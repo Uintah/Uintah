@@ -1,0 +1,388 @@
+% -*-latex-*-
+%
+%  The contents of this file are subject to the University of Utah Public
+%  License (the "License"); you may not use this file except in compliance
+%  with the License.
+%
+%  Software distributed under the License is distributed on an "AS IS"
+%  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+%  License for the specific language governing rights and limitations under
+%  the License.
+%
+%  The Original Source Code is SCIRun, released March 12, 2001.
+%
+%  The Original Source Code was developed by the University of Utah.
+%  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
+%  University of Utah. All Rights Reserved.
+%
+
+\documentclass[11pt]{article}
+\usepackage[]{fancyhdr}
+%\begin{latexonly}
+\usepackage[]{../Utilities/TeX/scirun-doc}
+%\end{latexonly}
+\usepackage[]{graphicx}
+\usepackage[]{html}
+\begin{htmlonly}
+  \include{../Utilities/TeX/scirun-doc.tex}
+\end{htmlonly}
+\newcommand{\latexenv}[1]{\texttt{#1}}
+\newcommand{\texutils}{../../Utilities/TeX}
+\begin{document}
+
+\begin{htmlonly}
+\include{../Utilities/TeX/banner_top.tex}
+\end{htmlonly}
+
+% The title page
+\title{\LaTeX{} Module Descriptions (Explicated)}
+\author{Ted Dustman}
+\maketitle 
+\newpage
+\tableofcontents
+\newpage
+
+
+\section{Quick Start}
+
+\begin{enumerate}
+\item Create a directory for the module description in the cvs tree.  If the
+  description is part of the \sr{} package, create a directory
+  in \directory{src/Dataflow/TeX}.  If the description is part of another
+  package, create a directory in
+  \directory{src/Packages/\ab{package}/Dataflow/TeX} where \ab{package} is
+  the name of the appropriate package.  Name the directory 
+  after the module it describes.
+\item Copy the template file,
+  \htmladdnormallink{\filename{module-desc-template.tex}}{../module-desc-template.tex},
+  to the directory just created.  Name the template file after its parent
+  directory with an extension of \filename{.tex}.  The template file is
+  now the module description document.
+\item Insert the document's figures into the directory created above.  Provide
+  figures in JPG or GIF formats.
+\item Look at the file \htmladdnormallink{\filename{scirun-doc.sty}}
+  {\texutils{}/scirun-doc.sty} and observe the markup
+  commands recommended for use in the module description file.
+\item Flesh out the document by following the instructions in the
+  module description document (the copy of the template).
+\item Notify the doc group of the new module description
+  (scirun-doc@sci.utah.edu)
+\item For additional information, refer to the following sections.
+\end{enumerate}
+
+
+\section{Document Name and Location}
+
+The document lives in the \directory{src} side of the CVS tree.  If the document
+describes a module in the \sr{} package, it  lives in a
+sub-directory of the directory \directory{src/Dataflow/TeX}.  If the document
+describes a module in another package,  it lives in a sub-directory
+of the directory \directory{src/Packages/\ab{package}/Dataflow/Tex} where
+\ab{package} is the name of the appropriate package.
+
+The document's file should be named after the module it
+describes with an extension of \filename{.tex}.  The document's
+directory \emph{must} have the same name as the document itself sans the
+\filename{.tex} extension. 
+
+The tex document must consist of one file only.
+
+Insert figures into the document's directory (not a sub-directory).
+
+\section{Markup}
+
+Do not use \LaTeX{} sectioning commands.  You are restricted to the
+following sectioning commands: \latexcommand{ModuleRef},
+\latexcommand{ModuleRefSummary}, \latexcommand{ModuleRefUse},
+\latexcommand{ModuleRefDetails}, \latexcommand{ModuleRefNotes},
+\latexcommand{ModuleRefCredits}, and \latexcommand{ModuleRefSubSection},
+\latexcommand{ModuleRefSubSubSection}.  The latter two commands can be used
+to add sub-sections and sub-sub-sections to the top-level sections of the
+module description document.  
+
+Markup the document using \LaTeX{} commands and commands in the file
+\htmladdnormallink{\filename{scirun-doc.sty}}{\texutils{}/scirun-doc.sty}. 
+
+Avoid presentation style markup commands such as \latexcommand{bf} or
+\latexcommand{emph}.  Most  \LaTeX{} commands can be used.
+
+You may invent your own markup commands as long as they are not
+presentation oriented and do not conflict with commands in
+\htmladdnormallink{\filename{scirun-doc.sty}}{\texutils{}/scirun-doc.sty}.
+
+\section{Organization}
+
+The \LaTeX{} version of a module description document consists of six parts: The
+\latexcommand{ModuleRef} command, and the Summary, Use, Details, Notes, and
+Credits sections.  The purpose of each section is described below:
+
+\begin{description}
+\item[The \latexcommand{ModuleRef} Command]\mbox{}
+  
+  The \latexcommand{ModuleRef} command is the first command in the
+  module description file.  It specifies the module's
+  name, and the category and package to which the module belongs:
+
+\begin{verbatim}
+\ModuleRef{\Module{module-name}}{\Category{category-name}}
+    {\Package{package-name}}
+\end{verbatim}
+  
+  Substitute appropriate values for ``module-name'',
+  ``category-name'', and ``package-name''.
+
+\item[Summary]
+  \label{sec:summary} \mbox{}
+
+  The Summary section is a brief summary of the module's purpose.  It
+  should be no more than one paragraph.
+
+  The \latexcommand{ModuleRefSummary} command starts the Summary section:
+
+\begin{verbatim}
+\ModuleRefSummary
+
+My module performs x, y, and z.     
+\end{verbatim}
+
+\item[Use] \label{sec:use} \mbox{}
+  
+  The Use section describe's the module's use.  It describes the
+  module's upstream and downstream connections and use of the module's
+  \gui{}.  In \acronym{JPG} or  \acronym{GIF} formats, include at least one image  of the module's graphical user interface.  See \secref{Including Images}{sec:inclimg} for details on
+  including images.
+  
+  Relate control of the module via its \gui{} to its theoretical
+  under-pinnings (and perhaps other details) described in the
+  Details section.
+  
+  Walk the user through an example, such as a small
+  complete network that uses the module.
+
+  The \latexcommand{ModuleRefUse} command starts the Use section:
+  
+\begin{verbatim}
+\ModuleRefUse
+
+My module is so intuitive it needs no documentation.
+\end{verbatim}
+
+\item[Details] \mbox{}
+  \label{sec:details}
+  
+  The \latexcommand{ModuleRefDetails} command starts the Details section.
+
+  Details not directly associated with the module's use belong in
+  the Details section.
+  
+  Describe the module's algorithms, mathematical under-pinnings, or
+  implementation details if appropriate.
+  
+  Relate the theory to the control of the module via its \gui{}
+  described in your Use section.
+
+\begin{verbatim}
+\ModuleRefDetails
+
+Details, details, to heck with the details!
+\end{verbatim}
+
+\item[Notes]\mbox{}
+  \label{sec:notes}
+  
+  Special installation instructions (special configure options), bugs, limitations, and possible future work should be
+  described in the Notes section.
+
+  The \latexcommand{ModuleRefNotes} command starts the Notes section:
+
+\begin{verbatim}
+\ModuleRefNotes
+
+Don't tell anyone, but this module just adds noise to its input.
+\end{verbatim}
+
+\item[Credits]\mbox{}
+  \label{sec:credits}
+  
+  The \latexcommand{ModuleRefCredits} command starts the Credits section:
+
+\begin{verbatim}
+\ModuleRefCredits
+
+Me!
+\end{verbatim}
+\end{description}
+
+See the Quick Start instructions above and the notes in
+\\
+\htmladdnormallink{\filename{module-desc-template.tex}}{../module-desc-template.tex}.
+
+\section{Including Images}
+\label{sec:inclimg}
+
+The \secname{Use}{sec:use} section of the document must include at
+least one image of the module's graphical user interface. Create
+images in  \acronym{JPEG} or \acronym{GIF} formats.  Note that EPS versions of the
+figures should not be provided. These figures will generate automatically as needed.
+
+Including images is a two step process.  You must first create an
+\dfn{image command} for each image.   Then you must use each
+image command at the approiate place in the text.
+
+
+\subsection{Creating an Image Command}
+\label{sec:crimgcmd}
+
+Create an image command by  copying the
+following template for each image.  Then
+replace angle-bracketed text with appropriate values.  Below is the template:
+
+%begin{latexonly}
+\begin{verbatim}
+%begin{latexonly}
+  \newcommand{\<image-command-name>}%
+  {\centerline{\includegraphics[<options>]
+               {\ModuleRefFigName{<figure-name>.eps}}}}
+%end{latexonly}
+\begin{htmlonly}
+  \newcommand{\<image-command-name>}{%
+    \htmladdimg[<options>]{\ModuleRefFigName{<figure-name.jpg-or-gif>}}}
+\end{htmlonly}
+\end{verbatim}
+%end{latexonly}
+
+\begin{rawhtml}
+  <PRE>
+  &#37begin{latexonly}
+  \newcommand{\&lt;image-command-name&gt;}
+  {\centerline{\includegraphics[&lt;options&gt;]
+               {\ModuleRefFigName{&lt;<figure-name>.eps&gt;}}}}
+  &#37end{latexonly}
+  &#92begin{htmlonly}
+  \newcommand{\&lt;image-command-name&gt;}
+  &nbsp&nbsp   {\htmladdimg[&lt;options&gt;]
+                {\ModuleRefFigName{&lt;<figure-name.jpg-or-gif>&gt;}}}
+  &#92end{htmlonly}
+  </PRE>
+\end{rawhtml}
+
+
+The ``latexonly'' part, ``options'' includes a list of key-value pair options.
+Typically, the options specify graphic width or height, scale, and bounding
+box.  See \etitle{The Latex Graphics Companion} for more information.  Note
+the \latexcommand{includegraphics} command from the
+\latexpackage{graphicx} package is used. Also, do not delete the two
+comment characters before the \verb|\%begin{latexonly}| and
+\verb|\%end{latexonly}|). 
+
+In the ``htmlonly'' part ``options'' there is a comma separated list of options
+such as ``align'', ``width'', ``height'', and ``alt''.  See \etitle{The
+  Latex Web Companion} for details.
+
+Note that use of the \latexcommand{ModuleRefFigName} command above is
+required.
+
+For example:
+%
+%begin{latexonly}
+\begin{verbatim}
+%begin{latexonly}
+  \newcommand{\testfig}{\centerline{\includegraphics[scale=.75]
+                        {\ModuleRefFigName{testfig.eps}}}}
+%end{latexonly}
+\begin{htmlonly}
+  \newcommand{\testfig}{\htmladdimg[align=top,alt="Test Figure"]
+              {\ModuleRefFigName{testfig.jpg}}}
+\end{htmlonly}
+\end{verbatim}
+%end{latexonly}
+
+
+\begin{rawhtml}
+  <PRE>
+  &#37begin{latexonly}
+  \newcommand{\testfig}{\centerline{\includegraphics[scale=.75]
+              {\ModuleRefFigName{testfig.eps}}}}
+  &#37end{latexonly}
+  &#92begin{htmlonly}
+  \newcommand{\testfig}{\htmladdimg[align=top,alt="Test Figure"]{\ModuleRefFigName{testfig.jpg}}}
+  &#92end{htmlonly}
+  </PRE>
+\end{rawhtml}
+
+
+\subsection{Using an Image Command}
+\label{sec:useimgcmd}
+
+Use image commands by enclosing each image
+command within a \latexenv{figure} environment as follows:
+
+%begin{latexonly}
+\begin{verbatim}
+\begin{figure}
+  \begin{makeimage}
+  \end{makeimage}
+  \<image-command-name>
+  \caption{\label{fig:<figure label>} Caption-text}
+\end{figure}
+\end{verbatim}
+%end{latexonly}
+
+\begin{rawhtml}
+  <PRE>
+  \begin{figure}
+    &#92begin{makeimage}
+    &#92end{makeimage}
+    \&lt;image-command-name&gt;
+    \caption{\label{fig:figure-label} Caption-text}
+  \end{figure}
+  </PRE>
+\end{rawhtml}
+
+
+Replace labels and names appropriately. For example:
+
+%begin{latexonly}
+\begin{verbatim}
+\begin{figure}
+  \begin{makeimage}
+  \end{makeimage}
+  \testfig
+  \caption{\label{fig:testfig} This is a test figure.}
+\end{figure}
+\end{verbatim}
+%end{latexonly}
+
+\begin{rawhtml}
+  <PRE>
+  \begin{figure}
+    &#92begin{makeimage}
+    &#92end{makeimage}
+    \testfig
+    \caption{\label{fig:testfig} This is a test figure.}
+  \end{figure}
+  </PRE>
+\end{rawhtml}
+
+\section{Using \LaTeX{} Packages}
+
+ The \latexcommand{usepackage} command can be used only if the package it is
+including is part of the standard \LaTeX{} distribution.  
+
+Commands from packages \latexpackage{graphicx} and
+\latexpackage{html} can be used without including them with the
+\latexcommand{usepackage} command.
+
+\section{Creating Citations}
+
+Cite references to other publications with the \latexcommand{cite} command.
+
+Provide a ``bib'' file containing bibliographic entries
+referenced in the document.
+
+
+\begin{htmlonly}
+\include{../Utilities/TeX/banner_bottom.tex}
+\end{htmlonly}
+
+\end{document}

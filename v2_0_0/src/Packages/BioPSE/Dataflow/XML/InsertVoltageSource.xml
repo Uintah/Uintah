@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+
+<component name="InsertVoltageSource" category="Forward">
+  <overview>
+    <authors>
+      <author>David Weinstein</author>
+    </authors>
+    <summary>Insert electrodes into a finite element mesh.</summary>
+    <description>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>TetMesh</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>VoltageSource</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>TetMesh</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+  </io>
+  <testing>
+  </testing>
+</component>

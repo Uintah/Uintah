@@ -1,0 +1,8 @@
+void redistribute_dragforce_cc(
+	Array3<double> dragforcex_fcx,
+	CCVariable<double> dragforcex_cc, 
+	int ioff, int joff, int koff, 
+	IntVector valid_lo, IntVector valid_hi);
+	
+
+	

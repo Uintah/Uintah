@@ -1,0 +1,173 @@
+<!--% require("Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::HTML) %-->
+
+<!--
+The contents of this file are subject to the University of Utah Public
+License (the "License"); you may not use this file except in compliance
+with the License.
+
+Software distributed under the License is distributed on an "AS IS"
+basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+License for the specific language governing rights and limitations under
+the License.
+
+The Original Source Code is SCIRun, released March 12, 2001.
+
+The Original Source Code was developed by the University of Utah.
+Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+University of Utah. All Rights Reserved.
+-->
+
+<html>
+<head>
+
+<script type="text/javascript">
+var treetop="";
+var path = location.pathname;
+if (path.charAt(path.length-1) == "/") {
+  path += "bogus.html"
+}
+var base = path.substr(path.lastIndexOf("/")+1);
+var roottag = "doc";
+while (base != roottag && base != "") {
+  treetop += "../";
+  path = path.substr(0, path.lastIndexOf("/"));
+  base = path.substr(path.lastIndexOf("/")+1);
+}
+var inDocTree = base == roottag;
+if (inDocTree) {
+document.write("<link href='",treetop,"doc/Utilities/HTML/mainindex.css' rel='stylesheet' type='text/css'/>")
+}
+function NewWindow(PageName,wide,tall,scroll){
+window.open(PageName,"","toolbar=0,location=0,directories=0,status=0,menubar=0,scrollbars=" + scroll + ",resizable=0,width=" + wide + ",height=" + tall + ",left=0,top=0");
+}
+</script>
+
+<title>Guide to SCIRun Documentation</title>
+
+</head>  
+
+<body>
+<script type="text/javascript">
+if (inDocTree) {
+document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_top.js"><\/script>');
+}
+</script>
+
+<br />
+
+<table align="center" cellspacing="0" border="1" cellpadding="2">
+<thead>
+<tr>
+<th colspan="3">
+<div class="title">SCIRun Documentation</div>
+<div class="subtitle">(for SCIRun version <!--%= doc.edition %-->  <a class="alt"
+href="ReleaseNotes/version_1_10.txt">[Release Notes]</a>)</div>
+</th>
+</tr>
+<tr>
+<th>Installation</th>
+<th>User</th>
+<th>Developer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<ul>
+<li>
+<a href="Installation/Guide/index.html">Guide</a>  <small><a href="Installation/Guide/srig.pdf">[PDF]</a></small>
+<p>Installation instructions for SCIRun, third party
+libraries, the optional PETSc library, sample data sets, and
+documentation.</p> 
+</li>
+<li>
+<a href="Installation/FAQ/faq.html">FAQ</a>  <small><a href="Installation/FAQ/faq.pdf">[PDF]</a></small>
+<p>Common installation questions and answers.</p>
+</li>
+</ul>
+</td>
+<td>
+<ul>
+<li>
+<a href="User/Tutorial/index.html">Tutorial</a> 
+<p>An interactive introduction to SCIRun for new users.</p>
+</li>
+<li><a href="User/Guide/usersguide/index.html">Guide</a> <small><a href="User/Guide/usersguide.pdf">[PDF]</a></small>
+<p>A guide to the concepts and use of the SCIRun problem solving
+environment.
+</p>
+</li>
+<li><a href="User/Nets/index.html">Network Descriptions</a><small><a
+href="User/Nets/nets.pdf">[PDF]</a></small>
+<p>Sample networks and their descriptions</p>
+</li>
+<li><a href="Developer/Modules/index.html">Module Reference</a><small><a href="Developer/Modules/srmrg.pdf">[PDF]</a></small>
+<p>Descriptions of SCIRun modules organized by package (and by
+category and alphabetically)</p>
+</li>
+<li><a href="User/FAQ/faq.html">FAQ</a>  <small><a href="User/FAQ/faq.pdf">[PDF]</a></small>
+<p>Common user questions and answers.</p>
+</li>
+<li>
+<a
+href="JavaScript:NewWindow('http://software.sci.utah.edu/scirun_citation.bib',
+'600','400','1')">SCIRun Citation</a>
+<p>BibTeX and plain text versions for use in publications
+which reference SCIRun's use.</p>
+</li>
+<li>
+<a
+href="JavaScript:NewWindow('http://software.sci.utah.edu/biopse_citation.bib',
+'600','400','1')">BioPSE Citation</a>
+<p>BibTeX and plain text versions for use in publications
+which reference BioPSE's use.</p>
+</li>
+</ul>
+</td>
+<td>
+<ul>
+<li><a href="Developer/Modules/index.html">Module Reference</a><small><a href="Developer/Modules/srmrg.pdf">[PDF]</a></small>
+<p>Descriptions of SCIRun modules organized by package (and by
+category and alphabetically)</p>
+</li>
+<li><a href="Developer/Guide/index.html">Guide</a>  <small><a href="Developer/Guide/srdg.pdf">[PDF]</a></small>
+<p>A guide to writing SCIRun modules, data types, and other code.</p>
+</li>
+<li><a href="Developer/CodeViews/html/index.html">Source Code
+Views</a>
+<p>SCIRun source code from several points of view.</p>
+</li>
+<li><a href="Developer/FAQ/faq.html">FAQ</a>  <small><a href="Developer/FAQ/faq.pdf">[PDF]</a></small>
+<p>Common developer questions and answers.</p>
+</li>
+<li><a href="Documentum/index.html">Documenting SCIRun</a>
+<p>Information for those writing or building SCIRun documentation.</p>
+</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+
+<br/>
+<br/>
+
+<script type="text/javascript">
+if (inDocTree) {
+document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_bottom.js"><\/script>');
+}
+</script>
+
+</body>
+
+</html>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-default-dtd-file:"Utilities/XML/xhtml1-transitional.ced"
+sgml-omittag:nil
+sgml-shorttag:nil
+End:
+-->

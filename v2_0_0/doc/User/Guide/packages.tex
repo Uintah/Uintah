@@ -1,0 +1,87 @@
+% -*-latex-*-
+%
+%  The contents of this file are subject to the University of Utah Public
+%  License (the "License"); you may not use this file except in compliance
+%  with the License.
+%
+%  Software distributed under the License is distributed on an "AS IS"
+%  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+%  License for the specific language governing rights and limitations under
+%  the License.
+%
+%  The Original Source Code is SCIRun, released March 12, 2001.
+%
+%  The Original Source Code was developed by the University of Utah.
+%  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
+%  University of Utah. All Rights Reserved.
+%
+% Document name: package.tex
+%
+
+\chapter{Packages}
+\label{ch:packages}
+\index{packages}
+
+Packages are collections of modules organized by category. The \SR{} and 
+packages are discussed below. 
+
+\section{The \sr{} Package}
+\label{sec:srpackage}
+\index{SCIRun@\sr{}!package}
+
+
+The \sr{} package contains these categories:
+
+\begin{description}
+  \descitem{\category{DataIO}} Modules for reading and writing \sr{}
+  data types.  Use these to read \sr{} type data into a network and
+  write data to disk from a network.  These modules only know about
+  \sr{} type data.  Non-\sr{} (foreign) data may be converted to \sr{}
+  type data using \sr{}'s converter programs (see \chref{Importing
+    data into \sr{}}{ch:import_export} for more information).
+  
+  \descitem{\category{Fields}} Modules for creating, manipulating, and
+  processing field data.
+  
+  \descitem{\category{Math}} Modules providing matrix operations and
+  equation solving capabilities.
+  
+  \descitem{\category{Render}} Modules for visualizing data produced by
+  other modules.  The main visualization tool at present
+  is the Viewer, which is described in more detail in
+  \chref{Visualization with the \viewer{}}{ch:viewer}.
+\end{description}
+
+\section{The BioPSE Package}
+\label{sec:biopsepackage}
+\index{SCIRun@\BIOPSE{}!package}
+
+
+These modules provide  tools tailored to solve bioelectric field
+problems.
+
+\begin{description}
+  \descitem{\category{DataIO}} Modules for reading and writing \sr{}
+  data types.
+  
+  \descitem{\category{Forward Problems}} Modules for solving forward
+  problems in the bioelectric field domain.
+  
+  \descitem{\category{Inverse Problems}} Modules for solving inverse
+  problems.
+  
+  \descitem{\category{LeadField Calculations}} Modules that support
+  the construction and analysis of fields derived from experimental or
+  computed data gathered or computed at electrode sensor locations.
+  
+  \descitem{\category{Modeling}} Modules that support the
+  construction of surface and volume bioelectric field models.
+  
+  \descitem{\category{Visualization}} Modules for visualizing
+  bioelectric field data.
+\end{description}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "usersguide"
+%%% End: 

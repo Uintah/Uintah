@@ -1,0 +1,246 @@
+#
+#  The contents of this file are subject to the University of Utah Public
+#  License (the "License"); you may not use this file except in compliance
+#  with the License.
+#  
+#  Software distributed under the License is distributed on an "AS IS"
+#  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+#  License for the specific language governing rights and limitations under
+#  the License.
+#  
+#  The Original Source Code is SCIRun, released March 12, 2001.
+#  
+#  The Original Source Code was developed by the University of Utah.
+#  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+#  University of Utah. All Rights Reserved.
+#
+
+# If you change this file, you must re-run configure before the changes
+# will be effective
+# This makefile was inspired by:
+# http://www.canb.auug.org.au/~millerp/rmch/recu-make-cons-harm.html
+
+# Default target
+default: all
+
+# Directory variables
+SRCTOP  := @top_srcdir@
+SRCDIR  := @srcdir@
+OBJTOP  := .
+OBJTOP_ABS    := $(shell cd $(OBJTOP) ; pwd)
+SRCTOP_ABS    := $(shell cd $(SRCTOP) ; pwd)
+SCIRUN_SCRIPTS = $(SRCTOP_ABS)/scripts
+include configVars.mk
+
+# Rules for autoconf
+#${SRCTOP}/configure: ${SRCTOP}/configure.in
+#	cd ${SRCTOP} && autoconf
+
+sci_config.h: stamp-h
+stamp-h: ${SRCTOP}/sci_config.h.in ${OBJTOP}/config.status
+	CONFIGFILE= CONFIG_HEADERS="sci_config.h " ./config.status
+	echo timestamp > stamp-h
+
+sci_defs.h: stamp-defs
+stamp-defs: ${SRCTOP}/sci_testdefs.h.in ${OBJTOP}/config.status
+	@( CONFIG_FILES="sci_testdefs.h" CONFIG_HEADERS="" ./config.status ) 1>&2
+	@if cmp -s sci_defs.h sci_testdefs.h 2>/dev/null; then echo "sci_defs.h is unchanged"; rm -f sci_testdefs.h; else  mv sci_testdefs.h sci_defs.h; echo "sci_defs.h is changed"; fi
+	echo timestamp > stamp-defs
+
+config.status: ${SRCTOP}/configure
+	@if test -n "`find ${SRCTOP}/configure.in -newer config.cache`"; then echo "removing config.cache and confdefs.h as they may be out of date"; /bin/rm -f config.cache confdefs.h; fi
+	./config.status --recheck
+	./config.status
+
+Makefile: ${SRCTOP}/Makefile.in ${OBJTOP}/config.status
+	@( Here="`pwd`" ; cd ${OBJTOP} ; Top="`pwd`" ; CONFIG_FILES=`echo $${Here} | sed -e "s%^"$${Top}"/%%" -e "s%^"$${Top}"%.%"`/Makefile CONFIG_HEADERS="" ./config.status ) 1>&2
+
+configVars.mk: ${SRCTOP}/configVars.mk.in ${OBJTOP}/config.status
+	@( Here="`pwd`" ; cd ${OBJTOP} ; Top="`pwd`" ; CONFIG_FILES=`echo $${Here} | sed -e "s%^"$${Top}"/%%" -e "s%^"$${Top}"%.%"`/configVars.mk CONFIG_HEADERS="" ./config.status )
+
+# Actually include the module makefile fragments
+ALLSUBDIRS := . 
+include $(SCIRUN_SCRIPTS)/recurse.mk
+ALLOBJSUBDIRS :=$(patsubst $(SRCTOP)%,$(OBJTOP)%, $(ALLSUBDIRS))
+MAKEFILEDIRS := $(wordlist 2,$(words $(ALLSUBDIRS)),$(ALLSUBDIRS))
+MAKEFILEDIRS := $(subst $(SRCTOP),$(OBJTOP_ABS),$(MAKEFILEDIRS))
+SUBMAKEFILES := $(patsubst %,%/Makefile,$(MAKEFILEDIRS))
+CREATETCLINDEX := $(OBJTOP)/createTclIndex
+TCLSH          := @TCL_PREFIX@/bin/tclsh@TCL_VERSION@
+TCL_VERSION    := @TCL_VERSION@
+LIB_DIR_ITCL   := @LIB_DIR_ITCL@
+
+MATLAB_ENGINE_FILES := @MATLAB_ENG@
+
+# etags generation
+TCL_FILES := $(patsubst %,%/*.tcl, $(ALLSUBDIRS))
+C_FILES := $(patsubst %,%/*.c, $(ALLSUBDIRS))
+CPP_FILES := $(patsubst %,%/*.cc, $(ALLSUBDIRS))
+HEADER_FILES := $(patsubst %,%/*.h, $(ALLSUBDIRS))
+
+ETAGS_FILES := $(wildcard $(HEADER_FILES) $(C_FILES) $(CPP_FILES) )
+TCL_ETAGS_FILES := $(wildcard $(TCL_FILES))
+ETAGS := @ETAGS@
+CTAGS := ctags
+
+all:: prereqs packmaker $(ALLTARGETS) ontheflylibs
+
+.PHONY: prereqs
+prereqs: $(MAKEFILEDIRS) $(MATLAB_ENGINE_FILES) $(CREATETCLINDEX) $(LIBDIR) $(SUBMAKEFILES) $(ALLGEN)
+
+$(MAKEFILEDIRS):
+	@echo creating directory $@
+	@mkdir -p $@
+
+$(MATLAB_ENGINE_FILES):
+	@echo creating engine files for MatlabInterface package.
+	mkdir -p $@
+	cp -r $(SRCTOP)/Packages/MatlabInterface/matlab/engine ./$@
+
+$(CREATETCLINDEX): $(SRCTOP)/scripts/createTclIndex.in $(OBJTOP)/Makefile
+	@echo creating createTclIndex
+	-@sed -e 's,TCLSH,$(TCLSH),g' \
+	      -e 's,LIB_DIR_ITCL,$(LIB_DIR_ITCL),g' \
+              -e 's,TCL_INIT_DIR,$(TCL_INIT_DIR),g' \
+              $(SRCTOP)/scripts/createTclIndex.in > $(CREATETCLINDEX)
+	-@chmod a+x $(CREATETCLINDEX)
+
+packmaker: $(SRCTOP)/scripts/packmaker.in $(OBJTOP)/Makefile
+	@echo creating packmaker
+	-@sed -e 's,REPLACE_SCIRUN_OBJTOP,$(OBJTOP_ABS),g' \
+              -e 's,REPLACE_SCIRUN_SRCTOP,$(SRCTOP_ABS),g' \
+              $(SRCTOP)/scripts/packmaker.in > packmaker
+	-@chmod a+x packmaker
+
+ontheflylibs:
+	@echo compiling on-the-fly-libs directory
+	@mkdir -p on-the-fly-libs
+	@(cd on-the-fly-libs;$(MAKE))
+
+$(LIBDIR):
+	mkdir -p $(LIBDIR)
+
+# This rule must be after the includes, so that it will find $(SIDL_EXE)
+%_sidl.o: %_sidl.cc %_sidl.h
+
+%_sidl.cc: %.sidl $(SIDL_EXE)
+	$(SIDL_EXE) -o $@ $<
+
+%_sidl.h: %.sidl $(SIDL_EXE)
+	$(SIDL_EXE) -h -o $@ $<
+
+# Make emacs etags file
+sciTAGS:  $(ETAGS_FILES) $(TCL_ETAGS_FILES)
+	$(ETAGS) -o sciTAGS $(ETAGS_FILES)
+	$(ETAGS) -o sciTAGS -a -l none --regex='/itcl_class[ \t]+\([^ \t]+\)/\1/' --regex='/[ \t]+method[ \t]+\([^ \t]+\)/\1/' $(TCL_ETAGS_FILES)
+
+# Make ctags file
+sciCTAGS:  $(ETAGS_FILES)
+	$(CTAGS) -o sciCTAGS $(ETAGS_FILES)
+
+# The sophsticated looking $(...) mess below is just to convert a
+# subdirectory of the form a/b/c into ../../..
+ifeq ($(LARGESOS),yes)
+  HERE = $(LIBDIR)lib$(firstword $(subst /," ",$(subst $(OBJTOP_ABS)/,,$@))).so
+else
+  HERE = $(LIBDIR)lib$(subst /,_,$(patsubst $(OBJTOP_ABS)/%/,%,$(dir $@))).so
+endif
+$(SUBMAKEFILES): scripts/Makefile.tmpl
+	@echo creating $@
+	@sed -e s,@OBJTOP@,$(shell echo $(foreach t,$(subst /," ",$(dir $(subst $(OBJTOP_ABS)/,,$@))),../) | sed -e 's,../ ,../,g' -e 's,/../$$,,'), -e s,@SRCTOP@,$(strip $(SRCTOP)), -e 's,@HERE_TARGET@,$(strip $(HERE)),' $< > $@
+
+ifeq ($(CC_DEPEND_REGEN),-MD)
+  ALLDEPENDS :=  $(patsubst %,%/*.d, $(ALLOBJSUBDIRS))
+else
+  ALLDEPENDS := $(patsubst %,%/depend.mk, $(ALLOBJSUBDIRS))
+endif
+
+# This is a temporary fix until we implement a better version of clean.
+# This should help avoid people accidently cleaning the entire tree when
+# what they really want is just from the current directory down.
+clean::
+	@echo "If you really want to clean up everything in the whole tree,"
+	@echo "type 'make cleanreally'.  If you want to clean this directory"
+	@echo "on down, type:"
+	@echo "   find . -name \"*.o\" -o -name depend.mk -o -name \\"
+	@echo "                      ii_files -print | xargs rm -rf"
+
+cleanreally::
+	rm -f $(patsubst %,%/*.o, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/depend.mk, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/core, $(ALLOBJSUBDIRS))
+	for fname in $(patsubst %,%/ii_files, $(ALLOBJSUBDIRS)); \
+	  do if test -d $$fname; then rm -rf $$fname; fi; done
+	rm -f $(patsubst %,%/*~, $(ALLOBJSUBDIRS))
+	rm -f $(LIBDIR)so_locations ./so_locations
+ifeq ($(CC_DEPEND_EXT),depend.mk)
+	rm -f $(patsubst %,%/depend.mk, $(ALLOBJSUBDIRS))
+else
+	rm -f $(patsubst %,%/*.$(CC_DEPEND_EXT), $(ALLOBJSUBDIRS))
+endif
+	rm -f $(CLEANLIBS)
+	rm -f $(CLEANPROGS)
+	rm -f y.output
+	rm -Rf $(LIBDIR)
+	-rm -f sciTAGS
+	rm -f on-the-fly-libs/*.*
+
+distclean:: clean
+	rm -f config.status config.log config.cache
+	rm -f $(CREATETCLINDEX) scripts/CC scripts/cc
+	rm -f $(patsubst %,%/Makefile, $(ALLOBJSUBDIRS))
+	rm -f sci_config.h sci_defs.h sci_testdefs.h stamp-h
+
+cleanall:: cleanai cleanAI cleanjs cleanJS cleantz cleanTZ cleanrest
+
+cleanai::
+	rm -f $(patsubst %,%/[a-i]*.o, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/ii_files/[a-i]*.ii, $(ALLOBJSUBDIRS))
+cleanAI::
+	rm -f $(patsubst %,%/[A-I]*.o, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/ii_files/[A-I]*.ii, $(ALLOBJSUBDIRS))
+cleanjs::
+	rm -f $(patsubst %,%/[j-s]*.o, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/ii_files/[j-s]*.ii, $(ALLOBJSUBDIRS))
+cleanJS::
+	rm -f $(patsubst %,%/[J-S]*.o, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/ii_files/[J-S]*.ii, $(ALLOBJSUBDIRS))
+cleantz::
+	rm -f $(patsubst %,%/[t-z]*.o, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/ii_files/[t-z]*.ii, $(ALLOBJSUBDIRS))
+cleanTZ::
+	rm -f $(patsubst %,%/[T-Z]*.o, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/ii_files/[T-Z]*.ii, $(ALLOBJSUBDIRS))
+cleanrest::
+	rm -f $(patsubst %,%/*.o, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/depend.mk, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/core, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/ii_files/*.ii, $(ALLOBJSUBDIRS))
+	-rmdir $(patsubst %,%/ii_files, $(ALLOBJSUBDIRS))
+	rm -f $(patsubst %,%/*~, $(ALLOBJSUBDIRS))
+	rm -f $(LIBDIR)so_locations
+	rm -f $(CLEANLIBS)
+	rm -f $(CLEANPROGS)
+	rm -f y.output
+	rm -Rf $(LIBDIR)
+
+objs: $(CLEANOBJS)
+
+cleantau:
+	rm -f Packages/Uintah/CCA/Components/Schedulers/MPIScheduler.o
+	rm -f Packages/Uintah/CCA/Components/Schedulers/ThreadPool.o
+	rm -f Packages/Uintah/StandAlone/sus.o
+
+ifeq (,$(findstring objs,$(MAKECMDGOALS)))
+# This includes all of the dependencies.  We prepend the absolute path
+# to the obj dir to prevent make from wasting time searching for them
+# in other directories
+  ifeq ($(CC_DEPEND_EXT),depend.mk)
+    -include $(patsubst %,$(OBJTOP_ABS)/%/depend.mk, $(patsubst $(SRCTOP)/%,%,$(ALLSUBDIRS)))
+  else
+    -include $(patsubst %.o,$(OBJTOP_ABS)/%.$(CC_DEPEND_EXT), $(CLEANOBJS))
+  endif
+else
+  # If we are making the special target "objs", we skip the dependencies.
+  # This is a hack for a "quick" compile.
+endif

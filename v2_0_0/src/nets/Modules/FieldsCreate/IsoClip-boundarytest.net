@@ -1,0 +1,197 @@
+# SCI Network 1.0
+#
+# The contents of this file are subject to the University of Utah Public
+# License (the "License"); you may not use this file except in compliance
+# with the License.
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations under
+# the License.
+# 
+# The Original Source Code is SCIRun, released March 12, 2001.
+# 
+# The Original Source Code was developed by the University of Utah.
+# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+# University of Utah. All Rights Reserved.
+
+set results [sourceSettingsFile]
+
+if { $results == "failed" } {
+
+    ::netedit scheduleok
+    return 
+
+} else {
+
+    set DATADIR [lindex $results 0]
+    set DATASET [lindex $results 1]
+}
+
+source $DATADIR/$DATASET/$DATASET.settings
+
+::netedit dontschedule
+
+global userName
+set userName ""
+
+global runDate
+set runDate ""
+
+global runTime
+set runTime ""
+
+global notes
+set notes ""
+
+set m0 [addModuleAtPosition "SCIRun" "Fields" "SampleLattice" 72 11]
+set m1 [addModuleAtPosition "SCIRun" "Fields" "HexToTet" 107 89]
+set m2 [addModuleAtPosition "SCIRun" "Fields" "TransformData" 99 175]
+set m3 [addModuleAtPosition "SCIRun" "Fields" "IsoClip" 87 264]
+set m4 [addModuleAtPosition "SCIRun" "Render" "Viewer" 66 600]
+set m5 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 75 344]
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 61 511]
+set m7 [addModuleAtPosition "SCIRun" "Fields" "ClipByFunction" 83 424]
+
+addConnection $m0 0 $m1 0
+addConnection $m1 0 $m2 0
+addConnection $m2 0 $m3 0
+addConnection $m3 0 $m5 0
+addConnection $m6 0 $m4 0
+addConnection $m5 0 $m7 0
+addConnection $m7 0 $m6 0
+
+set $m0-notes {}
+set $m0-sizex {7}
+set $m0-sizey {7}
+set $m0-sizez {7}
+set $m0-padpercent {0}
+set $m0-data-at {Nodes}
+set $m1-notes {}
+set $m2-notes {}
+set $m2-function {result = x*x + y*y + z*z;
+
+
+
+}
+set $m2-outputdatatype {input}
+set $m3-notes {}
+set $m3-isoval {1.0}
+set $m3-lte {1}
+set $m4-notes {}
+$m4 ui
+set $m4-ViewWindow_0-pos {}
+set $m4-ViewWindow_0-caxes {0}
+set $m4-ViewWindow_0-raxes {1}
+set $m4-ViewWindow_0-iaxes {}
+set $m4-ViewWindow_0-have_collab_vis {0}
+set $m4-ViewWindow_0-view-eyep-x {6.208401175366099}
+set $m4-ViewWindow_0-view-eyep-y {4.552070982916685}
+set $m4-ViewWindow_0-view-eyep-z {1.818395431159023}
+set $m4-ViewWindow_0-view-lookat-x {0}
+set $m4-ViewWindow_0-view-lookat-y {0}
+set $m4-ViewWindow_0-view-lookat-z {0}
+set $m4-ViewWindow_0-view-up-x {0.3991229397787737}
+set $m4-ViewWindow_0-view-up-y {-0.1856680584829249}
+set $m4-ViewWindow_0-view-up-z {-0.8979021388779127}
+set $m4-ViewWindow_0-view-fov {20}
+set $m4-ViewWindow_0-view-eyep_offset-x {}
+set $m4-ViewWindow_0-view-eyep_offset-y {}
+set $m4-ViewWindow_0-view-eyep_offset-z {}
+set $m4-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m4-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m4-ViewWindow_0-bgcolor-r {0}
+set $m4-ViewWindow_0-bgcolor-g {0}
+set $m4-ViewWindow_0-bgcolor-b {0}
+set $m4-ViewWindow_0-shading {}
+set $m4-ViewWindow_0-do_stereo {0}
+set $m4-ViewWindow_0-ambient-scale {1.0}
+set $m4-ViewWindow_0-diffuse-scale {1.0}
+set $m4-ViewWindow_0-specular-scale {0.4}
+set $m4-ViewWindow_0-emission-scale {1.0}
+set $m4-ViewWindow_0-shininess-scale {1.0}
+set $m4-ViewWindow_0-polygon-offset-factor {1.0}
+set $m4-ViewWindow_0-polygon-offset-units {0.0}
+set $m4-ViewWindow_0-point-size {1.0}
+set $m4-ViewWindow_0-line-width {1.0}
+set $m4-ViewWindow_0-sbase {0.40}
+set $m4-ViewWindow_0-sr {1}
+set $m4-ViewWindow_0-do_bawgl {0}
+set $m4-ViewWindow_0-drawimg {}
+set $m4-ViewWindow_0-saveprefix {}
+set $m4-ViewWindow_0-resx {}
+set $m4-ViewWindow_0-resy {}
+set $m4-ViewWindow_0-aspect {}
+set $m4-ViewWindow_0-aspect_ratio {}
+set $m4-ViewWindow_0-global-light {1}
+set $m4-ViewWindow_0-global-fog {0}
+set $m4-ViewWindow_0-global-debug {0}
+set $m4-ViewWindow_0-global-clip {1}
+set $m4-ViewWindow_0-global-cull {0}
+set $m4-ViewWindow_0-global-dl {0}
+set $m4-ViewWindow_0-global-type {Gouraud}
+set $m4-ViewWindow_0-ortho-view {0}
+set $m4-ViewWindow_0-unused {1}
+set $m4-ViewWindow_0-unused {1}
+set $m4-ViewWindow_0-unused {1}
+set $m5-notes {}
+set $m6-notes {}
+set $m6-nodes-on {1}
+set $m6-nodes-transparency {0}
+set $m6-nodes-as-disks {0}
+set $m6-edges-on {1}
+set $m6-edges-transparency {0}
+set $m6-faces-on {1}
+set $m6-use-normals {0}
+set $m6-use-transparency {0}
+set $m6-vectors-on {0}
+set $m6-normalize-vectors {}
+set $m6-has_vector_data {0}
+set $m6-bidirectional {0}
+set $m6-tensors-on {0}
+set $m6-has_tensor_data {0}
+set $m6-scalars-on {0}
+set $m6-scalars-transparency {0}
+set $m6-has_scalar_data {1}
+set $m6-text-on {0}
+set $m6-text-use-default-color {1}
+set $m6-text-color-r {1.0}
+set $m6-text-color-g {1.0}
+set $m6-text-color-b {1.0}
+set $m6-text-backface-cull {0}
+set $m6-text-fontsize {1}
+set $m6-text-precision {2}
+set $m6-text-render_locations {0}
+set $m6-text-show-data {1}
+set $m6-text-show-nodes {0}
+set $m6-text-show-edges {0}
+set $m6-text-show-faces {0}
+set $m6-text-show-cells {0}
+set $m6-def-color-r {0.5}
+set $m6-def-color-g {0.5}
+set $m6-def-color-b {0.5}
+set $m6-def-color-a {0.5}
+set $m6-node_display_type {Points}
+set $m6-edge_display_type {Lines}
+set $m6-data_display_type {Arrows}
+set $m6-tensor_display_type {Boxes}
+set $m6-scalar_display_type {Points}
+set $m6-active_tab {Nodes}
+set $m6-node_scale {0.03}
+set $m6-edge_scale {0.015}
+set $m6-vectors_scale {0.30}
+set $m6-tensors_scale {0.30}
+set $m6-scalars_scale {0.30}
+set $m6-show_progress {}
+set $m6-interactive_mode {Interactive}
+set $m6-field-name {}
+set $m6-field-name-update {1}
+set $m6-node-resolution {6}
+set $m6-edge-resolution {6}
+set $m6-data-resolution {6}
+set $m7-notes {}
+set $m7-clipmode {cell}
+set $m7-clipfunction {x < 0}
+$m3 initialize_ui
+
+::netedit scheduleok

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+
+<component name="ModifyConductivities" category="Modeling">
+  <overview>
+    <authors>
+      <author>Michael Callahan</author>
+    </authors>
+    <summary>Change the conductivity tensors in a field.</summary>
+    <description>
+      <p>
+        ModifyConductivities is used to interactively change the conductivity
+        tensors in a field.  These tensors are then used by many BioPSE
+        modules to create the support matrices that are then used to solve
+        forward and inverse problems.
+      </p>
+      <p>
+	The tensors are stored as a 'conductivities' property in the
+        input and output fields.  The fields should be of integer type
+        and contain indices into this conductivities table.  The
+        indices start at value zero.  Internally the table consists of
+        a vector of entry pairs, each containing the tensor and a
+        reference name.
+      </p>
+      <p>
+        The 'Tensor Matrix' input port is optional.  If there is an
+        Nx9 or 9xN matrix present on that port, then default
+        conductivities will be extracted from that matrix.
+      </p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Input</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Tensor Matrix</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Output Field</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Output Matrix</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
+  </io>
+  <testing>
+  </testing>
+</component>

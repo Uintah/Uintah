@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../doc/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+
+<component name="MapDistanceField" category="Modeling">
+  <overview>
+    <authors>
+      <author>Michael Callahan</author>
+    </authors>
+    <summary>
+      This module builds an interpolant field -- a field that indicates how to project
+      data from one field onto the data of a second field.
+    </summary>
+    <description>
+      <p>
+        The MapDistanceField module builds an interpolant field that contains data
+        about how to interpolate source field data for
+        the geometry of the destination field.  The resulting
+        interpolant field can then be used by the ApplyInterpolant
+        module to interpolate the values from a field, similar to the
+        source field, onto the destination field.
+      </p>
+      <p>
+        DirectInterpolate should be used instead of BuildInterpolant
+        and ApplyInterpolant if the interpolant is not to be reused,
+        as it performs the same interpolation without building the
+        intermediate interpolant field.  This should be used if the
+        source field changes much more often than the destination field.
+      </p> 
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+	<name>Contour</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+	<name>Surface</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+	<name>From Contour Interpolant</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+	<name>From Surface Interpolant</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+  </io>
+  <testing>
+  </testing>
+</component>

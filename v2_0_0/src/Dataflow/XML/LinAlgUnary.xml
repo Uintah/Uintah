@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+
+<component name="LinAlgUnary" category="Math">
+  <overview>
+    <authors>
+      <author>David Weinstein</author>
+    </authors>
+    <summary>Performs one of a number of selectable unary matrix
+  operations to the input matrix.</summary>
+    <description>
+
+	<p>One of a number of unary matrix operations can be selected
+	from the GUI and is then applied either to the whole matrix or
+	to each element in the matrix, depending upon which operation
+	is selected.  The operations are Round, Ceil, Floor,
+	Normalize, Transpose, Sort, Subtract Mean, or Function.</p>
+    
+	<p>Round, Ceil, and Floor are used to convert each element in
+	the input matrix into an integer value.</p>
+
+	<p>Normalize linearly transforms each element such that they
+	all end up between 0 and 1.</p>
+	      
+	<p>Transpose constructs a new transpose matrix containing the
+	same elements as the input matrix.  For example, if the input
+	matrix was of size 4x20, the output matrix will be of size
+	20x4.</p>
+
+	<p>Sort does an insertion sort on the elements of the input
+	matrix.  The elements will be sorted such that the smallest
+	element will be at the top of the matrix and the largest
+	element will be at the end.  If the matrix is not a row or
+	column matrix, the matrix is sorted in a row-scanline order.
+	For example, in a 2x30 matrix, the first row would contain the
+	lower half of the values and the second row would contain the
+	upper half.</p>
+
+	<p>Subract Mean computes the mean value of the matrix, and
+	then subtracts that value from each element in the matrix.</p>
+
+	<p>Function allows an arbitrary function to be evaluated for
+	each element in the matrix.  The current value is represented
+	as the variable 'x'.  For instance, the default 'x+10'
+	function adds 10 to each element in the matrix.  A function of
+	just '10' would set each element in the matrix to be 10.  The
+	function is specified using SCIRun's simple function parser.
+	There are a number of mathematical functions available for
+	use.  They are:</p>
+
+	<p>+: Add two numbers.  Example: 4+3 = 7</p>
+	<p>-: Subtract one number from another.  Example: 4-3 = 1</p>
+	<p>*: Multiply two numbers.  Example: 4*3 = 12</p>
+        <p>/: Divide one number from another.  Example: 12/3 = 4</p>
+	<p>sin: Sine of a number in radians.  Example: sin(x)</p>
+	<p>cos: Cosine of a number in radians.  Example: cos(x)</p>
+	<p>sqrt: Square root of a number.  Example: sqrt(4) = 2</p>
+	<p>sqr: Square of a number.  Example: sqr(2) = 4, sqrt(sqr(x))
+	= x</p>
+	<p>ln: Natural logarithm of a number.  Example: ln(x)</p>
+	<p>exp: e raised to the nth power. Example: exp(ln(x)) = x</p>
+	<p>log: Log base 10 of a number.  Example: log(100) = 2</p>
+	<p>abs: Absolute value of a number.  Example: abs(-3) = 3</p>
+        <p>pow: One number raised to the power of another.  Example:
+	pow(3, 2) = 9</p>
+	<p>random: Return a uniform random number between 0 and 1.
+	Example: random()</p>
+
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Input</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Output</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <img>../Modules/Math/doc/LinAlgUnaryUI.jpg</img>
+  </gui>
+  <testing>
+  </testing>
+</component>

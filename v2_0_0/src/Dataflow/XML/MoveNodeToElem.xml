@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+
+<component name="MoveNodeToElem" category="FieldsData">
+  <overview>
+    <authors>
+      <author>Michael Callahan</author>
+    </authors>
+    <summary>Make a new field with data at elements instead of nodes.</summary>
+    <description>
+
+      <p>MoveNodeToElem creates a new field with the data at the
+      mesh elements rather than at the nodes.   This currently only
+      works on LatVolField and ImageField field types.  The data must
+      be at the nodes.  A new field is created such that the data
+      remains at the same positions in space but occupy the
+      cell/face centers of the new mesh rather than being located at
+      the node locations.  This is the opposite of MoveElemToNode.</p>
+
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+	<name>Node Field</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+	<name>Elem Field</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+  </io>
+  <testing>
+  </testing>
+</component>

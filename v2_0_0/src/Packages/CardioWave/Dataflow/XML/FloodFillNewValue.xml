@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../../../doc/package-component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<component name="FloodFillNewValue" category="CreateModel">
+  <overview>
+    <authors>
+      <author>Dave Weinstein</author>
+    </authors>
+    <summary>
+      Read in a HexVolInt and a Point, change the HexVolInt by
+      flood-filling in the value of the Point into the Field.
+    </summary>
+    <description>
+      <p>Version Date: May 2002</p>
+      <p>Version: 1.1</p>
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Volume</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Point</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>FloodFilled Volume</name> 
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

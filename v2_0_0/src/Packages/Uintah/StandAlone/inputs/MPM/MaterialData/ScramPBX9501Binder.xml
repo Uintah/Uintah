@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- 4340 Steel -->
+<Uintah_Include>
+  <a>0.3</a>
+  <m>10</m>
+  <c0>0.00003</c0>
+  <vmax>300</vmax>
+  <K0>5.0e5</K0>
+  <mu_s>0.35</mu_s>
+</Uintah_Include>
+

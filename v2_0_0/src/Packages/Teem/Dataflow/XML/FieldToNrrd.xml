@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+
+<component name="FieldToNrrd" category="DataIO">
+  <overview>
+    <authors>
+      <author>David Weinstein</author>
+      <author>Martin Cole</author>
+    </authors>
+    <summary>Take the data from a field or fields and wrap it with a
+nrrd and pass it out.
+    </summary>
+    <description>
+      <p>Inputs: a field or multiple fields that share the *same*
+mesh. Output: a NrrdData.
+      </p>
+      <p>
+         This module converts data from a given field, into NrrdData.
+NrrdData is the SCIRun object that is mostly a wrapper around a Nrrd*.
+There are many operations that can be applied to the data as a nrrd,
+<slink path="http://www.cs.utah.edu/~gk/teem/unnrrdu/index.html"></slink>
+many of which are supported in this Teem package. </p>
+      <p>
+        We store a handle to the Field that is input to this module in
+the NrrdData, so that if it ever gets converted back to a Field, we
+have a preffered target field type instead of one of the structured
+defaults that NrrdToField will use if it cannot determine a prefferred
+type. The User may want to use NrrdJoin to combine sets of data that
+map to the same mesh into a single NrrdData. </p>
+    </description>
+    <examplesr>Teem/nets/test/to_and_from_lvd.fld.net</examplesr>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Field</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Nrrd</name>
+	<datatype>Teem::Nrrd</datatype>
+      </port>
+    </outputs>
+  </io>
+  <testing>
+    <plan>
+      <description>
+	<p></p>
+      </description>
+      <step>
+	<p>Run the test network (see examplesr tag), and verify that
+geometry and data values are identical.  This can be done with visual
+inspection. Just turn off and on display of nodes to compare
+colors.</p>
+      </step>
+    </plan>
+  </testing>
+</component>

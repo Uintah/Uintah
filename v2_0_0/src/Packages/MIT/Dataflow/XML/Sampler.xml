@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../../../doc/package-component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<component name="Sampler" category="Metropolis">
+  <overview>
+    <authors>
+      <author>Yarden Livnat</author>
+    </authors>
+    <summary>
+      Summary not available yet.
+    </summary>
+    <description>
+      <p>Version Date: Sep 2001</p><p>Version: 1.0</p>
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Distribution</name>
+        <datatype>MIT::Distribution</datatype>
+      </port>
+      <port>
+        <name>Measurements</name>
+        <datatype>MIT::Measurements</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Posterior</name>
+        <datatype>MIT::Results</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

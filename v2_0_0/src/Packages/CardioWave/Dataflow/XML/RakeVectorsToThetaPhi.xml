@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../../../doc/package-component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<component name="RakeVectorsToThetaPhi" category="CreateModel">
+  <overview>
+    <authors>
+      <author>Dave Weinstein</author>
+    </authors>
+    <summary>
+      Given a set of vectors that are sampled along a line (e.g. from a rake),
+      compute the theta and phi for each vector, and send them out as
+      ColumnMatrices (e.g. to be plotted in ErrorMetric).
+    </summary>
+    <description>
+      <p>Version Date: May 2002</p>
+      <p>Version: 1.1</p>
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Vectors</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Theta</name> 
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>Phi</name> 
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

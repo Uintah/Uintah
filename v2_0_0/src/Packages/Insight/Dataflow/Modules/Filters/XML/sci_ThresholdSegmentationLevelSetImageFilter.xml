@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE filter SYSTEM "sci_filter.dtd">
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<filter>
+  <include href="ITK/itk_ThresholdSegmentationLevelSetImageFilter.xml"/>
+  <include href="Dataflow/Modules/Filters/XML/gui_ThresholdSegmentationLevelSetImageFilter.xml"/>
+
+<filter-sci name="ThresholdSegmentationLevelSetImageFilter">
+  <package>Insight</package>
+
+  <category>Filters</category>
+
+  <instantiations>
+    <instance num="1">
+      <type name="ImageType">
+        <value>itk::Image&lt;float, 2&gt;</value>
+      </type>
+      <type name="FeatureImageType">
+        <value>itk::Image&lt;float, 2&gt;</value>
+      </type>
+     </instance>
+    <instance num="2">
+      <type name="ImageType">
+        <value>itk::Image&lt;float, 3&gt;</value>
+      </type>
+      <type name="FeatureImageType">
+        <value>itk::Image&lt;float, 3&gt;</value>
+      </type>
+     </instance>
+  </instantiations>
+
+  <includes>
+    <file>Packages/Insight/Dataflow/Ports/ITKDatatypePort.h</file>
+  </includes>
+
+</filter-sci>
+
+</filter>

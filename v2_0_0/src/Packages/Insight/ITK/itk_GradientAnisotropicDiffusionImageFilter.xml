@@ -1,0 +1,75 @@
+<?xml version="1.0"?>
+<!DOCTYPE filter-itk SYSTEM "itk_filter.dtd">
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<filter-itk name="itk::GradientAnisotropicDiffusionImageFilter">
+  <description>
+  This filter performs anisotropic diffusion on a scalar itk::Image using the classic Perona-Malik, gradient magnitude based equation implemented in itkGradientNDAnisotropicDiffusionFunction.
+  </description>
+  <templated>
+    <template>InputImageType</template>
+    <template>OutputImageType</template>
+    <defaults>
+      <default>itk::Image&lt;float, 2&gt;</default>
+      <default>itk::Image&lt;float, 2&gt;</default>
+    </defaults>
+    <defaults>
+      <default>itk::Image&lt;float, 3&gt;</default>
+      <default>itk::Image&lt;float, 3&gt;</default>
+    </defaults>
+  </templated>
+
+  <inputs>
+    <input name="InputImage">
+      <type>InputImageType</type>
+      <call>SetInput</call>
+    </input>  
+  </inputs>
+  <outputs>
+    <output name="OutputImage">
+      <type>OutputImageType</type>
+      <call>GetOutput</call>
+    </output>
+  </outputs>
+
+  <parameters>
+    <param>
+      <name>time_step</name>
+      <type>double</type>
+      <call>SetTimeStep</call>
+    </param>
+    <param>
+      <name>iterations</name>
+      <type>int</type>
+      <call>SetNumberOfIterations</call>
+      <default>6</default>
+    </param>
+    <param>
+      <name>conductance_parameter</name>
+      <type>double</type>
+      <call>SetConductanceParameter</call>
+      <default>1.0</default>
+    </param>
+  </parameters>
+
+  <includes>
+    <file>itkGradientAnisotropicDiffusionImageFilter.h</file>
+  </includes>
+</filter-itk>
+

@@ -1,0 +1,221 @@
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<!-- Note: This document is about 75% complete.  Debug and DebugStream
+phase 2 content files still need work. * tjd * -->
+
+<chapter id="dev.utilities">
+  <title>SCIRun Utilities</title>
+
+  
+    <para>
+      This chapter describes some simple utilities available in
+      SCIRun.
+    </para>
+  
+
+  <section>
+    <title>Introduction</title>
+
+    <para>
+      Core/Util is a miscellaneous collection of code.  The code can be
+      classified into 3 groups: debugging tools, timing routines, and
+      SCIRun internal code.
+    </para>
+    <para>The debugging tools and timing routines are generally useful.  The
+      SCIRun internal code is not.
+    </para>
+    <para>The SCIRun internal code consists of routines for accessing shared
+      libraries and work arounds of bugs on Linux platforms.
+    </para>
+
+  </section>
+
+  <section>
+    <title>Programming with SCIRun Utilities</title>
+
+      <para>Use the the debugging and timing tools when developing any kind of code.</para>
+      <para>
+	Use the debugging tools to specify data invariants, catch
+	programming errors, and log messages during program execution.
+      </para>
+      <para>
+	The timer tools can be used to analyze code bottlenecks and perform
+	other timing tasks.
+      </para>
+  
+    <section>
+      <title>Assertion</title>
+
+    <para>
+      Assertions have 2 (related) uses.  They are used to catch programming
+      errors and they may used to make promises between a routine
+      and its caller, i.e. "If you the caller send me data that does not
+      violate my assertion(s) then I, the routine, promise to do the
+      right thing by you." 
+    </para>
+    <para>
+      Assertions express a set of valid states a data object (or objects)
+      may possess at some point in the code.  If a piece of data is not in
+      a valid state, i.e. it violates the assertion, then the assertion
+      will catch this violation, report the violation, and perhaps terminate
+      the program.
+    </para>
+    
+    <para>
+      SCIRun supports a number of assertion styles which can be found in
+      Assert.h and FancyAssert.h.  Here are a few examples:
+    </para>
+    <para>
+      Ensure that the variable 'n' is greater than 0:
+    </para>
+    <programlisting>
+      ASSERT(n &lt; 0);
+    </programlisting>
+    <para>
+      Ensure that 'a' is equal to 999:
+    </para>
+    <programlisting>
+      ASSERTEQ(a, 999);
+    </programlisting>
+    <para>
+      Other examples:
+    </para>
+    <programlisting>
+      ASSERTNE(a, 0);
+      ASSERTRANGE(a, 0.0, 1.0);
+    </programlisting>
+    </section>
+    <section>
+      <title>Timer</title>
+    <para>
+      A Timer keeps track of time.  Class Timer is an abstract base class -
+      you can't create a Timer object.  But you can create objects of the
+      derived types CPUTimer, WallClockTimer, and TimeThrottle.  These all
+      provide the functions start(), stop(), clear(), time(), and add().  A
+      TimeThrottle also provides the function wait_for_time().  Functions
+      common to all timers are:
+    </para>
+    <para>
+      start() starts or resumes a timer.
+    </para>
+    <para>
+      stop() stops a timer.  It does not clear accumulated time.  The timer
+      may be resumed with start().
+    </para>
+    <para>
+      clear() sets the timer's accumulated time to 0.  clear() may be executed
+      while a timer is running (although a warning will be written to std error).
+    </para>
+    <para>
+      time() returns the timer's accumulated time.  It may be executed
+      while the timer is running or stopped.
+    </para>
+    <para>
+      add(double t) adds t seconds to the current elapsed time.
+    </para>
+    <para>
+      Individual timer types are discussed next.
+    </para>
+   </section>
+
+   <section>
+     <title>CPUTimer</title>
+    <para>
+      CPUTimer records the elasped CPU time (seconds) used by the calling
+      process (including system CPU time used on behalf of the calling
+      process).
+    </para>
+
+    <para>
+      Sample use of a CPUTimer:
+    </para>
+    <programlisting>
+      CPUTimer cpuTimer;
+      cpuTimer.start();
+      for (i =0; i&lt;3; ++i) {
+        .
+        .
+        .
+      }
+      cpuTimer.stop();
+      cout &lt;&lt; "Loop used " &lt;&lt; cpuTimer.time()
+           &lt;&lt; " seconds of cpu" &lt;&lt; endl;
+    </programlisting>
+   </section>
+   <section>
+    <title>WallClockTimer</title>
+    <para>
+      WallClockTimer records elasped real time (seconds).
+    </para>
+
+    <para>
+      Sample use of a WallClockTimer:
+    </para>
+    <programlisting>
+      WallClockTimer wcTimer;
+      wcTimer.start();
+      for (i =0; i&lt;3; ++i) {
+        .
+        .
+        .
+      }
+      wcTimer.stop();
+      cout &lt;&lt; "Loop used " &lt;&lt; wcTimer.time()
+           &lt;&lt; " seconds of real time" &lt;&lt; endl;
+    </programlisting>
+    </section>
+
+    <section>
+      <title>TimeThrottle</title>
+    <para>
+      TimeThrottle is a WallClockTimer with the added function wait_for_time().
+    </para>
+    <para>
+      wait_for_time(double endtime) will suspend the calling thread until
+      the given endtime (seconds) has elapsed.  This function is only
+      implemented on SGI systems.
+    </para>
+
+    <para>
+      Sample use of a TimeThrottle:
+    </para>
+    <programlisting>
+      TimeThrottle timeThrottle;
+      timeThrottle.start();
+      double startTime = timeThrottle.time();
+      // Start doing stuff.
+      .
+      .
+      .
+      // Make sure that not less than 1 second has elapsed since we started
+      // doing stuff.
+      timeThrottle.wait_for_time(startTime + 1);
+    </programlisting>
+    </section>
+  </section>
+</chapter>
+
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-default-dtd-file:"../../../Utilities/XML/docbook.ced"
+sgml-omittag:nil
+sgml-shorttag:nil
+End:
+-->

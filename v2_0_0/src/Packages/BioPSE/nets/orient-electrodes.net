@@ -1,0 +1,122 @@
+# SCI Network 1.0
+#
+# The contents of this file are subject to the University of Utah Public
+# License (the "License"); you may not use this file except in compliance
+# with the License.
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations under
+# the License.
+# 
+# The Original Source Code is SCIRun, released March 12, 2001.
+# 
+# The Original Source Code was developed by the University of Utah.
+# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+# University of Utah. All Rights Reserved.
+
+set results [sourceSettingsFile]
+
+if { $results == "failed" } {
+
+    ::netedit scheduleok
+    return 
+
+} else {
+
+    set DATADIR [lindex $results 0]
+    set DATASET [lindex $results 1]
+}
+
+source $DATADIR/$DATASET/$DATASET.settings
+
+::netedit dontschedule
+
+global userName
+set userName "dmw"
+
+global runDate
+set runDate " Sun  Mar 3 2002"
+
+global runTime
+set runTime " 0:53:47"
+
+set bbox {45.0 7.0 725 540}
+
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 45 42]
+set m1 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 45 178]
+set m2 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 400 7]
+set m3 [addModuleAtPosition "SCIRun" "Fields" "AttractNormals" 400 182]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 198 384]
+set m5 [addModuleAtPosition "SCIRun" "Render" "Viewer" 545 496]
+set m6 [addModuleAtPosition "SCIRun" "Fields" "Probe" 223 101]
+set m7 [addModuleAtPosition "SCIRun" "Fields" "AttractNormals" 400 251]
+set m8 [addModuleAtPosition "SCIRun" "DataIO" "FieldWriter" 400 383]
+set m9 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 581 8]
+set m10 [addModuleAtPosition "BioPSE" "Visualization" "ShowDipoles" 581 94]
+set m11 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 45 109]
+
+addConnection $m2 0 $m3 0
+addConnection $m2 0 $m6 0
+addConnection $m6 1 $m3 1
+addConnection $m3 0 $m7 0
+addConnection $m6 1 $m7 1
+addConnection $m7 0 $m4 0
+addConnection $m7 0 $m8 0
+addConnection $m9 0 $m10 0
+addConnection $m4 0 $m5 0
+addConnection $m1 0 $m5 1
+addConnection $m6 0 $m5 2
+addConnection $m10 1 $m5 3
+addConnection $m11 0 $m1 0
+addConnection $m0 0 $m11 0
+
+set $m0-filename $DATADIR/$DATASET/$DATASET-mesh.tvt.fld
+
+set $m1-nodes-on {0}
+set $m1-nodes-as-disks {0}
+set $m1-edges-on {1}
+set $m1-faces-on {0}
+set $m1-has_vec_data {0}
+set $m1-edge_display_type {Lines}
+set $m1-active_tab {Edges}
+set $m1-edge_scale [expr 0.01 * ${global-scale}]
+set $m1-resolution 10
+
+set $m2-filename $DATADIR/$DATASET/$DATASET-electrodes.pcd.fld
+
+set $m4-nodes-on {1}
+set $m4-nodes-as-disks {1}
+set $m4-vectors-on {1}
+set $m4-normalize-vectors {0}
+set $m4-has_vec_data {1}
+set $m4-node_display_type {Disks}
+set $m4-active_tab {Vectors}
+set $m4-node_scale [expr 0.04 * ${global-scale}]
+set $m4-vectors_scale [expr 0.1 * ${global-scale}]
+set $m4-resolution 20
+
+$m5 ui
+set $m5-ViewWindow_0-view-eyep-x ${view-eyep-x}
+set $m5-ViewWindow_0-view-eyep-y ${view-eyep-y}
+set $m5-ViewWindow_0-view-eyep-z ${view-eyep-z}
+set $m5-ViewWindow_0-view-lookat-x ${view-lookat-x}
+set $m5-ViewWindow_0-view-lookat-y ${view-lookat-y}
+set $m5-ViewWindow_0-view-lookat-z ${view-lookat-z}
+set $m5-ViewWindow_0-view-up-x ${view-up-x}
+set $m5-ViewWindow_0-view-up-y ${view-up-y}
+set $m5-ViewWindow_0-view-up-z ${view-up-z}
+set $m5-ViewWindow_0-view-fov ${view-fov}
+set $m5-ViewWindow_0-specular-scale {0.4}
+
+set $m8-filename $DATADIR/$DATASET/$DATASET-electrodes.pcv.fld
+set $m8-filetype {ASCII}
+
+set $m9-filename $DATADIR/$DATASET/$DATASET-dipole.pcv.fld
+
+set $m10-widgetSizeGui_ [expr 0.07 * ${global-scale}]
+set $m10-scaleModeGui_ {fixed}
+set $m10-showLastVecGui_ {1}
+set $m10-showLinesGui_ {0}
+
+::netedit scheduleok

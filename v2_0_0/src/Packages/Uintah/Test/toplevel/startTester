@@ -1,0 +1,343 @@
+#!/bin/sh
+
+# to differentiate among the build names & even directories
+OS=`uname -s`
+
+BUILD_DIR=/local/csafe/raid1/tester/"$OS"
+SCRIPT_DIR=/local/csafe/raid1/tester/bin
+TEST_DATA=/usr/sci/projects/Uintah/tester/"$OS"-TestData
+TEMP_DIR=/usr/sci/projects/Uintah/tester/"$OS"
+USE_PREVTREE="no"
+USE_TREE="new"
+SEND_MAIL_TO=""
+MAIL_REMAKE_LOG_TO=""
+DEFAULT_MAIL_TO="csafe-homebrew@cs.utah.edu"
+DEFAULT_REMAKE_LOG_TO="kuzimmer@cs.utah.edu, bigler@cs.utah.edu, sparker@cs.utah.edu, dav@cs.utah.edu, worthen@cs.utah.edu"
+PARALLELISM=0
+VERBOSE="no"
+WEEKLY="0"
+NOTESTS="0"
+MONTHLYBACKUP="no"
+mallocstrict="no"
+LD_LIBRARY_PATH=""
+
+# test OS, if Linux or IRIX, set appropriate compiler env. vars, else, abort
+if [ "$OS" == "IRIX64" -o "$OS" == "IRIX" ]; then
+    CC=cc
+    CXX=CC
+    F77=f77
+elif [ "$OS" == "Linux" ]; then
+#    LD_LIBRARY_PATH="/usr/sci/local/gcc32/lib"
+    CC=gcc
+    CXX=c++
+    F77=g77
+
+else
+    echo "Unknown OS. Abort"
+    exit -1
+fi
+
+export OS CC CXX F77
+
+unset SHELL
+umask 002
+
+show_help=0
+if [ "$#" == 0 ]; then
+    show_help=1
+fi
+
+# command line arguments
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+    -sendmail)
+	SEND_MAIL_TO="$DEFAULT_MAIL_TO"
+	MAIL_REMAKE_LOG_TO="$DEFAULT_REMAKE_LOG_TO"
+	;;
+    -sendmailto)
+	if [ "$#" -gt 1 ]; then
+	    shift
+	    SEND_MAIL_TO="$1"
+	fi
+	;;
+    -verbose)
+        VERBOSE="yes"
+	;;
+    -use_prevtree)
+	USE_PREVTREE="yes"
+	;;
+    -use_tree)
+	if [ "$#" -gt 1 ]; then
+	    shift
+	    USE_TREE="$1"
+	fi
+	;;
+    -j)
+	if [ "$#" -gt 1 ]; then
+	    shift
+	    PARALLELISM="$1"
+	fi
+	;;
+
+    -weekly)
+        WEEKLY="1"
+        ;;
+    -build_only)
+        NOTESTS="1"
+        ;;
+    -monthlybackup)
+        MONTHLYBACKUP="1"
+        ;;
+    -malloc_strict)
+        mallocstrict="yes"
+        ;;
+     -help)
+	show_help=1
+	;;
+     *)
+	echo "$1: Unknown option, -help for help"
+	exit 1
+	;;
+     esac
+     shift
+done
+
+# usage string - exit
+if [ $show_help != "0" ]; then
+    cat <<EOF
+    Usage: startTester should only be run by at(1) or cron(1)
+	To run immediately, use "at now" with the path to this script as stdin.
+	Options:
+	    -sendmail:  Send error messages to the default people
+	    -sendmailto "emails":  Send error messages to these people
+	    -j #:  Use # number of processors maximum
+            -malloc_strict:  Have debug runs use malloc_strict 
+	    -use_tree "tree": Use the given tree instead of checking one out
+	    -use_prevtree: Use the previous (last_ran.lock) checkout and/or build
+	    -build_only:  Test the compilation only.  Don't run the tests.
+            -verbose: Display verbose output
+            -weekly:  Run longer regression tests (meant for once a week)
+	    -help:    Display this option summary
+EOF
+    exit 0
+fi
+
+if [ "$WEEKLY" == "1" ]; then
+  BUILD_DIR="$BUILD_DIR"/Weekly
+fi
+
+PATH="$PATH":"$SCRIPT_DIR":/usr/bin:/local/bin:/usr/sci/local/bin/:/usr/gnu/bin:/usr/local/bin:/bin:/usr/lib:.
+CVSROOT="/usr/sci/projects/cvsrepository"
+export PATH CVSROOT WEEKLY mallocstrict NOTESTS
+
+# set number of processors to use when building
+if [ "$PARALLELISM" == "0" ]; then
+    if [ "$OS" == "IRIX64" -o "$OS" == "IRIX" ]; then
+	MAKE_PARALLELISM=`/usr/sbin/sysconf NPROC_ONLN`
+    else
+	MAKE_PARALLELISM=1
+    fi
+else
+	MAKE_PARALLELISM="$PARALLELISM"
+fi
+
+# use /usr/var/tmp on machines that have it, with the assumption that it will
+# have more space than /tmp (true for burn at least)
+if [ -d /usr/var/tmp ]; then
+	TMPDIR=/usr/var/tmp
+	export TMPDIR
+fi
+
+export BUILD_DIR BUILDROOT TEST_DATA PARALLELISM MAKE_PARALLELISM SEND_MAIL_TO MAIL_REMAKE_LOG_TO
+
+if [ $VERBOSE == "yes" ]; then
+    echo "TIME STAMP: Regression Tester Starting at:"
+    date
+fi
+
+# find the ID to append to SCIRun based on time of run - i.e., SCIRun.080102
+if [ $WEEKLY == "1" ]; then
+  ID=`date +%a%b%d%y`
+else
+  ID=`date +%m%d%y`
+fi
+
+if [ $USE_TREE != "new" ]; then
+# use the SCIRun specified on the command line
+    cd "$USE_TREE"
+    BUILDROOT=`pwd`
+    cd ..
+    echo "Using tree at " > "$BUILDROOT"/log
+    echo "$BUILDROOT" >> "$BUILDROOT"/log
+    ID="$ID"-old
+elif [ $USE_PREVTREE == "yes" ]; then
+# use the previous build of SCIRun
+    if [ ! -d "${BUILD_DIR}/last_ran.lock" ]; then
+	echo "No previous build found"
+	echo "${BUILD_DIR}/last_ran.lock does not exist"
+	exit -1
+    fi
+    cd "${BUILD_DIR}/last_ran.lock"
+    BUILDROOT=`pwd`
+    cd ..
+    echo "Using previous tree at " > "$BUILDROOT"/log
+    echo "$BUILDROOT" >> "$BUILDROOT"/log
+    ID="$ID"-old
+else
+#check out the current version
+    if [ $VERBOSE == "yes" ]; then
+       echo "cd $BUILD_DIR"
+    fi
+    cd "$BUILD_DIR"
+
+    BUILDROOT="${BUILD_DIR}/SCIRun.${ID}"
+    if [ -d "$BUILDROOT" ]; then
+
+# don\t just set the ID directly, we have two different possibilities for ID
+	NID=`date +_%H`
+	ID="${ID}${NID}"
+	BUILDROOT="${BUILDROOT}${NID}"
+	if [ -d "$BUILDROOT" ]; then
+	    NID=`date +%M`
+	    ID="${ID}${NID}"
+	    BUILDROOT="${BUILDROOT}${NID}"
+	    if [ -d "$BUILDROOT" ]; then
+		echo "SCIRun.${ID} dir already exists"
+		exit -1
+	    fi
+	fi
+    fi
+
+
+    if [ $VERBOSE == "yes" ]; then
+       echo "mkdir $BUILDROOT"
+    fi
+
+    umask 002
+
+    mkdir "$BUILDROOT"
+
+    if [ -L "${BUILD_DIR}/last_ran.lock" ]; then
+	rm -f "${BUILD_DIR}/last_ran.lock" 
+    fi
+    ln -s "$BUILDROOT" "${BUILD_DIR}/last_ran.lock"
+
+    if [ $VERBOSE == "yes" ]; then
+      echo "Checking out latest version of Uintah at `date`" 
+    fi
+    echo "Checking out latest version of Uintah at `date` to " > "$BUILDROOT"/log
+    echo "$BUILDROOT" >> "$BUILDROOT"/log
+
+    if [ $VERBOSE == "yes" ]; then
+	echo "TIME STAMP: CVS CHECKOUT STARTING AT:"
+	date
+    fi
+    cd "$BUILD_DIR"
+
+    # right now in Linux there's a problem checking out into /local/csafe/raid1
+    if [ $OS = "Linux" ]; then
+	cd "$TEMP_DIR"
+        cvs checkout -P -N -d SCIRun."$ID" Uintah > "$BUILDROOT"/cvs_co.log 2>&1
+	retval=$?
+	mv SCIRun."$ID"/* "$BUILDROOT"
+    else
+        cvs checkout -P -N -d SCIRun."$ID" Uintah > "$BUILDROOT"/cvs_co.log 2>&1
+	retval=$?
+    fi
+
+    if [ $VERBOSE == "yes" ]; then
+      cat "$BUILDROOT"/cvs_co.log
+    fi
+
+    if [ $retval != "0" ]; then
+	echo "CVS checkout failed with code $retval"
+	echo "Look at ${BUILDROOT}/cvs_co.log for more information"
+	exit 1
+    fi
+
+    cd "$BUILDROOT"
+    rm -rf CVS/
+    cd SCIRun
+    mv * ..
+    cd ..
+    rm -rf SCIRun
+
+# link directly from the build root to the Uintah code
+    ln -s src/Packages/Uintah Uintah
+
+    cd "$BUILD_DIR"
+
+    if [ $VERBOSE == "yes" ]; then
+	echo "TIME STAMP: CVS CHECKOUT DONE AT:"
+	date
+    fi
+fi
+
+# set a lock once a month for six months
+if [ "$USE_TREE" == "new" -a "$USE_PREVTREE" == "no" -a `date +%d` == "01" -a "$MONTHLYBACKUP" == "1" -a "$WEEKLY" == "0" ]; then
+    if [ -L "5_month.lock" ]; then
+	mv -f "${BUILD_DIR}/5_month.lock" "${BUILD_DIR}/6_month.lock"
+    fi
+    if [ -L "4_month.lock" ]; then
+	mv -f "${BUILD_DIR}/4_month.lock" "${BUILD_DIR}/5_month.lock"
+    fi
+    if [ -L "3_month.lock" ]; then
+	mv -f "${BUILD_DIR}/3_month.lock" "${BUILD_DIR}/4_month.lock"
+    fi
+    if [ -L "2_month.lock" ]; then
+	mv -f "${BUILD_DIR}/2_month.lock" "${BUILD_DIR}/3_month.lock"
+    fi
+    if [ -L "1_month.lock" ]; then
+	mv -f "${BUILD_DIR}/1_month.lock" "${BUILD_DIR}/2_month.lock"
+    fi
+    ln -s "$BUILDROOT" "${BUILD_DIR}/1_month.lock" 
+fi
+
+# where the webpage will be, and init webpage
+if [ "$WEEKLY" == "0" ]; then
+    HTMLLOG=/usr/sci/www/worthen/tester/"$OS"/SCIRun.${ID}
+    WEBLOG=http://www.sci.utah.edu/~worthen/tester/"$OS"/SCIRun.${ID}
+else
+    HTMLLOG=/usr/sci/www/worthen/tester/"$OS"/Weekly/SCIRun.${ID}
+    WEBLOG=http://www.sci.utah.edu/~worthen/tester/"$OS"/Weekly/SCIRun.${ID}
+fi
+# set configure command options based on architecture
+if [ "$OS" == "IRIX64" -o "$OS" == "IRIX" ]; then
+	DBG_CONFIGURE="'--enable-package=Uintah' '--enable-debug' '--enable-64bit' '--with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/petsc-2.1.1' '--with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/hypre-1.7.7b/src/hypre'"
+	OPT_CONFIGURE="'--enable-package=Uintah' '--enable-optimize=-Ofast -G0 -OPT:div_split=OFF' '--disable-sci-malloc' '--enable-assertion-level=0' '--enable-64bit' '--with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/petsc-2.1.1' '--with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/hypre-1.7.7b/src/hypre'"
+else
+	DBG_CONFIGURE="--enable-package='Uintah' --enable-debug --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.2-lam-32bit/petsc-2.1.1 --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.2-lam-32bit/hypre-1.7.7b/src/hypre --with-mpi=/usr/local/lam-mpi"
+	OPT_CONFIGURE="--enable-package='Uintah' '--enable-optimize=-march=pentium4 -msse -msse2 -O3' --disable-sci-malloc --enable-assertion-level=0 --with-petsc=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.2-lam-32bit/petsc-2.1.1 --with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.2-lam-32bit/hypre-1.7.7b/src/hypre --with-mpi=/usr/local/lam-mpi"
+fi
+
+rm -f $HTMLLOG
+TITLE=`date`
+echo "<HTML><HEAD><TITLE> $OS tests on $TITLE</TITLE></HEAD><BODY><pre>" >> $HTMLLOG 
+echo "Regression Tester results from `hostname`" >> $HTMLLOG
+echo "Architecture: ${OS}" >> $HTMLLOG
+echo "" >> $HTMLLOG
+echo "Using build: ${BUILDROOT}" >> $HTMLLOG
+echo "LOG: $HTMLLOG" >> $HTMLLOG
+
+
+PATH="$BUILDROOT"/src/Packages/Uintah/Test/helpers:"$PATH"
+export PATH DBG_CONFIGURE OPT_CONFIGURE HTMLLOG WEBLOG VERBOSE
+
+if [ $VERBOSE == "yes" ]; then
+   echo "Running Tests"
+fi
+
+runTests
+retval=$?
+
+chgrp -R csafe $BUILDROOT
+chmod -R g+w $BUILDROOT
+
+
+if [ $VERBOSE == "yes" ]; then
+    echo "TIME STAMP: REGRESSION TESTER DONE AT:"
+    date
+fi
+
+exit $retval
+

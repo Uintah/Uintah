@@ -1,0 +1,439 @@
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
+  University of Utah. All Rights Reserved.
+-->
+
+<section id="sec.petsc">
+<title id="title.petsc"><acronym>PETSc</acronym></title>
+
+<section>
+<title>Introduction</title>
+
+<para>
+The <ulink url="http://www-unix.mcs.anl.gov/petsc/petsc-2/">Portable,
+Extensible, Toolkit for Scientific Computation</ulink>
+(<acronym>PETSc</acronym>) is a library of data structures and
+functions for the parallel solution of partial differential equations.
+</para>
+<para>
+When <acronym>PETSc</acronym> is installed (and &sr; is configured to
+use it), &sr;'s SolveMatrix module enables the use of
+<acronym>PETSc</acronym> solvers.
+</para>
+<para>
+The installation of <acronym>PETSc</acronym> is optional.  SolveMatrix
+provides built-in solvers if <acronym>PETSc</acronym> is not available.
+</para>
+<para>
+<acronym>PETSc</acronym> is built and installed from its source code
+distribution.
+</para>
+<note>
+<para>
+<itemizedlist>
+<listitem>
+<para>
+The &sr; <acronym>RPM</acronym> distribution does
+<emphasis>not</emphasis> include support for <acronym>PETSc</acronym>.
+<acronym>PETSc</acronym> support is available only through the &sr; source
+code distribution.
+</para>
+</listitem>
+<listitem>
+<para>
+&sr; only supports the uniprocessor build of <acronym>PETSc</acronym>.
+This is because &sr; assumes a shared memory architecture, while
+multi-processor <acronym>PETSc</acronym> assumes a distributed memory
+architecture.
+</para>
+</listitem>
+<listitem>
+<para>
+The <acronym>BLAS</acronym> and <acronym>LAPACK</acronym> libraries
+must be installed before installing <acronym>PETSc</acronym>.  See
+<citetitle pubwork="section"><xref endterm="title.blas_lapack_inst"
+linkend="sec.blas_lapack_inst"/></citetitle> for installation
+instructions.
+</para>
+</listitem>
+<listitem>
+<para>
+<acronym>PETSc</acronym> must be installed before 
+installing &sr;. See <citetitle pubwork="section"><xref
+endterm="title.petsc_inst" linkend="sec.petsc_inst"/></citetitle> for
+<acronym>PETSc</acronym> installation instructions.
+</para>
+</listitem>
+<listitem>
+<para>
+&sr; must be configured to support <acronym>PETSc</acronym>.  See
+<citetitle pubwork="section"><xref
+endterm="title.petsc_sr_config" linkend="sec.petsc_sr_config"/></citetitle>
+</para>
+</listitem>
+</itemizedlist>
+</para>
+<para>
+Start a terminal application before proceeding.  Command line tools
+are used to install <acronym>PETSc</acronym> and
+<acronym>BLAS</acronym>/<acronym>LAPACK</acronym>.
+</para>
+</note>
+
+</section>
+
+<section id="sec.petsc_download">
+<title id="title.petsc_download">Download and Unpack</title>
+<para>
+Download and unpack <acronym>PETSc</acronym>'s source distribution:
+<orderedlist>
+<listitem>
+<para>
+Browser download:
+<literallayout class="monospaced"> <ulink url="ftp://ftp.mcs.anl.gov/pub/petsc/petsc.tar.gz">ftp://ftp.mcs.anl.gov/pub/petsc/petsc.tar.gz</ulink>
+</literallayout>
+</para>
+</listitem>
+<listitem>
+<para>
+Unpack:
+<literallayout class="monospaced">
+gunzip -c petsc.tar.gz | tar xvf -
+</literallayout>
+creates the directory
+<filename>petsc-<replaceable>x.x.x</replaceable></filename> where
+<replaceable>x.x.x</replaceable> is the <acronym>PETSc</acronym> version.
+</para>
+</listitem>
+</orderedlist>
+</para>
+</section>
+
+<section>
+<title>Environment Variables</title>
+<para>
+Environment variables <envar>PETSC_DIR</envar> and
+<envar>PETSC_ARCH</envar> must be set before proceeding.  They must be
+set before building <acronym>BLAS</acronym>/<acronym>LAPACK</acronym>
+and <acronym>PETSc</acronym>.
+</para>
+<para>
+<envar>PETSC_DIR</envar> is the path to
+the (unpacked) <acronym>PETSc</acronym> distribution. 
+For csh-type shells type:
+<literallayout class="monospaced">
+setenv PETSC_DIR <replaceable>path-to-petsc</replaceable>
+</literallayout>
+For sh-type shells type:
+<literallayout class="monospaced">
+PETSC_DIR=<replaceable>path-to-petsc</replaceable>
+export PETSC_DIR
+</literallayout>
+</para>
+<para>
+<envar>PETSC_ARCH</envar> specifies a computer architecture.
+Its value must be set to one of <literal>linux</literal>,
+<literal>IRIX</literal> (for 32-bit Irix builds), or
+<literal>IRIX64</literal> (for 64-bit Irix builds).  For example,
+for csh-type shells type:
+<literallayout class="monospaced">
+setenv PETSC_ARCH IRIX
+</literallayout>
+for sh-type shells type:
+<literallayout class="monospaced">
+PETSC_ARCH=IRIX
+export PETSC_ARCH
+</literallayout>
+</para>
+</section>
+
+<section id="sec.blas_lapack_inst">
+<title id="title.blas_lapack_inst">
+<acronym>BLAS</acronym> and <acronym>LAPACK</acronym>
+</title>
+
+<para>
+<acronym>PETSc</acronym> depends on <acronym>BLAS</acronym>
+and <acronym>LAPACK</acronym>, so they must be installed before installing
+<acronym>PETSc</acronym>.  A vendor version of <acronym>BLAS</acronym>
+is recommended.  <acronym>BLAS</acronym> and <acronym>LAPACK</acronym>
+may already be installed.  Check with the system administrator.
+<link linkend="sec.petsc_inst">Skip</link>
+this section if <acronym>BLAS</acronym> and <acronym>LAPACK</acronym>
+are installed.
+</para>
+
+<para>
+<acronym>BLAS</acronym>/<acronym>LAPACK</acronym> can be installed from <link
+linkend="sec.blas_lapack_rpm"><acronym>RPM</acronym>'s (Linux)</link>
+or a combined <acronym>BLAS</acronym>/<acronym>LAPACK</acronym> <link linkend="sec.blas_lapack_source">source distribution
+(SGI)</link>.  Linux users should install the <acronym>RPM</acronym>s.
+</para>
+
+<section id="sec.blas_lapack_rpm">
+<title id="title.blas_lapack_rpm"><acronym>RPM</acronym>s
+(Linux)</title>
+<para>
+Root privileges are needed to install the
+<acronym>BLAS</acronym>/<acronym>LAPACK</acronym>
+<acronym>RPM</acronym>s.
+</para>
+<para>
+Use a browser to download <acronym>BLAS</acronym> and
+<acronym>LAPACK</acronym> <acronym>RPM</acronym>s for Linux:
+<literallayout class="monospaced">
+<ulink url="http://www.netlib.org/lapack/rpms/lapack-3_0-2_i386.rpm">http://www.netlib.org/lapack/rpms/lapack-3_0-2_i386.rpm</ulink> 
+</literallayout>
+and
+<literallayout class="monospaced">
+<ulink url="http://www.netlib.org/lapack/rpms/blas-3_0-2_i386.rpm">http://www.netlib.org/lapack/rpms/blas-3_0-2_i386.rpm</ulink>
+</literallayout>
+</para>
+<para>
+Become root user:
+<literallayout class="monospaced">
+su -
+</literallayout>
+and install the <acronym>BLAS</acronym>/<acronym>LAPACK</acronym>
+<acronym>RPM</acronym>s:
+<literallayout class="monospaced">
+rpm -ivh blas-3_0-2_i386.rpm
+rpm -ivh lapack-3_0-2_i386.rpm
+</literallayout>
+Type <command>exit</command> to leave the root account.
+</para>
+</section>
+
+<section id="sec.blas_lapack_source">
+<title id="title.blas_lapack_source">Source Code (SGI)</title>
+
+<para>
+Follow these steps to install <acronym>BLAS</acronym> and
+<acronym>LAPACK</acronym> from the combined source distribution:
+<orderedlist>
+<listitem>
+<para>
+Download the source distribution:
+<literallayout class="monospaced">
+<ulink url="ftp://ftp.mcs.anl.gov/pub/petsc/fblaslapack.tar.gz">ftp://ftp.mcs.anl.gov/pub/petsc/fblaslapack.tar.gz</ulink>
+</literallayout>
+</para>
+</listitem>
+<listitem>
+<para>
+Unpack the <acronym>BLAS</acronym>/<acronym>LAPACK</acronym>
+distribution:
+<literallayout class="monospaced">
+gunzip -c fblaslapack.tar.gz | tar xvf -
+</literallayout>
+This creates the <filename>fblaslapack</filename> directory.
+</para>
+</listitem>
+<listitem>
+<para>
+Build <acronym>BLAS</acronym>/<acronym>LAPACK</acronym>:
+<literallayout class="monospaced">
+cd fblaslapack
+make
+</literallayout>
+This creates libraries <filename>libfblas.a</filename> and
+<filename>liblapack.a</filename> in directory
+<filename>fblaslapack</filename>.
+</para>
+</listitem>
+</orderedlist>
+</para>
+</section>
+
+</section>
+
+<section id="sec.petsc_inst">
+<title id="title.petsc_inst"><acronym>PETSc</acronym></title>
+
+<para>
+Follow these steps to build <acronym>PETSc</acronym>:
+<orderedlist>
+<listitem>
+<para>
+Change the working directory to the petsc directory:
+<literallayout class="monospaced">
+cd ${PETSC_DIR}
+</literallayout>
+</para>
+</listitem>
+<listitem>
+<para>
+Configure <acronym>PETSc</acronym> to use the uniprocessor
+<acronym>MPI</acronym> package.  
+</para>
+<para>
+With an editor (e.g. emacs or vi), open 
+<literallayout class="monospaced">
+<filename>${PETSC_DIR}/bmake/${PETSC_ARCH}/packages</filename>
+</literallayout>and make the following changes:
+<orderedlist>
+<listitem>
+<para>
+Find the line that begins with <quote><literal>BLASLAPACK_LIB
+=</literal></quote> (near the beginning of the file) and change it as
+follows:
+                  <itemizedlist>
+<listitem>
+<para>
+If using vendor supplied <acronym>BLAS</acronym>/
+<acronym>LAPACK</acronym> libraries or if using 
+the <acronym>RPM</acronym> installed libraries:
+<literallayout class="monospaced">
+BLASLAPACK_LIB = -llapack -lblas
+</literallayout>
+</para>
+</listitem>
+<listitem>
+<para>
+If using the source <acronym>BLAS</acronym>/<acronym>LAPACK</acronym>
+distribution:
+<literallayout class="monospaced">
+BLASLAPACK_LIB = -L <replaceable>path-to-fblaslapack</replaceable> -lflapack -lfblas
+</literallayout>
+</para>
+</listitem>
+</itemizedlist>
+</para>
+</listitem>
+<listitem>
+<para>
+Find the line that begins with
+<quote><literal>MPI_LIB =</literal></quote> and change it to:
+<literallayout class="monospaced">
+MPI_LIB = ${PETSC_DIR}/lib/lib${BOPT}/${PETSC_ARCH}/libmpiuni.a
+</literallayout>
+</para>
+</listitem>
+<listitem>
+<para>
+Find the line that begins with
+<quote><literal>MPI_INCLUDE =</literal></quote> and change it to
+<literallayout class="monospaced">
+MPI_INCLUDE = -I${PETSC_DIR}/src/sys/src/mpiuni
+</literallayout>
+</para>
+</listitem>
+<listitem>
+<para>
+Find the line that begins with
+<quote><literal>MPIRUN =</literal></quote> and change it to
+<literallayout class="monospaced">
+MPIRUN = ${PETSC_DIR}/lib/lib${BOPT}/${PETSC_ARCH}/libmpiuni.a
+</literallayout>
+</para>
+</listitem>
+</orderedlist>
+</para>
+</listitem>
+<listitem>
+<para>Compile <acronym>PETSc</acronym>.</para>
+<para>Type:
+<literallayout class="monospaced">
+make BOPT=O all
+</literallayout>
+</para>
+</listitem>
+</orderedlist>
+</para>
+
+
+
+</section>
+
+<section id="sec.petsc_sr_config">
+<title id="title.petsc_sr_config">Configuring &sr;</title> 
+
+<para>The configure options below add support for PETSc
+in &sr;.  Include these options in the &sr;
+<command>configure</command> command (see <citetitle
+pubwork="section"><xref linkend="sec.build-sr"
+endterm="title.build-sr"/></citetitle>).
+<variablelist>
+<varlistentry>
+<term><option>--with-unipetsc=<replaceable>path-to-petsc</replaceable></option></term>
+<listitem>
+<para>Specifies the path to the <acronym>PETSc</acronym> directory.
+</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><option>--with-blas=<replaceable>path-to-blas-libs</replaceable></option></term>
+<listitem>
+<para>Specifies the path to the <acronym>BLAS</acronym> libraries.
+Not needed if using a vendor supplied library or if the
+<acronym>BLAS</acronym> <acronym>RPM</acronym> was installed.</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><option>--with-lapack=<replaceable>path-to-lapack-libs</replaceable></option></term>
+<listitem>
+<para>Specifies the path to the <acronym>LAPACK</acronym> libraries.
+Not needed if using a vendor supplied library or if the
+<acronym>LAPACK</acronym> <acronym>RPM</acronym> was installed.</para>
+</listitem>
+</varlistentry>
+</variablelist>
+</para>
+<para>Here is an example <command>configure</command> command:
+<literallayout class="monospaced">
+../src/configure \
+  --with-thirdparty=/usr/local/&sr;/Thirdparty/1.10.0/Irix/CC-32bit \
+  --enable-package="BioPSE MatlabInterface Teem" \
+  --with-unipetsc=/usr/local/petsc \
+  --with-blas=/usr/local/lib \
+  --with-lapack=/usr/local/lib
+</literallayout></para>
+</section>
+
+<section>
+<title>The SolveMatrix Module</title>
+
+<para>When &sr; is built with <acronym>PETSc</acronym> support, the
+SolveMatrix module lets the user choose from one of 12
+<acronym>PETSc</acronym> solvers.</para>
+
+<para>SolveMatrix passes a copy of matrix data on its input ports
+to a call of <acronym>PETSc</acronym>'s <function>SLESSolve</function>
+function. SolveMatrix charts the progress of the solution while
+<acronym>PETSc</acronym> iterates.
+</para>
+</section>
+
+<section>
+<title>Next</title> 
+
+<para>Proceed to <citetitle pubwork="section"><xref
+linkend="sec.itk_inst" endterm="title.itk_inst"/></citetitle> when
+also adding support for the Insight toolkit.  Otherwise proceed to <citetitle
+pubwork="section"><xref linkend="sec.source_inst"
+endterm="title.source_inst"/></citetitle> after <acronym>PETSc has
+been installed.</acronym></para>
+</section>
+
+</section>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-default-dtd-file:"../../Utilities/XML/docbook.ced"
+sgml-omittag:nil
+sgml-shorttag:nil
+End:
+-->

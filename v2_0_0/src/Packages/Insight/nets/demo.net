@@ -1,0 +1,216 @@
+# SCI Network 1.0
+
+set DATADIR .
+if [info exists env(INSIGHT_DATA)] {
+   set DATADIR $env(INSIGHT_DATA)
+}
+
+::netedit dontschedule
+
+set m0 [addModuleAtPosition "Insight" "DataIO" "ImageReaderFloat3D" 281 12]
+set m1 [addModuleAtPosition "Insight" "Converters" "ImageToField" 281 103]
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 338 187]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 263 266]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "GLTextureBuilder" 57 184]
+set m5 [addModuleAtPosition "SCIRun" "Visualization" "TexCuttingPlanes" 245 373]
+set m6 [addModuleAtPosition "SCIRun" "Render" "Viewer" 227 627]
+set m7 [addModuleAtPosition "SCIRun" "Visualization" "TextureVolVis" 57 401]
+set m8 [addModuleAtPosition "SCIRun" "Visualization" "GenTransferFunc" 75 320]
+set m9 [addModuleAtPosition "Insight" "Filters" "GradientAnisotropicDiffusionImageFilter" 887 93]
+set m10 [addModuleAtPosition "Insight" "Filters" "ThresholdSegmentationLevelSetImageFilter" 869 184]
+set m11 [addModuleAtPosition "Insight" "DataIO" "ImageReaderFloat3D" 684 94]
+set m12 [addModuleAtPosition "Insight" "Converters" "ImageToField" 869 333]
+set m13 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 869 424]
+set m14 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 577 188]
+
+addConnection $m2 0 $m3 0
+addConnection $m1 0 $m3 1
+addConnection $m1 0 $m4 0
+addConnection $m4 0 $m5 0
+addConnection $m3 0 $m5 1
+addConnection $m4 0 $m7 0
+addConnection $m8 0 $m7 1
+addConnection $m0 0 $m9 0
+addConnection $m0 0 $m1 0
+addConnection $m9 0 $m10 1
+addConnection $m11 0 $m10 0
+addConnection $m10 0 $m12 0
+addConnection $m12 0 $m13 0
+addConnection $m1 0 $m14 0
+addConnection $m7 0 $m6 0
+addConnection $m5 0 $m6 1
+addConnection $m14 1 $m6 2
+addConnection $m13 1 $m6 3
+
+set $m0-notes {}
+set $m0-filename $DATADIR/case1seed.mhd
+set $m1-notes {}
+set $m1-copy {0}
+set $m2-notes {}
+set $m2-tcl_status {Calling GenStandardColorMaps!}
+set $m2-positionList {}
+set $m2-nodeList {}
+set $m2-width {1}
+set $m2-height {1}
+set $m2-mapType {3}
+set $m2-minRes {12}
+set $m2-resolution {255}
+set $m2-realres {255}
+set $m2-gamma {0}
+set $m3-notes {}
+set $m3-isFixed {0}
+set $m3-min {0}
+set $m3-max {1}
+set $m3-makeSymmetric {0}
+set $m4-notes {}
+set $m4-is_fixed {0}
+set $m4-max_brick_dim {128}
+set $m4-sel_brick_dim {128}
+set $m4-min {0}
+set $m4-max {1}
+set $m5-notes {}
+set $m5-control_pos_saved {1}
+set $m5-control_x {          6.38583}
+set $m5-control_y {          24.6482}
+set $m5-control_z {          32.4426}
+set $m5-drawX {1}
+set $m5-drawY {1}
+set $m5-drawZ {0}
+set $m5-drawView {0}
+set $m5-interp_mode {1}
+set $m5-draw_phi_0 {0}
+set $m5-draw_phi_1 {0}
+set $m5-phi_0 {50.0}
+set $m5-phi_1 {60.0}
+set $m5-cyl_active {0}
+set $m6-notes {}
+$m6 ui
+set $m6-ViewWindow_0-pos {y1_x1}
+set $m6-ViewWindow_0-caxes {0}
+set $m6-ViewWindow_0-raxes {1}
+set $m6-ViewWindow_0-iaxes {}
+set $m6-ViewWindow_0-have_collab_vis {0}
+set $m6-ViewWindow_0-view-eyep-x {         -125.212}
+set $m6-ViewWindow_0-view-eyep-y {         -339.105}
+set $m6-ViewWindow_0-view-eyep-z {          451.584}
+set $m6-ViewWindow_0-view-lookat-x {          2.82345}
+set $m6-ViewWindow_0-view-lookat-y {          11.9197}
+set $m6-ViewWindow_0-view-lookat-z {         -8.76416}
+set $m6-ViewWindow_0-view-up-x {         0.315523}
+set $m6-ViewWindow_0-view-up-y {        -0.794846}
+set $m6-ViewWindow_0-view-up-z {        -0.518329}
+set $m6-ViewWindow_0-view-fov {               20}
+set $m6-ViewWindow_0-view-eyep_offset-x {}
+set $m6-ViewWindow_0-view-eyep_offset-y {}
+set $m6-ViewWindow_0-view-eyep_offset-z {}
+set $m6-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m6-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m6-ViewWindow_0-bgcolor-r {                0}
+set $m6-ViewWindow_0-bgcolor-g {                0}
+set $m6-ViewWindow_0-bgcolor-b {                0}
+set $m6-ViewWindow_0-shading {}
+set $m6-ViewWindow_0-do_stereo {0}
+set $m6-ViewWindow_0-ambient-scale {1.0}
+set $m6-ViewWindow_0-diffuse-scale {1.0}
+set $m6-ViewWindow_0-specular-scale {0.4}
+set $m6-ViewWindow_0-emission-scale {1.0}
+set $m6-ViewWindow_0-shininess-scale {1.0}
+set $m6-ViewWindow_0-polygon-offset-factor {1.0}
+set $m6-ViewWindow_0-polygon-offset-units {0.0}
+set $m6-ViewWindow_0-point-size {1.0}
+set $m6-ViewWindow_0-line-width {1.0}
+set $m6-ViewWindow_0-sbase {0.40}
+set $m6-ViewWindow_0-sr {1}
+set $m6-ViewWindow_0-do_bawgl {0}
+set $m6-ViewWindow_0-drawimg {}
+set $m6-ViewWindow_0-saveprefix {}
+set $m6-ViewWindow_0-resx {}
+set $m6-ViewWindow_0-resy {}
+set $m6-ViewWindow_0-aspect {}
+set $m6-ViewWindow_0-aspect_ratio {}
+set $m6-ViewWindow_0-global-light {1}
+set $m6-ViewWindow_0-global-fog {0}
+set $m6-ViewWindow_0-global-debug {0}
+set $m6-ViewWindow_0-global-clip {0}
+set $m6-ViewWindow_0-global-cull {0}
+set $m6-ViewWindow_0-global-dl {0}
+set $m6-ViewWindow_0-global-type {Gouraud}
+set $m6-ViewWindow_0-ortho-view {0}
+set $m6-ViewWindow_0-unused {1}
+set $m6-ViewWindow_0-unused {1}
+set $m6-ViewWindow_0-unused {1}
+set $m6-ViewWindow_0-unused {1}
+set $m7-notes {}
+set $m7-num_slices {390}
+set $m7-draw_mode {2}
+set $m7-render_style {2}
+set $m7-alpha_scale {0.085}
+set $m7-interp_mode {1}
+set $m8-notes {}
+set $m8-rgbhsv {0}
+set $m8-linespline {0}
+set $m9-notes {}
+set $m9-time_step {0.100}
+set $m9-iterations {6}
+set $m9-conductance_parameter {0.5}
+set $m10-notes {}
+set $m10-lower_threshold {35000}
+set $m10-upper_threshold {50000}
+set $m10-curvature_scaling {2.0}
+set $m10-propagation_scaling {0.5}
+set $m10-edge_weight {1.0}
+set $m10-max_iterations {500}
+set $m10-max_rms_change {0.02}
+set $m10-reverse_expansion_direction {1}
+set $m10-isovalue {0.5}
+set $m10-smoothing_iterations {0}
+set $m10-smoothing_time_step {0.1}
+set $m10-smoothing_conductance {0.5}
+set $m11-notes {}
+set $m11-filename $DATADIR/case1cropisosm.mhd
+set $m12-notes {}
+set $m12-copy {0}
+set $m13-notes {}
+set $m13-isoval {1.0096}
+set $m13-isoval-min {               -4}
+set $m13-isoval-max {                4}
+set $m13-isoval-typed {0}
+set $m13-isoval-quantity {1}
+set $m13-quantity-range {colormap}
+set $m13-quantity-min {0}
+set $m13-quantity-max {100}
+set $m13-isoval-list {0.0 1.0 2.0 3.0}
+set $m13-extract-from-new-field {1}
+set $m13-algorithm {1}
+set $m13-build_trisurf {0}
+set $m13-np {1}
+set $m13-active-isoval-selection-tab {0}
+set $m13-active_tab {NOISE}
+set $m13-update_type {on release}
+set $m13-color-r {0.91}
+set $m13-color-g {0.00}
+set $m13-color-b {0.00}
+set $m14-notes {}
+set $m14-isoval {37348}
+set $m14-isoval-min {0}
+set $m14-isoval-max {1}
+set $m14-isoval-typed {0}
+set $m14-isoval-quantity {1}
+set $m14-quantity-range {colormap}
+set $m14-quantity-min {0}
+set $m14-quantity-max {100}
+set $m14-isoval-list {0.0 1.0 2.0 3.0}
+set $m14-extract-from-new-field {1}
+set $m14-algorithm {1}
+set $m14-build_trisurf {0}
+set $m14-np {1}
+set $m14-active-isoval-selection-tab {0}
+set $m14-active_tab {NOISE}
+set $m14-update_type {on release}
+set $m14-color-r {0.00}
+set $m14-color-g {0.88}
+set $m14-color-b {0.06}
+$m5 initialize_ui
+$m7 initialize_ui
+
+::netedit scheduleok

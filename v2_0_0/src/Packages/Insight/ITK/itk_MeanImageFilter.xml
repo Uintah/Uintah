@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<!DOCTYPE filter-itk SYSTEM "itk_filter.dtd">
+<filter-itk name="itk::MeanImageFilter">
+  <description>
+Applies an averaging filter to an image.  Computes an image where a given pixel is the mean value of the the pixels in a neighborhood about the corresponding input pixel. 
+  </description>
+  <templated>
+    <template>InputImageType</template>
+    <template>OutputImageType</template>
+    <defaults>
+      <default>itk::Image&lt;float, 2&gt;</default>
+      <default>itk::Image&lt;float, 2&gt;</default>
+    </defaults>
+    <defaults>
+      <default>itk::Image&lt;float, 3&gt;</default>
+      <default>itk::Image&lt;float, 3&gt;</default>
+    </defaults>
+  </templated>
+
+  <datatypes>
+    <datatype name="FilterType::InputSizeType">
+      <member-var type="array">
+        <elem-type>int</elem-type>
+        <size-call>GetSizeDimension</size-call>
+      </member-var>
+    </datatype>
+  </datatypes>
+
+  <inputs>
+    <input name="InputImage">
+      <type>InputImageType</type>
+      <call>SetInput</call>
+    </input>  
+  </inputs>
+  <outputs>
+    <output name="OutputImage">
+      <type>OutputImageType</type>
+      <call>GetOutput</call>
+    </output>
+  </outputs>
+
+  <parameters>
+    <param>
+      <name>radius</name>
+      <type>FilterType::InputSizeType</type>
+      <call>SetRadius</call>
+    </param>
+  </parameters>
+
+  <includes>
+    <file>itkMeanImageFilter.h</file>
+  </includes>
+</filter-itk>

@@ -1,0 +1,204 @@
+# SCI Network 1.0
+
+::netedit dontschedule
+
+set m0 [addModuleAtPosition "SCIRun" "Fields" "MapDataToMeshCoord" 292 539]
+set m1 [addModuleAtPosition "Fusion" "DataIO" "FusionFieldReader" 292 15]
+set m2 [addModuleAtPosition "SCIRun" "Fields" "FieldSlicer" 292 193]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 292 722]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 529 359]
+set m5 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 529 445]
+set m6 [addModuleAtPosition "SCIRun" "Render" "Viewer" 274 818]
+set m7 [addModuleAtPosition "Fusion" "Fields" "FusionSlicePlot" 33 457]
+set m8 [addModuleAtPosition "SCIRun" "Fields" "FieldSubSample" 292 108]
+set m9 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 292 298]
+set m10 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 292 459]
+set m11 [addModuleAtPosition "SCIRun" "Math" "LinAlgUnary" 310 374]
+set m12 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 292 634]
+set m13 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 33 565]
+
+addConnection $m4 0 $m5 0
+addConnection $m5 0 $m3 1
+addConnection $m1 0 $m8 0
+addConnection $m8 0 $m2 0
+addConnection $m9 1 $m11 0
+addConnection $m11 0 $m10 1
+addConnection $m9 0 $m10 0
+addConnection $m10 0 $m0 0
+addConnection $m1 0 $m5 1
+addConnection $m2 0 $m9 0
+addConnection $m0 0 $m12 0
+addConnection $m12 0 $m3 0
+addConnection $m9 1 $m12 1
+addConnection $m2 0 $m7 0
+addConnection $m7 0 $m13 0
+addConnection $m5 0 $m13 1
+addConnection $m13 0 $m6 0
+addConnection $m3 0 $m6 1
+
+set $m0-notes {}
+set $m0-show_status {1}
+set $m0-coord {3}
+set $m1-notes {}
+set $m1-show_status {1}
+set $m1-filename {/home/sci/allen/SCIRUN/SCIRunData/fusion/NIMROD_10089_00.mds}
+set $m2-notes {}
+set $m2-show_status {1}
+set $m2-axis {2}
+set $m2-dims {3}
+set $m2-i-dim {78}
+set $m2-j-dim {49}
+set $m2-k-dim {11}
+set $m2-i-index {0}
+set $m2-j-index {0}
+set $m2-k-index {0}
+set $m3-notes {}
+set $m3-show_status {1}
+set $m3-nodes-on {0}
+set $m3-nodes-as-disks {0}
+set $m3-edges-on {0}
+set $m3-edges-transparency {0}
+set $m3-faces-on {1}
+set $m3-use-normals {0}
+set $m3-use-transparency {0}
+set $m3-vectors-on {0}
+set $m3-normalize-vectors {}
+set $m3-has_vector_data {0}
+set $m3-bidirectional {0}
+set $m3-arrow-heads-on {1}
+set $m3-tensors-on {0}
+set $m3-has_tensor_data {0}
+set $m3-text-on {0}
+set $m3-text-use-default-color {1}
+set $m3-text-color-r {1.0}
+set $m3-text-color-g {1.0}
+set $m3-text-color-b {1.0}
+set $m3-text-backface-cull {0}
+set $m3-text-fontsize {1}
+set $m3-text-precision {2}
+set $m3-text-render_locations {0}
+set $m3-text-show-data {1}
+set $m3-text-show-nodes {0}
+set $m3-text-show-edges {0}
+set $m3-text-show-faces {0}
+set $m3-text-show-cells {0}
+set $m3-def-color-r {0.5}
+set $m3-def-color-g {0.5}
+set $m3-def-color-b {0.5}
+set $m3-def-color-a {0.5}
+set $m3-node_display_type {Spheres}
+set $m3-edge_display_type {Lines}
+set $m3-data_display_type {Arrows}
+set $m3-tensor_display_type {Boxes}
+set $m3-active_tab {Nodes}
+set $m3-node_scale {0.03}
+set $m3-edge_scale {0.015}
+set $m3-vectors_scale {0.30}
+set $m3-tensors_scale {0.30}
+set $m3-show_progress {}
+set $m3-interactive_mode {Interactive}
+set $m3-node-resolution {6}
+set $m3-edge-resolution {6}
+set $m3-data-resolution {6}
+set $m4-notes {}
+set $m4-show_status {1}
+set $m4-tcl_status {Calling GenStandardColorMaps!}
+set $m4-positionList {}
+set $m4-nodeList {}
+set $m4-width {1}
+set $m4-height {1}
+set $m4-mapType {3}
+set $m4-minRes {12}
+set $m4-resolution {255}
+set $m4-realres {255}
+set $m4-gamma {0}
+set $m5-notes {}
+set $m5-show_status {1}
+set $m5-isFixed {0}
+set $m5-min {      1.04083e-17}
+set $m5-max {           476463}
+set $m5-makeSymmetric {0}
+set $m6-notes {}
+set $m6-show_status {1}
+set $m7-notes {}
+set $m7-show_status {1}
+set $m7-scale {0.200}
+set $m8-notes {}
+set $m8-show_status {1}
+set $m8-wrap {1}
+set $m8-dims {3}
+set $m8-i-dim {385}
+set $m8-j-dim {192}
+set $m8-k-dim {10}
+set $m8-i-start {0}
+set $m8-j-start {0}
+set $m8-k-start {0}
+set $m8-i-stop {384}
+set $m8-j-stop {0}
+set $m8-k-stop {0}
+set $m8-i-stride {10}
+set $m8-j-stride {5}
+set $m8-k-stride {1}
+set $m8-i-wrap {0}
+set $m8-j-wrap {1}
+set $m8-k-wrap {1}
+set $m9-notes {}
+set $m9-show_status {1}
+set $m10-notes {}
+set $m10-show_status {1}
+set $m11-notes {}
+set $m11-show_status {1}
+set $m11-op {Function}
+set $m11-function {x*0.000001}
+set $m12-notes {}
+set $m12-show_status {1}
+set $m13-notes {}
+set $m13-show_status {1}
+set $m13-nodes-on {0}
+set $m13-nodes-as-disks {0}
+set $m13-edges-on {0}
+set $m13-edges-transparency {0}
+set $m13-faces-on {1}
+set $m13-use-normals {0}
+set $m13-use-transparency {0}
+set $m13-vectors-on {0}
+set $m13-normalize-vectors {}
+set $m13-has_vector_data {0}
+set $m13-bidirectional {0}
+set $m13-arrow-heads-on {1}
+set $m13-tensors-on {0}
+set $m13-has_tensor_data {0}
+set $m13-text-on {0}
+set $m13-text-use-default-color {1}
+set $m13-text-color-r {1.0}
+set $m13-text-color-g {1.0}
+set $m13-text-color-b {1.0}
+set $m13-text-backface-cull {0}
+set $m13-text-fontsize {1}
+set $m13-text-precision {2}
+set $m13-text-render_locations {0}
+set $m13-text-show-data {1}
+set $m13-text-show-nodes {0}
+set $m13-text-show-edges {0}
+set $m13-text-show-faces {0}
+set $m13-text-show-cells {0}
+set $m13-def-color-r {0.5}
+set $m13-def-color-g {0.5}
+set $m13-def-color-b {0.5}
+set $m13-def-color-a {0.5}
+set $m13-node_display_type {Spheres}
+set $m13-edge_display_type {Lines}
+set $m13-data_display_type {Arrows}
+set $m13-tensor_display_type {Boxes}
+set $m13-active_tab {Nodes}
+set $m13-node_scale {0.03}
+set $m13-edge_scale {0.015}
+set $m13-vectors_scale {0.30}
+set $m13-tensors_scale {0.30}
+set $m13-show_progress {}
+set $m13-interactive_mode {Interactive}
+set $m13-node-resolution {6}
+set $m13-edge-resolution {6}
+set $m13-data-resolution {6}
+
+::netedit scheduleok

@@ -1,0 +1,12 @@
+void dynamic_1loop(constCCVariable<double> sij1, constCCVariable<double> sij2,
+     constCCVariable<double> sij3, constCCVariable<double> sij4,
+     constCCVariable<double> sij5, constCCVariable<double> sij6,
+     constCCVariable<double> ccuvel, constCCVariable<double> ccvvel,
+     constCCVariable<double> ccwvel, Array3<double> isi,
+     Array3<double> betaij1, Array3<double> betaij2,
+     Array3<double> betaij3, Array3<double> betaij4,
+     Array3<double> betaij5, Array3<double> betaij6,
+     Array3<double> uu, Array3<double> uv,
+     Array3<double> uw, Array3<double> vv,
+     Array3<double> vw, Array3<double> ww,
+     IntVector idxLo, IntVector idxHi);

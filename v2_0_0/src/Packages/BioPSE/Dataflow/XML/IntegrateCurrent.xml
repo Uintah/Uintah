@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../../../doc/package-component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<component name="IntegrateCurrent" category="Forward">
+  <overview>
+    <authors>
+      <author>David Weinstein</author>
+    </authors>
+    <summary>Compute the current across a surface.</summary>
+    <description>
+      <p>Version Date: January 2003</p>
+      <p>Version: 1.0</p>
+      <p>IntegrateCurrent calculates current flow across a surface.
+Required inputs are the electric field, mesh with conductivities,
+and a surface enclosing the current source(s).</p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>TetMesh EField</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>TetMesh Sigmas</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>TriSurf</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+    </outputs>
+  </io>
+  <testing>
+  </testing>
+</component>

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+
+<component name="EditPath" category="Render">
+  <overview>
+    <authors>
+      <author>Alexei Samsonov</author>
+    </authors>
+    <summary>Interactive tool  to edit and playback camera path in Viewer.</summary>
+    <description>
+      <p>EditPath module provides a set of interactive tools for creation and manipulation of
+   camera path in Viewer. The basic features of the modules are as follows:</p>
+    
+   <p>- Interactive adding/inserting/deleting of key frames of current camera position in edited path</p>
+   <p> - Navigation through existing key frames</p>
+   <p>- Three interpolation modes - Linear, Cubic and no interpolation (key frames only playback)</p>
+   <p>- Two acceleration modes - smooth start/end(in interpolated mode) and no acceleration</p>
+   <p>- Path step(smoothness) and sampling rate specification for current path</p>
+   <p>- Automatic generation of circle path based on current camera position and position of reference widget</p>
+   <p>- Looped and reversed path modes</p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdyamic="no">
+      <port>
+        <name>Path</name>
+	<datatype>SCIRun::Path</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Path</name>
+	<datatype>SCIRun::Path</datatype>
+      </port>
+      <port>
+        <name>Geometry</name>
+	<datatype>SCIRun::Geometry</datatype>
+      </port>
+      <port>
+        <name>Camera View</name>
+	<datatype>SCIRun::Path</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <img>../Modules/Render/doc/EditPathUI.jpg</img>
+  </gui>
+  <testing>
+  </testing>
+</component>

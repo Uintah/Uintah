@@ -1,0 +1,117 @@
+<?xml version="1.0"?>
+<!DOCTYPE filter-itk SYSTEM "itk_filter.dtd">
+<filter-itk name="itk::ThresholdSegmentationLevelSetImageFilter">
+  <description>
+  Segments structures in images based on image features derived from pseudo-canny-edges.
+  </description>
+  <templated>
+    <template>ImageType</template>
+    <template>FeatureImageType</template>
+    <defaults>
+      <default>itk::Image&lt;float, 2&gt;</default>
+      <default>itk::Image&lt;float, 2&gt;</default>
+      <default>float</default>
+    </defaults>
+  </templated>
+
+  <inputs>
+    <input name="SeedImage">
+      <type>ImageType</type>
+      <call>SetInput</call>
+    </input>  
+    <input name="FeatureImage">
+      <type>FeatureImageType</type>
+      <call>SetFeatureImage</call>
+    </input>  
+  </inputs>
+  <outputs>
+    <output name="OutputImage">
+      <type>FeatureImageType</type>
+      <call>GetOutput</call>
+    </output>
+    <output name="SpeedImage">
+      <type>ImageType</type>
+      <call const="yes">GetSpeedImage</call>
+    </output>
+  </outputs>
+
+  <parameters>
+    <param>
+      <name>lower_threshold</name>
+      <type>double</type>
+      <call>SetLowerThreshold</call>
+      <default>210</default>
+    </param>
+    <param>
+      <name>upper_threshold</name>
+      <type>double</type>
+      <call>SetUpperThreshold</call>
+      <default>250</default>
+    </param>
+    <param>
+      <name>curvature_scaling</name>
+      <type>double</type>
+      <call>SetCurvatureScaling</call>
+      <default>1</default>
+    </param>
+    <param>
+      <name>propagation_scaling</name>
+      <type>double</type>
+      <call>SetPropagationScaling</call>
+      <default>1</default>
+    </param>
+    <param>
+      <name>edge_weight</name>
+      <type>double</type>
+      <call>SetEdgeWeight</call>
+      <default>1.0</default>
+    </param>
+    <param>
+      <name>max_iterations</name>
+      <type>int</type>
+      <call>SetMaximumIterations</call>
+      <default>100</default>
+    </param>
+    <param>
+      <name>max_rms_change</name>
+      <type>double</type>
+      <call>SetMaximumRMSError</call>
+      <default>0.02</default>
+    </param>
+    <param>
+      <name>reverse_expansion_direction</name>
+      <type>bool</type>
+      <call value="on">ReverseExpansionDirectionOn</call>
+      <call value="off">ReverseExpansionDirectionOff</call>
+      <default>0</default>
+    </param>
+    <param>
+      <name>isovalue</name>
+      <type>double</type>
+      <call>SetIsoSurfaceValue</call>
+      <default>127.5</default>
+    </param>
+    <param>
+      <name>smoothing_iterations</name>
+      <type>int</type>
+      <call>SetSmoothingIterations</call>
+      <default>0</default>
+    </param>
+    <param>
+      <name>smoothing_time_step</name>
+      <type>double</type>
+      <call>SetSmoothingTimeStep</call>
+      <default>0.1</default>
+    </param>
+    <param>
+      <name>smoothing_conductance</name>
+      <type>double</type>
+      <call>SetSmoothingConductance</call>
+      <default>0.5</default>
+    </param>
+  </parameters>
+  <includes>
+    <file>itkThresholdSegmentationLevelSetImageFilter.h</file>
+  </includes>
+</filter-itk>
+

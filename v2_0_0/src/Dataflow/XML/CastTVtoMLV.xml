@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<component name="CastTVtoMLV" category="FieldsGeometry">
+  <overview>
+    <authors>
+      <author>Chris Moulding</author>
+    </authors>
+    <summary>
+      <p>
+      Convert a TetVolField to a MaskedLatVolField
+      </p>
+    </summary>
+    <description>
+      <p>
+      CastTVtoMLV will create a regular grid representation of a TetVolField.
+      </p>
+      <p>	
+      First it creates a XxYxZ MaskedLatVolField specified by the
+      dimensions in the GUI.  Then it scales and transform
+      the field to envelop the input TetVolField.  Then it masks out any
+      rectangular elements that do not intersect with the input
+      TetVolField.  All Values are then interpolated to the new
+      field.
+      </p>	    
+    </description>    
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>TetVolFieldMask</name>
+        <description>
+          <p>
+            The volume to be converted
+          </p>
+        </description>
+        <datatype>SCIRun::Field</datatype>
+        <componentname>GenField</componentname>
+        <componentname>ReadField</componentname>
+        <componentname>Kindlmann</componentname>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>LatVolField</name>
+        <description>
+          <p>
+            The converted volume
+          </p>
+        </description>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

@@ -1,0 +1,138 @@
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+  <chapter id="dev.dynamiccomp">
+    <title>Dynamic Compilation</title>
+
+    
+      <para>
+      This chapter introduces the concept of <firstterm>Dynamic
+      Compilation</firstterm> within SCIRun.
+    </para>
+    
+
+    <section>
+      <title>Introduction</title>
+      <para>
+      SCIRun makes extensive use of C++ templates.  Templates are a
+      powerful mechanism that allows writing algorithms or data
+      structures once, while allowing them to be usable with many
+      types of data.  However, in order to use any particular type of
+      data, the templates need to know about them at compile time.
+      Dynamic compilation allows templates written in
+      the past to be applied to new data types at run time by
+      dynamically compiling code.
+    </para>
+    </section>
+
+    <section>
+      <title>Disclosure</title>
+
+      <para>
+       The Disclosure directory contains objects that discover information 
+       about types, as well as objects that produce previously uncompiled
+       types.
+    </para>
+
+      <para>
+       This directory also contains the TypeDescription object, as well
+       as the DynamicLoader. TypeDescription gives a recursive definition 
+       of type at runtime.  One can query a string that indicates the type
+       from the this object. It also provides information that can by used 
+       by the DynamicLoader to compile types that support TypeDescription.
+    </para>
+      
+      <para>
+       The DynamicLoader writes a .cc file, compiles it, then loads in the .so
+       all at runtime.  The main function is to compile algorithms that are
+       templated on various field types in SCIRun. This gives SCIRun a minimal
+       set of template instantiation based on how a user happens to use 
+       SCIRun, as opposed to the combinatorial explosion of template bloat 
+       that is the alternative.
+    </para>
+    </section>
+
+    <section>
+      <title>Programming with SCIRun dynamic compilation</title>
+      <para>
+      A developer is likely to use this code from within modules that 
+      has a field port. A FieldHandle can be one of *many* types of fields.
+      An algorithm can be templated on the field, and use the DynamicLoader 
+      to manage compilation and loading of the algorithm without the 
+      module code ever needing to know the exact type of the field.
+    </para>
+      <para>
+       The main use of code in this directory is to compile and load 
+       templated algorithms for use in modules.
+    </para>
+
+      <section>
+	<title>get_type_description()</title>
+
+	<para>
+        There are many of these functions.  Each is overloaded on the type that
+        the returned TypeDescription supports. There must be one of these if
+        your type is to be supported in dynamic compilation.
+      </para>
+	<para>
+        An example of a simple get_type_description for int.
+      </para>
+	<programlisting>
+       const TypeDescription* get_type_description(int*)
+       {
+       	 static TypeDescription* td = 0;
+       	 static string nm("int");
+       	 static string path("builtin");
+       	 if(!td){
+       	   td = scinew TypeDescription(nm, path);
+       	 }
+       	 return td;
+       }
+      </programlisting>
+	<para>
+        An example of a templated get_type_description function.
+      </para>
+	<programlisting>
+       template &lt;class T &gt;
+       const TypeDescription* get_type_description(vector &lt;T &gt;*)
+       {
+         static TypeDescription* td = 0;
+         static string v("vector");
+         static string path("std::vector"); 
+         if(!td){
+           const TypeDescription *sub = SCIRun::get_type_description((T*)0);
+           TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
+           (*subs)[0] = sub;
+           td = scinew TypeDescription(v, subs, path);
+         }
+         return td;
+       }
+      </programlisting>
+      </section>
+    </section>
+  </chapter>
+
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-default-dtd-file:"../../../Utilities/XML/docbook.ced"
+sgml-omittag:nil
+sgml-shorttag:nil
+End:
+-->

@@ -1,0 +1,83 @@
+/*
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+*/
+
+
+#ifndef SCI_DEFS_H
+#define SCI_DEFS_H
+
+#define SCI_ASSERTION_LEVEL @ASSERTION_LEVEL@
+#define SCI_OPENGL
+#define SCI_NORM_OGL
+#define TEMPLATE_TAG @TEMPLATE_TAG@
+#define TEMPLATE_BOX @TEMPLATE_BOX@
+#define SCI_@NBITS@BITS
+@DEF_SCIRUN2@
+@DEF_HASHMAP@
+@DEF_THREAD@
+@DEF_MALLOC@
+@DEF_BLAS@
+@DEF_MPI@
+@DEF_MPIUNI@
+@DEF_SSL@
+@DEF_GLOBUS@
+@DEF_QT@
+@DEF_VDT@
+@DEF_MAGICK@
+@DEF_PNG@
+@DEF_MPEG@
+@DEF_TEEM@
+@DEF_PERFEX@
+@DEF_CRYPTO@
+@DEF_EXC@
+@DEF_OOGL@
+@DEF_AUDIO@
+@DEF_HYPRE@
+@DEF_MDSPLUS@
+@DEF_HDF5@
+@DEF_PLPLOT@
+@DEF_TCLMATRIX@
+@DEF_PETSC@
+@DEF_PETSC_UNI@
+@DEF_BABEL@
+@DEF_COLLAB_VIS@
+@DEF_INSIGHT@
+
+#define MAKE_CMMD "@MAKE@"
+
+/* MPI++ on SGI has a bad interaction with <iostream>.  This prevents
+   it from  being included.  We don't use it anyway. */
+#define MPIPP_H
+
+/* paths for alternate compilation directories */
+#define SCIRUN_SRCDIR "@abs_srcdir@"
+#define SCIRUN_OBJDIR "@abs_conftop_dir@"
+
+#define LOAD_PACKAGE "@LOAD_PACKAGE@"
+
+#define PSECORETCL "@abs_srcdir@/Dataflow/GUI"
+#define SCICORETCL "@abs_srcdir@/Core/GUI"
+#define ITCL_WIDGETS "@LIB_DIR_ITCL@/iwidgets/scripts"
+#define SRCTOP "@abs_srcdir@"
+#define OBJTOP "@abs_conftop_dir@"
+
+
+/* Someday, we should make this a config variable - it might help the
+   optimizer, at the cost of more difficult debugging */
+#define USE_SCI_THROW 0
+
+#endif
+

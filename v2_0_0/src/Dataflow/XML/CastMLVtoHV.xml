@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<component name="CastMLVtoHV" category="FieldsGeometry">
+  <overview>
+    <authors>
+      <author>Chris Moulding</author>
+    </authors>
+    <summary>
+      <p>
+      Convert a LatVolField to a HexVolField
+      </p>
+    </summary>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>MaskedLatVolField</name>
+        <description>
+          <p>
+            The volume to be converted
+          </p>
+        </description>
+        <datatype>SCIRun::Field</datatype>
+        <componentname>GenField</componentname>
+        <componentname>ReadField</componentname>
+        <componentname>Kindlmann</componentname>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>HexVolField</name>
+        <description>
+          <p>
+            The converted volume
+          </p>
+        </description>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

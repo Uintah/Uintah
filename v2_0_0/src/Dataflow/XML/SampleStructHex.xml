@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+
+<component name="SampleStructHex" category="FieldsCreate">
+  <overview>
+    <authors>
+      <author>Michael Callahan</author>
+    </authors>
+    <summary>
+      Make a StructHexVolField that fits the source field.
+    </summary>
+    <description>
+
+      <p> Make a StructHexVolField that fits the source field.  The
+      value type of the LatVolField is the same as that of the input
+      field.  If there is no input field specified, then create a unit
+      volume of doubles.  The size parameters refer to the number of
+      nodes in the volume, not the number of cells.  Thus a 2x2x2 node
+      lattice will only contain one cell. </p>
+
+      <p> The Pad Percentage parameter is an optional parameter that
+      describes how much larger than the input field the resulting
+      lattice volume should be.  For example, a value of 100 would
+      make the lattice volume be three times as far across and contain
+      twenty seven times the volume of a lattice with the default 0
+      padding.  A value of 50 would cause the lattice to be twice as
+      far across (50% bigger on each side).  </p>
+
+      <p> No interpolation is done onto the new field.  It is
+      recommended that the DirectInterpolate module be used if those
+      values are needed. </p>
+
+      <p> The default appearance of this field is not much different than that
+      produced by the SampleLattice.  However the points can be moved
+      independently of each other such that primitive modeling can be
+      done in conjunction with the ManageFieldMesh module.  See the
+      SampleStructHex.net sample network for an example. </p>
+
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+	<name>Input Field</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+	<name>Output Sample Field</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+  </io>
+  <testing>
+  </testing>
+</component>

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<component name="NrrdSelectTime" category="NrrdData">
+  <overview>
+    <authors>
+      <author>Martin Cole</author>
+    </authors>
+    <summary>
+      The NrrdSelectTime module allows users to select a single time
+step or column from a NrrdData that has a time axis.  The user can
+also select a range of time indecies and send them to the output port
+one at a time.  This module allows the user to animate Through a time
+series.
+    </summary>
+    <description>
+	<p>When the module runs in interactive mode, the user selects
+which vectors they want to include in the playback.  In the
+NrrdSelectTime module dialog window, Start and End sliders enable the
+user to set the playback range, the Current Value function specifies
+which row or column to send downstream, and the Delay function
+controls the time delay and speed of the animated points on the
+mesh.</p>
+      
+      <p>There are several Play Modes in the NrrdSelectTime GUI
+dialog window: Once, Loop, Bounce1, and Bounce2.  The Once mode plays
+the animation from current value to the end of the selected range of
+column and rows on the matrix.  The Loop mode plays the selected range
+endlessly, reversing directions after reaching the start or end of the
+range.  Bounce1 only plays endpoints once, while Bounce2 repeats them.
+For example, if the range is 1 through 3, Bounce1 will play { 1 2 3 2
+1 2 3 2 1 . . .}, while Bounce2 will play {1 2 3 3 2 1 2 3 3 2 1}.
+Using the Delay text field in the GUI dialog window, the user
+specifies a delay (in milliseconds) that controls the speed at which
+the selected rows or columns may be sent to the output port.</p>
+      
+      <p>The Increment entry can be used to skip through the input
+matrix by more than one element at a time.  This can be used with the
+Send Amount entry to send more than one row/column at a time. For
+instance, if both entries are set to three, the module will send three
+rows/columns at a time, which can then be mapped onto a vector field
+by the ManageFieldData module. </p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no"> 
+      <port>
+        <name>Time Axis nrrd</name>
+	<datatype>Teem::Nrrd</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Time Slice</name>
+	<datatype>Teem::Nrrd</datatype>
+      </port>
+    </outputs>
+  </io>
+  <testing>
+  </testing>
+</component>

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+ 
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+ 
+  The Original Source Code is SCIRun, released March 12, 2001.
+ 
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
+  University of Utah. All Rights Reserved.
+-->
+
+<component name="ChangeFieldDataAt" category="FieldsData">
+  <overview>
+    <authors>
+      <author>McKay Davis</author>
+    </authors>
+    <summary>
+      <p>
+      ChangeFieldDataAt will modifiy the data locations of the values
+  of the input field.
+      </p>
+    </summary>
+    <description>
+      <p>
+      Upon execution the UI will display the input field name and the
+      current location the data values for the field are located.  
+      </p>
+      <p>
+      The output field's data value location is selected from a list
+      of available locations.  The output field will contain the same
+      geometry as the input field with the data value storage at the
+      newly specified location.  All data values are reset to 0.
+      </p>
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Input Field</name>
+        <datatype>SCIRun::Field</datatype>
+	<description>
+          <p>
+            The field to be edited.
+          </p>
+        </description>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Output Field</name>
+        <datatype>SCIRun::Field</datatype>
+        <description>
+          <p>
+            The edited field.
+          </p>
+        </description>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <description>
+    </description>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

@@ -1,0 +1,108 @@
+#!/bin/sh
+
+# echos are commented to not output so much
+
+gold_standard_dir="$1"
+replacement_dir="$2"
+testname="$3"
+
+# prompt for and replace udas
+if [ $# -ne 3 ]; then
+  echo "usage: $0 <gold_standard_dir> <replacement_dir> <testname>"
+  exit 1
+fi
+if [ ! -d $gold_standard_dir/$testname ]; then
+  echo "$gold_standard_dir/$testname does not exist!"
+  exit 1
+fi
+
+if [ ! -d $replacement_dir/$testname/*.uda ]; then
+  echo "No udas to replace"
+else
+  echo "Replace the udas at $gold_standard_dir/$testname with $replacement_dir/$testname? (Enter 'yes' or 'y' to continue.) "
+    
+  read yesno
+
+
+  # remove the udas, and copy the new ones
+  if [ $yesno = "y" -o $yesno = "yes" ]; then
+  # echo "rm -rf $gold_standard_dir/$testname/*.uda"
+    echo "Replacing $testname udas"
+    rm -r $gold_standard_dir/$testname/*.uda
+    if [ $? != "0" ]; then
+      echo "$testname replacement failed - could not remove old udas"
+    fi
+
+    #  echo "cp -r --dereference $replacement_dir/$testname/*.uda $gold_standard_dir/$testname/."
+    # if it has a --dereference option, then use it
+    cp -r --dereference $replacement_dir/$testname/*.uda $gold_standard_dir/$testname/. > /dev/null 2>&1
+
+    # sometimes it doesn't work with --dereference...
+    if [ $? != "0" ]; then
+    # echo "Try without --dereference."
+    # echo "cp -r $replacement_dir/$testname/*.uda $gold_standard_dir/$testname/."
+      cp -r $replacement_dir/$testname/*.uda $gold_standard_dir/$testname/.
+      if [ $? != "0" ]; then
+	echo "$testname replacement failed - could not copy new udas"
+      fi
+    fi
+    echo "udas successfully replaced"
+  else
+    echo "udas not replaced"
+  fi
+fi
+
+if [ ! -f $gold_standard_dir/$testname/malloc_stats ]; then
+  echo "No memory stats to replace"
+else
+  
+  # replace the memory usage (both normal and restart)
+  echo "Replace $testname mem usage results? (Enter 'yes' or 'y' to continue.)"
+
+  read yesno
+  if [ $yesno = "y" -o $yesno = "yes" ]; then
+    echo "Replacing $testname memory results"
+    rm $gold_standard_dir/$testname/*malloc* > /dev/null 2>&1
+    cp $replacement_dir/$testname/malloc_stats $gold_standard_dir/$testname/. > /dev/null 2>&1
+    if [ $? != "0" ]; then
+      echo "No malloc_stats -- ok"
+    fi
+    cp $replacement_dir/$testname/restart/restart_malloc_stats $gold_standard_dir/$testname/. > /dev/null 2>&1
+    if [ $? != "0" ]; then
+      echo "No restart_malloc_stats -- ok"
+    fi
+  else
+    echo "No memory usage results replaced"
+  fi
+fi
+
+if [ ! -f $gold_standard_dir/$testname/timestamp ]; then
+  echo "No performance stats to replace"
+else
+
+  # replace the performance results (both normal and restart)
+  echo "Replace $testname performance results? (Enter 'yes' or 'y' to continue.)"
+  read yesno
+
+  if [ $yesno = "y" -o $yesno = "yes" ]; then
+    echo "Replacing $testname performance results"
+    rm "$gold_standard_dir/$testname/*timestamp" > /dev/null 2>&1
+    cp $replacement_dir/$testname/timestamp $gold_standard_dir/$testname/. > /dev/null 2>&1
+    if [ $? != "0" ]; then
+      echo "Performance results not replaced"
+    fi
+    cp $replacement_dir/$testname/restart/restart_timestamp $gold_standard_dir/$testname/. > /dev/null 2>&1
+    if [ $? != "0" ]; then
+      echo "Restart performance results not replaced"
+    fi
+  else
+    echo "No performance results replaced"
+  fi
+fi
+
+# change groups and permissions so (hopefully) anybody can replace them later
+find "$gold_standard_dir/$testname" -user `whoami` | /usr/bin/xargs chmod g+wrX,o+rX
+find "$gold_standard_dir/$testname" -user `whoami` | /usr/bin/xargs chgrp csafe
+
+echo
+

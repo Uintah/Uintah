@@ -1,0 +1,37 @@
+#!/usr/local/bin/python
+
+from os import symlink,environ
+from sys import argv,exit,platform
+from helpers.runSusTests import runSusTests, inputs_root
+from helpers.modUPS import modUPS
+
+matest_heptwb_cyl_8p_ups = modUPS("%s/MPMARCHES" % inputs_root(), \
+                           "matest_heptwb_cyl.ups", \
+                           ["<patches>[2,2,2]</patches>"])
+
+matest_heptwb_cyl_8patch_ups = modUPS("%s/MPMARCHES" % inputs_root(), \
+                           "matest_heptwb_cyl.ups", \
+                           ["<patches>[2,2,2]</patches>", "<resolution>[40,40,40]</resolution>" \
+                            "<maxTime>0.5</maxTime>"])
+
+TESTS = [   ("matest_heptwb_cyl", "matest_heptwb_cyl.ups", "", 1.1, "ALL", "chem_hept_westbrook"), \
+            ("matest_heptwb_cyl_8p", matest_heptwb_cyl_8p_ups, "", 8, "ALL","chem_hept_westbrook"), \
+            ("matest_heptwb_cyl_8patch", matest_heptwb_cyl_8patch_ups, "", 8, "ALL","chem_hept_westbrook")
+    	]
+
+def chemfile (test):
+    return test[5]
+
+def chemfileCallback (test, susdir, inputsdir, compare_root, algo, mode, max_parallelism):
+  ArchesInputsdir = "%s/../ARCHES" % inputsdir
+  symlink("%s/input.dtd" % (ArchesInputsdir), "input.dtd")
+  cfile = chemfile(test)
+  if platform[0:5] == "linux":
+      cfile = cfile + ".linux.bin"
+  else:
+      cfile = cfile + ".bin"
+  symlink("%s/%s" % (ArchesInputsdir, cfile), "chem.bin")
+  symlink("%s/betaTable" % inputsdir, "betaTable")
+                     
+exit(runSusTests(argv, TESTS, "mpmarches", chemfileCallback))
+

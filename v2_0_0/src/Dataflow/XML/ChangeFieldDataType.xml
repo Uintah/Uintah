@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+ 
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+ 
+  The Original Source Code is SCIRun, released March 12, 2001.
+ 
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
+  University of Utah. All Rights Reserved.
+-->
+
+<component name="ChangeFieldDataType" category="FieldsData">
+  <overview>
+    <authors>
+      <author>McKay Davis</author>
+    </authors>
+    <summary>
+      <p>
+        ChangeFieldDataType is used to change the type of data associated with the field elements.
+      </p>
+    </summary>
+    <description>
+      <p>
+        ChangeFieldDataType allows the user to change the datatype
+        at each field data_at location.  This module also attempts to convert the
+        data in the field to the new type, if possible.  If no
+        conversion is possible, the output field will contain default
+        zero values.  Note that conversion from a large datatype to a
+        smaller datatype usually results in a loss of precision.
+      </p>
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Input Field</name>
+        <datatype>SCIRun::Field</datatype>
+	<description>
+          <p>
+            The field to be edited.
+          </p>
+        </description>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Output Field</name>
+        <datatype>SCIRun::Field</datatype>
+        <description>
+          <p>
+            The field with the changed Typename.
+          </p>
+        </description>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <description>
+      <p>
+      </p>
+    </description>
+    <parameter>
+      <widget>Optionmenu</widget>
+      <label>Typename</label>
+      <description>
+        <p>
+          The field's datatype.  Includes information about the type
+          of mesh (TetVolField, LatVolField, TriSurfField, etc.) as well as the
+          type of the data (unsigned char, double, Vector, Tensor, etc.).
+        </p>
+      </description>
+    </parameter>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

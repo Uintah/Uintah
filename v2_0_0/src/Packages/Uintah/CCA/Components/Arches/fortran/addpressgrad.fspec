@@ -1,0 +1,7 @@
+void addpressgrad(IntVector idxLoU, IntVector idxHiU,
+     Array3<double> uu, Array3<double> su,
+     CCVariable<double> press,
+     CCVariable<double> old_den, double deltat,
+     int ioff, int joff, int koff, OffsetArray1<double> sewu,
+     OffsetArray1<double> sns, OffsetArray1<double> stb,
+     OffsetArray1<double> dxpw);

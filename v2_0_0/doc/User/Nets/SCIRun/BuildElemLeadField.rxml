@@ -1,0 +1,259 @@
+<!--% require("../../Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<section id="sec.belfn">
+<title>Build Element Lead Field Network</title>
+
+<section>
+<title>Overview</title>
+
+<para>The Build Element Lead Field network file described here can be found
+at this location in the source tree:
+<ulink url=<!--%= doc.treeUrl("src/Packages/BioPSE/nets/build-fem-elem-leadfield.net") %-->>src/Packages/BioPSE/nets/build-fem-elem-leadfield.net</ulink>.
+See also <xref linkend="fig.belfn"/>.
+</para>
+
+<para>
+There has been significant progress made in the area of EEG source
+imaging.  Source localization on simple speherical models have become
+increasingly efficient, with a consistent reported accuracy of within
+5mm.  By contrast, source localization on realistic head models
+remains slow, with sub-centimeter accuracy being the exception rather
+than the norm.  A primary reason for this discrepancy is that most
+source imaging techniques are based on lead fields.  While the lead
+field for simplified geometries can be computed analytically, an
+efficient method for computing realistic domain lead fields has, until
+now, remained elusive.
+</para>
+
+<para>
+The SCIRun/BioPSE BuildElemLeadField network solves the problem of
+building a leadfield matrix. A leadfield matrix is a matrix that maps
+for an electric source at a particular node and reveals the voltages
+of all the electrodes. Ie: in a leadfield matrix, a single column
+corresponds to a single element and each row corresponds to a
+different electrode number.
+</para>
+
+<para>
+For example, after building the leadfield matrix, if you have an
+electric source at node (N), pointing in some direction (X), you can
+extract that particular colmun and, literally, read out the voltages
+for each of the electrodes. This allows us to quickly solve finite
+element problems.
+</para>
+
+<figure id="fig.belfn">
+<title>Build Element Lead Field Network</title>
+<mediaobject>
+<imageobject>
+<imagedata fileref="SCIRun/BuildElemLeadField.gif" format="GIF"/>
+</imageobject>
+<imageobject>
+<imagedata fileref="SCIRun/BuildElemLeadField.ps" format="PS"/>
+</imageobject>
+</mediaobject>
+</figure>
+
+</section>
+
+<section>
+<title>User Interface Settings</title>
+
+<para>
+These will be numbered on the figure of the net.  
+<orderedlist>
+<listitem>
+<para>SetupFEMatrix</para>
+<para>Use default values.</para>
+</listitem>
+<listitem>
+<para>FieldReader </para>
+<para>Set to "pointed at mesh."</para>
+</listitem>
+<listitem>
+<para>BuildInterpolant</para>
+<para>Use default settings.</para>
+</listitem>
+<listitem>
+<para>FieldReader</para>
+<para>Use "point to electrodes."</para>
+</listitem>
+<listitem>
+<para>BuildElemLeadField</para>
+<para>No UI</para>
+</listitem>
+<listitem>
+<para>SolveMatrix</para>
+<para>Deselect "emit partial solutions" check button.</para>
+</listitem>
+<listitem>
+<para>ManageFielData</para>
+<para>No UI</para>
+</listitem>
+<listitem>
+<para>Gradient</para>
+<para>No UI</para>
+</listitem>
+<listitem>
+<para>ManageFieldData</para>
+<para>No UI.</para>
+</listitem>
+<listitem>
+<para>MatrixWriter</para>
+<para>Use default settings.</para>
+</listitem>
+</orderedlist>
+</para>
+
+</section>
+
+<section>
+<title>Variables</title>
+
+<para>
+The user has no control over the variables on this net, except
+the SolveMatrix module (an iterative module) so we have to solve the
+AX=B linear system where we solve for X through an iterative
+method. We "guess" at a solution to find out how much we're off by,
+and try to improve the difference until it converges&hellip;either
+have answer exactly or within some tolerance of having it.
+</para>
+
+</section>
+
+<section>
+<title>In Depth Discussion</title>
+
+<para>
+The BuildElemLeadField net is designed to build up the leadfield
+matrix, which can occur in two ways: First, the process of placing a
+source at each element, and then computing the voltages at each
+electrode, which is incredibly slow, because there could be millions
+of electrodes and each would require a minute to process.
+</para>
+
+<para>A better solution is to use the Helmholtz reciprocity principle
+which states that given a dipole (an equivalent source),[P], and a
+need to know the resulting potential difference between two points, [A
+and B], it is sufficient to to know the electric field at [E] at the
+dipole location, resulting from a current, [I] placed between points
+[A and B]:
+</para>
+
+<para>(E.P)/I=*A-*B</para>
+
+<para>So, rather than placing a source in every element and for each
+pair, computing a forward solution, we can "invert" this process: we
+place a source and sink at pairs of electrodes and for each pair
+compute the resulting electric field in all of the elements. We can
+then use the reciprocity principle to reconstruct the potential
+differences at the electrodes for a source placed in any element (see
+Figure 1).
+</para>
+
+<para>(Figure 1 here: caption: Depiction of the element-oriented lead
+field basis.  The orthogonal dipole in each element corresponds to a
+column of L and each electrode corresponds to a row of L, and each
+entry of L corresponds to the potential measured at a particular
+electrode due to a particular source)
+</para>
+
+<para>The construction proceeds as follows: First, we must build the
+stiffness matrix A (similar to Chapter 5 in the User Tutorial [link]).
+Next, we must find electrodes (e=i-n).  Then, for each pair of
+electrodes, ?.  From those ?, we build J and solve for:
+</para>
+
+<para>E = triangle *, A* = J</para>
+
+<para>[the symbols are placeholders for the actual equation]</para>
+
+<para>This basically shows that we can inject and remove current
+through pairs of measurement electrodes in order to to compute
+individual rows of the matrix--only 30 electrodes--only 30 forward
+solutions. If we inject current at one electrode and withdraw at
+another. This network implements that solution--the important, driver
+module in the center of the network builds a feedback loop to itself
+bwteeen all the modules beneath it and with ManageFieldData--forces
+all these modules to run one time for each pair of electrodes. Choose
+one to ground, as each other one becomes the source, and the ground
+becomes the location where we take the current out that we need to
+solve a forward finite element problem (see Figure 2.).
+</para>
+
+<para>(Figure 2. here: caption: Depiction of our reciprocity-based
+method.  A unit current is applied between electrodes '3' and 'G'.
+The reciprocity principle states that the voltage difference '3' and
+'G' due to a dipole source P placed in element en will be equal to the
+dot product of P and the electric field in en.)
+</para>
+
+<para>Five SCIRun modules solve an FE problem as a linear system--a set of
+linear equations that say AX=B. These modules are:BuildElemLeadField,
+BuildInterpolant, FieldReader, Gradient, ManageFieldData, MatrixWriter,
+and SetupFEMatrix.
+</para>
+
+<para>This net changes the right hand side, B, solution vector, and
+the stiffness matrix (A) describes the geometries and conductivities
+of our system. The right hand side vector that describes our
+sources--though we change where we put our source, and modify our
+right-hand side vector.  This is why the output from
+BuildElemLeadField goes into SolveMatrix to the right hand side and
+solves the system --ManageFieldData takes those voltages that we just
+solved for and attaches them to the mesh so now we have a new Field
+from that Field. The Gradient module builds the derivative of the
+voltage, the electric field, and then send all of those electric field
+values into the BuidlElemLeadField module, ManageFieldData allows us
+to extract the Gradient values, sending them back up into the
+BuildElemLeadField module, which forms one row of our matrix. We then
+perform this solve again for another electrode--write out the matrix
+and send the output to the MatrixWriter on the right.
+</para>
+
+<para>The other modules on the left side, build the original stiffness
+matrix, so we read in our Finite Element Mesh that has conductivites
+and geometry and, then build a stiffness matrix: Three up above--one
+reads in the same mesh that holds geometry through the FieldReader on
+the right. The FieldReader on the left reads in electrode
+positions. BuildInterpolant For each of those electrode positions, the
+BuildInterpolant module will find out which node to which they
+correspond in this large mesh of the head or torso, and need to pass
+that information into BuildElemLeadField, so it knows which nodes to
+make as the sources. This is how each piece of the network performs,
+running in a loop. The BuildElemLeadField module drives everything,
+having solved the matrix 31 times, saving the result in the
+MatrixWriter whose output is the input to other nets that solve
+inverse problems (such as our sourcelocalization net).
+</para>
+
+</section>
+
+</section>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-default-dtd-file:"../../../Utilities/XML/docbook-4.2.ced"
+sgml-omittag:nil
+sgml-shorttag:nil
+End:
+-->

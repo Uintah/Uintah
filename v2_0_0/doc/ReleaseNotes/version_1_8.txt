@@ -1,0 +1,57 @@
+
+Release Notes - SCIRun/BioPSE Version 1.8 - Date ??
+
+* Set the SCI_EXCEPTIONMODE environment variable to "throw" in order
+to catch module exceptions.
+
+* All files from flex and bison generate in the object directory.
+
+* Now uses the 2.1.0 version of Xerces.
+
+* Users can now specify the location of on-the-fly-libs in the
+  .scirunrc or in an environment variable: SCIRUN_ON_THE_FLY_LIBS_DIR.
+
+
+* StreamLines module has new options for generating streamlines for
+  faster computation, and improved UI features.
+
+* New MapDataToCoord module maps data values from a field in to one of
+  the geometric coordinates of its mesh.
+
+* The Isosurface module now generates Isocontours on surfaces.
+
+* SampleLattice now extended to have more data-at locations.
+
+* SamplePlane updated to have the same options as SampleLattice.
+
+* New ReplaceScalarDataValue module replaces all instances of a
+  specified old data value with a specified new data value.
+
+* EditField module has been removed and replaced with four modules:
+  FieldInfo, ChangeFieldDataAt, ChangeFieldBounds, and
+  ChangeFieldDataType.
+
+* ShowField can now render the data values as text, for enhanced data
+  inspection.
+
+* Fixed race condition bug in the Viewer that sometimes caused Viewers
+  to display nothing but a gray window.
+
+* New and updated Tikhonov modules.
+
+* Now uses the fix for vdt on linux optimized builds.
+
+* New installation script and README files.
+
+* Tarballs are no longer moved out from under the installation script.
+
+* Ability to now reinstall an individual package, without reinstalling
+  all of Thirdparty. Not needed with rpm installation.
+
+* New datasets that fix a bug with properties.
+
+* Installs all of Thirdparty and the BioPSE, Teem, MatlabInterface,
+  VDT packages.
+
+
+

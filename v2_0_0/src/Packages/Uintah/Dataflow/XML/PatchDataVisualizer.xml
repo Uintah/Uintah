@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<component name="PatchDataVisualizer" category="Visualization">
+  <overview>
+    <authors>
+      <author>James Bigler</author>
+    </authors>
+    <summary>Display patch centers.</summary>
+    <description>
+      <p>Version Date: Mon Jan 17 14:15:55 MDT 2001</p><p>Version: 1.0</p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Data Archive</name>
+        <datatype>Uintah::Archive</datatype>
+      </port>
+     <port>
+       <name>ColorMap</name>
+       <datatype>SCIRun::ColorMap</datatype>
+     </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Geometry</name>
+        <datatype>SCIRun::Geometry</datatype>
+      </port>
+   </outputs>
+  </io>
+  <testing>
+  </testing>
+</component>

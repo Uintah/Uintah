@@ -1,0 +1,1020 @@
+version sci 0.1;
+version cca 0.6; 
+
+package sci {
+package cca {
+
+    /** All ports must derive from this port type */
+    interface Port {} 
+
+    /** 
+     * Mapping of standard exceptional event types
+     * occuring in the Services interface to integers. 
+     */
+    enum CCAExceptionType {
+
+	/* Someone caught a non-CCAException that was declared
+	 *  at an interface that claims it throws ONLY CCAException. 
+	 */
+	Unexpected = -1,
+	
+	/* A CCAException that is carrying a non-standard message. */
+	Nonstandard = 1,
+	
+	/* Action attempted on a port name that is neither registered
+	 * nor added. 
+	 */
+	PortNotDefined = 2,
+	
+	/* Adding/registering an already added/registered Port was
+	 *  attempted. 
+	 */
+	PortAlreadyDefined = 3,
+	
+	/* Attempt to getPort, getPortNonblocking, or releasePort
+	 * with a port named that is not connected. 
+	 */
+	PortNotConnected = 4,
+	
+	/* Redundant attempt to release a Port. */
+	PortNotInUse = 5,
+	
+	/* Attempt to unregister a Port that is still being used. */
+	UsesPortNotReleased = 6,
+	
+	/* Port name given to createPortInfo is bogus. */
+	BadPortName = 7,
+	
+	/* Port class/type given to createPortInfo is bogus. */
+	BadPortType = 8,
+	
+	/* 
+	 * Port properties given to createPortInfo is bogus.
+	 * Note: null is NOT a bogus input, but a fairly common one. 
+	 */
+	BadProperties = 9,
+	
+	/* PortInfo given in port add/register call is bogus or null. */
+	BadPortInfo = 10,
+	
+	/* Services implementation failed to allocate memory. */
+	OutOfMemory = 11,
+	
+	/* Port (or function within it) died on a remote error. */
+	NetworkError = 12,
+	
+    } // end enum CCAExceptionType
+
+
+   
+    /** Most CCA interfaces throw this exception */
+    abstract class CCAException extends SSIDL.BaseException {
+	abstract CCAExceptionType getCCAExceptionType();
+    } // end class CCAException
+
+
+
+    interface Services {
+
+	/** 
+	 * Fetch a previously registered Port (defined by either 
+	 * addProvidePort or (more typically) registerUsesPort).  
+	 * @return Will return the Port (possibly waiting forever while
+	 * attempting to acquire it) or throw an exception. Does not return
+	 * NULL, even in the case where no connection has been made. 
+	 * If a Port is returned,
+	 * there is then a contract that the port will remain valid for use
+	 * by the caller until the port is released via releasePort(), or a 
+	 * Disconnect Event is successfully dispatched to the caller,
+	 * or a runtime exception (such as network failure) occurs during 
+	 * invocation of some function in the Port. 
+	 * <p>
+	 * Subtle interpretation: If the Component is not listening for
+	 * Disconnect events, then the framework has no clean way to
+	 * break the connection until after the component calls releasePort.
+	 * </p>
+	 * <p>The framework may go through some machinations to obtain
+	 *    the port, possibly involving an interactive user or network 
+	 *    queries, before giving up and throwing an exception.
+	 * </p>
+	 * 
+	 * @param portName The previously registered or provide port which
+	 * 	   the component now wants to use.
+	 * @exception CCAException with the following types: NotConnected, PortNotDefined, 
+	 *                NetworkError, OutOfMemory.
+	 */
+	Port getPort(in string portName) throws CCAException;
+	
+	
+
+	/** 
+	 * Get a previously registered Port (defined by
+	 * either addProvide or registerUses) and return that
+	 * Port if it is available immediately (already connected
+	 * without further connection machinations).
+	 * There is an contract that the
+	 * port will remain valid per the description of getPort.
+	 * @return The named port, if it exists and is connected or self-provided,
+	 * 	      or NULL if it is registered and is not yet connected. Does not
+	 * 	      return if the Port is neither registered nor provided, but rather
+	 * 	      throws an exception.
+	 * @param portName registered or provided port that
+	 * 	     the component now wants to use.
+	 * @exception CCAException with the following types: PortNotDefined, OutOfMemory.
+	 */
+	Port getPortNonblocking(in string portName) throws CCAException;
+	
+	/** 
+	 * Notifies the framework that this component is finished 
+	 * using the previously fetched Port that is named.     
+	 * The releasePort() method calls should be paired with 
+	 * getPort() method calls; however, an extra call to releasePort()
+	 * for the same name may (is not required to) generate an exception.
+	 * Calls to release ports which are not defined or have never be fetched
+	 * with one of the getPort functions generate exceptions.
+	 * @param portName The name of a port.
+	 * @exception CCAException with the following types: PortNotDefined, PortNotInUse.
+	 */
+	void releasePort(in string portName) throws CCAException;
+	
+	
+	/**
+	 * Creates a TypeMap, potentially to be used in subsequent
+	 * calls to describe a Port.  Initially, this map is empty.
+	 */
+	TypeMap createTypeMap() throws CCAException;
+
+	/** 
+	 * Register a request for a Port that will be retrieved subsequently 
+	 * with a call to getPort().
+	 * @param portName A string uniquely describing this port.  This string
+	 * must be unique for this component, over both uses and provides ports.
+	 * @param type A string desribing the type of this port.
+	 * @param properties A TypeMap describing optional properties
+	 * associated with this port. This can be a null pointer, which
+	 * indicates an empty list of properties.  Properties may be
+	 * obtained from createTypeMap or any other source.  The properties
+	 * be copied into the framework, and subsequent changes to the
+	 * properties object will have no effect on the properties
+	 * associated with this port.
+	 * In these properties, all frameworks recognize at least the
+	 * following keys and values in implementing registerUsesPort:
+	 * <pre>
+	 * key:              standard values (in string form)     default
+	 * "MAX_CONNECTIONS" any nonnegative integer, "unlimited".   1
+	 * "MIN_CONNECTIONS" any integer > 0.                        0
+	 * "ABLE_TO_PROXY"   "true", "false"                      "false"
+	 * </pre>
+	 * The component is not expected to work if the framework
+	 * has not satisfied the connection requirements.
+	 * The framework is allowed to return an error if it
+	 * is incapable of meeting the connection requirements,
+	 * e.g. it does not implement multiple uses ports.
+	 * The caller of registerUsesPort is not obligated to define
+	 * these properties. If left undefined, the default listed above is
+	 *       assumed.
+	 * @exception CCAException with the following types: PortAlreadyDefined, OutOfMemory.
+	 */
+	void registerUsesPort(in string portName, 
+			      in string type, 
+			      in TypeMap properties ) throws CCAException ;
+
+
+	/** 
+	 * Notify the framework that a Port, previously registered by this
+	 * component but currently not in use, is no longer desired. 
+	 * Unregistering a port that is currently 
+	 * in use (i.e. an unreleased getPort() being outstanding) 
+	 * is an error.
+	 * @param name The name of a registered Port.
+	 * @exception CCAException with the following types: UsesPortNotReleased, PortNotDefined.
+	 */
+	void unregisterUsesPort(in string portName) throws CCAException ;
+	
+
+	/** 
+	 * Exposes a Port from this component to the framework.  
+	 * This Port is now available for the framework to connect 
+	 * to other components. 
+	 * @param inPort An abstract interface (tagged with CCA-ness
+	 * 	by inheriting from sci.cca.Port) the framework will
+	 * 	make available to other components.
+	 * 
+	 * @param portName string uniquely describing this port.  This string
+	 * must be unique for this component, over both uses and provides ports.
+	 * 
+	 * @param type string describing the type (class) of this port.
+	 * 
+	 * @param properties A TypeMap describing optional properties
+	 * associated with this port. This can be a null pointer, which
+	 * indicates an empty list of properties.  Properties may be
+	 * obtained from createTypeMap or any other source.  The properties
+	 * be copied into the framework, and subsequent changes to the
+	 * properties object will have no effect on the properties
+	 * associated with this port.
+	 * In these properties, all frameworks recognize at least the
+	 * following keys and values in implementing registerUsesPort:
+	 * <pre>
+	 * key:              standard values (in string form)     default
+	 * "MAX_CONNECTIONS" any nonnegative integer, "unlimited".   1
+	 * "MIN_CONNECTIONS" any integer > 0.                        0
+	 * "ABLE_TO_PROXY"   "true", "false"                      "false"
+	 * </pre>
+	 * The component is not expected to work if the framework
+	 * has not satisfied the connection requirements.
+	 * The framework is allowed to return an error if it
+	 * is incapable of meeting the connection requirements,
+	 * e.g. it does not implement multiple uses ports.
+	 * The caller of addProvidesPort is not obligated to define
+	 * these properties. If left undefined, the default listed above is
+	 * assumed.
+	 * @exception CCAException with the following types: PortAlreadyDefined, OutOfMemory.
+	 */
+	void addProvidesPort(in Port inPort, 
+			     in string portName, 
+			     in string type, 
+			     in TypeMap properties )
+	    throws CCAException ;
+	
+
+	/** Returns the complete list of the properties for a Port.  This
+	 * includes the properties defined when the port was registered
+	 * (these properties can be modified by the framework), two special
+	 * properties "cca.portName" and "cca.portType", and any other
+	 * properties that the framework wishes to disclose to the component.
+	 * The framework may also choose to provide only the subset of input
+	 * properties (i.e. from addProvidesPort/registerUsesPort) that it
+	 * will honor.      
+	 */
+        TypeMap getPortProperties(in string name) ;
+
+	/** Notifies the framework that a previously exposed Port is no longer 
+	 * available for use. The Port being removed must exist
+	 * until this call returns, or a CCAException may occur.
+	 * @param name The name of a provided Port.
+	 * @exception PortNotDefined. In general, the framework will not dictate 
+	 * when the component chooses to stop offering services.
+	 */
+	void removeProvidesPort(in string portName) throws CCAException ;
+		
+	/** 
+	 * Get a reference to the component to which this 
+	 * Services object belongs. 
+	 */
+	ComponentID getComponentID();
+    }
+
+
+    /**
+     * All components must implement this interface.
+     */
+    interface Component {
+	/** 
+	 * Obtain Services handle, through which the 
+	 * component communicates with the framework. 
+	 * This is the one method that every CCA Component
+	 * must implement. 
+	 */
+	collective
+	void setServices(in Services services);
+    }
+
+    /**
+     * An opaque reference to a Component.
+     */
+    interface ComponentID { 
+	/** 
+	 * Returns the instance name provided in 
+	 * <code>BuilderService.createInstance()</code>
+	 * or in 
+	 * <code>AbstractFramework.getServices()</code>.
+	 * @throws CCAException if <code>ComponentID</code> is invalid
+	 */
+	string getInstanceName() throws CCAException ;
+
+	/**
+	 * Returns a framework specific serialization of the ComponentID.
+	 * @throws CCAException if <code>ComponentID</code> is
+	 * invalid.
+	 */
+	string getSerialization() throws CCAException ;
+    }
+
+    enum Type {
+	None, Int, Long, Float, Double, Fcomplex, Dcomplex, String, Bool, 
+	IntArray, LongArray, FloatArray, DoubleArray, FcomplexArray, 
+	DcomplexArray, StringArray, BoolArray
+    }
+
+    
+    abstract class TypeMismatchException extends CCAException {
+	/** @return the enumerated value Type sought */
+        abstract Type getRequestedType();
+	/** @return the enumerated value Type sought */
+	abstract Type getActualType();        
+    }
+    
+    /** 
+     *  A CCA map.  Maps a string key to a particular value. Types are
+     *  strictly enforced.  For example, values places into the map
+     *  using putInt can be retrieved only using getInt.  Calls to
+     *  getLong, getString, getIntArray and other get methods will
+     *  fail (i.e. return the default value). 
+     */
+    interface TypeMap {
+	/** Create an exact copy of this Map */
+	TypeMap cloneTypeMap();
+
+	/** Create a new Map with no key/value associations. */
+	TypeMap cloneEmpty();
+	
+	/*
+	 * Get the scalar value associated with a given key.  If the key
+	 * was not found, return the default value. 
+	 */
+	int      getInt(in string key, in int dflt) throws TypeMismatchException;
+	long     getLong(in string key, in long dflt) throws TypeMismatchException;
+	float    getFloat(in string key, in float dflt) throws TypeMismatchException;
+	double   getDouble(in string key, in double dflt) throws TypeMismatchException;
+	fcomplex getFcomplex(in string key, in fcomplex dflt) throws TypeMismatchException;
+	dcomplex getDcomplex(in string key, in dcomplex dflt) throws TypeMismatchException;
+	string   getString(in string key, in string dflt) throws TypeMismatchException;
+	bool     getBool(in string key, in bool dflt) throws TypeMismatchException;
+	
+	/*
+	 * Get an array value associated with a given key.  If the key
+	 * was not found, return the dflt value. 
+	 */
+	array<int>      getIntArray(in string key, in array<int> dflt) 
+	    throws TypeMismatchException;
+	array<long>     getLongArray(in string key, in array<long> dflt) 
+	    throws TypeMismatchException;
+	array<float>    getFloatArray(in string key, in array<float> dflt) 
+	    throws TypeMismatchException;
+	array<double>   getDoubleArray(in string key, in array<double> dflt) 
+	    throws TypeMismatchException;
+	array<fcomplex> getFcomplexArray(in string key, in array<fcomplex> dflt) 
+	    throws TypeMismatchException;
+	array<dcomplex> getDcomplexArray(in string key, in array<dcomplex> dflt) 
+	    throws TypeMismatchException;
+	array<string>   getStringArray(in string key, in array<string> dflt) 
+	    throws TypeMismatchException; 
+	array<bool>     getBoolArray(in string key, in array<bool> dflt) 
+	    throws TypeMismatchException;
+	
+	/** 
+	 * Assign a key and value. Any value previously assigned
+	 * to the same key will be overwritten.  
+	 */
+	void putInt(in string key, in int value);
+	void putLong(in string key, in long value);
+	void putFloat(in string key, in float value);
+	void putDouble(in string key, in double value);
+	void putFcomplex(in string key, in fcomplex value);
+	void putDcomplex(in string key, in dcomplex value);
+	void putString(in string key, in string value);
+	void putBool(in string key, in bool value);
+	
+	void putIntArray(in string key, in array<int> value);
+	void putLongArray(in string key, in array<long> value);
+	void putFloatArray(in string key, in array<float> value);
+	void putDoubleArray(in string key, in array<double> value);
+	void putFcomplexArray(in string key, in array<fcomplex> value);
+	void putDcomplexArray(in string key, in array<dcomplex> value);
+	void putStringArray(in string key, in array<string> value);
+	void putBoolArray(in string key, in array<bool> value);
+	
+	/** Make the key and associated value disappear from the object. */
+	void remove (in string key);
+	
+	/** 
+	 *  Get all the names associated with a particular type
+	 *  without exposing the data implementation details.  The keys
+	 *  will be returned in an arbitrary order. If type specified is
+	 *  None (no specification) all keys of all types are returned.
+	 */
+	array<string> getAllKeys(in Type t);
+	
+	/** Return true if the key exists in this map */
+	bool hasKey(in string key);
+	
+	/** Return the type of the value associated with this key */
+	Type typeOf(in string key);
+	
+    }  // end interface TypeMap
+    
+
+
+    /** 
+     *  This is an interface presented by a CCA-compliant framework to access its 
+     *  application framing capabilities. Most of the manipulation of the 
+     *  underlying framework is expected to be be done with the 
+     *  sci.cca.BuilderService Port. This class exists as a sort of bootstrap 
+     *  to get a Services object necessary to retrieve Port's, including 
+     *  BuilderService, from the underlying framework. How the interface and 
+     *  the underlying framework is created is entirely unspecified and is up 
+     *  to the devices of the programmer and the framework provider.
+     *
+     *  <p>Example</p>
+     *  <p>
+     *  Here it is assumed that an instance of AbstractFramework
+     *  is created in the main() from some hypothetical implementation.
+     *  The idea is to allow a complete swap of framework choice by 
+     *  changing out the specified implementation class of a framework.
+     *  </p>
+     *
+     *  <code><pre>
+     *  // java
+     *  main() {
+     *    cca.reference.Framework fwkimpl = new cca.reference.Framework();
+     *    // change fwkimpl above to use different cca implementations when
+     *    // AbstractFramework becomes part of the standard.
+     *    sci.cca.AbstractFramework fwk = (sci.cca.AbstractFramework)fwkimpl;
+     *    sci.cca.Services svc = 
+     *	   fwk.getServices("instance0","AppDriver",null);
+     *    // From here on, access all services, components, etc
+     *    // through svc.
+     *    ...
+     *    // when done
+     *    fwk.releaseServices(svc);
+     *    fwk.shutdownFramework();
+     *  }
+     *
+     *  // c++
+     *  int functionName() {
+     *    ::sci::sandia::ccafe::Framework fwkimpl;
+     *    ::sci::cca::AbstractFrameworkPtr fwk;
+     *
+     *    fwk = fwkimpl.getStandardFramework();
+     *    ::sci::cca::Services_Interface * svc = 0;
+     *    svc = fwk->getServices("instance0","AppDriver",0);
+     *    // From here on, access all services, components, etc
+     *    // through svc.
+     *    ...
+     *    // when done
+     *    fwk->releaseServices(svc);
+     *    svc = 0;
+     *    fwk->shutdownFramework();
+     *
+     *    // at scope exit, all memory is automatically cleaned up.
+     *  }
+     *  </pre></code>
+     */
+    interface AbstractFramework {
+	/** 
+	 *  Create an empty TypeMap. Presumably this would be used in 
+	 *  an ensuing call to <code>getServices()</code>. The "normal" method of
+	 *  creating typemaps is found in the <code>Services</code> interface. It
+	 *  is duplicated here to break the "chicken and egg" problem.
+	 */
+
+	TypeMap createTypeMap() throws CCAException;
+	
+
+	/** 
+	 * Retrieve a Services handle to the underlying framework. 
+	 * This interface effectively causes the calling program to 
+	 * appear as the image of a component inside the framework.
+	 * This method may be called any number of times
+	 * with different arguments, creating a new component image 
+	 * each time. 
+	 * The only proper method to destroy a Services obtained 
+	 * from this interface is to pass it to releaseServices.
+	 * 
+	 * @param selfInstanceName the Component instance name,
+	 * as it will appear in the framework.
+	 * 
+	 * @param selfClassName the Component type of the 
+	 * calling program, as it will appear in the framework. 
+	 * 
+	 * @param selfProperties (which can be null) the properties 
+	 * of the component image to appear. 
+	 * 
+	 * @throws CCAException in the event that selfInstanceName 
+	 * is already in use by another component.
+	 * 
+	 * @return  A Services object that pertains to the
+	 *	    image of the this component. This is identical
+	 *	    to the object passed into Component.setServices() 
+	 *	    when a component is created.
+	 */
+	Services getServices(in string selfInstanceName, in string selfClassName, 
+			     in TypeMap selfProperties) throws CCAException ;
+
+
+	/** 
+	 * Inform framework that the <code>Services</code> handle is no longer needed by the 
+	 * caller and that the reference to its component image is to be
+	 * deleted from the context of the underlying framework. This invalidates
+	 * any <code>ComponentID</code>'s or <code>ConnectionID</code>'s associated 
+	 * with the given <code>Services</code>' component image. 
+	 * 
+	 * @param svc The result of getServices earlier obtained.
+	 * 
+	 * @throws CCAException if the <code>Services</code>
+	 *         handle has already been released or is otherwise rendered invalid 
+	 *         or was not obtained from <code>getServices()</code>.
+	 */
+	void releaseServices(in Services svc) throws CCAException ;
+
+
+	/** 
+	 * Tell the framework it is no longer needed and to clean up after itself. 
+	 *  @throws CCAException if the framework has already been shutdown.
+	 */  
+	void shutdownFramework() throws CCAException;
+	
+	/** 
+	 * Creates a new framework instance based on the same underlying 
+	 * framework implementation. This does not copy the existing 
+	 * framework, nor are any of the user-instantiated components in
+	 * the original framework available in the newly created 
+	 * <code>AbstractFramework</code>. 
+	 * 
+	 * @throws CCAException when one of the following conditions occur:
+	 * 
+	 * (1)the AbstractFramework previously had shutdownFramework() called on it, or 
+	 * (2)the underlying framework implementation does not permit creation 
+	 * of another instance.	 
+	 */
+	AbstractFramework createEmptyFramework() throws CCAException;
+	//<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+	//non-spec interface
+	/* 
+	Registers the slave framework with the master framework. Intended to be called 
+	only by the representative slave framework process. 
+        ------
+        size -- total number of parallel slave frameworks 
+        slaveURLs -- urls of the slave framework
+        slaveName -- name of the slave resource
+        ----
+        returns a positive number or zero if framework was registerred 
+        successfully, negative number on error
+        */
+	int registerLoader(in string slaveName, in array<string,1> slaveURLs);
+	int unregisterLoader(in string slaveName);
+
+	/** start to share the CCA components with other CCA frameworks by
+	1. broadcasting its own framework URL
+	2. listening to other frameworks' broadcasting
+	3. query the CCA components set availabe in other framewors.	 				
+	*/	
+	//void share(in sci.cca.Services svc);
+	/** This one is in test for distributed computing		
+      
+	*/	 
+	//string createComponent(in string name, in string type);
+	//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    }  // end interface AbstractFramework
+    
+    /**
+     *  This interface describes a CCA connection between components.
+     *  A connection is made at the users direction
+     *  when one component provides a Port that another component
+     *  advertises for and uses.  The components are referred to by their
+     *  opaque ComponentID references and the Ports are referred to
+     *  by their string instance names.
+     */
+    interface ConnectionID {
+	
+	/** 
+	 *  Get the providing component (callee) ID.
+	 *  @return ComponentID of the component that has 
+	 *          provided the Port for this connection. 
+	 *  @throws CCAException if the underlying connection 
+	 *            is no longer valid.
+	 */
+	ComponentID getProvider() throws CCAException ;
+	
+	/** 
+	 *  Get the using component (caller) ID.
+	 *  @return ComponentID of the component that is using the provided Port.
+	 *  @throws CCAException if the underlying connection is no longer valid.
+	 */
+	ComponentID getUser() throws CCAException ; 
+	
+	/** 
+	 *  Get the port name in the providing component of this connection.
+	 *  @return the instance name of the provided Port.
+	 *  @throws CCAException if the underlying connection is no longer valid.
+	 */
+	string getProviderPortName() throws CCAException ; 
+	
+	/** 
+	 *  Get the port name in the using component of this connection.
+	 *  Return the instance name of the Port registered for use in 
+	 *  this connection.
+	 *  @throws CCAException if the underlying connection is no longer valid.
+	 */
+	string getUserPortName() throws CCAException ; 
+	
+    }  
+    
+    /** 
+     *  An opaque reference to a Component Class.  
+     *  (This interface is expected to grow substantially.)
+     */
+    interface ComponentClassDescription { 
+
+	/** 
+	 *  Returns the class name provided in 
+	 *   <code>BuilderService.createInstance()</code>
+	 *   or in
+	 *   <code>AbstractFramework.getServices()</code>.
+	 *  <p>
+	 *  Throws <code>CCAException</code> if <code>ComponentClassDescription</code> is invalid.
+	 */
+	string getComponentClassName() throws CCAException ;
+
+	// non-official interfaces
+	string getComponentModelName() throws CCAException; 
+
+	string getLoaderName() throws CCAException;
+	
+    }  // end interface ComponentClassDescription
+    
+    /**
+     * some standard (required) CCA ports.
+     */
+    package ports { 
+	
+	/**
+	 * Go, component, go!
+	 */
+	interface GoPort extends Port {
+	    /** 
+	     * Execute some encapsulated functionality on the component. 
+	     * Return 0 if ok, -1 if internal error but component may be 
+	     * used further, and -2 if error so severe that component cannot
+	     * be further used safely.
+	     */
+	    collective int go();
+	}
+
+	/** 
+	 * The minimum kinds of events needed. List to be extended
+	 * in the future.  Clearly, SMP architectures and threads may
+	 * violate the simple assumptions.
+	 */
+	enum EventType { 
+	    Error = -1,            // Someone got a bogus event object somehow.
+	    ALL = 0,               // Component wants to receive all event notices. 
+      	                           // ALL itself never received.
+	    ConnectPending = 1,    // A connection is about to be attempted.
+	    Connected = 2,         // A connection has been made.
+	    DisconnectPending = 3, // A disconnection is about to be attempted.
+	    Disconnected = 4,      // A disconnection has been made.
+	}
+
+	/**
+	 * Event created when two components are connected.
+	 */
+	interface ConnectionEvent {
+
+	    /** 
+	     * <p>Returns the integer from those enumerated that describes the event.</p>
+	     * 
+	     * <p>
+	     * The semantics are noted before
+	     * each member of the enum/static constant. We can add in different
+	     * types of connect/disconnect as multiports and
+	     * explicit local/global/sync/async semantics are agreed to in the future.
+	     * At present we assume that:
+	     * <ul>
+	     * <li> All instances in a component cohort (often thought of as a single
+	     *   "parallel component") receive all the events
+	     *   and in the same order, but not necessarily globally synchronously.
+	     *
+	     * <li> For disconnections, within a process the events are delivered first
+	     *   to the using component then (if necessary) to the providing
+	     *   component.
+	     * 
+	     * <li> For connections, within a process the events are delivered first
+	     *   to the providing component then (if necessary) to the using
+	     *   component.
+	     * </ul>
+	     * </p>
+	     * 
+	     * <p>
+	     * Clearly some of the assumptions above may not suit a component
+	     * instance in which multiple execution threads act on a
+	     * single instance of the <code>cca.Services</code> object (SMP). The Services
+	     * specification is ambiguous as to whether such a component is even
+	     * allowed.
+	     * </p>
+	     * <p>
+	     * When this is clarified, additional members of the enum may arise,
+	     * in which case the assumptions here apply only to
+	     * <code>ConnectPending</code>, <code>Connected</code>, <code>DisconnectPending</code>, 
+	     * <code>Disconnected</code> types.
+	     */
+	    EventType getEventType();
+	    
+	    /** 
+	     * Get Properties of the affected Port.
+	     * Among the standard properties are the name and type info.
+	     */
+	    cca.TypeMap getPortInfo();
+	}
+
+	/**
+	 * This is the interface that a component must provide in order to 
+	 * be notified of <code>ConnectEvents</code>.
+	 */
+	interface ConnectionEventListener {
+
+	    /** 
+	     * Called on all listeners when a connection is made or broken. 
+	     */
+	    void connectionActivity(in ConnectionEvent ce);
+	}
+
+	/**
+	 * Connection event service.
+	 */
+	interface ConnectionEventService extends cca.Port {
+
+	    /** 
+	     * Sign up to be told about connection activity.
+	     * connectionEventType must be one of the integer 
+	     * values defined iN ConnectionEvent. 
+	     */
+	    void addConnectionEventListener(in EventType et,
+					    in ConnectionEventListener cel);
+	    
+	    /** 
+	     * Ignore future ConnectionEvents of the given type.
+	     * connectionEventType must be one of the integer values 
+	     * defined in ConnectionEvent. 
+	     */
+	    void removeConnectionEventListener(in EventType et, 
+					       in ConnectionEventListener cel);
+	}
+	
+	/** 
+	 *    BuilderService is a Port implemented by a CCA compliant framework for
+	 * the purpose of composing components into applications in a standard way.
+	 * It is meant to expose the Component creation and composition functionality
+	 * without the specific framework implementation. This interface is expected 
+	 * to be useful for rapid application development in a scripting language. 
+	 * Other uses are generic application development environments for CCA 
+	 * applications. 
+	 * <p>Each of the fundamental component architecture pieces
+	 *    (instances of Component, Port, and Connection) may have
+	 *    an associated TypeMap of properties managed by the framework.
+	 *    The standardized keys in the properties of a Port are documented
+	 *    in Services.getPortProperties().
+	 *    The standardized keys in the properties of a Component and Connection
+	 *    are documented below.
+	 *  </p>
+	 *  <p>For connection, thus far:
+	 *    <pre>
+	 *    Key         value           meaning
+	 *    cca.isInUse boolean         true if there have been more successful
+	 * 				 getPort than releasePort calls for the
+	 * 				 connection at the the time 
+	 * 				 properties were fetched.
+	 *   </pre>
+	 *   </p>
+	 *  <P>For component, thus far:
+	 *   <pre>
+	 *    Key                 value           meaning
+	 *    cca.className       string          component type
+	 *   </pre>
+	 *  </p>
+	 */
+	interface BuilderService extends cca.Port {
+
+	    /**
+	     * 	Creates an instance of a CCA component of the type defined by the 
+	     * 	string className.  The string classname uniquely defines the
+	     * 	"type" of the component, e.g.
+	     * 	    doe.cca.Library.GaussianElmination. 
+	     * 	It has an instance name given by the string instanceName.
+	     * 	The instanceName may be empty (zero length) in which case
+	     * 	the instanceName will be assigned to the component automatically.
+	     * 	@throws CCAException If the Component className is unknown, or if the
+	     * 		instanceName has already been used, a CCAException is thrown.
+	     * 	@return A ComponentID corresponding to the created component. Destroying
+	     * 		the returned ID does not destroy the component; 
+	     * 		see destroyInstance instead.
+	     */
+	    cca.ComponentID createInstance(in string instanceName, in string className, 
+					       in cca.TypeMap properties) 
+		throws cca.CCAException ; 
+
+	    /** 
+	     *  Get component list.
+	     *  @return a ComponentID for each component currently created.
+	     */
+	    array<cca.ComponentID> getComponentIDs() throws cca.CCAException ; 
+	    
+	    /** 
+	     *  Get property map for component.
+	     *  @return the public properties associated with the component referred to by
+	     *  ComponentID. 
+	     *  @throws a CCAException if the ComponentID is invalid.
+	     */
+	    cca.TypeMap getComponentProperties(in cca.ComponentID cid) 
+		throws cca.CCAException ;
+	    
+	    /**
+	     * 	Causes the framework implementation to associate the given properties 
+	     * 	with the component designated by cid. 
+	     * 	@throws CCAException if cid is invalid or if there is an attempted
+	     * 	change to a property locked by the framework implementation.
+	     */
+	    void setComponentProperties(in cca.ComponentID cid, in cca.TypeMap map) 
+		throws cca.CCAException ;
+	    
+	    /** Get component id from stringified reference.
+	     *    @return a ComponentID from the string produced by 
+	     * 	ComponentID.getSerialization(). 
+	     *    @throws CCAException if the string does not represent the appropriate 
+	     * 	 serialization of a ComponentID for the underlying framework.
+	     */
+	    cca.ComponentID getDeserialization(in string s) throws cca.CCAException ;
+	    
+	    /** Get id from name by which it was created.
+	     *  @return a ComponentID from the instance name of the component
+	     *  produced by ComponentID.getInstanceName().
+	     *  @throws CCAException if there is no component matching the 
+	     *  given componentInstanceName.
+	     */
+	    cca.ComponentID getComponentID(in string componentInstanceName) 
+		throws cca.CCAException ;
+	    
+	    /** 
+	     *  Eliminate the Component instance, from the scope of the framework.
+	     *  @param toDie the component to be removed.
+	     *  @param timeout the allowable wait; 0 means up to the framework.
+	     *  @throws CCAException if toDie refers to an invalid component, or
+	     *  if the operation takes longer than timeout seconds.
+	     */
+	    void destroyInstance(in cca.ComponentID toDie, in float timeout ) 
+		throws cca.CCAException ;
+	    
+	    /** 
+	     *  Get the names of Port instances provided by the identified component.
+	     *  @param cid the component.
+	     *  @throws CCAException if cid refers to an invalid component.
+	     */
+	    array<string> getProvidedPortNames(in cca.ComponentID cid) 
+		throws cca.CCAException ; 
+	    
+	    /** 
+	     *  Get the names of Port instances used by the identified component.
+	     *  @param cid the component.
+	     *  @throws CCAException if cid refers to an invalid component. 
+	     */
+	    array<string> getUsedPortNames(in cca.ComponentID cid) 
+		throws cca.CCAException ; 
+	    
+	    /** 
+	     *  Fetch map of Port properties exposed by the framework.
+	     *  @return the public properties pertaining to the Port instance 
+	     *    portname on the component referred to by cid. 
+	     *  @throws CCAException when any one of the following conditions occur:<ul>
+	     *    <li>portname is not a registered Port on the component indicated by cid,
+	     *    <li>cid refers to an invalid component. </ul>
+	     */ 
+	    cca.TypeMap getPortProperties(in cca.ComponentID cid, in string portName) 
+		throws cca.CCAException ;
+	    	    
+
+	    /** 
+	     *  Associates the properties given in map with the Port indicated by 
+	     *  portname. The component must have a Port known by portname.
+	     *  @throws CCAException if either cid or portname are
+	     *	invalid, or if this a changed property is locked by 
+	     *	 the underlying framework or component.
+	     */
+	    void setPortProperties(in cca.ComponentID cid, in string portName, 
+				   in cca.TypeMap map) throws cca.CCAException ;
+	    
+	    /**
+	     *   Creates a connection between ports on component user and 
+	     *   component provider. Destroying the ConnectionID does not
+	     *   cause a disconnection; for that, see disconnect().
+	     *   @throws CCAException when any one of the following conditions occur:<ul>
+	     *   <li>If either user or provider refer to an invalid component,
+	     *   <li>If either usingPortName or providingPortName refer to a 
+	     * 	 nonexistent Port on their respective component,
+	     *   <li>If other-- In reality there are a lot of things that can go wrong 
+	     * 	 with this operation, especially if the underlying connections 
+	     * 	 involve networking.</ul>
+	     */
+	    cca.ConnectionID connect(in cca.ComponentID user, 
+					 in string usingPortName, 
+					 in cca.ComponentID provider, 
+					 in string providingPortName) 
+		throws cca.CCAException ; 
+	    
+	    /** Returns a list of connections as an array of 
+	     * 	handles. This will return all connections involving components 
+	     * 	in the given componentList of ComponentIDs. This
+	     * 	means that ConnectionID's will be returned even if only one 
+	     * 	of the participants in the connection appears in componentList.
+	     * 
+	     * 	@throws CCAException if any component in componentList is invalid.
+	     */
+	    array<cca.ConnectionID> getConnectionIDs(in array<cca.ComponentID> componentList) 
+		throws cca.CCAException ; 
+	    
+	    /**
+	     *   Fetch property map of a connection.
+	     *   @returns the properties for the given connection.
+	     *   @throws CCAException if connID is invalid.
+	     */
+	    cca.TypeMap getConnectionProperties(in cca.ConnectionID connID) 
+		throws cca.CCAException ;
+	    
+	    /** Associates the properties with the connection.
+	     *   @param map the source of the properties.
+	     *   @param connID connection to receive property values.
+	     *   @throws CCAException if connID is invalid, or if this changes 
+	     *	 a property locked by the underlying framework.
+	     */
+	    void setConnectionProperties(in cca.ConnectionID connID, in cca.TypeMap map) 
+		throws cca.CCAException ;
+	    
+	    /** Disconnect the connection indicated by connID before the indicated
+	     *     timeout in secs. Upon successful completion, connID and the connection
+	     *     it represents become invalid. 
+	     *     @param timeout the time in seconds to wait for a connection to close; 0
+	     *     means to use the framework implementation default.
+	     *     @throws CCAException when any one of the following conditions occur: <ul>
+	     *     <li>id refers to an invalid ConnectionID,
+	     *     <li>timeout is exceeded, after which, if id was valid before 
+	     * disconnect() was invoked, it remains valid
+	     * </ul>
+	     * 
+	     */
+	    void disconnect(in cca.ConnectionID connID, in float timeout) 
+		throws cca.CCAException ; 
+	    
+	    /** Remove all connections between components id1 and id2 within 
+	     *   the period of timeout secs. If id2 is null, then all connections 
+	     *   to id1 are removed (within the period of timeout secs).
+	     *   @throws CCAException when any one of the following conditions occur:<ul>
+	     *	  <li>id1 or id2 refer to an invalid ComponentID (other than id2 == null),
+	     *	  <li>The timeout period is exceeded before the disconnections can be made. 
+	     *	  </ul>
+	     */
+	    void disconnectAll(in cca.ComponentID id1, in cca.ComponentID id2, 
+			       in float timeout) throws cca.CCAException ; 
+	    //<<<<<<<<<<<<<<<<<<<<<<<
+	   /* get available ports in c2 that can be connected to port1 of c1*/ 	
+   	   array<string> getCompatiblePortList(in sci.cca.ComponentID c1,
+				       in string port1,
+				       in sci.cca.ComponentID c2);
+	    		
+	   int addLoader(in string loaderName, in string login, in string domain, in string path);
+
+	   int removeLoader(in string name);
+
+	   //void registerFramework(in string frameworkURL); 	
+	   //void registerServices(in sci.cca.Services svc);
+
+	    //>>>>>>>>>>>>>>>>>>>>>		
+	} // end interface BuilderService
+	
+	/** 
+	 *  ComponentRepository is a Port implemented by a CCA compliant framework 
+	 *  or other component to expose in a standard way:<ol>
+	 *  <li>immediately instantiable component classes.
+	 *  <li>component class property maps. 
+	 *  <li>the operations used to obtain more component classes at runtime.
+	 *  </ol>
+	 *   
+	 */
+	interface ComponentRepository  extends cca.Port {
+
+	    /** 
+	     *  Collect the currently obtainable class name strings from
+	     *  factories known to the builder and the from the
+	     *  already instantiated components.
+	     *  @return The list of class description, which may be empty, that are
+	     *   known a priori to contain valid values for the className
+	     *  argument of createInstance. 
+	     *  @throws CCAException in the event of error.
+	     */
+	    array<cca.ComponentClassDescription> getAvailableComponentClasses() 
+		throws cca.CCAException ;
+	} // end of cca.ports.ComponentRepository
+
+//<<<<<<<<<<<<<<<<<<<<<<<<<
+#include "SCIRun2Ports.sidl"
+//>>>>>>>>>>>>>>>>>>>>>>>>>
+	
+    } // end of package cca.ports
+//<<<<<<<<<<<<<<<<<<<<<<<<<
+#include "SCIRun2Classes.sidl"
+//>>>>>>>>>>>>>>>>>>>>>>>>>
+} // end of package cca
+} // end package sci
+
+ 
+
+

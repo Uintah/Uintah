@@ -1,0 +1,508 @@
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<section id="sec.source_inst">
+<title id="title.source_inst">&sr; Installation from Source Code (Linux,
+<acronym>SGI</acronym>, and &osx;)</title>
+<section>
+<title>Introduction</title>
+
+<para>
+<ulink url="http://www.python.org">Python</ulink> (version 1.5.2 or
+later) and <ulink url="http://www.gnu.org/directory/make.html">GNU
+make</ulink> (version 3.79 or later) must be present before proceeding
+with the source installation.
+</para>
+
+<para>
+Installation from sources consists of these steps:
+<orderedlist>
+<listitem>
+<para>Downloading &sr; sources, packages,
+third party software, sample data sets, and documentation.</para>
+</listitem>
+<listitem>
+<para>Unpacking sources.</para>
+</listitem>
+<listitem>
+<para>Building and installing third party software.</para>
+</listitem>
+<listitem>
+<para>Building &sr;</para>
+</listitem>
+</orderedlist>
+</para>
+
+<note>
+<title>Itanium Architecture</title>
+<para>When building &sr; for the Itanium architecture the GNU compiler
+collection (gcc) must be used and the values of the environment
+variables <envar>CFLAGS</envar> and <envar>CXXFFLAGS</envar> must be
+set as follows:</para>
+<para>
+for csh-type shells
+<programlisting>
+setenv CFLAGS fPIC
+setenv CXXFLAGS fPIC
+</programlisting>
+for sh-type shells
+<programlisting>
+CFLAGS=fPIC
+CXXFLAGS=fPIC
+export CFLAGS CXXFLAGS
+</programlisting>
+</para>
+</note>
+</section>
+
+<section>
+<title>Downloading and Unpacking Sources</title>
+
+<orderedlist>
+
+<listitem>
+
+<para>
+From <acronym>SCI</acronym>'s <ulink
+url="http://software.sci.utah.edu/archive_entry.html">software
+archive</ulink> page obtain the following:
+<itemizedlist>
+<listitem>
+<para>
+&sr; sources, <filename>&sr;.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+</para>
+</listitem>
+<listitem>
+<para>
+&sr; package sources, e.g. <filename>BioPSE.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+</para>
+</listitem>
+<listitem>
+<para>
+Third-party sources,
+<filename>Thirdparty_install.<replaceable>x.x.x</replaceable>.tar.gz</filename>for
+SGI/Linux and
+<filename>Thirdparty_install_osx.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+for &osx; users.
+</para>
+</listitem>
+<listitem>
+<para>
+&sr; sample data sets, <filename>DataSets.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+</para>
+</listitem>
+<listitem>
+<para>
+&sr; documentation, <filename>docs.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+</para>
+</listitem>
+</itemizedlist>
+</para>
+
+</listitem>
+
+<listitem>
+<para>
+Unpack the &sr; sources:
+<literallayout class="monospaced">
+gunzip -c &sr;.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
+</literallayout>
+This will create a directory called <filename>&sr;</filename>. Below,
+the term <quote>&sr;</quote> is used to refer to this
+directory.
+</para>
+</listitem>
+
+<listitem>
+<para>
+Unpack the compressed package sources into
+<filename>&sr;/src/Packages</filename>, for example, to unpack the
+BioPSE package type
+<literallayout class="monospaced">
+gunzip -c BioPSE.PKG.<replaceable>x.x.x</replaceable>.tar.gz | (cd &sr;/src/Packages &amp;&amp; tar xf -)
+</literallayout>
+</para>
+</listitem>
+
+<listitem>
+<para>
+Unpack the sample datasets:
+<literallayout class="monospaced">
+gunzip -c DataSets.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
+</literallayout>
+This will create the directory <filename>&sr;Data</filename>.  The
+directory can be moved to a new location, say
+<filename>/usr/local</filename>, accessible to all &sr; users.
+</para>
+</listitem>
+
+<listitem>
+<para>
+Unpack third party sources.
+</para>
+<para>
+For SGI/Linux:
+<literallayout class="monospaced">
+gunzip -c Thirdparty_install.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
+</literallayout>
+This will create the directory
+<filename>Thirdparty_install.<replaceable>x.x.x</replaceable></filename>.
+For &osx;:
+<literallayout class="monospaced">
+gunzip -c Thirdparty_install_osx.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
+</literallayout>
+This will create the directory
+<filename>Thirdparty_install_osx.<replaceable>x.x.x</replaceable></filename>.
+</para>
+</listitem>
+
+<listitem>
+<para>
+Unpack the documentation:
+<literallayout class="monospaced">
+gunzip -c docs.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
+</literallayout>
+This will create the directory <filename>&sr;Docs</filename>. This
+directory can be moved to a new location, say
+<filename>/usr/local</filename>, accessible to all &sr; users.  Point
+a browser at <filename>&sr;Docs/doc/index.html</filename> to access
+&sr;'s online documentation.
+</para>
+</listitem>
+
+</orderedlist>
+
+<note>
+<title>Note</title> <para><xref linkend="ap.lsrcvs"/> discusses a
+method for putting the downloaded &sr; sources under control of the
+CVS version control system.  This is useful if the &sr; distribution
+will be used for development.  This is <emphasis>not</emphasis> a
+requirement for installing &sr;</para>
+</note>
+
+</section>
+
+<section>
+<title>Building Third Party Software</title>
+
+<para>Third party software must be built before building &sr;.
+Instructions for SGI and Linux are slightly different from
+instructions for &osx;.  The next two sections are instructions for
+SGI/Linux and &osx; platforms respectively.</para>
+
+<section>
+<title>SGI/Linux</title>
+
+<para>
+
+Follow these steps to install the third-party distribution on
+SGI/Linux platforms:
+
+<orderedlist>
+
+<listitem>
+<para>
+<command>cd</command> to the third-party software directory:
+<literallayout class="monospaced">
+cd Thirdparty_install.<replaceable>x.x.x</replaceable>
+</literallayout>
+</para>
+</listitem>
+
+<listitem>
+<para>
+Run the third party installation script.
+</para>
+
+<para>
+The simplest 
+script invocation requires a single argument:
+<literallayout class="monospaced">
+python install <replaceable>dir</replaceable>
+</literallayout>
+where <replaceable>dir</replaceable> is the third-party installation directory.
+</para>
+
+<para>
+The installation script takes additional optional arguments:
+<literallayout class="monospaced">
+python install <replaceable>dir</replaceable> <replaceable>bits</replaceable> <replaceable>jobs</replaceable>
+</literallayout>
+<replaceable>dir</replaceable> is the third-party installation
+directory.  <replaceable>bits</replaceable> is either 32 or 64 and
+specifies one of 32 bit or 64 bit
+binaries. <replaceable>jobs</replaceable> is the number of processors
+availabe for <command>make</command>'s use when building the software.
+For example:
+<literallayout class="monospaced">
+python install /usr/local/&sr;/Thirdparty 64 2
+</literallayout>
+or
+<literallayout class="monospaced">
+python install /usr/local/&sr;/Thirdparty 32 1
+</literallayout>
+When finished, the installation script displays the complete path of
+the third-party software installation directory. Make note of this
+value, it is used in the configure step of the build process described
+in Section&nbsp;<link endterm="title.build-sr"
+linkend="sec.build-sr"/>.
+</para>
+</listitem>
+
+</orderedlist>
+
+</para>
+
+<para>
+The complete path name of the third-party installation directory
+reflects the parameters given to the install script.  This allows the
+user to maintain multiple third-party installations for different
+operating systems and machine architectures.  For example, on a
+Mandrake 9.0 Linux machine, the installation command:
+<literallayout class="monospaced">
+python install /usr/local/&sr;/Thirdparty
+</literallayout>
+will create the installation under:
+<literallayout class="monospaced">
+/usr/local/&sr;/Thirdparty/1.8/Linux/gcc-3.2-32bit
+</literallayout>
+</para>
+
+<para>
+All, or part, of the third-party software may be reinstalled by repeating
+the install command line.  The script  asks for a
+<userinput>y</userinput> or <userinput>n</userinput> response to each
+tarball in the distribution.  Answer <userinput>y</userinput> to reinstall.
+</para>
+
+</section>
+
+<section>
+<title>&osx;</title>
+<para>Follow these steps to install the third-party distribution on
+the &osx; platform:
+<orderedlist>
+<listitem>
+<para>
+<command>cd</command> to the third-party software directory:
+<literallayout class="monospaced">
+cd Thirdparty_install_osx.<replaceable>x.x.x</replaceable>
+</literallayout>
+</para>
+</listitem>
+
+<listitem>
+<para>
+Run the third party installation script:
+<literallayout class="monospaced">
+install <replaceable>dir</replaceable>
+</literallayout>
+where <replaceable>dir</replaceable> is the third-party installation
+directory.  For example:
+<literallayout class="monospaced">
+install /usr/local/&sr;/Thirdparty_osx
+</literallayout>
+The path to the third-party installation directory is used in the
+configure step of the build process described in Section&nbsp;<link
+endterm="title.build-sr" linkend="sec.build-sr"/>.
+</para>
+</listitem>
+
+</orderedlist>
+
+</para>
+</section>
+
+</section>
+
+<section id="sec.build-sr">
+<title id="title.build-sr">Building &sr;</title>
+
+<orderedlist>
+
+<listitem>
+
+<para>
+Run &sr;'s configure script.    Do this from a sub-directory of
+<filename>&sr;</filename> (but <emphasis>not</emphasis>
+<filename>&sr;/src</filename>) as follows:
+
+<literallayout class="monospaced">
+mkdir &sr;/<replaceable>dir</replaceable>
+cd &sr;/<replaceable>dir</replaceable>
+../src/configure --with-thirdparty=<replaceable>third-party-dir</replaceable> \
+--enable-package="<replaceable>package-name1 package-name2 &hellip;</replaceable>"
+</literallayout>
+in which case &sr; is built in the directory
+<filename>&sr;/<replaceable>dir</replaceable></filename> (where
+<replaceable>dir</replaceable> is a directory name).  Above,
+<replaceable>third-party-dir</replaceable> is replaced by the name of
+the third party software installation directory.  For SGI/Linux
+platforms, use the third-party installation path provided by the
+third-party installation script.  For the &osx; platform, use the path
+given to the third-party installation script.  Replace
+"<replaceable>package-name1 package-name2 &hellip;</replaceable>" by a
+list of package names , e.g. "BioPSE MatlabInterface".  An example
+configure command for SGI/Linux platforms is:
+<literallayout class="monospaced">
+../src/configure \
+  --with-thirdparty=/usr/local/&sr;/Thirdparty/1.8.0/Irix/CC-32bit \
+  --enable-package="BioPSE MatlabInterface"
+</literallayout>
+  An example
+configure command for &osx; is:
+<literallayout class="monospaced">
+../src/configure \
+  --with-thirdparty=/usr/local/&sr;/Thirdparty_osx \
+  --enable-package="BioPSE MatlabInterface"
+</literallayout>For &sr; to use the <acronym>PETSc</acronym> libraries the option
+<option>--with-unipetsc</option> must be used.  Options
+<option>--with-lapack</option> and <option>--with-blas</option> must
+be used if the <acronym>BLAS</acronym> and <acronym>LAPACK</acronym>
+libraries are not in <filename>/usr/lib</filename> (<citetitle><xref
+endterm="title.petsc_sr_config"
+linkend="sec.petsc_sr_config"/></citetitle> describes these options).
+For example:
+<literallayout class="monospaced">
+../src/configure \
+  --with-thirdparty=/usr/local/&sr;/Thirdparty/1.8.0/Irix/CC-32bit \
+  --enable-package="BioPSE MatlabInterface" \
+  --with-unipetsc=/usr/local/petsc \
+  --with-blas=/usr/local/lib \
+  --with-lapack=/usr/local/lib
+</literallayout>
+</para>
+
+<para>
+<!-- <inlinemediaobject> -->
+<!-- <imageobject> -->
+<!-- <imagedata fileref="osx.gif" format="GIF"/> -->
+<!-- </imageobject> -->
+<!-- </inlinemediaobject> -->
+&osx; builds of &sr; require use of configure options
+<option>--enable-32bit</option> and
+<option>--disable-sci-malloc</option>.  The configure command must
+also include the following environment variable assignments:
+<userinput>CC=gcc</userinput> and <userinput>CXX=g++</userinput>.  For
+example:
+<literallayout class="monospaced">
+../src/configure \
+  --with-thirdparty=/usr/local/&sr;/Thirdparty/1.8.0/OSX/CC-32bit \
+  --enable-package="BioPSE MatlabInterface" \
+  --enable-32bit \
+  --disable-sci-malloc \
+  CC=gcc CXX=g++
+</literallayout>
+</para>
+
+<para>
+There are options to the configure command that have not been
+mentioned. The <command>configure --help</command> command lists them
+all.
+</para>
+
+</listitem>
+
+<listitem>
+<para>
+Run (GNU) make from the previously used directory when running
+configure (e.g. <filename>&sr;/linux</filename>,
+<filename>&sr;/sgi32</filename>, <filename>&sr;/sgi64</filename>, or
+<filename>&sr;/osx</filename>).  Note that the
+<quote>configure</quote> directory will be called
+<replaceable>build_dir</replaceable> from this point on.
+<literallayout class="monospaced">
+cd <replaceable>build_dir</replaceable>
+make
+</literallayout>
+Be sure that <command>make</command> invokes GNU make.  GNU is
+sometimes named <command>gmake</command> or
+<command>gnumake</command>.
+</para>
+
+<para>
+For a multiprocessor system GNU make's <option>-j</option> option can
+be used to reduce the build time:
+<literallayout class="monospaced">
+make -j <replaceable>N</replaceable>
+</literallayout>
+where <replaceable>N</replaceable> is the number of processors
+available for use by make.  Using this option on a multiprocessor
+machine will often significantly reduce the time to build &sr;.
+</para>
+<para>
+Be sure to read <citetitle pubwork="section"><xref
+endterm="title.prepare" linkend="sec.prepare"/></citetitle> before
+<link linkend="sec.starting">starting</link> &sr;.
+</para>
+</listitem>
+</orderedlist>
+
+<para>
+After a successful build, <replaceable>build_dir</replaceable>
+will contain the <filename>scirun</filename> executable.
+</para>
+
+<tip>
+<para>
+It is possible to build &sr; for multiple machine architectures. For instance, 
+a Linux version and 32 bit and 64 bit Irix versions.  If the
+<filename>&sr;</filename> directory resides on a volume shared by all
+machines then do the following:
+<literallayout class="monospaced">
+mkdir &sr;/linux
+mkdir &sr;/sgi32
+mkdir &sr;/sgi64
+mkdir &sr;/osx
+</literallayout>
+After logging onto the Linux machine:
+<literallayout class="monospaced">
+cd &sr;/linux
+../src/configure <replaceable>options</replaceable>
+make -j <replaceable>N</replaceable>
+</literallayout>
+Then from the Irix machine(s):
+<literallayout class="monospaced">
+cd &sr;/sgi32
+../src/configure <replaceable>options</replaceable>
+make -j <replaceable>N</replaceable>
+cd &sr;/sgi64
+../src/configure --enable-64bit <replaceable>options</replaceable>
+make -j <replaceable>N</replaceable>
+</literallayout>
+and the &osx; platform(s):
+<literallayout class="monospaced">
+cd &sr;/osx
+../src/configure <replaceable>options</replaceable> CC=gcc CXX=g++
+make -j <replaceable>N</replaceable>
+</literallayout>
+</para>
+</tip>
+
+</section>
+
+</section>
+
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-default-dtd-file:"../../Utilities/XML/docbook.ced"
+sgml-omittag:nil
+sgml-shorttag:nil
+End:
+-->

@@ -1,0 +1,51 @@
+------------------------------------------------------------
+	HVolumeBrickColor
+	
+Dimensions of data from fastest to slowest -> [rgb], x, y, z.
+Data should be unsigned chars.
+
+Header is [rawfile].hdr, and does not support comments.
+nx ny nz [int]
+min_x min_y min_z [double]
+max_x max_y max_z [double]
+
+------------------------------------------------------------
+	HVolume{,Brick,Brick16}
+
+Dimensions of data from fastest to slowest -> x, y, z.
+Data can be unsigned chars, chars, int, short, float, double
+
+Header is [rawfile].hdr, and does not support comments.
+nx ny nz [int]
+min_x min_y min_z [double]
+max_x max_y max_z [double]
+data_min data_max [double]
+
+------------------------------------------------------------
+	HVolumeVG
+
+Dimensions of data from fastest to slowest -> [vg], x, y, z
+Data type is templated.
+
+Header is [rawfile].hdr, and does not support comments.
+nx ny nz [int]
+min_x min_y min_z [double]
+max_x max_y max_z [double]
+data_v_min data_v_max data_g_min data_g_max [double]
+
+------------------------------------------------------------
+	GridSphere
+
+There is a header file with the extension [raw data file].meta.
+The data is arranged by particle in raw floats without spaces
+inbetween:
+  part01.x part01.y part01.z part01.var1 part01.var2 ...
+  part02.x part02.y part02.z part02.var1 part02.var2 ...
+
+The header is formated like this.  No comments are supported.
+num spheres [int]
+radius [double]
+-- for each var including x,y,z --
+  min max [double]
+------------------------------------------------------------
+

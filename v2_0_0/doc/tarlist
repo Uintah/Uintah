@@ -1,0 +1,91 @@
+# -*- ruby -*-
+#
+#  The contents of this file are subject to the University of Utah Public
+#  License (the "License"); you may not use this file except in compliance
+#  with the License.
+#
+#  Software distributed under the License is distributed on an "AS IS"
+#  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+#  License for the specific language governing rights and limitations under
+#  the License.
+#
+#  The Original Source Code is SCIRun, released March 12, 2001.
+#
+#  The Original Source Code was developed by the University of Utah.
+#  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
+#  University of Utah. All Rights Reserved.
+#
+
+# Print to stdout a list of files to be included in the tar archive.
+# This script is used as a filter by doc/Makefile.
+
+# To do: 
+# Consider a per-directory 'doc-include' file which lists
+# files to be included in the doc distribution.  Then the
+# responsibility of this file would be to slurp up the contents of all
+# those files and produce a list of files to be included in the doc
+# distro.
+
+Dir.chdir("..")
+root=File.basename(Dir.pwd())
+Dir.chdir("..")
+
+# First do individula files and directories (non-wildcards)
+$stdout.print("#{root}/doc/index.html
+#{root}/doc/.htaccess
+#{root}/doc/Documentum/module-latex
+#{root}/doc/Documentum/module-xml
+#{root}/doc/Documentum/templates
+#{root}/doc/Installation/index.html
+#{root}/doc/Installation/Guide/srig.pdf
+#{root}/doc/Installation/FAQ/faq.html
+#{root}/doc/Installation/FAQ/faq.pdf
+#{root}/doc/User/index.html
+#{root}/doc/User/FAQ/faq.html
+#{root}/doc/User/FAQ/faq.pdf
+#{root}/doc/User/Guide/usersguide
+#{root}/doc/User/Guide/Figures
+#{root}/doc/User/Guide/usersguide.pdf
+#{root}/doc/User/Tutorial
+#{root}/doc/User/BioTensorTutorial
+#{root}/doc/User/Nets/nets.pdf
+#{root}/doc/Developer/index.html
+#{root}/doc/Developer/FAQ/faq.html
+#{root}/doc/Developer/FAQ/faq.pdf
+#{root}/doc/Developer/Guide/dev/Figures/ComponentWizard.gif
+#{root}/doc/Developer/Guide/dev/Figures/ComponentWizard2.gif
+#{root}/doc/Developer/Guide/dev/Figures/EditPort.gif
+#{root}/doc/Developer/Guide/dev/Figures/msts.gif
+#{root}/doc/Developer/Guide/dev/Figures/pdts.gif
+#{root}/doc/Developer/Guide/srdg.pdf
+#{root}/doc/Developer/Modules/srmrg.pdf
+#{root}/doc/Developer/CodeViews/html
+#{root}/doc/Utilities/Figures
+#{root}/doc/Utilities/TeX/scirun-doc.sty
+#{root}/doc/Utilities/TeX/scirun-doc.tex
+#{root}/doc/ReleaseNotes
+")
+
+# Now do wildcards
+$stdout.print(Dir["
+#{root}/doc/User/FAQ/*.gif
+#{root}/doc/User/Nets/*.html
+#{root}/doc/User/Nets/*/*.jpg
+#{root}/doc/User/Nets/*/*.gif
+#{root}/doc/Documentum/*.html
+#{root}/doc/Documentum/*.pdf
+#{root}/doc/Installation/Guide/*.html
+#{root}/doc/Installation/Guide/*.gif
+#{root}/doc/Developer/Guide/*.html
+#{root}/doc/Developer/Modules/*.html
+#{root}/doc/Utilities/HTML/*.css
+#{root}/doc/Utilities/HTML/*.js
+#{root}/src/Dataflow/XML/*.html
+#{root}/src/Dataflow/Modules/*/doc/*.jpg
+#{root}/src/Dataflow/Modules/*/doc/*.gif
+#{root}/src/Packages/*/Dataflow/XML/*.html
+#{root}/src/Packages/*/Dataflow/TeX/*/*.jpg
+#{root}/src/Packages/*/Dataflow/TeX/*/*.gif
+#{root}/src/Packages/*/Dataflow/TeX/*/*/*
+#{root}/src/Packages/*/Dataflow/Modules/*/doc/*.gif
+"].join(" "))

@@ -1,0 +1,52 @@
+This directory contains a test for SCIRun communication library
+AT PRESENT, THIS WORKS ONLY IF MATLAB SIDE IS ON RAPTURE
+
+bring.c     : base communication routine
+transport.c : matlab communication routine
+cmp.m       : script to compile (from matlab environment)
+              converts transport.c -> transport.mexsg64
+
+The following file may be there already (may be not):
+transport.mexsg64 : pre-compiled sgi matlab executable
+                    (calls from matlab environment as a function)
+
+sciruntst.m : actual test to run.
+
+tst.uin     : matching script file for SCIRun
+inp.mat     : input matrix for tst.uin
+
+The SCIRun test reads matrix from the disk, 
+sends it to matlab,
+where it is multiplied by two, 
+returned back, 
+and SCIRun saves it to other file.
+
+ 
+To run the test, matlab side should be on rapture
+and SCIRun side anywhere.
+Place all the files located in this directory (where README is) 
+in the test directories on respective hosts.
+
+Then:
+
+1) run matlab (on rapture)
+2) from matlab, run script cmp to compile
+3) check that transport.mexsg64 is produced without errors
+4) in file sciruntst.m, very first line, change host:port 
+   to where SCIRun will be running  
+5) run sciruntst.m 
+
+6) execute SCIRun (assuming that sandbox "Oleg" is commited)
+7) open script tst.uin
+8) in the gui of first MatrixSend module check host:port where
+   matlab is running (rapture:5505)
+9) in the gui of MatrixSave, point to output file (say, res.mat, ascii)
+10) in the gui of MatrixRead, point to input file (inp.mat)
+11) execute first module.
+
+12) Check that inp.mat*2=res.mat
+
+
+Both sides run as clients, that is they are manually
+controlled. If you want to repeat the test, BOTH tst.uin and
+sciruntst.m have to be run again. 

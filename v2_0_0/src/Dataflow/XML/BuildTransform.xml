@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+
+<component name="BuildTransform" category="Math">
+  <overview>
+    <authors>
+      <author>David Weinstein</author>
+    </authors>
+    <summary>Build a 4x4 geometric transformation matrix.</summary>
+    <description>
+      <p>Build the transformation matrix by specifying options in
+respect to Translate, Scale, Rotate, Sheer and Permute.</p>
+      <p>If the second input (SCIRun::Field) is input, its bounding
+box is used to init the transform</p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Matrix</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>Field BBox</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Matrix</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>Geometry</name>
+	<datatype>SCIRun::Geometry</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <img>../Modules/Math/doc/BuildTransform-permute.gif</img>
+    <img>../Modules/Math/doc/BuildTransform-scale.gif</img>
+    <img>../Modules/Math/doc/BuildTransform-shear.gif</img>
+    <img>../Modules/Math/doc/BuildTransform-translate.gif</img>
+    <img>../Modules/Math/doc/BuildTransform-widget-roe.gif</img>
+    <img>../Modules/Math/doc/BuildTransform-widget.gif</img>
+  </gui>
+  <testing>
+  </testing>
+</component>

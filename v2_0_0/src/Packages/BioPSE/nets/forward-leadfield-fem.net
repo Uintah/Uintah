@@ -1,0 +1,145 @@
+# SCI Network 1.0
+#
+# The contents of this file are subject to the University of Utah Public
+# License (the "License"); you may not use this file except in compliance
+# with the License.
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations under
+# the License.
+# 
+# The Original Source Code is SCIRun, released March 12, 2001.
+# 
+# The Original Source Code was developed by the University of Utah.
+# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+# University of Utah. All Rights Reserved.
+
+set results [sourceSettingsFile]
+
+if { $results == "failed" } {
+
+    ::netedit scheduleok
+    return 
+
+} else {
+
+    set DATADIR [lindex $results 0]
+    set DATASET [lindex $results 1]
+}
+
+source $DATADIR/$DATASET/$DATASET.settings
+
+::netedit dontschedule
+
+global userName
+set userName "dmw"
+
+global runDate
+set runDate " Tue  Jan 1 2002"
+
+global runTime
+set runTime " 14:25:13"
+
+set bbox {3.0 4.0 784 667}
+
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 179 63]
+set m1 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 179 143]
+set m2 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 3 283]
+set m3 [addModuleAtPosition "BioPSE" "Visualization" "ShowDipoles" 359 65]
+set m4 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 359 4]
+set m5 [addModuleAtPosition "SCIRun" "Render" "Viewer" 359 508]
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 138 287]
+set m7 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 21 366]
+set m8 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 3 74]
+set m9 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 3 426]
+set m10 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 640 610]
+set m11 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 395 141]
+set m12 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 395 220]
+set m13 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 21 146]
+set m14 [addModuleAtPosition "SCIRun" "Math" "MatrixSelectVector" 21 223]
+
+addConnection $m0 0 $m1 0
+addConnection $m3 0 $m1 1
+addConnection $m4 0 $m3 0
+addConnection $m6 0 $m7 0
+addConnection $m7 0 $m9 1
+addConnection $m9 0 $m5 0
+addConnection $m11 0 $m12 0
+addConnection $m1 1 $m14 1
+addConnection $m13 0 $m14 0
+addConnection $m8 0 $m2 0
+addConnection $m14 0 $m2 1
+addConnection $m2 0 $m9 0
+addConnection $m2 0 $m7 1
+addConnection $m3 1 $m5 1
+addConnection $m12 0 $m5 2
+addConnection $m0 0 $m11 0
+
+set $m0-filename $DATADIR/$DATASET/$DATASET-mesh.tvt.fld
+
+set $m3-widgetSizeGui_ [expr 0.05 * ${global-scale}]
+set $m3-scaleModeGui_ {normalize}
+set $m3-showLastVecGui_ {1}
+
+set $m4-filename $DATADIR/$DATASET/$DATASET-dipole.pcv.fld
+
+$m5 initialize_ui
+set $m5-ViewWindow_0-view-eyep-x ${view-eyep-x}
+set $m5-ViewWindow_0-view-eyep-y ${view-eyep-y}
+set $m5-ViewWindow_0-view-eyep-z ${view-eyep-z}
+set $m5-ViewWindow_0-view-lookat-x ${view-lookat-x}
+set $m5-ViewWindow_0-view-lookat-y ${view-lookat-y}
+set $m5-ViewWindow_0-view-lookat-z ${view-lookat-z}
+set $m5-ViewWindow_0-view-up-x ${view-up-x}
+set $m5-ViewWindow_0-view-up-y ${view-up-y}
+set $m5-ViewWindow_0-view-up-z ${view-up-z}
+set $m5-ViewWindow_0-view-fov ${view-fov}
+set $m5-ViewWindow_0-specular-scale {0.4}
+
+set $m6-mapType {3}
+set $m6-minRes {12}
+set $m6-resolution {128}
+set $m6-realres {128}
+
+set $m8-filename $DATADIR/$DATASET/$DATASET-electrodes.pcd.fld
+
+set $m9-nodes-on {1}
+set $m9-edges-on {0}
+set $m9-faces-on {0}
+set $m9-node_display_type {Spheres}
+set $m9-node_scale [expr 0.03 * ${global-scale}]
+set $m9-resolution {7}
+
+set $m10-nodes-on {1}
+set $m10-edges-on {1}
+set $m10-faces-on {0}
+set $m10-node_display_type {Spheres}
+set $m10-edge_display_type {Cylinders}
+set $m10-node_scale [expr 0.01 * ${global-scale}]
+set $m10-edge_scale [expr 0.01 * ${global-scale}]
+set $m10-resolution {7}
+
+set $m12-def-color-r {0.3}
+set $m12-def-color-g {0.3}
+set $m12-def-color-b {0.3}
+set $m12-nodes-on {0}
+set $m12-edges-on {1}
+set $m12-faces-on {0}
+set $m12-node_display_type {Spheres}
+set $m12-edge_display_type {Cylinders}
+set $m12-node_scale [expr 0.005 * ${global-scale}]
+set $m12-edge_scale [expr 0.005 * ${global-scale}]
+set $m12-resolution {4}
+
+set $m13-filename $DATADIR/$DATASET/generated/$DATASET-leadfield.mat
+
+set $m14-row_or_col {col}
+set $m14-selectable_min {0}
+set $m14-selectable_max {100}
+set $m14-selectable_inc {1}
+set $m14-selectable_units {Units}
+set $m14-range_min {0}
+set $m14-range_max {0}
+
+::netedit scheduleok

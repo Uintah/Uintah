@@ -1,0 +1,123 @@
+# SCI Network 1.0
+
+::netedit dontschedule
+
+global notes
+set notes ""
+
+set m0 [addModuleAtPosition "MatlabInterface" "DataIO" "Matlab" 217 19]
+set m1 [addModuleAtPosition "SCIRun" "DataIO" "MatrixWriter" 217 102]
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "ShowMatrix" 35 103]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 6 15]
+set m4 [addModuleAtPosition "SCIRun" "Render" "Viewer" 35 179]
+
+addConnection $m0 0 $m1 0
+addConnection $m3 0 $m2 0
+addConnection $m0 0 $m2 1
+addConnection $m2 0 $m4 0
+
+set $m0-notes {}
+set $m0-show_status {1}
+set $m0-hpTCL {127.0.0.1:5517 3}
+set $m0-cmdTCL {rand('seed',1);
+o1=rand(5,5);
+
+
+}
+set $m1-notes {}
+set $m1-show_status {1}
+set $m1-filename {rand1.mat}
+set $m1-filetype {ASCII}
+set $m1-split {0}
+set $m2-notes {}
+set $m2-show_status {1}
+set $m2-color_by_val {1}
+set $m2-grid_x {10}
+set $m2-grid_y {10}
+set $m2-grid_z {10}
+set $m2-xpos {0.000000e+00}
+set $m2-ypos {0.000000e+00}
+set $m2-xscale {1.00}
+set $m2-xscale {1.00}
+set $m2-yscale {2.0}
+set $m2-displaymode {3D}
+set $m2-gmode {4}
+set $m2-showtext {1}
+set $m2-row_begin {0}
+set $m2-row_end {4}
+set $m2-col_begin {0}
+set $m2-col_end {4}
+set $m2-xgap {0.20000000000000001}
+set $m2-ygap {0.20000000000000001}
+set $m2-data_face_centered {}
+set $m2-colormapmode {0}
+set $m3-notes {}
+set $m3-show_status {1}
+set $m3-tcl_status {Calling GenStandardColorMaps!}
+set $m3-positionList {}
+set $m3-nodeList {}
+set $m3-width {335}
+set $m3-height {40}
+set $m3-mapType {2}
+set $m3-minRes {12}
+set $m3-resolution {256}
+set $m3-realres {256}
+set $m3-gamma {0}
+set $m4-notes {}
+set $m4-show_status {1}
+$m4 ui
+set $m4-ViewWindow_0-pos {}
+set $m4-ViewWindow_0-caxes {0}
+set $m4-ViewWindow_0-raxes {1}
+set $m4-ViewWindow_0-iaxes {}
+set $m4-ViewWindow_0-have_collab_vis {0}
+set $m4-ViewWindow_0-view-eyep-x {3.1561960107592513}
+set $m4-ViewWindow_0-view-eyep-y {3.1128184019393705}
+set $m4-ViewWindow_0-view-eyep-z {2.6497877234859004}
+set $m4-ViewWindow_0-view-lookat-x {0.5}
+set $m4-ViewWindow_0-view-lookat-y {0.50000001301569452}
+set $m4-ViewWindow_0-view-lookat-z {-0.5}
+set $m4-ViewWindow_0-view-up-x {-0.34791378044084326}
+set $m4-ViewWindow_0-view-up-y {0.84450612752029963}
+set $m4-ViewWindow_0-view-up-z {-0.40714297483811274}
+set $m4-ViewWindow_0-view-fov {20}
+set $m4-ViewWindow_0-view-eyep_offset-x {}
+set $m4-ViewWindow_0-view-eyep_offset-y {}
+set $m4-ViewWindow_0-view-eyep_offset-z {}
+set $m4-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m4-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m4-ViewWindow_0-bgcolor-r {0}
+set $m4-ViewWindow_0-bgcolor-g {0}
+set $m4-ViewWindow_0-bgcolor-b {0}
+set $m4-ViewWindow_0-shading {}
+set $m4-ViewWindow_0-do_stereo {0}
+set $m4-ViewWindow_0-ambient-scale {1.0}
+set $m4-ViewWindow_0-diffuse-scale {1.0}
+set $m4-ViewWindow_0-specular-scale {0.4}
+set $m4-ViewWindow_0-emission-scale {1.0}
+set $m4-ViewWindow_0-shininess-scale {1.0}
+set $m4-ViewWindow_0-polygon-offset-factor {1.0}
+set $m4-ViewWindow_0-polygon-offset-units {0.0}
+set $m4-ViewWindow_0-point-size {1.0}
+set $m4-ViewWindow_0-line-width {1.0}
+set $m4-ViewWindow_0-sbase {0.40}
+set $m4-ViewWindow_0-sr {1}
+set $m4-ViewWindow_0-do_bawgl {0}
+set $m4-ViewWindow_0-drawimg {}
+set $m4-ViewWindow_0-saveprefix {}
+set $m4-ViewWindow_0-resx {}
+set $m4-ViewWindow_0-resy {}
+set $m4-ViewWindow_0-aspect {}
+set $m4-ViewWindow_0-aspect_ratio {}
+set $m4-ViewWindow_0-global-light {1}
+set $m4-ViewWindow_0-global-fog {0}
+set $m4-ViewWindow_0-global-debug {0}
+set $m4-ViewWindow_0-global-clip {0}
+set $m4-ViewWindow_0-global-cull {0}
+set $m4-ViewWindow_0-global-dl {0}
+set $m4-ViewWindow_0-global-type {Gouraud}
+set $m4-ViewWindow_0-ortho-view {0}
+set $m4-ViewWindow_0-unused {1}
+$m0 initialize_ui
+
+::netedit scheduleok

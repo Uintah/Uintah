@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+
+<component name="NrrdReader" category="DataIO">
+  <overview>
+    <authors>
+      <author>David Weinstein</author>
+      <author>Martin Cole</author>
+    </authors>
+    <summary>Open a raw nrrd or a SCIRun wrapped nrrd.</summary>
+    <description>
+      <p>Interface to introdued a NrrdData into the net. NrrdReader
+can open a raw nrrd, or a previously saved SCIRun wrapped nrrd
+(NrrdData). The user needs to verify the tuple axis, by selecting an
+existing axis, or choosing to add a tuple axis.  The tuple axis, is
+the axis along which related but disjoint data sets can be stored, for
+example a pressure data set and a tempurature data set can be stored
+in the same nrrd, by joining them along the tuple axis.  All nrrds
+that pass through SCIRun must have a tuple axis.  Vector and Tensor
+data sets store thier elements along the tuple axis, for example a 3
+dimensional vector field is stored as a 4 dimensional nrrd, with x,y,z
+components encoded in the Vector label along the tuple axis. </p>
+      <p>
+When the user specifies the nrrd to load, all of its axis info is
+shown in the UI, where the user can select an axis to adopt as the
+tuple axis, add tuple axis can be chosen.</p>
+    </description>
+    <examplesr>Teem/nets/test/io.net</examplesr>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+    </inputs>
+    <outputs>
+      <port>
+        <name>Output Data</name>
+	<datatype>Teem::Nrrd</datatype>
+      </port>
+    </outputs>
+  </io>
+  <testing>
+  </testing>
+</component>

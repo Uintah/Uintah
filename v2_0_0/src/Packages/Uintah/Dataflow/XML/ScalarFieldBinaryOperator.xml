@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<component name="ScalarFieldBinaryOperator" category="Operators">
+  <overview>
+    <authors>
+      <author>James Bigler</author>
+    </authors>
+    <summary>Performs an operation on two scalar fields.</summary>
+    <description>
+      <p>Version Date: April 2002</p><p>Version: 1.0</p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Scalar Field Left Operand</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Scalar Field Right Operand</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+       <name>Scalar Field</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+   </outputs>
+  </io>
+  <testing>
+  </testing>
+</component>

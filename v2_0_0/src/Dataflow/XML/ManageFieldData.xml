@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+
+<component name="ManageFieldData" category="FieldsData">
+  <overview>
+    <authors>
+      <author>Michael Callahan</author>
+    </authors>
+    <summary>Add and remove data from a field.</summary>
+    <description>
+      <p>
+        This module performs two simultanious operations.  First
+        the "Input Field" is split into it's mesh part it's data
+        values.  The data values are packaged up and passed to
+        the "Output Matrix" port.  Second the input field
+        geometry is joined with the data from the Input Matrix,
+        and the result is passed out on the "Output Field" port.
+        If the input matrix is not present, then the second
+        operation is not performed and the Output Field is the
+        same as the Input Field.
+      </p>
+      <p>
+        The format of the "Output Matrix" will be a column matrix
+        if the nput field was of scalar type.  It will be an Nx3
+        matrix if the input field contained vectors.  If the
+        field contained tensors it will be Nx9 matrix, where the
+        tensor is flattened out in left to right, top to bottom
+        order.  Column 0 contains (0, 0), column 1 contains (0,
+        1), column 2 contains (0,2), column 3 contains (1, 0),
+        etc.
+      </p>
+      <p>
+        The "Input Matrix" should have the same number of values
+        as the field where the values are to be stored.  The type
+        of the Iutput Field is preserved in the Output field as
+        well.  So for instance if the input field is a vector
+        field, the Output Field will also be a vector field, and
+        the input matrix should be an Nx3 matrix where N is equal
+        to the number of elements to be filled in.
+      </p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+	<name>Input Field</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+	<name>Input Matrix</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+	<name>Output Field</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+	<name>Output Matrix</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
+  </io>
+  <testing>
+  </testing>
+</component>

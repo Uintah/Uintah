@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+
+<component name="remoteSalmon" category="remoteSalmon">
+  <overview>
+    <authors>
+      <author>Steven G. Parker</author>
+      <author>David Hart</author>
+    </authors>
+    <summary>Summary not available yet.</summary>
+    <description>
+      <p>Version Date: 2000</p><p>Version: 0.1</p>
+    </description>
+  </overview>
+  <io>
+  </io>
+  <testing>
+  </testing>
+</component>

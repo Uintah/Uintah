@@ -1,0 +1,36 @@
+# SCI Network 1.0
+
+::netedit dontschedule
+
+set m0 [addModuleAtPosition "Teem" "Unu" "UnuPermute" 56 209]
+set m1 [addModuleAtPosition "SCIRun" "Fields" "SampleLattice" 35 21]
+set m2 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 47 104]
+set m3 [addModuleAtPosition "Teem" "NrrdData" "NrrdInfo" 125 299]
+
+addConnection $m1 0 $m2 0
+addConnection $m2 0 $m0 0
+addConnection $m0 0 $m3 0
+
+set $m0-notes {}
+set $m0-show_status {1}
+set $m0-dim {4}
+set $m0-axis0 {0}
+set $m0-axis1 {1}
+set $m0-axis2 {3}
+set $m0-axis3 {2}
+set $m1-notes {}
+set $m1-show_status {1}
+set $m1-sizex {4}
+set $m1-sizey {8}
+set $m1-sizez {16}
+set $m1-padpercent {0}
+set $m1-data-at {Nodes}
+set $m2-notes {}
+set $m2-show_status {1}
+set $m2-label {unknown}
+set $m3-notes {}
+set $m3-show_status {1}
+$m0 initialize_ui
+$m3 initialize_ui
+
+::netedit scheduleok

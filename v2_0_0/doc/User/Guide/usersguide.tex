@@ -1,0 +1,75 @@
+% -*-latex-*-
+%
+%  The contents of this file are subject to the University of Utah Public
+%  License (the "License"); you may not use this file except in compliance
+%  with the License.
+%
+%  Software distributed under the License is distributed on an "AS IS"
+%  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+%  License for the specific language governing rights and limitations under
+%  the License.
+%
+%  The Original Source Code is SCIRun, released March 12, 2001.
+%
+%  The Original Source Code was developed by the University of Utah.
+%  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
+%  University of Utah. All Rights Reserved.
+%
+
+\documentclass[11pt,titlepage]{book}
+\usepackage[]{fancyhdr}
+\usepackage[]{graphics}
+\usepackage[]{epsfig}
+\usepackage[]{html}
+\usepackage{makeidx}
+%\begin{latexonly}
+\usepackage[]{../../Utilities/TeX/scirun-doc}
+%\end{latexonly}
+\begin{htmlonly}
+\input{../../Utilities/TeX/scirun-doc.tex}
+\end{htmlonly}
+%\begin{latexonly}
+\usepackage[]{srugmacros}
+%\end{latexonly}
+\begin{htmlonly}
+\input{srugmacros.tex}
+\end{htmlonly}
+%\usepackage[]{makeindex}
+\makeindex
+\begin{htmlonly}
+\input{srugmacros.tex}
+\end{htmlonly}
+
+\begin{document}
+
+% The title page
+\input{title}
+\newpage
+\tableofcontents
+\newpage
+
+% Now the main chapters of the manual
+\input{intro}
+\input{concepts}
+\newpage
+\input{running}
+\input{network}
+\input{viewer}
+\input{packages}
+%\input{ui}
+\input{converters}
+%\input{samples}
+
+% Now the glossary, appendiced, bibliography, and index
+\newpage
+%\input{glossary}
+\newpage
+%\input{appendices}
+
+\newpage
+\bibliography{usersguide.bib}
+\bibliographystyle{unsrt}
+\newpage
+\printindex
+
+\end{document}

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+
+<component name="Gradient" category="FieldsData">
+  <overview>
+    <authors>
+      <author>Michael Callahan</author>
+    </authors>
+    <summary>
+      Compute the derivative of a scalar field and output it as a
+  vector field.
+    </summary>
+    <description>
+      <p>The Gradient module computes the derivative of a scalar field
+      and converts it to a vector field. The gradient is the
+      derivative of three dimensions; the first component in the X
+      direction, the second component in the Y direction, and the
+      third component in the Z direction grid, computing the general
+      direction of "flow" at a specific point on the geometry.</p>
+
+      <p>Not all field types are supported by the Gradient module.  At
+      this time only derivatives of TetVolMesh and LatVolMesh are
+      supported.  The Gradient module has no GUI. If Gradient recieves
+      as input a Field type it does not support, an error message
+      appears in the Error frame of the SCIRun environment.</p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+	<name>Input Field</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+	<name>Output Gradient</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+  </io>
+  <testing>
+  </testing>
+</component>

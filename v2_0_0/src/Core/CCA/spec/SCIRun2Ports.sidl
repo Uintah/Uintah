@@ -1,0 +1,123 @@
+//abstract interface 
+interface StringPort extends sci.cca.Port
+{
+	collective string getString();
+}
+
+
+//abstract interface 
+interface UIPort extends sci.cca.Port
+{
+	//return 0 for success, -1 for fatal error, other values for others errors
+	collective int ui();
+}
+
+//abstract interface 
+interface BuilderPort extends sci.cca.Port
+{
+	/** The builder port is designed for the Builder only
+	 *  There is only one port for convenience.
+	 *  All final modification should be done through 
+	 *  the BuilderService and the BuilderService will tranverse
+	 *  each Builder
+	 */
+	void buildRemotePackageMenus(in sci.cca.ports.ComponentRepository reg, in string frameworkURL); 	
+
+}
+
+
+//abstract interface
+interface ZListPort extends sci.cca.Port
+{
+	array<double> getList();
+}
+/* $Source$ */
+
+
+
+//abstract interface 
+interface Field2DPort extends sci.cca.Port
+{
+	//provides a interface to 
+	array<double> getField();
+}
+
+//abstract interface 
+interface PDEDescriptionPort extends sci.cca.Port
+{
+	//provides a interface to 
+	array<double> getNodes();
+	array<int> getBoundaries();
+	array<int> getDirichletNodes();
+	array<double> getDirichletValues();
+}
+
+//abstract interface 
+interface MeshPort extends sci.cca.Port
+{
+	//provides a interface to 
+	array<int> getTriangles();
+	array<double> getNodes();
+}
+
+
+//abstract interface 
+interface PDEMatrixPort extends sci.cca.Port
+{
+	//provides a interface to 
+	void getMatrix(out DMatrix);
+	array<double> getVector();
+	int getSize();
+}
+
+// BEGIN proposed sparker
+// Builder events
+// Component created
+// Component destroyed
+// Component moved
+// Connection created
+// Connection destroyed
+// Connection moved
+enum ComponentEventType {
+  AllComponentEvents = 0,
+  InstantiatePending=1,
+  ComponentInstantiated=2,
+  DestroyPending=3,
+  ComponentDestroyed=4,
+  ComponentMoved=5,
+}
+interface ComponentEventListener {
+  void componentActivity(in ComponentEvent evt);
+}
+interface ComponentEvent {
+  ComponentEventType getEventType() ;
+
+  ComponentID getComponentID();
+
+   /** Get the Properties of the affected Port. */
+  TypeMap getComponentProperties() ;
+}
+interface ComponentEventService  extends Port
+{
+  /** Sign up to be told about connection activity.
+      @param connectionEventType must be one of the integer values 
+             ALL, ConnectPending, Connected, DisconnectPending, Disconnected
+             as defined in @see ContainerEventType. 
+             ALL means listening to all of the other four listed here.
+      @param l, an object (this component or its delegate) that listens
+             by implementing the ConnectionEventListener callback.
+  */
+   void addComponentEventListener(in ComponentEventType type, in ComponentEventListener l, in bool playInitalEvents);
+
+  /** Ignore future ConnectionEvents of the given type.
+      Removing a non-added listener is not an error. 
+      @param connectionEventType must be one of the integer values defined in
+             addConnectionEventListener.
+      @param l, a previously added listener interface.
+   */
+   void removeComponentEventListener(in ComponentEventType type, in ComponentEventListener l) ;
+ 
+   void moveComponent(in ComponentID component, in int x, in int y);
+}
+
+// END proposed - sparker

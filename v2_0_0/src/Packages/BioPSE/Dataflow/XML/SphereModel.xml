@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+
+<component name="SphereModel" category="Forward">
+<overview>
+
+<authors>
+<author>Sascha Moehrs</author>
+</authors>
+
+<summary>SphereModel builds a discrete unit sphere from a unit volume.
+</summary>
+
+<description>
+<p>SphereModel recieves HexVolField, covering the unit volume as input.
+SphereModel generates as output a mesh convering the unit sphere. The
+new mesh contains only cells belonging to the unit sphere.
+</p>
+</description>
+
+</overview>
+
+<io>
+
+<inputs lastportdynamic="no">
+<port>
+<name>HexVolField</name>
+<description>Unit Volume</description>
+<datatype>SCIRun::Field</datatype>
+</port>
+</inputs>
+
+<outputs>
+<port>
+<name>HexVolField</name>
+<description>Unit Sphere </description>
+<datatype>SCIRun::Field</datatype>
+</port>
+
+</outputs>
+</io>
+
+<nets>
+<net>
+<title>Sphere Model</title> 
+
+<p>A network using module SphereModel is
+shown in <xref target="fig.msn"/>.  The network generates a
+discretized sphere convering the unit volume.</p>
+
+<section>
+<title>Upstream</title>
+<p>Module <modref package="SCIRun" name="SampleLattice"/> produces a
+discretized unit volume (represented as a Lattice Volume Field).</p>
+
+<p>What is module <modref package="SCIRun" name="ChangeFieldDataType"/>
+ used for?</p>
+
+<p>Module <modref package="SCIRun" name="Unstructure"/> converts the
+unit volume from a LatVolField to a HexVolField (a LatVolField
+cannot represent a sphere).</p>
+
+<p>SphereModel then generates a discretized sphere (represented as a
+HexVolField).  Note that module <modref package="SCIRun"
+name="SampleLattice"/> is used to change the resolution of the
+discretized sphere.</p>
+
+</section>
+
+<figure id="fig.msn">
+<img>../Modules/Forward/doc/sphere3.gif</img>
+<caption>Sphere Model Network.  Also shown are module <modref package="SCIRun"
+name="SampleLattice"/>'s GUI and the discretized sphere rendered by module
+<modref package="SCIRun" name="Viewer"/></caption>
+</figure>
+
+<section>
+<title>Downstream</title>
+
+<p>Module <modref
+package="SCIRun" name="Viewer"/> displays the discretezied sphere 
+from scene-graph data produced by
+module <modref package="SCIRun" name="ShowField"/></p>
+
+</section>
+
+</net>
+
+</nets>
+
+</component>

@@ -1,0 +1,610 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+
+<!--% require("../../Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.2//EN"
+"../../Utilities/XML/Docbook_dtd/docbookx.dtd" [
+<!ENTITY sr "SCIRun">
+<!ENTITY sr_bibtex_cit_url "http://software.sci.utah.edu/scirun_citation.bib">
+<!ENTITY biopse_bibtex_cit_url "http://software.sci.utah.edu/biopse_citation.bib">
+<!--%=
+doc.doIfHTML {
+<<HTML_TEXT
+<!ENTITY sr_bibtex_cit "javascript:function NewWindow(PageName,wide,tall,scroll){
+window.open(PageName,'','toolbar=0,location=0,directories=0,status=0,menubar=0,scrollbars=' + scroll + ',resizable=0,width=' + wide + ',height=' + tall + ',left=0,top=0');}NewWindow('&sr_bibtex_cit_url;',
+'600','400','1')">
+<!ENTITY biopse_bibtex_cit "javascript:function NewWindow(PageName,wide,tall,scroll){
+window.open(PageName,'','toolbar=0,location=0,directories=0,status=0,menubar=0,scrollbars=' + scroll + ',resizable=0,width=' + wide + ',height=' + tall + ',left=0,top=0');}NewWindow('&biopse_bibtex_cit_url;', '600','400','1')">
+HTML_TEXT
+}
+%-->
+]>
+
+<article class="faq">
+<title>User FAQ (v. <!--%= doc.edition %-->)</title>
+
+
+<qandaset defaultlabel="number">
+
+<qandaentry>
+
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
+<date>3/15/03</date>
+</revision>
+</revhistory>
+
+<question>
+<para>
+What citation should be used when referring to &sr; and BioPSE in a
+paper or grant application?
+</para>
+</question>
+
+<answer>
+<para>
+<quote>BibTeX</quote> and <quote>plain text</quote>
+citations can be used.
+<!--%=
+doc.doIfHTML {
+<<HTML_TEXT
+Here are <ulink url="&sr_bibtex_cit;">&sr;
+citations</ulink> and <ulink
+url="&biopse_bibtex_cit;">BioPSE citations</ulink>.
+HTML_TEXT
+}
+%-->
+<!--%=
+doc.doIfPrint {
+<<PRINT_TEXT
+For &sr; and BioPSE citations go to: 
+<literallayout class="monospaced">
+&sr_bibtex_cit_url; and 
+&biopse_bibtex_cit_url;
+</literallayout>
+PRINT_TEXT
+}
+%-->
+</para>
+<para>
+Thank you for the citation(s).  Use of SCIRun/BioPSE citations 
+in projects and publications helps ensure the continued
+funding of the SCIRun/BioPSE project.  Please send
+ citations to macleod@sci.utah.edu.
+</para>
+</answer>
+
+</qandaentry>
+
+<qandaentry>
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
+<date>8/27/03</date>
+</revision>
+</revhistory>
+<question>
+<para>
+I've installed SCIRun from its RPM.  I'm running the networks in the
+tutorial and I'm getting these error messages and others like them:
+<literallayout class="monospaced">
+<![CDATA[
+REMARK: Maybe dynamically compiling some code, ignore failure here.
+DynamicLoader::create_cc(empty = false) - Could not create file
+/usr/local/SCIRun/linux/on-the-fly-libs/VFInterfaceMaker.TetVolFieldint.Te
+tVolMeshCell.cc
+DynamicLoader - Executing: cd /usr/local/SCIRun/linux/on-the-fly-libs;
+/usr/bin/gmake VFInterfaceMaker.TetVolFieldint.TetVolMeshCell.so
+DynamicLoader::compile_so() syscal error 256: command was 'cd
+/usr/local/SCIRun/linux/on-the-fly-libs; /usr/bin/gmake
+VFInterfaceMaker.TetVolFieldint.TetVolMeshCell.so >
+VFInterfaceMaker.TetVolFieldint.TetVolMeshCell.log 2>&1'
+DynamicLoader::create_cc(empty = true) - Could not create file
+/usr/local/SCIRun/linux/on-the-fly-libs/VFInterfaceMaker.TetVolFieldint.Te
+tVolMeshCell.cc
+DynamicLoader - Executing: cd /usr/local/SCIRun/linux/on-the-fly-libs;
+/usr/bin/gmake VFInterfaceMaker.TetVolFieldint.TetVolMeshCell.so
+DynamicLoader::compile_so() syscal error 256: command was 'cd
+/usr/local/SCIRun/linux/on-the-fly-libs; /usr/bin/gmake
+VFInterfaceMaker.TetVolFieldint.TetVolMeshCell.so >
+VFInterfaceMaker.TetVolFieldint.TetVolMeshCell.log 2>&1'
+DYNAMIC COMPILATION ERROR:
+/usr/local/SCIRun/linux/on-the-fly-libs/VFInterfaceMaker.TetVolFieldint.Te
+tVolMeshCell.so does not compile!!
+/usr/local/SCIRun/linux/on-the-fly-libs/VFInterfaceMaker.TetVolFieldint.Te
+tVolMeshCell.so: cannot open shared object file: No such file or directory
+REMARK: Dynamic compilation completed.
+]]>
+</literallayout>
+</para>
+</question>
+<answer>
+<para>
+One of the features of SCIRun/BioPSE is that it dynamically compiles
+some parts of the code at run-time based on the data that you're
+passing through your network.  In order for this to work, the software
+needs to be able to dynamically create files.  However, because you
+have installed the software from RPM, the directory that the dynamic
+files are wrtten to by default, <filename>/usr/local/SCIRun/linux/on-the-fly-libs/</filename>, is owned by root&mdash;which
+is why the program is having problems.  You can  fix this by
+creating a different directory that you own, and setting your
+<envar>SCIRUN_ON_THE_FLY_LIBS</envar> environment variable to point at that new
+directory.  This environment variable overrides the default location,
+so that should fix the problem you're having.  For example:
+<literallayout class="monospaced">
+mkdir /home/dmw/on-the-fly-libs/
+setenv SCIRUN_ON_THE_FLY_LIBS /home/dmw/on-the-fly-libs/
+</literallayout></para>
+</answer>
+</qandaentry>
+
+<qandaentry id="auto_exec_qa">
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
+<date>3/18/03</date>
+</revision>
+</revhistory>
+<question>
+<para>Can a scirun net automatically
+execute as soon as it loads?</para>
+</question>
+<answer>
+<para>Add the following line to the end of the net file:
+<programlisting>
+$m1-c needexecute 
+</programlisting>
+Adding the above line causes the execution of module
+<varname>$m1</varname>, plus the execution of all of modules that <varname>$m1</varname> depends on, and the execution of all modules that depend on <varname>$m1</varname>.
+</para>
+</answer>
+</qandaentry>
+<qandaentry>
+
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
+<date>2/20/03</date>
+</revision>
+</revhistory>
+
+<question>
+<para>
+When SCIRun is remotely displayed, it sometimes hangs and sometimes
+crashes the X server (depending on whether it is running on sgi/linux
+and being displayed on sgi/linux.)  What causes this?
+</para>
+</question>
+
+<answer>
+<para>There are problems with the 4191 Nvidia drivers, causing 
+GL programs to behave badly.  There has been success using the 3123
+drivers (except for 3D texturing).  Determine what drivers 
+are being used on the linux box by typing "rpm -qa | grep NVIDIA".
+</para>
+<para>
+Since 4191 is the most recent driver on nvidia's
+<ulink
+url="http://www.nvidia.com/view.asp?IO=linux_display_archive">web
+site</ulink>, go back and use the 3123 drivers.  NVIDIA does not have prebuilt
+rpms for RedHat 8.0, but it is easy to build from the source rpms:
+<literallayout class="monospaced">
+# Removes the old installation.  The actual number may need to be changed
+rpm -e NVIDIA_GLX-1.0-4191 NVIDIA_kernel-1.0-4191
+
+# Build the rpm from the source
+rpmbuild --rebuild NVIDIA_kernel-1.0-3123.src.rpm
+
+# Install the rpm.  Note: the actual path may differ from system to system.
+rpm -ivh /usr/src/redhat/RPMS/i386/NVIDIA_kernel-1.0-3123.i386.rpm
+
+# The GLX rpm does not have to build from source (not kernel dependant),
+# but I did anyway.
+rpmbuild --rebuild NVIDIA_GLX-1.0-3123.src.rpm
+rpm -ivh /usr/src/redhat/RPMS/i386/NVIDIA_GLX-1.0-3123.i386.rpm
+</literallayout>
+</para>
+
+</answer>
+</qandaentry>
+
+<qandaentry>
+
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
+<date>1/31/03</date>
+</revision>
+</revhistory>
+
+<question>
+<para>SCIRun dies with a memory allocation error.  Specifically:
+<literallayout class="monospaced">
+Error allocating memory (32833536 bytes requested) mmap: errno=12 Thread
+</literallayout>
+</para>
+</question>
+
+<answer>
+<para>If SCIRun is not configured with <option>--enable-64bit</option>, the
+program will not use more than approximately 2G of
+memory.</para>
+</answer>
+
+</qandaentry>
+
+<qandaentry>
+
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
+<date>9/15/02</date>
+</revision>
+</revhistory>
+
+<question>
+<para>
+How are inverse problems in
+electrocardiography solved in SCIRUN/BIOPSE. The so-called transfer matrix T is built and then a least-squares
+problem is solved. The transfer matrix is expressed using inverses of
+submatrices. Is this matrix T effectively computed? Are inverses
+really computed ?  What is the method implemented? In which
+modules can the source code be seen?
+</para>
+</question>
+
+<answer>
+<para>
+There are two general solutions to the bioelectric inverse
+problem.
+One formulation tries to recover equivalent dipole sources. The
+other tries to recover the voltages on an interior surface that is
+assumed to encompass any source (i.e. there are no sources located between
+the measurement surface and the interior surface).
+</para>
+<para>
+In the first formulation (surface-to-source inversion), the inverse
+problem can be over-constrained (searching for a single dipole
+that accounts for the outer surface measurements), or
+under-constrained (searching for a large number of dipoles that are
+distributed through the domain).  The over-constrained case is called parameterized inversion, 
+The under-constrained
+case is called non-parameterized.  In the parameterized case, a search
+algorithm locates the dipole that best reproduces the
+measured data. In the non-parameterized case, find the minimum-norm
+solution that best fits some a-priori information about the
+data (e.g. the solution should be spatially focused).
+</para>
+<para>
+The inverse problem is ill-conditioned because of the poorly-specified boundary conditions on the inner surface.  The formulation uses the
+transfer matrix built from a combination of sub-matrices from
+the stiffness matrix.  SCIRun
+solves the resulting linear systems, but not by computing an explicit
+inverse. Rather, an iterative (conjugate-gradient)
+algorithm is used. There is a preliminary version of this code, unfortunately, it has not yet been released in
+BioPSE.  For the moment, see <ulink
+url="http://www.sci.utah.edu/publications/spie95.ps.Z">this SPIE `95
+paper</ulink>, which
+describes this technique in more detail.  This 
+algorithm will be part of BioPSE in early Spring.
+</para>
+</answer>
+</qandaentry>
+
+<qandaentry>
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
+<date>7/29/01</date>
+</revision>
+</revhistory>
+<question>
+<para>
+When running &sr;, one or more messages appear in the message window
+indicating a problem with a package and/or module.
+The message(s) is/are similar to the following:
+<literallayout class="monospaced">
+Loading package '&sr;'
+Unable to load module 'CastField' :
+- can't find symbol 'make_CastField'
+</literallayout>
+or
+<literallayout class="monospaced">
+Unable to load all of package 'Teem' (category 'DataIO' failed) :
+- libPackages_Teem_Dataflow.so: cannot open shared object file: No
+such file or directory
+- libPackages_Teem_Dataflow_Modules_DataIO.so: cannot open shared
+object file: No such file or directory
+</literallayout>
+</para>
+</question>
+
+<answer>
+<para>
+ Each module for a given package has its own .xml file that describes
+it. When &sr; starts, it parses all .xml files in the packages
+(under Dataflow/XML) and tries to find the matching code within the
+related .so files. If the .so files cannot be found, the message
+<quote>No such file or directory</quote>" is given. If the .so can be
+found, but the code for a particular module does not exist within the
+library, the message <quote>can't find symbol</quote> is given.
+</para>
+<para>
+The message(s) may or may not indicate a problem with &sr;. For some
+modules, the .xml file may be listed, but the code has not been
+completed (this may be common for module developers). For other modules,
+the &sr; installation is some how corrupt (.so files
+have been deleted, moved, etc.)
+</para> 
+<para>
+The solution is to build  libraries 
+the .xml files need or remove the offending .xml files.
+</para>
+</answer>
+</qandaentry>
+
+<qandaentry>
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
+<date>7/29/01</date>
+</revision>
+</revhistory>
+<question>
+<para>
+What systems are compatible with &sr;?
+</para>
+</question>
+
+<answer>
+<para>
+&sr; should be compatible with any SGI or Linux machine. 
+</para>
+<para>
+&sr; has been tested on the following Linux distributions:
+<itemizedlist>
+<listitem>
+<simpara>Mandrake 7.2 &amp; 8.0</simpara>
+</listitem>
+<listitem>
+<simpara>Redhat 6.2, 7.0 &amp; 7.1</simpara>
+</listitem>
+<listitem>
+<simpara>SuSE 6.4, 7.0 &amp; 7.2</simpara>
+</listitem>
+<listitem>
+<simpara>Debian testing</simpara>
+</listitem>
+</itemizedlist> 
+</para>
+<para>
+&sr; has been tested on the following PC processor configurations:
+<itemizedlist>
+<listitem>
+<simpara>Dual Intel Pentium II</simpara>
+</listitem>
+<listitem>
+<simpara>Single Intel Pentium III</simpara>
+</listitem>
+<listitem>
+<simpara>Dual Intel Pentium III</simpara>
+</listitem>
+<listitem>
+<simpara>Single Intel Pentium 4</simpara>
+</listitem>
+<listitem>
+<simpara>Single AMD Athlon</simpara>
+</listitem>
+</itemizedlist>
+</para>
+<para>
+&sr; has been tested with the following PC graphics cards:
+<itemizedlist>
+<listitem>
+<simpara>NVIDIA GeForce, GeForce II &amp; GeForce3</simpara>
+</listitem>
+</itemizedlist>
+</para>
+</answer>
+</qandaentry>
+
+<qandaentry>
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
+<date>7/29/01</date>
+</revision>
+</revhistory>
+<question>
+<para>
+What is the relationship between &sr;, BioPSE, and other SCI
+Institute software?
+</para>
+</question>
+
+<answer>
+<para>
+It is important to understand the hierarchy of computational problem solving
+environments developed at the SCI Institute.  From a historical
+perspective, &sr;, which started development in 1992, was the
+original implementation of the computational framework.  Since then,
+&sr; and its computational workbench infrastructure has been the
+origin of many significant application-specific projects. Two major
+examples are the DOE sponsored Uintah system and the NIH sponsored
+BioPSE system (from the <ulink url="http://www.ncrr.nih.gov/">National
+Center for Research Resources</ulink> (NCRR) Center at <ulink
+url="http://www.sci.utah.edu/ncrr/">Utah</ulink>). The target
+applications of the Uintah project are combustion, computational fluid
+dynamics, and mechanical modeling implemented on large-scale,
+distributed, shared memory architectures. The goal of the BioPSE
+project is to create software for geometric modeling, simulation, and
+visualization for solving bioelectric field problems.  A
+secondary goal of the &sr; system is to make source code for 
+problem solving environments publicly available to the scientific
+community.
+</para>
+<para>
+To realize these significant projects, the &sr; infrastructure
+has required significant reorganization, extension, and
+enhancement.  Even with these changes, &sr; remains the
+core infrastructure for problem solving environments, and the name
+used to refer to the entire ensemble of software.  Thus, a user may
+install and operate the core &sr; software and also augment its
+functionality with one or more of the <quote>packages</quote> such as
+BioPSE.  SCI anticipates that the collection of packages will grow as
+the advantages of the &sr; infrastructure become available to
+scientists and engineers of all disciplines.
+</para>
+ 
+<para>
+<figure id="fig.biopsesr">
+<title>BioPSE Software System</title>
+<mediaobject>
+<imageobject>
+<imagedata fileref="EAB-BioPSE.gif" format="GIF" width="645" align="center"/>
+</imageobject>
+<imageobject>
+<imagedata fileref="EAB-BioPSE.eps" format="EPS" align="center"/>
+</imageobject>
+<caption>
+<para>
+This figure shows the relationship among &sr; and its packages.
+BioPSE consists of the basic &sr; software together with the BioPSE
+modules and support libraries.
+</para>
+</caption>
+</mediaobject>
+</figure>
+</para>
+
+<para>
+In addition to major projects that have both leveraged and
+advanced &sr;, there exist a number of smaller packages that 
+extend &sr;'s utility. Examples include the Teem package for raster
+data processing, the NetSolve package for linear algebra subroutines
+(developed by researchers at the University of Tennessee and
+Knoxville), and a communications interface recently introduced
+to the Matlab program. SCI has developed various forms of software
+wrappers or interfaces that allow &sr; to leverage the strengths of
+third party tools, links referred to as "bridges."  </para>
+<para>
+There are instances when a tighter level of integration than
+a bridge between &sr; and third-party software is necessary. One
+example is the addition of mpeg support for capturing animations from
+the &sr; Viewer module. SCI uses the Berkeley and Alex
+Knowles' mpeg encoding tools.  Another example is the set of image
+generation and manipulation tools from Paul Haeberli called
+libimage. To indicate if such tools are available, the
+configure scripts for &sr; contain optional control flags.
+</para>
+<para>
+The combination of a robust infrastructure and
+modular extensibility through packages and third-party libraries 
+allows &sr; to grow and adapt to changing needs and opportunities.
+</para>
+
+</answer>
+</qandaentry>
+
+<qandaentry> 
+<question>
+<para> 
+How do I get my data into SCIRun?
+</para> 
+</question> 
+
+<answer>
+<para>
+A set of command line utilities, called
+<firstterm>converters</firstterm>, convert <quote>foreign</quote> data
+into &sr; file objects (and vice-versa). See Section&nbsp;<ulink
+url="../Guide/usersguide/srug7.html"><citetitle>Importing and
+Exporting &sr; Data</citetitle></ulink> in the &sr; <citetitle>User's
+Guide</citetitle> for information on the use of converter
+programs.
+</para>
+</answer>
+
+</qandaentry>
+
+<qandaentry>
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
+<date>7/29/01</date>
+</revision>
+</revhistory>
+<question>
+<para>
+By default,  what directions do the positive x,y,z axis point to in the
+viewer module?
+</para>
+</question>
+<answer>
+<para>
+By default, the negative-z axis points down, positive-x
+points to right, and positive-y points up. If the
+Axes is turned on, arrows point in +/-{x,y,z}. 
+To remember which is which: (R,G,B) = (X,Y,Z).  Arrows
+pointing in  positive directions are brighter than arrows 
+pointing in  negative directions.  ???One last note, click
+on the "Views" button at the botton-right of the ViewWindow and
+snap to a "canonical" view (e.g. "Look down +Z
+axis, Up vector +Y").???
+</para>
+</answer>
+</qandaentry>
+
+<qandaentry>
+<revhistory>
+<revision>
+<revnumber>1.0</revnumber>
+<date>7/29/01</date>
+</revision>
+</revhistory>
+<question>
+<para>
+Is there a way to scale up the size of the axes in the
+viewer window to make the size of the axes comparable to
+the size of other objects?
+</para>
+</question>
+<answer>
+<para>
+Currently, everything must be scaled down to the size of unit-axes,
+by using the Math::BuildTransform and Field::TransformField modules.
+</para>
+</answer>
+</qandaentry>
+
+</qandaset>
+
+</article>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-default-dtd-file:"../../Utilities/XML/docbook-4.2.ced"
+sgml-omittag:nil
+sgml-shorttag:nil
+End:
+-->

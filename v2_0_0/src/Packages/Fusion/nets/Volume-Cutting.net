@@ -1,0 +1,106 @@
+# SCI Network 1.0
+
+::netedit dontschedule
+
+set m0 [addModuleAtPosition "Fusion" "DataIO" "FusionFieldReader" 17 17]
+set m1 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 231 129]
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 231 20]
+set m3 [addModuleAtPosition "SCIRun" "Fields" "FieldSubSample" 17 129]
+set m4 [addModuleAtPosition "SCIRun" "Fields" "SampleLattice" 53 215]
+set m5 [addModuleAtPosition "SCIRun" "Visualization" "GLTextureBuilder" 17 394]
+set m6 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 17 304]
+set m7 [addModuleAtPosition "SCIRun" "Render" "Viewer" 17 575]
+set m8 [addModuleAtPosition "SCIRun" "Visualization" "TexCuttingPlanes" 17 488]
+
+addConnection $m2 0 $m1 0
+addConnection $m6 0 $m5 0
+addConnection $m4 0 $m6 1
+addConnection $m0 0 $m3 0
+addConnection $m3 0 $m4 0
+addConnection $m3 0 $m6 0
+addConnection $m0 0 $m1 1
+addConnection $m1 0 $m8 1
+addConnection $m5 0 $m8 0
+addConnection $m8 0 $m7 0
+
+set $m0-notes {}
+set $m0-show_status {1}
+set $m0-filename {/home/sci/allen/SCIRUN/SCIRunData/fusion/NIMROD_10089_00.mds}
+set $m1-notes {}
+set $m1-show_status {1}
+set $m1-isFixed {0}
+set $m1-min {      1.04083e-17}
+set $m1-max {           476463}
+set $m1-makeSymmetric {0}
+set $m2-notes {}
+set $m2-show_status {1}
+set $m2-tcl_status {Calling GenStandardColorMaps!}
+set $m2-positionList {}
+set $m2-nodeList {}
+set $m2-width {389}
+set $m2-height {40}
+set $m2-mapType {3}
+set $m2-minRes {12}
+set $m2-resolution {255}
+set $m2-realres {255}
+set $m2-gamma {0.00}
+set $m3-notes {}
+set $m3-show_status {1}
+set $m3-wrap {1}
+set $m3-dims {3}
+set $m3-i-dim {385}
+set $m3-j-dim {192}
+set $m3-k-dim {10}
+set $m3-i-start {0}
+set $m3-j-start {0}
+set $m3-k-start {0}
+set $m3-i-stop {384}
+set $m3-j-stop {0}
+set $m3-k-stop {0}
+set $m3-i-stride {1}
+set $m3-j-stride {1}
+set $m3-k-stride {1}
+set $m3-i-wrap {0}
+set $m3-j-wrap {1}
+set $m3-k-wrap {1}
+set $m4-notes {}
+set $m4-show_status {1}
+set $m4-sizex {32}
+set $m4-sizey {32}
+set $m4-sizez {32}
+set $m4-padpercent {0}
+set $m4-data-at {Nodes}
+set $m5-notes {}
+set $m5-show_status {1}
+set $m5-is_fixed {0}
+set $m5-max_brick_dim {128}
+set $m5-sel_brick_dim {64}
+set $m5-min {      1.04083e-17}
+set $m5-max {      1.90382e+06}
+set $m6-notes {}
+set $m6-show_status {1}
+set $m6-interpolation_basis {linear}
+set $m6-map_source_to_single_dest {0}
+set $m6-exhaustive_search {0}
+set $m6-exhaustive_search_max_dist {-1}
+set $m6-np {1}
+set $m7-notes {}
+set $m7-show_status {1}
+set $m8-notes {}
+set $m8-show_status {1}
+set $m8-control_pos_saved {0}
+set $m8-control_x {}
+set $m8-control_y {}
+set $m8-control_z {}
+set $m8-drawX {0}
+set $m8-drawY {0}
+set $m8-drawZ {1}
+set $m8-drawView {0}
+set $m8-interp_mode {1}
+set $m8-draw_phi_0 {1}
+set $m8-draw_phi_1 {1}
+set $m8-phi_0 {30.0}
+set $m8-phi_1 {115.0}
+set $m8-cyl_active {1}
+
+::netedit scheduleok

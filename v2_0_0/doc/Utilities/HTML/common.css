@@ -1,0 +1,71 @@
+/*
+
+The contents of this file are subject to the University of Utah Public
+License (the "License"); you may not use this file except in compliance
+with the License.
+
+Software distributed under the License is distributed on an "AS IS"
+basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+License for the specific language governing rights and limitations under
+the License.
+
+The Original Source Code is SCIRun, released March 12, 2001.
+
+The Original Source Code was developed by the University of Utah.
+Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+University of Utah. All Rights Reserved.
+
+*/
+
+/*
+Stylesheet imported by most other stylesheets.
+*/
+
+body {
+background-color:#CCCCCC; 
+font-family: Arial, Helvetica, sans-serif;
+margin-left:50px; 
+margin-right:50px; 
+margin-top:0em}
+
+a:link {
+color:#003333}
+
+a.alt:link { 
+color:#FFCC33;}
+
+a:visited {
+color:#336666}
+
+a.alt:visited { 
+color:#FFCC33;}
+
+div.top-banner-margins {
+margin-left:-50px;
+margin-right:-50px;
+margin-top:0em}
+
+div.top-banner-margins table {
+border-style: none}
+
+div.top-banner-margins td {
+border-style: none}
+
+div.bottom-banner-margins {
+margin-left:-50px;
+margin-right:-50px}
+
+div.bottom-banner-margins table {
+border-style: none}
+
+div.bottom-banner-margins td {
+border-style: none}
+
+.block-center {
+display: table;
+margin-left: auto;
+margin-right: auto;}
+
+table.default {
+margin-left: auto;
+margin-right: auto}

@@ -1,0 +1,17 @@
+#!/bin/sh
+
+SUS_DIR=$1
+TEST=$2
+TEST_UDADIR=$3
+COMPARE_UDADIR=$4
+TMPDIR=$5
+FLAGS=$6
+
+echo "$SUS_DIR/compare_uda $TEST_UDADIR $COMPARE_UDADIR"
+$SUS_DIR/compare_uda $FLAGS $TEST_UDADIR $COMPARE_UDADIR > $TMPDIR/compare_uda.log 2>&1
+retval=$?
+cat $TMPDIR/compare_uda.log
+
+exit $retval
+
+

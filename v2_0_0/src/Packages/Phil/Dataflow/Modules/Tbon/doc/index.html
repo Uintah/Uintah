@@ -1,0 +1,88 @@
+<html>
+<title>T-BON Documentation</title>
+<body>
+
+<b>
+This is the overall README for the "Packages/Phil" package. <br>
+by: Packages/Philip Sutton (psutton@cs.utah.edu) <br>
+Last Modified: 26 January 2000<p>
+</b>
+
+<HR>
+
+This package contains much of the code I used for my thesis 
+(Isosurface Extraction in Time-varying Fields, Univerity of Utah).
+The concentration is on octree-based isosurface extraction, done in 
+several different ways.  For more information on the branch-on-need
+octree, see Wilhelms & van Gelder's 1992 paper in ACM ToG.
+<p>
+
+The "Packages/Phil" package contains the standard GUI/ and Modules/ directories.
+The modules contained in this package are:
+<p>
+
+<b>Isosurface extraction modules:</b>
+<table align=center cols=2 border=1 cellpadding=1>
+<tr>
+<td align=left><a href="bono.html">Bono</a></td>
+<td align=left>The basic branch-on-need octree implementation for 
+isosurface extraction in a rectilinear scalar field.</td>
+</tr>
+<tr>
+<td align=left><a href="bonop.html">BonoP</a></td>
+<td align=left>A parallel version of the BONO algorithm.</td>
+</tr>
+<tr>
+<td align=left><a href="bonocl.html">BonoCL</a></td>
+<td align=left>A version of the BONO for curvilinear grids.</td>
+</tr>
+<tr>
+<td align=left><a href="tbon.html">Tbon</a></td>
+<td align=left>An implementation of the T-BON algorithm for 
+isosurface extraction in rectilinear scalar fields.</td>
+</tr>
+<tr>
+<td align=left><a href="tbonp.html">TbonP</a></td>
+<td align=left>A parallel version of the T-BON algorithm.</td>
+</tr>
+<tr>
+<td align=left><a href="tboncl.html">TbonCL</a></td>
+<td align=left>A curvilinear version of the T-BON algorithm.</td>
+</tr>
+<tr>
+<td align=left><a href="tbonug.html">TbonUG</a></td>
+<td align=left>A version of the T-BON for unstructured grids.</td>
+</tr>
+<tr>
+<td align=left><a href="tbonooc1.html">TbonOOC1</a></td>
+<td align=left>An out-of-core isosurface extraction algorithm
+based on the T-BON (algorithm #1 from the thesis).</td>
+</tr>
+<tr>
+<td align=left><a href="tbonooc2.html">TbonOOC2</a></td>
+<td align=left>An out-of-core isosurface extraction algorithm
+based on the T-BON (algorithm #2 from the thesis).</td>
+</tr>
+</table>
+<p>
+
+
+<b>Other modules:</b>
+<table align=center cols=2 border=1 cellpadding=1>
+<tr>
+<td align=left><a href="viewgrid.html">ViewGrid</a></td>
+<td align=left>Displays a representation of the regular or curvilinear grid.</td>
+</tr>
+<tr>
+<td align=left><a href="viewmesh.html">ViewMesh</a></td>
+<td align=left>Displays a representation of the unstructured mesh.</td>
+</tr>
+<tr>
+<td align=left><a href="elapsedtime.html">ElapsedTime</a></td>
+<td align=left>A useful little module - displays a running clock of elapsed
+time.</td>
+</tr>
+</table>
+
+</body>
+</html>

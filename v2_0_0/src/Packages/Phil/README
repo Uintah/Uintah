@@ -1,0 +1,49 @@
+This is the overall README for the "Packages/Phil" package.
+by: Packages/Philip Sutton (psutton@cs.utah.edu)
+Last Modified: 27 January 2000
+
+----------
+
+This package contains much of the code I used for my thesis 
+(Isosurface Extraction in Time-varying Fields, Univerity of Utah).
+The concentration is on octree-based isosurface extraction, done in 
+several different ways.  For more information on the branch-on-need
+octree, see Wilhelms & van Gelder's 1992 paper in ACM ToG.
+
+The "Packages/Phil" package contains the standard GUI/ and Modules/ directories.
+The modules contained in this package are:
+
+Isosurface extraction modules:
+Bono		The basic branch-on-need octree implementation for 
+		isosurface extraction in a rectilinear scalar field.
+
+BonoP		A parallel version of the BONO algorithm.
+
+BonoCL		A version of the BONO for curvilinear grids.
+
+Tbon		An implementation of the T-BON algorithm for 
+		isosurface extraction in rectilinear scalar fields.
+
+TbonP		A parallel version of the T-BON algorithm.
+
+TbonCL		A curvilinear version of the T-BON algorithm.
+
+TbonUG		A version of the T-BON for unstructured grids.
+
+TbonOOC1	An out-of-core isosurface extraction algorithm
+		based on the T-BON
+
+TbonOOC2	Another out-of-core isosurface extraction algorithm
+		based on the T-BON
+
+Other modules:
+ViewGrid	Displays a representation of the regular or curvilinear grid.
+
+ViewMesh	Displays a representation of the unstructured mesh.
+
+ElapsedTime	A useful little module - displays a running clock of elapsed
+		time.
+
+More information for each module can be found in the HTML documentation
+(Packages/Phil/Dataflow/Modules/Tbon/doc/index.html).
+

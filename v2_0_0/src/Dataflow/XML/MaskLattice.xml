@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+
+<component name="MaskLattice" category="FieldsData">
+  <overview>
+    <authors>
+      <author>McKay Davis</author>
+      <author>Michael Callahan</author>
+    </authors>
+    <summary>
+	Convert a LatVolField into a MaskedLatVolField and apply the
+        given function to mask it out.
+    </summary>
+    <description>
+      <p>
+	Convert a LatVolField into a MaskedLatVolField and apply the
+        given function to mask it out.  This is similar to the
+        behavior of the ClipByFunction module, except that the input field
+        is masked rather than clipped out.
+      </p>
+      <p>
+        The function should be a valid C++ expression.  It will be
+	dynamically compiled into a function of the form "bool
+        inside_p(double x, double y, double z, TYPE v) { return EXPR; }"
+        where TYPE is the data type contained in the field, and EXPR is the
+        function typed into the GUI.
+      </p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+	<name>Input Field</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+	<name>Output Masked Field</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+  </io>
+  <testing>
+  </testing>
+</component>

@@ -1,0 +1,64 @@
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<!--% require("../../Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
+<section id="sec.starting">
+<title>Starting &sr;</title>
+
+<para>
+If installed from its rpm, &sr;'s installation can be tested by
+typing <command>/usr/local/&sr;/bin/scirun</command>.
+</para>
+
+<para>
+If built from its source code tarballs, &sr;'s installation can be
+tested by changing the working directory (<command>cd</command>ing) to
+&sr;'s build directory and typing <command>./scirun</command>.
+</para>
+
+<para>
+After starting &sr;, its network editor window and
+ shell prompt should appear.
+</para>
+
+<para>
+If the window does not appear, note any displayed errors and see <xref
+endterm="title.help" linkend="sec.help"/>.
+</para>
+
+<para>
+See &sr;'s <ulink 
+url=<!--%= doc.treeUrl("doc/User/Tutorial/index.html") %--> ><citetitle>
+tutorial</citetitle></ulink> for an introduction to the use of &sr;.
+The tutorial uses the previously downloaded sample data sets.
+</para>
+
+<para>See the <ulink
+url=<!--%= doc.treeUrl("doc/User/Guide/usersguide/index.html") %-->><citetitle>&sr; Users
+Guide</citetitle></ulink> for particulars on the use of &sr;.</para>
+</section>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-default-dtd-file:"../../Utilities/XML/docbook.ced"
+sgml-omittag:nil
+sgml-shorttag:nil
+End:
+-->

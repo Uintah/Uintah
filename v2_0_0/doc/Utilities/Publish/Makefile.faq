@@ -1,0 +1,60 @@
+# -*- makefile -*-
+
+#  The contents of this file are subject to the University of Utah Public
+#  License (the "License"); you may not use this file except in compliance
+#  with the License.
+#
+#  Software distributed under the License is distributed on an "AS IS"
+#  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+#  License for the specific language governing rights and limitations under
+#  the License.
+#
+#  The Original Source Code is SCIRun, released March 12, 2001.
+#
+#  The Original Source Code was developed by the University of Utah.
+#  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
+#  University of Utah. All Rights Reserved.
+#
+
+# Build html and print versions of an faq.
+
+edition:=../../edition.xml
+stylesheet_html := ${STYLESHEET_XSL_HTML}/srdocbook.xsl
+stylesheet_print := ${STYLESHEET_DSSSL_PRINT}/docbook.dsl
+params_print := -V %footnote-ulinks% -V %section-autolabel% \
+  -V "(define %default-quadding% 'justify)"
+
+.PHONY: clean veryclean
+
+.DELETE_ON_ERROR:
+
+all: html print
+
+# Rules for HTML output.
+
+html: faq.html
+
+faq.html: faq.rxml ${edition}
+	OUTPUT_MODE=html eruby --delimiters xml faq.rxml > faq.hxml
+	java com.icl.saxon.StyleSheet -w2 \
+	  faq.hxml ${stylesheet_html} >$@
+
+# Rules for print output.
+
+print: faq.pdf
+
+faq.pdf: faq.rxml ${edition}
+	OUTPUT_MODE=print eruby --delimiters xml faq.rxml > faq.pxml
+	openjade -t tex -V tex-backend -c ${CATALOG} -o faq.tex \
+          -d ${stylesheet_print} ${params_print} ${XML_DCL} faq.pxml 
+	for i in 1 2 ; do jadetex faq.tex ; done
+	dvipdfm -p letter faq.dvi
+
+clean:
+	-rm -f faq.[ph]xml faq.tex faq.dvi faq.aux faq.log faq.out *~
+
+# Cleanage
+
+veryclean: clean 
+	-rm faq.html faq.pdf 
+

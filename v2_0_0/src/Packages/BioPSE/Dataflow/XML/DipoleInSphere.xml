@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+
+<component name="DipoleInSphere" category="Forward">
+  <overview>
+    
+    <authors>
+      <author>David Weinstein</author>
+      <author>Alexei Samsonov</author>
+    </authors>
+
+    <summary>Due to the specified dipoles, the DipoleInSphere module fills the sphere field with potentials values.</summary>
+
+    <description>
+      <p>Version Date: March 2001</p>
+      <p>Version: 1.1</p>
+      <p>The current version of the module provides analytical
+	calculation of potentials on the surface of the supplied sphere. We assume that the
+	sphere has uniform conductivity equal to 1. The
+	center of the sphere is the center of the bounding box, and the
+	radius is half of the maximum dimension of the box.</p>
+    </description>
+  </overview>
+  
+  <io>
+    <inputs lastportdynamic="no">
+      <!-- one of (device port file) -->
+      <port>
+	<name>Sphere</name>
+	<description>
+	  <p>The port takes a handle to the field data object that
+	  contans TriSurfMesh as geometry.</p>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+	<name>Dipole Sources</name>
+	<description>
+	  <p>The port takes a handle to the matrix that is n-by-6 in size,
+	  containing parameters of n dipoles (the first three column are dipole
+	  positions, the other three are dipole moments). We also assume that the dipoles
+	  lie inside the sphere. Otherwise, the moudle log window produces a warning message.</p>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+
+    <outputs>
+      <!-- one of (device port file) -->
+      <port>
+	<name>SphereWithPots</name>
+	<description>
+	  <p> Send the handle to the field object to downstream
+	  module. This is the initial field object and is populated with
+	  potential values at the sphere nodes.</p>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+	<name>SphereWithMagneticField</name>
+	<description>
+	  <p> Send the handle to the field object to downstream
+	  module. This is the initial field object and is populated with
+	  magnetic vectors at the sphere nodes.</p>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+
+  </io>
+
+</component>

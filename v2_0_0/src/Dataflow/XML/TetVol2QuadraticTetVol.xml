@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../doc/package-component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<component name="TetVol2QuadraticTetVol" category="FieldsGeometry">
+  <overview>
+    <authors>
+      <author>Martin Cole</author>
+    </authors>
+    <summary>Given an input Field that is a TetVolField, create a
+QuadraticTetVol Field from the input.</summary>
+    <description>
+      <p>Given an input Field that is a TetVolField, create a
+QuadraticTetVol Field from the input. The underlying data type will be
+preserved, i.e. if the input field was a TetVolField with double
+values, then the output will have double values as well.  The output
+field will come complete with values, you will not have to interpolate
+them back onto the field.</p>
+      <p>Note that the difference between field types is that interpolation within a tet is linear where the QuadraticTetVol has quadratic interpolation within a tet.</p>
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>InputTetField</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>OutputQuadraticTet</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

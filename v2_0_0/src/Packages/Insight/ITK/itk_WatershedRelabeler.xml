@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<!DOCTYPE filter-itk SYSTEM "itk_filter.dtd">
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<filter-itk name="itk::watershed::Relabeler">
+  <description>
+This filter implements the final step in the watershed segmentation algorithm.  It is responsible for relabeling a segmented image according to a specified saliency level (flood level) in a merge tree.  (See itk::WatershedImageFilter for information on terminology used in this documentation.)
+  </description>
+  <templated>
+    <template>ScalarType</template>
+    <template type="unsigned int">ImageDimension</template>
+    <defaults>
+      <default>float</default>
+      <default>2</default>
+    </defaults>
+  </templated>
+
+  <inputs>
+    <input name="Labeled_Image">
+      <type>itk::Image&lt;unsigned long, ImageDimension&gt;</type>
+      <call>SetInputImage</call>
+    </input>  
+    <input name="Segment_Tree">
+      <type>itk::watershed::SegmentTree&lt;ScalarType&gt;</type>
+      <call>SetInputSegmentTree</call>
+    </input>  
+  </inputs>
+  <outputs>
+    <output name="Relabeled_Image">
+      <type>itk::Image&lt;unsigned long, ImageDimension&gt;</type>
+      <call>GetOutputImage</call>
+    </output>
+  </outputs>
+
+  <parameters>
+    <param>
+      <name>flood_level</name>
+      <type>double</type>
+      <call>SetFloodLevel</call>
+      <default>0.1</default>
+    </param>
+  </parameters>
+
+  <includes>
+    <file>itkWatershedRelabeler.h</file>
+  </includes>
+</filter-itk>
+

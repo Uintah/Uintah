@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<component name="ScalarFieldOperator" category="Operators">
+  <overview>
+    <authors>
+      <author>Wayne Witzel</author>
+    </authors>
+    <summary>Summary not available yet.</summary>
+    <description>
+      <p>Version Date: November 2000</p><p>Version: 1.0</p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Scalar Field</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+       <name>Scalar Field</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+   </outputs>
+  </io>
+  <testing>
+  </testing>
+</component>

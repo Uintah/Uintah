@@ -1,0 +1,167 @@
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<section id="sec.intro">
+<title>Introduction</title> 
+
+<para>This guide provides instructions for installing &sr;, its third
+party libraries, the (optional) <acronym>PETSc</acronym> and Insight
+libraries, sample data sets, and &sr; documentation.</para>
+
+<para> The <ulink
+url="http://www-unix.mcs.anl.gov/petsc/petsc-2/"><acronym>PETSc</acronym></ulink>
+library adds equation solvers to &sr;'s SolveMatrix module.  The
+<ulink url="http://www.itk.org">Insight toolkit
+(<acronym>ITK</acronym>)</ulink> provides segmentation, registration,
+and image processing filters encapsulated as &sr; modules.
+</para>
+
+<para>
+&sr; has been tested on three platforms: SGI, Linux, and Mac OS X.
+Platform requirement guidelines are listed in <xref
+linkend="tbl.pltfm_req"/>.
+<table id="tbl.pltfm_req">
+<title>Platform Guidelines</title>
+<tgroup cols="3">
+<thead>
+<row>
+<entry>Linux</entry>
+<entry>SGI</entry>
+<entry>Mac OS X</entry>
+</row>
+</thead>
+<tbody>
+<row valign="top">
+<entry>
+<itemizedlist>
+<listitem>
+<para>Redhat 8/9 or Mandrake 9</para>
+</listitem>
+<listitem>
+<para>OpenGL compatible video card and driver</para>
+</listitem>
+<listitem>
+<para>512 Mb (or more) RAM</para>
+</listitem>
+</itemizedlist>
+</entry>
+<entry>
+<itemizedlist>
+<listitem>
+<para>Irix 6.5</para>
+</listitem>
+<listitem>
+<para>MIPSpro compiler 7.3.1.1m (or later)</para>
+</listitem>
+<listitem>
+<para>MIPS R10000 (or more recent) CPU</para>
+</listitem>
+<listitem>
+<para>512 Mb (or more) RAM</para>
+</listitem>
+</itemizedlist>
+</entry>
+<entry>
+<itemizedlist>
+<listitem>
+<para>Mac OS X 10.2.6 or Mac OS X 10.3</para>
+</listitem>
+<listitem>
+<para>December 2002 developer tools for &osx; 10.2.6</para>
+<para>&osx; 10.3 compatible developer tools for &osx; 10.3</para>
+</listitem>
+<listitem>
+<para>Apple's <ulink url="http://www.apple.com/macosx/x11/">X11
+Public Beta 3</ulink> and X11 <acronym>SDK</acronym> for &osx;
+10.2.6</para> <para>Apple's X11 and X11 <acronym>SDK</acronym>
+are distributed with &osx; but must be installed separately</para>
+</listitem>
+<listitem>
+<para><quote>dlcompat</quote> library (provides
+<function>dlopen</function> functionality)</para>
+</listitem>
+<listitem>
+<para>G4 processor</para>
+<para>&sr; has not been tested on G5</para>
+</listitem>
+<listitem>
+<para>512 Mb (or more) RAM</para>
+</listitem>
+</itemizedlist>
+</entry>
+</row>
+</tbody>
+</tgroup>
+</table>
+</para>
+ 
+<para>
+On Linux systems (Mandrake 9 and Red Hat 8 and 9), &sr; binaries can be
+<link linkend="sec.rpminst">installed via
+an <acronym>RPM</acronym> package</link> or <link
+linkend="sec.source_inst">from &sr;'s source code distribution</link>.
+The &sr; <acronym>RPM</acronym> distribution does
+<emphasis>not</emphasis> provide support for <acronym>PETSc</acronym>.
+<acronym>PETSc</acronym> support is available only through the &sr;
+source code distribution.
+</para>
+
+<para>
+On SGI and &osx; systems &sr; must be <link
+linkend="sec.source_inst">installed from the source code
+distribution</link>.
+</para>
+
+<para>
+Read  <citetitle pubwork="section"><xref
+endterm="title.prepare" linkend="sec.prepare"/></citetitle> after
+installing, but before starting &sr;.
+</para>
+
+<para>
+Start with <citetitle
+pubwork="section"><xref linkend="sec.rpminst"
+endterm="title.rpminst"/></citetitle> if installing &sr; from an
+<acronym>RPM</acronym>.  Otherwise proceed as follows:
+<orderedlist>
+<listitem>
+<para>Read <citetitle pubwork="section"><xref linkend="sec.opt_inst"
+endterm="title.opt_inst"/></citetitle> if installing
+<acronym>PETSc</acronym> or Insight toolkit (<acronym>ITK</acronym>)
+support.  Note that support for <acronym>PETSc</acronym> and
+<acronym>ITK</acronym> is not provided by Linux <acronym>RPM</acronym>
+&sr; distributions.</para>
+</listitem>
+<listitem>
+<para>Proceed to <citetitle
+pubwork="section"><xref linkend="sec.source_inst"
+endterm="title.source_inst"/></citetitle> to install &sr; from 
+source code.</para>
+</listitem>
+</orderedlist>
+</para>
+
+</section>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-default-dtd-file:"../../Utilities/XML/docbook.ced"
+sgml-omittag:nil
+sgml-shorttag:nil
+End:
+-->

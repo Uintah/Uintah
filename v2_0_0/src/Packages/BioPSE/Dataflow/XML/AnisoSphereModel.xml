@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+
+<component name="AnisoSphereModel" category="Forward">
+<overview>
+
+<authors>
+<author><email addr="sascha@sci.utah.edu">Sascha Moehrs</email></author>
+</authors>
+
+<summary>AnisoSphereModel implements a four-layer anisotropic spherical
+volume conductor.</summary>
+
+<description>
+
+<p>AnisoSphereModel implements the geometry and composition of a
+four-layer anisotropic spherical volume conductor, resembling the human
+head.  See <xref target="svc"/>.  AnisoSphereModel provides data to
+other modules. For instance, due to a dipole in the innermost spere, <modref
+package="BioPSE" name="DipoleInAnisoSpheres"/> and <modref
+package="BioPSE" name="CreateDisAnisoSpheres"/> are used to
+compute the potential distribution on the outer sphere of the volume
+conductor.</p>
+
+<p>AnisoSphereModel provides the following parameters, which can be
+adjusted via AnisoSphereModel's GUI:</p>
+<unorderedlist>
+<listitem>
+<p>Radii for scalp, skull, cerebrospinal fluid, and brain</p>
+</listitem>
+<listitem>
+<p>Radial and tangential conductivities for scalp, skull,
+cerebrospinal fluid, and brain</p> 
+</listitem>
+<listitem>
+<p>Electrode positions where the potential distribution should be
+computed (on the surface of the outermost sphere)</p>
+</listitem>
+</unorderedlist>
+
+<p>Network <xref target="net.das"/> demonstrates the use
+of AnisoSphereModel in a network.</p>
+
+<figure id="svc">
+<img>../Modules/Forward/doc/sphere_model.gif</img>
+<caption>Schematic Representation of the Spherical Volume Conductor.</caption>
+</figure>
+
+</description>
+
+</overview>
+
+<io>
+<inputs lastportdynamic="no">
+<port>
+<name>ElectrodePositions</name>
+<description>
+<p>Electrodes are projected on the scalp</p>
+</description>
+<datatype>SCIRun::Field</datatype>
+</port>
+<port>
+<name>AnisoConductivities</name>
+<description>
+<p>The conductivities can be supplied via this port or via the GUI</p>
+</description>
+<datatype>SCIRun::Matrix</datatype>
+</port>
+</inputs>
+
+<outputs>
+<port>
+<name>ElectrodePositions</name>
+<description>
+<p>Electrodes projected on the outer sphere (scalp).</p>
+</description>
+<datatype>SCIRun::Field</datatype>
+</port>
+
+<port>
+<name>SphereRadii</name>
+<description>
+<p>Matrix containing the radii of scalp, skull, cbsf, brain used in
+the computation of the potentials.</p>
+</description>
+<datatype>SCIRun::Matrix</datatype>
+</port>
+
+<port>
+<name>AnisoConductivities</name>
+<description>
+<p>Matrix containing the anisotropic conductivities used in the
+computation of the potentials.</p>
+</description>
+<datatype>SCIRun::Matrix</datatype>
+</port>
+
+</outputs>
+
+</io>
+
+<gui>
+
+<parameter>
+<widget>Entry</widget>
+<datatype>float</datatype>
+<label>Scalp radius</label>
+<description> </description>
+</parameter>
+
+<parameter>
+<widget>Entry</widget>
+<datatype>float</datatype>
+<label>Skull radius</label>
+<description> </description>
+</parameter>
+
+<parameter>
+<widget>Entry</widget>
+<datatype>float</datatype>
+<label>Radius of cerebrospinal fluid</label>
+<description> </description>
+</parameter>
+
+<parameter>
+<widget>Entry</widget>
+<datatype>float</datatype>
+<label>Brain radius</label>
+<description> </description>
+</parameter>
+
+<parameter>
+<widget>Entry</widget>
+<datatype>float</datatype>
+<label>Unit</label>
+<description> </description>
+</parameter>
+
+<parameter>
+<widget>Entry</widget>
+<datatype>float</datatype>
+<label>Radial scalp conductivity</label>
+<description> </description>
+</parameter>
+
+<parameter>
+<widget>Entry</widget>
+<datatype>float</datatype>
+<label>Tangential scalp conductivity</label>
+<description> </description>
+</parameter>
+
+<parameter>
+<widget>Entry</widget>
+<datatype>float</datatype>
+<label>Radial skull conductivity</label>
+<description> </description>
+</parameter>
+
+<parameter>
+<widget>Entry</widget>
+<datatype>float</datatype>
+<label>Tangential skull conductivity</label>
+<description> </description>
+</parameter>
+
+<parameter>
+<widget>Entry</widget>
+<datatype>float</datatype>
+<label>Radial cbsf conductivity</label>
+<description> </description>
+</parameter>
+
+<parameter>
+<widget>Entry</widget>
+<datatype>float</datatype>
+<label>Tangential cbsf conductivity</label>
+<description> </description>
+</parameter>
+
+<parameter>
+<widget>Entry</widget>
+<datatype>float</datatype>
+<label>Radial brain conductivity</label>
+<description> </description>
+</parameter>
+
+<parameter>
+<widget>Entry</widget>
+<datatype>float</datatype>
+<label>Tangential brain conductivity</label>
+<description> </description>
+</parameter>
+
+</gui>
+
+<nets>
+
+<net id="net.das">
+<title>Dipole In Anisotropic Spheres</title>
+
+<p> Providing data to modules
+ <modref package="BioPSE" name="DipoleInAnisoSpheres"/> and
+<modref package="BioPSE" name="CreateDisAnisoSpheres"/> is the primary
+purpose of module AnisoSphereModel..  A network
+demonstrating the use of AnisoSphereModel is
+shown in <xref target="fig.das"/>.</p>
+
+<figure id="fig.das">
+<img>../Modules/Forward/doc/sphere.gif</img> <caption>Anisotropic Sphere Model
+Network</caption>
+</figure>
+
+<section id="sec.inputs">
+<title>Inputs</title>
+
+<p>A <modref package="SCIRun" name="FieldReader"/> module (see
+top-left) reads electrode positions from a
+file and sends them to AnisoSphereModel.</p>
+
+<p>AnisoSphereModel's GUI  sets radii and conductivity
+information for the anisotropic sphere model.  Alternatively,
+conductivity data can be transmitted as a matrix to AnisoSphereModel's
+second input port using, for instance,  module <modref
+package="SCIRun" name="MatrixReader"/>.</p>
+
+</section>
+
+<section>
+<title>Outputs</title> 
+
+<p>In most cases, AnisoSphereModel's output ports are attached to
+input ports of module <modref package="BioPSE"
+name="DipoleInAnisoSpheres"/> or module <modref package="BioPSE"
+name="CreateDisAnisoSpheres"/>.  AnisoSphereModel's first output port
+(yellow) transmits electrode positions (the electrodes are projected
+on the outermost sphere) as a field. AnisoSphereModel's next two
+output ports (blue) transmit radii and conductivity data as matricies
+respectively.</p>
+
+</section>
+
+</net>
+
+</nets>
+
+</component>

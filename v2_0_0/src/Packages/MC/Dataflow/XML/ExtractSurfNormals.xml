@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+
+<component name="ExtractSurfNormals" category="Field">
+  <overview>
+    <authors>
+      <author>Martin Cole</author>
+    </authors>
+    <summary>
+      Extract surface normals from field with normals, 
+             and output a PointCloudField<Vector> 
+    </Vector>
+    </summary>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="yes">
+    </inputs>
+    <outputs>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

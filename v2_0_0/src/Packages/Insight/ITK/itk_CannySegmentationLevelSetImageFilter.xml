@@ -1,0 +1,118 @@
+<?xml version="1.0"?>
+<!DOCTYPE filter-itk SYSTEM "itk_filter.dtd">
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<filter-itk name="itk::CannySegmentationLevelSetImageFilter">
+  <description>
+  Segments structures in images based on image features derived from pseudo-canny-edges.
+  </description>
+  <templated>
+    <template>SeedImageType</template>
+    <template>FeatureImageType</template>
+    <template>OutputPixelType</template>
+    <defaults>
+      <default>itk::Image&lt;float, 2&gt;</default>
+      <default>itk::Image&lt;float, 2&gt;</default>
+      <default>float</default>
+    </defaults>
+  </templated>
+
+  <inputs>
+    <input name="SeedImage">
+      <type>SeedImageType</type>
+      <call>SetInput</call>
+    </input>  
+    <input name="FeatureImage">
+      <type>FeatureImageType</type>
+      <call>SetFeatureImage</call>
+    </input>  
+  </inputs>
+  <outputs>
+    <output name="OutputImage">
+      <type>FeatureImageType</type>
+      <call>GetOutput</call>
+    </output>
+    <output name="SpeedImage">
+      <type>FeatureImageType</type>
+      <call const="yes">GetSpeedImage</call>
+    </output>
+  </outputs>
+
+  <parameters>
+    <param>
+      <name>iterations</name>
+      <type>int</type>
+      <call>SetMaximumIterations</call>
+      <default>10</default>
+    </param>
+    <param>
+      <name>reverse_expansion_direction</name>
+      <type>bool</type>
+      <call value="on">ReverseExpansionDirectionOn</call>
+      <call value="off">ReverseExpansionDirectionOff</call>
+      <default>1</default>
+    </param>
+    <param>
+      <name>max_rms_change</name>
+      <type>double</type>
+      <call>SetMaximumRMSError</call>
+      <default>0.001</default>
+    </param>
+    <param>
+      <name>threshold</name>
+      <type>double</type>
+      <call>SetThreshold</call>
+      <default>0.001</default>
+    </param>    
+    <param>
+      <name>variance</name>
+      <type>double</type>
+      <call>SetVariance</call>
+      <default>10</default>
+    </param>
+    <param>
+      <name>propagation_scaling</name>
+      <type>double</type>
+      <call>SetPropagationScaling</call>
+     <default>1.0</default>
+    </param>
+    <param>
+      <name>advection_scaling</name>
+      <type>double</type>
+      <call>SetAdvectionScaling</call>
+      <default>1.0</default>
+    </param>
+    <param>
+      <name>curvature_scaling</name>
+      <type>double</type>
+      <call>SetCurvatureScaling</call>
+      <default>1.0</default>
+    </param>
+    <param>
+      <name>isovalue</name>
+      <type>double</type>
+      <call>SetIsoSurfaceValue</call>
+      <default>0.5</default>
+    </param>
+  </parameters>
+  <includes>
+    <file>itkCannySegmentationLevelSetImageFilter.h</file>
+  </includes>
+</filter-itk>
+

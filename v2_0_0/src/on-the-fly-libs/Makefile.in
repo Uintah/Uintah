@@ -1,0 +1,84 @@
+#
+#  The contents of this file are subject to the University of Utah Public
+#  License (the "License"); you may not use this file except in compliance
+#  with the License.
+#  
+#  Software distributed under the License is distributed on an "AS IS"
+#  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+#  License for the specific language governing rights and limitations under
+#  the License.
+#  
+#  The Original Source Code is SCIRun, released March 12, 2001.
+#  
+#  The Original Source Code was developed by the University of Utah.
+#  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+#  University of Utah. All Rights Reserved.
+#
+
+# Makefile for field manipulation code that is compiled and loaded on the fly
+
+# Default target
+default: all
+
+OBJTOP      := ..
+OBJTOP_ABS  := $(shell cd $(OBJTOP) ; pwd)
+
+include @abs_conftop_dir@/configVars.mk
+
+SCIRUN_SRCTOP   := @abs_top_srcdir@
+SCIRUN_OBJTOP   := @abs_conftop_dir@
+LIBDIR	        := $(SCIRUN_OBJTOP)/lib/
+# get libraries in ./lib
+LIBS_FULLNAMES  := $(wildcard ../lib/*.$(SO_OR_A_FILE))
+# remove extension
+LIBS_NAMES      := $(patsubst %.$(SO_OR_A_FILE),%, $(LIBS_FULLNAMES))
+# replace front section with -l
+LIBS          := $(patsubst ../lib/lib%,-l%, $(LIBS_NAMES))
+
+INCLUDES = -I$(SCIRUN_SRCTOP)/include -I$(SCIRUN_SRCTOP) -I$(SCIRUN_OBJTOP) -I$(SCIRUN_SRCTOP)/Packages @INC_TCL_H@ @INC_TK_H@ @INC_ITCL_H@ @INC_BLT_H@ @INC_GLOBUS_H@ @INC_XERCESC_H@ @INC_PETSC_H@ $(TAU_INCLUDE) $(MPI_INCLUDE) $(GL_INCLUDE) $(INSIGHT_INCLUDE) $(TEEM_INCLUDE)
+
+ifeq ($(SSTREAM_COMPAT),yes)
+INCLUDES := $(INCLUDES) -I$(SCIRUN_SRCTOP)/include/compat
+endif
+INCLUDES := $(sort $(INCLUDES))
+
+SOFLAGS         := @SOFLAGS@  $(CFLAGS)
+
+SRCS = $(wildcard *.cc)
+OTF_LIBS := $(patsubst %.cc,%.$(SO_OR_A_FILE), $(SRCS))
+
+
+ifeq ($(NEED_SONAME),yes)
+SONAMEFLAG = -Wl,-soname,$(notdir $@)
+else
+SONAMEFLAG = 
+endif
+
+# Avoid error message when no .d files by specifying nonexistant filename.
+ifneq ($(MAKECMDGOALS),)
+-include dummyfile $(MAKECMDGOALS:.$(SO_OR_A_FILE)=.d)
+else
+-include dummyfile $(SRCS:.cc=.d)
+endif
+.SECONDARY:
+
+.PHONY: all
+all: $(OTF_LIBS)
+
+%.d: %.cc
+	set -e; $(CXX) -M $(CFLAGS) $(INCLUDES) $< \
+          | sed 's/\($*\)\.o[ :]*/\1.o $@ : /g' > $@; \
+          [ -s $@ ] || rm -f $@
+
+%.o : %.cc %.d
+	rm -f $@ $(*).so $(*).dylib
+	$(CXX) -c $(CFLAGS) $(INCLUDES) $< -o $@ 
+
+%.so : %.o 
+	$(CXX) $(CFLAGS) $(INCLUDES) $(SOFLAGS) $< -o $@ 
+
+%.dylib : %.o 
+	$(CXX) $(CFLAGS) $(INCLUDES) $(SOFLAGS) $< -o $@ -L$(LIBDIR) $(LIBS)
+
+clean::
+	@rm -f *.o *.d *.cc *.dylib *.so *.log *~

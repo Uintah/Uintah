@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../../../doc/package-component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<component name="VectorFieldsToTensorField" category="CreateModel">
+  <overview>
+    <authors>
+      <author>Dave Weinstein</author>
+    </authors>
+    <summary>
+      Read in e1 and e2 fields, create a tensor field (e3=e2).
+    </summary>
+    <description>
+      <p>Version Date: May 2002</p>
+      <p>Version: 1.1</p>
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Major Eigenvectors</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Median Eigenvectors</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Mask</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Tensors</name> 
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

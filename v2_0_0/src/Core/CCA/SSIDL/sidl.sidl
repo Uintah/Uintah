@@ -1,0 +1,111 @@
+/*
+// File:        sidl.sidl
+// Release:     $Name$
+// Revision:    @(#) $Revision$
+// Date:        $Date$
+// Description: SSIDL interface description for the basic SSIDL run-time library
+// 
+// Copyright (c) 2001, The Regents of the University of Calfornia.
+// Produced at the Lawrence Livermore National Laboratory.
+// Written by the Components Team <components@llnl.gov>
+// UCRL-CODE-2002-054
+// All rights reserved.
+// 
+// This file is part of Babel. For more information, see
+// http://www.llnl.gov/CASC/components/. Please read the COPYRIGHT file
+// for Our Notice and the LICENSE file for the GNU Lesser General Public
+// License.
+// 
+// This program is free software; you can redistribute it and/or modify it
+// under the terms of the GNU Lesser General Public License (as published by
+// the Free Software Foundation) version 2.1 dated February 1999.
+// 
+// This program is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
+// conditions of the GNU Lesser General Public License for more details.
+// 
+// You should have recieved a copy of the GNU Lesser General Public License
+// along with this program; if not, write to the Free Software Foundation,
+// Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+*/
+version SSIDL 0.7.4;
+
+/**
+ * The <code>SSIDL</code> package contains the fundamental type and interface
+ * definitions for the <code>SSIDL</code> interface definition language.  It
+ * defines common run-time libraries and common base classes and interfaces.
+ * Every interface implicitly inherits from <code>SSIDL.BaseInterface</code>
+ * and every class implicitly inherits from <code>SSIDL.BaseClass</code>.
+ * 
+ */
+package SSIDL {
+
+
+  interface BaseInterface {
+      collective void addReference();
+      collective void deleteReference();
+      /*Class getClass();*/
+      bool isSame(in BaseInterface object);
+      /*bool isInstanceOf(in Class type);*/
+      /*bool supportsInterface(in Class type);*/
+      /*BaseInterface queryInterface(in Class type);*/
+	BaseInterface queryInterface(in string name);
+    };
+
+
+  /**
+   * Every interface in <code>SSIDL</code> implicitly inherits
+   * from <code>BaseInterface</code>, and it is implemented
+   * by <code>BaseClass</code> below.
+   */
+ /* interface BaseInterface {
+    void addReference();
+    void deleteReference();
+    bool isSame(in BaseInterface iobj);
+    BaseInterface queryInterface(in string name);
+    bool isInstanceOf(in string name);
+  }
+*/
+
+  class BaseException {
+
+    /**
+     * Return the message associated with the exception.
+     */
+    string getMessage();
+
+    /**
+     * Set the message associated with the exception.
+     */
+    void setMessage(in string message);
+
+    /**
+     * Returns formatted string containing the concatenation of all 
+     * tracelines.
+     */
+    string getTrace();
+
+    /**
+     * Adds a stringified entry/line to the stack trace.
+     */
+    void addToStackTrace(in string traceline);
+
+    /**
+     * Formats and adds an entry to the stack trace based on the 
+     * file name, line number, and method name.
+     */
+    void addToTrace(in string filename, in int lineno, in string methodname);
+  }
+
+    class Object implements BaseInterface {
+      final collective void addReference();
+      final collective void deleteReference();
+      /*final Class getClass();*/
+      final bool isSame(in BaseInterface object);
+     /* final bool isInstanceOf(in Class type);
+      bool supportsInterface(in Class type);*/
+      BaseInterface queryInterface(in string type);
+    };
+
+}

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+
+<component name="ApplyInterpolant" category="FieldsData">
+  <overview>
+    <authors>
+      <author>David Weinstein</author>
+      <author>Michael Callahan</author>
+    </authors>
+    <summary>
+      Apply an interpolant field to project the data from one
+      field onto the mesh of another field.
+    </summary>
+    <description>
+      <p>
+        This module interpolates the "Source" field onto the geometry of
+        the Interpolant field.  The Interpolant field would be
+        preconstructed using the BuildInterpolant module.
+      </p>
+      <p>
+        The source field for BuildInterpolant and ApplyInterpolant
+        must contain the same geometry and data locations.  However
+        they do not have to contain the same data values or value
+        types.  For instance, a TetVolField of doubles with data at the
+        nodes can be passed into the Source port of BuildInterpolant,
+        and a TetVolField of Vectors with data also at the nodes and with
+        the same mesh can be passed into the source port of
+        ApplyInterpolant.
+      </p>
+      <p>
+        DirectInterpolate should be used instead of BuildInterpolant
+        and ApplyInterpolant if the Interpolant is not to be reused,
+        as it does the same interpolation without building the
+        intermediate interpolant field.  This should be used if the
+        source field changes much more often than the destination field.
+      </p> 
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+	<name>Source</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+	<name>Interpolant</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+	<name>Output</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+  </io>
+  <testing>
+  </testing>
+</component>

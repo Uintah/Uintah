@@ -1,0 +1,70 @@
+To configure Uintah, use:
+../src/configure  --enable-64bit --enable-package=Uintah --enable-debug 
+
+For an optimized 64bit build, use:
+./src/configure  --enable-64bit --enable-package=Uintah \
+ '--enable-optimize=-Ofast -G0 -OPT:Olimit=20000 -IPA:plimit=20000' \
+ --disable-sci-malloc --enable-assertion-level=0  
+
+
+______________________________________________________________________
+SUS_GOOD AND SUS_SUSPECT                      07/17/02 (Todd)
+ 
+If you want to keep a "good" sus around to compare against while you 
+work on "suspect" code.  
+
+- First build a "good" sus
+- mkdir good_sus     ( you need a separate dir for mpi to work>
+- mv sus good_sus/.
+- mkdir SCIRun/src/good_libs
+- cp -r SCIRun/src/lib/ SCIRun/src/good_libs/.
+- In a terminal that will ONLY be used to run good_sus/sus
+    unsetenv LD_LIBRARY64_PATH
+    setenv  LD_LIBRARY64_PATH /hd3/harman/SCIRun/src/good_libs:/usr/installed/SCIRun_Thirdparty_64/lib:/usr/lib:/usr/lib64
+ 
+and it should work.  I'd recommend that you put something like cout<< "SUSPECT CODE"<<endl;
+somewhere in your code just to be sure.
+
+Essentially LD_LIBRARY64_PATH sets the path where you want the executable to look.  
+Don't run any other applications from this terminal since you've wiped out their
+ library paths. Compile and run your suspect code in a different terminal.
+
+If you want mpi to work you'll need to add 
+
+if ( $cwd == "<path>/good_sus/" ) then
+ echo "setting LD_LIBRARY_PATH now"
+ setenv  LD_LIBRARY64_PATH /hd3/harman/SCIRun/src/good_libs:/usr/installed/SCIRun_Thirdparty_64/lib:/usr/lib:/usr/lib64
+endif
+
+to your .cshrc file.  MPI wipes out your environmental variables but it sources your
+.cshrc file so you can put a little hack in there.
+
+______________________________________________________________________
+MOVING SUS TO n02
+
+Here are the details on getting a locally compiled sus to 
+run at LANL.  Basically, you scp down sus, puda, compare_uda, 
+set the environmental variable LD_LIBRARY64_PATH and away you go.
+
+____________Details______________
+On n02:
+
+mkdir remotely_built
+cd remotely_built
+scp    harman@fin.mech.utah.edu:/usr/people/harman/Csafe/SCIRun/src/Packages/Uintah/StandAlone/sus" .
+scp -r harman@fin.mech.utah.edu:/usr/people/harman/Csafe/SCIRun/src/lib  .
+scp -r harman@fin.mech.utah.edu:/usr/people/harman/Csafe/SCIRun/src/Packages/Uintah/StandAlone/inputs .
+scp    harman@fin.mech.utah.edu:/usr/people/harman/Csafe/SCIRun/src/Packages/Uintah/StandAlone/compare_uda .
+scp    harman@fin.mech.utah.edu:/usr/people/harman/Csafe/SCIRun/src/Packages/Uintah/StandAlone/puda .
+setenv LD_LIBRARY64_PATH /users/tbh/Csafe/remotely_built/lib:/usr/projects/Uintah/SCIRun_Thirdparty_64/lib:$LD_LIBRARY64_PATH
+
+At this point sus, puda and compare_uda should be working for a single processor.
+If you want mpi to work you'll need to add 
+
+if ( $cwd == "/users/tbh/Csafe/remotely_built" ) then
+ echo "setting LD_LIBRARY_PATH now"
+ setenv LD_LIBRARY64_PATH /users/tbh/Csafe/remotely_built/lib:/usr/projects/Uintah/SCIRun_Thirdparty_64/lib:$LD_LIBRARY64_PATH
+endif
+
+to your .cshrc file.  MPI wipes out your environmental variables but it sources your
+.cshrc file so you can put a little hack in there.

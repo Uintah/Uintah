@@ -1,0 +1,165 @@
+#
+# The contents of this file are subject to the University of Utah Public
+# License (the "License"); you may not use this file except in compliance
+# with the License.
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations under
+# the License.
+# 
+# The Original Source Code is SCIRun, released March 12, 2001.
+# 
+# The Original Source Code was developed by the University of Utah.
+# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+# University of Utah. All Rights Reserved.
+#
+
+# SCI Network 1.0
+
+#######################################################################
+# Check environment variables.  Ask user for input if not set:
+set results [sourceSettingsFile]
+set DATADIR [lindex $results 0]
+set DATASET [lindex $results 1]
+#######################################################################
+
+source $DATADIR/$DATASET/$DATASET.settings
+
+::netedit dontschedule
+
+global notes
+set notes ""
+
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 13 11]
+set m1 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 34 96]
+set m2 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 13 174]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 13 332]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 206 173]
+set m5 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 206 253]
+set m6 [addModuleAtPosition "SCIRun" "Render" "Viewer" 188 418]
+set m7 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 188 332]
+
+addConnection $m0 0 $m1 0
+addConnection $m1 1 $m2 1
+addConnection $m0 0 $m2 0
+addConnection $m2 0 $m3 0
+addConnection $m4 0 $m5 0
+addConnection $m2 0 $m5 1
+addConnection $m5 0 $m3 1
+addConnection $m3 0 $m6 0
+addConnection $m5 0 $m7 1
+addConnection $m2 0 $m7 0
+addConnection $m7 1 $m6 1
+
+set $m0-notes {}
+set $m0-show_status {1}
+set $m0-filename $DATADIR/$DATASET/$DATASET-voltage.tvd.fld
+set $m1-notes {}
+set $m1-show_status {1}
+set $m2-notes {}
+set $m2-show_status {1}
+set $m3-notes {}
+set $m3-show_status {1}
+set $m3-nodes-on {1}
+set $m3-nodes-as-disks {0}
+set $m3-edges-on {0}
+set $m3-use-normals {0}
+set $m3-use-transparency {0}
+set $m3-faces-on {0}
+set $m3-vectors-on {0}
+set $m3-normalize-vectors {}
+set $m3-has_vec_data {0}
+set $m3-bidirectional {0}
+set $m3-arrow-heads-on {1}
+set $m3-def-color-r {0.5}
+set $m3-def-color-g {0.5}
+set $m3-def-color-b {0.5}
+set $m3-def-color-a {0.5}
+set $m3-node_display_type {Points}
+set $m3-edge_display_type {Lines}
+set $m3-active_tab {Faces}
+set $m3-node_scale {0.03}
+set $m3-edge_scale {0.015}
+set $m3-vectors_scale {0.30}
+set $m3-show_progress {}
+set $m3-interactive_mode {Interactive}
+set $m3-resolution {4}
+set $m4-notes {}
+set $m4-show_status {1}
+set $m4-tcl_status {Calling GenStandardColorMaps!}
+set $m4-positionList {}
+set $m4-nodeList {}
+set $m4-width {1}
+set $m4-height {1}
+set $m4-mapType {3}
+set $m4-minRes {12}
+set $m4-resolution {255}
+set $m4-realres {255}
+set $m4-gamma {0}
+set $m5-notes {}
+set $m5-show_status {1}
+set $m5-isFixed {0}
+set $m5-min {        -0.649647}
+set $m5-max {         0.370803}
+set $m6-notes {}
+set $m6-show_status {1}
+$m6 ui
+set $m6-ViewWindow_0-pos {}
+set $m6-ViewWindow_0-caxes {1}
+set $m6-ViewWindow_0-iaxes {}
+set $m6-ViewWindow_0-view-eyep-x {         -8.74685}
+set $m6-ViewWindow_0-view-eyep-y {         -7.00418}
+set $m6-ViewWindow_0-view-eyep-z {          3.69517}
+set $m6-ViewWindow_0-view-lookat-x {                0}
+set $m6-ViewWindow_0-view-lookat-y {                0}
+set $m6-ViewWindow_0-view-lookat-z {                0}
+set $m6-ViewWindow_0-view-up-x {        -0.649109}
+set $m6-ViewWindow_0-view-up-y {          0.51549}
+set $m6-ViewWindow_0-view-up-z {        -0.559399}
+set $m6-ViewWindow_0-view-fov {               20}
+set $m6-ViewWindow_0-view-eyep_offset-x {}
+set $m6-ViewWindow_0-view-eyep_offset-y {}
+set $m6-ViewWindow_0-view-eyep_offset-z {}
+set $m6-ViewWindow_0-bgcolor-r {                0}
+set $m6-ViewWindow_0-bgcolor-g {                0}
+set $m6-ViewWindow_0-bgcolor-b {                0}
+set $m6-ViewWindow_0-shading {}
+set $m6-ViewWindow_0-do_stereo {0}
+set $m6-ViewWindow_0-ambient-scale {1.0}
+set $m6-ViewWindow_0-diffuse-scale {1.0}
+set $m6-ViewWindow_0-specular-scale {0.4}
+set $m6-ViewWindow_0-emission-scale {1.0}
+set $m6-ViewWindow_0-shininess-scale {1.0}
+set $m6-ViewWindow_0-sbase {0.40}
+set $m6-ViewWindow_0-sr {1}
+set $m6-ViewWindow_0-do_bawgl {0}
+set $m6-ViewWindow_0-drawimg {}
+set $m6-ViewWindow_0-saveprefix {}
+set $m6-ViewWindow_0-resx {}
+set $m6-ViewWindow_0-resy {}
+set $m6-ViewWindow_0-aspect {}
+set $m6-ViewWindow_0-aspect_ratio {}
+set $m6-ViewWindow_0-unused {1}
+set $m6-ViewWindow_0-unused {1}
+set $m7-notes {}
+set $m7-show_status {1}
+set $m7-isoval {-0.11800}
+set $m7-isoval-min {-0.649647}
+set $m7-isoval-max {0.370803}
+set $m7-isoval-typed {0}
+set $m7-isoval-quantity {30}
+set $m7-isoval-list {0.0 0.1 0.2 0.3}
+set $m7-extract-from-new-field {1}
+set $m7-algorithm {1}
+set $m7-build_trisurf {0}
+set $m7-np {1}
+#set $m7-active-isoval-selection-tab {2}
+set $m7-active_tab {NOISE}
+set $m7-update_type {Auto}
+set $m7-color-r {0.4}
+set $m7-color-g {0.2}
+set $m7-color-b {0.9}
+$m7 initialize_ui
+
+::netedit scheduleok

@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+
+<component name="FieldBoundary" category="FieldsCreate">
+  <overview>
+    <authors>
+      <author>Martin Cole</author>
+    </authors>
+    <summary>The FieldBoundary module extracts a boundary surface from a volume field.</summary>
+    <description>
+      <p>
+        The FieldBoundary module extracts the bounding surface of
+        the incoming field, making it into a new field that it outputs
+        through the BoundaryField port.  This module does not have a GUI.
+	It has one input port, Field, and two output ports, BoundaryField,
+        and Interpolant.
+
+        The FieldBoundary module builds an appropriate mesh from the
+        incoming field.  FieldBoundary will build a QuadSurfMesh,
+        TriSurfMesh, or CurveMesh as appropriate for the boundary type
+        of the input field.
+
+        The Field output port will contain the new boundary mesh with
+        no data interpolated onto it.  If the data from the input
+        field is desired on the output field, we recommended that
+        using the Interpolant output, running the results
+        through ApplyInterpolant in order to draw values from the input
+        field.
+       </p>
+
+      <developer>
+	<p>Any interior face should be shared by two cells.  The boundary surface is calculated as the module checks each face that is shared by two or more cells. The faces that exist in one cell only are boundary faces.  This module can be used as a debugging tool becuase errors or holes in the mesh will show up as boundary faces.</p>
+      </developer>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <!-- one of (device port file) -->
+      <port>
+	<name>Field</name>
+	<description>
+	  <p>
+             Accepts any field. Only useful with fields that  
+             have faces.
+          </p>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+	<componentname>FieldReader</componentname>
+      </port>
+    </inputs>
+    <outputs>
+      <!-- one of (device port file) -->
+      <port>
+	<name>BoundaryField</name>
+	<description>
+	  <p>A TriSurfField or QuadSurfField of doubles.</p>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+	<componentname>ShowField</componentname>
+      </port>
+      <port>
+	<name>Interpolant</name>
+	<description>
+	  <p>Outputs an interpolant from the input volume to the BoundaryField.</p>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+	<componentname>ShowField</componentname>
+      </port>
+    </outputs>
+  </io>
+  <testing>
+    <plan>
+      <description>
+	<p>Feed the module a volume mesh and render the output.</p>
+      </description>
+      <step>
+	<p>Load ./doc/FieldBoundary_test.net</p>
+      </step>
+      <step>
+	<p>Execute the net.</p>
+      </step>
+      <step>
+	<p>The user should see the correct Gouraud shaded faces, along with 
+           normals and edges.</p>
+      </step>
+      <step>
+	<p>Select wireframe in the viewer.  There should be no interior faces,
+           although this could be caused by bad input (unconnected volume)</p>
+      </step>
+    </plan>
+  </testing>
+</component>

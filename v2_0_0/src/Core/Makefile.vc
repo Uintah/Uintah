@@ -1,0 +1,95 @@
+#
+#  The contents of this file are subject to the University of Utah Public
+#  License (the "License"); you may not use this file except in compliance
+#  with the License.
+#  
+#  Software distributed under the License is distributed on an "AS IS"
+#  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+#  License for the specific language governing rights and limitations under
+#  the License.
+#  
+#  The Original Source Code is SCIRun, released March 12, 2001.
+#  
+#  The Original Source Code was developed by the University of Utah.
+#  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+#  University of Utah. All Rights Reserved.
+#
+
+# Makefile.vc
+# written by Chris Moulding 7/99
+
+###########################  EDIT HERE  ###########################
+
+DLLNAME = Core
+EXENAME = 
+
+OBJS = Containers\Sort.odll Containers\String.odll Containers\PQueue.odll\
+	   Containers\TrivialAllocator.odll Containers\BitArray1.odll\
+	   Datatypes\TriSurface.odll\
+	   Datatypes\BasicSurfaces.odll Datatypes\Boolean.odll\
+	   Datatypes\ColorMap.odll Datatypes\ColumnMatrix.odll\
+	   Datatypes\Datatype.odll Datatypes\DenseMatrix.odll\
+	   Datatypes\HexMesh.odll Datatypes\Image.odll\
+       Datatypes\Interval.odll Datatypes\Matrix.odll Datatypes\Mesh.odll\
+	   Datatypes\ScalarField.odll Datatypes\ScalarFieldHUG.odll \
+       Datatypes\ScalarFieldRG.odll Datatypes\ScalarFieldRGBase.odll \
+       Datatypes\ScalarFieldRGchar.odll Datatypes\ScalarFieldRGdouble.odll\
+	   Datatypes\ScalarFieldRGfloat.odll Datatypes\ScalarFieldRGint.odll\
+	   Datatypes\ScalarFieldRGshort.odll Datatypes\ScalarFieldRGuchar.odll \
+       Datatypes\ScalarFieldUG.odll Datatypes\ScalarFieldZone.odll\
+	   Datatypes\SparseRowMatrix.odll Datatypes\Surface.odll \
+       Datatypes\SymSparseRowMatrix.odll Datatypes\TriDiagonalMatrix.odll  \
+       Datatypes\VectorField.odll Datatypes\VectorFieldHUG.odll\
+	   Datatypes\VectorFieldOcean.odll Datatypes\VectorFieldRG.odll \
+       Datatypes\VectorFieldUG.odll Datatypes\VectorFieldZone.odll\
+	   Datatypes\VoidStar.odll Datatypes\cDMatrix.odll Datatypes\cMatrix.odll \
+       Datatypes\cSMatrix.odll Datatypes\cVector.odll Datatypes\SurfTree.odll\
+	   Exceptions\Exceptions.odll\
+	   Geom\GeomObj.odll Geom\GeomArrows.odll Geom\Pt.odll\
+	   Geom\GeomText.odll Geom\BBoxCache.odll Geom\GeomGrid.odll Geom\GeomQMesh.odll\
+	   Geom\TimeGrid.odll Geom\GeomBillboard.odll Geom\GeomScene.odll Geom\GeomTorus.odll\
+	   Geom\Color.odll Geom\IndexedGroup.odll Geom\GeomSphere.odll Geom\GeomTransform.odll\
+	   Geom\GeomCone.odll Geom\Light.odll Geom\Sticky.odll Geom\GeomTri.odll\
+	   Geom\GeomContainer.odll Geom\Lighting.odll Geom\Switch.odll Geom\GeomTriStrip.odll\
+	   Geom\GeomCylinder.odll Geom\GeomLine.odll Geom\GeomTriangles.odll\
+	   Geom\GeomDisc.odll Geom\Material.odll Geom\GeomTube.odll Geom\GeomTetra.odll\
+	   Geom\GeomVertexPrim.odll Geom\GeomTexSlices.odll\
+	   Geom\View.odll Geom\GeomPolyline.odll\
+	   Geom\TexSquare.odll Geom\tGrid.odll Geom\GeomPick.odll Geom\Pickable.odll\
+	   Geom\TCLGeom.odll Geom\TCLView.odll Geom\GeomGroup.odll Geom\GeomOpenGL.odll\
+	   Geom\GeomTimeGroup.odll Geom\HeadLight.odll Geom\PointLight.odll\
+	   Geometry\BBox.odll Geometry\Grid.odll Geometry\Point.odll Geometry\Transform.odll\
+	   Geometry\Plane.odll Geometry\Vector.odll\
+	   Math\Mat.odll Math\MusilRNG.odll Math\TrigTable.odll\
+	   Math\LinAlg.odll Math\fft.odll Math\hf.odll Math\ssmult.odll\
+	   Persistent\Persistent.odll Persistent\Pstreams.odll\
+	   TclInterface\DebugSettings.odll TclInterface\GuiManager.odll\
+	   TclInterface\GuiServer.odll TclInterface\Histogram.odll\
+	   TclInterface\MemStats.odll TclInterface\Remote.odll TclInterface\TCL.odll\
+	   TclInterface\TCLInit.odll TclInterface\TCLTask.odll TclInterface\TCLvar.odll\
+	   TclInterface\ThreadStats.odll\
+	   Tester\PerfTest.odll Tester\RigorousTest.odll\
+	   Thread\Guard.odll Thread\ParallelBase.odll Thread\Runnable.odll\
+	   Thread\Thread.odll Thread\ThreadError.odll Thread\SimpleReducer.odll\
+	   Thread\ThreadGroup.odll Thread\WorkQueue.odll\
+	   Thread\ConditionVariable_default.odll Thread\CrowdMonitor_default.odll\
+       Thread\RecursiveMutex_default.odll Thread\AtomicCounter_default.odll\
+	   Thread\Barrier_default.odll Thread\Thread_win32.odll\
+#      Thread\Time_win32.odll\
+       TkExtensions\tk3d2.odll TkExtensions\tkAppInit.odll TkExtensions\tkBevel.odll\
+	   TkExtensions\tkCanvBLine.odll TkExtensions\tkOpenGL.odll\
+	   TkExtensions\tkRange.odll TkExtensions\tkCursor.odll\
+	   TkExtensions\tkUnixRange.odll\
+	   Util\Debug.odll Util\Timer.odll Util\soloader.odll\
+	   share\DllEntry.odll
+
+CF   = -DBUILD_SCICORE
+LF   = 
+
+INCS = 
+         
+LIBS = 
+
+###################################################################
+
+!include <$(TOP)\src\scripts\Makefile.vc.master>

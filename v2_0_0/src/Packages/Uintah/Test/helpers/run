@@ -1,0 +1,117 @@
+#!/bin/sh
+
+# $BUILD_DIR $BUILDROOT, $HTMLLOG, $PARALLELISM, and $MAKE_PARALLELISM must be set
+
+mode=$1
+
+failed=0
+
+if [ ! -d "$TEST_DATA" ]; then
+    echo "TEST_DATA directory doesn't exist: $TEST_DATA"
+    exit -1;
+fi
+
+if [ ! -d "${TEST_DATA}/${mode}" ]; then
+    mkdir "${TEST_DATA}/${mode}"
+fi
+
+
+cd "${BUILDROOT}/${mode}"
+if [ ! -d TestScripts ]; then
+    ln -s ../src/Packages/Uintah/Test TestScripts
+fi
+if [ ! -d susdir ]; then
+    ln -s build/Packages/Uintah/StandAlone susdir
+fi
+if [ ! -d inputs ]; then
+    ln -s ../src/Packages/Uintah/StandAlone/inputs inputs
+fi
+if [ ! -d goldStandard ]; then
+    ln -s "${TEST_DATA}/${mode}" goldStandard
+fi
+
+summary_log="${BUILDROOT}/${mode}/summary_log"
+rm -f $summary_log
+
+echo ""
+
+cd TestScripts
+
+for test in *; do
+
+# match this test to being run in a daily or weekly context
+    runThisTest=0;
+    if [ "$WEEKLY" = "1" ]; then
+      case "$test" in
+        *.wk) runThisTest=1
+              ;;
+        *)    runThisTest=0
+              ;;
+      esac
+    else
+      case "$test" in
+        *.wk) runThisTest=0
+              ;;
+        *)    runThisTest=1
+              ;;
+      esac
+    fi
+    if [ "$runThisTest" = "0" ]; then
+      continue
+    fi
+    if [ -f "$test" -a -x "$test" ]; then
+	if [ $WithArches = "no" -a $test = "ARCHES" ]; then
+	    echo ""
+	    echo "Skipping test \"${test}-${mode}\" at `date`"
+	    echo "(ARCHES did not compile)"
+	    failed=1
+	    continue; # skip arches test
+	fi
+#	echo ""
+#	echo "Running test \"${test}-${mode}\" at `date`"
+
+	cd "${BUILDROOT}/${mode}"
+	doTestScript="do${test}tests"
+	echo "#!/bin/tcsh" > "$doTestScript"
+	echo "setenv PATH $PATH" >> "$doTestScript"
+        echo "setenv OS $OS" >> "$doTestScript"
+	echo "python TestScripts/$test susdir inputs goldStandard $mode $PARALLELISM "'$1' >> "$doTestScript"
+	/bin/chmod a+x "$doTestScript"
+	rm -f "${BUILDROOT}/${mode}/${test}-short.log"
+	"$doTestScript" > "${test}.log"  2>&1
+	retval=$?
+	cat "${test}.log" >> "$summary_log"
+	cat "${test}.log" >> "$HTMLLOG"
+	cd TestScripts
+
+	if [ $retval = "0" ]; then
+	    echo "Passed: ${test}-${mode} tests! "
+	    # It was successful, so it can remove the lock
+	    if [ -d "${BUILD_DIR}/${test}-${mode}.lock" ]; then
+	        # test ran successfully - remove the lock
+	        rm "${BUILD_DIR}/${test}-${mode}.lock"
+	    fi
+	elif [ $retval = "3" ]; then
+	    echo "Skipped: ${test}-$mode tests"
+	else
+	    echo "Failed: ${test}-${mode} tests"
+	    if [ ! -d "${BUILD_DIR}/${test}-${mode}.lock" ]; then
+	        ln -s "$BUILDROOT" "${BUILD_DIR}/${test}-${mode}.lock" > /dev/null 2>&1
+	    fi
+	    if [ -f "${BUILDROOT}/${mode}/${test}-short.log" ]; then
+		cat "${BUILDROOT}/${mode}/${test}-short.log"
+	    fi
+	    failed=1
+	fi
+    fi
+done
+
+echo ""
+echo "Finished $mode tests on `date`"
+if [ $failed = "0" ]; then
+    echo "All $mode tests passed!"
+else
+    echo "*** Some $mode tests failed."
+fi
+
+exit $failed

@@ -1,0 +1,185 @@
+#
+# The contents of this file are subject to the University of Utah Public
+# License (the "License"); you may not use this file except in compliance
+# with the License.
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations under
+# the License.
+# 
+# The Original Source Code is SCIRun, released March 12, 2001.
+# 
+# The Original Source Code was developed by the University of Utah.
+# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+# University of Utah. All Rights Reserved.
+#
+
+# SCI Network 1.0
+
+set results [sourceSettingsFile]
+
+if { $results == "failed" } {
+
+    ::netedit scheduleok
+    return 
+
+} else {
+
+    set DATADIR [lindex $results 0]
+    set DATASET [lindex $results 1]
+}
+
+source $DATADIR/$DATASET/$DATASET.settings
+
+::netedit dontschedule
+
+global userName
+set userName "dmw"
+
+global runDate
+set runDate " Sun  Jun 10 2001"
+
+global runTime
+set runTime " 20:26:15"
+
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 320 7]
+set m1 [addModuleAtPosition "BioPSE" "Inverse" "ConductivitySearch" 12 113]
+set m2 [addModuleAtPosition "BioPSE" "Forward" "SetupFEMatrix" 287 234]
+set m3 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 484 251]
+set m4 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 466 313]
+set m5 [addModuleAtPosition "SCIRun" "Fields" "BuildInterpolant" 343 159]
+set m6 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 320 403]
+set m7 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 504 37]
+set m8 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 657 487]
+set m9 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 48 329]
+set m10 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 30 386]
+set m11 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 30 468]
+set m12 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 30 532]
+set m13 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 657 545]
+set m14 [addModuleAtPosition "SCIRun" "Math" "ErrorMetric" 117 625]
+set m15 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 30 6]
+set m16 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 688 9]
+set m17 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 452 479]
+set m18 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 281 567]
+set m19 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 452 567]
+set m20 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 463 385]
+set m21 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 434 627]
+set m22 [addModuleAtPosition "SCIRun" "Render" "Viewer" 365 712]
+set m23 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 688 72]
+set m24 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 570 151]
+
+addConnection $m0 0 $m1 0
+addConnection $m0 0 $m2 0
+addConnection $m0 0 $m3 0
+addConnection $m3 0 $m4 1
+addConnection $m2 0 $m4 0
+addConnection $m4 0 $m6 1
+addConnection $m0 0 $m6 0
+addConnection $m7 0 $m5 1
+addConnection $m6 0 $m8 0
+addConnection $m5 0 $m8 1
+addConnection $m3 0 $m9 1
+addConnection $m9 0 $m10 1
+addConnection $m1 2 $m9 0
+addConnection $m0 0 $m10 0
+addConnection $m10 0 $m11 0
+addConnection $m5 0 $m11 1
+addConnection $m11 0 $m12 0
+addConnection $m8 0 $m13 0
+addConnection $m12 1 $m14 0
+addConnection $m13 1 $m14 1
+addConnection $m14 0 $m1 2
+addConnection $m15 0 $m1 1
+addConnection $m16 0 $m5 0
+addConnection $m5 0 $m3 2
+addConnection $m17 0 $m18 0
+addConnection $m18 0 $m20 1
+addConnection $m17 0 $m19 0
+addConnection $m8 0 $m19 1
+addConnection $m19 0 $m21 1
+addConnection $m8 0 $m21 0
+addConnection $m20 0 $m22 0
+addConnection $m21 0 $m22 1
+addConnection $m23 1 $m24 1
+addConnection $m10 0 $m24 0
+addConnection $m24 0 $m18 1
+addConnection $m24 0 $m20 0
+addConnection $m16 0 $m23 0
+
+set $m0-filename $env(SCIRUN_DATA)/$DATASET/$DATASET-mesh.tvt.fld
+set $m1-seed_gui 1
+set $m2-UseCondTCL 1
+set $m2-BCFlag {GroundZero}
+set $m3-sourceNodeTCL 4
+set $m3-sinkNodeTCL 14
+set $m3-modeTCL {electrodes}
+set $m4-target_error 1e-08
+set $m4-orig_error 0.00141421
+set $m4-current_error {7.84145e-09}
+set $m4-method {Conjugate Gradient & Precond. (SCI)}
+set $m4-precond {jacobi}
+set $m4-maxiter 2000
+set $m4-use_previous_soln 1
+set $m4-emit_partial 0
+set $m4-np 1
+set $m5-use_interp {0}
+set $m7-filename $env(SCIRUN_DATA)/$DATASET/$DATASET-electrodes.pcd.fld
+set $m9-target_error 1e-08
+set $m9-orig_error 9.65643e-09
+set $m9-current_error {9.65643e-09}
+set $m9-method {Conjugate Gradient & Precond. (SCI)}
+set $m9-precond {jacobi}
+set $m9-maxiter 2000
+set $m9-use_previous_soln 1
+set $m9-emit_partial 0
+set $m9-np 1
+set $m14-haveUI 1
+set $m14-methodTCL {CCinv}
+set $m14-pTCL {1}
+set $m15-filename $env(SCIRUN_DATA)/$DATASET/$DATASET-condparams.mat
+set $m16-filename $env(SCIRUN_DATA)/$DATASET/$DATASET-voltage.tvd.fld
+set $m17-tcl_status {Calling GenStandardColorMaps!}
+set $m17-positionList {}
+set $m17-nodeList {}
+set $m17-width 1
+set $m17-height 1
+set $m17-mapType 3
+set $m17-minRes 12
+set $m17-resolution 255
+set $m18-isFixed 0
+set $m18-min -0.0345029
+set $m18-max 0.0160781
+set $m19-isFixed 0
+set $m19-min -0.171082
+set $m19-max 0.0702525
+set $m20-nodes-on 0
+set $m20-edges-on 0
+set $m20-faces-on 1
+set $m20-node_display_type {Spheres}
+set $m20-edge_display_type {Lines}
+set $m20-resolution 4
+set $m21-nodes-on 1
+set $m21-edges-on 0
+set $m21-faces-on 0
+set $m21-node_display_type {Spheres}
+set $m21-edge_display_type {Lines}
+set $m21-node_scale [expr 0.035 * ${global-scale}]
+set $m21-resolution 10
+$m22 initialize_ui
+set $m22-ViewWindow_0-view-eyep-x ${view-eyep-x}
+set $m22-ViewWindow_0-view-eyep-y ${view-eyep-y}
+set $m22-ViewWindow_0-view-eyep-z ${view-eyep-z}
+set $m22-ViewWindow_0-view-lookat-x ${view-lookat-x}
+set $m22-ViewWindow_0-view-lookat-y ${view-lookat-y}
+set $m22-ViewWindow_0-view-lookat-z ${view-lookat-z}
+set $m22-ViewWindow_0-view-up-x ${view-up-x}
+set $m22-ViewWindow_0-view-up-y ${view-up-y}
+set $m22-ViewWindow_0-view-up-z ${view-up-z}
+set $m22-ViewWindow_0-view-fov ${view-fov}
+set $m22-ViewWindow_0-specular-scale {0.4}
+$m1 initialize_ui
+$m3 initialize_ui
+$m14 initialize_ui
+
+::netedit scheduleok

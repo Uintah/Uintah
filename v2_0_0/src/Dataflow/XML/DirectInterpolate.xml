@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+
+<component name="DirectInterpolate" category="FieldsData">
+  <overview>
+    <authors>
+      <author>Michael Callahan</author>
+    </authors>
+    <summary>The DirectInterpolate module takes two Fields as input, the first of which, Source, contains geometry and data values; the second, Destination, contains geometry only. DirectInterpolate takes a field and finds data values for the destination geometry and outputs the resulting Field.</summary>
+    <description>
+      <p>
+        DirectInterpolate will find the corresponding data value in the Source for each node in the Destination Field. The data values can be stored at the nodes, cells, edges, or faces of the mesh at either the input or output ports.  If the geometires of the input ports are different, the module will calculate data values for the Destination by interpolation.
+      </p>
+<p> The DirectInterpolate GUI contains a check box for Enable Interpolation and Use Closest Element If Not Interpable.  The Enable Interpolation check box allows the user to select the option of interpolation.  The user can also select the option of choosing the closest element when a data value cannot be interpolated.  The Maximum Closeness option indicates the maximum distance between points of interpolation and data values.</p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+	<name>Source</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+	<name>Destination</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+	<name>Interpolant</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+  </io>
+  <testing>
+  </testing>
+</component>
+

@@ -1,0 +1,47 @@
+# Makefile for Compression
+
+include ../make.include
+
+SRCTOP  := @top_srcdir@
+SRCDIR  := @srcdir@
+OBJTOP  := @ROOT_DIR@
+
+OBJTOP_ABS    := $(shell cd $(OBJTOP) ; pwd)
+SRCTOP_ABS    := $(shell cd $(SRCTOP) ; pwd)
+ifeq ($(OBJTOP),.)
+LIBDIR := lib/
+else
+LIBDIR := $(OBJTOP_ABS)/lib/
+endif
+LIBDIR_ABS    := $(shell mkdir -p $(LIBDIR); cd $(LIBDIR) ; pwd)
+
+VPATH := $(SRCDIR)
+
+INCLUDES += -I$(SRCTOP)
+
+INCLUDES := $(sort $(INCLUDES))
+#SOFLAGS := $(SOFLAGS) -rpath ${LIBDIR}
+
+OBJS = JPEG.o LZO.o RLE.o ZLIB.o lzo/minilzo.o ppm.o texture.o
+
+SOLIB = ../lib/libCompression.so
+
+LIBS = -ljpeg -lz
+DRIVERLIBS = -L$(LIBDIR) -lCompression
+
+all:	$(SOLIB)
+
+
+$(SOLIB):	$(OBJS)
+	$(CXX) $(SOFLAGS)	$(OBJS) -o $(SOLIB) $(LIBS)
+
+clean:
+	/bin/rm -f $(OBJS) $(SOLIB)
+
+distclean:	clean
+	/bin/rm -f *.ppm *.jpg
+
+#-include $(OBJS:.o=.d)
+
+
+

@@ -1,0 +1,119 @@
+/*
+
+The contents of this file are subject to the University of Utah Public
+License (the "License"); you may not use this file except in compliance
+with the License.
+
+Software distributed under the License is distributed on an "AS IS"
+basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+License for the specific language governing rights and limitations under
+the License.
+
+The Original Source Code is SCIRun, released March 12, 2001.
+
+The Original Source Code was developed by the University of Utah.
+Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+University of Utah. All Rights Reserved.
+
+*/
+
+/*
+This stylesheet is used by html documents generated from docbook sources.
+*/
+
+@import url(common.css);
+
+.title {
+color:#003300}
+
+h2.title {
+border-bottom: 1px dotted;
+border-left: 1px dotted;
+padding-left: 4px}
+
+.subtitle {
+color:#003300}
+
+.screen {
+color:#006633}
+
+.literallayout {
+color:#006633}
+
+.programlisting {
+color:#006633}
+
+/* I wish there were some way to discriminate amongst all the different 
+   uses of <tt>. */
+tt {
+color:#006633}
+
+/* things look wierd w/o setting font to Times; we set the font size
+   as well, this is what the new browsers will all imply */
+div, .navheader, .navfooter, td, th {
+font-family: Arial, Helvetica, sans-serif;
+font-size: 14px}
+
+/* evil to force size smaller but it does look better */
+.literal, .token, .database {
+font-family: "Lucida Console", "Courier", monospace;}
+
+.guiicon, .guibutton, .guilabel, .interface {
+font-weight: bold}
+
+.chapter h1 { 
+font-size: 34px}
+
+/* we need the a specifier so this wins out over the chapter h1 */
+h1.section a { 
+font-size: 24px}
+
+.navheader td, .navfooter td {
+font-size: 12px;
+font-weight: bold;
+background:  #CCCCCC}
+
+.navheader th {
+color: black;
+background: #CCCCCC}
+
+/* General table stuff. */ 
+table {
+border-width: 2;
+border-color: black;}
+
+/* Table headers */ 
+th {
+font-family: sans-serif;
+color: white;
+background: #003333}
+
+/* tweak tables */
+.calstable tr th {
+background-color: black;
+color: white}
+
+table.simplelist{
+border: 0;
+frame: void}
+
+.faq_q_leadin {
+color: #003300;
+font-style: oblique;
+font-weight: bold;
+}
+
+.faq_a_leadin {
+color: #003300;
+font-weight: bold;
+}
+
+p.faqrev {
+color: #003300;
+font-size: small;
+font-style: italic;
+}
+
+.question {
+font-weight: bold;
+}

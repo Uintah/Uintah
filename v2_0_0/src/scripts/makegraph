@@ -1,0 +1,74 @@
+#!/usr/bin/env python
+
+# This script takes a list of dependencies, one per line, of the form
+# <source> <target>
+# which means that "source" depends on "target". It builds a
+# <string, list<string>> map from these dependency statements: each node
+# mentioned as either a source or a target has a list of the nodes it depends
+# on. When the file has been processed, it outputs this map/graph in daVinci's
+# term representation.
+# The input file must be named on the command line, and output goes to stdout.
+
+from string import strip,split,find
+from sys import argv,exit
+
+# These two constants define what nodes and edges look like in daVinci term
+# representation. These will need to be modified if we start using node classes
+# or modify node/edge attributes.
+NODEFMT = 'l("%s",n("",[a("OBJECT","%s"),a("COLOR","lightgrey")],['
+EDGEFMT = 'l("%s->%s",e("",[a("_DIR","inverse")],r("%s")))'
+
+if len(argv) < 2:
+	print "usage: makegraph.py <dependency list filename>"
+	exit(1)
+deplist = open(argv[1], 'r')
+
+nodes = {}
+
+for line in deplist.readlines():
+	# This ugliness exists to split the names (which may contain spaces)
+	names = []
+	i = 0
+	while (i >= 0):
+		i = find(line, '"', i)
+		if i >= 0:
+			(begin, end) = (i + 1, len(line))
+			i = find(line, '"', i + 1)
+			if i >= 0:
+				end = i
+			names.append(line[begin:end])
+			i = i + 1
+	
+	if (len(names) < 1) or (len(names) > 2):
+		print "syntax error: format is \"<obj> [<dependency>]\""
+		exit(1);
+
+	if (not nodes.has_key(names[0])):
+		nodes[names[0]] = [];
+	if len(names) == 2:
+		if (not nodes.has_key(names[1])):
+			nodes[names[1]] = [];
+		if (not names[1] in nodes[names[0]]):
+			nodes[names[0]].append(names[1])
+
+graph = '['
+firstnode = 1
+for source in nodes.keys():
+	if (not firstnode):
+		graph = graph + ','
+	node = NODEFMT % (source, source)
+		
+	firstedge = 1
+	for target in nodes[source]:
+		if (not firstedge):
+			node = node + ','
+		edge = EDGEFMT % (source, target, target)
+		node = node + edge
+		firstedge = 0
+
+	graph = graph + node + ']))'
+	firstnode = 0
+
+print graph + ']'
+
+deplist.close()

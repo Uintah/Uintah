@@ -1,0 +1,34 @@
+# Top-level makefile
+
+include make.include
+
+ALLDIRS = Logging XML Compression Exceptions Thread Properties Network \
+	Message Rendering Drivers
+DRIVERDIRS = Compression Message Network Properties Rendering \
+	Thread XML
+
+all:
+	 cd Logging ; make 
+	( cd XML ; make )
+	( cd Compression ; make ) 
+	( cd Exceptions ; make )
+	( cd Thread ; make )
+	( cd Properties ; make )
+	( cd Network ; make )
+	( cd Message ; make )
+	( cd Rendering ; make )
+	( cd Drivers ; make )
+
+#test:
+#	( cd Drivers ; 
+clean:	
+	( cd Compression ; make clean ) 
+	( cd Exceptions ; make clean )
+	( cd Logging ; make clean )
+	( cd Network ; make clean )
+	( cd Properties ; make clean )
+	( cd Thread ; make clean )
+	( cd XML ; make clean )
+	( cd Message ; make clean )
+	( cd Rendering ; make clean )
+	( cd Drivers ; make clean )

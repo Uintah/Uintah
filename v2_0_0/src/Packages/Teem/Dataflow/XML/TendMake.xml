@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+
+<component name="TendMake" category="Tend">  <overview>
+    <authors>
+      <author>Martin Cole</author>
+    </authors>
+    <summary>Still stub docs.</summary>
+    <description>
+      <p>Still stub docs </p>
+    </description>
+    <examplesr></examplesr>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Confidence</name>
+	<datatype>Teem::Nrrd</datatype>
+      </port>
+      <port>
+        <name>Evals</name>
+	<datatype>Teem::Nrrd</datatype>
+      </port>
+      <port>
+        <name>Evecs</name>
+	<datatype>Teem::Nrrd</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>nout</name>
+	<datatype>Teem::Nrrd</datatype>
+      </port>
+    </outputs>
+  </io>
+  <testing>
+  </testing>
+</component>

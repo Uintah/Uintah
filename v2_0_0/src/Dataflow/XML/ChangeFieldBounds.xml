@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+ 
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+ 
+  The Original Source Code is SCIRun, released March 12, 2001.
+ 
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
+  University of Utah. All Rights Reserved.
+-->
+
+<component name="ChangeFieldBounds" category="FieldsGeometry">
+  <overview>
+    <authors>
+      <author>McKay Davis</author>
+    </authors>
+    <summary>
+      <p>
+        ChangeFieldBounds is used to transform the field geometry.
+      </p>
+    </summary>
+    <description>
+      <p>
+        ChangeFieldBounds can trasform the field geometry via the UI or 
+	a widget attached to a Viewer window.
+      </p>
+      <p>
+	The output field is the transformed input field.
+      </p>
+      <p>
+	The output matrix is the resultant transformation matrix used
+	to transform the field.  It can be used to transform other
+	fields in SCIRun.
+      </p>
+      <p>
+	The UI can change the center and the size of the output
+	field.  Check the box next to the output attribute you wish to modify.
+	The 'Copy Input to Output' button will reset the
+	output values to the input values.
+      </p>
+      <p>
+	To interactively transform the input field you must attach the
+	Widget Port (the middle output port) to the viewer window.
+      </p>
+      <p>	
+	To move the widget: Shift+RightClick on the edges of the widget
+	frame and move the transformation box around.
+      </p>
+      <p>
+	To scale the widget:  Shift+RightClick on the spheres located on
+	each face of the widget and drag.  This will scale the output
+	field in a direction normal to the face the sphere is located
+	on.
+      </p>
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Input Field</name>
+        <datatype>SCIRun::Field</datatype>
+	<description>
+          <p>
+            The field to be transformed.
+          </p>
+        </description>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Output Field</name>
+        <datatype>SCIRun::Field</datatype>
+        <description>
+          <p>
+            The transformed field.
+          </p>
+        </description>
+      </port>
+      <port>
+        <name>Transformation Widget</name>
+        <datatype>SCIRun::Geometry</datatype>
+        <description>
+          <p>
+            A box widget used to translate and/or resize the field.
+          </p>
+        </description>
+      </port>
+      <port>
+        <name>Transformation Matrix</name>
+        <datatype>SCIRun::Matrix</datatype>
+        <description>
+          <p>
+            The matrix that represents the transformations made.
+          </p>
+        </description>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+    <description>
+      <p>
+      </p>
+    </description>
+    <parameter>
+      <widget>Entry</widget>
+      <label>BBox min and BBox max</label>
+      <description>
+        <p>
+          The 6 entries describe two 3D points, which are the min and
+          max points of the axis aligned bounding box of the field.
+        </p>
+      </description>
+    </parameter>
+  </gui>
+  <testing>
+  </testing>
+</component>
+

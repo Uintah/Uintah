@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../doc/Utilities/XML/component.dtd">
+<?xml-stylesheet href="../../../doc/Utilities/XML/component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+
+<component name="FieldCage" category="FieldsOther">
+  <overview>
+    <authors>
+      <author>McKay Davis</author>
+    </authors>
+    <summary>The FieldCage Module renders a semented red-green-blue 3D
+  grid around an arbitrary field</summary>
+    <description>
+      <p>
+       FieldCage queries the generic mesh interface to get the BBox of the
+       Field, and then renders a "cage" of that bounding box.  The user specifies
+       nx/ny/nz (number of "bars" in each direction) via text entry in
+       UI.  The cage is rendered with red/green/blue lines corresponding to x/y/z. 
+      </p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <!-- one of (device port file) -->
+      <port>
+	<name>Field</name>
+	<description>
+	  <p>
+          </p>
+	</description>
+	<datatype>SCIRun::Field</datatype>
+	<componentname>FieldReader</componentname>
+      </port>
+    </inputs>
+    <outputs>
+      <!-- one of (device port file) -->
+      <port>
+	<name>Scene Graph</name>
+	<description>
+	  <p>
+             A scene graph is sent out through this port expecting to be 
+             rendered by the downstream port.
+          </p>
+	</description>
+	<datatype>SCIRun::Geometry</datatype>
+	<componentname>Viewer</componentname>
+      </port>
+    </outputs>
+  </io>
+  <testing>
+    <plan>
+      <description>
+	<p>Feed the module a field mesh and render the output.</p>
+      </description>
+      <step>
+	<p></p>
+      </step>
+    </plan>
+  </testing>
+</component>

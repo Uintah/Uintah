@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+
+<component name="NrrdWriter" category="DataIO">
+  <overview>
+    <authors>
+      <author>David Weinstein</author>
+    </authors>
+    <summary>Output the NrrdData object via Pio.</summary>
+    <description>
+      <p>Save a serialized NrrdData object, which in turn saves the
+nrrd file that it wraps.  So the end result is two saved files. Note
+that these files live side by side, the NrrdData will not load
+properly if they are moved, as it holds the full path to the nrrd it
+wraps. The .nrrd file can of course be relocated on its own, and used
+as any other nrrd independently from the NrrdData (.nd) file.</p>
+    </description>
+    <examplesr>Teem/nets/test/io.net</examplesr>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Input Data</name>
+	<datatype>Teem::Nrrd</datatype>
+      </port>
+    </inputs>
+    <outputs>
+    </outputs>
+  </io>
+  <testing>
+  </testing>
+</component>

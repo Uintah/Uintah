@@ -1,0 +1,79 @@
+<?xml version="1.0"?>
+
+<!--% require("../../Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<!DOCTYPE book
+  PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+  "../../Utilities/XML/Docbook_dtd/docbookx.dtd" [
+<!--%= doc.sysEntity("intro") %-->
+<!--%= doc.sysEntity("src.core") %-->
+<!--%= doc.sysEntity("src.dataflow") %-->
+<!--%= doc.sysEntity("src.nets") %-->
+<!--%= doc.sysEntity("dev.coding_standards") %-->
+<!--%= doc.sysEntity("dev.dataflow") %-->
+<!--%= doc.sysEntity("dev.dynamiccomp") %-->
+<!--%= doc.sysEntity("dev.interfacetcl") %-->
+<!--%= doc.sysEntity("dev.memorymgt") %-->
+<!--%= doc.sysEntity("dev.persistentdata") %-->
+<!--%= doc.sysEntity("dev.customtkwidgets") %-->
+<!--%= doc.sysEntity("dev.utilities") %-->
+<!--%= doc.sysEntity("dev.exceptions") %-->
+<!--%= doc.sysEntity("dev.widgets3d") %-->
+<!ENTITY sr  "SCIRun">
+]>
+
+<book id="main">
+<title>Developers' Guide</title>
+<subtitle>(for &sr; Version <!--%= doc.edition %-->)</subtitle>
+
+&intro;
+
+<part id="src">
+<title>The src Tree</title>
+&src.core;
+&src.dataflow;
+&src.nets;
+</part>
+
+<part id="dev">
+<title>Development</title>
+&dev.coding_standards;
+&dev.dataflow;
+&dev.dynamiccomp;
+&dev.interfacetcl;
+&dev.memorymgt;
+&dev.persistentdata;
+&dev.customtkwidgets;
+&dev.utilities;
+&dev.exceptions;
+&dev.widgets3d;
+</part>
+
+</book>
+
+<!-- Keep this comment at the end of the file
+Local variables:
+mode: xml
+sgml-default-dtd-file:"../../Utilities/XML/docbook.ced"
+sgml-omittag:nil
+sgml-shorttag:nil
+End:
+-->

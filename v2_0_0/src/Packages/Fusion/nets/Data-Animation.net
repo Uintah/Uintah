@@ -1,0 +1,233 @@
+# SCI Network 1.0
+
+::netedit dontschedule
+
+global notes
+set notes ""
+
+set m0 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 393 119]
+set m1 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 18 539]
+set m2 [addModuleAtPosition "SCIRun" "Render" "Viewer" 18 729]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 392 10]
+set m4 [addModuleAtPosition "Fusion" "DataIO" "FusionFieldReader" 18 10]
+set m5 [addModuleAtPosition "SCIRun" "Math" "AppendMatrix" 36 229]
+set m6 [addModuleAtPosition "Fusion" "DataIO" "FusionFieldReader" 204 10]
+set m7 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 18 117]
+set m8 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 204 119]
+set m9 [addModuleAtPosition "SCIRun" "Math" "MatrixSelectVector" 36 313]
+set m10 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 18 411]
+set m11 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 215 577]
+set m12 [addModuleAtPosition "SCIRun" "Fields" "FieldSubSample" 215 494]
+
+addConnection $m0 0 $m1 1
+addConnection $m1 0 $m2 0
+addConnection $m3 0 $m0 0
+addConnection $m4 0 $m7 0
+addConnection $m6 0 $m8 0
+addConnection $m7 1 $m5 0
+addConnection $m8 1 $m5 1
+addConnection $m5 0 $m9 0
+addConnection $m9 0 $m10 1
+addConnection $m10 0 $m1 0
+addConnection $m4 0 $m0 1
+addConnection $m6 0 $m0 2
+addConnection $m11 1 $m2 1
+addConnection $m4 0 $m10 0
+addConnection $m10 0 $m12 0
+addConnection $m12 0 $m11 0
+
+set $m0-notes {}
+set $m0-show_status {1}
+set $m0-isFixed {0}
+set $m0-min {      -0.00360463}
+set $m0-max {           735375}
+set $m0-makeSymmetric {0}
+set $m1-notes {}
+set $m1-show_status {1}
+set $m1-nodes-on {1}
+set $m1-nodes-as-disks {0}
+set $m1-edges-on {0}
+set $m1-faces-on {0}
+set $m1-use-normals {0}
+set $m1-use-transparency {0}
+set $m1-vectors-on {0}
+set $m1-normalize-vectors {0}
+set $m1-has_vector_data {0}
+set $m1-bidirectional {0}
+set $m1-arrow-heads-on {1}
+set $m1-tensors-on {0}
+set $m1-has_tensor_data {0}
+set $m1-text-on {0}
+set $m1-text-use-default-color {1}
+set $m1-text-color-r {1.0}
+set $m1-text-color-g {1.0}
+set $m1-text-color-b {1.0}
+set $m1-text-backface-cull {0}
+set $m1-text-fontsize {1}
+set $m1-text-precision {2}
+set $m1-text-render_locations {0}
+set $m1-text-show-data {1}
+set $m1-text-show-nodes {0}
+set $m1-text-show-edges {0}
+set $m1-text-show-faces {0}
+set $m1-text-show-cells {0}
+set $m1-def-color-r {0.5}
+set $m1-def-color-g {0.5}
+set $m1-def-color-b {0.5}
+set $m1-def-color-a {0.5}
+set $m1-node_display_type {Points}
+set $m1-edge_display_type {Lines}
+set $m1-data_display_type {Arrows}
+set $m1-tensor_display_type {Boxes}
+set $m1-active_tab {Faces}
+set $m1-node_scale {0.03}
+set $m1-edge_scale {0.03}
+set $m1-vectors_scale {0.03}
+set $m1-tensors_scale {0.30}
+set $m1-show_progress {0}
+set $m1-interactive_mode {Interactive}
+set $m1-node-resolution {6}
+set $m1-edge-resolution {6}
+set $m1-data-resolution {6}
+set $m2-notes {}
+set $m2-show_status {1}
+$m2 ui
+set $m2-ViewWindow_0-pos {}
+set $m2-ViewWindow_0-caxes {1}
+set $m2-ViewWindow_0-raxes {1}
+set $m2-ViewWindow_0-iaxes {}
+set $m2-ViewWindow_0-have_collab_vis {0}
+set $m2-ViewWindow_0-view-eyep-x {         0.618995}
+set $m2-ViewWindow_0-view-eyep-y {         -15.4652}
+set $m2-ViewWindow_0-view-eyep-z {          12.0435}
+set $m2-ViewWindow_0-view-lookat-x {}
+set $m2-ViewWindow_0-view-lookat-y {     -9.53674e-07}
+set $m2-ViewWindow_0-view-lookat-z {}
+set $m2-ViewWindow_0-view-up-x {        -0.125728}
+set $m2-ViewWindow_0-view-up-y {         0.606404}
+set $m2-ViewWindow_0-view-up-z {         0.785154}
+set $m2-ViewWindow_0-view-fov {               20}
+set $m2-ViewWindow_0-view-eyep_offset-x {}
+set $m2-ViewWindow_0-view-eyep_offset-y {}
+set $m2-ViewWindow_0-view-eyep_offset-z {}
+set $m2-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m2-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m2-ViewWindow_0-bgcolor-r {0}
+set $m2-ViewWindow_0-bgcolor-g {0}
+set $m2-ViewWindow_0-bgcolor-b {0}
+set $m2-ViewWindow_0-shading {}
+set $m2-ViewWindow_0-do_stereo {0}
+set $m2-ViewWindow_0-ambient-scale {1.0}
+set $m2-ViewWindow_0-diffuse-scale {1.0}
+set $m2-ViewWindow_0-specular-scale {0.4}
+set $m2-ViewWindow_0-emission-scale {1.0}
+set $m2-ViewWindow_0-shininess-scale {1.0}
+set $m2-ViewWindow_0-polygon-offset-factor {1.0}
+set $m2-ViewWindow_0-polygon-offset-units {0.0}
+set $m2-ViewWindow_0-point-size {1.0}
+set $m2-ViewWindow_0-line-width {1.0}
+set $m2-ViewWindow_0-sbase {0.40}
+set $m2-ViewWindow_0-sr {1}
+set $m2-ViewWindow_0-do_bawgl {0}
+set $m2-ViewWindow_0-drawimg {}
+set $m2-ViewWindow_0-saveprefix {}
+set $m2-ViewWindow_0-resx {}
+set $m2-ViewWindow_0-resy {}
+set $m2-ViewWindow_0-aspect {}
+set $m2-ViewWindow_0-aspect_ratio {}
+set $m2-ViewWindow_0-global-light {1}
+set $m2-ViewWindow_0-global-fog {0}
+set $m2-ViewWindow_0-global-debug {0}
+set $m2-ViewWindow_0-global-clip {0}
+set $m2-ViewWindow_0-global-cull {0}
+set $m2-ViewWindow_0-global-dl {0}
+set $m2-ViewWindow_0-global-type {Gouraud}
+set $m3-notes {}
+set $m3-show_status {1}
+set $m3-tcl_status {Calling GenStandardColorMaps!}
+set $m3-positionList {}
+set $m3-nodeList {}
+set $m3-width {398}
+set $m3-height {40}
+set $m3-mapType {3}
+set $m3-minRes {12}
+set $m3-resolution {12}
+set $m3-realres {12}
+set $m3-gamma {0}
+set $m4-notes {}
+set $m4-show_status {1}
+set $m4-filename {/home/sci/allen/SCIRUN/SCIRunData/fusion/NIMROD_10089_00.mds}
+set $m5-notes {}
+set $m5-show_status {1}
+set $m5-append {1}
+set $m5-row {0}
+set $m5-front {0}
+set $m6-notes {}
+set $m6-show_status {1}
+set $m6-filename {/home/sci/allen/SCIRUN/SCIRunData/fusion/NIMROD_10089_21.mds}
+set $m7-notes {}
+set $m7-show_status {1}
+set $m8-notes {}
+set $m8-show_status {1}
+set $m9-notes {}
+set $m9-show_status {1}
+set $m9-row_or_col {col}
+set $m9-selectable_min {0}
+set $m9-selectable_max {                1}
+set $m9-selectable_inc {2}
+set $m9-selectable_units {Units}
+set $m9-range_min {0}
+set $m9-range_max {1}
+set $m9-playmode {loop}
+set $m9-current {0}
+set $m9-execmode {play}
+set $m9-delay {1000}
+set $m9-inc-amount {1}
+set $m9-send-amount {1}
+set $m10-notes {}
+set $m10-show_status {1}
+set $m11-notes {}
+set $m11-show_status {1}
+set $m11-isoval {452448.000}
+set $m11-isoval-min {-0.00360463}
+set $m11-isoval-max {735375}
+set $m11-isoval-typed {0}
+set $m11-isoval-quantity {1}
+set $m11-quantity-range {colormap}
+set $m11-quantity-min {0}
+set $m11-quantity-max {100}
+set $m11-isoval-list {0}
+set $m11-extract-from-new-field {1}
+set $m11-algorithm {0}
+set $m11-build_trisurf {0}
+set $m11-np {1}
+set $m11-active-isoval-selection-tab {0}
+set $m11-active_tab {MC}
+set $m11-update_type {Auto}
+set $m11-color-r {0.4}
+set $m11-color-g {0.2}
+set $m11-color-b {0.9}
+set $m12-notes {}
+set $m12-show_status {1}
+set $m12-wrap {1}
+set $m12-dims {3}
+set $m12-i-dim {385}
+set $m12-j-dim {192}
+set $m12-k-dim {10}
+set $m12-i-start {0}
+set $m12-j-start {0}
+set $m12-k-start {0}
+set $m12-i-stop {384}
+set $m12-j-stop {1}
+set $m12-k-stop {0}
+set $m12-i-stride {10}
+set $m12-j-stride {5}
+set $m12-k-stride {1}
+set $m12-i-wrap {0}
+set $m12-j-wrap {1}
+set $m12-k-wrap {1}
+$m5 initialize_ui
+$m9 initialize_ui
+$m11 initialize_ui
+
+::netedit scheduleok
