@@ -71,13 +71,15 @@ public:
 
   //////////
   // overides tcl_command in base class Module
-  void tcl_command( TCLArgs&, void* );
+  // void tcl_command( TCLArgs&, void* );
 
 private:
 
   TCLstring tcl_status; 
   TCLstring positionList;
   TCLstring nodeList;
+  TCLint width;
+  TCLint height;
   TCLint mapType;
   TCLint minRes;
   TCLint resolution;

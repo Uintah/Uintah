@@ -95,7 +95,8 @@ GenStandardColorMaps::GenStandardColorMaps(const clString& id)
     resolution("resolution", id, this),
   tcl_status("tcl_status",id,this) ,
   positionList("positionList", id, this),
-  nodeList("nodeList", id, this)
+  nodeList("nodeList", id, this),
+  width("width", id, this), height("height", id, this)
   
 
 { 
@@ -109,7 +110,7 @@ GenStandardColorMaps::GenStandardColorMaps(const clString& id)
 GenStandardColorMaps::~GenStandardColorMaps(){} 
 
 //-------------------------------------------------------------- 
-void GenStandardColorMaps::tcl_command( TCLArgs& args, void* userdata)
+/* void GenStandardColorMaps::tcl_command( TCLArgs& args, void* userdata)
 {
 
   int i;
@@ -127,7 +128,7 @@ void GenStandardColorMaps::tcl_command( TCLArgs& args, void* userdata)
     Module::tcl_command(args, userdata);
   }
 }
-
+*/
 //-------------------------------------------------------------- 
 
 void GenStandardColorMaps::execute() 
@@ -139,10 +140,15 @@ void GenStandardColorMaps::execute()
      res = resolution.get();
    }
    
-   if( !cmap.get_rep() ) return;
+   clString tclRes;
+   TCL::eval(id+" getColorMapString", tclRes);
+   genMap(tclRes);
+   
 
-   cmap.detach();
-   cmap->ResetScale();
+   // if( !cmap.get_rep() ) return;
+   //
+   // cmap.detach();
+   // cmap->ResetScale();
      
    outport->send(cmap);
 } 
