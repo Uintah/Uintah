@@ -36,6 +36,7 @@ public:
 	GeometryMoved,
 
 	RoeRedraw,
+	RoeMouse,
 
 	AttachDialbox,
 	DialMoved,
