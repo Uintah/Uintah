@@ -702,11 +702,7 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list,
   gui->execute(id + " setTime_list " + vector_to_string(indices).c_str());
 
   string name_list("");
-#if HAVE_ATOLL
   long64 partID = atoll(particleID.c_str());
-#else
-  long64 partID = atol(particleID.c_str());
-#endif
   cout << "partID = "<<partID<<endl;
   cerr << "mat_list.size() = "<<mat_list.size()<<endl;
   for(int m = 0; m < (int)mat_list.size(); m++) {
@@ -725,7 +721,12 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list,
 	vector< double > values;
 	int matl = atoi(mat_list[i].c_str());
 	cerr << "querying data archive for "<<varname<<" with matl="<<matl<<", particleID="<<partID<<", from time "<<times[0]<<" to time "<<times[times.size()-1]<<endl;
-	archive.query(values, varname, matl, partID, times[0], times[times.size()-1]);
+	try {
+	  archive.query(values, varname, matl, partID, times[0], times[times.size()-1]);
+	} catch (const VariableNotFoundInGrid& exception) {
+	  error("Particle Variable "+particleID+" not found.\n");
+	  return;
+	}
 	cerr << "Received data.  Size of data = " << values.size() << endl;
 	cache_value(particleID+" "+varname+" "+mat_list[i],values,data);
       } else {
@@ -745,7 +746,12 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list,
 	// query the value and then cache it
 	vector< int > values;
 	int matl = atoi(mat_list[i].c_str());
-	archive.query(values, varname, matl, partID, times[0], times[times.size()-1]);
+	try {
+	  archive.query(values, varname, matl, partID, times[0], times[times.size()-1]);
+	} catch (const VariableNotFoundInGrid& exception) {
+	  error("Particle Variable "+particleID+" not found.\n");
+	  return;
+	}
 	cerr << "Received data.  Size of data = " << values.size() << endl;
 	cache_value(particleID+" "+varname+" "+mat_list[i],values,data);
       } else {
@@ -765,7 +771,12 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list,
 	// query the value
 	vector< Vector > values;
 	int matl = atoi(mat_list[i].c_str());
-	archive.query(values, varname, matl, partID, times[0], times[times.size()-1]);
+	try {
+	  archive.query(values, varname, matl, partID, times[0], times[times.size()-1]);
+	} catch (const VariableNotFoundInGrid& exception) {
+	  error("Particle Variable "+particleID+" not found.\n");
+	  return;
+	}
 	cerr << "Received data.  Size of data = " << values.size() << endl;
 	data = vector_to_string(values,type_list[i]);
 	cache_value(particleID+" "+varname+" "+mat_list[i],values);
@@ -786,7 +797,12 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list,
 	// query the value
 	vector< Matrix3 > values;
 	int matl = atoi(mat_list[i].c_str());
-	archive.query(values, varname, matl, partID, times[0], times[times.size()-1]);
+	try {
+	  archive.query(values, varname, matl, partID, times[0], times[times.size()-1]);
+	} catch (const VariableNotFoundInGrid& exception) {
+	  error("Particle Variable "+particleID+" not found.\n");
+	  return;
+	}
 	cerr << "Received data.  Size of data = " << values.size() << endl;
 	data = vector_to_string(values,type_list[i]);
 	cache_value(particleID+" "+varname+" "+mat_list[i],values);
