@@ -144,7 +144,7 @@ ShowDipoles::execute()
       //   necessary
 	     
       if (widget_switch_.size()) {
-	widget_[nDips_-1]->SetCurrentMode(0);
+	widget_[nDips_-1]->SetCurrentMode(1);
 	widget_[nDips_-1]->SetMaterial(0, deflMatl_);
       }
       if (field_pcv->fdata().size()<nDips_) {
@@ -170,7 +170,7 @@ ShowDipoles::execute()
       }
     }
     if (showLastVecGui_.get()) {
-      widget_[nDips_-1]->SetCurrentMode(0);
+      widget_[nDips_-1]->SetCurrentMode(1);
       widget_[nDips_-1]->SetMaterial(0, deflMatl_);
     } else {
       widget_[nDips_-1]->SetCurrentMode(2);
