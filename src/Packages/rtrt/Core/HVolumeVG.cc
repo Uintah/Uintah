@@ -76,11 +76,11 @@ HVolumeVG<T,A,B>::HVolumeVG(Material* matl, Hist2DDpy* dpy,
     }
     indata.resize(nx, ny, nz);
 
-    double start=Time::currentSeconds();
+    double start=SCIRun::Time::currentSeconds();
     cerr << "Reading " << filebase << "...";
     cerr.flush();
     read(din_fd, indata.get_dataptr(), indata.get_datasize());
-    double dt=Time::currentSeconds()-start;
+    double dt=SCIRun::Time::currentSeconds()-start;
     cerr << "done in " << dt << " seconds (" << (double)(sizeof(T)*nx*ny*nz)/dt/1024/1024 << " MB/sec)\n";
     int s = close (din_fd);
     if(s == -1 ) {
@@ -114,9 +114,9 @@ HVolumeVG<T,A,B>::HVolumeVG(Material* matl, Hist2DDpy* dpy,
       exit(1);
     }
     cerr << "Writing " << buf << "...";
-    start=Time::currentSeconds();	
+    start=SCIRun::Time::currentSeconds();	
     write(bout_fd, blockdata.get_dataptr(),blockdata.get_datasize());
-    dt=Time::currentSeconds()-start;
+    dt=SCIRun::Time::currentSeconds()-start;
     cerr << "done (" << (double)(blockdata.get_datasize())/dt/1024/1024 << " MB/sec)\n";
     indata.resize(0,0,0);
   } else {
@@ -136,7 +136,7 @@ HVolumeVG<T,A,B>::HVolumeVG(Material* matl, Hist2DDpy* dpy,
 #endif
     cerr << "Reading " << buf << "...";
     cerr.flush();
-    double start=Time::currentSeconds();
+    double start=SCIRun::Time::currentSeconds();
 #if 1
     read(bin_fd, blockdata.get_dataptr(),blockdata.get_datasize());
 #else
@@ -163,7 +163,7 @@ HVolumeVG<T,A,B>::HVolumeVG(Material* matl, Hist2DDpy* dpy,
       total+=t;
     }
 #endif // sgi
-    double dt=Time::currentSeconds()-start;
+    double dt=SCIRun::Time::currentSeconds()-start;
     cerr << "done (" << (double)(blockdata.get_datasize())/dt/1024/1024 << " MB/sec)\n";
     close(bin_fd);
 #endif
@@ -819,7 +819,7 @@ void HVolumeVG<T,A,B>::compute_hist(int nvhist, int nghist, int** hist,
     }
   } else {
     cerr << "Not found\n";
-    double start=Time::currentSeconds();
+    double start=SCIRun::Time::currentSeconds();
     float gscale=(nghist-1)/(gdatamax-gdatamin);
     float vscale=(nvhist-1)/(vdatamax-vdatamin);
     int nx1=nx-1;
@@ -875,7 +875,7 @@ void HVolumeVG<T,A,B>::compute_hist(int nvhist, int nghist, int** hist,
 	}
       }
     }
-    double dt=Time::currentSeconds()-start;
+    double dt=SCIRun::Time::currentSeconds()-start;
     cerr << "Histogram computed in " << dt << " seconds\n";
     ofstream out(buf);
     for(int i=0;i<nghist;i++){
