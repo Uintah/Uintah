@@ -3153,22 +3153,22 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
         IntVector xplusCell(colX+1, colY, colZ);
         if (constvars->cellType[xplusCell] == outlet_celltypeval) {
 	   double out_vel = constvars->uVelocity[xplusCell];
-	   out_vel = maxAbsU;
+/*	   out_vel = maxAbsU;
            vars->scalar[xplusCell]= (- delta_t * out_vel *
                (constvars->old_density[xplusCell]*constvars->old_scalar[xplusCell] -
                 constvars->old_density[currCell]*constvars->old_scalar[currCell]) /
 	       cellinfo->dxpw[colX+1] +
 	       constvars->old_old_density[xplusCell]*constvars->old_old_scalar[xplusCell])/
 	      constvars->density_guess[xplusCell];
-
-	   if (constvars->uVelocity[xplusCell] > 0.0)
+*/
+//	   if (constvars->uVelocity[xplusCell] > 0.0)
            vars->scalar[xplusCell]= vars->scalar[currCell];
-	   else
+/*	   else
              if (d_enthalpySolve)
 	       vars->scalar[xplusCell] = -1.0;
 	     else
 	       vars->scalar[xplusCell] = 0.0;
-
+*/
 // Don't clip the special case scalar = -1 used to reinitialize enthalpy
 // to adiabatic value	   
 	   if (!(vars->scalar[xplusCell] == -1.0))
@@ -3188,17 +3188,29 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
         IntVector yminusCell(colX, colY-1, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
         if (constvars->cellType[yminusCell] == outlet_celltypeval) {
-	   double out_vel = constvars->vVelocity[yplusCell];
+/*	   double out_vel = constvars->vVelocity[yplusCell];
            vars->scalar[yminusCell]= (- delta_t * out_vel *
                (constvars->old_density[currCell]*constvars->old_scalar[currCell] -
                 constvars->old_density[yminusCell]*constvars->old_scalar[yminusCell]) /
 	       cellinfo->dynp[colY-1] +
 	       constvars->old_old_density[yminusCell]*constvars->old_old_scalar[yminusCell])/
 	      constvars->density_guess[yminusCell];
-           if (vars->scalar[yminusCell] > 1.0)
-               vars->scalar[yminusCell] = 1.0;
-           else if (vars->scalar[yminusCell] < 0.0)
-               vars->scalar[yminusCell] = 0.0;
+*/
+	   if (constvars->vVelocity[currCell] < 0.0)
+           vars->scalar[yminusCell]= vars->scalar[currCell];
+	   else
+             if (d_enthalpySolve)
+	       vars->scalar[yminusCell] = -1.0;
+	     else
+	       vars->scalar[yminusCell] = 0.0;
+
+// Don't clip the special case scalar = -1 used to reinitialize enthalpy
+// to adiabatic value	   
+	   if (!(vars->scalar[yminusCell] == -1.0))
+             if (vars->scalar[yminusCell] > 1.0)
+                 vars->scalar[yminusCell] = 1.0;
+             else if (vars->scalar[yminusCell] < 0.0)
+                 vars->scalar[yminusCell] = 0.0;
         } 
       }
     }
@@ -3210,17 +3222,29 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector yplusCell(colX, colY+1, colZ);
         if (constvars->cellType[yplusCell] == outlet_celltypeval) {
-	   double out_vel = constvars->vVelocity[currCell];
+/*	   double out_vel = constvars->vVelocity[currCell];
            vars->scalar[yplusCell]= (- delta_t * out_vel *
                (constvars->old_density[yplusCell]*constvars->old_scalar[yplusCell] -
                 constvars->old_density[currCell]*constvars->old_scalar[currCell]) /
 	       cellinfo->dyps[colY+1] +
 	       constvars->old_old_density[yplusCell]*constvars->old_old_scalar[yplusCell])/
 	      constvars->density_guess[yplusCell];
-           if (vars->scalar[yplusCell] > 1.0)
-               vars->scalar[yplusCell] = 1.0;
-           else if (vars->scalar[yplusCell] < 0.0)
-               vars->scalar[yplusCell] = 0.0;
+*/
+	   if (constvars->vVelocity[yplusCell] > 0.0)
+           vars->scalar[yplusCell]= vars->scalar[currCell];
+	   else
+             if (d_enthalpySolve)
+	       vars->scalar[yplusCell] = -1.0;
+	     else
+	       vars->scalar[yplusCell] = 0.0;
+
+// don't clip the special case scalar = -1 used to reinitialize enthalpy
+// to adiabatic value	   
+	   if (!(vars->scalar[yplusCell] == -1.0))
+             if (vars->scalar[yplusCell] > 1.0)
+                 vars->scalar[yplusCell] = 1.0;
+             else if (vars->scalar[yplusCell] < 0.0)
+                 vars->scalar[yplusCell] = 0.0;
         } 
       }
     }
@@ -3233,17 +3257,29 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
         IntVector zminusCell(colX, colY, colZ-1);
         IntVector zplusCell(colX, colY, colZ+1);
         if (constvars->cellType[zminusCell] == outlet_celltypeval) {
-	   double out_vel = constvars->wVelocity[zplusCell];
+/*	   double out_vel = constvars->wVelocity[zplusCell];
            vars->scalar[zminusCell]= (- delta_t * out_vel *
                (constvars->old_density[currCell]*constvars->old_scalar[currCell] -
                 constvars->old_density[zminusCell]*constvars->old_scalar[zminusCell]) /
 	       cellinfo->dztp[colZ-1] +
 	       constvars->old_old_density[zminusCell]*constvars->old_old_scalar[zminusCell])/
 	      constvars->density_guess[zminusCell];
-           if (vars->scalar[zminusCell] > 1.0)
-               vars->scalar[zminusCell] = 1.0;
-           else if (vars->scalar[zminusCell] < 0.0)
-               vars->scalar[zminusCell] = 0.0;
+*/
+	   if (constvars->wVelocity[currCell] < 0.0)
+           vars->scalar[zminusCell]= vars->scalar[currCell];
+	   else
+             if (d_enthalpySolve)
+	       vars->scalar[zminusCell] = -1.0;
+	     else
+	       vars->scalar[zminusCell] = 0.0;
+
+// Don't clip the special case scalar = -1 used to reinitialize enthalpy
+// to adiabatic value	   
+	   if (!(vars->scalar[zminusCell] == -1.0))
+             if (vars->scalar[zminusCell] > 1.0)
+                 vars->scalar[zminusCell] = 1.0;
+             else if (vars->scalar[zminusCell] < 0.0)
+                 vars->scalar[zminusCell] = 0.0;
         } 
       }
     }
@@ -3255,17 +3291,29 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector zplusCell(colX, colY, colZ+1);
         if (constvars->cellType[zplusCell] == outlet_celltypeval) {
-	   double out_vel = constvars->wVelocity[currCell];
+/*	   double out_vel = constvars->wVelocity[currCell];
            vars->scalar[zplusCell]= (- delta_t * out_vel *
                (constvars->old_density[zplusCell]*constvars->old_scalar[zplusCell] -
                 constvars->old_density[currCell]*constvars->old_scalar[currCell]) /
 	       cellinfo->dzpb[colZ+1] +
 	       constvars->old_old_density[zplusCell]*constvars->old_old_scalar[zplusCell])/
 	      constvars->density_guess[zplusCell];
-           if (vars->scalar[zplusCell] > 1.0)
-               vars->scalar[zplusCell] = 1.0;
-           else if (vars->scalar[zplusCell] < 0.0)
-               vars->scalar[zplusCell] = 0.0;
+*/
+	   if (constvars->wVelocity[zplusCell] > 0.0)
+           vars->scalar[zplusCell]= vars->scalar[currCell];
+	   else
+             if (d_enthalpySolve)
+	       vars->scalar[zplusCell] = -1.0;
+	     else
+	       vars->scalar[zplusCell] = 0.0;
+
+// don't clip the special case scalar = -1 used to reinitialize enthalpy
+// to adiabatic value	   
+	   if (!(vars->scalar[zplusCell] == -1.0))
+             if (vars->scalar[zplusCell] > 1.0)
+                 vars->scalar[zplusCell] = 1.0;
+             else if (vars->scalar[zplusCell] < 0.0)
+                 vars->scalar[zplusCell] = 0.0;
         } 
       }
     }
@@ -3522,7 +3570,10 @@ BoundaryCondition::velRhoHatPressureBC(const ProcessorGroup*,
         if (constvars->cellType[yminusCell] == pressure_celltypeval) {
         if (!(xminus && (colX == idxLo.x())))
            vars->uVelRhoHat[yminusCell] = vars->uVelRhoHat[currCell];
+	   if (constvars->vVelocity[currCell] > 0.0)
            vars->vVelRhoHat[currCell] = vars->vVelRhoHat[yplusCell];
+	   else
+	   vars->vVelRhoHat[currCell] = 0.0;
            vars->vVelRhoHat[yminusCell] = vars->vVelRhoHat[currCell];
         if (!(zminus && (colZ == idxLo.z())))
            vars->wVelRhoHat[yminusCell] = vars->wVelRhoHat[currCell];
@@ -3540,7 +3591,10 @@ BoundaryCondition::velRhoHatPressureBC(const ProcessorGroup*,
         if (constvars->cellType[yplusCell] == pressure_celltypeval) {
         if (!(xminus && (colX == idxLo.x())))
            vars->uVelRhoHat[yplusCell] = vars->uVelRhoHat[currCell];
+	   if (constvars->vVelocity[yplusCell] < 0.0)
            vars->vVelRhoHat[yplusCell] = vars->vVelRhoHat[currCell];
+	   else
+	   vars->vVelRhoHat[yplusCell] = 0.0;
            vars->vVelRhoHat[yplusplusCell] = vars->vVelRhoHat[yplusCell];
         if (!(zminus && (colZ == idxLo.z())))
            vars->wVelRhoHat[yplusCell] = vars->wVelRhoHat[currCell];
@@ -3560,7 +3614,10 @@ BoundaryCondition::velRhoHatPressureBC(const ProcessorGroup*,
            vars->uVelRhoHat[zminusCell] = vars->uVelRhoHat[currCell];
         if (!(yminus && (colY == idxLo.y())))
            vars->vVelRhoHat[zminusCell] = vars->vVelRhoHat[currCell];
+	   if (constvars->wVelocity[currCell] > 0.0)
            vars->wVelRhoHat[currCell] = vars->wVelRhoHat[zplusCell];
+	   else
+	   vars->wVelRhoHat[currCell] = 0.0;
            vars->wVelRhoHat[zminusCell] = vars->wVelRhoHat[currCell];
         }
       }
@@ -3578,7 +3635,10 @@ BoundaryCondition::velRhoHatPressureBC(const ProcessorGroup*,
            vars->uVelRhoHat[zplusCell] = vars->uVelRhoHat[currCell];
         if (!(yminus && (colY == idxLo.y())))
            vars->vVelRhoHat[zplusCell] = vars->vVelRhoHat[currCell];
+	   if (constvars->wVelocity[zplusCell] < 0.0)
            vars->wVelRhoHat[zplusCell] = vars->wVelRhoHat[currCell];
+	   else
+	   vars->wVelRhoHat[zplusCell] = 0.0;
            vars->wVelRhoHat[zplusplusCell] = vars->wVelRhoHat[zplusCell];
         }
       }
@@ -3941,6 +4001,7 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
 	   out_vel = maxAbsU;
 //	   out_vel = 25.0;
 
+	   if (constvars->uVelocity[xplusCell] > 0.0)
            vars->uVelRhoHat[xplusCell] = ( delta_t * (- out_vel *
             (avden*constvars->uVelocity[xplusCell] - 
 	     avdenlow*constvars->uVelocity[currCell]) / cellinfo->dxpwu[colX+1]
@@ -3948,6 +4009,9 @@ BoundaryCondition::velRhoHatOutletBC(const ProcessorGroup*,
 	     (avden-ref_avden) * gravity
 	     )+
 	    old_avden*constvars->old_uVelocity[xplusCell]) / new_avden;
+//           vars->uVelRhoHat[xplusCell] = vars->uVelRhoHat[currCell];
+	   else
+	   vars->uVelRhoHat[xplusCell] = 0.0;
 //	   if (vars->uVelRhoHat[xplusCell] < 0.0) vars->uVelRhoHat[xplusCell] = 0.0;
 /*           vars->uVelRhoHat[xplusCell] = (old_avden*constvars->old_uVelocity[xplusCell]-
 		   			  delta_t*(
@@ -4400,9 +4464,9 @@ BoundaryCondition::velocityPressureBC(const ProcessorGroup*,
         IntVector currCell(colX, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
         IntVector xplusplusCell(colX+2, colY, colZ);
-        //if ((constvars->cellType[xplusCell] == pressure_celltypeval)||
-          //  (constvars->cellType[xplusCell] == outlet_celltypeval)) {
-        if (constvars->cellType[xplusCell] == pressure_celltypeval) {
+        if ((constvars->cellType[xplusCell] == pressure_celltypeval)||
+            (constvars->cellType[xplusCell] == outlet_celltypeval)) {
+        //if (constvars->cellType[xplusCell] == pressure_celltypeval) {
           switch (index) {
            case Arches::XDIR:
            break;
@@ -4852,7 +4916,7 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
 	      if (cellType[xminusCell] == outlet_celltypeval) {
                  double avdenlow = 0.5 * (density[currCell] +
 	      		            density[xminusCell]);
-     	    	 floutbc += avdenlow*uVelocity[currCell] *
+     	    	 floutbc -= avdenlow*uVelocity[currCell] *
 	          	     cellinfo->sns[colY] * cellinfo->stb[colZ];
     	         areaOUT += cellinfo->sns[colY] * cellinfo->stb[colZ];
               }
@@ -4886,8 +4950,10 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
  	      if (cellType[yminusCell] == outlet_celltypeval) {
  	         double avdenlow = 0.5 * (density[currCell] +
  	      		            density[yminusCell]);
- 	         floutbc += avdenlow*vVelocity[currCell] *
-	                   cellinfo->sew[colX] * cellinfo->stb[colZ];
+ 	         flowOUT -= Min(0.0,avdenlow*vVelocity[currCell] *
+	                   cellinfo->sew[colX] * cellinfo->stb[colZ]);
+ 	         flowIN += Max(0.0,avdenlow*vVelocity[currCell] *
+	                   cellinfo->sew[colX] * cellinfo->stb[colZ]);
     	         areaOUT += cellinfo->sew[colX] * cellinfo->stb[colZ];
  	      }
  	    }
@@ -4903,8 +4969,10 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
  	      if (cellType[yplusCell] == outlet_celltypeval) {
  	         double avden = 0.5 * (density[yplusCell] +
  	      		         density[currCell]);
- 	         floutbc += avden*vVelocity[yplusCell] *
- 	          	     cellinfo->sew[colX] * cellinfo->stb[colZ];
+ 	         flowOUT += Max(0.0,avden*vVelocity[yplusCell] *
+ 	          	     cellinfo->sew[colX] * cellinfo->stb[colZ]);
+ 	         flowIN -= Min(0.0,avden*vVelocity[yplusCell] *
+ 	          	     cellinfo->sew[colX] * cellinfo->stb[colZ]);
     	         areaOUT += cellinfo->sew[colX] * cellinfo->stb[colZ];
  	      }
  	    }
@@ -4920,8 +4988,10 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
  	      if (cellType[zminusCell] == outlet_celltypeval) {
  	         double avdenlow = 0.5 * (density[currCell] +
  	      		            density[zminusCell]);
- 	         floutbc += avdenlow*wVelocity[currCell] *
- 	          	     cellinfo->sew[colX] * cellinfo->sns[colY];
+ 	         flowOUT -= Min(0.0,avdenlow*wVelocity[currCell] *
+ 	          	     cellinfo->sew[colX] * cellinfo->sns[colY]);
+ 	         flowIN += Max(0.0,avdenlow*wVelocity[currCell] *
+ 	          	     cellinfo->sew[colX] * cellinfo->sns[colY]);
     	         areaOUT += cellinfo->sew[colX] * cellinfo->sns[colY];
  	      }
  	    }
@@ -4937,8 +5007,10 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
  	      if (cellType[zplusCell] == outlet_celltypeval) {
  	         double avden = 0.5 * (density[zplusCell] +
  	      		         density[currCell]);
- 	         floutbc += avden*wVelocity[zplusCell] *
- 	          	     cellinfo->sew[colX] * cellinfo->sns[colY];
+ 	         flowOUT += Max(0.0,avden*wVelocity[zplusCell] *
+ 	          	     cellinfo->sew[colX] * cellinfo->sns[colY]);
+ 	         flowIN -= Min(0.0,avden*wVelocity[zplusCell] *
+ 	          	     cellinfo->sew[colX] * cellinfo->sns[colY]);
     	         areaOUT += cellinfo->sew[colX] * cellinfo->sns[colY];
  	      }
  	    }
