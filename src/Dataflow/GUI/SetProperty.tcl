@@ -70,8 +70,11 @@ itcl_class SCIRun_FieldsOther_SetProperty {
 		top $this-meshprop \
 		{{"Field" 0} \
 		{"Mesh" 1}}
-	button $w.f.b -text "Execute" -command "$this-c needexecute"
-	pack $w.f.p $w.f.v $w.f.m $w.f.b -side top -expand 1 -fill x
+
+	pack $w.f.p $w.f.v $w.f.m -side top -expand yes -fill x
 	pack $w.f -expand 1 -fill x
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 }

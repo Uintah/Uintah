@@ -22,25 +22,13 @@
 \usepackage[]{epsfig}
 \usepackage[]{alltt}
 \usepackage{makeidx}
-%\begin{latexonly}
-\usepackage[]{../../Utilities/TeX/scirun-doc}
-%\end{latexonly}
-\begin{htmlonly}
-\input{../../Utilities/TeX/scirun-doc.tex}
-\end{htmlonly}
-%\begin{latexonly}
-\usepackage[]{srugmacros}
-%\end{latexonly}
-\begin{htmlonly}
-\input{srugmacros.tex}
-\end{htmlonly}
-%\usepackage[]{makeindex}
-\makeindex
-\begin{htmlonly}
-\input{srugmacros.tex}
-\end{htmlonly}
-\newcommand{\clearemptydoublepage}{\newpage{\pagestyle{empty}\cleardoubleapage}}
 
+\usepackage{scirun-doc}
+\input{scirun-doc}
+\input{srugmacros.tex} 
+
+\makeindex
+\newcommand{\clearemptydoublepage}{\newpage{\pagestyle{empty}\cleardoubleapage}}
 \begin{document}
 
 \input{title}

@@ -26,20 +26,46 @@ docroot =
 <title id="title.prepare">Before Starting &sr;</title>
 
 <para>
-&osx; users starting &sr; under the tcsh shell should issue the
-command:
+Before starting &sr;, the following must be done:
+<itemizedlist>
+<listitem>
+<para>The limit on open files must be increased (&osx; only) (See
+ <citetitle><link linkend="sec:prepare.limits"
+endterm="sec:title:prepare.limits"/></citetitle>)</para>
+</listitem>
+<listitem>
+<para>Environment variable <envar>SCIRUN_ON_THE_FLY_LIBS_DIR</envar>
+must be initialized (See
+ <citetitle><link linkend="sec.dyncomp"
+endterm="title.dyncomp"/></citetitle>)</para>
+</listitem>
+<listitem>
+<para>Environment variables <envar>SCIRUN_DATA</envar>, and
+<envar>SCIRUN_DATASET</envar> should be initialized (See
+ <citetitle><link linkend="sec:prepare.datasets"
+endterm="sec:title:prepare.datasets"/></citetitle>)</para>
+</listitem>
+</itemizedlist>
+The following sections discuss each of these tasks.
+</para>
+
+
+<section id="sec:prepare.limits">
+<title id="sec:title:prepare.limits">Increasing the Open Files Limit
+(&osx; only)</title>
+<para>
+Before starting &sr; on &osx; the limit on the number of open files
+must be increased.  Users of csh-type shells must type the command:
 <literallayout class="monospaced">
 limit descriptors unlimited
 </literallayout>
-before starting &sr;.
+Users of sh-type shells must type:
+<literallayout class="monospaced">
+ulimit -n unlimited
+</literallayout>
 </para>
+</section>
 
-<para>
-The environment variables <envar>SCIRUN_ON_THE_FLY_LIBS_DIR</envar>,
-<envar>SCIRUN_DATA</envar>, and <envar>SCIRUN_DATASET</envar> should
-be initialized before starting &sr;.  The following sections
-describe the purpose and use of these variables.
-</para>
 
 <section id="sec.dyncomp">
 <title id="title.dyncomp">Dynamic Compilation</title>
@@ -89,13 +115,13 @@ startup. <filename>.scirunrc</filename> could contain, for example:
 <literallayout class="monospaced">
 SCIRUN_ON_THE_FLY_LIBS_DIR=$(HOME)/&sr;_otf
 </literallayout>
-See the <ulink url=
+See the <ulink url= 
 <!--%=
-"\"#{docroot}/User/Guide/usersguide/srug3_6.html.html\""
-%-->
+"\"#{docroot}/User/Guide/usersguide/srug4_5.html\"" 
+%--> 
 >
-&sr; Users Guide</ulink> for more information on the use of
-<filename>.scirunrc</filename>.
+<citetitle>&sr; Users Guide</citetitle></ulink> for more information
+on the use of <filename>.scirunrc</filename>.
 </para>
 
 <note>
@@ -132,8 +158,8 @@ between instances of &sr;.</para>
 </para>
 </section>
 
-<section>
-<title>Accessing Data Sets</title>
+<section id="sec:prepare.datasets">
+<title id="sec:title:prepare.datasets">Accessing Data Sets</title>
 
 <para>
 The environment variables <envar>SCIRUN_DATA</envar> and
@@ -148,7 +174,7 @@ a directory that contains a collection of data set directories.
 <para>
 When working with &sr;'s <ulink url=
 <!--%=
-"\"#{docroot}/User/Tutorial/index.html\""
+"\"#{docroot}/User/Tutorials/SCIRun_Intro/index.html\""
 %-->
 >tutorial</ulink>, 
 the value of <envar>SCIRUN_DATA</envar> must refer to the sample

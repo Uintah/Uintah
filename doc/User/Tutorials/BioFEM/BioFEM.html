@@ -1,0 +1,308 @@
+
+<HTML>
+  <TITLE>BioFEM Tutorial</TITLE>
+
+<BODY bgcolor="#a9a9a9">
+
+
+<CENTER>
+<TABLE border="0" cellpadding="20" cellspacing="5" width="640" bgcolor="#cccccc">
+<TR><TD>
+
+<CENTER>
+<IMG SRC="images/biofem-banner-main.gif">
+<FONT face="Arial,Helvetica,Geneva,Swiss,SunSans-Regular" color="Maroon">
+<H1> BioFEM Tutorial </H1>
+</FONT>
+</CENTER>
+
+<H2>Contents</H2>
+<H3>Sections</H3>
+
+<OL>
+  <LI value="1"> <A HREF="#section_1">Introduction</A>
+  <LI value="2"> <A HREF="#section_2">Getting Started</A>
+    <OL>
+      <LI value="1"> <A HREF="#section_2_1">SCIRun Environment Variables</A>
+      <LI value="2"> <A HREF="#section_2_2">Launching BioFEM</A>
+      <LI value="3"> <A HREF="#section_2_3">User Interface Organization</A>
+    </OL>
+  <LI value="3"> <A HREF="#section_3">Loading Data</A>
+  <LI value="4"> <A HREF="#section_4">Visualization</A>
+  <OL>
+    <LI value="1"> <A HREF="#section_4_1">Rendering Window</A>
+    <LI value="2"> <A HREF="#section_4_2">IsoSurface</A>
+    <LI value="3"> <A HREF="#section_4_3">StreamLines</A>
+    <LI value="4"> <A HREF="#section_4_4">Electrodes</A>
+    <LI value="5"> <A HREF="#section_4_5">ColorMap</A>
+  </OL
+</OL>
+
+<H3>Figures</H3>
+<UL>
+  <LI><A HREF="#figure_1">Figure 1: BioFEM Interface Window</A>
+  <LI><A HREF="#figure_2">Figure 2: BioFEM Interface Window (Detached Panes)</A>
+  <LI><A HREF="#figure_3">Figure 3: File Menu</A>
+  <LI><A HREF="#figure_4">Figure 4: Help Menu</A>
+  <LI><A HREF="#figure_5">Figure 5: Default Visualization</A>
+  <LI><A HREF="#figure_6">Figure 6: Isosurface Visualization</A>
+  <LI><A HREF="#figure_7">Figure 7: Streamlines Visualization</A>
+  <LI><A HREF="#figure_8">Figure 8: Electrodes Visualization</A>
+  <LI><A HREF="#figure_9">Figure 9: Visualization with Red-to-Blue colormap</A>
+</UL>
+
+<H2><A NAME="section_1"> Section 1 -- Introduction </H2>
+
+The BioFEM application is an example standalone program used for
+computing the electric field in a volume given a set of dipoles.  The
+intent of this program is to demonstrate wrapping the BioPSE Tutorial
+example up as a Power Application.
+
+<P>
+
+This application solves the forward problem for bioelectric fields.
+Three inputs are given: a volume with conductivities specified for
+each element, a set of dipoles, and a set of electrodes to act as
+sensors.  The forward problem is to compute the voltages that would be
+seen in the volume given the dipoles.  In particular one would like to
+compute what the electic field would be like at the given electrodes
+such that the results could be comparable with actual values recorded
+via ECG or EKG.
+
+
+<H2><A NAME="section_2"> Section 2 -- Getting Started </H2>
+
+In this section we describe how to get started using BioFEM.
+Subsequent sections will cover the various features and functions of
+the software, along with snapshots of the software in action.
+
+<BR><H3><A NAME="section_2_1"> 2.1 SCIRun Environment Variables </H3>
+
+It is highly recommended that you get started with the SCIRun datasets
+(available from http://software.sci.utah.edu/scirun-datasets.html)
+with BioFEM.  You are, of course, also encourage to use BioFEM to
+investigate your own datasets.  Details of how to import data into
+BioFEM will be provided in Section 3.  If you do choose to use the
+example SCIRun datasets, set your SCIRUN_DATA environment variable to
+point to the location of the data prior to running BioFEM.
+
+<BR><H3><A NAME="section_2_2"> 2.2 Launching BioFEM </H3>
+
+To launch the BioFEM application, 'cd' into the directory in which
+the BioFEM executable is located (if you have done an RPM
+installation, that directory is /usr/local/SCIRun/bin/), and then type
+'./BioFEM'.  The BioFEM application will take a few moments to
+start up, and will launch a user interface window like the one shown
+in <A HREF="#figure_1">Figure 1</A>.
+
+<A NAME="figure_1">
+<BR><BR>
+<CENTER>
+<P><A HREF="figures/biofem-load.gif"><IMG BORDER=1 SRC="figures/biofem-load-small.gif"></A><br>
+<B>Figure 1: BioFEM Interface Window (Initial State).</b>
+</CENTER>
+
+<BR><H3><A NAME="section_2_3"> 2.3 User Interface Organization </H3>
+
+The user interface for the BioFEM application has a lighter layout
+than the typical SCIRun/BioPSE PowerApp.  On the left there is a
+Rendering window where all of the data interaction and
+visualization is performed.  And on the right there is a
+Visualization Pane from which you can control many of the parameters
+for the Rendering window.  Because it is often desirable to view the
+Rendering window at full-screen resolution, we have added support for
+detaching and reattaching these two panes by clicking on the
+vertical dashed lines between them.  When separated, the panes appear
+as shown in <A HREF="#figure_2">Figure 2.</A>
+
+<A NAME="figure_2">
+<BR><BR>
+<CENTER>
+<P><A HREF="figures/biofem-panes.gif"><IMG BORDER=1 SRC="figures/biofem-panes-small.gif"></A><br>
+<B>Figure 2: BioFEM Interface Window (Panels Detached From View Window).</b>
+</CENTER>
+
+<P>
+At the top of the Rendering window there are two top-level menu
+options: File and Help, as shown in <A HREF="#figure_3">Figures 3</A>
+and <A HREF ="#figure_4">4</A>.  These menus contain options for loading and
+saving BioFEM settings, as well as options for controlling the
+appearance of 'tooltips' within BioFEM.
+
+<A NAME="figure_3">
+<BR><BR>
+<CENTER>
+<P><IMG BORDER=1 SRC="figures/biofem-file.gif"><br>
+<B>Figure 3: File Menu.</b>
+</CENTER>
+<A NAME="figure_4">
+<BR><BR>
+<CENTER>
+<P><IMG BORDER=1 SRC="figures/biofem-help.gif"><br>
+<B>Figure 4: Help Menu.</b>
+</CENTER>
+
+<P>
+At the bottom of the Visualization Pane, there is a Progress Indicator
+and a text description which indicate the current state of the
+application.  Just above the Progress Indicator is a blue Execute
+button.  The Execute button can be pressed to compute the electric
+field for the selected models, and should be pressed after the
+filenames are correct.
+
+
+<BR><H2><A NAME="section_3"> Section 3: Loading Data </H2>
+
+For this application it is recommended that SCIRun datasets are to be
+used.  You can make your own that would mirror the ones used for each
+dataset.  There are five files used.  There is a tetrahedral field of
+indexed tensors that determine the conductivity model.  There is a
+dipole field that just contains a small point cloud of vectors that
+are to be used as the original dipole source.  There is a point cloud
+of electrodes around the outside of the model that the results are
+mapped onto.  And finally there is a settings file that controls the
+default visualization settings for that particular model, including
+where to place the camera and what sizes to draw the various objects
+with.
+
+<P>
+Once the File entries are pointing to the correct data locations,
+press the Execute button at the bottom of the pane to load the data
+into the system.  Once the data is loaded, an image will appear in the
+Rendering window.  This image shows the outer boundary of the volume
+and the dipoles, as well as the electrode set from the electrode field
+file, the isosurface at zero voltage, and some streamlines that follow
+the voltage gradients.  The electrodes, isosurface, and streamlines
+are color coded by default such that negative voltages are blue and
+positive voltages are red.
+
+
+<BR><H2><A NAME="section_4"> Section 4: Visualization </H2>
+
+After the dataset is selected some computation is done to solve the
+forward problem and then the results are visualized.  This may take
+several minutes during which time the Progress Indicator will indicate
+that the system is busy and what it is doing.  The first result that
+should appear is the outer shell of the volume in a translucent grey.
+You can begin interacting with the visualization at any time, but
+waiting for the progress to be "Completed" (green) is more useful as
+that is when everything will be visible.
+
+
+<BR><H3><A NAME="section_4_1"> 4.1 Rendering Window </H3>
+
+The visualization data for the SCIRunData datasets should come up in
+the correct location.  If not you can begin visualizing the data by
+pressing the AutoView button to move the rendered geometry into the
+middle of the window.  The Autoview button is located on the Viewer
+Options tab, but can also be invoked by pressing Ctrl-V while the
+mouse is in the Rendering window.  The controls for navigating within
+the Rendering window are the same as for the SCIRun <a href="http://software.sci.utah.edu/doc/User/Guide/usersguide/srug6.html#sec:viewer">ViewWindow</a>
+though the full control pane normally found at the bottom of the
+ViewWindow has been replaced with the most frequently used subset of
+those controls and is now located on the Viewer Options tab.
+<P>
+Within the Vis Options tab of the Visualization pane, there are four categories for controlling the visualization settings.  We will now investigate the options on the four categories:  IsoSurface, StreamLines, Electrodes, and ColorMap.
+
+<A NAME="figure_5">
+<BR><BR>
+<CENTER>
+<P><IMG BORDER=1 SRC="figures/biofem-vis-all.jpg"><br>
+<B>Figure 5: Default Visualization.</b>
+</CENTER>
+
+
+<BR><H3><A NAME="section_4_2"> 4.2 IsoSurface Visualization </H3>
+
+An isopotential surface is the surface through the volume with a
+constant voltage value.  BioFEM allows you to draw one of these
+IsoSurfaces with a user selected voltage value.  The default value
+drawn is at 0.0.  An additional option is available to draw the surface
+with smoothing turned on or off.  Smoothing makes for a nicer
+IsoSurface appearance but also hides more of the underlying mesh from
+the user.
+
+<A NAME="figure_6">
+<BR><BR>
+<CENTER>
+<P><IMG BORDER=1 SRC="figures/biofem-vis-isosurface.jpg"><br>
+<B>Figure 6: Isosurface Visualization.</b>
+</CENTER>
+
+
+<BR><H3><A NAME="section_4_3"> 4.3 StreamLines Visualization </H3>
+
+The second set of visualization options are for the streamlines.  The
+streamlines are virtual traces of the paths particles would take along
+the voltage gradients if they were seeded along the points in the rake
+widget.  They generally go from one side of the dipole to the rake and
+then end at the other side of the dipole.  There is a slider bar on
+the GUI for selecting how many streamline seed points the rake widget
+should contain.  There is also an option for selecting between a fast
+and slow streamline computation method.  The fast method walks the
+mesh directly and is accurate to within the constraints of how the
+model is segmented.  The slower computation method interpolates
+between the different cells in the mesh and can thus walk over
+discontinuities better and makes for a smoother streamline appearance.
+
+<P>
+
+The Rake Widget found in the ViewWindow is the primary means of
+controlling where the streamlines will be drawn.  The will all pass
+through that widget at evenly spaced increments.  The rake can be
+controlled by holding the Shift Key down and using the mouse to select
+and drag it's various parts.  The grey bar controls moving the rake
+around horizontally or vertically.  The blue balls at the ends of the
+rake can be used to rotate it, and the green stubs at the very ends
+can be used to resize the widget.  The streamlines are redrawn
+automatically every time the rake is moved.
+
+<A NAME="figure_7">
+<BR><BR>
+<CENTER>
+<P><IMG BORDER=1 SRC="figures/biofem-vis-streamlines.jpg"><br>
+<B>Figure 7: Streamlines Visualization.</b>
+</CENTER>
+
+
+<BR><H3><A NAME="section_4_4"> 4.4 Electrodes Visualization </H3>
+
+One of the files read into the simulation is a set of electrode
+positions on the outside portion of the mesh.  In a medical situation
+these would correspond with where the net of sensors would be placed
+for measuring the voltage values on the outside of the torso.  After
+the simulation is run the voltage values are interpolated onto the
+sensor net as they would be measured in a real setting.  There is an
+option to turn the display of these electrodes on or off.
+
+
+<A NAME="figure_8">
+<BR><BR>
+<CENTER>
+<P><IMG BORDER=1 SRC="figures/biofem-vis-electrodes.jpg"><br>
+<B>Figure 8: Electrodes Visualization.</b>
+</CENTER>
+
+<BR><H3><A NAME="section_4_5"> 4.5 ColorMap Selection </H3>
+
+This option simply allows the user to select from one of a few
+different color maps to determine how the voltage values will be
+colored.  <A HREF="#figure_9">Figure 9</A> shows the results of the
+utahtorso-lowres model colored with the Red-to-Blue colormap selected
+rather than the default Inverse Rainbow coloring.
+
+<A NAME="figure_9">
+<BR><BR>
+<CENTER>
+<P><IMG BORDER=1 SRC="figures/biofem-vis-colormap.jpg"><br>
+<B>Figure 9: Visualization with the Red-to-Blue colormap selected.</b>
+</CENTER>
+
+<P><IMG SRC="images/footer.gif"><br>
+
+</TD></TR>
+</TABLE>
+</CENTER>
+
+</BODY>
+</HTML>

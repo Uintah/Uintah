@@ -50,7 +50,7 @@
 #include <Core/Math/MiscMath.h>
 #include <Core/GuiInterface/GuiCallback.h>
 #include <Core/GuiInterface/GuiInterface.h>
-#include <Core/GuiInterface/TCLstrbuff.h>
+#include <Core/GuiInterface/SciTCLstrbuff.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Util/sci_system.h>
@@ -170,7 +170,7 @@ void NetworkEditor::save_network(const string& filename,
 	gui->eval("modVarName {"+filename+"} "+module->id, midx);
 	if (midx.size()) {
 	  string result;
-	  gui->eval("winfo exists .ui" + module->id, result);
+	  gui->eval("windowIsMapped .ui" + module->id, result);
 	  int res;
 	  if(string_to_int(result, res) && (res == 1)) {
 	    out << midx << " initialize_ui\n";
@@ -244,6 +244,11 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
 	if(!string_to_int(args[5], iwhich)) {
 	    args.error("netedit addconnection can't parse iwhich");
 	    return;
+	}
+	if (imod->lastportdynamic && iwhich >= imod->iports.size()) {
+	  std::cerr << "Changing " << iwhich << " to ";
+	  iwhich = imod->iports.size()-1;
+	  cerr << iwhich << std::endl;
 	}
 	args.result(net->connect(omod, owhich, imod, iwhich));
     } else if(args[1] == "deleteconnection"){

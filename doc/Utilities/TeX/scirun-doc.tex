@@ -17,16 +17,27 @@
 %
 
 %
-% Recommened markup for latex docs.
+% Latex package to be used by scirun documents.  Markup commands exist
+% in two files.  This one and scirun-doc.tex.  This file contains
+% commands that are processed by both latex and by the builtin
+% capabilities of latex2html.  Scirun-doc.sty contains commands that are
+% either completely ignored by latex2html or are processed by functions in
+% the latex2html extension file scirun-doc.perl.
+%
+% Documents should include the
+% following latex commands:
+%
+% \usepackage{scirun-doc}
+% \input{scirun-doc.tex}
 %
 
 % (Mostly) Short cuts  ==============================
 \newcommand{\SCI}{{\em SCI}}
 \newcommand{\sci}{\SCI}
 \newcommand{\scii}{SCI Institute}
-\newcommand{\BIOPSE}{{\em BioPSE}}
+\newcommand{\BIOPSE}{\textbf{BioPSE}}
 \newcommand{\biopse}{\BIOPSE}
-\newcommand{\SR}{{\em SCIRun}}
+\newcommand{\SR}{\textbf{SCIRun}}
 \newcommand{\sr}{\SR}
 \newcommand{\eg}{{\em e.g.,}}
 \newcommand{\ie}{{\em i.e.,}}
@@ -43,16 +54,14 @@
 \newcommand{\ltilde}{\textasciitilde}
 
 % Encloses its argument between angle brackets.
-\newcommand{\ab}[1]{\latexhtml{\textless{}#1\textgreater}{<#1>}}
+\newcommand{\ab}[1]{\textless{}#1\textgreater}
 
 % Inserts a left angle bracket.
-\newcommand{\la}{\latexhtml{\textless}{<}}
+\newcommand{\la}{\textless}
 
 % Inserts a right angle bracket.
-\newcommand{\ra}{\latexhtml{\textgreater}{>}}
+\newcommand{\ra}{\textgreater}
 
-% Vertical elide.
-\newcommand{\velide}{\latexhtml{\(\vdots\)}{\begin{rawhtml}&#x22EE;\end{rawhtml}}}
 
 % Mark up commands =================================
 
@@ -63,9 +72,6 @@
 \newcommand{\ipaddr}[1]{#1}
 \newcommand{\localhost}{\ipaddr{127.0.0.1}}
 
-% Acronym
-\newcommand{\acronym}[1]{{\scshape\lowercase{#1}}}
-
 % Predefined acronyms
 \newcommand{\gui}{\acronym{GUI}}
 \newcommand{\tcl}{\acronym{TCL}}
@@ -74,64 +80,64 @@
 
 % Markup the first time use of term that may be unfamiliar to the
 % reader. 
-\newcommand{\dfn}[1]{\emph{#1}}
+\newmucmd{dfn}{emph}
 
 % In the next command #1 is the term and #2 is the shortcut or acronym that
 % will be used in the rest of the document. 
 \newcommand{\dfna}[2]{\emph{#1} (\acronym{#2})}
 
-% Directory name markup.
-\newcommand{\directory}[1]{\texttt{#1}}
-
 % Markup a file name.
-\newcommand{\filename}[1]{\texttt{#1}}
+\newmucmd{filename}{texttt}
+
+% Directory name markup.
+\newmucmd{directory}{texttt}
 
 % Markup text which is the name of a command.
-\newcommand{\command}[1]{\texttt{#1}} 
+\newmucmd{command}{texttt} 
 
 % Command option.
-\newcommand{\option}[1]{\texttt{#1}}
+\newmucmd{option}{texttt}
 
 % Markup text typed at the keyboard.
-\newcommand{\keyboard}[1]{\texttt{#1}} 
+\newmucmd{keyboard}{texttt} 
 
 % Parameterized text - marks up text that is to be
 % substituted for by the reader.
-\newcommand{\ptext}[1]{\textit{#1}}
-\newcommand{\replaceable}[1]{\textit{#1}}
+\newmucmd{ptext}{textit}        % Obsolete-use replaceable instead.
+\newmucmd{replaceable}{textit}
 
 % Markup text the user might see on his screen.
-\newcommand{\screen}[1]{\texttt{#1}}
+\newmucmd{screen}{texttt}
 
 % Markup the name of a GUI menu.
-\newcommand{\guimenu}[1]{\textbf{#1}}
+\newmucmd{guimenu}{textbf}
 
 % Markup the name of a GUI menu.
 \newcommand{\menu}[1]{\guimenu{#1}}
 
 % Markup a gui menu item name.
-\newcommand{\guimenuitem}[1]{\textbf{#1}}
+\newmucmd{guimenuitem}{textbf}
 
 % Markup a menu item name.
 \newcommand{\menuitem}[1]{\guimenuitem{#1}}
 
 % Markup name of a ui button.
-\newcommand{\guibutton}[1]{\textbf{#1}}
+\newmucmd{guibutton}{textbf}
 
 % Markup name of a ui button.
 \newcommand{\button}[1]{\guibutton{#1}}
 
 % Markup name of a gui text item.
-\newcommand{\guitext}[1]{\textit{#1}}
+\newmucmd{guitext}{textit}
 
 % Markup name of a gui label.
-\newcommand{\guilabel}[1]{\textbf{#1}}
+\newmucmd{guilabel}{textbf}
 
 % GUI variable
-\newcommand{\guivar}[1]{\texttt{#1}}
+\newmucmd{guivar}{texttt}
 
 % Scirun port
-\newcommand{\srport}[1]{\texttt{#1}}
+\newmucmd{srport}{texttt}
 
 % Sockets port
 \newcommand{\port}[1]{\texttt{#1}}
@@ -160,17 +166,8 @@
 % Markup a sr category name.
 \newcommand{\category}[1]{\texttt{#1}}
 
-% Call attention to some useful bit of information.
-\newcommand{\note}[1]{\emph{Note: #1}} 
-
-% Call attention to a warning.
-\newcommand{\warning}[1]{\emph{Warning: #1}} 
-
-% Call attention to a tip.
-\newcommand{\tip}[1]{\emph{Tip: #1}} 
-
 % Env variable markup.
-\newcommand{\envvar}[1]{\texttt{#1}}
+\newmucmd{envvar}{texttt}
 
 % Markup for the title of a book or article or whatever.
 \newcommand{\etitle}[1]{\texttt{#1}}
@@ -202,12 +199,16 @@
 \newcommand{\incomplete}{\emph{More Comming Soon.}}
 
 % Mark up a mail address
-\newcommand{\mailto}[1]{\texttt{#1}}
+\newmucmd{mailto}{texttt}
 
-% XML start and end tags
-\newcommand{\xmlstarttag}[1]{\ab{\texttt{#1}}}
-\newcommand{\xmlendtag}[1]{\ab{/\texttt{#1}}}
-\newcommand{\xmlattrname}[1]{\texttt{#1}}
+% Mark up an xml attribute
+\newmucmd{xmlattrname}{texttt}
+
+% Alternate item commands inside a description environment
+\newcommand{\descitem}[1]{\item[#1]\latex{\mbox{}\\}}
+\newcommand{\menudesc}[1]{\item[\menu{#1}]\latex{\mbox{}\\}}
+\newcommand{\menuitemdesc}[1]{\item[\menuitem{#1}]\latex{\mbox{}\\}}
+\newcommand{\buttondesc}[1]{\item[\button{#1}]\latex{\mbox{}\\}}
 
 % Sci Urls ========================================= 
 

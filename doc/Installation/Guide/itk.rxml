@@ -42,10 +42,16 @@ for more information.</para>
 presence of Java JDK 1.2.2 or later.</para>
 
 <note>
-<para>The &sr; <acronym>RPM</acronym> distribution does
-<emphasis>not</emphasis> include support for <acronym>ITK</acronym>.
-<acronym>ITK</acronym> support is available only through the &sr; source
-code distribution.</para>
+<para>The <acronym>RPM</acronym> distribution of &sr; 
+<emphasis>includes</emphasis> support for <acronym>ITK</acronym>.  The
+<acronym>RPM</acronym> distribution installs Insight libraries in
+/usr/local/lib/InsightTookit.  The instructions  in sections
+<citetitle><link endterm="sec.title.obitk"
+linkend="sec.obitk"/></citetitle>, <citetitle><link
+endterm="sec.title.cmake" linkend="sec.cmake"/></citetitle>, and <citetitle><link
+endterm="sec.title.itk_configsr" linkend="sec.itk_configsr"/></citetitle>
+apply only
+to source code installation of &sr;.</para>
 </note>
 
 </section>
@@ -69,8 +75,8 @@ linkend="sec.sources"/>.</para>
 
 </section>
 
-<section>
-<title>CMake Special Instructions</title>
+<section id="sec.cmake">
+<title id="sec.title.cmake">CMake Special Instructions</title>
 
 <para>CMake is a program that generates Makefiles that build ITK.
 CMake's configuration variables determine how ITK is built.  Command
@@ -85,8 +91,8 @@ set <userinput>ON</userinput>.  On OSX
 
 </section>
 
-<section>
-<title>Configuring &sr;</title>
+<section id="sec.itk_configsr">
+<title id="sec.title.itk_configsr">Configuring &sr;</title>
 
 <para>The configure options below add support for Insight
 in &sr;.  Include these options in the &sr;

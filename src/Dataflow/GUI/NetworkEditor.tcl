@@ -60,9 +60,9 @@ set netedit_savefile ""
 global NetworkChanged
 set NetworkChanged 0
 
+# Make sure version stays in sync with main/main.cc
 global SCIRun_version
-set SCIRun_version v1.20
-
+set SCIRun_version v1.20.1
 
 
 proc makeNetworkEditor {} {
@@ -142,11 +142,11 @@ proc makeNetworkEditor {} {
 	-variable tooltipsOn
 
     # Mac hack to fix size of 'About' window ... sigh... 
-    .main_menu.help.menu add command -label "About..." -underline 0 \
-	-command  "showSplash; after 0 {wm geometry .splash \"\"}"
+    .main_menu.help.menu add command -label "About..." -underline 0 -state disabled \
+	-command  "showSplash main/scisplash.ppm; after 0 {wm geometry .splash \"\"}"
 
     .main_menu.help.menu add command -label "License..." -underline 0 \
-	-command  "licenseDialog"
+	-command  "licenseDialog" -state disabled
 
     pack .main_menu.help -side right
     Tooltip .main_menu.help $ToolTipText(HelpMenu)
@@ -225,6 +225,33 @@ proc makeNetworkEditor {} {
     $maincanvas configure \
 	-xscrollcommand "updateCanvasX" -yscrollcommand "updateCanvasY"
 
+    wm withdraw .
+}
+
+proc canvasScroll { canvas { dx 0.0 } { dy 0.0 } } {
+    if {$dx!=0.0} {$canvas xview moveto [expr $dx+[lindex [$canvas xview] 0]]}
+    if {$dy!=0.0} {$canvas yview moveto [expr $dy+[lindex [$canvas yview] 0]]}
+}
+
+# Activate the "File" menu items - called from C after all packages are loaded
+proc activate_file_submenus { } {
+    .main_menu.file.menu entryconfig  0 -state active
+    .main_menu.file.menu entryconfig  1 -state active
+    .main_menu.file.menu entryconfig  2 -state active
+    .main_menu.file.menu entryconfig  3 -state active
+    .main_menu.file.menu entryconfig  5 -state active
+    .main_menu.file.menu entryconfig  6 -state active
+    .main_menu.file.menu entryconfig  7 -state active
+    .main_menu.file.menu entryconfig  9 -state active
+    .main_menu.file.menu entryconfig 11 -state active
+
+    .main_menu.help.menu entryconfig  1 -state active
+    .main_menu.help.menu entryconfig  2 -state active
+
+    ###################################################################
+    # Bind all the actions after SCIRun has loaded everything...
+    global maincanvas minicanvas
+
     bind $minicanvas <B1-Motion> "updateCanvases %x %y"
     bind $minicanvas <1> "updateCanvases %x %y"
     bind $maincanvas <Configure> "handleResize %w %h"
@@ -251,26 +278,6 @@ proc makeNetworkEditor {} {
     bind all <Control-z> "undo"
     bind all <Control-a> "selectAll"
     bind all <Control-y> "redo"
-
-    wm withdraw .
-}
-
-proc canvasScroll { canvas { dx 0.0 } { dy 0.0 } } {
-    if {$dx!=0.0} {$canvas xview moveto [expr $dx+[lindex [$canvas xview] 0]]}
-    if {$dy!=0.0} {$canvas yview moveto [expr $dy+[lindex [$canvas yview] 0]]}
-}
-
-# Activate the "File" menu items - called from C after all packages are loaded
-proc activate_file_submenus { } {
-    .main_menu.file.menu entryconfig  0 -state active
-    .main_menu.file.menu entryconfig  1 -state active
-    .main_menu.file.menu entryconfig  2 -state active
-    .main_menu.file.menu entryconfig  3 -state active
-    .main_menu.file.menu entryconfig  5 -state active
-    .main_menu.file.menu entryconfig  6 -state active
-    .main_menu.file.menu entryconfig  7 -state active
-    .main_menu.file.menu entryconfig  9 -state active
-    .main_menu.file.menu entryconfig 11 -state active
 }
 
 proc modulesMenu { subnet x y } {
@@ -376,6 +383,8 @@ proc createPackageMenu {index} {
 		-command "addModule \"$ModuleMenu($pack)\" \"$ModuleMenu($cat)\" \"$ModuleMenu($mod)\""
 	}
     }
+
+    createModulesMenu 0
     update idletasks
 }
 
@@ -383,6 +392,10 @@ proc createModulesMenu { subnet } {
     global ModuleMenu Subnet
     if ![info exists ModuleMenu] return
     set canvas $Subnet(Subnet${subnet}_canvas)
+    if [winfo exists $canvas.modulesMenu] {	
+	destroy $canvas.modulesMenu
+    }
+	
     if ![winfo exists $canvas.modulesMenu] {	
 	menu $canvas.modulesMenu -tearoff false
 	foreach pack $ModuleMenu(packages) {
@@ -412,40 +425,44 @@ proc createModulesMenu { subnet } {
 	menu $canvas.modulesMenu.subnet -tearoff false
     }
 
-    global SCIRUN_SRCDIR
+    createSubnetMenu $subnet
+	
+    update idletasks
+}
+
+proc createSubnetMenu { { subnet 0 } } {
+    global SCIRUN_SRCDIR Subnet 
     set filelist1 [glob -nocomplain -dir $SCIRUN_SRCDIR/Subnets *.net]
     set filelist2 [glob -nocomplain -dir ~/SCIRun/Subnets *.net]
-    set subnetfiles [lsort -dictionary [concat $filelist1 $filelist2]]
-
-    $canvas.modulesMenu.subnet delete 0 end
+    set subnetfiles [lsort -dictionary [concat $filelist1 $filelist2]]    
+    set menu $Subnet(Subnet${subnet}_canvas).modulesMenu
+    
+    $menu.subnet delete 0 end
     .main_menu.subnet.menu delete 0 end
 
     if ![llength $subnetfiles] {
-	$canvas.modulesMenu entryconfigure Sub-Networks -state disabled
+	$menu entryconfigure Sub-Networks -state disabled
 	.main_menu.subnet configure -state disabled
     } else {
-	$canvas.modulesMenu entryconfigure Sub-Networks -state normal
+	$menu entryconfigure Sub-Networks -state normal
 	.main_menu.subnet configure -state normal
 	foreach file $subnetfiles {
-	    set name [join [lrange [split [lindex [split $file "/"] end] "."] 0 end-1] "."]
-	    $canvas.modulesMenu.subnet add command \
-		-label "$name" \
+	    set filename [lindex [file split $file] end]
+	    set name [join [lrange [split  $filename "."] 0 end-1] "."]
+	    $menu.subnet add command -label "$name" \
 		-command "global Subnet
-                          set Subnet(Loading) $subnet
-                          loadSubnet {$file}
-                          set Subnet(Loading) 0"
-
-	    .main_menu.subnet.menu add command \
-		-label "$name" \
+			      set Subnet(Loading) $subnet
+			      loadSubnet {$file}
+                              set Subnet(Loading) 0"
+	    
+	    .main_menu.subnet.menu add command -label "$name" \
 		-command "global Subnet
                           set Subnet(Loading) 0
                           loadSubnet {$file}"
 	}
     }
-	
-    update idletasks
 }
-
+    
 
 proc networkHasChanged {args} {
     global NetworkChanged
@@ -848,22 +865,27 @@ proc loadfile {netedit_loadfile} {
     return
 }
 
-proc loadnet {netedit_loadfile } {
+proc loadnet { netedit_loadfile } {
     # Check to see of the file exists; warn user if it doesnt
     if { ![file exists $netedit_loadfile] } {
-	createSciDialog -warning -message \
+	createSciDialog -warning -message 
 	    "File \"$netedit_loadfile\" does not exist."
 	return
     }
-    # Cut off the path from the net name and put in on the title bar:
-    wm title . "SCIRun ([lindex [split "$netedit_loadfile" / ] end])"
-    # Remember the name of this net for future "Saves".
-    global netedit_savefile NetworkChanged Subnet
-    set netedit_savefile $netedit_loadfile
-    # The '#' below is not a comment...
-    uplevel #0 {source $netedit_savefile}
+
+    global netedit_savefile NetworkChanged Subnet inserting
+    if { !$inserting || ![string length $netedit_savefile] } {
+	# Cut off the path from the net name and put in on the title bar:
+	set name [lindex [file split "$netedit_loadfile"] end]
+	wm title . "SCIRun ($name)"
+	# Remember the name of this net for future "Saves".
+	set netedit_savefile $netedit_loadfile
+    }
+
+    # The '#' below is not a comment... This souces the network file globally
+    uplevel \#0 {source $netedit_savefile}
     set Subnet(Subnet$Subnet(Loading)_filename) $netedit_loadfile
-    set NetworkChanged 0
+    if { !$inserting } { set NetworkChanged 0 }
 }
 
 # Ask the user to select a data directory 
@@ -937,17 +959,22 @@ proc sourceSettingsFile {} {
    set DATADIR [lindex [array get env SCIRUN_DATA] 1]
    set DATASET [lindex [array get env SCIRUN_DATASET] 1]
 
-   if { [string compare "$DATASET" ""] == 0 } {
+   if { "$DATASET" == "" } {
        # if env var SCIRUN_DATASET not set... default to sphere:
        set DATASET "sphere"
    } else {
-       if { [string compare "$DATADIR" ""] == 0 } {
+       if { "$DATADIR" == 0 } {
           # DATASET specified, but not DATADIR.  Ask for DATADIR
           set DATADIR [getDataDirectory $DATASET]
+	  # Push out to the environment so user doesn't get asked
+	  # again if we need to check for this var again.
+	  # (Do it twice do to tcl bug...)
+	  array set env "SCIRUN_DATA    $DATADIR"
+	  array set env "SCIRUN_DATA    $DATADIR"
        }
    }
 
-   if { [string compare "$DATADIR" ""] != 0 && \
+   if { "$DATADIR" != "" && \
         [verifyFile $DATADIR/$DATASET/$DATASET.settings] == "true" } {
       displayErrorWarningOrInfo "*** Using SCIRUN_DATA $DATADIR" "info"
       displayErrorWarningOrInfo "*** Using DATASET $DATASET" "info"
@@ -970,6 +997,13 @@ proc sourceSettingsFile {} {
             set done "true"
 	 }
          set warn_user "false"
+
+	 # Push out to the environment so user doesn't get asked
+	 # again if we need to check for these vars again.
+	 # NOTE: For some reason you have to do this twice... perhaps
+	 # a newer version of TCL will fix this...
+	 array set env [list SCIRUN_DATA $DATADIR SCIRUN_DATASET $DATASET]
+	 array set env [list SCIRUN_DATA $DATADIR SCIRUN_DATASET $DATASET]
       }
    }
    source $DATADIR/$DATASET/$DATASET.settings
@@ -1001,14 +1035,28 @@ proc displayErrorWarningOrInfo { msg status } {
     .top.errorFrame.text see end
 }
 
+# if reset == "true" then remove the progress buttons so that
+# when it is brought up by the "About" menu, it will only have
+# the "ok" button.
+proc hideSplash { reset } {
+    wm withdraw .splash
+    if { $reset == "true" } {
+	destroy .splash.fb
+	button .splash.ok -text "OK" -width 10 -command "wm withdraw .splash"
+	pack .splash.ok -side bottom -padx 5 -pady 5 -fill none
+    }
+}
+
 proc showSplash { imgname {steps none} } {
     global SCIRUN_SRCDIR
 
     if {[winfo exists .splash]} {
-	if { [winfo ismapped $w] == 1} {
-	    raise $w
+	# Center on main SCIRun window
+        wm geometry .splash +[expr 135+[winfo x .]]+[expr 170+[winfo y .]]
+	if { [winfo ismapped .splash] == 1} {
+	    raise .splash
 	} else {
-	    wm deiconify $w
+	    wm deiconify .splash
 	}
 	return
     }
@@ -1016,7 +1064,13 @@ proc showSplash { imgname {steps none} } {
     set filename [file join $SCIRUN_SRCDIR $imgname]
     image create photo ::img::splash -file "$filename"
     toplevel .splash
-    wm geometry .splash +135+170
+
+    # Center splash in main SCIRun window:
+    #
+    # Must do it this way as "." isn't positioned at this point...({}
+    # delays the execution of the winfo command.)
+    #
+    after 0 {wm geometry .splash +[expr 135+[winfo x .]]+[expr 170+[winfo y .]]}
 
     wm protocol .splash WM_DELETE_WINDOW "wm withdraw .splash"
 
@@ -1030,9 +1084,6 @@ proc showSplash { imgname {steps none} } {
 	# The following line forces the window to be the correct size... this is a
 	# hack to fix things on the mac. -Dav
 	wm geometry .splash "" 
-    } else {
-	button .splash.ok -text " OK " -command "wm withdraw .splash"
-	pack .splash.ok -side bottom -padx 5 -pady 5 -fill none
     }
     update idletasks
 }
@@ -1047,21 +1098,18 @@ proc licenseDialog { {firsttime 0} } {
     set filename [file join $SCIRUN_SRCDIR LICENSE]
     set stream [open $filename r]
     toplevel .license
-    wm protocol .license WM_DELETE_WINDOW {
-	createSciDialog -error -message "You must choose Accept, Decline, or Later to continue."
-    }
 
-    wm geometry .license 504x482+135+170
     wm title .license {UNIVERSITY OF UTAH RESEARCH FOUNDATION PUBLIC LICENSE}
+
     frame .license.text -borderwidth 1 -class Scroll -highlightthickness 1 \
 	-relief sunken -takefocus 0
     text .license.text.text -wrap word  -borderwidth 2 -relief sunken \
-	-yscrollcommand ".license.text.y set"
-    scrollbar .license.text.y -borderwidth 0 -elementborderwidth 1 \
+	-yscrollcommand ".license.text.y set" -width 80 -height 20
+    scrollbar .license.text.y -borderwidth 2 -elementborderwidth 1 \
 	-orient vertical -takefocus 0 -highlightthicknes 0 \
 	-command ".license.text.text yview"
     grid columnconfigure .license.text 0 -weight 1
-    grid rowconfigure .license.text    0 -weight 1
+    grid rowconfigure .license.text    0 -weight 1 -pad 2
     grid .license.text.text -column 0 -row 0 -sticky news
     grid .license.text.y -column 1 -row 0 -sticky news
 
@@ -1122,11 +1170,18 @@ proc licenseDialog { {firsttime 0} } {
                       catch {destroy .license}"
 	pack $w.accept $w.decline $w.later -padx 5 -pady 5 -side left -padx 20
 	pack .license.b.buttons  .license.b.entry -side bottom
+
+	wm protocol .license WM_DELETE_WINDOW {
+	    createSciDialog -error -message "You must choose Accept, Decline, or Later to continue."
+	}
+
     } else {
-	button .license.b.ok -text OK -command {destroy .license}
-	pack .license.b.ok -padx 5 -pady 5 -side bottom
+        wm protocol .license WM_DELETE_WINDOW { destroy .license }
+	button .license.b.ok -text "OK" -width 10 -command {destroy .license}
+	pack .license.b.ok -padx 2 -pady 2 -side bottom
     }
-    raise .license
+    moveToCursor .license
+    wm deiconify .license
     grab .license
     if { $firsttime } { tkwait window .license }
     return $licenseResult
@@ -1297,4 +1352,13 @@ proc listFindAndRemove { name elem } {
 proc initVar { var } {
     if { [string first msgStream $var] != -1 } return
     uplevel \#0 trace variable \"$var\" w networkHasChanged
+}
+
+
+# Debug procedure to print global variable values
+proc printvars { pattern } {
+    foreach name [lsort [uplevel \#0 "info vars *${pattern}*"]] { 
+	upvar \#0 $name var
+	puts "set \"$name\" \{$var\}"
+    }
 }

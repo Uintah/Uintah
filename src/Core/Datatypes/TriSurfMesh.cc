@@ -546,7 +546,7 @@ TriSurfMesh::get_gradient_basis(Face::index_type fi, Vector& g0, Vector& g1,
   g0 = trans1.unproject(g0);
   g1 = trans1.unproject(g1);
   g2 = trans1.unproject(g2);
-  
+    
   // return the area of the element
   double area=(1./iA2)/2.0;
   return(area);

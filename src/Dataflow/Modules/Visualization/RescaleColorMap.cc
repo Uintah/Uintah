@@ -138,7 +138,8 @@ RescaleColorMap::execute()
       ++pi;
     }
     if (!have_some) {
-      warning("All of the input fields were empty -- colormap not rescaled.");
+      warning("No field provided! -- Color map can not be rescaled.\n"
+	      "Make sure you connect a field to the field input port.");
       omap->send(cmap);
       return;
     }
