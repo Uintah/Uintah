@@ -74,7 +74,8 @@ public:
   void get_edges(edge_array &array, face_index idx) const;
   void get_edges(edge_array &array, cell_index idx) const;
   void get_faces(face_array &array, cell_index idx) const;
-  void get_neighbor(cell_index &neighbor, face_index idx) const;
+  bool get_neighbor(cell_index &neighbor, cell_index from, 
+		   face_index idx) const;
   void get_center(Point &result, node_index idx) const;
   void get_center(Point &result, edge_index idx) const;
   void get_center(Point &result, face_index idx) const;
@@ -126,14 +127,18 @@ private:
   //! Face information.
   struct Face {
     node_index         nodes_[3];   //! 3 nodes makes a face.
-    vector<cell_index> cells_;      //! list of all the cells this face is in.
+    cell_index         cells_[2];   //! 2 cells may have this face is in.
     
-    Face() : cells_(6) {
+    Face() {
       nodes_[0] = -1;
       nodes_[1] = -1;
+      cells_[0] = -1;
+      cells_[1] = -1;
     }
     // nodes_ must be sorted. See Hash Function below.
-    Face(node_index n1, node_index n2, node_index n3) : cells_(6) {
+    Face(node_index n1, node_index n2, node_index n3) {
+      cells_[0] = -1;
+      cells_[1] = -1;
       if ((n1 < n2) && (n1 < n3)) {
 	nodes_[0] = n1;
 	if (n2 < n3) {
@@ -164,7 +169,7 @@ private:
       }
     }
 
-    bool shared() const { return cells_.size() > 1; }
+    bool shared() const { return ((cells_[0] != -1) && (cells_[1] != -1)); }
     
     //! true if both have the same nodes (order does not matter)
     bool operator==(const Face &f) const {
