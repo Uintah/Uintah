@@ -67,6 +67,7 @@ class BuildFEMatrix : public Module {
     int DirSub;	//  matrix decomposition and local regularization later
     int AverageGround; // make the last row in the matrix all 1's
     TCLint UseCondTCL;
+  TCLstring refnodeTCL;
     int UseCond;
     int PinZero;
     MatrixHandle gbl_matrixH;
@@ -89,7 +90,7 @@ extern "C" Module* make_BuildFEMatrix(const clString& id) {
 BuildFEMatrix::BuildFEMatrix(const clString& id)
 : Module("BuildFEMatrix", id, Filter), barrier("BuildFEMatrix barrier"),
     BCFlag("BCFlag", id, this),
-    UseCondTCL("UseCondTCL", id, this)
+  UseCondTCL("UseCondTCL", id, this), refnodeTCL("refnodeTCL", id, this)
 {
     // Create the input port
     inmesh = scinew MeshIPort(this, "Mesh", MeshIPort::Atomic);
@@ -253,23 +254,26 @@ void BuildFEMatrix::execute()
      if (np>10) np=5;
      colidx.resize(np+1);
 
-#if 1
      refnode=0;
+     DirSub=PinZero=AverageGround=0;
+     if (BCFlag.get() == "DirSub") DirSub=1;
+     else if (BCFlag.get() == "PinZero") { 
+       PinZero=1; DirSub=1;
+       refnodeTCL.get().get_int(refnode);
+     } else if (BCFlag.get() == "AverageGround") { AverageGround=1; DirSub=1; }
+     else cerr << "WARNING: BCFlag not set: " << BCFlag.get() << "!\n";
+     lastBCFlag=BCFlag.get();
+
+#if 1
      ColumnMatrixHandle refnodeH;
      if (refnodeport->get(refnodeH)&&refnodeH.get_rep()&&refnodeH->nrows()>0){
 	 refnode=(*refnodeH.get_rep())[0];
      }
 #endif
 
-     DirSub=PinZero=AverageGround=0;
-     if (BCFlag.get() == "DirSub") DirSub=1;
-     else if (BCFlag.get() == "PinZero") { PinZero=1; DirSub=1; }
-     else if (BCFlag.get() == "AverageGround") { AverageGround=1; DirSub=1; }
-     else cerr << "WARNING: BCFlag not set: " << BCFlag.get() << "!\n";
-     lastBCFlag=BCFlag.get();
      if (PinZero) cerr << "BuildFEM: pinning node "<<refnode<<" to zero.\n";
      if (AverageGround) cerr << "BuildFEM: averaging of all nodes to zero.\n";
-     
+
      Thread::parallel(Parallel<BuildFEMatrix>(this, &BuildFEMatrix::parallel),
 		      np, true);
 
@@ -438,6 +442,19 @@ void BuildFEMatrix::add_lcl_gbl(Matrix& gbl_a, double lcl_a[4][4],
 
 //
 // $Log$
+// Revision 1.12  2000/10/29 04:34:49  dmw
+// BuildFEMatrix -- ground an arbitrary node
+// SolveMatrix -- when preconditioning, be careful with 0's on diagonal
+// MeshReader -- build the grid when reading
+// SurfToGeom -- support node normals
+// IsoSurface -- fixed tet mesh bug
+// MatrixWriter -- support split file (header + raw data)
+//
+// LookupSplitSurface -- split a surface across a place and lookup values
+// LookupSurface -- find surface nodes in a sfug and copy values
+// Current -- compute the current of a potential field (- grad sigma phi)
+// LocalMinMax -- look find local min max points in a scalar field
+//
 // Revision 1.11  2000/03/17 09:26:52  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository
