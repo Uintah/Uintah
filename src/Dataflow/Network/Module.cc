@@ -54,8 +54,6 @@ typedef std::map<int,OPortInfo*>::iterator oport_iter;
 typedef std::map<clString,IPort*>::iterator auto_iport_iter;
 typedef std::map<clString,OPort*>::iterator auto_oport_iter;
 
-#define AUTO_PORTS 0
-
 ModuleInfo* GetModuleInfo(const clString& name, const clString& catname,
 			  const clString& packname)
 {
@@ -193,7 +191,6 @@ Module::Module(const clString& name, const clString& id,
   IPort* iport;
   OPort* oport;
 
-#if AUTO_PORTS
   ModuleInfo* info = GetModuleInfo(moduleName,categoryName,packageName);
   if (info) {
     for (iport_iter i1=info->iports->begin();
@@ -219,7 +216,6 @@ Module::Module(const clString& name, const clString& id,
       }
     }  
   }
-#endif
 }
 
 
@@ -662,6 +658,9 @@ void Module::multisend(OPort* p1, OPort* p2)
 
 //
 // $Log$
+// Revision 1.14  2000/11/22 19:10:38  moulding
+// auto-port facility is now operational.
+//
 // Revision 1.13  2000/11/21 22:44:30  moulding
 // initial commit of auto-port facility (not yet operational).
 //
