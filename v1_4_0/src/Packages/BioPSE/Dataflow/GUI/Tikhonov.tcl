@@ -37,7 +37,6 @@
     }
     method entervalue {} {
         set w .ui[modname]
-    	set $this-reg_method single
 	set color "#505050"
         #$this-c needexecute
 	$w.ent.f2.l1 configure -foreground black
@@ -49,7 +48,6 @@
     }
     method useslider {} {
         set w .ui[modname]
-    	set $this-reg_method slider
 	set color "#505050"
         #$this-c needexecute
 	$w.sld.f4.s configure -state normal -foreground black
@@ -61,7 +59,6 @@
     }
     method uselcurve {} {
         set w .ui[modname]
-    	set $this-reg_method lcurve
 	set color "#505050"
         #$this-c needexecute
 	$w.sld.f4.s configure -state disabled -foreground $color
@@ -116,7 +113,7 @@
 	global $this-lambda_fix
 	global $this-lambda_sld
 	global $this-reg_method
-    	set $this-reg_method lcurve
+#    	set $this-reg_method lcurve
 
 	# Entry radio-button
         frame $w.ent -relief groove -border 3
@@ -126,7 +123,7 @@
         pack $w.ent.f1 -side top -expand yes -fill x
 
         radiobutton $w.ent.f1.b -text "Enter value" \
-		-variable "$this reg_method" -value single \
+		-variable "$this-reg_method" -value single \
 		-command "$this entervalue"
         pack $w.ent.f1.b -side left
 
@@ -145,7 +142,7 @@
 	frame $w.sld.f3 -relief flat
         pack $w.sld.f3 -side top -expand yes -fill x
         radiobutton $w.sld.f3.b -text "Choose using slider" \
-		-variable "$this reg_method" -value slider \
+		-variable "$this-reg_method" -value slider \
 		-command "$this useslider"
         pack $w.sld.f3.b -side left
 
@@ -163,7 +160,7 @@
         frame $w.lc.f5 -relief flat
         pack $w.lc.f5 -side top -expand yes -fill x
         radiobutton $w.lc.f5.b -text "L-curve" \
-		-variable "$this reg_method" -value lcurve \
+		-variable "$this-reg_method" -value lcurve \
 		-command "$this uselcurve"
         pack $w.lc.f5.b -side left
 
@@ -189,5 +186,10 @@
 	button $w.f6.ex -text "Execute" -command "$this execrunmode"
 	button $w.f6.cl -text "Close" -command "destroy $w"
         pack $w.f6.ex $w.f6.cl -side left -expand yes -fill x -padx 2 -pady 2
+
+	if {[set $this-reg_method] == "lcurve"} { $this uselcurve }
+	if {[set $this-reg_method] == "single"} { $this entervalue }
+	if {[set $this-reg_method] == "slider"} { $this useslider }
+	
     }
 }
