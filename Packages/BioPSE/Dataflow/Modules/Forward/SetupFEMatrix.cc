@@ -454,7 +454,7 @@ SetupFEMatrix::execute()
   {
     nprocs = Thread::numProcessors() * 4;
   }
-  
+ 
   if (hex) {      // HEXES
     BuildHexFEMatrix *hexmat = 
       scinew BuildHexFEMatrix(hvfiH, hvftH, 
@@ -475,7 +475,7 @@ SetupFEMatrix::execute()
     BuildFEMatrix::build_FEMatrix(tvfiH, tvftH,
 				  index_based, tens, hGblMtrx_, 
 				  unitsScale, nprocs);
-  } else if (tri && index_based && lastUseBasis_) {  // TRIS -- indexed
+  } else if (tri) {  // TRIS -- indexed 
     //! If the user wants to use basis matrices, 
     //!    first check to see if we need to recompute them
     if (lastUseBasis_) {
