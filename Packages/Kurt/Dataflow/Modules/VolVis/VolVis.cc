@@ -49,11 +49,12 @@ Module* make_VolVis( const clString& id) {
 
 VolVis::VolVis(const clString& id)
   : Module("VolVis", id, Filter), widget_lock("VolVis widget lock"),
-    mode(0), draw_mode("draw_mode", id, this),
+    mode(0), draw_mode("draw_mode", id, this), debug("debug", id, this),
     alpha("alpha", id, this), 
     num_slices("num_slices", id, this) ,
     avail_tex("avail_tex", id, this),
-    max_brick_dim("max_brick_dim", id, this)
+    max_brick_dim("max_brick_dim", id, this), level("level", id, this),
+    brick(0)
 {
   // Create the input ports
   inscalarfield = scinew ScalarFieldIPort( this, "Scalar Field",
@@ -147,7 +148,7 @@ void VolVis::execute(void)
   if( !incolormap->get(cmap)){
     return;
   }
-
+  
       
   ScalarFieldRGuchar *rgchar = sfield->getRGBase()->getRGUchar();
 
@@ -157,69 +158,25 @@ void VolVis::execute(void)
   } else {
     int nx, ny, nz;
     int padx = 0, pady = 0, padz = 0;
-    if( !isPowerOf2( rgchar->nz ) ){      
-      nz = nextPowerOf2( rgchar->ny );
-      padz = nz - rgchar->nz;
-    }
-    if( !isPowerOf2( rgchar->ny)) {
-      ny = nextPowerOf2( rgchar->ny );
-      pady = ny - rgchar->ny;
-    }
-    if( !isPowerOf2( rgchar->nx)) {
-      nx = nextPowerOf2( rgchar->nx );
-      padx = nx - rgchar->nx;
-    }
-
-    Point tmp1, tmp2;
-    rgchar->get_bounds(tmp1, tmp2);
-    ScalarFieldRGuchar *rg;
-    if( padx + pady + padz ){
-      rg = new ScalarFieldRGuchar();
-      rg->resize(nx, ny, nz );
-      for( int i = 0; i < rgchar->nx; i++ )
-	for( int j = 0; j < rgchar->ny; j++ )
-	  for( int k = 0; k < rgchar->nz; k++ )
-	    rg->grid(i,j,k) = rgchar->grid(i,j,k);
-      rgchar = rg;
-    }
     
     Point pmin,pmax;
-    pmin=Point(tmp1.z(), tmp1.y(), tmp1.x());
-    pmax=Point(tmp2.z(), tmp2.y(), tmp2.x());
+    rgchar->get_bounds(pmin, pmax);
 
-    //cmap->Build1d( 256 );
-
-/*     unsigned char *data = (unsigned char*)&rgchar->grid(0,0,0); */
-/*      unsigned char *p = data;  */
-/*     //unsigned char *p = &textureMem[0][0][0]; */
-/*     for(int i = 0; i < 32; i++) */
-/*       for(int j = 0; j < 32; j++) */
-/* 	for(int k = 0; k < 32; k++){ */
-/* 	  if (i < 32/6 || i > 32 - 32/4 || */
-/* 	      j < 32/6 || j > 32 - 32/4 || */
-/* 	      k < 32/6 || k > 32 - 32/4) { */
-/* 	      if (i < 2 || i > 32 - 2 || */
-/* 		  j < 2 || j > 32 - 2 || */
-/* 		  k < 2 || k > 32 - 2) { */
-/* 		*p++ = 0; */
-/* 		//p[ k + 32*j + 32*32*i] = 0; */
-/* 	      } else { */
-/* 		*p++ =  255; */
-/* 		//p[ k + 32*j + 32*32*i] = 255; */
-/* 	      } */
-/* 	  } else { */
-/* 	    *p++ = 64; */
-/* 	    //p[ k + 32*j + 32*32*i] = 64; */
-/* 	  } */
-/* 	} */
-  
-/*     cerr<< "draw mode == 2? --> " << (draw_mode.get() == 2) << endl; */
-/*     cerr<<"texture addr in VolVis = "<< (int)data<<endl; */
-    GeomObj *brick = new MultiBrick( 0x12345676, num_slices.get(), alpha.get(),
+      cerr << "slices, alpha "<<num_slices.get()<<", "<<alpha.get()<<endl;
+      cerr << "max dim, pmin, pmax, "<<max_brick_dim.get()<<", "<<pmin<<", "<< pmax<<endl;
+      cerr << "field size "<<rgchar->nx <<", "<<rgchar->ny <<", "<<rgchar->nz <<endl;
+    brick = new MultiBrick( 0x12345676, num_slices.get(), alpha.get(),
 			  max_brick_dim.get(), pmin, pmax,
-			  (draw_mode.get() == 2),
+			  (draw_mode.get() == 2), debug.get(),
 			  rgchar->nz, rgchar->ny, rgchar->nx,
 			  rgchar, (unsigned char*)cmap->raw1d);
+    brick->SetDrawLevel(level.get());
+    
+    int l = brick->getMaxLevel();
+    int dim = brick->getMaxSize();
+    TCL::execute( id + " SetDims " + to_string( dim ));
+    TCL::execute( id + " SetLevels " + to_string( l ));
+
 
     ogeom->delAll();
     ogeom->addObj( brick, "TexBrick" );

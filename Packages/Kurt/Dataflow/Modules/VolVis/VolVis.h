@@ -69,8 +69,12 @@ private:
   TCLint max_brick_dim;
   TCLint num_slices;
   TCLint draw_mode;
+  TCLint debug;
+  TCLint level;
   TCLdouble alpha;
   int mode;
+
+  MultiBrick *brick;
   
 
 };
