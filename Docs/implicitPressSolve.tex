@@ -41,12 +41,16 @@
 \begin{document}
 \setlength{\abovedisplayskip}{0.1in}
 \setlength{\mathindent}{0.0in}
-\section{\underline{Overview of implicit ICE\hspace{ 0.5in}12/16/03}  }
+\section{\underline{Overview of implicit ICE\hspace{ 0.5in}10/04/04}  }
 
 \begin{algorithmic}
 \WHILE{ $| \text{outer residual} | <$ convergence criteria}
-    \STATE --Compute $ \velFC$
-    \STATE --Add Exchange contribution to  $\velFC $, compute $ \rhoMFC $
+    \STATE --Compute $ \velFC$ (add Exchange contribution, set boundary
+             conditions on $\velFC$, compute $ \rhoMFC $)
+             
+    \STATE --Form RHS $B = -\beta (P^{ \iter} - P^{old}) - \SUM{m}$ \text{Advection} $(\theta,\velFC)$,\\ \quad
+             where outer residual = $Max(RHS^2), \beta = \SUM{m} \frac{\theta_m}{\rhoM c_m^2}$
+    
     \STATE --Compute $A$ matrix \\ \quad
       $A_r = \frac{\delt^2}{\delx^2} \SUM{m} \frac{\thetaUW}{\rhoMFC} \B{|}_{r}$ \quad
       $A_l = \frac{\delt^2}{\delx^2} \SUM{m} \frac{\thetaUW}{\rhoMFC} \B{|}_{l}$ \\ \quad
@@ -54,16 +58,14 @@
       $A_b = \frac{\delt^2}{\dely^2} \SUM{m} \frac{\thetaUW}{\rhoMFC} \B{|}_{b}$ \\ \quad
       $A_f = \frac{\delt^2}{\delz^2} \SUM{m} \frac{\thetaUW}{\rhoMFC} \B{|}_{f}$ \quad
       $A_{bk} = \frac{\delt^2}{\delz^2} \SUM{m} \frac{\thetaUW}{\rhoMFC} \B{|}_{bk}$ \\ \quad
-      $A_{p} =\beta +( A_r + A_l + A_t + A_b + A_f + A_ {bk})$\\ \quad
-     where $\beta = \SUM{m} \frac{\theta_m}{\rhoM c_m^2}$
-    \STATE --Form RHS $B = -\beta (P^{ \iter} - P^{ \iter -1}) - \SUM{m}$ \text{Advection} $(\theta,\velFC)$ \\ \quad
-    where outer residual = $Max(RHS^2)$
+      $A_{p} =\beta +( A_r + A_l + A_t + A_b + A_f + A_ {bk})$
+      
     \STATE --Solve for $\delta{P}$
-    \STATE --Update pressure $P^{\iter} = P^{\iter -1 } + \delta{P}$
+    \STATE --Update pressure $P^{\iter} = P^{\iter -1 } + \delta{P}$, set boundary condition on $P^{\iter}$
 \ENDWHILE
 
 \STATE --Compute $\Delta{P} = P^{\iter} - P^{Old}$
-\STATE --Compute $\velFC$ include exchange (set boundary conditions on $\velFC$)
+\STATE --Compute $\velFC$ add exchange contribution, set boundary conditions on $\velFC$
 \end{algorithmic}
 %______________________________________________________________________
 \newpage
@@ -88,13 +90,13 @@ Write eq.{\ref{GE}} in terms of $P^{\iter} = P^{\iter -1 } + \delta{P}$, $\Delta
 \label{eq2}
 \beta (P^{\iter} -P^{old}) =
      \delt \massSrc 
-  -  \delt \nabla \cdot \B{(} \termA -\termB{P^{\iter}} +\text{Exch} + \delt\vec{g} \B{)}
+  -  \delt \nabla \cdot \thetaUW \B{(} \termA -\termB{P^{\iter}} +\text{Exch} + \delt\vec{g} \B{)}
 \end{equation}
 Substitite in for$P^{\iter} = P^{\iter -1 } + \delta{P}$
 \[
   \beta ((P^{\iter -1 } + \delta{P}) -P^{old}) =
     \delt \massSrc 
-  - \delt \nabla \cdot \B{(} \termA -\termB{(P^{\iter -1 } + \delta{P})} 
+  - \delt \nabla \cdot \thetaUW \B{(} \termA -\termB{(P^{\iter -1 } + \delta{P})} 
   +\text{Exch} + \delt\vec{g} \B{)}
 \]
 Now factor out $\delta{P}$
