@@ -53,8 +53,18 @@ namespace SCIRun {
 class TransformData2 : public Module
 {
 private:
-  GuiString function_;
-  GuiString outputdatatype_;
+  GuiString gFunction_;
+  GuiString gOutputDataType_;
+
+  string function_;
+  string outputDataType_;
+
+  FieldHandle fHandle_;
+
+  int fGeneration0_;
+  int fGeneration1_;
+
+  bool error_;
 
 public:
   TransformData2(GuiContext* ctx);
@@ -68,8 +78,11 @@ DECLARE_MAKER(TransformData2)
 
 TransformData2::TransformData2(GuiContext* ctx)
   : Module("TransformData2", ctx, Filter,"FieldsData", "SCIRun"),
-    function_(ctx->subVar("function")),
-    outputdatatype_(ctx->subVar("outputdatatype"))
+    gFunction_(ctx->subVar("function")),
+    gOutputDataType_(ctx->subVar("outputdatatype")),
+    fGeneration0_(-1),
+    fGeneration1_(-1),
+    error_(0)
 {
 }
 
@@ -82,56 +95,95 @@ TransformData2::~TransformData2()
 void
 TransformData2::execute()
 {
-  // Get input field.
-  FieldIPort *ifp0 = (FieldIPort *)get_iport("Input Field 0");
-  FieldHandle ifieldhandle0;
-  if (!ifp0) {
-    error("Unable to initialize iport 'Input Field 0'.");
+  // Get input field 0.
+  FieldIPort *ifp = (FieldIPort *)get_iport("Input Field 0");
+  FieldHandle fHandle0;
+  if (!ifp) {
+    error("Unable to initialize iport 'Input Field'.");
     return;
   }
-  if (!(ifp0->get(ifieldhandle0) && ifieldhandle0.get_rep()))
-  {
+  if (!(ifp->get(fHandle0) && fHandle0.get_rep())) {
     error("Input field 0 is empty.");
     return;
   }
 
-  if (ifieldhandle0->basis_order() == -1)
-  {
-    error("Field 0 contains no data to transform.");
+  if (fHandle0->basis_order() == -1) {
+    warning("Field 0 contains no data to transform.");
     return;
   }
 
-  FieldIPort *ifp1 = (FieldIPort *)get_iport("Input Field 1");
-  FieldHandle ifieldhandle1;
-  if (!ifp1) {
-    error("Unable to initialize iport 'Input Field 1'.");
+  // Get input field 1.
+  ifp = (FieldIPort *)get_iport("Input Field 1");
+  FieldHandle fHandle1;
+  if (!ifp) {
+    error("Unable to initialize iport 'Input Field'.");
     return;
   }
-  if (!(ifp1->get(ifieldhandle1) && ifieldhandle1.get_rep()))
-  {
+  if (!(ifp->get(fHandle1) && fHandle1.get_rep())) {
     error("Input field 1 is empty.");
     return;
   }
 
-  if (ifieldhandle1->basis_order() == -1)
-  {
-    error("Field 1 contains no data to transform.");
+  if (fHandle1->basis_order() == -1) {
+    warning("Field 1 contains no data to transform.");
     return;
   }
 
-  if (ifieldhandle0->mesh().get_rep() != ifieldhandle1->mesh().get_rep())
-  {
-    // If not the same mesh make sure they are the same type.
-    if( ifieldhandle0->get_type_description(0)->get_name() !=
-	ifieldhandle1->get_type_description(0)->get_name() ||
-	ifieldhandle0->get_type_description(1)->get_name() !=
-	ifieldhandle1->get_type_description(1)->get_name() ) {
-      error("The input fields must have the same mesh type.");
+  bool update = false;
+
+  // Check to see if the source field has changed.
+  if( fGeneration0_ != fHandle0->generation ) {
+    fGeneration0_ = fHandle0->generation;
+    update = true;
+  }
+
+  // Check to see if the source field has changed.
+  if( fGeneration1_ != fHandle1->generation ) {
+    fGeneration1_ = fHandle1->generation;
+    update = true;
+  }
+
+  string outputDataType = gOutputDataType_.get();
+  string function = gFunction_.get();
+
+  if( outputDataType_ != outputDataType ||
+      function_       != function ) {
+    update = true;
+    
+    outputDataType_ = outputDataType;
+    function_       = function;
+  }
+
+  if( !fHandle_.get_rep() ||
+      update ||
+      error_ ) {
+
+    error_ = false;
+
+    // remove trailing white-space from the function string
+    while (function.size() && isspace(function[function.size()-1]))
+      function.resize(function.size()-1);
+
+
+    if (fHandle0->basis_order() != fHandle1->basis_order()) {
+      error("The Input Fields must share the same data location.");
+      error_ = true;
       return;
-    } else {
+    }
+
+    if (fHandle0->mesh().get_rep() != fHandle1->mesh().get_rep()) {
+      // If not the same mesh make sure they are the same type.
+      if( fHandle0->get_type_description(0)->get_name() !=
+	  fHandle1->get_type_description(0)->get_name() ||
+	  fHandle0->get_type_description(1)->get_name() !=
+	  fHandle1->get_type_description(1)->get_name() ) {
+	error("The input fields must have the same mesh type.");
+	error_ = true;
+	return;
+      }
 
       // Do this last, sometimes takes a while.
-      const TypeDescription *meshtd0 = ifieldhandle0->mesh()->get_type_description();
+      const TypeDescription *meshtd0 = fHandle0->mesh()->get_type_description();
 
       CompileInfoHandle ci = FieldInfoAlgoCount::get_compile_info(meshtd0);
       Handle<FieldInfoAlgoCount> algo;
@@ -139,78 +191,62 @@ TransformData2::execute()
 
       //string num_nodes, num_elems;
       //int num_nodes, num_elems;
-      const string num_nodes0 = algo->execute_node(ifieldhandle0->mesh());
-      const string num_elems0 = algo->execute_elem(ifieldhandle0->mesh());
+      const string num_nodes0 = algo->execute_node(fHandle0->mesh());
+      const string num_elems0 = algo->execute_elem(fHandle0->mesh());
 
-      const string num_nodes1 = algo->execute_node(ifieldhandle1->mesh());
-      const string num_elems1 = algo->execute_elem(ifieldhandle1->mesh());
+      const string num_nodes1 = algo->execute_node(fHandle1->mesh());
+      const string num_elems1 = algo->execute_elem(fHandle1->mesh());
 
       if( num_nodes0 != num_nodes1 || num_elems0 != num_elems1 ) {
 	error("The input meshes must have the same number of nodes and elements.");
+	error_ = true;
 	return;
       } else {
 	warning("The input fields do not have the same mesh,");
 	warning("but appear to be the same otherwise.");
       }
     }
+
+    if (outputDataType == "input 0")
+      outputDataType = fHandle0->get_type_description(1)->get_name();
+    else if (outputDataType == "input 1")
+      outputDataType = fHandle1->get_type_description(1)->get_name();
+
+    const TypeDescription *ftd0 = fHandle0->get_type_description();
+    const TypeDescription *ftd1 = fHandle1->get_type_description();
+    const TypeDescription *ltd = fHandle0->order_type_description();
+    const string oftn = fHandle0->get_type_description(0)->get_name() +
+      "<" + outputDataType + "> ";
+    int hoffset = 0;
+    Handle<TransformData2Algo> algo;
+
+    while (1) {
+      CompileInfoHandle ci =
+	TransformData2Algo::get_compile_info(ftd0, ftd1, oftn, ltd, 
+					     function, hoffset);
+      if (!DynamicCompilation::compile(ci, algo, false, this)) {
+	error("Your function would not compile.");
+	gui->eval(id + " compile_error "+ci->filename_);
+	DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
+	return;
+      }
+      if (algo->identify() == function) {
+	break;
+      }
+      hoffset++;
+    }
+
+    fHandle_ = algo->execute(fHandle0, fHandle1);
   }
 
-  if (ifieldhandle0->basis_order() != ifieldhandle1->basis_order())
-  {
-    error("The Input Fields must share the same data location.");
-    return;
-  }
-
-  string outputdatatype = outputdatatype_.get();
-  if (outputdatatype == "input 0")
-  {
-    outputdatatype = ifieldhandle0->get_type_description(1)->get_name();
-  }
-  else if (outputdatatype == "input 1")
-  {
-    outputdatatype = ifieldhandle1->get_type_description(1)->get_name();
-  }
-
-  const TypeDescription *ftd0 = ifieldhandle0->get_type_description();
-  const TypeDescription *ftd1 = ifieldhandle1->get_type_description();
-  const TypeDescription *ltd = ifieldhandle0->order_type_description();
-  const string oftn = ifieldhandle0->get_type_description(0)->get_name() +
-    "<" + outputdatatype + "> ";
-  int hoffset = 0;
-  Handle<TransformData2Algo> algo;
-
-  // remove trailing white-space from the function string
-  string func=function_.get();
-  while (func.size() && isspace(func[func.size()-1]))
-    func.resize(func.size()-1);
-
-  while (1)
-  {
-    CompileInfoHandle ci =
-      TransformData2Algo::get_compile_info(ftd0, ftd1, oftn, ltd, 
-					   func, hoffset);
-    if (!DynamicCompilation::compile(ci, algo, false, this))
-    {
-      error("Your function would not compile.");
-      gui->eval(id + " compile_error "+ci->filename_);
-      DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
+  if( fHandle_.get_rep() ) {
+    FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
+    if (!ofield_port) {
+      error("Unable to initialize oport 'Output Field'.");
       return;
     }
-    if (algo->identify() == func)
-    {
-      break;
-    }
-    hoffset++;
+    ofield_port->send(fHandle_);
   }
-
-  FieldHandle ofieldhandle = algo->execute(ifieldhandle0, ifieldhandle1);
-
-  FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
-  if (!ofield_port) {
-    error("Unable to initialize oport 'Output Field'.");
-    return;
-  }
-  ofield_port->send(ofieldhandle);
 }
 
 

@@ -51,14 +51,23 @@ namespace SCIRun {
 
 class TransformData : public Module
 {
-private:
-  GuiString function_;
-  GuiString outputdatatype_;
-
 public:
   TransformData(GuiContext* ctx);
   virtual ~TransformData();
   virtual void execute();
+
+private:
+  GuiString gFunction_;
+  GuiString gOutputDataType_;
+
+  string function_;
+  string outputDataType_;
+
+  FieldHandle fHandle_;
+
+  int fGeneration_;
+
+  bool error_;
 };
 
 
@@ -67,8 +76,10 @@ DECLARE_MAKER(TransformData)
 
 TransformData::TransformData(GuiContext* ctx)
   : Module("TransformData", ctx, Filter,"FieldsData", "SCIRun"),
-    function_(ctx->subVar("function")),
-    outputdatatype_(ctx->subVar("outputdatatype"))
+    gFunction_(ctx->subVar("function")),
+    gOutputDataType_(ctx->subVar("outputdatatype")),
+    fGeneration_(-1),
+    error_(0)
 {
 }
 
@@ -83,69 +94,87 @@ TransformData::execute()
 {
   // Get input field.
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
-  FieldHandle ifieldhandle;
+  FieldHandle fHandle;
   if (!ifp) {
     error("Unable to initialize iport 'Input Field'.");
     return;
   }
-  if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
-  {
+  if (!(ifp->get(fHandle) && fHandle.get_rep())) {
     error("Input field is empty.");
     return;
   }
 
-  if (ifieldhandle->basis_order() == -1)
-  {
+  if (fHandle->basis_order() == -1) {
     warning("Field contains no data to transform.");
     return;
   }
 
-  string outputdatatype = outputdatatype_.get();
-  if (outputdatatype == "input")
-  {
-    outputdatatype = ifieldhandle->get_type_description(1)->get_name();
+  bool update = false;
+
+  // Check to see if the source field has changed.
+  if( fGeneration_ != fHandle->generation ) {
+    fGeneration_ = fHandle->generation;
+    update = true;
   }
 
-  const TypeDescription *ftd = ifieldhandle->get_type_description();
-  const TypeDescription *ltd = ifieldhandle->order_type_description();
-  const string oftn = ifieldhandle->get_type_description(0)->get_name() +
-    "<" + outputdatatype + "> ";
-  int hoffset = 0;
-  Handle<TransformDataAlgo> algo;
+  string outputDataType = gOutputDataType_.get();
+  string function = gFunction_.get();
 
-  // remove trailing white-space from the function string
-  string func = function_.get();
-  while (func.size() && isspace(func[func.size()-1]))
-  {
-    func.resize(func.size()-1);
+  if( outputDataType_ != outputDataType ||
+      function_       != function ) {
+    update = true;
+    
+    outputDataType_ = outputDataType;
+    function_       = function;
   }
 
-  while (1)
-  {
-    CompileInfoHandle ci =
-      TransformDataAlgo::get_compile_info(ftd, oftn, ltd, func, hoffset);
-    if (!DynamicCompilation::compile(ci, algo, false, this))
-    {
-      error("Your function would not compile.");
-      gui->eval(id + " compile_error "+ci->filename_);
-      DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
+  if( !fHandle_.get_rep() ||
+      update ||
+      error_ ) {
+
+    error_ = false;
+
+    // remove trailing white-space from the function string
+    while (function.size() && isspace(function[function.size()-1]))
+      function.resize(function.size()-1);
+
+    if (outputDataType == "input")
+      outputDataType = fHandle->get_type_description(1)->get_name();
+
+    const TypeDescription *ftd = fHandle->get_type_description();
+    const TypeDescription *ltd = fHandle->order_type_description();
+    const string oftn = fHandle->get_type_description(0)->get_name() +
+      "<" + outputDataType + "> ";
+    int hoffset = 0;
+    Handle<TransformDataAlgo> algo;
+    
+    while (1) {
+      CompileInfoHandle ci =
+	TransformDataAlgo::get_compile_info(ftd, oftn, ltd, function, hoffset);
+      if (!DynamicCompilation::compile(ci, algo, false, this)) {
+	error("Your function would not compile.");
+	gui->eval(id + " compile_error "+ci->filename_);
+	DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
+	return;
+      }
+
+      if (algo->identify() == function) {
+	break;
+      }
+      hoffset++;
+    }
+
+    fHandle_ = algo->execute(fHandle);
+  }
+
+  if( fHandle_.get_rep() ) {
+    FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
+    if (!ofield_port) {
+      error("Unable to initialize oport 'Output Field'.");
       return;
     }
-    if (algo->identify() == func)
-    {
-      break;
-    }
-    hoffset++;
+    ofield_port->send(fHandle_);
   }
-
-  FieldHandle ofieldhandle = algo->execute(ifieldhandle);
-
-  FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
-  if (!ofield_port) {
-    error("Unable to initialize oport 'Output Field'.");
-    return;
-  }
-  ofield_port->send(ofieldhandle);
 }
 
 
