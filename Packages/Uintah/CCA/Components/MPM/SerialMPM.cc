@@ -262,6 +262,7 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gTemperatureLabel);
   t->computes(lb->gTemperatureNoBCLabel);
   t->computes(lb->gExternalHeatRateLabel);
+  t->computes(lb->gNumNearParticlesLabel);
 
   t->computes(lb->TotalMassLabel);
   sched->addTask(t, patches, matls);
@@ -701,6 +702,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       NCVariable<double> gexternalheatrate;
       NCVariable<double> gTemperature;
       NCVariable<double> gTemperatureNoBC;
+      NCVariable<double> gnumnearparticles;
 
       new_dw->allocate(gmass,            lb->gMassLabel,      matlindex, patch);
       new_dw->allocate(gvolume,          lb->gVolumeLabel,    matlindex, patch);
@@ -711,6 +713,8 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       new_dw->allocate(gexternalforce,lb->gExternalForceLabel,matlindex, patch);
       new_dw->allocate(gexternalheatrate, lb->gExternalHeatRateLabel,
 							      matlindex, patch);
+      new_dw->allocate(gnumnearparticles, lb->gNumNearParticlesLabel,
+							      matlindex, patch);
 
       gmass.initialize(d_SMALL_NUM_MPM);
       gvolume.initialize(0);
@@ -719,6 +723,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       gTemperature.initialize(0);
       gTemperatureNoBC.initialize(0);
       gexternalheatrate.initialize(0);
+      gnumnearparticles.initialize(0.);
 
       // Interpolate particle data to Grid data.
       // This currently consists of the particle velocity and mass
@@ -772,6 +777,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	       gTemperature[ni[k]]   += pTemperature[idx] * pmass[idx] * S[k];
 	       gtempglobal[ni[k]]    += pTemperature[idx] * pmass[idx] * S[k];
                gexternalheatrate[ni[k]] += pexternalheatrate[idx]      * S[k];
+               gnumnearparticles[ni[k]] += 1.0;
 
 	       totalmass += pmass[idx] * S[k];
 	    }
@@ -826,6 +832,8 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       new_dw->put(gTemperatureNoBC,  lb->gTemperatureNoBCLabel,
 							  matlindex, patch);
       new_dw->put(gexternalheatrate,lb->gExternalHeatRateLabel,
+							  matlindex, patch);
+      new_dw->put(gnumnearparticles,lb->gNumNearParticlesLabel,
 							  matlindex, patch);
 
     }  // End loop over materials
@@ -954,9 +962,10 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
 	       Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
 						d_S[k].z()*oodx[2]);
 	       internalforce[ni[k]] -=
-			(div * (pstress[idx] + Id*p_pressure[idx]) * pvol[idx]);
+                      (div * (pstress[idx] + Id*p_pressure[idx]) * pvol[idx]);
                gstress[ni[k]] += pstress[idx] * pmass[idx] * S[k];
                gstressglobal[ni[k]] += pstress[idx] * pmass[idx] * S[k];
+
 	     }
           }
       }
@@ -1190,12 +1199,9 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
       acceleration.initialize(Vector(0.,0.,0.));
 
       if(doMechOld < -1.5){
-       // Do the computation of a = F/m for nodes where m!=0.0
-       // You need if(mass>small_num) so you don't get pressure
-       // acceleration where there isn't any mass. 3.30.01 
        for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
          acceleration[*iter] =
-		(internalforce[*iter] + externalforce[*iter])/mass[*iter] +
+                 (internalforce[*iter] + externalforce[*iter])/mass[*iter] +
                  gravity + gradPAccNC[*iter] + AccArchesNC[*iter];
        }
       }
