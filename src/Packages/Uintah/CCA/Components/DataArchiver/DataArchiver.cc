@@ -734,6 +734,8 @@ void DataArchiver::outputTimestep(Dir& baseDir,
 	DOM_Element levelElem = doc.createElement("Level");
 	gridElem.appendChild(levelElem);
 
+	if (level->getPeriodicBoundaries() != IntVector(0,0,0))
+	  appendElement(levelElem, "periodic", level->getPeriodicBoundaries());
 	appendElement(levelElem, "numPatches", level->numPatches());
 	appendElement(levelElem, "totalCells", level->totalCells());
 	appendElement(levelElem, "cellspacing", level->dCell());
