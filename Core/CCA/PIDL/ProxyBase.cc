@@ -121,12 +121,12 @@ void ProxyBase::_proxycreateSubset(int localsize, int remotesize)
   rm.createSubset(localsize,remotesize);
 }
 
-void ProxyBase::_proxysetRankAndSize(int size, int rank)
+void ProxyBase::_proxysetRankAndSize(int rank, int size)
 {
   if(proxy_uuid == "NONENONENONENONENONENONENONENONENONE") {
     getProxyUUID();
   }
-  rm.setRankAndSize(size,rank);
+  rm.setRankAndSize(rank,size);
 }
 
 void ProxyBase::_proxyresetRankAndSize()

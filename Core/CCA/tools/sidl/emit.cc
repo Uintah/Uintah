@@ -1108,7 +1108,7 @@ void CI::emit_proxyclass(EmitState& e)
   e.proxy << "\n";
   e.proxy << leader2 << "virtual void createSubset(int localsize, int remotesize);\n";
   e.proxy << "\n";
-  e.proxy << leader2 << "virtual void setRankAndSize(int size, int rank);\n";
+  e.proxy << leader2 << "virtual void setRankAndSize(int rank, int size);\n";
   e.proxy << "\n";
   e.proxy << leader2 << "virtual void resetRankAndSize();\n"; 
   e.proxy << "\n";
@@ -1177,7 +1177,7 @@ void CI::emit_header(EmitState& e)
   e.decl << "\n";
   e.decl << leader2 << "virtual void createSubset(int localsize, int remotesize);\n";
   e.decl << "\n";
-  e.decl << leader2 << "virtual void setRankAndSize(int size, int rank);\n";
+  e.decl << leader2 << "virtual void setRankAndSize(int rank, int size);\n";
   e.decl << "\n";
   e.decl << leader2 << "virtual void resetRankAndSize();\n";    
   e.decl << "\n";
@@ -1240,7 +1240,7 @@ void CI::emit_interface(EmitState& e)
   e.out << "{\n";
   e.out << "}\n\n";
 
-  e.out << "void " << fn << "::setRankAndSize(int size, int rank)\n";
+  e.out << "void " << fn << "::setRankAndSize(int rank, int size)\n";
   e.out << "{\n}\n\n";
   e.out << "void " << fn << "::resetRankAndSize()\n";
   e.out << "{\n}\n\n";
@@ -1362,10 +1362,10 @@ void CI::emit_proxy(EmitState& e)
   e.out << "}\n";
 
   e.out << "\n// set rank and size methods\n";
-  e.out << "void " << fn << "::setRankAndSize(int size, int rank)\n"; 
+  e.out << "void " << fn << "::setRankAndSize(int rank, int size)\n"; 
   e.out << "{\n";
 #ifdef HAVE_MPI
-  e.out << "  _proxysetRankAndSize(size, rank);\n";
+  e.out << "  _proxysetRankAndSize(rank, size);\n";
 #endif
   e.out << "}\n";
   e.out << "void " << fn << "::resetRankAndSize()\n"; 

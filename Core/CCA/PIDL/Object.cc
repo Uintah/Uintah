@@ -204,7 +204,7 @@ void Object::createSubset(int localsize, int remotesize)
   ::std::cerr << "createSubset(int,int) has no effect on this object\n";
 }
 
-void Object::setRankAndSize(int size, int rank)
+void Object::setRankAndSize(int rank, int size)
 {
   ::std::cerr << "setRankAndSize(int,int) has no effect on this object\n";
 }
