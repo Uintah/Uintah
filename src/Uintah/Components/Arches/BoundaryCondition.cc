@@ -694,11 +694,24 @@ BoundaryCondition::sched_setProfile(const LevelP& level,
       int matlIndex = 0;
 
       // This task requires cellTypeVariable and areaLabel for inlet boundary
+      // Also densityIN, [u,v,w] velocityIN, scalarIN
       tsk->requires(old_dw, d_cellTypeLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
       for (int ii = 0; ii < d_numInlets; ii++) {
 	tsk->requires(old_dw, d_flowInlets[ii].d_area_label);
       }
+      tsk->requires(old_dw, d_densityINLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      tsk->requires(old_dw, d_uVelocityINLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      tsk->requires(old_dw, d_vVelocityINLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      tsk->requires(old_dw, d_wVelocityINLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      for (int ii = 0; ii < d_props->getNumMixVars(); ii++) 
+	tsk->requires(old_dw, d_scalarINLabel, ii, patch, Ghost::None,
+		    numGhostCells);
+
       // This task computes new density, uVelocity, vVelocity and wVelocity, scalars
       tsk->computes(new_dw, d_densitySPLabel, matlIndex, patch);
       tsk->computes(new_dw, d_uVelocitySPLabel, matlIndex, patch);
@@ -1349,14 +1362,19 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* pc,
   // get cellType, density and velocity
   old_dw->get(cellType, d_cellTypeLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-
-  old_dw->allocate(uVelocity, d_uVelocitySPLabel, matlIndex, patch);
-  old_dw->allocate(vVelocity, d_vVelocitySPLabel, matlIndex, patch);
-  old_dw->allocate(wVelocity, d_wVelocitySPLabel, matlIndex, patch);
-  old_dw->allocate(density, d_densitySPLabel, matlIndex, patch);
+  old_dw->get(density, d_densityINLabel, matlIndex, patch, Ghost::None,
+	      nofGhostCells);
+  old_dw->get(uVelocity, d_uVelocityINLabel, matlIndex, patch, Ghost::None,
+	      nofGhostCells);
+  old_dw->get(vVelocity, d_vVelocityINLabel, matlIndex, patch, Ghost::None,
+	      nofGhostCells);
+  old_dw->get(wVelocity, d_wVelocityINLabel, matlIndex, patch, Ghost::None,
+	      nofGhostCells);
   for (int ii = 0; ii < d_nofScalars; ii++) {
-    old_dw->allocate(scalar[ii], d_scalarSPLabel, ii, patch);
+    old_dw->get(scalar[ii], d_scalarINLabel, ii, patch, Ghost::None,
+	      nofGhostCells);
   }
+
   // Get the low and high index for the patch
   IntVector domainLow = patch->getCellLowIndex();
   IntVector domainHigh = patch->getCellHighIndex() - IntVector(1,1,1);
@@ -1586,6 +1604,9 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.26  2000/06/21 06:49:21  bbanerje
+// Straightened out some of the problems in data location .. still lots to go.
+//
 // Revision 1.25  2000/06/20 20:42:36  rawat
 // added some more boundary stuff and modified interface to IntVector. Before
 // compiling the code you need to update /SCICore/Geometry/IntVector.h
