@@ -319,12 +319,14 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
                                                                   press_matl,
                                                                   all_matls);
 
-  scheduleInterpolatePressCCToPressNC(            sched, patches, press_matl,
+  if(!d_rigidMPM){
+    scheduleInterpolatePressCCToPressNC(          sched, patches, press_matl,
                                                                   mpm_matls);
-  scheduleInterpolatePAndGradP(                   sched, patches, press_matl,
+    scheduleInterpolatePAndGradP(                 sched, patches, press_matl,
                                                                   one_matl,
                                                                   mpm_matls_sub,
                                                                   mpm_matls);
+  }
    
   d_mpm->scheduleComputeInternalForce(            sched, patches, mpm_matls);
   d_mpm->scheduleComputeInternalHeatRate(         sched, patches, mpm_matls);
