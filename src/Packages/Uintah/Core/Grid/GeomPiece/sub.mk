@@ -10,6 +10,7 @@ SRCS     += \
 	$(SRCDIR)/CylinderGeometryPiece.cc \
 	$(SRCDIR)/ConeGeometryPiece.cc \
 	$(SRCDIR)/TriGeometryPiece.cc \
+	$(SRCDIR)/UniformGrid.cc \
 	$(SRCDIR)/UnionGeometryPiece.cc \
 	$(SRCDIR)/DifferenceGeometryPiece.cc \
 	$(SRCDIR)/IntersectionGeometryPiece.cc \
