@@ -73,7 +73,7 @@ GLVolRenState::GLVolRenState(const GLVolumeRenderer* glvr)
 {
   // Base Class, holds pointer to VolumeRenderer and 
   // common computation
-#if defined(GL_ARB_fragment_program)
+#if defined(GL_ARB_fragment_program) && defined(__APPLE__)
   VolShader = new FragmentProgramARB( ShaderString, false );
 #endif
 
@@ -230,7 +230,7 @@ GLVolRenState::loadColorMap(Brick& brick)
 {
   const unsigned char *arr = volren->transfer_functions(brick.level());
 
-#if defined(GL_ARB_fragment_program) && defined(GL_ARB_multitexture)
+#if defined(GL_ARB_fragment_program) && defined(GL_ARB_multitexture)  && defined(__APPLE__)
 
   static GLuint cmap = 0;
   glActiveTextureARB(GL_TEXTURE1_ARB);
@@ -283,7 +283,7 @@ GLVolRenState::loadColorMap(Brick& brick)
 void 
 GLVolRenState::loadTexture(Brick& brick)
 {
-#if defined( GL_ARB_fragment_program) && defined(GL_ARB_multitexture)
+#if defined( GL_ARB_fragment_program) && defined(GL_ARB_multitexture) && defined(__APPLE__)
   glActiveTexture(GL_TEXTURE0_ARB);
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
   glEnable(GL_TEXTURE_3D);
@@ -307,7 +307,7 @@ GLVolRenState::loadTexture(Brick& brick)
 //        glCheckForError("glTexParameteri GL_NEAREST");
     }
 
-#if defined( GL_ARB_fragment_program )  && defined(GL_ARB_multitexture)
+#if defined( GL_ARB_fragment_program )  && defined(GL_ARB_multitexture)  && defined(__APPLE__)
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP);
@@ -329,7 +329,7 @@ GLVolRenState::loadTexture(Brick& brick)
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 //      glCheckForError("After glPixelStorei(GL_UNPACK_ALIGNMENT, 1)");
     
-#if defined( GL_ARB_fragment_program ) && defined(GL_ARB_multitexture)
+#if defined( GL_ARB_fragment_program ) && defined(GL_ARB_multitexture) && defined(__APPLE__)
     glTexImage3D(GL_TEXTURE_3D, 0,
 		 GL_INTENSITY,
 		 (brick.texture())->dim1(), 
@@ -511,7 +511,7 @@ GLVolRenState::drawWireFrame(const Brick& brick)
 }
 
 
-#if defined(GL_ARB_fragment_program)
+#if defined(GL_ARB_fragment_program)  && defined(__APPLE__)
 FragmentProgramARB::FragmentProgramARB (const char* str, bool isFileName)
   : mId(0), mBuffer(0), mLength(0), mFile(0)
 {

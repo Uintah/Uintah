@@ -68,7 +68,7 @@ WARNING
   
 ****************************************/
 class GLVolumeRenderer;
-#if defined(GL_ARB_fragment_program)
+#if defined(GL_ARB_fragment_program) && defined(__APPLE__)
 class FragmentProgramARB;
 #endif
 
@@ -118,14 +118,14 @@ protected:
 
   BBox bounding_box_;
 
-#if defined(GL_ARB_fragment_program)
+#if defined(GL_ARB_fragment_program) && defined(__APPLE__)
   FragmentProgramARB *VolShader;
 #endif
 
 };
 
 
-#if defined(GL_ARB_fragment_program)
+#if defined(GL_ARB_fragment_program) && defined(__APPLE__)
 class FragmentProgramARB
 {
 public:
