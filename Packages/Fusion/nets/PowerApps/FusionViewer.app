@@ -46,454 +46,455 @@ set runDate " Tue  Jan 1 2002"
 global runTime
 set runTime " 14:25:13"
 
+global animate_lock
+set animate_lock 1
 
 #######################################################################
 #######################################################################
 
 # Create a DataIO->Readers->HDF5DataReader Module
-set m10 [addModuleAtPosition "DataIO" "Readers" "HDF5DataReader" 0 0]
+set m99 [addModuleAtPosition "DataIO" "Readers" "HDF5DataReader" 0 0]
 
 # Create a DataIO->Readers->HDF5DataReader Module
-set m11 [addModuleAtPosition "DataIO" "Readers" "HDF5DataReader" 325 0]
+set m1 [addModuleAtPosition "DataIO" "Readers" "HDF5DataReader" 325 0]
 
 # Create a DataIO->Readers->HDF5DataReader Module
-set m12 [addModuleAtPosition "DataIO" "Readers" "HDF5DataReader" 650 0]
+set m2 [addModuleAtPosition "DataIO" "Readers" "HDF5DataReader" 1275 100]
 
 
 
 # Create a DataIO->Readers->MDSPlusDataReader Module
-set m13 [addModuleAtPosition "DataIO" "Readers" "MDSPlusDataReader" 0 0]
+set m3 [addModuleAtPosition "DataIO" "Readers" "MDSPlusDataReader" 25 75]
 
 # Create a DataIO->Readers->MDSPlusDataReader Module
-set m14 [addModuleAtPosition "DataIO" "Readers" "MDSPlusDataReader" 325 0]
+set m4 [addModuleAtPosition "DataIO" "Readers" "MDSPlusDataReader" 350 75]
 
 # Create a DataIO->Readers->MDSPlusDataReader Module
-set m15 [addModuleAtPosition "DataIO" "Readers" "MDSPlusDataReader" 650 0]
+set m5 [addModuleAtPosition "DataIO" "Readers" "MDSPlusDataReader" 1300 175]
 
 
 
 # Create a Teem->NrrdData->ChooseNrrd Module
-set m16 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 325 50]
+set m6 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 0 175]
 
 # Create a Teem->NrrdData->ChooseNrrd Module
-set m17 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 650 50]
+set m7 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 325 175]
 
 # Create a Teem->NrrdData->ChooseNrrd Module
-set m18 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 650 50]
-
-
+set m8 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 1275 275]
 
 
 
 # Create a Teem->Converters->NrrdToField Module
-set m21 [addModuleAtPosition "Teem" "Converters" "NrrdToField" 0 133]
+set m11 [addModuleAtPosition "Teem" "Converters" "NrrdToField" 250 500]
 
 # Create a Teem->Converters->NrrdToField Module
-set m22 [addModuleAtPosition "Teem" "Converters" "NrrdToField" 287 162]
-
-
-
-
-# Create a SCIRun->FieldsCreate->SampleField Module
-set m30 [addModuleAtPosition "SCIRun" "FieldsCreate" "SampleField" 1274 417]
-
-# Create a SCIRun->Visualization->StreamLines Module
-set m31 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 1256 490]
-
-# Create a SCIRun->FieldsData->DirectInterpolate Module
-set m32 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 991 596]
-
-# Create a SCIRun->Visualization->ShowField Module
-set m33 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 991 885]
-
-# Create a SCIRun->Visualization->ShowField Module
-set m34 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 1336 885]
-
-# Create a SCIRun->Visualization->RescaleColorMap Module
-set m35 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 1009 776]
-
-# Create a SCIRun->Visualization->RescaleColorMap Module
-set m36 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 1354 792]
-
-# Create a SCIRun->Visualization->GenStandardColorMaps Module
-set m37 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 1009 690]
-
-# Create a SCIRun->Visualization->GenStandardColorMaps Module
-set m38 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 1354 690]
-
-# Create a SCIRun->FieldsData->VectorMagnitude Module
-set m39 [addModuleAtPosition "SCIRun" "FieldsData" "VectorMagnitude" 405 349]
-
-# Create a SCIRun->FieldsOther->ChooseField Module
-set m40 [addModuleAtPosition "SCIRun" "FieldsOther" "ChooseField" 387 448]
+set m12 [addModuleAtPosition "Teem" "Converters" "NrrdToField" 1250 400]
 
 
 
 # Create a SCIRun->FieldsCreate->FieldSubSample Module
-set m50 [addModuleAtPosition "SCIRun" "FieldsCreate" "FieldSubSample" 0 530]
+set m20 [addModuleAtPosition "SCIRun" "FieldsCreate" "FieldSubSample" 250 600]
 
 # Create a SCIRun->FieldsCreate->FieldSlicer Module
-set m51 [addModuleAtPosition "SCIRun" "FieldsCreate" "FieldSlicer" 195 620]
+set m21 [addModuleAtPosition "SCIRun" "FieldsCreate" "FieldSlicer" 450 700]
 
 # Create a SCIRun->FieldsCreate->FieldSlicer Module
-set m52 [addModuleAtPosition "SCIRun" "FieldsCreate" "FieldSlicer" 390 620]
+set m22 [addModuleAtPosition "SCIRun" "FieldsCreate" "FieldSlicer" 650 700]
 
 
 # Create a SCIRun->Visualization->Isosurface Module
-set m53 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 0 720]
+set m23 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 250 900]
 
 # Create a SCIRun->Visualization->Isosurface Module
-set m54 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 195 720]
+set m24 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 450 900]
 
 # Create a SCIRun->Visualization->Isosurface Module
-set m55 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 390 720]
+set m25 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 650 900]
 
 
 # Create a SCIRun->FieldsCreate->GatherFields Module
-set m56 [addModuleAtPosition "SCIRun" "FieldsCreate" "GatherFields" 195 800]
+set m26 [addModuleAtPosition "SCIRun" "FieldsCreate" "GatherFields" 450 1000]
 
 # Create a SCIRun->Visualization->ShowField Module
-set m57 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 0 900]
+set m27 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 250 1100]
 
 # Create a SCIRun->Visualization->ShowField Module
-set m58 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 195 900]
+set m28 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 450 1100]
 
-
-# Create a SCIRun->Visualization->RescaleColorMap Module
-set m59 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 594 620]
 
 # Create a SCIRun->Visualization->GenStandardColorMaps Module
-set m60 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 594 515]
+set m29 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 0 600]
+
+# Create a SCIRun->Visualization->RescaleColorMap Module
+set m30 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 0 700]
+
+
+
+# Create a SCIRun->FieldsCreate->SampleField Module
+set m40 [addModuleAtPosition "SCIRun" "FieldsCreate" "SampleField" 1275 500]
+
+# Create a SCIRun->Visualization->StreamLines Module
+set m41 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 1250 600]
+
+# Create a SCIRun->FieldsData->DirectInterpolate Module
+set m42 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 1025 700]
+
+# Create a SCIRun->Visualization->ShowField Module
+set m43 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 991 1000]
+
+# Create a SCIRun->Visualization->ShowField Module
+set m44 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 1250 1000]
+
+# Create a SCIRun->Visualization->GenStandardColorMaps Module
+set m45 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 900 800]
+
+# Create a SCIRun->Visualization->GenStandardColorMaps Module
+set m46 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 1350 800]
+
+# Create a SCIRun->Visualization->RescaleColorMap Module
+set m47 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 900 900]
+
+# Create a SCIRun->Visualization->RescaleColorMap Module
+set m48 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 1350 900]
+
+# Create a SCIRun->FieldsData->VectorMagnitude Module
+set m49 [addModuleAtPosition "SCIRun" "FieldsData" "VectorMagnitude" 925 500]
+
+# Create a SCIRun->FieldsOther->ChooseField Module
+set m50 [addModuleAtPosition "SCIRun" "FieldsOther" "ChooseField" 900 600]
+
 
 
 # Create a SCIRun->Render->SynchronizeGeometry Module
-set m100 [addModuleAtPosition "SCIRun" "Render" "SynchronizeGeometry" 0 1391]
+set m100 [addModuleAtPosition "SCIRun" "Render" "SynchronizeGeometry" 0 1400]
 # Create a SCIRun->Render->Viewer Module
 set m101 [addModuleAtPosition "SCIRun" "Render" "Viewer" 481 1600]
 
 
 
 # Create the Connections between Modules
-set c50 [addConnection $m10 0 $m16 0]
-set c51 [addConnection $m11 0 $m17 0]
-set c52 [addConnection $m12 0 $m18 0]
+#set c0 [addConnection $m1 8 $m2 0]
+set c1 [addConnection $m99 0 $m6 0]
+set c2 [addConnection $m1 0 $m7 0]
+set c3 [addConnection $m2 0 $m8 0]
 
-set c53 [addConnection $m13 0 $m16 1]
-set c54 [addConnection $m14 0 $m17 1]
-set c55 [addConnection $m15 0 $m18 1]
+set c4 [addConnection $m3 0 $m6 1]
+set c5 [addConnection $m4 0 $m7 1]
+set c6 [addConnection $m5 0 $m8 1]
 
-set c56 [addConnection $m16 0 $m21 0]
-set c57 [addConnection $m16 0 $m22 0]
-set c58 [addConnection $m17 0 $m21 2]
-set c59 [addConnection $m18 0 $m22 2]
-
-set c60 [addConnection $m11 8 $m12 0]
-
-set c40 [addConnection $m21 0 $m40 0]
-set c41 [addConnection $m22 0 $m39 0]
-set c42 [addConnection $m39 0 $m40 1]
+set c7 [addConnection $m6 0 $m11 0]
+set c8 [addConnection $m6 0 $m12 0]
+set c9 [addConnection $m7 0 $m11 2]
+set c10 [addConnection $m8 0 $m12 2]
 
 
-set c3 [addConnection $m51 0 $m54 0]
-set c4 [addConnection $m52 0 $m55 0]
-set c5 [addConnection $m50 0 $m51 0]
-set c6 [addConnection $m50 0 $m52 0]
-set c7 [addConnection $m50 0 $m53 0]
-set c8 [addConnection $m32 0 $m33 0]
-set c9 [addConnection $m100 0 $m101 0]
-set c10 [addConnection $m60 0 $m59 0]
-set c11 [addConnection $m38 0 $m36 0]
-set c12 [addConnection $m37 0 $m35 0]
-set c13 [addConnection $m53 0 $m57 0]
-set c14 [addConnection $m54 0 $m56 0]
-set c15 [addConnection $m55 0 $m56 1]
-set c16 [addConnection $m56 0 $m58 0]
-set c17 [addConnection $m31 0 $m34 0]
+set c11 [addConnection $m11 0 $m20 0]
+set c12 [addConnection $m11 0 $m50 0]
 
-set c18 [addConnection $m22 0 $m30 0]
-set c19 [addConnection $m22 0 $m31 0]
-
-set c20 [addConnection $m21 0 $m50 0]
-set c21 [addConnection $m40 0 $m32 0]
-set c33 [addConnection $m40 0 $m35 1]
-
-set c22 [addConnection $m50 0 $m59 1]
-set c23 [addConnection $m30 0 $m31 1]
-set c24 [addConnection $m30 1 $m101 1]
-set c26 [addConnection $m59 0 $m57 1]
-set c27 [addConnection $m59 0 $m58 1]
-set c28 [addConnection $m36 0 $m34 1]
-set c29 [addConnection $m35 0 $m33 1]
-set c30 [addConnection $m57 0 $m100 1]
-set c31 [addConnection $m31 0 $m32 1]
-set c32 [addConnection $m31 0 $m36 1]
-set c36 [addConnection $m58 0 $m100 0]
-set c37 [addConnection $m33 0 $m100 3]
-set c38 [addConnection $m34 0 $m100 4]
+set c13 [addConnection $m12 0 $m40 0]
+set c14 [addConnection $m12 0 $m41 0]
+set c15 [addConnection $m12 0 $m49 0]
 
 
-# Set GUI variables for the DataIO->Readers->HDF5DataReader Module
-set $m10-filename "$DATADIR/$DATASET/phi.h5"
-set $m10-datasets {{/ GRID X} {/ GRID Y} {/ GRID Z}}
-set $m10-dumpname {/tmp/qwall.h5.dump}
-set $m10-ports {   0   0   0}
-set $m10-ndims {3}
-set $m10-0-dim {101}
-set $m10-0-count {101}
-set $m10-1-dim {61}
-set $m10-1-count {61}
-set $m10-2-dim {101}
-set $m10-2-count {101}
 
-# Set GUI variables for the DataIO->Readers->HDF5DataReader Module
-set $m11-selectable_max {115.0}
-set $m11-range_max {115}
-set $m11-current {87}
-set $m11-execmode {current}
-set $m11-filename "$DATADIR/$DATASET/phi.h5"
-set $m11-datasets {{/ step_0000000 T_e} {/ step_0000050 T_e} {/ step_0000100 T_e} {/ step_0000150 T_e} {/ step_0000200 T_e} {/ step_0000250 T_e} {/ step_0000300 T_e} {/ step_0000350 T_e} {/ step_0000400 T_e} {/ step_0000450 T_e} {/ step_0000500 T_e} {/ step_0000550 T_e} {/ step_0000600 T_e} {/ step_0000650 T_e} {/ step_0000700 T_e} {/ step_0000750 T_e} {/ step_0000800 T_e} {/ step_0000850 T_e} {/ step_0000900 T_e} {/ step_0000950 T_e} {/ step_0001000 T_e} {/ step_0001050 T_e} {/ step_0001100 T_e} {/ step_0001150 T_e} {/ step_0001200 T_e} {/ step_0001250 T_e} {/ step_0001300 T_e} {/ step_0001350 T_e} {/ step_0001384 T_e} {/ step_0001400 T_e} {/ step_0001450 T_e} {/ step_0001500 T_e} {/ step_0001550 T_e} {/ step_0001600 T_e} {/ step_0001650 T_e} {/ step_0001700 T_e} {/ step_0001750 T_e} {/ step_0001776 T_e} {/ step_0001800 T_e} {/ step_0001850 T_e} {/ step_0001900 T_e} {/ step_0001950 T_e} {/ step_0002000 T_e} {/ step_0002050 T_e} {/ step_0002100 T_e} {/ step_0002150 T_e} {/ step_0002200 T_e} {/ step_0002250 T_e} {/ step_0002300 T_e} {/ step_0002350 T_e} {/ step_0002400 T_e} {/ step_0002450 T_e} {/ step_0002465 T_e} {/ step_0002500 T_e} {/ step_0002550 T_e} {/ step_0002600 T_e} {/ step_0002650 T_e} {/ step_0002700 T_e} {/ step_0002750 T_e} {/ step_0002783 T_e} {/ step_0002800 T_e} {/ step_0002850 T_e} {/ step_0002900 T_e} {/ step_0002950 T_e} {/ step_0003000 T_e} {/ step_0003050 T_e} {/ step_0003100 T_e} {/ step_0003150 T_e} {/ step_0003200 T_e} {/ step_0003250 T_e} {/ step_0003300 T_e} {/ step_0003350 T_e} {/ step_0003400 T_e} {/ step_0003450 T_e} {/ step_0003487 T_e} {/ step_0003500 T_e} {/ step_0003550 T_e} {/ step_0003600 T_e} {/ step_0003650 T_e} {/ step_0003700 T_e} {/ step_0003750 T_e} {/ step_0003800 T_e} {/ step_0003850 T_e} {/ step_0003900 T_e} {/ step_0003950 T_e} {/ step_0004000 T_e} {/ step_0004050 T_e} {/ step_0004100 T_e} {/ step_0004150 T_e} {/ step_0004200 T_e} {/ step_0004250 T_e} {/ step_0004300 T_e} {/ step_0004350 T_e} {/ step_0004400 T_e} {/ step_0004450 T_e} {/ step_0004500 T_e} {/ step_0004550 T_e} {/ step_0004600 T_e} {/ step_0004650 T_e} {/ step_0004700 T_e} {/ step_0004750 T_e} {/ step_0004800 T_e} {/ step_0004850 T_e} {/ step_0004900 T_e} {/ step_0004950 T_e} {/ step_0005000 T_e} {/ step_0005050 T_e} {/ step_0005100 T_e} {/ step_0005150 T_e} {/ step_0005200 T_e} {/ step_0005250 T_e} {/ step_0005300 T_e} {/ step_0005350 T_e} {/ step_0005400 T_e} {/ step_0005450 T_e} {/ step_0005487 T_e}}
-set $m11-dumpname {/tmp/phi.h5.dump}
-set $m11-ports {   0   0   0   1}
-set $m11-ndims {3}
-set $m11-animate {1}
-set $m11-0-dim {101}
-set $m11-0-count {101}
-set $m11-1-dim {61}
-set $m11-1-count {61}
-set $m11-2-dim {101}
-set $m11-2-count {101}
+
+set c20 [addConnection $m20 0 $m21 0]
+set c21 [addConnection $m20 0 $m22 0]
+set c22 [addConnection $m20 0 $m23 0]
+set c23 [addConnection $m20 0 $m30 1]
+set c24 [addConnection $m21 0 $m24 0]
+set c25 [addConnection $m22 0 $m25 0]
+set c26 [addConnection $m23 0 $m27 0]
+set c27 [addConnection $m24 0 $m26 0]
+set c28 [addConnection $m25 0 $m26 1]
+set c29 [addConnection $m26 0 $m28 0]
+set c30 [addConnection $m27 0 $m100 0]
+set c31 [addConnection $m28 0 $m100 1]
+set c32 [addConnection $m29 0 $m30 0]
+set c33 [addConnection $m30 0 $m27 1]
+set c34 [addConnection $m30 0 $m28 1]
+
+set c41 [addConnection $m40 0 $m41 1]
+set c42 [addConnection $m41 0 $m42 1]
+set c43 [addConnection $m41 0 $m48 1]
+set c44 [addConnection $m41 0 $m44 0]
+set c45 [addConnection $m42 0 $m43 0]
+set c46 [addConnection $m43 0 $m100 2]
+set c47 [addConnection $m44 0 $m100 3]
+set c48 [addConnection $m45 0 $m47 0]
+set c49 [addConnection $m46 0 $m48 0]
+set c50 [addConnection $m47 0 $m43 1]
+set c51 [addConnection $m48 0 $m44 1]
+set c52 [addConnection $m49 0 $m50 1]
+set c53 [addConnection $m50 0 $m42 0]
+set c54 [addConnection $m50 0 $m47 1]
+
+set c100 [addConnection $m100 0 $m101 0]
+set c101 [addConnection $m40 1 $m101 1]
 
 
 # Set GUI variables for the DataIO->Readers->HDF5DataReader Module
-set $m12-selectable_max {115.0}
-set $m12-range_max {115}
-set $m12-current {87}
-set $m12-execmode {current}
-set $m12-filename "$DATADIR/$DATASET/phi.h5"
-set $m12-datasets {{/ step_0000000 B X} {/ step_0000000 B Y} {/ step_0000000 B Z} {/ step_0000050 B X} {/ step_0000050 B Y} {/ step_0000050 B Z} {/ step_0000100 B X} {/ step_0000100 B Y} {/ step_0000100 B Z} {/ step_0000150 B X} {/ step_0000150 B Y} {/ step_0000150 B Z} {/ step_0000200 B X} {/ step_0000200 B Y} {/ step_0000200 B Z} {/ step_0000250 B X} {/ step_0000250 B Y} {/ step_0000250 B Z} {/ step_0000300 B X} {/ step_0000300 B Y} {/ step_0000300 B Z} {/ step_0000350 B X} {/ step_0000350 B Y} {/ step_0000350 B Z} {/ step_0000400 B X} {/ step_0000400 B Y} {/ step_0000400 B Z} {/ step_0000450 B X} {/ step_0000450 B Y} {/ step_0000450 B Z} {/ step_0000500 B X} {/ step_0000500 B Y} {/ step_0000500 B Z} {/ step_0000550 B X} {/ step_0000550 B Y} {/ step_0000550 B Z} {/ step_0000600 B X} {/ step_0000600 B Y} {/ step_0000600 B Z} {/ step_0000650 B X} {/ step_0000650 B Y} {/ step_0000650 B Z} {/ step_0000700 B X} {/ step_0000700 B Y} {/ step_0000700 B Z} {/ step_0000750 B X} {/ step_0000750 B Y} {/ step_0000750 B Z} {/ step_0000800 B X} {/ step_0000800 B Y} {/ step_0000800 B Z} {/ step_0000850 B X} {/ step_0000850 B Y} {/ step_0000850 B Z} {/ step_0000900 B X} {/ step_0000900 B Y} {/ step_0000900 B Z} {/ step_0000950 B X} {/ step_0000950 B Y} {/ step_0000950 B Z} {/ step_0001000 B X} {/ step_0001000 B Y} {/ step_0001000 B Z} {/ step_0001050 B X} {/ step_0001050 B Y} {/ step_0001050 B Z} {/ step_0001100 B X} {/ step_0001100 B Y} {/ step_0001100 B Z} {/ step_0001150 B X} {/ step_0001150 B Y} {/ step_0001150 B Z} {/ step_0001200 B X} {/ step_0001200 B Y} {/ step_0001200 B Z} {/ step_0001250 B X} {/ step_0001250 B Y} {/ step_0001250 B Z} {/ step_0001300 B X} {/ step_0001300 B Y} {/ step_0001300 B Z} {/ step_0001350 B X} {/ step_0001350 B Y} {/ step_0001350 B Z} {/ step_0001384 B X} {/ step_0001384 B Y} {/ step_0001384 B Z} {/ step_0001400 B X} {/ step_0001400 B Y} {/ step_0001400 B Z} {/ step_0001450 B X} {/ step_0001450 B Y} {/ step_0001450 B Z} {/ step_0001500 B X} {/ step_0001500 B Y} {/ step_0001500 B Z} {/ step_0001550 B X} {/ step_0001550 B Y} {/ step_0001550 B Z} {/ step_0001600 B X} {/ step_0001600 B Y} {/ step_0001600 B Z} {/ step_0001650 B X} {/ step_0001650 B Y} {/ step_0001650 B Z} {/ step_0001700 B X} {/ step_0001700 B Y} {/ step_0001700 B Z} {/ step_0001750 B X} {/ step_0001750 B Y} {/ step_0001750 B Z} {/ step_0001776 B X} {/ step_0001776 B Y} {/ step_0001776 B Z} {/ step_0001800 B X} {/ step_0001800 B Y} {/ step_0001800 B Z} {/ step_0001850 B X} {/ step_0001850 B Y} {/ step_0001850 B Z} {/ step_0001900 B X} {/ step_0001900 B Y} {/ step_0001900 B Z} {/ step_0001950 B X} {/ step_0001950 B Y} {/ step_0001950 B Z} {/ step_0002000 B X} {/ step_0002000 B Y} {/ step_0002000 B Z} {/ step_0002050 B X} {/ step_0002050 B Y} {/ step_0002050 B Z} {/ step_0002100 B X} {/ step_0002100 B Y} {/ step_0002100 B Z} {/ step_0002150 B X} {/ step_0002150 B Y} {/ step_0002150 B Z} {/ step_0002200 B X} {/ step_0002200 B Y} {/ step_0002200 B Z} {/ step_0002250 B X} {/ step_0002250 B Y} {/ step_0002250 B Z} {/ step_0002300 B X} {/ step_0002300 B Y} {/ step_0002300 B Z} {/ step_0002350 B X} {/ step_0002350 B Y} {/ step_0002350 B Z} {/ step_0002400 B X} {/ step_0002400 B Y} {/ step_0002400 B Z} {/ step_0002450 B X} {/ step_0002450 B Y} {/ step_0002450 B Z} {/ step_0002465 B X} {/ step_0002465 B Y} {/ step_0002465 B Z} {/ step_0002500 B X} {/ step_0002500 B Y} {/ step_0002500 B Z} {/ step_0002550 B X} {/ step_0002550 B Y} {/ step_0002550 B Z} {/ step_0002600 B X} {/ step_0002600 B Y} {/ step_0002600 B Z} {/ step_0002650 B X} {/ step_0002650 B Y} {/ step_0002650 B Z} {/ step_0002700 B X} {/ step_0002700 B Y} {/ step_0002700 B Z} {/ step_0002750 B X} {/ step_0002750 B Y} {/ step_0002750 B Z} {/ step_0002783 B X} {/ step_0002783 B Y} {/ step_0002783 B Z} {/ step_0002800 B X} {/ step_0002800 B Y} {/ step_0002800 B Z} {/ step_0002850 B X} {/ step_0002850 B Y} {/ step_0002850 B Z} {/ step_0002900 B X} {/ step_0002900 B Y} {/ step_0002900 B Z} {/ step_0002950 B X} {/ step_0002950 B Y} {/ step_0002950 B Z} {/ step_0003000 B X} {/ step_0003000 B Y} {/ step_0003000 B Z} {/ step_0003050 B X} {/ step_0003050 B Y} {/ step_0003050 B Z} {/ step_0003100 B X} {/ step_0003100 B Y} {/ step_0003100 B Z} {/ step_0003150 B X} {/ step_0003150 B Y} {/ step_0003150 B Z} {/ step_0003200 B X} {/ step_0003200 B Y} {/ step_0003200 B Z} {/ step_0003250 B X} {/ step_0003250 B Y} {/ step_0003250 B Z} {/ step_0003300 B X} {/ step_0003300 B Y} {/ step_0003300 B Z} {/ step_0003350 B X} {/ step_0003350 B Y} {/ step_0003350 B Z} {/ step_0003400 B X} {/ step_0003400 B Y} {/ step_0003400 B Z} {/ step_0003450 B X} {/ step_0003450 B Y} {/ step_0003450 B Z} {/ step_0003487 B X} {/ step_0003487 B Y} {/ step_0003487 B Z} {/ step_0003500 B X} {/ step_0003500 B Y} {/ step_0003500 B Z} {/ step_0003550 B X} {/ step_0003550 B Y} {/ step_0003550 B Z} {/ step_0003600 B X} {/ step_0003600 B Y} {/ step_0003600 B Z} {/ step_0003650 B X} {/ step_0003650 B Y} {/ step_0003650 B Z} {/ step_0003700 B X} {/ step_0003700 B Y} {/ step_0003700 B Z} {/ step_0003750 B X} {/ step_0003750 B Y} {/ step_0003750 B Z} {/ step_0003800 B X} {/ step_0003800 B Y} {/ step_0003800 B Z} {/ step_0003850 B X} {/ step_0003850 B Y} {/ step_0003850 B Z} {/ step_0003900 B X} {/ step_0003900 B Y} {/ step_0003900 B Z} {/ step_0003950 B X} {/ step_0003950 B Y} {/ step_0003950 B Z} {/ step_0004000 B X} {/ step_0004000 B Y} {/ step_0004000 B Z} {/ step_0004050 B X} {/ step_0004050 B Y} {/ step_0004050 B Z} {/ step_0004100 B X} {/ step_0004100 B Y} {/ step_0004100 B Z} {/ step_0004150 B X} {/ step_0004150 B Y} {/ step_0004150 B Z} {/ step_0004200 B X} {/ step_0004200 B Y} {/ step_0004200 B Z} {/ step_0004250 B X} {/ step_0004250 B Y} {/ step_0004250 B Z} {/ step_0004300 B X} {/ step_0004300 B Y} {/ step_0004300 B Z} {/ step_0004350 B X} {/ step_0004350 B Y} {/ step_0004350 B Z} {/ step_0004400 B X} {/ step_0004400 B Y} {/ step_0004400 B Z} {/ step_0004450 B X} {/ step_0004450 B Y} {/ step_0004450 B Z} {/ step_0004500 B X} {/ step_0004500 B Y} {/ step_0004500 B Z} {/ step_0004550 B X} {/ step_0004550 B Y} {/ step_0004550 B Z} {/ step_0004600 B X} {/ step_0004600 B Y} {/ step_0004600 B Z} {/ step_0004650 B X} {/ step_0004650 B Y} {/ step_0004650 B Z} {/ step_0004700 B X} {/ step_0004700 B Y} {/ step_0004700 B Z} {/ step_0004750 B X} {/ step_0004750 B Y} {/ step_0004750 B Z} {/ step_0004800 B X} {/ step_0004800 B Y} {/ step_0004800 B Z} {/ step_0004850 B X} {/ step_0004850 B Y} {/ step_0004850 B Z} {/ step_0004900 B X} {/ step_0004900 B Y} {/ step_0004900 B Z} {/ step_0004950 B X} {/ step_0004950 B Y} {/ step_0004950 B Z} {/ step_0005000 B X} {/ step_0005000 B Y} {/ step_0005000 B Z} {/ step_0005050 B X} {/ step_0005050 B Y} {/ step_0005050 B Z} {/ step_0005100 B X} {/ step_0005100 B Y} {/ step_0005100 B Z} {/ step_0005150 B X} {/ step_0005150 B Y} {/ step_0005150 B Z} {/ step_0005200 B X} {/ step_0005200 B Y} {/ step_0005200 B Z} {/ step_0005250 B X} {/ step_0005250 B Y} {/ step_0005250 B Z} {/ step_0005300 B X} {/ step_0005300 B Y} {/ step_0005300 B Z} {/ step_0005350 B X} {/ step_0005350 B Y} {/ step_0005350 B Z} {/ step_0005400 B X} {/ step_0005400 B Y} {/ step_0005400 B Z} {/ step_0005450 B X} {/ step_0005450 B Y} {/ step_0005450 B Z} {/ step_0005487 B X} {/ step_0005487 B Y} {/ step_0005487 B Z}}
-set $m12-dumpname {/tmp/phi.h5.dump}
-set $m12-ports {   0   0   0   1}
-set $m12-ndims {3}
-set $m12-animate {1}
-set $m12-0-dim {101}
-set $m12-0-count {101}
-set $m12-1-dim {61}
-set $m12-1-count {61}
-set $m12-2-dim {101}
-set $m12-2-count {101}
+set $m99-filename "$DATADIR/$DATASET/phi.h5"
+set $m99-datasets {{/ GRID X} {/ GRID Y} {/ GRID Z}}
+set $m99-dumpname {/tmp/qwall.h5.dump}
+set $m99-ports {   0   0   0}
+set $m99-ndims {3}
+set $m99-0-dim {101}
+set $m99-0-count {101}
+set $m99-1-dim {61}
+set $m99-1-count {61}
+set $m99-2-dim {101}
+set $m99-2-count {101}
+
+# Set GUI variables for the DataIO->Readers->HDF5DataReader Module
+set $m1-selectable_max {115.0}
+set $m1-range_max {115}
+set $m1-current {87}
+set $m1-execmode {current}
+set $m1-filename "$DATADIR/$DATASET/phi.h5"
+set $m1-datasets {{/ step_0000000 T_e} {/ step_0000050 T_e} {/ step_0000100 T_e} {/ step_0000150 T_e} {/ step_0000200 T_e} {/ step_0000250 T_e} {/ step_0000300 T_e} {/ step_0000350 T_e} {/ step_0000400 T_e} {/ step_0000450 T_e} {/ step_0000500 T_e} {/ step_0000550 T_e} {/ step_0000600 T_e} {/ step_0000650 T_e} {/ step_0000700 T_e} {/ step_0000750 T_e} {/ step_0000800 T_e} {/ step_0000850 T_e} {/ step_0000900 T_e} {/ step_0000950 T_e} {/ step_0001000 T_e} {/ step_0001050 T_e} {/ step_0001100 T_e} {/ step_0001150 T_e} {/ step_0001200 T_e} {/ step_0001250 T_e} {/ step_0001300 T_e} {/ step_0001350 T_e} {/ step_0001384 T_e} {/ step_0001400 T_e} {/ step_0001450 T_e} {/ step_0001500 T_e} {/ step_0001550 T_e} {/ step_0001600 T_e} {/ step_0001650 T_e} {/ step_0001700 T_e} {/ step_0001750 T_e} {/ step_0001776 T_e} {/ step_0001800 T_e} {/ step_0001850 T_e} {/ step_0001900 T_e} {/ step_0001950 T_e} {/ step_0002000 T_e} {/ step_0002050 T_e} {/ step_0002100 T_e} {/ step_0002150 T_e} {/ step_0002200 T_e} {/ step_0002250 T_e} {/ step_0002300 T_e} {/ step_0002350 T_e} {/ step_0002400 T_e} {/ step_0002450 T_e} {/ step_0002465 T_e} {/ step_0002500 T_e} {/ step_0002550 T_e} {/ step_0002600 T_e} {/ step_0002650 T_e} {/ step_0002700 T_e} {/ step_0002750 T_e} {/ step_0002783 T_e} {/ step_0002800 T_e} {/ step_0002850 T_e} {/ step_0002900 T_e} {/ step_0002950 T_e} {/ step_0003000 T_e} {/ step_0003050 T_e} {/ step_0003100 T_e} {/ step_0003150 T_e} {/ step_0003200 T_e} {/ step_0003250 T_e} {/ step_0003300 T_e} {/ step_0003350 T_e} {/ step_0003400 T_e} {/ step_0003450 T_e} {/ step_0003487 T_e} {/ step_0003500 T_e} {/ step_0003550 T_e} {/ step_0003600 T_e} {/ step_0003650 T_e} {/ step_0003700 T_e} {/ step_0003750 T_e} {/ step_0003800 T_e} {/ step_0003850 T_e} {/ step_0003900 T_e} {/ step_0003950 T_e} {/ step_0004000 T_e} {/ step_0004050 T_e} {/ step_0004100 T_e} {/ step_0004150 T_e} {/ step_0004200 T_e} {/ step_0004250 T_e} {/ step_0004300 T_e} {/ step_0004350 T_e} {/ step_0004400 T_e} {/ step_0004450 T_e} {/ step_0004500 T_e} {/ step_0004550 T_e} {/ step_0004600 T_e} {/ step_0004650 T_e} {/ step_0004700 T_e} {/ step_0004750 T_e} {/ step_0004800 T_e} {/ step_0004850 T_e} {/ step_0004900 T_e} {/ step_0004950 T_e} {/ step_0005000 T_e} {/ step_0005050 T_e} {/ step_0005100 T_e} {/ step_0005150 T_e} {/ step_0005200 T_e} {/ step_0005250 T_e} {/ step_0005300 T_e} {/ step_0005350 T_e} {/ step_0005400 T_e} {/ step_0005450 T_e} {/ step_0005487 T_e}}
+set $m1-dumpname {/tmp/phi.h5.dump}
+set $m1-ports {   0   0   0   1}
+set $m1-ndims {3}
+set $m1-animate {1}
+set $m1-0-dim {101}
+set $m1-0-count {101}
+set $m1-1-dim {61}
+set $m1-1-count {61}
+set $m1-2-dim {101}
+set $m1-2-count {101}
+
+
+# Set GUI variables for the DataIO->Readers->HDF5DataReader Module
+set $m2-selectable_max {115.0}
+set $m2-range_max {115}
+set $m2-current {87}
+set $m2-execmode {current}
+set $m2-filename "$DATADIR/$DATASET/phi.h5"
+set $m2-datasets {{/ step_0000000 B X} {/ step_0000000 B Y} {/ step_0000000 B Z} {/ step_0000050 B X} {/ step_0000050 B Y} {/ step_0000050 B Z} {/ step_0000100 B X} {/ step_0000100 B Y} {/ step_0000100 B Z} {/ step_0000150 B X} {/ step_0000150 B Y} {/ step_0000150 B Z} {/ step_0000200 B X} {/ step_0000200 B Y} {/ step_0000200 B Z} {/ step_0000250 B X} {/ step_0000250 B Y} {/ step_0000250 B Z} {/ step_0000300 B X} {/ step_0000300 B Y} {/ step_0000300 B Z} {/ step_0000350 B X} {/ step_0000350 B Y} {/ step_0000350 B Z} {/ step_0000400 B X} {/ step_0000400 B Y} {/ step_0000400 B Z} {/ step_0000450 B X} {/ step_0000450 B Y} {/ step_0000450 B Z} {/ step_0000500 B X} {/ step_0000500 B Y} {/ step_0000500 B Z} {/ step_0000550 B X} {/ step_0000550 B Y} {/ step_0000550 B Z} {/ step_0000600 B X} {/ step_0000600 B Y} {/ step_0000600 B Z} {/ step_0000650 B X} {/ step_0000650 B Y} {/ step_0000650 B Z} {/ step_0000700 B X} {/ step_0000700 B Y} {/ step_0000700 B Z} {/ step_0000750 B X} {/ step_0000750 B Y} {/ step_0000750 B Z} {/ step_0000800 B X} {/ step_0000800 B Y} {/ step_0000800 B Z} {/ step_0000850 B X} {/ step_0000850 B Y} {/ step_0000850 B Z} {/ step_0000900 B X} {/ step_0000900 B Y} {/ step_0000900 B Z} {/ step_0000950 B X} {/ step_0000950 B Y} {/ step_0000950 B Z} {/ step_0001000 B X} {/ step_0001000 B Y} {/ step_0001000 B Z} {/ step_0001050 B X} {/ step_0001050 B Y} {/ step_0001050 B Z} {/ step_0001100 B X} {/ step_0001100 B Y} {/ step_0001100 B Z} {/ step_0001150 B X} {/ step_0001150 B Y} {/ step_0001150 B Z} {/ step_0001200 B X} {/ step_0001200 B Y} {/ step_0001200 B Z} {/ step_0001250 B X} {/ step_0001250 B Y} {/ step_0001250 B Z} {/ step_0001300 B X} {/ step_0001300 B Y} {/ step_0001300 B Z} {/ step_0001350 B X} {/ step_0001350 B Y} {/ step_0001350 B Z} {/ step_0001384 B X} {/ step_0001384 B Y} {/ step_0001384 B Z} {/ step_0001400 B X} {/ step_0001400 B Y} {/ step_0001400 B Z} {/ step_0001450 B X} {/ step_0001450 B Y} {/ step_0001450 B Z} {/ step_0001500 B X} {/ step_0001500 B Y} {/ step_0001500 B Z} {/ step_0001550 B X} {/ step_0001550 B Y} {/ step_0001550 B Z} {/ step_0001600 B X} {/ step_0001600 B Y} {/ step_0001600 B Z} {/ step_0001650 B X} {/ step_0001650 B Y} {/ step_0001650 B Z} {/ step_0001700 B X} {/ step_0001700 B Y} {/ step_0001700 B Z} {/ step_0001750 B X} {/ step_0001750 B Y} {/ step_0001750 B Z} {/ step_0001776 B X} {/ step_0001776 B Y} {/ step_0001776 B Z} {/ step_0001800 B X} {/ step_0001800 B Y} {/ step_0001800 B Z} {/ step_0001850 B X} {/ step_0001850 B Y} {/ step_0001850 B Z} {/ step_0001900 B X} {/ step_0001900 B Y} {/ step_0001900 B Z} {/ step_0001950 B X} {/ step_0001950 B Y} {/ step_0001950 B Z} {/ step_0002000 B X} {/ step_0002000 B Y} {/ step_0002000 B Z} {/ step_0002050 B X} {/ step_0002050 B Y} {/ step_0002050 B Z} {/ step_0002100 B X} {/ step_0002100 B Y} {/ step_0002100 B Z} {/ step_0002150 B X} {/ step_0002150 B Y} {/ step_0002150 B Z} {/ step_0002200 B X} {/ step_0002200 B Y} {/ step_0002200 B Z} {/ step_0002250 B X} {/ step_0002250 B Y} {/ step_0002250 B Z} {/ step_0002300 B X} {/ step_0002300 B Y} {/ step_0002300 B Z} {/ step_0002350 B X} {/ step_0002350 B Y} {/ step_0002350 B Z} {/ step_0002400 B X} {/ step_0002400 B Y} {/ step_0002400 B Z} {/ step_0002450 B X} {/ step_0002450 B Y} {/ step_0002450 B Z} {/ step_0002465 B X} {/ step_0002465 B Y} {/ step_0002465 B Z} {/ step_0002500 B X} {/ step_0002500 B Y} {/ step_0002500 B Z} {/ step_0002550 B X} {/ step_0002550 B Y} {/ step_0002550 B Z} {/ step_0002600 B X} {/ step_0002600 B Y} {/ step_0002600 B Z} {/ step_0002650 B X} {/ step_0002650 B Y} {/ step_0002650 B Z} {/ step_0002700 B X} {/ step_0002700 B Y} {/ step_0002700 B Z} {/ step_0002750 B X} {/ step_0002750 B Y} {/ step_0002750 B Z} {/ step_0002783 B X} {/ step_0002783 B Y} {/ step_0002783 B Z} {/ step_0002800 B X} {/ step_0002800 B Y} {/ step_0002800 B Z} {/ step_0002850 B X} {/ step_0002850 B Y} {/ step_0002850 B Z} {/ step_0002900 B X} {/ step_0002900 B Y} {/ step_0002900 B Z} {/ step_0002950 B X} {/ step_0002950 B Y} {/ step_0002950 B Z} {/ step_0003000 B X} {/ step_0003000 B Y} {/ step_0003000 B Z} {/ step_0003050 B X} {/ step_0003050 B Y} {/ step_0003050 B Z} {/ step_0003100 B X} {/ step_0003100 B Y} {/ step_0003100 B Z} {/ step_0003150 B X} {/ step_0003150 B Y} {/ step_0003150 B Z} {/ step_0003200 B X} {/ step_0003200 B Y} {/ step_0003200 B Z} {/ step_0003250 B X} {/ step_0003250 B Y} {/ step_0003250 B Z} {/ step_0003300 B X} {/ step_0003300 B Y} {/ step_0003300 B Z} {/ step_0003350 B X} {/ step_0003350 B Y} {/ step_0003350 B Z} {/ step_0003400 B X} {/ step_0003400 B Y} {/ step_0003400 B Z} {/ step_0003450 B X} {/ step_0003450 B Y} {/ step_0003450 B Z} {/ step_0003487 B X} {/ step_0003487 B Y} {/ step_0003487 B Z} {/ step_0003500 B X} {/ step_0003500 B Y} {/ step_0003500 B Z} {/ step_0003550 B X} {/ step_0003550 B Y} {/ step_0003550 B Z} {/ step_0003600 B X} {/ step_0003600 B Y} {/ step_0003600 B Z} {/ step_0003650 B X} {/ step_0003650 B Y} {/ step_0003650 B Z} {/ step_0003700 B X} {/ step_0003700 B Y} {/ step_0003700 B Z} {/ step_0003750 B X} {/ step_0003750 B Y} {/ step_0003750 B Z} {/ step_0003800 B X} {/ step_0003800 B Y} {/ step_0003800 B Z} {/ step_0003850 B X} {/ step_0003850 B Y} {/ step_0003850 B Z} {/ step_0003900 B X} {/ step_0003900 B Y} {/ step_0003900 B Z} {/ step_0003950 B X} {/ step_0003950 B Y} {/ step_0003950 B Z} {/ step_0004000 B X} {/ step_0004000 B Y} {/ step_0004000 B Z} {/ step_0004050 B X} {/ step_0004050 B Y} {/ step_0004050 B Z} {/ step_0004100 B X} {/ step_0004100 B Y} {/ step_0004100 B Z} {/ step_0004150 B X} {/ step_0004150 B Y} {/ step_0004150 B Z} {/ step_0004200 B X} {/ step_0004200 B Y} {/ step_0004200 B Z} {/ step_0004250 B X} {/ step_0004250 B Y} {/ step_0004250 B Z} {/ step_0004300 B X} {/ step_0004300 B Y} {/ step_0004300 B Z} {/ step_0004350 B X} {/ step_0004350 B Y} {/ step_0004350 B Z} {/ step_0004400 B X} {/ step_0004400 B Y} {/ step_0004400 B Z} {/ step_0004450 B X} {/ step_0004450 B Y} {/ step_0004450 B Z} {/ step_0004500 B X} {/ step_0004500 B Y} {/ step_0004500 B Z} {/ step_0004550 B X} {/ step_0004550 B Y} {/ step_0004550 B Z} {/ step_0004600 B X} {/ step_0004600 B Y} {/ step_0004600 B Z} {/ step_0004650 B X} {/ step_0004650 B Y} {/ step_0004650 B Z} {/ step_0004700 B X} {/ step_0004700 B Y} {/ step_0004700 B Z} {/ step_0004750 B X} {/ step_0004750 B Y} {/ step_0004750 B Z} {/ step_0004800 B X} {/ step_0004800 B Y} {/ step_0004800 B Z} {/ step_0004850 B X} {/ step_0004850 B Y} {/ step_0004850 B Z} {/ step_0004900 B X} {/ step_0004900 B Y} {/ step_0004900 B Z} {/ step_0004950 B X} {/ step_0004950 B Y} {/ step_0004950 B Z} {/ step_0005000 B X} {/ step_0005000 B Y} {/ step_0005000 B Z} {/ step_0005050 B X} {/ step_0005050 B Y} {/ step_0005050 B Z} {/ step_0005100 B X} {/ step_0005100 B Y} {/ step_0005100 B Z} {/ step_0005150 B X} {/ step_0005150 B Y} {/ step_0005150 B Z} {/ step_0005200 B X} {/ step_0005200 B Y} {/ step_0005200 B Z} {/ step_0005250 B X} {/ step_0005250 B Y} {/ step_0005250 B Z} {/ step_0005300 B X} {/ step_0005300 B Y} {/ step_0005300 B Z} {/ step_0005350 B X} {/ step_0005350 B Y} {/ step_0005350 B Z} {/ step_0005400 B X} {/ step_0005400 B Y} {/ step_0005400 B Z} {/ step_0005450 B X} {/ step_0005450 B Y} {/ step_0005450 B Z} {/ step_0005487 B X} {/ step_0005487 B Y} {/ step_0005487 B Z}}
+set $m2-dumpname {/tmp/phi.h5.dump}
+set $m2-ports {   0   0   0   1}
+set $m2-ndims {3}
+set $m2-animate {1}
+set $m2-0-dim {101}
+set $m2-0-count {101}
+set $m2-1-dim {61}
+set $m2-1-count {61}
+set $m2-2-dim {101}
+set $m2-2-count {101}
 
 
 # Set GUI variables for the DataIO->Readers->MDSPlusDataReader Module
-set $m13-server {}
-set $m13-tree {}
-set $m13-shot {}
-set $m13-load-server {}
-set $m13-load-tree {}
-set $m13-load-shot {}
-set $m13-load-signal {}
-set $m13-search-server {}
-set $m13-search-tree {}
-set $m13-search-shot {}
-set $m13-search-signal {}
+set $m3-server {}
+set $m3-tree {}
+set $m3-shot {}
+set $m3-load-server {}
+set $m3-load-tree {}
+set $m3-load-shot {}
+set $m3-load-signal {}
+set $m3-search-server {}
+set $m3-search-tree {}
+set $m3-search-shot {}
+set $m3-search-signal {}
 
 # Set GUI variables for the DataIO->Readers->MDSPlusDataReader Module
-set $m14-server {}
-set $m14-tree {}
-set $m14-shot {}
-set $m14-load-server {}
-set $m14-load-tree {}
-set $m14-load-shot {}
-set $m14-load-signal {}
-set $m14-search-server {}
-set $m14-search-tree {}
-set $m14-search-shot {}
-set $m14-search-signal {}
+set $m4-server {}
+set $m4-tree {}
+set $m4-shot {}
+set $m4-load-server {}
+set $m4-load-tree {}
+set $m4-load-shot {}
+set $m4-load-signal {}
+set $m4-search-server {}
+set $m4-search-tree {}
+set $m4-search-shot {}
+set $m4-search-signal {}
 
 # Set GUI variables for the DataIO->Readers->MDSPlusDataReader Module
-set $m15-server {}
-set $m15-tree {}
-set $m15-shot {}
-set $m15-load-server {}
-set $m15-load-tree {}
-set $m15-load-shot {}
-set $m15-load-signal {}
-set $m15-search-server {}
-set $m15-search-tree {}
-set $m15-search-shot {}
-set $m15-search-signal {}
+set $m5-server {}
+set $m5-tree {}
+set $m5-shot {}
+set $m5-load-server {}
+set $m5-load-tree {}
+set $m5-load-shot {}
+set $m5-load-signal {}
+set $m5-search-server {}
+set $m5-search-tree {}
+set $m5-search-shot {}
+set $m5-search-signal {}
 
 
 # Set GUI variables for the Teem->NrrdData->ChooseNrrd Module
-set $m16-usefirstvalid {1}
+set $m6-usefirstvalid {1}
 
 # Set GUI variables for the Teem->NrrdData->ChooseNrrd Module
-set $m17-usefirstvalid {1}
+set $m7-usefirstvalid {1}
 
 # Set GUI variables for the Teem->NrrdData->ChooseNrrd Module
-set $m18-usefirstvalid {1}
+set $m8-usefirstvalid {1}
 
 
 
 # Set GUI variables for the Teem->Converters->NrrdToField Module
-set $m21-datasets {{Points : -GRID-X-Y-Z:Vector} {Connections : (none)} {Data : -step_0004100-T_e:Scalar} {Original Field : (none)} }
+set $m11-datasets {{Points : -GRID-X-Y-Z:Vector} {Connections : (none)} {Data : -step_0004100-T_e:Scalar} {Original Field : (none)} }
 
 # Set GUI variables for the Teem->Converters->NrrdToField Module
-set $m22-datasets {{Points : -GRID-X-Y-Z:Vector} {Connections : (none)} {Data : -step_0004100-B-X-Y-Z:Vector} {Original Field : (none)} }
+set $m12-datasets {{Points : -GRID-X-Y-Z:Vector} {Connections : (none)} {Data : -step_0004100-B-X-Y-Z:Vector} {Original Field : (none)} }
+
+
+
+
+# Set GUI variables for the SCIRun->FieldsCreate->FieldSubSample Module
+set $m20-wrap {1}
+set $m20-i-dim {101}
+set $m20-j-dim {61}
+set $m20-k-dim {101}
+set $m20-i-stop {100}
+set $m20-j-stop {60}
+set $m20-k-stop {67}
+
+# Set GUI variables for the SCIRun->FieldsCreate->FieldSlicer Module
+set $m21-i-dim {101}
+set $m21-j-dim {61}
+set $m21-k-dim {68}
+set $m21-i-index {0}
+set $m21-j-index {0}
+set $m21-k-index {0}
+
+# Set GUI variables for the SCIRun->FieldsCreate->FieldSlicer Module
+set $m22-i-dim {101}
+set $m22-j-dim {61}
+set $m22-k-dim {68}
+set $m22-i-index {0}
+set $m22-j-index {0}
+set $m22-k-index {67}
+
+# Set GUI variables for the SCIRun->Visualization->Isosurface Module
+set $m23-isoval {1000}
+set $m23-isoval-min {60.1251335144}
+set $m23-isoval-max {4761.27148438}
+set $m23-isoval-quantity 1
+set $m23-isoval-list {1000 4000 7000 12000 13160}
+set $m23-active-isoval-selection-tab {2}
+set $m23-active_tab {}
+
+# Set GUI variables for the SCIRun->Visualization->Isosurface Module
+set $m24-isoval {1000}
+set $m24-isoval-min {71.6849060059}
+set $m24-isoval-max {4749.19091797}
+set $m24-isoval-quantity 1
+set $m24-isoval-list {1000 4000 7000 12000 13160}
+set $m24-active-isoval-selection-tab {2}
+set $m24-active_tab {}
+
+# Set GUI variables for the SCIRun->Visualization->Isosurface Module
+set $m25-isoval {1000}
+set $m25-isoval-min {61.2371101379}
+set $m25-isoval-max {4728.31152344}
+set $m25-isoval-quantity 1
+set $m25-isoval-list {1000 4000 7000 12000 13160}
+set $m25-active-isoval-selection-tab {2}
+set $m25-active_tab {}
+
+# Set GUI variables for the SCIRun->Visualization->ShowField Module
+set $m27-nodes-on {0}
+set $m27-edges-on {0}
+set $m27-use-normals {1}
+set $m27-use-transparency {1}
+set $m27-normalize-vectors {}
+set $m27-has_scalar_data {1}
+set $m27-active_tab {Faces}
+set $m27-scalars_scale {0.3}
+set $m27-show_progress {}
+set $m27-field-name {-step_0004100-T_e:Scalar}
+
+# Set GUI variables for the SCIRun->Visualization->ShowField Module
+set $m28-nodes-on {0}
+set $m28-faces-on {0}
+set $m28-normalize-vectors {}
+set $m28-has_scalar_data {1}
+set $m28-def-color-r {0.0}
+set $m28-def-color-g {0.0}
+set $m28-def-color-b {0.0}
+set $m28-active_tab {Edges}
+set $m28-scalars_scale {0.3}
+set $m28-show_progress {}
+set $m28-field-name {-step_0004100-T_e:Scalar}
+
+# Set GUI variables for the SCIRun->Visualization->GenStandardColorMaps Module
+set $m29-positionList {{355 2}}
+set $m29-nodeList {257}
+set $m29-width {390}
+set $m29-height {40}
+set $m29-gamma {0.0}
+
+# Set GUI variables for the SCIRun->Visualization->RescaleColorMap Module
+set $m30-isFixed {1}
+set $m30-min {50}
+set $m30-max {13214.7080078}
 
 
 
 
 # Set GUI variables for the SCIRun->FieldsCreate->SampleField Module
-set $m30-endpoints {1}
-set $m30-endpoint0x {-0.854404350943}
-set $m30-endpoint0y {1.35035004817}
-set $m30-endpoint0z {-0.0364978830565}
-set $m30-endpoint1x {-0.864402193716}
-set $m30-endpoint1y {1.33871534477}
-set $m30-endpoint1z {-0.023278780019}
-set $m30-widgetscale {0.112657141788}
-set $m30-ringstate {}
-set $m30-framestate {}
-set $m30-maxseeds {2}
-set $m30-autoexecute {0}
+set $m40-endpoints {1}
+set $m40-endpoint0x {-0.854404350943}
+set $m40-endpoint0y {1.35035004817}
+set $m40-endpoint0z {-0.0364978830565}
+set $m40-endpoint1x {-0.864402193716}
+set $m40-endpoint1y {1.33871534477}
+set $m40-endpoint1z {-0.023278780019}
+set $m40-widgetscale {0.112657141788}
+set $m40-ringstate {}
+set $m40-framestate {}
+set $m40-maxseeds {2}
+set $m40-autoexecute {0}
 
 # Set GUI variables for the SCIRun->Visualization->StreamLines Module
-set $m31-stepsize {0.2}
-set $m31-tolerance {1e-05}
-set $m31-maxsteps {504}
-set $m31-direction {2}
-set $m31-method {0}
+set $m41-stepsize {0.2}
+set $m41-tolerance {1e-05}
+set $m41-maxsteps {504}
+set $m41-direction {2}
+set $m41-method {0}
 
 # Set GUI variables for the SCIRun->Visualization->ShowField Module
-set $m33-nodes-on {0}
-set $m33-faces-on {0}
-set $m33-normalize-vectors {}
-set $m33-has_scalar_data {1}
-set $m33-edge_display_type {Cylinders}
-set $m33-active_tab {Edges}
-set $m33-scalars_scale {0.3}
-set $m33-show_progress {}
+set $m43-nodes-on {0}
+set $m43-edges-on {1}
+set $m43-faces-on {0}
+set $m43-normalize-vectors {}
+set $m43-has_scalar_data {1}
+set $m43-edge_display_type {Cylinders}
+set $m43-active_tab {Edges}
+set $m43-scalars_scale {0.3}
+set $m43-show_progress {}
 
 # Set GUI variables for the SCIRun->Visualization->ShowField Module
-set $m34-edges-on {0}
-set $m34-faces-on {0}
-set $m34-normalize-vectors {}
-set $m34-has_scalar_data {1}
-set $m34-node_display_type {Spheres}
-set $m34-node_scale {0.02}
-set $m34-scalars_scale {0.3}
-set $m34-show_progress {}
-set $m34-node-resolution {7}
-
-
-# Set GUI variables for the SCIRun->Visualization->RescaleColorMap Module
-set $m35-isFixed {1}
-set $m35-min {50}
-set $m35-max {13214.7080078}
+set $m44-nodes-on {1}
+set $m44-edges-on {0}
+set $m44-faces-on {0}
+set $m44-normalize-vectors {}
+set $m44-has_scalar_data {1}
+set $m44-node_display_type {Spheres}
+set $m44-node_scale {0.02}
+set $m44-scalars_scale {0.3}
+set $m44-show_progress {}
+set $m44-node-resolution {7}
 
 # Set GUI variables for the SCIRun->Visualization->RescaleColorMap Module
-set $m36-min {0.0}
-set $m36-max {504.0}
+set $m47-isFixed {1}
+set $m47-min {50}
+set $m47-max {13214.7080078}
 
-# Set GUI variables for the SCIRun->Visualization->GenStandardColorMaps Module
-set $m38-width {355}
-set $m38-height {40}
-
+# Set GUI variables for the SCIRun->Visualization->RescaleColorMap Module
+set $m48-min {0.0}
+set $m48-max {504.0}
 
 # Set GUI variables for the SCIRun->FieldsOther->ChooseField Module
-set $m40-port-index {0}
-set $m40-usefirstvalid {0}
+set $m50-port-index {0}
+set $m50-usefirstvalid {0}
 
 
-# Set GUI variables for the SCIRun->FieldsCreate->FieldSubSample Module
-set $m50-wrap {1}
-set $m50-i-dim {101}
-set $m50-j-dim {61}
-set $m50-k-dim {101}
-set $m50-i-stop {100}
-set $m50-j-stop {60}
-set $m50-k-stop {67}
-
-# Set GUI variables for the SCIRun->FieldsCreate->FieldSlicer Module
-set $m51-i-dim {101}
-set $m51-j-dim {61}
-set $m51-k-dim {68}
-set $m51-i-index {0}
-set $m51-j-index {0}
-set $m51-k-index {0}
-
-# Set GUI variables for the SCIRun->FieldsCreate->FieldSlicer Module
-set $m52-i-dim {101}
-set $m52-j-dim {61}
-set $m52-k-dim {68}
-set $m52-i-index {0}
-set $m52-j-index {0}
-set $m52-k-index {67}
-
-# Set GUI variables for the SCIRun->Visualization->Isosurface Module
-set $m53-isoval {1000}
-set $m53-isoval-min {60.1251335144}
-set $m53-isoval-max {4761.27148438}
-set $m53-isoval-quantity 1
-set $m53-isoval-list {1000 4000 7000 12000 13160}
-set $m53-active-isoval-selection-tab {2}
-set $m53-active_tab {}
-
-# Set GUI variables for the SCIRun->Visualization->Isosurface Module
-set $m54-isoval {1000}
-set $m54-isoval-min {71.6849060059}
-set $m54-isoval-max {4749.19091797}
-set $m54-isoval-quantity 1
-set $m54-isoval-list {1000 4000 7000 12000 13160}
-set $m54-active-isoval-selection-tab {2}
-set $m54-active_tab {}
-
-# Set GUI variables for the SCIRun->Visualization->Isosurface Module
-set $m55-isoval {1000}
-set $m55-isoval-min {61.2371101379}
-set $m55-isoval-max {4728.31152344}
-set $m55-isoval-quantity 1
-set $m55-isoval-list {1000 4000 7000 12000 13160}
-set $m55-active-isoval-selection-tab {2}
-set $m55-active_tab {}
-
-# Set GUI variables for the SCIRun->Visualization->ShowField Module
-set $m57-nodes-on {0}
-set $m57-edges-on {0}
-set $m57-use-normals {1}
-set $m57-use-transparency {1}
-set $m57-normalize-vectors {}
-set $m57-has_scalar_data {1}
-set $m57-active_tab {Faces}
-set $m57-scalars_scale {0.3}
-set $m57-show_progress {}
-set $m57-field-name {-step_0004100-T_e:Scalar}
-
-# Set GUI variables for the SCIRun->Visualization->ShowField Module
-set $m58-nodes-on {0}
-set $m58-faces-on {0}
-set $m58-normalize-vectors {}
-set $m58-has_scalar_data {1}
-set $m58-def-color-r {0.0}
-set $m58-def-color-g {0.0}
-set $m58-def-color-b {0.0}
-set $m58-active_tab {Edges}
-set $m58-scalars_scale {0.3}
-set $m58-show_progress {}
-set $m58-field-name {-step_0004100-T_e:Scalar}
-
-
-# Set GUI variables for the SCIRun->Visualization->RescaleColorMap Module
-set $m59-isFixed {1}
-set $m59-min {50}
-set $m59-max {13214.7080078}
-
-# Set GUI variables for the SCIRun->Visualization->GenStandardColorMaps Module
-set $m60-positionList {{355 2}}
-set $m60-nodeList {257}
-set $m60-width {390}
-set $m60-height {40}
-set $m60-gamma {0.0}
 
 # Set GUI variables for the SCIRun->Render->SynchronizeGeometry Module
 set $m100-enforce {0}
@@ -603,39 +604,50 @@ set "$m101-ViewWindow_0-Nodes (5) (1)" {1}
 # global array indexed by module name to keep track of modules
 global mods
 
+set mods(HDF5-Grid) $m99
+set mods(HDF5-Scalar) $m1
+set mods(HDF5-Vector) $m2
+
+set mods(MDSPlus-Grid) $m3
+set mods(MDSPlus-Scalar) $m4
+set mods(MDSPlus-Vector) $m5
+
+set mods(ChooseNrrd-Grid) $m6
+
+set mods(NrrdToField-Scalar) $m11
+set mods(NrrdToField-Vector) $m12
+
+
+set mods(SubSample) $m20
+set mods(Slicer-Low) $m21
+set mods(Slicer-High) $m22
+
+set mods(Isosurface-Surface) $m23
+set mods(Isosurface-Contour-Low) $m24
+set mods(Isosurface-Contour-High) $m25
+
+set mods(ShowField-Isosurface-Surface) $m27
+set mods(ShowField-Isosurface-Contour) $m28
+
+
+set mods(StreamLines-rake) $m40
+set mods(StreamLines) $m41
+
+set mods(ShowField-StreamLines-Vector) $m43
+set mods(ShowField-StreamLines-Scalar) $m44
+
+set mods(ChooseField-Interpolate) $m50
+
+
+set mods(ColorMap-Isosurfaces) $m29
+set mods(ColorMap-Streamlines) $m45
+set mods(ColorMap-Other) $m46
+
+set mods(RescaleColorMap-Isosurfaces) $m30
+set mods(RescaleColorMap-Streamlines) $m47
+set mods(RescaleColorMap-Other) $m48
+
 set mods(Viewer) $m101
-
-set mods(HDF5-Grid) $m10
-set mods(HDF5-Scalar) $m11
-set mods(HDF5-Vector) $m12
-
-set mods(MDSPlus-Grid) $m13
-set mods(MDSPlus-Scalar) $m14
-set mods(MDSPlus-Vector) $m15
-
-set mods(StreamLines-rake) $m30
-set mods(StreamLines) $m31
-
-set mods(ShowField-StreamLines-Vector) $m33
-set mods(ShowField-StreamLines-Scalar) $m34
-
-set mods(ChooseField-Interpolate) $m40
-
-set mods(SubSample) $m50
-set mods(Slicer-Low) $m51
-set mods(Slicer-High) $m52
-
-set mods(Isosurface-Surface) $m53
-set mods(Isosurface-Contour-Low) $m54
-set mods(Isosurface-Contour-High) $m55
-
-set mods(ShowField-Isosurface-Surface) $m57
-set mods(ShowField-Isosurface-Contour) $m58
-
-set mods(ColorMap-Streamlines) $m37
-set mods(ColorMap-Other) $m38
-set mods(ColorMap-Isosurfaces) $m60
-
 
 #######################################################
 # Build up a simplistic standalone application.
@@ -658,8 +670,8 @@ class FusionViewerApp {
 	wm title .standalone "FusionViewer"	 
 	set win .standalone
 	
-	set viewer_width 640
-	set viewer_height 770
+	set viewer_width 800
+	set viewer_height 800
 	
 	set notebook_width 290
 	set notebook_height [expr $viewer_height - 160]
@@ -682,6 +694,9 @@ class FusionViewerApp {
 
         set data_tab1 ""
         set data_tab2 ""
+
+        set animate_tab1 ""
+        set animate_tab2 ""
 
         # colormaps
         set colormap_width 100
@@ -710,6 +725,9 @@ class FusionViewerApp {
 	set shot_grid   "No Data Selected"
 	set shot_scalar "No Data Selected"
 	set shot_vector "No Data Selected"
+
+	set valid_scalar -1
+	set valid_vector -1
     }
     
 
@@ -762,19 +780,37 @@ class FusionViewerApp {
 	global $mods(Isosurface-Surface)-isoval-max
 	trace variable $mods(Isosurface-Surface)-isoval-max w "$this set_minmax_callback"
 
-
 	global $mods(HDF5-Grid)-filename
-	trace variable $mods(HDF5-Grid)-filename w "$this update_animate_callback"
+	global $mods(HDF5-Scalar)-filename
+	global $mods(HDF5-Vector)-filename
+	trace variable $mods(HDF5-Grid)-filename w "$this update_filename_callback"
+	trace variable $mods(HDF5-Scalar)-filename w "$this update_filename_callback"
+	trace variable $mods(HDF5-Vector)-filename w "$this update_filename_callback"
+
+	global $mods(MDSPlus-Grid)-num-entries
+	global $mods(MDSPlus-Scalar)-num-entries
+	global $mods(MDSPlus-Vector)-num-entries
+	trace variable $mods(MDSPlus-Grid)-num-entries w "$this update_entries_callback"
+	trace variable $mods(MDSPlus-Scalar)-num-entries w "$this update_entries_callback"
+	trace variable $mods(MDSPlus-Vector)-num-entries w "$this update_entries_callback"
 
 	global $mods(HDF5-Scalar)-animate
-	global $mods(HDF5-Scalar)-filename
-	trace variable $mods(HDF5-Scalar)-animate w "$this update_animate_callback"
-	trace variable $mods(HDF5-Scalar)-filename w "$this update_animate_callback"
-
 	global $mods(HDF5-Vector)-animate
-	global $mods(HDF5-Vector)-filename
+	trace variable $mods(HDF5-Scalar)-animate w "$this update_animate_callback"
 	trace variable $mods(HDF5-Vector)-animate w "$this update_animate_callback"
-	trace variable $mods(HDF5-Scalar)-filename w "$this update_animate_callback"
+
+	global $mods(HDF5-Scalar)-current
+	global $mods(HDF5-Vector)-current
+	trace variable $mods(HDF5-Scalar)-current w "$this update_current_callback"
+	trace variable $mods(HDF5-Vector)-current w "$this update_current_callback"
+
+	global $mods(Slicer-High)-i-dim
+	global $mods(Slicer-High)-j-dim
+	global $mods(Slicer-High)-k-dim
+
+	trace variable $mods(Slicer-High)-i-dim w "$this update_slicer_callback"
+	trace variable $mods(Slicer-High)-j-dim w "$this update_slicer_callback"
+	trace variable $mods(Slicer-High)-k-dim w "$this update_slicer_callback"
 
 	### pack 3 frames
 	pack $win.viewer $attachedVFr -side left \
@@ -797,16 +833,27 @@ class FusionViewerApp {
 	$data_tab1 select "HDF5"
 	$data_tab2 select "HDF5"
 
+	$vis_tab1 select "Scalar Fields"
+	$vis_tab2 select "Scalar Fields"
+
+	$animate_tab1 select "Scalar"
+	$animate_tab2 select "Scalar"
+
 	$color_tab1 select "Isosurfaces"
 	$color_tab2 select "Isosurfaces"
+
+	set show_contours 1
+	set show_integration 1
 
         set initialized 1
 
 	global $mods(Isosurface-Surface)-active-isoval-selection-tab
 	change_iso_tab [set $mods(Isosurface-Surface)-active-isoval-selection-tab]
 
-	update_local_filenames 0 0 0
+	update_filename_callback 0 0 0
+	update_entries_callback 0 0 0
 	update_animate_callback 0 0 0
+	update_current_callback 0 0 0
 
 	global PowerAppSession
 	if {[info exists PowerAppSession] && [set PowerAppSession] != ""} { 
@@ -863,13 +910,37 @@ class FusionViewerApp {
     }
 
 
-    method update_local_filenames {varname varele varop} {
+    method update_slicer_callback {varname varele varop} {
+	global mods
+
+	for {set i 0} {$i < 3} {incr i 1} {
+	    if { $i == 0 } {
+		set index i
+	    } elseif { $i == 1 } {
+		set index j
+	    } elseif { $i == 2 } {
+		set index k
+	    }
+
+	    global $mods(Slicer-High)-$index-dim
+	    global $mods(Slicer-High)-$index-index
+	    global $mods(Slicer-High)-$index-index2
+
+	    set $mods(Slicer-High)-$index-index  [expr [set $mods(Slicer-High)-$index-dim] - 1]
+	    set $mods(Slicer-High)-$index-index2 [expr [set $mods(Slicer-High)-$index-dim] - 1]
+	}
+    }
+
+
+    method update_filename_callback {varname varele varop} {
 	global mods
 	global $mods(HDF5-Grid)-filename
 	global $mods(HDF5-Scalar)-filename
 	global $mods(HDF5-Vector)-filename
 
-	global filename_grid filename_scalar filename_vector
+	global filename_grid
+	global filename_scalar
+	global filename_vector
 
 	set tmp [set $mods(HDF5-Grid)-filename]
 	set pos [expr [string last "/" $tmp] + 1]
@@ -877,6 +948,10 @@ class FusionViewerApp {
 	    set filename_grid [string range $tmp $pos end]
 	} else {
 	    set filename_grid $tmp
+	}
+
+	if { [string length $filename_grid] == 0 } {
+	    set filename_grid "No Data Selected"
 	}
 
 	set tmp [set $mods(HDF5-Scalar)-filename]
@@ -887,6 +962,10 @@ class FusionViewerApp {
 	    set filename_scalar $tmp
 	}
 
+	if { [string length $filename_scalar] == 0 } {
+	    set filename_scalar "No Data Selected"
+	}
+
 	set tmp [set $mods(HDF5-Vector)-filename]
 	set pos [expr [string last "/" $tmp] + 1]
 	if {$pos != -1} {
@@ -894,41 +973,93 @@ class FusionViewerApp {
 	} else {
 	    set filename_vector $tmp
 	}
+
+	if { [string length $filename_vector] == 0 } {
+	    set filename_vector "No Data Selected"
+	}
+
+	update_animate_callback 0 0 0
+	update_module_status
     }
 
 
     method update_animate_callback {varname varele varop} {
 
 	global mods
+	global $mods(HDF5-Scalar)-filename
+	global $mods(HDF5-Vector)-filename
 	global $mods(HDF5-Scalar)-animate
 	global $mods(HDF5-Vector)-animate
 
         if {$initialized != 0} {
-	    if { [set $mods(HDF5-Scalar)-animate] == 1} {
-		enable_widget $hdf5_tab1.scalar.animate
-		enable_widget $hdf5_tab2.scalar.animate
+	    if { [string length [set $mods(HDF5-Scalar)-filename]] &&
+		 [set $mods(HDF5-Scalar)-animate] == 1 } {
+		foreach w [winfo children $animate_scalar_tab1] {
+		    enable_widget $w
+		}
+		foreach w [winfo children $animate_scalar_tab2] {
+		    enable_widget $w
+		}
 	    } else {
-		disable_widget $hdf5_tab1.scalar.animate
-		disable_widget $hdf5_tab2.scalar.animate
+		foreach w [winfo children $animate_scalar_tab1] {
+		    disable_widget $w
+		}
+		foreach w [winfo children $animate_scalar_tab2] {
+		    disable_widget $w
+		}
 	    }
 
-	    if { [set $mods(HDF5-Vector)-animate] == 1 } {
-		enable_widget $hdf5_tab1.vector.animate
-		enable_widget $hdf5_tab2.vector.animate
+	    if { [string length [set $mods(HDF5-Vector)-filename]] &&
+		 [set $mods(HDF5-Vector)-animate] == 1 } {
+		foreach w [winfo children $animate_vector_tab1] {
+		    enable_widget $w
+		}
+		foreach w [winfo children $animate_vector_tab2] {
+		    enable_widget $w
+		}
 	    } else {
-		disable_widget $hdf5_tab1.vector.animate
-		disable_widget $hdf5_tab2.vector.animate
+		foreach w [winfo children $animate_vector_tab1] {
+		    disable_widget $w
+		}
+		foreach w [winfo children $animate_vector_tab2] {
+		    disable_widget $w
+		}
 	    }
 	}
     }
 
-    method update_local_shot {} {
+    method update_current_callback {varname varele varop} {
+
+	global mods
+	global $mods(HDF5-Scalar)-current
+	global $mods(HDF5-Vector)-current
+
+	global animate_lock
+
+        if { $animate_lock != 0 } {
+	    if { [string first "$mods(HDF5-Scalar)-current" "$varname"] != -1 } {
+		if { [set $mods(HDF5-Vector)-current] !=
+		     [set $mods(HDF5-Scalar)-current] } {
+		    set $mods(HDF5-Vector)-current [set $mods(HDF5-Scalar)-current]
+		}
+	    } elseif { [string first "$mods(HDF5-Vector)-current" "$varname"] != -1 } {
+		if { [set $mods(HDF5-Scalar)-current] !=
+		     [set $mods(HDF5-Vector)-current] } {
+		    set $mods(HDF5-Scalar)-current [set $mods(HDF5-Vector)-current]
+		}
+	    }
+	}
+    }
+
+    method update_entries_callback {varname varele varop} {
 	global mods
 	global $mods(MDSPlus-Grid)-shot
 	global $mods(MDSPlus-Scalar)-shot
 	global $mods(MDSPlus-Vector)-shot
 
-	global shot_grid shot_scalar shot_vector
+	global shot_grid
+	global shot_scalar
+	global shot_vector
 
 	set tmp [set $mods(MDSPlus-Grid)-shot]
 	set pos [expr [string last "/" $tmp] + 1]
@@ -936,6 +1067,10 @@ class FusionViewerApp {
 	    set shot_grid [string range $tmp $pos end]
 	} else {
 	    set shot_grid $tmp
+	}
+
+	if { [string length $shot_grid] == 0 } {
+	    set shot_grid "No Data Selected"
 	}
 
 	set tmp [set $mods(MDSPlus-Scalar)-shot]
@@ -946,6 +1081,10 @@ class FusionViewerApp {
 	    set shot_scalar $tmp
 	}
 
+	if { [string length $shot_scalar] == 0 } {
+	    set shot_scalar "No Data Selected"
+	}
+
 	set tmp [set $mods(MDSPlus-Vector)-shot]
 	set pos [expr [string last "/" $tmp] + 1]
 	if {$pos != -1} {
@@ -953,7 +1092,157 @@ class FusionViewerApp {
 	} else {
 	    set shot_vector $tmp
 	}
+
+	if { [string length $shot_vector] == 0 } {
+	    set shot_vector "No Data Selected"
+	}
+
+	update_module_status
     }
+
+    method update_module_status { } {
+	global mods 
+
+	global $mods(HDF5-Grid)-filename
+	global $mods(HDF5-Scalar)-filename
+	global $mods(HDF5-Vector)-filename
+
+	global $mods(MDSPlus-Grid)-num-entries
+	global $mods(MDSPlus-Scalar)-num-entries
+	global $mods(MDSPlus-Vector)-num-entries
+
+
+	# This must be before the the next checks otherwise the modules will
+	# back on.
+	if { [string length [set $mods(HDF5-Grid)-filename]] == 0 &&
+	     [set $mods(MDSPlus-Grid)-num-entries] == 0 } {
+	    disableModule $mods(ChooseNrrd-Grid) 1
+	} else {
+	    disableModule $mods(ChooseNrrd-Grid) 0
+	}
+
+	if { [string length [set $mods(HDF5-Grid)-filename]] == 0 } {
+	    disableModule $mods(HDF5-Grid) 1
+	} else {
+	    disableModule $mods(HDF5-Grid) 0
+	}
+
+	if { [set $mods(MDSPlus-Grid)-num-entries] == 0 } {
+	    disableModule $mods(MDSPlus-Grid) 1
+	} else {
+	    disableModule $mods(MDSPlus-Grid) 0
+	}
+
+
+	if { [string length [set $mods(HDF5-Scalar)-filename]] == 0 } {
+	    disableModule $mods(HDF5-Scalar) 1
+	} else {
+	    disableModule $mods(HDF5-Scalar) 0
+	}
+
+	if { [set $mods(MDSPlus-Scalar)-num-entries] == 0 } {
+	    disableModule $mods(MDSPlus-Scalar) 1
+	} else {
+	    disableModule $mods(MDSPlus-Scalar) 0
+	}
+
+	if { [string length [set $mods(HDF5-Scalar)-filename]] == 0 &&
+	     [set $mods(MDSPlus-Scalar)-num-entries] == 0 } {
+
+	    set valid_scalar 0
+
+	    global $mods(ShowField-Isosurface-Surface)-faces-on
+	    set $mods(ShowField-Isosurface-Surface)-faces-on 0
+
+	    toggle_isosurface
+
+	    disable_widget $isosurfaces_frame1.show
+	    disable_widget $isosurfaces_frame2.show
+
+	    disableModule $mods(NrrdToField-Scalar) 1
+	    disableModule $mods(SubSample) 1
+
+	    global $mods(ChooseField-Interpolate)-port-index
+	    set $mods(ChooseField-Interpolate)-port-index 1
+
+	    disable_widget $streamlines_frame1.cm.l
+	    disable_widget $streamlines_frame1.cm.scalar
+	    disable_widget $streamlines_frame1.cm.vector
+
+	    disable_widget $streamlines_frame2.cm.l
+	    disable_widget $streamlines_frame2.cm.scalar
+	    disable_widget $streamlines_frame2.cm.vector
+
+	} else {
+
+	    if {$valid_scalar == 0} {
+
+		set valid_scalar 1
+		
+		global $mods(ShowField-Isosurface-Surface)-faces-on
+		set $mods(ShowField-Isosurface-Surface)-faces-on 1
+
+		toggle_isosurface
+
+		disableModule $mods(NrrdToField-Scalar) 0
+		disableModule $mods(SubSample) 0
+
+		enable_widget $streamlines_frame1.cm.l
+		enable_widget $streamlines_frame1.cm.scalar
+		enable_widget $streamlines_frame1.cm.vector
+
+		enable_widget $streamlines_frame2.cm.l
+		enable_widget $streamlines_frame2.cm.scalar
+		enable_widget $streamlines_frame2.cm.vector
+	    }
+	}
+
+
+	if { [string length [set $mods(HDF5-Vector)-filename]] == 0 } {
+	    disableModule $mods(HDF5-Vector) 1
+	} else {
+	    disableModule $mods(HDF5-Vector) 0
+	}
+
+	if { [set $mods(MDSPlus-Vector)-num-entries] == 0 } {
+	    disableModule $mods(MDSPlus-Vector) 1
+	} else {
+	    disableModule $mods(MDSPlus-Vector) 0
+	}
+
+	if { [string length [set $mods(HDF5-Vector)-filename]] == 0 &&
+	     [set $mods(MDSPlus-Vector)-num-entries] == 0 } {
+
+	    set valid_vector 0
+
+	    global $mods(ShowField-StreamLines-Vector)-edges-on
+	    set $mods(ShowField-StreamLines-Vector)-edges-on 0
+
+	    toggle_streamlines
+
+	    disable_widget $streamlines_frame1.show
+	    disable_widget $streamlines_frame2.show
+
+	    disableModule $mods(NrrdToField-Vector) 1
+	    disableModule $mods(ChooseField-Interpolate) 1
+
+	} else {
+
+	    if {$valid_vector == 0} {
+
+		set valid_vector 1
+
+		global $mods(ShowField-StreamLines-Vector)-edges-on
+		set $mods(ShowField-StreamLines-Vector)-edges-on 1
+
+		toggle_streamlines
+
+		disableModule $mods(NrrdToField-Vector) 0
+		disableModule $mods(ChooseField-Interpolate) 0
+	    }
+	}
+    }
+
 
     method init_Vframe { m case} {
 	global mods tips
@@ -979,7 +1268,8 @@ class FusionViewerApp {
 
 
 	    ### Data Tab
-	    set data [$vis.tnb add -label "Data Selection" -command "$this change_vis_frame 0"]
+	    set data [$vis.tnb add -label "Data Selection" \
+			  -command "$this change_vis_frame 0"]
 
 	    ### Data Source Frame
 	    iwidgets::labeledframe $data.source -labelpos nw \
@@ -991,6 +1281,18 @@ class FusionViewerApp {
 
 	    pack $data.source -padx 4 -pady 4 -fill x 
 	    
+
+	    ### Data Animate Frame
+	    iwidgets::labeledframe $data.animate -labelpos nw \
+		-labeltext "Data Animation" 
+
+	    set animate [$data.animate childsite]
+
+	    build_animate_frame $animate $case
+
+	    pack $data.animate -padx 4 -pady 4 -fill x 
+
+
 	    ### Data Subsample Frame
 	    iwidgets::labeledframe $data.subsample -labelpos nw \
 		-labeltext "Data Subsample" 
@@ -1001,54 +1303,106 @@ class FusionViewerApp {
 	    
             pack $data.subsample -padx 4 -pady 4 -fill x
 
+            if {$case == 0} {
+		set subsample_frame1 $subsample
+            } else {
+		set subsample_frame2 $subsample
+            }
 
 
 
 	    ### Vis Options Tab
-	    set page [$vis.tnb add -label "Vis Options" -command "$this change_vis_frame 1"]
+	    set page [$vis.tnb add -label "Vis Options" \
+			  -command "$this change_vis_frame 1"]
+
+
+
+	    ### Tabs
+	    iwidgets::tabnotebook $page.tnb -width $notebook_width \
+		-height [expr $notebook_height-100] -tabpos n
+	    pack $page.tnb -padx 0 -pady 0 -anchor n -fill both -expand 1
+
+            if {$case == 0} {
+		set vis_tab1 $page.tnb
+            } else {
+		set vis_tab2 $page.tnb	    
+            }
+
+
+	    set scalar [$page.tnb add -label "Scalar Fields" \
+			    -command "$this change_option_tab 0"]
+
+            if {$case == 0} {
+		set vis_scalar_tab1 $scalar
+            } else {
+		set vis_scalar_tab2 $scalar	    
+            }
+
 
 	    ### Vis Isosurface
-	    iwidgets::labeledframe $page.isoframe -labelpos nw \
-		-labeltext "Iso-Temperature Surface"
+	    iwidgets::labeledframe $scalar.isoframe -labelpos nw \
+		-labeltext "Isosurface"
 
-	    set iso [$page.isoframe childsite]
+	    set iso [$scalar.isoframe childsite]
 	    
 	    build_isosurface_frame $iso $case
 	     
-            pack $page.isoframe -padx 4 -pady 4 -fill x
+            pack $scalar.isoframe -padx 4 -pady 4 -fill x
 
             if {$case == 0} {
-		set isosurface_tab1 $iso
+		set isosurfaces_frame1 $iso
             } else {
-		set isosurface_tab2 $iso
+		set isosurfaces_frame2 $iso
             }
 	    
 
-	    ### Vis StreamLines
-	    iwidgets::labeledframe $page.slframe -labelpos nw \
-		-labeltext "Magnetic Field Lines"
 
-	    set sl [$page.slframe childsite]
+	    set vector [$page.tnb add -label "Vector Fields" \
+			    -command "$this change_option_tab 1"]
+
+            if {$case == 0} {
+		set vis_vector_tab1 $vector
+            } else {
+		set vis_vector_tab2 $vector	    
+            }
+
+
+	    ### Vis StreamLines
+	    iwidgets::labeledframe $vector.slframe -labelpos nw \
+		-labeltext "Field Lines"
+
+	    set sl [$vector.slframe childsite]
 	    
 	    build_streamlines_frame $sl
 	    
-            pack $page.slframe -padx 4 -pady 4 -fill x
+            pack $vector.slframe -padx 4 -pady 4 -fill x
 
             if {$case == 0} {
-		set streamlines_tab1 $sl
+		set streamlines_frame1 $sl
             } else {
-		set streamlines_tab2 $sl
+		set streamlines_frame2 $sl
+            }
+
+
+
+	    set misc [$page.tnb add -label "Misc" \
+			  -command "$this change_option_tab 2"]
+
+            if {$case == 0} {
+		set vis_misc_tab1 $misc
+            } else {
+		set vis_misc_tab2 $misc	    
             }
 
 	    ### ColorMaps
-	    iwidgets::labeledframe $page.colorframe -labelpos nw \
+	    iwidgets::labeledframe $misc.colorframe -labelpos nw \
 		-labeltext "Color Maps"
 
-	    set color [$page.colorframe childsite]
+	    set color [$misc.colorframe childsite]
 	    
 	    build_colormap_frame $color $case
 	    
-            pack $page.colorframe -padx 4 -pady 4 -fill x
+            pack $misc.colorframe -padx 4 -pady 4 -fill x
 
 	    
 	    ### Renderer Options Tab
@@ -1175,12 +1529,6 @@ class FusionViewerApp {
 	    puts $fileid "set app_version 1.0"
 
 	    save_module_variables $fileid
-	    # ShowDipoles uses the position of the input dipole
-	    # regardless of what was saved out. By setting 
-	    # num-dipoles to 0, instead of 1, the
-	    # module will disregard the position values that cause
-	    # a saved session to get degenerate cylinders and hang.
-	    puts $fileid "set \$mods(ShowDipole)-num-dipoles {0}"
 	    save_class_variables $fileid
 
 	    close $fileid
@@ -1266,8 +1614,6 @@ class FusionViewerApp {
     
 
     method indicate_dynamic_compile { which mode } {
-	global mods
-
 	if {$mode == "start"} {
 	    change_indicate_val 1
 	    change_indicator_labels "Dynamically Compiling Code..."
@@ -1281,7 +1627,6 @@ class FusionViewerApp {
     
     method update_progress { which state } {
 	global mods
-	
 	if  {$which == $mods(ShowField-Isosurface-Surface) && $state == "JustStarted"} {
 	    change_indicator_labels "Visualization..."
 	    change_indicate_val 1
@@ -1318,38 +1663,36 @@ class FusionViewerApp {
     method execute_Data {} {
 	global mods 
 
-	global $mods(HDF5-Grid)-datasets
-	global $mods(HDF5-Scalar)-datasets
-	global $mods(HDF5-Vector)-datasets
+	global $mods(HDF5-Grid)-filename
+	global $mods(HDF5-Scalar)-filename
+	global $mods(HDF5-Vector)-filename
 
 	global $mods(MDSPlus-Grid)-num-entries
 	global $mods(MDSPlus-Scalar)-num-entries
 	global $mods(MDSPlus-Vector)-num-entries
 
-
-	if{ [set $mods(HDF5-Scalar)-filename] != "" } {
-	    # Blocking Data Section
-	    disableModule $mods(HDF5-Scalar) 0
-	} else {
-	    disableModule $mods(HDF5-Scalar) 1
+	if { [string length [set $mods(HDF5-Grid)-filename]] != 0 } {
+	    $mods(HDF5-Grid)-c needexecute
 	}
 
-	if{ [set $mods(MDSPlus-Scalar)-num-entries] != 0 } {
-	    # Blocking Data Section
-	    disableModule $mods(MDSPlus-Scalar) 0
-	} else {
-	    disableModule $mods(MDSPlus-Scalar) 1
+	if { [string length [set $mods(HDF5-Scalar)-filename]] != 0 } {
+	    $mods(HDF5-Scalar)-c needexecute
 	}
 
-	update_isovals
+	if { [string length [set $mods(HDF5-Vector)-filename]] != 0 } {
+	    $mods(HDF5-Vector)-c needexecute
+	}
 
-	$mods(HDF5-Grid)-c needexecute
-	$mods(HDF5-Scalar)-c needexecute
-	$mods(HDF5-Vector)-c needexecute
+	if { [set $mods(MDSPlus-Grid)-num-entries] != 0 } {
+	    $mods(MDSPlus-Grid)-c needexecute
+	}
+	if { [set $mods(MDSPlus-Scalar)-num-entries] != 0 } {
+	    $mods(MDSPlus-Scalar)-c needexecute
+	}
 
-	$mods(MDSPlus-Grid)-c needexecute
-	$mods(MDSPlus-Scalar)-c needexecute
-	$mods(MDSPlus-Vector)-c needexecute
+	if { [set $mods(MDSPlus-Vector)-num-entries] != 0 } {
+	    $mods(MDSPlus-Vector)-c needexecute
+	}
     }
     
 
@@ -1373,20 +1716,20 @@ class FusionViewerApp {
 	    set hdf5 [$f.tnb add -label "HDF5" -command "$this change_data_tab 0"]
 
             if {$case == 0} {
-		set hdf5_tab1 $hdf5
+		set data_hdf5_tab1 $hdf5
             } else {
-		set hdf5_tab2 $hdf5
+		set data_hdf5_tab2 $hdf5
             }
 	    
-	    $mods(HDF5-Grid)   set_power_app "$this update_local_filenames 0 0 0"
-	    $mods(HDF5-Scalar) set_power_app "$this update_local_filenames 0 0 0"
-	    $mods(HDF5-Vector) set_power_app "$this update_local_filenames 0 0 0"
+	    $mods(HDF5-Grid)   set_power_app "$this update_filename_callback 0 0 0"
+	    $mods(HDF5-Scalar) set_power_app "$this update_filename_callback 0 0 0"
+	    $mods(HDF5-Vector) set_power_app "$this update_filename_callback 0 0 0"
 
 	    frame $hdf5.grid
-	    button $hdf5.grid.button   -text " Grid " -command "$mods(HDF5-Grid)   initialize_ui"
-	    pack $hdf5.grid.button   -side left -anchor nw -padx 3 -pady 3
+	    button $hdf5.grid.button -text " Grid " -command "$mods(HDF5-Grid)   initialize_ui"
+	    pack $hdf5.grid.button -side left -anchor nw -padx 3 -pady 3
 	    label $hdf5.grid.label -textvariable filename_grid
-	    pack $hdf5.grid.label   -side right -anchor nw -padx 3 -pady 3
+	    pack $hdf5.grid.label  -side right -anchor nw -padx 3 -pady 3
 
 
 
@@ -1394,24 +1737,16 @@ class FusionViewerApp {
 	    button $hdf5.scalar.button -text "Scalar" \
 		-command "$mods(HDF5-Scalar) initialize_ui"
 	    pack $hdf5.scalar.button -side left -anchor nw -padx 3 -pady 3
-	    label $hdf5.scalar.label  -textvariable filename_scalar
-	    pack $hdf5.scalar.label   -side left -anchor nw -padx 3 -pady 3
-
-	    button $hdf5.scalar.animate   -text "Animate UI" \
-		-command "$mods(HDF5-Scalar) make_animate_box '' "
-	    pack $hdf5.scalar.animate -side right -anchor ne -padx 3 -pady 3
+	    label $hdf5.scalar.label -textvariable filename_scalar
+	    pack $hdf5.scalar.label  -side left -anchor nw -padx 3 -pady 3
 
 
 	    frame $hdf5.vector
 	    button $hdf5.vector.button -text "Vector" \
 		-command "$mods(HDF5-Vector) initialize_ui"
 	    pack $hdf5.vector.button -side left -anchor nw -padx 3 -pady 3
-	    label $hdf5.vector.label  -textvariable filename_vector
-	    pack $hdf5.vector.label   -side left -anchor nw -padx 3 -pady 3
-
-	    button $hdf5.vector.animate   -text "Animate UI" \
-		-command "$mods(HDF5-Vector) make_animate_box '' "
-	    pack $hdf5.vector.animate   -side right -anchor nw -padx 3 -pady 3
+	    label $hdf5.vector.label -textvariable filename_vector
+	    pack $hdf5.vector.label  -side left -anchor nw -padx 3 -pady 3
 
 
 	    pack $hdf5.grid   -side top -anchor nw -padx 3 -pady 3
@@ -1423,37 +1758,36 @@ class FusionViewerApp {
 	    set mdsplus [$f.tnb add -label "MDSPlus" -command "$this change_data_tab 1"]
 
             if {$case == 0} {
-		set mdsplus_tab1 $mdsplus
+		set data_mdsplus_tab1 $mdsplus
             } else {
-		set mdsplus_tab2 $mdsplus
+		set data_mdsplus_tab2 $mdsplus
             }
 	    
 
-	    $mods(MDSPlus-Grid)   set_power_app "$this update_local_shot"
-	    $mods(MDSPlus-Scalar) set_power_app "$this update_local_shot"
-	    $mods(MDSPlus-Vector) set_power_app "$this update_local_shot"
+	    $mods(MDSPlus-Grid)   set_power_app "$this update_entries_callback 0 0 0"
+	    $mods(MDSPlus-Scalar) set_power_app "$this update_entries_callback 0 0 0"
+	    $mods(MDSPlus-Vector) set_power_app "$this update_entries_callback 0 0 0"
 
-	    update_local_shot
 
 	    frame $mdsplus.grid
-	    button $mdsplus.grid.button   -text " Grid " \
+	    button $mdsplus.grid.button -text " Grid " \
 		-command "$mods(MDSPlus-Grid)   initialize_ui"
 	    pack $mdsplus.grid.button   -side left -anchor nw -padx 3 -pady 3
-	    label $mdsplus.grid.label -text "No Data Selected"
+	    label $mdsplus.grid.label -textvariable shot_grid
 	    pack $mdsplus.grid.label   -side right -anchor nw -padx 3 -pady 3
 
 	    frame $mdsplus.scalar
 	    button $mdsplus.scalar.button -text "Scalar" \
 		-command "$mods(MDSPlus-Scalar) initialize_ui"
 	    pack $mdsplus.scalar.button -side left -anchor nw -padx 3 -pady 3
-	    label $mdsplus.scalar.label -text "No Data Selected"
+	    label $mdsplus.scalar.label -textvariable shot_scalar
 	    pack $mdsplus.scalar.label   -side right -anchor nw -padx 3 -pady 3
 
 	    frame $mdsplus.vector
 	    button $mdsplus.vector.button -text "Vector" \
 		-command "$mods(MDSPlus-Vector) initialize_ui"
 	    pack $mdsplus.vector.button -side left -anchor nw -padx 3 -pady 3
-	    label $mdsplus.vector.label -text "No Data Selected"
+	    label $mdsplus.vector.label -textvariable shot_vector
 	    pack $mdsplus.vector.label   -side right -anchor nw -padx 3 -pady 3
 
 
@@ -1475,16 +1809,86 @@ class FusionViewerApp {
     method update_subsample_frame {} {
     }
 
-    method toggle_show_isosurface {} {
+
+    method build_animate_frame { f case } {
+	global mods tips
+
+	if { [winfo exists $f] } {
+	    
+	    ### Tabs
+	    iwidgets::tabnotebook $f.tnb -width $notebook_width \
+		-height 250 -tabpos n
+	    pack $f.tnb -padx 0 -pady 0 -anchor n -fill both -expand 1
+
+            if {$case == 0} {
+		set animate_tab1 $f.tnb
+            } else {
+		set animate_tab2 $f.tnb	    
+            }
+
+	    ### Animate Scalar
+	    set scalar [$f.tnb add -label "Scalar" -command "$this change_animate_tab 0"]
+
+            if {$case == 0} {
+		set animate_scalar_tab1 $scalar
+            } else {
+		set animate_scalar_tab2 $scalar
+            }
+
+	    $mods(HDF5-Scalar) build_animate_ui $scalar
+	    
+
+	    ### Animate Vector
+	    set vector [$f.tnb add -label "Vector" -command "$this change_animate_tab 1"]
+
+            if {$case == 0} {
+		set animate_vector_tab1 $vector
+            } else {
+		set animate_vector_tab2 $vector
+	    }	    
+
+	    $mods(HDF5-Vector) build_animate_ui $vector
+
+	    ### Animate Lock
+	    set lock [$f.tnb add -label "Locking" -command "$this change_animate_tab 2"]
+
+            if {$case == 0} {
+		set animate_lock_tab1 $lock
+            } else {
+		set animate_lock_tab2 $lock
+	    }	    
+
+	    global animate_lock
+	    checkbutton $lock.show -text "Lock Animation" \
+		-variable animate_lock \
+		-command "$this update_current_callback $mods(HDF5-Scalar)-current 0 0"
+	    pack $lock.show -side top -anchor nw -padx 3 -pady 3
+
+	}
+    }
+
+
+    method toggle_isosurface {} {
 	global mods
 	global $mods(ShowField-Isosurface-Surface)-faces-on
 	global $mods(ShowField-Isosurface-Contour)-edges-on
 
 	if {[set $mods(ShowField-Isosurface-Surface)-faces-on] == 1} {
-	    foreach w [winfo children $isosurface_tab1] {
+	    disableModule $mods(Isosurface-Surface) 0
+	    disableModule $mods(Isosurface-Contour-Low) 0
+	    disableModule $mods(Isosurface-Contour-High) 0
+
+	    foreach w [winfo children $isosurfaces_frame1] {
 		enable_widget $w
 	    }
-	    foreach w [winfo children $isosurface_tab2] {
+	    foreach w [winfo children $isosurfaces_frame2] {
+		enable_widget $w
+	    }
+
+	    foreach w [winfo children $subsample_frame1] {
+		enable_widget $w
+	    }
+	    foreach w [winfo children $subsample_frame2] {
 		enable_widget $w
 	    }
 
@@ -1496,10 +1900,21 @@ class FusionViewerApp {
 	    set $mods(ShowField-Isosurface-Contour)-edges-on $show_contours
 
 	} else {
-	    foreach w [winfo children $isosurface_tab1] {
+	    disableModule $mods(Isosurface-Surface) 1
+	    disableModule $mods(Isosurface-Contour-Low) 1
+	    disableModule $mods(Isosurface-Contour-High) 1
+
+	    foreach w [winfo children $isosurfaces_frame1] {
 		disable_widget $w
 	    }
-	    foreach w [winfo children $isosurface_tab2] {
+	    foreach w [winfo children $isosurfaces_frame2] {
+		disable_widget $w
+	    }
+
+	    foreach w [winfo children $subsample_frame1] {
+		disable_widget $w
+	    }
+	    foreach w [winfo children $subsample_frame2] {
 		disable_widget $w
 	    }
 
@@ -1512,8 +1927,8 @@ class FusionViewerApp {
 	    set $mods(ShowField-Isosurface-Contour)-edges-on 0
 	}
 	
-	enable_widget $isosurface_tab1.show
-	enable_widget $isosurface_tab2.show
+	enable_widget $isosurfaces_frame1.show
+	enable_widget $isosurfaces_frame2.show
 
 	$mods(ShowField-Isosurface-Surface)-c toggle_display_faces
 	$mods(ShowField-Isosurface-Contour)-c toggle_display_edges
@@ -1558,9 +1973,9 @@ class FusionViewerApp {
 	global $mods(ShowField-Isosurface-Surface)-faces-on
 
 	if {![winfo exists $f.show]} {
-	    checkbutton $f.show -text "Show Iso-Temperature Surface" \
+	    checkbutton $f.show -text "Show Isosurface" \
 		-variable $mods(ShowField-Isosurface-Surface)-faces-on \
-		-command "$this toggle_show_isosurface"
+		-command "$this toggle_isosurface"
 	    pack $f.show -side top -anchor nw -padx 3 -pady 3
 	    
 
@@ -1586,7 +2001,9 @@ class FusionViewerApp {
 
 	    frame $slider.isoval
 	    
-	    global $mods(Isosurface-Surface)-isoval-min $mods(Isosurface-Surface)-isoval-max
+	    global $mods(Isosurface-Surface)-isoval
+	    global $mods(Isosurface-Surface)-isoval-min
+	    global $mods(Isosurface-Surface)-isoval-max
 
 	    label $slider.isoval.l -text "Isovalue:"
 	    scale $slider.isoval.s \
@@ -1692,17 +2109,18 @@ class FusionViewerApp {
 
     method set_minmax_callback {varname varele varop} {
 	global mods
- 	global $mods(Isosurface-Surface)-isoval-min $mods(Isosurface-Surface)-isoval-max
+ 	global $mods(Isosurface-Surface)-isoval-min
+	global $mods(Isosurface-Surface)-isoval-max
  	set min [set $mods(Isosurface-Surface)-isoval-min]
  	set max [set $mods(Isosurface-Surface)-isoval-max]
 
-	set w $isosurface_tab1.isoval.s
+	set w $isosurfaces_frame1.isoval.s
  	if [ expr [winfo exists $w] ] {
  	    $w configure -from $min -to $max
  	    $w configure -resolution [expr ($max - $min)/100.]
  	}
 
-	set w $isosurface_tab2.isoval.s
+	set w $isosurfaces_frame2.isoval.s
  	if [ expr [winfo exists $w] ] {
  	    $w configure -from $min -to $max
  	    $w configure -resolution [expr ($max - $min)/100.]
@@ -1721,38 +2139,38 @@ class FusionViewerApp {
 	    set "$eviewer-StreamLines rake (5)" 1
 	    $eviewer-c redraw
 
-	    foreach w [winfo children $streamlines_tab1] {
+	    foreach w [winfo children $streamlines_frame1] {
 		enable_widget $w
 	    }
-	    foreach w [winfo children $streamlines_tab2] {
+	    foreach w [winfo children $streamlines_frame2] {
 		enable_widget $w
 	    }
 
-	    bind $streamlines_tab1.seeds.s <ButtonRelease> \
+	    bind $streamlines_frame1.seeds.s <ButtonRelease> \
 		"$mods(StreamLines-rake)-c needexecute"
-	    bind $streamlines_tab2.seeds.s <ButtonRelease> \
+	    bind $streamlines_frame2.seeds.s <ButtonRelease> \
 		"$mods(StreamLines-rake)-c needexecute"
-	    bind $streamlines_tab1.seeds.val <Return> \
+	    bind $streamlines_frame1.seeds.val <Return> \
 		"$mods(StreamLines-rake)-c needexecute"
-	    bind $streamlines_tab2.seeds.val <Return> \
-		"$mods(StreamLines-rake)-c needexecute"
-
-	    bind $streamlines_tab1.stepsize.s <ButtonRelease> \
-		"$mods(StreamLines-rake)-c needexecute"
-	    bind $streamlines_tab2.stepsize.s <ButtonRelease> \
-		"$mods(StreamLines-rake)-c needexecute"
-	    bind $streamlines_tab1.stepsize.val <Return> \
-		"$mods(StreamLines-rake)-c needexecute"
-	    bind $streamlines_tab2.stepsize.val <Return> \
+	    bind $streamlines_frame2.seeds.val <Return> \
 		"$mods(StreamLines-rake)-c needexecute"
 
-	    bind $streamlines_tab1.steps.s <ButtonRelease> \
+	    bind $streamlines_frame1.stepsize.s <ButtonRelease> \
 		"$mods(StreamLines-rake)-c needexecute"
-	    bind $streamlines_tab2.steps.s <ButtonRelease> \
+	    bind $streamlines_frame2.stepsize.s <ButtonRelease> \
 		"$mods(StreamLines-rake)-c needexecute"
-	    bind $streamlines_tab1.steps.val <Return> \
+	    bind $streamlines_frame1.stepsize.val <Return> \
 		"$mods(StreamLines-rake)-c needexecute"
-	    bind $streamlines_tab2.steps.val <Return> \
+	    bind $streamlines_frame2.stepsize.val <Return> \
+		"$mods(StreamLines-rake)-c needexecute"
+
+	    bind $streamlines_frame1.steps.s <ButtonRelease> \
+		"$mods(StreamLines-rake)-c needexecute"
+	    bind $streamlines_frame2.steps.s <ButtonRelease> \
+		"$mods(StreamLines-rake)-c needexecute"
+	    bind $streamlines_frame1.steps.val <Return> \
+		"$mods(StreamLines-rake)-c needexecute"
+	    bind $streamlines_frame2.steps.val <Return> \
 		"$mods(StreamLines-rake)-c needexecute"
 
 	    set $mods(ShowField-StreamLines-Scalar)-nodes-on $show_integration
@@ -1762,39 +2180,61 @@ class FusionViewerApp {
 	    set "$eviewer-StreamLines rake (5)" 0
 	    $eviewer-c redraw
 
-	    foreach w [winfo children $streamlines_tab1] {
+	    foreach w [winfo children $streamlines_frame1] {
 		disable_widget $w
 	    }
-	    foreach w [winfo children $streamlines_tab2] {
+	    foreach w [winfo children $streamlines_frame2] {
 		disable_widget $w
 	    }
 
-	    bind $streamlines_tab1.seeds.s <ButtonRelease> ""
-	    bind $streamlines_tab2.seeds.s <ButtonRelease> ""
-	    bind $streamlines_tab1.seeds.val <Return> ""
-	    bind $streamlines_tab2.seeds.val <Return> ""
+	    bind $streamlines_frame1.seeds.s <ButtonRelease> ""
+	    bind $streamlines_frame2.seeds.s <ButtonRelease> ""
+	    bind $streamlines_frame1.seeds.val <Return> ""
+	    bind $streamlines_frame2.seeds.val <Return> ""
 
-	    bind $streamlines_tab1.stepsize.s <ButtonRelease> ""
-	    bind $streamlines_tab2.stepsize.s <ButtonRelease> ""
-	    bind $streamlines_tab1.stepsize.val <Return> ""
-	    bind $streamlines_tab2.stepsize.val <Return> ""
+	    bind $streamlines_frame1.stepsize.s <ButtonRelease> ""
+	    bind $streamlines_frame2.stepsize.s <ButtonRelease> ""
+	    bind $streamlines_frame1.stepsize.val <Return> ""
+	    bind $streamlines_frame2.stepsize.val <Return> ""
 
-	    bind $streamlines_tab1.steps.s <ButtonRelease> ""
-	    bind $streamlines_tab2.steps.s <ButtonRelease> ""
-	    bind $streamlines_tab1.steps.val <Return> ""
-	    bind $streamlines_tab2.steps.val <Return> ""
+	    bind $streamlines_frame1.steps.s <ButtonRelease> ""
+	    bind $streamlines_frame2.steps.s <ButtonRelease> ""
+	    bind $streamlines_frame1.steps.val <Return> ""
+	    bind $streamlines_frame2.steps.val <Return> ""
 
 	    set show_integration [set $mods(ShowField-StreamLines-Scalar)-nodes-on]
 	    set $mods(ShowField-StreamLines-Scalar)-nodes-on 0
 	}
 
-	enable_widget $streamlines_tab1.show
-	enable_widget $streamlines_tab2.show
+	enable_widget $streamlines_frame1.show
+	enable_widget $streamlines_frame2.show
 
 	$mods(ShowField-StreamLines-Vector)-c toggle_display_edges
 	$mods(ShowField-StreamLines-Scalar)-c toggle_display_nodes
-    }
 
+	global $mods(HDF5-Scalar)-filename
+	global $mods(MDSPlus-Scalar)-num-entries
+
+	if { [string length [set $mods(HDF5-Scalar)-filename]] == 0 &&
+	     [set $mods(MDSPlus-Scalar)-num-entries] == 0 } {
+	    disable_widget $streamlines_frame1.cm.l
+	    disable_widget $streamlines_frame1.cm.scalar
+	    disable_widget $streamlines_frame1.cm.vector
+
+	    disable_widget $streamlines_frame2.cm.l
+	    disable_widget $streamlines_frame2.cm.scalar
+	    disable_widget $streamlines_frame2.cm.vector
+
+	} else {
+	    enable_widget $streamlines_frame1.cm.l
+	    enable_widget $streamlines_frame1.cm.scalar
+	    enable_widget $streamlines_frame1.cm.vector
+
+	    enable_widget $streamlines_frame2.cm.l
+	    enable_widget $streamlines_frame2.cm.scalar
+	    enable_widget $streamlines_frame2.cm.vector
+	}
+    }
 
     method build_streamlines_frame { f } {
 	global mods
@@ -1802,7 +2242,7 @@ class FusionViewerApp {
 	global $mods(ShowField-StreamLines-Scalar)-nodes-on
 
 	if {![winfo exists $f.show]} {
-	    checkbutton $f.show -text "Show Magnetic Field Lines" \
+	    checkbutton $f.show -text "Show Field Lines" \
 		-variable $mods(ShowField-StreamLines-Vector)-edges-on \
 		-command "$this toggle_streamlines"
 	    pack $f.show -side top -anchor nw -padx 3 -pady 3
@@ -1914,33 +2354,13 @@ class FusionViewerApp {
     }
 
 
-    method build_electrodes_tab { f } {
-	global mods
-	global $mods(ShowField-Electrodes)-nodes-on
-	global $mods(ShowField-Electrodes)-text-on
-
-	if {![winfo exists $f.show]} {
-	    checkbutton $f.show -text "Show Electrodes" \
-		-variable $mods(ShowField-Electrodes)-nodes-on \
-		-command "$mods(ShowField-Electrodes)-c toggle_display_nodes"
-	    pack $f.show -side top -anchor nw -padx 3 -pady 3
-
-	    checkbutton $f.text -text "Print Potentials at Electrodes" \
-		-variable $mods(ShowField-Electrodes)-text-on \
-		-command "$mods(ShowField-Electrodes)-c toggle_display_text"
-
-	    pack $f.text -side top -anchor nw -padx 3 -pady 3
-	}
-    }
-
-
     method build_colormap_frame { f case } {
 
 	global mods
 
 	### Tabs
 	iwidgets::tabnotebook $f.tnb -width $notebook_width \
-	    -height 200 -tabpos n
+	    -height 300 -tabpos n
 	pack $f.tnb -padx 0 -pady 0 -anchor n -fill both -expand 1
 	
 	if {$case == 0} {
@@ -1953,46 +2373,60 @@ class FusionViewerApp {
 	set iso [$f.tnb add -label "Isosurfaces" -command "$this change_color_tab 0"]
 	
 	if {$case == 0} {
-	    set color_iso_tab1 $iso
+	    set color_isosurfaces_tab1 $iso
 	} else {
-	    set colr_iso_tab2 $iso
+	    set color_isosurfaces_tab2 $iso
 	}
 
-	build_colormap_tab $iso $mods(ColorMap-Isosurfaces)
+	build_colormap_tab $iso $mods(ColorMap-Isosurfaces) $mods(RescaleColorMap-Isosurfaces)
 
 	# Streamlines 
 	set iso [$f.tnb add -label "Streamlines" -command "$this change_color_tab 1"]
 	
 	if {$case == 0} {
-	    set color_iso_tab1 $iso
+	    set color_streamlines_tab1 $iso
 	} else {
-	    set colr_iso_tab2 $iso
+	    set color_streamlines_tab2 $iso
 	}
 
-	build_colormap_tab $iso $mods(ColorMap-Streamlines)
+	build_colormap_tab $iso $mods(ColorMap-Streamlines) $mods(RescaleColorMap-Streamlines)
 
 	# Other 
 	set iso [$f.tnb add -label "Other" -command "$this change_color_tab 2"]
 	
 	if {$case == 0} {
-	    set color_iso_tab1 $iso
+	    set color_other_tab1 $iso
 	} else {
-	    set colr_iso_tab2 $iso
+	    set color_other_tab2 $iso
 	}
 
-	build_colormap_tab $iso $mods(ColorMap-Other)
+	build_colormap_tab $iso $mods(ColorMap-Other) $mods(RescaleColorMap-Other)
     }
 
-    method build_colormap_tab { f cmapmod } {
+    method build_colormap_tab { f cmapmod rscapmod} {
 
 	if {![winfo exists $f.show]} {
+
+	    iwidgets::labeledframe $f.colormaps -labelpos nw \
+		-labeltext "Color Maps"
+
+	    set cmf [$f.colormaps childsite]
 	    
-	    build_colormap_canvas $f $cmapmod "Gray"  0
-	    build_colormap_canvas $f $cmapmod "Inverse Rainbow"  3
-	    build_colormap_canvas $f $cmapmod "Rainbow"  2
-	    build_colormap_canvas $f $cmapmod "Darkhue"  5
-	    build_colormap_canvas $f $cmapmod "Blackbody" 7
-	    build_colormap_canvas $f $cmapmod "Blue-to-Red" 17
+	    build_colormap_canvas $cmf $cmapmod "Gray"  0
+	    build_colormap_canvas $cmf $cmapmod "Inverse Rainbow"  3
+	    build_colormap_canvas $cmf $cmapmod "Rainbow"  2
+	    build_colormap_canvas $cmf $cmapmod "Darkhue"  5
+	    build_colormap_canvas $cmf $cmapmod "Blackbody" 7
+	    build_colormap_canvas $cmf $cmapmod "Blue-to-Red" 17
+
+	    iwidgets::labeledframe $f.rescaling -labelpos nw \
+		-labeltext "Color Map Rescalings"
+
+	    set cmrs [$f.rescaling childsite]
+	    
+	    $rscapmod build_ui $cmrs
+
+	    pack $f.colormaps $f.rescaling -padx 4 -pady 4 -fill x
 	}
     }
     
@@ -2041,6 +2475,25 @@ class FusionViewerApp {
     }
     
 
+    method change_option_tab { which } {
+	# change option tab for attached/detached
+
+	if {$initialized != 0} {
+	    if {$which == 0} {
+		$vis_tab1 view "Scalar Fields"
+		$vis_tab2 view "Scalar Fields"
+
+	    } elseif {$which == 1} {
+		$vis_tab1 view "Vector Fields"
+		$vis_tab2 view "Vector Fields"
+
+	    } elseif {$which == 2} {
+		$vis_tab1 view "Misc"
+		$vis_tab2 view "Misc"
+	    }
+	}
+    }
+
     method change_data_tab { which } {
 	# change data tab for attached/detached
 
@@ -2056,6 +2509,26 @@ class FusionViewerApp {
 	    } elseif {$which == 2} {
 		$data_tab1 view "Data Subsample"
 		$data_tab2 view "Data Subsample"
+	    }
+	}
+    }
+
+
+    method change_animate_tab { which } {
+	# change animate tab for attached/detached
+
+	if {$initialized != 0} {
+	    if {$which == 0} {
+		$animate_tab1 view "Scalar"
+		$animate_tab2 view "Scalar"
+
+	    } elseif {$which == 1} {
+		$animate_tab1 view "Vector"
+		$animate_tab2 view "Vector"
+
+	    } elseif {$which == 2} {
+		$animate_tab1 view "Locking"
+		$animate_tab2 view "Locking"
 	    }
 	}
     }
@@ -2162,15 +2635,45 @@ class FusionViewerApp {
     variable data_tab1
     variable data_tab2
 
-    variable hdf5_tab1
-    variable hdf5_tab2
+    variable data_hdf5_tab1
+    variable data_hdf5_tab2
 
-    variable mdsplus_tab1
-    variable mdsplus_tab2
+    variable data_mdsplus_tab1
+    variable data_mdsplus_tab2
 
-    # Isosurface
-    variable isosurface_tab1
-    variable isosurface_tab2
+    variable subsample_frame1
+    variable subsample_frame2
+
+    # Animate tabs notebook
+    variable animate_tab1
+    variable animate_tab2
+
+    variable animate_scalar_tab1
+    variable animate_scalar_tab2
+
+    variable animate_vector_tab1
+    variable animate_vector_tab2
+
+    variable animate_lock_tab1
+    variable animate_lock_tab2
+
+
+    # Vis options tabs notebook
+    variable vis_tab1
+    variable vis_tab2
+
+    variable vis_scalar_tab1
+    variable vis_scalar_tab2
+
+    variable vis_vector_tab1
+    variable vis_vector_tab2
+
+    variable vis_misc_tab1
+    variable vis_misc_tab2
+
+    # Isosurfaces
+    variable isosurfaces_frame1
+    variable isosurfaces_frame2
 
     variable iso_tab1
     variable iso_tab2
@@ -2185,8 +2688,8 @@ class FusionViewerApp {
     variable iso_list_tab2
 
     # Streamlines
-    variable streamlines_tab1
-    variable streamlines_tab2
+    variable streamlines_frame1
+    variable streamlines_frame2
 
     # Colormaps
     variable color_tab1
@@ -2207,6 +2710,9 @@ class FusionViewerApp {
 
     variable show_contours
     variable show_integration
+
+    variable valid_scalar
+    variable valid_vector
 }
 
 FusionViewerApp app
