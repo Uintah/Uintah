@@ -1133,7 +1133,10 @@ proc genSubnetScript { subnet { tab "__auto__" }  } {
 		    if { [llength $val] == 1 && ![string is integer $val] } {
 			set failed [catch "set num [format %.[string length $val]e $val]"]
 			if { !$failed } {
-			    append script "${tab}set $varname \{[expr $num]\}\n"
+			    set failed [catch "set num [expr $num]"]
+			}
+			if { !$failed } {
+			    append script "${tab}set $varname \{$num\}\n"
 			    continue
 			}
 		    }
