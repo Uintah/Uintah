@@ -14,7 +14,11 @@
   <io>
     <inputs lastportdynamic="yes">
       <port>
-	<name>Input FieldSet</name>
+	<name>Input FieldSet 0</name>
+	<datatype>SCIRun::FieldSet</datatype>
+      </port>
+      <port>
+	<name>Input FieldSet 1</name>
 	<datatype>SCIRun::FieldSet</datatype>
       </port>
       <port>
