@@ -19,9 +19,11 @@
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/MiscMath.h>
 #include <iostream>
+#include <vector>
 using std::cerr;
 using std::cout;
 using std::endl;
+using std::vector;
 
 namespace SCICore {
 namespace Datatypes {
@@ -183,6 +185,87 @@ int DenseMatrix::solve(ColumnMatrix& sol)
     ASSERT(nr==nc);
     ASSERT(sol.nrows()==nc);
     ColumnMatrix b(sol);
+
+    // Gauss-Jordan with partial pivoting
+    int i;
+    for(i=0;i<nr;i++){
+//	cout << "Solve: " << i << " of " << nr << endl;
+	double max=Abs(data[i][i]);
+	int row=i;
+	int j;
+	for(j=i+1;j<nr;j++){
+	    if(Abs(data[j][i]) > max){
+		max=Abs(data[j][i]);
+		row=j;
+	    }
+	}
+//	ASSERT(Abs(max) > 1.e-12);
+	if (Abs(max) < 1.e-12) {
+	    sol=b;
+	    return 0;
+	}
+	if(row != i){
+	    // Switch rows (actually their pointers)
+	    double* tmp=data[i];
+	    data[i]=data[row];
+	    data[row]=tmp;
+	    double dtmp=sol[i];
+	    sol[i]=sol[row];
+	    sol[row]=dtmp;
+	}
+	double denom=1./data[i][i];
+	double* r1=data[i];
+	double s1=sol[i];
+	for(j=i+1;j<nr;j++){
+	    double factor=data[j][i]*denom;
+	    double* r2=data[j];
+	    for(int k=i;k<nr;k++)
+		r2[k]-=factor*r1[k];
+	    sol[j]-=factor*s1;
+	}
+    }
+
+    // Back-substitution
+    for(i=1;i<nr;i++){
+//	cout << "Solve: " << i << " of " << nr << endl;
+//	ASSERT(Abs(data[i][i]) > 1.e-12);
+	if (Abs(data[i][i]) < 1.e-12) {
+	    sol=b;
+	    return 0;
+	}
+	double denom=1./data[i][i];
+	double* r1=data[i];
+	double s1=sol[i];
+	for(int j=0;j<i;j++){
+	    double factor=data[j][i]*denom;
+	    double* r2=data[j];
+	    for(int k=i;k<nr;k++)
+		r2[k]-=factor*r1[k];
+	    sol[j]-=factor*s1;
+	}
+    }
+
+    // Normalize
+    for(i=0;i<nr;i++){
+//	cout << "Solve: " << i << " of " << nr << endl;
+//	ASSERT(Abs(data[i][i]) > 1.e-12);
+	if (Abs(data[i][i]) < 1.e-12) {
+	    sol=b;
+	    return 0;
+	}
+	double factor=1./data[i][i];
+	for(int j=0;j<nr;j++)
+	    data[i][j]*=factor;
+	sol[i]*=factor;
+    }
+    return 1;
+}
+
+int DenseMatrix::solve(vector<double>& sol)
+{
+    ASSERT(nr==nc);
+    ASSERT(sol.size()==nc);
+    vector<double> b(sol);
 
     // Gauss-Jordan with partial pivoting
     int i;
@@ -579,8 +662,14 @@ void DenseMatrix::mult(double s)
 
 //
 // $Log$
+// Revision 1.8.2.2  2000/10/26 10:04:19  moulding
+// merge HEAD into FIELD_REDESIGN
+//
 // Revision 1.8.2.1  2000/09/28 03:13:31  mcole
 // merge trunk into FIELD_REDESIGN branch
+//
+// Revision 1.11  2000/10/18 17:26:14  guilkey
+// Added a version of solve which take a vector<double>.
 //
 // Revision 1.10  2000/07/25 16:47:43  yarden
 // add missing include

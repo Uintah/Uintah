@@ -5,6 +5,7 @@ static char *id="@(#) $Id$";
 
 #include <Uintah/Components/Arches/PicardNonlinearSolver.h>
 #include <Uintah/Components/Arches/Arches.h>
+#include <Uintah/Components/Arches/CellInformationP.h>
 #include <Uintah/Components/Arches/Properties.h>
 #include <Uintah/Components/Arches/BoundaryCondition.h>
 #include <Uintah/Components/Arches/TurbulenceModel.h>
@@ -124,7 +125,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     //           pressurePS (new_dw)
     d_pressSolver->solve(level, sched, old_dw, new_dw, time, delta_t);
 
-#if 0
+
     // if external boundary then recompute velocities using new pressure
     // and puts them in nonlinear_dw
     // require : densityCP, pressurePS, [u,v,w]VelocitySIVBC
@@ -144,7 +145,6 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     for (int index = 1; index <= Arches::NDIM; ++index) {
       d_momSolver->solve(level, sched, old_dw, new_dw, time, delta_t, index);
     }
-    
     // equation for scalars
     // require : scalarIN, [u,v,w]VelocitySPBC, densityIN, viscosityIN (new_dw)
     //           scalarSP, densityCP (old_dw)
@@ -155,6 +155,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
       // the same subroutine can be used to solve multiple scalars
       d_scalarSolver->solve(level, sched, old_dw, new_dw, time, delta_t, index);
     }
+
 
     // update properties
     // require : densityIN
@@ -169,18 +170,18 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
 
 
     ++nlIterations;
-
+#if 0    
     // residual represents the degrees of inaccuracies
     nlResidual = computeResidual(level, sched, old_dw, new_dw);
 #endif
   }while((nlIterations < d_nonlinear_its)&&(nlResidual > d_resTol));
 
-#if 0
   // Schedule an interpolation of the face centered velocity data 
   // to a cell centered vector for used by the viz tools
   sched_interpolateFromFCToCC(level, sched, old_dw, new_dw);
 
   // Save the old data (previous time step)
+#if 0
   new_dw->pleaseSave(d_lab->d_pressureINLabel, 1);
   new_dw->pleaseSave(d_lab->d_uVelocityINLabel, 1);
   new_dw->pleaseSave(d_lab->d_vVelocityINLabel, 1);
@@ -188,6 +189,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   new_dw->pleaseSave(d_lab->d_scalarINLabel, nofScalars);
   new_dw->pleaseSave(d_lab->d_densityINLabel, 1);
   new_dw->pleaseSave(d_lab->d_viscosityINLabel, 1);
+#endif
 
   // Save the old velocity as a CC<Vector> Variable
   new_dw->pleaseSave(d_lab->d_oldCCVelocityLabel, 1);
@@ -203,7 +205,6 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
 
   // Save the new velocity as a CC<Vector> Variable
   new_dw->pleaseSave(d_lab->d_newCCVelocityLabel, 1);
-#endif
   return(0);
 }
 
@@ -279,21 +280,21 @@ PicardNonlinearSolver::sched_interpolateFromFCToCC(const LevelP& level,
       Task* tsk = scinew Task("PicardNonlinearSolver::interpolateFCToCC",patch,
 			   old_dw, new_dw, this,
 			   &PicardNonlinearSolver::interpolateFromFCToCC);
-      int numGhostCells = 0;
+      int numGhostCells = 1;
       int matlIndex = 0;
 
       tsk->requires(new_dw, d_lab->d_uVelocityINLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
+		    Ghost::AroundCells, numGhostCells);
       tsk->requires(new_dw, d_lab->d_vVelocityINLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
+		    Ghost::AroundCells, numGhostCells);
       tsk->requires(new_dw, d_lab->d_wVelocityINLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
+		    Ghost::AroundCells, numGhostCells);
       tsk->requires(new_dw, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
+		    Ghost::AroundCells, numGhostCells);
       tsk->requires(new_dw, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
+		    Ghost::AroundCells, numGhostCells);
       tsk->requires(new_dw, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
-		    Ghost::None, numGhostCells);
+		    Ghost::AroundCells, numGhostCells);
 
       tsk->computes(new_dw, d_lab->d_oldCCVelocityLabel, matlIndex, patch);
       tsk->computes(new_dw, d_lab->d_newCCVelocityLabel, matlIndex, patch);
@@ -353,7 +354,7 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
   new_dw->allocate(cellType_new, d_lab->d_cellTypeLabel, matlIndex, patch);
   cellType_new = cellType;
     // Get the PerPatch CellInformation data
-  PerPatch<CellInformation*> cellInfoP;
+  PerPatch<CellInformationP> cellInfoP;
   cellInfoP.setData(scinew CellInformation(patch));
   new_dw->put(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
 
@@ -410,29 +411,29 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 					     DataWarehouseP& new_dw)
 {
   int matlIndex = 0;
-  int nofGhostCells = 0;
+  int nofGhostCells = 1;
 
   // Get the old velocity
   SFCXVariable<double> oldUVel;
   SFCYVariable<double> oldVVel;
   SFCZVariable<double> oldWVel;
   new_dw->get(oldUVel, d_lab->d_uVelocityINLabel, matlIndex, patch, 
-	      Ghost::None, nofGhostCells);
+	      Ghost::AroundCells, nofGhostCells);
   new_dw->get(oldVVel, d_lab->d_vVelocityINLabel, matlIndex, patch, 
-	      Ghost::None, nofGhostCells);
+	      Ghost::AroundCells, nofGhostCells);
   new_dw->get(oldWVel, d_lab->d_wVelocityINLabel, matlIndex, patch, 
-	      Ghost::None, nofGhostCells);
+	      Ghost::AroundCells, nofGhostCells);
 
   // Get the new velocity
   SFCXVariable<double> newUVel;
   SFCYVariable<double> newVVel;
   SFCZVariable<double> newWVel;
   new_dw->get(newUVel, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
-	      Ghost::None, nofGhostCells);
+	      Ghost::AroundCells, nofGhostCells);
   new_dw->get(newVVel, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
-	      Ghost::None, nofGhostCells);
+	      Ghost::AroundCells, nofGhostCells);
   new_dw->get(newWVel, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
-	      Ghost::None, nofGhostCells);
+	      Ghost::AroundCells, nofGhostCells);
 
   // Get the low and high index for the Cell Centered Variables
   IntVector idxLo = patch->getCellLowIndex();
@@ -523,6 +524,28 @@ PicardNonlinearSolver::computeResidual(const LevelP& /*level*/,
 
 //
 // $Log$
+// Revision 1.47.2.1  2000/10/26 10:05:15  moulding
+// merge HEAD into FIELD_REDESIGN
+//
+// Revision 1.53  2000/10/16 16:48:28  sparker
+// Ghost cells required for interpolate FC to CC
+//
+// Revision 1.52  2000/10/16 16:24:12  sparker
+// Commented in pleaseSave
+//
+// Revision 1.51  2000/10/14 17:11:05  sparker
+// Changed PerPatch<CellInformation*> to PerPatch<CellInformationP>
+// to get rid of memory leak
+//
+// Revision 1.50  2000/10/12 00:03:18  rawat
+// running for more than one timestep.
+//
+// Revision 1.49  2000/10/09 18:47:39  sparker
+// Start to do scalar solver
+//
+// Revision 1.48  2000/10/09 17:06:25  rawat
+// modified momentum solver for multi-patch
+//
 // Revision 1.47  2000/09/21 22:45:41  sparker
 // Towards compiling petsc stuff
 //

@@ -7,7 +7,8 @@ SRCDIR := Uintah/GUI
 
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
-$(SRCDIR)/tclIndex: $(SRCDIR)/ChemVis.tcl $(SRCDIR)/PartToGeom.tcl \
+$(SRCDIR)/tclIndex: \
+	$(SRCDIR)/ChemVis.tcl $(SRCDIR)/PartToGeom.tcl \
 	$(SRCDIR)/ParticleGridVisControl.tcl $(SRCDIR)/ParticleViz.tcl \
 	$(SRCDIR)/RescaleParticleColorMap.tcl \
 	$(SRCDIR)/TecplotFileSelector.tcl $(SRCDIR)/TriangleReader.tcl \
@@ -20,8 +21,12 @@ $(SRCDIR)/tclIndex: $(SRCDIR)/ChemVis.tcl $(SRCDIR)/PartToGeom.tcl \
 	$(SRCDIR)/RescaleColorMapForParticles.tcl $(SRCDIR)/ParticleVis.tcl \
 	$(SRCDIR)/NodeHedgehog.tcl $(SRCDIR)/ArchiveReader.tcl \
 	$(SRCDIR)/GridVisualizer.tcl $(SRCDIR)/EigenEvaluator.tcl \
+	$(SRCDIR)/ParticleEigenEvaluator.tcl \
 	$(SRCDIR)/InPlaneEigenEvaluator.tcl \
-	$(SRCDIR)/TensorElementExtractor.tcl
+	$(SRCDIR)/ParticleInPlaneEigenEvaluator.tcl \
+	$(SRCDIR)/TensorElementExtractor.tcl \
+	$(SRCDIR)/ParticleTensorElementExtractor.tcl\
+#[INSERT NEW TCL FILE HERE]
 	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/Uintah/GUI
 
 
@@ -29,6 +34,24 @@ CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.10.2.1  2000/10/26 10:06:04  moulding
+# merge HEAD into FIELD_REDESIGN
+#
+# Revision 1.14  2000/10/24 05:57:54  moulding
+# new module maker Phase 2: new module maker goes online
+#
+# These changes clean out the last remnants of the old module maker and
+# bring the new module maker online.
+#
+# Revision 1.13  2000/10/18 21:10:03  witzel
+# Added ParticleInPlaneEigenEvaluator
+#
+# Revision 1.12  2000/10/18 19:13:40  witzel
+# Added ParticleTensorElementExtractor
+#
+# Revision 1.11  2000/10/17 22:49:35  witzel
+# Added ParticleEigenEvaluator.tcl
+#
 # Revision 1.10  2000/09/20 23:44:50  witzel
 # Added TensorElementExtractor.tcl
 #

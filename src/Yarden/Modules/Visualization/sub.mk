@@ -7,9 +7,11 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Yarden/Modules/Visualization
 
-SRCS     += $(SRCDIR)/Sage.cc $(SRCDIR)/Screen.cc 
+SRCS     += \
+	$(SRCDIR)/ViewTensors.cc\
+#[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Yarden/Datatypes/General PSECore/Datatypes PSECore/Dataflow \
+PSELIBS := Yarden/Datatypes PSECore/Datatypes PSECore/Dataflow \
 	SCICore/Persistent SCICore/Containers SCICore/Util \
 	SCICore/Exceptions SCICore/Thread SCICore/TclInterface \
 	SCICore/Geom SCICore/Datatypes SCICore/Geometry \
@@ -20,6 +22,18 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3.2.1  2000/10/26 10:06:53  moulding
+# merge HEAD into FIELD_REDESIGN
+#
+# Revision 1.5  2000/10/24 05:58:03  moulding
+# new module maker Phase 2: new module maker goes online
+#
+# These changes clean out the last remnants of the old module maker and
+# bring the new module maker online.
+#
+# Revision 1.4  2000/10/23 23:41:31  yarden
+# View Tensors
+#
 # Revision 1.3  2000/03/20 23:38:40  yarden
 # Linux port
 #

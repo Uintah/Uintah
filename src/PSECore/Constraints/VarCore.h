@@ -118,6 +118,7 @@ VarCore::epsilonequal( const Real Epsilon, const VarCore& v )
       return (RealAbs(realvalue-v.realvalue) < Epsilon);
    else {
       ASSERTFAIL("Can't compare PointVariable with RealVariable!!");
+      //return 0;
    }
 }
 
@@ -126,6 +127,9 @@ VarCore::epsilonequal( const Real Epsilon, const VarCore& v )
 
 //
 // $Log$
+// Revision 1.5.2.3  2000/10/26 10:03:54  moulding
+// merge HEAD into FIELD_REDESIGN
+//
 // Revision 1.5.2.2  2000/09/28 03:14:55  mcole
 // merge trunk into FIELD_REDESIGN branch
 //

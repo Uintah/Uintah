@@ -4,6 +4,7 @@
 static char *id="@(#) $Id$";
 
 #include <Uintah/Components/Arches/PressureSolver.h>
+#include <Uintah/Components/Arches/CellInformationP.h>
 #include <Uintah/Components/Arches/Discretization.h>
 #include <Uintah/Components/Arches/Source.h>
 #include <Uintah/Components/Arches/BoundaryCondition.h>
@@ -45,8 +46,6 @@ PressureSolver::PressureSolver(const ArchesLabel* label,
 				     d_physicalConsts(physConst),
 				     d_myworld(myworld)
 {
-  d_pressureVars = scinew ArchesVariables();
-
 }
 
 //****************************************************************************
@@ -166,7 +165,7 @@ PressureSolver::sched_buildLinearMatrix(const LevelP& level,
       tsk->requires(new_dw, d_lab->d_pressureINLabel, matlIndex, patch, 
 		    Ghost::None, zeroGhostCells);
       tsk->requires(new_dw, d_lab->d_densityINLabel, matlIndex, patch, 
-		    Ghost::AroundCells, numGhostCells);
+		    Ghost::AroundCells, numGhostCells+1);
       tsk->requires(new_dw, d_lab->d_viscosityINLabel, matlIndex, patch, 
 		    Ghost::AroundCells, numGhostCells);
       tsk->requires(new_dw, d_lab->d_uVelocitySIVBCLabel, matlIndex, patch, 
@@ -180,13 +179,9 @@ PressureSolver::sched_buildLinearMatrix(const LevelP& level,
       // differencing
       // computes all the components of velocity
       for (int ii = 0; ii < nofStencils; ii++) {
-	tsk->computes(new_dw, d_lab->d_uVelConvCoefPBLMLabel, ii, patch);
-	tsk->computes(new_dw, d_lab->d_vVelConvCoefPBLMLabel, ii, patch);
-	tsk->computes(new_dw, d_lab->d_wVelConvCoefPBLMLabel, ii, patch);
 	tsk->computes(new_dw, d_lab->d_uVelCoefPBLMLabel, ii, patch);
 	tsk->computes(new_dw, d_lab->d_vVelCoefPBLMLabel, ii, patch);
 	tsk->computes(new_dw, d_lab->d_wVelCoefPBLMLabel, ii, patch);
-	tsk->computes(new_dw, d_lab->d_presCoefPBLMLabel, ii, patch);
       }
       tsk->computes(new_dw, d_lab->d_uVelLinSrcPBLMLabel, matlIndex, patch);
       tsk->computes(new_dw, d_lab->d_vVelLinSrcPBLMLabel, matlIndex, patch);
@@ -194,13 +189,80 @@ PressureSolver::sched_buildLinearMatrix(const LevelP& level,
       tsk->computes(new_dw, d_lab->d_uVelNonLinSrcPBLMLabel, matlIndex, patch);
       tsk->computes(new_dw, d_lab->d_vVelNonLinSrcPBLMLabel, matlIndex, patch);
       tsk->computes(new_dw, d_lab->d_wVelNonLinSrcPBLMLabel, matlIndex, patch);
+     
+      sched->addTask(tsk);
+    }
+  }
+  for(Level::const_patchIterator iter=level->patchesBegin();
+      iter != level->patchesEnd(); iter++){
+    const Patch* patch=*iter;
+    {
+      Task* tsk = scinew Task("PressureSolver::BuildCoeffPress",
+			   patch, old_dw, new_dw, this,
+			   &PressureSolver::buildLinearMatrixPress, delta_t);
+
+      int numGhostCells = 1;
+      int zeroGhostCells = 0;
+      int matlIndex = 0;
+      int nofStencils = 7;
+      // Requires
+      // from old_dw for time integration
+      // get old_dw from getTop function
+      tsk->requires(old_dw, d_lab->d_cellTypeLabel, matlIndex, patch, 
+		    Ghost::AroundCells, numGhostCells);
+      tsk->requires(old_dw, d_lab->d_densityCPLabel, matlIndex, patch, 
+		    Ghost::None, zeroGhostCells);
+      tsk->requires(old_dw, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
+		    Ghost::None, zeroGhostCells);
+      tsk->requires(old_dw, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
+		    Ghost::None, zeroGhostCells);
+      tsk->requires(old_dw, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
+		    Ghost::None, zeroGhostCells);
+      // from new_dw
+      tsk->requires(new_dw, d_lab->d_pressureINLabel, matlIndex, patch, 
+		    Ghost::None, zeroGhostCells);
+      tsk->requires(new_dw, d_lab->d_densityINLabel, matlIndex, patch, 
+		    Ghost::AroundCells, numGhostCells);
+      tsk->requires(new_dw, d_lab->d_viscosityINLabel, matlIndex, patch, 
+		    Ghost::AroundCells, numGhostCells);
+      tsk->requires(new_dw, d_lab->d_uVelocitySIVBCLabel, matlIndex, patch, 
+		    Ghost::AroundCells, numGhostCells+1);
+      tsk->requires(new_dw, d_lab->d_vVelocitySIVBCLabel, matlIndex, patch, 
+		    Ghost::AroundCells, numGhostCells+1);
+      tsk->requires(new_dw, d_lab->d_wVelocitySIVBCLabel, matlIndex, patch, 
+		    Ghost::AroundCells, numGhostCells+1);
+
+      /// requires convection coeff because of the nodal
+      // differencing
+      // computes all the components of velocity
+      for (int ii = 0; ii < nofStencils; ii++) {
+	tsk->requires(new_dw, d_lab->d_uVelCoefPBLMLabel, ii, patch,
+		      Ghost::AroundCells, numGhostCells);
+	tsk->requires(new_dw, d_lab->d_vVelCoefPBLMLabel, ii, patch,
+		      Ghost::AroundCells, numGhostCells);
+	tsk->requires(new_dw, d_lab->d_wVelCoefPBLMLabel, ii, patch,
+		      Ghost::AroundCells, numGhostCells);
+	tsk->computes(new_dw, d_lab->d_presCoefPBLMLabel, ii, patch);
+      }
+      tsk->requires(new_dw, d_lab->d_uVelLinSrcPBLMLabel, matlIndex, patch,
+		    Ghost::AroundCells, numGhostCells);
+      tsk->requires(new_dw, d_lab->d_vVelLinSrcPBLMLabel, matlIndex, patch,
+		    Ghost::AroundCells, numGhostCells);
+      tsk->requires(new_dw, d_lab->d_wVelLinSrcPBLMLabel, matlIndex, patch,
+		    Ghost::AroundCells, numGhostCells);
+      tsk->requires(new_dw, d_lab->d_uVelNonLinSrcPBLMLabel, matlIndex, patch,
+		    Ghost::AroundCells, numGhostCells);
+      tsk->requires(new_dw, d_lab->d_vVelNonLinSrcPBLMLabel, matlIndex, patch,
+		    Ghost::AroundCells, numGhostCells);
+      tsk->requires(new_dw, d_lab->d_wVelNonLinSrcPBLMLabel, matlIndex, patch,
+		    Ghost::AroundCells, numGhostCells);
       tsk->computes(new_dw, d_lab->d_presNonLinSrcPBLMLabel, matlIndex, patch);
      
       sched->addTask(tsk);
     }
 
   }
-}
+  }
 
 
 //****************************************************************************
@@ -246,7 +308,7 @@ PressureSolver::sched_pressureLinearSolve(const LevelP& level,
   vector<Task*> tasks(numProcessors, (Task*)0);
   LoadBalancer* lb = sched->getLoadBalancer();
 
-  cerr << "In sched_PressureLinearSolve\n";
+  //cerr << "In sched_PressureLinearSolve\n";
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
@@ -278,14 +340,18 @@ PressureSolver::sched_pressureLinearSolve(const LevelP& level,
        //      tsk->computes(new_dw, d_lab->d_presResidPSLabel, matlIndex, patch);
        //      tsk->computes(new_dw, d_lab->d_presTruncPSLabel, matlIndex, patch);
        tsk->computes(new_dw, d_lab->d_pressurePSLabel, matlIndex, patch);
+#ifdef ARCHES_PRES_DEBUG
        cerr << "Adding computes on patch: " << patch->getID() << '\n';
+#endif
 
     }
   }
   for(int i=0;i<tasks.size();i++)
      if(tasks[i]){
 	sched->addTask(tasks[i]);
+#ifdef ARCHES_PRES_DEBUG
 	cerr << "Adding task: " << *tasks[i] << '\n';
+#endif
      }
   sched->releaseLoadBalancer();
 #endif
@@ -302,21 +368,26 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				  DataWarehouseP& new_dw,
 				  double delta_t)
 {
+  ArchesVariables pressureVars;
   // compute all three componenets of velocity stencil coefficients
   int matlIndex = 0;
   int numGhostCells = 1;
   int zeroGhostCells = 0;
   int nofStencils = 7;
-
+  // Get the reference density
   // Get the required data
-  new_dw->get(d_pressureVars->density, d_lab->d_densityINLabel, 
+  new_dw->get(pressureVars.density, d_lab->d_densityINLabel, 
+	      matlIndex, patch, Ghost::AroundCells, numGhostCells+1);
+  new_dw->get(pressureVars.viscosity, d_lab->d_viscosityINLabel, 
 	      matlIndex, patch, Ghost::AroundCells, numGhostCells);
-  new_dw->get(d_pressureVars->viscosity, d_lab->d_viscosityINLabel, 
-	      matlIndex, patch, Ghost::AroundCells, numGhostCells);
-  new_dw->get(d_pressureVars->pressure, d_lab->d_pressureINLabel, 
+  new_dw->get(pressureVars.pressure, d_lab->d_pressureINLabel, 
 	      matlIndex, patch, Ghost::None, zeroGhostCells);
+  sum_vartype den_ref_var;
+  old_dw->get(den_ref_var, d_lab->d_refDensity_label);
+  pressureVars.den_Ref = den_ref_var;
+  //cerr << "getdensity_ref " << pressureVars.den_Ref << endl;
   // Get the PerPatch CellInformation data
-  PerPatch<CellInformation*> cellInfoP;
+  PerPatch<CellInformationP> cellInfoP;
   old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
   //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
   //  if (old_dw->exists(d_cellInfoLabel, patch)) 
@@ -325,37 +396,37 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
   //  cellInfoP.setData(scinew CellInformation(patch));
   //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
   //}
-  CellInformation* cellinfo = cellInfoP;
-  new_dw->get(d_pressureVars->uVelocity, d_lab->d_uVelocitySIVBCLabel, 
+  CellInformation* cellinfo = cellInfoP.get().get_rep();
+  new_dw->get(pressureVars.uVelocity, d_lab->d_uVelocitySIVBCLabel, 
 	      matlIndex, patch, Ghost::AroundCells, numGhostCells);
-  new_dw->get(d_pressureVars->vVelocity, d_lab->d_vVelocitySIVBCLabel, 
+  new_dw->get(pressureVars.vVelocity, d_lab->d_vVelocitySIVBCLabel, 
 	      matlIndex, patch, Ghost::AroundCells, numGhostCells);
-  new_dw->get(d_pressureVars->wVelocity, d_lab->d_wVelocitySIVBCLabel, 
+  new_dw->get(pressureVars.wVelocity, d_lab->d_wVelocitySIVBCLabel, 
 	      matlIndex, patch, Ghost::AroundCells, numGhostCells);
-  old_dw->get(d_pressureVars->old_uVelocity, d_lab->d_uVelocitySPBCLabel, 
+  old_dw->get(pressureVars.old_uVelocity, d_lab->d_uVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
-  old_dw->get(d_pressureVars->old_vVelocity, d_lab->d_vVelocitySPBCLabel, 
+  old_dw->get(pressureVars.old_vVelocity, d_lab->d_vVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
-  old_dw->get(d_pressureVars->old_wVelocity, d_lab->d_wVelocitySPBCLabel, 
+  old_dw->get(pressureVars.old_wVelocity, d_lab->d_wVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
-  old_dw->get(d_pressureVars->old_density, d_lab->d_densityINLabel, 
+  old_dw->get(pressureVars.old_density, d_lab->d_densityINLabel, 
 		matlIndex, patch, Ghost::None, zeroGhostCells);
-  old_dw->get(d_pressureVars->cellType, d_lab->d_cellTypeLabel, 
+  old_dw->get(pressureVars.cellType, d_lab->d_cellTypeLabel, 
 		matlIndex, patch, Ghost::AroundCells, numGhostCells);
   
   for(int index = 1; index <= Arches::NDIM; ++index) {
 #if  0
     switch (index) {
     case Arches::XDIR:
-      new_dw->allocate(d_pressureVars->variableCalledDU, d_lab->d_DUPBLMLabel,
+      new_dw->allocate(pressureVars.variableCalledDU, d_lab->d_DUPBLMLabel,
 		       matlIndex, patch);
       break;
     case Arches::YDIR:
-      new_dw->allocate(d_pressureVars->variableCalledDV, d_lab->d_DVPBLMLabel,
+      new_dw->allocate(pressureVars.variableCalledDV, d_lab->d_DVPBLMLabel,
 			  matlIndex, patch);
       break;
     case Arches::ZDIR:
-      new_dw->allocate(d_pressureVars->variableCalledDW, d_lab->d_DWPBLMLabel,
+      new_dw->allocate(pressureVars.variableCalledDW, d_lab->d_DWPBLMLabel,
 			  matlIndex, patch);
       break;
     default:
@@ -366,21 +437,21 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     for (int ii = 0; ii < nofStencils; ii++) {
       switch(index) {
       case Arches::XDIR:
-	new_dw->allocate(d_pressureVars->uVelocityCoeff[ii], 
+	new_dw->allocate(pressureVars.uVelocityCoeff[ii], 
 			    d_lab->d_uVelCoefPBLMLabel, ii, patch);
-	new_dw->allocate(d_pressureVars->uVelocityConvectCoeff[ii], 
+	new_dw->allocate(pressureVars.uVelocityConvectCoeff[ii], 
 			    d_lab->d_uVelConvCoefPBLMLabel, ii, patch);
 	break;
       case Arches::YDIR:
-	new_dw->allocate(d_pressureVars->vVelocityCoeff[ii], 
+	new_dw->allocate(pressureVars.vVelocityCoeff[ii], 
 			    d_lab->d_vVelCoefPBLMLabel, ii, patch);
-	new_dw->allocate(d_pressureVars->vVelocityConvectCoeff[ii],
+	new_dw->allocate(pressureVars.vVelocityConvectCoeff[ii],
 			    d_lab->d_vVelConvCoefPBLMLabel, ii, patch);
 	break;
       case Arches::ZDIR:
-	new_dw->allocate(d_pressureVars->wVelocityCoeff[ii], 
+	new_dw->allocate(pressureVars.wVelocityCoeff[ii], 
 			    d_lab->d_wVelCoefPBLMLabel, ii, patch);
-	new_dw->allocate(d_pressureVars->wVelocityConvectCoeff[ii], 
+	new_dw->allocate(pressureVars.wVelocityConvectCoeff[ii], 
 			    d_lab->d_wVelConvCoefPBLMLabel, ii, patch);
 	break;
       default:
@@ -393,30 +464,31 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     d_discretize->calculateVelocityCoeff(pc, patch, old_dw, new_dw, 
 					 delta_t, index, 
 					 Arches::PRESSURE, 
-					 cellinfo, d_pressureVars);
+					 cellinfo, &pressureVars);
     // Calculate Velocity source
     //  inputs : [u,v,w]VelocitySIVBC, densityIN, viscosityIN
     //  outputs: [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
     // get data
     // allocate
+
     switch(index) {
     case Arches::XDIR:
-      new_dw->allocate(d_pressureVars->uVelLinearSrc, 
+      new_dw->allocate(pressureVars.uVelLinearSrc, 
 			  d_lab->d_uVelLinSrcPBLMLabel, matlIndex, patch);
-      new_dw->allocate(d_pressureVars->uVelNonlinearSrc, 
+      new_dw->allocate(pressureVars.uVelNonlinearSrc, 
 			  d_lab->d_uVelNonLinSrcPBLMLabel,
 			  matlIndex, patch);
       break;
     case Arches::YDIR:
-      new_dw->allocate(d_pressureVars->vVelLinearSrc, 
+      new_dw->allocate(pressureVars.vVelLinearSrc, 
 			  d_lab->d_vVelLinSrcPBLMLabel, matlIndex, patch);
-      new_dw->allocate(d_pressureVars->vVelNonlinearSrc, 
+      new_dw->allocate(pressureVars.vVelNonlinearSrc, 
 			  d_lab->d_vVelNonLinSrcPBLMLabel, matlIndex, patch);
       break;
     case Arches::ZDIR:
-      new_dw->allocate(d_pressureVars->wVelLinearSrc, 
+      new_dw->allocate(pressureVars.wVelLinearSrc, 
 			  d_lab->d_wVelLinSrcPBLMLabel, matlIndex, patch);
-      new_dw->allocate(d_pressureVars->wVelNonlinearSrc,
+      new_dw->allocate(pressureVars.wVelNonlinearSrc,
 			  d_lab->d_wVelNonLinSrcPBLMLabel, matlIndex, patch);
       break;
     default:
@@ -425,7 +497,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     d_source->calculateVelocitySource(pc, patch, old_dw, new_dw, 
 				      delta_t, index,
 				      Arches::PRESSURE,
-				      cellinfo, d_pressureVars);
+				      cellinfo, &pressureVars);
     // Calculate the Velocity BCS
     //  inputs : densityCP, [u,v,w]VelocitySIVBC, [u,v,w]VelCoefPBLM
     //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
@@ -434,7 +506,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     
     d_boundaryCondition->velocityBC(pc, patch, old_dw, new_dw, 
 				    index,
-				    Arches::PRESSURE, cellinfo, d_pressureVars);
+				    Arches::PRESSURE, cellinfo, &pressureVars);
 
     // Modify Velocity Mass Source
     //  inputs : [u,v,w]VelocitySIVBC, [u,v,w]VelCoefPBLM, 
@@ -442,60 +514,159 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     //           [u,v,w]VelNonLinSrcPBLM
     //  outputs: [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
     d_source->modifyVelMassSource(pc, patch, old_dw, new_dw, delta_t, index,
-				  Arches::PRESSURE, d_pressureVars);
+				  Arches::PRESSURE, &pressureVars);
 
     // Calculate Velocity diagonal
     //  inputs : [u,v,w]VelCoefPBLM, [u,v,w]VelLinSrcPBLM
     //  outputs: [u,v,w]VelCoefPBLM
     d_discretize->calculateVelDiagonal(pc, patch, old_dw, new_dw, 
 				       index,
-				       Arches::PRESSURE, d_pressureVars);
+				       Arches::PRESSURE, &pressureVars);
+#ifdef ARCHES_PRES_DEBUG
     std::cerr << "Done building matrix for press coeff" << endl;
-  }
+#endif
 
+  }
+  // put required vars
+  for (int ii = 0; ii < nofStencils; ii++) {
+    new_dw->put(pressureVars.uVelocityCoeff[ii], d_lab->d_uVelCoefPBLMLabel, 
+		   ii, patch);
+    new_dw->put(pressureVars.vVelocityCoeff[ii], d_lab->d_vVelCoefPBLMLabel, 
+		   ii, patch);
+    new_dw->put(pressureVars.wVelocityCoeff[ii], d_lab->d_wVelCoefPBLMLabel, 
+		   ii, patch);
+  }
+  new_dw->put(pressureVars.uVelNonlinearSrc, 
+		 d_lab->d_uVelNonLinSrcPBLMLabel, matlIndex, patch);
+  new_dw->put(pressureVars.uVelLinearSrc, 
+		 d_lab->d_uVelLinSrcPBLMLabel, matlIndex, patch);
+  new_dw->put(pressureVars.vVelNonlinearSrc, 
+		 d_lab->d_vVelNonLinSrcPBLMLabel, matlIndex, patch);
+  new_dw->put(pressureVars.vVelLinearSrc, 
+		 d_lab->d_vVelLinSrcPBLMLabel, matlIndex, patch);
+  new_dw->put(pressureVars.wVelNonlinearSrc, 
+		 d_lab->d_wVelNonLinSrcPBLMLabel, matlIndex, patch);
+  new_dw->put(pressureVars.wVelLinearSrc, 
+		 d_lab->d_wVelLinSrcPBLMLabel, matlIndex, patch);
+#ifdef ARCHES_PRES_DEBUG
+  std::cerr << "Done building matrix for vel coeff for pressure" << endl;
+#endif
+
+}
+
+//****************************************************************************
+// Actually build of linear matrix
+//****************************************************************************
+void 
+PressureSolver::buildLinearMatrixPress(const ProcessorGroup* pc,
+				       const Patch* patch,
+				       DataWarehouseP& old_dw,
+				       DataWarehouseP& new_dw,
+				       double delta_t)
+{
+   ArchesVariables pressureVars;
+  // compute all three componenets of velocity stencil coefficients
+  int matlIndex = 0;
+  int numGhostCells = 1;
+  int zeroGhostCells = 0;
+  int nofStencils = 7;
+  // Get the reference density
+  // Get the required data
+  new_dw->get(pressureVars.density, d_lab->d_densityINLabel, 
+	      matlIndex, patch, Ghost::AroundCells, numGhostCells);
+  new_dw->get(pressureVars.viscosity, d_lab->d_viscosityINLabel, 
+	      matlIndex, patch, Ghost::AroundCells, numGhostCells);
+  new_dw->get(pressureVars.pressure, d_lab->d_pressureINLabel, 
+	      matlIndex, patch, Ghost::None, zeroGhostCells);
+  // Get the PerPatch CellInformation data
+  PerPatch<CellInformationP> cellInfoP;
+  old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
+  //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //  if (old_dw->exists(d_cellInfoLabel, patch)) 
+  //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //else {
+  //  cellInfoP.setData(scinew CellInformation(patch));
+  //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
+  //}
+  CellInformation* cellinfo = cellInfoP.get().get_rep();
+  new_dw->get(pressureVars.uVelocity, d_lab->d_uVelocitySIVBCLabel, 
+	      matlIndex, patch, Ghost::AroundCells, numGhostCells+1);
+  new_dw->get(pressureVars.vVelocity, d_lab->d_vVelocitySIVBCLabel, 
+	      matlIndex, patch, Ghost::AroundCells, numGhostCells+1);
+  new_dw->get(pressureVars.wVelocity, d_lab->d_wVelocitySIVBCLabel, 
+	      matlIndex, patch, Ghost::AroundCells, numGhostCells+1);
+  old_dw->get(pressureVars.old_density, d_lab->d_densityINLabel, 
+		matlIndex, patch, Ghost::None, zeroGhostCells);
+  old_dw->get(pressureVars.cellType, d_lab->d_cellTypeLabel, 
+		matlIndex, patch, Ghost::AroundCells, numGhostCells);
+  
+  for (int ii = 0; ii < nofStencils; ii++) {
+    new_dw->get(pressureVars.uVelocityCoeff[ii], 
+		d_lab->d_uVelCoefPBLMLabel, ii, patch,
+		Ghost::AroundCells, numGhostCells);
+    new_dw->get(pressureVars.vVelocityCoeff[ii], 
+		d_lab->d_vVelCoefPBLMLabel, ii, patch,
+		Ghost::AroundCells, numGhostCells);
+    new_dw->get(pressureVars.wVelocityCoeff[ii], 
+		d_lab->d_wVelCoefPBLMLabel, ii, patch,
+		Ghost::AroundCells, numGhostCells);
+  }
+  new_dw->get(pressureVars.uVelNonlinearSrc, 
+	      d_lab->d_uVelNonLinSrcPBLMLabel,
+	      matlIndex, patch,
+	      Ghost::AroundCells, numGhostCells);
+  new_dw->get(pressureVars.vVelNonlinearSrc, 
+	      d_lab->d_vVelNonLinSrcPBLMLabel, matlIndex, patch,
+	      Ghost::AroundCells, numGhostCells);
+  new_dw->get(pressureVars.wVelNonlinearSrc,
+	      d_lab->d_wVelNonLinSrcPBLMLabel, matlIndex, patch,
+	      Ghost::AroundCells, numGhostCells);
+ 
   // Calculate Pressure Coeffs
   //  inputs : densityIN, pressureIN, [u,v,w]VelCoefPBLM[Arches::AP]
   //  outputs: presCoefPBLM[Arches::AE..AB] 
   for (int ii = 0; ii < nofStencils; ii++)
-    new_dw->allocate(d_pressureVars->pressCoeff[ii], 
+    new_dw->allocate(pressureVars.pressCoeff[ii], 
 			d_lab->d_presCoefPBLMLabel, ii, patch);
-  
   d_discretize->calculatePressureCoeff(pc, patch, old_dw, new_dw, 
-				       delta_t, cellinfo, d_pressureVars);
+				       delta_t, cellinfo, &pressureVars);
 
   // Calculate Pressure Source
   //  inputs : pressureSPBC, [u,v,w]VelocitySIVBC, densityCP,
   //           [u,v,w]VelCoefPBLM, [u,v,w]VelNonLinSrcPBLM
   //  outputs: presLinSrcPBLM, presNonLinSrcPBLM
   // Allocate space
-  new_dw->allocate(d_pressureVars->pressLinearSrc, 
+  new_dw->allocate(pressureVars.pressLinearSrc, 
 		      d_lab->d_presLinSrcPBLMLabel, matlIndex, patch);
-  new_dw->allocate(d_pressureVars->pressNonlinearSrc, 
+  new_dw->allocate(pressureVars.pressNonlinearSrc, 
 		      d_lab->d_presNonLinSrcPBLMLabel, matlIndex, patch);
 
   d_source->calculatePressureSource(pc, patch, old_dw, new_dw, delta_t,
-				    cellinfo, d_pressureVars);
+				    cellinfo, &pressureVars);
+
 
   // Calculate Pressure BC
   //  inputs : pressureIN, presCoefPBLM
   //  outputs: presCoefPBLM
   d_boundaryCondition->pressureBC(pc, patch, old_dw, new_dw, 
-				  cellinfo, d_pressureVars);
+				  cellinfo, &pressureVars);
 
   // Calculate Pressure Diagonal
   //  inputs : presCoefPBLM, presLinSrcPBLM
   //  outputs: presCoefPBLM 
   d_discretize->calculatePressDiagonal(pc, patch, old_dw, new_dw, 
-				       d_pressureVars);
+				       &pressureVars);
   
   // put required vars
   for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->put(d_pressureVars->pressCoeff[ii], d_lab->d_presCoefPBLMLabel, 
+    new_dw->put(pressureVars.pressCoeff[ii], d_lab->d_presCoefPBLMLabel, 
 		   ii, patch);
   }
-  new_dw->put(d_pressureVars->pressNonlinearSrc, 
+  new_dw->put(pressureVars.pressNonlinearSrc, 
 		 d_lab->d_presNonLinSrcPBLMLabel, matlIndex, patch);
+#ifdef ARCHES_PRES_DEBUG
   std::cerr << "Done building matrix for press coeff" << endl;
+#endif
 
 }
 
@@ -507,12 +678,15 @@ PressureSolver::pressureLinearSolve_all (const ProcessorGroup* pg,
 					 DataWarehouseP& new_dw,
 					 LevelP level, SchedulerP sched)
 {
+  ArchesVariables pressureVars;
   int me = pg->myrank();
   LoadBalancer* lb = sched->getLoadBalancer();
 
   // initializeMatrix...
   d_linearSolver->matrixCreate(level, lb);
+#ifdef ARCHES_PRES_DEBUG
   cerr << "Finished creating petsc matrix\n";
+#endif
 
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
@@ -523,17 +697,26 @@ PressureSolver::pressureLinearSolve_all (const ProcessorGroup* pg,
 	  // Underrelax...
 
 	  // This calls fillRows on linear(petsc) solver
+#ifdef ARCHES_PRES_DEBUG
 	  cerr << "Calling pressureLinearSolve for patch: " << patch->getID() << '\n';
-	  pressureLinearSolve(pg, patch, old_dw, new_dw);
+#endif
+	  pressureLinearSolve(pg, patch, old_dw, new_dw, pressureVars);
+#ifdef ARCHES_PRES_DEBUG
 	  cerr << "Done with pressureLinearSolve for patch: " << patch->getID() << '\n';
+#endif
        }
     }
   }
   // MPI_Reduce();
   // solve
+#ifdef ARCHES_PRES_DEBUG
   cerr << "Calling pressLinearSolve\n";
+#endif
   d_linearSolver->pressLinearSolve();
+#ifdef ARCHES_PRES_DEBUG
   cerr << "Done with pressLinearSolve\n";
+#endif
+  int pressRefProc = -1;
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
@@ -542,18 +725,57 @@ PressureSolver::pressureLinearSolve_all (const ProcessorGroup* pg,
        //int proc = find_processor_assignment(patch);
        if(proc == me){
 	 //	  unpack from linear solver.
-	 d_linearSolver->copyPressSoln(patch, d_pressureVars);
+	 d_linearSolver->copyPressSoln(patch, &pressureVars);
+#ifdef ARCHES_PRES_DEBUG
 	 cerr << "Calling normPressure for patch: " << patch->getID() << '\n';
-	 normPressure(pg, patch, d_pressureVars);
-	 cerr << "Done with normPressure for patch: " << patch->getID() << '\n';
-	 // put back the results
-	 int matlIndex = 0;
-	 new_dw->put(d_pressureVars->pressure, d_lab->d_pressurePSLabel, 
-		     matlIndex, patch);
-
+#endif
+       }
+       if (patch->containsCell(d_pressRef)) {
+	  pressRefProc = proc;
+	  if(pressRefProc == me){
+	     pressureVars.press_ref = pressureVars.pressure[d_pressRef];
+#ifdef ARCHES_PRES_DEBUG
+	     cerr << "press_ref for norm" << pressureVars.press_ref << " " <<
+	       pressRefProc << endl;
+#endif
+	  }
        }
     }
   }
+    if(pressRefProc == -1)
+       throw InternalError("Patch containing pressure reference point was not found");
+
+    MPI_Bcast(&pressureVars.press_ref, 1, MPI_DOUBLE, pressRefProc, pg->getComm());
+    for(Level::const_patchIterator iter=level->patchesBegin();
+	iter != level->patchesEnd(); iter++){
+     const Patch* patch=*iter;
+     {
+#ifdef ARCHES_PRES_DEBUG
+	 cerr << "After presssoln" << endl;
+#endif
+       int proc = lb->getPatchwiseProcessorAssignment(patch, d_myworld);
+       //int proc = find_processor_assignment(patch);
+       if(proc == me){
+#ifdef ARCHES_PRES_DEBUG
+	 for(CellIterator iter = patch->getCellIterator();
+	     !iter.done(); iter++){
+	   cerr.width(10);
+	   cerr << "press"<<*iter << ": " << pressureVars.pressure[*iter] << "\n" ; 
+	 }
+#endif
+       	 normPressure(pg, patch, &pressureVars);
+#ifdef ARCHES_PRES_DEBUG
+	 cerr << "Done with normPressure for patch: " 
+	      << patch->getID() << '\n';
+#endif
+	 // put back the results
+	 int matlIndex = 0;
+	 new_dw->put(pressureVars.pressure, d_lab->d_pressurePSLabel, 
+		     matlIndex, patch);
+       }
+     }
+    }
+
   // destroy matrix
   d_linearSolver->destroyMatrix();
 }
@@ -563,68 +785,56 @@ void
 PressureSolver::pressureLinearSolve (const ProcessorGroup* pc,
 				     const Patch* patch,
 				     DataWarehouseP& old_dw,
-				     DataWarehouseP& new_dw)
+				     DataWarehouseP& new_dw,
+				     ArchesVariables& pressureVars)
 {
   int matlIndex = 0;
   int numGhostCells = 1;
   int zeroGhostCells = 0;
   int nofStencils = 7;
   // Get the required data
-  new_dw->get(d_pressureVars->pressure, d_lab->d_pressureINLabel, 
+  new_dw->get(pressureVars.pressure, d_lab->d_pressureINLabel, 
 	      matlIndex, patch, Ghost::AroundCells, numGhostCells);
   for (int ii = 0; ii < nofStencils; ii++) 
-    new_dw->get(d_pressureVars->pressCoeff[ii], d_lab->d_presCoefPBLMLabel, 
+    new_dw->get(pressureVars.pressCoeff[ii], d_lab->d_presCoefPBLMLabel, 
 		   ii, patch, Ghost::None, zeroGhostCells);
 
-  new_dw->get(d_pressureVars->pressNonlinearSrc, 
+  new_dw->get(pressureVars.pressNonlinearSrc, 
 		 d_lab->d_presNonLinSrcPBLMLabel, 
 		 matlIndex, patch, Ghost::None, zeroGhostCells);
 
   // compute eqn residual, L1 norm
-  new_dw->allocate(d_pressureVars->residualPressure, d_lab->d_pressureRes,
+  new_dw->allocate(pressureVars.residualPressure, d_lab->d_pressureRes,
 			  matlIndex, patch);
 #if 0
   d_linearSolver->computePressResidual(pc, patch, old_dw, new_dw, 
-				       d_pressureVars);
+				       &pressureVars);
 #else
-  d_pressureVars->residPress=d_pressureVars->truncPress=0;
+  pressureVars.residPress=pressureVars.truncPress=0;
 #endif
-  new_dw->put(sum_vartype(d_pressureVars->residPress), d_lab->d_presResidPSLabel);
-  new_dw->put(sum_vartype(d_pressureVars->truncPress), d_lab->d_presTruncPSLabel);
+  new_dw->put(sum_vartype(pressureVars.residPress), d_lab->d_presResidPSLabel);
+  new_dw->put(sum_vartype(pressureVars.truncPress), d_lab->d_presTruncPSLabel);
   // apply underelaxation to eqn
-#if 0
   d_linearSolver->computePressUnderrelax(pc, patch, old_dw, new_dw,
-					 d_pressureVars);
-    cerr << "After underrelax" << endl;
-    for(CellIterator iter = patch->getCellIterator();
-	!iter.done(); iter++){
-	  cerr.width(10);
-	  cerr << *iter << ": " << d_pressureVars->pressNonlinearSrc[*iter] << "\n" ; 
-    }
-#endif
+					 &pressureVars);
   // put back computed matrix coeffs and nonlinear source terms 
   // modified as a result of underrelaxation 
   // into the matrix datawarehouse
 #if 0
   for (int ii = 0; ii < nofStencils; ii++) {
-    new_dw->put(d_pressureVars->pressCoeff[ii], d_lab->d_presCoefPSLabel, ii, patch);
+    new_dw->put(pressureVars.pressCoeff[ii], d_lab->d_presCoefPSLabel, ii, patch);
   }
-  new_dw->put(d_pressureVars->pressNonLinSrc, d_lab->d_presNonLinSrcPSLabel, 
+  new_dw->put(pressureVars.pressNonLinSrc, d_lab->d_presNonLinSrcPSLabel, 
 	      matlIndex, patch);
 #endif
+
   // for parallel code lisolve will become a recursive task and 
   // will make the following subroutine separate
   // get patch numer ***warning****
   // sets matrix
-  d_linearSolver->setPressMatrix(pc, patch, old_dw, new_dw, d_pressureVars, d_lab);
+  d_linearSolver->setPressMatrix(pc, patch, old_dw, new_dw, &pressureVars, d_lab);
   //  d_linearSolver->pressLinearSolve();
 
-#if 0
-  normPressure(pc, patch, d_pressureVars);
-  // put back the results
-  new_dw->put(d_pressureVars->pressure, d_lab->d_pressurePSLabel, 
-	      matlIndex, patch);
-#endif
 }
   
   
@@ -641,7 +851,8 @@ PressureSolver::normPressure(const ProcessorGroup*,
   IntVector domHi = vars->pressure.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
-  double pressref = d_pressureVars->pressure[d_pressRef];
+  double pressref = vars->press_ref;
+  //  double pressref = 0.0;
   FORT_NORMPRESS(domLo.get_pointer(),domHi.get_pointer(),
 		idxLo.get_pointer(), idxHi.get_pointer(),
 		vars->pressure.getPointer(), 
@@ -649,10 +860,10 @@ PressureSolver::normPressure(const ProcessorGroup*,
 
 #ifdef ARCHES_PRES_DEBUG
   cerr << " After Pressure Normalization : " << endl;
-  for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+  for (int ii = idxLo.x(); ii <= idxHi.x(); ii++) {
     cerr << "pressure for ii = " << ii << endl;
-    for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-      for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+    for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
+      for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
 	cerr.width(10);
 	cerr << vars->pressure[IntVector(ii,jj,kk)] << " " ; 
       }
@@ -664,6 +875,45 @@ PressureSolver::normPressure(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.52.2.1  2000/10/26 10:05:15  moulding
+// merge HEAD into FIELD_REDESIGN
+//
+// Revision 1.63  2000/10/14 17:11:05  sparker
+// Changed PerPatch<CellInformation*> to PerPatch<CellInformationP>
+// to get rid of memory leak
+//
+// Revision 1.62  2000/10/12 20:08:33  sparker
+// Made multipatch work for several timesteps
+// Cleaned up print statements
+//
+// Revision 1.61  2000/10/10 19:30:57  rawat
+// added scalarsolver
+//
+// Revision 1.60  2000/10/09 17:06:25  rawat
+// modified momentum solver for multi-patch
+//
+// Revision 1.59  2000/10/08 18:56:35  rawat
+// fixed the solver for multi
+//
+// Revision 1.58  2000/10/07 21:40:49  rawat
+// fixed pressure norm
+//
+// Revision 1.57  2000/10/07 05:38:51  sparker
+// Changed d_pressureVars into a few different local variables so that
+// they will be freed at the end of the task.
+//
+// Revision 1.56  2000/10/05 16:39:46  rawat
+// modified bcs for multi-patch
+//
+// Revision 1.55  2000/10/04 16:46:23  rawat
+// Parallel solver for pressure is working
+//
+// Revision 1.54  2000/10/02 16:40:25  rawat
+// updated cellinformation for multi-patch
+//
+// Revision 1.53  2000/09/29 20:32:36  rawat
+// added underrelax to pressure solver
+//
 // Revision 1.52  2000/09/26 19:59:17  sparker
 // Work on MPI petsc
 //

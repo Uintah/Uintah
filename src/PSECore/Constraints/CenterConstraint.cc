@@ -182,6 +182,9 @@ CenterConstraint::Satisfy( const Index index, const Scheme scheme, const Real,
 
 //
 // $Log$
+// Revision 1.5.2.2  2000/10/26 10:03:53  moulding
+// merge HEAD into FIELD_REDESIGN
+//
 // Revision 1.5.2.1  2000/09/28 03:14:55  mcole
 // merge trunk into FIELD_REDESIGN branch
 //

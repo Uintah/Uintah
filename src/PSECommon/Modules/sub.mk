@@ -2,6 +2,7 @@
 # Makefile fragment for this subdirectory
 # $Id$
 #
+
 # *** NOTE ***
 # 
 # Do not remove or modify the comment line:
@@ -25,18 +26,23 @@ SUBDIRS := \
         $(SRCDIR)/Surface\
         $(SRCDIR)/Visualization\
 	$(SRCDIR)/Writers\
-	$(SRCDIR)/Domain
-#[INSERT NEW SUBDIRS HERE]
+#[INSERT NEW CATEGORY DIR HERE]
 
 include $(SRCTOP)/scripts/recurse.mk
 
 #
 # $Log$
+# Revision 1.2.2.3  2000/10/26 10:03:21  moulding
+# merge HEAD into FIELD_REDESIGN
+#
 # Revision 1.2.2.2  2000/09/28 03:16:48  mcole
 # merge trunk into FIELD_REDESIGN branch
 #
-# Revision 1.2.2.1  2000/06/07 17:23:37  kuehne
-# Revised sub.mk to include Domain modules
+# Revision 1.5  2000/10/24 05:57:29  moulding
+# new module maker Phase 2: new module maker goes online
+#
+# These changes clean out the last remnants of the old module maker and
+# bring the new module maker online.
 #
 # Revision 1.4  2000/06/08 22:46:23  moulding
 # Added a comment note about not messing with the module maker comment lines,

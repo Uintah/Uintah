@@ -49,7 +49,7 @@ void
 Source::calculateVelocitySource(const ProcessorGroup* ,
 				const Patch* patch,
 				DataWarehouseP& ,
-				DataWarehouseP& ,
+				DataWarehouseP& new_dw,
 				double delta_t,
 				int index,
 				int eqnType,
@@ -61,9 +61,14 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
   double gravity = d_physicalConsts->getGravity(index);
   // get iref, jref, kref and ref density by broadcasting from a patch that contains
   // iref, jref and kref
+  double den_ref = vars->den_Ref;
+
+
   //  double den_ref = vars->density[IntVector(3,3,3)]; // change it!!! use ipref, jpref and kpref
-  double den_ref = 1.184344; // change it!!! use ipref, jpref and kpref
+  //  double den_ref = 1.184344; // change it!!! use ipref, jpref and kpref
+#ifdef ARCHES_MOM_DEBUG
   cerr << " ref_ density" << den_ref << endl;
+#endif
   // Get the patch and variable indices
   IntVector domLoU = vars->uVelocity.getFortLowIndex();
   IntVector domHiU = vars->uVelocity.getFortHighIndex();
@@ -71,8 +76,10 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
   IntVector domHiV = vars->vVelocity.getFortHighIndex();
   IntVector domLoW = vars->wVelocity.getFortLowIndex();
   IntVector domHiW = vars->wVelocity.getFortHighIndex();
-  IntVector domLo = vars->density.getFortLowIndex();
-  IntVector domHi = vars->density.getFortHighIndex();
+  IntVector domLoeg = vars->density.getFortLowIndex();
+  IntVector domHieg = vars->density.getFortHighIndex();
+  IntVector domLo = vars->viscosity.getFortLowIndex();
+  IntVector domHi = vars->viscosity.getFortHighIndex();
   IntVector idxLoU = patch->getSFCXFORTLowIndex();
   IntVector idxHiU = patch->getSFCXFORTHighIndex();
   IntVector idxLoV = patch->getSFCYFORTLowIndex();
@@ -87,11 +94,15 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
   IntVector domHiVng;
   IntVector domLoWng;
   IntVector domHiWng;
+  IntVector domLong = vars->old_density.getFortLowIndex();
+  IntVector domHing = vars->old_density.getFortHighIndex();
 
+#ifdef ARCHES_MOM_DEBUG
   for (int iii = 0; iii < (domHi.z()-domLo.z()); iii++)
     std::cerr << cellinfo->ktsdw[iii] << " " << cellinfo->kbsdw[iii] << endl;
   for (int iii = 0; iii < (domHi.y()-domLo.y()); iii++)
     std::cerr << cellinfo->jnsdv[iii] << " " << cellinfo->jssdv[iii] << endl;
+#endif
   
   switch(index) {
   case Arches::XDIR:
@@ -111,10 +122,12 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 		    vars->vVelocity.getPointer(), 
 		    domLoW.get_pointer(), domHiW.get_pointer(),
 		    vars->wVelocity.getPointer(), 
+		    domLoeg.get_pointer(), domHieg.get_pointer(),
 		    domLo.get_pointer(), domHi.get_pointer(),
 		    vars->density.getPointer(),
-		    vars->old_density.getPointer(),
 		    vars->viscosity.getPointer(), 
+		    domLong.get_pointer(), domHing.get_pointer(),
+		    vars->old_density.getPointer(),
 		    &gravity, &delta_t, &den_ref,
 		    cellinfo->ceeu.get_objs(), cellinfo->cweu.get_objs(), 
 		    cellinfo->cwwu.get_objs(),
@@ -178,10 +191,12 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 		    vars->uVelocity.getPointer(), 
 		    domLoW.get_pointer(), domHiW.get_pointer(),
 		    vars->wVelocity.getPointer(), 
+		    domLoeg.get_pointer(), domHieg.get_pointer(),
 		    domLo.get_pointer(), domHi.get_pointer(),
 		    vars->density.getPointer(),
-		    vars->old_density.getPointer(),
 		    vars->viscosity.getPointer(), 
+		    domLong.get_pointer(), domHing.get_pointer(),
+		    vars->old_density.getPointer(),
 		    &gravity, &delta_t, &den_ref,
 		    cellinfo->cee.get_objs(), cellinfo->cwe.get_objs(), 
 		    cellinfo->cww.get_objs(),
@@ -241,10 +256,12 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 		    vars->uVelocity.getPointer(), 
 		    domLoV.get_pointer(), domHiV.get_pointer(),
 		    vars->vVelocity.getPointer(), 
+		    domLoeg.get_pointer(), domHieg.get_pointer(),
 		    domLo.get_pointer(), domHi.get_pointer(),
 		    vars->density.getPointer(),
-		    vars->old_density.getPointer(),
 		    vars->viscosity.getPointer(), 
+		    domLong.get_pointer(), domHing.get_pointer(),
+		    vars->old_density.getPointer(),
 		    &gravity, &delta_t, &den_ref,
 		    cellinfo->cee.get_objs(), cellinfo->cwe.get_objs(), 
 		    cellinfo->cww.get_objs(),
@@ -462,8 +479,12 @@ Source::calculateScalarSource(const ProcessorGroup*,
 {
 
   // Get the patch and variable indices
-  IntVector domLo = vars->old_scalar.getFortLowIndex();
-  IntVector domHi = vars->old_scalar.getFortHighIndex();
+  int numGhost = 1;
+  IntVector domLo = patch->getGhostCellLowIndex(numGhost);
+  IntVector domHi = patch->getGhostCellHighIndex(numGhost) -
+                                               IntVector(1,1,1);
+  IntVector domLong = vars->old_scalar.getFortLowIndex();
+  IntVector domHing = vars->old_scalar.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
@@ -472,6 +493,7 @@ Source::calculateScalarSource(const ProcessorGroup*,
   // computes remaining diffusion term and also computes 
   // source due to gravity...need to pass ipref, jpref and kpref
   FORT_SCALARSOURCE(domLo.get_pointer(), domHi.get_pointer(),
+		    domLong.get_pointer(), domHing.get_pointer(),
 		    idxLo.get_pointer(), idxHi.get_pointer(),
 		    vars->scalarLinearSrc.getPointer(),
 		    vars->scalarNonlinearSrc.getPointer(),
@@ -737,35 +759,40 @@ Source::addPressureSource(const ProcessorGroup* ,
 			  ArchesVariables* vars)
 {
   // Get the patch and variable indices
-  IntVector domLoU = vars->uVelocity.getFortLowIndex();
-  IntVector domHiU = vars->uVelocity.getFortHighIndex();
-  IntVector idxLoU = patch->getSFCXFORTLowIndex();
-  IntVector idxHiU = patch->getSFCXFORTHighIndex();
-  IntVector domLoV = vars->vVelocity.getFortLowIndex();
-  IntVector domHiV = vars->vVelocity.getFortHighIndex();
-  IntVector idxLoV = patch->getSFCYFORTLowIndex();
-  IntVector idxHiV = patch->getSFCYFORTHighIndex();
-  IntVector domLoW = vars->wVelocity.getFortLowIndex();
-  IntVector domHiW = vars->wVelocity.getFortHighIndex();
-  IntVector idxLoW = patch->getSFCZFORTLowIndex();
-  IntVector idxHiW = patch->getSFCZFORTHighIndex();
+  IntVector domLoU, domHiU;
+  IntVector domLoUng, domHiUng;
+  IntVector idxLoU, idxHiU;
   IntVector domLo = vars->pressure.getFortLowIndex();
   IntVector domHi = vars->pressure.getFortHighIndex();
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
-
+  IntVector domLong = vars->old_density.getFortLowIndex();
+  IntVector domHing = vars->old_density.getFortHighIndex();
+#ifdef ARCHES_SOURCE_DEBUG
+  if (patch->containsCell(IntVector(2,3,3))) {
+    cerr << "[2,3,3] press" << vars->pressure[IntVector(2,3,3)] << " " <<
+      vars->pressure[IntVector(1,3,3)] << endl;
+  }
+#endif
   int ioff, joff, koff;
   switch(index) {
   case Arches::XDIR:
+    domLoU = vars->uVelocity.getFortLowIndex();
+    domHiU = vars->uVelocity.getFortHighIndex();
+    domLoUng = vars->uVelNonlinearSrc.getFortLowIndex();
+    domHiUng = vars->uVelNonlinearSrc.getFortHighIndex();
+    idxLoU = patch->getSFCXFORTLowIndex();
+    idxHiU = patch->getSFCXFORTHighIndex();
+
     ioff = 1;
     joff = 0;
     koff = 0;
     FORT_ADDPRESSGRAD(domLoU.get_pointer(), domHiU.get_pointer(),
+		      domLoUng.get_pointer(), domHiUng.get_pointer(),
 		      idxLoU.get_pointer(), idxHiU.get_pointer(),
 		      vars->uVelocity.getPointer(),
 		      vars->uVelNonlinearSrc.getPointer(), 
 		      vars->uVelocityCoeff[Arches::AP].getPointer(),
 		      domLo.get_pointer(), domHi.get_pointer(),
+		      domLong.get_pointer(), domHing.get_pointer(),
 		      vars->pressure.getPointer(),
 		      vars->old_density.getPointer(),
 		      &delta_t, &ioff, &joff, &koff,
@@ -775,17 +802,25 @@ Source::addPressureSource(const ProcessorGroup* ,
 		      cellinfo->dxpw.get_objs());
     break;
   case Arches::YDIR:
+    domLoU = vars->vVelocity.getFortLowIndex();
+    domHiU = vars->vVelocity.getFortHighIndex();
+    domLoUng = vars->vVelNonlinearSrc.getFortLowIndex();
+    domHiUng = vars->vVelNonlinearSrc.getFortHighIndex();
+    idxLoU = patch->getSFCYFORTLowIndex();
+    idxHiU = patch->getSFCYFORTHighIndex();
     ioff = 0;
     joff = 1;
     koff = 0;
     // computes remaining diffusion term and also computes 
     // source due to gravity...need to pass ipref, jpref and kpref
-    FORT_ADDPRESSGRAD(domLoV.get_pointer(), domHiV.get_pointer(),
-		      idxLoV.get_pointer(), idxHiV.get_pointer(),
+    FORT_ADDPRESSGRAD(domLoU.get_pointer(), domHiU.get_pointer(),
+		      domLoUng.get_pointer(), domHiUng.get_pointer(),
+		      idxLoU.get_pointer(), idxHiU.get_pointer(),
 		      vars->vVelocity.getPointer(),
 		      vars->vVelNonlinearSrc.getPointer(), 
 		      vars->vVelocityCoeff[Arches::AP].getPointer(),
 		      domLo.get_pointer(), domHi.get_pointer(),
+		      domLong.get_pointer(), domHing.get_pointer(),
 		      vars->pressure.getPointer(),
 		      vars->old_density.getPointer(),
 		      &delta_t, &ioff, &joff, &koff,
@@ -795,17 +830,25 @@ Source::addPressureSource(const ProcessorGroup* ,
 		      cellinfo->dyps.get_objs());
     break;
   case Arches::ZDIR:
+    domLoU = vars->wVelocity.getFortLowIndex();
+    domHiU = vars->wVelocity.getFortHighIndex();
+    domLoUng = vars->wVelNonlinearSrc.getFortLowIndex();
+    domHiUng = vars->wVelNonlinearSrc.getFortHighIndex();
+    idxLoU = patch->getSFCZFORTLowIndex();
+    idxHiU = patch->getSFCZFORTHighIndex();
     ioff = 0;
     joff = 0;
     koff = 1;
     // computes remaining diffusion term and also computes 
     // source due to gravity...need to pass ipref, jpref and kpref
-    FORT_ADDPRESSGRAD(domLoW.get_pointer(), domHiW.get_pointer(),
-		      idxLoW.get_pointer(), idxHiW.get_pointer(),
+    FORT_ADDPRESSGRAD(domLoU.get_pointer(), domHiU.get_pointer(),
+		      domLoUng.get_pointer(), domHiUng.get_pointer(),
+		      idxLoU.get_pointer(), idxHiU.get_pointer(),
 		      vars->wVelocity.getPointer(),
 		      vars->wVelNonlinearSrc.getPointer(), 
 		      vars->wVelocityCoeff[Arches::AP].getPointer(),
 		      domLo.get_pointer(), domHi.get_pointer(),
+		      domLong.get_pointer(), domHing.get_pointer(),
 		      vars->pressure.getPointer(),
 		      vars->old_density.getPointer(),
 		      &delta_t, &ioff, &joff, &koff,
@@ -822,6 +865,34 @@ Source::addPressureSource(const ProcessorGroup* ,
 
 //
 //$Log$
+//Revision 1.41.2.1  2000/10/26 10:05:17  moulding
+//merge HEAD into FIELD_REDESIGN
+//
+//Revision 1.49  2000/10/12 20:08:33  sparker
+//Made multipatch work for several timesteps
+//Cleaned up print statements
+//
+//Revision 1.48  2000/10/12 00:03:18  rawat
+//running for more than one timestep.
+//
+//Revision 1.47  2000/10/11 16:37:29  rawat
+//modified calpbc for ghost cells
+//
+//Revision 1.46  2000/10/10 19:30:57  rawat
+//added scalarsolver
+//
+//Revision 1.45  2000/10/09 17:06:25  rawat
+//modified momentum solver for multi-patch
+//
+//Revision 1.44  2000/10/08 18:56:35  rawat
+//fixed the solver for multi
+//
+//Revision 1.43  2000/10/06 23:07:48  rawat
+//fixed some more bc routines for mulit-patch
+//
+//Revision 1.42  2000/09/29 20:32:36  rawat
+//added underrelax to pressure solver
+//
 //Revision 1.41  2000/09/26 19:59:18  sparker
 //Work on MPI petsc
 //

@@ -8,7 +8,7 @@
    </Meta>
 
    <Time>
-	<maxTime>.15</maxTime>
+	<maxTime>0.4</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.00006</delt_min>
 	<delt_max>0.006</delt_max>
@@ -21,7 +21,7 @@
 
     <DataArchiver>
         <filebase>1000grains_2m_svcontact.uda</filebase>
-        <outputInterval>.05</outputInterval>
+        <outputInterval>.01</outputInterval>
     </DataArchiver>
 
     <PhysicalConstants>
@@ -37,8 +37,8 @@
                 <density>1.9</density>
                 <material_type>comp_neo_hook_plastic</material_type>
                 <comp_neo_hook_plastic>
-                    <bulk_modulus>.14</bulk_modulus>
-                    <shear_modulus>.06</shear_modulus>
+                    <bulk_modulus>.102</bulk_modulus>
+                    <shear_modulus>.072</shear_modulus>
                     <yield_stress>.0027</yield_stress>
                     <hardening_modulus>0.001</hardening_modulus>
                     <alpha> 0.0 </alpha>
@@ -6381,7 +6381,7 @@
 		<upper>[0.1,0.1,0.11]</upper>
 		<patches>[1,1,1]</patches>
 	    </Box>
-	    <spacing>[.0025,.0025,.0025]</spacing>
+	    <spacing>[.001,.001,.001]</spacing>
 	</Level>
         <BoundaryConditions>
                 <Face side = "x-">

@@ -15,12 +15,9 @@ SRCS     += $(SRCDIR)/BooleanPort.cc $(SRCDIR)/ColorMapPort.cc \
 	$(SRCDIR)/ScaledBoxWidgetDataPort.cc $(SRCDIR)/SoundPort.cc \
 	$(SRCDIR)/SurfacePort.cc $(SRCDIR)/VectorFieldPort.cc \
 	$(SRCDIR)/VoidStarPort.cc $(SRCDIR)/cMatrixPort.cc \
-	$(SRCDIR)/cVectorPort.cc $(SRCDIR)/SpanTree.cc \
-	$(SRCDIR)/SpanPort.cc \
-	$(SRCDIR)/SpanSpace.cc $(SRCDIR)/templates.cc \
-	$(SRCDIR)/DomainPort.cc $(SRCDIR)/FieldWrapperPort.cc \
-	$(SRCDIR)/FieldPort.cc $(SRCDIR)/AttribPort.cc \
-	$(SRCDIR)/GeomPort.cc \
+	$(SRCDIR)/cVectorPort.cc \
+	$(SRCDIR)/SpanSpace.cc $(SRCDIR)/SpanPort.cc \
+	$(SRCDIR)/templates.cc \
 	$(SRCDIR)/PathPort.cc $(SRCDIR)/CameraViewPort.cc 
 
 PSELIBS := PSECore/Dataflow PSECore/Comm SCICore/Containers \
@@ -32,6 +29,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3.2.5  2000/10/26 10:04:01  moulding
+# merge HEAD into FIELD_REDESIGN
+#
 # Revision 1.3.2.4  2000/10/10 23:02:15  michaelc
 # move from {SVT}Field ports to Field ports
 #

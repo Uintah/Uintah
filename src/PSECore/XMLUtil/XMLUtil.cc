@@ -3,6 +3,7 @@
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Geometry/IntVector.h>
+#include <PSECore/Dataflow/NetworkEditor.h>
 #include <dom/DOM_NamedNodeMap.hpp>
 #include <iostream>
 #include <sstream>
@@ -11,9 +12,10 @@
 #include <stdio.h>
 using namespace std;
 using namespace SCICore::Geometry;
+using namespace PSECore::Dataflow;
 
 namespace PSECore {
-   namespace XMLUtil {
+namespace XMLUtil {
 
 const char _NOTSET_[] = "(null string)";
 
@@ -626,5 +628,51 @@ char* removeWhiteSpace(char* string)
   return string;
 }
 
+clString xmlto_string(const DOMString& str)
+{
+  char* s = str.transcode();
+  clString ret = clString(s);
+  delete[] s;
+  return ret;
 }
+
+clString xmlto_string(const XMLCh* const str)
+{
+  char* s = XMLString::transcode(str);
+  clString ret = clString(s);
+  delete[] s;
+  return ret;
 }
+
+void invalidNode(const DOM_Node& n, const clString& filename)
+{
+  if(n.getNodeType() == DOM_Node::COMMENT_NODE)
+      return;
+  if(n.getNodeType() == DOM_Node::TEXT_NODE){
+    DOMString s = n.getNodeValue();
+    char* str = s.transcode();
+    bool allwhite=true;
+    for(char* p = str; *p != 0; p++){
+      if(!isspace(*p))
+	allwhite=false;
+      }
+    if(!allwhite){
+      postMessage(clString("Extraneous text: ")+str+"after node: "+xmlto_string(n.getNodeName())+"(in file "+filename+")");
+    }
+    delete[] str;
+    return;
+  }
+  postMessage(clString("Do not understand node: ")+xmlto_string(n.getNodeName())+"(in file "+filename+")");
+}
+
+DOMString findText(DOM_Node& node)
+{
+  for(DOM_Node n = node.getFirstChild();n != 0; n = n.getNextSibling()){
+    if(n.getNodeType() == DOM_Node::TEXT_NODE)
+      return n.getNodeValue();
+  }
+  return 0;
+}
+
+} // XMLUtil
+} // PSECore

@@ -85,6 +85,9 @@ double ICEMaterial::getGamma() const
 }
 
 // $Log$
+// Revision 1.4.4.1  2000/10/26 10:05:34  moulding
+// merge HEAD into FIELD_REDESIGN
+//
 // Revision 1.4  2000/10/06 04:05:18  jas
 // Move files into EOS directory.
 //

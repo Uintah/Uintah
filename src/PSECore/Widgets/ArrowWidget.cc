@@ -326,8 +326,8 @@ ArrowWidget::widget_tcl( TCLArgs& args )
 
 //
 // $Log$
-// Revision 1.3.2.1  2000/09/28 03:14:24  mcole
-// merge trunk into FIELD_REDESIGN branch
+// Revision 1.3.2.2  2000/10/26 10:04:06  moulding
+// merge HEAD into FIELD_REDESIGN
 //
 // Revision 1.5  2000/06/27 07:58:40  samsonov
 // Added Get/SetLength member function

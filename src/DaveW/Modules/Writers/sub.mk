@@ -22,7 +22,7 @@ SRCS     += \
 	$(SRCDIR)/SegFldWriter.cc\
 	$(SRCDIR)/SigmaSetWriter.cc\
 	$(SRCDIR)/TensorFieldWriter.cc\
-#[INSERT NEW MODULE HERE]
+#[INSERT NEW CODE FILE HERE]
 
 PSELIBS := DaveW/Datatypes/General PSECore/Datatypes PSECore/Dataflow \
 	SCICore/Persistent SCICore/Exceptions SCICore/Containers \
@@ -33,8 +33,17 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.2.2.2  2000/10/26 10:02:48  moulding
+# merge HEAD into FIELD_REDESIGN
+#
 # Revision 1.2.2.1  2000/09/28 03:19:36  mcole
 # merge trunk into FIELD_REDESIGN branch
+#
+# Revision 1.6  2000/10/24 05:57:19  moulding
+# new module maker Phase 2: new module maker goes online
+#
+# These changes clean out the last remnants of the old module maker and
+# bring the new module maker online.
 #
 # Revision 1.5  2000/07/19 06:27:32  samsonov
 # aPathWriter moved to PSECommon

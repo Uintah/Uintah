@@ -135,11 +135,14 @@ RBGSSolver::computePressUnderrelax(const ProcessorGroup*,
   // Get the patch bounds and the variable bounds
   IntVector domLo = vars->pressure.getFortLowIndex();
   IntVector domHi = vars->pressure.getFortHighIndex();
+  IntVector domLong = vars->pressCoeff[Arches::AP].getFortLowIndex();
+  IntVector domHing = vars->pressCoeff[Arches::AP].getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
   //fortran call
   FORT_UNDERELAX(domLo.get_pointer(), domHi.get_pointer(),
+		 domLong.get_pointer(), domHing.get_pointer(),
 		 idxLo.get_pointer(), idxHi.get_pointer(),
 		 vars->pressure.getPointer(),
 		 vars->pressCoeff[Arches::AP].getPointer(), 
@@ -442,6 +445,8 @@ RBGSSolver::computeVelUnderrelax(const ProcessorGroup* ,
   // Get the patch bounds and the variable bounds
   IntVector domLo;
   IntVector domHi;
+  IntVector domLong;
+  IntVector domHing;
   IntVector idxLo;
   IntVector idxHi;
 
@@ -449,9 +454,12 @@ RBGSSolver::computeVelUnderrelax(const ProcessorGroup* ,
   case Arches::XDIR:
     domLo = vars->uVelocity.getFortLowIndex();
     domHi = vars->uVelocity.getFortHighIndex();
+    domLong = vars->uVelocityCoeff[Arches::AP].getFortLowIndex();
+    domHing = vars->uVelocityCoeff[Arches::AP].getFortHighIndex();
     idxLo = patch->getSFCXFORTLowIndex();
     idxHi = patch->getSFCXFORTHighIndex();
     FORT_UNDERELAX(domLo.get_pointer(), domHi.get_pointer(),
+		   domLong.get_pointer(), domHing.get_pointer(),
 		   idxLo.get_pointer(), idxHi.get_pointer(),
 		   vars->uVelocity.getPointer(),
 		   vars->uVelocityCoeff[Arches::AP].getPointer(), 
@@ -471,10 +479,10 @@ RBGSSolver::computeVelUnderrelax(const ProcessorGroup* ,
       }
     }
     cerr << " After U Vel Underrelax : " << endl;
-    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+    for (int ii = domLong.x(); ii <= domHing.x(); ii++) {
       cerr << "U Vel AP for ii = " << ii << endl;
-      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+      for (int jj = domLong.y(); jj <= domHing.y(); jj++) {
+	for (int kk = domLong.z(); kk <= domHing.z(); kk++) {
 	  cerr.width(14);
 	  cerr << (vars->uVelocityCoeff[Arches::AP])[IntVector(ii,jj,kk)] << " " ; 
 	}
@@ -482,10 +490,10 @@ RBGSSolver::computeVelUnderrelax(const ProcessorGroup* ,
       }
     }
     cerr << " After U Vel Underrelax : " << endl;
-    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+    for (int ii = domLong.x(); ii <= domHing.x(); ii++) {
       cerr << "U Vel SU for ii = " << ii << endl;
-      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+      for (int jj = domLong.y(); jj <= domHing.y(); jj++) {
+	for (int kk = domLong.z(); kk <= domHing.z(); kk++) {
 	  cerr.width(14);
 	  cerr << vars->uVelNonlinearSrc[IntVector(ii,jj,kk)] << " " ; 
 	}
@@ -498,9 +506,12 @@ RBGSSolver::computeVelUnderrelax(const ProcessorGroup* ,
     case Arches::YDIR:
     domLo = vars->vVelocity.getFortLowIndex();
     domHi = vars->vVelocity.getFortHighIndex();
+    domLong = vars->vVelocityCoeff[Arches::AP].getFortLowIndex();
+    domHing = vars->vVelocityCoeff[Arches::AP].getFortHighIndex();
     idxLo = patch->getSFCYFORTLowIndex();
     idxHi = patch->getSFCYFORTHighIndex();
     FORT_UNDERELAX(domLo.get_pointer(), domHi.get_pointer(),
+		   domLong.get_pointer(), domHing.get_pointer(),
 		   idxLo.get_pointer(), idxHi.get_pointer(),
 		   vars->vVelocity.getPointer(),
 		   vars->vVelocityCoeff[Arches::AP].getPointer(), 
@@ -520,10 +531,10 @@ RBGSSolver::computeVelUnderrelax(const ProcessorGroup* ,
       }
     }
     cerr << " After V Vel Underrelax : " << endl;
-    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+    for (int ii = domLong.x(); ii <= domHing.x(); ii++) {
       cerr << "V Vel AP for ii = " << ii << endl;
-      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+      for (int jj = domLong.y(); jj <= domHing.y(); jj++) {
+	for (int kk = domLong.z(); kk <= domHing.z(); kk++) {
 	  cerr.width(14);
 	  cerr << (vars->vVelocityCoeff[Arches::AP])[IntVector(ii,jj,kk)] << " " ; 
 	}
@@ -531,10 +542,10 @@ RBGSSolver::computeVelUnderrelax(const ProcessorGroup* ,
       }
     }
     cerr << " After V Vel Underrelax : " << endl;
-    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+    for (int ii = domLong.x(); ii <= domHing.x(); ii++) {
       cerr << "V Vel SU for ii = " << ii << endl;
-      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+      for (int jj = domLong.y(); jj <= domHing.y(); jj++) {
+	for (int kk = domLong.z(); kk <= domHing.z(); kk++) {
 	  cerr.width(14);
 	  cerr << vars->vVelNonlinearSrc[IntVector(ii,jj,kk)] << " " ; 
 	}
@@ -547,9 +558,12 @@ RBGSSolver::computeVelUnderrelax(const ProcessorGroup* ,
     case Arches::ZDIR:
     domLo = vars->wVelocity.getFortLowIndex();
     domHi = vars->wVelocity.getFortHighIndex();
+    domLong = vars->wVelocityCoeff[Arches::AP].getFortLowIndex();
+    domHing = vars->wVelocityCoeff[Arches::AP].getFortHighIndex();
     idxLo = patch->getSFCZFORTLowIndex();
     idxHi = patch->getSFCZFORTHighIndex();
     FORT_UNDERELAX(domLo.get_pointer(), domHi.get_pointer(),
+		   domLong.get_pointer(), domHing.get_pointer(),
 		   idxLo.get_pointer(), idxHi.get_pointer(),
 		   vars->wVelocity.getPointer(),
 		   vars->wVelocityCoeff[Arches::AP].getPointer(), 
@@ -569,10 +583,10 @@ RBGSSolver::computeVelUnderrelax(const ProcessorGroup* ,
       }
     }
     cerr << " After W Vel Underrelax : " << endl;
-    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+    for (int ii = domLong.x(); ii <= domHing.x(); ii++) {
       cerr << "W Vel AP for ii = " << ii << endl;
-      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+      for (int jj = domLong.y(); jj <= domHing.y(); jj++) {
+	for (int kk = domLong.z(); kk <= domHing.z(); kk++) {
 	  cerr.width(14);
 	  cerr << (vars->wVelocityCoeff[Arches::AP])[IntVector(ii,jj,kk)] << " " ; 
 	}
@@ -580,10 +594,10 @@ RBGSSolver::computeVelUnderrelax(const ProcessorGroup* ,
       }
     }
     cerr << " After W Vel Underrelax : " << endl;
-    for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
+    for (int ii = domLong.x(); ii <= domHing.x(); ii++) {
       cerr << "W Vel SU for ii = " << ii << endl;
-      for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
-	for (int kk = domLo.z(); kk <= domHi.z(); kk++) {
+      for (int jj = domLong.y(); jj <= domHing.y(); jj++) {
+	for (int kk = domLong.z(); kk <= domHing.z(); kk++) {
 	  cerr.width(14);
 	  cerr << vars->wVelNonlinearSrc[IntVector(ii,jj,kk)] << " " ; 
 	}
@@ -615,11 +629,17 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* pc,
   // Get the patch bounds and the variable bounds
   IntVector domLo;
   IntVector domHi;
+  IntVector domLong;
+  IntVector domHing;
   IntVector idxLo;
   IntVector idxHi;
   // for explicit solver
   IntVector domLoDen = vars->old_density.getFortLowIndex();
   IntVector domHiDen = vars->old_density.getFortHighIndex();
+  int numGhostCells = 1;
+  IntVector domLoDenwg = patch->getGhostCellLowIndex(numGhostCells);
+  IntVector domHiDenwg = patch->getGhostCellHighIndex(numGhostCells) -
+                                                        IntVector(1,1,1);
   
   IntVector Size;
 
@@ -644,9 +664,12 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* pc,
   case Arches::XDIR:
     domLo = vars->uVelocity.getFortLowIndex();
     domHi = vars->uVelocity.getFortHighIndex();
+    domLong = vars->uVelNonlinearSrc.getFortLowIndex();
+    domHing = vars->uVelNonlinearSrc.getFortHighIndex();
     idxLo = patch->getSFCXFORTLowIndex();
     idxHi = patch->getSFCXFORTHighIndex();
 
+#if implicit_defined
     Size = domHi - domLo + IntVector(1,1,1);
 
     e1.resize(Size.x());
@@ -661,7 +684,6 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* pc,
 
     nlResid = resid;
     trunc_conv = trunc*1.0E-7;
-#if implicit_defined
     do {
       //fortran call for lineGS solver
       FORT_LINEGS(domLo.get_pointer(), domHi.get_pointer(),
@@ -687,6 +709,7 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* pc,
     cerr << "After u Velocity solve " << nlResid << " " << trunc_conv <<  endl;
 #else
     FORT_EXPLICIT(domLo.get_pointer(), domHi.get_pointer(),
+		  domLong.get_pointer(), domHing.get_pointer(),
 		  idxLo.get_pointer(), idxHi.get_pointer(),
 		  vars->uVelocity.getPointer(),
 		  vars->old_uVelocity.getPointer(),
@@ -699,6 +722,7 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* pc,
 		  vars->uVelocityCoeff[Arches::AP].getPointer(), 
 		  vars->uVelNonlinearSrc.getPointer(),
 		  domLoDen.get_pointer(), domHiDen.get_pointer(),
+		  domLoDenwg.get_pointer(), domHiDenwg.get_pointer(),
 		  vars->old_density.getPointer(), 
 		  cellinfo->sewu.get_objs(), cellinfo->sns.get_objs(),
 		  cellinfo->stb.get_objs(), &delta_t);
@@ -724,9 +748,12 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* pc,
   case Arches::YDIR:
     domLo = vars->vVelocity.getFortLowIndex();
     domHi = vars->vVelocity.getFortHighIndex();
+    domLong = vars->vVelNonlinearSrc.getFortLowIndex();
+    domHing = vars->vVelNonlinearSrc.getFortHighIndex();
     idxLo = patch->getSFCYFORTLowIndex();
     idxHi = patch->getSFCYFORTHighIndex();
 
+#if implicit_defined
     Size = domHi - domLo + IntVector(1,1,1);
 
     e1.resize(Size.x());
@@ -741,7 +768,6 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* pc,
 
     nlResid = resid;
     trunc_conv = trunc*1.0E-7;
-#if implicit_defined
 
     do {
       //fortran call for lineGS solver
@@ -768,6 +794,7 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* pc,
     cerr << "After v Velocity solve " << nlResid << " " << trunc_conv <<  endl;
 #else
     FORT_EXPLICIT(domLo.get_pointer(), domHi.get_pointer(),
+		  domLong.get_pointer(), domHing.get_pointer(),
 		  idxLo.get_pointer(), idxHi.get_pointer(),
 		  vars->vVelocity.getPointer(),
 		  vars->old_vVelocity.getPointer(),
@@ -780,6 +807,7 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* pc,
 		  vars->vVelocityCoeff[Arches::AP].getPointer(), 
 		  vars->vVelNonlinearSrc.getPointer(),
 		  domLoDen.get_pointer(), domHiDen.get_pointer(),
+		  domLoDenwg.get_pointer(), domHiDenwg.get_pointer(),
 		  vars->old_density.getPointer(), 
 		  cellinfo->sew.get_objs(), cellinfo->snsv.get_objs(),
 		  cellinfo->stb.get_objs(), &delta_t);
@@ -805,9 +833,12 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* pc,
   case Arches::ZDIR:
     domLo = vars->wVelocity.getFortLowIndex();
     domHi = vars->wVelocity.getFortHighIndex();
+    domLong = vars->wVelNonlinearSrc.getFortLowIndex();
+    domHing = vars->wVelNonlinearSrc.getFortHighIndex();
     idxLo = patch->getSFCZFORTLowIndex();
     idxHi = patch->getSFCZFORTHighIndex();
 
+#if implicit_defined
     Size = domHi - domLo + IntVector(1,1,1);
 
     e1.resize(Size.x());
@@ -822,7 +853,6 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* pc,
 
     nlResid = resid;
     trunc_conv = trunc*1.0E-7;
-#if implicit_defined
     do {
       //fortran call for lineGS solver
       FORT_LINEGS(domLo.get_pointer(), domHi.get_pointer(),
@@ -848,6 +878,7 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* pc,
     cerr << "After w Velocity solve " << nlResid << " " << trunc_conv <<  endl;
 #else
     FORT_EXPLICIT(domLo.get_pointer(), domHi.get_pointer(),
+		  domLong.get_pointer(), domHing.get_pointer(),
 		  idxLo.get_pointer(), idxHi.get_pointer(),
 		  vars->wVelocity.getPointer(),
 		  vars->old_wVelocity.getPointer(),
@@ -860,6 +891,7 @@ RBGSSolver::velocityLisolve(const ProcessorGroup* pc,
 		  vars->wVelocityCoeff[Arches::AP].getPointer(), 
 		  vars->wVelNonlinearSrc.getPointer(),
 		  domLoDen.get_pointer(), domHiDen.get_pointer(),
+		  domLoDenwg.get_pointer(), domHiDenwg.get_pointer(),
 		  vars->old_density.getPointer(), 
 		  cellinfo->sew.get_objs(), cellinfo->sns.get_objs(),
 		  cellinfo->stbw.get_objs(), &delta_t);
@@ -950,11 +982,14 @@ RBGSSolver::computeScalarUnderrelax(const ProcessorGroup* ,
   // Get the patch bounds and the variable bounds
   IntVector domLo = vars->scalar.getFortLowIndex();
   IntVector domHi = vars->scalar.getFortHighIndex();
+  IntVector domLong = vars->scalarCoeff[Arches::AP].getFortLowIndex();
+  IntVector domHing = vars->scalarCoeff[Arches::AP].getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
   //fortran call
   FORT_UNDERELAX(domLo.get_pointer(), domHi.get_pointer(),
+		 domLong.get_pointer(), domHing.get_pointer(),
 		 idxLo.get_pointer(), idxHi.get_pointer(),
 		 vars->scalar.getPointer(),
 		 vars->scalarCoeff[Arches::AP].getPointer(), 
@@ -980,10 +1015,18 @@ RBGSSolver::scalarLisolve(const ProcessorGroup* pc,
   IntVector domHi = vars->scalar.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector domLong = vars->scalarNonlinearSrc.getFortLowIndex();
+  IntVector domHing = vars->scalarNonlinearSrc.getFortHighIndex();
   // for explicit solver
   IntVector domLoDen = vars->old_density.getFortLowIndex();
   IntVector domHiDen = vars->old_density.getFortHighIndex();
+  int numGhostCells = 1;
+  IntVector domLoDenwg = patch->getGhostCellLowIndex(numGhostCells);
+  // to make it compatible with fortran
+  IntVector domHiDenwg = patch->getGhostCellHighIndex(numGhostCells) -
+                                                      IntVector(1,1,1);
 
+#if implict_defined
   Array1<double> e1;
   Array1<double> f1;
   Array1<double> e2;
@@ -1011,7 +1054,6 @@ RBGSSolver::scalarLisolve(const ProcessorGroup* pc,
   double theta = 0.5;
   int scalarIter = 0;
   double scalarResid = 0.0;
-#if implict_defined
   do {
     //fortran call for lineGS solver
     FORT_LINEGS(domLo.get_pointer(), domHi.get_pointer(),
@@ -1036,6 +1078,7 @@ RBGSSolver::scalarLisolve(const ProcessorGroup* pc,
   cerr << "After scalar " << index <<" solve " << nlResid << " " << trunc_conv <<  endl;
 #endif
      FORT_EXPLICIT(domLo.get_pointer(), domHi.get_pointer(),
+		   domLong.get_pointer(), domHing.get_pointer(),
 		   idxLo.get_pointer(), idxHi.get_pointer(),
 		   vars->scalar.getPointer(), vars->old_scalar.getPointer(),
 		   vars->scalarCoeff[Arches::AE].getPointer(), 
@@ -1047,6 +1090,7 @@ RBGSSolver::scalarLisolve(const ProcessorGroup* pc,
 		   vars->scalarCoeff[Arches::AP].getPointer(), 
 		   vars->scalarNonlinearSrc.getPointer(),
 		   domLoDen.get_pointer(), domHiDen.get_pointer(),
+		   domLoDenwg.get_pointer(), domHiDenwg.get_pointer(),
 		   vars->old_density.getPointer(), 
 		   cellinfo->sew.get_objs(), cellinfo->sns.get_objs(),
 		   cellinfo->stb.get_objs(), &delta_t);
@@ -1102,6 +1146,21 @@ RBGSSolver::setPressMatrix(const ProcessorGroup* ,
 
 //
 // $Log$
+// Revision 1.27.2.1  2000/10/26 10:05:16  moulding
+// merge HEAD into FIELD_REDESIGN
+//
+// Revision 1.31  2000/10/12 00:03:18  rawat
+// running for more than one timestep.
+//
+// Revision 1.30  2000/10/11 21:14:03  rawat
+// fixed a bug in scalar solver
+//
+// Revision 1.29  2000/10/09 17:06:25  rawat
+// modified momentum solver for multi-patch
+//
+// Revision 1.28  2000/09/29 20:32:36  rawat
+// added underrelax to pressure solver
+//
 // Revision 1.27  2000/09/26 19:59:18  sparker
 // Work on MPI petsc
 //

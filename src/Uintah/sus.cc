@@ -90,10 +90,10 @@ int main(int argc, char** argv)
     /*
      * Default values
      */
-    bool do_mpm=false;
-    bool do_arches=false;
-    bool do_ice=false;
-    bool numThreads = 0;
+    bool   do_mpm=false;
+    bool   do_arches=false;
+    bool   do_ice=false;
+    int    numThreads = 0;
     string filename;
     string scheduler;
     string loadbalancer;
@@ -110,6 +110,7 @@ int main(int argc, char** argv)
 	} else if(s == "-ice"){
 	    do_ice=true;
 	} else if(s == "-nthreads"){
+	  cerr << "reading number of threads\n";
 	    if(++i == argc){
 		usage("You must provide a number of threads for -nthreads",
 		      s, argv[0]);
@@ -146,6 +147,7 @@ int main(int argc, char** argv)
        if(Parallel::usingMPI()){
 	  scheduler="MPIScheduler"; // Default for parallel runs
 	  loadbalancer="RoundRobinLoadBalancer";
+	  Parallel::noThreading();
        } else {
 	  scheduler="SingleProcessorScheduler"; // Default for serial runs
 	  loadbalancer="SingleProcessorLoadBalancer";
@@ -186,17 +188,8 @@ int main(int argc, char** argv)
 	// Connect a MPM module if applicable
 	MPMInterface* mpm = 0;
 	if(do_mpm){
-
-	    if(numThreads == 0){
-		mpm = scinew MPM::SerialMPM(world);
-	    } else {
-#ifdef WONT_COMPILE_YET
-		mpm = scinew ThreadedMPM();
-#else
-		mpm = 0;
-#endif
-	    }
-	    sim->attachPort("mpm", mpm);
+	  mpm = scinew MPM::SerialMPM(world);
+	  sim->attachPort("mpm", mpm);
 	}
 
 	// Connect a CFD module if applicable
@@ -205,7 +198,7 @@ int main(int argc, char** argv)
 	    cfd = scinew ArchesSpace::Arches(world);
 	}
 	if(do_ice){
-	    cfd = scinew ICESpace::ICE();
+	    cfd = scinew ICESpace::ICE(world);
 	}
 	if(cfd)
 	    sim->attachPort("cfd", cfd);
@@ -227,6 +220,7 @@ int main(int argc, char** argv)
 	} else if(loadbalancer == "SimpleLoadBalancer") {
 	   bal = scinew SimpleLoadBalancer(world);
 	} else {
+	   bal = 0;
 	   quit( "Unknown load balancer: " + loadbalancer );
 	}
 
@@ -242,6 +236,11 @@ int main(int argc, char** argv)
 	   sim->attachPort("scheduler", sched);
 	   sched->attachPort("load balancer", bal);
 	} else if(scheduler == "MixedScheduler"){
+	   if( numThreads > 0 ){
+	     if( Parallel::getMaxThreads() == 1 ){
+	       Parallel::setMaxThreads( numThreads );
+	     }
+	   }
 	   MixedScheduler* sched =
 	      scinew MixedScheduler(world, output);
 	   sim->attachPort("scheduler", sched);
@@ -278,7 +277,7 @@ int main(int argc, char** argv)
 	Parallel::finalizeManager(Parallel::Abort);
 	abort();
     } catch (std::exception e){
-       cerr << "Caught std exception: " << e.what() << '\n';
+        cerr << "Caught std exception: " << e.what() << '\n';
 	Parallel::finalizeManager(Parallel::Abort);
 	abort();       
     } catch(...){
@@ -295,6 +294,37 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.23.2.1  2000/10/26 10:05:10  moulding
+// merge HEAD into FIELD_REDESIGN
+//
+// Revision 1.30  2000/10/04 20:21:18  jas
+// Changed ICE() to ICE(world).
+//
+// Revision 1.29  2000/10/02 17:54:45  dav
+// Changed the semantics of numThreads.  By specifying "-nthreads", you
+// are no longer asking for the threaded version of components.  You ARE
+// asking for a threaded scheduler to use threads for separate patches.
+// In the future, we will need, for example, another flag (-mpmthreaded)
+// to specify the explicitly threaded version of mpm.
+//
+// Revision 1.28  2000/09/29 20:41:45  dav
+// Added hack to allow -nthreads to be set
+//
+// Revision 1.27  2000/09/29 19:57:51  dav
+// Changed numThreads from bool to int
+//
+// Revision 1.26  2000/09/29 19:54:22  dav
+// Uncommented the commented out sections that called
+// Parallel::finlaizeManager().  They were commented out because the abort
+// was causing print statements to be lost.  Hopefully with the cerr/cout
+// flush in Parallel.cc and a sleep, this should be fixed...
+//
+// Revision 1.25  2000/09/29 05:32:06  sparker
+// Quiet warning from g++
+//
+// Revision 1.24  2000/09/28 23:55:52  dav
+// fix to turn off threads if not using threads
+//
 // Revision 1.23  2000/09/26 21:49:00  dav
 // Added the ability to specify the MixedScheduler on the command line.
 // Added the ability to set an environment var to allow time for debuggers

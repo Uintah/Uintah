@@ -9,11 +9,14 @@
 #include <iostream>
 #include <mpi.h>
 
-using namespace Uintah;
-using std::cerr;
 using namespace SCICore::Exceptions;
+using namespace Uintah;
+
+using std::cerr;
+using std::cout;
 using std::string;
 
+static bool            allowThreads;
 static bool            usingMPI = false;
 static int             maxThreads = 1;
 static MPI_Comm        worldComm = -1;
@@ -44,10 +47,25 @@ Parallel::getMaxThreads()
 }
 
 void
+Parallel::setMaxThreads( int maxNumThreads )
+{
+   ::maxThreads = maxNumThreads;
+   ::allowThreads = true;
+}
+
+void
+Parallel::noThreading()
+{
+  ::allowThreads = false;
+  ::maxThreads = 1;
+}
+
+void
 Parallel::initializeManager(int& argc, char**& argv)
 {
    if( char * max = getenv( "PSE_MAX_THREADS" ) ){
       ::maxThreads = atoi( max );
+      ::allowThreads = true;
       cerr << "PSE_MAX_THREADS set to " << ::maxThreads << "\n";
 
       if( ::maxThreads <= 0 || ::maxThreads > 16 ){
@@ -89,11 +107,14 @@ Parallel::initializeManager(int& argc, char**& argv)
    }
 
    ProcessorGroup* world = getRootProcessorGroup();
-   cerr << "Parallel: processor " << world->myrank() + 1 
-	<< " of " << world->size();
-   if(::usingMPI)
-      cerr << " (using MPI)";
-   cerr << '\n';
+   //   cerr << "Parallel: processor " << world->myrank() + 1 
+   //<< " of " << world->size();
+   if(world->myrank() == 0){
+      cerr << "Parallel: " << world->size() << " processors";
+      if(::usingMPI)
+	 cerr << " (using MPI)";
+      cerr << '\n';
+   }
 }
 
 void
@@ -101,6 +122,9 @@ Parallel::finalizeManager(Circumstances circumstances)
 {
    if(::usingMPI){
       if(circumstances == Abort){
+	 cerr.flush();
+	 cout.flush();
+	 sleep(1);
 	 MPI_Abort(worldComm, 1);
       } else {
 	 int status;
@@ -121,6 +145,24 @@ Parallel::getRootProcessorGroup()
 
 //
 // $Log$
+// Revision 1.12.2.1  2000/10/26 10:06:32  moulding
+// merge HEAD into FIELD_REDESIGN
+//
+// Revision 1.16  2000/10/13 19:51:08  sparker
+// Changed printout of processor n of m to a single # of processors
+//
+// Revision 1.15  2000/09/29 20:43:42  dav
+// Added setMaxThreads()
+//
+// Revision 1.14  2000/09/29 19:52:56  dav
+// Added cerr and cout flushes and a sleep before the abort... In the past
+// print statements have been lost because of the abort.  Hopefully this
+// will allow all output to be displayed before the program actually dies.
+//
+// Revision 1.13  2000/09/28 22:21:34  dav
+// Added code that allows the MPIScheduler to run correctly even if
+// PSE_MAX_THREADS is set.  This was messing up the assigning of resources.
+//
 // Revision 1.12  2000/09/26 21:44:34  dav
 // removed PSE_MPI_DEBUG_LEVEL
 //

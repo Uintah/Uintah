@@ -47,8 +47,10 @@ ViscoScram::ViscoScram(ProblemSpecP& ps)
   ps->require("Beta",d_initialData.Beta);
   ps->require("Gamma",d_initialData.Gamma);
   ps->require("DCp_DTemperature",d_initialData.DCp_DTemperature);
-  ps->require("LoadCurveNumber",d_initialData.LoadCurveNumber);
-  ps->require("NumberOfPoints",d_initialData.NumberOfPoints);
+  //
+  //  FIX  Need to add load curve reader
+  //  ps->require("LoadCurveNumber",d_initialData.LoadCurveNumber);
+  //  ps->require("NumberOfPoints",d_initialData.NumberOfPoints);
 
 
   p_statedata_label = scinew VarLabel("p.statedata",
@@ -149,7 +151,8 @@ void ViscoScram::computeStableTimestep(const Patch* patch,
     }
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
-    new_dw->put(delt_vartype(delT_new), lb->delTAfterConstitutiveModelLabel);
+//    new_dw->put(delt_vartype(delT_new), lb->delTAfterConstitutiveModelLabel);
+    new_dw->put(delt_vartype(delT_new), lb->delTLabel);
 }
 
 void ViscoScram::computeStressTensor(const Patch* patch,
@@ -157,6 +160,10 @@ void ViscoScram::computeStressTensor(const Patch* patch,
                                         DataWarehouseP& old_dw,
                                         DataWarehouseP& new_dw)
 {
+  //
+  //  FIX  To do:  Read in table for vres
+  //               Obtain and modify particle temperature (deg K)
+  //
   Matrix3 velGrad,deformationGradientInc,Identity,zero(0.),One(1.);
   double J,se=0.;
   double c_dil=0.0,Jinc;
@@ -207,7 +214,8 @@ void ViscoScram::computeStressTensor(const Patch* patch,
   double cf = d_initialData.CrackFriction;
   double bulk = (2.*G*(1. + d_initialData.PR))/(3.*(1.-2.*d_initialData.PR));
 
-  double Cp0 = matl->getSpecificHeat();
+  //  FIX  Need thermal properties
+  //  double Cp0 = matl->getSpecificHeat();
 
   for(ParticleSubset::iterator iter = pset->begin();
      iter != pset->end(); iter++){
@@ -228,41 +236,62 @@ void ViscoScram::computeStressTensor(const Patch* patch,
             }
           }
       }
-    
-      Matrix3 D = velGrad + velGrad.Transpose();
 
-      // Calculate the stress Tensor (symmetric 3 x 3 Matrix) given the
-      // time step and the velocity gradient and the material constants
+      // Calculate rate of deformation D, and deviatoric rate DPrime
+    
+      Matrix3 D = (velGrad + velGrad.Transpose())*.5;
       Matrix3 DPrime = D - Identity*onethird*D.Trace();
-      // double EDeff = sqrtopf*DPrime.Norm();
+
+      // Effective deviatoric strain rate
+
+      double EDeff = sqrtopf*DPrime.Norm();
+
+      // Sum of old deviatoric stresses
+
       Matrix3 DevStress =statedata[idx].DevStress[1]+statedata[idx].DevStress[2]
 	                +statedata[idx].DevStress[3]+statedata[idx].DevStress[4]
 			+statedata[idx].DevStress[5];
+
+      // old total stress norm
+
       double EffStress = sqrtopf*pstress[idx].Norm();
+
+      //old deviatoric stress norm
+
       double DevStressNorm = DevStress.Norm();
+
+      // old effective deviatoric stress
+
       double EffDevStress = sqrtopf*DevStressNorm;
 
-      // Add code here to get vres from a lookup table
-      double vres = 1.0;
+      // FIX Add code here to get vres from a lookup table
+
+      double vres = 0.02861 + 0.02999 * EDeff;
 
       double p = -onethird * pstress[idx].Trace();
 
       int compflag = 0;
       if(p < 0.0){
-	compflag = 1;
+	compflag = -1;
       }
 
       EffStress     = (1+compflag)*EffDevStress - compflag*EffStress;
       vres         *= ((1 + compflag) - d_initialData.CrackGrowthRate*compflag);
       double sigmae = sqrt(DevStressNorm*DevStressNorm - compflag*(3*p*p));
-      double sif    = sqrt(3*PI*statedata[idx].CrackRadius/2)*sigmae;
+
+      // Stress intensity factor
+
+      double sif    = sqrt(1.5*PI*statedata[idx].CrackRadius)*sigmae;
+
+      // Modification to include friction on crack faces
+
       double xmup   = (1 + compflag)*sqrt(45./(2.*(3. - 2.*cf*cf)))*cf;
       double a      = xmup*p*sqrt(statedata[idx].CrackRadius);
       double b      = 1. + a/d_initialData.StressIntensityF;
       double termm  = 1. + PI*a*b/d_initialData.StressIntensityF;
       double rko    = d_initialData.StressIntensityF*sqrt(termm);
       double skp    = rko*sqrt(1. + (2./d_initialData.CrackPowerValue));
-      double sk1    = skp*pow((1. + (2./d_initialData.CrackPowerValue)),
+      double sk1    = skp*pow((1. + (d_initialData.CrackPowerValue/2.)),
 			1./d_initialData.CrackPowerValue);
 
       if(vres > d_initialData.CrackMaxGrowthRate){
@@ -271,6 +300,10 @@ void ViscoScram::computeStressTensor(const Patch* patch,
 
       double c    = statedata[idx].CrackRadius;
       double cdot,cc,rk1c,rk2c,rk3c,rk4c;
+
+      // cdot is crack speed
+      // Use fourth order Runge Kutta integration to find new crack radius
+
       if(sif < skp ){
 	cdot = vres*pow((sif/sk1),d_initialData.CrackPowerValue);
 	cc   = vres*delT;
@@ -291,6 +324,8 @@ void ViscoScram::computeStressTensor(const Patch* patch,
 	rk3c = cc*(1. - rko*rko/(PI*(c+.5*rk2c)*EffStress*EffStress));
 	rk4c = cc*(1. - rko*rko/(PI*(c+rk3c)*EffStress*EffStress));
       }
+
+      // Deviatoric stress integration
 
       a = d_initialData.CrackParameterA;
       for(int imw=0;imw<5;imw++){
@@ -366,10 +401,14 @@ void ViscoScram::computeStressTensor(const Patch* patch,
 			(DPrime*2.*G - DevStressT - DevStressS*con1)*con3/con2)
 		          *(d_initialData.G[imw]/G))*delT;
 
-        // Update Deviatoric Stresses
+        // Update Maxwell element Deviatoric Stresses
+
         statedata[idx].DevStress[imw] =
 		 (rk1 + rk4)*onesixth + (rk2 + rk3)*onethird;
       }
+
+      // Update crack radius
+
       statedata[idx].CrackRadius +=
 		onesixth*(rk1c + rk4c) + onethird*(rk2c + rk3c);
 
@@ -377,55 +416,43 @@ void ViscoScram::computeStressTensor(const Patch* patch,
 	        + statedata[idx].DevStress[3]+statedata[idx].DevStress[4]
 		+ statedata[idx].DevStress[5];
 
-      // Fix This
-      double sumn = 1.;
-
       c = statedata[idx].CrackRadius;
       double coa3   = (c*c*c)/(a*a*a);
-      double bot    = 1. + coa3;
       double topc   = 3.*(coa3/c)*cdot;
-      Matrix3 SRate = (DPrime*2.*G - One*sumn - DevStress*topc)/bot;
+      double odt    = 1./delT;
+      Matrix3 SRate = DevStress*odt;
 
       // This is the cracking work rate
-      double scrdot =((DevStress(1,1)*DevStress(1,1) +
-		       DevStress(2,2)*DevStress(2,2) +
-		       DevStress(3,3)*DevStress(3,3) +
-		       DevStress(2,3)*DevStress(2,3) +
-		       DevStress(1,2)*DevStress(1,2) +
-		       DevStress(1,3)*DevStress(1,3))*topc
-                    + (DevStress(1,1)*SRate(1,1) + DevStress(2,2)*SRate(2,2) +
-		       DevStress(3,3)*SRate(3,3) + DevStress(2,3)*SRate(2,3) +
-		       DevStress(1,2)*SRate(1,2) + DevStress(1,3)*SRate(1,3))*
-		       coa3)/(2*G);
+
+      double scrdot =(DevStress.Norm()*DevStress.Norm()*topc
+                      + (DevStress(1,1)*SRate(1,1) + DevStress(2,2)*SRate(2,2) +
+		         DevStress(3,3)*SRate(3,3) + 
+			 2.*(DevStress(2,3)*SRate(2,3) +
+		             DevStress(1,2)*SRate(1,2) + 
+			     DevStress(1,3)*SRate(1,3))
+			) * coa3
+		     )/(2*G);
 
       double ekkdot = D.Trace();
       p = onethird*(pstress[idx].Trace()) + ekkdot*bulk*delT;
 
-      // This is the total Cauchy stress
+      // This is the (updated) Cauchy stress
+
       pstress[idx] = DevStress + Identity*p;
+
+      // Viscoelastic work rate
 
       double svedot = 0.;
       for(int imw=0;imw<5;imw++){
-	svedot += (statedata[idx].DevStress[imw](1,1)*
-				statedata[idx].DevStress[imw](1,1) +
-                   statedata[idx].DevStress[imw](2,2)*
-				statedata[idx].DevStress[imw](2,2) +
-                   statedata[idx].DevStress[imw](3,3)*
-				statedata[idx].DevStress[imw](3,3) +
-                   statedata[idx].DevStress[imw](2,3)*
-				statedata[idx].DevStress[imw](2,3) +
-                   statedata[idx].DevStress[imw](1,2)*
-				statedata[idx].DevStress[imw](1,2) +
-                   statedata[idx].DevStress[imw](1,3)*
-				statedata[idx].DevStress[imw](1,3))
+	svedot += (statedata[idx].DevStress[imw].Norm()*
+		   statedata[idx].DevStress[imw].Norm())
 	           /(2.*d_initialData.G[imw])*d_initialData.RTau[imw] ;
       }
 
-      // Implement the commented out one when possible
-//      double cpnew = Cp0 + d_intialData.DCp_DTemperature*ptemperature[idx];
-      double cpnew = Cp0;
-//      double Cv = cpnew/(1+Beta*ptemperature[idx]);
-      double Cv = cpnew;
+      // FIX  Need to access particle temperature, thermal constants.
+
+      //      double cpnew = Cp0 + d_intialData.DCp_DTemperature*ptemperature[idx];
+      //      double Cv = cpnew/(1+Beta*ptemperature[idx]);
 
       // Compute the deformation gradient increment using the time_step
       // velocity gradient
@@ -443,24 +470,28 @@ void ViscoScram::computeStressTensor(const Patch* patch,
 
       pvolume[idx]=Jinc*pvolume[idx];
 
-      double rhocv = (pvolume[idx]/pmass[idx])*Cv;
-//      statedata[idx].VolumeChangeHeating -=
-//		 d_intitalData.Gamma*ptemperature[idx]*ekkdot*delT;
-      statedata[idx].VolumeChangeHeating = 0.;
+      // FIX when have the particle temperatures, thermal properties
 
+      //      double rhocv = (pvolume[idx]/pmass[idx])*Cv;
+
+      //      statedata[idx].VolumeChangeHeating -=
+      //		 d_intitalData.Gamma*ptemperature[idx]*ekkdot*delT;
+
+      // FIX Need access to thermal constants
       // Increments to the particle temperature
-      statedata[idx].ViscousHeating += svedot/rhocv*delT;
-      statedata[idx].CrackHeating   += scrdot/rhocv*delT;
+      //      statedata[idx].ViscousHeating += svedot/rhocv*delT;
+      //      statedata[idx].CrackHeating   += scrdot/rhocv*delT;
 
-//      ptemperature[idx] += (svedot + scrdot)/rhocv*delT;
+      //      ptemperature[idx] += (svedot + scrdot)/rhocv*delT;
 
       // Compute the strain energy for all the particles
       se += (D(1,1)*pstress[idx](1,1) +
              D(2,2)*pstress[idx](2,2) +
              D(3,3)*pstress[idx](3,3) +
-             D(1,2)*pstress[idx](1,2) +
-             D(1,3)*pstress[idx](1,3) +
-             D(2,3)*pstress[idx](2,3))*pvolume[idx];
+             2.*(D(1,2)*pstress[idx](1,2) +
+		 D(1,3)*pstress[idx](1,3) +
+		 D(2,3)*pstress[idx](2,3))
+	     )*pvolume[idx];
 
       // Compute wave speed at each particle, store the maximum
 
@@ -478,7 +509,7 @@ void ViscoScram::computeStressTensor(const Patch* patch,
 
   WaveSpeed = dx/WaveSpeed;
   double delT_new = WaveSpeed.minComponent();
-  new_dw->put(delt_vartype(delT_new), lb->delTLabel);
+  new_dw->put(delt_vartype(delT_new),lb->delTAfterConstitutiveModelLabel);
   new_dw->put(pstress, lb->pStressAfterStrainRateLabel);
   new_dw->put(deformationGradient, lb->pDeformationMeasureLabel_preReloc);
 
@@ -573,6 +604,19 @@ const TypeDescription* fun_getTypeDescription(ViscoScram::StateData*)
 }
 
 // $Log$
+// Revision 1.10.4.1  2000/10/26 10:05:40  moulding
+// merge HEAD into FIELD_REDESIGN
+//
+// Revision 1.13  2000/10/19 22:48:14  bard
+// Fixed an initialization error.  Runs longer, but not working yet.
+//
+// Revision 1.12  2000/10/17 18:03:56  guilkey
+// Swapped delTLabel with delTAfterConstitutiveModel in two places.
+//
+// Revision 1.11  2000/09/28 23:04:00  bard
+// Viscoscram logic complete in theory, except for known omissions marked
+// by FIX.
+//
 // Revision 1.10  2000/09/26 17:08:36  sparker
 // Need to commit MPI types
 //

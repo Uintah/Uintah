@@ -329,6 +329,9 @@ void SparseRowMatrix::io(Piostream& stream)
 
 //
 // $Log$
+// Revision 1.8.2.2  2000/10/26 10:04:21  moulding
+// merge HEAD into FIELD_REDESIGN
+//
 // Revision 1.8.2.1  2000/09/28 03:13:32  mcole
 // merge trunk into FIELD_REDESIGN branch
 //

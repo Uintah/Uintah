@@ -39,26 +39,26 @@ using std::endl;
 
 using namespace Uintah::ArchesSpace;
 
-//****************************************************************************
+// ****************************************************************************
 // Actual constructor for Arches
-//****************************************************************************
+// ****************************************************************************
 Arches::Arches(const ProcessorGroup* myworld) :
   UintahParallelComponent(myworld)
 {
   d_lab = scinew ArchesLabel();
 }
 
-//****************************************************************************
+// ****************************************************************************
 // Destructor
-//****************************************************************************
+// ****************************************************************************
 Arches::~Arches()
 {
 
 }
 
-//****************************************************************************
+// ****************************************************************************
 // problem set up
-//****************************************************************************
+// ****************************************************************************
 void 
 Arches::problemSetup(const ProblemSpecP& params, 
 		     GridP&,
@@ -111,9 +111,9 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_nlSolver->problemSetup(db);
 }
 
-//****************************************************************************
+// ****************************************************************************
 // Schedule initialization
-//****************************************************************************
+// ****************************************************************************
 void 
 Arches::scheduleInitialize(const LevelP& level,
 			   SchedulerP& sched,
@@ -156,9 +156,9 @@ Arches::scheduleInitialize(const LevelP& level,
     d_boundaryCondition->sched_computePressureBC(level, sched, dw, dw);
 }
 
-//****************************************************************************
+// ****************************************************************************
 // schedule the initialization of parameters
-//****************************************************************************
+// ****************************************************************************
 void 
 Arches::sched_paramInit(const LevelP& level,
 			SchedulerP& sched,
@@ -186,9 +186,9 @@ Arches::sched_paramInit(const LevelP& level,
   }
 }
 
-//****************************************************************************
+// ****************************************************************************
 // schedule computation of stable time step
-//****************************************************************************
+// ****************************************************************************
 void 
 Arches::scheduleComputeStableTimestep(const LevelP&,
 				      SchedulerP&,
@@ -197,9 +197,9 @@ Arches::scheduleComputeStableTimestep(const LevelP&,
   dw->put(delt_vartype(d_deltaT),  d_sharedState->get_delt_label()); 
 }
 
-//****************************************************************************
+// ****************************************************************************
 // Schedule time advance
-//****************************************************************************
+// ****************************************************************************
 void 
 Arches::scheduleTimeAdvance(double time, double dt,
 			    const LevelP& level, 
@@ -208,7 +208,9 @@ Arches::scheduleTimeAdvance(double time, double dt,
 			    DataWarehouseP& new_dw)
 {
 
+#ifdef ARCHES_MAIN_DEBUG
   cerr << "Begin: Arches::scheduleTimeAdvance\n";
+#endif
   // Schedule the non-linear solve
   // require : densityCP, viscosityCTS, [u,v,w]VelocitySP, 
   //           pressureIN. scalarIN
@@ -222,13 +224,15 @@ Arches::scheduleTimeAdvance(double time, double dt,
   //  else {
   //    cerr << "Nonlinear Solver didn't converge" << endl;
   //  }
+#ifdef ARCHES_MAIN_DEBUG
   cerr << "Done: Arches::scheduleTimeAdvance\n";
+#endif
 }
 
 
-//****************************************************************************
+// ****************************************************************************
 // Actual initialization
-//****************************************************************************
+// ****************************************************************************
 void
 Arches::paramInit(const ProcessorGroup* ,
 		  const Patch* patch,
@@ -312,6 +316,16 @@ Arches::paramInit(const ProcessorGroup* ,
   
 //
 // $Log$
+// Revision 1.57.2.1  2000/10/26 10:05:12  moulding
+// merge HEAD into FIELD_REDESIGN
+//
+// Revision 1.59  2000/10/12 20:08:32  sparker
+// Made multipatch work for several timesteps
+// Cleaned up print statements
+//
+// Revision 1.58  2000/10/07 05:35:45  sparker
+// Made comments mroe agreeable to emacs
+//
 // Revision 1.57  2000/09/20 18:05:33  sparker
 // Adding support for Petsc and per-processor tasks
 //

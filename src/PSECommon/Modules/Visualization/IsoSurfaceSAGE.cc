@@ -17,25 +17,14 @@
 
 #include <SCICore/Thread/Time.h>
 #include <SCICore/Containers/String.h>
-#include <PSECore/Dataflow/Module.h>
+
 #include <SCICore/Datatypes/ScalarFieldRGdouble.h>
 #include <SCICore/Datatypes/ScalarFieldRGfloat.h>
 #include <SCICore/Datatypes/ScalarFieldRGshort.h>
-#include <PSECore/Datatypes/ScalarFieldPort.h>
-#include <PSECore/Datatypes/ColorMapPort.h>
-#include <PSECore/Datatypes/GeometryPort.h>
-#include <PSECore/Datatypes/GeometryComm.h>
-#include <PSECore/Datatypes/SurfacePort.h>
+
 #include <SCICore/Thread/Thread.h>
 
 #include <SCICore/Geom/Color.h>
-
-#include <SCICore/TclInterface/TCLTask.h>
-#include <SCICore/TclInterface/TCLvar.h>
-#include <SCICore/TclInterface/TCL.h>
-#include <tcl.h>
-#include <tk.h>
-
 #include <SCICore/Geom/Material.h>
 #include <SCICore/Geom/GeomTriangles.h>
 #include <SCICore/Geom/View.h>
@@ -49,12 +38,28 @@
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Geometry/Transform.h>
 #include <SCICore/Geom/BBoxCache.h>
-#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Geom/GeomDL.h>
+
 #include <SCICore/Geometry/Vector.h>
+#include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/Trig.h>
+
+#include <SCICore/TclInterface/TCLTask.h>
+#include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/TclInterface/TCL.h>
+
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/Datatypes/ScalarFieldPort.h>
+#include <PSECore/Datatypes/ColorMapPort.h>
+#include <PSECore/Datatypes/GeometryPort.h>
+#include <PSECore/Datatypes/GeometryComm.h>
+#include <PSECore/Datatypes/SurfacePort.h>
+#include <PSECore/Datatypes/CameraViewPort.h>
 
 #include <PSECommon/Algorithms/Visualization/Sage.h>
 
+#include <tcl.h>
+#include <tk.h>
 #include <math.h>
 #include <iostream>
 #include <sstream>
@@ -96,7 +101,7 @@ namespace PSECommon {
       ScalarFieldIPort* infield;  // input scalar fields (bricks)
       ScalarFieldIPort* incolorfield;
       ColorMapIPort* incolormap;
-      //      GeometryIPort* igeom;       // input from salmon - view point
+      CameraViewIPort* icam_view;
 
       // ouput
       GeometryOPort* ogeom;       // input from salmon - view point
@@ -107,6 +112,7 @@ namespace PSECommon {
       TCLint tcl_bbox, tcl_value,tcl_visibility, tcl_scan;
       TCLint tcl_reduce, tcl_all;
       TCLint tcl_min_size, tcl_poll;
+      TCLint tcl_dl;
   
       int value, bbox_visibility, visibility;
       int scan, count_values, extract_all;
@@ -114,6 +120,9 @@ namespace PSECommon {
       int box_id;
       int surface_id;
       int points_id;
+
+      CameraView       camv;
+      bool has_camera_view;
 
       MaterialHandle bone;
       MaterialHandle flesh;
@@ -157,6 +166,7 @@ namespace PSECommon {
 
     private:
       void search();
+      int set_view( const View &);
     };
     
     extern "C" Module* make_IsoSurfaceSAGE(const clString& id)
@@ -170,17 +180,18 @@ namespace PSECommon {
     
     IsoSurfaceSAGE::IsoSurfaceSAGE(const clString& id)
       : Module("IsoSurfaceSAGE", id, Filter ), 
-      isoval("isoval", id, this),
-      isoval_min("isoval_min", id, this), 
-      isoval_max("isoval_max", id, this),
-      tcl_bbox("bbox", id, this), 
-      tcl_value("value", id, this), 
-      tcl_visibility("visibility", id, this),
-      tcl_scan("scan", id, this),  
-      tcl_reduce("reduce",id,this), 
-      tcl_all("all",id,this),
-      tcl_min_size("min_size", id, this),
-      tcl_poll("poll", id, this)
+	isoval("isoval", id, this),
+	isoval_min("isoval_min", id, this), 
+	isoval_max("isoval_max", id, this),
+	tcl_bbox("bbox", id, this), 
+	tcl_value("value", id, this), 
+	tcl_visibility("visibility", id, this),
+	tcl_scan("scan", id, this),  
+	tcl_reduce("reduce",id,this), 
+	tcl_all("all",id,this),
+	tcl_min_size("min_size", id, this),
+	tcl_poll("poll", id, this),
+	tcl_dl("dl", id, this)
     {
       // input ports
       infield=scinew ScalarFieldIPort(this, "Field",ScalarFieldIPort::Atomic);
@@ -193,7 +204,9 @@ namespace PSECommon {
       incolormap=scinew ColorMapIPort(this,"Color Map",ColorMapIPort::Atomic);
       add_iport(incolormap);
     
-//       add_iport(scinew GeometryIPort(this, "Geometry", GeometryIPort::Atomic));
+      icam_view=scinew CameraViewIPort(this, "Camera View",  
+				       CameraViewIPort::Atomic);
+      add_iport(icam_view);
 
       // output port
       ogeom=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
@@ -234,6 +247,7 @@ namespace PSECommon {
       screen->setup( 512, 512 );
 
       sage = 0;
+      xres = yres = 512;
     }
 
     IsoSurfaceSAGE::~IsoSurfaceSAGE()
@@ -251,8 +265,7 @@ namespace PSECommon {
 	error("No input field\n");
 	return;
       }
-      cerr <<"got field\n";
-
+      
       if ( scalar_field->generation !=  field_generation ) {
 	// save a handle to this field
 	
@@ -297,27 +310,38 @@ namespace PSECommon {
 	return;
       }
 
-      // Get View information from Salmon
-      gd = ogeom->getData(0, GEOM_VIEW);
-      if ( !gd ) {
-	cerr << "using default view" << endl;
-	gd = default_gd;
+      // Get View information 
+      
+      // first, check if we got a view in the input port
+      CameraViewHandle camera;
+      if ( !icam_view->get( camera ) || !set_view( camera->get_view() )) {
+	cerr << "using Salmon" << endl;
+	// no. get the view from salmon
+	gd = ogeom->getData(0, GEOM_VIEW);
+	if ( !gd ) {
+	  cerr << "using default view" << endl;
+	  gd = default_gd;
+	}
+	
+	sage->setView( *gd->view, 
+		       gd->znear, gd->zfar, gd->xres, gd->yres );
+	has_camera_view = false;
       }
-
-      sage->setView( gd->view, gd->znear, gd->zfar, gd->xres, gd->yres );
 
       search();
 
-      GeometryData *tmp_gd = ogeom->getData(0, GEOM_VIEW);
-
-      if ( tcl_poll.get() ) {
-	if ((*gd->view == *tmp_gd->view) ) 
-	  usleep( 50000 );
-	want_to_execute();
-      }
+      if ( has_camera_view ) 
+	ogeom->setView( 0, camera->get_view() );
+      else if ( tcl_poll.get() ) { 
+	  GeometryData *tmp_gd = ogeom->getData(0, GEOM_VIEW);
+	  if ((*gd->view == *tmp_gd->view) ) 
+	    usleep( 50000 );
+	  want_to_execute();
+	}
+    
     
       SysTime::SysClock end = SysTime::currentTicks();
-      printf("Exec Timer: %.3f\n", (end-start) *SysTime::secondsPerTick() );
+      printf("Exec Timer: %.3f\n\n", (end-(long long)start) *SysTime::secondsPerTick() );
     }
    
 
@@ -388,9 +412,11 @@ namespace PSECommon {
 	surface_id=0;
 	//surface_id2 = 0;
       } else {
+	if ( tcl_dl.get() )
+	  topobj = scinew GeomDL( topobj );
 	GeomBBoxCache *bbc = scinew GeomBBoxCache( topobj,
 						   BBox( bmin, bmax) );
-	surface_id=ogeom->addObj( bbc, surface_name ); // , &lock );
+	surface_id=ogeom->addObj( bbc, surface_name );
       }
       if ( points->pts.size() > 0 ) {
 	if ( points->pts.size() > 2000 )
@@ -398,7 +424,7 @@ namespace PSECommon {
 	points_id =ogeom->addObj( scinew GeomMaterial( points, 
 						       iso_value < 800 ? flesh 
 						       : bone ),
-				  "Dividing Cubes");
+				  "SAGE points");
       }
     }
     
@@ -415,55 +441,49 @@ namespace PSECommon {
     //    	 (end-start)*cycleval*1e-9);
     
 
-
-#ifdef COMMENT
-void
-IsoSurfaceSAGE::do_execute()
+int
+IsoSurfaceSAGE::set_view( const View &view )
 {
-  using PSECore::Comm::MessageTypes;
+  double znear=MAXDOUBLE;
+  double zfar=-MAXDOUBLE;
 
-  for(;;){
-    MessageBase* msg=mailbox.receive();
-    GeometryComm* gmsg=(GeometryComm*)msg;
-    switch(msg->type){
-    case MessageTypes::ExecuteModule:
-      execute();
-      break;
-//     case MessageTypes::TriggerPort:
-//       {
-// 	Scheduler_Module_Message* smsg=(Scheduler_Module_Message*)msg;
-// 	smsg->conn->oport->resend(smsg->conn);
-//       }
-//       break;
-    case MessageTypes::GeometryInit:
-      cerr << "got geom Init\n";
-      //gmsg->reply->send(GeomReply(portid++, &busy));
-      break;	
-    case MessageTypes::GeometrySetView:
-      //gd = gmsg-view;
-      cerr << "got geom set view\n";
-      break;
-    case MessageTypes::GeometryAddObj:
-    case MessageTypes::GeometryDelObj:
-    case MessageTypes::GeometryDelAll:
-      cerr << "Geometry msg add/del/delall " << endl;
-      break;
-    case MessageTypes::GeometryFlush:
-    case MessageTypes::GeometryFlushViews:
-    case MessageTypes::GeometryGetNRoe:
-    case MessageTypes::GeometryGetData:
-      cerr << "Geometry msg flush/flush views/get NRoe/get data" << endl;
-      //ogeom->forward(gmsg);
-      break;
-    default:
-      cerr << "Illegal Message type: " << msg->type << endl;
-      break;
-    }
-    delete msg;
+  Point eyep(view.eyep());
+  Vector dir(view.lookat()-eyep);
+  if(dir.length2() < 1.e-6) {
+    printf("dir error in set view\n");
+    return 0;
   }
+  dir.normalize();
+  double d=-Dot(eyep, dir);
+  for(int ix=0;ix<2;ix++){
+    for(int iy=0;iy<2;iy++){
+      for(int iz=0;iz<2;iz++){
+	Point p(ix?bmax.x():bmin.x(),
+		iy?bmax.y():bmin.y(),
+		iz?bmax.z():bmin.z());
+	double dist=Dot(p, dir)+d;
+	znear=Min(znear, dist);
+	zfar=Max(zfar, dist);
+      }
+    }
+  }
+
+  if(znear <= 0){
+    if(zfar <= 0){
+      // Everything is behind us - it doesn't matter what we do
+      znear=1.0;
+      zfar=2.0;
+    } else {
+      znear=zfar*.001;
+    }
+  }
+
+  sage->setView( view, znear, zfar, xres, yres );
+  has_camera_view = true;
+
+  return 1;
 }
 
-#endif
 
   } // namespace Modules
 } //  namespace PSECommon

@@ -115,27 +115,22 @@ int CCVectorField::interpolate(const Point& p, Vector& value)
 {
   using SCICore::Math::Interpolate;
 
-  Uintah::Box b;
+
   int i;
+  IntVector index;
+  index = level->getCellIndex( p );
   Level::const_patchIterator r;
   for(i = 0, r = level->patchesBegin();
       r != level->patchesEnd(); r++, i++){
-    b = (*r)->getBox();
-    if(b.contains(p)){
+    if( (*r)->containsCell( index )){
       break;
     }
   }
 
-  if (i >= _vars.size())
+  if (i >= _vars.size() || r == level->patchesEnd() )
     return 0;
   
-  IntVector index;
-  if( !(*r)->findCell( p, index))
-    return 0;
-  int ix = index.x();
-  int iy = index.y();
-  int iz = index.z();
-  value = _vars[i][IntVector(ix, iy, iz)];
+  value = _vars[i][index];
   return 1;
 }
 

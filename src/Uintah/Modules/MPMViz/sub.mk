@@ -7,10 +7,15 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Uintah/Modules/MPMViz
 
-SRCS     += $(SRCDIR)/ParticleGridVisControl.cc $(SRCDIR)/PartToGeom.cc \
-	$(SRCDIR)/RescaleParticleColorMap.cc $(SRCDIR)/cfdGridLines.cc \
-	$(SRCDIR)/GridLines.cc $(SRCDIR)/TecplotFileSelector.cc \
-	$(SRCDIR)/VizControl.cc
+SRCS     += \
+	$(SRCDIR)/ParticleGridVisControl.cc\
+	$(SRCDIR)/PartToGeom.cc \
+	$(SRCDIR)/RescaleParticleColorMap.cc\
+	$(SRCDIR)/cfdGridLines.cc \
+	$(SRCDIR)/GridLines.cc\
+	$(SRCDIR)/TecplotFileSelector.cc \
+	$(SRCDIR)/VizControl.cc\
+#[INSERT NEW CODE FILE HERE]
 
 ifeq ($(BUILD_PARALLEL),yes)
 SRCS += $(SRCDIR)/ParticleDB.cc $(SRCDIR)/ParticleDatabase.cc \
@@ -32,6 +37,15 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.4.2.1  2000/10/26 10:06:20  moulding
+# merge HEAD into FIELD_REDESIGN
+#
+# Revision 1.5  2000/10/24 05:57:56  moulding
+# new module maker Phase 2: new module maker goes online
+#
+# These changes clean out the last remnants of the old module maker and
+# bring the new module maker online.
+#
 # Revision 1.4  2000/06/20 17:57:17  kuzimmer
 # Moved GridVisualizer to Uintah
 #

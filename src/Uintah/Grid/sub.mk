@@ -38,6 +38,7 @@ SRCS     += $(SRCDIR)/Array3Index.cc $(SRCDIR)/Box.cc \
 	$(SRCDIR)/KinematicBoundCond.cc \
 	$(SRCDIR)/TempThermalBoundCond.cc \
 	$(SRCDIR)/FluxThermalBoundCond.cc \
+	$(SRCDIR)/PressureBoundCond.cc \
 	$(SRCDIR)/BoundCondFactory.cc
 
 
@@ -50,6 +51,12 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.23.2.1  2000/10/26 10:06:11  moulding
+# merge HEAD into FIELD_REDESIGN
+#
+# Revision 1.24  2000/10/18 03:46:46  jas
+# Added pressure boundary conditions.
+#
 # Revision 1.23  2000/09/25 18:12:20  sparker
 # do not use covariant return types due to problems with g++
 # other linux/g++ fixes

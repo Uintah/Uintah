@@ -9,7 +9,8 @@ c*********************************************************************
      &     SU, SP,
      &     domLoU, domHiU, UU,
      &     domLoV, domHiV, VV,
-     &     domLo, domHi, den, old_den, vis,
+     &     domLoeg, domHieg, domLo, domHi, den, vis,
+     $     domLong, domHing, old_den,
      &     grav, deltat, den_ref,
      &     CEE, CWE, CWW, 
      &     CNN, CSN, CSS,
@@ -50,13 +51,16 @@ c*********************************************************************
       integer domLoV(3), domHiV(3)
       double precision VV(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
      &     domLoV(3):domHiV(3))
+      integer domLoeg(3), domHieg(3)
       integer domLo(3), domHi(3)
-      double precision DEN(domLo(1):domHi(1), domLo(2):domHi(2), 
-     &     domLo(3):domHi(3))
-      double precision old_DEN(domLo(1):domHi(1), domLo(2):domHi(2), 
-     &     domLo(3):domHi(3))
+      double precision DEN(domLoeg(1):domHieg(1), domLoeg(2):domHieg(2), 
+     &     domLoeg(3):domHieg(3))
       double precision VIS(domLo(1):domHi(1), domLo(2):domHi(2), 
      &     domLo(3):domHi(3))
+      integer domLong(3), domHing(3)
+      double precision old_DEN(domLong(1):domHing(1), 
+     $     domLong(2):domHing(2), 
+     &     domLong(3):domHing(3))
       double precision DELTAT, GRAV, DEN_REF
       double precision CEE(domLo(1):domHi(1))
       double precision CWE(domLo(1):domHi(1))
@@ -106,9 +110,9 @@ c-----------------------------------------------------------------------
 c     assemble source coefficients
 c-----------------------------------------------------------------------
       call ARRASS(SU,ZERO,
-     $     domLoW, domHiW, idxLoW, idxHiW)
+     $     domLoWng, domHiWng, idxLoW, idxHiW)
       call ARRASS(SP,ZERO,
-     $     domLoW, domHiW, idxLoW, idxHiW)
+     $     domLoWng, domHiWng, idxLoW, idxHiW)
 
 c     viscous sources
 
@@ -155,6 +159,18 @@ c     viscous sources
 c*********************************************************************
 c
 c $Log$
+c Revision 1.4.2.1  2000/10/26 10:05:27  moulding
+c merge HEAD into FIELD_REDESIGN
+c
+c Revision 1.7  2000/10/08 18:56:41  rawat
+c fixed the solver for multi
+c
+c Revision 1.6  2000/10/06 23:07:53  rawat
+c fixed some more bc routines for mulit-patch
+c
+c Revision 1.5  2000/10/06 05:58:09  sparker
+c Fixed calls to ARRASS (pass in ng array bounds)
+c
 c Revision 1.4  2000/09/26 04:35:34  rawat
 c added some more multi-patch support
 c

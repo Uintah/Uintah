@@ -46,7 +46,7 @@ ProblemSpecP ProblemSpecReader::readInputFile()
       // Parse the input file
       // No exceptions just yet, need to add
 
-      cerr << "Parsing " << filename << endl;
+      //cerr << "Parsing " << filename << endl;
       parser.parse(filename.c_str());
 
       if(handler.foundError)

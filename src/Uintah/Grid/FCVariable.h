@@ -84,6 +84,11 @@ class FCVariable : public Array3<T>, public FCVariableBase {
 		      const IntVector& highIndex);
 
       FCVariable<T>& operator=(const FCVariable<T>&);
+      virtual void* getBasePointer();
+      virtual const TypeDescription* virtualGetTypeDescription() const;
+      virtual void getSizes(IntVector& low, IntVector& high,
+			   IntVector& siz) const;
+
      
      // Replace the values on the indicated face with value
       void fillFace(Patch::FaceType face, const T& value)
@@ -217,26 +222,37 @@ class FCVariable : public Array3<T>, public FCVariableBase {
       const TypeDescription*
       FCVariable<T>::getTypeDescription()
       {
-	 // Dd: Whis isn't td a class variable and does it
-	 // need to be deleted in the destructor?
-	std::cerr << "getting type description from FC var\n";
-
-	 // Dd: Copied this from NC Var... don't know if it is 
-	 // correct.
-	static TypeDescription* td;
-	if(!td){
-	  td = scinew TypeDescription(TypeDescription::FCVariable,
-				   "FCVariable", &maker,
-				   fun_getTypeDescription((T*)0));
-	}
-	return td;
+	 static TypeDescription* td;
+	 if(!td){
+	    td = scinew TypeDescription(TypeDescription::FCVariable,
+					"FCVariable", &maker,
+					fun_getTypeDescription((T*)0));
+	 }
+	 return td;
       }
+   
+   template<class T>
+      const TypeDescription*
+      FCVariable<T>::virtualGetTypeDescription() const
+      {
+	 return getTypeDescription();
+      }
+
+   template<class T>
+      void
+      FCVariable<T>::getSizes(IntVector& low, IntVector& high, IntVector& siz) const
+      {
+	 low=getLowIndex();
+	 high=getHighIndex();
+	 siz=size();
+      }
+
    
    template<class T>
       Variable*
       FCVariable<T>::maker()
       {
-	 return scinew NCVariable<T>();
+	 return scinew FCVariable<T>();
       }
    
    template<class T>
@@ -332,6 +348,13 @@ class FCVariable : public Array3<T>, public FCVariableBase {
 	    throw InternalError("Cannot yet write non-flat objects!\n");
 	 }
       }
+   
+   template<class T>
+      void*
+      FCVariable<T>::getBasePointer()
+      {
+	 return getPointer();
+      }
 
    template<class T>
       void
@@ -356,10 +379,30 @@ class FCVariable : public Array3<T>, public FCVariableBase {
 	 }
       }
 
+
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.9.2.1  2000/10/26 10:06:07  moulding
+// merge HEAD into FIELD_REDESIGN
+//
+// Revision 1.13  2000/10/18 03:46:46  jas
+// Added pressure boundary conditions.
+//
+// Revision 1.12  2000/10/12 20:05:37  sparker
+// Removed print statement from FCVariable
+// Added rewindow to SFC{X,Y,Z}Variables
+// Uncommented assertion in CCVariable
+//
+// Revision 1.11  2000/10/06 02:40:38  jas
+// Implemented more functions.
+//
+// Revision 1.10  2000/10/05 23:11:06  jas
+// Fixed a typo in FCVariable so that maker returns a FCVariable instead of
+// a NCVariable.  Subclassed FCVariableBase from Variable like the other
+// variable types.
+//
 // Revision 1.9  2000/09/25 18:12:19  sparker
 // do not use covariant return types due to problems with g++
 // other linux/g++ fixes

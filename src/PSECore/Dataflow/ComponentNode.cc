@@ -9,11 +9,27 @@
 
 #include <PSECore/Dataflow/ComponentNode.h>
 #include <PSECore/XMLUtil/XMLUtil.h>
+#include <PSECore/Dataflow/PackageDBHandler.h>
+#include <PSECore/Dataflow/StrX.h>
 
 #include <iostream>
 #include <fstream>
 #include <strstream>
 #include <stdlib.h>
+#include <SCICore/Containers/String.h>
+#ifdef __sgi
+#define IRIX
+#pragma set woff 1375
+#endif
+#include <util/PlatformUtils.hpp>
+#include <sax/SAXException.hpp>
+#include <sax/SAXParseException.hpp>
+#include <parsers/DOMParser.hpp>
+#include <dom/DOM_NamedNodeMap.hpp>
+#include <sax/ErrorHandler.hpp>
+#ifdef __sgi
+#pragma reset woff 1375
+#endif
 
 using std::map;
 using std::cout;
@@ -65,18 +81,18 @@ component_node* CreateComponentNode(int type)
     n->gui->parameters = new map<int,parameter_node*>;
     n->testingplans = new map<int,plan_node*>;
     break;
-  case 2: /* name only */
+  case 2: /* name and category only */
     n->name = NOT_SET;
-    n->category = NULL;
+    n->category = NOT_SET;
     n->overview = NULL;
     n->implementation = NULL;
     n->io = NULL;
     n->gui = NULL;
     n->testingplans = NULL;
     break;
-  case 3: /* name and ports */
+  case 3: /* name, category and ports */
     n->name = NOT_SET;
-    n->category = NULL;
+    n->category = NOT_SET;
     n->overview = NULL;
     n->implementation = NULL;
     n->io = new io_node;
@@ -153,7 +169,6 @@ void DestroyDeviceNode(device_node* n)
 
 void DestroyIoNode(io_node* n)
 {
-  char_iter i;
   inport_iter i2;
   outport_iter i3;
   file_iter i4;
@@ -675,6 +690,8 @@ void ProcessComponentNode(const DOM_Node& d, component_node* n)
       n->category = name.getNodeValue().transcode();
     }
   }
+
+  //cout << "processing " << n->category << "::" << n->name << endl;
   
   for (DOM_Node child = d.getFirstChild();
        child!=0;
@@ -723,7 +740,9 @@ void WriteOverviewNodeToStream(overview_node* n, std::ofstream& o)
   }
 
   if (n->summary && n->summary!=NOT_SET)
-    o << "    <summary>" << n->summary << "</summary>" << endl;
+    o << "    <summary>" << endl
+      << "      " << n->summary << endl
+      << "    </summary>" << endl;
     
   if (n->description && n->description!=NOT_SET)
     o << "    <description>" << endl
@@ -828,7 +847,6 @@ void WriteOutportNodeToStream(outport_node* n, std::ofstream& o)
 
 void WriteIoNodeToStream(io_node* n, std::ofstream& o)
 {
-  char_iter i;
   file_iter i2;
   inport_iter i5;
   outport_iter i6;
@@ -911,7 +929,6 @@ void WriteParameterNodeToStream(parameter_node* n, std::ofstream& o)
 
 void WriteGuiNodeToStream(gui_node* n, std::ofstream& o)
 {
-  char_iter i;
   param_iter i2;
 
   o << "  <gui>" << endl;
@@ -987,7 +1004,8 @@ void WriteComponentNodeToFile(component_node* n, const char* filename)
   std::ofstream o(filename);
 
   o << "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" << endl;
-  o << "<!DOCTYPE component SYSTEM \"component.dtd\">" << endl << endl;
+  o << "<!DOCTYPE component SYSTEM \""
+       "../../../doc/ReferenceGuide/component.dtd\">" << endl << endl;
 
   o << "<component name=\"";
   if (n->name && n->name!=NOT_SET)
@@ -1022,6 +1040,40 @@ void WriteComponentNodeToFile(component_node* n, const char* filename)
     o << "</component>" << endl;
   
   o << endl;
+}
+
+void ReadComponentNodeFromFile(component_node* n, const char* filename)
+{
+  // Initialize the XML4C system
+  try {
+    XMLPlatformUtils::Initialize();
+  } catch (const XMLException& toCatch) {
+    std::cerr << "Error during initialization! :\n"
+	 << StrX(toCatch.getMessage()) << endl;
+    return;
+  }
+
+  // Instantiate the DOM parser.
+  DOMParser parser;
+  parser.setDoValidation(false);
+  
+  PackageDBHandler handler;
+  parser.setErrorHandler(&handler);
+  
+  try {
+    parser.parse(filename);
+  }  catch (const XMLException& toCatch) {
+    std::cerr << clString("Error during parsing: '")+
+		filename+"'\nException message is:  "+
+		xmlto_string(toCatch.getMessage());
+    handler.foundError=true;
+  }
+  
+  DOM_Document doc = parser.getDocument();
+  DOM_NodeList list = doc.getElementsByTagName("component");
+  int nlist = list.getLength();
+  for (int i=0;i<nlist;i++)
+    ProcessComponentNode(list.item(i),n);
 }
 
 } // Dataflow
