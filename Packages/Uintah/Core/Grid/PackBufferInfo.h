@@ -7,11 +7,12 @@
 #include <vector>
 #include <Packages/Uintah/Core/Grid/BufferInfo.h>
 #include <Packages/Uintah/Core/ProblemSpec/RefCounted.h>
+#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Core/Malloc/Allocator.h>
 
 namespace Uintah {
   using namespace std;
-
+  
   class PackedBuffer : public RefCounted
   {
   public:
@@ -39,8 +40,8 @@ namespace Uintah {
     // PackBufferInfo is to be an AfterCommuncationHandler object for the
     // MPI_CommunicationRecord template in MPIScheduler.cc.  After receive
     // requests have finished, then it needs to unpack what got received.
-   void finishedCommunication(MPI_Comm comm)
-    { unpack(comm); }
+   void finishedCommunication(const ProcessorGroup * pg)
+    { unpack(pg->getComm()); }
     
   private:
     PackBufferInfo(const PackBufferInfo&);
