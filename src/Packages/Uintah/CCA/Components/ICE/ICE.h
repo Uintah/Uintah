@@ -243,7 +243,8 @@ using namespace SCIRun;
                const Patch* p, const int mat_id);
                
       void setBC(CCVariable<double>& press_CC, const CCVariable<double>& rho,
-               const std::string& type, const Patch* p, const int mat_id);
+               const std::string& whichVar, const std::string& type, 
+               const Patch* p, const int mat_id, DataWarehouse*);
 
       void setBC(CCVariable<Vector>& variable,const std::string& type,
                const Patch* p, const int mat_id);
@@ -292,8 +293,9 @@ using namespace SCIRun;
 
       // Debugging switches
       bool switchDebugInitialize;
-      bool switchDebug_equilibration_press;
+      bool switchDebug_EQ_RF_press;
       bool switchDebug_vel_FC;
+      bool switchDebug_PressDiffRF;
       bool switchDebug_Exchange_FC;
       bool switchDebug_explicit_press;
       bool switchDebug_PressFC;
