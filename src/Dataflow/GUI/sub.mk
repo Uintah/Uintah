@@ -82,6 +82,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ShowField.tcl \
 	$(SRCDIR)/SolveMatrix.tcl \
 	$(SRCDIR)/StreamLines.tcl \
+	$(SRCDIR)/Submatrix.tcl \
 	$(SRCDIR)/TexCuttingPlanes.tcl \
 	$(SRCDIR)/TextureVolVis.tcl \
 	$(SRCDIR)/ViewWidget.tcl \
