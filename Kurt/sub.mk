@@ -3,12 +3,12 @@
 # $Id$
 #
 
-include $(SRCTOP)/scripts/so_prologue.mk
+include $(SRCTOP)/scripts/largeso_prologue.mk
 
 SRCDIR := Kurt
 
 SUBDIRS := $(SRCDIR)/GUI $(SRCDIR)/Geom $(SRCDIR)/Modules \
-		$(SRCDIR)/Datatypes
+		$(SRCDIR)/Datatypes $(SRCDIR)/DataArchive
 
 
 include $(SRCTOP)/scripts/recurse.mk
@@ -23,10 +23,13 @@ PSELIBS := PSECore/Datatypes PSECore/Widgets \
 endif
 LIBS := $(LINK) $(GL_LIBS) -lm
 
-include $(SRCTOP)/scripts/so_epilogue.mk
+include $(SRCTOP)/scripts/largeso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.5  2000/05/20 02:31:44  kuzimmer
+# Multiple changes for new vis tools
+#
 # Revision 1.4  2000/05/16 20:53:59  kuzimmer
 # added new directory
 #

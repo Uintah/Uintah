@@ -4,10 +4,10 @@
 
 <package name="Kurt">
   <guiPath>GUI</guiPath>
-  <scirun-library category="VolVis">
+  <scirun-library category="Vis">
   <soNames>
-    <soName>libKurt_Modules_VolVis.so</soName>
-    <soName>libKurt_Modules_PadField.so</soName>
+    <soName>libKurt_Modules_Vis.so</soName>
+    <!-- this is also ignored for now -->
     <soName>libKurt.so</soName>
   </soNames>
   <dataflow-component name="VolVis">
@@ -45,7 +45,7 @@
   <dataflow-component name="GLTextureBuilder">
     <meta>
       <authors>
-        <author>Unknown</author>
+        <author>Kurt Zimmerman</author>
       </authors>
       <version-date>unknown</version-date>
       <version>1.0</version>
@@ -61,7 +61,7 @@
   <dataflow-component name="TextureVolVis">
     <meta>
       <authors>
-        <author>Unknown</author>
+        <author>Kurt Zimmerman</author>
       </authors>
       <version-date>unknown</version-date>
       <version>1.0</version>
@@ -72,6 +72,70 @@
     <parameters></parameters>
     <implementation>
       <creationFunction>make_TextureVolVis</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="TexCuttingPlanes">
+    <meta>
+      <authors>
+        <author>Kurt Zimmerman</author>
+      </authors>
+      <version-date>unknown</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs> GLTexture3D, ColorMap </inputs>
+    <outputs> GeomObj </outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_TexCuttingPlanes</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="VisControl">
+    <meta>
+      <authors>
+        <author>Kurt Zimmerman</author>
+      </authors>
+      <version-date>unknown</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs> Archive  </inputs>
+    <outputs> ScalarFieldRG, VectorFieldRG, VisParticleSet </outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_VisControl</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="RescaleColorMapForParticles">
+    <meta>
+      <authors>
+        <author>Kurt Zimmerman</author>
+      </authors>
+      <version-date>unknown</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs> Colormap, VisParticleSet  </inputs>
+    <outputs> Colormap </outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_RescaleColorMapForParticles</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="ParticleVis">
+    <meta>
+      <authors>
+        <author>Kurt Zimmerman</author>
+      </authors>
+      <version-date>unknown</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs> Colormap, VisParticleSet  </inputs>
+    <outputs> GeomObj </outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ParticleVis</creationFunction>
     </implementation>
   </dataflow-component>
   </scirun-library>

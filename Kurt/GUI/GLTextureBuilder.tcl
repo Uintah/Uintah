@@ -1,7 +1,7 @@
 
 catch {rename GLTextureBuilder ""}
 
-itcl_class Kurt_VolVis_GLTextureBuilder {
+itcl_class Kurt_Vis_GLTextureBuilder {
     inherit Module
     constructor {config} {
 	set name GLTextureBuilder

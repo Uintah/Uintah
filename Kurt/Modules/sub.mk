@@ -5,12 +5,15 @@
 
 SRCDIR := Kurt/Modules
 
-SUBDIRS := $(SRCDIR)/VolVis
+SUBDIRS := $(SRCDIR)/Vis
 
 include $(SRCTOP)/scripts/recurse.mk
 
 #
 # $Log$
+# Revision 1.3  2000/05/20 02:31:29  kuzimmer
+# Multiple changes for new vis tools
+#
 # Revision 1.2  2000/03/20 19:36:40  sparker
 # Added VPATH support
 #
