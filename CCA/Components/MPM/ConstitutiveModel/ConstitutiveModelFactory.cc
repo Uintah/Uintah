@@ -6,6 +6,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoScram.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoScramForBinder.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HypoElastic.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HypoElasticImplicit.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MWViscoElastic.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/Membrane.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HypoElasticPlastic.h>
@@ -63,8 +64,12 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
    else if (mat_type ==  "visco_scram_binder")
       return(scinew ViscoScramForBinder(child,lb,n8or27));
    
-   else if (mat_type ==  "hypo_elastic")
+   else if (mat_type ==  "hypo_elastic") {
+     if (integrator == "explicit")
       return(scinew HypoElastic(child,lb,n8or27));
+     else if (integrator == "implicit")
+       return(scinew HypoElasticImplicit(child,lb,n8or27));
+   }
    
    else if (mat_type ==  "mw_visco_elastic")
       return(scinew MWViscoElastic(child,lb,n8or27));
