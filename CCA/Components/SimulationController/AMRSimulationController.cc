@@ -182,7 +182,7 @@ void AMRSimulationController::run()
        DumpAllocator(DefaultAllocator(), filename.c_str());
      }
 
-     if(d_sharedState->needAddMaterial()){
+     if(d_sharedState->needAddMaterial() != 0){
        d_sim->addMaterial(d_ups, currentGrid, d_sharedState);
        d_sharedState->finalizeMaterials();
        d_scheduler->initialize();
@@ -513,7 +513,7 @@ void AMRSimulationController::recompile(double t, double delt, GridP& currentGri
   if(d_myworld->myrank() == 0)
     cout << "DONE TASKGRAPH RE-COMPILE (" << dt << " seconds)\n";
   
-  d_sharedState->setNeedAddMaterial(false);
+  d_sharedState->setNeedAddMaterial(0);
 }
 
 void AMRSimulationController::executeTimestep(double t, double& delt, GridP& currentGrid, int totalFine)
