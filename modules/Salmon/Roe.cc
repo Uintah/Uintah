@@ -596,6 +596,7 @@ void Roe::goHomeCB(CallbackData*, void*)
 void Roe::autoViewCB(CallbackData*, void*)
 {
     BBox bbox;
+    int ok=0;
     HashTableIter<int,HashTable<int, GeomObj*>*> iter(&manager->portHash);
     for (iter.first(); iter.ok(); ++iter) {
 	HashTable<int, GeomObj*>* serHash=iter.get_data();
@@ -604,10 +605,13 @@ void Roe::autoViewCB(CallbackData*, void*)
 	    GeomObj *geom=serIter.get_data();
 	    for (int i=0; i<geomItemA.size(); i++)
 		if (geomItemA[i]->geom == geom)
-		    if (geomItemA[i]->vis)
+		    if (geomItemA[i]->vis) {
 			bbox.extend(geom->bbox());
+			ok=1;
+		    }
 	}		
     }	
+    if (!ok) return;
     Point lookat(bbox.center());
     lookat.z(bbox.max().z());
     double xwidth=lookat.x()-bbox.min().x();
