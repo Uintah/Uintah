@@ -230,9 +230,12 @@ TetVolMesh::compute_faces()
     face_lock_.unlock();
     return;
   }
+
   faces_.clear();
   all_faces_.clear();
   unsigned int i, num_cells = cells_.size();
+  //faces_.resize((unsigned)(num_cells * 1.25));
+  //all_faces_.resize((unsigned)(num_cells * 1.25));
   for (i = 0; i < num_cells; i++)
   {
     faces_.insert(i);
@@ -251,10 +254,13 @@ TetVolMesh::compute_edges()
   if ((synchronized_ & EDGES_E) && (synchronized_ & EDGE_NEIGHBORS_E)) {
     edge_lock_.unlock();
     return;
-  }
+  } 
+
   edges_.clear();
   all_edges_.clear();
   unsigned int i, num_cells = (cells_.size()) / 4 * 6;
+  //  edges_.resize((unsigned)(num_cells * 1.25));
+  //all_edges_.resize((unsigned)(num_cells * 1.25));
   for (i = 0; i < num_cells; i++)
   {
     edges_.insert(i);
@@ -569,7 +575,11 @@ TetVolMesh::is_edge(Node::index_type n0, Node::index_type n1,
   if (array)
   {
     array->clear();
-    copy(range.first, range.second, array->end());
+    Edge::HalfEdgeSet::iterator iter = range.first;
+    while(iter != range.second) {
+      array->push_back(*iter);
+      ++iter;
+    }
   }
 
   //! Delete the pahntom cell
@@ -772,10 +782,163 @@ TetVolMesh::get_cells(Cell::array_type &array, Face::index_type idx) const
   }
 }
 
-  
 
-//! this is a bad hack for existing code that calls this function
-//! call the one below instead
+bool
+TetVolMesh::split_cell_at_boundary(Cell::array_type &new_tets, 
+				   Node::index_type &ni,
+				   Cell::index_type ci, Face::index_type fi)
+{
+  new_tets.resize(3);
+  Point face_center;
+  get_center(face_center, fi);
+  ni = add_point(face_center);
+
+  Node::array_type face_nodes;
+  get_nodes(face_nodes, fi);
+
+  Node::index_type piv_ni = cells_[(int)fi];
+
+  new_tets[0] = ci;
+  mod_tet(ci, ni, piv_ni, face_nodes[0], face_nodes[1]);
+  new_tets[1] = add_tet(ni, piv_ni, face_nodes[2], face_nodes[0]);
+  new_tets[2] = add_tet(ni, piv_ni, face_nodes[1], face_nodes[2]);
+  return true;
+}
+
+bool
+TetVolMesh::split_2_to_3(Cell::array_type &new_tets, Node::index_type &c1_node,
+			 Node::index_type &c2_node, Cell::index_type c1, 
+			 Cell::index_type c2, Face::index_type c1face)
+{
+  new_tets.resize(3);
+  
+  Node::array_type face_nodes;
+  get_nodes(face_nodes, c1face);
+
+  c1_node = cells_[(int)c1face];
+
+  Face::index_type c2face;
+  get_neighbor(c2face, c1face);
+
+  c2_node = cells_[(int)c2face];
+
+  // FIX_ME needs to make sure that the ray between c1_node, and c2_node
+  //        intersects the face shared by the tets.
+
+  mod_tet(c1, c2_node, c1_node, face_nodes[0], face_nodes[1]);
+  mod_tet(c2, c1_node, c2_node, face_nodes[0], face_nodes[2]);
+  new_tets[0] = c1;
+  new_tets[1] = c2;
+  new_tets[2] = add_tet(c2_node, c1_node, face_nodes[1], face_nodes[2]);
+  return true;
+}
+
+bool
+TetVolMesh::get_edge(Edge::index_type &ei, Cell::index_type ci, 
+		     Node::index_type n1, Node::index_type n2) const 
+{
+  Edge::index_type ebase = ci * 6;
+  for (int i = 0; i < 6; i++) {
+    pair<Node::index_type, Node::index_type> enodes = Edge::edgei(ebase + i);
+    if ((cells_[enodes.first] == n1 && cells_[enodes.second] == n2) || 
+	(cells_[enodes.first] == n2 && cells_[enodes.second] == n1)) {
+      ei = ebase + i;
+      return true;
+    }
+  }
+  return false;
+}
+
+
+//! Given 3 tets that share an edge exclusively, combine them into 2 
+//! tets that share a face.  This call orphans a cell index, which must be
+//! deleted later.  use delete_cells with removed added to the set targeted
+//! deletion.
+bool
+TetVolMesh::combine_3_to_2(Cell::index_type &removed,
+			   Edge::index_type shared_edge)
+{
+  Node::array_type extrema;
+  Edge::array_type edges;
+  get_nodes(extrema, shared_edge);
+
+  //! Search the all_edges_ multiset for edges matching our fake_edge
+  pair<Edge::HalfEdgeSet::iterator, Edge::HalfEdgeSet::iterator> range =
+    all_edges_.equal_range(shared_edge);
+
+  Edge::HalfEdgeSet::iterator edge_iter = range.first;
+
+  edges.push_back(*edge_iter++);
+  edges.push_back(*edge_iter++);
+  edges.push_back(*edge_iter);
+
+  set<int, less<int> > ord_cells;
+  ord_cells.insert(edges[0] / 6);
+  ord_cells.insert(edges[1] / 6);
+  ord_cells.insert(edges[2] / 6);
+  set<int, less<int> >::iterator iter = ord_cells.begin();
+  
+  Cell::index_type c1 = *iter++;
+  Cell::index_type c2 = *iter++;
+  Cell::index_type c3 = *iter;
+
+  // get the 3 nodes that are not on the shared edge
+  Node::array_type opp0;
+  Node::array_type opp1;
+  Node::array_type opp2;
+
+  get_nodes(opp0, Edge::opposite_edge(edges[0]));
+  get_nodes(opp1, Edge::opposite_edge(edges[1]));
+  get_nodes(opp2, Edge::opposite_edge(edges[2]));
+  
+  // filter out duplicates
+  set<int, less<int> > shared_face;
+  shared_face.insert(opp0[0]);
+  shared_face.insert(opp0[1]);
+  shared_face.insert(opp1[0]);
+  shared_face.insert(opp1[1]);
+  shared_face.insert(opp2[0]);
+  shared_face.insert(opp2[1]);
+  
+  ASSERT(shared_face.size() == 3);
+
+  Node::array_type face;
+  iter = shared_face.begin();
+  face.push_back(*iter++);
+  face.push_back(*iter++);
+  face.push_back(*iter++);
+
+  // the cell index that is orphaned, needs to be added to the set for 
+  // later deletion outside of this call.
+  removed = c3;
+
+  delete_cell_node_neighbors(removed);
+  delete_cell_edges(removed);
+  delete_cell_faces(removed);
+  
+  // FIX_ME needs to make sure that the ray between c1_node, and c2_node
+  //        intersects the face shared by the tets.
+
+  mod_tet(c1, extrema[0], face[0], face[1], face[2]);
+  mod_tet(c2, extrema[1], face[1], face[0], face[2]);
+  return true;
+}
+//! Return in fi the face that is opposite the node ni in the cell ci.
+//! Return false if bad input, else true indicating the face was found.
+bool
+TetVolMesh::get_face_opposite_node(Face::index_type &fi, Cell::index_type ci, 
+				   Node::index_type ni) const
+{
+  for (int f = ci * 4; f < (ci * 4) + 4; f++) {
+    if (cells_[f] == ni) {
+      fi = f;
+      return true;
+    }
+  }
+  return false;
+}
+
+//! Get neigbor across a specific face.
 bool
 TetVolMesh::get_neighbor(Cell::index_type &neighbor, Cell::index_type from,
 			 Face::index_type idx) const
@@ -1426,26 +1589,28 @@ TetVolMesh::add_elem(Node::array_type a)
 void
 TetVolMesh::delete_cells(set<int> &to_delete)
 {
-  vector<under_type> old_cells = cells_;
-  int i = 0, c;
-
-  cells_.clear();
-  cells_.reserve(old_cells.size() - to_delete.size()*4);
-
-  for (set<int>::iterator deleted = to_delete.begin();
-       deleted != to_delete.end(); ++deleted)
-  {
-    for (;i < *deleted; ++i)
-      for (c = i*4; c < i*4+4; ++c)
-	cells_.push_back(old_cells[c]);
-    ++i;
-
+  set<int>::reverse_iterator iter = to_delete.rbegin();
+  while (iter != to_delete.rend()) {
+    // erase the correct cell
+    TetVolMesh::Cell::index_type ci = *iter++;
+    unsigned ind = ci * 4;
+    vector<under_type>::iterator cb = cells_.begin() + ind;
+    vector<under_type>::iterator ce = cb;
+    ce+=4;
+    cells_.erase(cb, ce);
   }
 
-  for (; i < (int)(old_cells.size()/4); ++i)
-    for (c = i*4; c < i*4+4; ++c)
-      cells_.push_back(old_cells[c]);
-  
+  synchronized_ &= ~LOCATE_E;
+  synchronized_ &= ~NODE_NEIGHBORS_E;
+  if (synchronized_ & FACE_NEIGHBORS_E) {
+    synchronized_ &= ~FACE_NEIGHBORS_E;
+    compute_faces();
+  }
+  if (synchronized_ & EDGE_NEIGHBORS_E) {
+    synchronized_ &= ~EDGE_NEIGHBORS_E;
+    compute_edges();
+  }
+
 }
 
 void
@@ -1462,11 +1627,8 @@ TetVolMesh::orient(Cell::index_type ci) {
   double sgn=Dot(Cross(p1-p0,p2-p0),p3-p0);
 
   if(sgn < 0.0) {
-    // Switch two of the edges so that the volume is positive
     unsigned int base = ci * 4;
-    unsigned int tmp = cells_[base];
-    cells_[base] = cells_[base + 1];
-    cells_[base + 1] = tmp;
+    mod_tet(ci, cells_[base+1],  cells_[base], cells_[base+2], cells_[base+3]);
     sgn=-sgn;
   }
 
@@ -1477,32 +1639,41 @@ TetVolMesh::orient(Cell::index_type ci) {
 
 
 bool
-TetVolMesh::insert_node(const Point &p)
+TetVolMesh::insert_node_in_cell(Cell::array_type &tets, 
+				Cell::index_type ci, 
+				Node::index_type &pi, const Point &p)
 {
-  Node::index_type pi = add_point(p);
-  Cell::index_type cell;
-  locate(cell, p);
+  if (!inside(ci, p)) return false;
 
-  const unsigned index = cell*4;
-  if (!inside(index, p)) return false;
+  pi = add_point(p);
+  delete_cell_node_neighbors(ci);
+  delete_cell_edges(ci);
+  delete_cell_faces(ci);
 
-  delete_cell_node_neighbors(cell);
-  delete_cell_edges(cell);
-  delete_cell_faces(cell);
-
-  Cell::array_type tets(4,cell);
-
+  tets.resize(4, ci);
+  const unsigned index = ci*4;
   tets[1] = add_tet(cells_[index+0], cells_[index+3], cells_[index+1], pi);
   tets[2] = add_tet(cells_[index+1], cells_[index+3], cells_[index+2], pi);
   tets[3] = add_tet(cells_[index+0], cells_[index+2], cells_[index+3], pi);
   
   cells_[index+3] = pi;
     
-  create_cell_node_neighbors(cell);
-  create_cell_edges(cell);
-  create_cell_faces(cell);
+  create_cell_node_neighbors(ci);
+  create_cell_edges(ci);
+  create_cell_faces(ci);
 
   return true;
+}
+
+bool
+TetVolMesh::insert_node(const Point &p)
+{
+  Node::index_type pi;
+  Cell::index_type cell;
+  locate(cell, p);
+
+  Cell::array_type tets;
+  return insert_node_in_cell(tets, cell, pi, p);
 }
 
  

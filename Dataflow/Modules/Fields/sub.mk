@@ -65,6 +65,7 @@ SRCS     += \
 	$(SRCDIR)/MoveNodeToElem.cc\
 	$(SRCDIR)/QuadToTri.cc\
 	$(SRCDIR)/Probe.cc\
+	$(SRCDIR)/RefineTetVol.cc\
 	$(SRCDIR)/ReplaceScalarDataValue.cc\
 	$(SRCDIR)/SampleField.cc\
 	$(SRCDIR)/SampleLattice.cc\

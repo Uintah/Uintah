@@ -99,6 +99,21 @@ public:
       case 5: return pair<Node::index_type,Node::index_type>(b+1,b+3);
       }
     }
+    
+    static index_type opposite_edge(index_type idx) 
+    {
+      const int cell = (idx / 6);
+      switch (idx % 6)
+      {
+      case 0: return cell * 6 + 4;
+      case 1: return cell * 6 + 5;
+      case 2: return cell * 6 + 3;
+      case 3: return cell * 6 + 2;
+      case 4: return cell * 6 + 0;
+      default:	  
+      case 5: return cell * 6 + 1;
+      }      
+    }
 
     //! A fucntor that returns a boolean indicating weather two
     //! edges indices share the same nodes, and thus the same edge in space
@@ -251,6 +266,9 @@ public:
   void get_nodes(Node::array_type &array, Face::index_type idx) const;
   void get_nodes(Node::array_type &array, Cell::index_type idx) const;
 
+  bool get_edge(Edge::index_type &ei, Cell::index_type ci, 
+		Node::index_type n1, Node::index_type n2) const;
+
   void get_edges(Edge::array_type &array, Node::index_type idx) const;
   void get_edges(Edge::array_type &array, Face::index_type idx) const;
   void get_edges(Edge::array_type &array, Cell::index_type idx) const;
@@ -259,11 +277,16 @@ public:
   void get_faces(Face::array_type &array, Edge::index_type idx) const;
   void get_faces(Face::array_type &array, Cell::index_type idx) const;
 
+  //! not part of the mesh concept but rather specific to tetvol
+  //! Return in fi the face that is opposite the node ni in the cell ci.
+  //! Return false if bad input, else true indicating the face was found.
+  bool get_face_opposite_node(Face::index_type &fi, Cell::index_type ci, 
+			      Node::index_type ni) const;
+
   void get_cells(Cell::array_type &array, Node::index_type idx) const;
   void get_cells(Cell::array_type &array, Edge::index_type idx) const;
   void get_cells(Cell::array_type &array, Face::index_type idx) const;
   
-  // This function is redundant, the next one can be used with less parameters 
   bool get_neighbor(Cell::index_type &neighbor, Cell::index_type from,
 		   Face::index_type idx) const;
   // Use this one instead
@@ -409,6 +432,34 @@ public:
 
 
   //! Subdivision methods
+  //! given 2 cells that share a face, split the 2 tets into 3 by connecting
+  //! the 2 nodes not on the shared face.
+  bool                  split_2_to_3(Cell::array_type &new_tets, 
+				     Node::index_type &c1_node,
+				     Node::index_type &c2_node,
+				     Cell::index_type c1, 
+				     Cell::index_type c2, 
+				     Face::index_type between);
+  //! given a cell, and the face index which is hte boundary face,
+  //! split the cell into 3, by adding a point at the center of the boundary
+  //! face.
+  bool                  split_cell_at_boundary(Cell::array_type &new_tets, 
+					       Node::index_type &new_node, 
+					       Cell::index_type ci, 
+					       Face::index_type bface);
+
+  //! given an edge that has exactly 3 tets sharing the edge, create 2 tets in 
+  //! thier place.  The 3 points not on the edge become a face shared between 
+  //! the new 2 tet combo. 
+  //! Warning: this invalidates iterators.  removed has the invalid cell index
+  bool                  combine_3_to_2(Cell::index_type &removed,
+				       Edge::index_type shared_edge);
+
+    
+  bool                  insert_node_in_cell(Cell::array_type &tets, 
+					    Cell::index_type ci, 
+					    Node::index_type &ni,
+					    const Point &p);
   bool			insert_node(const Point &p);
   Node::index_type	insert_node_watson(const Point &p, 
 					   Cell::array_type *new_cells = 0, 
@@ -451,6 +502,7 @@ protected:
   void			create_cell_node_neighbors(Cell::index_type);
   void			delete_cell_node_neighbors(Cell::index_type);
 
+ 
   Elem::index_type	mod_tet(Cell::index_type cell, 
 				Node::index_type a,
 				Node::index_type b,

@@ -90,6 +90,7 @@ SRCS := \
 	$(SRCDIR)/Probe.tcl \
 	$(SRCDIR)/PromptedEntry.tcl \
 	$(SRCDIR)/PromptedText.tcl \
+	$(SRCDIR)/RefineTetVol.tcl \
 	$(SRCDIR)/ReplaceScalarDataValue.tcl \
 	$(SRCDIR)/RescaleColorMap.tcl \
 	$(SRCDIR)/RingWidget.tcl \
