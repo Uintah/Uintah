@@ -438,6 +438,7 @@ void ParticleFieldExtractor::graph(string idx, string var)
 //----------------------------------------------------------------
 void ParticleFieldExtractor::execute() 
 { 
+  //  const char* old_tag1 = AllocatorSetDefaultTag("ParticleFieldExtractor::execute");
   tcl_status.set("Calling ParticleFieldExtractor!"); 
   //  bool newarchive; RNJ - Not used???
   in = (ArchiveIPort *) get_iport("Data Archive");
@@ -447,6 +448,7 @@ void ParticleFieldExtractor::execute()
   ArchiveHandle handle;
    if(!in->get(handle)){
      warning("ParticleFieldExtractor::execute() Didn't get a handle.");
+     //     AllocatorSetDefaultTag(old_tag1);
      return;
    }
    
@@ -475,6 +477,7 @@ void ParticleFieldExtractor::execute()
      
    if( !setVars( archive, archiveH->timestep(), archive_dirty )){
      warning("Cannot read any ParticleVariables, no action.");
+     //     AllocatorSetDefaultTag(old_tag1);
      return;
    }
 
@@ -496,6 +499,7 @@ void ParticleFieldExtractor::execute()
    pvout->send( vp );
    ptout->send( tp );	  
    tcl_status.set("Done");
+   //   AllocatorSetDefaultTag(old_tag1);
 }
 
 
@@ -513,9 +517,9 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
   LevelP level = grid->getLevel( (guilevel == levels ? 0 : guilevel) );
 
   
-  PSet* pset = new PSet();
-  pset->SetLevel( level );
-  pset->SetCallbackClass( this );
+  PSetHandle pseth = scinew PSet();
+  pseth->SetLevel( level );
+  pseth->SetCallbackClass( this );
   
 
   bool have_sp = false;
@@ -545,14 +549,14 @@ ParticleFieldExtractor::buildData(DataArchive& archive, double time,
     sema->down();
     Thread *thrd =
       new Thread( scinew PFEThread( this, archive,
-				    *patch,  sp, vp, tp, pset,
+				    *patch,  sp, vp, tp, pseth,
 				    scalar_type, have_sp, have_vp,
 				    have_tp, have_ids, sema,
 				    &smutex, &vmutex, &tmutex, &imutex, gui),
 		  "Particle Field Extractor Thread");
     thrd->detach();
 //     PFEThread *thrd = scinew PFEThread( this, archive, *patch,
-// 			     sp, vp, tp, pset,
+// 			     sp, vp, tp, pseth,
 //  			     scalar_type, have_sp, have_vp,
 //  			     have_tp, have_ids, sema,
 //  			     &smutex, &vmutex, &tmutex, &imutex, gui);
@@ -711,13 +715,13 @@ void PFEThread::run(){
     }
   }
   imutex->lock();
-  pset->AddParticles( positions, ids, patch);
+  pseth->AddParticles( positions, ids, patch);
   imutex->unlock();
   if(have_sp) {
     smutex->lock();
     if( sp == 0 ){
       sp = scinew ScalarParticles();
-      sp->Set( PSetHandle(pset) );
+      sp->Set( pseth );
     }
     sp->AddVar( scalars );
     smutex->unlock();
@@ -727,7 +731,7 @@ void PFEThread::run(){
     vmutex->lock();
     if( vp == 0 ){
       vp = scinew VectorParticles();
-      vp->Set( PSetHandle(pset));
+      vp->Set( pseth );
     }
     vp->AddVar( vectors );
     vmutex->unlock();
@@ -738,7 +742,7 @@ void PFEThread::run(){
     tmutex->lock();
     if( tp == 0 ){
       tp = scinew TensorParticles();
-      tp->Set( PSetHandle(pset) );
+      tp->Set( pseth );
     }
     tp->AddVar( tensors);
     tmutex->unlock();
