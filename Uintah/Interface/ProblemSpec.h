@@ -78,7 +78,12 @@ public:
     void setNode(const DOM_Node& node);
 
     ProblemSpecP findBlock(const std::string& name) const;
+    ProblemSpecP findBlock() const;
     ProblemSpecP findNextBlock(const std::string& name) const;
+    ProblemSpecP findNextBlock() const;
+
+    std::string getNodeName() const;
+
     DOM_Node findNode(const std::string &name, DOM_Node node) const;
 
     void require(const std::string& name, double& value);
@@ -116,6 +121,10 @@ private:
 
 //
 // $Log$
+// Revision 1.10  2000/04/20 22:37:18  jas
+// Fixed up the GeometryObjectFactory.  Added findBlock() and findNextBlock()
+// to ProblemSpec stuff.  This will iterate through all of the nodes (hopefully).
+//
 // Revision 1.9  2000/04/12 23:01:55  sparker
 // Implemented more of problem spec - added Point and IntVector readers
 //

@@ -17,12 +17,9 @@ namespace Components {
 class IntersectionGeometryObject : public GeometryObject {
 
  public:
-  IntersectionGeometryObject();
+  IntersectionGeometryObject(ProblemSpecP &);
   virtual ~IntersectionGeometryObject();
-  IntersectionGeometryObject(const IntersectionGeometryObject& copy);
   
-  virtual void add(const GeometryObject *go);
-
   virtual bool inside(const Point &p) const;
   virtual Box getBoundingBox() const;
 

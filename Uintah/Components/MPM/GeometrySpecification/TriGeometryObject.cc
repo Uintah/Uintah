@@ -5,8 +5,14 @@
 
 using namespace Uintah::Components;
 
-TriGeometryObject::TriGeometryObject()
+TriGeometryObject::TriGeometryObject(ProblemSpecP &ps)
 {
+
+  std::string file;
+
+  ps->require("file",file);
+  
+ 
 }
 
 TriGeometryObject::~TriGeometryObject()
@@ -23,17 +29,12 @@ Box TriGeometryObject::getBoundingBox() const
 
 }
 
-GeometryObject* TriGeometryObject::readParameters(ProblemSpecP &ps)
-{
-  std::string file;
-
-  ps->require("file",file);
-  
-  return (new TriGeometryObject(file));
-  
-}
 
 // $Log$
+// Revision 1.4  2000/04/20 22:37:14  jas
+// Fixed up the GeometryObjectFactory.  Added findBlock() and findNextBlock()
+// to ProblemSpec stuff.  This will iterate through all of the nodes (hopefully).
+//
 // Revision 1.3  2000/04/20 18:56:23  sparker
 // Updates to MPM
 //

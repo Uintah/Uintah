@@ -16,11 +16,9 @@ namespace Components {
 class DifferenceGeometryObject : public GeometryObject {
 
  public:
-  DifferenceGeometryObject();
+  DifferenceGeometryObject(ProblemSpecP &);
   virtual ~DifferenceGeometryObject();
-  DifferenceGeometryObject(const DifferenceGeometryObject& copy);
 
-  virtual void add(const GeometryObject* go);
   virtual bool inside(const Point &p) const;
   virtual Box getBoundingBox() const;
 

@@ -16,14 +16,11 @@ namespace Components {
 class UnionGeometryObject : public GeometryObject {
 
  public:
-  UnionGeometryObject();
+  UnionGeometryObject(ProblemSpecP &);
   virtual ~UnionGeometryObject();
-  UnionGeometryObject(const UnionGeometryObject& copy);
 
   virtual bool inside(const Point &p) const;
   virtual Box getBoundingBox() const;
-  
-  virtual GeometryObject* readParameters(ProblemSpecP &ps);
 
  private:
   std::vector<GeometryObject* > child;

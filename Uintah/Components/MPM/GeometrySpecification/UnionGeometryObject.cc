@@ -8,8 +8,11 @@ using SCICore::Geometry::Max;
 
 using namespace Uintah::Components;
 
-UnionGeometryObject::UnionGeometryObject() 
+UnionGeometryObject::UnionGeometryObject(ProblemSpecP &ps) 
 {
+  // Need to loop through all the geometry objects
+  GeometryObjectFactory::create(ps,child);
+  
 }
 
 UnionGeometryObject::~UnionGeometryObject()
@@ -47,9 +50,4 @@ Box UnionGeometryObject::getBoundingBox() const
   return Box(lo,hi);
 }
 
-GeometryObject* UnionGeometryObject::readParameters(ProblemSpecP &ps)
-{
-  
-
-}
 

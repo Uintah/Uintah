@@ -1,5 +1,7 @@
 #include "DifferenceGeometryObject.h"
 #include <SCICore/Geometry/Point.h>
+#include "GeometryObjectFactory.h"
+#include <vector>
 
 using SCICore::Geometry::Point;
 using SCICore::Geometry::Min;
@@ -8,8 +10,15 @@ using SCICore::Geometry::Max;
 using namespace Uintah::Components;
 
 
-DifferenceGeometryObject::DifferenceGeometryObject() 
+DifferenceGeometryObject::DifferenceGeometryObject(ProblemSpecP &ps) 
 {
+  std::vector<GeometryObject *> objs(2);
+
+  GeometryObjectFactory::create(ps,objs);
+
+  left = objs[0];
+  right = objs[1];
+
 }
 
 DifferenceGeometryObject::~DifferenceGeometryObject()
@@ -40,4 +49,7 @@ Box DifferenceGeometryObject::getBoundingBox() const
  
   return Box(lo,hi);
 }
+
+
+
 

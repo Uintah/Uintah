@@ -18,14 +18,11 @@ class CylinderGeometryObject : public GeometryObject {
 
   enum AXIS {X = 1, Y = 2, Z = 3};
 
-  CylinderGeometryObject();
-  CylinderGeometryObject(AXIS axis, Point origin, double len, double rad);
+  CylinderGeometryObject(ProblemSpecP &);
   virtual ~CylinderGeometryObject();
 
   virtual bool inside(const Point &p) const;
   virtual Box getBoundingBox() const;
-
-  virtual GeometryObject* readParameters(ProblemSpecP &ps);
  
  private:
   AXIS  d_axis;
@@ -43,6 +40,10 @@ class CylinderGeometryObject : public GeometryObject {
 #endif // __CYLINDER_GEOMTRY_OBJECT_H__
 
 // $Log$
+// Revision 1.3  2000/04/20 22:37:13  jas
+// Fixed up the GeometryObjectFactory.  Added findBlock() and findNextBlock()
+// to ProblemSpec stuff.  This will iterate through all of the nodes (hopefully).
+//
 // Revision 1.2  2000/04/20 15:09:25  jas
 // Added factory methods for GeometryObjects.
 //

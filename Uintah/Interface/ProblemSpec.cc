@@ -37,6 +37,16 @@ void ProblemSpec::setNode(const DOM_Node &node)
   d_node = node;
 }
 
+ProblemSpecP ProblemSpec::findBlock() const
+{
+  ProblemSpecP prob_spec = new ProblemSpec;
+  prob_spec->setNode(this->d_node);
+  prob_spec->setDoc(this->d_doc);
+
+  return prob_spec;
+
+}
+
 ProblemSpecP ProblemSpec::findBlock(const std::string& name) const 
 {
   ProblemSpecP prob_spec = new ProblemSpec;
@@ -66,6 +76,18 @@ ProblemSpecP ProblemSpec::findBlock(const std::string& name) const
     prob_spec->setNode(found_node);
   }
   
+  return prob_spec;
+
+}
+
+ProblemSpecP ProblemSpec::findNextBlock() const
+{
+  ProblemSpecP prob_spec = new ProblemSpec;
+  prob_spec->setNode(this->d_node);
+  prob_spec->setDoc(this->d_doc);
+
+  prob_spec->setNode(d_node.getNextSibling());
+
   return prob_spec;
 
 }
@@ -119,6 +141,19 @@ ProblemSpecP ProblemSpec::findNextBlock(const std::string& name) const
   return prob_spec;
 
 }
+
+
+std::string ProblemSpec::getNodeName() const
+{
+
+  DOMString node_name = d_node.getNodeName();
+  char *s = node_name.transcode();
+  std::string name(s);
+  delete[] s;
+
+  return name;
+}
+
 
 
 DOM_Node ProblemSpec::findNode(const std::string &name,DOM_Node node) const
@@ -423,6 +458,10 @@ const TypeDescription* ProblemSpec::getTypeDescription()
 
 //
 // $Log$
+// Revision 1.13  2000/04/20 22:37:17  jas
+// Fixed up the GeometryObjectFactory.  Added findBlock() and findNextBlock()
+// to ProblemSpec stuff.  This will iterate through all of the nodes (hopefully).
+//
 // Revision 1.12  2000/04/19 05:26:18  sparker
 // Implemented new problemSetup/initialization phases
 // Simplified DataWarehouse interface (not finished yet)

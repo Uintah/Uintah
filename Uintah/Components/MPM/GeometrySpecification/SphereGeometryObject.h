@@ -14,15 +14,12 @@ class SphereGeometryObject : public GeometryObject {
 
  public:
 
-  SphereGeometryObject();
-  SphereGeometryObject(const double r, const Point o);
+  SphereGeometryObject(ProblemSpecP &);
   virtual ~SphereGeometryObject();
  
   virtual bool inside(const Point &p) const;
   virtual Box getBoundingBox() const;
-
-  virtual GeometryObject* readParameters(ProblemSpecP &ps);
-
+  
  private:
  
   Point d_origin;
@@ -35,6 +32,10 @@ class SphereGeometryObject : public GeometryObject {
 #endif // __SPHERE_GEOMETRY_OBJECT_H__
 
 // $Log$
+// Revision 1.3  2000/04/20 22:37:14  jas
+// Fixed up the GeometryObjectFactory.  Added findBlock() and findNextBlock()
+// to ProblemSpec stuff.  This will iterate through all of the nodes (hopefully).
+//
 // Revision 1.2  2000/04/20 15:09:26  jas
 // Added factory methods for GeometryObjects.
 //

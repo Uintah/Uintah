@@ -6,14 +6,31 @@
 using namespace Uintah::Components;
 
 
-CylinderGeometryObject::CylinderGeometryObject() {}
+CylinderGeometryObject::CylinderGeometryObject(ProblemSpecP& ps) {
 
-CylinderGeometryObject::CylinderGeometryObject(CylinderGeometryObject::AXIS a,
-					       Point o,
-					       double l, double r) :
-  d_axis(a),d_origin(o),d_length(l),d_radius(r)
-{
+  Point orig;
+  double len;
+  double rad;
+  CylinderGeometryObject::AXIS axis;
+  std::string axis_type;
+
+  ps->require("axis",axis_type);
+  ps->require("origin",orig);
+  ps->require("length",len);
+  ps->require("radius",rad);
+  
+  if (axis_type == "X") axis = CylinderGeometryObject::X;
+  if (axis_type == "Y") axis = CylinderGeometryObject::Y;
+  if (axis_type == "Z") axis = CylinderGeometryObject::Z;
+
+  d_axis = axis;
+  d_origin = orig;
+  d_length = len;
+  d_radius = rad;
+
+
 }
+
 
 
 CylinderGeometryObject::~CylinderGeometryObject()
@@ -37,29 +54,13 @@ Box CylinderGeometryObject::getBoundingBox() const
 
 }
 
-GeometryObject* CylinderGeometryObject::readParameters(ProblemSpecP &ps)
-{
-  Point orig;
-  double len;
-  double rad;
-  CylinderGeometryObject::AXIS axis;
-  std::string axis_type;
-
-  ps->require("axis",axis_type);
-  ps->require("origin",orig);
-  ps->require("length",len);
-  ps->require("radius",rad);
-  
-  if (axis_type == "X") axis = CylinderGeometryObject::X;
-  if (axis_type == "Y") axis = CylinderGeometryObject::Y;
-  if (axis_type == "Z") axis = CylinderGeometryObject::Z;
-
-  return(new CylinderGeometryObject(axis,orig,len,rad));
-
-}
 
 
 // $Log$
+// Revision 1.4  2000/04/20 22:37:13  jas
+// Fixed up the GeometryObjectFactory.  Added findBlock() and findNextBlock()
+// to ProblemSpec stuff.  This will iterate through all of the nodes (hopefully).
+//
 // Revision 1.3  2000/04/20 18:56:20  sparker
 // Updates to MPM
 //

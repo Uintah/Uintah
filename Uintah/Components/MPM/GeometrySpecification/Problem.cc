@@ -27,6 +27,8 @@ using std::cout;
 
 using namespace Uintah::Components;
 
+class GeometryObject;
+
 Problem::Problem()
   : d_num_bcs(0)
 {
@@ -46,6 +48,8 @@ void Problem::preProcessor(const ProblemSpecP& prob_spec, GridP& grid,
  
   Point lo,hi;
   Vector dx;
+
+  std::vector<GeometryObject *> geom_objs; // This is temporary for now.
   
   cerr << "In the preprocessor . . ." << endl;
     
@@ -72,13 +76,13 @@ void Problem::preProcessor(const ProblemSpecP& prob_spec, GridP& grid,
 	 geom_obj_ps != 0; 
 	 geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
 
-       GeometryObject* obj = GeometryObjectFactory::create(geom_obj_ps);
+      GeometryObjectFactory::create(geom_obj_ps,geom_objs);
 
-       piece_num++;
-       cerr << "piece: " << piece_num << '\n';
-       IntVector res;
-       geom_obj_ps->require("res",res);
-       cerr << piece_num << ": res: " << res << '\n';
+      piece_num++;
+      cerr << "piece: " << piece_num << '\n';
+      IntVector res;
+      geom_obj_ps->require("res",res);
+      cerr << piece_num << ": res: " << res << '\n';
     }
 
     cerr << "MPM Material creation not done\n";
@@ -129,6 +133,10 @@ void Problem::createParticles(const Region* region, DataWarehouseP& dw)
 #endif
 
 // $Log$
+// Revision 1.10  2000/04/20 22:37:14  jas
+// Fixed up the GeometryObjectFactory.  Added findBlock() and findNextBlock()
+// to ProblemSpec stuff.  This will iterate through all of the nodes (hopefully).
+//
 // Revision 1.9  2000/04/20 18:56:22  sparker
 // Updates to MPM
 //
