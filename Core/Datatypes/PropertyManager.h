@@ -60,9 +60,9 @@ public:
   bool transient() const { return transient_; }
   void set_transient(bool t) { transient_ = t; }
 
-  virtual bool operator==(PropertyBase &pb) const {
+  virtual bool operator==(PropertyBase &/*pb*/) const {
     ASSERTFAIL( "Not defined."); }
-  virtual bool operator!=(PropertyBase &pb) const {
+  virtual bool operator!=(PropertyBase &/*pb*/) const {
     ASSERTFAIL( "Not defined."); }
 
 protected:
