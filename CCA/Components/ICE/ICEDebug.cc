@@ -9,6 +9,7 @@
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Exceptions/UnknownVariable.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <iostream>
 #include <fstream>
 #include <sys/stat.h>
@@ -24,15 +25,25 @@ using namespace Uintah;
  Function:  printData--
  Purpose:  Print to stderr a cell-centered, single material
 _______________________________________________________________________ */
-void    ICE::printData(const Patch* patch, int include_EC,
-        const string&    message1,        
-        const string&    message2,       
-        const CCVariable<double>& q_CC)
+void    ICE::printData( int matl,
+                        const Patch* patch, 
+                        int include_EC,
+                        const string&    message1,        
+                        const string&    message2,       
+                        const CCVariable<double>& q_CC)
 {
- //__________________________________
- // Limit when we dump
-  d_dbgTime= dataArchiver->getCurrentTime();    
-  if ( d_dbgTime >= d_dbgStartTime && 
+  //__________________________________
+  // Limit when we dump
+  bool dumpThisMatl = false;
+  for (int m = 0; m<(int) d_dbgMatls.size(); m++) {
+    if (matl == d_dbgMatls[m]) {
+      dumpThisMatl = true;
+    }
+  } 
+  
+  d_dbgTime= dataArchiver->getCurrentTime();  
+  if ( dumpThisMatl == true        &&
+       d_dbgTime >= d_dbgStartTime && 
        d_dbgTime <= d_dbgStopTime  &&
        d_dbgTime >= d_dbgNextDumpTime) {
     d_dbgOldTime = d_dbgTime;      
@@ -97,6 +108,12 @@ void    ICE::printData(const Patch* patch, int include_EC,
       fclose(fp);
     } // gnuplot 
   }  // time to dump
+  //__________________________________
+  //  bullet proof
+  if (d_dbgMatls.size() == 0){
+    throw ProblemSetupException(
+          "P R I N T  D A T A: You must specify at least 1 matl in d_dbgMatls");
+  }
 }
 
 /* 
@@ -104,15 +121,25 @@ void    ICE::printData(const Patch* patch, int include_EC,
  Function:  printData--
  Purpose:  Print to stderr a cell-centered, single material
 _______________________________________________________________________ */
-void    ICE::printData(const Patch* patch, int include_EC,
-        const string&    message1,       /* message1                     */
-        const string&    message2,       /* message to user              */
-        const CCVariable<int>& q_CC)
+void    ICE::printData(int matl,
+                       const Patch* patch,                
+                       int include_EC,                    
+                       const string&    message1,         
+                       const string&    message2,         
+                       const CCVariable<int>& q_CC)       
 {
- //__________________________________
- // Limit when we dump
-  d_dbgTime= dataArchiver->getCurrentTime();
-  if ( d_dbgTime >= d_dbgStartTime && 
+  //__________________________________
+  // Limit when we dump
+  bool dumpThisMatl = false;
+  for (int m = 0; m<(int) d_dbgMatls.size(); m++) {
+    if (matl == d_dbgMatls[m]) {
+      dumpThisMatl = true;
+    }
+  } 
+  
+  d_dbgTime= dataArchiver->getCurrentTime();  
+  if ( dumpThisMatl == true        &&
+       d_dbgTime >= d_dbgStartTime && 
        d_dbgTime <= d_dbgStopTime  &&
        d_dbgTime >= d_dbgNextDumpTime) {
     d_dbgOldTime = d_dbgTime;      
@@ -176,23 +203,39 @@ void    ICE::printData(const Patch* patch, int include_EC,
       fclose(fp);
     } // gnuplot
   }  // time to dump
+  //__________________________________
+  //  bullet proof
+  if (d_dbgMatls.size() == 0){
+    throw ProblemSetupException(
+          "P R I N T  D A T A: You must specify at least 1 matl in d_dbgMatls");
+  }
 }
 /* 
  ======================================================================*
  Function:  printVector--
  Purpose:  Print to stderr a cell-centered, single material
 _______________________________________________________________________ */
-void    ICE::printVector(const Patch* patch, int include_EC,
-        const string&    message1,       /* message1                     */
-        const string&    message2,       /* message to user              */
-	int   /*component*/,                 /*  x = 0,y = 1, z = 1          */
-        const CCVariable<Vector>& q_CC)
+void    ICE::printVector(int matl,
+                         const Patch* patch, 
+                         int include_EC,
+                         const string&    message1,       
+                         const string&    message2,
+	                  int   /*component*/,  /*  x = 0,y = 1, z = 1  */
+                         const CCVariable<Vector>& q_CC)
 {
 
- //__________________________________
- // Limit when we dump
-  d_dbgTime= dataArchiver->getCurrentTime();
-  if ( d_dbgTime >= d_dbgStartTime && 
+  //__________________________________
+  // Limit when we dump
+  bool dumpThisMatl = false;
+  for (int m = 0; m<(int) d_dbgMatls.size(); m++) {
+    if (matl == d_dbgMatls[m]) {
+      dumpThisMatl = true;
+    }
+  } 
+  
+  d_dbgTime= dataArchiver->getCurrentTime();  
+  if ( dumpThisMatl == true        &&
+       d_dbgTime >= d_dbgStartTime && 
        d_dbgTime <= d_dbgStopTime  &&
        d_dbgTime >= d_dbgNextDumpTime) {
     d_dbgOldTime = d_dbgTime;      
@@ -270,6 +313,12 @@ void    ICE::printVector(const Patch* patch, int include_EC,
       } // gnuplot
     }  // dir loop
   } // time to dump
+  //__________________________________
+  //  bullet proof
+  if (d_dbgMatls.size() == 0){
+    throw ProblemSetupException(
+          "P R I N T  D A T A: You must specify at least 1 matl in d_dbgMatls");
+  }
 }
 
 
@@ -278,15 +327,25 @@ void    ICE::printVector(const Patch* patch, int include_EC,
  Function:  printData_FC--
  Purpose:  Print left face
 _______________________________________________________________________ */
-void    ICE::printData_FC(const Patch* patch, int include_EC,
-        const string&    message1,        /* message1                     */
-        const string&    message2,        /* message to user              */
-        const SFCXVariable<double>& q_FC)
+void    ICE::printData_FC(int matl,
+                          const Patch* patch, 
+                          int include_EC,
+                          const string&    message1,      
+                          const string&    message2,  
+                          const SFCXVariable<double>& q_FC)
 {
- //__________________________________
- // Limit when we dump
-  d_dbgTime= dataArchiver->getCurrentTime();
-  if ( d_dbgTime >= d_dbgStartTime && 
+  //__________________________________
+  // Limit when we dump
+  bool dumpThisMatl = false;
+  for (int m = 0; m<(int) d_dbgMatls.size(); m++) {
+    if (matl == d_dbgMatls[m]) {
+      dumpThisMatl = true;
+    }
+  } 
+  
+  d_dbgTime= dataArchiver->getCurrentTime();  
+  if ( dumpThisMatl == true        &&
+       d_dbgTime >= d_dbgStartTime && 
        d_dbgTime <= d_dbgStopTime  &&
        d_dbgTime >= d_dbgNextDumpTime) {
     d_dbgOldTime = d_dbgTime;
@@ -349,21 +408,37 @@ void    ICE::printData_FC(const Patch* patch, int include_EC,
       fclose(fp);
     } // gnuplot
   }  // time to dump
+  //__________________________________
+  //  bullet proof
+  if (d_dbgMatls.size() == 0){
+    throw ProblemSetupException(
+          "P R I N T  D A T A: You must specify at least 1 matl in d_dbgMatls");
+  }
 }
 /* 
  ======================================================================*
  Function:  printData_FC--
  Purpose:   Prints bottom Face
 _______________________________________________________________________ */
-void    ICE::printData_FC(const Patch* patch, int include_EC,
-        const string&    message1,         /* message1                     */
-        const string&    message2,         /* message to user              */
-        const SFCYVariable<double>& q_FC)
+void    ICE::printData_FC(int matl,
+                          const Patch* patch, 
+                          int include_EC,
+                          const string&    message1,        
+                          const string&    message2,  
+                          const SFCYVariable<double>& q_FC)
 {
- //__________________________________
- // Limit when we dump
-  d_dbgTime= dataArchiver->getCurrentTime();
-  if ( d_dbgTime >= d_dbgStartTime && 
+  //__________________________________
+  // Limit when we dump
+  bool dumpThisMatl = false;
+  for (int m = 0; m<(int) d_dbgMatls.size(); m++) {
+    if (matl == d_dbgMatls[m]) {
+      dumpThisMatl = true;
+    }
+  } 
+  
+  d_dbgTime= dataArchiver->getCurrentTime();  
+  if ( dumpThisMatl == true        &&
+       d_dbgTime >= d_dbgStartTime && 
        d_dbgTime <= d_dbgStopTime  &&
        d_dbgTime >= d_dbgNextDumpTime) {
     d_dbgOldTime = d_dbgTime;      
@@ -426,6 +501,12 @@ void    ICE::printData_FC(const Patch* patch, int include_EC,
       fclose(fp);
     } // gnuplot
   } // time to dump
+  //__________________________________
+  //  bullet proof
+  if (d_dbgMatls.size() == 0){
+    throw ProblemSetupException(
+          "P R I N T  D A T A: You must specify at least 1 matl in d_dbgMatls");
+  }
 }
 
 /* 
@@ -433,16 +514,26 @@ void    ICE::printData_FC(const Patch* patch, int include_EC,
  Function:  printData_FC--
  Purpose:  Prints back face
 _______________________________________________________________________ */
-void    ICE::printData_FC(const Patch* patch, int include_EC,
-        const string&    message1,        /* message1                     */
-        const string&    message2,        /* message to user              */
-        const SFCZVariable<double>& q_FC)
+void    ICE::printData_FC(int matl,
+                          const Patch* patch, 
+                          int include_EC,
+                          const string&    message1,        
+                          const string&    message2,       
+                          const SFCZVariable<double>& q_FC)
 {
 
- //__________________________________
- // Limit when we dump
-  d_dbgTime= dataArchiver->getCurrentTime();
-  if ( d_dbgTime >= d_dbgStartTime && 
+  //__________________________________
+  // Limit when we dump
+  bool dumpThisMatl = false;
+  for (int m = 0; m<(int) d_dbgMatls.size(); m++) {
+    if (matl == d_dbgMatls[m]) {
+      dumpThisMatl = true;
+    }
+  } 
+  
+  d_dbgTime= dataArchiver->getCurrentTime();  
+  if ( dumpThisMatl == true        &&
+       d_dbgTime >= d_dbgStartTime && 
        d_dbgTime <= d_dbgStopTime  &&
        d_dbgTime >= d_dbgNextDumpTime) {
     d_dbgOldTime = d_dbgTime;      
@@ -505,6 +596,12 @@ void    ICE::printData_FC(const Patch* patch, int include_EC,
       fclose(fp);
     } // gnuplot
   }  // time to dump
+  //__________________________________
+  //  bullet proof
+  if (d_dbgMatls.size() == 0){
+    throw ProblemSetupException(
+          "P R I N T  D A T A: You must specify at least 1 matl in d_dbgMatls");
+  }
 }
 
 /* 
