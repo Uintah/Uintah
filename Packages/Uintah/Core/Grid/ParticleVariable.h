@@ -121,9 +121,10 @@ public:
   virtual RefCounted* getRefCounted() {
     return d_pdata;
   }
-private:
+protected:
   ParticleVariable<T>& operator=(const ParticleVariable<T>&);
-      
+
+private:
     //////////
     // Insert Documentation Here:
   ParticleData<T>* d_pdata;
