@@ -257,6 +257,20 @@ namespace Uintah {
 			  CCVariable<eflux>& r_out_y_CF,
 			  CCVariable<eflux>& r_out_z_CF,
 			  const Vector& dx);
+                       
+                       
+      void Message(   
+        int     abort, 
+        char    message1[],
+        char    message2[],
+        char    message3[]);
+                        
+       void printData( 
+         const  Patch* patch,
+         int    include_GC,
+         char   message1[],
+         char   message2[],
+         const  CCVariable<double>& q_CC);
       
       ICELabel* lb; 
       SimulationStateP d_sharedState;
@@ -312,11 +326,10 @@ namespace Uintah {
 #endif
 
 // $Log$
-// Revision 1.43  2000/12/29 17:52:48  harman
-// - removed div_vel_fc calculation from delpress calculation
-// - changed how press_FC is being calculated
-// - get press_CC from new_dw instead of old_dw in step 1c
-// - changed convergence criteria in step1b (equilibration pressure)
+// Revision 1.44  2001/01/01 23:57:37  harman
+// - Moved all scheduling of tasks over to ICE_schedule.cc
+// - Added instrumentation functions
+// - fixed nan's in int_eng_L_source
 //
 // Revision 1.42  2000/12/21 21:54:50  jas
 // The exchange coefficients are now vector<double> so that an arbitrary

@@ -35,6 +35,14 @@
 #include <Uintah/Grid/DensityBoundCond.h>
 #include <iomanip>
 
+//______________________________________________________________________
+//  DEBUGGING SWITCHES
+#define  switch_Debug_advectQFirst          0
+#define  switchDebug_equilibration_press    1
+#define  switchDebug_explicit_press         1
+#define  switchDebug_advance_advect         1
+
+
 using std::vector;
 using std::max;
 using SCICore::Geometry::Vector;
@@ -46,7 +54,6 @@ using SCICore::Datatypes::DenseMatrix;
 static int iterNum = 0;
 
 #undef john_debug
-#define john_debug 1
 //______________________________________________________________________
 //                                   I   C   E
 ICE::ICE(const ProcessorGroup* myworld) 
@@ -141,579 +148,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   ice_ic_ps->require("pressure",d_pressure);   
 }
 //STOP_DOC
-/* ---------------------------------------------------------------------
- Function~  ICE::scheduleInitialize--
- Purpose~   Schedule the initialization of the dw variables
 
-Programmer         Date       Description                      
-----------         ----       -----------                 
-John Schmidt      10/04/00                              
-_____________________________________________________________________*/ 
-void ICE::scheduleInitialize(
-    const LevelP&   level, 
-    SchedulerP&     sched, 
-    DataWarehouseP& dw)
-{
-  Level::const_patchIterator iter;
-
-  for(iter=level->patchesBegin(); iter != level->patchesEnd(); iter++)
-  {
-    const Patch* patch=*iter;
-    Task* t = scinew Task("ICE::actuallyInitialize", patch, dw, dw,this,
-			    &ICE::actuallyInitialize);
-    t->computes( dw,    d_sharedState->get_delt_label());
-     
-    for (int m = 0; m < d_sharedState->getNumICEMatls(); m++ ) 
-    {
-	ICEMaterial*  matl = d_sharedState->getICEMaterial(m);
-	int dwindex = matl->getDWIndex();
-       
-	t->computes( dw, lb->temp_CCLabel,      dwindex, patch);
-	t->computes( dw, lb->rho_micro_CCLabel, dwindex, patch);
-	t->computes( dw, lb->rho_CCLabel,       dwindex, patch);
-	t->computes( dw, lb->cv_CCLabel,        dwindex, patch);
-	t->computes( dw, lb->viscosity_CCLabel, dwindex, patch);
-	t->computes( dw, lb->vol_frac_CCLabel,  dwindex, patch);
-	t->computes( dw, lb->uvel_CCLabel,      dwindex, patch);
-	t->computes( dw, lb->vvel_CCLabel,      dwindex, patch);
-	t->computes( dw, lb->wvel_CCLabel,      dwindex, patch);
-	t->computes( dw, lb->uvel_FCLabel,      dwindex, patch);
-	t->computes( dw, lb->vvel_FCLabel,      dwindex, patch);
-	t->computes( dw, lb->wvel_FCLabel,      dwindex, patch);
-    }
-
-    t->computes(dw, lb->press_CCLabel,0, patch);
-
-    sched->addTask(t);
-  }
-}
-//STOP_DOC
-/* ---------------------------------------------------------------------
- Function~  ICE::scheduleComputeStableTimestep--
- Purpose~  Schedule a task to compute the time step for ICE
-
-Programmer         Date       Description                      
-----------         ----       -----------                 
-John Schmidt    10/04/00                              
-_____________________________________________________________________*/
-void ICE::scheduleComputeStableTimestep(
-    const LevelP&   level,
-    SchedulerP&     sched,
-    DataWarehouseP& dw)
-{
-#if 0
-  // Compute the stable timestep
-  int numMatls = d_sharedState->getNumICEMatls();
-
-  for (Level::const_patchIterator iter = level->patchesBegin();
-       iter != level->patchesEnd(); iter++) 
-  {
-        const Patch* patch = *iter;
-  
-        Task* task = scinew Task("ICE::actuallyComputeStableTimestep",patch, dw,
-			       dw,this, &ICE::actuallyComputeStableTimestep);
-
-      for (int m = 0; m < numMatls; m++) 
-      {
-        ICEMaterial* matl = d_sharedState->getICEMaterial(m);
-        int dwindex = matl->getDWIndex();
-        task->requires(dw, lb->uvel_CCLabel,    dwindex,    patch,  Ghost::None);
-        task->requires(dw, lb->vvel_CCLabel,    dwindex,    patch,  Ghost::None);
-        task->requires(dw, lb->wvel_CCLabel,    dwindex,    patch,  Ghost::None);
-      }
-      sched->addTask(task);
-  }
-#endif
-}
-//STOP_DOC
-/* ---------------------------------------------------------------------
- Function~  ICE::scheduleTimeAdvance--
- Purpose~   Schedule tasks for each of the major steps 
-
-Programmer         Date       Description                      
-----------         ----       -----------                 
-John Schmidt      10/04/00                             
-_____________________________________________________________________*/
-void ICE::scheduleTimeAdvance(
-    double t,   
-    double dt,
-    const LevelP&   level,
-    SchedulerP&     sched,
-    DataWarehouseP& old_dw,
-    DataWarehouseP& new_dw)
-{
-  for(Level::const_patchIterator iter=level->patchesBegin();
-       iter != level->patchesEnd(); iter++)
-  {
-    const Patch* patch=*iter;
-
-    // Step 1a  computeSoundSpeed
-    scheduleStep1a( patch,  sched,  old_dw, new_dw);
-    
-    // Step 1b calculate equlibration pressure
-    scheduleStep1b( patch,  sched,  old_dw, new_dw);
-    
-    // Step 1c compute face centered velocities
-    scheduleStep1c( patch,  sched,  old_dw, new_dw);
-    
-    // Step 1d computes momentum exchange on FC velocities
-    scheduleStep1d( patch,  sched,  old_dw, new_dw);
-    
-    // Step 2 computes delPress and the new pressure
-    scheduleStep2(  patch,  sched,  old_dw, new_dw);
-    
-    // Step 3 compute face centered pressure
-    scheduleStep3(  patch,  sched,  old_dw, new_dw);
-    
-    // Step 4a compute sources of momentum
-    scheduleStep4a( patch,  sched,  old_dw, new_dw);
-    
-    // Step 4b compute sources of energy
-    scheduleStep4b( patch,  sched,  old_dw, new_dw);
-    
-    // Step 5a compute lagrangian quantities
-    scheduleStep5a( patch,  sched,  old_dw, new_dw);
-    
-    // Step 5b cell centered momentum exchange
-    scheduleStep5b( patch,  sched,  old_dw, new_dw);
-    
-    // Step 6and7 advect and advance in time
-    scheduleStep6and7(patch,sched,  old_dw, new_dw);
-  }
-}
-//STOP_DOC
-/* ---------------------------------------------------------------------
- Function~  ICE::scheduleStep1a--
- Purpose~   Compute the speed of sound
- 
-Programmer         Date       Description                      
-----------         ----       -----------                 
-John Schmidt      10/04/00                             
-_____________________________________________________________________*/
-void ICE::scheduleStep1a(
-    const Patch*    patch,
-    SchedulerP&     sched,
-    DataWarehouseP& old_dw,
-    DataWarehouseP& new_dw)
-{
-  int numMatls = d_sharedState->getNumICEMatls();
-  
-  Task* task = scinew Task("ICE::step1a",patch, old_dw, new_dw,this,
-			&ICE::actuallyStep1a);
-  for (int m = 0; m < numMatls; m++) 
-  {
-    ICEMaterial* matl = d_sharedState->getICEMaterial(m);
-    EquationOfState* eos = matl->getEOS();
-    // Compute the speed of sound
-    eos->addComputesAndRequiresSS(task,matl,patch,old_dw,new_dw);
-  }
-  sched->addTask(task);
-}
-//STOP_DOC
-/* ---------------------------------------------------------------------
- Function~  ICE::scheduleStep1b--
- Purpose~   Compute the equilibration pressure
- 
-Programmer         Date       Description                      
-----------         ----       -----------                 
-John Schmidt      10/04/00                             
-_____________________________________________________________________*/
-void ICE::scheduleStep1b(
-    const Patch*    patch,
-    SchedulerP&     sched,
-    DataWarehouseP& old_dw,
-    DataWarehouseP& new_dw)
-{
-  Task* task = scinew Task("ICE::step1b",patch, old_dw, new_dw,this,
-			   &ICE::actuallyStep1b);
-  
-  task->requires(old_dw,lb->press_CCLabel, 0,patch,Ghost::None);
-  
-  int numMatls=d_sharedState->getNumICEMatls();
-  for (int m = 0; m < numMatls; m++) 
-  {
-    ICEMaterial*  matl = d_sharedState->getICEMaterial(m);
-    int dwindex = matl->getDWIndex();
-    EquationOfState* eos = matl->getEOS();
-    // Compute the rho micro
-    eos->addComputesAndRequiresRM(task,matl,patch,old_dw,new_dw);
-    task->requires(old_dw,lb->vol_frac_CCLabel,  dwindex,patch,Ghost::None);
-    task->requires(old_dw,lb->rho_CCLabel,       dwindex,patch,Ghost::None);
-    task->requires(old_dw,lb->rho_micro_CCLabel, dwindex,patch,Ghost::None);
-    task->requires(old_dw,lb->temp_CCLabel,      dwindex,patch,Ghost::None);
-    task->requires(old_dw,lb->cv_CCLabel,        dwindex,patch,Ghost::None);
-    task->requires(new_dw,lb->speedSound_CCLabel,dwindex,patch,Ghost::None);
-    task->computes(new_dw,lb->vol_frac_CCLabel,          dwindex, patch);
-    task->computes(new_dw,lb->speedSound_equiv_CCLabel,  dwindex, patch);
-    task->computes(new_dw,lb->rho_micro_equil_CCLabel,   dwindex, patch);
-  }
-
-  task->computes(new_dw,lb->press_CCLabel,0, patch);
-  sched->addTask(task);
-}
-//STOP_DOC
-/* ---------------------------------------------------------------------
- Function~  ICE::scheduleStep1c--
- Purpose~   Compute the face-centered velocities
-
-Version   Programmer         Date       Description                      
--------   ----------         ----       -----------                 
-  1.0     John Schmidt      10/04/00                             
-_____________________________________________________________________*/
-void ICE::scheduleStep1c(
-    const Patch*    patch,
-    SchedulerP&     sched,
-    DataWarehouseP& old_dw,
-    DataWarehouseP& new_dw)
-{
-  Task* task = scinew Task("ICE::step1c",patch, old_dw, new_dw,this,
-			   &ICE::actuallyStep1c);
-
-  task->requires(new_dw,lb->press_CCLabel,0,patch,Ghost::None);
-
-  int numMatls=d_sharedState->getNumICEMatls();
-  for (int m = 0; m < numMatls; m++) 
-  {
-    ICEMaterial* matl = d_sharedState->getICEMaterial(m);
-    int dwindex = matl->getDWIndex();
-    task->requires(old_dw,lb->rho_CCLabel,   dwindex,patch,Ghost::None);
-    task->requires(old_dw,lb->uvel_CCLabel,  dwindex,patch,Ghost::None);
-    task->requires(old_dw,lb->vvel_CCLabel,  dwindex,patch,Ghost::None);
-    task->requires(old_dw,lb->wvel_CCLabel,  dwindex,patch,Ghost::None);
-    task->requires(new_dw,lb->rho_micro_equil_CCLabel,
-		                               dwindex,patch,Ghost::None);
-    
-    task->computes(new_dw,lb->uvel_FCLabel,  dwindex, patch);
-    task->computes(new_dw,lb->vvel_FCLabel,  dwindex, patch);
-    task->computes(new_dw,lb->wvel_FCLabel,  dwindex, patch);
-  }
-  sched->addTask(task);
-}
-//STOP_DOC
-/* ---------------------------------------------------------------------
- Function~  ICE::scheduleStep1d--
- Purpose~   Schedule compute the momentum exchange for the face centered 
-            velocities
-
-Programmer         Date       Description                      
-----------         ----       -----------                 
-John Schmidt      10/04/00                             
-_____________________________________________________________________*/
-void ICE::scheduleStep1d(
-    const Patch*    patch,
-    SchedulerP&     sched,
-    DataWarehouseP& old_dw,
-    DataWarehouseP& new_dw)
-{
-  Task* task = scinew Task("ICE::step1d",patch, old_dw, new_dw,this,
-			   &ICE::actuallyStep1d);
-  int numMatls=d_sharedState->getNumICEMatls();
-  
-  for (int m = 0; m < numMatls; m++) 
-  {
-    ICEMaterial* matl = d_sharedState->getICEMaterial(m);
-    int dwindex = matl->getDWIndex();
-    task->requires(new_dw,lb->rho_micro_equil_CCLabel,
-		                                  dwindex,patch,Ghost::None);
-    task->requires(new_dw,lb->vol_frac_CCLabel, dwindex, patch,Ghost::None);
-    task->requires(old_dw,lb->uvel_FCLabel,     dwindex, patch,Ghost::None);
-    task->requires(old_dw,lb->vvel_FCLabel,     dwindex, patch,Ghost::None);
-    task->requires(old_dw,lb->wvel_FCLabel,     dwindex, patch,Ghost::None);
-    
-    task->computes(new_dw,lb->uvel_FCMELabel,   dwindex, patch);
-    task->computes(new_dw,lb->vvel_FCMELabel,   dwindex, patch);
-    task->computes(new_dw,lb->wvel_FCMELabel,   dwindex, patch);
-  }
-  sched->addTask(task);
-}
-//STOP_DOC
-/* ---------------------------------------------------------------------
- Function~  ICE::scheduleStep2--
- Purpose~   Schedule compute delpress and new press_CC
-
-Programmer         Date       Description                      
-----------         ----       -----------                 
-John Schmidt      10/04/00                             
-_____________________________________________________________________*/
-void ICE::scheduleStep2(
-    const Patch*    patch,
-    SchedulerP&     sched,
-    DataWarehouseP& old_dw,
-    DataWarehouseP& new_dw)
-{
-  Task* task = scinew Task("ICE::step2",patch, old_dw, new_dw,this,
-			   &ICE::actuallyStep2);
-  
-  task->requires(new_dw,lb->press_CCLabel, 0,patch,Ghost::None);
-  int numMatls=d_sharedState->getNumICEMatls();
-  for (int m = 0; m < numMatls; m++) 
-  {
-    ICEMaterial* matl = d_sharedState->getICEMaterial(m);
-    int dwindex = matl->getDWIndex();
-    task->requires( new_dw, lb->vol_frac_CCLabel,  dwindex,patch,Ghost::None);
-    task->requires( new_dw, lb->uvel_FCMELabel,    dwindex,patch,Ghost::None);
-    task->requires( new_dw, lb->vvel_FCMELabel,    dwindex,patch,Ghost::None);
-    task->requires( new_dw, lb->wvel_FCMELabel,    dwindex,patch,Ghost::None);
-    task->requires( new_dw, lb->speedSound_equiv_CCLabel,
-                                                   dwindex,patch,Ghost::None);
-    task->requires( new_dw, lb->rho_micro_equil_CCLabel,
-		                                     dwindex,patch,Ghost::None);
-  }
-  task->computes(   new_dw,lb->pressdP_CCLabel,     0,     patch);
-  task->computes(   new_dw,lb->delPress_CCLabel,    0,     patch);
-  
-  sched->addTask(task);
-}
-//STOP_DOC
-/* ---------------------------------------------------------------------
- Function~  ICE::scheduleStep3--
- Purpose~   Schedule compute face centered pressure press_FC
-
-Programmer         Date       Description                      
-----------         ----       -----------                 
-John Schmidt      10/04/00                             
-_____________________________________________________________________*/
-void ICE::scheduleStep3(
-    const Patch*    patch,
-    SchedulerP&     sched,
-    DataWarehouseP& old_dw,
-    DataWarehouseP& new_dw)
-{
-  Task* task = scinew Task("ICE::step3",patch, old_dw, new_dw,this,
-			   &ICE::actuallyStep3);
-  
-  task->requires(   new_dw,lb->pressdP_CCLabel, 0,      patch,  Ghost::None);
-  int numMatls = d_sharedState->getNumICEMatls();
-  for (int m = 0; m < numMatls; m++) 
-  {
-    ICEMaterial* matl = d_sharedState->getICEMaterial(m);
-    int dwindex = matl->getDWIndex();
-    task->requires( old_dw, lb->rho_CCLabel,    dwindex, patch, Ghost::None);
-  }
-  
-  task->computes(   new_dw, lb->pressX_FCLabel, 0,      patch);
-  task->computes(   new_dw, lb->pressY_FCLabel, 0,      patch);
-  task->computes(   new_dw, lb->pressZ_FCLabel, 0,      patch);
-  
-  sched->addTask(task);
-}
-//STOP_DOC
-/* ---------------------------------------------------------------------
- Function~  ICE::scheduleStep4a--
- Purpose~   Schedule compute sources and sinks of momentum
-
-Programmer         Date       Description                      
-----------         ----       -----------                 
-John Schmidt      10/04/00                             
-_____________________________________________________________________*/
-void ICE::scheduleStep4a(
-    const Patch*    patch,
-    SchedulerP&     sched,
-    DataWarehouseP& old_dw,
-    DataWarehouseP& new_dw)
-{
-  Task* task = scinew Task("ICE::step4a",
-            patch,      old_dw,         new_dw,     this,
-	     &ICE::actuallyStep4a);
-
-  task->requires(new_dw,    lb->pressX_FCLabel,     0,  patch,  Ghost::None);
-  task->requires(new_dw,    lb->pressY_FCLabel,     0,  patch,  Ghost::None);
-  task->requires(new_dw,    lb->pressZ_FCLabel,     0,  patch,  Ghost::None);
-  int numMatls=d_sharedState->getNumICEMatls();
-  
-  for (int m = 0; m < numMatls; m++) 
-  {
-    ICEMaterial* matl = d_sharedState->getICEMaterial(m);
-    int dwindex = matl->getDWIndex();
-    task->requires(old_dw,  lb->rho_CCLabel,        dwindex,patch,Ghost::None);
-    task->requires(old_dw,  lb->uvel_CCLabel,       dwindex,patch,Ghost::None);
-    task->requires(old_dw,  lb->vvel_CCLabel,       dwindex,patch,Ghost::None);
-    task->requires(old_dw,  lb->wvel_CCLabel,       dwindex,patch,Ghost::None);
-    task->requires(old_dw,  lb->viscosity_CCLabel,  dwindex,patch,Ghost::None);
-    task->requires(new_dw,  lb->vol_frac_CCLabel,   dwindex,patch,Ghost::None);
- 
-    task->computes(new_dw,  lb->xmom_source_CCLabel,dwindex,patch);
-    task->computes(new_dw,  lb->ymom_source_CCLabel,dwindex,patch);
-    task->computes(new_dw,  lb->zmom_source_CCLabel,dwindex,patch);
-    task->computes(new_dw,  lb->tau_X_FCLabel,      dwindex,patch);
-    task->computes(new_dw,  lb->tau_Y_FCLabel,      dwindex,patch);
-    task->computes(new_dw,  lb->tau_Z_FCLabel,      dwindex,patch);
-  }
-  sched->addTask(task);
-}
-//STOP_DOC
-/* ---------------------------------------------------------------------
- Function~  ICE::scheduleStep4b--
- Purpose~   Schedule compute sources and sinks of energy
-
-Programmer         Date       Description                      
-----------         ----       -----------                 
-John Schmidt      10/04/00                             
-_____________________________________________________________________*/
-void ICE::scheduleStep4b(
-    const Patch*    patch,
-    SchedulerP&     sched,
-    DataWarehouseP& old_dw,
-    DataWarehouseP& new_dw)
-
-{
-  Task* task = scinew Task("ICE::step4b",patch, old_dw, new_dw,this,
-			   &ICE::actuallyStep4b);
-  
-  task->requires(new_dw,    lb->press_CCLabel,    0, patch, Ghost::None);
-  task->requires(new_dw,    lb->delPress_CCLabel, 0, patch, Ghost::None);
-  int numMatls=d_sharedState->getNumICEMatls();
-  
-  for (int m = 0; m < numMatls; m++) 
-  {
-    ICEMaterial* matl = d_sharedState->getICEMaterial(m);
-    int dwindex = matl->getDWIndex();
-    
-    task->requires( new_dw, lb->rho_micro_equil_CCLabel,    dwindex, patch,
-                                                            Ghost::None);
-    task->requires( new_dw, lb->speedSound_equiv_CCLabel,   dwindex, patch,
-                                                            Ghost::None);
-    task->requires( new_dw, lb->vol_frac_CCLabel,           dwindex, patch,
-                                                            Ghost::None);
-    
-    task->computes (new_dw, lb->int_eng_source_CCLabel,     dwindex, patch);
-  }
-  sched->addTask(task);
-}
-//STOP_DOC
-/* ---------------------------------------------------------------------
- Function~  ICE::scheduleStep5a--
- Purpose~   Schedule compute lagrangian mass momentum and internal energy
- 
-Programmer         Date       Description                      
-----------         ----       -----------                 
-John Schmidt      10/04/00                             
-_____________________________________________________________________*/
-void ICE::scheduleStep5a(
-    const Patch*    patch,
-    SchedulerP&     sched,
-    DataWarehouseP& old_dw,
-    DataWarehouseP& new_dw)
-{
-  Task* task = scinew Task("ICE::step5a",patch, old_dw, new_dw,this,
-			       &ICE::actuallyStep5a);
-  int numMatls=d_sharedState->getNumICEMatls();
-  for (int m = 0; m < numMatls; m++) 
-  {
-    ICEMaterial* matl = d_sharedState->getICEMaterial(m);
-    int dwindex = matl->getDWIndex();
-    task->requires( old_dw, lb->rho_CCLabel,        dwindex,patch,Ghost::None);
-    task->requires( old_dw, lb->uvel_CCLabel,       dwindex,patch,Ghost::None);
-    task->requires( old_dw, lb->vvel_CCLabel,       dwindex,patch,Ghost::None);
-    task->requires( old_dw, lb->wvel_CCLabel,       dwindex,patch,Ghost::None);
-    task->requires( old_dw, lb->cv_CCLabel,         dwindex,patch,Ghost::None);
-    task->requires( old_dw, lb->temp_CCLabel,       dwindex,patch,Ghost::None);
-    task->requires( new_dw, lb->xmom_source_CCLabel,dwindex,patch,Ghost::None);
-    task->requires( new_dw, lb->ymom_source_CCLabel,dwindex,patch,Ghost::None);
-    task->requires( new_dw, lb->zmom_source_CCLabel,dwindex,patch,Ghost::None);
-    task->requires( new_dw, lb->int_eng_source_CCLabel,
-		                                      dwindex,patch,Ghost::None);
- 
-    task->computes( new_dw, lb->xmom_L_CCLabel,     dwindex,patch);
-    task->computes( new_dw, lb->ymom_L_CCLabel,     dwindex,patch);
-    task->computes( new_dw, lb->zmom_L_CCLabel,     dwindex,patch);
-    task->computes( new_dw, lb->int_eng_L_CCLabel,  dwindex,patch);
-    task->computes( new_dw, lb->mass_L_CCLabel,     dwindex,patch);
-    task->computes( new_dw, lb->rho_L_CCLabel,      dwindex,patch);
-  }
-  sched->addTask(task);
-}
-//STOP_DOC
-/* ---------------------------------------------------------------------
- Function~  ICE::scheduleStep5b--
- Purpose~   Schedule momentum and energy exchange on the lagrangian quantities
-
-Programmer         Date       Description                      
-----------         ----       -----------                 
-John Schmidt      10/04/00                             
-_____________________________________________________________________*/
-void ICE::scheduleStep5b(
-    const Patch*    patch,
-    SchedulerP&     sched,
-    DataWarehouseP& old_dw,
-    DataWarehouseP& new_dw)
-{
-  Task* task = scinew Task("ICE::step5b",patch, old_dw, new_dw,this,
-			   &ICE::actuallyStep5b);
-  int numMatls=d_sharedState->getNumICEMatls();
-  
-  for (int m = 0; m < numMatls; m++) 
-  {
-    ICEMaterial* matl = d_sharedState->getICEMaterial(m);
-    int dwindex = matl->getDWIndex();
-    task->requires( old_dw, lb->rho_CCLabel,        dwindex,patch,Ghost::None);
-    task->requires( new_dw, lb->xmom_L_CCLabel,     dwindex,patch,Ghost::None);
-    task->requires( new_dw, lb->ymom_L_CCLabel,     dwindex,patch,Ghost::None);
-    task->requires( new_dw, lb->zmom_L_CCLabel,     dwindex,patch,Ghost::None);
-    task->requires( new_dw, lb->int_eng_L_CCLabel,  dwindex,patch,Ghost::None);
-    task->requires( new_dw, lb->vol_frac_CCLabel,   dwindex,patch,Ghost::None);
-    task->requires( old_dw, lb->cv_CCLabel,         dwindex,patch,Ghost::None);
-    task->requires( new_dw, lb->rho_micro_equil_CCLabel,
-		                                      dwindex,patch,Ghost::None);
-    
-    task->computes( new_dw, lb->xmom_L_ME_CCLabel,  dwindex,patch);
-    task->computes( new_dw, lb->ymom_L_ME_CCLabel,  dwindex,patch);
-    task->computes( new_dw, lb->zmom_L_ME_CCLabel,  dwindex,patch);
-    task->computes( new_dw, lb->int_eng_L_ME_CCLabel,dwindex,patch);
-  }
-  sched->addTask(task);
-}
-//STOP_DOC
-/* ---------------------------------------------------------------------
- Function~  ICE::scheduleStep6and7--
- Purpose~   Schedule advance and advect in time for mass, momentum
-            and energy.  Note this function puts (*)vel_CC, rho_CC
-            and Temp_CC into new dw, not flux variables
-
-Programmer         Date       Description                      
-----------         ----       -----------                 
-John Schmidt      10/04/00                             
-_____________________________________________________________________*/
-void ICE::scheduleStep6and7(
-    const Patch*    patch,
-    SchedulerP&     sched,
-    DataWarehouseP& old_dw,
-    DataWarehouseP& new_dw)
-{
-  Task* task = scinew Task("ICE::step6and7",patch, old_dw, new_dw,this,
-			   &ICE::actuallyStep6and7);
-  int numMatls=d_sharedState->getNumICEMatls();
-  for (int m = 0; m < numMatls; m++ ) 
-  {
-    ICEMaterial* matl = d_sharedState->getICEMaterial(m);
-    int dwindex = matl->getDWIndex();
-    task->requires(old_dw, lb->cv_CCLabel,dwindex,patch,Ghost::None,0);
-    task->requires(old_dw, lb->rho_CCLabel,       dwindex,patch,Ghost::None);
-    task->requires(old_dw, lb->uvel_CCLabel,      dwindex,patch,Ghost::None);
-    task->requires(old_dw, lb->vvel_CCLabel,      dwindex,patch,Ghost::None);
-    task->requires(old_dw, lb->wvel_CCLabel,      dwindex,patch,Ghost::None);
-    task->requires(old_dw, lb->temp_CCLabel,      dwindex,patch,Ghost::None);
-    task->requires(new_dw, lb->xmom_L_ME_CCLabel,
-		                                   dwindex,patch,Ghost::None,0);
-    task->requires(new_dw, lb->ymom_L_ME_CCLabel,
-		                                   dwindex,patch,Ghost::None,0);
-    task->requires(new_dw, lb->zmom_L_ME_CCLabel,
-		                                   dwindex,patch,Ghost::None,0);
-    task->requires(new_dw, lb->int_eng_L_ME_CCLabel,
-		                                   dwindex,patch,Ghost::None,0);
-
-    task->requires(new_dw, lb->speedSound_CCLabel,dwindex,patch,Ghost::None);
-    task->computes(new_dw, lb->temp_CCLabel,      dwindex,patch);
-    task->computes(new_dw, lb->rho_CCLabel,       dwindex,patch);
-    task->computes(new_dw, lb->cv_CCLabel,        dwindex,patch);
-    task->computes(new_dw, lb->uvel_CCLabel,      dwindex,patch);
-    task->computes(new_dw, lb->vvel_CCLabel,      dwindex,patch);
-    task->computes(new_dw, lb->wvel_CCLabel,      dwindex,patch);
-  }
-  task->computes(new_dw, d_sharedState->get_delt_label());
-  sched->addTask(task);
-}
-//STOP_DOC
 /* ---------------------------------------------------------------------
  Function~  ICE::actuallyComputeStableTimestep--
  Purpose~   Compute next time step based on speed of sound and 
@@ -977,7 +412,8 @@ void ICE::actuallyStep1a(const ProcessorGroup*,
 Note:  The nomenclature follows the reference.             
 Programmer         Date       Description                      
 ----------         ----       -----------                 
-John Schmidt      10/24/00                              
+John Schmidt      10/24/00 
+Todd              12/28/00    Changed convergence criteria                             
 _____________________________________________________________________*/
 void ICE::actuallyStep1b(
     const ProcessorGroup*,
@@ -1070,6 +506,21 @@ void ICE::actuallyStep1b(
   }
 
   press_new = press;
+  
+  /*`==========TESTING==========*/ 
+#if switchDebug_equilibration_press
+    printData( patch, 0, "TOP", "equilibrium press press_new",
+              press_new);
+              
+  for (int m = 0; m < numMatls; m++) 
+  {
+    printData( patch, 1, "TOP", "rho",             rho_micro[m]);
+    printData( patch, 1, "TOP", "rho_micro",       rho_micro[m]);
+    printData( patch, 1, "TOP", "Temp",            Temp[m]);
+    printData( patch, 1, "TOP", "vol_frac",        vol_frac[m]);
+   }
+ #endif
+ /*==========TESTING==========`*/
   //__________________________________
   //  Loop over every cell     
   int count;
@@ -1174,8 +625,9 @@ void ICE::actuallyStep1b(
 
 #ifdef john_debug
   for (CellIterator iter=patch->getExtraCellIterator(); !iter.done(); iter++) {
-    cout << "press_new["<<*iter<<"]="<<press_new[*iter] << endl;
+     cout << "press_new["<<*iter<<"]="<<press_new[*iter] << endl;
   }
+          
 #endif
 
 /*__________________________________
@@ -1184,6 +636,8 @@ void ICE::actuallyStep1b(
 *   SINCE WE USE BC_VALUES LATER ON IN THE CODE
 *___________________________________*/
   setBC(press_new,"Pressure",patch);
+ 
+ #if 0
  
   //__________________________________
   // Hydrostatic pressure adjustment - subtract off the hydrostatic pressure
@@ -1248,6 +702,9 @@ void ICE::actuallyStep1b(
       press_new[*iter] -= press_hydro;
     }
   }  
+  
+  
+#endif
   //__________________________________
   // Put data in the new dw
   for (int m = 0; m < numMatls; m++) 
@@ -1265,6 +722,20 @@ void ICE::actuallyStep1b(
 #endif
   }
   new_dw->put(press_new,lb->press_CCLabel,0,patch);
+  
+  
+/*`==========TESTING==========*/ 
+#if switchDebug_equilibration_press
+    printData( patch, 1, "BOTTOM", "equilibrium press press_new",
+              press_new);
+              
+  for (int m = 0; m < numMatls; m++) 
+  {
+    printData( patch, 1, "BOTTOM", "rho_micro",     rho_micro[m]);
+    printData( patch, 1, "BOTTOM", "vol_frac",      vol_frac[m]);
+   }
+#endif
+ /*==========TESTING==========`*/
   
 }
 //STOP_DOC
@@ -1870,7 +1341,7 @@ void ICE::actuallyStep2(
     DataWarehouseP& old_dw,
     DataWarehouseP& new_dw)
 {
-  cout << "Doing actually step2 -- divergence_of_face_centered_velocity_MM" << endl;
+  cout << "Doing actually step2 -- explicit delPress" << endl;
   int numMatls  = d_sharedState->getNumICEMatls();
   delt_vartype delT;
   old_dw->get(delT, d_sharedState->get_delt_label());
@@ -1959,7 +1430,12 @@ void ICE::actuallyStep2(
                             OFS,        OFE,        IFS,        IFE,
                             q_out,      q_out_EF,   q_in,   q_in_EF,
                             q_advected);
-
+/*`==========TESTING==========*/ 
+#if switchDebug_explicit_press
+    printData( patch, 0, "middle of explicit Pressure", "q_advected", q_advected);
+    printData( patch, 0, " ",                           "vol_frac",   vol_frac);
+#endif
+ /*==========TESTING==========`*/
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); 
 	  iter++)
       {
@@ -2006,6 +1482,14 @@ void ICE::actuallyStep2(
 
   new_dw->put(delPress, lb->delPress_CCLabel, 0, patch);
   new_dw->put(pressdP,  lb->pressdP_CCLabel,  0, patch);
+  
+  
+/*`==========TESTING==========*/ 
+#if switchDebug_explicit_press
+    printData( patch, 0, "Bottom of explicit Pressure",   "delPress",  delPress);
+    printData( patch, 1, " ",                             "pressdP",   pressdP);
+#endif
+ /*==========TESTING==========`*/
 }
 //STOP_DOC
 /* ---------------------------------------------------------------------  
@@ -2029,7 +1513,7 @@ void ICE::actuallyStep3(
 {
   cout << "Doing actually step3 -- press_face_MM" << endl;
   int numMatls = d_sharedState->getNumICEMatls();
-  double sum_rho, sum_rho_adj, sum_all_rho;
+  double sum_rho, sum_rho_adj;
   double A;                                      // Temp variable
 
   // Get required variables for this patch
@@ -2073,10 +1557,6 @@ void ICE::actuallyStep3(
 	    cout << "rho_CC"<<curcell<<"=" << rho_CC[m][curcell] << " sum_rho=" << sum_rho << " sum_rho_adj=" << sum_rho_adj << endl;
     #endif
         }
-        sum_all_rho  = sum_rho     +  sum_rho_adj;
-  #ifdef john_debug
-        cout << "sum_all_rho"<<curcell<<"=" << sum_all_rho << endl;
-  #endif 
   
         A =  (press_CC[curcell]/sum_rho) + (press_CC[adjcell]/sum_rho_adj);
         pressY_FC[curcell+IntVector(0,1,0)]      =  A/((1/sum_rho) + (1.0/sum_rho_adj) );
@@ -2095,7 +1575,7 @@ void ICE::actuallyStep3(
 	    sum_rho      += (rho_CC[m][curcell] + d_SMALL_NUM);
 	    sum_rho_adj  += (rho_CC[m][adjcell] + d_SMALL_NUM);
         }
-        sum_all_rho  = sum_rho     +  sum_rho_adj;
+       
         A =  (press_CC[curcell]/sum_rho) + (press_CC[adjcell]/sum_rho_adj);
         pressX_FC[curcell+IntVector(1,0,0)]      =  A/((1/sum_rho) + (1.0/sum_rho_adj) );
     }
@@ -2112,7 +1592,7 @@ void ICE::actuallyStep3(
 	sum_rho      += (rho_CC[m][curcell] + d_SMALL_NUM);
 	sum_rho_adj  += (rho_CC[m][adjcell] + d_SMALL_NUM);
       }
-      sum_all_rho  = sum_rho     +  sum_rho_adj;
+      
 #if 0
     /* 3D */
         A =  (press_CC[curcell]/sum_rho) + (press_CC[adjcell]/sum_rho_adj);
@@ -2316,6 +1796,10 @@ void ICE::actuallyStep4a(
     new_dw->put(ymom_source, lb->ymom_source_CCLabel, dwindex, patch);
     new_dw->put(zmom_source, lb->zmom_source_CCLabel, dwindex, patch);
   }
+  
+  //__________________________________
+  // KEEP -WALL -FULLWARN QUITE 
+    viscous_source = viscous_source;
 }
 //STOP_DOC
 /* --------------------------------------------------------------------- 
@@ -2352,6 +1836,8 @@ void ICE::actuallyStep4b(
   CCVariable<double> press_CC;
   CCVariable<double> delPress;
   CCVariable<double> int_eng_source;
+  
+
 
   new_dw->get(press_CC,lb->press_CCLabel,    0, patch,Ghost::None, 0);
   new_dw->get(delPress,lb->delPress_CCLabel, 0, patch,Ghost::None, 0);
@@ -2375,8 +1861,13 @@ void ICE::actuallyStep4b(
 
       new_dw->allocate(int_eng_source,          lb->int_eng_source_CCLabel,
                     dwindex,        patch);
+                    
+      
       //__________________________________
-      //   Compute int_eng_source in all cells
+      //   Compute int_eng_source in 
+      //   interior cells
+      
+      int_eng_source.initialize(0.);
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++)
      {
 	   A = vol * vol_frac[*iter] * press_CC[*iter];
@@ -2905,6 +2396,17 @@ void ICE::actuallyStep6and7(
      wvel_CC = wvel_CC_old;
      temp = temp_CC_old; 
  /*==========TESTING==========`*/
+ 
+
+/*`==========TESTING==========*/ 
+#if switchDebug_advance_advect
+    printData( patch,1, "TOP Advection",   "mass_L",      mass_L);
+    printData( patch,1, "",   "xmom_L_ME",                xmom_L_ME);
+    printData( patch,1, "",   "ymom_L_ME",                ymom_L_ME);
+    printData( patch,1, "",   "zmom_L_ME",                zmom_L_ME);
+    printData( patch,1, "",   "int_eng_L_ME",             int_eng_L_ME);
+#endif
+ /*==========TESTING==========`*/
       //__________________________________
       //   Advection preprocessings
       influxOutfluxVolume(
@@ -3005,7 +2507,15 @@ void ICE::actuallyStep6and7(
           temp[*iter] = (int_eng_L_ME[*iter] + q_advected[*iter])/
                                                           (mass*cv[*iter]);
       }
-
+/*`==========TESTING==========*/ 
+#if switchDebug_advance_advect
+    printData( patch,0, "Bottom Advection before BC's",   "rho",      rho_CC);
+    printData( patch,0, "",   "uvel_CC",  uvel_CC);
+    printData( patch,0, "",   "vvel_CC",  vvel_CC);
+    printData( patch,0, "",   "wvel_CC",  wvel_CC);
+    printData( patch,0, "",   "Temp_CC",  temp);
+#endif
+ /*==========TESTING==========`*/
   #ifdef john_debug
       cout << "Before applying bcs  6&7cd. . . " << endl << endl;
       for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
@@ -3048,6 +2558,8 @@ void ICE::actuallyStep6and7(
        new_dw->put(visc_CC,lb->viscosity_CCLabel,dwindex,patch);
        new_dw->put(cv,     lb->cv_CCLabel,       dwindex,patch);
   }
+  
+ 
   //______________________________________________________________________
   // Compute new delt
     for (int m = 0; m < d_sharedState->getNumICEMatls(); m++ ) 
@@ -3082,7 +2594,8 @@ void ICE::actuallyStep6and7(
 
 }
 //STOP_DOC
-
+//______________________________________________________________________
+//        B O U N D A R Y   C O N D I T I O N S   S E C T I O N
 
 void ICE::setBC(CCVariable<double>& variable, const string& kind, 
 		const Patch* patch)
@@ -3193,6 +2706,8 @@ void ICE::setBC(CCVariable<double>& variable, const  string& kind,
   }
 
 }
+
+
 
 void ICE::setBC(SFCXVariable<double>& variable, const string& kind, 
 		const Patch* patch)
@@ -3579,6 +3094,8 @@ void ICE::influxOutfluxVolume(
       OFE[*iter].d_eflux[FL] = 0.0;
       OFE[*iter].d_eflux[bR] = 0.0;
       OFE[*iter].d_eflux[bL] = 0.0;
+      
+      
   }
 //__________________________________
 //     INFLUX TERMS
@@ -3621,6 +3138,17 @@ void ICE::influxOutfluxVolume(
       IFE[*iter].d_eflux[BL]    = OFE[adjcell].d_eflux[TR];
       
       //__________________________________
+      // These need to be filled in for 3-d
+      IFE[*iter].d_eflux[TF] = 0.0;
+      IFE[*iter].d_eflux[Tb] = 0.0;
+      IFE[*iter].d_eflux[BF] = 0.0;
+      IFE[*iter].d_eflux[Bb] = 0.0;
+      IFE[*iter].d_eflux[FR] = 0.0;
+      IFE[*iter].d_eflux[FL] = 0.0;
+      IFE[*iter].d_eflux[bR] = 0.0;
+      IFE[*iter].d_eflux[bL] = 0.0;
+      
+      //__________________________________
       // NEED TO ADD CORNER FLUX TERMS
       totalfluxin = IFS[*iter].d_fflux[TOP]   + IFS[*iter].d_fflux[BOTTOM] +
         IFS[*iter].d_fflux[RIGHT] + IFS[*iter].d_fflux[LEFT]   +
@@ -3631,9 +3159,10 @@ void ICE::influxOutfluxVolume(
       cout << "totalfluxin = " << totalfluxin << endl;
       cout << "vol = " << vol << endl;
   #endif
+    }
        ASSERT(totalfluxin < vol);
   }
-}
+  
 //STOP_DOC
 /* ---------------------------------------------------------------------
  Function~  ICE::advectQFirst--ADVECTION:
@@ -3725,6 +3254,34 @@ void ICE::advectQFirst(
       "=" << q_advected[*iter] << endl;
 #endif
   }
+ //__________________________________
+ // DEBUGGING
+ #if switch_Debug_advectQFirst
+   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++)
+  {
+    cout<<*iter<< endl;
+    for(int face = TOP; face <= BACK; face++ ) 
+    {
+       fprintf(stderr, "slab: %i q_out %g, OFS %g\n",
+       face, q_out[*iter].d_fflux[face], OFS[*iter].d_fflux[face]);
+    }
+    for(int edge = TR; edge <= bL; edge++ ) 
+    {
+       fprintf(stderr, "edge %i q_out_EF %g, OFE %g\n",
+       edge, q_out_EF[*iter].d_eflux[edge], OFE[*iter].d_eflux[edge]);
+    }
+    for(int face = TOP; face <= BACK; face++ ) 
+    {
+       fprintf(stderr, "slab: %i q_in %g, IFS %g\n",
+       face, q_in[*iter].d_fflux[face], IFS[*iter].d_fflux[face]);
+    }
+    for(int edge = TR; edge <= bL; edge++ )
+    {
+       fprintf(stderr, "edge: %i q_in_EF %g, IFE %g\n",
+       edge, q_in_EF[*iter].d_eflux[edge], IFE[*iter].d_eflux[edge]);
+    }
+  }
+#endif
 
 }
 //STOP_DOC
@@ -3769,6 +3326,17 @@ void ICE::qOutfluxFirst(
         {
            q_out_EF[*iter].d_eflux[edge] = q_CC[*iter];
         }
+        
+      //__________________________________
+      // These need to be filled in for 3-d
+      q_out_EF[*iter].d_eflux[TF] = 0.0;
+      q_out_EF[*iter].d_eflux[Tb] = 0.0;
+      q_out_EF[*iter].d_eflux[BF] = 0.0;
+      q_out_EF[*iter].d_eflux[Bb] = 0.0;
+      q_out_EF[*iter].d_eflux[FR] = 0.0;
+      q_out_EF[*iter].d_eflux[FL] = 0.0;
+      q_out_EF[*iter].d_eflux[bR] = 0.0;
+      q_out_EF[*iter].d_eflux[bL] = 0.0;
     }
 }
 //STOP_DOC
@@ -3832,10 +3400,117 @@ void ICE::qInflux(
 
     adjcell = IntVector(curcell.x()-1,curcell.y()-1,curcell.z());
     q_in_EF[*iter].d_eflux[BL]  = q_out_EF[adjcell].d_eflux[TR];
+    
+      //__________________________________
+      // These need to be filled in for 3-d
+      q_in_EF[*iter].d_eflux[TF] = 0.0;
+      q_in_EF[*iter].d_eflux[Tb] = 0.0;
+      q_in_EF[*iter].d_eflux[BF] = 0.0;
+      q_in_EF[*iter].d_eflux[Bb] = 0.0;
+      q_in_EF[*iter].d_eflux[FR] = 0.0;
+      q_in_EF[*iter].d_eflux[FL] = 0.0;
+      q_in_EF[*iter].d_eflux[bR] = 0.0;
+      q_in_EF[*iter].d_eflux[bL] = 0.0;
   }
 
 }
 //STOP_DOC
+
+/* 
+ ======================================================================*
+ Function:  printData--
+ Purpose:  Print to stderr a cell-centered, single material
+
+  Programmer         Date       Description
+  ----------         ----       -----------
+   Todd Harman       12/29/00    
+_______________________________________________________________________ */
+void    ICE::printData( 
+        const Patch* patch, 
+        int     include_GC,             /* include ghost cells in print */
+        char    message1[],             /* message1                     */
+        char    message2[],             /* message to user              */
+        const CCVariable<double>& q_CC)
+{
+    int i, j, k,
+        xLo, yLo, zLo,
+        xHi, yHi, zHi,
+        extra_cell;
+    IntVector hiIndex      = patch->getCellHighIndex();
+    IntVector lowIndex    = patch->getCellLowIndex();                  
+    fprintf(stderr,"______________________________________________\n");
+    fprintf(stderr,"%s\n",message1);
+    fprintf(stderr,"~%s\n",message2);
+    
+    if (include_GC == 1) extra_cell = 0;
+    if (include_GC == 0) extra_cell = 1;
+    xLo = lowIndex.x()  + extra_cell;
+    yLo = lowIndex.y()  + extra_cell;
+    zLo = lowIndex.z()  + extra_cell;
+ 
+    xHi = hiIndex.x() - extra_cell-1;
+    yHi = hiIndex.y() - extra_cell-1;
+    zHi = hiIndex.z() - extra_cell-1;
+    
+    for(k = zLo; k <= zHi; k++)
+    {
+        for(j = yLo; j <= yHi; j++)
+        {
+            for(i = xLo; i <= xHi; i++)
+            {
+                IntVector idx(i, j, k);
+               fprintf(stderr,"[%d,%d,%d] = %4.3f \t",
+                      i,j,k, q_CC[idx]);
+               
+               /*  fprintf(stderr,"\n"); */
+            }
+            fprintf(stderr,"\n");
+        }
+        fprintf(stderr,"\n");
+    }
+    fprintf(stderr," ______________________________________________\n");
+       
+ }
+/*STOP_DOC*/
+
+/* 
+ ======================================================================
+ Function~  ICE::Message:
+ Purpose~  Output an error message and stop the program if requested. 
+ 
+ Programmer         Date       Description
+ ----------         ----       -----------
+  Todd Harman      12/29/00   Written   
+_______________________________________________________________________ */
+void    ICE::Message(
+        int     abort,          /* =1 then abort                            */                 
+        char    message1[],   
+        char    message2[],   
+        char    message3[]) 
+{        
+        char    c[2];
+                    
+        fprintf(stderr,"\n\n ______________________________________________\n");
+        fprintf(stderr,"%s\n",message1);
+        fprintf(stderr,"%s\n",message2);
+        fprintf(stderr,"%s\n",message3);
+        fprintf(stderr,"\n\n ______________________________________________\n");
+//______________________________
+// Now aborting program
+        if(abort == 1)
+        {
+            fprintf(stderr,"\n");
+            fprintf(stderr,"<c> = cvd  <d> = ddd\n");
+            scanf("%s",c);
+            system("date");
+            if(strcmp(c, "c") == 0) system("cvd -P ice");
+            if(strcmp(c, "d") == 0) system("ddd ice");
+            exit(1); 
+        }
+ }
+/*STOP_DOC*/
+
+
 
 #if 0
 /*__________________________________
@@ -4032,6 +3707,11 @@ ______________________________________________________________________*/
 
 //
 // $Log$
+// Revision 1.70  2001/01/01 23:57:37  harman
+// - Moved all scheduling of tasks over to ICE_schedule.cc
+// - Added instrumentation functions
+// - fixed nan's in int_eng_L_source
+//
 // Revision 1.69  2000/12/29 17:52:48  harman
 // - removed div_vel_fc calculation from delpress calculation
 // - changed how press_FC is being calculated
