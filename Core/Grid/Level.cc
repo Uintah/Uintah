@@ -7,19 +7,21 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
+#include <Packages/Uintah/Core/Grid/BoundCondFactory.h>
+#include <Packages/Uintah/Core/Grid/BoundCondBase.h>
+
 #include <Core/Geometry/BBox.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Util/FancyAssert.h>
 #include <Core/Thread/AtomicCounter.h>
 #include <Core/Thread/Mutex.h>
-#include <iostream>
+#include <Core/Thread/Thread.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
 
+#include <iostream>
 #include <algorithm>
 #include <map>
-#include <Packages/Uintah/Core/Grid/BoundCondFactory.h>
-#include <Packages/Uintah/Core/Grid/BoundCondBase.h>
 #include <math.h>
 
 #ifdef SELECT_RANGETREE
@@ -591,8 +593,9 @@ void Level::assignBCS(const ProblemSpecP& grid_ps)
   
   //Should this be an exception? -todd
   if (nFaces != 21) { 
-    cerr << "WARNING: Boundary conditions are not specified on all the faces"<< endl;
-    exit(1);
+    cerr << "Error: Boundary conditions are not specified on all the faces\n";
+    cerr << "       nFaces = " << nFaces << "\n";
+    Thread::exitAll(1);
   }
 }
 
