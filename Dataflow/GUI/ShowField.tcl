@@ -11,7 +11,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-show_edges
 	global $this-show_faces
 	global $this-node_disp_type
-	set $this-node_disp_type Spheres
+	set $this-node_display_type Spheres
 	$this-c needexecute
     }
 
@@ -90,10 +90,21 @@ itcl_class SCIRun_Visualization_ShowField {
 		-command "$this-c toggle_display_nodes"
 	$window.options.disp.show_nodes select
 
-	global $this-nodeDisplayType
+	global $this-node_display_type
+	set b $this-node_display_type
 	make_labeled_radio $window.options.disp.radio \
 		"Node Display Type" "$this-c node_display_type" top \
 		$this-node_display_type {Spheres Axes Points}
+
+	if {$b == "Spheres"} {
+	    $window.options.disp.radio.0 select
+	}
+	if {$b == "Axes"} {
+	    $window.options.disp.radio.1 select
+	}
+	if {$b == "Points"} {
+	    $window.options.disp.radio.1 select
+	}
 
 	checkbutton $window.options.disp.show_edges \
 		-text "Show Edges" \
