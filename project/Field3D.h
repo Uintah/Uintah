@@ -30,6 +30,9 @@ protected:
     int ref_cnt;
     Mutex lock;
 private:
+    Point min;
+    Point max;
+    Vector diagonal;
     int nx, ny, nz;
     Array3<double> s_grid;
     Array3<Vector> v_grid;
@@ -54,8 +57,8 @@ public:
     FieldType get_type();
 
     // These methods work for all types of representations
-    Vector interp_vector(Point&);
-    double interp_scalar(Point&);
+    int interpolate(const Point&, Vector&);
+    int interpolate(const Point&, double&);
 
     // Only for regular grids
     int get_nx();

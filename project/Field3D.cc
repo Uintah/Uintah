@@ -75,6 +75,9 @@ void Field3D::set_size(int _nx, int _ny, int _nz)
 	s_grid.newsize(nx, ny, nz);
     else
 	v_grid.newsize(nx, ny, nz);
+    min=Point(0,0,0);
+    max=Point(nx-1, ny-1, nz-1);
+    diagonal=max-min;
 }
 
 void Field3D::set(int i, int j, int k, const Vector& v)
@@ -111,10 +114,7 @@ void Field3D::io(Piostream& stream)
 	stream.io(nz);
 	if(stream.reading()){
 	    // Allocate the array...
-	    if(fieldtype==ScalarField)
-		s_grid.newsize(nx, ny, nz);
-	    else
-		v_grid.newsize(nx, ny, nz);
+	    set_size(nx, ny, nz);
 	}
 	if(fieldtype==ScalarField){
 	    for(int i=0;i<nx;i++){
@@ -141,3 +141,68 @@ void Field3D::io(Piostream& stream)
     stream.end_class();
 }
 
+int Field3D::interpolate(const Point& p, double& value)
+{
+    if(fieldtype != ScalarField)return 0;
+    if(rep != RegularGrid){
+	NOT_FINISHED("interpolate for non-regular grids");
+	return 0;
+    }
+    Vector pn=p-min;
+    double x=pn.x()*nx/diagonal.x();
+    double y=pn.y()*ny/diagonal.y();
+    double z=pn.z()*nz/diagonal.z();
+    int ix=(int)x;
+    int iy=(int)y;
+    int iz=(int)z;
+    int ix1=ix+1;
+    int iy1=iy+1;
+    int iz1=iz+1;
+    if(ix<0 || ix1>=nx)return 0;
+    if(iy<0 || iy1>=ny)return 0;
+    if(iz<0 || iz1>=nz)return 0;
+    double fx=x-ix;
+    double fy=y-iy;
+    double fz=z-iz;
+    double x00=Interpolate(s_grid(ix1, iy, iz), s_grid(ix, iy, iz), fx);
+    double x01=Interpolate(s_grid(ix1, iy, iz1), s_grid(ix, iy, iz1), fx);
+    double x10=Interpolate(s_grid(ix1, iy1, iz), s_grid(ix1, iy1, iz), fx);
+    double x11=Interpolate(s_grid(ix1, iy1, iz1), s_grid(ix1, iy1, iz1), fx);
+    double y0=Interpolate(x10, x00, fy);
+    double y1=Interpolate(x11, x01, fy);
+    value=Interpolate(y1, y0, fz);
+    return 1;
+}
+
+int Field3D::interpolate(const Point& p, Vector& value)
+{
+    if(fieldtype != ScalarField)return 0;
+    if(rep != RegularGrid){
+	NOT_FINISHED("interpolate for non-regular grids");
+	return 0;
+    }
+    Vector pn=p-min;
+    double x=pn.x()*nx/diagonal.x();
+    double y=pn.y()*ny/diagonal.y();
+    double z=pn.z()*nz/diagonal.z();
+    int ix=(int)x;
+    int iy=(int)y;
+    int iz=(int)z;
+    int ix1=ix+1;
+    int iy1=iy+1;
+    int iz1=iz+1;
+    if(ix<0 || ix1>=nx)return 0;
+    if(iy<0 || iy1>=ny)return 0;
+    if(iz<0 || iz1>=nz)return 0;
+    double fx=x-ix;
+    double fy=y-iy;
+    double fz=z-iz;
+    Vector x00=Interpolate(v_grid(ix1, iy, iz), v_grid(ix, iy, iz), fx);
+    Vector x01=Interpolate(v_grid(ix1, iy, iz1), v_grid(ix, iy, iz1), fx);
+    Vector x10=Interpolate(v_grid(ix1, iy1, iz), v_grid(ix1, iy1, iz), fx);
+    Vector x11=Interpolate(v_grid(ix1, iy1, iz1), v_grid(ix1, iy1, iz1), fx);
+    Vector y0=Interpolate(x10, x00, fy);
+    Vector y1=Interpolate(x11, x01, fy);
+    value=Interpolate(y1, y0, fz);
+    return 1;
+}
