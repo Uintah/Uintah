@@ -42,8 +42,6 @@
 #ifndef Core_Exceptions_Exception_h
 #define Core_Exceptions_Exception_h
 
-#include <sci_config.h>
-
 #if USE_SCI_THROW
 #define SCI_THROW(exc) do {SCIRun::Exception::sci_throw(exc);throw exc;} while(SCIRun::Exception::alwaysFalse())
 #else

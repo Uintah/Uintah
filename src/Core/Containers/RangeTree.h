@@ -29,8 +29,8 @@
 #ifndef Core_Containers_RangeTree_h
 #define Core_Containers_RangeTree_h
 
-#include <Core/Malloc/Allocator.h>
 #include <Core/Util/Assert.h>
+#include <Core/Malloc/Allocator.h>
 #include <Core/Exceptions/InternalError.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector>

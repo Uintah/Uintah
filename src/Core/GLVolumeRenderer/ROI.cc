@@ -27,8 +27,8 @@
 */
 
 
+#include <include/sci_defs/ogl_defs.h>
 
-#include <sci_defs.h>
 #if defined(HAVE_GLEW)
 #include <GL/glew.h>
 #else
@@ -37,12 +37,12 @@
 #endif
 
 #include <Core/GLVolumeRenderer/ROI.h>
-#include <Core/Geometry/Ray.h>
 #include <Core/GLVolumeRenderer/ROIIterator.h>
 #include <Core/GLVolumeRenderer/Brick.h>
 #include <Core/GLVolumeRenderer/SliceTable.h>
 #include <Core/GLVolumeRenderer/GLVolumeRenderer.h>
 #include <Core/GLVolumeRenderer/VolumeUtils.h>
+#include <Core/Geometry/Ray.h>
 
 namespace SCIRun {
 

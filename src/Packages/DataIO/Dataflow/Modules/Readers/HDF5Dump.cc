@@ -120,11 +120,9 @@
  *  Copyright (C) 2002 SCI Group
  */
 
-#include <sci_defs.h>
+#include "HDF5Dump.h"
 
 #ifdef HAVE_HDF5
-
-#include "HDF5Dump.h"
 
 namespace DataIO {
 

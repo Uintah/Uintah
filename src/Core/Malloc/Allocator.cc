@@ -64,10 +64,9 @@ const int ALIGN=16;
 
 #include <sys/param.h>
 #include <stdio.h>
-#include <sci_config.h>
 
 #ifdef SCI_PTHREAD
-#  include <pthread.h>
+#include <pthread.h>
 #endif
 
 /* we use UCONV to avoid compiler warnings. */

@@ -201,7 +201,6 @@ VULCANConnectionConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHand
   int ndims = 1;
   int hex = 8;
 
-
   NrrdData *nout = scinew NrrdData(true);
 
   register int i, j, kj, cc = 0;
@@ -211,6 +210,9 @@ VULCANConnectionConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHand
   int nCon = nHandles[mesh[LIST]]->nrrd->axis[1].size; // Connection list
   int nPhi = nHandles[mesh[PHI ]]->nrrd->axis[0].size; // Phi
   int nZR  = nHandles[mesh[ZR  ]]->nrrd->axis[1].size; // Points
+
+  if( nPhi == 1 )
+    hex = 4;
 
   NTYPE* ndata = scinew NTYPE[nPhi*nCon*hex];
 
@@ -234,7 +236,7 @@ VULCANConnectionConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHand
 	++cc;
       }
     }
-  } else {
+  } else if( nPhi > 1 ) {
     for( i=0, j=1; i<nPhi-1; i++, j++ ) {
       for( kj=0; kj<nCon; kj++ ) {      
 	
@@ -251,6 +253,17 @@ VULCANConnectionConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHand
 
 	++cc;
       }
+    }
+  } else if( nPhi == 1 ) {
+    for( kj=0; kj<nCon; kj++ ) {      
+	
+      // Mesh
+      ndata[cc*hex  ] = ((int) ptrCon[kj*rank + 0]);
+      ndata[cc*hex+1] = ((int) ptrCon[kj*rank + 1]);
+      ndata[cc*hex+2] = ((int) ptrCon[kj*rank + 2]);
+      ndata[cc*hex+3] = ((int) ptrCon[kj*rank + 3]);
+
+      ++cc;
     }
   }
 
@@ -270,12 +283,16 @@ VULCANConnectionConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHand
   string nrrdName;
   nHandles[mesh[LIST]]->get_property( "Name", nrrdName );
 
-  string::size_type pos = nrrdName.find( "Quad" );
-  if( pos != string::npos )
-    nrrdName.replace( pos, 4, "Hex" );
+  if( nPhi > 1 ) {
+    string::size_type pos = nrrdName.find( "Quad" );
+    if( pos != string::npos )
+      nrrdName.replace( pos, 4, "Hex" );
+  }
 
   nout->set_property( "Name", nrrdName, false );
-  nout->set_property( "Cell Type", string("Hex"), false );
+
+  if( nPhi > 1 )
+    nout->set_property( "Cell Type", string("Hex"), false );
 
   return  NrrdDataHandle( nout );	
 }

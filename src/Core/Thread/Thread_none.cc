@@ -48,6 +48,8 @@
 // This is brutal, but effective.  We want this file to have access
 // to the private members of Thread, without having to explicitly
 // declare friendships in the class.
+#include <include/sci_defs/bits_defs.h>
+
 #define private public
 #define protected public
 #include <Core/Thread/Thread.h>

@@ -39,8 +39,6 @@
  *  Copyright (C) 2004 SCI Institute
  */
 
-#include <sci_defs.h>
-
 #include <stdio.h>
 
 #include <Core/Malloc/Allocator.h>

@@ -37,10 +37,10 @@ default: all
 OBJTOP      := ..
 OBJTOP_ABS  := $(shell cd $(OBJTOP) ; pwd)
 
-include @abs_conftop_dir@/configVars.mk
+include @scirun_obj_dir@/configVars.mk
 
-SCIRUN_SRCTOP   := @abs_top_srcdir@
-SCIRUN_OBJTOP   := @abs_conftop_dir@
+SCIRUN_SRCTOP   := @scirun_src_dir@
+SCIRUN_OBJTOP   := @scirun_obj_dir@
 LIBDIR	        := $(SCIRUN_OBJTOP)/lib
 # get libraries in ./lib
 LIBS_FULLNAMES  := $(wildcard $(LIBDIR)/*.$(SO_OR_A_FILE))

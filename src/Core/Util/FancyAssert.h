@@ -43,7 +43,8 @@
 #ifndef SCI_Containers_FancyAssert_h
 #define SCI_Containers_FancyAssert_h
 
-#include <sci_config.h>
+#include <include/sci_defs/error_defs.h>
+
 #include <Core/Exceptions/AssertionFailed.h>
 #include <sgi_stl_warnings_off.h>
 #include <sstream>

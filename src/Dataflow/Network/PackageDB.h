@@ -32,15 +32,13 @@
 #ifndef PSE_Dataflow_PackageDB_h
 #define PSE_Dataflow_PackageDB_h 1
 
-#include <sci_defs.h>
-
-#include <Dataflow/share/share.h>
-
 #include <Core/Containers/AVLTree.h>
 #include <Core/Util/soloader.h>
 #include <Dataflow/Network/Module.h>
+#include <Dataflow/share/share.h>
 
 namespace SCIRun {
+
   class GuiInterface;
   using namespace std;
     typedef struct {

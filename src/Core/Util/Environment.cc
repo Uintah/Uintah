@@ -28,7 +28,8 @@
 
 
 // Core SCIRun Includes
-#include <sci_defs.h>
+#include <include/sci_defs/environment_defs.h>
+
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/RWS.h>
 

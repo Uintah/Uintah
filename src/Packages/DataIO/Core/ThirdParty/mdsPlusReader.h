@@ -48,8 +48,6 @@
   multiple servers and, or trees.
 */
 
-#include <sci_defs.h>
-
 #include <Core/Thread/Mutex.h>
 
 #include <string>

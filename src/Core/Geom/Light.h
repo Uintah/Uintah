@@ -44,10 +44,6 @@
 #define SCI_Geom_Light_h 1
 
 #include <Core/share/share.h>
-
-#ifndef _WIN32
-#include <sci_config.h>
-#endif
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Persistent/Persistent.h>

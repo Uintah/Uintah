@@ -43,15 +43,6 @@
 #ifndef SCIRUN_PBUFFER_H
 #define SCIRUN_PBUFFER_H
 
-#if defined(HAVE_GLEW)
-#include <GL/glew.h>
-#include <GL/glxew.h>
-#else
-#include <GL/gl.h>
-#include <GL/glx.h>
-#endif
-
-
 #if (defined(__linux) && !defined(__ECC)) || defined(__APPLE__)
 #define HAVE_PBUFFER
 #endif

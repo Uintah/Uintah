@@ -43,13 +43,13 @@
   University of Utah. All Rights Reserved.
 */
 
-#include <sci_defs.h>
+#include <include/sci_defs/chromium_defs.h>
 
 #include <Core/GLVolumeRenderer/GLVolRenState.h>
 #include <Core/GLVolumeRenderer/GLVolumeRenderer.h>
 #include <Core/GLVolumeRenderer/GLTexture3D.h>
-#include <Core/Geom/GeomOpenGL.h>
 #include <Core/GLVolumeRenderer/Brick.h>
+#include <Core/Geom/GeomOpenGL.h>
 #include <vector>
 #include <stdlib.h>
 #include <iostream>

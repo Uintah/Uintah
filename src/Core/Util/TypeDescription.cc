@@ -36,7 +36,6 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/Assert.h>
 #include <Core/Thread/Mutex.h>
-#include <sci_defs.h>
 #include <map>
 #include <iostream>
 

@@ -40,11 +40,6 @@
  */
 
 
-#include <sci_defs.h>
-
-#include <iostream>
-using std::ostream;
-
 #include <Core/Geom/GeomOpenGL.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geom/BBoxCache.h>
@@ -53,8 +48,10 @@ using std::ostream;
 #include <Dataflow/Modules/Render/ViewGeom.h>
 #include <Dataflow/Modules/Render/ViewWindow.h>
 
-namespace SCIRun {
+#include <iostream>
+using std::ostream;
 
+namespace SCIRun {
 
 Persistent*
 GeomViewerItem::maker()

@@ -39,13 +39,14 @@
  *  Copyright (C) 2002 SCI Group
  */
 
+#include <include/sci_defs/hdf5_defs.h>
+#include <include/sci_defs/stat64_defs.h>
+
 #include <Core/Malloc/Allocator.h>
 
 #include <Core/Datatypes/ColumnMatrix.h>
 
 #include <Packages/DataIO/Dataflow/Modules/Readers/HDF5DataReader.h>
-
-#include <sci_defs.h>
 
 #include <sys/stat.h>
 

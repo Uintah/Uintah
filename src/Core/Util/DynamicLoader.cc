@@ -30,8 +30,10 @@
 //    Author : Martin Cole
 //    Date   : Mon May 21 10:57:38 2001
 
+#include <include/sci_defs/environment_defs.h>
+#include <include/sci_defs/compile_defs.h>
+
 #include <Core/Util/DynamicLoader.h>
-#include <sci_defs.h>
 #include <Core/Util/soloader.h>
 #include <Core/Util/sci_system.h>
 #include <Core/Util/Environment.h>
@@ -306,7 +308,7 @@ DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p,
 bool 
 DynamicLoader::compile_so(const CompileInfo &info, ostream &serr)
 {
-  string command = ("cd " + otf_dir_ + "; " + MAKE_CMMD + " " + 
+  string command = ("cd " + otf_dir_ + "; " + MAKE_COMMAND + " " +
 		    info.filename_ + ext);
 
   serr << "DynamicLoader - Executing: " << command << endl;

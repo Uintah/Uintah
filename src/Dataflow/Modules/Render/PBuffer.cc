@@ -40,7 +40,16 @@
  *  Copyright (C) 2003 SCI Group
  */
 
-#include <sci_defs.h>
+#include <include/sci_defs/ogl_defs.h>
+#include <include/sci_defs/chromium_defs.h>
+
+#if defined(HAVE_GLEW)
+#include <GL/glew.h>
+#include <GL/glxew.h>
+#else
+#include <GL/gl.h>
+#include <GL/glx.h>
+#endif
 
 #include <Dataflow/Modules/Render/PBuffer.h>
 #include <Core/Util/Assert.h>

@@ -42,6 +42,8 @@
 // Use a standalone converter to do the colormap conversion into a
 // temporary file, then read in that file.
 
+#include <include/sci_defs/environment_defs.h>
+
 #include <Core/Malloc/Allocator.h>
 #include <Core/ImportExport/ColorMap/ColorMapIEPlugin.h>
 #include <Core/Persistent/Pstreams.h>

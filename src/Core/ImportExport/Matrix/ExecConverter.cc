@@ -42,6 +42,8 @@
 // Use a standalone converter to do the matrix conversion into a
 // temporary file, then read in that file.
 
+#include <include/sci_defs/environment_defs.h>
+
 #include <Core/ImportExport/Matrix/MatrixIEPlugin.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/StringUtil.h>

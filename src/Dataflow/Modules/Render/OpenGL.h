@@ -44,17 +44,11 @@
 #ifndef SCI_project_module_OpenGL_h
 #define SCI_project_module_OpenGL_h
 
+#include <include/sci_defs/collab_vis_defs.h>
+#include <include/sci_defs/image_defs.h>
+
 #include <tcl.h>
 #include <tk.h>
-
-#if defined(HAVE_GLEW)
-#include <GL/glew.h>
-#include <GL/glxew.h>
-#else
-#include <GL/gl.h>
-#include <sci_glu.h>
-#include <GL/glx.h>
-#endif
 
 #include <iostream>
 #include <sstream>
@@ -63,8 +57,6 @@
 
 #include <map>
 #include <vector>
-
-#include <sci_defs.h>
 
 #include <Core/Geom/GeomObj.h>
 #include <Core/Util/Timer.h>
@@ -82,7 +74,7 @@
 
 // HAVE_PBUFFER now comes from PBuffer.h
 #include <Dataflow/Modules/Render/PBuffer.h>
- 
+
 #include <Dataflow/Modules/Render/ViewWindow.h>
 #include <Dataflow/Modules/Render/Viewer.h>
 #include <Core/Thread/FutureValue.h>
@@ -186,7 +178,7 @@ public:
   // CollabVis code end
 
   void kill_helper();
-  
+
 protected:
   int xres, yres;
 
@@ -208,8 +200,8 @@ protected:
 	      int ntimesteps, double frametime);
 
   void getData(int datamask, FutureValue<GeometryData*>* result);
-  
-  
+
+
 private:
 
   GuiInterface* gui;
@@ -219,6 +211,7 @@ private:
   Display* dpy;
   GLXContext cx;
 #if defined(HAVE_PBUFFER)
+  bool have_pbuffer_;
   PBuffer pbuffer;
 #endif
   int maxlights;
@@ -255,7 +248,7 @@ private:
   bool doZTexTransform;
 #endif
   // CollabVis code end
-  
+
   // MPEG SUPPORT
   void StartMpeg(const string& fname);
   void AddMpegFrame();
@@ -291,7 +284,7 @@ private:
   Mailbox<int> recv_mb;
   Mailbox<GetReq> get_mb;
   Mailbox<ImgReq> img_mb;
-    
+
   Frustum frustum;
   HiRes hi_res;
 
@@ -317,7 +310,7 @@ private:
   GeomHandle stylusTriangle[4];
   GeomHandle pinchSphere;
   Material* stylusMaterial[16], *pinchMaterial;
-    
+
   GeomHandle pinchText[2];
   GeomHandle pinchCylinder[4];
 

@@ -51,17 +51,6 @@ include configVars.mk
 #${SRCTOP}/configure: ${SRCTOP}/configure.in
 #	cd ${SRCTOP} && autoconf
 
-sci_config.h: stamp-h
-stamp-h: ${SRCTOP}/sci_config.h.in ${OBJTOP}/config.status
-	CONFIGFILE= CONFIG_HEADERS="sci_config.h " ./config.status
-	echo timestamp > stamp-h
-
-sci_defs.h: stamp-defs
-stamp-defs: ${SRCTOP}/sci_testdefs.h.in ${OBJTOP}/config.status
-	@( CONFIG_FILES="sci_testdefs.h" CONFIG_HEADERS="" ./config.status ) 1>&2
-	@if cmp -s sci_defs.h sci_testdefs.h 2>/dev/null; then echo "sci_defs.h is unchanged"; rm -f sci_testdefs.h; else  mv sci_testdefs.h sci_defs.h; echo "sci_defs.h is changed"; fi
-	echo timestamp > stamp-defs
-
 config.status: ${SRCTOP}/configure
 	@if test -n "`find ${SRCTOP}/configure.in -newer config.cache`"; then echo "removing config.cache and confdefs.h as they may be out of date"; /bin/rm -f config.cache confdefs.h; fi
 	./config.status --recheck
@@ -221,7 +210,7 @@ distclean:: clean
 	rm -f config.status config.log config.cache
 	rm -f $(CREATETCLINDEX) scripts/CC scripts/cc
 	rm -f $(patsubst %,%/Makefile, $(ALLOBJSUBDIRS))
-	rm -f sci_config.h sci_defs.h sci_testdefs.h stamp-h
+	rm -f include/sci_defs/*.h stamp-h
 
 cleanall:: cleanai cleanAI cleanjs cleanJS cleantz cleanTZ cleanrest
 

@@ -27,17 +27,17 @@
 */
 
 
-#include <Core/GLVolumeRenderer/GLVolumeRenderer.h>
+#include <include/sci_defs/ogl_defs.h>
+
 #if defined( HAVE_GLEW )
 #include <GL/glew.h>
 #else
 #include <GL/gl.h>
 #endif
 
+#include <Core/GLVolumeRenderer/GLVolumeRenderer.h>
 
 namespace SCIRun {
-
-
 
 GLAttenuate::GLAttenuate(const GLVolumeRenderer* glvr) :
   GLTexRenState( glvr )

@@ -58,7 +58,7 @@
  * 9/95  Added nonZero flag to indicate whether min and max must be distinct
  */
 
-#include <sci_config.h>
+#include <include/sci_defs/config_defs.h> /* for HAVE_LIMITS etc, for tcl files */
 
 #include "tkPort.h"
 #include "default.h"

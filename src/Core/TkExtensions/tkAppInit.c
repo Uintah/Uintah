@@ -41,8 +41,9 @@
  *
  */
 
-#include <sci_config.h>
-#include <sci_defs.h>
+#include <include/sci_defs/config_defs.h> /* for HAVE_LIMITS etc, for tcl files */
+
+#include <include/sci_defs/ogl_defs.h>
 
 #define BUILD_tcl
 #include <tk.h>
@@ -98,9 +99,6 @@ extern void exit_all_threads(int rv);
 
 extern EXPORT int Blt_SafeInit _ANSI_ARGS_((Tcl_Interp *interp));
 extern EXPORT int Blt_Init _ANSI_ARGS_((Tcl_Interp *interp));
-#ifdef HAVE_PLPLOT
-extern EXPORT int Pltk_Init _ANSI_ARGS_((Tcl_Interp *interp));
-#endif
 extern int Table_Init _ANSI_ARGS_((Tcl_Interp* interp));
 
 /* include tclInt.h for access to namespace API */
@@ -257,21 +255,9 @@ Tcl_AppInit(interp)
     return TCL_ERROR;
   }
 
-#ifdef HAVE_PLPLOT
-  fflush(stdout);
-  printf("PLplot, ");
-  if (Pltk_Init(interp) == TCL_ERROR) {
-    printf("Pltk_Init() failed\n");
-    return TCL_ERROR;
-  }
-#endif
-
   Tcl_StaticPackage(interp, "Itcl", Itcl_Init, Itcl_SafeInit);
   Tcl_StaticPackage(interp, "Itk", Itk_Init, (Tcl_PackageInitProc *) NULL);
   Tcl_StaticPackage(interp, "BLT", Blt_Init, Blt_SafeInit);
-#ifdef HAVE_PLPLOT
-  Tcl_StaticPackage(interp, "Pltk", Pltk_Init, (Tcl_PackageInitProc *) NULL);
-#endif
 
   printf("Done.\n");
   fflush(stdout);

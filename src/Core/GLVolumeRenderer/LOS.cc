@@ -27,7 +27,8 @@
 */
 
 
-#include <sci_defs.h>
+#include <include/sci_defs/ogl_defs.h>
+
 #if defined(HAVE_GLEW)
 #include <GL/glew.h>
 #else
@@ -36,16 +37,14 @@
 #endif
 
 #include <Core/GLVolumeRenderer/LOS.h>
-#include <Core/Geometry/Ray.h>
 #include <Core/GLVolumeRenderer/LOSIterator.h>
 #include <Core/GLVolumeRenderer/Brick.h>
 #include <Core/GLVolumeRenderer/SliceTable.h>
 #include <Core/GLVolumeRenderer/GLVolumeRenderer.h>
 #include <Core/GLVolumeRenderer/VolumeUtils.h>
+#include <Core/Geometry/Ray.h>
 
 namespace SCIRun {
-
-
 
 LOS::LOS(const GLVolumeRenderer* glvr ) :
   GLVolRenState( glvr )
