@@ -109,7 +109,7 @@ libraries.  The
 ITK_BINARY_DIR.  The <acronym>ITK</acronym> library (or binary)
 directory is commonly
 <filename>/usr/local/lib/InsightToolkit</filename>.  The directory
-will contain file <filename>ITKConfig.make</filename>.
+will contain file <filename>ITKConfig.cmake</filename>.
 </para>
 </listitem>
 </varlistentry>
