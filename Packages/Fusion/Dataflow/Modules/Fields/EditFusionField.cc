@@ -171,20 +171,21 @@ void EditFusionField::execute(){
     updateField = true;
   }
 
+  // Get the dimensions of the mesh.
   idim_ = hvmInput->get_nx();
   jdim_ = hvmInput->get_ny();
   kdim_ = hvmInput->get_nz();
 
   // Check to see if the dimensions have changed.
-  if( idim_ != iDim_.get() ||
-      jdim_ != jDim_.get() ||
-      kdim_ != kDim_.get() ) {
+  if( idim_   != iDim_.get() ||
+      jdim_-1 != jDim_.get() ||
+      kdim_-1 != kDim_.get() ) {
 
     cout << "EditFusionField - Updating GUI." << endl;
 
     // Update the dims in the GUI.
     ostringstream str;
-    str << id << " set_size " << idim_ << " " << jdim_ << " " << kdim_;
+    str << id << " set_size " << idim_ << " " << jdim_-1 << " " << kdim_-1;
 
     TCL::execute(str.str().c_str());
 
@@ -247,18 +248,21 @@ void EditFusionField::execute(){
   }
 
   // Get a handle to the output field port.
-  FieldOPort *ofield_port = 
-    (FieldOPort *) get_oport("Output Field");
 
-  if (!ofield_port) {
-    error("Unable to initialize "+name+"'s oport\n");
-    return;
+  if( fHandle_.get_rep() )
+  {
+    FieldOPort *ofield_port = 
+      (FieldOPort *) get_oport("Output Field");
+
+    if (!ofield_port) {
+      error("Unable to initialize "+name+"'s oport\n");
+      return;
+    }
+
+    // Send the data downstream
+    ofield_port->send( fHandle_ );
   }
-
-  // Send the data downstream
-  ofield_port->send( fHandle_ );
 }
-
 
 CompileInfo *
 EditFusionFieldAlgo::get_compile_info(const TypeDescription *field_td)

@@ -80,36 +80,76 @@ EditFusionFieldAlgoT<FIELD>::execute(FieldHandle field_h,
   FIELD *ifield = dynamic_cast<FIELD *>(field_h.get_rep());
   typename FIELD::mesh_handle_type imesh = ifield->get_typed_mesh();
 
-  const unsigned int ini = imesh->get_nx();
-  const unsigned int inj = imesh->get_ny();
-  const unsigned int ink = imesh->get_nz();
+  // Account for the repeated values in the theta and phi directions
+  // by subtracting 1 in the j and k directions.
+  const unsigned int idim_in = imesh->get_nx();
+  const unsigned int jdim_in = imesh->get_ny() - 1;
+  const unsigned int kdim_in = imesh->get_nz() - 1;
 
-  const unsigned int ni = (iend - istart) / iskip; 
-  const unsigned int nj = (jend - jstart) / jskip; 
-  const unsigned int nk = (kend - kstart) / kskip; 
+  // Add one because we want the last node.
+  unsigned int idim_out = (iend - istart) / iskip + 1;
+  unsigned int jdim_out = (jend - jstart) / jskip + 1;
+  unsigned int kdin_out = (kend - kstart) / kskip + 1;
+
+  // Account for the modulo of skipping nodes so that the last node will be
+  // included even if it "partial" cell when compared to the others.
+  if( (iend - istart) % iskip ) idim_out += 1;
+  if( (jend - jstart) % jskip ) jdim_out += 1;
+  if( (kend - kstart) % kskip ) kdin_out += 1;
 
   typename FIELD::mesh_handle_type omesh =
-    scinew typename FIELD::mesh_type(ni, nj, nk);
+    scinew typename FIELD::mesh_type(idim_out, jdim_out, kdin_out);
 
   // Now after the mesh has been created, create the field.
   FIELD *ofield = scinew FIELD(omesh, Field::NODE);
 
-  for (unsigned int i=0; i < ni; i++)
-  {
-    for (unsigned int j=0; j < nj; j++)
-    {
-      for (unsigned int k=0; k < nk; k++)
-      {
-	typename FIELD::mesh_type::Node::index_type
-	  old_node((i*iskip+istart)%ini,
-		   (j*jskip+jstart)%inj,
-		   (k*kskip+kstart)%ink);
-	typename FIELD::mesh_type::Node::index_type new_node(i, j, k);
-	  
-	Point p;
-	imesh->get_center(p, old_node);
-	omesh->set_point(new_node, p);
-	typename FIELD::value_type value;
+  unsigned int i, j, k;
+  unsigned int iend_skip = iend+iskip;
+  unsigned int jend_skip = jend+jskip;
+  unsigned int kend_skip = kend+kskip;
+
+  Point pt;
+  typename FIELD::value_type value;
+  typename FIELD::mesh_type::Node::index_type old_node;
+  typename FIELD::mesh_type::Node::index_type new_node;
+
+  // Index based on the old mesh so that we are assured of getting the last
+  // node even if it forms a "partial" cell.
+  for( k=kstart, new_node.j_=0; k<kend_skip; k+=kskip, new_node.k_++ ) {
+
+    // Check for going past the end.
+    if( k > kend )
+      k = kend;
+
+    // Check for overlap.
+    if( k-kskip <= kstart+kdim_in && kstart+kdim_in <= k )
+      old_node.k_ = kstart;
+    else
+      old_node.k_ = k % kdim_in;
+
+    for( j=jstart, new_node.j_=0; j<jend_skip; j+=jskip, new_node.j_++ ) {
+
+      // Check for going past the end.
+      if( j > jend )
+	j = jend;
+
+      // Check for overlap.
+      if( j-jskip <= jstart+jdim_in && jstart+jdim_in <= j )
+	old_node.j_ = jstart;
+      else
+	old_node.j_ = j % jdim_in;
+
+      for( i=istart, new_node.i_=0; i<iend_skip; i+=iskip, new_node.i_++ ) {
+
+	// Check for going past the end.
+	if( i > iend )
+	  i = iend;
+
+	old_node.i_ = i;
+ 
+	imesh->get_center(pt, old_node);
+	omesh->set_point(new_node, pt);
+
 	ifield->value(value, old_node);
 	ofield->set_value(value, new_node);
       }
@@ -118,7 +158,6 @@ EditFusionFieldAlgoT<FIELD>::execute(FieldHandle field_h,
 
   return ofield;
 }
-
 
 } // end namespace SCIRun
 
