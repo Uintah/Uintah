@@ -152,7 +152,6 @@ WARNING
 	 
 	 SimulationStateP d_sharedState;
 	 Contact*         d_contactModel;
-	 Vector		  d_gravity;
 	 Fracture*        d_fractureModel;
 
 	 const VarLabel* deltLabel;
@@ -185,6 +184,9 @@ WARNING
    
 //
 // $Log$
+// Revision 1.27  2000/05/18 18:50:26  jas
+// Now using the gravity from the input file.
+//
 // Revision 1.26  2000/05/16 00:40:52  guilkey
 // Added code to do boundary conditions, print out tecplot files, and a
 // few other things.  Most of this is now commented out.

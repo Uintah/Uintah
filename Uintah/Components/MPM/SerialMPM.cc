@@ -50,7 +50,6 @@ SerialMPM::SerialMPM( int MpiRank, int MpiProcesses ) :
   UintahParallelComponent( MpiRank, MpiProcesses )
 {
 
-   d_gravity=Vector(0.0,0.0,0.);
 
    pDeformationMeasureLabel = new VarLabel("p.deformationMeasure",
 			    ParticleVariable<Matrix3>::getTypeDescription());
@@ -828,6 +827,9 @@ void SerialMPM::solveEquationsMotion(const ProcessorContext*,
 
   int numMatls = d_sharedState->getNumMatls();
 
+  // Gravity
+  Vector gravity = d_sharedState->getGravity();
+
   for(int m = 0; m < numMatls; m++){
     Material* matl = d_sharedState->getMaterial( m );
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
@@ -853,7 +855,7 @@ void SerialMPM::solveEquationsMotion(const ProcessorContext*,
 	if(mass[*iter]>0.0){
 	  acceleration[*iter] =
 		 (internalforce[*iter] + externalforce[*iter])/ mass[*iter]
-		 + d_gravity;
+		 + gravity;
 	}
 	else{
 	  acceleration[*iter] = zero;
@@ -1123,6 +1125,9 @@ void SerialMPM::crackGrow(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.60  2000/05/18 18:50:25  jas
+// Now using the gravity from the input file.
+//
 // Revision 1.59  2000/05/18 16:36:37  guilkey
 // Numerous small changes including:
 //   1.  Moved carry forward of particle volume to the cons. models.
