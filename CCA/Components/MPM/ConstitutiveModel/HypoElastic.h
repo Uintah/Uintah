@@ -63,6 +63,13 @@ namespace Uintah {
                                              const MPMMaterial* matl,
                                              const PatchSet* patches) const;
 
+         virtual double computeRhoMicroCM(double pressure,
+                                          const MPMMaterial* matl);
+
+         virtual void computePressEOSCM(double rho_m, double& press_eos,
+                                        double& dp_drho, double& ss_new,
+                                        const MPMMaterial* matl);
+
          // class function to read correct number of parameters
          // from the input file
          static void readParameters(ProblemSpecP ps, double *p_array);

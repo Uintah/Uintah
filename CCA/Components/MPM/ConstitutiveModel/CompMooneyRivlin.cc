@@ -326,6 +326,48 @@ void CompMooneyRivlin::addComputesAndRequires(Task* task,
   }
 }
 
+double CompMooneyRivlin::computeRhoMicroCM(double /*pressure*/,
+					   const MPMMaterial* /*matl*/)
+{
+#if 0
+  double rho_orig = matl->getInitialDensity();
+  double p_ref=101325.0;
+  double bulk = d_initialData.Bulk;
+
+  double p_gauge = pressure - p_ref;
+  double rho_cur;
+
+  rho_cur = rho_orig*(p_gauge/bulk + sqrt((p_gauge/bulk)*(p_gauge/bulk) +1));
+#endif
+
+  cout << "NO VERSION OF computeRhoMicroCM EXISTS YET FOR CompMooneyRivlin"
+       << endl;
+
+  double rho_cur=0.;
+
+  return rho_cur;
+}
+
+void CompMooneyRivlin::computePressEOSCM(const double /*rho_cur*/,double& /*pressure*/,
+                                         double& /*dp_drho*/, double& /*tmp*/,
+                                         const MPMMaterial* /*matl*/)
+{
+#if 0
+  double p_ref=101325.0;
+  double bulk = d_initialData.Bulk;
+  double shear = d_initialData.Shear;
+  double rho_orig = matl->getInitialDensity();
+
+  double p_g = .5*bulk*(rho_cur/rho_orig - rho_orig/rho_cur);
+  pressure = p_ref + p_g;
+  dp_drho  = .5*bulk*(rho_orig/(rho_cur*rho_cur) + 1./rho_orig);
+  tmp = sqrt((bulk + 4.*shear/3.)/rho_cur);  // speed of sound squared
+#endif
+
+  cout << "NO VERSION OF computePressEOSCM EXISTS YET FOR CompMooneyRivlin"
+       << endl;
+}
+
 #ifdef __sgi
 #define IRIX
 #pragma set woff 1209

@@ -71,6 +71,13 @@ WARNING
 					  const MPMMaterial* matl,
 					  DataWarehouse* old_dw,
 					  DataWarehouse* new_dw);
+
+         virtual double computeRhoMicroCM(double pressure,
+                                          const MPMMaterial* matl);
+
+         virtual void computePressEOSCM(double rho_m, double& press_eos,
+                                        double& dp_drho, double& ss_new,
+                                        const MPMMaterial* matl);
 	 
 	 // initialize  each particle's constitutive model data
 	 virtual void initializeCMData(const Patch* patch,
