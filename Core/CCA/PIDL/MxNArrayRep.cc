@@ -107,7 +107,8 @@ int SCIRun::lcm(int m,int n) {
 MxNArrayRep::MxNArrayRep(int dimno, Index* dimarr[], Reference* remote_ref) 
   : mydimno(dimno)
 {
-  for(int i=0; i< mydimno; i++){
+  //for(int i=0; i < mydimno; i++){
+  for(int i=mydimno-1; i >= 0; i--){
     mydimarr.push_back( *(dimarr[i]) );
   }
   if (remote_ref != NULL)  this->remoteRef = remote_ref;
@@ -117,7 +118,8 @@ MxNArrayRep::MxNArrayRep(int dimno, Index* dimarr[], Reference* remote_ref)
 MxNArrayRep::MxNArrayRep(SSIDL::array2<int>& arr, Reference* remote_ref) 
 {
   mydimno = arr.size2();
-  for(int i=0; i < mydimno; i++) {
+  //for(int i=0; i < mydimno; i++){
+  for(int i=mydimno-1; i >= 0; i--){
     mydimarr.push_back(Index(arr[0][i],arr[1][i],arr[2][i]) );
   }
   if (remote_ref != NULL)  this->remoteRef = remote_ref;
