@@ -71,7 +71,7 @@ SketchMaterial<ArrayType, DataType>::SketchMaterial
 (ArrayType &indata, BBox &bbox, Array2<float>& sil_trans, float sil_thickness,
  ScalarTransform1D<float, Color> *cm):
   SketchMaterialBase(sil_thickness),
-  bbox(bbox), ambient(0.5f), specular(1), spec_coeff(32), diffuse(1),
+  bbox(bbox), ambient(0.5f), specular(1), diffuse(1), spec_coeff(32),
   cool2warm(cm)
 {
   char me[] = "SketchMaterial::SketchMaterial";
@@ -194,8 +194,9 @@ SketchMaterial<ArrayType, DataType>::SketchMaterial
   // locality and worry about getting the rest of the code correct.
   
   // We need to know how many threads we could possibly use.  Lets
-  // check with the thread library.
-  ctx_pool.resize(SCIRun::Thread::numProcessors());
+  // check with the thread library.  Add one more for an auxiliary
+  // thread to use.
+  ctx_pool.resize(SCIRun::Thread::numProcessors()+1);
   fprintf(stderr, "%s: ctx_pool resized to %d\n", me, ctx_pool.size());
   for(int i = 0; i< ctx_pool.size(); i++) {
     // Allocate a new ctx
@@ -265,119 +266,124 @@ SketchMaterial<ArrayType, DataType>::shade(Color& result, const Ray& ray,
   }
   if (bbox.contains_point(hit_pos)) {
     // Get the ctx for this worker
-    int rank = cx->worker->rank();
-    if (rank < ctx_pool.size() && rank >= 0) {
-      // The rank will work
-      gageContext *gctx = ctx_pool[rank];
-      
-      // Compute the point in index space
-      Vector norm_hit_pos(hit_pos - bbox.min());
-      
-      double norm = norm_hit_pos.x() * inv_diag.x();
-      double samplex = norm * (nx - 1);
-      
-      norm = norm_hit_pos.y() * inv_diag.y();
-      double sampley = norm * (ny - 1);
-      
-      norm = norm_hit_pos.z() * inv_diag.z();
-      double samplez = norm * (nz - 1);
-      
-      if (rtrtGageProbe(gctx, samplex, sampley, samplez) == 0) {
-#ifdef COMPUTE_K1_K2
-	gage_t *k1 = gageAnswerPointer(gctx, gctx->pvl[0], gageSclK1);
-	gage_t *k2 = gageAnswerPointer(gctx, gctx->pvl[0], gageSclK2);
-#endif
-	gage_t *norm = gageAnswerPointer(gctx, gctx->pvl[0], gageSclGradVec);
-	gage_t *geomt = gageAnswerPointer(gctx, gctx->pvl[0], gageSclGeomTens);
-	
-	//      printf("k1 = %g, k2 = %g, norm = [%g, %g, %g]\n",*k1, *k2,
-	//	     norm[0], norm[1], norm[2]);
-	Vector normal;
-	gage_t length2 = norm[0]*norm[0]+norm[1]*norm[1]+norm[2]*norm[2];
-	if (length2){
-	  // this lets the compiler use a special 1/sqrt() operation
-	  float ilength2 = 1.0f/sqrtf(length2);
-	  normal = Vector(norm[0]*ilength2, norm[1]*ilength2, norm[2]*ilength2);
-	} else {
-	  normal = Vector(0,0,0);
-	}
-	
-	Light* light=cx->scene->light(0);
-
-	Color surface(0.9, 0.9, 0.9);
-	// Compute whether we are in shadow
-	Color shadowfactor(1,1,1);
-	Vector light_dir;
-	light_dir = light->get_pos()-hit_pos;
-	double dist=light_dir.normalize();
-	if(cx->scene->lit(hit_pos, light, light_dir, dist, shadowfactor, depth, cx) ){
-	  // Not in shadow
-	  if (use_cool2warm) {
-	    double dot = Dot(light_dir, normal);
-	    surface = cool2warm->lookup_bound(dot);
-	  } else {
-	    surface = color(normal, ray.direction(), light_dir, 
-			    surface, light->get_color());
-	  }
-	} else {
-	  // we are in shadow
-	  if (use_cool2warm) {
-	    double dot = Dot(light_dir, normal);
-	    if (dot >= 0)
-	      surface = cool2warm->lookup_bound(dot);
-	    else
-	      // This is regions facing the light.
-	      surface = cool2warm->lookup_bound(dot*0.25);
-	      //	      surface = cool2warm->lookup_bound(-dot);
-	  } else {
-	    surface = light->get_color() * surface * ambient;
-	  }
-	}
-
-	if (show_silhouettes == 0) {
-	  result = surface;
-	  return;
-	}
-	// Cool, now let's lookup the silhouette contribution.
-	
-	// We need a dot product of the normal with the view vector.
-	// This should be between -1 and 1;
-	Vector view = -ray.direction().normal();
-	double eye_dot_norm = Dot(view, normal);
-
-	// Now the multiplication of the geom tensor with the view.
-	double viewx = view.x();
-	double viewy = view.y();
-	double viewz = view.z();
-	double eye_gt_eye =
-	  viewx*(viewx * geomt[0] + viewy * geomt[1] + viewz * geomt[2]) +
-	  viewy*(viewx * geomt[3] + viewy * geomt[4] + viewz * geomt[5]) +
-	  viewz*(viewx * geomt[6] + viewy * geomt[7] + viewz * geomt[8]);
-
-	// Now to compute the indecies for the lookup, with bounds checks
-	int silx = static_cast<int>((eye_dot_norm + 1) * 0.5 *
-				    (sil_trans_funct.dim1()-1));
-	int sily = static_cast<int>(eye_gt_eye * inv_sil_thickness *
-				    (sil_trans_funct.dim2()-1));
-	//	cerr << "eye_dot_norm = "<<eye_dot_norm<<", eye_gt_eye = "<<eye_gt_eye<<", silx,y = ("<<silx<<", "<<sily<<")\n";cerr.flush();
-	if (silx < 0 || silx >= sil_trans_funct.dim1())
-	  silx = 0;
-	if (sily < 0 || sily >= sil_trans_funct.dim2())
-	  sily = 0;
-
-	// Bounds checks on sil_val???
-	float sil_val = sil_trans_funct(silx, sily);
-	// Now to do a lerp
-	result = surface * sil_val + sil_color * (1 - sil_val);
-      } else {
-	return;
-      }
-    } else {
+    int rank = cx->worker_num;
+    if (rank == -1) rank = ctx_pool.size()-1;
+    if (rank >= ctx_pool.size() || rank < -1) {
       // The rank is bad, so lets use some generic color.
       result = Color(1,0,1);
+      return;
     }
+
+    // The rank will work
+    gageContext *gctx = ctx_pool[rank];
+    
+    // Compute the point in index space
+    Vector norm_hit_pos(hit_pos - bbox.min());
+    
+    double idx_norm = norm_hit_pos.x() * inv_diag.x();
+    double samplex = idx_norm * (nx - 1);
+    
+    idx_norm = norm_hit_pos.y() * inv_diag.y();
+    double sampley = idx_norm * (ny - 1);
+    
+    idx_norm = norm_hit_pos.z() * inv_diag.z();
+    double samplez = idx_norm * (nz - 1);
+    
+    if (rtrtGageProbe(gctx, samplex, sampley, samplez) != 0) {
+      // There was a problem
+      result = Color(1,1,0);
+      return;
+    }
+    
+#ifdef COMPUTE_K1_K2
+    gage_t *k1 = gageAnswerPointer(gctx, gctx->pvl[0], gageSclK1);
+    gage_t *k2 = gageAnswerPointer(gctx, gctx->pvl[0], gageSclK2);
+#endif
+    gage_t *norm = gageAnswerPointer(gctx, gctx->pvl[0], gageSclGradVec);
+    gage_t *geomt = gageAnswerPointer(gctx, gctx->pvl[0], gageSclGeomTens);
+    
+    //      printf("k1 = %g, k2 = %g, norm = [%g, %g, %g]\n",*k1, *k2,
+    //	     norm[0], norm[1], norm[2]);
+    Vector normal;
+    gage_t length2 = norm[0]*norm[0]+norm[1]*norm[1]+norm[2]*norm[2];
+    if (length2){
+      // this lets the compiler use a special 1/sqrt() operation
+      float ilength2 = 1.0f/sqrtf(length2);
+      normal = Vector(norm[0]*ilength2, norm[1]*ilength2, norm[2]*ilength2);
+    } else {
+      normal = Vector(0,0,0);
+    }
+    
+    Light* light=cx->scene->light(0);
+    
+    Color surface(0.9, 0.9, 0.9);
+    // Compute whether we are in shadow
+    Color shadowfactor(1,1,1);
+    Vector light_dir;
+    light_dir = light->get_pos()-hit_pos;
+    double dist=light_dir.normalize();
+    if(cx->scene->lit(hit_pos, light, light_dir, dist, shadowfactor, depth, cx) ){
+      // Not in shadow
+      if (use_cool2warm) {
+        double dot = Dot(light_dir, normal);
+        surface = cool2warm->lookup_bound(dot);
+      } else {
+        surface = color(normal, ray.direction(), light_dir, 
+                        surface, light->get_color());
+      }
+    } else {
+      // we are in shadow
+      if (use_cool2warm) {
+        double dot = Dot(light_dir, normal);
+        if (dot >= 0)
+          surface = cool2warm->lookup_bound(dot);
+        else
+          // This is regions facing the light.
+          surface = cool2warm->lookup_bound(dot*0.25);
+        //	      surface = cool2warm->lookup_bound(-dot);
+      } else {
+        surface = light->get_color() * surface * ambient;
+      }
+    }
+    
+    if (show_silhouettes == 0) {
+      result = surface;
+      return;
+    }
+    // Cool, now let's lookup the silhouette contribution.
+    
+    // We need a dot product of the normal with the view vector.
+    // This should be between -1 and 1;
+    Vector view = -ray.direction().normal();
+    double eye_dot_norm = Dot(view, normal);
+    
+    // Now the multiplication of the geom tensor with the view.
+    double viewx = view.x();
+    double viewy = view.y();
+    double viewz = view.z();
+    double eye_gt_eye =
+      viewx*(viewx * geomt[0] + viewy * geomt[1] + viewz * geomt[2]) +
+      viewy*(viewx * geomt[3] + viewy * geomt[4] + viewz * geomt[5]) +
+      viewz*(viewx * geomt[6] + viewy * geomt[7] + viewz * geomt[8]);
+    
+    // Now to compute the indecies for the lookup, with bounds checks
+    int silx = static_cast<int>((eye_dot_norm + 1) * 0.5 *
+                                (sil_trans_funct.dim1()-1));
+    int sily = static_cast<int>(eye_gt_eye * inv_sil_thickness *
+                                (sil_trans_funct.dim2()-1));
+    //	cerr << "eye_dot_norm = "<<eye_dot_norm<<", eye_gt_eye = "<<eye_gt_eye<<", silx,y = ("<<silx<<", "<<sily<<")\n";cerr.flush();
+    if (silx < 0 || silx >= sil_trans_funct.dim1())
+      silx = 0;
+    if (sily < 0 || sily >= sil_trans_funct.dim2())
+      sily = 0;
+    
+    // Bounds checks on sil_val???
+    float sil_val = sil_trans_funct(silx, sily);
+    // Now to do a lerp
+    result = surface * sil_val + sil_color * (1 - sil_val);
   }
 }
+
 
 template<class ArrayType, class DataType>
 int
