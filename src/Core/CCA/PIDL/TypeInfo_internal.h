@@ -72,22 +72,16 @@ DESCRIPTION
 	    // one of these per distinct type.  Fullclassname is the
 	    // fully qualified C++ class name for the associated
 	    // class (i.e. ::Core/CCA::PIDL::TypeInfo_internal).
-	    // uuid is a unique identifier for this class.  table and
-	    // tableSize are used to create endpoints for objects
-	    // of this type.  The create_proxy function will create
-	    // a new proxy object for a proxy to this type.
+	    // table and tableSize are used to create endpoints for
+	    // objects of this type.  The create_proxy function will
+	    // create a new proxy object for a proxy to this type.
 	    TypeInfo_internal(const std::string& fullclassname,
-			      const std::string& uuid,
 			      void* table, int tableSize,
 			      Object* (*create_proxy)(const SCIRun::ReferenceMgr&));
 
 	    //////////
 	    // The fully qualified classname for this type.
 	    std::string fullclassname;
-
-	    //////////
-	    // The globally unique identifier associated with this ID.
-	    std::string uuid;
 
 	    //////////
 	    // The nexus handler table which dispatches the methods

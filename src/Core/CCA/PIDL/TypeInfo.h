@@ -99,7 +99,7 @@ public:
   //////////
   // Return the new vtable offset for casting to the named class.
   // This is used only by the sidl generated isa handler.
-  int isa(const std::string& classname, const std::string& uuid) const;
+  int isa(const std::string& classname) const;
 
   //////////
   // The number used to represent an invalid vtable offset.

@@ -46,13 +46,11 @@
 using namespace SCIRun;
 
 TypeInfo_internal::TypeInfo_internal(const std::string& fullclassname,
-				     const std::string& uuid,
 				     void* table,
 				     int tableSize,
 				     Object* (*create_proxy)(const ReferenceMgr&))
-    : fullclassname(fullclassname), uuid(uuid),
-      table(table), tableSize(tableSize), create_proxy(create_proxy),
-      parentclass(0)
+    : fullclassname(fullclassname), table(table),
+	tableSize(tableSize), create_proxy(create_proxy), parentclass(0)
 {
   // This is safe because it will not recurse - there are no parents yet.
   add_castable(this, TypeInfo::vtable_methods_start);
@@ -72,18 +70,19 @@ void TypeInfo_internal::add_parentiface(const TypeInfo* ti, int vtoffset)
 
 void TypeInfo_internal::add_castable(const TypeInfo_internal* ti, int vtoffset)
 {
-  MapType::iterator iter_classname=classname_map.find(ti->fullclassname);
-  if(iter_classname == classname_map.end()){
-    // Insert this...
-    classname_map[ti->fullclassname]=MapType::mapped_type(ti, vtoffset);
-    const_cast<TypeInfo_internal*>(ti)->add_castables(this, vtoffset);
-  } else {
-    if(iter_classname->second.first->uuid != ti->uuid){
-      throw SCIRun::InternalError("inconsistent typeinfo");
+    MapType::iterator iter_classname = classname_map.find(ti->fullclassname);
+    if (iter_classname == classname_map.end()) {
+	// Insert this...
+	classname_map[ti->fullclassname] = MapType::mapped_type(ti, vtoffset);
+	const_cast<TypeInfo_internal*>(ti)->add_castables(this, vtoffset);
     } else {
-      // Ok...
+      // uuid not used to identify class types anymore
+      //if(iter_classname->second.first->uuid != ti->uuid){
+            //throw SCIRun::InternalError("inconsistent typeinfo");
+      //} else {
+	  // Ok...
+      //}
     }
-  }
 }
 
 void TypeInfo_internal::add_castables(TypeInfo_internal* parent, int vtoffset)
