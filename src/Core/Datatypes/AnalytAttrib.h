@@ -296,6 +296,14 @@ namespace Datatypes{
     return Vector(func->get_value(vrs, 3, 0), func->get_value(vrs, 3, 1), func->get_value(vrs, 3, 2));
   }
 
+
+  template <class T>
+  void
+  AnalytAttrib<T>::io(Piostream &)
+  {
+  }
+
+
 } // end Datatypes
 } // end SCICore
 
