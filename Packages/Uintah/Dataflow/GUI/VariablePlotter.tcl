@@ -458,9 +458,6 @@ itcl_class Uintah_Visualization_VariablePlotter {
             # Add 4 to the y increment to account for the padding
             set yincr [expr $yincr + 4]
 
-            puts "width: $width"
-            puts "height: $height"
-            puts "yincr: $yincr"
             $w.vars.canvas config -yscrollincrement $yincr
             $w.vars.canvas config -scrollregion "0 0 $width $height"
             
