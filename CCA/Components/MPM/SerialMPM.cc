@@ -82,6 +82,7 @@ SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
   d_accStrainEnergy = false; // Flag for accumulating strain energy
   d_useLoadCurves = false; // Flag for using load curves
   d_doErosion = false; // Default is no erosion
+  d_createNewParticles = false; // Default is no new particle creation
   d_erosionAlgorithm = "none"; // Default algorithm is none
   d_adiabaticHeating = 0.0; // Adiabatic heating is on (no heat exchange
                             // between material points and surroundings
@@ -115,6 +116,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP&,
     mpm_soln_ps->get("turn_on_adiabatic_heating", adiabaticHeatingOn);
     if (!adiabaticHeatingOn) d_adiabaticHeating = 1.0;
     mpm_soln_ps->get("ForceBC_force_increment_factor", d_forceIncrementFactor);
+    mpm_soln_ps->get("create_new_particles", d_createNewParticles);
     ProblemSpecP erosion_ps = mpm_soln_ps->findBlock("erosion");
     if (erosion_ps) {
       if (erosion_ps->getAttribute("algorithm", d_erosionAlgorithm)) {
@@ -325,7 +327,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleSetGridBoundaryConditions(      sched, patches, matls);
   scheduleApplyExternalLoads(             sched, patches, matls);
   scheduleCalculateDampingRate(           sched, patches, matls);
-  //scheduleAddNewParticles(           sched, patches, matls);
+  scheduleAddNewParticles(                sched, patches, matls);
   scheduleInterpolateToParticlesAndUpdate(sched, patches, matls);
 
   sched->scheduleParticleRelocation(level, lb->pXLabel_preReloc,
@@ -759,6 +761,8 @@ void SerialMPM::scheduleAddNewParticles(SchedulerP& sched,
 					const PatchSet* patches,
 					const MaterialSet* matls)
 {
+  if (!d_createNewParticles) return;
+
  /*
   * AddNewParticles
   * Create new particles
