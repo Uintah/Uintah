@@ -1,8 +1,6 @@
 #ifndef GLTEXRENSTATE_H
 #define GLTEXRENSTATE_H
 
-//#include "GLVolumeRenderer.h"
-
 namespace SCICore {
 namespace GeomSpace  {
 

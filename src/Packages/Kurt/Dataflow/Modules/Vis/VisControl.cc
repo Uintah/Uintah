@@ -179,6 +179,12 @@ void VisControl::tcl_command( TCLArgs& args, void* userdata)
   string gsNames("");
   string gvNames("");
   //  string gtNames;
+  
+  // reset the vars
+  psVar.set("");
+  pvVar.set("");
+  gsVar.set("");
+  gvVar.set("");
 
   // get all of the NC and Particle Variables
   const TypeDescription *td;

@@ -31,7 +31,7 @@ SRCS     += $(SRCDIR)/Brick.cc \
 
 PSELIBS := SCICore/Exceptions SCICore/Geometry \
 	SCICore/Persistent SCICore/Datatypes \
-	SCICore/Containers  SCICore/Geom
+	SCICore/Containers  SCICore/Geom SCICore/Thread
 
 LIBS :=  $(LINK) $(GL_LIBS) -lm
 
@@ -39,6 +39,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3  2000/05/29 22:24:49  kuzimmer
+# A bunch of fixes, including making volumes work with udas, transforming volumes properly without copying data, and fixing coredumps when changing udas
+#
 # Revision 1.2  2000/05/20 02:23:28  kuzimmer
 # modifications for a texture slicing module
 #
