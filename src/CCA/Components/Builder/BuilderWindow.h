@@ -49,8 +49,15 @@
 #include <qmainwindow.h>
 #include "Module.h"
 
-class QPopupMenu;
 class NetworkCanvasView;
+
+class QAction;
+class QCanvasView;
+class QVBox;
+class QFont;
+class QPopupMenu;
+class QSplitter;
+class QLabel;
 
 namespace SCIRun {
 
@@ -61,83 +68,114 @@ class BuilderWindow;
  */
 class MenuTree : public QObject
 {
-  Q_OBJECT
+    Q_OBJECT
 public:
-  MenuTree(BuilderWindow* builder, const std::string &url);
-  virtual ~MenuTree();
-  sci::cca::ComponentClassDescription::pointer cd;
-  void add(const std::vector<std::string>& name, int nameindex,
-           const sci::cca::ComponentClassDescription::pointer& desc,
-           const std::string& fullname);
-  void coalesce();
-  void populateMenu(QPopupMenu*);
-  void clear();
+    MenuTree(BuilderWindow* builder, const std::string &url);
+    virtual ~MenuTree();
+    void add(const std::vector<std::string>& name,
+	     int nameindex,
+	     const sci::cca::ComponentClassDescription::pointer& desc,
+	     const std::string& fullname);
+    void coalesce();
+    void populateMenu( QPopupMenu* );
+    void clear();
+
+    sci::cca::ComponentClassDescription::pointer cd;
+
 private:
-  std::map<std::string, MenuTree*> child;
-  BuilderWindow* builder;
-  std::string url;
-  
+    BuilderWindow* builder;
+    std::map<std::string, MenuTree*> child;
+    std::string url;
+
 private slots:
-void instantiateComponent();  
+    void instantiateComponent();  
 };
 
+/**
+ *
+ * \class BuilderWindow
+ *  SCIRun2 main window
+ */
 class BuilderWindow : public QMainWindow,
-                      public sci::cca::ports::ComponentEventListener
+		    public sci::cca::ports::ComponentEventListener
 {
-  Q_OBJECT
-protected:
-  void closeEvent( QCloseEvent* );
-  
-public slots:
-void updateMiniView();
-  
-private slots:
-void save();
-  void saveAs();
-  void load();
-  void insert();
-  void clear();
-  void addInfo();
-  void exit();
-  void cluster_add();
-  void cluster_remove();
-  void mxn_add();
-  void performance_mngr();
-  void performance_tau_add();
-  void demos();
-  void about();
-  void addCluster();
-  void rmCluster();
-  void refresh();
+    Q_OBJECT
 public:
-  BuilderWindow(const sci::cca::Services::pointer& services);
-  virtual ~BuilderWindow();
-  
-  Module* instantiateComponent(const sci::cca::ComponentClassDescription::pointer&);
-  Module* instantiateComponent(const std::string& className, const std::string& type, const std::string& loaderName);
-  
-  // From sci::cca::ComponentEventListener
-  void componentActivity(const sci::cca::ports::ComponentEvent::pointer& e);
-  void displayMsg(const char *); 
-  void buildRemotePackageMenus(const sci::cca::ports::ComponentRepository::pointer &reg, const std::string &frameworkURL);
-  
-  std::vector<Module*> updateMiniView_modules;
-  std::vector<int> packageMenuIDs;
-  
-  void insertHelpMenu();
-  
+    BuilderWindow(const sci::cca::Services::pointer& services);
+    virtual ~BuilderWindow();
+    Module* instantiateComponent(const sci::cca::ComponentClassDescription::pointer&);
+    Module* instantiateComponent(const std::string& className,
+				const std::string& type,
+				const std::string& loaderName);
+    // From sci::cca::ComponentEventListener
+    void componentActivity(const sci::cca::ports::ComponentEvent::pointer& msgTextEdit);
+    void displayMsg(const char *);
+    void displayMsg(const QString &);
+    void buildRemotePackageMenus(const sci::cca::ports::ComponentRepository::pointer &reg,
+				 const std::string &frameworkURL);
+
+    std::vector<Module*> updateMiniView_modules;
+    std::vector<int> packageMenuIDs;
+
+public slots:
+    void updateMiniView();
+
+protected:
+    void closeEvent( QCloseEvent* );
+
 private:
-  QString filename;
-  sci::cca::Services::pointer services;
-  void buildPackageMenus();
-  BuilderWindow(const BuilderWindow&);
-  BuilderWindow& operator=(const BuilderWindow&);
-  NetworkCanvasView* big_canvas_view;
-  QTextEdit *e;	
-  QCanvas* miniCanvas;
-  QCanvas* big_canvas;
-  QCanvasItemList tempQCL;
-  std::vector<QCanvasRectangle*> miniRect;
+    BuilderWindow(const BuilderWindow&);
+    BuilderWindow& operator=(const BuilderWindow&);
+    void setupFileActions();
+    void setupClusterActions();
+    void buildPackageMenus();
+    void insertHelpMenu();
+    void writeFile();
+    QFont *bFont;
+    QSplitter *vsplit;
+    QSplitter *hsplit;
+    QVBox *vBox;
+    QLabel *msgLabel;
+    QTextEdit *msgTextEdit;
+    QCanvas *miniCanvas,
+	    *networkCanvas;
+    QCanvasView *miniView;
+    NetworkCanvasView* networkCanvasView;
+    QCanvasItemList tempQCL;
+    QAction *loadAction,
+	*insertAction,
+	*saveAction,
+	*saveAsAction,
+	*clearAction,
+	*addInfoAction,
+	*quitAction,
+	*exitAction,
+	*addClusterAction,
+	*rmClusterAction,
+	*refreshAction;
+
+    QString filename;
+    sci::cca::Services::pointer services;
+    std::vector<QCanvasRectangle*> miniRect;
+
+private slots:
+    void save();
+    void saveAs();
+    void load();
+    void insert();
+    void clear();
+    void addInfo();
+    void exit();
+    void clusterAdd();
+    void clusterRemove();
+    void mxn_add();
+    void performance_mngr();
+    void performance_tau_add();
+    void demos();
+    void about();
+    void addCluster();
+    void rmCluster();
+    void refresh();
 };
 
 } // end namespace SCIRun
