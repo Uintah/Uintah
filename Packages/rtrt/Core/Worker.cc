@@ -197,6 +197,7 @@ void Worker::run()
 	      // <<<< bigler >>>>
 	      //stime=Thread::currentSeconds();
 	      stime=SCIRun::Time::currentSeconds();
+	    int ny_total = image->get_yres();
 	    for(int y=sy;y<ey;y++){
 	      for(int x=sx;x<ex;x++){
 		camera->makeRayL(ray, x+xoffset, y+yoffset, ixres, iyres);
@@ -220,9 +221,9 @@ void Worker::run()
 		  double etime=SCIRun::Time::currentSeconds();
 		  double t=etime-stime;	
 		  stime=etime;
-		  (*image)(x,y).set(CMAP(t));
+		  (*image)(x,y+ny_total).set(CMAP(t));
 		} else {
-		  (*image)(x,y).set(result);
+		  (*image)(x,y+ny_total).set(result);
 		}
 	      }
 	    }

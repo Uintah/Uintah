@@ -232,7 +232,8 @@ int calc_width(XFontStruct* font_struct, char* str)
   int ascent, descent;
   int dir;
   XTextExtents(font_struct, str, (int)strlen(str), &dir, &ascent, &descent, &overall);
-  return overall.width;
+  if (overall.width < 20) return 50;
+  else return overall.width;
 }
 
 #define PS(str) \
@@ -409,7 +410,9 @@ static void drawrstats(int nworkers, Worker** workers,
   int dir;
   XTextExtents(font_struct, str, (int)strlen(str), &dir, &ascent, &descent, &overall);
   int dy=ascent+descent;
+  if (dy == 0) dy=15;
   int dx=overall.width;
+  if (dx == 0) dx=175;
   int column=3-left;
   int top=yres-3-dy+up;
   char* str2="(100%)";
@@ -593,6 +596,14 @@ Dpy::handle_keypress( unsigned long key )
     break;
   case XK_r:
     draw_rstats=!draw_rstats;
+    break;
+  case XK_n:
+    camera->scale_eyesep(0.9);
+    cerr << "camera->eyesep="<<camera->get_eyesep()<<"\n";
+    break;
+  case XK_m:
+    camera->scale_eyesep(1.1);
+    cerr << "camera->eyesep="<<camera->get_eyesep()<<"\n";
     break;
   case XK_t:
     scene->hotspots=!scene->hotspots;
@@ -810,8 +821,8 @@ void Dpy::get_input()
 	{
 	  if(e.xmotion.state & ShiftMask){
 	    double scl;
-	    double xmtn=last_x-e.xmotion.x;
-	    double ymtn=last_y-e.xmotion.y;
+	    double xmtn=-(last_x-e.xmotion.x);
+	    double ymtn=-(last_y-e.xmotion.y);
 	    xmtn/=300;
 	    ymtn/=300;
 	    last_x = e.xmotion.x;
@@ -1047,7 +1058,7 @@ void Dpy::run()
 
   XFontStruct* fontInfo2 = XLoadQueryFont(priv->dpy, __FONTSTRING__);
 
-  if (fontInfo == NULL) {
+  if (fontInfo2 == NULL) {
     cerr << "no font found" << __FILE__ << "," << __LINE__ << std::endl;
     Thread::exitAll(1);
   }
@@ -1056,7 +1067,7 @@ void Dpy::run()
   first = fontInfo2->min_char_or_byte2;
   last = fontInfo2->max_char_or_byte2;
 
-  GLuint fontbase2 = glGenLists((GLuint) last+1);
+  fontbase2 = glGenLists((GLuint) last+1);
   if (fontbase2 == 0) {
     printf ("out of display lists\n");
     exit (0);

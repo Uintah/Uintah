@@ -22,7 +22,7 @@ class Camera {
     double fov;
     Vector u,v;
     Vector direction;
-    Vector eyesep;
+    double eyesep;
     char pad2[128];
 public:
     Camera(const Point& eye, const Point& lookat,
@@ -39,13 +39,15 @@ public:
 	return eye;
     }
     inline bool operator != (const Camera& c) const {
-	return eye != c.eye || lookat != c.lookat || up != c.up || fov != c.fov;
+	return eye != c.eye || lookat != c.lookat || up != c.up || fov != c.fov || eyesep != c.eyesep;
     }
     void set_lookat(const Point&);
     Point get_lookat() const;
     void set_fov(double fov);
     double get_fov() const;
+    double get_eyesep() const;
     void set_eye(const Point&);
+    void scale_eyesep(double scale);
     void set_up(const Vector&);
     Vector get_up() const;
     void getParams(Point& origin, Vector& lookdir,
