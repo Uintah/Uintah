@@ -72,6 +72,9 @@ public:
     int size(void);
 
     int add(const Point&, const Point&, const Point&);
+    
+    void reserve_clear(int);   // reserves storage... and clears
+
     virtual GeomObj* clone();
 
     virtual void get_bounds(BBox&);

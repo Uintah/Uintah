@@ -184,6 +184,21 @@ int GeomTrianglesP::size(void)
     return points.size()/9;
 }
 
+void GeomTrianglesP::reserve_clear(int n)
+{
+    int np = points.size()/9;
+    int delta = n - np;
+
+    points.remove_all();
+    normals.remove_all();
+
+    if (delta > 0) {
+	points.grow(delta);
+	normals.grow(delta);
+    }
+	
+}
+
 int GeomTrianglesP::add(const Point& p1, const Point& p2, const Point& p3)
 {
     Vector n(Cross(p2-p1, p3-p1));
