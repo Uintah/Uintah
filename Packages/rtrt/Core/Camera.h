@@ -26,7 +26,7 @@ class Stealth;
 class Scene;
 class PerProcessorContext;
 class Dpy;
-class Gui;
+class GGT;
 class BBox;
 
 class Camera : public SCIRun::Persistent {
@@ -34,7 +34,7 @@ class Camera : public SCIRun::Persistent {
 protected:
 
   friend class Dpy;
-  friend class Gui;
+  friend class GGT;
 
   // I don't know who was using these, but I'm going to comment them
   // out for now.  If after a while of (August 2004) these are not

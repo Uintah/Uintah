@@ -34,7 +34,7 @@ class Stats;
 class PerProcessorContext;
 class Worker;
 class DpyGui;
-class Gui;
+class GGT;
 class RServer;
 class RTRT;
 class Stealth;
@@ -48,7 +48,7 @@ struct DpyPrivate;
 
 class Dpy : public DpyBase {
 
-  friend class Gui;
+  friend class GGT;
   friend class DpyGui;
   friend class Worker;
 
