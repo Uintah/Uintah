@@ -64,7 +64,7 @@ for test in TESTS:
 	errors_to = environ['ERRORS_TO']
 	if environ['ERRORMAIL'] != "yes":
 	    errors_to = ""
-    	rc = system("dat_test %s %s/MPM-%s %s/Uintah_testdata/%s '%s' > dat_test.log 2>&1" % (testname, environ['BUILDROOT'], mode, environ['BUILDROOT'], environ['OS'], errors_to))
+    	rc = system("dat_test %s %s/MPM-%s %s/Uintah_testdata/%s_%s '%s' > dat_test.log 2>&1" % (testname, environ['BUILDROOT'], mode, environ['BUILDROOT'], environ['OS'], mode, errors_to))
     	if rc != 0:
 	    if rc != 65280:
     	    	print "\tWarning, test %s failed dat comparision with error code %s" % (testname, rc)
