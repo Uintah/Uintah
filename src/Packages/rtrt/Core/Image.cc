@@ -83,7 +83,10 @@ void Image::save(char* filename)
     if(!out){
 	cerr << "error opening file: " << filename << '\n';
     }
+    printf("Image res(%d,%d)\n",xres, yres);
     out.write((char*)&image[0][0], (int)(sizeof(Pixel)*xres*yres));
+    out.close();
+    printf("Finished writing image\n");
 }
 
 // this code is added for tiled images...
