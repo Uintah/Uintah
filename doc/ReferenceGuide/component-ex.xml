@@ -87,6 +87,7 @@
       </p>
     </description>
     <parameter>
+      <widget>Text Widget</widget>
       <label>Min</label>
       <description>
         <p>
@@ -96,6 +97,7 @@
       </description>
     </parameter>
     <parameter>
+      <widget>Text Widget</widget>
       <label>Max</label>
       <description>
         <p>
@@ -105,6 +107,7 @@
       </description>
     </parameter>
     <parameter>
+      <widget>Text Widget</widget>
       <label>Bin Width</label>
       <description>
         <p>
@@ -114,6 +117,7 @@
       </description>
     </parameter>
     <parameter>
+      <widget>Text Widget</widget>
       <label># Bins</label>
       <description>
         <p>
@@ -134,12 +138,8 @@
 	  known outputs.
 	</p>
       </description>
+      <step>No steps yet.</step>
       <step>
-        <p>Read step 2</p>
-      </step>
-      <step>
-        <p>Don't do what step 1 said to do</p>
-      </step>      
     </plan>
   </testing>
 </component>
