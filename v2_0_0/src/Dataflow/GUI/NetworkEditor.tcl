@@ -128,6 +128,13 @@ proc makeNetworkEditor {} {
     global ToolTipText
     Tooltip .main_menu.file $ToolTipText(FileMenu)
     
+    menubutton .main_menu.subnet -text "Sub-Networks" -underline 0 \
+	-menu .main_menu.subnet.menu -direction below
+    menu .main_menu.subnet.menu -tearoff false
+    pack .main_menu.subnet -side left
+    .main_menu.subnet configure -state disabled
+
+
     menubutton .main_menu.help -text "Help" -underline 0 \
 	-menu .main_menu.help.menu -direction below
     menu .main_menu.help.menu -tearoff false
@@ -167,7 +174,7 @@ proc makeNetworkEditor {} {
     eval $maincanvas create rectangle [$maincanvas cget -scrollregion] \
 	-fill "$Color(NetworkEditor)" -tags bgRect
 
-    menu $maincanvas.modulesMenu -tearoff false
+
 
     scrollbar .bot.neteditFrame.hscroll -relief sunken -orient horizontal \
 	-command "$maincanvas xview"
@@ -352,8 +359,9 @@ proc createPackageMenu {index} {
     menubutton .main_menu.$pack -text "$ModuleMenu($pack)" -underline 0 \
 	-menu .main_menu.$pack.menu
     menu .main_menu.$pack.menu
+    pack forget .main_menu.subnet
     pack .main_menu.$pack -side left
-
+    pack .main_menu.subnet -side left
     global ToolTipText
     Tooltip .main_menu.$pack $ToolTipText(PackageMenus)
 
@@ -373,42 +381,51 @@ proc createPackageMenu {index} {
 
 proc createModulesMenu { subnet } {
     global ModuleMenu Subnet
+    if ![info exists ModuleMenu] return
     set canvas $Subnet(Subnet${subnet}_canvas)
-    if { ![info exists ModuleMenu] || \
-	  [info exists ModuleMenu($canvas)] } { return }
-    set ModuleMenu($canvas) 1
-    foreach pack $ModuleMenu(packages) {
-	# Add a separator to the right-button menu for this package if this
-	# isn't the first package to go in there
-	if { [$canvas.modulesMenu index end] != "none" } \
-	    { $canvas.modulesMenu add separator }
-	$canvas.modulesMenu add command -label "$ModuleMenu($pack)"
-	foreach cat $ModuleMenu(${pack}_categories) {
-	    # Add the category to the right-button menu
-	    $canvas.modulesMenu add cascade -label "  $ModuleMenu($cat)" \
-		-menu $canvas.modulesMenu.$cat
-	    menu $canvas.modulesMenu.$cat -tearoff false
-	    foreach mod $ModuleMenu(${pack}_${cat}_modules) {
-		$canvas.modulesMenu.$cat add command \
-		    -label "$ModuleMenu($mod)" \
-		    -command "global Subnet
+    if ![winfo exists $canvas.modulesMenu] {	
+	menu $canvas.modulesMenu -tearoff false
+	foreach pack $ModuleMenu(packages) {
+	    # Add a separator to the right-button menu for this package if this
+	    # isn't the first package to go in there
+	    if { [$canvas.modulesMenu index end] != "none" } \
+		{ $canvas.modulesMenu add separator }
+	    $canvas.modulesMenu add command -label "$ModuleMenu($pack)"
+	    foreach cat $ModuleMenu(${pack}_categories) {
+		# Add the category to the right-button menu
+		$canvas.modulesMenu add cascade -label "  $ModuleMenu($cat)" \
+		    -menu $canvas.modulesMenu.$cat
+		menu $canvas.modulesMenu.$cat -tearoff false
+		foreach mod $ModuleMenu(${pack}_${cat}_modules) {
+		    $canvas.modulesMenu.$cat add command \
+			-label "$ModuleMenu($mod)" \
+			-command "global Subnet
                               set Subnet(Loading) $subnet
                               addModuleAtMouse \"$ModuleMenu($pack)\" \"$ModuleMenu($cat)\" \"$ModuleMenu($mod)\"
                               set Subnet(Loading) 0"
+		}
 	    }
 	}
+	$canvas.modulesMenu add separator
+	$canvas.modulesMenu add cascade -label "Sub-Networks" \
+	    -menu $canvas.modulesMenu.subnet
+	menu $canvas.modulesMenu.subnet -tearoff false
     }
+
     global SCIRUN_SRCDIR
     set filelist1 [glob -nocomplain -dir $SCIRUN_SRCDIR/Subnets *.net]
     set filelist2 [glob -nocomplain -dir ~/SCIRun/Subnets *.net]
-    set subnetfiles [concat $filelist1 $filelist2]
-    if [llength $subnetfiles] {
-	if { [$canvas.modulesMenu index end] != "none" } \
-	    { $canvas.modulesMenu add separator }
-	# Add the category to the right-button menu
-	$canvas.modulesMenu add cascade -label "Sub-Networks" \
-		-menu $canvas.modulesMenu.subnet
-	menu $canvas.modulesMenu.subnet -tearoff false
+    set subnetfiles [lsort -dictionary [concat $filelist1 $filelist2]]
+
+    $canvas.modulesMenu.subnet delete 0 end
+    .main_menu.subnet.menu delete 0 end
+
+    if ![llength $subnetfiles] {
+	$canvas.modulesMenu entryconfigure Sub-Networks -state disabled
+	.main_menu.subnet configure -state disabled
+    } else {
+	$canvas.modulesMenu entryconfigure Sub-Networks -state normal
+	.main_menu.subnet configure -state normal
 	foreach file $subnetfiles {
 	    set name [join [lrange [split [lindex [split $file "/"] end] "."] 0 end-1] "."]
 	    $canvas.modulesMenu.subnet add command \
@@ -416,7 +433,13 @@ proc createModulesMenu { subnet } {
 		-command "global Subnet
                           set Subnet(Loading) $subnet
                           loadSubnet {$file}
-                          set SubnetLoading 0"
+                          set Subnet(Loading) 0"
+
+	    .main_menu.subnet.menu add command \
+		-label "$name" \
+		-command "global Subnet
+                          set Subnet(Loading) 0
+                          loadSubnet {$file}"
 	}
     }
 	
@@ -1019,6 +1042,7 @@ set licenseResult decline
 
 
 proc licenseDialog { {firsttime 0} } {
+    if $firsttime { return "accept" }
     global SCIRUN_SRCDIR licenseResult userData
     set filename [file join $SCIRUN_SRCDIR LICENSE]
     set stream [open $filename r]
