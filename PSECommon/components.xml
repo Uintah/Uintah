@@ -388,6 +388,23 @@
     </implementation>
   </dataflow-component>
 
+  <dataflow-component name="PathReader">
+    <meta>
+      <authors>
+        <author>Dave Weinstein</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_PathReader</creationFunction>
+    </implementation>
+  </dataflow-component>
+
   <!-- INSERT NEW Readers COMPONENT HERE -->
   </scirun-library>
   <scirun-library category="Salmon">
@@ -410,6 +427,23 @@
     <parameters></parameters>
     <implementation>
       <creationFunction>make_Salmon</creationFunction>
+    </implementation>
+  </dataflow-component>
+
+  <dataflow-component name="EditPath">
+    <meta>
+      <authors>
+        <author>Alexei Samsonov</author>
+      </authors>
+      <version-date>July 2000</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_EditPath</creationFunction>
     </implementation>
   </dataflow-component>
 
@@ -1531,6 +1565,23 @@
     <parameters></parameters>
     <implementation>
       <creationFunction>make_GeometryWriter</creationFunction>
+    </implementation>
+  </dataflow-component>
+  
+  <dataflow-component name="PathWriter">
+    <meta>
+      <authors>
+        <author>Dave Weinstein</author>
+      </authors>
+      <version-date>1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_PathWriter</creationFunction>
     </implementation>
   </dataflow-component>
 
