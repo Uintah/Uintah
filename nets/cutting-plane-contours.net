@@ -21,7 +21,8 @@
 # the generic "sourceSettingsFile" call...  So we just print out the
 # error message.  This will need to be fixed at some point.
 
-if {[llength [array get env SCIRUN_DATA]] == 0} {
+global SCIRUN_DATA
+if {$SCIRUN_DATA == ""} {
 
    displayErrorWarningOrInfo "" error
    displayErrorWarningOrInfo "*** Error: This net depends on the SCIRUN_DATA enviroment variable." error
@@ -32,7 +33,7 @@ if {[llength [array get env SCIRUN_DATA]] == 0} {
    return
 }
 
-set DATADIR $env(SCIRUN_DATA)
+set DATADIR $SCIRUN_DATA
 
 if {![file isfile $DATADIR/radial/radial.settings]} {
    displayErrorWarningOrInfo "" error
