@@ -1268,11 +1268,9 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	    gvelocity.fillFace(face,bc->getValue());
 	  }
 	  if (bcs_type == "Symmetric") {
-#if 0
 	    SymmetryBoundCond* bc =
 	      dynamic_cast<SymmetryBoundCond*>(bcs[i]);
 	     gvelocity.fillFaceNormal(face);
-#endif
 	  }
 	  if (bcs_type == "Temperature") {
 	    // TemperatureBoundCond* bc = 
@@ -2101,6 +2099,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.159  2000/11/07 04:28:41  jas
+// Now doing Symmetry BC in interpolateParticlesToGrid.  Had them commented
+// out.
+//
 // Revision 1.158  2000/11/06 20:50:11  guilkey
 // Moved functionality of Problem into SerialMPM.
 //
