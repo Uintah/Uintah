@@ -25,10 +25,10 @@ using namespace std;
 
 //#define DOING
 #undef DOING
-//#define EOSCM
+#define EOSCM
 //#undef EOSCM
-#define IDEAL_GAS
-//#undef IDEAL_GAS
+//#define IDEAL_GAS
+#undef IDEAL_GAS
 //#define BURN_DEBUG
 #undef BURN_DEBUG
 
@@ -180,7 +180,8 @@ void MPMICE::scheduleTimeAdvance(double, double,
   d_mpm->scheduleInterpolateToParticlesAndUpdate( sched, patches, mpm_matls);
 
   if(d_fracture) {
-    d_mpm->scheduleComputeFracture(sched, patches, mpm_matls);
+    d_mpm->scheduleComputeFracture(               sched, patches, mpm_matls);
+    d_mpm->scheduleComputeCrackExtension(         sched, patches, mpm_matls);
   }
 
   d_mpm->scheduleCarryForwardVariables(           sched, patches, mpm_matls);
