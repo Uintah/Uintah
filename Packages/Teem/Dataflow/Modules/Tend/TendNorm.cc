@@ -91,12 +91,12 @@ TendNorm::execute()
   Nrrd *nin = nrrd_handle->nrrd;
   Nrrd *nout = nrrdNew();
 
-  float weights[3];
+  double weights[3];
   weights[0]=major_weight_.get();
   weights[1]=medium_weight_.get();
   weights[2]=minor_weight_.get();
 
-  if (tenSizeNormalize(nout, nin, weights, amount_.get(), target_.get())) {
+  if (tenSizeNormalize(nout, nin, weights, (float)amount_.get(), target_.get())) {
     char *err = biffGetDone(TEN);
     error(string("Error making aniso volume: ") + err);
     free(err);
