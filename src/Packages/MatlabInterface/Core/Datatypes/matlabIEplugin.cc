@@ -98,15 +98,7 @@ MatlabMatrix_writer(ProgressReporter *pr,
   }
   return(true);
 }
-
-
-#ifndef __APPLE__
-static MatrixIEPlugin
-MatlabMatrix_plugin("Matlab Matrix",
-			   ".mat", "*.mat",
-			   MatlabMatrix_reader,
-			   MatlabMatrix_writer);
-#endif        
+  
 
 
 NrrdDataHandle
@@ -242,12 +234,6 @@ MatlabField_writer(ProgressReporter *pr,
   return(true);
 }
 
-#ifndef __APPLE__
-static FieldIEPlugin
-MatlabField_plugin("Matlab Field",
-			   ".mat", "*.mat",
-			   MatlabField_reader,
-			   MatlabField_writer);
-#endif         
+     
          
 
