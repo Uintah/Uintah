@@ -35,3 +35,7 @@ include $(SCIRUN_SCRIPTS)/program.mk
 PROGRAM := $(SRCDIR)/EGItoMat
 SRCS := $(SRCDIR)/EGItoMat.cc
 include $(SCIRUN_SCRIPTS)/program.mk
+
+PROGRAM := $(SRCDIR)/ElectrodeToContour
+SRCS := $(SRCDIR)/ElectrodeToContour.cc
+include $(SCIRUN_SCRIPTS)/program.mk
