@@ -731,7 +731,7 @@ OpenGL::redraw_frame()
     //    cerr<<"width = "<<xres<<", height == "<<yres<<"\n";
     pbuffer.destroy();
     if( !pbuffer.create( dpy, screen, xres, yres, 8, 8 ) ) {
-      printf( "Pbuffer create failed.  PBuffering will not be used.\n" );
+      //      printf( "Pbuffer create failed.  PBuffering will not be used.\n" );
     }
   }
 
