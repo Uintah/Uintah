@@ -139,6 +139,12 @@ SCIRUN_TMP_DIR = /tmp
 # SCIRUN_NET_SUBSTITUTE_DATADIR = false
 
 
+### SCIRUN_NOCLEANUPCOMPILE = [boolean]
+#   If true, the dynamic compiler will not clean up bad code compiles.
+#   Useful for debugging dynamic compilation code.
+# SCIRUN_NOCLEANUPCOMPILE = true
+
+
 ### SCI_NOSPLASH = [boolean]
 #   If true, SCIRun will not display the splash screen at startup.
 # SCI_NOSPLASH = false
