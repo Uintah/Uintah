@@ -1,7 +1,6 @@
 #ifndef UINTAH_GRID_DifferenceBCData_H
 #define UINTAH_GRID_DifferenceBCData_H
 
-#include <Packages/Uintah/Core/Grid/BoundCondData.h>
 #include <Packages/Uintah/Core/Grid/BCGeomBase.h>
 #include <Core/Geometry/Vector.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>

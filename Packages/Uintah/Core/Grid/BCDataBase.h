@@ -1,7 +1,6 @@
 #ifndef UINTAH_GRID_BCDataBase_H
 #define UINTAH_GRID_BCDataBase_H
 
-#include <Packages/Uintah/Core/Grid/BoundCondData.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Point.h>
 #include <sgi_stl_warnings_off.h>

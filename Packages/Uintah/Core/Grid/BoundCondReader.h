@@ -7,7 +7,6 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-#include <Packages/Uintah/Core/Grid/BoundCondData.h>
 #include <Packages/Uintah/Core/Grid/BCData.h>
 #include <Packages/Uintah/Core/Grid/BCGeomBase.h>
 #include <Packages/Uintah/Core/Grid/BCDataArray.h>
@@ -108,16 +107,12 @@ namespace Uintah {
     bool compareBCData(BCGeomBase* b1, BCGeomBase* b2);
 
     /// not used
-    void getBC(Patch::FaceType& face, BoundCondData& bc);
-
-    /// not used
     const BCDataArray getBCDataArray(Patch::FaceType& face) const;
 
    private:
     friend class Level;
     friend class Patch;
     map<Patch::FaceType,BCDataArray > d_BCReaderData;
-    vector<BoundCondData> d_bcs;
   };
 
   void print(BCGeomBase* p);

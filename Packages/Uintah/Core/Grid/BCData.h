@@ -16,12 +16,12 @@ using std::string;
 /**************************************
 
 CLASS
-   BoundCondData
+   BCData
    
    
 GENERAL INFORMATION
 
-   BoundCondData.h
+   BCData.h
 
    John A. Schmidt
    Department of Mechanical Engineering

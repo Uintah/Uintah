@@ -7,7 +7,6 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
 #include <Packages/Uintah/Core/Grid/BoundCondReader.h>
-#include <Packages/Uintah/Core/Grid/BoundCondData.h>
 
 #include <Core/Geometry/BBox.h>
 #include <Core/Malloc/Allocator.h>
@@ -557,13 +556,7 @@ void Level::assignBCS(const ProblemSpecP& grid_ps)
     for(patchIterator iter=d_virtualAndRealPatches.begin(); 
 	iter != d_virtualAndRealPatches.end(); iter++){
       Patch* patch = *iter;
-      Patch::BCType bc_type = patch->getBCType(face_side);
-      BoundCondData bc_data;
-
-      // For old boundary conditions
-      reader.getBC(face_side,bc_data);
-      if (bc_type == Patch::None) {
-	patch->setBCValues(face_side,bc_data);
+      if (patch->getBCType(face_side) == Patch::None) {
 	patch->setArrayBCValues(face_side,&(reader.d_BCReaderData[face_side]));
       }
     }  // end of patchIterator
