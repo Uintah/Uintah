@@ -50,9 +50,10 @@ void PrintTag(void*);
   const char* AllocatorSetDefaultTagMalloc(const char* tag);
   const char* AllocatorSetDefaultTagNew(const char* tag);
 
-  // append the pid to the MallocStats file if MallocStats are dumped to a file
-  void AllocatorMallocStatsAppendPID();
-
+  // append the num to the MallocStats file if MallocStats are dumped to a file
+  // (negative appends nothing)
+  void AllocatorMallocStatsAppendNumber(int num);
+  
 Allocator* DefaultAllocator();
 void GetGlobalStats(Allocator*,
 		    size_t& nalloc, size_t& sizealloc,

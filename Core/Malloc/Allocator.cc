@@ -113,11 +113,11 @@ Allocator* default_allocator;
 #define MAX_ALLOCSIZE (1024*1024*1024)
 
 static bool do_shutdown=false;
-static bool doMallocStatsAppendPID = false;
+static int mallocStatsAppendNum = -1;
   
-void AllocatorMallocStatsAppendPID()
+void AllocatorMallocStatsAppendNumber(int num)
 {
-  doMallocStatsAppendPID = true;
+  mallocStatsAppendNum = num;
 }
   
 inline size_t Allocator::obj_maxsize(Tag* t)
@@ -154,9 +154,9 @@ static void shutdown()
     if (a->statsfile && !a->stats_out) {
       char filename[256];
       strcpy(filename, a->statsfile);
-      if (doMallocStatsAppendPID) {
+      if (mallocStatsAppendNum >= 0) {
 	strcat(filename, ".");
-	sprintf(filename + strlen(filename), "%i", getpid());
+	sprintf(filename + strlen(filename), "%i", mallocStatsAppendNum);
       }
       a->stats_out=fopen(filename, "w");
       setvbuf(a->stats_out, stat_buffer, _IOFBF, STATSIZE);
