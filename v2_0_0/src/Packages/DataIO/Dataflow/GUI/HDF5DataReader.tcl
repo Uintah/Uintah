@@ -958,8 +958,10 @@ itcl_class DataIO_Readers_HDF5DataReader {
 		if { [string length $ports] > 0 } {
 		    set port [string range $ports [expr $cc*4] [expr $cc*4+3]]
 
-		    append name "   Port "
-		    append name $port
+		    if { [string length $port] > 0 } {
+			append name "   Port "
+			append name $port
+		    }
 		}
 
 		$listbox.list insert end $name
@@ -1148,10 +1150,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	}
     }
 
-    method set_nframes {nframes} {
-
-	global $this-nframes
-	set $this-nframes $nframes
+    method set_nframes {nframes frame} {
 
 	set w .ui[modname]
 
@@ -1159,15 +1158,21 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	    set dm [$w.dm childsite]
 
-	    if { [set $this-animate-frame] >= $nframes } {
-		set $this-animate-frame  [expr $nframes-1]
-		set $this-animate-frame2 [expr $nframes-1]
-	    }
-
 	    $dm.animate.frame.s configure -from 0 -to [expr $nframes-1]
 	}
-    }
 
+	global $this-animate-nframes
+	global $this-animate-frame
+
+	set $this-animate-nframes $nframes
+	set $this-animate-frame $frame
+	set $this-animate-frame2 [set $this-animate-frame]
+
+	if { [set $this-animate-frame] >= $nframes } {
+	    set $this-animate-frame  [expr $nframes-1]
+	    set $this-animate-frame2 [expr $nframes-1]
+	}
+    }
  }
 
 

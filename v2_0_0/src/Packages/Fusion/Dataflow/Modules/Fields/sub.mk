@@ -10,8 +10,6 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-INCLUDES += $(TEEM_INCLUDE)
-
 SRCDIR   := Packages/Fusion/Dataflow/Modules/Fields
 
 SRCS     += \
