@@ -114,8 +114,8 @@ ClipFieldAlgoT<FIELD>::execute_cell(ModuleReporter *mod,
     ++bi;
   }
 
-
   FIELD *ofield = scinew FIELD(clipped, fieldh->data_at());
+  *(PropertyManager *)ofield = *(PropertyManager *)fieldh;
 
   if (fieldh->data_at() == Field::NODE)
   {
@@ -213,7 +213,7 @@ ClipFieldAlgoT<FIELD>::execute_node(ModuleReporter *mod,
       // Add this element to the new mesh.
       typename FIELD::mesh_type::Node::array_type nnodes(onodes.size());
 
-      for (i = 0; i<onodes.size(); i++)
+      for (unsigned int i = 0; i<onodes.size(); i++)
       {
 	if (nodemap.find((unsigned int)onodes[i]) == nodemap.end())
 	{
@@ -232,6 +232,7 @@ ClipFieldAlgoT<FIELD>::execute_node(ModuleReporter *mod,
   }
 
   FIELD *ofield = scinew FIELD(clipped, fieldh->data_at());
+  *(PropertyManager *)ofield = *(PropertyManager *)fieldh;
 
   if (fieldh->data_at() == Field::NODE)
   {
