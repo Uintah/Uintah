@@ -28,15 +28,15 @@
 
 
 /*
- *  ColorMapReader.cc: Read a persistent colormap from a file
+ *  ColorMap2Reader.cc: Read a persistent colormap from a file
  *
  *  Written by:
- *   Steven G. Parker
+ *   Michael Callahan
  *   Department of Computer Science
  *   University of Utah
- *   July 1994
+ *   Sept 2004
  *
- *  Copyright (C) 1994 SCI Group
+ *  Copyright (C) 2004 SCI Group
  */
 
 #include <Dataflow/Ports/Colormap2Port.h>
@@ -45,9 +45,9 @@
 
 namespace SCIRun {
 
-template class GenericReader<Colormap2Handle>;
+template class GenericReader<ColorMap2Handle>;
 
-class ColorMap2Reader : public GenericReader<Colormap2Handle> {
+class ColorMap2Reader : public GenericReader<ColorMap2Handle> {
 protected:
   GuiString gui_types_;
   GuiString gui_filetype_;
@@ -63,7 +63,7 @@ public:
 DECLARE_MAKER(ColorMap2Reader)
 
 ColorMap2Reader::ColorMap2Reader(GuiContext* ctx)
-  : GenericReader<Colormap2Handle>("ColorMap2Reader", ctx, "DataIO", "SCIRun"),
+  : GenericReader<ColorMap2Handle>("ColorMap2Reader", ctx, "DataIO", "SCIRun"),
     gui_types_(ctx->subVar("types", false)),
     gui_filetype_(ctx->subVar("filetype"))
 {
@@ -87,7 +87,7 @@ void
 ColorMap2Reader::execute()
 {
   importing_ = false;
-  GenericReader<Colormap2Handle>::execute();
+  GenericReader<ColorMap2Handle>::execute();
 }
 
 

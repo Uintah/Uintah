@@ -55,14 +55,14 @@ class VolShaderFactory;
 class TextureRenderer : public GeomObj
 {
 public:
-  TextureRenderer(TextureHandle tex, ColorMapHandle cmap1, Colormap2Handle cmap2,
+  TextureRenderer(TextureHandle tex, ColorMapHandle cmap1, ColorMap2Handle cmap2,
                   int tex_mem);
   TextureRenderer(const TextureRenderer&);
   virtual ~TextureRenderer();
 
   void set_texture(TextureHandle tex);
   void set_colormap1(ColorMapHandle cmap1);
-  void set_colormap2(Colormap2Handle cmap2);
+  void set_colormap2(ColorMap2Handle cmap2);
   void set_colormap_size(int size);
   void set_slice_alpha(double alpha);
   void set_sw_raster(bool b);
@@ -89,7 +89,7 @@ protected:
   TextureHandle tex_;
   Mutex mutex_;
   ColorMapHandle cmap1_;
-  Colormap2Handle cmap2_;
+  ColorMap2Handle cmap2_;
   bool cmap1_dirty_;
   bool cmap2_dirty_;
   bool alpha_dirty_;

@@ -45,9 +45,9 @@
 
 namespace SCIRun {
 
-template class GenericWriter<Colormap2Handle>;
+template class GenericWriter<ColorMap2Handle>;
 
-class ColorMap2Writer : public GenericWriter<Colormap2Handle> {
+class ColorMap2Writer : public GenericWriter<ColorMap2Handle> {
 protected:
   GuiString gui_types_;
   GuiString gui_exporttype_;
@@ -64,7 +64,7 @@ public:
 DECLARE_MAKER(ColorMap2Writer)
 
 ColorMap2Writer::ColorMap2Writer(GuiContext* ctx)
-  : GenericWriter<Colormap2Handle>("ColorMap2Writer", ctx, "DataIO", "SCIRun"),
+  : GenericWriter<ColorMap2Handle>("ColorMap2Writer", ctx, "DataIO", "SCIRun"),
     gui_types_(ctx->subVar("types", false)),
     gui_exporttype_(ctx->subVar("exporttype"))
 {
@@ -99,7 +99,7 @@ ColorMap2Writer::execute()
   if (ft == "SCIRun ColorMap2 ASCII") ab = "ASCII";
   filetype_.set(ab);
 
-  GenericWriter<Colormap2Handle>::execute();
+  GenericWriter<ColorMap2Handle>::execute();
 }
 
 

@@ -25,7 +25,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : Colormap2.cc
+//    File   : ColorMap2.cc
 //    Author : Milan Ikits
 //    Date   : Mon Jul  5 18:33:29 2004
 
@@ -40,15 +40,15 @@ namespace SCIRun {
 
 static Persistent* maker()
 {
-  return scinew Colormap2;
+  return scinew ColorMap2;
 }
 
-PersistentTypeID Colormap2::type_id("ColorMap2", "Datatype", maker);
+PersistentTypeID ColorMap2::type_id("ColorMap2", "Datatype", maker);
 
 #define COLORMAP2_VERSION 1
 
 void
-Colormap2::io(Piostream &stream)
+ColorMap2::io(Piostream &stream)
 {
   stream.begin_class("ColorMap2", COLORMAP2_VERSION);
   
@@ -58,11 +58,11 @@ Colormap2::io(Piostream &stream)
   stream.end_class();
 }
 
-Colormap2::Colormap2()
+ColorMap2::ColorMap2()
   : updating_(false)
 {}
 
-Colormap2::Colormap2(const vector<CM2WidgetHandle>& widgets,
+ColorMap2::ColorMap2(const vector<CM2WidgetHandle>& widgets,
 		     bool updating, bool faux)
   : updating_(updating),
     faux_(faux)
@@ -71,7 +71,7 @@ Colormap2::Colormap2(const vector<CM2WidgetHandle>& widgets,
     widgets_.push_back(widgets[i]->clone());
 }
 
-Colormap2::~Colormap2()
+ColorMap2::~ColorMap2()
 {
 }
 

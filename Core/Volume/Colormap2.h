@@ -29,8 +29,8 @@
 //    Author : Milan Ikits
 //    Date   : Mon Jul  5 18:33:12 2004
 
-#ifndef Colormap2_h
-#define Colormap2_h
+#ifndef ColorMap2_h
+#define ColorMap2_h
 
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Containers/LockingHandle.h>
@@ -44,13 +44,13 @@ typedef LockingHandle<CM2Widget> CM2WidgetHandle;
 
 using std::vector;
 
-class Colormap2 : public SCIRun::Datatype
+class ColorMap2 : public SCIRun::Datatype
 {
 public:
-  Colormap2();
-  Colormap2(const vector<CM2WidgetHandle>& widgets,
+  ColorMap2();
+  ColorMap2(const vector<CM2WidgetHandle>& widgets,
 	    bool updating, bool faux);
-  virtual ~Colormap2();
+  virtual ~ColorMap2();
 
   inline vector<CM2WidgetHandle>& widgets() { return widgets_; }
   
@@ -66,8 +66,8 @@ protected:
   vector<CM2WidgetHandle> widgets_;
 };
 
-typedef SCIRun::LockingHandle<Colormap2> Colormap2Handle;
+typedef SCIRun::LockingHandle<ColorMap2> ColorMap2Handle;
 
 } // End namespace SCIRun
 
-#endif // Colormap2_h
+#endif // ColorMap2_h

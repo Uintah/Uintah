@@ -47,7 +47,7 @@ class VolShaderFactory;
 class VolumeRenderer : public TextureRenderer
 {
 public:
-  VolumeRenderer(TextureHandle tex, ColorMapHandle cmap1, Colormap2Handle cmap2,
+  VolumeRenderer(TextureHandle tex, ColorMapHandle cmap1, ColorMap2Handle cmap2,
                  int tex_mem);
   VolumeRenderer(const VolumeRenderer&);
   ~VolumeRenderer();
