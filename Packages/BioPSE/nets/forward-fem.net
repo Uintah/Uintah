@@ -139,7 +139,7 @@ set $m8-ViewWindow_0-specular-scale {0.4}
 
 set $m9-mapType {3}
 set $m9-minRes {12}
-set $m9-resolution {128}
+set $m9-resolution {255}
 set $m9-realres {128}
 
 set $m11-extract-from-new-field {1}

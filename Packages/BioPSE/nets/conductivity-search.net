@@ -158,7 +158,7 @@ set $m17-width 1
 set $m17-height 1
 set $m17-mapType 3
 set $m17-minRes 12
-set $m17-resolution 12
+set $m17-resolution 255
 set $m18-isFixed 0
 set $m18-min -0.0345029
 set $m18-max 0.0160781

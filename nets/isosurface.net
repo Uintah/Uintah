@@ -57,7 +57,7 @@ set bbox {12.0 13.0 364 336}
 
 set m0 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 30 121]
 set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 12 13]
-set m2 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 169 28]
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 190 28]
 set m3 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 12 209]
 set m4 [addModuleAtPosition "SCIRun" "Render" "Viewer" 30 292]
 
@@ -78,7 +78,7 @@ set $m2-width 1
 set $m2-height 1
 set $m2-mapType 3
 set $m2-minRes 12
-set $m2-resolution 12
+set $m2-resolution 255
 set $m3-isoval 0.747
 set $m3-extract-from-new-field 1
 set $m3-algorithm 0
