@@ -37,7 +37,6 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/OpenGLWindow.tcl\
 	$(SRCDIR)/PartManager.tcl\
 	$(SRCDIR)/NullGui.tcl\
-	$(SRCDIR)/ItPDSimPartGui.tcl\
 #	$(SRCDIR)/GuiFilename.tcl\
 #	$(SRCDIR)/Slider.tcl\
 #[INSERT NEW TCL FILE HERE]
