@@ -421,9 +421,9 @@ NIMRODPerturbedConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandl
 {
   unsigned int ndims = 3;
 
-  int idim = nHandles[data[0]]->nrrd->axis[0].size; // Radial
-  int jdim = nHandles[data[0]]->nrrd->axis[1].size; // Theta
-  int kdim = nHandles[data[0]]->nrrd->axis[2].size; // Phi
+  int idim = nHandles[data[  0]]->nrrd->axis[0].size; // Radial
+  int jdim = nHandles[data[  0]]->nrrd->axis[1].size; // Theta
+  int kdim = nHandles[mesh[PHI]]->nrrd->axis[0].size; // Phi
 
   NrrdData *nout = scinew NrrdData(true);
 
