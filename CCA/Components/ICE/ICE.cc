@@ -114,12 +114,12 @@ void  ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& ,
   ProblemSpecP debug_ps = prob_spec->findBlock("Debug");
   if (debug_ps) {
     d_dbgStartTime = 0.;
-    d_dbgStopTime = 1.;
+    d_dbgStopTime  = 1.;
     d_dbgOutputInterval = 0.0;
     debug_ps->get("dbg_timeStart",     d_dbgStartTime);
     debug_ps->get("dbg_timeStop",      d_dbgStopTime);
     debug_ps->get("dbg_outputInterval",d_dbgOutputInterval);
-    d_dbgOldTime = -d_dbgOutputInterval;
+    d_dbgOldTime      = -d_dbgOutputInterval;
     d_dbgNextDumpTime = 0.0;
 
     for (ProblemSpecP child = debug_ps->findBlock("debug"); child != 0;
@@ -167,8 +167,9 @@ void  ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& ,
   cout_norm << "Pulled out CFD-ICE block of the input file" << endl;
     
   // Pull out from Time section
+  d_initialDt = 10000.0;
   ProblemSpecP time_ps = prob_spec->findBlock("Time");
-  time_ps->require("delt_init",d_initialDt);
+  time_ps->get("delt_init",d_initialDt);
   cout_norm << "Initial dt = " << d_initialDt << endl;
   cout_norm << "Pulled out Time block of the input file" << endl;
 
@@ -721,7 +722,6 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
 
         }
       }
-
       delt_CFL = std::min(delt_CFL, d_initialDt);
       d_initialDt = 10000.0;
 
