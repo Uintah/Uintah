@@ -17,11 +17,13 @@
 #include <stdio.h>
 
 #include <vector>
+#include <string>
 
 namespace rtrt {
 
 using SCIRun::WorkQueue;
 using std::vector;
+using std::string;
 
 class Object;
 class Camera;
@@ -147,9 +149,13 @@ public:
     return ambientColor_;
   }
 
+  inline double getAmbientLevel() { return ambientScale_; }
+
   inline void setAmbientLevel( float scale ) {
     if( scale > 1.0 ) scale = 1.0;
     else if( scale < 0.0 ) scale = 0.0;
+
+    ambientScale_ = scale;
 
     cup = origCup_ * scale;
     cdown = origCDown_ * scale;
@@ -157,6 +163,9 @@ public:
     ambientColor_ = origAmbientColor_ * scale;
 
     background->updateAmbient( scale );
+  }
+  inline const vector<string> & getRoutes() const {
+    return routeNames_;
   }
   
   // Render a sphere in the scene for each light.
@@ -225,7 +234,9 @@ public:
   bool stereo;
   bool animate;
 
-  int ambient_mode;
+  int     ambient_mode;
+  double  ambientScale_;
+
   int frameno;
   FILE* frametime_fp;
   double lasttime;
@@ -268,6 +279,11 @@ public:
 
   // public for testing.
   int shadow_mode;
+
+  // Tell the scene to automatically load the specified route file.
+  //   Associate that route file with the given room.
+  void addRouteName( const string & filename, const string & room );
+
 private:
 
 //  friend class LumiDpy;
@@ -332,6 +348,11 @@ private:
   bool transmissionMode_;
 
   Array1<Material*> materials;
+
+  // If a scene wished to register route names, then these routes
+  // will be automatically loaded by the GUI.
+  vector< string > routeNames_;
+  vector< string > roomsForRoutes_;
 
 }; // end class Scene
 
