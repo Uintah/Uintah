@@ -225,13 +225,13 @@ void MPParticleGridReader::readGrid( MPRead& reader)
   if( type == "NC" || type == "CC" ){
     reader.GetGridPoints(o_x, o_y, o_z, dx, dy, dz);
     reader.getScalarVars( sVars );
-    for(i = 0; i < sVars.size(); i++){
+    for(i = 0; i < (int)sVars.size(); i++){
       ScalarFieldHandle sfh;
       reader.GetScalarField( sfh );
       grid->AddScalarField(sVars[i], sfh );
     }
     reader.getVectorVars( vVars );
-    for(i = 0; i < vVars.size(); i++){
+    for(i = 0; i < (int)vVars.size(); i++){
       VectorFieldHandle vfh;
       reader.GetVectorField( vfh );
       grid->AddVectorField(vVars[i], vfh );
@@ -256,11 +256,11 @@ void MPParticleGridReader::readParticles(MPRead& reader)
   reader.GetParticleInfo(name, nParticles, sVars, vVars);
   MPVizParticleSet *ps = scinew MPVizParticleSet(name);
   
-  for( i = 0; i < sVars.size(); i++){
+  for( i = 0; i < (int)sVars.size(); i++){
     ps->addScalarVar( sVars[i] );
   }
   ps->addVectorVar( "XYZ" );
-  for (i = 0; i< vVars.size(); i++){
+  for (i = 0; i< (int)vVars.size(); i++){
     ps->addVectorVar( vVars[i] );
   }
   
@@ -274,10 +274,10 @@ void MPParticleGridReader::readParticles(MPRead& reader)
     reader.GetParticle(p, scalars, vectors);
     ts->vectors[0].add( p.vector() );
 
-    for(j = 0; j < scalars.size(); j++ ){
+    for(j = 0; j < (int)scalars.size(); j++ ){
       ts->scalars[j].add( scalars[j] );
     }
-    for( j = 0; j < vectors.size(); j++ ){
+    for( j = 0; j < (int)vectors.size(); j++ ){
       ts->vectors[j+1].add( vectors[j] );
     }
   }
@@ -296,6 +296,9 @@ void MPParticleGridReader::readParticles(MPRead& reader)
 
 //
 // $Log$
+// Revision 1.7  2000/12/05 16:14:25  jas
+// Remove g++ warnings.
+//
 // Revision 1.6  2000/08/09 03:18:04  jas
 // Changed new to scinew and added deletes to some of the destructors.
 //
