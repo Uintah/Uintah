@@ -96,6 +96,22 @@ ConstitutiveModel::computeStressTensorWithErosion(const PatchSubset* patches,
   computeStressTensor(patches, matl, old_dw, new_dw);
 }
 
+void ConstitutiveModel::carryForward(const PatchSubset*,
+				     const MPMMaterial*,
+				     DataWarehouse*,
+				     DataWarehouse*)
+{
+}
+
+void ConstitutiveModel::carryForwardWithErosion(const PatchSubset* patches,
+                                                const MPMMaterial* matl,
+                                                DataWarehouse* old_dw,
+                                                DataWarehouse* new_dw)
+{
+  carryForward(patches, matl, old_dw, new_dw);
+}
+
+//______________________________________________________________________
 //______________________________________________________________________
 //          HARDWIRE FOR AN IDEAL GAS -Todd 
 double ConstitutiveModel::computeRhoMicro(double press, double gamma,
