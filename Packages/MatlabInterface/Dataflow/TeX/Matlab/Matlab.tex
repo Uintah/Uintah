@@ -1,68 +1,5 @@
 % Matlab.tex
 %
-% Notes:
-%
-% o Rename this file appropriately.
-%
-% o Complete relevant sections below.
-%
-% o Use markup commands defined in scirun-doc.sty.
-%   Avoid presentation markup (e.g. \textbf or \emph).
-%
-% o To make your document web-friendly, use commands from html package. See
-%   latex2html manual or the book "The Latex Web Companion."
-%
-% o Don't add new subsections, but freely subsubsection 
-%   existing subsections.
-%
-% o Add local commands if desired (via \newcommand).  But first check for
-%   equivalent markup in scirun-doc.sty.
-%
-% o Only use packages distributed with Latex2e.
-%
-% o Cite references with the \cite command. Put citations in
-%   a bib file and send along with this file.
-%
-% o Please include at least one image of tk GUI. Provide 
-%   an EPS version and a web friendly version (e.g., jpeg or gif).
-%
-% o Including images:  Create a figure command for each figure using   the
-%   template below.  Copy the template (make a copy of the template
-%   for each figure) and uncomment only the first '%' in each line.
-%   Then replace bracketed text with appropriate values.  Here is  the
-%   template: 
-%%begin{latexonly}
-%  \newcommand{\<figure command name>}%
-%  {\centerline{\includegraphics[options]{<path to eps file>}}}
-%%end{latexonly}
-%\begin{htmlonly}
-%  \newcommand{\<figure command name (same as above)>}{%
-%  \htmladdimg[options]{<path to jpg file>}}
-%\end{htmlonly}
-%
-%   Where in the ``latexonly'' part, ``options'' is a list of key-value pair
-%   options.  Typically the options specify graphic width, height, and
-%   bounding box.  See ``The Latex Graphics Companion'' for more
-%   information.  Note that we are using ``\includegraphics'' command
-%   from the ``graphicx'' package.
-%
-%   In the ``htmlonly'' part ``options'' is a list options such as ``align'',
-%   ``width'', ``height'', and ``alt''.  See ``The Latex Web Companion'' for
-%   details.
-%   
-%   Now to actually create figures enclose each figure command as follows:
-%
-%\begin{figure}
-%  \begin{makeimage}
-%  \end{makeimage}
-%  \<figurecommand>
-%  \caption{\label{fig:<figure label>} <Caption text>}
-%\end{figure}
-%
-%   and replace bracket text appropriately.
-%   
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 \newcommand{\mlm}{\module{Matlab module}}
 \newcommand{\m}{\emph{Matlab}}
 
@@ -95,10 +32,9 @@
   \htmladdimg[]{../figs/tst3.jpg}}
 \end{htmlonly}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \ModuleRef{\Module{Matlab}}{\Category{DataIO}}{\Package{MatlabInterface}}
 
-\subsection{Summary} 
+\ModuleRefSummary
 
 The \mlm{} is part of the \Package{MatlabInterface} package that enables
 calls from \sr{} to \m{}, either to interactive commands or via \m{}
@@ -108,7 +44,7 @@ both simple tasks such as converting files between \sr{} and \m{}, and more
 complex tasks such as creating interactive \sr{} programs that call \m{}
 scripts to perform real-time applications.
 
-\subsection{Use}
+\ModuleRefUse
 
 The following five examples of the \package{MatlabInterface} package
 demonstrate how to work with the \mlm{}.  The first three examples,
@@ -119,7 +55,7 @@ different hosts. The fifth example, \filename{tst5.net}, demonstrates how
 to apply the \mlm{} to an example of complex \m{} code: the focusing
 inversion routine.
 
-\subsubsection{Example 1: Saving the Matlab matrix in \sr{} format} 
+\ModuleRefSubSection{Example 1: Saving the Matlab matrix in \sr{} format} 
 
 
 To execute the first example, begin from your Unix shell and change to the
@@ -230,7 +166,7 @@ To determine whether you ran this example properly, you may open the file
 \filename{rand1.mat } with any ASCII text editor. The file should contain a
 random $5 \times 5$ matrix in \sr{} format.
 
-\subsubsection{Example 2: Converting a \sr{} file to a raw
+\ModuleRefSubSection{Example 2: Converting a \sr{} file to a raw
 ASCII \m{} file}  
 
 The second example runs with the \filename{tst2.net} file, which you will
@@ -291,7 +227,7 @@ You may determine whether this example ran properly by opening the file
 \filename{rand2.dat}, which should contain the same random numbers as the
 file \filename{rand1.mat}.
 
-\subsubsection{Example 3: Converting a \m{} file to a \sr{} file} 
+\ModuleRefSubSection{Example 3: Converting a \m{} file to a \sr{} file} 
 
 The third \mlm{} example runs with the \filename{tst3.net} file in the
 directory:
@@ -357,7 +293,7 @@ You may determine whether this example ran properly by opening the file
 \filename{rand3.mat}, which should contain the same random numbers as files
 \filename{rand1.mat}, and \filename{rand2.dat}.
 
-\subsubsection{ \sr{} and \m{} on different hosts}  
+\ModuleRefSubSection{ \sr{} and \m{} on different hosts}  
 
 The network for this example is the same as that in the first example,
 however, it will execute in a different condition. Here, we assume that \m{}
@@ -431,7 +367,7 @@ Terminating this example requires operations on both hosts:
   \item Quit \m{}.
 \end{enumerate}
 
-\subsubsection{Example 5: Focusing inversion} 
+\ModuleRefSubSection{Example 5: Focusing inversion} 
 
 
 In this final example, focusing inversion provides a special solution to
@@ -520,9 +456,9 @@ licensing conflicts and provides convenience by potentially saving extra
 installation time when \sr{} and \m{} already exist on different hosts.
 
 
-\subsection{Notes}
+\ModuleRefNotes
 
-\subsubsection{Location and installation}
+\ModuleRefSubSection{Location and installation}
 
 We assume the environment variable \envvar{SCIRun} points to the root of
 the \sr{} source tree, and that the package executables are available in
@@ -541,13 +477,13 @@ The example \m{} engine networks and scripts (\filename{tst*.net} files)
 are located in the \sr{} source tree under\\
 \directory{\$SCIRun/src/Packages/MatlabInterface/matlab/engine}.
 
-\subsubsection{Bugs}
+\ModuleRefSubSection{Bugs}
 
 \m{} graphics do not work under the current version of the \mlm{}.  If the
 script contains graphics commands (\eg{} ``plot''), the \m{} graphics
 window does not appear and may produce an error.
 
-\subsection{Credits} 
+\ModuleRefCredits
 
 The \mlm{} was written by Oleg Portniaguine with help from Marty Cole,
 David Weinstein and Michael Callahan.  Robert MacLeod, Steve Parker and
