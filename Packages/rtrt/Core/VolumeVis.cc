@@ -10,18 +10,14 @@
 #include <Packages/rtrt/Core/BrickArray3.cc>
 #include <Packages/rtrt/Core/Context.h>
 #include <Packages/rtrt/Core/Worker.h>
+#include <Packages/rtrt/Core/ScalarTransform1D.h>
 #include <float.h>
 #include <iostream>
 
 using namespace std;
 using namespace rtrt;
 
-static bool vectors_initialized = false;
-static Vector Vectors[MAXUNSIGNEDSHORT];
-
-#define RTRT_VOLUME_VIS_USE_TRUE_NORM 1
-
-VolumeVis::VolumeVis(BrickArray3<Voxel>& _data, float data_min, float data_max,
+VolumeVis::VolumeVis(BrickArray3<float>& _data, float data_min, float data_max,
 		     int nx, int ny, int nz,
 		     Point min, Point max, Material** matls, int nmatls,
 		     float *alphas, int nalphas):
@@ -36,23 +32,6 @@ VolumeVis::VolumeVis(BrickArray3<Voxel>& _data, float data_min, float data_max,
   delta_x2 = 2 * (max.x() - min.x())/nx;
   delta_y2 = 2 * (max.y() - min.y())/ny;
   delta_z2 = 2 * (max.z() - min.z())/nz;
-  // initialize the Vector array if needed
-  if (!vectors_initialized) {
-    vectors_initialized = true;
-    cout << "Initializing vector array\n"; flush(cout);
-    for (unsigned short i = 0; i < MAXUNSIGNEDSHORT; i++)
-      Vectors[i] = get_vector(i);
-    cout << "Done initializing vector array\n"; flush(cout);
-  }
-#if 0
-  // compute the vectors for each voxel and then assign it
-  cout << "Computing gradient for each voxel\n"; flush(cout);
-  for (int x = 0; x < nx; x++)
-    for (int y = 0; y < ny; y++)
-      for (int z = 0; z < nz; z++)
-	data(x,y,z).gradient_index = get_index(compute_gradient(x,y,z));
-  cout << "Done computing gradient for each voxel\n"; flush(cout);
-#endif
 }
 
 VolumeVis::~VolumeVis() {
@@ -121,23 +100,9 @@ void VolumeVis::light_intersect(Light* , const Ray& lightray,
 }
 
 Vector VolumeVis::normal(const Point&, const HitInfo& hit) {
-#if 1
+  // the normal should be placed in the scratchpad
   Vector* norm = (Vector*)hit.scratchpad;
   return *norm;
-#else
-  if (Abs(hitpos.x() - min.x()) < 0.0001)
-         return Vector(-1, 0, 0 );
-    else if (Abs(hitpos.x() - max.x()) < 0.0001)
-         return Vector( 1, 0, 0 );
-    else if (Abs(hitpos.y() - min.y()) < 0.0001)
-         return Vector( 0,-1, 0 );
-    else if (Abs(hitpos.y() - max.y()) < 0.0001)
-         return Vector( 0, 1, 0 );
-    else if (Abs(hitpos.z() - min.z()) < 0.0001)
-         return Vector( 0, 0,-1 );
-    else 
-         return Vector( 0, 0, 1 );
-#endif
 }
 
 void VolumeVis::compute_bounds(BBox& bbox, double offset) {
@@ -151,37 +116,6 @@ void VolumeVis::print(ostream& out) {
 
 int VolumeVis::bound(const int val, const int min, const int max) {
   return (val>min?(val<max?val:max):min);
-}
-
-Vector VolumeVis::gradient(const int x, const int y, const int z) {
-  return compute_gradient(x,y,z);
-}
-
-Vector VolumeVis::compute_gradient(const int x, const int y, const int z) {
-#if 1
-  float xf = (data(bound(x-1,0,x),y,z).val - data(bound(x+1,x,nx-1),y,z).val)/
-    delta_x2;
-  float yf = (data(x,bound(y-1,0,y),z).val - data(x,bound(y+1,y,ny-1),z).val)/
-    delta_y2;
-  float zf = (data(x,y,bound(z-1,0,z)).val - data(x,y,bound(z+1,z,nz-1)).val)/
-    delta_z2;
-#else
-  float xf = 0;
-  float yf = 0;
-  float zf = 0;
-#endif
-  if ((xf == 0) && (yf == 0) && (zf == 0))
-    return Vector(0,0,0);
-  else
-    return Vector(xf,yf,zf).normal();
-}
-
-unsigned short VolumeVis::get_index(const Vector &v) {
-  return 0;
-}
-
-Vector VolumeVis::get_vector(const unsigned short index) {
-  return Vector(1,0,0);
 }
 
 void VolumeVis::shade(Color& result, const Ray& ray,
@@ -233,18 +167,17 @@ void VolumeVis::shade(Color& result, const Ray& ray,
       float z_weight_high = 1 - z_weight_low; // step - index_high
       //cout << "norm = " << norm << ", step = " << step << ", z_low = " << z_low << ", z_high = " << z_high << ", z_weight_low = " << z_weight_low << ", z_weight_high = " << z_weight_high << endl;
       //cout << "data(0,0,0) = "; flush(cout); cout << data(0,0,0) << endl;
-//#ifdef RTRT_VOLUME_VIS_USE_TRUE_NORM
-#if 1
+
       float a,b,c,d,e,f,g,h;
       
-      a = data(x_low,  y_low,  z_low).val;
-      b = data(x_low,  y_low,  z_high).val;
-      c = data(x_low,  y_high, z_low).val;
-      d = data(x_low,  y_high, z_high).val;
-      e = data(x_high, y_low,  z_low).val;
-      f = data(x_high, y_low,  z_high).val;
-      g = data(x_high, y_high, z_low).val;
-      h = data(x_high, y_high, z_high).val;
+      a = data(x_low,  y_low,  z_low);
+      b = data(x_low,  y_low,  z_high);
+      c = data(x_low,  y_high, z_low);
+      d = data(x_low,  y_high, z_high);
+      e = data(x_high, y_low,  z_low);
+      f = data(x_high, y_low,  z_high);
+      g = data(x_high, y_high, z_low);
+      h = data(x_high, y_high, z_high);
 
       float lz1, lz2, lz3, lz4, ly1, ly2, value;
 
@@ -258,65 +191,6 @@ void VolumeVis::shade(Color& result, const Ray& ray,
 
       value = ly1 * x_weight_low + ly2 * x_weight_high;
       
-#else
-#if 0
-      if (x_low < 0 || x_low >= data.dim1())
-	cerr << "x_low = " << x_low << ", Must be [0,"<<data.dim1()<<")"<<endl;
-      if (x_high < 0 || x_high >= data.dim1())
-	cerr << "x_high = "<< x_high<< ", Must be [0,"<<data.dim1()<<")"<<endl;
-      if (y_low < 0 || y_low >= data.dim2())
-	cerr << "y_low = " << y_low << ", Must be [0,"<<data.dim2()<<")"<<endl;
-      if (y_high < 0 || y_high >= data.dim2())
-	cerr << "y_high = "<< y_high<< ", Must be [0,"<<data.dim2()<<")"<<endl;
-      if (z_low < 0 || z_low >= data.dim3())
-	cerr << "z_low = " << z_low << ", Must be [0,"<<data.dim3()<<")"<<endl;
-      if (z_high < 0 || z_high >= data.dim3())
-	cerr << "z_high = "<< z_high<< ", Must be [0,"<<data.dim3()<<")"<<endl;
-#endif
-#if 0
-      float x1 = data(x_low, y_low, z_low) * x_weight_low;
-      float x2 = data(x_high,y_low, z_low) * x_weight_high;
-      float x3 = data(x_low, y_high,z_low) * x_weight_low;
-      float x4 = data(x_high,y_high,z_low) * x_weight_high;
-      float x5 = data(x_low ,y_low, z_high) * x_weight_low;
-      float x6 = data(x_high,y_low, z_high) * x_weight_high;
-      float x7 = data(x_low ,y_high,z_high) * x_weight_low;
-      float x8 = data(x_high,y_high,z_high) * x_weight_high;
-      float y1 = (x1 + x2) * y_weight_low;
-      float y2 = (x3 + x4) * y_weight_high;
-      float y3 = (x5 + x6) * y_weight_low;
-      float y4 = (x7 + x8) * y_weight_high;
-      float z1 = (y1 + y2) * z_weight_low;
-      float z2 = (y3 + y4) * z_weight_high;
-      float value2 = z1 + z2;
-      cout << "value2 = " << value2 << endl;
-#endif
-#if 1
-      float value =
-	((data(x_low ,y_low, z_low).val  * z_weight_low +
-	  data(x_low ,y_low, z_high).val * z_weight_high) * y_weight_low +
-	 (data(x_low ,y_high,z_low).val  * z_weight_low +
-	  data(x_low ,y_high,z_high).val * z_weight_high) * y_weight_high) *
-	x_weight_low +
-	((data(x_high,y_low, z_low).val  * z_weight_low +
-	  data(x_high,y_low, z_high).val * z_weight_high) * y_weight_low +
-	 (data(x_high,y_high,z_low).val  * z_weight_low +
-	  data(x_high,y_high,z_high).val * z_weight_high) * y_weight_high) *
-	(1 - x_weight_low);
-#else
-      float value =
-	((data(x_low, y_low, z_low) * x_weight_low +
-	  data(x_high,y_low, z_low) * x_weight_high) * y_weight_low +
-	 (data(x_low, y_high,z_low) * x_weight_low +
-	  data(x_high,y_high,z_low) * x_weight_high) * y_weight_high) *
-	z_weight_low +
-	((data(x_low ,y_low, z_high) * x_weight_low +
-	  data(x_high,y_low, z_high) * x_weight_high) * y_weight_low +
-	 (data(x_low ,y_high,z_high) * x_weight_low +
-	  data(x_high,y_high,z_high) * x_weight_high) * y_weight_high) *
-	z_weight_high;
-#endif
-#endif // ifdef RTRT_VOLUME_VIS_USE_TRUE_NORM
       //cout << "value = " << value << endl;
       float normalized = (value - data_min) * data_diff_inv;
       int alpha_idx = bound((int)(normalized*(nalphas -1 )), 0, nalphas - 1);
@@ -325,7 +199,6 @@ void VolumeVis::shade(Color& result, const Ray& ray,
 
 	// compute the gradient and tuck it away for the normal function to get
 	Vector* p_vector = (Vector*)new_hit.scratchpad;
-#ifdef RTRT_VOLUME_VIS_USE_TRUE_NORM
 	float dx = ly2 - ly1;
 	
 	float dy, dy1, dy2;
@@ -345,19 +218,7 @@ void VolumeVis::shade(Color& result, const Ray& ray,
 	  *p_vector = (Vector(dx,dy,dz)).normal();
 	else
 	  *p_vector = Vector(0,0,0);
-#else
-	*p_vector =
-	  ((gradient(x_low ,y_low, z_low)  * z_weight_low +
-	    gradient(x_low ,y_low, z_high) * z_weight_high) * y_weight_low +
-	   (gradient(x_low ,y_high,z_low)  * z_weight_low +
-	    gradient(x_low ,y_high,z_high) * z_weight_high) * y_weight_high) *
-	  x_weight_low +
-	  ((gradient(x_high,y_low, z_low)  * z_weight_low +
-	    gradient(x_high,y_low, z_high) * z_weight_high) * y_weight_low +
-	   (gradient(x_high,y_high,z_low)  * z_weight_low +
-	    gradient(x_high,y_high,z_high) * z_weight_high) * y_weight_high) *
-	  (1 - x_weight_low);
-#endif
+
 	int idx=bound((int)(normalized*(nmatls-1)), 0, nmatls - 1);
 	Color temp;
 	new_hit.min_t = t;
