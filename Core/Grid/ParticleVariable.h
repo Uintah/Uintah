@@ -543,7 +543,7 @@ template<class T>
 	in.read((char*)&(*this)[start], size);
 	if (swapBytes) {
 	  for (particleIndex idx = start; idx != end; idx++) {
-	    swapbytes((*this)[idx]);
+	    SCIRun::swapbytes((*this)[idx]);
 	  }
 	}
       }

@@ -325,7 +325,7 @@ WARNING
 	  in.read((char*)&(*this)[IntVector(l.x(),y,z)], linesize);
 	  if (swapBytes) {
 	    for (int x=l.x();x<h.x();x++) {
-	      swapbytes((*this)[IntVector(x,y,z)]);
+	      SCIRun::swapbytes((*this)[IntVector(x,y,z)]);
 	    }
 	  }
 	}
