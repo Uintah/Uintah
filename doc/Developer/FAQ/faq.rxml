@@ -757,7 +757,7 @@
       <question>
 	<para>
             When I downloaded your network and all the files, I was
-            able to run the network, but saw only B&W torso. The probe
+            able to run the network, but saw only B&amp;W torso. The probe
             was there and I could grab and move it and I could see the
             slice planes moving along with it. But I got the error:
             Some sort of texturing error. I was expecting a colored
@@ -774,29 +774,21 @@
 
       </question>
       <answer>
-	<para>
-            You need to copy the gl headers from the nvidia driver
-            installation into place, then recompile scirun.  The
-            volume vis uses extensions, so it needs them defined in
-            the headers.
-
-            You also need a graphics card that supports 3d textures,
-            which I believe you have or you would see a solid white
-            cube.
-
-            cp /usr/share/doc/NVIDIA_GLX-1.0/include/GL/* to /usr/include/GL
-
-            See: /scratch/usr/share/doc/NVIDIA_GLX-1.0/README
-
-            PETsc is not required. You only need it if there was some
-            specific solvers you wanted.
-
-            --mc
-        </para>
+	<para>You need to copy the gl headers from the nvidia driver
+	installation into place, then recompile scirun.  The volume
+	vis uses extensions, so it needs them defined in the
+	headers.</para>
+	<para>You also need a graphics card that supports 3d textures,
+	which I believe you have or you would see a solid white
+	cube.</para>
+	<para>cp /usr/share/doc/NVIDIA_GLX-1.0/include/GL/* to /usr/include/GL</para>
+	<para>See: /scratch/usr/share/doc/NVIDIA_GLX-1.0/README</para>
+	<para>PETsc is not required. You only need it if there was some
+	specific solvers you wanted.</para>
       </answer>
     </qandaentry>
 
-<!---- TEMPLATE -----
+<!-- TEMPLATE
     <qandaentry>
       <revhistory>
 	<revision>
@@ -811,7 +803,7 @@
 	<para></para>
       </answer>
     </qandaentry>
------- END TEMPLATE ----->
+ END TEMPLATE -->
 
   </qandaset>
 
