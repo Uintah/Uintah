@@ -37,10 +37,10 @@ Camera::~Camera()
 {
 }
 
-void Camera::makeRay(Ray& ray, double x, double y, double, double iyres)
+void Camera::makeRay(Ray& ray, double x, double y, double ixres, double iyres)
 {
     ray.set_origin(eye);
-    double screenx=(x+0.5)*iyres-0.5;
+    double screenx=(x+0.5)*ixres-0.5;
     Vector sv(v*screenx);
     double screeny=(y+0.5)*iyres-0.5;
     Vector su(u*screeny);
@@ -49,10 +49,10 @@ void Camera::makeRay(Ray& ray, double x, double y, double, double iyres)
     ray.set_direction(raydir);
 }
 
-void Camera::makeRayL(Ray& ray, double x, double y, double, double iyres)
+void Camera::makeRayL(Ray& ray, double x, double y, double ixres, double iyres)
 {
     ray.set_origin(eye-v*5*eyesep*iyres);
-    double screenx=(x+0.5)*iyres-0.5;
+    double screenx=(x+0.5)*ixres-0.5;
     Vector sv(v*screenx+v*5*iyres*eyesep);
     double screeny=(y+0.5)*iyres-0.5;
     Vector su(u*screeny);
@@ -61,10 +61,10 @@ void Camera::makeRayL(Ray& ray, double x, double y, double, double iyres)
     ray.set_direction(raydir);
 }
 
-void Camera::makeRayR(Ray& ray, double x, double y, double, double iyres)
+void Camera::makeRayR(Ray& ray, double x, double y, double ixres, double iyres)
 {
     ray.set_origin(eye+v*5*eyesep*iyres);
-    double screenx=(x+0.5)*iyres-0.5;
+    double screenx=(x+0.5)*ixres-0.5;
     Vector sv(v*screenx-v*5*iyres*eyesep);
     double screeny=(y+0.5)*iyres-0.5;
     Vector su(u*screeny);
