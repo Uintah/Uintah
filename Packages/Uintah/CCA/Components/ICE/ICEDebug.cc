@@ -50,7 +50,6 @@ void    ICE::printData(const Patch* patch, int include_GC,
     }
 
     cerr.setf(ios::scientific,ios::floatfield);
-    cerr.setf(ios::uppercase,ios::floatfield);
     cerr.precision(16);  
     for(int k = low.z(); k < high.z(); k++)  {
       for(int j = low.y(); j < high.y(); j++) {
@@ -153,7 +152,6 @@ void    ICE::printVector(const Patch* patch, int include_GC,
     }
 
     cerr.setf(ios::scientific,ios::floatfield);
-    cerr.setf(ios::uppercase,ios::floatfield);
     cerr.precision(16);  
     for(int k = low.z(); k < high.z(); k++)  {
       for(int j = low.y(); j < high.y(); j++) {
@@ -207,7 +205,6 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
     }
 
     cerr.setf(ios::scientific,ios::floatfield);
-    cerr.setf(ios::uppercase,ios::floatfield);
     cerr.precision(16);  
     for(int k = low.z(); k < high.z(); k++)  {
       for(int j = low.y(); j < high.y(); j++) {
@@ -260,7 +257,6 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
     }
 
     cerr.setf(ios::scientific,ios::floatfield);
-    cerr.setf(ios::uppercase,ios::floatfield);
     cerr.precision(16);
     for(int k = low.z(); k < high.z(); k++)  {
       for(int j = low.y(); j < high.y(); j++) {
@@ -315,7 +311,6 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
     }
 
     cerr.setf(ios::scientific,ios::floatfield);
-    cerr.setf(ios::uppercase,ios::floatfield);
     cerr.precision(16);   
     for(int k = low.z(); k < high.z(); k++)  {
       for(int j = low.y(); j < high.y(); j++) {
