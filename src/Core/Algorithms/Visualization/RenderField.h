@@ -390,7 +390,7 @@ RenderField<Fld>::render_edges(const Fld *sfld,
     bool def_color = (use_def_color || (color_handle_.get_rep() == 0));
 
     typename Fld::mesh_type::Node::array_type nodes;
-    mesh->get_nodes(nodes, *eiter); ++eiter;
+    mesh->get_nodes(nodes, *eiter);
     
       
     Point p1, p2;
@@ -430,6 +430,8 @@ RenderField<Fld>::render_edges(const Fld *sfld,
     if (edge_display_type == "Cylinders") { cyl = true; }
     add_edge(p1, p2, edge_scale, edges, 
 	     choose_mat(def_color, val_avg), cyl);
+    
+    ++eiter;
   }
 }
 
@@ -464,7 +466,6 @@ RenderField<Fld>::render_faces(const Fld *sfld,
     bool def_color = (use_def_color || (color_handle_.get_rep() == 0));
 
     mesh->get_nodes(nodes, *fiter); 
-    ++fiter;     
  
     unsigned int i;
     vector<Point> points(nodes.size());
@@ -534,6 +535,8 @@ RenderField<Fld>::render_faces(const Fld *sfld,
 		   points[i], choose_mat(def_color, vals[i]));
       }
     }
+
+    ++fiter;     
   }
 }
 
