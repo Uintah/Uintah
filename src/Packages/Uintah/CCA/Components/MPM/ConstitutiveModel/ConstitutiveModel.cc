@@ -26,7 +26,8 @@ void ConstitutiveModel::computeStressTensorImplicit(const PatchSubset* patches,
 						    const MPMMaterial* matl,
 						    DataWarehouse* old_dw,
 						    DataWarehouse* new_dw,
-						    SparseMatrix<double,int>& K)
+						    SparseMatrix<double,int>& K,
+						    const bool recursion)
 {
 }
 
@@ -36,6 +37,14 @@ void ConstitutiveModel::computeStressTensorImplicitOnly(const PatchSubset* patch
 							DataWarehouse* old_dw,
 							DataWarehouse* new_dw)
 {
+}
+
+void ConstitutiveModel::addComputesAndRequiresImplicit(Task* task, 
+						       const MPMMaterial* matl,
+						       const PatchSet* patches,
+						       const bool recursion) 
+{
+
 }
 
 //______________________________________________________________________
