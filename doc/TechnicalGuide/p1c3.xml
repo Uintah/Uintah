@@ -101,25 +101,26 @@ cd Thirdparty_install.x.x.x
         </computeroutput>
       </listitem>
       <listitem>
-        <para><emphasis>
+        <para>
+	The install script is designed to help organize multiple installations for different architectures or compilers. 
+	<emphasis>
           Run the install script by typing:
         </emphasis></para>
 
         <computeroutput>
-python install 32
+python install base-path architecture compiler bit-size
         </computeroutput>
 
         <para>
-          For 32 bit binaries and libraries, or
+          Like this for: 32 bit binaries,  on Linux,  with a gcc 3.0.4 compiler, installed to /usr/local/SCIRun_Thirdparty :
         </para>
 
         <computeroutput>
-python install 64
+python install /usr/local/SCIRun_Thirdparty Linux gcc-3.0.4 32
         </computeroutput>
 
         <para>
-          for 64 bit binaries and libraries.  64 bit is available for
-          SGI only. 
+	Your installation would then be under /usr/local/SCIRun_Thirdparty/Linux/gcc-3.0.4-32bit
         </para>
 
         <para>
@@ -134,9 +135,7 @@ python install 32 12
         </computeroutput>
 
         <para>
-          The install script will create a directory named
-          SCIRun_Thirdparty_32 in the directory chosen in step 2
-          above.  When it finishes, it will display a message
+          When the install script finishes, it will display a message
           regarding the --with-thirdparty SCIRun configure option.
           Cut and paste that option when running the configure command 
           for SCIRun (see step 2 of <ulink
