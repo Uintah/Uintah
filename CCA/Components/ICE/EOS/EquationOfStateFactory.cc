@@ -3,6 +3,7 @@
 #include <Packages/Uintah/CCA/Components/ICE/EOS/JWL.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/JWLC.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/Murnahan.h>
+#include <Packages/Uintah/CCA/Components/ICE/EOS/Gruneisen.h>
 #if 0
 #include <Packages/Uintah/CCA/Components/ICE/EOS/Harlow.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/StiffGas.h>
@@ -37,6 +38,8 @@ EquationOfState* EquationOfStateFactory::create(ProblemSpecP& ps)
       return(scinew JWLC(child));
     else if (mat_type == "Murnahan") 
       return(scinew Murnahan(child));
+    else if (mat_type == "Gruneisen") 
+      return(scinew Gruneisen(child));
 #if 0   // Turn off harlow and stiff gas until everything with ideal
         // gas is working. Todd
     else if (mat_type == "harlow") 
