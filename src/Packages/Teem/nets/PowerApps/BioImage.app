@@ -117,8 +117,8 @@ class BioImageApp {
 
 	set loading_ui 0
 
-	set vis_frame_tab0 ""
 	set vis_frame_tab1 ""
+	set vis_frame_tab2 ""
 
 	set history0 ""
 	set history1 ""
@@ -1445,8 +1445,6 @@ class BioImageApp {
                 -equaltabs false
 	    pack $v.tnb -padx 0 -pady 0 -anchor n -fill both -expand 1
 
-            #set vis_frame_tab$case $vis.tnb
-
 	    set page [$v.tnb add -label "Planes"]
 
 
@@ -1828,12 +1826,12 @@ class BioImageApp {
         if {$initialized != 0} {
 	    if {$which == "Vis Options"} {
 		# Vis Options
-		$vis_frame_tab0 view "Vis Options"
 		$vis_frame_tab1 view "Vis Options"
+		$vis_frame_tab2 view "Vis Options"
 		set c_vis_tab "Vis Options"
 	    } else {
- 		$vis_frame_tab0 view "Viewer Options"
  		$vis_frame_tab1 view "Viewer Options"
+ 		$vis_frame_tab2 view "Viewer Options"
 		set c_vis_tab "Viewer Options"
 	    }
 	}
