@@ -228,6 +228,7 @@ int main(int argc, char** argv)
 	} else if(loadbalancer == "SimpleLoadBalancer") {
 	   bal = scinew SimpleLoadBalancer(world);
 	} else {
+	   bal = 0;
 	   quit( "Unknown load balancer: " + loadbalancer );
 	}
 
@@ -302,6 +303,9 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.25  2000/09/29 05:32:06  sparker
+// Quiet warning from g++
+//
 // Revision 1.24  2000/09/28 23:55:52  dav
 // fix to turn off threads if not using threads
 //
