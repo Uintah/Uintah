@@ -67,13 +67,11 @@ WARNING
 	 double getViscosity() const;
 	 double getSpeedOfSound() const;
 
-	 void initializeCells(CCVariable<double>& rhom, CCVariable<double>& rhC,
-			      CCVariable<double>& temp, CCVariable<double>& cv,
-			      CCVariable<double>& ss,   CCVariable<double>& vsc,
-			      CCVariable<double>& volf, CCVariable<double>& uCC,
-			      CCVariable<double>& vCC,  CCVariable<double>& wCC,
+	 void initializeCells(CCVariable<double>& rhom,CCVariable<double>& rhC,
+			      CCVariable<double>& temp,CCVariable<double>& cv,
+			      CCVariable<double>& ss, CCVariable<double>& vsc,
+			      CCVariable<double>& volf,CCVariable<Vector>& vCC,
 			      const Patch* patch, DataWarehouseP& new_dw);
-
       private:
 
 	 // Specific constitutive model associated with this material
@@ -98,6 +96,4 @@ WARNING
       };
 } // End namespace Uintah
 
-
 #endif // __ICE_MATERIAL_H__
-

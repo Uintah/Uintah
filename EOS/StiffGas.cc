@@ -85,7 +85,7 @@ void StiffGas::computeSpeedSound(const Patch* patch,
   CCVariable<double> cv;
   CCVariable<double> speedSound;
 
-  int vfindex = matl->getVFIndex();
+  int vfindex = matl->getDWIndex();
   double gamma = matl->getGamma();
 
   old_dw->get(temp, lb->temp_CCLabel, vfindex,patch,Ghost::None, 0); 
@@ -134,8 +134,8 @@ void StiffGas::computeRhoMicro(const Patch* patch,
   CCVariable<double> temp;
   CCVariable<double> cv;
   CCVariable<double> press;
-  
-  int vfindex = matl->getVFIndex();
+
+  int vfindex = matl->getDWIndex();
 
   old_dw->get(temp, lb->temp_CCLabel, vfindex,patch,Ghost::None, 0); 
   old_dw->get(cv, lb->cv_CCLabel, vfindex,patch,Ghost::None, 0); 
@@ -149,8 +149,6 @@ void StiffGas::computeRhoMicro(const Patch* patch,
   }
 
   new_dw->put(rho_micro,lb->rho_micro_CCLabel,vfindex,patch);
-
-
 }
 
 void StiffGas::computePressEOS(const Patch* patch,
@@ -159,7 +157,7 @@ void StiffGas::computePressEOS(const Patch* patch,
                                DataWarehouseP& new_dw)
 {
 
-  int vfindex = matl->getVFIndex();
+  int vfindex = matl->getDWIndex();
   CCVariable<double> rho_micro;
   CCVariable<double> temp;
   CCVariable<double> cv;

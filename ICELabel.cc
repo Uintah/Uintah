@@ -13,75 +13,46 @@ using namespace Uintah;
 
 ICELabel::ICELabel()
 {
-
     delTLabel
 	 = scinew VarLabel("delT",      delt_vartype::getTypeDescription() );
-
     press_CCLabel     =
      scinew VarLabel("press_CC",    CCVariable<double>::getTypeDescription() );
-    pressdP_CCLabel   =
-     scinew VarLabel("pressdP_CC",  CCVariable<double>::getTypeDescription() );
+    press_equil_CCLabel   =
+     scinew VarLabel("press_equil_CC",  CCVariable<double>::getTypeDescription() );
     delPress_CCLabel  =
      scinew VarLabel("delPress_CC", CCVariable<double>::getTypeDescription() );
-
     rho_CCLabel       = 
      scinew VarLabel("rho_CC",    CCVariable<double>::getTypeDescription() );
-
     temp_CCLabel      = 
      scinew VarLabel("temp_CC",   CCVariable<double>::getTypeDescription() );
-
-    uvel_CCLabel       = 
-     scinew VarLabel("uvel_CC",    CCVariable<double>::getTypeDescription() );
-    vvel_CCLabel       = 
-     scinew VarLabel("vvel_CC",    CCVariable<double>::getTypeDescription() );
-    wvel_CCLabel       = 
-     scinew VarLabel("wvel_CC",    CCVariable<double>::getTypeDescription() );
-
+    vel_CCLabel       = 
+     scinew VarLabel("vel_CC",    CCVariable<Vector>::getTypeDescription() );
     cv_CCLabel        = 
      scinew VarLabel("cv_CC",         CCVariable<double>::getTypeDescription());
     rho_micro_CCLabel = 
      scinew VarLabel("rho_micro_CC",  CCVariable<double>::getTypeDescription());
-    rho_micro_equil_CCLabel = 
-      scinew VarLabel("rho_micro_equil_CC",  CCVariable<double>::getTypeDescription());
-
     speedSound_CCLabel = 
      scinew VarLabel("speedSound_CC", CCVariable<double>::getTypeDescription());
-    speedSound_equiv_CCLabel = 
-     scinew VarLabel("speedSound_equiv_CC", CCVariable<double>::getTypeDescription());
-
     div_velfc_CCLabel = 
      scinew VarLabel("div_velfc_CC",  CCVariable<double>::getTypeDescription());
     vol_frac_CCLabel = 
      scinew VarLabel("vol_frac_CC",   CCVariable<double>::getTypeDescription());
-
     viscosity_CCLabel = 
      scinew VarLabel("viscosity_CC",  CCVariable<double>::getTypeDescription());
-    xmom_source_CCLabel = 
-     scinew VarLabel("xmom_source_CC",CCVariable<double>::getTypeDescription());
-    ymom_source_CCLabel = 
-     scinew VarLabel("ymom_source_CC",CCVariable<double>::getTypeDescription());
-    zmom_source_CCLabel = 
-     scinew VarLabel("zmom_source_CC",CCVariable<double>::getTypeDescription());
+    mom_source_CCLabel = 
+      scinew VarLabel("mom_source_CC",CCVariable<Vector>::getTypeDescription());
     int_eng_source_CCLabel = 
      scinew VarLabel("intE_source_CC",CCVariable<double>::getTypeDescription());
-    xmom_L_CCLabel = 
-     scinew VarLabel("xmom_L_CC",CCVariable<double>::getTypeDescription());
-    ymom_L_CCLabel = 
-     scinew VarLabel("ymom_L_CC",CCVariable<double>::getTypeDescription());
-    zmom_L_CCLabel = 
-     scinew VarLabel("zmom_L_CC",CCVariable<double>::getTypeDescription());
+    mom_L_CCLabel = 
+     scinew VarLabel("mom_L_CC",CCVariable<Vector>::getTypeDescription());
     int_eng_L_CCLabel = 
      scinew VarLabel("intE_L_CC",CCVariable<double>::getTypeDescription());
     mass_L_CCLabel = 
      scinew VarLabel("mass_L_CC",CCVariable<double>::getTypeDescription());
     rho_L_CCLabel = 
      scinew VarLabel("rho_L_CC",CCVariable<double>::getTypeDescription());
-    xmom_L_ME_CCLabel = 
-     scinew VarLabel("xmom_L_ME_CC",CCVariable<double>::getTypeDescription());
-    ymom_L_ME_CCLabel = 
-     scinew VarLabel("ymom_L_ME_CC",CCVariable<double>::getTypeDescription());
-    zmom_L_ME_CCLabel = 
-     scinew VarLabel("zmom_L_ME_CC",CCVariable<double>::getTypeDescription());
+    mom_L_ME_CCLabel = 
+     scinew VarLabel("mom_L_ME_CC",CCVariable<Vector>::getTypeDescription());
     int_eng_L_ME_CCLabel = 
      scinew VarLabel("intE_L_ME_CC",CCVariable<double>::getTypeDescription());
     q_CCLabel = 
@@ -120,39 +91,31 @@ ICELabel::ICELabel()
      scinew VarLabel("tau_Y_FC",   SFCYVariable<Vector>::getTypeDescription() );
     tau_Z_FCLabel       = 
      scinew VarLabel("tau_Z_FC",   SFCZVariable<Vector>::getTypeDescription() );
+    
 } 
 
 ICELabel::~ICELabel()
 {
     // Cell centered variables
-    delete  press_CCLabel;
-    delete  pressdP_CCLabel;
-    delete  delPress_CCLabel;
-    delete  rho_CCLabel;
+    delete press_CCLabel;
+    delete press_equil_CCLabel;
+    delete delPress_CCLabel;
+    delete rho_CCLabel;
     delete temp_CCLabel;
-    delete uvel_CCLabel;
-    delete vvel_CCLabel;
-    delete wvel_CCLabel;
+    delete vel_CCLabel;
     delete speedSound_CCLabel;
-    delete speedSound_equiv_CCLabel;
     delete cv_CCLabel;
     delete rho_micro_CCLabel;
     delete div_velfc_CCLabel;
     delete vol_frac_CCLabel;
     delete viscosity_CCLabel;
-    delete xmom_source_CCLabel;
-    delete ymom_source_CCLabel;
-    delete zmom_source_CCLabel;
+    delete mom_source_CCLabel;
     delete int_eng_source_CCLabel;
-    delete xmom_L_CCLabel;
-    delete ymom_L_CCLabel;
-    delete zmom_L_CCLabel;
+    delete mom_L_CCLabel;
     delete int_eng_L_CCLabel;
     delete mass_L_CCLabel;
     delete rho_L_CCLabel;
-    delete xmom_L_ME_CCLabel;
-    delete ymom_L_ME_CCLabel;
-    delete zmom_L_ME_CCLabel;
+    delete mom_L_ME_CCLabel;
     delete int_eng_L_ME_CCLabel;
     delete q_CCLabel;
     delete term1Label;
@@ -172,3 +135,4 @@ ICELabel::~ICELabel()
 
     delete delTLabel;
 }
+
