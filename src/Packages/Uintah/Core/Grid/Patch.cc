@@ -66,18 +66,18 @@ Patch::Patch(const Level* level,
 }
 
 Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
-    : d_level(realPatch->d_level),
+    : d_realPatch(realPatch), d_level(realPatch->d_level),
       d_level_index(realPatch->d_level_index),
       d_lowIndex(realPatch->d_lowIndex + virtualOffset),
       d_highIndex(realPatch->d_highIndex + virtualOffset),
       d_inLowIndex(realPatch->d_inLowIndex + virtualOffset),
       d_inHighIndex(realPatch->d_inHighIndex + virtualOffset),
       d_nodeHighIndex(realPatch->d_nodeHighIndex + virtualOffset),
-      d_realPatch(realPatch), d_id(-1000 - realPatch->getID()),
+      d_id(-1000 - realPatch->getID()),
       d_bcs(realPatch->d_bcs),
+      in_database(false),      
       have_layout(realPatch->have_layout),
-      layouthint(realPatch->layouthint),
-      in_database(false)
+      layouthint(realPatch->layouthint)
 {
   for (int i = 0; i < numFaces; i++)
     d_bctypes[i] = realPatch->d_bctypes[i];
