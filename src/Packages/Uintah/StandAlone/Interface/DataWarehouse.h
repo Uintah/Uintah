@@ -135,8 +135,7 @@ WARNING
       virtual void emit(OutputContext&, const VarLabel* label,
 			int matlIndex, const Patch* patch) const = 0;
 
-      virtual void emit(ofstream& intout,
-			vector <const VarLabel*> label) const = 0;
+      virtual void emit(ostream& intout, const VarLabel* label) const = 0;
 
    protected:
       DataWarehouse( int MpiRank, int MpiProcesses, int generation );
@@ -153,6 +152,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.25  2000/06/03 05:30:27  sparker
+// Changed emit (primary for reduction variables) to use ostream instead
+// of ofstream
+//
 // Revision 1.24  2000/06/01 23:17:53  guilkey
 // Added virtual pleaseSaveIntegrated functions.
 //
