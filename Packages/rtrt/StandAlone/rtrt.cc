@@ -16,6 +16,7 @@
 #include <Packages/rtrt/Core/BV2.h>
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Dpy.h>
+#include <Packages/rtrt/Core/DpyBase.h>
 #include <Packages/rtrt/Core/Grid.h>
 #include <Packages/rtrt/Core/Grid2.h>
 #include <Packages/rtrt/Core/Group.h>
@@ -759,12 +760,14 @@ main(int argc, char* argv[])
   gui->setDpy( dpy );
 
   // Initialize GLUT and GLUI stuff.
+  DpyBase::xlock();
   printf("start glut inits\n");
   glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE);
 
   glutInitWindowPosition( 0, 0 );
 
   mainWindowId = glutCreateWindow("RTRT");
+  DpyBase::xunlock();
 
   if( fullscreen ) {
     //glutFullScreen(); // only if full screen is 1280x1024
