@@ -18,6 +18,12 @@ public:
     UVPlane(const Point& cen, const Vector& v1, const Vector& v2);
     virtual ~UVPlane();
     virtual void uv(UV& uv, const Point&, const HitInfo& hit);
+    virtual void get_frame(const Point &, const HitInfo&,const Vector &norm,  Vector &v2, Vector &v3)
+  {
+    v2 = v1;
+    v3 = v2;
+  }
+
 };
 
 } // end namespace rtrt

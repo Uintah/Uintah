@@ -107,6 +107,10 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/pcube.c \
 	$(SRCDIR)/fpcube.c \
 	$(SRCDIR)/templates.cc \
+	$(SRCDIR)/BumpMaterial.cc \
+	$(SRCDIR)/UVSphere.cc \
+	$(SRCDIR)/BumpObject.cc \
+	$(SRCDIR)/NormalMapMaterial.cc \
 	$(SRCDIR)/SelectableGroup.cc \
 	$(SRCDIR)/CutGroup.cc \
 	$(SRCDIR)/CutMaterial.cc \
