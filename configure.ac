@@ -1417,7 +1417,7 @@ else
 fi
 
 if test "$is_linux" = "linux"; then
-  GLU_OTHERS="pthread"
+  GLU_OTHERS="-lpthread"
 else
   GLU_OTHERS=""
 fi
@@ -1436,7 +1436,7 @@ SCI_TRY_LINK(GL,OpenGL libraries and headers,[
 #include<GL/glu.h>
 #include<GL/glx.h>
 
-],$_sci_inc,GLU GL $GLU_OTHERS,$_sci_lib,,,not-optional)
+],$_sci_inc,GLU GL,$_sci_lib,$GLU_OTHERS,,not-optional)
 
 AC_SUBST(GL_LIB_FLAG)
 AC_SUBST(GL_LIB_DIR_FLAG)
