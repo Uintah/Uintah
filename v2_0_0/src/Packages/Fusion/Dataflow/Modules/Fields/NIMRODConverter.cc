@@ -65,6 +65,10 @@ private:
   int nmodes_;
   vector< int > modes_;
 
+  GuiInt allowUnrolling_;
+  GuiInt unRolling_;
+  int unrolling_;
+
   vector< int > mesh_;
   vector< int > data_;
 
@@ -82,6 +86,9 @@ NIMRODConverter::NIMRODConverter(GuiContext* context)
     datasetsStr_(context->subVar("datasets")),
     nModes_(context->subVar("nmodes")),
     nmodes_(0),
+    allowUnrolling_(context->subVar("allowUnrolling")),
+    unRolling_(context->subVar("unrolling")),
+    unrolling_(0),
     error_(false)
 {
 }
@@ -242,7 +249,7 @@ NIMRODConverter::execute(){
     mesh_.resize(4);
     mesh_[0] = mesh_[1] = mesh_[2] = mesh_[3] = -1;
 
-    for( unsigned int ic=0; ic++; ic<nHandles.size() )
+    for( unsigned int ic=0; ic<nHandles.size(); ic++ )
       nGenerations_[ic] = nHandles[ic]->generation;
 
     // Get each of the dataset names for the GUI.
@@ -413,6 +420,19 @@ NIMRODConverter::execute(){
     }
   }
 
+  if( (int) (conversion & MESH) != allowUnrolling_.get() )
+  {
+    ostringstream str;
+    str << id << " set_unrolling " << (conversion & MESH);
+    
+    gui->execute(str.str().c_str());
+
+    if( conversion & MESH ) {
+      warning( "Select the mesh rolling for the calculation" );
+      error_ = true; // Not really an error but it so it will execute.
+      return;
+    }
+  }
 
   if( (conversion & PERTURBED) &&
       nHandles[mesh_[PHI]]->get_property( "Coordinate System", property ) &&
@@ -470,9 +490,17 @@ NIMRODConverter::execute(){
     }
   }
 
+  bool updateRoll = false;
+
+  if( unrolling_ != unRolling_.get() ) {
+    unrolling_ = unRolling_.get();
+    updateRoll = true;
+  }
+
   // If no data or data change, recreate the field.
   if( error_ ||
       updateMode ||
+      updateRoll ||
       !nHandle_.get_rep() ||
       generation ) {
     
@@ -501,6 +529,9 @@ NIMRODConverter::execute(){
 	idim = nHandles[mesh_[PHI]]->nrrd->axis[1].size; // Phi
 	jdim = nHandles[mesh_[R]]->nrrd->axis[1].size;   // Radial
 	kdim = nHandles[mesh_[Z]]->nrrd->axis[2].size;   // Theta
+
+	modes_.resize(1);
+	modes_[0] = unrolling_;
       }
 
       convertStr = "Mesh";
@@ -583,6 +614,9 @@ NIMRODConverter::execute(){
       error_ = true;
       return;
     }
+
+    if( conversion & MESH )
+      modes_.clear();
   }
   
   // Get a handle to the output field port.

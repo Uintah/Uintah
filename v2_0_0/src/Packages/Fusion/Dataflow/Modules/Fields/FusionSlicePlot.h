@@ -34,7 +34,7 @@ using namespace SCIRun;
 class FusionSlicePlotAlgo : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(FieldHandle src, double scale) = 0;
+  virtual FieldHandle execute(FieldHandle& src, double scale) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *ftd);
@@ -46,13 +46,13 @@ class FusionSlicePlotAlgoT : public FusionSlicePlotAlgo
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(FieldHandle src, double scale);
+  virtual FieldHandle execute(FieldHandle& src, double scale);
 };
 
 
 template< class FIELD >
 FieldHandle
-FusionSlicePlotAlgoT<FIELD>::execute(FieldHandle field_h, double scale)
+FusionSlicePlotAlgoT<FIELD>::execute(FieldHandle& field_h, double scale)
 {
   FIELD *ifield = (FIELD *) field_h.get_rep();
 

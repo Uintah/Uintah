@@ -35,6 +35,12 @@ itcl_class Fusion_Fields_NIMRODConverter {
 
 	global $this-nmodes
 	set $this-nmodes 0
+
+	global $this-allowUnrolling
+	set $this-allowUnrolling 0
+
+	global $this-unrolling
+	set $this-unrolling 0
     }
 
     method ui {} {
@@ -67,6 +73,21 @@ itcl_class Fusion_Fields_NIMRODConverter {
 	set_modes [set $this-nmodes] 0
 
 	pack $w.modes -side top -pady 5
+
+
+
+	frame $w.unrolling
+
+	label $w.unrolling.label -text "Mesh unrolling" -width 15 -anchor w -just left
+	checkbutton $w.unrolling.button -variable $this-unrolling
+
+	pack $w.unrolling.label $w.unrolling.button -side left	    
+
+	set_unrolling [set $this-allowUnrolling]
+
+	pack $w.unrolling -side top -pady 5
+
+
 
 	frame $w.grid
 	label $w.grid.l -text "Inputs: (Execute to show list)" -width 30 -just left
@@ -152,6 +173,23 @@ itcl_class Fusion_Fields_NIMRODConverter {
 	    while {[winfo exists $w.modes.$i]} {
 		destroy $w.modes.$i
 		incr i
+	    }
+	}
+    }
+
+    method set_unrolling { allowUnrolling } {
+
+	global $this-allowUnrolling
+	set $this-allowUnrolling $allowUnrolling
+
+        set w .ui[modname]
+
+	if [ expr [winfo exists $w] ] {
+
+	    if { $allowUnrolling } {		
+		pack $w.unrolling -side top
+	    } else {
+		pack forget $w.unrolling
 	    }
 	}
     }
