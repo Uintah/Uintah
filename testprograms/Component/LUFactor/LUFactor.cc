@@ -31,7 +31,6 @@
 #include <iostream>
 #include <stdlib.h>
 #include <algo.h>
-#include <mpi.h>
 #include <Core/CCA/Component/PIDL/PIDL.h>
 #include <Core/CCA/Component/PIDL/MxNArrayRep.h>
 #include <Core/CCA/Component/PIDL/MalformedURL.h>
@@ -43,9 +42,7 @@
 
 #define SIZE 5               
 
-using std::cerr;
-using std::cout;
-
+using namespace std;
 using namespace SCIRun;
 
 void usage(char* progname)
@@ -69,8 +66,6 @@ void generate(SSIDL::array2<double>& A){
 
 int main(int argc, char* argv[])
 {
-    using std::string;
-
     using LUFactor_ns::LUFactor_impl;
     using LUFactor_ns::LUFactor;
 

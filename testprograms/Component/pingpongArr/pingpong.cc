@@ -29,6 +29,7 @@
  */
 
 #include <iostream>
+#include <sci_config.h> // For MPIPP_H on SGI
 #include <mpi.h>
 #include <Core/CCA/Component/PIDL/PIDL.h>
 #include <Core/CCA/Component/PIDL/MxNArrayRep.h>
@@ -39,9 +40,7 @@
 #include <testprograms/Component/pingpongArr/PingPong_sidl.h>
 #include <Core/Thread/Time.h>
 
-using std::cerr;
-using std::cout;
-
+using namespace std;
 using namespace SCIRun;
 
 void usage(char* progname)
