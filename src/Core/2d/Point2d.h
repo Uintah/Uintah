@@ -70,7 +70,7 @@ public:
   int operator==(const Point2d&) const;
   int operator!=(const Point2d&) const;
   inline Point2d& operator=(const Point2d&);
-  //  inline Vector operator-(const Point2d&) const;
+  inline Vector2d operator-(const Point2d&) const;
   Point2d operator+(const Vector2d&) const;
   Point2d operator-(const Vector2d&) const;
   inline Point2d operator*(double) const;
@@ -112,7 +112,7 @@ SCICORESHARE std::istream& operator>>(std::istream& os, Point2d& p);
 } // End namespace SCIRun
 
 // This cannot be above due to circular dependencies
-//#include <Core/Geometry/Vector.h>
+#include <Core/2d/Vector2d.h>
 
 namespace SCIRun {
 
@@ -133,6 +133,12 @@ inline Point2d& Point2d::operator=(const Point2d& p)
     return *this;
 }
 
+
+Vector2d 
+Point2d::operator-(const Point2d& p) const
+{
+  return Vector2d( x_ - p.x_ ,  y_ - p.y_ ) ;
+}
 
 inline Point2d Point2d::operator-() const
 {
