@@ -54,10 +54,10 @@
         <p><b>Chapter Overview</b><br>
 
         <p>In Chapters 1 and 2, we constructed SCIRun networks to
-        visualize the geometry and data values in a field.   In this
+        visualize the geometry and data values in a Field.   In this
         Chapter, we will explore additional visualization techniques,
-        and examine <i>filter</i> modules that receive a field as input,
-        and output a newly derived field.  
+        and examine <i>filter</i> modules that receive a Field as input,
+        and output a newly derived Field.  
 
 	<p>Rather than building one net to introduce all of these new
 	    modules, we 
@@ -67,7 +67,7 @@
                 
         <p><b><A name="section-1">3A: FieldBoundary</b><br></A>
 
-	<p>We will first perform a boundary extraction. The FieldBoundary module extracts a boundary surface from a volume field. For example, given a TetVolMesh, the module extracts the boundary faces and outputs a TriSurfMesh.
+	<p>We will first perform a boundary extraction. The FieldBoundary module extracts a boundary surface from a volume For example, given a TetVolMesh, the module extracts the boundary faces and outputs a TriSurfMesh.
 
 	<p>Create a net using the FieldBoundary module
 	    (SCIRun/Fields/FieldBoundary):</p>
@@ -96,7 +96,7 @@
       </div>
 	<center>
 	<p><img height="451" width="450" src="images/figures/3_2.gif"><br>
-	<b>Figure 3.2, field boundary of the utahtorso-lowres-voltage.tvd.fld</b></p>
+	<b>Figure 3.2, Field boundary of the utahtorso-lowres-voltage.tvd.fld</b></p>
 	</center>
 	<div align="left">
 	<p><br>
@@ -104,18 +104,18 @@
 
         <p><b><A name="section-2">3B:DirectInterpolate</b><br></A>
 
-	<p>Next, we will interpolate data values from one field to another field.  In this section, we will load two datasets: 
+	<p>Next, we will interpolate data values from one Field to another Field.  In this section, we will load two datasets: 
 	<ul> 
-	  <p><li>The first contains the utahtorso-lowres-voltage.tvd.fld that we examined in <A href="chapter_1.html#voltage">Chapter 1</a>, which we will refer to as the <i>volume field</i>.</p>
+	  <p><li>The first contains the utahtorso-lowres-voltage.tvd.fld that we examined in <A href="chapter_1.html#voltage">Chapter 1</a>, which we will refer to as the <i>volume Field</i>.</p>
 	  <p><li>The second contains the electrode positions in utahtorso-lowres-electrodes.pcd.fld, from
 	      <a href="chapter_2.html#electrodes">Chapter 2</a>.</p>
 	</ul>
 	
-	<p>Now that we have loaded the datasets, we will ceate a new field by interpolating the electrode positions and voltage values.</p>
+	<p>Now that we have loaded the datasets, we will ceate a new Field by interpolating the electrode positions and voltage values.</p>
 
 	<p>Interpolation is the means by which we calculate the value at a certain point by using the known values at surrounding points. For each electrode, 
 	we must find the corresponding voltage value
-	from the volume field. 
+	from the volume Field. 
 		
 	<p>The DirectInterpolate module implements this algorithm (SCIRun/Fields/DirectInterpolate). In order to run the DirectInterpolate net, we will need:</p>
 	<ul>
@@ -154,16 +154,16 @@ You should save this net as <i>3B.net</i>, which you'll use in Chapter 4 of this
 
         <p>Streamline advection is the last visualization technique we will
 	explore in this 
-        chapter. The StreamLines module visualizes vector fields by generating curves that interpolate the flow of vectors in a field.</p>
+        chapter. The StreamLines module visualizes vector Fields by integrating curves through a gradient vector flow Field.</p>
 
-	<p>We will generate the input vector field by using the
+	<p>We will generate the input vector Field by using the
 	Gradient module (SCIRun/Fields/Gradient) in order to compute the
 	gradient of the utahtorso-lowres-voltage.tvd.fld.</p> 
 
 <p>The SampleField module will generate a sample distribution of StreamLine seed
 	points.  SampleField
-	generates samples from any type of field input and outputs the
-	samples as a PointCloudMesh Field.    
+	generates samples from any type of Field input and outputs the
+	samples as a PointCloud Field.    
 	In order to run the StreamLines net, we will need:</p>
 	<ul>
 	<li>One FieldReader module 
@@ -203,33 +203,9 @@ You should save this net as <i>3B.net</i>, which you'll use in Chapter 4 of this
 	      or points, with NodeScale set to approximately 1--2.</p>
 	   <li> For the second ShowField module lower-left in <b>Figure 3.5</b>, set the UI to display Edges only as cylinders with a Cylinder Scale of 2.</p> 
 	</ul>
-You should save this net as <i>3C.net</i>, which you'll use in Chapter 4 of this tutorial, <b><A href="chapter_4.html#section-2">Putting the nets together</b></A>.</p>
+<p>You should save this net as <i>3C.net</i>, which you'll use in Chapter 4 of this tutorial, <b><A href="chapter_4.html#section-2">Putting the nets together</b></A>.</p>
         
-      </div>
-	<center>
-	<p><img height="461" width="450" src="images/figures/3_5.gif"><br>
-	<b>Figure 3.5, showing the StreamLines net</b></p>
-	</center>
-	<div align="left">
-	</p>
-
-<p>The SampleField module can generate the samples randomly or we
-	can select samples using a 3D widget.  For Streamline visualization, we
-	use a 3D "rake" widget for distributing seed points. You may interactively position the rake of seed points within the volume:
-	<ul>
-	    <p><li>From the SampleField UI, select the rake option and 
-	      set the number of samples to 30.</p>
-	</ul>
-
-	<p>In order to attach scalar data values to the
-        StreamLine nodes be sure to set the following options:</p>
-	<ul>
-	  <p><li> With the FieldReader, select the input file
-	  utahtorso-lowres-voltage.tvd.fld.</p> 
-	  <p><li>In the ShowField UI, display only Nodes, either as spheres
-	      or points, with NodeScale set to about 1--2.</p>
-	   <li> For the second ShowField module lower-left in <b>Figure 3.5</b>, set the UI to display Edges only as cylinders with a Cylinder Scale of 2.</p>
- </ul>
+     
 
 <p>The StreamLines module works by integrating the seed points
 	through the vector Field.  We use a fifth order
@@ -247,7 +223,7 @@ You should save this net as <i>3C.net</i>, which you'll use in Chapter 4 of this
 
 	<p><b><A name="section-9">Controlling Widgets</b><br></A> 
 
-	<p>The rake is one of many widgets used in the SCIRun.  Widgets are graphical elements in the Viewer that allow the user 
+	<p>The rake is one of many widgets used in SCIRun.  Widgets are graphical elements in the Viewer that allow the user 
 	to interactively control features of the display.  The SCIRun
 	widgets have similar visual characteristics, but manipulate different
 	aspects of the display, as detailed in the <a
@@ -261,7 +237,7 @@ You should save this net as <i>3C.net</i>, which you'll use in Chapter 4 of this
 	      it around the region of view in order to change its location and action.</p>
 	  <p><li>Press and hold the shift key, left-click the mouse on a <b>sphere</b> in the widget and change the
 	      position of that widget.</p>
-	  <p><li>Press and hold the shift key, left-click the mouse on the end <b>knob</b> (green resize cylinders)in the widget and change, for example, the density of stream lines.</p>
+	  <p><li>Press and hold the shift key, left-click the mouse on the end <b>knob</b> (green resize cylinders) in the widget and change, for example, the density of streamlines.</p>
 	  <p><li> SCIRun redraws the image in the ViewWindow whenever
 	      you release the mouse button.</p>
 	</ul>
@@ -311,7 +287,7 @@ You should save this net as <i>3C.net</i>, which you'll use in Chapter 4 of this
 	that performs concurrent visualizations.
 
 	<br>
-	<br><A HREF="#section-5">Back to Top</A>
+	<br><A HREF="#section-5">Return to Top</A>
         </div>
 	</td>
 	</tr>

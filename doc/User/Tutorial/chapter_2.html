@@ -3,7 +3,6 @@
 <meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
 <meta name="generator" content="Adobe GoLive 4">
 <title>Looking at the Data</title>
-<!-- Changed by: Ted Dustman, 20-Feb-2002 -->
 </head>
 
 <body bgcolor="#a9a9a9">
@@ -73,7 +72,7 @@
 
 	<p>We want to map the data values at each node of the mesh to a
 	meaningful color in order to differentiate one data value from another.   
-	The ColorMap class in SCIRun provides this mapping.  
+	The color map class in SCIRun provides this mapping.  
 	
 	<p>A ColorMap contains a set of evenly spaced colors
 	(RGBA) mapped to a data value range. The minimum and maximum data value specifies this range. <b>Figure 2.1</b> shows several example color maps. 
@@ -127,15 +126,15 @@
 	<p>Note that, RescaleColorMap is another example of a module that has dynamic input ports.
 	If the user connects more than one field into RescaleColorMap,
 	the min/max range for auto-scaling corresponds to the
-	min/max range of data values from all of the input fields.</p>
+	min/max range of data values from all of the input Fields.</p>
 
 	<p>The second input port on the ShowField module accepts a
-        ColorMap that maps the data values in its input field to a color in the
+        ColorMap that maps the data values in its input Field to a color in the
         input ColorMap, and renders accordingly.  If a ColorMap is
         present in ShowField the module ignores the Default
         Color, and uses the ColorMap value.</p>
                   
-        <p>To complete this net we must read in a field.  
+        <p>To complete this net we must read in a Field.  
 	<ol>
 	<p><li> <A NAME=electrodes>
 	    Use the FieldReader User Interface (UI) to read in
@@ -158,7 +157,7 @@
         <p><b><A name="section-2">GenStandardColorMaps UI</b><br></A>
 
         <p>Now, we will explore the UIs for the GenStandardColorMaps and RescaleColorMaps modules.  Upon opening the UI for GenStandardColorMaps, you will
-        see a window, as shown in <b>Figure 2.4.</b>.
+        see a window, as shown in <b>Figure 2.4</b>.
 
 	</div>
 	<center>
@@ -199,7 +198,7 @@
 	the module.</p></ul> 
                   
         <p>In GenStandardColorMaps, change
-	the ColorMap from Inverse Rainbow to Inverse Darkhue, which changes the
+	the color map from Inverse Rainbow to Inverse Darkhue, which changes the
 	image in the 
         View window from <b>Figure 2.3</b> to <b>Figure 2.6</b>.</p>
 
@@ -228,11 +227,11 @@
 	and for varying colors over the geometry, rather than mapping a
 	single color.<br> 
 
-	<p>The next chapter features more visualization techniques,and
+	<p>The next chapter features more visualization techniques, and
 	explores how  
 	to input and output a Field. 
 	<br>
-	<br><p><A HREF="#section-3">Back to Top</A>
+	<br><p><A HREF="#section-3">Return to Top</A>
         </div>
 	</td>
 	</tr>
