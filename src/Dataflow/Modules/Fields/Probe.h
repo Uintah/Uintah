@@ -86,7 +86,7 @@ ProbeLocateAlgoT<MESH>::execute(MeshHandle mesh_h,
 	const double dist = (p - c).length2();
 	if (first_p || dist < mindist)
 	{
-	  first_p = false
+	  first_p = false;
 	  mindist = dist;
 	  index = *bi;
 	  found_p = true;
