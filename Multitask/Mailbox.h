@@ -23,6 +23,7 @@ template<class Item> struct Mailbox_private;
 template<class Item> class Mailbox {
     Mailbox_private<Item>* priv;
 public:
+    Mailbox();
     Mailbox(int max);
     ~Mailbox();
     void send(Item);
