@@ -65,22 +65,22 @@ template<class T>
 T
 pidl_cast(const PIDL::Object& obj)
 {
-    // Try the direct cast before we go remote
-    typename T::interfacetype * iface =
-                  dynamic_cast< typename T::interfacetype* >(obj.getPointer());
-    if(iface)
-        return iface;
+  // Try the direct cast before we go remote
+  typename T::interfacetype * iface =
+    dynamic_cast< typename T::interfacetype* >(obj.getPointer());
+  if(iface)
+    return iface;
 
-    const PIDL::TypeInfo* typeinfo = T::_getTypeInfo();
-    PIDL::Object_interface* result=typeinfo->pidl_cast(obj.getPointer());
-    if(result){
-	T p=dynamic_cast<typename T::interfacetype*>(result);
-	if(!p)
-	    throw SCIRun::InternalError("TypeInfo::pidl_cast returned wrong object!");
-	return p;
-    } else {
-	return 0;
-    }
+  const PIDL::TypeInfo* typeinfo = T::_getTypeInfo();
+  PIDL::Object_interface* result=typeinfo->pidl_cast(obj.getPointer());
+  if(result){
+    T p=dynamic_cast<typename T::interfacetype*>(result);
+    if(!p)
+      throw SCIRun::InternalError("TypeInfo::pidl_cast returned wrong object!");
+    return p;
+  } else {
+    return 0;
+  }
 }
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
