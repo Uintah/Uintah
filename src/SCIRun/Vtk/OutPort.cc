@@ -41,8 +41,8 @@
 
 class vtkObject;
 
-using namespace SCIRun;
-using namespace vtk;
+namespace SCIRun {
+namespace vtk {
 
 OutPort::OutPort(){
   vtkobj=NULL;
@@ -63,3 +63,5 @@ OutPort::getOutput(){
 OutPort::~OutPort(){
 }
 
+}
+}

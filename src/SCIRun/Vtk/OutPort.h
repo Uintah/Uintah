@@ -45,26 +45,32 @@
 
 class vtkObject;
 namespace SCIRun {
-  namespace vtk {
-    class OutPort : public SCIRun::vtk::Port {
-    public:
-      //constructor
-      OutPort();
+namespace vtk {
+/**
+ * \class OutPort
+ *
+ * A virtual class that defines the interface for a SCIRun::vtk output port.
+ * An output port is a component port that provides data. Connects between
+ * input and output ports are made in the InPort object.
+ */
+class OutPort : public SCIRun::vtk::Port
+{
+public:
+  OutPort();
+  virtual ~OutPort();
+  
+  /** Sets the vtkObject that will receive the output data. */
+  void setOutput(vtkObject* object);
+  
+  /** Returns the vtkObject that will receive the output data. */
+  vtkObject* getOutput();
+  
+private:
+  //the output vtk object
+  vtkObject* vtkobj;
+};
 
-      //virtual destructor
-      virtual ~OutPort();
-      
-      //set the output object
-      void setOutput(vtkObject* object);
-      
-      //get the output object
-      vtkObject* getOutput();
-
-    private:
-      //the output vtk object
-      vtkObject* vtkobj;
-    };
-  }
+}
 }
 
 #endif

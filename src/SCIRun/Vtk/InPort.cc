@@ -41,9 +41,8 @@
 
 #include <SCIRun/Vtk/InPort.h>
 
-using namespace SCIRun;
-using namespace vtk;
-using namespace std;
+namespace SCIRun {
+namespace vtk {
 
 InPort::InPort(){
   is_input=true;
@@ -52,3 +51,5 @@ InPort::InPort(){
 InPort::~InPort(){
 }
 
+}
+}

@@ -42,10 +42,11 @@
 #include <SCIRun/Vtk/VtkComponentModel.h>
 #include <iostream>
 
-using namespace SCIRun;
-using namespace std;
+namespace SCIRun {
+namespace vtk {
 
-VtkComponentDescription::VtkComponentDescription(VtkComponentModel* m, const string& t)
+VtkComponentDescription::VtkComponentDescription(VtkComponentModel* m,
+                                                 const std::string& t)
 {
   this->model = m;
   this->type = t;
@@ -55,7 +56,7 @@ VtkComponentDescription::~VtkComponentDescription()
 {
 }
 
-string VtkComponentDescription::getType() const
+std::string VtkComponentDescription::getType() const
 {
   return type;
 }
@@ -63,4 +64,7 @@ string VtkComponentDescription::getType() const
 const ComponentModel* VtkComponentDescription::getModel() const
 {
   return model;
+}
+
+}
 }

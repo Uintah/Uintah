@@ -41,113 +41,140 @@
 
 #include <string>
 #include <iostream>
-#include <vector>
 #include <SCIRun/Vtk/InPort.h>
 #include <SCIRun/Vtk/OutPort.h>
 #include <SCIRun/Vtk/Component.h>
 
-using namespace SCIRun;
-using namespace vtk;
+namespace SCIRun {
+namespace vtk {
 
-Component::Component(){
+Component::Component()
+{
   have_ui=false;
 }
 
-Component::~Component(){
+Component::~Component()
+{
   //TODO
-  std::cerr<<" *** ~Component *** called\n";
+  std::cerr<<" *** ~Component *** called" << std::endl;
 }
 
 void
-Component::enableUI(bool new_thread){
+Component::enableUI(bool new_thread)
+{
   have_ui=true;
   new_ui_thread=new_thread;
 }
 
 void 
-Component::disableUI(){
+Component::disableUI()
+{
   have_ui=false;
 }
 
 bool 
-Component::haveUI(){
+Component::haveUI()
+{
   return have_ui;
 }
 
 Port* 
-Component::getPort(const std::string &name){
-  for(unsigned int i=0; i<iports.size(); i++){
+Component::getPort(const std::string &name)
+{
+  for(unsigned int i=0; i<iports.size(); i++)
+    {
     if(name==iports[i]->getName()) return iports[i];
-  }
-  for(unsigned int i=0; i<oports.size(); i++){
+    }
+  for(unsigned int i=0; i<oports.size(); i++)
+    {
     if(name==oports[i]->getName()) return oports[i];
-  }
+    }
   return 0;
 }
 
 void
-Component::addPort(Port *port){
+Component::addPort(Port *port)
+{
   if(port->isInput())
+    {
     iports.push_back((InPort*)port);
-  else 
+    }
+  else
+    {
     oports.push_back((OutPort*)port);
+    }
 }
 
 void
-Component::removePort(Port *port){
-  if(port->isInput()){
-    for(unsigned int i=0; i<iports.size(); i++){
-      if(iports[i]==port){
-	iports.erase(iports.begin()+i);
-	return;
+Component::removePort(Port *port)
+{
+  if(port->isInput())
+    {
+    for(unsigned int i=0; i<iports.size(); i++)
+      {
+      if(iports[i]==port)
+        {
+        iports.erase(iports.begin()+i);
+        return;
+        }
       }
     }
-  }
-  else{ 
-    for(unsigned int i=0; i<oports.size(); i++){
-      if(oports[i]==port){
-	oports.erase(oports.begin()+i);
-	return;
+  else
+    {
+    for(unsigned int i=0; i<oports.size(); i++)
+      {
+      if(oports[i]==port)
+        {
+        oports.erase(oports.begin()+i);
+        return;
+        }
       }
     }
-  }
 }
 
 void
-Component::removePort(const std::string &name){
+Component::removePort(const std::string &name)
+{
   removePort(getPort(name));
 }
 
 int 
-Component::numIPorts(){
+Component::numIPorts()
+{
   return iports.size();
 }
 
 int 
-Component::numOPorts(){
+Component::numOPorts()
+{
   return oports.size();
 }
 
 bool
-Component::isThreadedUI(){
+Component::isThreadedUI()
+{
   return new_ui_thread;
 }
 
-
-
 InPort* 
-Component::getIPort(unsigned int index){
+Component::getIPort(unsigned int index)
+{
   if(index>iports.size()) return 0;
   return iports[index];
 }
 
 OutPort* 
-Component::getOPort(unsigned int index){
+Component::getOPort(unsigned int index)
+{
   if(index>oports.size()) return 0;
   return oports[index];
 }
 
 int 
-Component::popupUI(){
+Component::popupUI()
+{
   return 0;
 }
+
+} // end namespace SCIRun::vtk
+} // end namespace SCIRun

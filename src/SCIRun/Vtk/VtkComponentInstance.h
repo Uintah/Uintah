@@ -49,21 +49,40 @@
 #include <vector>
 
 namespace SCIRun {
-  class CCAPortInstance;
-  class Module;
-  class VtkComponentInstance : public ComponentInstance {
-  public:
-    VtkComponentInstance(SCIRunFramework* fwk,
-			    const std::string& instanceName,
-			    const std::string& className,
-			    vtk::Component * component);
-    virtual ~VtkComponentInstance();
 
-    // Methods from ComponentInstance
-    virtual PortInstance* getPortInstance(const std::string& name);
-    virtual PortInstanceIterator* getPorts();
-    vtk::Component* getComponent() {
-      return component;
+class CCAPortInstance;
+class Module;
+
+/**
+ * \class VtkComponentInstance
+ *
+ * A handle to an instantiation of a Vtk component in the SCIRun framework.  This
+ * class is a container for information necessary to interact with an
+ * instantiation of a Vtk component such as its unique instance name, its
+ * type, its ports, and the framework to which it belongs.
+ *
+ */
+class VtkComponentInstance : public ComponentInstance {
+public:
+  /** Constructor specifies the SCIRunFramework to which this instance belongs
+      (\em fwk), the unique \em instanceName of the component instance, and a
+      pointer to an allocated vtk::Component object.*/
+  VtkComponentInstance(SCIRunFramework* fwk,
+                       const std::string& instanceName,
+                       const std::string& className,
+                       vtk::Component * component);
+  virtual ~VtkComponentInstance();
+  
+  // Methods from ComponentInstance
+  /** Returns a pointer to the port named \em name.  If no such port exists in
+      this component, returns a null pointer. */
+  virtual PortInstance* getPortInstance(const std::string& name);
+  /** Returns the list of ports associated with this component. */
+  virtual PortInstanceIterator* getPorts();
+
+  /** Returns a pointer to the vtk::Component referenced by this class */
+  vtk::Component* getComponent() {
+    return component;
     }
   private:
     class Iterator : public PortInstanceIterator {
