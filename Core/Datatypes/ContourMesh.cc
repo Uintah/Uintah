@@ -128,6 +128,8 @@ ContourMesh::io(Piostream& stream)
 {
   stream.begin_class(type_name().c_str(), CONTOURMESH_VERSION);
 
+  MeshBase::io(stream);
+
   // IO data members, in order
   Pio(stream,nodes_);
   Pio(stream,edges_);

@@ -712,6 +712,7 @@ TetVolMesh::io(Piostream &stream)
   stream.begin_class(type_id.type.c_str(), TETVOLMESH_VERSION);
 
   MeshBase::io(stream);
+
   Pio(stream, points_);
   Pio(stream, cells_);
   Pio(stream, neighbors_);
