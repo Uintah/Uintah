@@ -27,8 +27,11 @@ ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
 $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ApplyFEMCurrentSource.tcl\
+	$(SRCDIR)/ApplyFEMVoltageSource.tcl\
 	$(SRCDIR)/ConductivitySearch.tcl\
+	$(SRCDIR)/ConfigureElectrode.tcl\
 	$(SRCDIR)/DipoleSearch.tcl\
+	$(SRCDIR)/InsertVoltageSource.tcl\
 	$(SRCDIR)/ModifyConductivities.tcl\
 	$(SRCDIR)/SetupFEMatrix.tcl\
 	$(SRCDIR)/ShowDipoles.tcl\

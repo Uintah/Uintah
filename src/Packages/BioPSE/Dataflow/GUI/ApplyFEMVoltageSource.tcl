@@ -16,7 +16,7 @@
 #
 
 ##
- #  SetupFEMatrix.tcl
+ #  ApplyFEVoltageSource.tcl
  #  Written by:
  #   David Weinstein
  #   Department of Computer Science
@@ -25,17 +25,17 @@
  #  Copyright (C) 1996 SCI Group
  ##
 
-catch {rename BioPSE_Forward_SetupFEMatrix ""}
+catch {rename BioPSE_Forward_ApplyFEMVoltageSource ""}
 
-itcl_class BioPSE_Forward_SetupFEMatrix {
+itcl_class BioPSE_Forward_ApplyFEMVoltageSource {
     inherit Module
     constructor {config} {
-        set name SetupFEMatrix
+        set name ApplyFEMVoltageSource
         set_defaults
     }
     method set_defaults {} {
-	global $this-UseCondTCL
-	set $this-UseCondTCL 1
+        global $this-bcFlag
+        set $this-bcFlag none
     }
     method ui {} {
         set w .ui[modname]
@@ -43,14 +43,17 @@ itcl_class BioPSE_Forward_SetupFEMatrix {
             raise $w
             return;
         }
-
         toplevel $w
         wm minsize $w 150 20
         frame $w.f
         pack $w.f -padx 2 -pady 2 -side top -expand yes
-	global $this-UseCondTCL
-	checkbutton $w.f.b -text "Use Conductivities" -variable $this-UseCondTCL -onvalue 1 -offvalue 0
-	pack $w.f.b -side top -expand 1 -fill x
+        global $this-bcFlag
+        make_labeled_radio $w.f.r "Boundary Conditions:" "" \
+                left $this-bcFlag \
+                {{"Apply Dirichlet" DirSub}
+                {"Ground Node Zero" GroundZero}
+                {"No Dirichlet" none}}
+	pack $w.f.r -side top -expand 1 -fill x
 	pack $w.f -expand 1 -fill x
     }
 }

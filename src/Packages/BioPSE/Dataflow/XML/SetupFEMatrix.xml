@@ -87,17 +87,11 @@
 	</description>
 	<datatype>SCIRun::Field</datatype>
       </port>
-      <port>
-	<name>Interpolant</name>
-	<description>
-	</description>
-	<datatype>SCIRun::Field</datatype>
-      </port>
     </inputs>
     <outputs>
       <!-- one of (device port file) -->
       <port>
-	<name>FEM Matrix</name>
+	<name>Stiffness Matrix</name>
 	<description>
 	  <p>Sends a handle to the sparse matrix obtained from
 	  discretization of the problem by finite elements</p>
@@ -108,23 +102,6 @@
 	</description>
 	<datatype>SCIRun::Matrix</datatype>
       </port>
-      <port>
-	<name>RHS</name>
-	<description>
-	  <p>Sends a handle to the column matrix represention
-	  right-hand side of the discretization problem. It contains
-	  adjustments obtained from Dirichlet boundary conditions. Any
-	  addition of sources to the RHS is done in
-	  Forward::ApplyCurrentSource module</p>
-	  <note>
-	    <p>The handle is to base class of SparseRowMatrix, namely,
-	    Matrix</p>
-	  </note>
-	</description>
-	<datatype>SCIRun::Matrix</datatype>
-	
-      </port>
-
     </outputs>
   </io>
   <gui>
