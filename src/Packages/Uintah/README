@@ -27,3 +27,25 @@ _RLD64_ROOT essentially wipes out the original library path and LD_LIBRARY64_PAT
 sets the path where you want the executable to look.  Don't run any other
 applications from this terminal since you've wiped out their library paths.
 Compile and run your suspect code in a different terminal.
+
+
+______________________________________________________________________
+MOVING SUS TO n02
+
+Here are the details on getting a locally compiled sus to 
+run at LANL.  Basically, you scp down sus, puda, compare_uda, 
+set the environmental variable LD_LIBRARY64_PATH and away you go.
+
+____________Details______________
+On n02:
+
+mkdir remotely_built
+cd remotely_built
+scp    harman@fin.mech.utah.edu:/usr/people/harman/Csafe/SCIRun/src/Packages/Uintah/StandAlone/sus" .
+scp -r harman@fin.mech.utah.edu:/usr/people/harman/Csafe/SCIRun/src/lib  .
+scp -r harman@fin.mech.utah.edu:/usr/people/harman/Csafe/SCIRun/src/Packages/Uintah/StandAlone/inputs .
+scp    harman@fin.mech.utah.edu:/usr/people/harman/Csafe/SCIRun/src/Packages/Uintah/StandAlone/compare_uda .
+scp    harman@fin.mech.utah.edu:/usr/people/harman/Csafe/SCIRun/src/Packages/Uintah/StandAlone/puda .
+setenv LD_LIBRARY64_PATH /users/tbh/Csafe/remotely_built/lib:/usr/projects/Uintah/SCIRun_Thirdparty_64/lib:$LD_LIBRARY64_PATH
+
+At this point sus, puda and compare_uda should be working.
