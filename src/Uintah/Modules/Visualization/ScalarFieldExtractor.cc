@@ -80,9 +80,9 @@ ScalarFieldExtractor::ScalarFieldExtractor(const clString& id)
 { 
   //////////// Initialization code goes here
   // Create Ports
-  in=new ArchiveIPort(this, "Data Archive",
+  in=scinew ArchiveIPort(this, "Data Archive",
 		      ArchiveIPort::Atomic);
-  sfout=new ScalarFieldOPort(this, "ScalarField", ScalarFieldIPort::Atomic);
+  sfout=scinew ScalarFieldOPort(this, "ScalarField", ScalarFieldIPort::Atomic);
 
   // Add them to the Module
   add_iport(in);
@@ -219,7 +219,6 @@ void ScalarFieldExtractor::execute()
     case TypeDescription::double_type:
       {
 	NCScalarField<double> *sfd  = scinew NCScalarField<double>();
-	NCVariable< double > sv;
 	
 	if(var != ""){
 	  sfd->SetGrid( grid );
@@ -229,6 +228,7 @@ void ScalarFieldExtractor::execute()
 	  // iterate over patches
 	  for(Level::const_patchIterator r = level->patchesBegin();
 	      r != level->patchesEnd(); r++ ){
+	    NCVariable< double > sv;
 	    archive.query(sv, var, mat, *r, time);
 	    sfd->AddVar( sv, *r );
 	  }
@@ -240,7 +240,6 @@ void ScalarFieldExtractor::execute()
     case TypeDescription::int_type:
       {
 	NCScalarField<int> *sfd  = scinew NCScalarField<int>();
-	NCVariable< int > sv;
 	
 	if(var != ""){
 	  sfd->SetGrid( grid );
@@ -250,6 +249,7 @@ void ScalarFieldExtractor::execute()
 	  // iterate over patches
 	  for(Level::const_patchIterator r = level->patchesBegin();
 	      r != level->patchesEnd(); r++ ){
+	    NCVariable< int > sv;
 	    archive.query(sv, var, mat, (*r), time);
 	    sfd->AddVar( sv, *r );
 	  }
@@ -261,7 +261,6 @@ void ScalarFieldExtractor::execute()
     case TypeDescription::long_type:
       {
 	NCScalarField<long int> *sfd  = scinew NCScalarField<long int>();
-	NCVariable< long int > sv;
 	
 	if(var != ""){
 	  sfd->SetGrid( grid );
@@ -271,6 +270,7 @@ void ScalarFieldExtractor::execute()
 	  // iterate over patches
 	  for(Level::const_patchIterator r = level->patchesBegin();
 	      r != level->patchesEnd(); r++ ){
+	    NCVariable< long int > sv;
 	    archive.query(sv, var, mat, (*r), time);
 	    sfd->AddVar( sv, *r );
 	  }
@@ -289,7 +289,6 @@ void ScalarFieldExtractor::execute()
     case TypeDescription::double_type:
       {
 	CCScalarField<double> *sfd  = scinew CCScalarField<double>();
-	CCVariable< double > sv;
 	
 	if(var != ""){
 	  sfd->SetGrid( grid );
@@ -300,6 +299,7 @@ void ScalarFieldExtractor::execute()
 	  // iterate over patches
 	  for(Level::const_patchIterator r = level->patchesBegin();
 	      r != level->patchesEnd(); r++ ){
+	    CCVariable< double > sv;
 	    archive.query(sv, var, mat, (*r), time);
 	    sfd->AddVar( sv, *r );
 	  }
@@ -311,7 +311,6 @@ void ScalarFieldExtractor::execute()
     case TypeDescription::int_type:
       {
 	CCScalarField<int> *sfd  = scinew CCScalarField<int>();
-	CCVariable< int > sv;
 	
 	if(var != ""){
 	  sfd->SetGrid( grid );
@@ -322,6 +321,7 @@ void ScalarFieldExtractor::execute()
 	  // iterate over patches
 	  for(Level::const_patchIterator r = level->patchesBegin();
 	      r != level->patchesEnd(); r++ ){
+	    CCVariable< int > sv;
 	    archive.query(sv, var, mat, (*r), time);
 	    sfd->AddVar( sv, *r );
 	  }
@@ -333,7 +333,6 @@ void ScalarFieldExtractor::execute()
     case TypeDescription::long_type:
       {
 	CCScalarField<long int> *sfd  = scinew CCScalarField<long int>();
-	CCVariable< long int > sv;
 	
 	if(var != ""){
 	  sfd->SetGrid( grid );
@@ -344,6 +343,7 @@ void ScalarFieldExtractor::execute()
 	  // iterate over patches
 	  for(Level::const_patchIterator r = level->patchesBegin();
 	      r != level->patchesEnd(); r++ ){
+	    CCVariable< long int > sv;
 	    archive.query(sv, var, mat, (*r), time);
 	    sfd->AddVar( sv, *r );
 	  }
