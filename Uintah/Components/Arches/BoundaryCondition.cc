@@ -71,6 +71,8 @@ BoundaryCondition::BoundaryCondition(TurbulenceModel* turb_model,
 				    CCVariable<double>::getTypeDescription() );
   d_wVelocityINLabel = scinew VarLabel("wVelocityIN", 
 				    CCVariable<double>::getTypeDescription() );
+  d_scalarINLabel = scinew VarLabel("scalarIN",
+				    CCVariable<double>::getTypeDescription() );
 
   // The internal labels for computations
   // 1) The labels computed by setProfile (SP)
@@ -149,8 +151,6 @@ BoundaryCondition::BoundaryCondition(TurbulenceModel* turb_model,
 				    CCVariable<double>::getTypeDescription() );
 
   // 6) The labels used/computed by scalarBC
-  d_scalarINLabel = scinew VarLabel("scalarIN",
-				    CCVariable<double>::getTypeDescription() );
   d_scalCoefSBLMLabel = scinew VarLabel("scalCoefSBLM", 
 				    CCVariable<double>::getTypeDescription() );
 
@@ -613,15 +613,15 @@ BoundaryCondition::sched_computePressureBC(const LevelP& level,
       int matlIndex = 0;
 
       // This task requires old density, pressure and velocity
-      tsk->requires(old_dw, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(new_dw, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_pressurePSLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(new_dw, d_pressurePSLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_uVelocitySIVBCLabel, matlIndex, patch, 
+      tsk->requires(new_dw, d_uVelocitySIVBCLabel, matlIndex, patch, 
 		    Ghost::None, numGhostCells);
-      tsk->requires(old_dw, d_vVelocitySIVBCLabel, matlIndex, patch, 
+      tsk->requires(new_dw, d_vVelocitySIVBCLabel, matlIndex, patch, 
 		    Ghost::None, numGhostCells);
-      tsk->requires(old_dw, d_wVelocitySIVBCLabel, matlIndex, patch, 
+      tsk->requires(new_dw, d_wVelocitySIVBCLabel, matlIndex, patch, 
 		    Ghost::None, numGhostCells);
 
       // This task computes new uVelocity, vVelocity and wVelocity
@@ -1186,7 +1186,7 @@ BoundaryCondition::scalarBC(const ProcessorGroup*,
   // get cellType, pressure and pressure stencil coeffs
   old_dw->get(cellType, d_cellTypeLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  old_dw->get(scalar, d_scalarINLabel, index, patch, Ghost::None,
+  old_dw->get(scalar, d_scalarSPLabel, index, patch, Ghost::None,
 	      nofGhostCells);
   // ** WARNING ** have to figure out a way to read the stencils
   //               currently overwriting scalarCoef[ii] each time
@@ -1604,6 +1604,10 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.27  2000/06/21 07:50:59  bbanerje
+// Corrected new_dw, old_dw problems, commented out intermediate dw (for now)
+// and made the stuff go through schedule_time_advance.
+//
 // Revision 1.26  2000/06/21 06:49:21  bbanerje
 // Straightened out some of the problems in data location .. still lots to go.
 //

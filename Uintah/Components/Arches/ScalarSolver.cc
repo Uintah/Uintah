@@ -42,7 +42,7 @@ ScalarSolver::ScalarSolver(TurbulenceModel* turb_model,
 {
   // BB : **WARNING** velocity is set as CCVariable (should be FCVariable)
   // Change them to FCVariables and then remove this comment
-  d_scalarINLabel = scinew VarLabel("scalarIN",
+  d_scalarSPLabel = scinew VarLabel("scalarSP",
 				CCVariable<double>::getTypeDescription() );
   d_uVelocityMSLabel = scinew VarLabel("uVelocityMS",
 				CCVariable<double>::getTypeDescription() );
@@ -114,18 +114,20 @@ ScalarSolver::solve(const LevelP& level,
   //create a new data warehouse to store matrix coeff
   // and source terms. It gets reinitialized after every 
   // pressure solve.
-  DataWarehouseP matrix_dw = sched->createDataWarehouse(d_generation);
-  ++d_generation;
+  //DataWarehouseP matrix_dw = sched->createDataWarehouse(d_generation);
+  //++d_generation;
 
   //computes stencil coefficients and source terms
-  // requires : scalarIN, [u,v,w]VelocityMS, densitySIVBC, viscosityCTS
+  // requires : scalarSP, [u,v,w]VelocityMS, densitySIVBC, viscosityCTS
   // computes : scalarCoefSBLM, scalarLinSrcSBLM, scalarNonLinSrcSBLM
-  sched_buildLinearMatrix(level, sched, new_dw, matrix_dw, delta_t, index);
+  //sched_buildLinearMatrix(level, sched, new_dw, matrix_dw, delta_t, index);
+  sched_buildLinearMatrix(level, sched, old_dw, new_dw, delta_t, index);
     
   // Schedule the scalar solve
-  // require : scalarIn, scalCoefSBLM, scalNonLinSrcSBLM
+  // require : scalarSP, scalCoefSBLM, scalNonLinSrcSBLM
   // compute : scalResidualSS, scalCoefSS, scalNonLinSrcSS, scalarSS
-  d_linearSolver->sched_scalarSolve(level, sched, new_dw, matrix_dw, index);
+  //d_linearSolver->sched_scalarSolve(level, sched, new_dw, matrix_dw, index);
+  d_linearSolver->sched_scalarSolve(level, sched, old_dw, new_dw, index);
     
 }
 
@@ -157,15 +159,15 @@ ScalarSolver::sched_buildLinearMatrix(const LevelP& level,
       int matlIndex = 0;
 
       // This task requires
-      tsk->requires(old_dw, d_scalarINLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_scalarSPLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_uVelocityMSLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(new_dw, d_uVelocityMSLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_vVelocityMSLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(new_dw, d_vVelocityMSLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_wVelocityMSLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(new_dw, d_wVelocityMSLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(new_dw, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
       tsk->requires(old_dw, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
@@ -194,37 +196,41 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				     double delta_t, int index)
 {
   // compute ith componenet of velocity stencil coefficients
-  // inputs : scalarIN, [u,v,w]VelocityMS, densitySIVBC, viscosityCTS
+  // inputs : scalarSP, [u,v,w]VelocityMS, densitySIVBC, viscosityCTS
   // outputs: scalCoefSBLM
   d_discretize->calculateScalarCoeff(pc, patch, old_dw, new_dw, 
 				     delta_t, index);
 
   // Calculate scalar source terms
-  // inputs : [u,v,w]VelocityMS, scalarIN, densitySIVBC, viscosityCTS
+  // inputs : [u,v,w]VelocityMS, scalarSP, densitySIVBC, viscosityCTS
   // outputs: scalLinSrcSBLM, scalNonLinSrcSBLM
   d_source->calculateScalarSource(pc, patch, old_dw, new_dw, 
 				  delta_t, index);
 
   // Calculate the scalar boundary conditions
-  // inputs : scalarIN, scalCoefSBLM
+  // inputs : scalarSP, scalCoefSBLM
   // outputs: scalCoefSBLM
   d_boundaryCondition->scalarBC(pc, patch, old_dw, new_dw, index);
 
   // similar to mascal
   // inputs :
   // outputs:
-  d_source->modifyScalarMassSource(pc, patch, old_dw,
+  d_source->modifyScalarMassSource(pc, patch, new_dw,
 				   new_dw, delta_t, index);
 
   // Calculate the scalar diagonal terms
   // inputs : scalCoefSBLM, scalLinSrcSBLM
   // outputs: scalCoefSBLM
-  d_discretize->calculateScalarDiagonal(pc, patch, old_dw,
+  d_discretize->calculateScalarDiagonal(pc, patch, new_dw,
 				     new_dw, index);
 }
 
 //
 // $Log$
+// Revision 1.11  2000/06/21 07:51:01  bbanerje
+// Corrected new_dw, old_dw problems, commented out intermediate dw (for now)
+// and made the stuff go through schedule_time_advance.
+//
 // Revision 1.10  2000/06/21 06:12:12  bbanerje
 // Added missing VarLabel* mallocs .
 //

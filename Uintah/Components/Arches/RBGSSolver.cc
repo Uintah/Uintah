@@ -92,7 +92,7 @@ RBGSSolver::RBGSSolver()
 				    CCVariable<double>::getTypeDescription() );
 
   // Momentum Solve Requires/Computes
-  d_scalarINLabel = scinew VarLabel("scalarIN",
+  d_scalarSPLabel = scinew VarLabel("scalarSP",
 				    CCVariable<double>::getTypeDescription() );
   d_scalCoefSBLMLabel = scinew VarLabel("scalCoefSBLM",
 				    CCVariable<double>::getTypeDescription() );
@@ -418,7 +418,7 @@ RBGSSolver::sched_scalarSolve(const LevelP& level,
       int matlIndex = 0;
 
       // coefficient for the variable for which solve is invoked
-      tsk->requires(old_dw, d_scalarINLabel, index, patch, Ghost::None,
+      tsk->requires(old_dw, d_scalarSPLabel, index, patch, Ghost::None,
 		    numGhostCells);
       tsk->requires(new_dw, d_scalCoefSBLMLabel, index, patch, Ghost::None,
 		    numGhostCells);
@@ -439,7 +439,7 @@ RBGSSolver::sched_scalarSolve(const LevelP& level,
 
       // coefficient for the variable for which solve is invoked
       // not sure if the var is of type CCVariable or FCVariable
-      tsk->requires(old_dw, d_scalarINLabel, index, patch, Ghost::None,
+      tsk->requires(old_dw, d_scalarSPLabel, index, patch, Ghost::None,
 		    numGhostCells);
       tsk->requires(new_dw, d_scalCoefSBLMLabel, index, patch, Ghost::None,
 		    numGhostCells);
@@ -464,7 +464,7 @@ RBGSSolver::sched_scalarSolve(const LevelP& level,
 
       // coefficient for the variable for which solve is invoked
       // not sure if the var is of type CCVariable or FCVariable
-      tsk->requires(old_dw, d_scalarINLabel, index, patch, Ghost::None,
+      tsk->requires(old_dw, d_scalarSPLabel, index, patch, Ghost::None,
 		    numGhostCells);
       tsk->requires(new_dw, d_scalCoefSSLabel, index, patch, Ghost::None,
 		    numGhostCells);
@@ -795,7 +795,7 @@ RBGSSolver::scalar_underrelax(const ProcessorGroup* ,
 
   // Get the scalar from the old DW and scalar coefficients and non-linear
   // source terms from the new DW
-  old_dw->get(scalar, d_scalarINLabel, index, patch, Ghost::None,
+  old_dw->get(scalar, d_scalarSPLabel, index, patch, Ghost::None,
 	      numGhostCells);
 
   // ** WARNING ** scalarCoeff is not being read in corrctly .. may
@@ -847,7 +847,7 @@ RBGSSolver::scalar_lisolve(const ProcessorGroup* ,
 
   // Get the scalar from the old DW and scalar coefficients and non-linear
   // source terms from the new DW
-  old_dw->get(scalar, d_scalarINLabel, index, patch, Ghost::None,
+  old_dw->get(scalar, d_scalarSPLabel, index, patch, Ghost::None,
 	      numGhostCells);
 
   // ** WARNING ** scalarCoeff is not being read in corrctly .. may
@@ -887,6 +887,10 @@ RBGSSolver::scalar_residCalculation(const ProcessorGroup* ,
 
 //
 // $Log$
+// Revision 1.9  2000/06/21 07:51:01  bbanerje
+// Corrected new_dw, old_dw problems, commented out intermediate dw (for now)
+// and made the stuff go through schedule_time_advance.
+//
 // Revision 1.8  2000/06/18 01:20:16  bbanerje
 // Changed names of varlabels in source to reflect the sequence of tasks.
 // Result : Seg Violation in addTask in MomentumSolver

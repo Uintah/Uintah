@@ -210,7 +210,7 @@ private:
       const VarLabel* d_wVelLinSrcMBLMLabel;
 
       // Input/output for calculateScalarCoeff
-      const VarLabel* d_scalarINLabel;
+      const VarLabel* d_scalarSPLabel;
       const VarLabel* d_uVelocityMSLabel;
       const VarLabel* d_vVelocityMSLabel;
       const VarLabel* d_wVelocityMSLabel;
@@ -227,6 +227,10 @@ private:
   
 //
 // $Log$
+// Revision 1.18  2000/06/21 07:51:00  bbanerje
+// Corrected new_dw, old_dw problems, commented out intermediate dw (for now)
+// and made the stuff go through schedule_time_advance.
+//
 // Revision 1.17  2000/06/18 01:20:15  bbanerje
 // Changed names of varlabels in source to reflect the sequence of tasks.
 // Result : Seg Violation in addTask in MomentumSolver

@@ -262,7 +262,7 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     // Calculate Velocity source
     //  inputs : [u,v,w]VelocitySIVBC, densitySIVBC, viscosityCTS
     //  outputs: [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
-    d_source->calculateVelocitySource(pc, patch, old_dw, new_dw, 
+    d_source->calculateVelocitySource(pc, patch, new_dw, new_dw, 
 				      delta_t, index,
 				      Discretization::PRESSURE);
 
@@ -271,19 +271,19 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
     //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
     //  outputs: [u,v,w]VelCoefPBLM, [u,v,w]VelLinSrcPBLM, 
     //           [u,v,w]VelNonLinSrcPBLM
-    d_boundaryCondition->velocityBC(pc, patch, old_dw, new_dw, 
+    d_boundaryCondition->velocityBC(pc, patch, new_dw, new_dw, 
 				    index,
 				    Discretization::PRESSURE);
 
     // Modify Velocity Mass Source
     //  inputs :
     //  outputs:
-    d_source->modifyVelMassSource(pc, patch, old_dw, new_dw, delta_t, index);
+    d_source->modifyVelMassSource(pc, patch, new_dw, new_dw, delta_t, index);
 
     // Calculate Velocity diagonal
     //  inputs : [u,v,w]VelCoefPBLM, [u,v,w]VelLinSrcPBLM
     //  outputs: [u,v,w]VelCoefPBLM
-    d_discretize->calculateVelDiagonal(pc, patch, old_dw, new_dw, 
+    d_discretize->calculateVelDiagonal(pc, patch, new_dw, new_dw, 
 				       index,
 				       Discretization::PRESSURE);
   }
@@ -335,6 +335,10 @@ PressureSolver::normPressure(const Patch* ,
 
 //
 // $Log$
+// Revision 1.24  2000/06/21 07:51:00  bbanerje
+// Corrected new_dw, old_dw problems, commented out intermediate dw (for now)
+// and made the stuff go through schedule_time_advance.
+//
 // Revision 1.23  2000/06/21 06:49:21  bbanerje
 // Straightened out some of the problems in data location .. still lots to go.
 //
