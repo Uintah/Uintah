@@ -117,14 +117,21 @@ void ICE::scheduleUpdatePressure(  SchedulerP& sched,
   t->requires(Task::OldDW,         lb->press_CCLabel,        press_matl,oims,gn);
   t->requires(Task::NewDW,         lb->imp_delPLabel,        press_matl,oims,gn);
 
+/*`==========TESTING==========*/
   if(d_usingLODI) {
-    t->requires(Task::ParentNewDW,   lb->gammaLabel,        ice_matls, gn);
-    t->requires(Task::ParentNewDW,   lb->specific_heatLabel,ice_matls, gn);
-    t->requires(Task::ParentOldDW,   lb->temp_CCLabel,      ice_matls, gn);      
-    t->requires(Task::ParentNewDW, MIlb->temp_CCLabel,      mpm_matls, gn);      
-    t->requires(Task::ParentNewDW,   lb->f_theta_CCLabel,              gn);
-  }
-
+    t->requires(Task::ParentOldDW, lb->vel_CCLabel,        ice_matls, gn);
+    t->requires(Task::ParentNewDW, lb->speedSound_CCLabel, ice_matls, gn);
+    t->requires(Task::ParentNewDW, lb->rho_CCLabel,        ice_matls, gn);
+     
+    vector<Patch::FaceType>::iterator f ;  // MaxMach
+    for( f = d_Lodi_variable_basket->LodiFaces.begin();
+         f !=d_Lodi_variable_basket->LodiFaces.end(); ++f) {
+      VarLabel* V_Label = getMaxMach_face_VarLabel(*f);
+      t->requires(Task::ParentNewDW,V_Label, ice_matls);
+    }
+  } 
+/*===========TESTING==========`*/
+  
   t->computes(lb->press_CCLabel,      press_matl,oims); 
   sched->addTask(t, patches, all_matls);                 
 } 
@@ -262,14 +269,18 @@ void ICE::scheduleImplicitPressureSolve(  SchedulerP& sched,
   // Update Pressure
   t->requires( Task::NewDW, lb->rho_CCLabel,                       gac,1);            
   t->requires( Task::NewDW, lb->press_CCLabel,   press_matl, oims, gac,1);  
-
+  
+/*`==========TESTING==========*/
+  // For Lodi faces require(maxMach_<face>)
   if(d_usingLODI) {
-    t->requires(Task::NewDW,   lb->gammaLabel,        ice_matls, gn);
-    t->requires(Task::NewDW,   lb->specific_heatLabel,ice_matls, gn);
-    t->requires(Task::OldDW,   lb->temp_CCLabel,      ice_matls, gn);    
-    t->requires(Task::NewDW, MIlb->temp_CCLabel,      mpm_matls, gn);    
-    t->requires(Task::NewDW,   lb->f_theta_CCLabel,              gn);
-  }
+    vector<Patch::FaceType>::iterator f ;
+    for( f = d_Lodi_variable_basket->LodiFaces.begin();
+         f !=d_Lodi_variable_basket->LodiFaces.end(); ++f) {
+      VarLabel* V_Label = getMaxMach_face_VarLabel(*f);
+      t->requires(Task::NewDW,V_Label, ice_matls);
+    }
+  } 
+/*===========TESTING==========`*/
   //__________________________________
   // ImplicitVel_FC
   t->requires(Task::OldDW,lb->vel_CCLabel,       ice_matls,  gac,1);    
@@ -628,16 +639,39 @@ void ICE::updatePressure(const ProcessorGroup*,
       } 
     }
 
+/*`==========TESTING==========*/
     //__________________________________
     //  Set Boundary Conditions
     // if LODI are specified then set them.
     Lodi_vars_pressBC* lv = new Lodi_vars_pressBC(numMatls);
     lv->setLodiBcs = true;
     lv->usingLODI = d_usingLODI;
-    if(d_usingLODI) { 
-      lodi_getVars_pressBC(  patch, lv, lb, d_sharedState, 
-                             parent_old_dw, parent_new_dw);
-    } 
+    
+    if(d_usingLODI) {            // this only works for 1 matl!!!!!
+      for(int m = 0; m < numMatls; m++) {
+        Material* matl = d_sharedState->getICEMaterial( m );
+        int indx = matl->getDWIndex();   
+        
+        constCCVariable<double> tmp1, tmp2;
+        parent_old_dw->get(lv->vel_CC, lb->vel_CCLabel,        indx,patch,gn,0); 
+        parent_new_dw->get(tmp1,       lb->speedSound_CCLabel, indx,patch,gn,0); 
+        parent_new_dw->get(tmp2,       lb->rho_CCLabel,        indx,patch,gn,0);
+        new_dw->allocateTemporary(lv->speedSound,patch);
+        new_dw->allocateTemporary(lv->rho_CC,    patch);
+        lv->speedSound.copyData(tmp1);
+        lv->rho_CC.copyData(tmp2);
+         
+       // compute Li 
+        for (int i = 0; i <= 5; i++){ 
+          new_dw->allocateTemporary(lv->Li[i], patch);
+          lv->Li[i].initialize(Vector(-9e30,-9e30,-9e30));
+        } 
+
+        computeLi( lv->Li, lv->rho_CC, press_CC,  lv->vel_CC, lv->speedSound, 
+                   patch, new_dw, d_sharedState, d_Lodi_variable_basket, true);
+      }
+    }  
+/*===========TESTING==========`*/
     
     setBC(press_CC, placeHolder, sp_vol_CC, d_surroundingMatl_indx,
           "sp_vol", "Pressure", patch ,d_sharedState, 0, new_dw, lv);
