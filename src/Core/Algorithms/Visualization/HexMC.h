@@ -185,32 +185,35 @@ template<class Field>
 void
 HexMC<Field>::extract_c( const cell_index_type& cell, double iso )
 {
-  value_type selfvalue;
+  value_type selfvalue, nbrvalue;
   if (!field_->value( selfvalue, cell )) return;
   typename mesh_type::Face::array_type faces;
   mesh_->get_faces(faces, cell);
-  for (unsigned int f=0; f<faces.size(); f++) {
-    cell_index_type nbr_cell;
-    if (mesh_->get_neighbor(nbr_cell, cell, faces[f])) {
-      value_type nbrvalue;
-      if (field_->value( nbrvalue, nbr_cell ) && ( selfvalue > nbrvalue ) &&
-	  (( selfvalue-iso ) * ( nbrvalue-iso ) < 0 )) {
-	node_array_type face_nodes;
-	mesh_->get_nodes(face_nodes, faces[f]);
-	Point p[4];
-	int n;
-	for (n=0; n<4; n++) mesh_->get_center(p[n], face_nodes[n]);
-	triangles_->add(p[0], p[1], p[2]);
-	triangles_->add(p[2], p[3], p[0]);
-	if (build_trisurf_)
+
+  cell_index_type nbr_cell;
+  Point p[4];
+  node_array_type face_nodes;
+  QuadSurfMesh::Node::index_type verts[4];
+  unsigned int f, n;
+  for (f=0; f<faces.size(); f++)
+  {
+    if (mesh_->get_neighbor(nbr_cell, cell, faces[f]) &&
+	field_->value(nbrvalue, nbr_cell) &&
+	(selfvalue > nbrvalue) &&
+	((selfvalue - iso) * (nbrvalue - iso) < 0 ))
+    {
+      mesh_->get_nodes(face_nodes, faces[f]);
+      for (n=0; n<4; n++) { mesh_->get_center(p[n], face_nodes[n]); }
+      triangles_->add(p[0], p[1], p[2]);
+      triangles_->add(p[2], p[3], p[0]);
+
+      if (build_trisurf_)
+      {
+	for (n=0; n<4; n++)
 	{
-	  QuadSurfMesh::Node::index_type verts[4];
-	  for (n=0; n<4; n++)
-	  {
-	    verts[n]=find_or_add_nodepoint(face_nodes[n]);
-	  }
-	  quadsurf_->add_quad(verts[0], verts[1], verts[2], verts[3]);
+	  verts[n]=find_or_add_nodepoint(face_nodes[n]);
 	}
+	quadsurf_->add_quad(verts[0], verts[1], verts[2], verts[3]);
       }
     }
   }
