@@ -223,7 +223,9 @@ proc createConnection { conn { record_undo 0 } { tell_SCIRun 1 } } {
     }
     
     lappend Subnet([oMod conn]_connections) $conn
-    lappend Subnet([iMod conn]_connections) $conn
+    if {![string equal [iMod conn] [oMod conn]] } {
+	lappend Subnet([iMod conn]_connections) $conn
+    }
 
     set connid [makeConnID $conn]
     unsetIfExists Disabled($connid)
