@@ -250,6 +250,7 @@ public:
    //! the variable with.
    virtual void transferFrom(DataWarehouse*, const VarLabel*,
 			     const PatchSubset* patches, const MaterialSubset*,
+                             bool replace = false,
                              const PatchSubset* newPatches = 0);
 
    virtual bool isFinalized() const;
