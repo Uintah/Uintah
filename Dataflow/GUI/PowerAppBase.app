@@ -106,6 +106,8 @@ class PowerAppBase {
 	    "Lists a number of\nstandard viewing\nangles and orientations."
 	set tips(ViewerAutoview) \
 	    "Restores the viewer to\nthe default condition."
+	set tips(ViewerStereo) \
+	    "Puts [appname] into stereo rendering mode.\nSpecial hardware may be neccesary to use\nthis functionality."
 
  	# Attach/Detach Mouseovers
  	set tips(ProcAttachHashes) "Click hash marks to\nattach to Viewer."
@@ -438,28 +440,42 @@ class PowerAppBase {
 	frame $view_opts.eframe -relief groove -borderwidth 2
 	pack $view_opts.eframe -side top -anchor n -padx 4 -pady 4
 	
-	checkbutton $view_opts.eframe.light -text "Lighting" \
+	frame $view_opts.eframe.a 
+	pack $view_opts.eframe.a -side top -anchor n
+	
+	checkbutton $view_opts.eframe.a.light -text "Lighting" \
 	    -variable $mods(Viewer)-ViewWindow_0-global-light \
 	    -command "$mods(Viewer)-ViewWindow_0-c redraw"
-	Tooltip $view_opts.eframe.light $tips(ViewerLighting)
+	Tooltip $view_opts.eframe.a.light $tips(ViewerLighting)
 	
-	checkbutton $view_opts.eframe.fog -text "Fog" \
+	checkbutton $view_opts.eframe.a.fog -text "Fog" \
 	    -variable $mods(Viewer)-ViewWindow_0-global-fog \
 	    -command "$mods(Viewer)-ViewWindow_0-c redraw"
-	Tooltip $view_opts.eframe.fog $tips(ViewerFog)
+	Tooltip $view_opts.eframe.a.fog $tips(ViewerFog)
 	
-	checkbutton $view_opts.eframe.bbox -text "BBox" \
+	checkbutton $view_opts.eframe.a.bbox -text "BBox" \
 	    -variable $mods(Viewer)-ViewWindow_0-global-debug \
 	    -command "$mods(Viewer)-ViewWindow_0-c redraw"
-	Tooltip $view_opts.eframe.bbox $tips(ViewerBBox)
+	Tooltip $view_opts.eframe.a.bbox $tips(ViewerBBox)
+	
+	frame $view_opts.eframe.b
+	pack $view_opts.eframe.b -side top -anchor n
 
-	checkbutton $view_opts.eframe.cull -text "Back Cull" \
+	checkbutton $view_opts.eframe.b.cull -text "Back Cull" \
 	    -variable $mods(Viewer)-ViewWindow_0-global-cull \
 	    -command "$mods(Viewer)-ViewWindow_0-c redraw"
-	Tooltip $view_opts.eframe.cull $tips(ViewerCull)
+	Tooltip $view_opts.eframe.b.cull $tips(ViewerCull)
+
+	checkbutton $view_opts.eframe.b.stereo -text "Stereo" \
+	    -variable $mods(Viewer)-ViewWindow_0-do_stereo \
+	    -command "$mods(Viewer)-ViewWindow_0-c redraw"
+	Tooltip $view_opts.eframe.b.stereo $tips(ViewerStereo)
 	
-	pack $view_opts.eframe.light $view_opts.eframe.fog \
-	    $view_opts.eframe.bbox  $view_opts.eframe.cull\
+	pack $view_opts.eframe.a.light $view_opts.eframe.a.fog \
+	    $view_opts.eframe.a.bbox \
+   	    -side left -anchor n -padx 4 -pady 4
+
+	pack $view_opts.eframe.b.cull $view_opts.eframe.b.stereo \
 	    -side left -anchor n -padx 4 -pady 4
 	
 	
