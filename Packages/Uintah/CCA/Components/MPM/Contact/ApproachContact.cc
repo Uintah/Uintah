@@ -66,29 +66,31 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
 					DataWarehouse* new_dw)
 { 
   typedef IntVector IV;
+  Ghost::GhostType  gan   = Ghost::AroundNodes;
+  Ghost::GhostType  gnone = Ghost::None;
+
   int numMatls = d_sharedState->getNumMPMMatls();
   ASSERTEQ(numMatls, matls->size());
+
+  // Need access to all velocity fields at once
+  StaticArray<constNCVariable<double> >  gmass(numMatls);
+  StaticArray<constNCVariable<double> >  gvolume(numMatls);
+  StaticArray<constNCVariable<double> >  numnearparticles(numMatls);
+  StaticArray<NCVariable<Vector> >       gvelocity(numMatls);
+  StaticArray<NCVariable<Vector> >       gsurfnorm(numMatls);
+  StaticArray<NCVariable<double> >       frictionWork(numMatls);
+  StaticArray<NCVariable<Matrix3> >      gstress(numMatls);
+  StaticArray<NCVariable<double> >       gnormtraction(numMatls);
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z();
 
-    // Need access to all velocity fields at once
-    StaticArray<constNCVariable<double> >  gmass(numMatls);
-    StaticArray<constNCVariable<double> >  gvolume(numMatls);
-    StaticArray<constNCVariable<double> >  numnearparticles(numMatls);
-    StaticArray<NCVariable<Vector> >       gvelocity(numMatls);
-    StaticArray<NCVariable<Vector> >       gsurfnorm(numMatls);
-    StaticArray<NCVariable<double> >       frictionWork(numMatls);
-    StaticArray<NCVariable<Matrix3> >      gstress(numMatls);
-    StaticArray<NCVariable<double> >       gnormtraction(numMatls);
     delt_vartype delT;
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
   
     Vector surnor;
 
-    Ghost::GhostType  gan   = Ghost::AroundNodes;
-    Ghost::GhostType  gnone = Ghost::None;
     // First, calculate the gradient of the mass everywhere
     // normalize it, and stick it in surfNorm
     for(int m=0;m<matls->size();m++){
@@ -119,40 +121,46 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
       		  face <= Patch::endFace; face=Patch::nextFace(face)){
 	Patch::BCType bc_type = patch->getBCType(face);
 
-	if(face==Patch::xminus){
-	  if(bc_type == Patch::Neighbor) { ILOW = low.x(); }
-	  else if(bc_type == Patch::None){ ILOW = low.x()+1; }
-	}
-	if(face==Patch::xplus){
-	  if(bc_type == Patch::Neighbor) { IHIGH = high.x(); }
-	  else if(bc_type == Patch::None){ IHIGH = high.x()-1; }
-	}
-	if(face==Patch::yminus){
-	  if(bc_type == Patch::Neighbor) { JLOW = low.y(); }
-	  else if(bc_type == Patch::None){ JLOW = low.y()+1; }
-	}
-	if(face==Patch::yplus){
-	  if(bc_type == Patch::Neighbor) { JHIGH = high.y(); }
-	  else if(bc_type == Patch::None){ JHIGH = high.y()-1; }
-	}
-	if(face==Patch::zminus){
-	  if(bc_type == Patch::Neighbor) { KLOW = low.z(); }
-	  else if(bc_type == Patch::None){ KLOW = low.z()+1; }
-	}
-	if(face==Patch::zplus){
-	  if(bc_type == Patch::Neighbor) { KHIGH = high.z(); }
-	  else if(bc_type == Patch::None){ KHIGH = high.z()-1; }
-	}
+        switch(face) {
+         case Patch::xminus:
+          if(bc_type == Patch::Neighbor) { ILOW = low.x(); }
+          else if(bc_type == Patch::None){ ILOW = low.x()+1; }
+          break;
+         case Patch::xplus:
+          if(bc_type == Patch::Neighbor) { IHIGH = high.x(); }
+          else if(bc_type == Patch::None){ IHIGH = high.x()-1; }
+          break;
+         case Patch::yminus:
+          if(bc_type == Patch::Neighbor) { JLOW = low.y(); }
+          else if(bc_type == Patch::None){ JLOW = low.y()+1; }
+          break;
+         case Patch::yplus:
+          if(bc_type == Patch::Neighbor) { JHIGH = high.y(); }
+          else if(bc_type == Patch::None){ JHIGH = high.y()-1; }
+          break;
+         case Patch::zminus:
+          if(bc_type == Patch::Neighbor) { KLOW = low.z(); }
+          else if(bc_type == Patch::None){ KLOW = low.z()+1; }
+          break;
+         case Patch::zplus:
+          if(bc_type == Patch::Neighbor) { KHIGH = high.z(); }
+          else if(bc_type == Patch::None){ KHIGH = high.z()-1; }
+          break;
+         default:
+          break;
+        }
       }
 
       // Compute the normals for all of the interior nodes
       for(int i = ILOW; i < IHIGH; i++){
+        int ip = i+1; int im = i-1;
         for(int j = JLOW; j < JHIGH; j++){
+          int jp = j+1; int jm = j-1;
           for(int k = KLOW; k < KHIGH; k++){
 	     surnor = Vector(
-	        -(gmass[m][IV(i+1,j,k)] - gmass[m][IV(i-1,j,k)])/dx.x(),
-         	-(gmass[m][IV(i,j+1,k)] - gmass[m][IV(i,j-1,k)])/dx.y(), 
-	        -(gmass[m][IV(i,j,k+1)] - gmass[m][IV(i,j,k-1)])/dx.z()); 
+                    -(gmass[m][IV(ip,j,k)] - gmass[m][IV(im,j,k)])/dx.x(),
+                    -(gmass[m][IV(i,jp,k)] - gmass[m][IV(i,jm,k)])/dx.y(), 
+                    -(gmass[m][IV(i,j,k+1)] - gmass[m][IV(i,j,k-1)])/dx.z()); 
 	     double length = surnor.length();
 	     if(length>0.0){
 	    	 gsurfnorm[m][IntVector(i,j,k)] = surnor/length;;
@@ -161,17 +169,12 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
         }
       }
 
-
       // Fix the normals on the surface nodes
       for(Patch::FaceType face = Patch::startFace;
       		  face <= Patch::endFace; face=Patch::nextFace(face)){
 	Patch::BCType bc_type = patch->getBCType(face);
-	// First the nodes which border another patch
-	if (bc_type == Patch::Neighbor){
-		// Do nothing, we already got those
-	}
-	// Next the nodes which make up the problem domain boundary
-	else if (bc_type == Patch::None) {
+
+	if (bc_type == Patch::None) {
           int i=0,j=0,k=0;
 	  if(face==Patch::xplus || face==Patch::xminus){
             int I=0;
@@ -179,9 +182,10 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
             if(face==Patch::xplus) { I=high.x()-1; }
             // Faces
             for (j = JLOW; j<JHIGH; j++) {
+              int jp = j+1; int jm = j-1;
               for (k = KLOW; k<KHIGH; k++) {
            	surnor = Vector( 0.0,
-                       -(gmass[m][IV(I,j+1,k)] - gmass[m][IV(I,j-1,k)])/dx.y(),
+                       -(gmass[m][IV(I,jp,k)] - gmass[m][IV(I,jm,k)])/dx.y(),
                        -(gmass[m][IV(I,j,k+1)] - gmass[m][IV(I,j,k-1)])/dx.z());
                 double length = surnor.length();
                 if(length>0.0){
@@ -220,9 +224,10 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
             if(face==Patch::yplus) { J=high.y()-1; }
             // Faces
             for (i = ILOW; i<IHIGH; i++) {
+              int ip = i+1; int im = i-1;
               for (k = KLOW; k<KHIGH; k++) {
 		surnor = Vector(
-	               -(gmass[m][IV(i+1,J,k)] - gmass[m][IV(i-1,J,k)])/dx.x(),
+	               -(gmass[m][IV(ip,J,k)] - gmass[m][IV(im,J,k)])/dx.x(),
 			 0.0,
 		       -(gmass[m][IV(i,J,k+1)] - gmass[m][IV(i,J,k-1)])/dx.z());
 		double length = surnor.length();
@@ -264,9 +269,10 @@ void ApproachContact::exMomInterpolated(const ProcessorGroup*,
             if(face==Patch::zplus) { K=high.z()-1; }
             // Faces
             for (i = ILOW; i<IHIGH; i++) {
+              int ip = i+1; int im = i-1;
               for (j = JLOW; j<JHIGH; j++) {
 		surnor = Vector(
-	               -(gmass[m][IV(i+1,j,K)] - gmass[m][IV(i-1,j,K)])/dx.x(),
+	               -(gmass[m][IV(ip,j,K)] - gmass[m][IV(ip,j,K)])/dx.x(),
 	               -(gmass[m][IV(i,j+1,K)] - gmass[m][IV(i,j-1,K)])/dx.y(), 
 	               0.0);
 		double length = surnor.length();
@@ -495,28 +501,28 @@ void ApproachContact::exMomIntegrated(const ProcessorGroup*,
 {
   IntVector onex(1,0,0), oney(0,1,0), onez(0,0,1);
   typedef IntVector IV;
+  Ghost::GhostType  gnone = Ghost::None;
 
   int numMatls = d_sharedState->getNumMPMMatls();
   ASSERTEQ(numMatls, matls->size());
+
+  // Need access to all velocity fields at once, so store in
+  // vectors of NCVariables
+  StaticArray<constNCVariable<double> > gmass(numMatls);
+  StaticArray<constNCVariable<double> > gvolume(numMatls);
+  StaticArray<constNCVariable<double> > numnearparticles(numMatls);
+  StaticArray<NCVariable<Vector> >      gvelocity_star(numMatls);
+  StaticArray<NCVariable<Vector> >      gacceleration(numMatls);
+  StaticArray<constNCVariable<double> > normtraction(numMatls);
+  StaticArray<NCVariable<double> >      frictionWork(numMatls);
+  StaticArray<constNCVariable<Vector> > gsurfnorm(numMatls);    
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     Vector dx = patch->dCell();
     double cell_vol = dx.x()*dx.y()*dx.z();
 
-    // Need access to all velocity fields at once, so store in
-    // vectors of NCVariables
-    StaticArray<constNCVariable<double> > gmass(numMatls);
-    StaticArray<constNCVariable<double> > gvolume(numMatls);
-    StaticArray<constNCVariable<double> > numnearparticles(numMatls);
-    StaticArray<NCVariable<Vector> >      gvelocity_star(numMatls);
-    StaticArray<NCVariable<Vector> >      gacceleration(numMatls);
-    StaticArray<constNCVariable<double> > normtraction(numMatls);
-    StaticArray<NCVariable<double> >      frictionWork(numMatls);
-
     // Retrieve necessary data from DataWarehouse
-    Ghost::GhostType  gnone = Ghost::None;
-    StaticArray<constNCVariable<Vector> > gsurfnorm(numMatls);    
     for(int m=0;m<matls->size();m++){
       int dwi = matls->get(m);
       new_dw->get(gmass[m],       lb->gMassLabel,        dwi, patch, gnone, 0);
