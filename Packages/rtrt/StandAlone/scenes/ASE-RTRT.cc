@@ -216,7 +216,7 @@ extern "C" Scene *make_scene(int argc, char** argv, int)
   
   Color bgcolor(.2,.2,.4);
   
-  Plane groundplane ( Point(0, 0, 0), Vector(1, 0, 0) );
+  rtrt::Plane groundplane ( Point(0, 0, 0), Vector(1, 0, 0) );
   Scene* scene=new Scene(all, cam,
                          bgcolor, groundcolor*bgcolor, bgcolor, groundplane,
                          ambient_scale);
