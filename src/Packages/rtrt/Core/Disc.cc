@@ -34,7 +34,6 @@ void Disc::preprocess(double, int&, int&)
   // Set up unit transformation
   xform.rotate(Vector(0,0,1), n);
   xform.pre_translate(cen.asVector());
-  xform.print();
 }
 
 void Disc::intersect(const Ray& ray, HitInfo& hit, DepthStats*,
