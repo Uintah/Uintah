@@ -119,7 +119,7 @@ void printData(DataArchive* archive, string& variable_name,
   }
   // Print out data
   for(unsigned int i = 0; i < values.size(); i++) {
-    out << values[i] << endl;
+    out << times[i] << ", " << values[i] << endl;
   }
 } 
 
