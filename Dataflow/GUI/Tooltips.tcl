@@ -71,7 +71,7 @@ proc TooltipMultiline { w args } {
     Tooltip $w "$message"
 }
 
-#  TooltipMultiWidget widgets msg
+#  TooltipMultiWidget "widgets" msg
 #
 #     This convenience function creates the same tooltip for multiple
 #     widgets.  "widgets" must be a list of widgets.
