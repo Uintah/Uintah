@@ -119,12 +119,10 @@ color="maroon">
   <b>Figure 1.2.2 Setup using a Borne-style shell (bash, ksh, sh)</b></p>
   </center>
   <div align="left">
-  <br> 
-    
+  </p>
   <p>Having set these environment variables, you are now ready to
-  start SCIRun.   
-  <ol>
-    <p><li value="1.">Change into your SCIRun/linux/ directory, and
+  start SCIRun.</p>   
+    <p><ol><li value="1.">Change into your SCIRun/linux/ directory, and
     enter the command &quot;./scirun&quot;.  SCIRun cannot be run as a background application.  
     <p><li value="2.">The SCIRun NetworkEditor window appears on your
     screen, as shown in 
@@ -165,7 +163,7 @@ indicator to blink.</p>
     <b>Figure 1.3.1, showing drop-down menus that create the FieldReader module</b></p>
     </center>
     <div align="left">
-    <p><br>
+    </p>
 <p>Set the user interface (UI) settings for the FieldReader module:
    <ol>
       <p><li value="1.">Press the UI button on the FieldReader module to launch the file
@@ -264,7 +262,7 @@ indicator to blink.</p>
 
         <br>
     
-    <p>The following data types can be stored in a Field:<br>
+    <p>The following data types are stored in a Field:<br>
     </p>
     <ul>
       <li>tensor
@@ -322,7 +320,7 @@ indicator to blink.</p>
     <p><b>Setting the ShowField User Interface</b></p>
 
     
-    <p>The ShowField module has options for changing the visual representations of a Field's geometry.  For example, in the dataset we have just loaded (using the FieldReader module), you will change the color of the nodes to blue spheres.</p>
+<p>The ShowField module has options for changing the visual representations of a Field's geometry.  For example, in the dataset we have just loaded (using the FieldReader module), you will change the color of the nodes to blue spheres.</p>
  
         
     <p><ol>
@@ -336,18 +334,19 @@ indicator to blink.</p>
 </div>
     <center>
     <p><img height="461" width="450" src="images/figures/1_8.gif"><br>
-    <b>Figure 1.7 SCIRun environment after changing ShowField's Default Color</b></p>
+    <b>Figure 1.7 SCIRun environment after changing ShowField's Default Color</b>
     </center>
-    <div align="left">
-<br>
+    <div align="left"></p>
+
 <p>We will now change the scale and resolution of the nodes.</p>
  
-      <ol><li><p>In the ShowField GUI, a slider widget represents the Node Scale.  You can increase or decrease the Node Scale interval by a power of 10 by pressing the + or - button.  Set the Node Scale to 2.</p>
-<p><li>Set the Cylinder and Sphere Resolution
-	  to 5.</p> 
-      <li><p>Go to the Edges tab and turn off the display of edges by deselecting the Show Edges check box.</p>  
-      <li><p>Go to the Faces tab and repeat the same action.</p>
+
+      <p><ol><li>In the ShowField GUI, a slider widget represents the Node Scale.  You can increase or decrease the Node Scale interval by a power of 10 by pressing the + or - button.  Set the Node Scale to 2.</p>
+<p><li>Set the Cylinder and Sphere Resolution to 5.</p> 
+      <li><p>Go to the Edges tab and turn off the display of edges by deselecting the &quot;Show Edges&quot; check box.</p>  
+      <li><p>Go the the Faces tab and repeat the same action.</p>
       <li><p>Close the ShowField GUI by pressing the Dismiss button.</p></ol>
+      
       <p>The ShowField module is now ready to render the nodes as blue
 	  spheres. The module will Interactively Update, by default, to execute after every change.  Or, you may select the Execute Button Only box to contain all changes until you press the Execute button. Consult the <a HREF="../Guide/usersguide/srug4.html#sec:executenet">
     User's Guide 4.5,
@@ -357,7 +356,9 @@ indicator to blink.</p>
     href="http://www.sci.utah.edu/publications/mcole01/dyn.pdf">Dynamic
     Compilation</a>.
 
+
 <p>In addition, the module will turn a color while it compiles and all output will go to the module's log as a remark.</p>
+
 
     <p><b><A name="section-5">Viewer module</b><br></A>
     
@@ -396,13 +397,12 @@ indicator to blink.</p>
     <p>In the Viewer, you can rotate, scale, and translate the image using your mouse. The <a
     HREF="../Guide/usersguide/srug5.html#sec:view-mouse">User's Guide 5.2,
     Mouse Control in the Viewer</a> 
-	provides more complete information.</p><br>
+	provides more complete information.</p>
 <p><b>Translating the image</b></p>
-    <ol>
-      <p><li> Move the mouse to the center of the image.</p>
+      <p><ol><li> Move the mouse to the center of the image.</p>
       <p><li> Click and hold the left mouse button.</p> 
       <p><li> Move the mouse in order to move the image.</p>  
-      <p><li>Release the button and the image will stay where you have placed it within the ViewWindow.</p></ol><br>
+      <p><li>Release the button and the image will stay where you have placed it within the ViewWindow.</p></ol>
 <p><b>Rotating the image</b></p>
       <ol><p><li> Click and hold the middle mouse button.</p> 
 	<p><li>Move the mouse in order to rotate the image.</p>
@@ -413,7 +413,7 @@ indicator to blink.</p>
     
     <p><b>Scaling the scene</b></p>
 
-    <ol><p><li>Click the right mouse button and drag the mouse.</p>
+    <p><ol><li>Click the right mouse button and drag the mouse.</p>
 <p><li>Move the mouse up or to the left in order to zoom the image out.</p>
 <p><li>Move the mouse down or to the right in order to zoom the image in.</p>
  <p><b>Figure 1.8.1</b> shows the image rotated approximately 90 degrees and scaled. 
@@ -429,16 +429,15 @@ indicator to blink.</p>
     
  
 
-    <p><b><A name="section-8">Setting Visualization Parameters</b><br></A>
+    <p><b><A name="section-8">Setting Visualization Parameters</b></A></p>
     
    
     
     <p>Now we will use the controls at the bottom of the ViewWindow, <b>Figure 1.8.2</b>. Here, you can locate buttons
     for the 
-    following functions:
-    <br>
-    <ul>
-      <p><li>Autoview: restores the display back to its default
+    following functions:</p>
+ 
+      <p><ul><li>Autoview: restores the display back to its default
 	  condition; very useful when first viewing an object or when some
 	  combination of settings results in objects disappearing from the
 	  ViewWindow.</p> 
@@ -447,7 +446,7 @@ indicator to blink.</p>
 	  button.</p>
       <p><li>Go home: restores the current home view.</p>  
       <p><li>Views: lists a number of standard viewing angles and
-	  orientations for you to select.</p>
+	  orientations from which to choose.</p>
     </ul>
   </div>
     <center>
@@ -455,13 +454,14 @@ indicator to blink.</p>
     <b>Figure 1.8.2, basic Viewer controls</b></p>
     </center>
     <div align="left">
-    <p><br>
+    </p>
  </div>
     
            
-    <p>To access even more display options:
+
+    <p>To access even more display options:</p>
     <ul>
-      <p><li>Locate the + button in the lower right corner of the ViewerWindow in order to access the Extended Control Window which contains additional Viewer settings <b>(Figure 1.8.3)</b>, as described in the <a
+      <p><li>Locate the + button in the lower right corner of the ViewWindow in order to access the Extended Control Window which contains additional Viewer settings <b>(Figure 1.8.3)</b>, as described in the <a
 	  HREF="../Guide/usersguide/srug5.html#sec:view-control">User's Guide
 	  5.3, Extended Control Window</a>.</p> 
     </ul> 
@@ -471,7 +471,7 @@ indicator to blink.</p>
     </center>
     <div align="left">
     <p><br>
-  <p>Using the Extended Control Window, you can manipulate various settings for individual objects and see their possible effects.</p><br> 
+  <p>Using the Extended Control Window, you can manipulate various settings for individual objects and see their possible effects.</p>
     
      
     <p><b><A name="section-10">Saving and reloading networks</b><br></A> 
@@ -480,9 +480,10 @@ indicator to blink.</p>
     can now save the net to disk. This net may be reloaded in a future SCIRun
     session. 
 
-    <p>Saving a SCIRun network:
-    <ol>
-      <p><li value="1.">Click on the File menu and select Save As.</p>  
+    <p>Saving a SCIRun network:</p>
+
+
+      <p><ol><li value="1.">Click on the File menu and select Save As.</p>  
       <p><li>When the file browser appears, follow the prompt to choose a
 	  location and filename for your net. By convention, most
 	  nets are stored in the SCIRun/src/nets/ directory, but you can store them in another location.</p>
@@ -493,22 +494,24 @@ indicator to blink.</p>
 <p><b>Please note that we strongly recommend that you frequently save your nets to avoid losing work.</p></b>
 <br> 
 
+
     </div>
     <center>
     <p><img height="216" width="320" src="images/figures/1_11.gif"><br>
     <b>Figure 1.9, &quot;Save As&quot; GUI</b>
     </center>
     <div align="left">
-    </p><br>
-    <ol>
-<p><li>Click the Save button. The network will be saved, and the GUI disappears.</p>
+    </p>
+
+    
+<p><ol><li>Click the Save button. The network will be saved, and the GUI disappears.</p>
       <p><li>Exit SCIRun.</p></ol>
 <p>Loading a SCIRun network:</p>  
-      <ol><p><li>Start SCIRun.</p>
+      <p><ol><li>Start SCIRun.</p>
 <p><li>From the File drop-down menu, select the 
       the Load... option.</p>
       <li>Select SCIRun/src/nets/show-torso-mesh.net. 
-    </ol><br>
+    </p></ol>
     
     </div>
     <center>
@@ -516,7 +519,7 @@ indicator to blink.</p>
     <b>Figure 1.10, GUI for loading a network</b></p>
     </center>
     <div align="left">
-    <p><br>
+    </p>
     </div>
     
     <p>The net should reload into SCIRun, where you previously saved it. If you saved the net with any of the module UIs open, those UIs automatically re-open when you load the net. 
@@ -524,11 +527,11 @@ indicator to blink.</p>
     in the ViewWindow or changing
     the rendering color of the nodes in ShowField), you have
     two options for re-saving the net:</p>
-    <ul>
-      <p><li>Overwrite the existing show-torso-mesh.net file by
+   
+      <p><ol><li>Overwrite the existing show-torso-mesh.net file by
 	  using File/Save from the drop-down menu.</p>  
       <p><li>Or, you can save the net to a new file by using File/Save As...</p>  
-    </ul>
+    </ol>
     
       
     <p><b><H4>Summary</b></H4>
