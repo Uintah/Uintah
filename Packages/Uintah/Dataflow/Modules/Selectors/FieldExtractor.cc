@@ -28,7 +28,6 @@ LOG
     Created January 5, 1999
 ****************************************/
 
-#include <Core/Util/NotFinished.h>
 #include <Packages/Uintah/Core/DataArchive/DataArchive.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
 #include <Core/Malloc/Allocator.h>

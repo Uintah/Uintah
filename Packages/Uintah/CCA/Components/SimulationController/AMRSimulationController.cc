@@ -30,7 +30,6 @@
 #include <TauProfilerForSCIRun.h>
 #include <iostream>
 #include <iomanip>
-#include <values.h>
 
 #ifdef OUTPUT_AVG_ELAPSED_WALLTIME
 #include <list>
