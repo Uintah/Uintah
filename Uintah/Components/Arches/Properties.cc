@@ -43,7 +43,7 @@ Properties::problemSetup(const ProblemSpecP& params)
   // Read the mixing variable streams
   d_numMixingVars = 0;
   for (ProblemSpecP stream_db = db->findBlock("Stream");
-       stream_db != 0; stream_db = params->findNextBlock("Stream")) {
+       stream_db != 0; stream_db = stream_db->findNextBlock("Stream")) {
 
     // Create the stream and add it to the vector
     d_streams.push_back(Stream());
@@ -89,7 +89,7 @@ Properties::computeProps(const ProcessorContext*,
 			 DataWarehouseP& new_dw)
 {
   // Get the CCVariable (density) from the old datawarehouse
-  CCVariable<Vector> density;
+  CCVariable<double> density;
   int matlIndex = 0;
   int nofGhostCells = 0;
   old_dw->get(density, d_densityLabel, matlIndex, patch, Ghost::None,
@@ -100,7 +100,8 @@ Properties::computeProps(const ProcessorContext*,
   IntVector highIndex = patch->getCellHighIndex();
 
   // Create the CCVariable for storing the computed density
-  CCVariable<Vector> new_density;
+  CCVariable<double> new_density;
+  new_dw->allocate(new_density, d_densityLabel, matlIndex, patch);
 
 #ifdef WONT_COMPILE_YET
   // Calculate the properties
@@ -134,6 +135,9 @@ Properties::Stream::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.10  2000/05/31 23:44:52  rawat
+// modified arches and properties
+//
 // Revision 1.9  2000/05/31 20:11:30  bbanerje
 // Cocoon stuff, tasks added to SmagorinskyModel, TurbulenceModel.
 // Added schedule compute of properties and TurbModel to Arches.

@@ -12,7 +12,6 @@
 #include <Uintah/Interface/DataWarehouse.h>
 #include <SCICore/Geometry/Vector.h>
 #include <Uintah/Exceptions/InvalidValue.h>
-#include <Uintah/Grid/Array3.h>
 #include <Uintah/Interface/Scheduler.h>
 #include <Uintah/Grid/Level.h>
 #include <Uintah/Exceptions/InvalidValue.h>
@@ -23,11 +22,16 @@ using SCICore::Geometry::Vector;
 
 BoundaryCondition::BoundaryCondition()
 {
+  //construct 3d array for storing boundary type 
+  //  IntVector lowIndex = (0,0,0);
+  //  cellTypes = scinew Array3<int>(lowIndex, DOMAIN_HIGH);
 }
 
 BoundaryCondition::BoundaryCondition(TurbulenceModel* turb_model)
   :d_turbModel(turb_model)
 {
+  //  IntVector lowIndex = (0,0,0);
+  //  cellTypes = scinew Array3<int>(lowIndex, DOMAIN_HIGH);
 }
 
 BoundaryCondition::~BoundaryCondition()

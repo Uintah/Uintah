@@ -83,6 +83,7 @@ Arches::problemSetup(const ProblemSpecP& params, GridP&,
     throw InvalidValue("Turbulence Model not supported" + turbModel);
   d_turbModel->problemSetup(db);
   d_boundaryCondition = scinew BoundaryCondition(d_turbModel);
+  // send params, boundary type defined at the level of Grid
   d_boundaryCondition->problemSetup(db);
   string nlSolver;
   db->require("nonlinear_solver", nlSolver);
@@ -123,11 +124,27 @@ Arches::scheduleInitialize(const LevelP& level,
 {
   // BB : 5/19/2000 : Start scheduling the initializations one by one
   // Parameter initialization
-  cerr << "Schedule parameter initialization\n" ;
-  sched_paramInit(level, sched, dw);
-  d_props->sched_computeProps(level, sched, dw, dw);
-  d_turbModel->sched_computeTurbSubmodel(level, sched, dw, dw);
-  cerr << "SerialArches::scheduleInitialize not completely done\n";
+  //  cerr << "Schedule parameter initialization\n" ;
+  //  sched_paramInit(level, sched, dw);
+  // cerr << "SerialArches::scheduleInitialize not completely done\n";
+  
+  for(Level::const_patchIterator iter=level->patchesBegin();
+      iter != level->patchesEnd(); iter++){
+    const Patch* patch=*iter;
+    {
+      Task* tsk = new Task("Arches::paramInit",
+			   patch, dw, dw, this,
+			   &Arches::paramInit);
+      cerr << "New task created successfully\n";
+      tsk->computes(dw, d_velocityLabel, 0, patch);
+      tsk->computes(dw, d_pressureLabel, 0, patch);
+      tsk->computes(dw, d_scalarLabel, 0, patch);
+      tsk->computes(dw, d_densityLabel, 0, patch);
+      tsk->computes(dw, d_viscosityLabel, 0, patch);
+      sched->addTask(tsk);
+      cerr << "New task added successfully to scheduler\n";
+    }
+  }
 }
 
 void 
@@ -229,9 +246,8 @@ Arches::paramInit(const ProcessorContext* ,
 
 //
 // $Log$
-// Revision 1.30  2000/05/31 20:11:29  bbanerje
-// Cocoon stuff, tasks added to SmagorinskyModel, TurbulenceModel.
-// Added schedule compute of properties and TurbModel to Arches.
+// Revision 1.31  2000/05/31 23:44:52  rawat
+// modified arches and properties
 //
 // Revision 1.29  2000/05/30 20:18:45  sparker
 // Changed new to scinew to help track down memory leaks

@@ -299,10 +299,13 @@ double  MPMMaterial::getSpecificHeat() const
 
 double  MPMMaterial::getHeatTransferCoefficient() const
 {
-  return d_heatTransferCoefficient;
+  return 0;
 }
 
 // $Log$
+// Revision 1.24  2000/05/31 23:44:54  rawat
+// modified arches and properties
+//
 // Revision 1.23  2000/05/31 21:01:40  tan
 // Added getHeatTransferCoefficient() to retrieve the material
 // constants for heat exchange.

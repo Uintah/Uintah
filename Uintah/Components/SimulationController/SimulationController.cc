@@ -176,7 +176,6 @@ void SimulationController::run()
       d_generation++;
 
       d_dwMpiHandler->registerDW( new_ds );
-
       new_ds->carryForward(old_ds);
       scheduleTimeAdvance(t, delt, level, scheduler, old_ds, new_ds,
 			  cfd, mpm);
@@ -428,6 +427,9 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.27  2000/05/31 23:44:55  rawat
+// modified arches and properties
+//
 // Revision 1.26  2000/05/30 20:19:25  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch
