@@ -11,9 +11,9 @@
 #include <Core/Geometry/Vector.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
-#include <Packages/Uintah/CCA/Components/MPM/Crack/Crack.h>//for Fracture
 #include <Packages/Uintah/Core/Grid/ParticleSet.h>
 #include <Packages/Uintah/Core/Grid/ParticleVariable.h>
+#include <Packages/Uintah/CCA/Components/MPM/Crack/Crack.h>//for Fracture
 
 namespace Uintah {
 
@@ -333,20 +333,19 @@ private:
   void scheduleCalculateDampingRate(SchedulerP&, const PatchSet*,
 				    const MaterialSet*);
 
-  // for Farcture ----------------------------------------------
+  // for Farcture
   void scheduleParticleVelocityField(SchedulerP& sched,
                                      const PatchSet* patches,
                                      const MaterialSet* matls);
   void scheduleCrackAdjustInterpolated(SchedulerP& sched,
                                      const PatchSet* patches,
                                      const MaterialSet* matls);
-  void scheduleCrackAdjustIntegrated(SchedulerP& sched,
+  void scheduleCrackAdjustIntegrated(SchedulerP& sched,    
                                      const PatchSet* patches,
                                      const MaterialSet* matls);
-  void scheduleMoveCrack(SchedulerP& sched,
+  void scheduleMoveCrack(SchedulerP& sched,             
                                      const PatchSet* patches,
                                      const MaterialSet* matls);
-  // ----------------------------------------------------------
 
   FractureMPM(const FractureMPM&);
   FractureMPM& operator=(const FractureMPM&);
