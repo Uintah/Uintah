@@ -73,12 +73,10 @@ MatrixIEPlugin::MatrixIEPlugin(const string& pname,
     fileWriter_(fwriter)
 {
   matrixIEPluginMutex.lock();
-  cout << "registering " << pname << " with extension " << fextension << "\n";
+
   if (!matrix_plugin_table)
   {
-    cout << "Creating the matrix_plugin_table: " << &matrix_plugin_table << "\n";
     matrix_plugin_table = scinew map<string, MatrixIEPlugin *>();
-    cout << "         the matrix_plugin_table is now " << matrix_plugin_table << "\n";
   }
 
   string tmppname = pluginname_;
@@ -89,8 +87,6 @@ MatrixIEPlugin::MatrixIEPlugin(const string& pname,
     if (loc == matrix_plugin_table->end())
     {
       if (tmppname != pluginname_) { ((string)pluginname_) = tmppname; }
-
-      cout << "Adding to table " << matrix_plugin_table << " this: " << pluginname_ << "\n";
 
       (*matrix_plugin_table)[pluginname_] = this;
       break;
@@ -107,8 +103,6 @@ MatrixIEPlugin::MatrixIEPlugin(const string& pname,
     counter++;
   }
 
-  cout << "MatrixIEPlugins: table " << matrix_plugin_table << " size: " << matrix_plugin_table->size() << "\n";
-
   matrixIEPluginMutex.unlock();
 }
 
@@ -124,8 +118,6 @@ MatrixIEPlugin::~MatrixIEPlugin()
   }
 
   matrixIEPluginMutex.lock();
-
-  cout << "MatrixIEPlugins DESTRUCTOR: table " << matrix_plugin_table << " size: " << matrix_plugin_table->size() << ", " << pluginname_ << "\n";
 
   map<string, MatrixIEPlugin *>::iterator iter = matrix_plugin_table->find(pluginname_);
   if (iter == matrix_plugin_table->end())
@@ -165,8 +157,6 @@ MatrixIEPluginManager::get_importer_list(vector<string> &results)
 {
   if (matrix_plugin_table == NULL) return;
 
-  cout << "get_importer_list: table " << matrix_plugin_table << " size: " << matrix_plugin_table->size() << "\n";
-
   matrixIEPluginMutex.lock();
   map<string, MatrixIEPlugin *>::const_iterator itr = matrix_plugin_table->begin();
   while (itr != matrix_plugin_table->end())
@@ -185,8 +175,6 @@ void
 MatrixIEPluginManager::get_exporter_list(vector<string> &results)
 {
   if (matrix_plugin_table == NULL) return;
-
-  cout << "get_exporter_list: table " << matrix_plugin_table << " size: " << matrix_plugin_table->size() << "\n";
 
   matrixIEPluginMutex.lock();
   map<string, MatrixIEPlugin *>::const_iterator itr = matrix_plugin_table->begin();
