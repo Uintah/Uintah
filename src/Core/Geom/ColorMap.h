@@ -61,58 +61,36 @@ namespace SCIRun {
 
 using std::vector;
 
-class SCICORESHARE ColorMap : public Datatype, public GeomColormapInterface {
+class SCICORESHARE ColorMap : public Datatype, public GeomColormapInterface
+{
 public:
-  vector<float>			rawRampAlpha_;
-  vector<float>			rawRampAlphaT_;
-  vector<Color>			rawRampColor_;
-  vector<float>			rawRampColorT_;
-  float*         		rawRGBA_;
-  string			units;
-
-private:
-
-
-  double			min_;
-  double			max_;
-
-  vector<MaterialHandle>	colors_;
-
-  bool				scaled_p_;
-  bool				blend_p_;
-
-public:
-
-  ColorMap();
   ColorMap(const ColorMap&);
-  ColorMap(int nlevels, double min, double max);
 
   ColorMap(const vector<Color>& rgb,
 	   const vector<float>& rgbT,
 	   const vector<float>& alphas,
-	   const vector<float>& alphaT);
+	   const vector<float>& alphaT,
+	   unsigned int resolution = 256);
   virtual ~ColorMap();
   virtual ColorMap*	clone();
 
-  void			SetRaw(const vector<Color>& rgb,
-			       const vector<float>& rgbT,
-			       const vector<float>& alphas,
-			       const vector<float>& alphaT);
 
-  void			Build1d(const int size=256);
+  const vector<Color> &get_rgbs() { return rawRampColor_; }
+  const vector<float> &get_rgbT() { return rawRampColorT_; }
+  const vector<float> &get_alphas() { return rawRampAlpha_; }
+  const vector<float> &get_alphaT() { return rawRampAlphaT_; }
 
-  // are the colors scaled to some data?
-  bool			IsScaled(){ return scaled_p_;} 
-
+  // Functions for handling the color scale of the data.
   void			Scale(double newmin, double newmax)
-  { min_ = newmin; max_ = newmax; scaled_p_ = true;}
-
+  { min_ = newmin; max_ = newmax; }
   void			ResetScale() 
-  { min_ = -1; max_ = 1; scaled_p_ = false; }
+  { min_ = -1.0; max_ = 1.0; }
+  virtual double	getMin() const;
+  virtual double	getMax() const;
 
-  // return the number of color points in the colormap
-  int			size() const { return rawRampColor_.size();}
- 
+  void                  set_units(const string &u) { units_ = u; }
+  string                units() { return units_; }
+
   // Lookup which color value would be associated with in the colormap.
   const MaterialHandle&	lookup(double value) const;
 
@@ -120,18 +98,41 @@ public:
   // to the min/max of the colormap (value should be between 1 and ncolors).
   const MaterialHandle&	lookup2(double value) const;
 
-  virtual double	getMin() const;
-  virtual double	getMax() const;
-  Color			getColor(double t);
+  const Color &		getColor(double t);
   double		getAlpha(double t);
 
-  bool			blend_p() { return blend_p_; }
-  void			set_blend(bool);
+  const float *         get_rgba() { return rawRGBA_; }
+  unsigned int          resolution() { return resolution_; }
 
-  // Persistent representation...
+public:
+
+  // Persistent representation.
   virtual void		io(Piostream&);
   static PersistentTypeID type_id;
+
+private:
+  friend class GeomColorMap;
+
+  ColorMap();
+  void			Build1d();
+
+  static Persistent *maker();
+
+  vector<float>			rawRampAlpha_;
+  vector<float>			rawRampAlphaT_;
+  vector<Color>			rawRampColor_;
+  vector<float>			rawRampColorT_;
+
+  unsigned int                  resolution_;
+  float*         		rawRGBA_;
+  string			units_;
+
+  double			min_;
+  double			max_;
+
+  vector<MaterialHandle>	colors_;
 };
+
 
 typedef LockingHandle<ColorMap> ColorMapHandle;
 

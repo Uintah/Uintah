@@ -1033,7 +1033,7 @@ GeomColorMap::draw(DrawInfoOpenGL* di, Material *m, double time)
     glBindTexture(GL_TEXTURE_1D, di->cmtexture_);
 
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    if (cmap_->blend_p())
+    if (cmap_->resolution_ == 256)
     {
       glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
       glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -1050,7 +1050,8 @@ GeomColorMap::draw(DrawInfoOpenGL* di, Material *m, double time)
     glMatrixMode(GL_TEXTURE);
     glPushMatrix();
 
-    glScaled(1.0 / (cmap_->getMax() - cmap_->getMin()), 1.0, 1.0);
+    const double r = cmap_->resolution_ / 256.0;
+    glScaled(r / (cmap_->getMax() - cmap_->getMin()), 1.0, 1.0);
     glTranslated(-cmap_->getMin(), 0.0, 0.0);
 
     glMatrixMode(GL_MODELVIEW);
@@ -6126,7 +6127,7 @@ void GeomTextTexture::draw(DrawInfoOpenGL* di, Material* matl, double)
 }
 
 
-
+#if 0
 void ColorMapTex::draw(DrawInfoOpenGL* di, Material* matl, double) 
 {
   if(!pre_draw(di, matl, 0)) return;
@@ -6165,6 +6166,8 @@ void ColorMapTex::draw(DrawInfoOpenGL* di, Material* matl, double)
   }
   post_draw(di);
 }
+#endif
+
 
 void HistogramTex::draw(DrawInfoOpenGL* di, Material* matl, double) 
 {

@@ -42,34 +42,21 @@
 #ifndef SCI_COLORMAPTEX_H
 #define SCI_COLORMAPTEX_H 1
 
-#include <Core/Geom/GeomObj.h>
+#include <Core/Geom/GeomContainer.h>
+#include <Core/Geom/ColorMap.h>
 #include <Core/Geometry/Point.h>
 
 namespace SCIRun {
 
-class SCICORESHARE ColorMapTex : public GeomObj {
-  Point a_, b_, c_, d_;
-  float texture_[256*4];
-  int numcolors_;
-  
+class SCICORESHARE ColorMapTex : public GeomContainer {
 public:
   ColorMapTex(const Point &p1, const Point &p2, 
-	      const Point &p3,const Point &p4 );
+	      const Point &p3,const Point &p4,
+	      ColorMapHandle cmap);
   ColorMapTex(const ColorMapTex &);
   virtual ~ColorMapTex();
 
-  void set_texture(float *tex, int w = 256)
-  {
-    numcolors_ = Max(Min(w, 256), 0);
-    memcpy(texture_, tex, sizeof(float) * numcolors_ * 4);
-  }
-  
   virtual GeomObj* clone();
-  virtual void get_bounds(BBox&);
-
-#ifdef SCI_OPENGL
-  virtual void draw(DrawInfoOpenGL*, Material*, double time);
-#endif
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;

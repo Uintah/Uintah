@@ -446,8 +446,19 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
     }
     
     method getColorMapString { } {
-        $this SetColorMap
-        return [join $colorMap]
+	set colors [lindex [lindex $colorMaps [set $this-mapType]] 1]
+	set csize [llength $colors]
+	set scolors [join $colors]
+
+	global $this-positionList
+	global $this-width
+	global $this-height
+	set cw [set $this-width]
+	set ch [set $this-height]
+	set alphas [join [set $this-positionList]]
+	set asize [llength [set $this-positionList]]
+
+        return "$csize $scolors $asize $cw $ch $alphas"
     }
 
     method close {} {

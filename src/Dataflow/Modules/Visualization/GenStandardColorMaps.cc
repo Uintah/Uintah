@@ -79,105 +79,67 @@ namespace SCIRun {
 
 // ---------------------------------------------------------------------- // 
 static bool
-genMap(ColorMapHandle &cmap, const string& s, int res, bool faux)
+genMap(ColorMapHandle &cmap, const string& s, int res, double gamma, bool faux)
 {
-  int r,g,b;
-  double a;
+  unsigned int i;
   istringstream is(s);
   if( is.good() )
   {
-    vector< Color > rgbs(res);
-    vector< float > rgbT(res);
-    vector< float > alphas(res);
-    vector< float > alphaT(res);
-
-    for (int i = 0; i < res; i++)
+    // Slurp in the rgb values.
+    unsigned int rgbsize;
+    is >> rgbsize;
+    vector< Color > rgbs(rgbsize);
+    vector< float > rgbT(rgbsize);
+    for (i = 0; i < rgbsize; i++)
     {
-      is >> r >> g >> b >> a;
+      int r, g, b;
+      is >> r >> g >> b;
       rgbs[i] = Color(r/255.0, g/255.0, b/255.0);
-      rgbT[i] = i/float(res-1);
-      alphas[i] = a;
-      alphaT[i] = i/float(res-1);
-    }
-    if (!res || rgbT[res-1] != 1.0)
-    {
-      rgbT.push_back(1.0);
-    }
-    if (!res || alphaT[res-1] != 1.0)
-    {
-      alphaT.push_back(1.0);
+      rgbT[i] = i/float(rgbsize-1);
     }
 
-    if (faux)
+    // Shift RGB
+    const double bp = 1.0 / tan( M_PI_2 * (0.5 + gamma * 0.5));
+    for (i=0; i < rgbT.size(); i++)
     {
-      vector<int> local0;
-      vector<int> local;
-      if (res > 0) {
-        local0.push_back(0);
-      }
-      for (int i=1; i<res-1; i++) {
-        if ((alphas[i] <= alphas[i-1] && alphas[i] < alphas[i+1])
-            || (alphas[i] < alphas[i-1] && alphas[i] <= alphas[i+1])
-            || (alphas[i] >= alphas[i-1] && alphas[i] > alphas[i+1])
-            || (alphas[i] > alphas[i-1] && alphas[i] >= alphas[i+1])) {
-          local0.push_back(i);
-        }
-      }
-      if (res > 0) {
-        local0.push_back(res-1);
-      }
-
-      bool equal = false;
-      for (int i=0; i<(int)local0.size()-1; i++) {
-        if (equal) {
-          if (alphas[local0[i]] != alphas[local0[i+1]]) {
-            equal = false;
-          }
-        } else {
-          if (alphas[local0[i]] == alphas[local0[i+1]]) {
-            equal = true;
-            local.push_back(local0[i]);
-          } else {
-            local.push_back(local0[i]);
-          }
-        }
-      }
-      if (alphas[local0[local0.size()-1]] == alphas[local[local.size()-1]]) {
-        local[local.size()-1] = local0[local0.size()-1];
-      } else {
-        local.push_back(local0[local0.size()-1]);
-      }
-      
-      for (int i=0; i<(int)local.size()-1; i++) {
-        if (alphas[local[i]] < alphas[local[i+1]]) {
-          for (int j=local[i]; j<local[i+1] + (i+1 == (int)local.size()-1 ? 1 : 0); j++) {
-            float s = alphas[local[i]] +
-              (1 - alphas[local[i]])
-              *(alphas[j]-alphas[local[i]])/(alphas[local[i+1]]-alphas[local[i]]);
-            rgbs[j].r(s*rgbs[j].r());
-            rgbs[j].g(s*rgbs[j].g());
-            rgbs[j].b(s*rgbs[j].b());
-          }
-        } else if (alphas[local[i]] > alphas[local[i+1]]) {
-          for (int j=local[i]; j<local[i+1] + (i+1 == (int)local.size()-1 ? 1 : 0); j++) {
-            float s = alphas[local[i+1]] +
-              (1 - alphas[local[i+1]])
-              *(alphas[j]-alphas[local[i+1]])/(alphas[local[i]]-alphas[local[i+1]]);
-            rgbs[j].r(s*rgbs[j].r());
-            rgbs[j].g(s*rgbs[j].g());
-            rgbs[j].b(s*rgbs[j].b());
-          }
-        }
-      }
+      rgbT[i] = pow((double)rgbT[i], bp);
     }
     
-    cmap = scinew ColorMap(rgbs,rgbT,alphas,alphaT);
+
+    // Read in the alpha values.  This is the screen space curve.
+    unsigned int asize;
+    float w, h;
+    is >> asize;
+    is >> w >> h;
+    vector< float > alphas(asize);
+    vector< float > alphaT(asize);
+
+    for (i = 0; i < asize; i++)
+    {
+      int x, y;
+      is >> x >> y;
+      alphaT[i] = x / w;
+      alphas[i] = 1.0 - y / h;
+    }
+    
+    // The screen space curve may not contain the default endpoints.
+    // Add them in here if needed.
+    if (alphaT.empty() || alphaT.front() != 0.0)
+    {
+      alphas.insert(alphas.begin(), 0.5);
+      alphaT.insert(alphaT.begin(), 0.0);
+    }
+    if (alphaT.back() != 1.0)
+    {
+      alphas.push_back(0.5);
+      alphaT.push_back(1.0);
+    }
+    
+    cmap = scinew ColorMap(rgbs, rgbT, alphas, alphaT, res);
     return true;
   }
   return false;
 }
-
-
 
 // ---------------------------------------------------------------------- // 
   
@@ -214,7 +176,7 @@ void GenStandardColorMaps::execute()
    gui->eval(id+" getColorMapString", tclRes);
 
    ColorMapHandle cmap;
-   if ( genMap(cmap, tclRes, resolution.get(), faux.get()) ) 
+   if ( genMap(cmap, tclRes, resolution.get(), gamma.get(), faux.get()) ) 
    {
      ColorMapOPort *outport = (ColorMapOPort *)get_oport("ColorMap");
      if (!outport) {
