@@ -46,9 +46,9 @@ public:
   bool computeEnergyReleaseRate(
         particleIndex tipIndex,
         const Vector& nx,
-	const Vector& ny,
+	Vector& ny,
+	double stress,
 	const ParticleVariable<Point>& pX,
-	const ParticleVariable<Matrix3>& pStress,
 	const ParticleVariable<double>& pVolume,
 	double& G) const;
 

@@ -197,62 +197,149 @@ bool ParticlesNeighbor::visible(particleIndex idxA,
 bool ParticlesNeighbor::computeEnergyReleaseRate(
         particleIndex tipIndex,
         const Vector& nx,
-	const Vector& ny,
+	Vector& ny,
+	double stress,
 	const ParticleVariable<Point>& pX,
-	const ParticleVariable<Matrix3>& pStress,
 	const ParticleVariable<double>& pVolume,
 	double& G) const
 {
-  double volume1=0;
-  double volume2=0;
-  double open1=0;
-  double open2=0;
-  double stress1=0;
-  double stress2=0;
-  int num1=0;
-  int num2=0;
-  
-  const Point& pTip = pX[tipIndex];
+  double volumea1=0;
+  double volumea2=0;
+  double opena1=0;
+  double opena2=0;
+  int numa1=0;
+  int numa2=0;
+
+  double volumeb1=0;
+  double volumeb2=0;
+  double openb1=0;
+  double openb2=0;
+  int numb1=0;
+  int numb2=0;
+
+  double volumec1=0;
+  double volumec2=0;
+  double openc1=0;
+  double openc2=0;
+  int numc1=0;
+  int numc2=0;
+
+  double volumed1=0;
+  double volumed2=0;
+  double opend1=0;
+  double opend2=0;
+  int numd1=0;
+  int numd2=0;
+
+  double psize = pow( pVolume[tipIndex],1./3. );
+  Point pTipa = pX[tipIndex] + ny*(psize/2) + nx*(psize/2);
+  Point pTipb = pX[tipIndex] + ny*(psize/2) - nx*(psize/2);
+  Point pTipc = pX[tipIndex] - ny*(psize/2) + nx*(psize/2);
+  Point pTipd = pX[tipIndex] - ny*(psize/2) - nx*(psize/2);
   
   int num = size();
   for(int i=0; i<num; i++) {
     int index = (*this)[i];
-    if(tipIndex == index) continue;
     
-    Vector d = pX[index] - pTip;
-    double dx = Dot(d,nx);
-    double dy = Dot(d,ny);
-    
-    if( dx>0 ) {
-      volume1 += pVolume[index];
-      open1 += fabs(dy) * pVolume[index];
-      stress1 += Dot(ny, pStress[index] * ny) * pVolume[index];
-      num1++;
+    Vector da = pX[index] - pTipa;
+    Vector db = pX[index] - pTipb;
+    Vector dc = pX[index] - pTipc;
+    Vector dd = pX[index] - pTipd;
+
+    double dxa = Dot(da,nx);
+    double dxb = Dot(db,nx);
+    double dxc = Dot(dc,nx);
+    double dxd = Dot(dd,nx);
+
+    double dya = Dot(da,ny);
+    double dyb = Dot(db,ny);
+    double dyc = Dot(dc,ny);
+    double dyd = Dot(dd,ny);
+
+    if( sqrt(dxa*dxa+dya*dya) < psize ) {
+      if( dxa>0 ) {
+        volumea1 += pVolume[index];
+        opena1 += fabs(dya) * pVolume[index];
+        numa1++;
+      }
+      if( dxa<0 ) {
+        volumea2 += pVolume[index];
+        opena2 += fabs(dya) * pVolume[index];
+        numa2++;
+      }
     }
-    if( dx<0 ) {
-      volume2 += pVolume[index];
-      open2 += fabs(dy) * pVolume[index];
-      stress2 += Dot(ny, pStress[index] * ny) * pVolume[index];
-      num2++;
+    else if( sqrt(dxb*dxb+dyb*dyb) < psize ) {
+      if( dxb>0 ) {
+        volumeb1 += pVolume[index];
+        openb1 += fabs(dyb) * pVolume[index];
+        numb1++;
+      }
+      if( dxb<0 ) {
+        volumeb2 += pVolume[index];
+        openb2 += fabs(dyb) * pVolume[index];
+        numb2++;
+      }
+    }
+    else if( sqrt(dxc*dxc+dyc*dyc) < psize ) {
+      if( dxc>0 ) {
+        volumec1 += pVolume[index];
+        openc1 += fabs(dyc) * pVolume[index];
+        numc1++;
+      }
+      if( dxc<0 ) {
+        volumec2 += pVolume[index];
+        openc2 += fabs(dyc) * pVolume[index];
+        numc2++;
+      }
+    }
+    else if( sqrt(dxd*dxd+dyd*dyd) < psize ) {
+      if( dxd>0 ) {
+        volumed1 += pVolume[index];
+        opend1 += fabs(dyd) * pVolume[index];
+        numd1++;
+      }
+      if( dxd<0 ) {
+        volumed2 += pVolume[index];
+        opend2 += fabs(dyd) * pVolume[index];
+        numd2++;
+      }
     }
   }
-  
-  if(num1 == 0) return false;
-  if(num2 == 0) return false;
-  
-  volume1 /= volume1;
-  open1 /= volume1;
-  stress1 /= volume1;
 
-  volume2 /= volume2;
-  open2 /= volume2;
-  stress2 /= volume2;
-  
-  if(stress1<=0 && stress2<=0) return false;
-  
-  if(stress1>stress2) G=stress1*open2-stress2*open1;
-  else G=stress2*open1-stress1*open2;
-  
+  G = 0;
+    
+  if(numa1 > 0 && numa2 > 0) {
+    opena1 /= volumea1;
+    opena2 /= volumea2;
+    double Ga=stress*fabs(opena1-opena2);
+    if(Ga>G)G=Ga;
+  }
+  else if(numb1 > 0 && numb2 > 0) {
+    openb1 /= volumeb1;
+    openb2 /= volumeb2;
+    double Gb=stress*fabs(openb1-openb2);
+    if(Gb>G)G=Gb;
+  }
+  else if(numc1 > 0 && numc2 > 0) {
+    openc1 /= volumec1;
+    openc2 /= volumec2;
+    double Gc=stress*fabs(openc1-openc2);
+    if(Gc>G) {
+      G=Gc;
+      ny = -ny;
+    }
+  }
+  else if(numd1 > 0 && numd2 > 0) {
+    opend1 /= volumed1;
+    opend2 /= volumed2;
+    double Gd=stress*fabs(opend1-opend2);
+    if(Gd>G) {
+      G=Gd;
+      ny = -ny;
+    }
+  }
+  else return false;
+
   return true;
 }
 
