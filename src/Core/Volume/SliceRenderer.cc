@@ -314,233 +314,6 @@ SliceRenderer::draw_slice()
 }
 
 
-//  void
-//  SliceRenderer::multi_level_draw()
-//  {
-//    tex_->lock_bricks();
-  
-//    Ray view_ray = compute_view();
-//    vector<TextureBrick*> bricks;
-//    tex_->get_sorted_bricks(bricks, view_ray);
-
-//    int levels = tex_->nlevels();
-
-//    //--------------------------------------------------------------------------
-
-//    int nc = tex_->nc();
-//    int nb0 = tex_->nb(0);
-//    bool use_cmap1 = cmap1_.get_rep();
-//    bool use_cmap2 = cmap2_.get_rep() && nc == 2;
-//    if(!use_cmap1 && !use_cmap2) return;
-//    GLboolean use_fog = glIsEnabled(GL_FOG);
-  
-//    //--------------------------------------------------------------------------
-//    // load colormap texture
-//    if(use_cmap2) {
-//      // rebuild if needed
-//      build_colormap2();
-//      bind_colormap2();
-//    } else {
-//      // rebuild if needed
-//      build_colormap1(cmap1_array_, cmap1_tex_, cmap1_dirty_, alpha_dirty_);
-//      bind_colormap1(cmap1_tex_);
-//    }
-  
-//    //--------------------------------------------------------------------------
-//    // enable data texture unit 0
-//    glActiveTexture(GL_TEXTURE0_ARB);
-//    glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-//    glEnable(GL_TEXTURE_3D);
-
-//    //--------------------------------------------------------------------------
-//    // enable alpha test
-//    glEnable(GL_ALPHA_TEST);
-//    glAlphaFunc(GL_GREATER, 0.0);
-//    glColor4f(1.0, 1.0, 1.0, 1.0);
-//    glDepthMask(GL_TRUE);
-
-//    //--------------------------------------------------------------------------
-//    // set up shaders
-//    FragmentProgramARB* shader = 0;
-//    int blend_mode = 0;
-//    shader = vol_shader_factory_->shader(use_cmap2 ? 2 : 1, nb0, false, true,
-//                                         use_fog, blend_mode);
-
-//    if(shader) {
-//      if(!shader->valid()) {
-//        shader->create();
-//      }
-//      shader->bind();
-//    }
-
-//    //-------------------------------------------------------------------------
-
-//    // set up stenciling
-//    if(use_stencil_){
-//  //     cerr<<"Using Stencil\n";
-//      glClearStencil(0);
-//      glStencilMask(1);
-//      glStencilFunc(GL_EQUAL, 0, 1);
-//      glStencilOp(GL_KEEP, GL_KEEP,GL_INCR);
-//      glEnable(GL_STENCIL_TEST);
-//    } 
-
-//    //--------------------------------------------------------------------------
-//    // render bricks
-
-//  //    Array1<float> vertex(0, 128, 128);
-//  //    Array1<float> texcoord(0, 128, 128);
-//  //    Array1<int> size(0, 128, 128);
-//    vector<float> vertex;
-//    vector<float> texcoord;
-//    vector<int> size;
-  
-//    Transform tform = tex_->transform();
-//    double mvmat[16];
-//    tform.get_trans(mvmat);
-//    glMatrixMode(GL_MODELVIEW);
-//    glPushMatrix();
-//    glMultMatrixd(mvmat);
-  
-//    vector<vector<TextureBrick *> > blevels;
-//    blevels.resize(levels);
-//    for(int k = levels - 1; k >= 0;  --k ){
-//      tex_->get_sorted_bricks(blevels[levels - (k + 1)], view_ray, k);
-//    }
-//    if( use_stencil_){
-//      glStencilMask(~0);
-//      glClear(GL_STENCIL_BUFFER_BIT);
-//      glStencilMask(1);
-//    }
-//  //    for(unsigned int j = 0; j < levels; ++j ){
-//   for(unsigned int j = 0; j < levels; ++j ){
-//     if(!draw_level_[j]) continue;
-//      vector<TextureBrick*>& bs  = blevels[j];
-
-//      for(unsigned int i=0; i<bs.size(); i++) {
-//        double t;
-//        TextureBrick* b = bs[i];
-//        load_brick(b);
-//        vertex.resize(0);
-//        texcoord.resize(0);
-//        size.resize(0);
-//        Point view = view_ray.origin();
-//        const Point &bmin = b->bbox().min();
-//        const Point &bmax = b->bbox().max();
-//        const Point &bmid = b->bbox().center();
-//        Point c(control_point_);
-//        bool draw_z = false;
-//        if(draw_cyl_) {
-//  	const double to_rad = M_PI / 180.0;
-//  	BBox bb;
-//  	tex_->get_bounds(bb);
-//  	Point cyl_mid = bb.center();
-//  	if(draw_phi0_) {
-//  	  Vector phi(1.,0,0);
-//  	  Transform rot;
-//  	  rot.pre_rotate(phi0_ * to_rad, Vector(0,0,1.));
-//  	  phi = rot.project(phi);
-//  	  Ray r(cyl_mid, phi);
-//  	  r.planeIntersectParameter(-r.direction(), control_point_, t);
-//  	  b->compute_polygon(r, t, vertex, texcoord, size);
-//  	}
-//  	if(draw_phi1_) {
-//  	  Vector phi(1.,0,0);
-//  	  Transform rot;
-//  	  rot.pre_rotate(phi1_ * to_rad, Vector(0,0,1.));
-//  	  phi = rot.project(phi);
-//  	  Ray r(cyl_mid, phi);
-//  	  r.planeIntersectParameter(-r.direction(), control_point_, t);
-//  	  b->compute_polygon(r, t, vertex, texcoord, size);
-//  	}
-//  	if(draw_z_) {
-//  	  draw_z = true;
-//  	}
-//        } else {
-//  	if(draw_view_) {
-//  	  view_ray.planeIntersectParameter(-view_ray.direction(),
-//  					   control_point_, t);
-//  	  b->compute_polygon(view_ray, t, vertex, texcoord, size);
-//  	} else {
-//  	  if(draw_x_) {
-//  	    Point o( bmin.x(), bmid.y(), bmid.z());
-//  	    Vector v(c.x() - o.x(), 0,0);
-//  	    if(c.x() > bmin.x() && c.x() < bmax.x() ){
-//  	      if(view.x() > c.x()) {
-//  		o.x(bmax.x());
-//  		v.x(c.x() - o.x());
-//  	      } 
-//  	      Ray r(o,v);
-//  	      r.planeIntersectParameter(-r.direction(), control_point_, t);
-//  	      b->compute_polygon(r, t, vertex, texcoord, size);
-//  	    }
-//  	  }
-//  	  if(draw_y_) {
-//  	    Point o(bmid.x(), bmin.y(), bmid.z());
-//  	    Vector v(0, c.y() - o.y(), 0);
-//  	    if(c.y() > bmin.y() && c.y() < bmax.y() ){
-//  	      if(view.y() > c.y()) {
-//  		o.y(bmax.y());
-//  		v.y(c.y() - o.y());
-//  	      } 
-//  	      Ray r(o,v);
-//  	      r.planeIntersectParameter(-r.direction(), control_point_, t);
-//  	      b->compute_polygon(r, t, vertex, texcoord, size);
-//  	    }
-//  	  }
-//  	  if(draw_z_) {
-//  	    draw_z = true;
-//  	  }
-//  	}
-//        }
-    
-//        if (draw_z) {
-//  	Point o(bmid.x(), bmid.y(), bmin.z());
-//  	Vector v(0, 0, c.z() - o.z());
-//  	if(c.z() > bmin.z() && c.z() < bmax.z() ) {
-//  	  if(view.z() > c.z()) {
-//  	    o.z(bmax.z());
-//  	    v.z(c.z() - o.z());
-//  	  } 
-//  	  Ray r(o,v);
-//  	  r.planeIntersectParameter(-r.direction(), control_point_, t);
-//  	  b->compute_polygon(r, t, vertex, texcoord, size);
-//  	}
-//        }
-
-//        draw_polygons(vertex, texcoord, size, true, use_fog, 0);
-//      }
-//    }
-
-//    glPopMatrix();
-  
-//    //-------------------------------------------------------------------------
-//    // turn off stenciling
-//    if(use_stencil_)
-//      glDisable(GL_STENCIL_TEST);
-//    //--------------------------------------------------------------------------
-//    // release shaders
-
-//    if(shader && shader->valid())
-//      shader->release();
-
-//    //--------------------------------------------------------------------------
-  
-//    glDisable(GL_ALPHA_TEST);
-//    glDepthMask(GL_TRUE);
-
-//    if(use_cmap2) {
-//      release_colormap2();
-//    } else {
-//      release_colormap1();
-//    }
-//    glActiveTexture(GL_TEXTURE0_ARB);
-//    glDisable(GL_TEXTURE_3D);
-//    glBindTexture(GL_TEXTURE_3D, 0);
-
-//    tex_->unlock_bricks();
-//  }
-
 void
 SliceRenderer::multi_level_draw()
 {
@@ -616,9 +389,6 @@ SliceRenderer::multi_level_draw()
   //--------------------------------------------------------------------------
   // render bricks
 
-//    Array1<float> vertex(0, 128, 128);
-//    Array1<float> texcoord(0, 128, 128);
-//    Array1<int> size(0, 128, 128);
   vector<float> vertex;
   vector<float> texcoord;
   vector<int> size;
@@ -672,11 +442,6 @@ SliceRenderer::multi_level_draw()
 	  vertex.resize(0);
 	  texcoord.resize(0);
 	  size.resize(0);
-//  	  Point view = view_ray.origin();
-//  	  const Point &bmin = b->bbox().min();
-//  	  const Point &bmax = b->bbox().max();
-//  	  const Point &bmid = b->bbox().center();
-//  	  Point c(control_point_);
 	  draw_z = false;
 	  r.planeIntersectParameter(-r.direction(), control_point_, t);
 	  b->compute_polygon(r, t, vertex, texcoord, size);
@@ -718,10 +483,6 @@ SliceRenderer::multi_level_draw()
 	  vertex.resize(0);
 	  texcoord.resize(0);
 	  size.resize(0);
-//  	  Point view = view_ray.origin();
-//  	  const Point &bmin = b->bbox().min();
-//  	  const Point &bmax = b->bbox().max();
-//  	  const Point &bmid = b->bbox().center();
 	  Point c(control_point_);
 	  draw_z = false;
 	  r.planeIntersectParameter(-r.direction(), control_point_, t);
@@ -763,11 +524,6 @@ SliceRenderer::multi_level_draw()
 	  vertex.resize(0);
 	  texcoord.resize(0);
 	  size.resize(0);
-//  	  Point view = view_ray.origin();
-//  	  const Point &bmin = b->bbox().min();
-//  	  const Point &bmax = b->bbox().max();
-//  	  const Point &bmid = b->bbox().center();
-//  	  Point c(control_point_);
 	  view_ray.planeIntersectParameter(-view_ray.direction(),
 					   control_point_, t);
 	  draw_z = false;

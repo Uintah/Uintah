@@ -64,18 +64,6 @@ Texture::Texture()
 Texture::~Texture()
 {}
 
-// void
-// Texture::get_sorted_bricks(vector<TextureBrick*>& bricks, const Ray& view)
-// {
-//   bricks.resize(0);
-//   vector<double> dist;
-//   for(unsigned int i=0; i<brick_.size(); i++) {
-//     bricks.push_back(brick_[i]);
-//     dist.push_back(-(brick_[i]->center()-view.origin()).length());
-//   }
-//   Sort(dist, bricks);
-// }
-
 void
 Texture::get_sorted_bricks(vector<TextureBrickHandle> &bricks, const Ray& view,
 			   int idx)
@@ -83,7 +71,8 @@ Texture::get_sorted_bricks(vector<TextureBrickHandle> &bricks, const Ray& view,
   bricks.resize(0);
   vector<TextureBrickHandle> &brick_ = bricks_[idx];
   vector<double> dist;
-  for(unsigned int i=0; i<brick_.size(); i++) {
+  for (unsigned int i=0; i<brick_.size(); i++)
+  {
     bricks.push_back(brick_[i]);
     dist.push_back(-(brick_[i]->bbox().center()-view.origin()).length());
   }
@@ -107,6 +96,8 @@ Texture::clear()
   nb_[0] = 0;
   nb_[1] = 0;
   bricks_.resize(1);
-  bricks_[0].resize(0);}
+  bricks_[0].resize(0);
+}
+
 
 } // namespace SCIRun

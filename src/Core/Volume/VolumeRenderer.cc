@@ -290,9 +290,6 @@ VolumeRenderer::draw_volume()
     bind_colormap2();
   } else {
     // rebuild if needed
-//     build_colormap1();
-//     bind_colormap1();
-    // rebuild if needed
     build_colormap1(cmap1_array_, cmap1_tex_, cmap1_dirty_, alpha_dirty_);
     bind_colormap1(cmap1_tex_);
   }
@@ -454,6 +451,7 @@ VolumeRenderer::draw_volume()
 #endif
 }
 
+
 void
 VolumeRenderer::multi_level_draw()
 {
@@ -488,12 +486,8 @@ VolumeRenderer::multi_level_draw()
 		   diag.z()/(tex_->nz()*pow(2.0,levels-1)));
   
   double dt = cell_diag.length()/rate;
-//   cerr<<"dt = "<<dt<<"\n";
   int num_slices = (int)(diag.length()/dt);
   
-//    Array1<float> vertex(0, 100, num_slices*6);
-//    Array1<float> texcoord(0, 100, num_slices*6);
-//    Array1<int> size(0, 100, num_slices*6);
   vector<float> vertex;
   vector<float> texcoord;
   vector<int> size;
@@ -595,12 +589,7 @@ VolumeRenderer::multi_level_draw()
 			       tan(1.570796327 * 
 				   (0.5 - level_alpha_[levels - i - 1])*
 				   0.49999) : i ));;
-//        bind_colormap1( cmaps[levels -1 -1]->tex_id_ );
     }
-//      build_colormap1(cmap1_array_, cmap1_tex_, cmap1_dirty_, alpha_dirty_);
-//      //      
-//      bind_colormap1( cmap1_tex_ );
-
   }
   
   //--------------------------------------------------------------------------
@@ -640,7 +629,6 @@ VolumeRenderer::multi_level_draw()
   if(use_shading) {
     // set shader parameters
     Vector l(light_pos[0], light_pos[1], light_pos[2]);
-    //cerr << "LIGHTING: " << pos << endl;
     double m[16];
     glGetDoublev(GL_MODELVIEW_MATRIX, m);
     Transform mv;
@@ -655,7 +643,6 @@ VolumeRenderer::multi_level_draw()
   //-------------------------------------------------------------------------
   // set up stenciling
   if(use_stencil_){
-//     cerr<<"Using Stencil\n";
     glClearStencil(0);
     glStencilMask(1);
     glStencilFunc(GL_EQUAL, 0, 1);
@@ -699,12 +686,6 @@ VolumeRenderer::multi_level_draw()
   blevels.resize(levels);
   for(int i = levels - 1; i >= 0;  --i ){
     tex_->get_sorted_bricks(blevels[levels - (i + 1)], view_ray, i);
-//  //      vector<TextureBrick*>& lbricks = blevels[levels - (i + 1)];
-//      lbricks.resize(0);
-//      int bsize = bricks.size();
-//      for(unsigned int j = 0; j < bsize ; j++ ){
-//        lbricks.push_back( bricks[j] );
-//      }
   }
 
 
@@ -714,7 +695,6 @@ VolumeRenderer::multi_level_draw()
       glClear(GL_STENCIL_BUFFER_BIT);
       glStencilMask(1);
     }
-//      int i = 2;
 
     for(int i = 0; i < levels; ++i ){
       if( !draw_level_[i] ) continue;
@@ -723,7 +703,6 @@ VolumeRenderer::multi_level_draw()
 	int k = i;
 	while( k < levels ){
 	  int draw_level = int(pow(2.0, k));
-//    	  cerr<<"count = "<<count<<", draw_level = "<<draw_level<<"\n";
 	  if( count < draw_level ){
 	    break;
 	  } else if( count == draw_level ) {
@@ -735,16 +714,10 @@ VolumeRenderer::multi_level_draw()
 	}
 
 	if( !go_on ){
-	  // cerr<<"Not drawing level "<<i<<", t = "<<t<<"\n";
 	  break;
 	} 
-//  else if( count == reset_val ){
-//  	  count = 0;
-	  
-//  	}
       }
      
-//        tex_->get_sorted_bricks(bricks, view_ray, levels -i -1);
       bind_colormap1( cmaps[i]->tex_id_ );
       vector<TextureBrickHandle>& bs  = blevels[i];
       for(unsigned int j =0; j < bs.size(); j++) {
@@ -754,10 +727,8 @@ VolumeRenderer::multi_level_draw()
 	size.resize(0);
 	b->compute_polygon( view_ray, t, vertex, texcoord, size);
 	if( vertex.size() == 0 ) {
-	  //cerr<<"skipping not inside brick "<<j<<" level "<<i<<"\n";
 	  continue;
 	}
-//    	cerr<<"drawing poly at level "<<i<<" with count = "<<count<<"\n";
 	load_brick(b);
 	draw_polygons(vertex, texcoord, size, false, use_fog,
 		      blend_num_bits_ > 8 ? blend_buffer_ : 0);
@@ -767,6 +738,7 @@ VolumeRenderer::multi_level_draw()
     if( count == reset_val ) count = 0;
     ++count;
   }
+
   //________________________________________________________________________
   // undo transform
   glPopMatrix();
@@ -781,7 +753,6 @@ VolumeRenderer::multi_level_draw()
   
   //--------------------------------------------------------------------------
   // release shader
-
   if(shader && shader->valid())
     shader->release();
   
@@ -852,7 +823,6 @@ VolumeRenderer::multi_level_draw()
     blend_buffer_->set_use_default_shader(false);
   }
  
-
   vector< cmap_data* >::iterator it =  cmaps.begin(); //(  tex_->nlevels() );
   for(; it != cmaps.end(); ++it){
     delete *it;
@@ -867,6 +837,7 @@ VolumeRenderer::multi_level_draw()
   tex_->unlock_bricks();
 #endif  
 }
+
 
 void
 VolumeRenderer::draw_wireframe()
