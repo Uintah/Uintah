@@ -11,6 +11,7 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 
 #include <iostream>
+#include <float.h>  // for DBL_MAX
 
 namespace Uintah {
 using namespace SCIRun;
@@ -194,153 +195,197 @@ bool ParticlesNeighbor::visible(particleIndex idxA,
   return true;
 }
 
-bool ParticlesNeighbor::computeEnergyReleaseRate(
+double ParticlesNeighbor::computeEnergyReleaseRate(
         particleIndex tipIndex,
-        const Vector& nx,
-	Vector& ny,
-	double stress,
+        const Matrix3& stress,
 	const ParticleVariable<Point>& pX,
 	const ParticleVariable<double>& pVolume,
-	double& G) const
+	const ParticleVariable<int>& pIsBroken,
+	double& sigmaN,
+	Vector& Ny,
+	Vector& Nx) const
 {
-  double volumea1=0;
-  double volumea2=0;
-  double opena1=0;
-  double opena2=0;
-  int numa1=0;
-  int numa2=0;
+  static double open_limit = DBL_MAX/2;
 
-  double volumeb1=0;
-  double volumeb2=0;
-  double openb1=0;
-  double openb2=0;
-  int numb1=0;
-  int numb2=0;
-
-  double volumec1=0;
-  double volumec2=0;
-  double openc1=0;
-  double openc2=0;
-  int numc1=0;
-  int numc2=0;
-
-  double volumed1=0;
-  double volumed2=0;
-  double opend1=0;
-  double opend2=0;
-  int numd1=0;
-  int numd2=0;
-
-  double psize = pow( pVolume[tipIndex],1./3. );
-  Point pTipa = pX[tipIndex] + ny*(psize/2) + nx*(psize/2);
-  Point pTipb = pX[tipIndex] + ny*(psize/2) - nx*(psize/2);
-  Point pTipc = pX[tipIndex] - ny*(psize/2) + nx*(psize/2);
-  Point pTipd = pX[tipIndex] - ny*(psize/2) - nx*(psize/2);
+  Vector e[3];
+  double sig[3];
+  getEigenInfo(stress,e[0],sig[0],e[1],sig[1],e[2],sig[2]);
   
+  double R = pow( pVolume[tipIndex],1./3. ) /2;
+
+  double G = 0;
+
+  for(int i=0;i<12;++i) {
+    Vector nx,ny;
+    double sigma;
+
+    double openxy = DBL_MAX;
+    double openxY = DBL_MAX;
+    double openXy = DBL_MAX;
+    double openXY = DBL_MAX;
+
+    bool nearCracky = false;
+    bool nearCrackY = false;
+    
+         if(i==0)  {nx= e[0];ny= e[1];sigma=sig[1];}
+    else if(i==1)  {nx= e[0];ny= e[2];sigma=sig[2];}
+    else if(i==2)  {nx= e[1];ny= e[0];sigma=sig[0];}
+    else if(i==3)  {nx= e[1];ny= e[2];sigma=sig[2];}
+    else if(i==4)  {nx= e[2];ny= e[1];sigma=sig[1];}
+    else if(i==5)  {nx= e[2];ny= e[0];sigma=sig[0];}
+    else if(i==6)  {nx= e[0];ny=-e[1];sigma=sig[1];}
+    else if(i==7)  {nx= e[0];ny=-e[2];sigma=sig[2];}
+    else if(i==8)  {nx= e[1];ny=-e[0];sigma=sig[0];}
+    else if(i==9)  {nx= e[1];ny=-e[2];sigma=sig[2];}
+    else if(i==10) {nx= e[2];ny=-e[1];sigma=sig[1];}
+    else           {nx= e[2];ny=-e[0];sigma=sig[0];}
+
+    Point pTip = pX[tipIndex] + ny*(R) + nx*(R);
+
+    int num = size();
+    for(int k=0; k<num; k++) {
+      int index = (*this)[k];
+
+      Vector d = pX[index] - pTip;
+
+      double r = pow( pVolume[index],0.333333 ) /2;
+
+      double dx = Dot(d,nx);
+      double dy = Dot(d,ny);
+
+      if( d.length() < R * 1.5 ) {
+        if(dy>0) {
+          if(pIsBroken[index]>0) nearCrackY = true;
+          if( dx>0 ) {
+            openXY = Min(dy-r,openXY);
+          }
+          else {
+            openxY = Min(dy-r,openxY);
+          }
+	}
+        else {
+          if(pIsBroken[index]>0) nearCracky = true;
+          if( dx>0 ) {
+            openXy = Min(-dy-r,openXy);
+          }
+          else {
+            openxy = Min(-dy-r,openxy);
+          }
+	}
+      }
+    }
+    
+    if( nearCracky && nearCrackY && 
+        openXY < open_limit &&
+	openxY < open_limit &&
+	openXy < open_limit &&
+	openxy < open_limit )
+    {
+      double openx = openxY + openxy;
+      double openX = openXY + openXy;
+      if(openx<0)openx=0;
+      if(openX<0)openX=0;
+      
+      double g = sigma * fabs(openx-openX);
+      if(g>G) {
+        G = g;
+	Ny = ny;
+	Nx = nx;
+	sigmaN = sigma;
+      }
+    }
+  }
+  
+  return G;
+}
+
+double ParticlesNeighbor::computeCrackClosureIntegral(
+        const Point& pTip,
+	double R,
+	const Vector& nx,
+	const Vector& ny,
+        double sigma,
+	const ParticleVariable<Point>& pX,
+	const ParticleVariable<double>& pVolume ) const
+{
+  static double open_limit = DBL_MAX/2;
+  if(sigma<0) return 0;
+
+  double openxy = DBL_MAX;
+  double openxY = DBL_MAX;
+  double openXy = DBL_MAX;
+  double openXY = DBL_MAX;
+
   int num = size();
-  for(int i=0; i<num; i++) {
-    int index = (*this)[i];
+  for(int k=0; k<num; k++) {
+    int index = (*this)[k];
+
+    Vector d = pX[index] - pTip;
+    double r = pow( pVolume[index],0.333333 ) /2;
+
+    //cout<<"pX: "<<pX[index] 
+    //    <<"pTip: "<<pTip<<endl;
+	
+    double dx = Dot(d,nx);
+    double dy = Dot(d,ny);
+
+    if( d.length() < R * 3 ) {
+      //cout<<"dx: "<<dx<<"  dy: "<<dy<<endl;
+
+      if(dy>0) {
+        double open = dy-r;
+//	cout<<"dx: "<<dx<<"  dy: "<<dy<<"  open: "<<open<<endl;
+        if( dx>0 ) {
+	  if( open < openXY ) openXY = open;
+	}
+        else {
+	  if( open < openxY ) openxY = open;
+	}
+      }
+      else {
+        double open = -dy-r;
+//	cout<<"dx: "<<dx<<"  dy: "<<dy<<"  open: "<<open<<endl;
+        if( dx>0 ) {
+	  if( open < openXy ) openXy = open;
+	}
+        else {
+	  if( open < openxy ) openxy = open;
+	}
+      }
+    }
+  }
+  
+/*
+  cout<<" openXY: "<<openXY
+      <<" openXy: "<<openXy
+      <<" openxY: "<<openxY
+      <<" openxy: "<<openxy<<endl;
+*/
     
-    Vector da = pX[index] - pTipa;
-    Vector db = pX[index] - pTipb;
-    Vector dc = pX[index] - pTipc;
-    Vector dd = pX[index] - pTipd;
+  double G = 0;
+  if( openXY < open_limit &&
+      openxY < open_limit &&
+      openXy < open_limit &&
+      openxy < open_limit )
+  {
+    double openx = openxY + openxy;
+    double openX = openXY + openXy;
+    if(openx<0)openx=0;
+    if(openX<0)openX=0;
+      
+    G = sigma * (openx-openX);
 
-    double dxa = Dot(da,nx);
-    double dxb = Dot(db,nx);
-    double dxc = Dot(dc,nx);
-    double dxd = Dot(dd,nx);
-
-    double dya = Dot(da,ny);
-    double dyb = Dot(db,ny);
-    double dyc = Dot(dc,ny);
-    double dyd = Dot(dd,ny);
-
-    if( sqrt(dxa*dxa+dya*dya) < psize ) {
-      if( dxa>0 ) {
-        volumea1 += pVolume[index];
-        opena1 += fabs(dya) * pVolume[index];
-        numa1++;
-      }
-      if( dxa<0 ) {
-        volumea2 += pVolume[index];
-        opena2 += fabs(dya) * pVolume[index];
-        numa2++;
-      }
-    }
-    else if( sqrt(dxb*dxb+dyb*dyb) < psize ) {
-      if( dxb>0 ) {
-        volumeb1 += pVolume[index];
-        openb1 += fabs(dyb) * pVolume[index];
-        numb1++;
-      }
-      if( dxb<0 ) {
-        volumeb2 += pVolume[index];
-        openb2 += fabs(dyb) * pVolume[index];
-        numb2++;
-      }
-    }
-    else if( sqrt(dxc*dxc+dyc*dyc) < psize ) {
-      if( dxc>0 ) {
-        volumec1 += pVolume[index];
-        openc1 += fabs(dyc) * pVolume[index];
-        numc1++;
-      }
-      if( dxc<0 ) {
-        volumec2 += pVolume[index];
-        openc2 += fabs(dyc) * pVolume[index];
-        numc2++;
-      }
-    }
-    else if( sqrt(dxd*dxd+dyd*dyd) < psize ) {
-      if( dxd>0 ) {
-        volumed1 += pVolume[index];
-        opend1 += fabs(dyd) * pVolume[index];
-        numd1++;
-      }
-      if( dxd<0 ) {
-        volumed2 += pVolume[index];
-        opend2 += fabs(dyd) * pVolume[index];
-        numd2++;
-      }
-    }
+/*
+    cout<<"openx: "<<openx
+        <<"openX: "<<openX
+	<<"G: "<<endl;
+*/
   }
-
-  G = 0;
-    
-  if(numa1 > 0 && numa2 > 0) {
-    opena1 /= volumea1;
-    opena2 /= volumea2;
-    double Ga=stress*fabs(opena1-opena2);
-    if(Ga>G)G=Ga;
-  }
-  else if(numb1 > 0 && numb2 > 0) {
-    openb1 /= volumeb1;
-    openb2 /= volumeb2;
-    double Gb=stress*fabs(openb1-openb2);
-    if(Gb>G)G=Gb;
-  }
-  else if(numc1 > 0 && numc2 > 0) {
-    openc1 /= volumec1;
-    openc2 /= volumec2;
-    double Gc=stress*fabs(openc1-openc2);
-    if(Gc>G) {
-      G=Gc;
-      ny = -ny;
-    }
-  }
-  else if(numd1 > 0 && numd2 > 0) {
-    opend1 /= volumed1;
-    opend2 /= volumed2;
-    double Gd=stress*fabs(opend1-opend2);
-    if(Gd>G) {
-      G=Gd;
-      ny = -ny;
-    }
-  }
-  else return false;
-
-  return true;
+  
+//  cout<<endl<<endl;
+  
+  if(G>0) return G;
+  else return 0;
 }
 
 } // End namespace Uintah

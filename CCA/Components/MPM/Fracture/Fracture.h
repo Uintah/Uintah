@@ -37,6 +37,12 @@ public:
 		  DataWarehouse* old_dw, 
 		  DataWarehouse* new_dw) = 0;
 
+  virtual void   computeCrackExtension(
+                  const PatchSubset* patch,
+                  MPMMaterial* mpm_matl, 
+		  DataWarehouse* old_dw, 
+		  DataWarehouse* new_dw) = 0;
+
   virtual void   computeFracture(
                   const PatchSubset* patch,
                   MPMMaterial* mpm_matl, 
