@@ -8,8 +8,9 @@
 #include <Packages/Uintah/Core/Grid/Stencil7.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
+#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
 
-using namespace Uintah;
+namespace Uintah {
 
 ExamplesLabel::ExamplesLabel()
 {
@@ -70,4 +71,6 @@ ExamplesLabel::~ExamplesLabel()
   VarLabel::destroy(residual);
   VarLabel::destroy(u);
 }
+
+} // end namespace uintah 
 
