@@ -3,6 +3,7 @@
 #include <Packages/rtrt/Core/ColorMapDpy.h>
 #include <Packages/rtrt/Core/DpyBase.h>
 #include <Packages/rtrt/Core/Scene.h>
+#include <Packages/rtrt/Core/rtrt.h>
 #include <Packages/rtrt/visinfo/visinfo.h>
 
 #include <Core/Thread/Thread.h>

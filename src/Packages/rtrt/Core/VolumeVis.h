@@ -17,7 +17,6 @@
 #include <Packages/rtrt/Core/Worker.h>
 #include <Packages/rtrt/Core/ScalarTransform1D.h>
 #include <Packages/rtrt/Core/Scene.h>
-#include <Packages/rtrt/Core/rtrt.h>
 
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>

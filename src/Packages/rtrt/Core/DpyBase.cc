@@ -1,6 +1,7 @@
 #include <Packages/rtrt/Core/DpyBase.h>
 #include <Packages/rtrt/Core/Color.h>
 #include <Packages/rtrt/Core/Scene.h>
+#include <Packages/rtrt/Core/rtrt.h>
 #include <Packages/rtrt/visinfo/visinfo.h>
 #include <Packages/rtrt/Core/FontString.h>
 
