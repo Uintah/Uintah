@@ -51,19 +51,20 @@ class NrrdQuantize : public Module {
   int last_generation_;
   NrrdDataHandle last_nrrdH_;
 public:
-  NrrdQuantize(const string& id);
+  NrrdQuantize(GuiContext *ctx);
   virtual ~NrrdQuantize();
   virtual void execute();
 };
 
-extern "C" Module* make_NrrdQuantize(const string& id)
-{
-    return new NrrdQuantize(id);
-}
+} // End namespace SCITeem
+using namespace SCITeem;
+DECLARE_MAKER(NrrdQuantize)
 
-NrrdQuantize::NrrdQuantize(const string& id)
-  : Module("NrrdQuantize", id, Filter, "Filters", "Teem"), minf_("minf", id, this),
-    maxf_("maxf", id, this), nbits_("nbits", id, this), last_minf_(0),
+NrrdQuantize::NrrdQuantize(GuiContext *ctx)
+  : Module("NrrdQuantize", ctx, Filter, "Filters", "Teem"),
+    minf_(ctx->subVar("minf")),
+    maxf_(ctx->subVar("maxf")),
+    nbits_(ctx->subVar("nbits")), last_minf_(0),
     last_maxf_(0), last_nbits_(0), last_generation_(-1), last_nrrdH_(0)
 {
 }
@@ -128,4 +129,3 @@ NrrdQuantize::execute()
   onrrd_->send(last_nrrdH_);
 }
 
-} // End namespace SCITeem

@@ -42,19 +42,20 @@ class NrrdWriter : public Module {
     GuiString filename_;
     GuiString filetype_;
 public:
-    NrrdWriter(const string& id);
+    NrrdWriter(GuiContext *ctx);
     virtual ~NrrdWriter();
     virtual void execute();
 };
 
-extern "C" Module* make_NrrdWriter(const string& id) {
-  return new NrrdWriter(id);
-}
+} // end namespace SCITeem
 
-NrrdWriter::NrrdWriter(const string& id)
-: Module("NrrdWriter", id, Source, "DataIO", "Teem"), 
-  filename_("filename", id, this),
-  filetype_("filetype", id, this)
+using namespace SCITeem;
+DECLARE_MAKER(NrrdWriter)
+
+NrrdWriter::NrrdWriter(GuiContext *ctx)
+: Module("NrrdWriter", ctx, Filter, "DataIO", "Teem"), 
+  filename_(ctx->subVar("filename")),
+  filetype_(ctx->subVar("filetype"))
 {
 }
 
@@ -90,5 +91,4 @@ void NrrdWriter::execute()
   }
 }
 
-} // End namespace SCITeem
 

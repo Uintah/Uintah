@@ -45,18 +45,20 @@ class NrrdReader : public Module {
   string old_filename_;
   time_t old_filemodification_;
 public:
-  NrrdReader(const string& id);
+  NrrdReader(SCIRun::GuiContext* ctx);
   virtual ~NrrdReader();
   virtual void execute();
 };
 
-extern "C" Module* make_NrrdReader(const string& id) {
-  return new NrrdReader(id);
-}
+} // end namespace SCITeem
 
-NrrdReader::NrrdReader(const string& id)
-: Module("NrrdReader", id, Source, "DataIO", "Teem"), 
-  filename_("filename", id, this),
+using namespace SCITeem;
+
+DECLARE_MAKER(NrrdReader)
+
+NrrdReader::NrrdReader(SCIRun::GuiContext* ctx)
+  : Module("NrrdReader", ctx, Filter, "DataIO", "Teem"), 
+  filename_(ctx->subVar("filename")),
   old_filemodification_(0)
 {
 }
@@ -110,4 +112,3 @@ void NrrdReader::execute()
   outport_->send(handle_);
 }
 
-} // End namespace SCITeem
