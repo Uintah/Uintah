@@ -1,5 +1,5 @@
 
-itcl_class PSECommon_Visualizations_GenTransferFunc {
+itcl_class PSECommon_Visualization_GenTransferFunc {
     inherit Module
     constructor {config} {
 	set name GenTransferFunc

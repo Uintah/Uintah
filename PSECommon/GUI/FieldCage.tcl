@@ -1,5 +1,5 @@
 
-itcl_class PSECommon_Visualizations_FieldCage {
+itcl_class PSECommon_Visualization_FieldCage {
     inherit Module
     constructor {config} {
 	set name FieldCage
