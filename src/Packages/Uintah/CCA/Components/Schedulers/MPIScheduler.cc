@@ -255,7 +255,8 @@ MPIScheduler::execute(const ProcessorGroup * pg )
 	const Task::Dependency* comp = task->getTask()->getComputes();
 	ASSERT(!comp->next);
 	OnDemandDataWarehouse* dw = this->dw[Task::NewDW];
-	dw->reduceMPI(comp->var, task->getMaterials(), d_myworld);
+	dw->reduceMPI(comp->var, comp->matls /*task->getMaterials() */,
+		      d_myworld);
 	double reduceend = Time::currentSeconds();
 	emitNode(task, reducestart, reduceend - reducestart);
 	totalreduce += reduceend-reducestart;
