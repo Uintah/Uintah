@@ -63,8 +63,8 @@ struct Allocator {
 
     int strict;
     int lazy;
-    int trace;
     FILE* trace_out;
+    FILE* stats_out;
     OSHunk* hunks;
 
     AllocBin* small_bins;
@@ -107,6 +107,12 @@ void AllocError(char*);
 
 //
 // $Log$
+// Revision 1.3  1999/09/25 08:30:54  sparker
+// Added support for MALLOC_STATS environment variable.  If set, it will
+//   send statistics about malloc and a list of all unfreed objects at
+//   program shutdown.  It isn't perfect yet - I need to figure out how
+//   to make it run after the C++ dtors.
+//
 // Revision 1.2  1999/09/17 05:04:43  sparker
 // Enhanced malloc tracing facility.  You can now set the environment
 // variable MALLOC_TRACE to a filename, where the allocator will dump
