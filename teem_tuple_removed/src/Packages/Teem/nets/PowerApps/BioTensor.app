@@ -4482,7 +4482,8 @@ class BioTensorApp {
     method load_nrrd_dwi {} {
 
 	global mods
-	set theWindow [$mods(NrrdReader1) make_file_open_box]
+	#set theWindow [$mods(NrrdReader1) make_file_open_box]
+	$mods(NrrdReader1) initialize_ui
 
 	# tkwait window $theWindow
 	
@@ -4496,8 +4497,9 @@ class BioTensorApp {
     # Specify a T2 nrrd file and set tuple axis 0
     method load_nrrd_t2 {} {
 	global mods
-        set theWindow [$mods(NrrdReader-T2) make_file_open_box]
-	
+        #set theWindow [$mods(NrrdReader-T2) make_file_open_box]
+	$mods(NrrdReader-T2) initialize_ui
+
 	# tkwait window $theWindow
 
 	# update idletasks
@@ -4600,7 +4602,8 @@ class BioTensorApp {
 
     method load_gradient {} {
         global mods
-        set theWindow [$mods(NrrdReader-Gradient) make_file_open_box]
+        #set theWindow [$mods(NrrdReader-Gradient) make_file_open_box]
+	$mods(NrrdReader-Gradient) initialize_ui
 	
         #tkwait window $theWindow
 	
@@ -4751,11 +4754,12 @@ class BioTensorApp {
     
     method load_bmatrix {} {
 	global mods
-        set theWindow [$mods(NrrdReader-BMatrix) make_file_open_box]
+        #set theWindow [$mods(NrrdReader-BMatrix) make_file_open_box]
+	$mods(NrrdReader-BMatrix) initialize_ui
 	
-	tkwait window $theWindow
+	#tkwait window $theWindow
 	
-	update idletasks
+	#update idletasks
 
 	
 #        global $mods(NrrdReader-BMatrix)-axis
