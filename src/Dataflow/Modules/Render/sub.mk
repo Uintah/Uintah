@@ -44,12 +44,6 @@ SRCS     += \
 	$(SRCDIR)/ViewWindow.cc\
 	$(SRCDIR)/Viewer.cc\
 	$(SRCDIR)/glMath.cc\
-	$(SRCDIR)/close.c\
-	$(SRCDIR)/name.c\
-	$(SRCDIR)/open.c\
-	$(SRCDIR)/rdwr.c\
-	$(SRCDIR)/rle.c\
-	$(SRCDIR)/row.c\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Dataflow/Widgets Dataflow/Network Dataflow/Ports Core/Datatypes \
@@ -58,11 +52,11 @@ PSELIBS := Dataflow/Widgets Dataflow/Network Dataflow/Ports Core/Datatypes \
 	Core/GuiInterface Core/TkExtensions Core/Util \
 	Core/TkExtensions Core/Datatypes
 
-CFLAGS += $(MPEG_DEF_FLAG)
+CFLAGS += $(MPEG_DEF_FLAG) $(LIBIMAGE_DEF_FLAG)
 
-INCLUDES += $(MPEG_INCLUDE)
+INCLUDES += $(MPEG_INCLUDE) $(LIBIMAGE_INCLUDE)
 
-LIBS := $(TK_LIBRARY) $(GL_LIBS) $(IMAGE_LIBS) $(MPEG_LIBRARY) -lm
+LIBS := $(TK_LIBRARY) $(GL_LIBS) $(IMAGE_LIBS) $(MPEG_LIBRARY) $(LIBIMAGE_LIBRARY) -lm
 
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk

@@ -44,7 +44,6 @@
 
 #include <map.h>
 
-#include "image.h"
 #include <Core/Geom/GeomObj.h>
 #include <Core/Util/Timer.h>
 #include <Core/Geom/GeomObj.h>
@@ -62,6 +61,7 @@
 #include <Dataflow/Modules/Render/Renderer.h>
 #include <Dataflow/Modules/Render/ViewWindow.h>
 #include <Dataflow/Modules/Render/Viewer.h>
+#include <Dataflow/Modules/Render/image.h>
 #include <Core/Thread/FutureValue.h>
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Thread.h>
@@ -77,11 +77,12 @@
 #endif // MPEG
 
 #ifdef __sgi
+#ifdef LIBIMAGE
+#include <image.h>
+#endif //LIBIMAGE
 #include <X11/extensions/SGIStereo.h>
 #if (_MIPS_SZPTR == 64)
-#include "imagelib.h"
 #else
-#include "imagelib.h"
 #include <dmedia/cl.h>
 #endif
 #endif

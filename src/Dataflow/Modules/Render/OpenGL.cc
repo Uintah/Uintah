@@ -754,6 +754,7 @@ void OpenGL::redraw_frame()
 	  // Show the pretty picture
 	  glXSwapBuffers(dpy, win);
 #ifdef __sgi
+#ifdef LIBIMAGE
 	  if(saveprefix != ""){
 	    // Save out the image...
 	    char filename[200];
@@ -786,7 +787,8 @@ void OpenGL::redraw_frame()
 	    delete[] greendata;
 	    delete[] bluedata;
 	  }
-#endif
+#endif // LIBIMAGE
+#endif // __sgi
 	}
 	throttle.stop();
 	double fps=nframes/throttle.time();
