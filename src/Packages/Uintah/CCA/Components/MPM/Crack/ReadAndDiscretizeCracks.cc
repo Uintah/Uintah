@@ -69,7 +69,7 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
   // Flags for fracture analysis
   d_calFractParameters = "false";
   d_doCrackPropagation = "false";
-
+  
   // Flag if using volume-integral in J-integral computation
   useVolumeIntegral=false; 
   // Flag if smoothing crack-front
@@ -108,7 +108,7 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
      }
      
      mpm_soln_ps->get("do_crack_propagation", d_doCrackPropagation);
-     if(d_doCrackPropagation!="true" && d_doCrackPropagation!="flase"
+     if(d_doCrackPropagation!="true" && d_doCrackPropagation!="false"
                          && d_doCrackPropagation!="every_time_step") {        
        cout << "'do_crack_propagation' can either be "
             << "'true' or 'false' or 'every_time_step'." 
