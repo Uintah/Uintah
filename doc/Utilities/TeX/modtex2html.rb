@@ -84,7 +84,7 @@ def tex2html(moduleName)
   texFile = moduleName + ".tex"
   system("rm -rf #{htmlDir}") if FileTest.exists?(htmlDir)
   system("latex #{texFile}; latex #{texFile}")
-  system("latex2html -split 0 -no_navigation #{texFile}")
+  system("latex2html -split 0 -no_navigation -image_type gif #{texFile}")
   system("rm -f *.dvi *.log *.aux #{htmlDir}/index.html #{htmlDir}/#{moduleName}.css")
 end
 
