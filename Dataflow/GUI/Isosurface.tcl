@@ -22,12 +22,12 @@ package require Iwidgets 3.0
 
 itcl_class SCIRun_Visualization_Isosurface {
     inherit Module
-
+    
     constructor {config} {
 	set name Isosurface
 	set_defaults
     }
-
+    
     method set_defaults {} {
 	global $this-isoval-min 
 	global $this-isoval-max 
@@ -38,7 +38,9 @@ itcl_class SCIRun_Visualization_Isosurface {
 	global $this-gen
 	global $this-build_trisurf
 	global $this-np
-	
+	global $this-active_tab
+	global $this-update_type
+
 	set $this-isoval-min 0
 	set $this-isoval-max 4095
 	set $this-continuous 0
@@ -48,6 +50,10 @@ itcl_class SCIRun_Visualization_Isosurface {
 	set $this-gen 0
 	set $this-build_trisurf 0
 	set $this-np 1
+	set $this-active_tab "MC"
+	set $this-update_type "on release"
+	trace variable $this-active_tab w "$this switch_to_active_tab"
+	trace variable $this-update_type w "$this set_update_type"
 
 	# SAGE vars
 	global $this-visibility $this-value $this-scan
@@ -69,8 +75,15 @@ itcl_class SCIRun_Visualization_Isosurface {
 	set $this-min_size 1
 	set $this-poll 0
 
-#	global $this-update
-#	set $this-update 0
+    }
+
+    method switch_to_active_tab {name1 name2 op} {
+	#puts stdout "switching"
+	set window .ui[modname]
+	if {[winfo exists $window]} {
+	    set mf [$window.f.meth childsite]
+	    $mf.tabs view [set $this-active_tab]
+	}
     }
 
     method ui {} {
@@ -79,21 +92,21 @@ itcl_class SCIRun_Visualization_Isosurface {
 	    raise $w
 	    return;
 	}
-
+	
 	toplevel $w
 	frame $w.f 
 	pack $w.f -padx 2 -pady 2 -expand 1 -fill x
 	set n "$this-c needexecute "
-
+	
 	scale $w.f.isoval -label "Iso Value:" \
-	    -variable $this-isoval \
-	    -from [set $this-isoval-min] -to [set $this-isoval-max] \
-	    -length 5c \
-	    -showvalue true \
-	    -orient horizontal  \
-	    -digits 5 \
-	    -resolution 0.001 \
-	    -command "$this change_isoval"
+		-variable $this-isoval \
+		-from [set $this-isoval-min] -to [set $this-isoval-max] \
+		-length 5c \
+		-showvalue true \
+		-orient horizontal  \
+		-digits 5 \
+		-resolution 0.001 \
+		-command "$this change_isoval"
 
 	bind $w.f.isoval <ButtonRelease> "$this set-isoval"
 	
@@ -106,7 +119,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	global $this-type
 	global $this-gen
 
-	iwidgets::Labeledframe $w.f.info -labelpos nw -labeltext "Info"
+	iwidgets::labeledframe $w.f.info -labelpos nw -labeltext "Info"
 	set info [$w.f.info childsite]
 	
 	label $info.type_label -text "File Type: " 
@@ -119,13 +132,14 @@ itcl_class SCIRun_Visualization_Isosurface {
 
 	#  Options
 
-	iwidgets::Labeledframe $w.f.opt -labelpos nw -labeltext "Options"
+	iwidgets::labeledframe $w.f.opt -labelpos nw -labeltext "Options"
 	set opt [$w.f.opt childsite]
 	
 	iwidgets::optionmenu $opt.update -labeltext "Update:" \
-	    -labelpos w -command "$this update-type $opt.update"
+		-labelpos w -command "$this update-type $opt.update"
 	
 	$opt.update insert end "on release" Manual Auto
+	$opt.update select [set $this-update_type]
 
 	global $this-update
 	set $this-update $opt.update
@@ -135,97 +149,50 @@ itcl_class SCIRun_Visualization_Isosurface {
 		-variable $this-build_trisurf
 
 	checkbutton $opt.aefnf -text "Auto Extract from New Field" \
-	    -relief flat -variable $this-extract-from-new-field 
+		-relief flat -variable $this-extract-from-new-field 
 
 	pack $opt.update $opt.aefnf $opt.buildsurf -side top -anchor w
 	pack $w.f.opt -side top -anchor w
 
 
 	#  Methods
-	iwidgets::Labeledframe $w.f.method -labelpos nw -labeltext "Methods"
-	set mf [$w.f.method childsite]
+	iwidgets::labeledframe $w.f.meth -labelpos nw -labeltext "Methods"
+	set mf [$w.f.meth childsite]
 	
 	iwidgets::tabnotebook  $mf.tabs -raiseselect true 
-#-fill both
+	#-fill both
 	pack $mf.tabs -side top
 
 	#  Method:
 
 	set alg [$mf.tabs add -label "MC" -command "$this select-alg 0"]
- 
+	
         scale $alg.np -label "np:" \
-            -variable $this-np \
-            -from 1 -to 8 \
-            -showvalue true \
-            -orient horizontal
- 
+		-variable $this-np \
+		-from 1 -to 8 \
+		-showvalue true \
+		-orient horizontal
+	
         pack $alg.np -side left -fill x
 
 	set alg [$mf.tabs add -label "NOISE"  -command "$this select-alg 1"]
-#	set alg [$mf.tabs add -label "SAGE"  -command "$this select-alg 2"]
 
-# 	iwidgets::checkbox $alg.prune -labeltext "Prune"
-# 	$alg.prune add value  -text "Value"  -variable $this-value
-# 	$alg.prune add bbox   -text "BBox"   -variable $this-bbox
-# 	$alg.prune add scan   -text "Scan"   -variable $this-scan
-# 	$alg.prune add points -text "Points" -variable $this-reduce
-
-# 	iwidgets::checkbox $alg.opt -labeltext "Options"
-# 	$alg.opt add poll   -text "Poll"   -variable $this-poll
-# 	$alg.opt add size   -text "Size"   -variable $this-min_size
-#  	$alg.opt add all    -text "All"    -variable $this-all
-
-# 	pack $alg.prune $alg.opt -side left -anchor n
-	
-#	set alg [$mf.tabs add -label "Opt"]
-
-#	iwidgets::radiobox $alg.orient -labeltext "Tabs position:" \
-#	    -command "$this orient $mf $alg" 
-
-# 	$alg.orient add n -text "n"
-# 	$alg.orient add w -text "w"
-# 	$alg.orient add e -text "e"
-# 	$alg.orient add s -text "s"
-
-# 	$alg.orient select n
-
-
-# 	pack $alg.orient -padx 4 -pady 4 -anchor w
-
-	$mf.tabs view "MC"
+	$mf.tabs view [set $this-active_tab]
 	$mf.tabs configure -tabpos "n"
-#[$alg.orient get]
 
 	
 	pack $mf.tabs -side top
+	pack $w.f.meth -side top
+    }
 
-	pack $w.f.method -side top
-
-
-# 	button $w.f.reset_view -text "Reset View" -relief raised -command $n
-
-
-
-
-
-# 	pack $w.f.prune -side bottom
-
-# 	pack $w.f.prune.reduce $w.f.prune.skip \
-# 	    $w.f.prune.scan $w.f.prune.value $w.f.prune.visibility \
-# 	    $w.f.prune.all $w.f.prune.size $w.f.prune.poll \
-# 	    -padx 2 -pady 3 -expand 1 -fill x  -side left
-	
-# #	raiseGL
-#     }
-    
     method change_isoval { n } {
-        global $this-continuous
+	global $this-continuous
 	
 	if { [set $this-continuous] == 1.0 } {
 	    eval "$this-c needexecute"
 	}
     }
-	
+    
     method set-isoval {} {
 	global $this-update
 
@@ -234,7 +201,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	    eval "$this-c needexecute"
 	}
     }
-	
+    
     method orient { tab page { val 4 }} {
 	global $page
 	global $tab
@@ -244,7 +211,13 @@ itcl_class SCIRun_Visualization_Isosurface {
 
     method select-alg { alg } {
 	global $this-algorithm
-	
+	global $this-active_tab
+
+	if { $alg == 0 } {
+	    set $this-active_tab "MC"
+	} else {
+	    set $this-active_tab "NOISE"
+	}
 	if { [set $this-algorithm] != $alg } {
 	    set $this-algorithm $alg
 	    if { [set $this-continuous] == 1.0 } {
@@ -253,13 +226,27 @@ itcl_class SCIRun_Visualization_Isosurface {
 	}
     }
 
+    method set_update_type { name1 name2 op } {
+	puts stdout "set update type"
+	puts stdout $name1
+	puts stdout $name2
+	puts stdout $op
+	puts stdout [set $this-update_type]
+	set window .ui[modname]
+	if {[winfo exists $window]} {
+	    set opt [$window.f.opt childsite]
+	    $opt.update select [set $this-update_type]
+	}
+    }
+
     method update-type { w } {
 	global $w
 	global $this-continuous
+	global $this-update_type
 
-	set type [$w get]
-	puts "update to $type current is [set $this-continuous]"
-	if { $type == "Auto" } {
+	set $this-update_type [$w get]
+	puts "update to $this-update_type current is [set $this-continuous]"
+	if { [set $this-update_type] == "Auto" } {
 	    set $this-continuous 1
 	} else {
 	    set $this-continuous 0

@@ -73,13 +73,14 @@ class Isosurface : public Module {
   
 
   //! GUI variables
-  GuiDouble gui_iso_value;
-  GuiInt    extract_from_new_field;
-  GuiInt    use_algorithm;
-  GuiInt    build_trisurf_;
-  GuiInt    np_;          
+  GuiDouble  gui_iso_value;
+  GuiInt     extract_from_new_field;
+  GuiInt     use_algorithm;
+  GuiInt     build_trisurf_;
+  GuiInt     np_;          
+  GuiString  active_tab_; //! for saving nets state
+  GuiString  update_type_; //! for saving nets state
 
-  //! 
   double iso_value;
   FieldHandle field_;
   GeomObj *surface;
