@@ -63,10 +63,20 @@ void CompMooneyRivlin::initializeCMData(const Patch* patch,
 
   new_dw->allocateAndPut(deformationGradient,lb->pDeformationMeasureLabel,pset);
   new_dw->allocateAndPut(pstress,            lb->pStressLabel,            pset);
-
+  // for J-Integral
+#ifdef FRACTURE
+  ParticleVariable<Matrix3> pdispGrads;
+  new_dw->allocateAndPut(pdispGrads, lb->pDispGradsLabel, pset);
+  ParticleVariable<double>  pstrainEnergyDensity;
+  new_dw->allocateAndPut(pstrainEnergyDensity, lb->pStrainEnergyDensityLabel, pset);
+#endif
   for(ParticleSubset::iterator iter =pset->begin();iter != pset->end();iter++){
         deformationGradient[*iter] = Identity;
         pstress[*iter] = zero;
+#ifdef FRACTURE
+     pdispGrads[*iter] = zero;
+     pstrainEnergyDensity[*iter] = 0.0;
+#endif
   }
 
   computeStableTimestep(patch, matl, new_dw);
@@ -158,10 +168,21 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
                                   lb->pDeformationMeasureLabel_preReloc, pset);
 
 #ifdef FRACTURE
-    constParticleVariable<Short27> pgCode;
-    new_dw->get(pgCode, lb->pgCodeLabel, pset);
     constNCVariable<Vector> Gvelocity;
     new_dw->get(Gvelocity,lb->GVelocityLabel, matlindex, patch, gac, NGN);
+
+    constParticleVariable<Short27> pgCode;
+    constParticleVariable<Matrix3> pdispGrads;
+    constParticleVariable<double>  pstrainEnergyDensity;
+    new_dw->get(pgCode,              lb->pgCodeLabel,              pset);
+    old_dw->get(pdispGrads,          lb->pDispGradsLabel,          pset);
+    old_dw->get(pstrainEnergyDensity,lb->pStrainEnergyDensityLabel,pset);
+
+    ParticleVariable<Matrix3> pdispGrads_new;
+    ParticleVariable<double> pstrainEnergyDensity_new;
+    new_dw->allocateAndPut(pdispGrads_new, lb->pDispGradsLabel_preReloc, pset);
+    new_dw->allocateAndPut(pstrainEnergyDensity_new,
+                                 lb->pStrainEnergyDensityLabel_preReloc, pset);
 #endif
 
     new_dw->get(gvelocity, lb->gVelocityLabel, matlindex,patch, gac, NGN);
@@ -254,6 +275,13 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
             C4*(invar3-1.0)*(invar3-1.0))*pvolume_deform[idx]/J;
 
       se += e;
+#ifdef FRACTURE
+      // Update particle displacement gradients
+      pdispGrads_new[idx] = pdispGrads[idx] + velGrad * delT;
+      // Update particle strain energy density
+      pstrainEnergyDensity_new[idx] = pstrainEnergyDensity[idx] +
+                                         e/pvolume_deform[idx];
+#endif
     }
         
     WaveSpeed = dx/WaveSpeed;
@@ -283,6 +311,12 @@ void CompMooneyRivlin::addParticleState(std::vector<const VarLabel*>& from,
 
    to.push_back(lb->pDeformationMeasureLabel_preReloc);
    to.push_back(lb->pStressLabel_preReloc);
+#ifdef FRACTURE
+   from.push_back(lb->pDispGradsLabel);
+   from.push_back(lb->pStrainEnergyDensityLabel);
+   to.push_back(lb->pDispGradsLabel_preReloc);
+   to.push_back(lb->pStrainEnergyDensityLabel_preReloc);
+#endif
 }
 
 void CompMooneyRivlin::addInitialComputesAndRequires(Task*,
@@ -310,8 +344,12 @@ void CompMooneyRivlin::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, lb->delTLabel);
 
 #ifdef FRACTURE
-  task->requires(Task::NewDW, lb->pgCodeLabel, matlset, Ghost::None);
-  task->requires(Task::NewDW, lb->GVelocityLabel, matlset, gac, NGN);
+  task->requires(Task::NewDW, lb->GVelocityLabel,          matlset,gac,NGN);
+  task->requires(Task::NewDW, lb->pgCodeLabel,             matlset,Ghost::None);
+  task->requires(Task::OldDW, lb->pDispGradsLabel,         matlset,Ghost::None);
+  task->requires(Task::OldDW,lb->pStrainEnergyDensityLabel,matlset,Ghost::None);
+  task->computes(lb->pDispGradsLabel_preReloc,             matlset);
+  task->computes(lb->pStrainEnergyDensityLabel_preReloc,   matlset);
 #endif
 
   task->computes(lb->pStressLabel_preReloc,             matlset);
