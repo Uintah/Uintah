@@ -102,7 +102,8 @@ public:
 
    // NCVariables Variables
    virtual void allocate(NCVariableBase&, const VarLabel*,
-			 int matlIndex, const Patch*);
+			 int matlIndex, const Patch*,
+			 const IntVector gc = IntVector(0,0,0));
    virtual void get(NCVariableBase&, const VarLabel*, int matlIndex,
 		    const Patch*, Ghost::GhostType, int numGhostCells);
    virtual void put(const NCVariableBase&, const VarLabel*,

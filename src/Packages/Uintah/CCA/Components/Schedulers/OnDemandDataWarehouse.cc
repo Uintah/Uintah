@@ -914,7 +914,7 @@ void
 OnDemandDataWarehouse::allocate(NCVariableBase& var,
 				const VarLabel* label,
 				int matlIndex,
-				const Patch* patch)
+				const Patch* patch, const IntVector gc)
 {
   d_lock.writeLock();
 
@@ -931,7 +931,7 @@ OnDemandDataWarehouse::allocate(NCVariableBase& var,
   }
 
   // Allocate the variable
-  var.allocate(patch->getNodeLowIndex(), patch->getNodeHighIndex());
+  var.allocate(patch->getNodeLowIndex()-gc, patch->getNodeHighIndex()+gc);
   d_lock.writeUnlock();
 }
 
