@@ -542,7 +542,7 @@ ProblemSpecP ProblemSpec::get(const std::string& name, vector<IntVector>& value)
 	delete [] s;
 
         istringstream in(string_value);
-	char c,next;
+	char c;
         bool first_bracket = false;
         bool inner_bracket = false;
 	string result;
@@ -583,6 +583,7 @@ ProblemSpecP ProblemSpec::get(const std::string& name, vector<IntVector>& value)
       } // end if (child->getNodeType() == DOMNode::TEXT_NODE)
     }
   }
+  return ps;
 }
 
 void ProblemSpec::parseIntVector(const std::string& string_value, IntVector& value)
@@ -1363,7 +1364,7 @@ ostream& operator<<(ostream& out, ProblemSpecP pspec) {
 void outputContent(ostream& target, const char *chars /**to_write*/)
 {
   //const char* chars = strdup(to_char_ptr(to_write));
-  unsigned int len = chars?strlen(chars):0;
+  unsigned int len = chars?(unsigned)strlen(chars):0;
   for (unsigned int index = 0; index < len; index++) {
     switch (chars[index]) {
     case chAmpersand :
