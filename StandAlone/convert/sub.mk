@@ -67,6 +67,10 @@ PROGRAM := $(SRCDIR)/TriSurfToCVRTI
 SRCS := $(SRCDIR)/TriSurfToCVRTI.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
+PROGRAM := $(SRCDIR)/TriSurfToTetgen
+SRCS := $(SRCDIR)/TriSurfToTetgen.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
 PROGRAM := $(SRCDIR)/CVRTItoPointCloud
 SRCS := $(SRCDIR)/CVRTItoPointCloud.cc
 include $(SCIRUN_SCRIPTS)/program.mk
@@ -93,6 +97,10 @@ include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/RawToTetVol
 SRCS := $(SRCDIR)/RawToTetVol.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
+PROGRAM := $(SRCDIR)/TetgenToTetVol
+SRCS := $(SRCDIR)/TetgenToTetVol.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/RawToTriSurf
