@@ -122,7 +122,7 @@ if [ "$VERBOSE" = "no" -a "$SEND_MAIL_TO" != "" ]; then
 Subject: $subject
 To: $SEND_MAIL_TO
 EOF
-    if [ "$REPLY_TO" != "" ];
+    if [ "$REPLY_TO" != "" ]; then
         echo "Reply-To: $REPLY_TO" >> "$BUILDROOT"/mail.msg
     fi
     cat "$BUILDROOT"/log >> "$BUILDROOT"/mail.msg
