@@ -17,11 +17,11 @@ AC_ARG_ENABLE(exename,
 	[exename="$enableval"],
 	[exename=${exename='default'}])
 
-if test "$package" = ""; then
-  echo "--enable-package requires an argument, such as:"
-  echo "  --enable-package=\"Uintah BioPSE\""
-  exit 1
-fi
+#if test "$package" = ""; then
+#  echo "--enable-package requires an argument, such as:"
+#  echo "  --enable-package=\"Uintah BioPSE\""
+#  exit 1
+#fi
 
 PACKAGE_DIRS=
 
