@@ -1171,6 +1171,9 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   scene->addObjectOfInterest(TVI9, true);
   scene->addObjectOfInterest(TVI10, true);
 
+  scene->addObjectOfInterest(tan, true);
+  scene->addObjectOfInterest(seawhite, true);  
+  
   
 
   bubbles->set_name("bubbles");
@@ -1183,7 +1186,5 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   //scene->add_light(new Light(Point(-10, 0, 2.9), Color(.8,.8,.8), 0));
   //scene->add_light(new Light(Point(10, 0, 2.9), Color(.8,.8,.8), 0));
   scene->animate=true;
-  
-  
   return scene;
 }
