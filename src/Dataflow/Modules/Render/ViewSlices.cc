@@ -2430,7 +2430,18 @@ ViewSlices::execute()
   for (n = 0; n < nrrd_iports.size(); ++n) {
     NrrdDataHandle nrrdH;
     nrrd_iports[n]->get(nrrdH);
-    if (nrrdH.get_rep()) nrrds.push_back(nrrdH);
+
+    if (nrrdH.get_rep())
+    {
+      if (nrrdH->nrrd->dim < 3)
+      {
+        warning("Nrrd with dim < 3, skipping.");
+      }
+      else
+      {
+        nrrds.push_back(nrrdH);
+      }
+    }
   }
 
   if (!nrrds.size()) {
