@@ -330,7 +330,11 @@ public:
   // Use this one instead
   bool get_neighbor(Face::index_type &neighbor, Face::index_type idx) const;
   void get_neighbors(Cell::array_type &array, Cell::index_type idx) const;
-  void get_neighbors(Node::array_type &array, Node::index_type idx) const;
+  // This uses vector instead of array_type because we cannot make any
+  // guarantees about the maximum valence size of any node in the
+  // mesh.
+  void get_neighbors(vector<Node::index_type> &array,
+		     Node::index_type idx) const;
 
   void get_center(Point &result, Node::index_type idx) const { result = points_[idx]; }
   void get_center(Point &result, Edge::index_type idx) const;
@@ -376,7 +380,7 @@ public:
 
   unsigned int get_valence(Node::index_type idx) const
   {
-    Node::array_type arr;
+    vector<Node::index_type> arr;
     get_neighbors(arr, idx);
     return arr.size();
   }

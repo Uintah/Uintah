@@ -1087,14 +1087,13 @@ TetVolMesh::get_neighbor(Face::index_type &neighbor, Face::index_type idx)const
 
   return true;
 }  
-  
-  
 
 
 void
 TetVolMesh::get_neighbors(Cell::array_type &array, Cell::index_type idx) const
 {
-  ASSERTMSG(synchronized_ & FACE_NEIGHBORS_E, "Must call synchronize FACE_NEIGHBORS_E on TetVolMesh first.");
+  ASSERTMSG(synchronized_ & FACE_NEIGHBORS_E,
+	    "Must call synchronize FACE_NEIGHBORS_E on TetVolMesh first.");
   Face::index_type face;
   for (int i = idx*4; i < idx*4+4;i++)
   {
@@ -1109,8 +1108,10 @@ TetVolMesh::get_neighbors(Cell::array_type &array, Cell::index_type idx) const
   } 
 }
 
+
 void
-TetVolMesh::get_neighbors(Node::array_type &array, Node::index_type idx) const
+TetVolMesh::get_neighbors(vector<Node::index_type> &array,
+			  Node::index_type idx) const
 {
   ASSERTMSG(synchronized_ & NODE_NEIGHBORS_E, 
 	    "Must call synchronize NODE_NEIGHBORS_E on TetVolMesh first.");
@@ -1119,12 +1120,14 @@ TetVolMesh::get_neighbors(Node::array_type &array, Node::index_type idx) const
   {
     const int base = node_neighbors_[idx][i]/4*4;
     for (int c = base; c < base+4; c++)
-      if (cells_[c] != idx && inserted.find(cells_[c]) == inserted.end())
-      {
-	inserted.insert(cells_[c]);
-	array.push_back(cells_[c]);
-      }
+    {
+      inserted.insert(cells_[c]);
+    }
   }
+  
+  array.clear();
+  array.reserve(inserted.size());
+  array.insert(array.begin(), inserted.begin(), inserted.end());
 }
 
 
