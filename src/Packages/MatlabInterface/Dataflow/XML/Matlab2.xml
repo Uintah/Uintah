@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<?xml-stylesheet href="../../../../../doc/package-component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+<component name="Matlab2" category="DataIO">
+  <overview>
+    <authors>
+      <author>Oleg Portniaguine</author>
+      <author>Jeroen Stinstra</author>
+    </authors>
+    <summary>
+      Interactive Matlab Interface.  The Matlab module is part of the DataIO category in the MatlabInterface package.
+    </summary>
+    <description>
+      <p>The Matlab module is part of the MatlabInterface package that enables
+calls from SCIRun to Matlab, either to interactive commands or via Matlab
+scripts.  Sockets are the underlying coupling mechanism that connect SCIRun
+and Matlab because they run as separate processes.  The Matlab module facilitates both simple tasks such as converting files between SCIRun and Matlab, and more complex tasks such as creating interactive SCIRun programs that call Matlab scripts to perform real-time applications.</p>
+      <p>Version Date: Sep 2001</p><p>Version: 1.0</p>
+    </description>
+  </overview>
+  <implementation>
+  </implementation>
+  <io>
+    <inputs lastportdynamic="yes">
+      <port>
+        <name>i1</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>i2</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>i3</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>i4</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>i5</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>fieldi1</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>fieldi2</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>fieldi3</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>nnrdi1</name>
+        <datatype>SCIRun::Nrrd</datatype>
+      </port>
+      <port>
+        <name>nrrdi2</name>
+        <datatype>SCIRun::Nrrd</datatype>
+      </port>
+      <port>
+        <name>nrrdi3</name>
+        <datatype>SCIRun::Nrrd</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>o1</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>o2</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>o3</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>o4</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>o5</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+     <port>
+        <name>fieldo1</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>fieldo2</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>fieldo3</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>nnrdo1</name>
+        <datatype>SCIRun::Nrrd</datatype>
+      </port>
+      <port>
+        <name>nrrdo2</name>
+        <datatype>SCIRun::Nrrd</datatype>
+      </port>
+      <port>
+        <name>nrrdo3</name>
+        <datatype>SCIRun::Nrrd</datatype>
+      </port>
+    </outputs>
+  </io>
+  <gui>
+  </gui>
+  <testing>
+  </testing>
+</component>
+
+
+
+
+
+
+
+
+
+
+
+
