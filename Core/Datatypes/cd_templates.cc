@@ -89,6 +89,7 @@ const TypeDescription* get_type_description(vector<FaceIndex<int> >*);
 const TypeDescription* get_type_description(vector<CellIndex<int> >*);
 
 // Property types
+template class Property<int>;
 template class Property<string>;
 template class Property<Array1<double> >;
 template class Property<Array1<Tensor> >;
