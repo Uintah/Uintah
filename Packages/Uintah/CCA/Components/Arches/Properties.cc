@@ -75,6 +75,7 @@ Properties::problemSetup(const ProblemSpecP& params)
   ProblemSpecP db = params->findBlock("Properties");
   db->require("denUnderrelax", d_denUnderrelax);
   db->getWithDefault("filter_drhodt",d_filter_drhodt,false);
+  db->getWithDefault("first_order_drhodt",d_first_order_drhodt,false);
   db->require("ref_point", d_denRef);
   db->require("radiation",d_radiationCalc);
   if (d_radiationCalc) {
@@ -233,6 +234,11 @@ Properties::computeProps(const ProcessorGroup* pc,
 			 DataWarehouse*,
 			 DataWarehouse* new_dw)
 {
+  const Patch* patch_for_level = patches->get(0);
+  const Level* level = patch_for_level->getLevel();
+  IntVector periodic_vector = level->getPeriodicBoundaries();
+  d_3d_periodic = (periodic_vector == IntVector(1,1,1));
+
   for (int p = 0; p < patches->size(); p++) {
 
     const Patch* patch = patches->get(p);
@@ -1743,10 +1749,10 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
     IntVector idxLo = patch->getCellFORTLowIndex();
     IntVector idxHi = patch->getCellFORTHighIndex();
     // compute drhodt and add its filtered value
-    drhodt.resize(patch->getLowIndex(), patch->getHighIndex());
+    drhodt.allocate(patch->getLowIndex(), patch->getHighIndex());
     drhodt.initialize(0.0);
 
-    if (current_step <= drhodt_1st_order) {
+    if ((d_first_order_drhodt)||(current_step <= drhodt_1st_order)) {
 // 1st order drhodt
       for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
         for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
@@ -1781,7 +1787,9 @@ Properties::computeDrhodt(const ProcessorGroup* pc,
       }
     }
 
-    if (d_filter_drhodt) {
+    if ((d_filter_drhodt)&&(!(d_3d_periodic))) {
+    // filtering for periodic case is not implemented 
+    // if it needs to be then drhodt will require 1 layer of boundary cells to be computed
 #ifdef PetscFilter
     d_filter->applyFilter(pc, patch, drhodt, filterdrhodt);
 #else

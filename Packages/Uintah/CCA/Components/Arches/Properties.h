@@ -248,6 +248,7 @@ private:
       bool d_flamelet;
       bool d_steadyflamelet;
       bool d_filter_drhodt;
+      bool d_first_order_drhodt;
       int d_numMixingVars;
       int d_numMixStatVars;
       double d_denUnderrelax;
@@ -256,6 +257,7 @@ private:
       MixingModel* d_mixingModel;
       BoundaryCondition* d_bc;
       bool d_empirical_soot;
+      bool d_3d_periodic;
 #ifdef PetscFilter
       Filter* d_filter;
 #endif

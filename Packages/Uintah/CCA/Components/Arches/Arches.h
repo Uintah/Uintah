@@ -149,9 +149,11 @@ public:
 			    const GridP& grid);
 
       virtual void sched_readCCInitialCondition(const LevelP& level,
-				   SchedulerP&);
+				   		SchedulerP&);
       virtual void sched_interpInitialConditionToStaggeredGrid(const LevelP& level,
-				   SchedulerP&);
+				   		SchedulerP&);
+      virtual void sched_getCCVelocities(const LevelP& level,
+			   		 SchedulerP&);
       // GROUP: Access Functions :
       ///////////////////////////////////////////////////////////////////////
 	// Boolean to see whether or not Enthalpy is solved for
@@ -219,16 +221,22 @@ private:
 				 DataWarehouse* new_dw);
 
       void readCCInitialCondition(const ProcessorGroup*,
-		     const PatchSubset* patches,
-		     const MaterialSubset*,
-		     DataWarehouse* ,
-		     DataWarehouse* new_dw );
+		     		  const PatchSubset* patches,
+		     		  const MaterialSubset*,
+		    		  DataWarehouse* ,
+		     		  DataWarehouse* new_dw);
 
       void interpInitialConditionToStaggeredGrid(const ProcessorGroup*,
-		     const PatchSubset* patches,
-		     const MaterialSubset*,
-		     DataWarehouse* ,
-		     DataWarehouse* new_dw );
+		     				 const PatchSubset* patches,
+		    				 const MaterialSubset*,
+		   				 DataWarehouse* ,
+		     				 DataWarehouse* new_dw);
+
+      void getCCVelocities(const ProcessorGroup*,
+		     	   const PatchSubset* patches,
+		     	   const MaterialSubset*,
+		    	   DataWarehouse* ,
+		     	   DataWarehouse* new_dw);
 private:
 
       double d_deltaT;

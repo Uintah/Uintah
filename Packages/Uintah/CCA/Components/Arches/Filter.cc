@@ -88,6 +88,9 @@ Filter::sched_buildFilterMatrix(const LevelP& level,
   d_perproc_patches->addReference();
   const MaterialSet* matls = d_lab->d_sharedState->allArchesMaterials();
 
+  IntVector periodic_vector = level->getPeriodicBoundaries();
+  d_3d_periodic = (periodic_vector == IntVector(1,1,1));
+
   Task* tsk = scinew Task("Filter::BuildFilterMatrix",
 			  this,
 			  &Filter::buildFilterMatrix);
@@ -139,9 +142,21 @@ Filter::matrixCreate(const PatchSet* allpatches,
       IntVector plowIndex = patch->getLowIndex();
       IntVector phighIndex = patch->getHighIndex();
 #endif
+      if (d_3d_periodic) {
+        const Level* level = patch->getLevel();
+        IntVector domain_low, domain_high;
+        level->findCellIndexRange(domain_low, domain_high);
+        if (plowIndex.x() == domain_low.x()) plowIndex -= IntVector(1,0,0);
+        if (plowIndex.y() == domain_low.y()) plowIndex -= IntVector(0,1,0);
+        if (plowIndex.z() == domain_low.z()) plowIndex -= IntVector(0,0,1);
+        if (phighIndex.x() == domain_high.x()) phighIndex += IntVector(1,0,0);
+        if (phighIndex.y() == domain_high.y()) phighIndex += IntVector(0,1,0);
+        if (phighIndex.z() == domain_high.z()) phighIndex += IntVector(0,0,1);
+      }
+
       long nc = (phighIndex[0]-plowIndex[0])*
-	(phighIndex[1]-plowIndex[1])*
-	(phighIndex[2]-plowIndex[2]);
+	        (phighIndex[1]-plowIndex[1])*
+	        (phighIndex[2]-plowIndex[2]);
       d_petscGlobalStart[patch]=totalCells;
       totalCells+=nc;
       mytotal+=nc;
@@ -158,12 +173,12 @@ Filter::matrixCreate(const PatchSet* allpatches,
     IntVector highIndex = patch->getGhostCellHighIndex(Arches::ONEGHOSTCELL);
     Array3<int> l2g(lowIndex, highIndex);
     l2g.initialize(-1234);
-    long totalCells=0;
     const Level* level = patch->getLevel();
     Level::selectType neighbors;
     level->selectPatches(lowIndex, highIndex, neighbors);
     for(int i=0;i<neighbors.size();i++){
       const Patch* neighbor = neighbors[i];
+
       // #ifdef notincludeBdry
 #if 1
       IntVector plow = neighbor->getCellFORTLowIndex();
@@ -172,6 +187,24 @@ Filter::matrixCreate(const PatchSet* allpatches,
       IntVector plow = neighbor->getLowIndex();
       IntVector phigh = neighbor->getHighIndex();
 #endif
+      if (d_3d_periodic) {
+        const Level* level = patch->getLevel();
+        IntVector domain_low, domain_high;
+        level->findCellIndexRange(domain_low, domain_high);
+        if (plow.x() == domain_low.x()) plow -= IntVector(1,0,0);
+        if (plow.y() == domain_low.y()) plow -= IntVector(0,1,0);
+        if (plow.z() == domain_low.z()) plow -= IntVector(0,0,1);
+        if (plow.x() == domain_high.x()) plow += IntVector(1,0,0);
+        if (plow.y() == domain_high.y()) plow += IntVector(0,1,0);
+        if (plow.z() == domain_high.z()) plow += IntVector(0,0,1);
+        if (phigh.x() == domain_high.x()) phigh += IntVector(1,0,0);
+        if (phigh.y() == domain_high.y()) phigh += IntVector(0,1,0);
+        if (phigh.z() == domain_high.z()) phigh += IntVector(0,0,1);
+        if (phigh.x() == domain_low.x()) phigh -= IntVector(1,0,0);
+        if (phigh.y() == domain_low.y()) phigh -= IntVector(0,1,0);
+        if (phigh.z() == domain_low.z()) phigh -= IntVector(0,0,1);
+      }
+
       IntVector low = Max(lowIndex, plow);
       IntVector high= Min(highIndex, phigh);
 
@@ -204,8 +237,6 @@ Filter::matrixCreate(const PatchSet* allpatches,
 	  }
 	}
       }
-      IntVector d = high-low;
-      totalCells+=d.x()*d.y()*d.z();
     }
     d_petscLocalToGlobal[patch].copyPointer(l2g);
     // #ifdef ARCHES_PETSC_DEBUG
@@ -227,14 +258,14 @@ Filter::matrixCreate(const PatchSet* allpatches,
   int me = d_myworld->myrank();
   int numlrows = numCells[me];
   int numlcolumns = numlrows;
-  int globalrows = (int)totalCells;
-  int globalcolumns = (int)totalCells;
+  int globalrows = totalCells;
+  int globalcolumns = totalCells;
   // for box filter of size 2 matrix width is 27
   d_nz = 27; // defined in Filter.h
   o_nz = 26;
   // #ifdef ARCHES_PETSC_DEBUG
 #if 0
-  cerr << "matrixCreate: local size: " << numlrows << ", " << numlcolumns << ", global size: " << globalrows << ", " << globalcolumns << "\n";
+  cout << "matrixCreate: local size: " << numlrows << ", " << numlcolumns << ", global size: " << globalrows << ", " << globalcolumns << "\n";
 #endif
   int ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
 			     globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
@@ -270,8 +301,8 @@ Filter::setFilterMatrix(const ProcessorGroup* ,
    cerr << "in setFilterMatrix on patch: " << patch->getID() << '\n';
 #endif
   // Get the patch bounds and the variable bounds
-   // #ifdef notincludeBdry
    if (!d_matrixInitialize) {
+     // #ifdef notincludeBdry
 #if 1
      IntVector idxLo = patch->getCellFORTLowIndex();
      IntVector idxHi = patch->getCellFORTHighIndex();
@@ -279,7 +310,7 @@ Filter::setFilterMatrix(const ProcessorGroup* ,
      IntVector idxLo = patch->getLowIndex();
      IntVector idxHi = patch->getHighIndex()-IntVector(1,1,1);
 #endif
-  /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+    /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
          Compute the matrix that defines the filter function Ax
      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
     /* 
@@ -396,6 +427,7 @@ Filter::applyFilter(const ProcessorGroup* ,
 
   Array3<int> l2g(lowIndex, highIndex);
   l2g.copy(d_petscLocalToGlobal[patch]);
+
   // #ifdef notincludeBdry
 #if 1
   IntVector idxLo = patch->getCellFORTLowIndex();
@@ -404,10 +436,25 @@ Filter::applyFilter(const ProcessorGroup* ,
   IntVector idxLo = patch->getLowIndex();
   IntVector idxHi = patch->getHighIndex()-IntVector(1,1,1);
 #endif
+  IntVector inputLo = idxLo;
+  IntVector inputHi = idxHi;
+  if (d_3d_periodic) {
+  const Level* level = patch->getLevel();
+  IntVector domain_low, domain_high;
+  level->findCellIndexRange(domain_low, domain_high);
+  domain_high -=IntVector(1,1,1);
+  if (idxLo.x() == domain_low.x()) inputLo -= IntVector(1,0,0);
+  if (idxLo.y() == domain_low.y()) inputLo -= IntVector(0,1,0);
+  if (idxLo.z() == domain_low.z()) inputLo -= IntVector(0,0,1);
+  if (idxHi.x() == domain_high.x()) inputHi += IntVector(1,0,0);
+  if (idxHi.y() == domain_high.y()) inputHi += IntVector(0,1,0);
+  if (idxHi.z() == domain_high.z()) inputHi += IntVector(0,0,1);
+  }
+
   double vecvaluex;
-  for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+  for (int colZ = inputLo.z(); colZ <= inputHi.z(); colZ ++) {
+    for (int colY = inputLo.y(); colY <= inputHi.y(); colY ++) {
+      for (int colX = inputLo.x(); colX <= inputHi.x(); colX ++) {
 	vecvaluex = var[IntVector(colX, colY, colZ)];
 	int row = l2g[IntVector(colX, colY, colZ)];	  
 	ierr = VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
@@ -454,7 +501,7 @@ Filter::applyFilter(const ProcessorGroup* ,
   ierr = VecGetArray(d_b, &xvec);
   if(ierr)
     throw PetscError(ierr, "VecGetArray");
-  int rowinit = l2g[IntVector(idxLo.x(), idxLo.y(), idxLo.z())]; 
+  int rowinit = l2g[IntVector(inputLo.x(), inputLo.y(), inputLo.z())]; 
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
@@ -491,6 +538,7 @@ Filter::applyFilter(const ProcessorGroup* ,
 
   Array3<int> l2g(lowIndex, highIndex);
   l2g.copy(d_petscLocalToGlobal[patch]);
+
   // #ifdef notincludeBdry
 #if 1
   IntVector idxLo = patch->getCellFORTLowIndex();
@@ -499,10 +547,25 @@ Filter::applyFilter(const ProcessorGroup* ,
   IntVector idxLo = patch->getLowIndex();
   IntVector idxHi = patch->getHighIndex()-IntVector(1,1,1);
 #endif
+  IntVector inputLo = idxLo;
+  IntVector inputHi = idxHi;
+  if (d_3d_periodic) {
+  const Level* level = patch->getLevel();
+  IntVector domain_low, domain_high;
+  level->findCellIndexRange(domain_low, domain_high);
+  domain_high -=IntVector(1,1,1);
+  if (idxLo.x() == domain_low.x()) inputLo -= IntVector(1,0,0);
+  if (idxLo.y() == domain_low.y()) inputLo -= IntVector(0,1,0);
+  if (idxLo.z() == domain_low.z()) inputLo -= IntVector(0,0,1);
+  if (idxHi.x() == domain_high.x()) inputHi += IntVector(1,0,0);
+  if (idxHi.y() == domain_high.y()) inputHi += IntVector(0,1,0);
+  if (idxHi.z() == domain_high.z()) inputHi += IntVector(0,0,1);
+  }
+
   double vecvaluex;
-  for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
-    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
-      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+  for (int colZ = inputLo.z(); colZ <= inputHi.z(); colZ ++) {
+    for (int colY = inputLo.y(); colY <= inputHi.y(); colY ++) {
+      for (int colX = inputLo.x(); colX <= inputHi.x(); colX ++) {
 	vecvaluex = var[IntVector(colX, colY, colZ)];
 	int row = l2g[IntVector(colX, colY, colZ)];	  
 	ierr = VecSetValue(d_x, row, vecvaluex, INSERT_VALUES);
@@ -551,7 +614,7 @@ Filter::applyFilter(const ProcessorGroup* ,
   ierr = VecGetArray(d_b, &xvec);
   if(ierr)
     throw PetscError(ierr, "VecGetArray");
-  int rowinit = l2g[IntVector(idxLo.x(), idxLo.y(), idxLo.z())]; 
+  int rowinit = l2g[IntVector(inputLo.x(), inputLo.y(), inputLo.z())]; 
   for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
