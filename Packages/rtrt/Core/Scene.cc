@@ -27,21 +27,21 @@ using namespace rtrt;
 using namespace SCIRun;
 using std::cerr;
 
-Scene::Scene(Object* obj, const Camera& cam, Image* image0, Image* image1,
+Scene::Scene(Object* ob, const Camera& cam, Image* image0, Image* image1,
 	     const Color& bgcolor,
              const Color& cdown,
              const Color& cup,
 	     const Plane& groundplane, 
 	     double ambientscale,
 	     AmbientType ambient_mode)
-  : obj(obj), mainGroup_(obj), 
+  : obj(ob), mainGroup_(ob),
     camera0(camera0), image0(image0), image1(image1),
     groundplane(groundplane), ambient_mode(ambient_mode),
     cup(cup), cdown(cdown), origCup_(cup), origCDown_(cdown),
     work("frame tiles")
 {
-  mainGroupWithLights_ = new Group;
-  mainGroupWithLights_->add( obj );
+  lightsGroup_ = new Group;
+  mainGroupWithLights_ = lightsGroup_;
 
   origAmbientColor_ = Color(1,1,1) * ambientscale;
   ambientColor_     = origAmbientColor_;
@@ -77,7 +77,19 @@ void Scene::init(const Camera& cam, const Color& bgcolor)
   select_shadow_mode( Hard_Shadows );
 }
 
-void Scene::add_shadowmode(const char* name, ShadowBase* s)
+void
+Scene::set_object(Object* new_obj) 
+{
+  obj        = new_obj;
+  mainGroup_ = new_obj;
+  
+  mainGroupWithLights_ = new Group;
+  mainGroupWithLights_->add( new_obj );
+  mainGroupWithLights_->add( lightsGroup_ );
+}
+
+void
+Scene::add_shadowmode(const char* name, ShadowBase* s)
 {
   s->setName(name);
   shadows.add(s);
@@ -89,20 +101,20 @@ Scene::select_shadow_mode( ShadowType st )
   shadow_mode = st;
 }
 
-Scene::Scene(Object* obj, const Camera& cam, const Color& bgcolor,
+Scene::Scene(Object* ob, const Camera& cam, const Color& bgcolor,
              const Color& cdown,
              const Color& cup,
 	     const Plane& groundplane,
 	     double ambientscale,
 	     AmbientType ambient_mode)
-  : obj(obj), mainGroup_(obj),
+  : obj(ob), mainGroup_(ob),
     camera0(camera0), image0(0), image1(0),
     groundplane(groundplane), ambient_mode(ambient_mode),
     cdown(cdown), cup(cup), origCup_(cup), origCDown_(cdown),
     work("frame tiles")
 {
-  mainGroupWithLights_ = new Group;
-  mainGroupWithLights_->add( obj );
+  lightsGroup_ = new Group;
+  mainGroupWithLights_ = lightsGroup_;
 
   origAmbientColor_ = Color(1,1,1) * ambientscale;
   ambientColor_     = origAmbientColor_;
@@ -112,6 +124,7 @@ Scene::Scene(Object* obj, const Camera& cam, const Color& bgcolor,
 
 Scene::~Scene()
 {
+    delete lightsGroup_;
     delete mainGroup_;
     delete mainGroupWithLights_;
     delete camera0;
@@ -132,6 +145,7 @@ void Scene::refill_work(int which, int nworkers)
 }
 
 static Material * flat_yellow = NULL;
+static Material * flat_orange = NULL;
 
 void Scene::add_light(Light* light)
 {
@@ -141,20 +155,20 @@ void Scene::add_light(Light* light)
     // Create a yellow sphere that can be rendered in the location
     // of the light.
     Sphere * s = new Sphere( flat_yellow, light->get_pos(), 0.1 );
-    mainGroupWithLights_->add( s );
+    lightsGroup_->add( s );
 
     lights.add(light);
 }
 
 void Scene::add_per_matl_light(Light* light)
 {
-    if( !flat_yellow )
-        flat_yellow = new LambertianMaterial(Color(.8,.8,.0));
+    if( !flat_orange )
+        flat_orange = new LambertianMaterial(Color(1.0,.7,.0));
 
     // Create a yellow sphere that can be rendered in the location
     // of the light.
-    Sphere * s = new Sphere( flat_yellow, light->get_pos(), 0.1 );
-    mainGroupWithLights_->add( s );
+    Sphere * s = new Sphere( flat_orange, light->get_pos(), 0.1 );
+    lightsGroup_->add( s );
 
     per_matl_lights.add(light);
 }
@@ -298,3 +312,12 @@ Scene::renderLights( bool on )
   }
 }
 
+// Animate will only be called on objects added through this function.
+void
+Scene::addObjectOfInterest( Object * obj, bool animate /* = false */ )
+{
+  if( animate )
+    animateObjects_.add( obj );
+  if( obj->name_ != "" )
+    objectsOfInterest_.add( obj );
+}

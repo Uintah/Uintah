@@ -79,9 +79,7 @@ public:
   inline Object* get_shadow_object() const {
     return shadowobj;
   }
-  inline void set_object(Object* new_obj) {
-    obj=new_obj;
-  }
+  void set_object(Object* new_obj); 
   
   inline const Plane& get_groundplane() const {
     return groundplane;
@@ -203,7 +201,7 @@ public:
   Object* shadowobj;
   bool stereo;
   bool animate;
-  
+
   int ambient_mode;
   int frameno;
   FILE* frametime_fp;
@@ -212,6 +210,14 @@ public:
   bool doHotSpots() {
     return hotspots;
   }
+
+  // Any object that the GUI should allow "direct" interaction with
+  // or that needs to be animated should notify the scene of this
+  // via this call.  If the "name_" of the object is "", then the
+  // Gui will not display the object.  Also, animate will (now) only 
+  // be called on objects that have been added through this function
+  // with the "animate" flag set to true.
+  void addObjectOfInterest( Object * obj, bool animate = false );
 
   void attach_display(DpyBase *dpy);
   void init(const Camera& cam, const Color& bgcolor);
@@ -225,6 +231,8 @@ public:
 				     shadow_factor, depth, cx);
   }
 
+  // public for testing.
+  int shadow_mode;
 private:
 
   friend class Dpy;
@@ -235,7 +243,14 @@ private:
 
   Object * mainGroup_;
   Group  * mainGroupWithLights_;
+  Group  * lightsGroup_;
 
+  // Objects that are to be presented to the GUI for user interaction.
+  Array1<Object*> objectsOfInterest_;
+
+  // Objects that will have their animate() function called:
+  Array1<Object*> animateObjects_;
+  
   Camera* camera0;
   Camera* camera1;
   Image* image0;
@@ -250,7 +265,7 @@ private:
   Color cdown;         // color in direction of groundplane
   Plane groundplane;   // the groundplane for ambient hack
                        // distance guage is based on normal length
-  int shadow_mode;
+  //  int shadow_mode;
 
   int lightbits;
 
