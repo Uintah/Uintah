@@ -816,9 +816,6 @@ elif test "$tcl" &&
 fi
 
 if test -z "$BLT_PREFIX" ; then
-
-echo "here: thirdparty: $thirdparty"
-
   if test -f "$thirdparty/lib/libBLT24.so" || 
      test -f "$thirdparty/lib/libBLT24.a"; then
     BLT_PREFIX="$thirdparty"
