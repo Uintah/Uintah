@@ -171,8 +171,7 @@ void ViewWindow::itemAdded(GeomViewerItem* si)
   if(viter==visible.end()){
     // Make one...
     vis=scinew ObjTag;
-    vis->visible=scinew GuiInt(ctx->subVar(si->name));
-    vis->visible->set(1);
+    vis->visible=scinew GuiInt(ctx->subVar(si->name), 1);
     vis->tagid=maxtag++;
     visible[si->name] = vis;
     ostringstream str;
