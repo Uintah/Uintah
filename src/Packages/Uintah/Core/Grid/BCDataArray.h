@@ -56,15 +56,9 @@ WARNING
      void setBoundaryIterator(int mat_id,vector<IntVector>& b, int i);
      void setNBoundaryIterator(int mat_id,vector<IntVector>& b, int i);
      void setInteriorIterator(int mat_id,vector<IntVector>& i, int ii);
-     void setSFCXIterator(int mat_id,vector<IntVector>& i, int ii);
-     void setSFCYIterator(int mat_id,vector<IntVector>& i, int ii);
-     void setSFCZIterator(int mat_id,vector<IntVector>& i, int ii);
      void getBoundaryIterator(int mat_id,vector<IntVector>& b, int i) const;
      void getNBoundaryIterator(int mat_id,vector<IntVector>& b, int i) const;
      void getInteriorIterator(int mat_id,vector<IntVector>& i, int ii) const;
-     void getSFCXIterator(int mat_id,vector<IntVector>& i, int ii) const;
-     void getSFCYIterator(int mat_id,vector<IntVector>& i, int ii) const;
-     void getSFCZIterator(int mat_id,vector<IntVector>& i, int ii) const;
      int getNumberChildren(int mat_id) const;
      BCGeomBase* getChild(int mat_id,int i) const;
      void print();

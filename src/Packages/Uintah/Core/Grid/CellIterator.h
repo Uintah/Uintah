@@ -97,7 +97,7 @@ WARNING
     }
      
     const IntVector& operator*() const {
-//      ASSERT(!d_done);
+      ASSERT(!d_done);
       return d_cur;
     }
     inline CellIterator(const IntVector& s, const IntVector& e)
