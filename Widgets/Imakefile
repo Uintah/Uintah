@@ -7,32 +7,26 @@ OBJS = BaseWidget.o \
 	ArrowWidget.o \
 	BoxWidget.o \
 	CrosshairWidget.o \
-	CubeWidget.o \
 	FixedFrameWidget.o \
 	FrameWidget.o \
 	GuageWidget.o \
 	PointWidget.o \
 	RingWidget.o \
 	ScaledBoxWidget.o \
-	ScaledCubeWidget.o \
 	ScaledFrameWidget.o \
-	ScaledSquareWidget.o \
-	SquareWidget.o
+	ViewWidget.o
 SRCS = BaseWidget.cc \
 	ArrowWidget.cc \
 	BoxWidget.cc \
 	CrosshairWidget.cc \
-	CubeWidget.cc \
 	FixedFrameWidget.cc \
 	FrameWidget.cc \
 	GuageWidget.cc \
 	PointWidget.cc \
 	RingWidget.cc \
 	ScaledBoxWidget.cc \
-	ScaledCubeWidget.cc \
 	ScaledFrameWidget.cc \
-	ScaledSquareWidget.cc \
-	SquareWidget.cc
+	ViewWidget.cc
 
 
 LIBNAME = Widgets

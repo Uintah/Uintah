@@ -34,7 +34,47 @@ public:
 
    virtual void widget_execute();
    virtual void geom_moved(int, double, const Vector&, void*);
+
+   inline Vector GetAxis1();
+   inline Vector GetAxis2();
+   inline Vector GetAxis3();
+
+private:
+   Vector oldaxis1, oldaxis2, oldaxis3;
 };
+
+
+inline Vector
+BoxWidget::GetAxis1()
+{
+   Vector axis(variables[BoxW_PointIUR]->Get() - variables[BoxW_PointIUL]->Get());
+   if (axis.length2() <= 1e-6)
+      return oldaxis1;
+   else
+      return (oldaxis1 = axis.normal());
+}
+
+
+inline Vector
+BoxWidget::GetAxis2()
+{
+   Vector axis(variables[BoxW_PointIDL]->Get() - variables[BoxW_PointIUL]->Get());
+   if (axis.length2() <= 1e-6)
+      return oldaxis2;
+   else
+      return (oldaxis2 = axis.normal());
+}
+
+
+inline Vector
+BoxWidget::GetAxis3()
+{
+   Vector axis(variables[BoxW_PointOUL]->Get() - variables[BoxW_PointIUL]->Get());
+   if (axis.length2() <= 1e-6)
+      return oldaxis3;
+   else
+      return (oldaxis3 = axis.normal());
+}
 
 
 #endif

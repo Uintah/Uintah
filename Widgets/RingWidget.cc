@@ -15,7 +15,7 @@
 #include <Widgets/RingWidget.h>
 #include <Constraints/AngleConstraint.h>
 #include <Constraints/DistanceConstraint.h>
-#include <Constraints/HypotenuseConstraint.h>
+#include <Constraints/PythagorasConstraint.h>
 #include <Constraints/MidpointConstraint.h>
 #include <Constraints/PlaneConstraint.h>
 #include <Geom/Cylinder.h>
@@ -134,14 +134,15 @@ RingWidget::RingWidget( Module* module, CrowdMonitor* lock, Real widget_scale )
    constraints[RingW_ConstURDL]->VarChoices(Scheme2, 2, 2, 1);
    constraints[RingW_ConstURDL]->VarChoices(Scheme3, 1, 0, 1);
    constraints[RingW_ConstURDL]->Priorities(P_HighMedium, P_HighMedium, P_Default);
-   constraints[RingW_ConstHypo] = new HypotenuseConstraint("ConstHypo",
+   constraints[RingW_ConstHypo] = new PythagorasConstraint("ConstHypo",
 							   NumSchemes,
 							   variables[RingW_Dist],
+							   variables[RingW_Dist],
 							   variables[RingW_Hypo]);
-   constraints[RingW_ConstHypo]->VarChoices(Scheme1, 1, 0);
-   constraints[RingW_ConstHypo]->VarChoices(Scheme2, 1, 0);
-   constraints[RingW_ConstHypo]->VarChoices(Scheme3, 1, 0);
-   constraints[RingW_ConstHypo]->Priorities(P_Default, P_HighMedium);
+   constraints[RingW_ConstHypo]->VarChoices(Scheme1, 1, 0, 1);
+   constraints[RingW_ConstHypo]->VarChoices(Scheme2, 1, 0, 1);
+   constraints[RingW_ConstHypo]->VarChoices(Scheme3, 1, 0, 1);
+   constraints[RingW_ConstHypo]->Priorities(P_Default, P_Default, P_HighMedium);
    constraints[RingW_ConstULUR] = new DistanceConstraint("Const12",
 							 NumSchemes,
 							 variables[RingW_PointUL],

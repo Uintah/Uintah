@@ -25,7 +25,7 @@ const Index NumVars = 8;
 const Index NumGeoms = 10;
 const Index NumMatls = 3;
 const Index NumPcks = 7;
-const Index NumSchemes = 4;
+const Index NumSchemes = 5;
 
 enum { FFrameW_ConstULDR, FFrameW_ConstURDL, FFrameW_ConstPyth, FFrameW_ConstPlane,
        FFrameW_ConstULUR, FFrameW_ConstULDL, FFrameW_ConstDRUR, FFrameW_ConstDRDL,
@@ -44,8 +44,8 @@ FixedFrameWidget::FixedFrameWidget( Module* module, CrowdMonitor* lock, Real wid
    // Scheme2/3 are used by the picks in GeomMoved!!
    variables[FFrameW_PointUL] = new Variable("PntUL", Scheme1, Point(0, 0, 0));
    variables[FFrameW_PointUR] = new Variable("PntUR", Scheme2, Point(INIT, 0, 0));
-   variables[FFrameW_PointDR] = new Variable("PntDR", Scheme1, Point(INIT, INIT, 0));
-   variables[FFrameW_PointDL] = new Variable("PntDL", Scheme2, Point(0, INIT, 0));
+   variables[FFrameW_PointDR] = new Variable("PntDR", Scheme3, Point(INIT, INIT, 0));
+   variables[FFrameW_PointDL] = new Variable("PntDL", Scheme4, Point(0, INIT, 0));
    variables[FFrameW_Dist1] = new Variable("DIST1", Scheme1, Point(INIT, 0, 0));
    variables[FFrameW_Dist2] = new Variable("DIST2", Scheme1, Point(INIT, 0, 0));
    variables[FFrameW_Ratio] = new Variable("Ratio", Scheme1, Point(1.0, 0, 0));
@@ -60,6 +60,7 @@ FixedFrameWidget::FixedFrameWidget( Module* module, CrowdMonitor* lock, Real wid
    constraints[FFrameW_ConstRatio]->VarChoices(Scheme2, 1, 0, 0);
    constraints[FFrameW_ConstRatio]->VarChoices(Scheme3, 1, 0, 1);
    constraints[FFrameW_ConstRatio]->VarChoices(Scheme4, 1, 0, 0);
+   constraints[FFrameW_ConstRatio]->VarChoices(Scheme5, 1, 0, 0);
    constraints[FFrameW_ConstRatio]->Priorities(P_Highest, P_Highest, P_Default);
    constraints[FFrameW_ConstPlane] = new PlaneConstraint("ConstPlane",
 							 NumSchemes,
@@ -67,10 +68,11 @@ FixedFrameWidget::FixedFrameWidget( Module* module, CrowdMonitor* lock, Real wid
 							 variables[FFrameW_PointUR],
 							 variables[FFrameW_PointDR],
 							 variables[FFrameW_PointDL]);
-   constraints[FFrameW_ConstPlane]->VarChoices(Scheme1, 2, 3, 0, 1);
-   constraints[FFrameW_ConstPlane]->VarChoices(Scheme2, 2, 3, 0, 1);
-   constraints[FFrameW_ConstPlane]->VarChoices(Scheme3, 2, 3, 0, 1);
-   constraints[FFrameW_ConstPlane]->VarChoices(Scheme4, 2, 3, 0, 1);
+   constraints[FFrameW_ConstPlane]->VarChoices(Scheme1, 2, 3, 2, 1);
+   constraints[FFrameW_ConstPlane]->VarChoices(Scheme2, 2, 3, 0, 3);
+   constraints[FFrameW_ConstPlane]->VarChoices(Scheme3, 0, 3, 0, 1);
+   constraints[FFrameW_ConstPlane]->VarChoices(Scheme4, 2, 1, 0, 1);
+   constraints[FFrameW_ConstPlane]->VarChoices(Scheme5, 2, 3, 0, 1);
    constraints[FFrameW_ConstPlane]->Priorities(P_Highest, P_Highest,
 					       P_Highest, P_Highest);
    constraints[FFrameW_ConstULDR] = new DistanceConstraint("Const13",
@@ -78,10 +80,11 @@ FixedFrameWidget::FixedFrameWidget( Module* module, CrowdMonitor* lock, Real wid
 							   variables[FFrameW_PointUL],
 							   variables[FFrameW_PointDR],
 							   variables[FFrameW_Hypo]);
-   constraints[FFrameW_ConstULDR]->VarChoices(Scheme1, 1, 0, 1);
+   constraints[FFrameW_ConstULDR]->VarChoices(Scheme1, 1, 1, 1);
    constraints[FFrameW_ConstULDR]->VarChoices(Scheme2, 1, 0, 1);
-   constraints[FFrameW_ConstULDR]->VarChoices(Scheme3, 2, 2, 1);
+   constraints[FFrameW_ConstULDR]->VarChoices(Scheme3, 0, 0, 0);
    constraints[FFrameW_ConstULDR]->VarChoices(Scheme4, 1, 0, 1);
+   constraints[FFrameW_ConstULDR]->VarChoices(Scheme5, 1, 0, 1);
    constraints[FFrameW_ConstULDR]->Priorities(P_HighMedium, P_HighMedium, P_Default);
    constraints[FFrameW_ConstURDL] = new DistanceConstraint("Const24",
 							   NumSchemes,
@@ -89,9 +92,10 @@ FixedFrameWidget::FixedFrameWidget( Module* module, CrowdMonitor* lock, Real wid
 							   variables[FFrameW_PointDL],
 							   variables[FFrameW_Hypo]);
    constraints[FFrameW_ConstURDL]->VarChoices(Scheme1, 1, 0, 1);
-   constraints[FFrameW_ConstURDL]->VarChoices(Scheme2, 1, 0, 1);
+   constraints[FFrameW_ConstURDL]->VarChoices(Scheme2, 1, 1, 1);
    constraints[FFrameW_ConstURDL]->VarChoices(Scheme3, 1, 0, 1);
-   constraints[FFrameW_ConstURDL]->VarChoices(Scheme4, 2, 2, 0);
+   constraints[FFrameW_ConstURDL]->VarChoices(Scheme4, 0, 0, 0);
+   constraints[FFrameW_ConstURDL]->VarChoices(Scheme5, 2, 2, 0);
    constraints[FFrameW_ConstURDL]->Priorities(P_HighMedium, P_HighMedium, P_Default);
    constraints[FFrameW_ConstPyth] = new PythagorasConstraint("ConstPyth",
 							     NumSchemes,
@@ -100,8 +104,9 @@ FixedFrameWidget::FixedFrameWidget( Module* module, CrowdMonitor* lock, Real wid
 							     variables[FFrameW_Hypo]);
    constraints[FFrameW_ConstPyth]->VarChoices(Scheme1, 1, 0, 1);
    constraints[FFrameW_ConstPyth]->VarChoices(Scheme2, 1, 0, 1);
-   constraints[FFrameW_ConstPyth]->VarChoices(Scheme3, 2, 2, 0);
-   constraints[FFrameW_ConstPyth]->VarChoices(Scheme4, 2, 2, 1);
+   constraints[FFrameW_ConstPyth]->VarChoices(Scheme3, 1, 0, 1);
+   constraints[FFrameW_ConstPyth]->VarChoices(Scheme4, 1, 0, 1);
+   constraints[FFrameW_ConstPyth]->VarChoices(Scheme5, 2, 2, 1);
    constraints[FFrameW_ConstPyth]->Priorities(P_Default, P_Default, P_HighMedium);
    constraints[FFrameW_ConstULUR] = new DistanceConstraint("Const12",
 							   NumSchemes,
@@ -110,8 +115,9 @@ FixedFrameWidget::FixedFrameWidget( Module* module, CrowdMonitor* lock, Real wid
 							   variables[FFrameW_Dist1]);
    constraints[FFrameW_ConstULUR]->VarChoices(Scheme1, 1, 1, 1);
    constraints[FFrameW_ConstULUR]->VarChoices(Scheme2, 0, 0, 0);
-   constraints[FFrameW_ConstULUR]->VarChoices(Scheme3, 1, 1, 1);
-   constraints[FFrameW_ConstULUR]->VarChoices(Scheme4, 0, 0, 0);
+   constraints[FFrameW_ConstULUR]->VarChoices(Scheme3, 1, 0, 0);
+   constraints[FFrameW_ConstULUR]->VarChoices(Scheme4, 1, 0, 1);
+   constraints[FFrameW_ConstULUR]->VarChoices(Scheme5, 0, 0, 0);
    constraints[FFrameW_ConstULUR]->Priorities(P_Default, P_Default, P_LowMedium);
    constraints[FFrameW_ConstULDL] = new DistanceConstraint("Const14",
 							   NumSchemes,
@@ -119,29 +125,32 @@ FixedFrameWidget::FixedFrameWidget( Module* module, CrowdMonitor* lock, Real wid
 							   variables[FFrameW_PointDL],
 							   variables[FFrameW_Dist2]);
    constraints[FFrameW_ConstULDL]->VarChoices(Scheme1, 1, 1, 1);
-   constraints[FFrameW_ConstULDL]->VarChoices(Scheme2, 0, 0, 0);
-   constraints[FFrameW_ConstULDL]->VarChoices(Scheme3, 1, 1, 1);
+   constraints[FFrameW_ConstULDL]->VarChoices(Scheme2, 1, 0, 0);
+   constraints[FFrameW_ConstULDL]->VarChoices(Scheme3, 1, 0, 1);
    constraints[FFrameW_ConstULDL]->VarChoices(Scheme4, 0, 0, 0);
+   constraints[FFrameW_ConstULDL]->VarChoices(Scheme5, 0, 0, 0);
    constraints[FFrameW_ConstULDL]->Priorities(P_Default, P_Default, P_LowMedium);
    constraints[FFrameW_ConstDRUR] = new DistanceConstraint("Const32",
 							   NumSchemes,
 							   variables[FFrameW_PointDR],
 							   variables[FFrameW_PointUR],
 							   variables[FFrameW_Dist2]);
-   constraints[FFrameW_ConstDRUR]->VarChoices(Scheme1, 1, 1, 1);
+   constraints[FFrameW_ConstDRUR]->VarChoices(Scheme1, 1, 0, 1);
    constraints[FFrameW_ConstDRUR]->VarChoices(Scheme2, 0, 0, 0);
    constraints[FFrameW_ConstDRUR]->VarChoices(Scheme3, 1, 1, 1);
-   constraints[FFrameW_ConstDRUR]->VarChoices(Scheme4, 0, 0, 0);
+   constraints[FFrameW_ConstDRUR]->VarChoices(Scheme4, 1, 0, 0);
+   constraints[FFrameW_ConstDRUR]->VarChoices(Scheme5, 0, 0, 0);
    constraints[FFrameW_ConstDRUR]->Priorities(P_Default, P_Default, P_LowMedium);
    constraints[FFrameW_ConstDRDL] = new DistanceConstraint("Const34",
 							   NumSchemes,
 							   variables[FFrameW_PointDR],
 							   variables[FFrameW_PointDL],
 							   variables[FFrameW_Dist1]);
-   constraints[FFrameW_ConstDRDL]->VarChoices(Scheme1, 1, 1, 1);
-   constraints[FFrameW_ConstDRDL]->VarChoices(Scheme2, 0, 0, 0);
+   constraints[FFrameW_ConstDRDL]->VarChoices(Scheme1, 1, 0, 1);
+   constraints[FFrameW_ConstDRDL]->VarChoices(Scheme2, 1, 0, 0);
    constraints[FFrameW_ConstDRDL]->VarChoices(Scheme3, 1, 1, 1);
    constraints[FFrameW_ConstDRDL]->VarChoices(Scheme4, 0, 0, 0);
+   constraints[FFrameW_ConstDRDL]->VarChoices(Scheme5, 0, 0, 0);
    constraints[FFrameW_ConstDRDL]->Priorities(P_Default, P_Default, P_LowMedium);
 
    materials[FFrameW_PointMatl] = PointWidgetMaterial;
@@ -233,6 +242,13 @@ FixedFrameWidget::widget_execute()
 						       variables[FFrameW_PointUL]->Get(),
 						       0.5*widget_scale);
 
+   ((DistanceConstraint*)constraints[FFrameW_ConstULUR])->SetMinimum(3.2*widget_scale);
+   ((DistanceConstraint*)constraints[FFrameW_ConstDRDL])->SetMinimum(3.2*widget_scale);
+   ((DistanceConstraint*)constraints[FFrameW_ConstULDL])->SetMinimum(3.2*widget_scale);
+   ((DistanceConstraint*)constraints[FFrameW_ConstDRUR])->SetMinimum(3.2*widget_scale);
+   ((DistanceConstraint*)constraints[FFrameW_ConstULDR])->SetMinimum(sqrt(2*3.2*3.2)*widget_scale);
+   ((DistanceConstraint*)constraints[FFrameW_ConstURDL])->SetMinimum(sqrt(2*3.2*3.2)*widget_scale);
+
    SetEpsilon(widget_scale*1e-4);
 
    Vector spvec1(variables[FFrameW_PointUR]->Get() - variables[FFrameW_PointUL]->Get());
@@ -254,6 +270,14 @@ void
 FixedFrameWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
 			      void* cbdata )
 {
+   Vector delt(delta);
+   Real t;
+   
+   ((DistanceConstraint*)constraints[FFrameW_ConstULUR])->SetDefault(GetAxis1());
+   ((DistanceConstraint*)constraints[FFrameW_ConstDRDL])->SetDefault(GetAxis1());
+   ((DistanceConstraint*)constraints[FFrameW_ConstULDL])->SetDefault(GetAxis2());
+   ((DistanceConstraint*)constraints[FFrameW_ConstDRUR])->SetDefault(GetAxis2());
+
    for (Index v=0; v<NumVars; v++)
       variables[v]->Reset();
    
@@ -271,10 +295,28 @@ FixedFrameWidget::geom_moved( int /* axis */, double /* dist */, const Vector& d
       variables[FFrameW_PointDL]->SetDelta(delta);
       break;
    case FFrameW_PickResizeU:
-      variables[FFrameW_PointUR]->SetDelta(delta, Scheme4);
+      if (((variables[FFrameW_PointUL]->Get()+delta)-variables[FFrameW_PointDL]->Get()).length()
+	  < 3.2*widget_scale) {
+	 delt = ((variables[FFrameW_PointDL]->Get() + delta.normal()*3.2*widget_scale)
+		 - variables[FFrameW_PointUL]->Get());
+      }
+      t = delt.length();
+      variables[FFrameW_PointDL]->MoveDelta(GetAxis1()*t/2.0);
+      variables[FFrameW_PointDR]->MoveDelta(-GetAxis1()*t/2.0);
+      variables[FFrameW_PointUL]->MoveDelta(delt+GetAxis1()*t/2.0);
+      variables[FFrameW_PointUR]->SetDelta(delt-GetAxis1()*t/2.0, Scheme5);
       break;
    case FFrameW_PickResizeD:
-      variables[FFrameW_PointDL]->SetDelta(delta, Scheme4);
+      if (((variables[FFrameW_PointDR]->Get()+delta)-variables[FFrameW_PointUR]->Get()).length()
+	  < 3.2*widget_scale) {
+	 delt = ((variables[FFrameW_PointUR]->Get() + delta.normal()*3.2*widget_scale)
+		 - variables[FFrameW_PointDR]->Get());
+      }
+      t = delt.length();
+      variables[FFrameW_PointUL]->MoveDelta(GetAxis1()*t/2.0);
+      variables[FFrameW_PointUR]->MoveDelta(-GetAxis1()*t/2.0);
+      variables[FFrameW_PointDR]->MoveDelta(delt+GetAxis1()*t/2.0);
+      variables[FFrameW_PointDL]->SetDelta(delt-GetAxis1()*t/2.0, Scheme5);
       break;
    case FFrameW_PickCyls:
       variables[FFrameW_PointUL]->MoveDelta(delta);
