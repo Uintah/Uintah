@@ -481,8 +481,7 @@ itcl_class SCIRun_Visualization_GenAxes {
 	set rez [labeledSlider $labelframe "Label Resolution:" $this-labelrez 1 500 1 14]
 	bind $rez <Button> "$this-c labelFontChanged"
 
-	global SCIRUN_SRCDIR
-	set dir [file join $SCIRUN_SRCDIR Fonts]
+	set dir [file join [netedit getenv SCIRUN_SRCDIR] Fonts]
 	set files [glob -nocomplain -dir $dir *.ttf]
 	set def 0
 	set i 0
