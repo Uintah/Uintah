@@ -17,6 +17,8 @@
 #include <Classlib/Array1.h>
 #include <Classlib/Stack.h>
 #include <Geom/Geom.h>
+#include <Geom/Lighting.h>
+#include <Geom/View.h>
 #include <Geometry/Point.h>
 #include <X11/Xlib.h>
 class Light;
@@ -38,9 +40,8 @@ struct DrawInfoX11 {
     int green_mult;
     unsigned long* colors;
 
-    Color amblight;
-    Array1<Light*> light;
-    Point eyep;
+    View view;
+    Lighting lighting;
 
     Display* dpy;
     Window win;

@@ -53,21 +53,21 @@ void GeomObj::draw(DrawInfoX11* di)
 	    Vector normal;
 	    Point hitpos;
 	    get_hit(normal, hitpos);
-	    Vector view_direction(hitpos-di->eyep);
+	    Vector view_direction(hitpos-di->view.eyep);
 
 	    // Start with the ambient light
-	    Color result(di->current_matl->ambient*di->amblight);
+	    Color result(di->current_matl->ambient*di->lighting.amblight);
 
 	    // Add the object's emission
 	    result+=di->current_matl->emission;
 	    Color difflight(0,0,0);
 	    Color speclight(0,0,0);
-	    int nlights=di->light.size();
+	    int nlights=di->lighting.lights.size();
 	    for(int i=0;i<nlights;i++){
 		// Compute diffuse contribution
 		Vector light_dir;
 		Color light;
-		di->light[i]->compute_lighting(hitpos, light, light_dir);
+		di->lighting.lights[i]->compute_lighting(hitpos, light, light_dir);
 
 		double cos_theta=Dot(light_dir, normal);
 		if(cos_theta < 0){
