@@ -24,6 +24,7 @@ using SCICore::Containers::TrivialAllocator;
 
 static TrivialAllocator GeomVertex_alloc(sizeof(GeomVertex));
 static TrivialAllocator GeomNVertex_alloc(sizeof(GeomNVertex));
+static TrivialAllocator GeomMVertex_alloc(sizeof(GeomMVertex));
 static TrivialAllocator GeomNMVertex_alloc(sizeof(GeomNMVertex));
 static TrivialAllocator GeomCVertex_alloc(sizeof(GeomCVertex));
 
@@ -359,6 +360,9 @@ void Pio(Piostream& stream, GeomVertex*& obj)
 
 //
 // $Log$
+// Revision 1.7  1999/09/16 17:08:56  kuzimmer
+// TrivialAllocator GeomMVertex_alloc(sizeof(GeomMVertex));   was missing,  added again, will prevent core dumps.
+//
 // Revision 1.6  1999/09/08 02:26:51  sparker
 // Various #include cleanups
 //
