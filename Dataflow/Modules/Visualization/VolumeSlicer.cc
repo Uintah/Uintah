@@ -66,7 +66,7 @@ private:
   TextureHandle tex_;
 
   ColorMapIPort* icmap1_;
-  Colormap2IPort* icmap2_;
+  ColorMap2IPort* icmap2_;
   TextureIPort* intexture_;
   GeometryOPort* ogeom_;
   ColorMapOPort* ocmap_;
@@ -146,7 +146,7 @@ void VolumeSlicer::execute()
 {
   intexture_ = (TextureIPort*)get_iport("Texture");
   icmap1_ = (ColorMapIPort*)get_iport("ColorMap");
-  icmap2_ = (Colormap2IPort*)get_iport("ColorMap2");
+  icmap2_ = (ColorMap2IPort*)get_iport("ColorMap2");
   ogeom_ = (GeometryOPort*)get_oport("Geometry");
   ocmap_ = (ColorMapOPort*)get_oport("ColorMap");
   if (!intexture_) {

@@ -47,7 +47,7 @@
     <inputs lastportdynamic="no">
       <port>
 	<name>Input Data</name>
-	<datatype>SCIRun::Colormap2</datatype>
+	<datatype>SCIRun::ColorMap2</datatype>
       </port>
     </inputs>
   </io>

@@ -46,7 +46,7 @@
     <inputs lastportdynamic="no">
       <port>
 	<name>Input Colormap</name>
-	<datatype>SCIRun::Colormap2</datatype>
+	<datatype>SCIRun::ColorMap2</datatype>
       </port>
       <port>
 	<name>Histogram</name>
@@ -56,7 +56,7 @@
     <outputs>
       <port>
         <name>Output Colormap</name>
-        <datatype>SCIRun::Colormap2</datatype>
+        <datatype>SCIRun::ColorMap2</datatype>
       </port>
     </outputs>
   </io>

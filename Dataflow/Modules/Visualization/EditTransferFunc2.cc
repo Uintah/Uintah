@@ -570,7 +570,7 @@ EditTransferFunc2::execute()
     redraw();
   }
   
-  Colormap2OPort* cmap_port = (Colormap2OPort*)get_oport("Output Colormap");
+  ColorMap2OPort* cmap_port = (ColorMap2OPort*)get_oport("Output Colormap");
   if (cmap_port) {
     Colormap2Handle cmap(scinew Colormap2(widgets_, updating_, gui_faux_.get()));
     cmap_port->send(cmap);
