@@ -128,7 +128,7 @@ AC_CONFIG_AUX_DIR(scripts)
 path_to_src=`echo $0 | sed 's/\/configure//'`
 
 ## If user tried to configure in current directory, this will block it.
-if test "$path_to_src" = "configure" -o "$path_to_src" = "."; then
+if test "$path_to_src" = "configure" -o "$path_to_src" = "." -o "$path_to_src" = "../src"; then
    AC_MSG_WARN(DO NOT CONFIGURE IN THE SRC DIRECTORY:)
    AC_MSG_WARN(___ Try creating a dir such as: ../archBITSdebug)
    AC_MSG_WARN(___ eg: ../sgi32opt or ../linux32debug)
