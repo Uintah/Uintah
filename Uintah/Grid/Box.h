@@ -6,15 +6,16 @@
 #include <iosfwd>
 
 namespace Uintah {
-  namespace Grid {
-    using SCICore::Geometry::Point;
+namespace Grid {
 
-    /**************************************
+using SCICore::Geometry::Point;
 
-      CLASS
+/**************************************
+
+  CLASS
         Box
    
-      GENERAL INFORMATION
+  GENERAL INFORMATION
 
         Box.h
 
@@ -26,40 +27,40 @@ namespace Uintah {
 	
 	Copyright (C) 2000 SCI Group
 
-      KEYWORDS
+  KEYWORDS
         Box
 
-      DESCRIPTION
+  DESCRIPTION
         Long description...
   
-      WARNING
+  WARNING
   
-      ****************************************/
+****************************************/
 
-    class Box {
-    public:
-      Box();
-      ~Box();
-      Box(const Box&);
-      Box& operator=(const Box&);
+class Box {
+public:
+  Box();
+  ~Box();
+  Box(const Box&);
+  Box& operator=(const Box&);
 
-      Box(const Point& lower, const Point& upper);
+  Box(const Point& lower, const Point& upper);
 
-      bool overlaps(const Box&, double epsilon=1.e-6) const;
+  bool overlaps(const Box&, double epsilon=1.e-6) const;
 
-      inline Point lower() const {
-	return d_lower;
-      }
-      inline Point upper() const {
-	return d_upper;
-      }
+  inline Point lower() const {
+    return d_lower;
+  }
+  inline Point upper() const {
+    return d_upper;
+  }
 
-    private:
-      Point d_lower;
-      Point d_upper;
-    };
+private:
+  Point d_lower;
+  Point d_upper;
+};
 
-  } // end namespace Grid
+} // end namespace Grid
 } // end namespace Uintah
 
 std::ostream& operator<<(std::ostream& out, const Uintah::Grid::Box& b);
@@ -67,6 +68,9 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Grid::Box& b);
 
 //
 // $Log$
+// Revision 1.2  2000/04/25 00:41:21  dav
+// more changes to fix compilations
+//
 // Revision 1.1  2000/04/13 06:51:01  sparker
 // More implementation to get this to work
 //

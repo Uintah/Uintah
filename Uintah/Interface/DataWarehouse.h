@@ -71,12 +71,14 @@ public:
   virtual void allocate(ReductionVariableBase&, const VarLabel*) const = 0;
   virtual void get(ReductionVariableBase&, const VarLabel*) const = 0;
   virtual void put(const ReductionVariableBase&, const VarLabel*) = 0;
-  virtual void allocate(ParticleVariableBase&, const VarLabel*,
-			int matlIndex, const Region*, int numGhostCells) const = 0;
+
+  virtual void allocate(ParticleVariableBase&, const VarLabel*,	int matlIndex,
+			const Region*, int numGhostCells) const = 0;
   virtual void get(ParticleVariableBase&, const VarLabel*,
 		   int matlIndex, const Region*, int numGhostCells) const = 0;
   virtual void put(const ParticleVariableBase&, const VarLabel*,
 		   int matlIndex, const Region*) = 0;
+
   virtual void allocate(NCVariableBase&, const VarLabel*,
 		   int matlIndex, const Region*, int numGhostCells) const = 0;
   virtual void get(NCVariableBase&, const VarLabel*,
@@ -177,6 +179,9 @@ private:
 
 //
 // $Log$
+// Revision 1.13  2000/04/25 00:41:22  dav
+// more changes to fix compilations
+//
 // Revision 1.12  2000/04/24 15:17:02  sparker
 // Fixed unresolved symbols
 //
