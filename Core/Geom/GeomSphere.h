@@ -71,7 +71,10 @@ public:
   virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
   virtual bool getId( int& id );
   virtual bool getId( IntVector& id);
-  
+
+  // This is a helper function which determins the nu and nv given an
+  // approximate number of polygons desired.
+  static void getnunv(const int num_polygons, int &nu, int &nv);
 };
 
 } // End namespace SCIRun
