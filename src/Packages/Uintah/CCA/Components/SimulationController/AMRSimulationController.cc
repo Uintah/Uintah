@@ -97,8 +97,10 @@ void AMRSimulationController::run()
    }
 #endif
 
+   SimulationStateP sharedState = scinew SimulationState(ups);
+   
    Output* output = dynamic_cast<Output*>(getPort("output"));
-   output->problemSetup(ups);
+   output->problemSetup(ups, sharedState);
    
    // Setup the initial grid
    GridP grid=scinew Grid();
@@ -116,8 +118,6 @@ void AMRSimulationController::run()
    if (d_myworld->myrank() == 0)
      grid->printStatistics();
 
-   SimulationStateP sharedState = scinew SimulationState(ups);
-   
    // Initialize the CFD and/or MPM components
    SimulationInterface* sim = dynamic_cast<SimulationInterface*>(getPort("sim"));
    if(!sim)
@@ -133,7 +133,7 @@ void AMRSimulationController::run()
 
    LoadBalancer* lb = dynamic_cast<LoadBalancer*>
      (dynamic_cast<SchedulerCommon*>(sched)->getPort("load balancer"));
-   lb->problemSetup(ups);
+   lb->problemSetup(ups/*, sharedState*/);
 
    output->initializeOutput(ups);
 
@@ -144,6 +144,8 @@ void AMRSimulationController::run()
    
    scheduler->initialize(1, 1);
    scheduler->advanceDataWarehouse(grid);
+   // for dynamic lb's, set up initial patch config
+   //lb->dynamicReallocation(grid, scheduler); 
 
    double t;
 
@@ -313,11 +315,31 @@ void AMRSimulationController::run()
        DumpAllocator(DefaultAllocator(), filename.c_str());
      }
      
+     // calculate mean/std dev
+     double stdDev, mean;       
+     if (n > 2) // ignore times 0,1,2
+     {
+       //wallTimes.push_back(wallTime - prevWallTime);
+       sum_of_walltime += (wallTime - prevWallTime);
+       sum_of_walltime_squares += pow(wallTime - prevWallTime,2);
+     }
+     if (n > 3) {
+       // divide by n-2 and not n, because we wait till n>2 to keep track
+       // of our stats
+       stdDev = stdDeviation(sum_of_walltime, sum_of_walltime_squares, n-2);
+       mean = sum_of_walltime / (n-2);
+       //	  ofstream timefile("avg_elapsed_walltime.txt");
+       //	  timefile << mean << " +- " << stdDev << endl;
+     }
      //output timestep statistics
      if(d_myworld->myrank() == 0){
-       cout << "Time=" << t << ", delT=" << delt 
-	    << ", elap T = " << wallTime 
-	    << ", DW: " << oldDW->getID() << ", Mem Use = ";
+       cout << "Time=" << t 
+            << " (timestep " << sharedState->getCurrentTopLevelTimeStep() 
+            << "), delT=" << delt << ", elap T = " << wallTime;
+
+       if (n > 3)
+         cout << ", mean: " << mean << " +- " << stdDev;
+       cout << "\nMem Use = ";
        if (avg_memuse == max_memuse && avg_highwater == max_highwater){
 	 cout << avg_memuse;
 	 if(avg_highwater)
@@ -333,24 +355,6 @@ void AMRSimulationController::run()
        }
        cout << endl;
 
-       // calculate mean/std dev
-       if (n > 2) // ignore times 0,1,2
-       {
-	 //wallTimes.push_back(wallTime - prevWallTime);
-	 sum_of_walltime += (wallTime - prevWallTime);
-	 sum_of_walltime_squares += pow(wallTime - prevWallTime,2);
-       }
-       if (n > 3) {
-	 double stdDev, mean;
-	 
-	 // divide by n-2 and not n, because we wait till n>2 to keep track
-	 // of our stats
-	 stdDev = stdDeviation(sum_of_walltime, sum_of_walltime_squares, n-2);
-	 mean = sum_of_walltime / (n-2);
-	 //	  ofstream timefile("avg_elapsed_walltime.txt");
-	 //	  timefile << mean << " +- " << stdDev << endl;
-	 cout << "Timestep mean: " << mean << " +- " << stdDev << endl;
-       }
        prevWallTime = wallTime;
        n++;
      }
@@ -368,6 +372,7 @@ void AMRSimulationController::run()
        
        scheduler->initialize(1, totalFine);
        scheduler->fillDataWarehouses(grid);
+       //lb->dynamicReallocation(grid, scheduler); 
 
        // Set up new DWs, DW mappings.
        scheduler->clearMappings();
@@ -431,7 +436,7 @@ void AMRSimulationController::run()
      scheduler->get_dw(totalFine)->setScrubbing(DataWarehouse::ScrubNone);
      scheduler->execute();
      if(output)
-       output->executedTimestep();
+       output->executedTimestep(delt);
      // remesh here!
 
      t += delt;
