@@ -45,6 +45,7 @@ using namespace SCIRun;
 #include <Core/Datatypes/MaskedTetVol.h>
 #include <Core/Datatypes/LatticeVol.h>
 #include <Core/Datatypes/MaskedLatticeVol.h>
+#include <Core/Datatypes/MaskedTriSurf.h>
 #include <Core/Datatypes/TriSurf.h>
 #include <Core/Datatypes/ContourField.h>
 #include <Core/Datatypes/PointCloud.h>
@@ -72,6 +73,20 @@ const TypeDescription* get_type_description(MaskedTetVol<double>*);
 const TypeDescription* get_type_description(MaskedTetVol<int>*);
 const TypeDescription* get_type_description(MaskedTetVol<short>*);
 const TypeDescription* get_type_description(MaskedTetVol<unsigned char>*);
+
+template class MaskedTriSurf<Tensor>;
+template class MaskedTriSurf<Vector>;
+template class MaskedTriSurf<double>;
+template class MaskedTriSurf<int>;
+template class MaskedTriSurf<short>;
+template class MaskedTriSurf<unsigned char>;
+
+const TypeDescription* get_type_description(MaskedTriSurf<Tensor>*);
+const TypeDescription* get_type_description(MaskedTriSurf<Vector>*);
+const TypeDescription* get_type_description(MaskedTriSurf<double>*);
+const TypeDescription* get_type_description(MaskedTriSurf<int>*);
+const TypeDescription* get_type_description(MaskedTriSurf<short>*);
+const TypeDescription* get_type_description(MaskedTriSurf<unsigned char>*);
 
 template class TetVol<Tensor>;
 template class TetVol<Vector>;

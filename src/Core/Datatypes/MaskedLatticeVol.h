@@ -16,7 +16,7 @@
 */
 
 /*
- *  MaskedTetVol.h
+ *  MaskedLatticeVol.h
  *
  *  Written by:
  *   Martin Cole
@@ -44,16 +44,48 @@ private:
   FData3d<char> mask_;  // since Pio isn't implemented for bool's
 public:
   FData3d<char>& mask() { return mask_; }
+  
+  bool get_valid_nodes_and_data(Array1<LatVolMesh::Node::index_type> &nodes,
+				Array1<T> &data) {
+    nodes.resize(0);
+    data.resize(0);
+    if (data_at() != NODE) return false;
+    LatVolMesh::Node::iterator ni, nie;
+    get_typed_mesh()->begin(ni);
+    get_typed_mesh()->end(nie);
+    for (; ni != nie; ++ni) { 
+      if (mask_[*ni]) { nodes.add(*ni); data.add(fdata()[*ni]); }
+    }
+    return true;
+  }
 
-  MaskedLatticeVol() :
-    LatticeVol<T>() {};
-  MaskedLatticeVol(Field::data_location data_at) : 
-    LatticeVol<T>(data_at) {};
-  MaskedLatticeVol(LatVolMeshHandle mesh, Field::data_location data_at) : 
-    LatticeVol<T>(mesh, data_at) 
-  {
-    resize_fdata();
-  };
+#if 0
+  bool get_valid_cells_and_data(Array1<LatVolMesh::Cel::index_type> &nodes,
+				Array1<T> &data) {
+    nodes.resize(0);
+    data.resize(0);
+    if (data_at() != CELL) return false;
+    LatVolMesh::Node::iterator ni, nie;
+    get_typed_mesh()->begin(ni);
+    get_typed_mesh()->end(nie);
+    for (; ni != nie; ++ni) { 
+      if (mask_[*ni]) { nodes.add(*ni); data.add(fdata()[*ni]); }
+    }
+    return true;
+  }
+
+  // we're not really supporting edge-centered data yet
+  bool get_valid_edge_and_data(Array1<LatVolMesh::Edge::index_type> &nodes,
+				Array1<T> &data) {
+    return false;
+  }
+
+  // we're not really supporting face-centered data yet
+  bool get_valid_face_and_data(Array1<LatVolMesh::Face::index_type> &nodes,
+				Array1<T> &data) {
+    return false;
+  }
+#endif
 
   virtual ~MaskedLatticeVol() {};
 
@@ -108,12 +140,29 @@ public:
   static const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const { return type_name(n); }
   virtual const TypeDescription* get_type_description() const;
+
+  MaskedLatticeVol();
+  MaskedLatticeVol(LatVolMeshHandle mesh, Field::data_location data_at);
 private:
   static Persistent *maker();
 };
 
 // Pio defs.
 const int MASKED_LATTICE_VOL_VERSION = 1;
+
+template <class Data>
+MaskedLatticeVol<Data>::MaskedLatticeVol(LatVolMeshHandle mesh,
+					 Field::data_location data_at)
+  : LatticeVol<Data>(mesh, data_at)
+{
+  resize_fdata();
+}
+
+template <class Data>
+MaskedLatticeVol<Data>::MaskedLatticeVol()
+  : LatticeVol<Data>()
+{
+}
 
 template <class T>
 Persistent*

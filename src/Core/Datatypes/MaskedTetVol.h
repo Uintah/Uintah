@@ -55,6 +55,51 @@ public:
     resize_fdata();
   };
 
+  bool get_valid_nodes_and_data(vector<pair<TetVolMesh::Node::index_type, T> > &data) {
+    data.erase(data.begin(), data.end());
+    if (data_at() != NODE) return false;
+    TetVolMesh::Node::iterator ni, nie;
+    get_typed_mesh()->begin(ni);
+    get_typed_mesh()->end(nie);
+    for (; ni != nie; ++ni) { 
+      if (mask_[*ni]) { 
+	pair<TetVolMesh::Node::index_type, T> p;
+	p.first=*ni; 
+	p.second=fdata()[*ni];
+	data.push_back(p);
+      }
+    }
+    return true;
+  }
+
+#if 0
+  bool get_valid_cells_and_data(Array1<TetVolMesh::Cel::index_type> &nodes,
+				Array1<T> &data) {
+    nodes.resize(0);
+    data.resize(0);
+    if (data_at() != CELL) return false;
+    TetVolMesh::Node::iterator ni, nie;
+    get_typed_mesh()->begin(ni);
+    get_typed_mesh()->end(nie);
+    for (; ni != nie; ++ni) { 
+      if (mask_[*ni]) { nodes.add(*ni); data.add(fdata()[*ni]); }
+    }
+    return true;
+  }
+
+  // we're not really supporting edge-centered data yet
+  bool get_valid_edge_and_data(Array1<TetVolMesh::Edge::index_type> &nodes,
+				Array1<T> &data) {
+    return false;
+  }
+
+  // we're not really supporting face-centered data yet
+  bool get_valid_face_and_data(Array1<TetVolMesh::Face::index_type> &nodes,
+				Array1<T> &data) {
+    return false;
+  }
+#endif
+
   virtual ~MaskedTetVol() {};
 
   bool value(T &val, typename TetVolMesh::Node::index_type i) const
