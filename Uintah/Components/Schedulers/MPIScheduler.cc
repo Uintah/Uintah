@@ -311,7 +311,9 @@ MPIScheduler::execute(const ProcessorGroup * pc,
       MPI_Abort(d_myworld->getComm(), 1);
    }
    dbg << "Executing " << ntasks << " tasks\n";
-   emitEdges(tasks);
+
+   if (me == 0)
+     emitEdges(tasks);
 
    for(int i=0;i<ntasks;i++){
       Task* task = tasks[i];
@@ -888,6 +890,10 @@ MPIScheduler::releaseLoadBalancer()
 
 //
 // $Log$
+// Revision 1.23  2000/09/25 23:12:39  witzel
+// Have only process zero emit edges since they all contain the same
+// information.
+//
 // Revision 1.22  2000/09/25 20:43:44  sparker
 // Quiet g++ warnings
 //
