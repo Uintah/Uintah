@@ -121,7 +121,9 @@ AC_DEFUN(SCI_MSG_ERROR,
 ##  - Check whether the function exists within the lib found in path(s).
 ##      (If "path" is blank (""), then see if the compiler automatically
 ##      finds it.)
-##  - Set function to "main" if you want to see if the lib just exists.
+##  - Set function to "main" if you want to see if the lib just exists
+##      within the lib found in path(s).
+##  - Set function to "" if you want to see if the lib just exists.
 ##  - Use other-libraries to resolve undefined symbols.
 ##
 ##  - Sets the following shell variables (Note: $lib will be in all caps.):
@@ -200,27 +202,99 @@ AC_DEFUN(SCI_CHECK_LIB,
 
     ##########################
     ## FUNCTION parameter
-    if test "$3" = "main"; then
+    if test -z "$3"; then
        _SCI_DECL_=""
        _SCI_CALL_=""
        EXTERN_BEGIN=""
        EXTERN_END=""
-       AC_MSG_CHECKING(for -l$2)
+       AC_MSG_CHECKING(for lib$2.so)
     else
-       _SCI_DECL_="char $3();"
-       _SCI_CALL_="$3();"
+      if test "$3" = "main"; then
+         _SCI_DECL_=""
+         _SCI_CALL_=""
+         EXTERN_BEGIN=""
+         EXTERN_END=""
+         AC_MSG_CHECKING(for -l$2)
+      else
+        _SCI_DECL_="char $3();"
+        _SCI_CALL_="$3();"
 
-       AC_MSG_CHECKING(for $3 in -l$2)
-       if test "$_SCI_USING_CXX_" != "yes"; then
+        AC_MSG_CHECKING(for $3 in -l$2)
+        if test "$_SCI_USING_CXX_" != "yes"; then
           EXTERN_BEGIN="extern \"C\" {"
           EXTERN_END="}"
-       fi
+        fi
+      fi
     fi
 
     ##########################
     ## OTHER-LIBRARIES parameter
 
     _SCI_OTHER_LIBS_="$4"
+
+    if test -z "$3"; then
+
+    # Add inthe standard PATH to search as well.
+    # In other words, to see if the compiler would find it by itself...
+    # THIS DOES NOT WORK FULLY AS THERE SHOULD BE MORE PATHS - ARS
+      _SCI_CHECK_PATHS_="$1 /usr/lib /lib"
+
+    # Test for just the existance of the library in the paths.
+      for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
+
+        if test ! -d "$_CHECK_PATH_"; then 
+          if test "$debugging" = "yes"; then
+            echo "$_CHECK_PATH_  No such path!"
+          fi
+          continue
+        fi
+
+        if test "$debugging" = "yes"; then
+          echo "Checking in path: $_CHECK_PATH_"
+        fi
+
+        if test -e "$_CHECK_PATH_/lib$2.so"; then
+
+          if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+            "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
+            _CHECK_PATH_=""
+          fi
+
+          eval $_SCI_VAR_DIR_=$_CHECK_PATH_
+          eval $_SCI_VAR_HAVE_=yes
+          if test "$_CHECK_PATH_" != ""; then
+	      tmp="$LDRUN_PREFIX$_CHECK_PATH_ -L$_CHECK_PATH_"
+              eval $_SCI_VAR_LIB_DIR_FLAG_='"$tmp"'
+          fi
+	  eval $_SCI_VAR_LIB_FLAG_=-l$2
+
+	  AC_MSG_RESULT(yes)
+
+          if test "$debugging" = "yes"; then
+            echo "FOUND IT"
+  	    eval echo "$_SCI_VAR_DIR_    is $"$_SCI_VAR_DIR_""
+	    eval echo "$_SCI_VAR_HAVE_    is $"$_SCI_VAR_HAVE_""
+	    eval echo "$_SCI_VAR_LIB_DIR_FLAG_ is $"$_SCI_VAR_LIB_DIR_FLAG_""
+	    eval echo "$_SCI_VAR_LIB_FLAG_ is $"$_SCI_VAR_LIB_FLAG_""
+	    echo
+	    break;
+  	  fi
+        fi
+      done
+
+      eval result='$'$_SCI_VAR_HAVE_
+
+      if test "$result" = ""; then
+        if test "$debugging" = "yes"; then
+          echo "Did NOT find it"
+        fi
+        eval $_SCI_VAR_DIR_=''
+        eval $_SCI_VAR_HAVE_=''
+        eval $_SCI_VAR_LIB_DIR_FLAG_=''
+        eval $_SCI_VAR_LIB_FLAG_=''
+      fi
+
+    else
 
     # NO_EXPLICIT_PATHS: this flag is used to check a "blank" path.
     # In other words, to see if the compiler can find it by itself...
@@ -344,7 +418,7 @@ EOF
        fi
 
     done # loop over all libs.
-
+    fi
     # For some reason putting the eval statement in the following "if test" 
     # statement doesn't work... so I do it here.
     eval result='$'$_SCI_VAR_HAVE_
@@ -353,13 +427,15 @@ EOF
        if test "$debugging" = "yes"; then
           echo "Did not find it at all"
        fi
-       # Didn't find the library (or function)...
+       # Didn't find the library, link the library, find the function)...
        AC_MSG_RESULT(no)
        if test "$_SCI_LIB_OPTIONAL_" = "not-optional"; then
           AC_MSG_WARN(Required library $_SCI_VAR_LIBNAME_ not found.)
-          AC_MSG_WARN(Command line for test was: $ac_try)
-          AC_MSG_WARN(Compile output is:)
-          cat conftest.out
+	  if test -z "$3"; then
+            AC_MSG_WARN(Command line for test was: $ac_try)
+            AC_MSG_WARN(Compile output is:)
+            cat conftest.out
+	  fi
           SCI_MSG_ERROR(Exiting configure: non-optional lib not found. Bye.)
        fi
     fi
@@ -2740,23 +2816,23 @@ if test "$pkg_vdt" = "yes"; then
       continue
     fi
 
-    SCI_CHECK_LIB($i/src/vdt/Elixir/lib/$ad,esi,main,,,optional)
-    SCI_CHECK_LIB($i/src/vdt/Elixir/lib/$ad,elixir,main,,,optional)
-    SCI_CHECK_LIB($i/src/vdt/lp_solve_2.2/$ad,lpk,main,,,optional)
-    SCI_CHECK_LIB($i/src/vdt/PiRaT/lib/$ad,pirat,main,,,optional)
-    SCI_CHECK_LIB($i/src/vdt/LOBS/lib/$ad,lobs3d,main,,,optional)
-    SCI_CHECK_LIB($i/src/vdt/LOBS/lib/$ad,lobs2d,main,,,optional)
-    SCI_CHECK_LIB($i/src/vdt/LOBS/lib/$ad,lobs1d,main,,,optional)
-    SCI_CHECK_LIB($i/src/vdt/G3D/lib/$ad,g3d,main,,,optional)
-    SCI_CHECK_LIB($i/src/vdt/Ckit/lib/$ad,ckit,main,,,optional)
-    SCI_CHECK_LIB($i/src/vdt/Meschach/$ad,meschach,main,,,optional)
+    SCI_CHECK_LIB($i/src/vdt/Elixir/lib/$ad,esi,,,,not-optional)
+    SCI_CHECK_LIB($i/src/vdt/Elixir/lib/$ad,elixir,,,,not-optional)
+    SCI_CHECK_LIB($i/src/vdt/lp_solve_2.2/$ad,lpk,,,,not-optional)
+    SCI_CHECK_LIB($i/src/vdt/PiRaT/lib/$ad,pirat,,,,not-optional)
+    SCI_CHECK_LIB($i/src/vdt/LOBS/lib/$ad,lobs3d,,,,not-optional)
+    SCI_CHECK_LIB($i/src/vdt/LOBS/lib/$ad,lobs2d,,,,not-optional)
+    SCI_CHECK_LIB($i/src/vdt/LOBS/lib/$ad,lobs1d,,,,not-optional)
+    SCI_CHECK_LIB($i/src/vdt/G3D/lib/$ad,g3d,,,,not-optional)
+    SCI_CHECK_LIB($i/src/vdt/Ckit/lib/$ad,ckit,,,,not-optional)
+    SCI_CHECK_LIB($i/src/vdt/Meschach/$ad,meschach,,,,not-optional)
 
 
     MISC_LIB_FLAG="$ESI_LIB_FLAG $ELIXIR_LIB_FLAG $LPK_LIB_FLAG $PIRAT_LIB_FLAG $LOBS3D_LIB_FLAG $LOBS2D_LIB_FLAG $LOBS1D_LIB_FLAG $G3D_LIB_FLAG $CKIT_LIB_FLAG $MESCHACH_LIB_FLAG $X11_LIB_FLAG $XEXT_LIB_FLAG $XAW_LIB_FLAG $XT_LIB_FLAG $XMU_LIB_FLAG $M_LIB_FLAG"
   
     MISC_LIB_DIR_FLAG="$ESI_LIB_DIR_FLAG $ELIXIR_LIB_DIR_FLAG $LPK_LIB_DIR_FLAG $PIRAT_LIB_DIR_FLAG $LOBS3D_LIB_DIR_FLAG $LOBS2D_LIB_DIR_FLAG $LOBS1D_LIB_DIR_FLAG $G3D_LIB_DIR_FLAG $CKIT_LIB_DIR_FLAG $MESCHACH_LIB_DIR_FLAG $X11_LIB_DIR_FLAG"
   
-    SCI_CHECK_LIB($i/src/vdt/VDT/lib/$ad,vdt,VDT_triangulate, $MISC_LIB_DIR_FLAG $MISC_LIB_FLAG $LEXLIB,,optional)
+    SCI_CHECK_LIB($i/src/vdt/VDT/lib/$ad,vdt,VDT_triangulate, $MISC_LIB_DIR_FLAG $MISC_LIB_FLAG $LEXLIB,,not-optional)
     if test -e "$LIB_DIR_VDT/../../src/vdt.h"; then
       HAVE_VDT_H="yes"
       INC_VDT_H="-I$LIB_DIR_VDT/../../src"
