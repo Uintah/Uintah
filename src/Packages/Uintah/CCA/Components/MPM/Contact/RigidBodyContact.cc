@@ -1,6 +1,8 @@
 // RigidBodyContact.cc
 
 #include <Packages/Uintah/CCA/Components/MPM/Contact/RigidBodyContact.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
@@ -21,6 +23,7 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+using std::cerr;
 
 using namespace std;
 using namespace Uintah;
@@ -34,6 +37,21 @@ RigidBodyContact::RigidBodyContact(ProblemSpecP& ps,
   IntVector v_f;
   ps->require("vel_fields",v_f);
   ps->get("stop_time",d_stop_time);
+
+  try {
+    ps->require("direction",d_direction);
+  } catch (ParameterNotFound& e) {
+    cerr << "Default contact direction is Z-direction (0,0,1)\n";
+    d_direction.x(0); d_direction.y(0); d_direction.z(1);
+  }
+  d_direction.x(1^d_direction.x());
+  d_direction.y(1^d_direction.y());
+  d_direction.z(1^d_direction.z());
+  if (d_direction.x() < 0 || d_direction.x() > 1 || d_direction.y() < 0 ||
+      d_direction.y() > 1 || d_direction.z() < 0 || d_direction.z() > 1) {
+    throw ProblemSetupException(" E R R O R----->MPM:Dir. of rigid contact should be 0 or 1");
+  }
+  //cout << "Direction of contact = " << d_direction << endl;
   
   d_sharedState = d_sS;
   lb = Mlb;
@@ -90,7 +108,12 @@ void RigidBodyContact::exMomInterpolated(const ProcessorGroup*,
       // Set each field's velocity equal to the velocity of material 0
       if(!compare(gmass[0][c],0.0)){
         for(int n = 1; n < numMatls; n++){
-	  gvelocity[n][c].z( gvelocity[0][c].z() );
+          int xn = d_direction.x()*n;
+          int yn = d_direction.y()*n;
+          int zn = d_direction.z()*n;
+	  gvelocity[n][c].x( gvelocity[xn][c].x() );
+	  gvelocity[n][c].y( gvelocity[yn][c].y() );
+	  gvelocity[n][c].z( gvelocity[zn][c].z() );
         }
       }
     }
@@ -152,10 +175,16 @@ void RigidBodyContact::exMomIntegrated(const ProcessorGroup*,
       // and adjust the acceleration of each field to account for this
       if(!compare(gmass[0][c],0.0)){  // Non-rigid matl
         for(int  n = 1; n < numMatls; n++){
-	  Dvdt = Vector(0., 0.,
-		  -(gvelocity_star[n][c].z() 
-		  - gvelocity_star[0][c].z())/delT);
-	  gvelocity_star[n][c].z( gvelocity_star[0][c].z() );
+          int xn = d_direction.x()*n;
+          int yn = d_direction.y()*n;
+          int zn = d_direction.z()*n;
+          double xDvdt = -(gvelocity_star[n][c].x() - gvelocity_star[xn][c].x())/delT;
+          double yDvdt = -(gvelocity_star[n][c].y() - gvelocity_star[yn][c].y())/delT;
+          double zDvdt = -(gvelocity_star[n][c].z() - gvelocity_star[zn][c].z())/delT;
+	  Dvdt = Vector(xDvdt, yDvdt, zDvdt);
+	  gvelocity_star[n][c].x( gvelocity_star[xn][c].x() );
+	  gvelocity_star[n][c].y( gvelocity_star[yn][c].y() );
+	  gvelocity_star[n][c].z( gvelocity_star[zn][c].z() );
 	  gacceleration[n][c]+=Dvdt;
         }
       }
