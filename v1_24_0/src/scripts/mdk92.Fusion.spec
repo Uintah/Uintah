@@ -35,7 +35,7 @@
 %define debug   opt
 %undefine	__check_files
 %define thirdpartydotver 0
-%define thirdpartyversion 1.22
+%define thirdpartyversion %{defver}.%{thirdpartydotver}
 %define hdf5    hdf5-1.6.2
 %define ftgl	ftgl-2.0.9
 
@@ -63,7 +63,7 @@ AutoReqProv:	no
 
 ExclusiveOS:	linux
 
-source0:	Thirdparty_install.%{thirdpartyversion}.%{thirdpartydotver}.tar.gz
+source0:	Thirdparty_install.%{thirdpartyversion}.tar.gz
 source1:	%{defname}.%{version}.tar.gz
 source2:	Teem.PKG.%{version}.tar.gz
 source3:	Fusion.PKG.%{version}.tar.gz
@@ -101,11 +101,11 @@ tar -xvzf %{SOURCE6}
 
 
 %build
-#cd $RPM_BUILD_DIR/%{ftgl}/FTGL/unix
+#cd $RPM_BUILD_DIR/%{ftgl}/FTGL/unix 
 #./configure --prefix=/usr/local/%{ftgl}
 #make
 #make install 
-cp $RPM_BUILD_DIR/%{ftgl}/FTGL/COPYING.txt /usr/local/%{ftgl}
+#cp $RPM_BUILD_DIR/%{ftgl}/FTGL/COPYING.txt /usr/local/%{ftgl}
 
 
 cd $RPM_BUILD_DIR/%{hdf5}
@@ -114,15 +114,15 @@ make
 make install 
 cp $RPM_BUILD_DIR/%{hdf5}/COPYING /usr/local/%{hdf5}
 
-cd $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyversion}.%{thirdpartydotver}
-python $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyversion}.%{thirdpartydotver}/install /usr/local/SCIRun/Thirdparty 32 1
+cd $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyversion}
+python $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyversion}/install /usr/local/SCIRun/Thirdparty 32 1
 
 
 rm -rf /usr/local/SCIRun/bin
 mkdir -p /usr/local/SCIRun/bin
 cd /usr/local/SCIRun/bin
 /usr/local/SCIRun/src/con
-figure --with-thirdparty="/usr/local/SCIRun/Thirdparty/%{defver}/Linux/gcc-%{gccver}-32bit/" --with-ftgl="/usr/local/%{ftgl}/FTGL" --with-hdf5="/usr/local/%{hdf5}" --with-mdsplus="/usr/local/mdsplus"  --enable-package="Fusion DataIO Teem"
+figure --with-thirdparty="/usr/local/SCIRun/Thirdparty/%{defver}/Linux/gcc-%{gccver}-32bit/" --with-ftgl="/usr/local/%{ftgl}" --with-hdf5="/usr/local/%{hdf5}" --with-mdsplus="/usr/local/mdsplus"  --enable-package="Fusion DataIO Teem"
 cd /usr/local/SCIRun/bin/on-the-fly-libs
 tar -xvzf %{SOURCE7}
 cd /usr/local/SCIRun/bin/
@@ -133,7 +133,7 @@ chown -R root.root /usr/local/SCIRun /usr/local/%{hdf5} /usr/local/%{ftgl}
 chmod -R a+r /usr/local/SCIRun /usr/local/%{hdf5} /usr/local/%{ftgl}
 
 %clean
-rm -rf $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyversion}.%{thirdpartydotver}
+rm -rf $RPM_BUILD_DIR/Thirdparty_install.%{thirdpartyversion}
 rm -rf $RPM_BUILD_DIR/%{hdf5}
 rm -rf $RPM_BUILD_DIR/%{ftgl}
 
