@@ -50,6 +50,10 @@
 	<name>Cell Angular Velocity</name>
 	<datatype>Teem::Nrrd</datatype>
       </port>
+      <port>
+	<name>Time Slice</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
     </outputs>
   </io>
   <gui>
