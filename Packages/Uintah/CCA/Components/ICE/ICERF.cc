@@ -1,10 +1,11 @@
+#include "ICE.h"
+#include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
+#include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
-#include "ICE.h"
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Core/Util/DebugStream.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
@@ -160,10 +161,10 @@ void ICE::computeRateFormPressure(const ProcessorGroup*,
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
       setBC(matl_press[m], rho_micro[SURROUND_MAT],
-            "rho_micro", "Pressure", patch, indx, new_dw);
+            "rho_micro", "Pressure", patch, d_sharedState, indx, new_dw);
     }  
     setBC(press_new,  rho_micro[SURROUND_MAT],
-         "rho_micro", "Pressure", patch, 0, new_dw);
+         "rho_micro", "Pressure", patch, d_sharedState, 0, new_dw);
     //__________________________________
     // carry rho_cc forward for MPMICE
     // carry sp_vol_CC forward for ICE:computeEquilibrationPressure
