@@ -40,18 +40,21 @@ UintahParallelPort* UintahParallelComponent::getPort(const std::string& name)
     map<string, PortRecord*>::iterator iter = portmap.find(name);
     if(iter == portmap.end())
 	return 0;
-    else if(iter->second->connections.size()> 0)
+    else if(iter->second->connections.size()> 1)
 	return 0;
     else
 	return iter->second->connections[0];
 }
 
-void UintahParallelComponent::releasePort(const std::string& name)
+void UintahParallelComponent::releasePort(const std::string&)
 {
 }
 
 //
 // $Log$
+// Revision 1.4  2000/04/12 23:01:03  sparker
+// Make getPort work
+//
 // Revision 1.3  2000/04/11 07:10:56  sparker
 // Completing initialization and problem setup
 // Finishing Exception modifications
