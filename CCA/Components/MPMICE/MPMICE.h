@@ -5,6 +5,7 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
+#include <Packages/Uintah/Core/Grid/NCVariable.h>
 
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/CCA/Ports/MPMCFDInterface.h>
@@ -197,7 +198,19 @@ public:
 				       const MaterialSubset* matls,
 		                       DataWarehouse* old_dw,
 		                       DataWarehouse* new_dw);
-
+  void printData(const Patch* patch, 
+                  int   include_EC,
+                  char  message1[],
+                  char  message2[],
+                  const NCVariable<double>& q_NC);
+                  
+  void printNCVector(const Patch* patch, int include_EC,
+                     char    message1[],
+                     char    message2[],
+                     int     component,
+                     const NCVariable<Vector>& q_NC);
+        
+        
   enum bctype { NONE=0,
                 FIXED,
                 SYMMETRY,
@@ -215,9 +228,20 @@ protected:
   SerialMPM*       d_mpm;
   ICE*             d_ice;
   bool             d_fracture;
-
+  double d_dbgTime; 
+  double d_dbgStartTime;
+  double d_dbgStopTime;
+  double d_dbgOutputInterval;
+  double d_dbgNextDumpTime;
+  double d_dbgOldTime;
+  
   vector<MPMPhysicalBC*> d_physicalBCs;
   double d_SMALL_NUM;
+  
+  // Debugging switches
+  bool switchDebug_InterpolateNCToCC;
+  bool switchDebug_InterpolateNCToCC_0;
+  bool switchDebug_InterpolateCCToNC;
 };
 
 } // End namespace Uintah
