@@ -241,11 +241,10 @@ void get_material(Array1<Material*> &matls) {
   spline.add(Color(1,.4,.4));
   int ncolors=5000;
   matls.resize(ncolors);
-  float Ka=.8;
   float Kd=.8;
   float Ks=.8;
   float refl=0;
-  float specpow=40;
+  int specpow=40;
   for(int i=0;i<ncolors;i++){
     float frac=float(i)/(ncolors-1);
     Color c(spline(frac));

@@ -44,9 +44,9 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     Color bgcolor(0.05, 0.1, 0.3);
 
     //Material* matl0=new LambertianMaterial(Color(0.8,0.8,0.8));
-    Material* matl2=new DielectricMaterial(1.5, 1.0, 0.04, 100.0, Color(.85, .97, .9), Color(1,1,1));
+    Material* matl2=new DielectricMaterial(1.5, 1.0, 0.04, 100, Color(.85, .97, .9), Color(1,1,1));
     Material* matl3=new DielectricMaterial(1.33333, 1.0);
-    Material* matl20=new DielectricMaterial(1.0, 1.5, 0.04, 100.0,  Color(1,1,1),  Color(.85, .97, .9) );
+    Material* matl20=new DielectricMaterial(1.0, 1.5, 0.04, 100,  Color(1,1,1),  Color(.85, .97, .9) );
     Material* matl30=new DielectricMaterial(1.0, 1.3333);
     Material* matl4 = new MetalMaterial(Color(0.7,0.73,0.8));
 

@@ -263,7 +263,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
       /*printf("Min: %lf %lf %lf\n",min.x(),min.y(),min.z());
       printf("Max: %lf %lf %lf\n",max.x(),max.y(),max.z());*/
       
-      Material* glass= new DielectricMaterial(1.5, 1.0, 0.04, 400.0, Color(.80, .93 , .87), Color(1,1,1), true, 0.001);
+      Material* glass= new DielectricMaterial(1.5, 1.0, 0.04, 400, Color(.80, .93 , .87), Color(1,1,1), true, 0.001);
 
       Object* box=new Box(glass, Point(-500,-100,-10), Point(300,300,0) );
       Group* table=new Group();
