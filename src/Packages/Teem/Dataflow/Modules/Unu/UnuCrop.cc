@@ -260,7 +260,7 @@ UnuCrop::execute()
   }
 
   // See if any of the sizes have changed.
-  bool update = false;
+  bool update = new_dataset;
 
   for (int i=0; i<num_axes_.get(); i++) {
     if (lastmin_[i] != mins_[i]->get()) {
