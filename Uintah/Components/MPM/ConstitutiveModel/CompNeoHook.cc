@@ -246,7 +246,7 @@ void CompNeoHook::computeStressTensor(const Patch* patch,
      }
 
      if( matl->getFractureModel() ) {
-        pRotationRate[idx] = Vector(omega1,omega2,omega3);
+        pRotationRate[idx] = Vector(omega1/2,omega2/2,omega3/2);
      }
 
     // Calculate the stress Tensor (symmetric 3 x 3 Matrix) given the
@@ -412,6 +412,9 @@ const TypeDescription* fun_getTypeDescription(CompNeoHook::CMData*)
 }
 
 // $Log$
+// Revision 1.43  2000/09/11 20:23:25  tan
+// Fixed a mistake in crack surface contact force algorithm.
+//
 // Revision 1.42  2000/09/11 01:08:43  tan
 // Modified time step calculation (in constitutive model computeStressTensor(...))
 // when fracture cracking speed involved.
