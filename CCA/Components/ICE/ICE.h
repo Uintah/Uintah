@@ -313,12 +313,6 @@ using namespace SCIRun;
                                           const MaterialSubset*,
                                           DataWarehouse*,
                                           DataWarehouse*); 
-                                  
-      void transportModelVariables(const ProcessorGroup*,
-				   const PatchSubset* patches,
-				   const MaterialSubset* matls,
-				   DataWarehouse*,
-				   DataWarehouse*);
 
       void advectAndAdvanceInTime(const ProcessorGroup*,
                                   const PatchSubset* patches,
