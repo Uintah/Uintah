@@ -34,7 +34,7 @@ PROGRAM := $(SRCDIR)/strauss
 STRAUSS_EXE := $(PROGRAM)
 PSELIBS := Core/CCA/tools/strauss/c++ruby
 INCLUDES := $(INCLUDES) $(RUBY_INCLUDE)
-LIBS := $(XML_LIBRARY) $(RUBY_LIBRARY) -lruby-static -lcrypt -ldl
+LIBS := $(XML_LIBRARY) $(RUBY_LIBRARY) -lcrypt -ldl
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
