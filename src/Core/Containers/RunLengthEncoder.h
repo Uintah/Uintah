@@ -776,7 +776,7 @@ T RunLengthEncoder<T, Sequencer>::seek(int fd, unsigned long index) throw(Intern
     // the group is a run
     lseek(fd, start + data_start, SEEK_SET);
     ::read(fd, &item, sizeof(T));
-    Sequencer::SequenceRule rule;
+    typename Sequencer::SequenceRule rule;
     if (Sequencer::needRule()) {
       if (data_end - data_start == sizeof(T))
 	// must be a default sequence rule
