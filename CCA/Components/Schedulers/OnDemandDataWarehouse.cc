@@ -12,6 +12,7 @@
 
 #include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SendState.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/DependencyException.h>
@@ -24,6 +25,7 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
+#include <Packages/Uintah/Core/Grid/PSPatchMatlGhost.h>
 #include <Packages/Uintah/Core/Grid/BufferInfo.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
@@ -61,7 +63,7 @@ Mutex ssLock( "send state lock" );
 #define DAV_DEBUG 0
 
 OnDemandDataWarehouse::OnDemandDataWarehouse(const ProcessorGroup* myworld,
-					     const Scheduler* scheduler,
+					     Scheduler* scheduler,
 					     int generation, const GridP& grid,
 					     bool isInitializationDW/*=false*/)
    : DataWarehouse(myworld, scheduler, generation),
@@ -248,6 +250,15 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, DependencyBatch* batch,
   const VarLabel* label = dep->req->var;
   const Patch* patch = dep->fromPatch;
   int matlIndex = dep->matl;
+  Ghost::GhostType gt = dep->req->gtype;
+  int ngc = dep->req->numGhostCells;
+
+  IntVector range = dep->high - dep->low;
+  if (range.x() > ngc && range.y() > ngc && range.z() > ngc) {
+    //brydbg << d_myworld->myrank() << " sending entire patch of data\n";
+    gt = Ghost::None;
+    ngc = 0;
+  }
 
  d_lock.readLock();
   switch(label->typeDescription()->getType()){
@@ -262,7 +273,7 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, DependencyBatch* batch,
       ASSERTRANGE(dest, 0, d_myworld->size());
 
       ssLock.lock();  // Dd: ??
-      ParticleSubset* sendset = ss.find_sendset(dest, patch, matlIndex);
+      ParticleSubset* sendset = ss.find_sendset(dest, patch, matlIndex, gt, ngc);
       ssLock.unlock();  // Dd: ??
 
       if(!sendset){
@@ -272,7 +283,7 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, DependencyBatch* batch,
         ParticleSubset* pset = var->getParticleSubset();
         ssLock.lock();  // Dd: ??
         sendset = scinew ParticleSubset(pset->getParticleSet(),
-                                        false, -1, 0, 0);
+                                        false, matlIndex, patch, gt, ngc, 0);
         ssLock.unlock();  // Dd: ??
         constParticleVariable<Point> pos;
         old_dw->get(pos, pos_var, pset);
@@ -296,10 +307,13 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, DependencyBatch* batch,
 	ASSERT((PARTICLESET_TAG|batch->messageTag) <= (*maxtag));
 #endif
         ASSERT(batch->messageTag >= 0);
+        
+        //brydbg << d_myworld->myrank() << " Sending PARTICLE message number " << (PARTICLESET_TAG|batch->messageTag) << ", to " << dest << ", length: " << 1 << "(" << numParticles << ")\n"; cerrLock.unlock();
+
         MPI_Bsend(&numParticles, 1, MPI_INT, dest,
                   PARTICLESET_TAG|batch->messageTag, d_myworld->getComm());
         ssLock.lock();  // Dd: ??       
-        ss.add_sendset(sendset, dest, patch, matlIndex);
+        ss.add_sendset(sendset, dest, patch, matlIndex, gt, ngc);
         ssLock.unlock();  // Dd: ??
       }
         
@@ -307,7 +321,7 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, DependencyBatch* batch,
       int numParticles = sendset->numParticles();
       ssLock.unlock(); // Dd: ??
 
-      mixedDebug << "sendset has " << numParticles << " particles\n";
+      //brydbg << d_myworld->myrank() << " sendset has " << numParticles << " particles - patch " << patch << ' ' << "M: " << matlIndex << "GT: (" << gt << ',' << ngc << "), on dest: " << dest << "\n";
 
       if( numParticles > 0){
          var->getMPIBuffer(buffer, sendset);
@@ -390,23 +404,58 @@ OnDemandDataWarehouse::recvMPI(SendState& rs, BufferInfo& buffer,
   const Patch* patch = dep->fromPatch;
   int matlIndex = dep->matl;
 
+  Ghost::GhostType gt = dep->req->gtype;
+  int ngc = dep->req->numGhostCells;
+
+  // this is a special case, based on the circumstances, we have sent
+  // the entire patch instead of just the ghost region.
+  // This can happen when dynamic load balancing or when 1 patch needs to send
+  // to multiple patchs on 1 processor
+  
+  IntVector range = dep->high - dep->low;
+  if (range.x() > ngc && range.y() > ngc && range.z() > ngc) {
+    //brydbg << d_myworld->myrank() << " Recving entire patch of data\n";
+    gt = Ghost::None;
+    ngc = 0;
+  }
+
   switch(label->typeDescription()->getType()){
   case TypeDescription::ParticleVariable:
     {
       // First, get the particle set.  We should already have it
-      if(!old_dw->haveParticleSubset(matlIndex, patch)){
+      //      if(!old_dw->haveParticleSubset(matlIndex, patch, gt, ngc)){
+      int from=batch->fromTask->getAssignedResourceIndex();
+      ParticleSubset* recvset = rs.find_sendset(from, patch, matlIndex, gt, ngc);
+      if(!recvset){
         int numParticles;
         MPI_Status status;
         ASSERT(batch->messageTag >= 0);
-        int from=batch->fromTask->getAssignedResourceIndex();
 	ASSERTRANGE(from, 0, d_myworld->size());
+        //brydbg << d_myworld->myrank() << " Posting PARTICLES receive for message number " << (PARTICLESET_TAG|batch->messageTag) << " from " << from << ", length=" << 1 << "\n";      
         MPI_Recv(&numParticles, 1, MPI_INT, from,
                  PARTICLESET_TAG|batch->messageTag, d_myworld->getComm(),
                  &status);
-        old_dw->createParticleSubset(numParticles, matlIndex, patch);
+        //brydbg << d_myworld->myrank() << " recving " << numParticles << "particles\n";
+        
+        // sometime we have to force a receive to match a send.
+        // in these cases just ignore this new subset
+        ParticleSubset* psubset;
+        if (!old_dw->haveParticleSubset(matlIndex, patch, gt, ngc)) {
+          psubset = old_dw->createParticleSubset(numParticles, matlIndex, patch, gt, ngc);
+        }
+        else {
+          psubset = old_dw->getParticleSubset(matlIndex,patch,gt,ngc);
+          ASSERTEQ(numParticles, psubset->numParticles());
+        }
+        ParticleSubset* recvset = new ParticleSubset(psubset->getParticleSet(),
+                                                     true, matlIndex, patch, 
+                                                     gt, ngc, 0);
+        rs.add_sendset(recvset, from, patch, matlIndex, gt, ngc);
       }
-      ParticleSubset* pset = old_dw->getParticleSubset(matlIndex, patch);
+      ParticleSubset* pset = old_dw->getParticleSubset(matlIndex,patch,gt,ngc);
 
+
+      //brydbg << d_myworld->myrank() << " RECVset has" << pset->numParticles() << " particles - patch " << patch << ' ' << "M: " << matlIndex << "GT: (" << gt << ',' << ngc << ")\n";
       Variable* v = label->typeDescription()->createInstance();
       ParticleVariableBase* var = dynamic_cast<ParticleVariableBase*>(v);
       ASSERT(var != 0);
@@ -495,7 +544,6 @@ void
 OnDemandDataWarehouse::reduceMPI(const VarLabel* label,
 				 const Level* level,
                                  const MaterialSubset* inmatls)
-                                 
 {
   const MaterialSubset* matls;
   if(!inmatls){
@@ -638,7 +686,8 @@ OnDemandDataWarehouse::override(const ReductionVariableBase& var,
 
 ParticleSubset*
 OnDemandDataWarehouse::createParticleSubset(particleIndex numParticles,
-                                            int matlIndex, const Patch* patch)
+                                            int matlIndex, const Patch* patch,
+                                            Ghost::GhostType gt, int numgc)
 {
   d_lock.writeLock();
 #if DAV_DEBUG
@@ -649,29 +698,29 @@ OnDemandDataWarehouse::createParticleSubset(particleIndex numParticles,
 
    ParticleSet* pset = scinew ParticleSet(numParticles);
    ParticleSubset* psubset = 
-                       scinew ParticleSubset(pset, true, matlIndex, patch, 0);
+     scinew ParticleSubset(pset, true, matlIndex, patch, gt, numgc, 0);
 
-   psetDBType::key_type key(matlIndex, patch);
+   psetDBType::key_type key(patch, matlIndex, gt, numgc);
    if(d_psetDB.find(key) != d_psetDB.end())
      SCI_THROW(InternalError("createParticleSubset called twice for patch"));
 
    d_psetDB[key]=psubset;
    psubset->addReference();
-
   d_lock.writeUnlock();
    return psubset;
 }
 
 void
-OnDemandDataWarehouse::saveParticleSubset(ParticleSubset* psubset,
-                                          int matlIndex, const Patch* patch)
+OnDemandDataWarehouse::saveParticleSubset(ParticleSubset* psubset, 
+                                          int matlIndex, const Patch* patch,
+                                          Ghost::GhostType gt, int numgc)
 {
   ASSERTEQ(psubset->getPatch(), patch);
   ASSERTEQ(psubset->getMatlIndex(), matlIndex);
   ASSERT(!patch->isVirtual());  
   d_lock.writeLock();
   
-  psetDBType::key_type key(matlIndex, patch);
+  psetDBType::key_type key(patch, matlIndex, gt, numgc);
   if(d_psetDB.find(key) != d_psetDB.end())
     SCI_THROW(InternalError("saveParticleSubset called twice for patch"));
 
@@ -681,28 +730,44 @@ OnDemandDataWarehouse::saveParticleSubset(ParticleSubset* psubset,
   d_lock.writeUnlock();
 }
 
+void OnDemandDataWarehouse::printParticleSubsets()
+{
+  psetDBType::iterator iter;
+  cout << d_myworld->myrank() << " Available psets:\n";
+  for (iter = d_psetDB.begin(); iter != d_psetDB.end(); iter++) {
+    cout << d_myworld->myrank() << " " <<*(iter->second) << endl;
+  }
+  
+}
+
 ParticleSubset*
-OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch)
+OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
+                                         Ghost::GhostType gt, int numgc)
 {
   d_lock.readLock();
   const Patch* realPatch = (patch != 0) ? patch->getRealPatch() : 0;
-  psetDBType::key_type key(matlIndex, realPatch);
+
+  psetDBType::key_type key(realPatch, matlIndex, gt, numgc);
   psetDBType::iterator iter = d_psetDB.find(key);
   if(iter == d_psetDB.end()){
+    printParticleSubsets();
     d_lock.readUnlock();
-    SCI_THROW(UnknownVariable("ParticleSet", getID(), realPatch, matlIndex,
-			      "Cannot find particle set on patch"));
+    ostringstream s;
+    s << "ParticleSet, ghost: (" << gt << ',' << numgc << ')';
+    SCI_THROW(UnknownVariable(s.str().c_str(), getID(), realPatch, matlIndex,
+                              "Cannot find particle set on patch"));
   }
   d_lock.readUnlock();
   return iter->second;
 }
 
 ParticleSubset*
-OnDemandDataWarehouse::getDeleteSubset(int matlIndex, const Patch* patch)
+OnDemandDataWarehouse::getDeleteSubset(int matlIndex, const Patch* patch,
+                                       Ghost::GhostType gt, int numgc)
 {
   d_lock.readLock();
   const Patch* realPatch = (patch != 0) ? patch->getRealPatch() : 0;
-   psetDBType::key_type key(matlIndex, realPatch);
+   psetDBType::key_type key(realPatch, matlIndex, gt, numgc);
    psetDBType::iterator iter = d_delsetDB.find(key);
    if(iter == d_delsetDB.end()){
      d_lock.readUnlock();
@@ -731,10 +796,11 @@ OnDemandDataWarehouse::getNewParticleState(int matlIndex, const Patch* patch)
 
 
 bool
-OnDemandDataWarehouse::haveParticleSubset(int matlIndex, const Patch* patch)
+OnDemandDataWarehouse::haveParticleSubset(int matlIndex, const Patch* patch,
+                                          Ghost::GhostType gt, int numgc)
 {
   d_lock.readLock();
-   psetDBType::key_type key(matlIndex, patch);
+   psetDBType::key_type key(patch->getRealPatch(), matlIndex, gt, numgc);
    psetDBType::iterator iter = d_psetDB.find(key);
   d_lock.readUnlock();
    return !(iter == d_psetDB.end());
@@ -749,7 +815,7 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
   if(gtype == Ghost::None){
     if(numGhostCells != 0)
       SCI_THROW(InternalError("Ghost cells specified with task type none!\n"));
-    return getParticleSubset(matlIndex, patch);
+    return getParticleSubset(matlIndex, patch, gtype, numGhostCells);
   }
   Patch::selectType neighbors;
   IntVector lowIndex, highIndex;
@@ -764,6 +830,7 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
   
   for(int i=0;i<(int)neighbors.size();i++){
     const Patch* neighbor = neighbors[i];
+    const Patch* realNeighbor = neighbor->getRealPatch();
     if(neighbor){
       Box adjustedBox = box;
       if (neighbor->isVirtual()) {
@@ -773,11 +840,23 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
         adjustedBox = Box(box.lower() - offset,
                           box.upper() - offset);
       }
-      ParticleSubset* pset = getParticleSubset(matlIndex, neighbor);
+      ParticleSubset* pset;
+      //cout << d_myworld->myrank() << " Patch: " << patch << ' ' << patch->getID()
+      //     << ", neighbor: " << neighbor << ' ' << neighbor->getID() << endl;
+
+      // if neighbor is stored entirely on this dw - multi-patch per proc, or 
+      // this is a load balancing timestep and neighbor used to be on this proc
+      LoadBalancer* lb = d_scheduler->getLoadBalancer();
+
+      if (lb->getPatchwiseProcessorAssignment(neighbor) == d_myworld->myrank() || !haveParticleSubset(matlIndex, neighbor, gtype, numGhostCells))
+        pset = getParticleSubset(matlIndex, neighbor, Ghost::None, 0);
+      else
+        pset = getParticleSubset(matlIndex, neighbor, gtype, numGhostCells);
       constParticleVariable<Point> pos;
+
       get(pos, pos_var, pset);
-      
-      particleIndex sizeHint = neighbor == patch? pset->numParticles():0;
+
+      particleIndex sizeHint = realNeighbor == patch? pset->numParticles():0;
       ParticleSubset* subset = 
         scinew ParticleSubset(pset->getParticleSet(), false, -1, 0, sizeHint);
       for(ParticleSubset::iterator iter = pset->begin();
@@ -786,6 +865,7 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
         if(adjustedBox.contains(pos[idx]))
           subset->addParticle(idx);
       }
+      //cout << d_myworld->myrank() << " GPS 1 "  << *subset << endl;
       totalParticles+=subset->numParticles();
       subsets.push_back(subset);
     }
@@ -798,6 +878,8 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
                                                     matlIndex, patch,
                                                     gtype, numGhostCells,
                                                     vneighbors, subsets);
+  
+  //cout << d_myworld->myrank() << " NEW NEIGHORED SUBSET: " << *newsubset <<endl;
   return newsubset;
 }
 
@@ -825,7 +907,8 @@ OnDemandDataWarehouse::get(constParticleVariableBase& constVar,
   int matlIndex = pset->getMatlIndex();
   const Patch* patch = pset->getPatch();
 
-  if(pset->getGhostType() == Ghost::None){
+  //cout << d_myworld->myrank() << " get: " << *pset <<endl;
+  if(pset->getGhostType() == Ghost::None || pset->getNeighbors().size() == 0){
     get(constVar, label, matlIndex, patch);
   }
   else {
@@ -836,6 +919,7 @@ OnDemandDataWarehouse::get(constParticleVariableBase& constVar,
 
     const vector<const Patch*>& neighbors = pset->getNeighbors();
     const vector<ParticleSubset*>& neighbor_subsets = pset->getNeighborSubsets();
+
     vector<ParticleVariableBase*> neighborvars(neighbors.size());
     for(int i=0;i<(int)neighbors.size();i++){
       const Patch* neighbor=neighbors[i];
@@ -843,12 +927,14 @@ OnDemandDataWarehouse::get(constParticleVariableBase& constVar,
 	SCI_THROW(UnknownVariable(label->getName(), getID(), neighbor, matlIndex,
 			      neighbor == patch?"on patch":"on neighbor"));
       neighborvars[i] = var->cloneType();
+
       d_particleDB.get(label, matlIndex, neighbors[i], *neighborvars[i]);
     }
 
     // Note that when the neighbors are virtual patches (i.e. periodic
     // boundaries), then if var is a ParticleVariable<Point>, the points
     // of neighbors will be translated by its virtualOffset.
+    
     var->gather(pset, neighbor_subsets, neighborvars, neighbors);
     
     constVar = *var;
@@ -1555,7 +1641,7 @@ OnDemandDataWarehouse::deleteParticles(ParticleSubset* delset)
  d_lock.writeLock();
   int matlIndex = delset->getMatlIndex();
   Patch* patch = (Patch*) delset->getPatch();
-  psetDBType::key_type key(matlIndex, patch);
+  psetDBType::key_type key(patch, matlIndex);
   psetDBType::iterator iter = d_delsetDB.find(key);
   ParticleSubset* currentDelset;
   if(iter != d_delsetDB.end()) {
@@ -1580,7 +1666,7 @@ OnDemandDataWarehouse::addParticles(const Patch* patch, int matlIndex,
 				    map<const VarLabel*, ParticleVariableBase*>* addedState)
 {
  d_lock.writeLock();
-  psetDBType::key_type key(matlIndex, patch);
+  psetAddDBType::key_type key(matlIndex, patch);
   psetAddDBType::iterator iter = d_addsetDB.find(key);
   if(iter  != d_addsetDB.end()) 
     // SCI_THROW(InternalError("addParticles called twice for patch"));
