@@ -20,7 +20,7 @@
 #include <PSECore/Datatypes/GeometryPort.h>
 #include <SCICore/Geom/GeomGroup.h>
 #include <SCICore/Geom/GeomText.h>
-#include <SCICore/Geom/TexSquare.h>
+#include <SCICore/Geom/ColorMapTex.h>
 #include <SCICore/Geom/GeomTransform.h>
 #include <SCICore/Geometry/Transform.h>
 #include <SCICore/Malloc/Allocator.h>
@@ -86,28 +86,14 @@ void ColorMapKey::execute() {
 
   GeomGroup *all = new GeomGroup();
 
-  // this looks all general and everything, but when you look closely
-  // at the TexSquare data structure, it turns out this is hard-coded
-  // to have 64x64 entries.  So, we should make this TexSquare accordingly...
-
-  double skip = (map->colors.size()+0.00001)/(64*64);
-  double curr=0;
-
   double xsize = 15./16.0;
   double ysize = 0.1;
-  TexSquare *sq = new TexSquare( Point( 0, -1, 0),
+  ColorMapTex *sq = new ColorMapTex( Point( 0, -1, 0),
 				 Point( xsize, -1, 0),
 				 Point( xsize, -1 + ysize, 0 ),
 				 Point( 0, -1 + ysize, 0 ) );
 
-  unsigned char tex[ 64 * 64 * 3 ];
-  for( int i = 0; curr < map->colors.size(); i++, curr+=skip ) {
-      tex[ 3*i ] = 255*map->colors[(int)curr]->diffuse.r();
-      tex[ 3*i + 1 ] = 255*map->colors[(int)curr]->diffuse.g();
-      tex[ 3*i + 2 ] = 255*map->colors[(int)curr]->diffuse.b();
-  }
-
-  sq->set_texture( tex, 64, 64 );
+  sq->set_texture( map->raw1d );
   all->add( sq );
   
   // if the scalar field is present, we can add numbers and place the
@@ -124,16 +110,10 @@ void ColorMapKey::execute() {
 
     scale = Vector(grid->nx, grid->ny, 1 );
     
-    // find min and max scalar values
-    double max = -MAXDOUBLE;
-    double min = MAXDOUBLE;
-    int i, j;
-    for( i = 0; i < grid->nx; i++ ) {
-      for( j = 0; j < grid->ny; j++ ) {
-	max = ( max < grid->grid(i,j,0) ) ? grid->grid(i,j,0) : max;
-	min = ( min > grid->grid(i,j,0) ) ? grid->grid(i,j,0) : min;
-      }
-    }
+    int i;
+
+    double min = map->min;
+    double max = map->max;
 
     // some bases for positioning text
     double xloc = xsize;
@@ -169,6 +149,9 @@ void ColorMapKey::execute() {
 
 //
 // $Log$
+// Revision 1.8  2000/05/31 21:55:08  kuzimmer
+// Modified ColorMapKey, it works!
+//
 // Revision 1.7  2000/03/17 09:27:30  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository
