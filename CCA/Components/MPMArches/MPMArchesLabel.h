@@ -13,6 +13,7 @@ namespace Uintah {
       const VarLabel* cMassLabel;
       const VarLabel* cVolumeLabel;
       const VarLabel* solid_fraction_CCLabel;
+      const VarLabel* solid_fractionNew_CCLabel;
 
       // velocity labels for solid materials
 
@@ -108,7 +109,11 @@ namespace Uintah {
 
       const VarLabel* void_frac_CCLabel;
       const VarLabel* void_frac_old_CCLabel;
+      const VarLabel* void_frac_MPM_CCLabel;
+      const VarLabel* void_frac_CutCell_CCLabel;
       const VarLabel* solid_frac_sum_CCLabel;
+      const VarLabel* mmCellType_MPMLabel;
+      const VarLabel* mmCellType_CutCellLabel;
 
       // Stability Factor Labels
       
@@ -195,6 +200,9 @@ namespace Uintah {
       const VarLabel* d_nextCutCellILabel;
       const VarLabel* d_nextCutCellJLabel;
       const VarLabel* d_nextCutCellKLabel;
+      const VarLabel* d_nextWallILabel;
+      const VarLabel* d_nextWallJLabel;
+      const VarLabel* d_nextWallKLabel;
 
     };
 

@@ -119,6 +119,12 @@ public:
 
   // Calculate gas void fraction by subtraction of solid volume
   // fraction from one
+  void scheduleComputeVoidFracMPM(SchedulerP& sched,
+			       const PatchSet* patches,
+			       const MaterialSet* arches_matls,
+			       const MaterialSet* mpm_matls,
+			       const MaterialSet* all_matls);
+
   void scheduleComputeVoidFrac(SchedulerP& sched,
 			       const PatchSet* patches,
 			       const MaterialSet* arches_matls,
@@ -231,12 +237,18 @@ public:
 			 DataWarehouse* old_dw,
 			 DataWarehouse* new_dw);
 
-  void computeVoidFrac(const ProcessorGroup*,
+  void computeVoidFracMPM(const ProcessorGroup*,
 		       const PatchSubset* patches,
 		       const MaterialSubset*,
 		       DataWarehouse* old_dw,
 		       DataWarehouse* new_dw);
 
+
+  void computeVoidFrac(const ProcessorGroup*,
+		       const PatchSubset* patches,
+		       const MaterialSubset*,
+		       DataWarehouse* old_dw,
+		       DataWarehouse* new_dw);
 
   void computeIntegratedSolidProps(const ProcessorGroup*,
 				   const PatchSubset* patches,
