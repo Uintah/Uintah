@@ -378,10 +378,7 @@ namespace Uintah {
                       CCVariable<T>& q_CC,
                       V& q_Lagrangian,
                       const CCVariable<T>& q_advected,
-                      constCCVariable<double>& mass_L,
                       const CCVariable<double>& mass_new,
-                      const CCVariable<double>& mass_advected,
-                      constCCVariable<double>& cv,
                       const CCVariable<double>& cv_new,
                       const Patch* patch); 
  
