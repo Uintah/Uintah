@@ -599,26 +599,25 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
       {
 	 /*
 	  * crackGrow
-	  *   in(P.STRESS)
-	  *   operation(check the stress on each boudary particle to see
-	  *             if the microcrack will grow.  If fracture occur,
-	  *             more interior particles become boundary particles)
-	  * out(P.SURFACENORMAL)
+	  *   in(p.stress,p.isBroken,p.crackSurfaceNormal)
+	  *   operation(check the stress on each particle to see
+	  *   if the microcrack will initiate and/or grow)
+	  * out(p.isBroken,p.crackSurfaceNormal)
 	  */
 	 Task* t = scinew Task("SerialMPM::crackGrow",
 			    patch, old_dw, new_dw,
 			    this,&SerialMPM::crackGrow);
 
-	 for(int m = 0; m < numMatls; m++){
+	 for(int m = 0; m < numMatls; m++) {
 	    Material* matl = d_sharedState->getMaterial(m);
 	    int idx = matl->getDWIndex();
 	    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);     
 	    if(mpm_matl->getFractureModel()) {
-	      t->requires( new_dw, lb->pStressLabel, idx, patch,
+	      t->requires( new_dw, lb->pStressLabel_preReloc, idx, patch,
 			 Ghost::None);
-	      t->requires( new_dw, lb->pIsBrokenLabel, idx, patch,
+	      t->requires( old_dw, lb->pIsBrokenLabel, idx, patch,
 			 Ghost::None);
-	      t->requires( new_dw, lb->pCrackSurfaceNormalLabel, idx, patch,
+	      t->requires( old_dw, lb->pCrackSurfaceNormalLabel, idx, patch,
 			 Ghost::None);
 
 	      t->computes( new_dw, lb->pIsBrokenLabel_preReloc, idx, patch );
@@ -675,17 +674,13 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
    new_dw->pleaseSave(lb->gMassLabel, numMatls);
    new_dw->pleaseSave(lb->gVelocityLabel, numMatls);
 
-   if(d_burns){
-   // Archive reader can't handle this anyway...
-//     new_dw->pleaseSave(lb->cBurnedMassLabel, numMatls);
-   }
-
    new_dw->pleaseSave(lb->pTemperatureLabel, numMatls);
    new_dw->pleaseSave(lb->pTemperatureGradientLabel, numMatls);
 
    new_dw->pleaseSave(lb->gTemperatureLabel, numMatls);
 
-//   new_dw->pleaseSave(lb->gStressLabel, numMatls);
+   new_dw->pleaseSave(lb->pCrackSurfaceNormalLabel, numMatls);
+   new_dw->pleaseSave(lb->pIsBrokenLabel, numMatls);
 
    new_dw->pleaseSaveIntegrated(lb->StrainEnergyLabel);
    new_dw->pleaseSaveIntegrated(lb->KineticEnergyLabel);
@@ -1100,18 +1095,6 @@ void SerialMPM::computeMassRate(const ProcessorGroup*,
    }
 }
 
-void SerialMPM::labelBrokenCells(const ProcessorGroup*,
-			 	const Patch* patch,
-				DataWarehouseP& old_dw,
-				DataWarehouseP& new_dw)
-{
-   for(int m = 0; m < d_sharedState->getNumMatls(); m++){
-      Material* matl = d_sharedState->getMaterial(m);
-      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-      mpm_matl->getFractureModel()->labelBrokenCells(patch, mpm_matl, old_dw, new_dw);
-   }
-}
-
 void SerialMPM::crackGrow(const ProcessorGroup*,
 				    const Patch* patch,
 				    DataWarehouseP& old_dw,
@@ -1470,16 +1453,13 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
   Vector dx = patch->dCell();
   double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
-  /* tan: oodx used for shape-function-gradient calculation.
-          shape-function-gradient will be used for temperature 
-          gradient calculation.  */
 
   Vector vel(0.0,0.0,0.0);
   Vector acc(0.0,0.0,0.0);
   
-  double tempRate; /* tan: tempRate stands for "temperature variation
-                           time rate", used for heat conduction.  */
-//  double thermal_energy = 0.0;
+  double tempRate;
+  
+  //  double thermal_energy = 0.0;
   // DON'T MOVE THESE!!!
   Vector CMX(0.0,0.0,0.0);
   Vector CMV(0.0,0.0,0.0);
@@ -1489,8 +1469,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
   // This needs the datawarehouse to allow indexing by material
 
   int numMatls = d_sharedState->getNumMatls();
-
-  //  const MPMLabel* lb = MPMLabel::getLabels();
 
   for(int m = 0; m < numMatls; m++){
     Material* matl = d_sharedState->getMaterial( m );
@@ -1770,6 +1748,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.128  2000/09/05 19:37:15  tan
+// Fracture starts to run in Uintah/MPM!
+//
 // Revision 1.127  2000/09/05 08:00:19  tan
 // Added crack grow for crack propagation.
 //

@@ -9,8 +9,10 @@ namespace MPM {
 Lattice::
 Lattice(const ParticleVariable<Point>& pX)
 : d_patch( pX.getParticleSubset()->getPatch() ),
-  Array3<Cell>( d_patch->getCellLowIndex()-IntVector(1,1,1),
-                d_patch->getCellHighIndex()+IntVector(1,1,1) ),
+  Array3<Cell>( pX.getParticleSubset()->getPatch()->getCellLowIndex()
+                  - IntVector(1,1,1),
+                pX.getParticleSubset()->getPatch()->getCellHighIndex()
+		  + IntVector(1,1,1) ),
   d_pX(pX)
 {
   ParticleSubset* pset = d_pX.getParticleSubset();
@@ -47,6 +49,9 @@ const ParticleVariable<Point>& Lattice::getpX() const
 } //namespace Uintah
 
 // $Log$
+// Revision 1.10  2000/09/05 19:38:42  tan
+// Fracture starts to run in Uintah/MPM!
+//
 // Revision 1.9  2000/09/05 06:34:27  tan
 // Introduced BrokenCellShapeFunction for SerialMPM::interpolateParticlesToGrid
 // where farcture is involved.

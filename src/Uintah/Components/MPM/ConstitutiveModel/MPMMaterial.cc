@@ -189,6 +189,8 @@ void MPMMaterial::createParticles(particleIndex numParticles,
      ptemperatureGradient[pIdx] = Vector(0.,0.,0.);
      pexternalHeatRate[pIdx] = 0.;
 
+     pexternalforce[pIdx] = Vector(0.0,0.0,0.0);
+
      //applyPhysicalBCToParticles
      for (int i = 0; i<MPMPhysicalBCFactory::mpmPhysicalBCs.size(); i++ )
      {
@@ -207,9 +209,6 @@ void MPMMaterial::createParticles(particleIndex numParticles,
          {
              pexternalforce[pIdx] = bc->getForceDensity() * pvolume[pIdx];
              cout << pexternalforce[pIdx] << endl;
-         }
-         else {
-           pexternalforce[pIdx] = Vector(0.0,0.0,0.0);
          }
        }
      }
@@ -375,6 +374,9 @@ double MPMMaterial::getHeatTransferCoefficient() const
 
 
 // $Log$
+// Revision 1.48  2000/09/05 19:36:36  tan
+// Fracture starts to run in Uintah/MPM!
+//
 // Revision 1.47  2000/09/05 07:45:13  tan
 // Applied BrokenCellShapeFunction to constitutive models where fracture
 // is involved.

@@ -34,17 +34,11 @@ public:
                             const MPMMaterial* matl,
                             DataWarehouseP& new_dw);
 
-  void   labelBrokenCells( const Patch* patch,
-                  MPMMaterial* mpm_matl, 
-		  DataWarehouseP& old_dw, 
-		  DataWarehouseP& new_dw);
-  
   void   crackGrow(const Patch* patch,
                   MPMMaterial* mpm_matl, 
 		  DataWarehouseP& old_dw, 
 		  DataWarehouseP& new_dw);
 
-         Fracture();
 	 Fracture(ProblemSpecP& ps);
         ~Fracture();
                 
@@ -60,6 +54,9 @@ private:
 #endif //__FRACTURE_H__
 
 // $Log$
+// Revision 1.25  2000/09/05 19:38:10  tan
+// Fracture starts to run in Uintah/MPM!
+//
 // Revision 1.24  2000/09/05 05:13:09  tan
 // Moved Fracture Model to MPMMaterial class.
 //
