@@ -277,6 +277,8 @@ void FractureMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pXLabel,                gan,NGP);
   t->requires(Task::OldDW, lb->pExternalForceLabel,    gan,NGP);
   t->requires(Task::OldDW, lb->pTemperatureLabel,      gan,NGP);
+  t->requires(Task::OldDW, lb->pSp_volLabel,           gan,NGP); 
+
   if(d_8or27==27){
    t->requires(Task::OldDW,lb->pSizeLabel,             gan,NGP);
   }
@@ -287,6 +289,9 @@ void FractureMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
 	      Task::OutOfDomain);
   t->computes(lb->gTemperatureLabel, d_sharedState->getAllInOneMatl(),
 	      Task::OutOfDomain);
+  t->computes(lb->gVelocityLabel,    d_sharedState->getAllInOneMatl(),
+	      Task::OutOfDomain);
+  t->computes(lb->gSp_volLabel);
   t->computes(lb->gVolumeLabel);
   t->computes(lb->gVelocityLabel);
   t->computes(lb->gExternalForceLabel);
@@ -672,12 +677,14 @@ void FractureMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::NewDW, lb->gTemperatureRateLabel,  gac,NGN);
   t->requires(Task::NewDW, lb->gTemperatureLabel,      gac,NGN);
   t->requires(Task::NewDW, lb->gTemperatureNoBCLabel,  gac,NGN);
+  t->requires(Task::NewDW, lb->gSp_volLabel,           gac,NGN);
   t->requires(Task::NewDW, lb->frictionalWorkLabel,    gac,NGN);
   t->requires(Task::OldDW, lb->pXLabel,                Ghost::None);
   t->requires(Task::OldDW, lb->pExternalForceLabel,    Ghost::None);
   t->requires(Task::OldDW, lb->pMassLabel,             Ghost::None);
   t->requires(Task::OldDW, lb->pParticleIDLabel,       Ghost::None);
   t->requires(Task::OldDW, lb->pTemperatureLabel,      Ghost::None);
+  t->requires(Task::OldDW, lb->pSp_volLabel,           Ghost::None); 
   t->requires(Task::OldDW, lb->pVelocityLabel,         Ghost::None);
   t->requires(Task::OldDW, lb->pMassLabel,             Ghost::None);
  
@@ -709,6 +716,7 @@ void FractureMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->pExtForceLabel_preReloc);
   t->computes(lb->pParticleIDLabel_preReloc);
   t->computes(lb->pTemperatureLabel_preReloc);
+  t->computes(lb->pSp_volLabel_preReloc);
   t->computes(lb->pMassLabel_preReloc);
   t->computes(lb->pVolumeLabel_preReloc);
   if(d_8or27==27){
@@ -1984,10 +1992,10 @@ void FractureMPM::setGridBoundaryConditions(const ProcessorGroup*,
 
 
 void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
-						const PatchSubset* patches,
-						const MaterialSubset* ,
-						DataWarehouse* old_dw,
-						DataWarehouse* new_dw)
+						  const PatchSubset* patches,
+						  const MaterialSubset* ,
+						  DataWarehouse* old_dw,
+						  DataWarehouse* new_dw)
 {
  //double time0,time1;
  //time0=clock();

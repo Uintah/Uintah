@@ -37,13 +37,20 @@ void NullThermalContact::computeHeatExchange(const ProcessorGroup*,
       int dwindex = mpm_matl->getDWIndex();
 
       NCVariable<double> thermalContactHeatExchangeRate;
-      new_dw->allocateAndPut(thermalContactHeatExchangeRate, lb->gThermalContactHeatExchangeRateLabel, dwindex, patch);
+      new_dw->allocateAndPut(thermalContactHeatExchangeRate, 
+			     lb->gThermalContactHeatExchangeRateLabel, 
+			     dwindex, patch);
 
       thermalContactHeatExchangeRate.initialize(0);
 
-      // allocateAndPut instead:
-      /* new_dw->put(thermalContactHeatExchangeRate, 
-        lb->gThermalContactHeatExchangeRateLabel, dwindex, patch); */;
+      // for Fracture (additional field)-------------------------------
+      NCVariable<double> GthermalContactHeatExchangeRate;
+      new_dw->allocateAndPut(GthermalContactHeatExchangeRate,
+			     lb->GThermalContactHeatExchangeRateLabel, 
+			     dwindex, patch);
+      GthermalContactHeatExchangeRate.initialize(0);
+      // --------------------------------------------------------------
+
     }
   }
 }
@@ -59,4 +66,5 @@ void NullThermalContact::addComputesAndRequires(Task* t,
 					    const MaterialSet*) const
 {
   t->computes(lb->gThermalContactHeatExchangeRateLabel);
+  t->computes(lb->GThermalContactHeatExchangeRateLabel); //for Fracture
 }
