@@ -59,7 +59,7 @@ private:
   TriSurfMeshHandle trisurf_;
   map<long int, TriSurfMesh::Node::index_type> vertex_map_;
   int nnodes_;
-  TriSurfMesh::Node::index_type find_or_add_edgepoint(int, int, Point);
+  TriSurfMesh::Node::index_type find_or_add_edgepoint(int, int, const Point &);
 
   int n_;
 
@@ -103,7 +103,7 @@ void TetMC<Field>::reset( int n, bool build_trisurf )
 
 template<class Field>
 TriSurfMesh::Node::index_type
-TetMC<Field>::find_or_add_edgepoint(int n0, int n1, Point p) 
+TetMC<Field>::find_or_add_edgepoint(int n0, int n1, const Point &p) 
 {
   map<long int, TriSurfMesh::Node::index_type>::iterator node_iter;
   TriSurfMesh::Node::index_type node_idx;
