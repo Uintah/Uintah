@@ -55,7 +55,7 @@ using namespace SCIRun;
       
       virtual void scheduleTimeAdvance( const LevelP& level, 
 					SchedulerP&, int step, int nsteps );
-
+                                             
       void scheduleComputePressure(SchedulerP&, 
                                    const PatchSet*,
                                    const MaterialSubset*,
@@ -223,7 +223,7 @@ using namespace SCIRun;
                                      const MaterialSubset*,
                                      DataWarehouse*, 
                                      DataWarehouse* new_dw);
-      
+                                          
       void actuallyComputeStableTimestep(const ProcessorGroup*, 
                                         const PatchSubset* patch,  
                                         const MaterialSubset* matls,
@@ -582,9 +582,42 @@ using namespace SCIRun;
       vector<double> d_add_heat_coeff;
       double         d_add_heat_t_start, d_add_heat_t_final;
       bool           d_add_heat;
-     
+      
+// For AMR staff
+
+    protected:
+    
+
+    virtual void refineBoundaries(const Patch* patch,
+				  CCVariable<double>& val,
+				  DataWarehouse* new_dw,
+				  const VarLabel* label,
+				  int matl, double factor);
+    virtual void refineBoundaries(const Patch* patch,
+				  CCVariable<Vector>& val,
+				  DataWarehouse* new_dw,
+				  const VarLabel* label,
+				  int matl, double factor);
+    virtual void refineBoundaries(const Patch* patch,
+				  SFCXVariable<double>& val,
+				  DataWarehouse* new_dw,
+				  const VarLabel* label,
+				  int matl, double factor);
+    virtual void refineBoundaries(const Patch* patch,
+				  SFCYVariable<double>& val,
+				  DataWarehouse* new_dw,
+				  const VarLabel* label,
+				  int matl, double factor);
+    virtual void refineBoundaries(const Patch* patch,
+				  SFCZVariable<double>& val,
+				  DataWarehouse* new_dw,
+				  const VarLabel* label,
+				  int matl, double factor);
+    virtual void addRefineDependencies(Task* task, const VarLabel* var,
+				       int step, int nsteps);
     private:
       friend class MPMICE;
+      friend class AMRICE;
                    
        void printData_FC(int indx,
                       const  Patch* patch,
