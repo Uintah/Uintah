@@ -305,10 +305,31 @@ void
 RenderTensorFieldBase::add_super_quadric(GeomGroup *g,
 					 MaterialHandle mat,
 					 const Point &p, Tensor &t,
-					 double scale, int resolution,
+					 double scale, int reso,
 					 bool colorize)
 {
-  GeomHandle glyph = scinew GeomSuperquadric(resolution);
+  double v1, v2, v3;
+  t.get_eigenvalues(v1, v2, v3);
+
+  const double cl = (v1 - v2) / (v1 + v2 + v3);
+  const double cp = 2.0 * (v2 - v3) / (v1 + v2 + v3);
+
+  double qA, qB;
+  int axis;
+  if (cl > cp)
+  {
+    axis = 0;
+    qA = pow((1.0 - cp), 3.5);  // Magic 3.5, adds emphasis to edges.
+    qB = pow((1.0 - cl), 3.5);
+  }
+  else
+  {
+    axis = 2;
+    qA = pow((1.0 - cl), 3.5);
+    qB = pow((1.0 - cp), 3.5);
+  }
+
+  GeomHandle glyph = scinew GeomSuperquadric(axis, qA, qB, reso, reso);
 
   if (mat.get_rep())
   {
