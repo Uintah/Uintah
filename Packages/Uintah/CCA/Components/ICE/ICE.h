@@ -84,9 +84,11 @@ using namespace SCIRun;
 			         DataWarehouse*, 
                               DataWarehouse* new_dw);
       
-      void actuallyComputeStableTimestep(const ProcessorGroup*,
-					 const Patch* patch, DataWarehouse*,
-					 DataWarehouse*);
+      void actuallyComputeStableTimestep(const ProcessorGroup*, 
+                                        const PatchSubset* patch,  
+                                        const MaterialSubset* matls,
+                                        DataWarehouse*, 
+                                        DataWarehouse*);
 
       void computeEquilibrationPressure(const ProcessorGroup*, 
                                           const PatchSubset* patch,  
@@ -188,8 +190,8 @@ using namespace SCIRun;
       void readData(const Patch* patch, int include_GC, char filename[],
 		    char var_name[], const CCVariable<double>& q_CC);
                  
-      void  hydrostaticPressureAdjustment(const Patch* patch, 
-                const CCVariable<double>& rho_micro_CC, 
+      void hydrostaticPressureAdjustment(const Patch* patch, 
+                      const CCVariable<double>& rho_micro_CC, 
                       CCVariable<double>& press_CC);
                       
       void massExchange(const ProcessorGroup*,
