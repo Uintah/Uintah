@@ -28,6 +28,7 @@ namespace Uintah {
     const VarLabel* vvel_CCLabel;
     const VarLabel* wvel_CCLabel;
     const VarLabel* speedSound_CCLabel;
+    const VarLabel* speedSound_equiv_CCLabel;
     const VarLabel* cv_CCLabel;
     const VarLabel* div_velfc_CCLabel;
     const VarLabel* vol_frac_CCLabel;
@@ -48,6 +49,10 @@ namespace Uintah {
 
 #endif
 // $Log$
+// Revision 1.7  2000/10/17 04:13:25  jas
+// Implement hydrostatic pressure adjustment as part of step 1b.  Still need
+// to implement update bcs.
+//
 // Revision 1.6  2000/10/16 19:10:35  guilkey
 // Combined step1e with step2 and eliminated step1e.
 //

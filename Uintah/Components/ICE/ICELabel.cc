@@ -42,6 +42,9 @@ ICELabel::ICELabel()
      scinew VarLabel("rho_micro_CC",  CCVariable<double>::getTypeDescription());
     speedSound_CCLabel = 
      scinew VarLabel("speedSound_CC", CCVariable<double>::getTypeDescription());
+    speedSound_equiv_CCLabel = 
+     scinew VarLabel("speedSound_equiv_CC", CCVariable<double>::getTypeDescription());
+
     div_velfc_CCLabel = 
      scinew VarLabel("div_velfc_CC",  CCVariable<double>::getTypeDescription());
     vol_frac_CCLabel = 
@@ -93,6 +96,10 @@ ICELabel::~ICELabel()
     delete delTLabel;
 }
 // $Log$
+// Revision 1.8  2000/10/17 04:13:25  jas
+// Implement hydrostatic pressure adjustment as part of step 1b.  Still need
+// to implement update bcs.
+//
 // Revision 1.7  2000/10/16 19:10:35  guilkey
 // Combined step1e with step2 and eliminated step1e.
 //

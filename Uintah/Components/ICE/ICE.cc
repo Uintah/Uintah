@@ -174,8 +174,8 @@ void ICE::scheduleTimeAdvance(double t, double dt,
 	       t->computes(new_dw,lb->press_CCLabel,matl->getDWIndex(), patch);
 	       t->computes(new_dw,lb->vol_frac_CCLabel,matl->getDWIndex(),
 			   patch);
-	       t->computes(new_dw,lb->speedSound_CCLabel,matl->getDWIndex(), 
-			   patch);
+	       t->computes(new_dw,lb->speedSound_equiv_CCLabel,
+			   matl->getDWIndex(), patch);
 	  }
 	}
 	sched->addTask(t);
@@ -254,7 +254,7 @@ void ICE::scheduleTimeAdvance(double t, double dt,
 			matl->getDWIndex(),patch,Ghost::None);
 	    t->requires(new_dw,lb->wvel_FCMELabel,
 			matl->getDWIndex(),patch,Ghost::None);
-	    t->requires(new_dw,lb->speedSound_CCLabel,
+	    t->requires(new_dw,lb->speedSound_equiv_CCLabel,
 			matl->getDWIndex(),patch,Ghost::None);
 	    t->requires(new_dw,lb->rho_CCLabel,
 			matl->getDWIndex(),patch,Ghost::None);
@@ -410,7 +410,15 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
 
   cout << "Doing actually step1b" << endl;
 
-  int numMatls = d_sharedState->getNumMatls();
+  int numMatls = 0;
+
+  for (int m = 0; m < d_sharedState->getNumMatls(); m++) {
+    Material* matl = d_sharedState->getMaterial(m);
+    ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+    if (ice_matl) {
+      numMatls++;
+    }
+  }
 
   // Compute the equilibration pressure for all materials
 #if 1
@@ -456,7 +464,7 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
   vector<CCVariable<double> > cv(numMatls);
   vector<CCVariable<double> > Temp(numMatls);
   vector<CCVariable<double> > press(numMatls),press_new(numMatls);
-  vector<CCVariable<double> > speedSound(numMatls);
+  vector<CCVariable<double> > speedSound(numMatls),speedSound_old(numMatls);
 
   
   for (int m = 0; m < numMatls; m++) {
@@ -468,14 +476,19 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
       old_dw->get(rho[m], lb->rho_CCLabel, vfindex,patch,Ghost::None, 0); 
       old_dw->get(Temp[m], lb->temp_CCLabel, vfindex,patch,Ghost::None, 0); 
       old_dw->get(press[m], lb->press_CCLabel, vfindex,patch,Ghost::None, 0); 
+      old_dw->get(speedSound_old[m], lb->speedSound_CCLabel, vfindex,
+		  patch,Ghost::None, 0); 
       new_dw->allocate(press_new[m],lb->press_CCLabel,vfindex,patch);
-      new_dw->allocate(speedSound[m],lb->speedSound_CCLabel,vfindex,patch);
+      new_dw->allocate(speedSound[m],lb->speedSound_equiv_CCLabel,vfindex,
+		       patch);
       new_dw->get(rho_micro[m],lb->rho_micro_CCLabel,vfindex,patch,
 		  Ghost::None,0);
     }
   }
 
   bool converged = false;
+  double SMALL_NUM=1.e-12;
+
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
     double delPress = 0.;
     while( converged == false) {
@@ -497,7 +510,7 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
 					     dp_drho[m],dp_de[m]);
        }
      }
-     vector<double> Q(2),y(2);     
+     vector<double> Q(numMatls),y(numMatls);     
      for (int m = 0; m < numMatls; m++) {
        Material* matl = d_sharedState->getMaterial(m);
        ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
@@ -558,11 +571,61 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
      for (int m = 0; m < numMatls; m++) {
        test = std::max(test,fabs(delVol_frac[m]));
      }
-     if (test < 1.e-5)
+     if (test < SMALL_NUM)
        converged = true;
      
     }  // end of converged
-    
+
+    // Update the boundary conditions
+
+    // Hydrostatic pressure adjustment - subtract off the hydrostatic pressure
+
+    Vector dx = patch->dCell();
+    Vector gravity = d_sharedState->getGravity();
+    IntVector highIndex = patch->getCellHighIndex();
+    IntVector lowIndex = patch->getCellLowIndex();
+
+    double width = (highIndex.x() - lowIndex.x())*dx.x();
+    double height = (highIndex.y() - lowIndex.y())*dx.y();
+    double depth = (highIndex.z() - lowIndex.z())*dx.z();
+
+    if (gravity.x() != 0.) {
+    // x direction
+      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+	IntVector curcell = *iter;
+	double press_hydro = 0.;
+	for (int m = 0; m < numMatls; m++) {
+	  press_hydro += rho[m][*iter]* gravity.x()*
+	    ((double) (curcell-highIndex).x()*dx.x()- width);
+	  press[m][*iter] -= press_hydro;
+	}
+      }
+    }
+    if (gravity.y() != 0.) {
+      // y direction
+      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+	IntVector curcell = *iter;
+	double press_hydro = 0.;
+	for (int m = 0; m < numMatls; m++) {
+	  press_hydro += rho[m][*iter]* gravity.y()*
+	    ( (double) (curcell-highIndex).y()*dx.y()- height);
+	  press[m][*iter] -= press_hydro;
+	}
+      }
+    }
+    if (gravity.z() != 0.) {
+      // z direction
+      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+	IntVector curcell = *iter;
+	double press_hydro = 0.;
+	for (int m = 0; m < numMatls; m++) {
+	  press_hydro += rho[m][*iter]* gravity.z()*
+	    ((double) (curcell-highIndex).z()*dx.z()- depth);
+	  press[m][*iter] -= press_hydro;
+	}
+      }
+    }
+      
     // Store new pressure, speedSound,vol_frac
     for (int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial(m);
@@ -571,7 +634,7 @@ void ICE::actuallyStep1b(const ProcessorGroup*,
 	int vfindex = matl->getVFIndex();
 	new_dw->put(press[m],lb->press_CCLabel,vfindex,patch);
 	new_dw->put(vol_frac[m],lb->vol_frac_CCLabel,vfindex,patch);
-	new_dw->put(speedSound[m],lb->speedSound_CCLabel,vfindex,patch);
+	new_dw->put(speedSound[m],lb->speedSound_equiv_CCLabel,vfindex,patch);
       }
     }
     
@@ -854,7 +917,7 @@ void ICE::actuallyStep2(const ProcessorGroup*,
       new_dw->get(wvel_FC, lb->wvel_FCMELabel, vfindex, patch, Ghost::None, 0);
       new_dw->get(vol_frac,lb->vol_frac_CCLabel, vfindex,patch,Ghost::None, 0);
       new_dw->get(rho_CC,lb->rho_CCLabel,      vfindex,patch,Ghost::None, 0);
-      new_dw->get(speedSound,lb->speedSound_CCLabel,
+      new_dw->get(speedSound,lb->speedSound_equiv_CCLabel,
 					       vfindex,patch,Ghost::None, 0);
       new_dw->get(pressure,lb->press_CCLabel,  vfindex,patch,Ghost::None, 0);
 
@@ -963,6 +1026,7 @@ void ICE::actuallyStep3(const ProcessorGroup*,
   }
 }
 
+
 void ICE::actuallyStep4(const ProcessorGroup*,
 		   const Patch* patch,
 		   DataWarehouseP& old_dw,
@@ -1022,6 +1086,10 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.36  2000/10/17 04:13:25  jas
+// Implement hydrostatic pressure adjustment as part of step 1b.  Still need
+// to implement update bcs.
+//
 // Revision 1.35  2000/10/16 20:31:00  guilkey
 // Step3 added
 //
