@@ -355,8 +355,8 @@ SimpleSimulationController::run()
       unsigned long highwater = highwater_mmap;
 #else
       unsigned long memuse = 0;
-      if ( ProcessInfo::IsSupported( ProcessInfo::MEM_SIZE ) ) {
-	memuse = ProcessInfo::GetMemoryUsed();
+      if ( ProcessInfo::IsSupported( ProcessInfo::MEM_RSS ) ) {
+	memuse = ProcessInfo::GetMemoryResident();
       } else {
 	memuse = (char*)sbrk(0)-start_addr;
       }
