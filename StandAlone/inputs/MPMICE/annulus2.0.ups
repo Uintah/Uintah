@@ -22,9 +22,9 @@
    <Time>
 	<maxTime>            0.05      </maxTime>
 	<initTime>           0.0         </initTime>
-	<delt_min>           0.0         </delt_min>
-	<delt_max>           1.0         </delt_max>
-	<delt_init>          1.0e-4      </delt_init>
+	<delt_min>           1.0e-9      </delt_min>
+	<delt_max>           1.0e-7      </delt_max>
+	<delt_init>          2.7e-8      </delt_init>
 	<timestep_multiplier>0.8         </timestep_multiplier>
    </Time>
    
