@@ -17,39 +17,39 @@ using namespace Uintah;
 MPMICELabel::MPMICELabel()
 {
   // Cell centered variables
-  cMassLabel    = scinew VarLabel( "c.mass",
+  cMassLabel    = VarLabel::create( "c.mass",
 			CCVariable<double>::getTypeDescription() );
-  cVolumeLabel  = scinew VarLabel( "c.volume",
+  cVolumeLabel  = VarLabel::create( "c.volume",
 			CCVariable<double>::getTypeDescription() );
-  vel_CCLabel   = scinew VarLabel( "vel_CC",
+  vel_CCLabel   = VarLabel::create( "vel_CC",
 			CCVariable<Vector>::getTypeDescription() );
-  velstar_CCLabel  = scinew VarLabel( "velstar_CC",
+  velstar_CCLabel  = VarLabel::create( "velstar_CC",
 			CCVariable<Vector>::getTypeDescription() );
-  dvdt_CCLabel     = scinew VarLabel( "dvdt_CC",
+  dvdt_CCLabel     = VarLabel::create( "dvdt_CC",
 			CCVariable<Vector>::getTypeDescription() );
-  dTdt_CCLabel     = scinew VarLabel( "dTdt_CC",
+  dTdt_CCLabel     = VarLabel::create( "dTdt_CC",
 			CCVariable<double>::getTypeDescription() );
-  temp_CCLabel     = scinew VarLabel("temp_CC",
+  temp_CCLabel     = VarLabel::create("temp_CC",
 			CCVariable<double>::getTypeDescription() );
-  temp_CC_scratchLabel = scinew VarLabel("temp_CC_scratch",
+  temp_CC_scratchLabel = VarLabel::create("temp_CC_scratch",
 			CCVariable<double>::getTypeDescription() );
-  press_NCLabel      = scinew VarLabel("pressureNC",
+  press_NCLabel      = VarLabel::create("pressureNC",
 			NCVariable<double>::getTypeDescription());
 
-  velInc_CCLabel     = scinew VarLabel("velIncCC",
+  velInc_CCLabel     = VarLabel::create("velIncCC",
 			CCVariable<Vector>::getTypeDescription());
-  velInc_NCLabel     = scinew VarLabel("velIncNC",
+  velInc_NCLabel     = VarLabel::create("velIncNC",
 			NCVariable<Vector>::getTypeDescription());
 
-  burnedMassCCLabel   = scinew VarLabel("burnedMass",
+  burnedMassCCLabel   = VarLabel::create("burnedMass",
 			CCVariable<double>::getTypeDescription());  
-  releasedHeatCCLabel = scinew VarLabel("releasedHeat",
+  releasedHeatCCLabel = VarLabel::create("releasedHeat",
 			CCVariable<double>::getTypeDescription());
-  sumBurnedMassLabel  = scinew VarLabel("sumBurnedMass",
+  sumBurnedMassLabel  = VarLabel::create("sumBurnedMass",
 			CCVariable<double>::getTypeDescription());  
-  sumReleasedHeatLabel = scinew VarLabel("sumReleasedHeat",
+  sumReleasedHeatLabel = VarLabel::create("sumReleasedHeat",
 			CCVariable<double>::getTypeDescription());
-  sumCreatedVolLabel   = scinew VarLabel("sumCreateVol",
+  sumCreatedVolLabel   = VarLabel::create("sumCreateVol",
                         CCVariable<double>::getTypeDescription());
 
 
