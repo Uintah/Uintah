@@ -38,19 +38,13 @@ public:
 		  DataWarehouseP& old_dw, 
 		  DataWarehouseP& new_dw);
 
-  void   computeVisibility(
+  void   computeConnectivity(
                   const Patch* patch,
                   MPMMaterial* mpm_matl, 
 		  DataWarehouseP& old_dw, 
 		  DataWarehouseP& new_dw);
 
   void   computeFracture(
-                  const Patch* patch,
-                  MPMMaterial* mpm_matl, 
-		  DataWarehouseP& old_dw, 
-		  DataWarehouseP& new_dw);
-
-  void   stressRelease(
                   const Patch* patch,
                   MPMMaterial* mpm_matl, 
 		  DataWarehouseP& old_dw, 

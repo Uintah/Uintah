@@ -31,19 +31,13 @@ public:
                             const MPMMaterial* matl,
                             DataWarehouseP& new_dw) = 0;
 
-  virtual void   computeVisibility(
+  virtual void   computeConnectivity(
                   const Patch* patch,
                   MPMMaterial* mpm_matl, 
 		  DataWarehouseP& old_dw, 
 		  DataWarehouseP& new_dw) = 0;
 
   virtual void   computeFracture(
-                  const Patch* patch,
-                  MPMMaterial* mpm_matl, 
-		  DataWarehouseP& old_dw, 
-		  DataWarehouseP& new_dw) = 0;
-
-  virtual void   stressRelease(
                   const Patch* patch,
                   MPMMaterial* mpm_matl, 
 		  DataWarehouseP& old_dw, 

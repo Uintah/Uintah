@@ -16,5 +16,6 @@ SRCS     += $(SRCDIR)/Fracture.cc \
 	$(SRCDIR)/QuarticSpline.cc \
 	$(SRCDIR)/ExponentialSpline.cc \
 	$(SRCDIR)/Visibility.cc \
+	$(SRCDIR)/Connectivity.cc \
 	$(SRCDIR)/CrackFace.cc
 

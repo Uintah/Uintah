@@ -25,14 +25,8 @@ public:
   const Vector&  getNormal() const;
   void           setNormal(const Vector& n);
 
-  const Matrix3& getStress() const;
-  void           setStress(const Matrix3& s);
-
   double         getHalfGap() const;
-  const Vector&  getMaxDirection() const;
 
-  void           computeMaxDirection();
-	       
   double         distance(const Point& p);
 
   bool           isTip(const ParticleVariable<Vector>& pCrackNormal,
@@ -48,8 +42,6 @@ private:
   Vector      _normal;
   Point       _tip;
   double      _halfGap;
-  Matrix3     _stress;
-  Vector      _maxDirection;
 };
 
 } //namespace

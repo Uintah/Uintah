@@ -97,37 +97,53 @@ bool ParticlesNeighbor::visible(particleIndex idx,
                                 const Point& B,
 				const ParticleVariable<Point>& pX,
 				const ParticleVariable<int>& pIsBroken,
-				const ParticleVariable<Vector>& pCrackSurfaceNormal,
+				const ParticleVariable<Vector>& pCrackSurfaceNormal1,
+				const ParticleVariable<Vector>& pCrackSurfaceNormal2,
+				const ParticleVariable<Vector>& pCrackSurfaceNormal3,
 				const ParticleVariable<double>& pVolume) const
 {
   const Point& A = pX[idx];
-  if(pIsBroken[idx]) {
-    if( Dot( B - A, pCrackSurfaceNormal[idx] ) > 0 ) return false;
-  }
+  if(pIsBroken[idx]>=1) 
+    if( Dot( B - A, pCrackSurfaceNormal1[idx] ) > 0 ) return false;
+  if(pIsBroken[idx]>=2)
+    if( Dot( B - A, pCrackSurfaceNormal2[idx] ) > 0 ) return false;
+  if(pIsBroken[idx]>=3)
+    if( Dot( B - A, pCrackSurfaceNormal3[idx] ) > 0 ) return false;
   
   for(int i=0; i<(int)size(); i++) {
-      int index = (*this)[i];
+    int index = (*this)[i];
+    if( index == idx ) continue;
       
-      if( index != idx && pIsBroken[index] ) {
-        const Vector& N = pCrackSurfaceNormal[index];
-        double size2 = pow(pVolume[index] *0.75/M_PI,0.666666667);
-        const Point& O = pX[index];
+    const Point& O = pX[index];
+    double size2 = pow(pVolume[index] *0.75/M_PI,0.666666667);
+    
+    if(pIsBroken[index]>=1)
+      if( !visible(A,B,O,pCrackSurfaceNormal1[index],size2) ) return false;
+    if(pIsBroken[index]>=2)
+      if( !visible(A,B,O,pCrackSurfaceNormal2[index],size2) ) return false;
+    if(pIsBroken[index]>=3)
+      if( !visible(A,B,O,pCrackSurfaceNormal3[index],size2) ) return false;
+  }
+  return true;
+}
 
-	double A_N = Dot(A,N);
+bool ParticlesNeighbor::visible(const Point& A,
+                                const Point& B,
+				const Point& O,const Vector& N,double size2) const
+{
+  double A_N = Dot(A,N);
 	
-        double a = A_N - Dot(O,N);
-        double b = A_N - Dot(B,N);
+  double a = A_N - Dot(O,N);
+  double b = A_N - Dot(B,N);
 	
-	if(b != 0) {
-	  double lambda = a/b;
-	  if( lambda>=0 && lambda<=1 ) {
-	    Point p( A.x() * (1-lambda) + B.x() * lambda,
-                     A.y() * (1-lambda) + B.y() * lambda,
-		     A.z() * (1-lambda) + B.z() * lambda );
- 	    if( (p - O).length2() < size2 ) return false;
-	  }
-	}
-      }
+  if(b != 0) {
+    double lambda = a/b;
+    if( lambda>=0 && lambda<=1 ) {
+      Point p( A.x() * (1-lambda) + B.x() * lambda,
+               A.y() * (1-lambda) + B.y() * lambda,
+	       A.z() * (1-lambda) + B.z() * lambda );
+      if( (p - O).length2() < size2 ) return false;
+    }
   }
   return true;
 }
@@ -136,48 +152,44 @@ bool ParticlesNeighbor::visible(particleIndex idxA,
                                 particleIndex idxB,
 				const ParticleVariable<Point>& pX,
 				const ParticleVariable<int>& pIsBroken,
-				const ParticleVariable<Vector>& pCrackSurfaceNormal,
+				const ParticleVariable<Vector>& pCrackSurfaceNormal1,
+				const ParticleVariable<Vector>& pCrackSurfaceNormal2,
+				const ParticleVariable<Vector>& pCrackSurfaceNormal3,
 				const ParticleVariable<double>& pVolume) const
 {
   const Point& A = pX[idxA];
   const Point& B = pX[idxB];
   Vector d = B - A;
   d.normalize();
-  
-  if(pIsBroken[idxA] && pIsBroken[idxB])  {
-    if( Dot( d, pCrackSurfaceNormal[idxA] ) > 0.5 && 
-        Dot( d, pCrackSurfaceNormal[idxB] ) < -0.5 ) return false;
-  }
-  else if(pIsBroken[idxA]) {
-    if( Dot( d, pCrackSurfaceNormal[idxA] ) > 0.5 ) return false;
-  }
-  else if(pIsBroken[idxB]) {
-    if( Dot( d, pCrackSurfaceNormal[idxB] ) < -0.5 ) return false;
-  }
+
+  if(pIsBroken[idxA] >= 1)
+    if( Dot( d, pCrackSurfaceNormal1[idxA] ) > 0.707 ) return false;
+  if(pIsBroken[idxA] >= 2)
+    if( Dot( d, pCrackSurfaceNormal2[idxA] ) > 0.707 ) return false;
+  if(pIsBroken[idxA] >= 3)
+    if( Dot( d, pCrackSurfaceNormal3[idxA] ) > 0.707 ) return false;
+
+  if(pIsBroken[idxB] >= 1)
+    if( Dot( d, pCrackSurfaceNormal1[idxB] ) < -0.707 ) return false;
+  if(pIsBroken[idxB] >= 2)
+    if( Dot( d, pCrackSurfaceNormal2[idxB] ) < -0.707 ) return false;
+  if(pIsBroken[idxB] >= 3)
+    if( Dot( d, pCrackSurfaceNormal3[idxB] ) < -0.707 ) return false;
   
   for(int i=0; i<(int)size(); i++) {
-      int index = (*this)[i];
-      
-      if( index != idxA && index != idxB && pIsBroken[index] ) {
-        const Vector& N = pCrackSurfaceNormal[index];
-        double size2 = pow(pVolume[index] *0.75/M_PI,0.666666667);
-        const Point& O = pX[index];
+    int index = (*this)[i];
+    if( index == idxA || index == idxB ) continue;
+    if(pIsBroken[index] == 0) continue;
 
-	double A_N = Dot(A,N);
-	
-        double a = A_N - Dot(O,N);
-        double b = A_N - Dot(B,N);
-	
-	if(b != 0) {
-	  double lambda = a/b;
-	  if( lambda>=0 && lambda<=1 ) {
-	    Point p( A.x() * (1-lambda) + B.x() * lambda,
-                     A.y() * (1-lambda) + B.y() * lambda,
-		     A.z() * (1-lambda) + B.z() * lambda );
- 	    if( (p - O).length2() < size2 ) return false;
-	  }
-	}
-      }
+    const Point& O = pX[index];
+    double size2 = pow(pVolume[index] *0.75/M_PI,0.666666667);
+    
+    if(pIsBroken[index]>=1)
+      if( !visible(A,B,O,pCrackSurfaceNormal1[index],size2) ) return false;
+    if(pIsBroken[index]>=2)
+      if( !visible(A,B,O,pCrackSurfaceNormal2[index],size2) ) return false;
+    if(pIsBroken[index]>=3)
+      if( !visible(A,B,O,pCrackSurfaceNormal3[index],size2) ) return false;
   }
   return true;
 }
