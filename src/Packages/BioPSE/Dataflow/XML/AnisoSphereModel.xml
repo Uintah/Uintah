@@ -27,7 +27,7 @@
       </port>
 	  <port>
 		<name>AnisoConductivities</name>
-		<description> the conductivities can be supplied via this port or via the gui </description>
+		<description> the conductivities can be supplied via this port or via the GUI</description>
 		<datatype>SCIRun::Matrix</datatype>
 	  </port>
     </inputs>

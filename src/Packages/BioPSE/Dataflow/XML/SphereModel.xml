@@ -10,7 +10,7 @@
 
     <description>
       <p>Date: January 2003; Version: 1.0</p>
-	  <p> selects those elements from the unit volume which belong to the unit sphere
+	  <p>selects those elements from the unit volume which belong to the unit sphere
           and creates a new mesh containing only those elements</p>
     </description>
 
