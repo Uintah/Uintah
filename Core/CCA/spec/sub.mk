@@ -25,7 +25,7 @@ SRCS := $(SRCS) $(SRCDIR)/cca.sidl $(SRCDIR)/cca_sidl.cc
 GENHDRS := $(GENHDRS) $(SRCDIR)/cca_sidl.h
 
 PSELIBS := Core/CCA/Component/CIA Core/CCA/Component/Comm Core/CCA/Component/PIDL
-LIBS := $(GLOBUS_LIBS)
+LIBS := 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
