@@ -205,10 +205,20 @@ MTSPlastic::computeFlowStress(const Matrix3& rateOfDeformation,
   return sigma;
 }
 
-/*! In this case, \f$\dot{\epsilon_p}\f$ is the time derivative of 
-  \f$\epsilon_p\f$.  Hence, the evolution law of the internal variables
-  \f$ \dot{q_\alpha} = \gamma h_\alpha \f$ requires 
-  \f$\gamma = \dot{\epsilon_p}\f$ and \f$ h_\alpha = 1\f$. */
+/*! The evolving internal variable is \f$q = \hat\sigma_e\f$.  If the 
+    evolution equation for internal variables is of the form 
+    \f$ \dot q = \gamma h (\sigma, q) \f$, then 
+    \f[
+    \dot q = \frac{d\hat\sigma_e}{dt} 
+           = \frac{d\hat\sigma_e}{d\epsilon} \frac{d\epsilon}{dt}
+           = \theta \dot\epsilon .
+    \f] 
+    If \f$\dot\epsilon = \gamma$, then \f$ \theta = h \f$.
+    Also, \f$ f_q = \frac{\partial f}{\partial \hat\sigma_e} \f$.
+    For the von Mises yield condition, \f$(f)\f$, 
+    \f$ f_q = \frac{\partial \sigma}{\partial \hat\sigma_e} \f$
+    where \f$\sigma\f$ is the MTS flow stress.
+*/
 void 
 MTSPlastic::computeTangentModulus(const Matrix3& sig,
 				  const Matrix3& D, 
@@ -222,17 +232,41 @@ MTSPlastic::computeTangentModulus(const Matrix3& sig,
   // Calculate the deviatoric stress and rate of deformation
   Matrix3 one; one.Identity();
   Matrix3 sigdev = sig - one*(sig.Trace()/3.0);
-  Matrix3 Ddev = D - one*(D.Trace()/3.0);
 
-  // Calculate the equivalent stress
+  // Calculate the equivalent stress and strain rate
   double sigeqv = sqrt(sigdev.NormSquared()); 
+  double edot = sqrt(D.NormSquared()/1.5);
 
-  // Calculate the dircetion of plastic loading (r)
+  // Calculate the direction of plastic loading (r)
   Matrix3 rr = sigdev*(1.5/sigeqv);
 
-  // Calculate f_q (h = 1, therefore f_q.h = f_q)
-  double epdot = sqrt(Ddev.NormSquared()/1.5);
-  double f_q = T;
+  // Calculate mu and mu/mu_0
+  double mu_mu_0 = 1.0 - d_const.D/(d_const.mu_0*(exp(d_const.T_0/T) - 1.0)); 
+  double mu = mu_mu_0*d_const.mu_0;
+
+  // Calculate theta_0
+  double theta_0 = d_const.a_0 + d_const.a_1*log(edot) + d_const.a_2*sqrt(edot)
+    - d_const.a_3*T;
+
+  // Calculate sigma_es
+  double CC = d_const.koverbcubed*T/mu;
+  double CCes = CC/d_const.g_0es;
+  double logees = log(edot/d_const.edot_es0);
+  double sigma_es = d_const.sigma_es0*exp(CCes*logees);
+
+  // Calculate X and FX
+  double X = pMTS_new[idx]/sigma_es;
+  double FX = tanh(d_const.alpha*X);
+
+  // Calculate theta
+  double theta = theta_0*(1.0 - FX) + d_const.theta_IV*FX;
+  double h = theta;
+
+  // Calculate f_q (h = theta, therefore f_q.h = f_q.theta)
+  double CCe = CC/d_const.g_0e;
+  double logee = log(d_const.edot_0e/edot);
+  double S_e = pow((1.0-pow((CCe*logee),(1.0/d_const.q_e))),(1.0/d_const.p_e));
+  double f_q = mu_mu_0*S_e;
 
   // Form the elastic-plastic tangent modulus
   Matrix3 Cr, rC;
@@ -255,7 +289,7 @@ MTSPlastic::computeTangentModulus(const Matrix3& sig,
       for (int kk = 0; kk < 3; ++kk) {
 	for (int ll = 0; ll < 3; ++ll) {
           Cep(ii,jj,kk,ll) = Ce(ii,jj,kk,ll) - 
-	    Cr(ii,jj)*rC(kk,ll)/(-f_q + rCr);
+	    Cr(ii,jj)*rC(kk,ll)/(-f_q*h + rCr);
 	}  
       }  
     }  
