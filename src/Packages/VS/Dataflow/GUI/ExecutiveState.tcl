@@ -48,7 +48,14 @@ itcl_class VS_Render_ExecutiveState {
 	global  $this-font_scale
 	global  $this-show_name
 	global  $this-show_vectors
+	global  $this-vector_mode
 	global  $this-show_cross
+	global  $this-show_trend
+	global  $this-injury_offset
+	global  $this-horiz_comp
+	global  $this-both_comp
+	global  $this-show_threshold
+	global  $this-geom
 
 	set $this-edit          0
 	set $this-edit-target   0
@@ -64,12 +71,29 @@ itcl_class VS_Render_ExecutiveState {
 	set $this-font_scale 1.0
 	set $this-show_name 0
 	set $this-show_vectors 0
+	set $this-vector_mode 1
 	set $this-show_cross 0
+	set $this-show_trend 0
+	set $this-injury_offset 0
+	set $this-horiz_comp 0
+	set $this-both_comp 0
+	set $this-show_threshold 0
+	set $this-geom "640x640+0+0"
     }
+
+	method do_expose {} {
+	 	if {[winfo exists .ui[modname]] != 0} {
+			set w .ui[modname]
+			set $this-geom [wm geometry $w]
+		}
+
+		$this-c expose
+	}
 
     method bind_events {w} {
 	# every time the OpenGL widget is displayed, redraw it
-	bind $w <Expose> "$this-c expose"
+#	bind $w <Expose> "$this-c expose"
+	bind $w <Expose> "$this do_expose"
 # 	bind $w <Shift-ButtonPress-1> "$this-c mouse push %x %y %b 0"
 # 	bind $w <Shift-ButtonPress-2> "$this-c mouse push %x %y %b 0"
 # 	bind $w <Shift-ButtonPress-3> "$this-c mouse push %x %y %b 1"
@@ -136,6 +160,66 @@ itcl_class VS_Render_ExecutiveState {
         $this-c "init"
     }
 
+    method vector_mode {} {
+        set w .ui[modname]
+        set gen [$w.prefs.gen childsite]
+
+	     global $this-show_vectors
+	     global $this-horiz_comp
+
+		  if {([set $this-horiz_comp] == 1) && ([set $this-show_vectors] == 1)} {
+		    $gen.slidingy.tog configure -state normal
+		    $gen.onhead.tog configure -state normal
+		  } else {
+		    $gen.slidingy.tog configure -state disabled
+		    $gen.onhead.tog configure -state disabled
+		  }
+    }
+
+    method show_vectors {} {
+        set w .ui[modname]
+        set gen [$w.prefs.gen childsite]
+
+	     global $this-show_vectors
+
+		  if {[set $this-show_vectors] == 1} {
+		    $gen.hor.tog configure -state normal
+		    $gen.vert.tog configure -state normal
+          $gen.showthreshold.tog configure -state normal
+		  } else {
+		    $gen.hor.tog configure -state disabled
+		    $gen.vert.tog configure -state disabled
+          $gen.showthreshold.tog configure -state disabled
+		  }
+
+		  vector_mode
+    }
+
+	method centerWindow {w1 w2} {
+		update
+		#wm overrideredirect $w1 1
+		wm geometry $w1 ""
+		update idletasks
+		set w [winfo width $w2]
+		set h [winfo height $w2]
+		
+		if {$w < 2} { set w [winfo screenwidth .] }
+		if {$h < 2} { set h [winfo screenheight .] }
+
+		set x [expr [winfo x $w2]+($w - [winfo width $w1])/2]
+		set y [expr [winfo y $w2]+($h - [winfo height $w1])/2]
+		wm geometry $w1 +${x}+${y}
+		
+		if { [winfo ismapped $w1] } {
+			#raise $w1
+			SciRaise $w1
+		} else {
+			wm deiconify $w1
+		}
+		
+		grab $w1
+	} 
+
     method edit_plot {} {
 	set w .ui[modname]
 	if {[winfo exists $w.edit]} {
@@ -187,16 +271,74 @@ itcl_class VS_Render_ExecutiveState {
                 -onvalue 1 -offvalue 0 -anchor w
             pack $gen.showname -side top -fill x -pady 2
                                                                                 
-            checkbutton $gen.showvec -text "Show 2nd Diff. Vectors" -padx 6 \
+            checkbutton $gen.showvec -text "Show 2nd Difference Vectors" -padx 6 \
                 -justify left -relief flat -variable $this-show_vectors \
-                -onvalue 1 -offvalue 0 -anchor w
+                -onvalue 1 -offvalue 0 -anchor w -command "$this show_vectors"
             pack $gen.showvec -side top -fill x -pady 2
                                                                                 
+            frame $gen.hor
+            pack $gen.hor -side top -fill x -pady 2
+            label $gen.hor.l -text "    "
+            pack $gen.hor.l -side left
+            checkbutton $gen.hor.tog -text "Horizontal Component" -padx 6 \
+                -justify left -relief flat -variable $this-horiz_comp \
+                -onvalue 1 -offvalue 0 -anchor w -command "$this vector_mode"
+            pack $gen.hor.tog -side left -fill x -pady 2
+
+            frame $gen.slidingy
+            pack $gen.slidingy -side top -fill x -pady 2
+            label $gen.slidingy.l -text "        "
+            pack $gen.slidingy.l -side left
+            #checkbutton $gen.slidingy.tog -text "Slide Along Y Axis" -padx 6 \
+                -justify left -relief flat -variable $this-slide_yaxis \
+                -onvalue 1 -offvalue 0 -anchor w
+            radiobutton $gen.slidingy.tog -text "Sliding Along Y Axis" -padx 6 \
+                -justify left -relief flat -variable $this-vector_mode \
+                -anchor w -value 0 -state disabled
+            pack $gen.slidingy.tog -side left -fill x -pady 2
+
+            frame $gen.onhead
+            pack $gen.onhead -side top -fill x -pady 2
+            label $gen.onhead.l -text "        "
+            pack $gen.onhead.l -side left
+            #checkbutton $gen.onhead.tog -text "Follow Path" -padx 6 \
+                -justify left -relief flat -variable $this-follow_path \
+                -onvalue 1 -offvalue 0 -anchor w
+            radiobutton $gen.onhead.tog -text "Attached To Path" -padx 6 \
+                -justify left -relief flat -variable $this-vector_mode \
+                -anchor w -value 1 -state disabled
+                #-justify left -relief flat -variable $this-follow_path \
+                -anchor w
+            pack $gen.onhead.tog -side left -fill x -pady 2
+
+            frame $gen.vert
+            pack $gen.vert -side top -fill x -pady 2
+            label $gen.vert.l -text "    "
+            pack $gen.vert.l -side left
+            checkbutton $gen.vert.tog -text "Horizontal and Vertical Components" -padx 6 \
+                -justify left -relief flat -variable $this-both_comp \
+                -onvalue 1 -offvalue 0 -anchor w -wraplength 150
+            pack $gen.vert.tog -side left -fill x -pady 2
+
+            frame $gen.showthreshold
+            pack $gen.showthreshold -side top -fill x -pady 2
+            label $gen.showthreshold.l -text "    "
+            pack $gen.showthreshold.l -side left
+            checkbutton $gen.showthreshold.tog -text "Show Alarm Threshold" -padx 6 \
+                -justify left -relief flat -variable $this-show_threshold \
+                -onvalue 1 -offvalue 0 -anchor w
+            pack $gen.showthreshold.tog -side left -fill x -pady 2
+
             checkbutton $gen.showcross -text "Show Crosshairs" -padx 6 \
                 -justify left -relief flat -variable $this-show_cross \
                 -onvalue 1 -offvalue 0 -anchor w
             pack $gen.showcross -side top -fill x -pady 2
-                                                                                
+
+            checkbutton $gen.showtrend -text "Show Trend Gradient" -padx 6 \
+                -justify left -relief flat -variable $this-show_trend \
+                -onvalue 1 -offvalue 0 -anchor w
+            pack $gen.showtrend -side top -fill x -pady 2
+
             frame $gen.fs -borderwidth 4
             pack $gen.fs -side top -fill x -pady 2
             scale $gen.fs.font -variable $this-font_scale \
@@ -207,6 +349,95 @@ itcl_class VS_Render_ExecutiveState {
                                                                                 
             pack $w.prefs.gen -fill x -expand yes -side top
 
+				show_vectors
+
+            iwidgets::labeledframe $w.prefs.time -labeltext "Timeline" \
+                -labelpos nw
+            set time [$w.prefs.time childsite]
+
+            frame $time.f -borderwidth 2
+            pack $time.f -side top -fill both
+
+            frame $time.f.offset
+            pack $time.f.offset -side top -fill x -pady 2
+            label $time.f.offset.l -text "Index Offset:"
+            entry $time.f.offset.val -textvariable $this-injury_offset \
+                -width 6
+            label $time.f.offset.u -text "s"
+            pack $time.f.offset.l -side left
+            pack $time.f.offset.val -side left
+            pack $time.f.offset.u -side left
+                                                                                
+            pack $w.prefs.time -fill x -expand yes -side top
+
+            iwidgets::labeledframe $w.prefs.plot -labeltext "Plot Labels" \
+                -labelpos nw
+            set plot [$w.prefs.plot childsite]
+
+            frame $plot.f -borderwidth 2
+            pack $plot.f -side top -fill both
+
+            frame $plot.f.xaxis
+            pack $plot.f.xaxis -side top -fill x -pady 2
+            label $plot.f.xaxis.l -text "X Axis:"
+            entry $plot.f.xaxis.val -textvariable $this-x_axis_label \
+                -width 18
+            pack $plot.f.xaxis.val -side right
+            pack $plot.f.xaxis.l -side right
+                                                                                
+            frame $plot.f.xtrendl
+            pack $plot.f.xtrendl -side top -fill x -pady 2
+            label $plot.f.xtrendl.l -text "X Axis Trend:"
+            entry $plot.f.xtrendl.val -textvariable $this-x_trend_l_label \
+                -width 18
+            pack $plot.f.xtrendl.val -side right
+            pack $plot.f.xtrendl.l -side right
+                                                                                
+            frame $plot.f.xtrendm
+            pack $plot.f.xtrendm -side top -fill x -pady 2
+            entry $plot.f.xtrendm.val -textvariable $this-x_trend_m_label \
+                -width 18
+            pack $plot.f.xtrendm.val -side right
+
+            frame $plot.f.xtrendh
+            pack $plot.f.xtrendh -side top -fill x -pady 2
+            entry $plot.f.xtrendh.val -textvariable $this-x_trend_h_label \
+                -width 18
+            pack $plot.f.xtrendh.val -side right
+
+            frame $plot.f.spacer
+            pack $plot.f.spacer -side top -fill x -pady 4
+
+            frame $plot.f.yaxis
+            pack $plot.f.yaxis -side top -fill x -pady 2
+            label $plot.f.yaxis.l -text "Y Axis:"
+            entry $plot.f.yaxis.val -textvariable $this-y_axis_label \
+                -width 18
+            pack $plot.f.yaxis.val -side right
+            pack $plot.f.yaxis.l -side right
+
+            frame $plot.f.ytrendl
+            pack $plot.f.ytrendl -side top -fill x -pady 2
+            label $plot.f.ytrendl.l -text "Y Axis Trend:"
+            entry $plot.f.ytrendl.val -textvariable $this-y_trend_l_label \
+                -width 18
+            pack $plot.f.ytrendl.val -side right
+            pack $plot.f.ytrendl.l -side right
+
+            frame $plot.f.ytrendm
+            pack $plot.f.ytrendm -side top -fill x -pady 2
+            entry $plot.f.ytrendm.val -textvariable $this-y_trend_m_label \
+                -width 18
+            pack $plot.f.ytrendm.val -side right
+
+            frame $plot.f.ytrendh
+            pack $plot.f.ytrendh -side top -fill x -pady 2
+            entry $plot.f.ytrendh.val -textvariable $this-y_trend_h_label \
+                -width 18
+            pack $plot.f.ytrendh.val -side right
+
+            pack $w.prefs.plot -fill x -expand yes -side top
+                                                                                
             frame $w.prefs.donef
             button $w.prefs.donef.done -text "Done" \
                 -command "$this prefs_accept $w.prefs"
@@ -501,9 +732,11 @@ itcl_class VS_Render_ExecutiveState {
 
 	    SciRaise $w
 
-	    wm title $w "Executive State"
+	    #wm title $w "Executive State"
+	    wm title $w "Decision Space"
 	    #wm minsize $w 640 128
-	    wm geometry $w "640x640"
+	    #wm geometry $w "640x640"
+	    wm geometry $w [set $this-geom]
 	}
     }
 
