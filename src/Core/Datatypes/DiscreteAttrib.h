@@ -17,6 +17,7 @@
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
+#include <Core/Datatypes/TypeName.h>
 
 namespace SCIRun {
 
@@ -77,7 +78,8 @@ public:
   // Persistent representation...
   virtual void io(Piostream &);
   static PersistentTypeID type_id;
-
+  static string typeName();
+ 
   virtual int iterate(AttribFunctor<T> &func);
 
   virtual int xsize() const { return d_nx; }
@@ -95,7 +97,39 @@ private:
   T d_defval;
 };
 
+//////////
+// PIO support
+template <class T>
+string DiscreteAttrib<T>::typeName(){
+  static string typeName = string("DiscreteAttrib<") + findTypeName((T*)0)+">";
+  return typeName;
+}
 
+template <class T> 
+PersistentTypeID DiscreteAttrib<T>::type_id(DiscreteAttrib<T>::typeName(), 
+					    "Attrib", 
+					    0);
+
+#define DISCRETEATTRIB_VERSION 1
+
+template <class T> void
+DiscreteAttrib<T>::io(Piostream& stream)
+{
+  stream.begin_class(typeName().c_str(), DISCRETEATTRIB_VERSION);
+  
+  // -- base class PIO
+  Attrib::io(stream);
+  Pio(stream, d_nx);
+  Pio(stream, d_ny);
+  Pio(stream, d_nz);
+  Pio(stream, d_dim);
+  Pio(stream, d_defval);
+  
+  stream.end_class();
+}
+
+//////////
+// Constructors/Destructor
 template <class T>
 DiscreteAttrib<T>::DiscreteAttrib() :
   Attrib(), d_nx(0), d_ny(0), d_nz(0), d_dim(0)
@@ -317,10 +351,6 @@ DiscreteAttrib<T>::size() const
     }
 }
 
-
-template <class T> PersistentTypeID DiscreteAttrib<T>::type_id("DiscreteAttrib", "Datatype", 0);
-
-
 template <class T> string
 DiscreteAttrib<T>::getInfo()
 {
@@ -331,11 +361,6 @@ DiscreteAttrib<T>::getInfo()
     "Dim = " << d_dim << ": " << d_nx << ' ' << d_ny << ' ' << d_nz << '\n' <<
     "Size = " << size() << '\n';
   return retval.str();
-}
-
-template <class T> void
-DiscreteAttrib<T>::io(Piostream&)
-{
 }
 
 

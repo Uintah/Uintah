@@ -19,8 +19,10 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Util/DebugStream.h>
-#include <sstream>
+#include <Core/Datatypes/TypeName.h>
+#include <Core/Persistent/PersistentSTL.h>
 
+#include <sstream>
 
 namespace SCIRun {
 
@@ -86,6 +88,7 @@ public:
   // Persistent representation...
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
+  static string typeName();
 
 protected:
   vector<T> d_data;
@@ -93,12 +96,34 @@ protected:
   static DebugStream dbg;
 };
 
+//////////
+// PIO support
+template <class T>
+string FlatAttrib<T>::typeName(){
+  static string typeName = string("FlatAttrib<") + findTypeName((T*)0)+">";
+  return typeName;
+}
+
+template <class T> 
+PersistentTypeID FlatAttrib<T>::type_id(FlatAttrib<T>::typeName(), 
+					DiscreteAttrib<T>::typeName(), 
+					0);
+
+#define FLATATTRIB_VERSION 1
+
+template <class T> void
+FlatAttrib<T>::io(Piostream& stream)
+{
+  stream.begin_class(typeName().c_str(), FLATATTRIB_VERSION);
+  
+  // -- base class PIO
+  DiscreteAttrib<T>::io(stream);
+  Pio(stream, d_data);
+  stream.end_class();
+}
 
 
 template <class T> DebugStream FlatAttrib<T>::dbg("FlatAttrib", true);
-
-template <class T> PersistentTypeID FlatAttrib<T>::type_id("FlatAttrib", "Datatype", 0);
-
 
 template <class T>
 FlatAttrib<T>::FlatAttrib() :
@@ -337,19 +362,6 @@ FlatAttrib<T>::getInfo()
   if (itr != d_data.end()) { retval << "..."; }
   retval << endl;
   return retval.str();
-}
-
-template <class T> void
-FlatAttrib<T>::io(Piostream &stream)
-{
-  DiscreteAttrib<T>::io(stream);
-
-  stream.begin_class("FlatAttrib", 0);
-  for (int i=0; i < d_data.size(); i++)
-    {
-      //Pio(stream, d_data[i]);
-    }
-  stream.end_class();
 }
 
 } // End namespace SCIRun

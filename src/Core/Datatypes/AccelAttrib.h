@@ -71,6 +71,7 @@ public:
   // Persistent representation...
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
+  static string typeName();
 
 protected:
   void create_accel_structure();
@@ -80,9 +81,30 @@ protected:
   vector<T *> d_accel2;
 };
 
+//////////
+// PIO support
+template <class T> string AccelAttrib<T>::typeName(){
+  static string typeName = string("AccelAttrib<") + findTypeName((T*)0)+">";
+  return typeName;
+}
 
+template <class T> 
+PersistentTypeID AccelAttrib<T>::type_id(AccelAttrib<T>::typeName(),
+					 FlatAttrib<T>::typeName(),
+					 0);
 
-template <class T> PersistentTypeID AccelAttrib<T>::type_id("AccelAttrib", "Datatype", 0);
+#define ACCELATTRIB_VERSION 1
+
+template <class T> void
+AccelAttrib<T>::io(Piostream& stream)
+{
+  stream.begin_class(typeName().c_str(), ACCELATTRIB_VERSION);
+  
+  // -- base class PIO
+  FlatAttrib<T>::io(stream);
+  Pio(stream, d_data);
+  stream.end_class();
+}
 
 
 template <class T>
@@ -381,12 +403,6 @@ AccelAttrib<unsigned char>::getInfo()
   retval << endl;
 #endif
   return retval.str();
-}
-
-
-
-
-template <class T> void AccelAttrib<T>::io(Piostream&){
 }
 
 } // End namespace SCIRun
