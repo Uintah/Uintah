@@ -17,7 +17,7 @@
 
 #ifdef HAVE_PETSC
 extern "C" {
-#include "petscsles.h"
+#include "petscksp.h"
 }
 #endif
 
@@ -217,7 +217,6 @@ private:
    map<const Patch*, Array3<int> > d_petscLocalToGlobal;
    Mat A;
    Vec d_x, d_b, d_u;
-   SLES sles;
 #endif
 }; // End class PetscSolver.h
 
