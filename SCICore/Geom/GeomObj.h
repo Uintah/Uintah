@@ -55,6 +55,7 @@ class SCICORESHARE GeomObj : public Persistent {
 public:
     GeomObj(int id = 0x1234567);
     GeomObj(IntVector id);
+    GeomObj(int id_int, IntVector id);
     GeomObj(const GeomObj&);
     virtual ~GeomObj();
     virtual GeomObj* clone() = 0;
@@ -89,6 +90,10 @@ void Pio(Piostream&, GeomObj*&);
 
 //
 // $Log$
+// Revision 1.11  2000/09/11 22:14:46  bigler
+// Added constructors that take an int and IntVector to allow unique
+// identification in 4 dimensions.
+//
 // Revision 1.10  2000/08/09 18:21:14  kuzimmer
 // Added IntVector indexing to GeomObj & GeomSphere
 //
