@@ -1407,6 +1407,8 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 	   mpm_matl->getConstitutiveModel()->
 	     computePressEOSCM(rho_micro[m][*iter],press_eos[m],press_ref,
                               dp_drho[m], tmp,mpm_matl);
+
+          speedSound_new[m][*iter] = sqrt(tmp);
   #endif
 	   mat_volume[m] = mat_vol[m][*iter];
 
