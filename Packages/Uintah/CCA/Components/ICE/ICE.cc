@@ -49,9 +49,6 @@ using namespace Uintah;
 static DebugStream cout_norm("ICE_NORMAL_COUT", false);  
 static DebugStream cout_doing("ICE_DOING_COUT", false);
 
-/*`==========TESTING==========*/
-static DebugStream oldStyleAdvect("oldStyleAdvect",false); 
-/*==========TESTING==========`*/
 
 ICE::ICE(const ProcessorGroup* myworld) 
   : UintahParallelComponent(myworld)
@@ -4543,60 +4540,31 @@ void ICE::maxMach_on_Lodi_BC_Faces(const ProcessorGroup*,
  
 /* --------------------------------------------------------------------- 
 Function~  ICE::update_q_CC--
-Purpose~   This function tacks on the advection of q_CC.  There are two
-     different ways to do it.  
+Purpose~   This function tacks on the advection of q_CC. 
 ---------------------------------------------------------------------  */
 template< class V, class T>
 void ICE::update_q_CC(const std::string& desc,
                       CCVariable<T>& Q_CC,
                       V& Q_Lagrangian,
                       const CCVariable<T>& Q_advected,
-                      constCCVariable<double>& mass_L,
                       const CCVariable<double>& mass_new,
-                      const CCVariable<double>& mass_advected,
-                      constCCVariable<double>& cv,
                       const CCVariable<double>& cv_new,
                       const Patch* patch) 
 {
   //__________________________________
   //  all Q quantites except Temperature
-  if (oldStyleAdvect.active() && desc != "energy"){
+  if (desc != "energy"){
     for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
       IntVector c = *iter;
       Q_CC[c] = (Q_Lagrangian[c] + Q_advected[c])/mass_new[c] ;
     }
   }
-  //_______________
-  //  BAK's update
-  if (!oldStyleAdvect.active() && desc != "energy" ){
-    T q_L_tmp, q_Advected; 
-    for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
-      IntVector c = *iter;
-      q_L_tmp    = Q_Lagrangian[c]/mass_L[c];
-      q_Advected = (Q_advected[c] - q_L_tmp * mass_advected[c]) / mass_new[c];
-      Q_CC[c]    = q_L_tmp + q_Advected;
-    }
-  }
   //__________________________________
   //  Temperature
-  if(oldStyleAdvect.active() && desc == "energy" ) {
+  if(desc == "energy" ) {
     for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
       IntVector c = *iter;
       Q_CC[c] = (Q_Lagrangian[c] + Q_advected[c])/(mass_new[c] * cv_new[c]) ;
-    }
-  }
-  //_______________
-  //  BAK's update
-  if (!oldStyleAdvect.active() && desc == "energy" ){
-    T Temp_advected, Temp_cv_L_ME, Temp_L_ME; 
-    for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
-      IntVector c = *iter;
-      Temp_cv_L_ME  = Q_Lagrangian[c]/mass_L[c];
-      Temp_L_ME     = Temp_cv_L_ME/cv[c];
-   
-      Temp_advected = (Q_advected[c] - Temp_cv_L_ME * mass_advected[c])/
-                      (cv_new[c] * mass_new[c] );
-      Q_CC[c]       = Temp_L_ME + Temp_advected;
     }
   }
 } 
@@ -4684,19 +4652,6 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
       vel_CC.initialize(Vector(0.0,0.0,0.0));
       qV_advected.initialize(Vector(0.0,0.0,0.0)); 
 
-
-/*`==========TESTING==========*/
- int timestep = d_sharedState->getCurrentTopLevelTimeStep();
- if (timestep == 1 && patch->getID() == 0 ) {
-   if(oldStyleAdvect.active()){
-    cout << " ICE:Advection: using conservative style update eq. "<< endl;
-   } else{
-    cout << " ICE:Advection: using BAK update eq.  "<< endl;
-   }
- }
-/*==========TESTING==========`*/
-
-
       //__________________________________
       //   Advection preprocessing
       bool bulletProof_test=true;
@@ -4720,11 +4675,8 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
       advector->advectQ(useCompatibleFluxes, is_Q_massSpecific,
                         mom_L_ME,mass_L, patch,qV_advected, new_dw);
 
-      constCCVariable<double> PH;  // placeHolders
-      CCVariable<double> PH2;
       update_q_CC<constCCVariable<Vector>, Vector>
-                 ("velocity",vel_CC, mom_L_ME, qV_advected, 
-                   mass_L, mass_new, mass_advected, PH, PH2, patch);
+                 ("velocity",vel_CC, mom_L_ME, qV_advected, mass_new,cv, patch);
 
       //__________________________________
       //    Jim's tweak
@@ -4744,8 +4696,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
                         sp_vol_L,mass_L, patch,q_advected, new_dw); 
 
       update_q_CC<constCCVariable<double>, double>
-                  ("sp_vol",sp_vol_CC, sp_vol_L, q_advected, 
-                   mass_L, mass_new, mass_advected, PH, PH2, patch);
+             ("sp_vol",sp_vol_CC, sp_vol_L, q_advected, mass_new, cv,patch);
 
       //  Set Neumann = 0 if symmetric Boundary conditions
       setBC(sp_vol_CC, "set_if_sym_BC",patch, d_sharedState, indx, new_dw); 
@@ -4769,8 +4720,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
                               q_L_CC,mass_L, patch,q_advected, new_dw);  
    
             update_q_CC<constCCVariable<double>, double>
-                 ("q_L_CC",q_CC, q_L_CC, q_advected, 
-                  mass_L, mass_new, mass_advected, PH, PH2, patch);
+                 ("q_L_CC",q_CC, q_L_CC, q_advected, mass_new, cv, patch);
                   
             //  Set Boundary Conditions 
             string Labelname = tvar->var->getName();
@@ -4813,8 +4763,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
                         int_eng_L_ME, mass_L, patch,q_advected, new_dw);
       
       update_q_CC<constCCVariable<double>, double>
-                  ("energy",temp, int_eng_L_ME, q_advected, 
-                   mass_L, mass_new, mass_advected, cv, cv_new, patch);                        
+            ("energy",temp, int_eng_L_ME, q_advected, mass_new, cv_new, patch);                        
  
 /*`==========TESTING==========*/                                                    
       //__________________________________
