@@ -73,6 +73,8 @@ class IsoSurface : public Module {
     double old_max;
     Point old_bmin;
     Point old_bmax;
+    int sp;
+    TCLint show_progress;
 
     MaterialHandle widget_matl;
     MaterialHandle widget_highlight_matl;
@@ -129,7 +131,8 @@ static clString surface_name("IsoSurface");
 IsoSurface::IsoSurface(const clString& id)
 : Module("IsoSurface", id, Filter), emit_surface("emit_surface", id, this),
   have_seedpoint("have_seedpoint", id, this), isoval("isoval", id, this),
-  do_3dwidget("do_3dwidget", id, this), seed_point("seed_point", id, this)
+  do_3dwidget("do_3dwidget", id, this), seed_point("seed_point", id, this),
+  show_progress("show_progress", id, this)
 {
     // Create the input ports
     infield=new ScalarFieldIPort(this, "Field", ScalarFieldIPort::Atomic);
@@ -165,7 +168,8 @@ IsoSurface::IsoSurface(const clString& id)
 IsoSurface::IsoSurface(const IsoSurface& copy, int deep)
 : Module(copy, deep), emit_surface("emit_surface", id, this),
   have_seedpoint("have_seedpoint", id, this), isoval("isoval", id, this),
-  do_3dwidget("do_3dwidget", id, this), seed_point("seed_point", id, this)
+  do_3dwidget("do_3dwidget", id, this), seed_point("seed_point", id, this),
+  show_progress("show_progress", id, this)
 {
     NOT_FINISHED("IsoSurface::IsoSurface");
 }
@@ -215,6 +219,7 @@ void IsoSurface::execute()
 	find_seed_from_value(field);
 	need_seed=0;
     }
+    sp=show_progress.get();
     if(do_3dwidget.get()){
 	widget_scale=0.05*field->longest_dimension();
 	if(!widget){
@@ -715,7 +720,7 @@ void IsoSurface::iso_reg_grid(ScalarFieldRG* field, double isoval,
 	    for(int k=0;k<nz-1;k++){
 		iso_cube(i,j,k, isoval, group, field);
 	    }
-	    if(abort_flag)
+	    if(sp && abort_flag)
 		return;
 	}
     }
@@ -745,7 +750,7 @@ void IsoSurface::iso_reg_grid(ScalarFieldRG* field, const Point& p,
     int counter=1;
     GeomID groupid=0;
     while(!surfQ.is_empty()) {
-	if (counter%400 == 0) {
+	if (sp && counter%400 == 0) {
 	    if(!ogeom->busy()){
 		if (groupid)
 		    ogeom->delObj(groupid);
@@ -753,7 +758,7 @@ void IsoSurface::iso_reg_grid(ScalarFieldRG* field, const Point& p,
 		ogeom->flushViews();
 	    }
 	}
-	if(abort_flag){
+	if(sp && abort_flag){
 	    if(groupid)
 		ogeom->delObj(groupid);
 	    return;
@@ -937,7 +942,7 @@ void IsoSurface::iso_tetrahedra(ScalarFieldUG* field, double isoval,
 	//update_progress(i, nelems);
 	Element* element=mesh->elems[i];
 	iso_tetra(element, mesh, field, isoval, group);
-	if(abort_flag)
+	if(sp && abort_flag)
 	    return;
     }
 }
@@ -952,6 +957,7 @@ void IsoSurface::iso_tetrahedra(ScalarFieldUG* field, const Point& p,
 	error("Seed point not in field boundary");
 	return;
     }
+    cerr << "In iso_tetrahedra!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n";
     isoval.set(iv);
     BitArray1 visited(nelems, 0);
     Queue<int> surfQ;
@@ -962,9 +968,9 @@ void IsoSurface::iso_tetrahedra(ScalarFieldUG* field, const Point& p,
     int groupid=0;
     int counter=1;
     while(!surfQ.is_empty()){
-	if(abort_flag)
+	if(sp && abort_flag)
 	    break;
-	if(counter%400 == 0){
+	if(sp && counter%400 == 0){
 	    if(!ogeom->busy()){
 		if(groupid)
 		    ogeom->delObj(groupid);
