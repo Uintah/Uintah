@@ -282,7 +282,21 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
 
   d_ice->scheduleUpdateVolumeFraction(            sched, level,   all_matls);
   
+  d_ice->scheduleComputeVel_FC(                   sched, patches, ice_matls_sub,
+                                                                  mpm_matls_sub,
+			                                             press_matl, 
+                                                                  all_matls, 
+                                                                  false);
+                                                               
+  d_ice->scheduleAddExchangeContributionToFCVel(  sched, patches, ice_matls_sub,
+                                                                  all_matls,
+                                                                  false);  
+  
   if(d_ice->d_impICE) {        //  I M P L I C I T 
+    d_ice->scheduleSetupRHS(                      sched, patches, one_matl, 
+                                                                  all_matls,
+                                                                  false);
+                                                                  
     d_ice->scheduleImplicitPressureSolve(         sched, level,   patches,
                                                                   one_matl, 
 					                               press_matl,
@@ -295,12 +309,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
                                                                   press_matl,
 				                                      all_matls);
   }                           //  IMPLICIT AND EXPLICIT
-  d_ice->scheduleComputeVel_FC(sched, patches,   ice_matls_sub, mpm_matls_sub,
-			       press_matl, all_matls, false);
-                                                               
-  d_ice->scheduleAddExchangeContributionToFCVel(  sched, patches, ice_matls_sub,
-                                                                  all_matls,
-                                                                  false);
+
                                                                   
   if(!(d_ice->d_impICE)){       //  E X P L I C I T 
     d_ice->scheduleComputeDelPressAndUpdatePressCC(sched,patches, press_matl,
@@ -378,8 +387,10 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
   vector<PatchSubset*> maxMach_PSS(Patch::numFaces);                                                       
   d_ice->scheduleMaxMach_on_Lodi_BC_Faces(sched, level,ice_matls,maxMach_PSS);
                                    
-  d_ice->scheduleAdvectAndAdvanceInTime(sched, patches, ice_matls_sub,
-					mpm_matls_sub,press_matl,ice_matls);
+  d_ice->scheduleAdvectAndAdvanceInTime(         sched, patches, ice_matls_sub,
+					                              mpm_matls_sub,
+                                                                 press_matl,
+                                                                 ice_matls);
                                                                   
   if(d_ice->switchTestConservation) {
     d_ice->schedulePrintConservedQuantities(     sched, patches, ice_matls_sub,
