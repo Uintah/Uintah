@@ -992,10 +992,13 @@ class BioImageApp {
 	    set c32 [addConnection $m33 0 $m31 0]
 	    set c32 [addConnection $m33 0 $m34 0]
 	    set c33 [addConnection $m31 0 $m34 1]
-	    set c34 [addConnection $m34 0 $m7 0]
+	    set c34 [addConnection $m36 0 $m7 0]
 	    set c35 [addConnection $m34 0 $m35 0]
 	    set c36 [addConnection $m34 0 $m36 0]
 	    set c36 [addConnection $m35 0 $m36 1]
+
+	    # connect 2D Viewer to 3D Viewer
+	    set c37 [addConnection $m26 0 $mods(Viewer) 2]
 
 
 
@@ -1008,6 +1011,7 @@ class BioImageApp {
 	    # set some ui parameters
 	    global $m1-filename
 	    set $m1-filename $data_dir/volume/CThead.nhdr
+#	    set $m1-filename $data_dir/brain-dt/demo-B0.nrrd
 #	    set $m1-filename $data_dir/volume/tooth.nhdr
 #	    set $m1-filename "/home/darbyb/work/data/TR0600-TE020.nhdr"
 #	    set $m1-filename $data_dir/mrca2_t1_or-fixed.nhdr
