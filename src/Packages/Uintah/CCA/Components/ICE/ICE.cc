@@ -49,8 +49,8 @@ using namespace Uintah;
 static DebugStream cout_norm("ICE_NORMAL_COUT", false);  
 static DebugStream cout_doing("ICE_DOING_COUT", false);
 
-#define ANNULUSICE
-//#undef ANNULUSICE
+//#define ANNULUSICE
+#undef ANNULUSICE
 
 ICE::ICE(const ProcessorGroup* myworld) 
   : UintahParallelComponent(myworld)
