@@ -43,10 +43,6 @@ public:
   virtual ContourField<Data> *clone() const;
   virtual ~ContourField();
 
-  virtual ScalarFieldInterface* query_scalar_interface() const;
-  virtual VectorFieldInterface* query_vector_interface() const;
-  virtual TensorFieldInterface* query_tensor_interface() const;
-
   static const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const;
   static PersistentTypeID type_id;
@@ -135,59 +131,6 @@ ContourField<Data> *
 ContourField<Data>::clone() const
 {
   return new ContourField<Data>(*this);
-}
-
-template <> ScalarFieldInterface *
-ContourField<double>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface *
-ContourField<float>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface *
-ContourField<int>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-ContourField<short>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-ContourField<char>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface *
-ContourField<unsigned int>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-ContourField<unsigned short>::query_scalar_interface() const;
-
-template <> ScalarFieldInterface*
-ContourField<unsigned char>::query_scalar_interface() const;
-
-template <class T>
-ScalarFieldInterface*
-ContourField<T>::query_scalar_interface() const 
-{
-  return 0;
-}
-
-template <>
-VectorFieldInterface*
-ContourField<Vector>::query_vector_interface() const;
-
-template <class T>
-VectorFieldInterface*
-ContourField<T>::query_vector_interface() const
-{
-  return 0;
-}
-
-template <>
-TensorFieldInterface*
-ContourField<Tensor>::query_tensor_interface() const;
-
-template <class T>
-TensorFieldInterface*
-ContourField<T>::query_tensor_interface() const
-{
-  return 0;
 }
 
 template <class Data>
