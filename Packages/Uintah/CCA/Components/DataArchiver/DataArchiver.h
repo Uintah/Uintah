@@ -51,7 +51,7 @@ using std::pair;
     
    class DataArchiver : public Output, public UintahParallelComponent {
    public:
-      DataArchiver(const ProcessorGroup* myworld);
+      DataArchiver(const ProcessorGroup* myworld, int udaSuffix = -1);
       virtual ~DataArchiver();
 
       //////////
@@ -191,6 +191,9 @@ using std::pair;
       // returns a ProblemSpecP that you need to call releaseDocument on
       ProblemSpecP loadDocument(std::string xmlName);     
 
+      //! creates the uda directory with a trailing version suffix
+      void makeVersionedDir();
+      
       void initSaveLabels(SchedulerP& sched);
       void initCheckpoints(SchedulerP& sched);
      
@@ -283,8 +286,6 @@ using std::pair;
       double d_nextCheckpointTime; // used when d_checkpointInterval != 0
       int d_nextCheckpointTimestep; // used when d_checkpointTimestepInterval != 0
       int d_nextCheckpointWalltime; // used when d_checkpointWalltimeInterval != 0
-      Mutex d_outputLock;
-
       //-----------------------------------------------------------
       // RNJ - 
       //
@@ -346,6 +347,11 @@ using std::pair;
 
       int d_fileSystemRetrys;
 
+
+      //! This is if you want to pass in the uda extension on the command line
+      int d_udaSuffix;
+
+      Mutex d_outputLock;
 
       DataArchiver(const DataArchiver&);
       DataArchiver& operator=(const DataArchiver&);

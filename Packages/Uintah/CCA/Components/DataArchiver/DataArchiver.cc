@@ -55,11 +55,11 @@ using namespace Uintah;
 using namespace std;
 using namespace SCIRun;
 
-static Dir makeVersionedDir(const std::string nameBase);
 static DebugStream dbg("DataArchiver", false);
 
-DataArchiver::DataArchiver(const ProcessorGroup* myworld)
+DataArchiver::DataArchiver(const ProcessorGroup* myworld, int udaSuffix)
   : UintahParallelComponent(myworld),
+    d_udaSuffix(udaSuffix),
     d_outputLock("DataArchiver output lock")
 {
   d_wasOutputTimestep = false;
@@ -300,7 +300,7 @@ void DataArchiver::initializeOutput(const ProblemSpecP& params) {
      }
      MPI_Barrier(d_myworld->getComm());
      if(d_writeMeta){
-       d_dir = makeVersionedDir(d_filebase);
+       makeVersionedDir();
        string fname = myname.str();
        FILE* tmpout = fopen(fname.c_str(), "w");
        if(!tmpout)
@@ -349,7 +349,7 @@ void DataArchiver::initializeOutput(const ProblemSpecP& params) {
        throw ErrnoException("unlink", errno);
      }
    } else {
-      d_dir = makeVersionedDir(d_filebase);
+      makeVersionedDir();
       d_writeMeta = true;
    }
 
@@ -1021,7 +1021,7 @@ void DataArchiver::reEvaluateOutputTimestep(double /*orig_delt*/, double new_del
       
 void DataArchiver::executedTimestep(double delt)
 {
-  double time = d_sharedState->getElapsedTime();
+  // double time = d_sharedState->getElapsedTime();
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
   // if this was an output/checkpoint timestep,
   // determine when the next one will be.
@@ -1738,9 +1738,8 @@ void DataArchiver::output(const ProcessorGroup*,
 
 } // end output()
 
-static
-Dir
-makeVersionedDir(const std::string nameBase)
+void
+DataArchiver::makeVersionedDir()
 {
   unsigned int dirMin = 0;
   unsigned int dirNum = 0;
@@ -1774,9 +1773,30 @@ makeVersionedDir(const std::string nameBase)
 
   string dirName;
 
+  // first check to see if the suffix passed in on the command line
+  // makes a valid uda dir
+
+  if (d_udaSuffix != -1) {
+    ostringstream name;
+    name << d_filebase << "." << setw(3) << setfill('0') << d_udaSuffix;
+    dirName = name.str();
+    
+    int code = mkdir( dirName.c_str(), 0777 );
+    if( code == 0 ) { // Created the directory successfully
+      dirCreated = true;
+    }
+    else if( errno != EEXIST )  {
+      cerr << "makeVersionedDir: Error " << errno << " in mkdir\n";
+      throw ErrnoException("DataArchiver.cc: mkdir failed for some "
+                           "reason besides dir already exists", errno);
+    }
+  }
+
+  // if that didn't work, go ahead with the real algorithm
+
   while (!dirCreated) {
     ostringstream name;
-    name << nameBase << "." << setw(3) << setfill('0') << dirNum;
+    name << d_filebase << "." << setw(3) << setfill('0') << dirNum;
     dirName = name.str();
       
     int code = mkdir( dirName.c_str(), 0777 );
@@ -1819,19 +1839,19 @@ makeVersionedDir(const std::string nameBase)
   // name existed or if it's already a link.
   bool make_link = false;
   struct stat sb;
-  int rc = lstat(nameBase.c_str(), &sb);
+  int rc = lstat(d_filebase.c_str(), &sb);
   if ((rc != 0) && (errno == ENOENT))
     make_link = true;
   else if ((rc == 0) && (S_ISLNK(sb.st_mode))) {
-    unlink(nameBase.c_str());
+    unlink(d_filebase.c_str());
     make_link = true;
   }
   if (make_link)
-    symlink(dirName.c_str(), nameBase.c_str());
+    symlink(dirName.c_str(), d_filebase.c_str());
 
   cout << "DataArchiver created " << dirName << endl;
+  d_dir = Dir(dirName);
    
-  return Dir(dirName);
 }
 
 void  DataArchiver::initSaveLabels(SchedulerP& sched)
