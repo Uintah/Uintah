@@ -195,19 +195,19 @@ namespace Uintah {
     // class function to create a new object from parameters
     static ConstitutiveModel* create(double *p_array);
 
-    virtual void addComputesAndRequires(Task* task,
-					const MPMMaterial* matl,
-					const PatchSet* patches,
-					const bool recursion) const
+    virtual void addComputesAndRequires(Task* ,
+					const MPMMaterial* ,
+					const PatchSet* ,
+					const bool ) const
     {
     }
 
-    virtual void computeStressTensor(const PatchSubset* patches,
-				     const MPMMaterial* matl,
-				     DataWarehouse* old_dw,
-				     DataWarehouse* new_dw,
-				     Solver* solver,
-				     const bool recursion)
+    virtual void computeStressTensor(const PatchSubset* ,
+				     const MPMMaterial* ,
+				     DataWarehouse* ,
+				     DataWarehouse* ,
+				     Solver* ,
+				     const bool )
     {
     }
 	 
