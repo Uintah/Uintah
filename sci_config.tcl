@@ -15,6 +15,7 @@ ConfigBool .opengl -text "OpenGL? " -name OPENGL
 ConfigBool .normalize_prim -text "ogl normalizes primitives? " -name NORM_OGL
 ConfigBool .pthreads -text "Pthreads? " -name PTHREADS
 ConfigBool .quarks -text "Quarks? " -name QUARKS
+ConfigBool .sparselib -text "Use Sparselib? " -name SPARSELIB
 ConfigChoice .irix_binary -choices {o32 n32_mips3 n32_mips4 64_mips3 64_mips4} \
 	-text "Irix binary format: " -name "IRIX_BIN"
 
