@@ -171,6 +171,7 @@ private:
       std::vector<double> meanVars;
       std::vector<double> enthalpyLoss;
       std::vector<std::string> species_list;
+      bool d_nonadiabatic_table;
 }; // end class StaticMixingTable
 
 } // end namespace Uintah

@@ -57,10 +57,9 @@ StaticMixingTable::problemSetup(const ProblemSpecP& params)
   db->require("inputfile",d_inputfile);
   // Set up for MixingModel table
   d_numMixingVars = 1;
-  // Table always has 1 variance
-  int table_numMixStatVars = 1;
+  // Set nonadiabatic flat to read nonadiabatic tables
+  db->getWithDefault("nonadiabatic_table",d_nonadiabatic_table,true);
   // Define mixing table, which includes call reaction model constructor
-  d_tableDimension = d_numMixingVars + d_numRxnVars + table_numMixStatVars + !(d_adiabatic);
   readMixingTable(d_inputfile);
   // Moving the index by adding the properties before the species 
   co2_index=co2_index+5;
@@ -282,7 +281,7 @@ void StaticMixingTable::readMixingTable(std::string inputfile)
   fd >> d_enthalpycount >> d_mixfraccount >>d_mixvarcount >> d_speciescount;
   cout << d_enthalpycount << " " << d_mixfraccount << " " << d_mixvarcount << " " << d_speciescount << endl;
   // Total number of variables in the table: Non-adaibatic table has sensibile enthalpy too
-  d_varcount=d_speciescount+4+!(d_adiabatic);
+  d_varcount=d_speciescount+4+d_nonadiabatic_table;
   cout<<"d_var count: "<< d_varcount << endl;
   // Intitializing the mixture fraction table: 2-D vector for non-uniform tables
   mixfrac_size=d_enthalpycount*d_mixfraccount;
