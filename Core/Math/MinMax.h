@@ -47,7 +47,7 @@ inline SCICORESHARE int Max(int d1, int d2)
     return d1>d2?d1:d2;
 }
 
-// 2 Integers
+// 2 Long Integers
 inline SCICORESHARE long Min(long d1, long d2)
 {
     return d1<d2?d1:d2;
@@ -56,6 +56,17 @@ inline SCICORESHARE long Min(long d1, long d2)
 inline SCICORESHARE long Max(long d1, long d2)
 {
     return d1>d2?d1:d2;
+}
+
+// 2 floats
+inline SCICORESHARE float Max(float d1, float d2)
+{
+  return d1>d2?d1:d2;
+}
+
+inline SCICORESHARE float Min(float d1, float d2)
+{
+  return d1<d2?d1:d2;
 }
 
 // 2 doubles
@@ -99,7 +110,7 @@ inline SCICORESHARE int Max(int d1, int d2, int d3)
     return m;
 }
 
-// 3 integers
+// 3 Long Integers
 inline SCICORESHARE long  Min(long  d1, long  d2, long  d3)
 {
     long  m=d1<d2?d1:d2;
