@@ -32,6 +32,8 @@
 #include <SCIRun/CCA/CCAPortInstance.h>
 #include <SCIRun/CCA/CCAException.h>
 #include <iostream>
+#include <Core/Thread/Mutex.h>
+
 using namespace std;
 using namespace SCIRun;
 
@@ -43,10 +45,12 @@ CCAComponentInstance::CCAComponentInstance(SCIRunFramework* framework,
 )
   : ComponentInstance(framework, instanceName, typeName), component(component)
 {
+  mutex=new Mutex("getPort mutex");
 }
 
 CCAComponentInstance::~CCAComponentInstance()
 {
+  delete mutex;
 }
 
 PortInstance*
@@ -61,7 +65,10 @@ CCAComponentInstance::getPortInstance(const std::string& portname)
 
 sci::cca::Port::pointer CCAComponentInstance::getPort(const std::string& name)
 {
-  return getPortNonblocking(name);
+  mutex->lock();
+  sci::cca::Port::pointer port=getPortNonblocking(name);
+  mutex->unlock();
+  return port;
 }
 
 sci::cca::Port::pointer
@@ -152,11 +159,6 @@ void CCAComponentInstance::addProvidesPort(const sci::cca::Port::pointer& port,
       throw CCAException("addProvidesPort called twice");
   }
   ports.insert(make_pair(portName, new CCAPortInstance(portName, portType, properties, port, CCAPortInstance::Provides)));
-  if(portType=="sci.cca.ports.UIPort"){
-    cerr<<"Runing ui->ui() from CCAComponentInstance::addProvidesPort\n";
-    sci::cca::ports::UIPort::pointer ui=pidl_cast<sci::cca::ports::UIPort::pointer>(port);
-    ui->ui();
-  }
 }
 
 void CCAComponentInstance::removeProvidesPort(const std::string& name)
