@@ -28,6 +28,7 @@
  */
 
 #define LINUX_GETENV_HACK 0
+#define ALIGN 16
 
 /* TODO:
 6) Destroy allocators
@@ -93,7 +94,7 @@ Allocator* default_allocator;
 #define SMALL_BINSIZE(bin) (((bin)<<4)+8)
 
 // Granularity of medium things - 2k bytes
-#define MEDIUM_THRESHOLD (65536)
+#define MEDIUM_THRESHOLD (65536*8)
 
 #define MEDIUM_BIN(size) (((size)-1)>>11)
 #define NMEDIUM_BINS ((MEDIUM_THRESHOLD)>>11)
@@ -371,6 +372,7 @@ Allocator* MakeAllocator()
     a->nmunmap=a->sizemunmap=0;
     a->highwater_alloc=0;
 
+    a->pagesize=getpagesize();
     // Setup the lock...
     a->initlock();
 
@@ -524,17 +526,17 @@ void* Allocator::alloc_big(size_t size, const char* tag)
     size_t osize=size+OVERHEAD;
     size_t maxsize=osize+(size>>4);
     for(;obj!=0;obj=obj->next){
-	// See if this object is within .0625% of the right size...
+	// See if this object is within 6.25% of the right size...
 	if(obj->hunk->len > osize && obj->hunk->len <= maxsize)
 	    break;
     }
     if(!obj){
 	// First, see if we need to clean out the list.
 	int nfree=big_bin.ntotal-big_bin.ninuse;
-	if(nfree >= 10){
-	    // Skip the first 5...
+	if(nfree >= 20){
+	    // Skip the first half...
 	    obj=big_bin.free;
-	    for(int i=0;i<4;i++)
+	    for(int i=0;i<10;i++)
 		obj=obj->next;
 	    Tag* last=obj;
 	    obj=obj->next;
@@ -553,10 +555,14 @@ void* Allocator::alloc_big(size_t size, const char* tag)
 
 	// Make a new one...
 	size_t tsize=sizeof(OSHunk)+OVERHEAD+size;
-	// Round up to nearest page size (assuming 4k pages).
-	size_t npages=(tsize+4095)/4096;
-	tsize=npages*4096;
+	// Round up to nearest page size
+	size_t npages=(tsize+pagesize-1)/pagesize;
+	tsize=npages*pagesize;
 	tsize-=sizeof(OSHunk);
+	unsigned long offset = sizeof(OSHunk)%ALIGN;
+	if(offset != 0)
+	  offset = ALIGN-offset;
+	tsize -= offset;
 	OSHunk* hunk=OSHunk::alloc(tsize, true);
 	nmmap++;
 	sizemmap+=tsize+sizeof(OSHunk);
@@ -787,7 +793,7 @@ void Allocator::free(void* dobj)
     }
     obj_bin->ninuse--;
 
-    if(obj_bin == &big_bin && obj->reqsize > 10*1024*1024){
+    if(obj_bin == &big_bin && obj->reqsize > 50*1024*1024){
       // Go ahead and unmap this segment...
       OSHunk* hunk=obj->hunk;
       nmunmap++;
