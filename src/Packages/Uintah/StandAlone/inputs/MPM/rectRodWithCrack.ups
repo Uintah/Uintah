@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
 <!-- <!DOCTYPE Uintah_specification SYSTEM "input.dtd"> -->
-<!-- @version: Updated 8/5/03-->
+<!-- @version: Updated 1/9/04-->
 <Uintah_specification>
 
    <Meta>
@@ -35,6 +35,7 @@
 	<time_integrator>fracture</time_integrator>
 	<nodes8or27>8</nodes8or27>
         <calculate_fracture_parameters>every_time_step</calculate_fracture_parameters>
+        <useVolumeIntegral>false</useVolumeIntegral>
         <do_crack_propagation>false</do_crack_propagation>
     </MPM>
 
