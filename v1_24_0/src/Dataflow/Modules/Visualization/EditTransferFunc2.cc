@@ -101,6 +101,8 @@ public:
   void save_ppm(const char * const filename,
               int sx, int sy,
               int bpp, const unsigned char * buf);
+  void save_function(const string& filename);
+
   void update_histo();
   void draw_histo();
   void redraw();
@@ -152,6 +154,11 @@ private:
   void scale_end(int x, int y);
 
   void screen_val(int &x, int &y);
+  
+  // functions for saving and forming swatches
+//  void save_ppm(const char * const filename, 
+//                int sx, int sy, int bpp,
+//                const unsigned char * buf);
 
   int                                   mouse_last_x_;
   int                                   mouse_last_y_;
@@ -180,6 +187,8 @@ private:
   string                                old_filename_;
   time_t 	                        old_filemodification_;
   GuiString *				end_marker_;
+  bool					make_swatch_;
+  unsigned char *			swatch_buffer_;
 };
 
 
@@ -215,7 +224,8 @@ EditTransferFunc2::EditTransferFunc2(GuiContext* ctx)
     gui_num_entries_(ctx->subVar("num-entries")),
     filename_(ctx->subVar("filename")),
     old_filemodification_(0),
-    end_marker_(0)
+    end_marker_(0),
+    make_swatch_(false)
 {
   pan_x_.set(0.0);
   pan_y_.set(0.0);
@@ -233,6 +243,8 @@ EditTransferFunc2::~EditTransferFunc2()
   delete shader_factory_;
   if (end_marker_) 
     delete end_marker_;
+  if (swatch_buffer_)
+    delete swatch_buffer_;
 }
 
 
@@ -466,7 +478,25 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
   } else if (args[1] == "undowidget") {
     undo();
   } else if (args[1] == "reset_gui") {
-    
+  
+  } else if (args[1] == "swatch_save") {
+    make_swatch_ = true;
+    if(swatch_buffer_)
+      delete swatch_buffer_;
+
+    swatch_buffer_ = new unsigned char[width_*height_*4*sizeof(char)];
+    rasterize_widgets();
+    make_swatch_ = false;
+
+    // at this point, the swatch_buffer_ should be populated in
+    // pixels in the format expected by ppm.  All we need to do
+    // is write the header and dump the buffer..  Note:  the
+    // swatch_buffer_ is in the form RGBA as defined by GL_RGBA 
+    // type enum used in glReadPixels
+    filename_.reset();
+    string fn(filename_.get());
+    save_ppm(fn.c_str(), 512, 256, 4, swatch_buffer_);
+
   } else if (args[1] == "load") {
     // The implementation of this was taken almost directly from
     // NrrdReader Module.  
@@ -522,17 +552,40 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
     }    
   } else if (args[1] == "save") {
     const string fn(filename_.get());
-    if (fn == "") {
+    save_function(fn);
+
+  } else if (args[1] == "saveppm") { 
+    save_ppm_ = true;
+    redraw();
+    // Now we trim off the .ppm, add a .xff and call
+    // the save_function() method
+    string fn = filename_.get();
+    fn += ".xff";
+    char buf[256];
+    sprintf(buf, fn.c_str());
+    
+    const string xff_file = buf;
+    save_function(xff_file);
+  }
+  else {
+    Module::tcl_command(args, userdata);
+  }
+}
+
+void
+EditTransferFunc2::save_function(const string& filename)
+{
+    if (filename == "") {
       error("Warning;  No filename provided to EditTransferFunc2");
       return;
     }
 
     // Open ostream
     Piostream* stream;
-    stream = scinew BinaryPiostream(fn, Piostream::Write);
+    stream = scinew BinaryPiostream(filename, Piostream::Write);
     if (stream->error())
-      error("Could not open file for writing" + fn);
-    else { 
+      error("Could not open file for writing" + filename);
+    else {
       int size = widgets_.size();
       Pio(*stream, size);
       for(unsigned int i = 0; i < widgets_.size(); i++) {
@@ -541,15 +594,7 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
       delete stream;
     }
 
-  } else if (args[1] == "saveppm") { 
-    save_ppm_ = true;
-    redraw();
-  }
-  else {
-    Module::tcl_command(args, userdata);
-  }
 }
-
 
 void
 EditTransferFunc2::presave()
@@ -1074,7 +1119,7 @@ void EditTransferFunc2::save_ppm(const char * const filename,
   int R = 3;
   int G = 2;
   int B = 1;
-  int A = 0;
+//  int A = 0;
 
   ofstream output(filename, ios::out);
   
@@ -1085,16 +1130,16 @@ void EditTransferFunc2::save_ppm(const char * const filename,
     }
   
   if ( bpp == 1 || bpp == 2 )
-    output << "P2\n# CREATOR: " << "\n"; // endl;
+    output << "P2 \n# CREATOR: " << "\n"; // endl;
   else if ( bpp == 3 || bpp == 4 )
-    output << "P3\n# CREATOR: " << "\n"; // endl;
+    output << "P3 \n# CREATOR: " << "\n"; // endl;
   else {
     cerr << "ERROR: unknown number of bytes per pixel " << bpp << "\n"; // endl;
     return;
   }
   
-  output << sx << " " << sy << "\n"; // endl;
-  output << 255 << "\n"; // endl;
+  output << sx << " " << sy << " \n"; // endl;
+  output << 255 << " \n"; // endl;
   
   for ( int row = sy - 1; row >= 0; --row )
     {
@@ -1104,11 +1149,11 @@ void EditTransferFunc2::save_ppm(const char * const filename,
 	  switch (bpp) {
 	  case 2:
 	  case 1:
-	    output << (int) buf[p] << "\n"; // endl;
+	    output << (int) buf[p] << " \n"; // endl;
 	    break;
 	  default:
 	    output << (int) buf[p + R] << " " << (int) buf[p + G]
-		   << " " << (int) buf[p + B] << "\n"; // endl;
+		   << " " << (int) buf[p + B] << " \n"; // endl;
 	    break;
 	  }
 	}
@@ -1175,21 +1220,6 @@ EditTransferFunc2::draw_colormap()
     }
     glEnd();
     if(use_pbuffer_) {
-      if (save_ppm_){
-	unsigned int* FrameBuffer = scinew unsigned int[pbuffer_->width()*pbuffer_->height()];
-	glFlush();
-	glReadBuffer(GL_FRONT);
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 8);
-	glReadPixels(0, 0,pbuffer_->width(), pbuffer_->height(),
-		     GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, FrameBuffer);
-	char tmp[256];
-	sprintf(tmp, "/tmp/FrameBuffer%d.ppm", 1);
-	save_ppm(tmp, pbuffer_->width(), pbuffer_->height(),
-		 4, (const unsigned char *)(FrameBuffer));
-	cout<<"Done saving framebuffer..."<<tmp<<"\n"; // endl;
-	delete FrameBuffer;
-	save_ppm_ = false;
-      }
 	
       pbuffer_->release(GL_FRONT);
     } else {
@@ -1198,6 +1228,22 @@ EditTransferFunc2::draw_colormap()
     }
     glDisable(GL_BLEND);
 
+  }
+  if (save_ppm_){
+	unsigned int* FrameBuffer = scinew unsigned int[width_*height_];
+	glFlush();
+	glReadBuffer(GL_FRONT);
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 8);
+	glReadPixels(0, 0,width_, height_,
+		     GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, FrameBuffer);
+	char tmp[256];
+	sprintf(tmp, filename_.get().c_str());
+        printf("Writing to file:  %s\n", filename_.get().c_str());
+	save_ppm(tmp, width_, height_,
+		 4, (const unsigned char *)(FrameBuffer));
+	cout<<"Done saving framebuffer..."<<tmp<<"\n"; // endl;
+	delete FrameBuffer;
+	save_ppm_ = false;
   }
 }
 
@@ -1289,6 +1335,5 @@ EditTransferFunc2::redraw()
 
   gui->unlock();
 }
-
 
 } // end namespace SCIRun
