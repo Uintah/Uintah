@@ -1,3 +1,4 @@
+#define PETSC_USE_LOG
 #include "PetscSolver.h"
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
@@ -6,7 +7,7 @@
 using namespace Uintah;
 using std::vector;
 #define LOG
-#undef LOG
+//#undef LOG
 
 MPMPetscSolver::MPMPetscSolver()
 {
@@ -24,7 +25,7 @@ void MPMPetscSolver::initialize()
 {
 #ifdef HAVE_PETSC
 #ifdef LOG
-  int argc = 5;
+  int argc = 3;
 #else
   int argc = 2;
 #endif
@@ -35,9 +36,10 @@ void MPMPetscSolver::initialize()
   //argv[1] = "-start_in_debugger";
   argv[1] = "-no_signal_handler";
 #ifdef LOG
-  argv[2] = "-log_exclude_actions";
-  argv[3] = "-log_exclude_objects";
-  argv[4] = "-log_info";
+  //argv[2] = "-log_exclude_actions";
+  //argv[3] = "-log_exclude_objects";
+  //argv[4] = "-log_info";
+  argv[2] = "-log_summary";
 #endif
 
   PetscInitialize(&argc,&argv, PETSC_NULL, PETSC_NULL);
@@ -240,11 +242,15 @@ void MPMPetscSolver::destroyMatrix(bool recursion)
 void MPMPetscSolver::fillMatrix(int i,int j,double value)
 {
 #ifdef HAVE_PETSC
+#if 0
   set<int>::iterator find_itr_j = d_DOF.find(j);
   if (find_itr_j == d_DOF.end() ) {
+#endif
     PetscScalar v = value;
     MatSetValues(d_A,1,&i,1,&j,&v,ADD_VALUES);
+#if 0
   }
+#endif
 #endif
 }
 
