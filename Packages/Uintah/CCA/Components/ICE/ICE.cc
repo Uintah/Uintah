@@ -3337,7 +3337,10 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
 
           int_eng_L[c] = std::max(int_eng_L[c], min_int_eng);
          }
-         cout << "Mass gained by the models this timestep = " << massGain << endl;
+         if(massGain > 0.0){
+          cout << "Mass gained by the models this timestep = " 
+               << massGain << endl;
+         }
        }  //  if (models.size() > 0)
 
         //---- P R I N T   D A T A ------ 
