@@ -46,6 +46,7 @@ SRCS     += \
 	$(SRCDIR)/Coregister.cc\
 	$(SRCDIR)/DirectInterpolate.cc\
 	$(SRCDIR)/FieldBoundary.cc\
+	$(SRCDIR)/FieldCage.cc\
 	$(SRCDIR)/FieldInfo.cc\
 	$(SRCDIR)/FieldMeasures.cc\
 	$(SRCDIR)/FieldSlicer.cc\
