@@ -219,7 +219,8 @@ int Network::delete_module(const string& id)
 
     // remove array element corresponding to module, remove from hash table
     modules.erase(modules.begin() + i);
-    delete mod;			
+    mod->kill_helper();
+    delete mod;
     return 1;
 }
 

@@ -127,7 +127,6 @@ Module::Module(const string& name, GuiContext* ctx,
     sched(0),
     pid_(0),
     have_own_dispatch(0),
-    helper_done("Module helper finished flag"),
     id(ctx->getfullname()), 
     abort_flag(0),
     msgStream_(ctx->subVar("msgStream")),
@@ -138,6 +137,7 @@ Module::Module(const string& name, GuiContext* ctx,
     progress(0),
     show_stat(false),
     helper(0),
+    helper_thread(0),
     network(0), 
     notes(ctx->subVar("notes")),
     show_status(ctx->subVar("show_status"))
@@ -215,11 +215,21 @@ Module::Module(const string& name, GuiContext* ctx,
 
 Module::~Module()
 {
-  // kill the helper thread
-  MessageBase msg(MessageTypes::GoAway);
-  mailbox.send(&msg);
-  helper_done.receive();
 }
+
+
+void Module::kill_helper()
+{
+  if (helper_thread)
+  {
+    // kill the helper thread
+    MessageBase msg(MessageTypes::GoAway);
+    mailbox.send(&msg);
+    helper_thread->join();
+    helper_thread = 0;
+  }
+}
+
 
 void Module::update_state(State st)
 {
@@ -495,13 +505,17 @@ void Module::set_context(Scheduler* sched, Network* network)
 {
   this->network=network;
   this->sched=sched;
+  ASSERT(helper == 0);
   // Start up the event loop
   helper=scinew ModuleHelper(this);
-  Thread* t=new Thread(helper, moduleName.c_str(), 0, Thread::NotActivated);
+  helper_thread = 
+    scinew Thread(helper, moduleName.c_str(), 0, Thread::NotActivated);
   if(stacksize)
-    t->setStackSize(stacksize);
-  t->activate(false);
-  t->detach();
+  {
+    helper_thread->setStackSize(stacksize);
+  }
+  helper_thread->activate(false);
+  //helper_thread->detach();  // Join on delete.
 }
 
 void Module::setStackSize(unsigned long s)

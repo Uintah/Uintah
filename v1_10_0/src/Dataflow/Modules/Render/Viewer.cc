@@ -134,8 +134,6 @@ void Viewer::do_execute()
       //r->current_renderer->kill_helper();
       //	}
       //      }
-      
-      helper_done.send(1);
       return;
     }
   }
