@@ -76,7 +76,8 @@ ICE::ICE(const ProcessorGroup* myworld)
   d_massExchange = false;
   d_RateForm     = false;
   d_EqForm       = false;
-  
+  d_SMALL_NUM    = 1.0e-100; 
+  d_TINY_RHO     = 1.0e-100;// also defined ICEMaterial.cc and MPMMaterial.cc
 }
 
 ICE::~ICE()
@@ -94,14 +95,13 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& /**/,
                         SimulationStateP&   sharedState)
 {
   d_sharedState = sharedState;
-  d_SMALL_NUM   = 1.e-100;
+
   cout_norm << "In the preprocessor . . ." << endl;
   dataArchiver = dynamic_cast<Output*>(getPort("output"));
   if(dataArchiver == 0){
     cout<<"dataArhiver in ICE is null now exiting; "<<endl;
     exit(1);
   }
-
   //__________________________________
   // Find the switches
   ProblemSpecP debug_ps = prob_spec->findBlock("Debug");
@@ -2055,7 +2055,7 @@ void ICE::massExchange(const ProcessorGroup*,
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
         IntVector c = *iter;
         double mass_hmx = rho_CC[react][c] * vol;
-        if (mass_hmx > d_SMALL_NUM)  {
+        if (mass_hmx > d_TINY_RHO)  {
           double burnedMass_tmp  = (rho_CC[react][c] * vol/2.0); 
           burnedMass[react][c]   = -burnedMass_tmp;
           int_eng_comb[react][c] = -burnedMass_tmp
@@ -2492,7 +2492,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
          IntVector c = *iter;
            //  must have a minimum mass
           double mass = rho_CC[c] * vol;
-          double min_mass = d_SMALL_NUM * vol;
+          double min_mass = d_TINY_RHO * vol;
 
           mass_L[c] = std::max( (mass + burnedMass[c] ), min_mass);
 
@@ -2632,6 +2632,10 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
                             (term1 + if_mpm_matl_ignore[m] * delT * term2);
        spec_vol_L[c] =  vol * (sp_vol_CC[c] + spec_vol_source[c]);              
      }
+
+      //  Set Neumann = 0 if symmetric Boundary conditions
+      setBC(spec_vol_L, "set_if_sym_BC",patch, d_sharedState, indx); 
+
       //---- P R I N T   D A T A ------ 
       if (switchDebugLagrangianSpecificVol ) {
         ostringstream desc;
@@ -3061,6 +3065,9 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
        IntVector c = *iter;
        sp_vol_CC[c] = (q_CC[c]*vol + q_advected[c])/vol;
       }
+
+      //  Set Neumann = 0 if symmetric Boundary conditions
+      setBC(sp_vol_CC, "set_if_sym_BC",patch, d_sharedState, indx); 
 
       //---- P R I N T   D A T A ------   
       if (switchDebug_advance_advect ) {
