@@ -40,8 +40,8 @@
 
 #include <SCIRun/Babel/BabelComponentDescription.h>
 #include <SCIRun/Babel/BabelComponentModel.h>
-using namespace SCIRun;
-using namespace std;
+
+namespace SCIRun {
 
 BabelComponentDescription::BabelComponentDescription(BabelComponentModel* model)
   : model(model)
@@ -52,7 +52,7 @@ BabelComponentDescription::~BabelComponentDescription()
 {
 }
 
-string BabelComponentDescription::getType() const
+std::string BabelComponentDescription::getType() const
 {
   return type;
 }
@@ -61,3 +61,5 @@ const ComponentModel* BabelComponentDescription::getModel() const
 {
   return model;
 }
+
+} // end namespace SCIRun

@@ -44,23 +44,41 @@
 #include <SCIRun/ComponentDescription.h>
 
 namespace SCIRun {
-  class BabelComponentModel;
-  class BabelComponentDescription : public ComponentDescription {
-  public:
-    BabelComponentDescription(BabelComponentModel* model);
-    virtual ~BabelComponentDescription();
+class BabelComponentModel;
 
-    virtual std::string getType() const;
-    virtual const ComponentModel* getModel() const;
-  protected:
-    friend class BabelComponentModel;
-    BabelComponentModel* model;
-    std::string type;
+/**
+ * \class BabelComponentDescription
+ *
+ * A refinement of ComponentDescription for the SCIRun Babel component
+ * model. Used as a record of information necessary to find and instantiate a
+ * particular type of Babel component.
+ *
+ * See ComponentDescription for more information.
+ *
+ * \sa ComponentDescription
+ */
+class BabelComponentDescription : public ComponentDescription
+{
+public:
+  BabelComponentDescription(BabelComponentModel* model);
+  virtual ~BabelComponentDescription();
 
-  private:
-    BabelComponentDescription(const BabelComponentDescription&);
-    BabelComponentDescription& operator=(const BabelComponentDescription&);
-  };
+  /** Returns the type name (a string) the component described by this class. */
+  virtual std::string getType() const;
+
+  /** Returns a pointer to the component model under which the component type
+      is defined. */
+  virtual const ComponentModel* getModel() const;
+protected:
+  friend class BabelComponentModel;
+  BabelComponentModel* model;
+  std::string type;
+  
+private:
+  BabelComponentDescription(const BabelComponentDescription&);
+  BabelComponentDescription& operator=(const BabelComponentDescription&);
+};
+
 } //namespace SCIRun
 
 #endif

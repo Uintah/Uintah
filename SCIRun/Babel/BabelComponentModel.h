@@ -48,54 +48,84 @@
 #include <map>
 
 namespace SCIRun {
-  class SCIRunFramework;
-  class BabelComponentDescription;
-  class BabelComponentInstance;
 
-  class BabelComponentModel : public ComponentModel {
-  public:
-    BabelComponentModel(SCIRunFramework* framework);
-    virtual ~BabelComponentModel();
+class SCIRunFramework;
+class BabelComponentDescription;
+class BabelComponentInstance;
 
-    gov::cca::Services createServices(const std::string& instanceName,
-					       const std::string& className,
-					       const gov::cca::TypeMap& properties);
-    virtual bool haveComponent(const std::string& type);
-    virtual ComponentInstance* createInstance(const std::string& name,
-					      const std::string& type);
+/**
+ * \class BabelComponentModel
+ *
+ * A metacomponent model for Babel components.  This class handles the
+ * allocation/deallocation of Babel components and maintains a database of
+ * Babel components registered in the framework.  See ComponentModel for more
+ * information.
+ *
+ * \sa ComponentModel CCAComponentModel InternalComponentModel VtkComponentModel
+ *
+ */
+class BabelComponentModel : public ComponentModel
+{
+public:
+  BabelComponentModel(SCIRunFramework* framework);
+  virtual ~BabelComponentModel();
 
-    virtual std::string createComponent(const std::string& name,
+  /** ? */
+  gov::cca::Services createServices(const std::string& instanceName,
+                                    const std::string& className,
+                                    const gov::cca::TypeMap& properties);
+
+  /** Returns true if component type \em type has been registered with this
+      component model.  In other words, returns true if this ComponentModel
+      knows how to instantiate component \em type. */
+  virtual bool haveComponent(const std::string& type);
+
+  /** Allocates an instance of the component of type \em type.  The parameter
+      \em name is assigned as the unique name of the newly created instance.
+      Returns a smart pointer to the newly created instance, or a null pointer
+      on failure. */
+  virtual ComponentInstance* createInstance(const std::string& name,
+                                            const std::string& type);
+
+  /** ? */
+  virtual std::string createComponent(const std::string& name,
 					 const std::string& type);
-						     
-    virtual bool destroyInstance(ComponentInstance *ci);
-    virtual std::string getName() const;
-    virtual void listAllComponentTypes(std::vector<ComponentDescription*>&,
-				       bool);
 
-    /**
-     * Get/Set the directory path to the XML files describing Babel
-     * components. By default, sidlXMLPath is initialized to the
-     * environment variable SIDL_XML_PATH. This path is expected to
-     * contain all .scl and .cca files for Babel components.
-     */
-    std::string getSidlXMLPath() const
-    { return sidlXMLPath; }
-    void setSidlXMLPath( const std::string& s)
-    { sidlXMLPath = s; }
+ /** Deallocates the component instance \em ci.  Returns \code true on success and
+     \code false on failure. */
+  virtual bool destroyInstance(ComponentInstance *ci);
 
-  private:
-    SCIRunFramework* framework;
-    typedef std::map<std::string, BabelComponentDescription*> componentDB_type;
-    componentDB_type components;
-    std::string sidlXMLPath;
-    
-    void destroyComponentList();
-    void buildComponentList();
-    void readComponentDescription(const std::string& file);
+  /**  Returns the name (as a string) of this component model. */
+  virtual std::string getName() const;
 
-    BabelComponentModel(const BabelComponentModel&);
-    BabelComponentModel& operator=(const BabelComponentModel&);
-  };
+  /** Creates a list of all the available components (as ComponentDescriptions)
+      registered in this ComponentModel. */
+  virtual void listAllComponentTypes(std::vector<ComponentDescription*>&,
+                                     bool);
+
+  /** Get/Set the directory path to the XML files describing Babel
+   * components. By default, sidlXMLPath is initialized to the
+   * environment variable SIDL_XML_PATH. This path is expected to
+   * contain all .scl and .cca files for Babel components.  */
+  std::string getSidlXMLPath() const
+  { return sidlXMLPath; }
+  void setSidlXMLPath( const std::string& s)
+  { sidlXMLPath = s; }
+  
+private:
+  SCIRunFramework* framework;
+  typedef std::map<std::string, BabelComponentDescription*> componentDB_type;
+  componentDB_type components;
+  std::string sidlXMLPath;
+  
+  void destroyComponentList();
+  void buildComponentList();
+  void readComponentDescription(const std::string& file);
+
+  BabelComponentModel(const BabelComponentModel&);
+  BabelComponentModel& operator=(const BabelComponentModel&);
+};
+
 } //namespace SCIRun
 
 #endif

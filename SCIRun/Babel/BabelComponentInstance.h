@@ -51,77 +51,100 @@
 
 namespace SCIRun {
 
-  class BabelCCAGoPort : public virtual sci::cca::ports::GoPort{
+/** \class BabelCCAGoPort
+ *
+ *
+ */
+class BabelCCAGoPort : public virtual sci::cca::ports::GoPort
+{
+public:
+  BabelCCAGoPort(const gov::cca::ports::GoPort &port);
+  virtual int go();
+private:
+  gov::cca::ports::GoPort port;
+};
+
+/** \class BabelCCAUIPort
+ *
+ *
+ */
+class BabelCCAUIPort : public virtual sci::cca::ports::UIPort
+{
+public:
+  BabelCCAUIPort(const gov::cca::ports::UIPort &port);
+  virtual int ui();
+private:
+  gov::cca::ports::UIPort port;
+};
+
+
+class BabelPortInstance;
+class Services;
+
+/** \class BabelComponentInstance
+ *
+ * A handle to an instantiation of a Babel component in the SCIRun framework.  This
+ * class is a container for information necessary to interact with an
+ * instantiation of a framework component such as its unique instance name, its
+ * type, its ports, and the framework to which it belongs.
+ */
+class BabelComponentInstance : public ComponentInstance
+{
+public:
+  BabelComponentInstance(SCIRunFramework* framework,
+                         const std::string& instanceName,
+                         const std::string& className,
+                         const gov::cca::TypeMap& typemap,
+                         const gov::cca::Component& component,
+                         const framework::Services& svc);
+  virtual ~BabelComponentInstance();
+  
+  /** A proxy method for gov::cca::Services.  Calls the corresponding method in
+      SCIRunFramework::Services. */
+  gov::cca::Port getPort(const std::string& name);
+  gov::cca::Port getPortNonblocking(const std::string& name);
+  void releasePort(const std::string& name);
+  gov::cca::TypeMap createTypeMap();
+  void registerUsesPort(const std::string& name, const std::string& type,
+                        const gov::cca::TypeMap& properties);
+  void unregisterUsesPort(const std::string& name);
+  void addProvidesPort(const gov::cca::Port& port,
+                       const std::string& name,
+                       const std::string& type,
+                       const gov::cca::TypeMap& properties);
+  void removeProvidesPort(const std::string& name);
+  gov::cca::TypeMap getPortProperties(const std::string& portName);
+  gov::cca::ComponentID getComponentID();
+  
+  /** ? */
+  virtual PortInstance* getPortInstance(const std::string& name);
+  /** ? */
+  virtual PortInstanceIterator* getPorts();
+private:
+  framework::Services svc;
+  /** ? */
+  class Iterator : public PortInstanceIterator
+  {
+    std::map<std::string, PortInstance*> *ports;
+    std::map<std::string, PortInstance*>::iterator iter;
   public:
-    BabelCCAGoPort(const gov::cca::ports::GoPort &port);
-    virtual int go();
+    Iterator(BabelComponentInstance*);
+    virtual ~Iterator();
+    virtual PortInstance* get();
+    virtual bool done();
+    virtual void next();
   private:
-    gov::cca::ports::GoPort port;
+    Iterator(const Iterator&);
+    Iterator& operator=(const Iterator&);
+    //sci::cca::ComponentID::pointer cid;
   };
+  
+  gov::cca::Component component;
+  BabelComponentInstance(const BabelComponentInstance&);
+  BabelComponentInstance& operator=(const BabelComponentInstance&);
+};
 
-  class BabelCCAUIPort : public virtual sci::cca::ports::UIPort{
-  public:
-    BabelCCAUIPort(const gov::cca::ports::UIPort &port);
-    virtual int ui();
-  private:
-    gov::cca::ports::UIPort port;
-  };
-
-
-  class BabelPortInstance;
-  class Services;
-
-  class BabelComponentInstance : public ComponentInstance{
-  public:
-    BabelComponentInstance(SCIRunFramework* framework,
-			 const std::string& instanceName,
-			 const std::string& className,
-			 const gov::cca::TypeMap& typemap,
-			 const gov::cca::Component& component,
-			 const framework::Services& svc);
-    virtual ~BabelComponentInstance();
-
-    // Methods from gov::cca::Services
-    gov::cca::Port getPort(const std::string& name);
-    gov::cca::Port getPortNonblocking(const std::string& name);
-    void releasePort(const std::string& name);
-    gov::cca::TypeMap createTypeMap();
-    void registerUsesPort(const std::string& name, const std::string& type,
-			  const gov::cca::TypeMap& properties);
-    void unregisterUsesPort(const std::string& name);
-    void addProvidesPort(const gov::cca::Port& port,
-			 const std::string& name,
-			 const std::string& type,
-			 const gov::cca::TypeMap& properties);
-    void removeProvidesPort(const std::string& name);
-    gov::cca::TypeMap getPortProperties(const std::string& portName);
-    gov::cca::ComponentID getComponentID();
-
-    // Methods from ComponentInstance
-    virtual PortInstance* getPortInstance(const std::string& name);
-    virtual PortInstanceIterator* getPorts();
- private:
-    framework::Services svc;
-    class Iterator : public PortInstanceIterator {
-      std::map<std::string, PortInstance*> *ports;
-      std::map<std::string, PortInstance*>::iterator iter;
-    public:
-      Iterator(BabelComponentInstance*);
-      virtual ~Iterator();
-      virtual PortInstance* get();
-      virtual bool done();
-      virtual void next();
-    private:
-      Iterator(const Iterator&);
-      Iterator& operator=(const Iterator&);
-      //sci::cca::ComponentID::pointer cid;
-    };
-
-    gov::cca::Component component;
-    BabelComponentInstance(const BabelComponentInstance&);
-    BabelComponentInstance& operator=(const BabelComponentInstance&);
-  };
-}
+} // end namespace SCIRun
 
 #endif
 

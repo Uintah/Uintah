@@ -54,7 +54,12 @@ class ComponentInstance;
 /**
  * \class ComponentModel
  *
+ * An abstract base class that defines the API for all SCIRun framework meta
+ * component models.  The ComponentModel class performs low-level functions in
+ * the framework such as allocation / deallocation of component instances and
+ * maintains a database of available component types.
  *
+ * \sa CCAComponentModel BabelComponentModel VtkComponentModel InternalComponentModel
  */
 class ComponentModel
 {
@@ -62,24 +67,30 @@ public:
   ComponentModel(const std::string& prefixName);
   virtual ~ComponentModel();
 
-  /** */
+  /** Returns true if component type \em type has been registered with this
+      component model.  In other words, returns true if this ComponentModel
+      knows how to instantiate component \em type. */
   virtual bool haveComponent(const std::string& type) = 0;
 
-  /** */
+  /** Allocates an instance of the component of type \em type.  The parameter
+      \em name is assigned as the unique name of the newly created instance.
+      Returns a smart pointer to the newly created instance, or a null pointer
+      on failure. */
   virtual ComponentInstance* createInstance(const std::string& name,
                                             const std::string& type);
 
-  /** */
+  /** Deallocates the component instance \em ci.  Returns \code true on success and
+      \code false on failure. */
   virtual bool destroyInstance(ComponentInstance* ci)= 0;
 
-  /** */
+  /** Returns the name (as a string) of this component model. */
   virtual std::string getName() const = 0;
 
-  /** */
+  /** Creates a list of all the available components (as ComponentDescriptions)
+      registered in this ComponentModel. */
   virtual void listAllComponentTypes(std::vector<ComponentDescription*>&,
                                      bool) = 0;
 
-  /** */
   std::string prefixName;
 private:
   ComponentModel(const ComponentModel&);

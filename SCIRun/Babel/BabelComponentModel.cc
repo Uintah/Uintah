@@ -73,7 +73,8 @@ extern "C" {
 #endif
 
 #include <iostream>
-using namespace SCIRun;
+
+namespace SCIRun {
 
 BabelComponentModel::BabelComponentModel(SCIRunFramework* framework)
   : ComponentModel("babel"), framework(framework)
@@ -89,7 +90,7 @@ BabelComponentModel::BabelComponentModel(SCIRunFramework* framework)
     {
     this->setSidlXMLPath("../src/CCA/Components/BabelTest/xml");
     }
-
+  
   // Now append the SIDL_XML_PATH to the sidl::Loader search path.  This
   // is the path that sidl::Loader will search for .scl files.  Babel .scl
   // files are necessary for mapping component names with their DLLs.
@@ -98,7 +99,7 @@ BabelComponentModel::BabelComponentModel(SCIRunFramework* framework)
     {// SIDL_XML_PATH is not already in the sidl runtime search path
     sidl::Loader::addSearchPath( this->getSidlXMLPath() );     
     }
-
+  
   buildComponentList();
 }
 
@@ -455,3 +456,5 @@ std::string BabelComponentModel::createComponent(const std::string& name,
   */
   return ""; 
 }
+
+} // end namespace SCIRun
