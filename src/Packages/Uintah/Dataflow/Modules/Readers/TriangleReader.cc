@@ -120,6 +120,8 @@ TriangleReader::Read(istream& is, ColorMapHandle cmh, GeomGroup *tris)
       cmh->Scale(min,max);
     }   
 
+    cmh->Scale(0.0, 1.0);
+
     is >> nTriangles;
     int p0,p1,p2;
     GeomTriangles *tri = new GeomTriangles();
@@ -243,6 +245,9 @@ void TriangleReader::doAnimation( ColorMapHandle cmh )
 
 //
 // $Log$
+// Revision 1.8  1999/12/09 22:03:31  kuzimmer
+// hardcoded colormap scaling for now.
+//
 // Revision 1.7  1999/10/07 22:42:38  kuzimmer
 // fixed error in animation
 //
