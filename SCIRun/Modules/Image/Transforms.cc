@@ -8,24 +8,27 @@
  *    July 1998
  */
 
-#include <Containers/Array1.h>
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <Datatypes/GeometryPort.h>
-#include <Datatypes/ScalarFieldPort.h>
-#include <Datatypes/ScalarFieldRG.h>
-#include <Geom/GeomGrid.h>
-#include <Geom/GeomGroup.h>
-#include <Geom/GeomLine.h>
-#include <Geom/Material.h>
-#include <Geometry/Point.h>
-#include <Math/MinMax.h>
-#include <Math/MiscMath.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLvar.h>
-#include <Multitask/Task.h>
-#include <Containers/Array3.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/Datatypes/GeometryPort.h>
+#include <PSECore/Datatypes/ScalarFieldPort.h>
+#include <SCICore/Datatypes/ScalarFieldRG.h>
+#include <SCICore/Geom/GeomGrid.h>
+#include <SCICore/Geom/GeomGroup.h>
+#include <SCICore/Geom/GeomLine.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Math/MinMax.h>
+#include <SCICore/Math/MiscMath.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/Containers/Array3.h>
+#include <SCICore/Thread/Parallel.h>
+#include <SCICore/Thread/Thread.h>
 #include <math.h>
+
+using namespace SCICore::Thread;
 
 namespace SCIRun {
 namespace Modules {
@@ -34,8 +37,8 @@ using namespace PSECore::Dataflow;
 using namespace PSECore::Datatypes;
 
 using namespace SCICore::TclInterface;
-using namespace SCICore::Multitask;
 using namespace SCICore::Math;
+using namespace SCICore::Containers;
 
 class Transforms : public Module {
    ScalarFieldIPort *inscalarfield;
@@ -63,20 +66,16 @@ class Transforms : public Module {
    
 public:
    Transforms(const clString& id);
-   Transforms(const Transforms&, int deep);
    virtual ~Transforms();
-   virtual Module* clone(int deep);
    virtual void execute();
    void do_parallel(int proc);
    void do_clip(int proc);   
 };
 
-extern "C" {
   Module* make_Transforms(const clString& id)
     {
       return scinew Transforms(id);
     }
-}
 
 static clString module_name("Transforms");
 static clString widget_name("Transforms Widget");
@@ -104,22 +103,8 @@ Transforms::Transforms(const clString& id)
     snaxels=0;
 }
 
-Transforms::Transforms(const Transforms& copy, int deep)
-: Module(copy, deep),
-  coef("coef", id, this), mode("mode", id, this), perr("perr", id, this),
-  spread("spread", id, this), inverse("inverse", id, this),
-  transmode("trans", id, this)
-{
-   NOT_FINISHED("Transforms::Transforms");
-}
-
 Transforms::~Transforms()
 {
-}
-
-Module* Transforms::clone(int deep)
-{
-   return scinew Transforms(*this, deep);
 }
 
 void Transforms::do_parallel(int proc)
@@ -134,13 +119,6 @@ void Transforms::do_parallel(int proc)
     }
 }
 
-static void do_parallel_stuff(void* obj,int proc)
-{
-  Transforms* img = (Transforms*) obj;
-
-  img->do_parallel(proc);
-}
-
 void Transforms::do_clip(int proc)
 {
   int start = (newgrid->grid.dim1())*proc/np;
@@ -152,13 +130,6 @@ void Transforms::do_clip(int proc)
 	clip(y,x)=result(y,x); else
 	  clip(y,x)=0;
     }
-}
-
-static void clip_starter(void* obj,int proc)
-{
-  Transforms* img = (Transforms*) obj;
-
-  img->do_clip(proc);
 }
 
 double pow(double x,double y) {
@@ -179,7 +150,7 @@ void Transforms::haar()
   coef[0]=1;
   for (x=2; x<=nx; x++) 
     coef[x-1]=sqrt(pow(2,x-2));
-  double iter = log10(nx)/log10(2);
+  double iter = log10((double)nx)/log10((double)2);
   for (x=1; x<=iter; x++) {
     int subiter = pow(2,x-1);
     int len = nx/subiter;
@@ -194,7 +165,7 @@ void Transforms::haar()
   }
   for (x=0;x<nx;x++)
     for (y=0;y<nx;y++)
-      trans(x,y)/=sqrt(nx);
+      trans(x,y)/=sqrt((double)nx);
 }
 
 int Transforms::nonzero() {
@@ -238,7 +209,7 @@ void Transforms::execute()
     }
     
     double coeft = coef.get();
-    double perrt = perr.get();
+    //double perrt = perr.get();
     double spreadt = spread.get();
     int inverset = inverse.get();
     
@@ -249,8 +220,8 @@ void Transforms::execute()
     ny=rg->grid.dim2();
     nz=rg->grid.dim3();
 
-    if (((log(nx)/log(2))-floor(log(nx)/log(2))) ||
-	((log(nx)/log(2))-floor(log(nx)/log(2)))) { 
+    if (((log((double)nx)/log(2.))-floor(log((double)nx)/log(2.))) ||
+	((log((double)nx)/log(2.))-floor(log((double)nx)/log(2.)))) { 
       cerr << "Image to be transformed must powers of two in width&height..\n";
       return;
     }
@@ -292,7 +263,7 @@ void Transforms::execute()
      
     //Do the matrix multiplication
     
-    np = Task::nprocessors();
+    np = Thread::numProcessors();
 
     a = trans;
     b.newsize(nx,nx);
@@ -304,7 +275,8 @@ void Transforms::execute()
 	  result(y,x)=0;
       }
     
-    Task::multiprocess(np, do_parallel_stuff, this);
+    Thread::parallel(Parallel<Transforms>(this, &Transforms::do_parallel),
+		     np, true);
     
     for (x=0; x<nx; x++)
       for (int y=0; y<nx; y++) {
@@ -312,7 +284,8 @@ void Transforms::execute()
 	  result(y,x)=0;
       }
     b = trans;
-    Task::multiprocess(np, do_parallel_stuff, this); 
+    Thread::parallel(Parallel<Transforms>(this, &Transforms::do_parallel),
+		     np, true);
 
     if (!inverset) {
     
@@ -335,7 +308,8 @@ void Transforms::execute()
 	mid = (first+last)/2;
 	
 	clipval = mid;  cerr << "clipval : " << clipval << "\n";
-	Task::multiprocess(np, clip_starter, this);
+	Thread::parallel(Parallel<Transforms>(this, &Transforms::do_clip),
+			 np, true);
 	
 	nz = nonzero();
 	if (nz==oldnz) break;
@@ -364,6 +338,9 @@ void Transforms::execute()
 
 //
 // $Log$
+// Revision 1.4  1999/08/31 08:55:35  sparker
+// Bring SCIRun modules up to speed
+//
 // Revision 1.3  1999/08/25 03:48:59  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

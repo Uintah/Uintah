@@ -8,24 +8,27 @@
  *    August 1997
  */
 
-#include <Containers/Array1.h>
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <Datatypes/GeometryPort.h>
-#include <Datatypes/ScalarFieldPort.h>
-#include <Datatypes/ScalarFieldRG.h>
-#include <Datatypes/ScalarFieldRGchar.h>
-#include <Datatypes/ColorMapPort.h>
-#include <Geom/GeomGrid.h>
-#include <Geom/GeomGroup.h>
-#include <Geom/GeomLine.h>
-#include <Geom/Material.h>
-#include <Geometry/Point.h>
-#include <Math/MinMax.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLvar.h>
-#include <Multitask/Task.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/Datatypes/GeometryPort.h>
+#include <PSECore/Datatypes/ScalarFieldPort.h>
+#include <SCICore/Datatypes/ScalarFieldRG.h>
+#include <SCICore/Datatypes/ScalarFieldRGchar.h>
+#include <PSECore/Datatypes/ColorMapPort.h>
+#include <SCICore/Geom/GeomGrid.h>
+#include <SCICore/Geom/GeomGroup.h>
+#include <SCICore/Geom/GeomLine.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Math/MinMax.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/Thread/Parallel.h>
+#include <SCICore/Thread/Thread.h>
 #include <math.h>
+
+using namespace SCICore::Thread;
 
 namespace SCIRun {
 namespace Modules {
@@ -37,7 +40,6 @@ using namespace SCICore::TclInterface;
 using namespace SCICore::Containers;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Math;
-using namespace SCICore::Multitask;
 
 class Edge : public Module {
    ScalarFieldIPort *inscalarfield;
@@ -68,9 +70,7 @@ class Edge : public Module {
   
 public:
    Edge(const clString& id);
-   Edge(const Edge&, int deep);
    virtual ~Edge();
-   virtual Module* clone(int deep);
    virtual void execute();
 
    void tcl_command( TCLArgs&, void *);
@@ -80,11 +80,9 @@ public:
    void do_canny_link(int proc);
 };
 
-extern "C" {
 Module* make_Edge(const clString& id)
 {
    return scinew Edge(id);
-}
 }
 
 //static clString module_name("Edge");
@@ -124,21 +122,9 @@ Edge::Edge(const clString& id)
     gen=genblur=99;  // ?
 }
 
-Edge::Edge(const Edge& copy, int deep)
-: Module(copy, deep), funcname("funcname",id,this), t1("t1", id, this)
-{
-   NOT_FINISHED("Edge::Edge");
-}
-
 Edge::~Edge()
 {
 }
-
-Module* Edge::clone(int deep)
-{
-   return scinew Edge(*this, deep);
-}
-
 
 double sector(double theta)  // return sector of orientation.. (Gradient dir)
 {
@@ -317,27 +303,6 @@ void Edge::do_canny_link(int proc)
     }
 }
 
-static void do_parallel_stuff(void* obj,int proc)
-{
-  Edge* img = (Edge*) obj;
-
-  img->do_parallel(proc);
-}
-
-static void do_canny_stuff(void* obj,int proc)
-{
-  Edge* img = (Edge*) obj;
-
-  img->do_canny(proc);
-}
-
-static void do_canny_link_stuff(void* obj,int proc)
-{
-  Edge *img = (Edge*) obj;
-
-  img->do_canny_link(proc);
-}
-
 void Edge::execute()
 {
     // get the scalar field...if you can
@@ -460,15 +425,18 @@ void Edge::execute()
       }
     }
     
-    np = Task::nprocessors();
+    np = Thread::numProcessors();
 
     np = 1;
     
-    Task::multiprocess(np, do_parallel_stuff, this);
+    Thread::parallel(Parallel<Edge>(this, &Edge::do_parallel),
+		     np, true);
 
     if (ty==5) {  // Run the extra canny stuff
-      Task::multiprocess(np, do_canny_stuff, this);
-      Task::multiprocess(np, do_canny_link_stuff, this);
+	Thread::parallel(Parallel<Edge>(this, &Edge::do_canny),
+			 np, true);
+	Thread::parallel(Parallel<Edge>(this, &Edge::do_canny_link),
+			 np, true);
     }
       
     outscalarfield->send( newgrid );
@@ -493,6 +461,9 @@ void Edge::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.4  1999/08/31 08:55:31  sparker
+// Bring SCIRun modules up to speed
+//
 // Revision 1.3  1999/08/25 03:48:54  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

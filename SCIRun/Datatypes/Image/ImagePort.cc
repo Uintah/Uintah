@@ -12,22 +12,20 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Datatypes/Image/ImagePort.h>
+#include <SCIRun/Datatypes/Image/ImagePort.h>
 
-//namespace SCIRun {
-//namespace Datatypes {
+using namespace PSECore::Datatypes;
+using namespace SCICore::Datatypes;
 
-using namespace SCICore::Containers;
-using namespace SCIRun::Datatypes;
+template<> clString SimpleIPort<ImageHandle>::port_type("Image");
+template<> clString SimpleIPort<ImageHandle>::port_color("misty rose");
 
-clString SimpleIPort<ImageHandle>::port_type("Image");
-clString SimpleIPort<ImageHandle>::port_color("misty rose");
-
-//} // End namespace Datatypes
-//} // End namespace SCIRun
 
 //
 // $Log$
+// Revision 1.2  1999/08/31 08:55:29  sparker
+// Bring SCIRun modules up to speed
+//
 // Revision 1.1  1999/07/27 16:58:46  mcq
 // Initial commit
 //

@@ -8,22 +8,21 @@
  *    October 1997
  */
 
-#include <Containers/Array1.h>
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <Datatypes/GeometryPort.h>
-#include <Datatypes/ScalarFieldPort.h>
-#include <Datatypes/ScalarFieldRG.h>
-#include <Datatypes/ColorMapPort.h>
-#include <Geom/GeomGrid.h>
-#include <Geom/GeomGroup.h>
-#include <Geom/GeomLine.h>
-#include <Geom/Material.h>
-#include <Geometry/Point.h>
-#include <Math/MinMax.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLvar.h>
-#include <Multitask/Task.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/Datatypes/GeometryPort.h>
+#include <PSECore/Datatypes/ScalarFieldPort.h>
+#include <SCICore/Datatypes/ScalarFieldRG.h>
+#include <PSECore/Datatypes/ColorMapPort.h>
+#include <SCICore/Geom/GeomGrid.h>
+#include <SCICore/Geom/GeomGroup.h>
+#include <SCICore/Geom/GeomLine.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Math/MinMax.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLvar.h>
 #include <math.h>
 
 namespace SCIRun {
@@ -51,9 +50,7 @@ class Hist : public Module {
   
 public:
    Hist(const clString& id);
-   Hist(const Hist&, int deep);
    virtual ~Hist();
-   virtual Module* clone(int deep);
    virtual void execute();
 
 //   void tcl_command( TCLArgs&, void *);
@@ -62,11 +59,9 @@ public:
 
 };
 
-extern "C" {
 Module* make_Hist(const clString& id)
 {
    return scinew Hist(id);
-}
 }
 
 //static clString module_name("Hist");
@@ -89,20 +84,8 @@ Hist::Hist(const clString& id)
     newgrid=new ScalarFieldRG;
 }
 
-Hist::Hist(const Hist& copy, int deep)
-: Module(copy, deep), includeval("include",id,this),
-  numbinsval("numbins",id,this)
-{
-   NOT_FINISHED("Hist::Hist");
-}
-
 Hist::~Hist()
 {
-}
-
-Module* Hist::clone(int deep)
-{
-   return scinew Hist(*this, deep);
 }
 
 void Hist::do_hist(int proc)    
@@ -116,13 +99,6 @@ void Hist::do_hist(int proc)
 	newgrid->grid(0,rg->grid(y,x,0),0)++;
     }
   }
-}
-
-static void start_hist(void* obj,int proc)
-{
-  Hist* img = (Hist*) obj;
-
-  img->do_hist(proc);
 }
 
 void Hist::execute()
@@ -162,7 +138,7 @@ void Hist::execute()
     for (int i=0; i<numbins; i++)
       newgrid->grid(0,i,0)=0;
 
-    float bindiv = (max/numbins);
+    //    float bindiv = (max/numbins);
 
     for (int x=0; x<rg->grid.dim1(); x++)
       for (int y=0; y<rg->grid.dim2(); y++)
@@ -190,6 +166,9 @@ void Hist::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.4  1999/08/31 08:55:32  sparker
+// Bring SCIRun modules up to speed
+//
 // Revision 1.3  1999/08/25 03:48:55  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

@@ -8,25 +8,28 @@
  *    June 1998
  */
 
-#include <Containers/Array1.h>
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <Datatypes/GeometryPort.h>
-#include <Datatypes/ScalarFieldPort.h>
-#include <Datatypes/ScalarFieldRG.h>
-#include <Datatypes/ColorMapPort.h>
-#include <Geom/GeomGrid.h>
-#include <Geom/GeomGroup.h>
-#include <Geom/GeomLine.h>
-#include <Geom/Material.h>
-#include <Geometry/Point.h>
-#include <Math/MinMax.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLvar.h>
-#include <Multitask/Task.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/Datatypes/GeometryPort.h>
+#include <PSECore/Datatypes/ScalarFieldPort.h>
+#include <SCICore/Datatypes/ScalarFieldRG.h>
+#include <PSECore/Datatypes/ColorMapPort.h>
+#include <SCICore/Geom/GeomGrid.h>
+#include <SCICore/Geom/GeomGroup.h>
+#include <SCICore/Geom/GeomLine.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Math/MinMax.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/Thread/Parallel.h>
+#include <SCICore/Thread/Thread.h>
 
 #include <math.h>
 #include <stdlib.h>
+
+using namespace SCICore::Thread;
 
 namespace SCIRun {
 namespace Modules {
@@ -35,7 +38,6 @@ using namespace PSECore::Dataflow;
 using namespace PSECore::Datatypes;
 
 using namespace SCICore::TclInterface;
-using namespace SCICore::Multitask;
 
 class HistEq : public Module {
    ScalarFieldIPort *inscalarfield;
@@ -53,9 +55,7 @@ class HistEq : public Module {
   
 public:
    HistEq(const clString& id);
-   HistEq(const HistEq&, int deep);
    virtual ~HistEq();
-   virtual Module* clone(int deep);
    virtual void execute();
 
 //   void tcl_command( TCLArgs&, void *);
@@ -64,12 +64,10 @@ public:
 
 };
 
-extern "C" {
   Module* make_HistEq(const clString& id)
     {
       return scinew HistEq(id);
     }
-}
 
 static clString module_name("HistEq");
 
@@ -92,21 +90,8 @@ HistEq::HistEq(const clString& id)
     newgrid=new ScalarFieldRG;
 }
 
-HistEq::HistEq(const HistEq& copy, int deep)
-: Module(copy, deep),
-  bins("bins",id,this),clip("clip",id,this),conx("conx",id,this),
-  cony("cony",id,this)
-{
-   NOT_FINISHED("HistEq::HistEq");
-}
-
 HistEq::~HistEq()
 {
-}
-
-Module* HistEq::clone(int deep)
-{
-   return scinew HistEq(*this, deep);
 }
 
 void HistEq::do_HistEq(int proc)    
@@ -120,13 +105,6 @@ void HistEq::do_HistEq(int proc)
 	newgrid->grid(0,rg->grid(y,x,0),0)++;
     }
   }
-}
-
-static void start_HistEq(void* obj,int proc)
-{
-  HistEq* img = (HistEq*) obj;
-
-  img->do_HistEq(proc);
 }
 
 typedef unsigned char kz_pixel_t;
@@ -216,11 +194,11 @@ void MapHistogram (unsigned long* pulHistogram, kz_pixel_t Min, kz_pixel_t Max,
  */
 {
     unsigned int i;  unsigned long ulSum = 0;
-    const float fScale = ((float)(Max - Min)) / ulNrOfPixels;
+    const float fScale = ((float)(Max - Min)) / (float)ulNrOfPixels;
     const unsigned long ulMin = (unsigned long) Min;
 
     for (i = 0; i < uiNrGreylevels; i++) {
-	ulSum += pulHistogram[i]; pulHistogram[i]=(unsigned long)(ulMin+ulSum*fScale);
+	ulSum += pulHistogram[i]; pulHistogram[i]=(unsigned long)(ulMin+(float)ulSum*fScale);
 	if (pulHistogram[i] > Max) pulHistogram[i] = Max;
     }
 }
@@ -420,7 +398,7 @@ void HistEq::execute()
 
     
     
-    np = Task::nprocessors();    
+    np = Thread::numProcessors();    
   
     cerr << "min/max : " << min << " " << max << "\n";
     
@@ -455,6 +433,9 @@ void HistEq::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.4  1999/08/31 08:55:32  sparker
+// Bring SCIRun modules up to speed
+//
 // Revision 1.3  1999/08/25 03:48:55  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

@@ -8,14 +8,14 @@
  *    July 1997
  */
 
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <Datatypes/ScalarFieldPort.h>
-#include <Datatypes/ScalarField.h>
-#include <Datatypes/ScalarFieldRG.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLTask.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/Datatypes/ScalarFieldPort.h>
+#include <SCICore/Datatypes/ScalarField.h>
+#include <SCICore/Datatypes/ScalarFieldRG.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLTask.h>
+#include <SCICore/TclInterface/TCLvar.h>
 #include <math.h>
 
 namespace SCIRun {
@@ -36,9 +36,7 @@ class ImageGen : public Module {
   
 public:
     ImageGen(const clString& id);
-    ImageGen(const ImageGen&, int deep=0);
     virtual ~ImageGen();
-    virtual Module* clone(int deep);
     virtual void execute();
     void tcl_command( TCLArgs&, void *);
 };
@@ -47,11 +45,9 @@ inline double abs(double i) { return i < 0 ? -i: i; }
 inline double max(double i, double j) { return i > j ? i : j; }
 #define pi M_PI
 
-extern "C" {
 Module* make_ImageGen(const clString& id)
 {
     return scinew ImageGen(id);
-}
 }
 
 ImageGen::ImageGen(const clString& id)
@@ -65,24 +61,9 @@ ImageGen::ImageGen(const clString& id)
     width=height=512;
 }
 
-ImageGen::ImageGen(const ImageGen& copy, int deep)
-: Module(copy, deep),
-  period("period", id, this), amp("amp", id, this),
-  horizontal("horizontal", id, this), vertical("vertical", id, this)
-{
-    NOT_FINISHED("ImageGen::ImageGen");
-}
-
 ImageGen::~ImageGen()
 {
 }
-
-Module* ImageGen::clone(int deep)
-{
-    return scinew ImageGen(*this, deep);
-}
-
-
 
 void ImageGen::execute()
 {
@@ -139,6 +120,9 @@ void ImageGen::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.4  1999/08/31 08:55:33  sparker
+// Bring SCIRun modules up to speed
+//
 // Revision 1.3  1999/08/25 03:48:56  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

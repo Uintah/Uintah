@@ -2,7 +2,7 @@ SRCTOP   = @top_srcdir@
 SRCDIR   = @srcdir@
 OBJTOP   = ../../..
 
-SRCS     = 
+SRCS     = TiffWriter.cc
 
 INCLUDES = -I$(OBJTOP)
 

@@ -8,23 +8,26 @@
  *    November 1997
  */
 
-#include <Containers/Array1.h>
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <Datatypes/GeometryPort.h>
-#include <Datatypes/ScalarFieldPort.h>
-#include <Datatypes/ScalarFieldRG.h>
-#include <Datatypes/ColorMapPort.h>
-#include <Geom/GeomGrid.h>
-#include <Geom/GeomGroup.h>
-#include <Geom/GeomLine.h>
-#include <Geom/Material.h>
-#include <Geometry/Point.h>
-#include <Math/MinMax.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLvar.h>
-#include <Multitask/Task.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/Datatypes/GeometryPort.h>
+#include <PSECore/Datatypes/ScalarFieldPort.h>
+#include <SCICore/Datatypes/ScalarFieldRG.h>
+#include <PSECore/Datatypes/ColorMapPort.h>
+#include <SCICore/Geom/GeomGrid.h>
+#include <SCICore/Geom/GeomGroup.h>
+#include <SCICore/Geom/GeomLine.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Math/MinMax.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/Thread/Parallel.h>
+#include <SCICore/Thread/Thread.h>
 #include <math.h>
+
+using namespace SCICore::Thread;
 
 namespace SCIRun {
 namespace Modules {
@@ -36,7 +39,6 @@ using namespace SCICore::TclInterface;
 using namespace SCICore::Containers;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Math;
-using namespace SCICore::Multitask;
 
 class Binop : public Module {
   ScalarFieldIPort *inscalarfield;
@@ -55,9 +57,7 @@ class Binop : public Module {
   
 public:
   Binop(const clString& id);
-  Binop(const Binop&, int deep);
   virtual ~Binop();
-  virtual Module* clone(int deep);
   virtual void execute();
   
   void tcl_command( TCLArgs&, void *);
@@ -65,11 +65,9 @@ public:
   void do_op(int proc);
 };
 
-extern "C" {
 Module* make_Binop(const clString& id)
 {
    return scinew Binop(id);
-}
 }
 
 //static clString module_name("Binop");
@@ -95,19 +93,8 @@ Binop::Binop(const clString& id)
     mode=0;
 }
 
-Binop::Binop(const Binop& copy, int deep)
-: Module(copy, deep),  funcname("funcname",id,this)
-{
-   NOT_FINISHED("Binop::Binop");
-}
-
 Binop::~Binop()
 {
-}
-
-Module* Binop::clone(int deep)
-{
-   return scinew Binop(*this, deep);
 }
 
 void Binop::do_op(int proc)    // Do the operation.. paralell
@@ -151,13 +138,6 @@ void Binop::do_op(int proc)    // Do the operation.. paralell
     }
 }
 
-static void start_op(void* obj,int proc)
-{
-  Binop* img = (Binop*) obj;
-
-  img->do_op(proc);
-}
-
 void Binop::execute()
 {
     // get the scalar field...if you can
@@ -188,7 +168,7 @@ void Binop::execute()
     
     newgrid->resize(a->grid.dim1(),a->grid.dim2(),a->grid.dim3());
 
-    np = Task::nprocessors();    
+    np = Thread::numProcessors();    
 
     // see which radio button is pressed..
     
@@ -207,7 +187,8 @@ void Binop::execute()
 
     cout << "Mode: " << mode << "\n";
     
-    Task::multiprocess(np, start_op, this);
+    Thread::parallel(Parallel<Binop>(this, &Binop::do_op),
+		     np, true);
 
     outscalarfield->send( newgrid );
 }
@@ -223,6 +204,9 @@ void Binop::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.4  1999/08/31 08:55:31  sparker
+// Bring SCIRun modules up to speed
+//
 // Revision 1.3  1999/08/25 03:48:54  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

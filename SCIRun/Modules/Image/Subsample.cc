@@ -6,23 +6,26 @@
  *  Written by:
  */
 
-#include <Containers/Array1.h>
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <Datatypes/GeometryPort.h>
-#include <Datatypes/ScalarFieldPort.h>
-#include <Datatypes/ScalarFieldRG.h>
-#include <Datatypes/ColorMapPort.h>
-#include <Geom/GeomGrid.h>
-#include <Geom/GeomGroup.h>
-#include <Geom/GeomLine.h>
-#include <Geom/Material.h>
-#include <Geometry/Point.h>
-#include <Math/MinMax.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLvar.h>
-#include <Multitask/Task.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/Datatypes/GeometryPort.h>
+#include <PSECore/Datatypes/ScalarFieldPort.h>
+#include <SCICore/Datatypes/ScalarFieldRG.h>
+#include <PSECore/Datatypes/ColorMapPort.h>
+#include <SCICore/Geom/GeomGrid.h>
+#include <SCICore/Geom/GeomGroup.h>
+#include <SCICore/Geom/GeomLine.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Math/MinMax.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/Thread/Parallel.h>
+#include <SCICore/Thread/Thread.h>
 #include <math.h>
+
+using namespace SCICore::Thread;
 
 namespace SCIRun {
 namespace Modules {
@@ -31,7 +34,6 @@ using namespace PSECore::Dataflow;
 using namespace PSECore::Datatypes;
 
 using namespace SCICore::TclInterface;
-using namespace SCICore::Multitask;
 
 #define support (2.0)  // Filter Width
 
@@ -69,9 +71,7 @@ class Subsample : public Module {
   
 public:
    Subsample(const clString& id);
-   Subsample(const Subsample&, int deep);
    virtual ~Subsample();
-   virtual Module* clone(int deep);
    virtual void execute();
 
    void tcl_command( TCLArgs&, void *);
@@ -86,11 +86,9 @@ public:
   
 };
 
-extern "C" {
 Module* make_Subsample(const clString& id)
 {
    return scinew Subsample(id);
-}
 }
 
 //static clString module_name("Subsample");
@@ -113,21 +111,9 @@ Subsample::Subsample(const clString& id)
     mode=2;
 }
 
-Subsample::Subsample(const Subsample& copy, int deep)
-: Module(copy, deep),  funcname("funcname",id,this)
-{
-   NOT_FINISHED("Subsample::Subsample");
-}
-
 Subsample::~Subsample()
 {
 }
-
-Module* Subsample::clone(int deep)
-{
-   return scinew Subsample(*this, deep);
-}
-
 
 double Mitchell(double x)
 {
@@ -209,27 +195,6 @@ void Subsample::do_fast(int proc)    // No filtering, but fast
 	newgrid->grid(y,x,z) = rg->grid(sy,sx,z);
       }
     }
-}
-
-static void start_fast(void* obj,int proc)
-{
-  Subsample* img = (Subsample*) obj;
-
-  img->do_fast(proc);
-}
-
-static void start_mitchell_row(void* obj,int proc)
-{
-  Subsample* img = (Subsample*) obj;
-  
-  img->do_mitchell_row(proc);
-}
-
-static void start_mitchell_col(void* obj,int proc)
-{
-  Subsample* img = (Subsample*) obj;
-  
-  img->do_mitchell_col(proc);
 }
 
 void Subsample::compute_hcontribs()
@@ -370,7 +335,7 @@ void Subsample::execute()
     cerr << "Scale Factors   : " << scalex << " " << scaley << "\n";
     newgrid->resize(newy,newx,rg->grid.dim3());
 
-    np = Task::nprocessors();    
+    np = Thread::numProcessors();    
 
     clString ft(funcname.get());
 
@@ -384,14 +349,17 @@ void Subsample::execute()
       tmp->resize(rg->grid.dim1(),newx,rg->grid.dim3());
     
       compute_hcontribs();  // Horizontal contributions
-      Task::multiprocess(np, start_mitchell_row, this);
+      Thread::parallel(Parallel<Subsample>(this, &Subsample::do_mitchell_row),
+		       np, true);
       
       compute_vcontribs();
-      Task::multiprocess(np, start_mitchell_col, this);
+      Thread::parallel(Parallel<Subsample>(this, &Subsample::do_mitchell_col),
+		       np, true);
     }
 
     if (ft=="Fast") {
-      Task::multiprocess(np, start_fast, this);
+      Thread::parallel(Parallel<Subsample>(this, &Subsample::do_fast),
+		       np, true);
     }
 
     outscalarfield->send( newgrid );
@@ -419,6 +387,9 @@ void Subsample::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.4  1999/08/31 08:55:35  sparker
+// Bring SCIRun modules up to speed
+//
 // Revision 1.3  1999/08/25 03:48:58  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

@@ -2,7 +2,7 @@ SRCTOP  = @top_srcdir@
 SRCDIR  = @srcdir@
 OBJTOP  = ../..
 
-SUBDIRS = Image Writers
+SUBDIRS = Image
 
 include $(SRCTOP)/scripts/recurse.mk
 

@@ -2,13 +2,19 @@ SRCTOP   = @top_srcdir@
 SRCDIR   = @srcdir@
 OBJTOP   = ../../..
 
+TCL_INCLUDE_DIR  = @TCL_INCLUDE_DIR@
+TK_INCLUDE_DIR   = @TK_INCLUDE_DIR@
+ITCL_INCLUDE_DIR = @ITCL_INCLUDE_DIR@
+
 SRCS     = Binop.cc Edge.cc FFT.cc FFTImage.cc FilterImage.cc Gauss.cc \
 	   Hist.cc HistEq.cc IFFT.cc IFFTImage.cc ImageConvolve.cc \
 	   ImageGen.cc ImageSel.cc ImageToGeom.cc Noise.cc \
 	   PMFilterImage.cc Radon.cc Segment.cc Sharpen.cc Snakes.cc \
-	   Subsample.cc Ted.cc Threshold.cc TiffReader.cc Transforms.cc \
+	   Subsample.cc Ted.cc Threshold.cc Transforms.cc \
 	   Turk.cc Unop.cc ViewHist.cc WhiteNoiseImage.cc
 
-INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
+INCLUDES = -I$(SRCTOP) -I$(OBJTOP) \
+           -I$(TCL_INCLUDE_DIR) -I$(TK_INCLUDE_DIR) -I$(ITCL_INCLUDE_DIR)
+
 
 include $(SRCTOP)/scripts/objs.mk

@@ -8,23 +8,26 @@
  *    October 1997
  */
 
-#include <Containers/Array1.h>
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <Datatypes/GeometryPort.h>
-#include <Datatypes/ScalarFieldPort.h>
-#include <Datatypes/ScalarFieldRG.h>
-#include <Datatypes/ColorMapPort.h>
-#include <Geom/GeomGrid.h>
-#include <Geom/GeomGroup.h>
-#include <Geom/GeomLine.h>
-#include <Geom/Material.h>
-#include <Geometry/Point.h>
-#include <Math/MinMax.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLvar.h>
-#include <Multitask/Task.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/Datatypes/GeometryPort.h>
+#include <PSECore/Datatypes/ScalarFieldPort.h>
+#include <SCICore/Datatypes/ScalarFieldRG.h>
+#include <PSECore/Datatypes/ColorMapPort.h>
+#include <SCICore/Geom/GeomGrid.h>
+#include <SCICore/Geom/GeomGroup.h>
+#include <SCICore/Geom/GeomLine.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Math/MinMax.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/Thread/Parallel.h>
+#include <SCICore/Thread/Thread.h>
 #include <math.h>
+
+using namespace SCICore::Thread;
 
 namespace SCIRun {
 namespace Modules {
@@ -33,7 +36,6 @@ using namespace PSECore::Dataflow;
 using namespace PSECore::Datatypes;
 
 using namespace SCICore::TclInterface;
-using namespace SCICore::Multitask;
 using namespace SCICore::Math;
 
 class ViewHist : public Module {
@@ -51,9 +53,7 @@ class ViewHist : public Module {
   
 public:
    ViewHist(const clString& id);
-   ViewHist(const ViewHist&, int deep);
    virtual ~ViewHist();
-   virtual Module* clone(int deep);
    virtual void execute();
 
 //   void tcl_command( TCLArgs&, void *);
@@ -62,11 +62,9 @@ public:
 
 };
 
-extern "C" {
 Module* make_ViewHist(const clString& id)
 {
    return scinew ViewHist(id);
-}
 }
 
 //static clString module_name("ViewHist");
@@ -88,19 +86,8 @@ ViewHist::ViewHist(const clString& id)
     newgrid=new ScalarFieldRG;
 }
 
-ViewHist::ViewHist(const ViewHist& copy, int deep)
-: Module(copy, deep)
-{
-   NOT_FINISHED("ViewHist::ViewHist");
-}
-
 ViewHist::~ViewHist()
 {
-}
-
-Module* ViewHist::clone(int deep)
-{
-   return scinew ViewHist(*this, deep);
 }
 
 void ViewHist::do_ViewHist(int proc)    
@@ -116,13 +103,6 @@ void ViewHist::do_ViewHist(int proc)
       newgrid->grid(y,x,0)=255;
     }
   }
-}
-
-static void start_ViewHist(void* obj,int proc)
-{
-  ViewHist* img = (ViewHist*) obj;
-
-  img->do_ViewHist(proc);
 }
 
 void ViewHist::execute()
@@ -154,9 +134,10 @@ void ViewHist::execute()
     
     newgrid->resize(500,rg->grid.dim2(),1);
 
-    np = Task::nprocessors();    
+    np = Thread::numProcessors();    
       
-    Task::multiprocess(np, start_ViewHist, this);
+    Thread::parallel(Parallel<ViewHist>(this, &ViewHist::do_ViewHist),
+		     np, true);
 
     outscalarfield->send( newgrid );
 }
@@ -173,6 +154,9 @@ void ViewHist::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.4  1999/08/31 08:55:36  sparker
+// Bring SCIRun modules up to speed
+//
 // Revision 1.3  1999/08/25 03:49:00  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes
