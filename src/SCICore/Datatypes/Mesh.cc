@@ -482,7 +482,7 @@ void Mesh::compute_neighbors()
 
 int Mesh::inside(const Point& p, Element* elem)
 {
-    cerr << "inside called...\n";
+    //    cerr << "inside called...\n";
 #ifndef STORE_ELEMENT_BASIS
     Point p1(nodes[elem->n[0]]->p);
     Point p2(nodes[elem->n[1]]->p);
@@ -1861,6 +1861,10 @@ void Pio(Piostream& stream, SCICore::Datatypes::ElementVersion1& elem)
 
 //
 // $Log$
+// Revision 1.9  1999/10/22 05:43:20  jmk
+// Made Isosurface by seedpoint work somewhat
+// Removed "inside called..." print statement from Mesh
+//
 // Revision 1.8  1999/10/07 02:07:32  sparker
 // use standard iostreams and complex type
 //
