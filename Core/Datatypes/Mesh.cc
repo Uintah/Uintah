@@ -378,11 +378,6 @@ Node::Node(const Node& copy)
 {
 }
 
-Node* Node::clone()
-{
-  return new Node(*this);
-}
-
 int Mesh::unify(Element* not,
 		const Array1<int>& n1, const Array1<int>& n2,
 		const Array1<int>& n3)
@@ -1150,7 +1145,6 @@ void Element::operator delete(void* rp, size_t)
   Element_alloc.free(rp);
 }
 
-#if 0
 void *Node::operator new(size_t)
 {
   return Node_alloc.alloc();
@@ -1160,7 +1154,6 @@ void Node::operator delete(void* rp, size_t)
 {
   Node_alloc.free(rp);
 }
-#endif
 
 int Element::orient()
 {
@@ -1906,6 +1899,7 @@ void Pio(Piostream& stream, Element*& data)
   stream.end_cheap_delim();
 }
 
+#if 0
 void Pio(Piostream& stream, NodeVersion1& node)
 {
 
@@ -1923,6 +1917,7 @@ void Pio(Piostream& stream, ElementVersion1& elem)
   Pio(stream, elem.n3);
   stream.end_cheap_delim();
 }
+#endif
 
 } // End namespace SCIRun
 

@@ -100,8 +100,10 @@ struct Node {
   Node();
   Node(const Point &p);
   Node(const Node &n);
-  Node *clone();
   ~Node();
+
+  void *operator new(size_t);
+  void operator delete(void*, size_t);
 };
 
 
@@ -119,16 +121,17 @@ struct ElementVersion1 {
 
 
 struct Face {
-  Face* next;
+  Face *next;
   int hash;
   int face_idx;
   int n[3];
+
   Face(int, int, int);
   inline int operator==(const Face& f) const {
     return n[0]==f.n[0] && n[1]==f.n[1] && n[2]==f.n[2];
   }
 
-  void* operator new(size_t);
+  void *operator new(size_t);
   void operator delete(void*, size_t);
 };
 
@@ -277,7 +280,7 @@ inline int Element::face(int i)
 
 
 void Pio(Piostream&, Element*&);
-//void Pio(Piostream& stream, NodeVersion1& node);
+void Pio(Piostream& stream, NodeVersion1& node);
 void Pio(Piostream& stream, ElementVersion1& node);
 
 } // End namespace SCIRun
