@@ -69,7 +69,7 @@ typedef LockingHandle<Material> MaterialHandle;
 class SCICORESHARE GeomMaterial : public GeomContainer {
   MaterialHandle matl;
 public:
-  GeomMaterial(GeomObj*, const MaterialHandle&);
+  GeomMaterial(GeomHandle, const MaterialHandle&);
   GeomMaterial(const GeomMaterial&);
   void setMaterial(const MaterialHandle&);
   MaterialHandle getMaterial();
