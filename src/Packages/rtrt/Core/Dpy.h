@@ -51,7 +51,7 @@ class Dpy : public Runnable {
   void get_input();         // some common code for frameless vs. not frameless
 
   // case statement for keypresses
-  void handle_keypress( unsigned long key ); 
+  void handle_keypress( XEvent & e ); 
   // case statement for mouse press events
   void handle_mouse_press( XEvent & e ); 
   
