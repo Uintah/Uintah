@@ -164,7 +164,7 @@ void HypoElasticPlastic::initializeCMData(const Patch* patch,
   new_dw->allocateAndPut(pDamage, pDamageLabel, pset);
   new_dw->allocateAndPut(pPlasticTemperature, pPlasticTempLabel, pset);
 
-  for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
+  for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
 
     // To fix : For a material that is initially stressed we need to
     // modify the leftStretch and the stress tensors to comply with the
@@ -363,7 +363,8 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
                                           pgFld, gVelocity, GVelocity);
 #else
       if (d_8or27==27)
-        tensorL = computeVelocityGradient(patch, oodx, px[idx], psize[idx], gVelocity);
+        tensorL = computeVelocityGradient(patch, oodx, px[idx], psize[idx],
+                                                                gVelocity);
       else
         tensorL = computeVelocityGradient(patch, oodx, px[idx], gVelocity);
 #endif
@@ -373,8 +374,8 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       tensorW = (tensorL - tensorL.Transpose())*0.5;
       for (int ii = 1; ii < 4; ++ii) {
 	for (int jj = 1; jj < 4; ++jj) {
-	  tensorD(ii,jj) = (fabs(tensorD(ii,jj)) < d_tol) ? 0.0 : tensorD(ii,jj);
-	  tensorW(ii,jj) = (fabs(tensorW(ii,jj)) < d_tol) ? 0.0 : tensorW(ii,jj);
+	  tensorD(ii,jj)=(fabs(tensorD(ii,jj)) < d_tol) ? 0.0 : tensorD(ii,jj);
+	  tensorW(ii,jj)=(fabs(tensorW(ii,jj)) < d_tol) ? 0.0 : tensorW(ii,jj);
 	}
       }
 
@@ -403,13 +404,13 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       Matrix3 tensorP = one*(tensorSig.Trace()/3.0);
       tensorS = tensorSig - tensorP;
 
-      // Integrate the stress rate equation to get a trial stress
-      // and calculate the J2 equivalent stress (assuming isotropic yield surface)
+      // Integrate the stress rate equation to get a trial stress and 
+      // calculate the J2 equivalent stress (assuming isotropic yield surface)
       Matrix3 trialS = tensorS + tensorEta*(2.0*shear*delT);
       equivStress = (trialS.NormSquared())*1.5;
 
-      // To determine if the stress is above or below yield used a von Mises yield
-      // criterion Assumption: Material yields, on average, like a von Mises solid
+      // To determine if the stress is above or below yield used a von Mises yld
+      // criterion Assumption: Material yields, on average, as a von Mises solid
       double temperature = pTemperature[idx] + pPlasticTemperature[idx];
       flowStress = d_plasticity->computeFlowStress(tensorEta, tensorS, 
                                                    temperature,
@@ -584,14 +585,14 @@ void HypoElasticPlastic::carryForward(const PatchSubset* patches,
     constParticleVariable<double> pDamage;
     constParticleVariable<Matrix3> pLeftStretch, pRotation, pDeformGrad;
     ParticleVariable<Matrix3> pLeftStretch_new, pRotation_new, pDeformGrad_new;
-    ParticleVariable<Matrix3> pStress_new;
     ParticleVariable<double> pDamage_new;
     ParticleVariable<Matrix3> pdefm_new,pstress_new;
     constParticleVariable<Matrix3> pdefm,pstress;
-    constParticleVariable<double> pmass;
-    ParticleVariable<double> pvolume_deformed;
+    constParticleVariable<double> pmass,pPlasticTemp;
+    ParticleVariable<double> pvolume_deformed,pPlasticTemp_new;
 
     old_dw->get(pDamage, pDamageLabel, pset);
+    old_dw->get(pPlasticTemp, pPlasticTempLabel, pset);
     old_dw->get(pLeftStretch, pLeftStretchLabel, pset);
     old_dw->get(pRotation, pRotationLabel, pset);
     old_dw->get(pDeformGrad, lb->pDeformationMeasureLabel, pset);
@@ -600,18 +601,20 @@ void HypoElasticPlastic::carryForward(const PatchSubset* patches,
                            pLeftStretchLabel_preReloc,            pset);
     new_dw->allocateAndPut(pRotation_new,    
                            pRotationLabel_preReloc,               pset);
-    new_dw->allocateAndPut(pStress_new,      
+    new_dw->allocateAndPut(pstress_new,      
                            lb->pStressLabel_preReloc,             pset);
     new_dw->allocateAndPut(pDeformGrad_new,  
                            lb->pDeformationMeasureLabel_preReloc, pset);
     new_dw->allocateAndPut(pDamage_new,      
                            pDamageLabel_preReloc,                 pset);
-    new_dw->allocateAndPut(pstress_new,lb->pStressLabel_preReloc,      pset);
+    new_dw->allocateAndPut(pPlasticTemp_new,
+                           pPlasticTempLabel_preReloc,                 pset);
     new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel, pset);
 
     // Get the plastic strain
     d_plasticity->getInternalVars(pset, old_dw);
-    d_plasticity->initializeInternalVars(pset, new_dw);
+    d_plasticity->allocateAndPutInternalVars(pset, new_dw);
+//    d_plasticity->initializeInternalVars(pset, new_dw);
 
     old_dw->get(pstress,       lb->pStressLabel,                       pset);
     double rho_orig = matl->getInitialDensity();
@@ -624,6 +627,7 @@ void HypoElasticPlastic::carryForward(const PatchSubset* patches,
       pLeftStretch_new[idx] = pLeftStretch[idx];
       pRotation_new[idx] = pRotation[idx];
       pDamage_new[idx] = pDamage[idx];
+      pPlasticTemp_new[idx] = pPlasticTemp[idx];
       pvolume_deformed[idx]=(pmass[idx]/rho_orig);
     }
 
@@ -642,8 +646,6 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* ,
 {
 }
 	 
-
-
 void 
 HypoElasticPlastic::computeStressTensorWithErosion(const PatchSubset* patches,
 					const MPMMaterial* matl,
@@ -786,8 +788,8 @@ HypoElasticPlastic::computeStressTensorWithErosion(const PatchSubset* patches,
       tensorW = (tensorL - tensorL.Transpose())*0.5;
       for (int ii = 1; ii < 4; ++ii) {
 	for (int jj = 1; jj < 4; ++jj) {
-	  tensorD(ii,jj) = (fabs(tensorD(ii,jj)) < d_tol) ? 0.0 : tensorD(ii,jj);
-	  tensorW(ii,jj) = (fabs(tensorW(ii,jj)) < d_tol) ? 0.0 : tensorW(ii,jj);
+	  tensorD(ii,jj)=(fabs(tensorD(ii,jj)) < d_tol) ? 0.0 : tensorD(ii,jj);
+	  tensorW(ii,jj)=(fabs(tensorW(ii,jj)) < d_tol) ? 0.0 : tensorW(ii,jj);
 	}
       }
 
@@ -1172,8 +1174,8 @@ HypoElasticPlastic::computeUpdatedVR(const double& delT,
 				     Matrix3& RR)  
 {
   // Note:  The incremental polar decomposition algorithm is from
-  // Flanagan and Taylor, 1987, Computer Methods in Applied Mechanics and Engineering,
-  // v. 62, p.315.
+  // Flanagan and Taylor, 1987, Computer Methods in Applied Mechanics and
+  // Engineering, v. 62, p.315.
 
   // Set up identity matrix
   Matrix3 one; one.Identity();
