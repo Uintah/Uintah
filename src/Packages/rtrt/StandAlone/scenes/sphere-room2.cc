@@ -84,7 +84,7 @@ satellite_data table[] = {
   { 6378, 1.496E8, .99727, 365.26, .0167, 23.45, 0,
     0, 0, 0, "earth" },
   
-  { 1737.4, 384400*50*ROOMSCALE, 27.32166, 27.32166, .0549, 1.5424, 5.1454,
+  { 1737.4, 384400*50, 27.32166, 27.32166, .0549, 1.5424, 5.1454,
     1, 0, 0, "luna" },
 
   { 2439.7, 5.791E7, 58.65, 87.97, .2056, 0, 7.004, 
@@ -111,10 +111,10 @@ satellite_data table[] = {
   { 1137*6, 5.91352E9, 6.3872, 90779, .2482, 122.52, 17.148,
     0, 1, 0, "pluto" },
 
-  { 1815, 421600*400*ROOMSCALE, 1.769, 1.769, .004, 0, .04,
+  { 1815, 421600*400, 1.769, 1.769, .004, 0, .04,
     6, 0, 0, "io" },
 
-  { 1569, 670900*400*ROOMSCALE, 3.55, 3.55, .009, 0, .47,
+  { 1569, 670900*400, 3.55, 3.55, .009, 0, .47,
     6, 0, 0, "europa" },
 
   { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
@@ -124,9 +124,9 @@ extern "C"
 Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/) 
 {
   Group *galaxy_room = new Group();
-  //Grid2 *solar_system = new Grid2(galaxy_room,8);
-
-  //galaxy_room->add( solar_system );
+  Group *solar_system = new Group();
+  //Grid2 *solar_grid = new Grid2(solar_system,8);
+  galaxy_room->add( solar_system );
   BV1 *room_grid = new BV1(galaxy_room);
 
   Camera cam( Point(10,0,1.8), 
@@ -147,7 +147,7 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
                          ambient_scale, Constant_Ambient);
   scene->select_shadow_mode(No_Shadows);
   LinearBackground *background= 
-    new LinearBackground(Color(.8,.8,.8),Color(.2,.3,.8),Vector(0,0,-1));
+    new LinearBackground(Color(.8,.5,.2),Color(.2,.8,.1),Vector(0,0,-1));
   scene->set_background_ptr( background );
 
   //
@@ -184,12 +184,12 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
                          FLIP_IMAGES);
               
   TileImageMaterial *matl0 = 
-    new TileImageMaterial(IMAGEDIR"holowall.ppm",
+    new TileImageMaterial(IMAGEDIR"holowall3.ppm",
                           4,Color(.5,.5,.5),0,0,0,FLIP_IMAGES);
   matl0->SetScale(3,3);
 
   TileImageMaterial *matl1 = 
-    new TileImageMaterial(IMAGEDIR"holowall.ppm",
+    new TileImageMaterial(IMAGEDIR"holowall3.ppm",
                           4,Color(.5,.5,.5),0,0,0,FLIP_IMAGES);
   matl1->SetScale(3,3*(ROOMHEIGHT/(double)(ROOMRADIUS*2)));
 
@@ -207,7 +207,6 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   double radius;
   double orb_radius;
   BBox bbox;
-
 
   // galaxy room
 
@@ -372,10 +371,10 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   cerr << earth->get_name() << " = " << earth << endl;
   bbox.reset();
   earth->compute_bounds(bbox,1E-6);
-  galaxy_room->add( earth );
+  solar_system->add( earth );
   
   // these two lines needed for animation
-  //earth->set_anim_grid(solar_system);
+  //earth->set_anim_grid(solar_grid);
   scene->addObjectOfInterest(earth,ANIMATE);
 
   // build the other satellites
@@ -404,15 +403,15 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
     newsat->set_orb_speed(1./table[loop].orb_speed_*SYSTEM_TIME_SCALE2);
     bbox.reset();
     newsat->compute_bounds( bbox, 1E-6 );
-    galaxy_room->add( newsat );
-    //newsat->set_anim_grid(solar_system);
+    solar_system->add( newsat );
+    //newsat->set_anim_grid(solar_grid);
     scene->addObjectOfInterest( newsat, ANIMATE );
 
     if (newsat->get_name() == "saturn") {
       bbox.reset();
       newsat->compute_bounds( bbox, 1E-6 );
       cerr << "adding rings!!!! " << radius << endl;
-      up = Vector(-sin(DEG2RAD(table[loop].tilt_)), 0, 
+      up = Vector(-sin(DEG2RAD(table[loop].tilt_))+.25, 0, 
                   cos(DEG2RAD(table[loop].tilt_)));
       RingSatellite *rings = 
         new RingSatellite("rings",rings_m,
@@ -424,8 +423,8 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
 
       bbox.reset();
       rings->compute_bounds( bbox, 1E-6 );
-      galaxy_room->add( rings );
-      //rings->set_anim_grid(solar_system);
+      solar_system->add( rings );
+      //rings->set_anim_grid(solar_grid);
       scene->addObjectOfInterest( rings, ANIMATE );
     }
   }
@@ -434,6 +433,8 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   // add the light (the sun, as mentioned above)
   Light2 *light = new Light2(sol_m, Color(1,.9,.8), 
                              Point(ROOMCENTER, ROOMHEIGHT/2.), .2,4);
+  //Light *light = new Light(Color(1,.9,.8), 
+  //                         Point(ROOMCENTER, ROOMHEIGHT/2.), .2);
   scene->add_light( light );
   scene->addObjectOfInterest(light->getSphere(),ANIMATE);
 
