@@ -59,7 +59,7 @@ void Camera::makeRayL(Ray& ray, double x, double y, double ixres, double iyres)
     Vector su(u*screeny);
     Vector raydir=su+sv+direction;
     raydir.normalize();
-    ray.set_direction(raydir);
+    ray.set_direction(raydir + v*5*eyesep*iyres + raydir*ray_offset);
     ray.set_origin(eye - v*5*eyesep*iyres + raydir*ray_offset);
 }
 
@@ -71,7 +71,7 @@ void Camera::makeRayR(Ray& ray, double x, double y, double ixres, double iyres)
     Vector su(u*screeny);
     Vector raydir=su+sv+direction;
     raydir.normalize();
-    ray.set_direction(raydir);
+    ray.set_direction(raydir - v*5*eyesep*iyres + raydir*ray_offset);
     ray.set_origin(eye + v*5*eyesep*iyres + raydir*ray_offset);
 }
 
