@@ -95,6 +95,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ScalarFieldStats.tcl \
 	$(SRCDIR)/SetProperty.tcl \
 	$(SRCDIR)/ShowField.tcl \
+	$(SRCDIR)/ShowMatrix.tcl \
 	$(SRCDIR)/SolveMatrix.tcl \
 	$(SRCDIR)/StreamLines.tcl \
 	$(SRCDIR)/Submatrix.tcl \

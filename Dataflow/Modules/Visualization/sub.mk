@@ -37,9 +37,11 @@ SRCS     += \
 	$(SRCDIR)/RescaleColorMap.cc\
 	$(SRCDIR)/ShowColorMap.cc\
 	$(SRCDIR)/ShowField.cc\
+	$(SRCDIR)/ShowMatrix.cc\
 	$(SRCDIR)/StreamLines.cc\
 	$(SRCDIR)/TexCuttingPlanes.cc\
 	$(SRCDIR)/TextureVolVis.cc\
+#	$(SRCDIR)/TransformGeometry.cc\
 [INSERT NEW CODE FILE HERE]
 
 
