@@ -1706,7 +1706,7 @@ void build_david_room (Group* main_group, Scene *scene, Light *light1, Light *li
 		    Vector(0.001000,0.,0.),
 		    Vector(0.,0.,0.001000),
 		    Vector(0.,-0.001000,0.));
-  davidT.pre_translate (Vector(-14.079300,-33.336876,3.586000));
+  davidT.pre_translate (Vector(-14.079300,-33.336876,3.5000));
   //  davidT.print();
   read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/david_2mm.ply",davidg,&davidT);  
 #endif
@@ -3184,8 +3184,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   // KEY functions!  
 
   build_david_room (solidg,scene, DavL1, DavL2);
-  //  build_history_hall (solidg, clearg, fakeg, scene, HistoryL0,HistoryL1, HistoryL2); 
-  //  build_modern_room (solidg,clearg,fakeg,scene);
+  build_history_hall (solidg, clearg, fakeg, scene, HistoryL0,HistoryL1, HistoryL2); 
+  build_modern_room (solidg,clearg,fakeg,scene);
 
  /*
   Transform outlet_trans;
