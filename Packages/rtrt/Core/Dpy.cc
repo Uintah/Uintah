@@ -322,7 +322,7 @@ Dpy::checkGuiFlags()
   if(animate && scene->animate) {
     Array1<Object*> & objects = scene->animateObjects_;
     for( int num = 0; num < objects.size(); num++ )
-      obj->animate(SCIRun::Time::currentSeconds(), changed);
+      objects[num]->animate(SCIRun::Time::currentSeconds(), changed);
   }
 
   if( attachedObject_ ) {
