@@ -68,11 +68,6 @@ public:
 
       // GROUP: Schedule Action :
       ///////////////////////////////////////////////////////////////////////
-      // Schedule the initialization of the Smagorinsky Coefficient
-      //    [in] 
-      //        data User data needed for solve 
-      
-      ///////////////////////////////////////////////////////////////////////
       // Schedule the recomputation of Turbulence Model data
       //    [in] 
       //        data User data needed for solve 
@@ -123,6 +118,7 @@ private:
       CompDynamicProcedure();
 
       // GROUP: Action Methods (private)  :
+
 
       ///////////////////////////////////////////////////////////////////////
       // Actually reCalculate the Turbulence sub model
