@@ -56,7 +56,7 @@ public:
   
   // behavior
   virtual int pick1 (int x, int y, int w, int h) = 0;
-  virtual int pick2 (int x, int y, int w, int h) = 0;
+  virtual int pick2 (int x, int y, int w, int h, int m) = 0;
   virtual void move (int obj, int x, int y, int w, int h) = 0;
   virtual void release (int obj, int x, int y, int w, int h) = 0;
 
@@ -83,6 +83,7 @@ protected:
   SCIRun::Color color_;
   float alpha_;
   int selected_;
+  SCIRun::HSVColor last_hsv_;
 };
 
 class TriangleCM2Widget : public CM2Widget
@@ -103,7 +104,7 @@ public:
   
   // behavior
   virtual int pick1 (int x, int y, int w, int h);
-  virtual int pick2 (int x, int y, int w, int h);
+  virtual int pick2 (int x, int y, int w, int h, int m);
   virtual void move (int obj, int x, int y, int w, int h);
   virtual void release (int obj, int x, int y, int w, int h);
 
@@ -145,7 +146,7 @@ public:
   
   // behavior
   virtual int pick1 (int x, int y, int w, int h);
-  virtual int pick2 (int x, int y, int w, int h);
+  virtual int pick2 (int x, int y, int w, int h, int m);
   virtual void move (int obj, int x, int y, int w, int h);
   virtual void release (int obj, int x, int y, int w, int h);
   

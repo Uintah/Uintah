@@ -198,7 +198,8 @@ itcl_class Volume_Visualization_EditTransferFunc2 {
             # every time the OpenGL widget is displayed, redraw it
             bind $w.f.gl.gl <Expose> "$this-c expose"
             #bind $w.f.gl.gl <Configure> "$this-c resize"
-            bind $w.f.gl.gl <ButtonPress> "$this-c mouse push %x %y %b"
+            bind $w.f.gl.gl <Shift-ButtonPress> "$this-c mouse push %x %y %b 1"
+            bind $w.f.gl.gl <ButtonPress> "$this-c mouse push %x %y %b 0"
             bind $w.f.gl.gl <ButtonRelease> "$this-c mouse release %x %y %b"
             bind $w.f.gl.gl <Motion> "$this-c mouse motion %x %y"
             bind $w.f.gl.gl <Destroy> "$this-c closewindow"
@@ -208,7 +209,7 @@ itcl_class Volume_Visualization_EditTransferFunc2 {
             scale $w.f.gl.shisto -variable $this-histo \
                 -from 0.0 -to 1.0 -label "Histogram Opacity" \
                 -showvalue true -resolution 0.001 \
-                -orient horizontal -command "$this-c redraw"
+                -orient horizontal -command "$this-c redraw true"
             pack $w.f.gl.shisto -side top -fill x -padx 4
             # faux shading
             frame $w.f.f0 -relief groove -borderwidth 2

@@ -137,7 +137,7 @@ public:
 
   void redraw();
 
-  void push(int x, int y, int button);
+  void push(int x, int y, int button, int modifier);
   void motion(int x, int y);
   void release(int x, int y, int button);
 };
@@ -182,7 +182,7 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
   // mouse commands are motion, down, release
   if (args[1] == "mouse") {
     //cerr << "EVENT: mouse" << endl;
-    int x, y, b;
+    int x, y, b, m;
     string_to_int(args[3], x);
     string_to_int(args[4], y);
     if (args[2] == "motion") {
@@ -192,7 +192,8 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
     } else {
       string_to_int(args[5], b); // which button it was
       if (args[2] == "push") {
-	push(x, y, b);
+	string_to_int(args[6], m); // which button it was
+	push(x, y, b, m);
       } else {
 	release(x, y, b);
       }
@@ -208,6 +209,10 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
   } else if (args[1] == "redraw") {
     //cerr << "EVENT: expose" << endl;
     reset_vars();
+    if (args.count() > 2)
+    {
+      cmap_dirty_ = true;
+    }
     redraw();
   } else if (args[1] == "redrawcmap") {
     //cerr << "EVENT: expose" << endl;
@@ -338,6 +343,7 @@ EditTransferFunc2::undo()
     case UndoItem::UNDO_MOVE:
       delete widgets_[item.selected_];
       widgets_[item.selected_] = item.widget_;
+      gui_update = true;
       break;
 
     case UndoItem::UNDO_ADD:
@@ -473,38 +479,42 @@ EditTransferFunc2::tcl_unpickle()
 
 
 void
-EditTransferFunc2::push(int x, int y, int button)
+EditTransferFunc2::push(int x, int y, int button, int modifier)
 {
-  //cerr << "push: " << x << " " << y << " " << button << " " << width_ << " " << height_ << endl;
+  //cerr << "push: " << x << " " << y << " " << button << " " << width_ << " " << height_ << " " << modifier << endl;
 
-  unsigned int i;
+  int i;
 
   button_ = button;
   first_motion_ = true;
 
-  for (i = 0; i < widgets_.size(); i++)
+  for (i = 0; i < (int)widgets_.size(); i++)
   {
     widgets_[i]->unselect_all();
   }
 
   pick_widget_ = -1;
   pick_object_ = 0;
-  for (unsigned int i = 0; i < widgets_.size(); i++)
+  if (modifier == 0)
   {
-    const int tmp = widgets_[i]->pick1(x, height_-1-y, width_, height_);
-    if (tmp)
+    for (i = widgets_.size()-1; i >= 0; i--)
     {
-      pick_widget_ = i;
-      pick_object_ = tmp;
-      widgets_[i]->select(tmp);
-      break;
+      const int tmp = widgets_[i]->pick1(x, height_-1-y, width_, height_);
+      if (tmp)
+      {
+	pick_widget_ = i;
+	pick_object_ = tmp;
+	widgets_[i]->select(tmp);
+	break;
+      }
     }
   }
   if (pick_widget_ == -1)
   {
-    for (unsigned int i = 0; i < widgets_.size(); i++)
+    for (i = widgets_.size()-1; i >= 0; i--)
     {
-      const int tmp = widgets_[i]->pick2(x, height_-1-y, width_, height_);
+      const int m = modifier;
+      const int tmp = widgets_[i]->pick2(x, height_-1-y, width_, height_, m);
       if (tmp)
       {
 	pick_widget_ = i;
@@ -539,6 +549,7 @@ EditTransferFunc2::motion(int x, int y)
     widgets_[pick_widget_]->move(pick_object_, x, height_-1-y, width_, height_);
     cmap_dirty_ = true;
     updating_ = true;
+    update_to_gui(true);
     redraw();
     want_to_execute();
   }
@@ -559,6 +570,7 @@ EditTransferFunc2::release(int x, int y, int button)
     cmap_dirty_ = true;
 
     redraw();
+    update_to_gui(true);
     want_to_execute();
   }
 }
