@@ -33,7 +33,8 @@
 #include <Core/Util/NotFinished.h>
 
 #include <iostream>
-#define SMALL_NUM 1.0e-100
+#define d_TINY_RHO 1.0e-100// also defined  ICE.cc and ICEMaterial.cc 
+
 using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
@@ -570,7 +571,7 @@ void MPMMaterial::initializeCCVariables(CCVariable<double>& rho_micro,
          // vol_frac_CC[*iter]= 1.0;
           vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
           rho_micro[*iter]  = getInitialDensity();
-          rho_CC[*iter]     = rho_micro[*iter] + SMALL_NUM;
+          rho_CC[*iter]     = rho_micro[*iter] + d_TINY_RHO;
           temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
         }
 
@@ -578,14 +579,14 @@ void MPMMaterial::initializeCCVariables(CCVariable<double>& rho_micro,
          // vol_frac_CC[*iter]= 1.0;
           vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
           rho_micro[*iter]  = getInitialDensity();
-          rho_CC[*iter]     = rho_micro[*iter] + SMALL_NUM;
+          rho_CC[*iter]     = rho_micro[*iter] + d_TINY_RHO;
           temp[*iter]       = d_geom_objs[obj]->getInitialTemperature();
         } 
       }   
       if (numMatls > 1 ) {
         double vol_frac_CC= count/totalppc;       
         rho_micro[*iter]  = getInitialDensity();
-        rho_CC[*iter]     = rho_micro[*iter] * vol_frac_CC +SMALL_NUM;
+        rho_CC[*iter]     = rho_micro[*iter] * vol_frac_CC + d_TINY_RHO;
         temp[*iter]       = 300.0;         
         Point pd = patch->cellPosition(*iter);
         if((pd.x() > b1low.x() && pd.y() > b1low.y() && pd.z() > b1low.z()) &&
