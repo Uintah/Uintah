@@ -42,44 +42,47 @@ WARNING
 
    class SimulationInterface : public UintahParallelPort {
    public:
-      SimulationInterface();
-      virtual ~SimulationInterface();
+     SimulationInterface();
+     virtual ~SimulationInterface();
       
-      //////////
-      // Insert Documentation Here:
-      virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
-				SimulationStateP& state) = 0;
+     //////////
+     // Insert Documentation Here:
+     virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
+			       SimulationStateP& state) = 0;
       
-      //////////
-      // Insert Documentation Here:
-      virtual void scheduleInitialize(const LevelP& level,
-				      SchedulerP&) = 0;
-      //////////
-      // Insert Documentation Here:
-      virtual void restartInitialize() {}
+     //////////
+     // Insert Documentation Here:
+     virtual void scheduleInitialize(const LevelP& level,
+				     SchedulerP&) = 0;
+     //////////
+     // Insert Documentation Here:
+     virtual void restartInitialize() {}
       
-      //////////
-      // Insert Documentation Here:
-      virtual void scheduleComputeStableTimestep(const LevelP& level,
-						 SchedulerP&) = 0;
+     //////////
+     // Insert Documentation Here:
+     virtual void scheduleComputeStableTimestep(const LevelP& level,
+						SchedulerP&) = 0;
       
-      //////////
-      // Insert Documentation Here:
-      virtual void scheduleTimeAdvance(const LevelP& level, SchedulerP&) = 0;
-
-     virtual void scheduleRefine(/* const */ LevelP& fineLevel, 
+     //////////
+     // Insert Documentation Here:
+     virtual void scheduleTimeAdvance(const LevelP& level, SchedulerP&,
+				      int step, int nsteps);
+     virtual void scheduleRefine(const LevelP& fineLevel, 
 				 SchedulerP& scheduler);
-     virtual void scheduleRefineInterface(/* const */ LevelP& fineLevel, 
+     virtual void scheduleRefineInterface(const LevelP& fineLevel, 
 				          SchedulerP& scheduler,
 					  int step, int nsteps);
-     virtual void scheduleCoarsen(/* const */ LevelP& coarseLevel, 
-
-
+     virtual void scheduleCoarsen(const LevelP& coarseLevel, 
 				  SchedulerP& scheduler);
+     virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
+					SchedulerP& sched);
 
+   protected:
+     virtual void scheduleTimeAdvance(const LevelP& level, SchedulerP&);
+     
    private:
-      SimulationInterface(const SimulationInterface&);
-      SimulationInterface& operator=(const SimulationInterface&);
+     SimulationInterface(const SimulationInterface&);
+     SimulationInterface& operator=(const SimulationInterface&);
    };
 } // End namespace Uintah
    
