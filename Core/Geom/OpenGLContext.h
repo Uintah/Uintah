@@ -38,7 +38,7 @@
 #ifndef SCIRun_Core_2d_OpenGLContext_h
 #define SCIRun_Core_2d_OpenGLContext_h
 
-#include <Core/TkExtensions/tkOpenGL.h>
+#include <Core/Geom/TkOpenGLContext.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>
@@ -51,9 +51,8 @@ class GuiInterface;
 
 class OpenGLContext {
 private:
-  OpenGLClientData *	tk_clientdata_;
+  TkOpenGLContext *	tk_gl_context_;
   GuiInterface *	gui_;
-  string		id_;
   bool			get_client_data();
 public:
   OpenGLContext(GuiInterface* gui, const string &);
@@ -63,8 +62,8 @@ public:
   void		release();
   int		xres();
   int		yres();
-  Display *	display() { return tk_clientdata_->display; }
-  int		screen_number() { return tk_clientdata_->screen_number; }
+  Display *	display() { return tk_gl_context_->display_; }
+  int		screen_number() { return tk_gl_context_->screen_number_; }
   GuiInterface *gui() { return gui_; }
 };
 

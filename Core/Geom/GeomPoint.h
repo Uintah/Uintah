@@ -52,7 +52,6 @@
 
 namespace SCIRun {
 
-
 class SCICORESHARE GeomPoints : public GeomObj {
 protected:
   vector<float> points_;
@@ -163,8 +162,6 @@ struct TimedParticle {
 // we will defenitly need some form of hiarchy, to do
 // spatial partioning with - probably also have a "time" hiearchy
 // this should make it easy to parallelize things...
-
-#include <Core/Geometry/BBox.h>
 
 class SCICORESHARE GeomTimedParticles : public GeomObj {
   Array1< TimedParticle > particles; // actual particles

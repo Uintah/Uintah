@@ -30,7 +30,8 @@
 //    Date   : Sun Jun 27 17:49:45 2004
 
 #include <Core/Volume/Pbuffer.h>
-#include <Core/Volume/ShaderProgramARB.h>
+#include <Core/Geom/ShaderProgramARB.h>
+#include <Core/Util/Environment.h>
 #include <iostream>
 
 #include <string>
@@ -203,10 +204,16 @@ struct PbufferImpl
 bool
 Pbuffer::create ()
 {
+  if (sci_getenv_p("SCIRUN_DISABLE_PBUFFERS"))
+  {
+    mSupported = false;
+    return true;
+  }
+
 #ifdef __ECC
   // For now no Pbuffer support on the Altix system
   mSupported = false;
-  return false;
+  return true;
 #else
   if(!mInit) {
 #ifdef HAVE_GLEW

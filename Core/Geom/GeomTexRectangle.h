@@ -26,61 +26,69 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+
 /*
- *  OpenGLViewPort.h:
+ *  TexSquare.cc: Texture-mapped square
  *
  *  Written by:
- *   McKay Davis
- *   August 2004
+ *   Philip Sutton
+ *   Department of Computer Science
+ *   University of Utah
+ *   May 1998
+ *
+ *  Copyright (C) 1998 SCI Group
  */
 
+#ifndef SCI_GEOMTEXRECTANGLE_H
+#define SCI_GEOMTEXRECTANGLE_H 1
 
-#ifndef SCIRun_Core_Geom_OpenGLViewport_h
-#define SCIRun_Core_Geom_OpenGLViewport_h
-
-#include <sgi_stl_warnings_off.h>
-#include <string>
-#include <map>
-#include <sgi_stl_warnings_on.h>
-
-using std::string;
+#include <Core/Geom/GeomObj.h>
+#include <Core/Geom/ShaderProgramARB.h>
+#include <Core/Geometry/Point.h>
 
 namespace SCIRun {
 
-class TkOpenGLContext;
-
-class OpenGLViewport {
-private:
-  TkOpenGLContext *	context_;
-  float			x_;
-  float			y_;
-  float			width_;
-  float			height_;
-  int			current_level_;
-
-  void			check_bounds();
+class SCICORESHARE GeomTexRectangle : public GeomObj {
+  float tex_coords_[8];
+  float pos_coords_[12];
+  float normal_[3];
+  unsigned char *texture_;
+  unsigned int sId_;
+  unsigned int fId_;
+  int numcolors_;
+  int width_;
+  int height_;
+  unsigned int texname_;
+  double alpha_cutoff_;
+  bool interp_;
+  bool trans_;
+  bool use_normal_;
+  FragmentProgramARB *shader_;
+  FragmentProgramARB *fog_shader_;
+  void	bind_texture();
 public:
-  OpenGLViewport(TkOpenGLContext *ctx=0, 
-		 float x = 0.0, float y = 0.0, 
-		 float w = 1.0, float h = 1.0);
+  GeomTexRectangle();
+  GeomTexRectangle(const GeomTexRectangle&);
+  virtual ~GeomTexRectangle();
+  void set_coords(float *tex, float *pos);
+  void set_normal(float *norm);
+  void set_texture( unsigned char *tex, int num, int w, int h);
+  void set_texname(unsigned int texname);
+  void set_transparency(bool b){trans_ = b;}
+  void set_alpha_cutoff(double alpha);
+  void interpolate(bool b){ interp_ = b; }
+  virtual GeomObj* clone();
+  virtual void get_bounds(BBox&);
 
-  void		resize(float x=0.0, float y=0.0, float w=1.0, float h=1.0);
-  int		x();
-  int		y();
-  int		width();
-  int		height();
-  int		max_width();
-  int		max_height();
+#ifdef SCI_OPENGL
+  virtual void draw(DrawInfoOpenGL*, Material*, double );
+#endif
 
-  void		clear(float r=0.0, float g=0.0, float b=0.0, float a=0.0);
-  
-  bool		make_current();
-  void		swap();
-  void		release();
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
 };
 
 } // End namespace SCIRun
 
-#endif // SCIRun_Core_2d_OpenGLViewport_h
-
-
+  
+#endif

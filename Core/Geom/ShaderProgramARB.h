@@ -25,50 +25,62 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : Colormap2.h
+//    File   : ShaderProgramARB.h
 //    Author : Milan Ikits
-//    Date   : Mon Jul  5 18:33:12 2004
+//    Date   : Wed Jul  7 23:20:59 2004
 
-#ifndef ColorMap2_h
-#define ColorMap2_h
+#ifndef ShaderProgramARB_h 
+#define ShaderProgramARB_h
 
-#include <Core/Datatypes/PropertyManager.h>
-#include <Core/Containers/LockingHandle.h>
-#include <Core/Thread/Mutex.h>
-#include <vector>
+#include <string>
 
 namespace SCIRun {
 
-class CM2Widget;
-typedef LockingHandle<CM2Widget> CM2WidgetHandle;
-
-using std::vector;
-
-class ColorMap2 : public PropertyManager
+class ShaderProgramARB
 {
 public:
-  ColorMap2();
-  ColorMap2(const vector<CM2WidgetHandle>& widgets,
-	    bool updating, bool faux);
-  virtual ~ColorMap2();
-
-  inline vector<CM2WidgetHandle>&	widgets() { return widgets_; }
+  ShaderProgramARB(const std::string& program);
+  virtual ~ShaderProgramARB();
   
-  inline bool				updating() { return updating_; }
-  inline bool				faux() { return faux_; }
-  int &					selected() { return selected_; }
-  virtual void				io(SCIRun::Piostream&);
-  static SCIRun::PersistentTypeID	type_id;
+  bool create();
+  bool valid();
+  void destroy();
+
+  void bind();
+  void release();
+  void enable();
+  void disable();
+  void makeCurrent();
+
+  void setLocalParam(int, float, float, float, float);
+
+  // This is only callable from within a valid opengl context!
+  static bool shaders_supported();
 
 protected:
-  bool					updating_;
-  bool					faux_;
-  vector<CM2WidgetHandle>		widgets_;
-  int					selected_;
+  unsigned int mType;
+  unsigned int mId;
+  std::string mProgram;
+
+  static bool mInit;
+  static bool mSupported;
+
 };
 
-typedef SCIRun::LockingHandle<ColorMap2> ColorMap2Handle;
+class VertexProgramARB : public ShaderProgramARB
+{
+public:
+  VertexProgramARB(const std::string& program);
+  ~VertexProgramARB();
+};
 
-} // End namespace SCIRun
+class FragmentProgramARB : public ShaderProgramARB
+{
+public:
+  FragmentProgramARB(const std::string& program);
+  ~FragmentProgramARB();
+};
 
-#endif // ColorMap2_h
+} // end namespace SCIRun
+
+#endif // ShaderProgramARB_h

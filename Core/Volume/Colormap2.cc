@@ -45,15 +45,26 @@ static Persistent* maker()
 
 PersistentTypeID ColorMap2::type_id("ColorMap2", "Datatype", maker);
 
-#define COLORMAP2_VERSION 1
+#define COLORMAP2_VERSION 3
 
 void
 ColorMap2::io(Piostream &stream)
 {
-  stream.begin_class("ColorMap2", COLORMAP2_VERSION);
-  
+  const int version = stream.begin_class("ColorMap2", COLORMAP2_VERSION);
+
+  if (version > 1)
+  {
+    PropertyManager::io(stream);
+  }
+
+
   SCIRun::Pio(stream, faux_);
   SCIRun::Pio(stream, widgets_);
+
+  if (version > 2)
+  {
+    SCIRun::Pio(stream, selected_);
+  }
 
   stream.end_class();
 }
@@ -65,10 +76,12 @@ ColorMap2::ColorMap2()
 ColorMap2::ColorMap2(const vector<CM2WidgetHandle>& widgets,
 		     bool updating, bool faux)
   : updating_(updating),
-    faux_(faux)
+    faux_(faux),
+    selected_(-1)
 {
-  for(unsigned int i=0; i<widgets.size(); i++)
-    widgets_.push_back(widgets[i]->clone());
+  //for(unsigned int i=0; i<widgets.size(); i++)
+  //  widgets_.push_back(widgets[i]->clone());
+  widgets_ = widgets;
 }
 
 ColorMap2::~ColorMap2()
