@@ -315,7 +315,7 @@ itcl_class Streamline {
 	set $s-maxbend 20
 
 	global $s-algorithm
-	set $s-algorithm "Euler"
+	set $s-algorithm "RK4"
 
 	global $s-animation
 	set $s-animation "None"
@@ -324,7 +324,7 @@ itcl_class Streamline {
 	set $s-anim_timesteps 30
 
 	global $s-stepsize
-	set $s-stepsize 0.5
+	set $s-stepsize 0.3
 
 	global $s-skip
 	set $s-skip 25
@@ -336,7 +336,7 @@ itcl_class Streamline {
 	set $s-widget_scale 1
 
 	global $s-direction
-	set $s-direction Downstream
+	set $s-direction Both
 
 	global $s-position
 	set $s-position ""

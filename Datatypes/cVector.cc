@@ -1,5 +1,7 @@
 #include <Datatypes/cVector.h>
 
+PersistentTypeID cVector::type_id("cVector", "Datatype", 0);
+
 //-----------------------------------------------------------------
 cVector::cVector(int N){
  int i;

@@ -76,14 +76,12 @@ void SimpleIPort<T>::reset()
 template<class T>
 void SimpleIPort<T>::finish()
 {
-#if 0
     if(!recvd && nconnections() > 0){
 	turn_on(Finishing);
 	SimplePortComm<T>* msg=mailbox.receive();
 	delete msg;
 	turn_off();
     }
-#endif
 }
 
 template<class T>
@@ -139,12 +137,10 @@ void SimpleOPort<T>::send(const T& data)
     handle = data;
     if (nconnections() == 0)
 	return;
-#if 0
     if(sent_something){
-      // Tell the scheduler that we are going to do this...
       cerr << "The data got sent twice - ignoring second one...\n";
+      return;
     }
-#endif
 
     // change oport state and colors on screen
     turn_on();

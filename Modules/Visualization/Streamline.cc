@@ -783,7 +783,7 @@ static void do_parallel_streamline(void* obj, int proc)
 void Streamline::do_streamline(SLSourceInfo* si)
 {
     tracers.remove_all();
-    make_tracers(si->source, tracers, field, alg_enum);
+    make_tracers(si->source, tracers, field);
     lines.resize(tracers.size());
     np=Min(tracers.size(), Task::nprocessors());
     Task::multiprocess(np, do_parallel_streamline, this);
@@ -921,7 +921,7 @@ void Streamline::do_streamlline(SLSourceInfo* si, int doseed)
 {
   tracers.remove_all();
   if (!doseed) {
-    make_tracers(si->source, tracers, field, alg_enum);
+    make_tracers(si->source, tracers, field);
   } else { // use the seeds from the scalar field
     double fac = 1.0/(sfield->samples.size()-1.0);
     for(int i=0;i<sfield->samples.size();i++) {
@@ -1006,7 +1006,7 @@ void Streamline::do_streamtube(SLSourceInfo* si)
 {
     SLSource* source=si->source;
     tracers.remove_all();
-    make_tracers(source, tracers, field, alg_enum);
+    make_tracers(source, tracers, field);
     tubes.resize(tracers.size());
     np=Min(tracers.size(), Task::nprocessors());
     Task::multiprocess(np, do_parallel_streamtube, this);
@@ -1127,7 +1127,7 @@ void Streamline::do_streamsurface(SLSourceInfo* si,
 {
     tracers.remove_all();
     SLSource* source=si->source;
-    make_tracers(source, tracers, field, alg_enum);
+    make_tracers(source, tracers, field);
     if(tracers.size() <= 1){
 	error("Can't make a surface out of this!!!");
 	return;

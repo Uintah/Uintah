@@ -244,7 +244,7 @@ void SolveMatrix::execute()
    } else if(meth == "conjugate_gradient_sci"){
      conjugate_gradient_sci(matrix.get_rep(),
 			    *solution.get_rep(), *rhs.get_rep());
-     solport->send_intermediate(solution);
+     solport->send(solution);
      
    } else if(meth == "bi_conjugate_gradient_sci"){
      bi_conjugate_gradient_sci(matrix.get_rep(),
@@ -928,7 +928,8 @@ void SolveMatrix::conjugate_gradient_sci(Matrix* matrix,
   CPUTimer timer;
   timer.start();
   int np = tcl_np.get();
-  //     int np=Task::nprocessors();
+  if(np>Task::nprocessors())
+	np=Task::nprocessors();
   cerr << "np=" << np << endl;
   CGData* data=new CGData;
   data->module=this;

@@ -5,6 +5,9 @@
 #include <string.h>
 #include <errno.h>
 #include <fcntl.h>
+#ifdef __sgi
+#include <unistd.h>
+#endif
 
 #ifdef sun
 #define MMAP_TYPE char
@@ -42,7 +45,18 @@ void OSHunk::free(OSHunk* hunk)
 {
     size_t len=hunk->len;
     if(munmap((MMAP_TYPE*)hunk, len) == -1){
-	fprintf(stderr, "Error unmapping memory\nmunmap: errno=%d\n", errno);
-	abort();
+	int i;
+        for(i=0;i<10;i++){
+#ifdef __sgi
+	    sginap(10);
+#endif
+    	    if(munmap((MMAP_TYPE*)hunk, len) != -1)
+		break;
+        }
+ 	if(i==10){
+	    fprintf(stderr, "Error unmapping memory\nmunmap: errno=%d\n", errno);
+	    fprintf(stderr, "Unmap failed - leaking memory\n");
+	    //abort();
+	}
     }
 }
