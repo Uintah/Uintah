@@ -74,18 +74,21 @@ public:
   sci::cca::Port::pointer getService(const std::string&);
   
   /** ? */
-  virtual void addComponentEventListener(sci::cca::ports::ComponentEventType type,
-                        const sci::cca::ports::ComponentEventListener::pointer& l,
-                                         bool playInitialEvents);
+  virtual void
+  addComponentEventListener(sci::cca::ports::ComponentEventType type,
+                            const sci::cca::ports::ComponentEventListener::pointer& l,
+                            bool playInitialEvents);
   
   /** ? */
   virtual void
   removeComponentEventListener(sci::cca::ports::ComponentEventType type,
-                        const sci::cca::ports::ComponentEventListener::pointer& l);
+                               const sci::cca::ports::ComponentEventListener::pointer& l);
   
   virtual void moveComponent(const sci::cca::ComponentID::pointer& id, int x, int y);
-  private:
 
+  void emitComponentEvent(const sci::cca::ports::ComponentEvent::pointer& event);
+
+private:
   struct Listener
   {
     sci::cca::ports::ComponentEventType type;
@@ -94,8 +97,8 @@ public:
              const sci::cca::ports::ComponentEventListener::pointer& l)
       : type(type), l(l)
     {  }
-    
   };
+
   std::vector<Listener*> listeners;
   ComponentEventService(SCIRunFramework* fwk, const std::string& name);
 };
