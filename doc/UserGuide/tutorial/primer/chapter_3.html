@@ -3,6 +3,7 @@
 <meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
 <meta name="generator" content="Adobe GoLive 4">
 <title>Derived Fields</title>
+<!-- Changed by: Ted Dustman, 20-Feb-2002 -->
 </head>
 
 <body bgcolor="#a9a9a9">
@@ -55,8 +56,11 @@
         Field, the module produces a triangulated surface Field of
         just the boundary faces as output.
 
-	<p>To create a FieldBounday module from
-	SCIRun/Fields/FieldBoundary:
+	<p>[To create a FieldBoundary module from
+	SCIRun/Fields/FieldBoundary|<Confusing - This part tells how
+					       to create a net using the
+					       FieldBoundary module not how to
+					       create a FieldBoundary module>]
 	<ol>
 	<li value="1.">Attach the output from a FieldReader 
 	(choose the utahtorso-lowres-voltage.tvd.fld file again)
@@ -91,28 +95,33 @@
 	<p>Another useful technique for visualizing data is to interpolate data values
 	 from one Field to another Field. In this section, we will read in two datasets:
 	<ul> 
-	<li>The first contains the utahtorso volume mesh we looked at in Chapter 1.
-	<li>The second contains the electrodes that we looked at in
+	<li>The first contains the utahtorso volume [mesh|data (mesh and
+	  voltage values)] we looked at in Chapter 1.
+	<li>The second contains the electrode[s| positions] [that|] we [looked at|saw] in
 	Chapter 2 [link here to chapter 2, electrodes]. </ul>
 	
-	<p>The volume Field contains simulated voltage values
-	through the entire volume.  For each position of the electrodes,
+	<p>The [|utahtorso] volume Field contains simulated voltage values
+	through the entire volume.  For each [|electrode] position [of the electrodes|],
 	we must look up the corresponding voltage value
-	from the volume mesh. 
+	from the volume field. 
 	
-	<p>We can then output a new combined Field containing the geometry 
-	of the electrodes and their corresponding interpolated voltages from the volume.  
+	[|<Note: The following paragraph should come before the previous paragraph>]
+
+	<p>We [can then|want to] output a new [combined|] Field containing the
+	  [|electrode's] [geometry|positions (as geometry)]
+	[of the electrodes|] and [their|] corresponding [|voltage values]
+	interpolated [voltages|] from the [|utahtorso] volume.
 
 	<p>The module that implements this algorithm is called
 	DirectInterpolate (SCIRun/Fields/DirectInterpolate).
 	<p>To implement the net described above, we will need:
 	<ul>
-	<li>two FieldReader modules 
-	<li>one DirectInterpolate module 
-	<li>one ShowField module
-	<li>one GenStandardColorMaps module 
-	<li>one RescaleColorMap module 
-	<li>one Viewer module  
+	<li>Two FieldReader modules 
+	<li>One DirectInterpolate module 
+	<li>One ShowField module
+	<li>One GenStandardColorMaps module 
+	<li>One RescaleColorMap module 
+	<li>One Viewer module  
 	</ul>
 	<p>These should be hooked together as shown in <b>Figure 3.3</b>.
 
@@ -129,7 +138,7 @@
 	utahtorso-lowres-voltage.tvd.fld input file, and the
 	FieldReader on the right should read in the
 	utahtorso-lowres-electrodes.pcd.fld input file.  The resulting
-	image in the ViewWindow should look like <b>Figure 3.4</b>.
+	image in the Viewer Window should look like <b>Figure 3.4</b>.
 
       </div>
 	<center>
@@ -143,8 +152,8 @@
         <p><b><A name="section 3">3C: StreamLines</b><br></A>
 
         <p>Streamline advection is the last visualization technique we will explore in this
-        Chapter.  The StreamLine module takes in a vector Field, and a Field of sample points. The 
-	module then outputs a new Field that consists of a sequence of path-integral curves
+        Chapter.  The StreamLine module takes in a vector Field and a Field of sample points. The 
+	module then outputs a new Field [that consists|consisting] of a sequence of path-integral curves
         generated from advecting (integrating) the sample positions
         through the (derivative) vector Field.
 
@@ -168,7 +177,8 @@
 	
 	<p>To interactively position the rake of seed points within
 	the volume:
-	<ol><li value="2.">Connect the Geometry output port (pink) from this
+	<ol><li value="2.">Connect the geometry output port (pink) [from
+	      this|of the SampleField]
 	module to the Viewer module.  
 	<li>Select the "rake" option from the SampleField UI and 
 	set the number of samples to 30.
@@ -178,11 +188,11 @@
 
 	<p>At this point, we have streamlines coming out of the
         StreamLines module, and we would like to render them.  Before
-        we do, we can attach scalar datavalues to the
+        we do, we [can|] attach scalar data values to the
         streamline nodes.  To accomplish this, we use the
         DirectInterpolate module described above.  
 
-	<p>We will again use the voltage datavalues from the
+	<p>We will again use the voltage data values from the
         utahtorso-lowres-voltage.tvd.fld Field.  Attaching all of the
         modules, we have the network shown in <b>Figure 3.5</b>.
 
@@ -222,7 +232,7 @@
 	<li>Press any of the "Execute" buttons that appear on many of the module User
 	Interfaces. </li> 
 
-	These actions will execute the selected module, as well as any modules 
+	These actions will execute the selected module as well as any modules 
 	that are part of its data dependency graph.
 
 	</div>
@@ -249,7 +259,8 @@
 	<br>
 	<p>You can move this widget around to new positions by:
 	<ol>
-	<li value="1.">Press the shift key and click on the widget with the left mouse button. 
+	<li value="1.">Press [|(and hold down)] the shift key and click on
+	the widget with the left mouse button.
 	<LI>Release the mouse button.</OL> 
 	<P>The streamlines will automatically recompute from the new seed positions.
 
