@@ -1057,6 +1057,10 @@ void CI::emit_proxyclass(EmitState& e)
     Method* m=*iter;
     m->emit_prototype(e.proxy, Method::Normal, symbols->getParent());
   }
+    
+  e.proxy << "\n";
+  e.proxy << leader2 << "virtual void createSubset(int ssize);\n";   
+
   if (doRedistribution) {
     e.proxy << '\n';  
     e.proxy << leader2 << "virtual void setCallerDistribution(std::string distname,\n"; 
@@ -1116,6 +1120,10 @@ void CI::emit_header(EmitState& e)
     Method* m=*iter;
     m->emit_prototype(e.decl, Method::PureVirtual, symbols->getParent());
   }
+
+  e.decl << "\n";
+  e.decl << leader2 << "virtual void createSubset(int ssize);\n";   
+
   if (doRedistribution) {
     e.decl << '\n';  
     e.decl << leader2 << "virtual void setCallerDistribution(std::string distname,\n";
@@ -1164,6 +1172,11 @@ void CI::emit_interface(EmitState& e)
     e.out << "void " << fn << "::setCallerDistribution(std::string distname,\n" 
           << "\t\t\t\tSCIRun::MxNArrayRep* arrrep)\n{  }\n\n";
   }
+
+  e.out << "// subsetting method\n";
+  e.out << "void " << fn << "::createSubset(int ssize)\n"; 
+  e.out << "{\n";
+  e.out << "}\n\n";
 
   e.out << fn << "::" << cn << "(bool initServer)\n";
   if(parent_ifaces.size() != 0 || parentclass)
@@ -1266,6 +1279,12 @@ void CI::emit_proxy(EmitState& e)
     Method* m=*iter;
     m->emit_proxy(e, fn, localScope);
   }
+
+  e.out << "\n// subsetting proxy method\n";
+  e.out << "void " << fn << "::createSubset(int ssize)\n"; 
+  e.out << "{\n";
+  e.out << "  _proxycreateSubset(ssize);\n";
+  e.out << "}\n\n";
 
   // Emit setCallerDistribution proxy
   if(doRedistribution) {
@@ -1391,6 +1410,7 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     string nocallret_ldr=e.out.push_leader();
 
     e.out << leader2 << "_ref = _rm->getCollectiveReference(SCIRun::NOCALLRET);\n";
+    e.out << leader2 << "if(_ref.size() <= 0) goto exitmethod;\n";
     e.out << leader2 << "::SCIRun::Message* message = (_ref[0])->chan->getMessage();\n";
     e.out << leader2 << "message->createMessage();\n";
     e.out << leader2 << "//Marshal flag which informs handler that\n";
@@ -1503,6 +1523,7 @@ e.out << leader2 << "::std::cout << \"CALLNORET sending _sessionID = '\" << _ses
   if (isCollective) { 
     e.out << leader2 << "/*CALLONLY*/\n";
     e.out << leader2 << "_ref = _rm->getCollectiveReference(SCIRun::CALLONLY);\n";  
+    e.out << leader2 << "if(_ref.size() <= 0) goto exitmethod;\n";
     e.out << leader2 << "::SCIRun::Message* message = (_ref[0])->chan->getMessage();\n";
   } else {
     e.out << leader2 << "::SCIRun::Reference* _i_ref = _rm->getIndependentReference();\n";
@@ -1548,7 +1569,7 @@ e.out << leader2 << "::std::cout << \"CALLONLY sending _sessionID = '\" << _sess
   }
   e.out << leader2 << "message->sendMessage(_handler);\n";
   e.out << leader2 << "save_callonly_msg = message;\n";
-  e.out << leader2 << "// Getting CALLONLY reply to be continued...\n";
+  e.out << leader2 << "// CALLONLY reply to be continued...\n";
 
   if (isCollective) {
     e.out.pop_leader(call_ldr);
@@ -1611,10 +1632,14 @@ e.out << leader2 << "::std::cout << \"CALLONLY sending _sessionID = '\" << _sess
     }
 
     /**********************************************/
+    e.out << "exitmethod:\n";
     if(reply_required()) {  
       if(return_type){
 	if(!return_type->isvoid()){
 	  e.out << "  return _ret;\n";
+	}
+        else {
+          e.out << "  return;\n";
 	}
       }
     }

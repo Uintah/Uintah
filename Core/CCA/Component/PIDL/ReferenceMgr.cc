@@ -34,10 +34,11 @@ ReferenceMgr::ReferenceMgr()
 {
   localSize=1; 
   localRank=0;
+  isSubset=false;
 }
 
 ReferenceMgr::ReferenceMgr(int rank, int size)
-  :localSize(size), localRank(rank)
+  :localSize(size), localRank(rank), isSubset(false)
 {
 }
 
@@ -49,16 +50,24 @@ ReferenceMgr& ReferenceMgr::operator=(const ReferenceMgr& copy)
   }
   localSize = copy.localSize;
   localRank = copy.localRank;
+  isSubset = copy.isSubset;
+  if(isSubset) {
+    save_lSize = copy.save_lSize;
+  } 
   intracomm = copy.intracomm;
   return *this;
 }
 
 ReferenceMgr::ReferenceMgr(const ReferenceMgr& copy)
   :localSize(copy.localSize),localRank(copy.localRank),
-   d_ref(copy.d_ref), intracomm(copy.intracomm) 
+   isSubset(copy.isSubset), d_ref(copy.d_ref),
+   intracomm(copy.intracomm) 
 {
   for(unsigned int i=0; i < d_ref.size(); i++) {
     d_ref[i].chan = (copy.d_ref[i].chan)->SPFactory(true);
+  }
+  if(isSubset) {
+    save_lSize = copy.save_lSize;
   }
 }
 
@@ -80,6 +89,8 @@ Reference* ReferenceMgr::getIndependentReference()
   ::std::vector<Reference*> refPtrList;
   refList::iterator iter;
 
+  if (localRank >= localSize) return refPtrList;
+
   switch(tip) {
   case (CALLONLY):
   case (NOCALLRET):
@@ -97,9 +108,10 @@ Reference* ReferenceMgr::getIndependentReference()
   return refPtrList;
 }
 
-refList* ReferenceMgr::getAllReferences()
+refList* ReferenceMgr::getAllReferences() const
 {
-  return (&d_ref);
+  if (localRank >= localSize) return(new refList());
+  return (refList*)(&d_ref);
 }
 
 void ReferenceMgr::insertReference(const Reference& ref)
@@ -111,3 +123,23 @@ int ReferenceMgr::getRemoteSize()
 {
   return (d_ref.size());
 }
+
+void ReferenceMgr::createSubset(int ssize)
+{
+  if(ssize) { 
+    if(!isSubset){
+      isSubset=true;
+      save_lSize=localSize;
+    }
+    localSize=ssize; 
+  }
+  else { 
+    if(isSubset) {
+      /*reset subsetting*/
+      localSize=save_lSize;
+      isSubset=false;
+    }
+  } 
+
+}
+

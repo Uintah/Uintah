@@ -189,4 +189,12 @@ void Object::setCalleeDistribution(std::string distname,
   d_serverContext->d_sched->setCalleeRepresentation(distname,arrrep);
 }
 
+void Object::createSubset(int ssize)
+{
+  if(d_serverContext)
+    ::std::cerr << "Object::createSubset()-SERVER\n";
+  else {
+    ::std::cerr << "Object::createSubset()-PROXY\n";
+  }  
+}
 

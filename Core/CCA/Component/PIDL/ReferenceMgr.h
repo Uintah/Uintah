@@ -101,7 +101,7 @@ DESCRIPTION
 
     /////////
     // Retreives a pointer to the list of all references
-    refList* getAllReferences();
+    refList* getAllReferences() const;
 
     //////////
     // Adds another reference (parallel component situation)
@@ -111,6 +111,12 @@ DESCRIPTION
     // Returns the number of references in the list
     int getRemoteSize();
 
+    //////////
+    // Create a subset. Only affects getCollectiveReference(...) and
+    // the localRank and localSize variables. Passing 0 or a negative
+    // number resets the state of this object to no subsets.
+    void createSubset(int ssize);
+    
     /////////
     // For parallel proxies, number of cohorts
     int localSize;
@@ -119,6 +125,15 @@ DESCRIPTION
     // For parallel proxies, my ordered number
     int localRank;
 
+    ///////
+    // Denote whether we have subsetted this object  
+    bool isSubset;
+
+    ////////
+    // Save true variables when replaced by subset specific
+    // values. Able to restore them if needed.   
+    int save_lSize;
+      
     //////////
     // A vector of reference to the remote objects.
     refList d_ref;

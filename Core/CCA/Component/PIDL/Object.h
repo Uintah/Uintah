@@ -121,6 +121,11 @@ public:
   // Method used to create an array distribution scheduler
   void createScheduler();
 
+  /////////
+  // Create a subset of processes to service
+  // collective calls.
+  void createSubset(int ssize);
+
 protected:
   //////////
   // Constructor.  Initializes d_serverContext to null,
