@@ -885,7 +885,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
 /*==========TESTING==========`*/
       //__________________________________
       //  compute CC Variables
-      for(CellIterator iter =patch->getCellIterator();!iter.done();iter++){
+      for(CellIterator iter =patch->getExtraCellIterator();!iter.done();iter++){
         IntVector c = *iter;
         patch->findNodesFromCell(*iter,nodeIdx);
  
@@ -933,19 +933,14 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
           }
         }
       } 
-      //__________________________________
-      //  Set BC's
-      setBC(vel_CC,  "Velocity",   patch, indx);
-      setBC(Temp_CC, "Temperature",patch, d_sharedState, indx);
-      setBC(cmass,   "Density",    patch, d_sharedState, indx);
-      setBC(cvolume, "Density",    patch, d_sharedState, indx); 
-      
+
 /*`==========TESTING==========*/
+      //  Set BC's
+      setBC(Temp_CC, "Temperature",patch, d_sharedState, indx);
+      setBC(vel_CC,  "Velocity",   patch, indx);
       //  Set if symmetric Boundary conditions
-    #if 0
       setBC(cmass,   "set_if_sym_BC",patch, d_sharedState, indx);
       setBC(cvolume, "set_if_sym_BC",patch, d_sharedState, indx);
-    #endif 
 /*==========TESTING==========`*/
       
      //---- P R I N T   D A T A ------
@@ -1198,11 +1193,11 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
       new_dw->getModifiable(gacceleration,Mlb->gAccelerationLabel,indx,patch);
                   
       Ghost::GhostType  gac = Ghost::AroundCells;
-      new_dw->get(old_mom_L_CC,    Ilb->mom_L_CCLabel,       indx,patch,gac,1);  
-      new_dw->get(old_int_eng_L_CC,Ilb->int_eng_L_CCLabel,   indx,patch,gac,1);  
-      new_dw->get(mass_L_CC,       Ilb->mass_L_CCLabel,      indx,patch,gac,1);  
-      new_dw->get(mom_L_ME_CC,     Ilb->mom_L_ME_CCLabel,    indx,patch,gac,1);  
-      new_dw->get(int_eng_L_ME_CC, Ilb->int_eng_L_ME_CCLabel,indx,patch,gac,1); 
+      new_dw->get(old_mom_L_CC,    Ilb->mom_L_CCLabel,       indx,patch,gac,1);
+      new_dw->get(old_int_eng_L_CC,Ilb->int_eng_L_CCLabel,   indx,patch,gac,1);
+      new_dw->get(mass_L_CC,       Ilb->mass_L_CCLabel,      indx,patch,gac,1);
+      new_dw->get(mom_L_ME_CC,     Ilb->mom_L_ME_CCLabel,    indx,patch,gac,1);
+      new_dw->get(int_eng_L_ME_CC, Ilb->int_eng_L_ME_CCLabel,indx,patch,gac,1);
       double cv = mpm_matl->getSpecificHeat();     
 
       new_dw->allocate(dTdt_NC, Mlb->dTdt_NCLabel,        indx, patch);
@@ -1211,7 +1206,7 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
       Vector dvdt_tmp;
       double dTdt_tmp;
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
-        patch->findCellsFromNode(*iter,cIdx);
+       patch->findCellsFromNode(*iter,cIdx);
        for(int in=0;in<8;in++){
           dvdt_tmp  = (mom_L_ME_CC[cIdx[in]] - old_mom_L_CC[cIdx[in]])
                     / (mass_L_CC[cIdx[in]] * delT);
@@ -1798,7 +1793,6 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
     // M P M  matls
     // compute the burned mass and released Heat
     // if burnModel != null  && material == reactant
-    double total_created_vol = 0;
     for(int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl); 
@@ -1918,7 +1912,6 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
              sumReleasedHeat[c] += int_eng_react[m][c];
              sumCreatedVol[c]   += createdVol[m][c];
              sumMom_comb[c]     += -mom_comb[m][c];
-             total_created_vol  += createdVol[m][c];
              burnedMass[m][c]    = -burnedMass[m][c];
              // reactantants: (-)burnedMass
              // int_eng_react  = change in internal energy of the reactants
