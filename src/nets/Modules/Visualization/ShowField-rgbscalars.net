@@ -32,14 +32,20 @@ source $DATADIR/$DATASET/$DATASET.settings
 
 ::netedit dontschedule
 
-set m0 [addModuleAtPosition "SCIRun" "Fields" "SampleLattice" 135 46]
-set m1 [addModuleAtPosition "SCIRun" "Fields" "TransformData" 127 155]
-set m2 [addModuleAtPosition "SCIRun" "Render" "Viewer" 128 384]
-set m3 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 116 272]
+global notes
+set notes ""
+
+set m0 [addModuleAtPosition "SCIRun" "Fields" "SampleLattice" 119 27]
+set m1 [addModuleAtPosition "SCIRun" "Fields" "TransformData" 96 133]
+set m2 [addModuleAtPosition "SCIRun" "Render" "Viewer" 57 414]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 80 313]
+set m4 [addModuleAtPosition "SCIRun" "Fields" "VectorMagnitude" 287 226]
 
 addConnection $m0 0 $m1 0
 addConnection $m1 0 $m3 0
 addConnection $m3 0 $m2 0
+addConnection $m1 0 $m4 0
+addConnection $m4 0 $m3 2
 
 set $m0-notes {}
 set $m0-sizex {8}
@@ -50,6 +56,7 @@ set $m0-data-at {Nodes}
 set $m1-notes {}
 set $m1-function {result = Vector((x+1)*0.5, (y+1)*0.5, (z+1)*0.5);
 
+
 }
 set $m1-outputdatatype {Vector}
 set $m2-notes {}
@@ -59,15 +66,15 @@ set $m2-ViewWindow_0-caxes {0}
 set $m2-ViewWindow_0-raxes {1}
 set $m2-ViewWindow_0-iaxes {}
 set $m2-ViewWindow_0-have_collab_vis {0}
-set $m2-ViewWindow_0-view-eyep-x {0.3619099660479703}
-set $m2-ViewWindow_0-view-eyep-y {-5.536068419850894}
-set $m2-ViewWindow_0-view-eyep-z {-10.41349929789237}
+set $m2-ViewWindow_0-view-eyep-x {-4.619247865646082}
+set $m2-ViewWindow_0-view-eyep-y {-10.50683245600236}
+set $m2-ViewWindow_0-view-eyep-z {2.736607552649732}
 set $m2-ViewWindow_0-view-lookat-x {}
 set $m2-ViewWindow_0-view-lookat-y {}
 set $m2-ViewWindow_0-view-lookat-z {}
-set $m2-ViewWindow_0-view-up-x {-0.5857869492369614}
-set $m2-ViewWindow_0-view-up-y {-0.7238856045241302}
-set $m2-ViewWindow_0-view-up-z {0.3644767230789751}
+set $m2-ViewWindow_0-view-up-x {-0.1405376469399383}
+set $m2-ViewWindow_0-view-up-y {0.3069546622226439}
+set $m2-ViewWindow_0-view-up-z {0.9412906061001394}
 set $m2-ViewWindow_0-view-fov {20}
 set $m2-ViewWindow_0-view-eyep_offset-x {}
 set $m2-ViewWindow_0-view-eyep_offset-y {}
@@ -108,9 +115,9 @@ set $m2-ViewWindow_0-ortho-view {0}
 set $m2-ViewWindow_0-unused {1}
 set $m2-ViewWindow_0-unused {1}
 set $m3-notes {}
-set $m3-nodes-on {1}
+set $m3-nodes-on {0}
 set $m3-nodes-transparency {0}
-set $m3-nodes-as-disks {1}
+set $m3-nodes-as-disks {0}
 set $m3-edges-on {0}
 set $m3-edges-transparency {1}
 set $m3-faces-on {0}
@@ -118,13 +125,13 @@ set $m3-use-normals {0}
 set $m3-use-transparency {0}
 set $m3-vectors-on {0}
 set $m3-normalize-vectors {0}
-set $m3-has_vector_data {1}
+set $m3-has_vector_data {0}
 set $m3-bidirectional {0}
 set $m3-tensors-on {0}
 set $m3-has_tensor_data {0}
-set $m3-scalars-on {0}
+set $m3-scalars-on {1}
 set $m3-scalars-transparency {0}
-set $m3-has_scalar_data {0}
+set $m3-has_scalar_data {1}
 set $m3-text-on {0}
 set $m3-text-use-default-color {1}
 set $m3-text-color-r {1.0}
@@ -147,20 +154,21 @@ set $m3-node_display_type {Spheres}
 set $m3-edge_display_type {Lines}
 set $m3-data_display_type {Arrows}
 set $m3-tensor_display_type {Boxes}
-set $m3-scalar_display_type {Points}
-set $m3-active_tab {Nodes}
+set $m3-scalar_display_type {Scaled Spheres}
+set $m3-active_tab {Scalars}
 set $m3-node_scale {0.0502}
 set $m3-edge_scale {0.0150}
 set $m3-vectors_scale {0.300}
 set $m3-tensors_scale {0.30}
-set $m3-scalars_scale {0.30}
+set $m3-scalars_scale {0.071}
 set $m3-show_progress {}
 set $m3-interactive_mode {Interactive}
 set $m3-field-name {}
 set $m3-field-name-update {1}
 set $m3-node-resolution {6}
 set $m3-edge-resolution {6}
-set $m3-data-resolution {6}
+set $m3-data-resolution {12}
+set $m4-notes {}
 $m0 initialize_ui
 $m1 initialize_ui
 
