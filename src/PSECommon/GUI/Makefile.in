@@ -31,7 +31,7 @@ tclIndex : AddWells.tcl AddWells2.tcl BitVisualize.tcl \
            SurfInterpVals.tcl SurfToGeom.tcl SurfaceReader.tcl \
 	   SurfaceWriter.tcl \
            TetraWriter.tcl TiffWriter.tcl TracePath.tcl TrainSeg2.tcl \
-           TrainSegment.tcl TransformField.tcl TransformSurf.tcl \
+           TrainSegment.tcl \
            TranslateSurface.tcl VectorFieldReader.tcl VectorFieldWriter.tcl \
            VectorSeg.tcl VisualizeMatrix.tcl VoidStarReader.tcl \
            VoidStarWriter.tcl VolRendTexSlices.tcl VolVis.tcl \
