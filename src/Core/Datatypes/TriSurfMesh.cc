@@ -451,15 +451,14 @@ TriSurfMesh::inside3_p(int i, const Point &p) const
   Vector v0(p0-p);
   Vector v1(p1-p);
   Vector v2(p2-p);
-  double a(Cross(v01, v02).length()); // area of the whole triangle (2x)
-  double a0(Cross(v1, v2).length());  // area opposite p0
-  double a1(Cross(v2, v0).length());  // area opposite p1
-  double a2(Cross(v0, v1).length());  // area opposite p2
-  double s=a0+a1+a2;
-  double r = a/s;
-  if (r < (1-1.e-6)) return false;
-  return true;
+  const double a = Cross(v01, v02).length(); // area of the whole triangle (2x)
+  const double a0 = Cross(v1, v2).length();  // area opposite p0
+  const double a1 = Cross(v2, v0).length();  // area opposite p1
+  const double a2 = Cross(v0, v1).length();  // area opposite p2
+  const double s = a0+a1+a2;
+  return fabs(s - a) < 1.0e-12 && a > 1.0e-12;
 }
+
 
 void
 TriSurfMesh::get_weights(const Point &p,
