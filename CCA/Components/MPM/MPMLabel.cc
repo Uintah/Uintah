@@ -125,7 +125,7 @@ MPMLabel::MPMLabel()
   pVelocityLabel_preReloc = VarLabel::create( "p.velocity+", 
 			ParticleVariable<Vector>::getTypeDescription() );
   
-  pExternalForceLabel_preReloc = VarLabel::create( "p.externalforce+",
+  pExtForceLabel_preReloc = VarLabel::create( "p.externalforce+",
 			ParticleVariable<Vector>::getTypeDescription() );
   
   pXLabel_preReloc = VarLabel::create( "p.x+",
@@ -332,7 +332,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pVelocityLabel);
   VarLabel::destroy(pVelocityLabel_preReloc);
   VarLabel::destroy(pExternalForceLabel);
-  VarLabel::destroy(pExternalForceLabel_preReloc);
+  VarLabel::destroy(pExtForceLabel_preReloc);
   VarLabel::destroy(pXLabel);
   VarLabel::destroy(pXLabel_preReloc);
   VarLabel::destroy(pTemperatureLabel);

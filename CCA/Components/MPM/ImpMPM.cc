@@ -1018,7 +1018,7 @@ void ImpMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->computes(lb->pVelocityLabel_preReloc);
   t->computes(lb->pAccelerationLabel_preReloc);
   t->computes(lb->pXLabel_preReloc);
-  t->computes(lb->pExternalForceLabel_preReloc);
+  t->computes(lb->pExtForceLabel_preReloc);
   t->computes(lb->pParticleIDLabel_preReloc);
   t->computes(lb->pMassLabel_preReloc);
   t->computes(lb->pVolumeLabel_preReloc);
@@ -2908,7 +2908,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->allocateAndPut(pvolumeNew, lb->pVolumeLabel_preReloc,      pset);
       new_dw->allocateAndPut(newpvolumeold,lb->pVolumeOldLabel_preReloc, pset);
       new_dw->allocateAndPut(pexternalForceNew,
-			     lb->pExternalForceLabel_preReloc,pset);
+			     lb->pExtForceLabel_preReloc,pset);
       pexternalForceNew.copyData(pexternalForce);
 
       new_dw->get(dispNew,lb->dispNewLabel,dwindex,patch,Ghost::AroundCells,1);

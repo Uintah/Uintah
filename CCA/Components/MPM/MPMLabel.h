@@ -48,7 +48,7 @@ using std::vector;
       const VarLabel* pVelocityLabel;
       const VarLabel* pVelocityLabel_preReloc;
       const VarLabel* pExternalForceLabel;
-      const VarLabel* pExternalForceLabel_preReloc;
+      const VarLabel* pExtForceLabel_preReloc;
       const VarLabel* pXLabel;
       const VarLabel* pXLabel_preReloc;
       const VarLabel* pSurfLabel;
