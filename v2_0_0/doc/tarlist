@@ -46,8 +46,7 @@ $stdout.print("#{root}/doc/index.html
 #{root}/doc/User/Guide/usersguide
 #{root}/doc/User/Guide/Figures
 #{root}/doc/User/Guide/usersguide.pdf
-#{root}/doc/User/Tutorial
-#{root}/doc/User/BioTensorTutorial
+#{root}/doc/User/Tutorials
 #{root}/doc/User/Nets/nets.pdf
 #{root}/doc/Developer/index.html
 #{root}/doc/Developer/FAQ/faq.html
