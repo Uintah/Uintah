@@ -10,7 +10,7 @@
  *
  *  Copyright (C) 1994 SCI Group
  */
-
+#include <iostream.h>
 #include <Datatypes/TriSurface.h>
 #include <Classlib/Assert.h>
 #include <Classlib/NotFinished.h>
@@ -57,12 +57,12 @@ void TriSurface::add_point(const Point& p) {
     points.add(p);
 }
 
-int TriSurface::add_triangle(int i1, int i2, int i3) {
-    return(add_triangle(i1, i2, i3, 0));  // can no longer assume ordered cw
-}
-
 int TriSurface::get_closest_vertex_id(const Point &p1, const Point &p2,
 				      const Point &p3) {
+    if (grid==0) {
+	cerr << "Can't run TriSurface::get_closest_vertex_id() w/o a grid\n";
+	exit(0);
+    }
     int i[3], j[3], k[3];
     int maxi, maxj, maxk, mini, minj, mink;
     grid->get_element(p1, &(i[0]), &(j[0]), &(k[0]));
@@ -110,6 +110,10 @@ int TriSurface::get_closest_vertex_id(const Point &p1, const Point &p2,
 }
 
 int TriSurface::find_or_add(const Point &p) {
+    if (grid==0) {
+	cerr << "Can't run TriSurface::find_or_add() w/o a grid\n";
+	exit(0);
+    }
     Array1<int> *el=grid->get_members(p);
     for (int i=0, done=0; i<el->size() && !done; i++) {
 	if ((points[elements[(*el)[i]]->i1]-p).length2() < .000001)
@@ -124,7 +128,12 @@ int TriSurface::find_or_add(const Point &p) {
 }
 
 int TriSurface::cautious_add_triangle(const Point &p1, const Point &p2, 
-				       const Point &p3) {
+				       const Point &p3, int cw) {
+    directed&=cw;
+    if (grid==0) {
+	cerr << "Can't run TriSurface::cautious_add_triangle w/o a grid\n";
+	exit(0);
+    }
     int i1=find_or_add(p1);
     int i2=find_or_add(p2);
     int i3=find_or_add(p3);
@@ -132,7 +141,7 @@ int TriSurface::cautious_add_triangle(const Point &p1, const Point &p2,
 }
 
 int TriSurface::add_triangle(int i1, int i2, int i3, int cw) {
-    directed=cw;
+    directed&=cw;
     int temp;
     if (empty_index == -1) {
 	elements.add(new TSElement(i1, i2, i3));
@@ -187,6 +196,11 @@ void TriSurface::construct_grid(int xdim, int ydim, int zdim,
 //		   ...
 
 double TriSurface::distance(const Point &p,Array1<int> &res) {
+
+    if (grid==0) {
+	cerr << "Can't run TriSurface::distance w/o a grid\n";
+	exit(0);
+    }
     Array1<int>* candid;
     Array1<int>* elem;
     Array1<int> tri;
