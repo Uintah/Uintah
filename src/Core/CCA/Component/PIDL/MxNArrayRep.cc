@@ -76,25 +76,16 @@ int SCIRun::gcd(int a, int b, int &x, int &y) {
   return ret;
 }
 
-int SCIRun::crt(int a1, int m1, int a2, int m2) {
-  int x,y;
-  int m = m1 * m2;
-  int M1 = m/m1;
-  if (gcd(M1,m1,x,y) != 1) {
-    //CRT does not apply in this case
-    //return mod and hope for best
-    return (a1 % m1); 
-  }
-  int M1_p = x % m1;
-  int M2 = m/m2;
-  if (gcd(M2,m2,x,y) != 1) {
-    //CRT does not apply in this case
-    //return mod and hope for best
-    return (a2 % m2);
-  }
-  int M2_p = x % m2;
-  return (((a1*M1*M1_p)+(a2*M2*M2_p)) % m);
-}
+int SCIRun::intersectSlice(int f1, int s1, int f2, int s2)
+{
+  int I;
+  int m,n;
+  int _gcd = gcd(s1,s2,m,n);
+  int _lcm = lcm(s1,s2);
+
+  I = f1 + (- ((s1*m*(f1-f2))/_gcd));
+  return (I + (_lcm * (int)ceil((double)(std::max(f1,f2) - I) / (double)_lcm)));
+} 
 
 int SCIRun::gcd(int m,int n) {
   if(n == 0)
@@ -246,57 +237,27 @@ Index* MxNArrayRep::Intersect(MxNArrayRep* arep, int dimno)
 
       //Calculate lcm of the strides:
       int lcm_str = lcm(str,mystr);
+      int d_gcd = gcd(str,mystr);
       intersectionRep->mystride = lcm_str;
 
-      //Calculate the crt:
-      int d_crt; 
-      int d_gcd = gcd(str,mystr);
-      if (d_gcd == 1)
-        d_crt = crt(fst,str,myfst,mystr);
+      if ((fst % d_gcd) == (myfst % d_gcd)) {
+	intersectionRep->myfirst = intersectSlice(fst,str,myfst,mystr);
+      } 
       else {
-        if ((fst % d_gcd) == (myfst % d_gcd)) {
-	  std::cerr << "Intersection exists, but I can't find it\n";
-          //No Intersection
-          intersectionRep->myfirst = 1;
-          intersectionRep->mylast = 0;
+	//No Intersection
+	intersectionRep->myfirst = 0;
+	intersectionRep->mylast = 0;
+	intersectionRep->mystride = 0;
 
-          std::cerr << "INTERSECTION: ";
-          intersectionRep->print(std::cerr);
-
-          return intersectionRep;
-        } 
-	else {
-          //No Intersection
-          intersectionRep->myfirst = 1;	
-          intersectionRep->mylast = 0;
-
-          std::cerr << "INTERSECTION: ";
-          intersectionRep->print(std::cerr);
-
-          return intersectionRep; 
-        } 
+	intersectionRep->print(std::cerr);
+	return intersectionRep;
       }
-      while(d_crt < 0)  d_crt += lcm_str;
-      std::cout << "CRT = " << d_crt << "\n";
-      //Using the crt as the starting intersect, find the first intersect 
-      //within the first and last pairs:
-      int max_fst = std::max(myfst,fst);
-      int t1 = max_fst - d_crt;
-      if ((t1 % lcm_str) == 0)
-	intersectionRep->myfirst = max_fst;
-      else {
-	t1 = (t1 / lcm_str) + 1;
-	intersectionRep->myfirst = lcm_str * t1 + d_crt;
-      }
-      
-      //Using the first intersect, find the last
+
+      //Find the last
       int min_lst = std::min(mylst,lst) - 1;
       int dif = min_lst - intersectionRep->myfirst;
       if (dif > 0) {
-	if ((dif % lcm_str) == 0)
-	  intersectionRep->mylast = min_lst;
-	else
-	  intersectionRep->mylast = min_lst - (dif % lcm_str);
+	intersectionRep->mylast = min_lst;
       }
       else {
 	//No Intersection, leave results as they will signify that also

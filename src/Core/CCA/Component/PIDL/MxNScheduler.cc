@@ -180,7 +180,7 @@ void MxNScheduler::clear(std::string distname)
 
 void MxNScheduler::print()
 {
-  if (!dbg) {
+  //  if (!dbg) {
     schedList::iterator iter = entries.begin();   
     std::cerr << "entries.size = " << entries.size() << "\n";
     for(unsigned int i=0; i < entries.size(); i++, iter++) {
@@ -191,6 +191,7 @@ void MxNScheduler::print()
 	std::cerr << " Callee\n"; 
       ((*iter).second)->print(std::cerr);
     }
+  /*
   }
   else {
     schedList::iterator iter = entries.begin();   
@@ -204,6 +205,7 @@ void MxNScheduler::print()
       ((*iter).second)->print(dbg);
     }
   }
+  */
 }
 
 

@@ -59,19 +59,18 @@ namespace SCIRun {
   
   ////////////
   // Solves ax + by = gcd(a,b) for a given a
-  // and b integer values. This function is used
-  // by the Chinese Remainder Theorem below. 
-  // In addition, gcd(a,b) is returned by this function.
+  // and b integer values. In addition, gcd(a,b) is 
+  // returned by this function.
   int gcd(int a, int b, int &x, int &y);
-  ////////////
-  // The Chinese Remainder Theorem for two congruencies
-  int crt(int a1, int m1, int a2, int m2);
   /////////////
   // Greatest Common Divisor of two integers 
   int gcd(int m,int n);
   ////////////
   // Least Common Multiplier of two integers
   int lcm(int m,int n);
+  ///////////
+  // Intesects two array slice descriptions
+  int intersectSlice(int f1, int s1, int f2, int s2);
   
   class Index;
   
