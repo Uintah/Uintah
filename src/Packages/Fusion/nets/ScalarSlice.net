@@ -2,16 +2,13 @@
 
 ::netedit dontschedule
 
-global notes
-set notes ""
-
 set m0 [addModuleAtPosition "Fusion" "DataIO" "FusionFieldReader" 16 17]
-set m1 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 184 201]
+set m1 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 218 202]
 set m2 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 16 390]
 set m3 [addModuleAtPosition "SCIRun" "Render" "Viewer" 16 497]
-set m4 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 188 16]
-set m5 [addModuleAtPosition "Fusion" "Fields" "EditFusionField" 16 157]
-set m6 [addModuleAtPosition "Fusion" "Fields" "FusionSlicer" 16 247]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 218 18]
+set m5 [addModuleAtPosition "SCIRun" "Fields" "FieldSubSample" 16 157]
+set m6 [addModuleAtPosition "SCIRun" "Fields" "FieldSlicer" 16 247]
 
 addConnection $m1 0 $m2 1
 addConnection $m2 0 $m3 0
@@ -27,13 +24,13 @@ set $m0-filename {/home/sci/allen/SCIRUN/SCIRunData/fusion/NIMROD_10089_00.mds}
 set $m1-notes {}
 set $m1-show_status {1}
 set $m1-isFixed {0}
-set $m1-min {      -0.00360463}
-set $m1-max {           735375}
+set $m1-min {      1.04083e-17}
+set $m1-max {           476463}
 set $m1-makeSymmetric {0}
 set $m2-notes {}
 set $m2-show_status {1}
 set $m2-nodes-on {1}
-set $m2-nodes-as-disks {1}
+set $m2-nodes-as-disks {0}
 set $m2-edges-on {1}
 set $m2-faces-on {1}
 set $m2-use-normals {0}
@@ -48,6 +45,13 @@ set $m2-text-use-default-color {1}
 set $m2-text-color-r {1.0}
 set $m2-text-color-g {1.0}
 set $m2-text-color-b {1.0}
+set $m2-text-backface-cull {0}
+set $m2-text-fontsize {1}
+set $m2-text-show-data {1}
+set $m2-text-show-nodes {0}
+set $m2-text-show-edges {0}
+set $m2-text-show-faces {0}
+set $m2-text-show-cells {0}
 set $m2-def-color-r {0.5}
 set $m2-def-color-g {0.5}
 set $m2-def-color-b {0.5}
@@ -60,7 +64,8 @@ set $m2-edge_scale {0.03}
 set $m2-vectors_scale {0.000001}
 set $m2-show_progress {0}
 set $m2-interactive_mode {Interactive}
-set $m2-resolution {4}
+set $m2-node-resolution {6}
+set $m2-edge-resolution {6}
 set $m3-notes {}
 set $m3-show_status {1}
 set $m4-notes {}
@@ -77,26 +82,32 @@ set $m4-realres {255}
 set $m4-gamma {0.00}
 set $m5-notes {}
 set $m5-show_status {1}
-set $m5-idim {385}
-set $m5-jdim {192}
-set $m5-kdim {10}
-set $m5-istart {0}
-set $m5-jstart {0}
-set $m5-kstart {0}
-set $m5-idelta {384}
-set $m5-jdelta {192}
-set $m5-kdelta {10}
-set $m5-iskip {20}
-set $m5-jskip {10}
-set $m5-kskip {1}
+set $m5-wrap {1}
+set $m5-dims {3}
+set $m5-i-dim {385}
+set $m5-j-dim {192}
+set $m5-k-dim {10}
+set $m5-i-start {0}
+set $m5-j-start {0}
+set $m5-k-start {0}
+set $m5-i-stop {384}
+set $m5-j-stop {0}
+set $m5-k-stop {0}
+set $m5-i-skip {5}
+set $m5-j-skip {4}
+set $m5-k-skip {1}
+set $m5-i-wrap {0}
+set $m5-j-wrap {1}
+set $m5-k-wrap {1}
 set $m6-notes {}
 set $m6-show_status {1}
-set $m6-axis {2}
-set $m6-idim {21}
-set $m6-jdim {20}
-set $m6-kdim {10}
+set $m6-axis {1}
+set $m6-dims {3}
+set $m6-idim {78}
+set $m6-jdim {49}
+set $m6-kdim {11}
 set $m6-iindex {0}
 set $m6-jindex {0}
-set $m6-kindex {0}
+set $m6-kindex {6}
 
 ::netedit scheduleok

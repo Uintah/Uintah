@@ -2,9 +2,12 @@
 
 ::netedit dontschedule
 
+global notes
+set notes ""
+
 set m0 [addModuleAtPosition "Fusion" "DataIO" "FusionFieldReader" 16 17]
 set m1 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 300 55]
-set m2 [addModuleAtPosition "Fusion" "Fields" "EditFusionField" 34 133]
+set m2 [addModuleAtPosition "SCIRun" "Fields" "FieldSubSample" 34 133]
 set m3 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 34 333]
 set m4 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 34 553]
 set m5 [addModuleAtPosition "SCIRun" "Fields" "SampleField" 64 228]
@@ -39,18 +42,23 @@ set $m1-realres {255}
 set $m1-gamma {0.00}
 set $m2-notes {}
 set $m2-show_status {1}
-set $m2-idim {385}
-set $m2-jdim {192}
-set $m2-kdim {10}
-set $m2-istart {0}
-set $m2-jstart {0}
-set $m2-kstart {0}
-set $m2-idelta {384}
-set $m2-jdelta {192}
-set $m2-kdelta {10}
-set $m2-iskip {10}
-set $m2-jskip {5}
-set $m2-kskip {1}
+set $m2-wrap {1}
+set $m2-dims {3}
+set $m2-i-dim {385}
+set $m2-j-dim {192}
+set $m2-k-dim {10}
+set $m2-i-start {0}
+set $m2-j-start {0}
+set $m2-k-start {0}
+set $m2-i-stop {384}
+set $m2-j-stop {0}
+set $m2-k-stop {0}
+set $m2-i-skip {10}
+set $m2-j-skip {5}
+set $m2-k-skip {1}
+set $m2-i-wrap {0}
+set $m2-j-wrap {1}
+set $m2-k-wrap {1}
 set $m3-notes {}
 set $m3-show_status {1}
 set $m3-stepsize {0.0001}
@@ -60,20 +68,32 @@ set $m3-direction {2}
 set $m3-color {1}
 set $m3-remove-colinear {1}
 set $m3-method {4}
+set $m3-np {1}
 set $m4-notes {}
 set $m4-show_status {1}
 set $m4-nodes-on {1}
 set $m4-nodes-as-disks {0}
 set $m4-edges-on {1}
+set $m4-faces-on {0}
 set $m4-use-normals {0}
 set $m4-use-transparency {0}
-set $m4-faces-on {0}
 set $m4-vectors-on {0}
 set $m4-normalize-vectors {25277570}
 set $m4-has_vec_data {0}
 set $m4-bidirectional {0}
 set $m4-arrow-heads-on {1}
-set $m4-error-cones-on {0}
+set $m4-text-on {0}
+set $m4-text-use-default-color {1}
+set $m4-text-color-r {1.0}
+set $m4-text-color-g {1.0}
+set $m4-text-color-b {1.0}
+set $m4-text-backface-cull {0}
+set $m4-text-fontsize {1}
+set $m4-text-show-data {1}
+set $m4-text-show-nodes {0}
+set $m4-text-show-edges {0}
+set $m4-text-show-faces {0}
+set $m4-text-show-cells {0}
 set $m4-def-color-r {0.5}
 set $m4-def-color-g {0.5}
 set $m4-def-color-b {0.5}
@@ -86,7 +106,8 @@ set $m4-edge_scale {0.03}
 set $m4-vectors_scale {0.3}
 set $m4-show_progress {39848618}
 set $m4-interactive_mode {Interactive}
-set $m4-resolution {4}
+set $m4-node-resolution {6}
+set $m4-edge-resolution {6}
 set $m5-notes {}
 set $m5-show_status {1}
 set $m5-endpoints {1}
@@ -111,6 +132,7 @@ set $m6-show_status {1}
 set $m6-isFixed {0}
 set $m6-min {                0}
 set $m6-max {              128}
+set $m6-makeSymmetric {0}
 set $m7-notes {}
 set $m7-show_status {1}
 

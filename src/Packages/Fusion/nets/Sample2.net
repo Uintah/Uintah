@@ -9,8 +9,8 @@ set m3 [addModuleAtPosition "SCIRun" "Render" "Viewer" 15 836]
 set m4 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 272 685]
 set m5 [addModuleAtPosition "Fusion" "DataIO" "MDSPlusFieldReader" 234 18]
 set m6 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 467 15]
-set m7 [addModuleAtPosition "Fusion" "Fields" "EditFusionField" 16 182]
-set m8 [addModuleAtPosition "Fusion" "Fields" "EditFusionField" 822 180]
+set m7 [addModuleAtPosition "SCIRun" "Fields" "FieldSubSample" 16 182]
+set m8 [addModuleAtPosition "SCIRun" "Fields" "FieldSubSample" 822 180]
 set m9 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 822 374]
 set m10 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 903 553]
 set m11 [addModuleAtPosition "SCIRun" "Fields" "SampleField" 840 265]
@@ -21,10 +21,10 @@ set m15 [addModuleAtPosition "SCIRun" "Visualization" "TextureVolVis" 110 559]
 set m16 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 111 382]
 set m17 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 725 471]
 set m18 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 725 555]
-set m19 [addModuleAtPosition "Fusion" "Fields" "EditFusionField" 1098 124]
+set m19 [addModuleAtPosition "SCIRun" "Fields" "FieldSubSample" 1098 124]
 set m20 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 1098 432]
 set m21 [addModuleAtPosition "SCIRun" "Visualization" "TexCuttingPlanes" 407 567]
-set m22 [addModuleAtPosition "Fusion" "Fields" "EditFusionField" 407 199]
+set m22 [addModuleAtPosition "SCIRun" "Fields" "FieldSubSample" 407 199]
 set m23 [addModuleAtPosition "SCIRun" "Fields" "SampleLattice" 437 293]
 set m24 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 407 387]
 set m25 [addModuleAtPosition "SCIRun" "Visualization" "GLTextureBuilder" 407 479]
@@ -73,11 +73,11 @@ addConnection $m27 0 $m12 0
 addConnection $m27 0 $m26 0
 addConnection $m28 0 $m26 1
 addConnection $m19 0 $m28 0
-addConnection $m5 0 $m7 0
-addConnection $m5 0 $m1 1
-addConnection $m5 0 $m22 0
-addConnection $m5 1 $m8 0
-addConnection $m5 2 $m19 0
+addConnection $m0 0 $m7 0
+addConnection $m0 0 $m1 1
+addConnection $m0 0 $m22 0
+addConnection $m0 3 $m19 0
+addConnection $m0 2 $m8 0
 
 set $m0-notes {}
 set $m0-show_status {1}
@@ -85,23 +85,34 @@ set $m0-filename {/home/sci/allen/SCIRUN/SCIRunData/fusion/NIMROD_10107_01.mds}
 set $m1-notes {}
 set $m1-show_status {1}
 set $m1-isFixed {0}
-set $m1-min {      -0.00583625}
-set $m1-max {         0.725436}
+set $m1-min {       -0.0155957}
+set $m1-max {         0.725127}
 set $m1-makeSymmetric {0}
 set $m2-notes {}
 set $m2-show_status {1}
 set $m2-nodes-on {1}
 set $m2-nodes-as-disks {0}
 set $m2-edges-on {1}
+set $m2-faces-on {1}
 set $m2-use-normals {0}
 set $m2-use-transparency {0}
-set $m2-faces-on {1}
 set $m2-vectors-on {0}
 set $m2-normalize-vectors {0}
 set $m2-has_vec_data {0}
 set $m2-bidirectional {0}
 set $m2-arrow-heads-on {1}
-set $m2-error-cones-on {0}
+set $m2-text-on {0}
+set $m2-text-use-default-color {1}
+set $m2-text-color-r {1.0}
+set $m2-text-color-g {1.0}
+set $m2-text-color-b {1.0}
+set $m2-text-backface-cull {0}
+set $m2-text-fontsize {1}
+set $m2-text-show-data {1}
+set $m2-text-show-nodes {0}
+set $m2-text-show-edges {0}
+set $m2-text-show-faces {0}
+set $m2-text-show-cells {0}
 set $m2-def-color-r {0.5}
 set $m2-def-color-g {0.5}
 set $m2-def-color-b {0.5}
@@ -114,63 +125,21 @@ set $m2-edge_scale {0.03}
 set $m2-vectors_scale {0.03}
 set $m2-show_progress {0}
 set $m2-interactive_mode {Interactive}
-set $m2-resolution {4}
+set $m2-node-resolution {6}
+set $m2-edge-resolution {6}
 set $m3-notes {}
 set $m3-show_status {1}
-$m3 ui
-set $m3-ViewWindow_0-pos {z1_x0}
-set $m3-ViewWindow_0-caxes {0}
-set $m3-ViewWindow_0-iaxes {40}
-set $m3-ViewWindow_0-view-eyep-x {          1.22467}
-set $m3-ViewWindow_0-view-eyep-y {          18.5734}
-set $m3-ViewWindow_0-view-eyep-z {          9.76875}
-set $m3-ViewWindow_0-view-lookat-x {        0.0757929}
-set $m3-ViewWindow_0-view-lookat-y {        -0.017231}
-set $m3-ViewWindow_0-view-lookat-z {        0.0381462}
-set $m3-ViewWindow_0-view-up-x {        -0.234434}
-set $m3-ViewWindow_0-view-up-y {        -0.439397}
-set $m3-ViewWindow_0-view-up-z {         0.867162}
-set $m3-ViewWindow_0-view-fov {               20}
-set $m3-ViewWindow_0-view-eyep_offset-x {3.90872e-311}
-set $m3-ViewWindow_0-view-eyep_offset-y {1.44168e-310}
-set $m3-ViewWindow_0-view-eyep_offset-z {4.15699e-311}
-set $m3-ViewWindow_0-bgcolor-r {0}
-set $m3-ViewWindow_0-bgcolor-g {0}
-set $m3-ViewWindow_0-bgcolor-b {0}
-set $m3-ViewWindow_0-shading {}
-set $m3-ViewWindow_0-do_stereo {0}
-set $m3-ViewWindow_0-ambient-scale {1}
-set $m3-ViewWindow_0-diffuse-scale {1}
-set $m3-ViewWindow_0-specular-scale {0.4}
-set $m3-ViewWindow_0-emission-scale {1}
-set $m3-ViewWindow_0-shininess-scale {1}
-set $m3-ViewWindow_0-sbase {0.40}
-set $m3-ViewWindow_0-sr {1}
-set $m3-ViewWindow_0-do_bawgl {0}
-set $m3-ViewWindow_0-drawimg {126}
-set $m3-ViewWindow_0-saveprefix {}
-set $m3-ViewWindow_0-resx {28}
-set $m3-ViewWindow_0-resy {10081}
-set $m3-ViewWindow_0-aspect {68}
-set $m3-ViewWindow_0-aspect_ratio {7.21479e-313}
-set $m3-ViewWindow_0-unused {0}
-set $m3-ViewWindow_0-unused {1}
-set $m3-ViewWindow_0-unused {0}
-set $m3-ViewWindow_0-unused {0}
-set $m3-ViewWindow_0-unused {0}
-set $m3-ViewWindow_0-unused {0}
-set $m3-ViewWindow_0-unused {0}
-set $m3-ViewWindow_0-unused {1}
-set $m3-ViewWindow_0-unused {1}
-set $m3-ViewWindow_0-unused {0}
-set $m3-ViewWindow_0-unused {0}
 set $m4-notes {}
 set $m4-show_status {1}
 set $m4-isoval {127758}
-set $m4-isoval-min {-0.00121004}
-set $m4-isoval-max {0.725436}
+set $m4-isoval-min {-0.0153597}
+set $m4-isoval-max {0.725127}
 set $m4-isoval-typed {0}
 set $m4-isoval-quantity {1}
+set $m4-quantity-range {colormap}
+set $m4-quantity-min {0}
+set $m4-quantity-max {100}
+set $m4-isoval-list {0}
 set $m4-extract-from-new-field {0}
 set $m4-algorithm {0}
 set $m4-build_trisurf {0}
@@ -211,32 +180,42 @@ set $m6-realres {255}
 set $m6-gamma {-0.60}
 set $m7-notes {}
 set $m7-show_status {1}
-set $m7-idim {145}
-set $m7-jdim {84}
-set $m7-kdim {40}
-set $m7-istart {0}
-set $m7-jstart {0}
-set $m7-kstart {0}
-set $m7-idelta {144}
-set $m7-jdelta {84}
-set $m7-kdelta {20}
-set $m7-iskip {10}
-set $m7-jskip {5}
-set $m7-kskip {1}
+set $m7-wrap {1}
+set $m7-dims {3}
+set $m7-i-dim {145}
+set $m7-j-dim {84}
+set $m7-k-dim {40}
+set $m7-i-start {0}
+set $m7-j-start {0}
+set $m7-k-start {0}
+set $m7-i-stop {144}
+set $m7-j-stop {83}
+set $m7-k-stop {39}
+set $m7-i-skip {5}
+set $m7-j-skip {4}
+set $m7-k-skip {1}
+set $m7-i-wrap {0}
+set $m7-j-wrap {1}
+set $m7-k-wrap {1}
 set $m8-notes {}
 set $m8-show_status {1}
-set $m8-idim {145}
-set $m8-jdim {84}
-set $m8-kdim {40}
-set $m8-istart {0}
-set $m8-jstart {0}
-set $m8-kstart {0}
-set $m8-idelta {144}
-set $m8-jdelta {84}
-set $m8-kdelta {40}
-set $m8-iskip {10}
-set $m8-jskip {5}
-set $m8-kskip {1}
+set $m8-wrap {1}
+set $m8-dims {3}
+set $m8-i-dim {145}
+set $m8-j-dim {84}
+set $m8-k-dim {40}
+set $m8-i-start {0}
+set $m8-j-start {0}
+set $m8-k-start {0}
+set $m8-i-stop {144}
+set $m8-j-stop {83}
+set $m8-k-stop {39}
+set $m8-i-skip {1}
+set $m8-j-skip {4}
+set $m8-k-skip {1}
+set $m8-i-wrap {0}
+set $m8-j-wrap {1}
+set $m8-k-wrap {1}
 set $m9-notes {}
 set $m9-show_status {1}
 set $m9-stepsize {0.0001}
@@ -246,20 +225,32 @@ set $m9-direction {0}
 set $m9-color {1}
 set $m9-remove-colinear {1}
 set $m9-method {4}
+set $m9-np {1}
 set $m10-notes {}
 set $m10-show_status {1}
 set $m10-nodes-on {1}
 set $m10-nodes-as-disks {0}
 set $m10-edges-on {1}
+set $m10-faces-on {0}
 set $m10-use-normals {0}
 set $m10-use-transparency {0}
-set $m10-faces-on {0}
 set $m10-vectors-on {0}
 set $m10-normalize-vectors {25277570}
 set $m10-has_vec_data {0}
 set $m10-bidirectional {0}
 set $m10-arrow-heads-on {1}
-set $m10-error-cones-on {0}
+set $m10-text-on {0}
+set $m10-text-use-default-color {1}
+set $m10-text-color-r {1.0}
+set $m10-text-color-g {1.0}
+set $m10-text-color-b {1.0}
+set $m10-text-backface-cull {0}
+set $m10-text-fontsize {1}
+set $m10-text-show-data {1}
+set $m10-text-show-nodes {0}
+set $m10-text-show-edges {0}
+set $m10-text-show-faces {0}
+set $m10-text-show-cells {0}
 set $m10-def-color-r {0.5}
 set $m10-def-color-g {0.5}
 set $m10-def-color-b {0.5}
@@ -272,7 +263,8 @@ set $m10-edge_scale {0.01}
 set $m10-vectors_scale {0.3}
 set $m10-show_progress {39848618}
 set $m10-interactive_mode {Interactive}
-set $m10-resolution {4}
+set $m10-node-resolution {6}
+set $m10-edge-resolution {6}
 set $m11-notes {}
 set $m11-show_status {1}
 set $m11-endpoints {1}
@@ -334,15 +326,26 @@ set $m18-show_status {1}
 set $m18-nodes-on {0}
 set $m18-nodes-as-disks {0}
 set $m18-edges-on {1}
+set $m18-faces-on {0}
 set $m18-use-normals {0}
 set $m18-use-transparency {0}
-set $m18-faces-on {0}
 set $m18-vectors-on {0}
 set $m18-normalize-vectors {39847676}
 set $m18-has_vec_data {0}
 set $m18-bidirectional {0}
 set $m18-arrow-heads-on {1}
-set $m18-error-cones-on {0}
+set $m18-text-on {0}
+set $m18-text-use-default-color {1}
+set $m18-text-color-r {1.0}
+set $m18-text-color-g {1.0}
+set $m18-text-color-b {1.0}
+set $m18-text-backface-cull {0}
+set $m18-text-fontsize {1}
+set $m18-text-show-data {1}
+set $m18-text-show-nodes {0}
+set $m18-text-show-edges {0}
+set $m18-text-show-faces {0}
+set $m18-text-show-cells {0}
 set $m18-def-color-r {0.5}
 set $m18-def-color-g {0.5}
 set $m18-def-color-b {0.5}
@@ -355,35 +358,52 @@ set $m18-edge_scale {0.02}
 set $m18-vectors_scale {0.3}
 set $m18-show_progress {19551847}
 set $m18-interactive_mode {Interactive}
-set $m18-resolution {4}
+set $m18-node-resolution {6}
+set $m18-edge-resolution {6}
 set $m19-notes {}
 set $m19-show_status {1}
-set $m19-idim {145}
-set $m19-jdim {84}
-set $m19-kdim {40}
-set $m19-istart {0}
-set $m19-jstart {0}
-set $m19-kstart {0}
-set $m19-idelta {144}
-set $m19-jdelta {84}
-set $m19-kdelta {40}
-set $m19-iskip {14}
-set $m19-jskip {8}
-set $m19-kskip {5}
+set $m19-wrap {1}
+set $m19-dims {3}
+set $m19-i-dim {145}
+set $m19-j-dim {84}
+set $m19-k-dim {40}
+set $m19-i-start {0}
+set $m19-j-start {0}
+set $m19-k-start {0}
+set $m19-i-stop {144}
+set $m19-j-stop {83}
+set $m19-k-stop {39}
+set $m19-i-skip {5}
+set $m19-j-skip {4}
+set $m19-k-skip {1}
+set $m19-i-wrap {0}
+set $m19-j-wrap {1}
+set $m19-k-wrap {1}
 set $m20-notes {}
 set $m20-show_status {1}
 set $m20-nodes-on {0}
 set $m20-nodes-as-disks {1}
 set $m20-edges-on {0}
+set $m20-faces-on {0}
 set $m20-use-normals {0}
 set $m20-use-transparency {0}
-set $m20-faces-on {0}
 set $m20-vectors-on {1}
 set $m20-normalize-vectors {39847828}
 set $m20-has_vec_data {1}
 set $m20-bidirectional {0}
 set $m20-arrow-heads-on {1}
-set $m20-error-cones-on {0}
+set $m20-text-on {0}
+set $m20-text-use-default-color {1}
+set $m20-text-color-r {1.0}
+set $m20-text-color-g {1.0}
+set $m20-text-color-b {1.0}
+set $m20-text-backface-cull {0}
+set $m20-text-fontsize {1}
+set $m20-text-show-data {1}
+set $m20-text-show-nodes {0}
+set $m20-text-show-edges {0}
+set $m20-text-show-faces {0}
+set $m20-text-show-cells {0}
 set $m20-def-color-r {0.67}
 set $m20-def-color-g {0.47}
 set $m20-def-color-b {0.27}
@@ -396,7 +416,8 @@ set $m20-edge_scale {0.015}
 set $m20-vectors_scale {0.2}
 set $m20-show_progress {23097422}
 set $m20-interactive_mode {Interactive}
-set $m20-resolution {4}
+set $m20-node-resolution {6}
+set $m20-edge-resolution {6}
 set $m21-notes {}
 set $m21-show_status {1}
 set $m21-drawX {0}
@@ -411,18 +432,23 @@ set $m21-phi_1 {270.0}
 set $m21-cyl_active {0}
 set $m22-notes {}
 set $m22-show_status {1}
-set $m22-idim {145}
-set $m22-jdim {84}
-set $m22-kdim {40}
-set $m22-istart {0}
-set $m22-jstart {0}
-set $m22-kstart {0}
-set $m22-idelta {144}
-set $m22-jdelta {84}
-set $m22-kdelta {40}
-set $m22-iskip {10}
-set $m22-jskip {5}
-set $m22-kskip {1}
+set $m22-wrap {1}
+set $m22-dims {3}
+set $m22-i-dim {145}
+set $m22-j-dim {84}
+set $m22-k-dim {40}
+set $m22-i-start {0}
+set $m22-j-start {0}
+set $m22-k-start {0}
+set $m22-i-stop {144}
+set $m22-j-stop {83}
+set $m22-k-stop {39}
+set $m22-i-skip {5}
+set $m22-j-skip {4}
+set $m22-k-skip {1}
+set $m22-i-wrap {0}
+set $m22-j-wrap {1}
+set $m22-k-wrap {1}
 set $m23-notes {}
 set $m23-show_status {1}
 set $m23-sizex {32}
@@ -445,8 +471,8 @@ set $m25-max {          0.68881}
 set $m26-notes {}
 set $m26-show_status {1}
 set $m26-isFixed {0}
-set $m26-min {          1.00825}
-set $m26-max {          1662.03}
+set $m26-min {                0}
+set $m26-max {          2333.51}
 set $m26-makeSymmetric {0}
 set $m27-notes {}
 set $m27-show_status {1}
@@ -462,8 +488,5 @@ set $m27-realres {255}
 set $m27-gamma {0}
 set $m28-notes {}
 set $m28-show_status {1}
-$m5 initialize_ui
-$m7 initialize_ui
-$m18 initialize_ui
 
 ::netedit scheduleok
