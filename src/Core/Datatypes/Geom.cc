@@ -11,8 +11,8 @@
 #include <SCICore/Datatypes/Lattice3Geom.h>
 #include <SCICore/Datatypes/MeshGeom.h>
 
-namespace SCICore{
-  namespace Datatypes{
+namespace SCICore {
+  namespace Datatypes {
 
 Geom::Geom()
 {
@@ -20,11 +20,11 @@ Geom::Geom()
 
 
 bool
-Geom::get_bbox(BBox& ibbox)
+Geom::getBoundingBox(BBox& ibbox)
 {
-  if (bbox.valid() || compute_bbox())
+  if (d_bbox.valid() || computeBoundingBox())
     {
-      ibbox = bbox;
+      ibbox = d_bbox;
       return true;
     }
   else
@@ -35,25 +35,25 @@ Geom::get_bbox(BBox& ibbox)
 
 
 bool
-Geom::longest_dimension(double& odouble)
+Geom::longestDimension(double& odouble)
 {
-  if (!bbox.valid())
+  if (!d_bbox.valid())
     {
-      compute_bbox();
+      computeBoundingBox();
     }
-  odouble = bbox.longest_edge();
+  odouble = d_bbox.longest_edge();
   return true;
 }
 
 
 bool
-Geom::get_diagonal(Vector& ovec)
+Geom::getDiagonal(Vector& ovec)
 {
-  if(!bbox.valid())
+  if(!d_bbox.valid())
     {
-      compute_bbox();
+      computeBoundingBox();
     }
-  ovec = bbox.diagonal();
+  ovec = d_bbox.diagonal();
   return true;
 }
 

@@ -24,7 +24,7 @@
 
 
 namespace SCICore {
-namespace Datatypes{
+namespace Datatypes {
 
 using SCICore::Containers::LockingHandle;
 using SCICore::Geometry::Vector;
@@ -50,40 +50,40 @@ enum elem_t{
 };
 
 
-class SCICORESHARE Geom:public Datatype{  
+class SCICORESHARE Geom : public Datatype {
 public:
 
   Geom();
-  virtual ~Geom(){ };
+  virtual ~Geom() {};
 
   //////////
   // return the bounding box, if it is not allready computed 
-  virtual bool get_bbox(BBox&);
+  virtual bool getBoundingBox(BBox&);
 
   //////////
   // Compute the longest dimension
-  bool longest_dimension(double&);
+  bool longestDimension(double&);
 
   //////////
-  // Return the diaganol
-  bool get_diagonal(Vector&);
+  // Return the diagonal
+  bool getDiagonal(Vector&);
   
   //////////
   // Return a string describing this geometry.
-  virtual string get_info() = 0;
+  virtual string getInfo() = 0;
 
-  inline void set_name(string iname) {name=iname;};
-  inline string get_name() {return name;};
+  inline void setName(string iname) { d_name = iname; };
+  inline string getName() { return d_name; };
   
   // ...
 protected:
 
   //////////
   // Compute the bounding box, set has_bbox to true
-  virtual bool compute_bbox() = 0;
+  virtual bool computeBoundingBox() = 0;
 
-  BBox bbox;
-  string name;
+  BBox d_bbox;
+  string d_name;
 };
 
 } // end namespace Datatypes

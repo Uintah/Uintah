@@ -20,7 +20,7 @@ DebugStream TetMeshGeom::dbg("TetMeshGeom", true);
 TetMeshGeom::TetMeshGeom(const vector<NodeSimp>& inodes, const vector<TetSimp>& itets):
   has_neighbors(0)
 {
-  nodes = inodes;
+  d_node = inodes;
   tets = itets;
 }
 
