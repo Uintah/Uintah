@@ -89,7 +89,7 @@ DESCRIPTION
 	    void detach();
 	    
 	    //////////
-	    // Returns true if the thread is tagged as a daemon thread
+	    // Returns true if the thread is detached
 	    bool isDetached() const;
 	    
 	    //////////
@@ -233,6 +233,9 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.16  1999/11/03 01:23:03  moulding
+// fixed a typo in the description (comment) for Thread::isDetached()
+//
 // Revision 1.15  1999/11/01 22:50:01  moulding
 // fixed a typo in the (comment) description for Thread::couldBlock
 //
