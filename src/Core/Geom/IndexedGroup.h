@@ -39,6 +39,8 @@
 
 namespace SCIRun {
 
+  using namespace std;
+
 class SCICORESHARE GeomIndexedGroup: public GeomObj {
     
 public:
@@ -74,9 +76,9 @@ public:
     void delObj(int, int del);	 // removes object from table
     void delAll(void);		 // deletes everything
 
-    IterIntGeomObj getIter(void); // gets an iter 
+    IterIntGeomObj getIter(); // gets an iter 
     
-    MapIntGeomObj* getHash(void); // gets the table
+    MapIntGeomObj* getHash(); // gets the table
     
     virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
 };
