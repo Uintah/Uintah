@@ -40,7 +40,7 @@ public:
   TexCuttingPlanes( GuiContext* ctx);
 
   virtual ~TexCuttingPlanes();
-  virtual void widget_moved(int last);    
+  virtual void widget_moved(bool last);    
   virtual void execute();
   void tcl_command( GuiArgs&, void* );
 

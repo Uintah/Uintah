@@ -560,7 +560,7 @@ void Viewer::flushPort(int portid)
 
 
 //----------------------------------------------------------------------
-void Viewer::emit_vars(ostream& out, string& midx)
+void Viewer::emit_vars(ostream& out, const string& midx)
 {
   ctx->emit(out, midx);
   string viewwindowstr;

@@ -48,7 +48,7 @@ public:
   virtual void execute();
 };
 
-  DECLARE_MAKER(ShowColorMap);
+  DECLARE_MAKER(ShowColorMap)
 
 ShowColorMap::ShowColorMap(GuiContext* ctx)
   : Module("ShowColorMap", ctx, Filter, "Visualization", "SCIRun"),

@@ -187,7 +187,7 @@ Attractor::execute(Vector &v, const Point &p)
 }
 
 void
-Attractor::io(Piostream &s)
+Attractor::io(Piostream &)
 {
 }
 

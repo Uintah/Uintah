@@ -66,7 +66,7 @@ public:
   virtual ~ClipField();
 
   virtual void execute();
-  virtual void widget_moved(int);
+  virtual void widget_moved(bool);
 };
 
 
@@ -338,9 +338,9 @@ ClipField::execute()
 
 
 void
-ClipField::widget_moved(int i)
+ClipField::widget_moved(bool last)
 {
-  if (i == 1)
+  if (last)
   {
     autoexec_.reset();
     if (autoexec_.get())

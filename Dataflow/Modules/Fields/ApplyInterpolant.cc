@@ -54,7 +54,7 @@ public:
   virtual void execute();
 };
 
-  DECLARE_MAKER(ApplyInterpolant);
+  DECLARE_MAKER(ApplyInterpolant)
 
 ApplyInterpolant::ApplyInterpolant(GuiContext* ctx)
   : Module("ApplyInterpolant", ctx, Filter, "Fields", "SCIRun")

@@ -346,12 +346,11 @@ FieldMeasures::execute()
 {
   ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle fieldhandle;
-  Field *field;
   if (!ifp) {
     postMessage("Unable to initialize "+name+"'s iport\n");
     return;
   }
-  if (!(ifp->get(fieldhandle) && (field = fieldhandle.get_rep())))
+  if (!(ifp->get(fieldhandle) && fieldhandle.get_rep()))
   {
     return;
   }

@@ -46,7 +46,7 @@ public:
   virtual void tcl_command(GuiArgs&, void*);
 };
 
-  DECLARE_MAKER(TetVolFieldCellToNode);
+  DECLARE_MAKER(TetVolFieldCellToNode)
 
 TetVolFieldCellToNode::TetVolFieldCellToNode(GuiContext* ctx)
   : Module("TetVolFieldCellToNode", ctx, Source, "Fields", "SCIRun")

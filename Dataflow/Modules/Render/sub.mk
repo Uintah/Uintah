@@ -49,7 +49,7 @@ PSELIBS := Dataflow/Widgets Dataflow/Network Dataflow/Ports Core/Datatypes \
 	Dataflow/Comm Core/Persistent Core/Exceptions Core/Geometry \
 	Core/Geom Core/Thread Core/Containers \
 	Core/GuiInterface Core/TkExtensions Core/Util \
-	Core/TkExtensions Core/Datatypes
+	Core/TkExtensions Core/Datatypes Core/GeomInterface
 
 CFLAGS += $(MPEG_DEF_FLAG) $(MAGICK_DEF_FLAG)
 

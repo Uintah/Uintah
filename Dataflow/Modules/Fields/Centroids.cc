@@ -31,7 +31,7 @@ public:
   virtual void execute();
 };
 
-  DECLARE_MAKER(Centroids);
+  DECLARE_MAKER(Centroids)
 
 Centroids::Centroids(GuiContext* ctx)
   : Module("Centroids", ctx, Source, "Fields", "SCIRun")

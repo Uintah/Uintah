@@ -758,7 +758,7 @@ void BaWGL::getControllerMatrix( int id, int rid, GLfloat m[16], int space )
 }
 
 
-void BaWGL::getControllerMatrixChange( int id, int rid, GLfloat m[16], GLfloat pm[16], 
+void BaWGL::getControllerMatrixChange( int , int , GLfloat m[16], GLfloat pm[16], 
 				       GLfloat mc[16], int spacefrom, int spaceto )
 {
   getRelTransform(mc, pm, m, spacefrom, spaceto);

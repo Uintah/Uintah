@@ -37,7 +37,7 @@ public:
   virtual void execute();
 };
 
-  DECLARE_MAKER(CastTVtoMLV);
+  DECLARE_MAKER(CastTVtoMLV)
 
 CastTVtoMLV::CastTVtoMLV(GuiContext* ctx)
   : Module("CastTVtoMLV", ctx, Source, "Fields", "SCIRun"),

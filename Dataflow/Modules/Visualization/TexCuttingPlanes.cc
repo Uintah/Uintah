@@ -98,14 +98,14 @@ TexCuttingPlanes::tcl_command( GuiArgs& args, void* userdata)
 	w += view*ddview_*atof(args[3].c_str());
       }
       control_widget_->SetPosition(w);
-      widget_moved(1);
+      widget_moved(true);
       ogeom_->flushViews();				  
   } else {
     Module::tcl_command(args, userdata);
   }
 }
 
-void TexCuttingPlanes::widget_moved(int)
+void TexCuttingPlanes::widget_moved(bool)
 {
   if( volren_ ){
       volren_->SetControlPoint(tex_->get_field_transform().unproject(control_widget_->ReferencePoint()));
