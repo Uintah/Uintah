@@ -34,6 +34,7 @@
 
 #include <Core/Datatypes/Color.h>
 #include <Core/Datatypes/Datatype.h>
+#include <Core/Datatypes/NrrdData.h>
 #include <Core/Containers/Array3.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Persistent/Persistent.h>
@@ -177,6 +178,40 @@ protected:
   // Used by picking.
   float last_x_, last_y_;
   int pick_ix_, pick_iy_;
+};
+
+
+class ImageCM2Widget : public CM2Widget
+{
+public:
+  ImageCM2Widget(NrrdDataHandle image);
+  ~ImageCM2Widget();
+  ImageCM2Widget(ImageCM2Widget& copy);
+
+  virtual CM2Widget* clone();
+
+  // appearance
+  void draw();
+  void rasterize(CM2ShaderFactory& factory, bool faux, Pbuffer* pbuffer);
+  void rasterize(SCIRun::Array3<float>& array, bool faux);
+  
+  // behavior
+  virtual int pick1 (int x, int y, int w, int h);
+  virtual int pick2 (int x, int y, int w, int h, int m);
+  virtual void move (int obj, int x, int y, int w, int h);
+  virtual void release (int obj, int x, int y, int w, int h);
+  
+  virtual std::string tcl_pickle();
+  virtual void tcl_unpickle(const std::string &p);
+
+  virtual void io(SCIRun::Piostream &stream);
+  static SCIRun::PersistentTypeID type_id;
+
+protected:
+  ImageCM2Widget();
+  NrrdDataHandle image_;
+
+  static Persistent *maker();
 };
 
 } // End namespace SCIRun
