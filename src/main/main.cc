@@ -138,7 +138,6 @@ int main(int argc, char** argv)
   if (HOME) {
     string home(HOME);
     home += "/.scirunrc";
-    cerr << "HOME = " << home << endl;
     RCParse(home.c_str(),SCIRun::scirunrc);
   }
 

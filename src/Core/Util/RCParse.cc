@@ -42,10 +42,11 @@ bool RCParse(const char* rcfile, env_map& env)
       if (var[0]!='\0' && var_val[0]!='\0') {
 	removeLTWhiteSpace(var);
 	removeLTWhiteSpace(var_val);
-	env.insert(env_entry(string(var),
-			     string(MacroSubstitute(var_val,env))));
-	std::cerr << "inserted : ]" << var << "=" << var_val
-		  << "[" << std::endl;
+	char* sub = MacroSubstitute(var_val,env);
+	env.insert(env_entry(string(var),string(sub)));
+	//std::cerr << "inserted : ]" << var << "=" << sub
+	//  << "[" << std::endl;
+	delete[] sub;
       }
     } else
       break;
