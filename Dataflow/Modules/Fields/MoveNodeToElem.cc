@@ -90,13 +90,22 @@ MoveNodeToElem::execute()
     return;
   }
 
+  // Get the output port now, because we may be able to pass the field
+  // directly through if it is already cell centered.
+  FieldOPort *ofp = (FieldOPort *)get_oport("Elem Field");
+  if (!ofp) {
+    error("Unable to initialize oport 'Elem Field'.");
+    return;
+  }
+
   string ext = "";
   const TypeDescription *mtd = ifield->mesh()->get_type_description();
   if (mtd->get_name() == "LatVolMesh")
   {
     if (ifield->basis_order() != 1)
     {
-      error("LatVolMesh data must be at node centers.");
+      remark("Field is already node centered.  Passing through.");
+      ofp->send(ifield);
       return;
     }
     ext = "Lat";
@@ -105,7 +114,8 @@ MoveNodeToElem::execute()
   {
     if (ifield->basis_order() != 1)
     {
-      error("ImageMesh data must be at node centers.");
+      remark("Field is already node centered.  Passing through.");
+      ofp->send(ifield);
       return;
     }
     ext = "Img";
@@ -129,12 +139,6 @@ MoveNodeToElem::execute()
 
     FieldHandle ofield = algo->execute(this, ifield);
   
-    FieldOPort *ofp = (FieldOPort *)get_oport("Elem Field");
-    if (!ofp) {
-      error("Unable to initialize oport 'Elem Field'.");
-      return;
-    }
-
     ofp->send(ofield);
   }
 }
