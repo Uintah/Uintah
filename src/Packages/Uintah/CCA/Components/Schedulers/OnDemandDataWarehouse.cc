@@ -1299,6 +1299,7 @@ void OnDemandDataWarehouse::print(ostream& intout, const VarLabel* label,
 void
 OnDemandDataWarehouse::deleteParticles(ParticleSubset* delset)
 {
+ d_lock.writeLock();
   int matlIndex = delset->getMatlIndex();
   Patch* patch = (Patch*) delset->getPatch();
   psetDBType::key_type key(matlIndex, patch);
@@ -1307,8 +1308,7 @@ OnDemandDataWarehouse::deleteParticles(ParticleSubset* delset)
 
   d_delsetDB[key]=delset;
   delset->addReference();
-  
-
+ d_lock.writeUnlock();
 }
 
 void
