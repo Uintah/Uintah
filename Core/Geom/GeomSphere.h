@@ -30,13 +30,14 @@ public:
     void adjust();
     void move(const Point&, double, int nu=20, int nv=10);
 
-    GeomSphere(int nu=20, int nv=10);
-    GeomSphere(const Point&, double, int nu=20, int nv=10);
+    GeomSphere(int nu=20, int nv=10, int id = 0x1234567);
+    GeomSphere(const Point&, double, int nu=20, int nv=10, int id = 0x1234567);
     GeomSphere(const GeomSphere&);
     virtual ~GeomSphere();
 
     virtual GeomObj* clone();
     virtual void get_bounds(BBox&);
+    
 
 #ifdef SCI_OPENGL
     virtual void draw(DrawInfoOpenGL*, Material*, double time);
@@ -45,6 +46,8 @@ public:
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
     virtual bool saveobj(std::ostream&, const clString& format, GeomSave*);
+  virtual bool getId( int& id );
+  
 };
 
 } // End namespace GeomSpace
@@ -52,6 +55,9 @@ public:
 
 //
 // $Log$
+// Revision 1.5  2000/01/03 20:12:37  kuzimmer
+//  Forgot to check in these files for picking spheres
+//
 // Revision 1.4  1999/10/07 02:07:45  sparker
 // use standard iostreams and complex type
 //

@@ -20,7 +20,7 @@ namespace GeomSpace {
 
 PersistentTypeID GeomObj::type_id("GeomObj", "Persistent", 0);
 
-GeomObj::GeomObj()
+GeomObj::GeomObj(int id) : id(id)
 {
 }
 
@@ -55,6 +55,9 @@ void Pio( Piostream & stream, GeomObj *& obj )
 
 //
 // $Log$
+// Revision 1.5  2000/01/03 20:12:36  kuzimmer
+//  Forgot to check in these files for picking spheres
+//
 // Revision 1.4  1999/09/08 02:26:50  sparker
 // Various #include cleanups
 //

@@ -49,9 +49,8 @@ using SCICore::Geometry::Point;
 using SCICore::Containers::clString;
 
 class SCICORESHARE GeomObj : public Persistent {
-protected:
 public:
-    GeomObj();
+    GeomObj(int id = 0x1234567);
     GeomObj(const GeomObj&);
     virtual ~GeomObj();
     virtual GeomObj* clone() = 0;
@@ -69,6 +68,11 @@ public:
 
     virtual void io(Piostream&);    
     virtual bool saveobj(std::ostream&, const clString& format, GeomSave*)=0;
+  // we want to return false if value is the default value
+    virtual bool getId( int& ) { return false; }
+protected:
+
+  int id;
 };
 
 void Pio(Piostream&, GeomObj*&);
@@ -78,6 +82,9 @@ void Pio(Piostream&, GeomObj*&);
 
 //
 // $Log$
+// Revision 1.8  2000/01/03 20:12:36  kuzimmer
+//  Forgot to check in these files for picking spheres
+//
 // Revision 1.7  1999/10/16 20:51:00  jmk
 // forgive me if I break something -- this fixes picking and sets up sci
 // bench - go to /home/sci/u2/VR/PSE for the latest sci bench technology
