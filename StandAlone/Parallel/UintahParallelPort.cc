@@ -4,8 +4,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Parallel/UintahParallelPort.h>
 #include <SCICore/Util/NotFinished.h>
 
-namespace Uintah {
-namespace Parallel {
+using namespace Uintah;
 
 UintahParallelPort::UintahParallelPort()
 {
@@ -15,11 +14,11 @@ UintahParallelPort::~UintahParallelPort()
 {
 }
 
-} // end namespace Parallel
-} // end namespace Uintah
-
 //
 // $Log$
+// Revision 1.4  2000/04/26 06:49:16  sparker
+// Streamlined namespaces
+//
 // Revision 1.3  2000/04/11 07:10:57  sparker
 // Completing initialization and problem setup
 // Finishing Exception modifications

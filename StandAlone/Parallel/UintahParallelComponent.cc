@@ -4,11 +4,9 @@ static char *id="@(#) $Id$";
 #include <Uintah/Parallel/UintahParallelComponent.h>
 #include <SCICore/Util/NotFinished.h>
 #include <algorithm>
-using std::map;
-using std::find;
 
-using Uintah::Parallel::UintahParallelComponent;
-using Uintah::Parallel::UintahParallelPort;
+using namespace Uintah;
+using namespace std;
 
 UintahParallelComponent::UintahParallelComponent( int MpiRank, 
 						  int MpiProcesses ) :
@@ -54,6 +52,9 @@ void UintahParallelComponent::releasePort(const std::string&)
 
 //
 // $Log$
+// Revision 1.6  2000/04/26 06:49:16  sparker
+// Streamlined namespaces
+//
 // Revision 1.5  2000/04/19 21:20:05  dav
 // more MPI stuff
 //
