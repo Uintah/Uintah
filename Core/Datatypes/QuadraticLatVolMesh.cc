@@ -61,6 +61,21 @@ get_type_description(QuadraticLatVolMesh *)
   return td;
 }
 
+
+const TypeDescription*
+get_type_description(QuadraticLatVolMesh::Node *)
+{
+  static TypeDescription *td = 0;
+  if (!td)
+  {
+    td = scinew TypeDescription("QuadraticLatVolMesh::Node",
+				TypeDescription::cc_to_h(__FILE__),
+				"SCIRun");
+  }
+  return td;
+}
+
+
 #define QUADRATICTETVOLMESH_VERSION 1
 
 void
