@@ -145,6 +145,17 @@ const TypeDescription* get_type_description(double*)
   return td;
 }
 
+const TypeDescription* get_type_description(long*)
+{
+  static TypeDescription* td = 0;
+  static string nm("long");
+  static string path("builtin");
+  if(!td){
+    td = scinew TypeDescription(nm, path);
+  }
+  return td;
+}
+
 const TypeDescription* get_type_description(float*)
 {
   static TypeDescription* td = 0;

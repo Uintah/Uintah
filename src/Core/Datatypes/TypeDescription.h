@@ -75,6 +75,7 @@ private:
 
 
 const TypeDescription* get_type_description(double*);
+const TypeDescription* get_type_description(long*);
 const TypeDescription* get_type_description(float*);
 const TypeDescription* get_type_description(short*);
 const TypeDescription* get_type_description(int*);
