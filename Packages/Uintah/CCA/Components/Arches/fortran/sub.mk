@@ -38,6 +38,7 @@ SRCS += \
 	$(SRCDIR)/explicit_vel.F \
 	$(SRCDIR)/explicit_velocity.F \
 	$(SRCDIR)/fixval.F \
+	$(SRCDIR)/fixval_trans.F \
 	$(SRCDIR)/init.F \
 	$(SRCDIR)/initScal.F \
 	$(SRCDIR)/inlbcs.F \
@@ -56,6 +57,7 @@ SRCS += \
 	$(SRCDIR)/mmcelltypeinit.F \
 	$(SRCDIR)/mmmomsrc.F \
 	$(SRCDIR)/mmwallbc.F \
+	$(SRCDIR)/mmwallbc_trans.F \
 	$(SRCDIR)/normpress.F \
 	$(SRCDIR)/outarea.F \
 	$(SRCDIR)/outletbc.F \
@@ -145,6 +147,7 @@ $(SRCDIR)/mmbcvelocity.o: $(SRCDIR)/mmbcvelocity_fort.h
 $(SRCDIR)/mmcelltypeinit.o: $(SRCDIR)/mmcelltypeinit_fort.h
 $(SRCDIR)/mmmomsrc.o: $(SRCDIR)/mmmomsrc_fort.h
 $(SRCDIR)/mmwallbc.o: $(SRCDIR)/mmwallbc_fort.h
+$(SRCDIR)/mmwallbc.o: $(SRCDIR)/mmwallbc_trans_fort.h
 $(SRCDIR)/normpress.o: $(SRCDIR)/normpress_fort.h
 $(SRCDIR)/outarea.o: $(SRCDIR)/outarea_fort.h
 $(SRCDIR)/outletbc.o: $(SRCDIR)/outletbc_fort.h

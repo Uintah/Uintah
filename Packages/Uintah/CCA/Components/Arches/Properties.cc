@@ -403,6 +403,7 @@ Properties::computeProps(const ProcessorGroup* pc,
       //new_dw->get(enthalpy_old, d_lab->d_enthalpySPBCLabel, 
       //	  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
       new_dw->allocateAndPut(enthalpy, d_lab->d_enthalpySPLabel, matlIndex, patch);
+      enthalpy.initialize(0.0);
       //enthalpy.copyData(enthalpy_old);
     }
     
@@ -594,7 +595,7 @@ Properties::computeProps(const ProcessorGroup* pc,
 	}
       }
     }
-    if (d_bc->getIntrusionBC())
+    if ((d_bc->getIntrusionBC())&&(d_reactingFlow||d_flamelet))
       d_bc->intrusionTemperatureBC(pc, patch, cellType, temperature);
     if (patch->containsCell(d_denRef)) {
 
@@ -908,7 +909,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 		         d_mixingModel->getNumMixStatVars(),
 		         d_mixingModel->getNumRxnVars());
     Stream outStream;
-
     for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
 	for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
@@ -918,7 +918,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	  // construct an InletStream for input to the computeProps of mixingModel
 
 	  IntVector currCell(colX, colY, colZ);
-
 	  for (int ii = 0; ii < d_numMixingVars; ii++ ) {
 
 	    inStream.d_mixVars[ii] = (scalar[ii])[currCell];
@@ -950,8 +949,11 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	  //	  inStream.d_mixVarVariance[0] = 0.0;
 	  // currently not using any reaction progress variables
 
-	  if (!d_mixingModel->isAdiabatic())
+	  if ((!d_mixingModel->isAdiabatic()))
+	      //	      &&(cellType[currCell] != d_bc->getIntrusionID()))
 	    inStream.d_enthalpy = enthalpy_comp[currCell];
+	  else
+	    inStream.d_enthalpy = 0.0;
 	  if (d_flamelet) {
 	    if (colX >= 0)
 	      inStream.d_axialLoc = colX;
@@ -1071,7 +1073,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     }
     else
       new_dw->put(sum_vartype(0), d_lab->d_refDensity_label);
-    if (d_bc->getIntrusionBC())
+    if ((d_bc->getIntrusionBC())&&(d_reactingFlow||d_flamelet))
       d_bc->intrusionTemperatureBC(pc, patch, cellType, temperature);
 
     if (pc->myrank() == 0)
