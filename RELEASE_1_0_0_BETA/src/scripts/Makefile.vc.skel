@@ -1,0 +1,26 @@
+# Makefile.vc
+# written by <YOUR NAME HERE> <TODAYS DATE HERE>
+
+###########################  EDIT HERE  ###########################
+
+## the name of the .dll and/or .exe to be built by linking the OBJS
+DLLNAME = 
+EXENAME = 
+
+## the files to be compiled. .odll and .oexe extensions indicate
+## that the file will be linked into a dll or exe binary, respectively.
+OBJS = 
+
+## override, or append to, the default compiler and/or linker flags with these
+CF   = 
+LF   = 
+
+## add to the default include paths
+INCS = 
+
+## add to the default list of libraries to link against
+LIBS = 
+
+###################################################################
+
+!include <$(TOP)\src\scripts\Makefile.vc.master>

@@ -1,0 +1,26 @@
+# Makefile.vc
+# written by Chris Packages/Moulding 11/99
+
+###########################  EDIT HERE  ###########################
+
+## the name of the .dll and/or .exe to be built by linking the OBJS
+DLLNAME = Packages/Uintah
+EXENAME = 
+
+## the files to be compiled. .odll and .oexe extensions indicate
+## that the file will be linked into a dll or exe binary, respectively.
+OBJS = Modules\index.odll
+
+## override, or append to, the default compiler and/or linker flags with these
+CF   = -DBUILD_UINTAH
+LF   = 
+
+## add to the default include paths
+INCS = 
+
+## add to the default list of libraries to link against
+LIBS = 
+
+###################################################################
+
+!include <$(TOP)\src\scripts\Makefile.vc.master>

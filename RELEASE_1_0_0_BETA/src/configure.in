@@ -1,0 +1,1119 @@
+#
+#  The contents of this file are subject to the University of Utah Public
+#  License (the "License"); you may not use this file except in compliance
+#  with the License.
+#  
+#  Software distributed under the License is distributed on an "AS IS"
+#  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+#  License for the specific language governing rights and limitations under
+#  the License.
+#  
+#  The Original Source Code is SCIRun, released March 12, 2001.
+#  
+#  The Original Source Code was developed by the University of Utah.
+#  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+#  University of Utah. All Rights Reserved.
+#
+
+## XXX: Should probably set AC_PREFIX_DEFAULT to something good some day.
+## TODO:
+##  - Automatically detect TEMPLATE_BOX and TEMPLATE_TAG variables
+
+AC_INIT(README.PSE)
+AC_CONFIG_HEADER(sci_config.h)
+AC_CONFIG_AUX_DIR(scripts)
+AC_PREREQ(2.0)
+AC_PROG_CC
+AC_PROG_CXX
+AC_LANG_CPLUSPLUS 
+
+##-- Check for different versions --------------------------------------------
+
+AC_ARG_ENABLE(package,
+	[  --enable-package		Build the specified packages],
+	[package="$enableval"])
+AC_ARG_ENABLE(exename,
+	[  --enable-exename		Override the default executable name],
+	[exename="$enableval"],
+	[exename=${exename='default'}])
+
+#if test "$package" = ""; then
+#  echo "--enable-package requires an argument, such as:"
+#  echo "  --enable-package=\"Uintah BioPSE\""
+#  exit 1
+#fi
+
+PACKAGE_DIRS=
+
+for i in $package; do
+ PACKAGE_DIRS=$PACKAGE_DIRS" Packages/$i"
+done
+
+PACKAGE_PATH="\$(SRCTOP_ABS)"
+for i in $package; do
+ PACKAGE_PATH=$PACKAGE_PATH,"\$(SRCTOP_ABS)/Packages/$i"
+done
+
+##-- check for user supplied tcl paths --------------------------------------
+
+AC_ARG_WITH(thirdparty,
+	[  --with-thirdparty=<path-to-thirdparty>    <path-to-thirdparty>/{itcltk-8.3.2,xerces-1.3.0,...}],
+	[thirdparty="$withval"],
+	[thirdparty="/res/sci/data1/SCIRun_Thirdparty_32"])
+AC_ARG_WITH(tcl,
+        [  --with-tcl=<path-to-tcl>      <path-to-tcl>/bin/tclsh8.?],
+        [tcl="$withval"],
+        [tcl=""])
+AC_ARG_WITH(tk,
+        [  --with-tk=<path-to-tk>        <path-to-tk>/bin/wish8.?],
+        [tk="$withval"],
+        [tk=""])
+AC_ARG_WITH(itcl,
+        [  --with-itcl=<path-to-itcl>    <path-to-itcl>/bin/itkwish3.?],
+        [itcl="$withval"],
+        [itcl=""])
+AC_ARG_WITH(blt,
+        [  --with-blt=<path-to-btl>      <path-to-blt>/bin/bltwish24],
+        [blt="$withval"],
+        [blt=""])
+
+
+if test "$exename" = "default"; then
+  EXENAME=scirun
+else
+  EXENAME=$exename
+fi
+
+AC_SUBST(PACKAGE_DIRS)
+AC_SUBST(PACKAGE_PATH)
+AC_SUBST(EXENAME)
+
+##-- check for supplied xerces path ------------------------------------------
+
+AC_ARG_WITH(xerces,
+	[  --with-xerces=<path-to-xerces>  <path-to-xerces>],
+	[xerces="$withval"],
+	[xerces=""])
+
+##-- Canonical Host Type -----------------------------------------------------
+AC_CANONICAL_HOST
+
+##-- Thread libraries --------------------------------------------------------
+
+AC_ARG_ENABLE(threads,
+	[  --enable-threads		Specify a thread implementation (pthreads, irix)],
+	[threads="$enableval"],
+	[threads=${threads='unknown'}])
+AC_SUBST(LOCK_IMPL)
+AC_SUBST(THREAD_IMPL)
+AC_SUBST(TIME_IMPL)
+
+##-- Compiler options --------------------------------------------------------
+AC_ARG_ENABLE(debug,
+	  [ --enable-debug		Turn on debugging (usually -g flag)],
+	  [debug="$enableval"],
+	  [debug="no"])
+
+AC_ARG_ENABLE(optimize,
+	  [  --enable-optimize		Turn on optimize (usually -O2 flag)],
+	  [optimize="$enableval"],
+	  [optimize=${optimize='no'}])
+
+AC_ARG_ENABLE(output-avg-walltime,
+	[  --enable-output-avg-walltime	Output ellapsed wall-times between timesteps],
+	[output_avg_walltime="$enableval"],
+	[output_avg_walltime=${output_avg_walltime='no'}])
+
+extra_cflags="";
+if test "$debug" = "no"; then
+  echo "     No debug flags."
+elif test "$debug" = "yes"; then
+  extra_cflags="-g ${extra_cflags}";
+  echo "     -g debug flag."
+else
+  extra_cflags="$debug ${extra_cflags}";
+  echo "     " $debug" debug flags."
+fi
+
+if test "$optimize" = "no"; then
+  if test "$debug" = "no"; then
+    extra_cflags="-O2 ${extra_cflags}";
+    echo "     -O2 optimize flag."
+  else
+    echo "     No optimize flags."
+  fi
+elif test "$optimize" = "yes"; then
+  extra_cflags="-O2 ${extra_cflags}";
+  echo "     -O2 optimize flag."
+else
+  extra_cflags="$optimize ${extra_cflags}";
+  echo "     " $optimize" optimize flags."
+fi
+
+
+if ! test "$output_avg_walltime" = "no"; then
+  extra_cflags="-DOUTPUT_AVG_ELAPSED_WALLTIME ${extra_cflags}"
+fi
+
+AC_ARG_ENABLE(largesos,
+	[  --enable-largesos		Build one .so per directory],
+	[largesos="$enableval"],
+	[largesos=${largesos='no'}])
+LARGESOS=$largesos
+AC_SUBST(LARGESOS)
+
+##-- Find dlopen -------------------------------------------------------------
+
+AC_CHECK_LIB(c, dlopen, DL_LIBRARY="", AC_CHECK_LIB(dl, dlopen, DL_LIBRARY="-ldl"))
+AC_SUBST(DL_LIBRARY)
+
+##-- Find gzopen (and related) -----------------------------------------------
+
+AC_CHECK_LIB(z,gzopen,GZ_LIBRARY="-lz")
+AC_SUBST(GZ_LIBRARY)
+
+##-- Find MPI ----------------------------------------------------------------
+
+AC_ARG_WITH(mpi,
+	[  --with-mpi=<path-to-mpi>  <path-to-mpi>],
+	[mpi="$withval"],
+	[mpi=""])
+
+if test -z "$mpi"; then
+  MPI_INCLUDE_DIR=""
+  for trylib in mpi mpich; do
+     echo -n "Looking for MPI in -l$trylib... "
+     LIBS="$oldLibs -l$trylib"
+     AC_TRY_LINK(
+#include <mpi.h>
+,
+     int argc;
+     char** argv;
+     MPI_Init(&argc, &argv);
+, mpi_dir=""; mpi_lib=$trylib; echo "found"; break, echo "not found")
+  done
+else
+  oldcppflags=$CPPFLAGS
+  MPI_INCLUDE_DIR=$mpi/include
+  CPPFLAGS="$CPPFLAGS -I$MPI_INCLUDE_DIR"
+  oldLibs=$LIBS
+  for trydir in lib lib32 lib64; do
+     for trylib in mpi mpich; do
+        echo -n "Looking for MPI in -L$mpi/$trydir -l$trylib... "
+        LIBS="$oldLibs -L$mpi/$trydir -l$trylib"
+        AC_TRY_LINK(
+#include <mpi.h>
+,
+	int argc;
+	char** argv;
+	MPI_Init(&argc, &argv);
+, mpi_dir=$mpi/$trydir; mpi_lib=$trylib; echo "found"; break 2, echo "not found")
+     done
+  done
+  LIBS=$oldLibs
+  CPPFLAGS=$oldcppflags
+fi
+
+MPI_LIB_DIR=$mpi_dir
+MPI_LIB_FLAG="-l$mpi_lib"
+
+AC_SUBST(MPI_LIB_DIR)
+AC_SUBST(MPI_LIB_FLAG)
+AC_SUBST(MPI_INCLUDE_DIR)
+
+##-- Host-Specific Defaults --------------------------------------------------
+
+AC_SUBST(CC)
+AC_SUBST(CXX)
+AC_SUBST(AS)
+AC_SUBST(LD)
+AC_SUBST(CFLAGS)
+AC_SUBST(SOFLAGS)
+AC_SUBST(LDFLAGS)
+AC_SUBST(ASFLAGS)
+AC_SUBST(LDRUN_PREFIX)
+AC_SUBST(BINARYFLAGS)
+
+AC_ARG_ENABLE(64bit,
+	[  --enable-64bit		Compile in 64 bit mode],
+	[is_64bit="$enableval"],
+	[is_64bit=$i{is_64bit='no'}])
+
+NEED_SONAME=no
+case $host in
+  *-irix*) echo -n "Checking for /opt/MIPSpro/bin/cc... "
+	   if test "$is_64bit" = "yes" ; then
+             BINARYFLAGS="-64 -mips4"
+	     if test "$thirdparty" = "/res/sci/data1/SCIRun_Thirdparty_32"; then
+	       thirdparty="/res/sci/data1/SCIRun_Thirdparty_64"
+	     fi
+           else
+             BINARYFLAGS="-n32 -mips4"
+           fi
+           if test -f /opt/MIPSpro/bin/cc; then
+             echo "yes"
+             echo "  Using MIPSpro compilers instead of gcc; they're better"
+             CC=/opt/MIPSpro/bin/cc
+             CXX=/opt/MIPSpro/bin/CC
+             AS=/opt/MIPSpro/bin/as
+             LD=/opt/MIPSpro/bin/ld
+           else
+             echo "no"
+           fi
+#           if test "${CC}" = "" ; then
+             if type CC | sed 's/^.* //' > /dev/null 2>&1 ; then
+               CXX=`type CC | sed 's/^.* //' `
+               echo "Using C++ compiler ${CXX}"
+             fi
+             if type cc | sed 's/^.* //' > /dev/null 2>&1 ; then
+               CC=`type cc | sed 's/^.* //' `
+               echo "Using C compiler ${CC}"
+             fi
+             if type as | sed 's/^.* //' > /dev/null 2>&1 ; then
+               AS=`type as | sed 's/^.* //' `
+               echo "Using Assembler ${AS}"
+             fi
+#           fi
+	   F77=f77
+	   FFLAGS="$BINARYFLAGS ${FFLAGS}"
+           CFLAGS="-fullwarn -xansi -LANG:std $BINARYFLAGS $extra_cflags"
+	   ASFLAGS="$BINARYFLAGS ${ASFLAGS}"
+           SOFLAGS="-shared $BINARYFLAGS -LANG:std -no_unresolved -J\$(MAKE_PARALLELISM) -update_registry \$(LIBDIR)so_locations $(TLINK) ${SOFLAGS}"
+           LDFLAGS="$BINARYFLAGS -LANG:std -no_unresolved -J\$(MAKE_PARALLELISM) $(TLINK)"
+           LDRUN_PREFIX="-Wl,-rpath -Wl,"
+	   TEMPLATE_TAG=
+	   TEMPLATE_BOX="<>"
+	   LOCK_IMPL=lock_mips.s
+           if test "$threads" = "unknown"; then
+             threads="irix"
+           fi
+	   TIME_IMPL=Time_irix.cc
+	   if test "$is_64bit" = "yes" ; then
+             IMAGE_LIBS="-lifl"
+           else
+             IMAGE_LIBS="-lifl -lcl"
+           fi
+	   TRACEBACK_LIB=-lexc
+           ;;
+  *-linux-gnu)
+#     AC_PROG_F77
+     CFLAGS="-Wall $extra_cflags"
+     TEMPLATE_TAG=
+     TEMPLATE_BOX="<>"
+     LOCK_IMPL=""
+     SOFLAGS="-shared ${SOFLAGS}"
+     NEED_SONAME=yes
+     LDRUN_PREFIX="-Wl,-rpath -Wl,"
+     TIME_IMPL=Time_unix.cc
+     PLATFORM_LDFLAGS="-ldl"
+     TRACEBACK_LIB=""
+     IMAGE_LIBS=""
+     AC_CHECK_HEADER(sstream, SSTREAM_COMPAT="no", SSTREAM_COMPAT="yes")
+           ;;
+  *)
+     echo "WARNING: Untested configuration - you are on your own!"
+     AC_PROG_CC
+     AC_PROG_CXX
+     ;;
+esac
+AC_SUBST(F77)
+AC_SUBST(FFLAGS)
+AC_SUBST(PLATFORM_LDFLAGS)
+AC_SUBST(NEED_SONAME)
+AC_SUBST(SSTREAM_COMPAT)
+AC_SUBST(TRACEBACK_LIB)
+AC_SUBST(IMAGE_LIBS)
+##-- Part II thread configuration --------------------------------------------
+
+if test "$threads" = "unknown"; then
+   threads="pthreads"
+fi
+case $threads in
+  pthreads*) THREAD_LIBS="-lpthread"
+	     THREAD_DEFINE="#define SCI_PTHREAD"
+  ;;
+  irix)     THREAD_LIBS="-lfetchop"
+	    CFLAGS="$CFLAGS -DSTL_SGI_THREADS"
+	    THREAD_DEFINE=""
+  ;;  
+  *)
+    echo "Unknown thread implementation: $threads"
+    exit 1
+  ;;
+esac
+AC_SUBST(THREAD_LIBS)
+AC_SUBST(THREAD_DEFINE)
+THREAD_IMPL="Thread_"$threads".cc"
+
+##-- Find a C Compiler -------------------------------------------------------
+## AC_PROG_CC
+## AC_PROG_CXX
+
+##-- Find Perl ---------------------------------------------------------------
+
+AC_PATH_PROG(PERL, perl, none)
+if test "${PERL}" = "none" ; then
+  echo "  You must have perl on your path for configure to succeed."
+  exit 1
+fi
+
+##-- Twitty SGI License Chatter ----------------------------------------------
+
+echo -n "Checking if ${CC} talks too much... "
+touch wow.c
+if ${CC} -c wow.c 2>&1 | fgrep "requires a license password" > /dev/null ; then
+  echo "yes"
+  echo "  Using cc and CC wrappers in scripts/cc and scripts/CC to remove"
+  echo "  irritating license verbosity from SGI's Varsity Pack MIPSpro"
+  echo "  compilers."
+
+  mkdir -p scripts
+  sed "s+VERBOSE_CC+${CC}+g;" < ${srcdir}/scripts/cc.in > scripts/cc
+  sed "s+VERBOSE_CC+${CXX}+g;" < ${srcdir}/scripts/cc.in > scripts/CC
+  chmod 755 scripts/cc scripts/CC
+
+  CC="$(OBJTOP)/scripts/cc"
+  CXX="$(OBJTOP)/scripts/CC"
+else
+  echo "no"
+fi
+rm -f wow.c wow.o
+
+##-- One Rarely Finds This ---------------------------------------------------
+
+AC_CHECK_LIB(Kenny,life_signs,true,
+             echo "  Oh my God!  They killed Kenny!  You bastards!")
+
+##-- Dependency Regen Switch -------------------------------------------------
+
+echo -n "Determining cc dependency regen switch: "
+rm -f configure-test.*
+echo "#include <stdio.h>" > configure-test.c
+CC_DEPEND_REGEN=''
+
+# GCC just puts the dependency info in a .d when you provide the -MD switch.
+if test "${CC_DEPEND_REGEN}" = "" ; then
+  ${CC} -MD -c configure-test.c > /dev/null 2>&1
+  if test -f configure-test.d ; then
+    CC_DEPEND_REGEN='-MD'
+  fi
+fi
+
+# SGI cc wants -MDupdate <filename>.
+if test "${CC_DEPEND_REGEN}" = "" ; then
+  ${CC} -MDupdate configure-test.d -c configure-test.c
+  if test -f configure-test.d ; then
+    CC_DEPEND_REGEN='-MDupdate $(dir $@)depend.mk'
+  fi
+fi
+
+rm -f configure-test.*
+
+if test "${CC_DEPEND_REGEN}" = "" ; then
+  echo unknown
+  echo "  Warning: Dependency information will not be maintained."
+else
+  echo $CC_DEPEND_REGEN
+fi
+AC_SUBST(CC_DEPEND_REGEN)
+F77_DEPEND_REGEN=$CC_DEPEND_REGEN
+AC_SUBST(F77_DEPEND_REGEN)
+
+##-- How Many Processors -----------------------------------------------------
+
+unset NUM_CPUS
+echo -n "Determining physical processor count: "
+case $host in
+  *-irix*) NUM_CPUS="`TERM=dumb top -n 1 | fgrep CPUs | cut -d' ' -f1`"
+           ;;
+  *linux*) NUM_CPUS="`cat /proc/cpuinfo | fgrep processor | wc | cut -c1-7`"
+           ;;
+  *)       NUM_CPUS="1"
+           ;;
+esac
+if ! NUM_CPUS="`expr $NUM_CPUS + 0 2> /dev/null`" ; then
+  NUM_CPUS="1"
+fi
+echo $NUM_CPUS
+
+MAKE_PARALLELISM="`expr ${NUM_CPUS} \* 2`"
+export MAKE_PARALLELISM
+AC_SUBST(MAKE_PARALLELISM)
+
+##-- Find TCL ----------------------------------------------------------------
+
+echo -n "checking for Tcl 8.X... "
+
+# try the user supplied path first
+if test "$tcl" ; then
+  unset cfsh
+  cfsh="$tcl/lib/tclConfig.sh"
+  if test -f $cfsh ; then
+    . $cfsh
+  fi
+fi
+
+# if not found try the default
+if test -z "$TCL_MAJOR_VERSION" ; then
+  unset cfsh
+  cfsh="$thirdparty/lib/tclConfig.sh"
+  if test -f $cfsh ; then
+    . $cfsh
+  fi
+fi
+
+# if still not found try some standard locations
+if test -z "$TCL_MAJOR_VERSION" ; then
+  unset cfsh
+  cfsh="/usr/local/lib/tclConfig.sh"
+  if test -f $cfsh ; then
+    . $cfsh
+  else
+    cfsh="/usr/lib/tclConfig.sh"
+    if test -f $cfsh ; then
+      . $cfsh
+    fi
+  fi
+fi
+
+if test "$TCL_MAJOR_VERSION" = "8" ; then
+  # TCL_PREFIX set by tclConfig.sh
+  TCL_INCLUDE_DIR="${TCL_PREFIX}/include"
+  TCL_LIB_DIR="${TCL_PREFIX}/lib"
+  # TCL_LIB_FLAG set by tclConfig.sh, but needs eval'ing for debug flags
+  TCL_LIB_FLAG="`eval echo $TCL_LIB_FLAG`"
+  TCL_INIT_DIR="${TCL_LIB_DIR}/tcl${TCL_VERSION}"
+  echo -L$TCL_LIB_DIR $TCL_LIB_FLAG
+
+  if test "$TCL_LD_FLAGS" != "" ; then
+    if test "$host" = "*-irix*"; then
+      echo "  XXX: Check SGI ABI"
+    fi
+  fi
+else
+  if test -z "TCL_MAJOR_VERSION" ; then
+    echo "not found -- must build"
+    echo "  Implement me."
+  else
+    echo "incorrect tcl version $TCL_MAJOR_VERSION$TCL_MINOR_VERSION$TCL_PATCH_LEVEL found"
+  fi
+  exit 1
+fi
+
+# These are headers we need to build our custom widgets.
+if test ! -d "$TCL_SRC_DIR/generic" ||
+   test ! -f "$TCL_SRC_DIR/generic/tcl.h" ||
+   test ! -f "$TCL_SRC_DIR/generic/tclPort.h" ||
+   test ! -f "$TCL_SRC_DIR/generic/tclMath.h" ||
+   test ! -f "$TCL_SRC_DIR/generic/tclInt.h"; then
+  echo "Couldn't find the necessary Tcl include files."
+  echo "The full Tcl source is required.  exiting."
+  exit 1
+fi
+
+AC_SUBST(TCL_INCLUDE_DIR)
+AC_SUBST(TCL_SRC_DIR)
+AC_SUBST(TCL_LIB_DIR)
+AC_SUBST(TCL_LIB_FLAG)
+AC_SUBST(TCL_INIT_DIR)
+
+##-- Find Tk -----------------------------------------------------------------
+
+echo -n "checking for Tk 8.X... "
+
+if test "$tk" ; then
+  unset cfsh
+  cfsh="$tk/lib/tkConfig.sh"
+  if test -f $cfsh ; then
+    . $cfsh
+  fi
+elif test "$tcl" ; then
+  unset cfsh
+  cfsh="$tcl/lib/tkConfig.sh"
+  if test -f $cfsh ; then
+    . $cfsh
+  fi
+fi
+
+# if not found try the default
+if test -z "$TK_MAJOR_VERSION" ; then
+  unset cfsh
+  cfsh="$thirdparty/lib/tkConfig.sh"
+  if test -f $cfsh ; then
+    . $cfsh
+  fi
+fi
+
+# if still not found try some standard locations
+if test -z "$TK_MAJOR_VERSION" ; then
+  unset cfsh
+  cfsh="/usr/local/lib/tkConfig.sh"
+  if test -f $cfsh ; then
+    . $cfsh
+  else
+    cfsh="/usr/lib/tkConfig.sh"
+    if test -f $cfsh ; then
+      . $cfsh
+    fi
+  fi
+fi
+
+if test "$TK_MAJOR_VERSION" = "8" ; then
+  # TK_PREFIX set by tclConfig.sh
+  TK_INCLUDE_DIR="${TK_PREFIX}/include"
+  TK_LIB_DIR="${TK_PREFIX}/lib"
+  # TK_LIB_FLAG set by tclConfig.sh, but needs eval'ing for debug flags
+  TK_LIB_FLAG="`eval echo $TK_LIB_FLAG`"
+  TK_LIB_SPEC="`eval echo $TK_LIB_SPEC`"
+
+  echo -L$TK_LIB_DIR $TK_LIB_FLAG
+
+  # Can't check the SGI ABI 'cause LD_FLAGS doesn't get def'd in tkConfig.sh;
+  # just assume the tk we find matches the tcl we find.
+
+  if ! test "$TCL_PREFIX" = "$TK_PREFIX" ; then
+    echo "  WARNING: Tcl and Tk not colocated; this might indicate a problem"
+  fi
+
+  if ! test "$TCL_VERSION" = "$TK_VERSION" -a \
+            "$TCL_PATCH_LEVEL" = "$TK_PATCH_LEVEL" ; then
+    echo "  ERROR: Tcl and Tk are not the same version & patch level; this is Wrong"
+    exit 1
+  fi
+
+else
+  echo "not found -- must build"
+  BUILDING_TK=1
+  echo "  Implement me."
+  exit 1
+fi
+
+# These are headers we need to build our custom widgets.
+if test ! -d "$TK_SRC_DIR/generic" ||
+   test ! -f "$TK_SRC_DIR/generic/tk.h" ||
+   test ! -f "$TK_SRC_DIR/generic/tk3d.h" ||
+   test ! -f "$TK_SRC_DIR/generic/tkPort.h" ; then
+  echo "Couldn't find the necessary Tk include files."
+  echo "The full Tk source is required.  exiting."
+  exit 1
+fi
+
+AC_SUBST(TK_INCLUDE_DIR)
+AC_SUBST(TK_SRC_DIR)
+AC_SUBST(TK_LIB_DIR)
+AC_SUBST(TK_LIB_FLAG)
+AC_SUBST(TK_LIB_SPEC)
+AC_SUBST(TK_VERSION)
+
+##-- Find iTcl ---------------------------------------------------------------
+
+echo -n "checking for [[incr Tcl/Tk]] 3.X... "
+
+if test "$BUILDING_TK" = "" ; then
+
+if test "$itcl" ; then
+  unset cfsh
+  cfsh="$itcl/lib/itclConfig.sh"
+  if test -f $cfsh ; then
+    . $cfsh;
+    ITCL_PREFIX="$itcl"
+  fi
+  cfsh="$itcl/lib/itkConfig.sh"
+  if test -f $cfsh ; then
+    . $cfsh
+  fi
+elif test "$tcl" ; then
+  unset cfsh
+  cfsh="$tcl/lib/itclConfig.sh"
+  if test -f $cfsh ; then
+    . $cfsh;
+    ITCL_PREFIX="$tcl"
+  fi
+  cfsh="$tcl/lib/itkConfig.sh"
+  if test -f $cfsh ; then
+    . $cfsh
+  fi
+fi
+
+# if not found try the SCI group defaults (we're lazy ;)
+if test -z "$ITCL_MAJOR_VERSION" ; then
+
+  unset cfsh
+  cfsh="$thirdparty/lib/itclConfig.sh"
+  ITCL_PREFIX="$thirdparty"
+  if test -f $cfsh ; then
+    . $cfsh
+  else
+    ITCL_PREFIX=""
+  fi  
+
+  unset cfsh
+  cfsh="$thirdparty/lib/itkConfig.sh"
+  ITK_PREFIX="$thirdparty"
+  if test -f $cfsh ; then
+    . $cfsh
+  else
+    ITK_PREFIX=""
+  fi  
+fi
+
+# if still not found try some standard locations
+if test -z "$ITCL_MAJOR_VERSION" ; then
+  unset cfsh
+  cfsh="/usr/local/lib/itclConfig.sh"
+  if test -f $cfsh ; then
+    . $cfsh
+    ITCL_PREFIX="/usr/local"
+  else
+    cfsh="/usr/lib/itclConfig.sh"
+    if test -f $cfsh ; then
+      . $cfsh
+      ITCL_PREFIX="/usr"
+    fi
+  fi
+  cfsh="/usr/local/lib/itkConfig.sh"
+  if test -f $cfsh ; then
+    . $cfsh
+  else
+    cfsh="/usr/lib/itkConfig.sh"
+    if test -f $cfsh ; then
+      . $cfsh
+    fi
+  fi
+fi
+
+fi # end BUILDING_TK
+
+if test "$ITCL_MAJOR_VERSION" = "3" ; then
+  if test -z "$ITCL_PREFIX" ; then
+   ITCL_PREFIX="`cd $shdir/.. ; pwd`"
+  fi
+  ITCL_INCLUDE_DIR="${ITCL_PREFIX}/include"
+  ITCL_SRC_DIR="`eval echo $ITCL_SRC_DIR`"
+  ITCL_LIB_SPEC="`eval echo $ITCL_LIB_SPEC`"
+  ITK_SRC_DIR="`eval echo $ITK_SRC_DIR`"
+  ITK_LIB_SPEC="`eval echo $ITK_LIB_SPEC`"
+  ITCL_LIB_DIR="${ITCL_PREFIX}/lib"
+  ITK_LIB_DIR="${ITCL_PREFIX}/lib"
+  ITCL_BIN_DIR="${ITCL_PREFIX}/bin"
+  ITCLSH="${ITCL_BIN_DIR}/itclsh${ITCL_VERSION}"
+  ITCL_WIDGETS="${ITCL_LIB_DIR}/iwidgets/scripts"
+  ITCL_INIT_DIR="${ITCL_LIB_DIR}/itcl${ITCL_VERSION}"
+  echo "${ITCL_LIB_SPEC} -l`basename $ITK_LIB_FILE | sed -e 's,lib,,g' -e 's,.so,,g'`"
+else
+  if test -z "$ITCL_VERSION" ; then
+    echo "not found -- must build"
+    echo "  Implement me."
+  else
+    echo "incorrect itcl/itk version $ITCL_VERSION$ITCL_PATCH_LEVEL found"
+  fi
+  exit 1
+fi
+
+if test ! -d "$ITCL_SRC_DIR/generic" ||
+   test ! -f "$ITCL_SRC_DIR/generic/itcl.h" ||
+   test ! -f "$ITK_SRC_DIR/generic/itk.h" ; then
+  echo "Couldn't find the [[incr Tcl/Tk]] include files.  exiting."
+  exit 1
+fi
+
+AC_SUBST(ITCLSH)
+AC_SUBST(ITCL_INCLUDE_DIR)
+AC_SUBST(ITCL_LIB_DIR)
+AC_SUBST(ITCL_BIN_DIR)
+#AC_SUBST(ITCL_LIB_FLAG)
+AC_SUBST(ITCL_WIDGETS)
+AC_SUBST(ITCL_INIT_DIR)
+AC_SUBST(ITCL_SRC_DIR)
+AC_SUBST(ITCL_LIB_SPEC)
+
+AC_SUBST(ITK_SRC_DIR)
+AC_SUBST(ITK_LIB_DIR)
+AC_SUBST(ITK_LIB_SPEC)
+
+##-- Find BLT ---------------------------------------------------------------
+echo -n "checking for BLT 2.4x... "
+
+if test "$blt" &&
+   test -n "`ls -1r $blt/lib/libBLT24.{so,a} 2> /dev/null | head -n 1`"; then
+  BLT_PREFIX=$blt
+elif test "$tcl" &&
+     test -n "`ls -1r $tcl/lib/libBLT24.{so,a} 2> /dev/null | head -n 1`"; then
+  BLT_PREFIX=$tcl
+fi
+
+if test -z "$BLT_PREFIX" ; then
+  if test -n "`ls -1r $thirdparty/lib/libBLT24.{so,a} 2> /dev/null | head -n 1`"; then
+    BLT_PREFIX="$thirdparty"
+  elif test -n "`ls -1r /usr/local/lib/libBLT24.{so,a} 2> /dev/null | head -n 1`";  then
+    BLT_PREFIX=/usr/local
+  elif test -n "`ls -1r /usr/lib/libBLT24.{so,a} 2> /dev/null | head -n 1`"; then
+    BLT_PREFIX=/usr
+  fi
+fi
+
+if test "$BLT_PREFIX" ; then
+  BLT_INCLUDE_DIR="$BLT_PREFIX/include"
+  BLT_LIB_DIR="$BLT_PREFIX/lib"
+  BLT_LIB_FLAG="-lBLT24"
+  echo -L$BLT_LIB_DIR $BLT_LIB_FLAG $BLT_INCLUDE_DIR
+else
+  echo "not found -- must build"
+  echo "  Implement me."
+  exit 1
+fi
+
+if test ! -d "$BLT_INCLUDE_DIR" ||
+   test ! -f "$BLT_INCLUDE_DIR/blt.h" ; then
+  echo "Couldn't find the BLT include file.  exiting."
+  exit 1
+fi
+
+AC_SUBST(BLT_INCLUDE_DIR)
+AC_SUBST(BLT_LIB_DIR)
+AC_SUBST(BLT_LIB_FLAG)
+
+##-- Find Xerces-C  ------------------------------------------------------
+
+echo -n "checking for Xerces-C 1.X... "
+
+if test "$xerces" &&
+   test -n "`ls -1r $xerces/lib/libxerces-c1_?.so 2> /dev/null | head -n 1`"; then
+  XML_LIB_DIR=$xerces/lib
+fi
+
+if test -z "$XML_LIB_DIR"; then
+  if test -n "`ls -1r $thirdparty/lib/libxerces-c1_?.so 2> /dev/null | head -n 1`"; then
+    XML_LIB_DIR="$thirdparty/lib"
+  elif test -n "`ls -1r /usr/local/lib/libxerces-c1_?.so 2> /dev/null | head -n 1`"; then 
+    XML_LIB_DIR="/usr/local/lib"
+  elif test -n "`ls -1r /usr/lib/libxerces-c1_?.so 2> /dev/null | head -n 1`"; then 
+    XML_LIB_DIR="/usr/lib"
+  fi
+fi
+
+if test -z "$XML_LIB_DIR"; then
+  echo "Couldn't find a Xerces-C library.  exiting."
+  exit 1
+fi
+
+echo $XML_LIB_DIR
+if (test $XML_LIB_DIR &&
+    test -d "$XML_LIB_DIR/../util" &&
+    test -d "$XML_LIB_DIR/../sax" &&
+    test -d "$XML_LIB_DIR/../dom" &&
+    test -d "$XML_LIB_DIR/../parsers") ; then
+  XML_INCLUDE_DIR="$XML_LIB_DIR/.."
+else
+  echo "Couldn't find the Xerces-C headers.  exiting."
+  exit 1
+fi
+
+XML_LIB_FLAG="`ls -1 $XML_LIB_DIR/libxerces-c1_?.so |\
+	      sort -r | head -n 1 |  sed -e's,lib,,g' -e 's,.so,,g'`"
+XML_LIB_FLAG="-l`basename $XML_LIB_FLAG`"
+
+echo "-L$XML_LIB_DIR $XML_LIB_FLAG"
+
+AC_SUBST(XML_LIB_DIR)
+AC_SUBST(XML_LIB_FLAG)
+AC_SUBST(XML_INCLUDE_DIR)
+
+
+##-- Find Nrrd ------------------------------------------------------
+
+nrrd_pkg="no"
+for i in $package; do
+  if test "$i" = "Nrrd" ; then
+    nrrd_pkg="yes"
+    if test -e "$thirdparty/include/nrrd.h" ; then
+      NRRD_PREFIX=$thirdparty
+    fi
+  fi
+done
+
+if test "${nrrd_pkg}" = "yes" ; then
+  if test "${with_nrrd+set}" = set; then
+    withval="$with_nrrd"
+    if test "$withval" != "yes" ; then
+      if test -e "${withval}/include/nrrd.h"; then
+        NRRD_PREFIX="$withval"
+      else
+        echo "\n*** Error - could not find ${withval}/include/nrrd.h\n"
+        nrrd_pkg="no"
+      fi
+    else
+      echo "Remark: ignoring pathless with-nrrd flag"
+    fi
+  fi
+fi
+
+if test "${nrrd_pkg}" = "yes" ; then
+  echo -n "checking for nrrd... "
+  if test "$NRRD_PREFIX" ; then
+    NRRD_INCLUDE="-I${NRRD_PREFIX}/include"
+    NRRD_LIB_DIR="${NRRD_PREFIX}/lib"
+    echo "${NRRD_PREFIX}"
+  else
+    echo "no"
+  fi
+fi
+
+AC_SUBST(NRRD_INCLUDE)
+AC_SUBST(NRRD_LIB_DIR)
+
+
+##-- Find MPEG ---------------------------------------------------------------
+
+MPEG_DEF_FLAG=""
+MPEG_PREFIX=""
+if test "${with_mpeg+set}" = set; then
+  withval="$with_mpeg"
+  if test "$withval" != "yes" ; then
+    if test -e "${withval}/include/mpege.h"; then
+      MPEG_PREFIX="$withval"
+    else
+      echo "\n*** Error - could not find MPEG in ${withval}/include/mpege.h\n"
+    fi
+  else
+    if test -e "$thirdparty/include/mpege.h" ; then
+      MPEG_PREFIX=$thirdparty
+    else
+      echo "\n*** Error - could not find MPEG in $thirdparty/include/mpege.h\n";
+    fi
+  fi
+fi
+
+if test "$MPEG_PREFIX" != "" ; then
+  echo -n "checking for mpeg... "
+  MPEG_DEF_FLAG="-DMPEG"
+  MPEG_INCLUDE="-I${MPEG_PREFIX}/include"
+  MPEG_LIBRARY="-L${MPEG_PREFIX}/lib -lmpege"
+  echo "${MPEG_PREFIX}"
+fi
+
+AC_SUBST(MPEG_INCLUDE)
+AC_SUBST(MPEG_LIBRARY)
+AC_SUBST(MPEG_DEF_FLAG)
+
+
+##-- Find Nektar--------------------------------------------------------------
+
+AC_ARG_WITH(with_nektar,
+	[  --with-nektar=DIR		Use the nektar installation in DIR],
+	[with_nektar="$withval"],
+	[with_nektar=${with_nektar='no'}])
+
+
+if ! test "${with_nektar}" = "no"; then
+  NEKTAR_PREFIX=${with_nektar}
+  NEKTAR_INCLUDE_DIR="${NEKTAR_PREFIX}/include"
+  NEKTAR_LIB_DIR="${NEKTAR_PREFIX}/lib"
+  NEKTAR_LIB_FLAG="-lhybridopt -lvec"
+  echo "with Nektar at ${NEKTAR_PREFIX}"
+fi
+
+AC_SUBST(NEKTAR_INCLUDE_DIR)
+AC_SUBST(NEKTAR_LIB_DIR)
+AC_SUBST(NEKTAR_LIB_FLAG)
+
+
+##-- Find etags ------------------------------------------------------------
+
+AC_PATH_PROG(ETAGS, etags, notfound)
+if test "$ETAGS" = "notfound" ; then
+  echo "\tetags not found"
+fi
+ 
+
+##-- Find location of OpenGL -----------------------------------------------
+
+echo -n "checking for OpenGL... "
+
+if test -e /usr/include/GL; then
+  GL_INCLUDE_DIR="/usr/include"
+elif test -e /usr/X11R6/include/GL; then
+  GL_INCLUDE_DIR="/usr/X11R6/include"
+elif test -e /usr/local/include/GL; then
+  GL_INCLUDE_DIR="/usr/local/include"
+fi
+
+if test -e /usr/lib/libGL.so; then
+  GL_LIB_DIR="/usr/lib"
+elif test -e /usr/X11R6/lib/libGL.so; then
+  GL_LIB_DIR="/usr/X11R6/lib"
+elif test -e /usr/local/lib/libGL.so; then
+  GL_LIB_DIR="/usr/local/lib"
+fi
+
+if test -z "$GL_INCLUDE_DIR"; then
+  echo "couldn't find the location of the GL headers."
+  echo "by standard convention, they should be in /usr/include/GL"
+  echo ""
+  exit 1
+else
+  echo libraries $GL_LIB_DIR, headers $GL_INCLUDE_DIR/GL
+fi
+
+AC_SUBST(GL_INCLUDE_DIR)
+AC_SUBST(GL_LIB_DIR)
+
+
+##-- Other paths for Uintah ------------------------------------------
+
+AC_ARG_ENABLE(enable_sci_malloc,
+	[  --enable-sci-malloc		Use SCI malloc checker],
+	[enable_sci_malloc="$enableval"],
+	[enable_sci_malloc=${enable_sci_malloc='yes'}])
+
+if test "$enable_sci_malloc" = "yes"; then
+	MALLOC_DEFINE=""
+else
+	MALLOC_DEFINE="#define DISABLE_SCI_MALLOC"
+fi
+AC_SUBST(MALLOC_DEFINE)
+
+##-- Other paths for Uintah ------------------------------------------
+
+AC_ARG_WITH(petsc,
+	[  --with-petsc=<path-to-petsc>  <path-to-petsc>],
+	[withpetsc="$withval"],
+	[withpetsc=""])
+if test "$optimize" = "yes"; then
+   PETSC_SUB="libO"
+else
+   PETSC_SUB="libg"
+fi
+PETSC_DIR=$withpetsc
+if test "$withpetsc" = "yes"; then
+   PETSC_ARCH=`$(PETSC_DIR)/bin/petscarch`
+   if test "$is_64bit" != "yes" -a "$PETSC_ARCH" = "IRIX64"; then
+      PETSC_ARCH="IRIX"
+   fi
+fi
+AC_SUBST(PETSC_DIR)
+AC_SUBST(PETSC_SUB)
+AC_SUBST(PETSC_ARCH)
+
+##-- Check for option to build new parallel (distributed memory) SCIRun ------
+
+AC_ARG_ENABLE(enable_parallel,
+	[  --enable-parallel		Compile experimental distributed memory version],
+	[enable_parallel="$enableval"],
+	[enable_parallel=${enable_parallel='no'}])
+AC_ARG_WITH(with_globus,
+	[  --with-globus=DIR		Use the globus installation in DIR],
+	[with_globus="$withval"],
+	[with_globus=${with_globus='no'}])
+
+if test "$enable_parallel" = "yes"; then
+  if test "$with_globus" = "no"; then
+    echo "Must include --with-globus with --enable-parallel"
+    exit 1
+  fi
+
+  PARALLEL_DEFINE="#define SCI_PARALLEL"
+  parallel_output="
+	        Base/Core/globus_threads/Makefile \
+	      Component/Makefile \
+	        Component/CIA/Makefile \
+	        Component/PIDL/Makefile \
+	        Base/Dataflow/Interface/Makefile \
+	        Base/Dataflow/Controller/Makefile \
+	        Base/Dataflow/Builder/Makefile \
+	      newmain/Makefile \
+	        tools/sidl/Makefile \
+		testprograms/Component/Makefile \
+		  testprograms/Component/argtest/Makefile \
+		  testprograms/Component/memstress/Makefile \
+		  testprograms/Component/mitest/Makefile \
+		  testprograms/Component/objects/Makefile \
+		  testprograms/Component/pingpong/Makefile \
+		"
+  BUILD_PARALLEL="yes"
+  GLOBUS_INCLUDE="-I$with_globus/include"
+  GLOBUS_LIB="$with_globus/lib"
+else
+  PARALLEL_DEFINE=""
+  BUILD_PARALLEL="no"
+  GLOBUS_INCLUDE=""
+  GLOBUS_LIB=""
+fi
+AC_SUBST(GLOBUS_INCLUDE)
+AC_SUBST(GLOBUS_LIB)
+AC_SUBST(PARALLEL_DEFINE)
+AC_SUBST(BUILD_PARALLEL)
+
+##-- Emit local configuration file -------------------------------------------
+
+if test "$is_64bit" = "yes"; then
+  NBITS=64
+else
+  NBITS=32
+fi
+AC_SUBST(NBITS)
+
+AC_ARG_ENABLE(assertion-level,
+	[  --enable-assertion-level=N   Use assertion level N (0-3)],
+	[enable_assertion_level="$enableval"],
+	[enable_assertion_level=${enable_assertion_level=3}])
+ASSERTION_LEVEL=$enable_assertion_level
+AC_SUBST(ASSERTION_LEVEL)
+
+AC_SUBST(TEMPLATE_BOX)
+AC_SUBST(TEMPLATE_TAG)
+
+##-- Check enterleave flag ---------------------------------------------------
+
+AC_ARG_ENABLE(enterleave,
+	[  --enable-enterleave		Make gmake print out entering/leaving statements],
+	[enterleave="$enableval"],
+	[enterleave=${enterleave='no'}])
+
+if test "$enterleave" = "yes" ; then
+	NOPRINTDIR=EMPTY
+else
+	NOPRINTDIR="--no-print-directory"
+fi
+AC_SUBST(NOPRINTDIR)
+
+##-- Check for header files --------------------------------------------------
+
+AC_CHECK_HEADERS(limits.h)
+AC_CHECK_HEADERS(sys/select.h)
+AC_CHECK_HEADERS(unistd.h)
+AC_CHECK_HEADERS(sys/time.h)
+AC_PATH_XTRA()
+if test x"$X_LIBS" = x"-L/usr/lib" -o x"$X_LIBS" = x" -L/usr/lib"; then
+  X_LIBS=""
+fi
+
+if ! test x"$X_LIBS" = x; then
+  X_LIBS="-Wl,-rpath,$x_libraries $X_LIBS"
+fi
+
+##-- Check for programs ------------------------------------------------------
+
+# Yacc - for sidl
+AC_PROG_YACC()
+AC_SUBST(YACC)
+
+# Lex - for sidl
+AC_PROG_LEX()
+AC_SUBST(LEX)
+AC_SUBST(LEXLIB)
+
+##-- Generate Output Files ---------------------------------------------------
+if ! test -d "Dataflow/Modules/Fields/Manip"; then
+  mkdir -p "Dataflow/Modules/Fields/Manip";
+fi
+if ! test -d "Dataflow/Modules/Math/Manip"; then
+  mkdir -p "Dataflow/Modules/Math/Manip";
+fi
+AC_OUTPUT(	configVars.mk \
+		Makefile \
+                Dataflow/Modules/Fields/Manip/Makefile\
+		Dataflow/Modules/Math/Manip/Makefile\
+		sci_defs.h \
+		, echo timestamp > stamp-h)
+

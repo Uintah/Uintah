@@ -1,0 +1,145 @@
+# SCI Network 1.0
+
+::netedit dontschedule
+
+global userName
+set userName "darbyb"
+
+global runDate
+set runDate " Fri  Feb 23 19101"
+
+global runTime
+set runTime " 16:40:9"
+
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 141 17]
+set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 397 40]
+set m2 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 449 122]
+set m3 [addModuleAtPosition "SCIRun" "DataIO" "MatrixWriter" 287 121]
+set m4 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 27 213]
+set m5 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 252 213]
+set m6 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 473 216]
+set m7 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 689 216]
+set m8 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 601 373]
+set m9 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 759 371]
+set m10 [addModuleAtPosition "SCIRun" "Math" "ErrorMetric" 28 467]
+set m11 [addModuleAtPosition "SCIRun" "Fields" "SeedField" 70 546]
+set m12 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 427 665]
+set m13 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 707 724]
+set m14 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 51 810]
+set m15 [addModuleAtPosition "SCIRun" "Math" "ErrorMetric" 223 721]
+set m16 [addModuleAtPosition "SCIRun" "Render" "Viewer" 514 1048]
+set m17 [addModuleAtPosition "BioPSE" "Visualization" "ShowDipoles" 51 929]
+set m18 [addModuleAtPosition "BioPSE" "Visualization" "ShowDipoles" 240 905]
+set m19 [addModuleAtPosition "SCIRun" "Math" "ManipMatrix" 134 115]
+set m20 [addModuleAtPosition "SCIRun" "Math" "ManipMatrix" 197 427]
+set m21 [addModuleAtPosition "SCIRun" "Math" "ManipMatrix" 362 427]
+set m22 [addModuleAtPosition "SCIRun" "Math" "ManipMatrix" 521 446]
+set m23 [addModuleAtPosition "SCIRun" "Math" "ManipMatrix" 241 619]
+
+addConnection $m17 1 $m16 0
+addConnection $m18 1 $m16 1
+addConnection $m14 0 $m17 0
+addConnection $m23 0 $m15 1
+
+set $m0-notes {}
+set $m0-show_status 1
+set $m0-filename {}
+set $m1-notes {}
+set $m1-show_status 1
+set $m1-filename {}
+set $m2-notes {}
+set $m2-show_status 1
+set $m2-filename {}
+set $m3-notes {}
+set $m3-show_status 1
+set $m3-filename {}
+set $m3-filetype {Binary}
+set $m3-split 0
+set $m4-notes {}
+set $m4-show_status 1
+set $m4-sourceNodeTCL {0}
+set $m4-sinkNodeTCL {1}
+set $m4-modeTCL {dipole}
+set $m5-notes {}
+set $m5-show_status 1
+set $m5-sourceNodeTCL {0}
+set $m5-sinkNodeTCL {1}
+set $m5-modeTCL {dipole}
+set $m6-notes {}
+set $m6-show_status 1
+set $m6-sourceNodeTCL {0}
+set $m6-sinkNodeTCL {1}
+set $m6-modeTCL {dipole}
+set $m7-notes {}
+set $m7-show_status 1
+set $m7-filename {}
+set $m8-notes {}
+set $m8-show_status 1
+set $m8-filename {}
+set $m9-notes {}
+set $m9-show_status 1
+set $m9-filename {}
+set $m10-notes {}
+set $m10-show_status 1
+set $m10-haveUI 0
+set $m10-methodTCL {CCinv}
+set $m10-pTCL {1}
+set $m11-notes {}
+set $m11-show_status 1
+set $m11-seedRandTCL {}
+set $m11-numDipolesTCL {}
+set $m11-dipoleMagnitudeTCL {}
+set $m12-notes {}
+set $m12-show_status 1
+set $m12-sourceNodeTCL {0}
+set $m12-sinkNodeTCL {1}
+set $m12-modeTCL {dipole}
+set $m13-notes {}
+set $m13-show_status 1
+set $m13-tcl_status {}
+set $m13-positionList {}
+set $m13-nodeList {}
+set $m13-width 1
+set $m13-height 1
+set $m13-mapType 3
+set $m13-minRes 12
+set $m13-resolution 12
+set $m14-notes {}
+set $m14-show_status 1
+set $m14-filename {}
+set $m15-notes {}
+set $m15-show_status 1
+set $m15-haveUI 0
+set $m15-methodTCL {CCinv}
+set $m15-pTCL {1}
+set $m16-notes {}
+set $m16-show_status 1
+set $m17-notes {}
+set $m17-show_status 1
+set $m17-widgetSizeGui_ {}
+set $m17-scaleModeGui_ {}
+set $m17-showLastVecGui_ -2147483647
+set $m17-showLinesGui_ -2147483647
+set $m18-notes {}
+set $m18-show_status 1
+set $m18-widgetSizeGui_ {}
+set $m18-scaleModeGui_ {}
+set $m18-showLastVecGui_ -2147483647
+set $m18-showLinesGui_ -2147483647
+set $m19-notes {}
+set $m19-show_status 1
+set $m19-manipulationName {}
+set $m20-notes {}
+set $m20-show_status 1
+set $m20-manipulationName {}
+set $m21-notes {}
+set $m21-show_status 1
+set $m21-manipulationName {}
+set $m22-notes {}
+set $m22-show_status 1
+set $m22-manipulationName {}
+set $m23-notes {}
+set $m23-show_status 1
+set $m23-manipulationName {}
+
+::netedit scheduleok

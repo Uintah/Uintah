@@ -1,0 +1,154 @@
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<?xml version='1.0' encoding='us-ascii' ?>
+<!DOCTYPE spec SYSTEM "spec.dtd">
+
+<spec>
+
+  <info>
+    <name>Exact module name</name>
+    <!-- hook for the menu item that launches this module -->
+    <creation>Ex. make_BuildFEMatrix</creation>
+    <description>
+      <summary>Short summary of modules purpose</summary>
+      <info-builder>
+	<!-- one or more paragraphs -->
+	<para>Elaborate and describe more comprehensively, for 
+         someone who does not write SCIRun modules</para>
+      </info-builder>
+      <info-developer>
+	<!-- one or more paragraphs -->
+	<para>Put module implementation details here, for module
+              writers and SCIRun maintainers. If a drawing or two would 
+              help explain things, there is a place for them in the 
+              next tag (img).</para>
+	<!-- zero or more images -->
+	<img>Put the relative path to one gif or jpeg here. Please put
+             mages in the doc directory, and name them after the
+             module you are documenting. For example: 
+             ./doc/ModuleXFig1.jpg</img>
+      </info-developer>
+    </description>
+    <author>
+      <!-- one or more names, last name on list assumed to be maintainer -->
+      <name>First name original author, successive names include major edits
+            to the module for additions, changes. The last name on this list 
+            is assumed to be the current maintainer of the module</name>
+    </author>
+    <version>Version/revision number 1.0 (not currently supported)</version>
+    <IO>
+      <ports>
+	<in>
+	  <port>Port type</port>
+          <!-- one or more datatype fields (list all valid) -->
+	  <datatype>Exact datatype name</datatype>
+	  <!-- zero or one usage field -->
+	  <usage>
+	    <para>If there is more than one port of the same type,
+                  disambiguate them by telling what they are used for
+                  in the module code</para>
+	  </usage>
+	</in>
+	<out>
+	  <port>Port type</port>
+	  <!-- one or more datatype fields (list all valid) -->
+	  <datatype>Exact datatype name</datatype>
+	  <!-- zero or one usage field -->
+	  <usage>
+	    <para>state the output's intended use downstream 
+                  (if ambiguous or potentially unclear). If there is 
+                  more than one output port of the same type,
+                  disambiguate them.</para>
+	  </usage>
+	</out>
+      </ports>
+      <modules>
+        <typin>
+	  <!-- one or more name fields (list all valid) -->
+          <name>Name a typical upstream Module (or "file" for Readers)</name>
+        </typin>
+        <typout>
+	  <!-- one or more name fields (list all valid) -->
+          <name>Name a typical downstream Module (or "file" for Writers)</name>
+        </typout>
+      </modules>
+      <!-- pointer to example network map -->
+      <example>A .sr file that shows the intended use in ./doc</example>
+    </IO>
+    <also>
+      <!-- one or more ref fields (list all valid) -->
+      <ref> See Also ... classes, modules, datatypes, files within SCIRun, 
+                      references, published papers, white papers, url's </ref>
+      <link>http://www.cool.info.about.this.module.org</link>
+    </also>
+    <!-- optional field -->
+    <caution>
+      <!-- optional field -->
+      <knownbugs>
+	<!-- one or more bugNum fields (list all valid) -->
+	<bugNum>Bugzilla bug number</bugNum>
+      </knownbugs>
+      <!-- optional field -->
+      <platformIssues>
+	<!-- one or more issue fields (list all valid) -->
+	<issue>Platform issue. Ex. Needs 3d texture capabilities. 
+               Ex. works on linux only.</issue>
+      </platformIssues>
+    </caution>
+    <!-- optional field -->
+    <enhancements>
+      <!-- one or more paragraphs -->
+      <para>list future work or possible extensions to the module</para>
+    </enhancements>
+  </info>  
+
+  <gui>
+    <!-- one parameter field for each widget in the dialog -->
+    <parameter>
+      <label>Identify it by the label it has onscreen</label>
+      <guidance>
+	<!-- one or more paragraphs -->
+	<para>Spells out exactly how to modify the module's behavior from 
+              the gui example: "Using the left mouse button, slide the 
+              'xxx' slider to the right to increase the number of bins 
+              in the color map."</para>
+      </guidance>
+      <gui-developer>
+	<widgets>Identify it by widget type</widgets>
+	<use>Indicate how the code uses the parameter's value</use>
+      </gui-developer>
+    </parameter>
+    <img>Take a screen snapshot of the GUI, convert it to a jpeg or
+         gif, and put it in ./doc/ModuleXGUI.jpg. What goes in this
+         tag is the relative path,  ./doc/ModuleXGUI.jpg</img>
+  </gui>
+                         
+  <testing>
+    <plan>
+      <procedure>
+	<!-- one or more paragraphs -->
+	<para>Describe the special testing needs this module has.</para>
+      </procedure>
+      <steps>
+	<!-- add as many steps as needed. -->
+        <step>Put one step of the Test Plan here.</step>
+      </steps>
+    </plan>
+  </testing>
+</spec>
+

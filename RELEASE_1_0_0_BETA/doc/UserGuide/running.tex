@@ -1,0 +1,150 @@
+% running.tex
+%
+% This is the `Running SCIRun' main section.
+
+%begin{latexonly}
+  \newcommand{\srwindow}%
+  {\centerline{\epsfig{file=figures/srwindow.eps,width=\columnwidth}}}
+%end{latexonly}
+\begin{htmlonly}
+  \newcommand{\srwindow}{%
+  \htmladdimg[align=top,width=6,alt="SCIRun Window"]
+  {../figures/srwindow.gif}}
+\end{htmlonly}
+
+
+\section{Starting Up}
+\label{sec:startingup}
+
+\subsection{The \command{scirun} Command}
+\label{sec:sciruncmd}
+
+Start \sr\ by typing \keyboard{scirun} in a terminal (\eg \command{xterm})
+window.  Don't start \sr\ in the background, \ie don't type
+\keyboard{scirun \&}.
+
+The \command{scirun} command is located in the \directory{src} directory of
+the \directory{\sr} install directory.  The person who installed \sr\ can
+locate this command for you.
+
+Typing \keyboard{scirun} with no arguments starts up \sr\ with a blank \sr
+window as shown in Figure~\ref{fig:srwindow}.  The main features of this
+window are discussed in \secref{Anatomy of the Main
+  Window}{sec:windowanatomy}.
+
+The \command{scirun} command may take 1 argument which is the name of a
+\sr\ \dfn{network} \index{network} file (these files have a \filename{.net}
+extension).  These files hold previously defined \sr\ networks.  \sr\ will
+load the specified network.  Network files will be discussed in a later
+section.
+
+\sr\ may encounter errors during start up.  These will be displayed in \sr{}'s
+error message pane (see Figure~\ref{fig:srwindow}).  \AuthorNote{Need to
+  add refs to bug reporting here.}
+
+\subsubsection{Anatomy of the Main Window}
+\label{sec:windowanatomy}
+
+The \sr\ main window consists of 4 main components (see Figure~\ref{fig:srwindow}):
+
+\begin{figure}[htb]
+  \begin{makeimage}
+  \end{makeimage}
+  \srwindow
+  \caption{\label{fig:srwindow} \sr\ Main Window}
+\end{figure}
+
+\begin{description}
+\item[Menu Bar] The menu bar is used to load networks, save networks, quit
+  \sr, create network modules, and perform other tasks.  The menu bar
+  consists of the following menu items:
+
+  \begin{description}
+  \item[\menu{File}] 
+    \begin{description}
+    \item[Save] Saves the current network to a file.
+    \item[Load] Loads a network from a file.
+    \item[New] This submenu contains items of interest to developers only.
+    \item[Add Info] Use this item to add network specific notes to
+      the current network.  Notes should be used to document the purpose of
+      the network.
+    \item[Quit] Quits \sr.
+    \end{description}
+  \end{description}
+  
+  \begin{description}
+  \item[\menu{SCIRun}] The \menu{SCIRun} menu is used to create modules
+    (from the \sr\ package) for use in the network pane.  This menu is
+    composed of submenus. Each submenu corresponds to a \dfn{category}
+    \index{category} within the \sr\ package. 
+    
+    An overview of the contents of the \sr\ package is given in \secref{The
+      SCIRun Package}{sec:srpackage}.
+
+    Each menu item in a category submenu creates a specific module and
+    places it in the network pane.  A category is group of related modules.
+    
+    The network pane's popup menu (activated by clicking the right most
+    mouse button when the mouse pointer is in the network pane) also
+    provides access to the \menu{SCIRun} (and possibly other) package
+    menus.
+  \end{description}
+
+  \begin{description}
+  \item [\textit{Possibly Other Package Menus}] There may be other package
+    menus if other packages have been installed.
+  \end{description}
+
+\item[Navigator Pane] The Navigator Pane is used to navigate complex
+  networks.  The Network Pane's scroll bars can also be used for network
+  navigation.  The use of the Navigator Pane will be described in
+  \secref{Building Networks}{sec:bldnetworks}.
+  
+\item[Error Pane] Errors during program startup are displayed in the Error
+  Pane.  Errors on startup may mean that \sr\ has been installed
+  incorrectly or has been installed from a buggy distribution.
+  
+\item[Network Pane] The Network Pane is used to build and execute networks.
+  \secref{Building Networks}{sec:workwithnets} discusses the use of this
+  pane.
+
+\end{description}
+
+\subsection{The Terminal Window App}
+\label{sec:termwinapp}
+
+After starting, \sr\ will also run a shell-like application in the terminal
+window.  It will display the prompt \screen{uintah\ra}.  This program is
+actually a modified \dfna{Tool Command Language}{TCL} shell program and it
+is possible to type in \acronym{TCL}'ish \sr\ commands at the prompt. The
+use of this program will be discribed in a later section.
+
+
+\subsection{\envvar{SCIRUN\_DATA}}
+\label{sec:scirundata}
+
+The environment variable \envvar{SCIRUN\_DATA} affects the behavior of \sr\ 
+It specifies the default location of \sr\ data files.  It mainly affects
+the behavior of file browsing dialogs -- they will prompt for a file within
+the \envvar{SCIRUN\_DATA} directory (of course you may have the dialog look
+elsewhere).
+
+
+\subsection{Stopping}
+\label{sec:stopping}
+
+Quit \sr\ by selecting the \menuitem{Quit} item from the \menu{File} menu
+
+Don't press \keyboard{Ctrl-c} to exit \sr.  Doing this will drop you into
+a debugger which is probably not what you want to do.
+
+\input{network}
+
+\input{viewer}
+
+\input{ui}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "usersguide"
+%%% End: 
