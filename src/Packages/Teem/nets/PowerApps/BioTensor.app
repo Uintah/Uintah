@@ -1881,7 +1881,7 @@ global scale_glyph
 set scale_glyph 1
 
 global glyph_scale_val
-set glyph_scale_val 1
+set glyph_scale_val 0.5
 
 global exag_glyph
 set exag_glyph 0
@@ -2071,6 +2071,7 @@ class BioTensorApp {
         set colormap_height 15
         set colormap_res 64
 
+        set has_autoviewed 0
 	
 	### Define Tooltips
 	##########################
@@ -3473,6 +3474,9 @@ class BioTensorApp {
 	
 	global exag_glyph
 	puts $fileid "set exag_glyph \{$exag_glyph\}"
+
+	global glyph_scale_val
+	puts $fileid "set glyph_scale_val \{$glyph_scale_val\}"
 	
 	# fibers
 	global fibers_stepsize
@@ -3834,6 +3838,7 @@ class BioTensorApp {
 	configure_isosurface_tabs
 	configure_glyphs_tabs
 	configure_fibers_tabs
+	change_glyph_scale
 	
 	# bring tabs forward
 	$proc_tab1 view $c_procedure_tab
@@ -3893,20 +3898,24 @@ class BioTensorApp {
     ############################
     # Show the help menu
     method show_help {} {
-	showSplash [file join [netedit getenv SCIRUN_SRCDIR] Packages Teem Dataflow GUI splash-tensor.ppm]
+	set splashImageFile [file join [netedit getenv SCIRUN_SRCDIR] Packages Teem Dataflow GUI splash-tensor.ppm]
+	showProgress 1 none 1
 
 	global tutorial_link
 	set tutorial_link "http://software.sci.utah.edu/doc/User/Tutorials/BioTensor"
 	set help_font "-Adobe-Helvetica-normal-R-Normal-*-12-120-75-*"
 
-	label .splash.m1 -text "Please refer to the online BioTensor Tutorial" \
-	    -font $help_font
-
-	entry .splash.m2 -relief flat -textvariable tutorial_link \
-	    -state disabled -width 45 -font $help_font
-	pack .splash.m1 .splash.m2 -before .splash.ok -anchor n \
-	    -pady 2
-
+	if {![winfo exists .splash.frame.m1]} {
+	    label .splash.frame.m1 -text "Please refer to the online BioTensor Tutorial" \
+		-font $help_font
+	    
+	    entry .splash.frame.m2 -relief flat -textvariable tutorial_link \
+		-state disabled -width 45 -font $help_font
+	    pack .splash.frame.m1 .splash.frame.m2 -before .splash.frame.ok -anchor n \
+		-pady 2	   
+	} else {
+	    SciRaise .splash
+	}
 	update idletasks
     }
     
@@ -3978,6 +3987,7 @@ class BioTensorApp {
 	    global $mods(ShowField-Orig)-faces-on
 	    if {[set $mods(ShowField-Orig)-faces-on] == 1 && !$loading} {
 		after 100 "$mods(Viewer)-ViewWindow_0-c autoview; global $mods(Viewer)-ViewWindow_0-pos; set $mods(Viewer)-ViewWindow_0-pos \"z0_y0\"; $mods(Viewer)-ViewWindow_0-c Views;"
+		set has_autoviewed 1
 	    }
 	} elseif {$which == $mods(TendEpireg) && $state == "JustStarted"} {
 	    if {$data_completed} {
@@ -4005,6 +4015,7 @@ class BioTensorApp {
 	    global $mods(ShowField-Reg)-faces-on
 	    if {[set $mods(ShowField-Reg)-faces-on] == 1 && !$loading} {
 		after 100 "$mods(Viewer)-ViewWindow_0-c autoview; global $mods(Viewer)-ViewWindow_0-pos; set $mods(Viewer)-ViewWindow_0-pos \"z0_y0\"; $mods(Viewer)-ViewWindow_0-c Views"
+		set has_autoviewed 1
 	    }
         } elseif {$which == $mods(TendEstim) && $state == "JustStarted"} {
 	    if {$reg_completed} {
@@ -4226,11 +4237,12 @@ class BioTensorApp {
 		set $mods(ShowField-Fibers)-edge_scale [expr 0.125 * $average_spacing]
 		
 		global $mods(ShowField-Glyphs)-tensors_scale
-		set $mods(ShowField-Glyphs)-tensors_scale [expr 0.5 * $average_spacing]
 		global glyph_scale_val
-		set glyph_scale_val 0.5
-		
-		
+		if {!$loading} {
+		    set $mods(ShowField-Glyphs)-tensors_scale [expr 0.5 * $average_spacing]
+		    set glyph_scale_val 0.5
+		}
+
 		if {$data_mode == "DWI" || $data_mode == "DWIknownB0" || $data_mode == "B0DWI"} {
 		    # new data has been loaded, configure
 		    # the vis tabs and sync their values
@@ -4270,6 +4282,10 @@ class BioTensorApp {
  	} elseif {$which == $mods(ShowField-X) && $state == "JustStarted"} {
 	    change_indicate_val 1
  	} elseif {$which == $mods(ShowField-X) && $state == "Completed"} {
+	    if { !$has_autoviewed && !$loading} {
+		after 100 "$mods(Viewer)-ViewWindow_0-c autoview; global $mods(Viewer)-ViewWindow_0-pos; set $mods(Viewer)-ViewWindow_0-pos \"z0_y0\"; $mods(Viewer)-ViewWindow_0-c Views"
+		set has_autoviewed 1
+	    }
  	    change_indicate_val 2
  	} elseif {$which == $mods(ShowField-Y) && $state == "JustStarted"} {
 	    change_indicate_val 1
@@ -8221,7 +8237,8 @@ class BioTensorApp {
 	
 	set $mods(ShowField-Glyphs)-tensors_scale [expr $average_spacing * $glyph_scale_val]
 	
-	if {$vis_activated && $scale_glyph && [set $mods(ShowField-Glyphs)-tensors-on] == 1} {
+	if {$vis_activated && $scale_glyph && [set $mods(ShowField-Glyphs)-tensors-on] == 1 \
+	    && !$loading} {
 
 	    $mods(ShowField-Glyphs)-c data_scale
 	} else {
@@ -9807,6 +9824,8 @@ class BioTensorApp {
 	
     # fibers
     variable fiber_type
+
+    variable has_autoviewed
 
 }
 
