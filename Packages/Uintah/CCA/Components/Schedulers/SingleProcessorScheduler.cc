@@ -39,13 +39,13 @@ SingleProcessorScheduler::compile(const ProcessorGroup* pg, bool init_timestep)
   if(dts_)
     delete dts_;
 
-  if( useInternalDeps() )
-    dts_ = graph.createDetailedTasks( pg, true );
-  else
-    dts_ = graph.createDetailedTasks( pg, false );
-
   UintahParallelPort* lbp = getPort("load balancer");
   LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
+  if( useInternalDeps() )
+    dts_ = graph.createDetailedTasks( pg, lb, true );
+  else
+    dts_ = graph.createDetailedTasks( pg, lb, false );
+
   lb->assignResources(*dts_, d_myworld);
   releasePort("load balancer");
   dts_->computeLocalTasks(pg->myrank());

@@ -145,3 +145,49 @@ NirvanaLoadBalancer::createPerProcessorPatchSet(const LevelP& level,
   return patches;
 }
 
+
+void
+NirvanaLoadBalancer::createNeighborhood(const Level* level,
+					const ProcessorGroup* group)
+{
+  int me = group->myrank();
+  // WARNING - this should be determined from the taskgraph? - Steve
+  int maxGhost = 2;
+  neighbors.clear();
+  for(Level::const_patchIterator iter = level->patchesBegin();
+      iter != level->patchesEnd(); iter++){
+    const Patch* patch = *iter;
+    if(getPatchwiseProcessorAssignment(patch, group) == me){
+      Level::selectType n;
+      IntVector lowIndex, highIndex;
+      patch->computeVariableExtents(Patch::CellBased, Ghost::AroundCells,
+				    maxGhost, n, lowIndex, highIndex);
+      for(int i=0;i<(int)n.size();i++){
+	const Patch* neighbor = n[i];
+	if(neighbors.find(neighbor) == neighbors.end())
+	  neighbors.insert(neighbor);
+      }
+    }
+  }
+}
+
+bool
+NirvanaLoadBalancer::inNeighborhood(const PatchSubset* ps,
+				    const MaterialSubset*)
+{
+  for(int i=0;i<ps->size();i++){
+    const Patch* patch = ps->get(i);
+    if(neighbors.find(patch) != neighbors.end())
+      return true;
+  }
+  return false;
+}
+
+bool
+NirvanaLoadBalancer::inNeighborhood(const Patch* patch)
+{
+  if(neighbors.find(patch) != neighbors.end())
+    return true;
+  else
+    return false;
+}

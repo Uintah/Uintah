@@ -11,7 +11,7 @@ namespace Uintah {
 		 const std::string& label, const std::string& name,
 		 const std::string& type, const Patch* patch,
 		 int material, const std::string& elems,
-		 int size, void* ptr, int dwid=-1);
+		 unsigned long size, void* ptr, int dwid=-1);
 }
 
 #endif

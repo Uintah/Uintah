@@ -79,7 +79,7 @@ MPIScheduler::verifyChecksum()
   // things in the future:
   //  - make a flag to turn this off
   //  - make the checksum more sophisticated
-  int checksum = dts_->getMaxMessageTag();
+  int checksum = (int)graph.getTasks().size();
   dbg << "Checking checksum of " << checksum << '\n';
   int result_checksum;
   MPI_Allreduce(&checksum, &result_checksum, 1, MPI_INT, MPI_MIN,
@@ -102,23 +102,21 @@ MPIScheduler::compile(const ProcessorGroup* pg, bool init_timestep)
   if( dts_ )
     delete dts_;
 
-  if( useInternalDeps() )
-    dts_ = graph.createDetailedTasks( pg, true );
-  else
-    dts_ = graph.createDetailedTasks( pg, false );
-
-  if(dts_->numTasks() == 0){
-    cerr << "WARNING: Scheduler executed, but no tasks\n";
-  }
-  
   UintahParallelPort* lbp = getPort("load balancer");
   LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
-  lb->assignResources(*dts_, d_myworld);
+  if( useInternalDeps() )
+    dts_ = graph.createDetailedTasks( pg, lb, true );
+  else
+    dts_ = graph.createDetailedTasks( pg, lb, false );
 
+  if(dts_->numTasks() == 0)
+    cerr << "WARNING: Scheduler executed, but no tasks\n";
+  
+  lb->assignResources(*dts_, d_myworld);
   graph.createDetailedDependencies(dts_, lb, pg);
   releasePort("load balancer");
 
-  dts_->assignMessageTags();
+  dts_->assignMessageTags(graph.getTasks());
   int me=pg->myrank();
   dts_->computeLocalTasks(me);
   dts_->createScrublists(init_timestep);
