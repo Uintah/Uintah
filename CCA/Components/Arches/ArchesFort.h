@@ -86,6 +86,7 @@ WARNING
 #define FORT_MMWALLBC mmwallbc_
 #define FORT_MMCELLTYPEINIT mmcelltypeinit_
 #define FORT_MM_MODIFY_PRESCOEF mm_modify_prescoef_
+#define FORT_ADD_HYDRO_TO_PRESSURE add_hydrostatic_term_topressure_
 // GROUP: Function Declarations:
 ////////////////////////////////////////////////////////////////////////
 
@@ -418,7 +419,8 @@ extern "C"
 		    const int* domLong, const int* domHing,
 		    const double* old_density,
 		    const double* gravity,
-		    const double* deltaT, const double* den_ref,
+		    const double* deltaT, 
+		    const double* den_ref,
 		    const double* ceeu, const double* cweu, const double* cwwu,
 		    const double* cnn, const double* csn, const double* css,
 		    const double* ctt, const double* cbt, const double* cbb,
@@ -448,7 +450,8 @@ extern "C"
 		    const int* domLong, const int* domHing,
 		    const double* old_density,
 		    const double* gravity,
-		    const double* deltaT, const double* den_ref,
+		    const double* deltaT, 
+		    const double* den_ref,
 		    const double* cee, const double* cwe, const double* cww,
 		    const double* cnnv, const double* csnv, const double* cssv,
 		    const double* ctt, const double* cbt, const double* cbb,
@@ -478,7 +481,8 @@ extern "C"
 		    const int* domLong, const int* domHing,
 		    const double* old_density,
 		    const double* gravity,
-		    const double* deltaT, const double* den_ref,
+		    const double* deltaT, 
+		    const double* den_ref,
 		    const double* cee, const double* cwe, const double* cww,
 		    const double* cnn, const double* csn, const double* css,
 		    const double* cttw, const double* cbtw, const double* cbbw,
@@ -1034,6 +1038,22 @@ extern "C"
 			  double* epsg,
 			  const int* valid_lo,
 			  const int* valid_hi);
+
+  ////////////////////////////////////////////////////////////////////////
+  // Add hydrostatic term to relative pressure
+
+  void
+  FORT_ADD_HYDRO_TO_PRESSURE(
+			     const int* dim_lo, const int* dim_hi,
+			     const int* dim_lo_ph, const int* dim_hi_ph,
+			     const int* dim_lo_prel, const int* dim_hi_prel,
+			     const int* dim_lo_den, const int* dim_hi_den,
+			     double* p_plus_hydro, double* prel,
+			     double* den_micro, 
+			     double* gx, double* gy, double* gz,
+			     double* xx, double* yy, double* zz,
+			     const int* valid_lo, const int* valid_hi,
+			     const int* pcell, const int* wall);
 
 }
 

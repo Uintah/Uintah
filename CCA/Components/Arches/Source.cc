@@ -55,8 +55,6 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
   double gravity = d_physicalConsts->getGravity(index);
   // get iref, jref, kref and ref density by broadcasting from a patch that contains
   // iref, jref and kref
-  double den_ref = vars->den_Ref;
-
 
   //  double den_ref = vars->density[IntVector(3,3,3)]; // change it!!! use ipref, jpref and kpref
   //  double den_ref = 1.184344; // change it!!! use ipref, jpref and kpref
@@ -122,7 +120,8 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 		    vars->viscosity.getPointer(), 
 		    domLong.get_pointer(), domHing.get_pointer(),
 		    vars->old_density.getPointer(),
-		    &gravity, &delta_t, &den_ref,
+		    &gravity, &delta_t, 
+		    vars->denRefArray.getPointer(),
 		    cellinfo->ceeu.get_objs(), cellinfo->cweu.get_objs(), 
 		    cellinfo->cwwu.get_objs(),
 		    cellinfo->cnn.get_objs(), cellinfo->csn.get_objs(),
@@ -191,7 +190,8 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 		    vars->viscosity.getPointer(), 
 		    domLong.get_pointer(), domHing.get_pointer(),
 		    vars->old_density.getPointer(),
-		    &gravity, &delta_t, &den_ref,
+		    &gravity, &delta_t,  
+		    vars->denRefArray.getPointer(),
 		    cellinfo->cee.get_objs(), cellinfo->cwe.get_objs(), 
 		    cellinfo->cww.get_objs(),
 		    cellinfo->cnnv.get_objs(), cellinfo->csnv.get_objs(),
@@ -256,7 +256,8 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 		    vars->viscosity.getPointer(), 
 		    domLong.get_pointer(), domHing.get_pointer(),
 		    vars->old_density.getPointer(),
-		    &gravity, &delta_t, &den_ref,
+		    &gravity, &delta_t,  
+		    vars->denRefArray.getPointer(),
 		    cellinfo->cee.get_objs(), cellinfo->cwe.get_objs(), 
 		    cellinfo->cww.get_objs(),
 		    cellinfo->cnn.get_objs(), cellinfo->csn.get_objs(),

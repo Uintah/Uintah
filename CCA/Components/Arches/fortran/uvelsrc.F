@@ -3,14 +3,17 @@ c
 c
 c*********************************************************************
 
-      SUBROUTINE uvelsrc(domLoU, domHiU, domLoUng, domHiUng,
+      SUBROUTINE uvelsrc(
+     $     domLoU, domHiU, 
+     $     domLoUng, domHiUng,
      $     idxLoU, idxHiU, UU, old_UU,
      &     SU, SP,
      &     domLoV, domHiV, VV,
      &     domLoW, domHiW, WW,
      &     domLoeg, domHieg, domLo, domHi, den, vis,
      $     domLong, domHing, old_den,
-     &     grav, deltat, den_ref,
+     &     grav, deltat, 
+     $     den_ref,
      &     CEEU, CWEU, CWWU, 
      &     CNN, CSN, CSS,
      &     CTT, CBT, CBB, 
@@ -33,34 +36,68 @@ c     Arguments :
 c*********************************************************************
       integer domLoU(3), domHiU(3), idxLoU(3), idxHiU(3)
       integer domLoUng(3), domHiUng(3)
-      double precision UU(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
+
+      double precision UU(
+     $     domLoU(1):domHiU(1), 
+     $     domLoU(2):domHiU(2), 
      &     domLoU(3):domHiU(3))
-      double precision old_UU(domLoUng(1):domHiUng(1),
+
+      double precision old_UU(
+     $     domLoUng(1):domHiUng(1),
      $     domLoUng(2):domHiUng(2), 
      &     domLoUng(3):domHiUng(3))
-      double precision SU(domLoUng(1):domHiUng(1), 
+
+      double precision SU(
+     $     domLoUng(1):domHiUng(1), 
      $     domLoUng(2):domHiUng(2), 
      &     domLoUng(3):domHiUng(3))
-      double precision SP(domLoUng(1):domHiUng(1), 
+
+      double precision SP(
+     $     domLoUng(1):domHiUng(1), 
      $     domLoUng(2):domHiUng(2), 
      &     domLoUng(3):domHiUng(3))
+
       integer domLoV(3), domHiV(3)
-      double precision VV(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
+
+      double precision VV(
+     $     domLoV(1):domHiV(1), 
+     $     domLoV(2):domHiV(2), 
      &     domLoV(3):domHiV(3))
+
       integer domLoW(3), domHiW(3)
-      double precision WW(domLoW(1):domHiW(1), domLoW(2):domHiW(2), 
+
+      double precision WW(
+     $     domLoW(1):domHiW(1), 
+     $     domLoW(2):domHiW(2), 
      &     domLoW(3):domHiW(3))
+
       integer domLoeg(3), domHieg(3)
       integer domLo(3), domHi(3)
-      double precision DEN(domLoeg(1):domHieg(1), domLoeg(2):domHieg(2), 
+
+      double precision DEN(
+     $     domLoeg(1):domHieg(1), 
+     $     domLoeg(2):domHieg(2), 
      &     domLoeg(3):domHieg(3))
-      double precision VIS(domLo(1):domHi(1), domLo(2):domHi(2), 
+
+      double precision VIS(
+     $     domLo(1):domHi(1), 
+     $     domLo(2):domHi(2), 
      &     domLo(3):domHi(3))
+
       integer domLong(3), domHing(3)
-      double precision old_DEN(domLong(1):domHing(1), 
+
+      double precision old_DEN(
+     $     domLong(1):domHing(1), 
      $     domLong(2):domHing(2), 
      &     domLong(3):domHing(3))
-      double precision DELTAT, GRAV, DEN_REF
+
+      double precision DELTAT, GRAV
+
+      double precision DEN_REF(
+     $     domLoeg(1):domHieg(1), 
+     $     domLoeg(2):domHieg(2), 
+     &     domLoeg(3):domHieg(3))
+
       double precision CEEU(domLo(1):domHi(1))
       double precision CWEU(domLo(1):domHi(1))
       double precision CWWU(domLo(1):domHi(1))
@@ -149,9 +186,12 @@ c
      &              ((VISEI*DUDXE-VISWI*DUDXW)/SEWU(I) +
      &              (VISNI*DVDXN-VISSI*DVDXS)/SNS(J)   +
      &              (VISTI*DWDXT-VISBI*DWDXB)/STB(K)   +
-     &              (old_DEN(I,J,K)*(old_UU(I,J,K)-UU(I,J,K))/DELTAT +
-     &              (PT5*(DEN(I,J,K)+DEN(I-1,J,K))-DEN_REF)*GRAV))*VOL 
-
+     &              old_DEN(I,J,K)*(old_UU(I,J,K)-UU(I,J,K))/
+     $              DELTAT
+     &              + (PT5*(DEN(I,J,K)+DEN(I-1,J,K))-
+     $              pt5*(den_ref(i,j,k)+den_ref(i-1,j,k)))*
+     $              GRAV
+     $              )*VOL 
 
  100        continue
  110     continue

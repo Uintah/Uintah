@@ -101,6 +101,13 @@ public:
       void sched_pressureLinearSolve(const LevelP& level,
 				     SchedulerP& sched);
 
+      ///////////////////////////////////////////////////////////////////////
+      // Schedule the addition of the hydrostatic term to the relative pressure
+
+      void sched_addHydrostaticTermtoPressure(SchedulerP& sched,
+					      const PatchSet* patches,
+					      const MaterialSet* matls);
+
 protected:
 
 private:
@@ -139,6 +146,16 @@ private:
 			       DataWarehouse* new_dw,
 			       DataWarehouse* matrix_dw,
 			       ArchesVariables& pressureVars);
+
+
+      ////////////////////////////////////////////////////////////////
+      // addition of hydrostatic term to relative pressure
+
+      void addHydrostaticTermtoPressure(const ProcessorGroup* pc,
+					const PatchSubset* patches,
+					const MaterialSubset* matls,
+					DataWarehouse* old_dw,
+					DataWarehouse* new_dw);
       
       ///////////////////////////////////////////////////////////////////////
       // Actually do normPressure

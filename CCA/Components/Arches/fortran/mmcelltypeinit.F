@@ -92,7 +92,7 @@ C-----------------------------------------------------------------------
 
                   PCELL(I,J,K) = MMWALLID
                   VOIDFRAC(I,J,K) = 0.0
-c                  print*, 'location of mmwallid = ',i,j,k
+                  print*, 'location of mmwallid = ',i,j,k
 
                end if
 

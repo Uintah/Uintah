@@ -110,7 +110,7 @@ namespace Uintah {
       SFCYVariable<double> mmvVelSp;
       SFCZVariable<double> mmwVelSu;
       SFCZVariable<double> mmwVelSp;
-      
+      CCVariable<double> denRefArray;
     }; // End class ArchesVariables
 } // End namespace Uintah
 

@@ -28,7 +28,8 @@ SRCS     += $(SRCDIR)/init.F $(SRCDIR)/initScal.F $(SRCDIR)/celltypeInit.F \
 	$(SRCDIR)/normpress.F $(SRCDIR)/explicit.F \
 	$(SRCDIR)/mmcelltypeinit.F \
 	$(SRCDIR)/mmmomsrc.F $(SRCDIR)/mmbcvelocity.F $(SRCDIR)/mmwallbc.F \
-	$(SRCDIR)/mm_modify_prescoef.F 
+	$(SRCDIR)/mm_modify_prescoef.F \
+	$(SRCDIR)/add_hydrostatic_term_topressure.F
 
 # SRCS     += $(SRCDIR)/apcal.F $(SRCDIR)/areain.F $(SRCDIR)/arradd.F \
 #	$(SRCDIR)/arrass.F $(SRCDIR)/arrcop.F $(SRCDIR)/arrl1.F \
