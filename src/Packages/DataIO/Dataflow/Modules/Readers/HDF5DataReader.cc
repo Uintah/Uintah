@@ -39,7 +39,11 @@
 
 #include <sci_defs.h>
 
+#ifdef HAVE_STAT64
+#include <sys/stat64.h>
+#else
 #include <sys/stat.h>
+#endif
 
 #include <fstream>
 #include <algorithm>
@@ -155,8 +159,13 @@ void HDF5DataReader::execute() {
     return;
 
   // Read the status of this file so we can compare modification timestamps
+#ifdef HAVE_STAT64
   struct stat64 buf;
   if (stat64(new_filename.c_str(), &buf)) {
+#else
+  struct stat buf;
+  if (stat(new_filename.c_str(), &buf)) {
+#endif
     error( string("Execute File not found ") + new_filename );
     return;
   }
@@ -1531,8 +1540,13 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
       return;
 
     // Read the status of this file so we can compare modification timestamps
+#ifdef HAVE_STAT64
     struct stat64 buf;
     if (stat64(new_filename.c_str(), &buf)) {
+#else
+    struct stat buf;
+    if (stat(new_filename.c_str(), &buf)) {
+#endif
       error( string("Updating - File not found ") + new_filename );
       return;
     }
@@ -1575,7 +1589,11 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
       sPtr.flush();
       sPtr.close();
 
-      if (stat64(tmp_filename.c_str(), &buf)) {
+#ifdef HAVE_STAT64
+    if (stat64(tmp_filename.c_str(), &buf)) {
+#else
+    if (stat(new_filename.c_str(), &buf)) {
+#endif
 	error( string("Temporary dump file not found ") + tmp_filename );
 	return;
       } 
@@ -1604,8 +1622,13 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
       return;
 
     // Read the status of this file so we can compare modification timestamps
+#ifdef HAVE_STAT64
     struct stat64 buf;
     if (stat64(new_filename.c_str(), &buf)) {
+#else
+    struct stat buf;
+    if (stat(new_filename.c_str(), &buf)) {
+#endif
       error( string("Selection - File not found ") + new_filename );
       return;
     }
