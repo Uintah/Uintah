@@ -11,7 +11,7 @@ itcl_class DaveW_FEM_DipoleSourceRHS {
 	global $this-sinkNodeTCL
 	global $this-modeTCL
 	set $this-sourceNodeTCL 0
-	set $this-sinNodeTCL 1
+	set $this-sinkNodeTCL 1
 	set $this-modeTCL dipole
     }
     method make_entry {w text v c} {
@@ -36,8 +36,8 @@ itcl_class DaveW_FEM_DipoleSourceRHS {
 	
 	make_labeled_radio $w.mode "Source model:" "" left $this-modeTCL \
 		{dipole electrodes}
-	make_entry $w.source "Source electrode:" $this-sourceNodeTCL {}
-	make_entry $w.sink "Sink electrode:" $this-sinkNodeTCL {}
+	make_entry $w.source "Source electrode:" $this-sourceNodeTCL "$this-c needexecute"
+	make_entry $w.sink "Sink electrode:" $this-sinkNodeTCL "$this-c needexecute"
 	bind $w.source <Return> "$this-c needexecute"
 	bind $w.sink <Return> "$this-c needexecute"
 	pack $w.mode $w.source $w.sink -side top -fill x
