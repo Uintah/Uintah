@@ -143,7 +143,7 @@ static double    prev_time[3]; // history for quaternions and time
 static HVect     prev_quat[3];
 static Transform prev_trans;
 
-static double   last_frame = Time::currentSeconds();
+static double   last_frame = SCIRun::Time::currentSeconds();
 static int      frame = 0;
 static int      rendering_scene = 0;
 static MusilRNG rng;
