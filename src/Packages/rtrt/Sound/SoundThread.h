@@ -19,6 +19,8 @@ class Camera;
 
 class SoundThread : public Runnable {
 
+  friend class Sound;
+
 public:
   SoundThread( const Camera * eyepoint, Scene * scene );
   virtual ~SoundThread();
@@ -33,8 +35,10 @@ private:
 
   vector<Sound*>  soundQueue_;
 
-  const Camera  * eyepoint_;
-        Scene   * scene_;
+  const Camera     * eyepoint_;
+        Scene      * scene_;
+
+  static const int   numChannels_;
 };
 
 } // end namespace rtrt
