@@ -17,9 +17,6 @@ using namespace Uintah;
 static DebugStream cout_norm("ICE_NORMAL_COUT", false);  
 static DebugStream cout_doing("ICE_DOING_COUT", false);
 
-//#define ANNULUSICE 
-#undef ANNULUSICE
-
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleComputeDiv_vol_frac_vel_CC--
 _____________________________________________________________________*/
@@ -395,7 +392,10 @@ template<class T> void ICE::vel_PressDiff_FC
 
     double tmp      = (sp_vol_CC[L] + sp_vol_CC[R])/(kappa_L + kappa_R);
     double cstar    = sqrt(tmp) + fabs(vel_CC[R].length() - 
-                                       vel_CC[L].length());
+                                       vel_CC[L].length()); 
+/*`==========TESTING==========*/                                 
+    phi = 0.0;  //HARDWIRED
+/*==========TESTING==========`*/
     
     double local_dt = delT + .5*phi*(dx/cstar - delT);
     double dtdx     = local_dt/dx;            //4.10d
@@ -578,12 +578,7 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
                                   DataWarehouse* old_dw, 
                                   DataWarehouse* new_dw)
 {
-/*`==========TESTING==========*/
-#ifdef ANNULUSICE
-  static int n_iter;
-  n_iter ++;
-#endif 
-/*==========TESTING==========`*/
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << "Doing accumulate_energy_source_sinks_RF on patch " 
@@ -605,8 +600,6 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
     constCCVariable<double> sp_vol_CC;
     constCCVariable<double> speedSound;
     constCCVariable<double> press_CC;
-    constCCVariable<double> delP_Dilatate;
-    constCCVariable<double> matl_press;
     constCCVariable<double> f_theta;
     constCCVariable<double> rho_CC;
     
@@ -656,7 +649,6 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
       new_dw->get(rho_CC,        lb->rho_CCLabel,        indx,patch,gn,  0);
       new_dw->get(sp_vol_CC,     lb->sp_vol_CCLabel,     indx,patch,gn,  0);
       new_dw->get(speedSound,    lb->speedSound_CCLabel, indx,patch,gn,  0);
-      new_dw->get(matl_press,    lb->matl_press_CCLabel, indx,patch,gn,  0);
       new_dw->get(f_theta,       lb->f_theta_CCLabel,    indx,patch,gn,  0);
       new_dw->get(pressDiffX_FC, lb->press_diffX_FCLabel,indx,patch,gac, 1);      
       new_dw->get(pressDiffY_FC, lb->press_diffY_FCLabel,indx,patch,gac, 1);      
@@ -745,25 +737,28 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
         int_eng_source[c] = (-term1[c] + term2[c] - term3[c]) * delT;
       }  // iter loop
       
-/*`==========TESTING==========*/
       //__________________________________
-      //  hack      
-#ifdef ANNULUSICE
-      double vol=dx.x()*dx.y()*dx.z();
+      //  User specified source/sink   
+      static int n_iter;
+      if (patch->getID() == 0 && indx == 0){
+        n_iter ++;
+      }  
       
-      if(n_iter <= d_dbgVar2){
-        if(m==2 || m == d_dbgVar1 ){
-          for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){            
-            IntVector c = *iter;
-            if ( vol_frac[m][c] > 0.001) {
-                int_eng_source[c] += 8.0e10* delT * rho_CC[c] * vol;
-            }
-          }
-        }
-      }
-#endif
-
-/*==========TESTING==========`*/
+      if(d_add_heat && n_iter <= d_add_heat_iters){
+        double vol = dx.x() * dx.y() * dx.z();
+        for (int i = 0; i<(int) d_add_heat_matls.size(); i++) {
+          if(m == d_add_heat_matls[i] ){
+            for(CellIterator iter = patch->getCellIterator();!iter.done();
+                                                                    iter++){            
+              IntVector c = *iter;
+              if ( vol_frac[m][c] > 0.001) {
+                int_eng_source[c] += d_add_heat_coeff[i]
+                                   * delT * rho_CC[c] * vol;
+              }
+            }  // iter loop
+          }  // if right matl
+        } 
+      }  // if add heat
 
       //---- P R I N T   D A T A ------ 
       if (switchDebugSource_Sink) {
@@ -840,7 +835,7 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
     old_dw->get(delT, d_sharedState->get_delt_label());
 
     // Create arrays for the grid data
-    constCCVariable<double>  press_CC, delP_Dilatate;
+    constCCVariable<double>  press_CC;
     StaticArray<CCVariable<double> > Temp_CC(numALLMatls);  
     StaticArray<constCCVariable<double> > vol_frac_CC(numALLMatls);
     StaticArray<constCCVariable<double> > sp_vol_CC(numALLMatls);
@@ -921,8 +916,7 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
       Tdot[m].initialize(0.0);
       tot_eng_L_ME[m].initialize(0.0);
     }
-    new_dw->get(press_CC,           lb->press_CCLabel,     0,  patch,gn, 0);
-    new_dw->get(delP_Dilatate,      lb->delP_DilatateLabel,0,  patch,gn, 0);       
+    new_dw->get(press_CC,           lb->press_CCLabel,     0,  patch,gn, 0);       
     
     // Convert momenta to velocities and internal energy to total energy
     // using the old_vel
