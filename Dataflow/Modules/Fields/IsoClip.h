@@ -91,7 +91,7 @@ private:
   struct facetriple_t
   {
     unsigned int first, second, third;
-    double dfirst, dsecond, dthird;
+    double dsecond, dthird;
   };
 
 #ifdef HAVE_HASH_MAP
@@ -150,7 +150,7 @@ private:
 
   typename FIELD::mesh_type::Node::index_type
   face_lookup(unsigned int u0, unsigned int u1, unsigned int u2,
-	      double d0, double d1, double d2,
+	      double d1, double d2,
 	      const Point &p, face_hash_type &facemap,
 	      typename FIELD::mesh_type *clipped) const;
 };
@@ -185,7 +185,7 @@ IsoClipAlgoTet<FIELD>::edge_lookup(unsigned int u0, unsigned int u1,
 template <class FIELD>
 typename FIELD::mesh_type::Node::index_type
 IsoClipAlgoTet<FIELD>::face_lookup(unsigned int u0, unsigned int u1,
-				   unsigned int u2, double d0, double d1,
+				   unsigned int u2, double d1,
 				   double d2, const Point &p,
 				   face_hash_type &facemap,
 				   typename FIELD::mesh_type *clipped) const
@@ -196,17 +196,17 @@ IsoClipAlgoTet<FIELD>::face_lookup(unsigned int u0, unsigned int u1,
     if (u2 < u0)
     {
       nt.first = u2; nt.second = u0; nt.third = u1;
-      nt.dfirst = d2; nt.dsecond = d0; nt.dthird = d1;
+      nt.dsecond = 1.0 - d1 - d2; nt.dthird = d1;
     }
     else if (u2 < u1)
     {
       nt.first = u0; nt.second = u2; nt.third = u1;
-      nt.dfirst = d0; nt.dsecond = d2; nt.dthird = d1;
+      nt.dsecond = d2; nt.dthird = d1;
     }
     else
     {
       nt.first = u0; nt.second = u1; nt.third = u2;
-      nt.dfirst = d0; nt.dsecond = d1; nt.dthird = d2;
+      nt.dsecond = d1; nt.dthird = d2;
     }
   }
   else
@@ -214,17 +214,17 @@ IsoClipAlgoTet<FIELD>::face_lookup(unsigned int u0, unsigned int u1,
     if (u2 > u0)
     {
       nt.first = u1; nt.second = u0; nt.third = u2;
-      nt.dfirst = d1; nt.dsecond = d0; nt.dthird = d2;
+      nt.dsecond = 1.0 - d1 - d2; nt.dthird = d2;
     }
     else if (u2 > u1)
     {
       nt.first = u1; nt.second = u2; nt.third = u0;
-      nt.dfirst = d1; nt.dsecond = d2; nt.dthird = d0;
+      nt.dsecond = d2; nt.dthird = 1.0 - d1 - d2;
     }
     else
     {
       nt.first = u2; nt.second = u1; nt.third = u0;
-      nt.dfirst = d2; nt.dsecond = d1; nt.dthird = d0;
+      nt.dsecond = d1; nt.dthird = 1.0 - d1 - d2;
     }
   }
   if (facemap.find(nt) == facemap.end())
@@ -401,17 +401,17 @@ IsoClipAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
       inodes[6] = face_lookup((unsigned int)onodes[perm[0]],
 			      (unsigned int)onodes[perm[1]],
 			      (unsigned int)onodes[perm[2]],
-			      (2.0 - dl1 - dl2)*0.5, dl1*0.5, dl2*0.5,
+			      dl1*0.5, dl2*0.5,
 			      c1, facemap, clipped);
-      inodes[7] = face_lookup((unsigned int)onodes[perm[2]],
-			      (unsigned int)onodes[perm[0]],
+      inodes[7] = face_lookup((unsigned int)onodes[perm[0]],
+			      (unsigned int)onodes[perm[2]],
 			      (unsigned int)onodes[perm[3]],
-			      dl2*0.5, (2.0 - dl2 - dl3)*0.5, dl3*0.5,
+			      dl2*0.5, dl3*0.5,
 			      c2, facemap, clipped);
-      inodes[8] = face_lookup((unsigned int)onodes[perm[3]],
-			      (unsigned int)onodes[perm[0]],
+      inodes[8] = face_lookup((unsigned int)onodes[perm[0]],
+			      (unsigned int)onodes[perm[3]],
 			      (unsigned int)onodes[perm[1]],
-			      dl3*0.5, (2.0 - dl3 - dl1)*0.5, dl1*0.5,
+			      dl3*0.5, dl1*0.5,
 			      c3, facemap, clipped);
 
       nnodes[0] = inodes[0];
@@ -512,14 +512,12 @@ IsoClipAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
       inodes[6] = face_lookup((unsigned int)onodes[perm[0]],
 			      (unsigned int)onodes[perm[2]],
       			      (unsigned int)onodes[perm[3]],
-			      (2.0 - dl02 - dl03)*0.5,
 			      dl02*0.5,
 			      dl03*0.5,
       			      c1, facemap, clipped);
       inodes[7] = face_lookup((unsigned int)onodes[perm[1]],
 			      (unsigned int)onodes[perm[2]],
 			      (unsigned int)onodes[perm[3]],
-			      (2.0 - dl12 - dl13)*0.5,
 			      dl12*0.5,
 			      dl13*0.5,
       			      c2, facemap, clipped);
@@ -643,7 +641,8 @@ IsoClipAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
     cctmp[(*fmitr).second * 3 + 0] = (*fmitr).first.first;
     cctmp[(*fmitr).second * 3 + 1] = (*fmitr).first.second;
     cctmp[(*fmitr).second * 3 + 2] = (*fmitr).first.third;
-    dtmp[(*fmitr).second * 3 + 0] = (*fmitr).first.dfirst;
+    dtmp[(*fmitr).second * 3 + 0] =
+      1.0 - (*fmitr).first.dsecond - (*fmitr).first.dthird;;
     dtmp[(*fmitr).second * 3 + 1] = (*fmitr).first.dsecond;
     dtmp[(*fmitr).second * 3 + 2] = (*fmitr).first.dthird;
     nnz+=3;
