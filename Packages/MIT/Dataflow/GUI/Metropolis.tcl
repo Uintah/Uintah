@@ -40,7 +40,7 @@ itcl_class MIT_Bayer_Metropolis {
 	set $this-monitor 50000
 	set $this-thin    10
 	set $this-kappa   0
-	set $this-use-cvode 0
+	set $this-use-cvode 1
     }
 
     method ui {} {
