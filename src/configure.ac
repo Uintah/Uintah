@@ -263,6 +263,13 @@ SCI_ARG_WITH(tiff,
    sci_check_tiff=yes],
   [with_tiff=""])
 
+SCI_ARG_WITH(xalan,
+  AC_HELP_STRING(--with-xalan=DIR,
+                 Use the xalan installation in DIR),
+  [with_xalan="$withval"
+   sci_check_xalan=yes],
+  [with_xalan=""])
+
 SCI_ARG_WITH(mdsplus,
   AC_HELP_STRING(--with-mdsplus=DIR,
                  Use the mdsplus installation in DIR),
@@ -301,6 +308,7 @@ SCI_ARG_WITH(audio,
   [with_audio="$withval"
    sci_check_audio=yes],
   [with_audio=""])
+
 SCI_ARG_ENABLE(verbosity,
   AC_HELP_STRING(--enable-verbosity,
                  Turn on verbose configure output),
@@ -2265,6 +2273,32 @@ AC_SUBST(INSIGHT_LIB_DIR_FLAG)
 AC_SUBST(INC_INSIGHT_H)
 AC_SUBST(DEF_INSIGHT)
 
+
+##  --  search for xalan-c++ --
+echo
+AS_MESSAGE(checking for required Xalan-C++ components......)
+echo
+
+if test "$with_xalan"; then
+  _xalan_lib_path="$with_xalan/c/lib"
+  _xalan_inc="$with_xalan/c/src $_xer_inc"
+
+  AC_LANG_PUSH(C++)
+  _xalan_lib="xalan-c1_5_0"
+
+  SCI_TRY_LINK(XALAN,xalan library and headers,[
+#include <Include/PlatformDefinitions.hpp>
+#include <xercesc/util/PlatformUtils.hpp>
+#include <XalanTransformer/XalanTransformer.hpp>
+],$_xalan_inc,$_xalan_lib $_xer_lib,$_xalan_lib_path $_xer_lib_path,,[
+	XALAN_CPP_NAMESPACE_USE;
+	XalanTransformer::initialize();
+],not-optional)
+fi
+
+AC_SUBST(XALAN_LIB_FLAG)
+AC_SUBST(XALAN_LIB_DIR_FLAG)
+AC_SUBST(INC_XALAN_H)
 
 ##  --  if building uintah, search for TAU makefile  ---------------------
 
