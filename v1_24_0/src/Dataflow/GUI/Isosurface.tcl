@@ -199,7 +199,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 
 	scaleEntry2 $sel.isoval \
 	    [set $this-isoval-min] [set $this-isoval-max] \
-	     4c $this-isoval $this-isoval2
+	     4c $this-isoval $this-isoval-typed
 
 	pack $sel.isoval  -fill x
 
@@ -402,7 +402,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	}
     }
 
-    method scaleEntry2 { win start stop length var1 var2 } {
+    method scaleEntry2 { win start stop length var_slider var_typed } {
 	frame $win 
 
 	frame $win.l
@@ -420,18 +420,18 @@ itcl_class SCIRun_Visualization_Isosurface {
 	scale $win.l.s \
 	    -from $start -to $stop \
 	    -length $length \
-	    -variable $var1 -orient horizontal -showvalue false \
-	    -command "$this updateSliderEntry $var1 $var2" \
+	    -variable $var_slider -orient horizontal -showvalue false \
+	    -command "$this updateSliderEntry $var_slider $var_typed" \
 	    -resolution [expr $range/(1.0e4*$scale)] \
 	    -tickinterval [expr ($stop - $start)]
 
-	entry $win.r.e -width 7 -text $var2
+	entry $win.r.e -width 7 -text $var_typed
 
 	bind $win.l.s <ButtonRelease> "$this set-isoval"
 
 	bind $win.r.e <Return> "$this-c needexecute"
 	bind $win.r.e <KeyRelease> "$this manualSliderEntry \
-             $start $stop $var1 $var2"
+             $start $stop $var_slider $var_typed"
 
 	pack $win.l.s -side top -expand 1 -fill x -padx 5
 	pack $win.r.e -side top -padx 5 -pady 3
@@ -439,8 +439,8 @@ itcl_class SCIRun_Visualization_Isosurface {
 	pack $win.r -side right -fill y
     }
 
-    method updateSliderEntry {var1 var2 someUknownVar} {
-	set $var2 [set $var1]
+    method updateSliderEntry {var_slider var_typed someUknownVar} {
+	set $var_typed [set $var_slider]
 
 	global $this-continuous
 
@@ -451,25 +451,30 @@ itcl_class SCIRun_Visualization_Isosurface {
 	}
     }
     
-    method manualSliderEntry { start stop var1 var2 } {
-	if { ![string is double [set $var2]] } {
-	    set $var2 [set $var1] }
+    method manualSliderEntry { start stop var_slider var_typed } {
+	if { ![string is double [set $var_typed]] } {
+	    set $var_typed [set $var_slider] }
 
-	if { [set $var2] < $start } {
-	    set $var2 $start
+
+	if { $start <= [set $var_typed] &&
+	     [set $var_typed] <= $stop } {
+
+#	if { [set $var_typed] < $start } {
+#	    set $var_typed $start
+#	}
+#	if { [set $var_typed] > $stop } {
+#	    set $var_typed $stop 
+#	}
+
+	    # Force the update to be manual
+	    global $this-continuous
+	    set continuous [set $this-continuous]
+	    
+	    set $this-continuous 0
+	    
+	    set $var_slider [set $var_typed]
+	    
+	    set $this-continuous $continuous
 	}
-	if { [set $var2] > $stop } {
-	    set $var2 $stop 
-	}
-
-	# Force the update to be manual
-	global $this-continuous
-	set continuous [set $this-continuous]
-
-	set $this-continuous 0
-	
-	set $var1 [set $var2]
-
-	set $this-continuous $continuous
     }
 }
