@@ -1856,7 +1856,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
             IntVector hi = gTemperature.getHighIndex();
 	    gTemperatureStar.fillFace(face,bc->getTemp());
 	    if(face==Patch::xplus || face==Patch::xminus){
-             int I;
+             int I=-1234;
 	     if(face==Patch::xminus){ I=low.x(); }
 	     if(face==Patch::xplus){ I=hi.x()-1; }
 	      for (int j = low.y(); j<hi.y(); j++) { 
@@ -1868,7 +1868,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
               }
 	    }
 	    if(face==Patch::yplus || face==Patch::yminus){
-	     int J;
+	     int J=-1234;
 	     if(face==Patch::yminus){ J=low.y(); }
 	     if(face==Patch::yplus){ J=hi.y()-1; }
               for (int i = low.x(); i<hi.x(); i++) {
@@ -1880,7 +1880,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
               }
 	    }
 	    if(face==Patch::zplus || face==Patch::zminus){
-	     int K;
+	     int K=-1234;
 	     if(face==Patch::zminus){ K=low.z(); }
 	     if(face==Patch::zplus){ K=hi.z()-1; }
               for (int i = low.x(); i<hi.x(); i++) {
@@ -2051,6 +2051,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.155  2000/09/29 05:32:50  sparker
+// Quiet warning from g++
+//
 // Revision 1.154  2000/09/27 16:47:18  guilkey
 // Moved the creation of gStressForSaving from my failed function into
 // computeInternalForce.  Lame.
