@@ -19,7 +19,6 @@ INCLUDES += $(MDSPLUS_INCLUDE) $(HDF5_INCLUDE) -DHDF5_PATH='"$(HDF5_LIB_DIR)/../
 SRCS     += \
 	$(SRCDIR)/FusionFieldReader.cc\
 	$(SRCDIR)/PPPLHDF5FieldReader.cc\
-	$(SRCDIR)/HDF5ProtoType.cc\
 	$(SRCDIR)/MDSPlusFieldReader.cc\
 	$(SRCDIR)/MDSPlusDataReader.cc\
 #[INSERT NEW CODE FILE HERE]
