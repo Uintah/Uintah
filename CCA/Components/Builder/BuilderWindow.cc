@@ -39,11 +39,9 @@
  */
 
 #include <CCA/Components/Builder/BuilderWindow.h>
-//#include <CCA/Components/Builder/SCIRun.xpm>
 #include <Core/CCA/PIDL/PIDL.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <CCA/Components/Builder/NetworkCanvasView.h>
-#include <CCA/Components/Builder/Module.h>
 #include <CCA/Components/Builder/ClusterDialog.h>
 #include <SCIRun/TypeMap.h>
 #include <Core/Thread/Thread.h>
@@ -171,6 +169,7 @@ BuilderWindow::BuilderWindow(const sci::cca::Services::pointer& services)
     QApplication::setStyle( new QMotifPlusStyle(TRUE) );
 #endif
 
+    componentMenu = new QPopupMenu(this, "Components");
     menuBar()->setFrameStyle(QFrame::Raised | QFrame::MenuBarPanel);
     QColor bgcolor(0, 51, 102);
     bFont = new QFont(this->font().family(), 11);
@@ -372,7 +371,7 @@ void BuilderWindow::setupClusterActions()
     rmClusterAction->addTo(clusters);
 
     // Refresh
-    refreshAction = new QAction("Refresh", "Refresh Menu", CTRL+Key_R, this, "refresh");
+    refreshAction = new QAction("Refresh Menu", "Refresh Menu", CTRL+Key_R, this, "Refresh Menu");
     connect(refreshAction, SIGNAL( activated() ), this, SLOT( refresh() ));
     refreshAction->addTo(clusters);
 
@@ -391,14 +390,14 @@ void BuilderWindow::setupClusterActions()
 
 void BuilderWindow::insertHelpMenu()
 {
-    static int id;
-//   static bool firstTime = true;
-//   if (firstTime) {
-//     firstTime = false;
-//   } else {
-// std::cerr << "BuilderWindow::insertHelpMenu, not first time" << std::endl;
-//     menuBar()->removeItem(id);
-//   }
+  static int id;
+  // find a better way to handle MenuTree re-insertions
+  static bool firstTime = true;
+  if (firstTime) {
+    firstTime = false;
+  } else {
+    menuBar()->removeItem(id);
+  }
 
   menuBar()->insertSeparator();
   QPopupMenu *help = new QPopupMenu( this );
@@ -429,8 +428,8 @@ void BuilderWindow::closeEvent( QCloseEvent* ce )
     ce->accept();
     break;
   case 1:
-    ce->accept();
     exit();
+    ce->accept();
     break;
   case 2:
   default:
@@ -496,6 +495,9 @@ void BuilderWindow::buildPackageMenus()
     for (unsigned int i = 0; i < packageMenuIDs.size(); i++){
 	menuBar()->removeItem(packageMenuIDs[i]);
     }
+    componentMenu->clear();
+    packageMenuIDs.clear();
+
     sci::cca::ports::ComponentRepository::pointer reg =
 	pidl_cast<sci::cca::ports::ComponentRepository::pointer>(services->getPort("cca.ComponentRepository"));
     if (reg.isNull()) {
@@ -540,10 +542,11 @@ void BuilderWindow::buildPackageMenus()
 	menu->setFont(*bFont);
 	iter->second->populateMenu(menu);
 	int menuID = menuBar()->insertItem(iter->first.c_str(), menu);
+	componentMenu->insertItem(iter->first.c_str(), menu);
 	packageMenuIDs.push_back(menuID);
     }
     services->releasePort("cca.ComponentRepository");
-    //insertHelpMenu();
+    insertHelpMenu();
     unsetCursor();
 }
 
@@ -701,7 +704,7 @@ void BuilderWindow::addInfo()
 void BuilderWindow::exit()
 {
   std::cerr << "Exit should ask framework to shutdown instead!" << std::endl;
-  //should stop and close socket in CCACommunicator first
+  //should stop and close socket in CCACommunicator first - support in CCACommunicator for this?
   Thread::exitAll(0);
 }
 
