@@ -26,6 +26,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/GeometryReader.tcl $(SRCDIR)/GeometryWriter.tcl \
 	$(SRCDIR)/Hedgehog.tcl $(SRCDIR)/HedgehogLitLines.tcl \
 	$(SRCDIR)/ImageReader.tcl $(SRCDIR)/IsoMask.tcl \
+	$(SRCDIR)/Isosurface.tcl \
 	$(SRCDIR)/IsoSurface.tcl $(SRCDIR)/IsoSurfaceDW.tcl \
 	$(SRCDIR)/IsoSurfaceMRSG.tcl $(SRCDIR)/IsoSurfaceSP.tcl \
 	$(SRCDIR)/LabelSurface.tcl $(SRCDIR)/MatMat.tcl \
@@ -66,6 +67,9 @@ CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.10  2000/12/12 20:17:50  yarden
+# add Isosurface.tcl
+#
 # Revision 1.9  2000/12/09 17:30:54  moulding
 # Port Kurt's volume rendering stuff to linux and move it to PSECommon.
 #
