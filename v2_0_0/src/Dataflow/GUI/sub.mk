@@ -98,6 +98,8 @@ SRCS := \
 	$(SRCDIR)/SampleStructHex.tcl \
 	$(SRCDIR)/ScalarFieldStats.tcl \
 	$(SRCDIR)/SciDialog.tcl \
+	$(SRCDIR)/SciButtonPanel.tcl \
+	$(SRCDIR)/SciMoveToCursor.tcl \
 	$(SRCDIR)/SelectField.tcl \
 	$(SRCDIR)/SetProperty.tcl \
 	$(SRCDIR)/ShowColorMap.tcl \
