@@ -225,7 +225,7 @@ public:
 
   static const string type_name(int n = -1);
 
-  image_type::Pointer get_image() { return image_; }
+  typename image_type::Pointer get_image() { return image_; }
 
 private:
   bool image_set_;
