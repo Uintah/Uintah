@@ -56,7 +56,7 @@ DebugSwitch::~DebugSwitch()
    }
 }
 
-DebugInfo* DebugSwitch::get_debuginfo(int &size) const
+DebugInfo* DebugSwitch::get_debuginfo(int &size)
 {
    size=debugs->size();
    return debugsiter;
