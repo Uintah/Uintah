@@ -192,6 +192,12 @@ PIDL::objectFrom(const std::vector<URL>& urlv, int mysize, int myrank)
   return Object::pointer(new Object_proxy(urlv,mysize,myrank));
 }
 
+Object::pointer 
+PIDL::objectFrom(const std::vector<Object::pointer>& pxy, int mysize, int myrank)
+{
+  return Object::pointer(new Object_proxy(pxy,mysize,myrank));	
+}
+
 void 
 PIDL::serveObjects()
 {

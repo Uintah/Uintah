@@ -102,7 +102,10 @@ DESCRIPTION
     /////////
     // Xception is a friend since it needs access to the reference mgr's intracomm
     friend class XceptionRelay;
-    
+    /////////
+    // Object_proxy is a friend since it uses proxyGetReferenceMgr()
+    friend class Object_proxy;
+
     //////////
     // Return a the first internal reference or a copy of it.  
     void _proxyGetReference(Reference& ref, bool copy) const;
