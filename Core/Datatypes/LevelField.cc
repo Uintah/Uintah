@@ -45,10 +45,10 @@ bool LevelFieldSFI<double>::interpolate( double& result, const Point &p) const
 }
 
 template <>
-bool LevelFieldSFI<float>::interpolate( double& result, const Point &p) const
+bool LevelFieldSFI<int>::interpolate( double& result, const Point &p) const
 {
   bool success;
-  float result_;
+  int result_;
   success = fld_->interpolate( result_, p);
   if( success ) result = double(result_);
   return success;
