@@ -96,12 +96,16 @@ else
         Packages/Uintah/Core/Exceptions    \
         Packages/Uintah/Core/Grid          \
         Packages/Uintah/Core/Math          \
+        Packages/Uintah/Core/Parallel      \
         Packages/Uintah/Core/Disclosure    \
         Packages/Uintah/Core/ProblemSpec   \
         Packages/Uintah/Core/Disclosure    \
         Packages/Uintah/Core/DataArchive   \
 	Packages/Uintah/CCA/Ports          \
+        Packages/Uintah/CCA/Components/ProblemSpecification \
+        Dataflow/XMLUtil \
         Core/Exceptions  \
+        Core/Persistent  \
         Core/Geometry    \
         Core/Thread      \
         Core/Util        \
@@ -109,7 +113,7 @@ else
         Core/Containers
 endif
 
-LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
+LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(Z_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
