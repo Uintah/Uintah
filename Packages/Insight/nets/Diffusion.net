@@ -93,12 +93,12 @@ set $m2-ViewWindow_0-caxes {0}
 set $m2-ViewWindow_0-raxes {1}
 set $m2-ViewWindow_0-iaxes {}
 set $m2-ViewWindow_0-have_collab_vis {0}
-set $m2-ViewWindow_0-view-eyep-x {                0}
-set $m2-ViewWindow_0-view-eyep-y {                0}
-set $m2-ViewWindow_0-view-eyep-z {          1026.61}
-set $m2-ViewWindow_0-view-lookat-x {              128}
-set $m2-ViewWindow_0-view-lookat-y {              128}
-set $m2-ViewWindow_0-view-lookat-z {                0}
+set $m2-ViewWindow_0-view-eyep-x {         -26.1909}
+set $m2-ViewWindow_0-view-eyep-y {         -1.22256}
+set $m2-ViewWindow_0-view-eyep-z {           672.31}
+set $m2-ViewWindow_0-view-lookat-x {          59.3797}
+set $m2-ViewWindow_0-view-lookat-y {           84.348}
+set $m2-ViewWindow_0-view-lookat-z {         -13.9984}
 set $m2-ViewWindow_0-view-up-x {                0}
 set $m2-ViewWindow_0-view-up-y {               -1}
 set $m2-ViewWindow_0-view-up-z {                0}
@@ -139,6 +139,9 @@ set $m2-ViewWindow_0-global-cull {0}
 set $m2-ViewWindow_0-global-dl {0}
 set $m2-ViewWindow_0-global-type {Gouraud}
 set $m2-ViewWindow_0-ortho-view {0}
+set $m2-ViewWindow_0-unused {1}
+set $m2-ViewWindow_0-unused {0}
+set $m2-ViewWindow_0-unused {0}
 set $m3-notes {}
 set $m3-show_status {1}
 set $m3-tcl_status {Calling GenStandardColorMaps!}
@@ -154,8 +157,8 @@ set $m3-gamma {0}
 set $m4-notes {}
 set $m4-show_status {1}
 set $m4-isFixed {0}
-set $m4-min {                0}
-set $m4-max {              255}
+set $m4-min {          16.4154}
+set $m4-max {          191.245}
 set $m4-makeSymmetric {0}
 set $m5-notes {}
 set $m5-show_status {1}
