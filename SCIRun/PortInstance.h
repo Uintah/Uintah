@@ -43,30 +43,40 @@
 
 #include <string>
 
-namespace SCIRun {
-  class PortInstance {
-  public:
-    PortInstance();
-    virtual ~PortInstance();
+namespace SCIRun
+{
 
-    enum PortType {
-      From=0,
-      To=1
-    };
-
-    virtual bool connect(PortInstance*) = 0;
-    virtual PortType portType() = 0;
-    virtual std::string getType();
-    virtual std::string getModel();
-    virtual std::string getUniqueName() = 0;
-    virtual bool disconnect(PortInstance*) =0;
-    virtual bool canConnectTo(PortInstance *)=0;
-    virtual bool available();
-    virtual PortInstance* getPeer();
-  private:
-    PortInstance(const PortInstance&);
-    PortInstance& operator=(const PortInstance&);
+/**
+ * \class PortInstance
+ *
+ *
+ *
+ */
+class PortInstance
+{
+public:
+  PortInstance();
+  virtual ~PortInstance();
+  
+  enum PortType {
+    From=0,
+    To=1
   };
-}
+  
+  virtual bool connect(PortInstance*) = 0;
+  virtual PortType portType() = 0;
+  virtual std::string getType();
+  virtual std::string getModel();
+  virtual std::string getUniqueName() = 0;
+  virtual bool disconnect(PortInstance*) =0;
+  virtual bool canConnectTo(PortInstance *)=0;
+  virtual bool available();
+  virtual PortInstance* getPeer();
+private:
+  PortInstance(const PortInstance&);
+  PortInstance& operator=(const PortInstance&);
+};
+
+} // end namespace SCIRun
 
 #endif
