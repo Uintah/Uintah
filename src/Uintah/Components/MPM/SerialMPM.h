@@ -97,6 +97,17 @@ WARNING
 				  const Region* region,
 				  const DataWarehouseP&,
 				  DataWarehouseP&);
+
+	 //////////
+	 // update the Surface Normal Of Boundary Particles according to their
+	 // velocity gradient during the deformation
+	 //
+	 void updateSurfaceNormalOfBoundaryParticle(
+	                            const ProcessorContext*,
+				    const Region* region,
+				    const DataWarehouseP& old_dw,
+				    DataWarehouseP& new_dw);
+
 	 //////////
 	 // Insert Documentation Here:
 	 void computeInternalForce(const ProcessorContext*,
@@ -121,6 +132,16 @@ WARNING
 					      const Region* region,
 					      const DataWarehouseP&,
 					      DataWarehouseP&);
+
+	 //////////
+	 // check the stress on each boundary particle to see
+	 // if the microcrack will grow.  If fracture occur,
+	 // more interior particles become boundary particles
+         void crackGrow(const ProcessorContext*,
+                        const Region* region,
+                        const DataWarehouseP& old_dw,
+                        DataWarehouseP& new_dw);
+
 	 SerialMPM(const SerialMPM&);
 	 SerialMPM& operator=(const SerialMPM&);
 	 
@@ -155,6 +176,9 @@ WARNING
    
 //
 // $Log$
+// Revision 1.21  2000/05/04 23:40:29  tan
+// Added fracture interface to general MPM.
+//
 // Revision 1.20  2000/05/04 19:10:52  guilkey
 // Added code to apply boundary conditions.  This currently calls empty
 // functions which will be implemented soon.
