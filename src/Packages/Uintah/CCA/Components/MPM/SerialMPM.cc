@@ -1,7 +1,6 @@
-#include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h> // 
+#include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
-#include <Packages/Uintah/CCA/Components/MPM/BoundaryCond.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/ContactFactory.h>
@@ -31,6 +30,7 @@
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Packages/Uintah/Core/Grid/fillFace.h>
 
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
