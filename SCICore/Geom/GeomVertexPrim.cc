@@ -38,6 +38,16 @@ void GeomVertex::operator delete(void* rp, size_t)
   GeomVertex_alloc.free(rp);
 }
 
+void* GeomMVertex::operator new(size_t)
+{
+  return GeomMVertex_alloc.alloc();
+}
+
+void GeomMVertex::operator delete(void* rp, size_t)
+{
+  GeomMVertex_alloc.free(rp);
+}
+
 void* GeomNVertex::operator new(size_t)
 {
   return GeomNVertex_alloc.alloc();
@@ -56,16 +66,6 @@ void* GeomNMVertex::operator new(size_t)
 void GeomNMVertex::operator delete(void* rp, size_t)
 {
   GeomNMVertex_alloc.free(rp);
-}
-
-void* GeomMVertex::operator new(size_t)
-{
-  return GeomVertex_alloc.alloc();
-}
-
-void GeomMVertex::operator delete(void* rp, size_t)
-{
-  GeomVertex_alloc.free(rp);
 }
 
 void* GeomCVertex::operator new(size_t)
@@ -360,6 +360,9 @@ void Pio(Piostream& stream, GeomVertex*& obj)
 
 //
 // $Log$
+// Revision 1.8  1999/09/16 17:43:58  kuzimmer
+// corrected new and delete functions for GeomMVertex
+//
 // Revision 1.7  1999/09/16 17:08:56  kuzimmer
 // TrivialAllocator GeomMVertex_alloc(sizeof(GeomMVertex));   was missing,  added again, will prevent core dumps.
 //
