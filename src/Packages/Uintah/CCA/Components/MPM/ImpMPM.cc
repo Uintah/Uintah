@@ -1681,7 +1681,7 @@ void ImpMPM::checkConvergence(const ProcessorGroup*,
         dispIncNormMax = 0.;
       }
 
-      if (!recursion || dispIncQNorm0 == 0.){
+      if (!recursion || compare(dispIncQNorm0,0.)){
 	dispIncQNorm0 = dispIncQNorm;
       }
 
