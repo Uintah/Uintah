@@ -331,21 +331,21 @@ void Transform::post_rotate(double angle, const Vector& axis)
   inverse_valid=0;
 }	
 
-void Transform::rotate(const Vector& from, const Vector& to)
+bool Transform::rotate(const Vector& from, const Vector& to)
 {
   Vector t(to); t.normalize();
   Vector f(from); f.normalize();
   Vector axis(Cross(f,t));
-  if (axis.length2() < 0.00001) {
-    Vector j, k;
-    t.find_orthogonal(j,k);
-    axis=j.normal();
+  if (axis.length2() < 1e-8) {
+    // Vectors are too close to each other to get a stable axis of
+    // rotation, so return.
+    return false;
   }
   double sinth=axis.length();
   double costh=Dot(f,t);
   if(Abs(sinth) < 1.e-9){
     if(costh > 0)
-      return; // no rotate;
+      return false; // no rotate;
     else {
       // from and to are in opposite directions, find an axis of rotation
       // Try the Z axis first.  This will fail if from is along Z, so try
@@ -359,6 +359,7 @@ void Transform::rotate(const Vector& from, const Vector& to)
   } else {
     pre_rotate(atan2(sinth, costh), axis.normal());
   }
+  return true;
 }
 
 void Transform::build_permute(double m[4][4],int xmap, int ymap, int zmap, 
