@@ -39,10 +39,8 @@ WARNING
       MassFractionBoundCond(ProblemSpecP& ps,std::string& kind,
                             std::string& variableName);
       virtual ~MassFractionBoundCond();
-      virtual double getValue() const;
+      virtual MassFractionBoundCond* clone();
       
-   private:
-      double d_value;
    };
 } // End namespace Uintah
 

@@ -39,6 +39,7 @@ WARNING
       NoneBoundCond() : BoundCondBase("None") {};
       NoneBoundCond(ProblemSpecP&){};
       virtual ~NoneBoundCond() {};
+      virtual NoneBoundCond* clone() {return new NoneBoundCond(*this);};
                
    private:
 #if 0

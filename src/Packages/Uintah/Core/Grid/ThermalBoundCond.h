@@ -38,6 +38,7 @@ WARNING
       ThermalBoundCond() {};
       virtual ~ThermalBoundCond() {};
       virtual std::string getType() const = 0;
+      virtual ThermalBoundCond* clone() {return new ThermalBoundCond(*this);};
          
    private:
 #if 0

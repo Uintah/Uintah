@@ -7,6 +7,9 @@
 #include <Packages/Uintah/Core/Math/Primes.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/BoundCondData.h>
+#include <Packages/Uintah/Core/Grid/BCData.h>
+#include <Packages/Uintah/Core/Grid/BCDataArray.h>
+#include <Packages/Uintah/Core/Grid/BoundCond.h>
 #include <Core/Containers/StaticArray.h>
 
 #include <Core/Thread/AtomicCounter.h>
@@ -938,7 +941,7 @@ Patch::setBCType(Patch::FaceType face, BCType newbc)
 }
 
 void 
-Patch::setBCValues(Patch::FaceType face, BCData& bc)
+Patch::setBCValues(Patch::FaceType face, BoundCondData& bc)
 {
   d_bcs[face] = bc;
   d_nodeHighIndex = d_highIndex+
@@ -952,9 +955,10 @@ Patch::setArrayBCValues(Patch::FaceType face, BCDataArray& bc)
 {
   // At this point need to set up the iterators for each BCData type:
   // Side, Rectangle, Circle, Difference, and Union.
-  IntVector l,h,li,hi,lx,ly,lz;
+  IntVector l,h,li,hi,lx,ly,lz,ln,hn;
   getFaceCells(face,0,l,h);
   getFaceCells(face,-1,li,hi);
+  getFaceNodes(face,0,ln,hn);
 
   lx = ly = lz = l;
   IntVector adjustx(0,0,0),adjusty(0,0,0),adjustz(0,0,0);
@@ -977,26 +981,40 @@ Patch::setArrayBCValues(Patch::FaceType face, BCDataArray& bc)
 		      getBCType(Patch::yminus)==Patch::Neighbor?numGC:0,
 		      getBCType(Patch::zminus)==Patch::Neighbor?numGC:1);
   lz = l+adjustz;
-   
-  for (int c = 0; c < bc.getNumberChildren(); c++) {
-    CellIterator interior(li,hi),sfcx(lx,h),sfcy(ly,h),sfcz(lz,h);
-    vector<IntVector> bound,inter,sfx,sfy,sfz;
-    for (CellIterator boundary(l,h);!boundary.done();boundary++,interior++,
-	   sfcx++,sfcy++,sfcz++) {
-      Point p = this->getLevel()->getCellPosition(*boundary);
-      if ((bc.getChild(c))->inside(p)) {
-	bound.push_back(*boundary);
-	inter.push_back(*interior);
-	sfx.push_back(*sfcx);
-	sfy.push_back(*sfcy);
-	sfz.push_back(*sfcz);
+
+  // Loop over the various material ids.
+ 
+  BCDataArray::bcDataArrayType::const_iterator mat_id_itr;
+  for (mat_id_itr = bc.d_BCDataArray.begin(); 
+       mat_id_itr != bc.d_BCDataArray.end(); ++mat_id_itr) {
+    int mat_id = mat_id_itr->first;
+    for (int c = 0; c < bc.getNumberChildren(mat_id); c++) {
+      CellIterator interior(li,hi),sfcx(lx,h),sfcy(ly,h),sfcz(lz,h);
+      vector<IntVector> bound,inter,sfx,sfy,sfz,nbound;
+      for (CellIterator boundary(l,h);!boundary.done();boundary++,interior++,
+	     sfcx++,sfcy++,sfcz++) {
+	Point p = this->getLevel()->getCellPosition(*boundary);
+	if ((bc.getChild(mat_id,c))->inside(p)) {
+	  bound.push_back(*boundary);
+	  inter.push_back(*interior);
+	  sfx.push_back(*sfcx);
+	  sfy.push_back(*sfcy);
+	  sfz.push_back(*sfcz);
+	}
       }
+      for (NodeIterator boundary(ln,hn);!boundary.done();boundary++) {
+	Point p = this->getLevel()->getNodePosition(*boundary);
+	if ((bc.getChild(mat_id,c))->inside(p)) {
+	  nbound.push_back(*boundary);
+	}
+      }
+      bc.setBoundaryIterator(mat_id,bound,c);
+      bc.setNBoundaryIterator(mat_id,nbound,c);
+      bc.setInteriorIterator(mat_id,inter,c);
+      bc.setSFCXIterator(mat_id,sfx,c);
+      bc.setSFCYIterator(mat_id,sfy,c);
+      bc.setSFCZIterator(mat_id,sfz,c);
     }
-    bc.setBoundaryIterator(bound,c);
-    bc.setInteriorIterator(inter,c);
-    bc.setSFCXIterator(sfx,c);
-    bc.setSFCYIterator(sfy,c);
-    bc.setSFCZIterator(sfz,c);
   }
   array_bcs[face] = bc;
 }
@@ -1025,19 +1043,20 @@ Patch::getArrayBCValues(Patch::FaceType face,int mat_id,string type,
 			vector<IntVector>& sfcx,
 			vector<IntVector>& sfcy,
 			vector<IntVector>& sfcz,
+			vector<IntVector>& nbound,
 			int child) const
 {
   map<Patch::FaceType,BCDataArray >* m = 
     const_cast<map<Patch::FaceType,BCDataArray>* >(&array_bcs);
   BCDataArray* ubc = &((*m)[face]);
-  BCData bc_data;
-  ubc->getBCData(bc_data,child);
-  ubc->getBoundaryIterator(bound,child);
-  ubc->getInteriorIterator(inter,child);
-  ubc->getSFCXIterator(sfcx,child);
-  ubc->getSFCYIterator(sfcy,child);
-  ubc->getSFCZIterator(sfcz,child);
-  return bc_data.getBCValues(mat_id,type);
+  const BoundCondBase* bc = ubc->getBoundCondData(mat_id,type,child);
+  ubc->getBoundaryIterator(mat_id,bound,child);
+  ubc->getInteriorIterator(mat_id,inter,child);
+  ubc->getSFCXIterator(mat_id,sfcx,child);
+  ubc->getSFCYIterator(mat_id,sfcy,child);
+  ubc->getSFCZIterator(mat_id,sfcz,child);
+  ubc->getNBoundaryIterator(mat_id,nbound,child);
+  return bc;
 }
 
 

@@ -43,16 +43,10 @@ WARNING
    public:
      VelocityBoundCond(ProblemSpecP& ps, const std::string& kind);
      virtual ~VelocityBoundCond();
-     virtual Vector getValue() const;
      map<string,string> getMixed() const;
+     virtual VelocityBoundCond* clone();
      
    private:
-#if 0
-      VelocityBoundCond(const VelocityBoundCond&);
-      VelocityBoundCond& operator=(const VelocityBoundCond&);
-#endif
-      
-      Vector d_vel;
       std::map<string,string> d_comp_var;
      
    };

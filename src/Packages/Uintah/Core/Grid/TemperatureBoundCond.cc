@@ -7,15 +7,14 @@ TemperatureBoundCond::TemperatureBoundCond(ProblemSpecP& ps,std::string& kind):
   BoundCond<double>(kind)
 {
   d_type = "Temperature";
-  ps->require("value",d_temp);
+  ps->require("value",d_value);
 }
 
 TemperatureBoundCond::~TemperatureBoundCond()
 {
 }
 
-double TemperatureBoundCond::getValue() const
+TemperatureBoundCond* TemperatureBoundCond::clone()
 {
-  return d_temp;
+  return new TemperatureBoundCond(*this);
 }
-

@@ -2,7 +2,7 @@
 #define UINTAH_GRID_UnionBCData_H
 
 #include <Packages/Uintah/Core/Grid/BoundCondData.h>
-#include <Packages/Uintah/Core/Grid/BCDataBase.h>
+#include <Packages/Uintah/Core/Grid/BCGeomBase.h>
 #include <Core/Geometry/Vector.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <sgi_stl_warnings_off.h>
@@ -40,11 +40,10 @@ WARNING
   
 ****************************************/
 
-   class UnionBCData : public BCDataBase {
+   class UnionBCData : public BCGeomBase {
    public:
      UnionBCData();
      UnionBCData(BCData& bc);
-     UnionBCData(const std::string& type);
      UnionBCData(const UnionBCData& bc);
      UnionBCData& operator=(const UnionBCData& bc);
      UnionBCData(ProblemSpecP& ps);
@@ -52,22 +51,13 @@ WARNING
      UnionBCData* clone();
      void getBCData(BCData& bc) const;
      void addBCData(BCData& bc);
-     void addBCData(BCDataBase* bc);
-     void setBoundaryIterator(std::vector<IntVector>& b);
-     void setInteriorIterator(std::vector<IntVector>& i);
-     void setSFCXIterator(std::vector<IntVector>& i);
-     void setSFCYIterator(std::vector<IntVector>& i);
-     void setSFCZIterator(std::vector<IntVector>& i);
-     void getBoundaryIterator(std::vector<IntVector>& b) const;
-     void getInteriorIterator(std::vector<IntVector>& i) const;
-     void getSFCXIterator(std::vector<IntVector>& i) const;
-     void getSFCYIterator(std::vector<IntVector>& i) const;
-     void getSFCZIterator(std::vector<IntVector>& i) const;
+     void addBC(BoundCondBase* bc);
+     void addBCData(BCGeomBase* bc);
      bool inside(const Point& p) const;
          
    private:
-     std::vector<BCDataBase*> child;
-     std::vector<IntVector> boundary,interior,sfcx,sfcy,sfcz;
+     std::vector<BCGeomBase*> child;
+     friend class BCReader;
    };
 
 } // End namespace Uintah
