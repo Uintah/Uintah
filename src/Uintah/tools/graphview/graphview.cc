@@ -1,7 +1,10 @@
 #include <errno.h>
 #include <fstream>
 #include <iostream>
+#include <iomanip>
+#include <sstream>
 #include <string>
+#include <stdlib.h>
 #include "DaVinci.h"
 #include "graphview.h"
 #include "TaskGraph.h"
@@ -9,10 +12,15 @@
 using namespace std;
 
 static const char HELP_MSG[] = {
-"Commands\n"
+"\nCommands\n"
 "--------\n"
 "Help\n"
 "    Display this command summary.\n"
+"Time <timestep>\n"
+"    Loads the taskgraph from the given timestep directory in the uda\n"
+"    directory.\n"
+"List\n"
+"    Lists the timestep directories in the uda directory.\n"
 "Prune <percent>\n"
 "    Hide nodes and edges with maximum path costs less than <percent>\n"
 "    of the critical path cost.\n"
@@ -28,6 +36,7 @@ queue<Event> gEventQueue;
 
 static TaskGraph* gGraph = 0;
 static DaVinci* gDavinci = 0;
+static string udaDir;
 
 static void handle_event(const Event& event);
 static void handle_console_input();
@@ -39,7 +48,12 @@ main(int argc, char* argv[])
     cerr << "usage: " << argv[0] << " <uda directory>" << endl;
     return 1;
   }
-  string infile = string(argv[1]) + "/taskgraph.xml";
+
+  udaDir = argv[1];
+
+  cout << "Loading timestep 0...\n";
+  
+  string infile = udaDir + "/t0000";
   
   gGraph = TaskGraph::inflate(infile);
   if (!gGraph) {
@@ -50,6 +64,8 @@ main(int argc, char* argv[])
   gDavinci = DaVinci::run();
   gDavinci->setOrientation(DaVinci::BOTTOM_UP);
   gDavinci->setGraph(gGraph);
+
+  cout << HELP_MSG << endl;
   
   while (!gQuit) {
     while (!gEventQueue.empty()) {
@@ -180,8 +196,33 @@ static void handle_console_input()
     gQuit = true;
     break;
 
+  case 't': {
+    int timestep;
+    ostringstream timedir;
+    cin >> timestep;
+    timedir << "/t" << setw(4) << setfill('0') << timestep;
+    cout << "Loading timestep " << timestep << "...\n";
+    TaskGraph* oldGraph = gGraph;
+    gGraph = TaskGraph::inflate(udaDir + timedir.str());
+    if (gGraph != NULL) {
+      gGraph->setThresholdPercent(oldGraph->getThresholdPercent());
+      gDavinci->setGraph(gGraph);
+      delete oldGraph;
+    }
+    else {
+      gGraph = oldGraph;
+      cout << "Use the 'List' command to get a list of timestep directories\n"
+	   << "and find out which timestep numbers are valid.\n";
+    }
+  } break;
+
+  case 'l':
+    system((string("ls -d ") + udaDir + "/t*").c_str());
+    break;
+    
   default:
     cerr << "Unknown command: " << cmd << endl;
     break;
   }
 }
+
