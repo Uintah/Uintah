@@ -740,7 +740,9 @@ proc popupLoadMenu {} {
     
     set netedit_loadnet [tk_getOpenFile -filetypes $types ]
     global netedit_savefile
-    set netedit_savefile $netedit_loadnet
+    if { [string compare $netedit_savefile ""] == 0 } {
+	set netedit_savefile $netedit_loadnet
+    }
     
     if { [file exists $netedit_loadnet] } {
 	loadnet $netedit_loadnet
