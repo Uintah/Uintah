@@ -46,7 +46,7 @@ if [ ! -x "${BUILDROOT}/${mode}/build/Packages/Uintah/StandAlone/sus" ]; then
     rm -f "../make.log"
 fi
 while [ ! -x "${BUILDROOT}/${mode}/build/Packages/Uintah/StandAlone/sus" ]; do
-    nice /usr/local/gnu/bin/make -k -j$MAKE_PARALLELISM >> ../make.log 2>&1
+    nice gmake -k -j$MAKE_PARALLELISM >> ../make.log 2>&1
     retval=$?
     if [ $retval != "0" ]; then
 	echo "*** Make failed with code $retval"
