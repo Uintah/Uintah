@@ -30,6 +30,7 @@
 
 #include <iostream>
 #include <Core/2d/LockedPolyline.h>
+#include <Core/2d/ParametricPolyline.h>
 #include <Core/2d/Diagram.h>
 #include <Core/2d/Graph.h>
 
@@ -37,9 +38,11 @@
 #include <Core/Parts/GraphPart.h>
 #include <Core/PartsGui/GraphGui.h>
 
+#include <typeinfo>
+
 namespace SCIRun {
 
-  using std::cerr;
+using std::cerr;
 
 GraphGui::GraphGui( const string &name, const string &script)
   : PartGui( name, script )
@@ -54,27 +57,40 @@ GraphGui::~GraphGui()
 {
 }
 
-
 void
-GraphGui::reset( int n )
+GraphGui::reset( const vector<DrawObj*> &objs)
 {
-  for (int i=poly_.size(); i<n; i++) {
-    LockedPolyline *p = scinew LockedPolyline( i );
-    p->set_lock( monitor_ );
-    p->set_color( Color( drand48(), drand48(), drand48() ) );
-    poly_.push_back( p );
-    diagram_->add( p );
+  for (unsigned loop=0; loop<objs.size(); ++loop) {
+    cerr << "checking DrawObj type: ";
+    const type_info &t=typeid(objs[loop]);
+    cerr << t.name() << endl;
+    if (LockedPolyline *p =  dynamic_cast<LockedPolyline*>(objs[loop])) {
+      cerr << "item " << loop << " is type LockedPolyline." << endl;
+      p = scinew LockedPolyline( loop );
+      p->set_lock( monitor_ );
+      p->set_color( Color( drand48(), drand48(), drand48() ) );
+      poly_.push_back( p );
+      diagram_->add( p );
+      p->clear();
+    } else if (ParametricPolyline *p = 
+                 dynamic_cast<ParametricPolyline*>(objs[loop])) {
+      cerr << "item " << loop << " is type ParametricPolyline." << endl;
+      p = scinew ParametricPolyline( loop );
+      p->set_lock( monitor_ );
+      p->set_color( Color( drand48(), drand48(), drand48() ) );
+      poly_.push_back( p );
+      diagram_->add( p );
+      p->clear();
+    } else {
+      cerr << "item " << loop << " is unknown type." << endl;
+    }
   }
-
-  for (int i=0; i<n; i++)
-    poly_[i]->clear();
 }
 
 void
-GraphGui::add_values( vector<double> &v )
+GraphGui::add_values( unsigned item, const vector<double> &v )
 {
-  for (unsigned i=0; i<v.size(); i++) 
-    poly_[i]->add(v[i]);
+  poly_[item]->add(v);
 
   graph_->need_redraw();
 }

@@ -42,20 +42,23 @@ class Diagram;
 class Graph;
 class CrowdMonitor;
 class LockedPolyline;
+class DrawObj;
+
+using std::vector;
 
 class GraphGui : public PartGui {
 public:
   GraphGui( const string &name, const string &script = "GraphGui"); 
   virtual ~GraphGui();
 
-  void reset( int =0 );
-  void add_values( vector<double> & );
+  void reset( const vector<DrawObj*>& );
+  void add_values( unsigned, const vector<double> & );
   void attach( PartInterface * );
 
   virtual void set_window( const string & );
 
 private:
-  vector<LockedPolyline *> poly_;
+  vector<DrawObj *> poly_;
   Diagram *diagram_;
   Graph *graph_;
   CrowdMonitor *monitor_;
