@@ -29,13 +29,17 @@
     <summary>
       <p>
         ChooseColorMap takes in an arbitrary number of input colormaps, and
-        pass one of them downstream, based on the port index typed in the UI.
+        passes one of them downstream, based on the port index typed
+        in the UI.  Input port specification is 0 based (ie: first
+        port is 0, 2nd port is 1, etc.) 
       </p>
     </summary>
     <description>
       <p>
         ChooseColorMap takes in an arbitrary number of input colormaps, and
-        pass one of them downstream, based on the port index typed in the UI.
+        passes one of them downstream, based on the port index typed
+        in the UI.  Input port specification is 0 based (ie: first
+        port is 0, 2nd port is 1, etc.) 
       </p>
     </description>
   </overview>
