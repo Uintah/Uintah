@@ -63,7 +63,6 @@ itcl_class SCIRun_Visualization_TexCuttingPlanes {
 	} else {
 	    set $this-cyl_active 0
 	}
-	$this-c needexecute
     }
 
     method spin_in {new phi} {
@@ -221,12 +220,14 @@ itcl_class SCIRun_Visualization_TexCuttingPlanes {
 	global cyl
 	set c "Cylindrical"
 	set cyl [$dof.tabs add -label $c \
-		-command "$this set_active_tab $c"]
+		     -command "$this set_active_tab $c; $n"]
 
 	add_cyl_tab $cyl
  
 	$dof.tabs view "Standard"	
 	$dof.tabs configure -tabpos "n"
+	$dof.tabs pageconfigure 0 -command "$this set_active_tab $st; $n"
+	
 	pack $dof.tabs -side top -expand yes
 
 	pack $w.frame_title -side top -expand yes
