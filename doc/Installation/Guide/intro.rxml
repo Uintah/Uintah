@@ -30,29 +30,16 @@ DEALINGS IN THE SOFTWARE.
 <section id="sec.intro">
   <title>Introduction</title>
 
-  <para>This guide provides instructions for installing &sr;, its third
-  party libraries, the (optional) <acronym>BLAS</acronym> (or <acronym>ATLAS</acronym>), <acronym>LAPACK</acronym>, <acronym>PETSc</acronym>, and Insight
-  libraries, sample data sets, and &sr; documentation.</para>
+  <para>This guide provides instructions for installing &sr;, its
+  required third party software, optional thirdparty software, sample
+  data sets, and &sr; documentation.</para>
 
-  <para> The <ulink
-  url="http://www-unix.mcs.anl.gov/petsc/petsc-2/"><acronym>PETSc</acronym></ulink>
-  library adds equation solvers to &sr;'s SolveMatrix module.
-  Installation of <acronym>PETSc</acronym> is optional.
-  <acronym>PETSc</acronym> requires
-  <acronym>BLAS</acronym>/<acronym>ATLAS</acronym> and
-  <acronym>LAPACK</acronym>.</para>
-
-  <para>The <ulink
-  url="http://www.itk.org">Insight Toolkit
-  (<acronym>ITK</acronym>)</ulink> provides segmentation,
-  registration, and image processing filters encapsulated as &sr;
-  modules.  Installation of <acronym>ITK</acronym> is optional. </para>
-
-  <para>
-    &sr; has been tested on three platforms: SGI, Linux, and Mac OS X.
-    Platform requirement guidelines are listed in <xref
-    linkend="tbl.pltfm_req"/>.
-  </para>
+  <para>&sr; has been tested on three platforms: SGI,
+  Linux<footnote><para>&sr; has been tested on the specified systems
+  and RPMs are provided for these systems.  &sr; may work on other
+  Linux systems as well.</para></footnote>, and Mac OS X.  Platform
+  requirement guidelines are listed in <xref
+  linkend="tbl.pltfm_req"/>.</para>
 
   <para>
     Disk space requirements for a source code installation are listed in
@@ -74,13 +61,13 @@ DEALINGS IN THE SOFTWARE.
 	  <entry>
 	    <itemizedlist>
 	      <listitem>
-		<para>Redhat 8/9 or Mandrake 9</para>
+		<para>Redhat 9 or Mandrake 9.2</para>
 	      </listitem>
 	      <listitem>
 		<para>OpenGL compatible video card and driver</para>
 	      </listitem>
 	      <listitem>
-		<para>GCC 3.2 or greater</para>
+		<para>GCC 3.x</para>
 	      </listitem>
 	      <listitem>
 		<para>512 Mb (or more) RAM</para>

@@ -33,9 +33,10 @@
 
 
 <!--% doc.insertDocType("article", {"sr"=>"SCIRun","osx"=>"Mac OS X"},
-["intro", "requirements","recommendations", "rpm_inst","source_inst",
- "third_party_inst", "blas_lapack", "petsc", "itk", "opt_inst", "preparing",
- "starting", "help", "cvs"])
+["intro", "rpm_inst","source_inst", "download_src",
+ "third_party_inst", "opt_inst", "build", "preparing", "starting", "help",
+ "blas_lapack_inst", "petsc_inst", "itk_inst", "hdf5_inst", "mdsplus_inst",
+ "cvs"])
 %-->
 
 <article id="article.main">
@@ -46,5 +47,10 @@
 &preparing;
 &starting;
 &help;
+&blas_lapack_inst;
+&petsc_inst;
+&itk_inst;
+&hdf5_inst;
+&mdsplus_inst;
 &cvs;
 </article>
