@@ -1,0 +1,103 @@
+% module-template.tex --
+%
+% Notes:
+%
+% o Rename this file appropriately.
+%
+% o Complete relevant sections below.
+%
+% o Use markup commands defined in scirun-doc.sty.
+%   Avoid presentation markup (e.g. \textbf or \emph).
+%
+% o To make your document web-friendly, use commands from html package. See
+%   latex2html manual or the book "The Latex Web Companion."
+%
+% o Don't add new subsections, but freely subsubsection 
+%   existing subsections.
+%
+% o Add local commands if desired (via \newcommand).  But first check for
+%   equivalent markup in scirun-doc.sty.
+%
+% o Only use packages distributed with Latex2e.
+%
+% o Cite references with the \cite command. Put citations in
+%   a bib file and send along with this file.
+%
+% o Please include at least one image of tk GUI. Provide 
+%   an EPS version and a web friendly version (e.g., jpeg or gif).
+%
+% o Including images:  Create a figure command for each figure using the
+%   template below.  Copy the template (make a copy of the template
+%   for each figure) and uncomment only the first '%' in each line.
+%   Then replace bracketed text with appropriate values.  Here is the
+%   template: 
+% 
+%%begin{latexonly}
+%  \newcommand{\<figure command name>}%
+%  {\centerline{\includegraphics[options]{<path to eps file>}}}
+%%end{latexonly}
+%\begin{htmlonly}
+%  \newcommand{\<figure command name (same as above)>}{%
+%  \htmladdimg[options]{<path to jpg file>}}
+%\end{htmlonly}
+%
+%   Where in the ``latexonly'' part, ``options'' is a list of key-value pair
+%   options.  Typically the options specify graphic width, height, and
+%   bounding box.  See ``The Latex Graphics Companion'' for more
+%   information.  Note that we are using ``\includegraphics'' command
+%   from the ``graphicx'' package.
+%
+%   In the ``htmlonly'' part ``options'' is a list options such as ``align'',
+%   ``width'', ``height'', and ``alt''.  See ``The Latex Web Companion'' for
+%   details.
+%   
+%   Now to actually create figures enclose each figure command as follows:
+%
+%\begin{figure}
+%  \begin{makeimage}
+%  \end{makeimage}
+%  \<figurecommand>
+%  \caption{\label{fig:<figure label>} <Caption text>}
+%\end{figure}
+%
+%   and replace bracket text appropriately.
+%   
+
+% Module information: replace the XXXX's
+
+\ModuleRef{\Module{XXXX}}{\Category{XXXX}}{\Package{XXXX}}
+
+% Summary of module's purpose. No more than one paragraph.
+
+\subsection{Summary}
+
+Summary here.
+
+% How to use the module.  Describe connections upstream and downstream
+% and how to use the GUI.  If desired, Walk the user through an example.
+% Please include at least one image of tk GUI. Provide 
+% an EPS version and a web-friendly version (e.g., jpeg or gif).
+% See the note above that explains how to include images.
+
+\subsection{Use}
+
+Describe use here.
+
+% Description of module's algorithms, mathematics, etc.
+
+\subsection{Detail}
+
+Details here.
+
+% Special notes.  These may be installation instructions, bugs, limitations,
+% etc.
+
+\subsection{Notes}
+
+Write notes here.
+
+% Who is responsible? 
+
+\subsection{Credits}
+
+Who wrote this.

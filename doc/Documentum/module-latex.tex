@@ -1,0 +1,292 @@
+% -*-latex-*-
+% Document name: module-latex.tex
+%
+
+\documentclass[11pt]{article}
+\usepackage[]{fancyhdr}
+%\begin{latexonly}
+\usepackage[]{../Utilities/TeX/scirun-doc}
+%\end{latexonly}
+\usepackage[]{graphicx}
+\usepackage[]{html}
+\begin{htmlonly}
+  \include{../Utilities/TeX/scirun-doc.tex}
+\end{htmlonly}
+
+\begin{document}
+
+\begin{rawhtml}
+  <script language="JavaScript">
+  var treetop="";
+  var path = location.pathname;
+  while (path.substr(path.lastIndexOf("/")+1) != "doc") {
+    treetop += "../";
+    path = path.substr(0, path.lastIndexOf("/"));
+  }
+  document.write('<script language="JavaScript" src="',treetop,'doc/Utilities/HTML/banner_top.js"><\/script>');
+  </script>
+\end{rawhtml}
+
+% The title page
+\title{\LaTeX{} Module Descriptions (Explicated)}
+\author{Ted Dustman}
+\maketitle 
+\newpage
+\tableofcontents
+\newpage
+
+
+\section{Quick Start}
+
+\begin{enumerate}
+\item Make a copy of the template file
+  \htmladdnormallink{module-desc-template.tex}
+  {file://module-desc-template.tex} and rename it appropriately. 
+  This file will become your module description document.
+\item Look at the file \htmladdnormallink{\filename{scirun-doc.sty}}
+  {file://../Utilities/scirun-doc.sty} and observe the markup
+  commands recommended for use in your module description file.
+\item Flesh out your document by following the instructions in your
+  module description document (the copy of the template).
+\item Send the result to the doc group.
+\item Refer to following sections for additional information.
+\end{enumerate}
+
+\section{Introduction}
+
+The \LaTeX{} version of a module description document consists 6 parts: The
+\latexcommand{ModuleRef} command, and the summary, use, details, notes, and
+credits sections.  Below we describe the purpose of each part.
+
+\begin{description}
+\item[The \latexcommand{ModuleRef} Command]\mbox{}
+  The \latexcommand{ModuleRef} command is the first command in the
+  module description file.  Its purpose is to specify the module's
+  name, and the category and package to which the module belongs.  It
+  looks like this:
+
+\begin{verbatim}
+     \ModuleRef{\Module{module-name}}{\Category{category-name}}
+          {\Package{package-name}}
+\end{verbatim}
+  
+  Simply substitute appropriate values for ``module-name'',
+  ``category-name'', and ``package-name'' above.
+
+\item[Summary]
+  \label{sec:summary} \mbox{}
+  The Summary section is a brief summary of the module's purpose.  It
+  should be no more than one paragraph.
+
+\item[Use] \label{sec:use} \mbox{}
+  
+  
+  Describe your module's use.  
+  
+  Describe your module's upstream and downstream connections.
+  
+  Describe the use of the module's \gui{}.  Include at least 1 image
+  (in 2 formats, \acronym{EPS}, and \acronym{JPEG} or \acronym{GIF})
+  of your module's graphical user interface.  See \secref{Including
+    Images}{sec:inclimg} for details on including images.
+  
+  Relate control of your module via its \gui{} to its theoretical
+  under-pinnings (and perhaps other details) described in your
+  Details section.
+  
+  You may want to walk the user through an example, say a small
+  complete network which uses your module.
+
+\item[Details] \mbox{}
+  \label{sec:details}
+  
+  Details not directly associated with the module's use belong in
+  the Details section.
+  
+  Describe your module's algorithms, mathematical under-pinnings, or
+  perhaps even implementation details if appropriate.
+  
+  Relate the theory to the control of the module via its \gui{}
+  described in your Use section.
+
+\item[Notes]\mbox{}
+  \label{sec:notes}
+  
+  Special installation instructions (special configure options
+  perhaps), bugs, limitations, and possible future work should be
+  described in the Notes section.
+
+\item[Credits]
+  \label{sec:credits}
+  
+  Give yourself credit!
+\end{description}
+
+To write this document, see the Quick Start instructions above.
+
+\section{Using Markup}
+
+Markup your document using \LaTeX{} commands and commands in the file
+\htmladdnormallink{\filename{scirun-doc.sty}}{../scirun-doc.sty}. 
+
+Avoid presentation style markup commands like \latexcommand{bf} (or even
+\latexcommand{emph}).  Most other \LaTeX{} commands are fine.
+
+You may invent your own markup commands as long as they are not
+presentation oriented and do not conflict with commands in
+\htmladdnormallink{\filename{scirun-doc.sty}}{../scirun-doc.sty}.
+
+\section{Using Packages}
+
+You may use the \latexcommand{usepackage} command only if the package it is
+including is part of the standard \LaTeX{} distribution.  
+
+You may use commands from packages \latexpackage{graphicx} and
+\latexpackage{html} without having to first include them with the
+\latexcommand{usepackage} command.
+
+\section{Including Images}
+\label{sec:inclimg}
+
+The \secname{Use}{sec:use} section of your document must include at least 1
+image (in 2 formats, see below) of your module's graphical user interface.
+
+Create your images in 2 formats, \dfna{Encapsulated Postscript}{EPS} for
+high quality printing and \acronym{JPEG} or \acronym{GIF} for online
+viewing. 
+
+Create an image command for each image using the template below.  Copy the
+following template (make a copy of the template for each image).  Then
+replace bracketed text with appropriate values.  Here is the template:
+
+%begin{latexonly}
+\begin{verbatim}
+%begin{latexonly}
+  \newcommand{\image-command-name}%
+  {\centerline{\includegraphics[options]{path-to-eps-file}}}
+%end{latexonly}
+\begin{htmlonly}
+  \newcommand{\image-command-name (same as above)}{%
+    \htmladdimg[options]{path-to-jpg-or-gif-file}}
+\end{htmlonly}
+\end{verbatim}
+%end{latexonly}
+
+\begin{rawhtml}
+  <PRE>
+  &#37begin{latexonly}
+  \newcommand{\image-command-name}
+  {\centerline{\includegraphics[options]{path-to-eps-file}}}
+  &#37end{latexonly}
+  &#92begin{htmlonly}
+  \newcommand{\image-command-name (same as above)}
+  &nbsp&nbsp   {\htmladdimg[options]{path-to-jpg-or-gif-file}}
+  &#92end{htmlonly}
+  </PRE>
+\end{rawhtml}
+
+
+In the ``latexonly'' part, ``options'' is a list of key-value pair options.
+Typically the options specify graphic width or height, scale, and bounding
+box.  See \etitle{The Latex Graphics Companion} for more information.  Note
+that we are using the \latexcommand{includegraphics} command from the
+\latexpackage{graphicx} package (also note that you should not delete the 2
+comment characters before the \verb|%begin{latexonly}| and
+\verb|%end{latexonly}|). 
+
+In the ``htmlonly'' part ``options'' is a comma separated of list options
+such as ``align'', ``width'', ``height'', and ``alt''.  See \etitle{The
+  Latex Web Companion} for details.
+
+Here is a typical example:
+%
+%begin{latexonly}
+\begin{verbatim}
+%begin{latexonly}
+  \newcommand{\testfig}{\centerline{\includegraphics[scale=.75]{testfig.eps}}}
+%end{latexonly}
+\begin{htmlonly}
+  \newcommand{\testfig}{\htmladdimg[align=top,alt="Test Figure"]{testfig.jpg}}
+\end{htmlonly}
+\end{verbatim}
+%end{latexonly}
+
+
+\begin{rawhtml}
+  <PRE>
+  &#37begin{latexonly}
+  \newcommand{\testfig}{\centerline{\includegraphics[scale=.75]{testfig.eps}}}
+  &#37end{latexonly}
+  &#92begin{htmlonly}
+  \newcommand{\testfig}{\htmladdimg[align=top,alt="Test Figure"]{testfig.jpg}}
+  &#92end{htmlonly}
+  </PRE>
+\end{rawhtml}
+
+To actually create figures using your image commands enclose each image
+command within a \latexcommand{figure} command as follows:
+
+%begin{latexonly}
+\begin{verbatim}
+\begin{figure}
+  \begin{makeimage}
+  \end{makeimage}
+  \image-command-name
+  \caption{\label{fig:<figure label>} Caption-text}
+\end{figure}
+\end{verbatim}
+%end{latexonly}
+
+\begin{rawhtml}
+  <PRE>
+  \begin{figure}
+    &#92begin{makeimage}
+    &#92end{makeimage}
+    \image-command-name
+    \caption{\label{fig:figure-label} Caption-text}
+  \end{figure}
+  </PRE>
+\end{rawhtml}
+
+
+and replace labels and names appropriately.  For example:
+
+%begin{latexonly}
+\begin{verbatim}
+\begin{figure}
+  \begin{makeimage}
+  \end{makeimage}
+  \testfig
+  \caption{\label{fig:testfig} This is a test figure.}
+\end{figure}
+\end{verbatim}
+%end{latexonly}
+
+\begin{rawhtml}
+  <PRE>
+  \begin{figure}
+    &#92begin{makeimage}
+    &#92end{makeimage}
+    \testfig
+    \caption{\label{fig:testfig} This is a test figure.}
+  \end{figure}
+  </PRE>
+\end{rawhtml}
+
+\section{Creating Citations}
+
+Cite references to other publications with the \latexcommand{cite} command.
+You should provide a ``bib'' file containing bibliographic entries
+referenced in your document.
+
+
+%\section{Example}
+
+\begin{rawhtml}
+  <script type="text/javascript">
+  // Include JavaScript code that produces the bottom banner.
+  document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_bottom.js"><\/script>');
+  </script>
+\end{rawhtml}
+
+\end{document}
