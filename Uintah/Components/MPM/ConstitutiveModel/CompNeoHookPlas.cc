@@ -67,7 +67,6 @@ void CompNeoHookPlas::initializeCMData(const Patch* patch,
    // constitutive model parameters and deformationMeasure
    Matrix3 Identity, zero(0.);
    Identity.Identity();
-   //   const MPMLabel* lb = MPMLabel::getLabels();
 
    ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
    ParticleVariable<CMData> cmdata;
@@ -103,7 +102,6 @@ void CompNeoHookPlas::computeStableTimestep(const Patch* patch,
    // are computed as a side-effect of computeStressTensor
   Vector dx = patch->dCell();
   int matlindex = matl->getDWIndex();
-  //  const MPMLabel* lb = MPMLabel::getLabels();
   // Retrieve the array of constitutive parameters
   ParticleSubset* pset = new_dw->getParticleSubset(matlindex, patch);
   ParticleVariable<CMData> cmdata;
@@ -164,7 +162,6 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
   double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
   int matlindex = matl->getDWIndex();
-  //  const MPMLabel* lb = MPMLabel::getLabels();
   // Create array for the particle position
   ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
   ParticleVariable<Point> px;
@@ -283,7 +280,6 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
 
     // compute the total stress (volumetric + deviatoric)
     pstress[idx] = Identity*p + Shear/J;
-//    pstress[idx] = Identity*p*J + Shear;
 
     // Compute the strain energy for all the particles
     U = .5*bulk*(.5*(pow(J,2.0) - 1.0) - log(J));
@@ -319,9 +315,8 @@ void CompNeoHookPlas::computeStressTensor(const Patch* patch,
 
   // This is just carried forward with the updated alpha
   new_dw->put(cmdata, p_cmdata_label_preReloc);
-  // Volume is currently being carried forward, will be updated
+  // Store the deformed volume
   new_dw->put(pvolume,lb->pVolumeDeformedLabel);
-
 }
 
 double CompNeoHookPlas::computeStrainEnergy(const Patch* patch,
@@ -329,42 +324,6 @@ double CompNeoHookPlas::computeStrainEnergy(const Patch* patch,
 					    DataWarehouseP& new_dw)
 {
   double se=0;
-#if 0
-  double U,W,J,se=0;
-  int matlindex = matl->getDWIndex();
-  //  const MPMLabel* lb = MPMLabel::getLabels();
-  // Create array for the particle deformation
-  ParticleVariable<Matrix3> deformationGradient;
-  new_dw->get(deformationGradient, lb->pDeformationMeasureLabel,
-              matlindex, patch, Ghost::None, 0);
-
-  // Get the elastic part of the shear strain
-  ParticleVariable<Matrix3> bElBar;
-  new_dw->get(bElBar, bElBarLabel, matlindex, patch, Ghost::None, 0);
-  // Retrieve the array of constitutive parameters
-  ParticleVariable<CMData> cmdata;
-  new_dw->get(cmdata, p_cmdata_label, matlindex, patch, Ghost::None, 0);
-  ParticleVariable<double> pvolume;
-  new_dw->get(pvolume, lb->pVolumeLabel, matlindex, patch, Ghost::None, 0);
-
-  ParticleSubset* pset = deformationGradient.getParticleSubset();
-  ASSERT(pset == pvolume.getParticleSubset());
-
-  for(ParticleSubset::iterator iter = pset->begin();
-     iter != pset->end(); iter++){
-     particleIndex idx = *iter;
- 
-     double shear = cmdata[idx].Shear;
-     double bulk  = cmdata[idx].Bulk;
-
-     J = deformationGradient[idx].Determinant();
-
-     U = .5*bulk*(.5*(pow(J,2.0) - 1.0) - log(J));
-     W = .5*shear*(bElBar[idx].Trace() - 3.0);
-
-     se += (U + W)*pvolume[idx]/J;
-  }
-#endif
   return se;
 }
 
@@ -374,7 +333,6 @@ void CompNeoHookPlas::addComputesAndRequires(Task* task,
 					     DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw) const
 {
-  //  const MPMLabel* lb = MPMLabel::getLabels();
    task->requires(old_dw, lb->pXLabel, matl->getDWIndex(), patch,
                   Ghost::None);
    task->requires(old_dw, lb->pDeformationMeasureLabel, matl->getDWIndex(), patch,
@@ -427,6 +385,9 @@ const TypeDescription* fun_getTypeDescription(CompNeoHookPlas::CMData*)
 }
 
 // $Log$
+// Revision 1.38  2000/08/21 19:01:37  guilkey
+// Removed some garbage from the constitutive models.
+//
 // Revision 1.37  2000/08/14 22:38:10  bard
 // Corrected strain energy calculation.
 //

@@ -51,7 +51,6 @@ void CompMooneyRivlin::initializeCMData(const Patch* patch,
 {
    // Put stuff in here to initialize each particle's
    // constitutive model parameters and deformationMeasure
-  //   const MPMLabel* lb = MPMLabel::getLabels();
    Matrix3 Identity, zero(0.);
    Identity.Identity();
    ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
@@ -83,7 +82,6 @@ void CompMooneyRivlin::computeStableTimestep(const Patch* patch,
    // are computed as a side-effect of computeStressTensor
   Vector dx = patch->dCell();
   int matlindex = matl->getDWIndex();
-  //  const MPMLabel* lb = MPMLabel::getLabels();
   // Retrieve the array of constitutive parameters
   ParticleSubset* pset = new_dw->getParticleSubset(matlindex, patch);
   ParticleVariable<CMData> cmdata;
@@ -137,7 +135,6 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
 
   int matlindex = matl->getDWIndex();
 
-  //  const MPMLabel* lb = MPMLabel::getLabels();
   // Create array for the particle position
   ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
   ParticleVariable<Point> px;
@@ -296,45 +293,6 @@ double CompMooneyRivlin::computeStrainEnergy(const Patch* patch,
                                              DataWarehouseP& new_dw)
 {
   double se=0.0;
-#if 0
-  double invar1,invar2,invar3,J,se=0.0;
-  Matrix3 B,BSQ;
-
-  int matlindex = matl->getDWIndex();
-
-  // Create array for the particle deformation
-  ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
-  ParticleVariable<Matrix3> deformationGradient;
-
-  //  const MPMLabel* lb = MPMLabel::getLabels();
-  new_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
-  // Retrieve the array of constitutive parameters
-  ParticleVariable<CMData> cmdata;
-  new_dw->get(cmdata, p_cmdata_label, pset);
-  ParticleVariable<double> pvolume;
-  new_dw->get(pvolume, lb->pVolumeLabel, pset);
-
-  for(ParticleSubset::iterator iter = pset->begin();
-     iter != pset->end(); iter++){
-     particleIndex idx = *iter;
-
-     double C1 = cmdata[idx].C1;
-     double C2 = cmdata[idx].C2;
-     double C3 = cmdata[idx].C3;
-     double C4 = cmdata[idx].C4;
- 
-     B = deformationGradient[idx] * deformationGradient[idx].Transpose();
-     // Compute the invariants
-     invar1 = B.Trace();
-     invar2 = 0.5*((invar1*invar1) - (B*B).Trace());
-     J = deformationGradient[idx].Determinant();
-     invar3 = J*J;
-  
-     se += (C1*(invar1-3.0) + C2*(invar2-3.0) +
-           C3*(1.0/(invar3*invar3) - 1.0) +
-           C4*(invar3-1.0)*(invar3-1.0))*pvolume[idx]/J;
-  }
-#endif
   return se;
 
 }
@@ -366,6 +324,9 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 }
 
 // $Log$
+// Revision 1.53  2000/08/21 19:01:36  guilkey
+// Removed some garbage from the constitutive models.
+//
 // Revision 1.52  2000/08/14 22:38:10  bard
 // Corrected strain energy calculation.
 //
