@@ -488,17 +488,19 @@ void Task::initialize(char* pn)
     ss.ss_sp+=stacklen-1;
     ss.ss_size=stacklen;
     ss.ss_flags=0;
+#if 0
     if(sigaltstack(&ss, NULL) == -1){
 	perror("sigstack");
 	exit(-1);
     }
+#endif
     
     // Setup the seg fault handler...
     // For SIGQUIT
     // halt all threads
     // signal(SIGINT, (SIG_PF)handle_halt_signals);
     struct sigaction action;
-    action.sa_flags=SA_ONSTACK;
+    //action.sa_flags=SA_ONSTACK;
     sigemptyset(&action.sa_mask);
     
     action.sa_handler=(SIG_PF)handle_halt_signals;
