@@ -97,8 +97,6 @@ namespace Uintah {
       throw InternalError("psi dynamic_cast failed");
     }
 
-    cout  << "  UPS:drep: " << d_ups.get_rep() << endl;
-    
     // Get the problem specification
     d_ups = psi->readInputFile();
     d_ups->writeMessages(d_myworld->myrank() == 0);
