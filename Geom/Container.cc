@@ -27,6 +27,8 @@ GeomContainer::GeomContainer(const GeomContainer& copy)
 
 GeomContainer::~GeomContainer()
 {
+    if(child)
+	delete child;
 }
 
 void GeomContainer::get_bounds(BBox& bbox)
