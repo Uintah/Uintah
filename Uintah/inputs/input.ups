@@ -172,23 +172,23 @@
 		<thermal_conductivity>1.0</thermal_conductivity>
 		<specific_heat>5</specific_heat>
 		<geom_object>
-		    <geom_piece>
+		  <union>
+		    <box>
 			<label>gp1</label>
-			<type>box</type>
 			<min>[.25,.25,.25]</min>
 			<max>[.75,.75,.75]</max>
-			<res>[2,2,2]</res>
-		    </geom_piece>
-		    <geom_piece>
+		    </box>
+		    <res>[2,2,2]</res>
+		    
+		    <box>
 			<label>gp2</label>
-			<type>box</type>
 			<min>[.75,.75,.75]</min>
 			<max>[1.75,1.75,1.75]</max>
-			<res>[2,2,2]</res>
-		    </geom_piece>
-		    <!-- Union connects geometry pieces together -->
-		    <object>gp1 + gp2</object>
- 		</geom_object>
+		    </box>
+		    <res>[2,2,2]</res>
+		   </union> 
+	  	   <res>[2,2,2]</res>
+		  </geom_object>
 		<velocity_field>1</velocity_field>
 	    </material>
 	</MPM>
