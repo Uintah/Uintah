@@ -428,9 +428,9 @@ class BioImageApp {
                 setGlobal $VS-background_threshold $min
 				
 		global slice_frame
-                $VS-c rebind $slice_frame(axial).bd.axial
-                $VS-c rebind $slice_frame(sagittal).bd.sagittal
-                $VS-c rebind $slice_frame(coronal).bd.coronal
+		foreach axis {axial sagittal coronal} {
+		    $VS-c rebind $slice_frame($axis).bd.$axis
+		}
 
 		$VS-c setclut
 
@@ -743,7 +743,7 @@ class BioImageApp {
 	set w $win.viewers
 	
 	global mods
-	set mods(ViewSlices) $viewimage
+	set mods(ViewSlices) $ViewSlices
 
 	iwidgets::panedwindow $w.topbot -orient horizontal -thickness 0 \
 	    -sashwidth 5000 -sashindent 0 -sashborderwidth 2 -sashheight 6 \
@@ -780,8 +780,8 @@ class BioImageApp {
 	pack $top.lr -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
 	pack $bot.lr -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
 
-	$viewimage control_panel $w.cp
-	$viewimage add_nrrd_tab $w 1
+	$ViewSlices control_panel $w.cp
+	$ViewSlices add_nrrd_tab $w 1
 	global slice_frame
 	set slice_frame(3d) $topl
 	set slice_frame(axial) $topr
@@ -790,7 +790,8 @@ class BioImageApp {
 	
 	foreach axis "sagittal coronal axial" {
 	    create_2d_frame $slice_frame($axis) $axis
-	    $viewimage gl_frame $slice_frame($axis).$axis
+	    $ViewSlices gl_frame $slice_frame($axis).$axis
+	    bind <ButtonRelease-1> $slice_frame($axis).$axis "puts hi"
 	    pack $slice_frame($axis).$axis \
 		-side top -padx 0 -ipadx 0 -pady 0 -ipady 0
 	}
@@ -808,11 +809,11 @@ class BioImageApp {
     }
 
 
-    method build_viewers {viewer viewimage} {
+    method build_viewers {viewer ViewSlices} {
 	set w $win.viewers
 	
 	global mods
-	set mods(ViewSlices) $viewimage
+	set mods(ViewSlices) $ViewSlices
 
 	iwidgets::panedwindow $w.topbot -orient horizontal -thickness 0 \
 	    -sashwidth 5000 -sashindent 0 -sashborderwidth 2 -sashheight 6 \
@@ -841,8 +842,8 @@ class BioImageApp {
 
 	pack $top.lmr -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
 
-	$viewimage control_panel $w.cp
-	$viewimage add_nrrd_tab $w 1
+	$ViewSlices control_panel $w.cp
+	$ViewSlices add_nrrd_tab $w 1
 	global slice_frame
 	set slice_frame(3d) $bot
 	set slice_frame(sagittal) $topl
@@ -856,7 +857,12 @@ class BioImageApp {
 		-background $slice_frame(${axis}_color)
 	    pack $slice_frame($axis).bd -expand 1 -fill both \
 		-side top -padx 0 -ipadx 0 -pady 0 -ipady 0
-	    $viewimage gl_frame $slice_frame($axis).bd.$axis
+	    $ViewSlices gl_frame $slice_frame($axis).bd.$axis
+	    bind $slice_frame($axis).bd.$axis <Shift-ButtonRelease-1> \
+		"$ViewSlices-c release %W %b %s %X %Y"
+	    bind $slice_frame($axis).bd.$axis <ButtonRelease-1> \
+		"$ViewSlices-c release %W %b %s %X %Y; $this change_window_width_and_level 1"
+
 	    pack $slice_frame($axis).bd.$axis -expand 1 -fill both \
 		-side top -padx 0 -ipadx 0 -pady 0 -ipady 0
 	}
@@ -3493,7 +3499,8 @@ class BioImageApp {
 	    
     }
     
-     method execute_vol_ren {} {
+    method execute_vol_ren {} {
+	if {$current_crop != -1} return
      	# execute modules if volume rendering enabled
  	global show_vol_ren
  	if {$show_vol_ren == 1} {
@@ -3507,7 +3514,7 @@ class BioImageApp {
     method link_windowlevels { { execute 1 } } {
 	global link_winlevel mods
 	if {$link_winlevel == 1} {
-	    # Set vol_width and vol_level to Viewimage window width and level
+	    # Set vol_width and vol_level to ViewSlices window width and level
 	    upvar \#0 $mods(ViewSlices)-clut_ww ww $mods(ViewSlices)-clut_wl wl
 	    set link_winlevel 0
             setGlobal vol_width $ww
@@ -4864,7 +4871,7 @@ class BioImageApp {
         # update components using globals
         $this update_orientations
         $this update_planes_color_by
-        $this change_volume_window_width_and_level -1
+        $this change_volume_window_width_and_level 0
         $this toggle_show_guidelines
 
         # bring proper tabs forward
