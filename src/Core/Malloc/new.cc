@@ -58,18 +58,46 @@ extern "C" {
 }
 #endif
 
+static const char* default_new_tag = "Unknown - operator new";
+static const char* default_new_array_tag = "Unknown - operator new[]";
+namespace SCIRun {
+const char* AllocatorSetDefaultTagNew(const char* tag)
+{
+  const char* old = default_new_tag;
+  default_new_tag=tag;
+  return old;
+}
+
+void AllocatorResetDefaultTagNew()
+{
+  default_new_tag = "Unknown - operator new";
+  default_new_array_tag = "Unknown - operator new[]";
+}
+
+const char* AllocatorSetDefaultTag(char* tag)
+{
+  AllocatorSetDefaultTagMalloc(tag);
+  return AllocatorSetDefaultTagNew(tag);
+}
+
+void AllocatorResetDefaultTag()
+{
+  AllocatorResetDefaultTagMalloc();
+  AllocatorResetDefaultTagNew();
+}
+}
 void* operator new(size_t size) throw(std::bad_alloc)
 {
     if(!default_allocator)
 	MakeDefaultAllocator();
-    return default_allocator->alloc(size, "unknown - operator new");
+    return default_allocator->alloc(size, default_new_tag);
 }
 
 void* operator new[](size_t size) throw(std::bad_alloc)
 {
     if(!default_allocator)
 	MakeDefaultAllocator();
-    return default_allocator->alloc(size, "unknown - operator new[]");
+    return default_allocator->alloc(size, default_new_array_tag);
 }
 
 void* operator new(size_t size, const std::nothrow_t&) throw()
