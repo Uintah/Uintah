@@ -76,9 +76,8 @@ GLTexture3D::GLTexture3D() :
 
 GLTexture3D::GLTexture3D(ScalarFieldRGBase *tex ) :
   _tex(tex), X(tex->nx), Y(tex->ny),
-  Z(tex->nz),  xmax(64), ymax(64), zmax(64), isCC(false)
+  Z(tex->nz),  xmax(128), ymax(128), zmax(128), isCC(false)
 {
-
   tex->get_bounds( minP, maxP );
   tex->get_minmax( _min, _max );
   SetBounds();
@@ -127,7 +126,7 @@ void GLTexture3D::BuildTexture()
 	    dynamic_cast<NCScalarField<double> *> (_tex)){
     cerr<<"Type = <NCScalarField<double>\n";
     bontree = buildBonTree(minP, maxP, 0, 0, 0, X, Y, Z, 0, sfd, 0);
-} else if(NCScalarField<int> *sfi =
+  } else if(NCScalarField<int> *sfi =
 	    dynamic_cast<NCScalarField<int> *> (_tex)){
     cerr<<"Type = NCScalarField<int>\n";
     bontree = buildBonTree(minP, maxP, 0, 0, 0, X, Y, Z, 0, sfi, 0);
@@ -185,7 +184,7 @@ GLTexture3D::SetField( ScalarFieldRGBase *tex )
 
   tex->get_bounds( minP, maxP );
   tex->get_minmax( _min, _max );
-  xmax = ymax = zmax = 64;
+  xmax = ymax = zmax = 128;
 
 
 // #ifdef SCI_OPENGL

@@ -27,7 +27,8 @@ SRCS     += $(SRCDIR)/Brick.cc \
 	 $(SRCDIR)/Octree.cc \
 	 $(SRCDIR)/Polygon.cc \
 	 $(SRCDIR)/SliceTable.cc \
-	 $(SRCDIR)/VolumeUtils.cc 
+	 $(SRCDIR)/VolumeUtils.cc \
+	 $(SRCDIR)/GLAnimatedStreams.cc
 
 PSELIBS := SCICore/Exceptions SCICore/Geometry \
 	SCICore/Persistent SCICore/Datatypes \
@@ -43,6 +44,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.5  2000/09/17 15:59:41  kuzimmer
+# updated texture planes for binary transparency
+#
 # Revision 1.4  2000/08/29 21:19:43  kuzimmer
 # Added some 3D texture mapping functionality
 #
