@@ -806,10 +806,13 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
   task->requires( Task::NewDW, lb->wvel_FCMELabel,     gac,2);
   task->requires( Task::NewDW, lb->sp_vol_CCLabel,     gn);
   task->requires( Task::NewDW, lb->rho_CCLabel,        gn);    
-  task->requires( Task::NewDW, lb->burnedMass_CCLabel, gn);
   task->requires( Task::NewDW, lb->speedSound_CCLabel, gn);
-  task->requires( Task::NewDW, lb->created_vol_CCLabel,gn); //MODEL REMOVE
-
+//__________________________________
+  if(d_models.size() == 0){  //MODEL REMOVE
+    task->requires( Task::NewDW, lb->burnedMass_CCLabel, gn);
+    task->requires( Task::NewDW, lb->created_vol_CCLabel,gn); //MODEL REMOVE
+  }
+//__________________________________
   if(d_models.size() > 0){
     task->requires(Task::NewDW, lb->modelVol_srcLabel, gn);
   }
@@ -969,11 +972,14 @@ void ICE::scheduleComputeLagrangianValues(SchedulerP& sched,
   t->requires(Task::OldDW,lb->vel_CCLabel,             gn);
   t->requires(Task::OldDW,lb->temp_CCLabel,            gn);
   t->requires(Task::NewDW,lb->mom_source_CCLabel,      gn);
-  t->requires(Task::NewDW,lb->mom_comb_CCLabel,        gn);
-  t->requires(Task::NewDW,lb->burnedMass_CCLabel,      gn);
-  t->requires(Task::NewDW,lb->int_eng_comb_CCLabel,    gn);
   t->requires(Task::NewDW,lb->int_eng_source_CCLabel,  gn);
-
+//__________________________________  
+  if(d_models.size() == 0){  //MODEL REMOVE
+    t->requires(Task::NewDW,lb->int_eng_comb_CCLabel,  gn);  
+    t->requires(Task::NewDW,lb->mom_comb_CCLabel,      gn);  
+    t->requires(Task::NewDW,lb->burnedMass_CCLabel,    gn);  
+  }
+//__________________________________  
   if(d_models.size() > 0){
     t->requires(Task::NewDW, lb->modelMass_srcLabel,   gn);
     t->requires(Task::NewDW, lb->modelMom_srcLabel,    gn);
@@ -1030,8 +1036,11 @@ void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
   }
   t->requires(Task::OldDW, lb->temp_CCLabel,   ice_matls,   gn);   
   t->requires(Task::NewDW, lb->temp_CCLabel,   mpm_matls,   gn);   
-  t->requires(Task::NewDW, lb->created_vol_CCLabel, gn);     //MODEL REMOVE        
-
+//__________________________________          
+  if(d_models.size() == 0){
+    t->requires(Task::NewDW, lb->created_vol_CCLabel, gn);     //MODEL REMOVE
+  }
+//__________________________________
   if(d_models.size() > 0){
     t->requires(Task::NewDW, lb->modelVol_srcLabel,    gn);
   }
@@ -1931,7 +1940,7 @@ void ICE::computeTempFC(const ProcessorGroup*,
       //__________________________________
       //  Compute the temperature on each face     
       //  Currently on used by HEChemistry 
-      if ( d_massExchange == true ) {        
+      if ( d_massExchange == true || d_models.size() > 0) {        
         computeTempFace<SFCXVariable<double> >(patch->getSFCXIterator(offset),
                                      adj_offset[0], rho_CC,Temp_CC, TempX_FC);
 
@@ -2341,7 +2350,6 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     CCVariable<double> sum_rho_CC;
     CCVariable<double> press_CC;
     CCVariable<double> term1, term2, term3;
-    constCCVariable<double> burnedMass;
     constCCVariable<double> pressure;
     StaticArray<constCCVariable<double> > sp_vol_CC(numMatls);
    
@@ -2373,7 +2381,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       constCCVariable<double> speedSound;
       constCCVariable<double> vol_frac;
       constCCVariable<double> rho_CC;
-      constCCVariable<double> created_vol;  //MODEL REMOVE
+
       constSFCXVariable<double> uvel_FC;
       constSFCYVariable<double> vvel_FC;
       constSFCZVariable<double> wvel_FC;
@@ -2384,9 +2392,8 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       new_dw->get(vol_frac,    lb->vol_frac_CCLabel,   indx,patch,gac, 2);   
       new_dw->get(rho_CC,      lb->rho_CCLabel,        indx,patch,gn,0);
       new_dw->get(sp_vol_CC[m],lb->sp_vol_CCLabel,     indx,patch,gn,0);
-      new_dw->get(burnedMass,  lb->burnedMass_CCLabel, indx,patch,gn,0);
       new_dw->get(speedSound,  lb->speedSound_CCLabel, indx,patch,gn,0);
-      new_dw->get(created_vol, lb->created_vol_CCLabel,indx,patch,gn,0); // MODEL REMOVE
+
     
       //---- P R I N T   D A T A ------  
       if (switchDebug_explicit_press ) {
@@ -2409,22 +2416,29 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       //__________________________________
       //   advect vol_frac
       advector->advectQ(vol_frac, patch, q_advected, new_dw);  
-
       
       for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
         IntVector c = *iter;
-        //   Contributions from reactions
-        term1[c] += burnedMass[c] * (sp_vol_CC[m][c]/vol);
-
-        //   Divergence of velocity * face area 
         term2[c] -= q_advected[c]; 
 
-//        term3[c] += vol_frac[c] * sp_vol_CC[m][c]/
-//                            (speedSound[c]*speedSound[c]);
-
-        term3[c] += (vol_frac[c] + created_vol[c]/vol)*sp_vol_CC[m][c]/
-                                             (speedSound[c]*speedSound[c]);
       }  //iter loop 
+      
+      //__________________________________
+      //   NO Models   MODEL REMOVE
+      if(d_models.size() == 0){
+        constCCVariable<double> created_vol; 
+        constCCVariable<double> burnedMass;
+        new_dw->get(burnedMass,  lb->burnedMass_CCLabel, indx,patch,gn,0);
+        new_dw->get(created_vol, lb->created_vol_CCLabel,indx,patch,gn,0); 
+                
+        for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
+          IntVector c = *iter;
+          term1[c] += burnedMass[c] * (sp_vol_CC[m][c]/vol);
+           
+          term3[c] += (vol_frac[c] + created_vol[c]/vol)*sp_vol_CC[m][c]/
+                                                 (speedSound[c]*speedSound[c]);
+        }  //iter loop 
+      }  // models
       
       //__________________________________
       //   Contributions from models
@@ -2436,10 +2450,8 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
 	 for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
 	  IntVector c = *iter;
 	  term1[c] += modelMass_src[c] * (sp_vol_CC[m][c]/vol);
-         term3[c] += (modelVol_src[c]/vol)*sp_vol_CC[m][c]/
+         term3[c] += (vol_frac[c] + modelVol_src[c]/vol)*sp_vol_CC[m][c]/
                                              (speedSound[c]*speedSound[c]);
-         ASSERT( created_vol[c] == 0.0);  // MODEL REMOVE
-         ASSERT( burnedMass[c] == 0.0);  // MODEL REMOVE
 	 }
       }
 	  
@@ -3084,7 +3096,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
       double cv = ice_matl->getSpecificHeat();
       //__________________________________
       //  NO mass exchange
-      if(d_massExchange == false) {
+      if(d_massExchange == false && d_models.size() == 0.0) {
         for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
            iter++) {
          IntVector c = *iter;
@@ -3099,8 +3111,6 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
 
 //__________________________________
 //   T H R O W   A W A Y   W H E N   M O D E L S   A R E   W O R K I N G
-      if(d_massExchange && d_models.size() > 0)
-	throw InternalError("Cannot handle mass exchange simultaneous with new style models");
 
       //__________________________________
       //  WITH mass exchange
@@ -3108,7 +3118,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
       // eliminate all the mass, momentum and internal E
       // If it does then we'll get erroneous vel, and temps
       // after advection.  Thus there is always a mininum amount
-      if(d_massExchange)  {
+      if(d_massExchange && d_models.size() == 0)  {
 	constCCVariable<double> burnedMass;
 	new_dw->get(burnedMass,   lb->burnedMass_CCLabel,    indx,patch,gn,0);
 	constCCVariable<Vector> mom_comb;
@@ -3132,8 +3142,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
           //  must have a minimum momentum   
           for (int dir = 0; dir <3; dir++) {  //loop over all three directons
             double min_mom_L = vel_CC[c][dir] * min_mass;
-            double mom_L_tmp = vel_CC[c][dir] * mass;
-                             + mom_comb[c][dir];
+            double mom_L_tmp = vel_CC[c][dir] * mass + mom_comb[c][dir];
   
              // Preserve the original sign on momemtum     
              // Use d_SMALL_NUMs to avoid nans when mom_L_temp = 0.0
@@ -3179,7 +3188,6 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
       // If it does then we'll get erroneous vel, and temps
       // after advection.  Thus there is always a mininum amount
       if(d_models.size() > 0)  {
-
 	constCCVariable<double> modelMass_src;
        constCCVariable<double> modelEng_src;
        constCCVariable<Vector> modelMom_src;
@@ -3204,8 +3212,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
           //  must have a minimum momentum   
           for (int dir = 0; dir <3; dir++) {  //loop over all three directons
             double min_mom_L = vel_CC[c][dir] * min_mass;
-            double mom_L_tmp = vel_CC[c][dir] * mass
-                             + modelMom_src[c][dir];
+            double mom_L_tmp = vel_CC[c][dir] * mass + modelMom_src[c][dir];
   
              // Preserve the original sign on momemtum     
              // Use d_SMALL_NUMs to avoid nans when mom_L_temp = 0.0
@@ -3215,7 +3222,6 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
             mom_L[c][dir] = mom_source[c][dir] +
                   plus_minus_one * std::max( fabs(mom_L_tmp), min_mom_L );
           }
-
           // must have a minimum int_eng   
           double min_int_eng = min_mass * cv * temp_CC[c];
           double int_eng_tmp = mass * cv * temp_CC[c];
@@ -3277,7 +3283,7 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     cout_doing << "Doing computeLagrangianSpecificVolume " <<
-      patch->getID() << "\t\t ICE" << endl;
+      patch->getID() << "\t\t\t ICE" << endl;
 
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label());
@@ -3292,7 +3298,6 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
     StaticArray<constCCVariable<double> > vol_frac(numALLMatls);
     StaticArray<constCCVariable<double> > Temp_CC(numALLMatls);
     constCCVariable<double> rho_CC, f_theta,sp_vol_CC;
-    constCCVariable<double> sp_vol_comb;   //MODELS .....REMOVE
     constCCVariable<double> delP;
     CCVariable<double> sum_therm_exp;
     vector<double> if_mpm_matl_ignore(numALLMatls);
@@ -3351,7 +3356,6 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
       new_dw->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx,patch,gn, 0);
       new_dw->get(rho_CC,     lb->rho_CCLabel,        indx,patch,gn, 0);
       new_dw->get(f_theta,    lb->f_theta_CCLabel,    indx,patch,gn, 0);
-      new_dw->get(sp_vol_comb,lb->created_vol_CCLabel,indx,patch,gn, 0); //MODEL REMOVE
       new_dw->get(speedSound, lb->speedSound_CCLabel, indx,patch,gn, 0);
 
       //__________________________________
@@ -3360,7 +3364,16 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
         IntVector c = *iter;
         spec_vol_L[c] = (rho_CC[c] * vol)*sp_vol_CC[c];
       }
-      
+      //__________________________________
+      //  MODELS REMOVE
+      if(d_models.size() == 0){
+	 constCCVariable<double> sp_vol_comb;   //MODELS .....REMOVE
+        new_dw->get(sp_vol_comb,lb->created_vol_CCLabel,indx,patch,gn, 0); //MODEL REMOVE
+	 for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
+	  IntVector c = *iter;
+         spec_vol_L[c] += sp_vol_comb[c];
+	 }
+      }      
       //__________________________________
       //   Contributions from models
       if(d_models.size() > 0){
@@ -3369,7 +3382,6 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
 	 for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
 	  IntVector c = *iter;
          spec_vol_L[c] += Modelsp_vol_src[c];
-         ASSERT (sp_vol_comb[c] == 0);  //  MODELS REMOVE
 	 }
       }
       //__________________________________
@@ -3387,7 +3399,7 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
 
         // This is actually mass * sp_vol
         double src = term1 + if_mpm_matl_ignore[m] * term2;
-        spec_vol_L[c]     += src + sp_vol_comb[c];   // MODELS REMOVE
+        spec_vol_L[c]     += src;
         spec_vol_source[c] = src/(rho_CC[c] * vol);
 
 /*`==========TESTING==========*/
@@ -3405,7 +3417,7 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
         cout << "matl            "<< indx << endl;
         cout << "sum_thermal_exp "<< sum_therm_exp[neg_cell] << endl;
         cout << "spec_vol_source "<< spec_vol_source[neg_cell] << endl;
-        cout << "sp_vol_comb     "<< sp_vol_comb[neg_cell] << endl;
+//        cout << "sp_vol_comb     "<< sp_vol_comb[neg_cell] << endl;
         cout << "mass sp_vol_L    "<< spec_vol_L[neg_cell] << endl;
         cout << "mass sp_vol_L_old"
              << (rho_CC[neg_cell]*vol*sp_vol_CC[neg_cell]) << endl;
