@@ -34,6 +34,14 @@ PROGRAM := $(SRCDIR)/CVRTItoTetVolPot
 SRCS := $(SRCDIR)/CVRTItoTetVolPot.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
+PROGRAM := $(SRCDIR)/CVRTItoTriSurfGrad
+SRCS := $(SRCDIR)/CVRTItoTriSurfGrad.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
+PROGRAM := $(SRCDIR)/CVRTItoTriSurfPot
+SRCS := $(SRCDIR)/CVRTItoTriSurfPot.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
 PROGRAM := $(SRCDIR)/RawToContourField
 SRCS := $(SRCDIR)/RawToContourField.cc
 include $(SCIRUN_SCRIPTS)/program.mk
