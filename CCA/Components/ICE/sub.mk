@@ -22,8 +22,7 @@ PSELIBS := \
 	Packages/Uintah/Core/Math \
 	Core/Exceptions Core/Thread \
 	Core/Geometry Dataflow/XMLUtil \
-	Core/Datatypes \
-	Packages/Uintah/CCA/Components/MPMICE
+	Core/Datatypes
 
 LIBS	:= $(XML_LIBRARY) $(MPI_LIBRARY)
 
