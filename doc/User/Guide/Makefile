@@ -46,6 +46,10 @@ macrosfile := srugmacros.tex
 # ${macrosfile} and is automatically generated from it.
 styfile := srugmacros.sty
 
+# Figures
+psfigs := Figures/*.gz 
+htmlfigs := Figures/*.gif Figures/*.jpg
+
 # User created/edited sources (generated sources come into play further
 # down). 
 srcs:=${styfile} title.tex intro.tex concepts.tex \
@@ -173,7 +177,8 @@ ps: ${psfile}
 bib: ${bn}.bbl
 
 # Note: ${bn}.bbl must be the last dependency!
-${dvifile}: ${macrosfile} ${mainfile} ${srcs} ${packagetargets} ${bn}.bbl 
+${dvifile}: ${macrosfile} ${mainfile} ${srcs} ${psfigs} \
+  ${packagetargets} ${bn}.bbl 
 	-${latex}  ${bn}
 	-makeindex ${bn}.idx
 	-${latex} ${bn}
@@ -187,7 +192,7 @@ ${bn}.bbl: ${mainfile}
 	${call rmfiles,${bn}.bbl}
 	-bibtex ${bn}
 
-${htmldir}: ${dvifile}
+${htmldir}: ${dvifile} ${htmlfigs}
 	${call rmdirs,${htmldir}}
 	latex2html ${latex2htmloptions} ${mainfile}
 
