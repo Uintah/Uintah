@@ -412,6 +412,7 @@ AC_DEFUN([INIT_PACKAGE_CHECK_VARS], [
   sci_check_etags=no
   sci_check_exc=no 
   sci_check_fortran=no
+  sci_check_hdf5=no
   sci_check_globus=no
   sci_check_glui=no
   sci_check_glut=no
@@ -475,6 +476,7 @@ case $1 in
   Fusion)
     sci_check_plplot=yes
     sci_check_mdsplus=yes
+    sci_check_hdf5=yes
   ;;
   SCIRun2)
     sci_check_babel=yes
