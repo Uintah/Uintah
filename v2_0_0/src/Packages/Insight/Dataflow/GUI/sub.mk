@@ -51,9 +51,9 @@ SRCS := \
 	$(SRCDIR)/ImageReaderUShort2D.tcl \
 	$(SRCDIR)/ImageReaderUShort3D.tcl \
 	$(SRCDIR)/ImageToField.tcl \
-	$(SRCDIR)/Switch.tcl \
 	$(SRCDIR)/ColorImageReaderUChar2D.tcl\
 	$(SRCDIR)/ColorImageReaderFloat2D.tcl\
+	$(SRCDIR)/ChooseImage.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk
