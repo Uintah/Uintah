@@ -408,15 +408,6 @@ private:
   Mutex                       grid_lock_; // Bad traffic!
 };
 
-const size_t HexVolMesh::FaceHash::bucket_size = 4;
-const size_t HexVolMesh::FaceHash::min_buckets = 8;
-
-const int HexVolMesh::FaceHash::sz_quarter_int = (int)(HexVolMesh::sz_int * .25); // in bits
-const int HexVolMesh::FaceHash::top4_mask = ((~((int)0)) << sz_quarter_int << sz_quarter_int << sz_quarter_int);
-const int HexVolMesh::FaceHash::up4_mask = top4_mask ^ (~((int)0) << sz_quarter_int << sz_quarter_int);
-const int HexVolMesh::FaceHash::mid4_mask =  top4_mask ^ (~((int)0) << sz_quarter_int);
-const int HexVolMesh::FaceHash::low4_mask = ~(top4_mask | mid4_mask);
-
 // Handle type for HexVolMesh mesh.
 typedef LockingHandle<HexVolMesh> HexVolMeshHandle;
 
