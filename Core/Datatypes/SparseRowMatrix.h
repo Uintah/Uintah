@@ -88,7 +88,7 @@ public:
 		    int spVec=0) const;
   virtual void mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
 			      int& flops, int& memrefs, int beg=-1, 
-			      int end=-1, int spVec=0);
+			      int end=-1, int spVec=0) const;
   virtual void print() const;
   virtual void print(std::ostream&) const;
  

@@ -77,9 +77,18 @@ public:
   virtual void mult(const ColumnMatrix& x, ColumnMatrix& b,
 		    int& flops, int& memrefs,
 		    int beg=-1, int end=-1, int spVec=0) const=0;
+  int cg_solve(const ColumnMatrix& rhs, ColumnMatrix& lhs,
+	       double &err, int &niter,
+	       int& flops, int& memrefs, 
+	       double max_error=1.e-6, int toomany=0) const;
+  int bicg_solve(const ColumnMatrix& rhs, ColumnMatrix& lhs,
+		 double &err, int &niter,
+		 int& flops, int& memrefs, 
+		 double max_error=1.e-6, int toomany=0) const;
+
   virtual void mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
 			      int& flops, int& memrefs,
-			      int beg=-1, int end=-1, int spVec=0)=0;
+			      int beg=-1, int end=-1, int spVec=0) const=0;
 
   virtual void print(ostream&) const {}
   virtual void print() const {}

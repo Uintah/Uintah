@@ -85,14 +85,19 @@ public:
   virtual double  sumOfRow(int);
   virtual void    getRowNonzeros(int r, Array1<int>& idx, Array1<double>& val);
   
-  virtual int     solve(ColumnMatrix&);
-  virtual int     solve(vector<double>& sol);
+  int     solve(ColumnMatrix&, int overwrite=0);
+  int     solve(const ColumnMatrix& rhs, ColumnMatrix& lhs,
+		int overwrite=0);
+  int     solve(vector<double>& sol, int overwrite=0);
+  int     solve(const vector<double>& rhs, vector<double>& lhs,
+		int overwrite=0);
+
   virtual void    mult(const ColumnMatrix& x, ColumnMatrix& b,
 		       int& flops, int& memrefs, int beg=-1, int end=-1, 
 		       int spVec=0) const;
   virtual void    mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
 				 int& flops, int& memrefs,
-				 int beg=-1, int end=-1, int spVec=0);
+				 int beg=-1, int end=-1, int spVec=0) const;
   virtual void    print() const;
   virtual void    print(ostream&) const;
   

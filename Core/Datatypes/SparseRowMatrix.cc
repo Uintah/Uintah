@@ -318,7 +318,7 @@ void SparseRowMatrix::mult(const ColumnMatrix& x, ColumnMatrix& b,
 
 void SparseRowMatrix::mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
 					int& flops, int& memrefs,
-					int beg, int end, int)
+					int beg, int end, int) const
 {
     // Compute At*x=b
     ASSERT(x.nrows() == nnrows);
