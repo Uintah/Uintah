@@ -31,7 +31,7 @@ void GeomBBoxCache::get_bounds(BBox& box)
 	bbox_cached = 1;
     }
     else {
-	box = bbox;
+	box.extend( bbox );
     }
 }
 

@@ -164,7 +164,7 @@ Point GeomTriStripList::get_pm2(void)
     return p;
 }
 
-void GeomTriStripList::permute(int& i0,int& i1, int& i2)
+void GeomTriStripList::permute(int i0,int i1, int i2)
 {
     float *ptr = &pts[pts.size()-1-8];
     float remap[9];

@@ -57,7 +57,7 @@ public:
     Point get_pm1(void);
     Point get_pm2(void);
 
-    void permute(int&,int&,int&);
+    void permute(int,int,int);
 #ifdef SCI_OPENGL
     virtual void draw(DrawInfoOpenGL*, Material*, double time);
 #endif
