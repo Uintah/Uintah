@@ -24,13 +24,15 @@ namespace rtrt {
 static void printString(GLuint fontbase, double x, double y,
 			const char *s, const Color& c);
 static int calc_width(XFontStruct* font_struct, const char* str);
+static void draw_circle(int radius, int x_center, int y_center);
+static void circle_points(int x, int y, int x_center, int y_center);
 
 VolumeVisDpy::VolumeVisDpy(Array1<Color> &matls, Array1<AlphaPos> &alphas,
 			   int ncolors, float t_inc, char *in_file):
   hist(0), xres(500), yres(500), colors_index(matls), alpha_list(alphas),
   ncolors(ncolors), nalphas(ncolors),
   original_t_inc(0.01), current_t_inc(t_inc), t_inc(t_inc),
-  in_file(in_file)
+  in_file(in_file), selected_point(-1)
 {
   // need to allocate memory for alpha_transform and color_transform
   Array1<Color*> *c = new Array1<Color*>(ncolors);
@@ -174,6 +176,11 @@ void VolumeVisDpy::run() {
   bool control_pressed=false;
   bool shift_pressed=false;
 
+  int selected_point = -1;
+  // these are used to keep the points from moving too much
+  int min_x;
+  int max_x;
+  
   for(;;){
     //cerr << "GridSpheresDpy:run:eventloop\n";
     if(need_hist){
@@ -191,8 +198,6 @@ void VolumeVisDpy::run() {
     XNextEvent(dpy, &e);	
     switch(e.type){
     case Expose:
-      // Ignore expose events, since we will be refreshing
-      // constantly anyway
       redraw=true;
       break;
     case ConfigureNotify:
@@ -245,56 +250,111 @@ void VolumeVisDpy::run() {
       }
       break;
     case ButtonRelease:
-      break;
-    case ButtonPress:
       switch(e.xbutton.button){
       case Button1:
-	if (shift_pressed) {
-	  cerr << "Left button pressed with shift\n";
-	} else if (control_pressed) {
-	  cerr << "Left button pressed with control\n";
-	} else {
-	}
-	break;
-      case Button2:
-	if (shift_pressed) {
-	  cerr << "Middle button pressed with shift\n";
-	} else if (control_pressed) {
-	  cerr << "Middle button pressed with control\n";
-	} else {
-	}
-	break;
-      case Button3:
-	if (shift_pressed) {
-	  cerr << "Right button pressed with shift\n";
-	} else if (control_pressed) {
-	  cerr << "Right button pressed with control\n";
-	} else {
+	{
+	  create_alpha_transfer();
+	  selected_point = -1;
+	  redraw = true;
 	}
 	break;
       }
       break;
+    case ButtonPress:
+      {
+	int xpos = e.xbutton.x;
+	int ypos = yres - e.xbutton.y;
+	
+	// check boundaries
+	int s=5;
+	int end=yres/2-5;
+	if (ypos < s || ypos > end)
+	  break;
+	if (xpos < 5 || xpos > xres - 5)
+	  break;
+	switch(e.xbutton.button){
+	case Button1:
+	  if (shift_pressed) {
+	    cerr << "Left button pressed with shift\n";
+	    selected_point = -1;
+	    // create a point at the location of the click
+	    AlphaPos new_guy((xpos-(float)5)/(xres-10),
+			     (ypos-(float)5)/(yres/2-10));
+	    int index = alpha_list.size();
+	    alpha_list.grow(1,5);
+	    while (new_guy.x < alpha_list[index-1].x) {
+	      alpha_list[index] = alpha_list[index-1];
+	      index--;
+	    }
+	    // now insert new_guy
+	    alpha_list[index] = new_guy;
+	    // make it selected for movement
+	    selected_point = index;
+	  } else if (control_pressed) {
+	    cerr << "Left button pressed with control\n";
+	    selected_point = -1;
+	    // find the point closest and delete it
+	    // can't remove the end points
+	    int index = select_point(xpos,ypos);
+	    if (index > 0 && index < alpha_list.size()-1)
+	      alpha_list.remove(index);
+	  } else {
+	    // find the point closest and make it selected
+	    int index = select_point(xpos,ypos);
+	    if (index >= 0)
+	      selected_point = index;
+	  }
+	  break;
+	case Button2:
+	  if (shift_pressed) {
+	    cerr << "Middle button pressed with shift\n";
+	  } else if (control_pressed) {
+	    cerr << "Middle button pressed with control\n";
+	  } else {
+	  }
+	  break;
+	case Button3:
+	  if (shift_pressed) {
+	    cerr << "Right button pressed with shift\n";
+	  } else if (control_pressed) {
+	    cerr << "Right button pressed with control\n";
+	  } else {
+	  }
+	  break;
+	}
+      }
+      break;
     case MotionNotify:
-      if (shift_pressed || control_pressed) break;
-      switch(e.xmotion.state&(Button1Mask|Button2Mask|Button3Mask)){
-      case Button1Mask:
-	if (shift_pressed) {
-	  cerr << "Left button pressed with shift\n";
-	} else if (control_pressed) {
-	  cerr << "Left button pressed with control\n";
-	} else {
-	}
-	break;
-      case Button2Mask:
-	break;
-      case Button3Mask:
-	if (shift_pressed) {
-	  cerr << "Right button pressed with shift\n";
-	} else if (control_pressed) {
-	  cerr << "Right button pressed with control\n";
-	} else {
-	}
-	break;
+      {
+	if (shift_pressed || control_pressed) break;
+	switch(e.xmotion.state&(Button1Mask|Button2Mask|Button3Mask)){
+	case Button1Mask:
+	  {
+	    if (selected_point < 0)
+	      // no point is selected, so don't do anything
+	      break;
+	    int xpos = e.xbutton.x;
+	    float xnorm;
+	    if (xpos >= min_x && xpos < max_x)
+	      xnorm = (xpos - (float)5)/(xres-10);
+	    else
+	      xnorm = alpha_list[selected_point].x;
+	    int ypos = yres - e.xbutton.y;
+	    float ynorm;
+	    if (ypos < 5)
+	      ynorm = 0;
+	    else if (ypos > (yres/2-5))
+	      ynorm = 1;
+	    else
+	      ynorm = (ypos - (float)5)/(yres/2-10);
+	    
+	    alpha_list[selected_point] = AlphaPos(xnorm,ynorm);
+	  }
+	  break;
+	case Button2Mask:
+	case Button3Mask:
+	  break;
+	} // end switch(button mask with motion)
       }
       break;
     default:
@@ -452,11 +512,18 @@ void VolumeVisDpy::draw_alpha_curve(GLuint /*fid*/, XFontStruct* font_struct) {
   // now draw the alpha curve
   glColor3f(1.0, 1.0, 1.0);
   glBegin(GL_LINE_STRIP);
-  for(unsigned int i = 0; i < alpha_list.size(); i++) {
-    //    cout << "drawing a point at ("<<alpha_list[i].x<<", "<<alpha_list[i].val<<")\n";
-    glVertex2i(alpha_list[i].x*width, alpha_list[i].val*h);
+  for(unsigned int j = 0; j < alpha_list.size(); j++) {
+    //    cout << "drawing a point at ("<<alpha_list[j].x<<", "<<alpha_list[j].val<<")\n";
+    glVertex2i((int)(alpha_list[j].x*width), (int)(alpha_list[j].val*h));
   }
   glEnd();
+
+  glColor3f(1.0, 0.5, 1.0);
+  int radius = (width/100)*3;
+  for(unsigned int k = 0; k < alpha_list.size(); k++) {
+    draw_circle(radius, (int)(alpha_list[k].x*width),
+		(int)(alpha_list[k].val*h));
+  }
 }
 
 void VolumeVisDpy::rescale_alphas(float new_t_inc) {
@@ -477,59 +544,75 @@ void VolumeVisDpy::rescale_alphas(float new_t_inc) {
   current_t_inc = new_t_inc;
 }
 
-// assuming that the data in alpha_transform and alpha_stripes is already
-// allocated.
-// This is not too trivial as the alpha values in alpha_list are not evenly
-// spaced.  
+// Preconditions:
+//   assuming that the data in alpha_transform and alpha_stripes is already
+//     allocated.
+//   alpha_list.size() >= 2
+//   alpha_list[0].x == 0
+//   alpha_list[alpha_list.size()-1].x == 1
+
 void VolumeVisDpy::create_alpha_transfer() {
   // the ratio of values as explained in rescale_alphas
   float d2_div_d1 = current_t_inc/original_t_inc;
-  // i_f is the number between 0 and 1 that represent how far we are along
-  float i_f = 0;
-  float i_f_inc = 1.0/(alpha_transform.size()-1);
-  int a_index = 0; // the index of the alpha_list
-  // slope of the line made up of alpha_list[a_index] and alpha_list[a_index+1]
-  // defined as alpha_list[a_index].x <= i_f < alpha_list[a_index+1].x
-  float slope = 0; 
-  float c = 0; // the constant for the line equasion
 
-  // we need to get a value for every entry in alpha_transform
-  for(unsigned int i = 0; i < alpha_transform.size(); i++) {
-    // this will be the interpolated value
-    float val; 
-    //    cout <<"a_index = "<<a_index<<", i_f = "<<i_f<<", ";
-    // if this (alpha_list[a_index].x <= i_f < alpha_list[a_index+1].x) no
-    // longer holds true we need to increment a_index and recompute the slope
-    // and constant.
-    if (i_f > alpha_list[a_index+1].x) {
-      a_index++;
-      //      cout << "a_index = "<<a_index<<", ";
-      // slope is rise of run
-      slope = (alpha_list[a_index+1].val - alpha_list[a_index].val) /
-	(alpha_list[a_index+1].x - alpha_list[a_index].x);
-      // c = y1 - slope * x1;
-      c = alpha_list[a_index].val - slope * alpha_list[a_index].x;
-      //      cout <<"slope = "<<slope<<", c = "<<c<<", ";
+  // loop over the alpha values and fill in the array
+  int start = 0;
+  int end;
+  int nindex = alpha_transform.size() - 1;
+  for (int a_index = 0; a_index < (alpha_list.size()-1); a_index++) {
+    // the start has already been computed, so you need to figure out
+    // the end.
+    end = (int)(alpha_list[a_index+1].x * nindex);
+    float val = alpha_list[a_index].val;
+    float val_inc = (alpha_list[a_index+1].val - val) / (end - start);
+    for (int i = start; i <= end; i++) {
+      //    cout << "val = "<<val<<", ";
+      alpha_stripes[i] = val;
+      // apply the alpha scaling
+      alpha_transform[i] = 1 - powf(1 - val, d2_div_d1);
+      //    cout <<"alpha_transform[i="<<i<<"] = "<<alpha_transform[i]<<"\n";
+      val += val_inc;
     }
-    // calculate the interpolated value
-#if 0
-    if ((a_index+1) < alpha_list.size()) {
-      val = slope * i_f + c;
-    } else {
-      // the last element
-      val = alpha_list[a_index].val;
-    }
-#else
-    val = slope * i_f + c;
-#endif
-    
-    cout << "val = "<<val<<", ";
-    alpha_stripes[i] = val;
-    // apply the alpha scaling
-    alpha_transform[i] = 1 - powf(1 - val, d2_div_d1);
-    cout <<"alpha_transform[i="<<i<<"] = "<<alpha_transform[i]<<"\n";
-    i_f += i_f_inc;
+    start = end;
   }
+}
+
+// finds the closest point to x,y in the alpha_list and returns the index
+int VolumeVisDpy::select_point(int xpos, int ypos) {
+  // need to figure out the normalized points
+  float x = (xpos - (float)5)/(xres-10);
+  float y = (ypos - (float)5)/(yres/2-10);
+  //cout << "norm (x,y) = ("<<x<<", "<<y<<")\n";
+  // now loop over the values and find the point closest
+  float max_distance = FLT_MAX;
+  int index = -1;
+  for(unsigned int i = 0; i < alpha_list.size(); i++) {
+    // we don't really care about the actuall distance, just the relative
+    // distance, so we don't have to square root this value.
+    float distance = (x - alpha_list[i].x) * (x - alpha_list[i].x) +
+      (y - alpha_list[i].val) * (y - alpha_list[i].val);
+    if (distance < max_distance) {
+      // new close point
+      max_distance = distance;
+      index = i;
+    }
+  }
+  // now to set the min_x and max_x;
+  // if the selected point is either the first or last point they need to be
+  // made so that they can't move left or right
+  float min,max;
+  if (index > 0 && index < alpha_list.size()-1) {
+    // center point
+    min = alpha_list[index-1].x;
+    max = alpha_list[index+1].x;
+  } else {
+    // end point
+    min = max = alpha_list[index].x;
+  }
+  min_x =(int)(min*(xres-10)+5);
+  max_x =(int)(max*(xres-10)+5);
+  //cout << "Closest to point "<<index<<".\n";
+  return index;
 }
 
 // assuming that the data in color_transform already allocated
@@ -572,5 +655,50 @@ static int calc_width(XFontStruct* font_struct, const char* str)
   int dir;
   XTextExtents(font_struct, str, (int)strlen(str), &dir, &ascent, &descent, &overall);
   return overall.width;
+}
+
+/*
+  Midpoint Circle Algorithm found in Introduction to Computer Graphics
+
+ */
+void draw_circle(int radius, int x_center, int y_center) {
+  int x,y,d,deltaE,deltaSE;
+  x = 0;
+  y = radius;
+  d = 1 - radius;
+  deltaE = 3;
+  deltaSE = 5 - radius * 2;
+  glBegin(GL_POINTS);
+  circle_points(x,y,x_center,y_center);
+  while (y > x) {
+    if (d < 0) {
+      d += deltaE;
+      deltaE += 2;
+      deltaSE += 2;
+      x++;
+    } else {
+      d += deltaSE;
+      deltaE += 2;
+      deltaSE += 4;
+      x++;
+      y--;
+    }
+    circle_points(x,y,x_center,y_center);
+  }
+  glEnd();
+}
+
+/*
+  found in Introduction to Computer Graphics
+*/
+void circle_points(int x, int y, int x_center, int y_center) {
+  glVertex2i(x_center+x,y_center+y);
+  glVertex2i(x_center+y,y_center+x);
+  glVertex2i(x_center+y,y_center-x);
+  glVertex2i(x_center+x,y_center-y);
+  glVertex2i(x_center-x,y_center-y);
+  glVertex2i(x_center-y,y_center-x);
+  glVertex2i(x_center-y,y_center+x);
+  glVertex2i(x_center-x,y_center+y);
 }
 
