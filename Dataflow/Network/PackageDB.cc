@@ -1,7 +1,7 @@
 // PackageDB.cc - Interface to module-finding and loading mechanisms
+// $Id$
 
 
-//#include <dlfcn.h>
 #include <SCICore/Util/soloader.h>
 #ifdef ASSERT
 #undef ASSERT
@@ -261,3 +261,10 @@ Array1<clString> PackageDB::moduleNames(const clString& packageName,
 
 } // Dataflow namespace
 } // PSECore namespace
+
+//
+// $Log$
+// Revision 1.8  1999/08/31 23:27:53  sparker
+// Added Log and Id entries
+//
+//
