@@ -35,17 +35,22 @@
 #include <Core/Containers/Array1.h>
 #include <Core/2d/DrawGui.h>
 #include <Core/2d/Widget.h>
+#include <stack>
 
 namespace SCIRun {
   
-  class Polyline;
+class Polyline;
+class ScrolledOpenGLWindow;
 
 class SCICORESHARE Diagram : public DrawGui {
 private:
+  ScrolledOpenGLWindow *ogl_;
+
   Array1<bool> active_;
   Array1<Polyline *> poly_;
   Array1<Widget *> widget_;
 
+  stack< int > zoom_stack_;
   BBox2d graphs_bounds_;
   string window_;
   int selected_;
@@ -54,12 +59,14 @@ private:
   typedef enum { SelectOne, SelectMany } SelectMode;
   typedef enum { ScaleAll, ScaleEach } ScaleMode;
   typedef enum { Draw, Pick } DrawMode;
+  typedef enum { NormalMode, ZoomInMode, ZoomOutMode } OperateMode;
 
   GuiInt *gui_select, *gui_scale;
 /*   SelectMode select_mode; */
 /*   ScaleMode scale_mode; */
   int select_mode_, scale_mode_;
   DrawMode draw_mode_;
+  OperateMode operate_mode_;
   bool changed_;
 
 public:
@@ -68,14 +75,15 @@ public:
 
   void add( Polyline * );
   int add_widget( Widget *);
-  void redraw() { if ( parent() ) parent()->need_redraw(); }
+  void redraw();
+  void update() { if (parent() ) parent()->need_redraw(); }
   virtual void reset_bbox();
   virtual void get_bounds(BBox2d&);
 
   virtual void tcl_command(TCLArgs&, void*);
   virtual void set_id( const string &);
   virtual void set_windows( const string &menu, const string &tb,
-			    const string &ui);
+			    const string &ui, const string &ogl);
 
   void get_active( Array1<Polyline *> &);
   double get_at( double );
@@ -91,11 +99,14 @@ public:
   void add_hairline();
   void add_zoom();
 
+  void zoom_in( int x, int y, int );
+  void zoom_out( int x, int y, int );
+
   void child_changed( DrawObj *) { changed_ = true; }
  public:
   // For OpenGL
 #ifdef SCI_OPENGL
-  virtual void draw();
+  virtual void draw( bool = false );
 #endif
   static PersistentTypeID type_id;
   

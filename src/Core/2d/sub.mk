@@ -22,25 +22,26 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Core/2d
 
 SRCS     += \
-	$(SRCDIR)/Point2d.cc \
-	$(SRCDIR)/Vector2d.cc \
-	$(SRCDIR)/DrawObj.cc \
-	$(SRCDIR)/DrawGui.cc \
+	$(SRCDIR)/Axes.cc \
 	$(SRCDIR)/BBox2d.cc \
+	$(SRCDIR)/BoxObj.cc \
 	$(SRCDIR)/Diagram.cc \
+	$(SRCDIR)/DrawGui.cc \
+	$(SRCDIR)/DrawObj.cc \
+	$(SRCDIR)/Graph.cc \
 	$(SRCDIR)/HairObj.cc \
 	$(SRCDIR)/Hairline.cc \
-	$(SRCDIR)/Polyline.cc \
-	$(SRCDIR)/OpenGLWindow.cc \
 	$(SRCDIR)/OpenGL.cc \
-	$(SRCDIR)/Graph.cc \
+	$(SRCDIR)/OpenGLWindow.cc \
+	$(SRCDIR)/Point2d.cc \
+	$(SRCDIR)/Polyline.cc \
+	$(SRCDIR)/ScrolledOpenGLWindow.cc \
+	$(SRCDIR)/Vector2d.cc \
 	$(SRCDIR)/Widget.cc \
+	$(SRCDIR)/Zoom.cc \
 	$(SRCDIR)/glprintf.cc \
 	$(SRCDIR)/asciitable.cc \
 	$(SRCDIR)/texture.cc \
-	$(SRCDIR)/Axes.cc \
-	$(SRCDIR)/BoxObj.cc \
-	$(SRCDIR)/Zoom.cc \
 
 
 PSELIBS := Core/Persistent Core/Exceptions \

@@ -77,7 +77,7 @@ public:
 
   // For OpenGL
 #ifdef SCI_OPENGL
-  virtual void draw()=0;
+  virtual void draw( bool = false )=0;
 #endif
   static PersistentTypeID type_id;
 

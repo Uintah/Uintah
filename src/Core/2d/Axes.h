@@ -60,7 +60,7 @@ public:
   virtual void get_bounds(BBox2d&);
   
 #ifdef SCI_OPENGL
-  virtual void draw();
+  virtual void draw( bool = false );
 #endif
 
   static PersistentTypeID type_id;

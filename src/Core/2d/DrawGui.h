@@ -46,9 +46,9 @@ public:
   virtual ~DrawGui();
 
   virtual void set_windows( const string &menu, const string &tb,
-			    const string &ui );
-  //static PersistentTypeID type_id;
-  
+			    const string &ui, const string &ogl="" );
+
+  virtual void redraw() { draw(); }
 };
 
 } // namespace SCIRun

@@ -53,7 +53,7 @@ namespace SCIRun {
 
 
 void 
-Polyline::draw()
+Polyline::draw( bool )
 {
   glColor3f( color_.r(), color_.g(), color_.b() );
   
@@ -68,17 +68,16 @@ Polyline::draw()
 }
   
 void 
-Diagram::draw()
+Diagram::draw( bool pick)
 {
   if ( poly_.size() == 0 ) return; 
 
   glMatrixMode(GL_PROJECTION);
 
-  switch ( draw_mode_ ) {
-  case Draw:
+  if  ( !pick ) {
     if ( select_mode_ == 2 ) { // select_mode_ = many
       if ( scale_mode_ == 1 ) { // scale_mode_ = all
-
+	
 	reset_bbox();
 	
 	if ( graphs_bounds_.valid() ) {
@@ -131,27 +130,25 @@ Diagram::draw()
     // display the widgets
     for (int i=0; i<widget_.size(); i++) 
       widget_[i]->draw();
-    break;
-    
-  case Pick:
-    // in pick mode we only draw the widgets
+  }
+  else { // pick 
+    // in mode we only draw the widgets
     for (int i=0; i<widget_.size(); i++) {
       glLoadName( i );
-      widget_[i]->draw();
+      widget_[i]->draw( true );
     }
-    break;
   }
 }
 
 void
-Hairline::draw()
+Hairline::draw( bool pick )
 {
-  HairObj::draw();
+  HairObj::draw( pick );
   update();
 }
 
 void
-HairObj::draw() 
+HairObj::draw( bool ) 
 {
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -170,7 +167,7 @@ HairObj::draw()
   
 
 void 
-Axes::draw()
+Axes::draw( bool )
 {
   if (!initialized) {
     init_glprintf();
@@ -215,12 +212,15 @@ Axes::draw()
 
 
 void
-BoxObj::draw()
+BoxObj::draw( bool pick )
 {
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
 
-  glOrtho( 0, 1,  0, 1,  -1, 1 );
+  if ( pick )
+    glOrtho( 0, 1,  1, 0,  -1, 1 );
+  else
+    glOrtho( 0, 1,  0, 1,  -1, 1 );
 
   glColor3f(0,0,0);
 
@@ -235,7 +235,7 @@ BoxObj::draw()
 }
 
 void
-Zoom::draw()
+Zoom::draw( bool )
 {
   cerr << "ZoomObj draw" << endl;
 }

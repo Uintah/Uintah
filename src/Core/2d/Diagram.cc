@@ -42,7 +42,7 @@ using std::ostringstream;
 #include <Core/2d/Hairline.h>
 #include <Core/2d/Zoom.h>
 #include <Core/2d/BBox2d.h>
-#include <Core/2d/OpenGLWindow.h>
+#include <Core/2d/ScrolledOpenGLWindow.h>
 
 namespace SCIRun {
 
@@ -67,6 +67,18 @@ Diagram::Diagram( const string &name)
 Diagram::~Diagram()
 {
 }
+
+void
+Diagram::redraw() 
+{
+  if ( !ogl_ ) return;
+
+  ogl_->pre();
+  ogl_->clear();
+  draw();
+  ogl_->post();
+}
+
 
 void
 Diagram::add( Polyline *d )
@@ -116,17 +128,17 @@ Diagram::tcl_command(TCLArgs& args, void* userdata)
     int plot = atoi( args[2].c_str() );
     bool state = args[3] == "0" ? false : true;
     active_[plot] = state;
-    redraw();
+    update();
   } 
   else if ( args[1] == "select-one" ) {
     selected_ = atoi( args[2].c_str() );
-    redraw();
+    update();
   } 
   else if ( args[1] == "redraw" ) {
     reset_vars();
     select_mode_ = gui_select->get();
     scale_mode_ = gui_scale->get();
-    redraw();
+    update();
   }
   else if ( args[1] == "ButtonPress" ) {
     int x, y, b;
@@ -161,6 +173,25 @@ Diagram::tcl_command(TCLArgs& args, void* userdata)
       cerr << "Diagram[tcl_command]: unknown widget requested" << endl;
     }
   }
+  else if ( args[1] == "mode" ) {
+    if ( args[2] == "normal" ) {
+      operate_mode_ = NormalMode;
+      ogl_->set_cursor("left_ptr");
+      command( "zoom off" );
+    }
+    if ( args[2] == "zoom" ) {
+      operate_mode_ = ZoomInMode;
+      command( "zoom on" );
+    }
+  }
+  else if ( args[1] == "zoom" ) {
+    int x, y, b;
+    string_to_int(args[3], x);
+    string_to_int(args[4], y);
+    string_to_int(args[5], b);
+    if ( args[2] == "in" ) zoom_in( x, y, b );
+    else zoom_out( x, y, b );
+  }
   else
     cerr << "Diagram[tcl_command]: unknown tcl command requested" << endl;
 }
@@ -177,7 +208,7 @@ Diagram::add_hairline()
   hair->set_id( id()+"-hairline-" + to_string(w) );
   hair->set_window( window_name, string("hair-")+ to_string(w));
 
-  redraw();
+  update();
 }
 
 
@@ -186,34 +217,56 @@ Diagram::add_zoom()
 {
   BoxObj *obj = scinew BoxObj( "Zoom" );
   add_widget( obj );
-  redraw();
+  update();
 //   Zoom *zoom = scinew Zoom( this, bbox_, "Zoom" );
 //   int w = add_widget( zoom );
 
 //   zoom->set_id( id()+"-zoom-"+to_string(w) );
 //   zoom->set_window( "", string("Zoom-")+to_string(w));
   
-//   redraw();
+//   update();
+}
+
+void 
+Diagram::zoom_in( int x, int y, int )
+{
+//   zoom_stack_.push( x );
+//   zoom_stack_.push( y );
+  ogl_->resize( 2*ogl_->xres(), 2*ogl_->yres() );
+  update();
+}
+
+void 
+Diagram::zoom_out( int x, int y, int )
+{
+//   int x = zoom_stack_.pop();
+//   int y = zoom_stack_.pop();
+  ogl_->resize( ogl_->xres()/2, ogl_->yres()/2 );
+  update();
 }
 
 void
-Diagram::set_id( const string & id )
+Diagram::set_id( const string & nid )
 {
   ostringstream tmp;
-  tmp << id << "-" << generation;
-
-  gui_select = scinew GuiInt("select", tmp.str(), this );
-  gui_scale = scinew GuiInt("scale", tmp.str(), this );
+  tmp << nid << "-" << generation;
 
   TclObj::set_id( tmp.str() );
+
+  gui_select = scinew GuiInt("select", id(), this );
+  gui_scale = scinew GuiInt("scale", id(), this );
+
+  ogl_ = scinew ScrolledOpenGLWindow;
+  ogl_->set_id ( id() + "-gl" );
 }
 
 void 
 Diagram::set_windows( const string &menu, const string &tb,
-		      const string &ui )
+		      const string &ui, const string &ogl )
 {
-  DrawGui::set_windows( menu, tb, ui );
-  if ( ogl_ ) ogl_->set_binds( id() );
+  DrawGui::set_windows( menu, tb, ui, ogl_->id() );
+  ogl_->set_window( ogl, id() );
+  ogl_->set_binds( id() );
   for (int i=0; i<poly_.size(); i++) {
     tcl_ << " add " << i << " ";
     if ( poly_[i]->name() != "" )
@@ -228,57 +281,51 @@ Diagram::set_windows( const string &menu, const string &tb,
 void
 Diagram::button_press( int x, int y, int button )
 {
-  if ( ogl_ ) {
-    draw_mode_ = Pick;
-
-    GLuint buffer[10]; 
-
-    ogl_->pre();
-
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-
-    GLint viewport[4];
-    glGetIntegerv( GL_VIEWPORT, viewport );
-
-    gluPickMatrix(x, y, 10, 10, viewport );
-
-    glSelectBuffer( 10, buffer );
-    glRenderMode( GL_SELECT );
-    glInitNames();
-    glPushName(2);
-
-    draw();
-
-    int n = glRenderMode( GL_RENDER );
-
-    if ( n > 0 ) {
-      selected_widget_ = buffer[3];
-      widget_[ selected_widget_ ]->select( x, y, button );
-    }
-
-    glPopMatrix();
-    ogl_->post(false);
-
-    draw_mode_ = Draw;
-
-    if ( n == 0 && button == 1 ) {
-      selected_widget_ = -2;
-      pan_start( x, y, button );
-    }
-
-    redraw();
+  GLuint buffer[10]; 
+  
+  ogl_->pre();
+  
+  glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+  glLoadIdentity();
+  
+  GLint viewport[4];
+  glGetIntegerv( GL_VIEWPORT, viewport );
+  
+  gluPickMatrix(x, y, 10, 10, viewport );
+  
+  glSelectBuffer( 10, buffer );
+  glRenderMode( GL_SELECT );
+  glInitNames();
+  glPushName(2);
+  
+  draw( true );
+  
+  int n = glRenderMode( GL_RENDER );
+  
+  if ( n > 0 ) {
+    selected_widget_ = buffer[3];
+    widget_[ selected_widget_ ]->select( x, y, button );
   }
-  else
-    cerr << "diagram no ogl \n";
+  
+  glPopMatrix();
+  ogl_->post(false);
+  
+  if ( n == 0 && button == 1 ) {
+    selected_widget_ = -2;
+    pan_start( x, y, button );
+  }
+  
+  update();
 }
+
 
 void
 Diagram::button_motion( int x, int y, int button )
 {
   if ( selected_widget_ > -1 ) {
     widget_[selected_widget_]->move( x, y, button );
-    redraw();
+    update();
   }
   else if ( selected_widget_ == -2 ) { // pan motion
     pan_move( x, y, button );
@@ -291,7 +338,7 @@ Diagram::button_release( int x, int y, int button )
   if ( selected_widget_ > -1) {
     widget_[ selected_widget_ ]->release(x, y, button );
     selected_widget_ = -1;
-    redraw();
+    update();
   } else if ( selected_widget_ == -2 ) { // pan motion
     pan_end( x, y, button );
     selected_widget_ = -1;
@@ -302,10 +349,7 @@ Diagram::button_release( int x, int y, int button )
 void
 Diagram::pan_start( int x, int y, int button )
 {
-  cerr << "pan start\n";
-  if ( ogl_ ) {
-    ogl_->set_cursor ("fleur");
-  }
+  ogl_->set_cursor ("fleur");
 }
 
 void
@@ -316,8 +360,7 @@ Diagram::pan_move( int x, int y, int button )
 void
 Diagram::pan_end( int x, int y, int button )
 {
-  if ( ogl_ )
-    ogl_->set_cursor ("left_ptr");
+  ogl_->set_cursor ("left_ptr");
 
 }
 

@@ -65,15 +65,17 @@ BoxObj::~BoxObj()
 }
 
 void
-BoxObj::recompute()
+BoxObj::recompute( bool pick)
 {
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   glLoadIdentity();
-  glOrtho( 0, 1,  0, 1,  -1, 1 );
+  glOrtho( 0, 1,  1, 0,  -1, 1 );
+    
   glGetDoublev( GL_PROJECTION_MATRIX, proj );
   glGetDoublev( GL_MODELVIEW_MATRIX, model );
   glGetIntegerv( GL_VIEWPORT, viewport );
+
   glPopMatrix();
 }
 
@@ -83,9 +85,8 @@ BoxObj::select( double x, double y, int button )
   GLdouble pz;
   
   mode_ = button;
-  recompute( );
+  recompute();
   gluUnProject( x, y, 0, model, proj, viewport, &sx_, &sy_, &pz );
-  sy_ = 1 - sy_;
 }
   
 void
@@ -98,7 +99,6 @@ BoxObj::move( double x, double y, int button)
   case 1:
     {
       gluUnProject( x, y, 0, model, proj, viewport, &px, &py, &pz );
-      py = 1 - py;
       Vector2d d( px-sx_, py-sy_ );
       screen_ = BBox2d( screen_.min() + d, screen_.max() + d );
       sx_ = px;
@@ -117,15 +117,6 @@ BoxObj::move( double x, double y, int button)
 void
 BoxObj::release( double x, double y, int )
 {
-  GLdouble px, py, pz;
-
-  recompute();
-  gluUnProject( x, y, 0, model, proj, viewport, &px, &py, &pz );
-  Vector2d d( px-sx_, sy_-py );
-  screen_ = BBox2d( screen_.min() + d, screen_.max() + d );
-  sx_ = px;
-  sy_ = py;
-  cerr << "release " << screen_.min() << "  " << screen_.max() << endl;
 }
   
 
