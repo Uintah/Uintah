@@ -3,6 +3,9 @@ c
 c
 c*********************************************************************
 
+#if 1
+#include <Packages/Uintah/CCA/Components/Arches/fortran/reade_fort.h>
+#else
       SUBROUTINE reade(X,Y,NVAR,IJKST,
      $     IST,JST,KST,IEND,JEND,KEND,
      $     ISTR,JSTR,KSTR,IENDR,JENDR,KENDR,

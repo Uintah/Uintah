@@ -1,28 +1,32 @@
 //----- MomentumSolver.cc ----------------------------------------------
 
+#include <Packages/Uintah/CCA/Components/Arches/debug.h>
 #include <Packages/Uintah/CCA/Components/Arches/MomentumSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
-#include <Packages/Uintah/CCA/Components/Arches/RBGSSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/Discretization.h>
-#include <Packages/Uintah/CCA/Components/Arches/Source.h>
-#include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
-#include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
+#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
+#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
+#include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
+#include <Packages/Uintah/CCA/Components/Arches/Discretization.h>
+#include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
+#include <Packages/Uintah/CCA/Components/Arches/RBGSSolver.h>
+#include <Packages/Uintah/CCA/Components/Arches/Source.h>
+#include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
+#include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
+#include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
-#include <Core/Util/NotFinished.h>
+#include <Packages/Uintah/Core/Grid/Task.h>
+#include <Packages/Uintah/Core/Grid/VarTypes.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 
 
 using namespace Uintah;
@@ -759,7 +763,7 @@ void
 MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
 				    const PatchSubset* patches,
 				    const MaterialSubset* /*matls*/,
-				    DataWarehouse* old_dw,
+				    DataWarehouse*,
 				    DataWarehouse* new_dw,
 				    double delta_t, int index)
 {
@@ -1052,7 +1056,7 @@ void
 MomentumSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 				      const PatchSubset* patches,
 				      const MaterialSubset* /*matls*/,
-				      DataWarehouse* old_dw,
+				      DataWarehouse*,
 				      DataWarehouse* new_dw,
 				      double delta_t, int index)
 {
@@ -1259,7 +1263,6 @@ MomentumSolver::sched_buildLinearMatrixCorr(SchedulerP& sched, const PatchSet* p
 			  this, &MomentumSolver::buildLinearMatrixCorr,
 			  delta_t, index);
   int numGhostCells = 1;
-  int zeroGhostCells = 0;
 
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,
 		Ghost::AroundCells, numGhostCells);
@@ -1320,7 +1323,7 @@ void
 MomentumSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
 				      const PatchSubset* patches,
 				      const MaterialSubset* /*matls*/,
-				      DataWarehouse* old_dw,
+				      DataWarehouse*,
 				      DataWarehouse* new_dw,
 				      double delta_t, int index)
 {
@@ -1331,7 +1334,6 @@ MomentumSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     ArchesVariables velocityVars;
     int numGhostCells = 1;
-    int zeroGhostCells = 0;
 
     // Get the required data
 

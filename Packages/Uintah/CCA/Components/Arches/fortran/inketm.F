@@ -3,6 +3,9 @@ c
 c
 c*********************************************************************
 
+#if 1
+#include <Packages/Uintah/CCA/Components/Arches/fortran/inketm_fort.h>
+#else
       SUBROUTINE inketm(indexLow, indexHigh, PCELL,
      &     IJKEVL,
      &     UU,VV,WW,TKE,TED,

@@ -1,40 +1,13 @@
 c
 c
-      subroutine enthalpysrc(domLo, domHi, domLong, domHing, idxLo, idxHi, 
-     $     sp, su, 
-     &     old_den, old_enth, 
-     &     sew, sns, stb, 
-     &     deltat)
-
-      implicit none
-      INCLUDE 'param4.h'
-
-*     passed variables
-
-      integer domLo(3), domHi(3)
-      integer domLong(3), domHing(3)
-      integer idxLo(3), idxHi(3)
-      double precision su(domLong(1):domHing(1), domLong(2):domHing(2),
-     $     domLong(3):domHing(3))
-      double precision sp(domLong(1):domHing(1), domLong(2):domHing(2),
-     $     domLong(3):domHing(3))
-      double precision old_den(domLong(1):domHing(1), 
-     $     domLong(2):domHing(2),
-     $     domLong(3):domHing(3))
-      double precision old_enth(domLong(1):domHing(1), 
-     $     domLong(2):domHing(2),
-     $     domLong(3):domHing(3))
-      double precision sew(domLo(1):domHi(1))
-      double precision sns(domLo(2):domHi(2))
-      double precision stb(domLo(3):domHi(3))
-      double precision deltat
+#include <Packages/Uintah/CCA/Components/Arches/fortran/enthalpysrc_fort.h>
       
 *     local variables
 
       double precision vol, apo
       integer IST, JST, KST, IEND, JEND, KEND
       integer i, j, k
-      logical ltim, lexpl
+      logical*1 ltim, lexpl
 
       ltim = .true.
       lexpl = .true.
@@ -46,8 +19,12 @@ c
       KEND = idxHi(3)
 c-----------------------------------------------------------------------
 
-      CALL ARRASS(SU,ZERO,domLong, domHing, idxLo, idxHi)
-      CALL ARRASS(SP,ZERO,domLong, domHing, idxLo, idxHi)
+      CALL ARRASS(PASS3A(SU)
+     & PASS3B(SU),
+     & ZERO, idxLo, idxHi)
+      CALL ARRASS(PASS3A(SP)
+     & PASS3B(SU),
+     & ZERO, idxLo, idxHi)
 
       do 120 k = KST, KEND
          do 110 j = JST, JEND

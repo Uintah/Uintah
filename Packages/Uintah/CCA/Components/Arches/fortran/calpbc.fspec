@@ -1,0 +1,6 @@
+void calpbc(SFCXVariable<double> uu, SFCYVariable<double> vv,
+     SFCZVariable<double> ww, IntVector idxLo, IntVector idxHi,
+     CCVariable<double> pp, CCVariable<double> den,
+     CCVariable<int> pcell, int pfield, double bndrypress,
+     bool xminus, bool xplus, bool yminus, bool yplus, bool zminus,
+     bool zplus);

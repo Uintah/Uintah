@@ -1,157 +1,8 @@
 c
 c
-      subroutine pressrc(domLo, domHi, domLong, domHing, idxLo, idxHi, 
-     $     su, sp, 
-     &     den, old_den,
-     &     domLoU, domHiU, domLoUng, domHiUng, uu, 
-     $     aup, aue, auw, aun, aus, aut, aub, suu,
-     &     domLoV, domHiV, domLoVng, domHiVng, vv, 
-     $     avp, ave, avw, avn, avs, avt, avb, svu,
-     &     domLoW, domHiW, domLoWng, domHiWng, ww, 
-     $     awp, awe, aww, awn, aws, awt, awb, swu,
-c    &     convs, 
-c    &     spm, cpl,
-c    $     rv, ra, rcv, 
-     &     sew, sns, stb, 
-     &     sewu, snsv, stbw, 
-c    &     sign,
-c    $     ltest,
-     $     pcell, ffield, deltat)
 
-      implicit none
-      INCLUDE 'param4.h'
-
-*     passed variables
-
-      integer domLo(3), domHi(3)
-      integer domLong(3), domHing(3)
-      integer idxLo(3), idxHi(3)
-      double precision su(domLong(1):domHing(1), domLong(2):domHing(2),
-     $     domLong(3):domHing(3))
-      double precision sp(domLong(1):domHing(1), domLong(2):domHing(2),
-     $     domLong(3):domHing(3))
-      double precision den(domLo(1):domHi(1), domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
-      double precision old_den(
-     $     domLong(1):domHing(1), domLong(2):domHing(2),
-     $     domLong(3):domHing(3))
-
-      integer domLoU(3), domHiU(3)
-      integer domLoUng(3), domHiUng(3)
-      double precision uu(domLoU(1):domHiU(1), domLoU(2):domHiU(2),
-     $     domLoU(3):domHiU(3))
-      double precision aup(domLoUng(1):domHiUng(1),
-     $     domLoUng(2):domHiUng(2),
-     $     domLoUng(3):domHiUng(3))
-      double precision aue(domLoUng(1):domHiUng(1),
-     $     domLoUng(2):domHiUng(2),
-     $     domLoUng(3):domHiUng(3))
-      double precision auw(domLoUng(1):domHiUng(1),
-     $     domLoUng(2):domHiUng(2),
-     $     domLoUng(3):domHiUng(3))
-      double precision aun(domLoUng(1):domHiUng(1),
-     $     domLoUng(2):domHiUng(2),
-     $     domLoUng(3):domHiUng(3))
-      double precision aus(domLoUng(1):domHiUng(1),
-     $     domLoUng(2):domHiUng(2),
-     $     domLoUng(3):domHiUng(3))
-      double precision aut(domLoUng(1):domHiUng(1),
-     $     domLoUng(2):domHiUng(2),
-     $     domLoUng(3):domHiUng(3))
-      double precision aub(domLoUng(1):domHiUng(1),
-     $     domLoUng(2):domHiUng(2),
-     $     domLoUng(3):domHiUng(3))
-      double precision suu(domLoUng(1):domHiUng(1),
-     $     domLoUng(2):domHiUng(2),
-     $     domLoUng(3):domHiUng(3))
-
-      integer domLoV(3), domHiV(3)
-      integer domLoVng(3), domHiVng(3)
-      double precision vv(domLoV(1):domHiV(1), domLoV(2):domHiV(2),
-     $     domLoV(3):domHiV(3))
-      double precision avp(domLoVng(1):domHiVng(1),
-     $     domLoVng(2):domHiVng(2),
-     $     domLoVng(3):domHiVng(3))
-      double precision ave(domLoVng(1):domHiVng(1),
-     $     domLoVng(2):domHiVng(2),
-     $     domLoVng(3):domHiVng(3))
-      double precision avw(domLoVng(1):domHiVng(1), 
-     $     domLoVng(2):domHiVng(2),
-     $     domLoVng(3):domHiVng(3))
-      double precision avn(domLoVng(1):domHiVng(1),
-     $     domLoVng(2):domHiVng(2),
-     $     domLoVng(3):domHiVng(3))
-      double precision avs(domLoVng(1):domHiVng(1),
-     $     domLoVng(2):domHiVng(2),
-     $     domLoVng(3):domHiVng(3))
-      double precision avt(domLoVng(1):domHiVng(1), 
-     $     domLoVng(2):domHiVng(2),
-     $     domLoVng(3):domHiVng(3))
-      double precision avb(domLoVng(1):domHiVng(1),
-     $     domLoVng(2):domHiVng(2),
-     $     domLoVng(3):domHiVng(3))
-      double precision svu(domLoVng(1):domHiVng(1),
-     $     domLoVng(2):domHiVng(2),
-     $     domLoVng(3):domHiVng(3))
-
-      integer domLoW(3), domHiW(3)
-      integer domLoWng(3), domHiWng(3)
-      double precision ww(domLoW(1):domHiW(1), domLoW(2):domHiW(2),
-     $     domLoW(3):domHiW(3))
-      double precision awp(domLoWng(1):domHiWng(1), 
-     $     domLoWng(2):domHiWng(2),
-     $     domLoWng(3):domHiWng(3))
-      double precision awe(domLoWng(1):domHiWng(1),
-     $     domLoWng(2):domHiWng(2),
-     $     domLoWng(3):domHiWng(3))
-      double precision aww(domLoWng(1):domHiWng(1),
-     $     domLoWng(2):domHiWng(2),
-     $     domLoWng(3):domHiWng(3))
-      double precision awn(domLoWng(1):domHiWng(1),
-     $     domLoWng(2):domHiWng(2),
-     $     domLoWng(3):domHiWng(3))
-      double precision aws(domLoWng(1):domHiWng(1),
-     $     domLoWng(2):domHiWng(2),
-     $     domLoWng(3):domHiWng(3))
-      double precision awt(domLoWng(1):domHiWng(1),
-     $     domLoWng(2):domHiWng(2),
-     $     domLoWng(3):domHiWng(3))
-      double precision awb(domLoWng(1):domHiWng(1),
-     $     domLoWng(2):domHiWng(2),
-     $     domLoWng(3):domHiWng(3))
-      double precision swu(domLoWng(1):domHiWng(1),
-     $     domLoWng(2):domHiWng(2),
-     $     domLoWng(3):domHiWng(3))
-
-c     double precision convs
-
-c     double precision spm(
-c    $     domLo(1):domHi(1),
-c    $     domLo(2):domHi(2),
-c    $     domLo(3):domHi(3))
-
-c     double precision cpl(
-c    $     domLo(1):domHi(1),
-c    $     domLo(2):domHi(2),
-c    $     domLo(3):domHi(3))
-      
-c     double precision sign
-      
-c     double precision rv(domLo(2):domHi(2))
-c     double precision ra(domLo(2):domHi(2))
-c     double precision rcv(domLo(2):domHi(2))
-
-      double precision sew(domLo(1):domHi(1))
-      double precision sns(domLo(2):domHi(2))
-      double precision stb(domLo(3):domHi(3))
-      double precision sewu(domLo(1):domHi(1))
-      double precision snsv(domLo(2):domHi(2))
-      double precision stbw(domLo(3):domHi(3))
-
-      integer pcell(domLo(1):domHi(1), domLo(2):domHi(2), 
-     &     domLo(3):domHi(3))
-      integer ffield
-      double precision deltat
+#include <Packages/Uintah/CCA/Components/Arches/fortran/pressrc_fort.h>
+#include "param4.h"
       
 *     local variables
 
@@ -162,7 +13,7 @@ c     double precision rcv(domLo(2):domHi(2))
       double precision smp, apo
       integer IST, JST, KST, IEND, JEND, KEND
       integer i, j, k
-      logical ltest, ltim
+      logical*1 ltest, ltim
 
 c     include 'celltypes.h'
       ltim = .true.

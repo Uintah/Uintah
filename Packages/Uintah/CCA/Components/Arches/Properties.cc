@@ -1,6 +1,8 @@
 //----- Properties.cc --------------------------------------------------
 
+#include <Packages/Uintah/CCA/Components/Arches/debug.h>
 #include <Packages/Uintah/CCA/Components/Arches/Properties.h>
+#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/MixingModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/ColdflowMixingModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/PDFMixingModel.h>
@@ -21,7 +23,6 @@
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Core/Containers/StaticArray.h>
 #include <Core/Math/MinMax.h>
-#include <Core/Util/NotFinished.h>
 #include <iostream>
 using namespace std;
 using namespace Uintah;
@@ -195,8 +196,8 @@ Properties::sched_computeDenRefArray(SchedulerP& sched,
 void 
 Properties::computeProps(const ProcessorGroup*,
 			 const PatchSubset* patches,
-			 const MaterialSubset* matls,
-			 DataWarehouse* old_dw,
+			 const MaterialSubset*,
+			 DataWarehouse*,
 			 DataWarehouse* new_dw)
 {
   for (int p = 0; p < patches->size(); p++) {
@@ -357,8 +358,8 @@ Properties::computeProps(const ProcessorGroup*,
 void 
 Properties::reComputeProps(const ProcessorGroup*,
 			   const PatchSubset* patches,
-			   const MaterialSubset* matls,
-			   DataWarehouse* old_dw,
+			   const MaterialSubset*,
+			   DataWarehouse*,
 			   DataWarehouse* new_dw)
 {
   for (int p = 0; p < patches->size(); p++) {
@@ -527,7 +528,7 @@ Properties::reComputeProps(const ProcessorGroup*,
 void 
 Properties::computeDenRefArray(const ProcessorGroup*,
 			       const PatchSubset* patches,
-			       const MaterialSubset* matls,
+			       const MaterialSubset*,
 			       DataWarehouse* old_dw,
 			       DataWarehouse* new_dw)
 
@@ -619,8 +620,8 @@ Properties::sched_computePropsPred(SchedulerP& sched, const PatchSet* patches,
 void 
 Properties::computePropsPred(const ProcessorGroup*,
 			     const PatchSubset* patches,
-			     const MaterialSubset* matls,
-			     DataWarehouse* old_dw,
+			     const MaterialSubset*,
+			     DataWarehouse*,
 			     DataWarehouse* new_dw)
 {
   for (int p = 0; p < patches->size(); p++) {
@@ -690,7 +691,7 @@ Properties::computePropsPred(const ProcessorGroup*,
 
 	  if (!d_mixingModel->isAdiabatic())
 	    // get absolute enthalpy from enthalpy eqn
-	    cerr << "No eqn for enthalpy yet" << '/n';
+	    cerr << "No eqn for enthalpy yet" << '\n';
 	  Stream outStream;
 	  d_mixingModel->computeProps(inStream, outStream);
 	  double local_den = outStream.getDensity();

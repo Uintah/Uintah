@@ -3,6 +3,9 @@ c
 c
 c*********************************************************************
 
+#if 0
+#include <Packages/Uintah/CCA/Components/Arches/fortran/lisolv_fort.h>
+#else
       SUBROUTINE lisolv(indexLow, indexHigh,
      &     PHI,
      &     AE,AW,AN,AS,AT,AB,AP,SU,
@@ -121,7 +124,7 @@ c*********************************************************************
       double precision GAMF,TSOLV,THETA,CONVL,R_NORM
       integer NI,NJ,NK
       integer ILCNT,ISPF,ISOPT,NSWPS,IEQN
-      LOGICAL LSWPWE,LSWPSN,LSWPBT,LLEFT,LTEST
+      LOGICAL*1 LSWPWE,LSWPSN,LSWPBT,LLEFT,LTEST
       double precision RESF(indexLow(1):indexHigh(1), 
      &     indexLow(2):indexHigh(2), indexLow(3):indexHigh(3))
       double precision OLD(indexLow(1):indexHigh(1), 
@@ -143,28 +146,86 @@ c*********************************************************************
 
 *-----STORE OLD VALUES-----------------------------------------------
 
-      CALL ARRCOP(indexLow, indexHigh, OLD,PHI,ONE)
+      CALL ARRCOP(indexLow, indexHigh,
+     & PASS3A(OLD)
+     & PASS3B(OLD),
+     & PASS3A(PHI)
+     & PASS3B(PHI),ONE)
 
 *-----------------------------------------------------------------------
 
       IF (ISOPT.EQ.1) THEN
 
          CALL RESCAL(indexLow, indexHigh, 
-     &        PHI,RESF,
-     &        AE,AW,AN,AS,AT,AB,AP,SU,
+     & PASS3A(PHI)
+     & PASS3B(PHI),
+     & PASS3A(RESF)
+     & PASS3B(RESF),
+     & PASS3A(AE)
+     & PASS3B(AE),
+     & PASS3A(AW)
+     & PASS3B(AW),
+     & PASS3A(AN)
+     & PASS3B(AN),
+     & PASS3A(AS)
+     & PASS3B(AS),
+     & PASS3A(AT)
+     & PASS3B(AT),
+     & PASS3A(AB)
+     & PASS3B(AB),
+     & PASS3A(AP)
+     & PASS3B(AP),
+     & PASS3A(SU)
+     & PASS3B(SU),
      &        RTOT0)
          DO 600 NSOL = 1,NSWPS
             ISPF = ISPF + 1
+ WARNING: This does not match the linegs prototype, so I did nto finish
+ the conversion - Steve
             CALL LINEGS(indexLow, indexHigh,
-     &           PHI,
-     &           AE,AW,AN,AS,AT,AB,AP,SU,
+     & PASS3A(PHI)
+     & PASS3B(PHI),
+     & PASS3A(AE)
+     & PASS3B(AE),
+     & PASS3A(AW)
+     & PASS3B(AW),
+     & PASS3A(AN)
+     & PASS3B(AN),
+     & PASS3A(AS)
+     & PASS3B(AS),
+     & PASS3A(AT)
+     & PASS3B(AT),
+     & PASS3A(AB)
+     & PASS3B(AB),
+     & PASS3A(AP)
+     & PASS3B(AP),
+     & PASS3A(SU)
+     & PASS3B(SU),
      $           TSOLV,THETA,CONVL,
      &           ILCNT,
      $           LSWPWE,LSWPSN,LSWPBT,
      &           tmpXArr1, tmpXArr2)
          CALL RESCAL(indexLow, indexHigh, 
-     &        PHI,RESF,
-     &        AE,AW,AN,AS,AT,AB,AP,SU,
+     & PASS3A(PHI)
+     & PASS3B(PHI),
+     & PASS3A(RESF)
+     & PASS3B(RESF),
+     & PASS3A(AE)
+     & PASS3B(AE),
+     & PASS3A(AW)
+     & PASS3B(AW),
+     & PASS3A(AN)
+     & PASS3B(AN),
+     & PASS3A(AS)
+     & PASS3B(AS),
+     & PASS3A(AT)
+     & PASS3B(AT),
+     & PASS3A(AB)
+     & PASS3B(AB),
+     & PASS3A(AP)
+     & PASS3B(AP),
+     & PASS3A(SU)
+     & PASS3B(SU),
      &        RTOT)
             RATIO = RTOT/RTOT0
             RES_NORM = RTOT/RTOT0
@@ -194,7 +255,12 @@ c**** END COMMENT
       IF ((RATIO.GT.ONE).AND..NOT.LTEST) THEN
          PRINT *,CLABEL(IEQN),'is diverging by: ',RATIO
      $        ,' USING OLD VALUES'
-         CALL ARRCOP(indexLow, indexHigh, PHI,OLD,ONE)
+         CALL ARRCOP(indexLow, indexHigh,
+     & PASS3A(PHI)
+     & PASS3B(PHI),
+     & PASS3A(OLD)
+     & PASS3B(OLD),
+     & ONE)
       ENDIF
 
 *-----------------------------------------------------------------------

@@ -24,35 +24,11 @@ c    None
 c   
 c*********************************************************************
 
-      SUBROUTINE mmcelltypeinit(domainLow, domainHigh, 
-     &     indexLow, indexHigh,
-     &     VOIDFRAC, PCELL,
-     &     MMWALLID, FLOWCELLID,
-     &     cutoff)
-
+#include <Packages/Uintah/CCA/Components/Arches/fortran/mmcelltypeinit_fort.h>
 C-----------------------------------------------------------------------
 C     THREE-DIMENSIONAL VERSION
 C     INITIALIZATION ROUTINE     
 C-----------------------------------------------------------------------
-
-      implicit none
-
-c*********************************************************************
-c     Arguments :
-c*********************************************************************
-      integer domainLow(3)
-      integer domainHigh(3)
-      integer indexLow(3)
-      integer indexHigh(3)
-      integer PCELL(domainLow(1):domainHigh(1),
-     &     domainLow(2):domainHigh(2),
-     &     domainLow(3):domainHigh(3))
-      double precision VOIDFRAC(domainLow(1):domainHigh(1),
-     &     domainLow(2):domainHigh(2),
-     &     domainLow(3):domainHigh(3))
-      integer MMWALLID
-      integer FLOWCELLID
-      double precision cutoff
 
 c*********************************************************************
 c     Locals :

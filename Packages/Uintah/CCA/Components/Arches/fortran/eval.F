@@ -3,6 +3,9 @@ c
 c
 c*********************************************************************
 
+#if 1
+#include <Packages/Uintah/CCA/Components/Arches/fortran/eval_fort.h>
+#else
       SUBROUTINE eval(indexLow, indexHigh, NITER, PCELL,
      &     UU, VV, WW,
      &     FF,

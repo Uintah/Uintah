@@ -1,30 +1,31 @@
 //----- PicardNonlinearSolver.cc ----------------------------------------------
 
 #include <Packages/Uintah/CCA/Components/Arches/PicardNonlinearSolver.h>
+#include <Core/Containers/StaticArray.h>
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
-#include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
-#include <Packages/Uintah/CCA/Components/Arches/Properties.h>
+#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
+#include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
 #include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
-#include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
+#include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
+#include <Packages/Uintah/CCA/Components/Arches/EnthalpySolver.h>
+#include <Packages/Uintah/CCA/Components/Arches/MomentumSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
 #include <Packages/Uintah/CCA/Components/Arches/PressureSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/MomentumSolver.h>
+#include <Packages/Uintah/CCA/Components/Arches/Properties.h>
 #include <Packages/Uintah/CCA/Components/Arches/ScalarSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/EnthalpySolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
+#include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
+#include <Packages/Uintah/Core/Grid/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Core/Util/NotFinished.h>
-#include <Core/Containers/StaticArray.h>
+#include <Packages/Uintah/Core/Grid/Task.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 
 #include <math.h>
 
@@ -374,7 +375,7 @@ PicardNonlinearSolver::sched_probeData(SchedulerP& sched, const PatchSet* patche
 void 
 PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
 				       const PatchSubset* patches,
-				       const MaterialSubset* matls,
+				       const MaterialSubset*,
 				       DataWarehouse* old_dw,
 				       DataWarehouse* new_dw)
 {
@@ -512,8 +513,8 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
 void 
 PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 					     const PatchSubset* patches,
-					     const MaterialSubset* matls,
-					     DataWarehouse* old_dw,
+					     const MaterialSubset*,
+					     DataWarehouse*,
 					     DataWarehouse* new_dw)
 {
   for (int p = 0; p < patches->size(); p++) {
@@ -613,7 +614,7 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 void 
 PicardNonlinearSolver::probeData(const ProcessorGroup* ,
 				 const PatchSubset* patches,
-				 const MaterialSubset* matls,
+				 const MaterialSubset*,
 				 DataWarehouse*,
 				 DataWarehouse* new_dw)
 {
@@ -675,10 +676,10 @@ PicardNonlinearSolver::probeData(const ProcessorGroup* ,
 // compute the residual
 // ****************************************************************************
 double 
-PicardNonlinearSolver::computeResidual(const LevelP& level,
-				       SchedulerP& sched,
-				       DataWarehouseP& old_dw,
-				       DataWarehouseP& new_dw)
+PicardNonlinearSolver::computeResidual(const LevelP&,
+				       SchedulerP&,
+				       DataWarehouseP&,
+				       DataWarehouseP&)
 {
   double nlresidual = 0.0;
 #if 0

@@ -3,13 +3,7 @@ c
 c
 c*********************************************************************
 
-      SUBROUTINE explicit(domLoU, domHiU,domLoUng, domHiUng,
-     $     idxLo, idxHi,
-     &     PHI, old_PHI, 
-     &     AE,AW,AN,AS,AT,AB,AP,SU,
-     $     domLo, domHi,domLowg, domHiwg, old_den, sew, 
-     $     sns, stb, dtime)
-c     &     lswpwe, lswpsn, lswpbt)
+#include <Packages/Uintah/CCA/Components/Arches/fortran/explicit_fort.h>
 C-----------------------------------------------------------------------
 *
 *     This routine is a relaxation operation on x, given the linear
@@ -37,49 +31,6 @@ C-----------------------------------------------------------------------
 *	IEND,JEND,KEND
 *		Ending indices for calculation (i/p)
 C-----------------------------------------------------------------------
-      implicit none
-
-#include "param4.h"
-
-c*********************************************************************
-c     Arguments :
-c*********************************************************************
-      integer domLoU(3)
-      integer domHiU(3)
-      integer domLoUng(3)
-      integer domHiUng(3)
-      integer idxLo(3)
-      integer idxHi(3)
-      integer domLo(3)
-      integer domHi(3)
-      integer domLowg(3)
-      integer domHiwg(3)
-      double precision PHI(domLoU(1):domHiU(1), 
-     &     domLoU(2):domHiU(2), domLoU(3):domHiU(3))
-      double precision old_PHI(domLoU(1):domHiU(1), 
-     &     domLoU(2):domHiU(2), domLoU(3):domHiU(3))
-      double precision AP(domLoUng(1):domHiUng(1), 
-     &     domLoUng(2):domHiUng(2), domLoUng(3):domHiUng(3))
-      double precision AE(domLoUng(1):domHiUng(1), 
-     &     domLoUng(2):domHiUng(2), domLoUng(3):domHiUng(3))
-      double precision AW(domLoUng(1):domHiUng(1), 
-     &     domLoUng(2):domHiUng(2), domLoUng(3):domHiUng(3))
-      double precision AN(domLoUng(1):domHiUng(1), 
-     &     domLoUng(2):domHiUng(2), domLoUng(3):domHiUng(3))
-      double precision AS(domLoUng(1):domHiUng(1), 
-     &     domLoUng(2):domHiUng(2), domLoUng(3):domHiUng(3))
-      double precision AT(domLoUng(1):domHiUng(1), 
-     &     domLoUng(2):domHiUng(2), domLoUng(3):domHiUng(3))
-      double precision AB(domLoUng(1):domHiUng(1), 
-     &     domLoUng(2):domHiUng(2), domLoUng(3):domHiUng(3))
-      double precision SU(domLoUng(1):domHiUng(1), 
-     &     domLoUng(2):domHiUng(2), domLoUng(3):domHiUng(3))
-      double precision old_Den(domLo(1):domHi(1), 
-     &     domLo(2):domHi(2), domLo(3):domHi(3))
-      double precision sew(domLowg(1):domHiwg(1))
-      double precision sns(domLowg(2):domHiwg(2))
-      double precision stb(domLowg(3):domHiwg(3))
-      double precision dtime
 
 c*********************************************************************
 c     Local Variables :

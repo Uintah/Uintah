@@ -1,6 +1,9 @@
 c
 c
 
+#if 1
+#include <Packages/Uintah/CCA/Components/Arches/fortran/coeffb_fort.h>
+#else
       SUBROUTINE coeffb(domLoVel, domHiVel, VEL,
      $     domLo, domHi, 
      &     DEN,VIS,

@@ -1,42 +1,7 @@
 c
 c
-      subroutine enthalpyradwallbc(domLo, domHi, idxLo, idxHi,
-     $     qfluxe, qfluxw, qfluxn, qfluxs, qfluxt, qfluxb,
-     $     domLoT, domHiT, TG,
-     $     domLoP, domHiP, PCELL,
-     $     WALLID,
-     $     xminus, xplus, yminus, yplus, zminus, zplus)
-
-      implicit none
-      INCLUDE 'param4.h'
-
-*     passed variables
-
-      integer domLo(3), domHi(3)
-      integer idxLo(3), idxHi(3)
-      double precision qfluxe(domLo(1):domHi(1), domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
-      double precision qfluxw(domLo(1):domHi(1), domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
-      double precision qfluxn(domLo(1):domHi(1), domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
-      double precision qfluxs(domLo(1):domHi(1), domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
-      double precision qfluxt(domLo(1):domHi(1), domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
-      double precision qfluxb(domLo(1):domHi(1), domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
-      integer domLoT(3), domHiT(3)
-      double precision TG(domLoT(1):domHiT(1), 
-     $     domLoT(2):domHiT(2),
-     $     domLoT(3):domHiT(3))
-      integer domLoP(3), domHiP(3)
-      double precision PCELL(domLoP(1):domHiP(1), 
-     $     domLoP(2):domHiP(2),
-     $     domLoP(3):domHiP(3))
-      integer WALLID
-      integer xminus, xplus, yminus, yplus, zminus, zplus
-
+#include <Packages/Uintah/CCA/Components/Arches/fortran/enthalpyradwallbc_fort.h>
+#include "param4.h"
       
 *     local variables
 

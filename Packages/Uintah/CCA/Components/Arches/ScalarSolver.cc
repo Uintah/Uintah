@@ -1,29 +1,30 @@
 //----- ScalarSolver.cc ----------------------------------------------
 
 #include <Packages/Uintah/CCA/Components/Arches/ScalarSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
-#include <Packages/Uintah/CCA/Components/Arches/PetscSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/RBGSSolver.h>
-#include <Packages/Uintah/CCA/Components/Arches/Discretization.h>
-#include <Packages/Uintah/CCA/Components/Arches/Source.h>
-#include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
-#include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
+#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
+#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
-#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
+#include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
+#include <Packages/Uintah/CCA/Components/Arches/Discretization.h>
+#include <Packages/Uintah/CCA/Components/Arches/PetscSolver.h>
+#include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
+#include <Packages/Uintah/CCA/Components/Arches/RBGSSolver.h>
+#include <Packages/Uintah/CCA/Components/Arches/Source.h>
+#include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
+#include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
-#include <Core/Util/NotFinished.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
+#include <Packages/Uintah/Core/Grid/Task.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 
 using namespace Uintah;
 using namespace std;
@@ -190,7 +191,7 @@ ScalarSolver::sched_scalarLinearSolve(SchedulerP& sched, const PatchSet* patches
 void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				     const PatchSubset* patches,
 				     const MaterialSubset*,
-				     DataWarehouse* old_dw,
+				     DataWarehouse*,
 				     DataWarehouse* new_dw,
 				     double delta_t, int index)
 {
@@ -299,7 +300,7 @@ void
 ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
 				const PatchSubset* patches,
 				const MaterialSubset*,
-				DataWarehouse* old_dw,
+				DataWarehouse*,
 				DataWarehouse* new_dw,
 				double delta_t,
 				int index)
@@ -434,7 +435,7 @@ ScalarSolver::sched_buildLinearMatrixPred(SchedulerP& sched,
 void ScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 					 const PatchSubset* patches,
 					 const MaterialSubset*,
-					 DataWarehouse* old_dw,
+					 DataWarehouse*,
 					 DataWarehouse* new_dw,
 					 double delta_t, int index)
 {
@@ -582,7 +583,7 @@ void
 ScalarSolver::scalarLinearSolvePred(const ProcessorGroup* pc,
                                 const PatchSubset* patches,
 				const MaterialSubset*,
-				DataWarehouse* old_dw,
+				DataWarehouse*,
 				DataWarehouse* new_dw,
 				double delta_t,
 				int index)
@@ -722,7 +723,7 @@ ScalarSolver::sched_buildLinearMatrixCorr(SchedulerP& sched,
 void ScalarSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
 					 const PatchSubset* patches,
 					 const MaterialSubset*,
-					 DataWarehouse* old_dw,
+					 DataWarehouse*,
 					 DataWarehouse* new_dw,
 					 double delta_t, int index)
 {
@@ -868,7 +869,7 @@ void
 ScalarSolver::scalarLinearSolveCorr(const ProcessorGroup* pc,
 				const PatchSubset* patches,
 				const MaterialSubset*,
-				DataWarehouse* old_dw,
+				DataWarehouse*,
 				DataWarehouse* new_dw,
 				double delta_t,
 				int index)

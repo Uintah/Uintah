@@ -3,6 +3,9 @@ c
 c
 c*********************************************************************
 
+#if 1
+#include <Packages/Uintah/CCA/Components/Arches/fortran/gtrsv_fort.h>
+#else
       SUBROUTINE gtrsv(UPLO,TRANS,DIAG,NN,AA,LDA,XX,INCX)
 
       implicit none

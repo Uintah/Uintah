@@ -3,47 +3,12 @@ c
 c
 c*********************************************************************
 
-      SUBROUTINE bcpress(domLo, domHi, domLong, domHing, idxLo, idxHi,
-     &     PP,
-     &     AE,AW,AN,AS,AT,AB,
-     &     SU, SP,
-     &     PCELL, WALL, SYMTRY, FFIELD,
-     $     xminus, xplus, yminus, yplus, zminus, zplus)
+#include <Packages/Uintah/CCA/Components/Arches/fortran/bcpress_fort.h>
+#include "param4.h"
 *-----------------------------------------------------------------------
 *     This subroutine calculates the boundary
 *     conditions for the pressure and pressure correction equations.
 *-----------------------------------------------------------------------
-      implicit none
-
-#include "param4.h"
-
-c*********************************************************************
-c     Arguments :
-c*********************************************************************
-      integer domLo(3), domHi(3), idxLo(3), idxHi(3)
-      integer domLong(3), domHing(3)
-      double precision PP(domLong(1):domHing(1), domLong(2):domHing(2),
-     &     domLong(3):domHing(3))
-      double precision AE(domLong(1):domHing(1), domLong(2):domHing(2),
-     &     domLong(3):domHing(3))
-      double precision AW(domLong(1):domHing(1), domLong(2):domHing(2),
-     &     domLong(3):domHing(3))
-      double precision AN(domLong(1):domHing(1), domLong(2):domHing(2),
-     &     domLong(3):domHing(3))
-      double precision AS(domLong(1):domHing(1), domLong(2):domHing(2),
-     &     domLong(3):domHing(3))
-      double precision AT(domLong(1):domHing(1), domLong(2):domHing(2),
-     &     domLong(3):domHing(3))
-      double precision AB(domLong(1):domHing(1), domLong(2):domHing(2),
-     &     domLong(3):domHing(3))
-      double precision SU(domLong(1):domHing(1), domLong(2):domHing(2),
-     &     domLong(3):domHing(3))
-      double precision SP(domLong(1):domHing(1), domLong(2):domHing(2),
-     &     domLong(3):domHing(3))
-      integer PCELL(domLo(1):domHi(1), domLo(2):domHi(2), 
-     &     domLo(3):domHi(3))
-      integer WALL, SYMTRY, FFIELD
-      integer xminus, xplus, yminus, yplus, zminus, zplus
 
 c*********************************************************************
 c     Local Variables :
@@ -51,7 +16,7 @@ c*********************************************************************
       integer IST, JST, KST, IEND, JEND, KEND
       integer i,j,k
 
-      LOGICAL LWRAP,LSYMB, LPRDKK, LPRDAV, LPRDJK
+      LOGICAL*1 LWRAP,LSYMB, LPRDKK, LPRDAV, LPRDJK
 
 c*********************************************************************
 c     Start :
@@ -158,16 +123,41 @@ C$DIR SCALAR
 *--------------------------------------------------------------------
       IF (LSYMB) THEN
          CALL SYMBCS(domLo, domHi, idxLo, idxHi,
-     $        PP,
-     &        AE,AW,AN,AS,AT,AB,
-     &        PCELL, SYMTRY,
-     $        LPRDJK, LPRDKK)
+     & PASS3A(PP)
+     & PASS3B(PP),
+     & PASS3A(AE)
+     & PASS3B(AE),
+     & PASS3A(AW)
+     & PASS3B(AW),
+     & PASS3A(AN)
+     & PASS3B(AN),
+     & PASS3A(AS)
+     & PASS3B(AS),
+     & PASS3A(AT)
+     & PASS3B(AT),
+     & PASS3A(AB)
+     & PASS3B(AB),
+     & PASS3A(PCELL)
+     & PASS3B(PCELL),
+     & PCELL, SYMTRY,LPRDJK, LPRDKK)
       ENDIF
 
-      CALL WALLBC(domLo, domHi, domLong, domHing, idxLo, idxHi,
-     $     AE,AW,AN,AS,AT,AB,
-     &     PCELL,WALL,
-     $     xminus, xplus, yminus, yplus, zminus, zplus)
+      CALL WALLBC(idxLo, idxHi,
+     & PASS3A(AE)
+     & PASS3B(AE),
+     & PASS3A(AW)
+     & PASS3B(AW),
+     & PASS3A(AN)
+     & PASS3B(AN),
+     & PASS3A(AS)
+     & PASS3B(AS),
+     & PASS3A(AT)
+     & PASS3B(AT),
+     & PASS3A(AB)
+     & PASS3B(AB),
+     & PASS3A(PCELL)
+     & PASS3B(PCELL),
+     & WALL, xminus, xplus, yminus, yplus, zminus, zplus)
       RETURN
       END 
 

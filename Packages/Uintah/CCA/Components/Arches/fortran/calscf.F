@@ -3,11 +3,7 @@ c
 c
 c*********************************************************************
 
-      SUBROUTINE calscf(indexLow, indexHigh,
-     &     SCF,
-     &     PHI,
-     &     NVAR,IJKST,
-     $     IJ,IK)
+#include <Packages/Uintah/CCA/Components/Arches/fortran/calscf_fort.h>
 C-----------------------------------------------------------------------
 C     Written by: Seshadri Kumar, ca. August 1996
 C     Last modified, November 26, 1997
@@ -44,22 +40,6 @@ C               violations.  When they are greater than
 C               the write indices, then the extra space is padded by
 C               whatever was in array X before this operation.
 *-----------------------------------------------------------------------
-      implicit none
-
-#include "param4.h"
-
-c*********************************************************************
-c     Arguments :
-c*********************************************************************
-      integer indexLow(3)
-      integer indexHigh(3)
-      double precision PHI(indexLow(1):indexHigh(1),
-     &     indexLow(2):indexHigh(2),indexLow(3):indexHigh(3))
-      double precision SCF(*)
-      integer NVAR,IJKST
-      integer IJ(indexLow(2):indexHigh(2)) 
-      integer IK(indexLow(3):indexHigh(3))
-
 c*********************************************************************
 c     Local Variables :
 c*********************************************************************
@@ -86,11 +66,16 @@ c*********************************************************************
 *-----------------------------------------------------------------------
       
 C-----Determine Scaling factor norms------------------------------------
-      
-      CALL ARRL1(indexLow, indexHigh, 
+
+      CALL ARRL1(PHIL1, PHIAVE,
+     & PASS3A(PHI)
+     & PASS3B(PHI),
+     & indexLow, indexHigh)
      &     PHI,PHIL1,PHIAVE)
       CALL ARRMAX(indexLow, indexHigh, 
-     &     PHI,PHIMAX)
+     & PASS3A(PHI)
+     & PASS3B(PHI),
+     & PHIMAX)
       IF (PHIAVE.LT.SMALL) PHIAVE = ONE
       if (phimax.lt.small) phimax = one
 C      PHICUT = 1.0D-5

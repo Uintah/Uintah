@@ -3,6 +3,9 @@ c
 c
 c*********************************************************************
 
+#if 1
+#include <Packages/Uintah/CCA/Components/Arches/fortran/resid1_fort.h>
+#else
       SUBROUTINE resid1(R0,X,Y,SCF,NVAR,IJKST,
      $     IST,JST,KST,IEND,JEND,KEND,
      $     ISTR,JSTR,KSTR,IENDR,JENDR,KENDR,IJ,IK)

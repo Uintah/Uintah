@@ -3,43 +3,12 @@ c
 c
 c*********************************************************************
 
-      SUBROUTINE symbcs(domLo, domHi, idxLo, idxHi,
-     &     PHI,
-     &     AE,AW,AN,AS,AT,AB,
-     &     PCELL, SYMTRY,
-     &     LPRDJK, LPRDKK)
+#include <Packages/Uintah/CCA/Components/Arches/fortran/symbcs_fort.h>
+#include "param4.h"
 C--------------------------------------------------------------------
 C     Subroutine provides symmtry boundary conditions for the 
 C         following variables: p, pp, u, v, w, tke, and ted.
 C-------------------------------------------------------------------- 
-
-      implicit none
-
-#include "param4.h"
-c#include "pcell.h"
-
-c*********************************************************************
-c     Arguments :
-c*********************************************************************
-      integer domLo(3), domHi(3), idxLo(3), idxHi(3)
-      double precision PHI(domLo(1):domHi(1), domLo(2):domHi(2),
-     &     domLo(3):domHi(3))
-      double precision AE(domLo(1):domHi(1), domLo(2):domHi(2),
-     &     domLo(3):domHi(3))
-      double precision AW(domLo(1):domHi(1), domLo(2):domHi(2),
-     &     domLo(3):domHi(3))
-      double precision AN(domLo(1):domHi(1), domLo(2):domHi(2),
-     &     domLo(3):domHi(3))
-      double precision AS(domLo(1):domHi(1), domLo(2):domHi(2),
-     &     domLo(3):domHi(3))
-      double precision AT(domLo(1):domHi(1), domLo(2):domHi(2),
-     &     domLo(3):domHi(3))
-      double precision AB(domLo(1):domHi(1), domLo(2):domHi(2),
-     &     domLo(3):domHi(3))
-      integer PCELL(domLo(1):domHi(1), domLo(2):domHi(2), 
-     &     domLo(3):domHi(3))
-      integer SYMTRY
-      logical LPRDKK,LPRDJK
 
 c*********************************************************************
 c     Local Variables :

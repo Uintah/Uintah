@@ -1,21 +1,8 @@
 c
 c
 
-      SUBROUTINE scalcoef(domLo, domHi, domLoVis, domHiVis,
-     $     domLong, domHing, idxLo, idxHi,
-     $     den,vis,
-     &     ae,aw,an,as,at,ab,
-     $     cesav,cwsav,cnsav,cssav,ctsav,cbsav,
-     &     domLoU, domHiU, UU,
-     &     domLoV, domHiV, VV,
-     &     domLoW, domHiW, WW,
-c    &     prinv,crn,
-c    $     VOL,RV,RA,RONE,
-     &     sew,sns,stb,
-     $     cee,cwe,cww,cnn,csn,css,ctt,cbt,cbb,
-     $     efac,wfac,enfac,sfac,tfac,bfac,
-     $     dxpw, dxep, dyps, dynp, dzpb, dztp)
-c    $     L2UP)
+#include <Packages/Uintah/CCA/Components/Arches/fortran/scalcoef_fort.h>
+#include "param4.h"
 C-----------------------------------------------------------------------
 C     WRITTEN BY SESHADRI KUMAR, OCTOBER 14, 1996
 C
@@ -85,154 +72,13 @@ C	l2up	Logical, =T implies that the 2nd upwind differencing
 C		scheme of Roache is used
 C
 C-----------------------------------------------------------------------
-      implicit none
-      INCLUDE 'param4.h'
-*-----------------------------------------------------------------------
-*     passed variables
-*
-      integer domLo(3), domHi(3), domLoVis(3), domHiVis(3),
-     $        domLong(3), domHing(3),
-     $        idxLo(3), idxHi(3)
-
-      double precision den(
-     $     domLo(1):domHi(1),
-     $     domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
-
-      double precision vis(
-     $     domLoVis(1):domHiVis(1),
-     $     domLoVis(2):domHiVis(2),
-     $     domLoVis(3):domHiVis(3))
-
-      double precision ae(
-     $     domLong(1):domHing(1),
-     $     domLong(2):domHing(2),
-     $     domLong(3):domHing(3))
-
-      double precision aw(
-     $     domLong(1):domHing(1),
-     $     domLong(2):domHing(2),
-     $     domLong(3):domHing(3))
-
-      double precision an(
-     $     domLong(1):domHing(1),
-     $     domLong(2):domHing(2),
-     $     domLong(3):domHing(3))
-
-      double precision as(
-     $     domLong(1):domHing(1),
-     $     domLong(2):domHing(2),
-     $     domLong(3):domHing(3))
-
-      double precision at(
-     $     domLong(1):domHing(1),
-     $     domLong(2):domHing(2),
-     $     domLong(3):domHing(3))
-
-      double precision ab(
-     $     domLong(1):domHing(1),
-     $     domLong(2):domHing(2),
-     $     domLong(3):domHing(3))
-
-      double precision cesav(
-     $     domLong(1):domHing(1),
-     $     domLong(2):domHing(2),
-     $     domLong(3):domHing(3))
-
-      double precision cwsav(
-     $     domLong(1):domHing(1),
-     $     domLong(2):domHing(2),
-     $     domLong(3):domHing(3))
-
-      double precision cnsav(
-     $     domLong(1):domHing(1),
-     $     domLong(2):domHing(2),
-     $     domLong(3):domHing(3))
-
-      double precision cssav(
-     $     domLong(1):domHing(1),
-     $     domLong(2):domHing(2),
-     $     domLong(3):domHing(3))
-
-      double precision ctsav(
-     $     domLong(1):domHing(1),
-     $     domLong(2):domHing(2),
-     $     domLong(3):domHing(3))
-
-      double precision cbsav(
-     $     domLong(1):domHing(1),
-     $     domLong(2):domHing(2),
-     $     domLong(3):domHing(3))
-
-      integer domLoU(3), domHiU(3)
-      double precision uu(
-     $     domLoU(1):domHiU(1),
-     $     domLoU(2):domHiU(2),
-     $     domLoU(3):domHiU(3))
-
-      integer domLoV(3), domHiV(3)
-      double precision vv(
-     $     domLoV(1):domHiV(1),
-     $     domLoV(2):domHiV(2),
-     $     domLoV(3):domHiV(3))
-
-      integer domLoW(3), domHiW(3)
-      double precision ww(
-     $     domLoW(1):domHiW(1),
-     $     domLoW(2):domHiW(2),
-     $     domLoW(3):domHiW(3))
-
-c     double precision prinv
-c     double precision crn
-
-c     double precision vol(
-c    $     domLo(1):domHi(1),
-c    $     domLo(2):domHi(2),
-c    $     domLo(3):domHi(3))
-
-c     double precision rv(domLo(2):domHi(2))
-c     double precision ra(domLo(2):domHi(2))
-c     double precision rone(domLo(2):domHi(2))
-      
-      double precision sew(domLo(1):domHi(1))
-      double precision sns(domLo(2):domHi(2))
-      double precision stb(domLo(3):domHi(3))
-
-      double precision cee(domLo(1):domHi(1))
-      double precision cwe(domLo(1):domHi(1))
-      double precision cww(domLo(1):domHi(1))
-
-      double precision cnn(domLo(2):domHi(2))
-      double precision csn(domLo(2):domHi(2))
-      double precision css(domLo(2):domHi(2))
-
-      double precision ctt(domLo(3):domHi(3))
-      double precision cbt(domLo(3):domHi(3))
-      double precision cbb(domLo(3):domHi(3))
-
-      double precision efac(domLo(1):domHi(1))
-      double precision wfac(domLo(1):domHi(1))
-
-      double precision enfac(domLo(2):domHi(2))
-      double precision sfac(domLo(2):domHi(2))
-
-      double precision tfac(domLo(3):domHi(3))
-      double precision bfac(domLo(3):domHi(3))
-
-      double precision dxpw(domLo(1):domHi(1))
-      double precision dyps(domLo(2):domHi(2))
-      double precision dzpb(domLo(3):domHi(3))
-      double precision dxep(domLo(1):domHi(1))
-      double precision dynp(domLo(2):domHi(2))
-      double precision dztp(domLo(3):domHi(3))
-
 
 *-----------------------------------------------------------------------
 *     local variables
 *
       double precision prinv
       double precision crn
-      logical l2up, lsmpt, lcend
+      logical*1 l2up, lsmpt, lcend
       double precision vol
       double precision arean, areas, areaew, areatb
       double precision dene, denw, denn, dens, dent, denb

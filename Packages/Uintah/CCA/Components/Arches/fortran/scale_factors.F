@@ -3,6 +3,9 @@ c
 c
 c*********************************************************************
 
+#if 1
+#include <Packages/Uintah/CCA/Components/Arches/fortran/scale_factors_fort.h>
+#else
       SUBROUTINE scale_factors(indexLow, indexHigh,
      $     UU, VV, WW, PP,
      &     TKE, TED, FF,

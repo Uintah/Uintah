@@ -3,6 +3,9 @@ c
 c
 c*********************************************************************
 
+#if 1
+#include <Packages/Uintah/CCA/Components/Arches/fortran/grid_fort.h>
+#else
       SUBROUTINE grid(indexLow, indexHigh, PCELL,
      &     XX, YY, ZZ, 
      &     DIACH, DIAPR, DIASC,

@@ -3,6 +3,9 @@ c
 c
 c*********************************************************************
 
+#if 1
+#include <Packages/Uintah/CCA/Components/Arches/fortran/prdbc2_fort.h>
+#else
       SUBROUTINE prdbc2(domLo, domHi, idxLo, idxHi,
      &     PHI,
      &     AS,AT,AB,

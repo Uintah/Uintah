@@ -3,9 +3,8 @@ c
 c
 c*********************************************************************
 
-      SUBROUTINE arrl1(
-     $     ALPHA, ALPAVE, AA,
-     $     dim_lo, dim_hi, valid_lo, valid_hi)
+#include <Packages/Uintah/CCA/Components/Arches/fortran/arrl1_fort.h>
+#include "param4.h"
 C-----------------------------------------------------------------------
 C     WRITTEN BY SESHADRI KUMAR, OCTOBER 14, 1996
 C
@@ -17,37 +16,6 @@ C
 C     ALSO CALCULATES THE L1 MEAN VALUE OF AA, ALPAVE.
 C
 C-----------------------------------------------------------------------
-      implicit none
-
-#include "param4.h"
-
-c*********************************************************************
-c     Arguments :
-c*********************************************************************
-      integer dim_lo(3)
-c
-c     lower indices for dimension of AA
-c
-      integer dim_hi(3)
-c
-c     upper indices for dimension of AA
-c
-      integer valid_lo(3)
-c
-c     lower indices of valid region of AA over which operation is
-c     to be performed
-c
-      integer valid_hi(3)
-c
-c     upper indices of valid region of AA over which operation is
-c     to be performed
-c
-      double precision AA(
-     $     dim_lo(1):dim_hi(1), 
-     &     dim_lo(2):dim_hi(2), 
-     $     dim_lo(3):dim_hi(3))
-
-      double precision ALPHA, ALPAVE
 
 c*********************************************************************
 c     Local Variables :

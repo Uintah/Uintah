@@ -3,6 +3,9 @@ c
 c
 c*********************************************************************
 
+#if 1
+#include <Packages/Uintah/CCA/Components/Arches/fortran/grdgrf_fort.h>
+#else
       SUBROUTINE grdgrf(indexLow, indexHigh,
      &     JPST, JPED, JSST, JSED,
      &     LRDGD, LCORD, LPRIN,

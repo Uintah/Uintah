@@ -3,44 +3,12 @@ c
 c
 c*********************************************************************
 
-      SUBROUTINE areain(domainLow, domainHigh,
-     &     indexLow, indexHigh,
-     &     SEW, SNS, STB, 
-c     &     RA, RV, 
-     &     AREAPR, PCELL, PFIELD,
-     $     xminus, xplus, yminus, yplus, zminus, zplus) 
-c     &     LCORD, LPRIN,
-c     &     ierr)
+#include <Packages/Uintah/CCA/Components/Arches/fortran/areain_fort.h>
+#include "param4.h"
 C---------------------------------------------------------------------
 C     THIS SUBROUTINE WILL CALCULATE INLET
 C     AREAS FOR THE PRIMARY (AREAPR) AND SECONDARY (AREASC)
 C---------------------------------------------------------------------
-
-      implicit none
-
-#include "param4.h"
-
-
-c*********************************************************************
-c     Arguments :
-c*********************************************************************
-      integer domainLow(3)
-      integer domainHigh(3)
-      integer indexLow(3)
-      integer indexHigh(3)
-      integer PCELL(domainLow(1):domainHigh(1), 
-     &     domainLow(2):domainHigh(2), 
-     &     domainLow(3):domainHigh(3))
-      double precision SEW(domainLow(1):domainHigh(1)), 
-     &     SNS(domainLow(2):domainHigh(2)), 
-     &     STB(domainLow(3):domainHigh(3))
-c      double precision RA(domainLow(2): domainHigh(2)), 
-c     &     RV(domainLow(2): domainHigh(2))
-      double precision AREAPR
-      integer PFIELD
-      integer xminus, xplus, yminus, yplus, zminus, zplus
-c      logical LCORD, LPRIN
-c      integer ierr
 
 c*********************************************************************
 c     Local Variables :
@@ -74,7 +42,7 @@ C--------------------------------------------------------------------
       if (xminus.or.xplus) then
          DO 110 K = KST,KEND
             DO 100 J = JST,JEND
-               IF ((PCELL(iBegGhost,J,K).EQ.PFIELD).and.xminus) THEN
+               IF ((PCELL(iBegGhost,J,K).EQ.PFIELD).and.xminus)THEN
 c           write(*,'("i=",i2," j=",i2," k=",i2," sns=",f5.2," stb=",f5.2)')
 c    &        iBegGhost,j,k,sns(j),stb(k) 
                   AREAT = AREAT + SNS(J)*STB(K)
@@ -88,7 +56,7 @@ c    &        iBegGhost,j,k,sns(j),stb(k)
       if (yminus.or.yplus) then
          DO 140 K = KST,KEND
             DO 130 I = IST,IEND
-               IF ((PCELL(I,jBegGhost,K).EQ.PFIELD).and.yminus) THEN
+               IF ((PCELL(I,jBegGhost,K).EQ.PFIELD).and.yminus)THEN
                 AREAT = AREAT + SEW(I)*STB(K)
 c               IF(LCORD.AND.LPRIN)WRITE(3,*)' ERROR ON INLET CONDITION'
              END IF
@@ -102,7 +70,7 @@ c               IF(LCORD.AND.LPRIN)WRITE(3,*)' ERROR ON INLET CONDITION'
       if (zminus.or.zplus) then
          DO 170 J = JST,JEND
             DO 160 I = IST,IEND
-               IF ((PCELL(I,J,kBegGhost).EQ.PFIELD).and.zminus) THEN
+               IF ((PCELL(I,J,kBegGhost).EQ.PFIELD).and.zminus)THEN
                   AREAT = AREAT + SEW(I)*SNS(J)
 c     IF(LCORD.AND.LPRIN)WRITE(3,*)' ERROR ON INLET CONDITION'
                END IF
