@@ -287,8 +287,7 @@ public:
 					    const TypeDescription *vfld);
 
   static double RayPlaneIntersection(const Point &p, const Vector &dir,
-				     const Point &p0, const Point &p1,
-				     const Point &p2);
+				     const Point &p0, const Vector &normal);
 };
 
 
@@ -323,24 +322,20 @@ StreamLinesAccAlgoT<SMESH, SLOC, VFLD>::FindNodes(vector<Point> &v,
   typename VFLD::mesh_type::Elem::index_type elem, neighbor;
   typename VFLD::mesh_type::Face::array_type faces;
   typename VFLD::mesh_type::Node::array_type nodes;
-
+  typename VFLD::mesh_type::Face::index_type minface;
+  Vector lastnormal, minnormal;
   Vector dir;
-  Vector newdir;
 
-  vmesh->locate(elem, seed);
-  vfield->value(dir, elem);
-  if (back) { dir *= -1.0; }
-
+  if (!vmesh->locate(elem, seed)) { return; }
   for (int i=0; i < maxsteps; i++)
   {
-    vfield->value(newdir, elem);
-    if (back) { newdir *= -1.0; }
-    if (Dot(dir, newdir) < 0.0) { break; }
-    dir = newdir;
+    vfield->value(dir, elem);
+    if (back) { dir *= -1.0; }
     
+    if (i && Dot(dir, lastnormal) < 1.0e-3) { break; }
+
     vmesh->get_faces(faces, elem);
     double mindist = 1.0e24;
-    typename VFLD::mesh_type::Face::index_type minface;
     bool found = false;
     for (unsigned int j=0; j < faces.size(); j++)
     {
@@ -349,21 +344,25 @@ StreamLinesAccAlgoT<SMESH, SLOC, VFLD>::FindNodes(vector<Point> &v,
       vmesh->get_center(p0, nodes[0]);
       vmesh->get_center(p1, nodes[1]);
       vmesh->get_center(p2, nodes[2]);
-      const double dist = RayPlaneIntersection(seed, dir, p0, p1, p2);
-      if (dist > 1.0e-3 && dist < mindist)
+      const Vector normal = Cross(p1-p0, p2-p0);
+      const double dist = RayPlaneIntersection(seed, dir, p0, normal);
+      if (dist > 1.0e-6 && dist < mindist)
       {
 	mindist = dist;
 	minface = faces[j];
+	minnormal = normal;
 	found = true;
       }
     }
     if (!found) { break; }
+
     seed = seed + dir * mindist;
-    if (!vmesh->locate(neighbor, seed)) { break; }
 
     v.push_back(seed);
     if (!vmesh->get_neighbor(neighbor, elem, minface)) { break; }
     elem = neighbor;
+    lastnormal = minnormal;
+    if (Dot(lastnormal, dir) < 0.0) { lastnormal *= -1; }
   }
 
   if (remove_colinear_p)
