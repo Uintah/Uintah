@@ -364,8 +364,10 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 				    req->d_patch, d_myworld,
 				    MPI_ANY_SOURCE,
 				    req->d_serialNumber, &size, &requestid);
-			log.logRecv(req, size);
-			recv_ids.push_back(requestid);	
+			if(size != -){
+			   log.logRecv(req, size);
+			   recv_ids.push_back(requestid);
+			}
 			dbg << "there are now " << recv_ids.size() << " waiters\n";
 		     }
 		  }
@@ -449,8 +451,10 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 				       dep->d_task->getAssignedResourceIndex(),
 				       dep->d_serialNumber,
 				       &size, &requestid);
-			   log.logSend(dep, size);
-			   send_ids.push_back(requestid);
+			   if(size != -){
+			      log.logSend(dep, size);
+			      send_ids.push_back(requestid);
+			   }
 			   varsent.insert(ddest);
 			}
 		     }
@@ -881,6 +885,9 @@ MPIScheduler::releaseLoadBalancer()
 
 //
 // $Log$
+// Revision 1.26  2000/09/29 21:19:57  sparker
+// Do not log send or wait for the send if size == -1
+//
 // Revision 1.25  2000/09/27 20:49:55  witzel
 // It needed to receive in gatherParticles even for zero byte data.
 //
