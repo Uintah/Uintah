@@ -37,6 +37,11 @@ itcl_class SubnetModule {
 	set isSubnetModule 1
     }
 
+    destructor {
+	destroy .subnet$subnetNumber
+    }
+	
+
     method ui {} {
 	global Subnet
 	foreach modid $Subnet(Subnet${subnetNumber}_Modules) {
@@ -208,7 +213,7 @@ proc makeSubnet { from_subnet { x 0 } { y 0 }} {
 
 proc createSubnet { from_subnet { modules "" } } {
     global Subnet CurrentlySelectedModules mouseX mouseY
-    if { $modules == "" } {
+    if { [llength $CurrentlySelectedModules ] } {
 	set modules $CurrentlySelectedModules
     }
 
@@ -270,6 +275,64 @@ proc createSubnet { from_subnet { modules "" } } {
 }
 
 
+
+proc expandSubnet { modid } {
+    global Subnet
+    set from $Subnet(${modid}_num)
+    set to $Subnet($modid)
+
+    set fromcanvas $Subnet(Subnet${from}_canvas)
+    set tocanvas $Subnet(Subnet${to}_canvas)
+    set x [lindex [$tocanvas bbox $modid] 0]
+    set y [lindex [$tocanvas bbox $modid] 1]
+    $tocanvas delete $modid
+    set toDelete ""
+    set toAdd ""
+    foreach module $Subnet(Subnet${from}_Modules) {
+	set bbox [$fromcanvas bbox $module]
+	set newx [expr $x + [lindex $bbox 0] - 10]
+	set newy [expr $y + [lindex $bbox 1] - 25]
+	set Subnet($module) $to
+	lappend Subnet(Subnet${to}_Modules) $module
+	$fromcanvas delete $module
+	$module make_icon $newx $newy
+	foreach iconn $Subnet(Subnet${from}_connections) {
+	    lappend toDelete $iconn
+	    foreach econn $Subnet(SubnetIcon${from}_connections) {
+		lappend toDelete $econn
+		if { [iNum econn] == [oNum iconn] && \
+			 [isaSubnetIcon [iMod econn]] && \
+			 [isaSubnet [oMod iconn]] } {
+		    lappend toAdd \
+			"[oMod econn] [oNum econn] [iMod iconn] [iNum iconn]"
+		}
+		if { [oNum econn] == [iNum iconn] && \
+			 [isaSubnetIcon [oMod econn]] && \
+			 [isaSubnet [iMod iconn]] } {
+		    lappend toAdd \
+			"[oMod iconn] [oNum iconn] [iMod econn] [iNum econn]"
+		}
+	    }
+	}
+    }	
+    foreach conn $toDelete {
+	destroyConnection $conn 0 0
+    }
+
+    foreach conn $toAdd {
+	createConnection $conn 0 0
+    }
+
+    foreach module $Subnet(Subnet${from}_Modules) {
+	drawConnections $Subnet(${module}_connections)
+    }
+
+#    moduleDestroy $modid
+    array unset Subnet Subnet${from}*
+}
+
+
+
 # Sorts a list of connections by input port position left to right
 proc sortPorts { subnet ports } {
     global Subnet
@@ -299,24 +362,32 @@ proc drawSubnetConnections { subnet } {
 
 
 
-# This procedure stores away all the global variables that start
-# with an "m" to allow nested loads of the networks (see the .net files)
-proc backupLoadVars {} {
+# This procedure caches away all the global variables that match the pattern
+# "mDDDD" (where D is a decimal digit or null character"
+# this allow nested source loads of the networks (see the .net files)
+proc backupLoadVars { key } {
     global loadVars
-    set loadVars(savedNames) [uplevel \#0 info vars m*]
-    foreach name $loadVars(savedNames) {
-	upvar \#0 $name var
-	set loadVars($name) $var
+    set pattern m
+    for {set i 0} {$i < 4} {incr i} {
+	set pattern "$pattern\\\[0\\\-9\\\]"
+	set varNames [uplevel \#0 info vars $pattern]
+	eval lappend {loadVars($key-varList)} $varNames
+	foreach name $varNames {
+	    upvar \#0 $name var
+	    set loadVars($key-$name) $var
+	}
     }
 }
 
 
-proc restoreLoadVars {} {
+proc restoreLoadVars { key } {
     global loadVars
-    foreach name $loadVars(savedNames) {
+    if ![info exists loadVars($key-varList)] { return }
+    foreach name $loadVars($key-varList) {
 	upvar \#0 $name var
-	set var $loadVars($name)
+	set var $loadVars($key-$name)
     }
+    array unset loadVars "$key-*"
 }
 
 
@@ -345,9 +416,9 @@ proc loadSubnet { subnet filename { x 0 } { y 0 } } {
     set subnetNumber [makeSubnet $subnet $x $y]
     set oldLoadingLevel $Subnet(Loading)
     set Subnet(Loading) $subnetNumber
-    backupLoadVars
+    backupLoadVars $filename
     uplevel \#0 source \{$filename\}
-    restoreLoadVars
+    restoreLoadVars $filename
     set Subnet(Subnet$Subnet(Loading)_filename) "$filename"
     set Subnet(Loading) $oldLoadingLevel
     return SubnetIcon$subnetNumber
@@ -411,17 +482,25 @@ proc saveSubnet { subnet { name ""} } {
 	    "$m([oMod conn]) [oNum conn] $m([iMod conn]) [iNum conn]"
     }
     set invalidvars [list -msgStream -done_bld_icon]
-    puts $out ""
+    puts $out "\#ui"
     set i 0
     foreach module $Subnet(Subnet${subnet}_Modules) {
 	foreach var [uplevel \#0 info vars "$module-*"] {
-	    set varname [string range $var [string length $module] end]
+	    if [uplevel \#0 array exists "\{$var\}"] continue
+	    set varname [string range "$var" [string length $module] end]
 	    if {[lsearch $invalidvars $varname] == -1} {
-		set value [uplevel \#0 set $var]
-		puts $out "set $m($module)${varname} \{$value\}"
+		upvar \#0 "$var" value
+		puts $out "set \{$m($module)${varname}\} \{$value\}"
 	    }
 	}
     }
+    puts $out ""
+    foreach module $Subnet(Subnet${subnet}_Modules) {
+	if [winfo exists .ui$module] {
+	    puts $out "$m($module) initialize_ui"
+	}
+    }
+
     puts $out "\n::netedit scheduleok"
     close $out
     return $name
