@@ -71,6 +71,8 @@ private:
   int jwrap_;
   int kwrap_;
 
+  bool error_;
+
   vector< int > nGenerations_;
 
   FieldHandle  fHandle_;
@@ -94,7 +96,9 @@ PPPLNrrdConverter::PPPLNrrdConverter(GuiContext* context)
 
     iwrap_(0),
     jwrap_(0),
-    kwrap_(0)
+    kwrap_(0),
+
+    error_( false )
 {
 }
 
@@ -184,6 +188,7 @@ PPPLNrrdConverter::execute(){
       // Do not allow joined Nrrds
       if( datasets.size() != 1 ) {
 	error( "Too many sets listed in the tuple axis." );
+	error_ = true;
 	return;
       }
 
@@ -218,13 +223,16 @@ PPPLNrrdConverter::execute(){
   }
 
   // If no data or data change, recreate the field.
-  if( !fHandle_.get_rep() ||
+  if( error_ ||
+      !fHandle_.get_rep() ||
       generation ||
       iwrap_ != iWrap_.get() ||
       jwrap_ != jWrap_.get() ||
       kwrap_ != kWrap_.get() ||
       grid_  != gridData_.get() ) {
  
+    error_ = false;
+
     iwrap_ = iWrap_.get();
     jwrap_ = jWrap_.get();
     kwrap_ = kWrap_.get();
@@ -265,6 +273,7 @@ PPPLNrrdConverter::execute(){
       kdim = 1;
     } else {
       error( "Grid dimensions do not make sense." );
+      error_ = true;
       return;
     }
 
@@ -325,6 +334,7 @@ PPPLNrrdConverter::execute(){
 
     } else {
       error( "Grid dimensions do not make sense." );
+      error_ = true;
       return;
     }
   
@@ -358,6 +368,7 @@ PPPLNrrdConverter::execute(){
 
       if( tuples != 1 ) {
 	error( "Too many tuples listed in the tuple axis." );
+	error_ = true;
 	return;
       }
 
@@ -368,6 +379,7 @@ PPPLNrrdConverter::execute(){
 
       if( dataset.size() != 1 ) {
 	error( "Too many sets listed in the tuple axis." );
+	error_ = true;
 	return;
       }
 
@@ -383,14 +395,36 @@ PPPLNrrdConverter::execute(){
 	for( int ic=0; ic<mdims.size(); ic++ ) {
 	  if( ddims[ic] != mdims[ic] ) {
 	    error( "Data and grid sizes do not match." );
+	    error_ = true;
 	    return;
 	  }
 	}
 
-	if( ddims.size() == mdims.size() )
-	  rank = 1;
-	else if(ddims.size() == mdims.size() + 1)
-	  rank = ddims[mdims.size()];
+	if( ddims.size() == mdims.size() ) {
+	  if( dataset[0].find( ":Scalar" ) != std::string::npos )
+	    rank = 1;
+	  else if( dataset[0].find( ":Vector" ) != std::string::npos )
+	    rank = 1;
+	  else if( dataset[0].find( ":Tensor" ) != std::string::npos )
+	    rank = 1;
+	  else {
+	    error( "Bad tuple axis - no data type must be scalar, vector, or tensor." );
+	    error( dataset[0] );
+	    error_ = true;
+	    return;
+	  }
+	}
+	else if(ddims.size() == mdims.size() + 1) {
+
+	  if( dataset[0].find( ":Scalar" ) != std::string::npos )
+	    rank = ddims[mdims.size()];
+	  else {
+	    error( "Bad tuple axis - data type must be scalar. Found:" );
+	    error( dataset[0] );
+	    error_ = true;
+	    return;
+	  }
+	}
       }
     } else {
       nHandle = NULL;
@@ -406,11 +440,15 @@ PPPLNrrdConverter::execute(){
       if( rank == 1 ) {
 	// Now after the mesh has been created, create the field.
 	fHandle_ =
-	  scinew StructHexVolField<float>(mesh, Field::NODE);
+	  scinew StructHexVolField< float >(mesh, Field::NODE);
       } else if( rank == 3 ) {
 	// Now after the mesh has been created, create the field.
 	fHandle_ =
-	  scinew StructHexVolField< vector<float> >(mesh, Field::NODE);
+	  scinew StructHexVolField< Vector >(mesh, Field::NODE);
+      } else if( rank == 6 ) {
+	// Now after the mesh has been created, create the field.
+	fHandle_ =
+	  scinew StructHexVolField< Tensor >(mesh, Field::NODE);
       }
     } else if( ndims == 2 ) {
 
@@ -420,11 +458,15 @@ PPPLNrrdConverter::execute(){
       if( rank == 1 ) {
 	// Now after the mesh has been created, create the field.
 	fHandle_ =
-	  scinew StructQuadSurfField<float >(mesh, Field::NODE);
+	  scinew StructQuadSurfField< float >(mesh, Field::NODE);
       } else if( rank == 3 ) {
 	// Now after the mesh has been created, create the field.
 	fHandle_ =
-	  scinew StructQuadSurfField< vector<float> >(mesh, Field::NODE);
+	  scinew StructQuadSurfField< Vector >(mesh, Field::NODE);
+      } else if( rank == 6 ) {
+	// Now after the mesh has been created, create the field.
+	fHandle_ =
+	  scinew StructQuadSurfField< Tensor >(mesh, Field::NODE);
       }
     } else if( ndims == 1 ) {
 
@@ -434,14 +476,19 @@ PPPLNrrdConverter::execute(){
       if( rank == 1 ) {
 	// Now after the mesh has been created, create the field.
 	fHandle_ =
-	  scinew StructCurveField<float >(mesh, Field::NODE);
+	  scinew StructCurveField< float >(mesh, Field::NODE);
       } else if( rank == 3 ) {
 	// Now after the mesh has been created, create the field.
 	fHandle_ =
-	  scinew StructCurveField< vector<float> >(mesh, Field::NODE);
+	  scinew StructCurveField< Vector >(mesh, Field::NODE);
+      } else if( rank == 6 ) {
+	// Now after the mesh has been created, create the field.
+	fHandle_ =
+	  scinew StructCurveField< Tensor >(mesh, Field::NODE);
       }
     } else {
       error( "Data dimensions do not make sense." );
+      error_ = true;
       return;
     }
 		
