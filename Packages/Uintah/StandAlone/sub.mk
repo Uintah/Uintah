@@ -9,7 +9,7 @@ include $(SCIRUN_SCRIPTS)/recurse.mk
 SRCS := $(SRCDIR)/sus.cc
 
 ifeq ($(CC),newmpxlc)
-AIX_LIBRARY := \
+  AIX_LIBRARY := \
         Core/Datatypes    \
         Dataflow/Comm     \
         Dataflow/Network  \
@@ -31,8 +31,8 @@ AIX_LIBRARY := \
         Packages/Uintah/CCA/Components/Arches/Radiation/fortran
 endif
 
-
 PROGRAM := Packages/Uintah/StandAlone/sus
+
 ifeq ($(LARGESOS),yes)
   PSELIBS := Packages/Uintah
 else
@@ -65,7 +65,7 @@ else
 endif
 
 ifeq ($(CC),newmpxlc)
-LIBS := \
+  LIBS := \
         $(TCL_LIBRARY) $(TK_LIBRARY) $(ITCL_LIBRARY) $(ITK_LIBRARY)
 	$(BLT_LIBRARY) \
         $(XML_LIBRARY) \
@@ -77,18 +77,19 @@ LIBS := \
         $(PETSC_LIBRARY) \
         -lld -lm
 else
-LIBS := $(XML_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) \
-        $(PETSC_LIBRARY)
+  LIBS := $(XML_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY) \
+        $(HYPRE_LIBRARY) $(PETSC_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
 SRCS := $(SRCDIR)/puda.cc
 PROGRAM := Packages/Uintah/StandAlone/puda
+
 ifeq ($(LARGESOS),yes)
-PSELIBS := Datflow Packages/Uintah
+  PSELIBS := Datflow Packages/Uintah
 else
-PSELIBS := \
+  PSELIBS := \
         Packages/Uintah/Core/Exceptions    \
         Packages/Uintah/Core/Grid          \
         Packages/Uintah/Core/Math          \
@@ -104,16 +105,18 @@ PSELIBS := \
         Core/OS          \
         Core/Containers
 endif
+
 LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY) -lm
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
 SRCS := $(SRCDIR)/compare_uda.cc
 PROGRAM := Packages/Uintah/StandAlone/compare_uda
+
 ifeq ($(LARGESOS),yes)
-PSELIBS := Datflow Packages/Uintah
+  PSELIBS := Datflow Packages/Uintah
 else
-PSELIBS := \
+  PSELIBS := \
         Packages/Uintah/Core/Exceptions    \
         Packages/Uintah/Core/Grid          \
         Packages/Uintah/Core/Disclosure    \
@@ -128,6 +131,7 @@ PSELIBS := \
         Core/OS          \
         Core/Containers
 endif
+
 LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY) -lm
 
 include $(SCIRUN_SCRIPTS)/program.mk
