@@ -100,6 +100,7 @@ void TCL::execute(const clString& string)
 	}
         gm->putConnection (skt);
     }
+#endif
     else {
         TCLTask::lock();
         int code = Tcl_Eval(the_interp, const_cast<char *>(string()));
@@ -111,6 +112,7 @@ void TCL::execute(const clString& string)
 
 void TCL::execute(char* string)
 {
+#ifndef _WIN32
     if (gm != NULL) {
     	int skt = gm->getConnection();
 printf ("TCL::execute(%s): Got skt from gm->getConnection() = %d", string,skt);
@@ -131,7 +133,7 @@ printf ("TCL::execute(%s): Got skt from gm->getConnection() = %d", string,skt);
 	{
 	    //printf("TCL::execute() 1\n");
 	    TCLTask::lock();
-        int code = Tcl_Eval(the_interp, (char*)(string()));
+        int code = Tcl_Eval(the_interp, string);
         if(code != TCL_OK)
 		{
 			Tk_BackgroundError(the_interp);
@@ -455,6 +457,9 @@ void TCL::set_tclvar(const clString& base, const clString& name,
 
 //
 // $Log$
+// Revision 1.9  1999/09/23 06:16:24  sparker
+// Fixed win32 ifdef
+//
 // Revision 1.8  1999/09/23 01:13:03  moulding
 // for a win32 #if block, changed Tcl_Eval(the_interp, string) to
 // Tcl_Eval(the_interp, (char*)(string()))
