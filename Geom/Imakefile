@@ -15,14 +15,14 @@ X11SRCS = GeomX11.cc
 OBJS = Color.o  Cone.o  Cylinder.o  Disc.o  Geom.o  Group.o  \
 	HeadLight.o  Light.o  Lighting.o  Line.o  Material.o  \
 	Pick.o  PickMessage.o  PointLight.o  Polyline.o  \
-	RenderMode.o  Sphere.o  \
-	Tetra.o  Tri.o  TriStrip.o  View.o  \
+	RenderMode.o  Sphere.o \
+	Tetra.o  Tri.o  TriStrip.o  Tube.o  View.o  \
 	$(OPENGLOBJS) $(X11OBJS)
 SRCS = Color.cc Cone.cc Cylinder.cc Disc.cc Geom.cc Group.cc \
 	HeadLight.cc Light.cc Lighting.cc Line.cc Material.cc \
 	Pick.cc PickMessage.cc PointLight.cc Polyline.cc \
 	RenderMode.cc Sphere.cc \
-	Tetra.cc Tri.cc TriStrip.cc View.cc \
+	Tetra.cc Tri.cc TriStrip.cc Tube.cc View.cc \
 	$(OPENGLSRCS) $(X11SRCS)
 
 LIBNAME = Geom
