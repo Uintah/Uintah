@@ -28,6 +28,8 @@ SRCS     += $(SRCDIR)/Brick.cc \
 	 $(SRCDIR)/Polygon.cc \
 	 $(SRCDIR)/SliceTable.cc \
 	 $(SRCDIR)/VolumeUtils.cc \
+	 $(SRCDIR)/VisParticleSet.cc \
+	 $(SRCDIR)/VisParticleSetPort.cc \
 	 $(SRCDIR)/GLAnimatedStreams.cc
 
 PSELIBS := SCICore/Exceptions SCICore/Geometry \
@@ -44,6 +46,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.6  2000/09/27 16:23:18  kuzimmer
+# Moved these files from the now defunct DataArchive Directory
+#
 # Revision 1.5  2000/09/17 15:59:41  kuzimmer
 # updated texture planes for binary transparency
 #
