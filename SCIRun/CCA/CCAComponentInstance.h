@@ -45,6 +45,7 @@
 #include <SCIRun/PortInstanceIterator.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <Core/CCA/PIDL/Object.h>
+#include <Core/Thread/ConditionVariable.h>
 #include <map>
 #include <string>
 
@@ -131,6 +132,7 @@ private:
   std::map<std::string, CCAPortInstance*> ports;
   std::map<std::string, std::vector<Object::pointer> > preports;
   std::map<std::string, int > precnt;
+  std::map<std::string, ConditionVariable*> precond;
   
   sci::cca::Component::pointer component;
   Mutex *mutex;
