@@ -257,32 +257,12 @@ Arches::sched_paramInit(const LevelP& level,
       tsk->computes(d_lab->d_scalarINLabel); // only work for 1 scalar
     tsk->computes(d_lab->d_densityINLabel);
     tsk->computes(d_lab->d_viscosityINLabel);
-
+    // for reacting flows save temperature and co2 
+    tsk->computes(d_lab->d_tempINLabel);
+    tsk->computes(d_lab->d_co2INLabel);
     tsk->computes(d_lab->d_pressPlusHydroLabel);
     sched->addTask(tsk, level->eachPatch(), d_sharedState->allArchesMaterials());
 
-  
-#if 0
-  for(Level::const_patchIterator iter=level->patchesBegin();
-      iter != level->patchesEnd(); iter++){
-    const Patch* patch=*iter;
-
-    // primitive variable initialization
-    Task* tsk = scinew Task("Arches::paramInit",
-			 patch, old_dw, new_dw, this,
-			 &Arches::paramInit);
-    int matlIndex = 0;
-    tsk->computes(new_dw, d_lab->d_uVelocityINLabel, matlIndex, patch);
-    tsk->computes(new_dw, d_lab->d_vVelocityINLabel, matlIndex, patch);
-    tsk->computes(new_dw, d_lab->d_wVelocityINLabel, matlIndex, patch);
-    tsk->computes(new_dw, d_lab->d_pressureINLabel, matlIndex, patch);
-    for (int ii = 0; ii < d_nofScalars; ii++) 
-      tsk->computes(new_dw, d_lab->d_scalarINLabel, ii, patch);
-    tsk->computes(new_dw, d_lab->d_densityINLabel, matlIndex, patch);
-    tsk->computes(new_dw, d_lab->d_viscosityINLabel, matlIndex, patch);
-    sched->addTask(tsk);
-  }
-#endif
 }
 
 // ****************************************************************************
@@ -384,7 +364,13 @@ Arches::paramInit(const ProcessorGroup* ,
     new_dw->allocate(vVelocity, d_lab->d_vVelocityINLabel, matlIndex, patch);
     new_dw->allocate(wVelocity, d_lab->d_wVelocityINLabel, matlIndex, patch);
     new_dw->allocate(pressure, d_lab->d_pressureINLabel, matlIndex, patch);
-
+    CCVariable<double> temperature;
+    CCVariable<double> co2;
+    new_dw->allocate(temperature, d_lab->d_tempINLabel, matlIndex, patch);
+    new_dw->allocate(co2, d_lab->d_co2INLabel, matlIndex, patch);
+    temperature.initialize(0.0);
+    co2.initialize(0.0);
+ 
     new_dw->allocate(pPlusHydro, d_lab->d_pressPlusHydroLabel, matlIndex, patch);
     pPlusHydro.initialize(0.0);
 
@@ -450,6 +436,8 @@ Arches::paramInit(const ProcessorGroup* ,
     }
     new_dw->put(density, d_lab->d_densityINLabel, matlIndex, patch);
     new_dw->put(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch);
+    new_dw->put(temperature, d_lab->d_tempINLabel, matlIndex, patch);
+    new_dw->put(co2, d_lab->d_co2INLabel, matlIndex, patch);
 
     new_dw->put(pPlusHydro, d_lab->d_pressPlusHydroLabel, matlIndex, patch);
 

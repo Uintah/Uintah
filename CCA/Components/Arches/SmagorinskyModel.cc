@@ -105,42 +105,6 @@ SmagorinskyModel::sched_computeTurbSubmodel(SchedulerP& sched, const PatchSet* p
 
   sched->addTask(tsk, patches, matls);
 
-#if 0
-  for(Level::const_patchIterator iter=level->patchesBegin();
-      iter != level->patchesEnd(); iter++){
-    const Patch* patch=*iter;
-    {
-      Task* tsk = scinew Task("SmagorinskyModel::TurbSubmodel",
-			      patch, old_dw, new_dw, this,
-			      &SmagorinskyModel::computeTurbSubmodel);
-
-      int numGhostCells = 1;
-      int zeroGhostCells = 0;
-      int matlIndex = 0;
-
-      // Requires
-      tsk->requires(old_dw, d_lab->d_densityCPLabel, matlIndex, patch, Ghost::None,
-		    zeroGhostCells);
-      tsk->requires(old_dw, d_lab->d_viscosityINLabel, matlIndex, patch, 
-		    Ghost::None,
-		    zeroGhostCells);
-      tsk->requires(old_dw, d_lab->d_uVelocitySPLabel, matlIndex, patch, 
-		    Ghost::AroundCells,
-		    numGhostCells);
-      tsk->requires(old_dw, d_lab->d_vVelocitySPLabel, matlIndex, patch,
-		    Ghost::AroundCells,
-		    numGhostCells);
-      tsk->requires(old_dw, d_lab->d_wVelocitySPLabel, matlIndex, patch, 
-		    Ghost::AroundCells,
-		    numGhostCells);
-
-      // Computes
-      tsk->computes(new_dw, d_lab->d_viscosityCTSLabel, matlIndex, patch);
-
-      sched->addTask(tsk);
-    }
-  }
-#endif
 }
 
 //****************************************************************************
@@ -181,46 +145,6 @@ SmagorinskyModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
   tsk->computes(d_lab->d_viscosityCTSLabel);
 
   sched->addTask(tsk, patches, matls);
-#if 0
-  for(Level::const_patchIterator iter=level->patchesBegin();
-      iter != level->patchesEnd(); iter++){
-    const Patch* patch=*iter;
-    {
-      Task* tsk = scinew Task("SmagorinskyModel::ReTurbSubmodel",
-			      patch, old_dw, new_dw, this,
-			      &SmagorinskyModel::reComputeTurbSubmodel);
-
-      int numGhostCells = 1;
-      int zeroGhostCells = 0;
-      int matlIndex = 0;
-
-      // Requires
-      tsk->requires(new_dw, d_lab->d_densityCPLabel, matlIndex, patch, Ghost::None,
-		    zeroGhostCells);
-      tsk->requires(new_dw, d_lab->d_viscosityINLabel, matlIndex, patch, 
-		    Ghost::None,
-		    zeroGhostCells);
-      tsk->requires(new_dw, d_lab->d_uVelocitySPBCLabel, matlIndex, patch,
-		    Ghost::AroundCells,
-		    numGhostCells);
-      tsk->requires(new_dw, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
-		    Ghost::AroundCells,
-		    numGhostCells);
-      tsk->requires(new_dw, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
-		    Ghost::AroundCells,
-		    numGhostCells);
-      // for multimaterial
-      if (d_MAlab)
-	tsk->requires(new_dw, d_lab->d_mmgasVolFracLabel, matlIndex, patch,
-		      Ghost::None, zeroGhostCells);
-
-      // Computes
-      tsk->computes(new_dw, d_lab->d_viscosityCTSLabel, matlIndex, patch);
-
-      sched->addTask(tsk);
-    }
-  }
-#endif
 }
 
 //****************************************************************************
@@ -247,6 +171,8 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup*,
     // Get the velocity, density and viscosity from the old data warehouse
     int numGhostCells = 1;
     int zeroGhostCells = 0;
+    new_dw->get(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch, Ghost::None,
+		zeroGhostCells);
     new_dw->get(uVelocity, d_lab->d_uVelocitySPLabel, matlIndex, patch,
 		Ghost::AroundCells, numGhostCells);
     new_dw->get(vVelocity, d_lab->d_vVelocitySPLabel, matlIndex, patch, 
@@ -254,8 +180,6 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup*,
     new_dw->get(wVelocity,d_lab->d_wVelocitySPLabel, matlIndex, patch, 
 		Ghost::AroundCells, numGhostCells);
     new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch, Ghost::None,
-		zeroGhostCells);
-    new_dw->get(viscosity, d_lab->d_viscosityINLabel, matlIndex, patch, Ghost::None,
 		zeroGhostCells);
 
     PerPatch<CellInformationP> cellinfop;
@@ -344,7 +268,6 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup*,
 	}
       }
 #endif
-
       // Create the new viscosity variable to write the result to 
       // and allocate space in the new data warehouse for this variable
       // Put the calculated viscosityvalue into the new data warehouse

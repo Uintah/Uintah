@@ -49,7 +49,7 @@ C-----------------------------------------------------------------------
  100        continue
  200     continue
  300  continue
-
+#if 0
       print*, 'value of pressure after normalization = ',
      $     'at wall location 5, 9, 9 = ',press(5,9,9)
 
@@ -61,7 +61,7 @@ C-----------------------------------------------------------------------
 
       print*, 'value of pressure after normalization = ',
      $     'at wall location 5, 10, 10 = ',press(5,10,10)
-
+#endif
 C-----------------------------------------------------------------------
       RETURN
       END

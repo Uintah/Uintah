@@ -147,6 +147,10 @@ public:
       void sched_setInletVelocityBC(SchedulerP&, const PatchSet* patches,
 				    const MaterialSet* matls);
 
+      void sched_computeFlowINOUT(SchedulerP& sched, const PatchSet* patches,
+				  const MaterialSet* matls, double delta_t);
+      void sched_computeOMB(SchedulerP& sched, const PatchSet* patches,
+			    const MaterialSet* matls);
       ////////////////////////////////////////////////////////////////////////
       // Schedule Compute Pressure BCS
       // used for pressure boundary type (during time advance)
@@ -289,6 +293,19 @@ private:
 			      DataWarehouse* old_dw,
 			      DataWarehouse* new_dw);
 
+      void computeFlowINOUT(const ProcessorGroup* pc,
+			    const PatchSubset* patches,
+			    const MaterialSubset* matls,
+			    DataWarehouse* old_dw,
+			    DataWarehouse* new_dw,
+			    double delta_t);
+
+      void computeOMB(const ProcessorGroup* pc,
+		      const PatchSubset* patches,
+		      const MaterialSubset* matls,
+		      DataWarehouse* old_dw,
+		      DataWarehouse* new_dw);
+
       ////////////////////////////////////////////////////////////////////////
       // Actually calculate pressure bcs
       void calcPressureBC(const ProcessorGroup* pc,
@@ -380,7 +397,10 @@ private:
       TurbulenceModel* d_turbModel;
       // used to get properties of different streams
       Properties* d_props;
-
+      // mass flow
+      double d_uvwout;
+      double d_overallMB;
+      
       // variable labels
       std::vector<int> d_cellTypes;
       WallBdry* d_wallBdry;

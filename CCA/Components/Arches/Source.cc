@@ -70,6 +70,8 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
   IntVector domHiW = vars->wVelocity.getFortHighIndex();
   IntVector domLoeg = vars->density.getFortLowIndex();
   IntVector domHieg = vars->density.getFortHighIndex();
+  IntVector domLodref = vars->denRefArray.getFortLowIndex();
+  IntVector domHidref = vars->denRefArray.getFortHighIndex();
   IntVector domLo = vars->viscosity.getFortLowIndex();
   IntVector domHi = vars->viscosity.getFortHighIndex();
   IntVector idxLoU = patch->getSFCXFORTLowIndex();
@@ -120,8 +122,9 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 		    vars->viscosity.getPointer(), 
 		    domLong.get_pointer(), domHing.get_pointer(),
 		    vars->old_density.getPointer(),
-		    &gravity, &delta_t, 
+		    domLodref.get_pointer(), domHidref.get_pointer(),
 		    vars->denRefArray.getPointer(),
+		    &gravity, &delta_t, 
 		    cellinfo->ceeu.get_objs(), cellinfo->cweu.get_objs(), 
 		    cellinfo->cwwu.get_objs(),
 		    cellinfo->cnn.get_objs(), cellinfo->csn.get_objs(),
@@ -190,8 +193,9 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 		    vars->viscosity.getPointer(), 
 		    domLong.get_pointer(), domHing.get_pointer(),
 		    vars->old_density.getPointer(),
-		    &gravity, &delta_t,  
+		    domLodref.get_pointer(), domHidref.get_pointer(),
 		    vars->denRefArray.getPointer(),
+		    &gravity, &delta_t,  
 		    cellinfo->cee.get_objs(), cellinfo->cwe.get_objs(), 
 		    cellinfo->cww.get_objs(),
 		    cellinfo->cnnv.get_objs(), cellinfo->csnv.get_objs(),
@@ -256,8 +260,9 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 		    vars->viscosity.getPointer(), 
 		    domLong.get_pointer(), domHing.get_pointer(),
 		    vars->old_density.getPointer(),
-		    &gravity, &delta_t,  
+		    domLodref.get_pointer(), domHidref.get_pointer(),
 		    vars->denRefArray.getPointer(),
+		    &gravity, &delta_t,  
 		    cellinfo->cee.get_objs(), cellinfo->cwe.get_objs(), 
 		    cellinfo->cww.get_objs(),
 		    cellinfo->cnn.get_objs(), cellinfo->csn.get_objs(),
