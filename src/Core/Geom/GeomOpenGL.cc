@@ -2589,7 +2589,7 @@ void GeomPoints::draw(DrawInfoOpenGL* di, Material* matl, double)
     if (pickable) {
       glLoadName(0);
       float* p=&points_[0];
-      for (int i=0; i<points_.size(); i+=3) {
+      for (unsigned int i=0; i<points_.size(); i+=3) {
 	glLoadName(i/3);
 	glBegin(GL_POINTS);
 	glVertex3fv(p);

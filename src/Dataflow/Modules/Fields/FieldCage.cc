@@ -67,6 +67,8 @@ private:
 DECLARE_MAKER(FieldCage)
 FieldCage::FieldCage(GuiContext* ctx) : 
   Module("FieldCage", ctx, Filter, "Fields", "SCIRun"), 
+  ogeom_(0),
+  infield_(0),
   sizex_(ctx->subVar("sizex")),
   sizey_(ctx->subVar("sizey")),
   sizez_(ctx->subVar("sizez")),
@@ -74,10 +76,7 @@ FieldCage::FieldCage(GuiContext* ctx) :
   mesh_generation_(-1), 
   fieldcage_id_(0),
   bounding_vector_(0),
-  bounding_min_(0),
-  ogeom_(0),
-  infield_(0)
-
+  bounding_min_(0)
 {
 }
 

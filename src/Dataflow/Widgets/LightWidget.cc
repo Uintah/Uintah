@@ -472,7 +472,7 @@ LightWidget::SetRatio( double rat )
 void
 LightWidget::NextMode()
 {
-  double s1, s2;
+  //  double s1, s2;
   switch(ltype)
   {
   case DirectionalLight:

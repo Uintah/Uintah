@@ -152,7 +152,7 @@ LightID
 GeometryOPort::addLight(LightHandle obj, 
 			const string& name, CrowdMonitor* lock)
 {
-  static LightID next_id = 1;
+  //static LightID next_id = 1;
   if (module->showStats()) turn_on();
   LightID id = lserial_++;;
 //   if( next_id > lserial_ ){
