@@ -93,10 +93,11 @@ BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::execute(MeshHandle src_meshH, Me
   MDST *dst_mesh = dynamic_cast<MDST *>(dst_meshH.get_rep());
   FOUT *ofield = scinew FOUT(dst_mesh, loc);
 
-  // FIXME:  Just synchronize needed elements.
-  src_mesh->synchronize(Mesh::ALL_ELEMENTS_E);
-  dst_mesh->synchronize(Mesh::ALL_ELEMENTS_E);
-  
+  if (loc == Field::NODE) src_mesh->synchronize(Mesh::NODES_E);
+  else if (loc == Field::CELL) src_mesh->synchronize(Mesh::CELLS_E);
+  else if (loc == Field::FACE) src_mesh->synchronize(Mesh::FACES_E);
+  else if (loc == Field::EDGE) src_mesh->synchronize(Mesh::EDGES_E);
+
   typename LDST::iterator itr, end_itr;
   dst_mesh->begin(itr);
   dst_mesh->end(end_itr);

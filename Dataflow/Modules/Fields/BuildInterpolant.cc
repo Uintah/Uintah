@@ -118,6 +118,7 @@ BuildInterpolant::execute()
     error("Unable to initialize oport 'Interpolant'.");
     return;
   }
+  fsrc_h->mesh()->synchronize(Mesh::LOCATE_E);
   ofp->send(algo->execute(fsrc_h->mesh(), fdst_h->mesh(), fdst_h->data_at(),
 			  use_interp_.get(),
 			  use_closest_.get(), closeness_distance_.get()));
