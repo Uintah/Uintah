@@ -70,16 +70,14 @@ void CastTVtoMLV::execute()
     return;
   
   // we expect that the input field is a TetVolField<Vector>
-  cout << "typename = " << ifieldH->get_type_description()->get_name() << '\n';
-  if (ifieldH->get_type_description()->get_name() !=
-      get_type_description((TetVolField<Vector> *)0)->get_name())
-  {
+  if ( ifieldH.get_rep()->get_type_name() == "TetVolField<Vector>" ) {
     postMessage("CastTVtoMLV: ERROR: input volume is not a TetVolField<Vector>.  Exiting.");
     return;
   }                     
 
-  TetVolField<Vector> *tv = dynamic_cast<TetVolField<Vector> *>(ifieldH.get_rep());
-  TetVolMesh *tvm = tv->get_typed_mesh().get_rep();
+  TetVolField<Vector> *tv = (TetVolField<Vector> *) ifieldH.get_rep();
+  TetVolMesh *tvm = (TetVolMesh *) tv->get_typed_mesh().get_rep();
+
   BBox b = tvm->get_bounding_box();
 
   // break up the volume into cells, with nx/ny/nz specified via the GUI
