@@ -10,12 +10,12 @@
     <!--   T  I  M  E     V  A  R  I  A  B  L  E  S                         -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            3.0         </maxTime>
+       <maxTime>            1.891e-5    </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           1.0e-12     </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          2.1e-8      </delt_init>
-       <max_iterations>     200         </max_iterations>
+       <max_iterations>     300         </max_iterations>
        <timestep_multiplier>0.5         </timestep_multiplier>
    </Time>    
     <!--____________________________________________________________________-->
@@ -105,6 +105,7 @@
       <save label = "p.mass"/>
       <save label = "p.temperature"/>
       <save label = "p.porosity"/>
+      <save label = "p.particleID"/>
       <save label = "p.velocity"/>
       <save label = "p.stress"/>
       <save label = "p.damage" material = "0"/>
