@@ -19,6 +19,7 @@
 #include <Datatypes/TriSurface.h>
 #include <Geometry/BBox.h>
 #include <Geometry/Point.h>
+#include <Math/MusilRNG.h>
 #include <TCL/TCLvar.h>
 
 class InsertDelaunay : public Module {
@@ -41,7 +42,7 @@ static Module* make_InsertDelaunay(const clString& id)
 static RegisterModule db1("Mesh", "InsertDelaunay", make_InsertDelaunay);
 
 InsertDelaunay::InsertDelaunay(const clString& id)
-: Module("InsertDelaunay", id, Filter), surfports(2)
+: Module("InsertDelaunay", id, Filter), surfports(4)
 {
     iport=new MeshIPort(this, "Input Mesh", MeshIPort::Atomic);
     add_iport(iport);
@@ -49,6 +50,10 @@ InsertDelaunay::InsertDelaunay(const clString& id)
     add_iport(surfports[0]);
     surfports[1]=new SurfaceIPort(this, "Added Surface", SurfaceIPort::Atomic);
     add_iport(surfports[1]);
+    surfports[2]=new SurfaceIPort(this, "Added Surface", SurfaceIPort::Atomic);
+    add_iport(surfports[2]);
+    surfports[3]=new SurfaceIPort(this, "Added Surface", SurfaceIPort::Atomic);
+    add_iport(surfports[3]);
 
     // Create the output port
     oport=new MeshOPort(this, "InsertDelaunay Mesh", MeshIPort::Atomic);
@@ -89,6 +94,7 @@ void InsertDelaunay::execute()
     int nsurfs=surfports.size();
     Array1<Point> points;
     for(int isurf=0;isurf<nsurfs;isurf++){
+	points.remove_all();
 	surfs[isurf]->get_surfpoints(points);
 	int npoints=points.size();
 	for(int i=0;i<npoints;i++){
@@ -96,19 +102,29 @@ void InsertDelaunay::execute()
 	    update_progress(i, npoints);
 	}
     }
+    mesh->compute_neighbors();
 
     // Go through the mesh and remove all points that are
     // inside any of the inserted surfaces.
     int nnodes=mesh->nodes.size();
-    for(i=0;i<nnodes;i++){
-	update_progress(i, nnodes);
-	for(int isurf=0;isurf<nsurfs;isurf++){
-	    if(surfs[isurf]->inside(mesh->nodes[i]->p)){
-		// Remove this node...
-		mesh->remove_delaunay(i);
+    int ngone=0;
+    int ntodo=2*nnodes;
+    int ndone=0;
+    for(isurf=0;isurf<nsurfs;isurf++){
+	if(surfs[isurf]->closed){
+	    for(i=0;i<nnodes;i++){
+		update_progress(ndone, ntodo);
+		if(mesh->nodes[i] && surfs[isurf]->inside(mesh->nodes[i]->p)){
+		    // Remove this node...
+		    mesh->remove_delaunay(i, 0);
+		    ngone++;
+		}
 	    }
+	} else {
+	    ntodo-=nnodes;
 	}
     }
+    mesh->compute_neighbors();
     mesh->pack_nodes();
     mesh->pack_elems();
     oport->send(mesh);

@@ -15,10 +15,14 @@
 #include <Dataflow/ModuleList.h>
 #include <Datatypes/ScalarFieldPort.h>
 #include <Datatypes/SurfacePort.h>
+#include <Datatypes/ScalarFieldUG.h>
 #include <Datatypes/VectorFieldPort.h>
+#include <Datatypes/VectorFieldUG.h>
 #include <Geometry/Point.h>
 
 class Gradient : public Module {
+    ScalarFieldIPort* infield;
+    VectorFieldOPort* outfield;
 public:
     Gradient(const clString& id);
     Gradient(const Gradient&, int deep);
@@ -37,15 +41,16 @@ static RegisterModule db1("Unfinished", "Gradient", make_Gradient);
 Gradient::Gradient(const clString& id)
 : Module("Gradient", id, Filter)
 {
-    add_iport(new ScalarFieldIPort(this, "Geometry", ScalarFieldIPort::Atomic));
+    infield=new ScalarFieldIPort(this, "Geometry", ScalarFieldIPort::Atomic);
+    add_iport(infield);
     // Create the output port
-    add_oport(new VectorFieldOPort(this, "Geometry", VectorFieldIPort::Atomic));
+    outfield=new VectorFieldOPort(this, "Geometry", VectorFieldIPort::Atomic);
+    add_oport(outfield);
 }
 
 Gradient::Gradient(const Gradient& copy, int deep)
 : Module(copy, deep)
 {
-    NOT_FINISHED("Gradient::Gradient");
 }
 
 Gradient::~Gradient()
@@ -59,5 +64,42 @@ Module* Gradient::clone(int deep)
 
 void Gradient::execute()
 {
-    NOT_FINISHED("Gradient::execute");
+    ScalarFieldHandle iff;
+    if(!infield->get(iff))
+	return;
+    ScalarFieldUG* sfield=iff->getUG();
+    if(!sfield){
+	error("Gradient can't deal with this field");
+	return;
+    }
+    VectorFieldUG* vfield=new VectorFieldUG;
+    vfield->mesh=sfield->mesh;
+    vfield->data.resize(sfield->data.size());
+    Mesh* mesh=sfield->mesh.get_rep();
+    int nnodes=mesh->nodes.size();
+    Array1<Vector>& gradients=vfield->data;
+    for(int i=0;i<nnodes;i++)
+	gradients[i]=Vector(0,0,0);
+    int nelems=mesh->elems.size();
+    for(i=0;i<nelems;i++){
+	update_progress(i, nelems);
+	Element* e=mesh->elems[i];
+	Point pt;
+	Vector grad1, grad2, grad3, grad4;
+	double vol=mesh->get_grad(e, pt, grad1, grad2, grad3, grad4);
+	double v1=sfield->data[e->n[0]];
+	double v2=sfield->data[e->n[1]];
+	double v3=sfield->data[e->n[2]];
+	double v4=sfield->data[e->n[3]];
+	Vector gradient(grad1*v1+grad2*v2+grad3*v3+grad4*v4);
+	for(int j=0;j<4;j++){
+	    gradients[e->n[j]]+=gradient;
+	}
+    }
+    for(i=0;i<nnodes;i++){
+	update_progress(i, nnodes);
+	Node* n=mesh->nodes[i];
+	gradients[i]*=1./(n->elems.size());
+    }
+    outfield->send(vfield);
 }
