@@ -116,6 +116,10 @@ public:
   {
     b.extend(transform_.project(minP_)); b.extend(transform_.project(maxP_));
   }
+
+  /////////
+  // tag bricks for reloading
+  void tagBricksForReloading();
   /////////
   // get the over all texture dimensions
   void get_dimensions( int& ni, int &nj, int &nk );
@@ -152,6 +156,8 @@ protected:
 
   void sortBricks( BinaryTree< BrickNode *> *tree,
 		   vector<Brick *>& bricks, const Ray& vr);
+  void tagBricksForReloading( BinaryTree< BrickNode *> *tree );
+
 };
 
 typedef LockingHandle<Texture> TextureHandle;
