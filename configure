@@ -8212,6 +8212,7 @@ fi
 
 if test -n "m"; then
 
+   found_framework=no
    for lib in "" m; do
 
       if test -z "$lib"; then
@@ -8219,11 +8220,25 @@ if test -n "m"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of M check (disregarding $lib)." >&5
@@ -8233,7 +8248,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of M check (disregar
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -8700,6 +8715,7 @@ done
 
 if test -n "X11 Xext Xaw Xi Xt Xmu"; then
 
+   found_framework=no
    for lib in "" X11 Xext Xaw Xi Xt Xmu; do
 
       if test -z "$lib"; then
@@ -8707,11 +8723,25 @@ if test -n "X11 Xext Xaw Xi Xt Xmu"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of X check (disregarding $lib)." >&5
@@ -8721,7 +8751,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of X check (disregar
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -9200,6 +9230,7 @@ fi
 
 if test -n "fetchop"; then
 
+   found_framework=no
    for lib in "" fetchop; do
 
       if test -z "$lib"; then
@@ -9207,11 +9238,25 @@ if test -n "fetchop"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of FETCHOP check (disregarding $lib)." >&5
@@ -9221,7 +9266,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of FETCHOP check (di
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -9612,6 +9657,7 @@ fi
 
 if test -n "pthread"; then
 
+   found_framework=no
    for lib in "" pthread; do
 
       if test -z "$lib"; then
@@ -9619,11 +9665,25 @@ if test -n "pthread"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of PTHREAD check (disregarding $lib)." >&5
@@ -9633,7 +9693,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of PTHREAD check (di
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -10237,6 +10297,7 @@ done
 
 if test -n "GLU GL $GLU_OTHERS"; then
 
+   found_framework=no
    for lib in "" GLU GL $GLU_OTHERS; do
 
       if test -z "$lib"; then
@@ -10244,11 +10305,25 @@ if test -n "GLU GL $GLU_OTHERS"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of GL check (disregarding $lib)." >&5
@@ -10258,7 +10333,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of GL check (disrega
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -10657,6 +10732,7 @@ fi
 
 if test -n "c"; then
 
+   found_framework=no
    for lib in "" c; do
 
       if test -z "$lib"; then
@@ -10664,11 +10740,25 @@ if test -n "c"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of DL check (disregarding $lib)." >&5
@@ -10678,7 +10768,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of DL check (disrega
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -11106,6 +11196,7 @@ done
 
 if test -n "dl"; then
 
+   found_framework=no
    for lib in "" dl; do
 
       if test -z "$lib"; then
@@ -11113,11 +11204,25 @@ if test -n "dl"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of DL check (disregarding $lib)." >&5
@@ -11127,7 +11232,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of DL check (disrega
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -11515,6 +11620,7 @@ fi
 
 if test -n "dl"; then
 
+   found_framework=no
    for lib in "" dl; do
 
       if test -z "$lib"; then
@@ -11522,11 +11628,25 @@ if test -n "dl"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of DL check (disregarding $lib)." >&5
@@ -11536,7 +11656,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of DL check (disrega
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -11936,6 +12056,7 @@ fi
 
 if test -n ""; then
 
+   found_framework=no
    for lib in "" ; do
 
       if test -z "$lib"; then
@@ -11943,11 +12064,25 @@ if test -n ""; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of STAT64 check (disregarding $lib)." >&5
@@ -11957,7 +12092,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of STAT64 check (dis
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -12354,6 +12489,7 @@ fi
 
 if test -n ""; then
 
+   found_framework=no
    for lib in "" ; do
 
       if test -z "$lib"; then
@@ -12361,11 +12497,25 @@ if test -n ""; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of STD_HDRS check (disregarding $lib)." >&5
@@ -12375,7 +12525,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of STD_HDRS check (d
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -12766,6 +12916,7 @@ fi
 
 if test -n ""; then
 
+   found_framework=no
    for lib in "" ; do
 
       if test -z "$lib"; then
@@ -12773,11 +12924,25 @@ if test -n ""; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of STD_HDRS check (disregarding $lib)." >&5
@@ -12787,7 +12952,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of STD_HDRS check (d
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -13175,6 +13340,7 @@ fi
 
 if test -n ""; then
 
+   found_framework=no
    for lib in "" ; do
 
       if test -z "$lib"; then
@@ -13182,11 +13348,25 @@ if test -n ""; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of STD_HDRS check (disregarding $lib)." >&5
@@ -13196,7 +13376,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of STD_HDRS check (d
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -13594,6 +13774,7 @@ fi
 
 if test -n ""; then
 
+   found_framework=no
    for lib in "" ; do
 
       if test -z "$lib"; then
@@ -13601,11 +13782,25 @@ if test -n ""; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of STL_HEADERS check (disregarding $lib)." >&5
@@ -13615,7 +13810,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of STL_HEADERS check
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -14215,6 +14410,7 @@ done
 
 if test -n "tcl"; then
 
+   found_framework=no
    for lib in "" tcl; do
 
       if test -z "$lib"; then
@@ -14222,11 +14418,25 @@ if test -n "tcl"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of TCL check (disregarding $lib)." >&5
@@ -14236,7 +14446,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of TCL check (disreg
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -14671,6 +14881,7 @@ done
 
 if test -n "tk $TCL_LIB_FLAG"; then
 
+   found_framework=no
    for lib in "" tk $TCL_LIB_FLAG; do
 
       if test -z "$lib"; then
@@ -14678,11 +14889,25 @@ if test -n "tk $TCL_LIB_FLAG"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of TK check (disregarding $lib)." >&5
@@ -14692,7 +14917,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of TK check (disrega
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -15118,6 +15343,7 @@ done
 
 if test -n "itcl"; then
 
+   found_framework=no
    for lib in "" itcl; do
 
       if test -z "$lib"; then
@@ -15125,11 +15351,25 @@ if test -n "itcl"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of ITCL check (disregarding $lib)." >&5
@@ -15139,7 +15379,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of ITCL check (disre
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -15566,6 +15806,7 @@ done
 
 if test -n "itk"; then
 
+   found_framework=no
    for lib in "" itk; do
 
       if test -z "$lib"; then
@@ -15573,11 +15814,25 @@ if test -n "itk"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of ITK check (disregarding $lib)." >&5
@@ -15587,7 +15842,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of ITK check (disreg
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -16013,6 +16268,7 @@ done
 
 if test -n "BLT"; then
 
+   found_framework=no
    for lib in "" BLT; do
 
       if test -z "$lib"; then
@@ -16020,11 +16276,25 @@ if test -n "BLT"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of BLT check (disregarding $lib)." >&5
@@ -16034,7 +16304,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of BLT check (disreg
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -16666,6 +16936,7 @@ done
 
 if test -n "$_xer_lib"; then
 
+   found_framework=no
    for lib in "" $_xer_lib; do
 
       if test -z "$lib"; then
@@ -16673,11 +16944,25 @@ if test -n "$_xer_lib"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of XERCES_C check (disregarding $lib)." >&5
@@ -16687,7 +16972,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of XERCES_C check (d
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -17085,6 +17370,7 @@ fi
 
 if test -n ""; then
 
+   found_framework=no
    for lib in "" ; do
 
       if test -z "$lib"; then
@@ -17092,11 +17378,25 @@ if test -n ""; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of SSTREAM check (disregarding $lib)." >&5
@@ -17106,7 +17406,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of SSTREAM check (di
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -17548,6 +17848,7 @@ done
 
 if test -n "exc"; then
 
+   found_framework=no
    for lib in "" exc; do
 
       if test -z "$lib"; then
@@ -17555,11 +17856,25 @@ if test -n "exc"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of EXC check (disregarding $lib)." >&5
@@ -17569,7 +17884,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of EXC check (disreg
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -17980,6 +18295,7 @@ fi
 
 if test -n "mpege"; then
 
+   found_framework=no
    for lib in "" mpege; do
 
       if test -z "$lib"; then
@@ -17987,11 +18303,25 @@ if test -n "mpege"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of MPEGE check (disregarding $lib)." >&5
@@ -18001,7 +18331,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of MPEGE check (disr
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -18506,6 +18836,7 @@ done
 
 if test -n "$MAGICK_LIB_FLAG"; then
 
+   found_framework=no
    for lib in "" $MAGICK_LIB_FLAG; do
 
       if test -z "$lib"; then
@@ -18513,11 +18844,25 @@ if test -n "$MAGICK_LIB_FLAG"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of MAGICK check (disregarding $lib)." >&5
@@ -18527,7 +18872,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of MAGICK check (dis
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -18990,6 +19335,7 @@ done
 
 if test -n "z"; then
 
+   found_framework=no
    for lib in "" z; do
 
       if test -z "$lib"; then
@@ -18997,11 +19343,25 @@ if test -n "z"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of Z check (disregarding $lib)." >&5
@@ -19011,7 +19371,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of Z check (disregar
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -19465,6 +19825,7 @@ done
 
 if test -n "unp scisock"; then
 
+   found_framework=no
    for lib in "" unp scisock; do
 
       if test -z "$lib"; then
@@ -19472,11 +19833,25 @@ if test -n "unp scisock"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of UNP check (disregarding $lib)." >&5
@@ -19486,7 +19861,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of UNP check (disreg
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -19960,6 +20335,7 @@ done
 
 if test -n "png"; then
 
+   found_framework=no
    for lib in "" png; do
 
       if test -z "$lib"; then
@@ -19967,11 +20343,25 @@ if test -n "png"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of PNG check (disregarding $lib)." >&5
@@ -19981,7 +20371,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of PNG check (disreg
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -20436,6 +20826,7 @@ fi
 
 if test -n "ftn fortran"; then
 
+   found_framework=no
    for lib in "" ftn fortran; do
 
       if test -z "$lib"; then
@@ -20443,11 +20834,25 @@ if test -n "ftn fortran"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of F check (disregarding $lib)." >&5
@@ -20457,7 +20862,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of F check (disregar
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -20844,6 +21249,7 @@ fi
 
 if test -n "xlf90"; then
 
+   found_framework=no
    for lib in "" xlf90; do
 
       if test -z "$lib"; then
@@ -20851,11 +21257,25 @@ if test -n "xlf90"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of F check (disregarding $lib)." >&5
@@ -20865,7 +21285,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of F check (disregar
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -21253,6 +21673,7 @@ fi
 
 if test -n "pgftnrtl"; then
 
+   found_framework=no
    for lib in "" pgftnrtl; do
 
       if test -z "$lib"; then
@@ -21260,11 +21681,25 @@ if test -n "pgftnrtl"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of F check (disregarding $lib)." >&5
@@ -21274,7 +21709,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of F check (disregar
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -21659,6 +22094,7 @@ fi
 
 if test -n "g2c"; then
 
+   found_framework=no
    for lib in "" g2c; do
 
       if test -z "$lib"; then
@@ -21666,11 +22102,25 @@ if test -n "g2c"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of F check (disregarding $lib)." >&5
@@ -21680,7 +22130,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of F check (disregar
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -22067,6 +22517,7 @@ fi
 
 if test -n "for Ufor"; then
 
+   found_framework=no
    for lib in "" for Ufor; do
 
       if test -z "$lib"; then
@@ -22074,11 +22525,25 @@ if test -n "for Ufor"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of F check (disregarding $lib)." >&5
@@ -22088,7 +22553,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of F check (disregar
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -22475,6 +22940,7 @@ fi
 
 if test -n "g2c"; then
 
+   found_framework=no
    for lib in "" g2c; do
 
       if test -z "$lib"; then
@@ -22482,11 +22948,25 @@ if test -n "g2c"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of F check (disregarding $lib)." >&5
@@ -22496,7 +22976,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of F check (disregar
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -22882,6 +23362,7 @@ fi
 
 if test -n "F77"; then
 
+   found_framework=no
    for lib in "" F77; do
 
       if test -z "$lib"; then
@@ -22889,11 +23370,25 @@ if test -n "F77"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of F check (disregarding $lib)." >&5
@@ -22903,7 +23398,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of F check (disregar
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -23315,6 +23810,7 @@ fi
 
 if test -n ""; then
 
+   found_framework=no
    for lib in "" ; do
 
       if test -z "$lib"; then
@@ -23322,11 +23818,25 @@ if test -n ""; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of BLAS check (disregarding $lib)." >&5
@@ -23336,7 +23846,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of BLAS check (disre
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -23761,6 +24271,7 @@ done
 
 if test -n "cblas f77blas atlas f2c"; then
 
+   found_framework=no
    for lib in "" cblas f77blas atlas f2c; do
 
       if test -z "$lib"; then
@@ -23768,11 +24279,25 @@ if test -n "cblas f77blas atlas f2c"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of BLAS check (disregarding $lib)." >&5
@@ -23782,7 +24307,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of BLAS check (disre
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -24207,6 +24732,7 @@ fi
 
 if test -n "essl"; then
 
+   found_framework=no
    for lib in "" essl; do
 
       if test -z "$lib"; then
@@ -24214,11 +24740,25 @@ if test -n "essl"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of BLAS check (disregarding $lib)." >&5
@@ -24228,7 +24768,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of BLAS check (disre
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -24614,6 +25154,7 @@ fi
 
 if test -n "cxml"; then
 
+   found_framework=no
    for lib in "" cxml; do
 
       if test -z "$lib"; then
@@ -24621,11 +25162,25 @@ if test -n "cxml"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of BLAS check (disregarding $lib)." >&5
@@ -24635,7 +25190,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of BLAS check (disre
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -25057,6 +25612,7 @@ done
 
 if test -n "cblas blas"; then
 
+   found_framework=no
    for lib in "" cblas blas; do
 
       if test -z "$lib"; then
@@ -25064,11 +25620,25 @@ if test -n "cblas blas"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of BLAS check (disregarding $lib)." >&5
@@ -25078,7 +25648,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of BLAS check (disre
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -25504,6 +26074,7 @@ done
 
 if test -n "blas"; then
 
+   found_framework=no
    for lib in "" blas; do
 
       if test -z "$lib"; then
@@ -25511,11 +26082,25 @@ if test -n "blas"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of BLAS check (disregarding $lib)." >&5
@@ -25525,7 +26110,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of BLAS check (disre
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -25915,6 +26500,7 @@ fi
 
 if test -n "blas"; then
 
+   found_framework=no
    for lib in "" blas; do
 
       if test -z "$lib"; then
@@ -25922,11 +26508,25 @@ if test -n "blas"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of BLAS check (disregarding $lib)." >&5
@@ -25936,7 +26536,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of BLAS check (disre
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -26321,6 +26921,7 @@ fi
 
 if test -n "fblas"; then
 
+   found_framework=no
    for lib in "" fblas; do
 
       if test -z "$lib"; then
@@ -26328,11 +26929,25 @@ if test -n "fblas"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of BLAS check (disregarding $lib)." >&5
@@ -26342,7 +26957,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of BLAS check (disre
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -26799,6 +27414,7 @@ done
 
 if test -n "freetype ftgl"; then
 
+   found_framework=no
    for lib in "" freetype ftgl; do
 
       if test -z "$lib"; then
@@ -26806,11 +27422,25 @@ if test -n "freetype ftgl"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of FTGL check (disregarding $lib)." >&5
@@ -26820,7 +27450,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of FTGL check (disre
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -27243,6 +27873,7 @@ fi
 
 if test -n ""; then
 
+   found_framework=no
    for lib in "" ; do
 
       if test -z "$lib"; then
@@ -27250,11 +27881,25 @@ if test -n ""; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of LAPACK check (disregarding $lib)." >&5
@@ -27264,7 +27909,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of LAPACK check (dis
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -27653,6 +28298,7 @@ fi
 
 if test -n "lapack"; then
 
+   found_framework=no
    for lib in "" lapack; do
 
       if test -z "$lib"; then
@@ -27660,11 +28306,25 @@ if test -n "lapack"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of LAPACK check (disregarding $lib)." >&5
@@ -27674,7 +28334,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of LAPACK check (dis
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -28062,6 +28722,7 @@ fi
 
 if test -n "flapack"; then
 
+   found_framework=no
    for lib in "" flapack; do
 
       if test -z "$lib"; then
@@ -28069,11 +28730,25 @@ if test -n "flapack"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of LAPACK check (disregarding $lib)." >&5
@@ -28083,7 +28758,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of LAPACK check (dis
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -28479,6 +29154,7 @@ fi
 
 if test -n "complib.sgimath"; then
 
+   found_framework=no
    for lib in "" complib.sgimath; do
 
       if test -z "$lib"; then
@@ -28486,11 +29162,25 @@ if test -n "complib.sgimath"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of LAPACK check (disregarding $lib)." >&5
@@ -28500,7 +29190,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of LAPACK check (dis
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -28887,6 +29577,7 @@ fi
 
 if test -n "complib.sgimath_mp"; then
 
+   found_framework=no
    for lib in "" complib.sgimath_mp; do
 
       if test -z "$lib"; then
@@ -28894,11 +29585,25 @@ if test -n "complib.sgimath_mp"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of LAPACKMP check (disregarding $lib)." >&5
@@ -28908,7 +29613,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of LAPACKMP check (d
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -29390,6 +30095,7 @@ done
 
 if test -n "mpi lam util pmpi"; then
 
+   found_framework=no
    for lib in "" mpi lam util pmpi; do
 
       if test -z "$lib"; then
@@ -29397,11 +30103,25 @@ if test -n "mpi lam util pmpi"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of MPI check (disregarding $lib)." >&5
@@ -29411,7 +30131,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of MPI check (disreg
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -29835,6 +30555,7 @@ done
 
 if test -n "mpi lam util pthread"; then
 
+   found_framework=no
    for lib in "" mpi lam util pthread; do
 
       if test -z "$lib"; then
@@ -29842,11 +30563,25 @@ if test -n "mpi lam util pthread"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of MPI check (disregarding $lib)." >&5
@@ -29856,7 +30591,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of MPI check (disreg
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -30279,6 +31014,7 @@ done
 
 if test -n "mpi"; then
 
+   found_framework=no
    for lib in "" mpi; do
 
       if test -z "$lib"; then
@@ -30286,11 +31022,25 @@ if test -n "mpi"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of MPI check (disregarding $lib)." >&5
@@ -30300,7 +31050,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of MPI check (disreg
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -30722,6 +31472,7 @@ done
 
 if test -n "mpich pmpich"; then
 
+   found_framework=no
    for lib in "" mpich pmpich; do
 
       if test -z "$lib"; then
@@ -30729,11 +31480,25 @@ if test -n "mpich pmpich"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of MPI check (disregarding $lib)." >&5
@@ -30743,7 +31508,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of MPI check (disreg
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -31328,6 +32093,7 @@ done
 
 if test -n "mpiuni"; then
 
+   found_framework=no
    for lib in "" mpiuni; do
 
       if test -z "$lib"; then
@@ -31335,11 +32101,25 @@ if test -n "mpiuni"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of MPIUNI check (disregarding $lib)." >&5
@@ -31349,7 +32129,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of MPIUNI check (dis
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -31771,6 +32551,7 @@ done
 
 if test -n "mpiunich pmpiunich"; then
 
+   found_framework=no
    for lib in "" mpiunich pmpiunich; do
 
       if test -z "$lib"; then
@@ -31778,11 +32559,25 @@ if test -n "mpiunich pmpiunich"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of MPIUNICH check (disregarding $lib)." >&5
@@ -31792,7 +32587,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of MPIUNICH check (d
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -32288,6 +33083,7 @@ done
 
 if test -n "petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles petscfortran $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG"; then
 
+   found_framework=no
    for lib in "" petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles petscfortran $LAPACK_LIB_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $MPI_LIB_FLAG $F_LIB_FLAG $DL_LIB_FLAG; do
 
       if test -z "$lib"; then
@@ -32295,11 +33091,25 @@ if test -n "petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petsc
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of PETSC check (disregarding $lib)." >&5
@@ -32309,7 +33119,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of PETSC check (disr
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -32751,6 +33561,7 @@ done
 
 if test -n "petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles petscfortran"; then
 
+   found_framework=no
    for lib in "" petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles petscfortran; do
 
       if test -z "$lib"; then
@@ -32758,11 +33569,25 @@ if test -n "petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petsc
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of PETSC_UNI check (disregarding $lib)." >&5
@@ -32772,7 +33597,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of PETSC_UNI check (
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -33438,6 +34263,7 @@ done
 
 if test -n "sidl"; then
 
+   found_framework=no
    for lib in "" sidl; do
 
       if test -z "$lib"; then
@@ -33445,11 +34271,25 @@ if test -n "sidl"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of SIDL check (disregarding $lib)." >&5
@@ -33459,7 +34299,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of SIDL check (disre
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -33916,6 +34756,7 @@ fi
 
 if test -n "jpeg"; then
 
+   found_framework=no
    for lib in "" jpeg; do
 
       if test -z "$lib"; then
@@ -33923,11 +34764,25 @@ if test -n "jpeg"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of JPEG check (disregarding $lib)." >&5
@@ -33937,7 +34792,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of JPEG check (disre
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -34335,6 +35190,7 @@ fi
 
 if test -n "tiff"; then
 
+   found_framework=no
    for lib in "" tiff; do
 
       if test -z "$lib"; then
@@ -34342,11 +35198,25 @@ if test -n "tiff"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of TIFF check (disregarding $lib)." >&5
@@ -34356,7 +35226,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of TIFF check (disre
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -34756,6 +35626,7 @@ fi
 
 if test -n "netsolve"; then
 
+   found_framework=no
    for lib in "" netsolve; do
 
       if test -z "$lib"; then
@@ -34763,11 +35634,25 @@ if test -n "netsolve"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of NETSOLVE check (disregarding $lib)." >&5
@@ -34777,7 +35662,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of NETSOLVE check (d
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -35313,6 +36198,7 @@ done
 
 if test -n "glut"; then
 
+   found_framework=no
    for lib in "" glut; do
 
       if test -z "$lib"; then
@@ -35320,11 +36206,25 @@ if test -n "glut"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of GLUT check (disregarding $lib)." >&5
@@ -35334,7 +36234,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of GLUT check (disre
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -35911,6 +36811,7 @@ done
 
 if test -n "glui"; then
 
+   found_framework=no
    for lib in "" glui; do
 
       if test -z "$lib"; then
@@ -35918,11 +36819,25 @@ if test -n "glui"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of GLUI check (disregarding $lib)." >&5
@@ -35932,7 +36847,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of GLUI check (disre
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -36391,6 +37306,7 @@ done
 
 if test -n "oogl"; then
 
+   found_framework=no
    for lib in "" oogl; do
 
       if test -z "$lib"; then
@@ -36398,11 +37314,25 @@ if test -n "oogl"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of OOGL check (disregarding $lib)." >&5
@@ -36412,7 +37342,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of OOGL check (disre
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -36895,6 +37825,7 @@ done
 
 if test -n "GLEW"; then
 
+   found_framework=no
    for lib in "" GLEW; do
 
       if test -z "$lib"; then
@@ -36902,11 +37833,25 @@ if test -n "GLEW"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of GLEW check (disregarding $lib)." >&5
@@ -36916,7 +37861,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of GLEW check (disre
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -37334,6 +38279,7 @@ fi
 
 if test -n "audio audiofile"; then
 
+   found_framework=no
    for lib in "" audio audiofile; do
 
       if test -z "$lib"; then
@@ -37341,11 +38287,25 @@ if test -n "audio audiofile"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of AUDIO check (disregarding $lib)." >&5
@@ -37355,7 +38315,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of AUDIO check (disr
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -37831,6 +38791,7 @@ done
 
 if test -n "teem $PNG_LIB_FLAG $Z_LIB_FLAG -lm"; then
 
+   found_framework=no
    for lib in "" teem $PNG_LIB_FLAG $Z_LIB_FLAG -lm; do
 
       if test -z "$lib"; then
@@ -37838,11 +38799,25 @@ if test -n "teem $PNG_LIB_FLAG $Z_LIB_FLAG -lm"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of TEEM check (disregarding $lib)." >&5
@@ -37852,7 +38827,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of TEEM check (disre
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -38311,6 +39286,7 @@ done
 
 if test -n "MdsLib_client"; then
 
+   found_framework=no
    for lib in "" MdsLib_client; do
 
       if test -z "$lib"; then
@@ -38318,11 +39294,25 @@ if test -n "MdsLib_client"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of MDSPLUS check (disregarding $lib)." >&5
@@ -38332,7 +39322,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of MDSPLUS check (di
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -38791,6 +39781,7 @@ done
 
 if test -n "hdf5"; then
 
+   found_framework=no
    for lib in "" hdf5; do
 
       if test -z "$lib"; then
@@ -38798,11 +39789,25 @@ if test -n "hdf5"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of HDF5 check (disregarding $lib)." >&5
@@ -38812,7 +39817,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of HDF5 check (disre
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -39225,6 +40230,7 @@ fi
 
 if test -n "perfex"; then
 
+   found_framework=no
    for lib in "" perfex; do
 
       if test -z "$lib"; then
@@ -39232,11 +40238,25 @@ if test -n "perfex"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of PERFEX check (disregarding $lib)." >&5
@@ -39246,7 +40266,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of PERFEX check (dis
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -39650,6 +40670,7 @@ fi
 
 if test -n "crypto"; then
 
+   found_framework=no
    for lib in "" crypto; do
 
       if test -z "$lib"; then
@@ -39657,11 +40678,25 @@ if test -n "crypto"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of CRYPTO check (disregarding $lib)." >&5
@@ -39671,7 +40706,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of CRYPTO check (dis
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -40082,6 +41117,7 @@ fi
 
 if test -n "ssl crypto"; then
 
+   found_framework=no
    for lib in "" ssl crypto; do
 
       if test -z "$lib"; then
@@ -40089,11 +41125,25 @@ if test -n "ssl crypto"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of SSL check (disregarding $lib)." >&5
@@ -40103,7 +41153,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of SSL check (disreg
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -40565,6 +41615,7 @@ done
 
 if test -n "globus_dc pthread"; then
 
+   found_framework=no
    for lib in "" globus_dc pthread; do
 
       if test -z "$lib"; then
@@ -40572,11 +41623,25 @@ if test -n "globus_dc pthread"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of GLOBUS check (disregarding $lib)." >&5
@@ -40586,7 +41651,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of GLOBUS check (dis
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -41305,6 +42370,7 @@ done
 
 if test -n "qt-mt"; then
 
+   found_framework=no
    for lib in "" qt-mt; do
 
       if test -z "$lib"; then
@@ -41312,11 +42378,25 @@ if test -n "qt-mt"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of QT_MT check (disregarding $lib)." >&5
@@ -41326,7 +42406,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of QT_MT check (disr
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -41830,6 +42910,7 @@ done
 
 if test -n "ruby-static"; then
 
+   found_framework=no
    for lib in "" ruby-static; do
 
       if test -z "$lib"; then
@@ -41837,11 +42918,25 @@ if test -n "ruby-static"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of RUBY check (disregarding $lib)." >&5
@@ -41851,7 +42946,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of RUBY check (disre
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -42303,6 +43398,7 @@ done
 
 if test -n "vtkCommon vtkFiltering vtkGraphics vtkImaging vtkRendering vtkIO vtkjpeg vtkpng vtkzlib"; then
 
+   found_framework=no
    for lib in "" vtkCommon vtkFiltering vtkGraphics vtkImaging vtkRendering vtkIO vtkjpeg vtkpng vtkzlib; do
 
       if test -z "$lib"; then
@@ -42310,11 +43406,25 @@ if test -n "vtkCommon vtkFiltering vtkGraphics vtkImaging vtkRendering vtkIO vtk
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of VTK check (disregarding $lib)." >&5
@@ -42324,7 +43434,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of VTK check (disreg
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -42799,6 +43909,7 @@ done
 
 if test -n "$_vdt_libs"; then
 
+   found_framework=no
    for lib in "" $_vdt_libs; do
 
       if test -z "$lib"; then
@@ -42806,11 +43917,25 @@ if test -n "$_vdt_libs"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of VDT check (disregarding $lib)." >&5
@@ -42820,7 +43945,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of VDT check (disreg
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
@@ -43280,6 +44405,7 @@ done
 
 if test -n "HYPRE_struct_mv HYPRE_struct_ls HYPRE_blas HYPRE_LSI"; then
 
+   found_framework=no
    for lib in "" HYPRE_struct_mv HYPRE_struct_ls HYPRE_blas HYPRE_LSI; do
 
       if test -z "$lib"; then
@@ -43287,11 +44413,25 @@ if test -n "HYPRE_struct_mv HYPRE_struct_ls HYPRE_blas HYPRE_LSI"; then
          continue
       fi
 
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
       # Make sure it doesn't have any thing but -l
       has_minus=`echo $lib | sed 's/-.*//'`
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -n "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
          if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of HYPRE check (disregarding $lib)." >&5
@@ -43301,7 +44441,7 @@ echo "$as_me: WARNING: Only -l options are allowed in arg 5 of HYPRE check (disr
       fi
 
       the_lib=`echo $lib | grep "\-l"`
-      if test -z "$the_lib"; then
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
          # If the lib arg does not have -l on it, then add -l.
          final_lib=-l$lib
       else
