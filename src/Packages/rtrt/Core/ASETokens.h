@@ -78,107 +78,6 @@ class MaterialListToken : public Token
 
 
 
-class MaterialToken : public Token
-{
-
- public:
-
-  MaterialToken() : Token("*MATERIAL") {
-    nargs_ = 1;
-    AddChildMoniker("*MATERIAL_AMBIENT");
-    AddChildMoniker("*MATERIAL_DIFFUSE");
-    AddChildMoniker("*MATERIAL_SPECULAR");
-    AddChildMoniker("*MATERIAL_SHINE");
-    AddChildMoniker("*MATERIAL_TRANSPARENCY");
-    AddChildMoniker("*MAP_DIFFUSE");
-  }
-  virtual ~MaterialToken() {}
-
-  Token *MakeToken() { return new MaterialToken(); }
-};
-
-
-
-class MaterialAmbientToken : public Token
-{
-
- public:
-
-  MaterialAmbientToken() : Token("*MATERIAL_AMBIENT") { nargs_ = 3; }
-  virtual ~MaterialAmbientToken() {}
-
-  Token *MakeToken() { return new MaterialAmbientToken(); }
-};
-
-
-
-class MaterialDiffuseToken : public Token
-{
-
- public:
-
-  MaterialDiffuseToken() : Token("*MATERIAL_DIFFUSE") { nargs_ = 3; }
-  virtual ~MaterialDiffuseToken() {}
-
-  Token *MakeToken() { return new MaterialDiffuseToken(); }
-};
-
-
-
-class MaterialSpecularToken : public Token
-{
-
- public:
-
-  MaterialSpecularToken() : Token("*MATERIAL_SPECULAR") { nargs_ = 3; }
-  virtual ~MaterialSpecularToken() {}
-
-  Token *MakeToken() { return new MaterialSpecularToken(); }
-};
-
-
-
-class MaterialShineToken : public Token
-{
-
- public:
-
-  MaterialShineToken() : Token("*MATERIAL_SHINE") { nargs_ = 1; }
-  virtual ~MaterialShineToken() {}
-
-  Token *MakeToken() { return new MaterialShineToken(); }
-};
-
-
-
-class MaterialTransparencyToken : public Token
-{
-
- public:
-
-  MaterialTransparencyToken() : Token("*MATERIAL_TRANSPARENCY") { nargs_ = 1; }
-  virtual ~MaterialTransparencyToken() {}
-
-  Token *MakeToken() { return new MaterialTransparencyToken(); }
-};
-
-
-
-class MapDiffuseToken : public Token
-{
-
- public:
-  
-  MapDiffuseToken() : Token("*MAP_DIFFUSE") {
-    AddChildMoniker("*BITMAP");
-  }
-  virtual ~MapDiffuseToken() {}
-
-  Token *MakeToken() { return new MapDiffuseToken(); }
-};
-
-
-
 class BitmapToken : public Token
 {
 
@@ -197,20 +96,122 @@ class BitmapToken : public Token
 
 
 
+class MaterialToken : public Token
+{
+
+ protected:
+
+  unsigned index_;
+  double ambient_[3];
+  double diffuse_[3];
+  double specular_[3];
+  double shine_;
+  double transparency_;
+  string tmap_filename_;
+
+ public:
+
+  MaterialToken() : Token("*MATERIAL") {
+    nargs_ = 1;
+    tmap_filename_="";
+  }
+  virtual ~MaterialToken() {}
+  
+  virtual bool Parse(ifstream &str) {
+    string curstring;
+    str >> index_;
+    str >> curstring; // delimiter
+    str >> curstring;
+    while (1) {
+      if (curstring == "*MATERIAL_AMBIENT") {
+        str >> ambient_[0] >> ambient_[1] >> ambient_[2];
+        str >> curstring; // get next token
+      } else if (curstring == "*MATERIAL_DIFFUSE") {
+        str >> diffuse_[0] >> diffuse_[1] >> diffuse_[2];
+        str >> curstring; // get next token
+      } else if (curstring == "*MATERIAL_SPECULAR") {
+        str >> specular_[0] >> specular_[1] >> specular_[2];
+        str >> curstring; // get next token
+      } else if (curstring == "*MATERIAL_SHINE") {
+        str >> shine_;
+        str >> curstring; // get next token
+      } else if (curstring == "*MATERIAL_TRANSPARENCY") {
+        str >> transparency_;
+        str >> curstring; // get next token
+      } else if (curstring == "*MAP_DIFFUSE") {
+        str >> curstring; // delimiter
+        str >> curstring; // *BITMAP
+        if (curstring == "*BITMAP") {
+          BitmapToken map;
+          if (!map.Parse(str))
+            return false;
+          tmap_filename_ = (*(map.GetArgs()))[0];
+          str >> curstring; // get closing delimiter
+          str >> curstring; // get next token
+        }
+      } else 
+        break;
+    }
+
+#if DEBUG
+    cout << "Material " << index_ << ": " << tmap_filename_ << endl
+         << ambient_[0] << ", " << ambient_[1] << ", " << ambient_[2] << endl
+         << diffuse_[0] << ", " << diffuse_[1] << ", " << diffuse_[2] << endl
+         << specular_[0] << ", " << specular_[1] << ", " << specular_[2] 
+         << endl
+         << shine_ << endl
+         << transparency_ << endl << endl;
+#endif
+
+    return true;
+  }
+
+  unsigned GetIndex() { return index_; }
+
+  void GetAmbient(double c[3]) { 
+    c[0] = ambient_[0];
+    c[1] = ambient_[1];
+    c[2] = ambient_[2];
+  } 
+
+  void GetDiffuse(double c[3]) { 
+    c[0] = diffuse_[0];
+    c[1] = diffuse_[1];
+    c[2] = diffuse_[2];
+  } 
+
+  void GetSpecular(double c[3]) { 
+    c[0] = specular_[0];
+    c[1] = specular_[1];
+    c[2] = specular_[2];
+  } 
+
+  double GetShine() { return shine_; } 
+
+  double GetTransparency() { return transparency_; }
+
+  string GetTMapFilename() { return tmap_filename_; }
+
+  Token *MakeToken() { return new MaterialToken(); }
+};
+
+
+
 class GeomObjectToken : public Token
 {
 
  protected:
 
-  bool   empty_;
-  string nodename_;
+  bool     empty_;
+  string   nodename_;
+  unsigned material_index_;
 
  public:
 
-  GeomObjectToken() : Token("*GEOMOBJECT"), empty_(false) {
+  GeomObjectToken() : Token("*GEOMOBJECT"), empty_(false), material_index_(0) {
+    AddChildMoniker("*MATERIAL_REF");
     AddChildMoniker("*NODE_NAME");
     AddChildMoniker("*MESH");
-    AddChildMoniker("*MATERIAL_REF");
   }
   virtual ~GeomObjectToken() {}
 
@@ -226,6 +227,11 @@ class GeomObjectToken : public Token
   
   void SetNodeName(const string& s) { nodename_ = s; }
   string GetNodeName() { return nodename_; }
+
+  void SetMaterialIndex(unsigned i) { 
+    material_index_ = i; 
+  }
+  unsigned GetMaterialIndex() { return material_index_; }
 
   Token *MakeToken() { return new GeomObjectToken(); }
 };
@@ -631,7 +637,7 @@ class MeshTFaceListToken : public Token
     str >> curstring; // opening delimiter
     str >> curstring;
     while(1) {
-      if (curstring == "*MESH_TFACE") {
+      if (curstring == "*MESH_FACE") {
 	str >> index; // face index
 	str >> tfaces_[index*3]; // A
 	str >> tfaces_[index*3+1]; // B
@@ -858,11 +864,22 @@ class MeshVertexNormal : public Token
 
 class MaterialRefToken : public Token
 {
+  
+ protected:
+
+  unsigned index_;
 
  public:
 
-  MaterialRefToken() : Token("*MATERIAL_REF") { nargs_ = 1; }
+  MaterialRefToken() : Token("*MATERIAL_REF") {}
   virtual ~MaterialRefToken() {}
+
+  virtual bool Parse(ifstream &str) {
+    str >> index_;
+
+    ((GeomObjectToken*)parent_)->SetMaterialIndex(index_);
+    return true;
+  }
 
   virtual Token *MakeToken() { return new MaterialRefToken(); }
 };
@@ -906,12 +923,14 @@ class ASEFile : public Token
   SceneAmbientStaticToken C;
   MaterialListToken D;
   MaterialToken E;
+#if 0
   MaterialAmbientToken F;
   MaterialDiffuseToken G;
   MaterialSpecularToken H;
   MaterialShineToken I;
   MaterialTransparencyToken J;
   MapDiffuseToken K;
+#endif
   BitmapToken L;
   GeomObjectToken M;
   NodeNameToken N;
