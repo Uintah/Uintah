@@ -29,13 +29,25 @@
  */
 
 #include <Core/Geom/Light.h>
+#include <Core/Thread/MutexPool.h>
 
 namespace SCIRun {
 
 PersistentTypeID Light::type_id("Light", "Persistent", 0);
 
-Light::Light(const string& name, bool on)
-  : name(name), on(on)
+#define LIGHT_LOCK_POOL_SIZE 50
+MutexPool light_lock_pool("LightObj pool", LIGHT_LOCK_POOL_SIZE);
+
+static int light_lock_pool_hash(Light *ptr)
+{
+  long k = ((long)ptr) >> 2; // Disgard unused bits, word aligned pointers.
+  return (int)((k^(3*LIGHT_LOCK_POOL_SIZE+1))%LIGHT_LOCK_POOL_SIZE);
+}   
+
+Light::Light(const string& name, bool on, bool transformed)
+  : ref_cnt(0),
+    lock(*(light_lock_pool.getMutex(light_lock_pool_hash(this)))),
+    name(name), on(on), transformed( transformed )
 {
 }
 

@@ -903,7 +903,7 @@ OpenGL::redraw_frame()
 	int ii;
 	for(ii=0;ii<l.lights.size();ii++)
 	{
-	  Light* light=l.lights[ii];
+	  LightHandle light=l.lights[ii];
 	  light->opengl_setup(view, drawinfo, idx);
 	}
 	for(ii=0;ii<idx && ii<maxlights;ii++)
@@ -2647,7 +2647,7 @@ OpenGL::render_rotation_axis(const View &view,
   int ii;
   for(ii=0;ii<l.lights.size();ii++)
   {
-    Light* light=l.lights[ii];
+    LightHandle light=l.lights[ii];
     light->opengl_setup(view, drawinfo, idx);
   }
   for(ii=0;ii<idx && ii<maxlights;ii++)

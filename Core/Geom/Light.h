@@ -36,6 +36,8 @@
 #ifndef _WIN32
 #include <sci_config.h>
 #endif
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Thread/Mutex.h>
 #include <Core/Persistent/Persistent.h>
 
 namespace SCIRun {
@@ -51,20 +53,31 @@ struct DrawInfoOpenGL;
 
 class SCICORESHARE Light : public Persistent {
 protected:
-    Light(const string& name, bool on = true);
+  Light(const string& name, bool on = true, bool tranformed = true);
+    
 public:
-    string name;
-    bool on;
-    virtual ~Light();
-    virtual void io(Piostream&);
+  int ref_cnt;
+  Mutex &lock;
+  string name;
+  bool on;
+  bool transformed;  // defaults to true meaning you do want the light 
+                     // to be transformed by the current modelview matrix.  
+                     // Set to false for headlights and directional lights 
+                     // fixed in the viewing hemisphere.
+  virtual ~Light();
+  virtual void io(Piostream&);
 
-    friend SCICORESHARE void Pio( Piostream&, Light*& );
+  friend SCICORESHARE void Pio( Piostream&, Light*& );
 
-    static PersistentTypeID type_id;
+  void opengl_reset_light( int i );
+
+  static PersistentTypeID type_id;
 #ifdef SCI_OPENGL
-    virtual void opengl_setup(const View& view, DrawInfoOpenGL*, int& idx)=0;
+  virtual void opengl_setup(const View& view, DrawInfoOpenGL*, int& idx)=0;
 #endif
 };
+
+typedef LockingHandle<Light> LightHandle;
 
 } // End namespace SCIRun
 

@@ -61,6 +61,7 @@
 #include <Core/Geom/Material.h>
 #include <Core/Geom/GeomPick.h>
 #include <Core/Geom/PointLight.h>
+#include <Core/Geom/SpotLight.h>
 #include <Core/Geom/GeomPolyline.h>
 #include <Core/Geom/Pt.h>
 #include <Core/Geom/GeomRenderMode.h>
@@ -4910,20 +4911,91 @@ void GeomCVertex::emit_matl(DrawInfoOpenGL* /*di*/)
     glColor3f(color.r(),color.g(),color.b());
 }
 
-void DirectionalLight::opengl_setup( const View&, DrawInfoOpenGL*, int& idx)
+
+void Light::opengl_reset_light(int i)
+{
+  float f[4];
+  f[0]=0.0; f[1]=0.0; f[2]=0.0; f[3]=1.0;
+  glLightfv((GLenum)(GL_LIGHT0+i), GL_AMBIENT, f);
+
+  if( i != 0 ) {
+    glLightfv((GLenum)(GL_LIGHT0+i), GL_DIFFUSE, f);
+    glLightfv((GLenum)(GL_LIGHT0+i), GL_SPECULAR, f);
+  } else {
+    f[0] = 1.0; f[1]=1.0; f[2]=1.0; f[3]=1.0;
+    glLightfv((GLenum)(GL_LIGHT0+i), GL_DIFFUSE, f);
+    glLightfv((GLenum)(GL_LIGHT0+i), GL_SPECULAR, f);
+  }
+  f[0]=0.0; f[1]=0.0; f[2]=-1.0; f[3]=1.0;
+  glLightfv((GLenum)(GL_LIGHT0+i), GL_POSITION, f);
+  
+  glLightfv((GLenum)(GL_LIGHT0+i), GL_SPOT_DIRECTION, f);
+  f[0] = 180.0;
+  glLightfv((GLenum)(GL_LIGHT0+i), GL_SPOT_CUTOFF, f);
+  f[0] = 0.0;
+  glLightfv((GLenum)(GL_LIGHT0+i), GL_SPOT_EXPONENT, f);
+  glLightfv((GLenum)(GL_LIGHT0+i), GL_LINEAR_ATTENUATION, f);
+  glLightfv((GLenum)(GL_LIGHT0+i), GL_QUADRATIC_ATTENUATION, f);
+  f[0] = 1.0;
+  glLightfv((GLenum)(GL_LIGHT0+i), GL_CONSTANT_ATTENUATION, f);
+  
+}
+
+void SpotLight::opengl_setup( const View&, DrawInfoOpenGL*, int& idx)
 {
   if(on ) {
     int i = idx++;
     float f[4];
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
+//     cerr<<"Turning on spot light: light "<<idx<<".\n";
+
+    opengl_reset_light( i );
+
+    if ( !transformed ){
+      glMatrixMode(GL_MODELVIEW);
+      glPushMatrix();
       glLoadIdentity();
+    }
+
+      f[0]=p.x(); f[1]=p.y(); f[2]=p.z(); f[3]=1.0;
+      glLightfv((GLenum)(GL_LIGHT0+i), GL_POSITION, f);
+      f[0]=v.x(); f[1]=v.y(); f[2]=v.z(); f[3]=0.0;
+      glLightfv((GLenum)(GL_LIGHT0+i), GL_SPOT_DIRECTION, f);
+      glLightfv((GLenum)(GL_LIGHT0+i), GL_SPOT_CUTOFF, &cutoff);
+      c.get_color(f);
+      glLightfv((GLenum)(GL_LIGHT0+i), GL_DIFFUSE, f);
+      glLightfv((GLenum)(GL_LIGHT0+i), GL_SPECULAR, f);
+
+    if( !transformed ){
+      glPopMatrix();
+    }
+  }
+}
+
+void DirectionalLight::opengl_setup( const View&, DrawInfoOpenGL*, int& idx)
+{
+  if(on ) {
+    int i = idx++;
+//     cerr<<"Turning on directional light: light "<<idx<<".\n";
+
+    float f[4];
+
+    opengl_reset_light( i );
+
+    if( !transformed ){
+      glMatrixMode(GL_MODELVIEW);
+      glPushMatrix();
+      glLoadIdentity();
+    }
+
       f[0]=v.x(); f[1]=v.y(); f[2]=v.z(); f[3]=0.0;
       glLightfv((GLenum)(GL_LIGHT0+i), GL_POSITION, f);
       c.get_color(f);
       glLightfv((GLenum)(GL_LIGHT0+i), GL_DIFFUSE, f);
       glLightfv((GLenum)(GL_LIGHT0+i), GL_SPECULAR, f);
-    glPopMatrix();
+
+    if( !transformed ){
+      glPopMatrix();
+    }
   }
 }
     
@@ -4931,12 +5003,25 @@ void PointLight::opengl_setup(const View&, DrawInfoOpenGL*, int& idx)
 {
   if( on ) {
     int i=idx++;
+//     cerr<<"Turning on point light: light "<<idx<<".\n";
     float f[4];
-    f[0]=p.x(); f[1]=p.y(); f[2]=p.z(); f[3]=1.0;
-    glLightfv((GLenum)(GL_LIGHT0+i), GL_POSITION, f);
-    c.get_color(f);
-    glLightfv((GLenum)(GL_LIGHT0+i), GL_DIFFUSE, f);
-    glLightfv((GLenum)(GL_LIGHT0+i), GL_SPECULAR, f);
+
+    opengl_reset_light( i );
+
+    if( !transformed ) {
+      glMatrixMode(GL_MODELVIEW);
+      glPushMatrix();
+      glLoadIdentity();
+    }
+      f[0]=p.x(); f[1]=p.y(); f[2]=p.z(); f[3]=1.0;
+      glLightfv((GLenum)(GL_LIGHT0+i), GL_POSITION, f);
+      c.get_color(f);
+      glLightfv((GLenum)(GL_LIGHT0+i), GL_DIFFUSE, f);
+      glLightfv((GLenum)(GL_LIGHT0+i), GL_SPECULAR, f);
+      
+    if( !transformed ){
+      glPopMatrix();
+    }
   }
 }
 
@@ -4944,12 +5029,15 @@ void HeadLight::opengl_setup(const View& /*view*/, DrawInfoOpenGL*, int& idx)
 {
   if ( on ) {
     int i=idx++;
-//    Point p(view.eyep());
+//     cerr<<"Turning on headlight: light "<<idx<<".\n";
     float f[4];
+
+    opengl_reset_light(i);
+
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
-    glLoadIdentity();
-    //    f[0]=p.x(); f[1]=p.y(); f[2]=p.z(); f[3]=0.0;
+    glLoadIdentity(); // Never transformed: its a headlight afterall--Kurt
+
     f[0] = f[1] = f[3] = 0.0;
     f[2] = 1.0;
     glLightfv((GLenum)(GL_LIGHT0+i), GL_POSITION, f);
@@ -4957,13 +5045,6 @@ void HeadLight::opengl_setup(const View& /*view*/, DrawInfoOpenGL*, int& idx)
     glLightfv((GLenum)(GL_LIGHT0+i), GL_DIFFUSE, f);
     glLightfv((GLenum)(GL_LIGHT0+i), GL_SPECULAR, f);
     
-#if 0
-    i=idx++;
-    f[2] = -1.0; 
-    glLightfv(GL_LIGHT0+i, (GLenum)GL_POSITION, f);
-    glLightfv(GL_LIGHT0+i, (GLenum)GL_DIFFUSE, f);
-    glLightfv(GL_LIGHT0+i, (GLenum)GL_SPECULAR, f);
-#endif
     glPopMatrix();
   }
 }

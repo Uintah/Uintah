@@ -59,7 +59,7 @@ DECLARE_MAKER(Viewer)
 //----------------------------------------------------------------------
 Viewer::Viewer(GuiContext* ctx)
   : Module("Viewer", ctx, ViewerSpecial,"Render","SCIRun"),
-    geomlock_("Viewer geometry lock"),
+    geomlock_("Viewer geometry lock"), 
     // CollabVis code begin
 #ifdef HAVE_COLLAB_VIS
     newViewWindowMailbox( "NewViewWindowMailbox", 10 ),
@@ -67,16 +67,22 @@ Viewer::Viewer(GuiContext* ctx)
     // CollabVis code end
     max_portno_(0)
 {
-				// Add a headlight
-  lighting_.lights.add(scinew HeadLight("Headlight", Color(1,1,1)));
 
-  for(int i = 1; i < 8; i++){
+  map<LightID, int> li;
+  // Add a headlight
+  lighting_.lights.add(scinew HeadLight("Headlight", Color(1,1,1)));
+  li[0] = 0;
+  for(int i = 1; i < 4; i++){ // only set up 3 more lights
     char l[8];
     sprintf( l, "Light%d", i );
-    lighting_.lights.add(scinew DirectionalLight(string(l), Vector(0,0,1),
-					   Color(1,1,1), false));
+    lighting_.lights.add(scinew DirectionalLight(string(l), 
+						       Vector(0,0,1),
+						       Color(1,1,1), 
+						       false, false));
+    li[i] = i;
   }
-  
+  pli_[0] = li;
+
   default_material_ = scinew Material(Color(.1,.1,.1),
 				      Color(.6,0,0),
 				      Color(.7,.7,.7),
@@ -193,7 +199,7 @@ int Viewer::process_event()
 	  ((lighting_.lights)[rmsg->lightNo])->on = rmsg->on;
 	  if( rmsg->on ){
 	    if(DirectionalLight *dl = dynamic_cast<DirectionalLight *>
-	       ((lighting_.lights)[rmsg->lightNo])) {
+	       (((lighting_.lights)[rmsg->lightNo]).get_rep())) {
 	      dl->move( rmsg->lightDir );
 	      dl->setColor( rmsg->lightColor );
 	    }
@@ -252,6 +258,57 @@ int Viewer::process_event()
     }
     break;
 
+  case MessageTypes::GeometryAddLight:
+    {
+      // Add a light to the light list
+      lighting_.lights.add(gmsg->light);
+
+      // Now associate the port, and LightID to the index
+      map<LightID, int> li;
+      map<int, map<LightID, int> >::iterator it = 
+	pli_.find( gmsg->portno );
+      if( it == pli_.end() ){
+	li[gmsg->lserial] =  lighting_.lights.size() - 1;
+	pli_[ gmsg->portno ] = li;
+      } else {
+	((*it).second)[gmsg->lserial] = lighting_.lights.size() - 1;
+      }
+      break;
+    }
+    break;
+  case MessageTypes::GeometryDelLight:
+    {
+      map<LightID, int>::iterator li;
+      map<int, map<LightID, int> >::iterator it = 
+	pli_.find( gmsg->portno );
+      if( it == pli_.end() ){
+	error("Error while deleting a light: no data base for port number " +
+	      to_string( gmsg->portno ) );
+      } else {
+	li = ((*it).second).find(gmsg->lserial);
+	if( li == (*it).second.end() ){
+	  error("Error while deleting a light: no light with id " +
+		to_string(gmsg->lserial) + "in database for port number" +
+		to_string( gmsg->portno));
+	} else {
+	  int idx = (*li).second;
+	  int i;
+	  for(i = 0; i < lighting_.lights.size(); i++){
+	    if( i == idx ){
+	      lighting_.lights[i] = 0;
+	      lighting_.lights.remove(i);
+	      ((*it).second).erase( li );
+	      break;
+	    }
+	    if( i == lighting_.lights.size() )
+	      error("Error deleting light, light not in database...(lserial=" +
+		    to_string(gmsg->lserial));
+	  }
+	}
+      }
+    }
+    break;
+  
   case MessageTypes::GeometryInit:
     geomlock_.writeLock();
     initPort(gmsg->reply);

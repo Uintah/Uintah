@@ -38,7 +38,7 @@
 namespace SCIRun {
 
 enum LightType {
-  DirectionalLight, PointLight, SpotLight, AreaLight, NumLightTypes
+  DirectionalLight=0, PointLight=1, SpotLight=2, AreaLight=3, NumLightTypes=4
 };
 
 class FrameWidget;
@@ -61,7 +61,12 @@ public:
    void SetLightType( const LightType lighttype );
    LightType GetLightType() const;
    
-   const Vector& GetAxis();
+  const Vector& GetAxis();
+  Point GetSource() const;
+  Point GetPointAt() const;
+  void SetPointAt( const Point& p );
+  double GetRadius() const;
+  void SetRadius( double r );
 
    // Variable indexs
    enum { SourceVar, DirectVar, ConeVar, DistVar, RadiusVar, RatioVar };

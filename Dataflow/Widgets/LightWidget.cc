@@ -50,8 +50,8 @@ const Index NumVars = 6;
 const Index NumGeoms = 7;
 const Index NumPcks = 5;
 const Index NumMatls = 4;
-const Index NumMdes = 4;
-const Index NumSwtchs = 4;
+const Index NumMdes = 3;
+const Index NumSwtchs = 3;
 const Index NumSchemes = 4;
 
 enum { ConstAdjacent, ConstOpposite, ConstRatio, ConstProject };
@@ -163,13 +163,13 @@ LightWidget::LightWidget( Module* module, CrowdMonitor* lock, double widget_scal
   conegroup->add(materials[ConeMatl]);
   CreateModeSwitch(2, conegroup);
 
-  arealight = scinew FrameWidget(module, lock, widget_scale);
-  CreateModeSwitch(3, arealight->GetWidget());
+//   arealight = scinew FrameWidget(module, lock, widget_scale);
+//   CreateModeSwitch(3, arealight->GetWidget());
 
   SetMode(Mode0, Switch1|Switch0);
   SetMode(Mode1, Switch1);
   SetMode(Mode2, Switch1|Switch2);
-  SetMode(Mode3, Switch3);
+//   SetMode(Mode3, Switch3);
 
   FinishWidget();
 }
@@ -229,10 +229,10 @@ LightWidget::redraw()
 					 variables[RadiusVar]->real(), cylinderrad);
   }
 
-  if (mode_switches[3]->get_state())
-  {
-    arealight->SetScale(widget_scale_);
-  }
+//    if (mode_switches[3]->get_state())
+//    {
+//      arealight->SetScale(widget_scale_);
+//    }
 
   if (direct.length2() > 1e-6)
   {
@@ -302,9 +302,9 @@ LightWidget::geom_moved( GeomPickHandle gp, int axis, double dist,
     }
     break;
 
-  case AreaLight:
-    arealight->geom_moved(gp, axis, dist, delta, pick, state, pick_offset);
-    break;
+//   case AreaLight:
+//     arealight->geom_moved(gp, axis, dist, delta, pick, state, pick_offset);
+//     break;
 
   default:
     ASSERTFAIL("Bad light type");
@@ -323,7 +323,7 @@ LightWidget::geom_moved( GeomPickHandle gp, int axis, double dist,
 void
 LightWidget::MoveDelta( const Vector& delta )
 {
-  arealight->MoveDelta(delta);
+//   arealight->MoveDelta(delta);
 
   variables[SourceVar]->MoveDelta(delta);
   variables[DirectVar]->MoveDelta(delta);
@@ -348,9 +348,26 @@ LightWidget::ReferencePoint() const
 void
 LightWidget::SetLightType( const LightType lighttype )
 {
+  Index s;
+  for (s=0; s<mode_switches.size(); s++)
+  {
+    if (modes[current_mode_]&(1<<s))
+    {
+      mode_switches[s]->set_state(0);
+    }
+  }
+  current_mode_ = ((Index) lighttype) % modes.size();
   ltype = lighttype;
+  for (s=0; s<mode_switches.size(); s++)
+  {
+    if (modes[current_mode_]&(1<<s))
+    {
+      mode_switches[s]->set_state(1);
+    }
+  }
 
   execute(0);
+
 }
 
 
@@ -374,7 +391,36 @@ LightWidget::GetAxis()
     return (oldaxis = axis.normal());
   }
 }
+Point 
+LightWidget::GetSource() const
+{
+  Point source(variables[SourceVar]->point());
+  return source;
+} 
 
+Point
+LightWidget::GetPointAt() const
+{
+  Point at(variables[DirectVar]->point());
+  return at;
+}
+void 
+LightWidget::SetPointAt( const Point& pt)
+{
+  variables[DirectVar]->Set( pt, Scheme2 );
+}
+
+double 
+LightWidget::GetRadius() const
+{
+  return variables[RadiusVar]->real();
+}
+
+void
+LightWidget::SetRadius( double rad )
+{
+  variables[RadiusVar]->Set( rad, Scheme1 );
+}
 
 void
 LightWidget::NextMode()
@@ -385,20 +431,20 @@ LightWidget::NextMode()
   case DirectionalLight:
   case PointLight:
   case SpotLight:
-    arealight->GetSize(s1, s2);
-    arealight->SetPosition(variables[SourceVar]->point(), GetAxis(), s1, s2);
+//     arealight->GetSize(s1, s2);
+//     arealight->SetPosition(variables[SourceVar]->point(), GetAxis(), s1, s2);
     break;
 
-  case AreaLight:
-    {
-      Point center;
-      Vector normal;
-      arealight->GetPosition(center, normal, s1, s2);
+//   case AreaLight:
+//     {
+//       Point center;
+//       Vector normal;
+//       arealight->GetPosition(center, normal, s1, s2);
 
-      variables[SourceVar]->Move(center);
-      variables[DirectVar]->Set(center+normal, Scheme4);
-      break;
-    }
+//       variables[SourceVar]->Move(center);
+//       variables[DirectVar]->Set(center+normal, Scheme4);
+//       break;
+//     }
 
   default:
     ASSERTFAIL("Bad Light Type");
@@ -413,7 +459,7 @@ LightWidget::NextMode()
     }
   }
   current_mode_ = (current_mode_+1) % modes.size();
-  ltype = (LightType)((ltype+1) % NumLightTypes);
+  ltype = (LightType)((ltype+1) % AreaLight);
   for (s=0; s<mode_switches.size(); s++)
   {
     if (modes[current_mode_]&(1<<s))

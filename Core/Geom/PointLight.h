@@ -41,13 +41,16 @@ class SCICORESHARE PointLight : public Light {
     Point p;
     Color c;
 public:
-    PointLight(const string& name, const Point&, const Color&, bool on = true);
+    PointLight(const string& name, const Point&, const Color&,
+	       bool on = true, bool transformed = true);
     virtual ~PointLight();
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
 #ifdef SCI_OPENGL
     virtual void opengl_setup(const View& view, DrawInfoOpenGL*, int& idx);
 #endif
+  void move( const Point& newP) { p = newP; }
+  void setColor( const Color& newC) { c = newC; }
 };
 
 } // End namespace SCIRun

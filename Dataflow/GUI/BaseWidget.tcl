@@ -206,9 +206,12 @@ proc initColor {c r g b} {
 }
 
 proc initMaterial {matter} {
-    initColor $matter-ambient 0.0 0.0 0.0
-    initColor $matter-diffuse 0.0 0.0 0.0
-    initColor $matter-specular 0.0 0.0 0.0
+#     initColor $matter-ambient 0.0 0.0 0.0
+#     initColor $matter-diffuse 0.0 0.0 0.0
+#     initColor $matter-specular 0.0 0.0 0.0
+    initColor $matter-ambient 1.0 1.0 1.0
+    initColor $matter-diffuse 1.0 1.0 1.0
+    initColor $matter-specular 1.0 1.0 1.0
     global $matter-shininess
     set $matter-shininess 10.0
     initColor $matter-emission 0.0 0.0 0.0

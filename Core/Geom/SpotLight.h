@@ -17,7 +17,7 @@
 
 
 /*
- *  DirectionalLight.h:  A Directional light source
+ *  SpotLight.h:  A Spot light source
  *
  *  Written by:
  *   Steven G. Parker
@@ -28,8 +28,8 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#ifndef SCI_Geom_DirectionalLight_h
-#define SCI_Geom_DirectionalLight_h 1
+#ifndef SCI_Geom_SpotLight_h
+#define SCI_Geom_SpotLight_h 1
 
 #include <Core/Geom/Light.h>
 #include <Core/Datatypes/Color.h>
@@ -37,24 +37,32 @@
 
 namespace SCIRun {
 
-class SCICORESHARE DirectionalLight : public Light {
+class SCICORESHARE SpotLight : public Light {
+    Point p;
     Vector v;
+    float cutoff; // must be [0-90], or 180
     Color c;
 public:
-    DirectionalLight(const string& name, const Vector&, const Color&,
-		     bool on = true, bool transformed = true);
-    virtual ~DirectionalLight();
+    SpotLight(const string& name, const Point&, const Vector&, 
+	      float, const Color&, bool on = true, bool transformed = true);
+    virtual ~SpotLight();
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
 #ifdef SCI_OPENGL
     virtual void opengl_setup(const View& view, DrawInfoOpenGL*, int& idx);
 #endif
-  void move( const Vector& newV) { v = newV; }
+  void move( const Point& newP) { p = newP; }
+  void setDirection( const Vector& newV) {v = newV; }
+  void setCutoff( float co ) { 
+    if ( co >=0 && co <=90 ) 
+      cutoff = co;
+    else
+      cutoff = 180;
+  }
   void setColor( const Color& newC) { c = newC; }
 };
 
 } // End namespace SCIRun
 
 
-#endif /* SCI_Geom_DirectionalLight_h */
-
+#endif /* SCI_Geom_SpotLight_h */
