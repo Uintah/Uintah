@@ -406,11 +406,11 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
   {
     if (pad_data)
     {
-      ndata = scinew NrrdData(f);
+      ndata = scinew NrrdData();
     }
     else
     {
-      ndata = scinew NrrdData();
+      ndata = scinew NrrdData(f);
     }
 
     // switch based on the dims size because that is the size
