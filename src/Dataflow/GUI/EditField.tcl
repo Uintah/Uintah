@@ -96,17 +96,17 @@ itcl_class SCIRun_Fields_EditField {
 	pack $w.att 
 	set att [$w.att childsite]
 	
-	labelpair $att.l1 "Name" "[set $this-fldname]"
-	labelpair $att.l2 "Typename" "[set $this-typename]"
-	labelpair $att.l3 "BBox min" "[set $this-minx], [set $this-miny], \
-		                      [set $this-minz]"
-	labelpair $att.l4 "BBox max" "[set $this-maxx], [set $this-maxy], \
-		                      [set $this-maxz]"
-	labelpair $att.l5 "Data min,max" "[set $this-datamin], \
+	labelpair $att.l1 "Name" $this-fldname
+	labelpair $att.l2 "Typename" $this-typename
+	labelpairmulti $att.l3 "BBox min" "[set $this-minx], \
+		               [set $this-miny], [set $this-minz]"
+	labelpairmulti $att.l4 "BBox max" "[set $this-maxx], \
+                               [set $this-maxy], [set $this-maxz]"
+	labelpairmulti $att.l5 "Data min,max" "[set $this-datamin], \
 		                          [set $this-datamax]"
-	labelpair $att.l7 "# Nodes" "[set $this-numnodes]"
-	labelpair $att.l8 "# Elements" "[set $this-numelems]"
-	labelpair $att.l9 "Data at" "[set $this-dataat]"
+	labelpair $att.l7 "# Nodes" $this-numnodes
+	labelpair $att.l8 "# Elements" $this-numelems
+	labelpair $att.l9 "Data at" $this-dataat
 	pack $att.l1 $att.l2 $att.l3 $att.l4 $att.l5 \
 	     $att.l7 $att.l8 $att.l9 -side top 
 
@@ -137,9 +137,31 @@ itcl_class SCIRun_Fields_EditField {
 		   $this-dataat2 $this-cdataat
 	pack $edit.l1 $edit.l2 $edit.l3 $edit.l4 $edit.l5 \
 	     $edit.l8 $edit.l9 -side top 
+
+    }
+
+    method update_multifields {} {
+        set w .ui[modname]
+	set att [$w.att childsite]
+	$att.l3.l2 configure -text "[set $this-minx], [set $this-miny], \
+		                  [set $this-minz]"
+	$att.l4.l2 configure -text "[set $this-maxx], [set $this-maxy], \
+		                  [set $this-maxz]"
+	$att.l5.l2 configure -text "[set $this-datamin], [set $this-datamax]"
     }
 
     method labelpair { win text1 text2 } {
+	frame $win 
+	pack $win -side top -padx 5
+	label $win.l1 -text $text1 -width [set $this-firstwidth] \
+		      -anchor w -just left
+	label $win.colon  -text ":" -width 2 -anchor w -just left 
+	label $win.l2 -textvar $text2 -width 40 -anchor w -just left \
+		-fore darkred
+	pack $win.l1 $win.colon $win.l2 -side left
+    } 
+
+    method labelpairmulti { win text1 text2 } {
 	frame $win 
 	pack $win -side top -padx 5
 	label $win.l1 -text $text1 -width [set $this-firstwidth] \
@@ -204,7 +226,8 @@ itcl_class SCIRun_Fields_EditField {
 	label $win.l1 -text $text1 -width [set $this-firstwidth] \
 		      -anchor w -just left
 	label $win.colon  -text ":" -width 2 -anchor w -just left
-	iwidgets::optionmenu $win.c -foreground darkred 
+	iwidgets::optionmenu $win.c -foreground darkred \
+		-command " $this comboget $win.c $var "
 	set i 0
 	set length [llength $arglist]
 	for {set elem [lindex $arglist $i]} {$i<$length} \
@@ -212,8 +235,18 @@ itcl_class SCIRun_Fields_EditField {
 	    $win.c insert end $elem
 	}
 	label $win.l2 -text "" -width 40 -anchor w -just left
+
+	# hack to associate optionmenus with a textvariable
+	bind $win.c <Map> "$win.c select {[set $var]}"
+
 	pack $win.b $win.l1 $win.colon -side left
 	pack $win.c $win.l2 -side left	
+    }
+
+    method comboget { win var } {
+	if { "$var"!="[$win get]" } {
+	    set $var [$win get]
+	}
     }
 
     method labeloption { win text1 text2 text3 var var2} {
@@ -228,23 +261,6 @@ itcl_class SCIRun_Fields_EditField {
 	label $win.l4 -width 40
 	pack $win.b $win.l1 $win.colon -side left
         pack $win.l2 $win.l3 $win.l4 -side left
-    }
-
-    method update_attributes {} {
-	set w .ui[modname]
-	set att [$w.att childsite]
-	set edit [$w.edit childsite]
-
-	config_labelpair $att.l1 "[set $this-fldname]"
-	config_labelpair $att.l2 "[set $this-typename]"
-	config_labelpair $att.l3 "[set $this-minx], [set $this-miny], \
-                                  [set $this-minz]"
-	config_labelpair $att.l4 "[set $this-maxx], [set $this-maxy], \
-                                  [set $this-maxz]"
-	config_labelpair $att.l5 "[set $this-datamin], [set $this-datamax]"
-	config_labelpair $att.l7 "[set $this-numnodes]"
-	config_labelpair $att.l8 "[set $this-numelems]"
-	config_labelpair $att.l9 "[set $this-dataat]"
     }
 
     method copy_attributes {} {
@@ -318,7 +334,7 @@ itcl_class SCIRun_Fields_EditField {
     }
 
     method config_labelpair { win text2 } {
-	$win.l2 configure -text $text2
+#	$win.l2 configure -text $text2
     }
 
     method config_labeloption {win text2 text3} {
