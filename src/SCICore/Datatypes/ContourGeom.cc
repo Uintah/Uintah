@@ -10,19 +10,24 @@
 
 #include <SCICore/Datatypes/ContourGeom.h>
 
-namespace SCICore{
-namespace Datatypes{
+namespace SCICore {
+namespace Datatypes {
 
 PersistentTypeID ContourGeom::type_id("ContourGeom", "Datatype", 0);
 
 DebugStream ContourGeom::dbg("ContourGeom", true);
 
+
+ContourGeom::ContourGeom()
+{
+}
+
 ContourGeom::ContourGeom(const vector<NodeSimp>& inodes,
 			 const vector<EdgeSimp>& iedges)
-  : has_neighbors(0)
+  : PointCloudGeom(inodes),
+    d_has_neighbors(0)
 {
-  nodes = inodes;
-  edges = iedges;
+  d_edge = iedges;
 }
 
 ContourGeom::~ContourGeom()
@@ -30,51 +35,18 @@ ContourGeom::~ContourGeom()
 }
 
 string
-ContourGeom::get_info()
+ContourGeom::getInfo()
 {
   ostringstream retval;
-  retval << "name = " << name << endl;
+  retval << "name = " << d_name << endl;
   return retval.str();
 }
 
-bool
-ContourGeom::compute_bbox()
-{
-  //compute diagnal and bbox
-  dbg << "calling Contourgeom::compute_bbox()" << endl;
-  
-  if (nodes.empty())
-    {
-      return false;
-    }
-
-  Point min, max;
-  min = max = nodes[0].p;
-  for (int i = 1; i < nodes.size(); i ++)
-    {
-      min = Min(min, nodes[i].p);
-      max = Max(max, nodes[i].p);
-    }
-
-  bbox.reset();
-  bbox.extend(min);
-  bbox.extend(max);
-
-  return true;
-}
-  
 void
-ContourGeom::set_nodes(const vector<NodeSimp>& inodes)
+ContourGeom::setEdges(const vector<EdgeSimp>& iedges)
 {
-  nodes.clear();
-  nodes = inodes;
-}
-
-void
-ContourGeom::set_edges(const vector<EdgeSimp>& iedges)
-{
-  edges.clear();
-  edges = iedges;
+  d_edge.clear();
+  d_edge = iedges;
 }
 
 void ContourGeom::io(Piostream&)

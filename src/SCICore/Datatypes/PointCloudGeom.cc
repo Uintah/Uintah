@@ -10,16 +10,21 @@
 
 #include <SCICore/Datatypes/PointCloudGeom.h>
 
-namespace SCICore{
-namespace Datatypes{
+namespace SCICore {
+namespace Datatypes {
 
 PersistentTypeID PointCloudGeom::type_id("PointCloudGeom", "Datatype", 0);
 
 DebugStream PointCloudGeom::dbg("PointCloudGeom", true);
 
+PointCloudGeom::PointCloudGeom()
+{
+}
+
+
 PointCloudGeom::PointCloudGeom(const vector<NodeSimp>& inodes)
 {
-  nodes = inodes;
+  d_node = inodes;
 }
 
 
@@ -28,47 +33,49 @@ PointCloudGeom::~PointCloudGeom()
 }
 
 string
-PointCloudGeom::get_info()
+PointCloudGeom::getInfo()
 {
   ostringstream retval;
-  retval << "name = " << name << endl;
+  retval << "name = " << d_name << endl;
   return retval.str();
 }
 
 bool
-PointCloudGeom::compute_bbox()
+PointCloudGeom::computeBoundingBox()
 {
   //compute diagnal and bbox
   dbg << "calling PointCloudgeom::compute_bbox()" << endl;
   
-  if (nodes.empty())
-    {
-      return false;
-    }
+  if (d_node.empty())
+  {
+    return false;
+  }
 
   Point min, max;
-  min = max = nodes[0].p;
-  for (int i = 1; i < nodes.size(); i ++)
-    {
-      min = Min(min, nodes[i].p);
-      max = Max(max, nodes[i].p);
-    }
+  min = max = d_node[0].p;
+  for (int i = 1; i < d_node.size(); i ++)
+  {
+    min = Min(min, d_node[i].p);
+    max = Max(max, d_node[i].p);
+  }
 
-  bbox.reset();
-  bbox.extend(min);
-  bbox.extend(max);
+  d_bbox.reset();
+  d_bbox.extend(min);
+  d_bbox.extend(max);
 
   return true;
 }
+
   
 void
-PointCloudGeom::set_nodes(const vector<NodeSimp>& inodes)
+PointCloudGeom::setNodes(const vector<NodeSimp>& inodes)
 {
-  nodes.clear();
-  nodes = inodes;
+  d_node.clear();
+  d_node = inodes;
 }
 
-void PointCloudGeom::io(Piostream&)
+void
+PointCloudGeom::io(Piostream&)
 {
 }
 

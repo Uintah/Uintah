@@ -29,7 +29,7 @@ Lattice3Geom::Lattice3Geom(int ix, int iy, int iz)
   d_nx = Max(1, ix);
   d_ny = Max(1, iy);
   d_nz = Max(1, iz);
-  compute_bbox();
+  computeBoundingBox();
 }
 
 Lattice3Geom::Lattice3Geom(int ix, int iy, int iz,
@@ -42,7 +42,7 @@ Lattice3Geom::Lattice3Geom(int ix, int iy, int iz,
   BBox box;
   box.extend(a);
   box.extend(b);
-  set_bbox(box);
+  setBoundingBox(box);
 }
 
 Lattice3Geom::~Lattice3Geom()
@@ -50,11 +50,11 @@ Lattice3Geom::~Lattice3Geom()
 }
 
 string
-Lattice3Geom::get_info()
+Lattice3Geom::getInfo()
 {
   ostringstream retval;
   retval <<
-    "name = " << name << endl <<
+    "name = " << d_name << endl <<
     "x = " << d_nx << endl <<
     "y = " << d_ny << endl <<
     "z = " << d_nz << endl;
@@ -64,11 +64,11 @@ Lattice3Geom::get_info()
 
 
 bool
-Lattice3Geom::compute_bbox()
+Lattice3Geom::computeBoundingBox()
 {
-  bbox.reset();
-  bbox.extend(d_trans.project(Point(0, 0, 0)));
-  bbox.extend(d_trans.project(Point(d_nx-1, d_ny-1, d_nz-1)));
+  d_bbox.reset();
+  d_bbox.extend(d_trans.project(Point(0, 0, 0)));
+  d_bbox.extend(d_trans.project(Point(d_nx-1, d_ny-1, d_nz-1)));
   return true;
 }
 
@@ -88,7 +88,7 @@ Lattice3Geom::itransform(const Point &p, Point &r)
 
 
 Point
-Lattice3Geom::get_point(int x, int y, int z)
+Lattice3Geom::getPoint(int x, int y, int z)
 {
   Point p(x, y, z);
   Point r;
@@ -99,7 +99,7 @@ Lattice3Geom::get_point(int x, int y, int z)
 
 #if 0
 bool Lattice3Geom::locate(const Point& p, int& ix, int& iy, int& iz){
-  Vector pn=p-bbox.min();
+  Vector pn=p-d_bbox.min();
   double mdx=diagonal.x();
   double mdy=diagonal.y();
   double mdz=diagonal.z();
@@ -120,12 +120,12 @@ Lattice3Geom::resize(int x, int y, int z)
   d_nx = Min(x, 1);
   d_ny = Min(y, 1);
   d_nz = Min(z, 1);
-  compute_bbox();
+  computeBoundingBox();
 }
 
 #if 0  
 void
-Lattice3Geom::set_bbox(const Point& imin, const Point& imax)
+Lattice3Geom::setBoundingBox(const Point& imin, const Point& imax)
 {
   bbox.reset();
   // extend the bbox to include min and max
@@ -136,7 +136,7 @@ Lattice3Geom::set_bbox(const Point& imin, const Point& imax)
   compute_deltas();
 }
 
-void Lattice3Geom::set_bbox(const BBox& ibbox){
+void Lattice3Geom::setBoundingBox(const BBox& ibbox){
   bbox = ibbox;
   has_bbox = true;
   compute_deltas();
@@ -151,7 +151,7 @@ void Lattice3Geom::compute_deltas(){
     
 
 void
-Lattice3Geom::set_bbox(BBox &box)
+Lattice3Geom::setBoundingBox(BBox &box)
 {
   Vector offset(box.min());
   d_trans.post_translate(offset);
@@ -163,7 +163,7 @@ Lattice3Geom::set_bbox(BBox &box)
 
   d_trans.post_scale(sdiag);
   d_trans.compute_imat();
-  compute_bbox();
+  computeBoundingBox();
 }
 
 void

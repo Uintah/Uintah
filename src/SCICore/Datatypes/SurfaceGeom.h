@@ -16,18 +16,19 @@
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Geom/GeomTriangles.h>
 #include <SCICore/Geom/GeomPolyline.h>
-#include <SCICore/Datatypes/UnstructuredGeom.h>
+#include <SCICore/Datatypes/ContourGeom.h>
 #include <SCICore/Containers/LockingHandle.h>
 #include <SCICore/Math/MiscMath.h>
 #include <SCICore/Util/DebugStream.h>
-#include <sstream>
+//#include <sstream>
+#include <list>
 #include <vector>
 #include <string>
-#include <set>
+//#include <set>
 
 
-namespace SCICore{
-namespace Datatypes{
+namespace SCICore {
+namespace Datatypes {
 
 using SCICore::Geometry::Vector;
 using SCICore::Geometry::Point;
@@ -42,30 +43,23 @@ using SCICore::PersistentSpace::PersistentTypeID;
 using SCICore::Math::Interpolate;
 using SCICore::Util::DebugStream;
 
-class SurfaceGeom:public UnstructuredGeom
+class SurfaceGeom : public ContourGeom
 {
 public:
 
   SurfaceGeom();
+  virtual ~SurfaceGeom() {}
   
-  virtual string get_info();
+  virtual string getInfo();
   
-  //////////
-  // set nodes and tets vectors
-  // deletes these pointers if they are allready set
-  void set_nodes(const vector<NodeSimp>&);
-
- ///////////
+  ///////////
   // Persistent representation...
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
 
 protected:
-  //////////
-  // Compute the bounding box and diagnal, set has_bbox to true
-  virtual bool compute_bbox();
- 
-  vector<NodeSimp> nodes;
+  
+  vector<list<int> > d_face;
 
 private:
   static DebugStream dbg;

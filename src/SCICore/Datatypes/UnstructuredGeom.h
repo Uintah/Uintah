@@ -26,10 +26,10 @@
 #include <vector>
 #include <string>
 
-#define BOUNDARY -2
+//#define BOUNDARY -2
 
 namespace SCICore {
-namespace Datatypes{
+namespace Datatypes {
 
 using SCICore::Containers::LockingHandle;
 using SCICore::Geometry::Vector;
@@ -38,14 +38,15 @@ using std::vector;
 using std::string;
 using SCICore::PersistentSpace::Piostream;
 using SCICore::PersistentSpace::PersistentTypeID;
-  //using SCICore::GeomSpace::GeomGroup;
-  //using SCICore::GeomSpace::GeomMaterial;
-  //using SCICore::GeomSpace::MaterialHandle;
-  //using SCICore::GeomSpace::GeomTrianglesP;
+//using SCICore::GeomSpace::GeomGroup;
+//using SCICore::GeomSpace::GeomMaterial;
+//using SCICore::GeomSpace::MaterialHandle;
+//using SCICore::GeomSpace::GeomTrianglesP;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Malloc;
 
-class NodeSimp{
+
+class NodeSimp {
 public:
   NodeSimp();
   NodeSimp(const Point&);
@@ -59,7 +60,7 @@ public:
 private:
 };
 
-class EdgeSimp{
+class EdgeSimp {
 public:
   EdgeSimp();
   //////////
@@ -78,7 +79,7 @@ public:
 private:
 };
 
-class FaceSimp{
+class FaceSimp {
 public:
   FaceSimp();
   FaceSimp(int, int, int);
@@ -89,7 +90,7 @@ public:
 private:
 };
   
-class TetSimp{
+class TetSimp {
 public:
   TetSimp();
   TetSimp(int, int, int, int);
@@ -102,13 +103,14 @@ private:
 
 };
 
-class SCICORESHARE UnstructuredGeom:public Geom{  
+
+class SCICORESHARE UnstructuredGeom : public Geom
+{
 public:
   
-  virtual ~UnstructuredGeom(){ };
+  virtual ~UnstructuredGeom() {};
 
 protected:
-  
 };
 
 
