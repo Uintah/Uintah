@@ -153,6 +153,7 @@ void Salmon::initPort(Mailbox<GeomReply>* reply)
     portHash.insert(portid, pi);
     pi->msg_head=pi->msg_tail=0;
     pi->portno=portid;
+    cerr << "Initializing port " << pi->portno << endl;
     pi->objs=new HashTable<int, SceneItem*>;
     reply->send(GeomReply(portid, &busy_bit));
 }

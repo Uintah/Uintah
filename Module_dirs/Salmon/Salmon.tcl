@@ -245,4 +245,5 @@ proc removeObject {rid objid} {
     set w .$rid
     set m $w.mframe.f
     pack forget $m.objlist.canvas.frame.obj$objid
+    puts "removed $objid"
 }
