@@ -2,7 +2,7 @@
 #define __MATERIAL_H__
 
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
-#include <Packages/Uintah/Core/Grid/ComputeSet.h>
+#include <Packages/Uintah/Core/Variables/ComputeSet.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
 

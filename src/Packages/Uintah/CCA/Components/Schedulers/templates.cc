@@ -6,12 +6,12 @@
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 #include <mpi.h>
 
-#include <Packages/Uintah/Core/Grid/ParticleVariableBase.h>
-#include <Packages/Uintah/Core/Grid/ParticleVariable.h>
-#include <Packages/Uintah/Core/Grid/ParticleSubset.h>
+#include <Packages/Uintah/Core/Variables/ParticleVariableBase.h>
+#include <Packages/Uintah/Core/Variables/ParticleVariable.h>
+#include <Packages/Uintah/Core/Variables/ParticleSubset.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
-#include <Packages/Uintah/Core/Grid/VarLabel.h>
+#include <Packages/Uintah/Core/Variables/VarLabel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/TaskGraph.h>
 

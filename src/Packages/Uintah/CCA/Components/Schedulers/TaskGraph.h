@@ -1,7 +1,7 @@
 #ifndef UINTAH_HOMEBREW_TaskGraph_H
 #define UINTAH_HOMEBREW_TaskGraph_H
 
-#include <Packages/Uintah/Core/Grid/TaskProduct.h>
+ 
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <sgi_stl_warnings_off.h>

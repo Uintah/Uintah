@@ -1,7 +1,7 @@
 
 #include <Packages/Uintah/CCA/Components/Schedulers/SendState.h>
-#include <Packages/Uintah/Core/Grid/ParticleSubset.h>
-#include <Packages/Uintah/Core/Grid/PSPatchMatlGhost.h>
+#include <Packages/Uintah/Core/Variables/ParticleSubset.h>
+#include <Packages/Uintah/Core/Variables/PSPatchMatlGhost.h>
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Core/Exceptions/InternalError.h>
 

@@ -3,19 +3,19 @@
 #include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/Core/Grid/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/ParticleSet.h>
-#include <Packages/Uintah/Core/Grid/ParticleVariable.h>
+#include <Packages/Uintah/Core/Variables/NCVariable.h>
+#include <Packages/Uintah/Core/Variables/ParticleSet.h>
+#include <Packages/Uintah/Core/Variables/ParticleVariable.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/VarLabel.h>
+#include <Packages/Uintah/Core/Variables/VarLabel.h>
 #include <Core/Math/MinMax.h>
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Math/Short27.h> //for Fracture
-#include <Packages/Uintah/Core/Grid/NodeIterator.h> // just added
+#include <Packages/Uintah/Core/Variables/NodeIterator.h> // just added
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/Core/Grid/VarTypes.h>
+#include <Packages/Uintah/Core/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
 #include <sgi_stl_warnings_off.h>

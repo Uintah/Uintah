@@ -24,8 +24,10 @@ else
   PSELIBS := \
         Packages/Uintah/Core/Exceptions    \
         Packages/Uintah/Core/Grid          \
+        Packages/Uintah/Core/Util          \
         Packages/Uintah/Core/Math          \
         Packages/Uintah/Core/ProblemSpec   \
+        Packages/Uintah/Core/Parallel      \
         Packages/Uintah/Core/Disclosure    \
         Core/Exceptions  \
         Core/Geometry    \

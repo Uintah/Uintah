@@ -4,7 +4,7 @@
 #include "TensorOperatorFunctors.h"
 #include <Core/GuiInterface/GuiVar.h>
 #include <Uintah/Dataflow/Ports/TensorParticlesPort.h>
-#include <Uintah/Core/Grid/ShareAssignParticleVariable.h>
+#include <Uintah/Core/Variables/ShareAssignParticleVariable.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/share/share.h>

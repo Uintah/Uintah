@@ -1,10 +1,10 @@
 
 #include <Packages/Uintah/CCA/Components/Examples/RegionDB.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
-#include <Packages/Uintah/Core/Grid/GeomPiece/GeometryPiece.h>
-#include <Packages/Uintah/Core/Grid/GeomPiece/GeometryPieceFactory.h>
-#include <Packages/Uintah/Core/Grid/GeomPiece/BoxGeometryPiece.h>
-#include <Packages/Uintah/Core/Grid/GeomPiece/DifferenceGeometryPiece.h>
+#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
+#include <Packages/Uintah/Core/GeometryPiece/GeometryPieceFactory.h>
+#include <Packages/Uintah/Core/GeometryPiece/BoxGeometryPiece.h>
+#include <Packages/Uintah/Core/GeometryPiece/DifferenceGeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <iostream>

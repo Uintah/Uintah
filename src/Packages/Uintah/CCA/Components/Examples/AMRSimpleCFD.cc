@@ -17,9 +17,9 @@
 #include <Packages/Uintah/CCA/Ports/SolverInterface.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
-#include <Packages/Uintah/Core/Grid/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/PerPatch.h>
+#include <Packages/Uintah/Core/Variables/CCVariable.h>
+#include <Packages/Uintah/Core/Variables/CellIterator.h>
+#include <Packages/Uintah/Core/Variables/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/Task.h>

@@ -2,12 +2,12 @@
 #ifndef Packages_Uintah_CCA_Components_Solvers_MatrixUtil_h
 #define Packages_Uintah_CCA_Components_Solvers_MatrixUtil_h
 
-#include <Packages/Uintah/Core/Grid/Stencil7.h>
-#include <Packages/Uintah/Core/Grid/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/NCVariable.h>
-#include <Packages/Uintah/Core/Grid/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/SFCZVariable.h>
+#include <Packages/Uintah/Core/Variables/Stencil7.h>
+#include <Packages/Uintah/Core/Variables/CCVariable.h>
+#include <Packages/Uintah/Core/Variables/NCVariable.h>
+#include <Packages/Uintah/Core/Variables/SFCXVariable.h>
+#include <Packages/Uintah/Core/Variables/SFCYVariable.h>
+#include <Packages/Uintah/Core/Variables/SFCZVariable.h>
 
 namespace Uintah {
   class SFCXTypes {

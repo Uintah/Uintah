@@ -5,11 +5,11 @@
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Grid/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/ParticleSet.h>
-#include <Packages/Uintah/Core/Grid/ParticleVariable.h>
-#include <Packages/Uintah/Core/Grid/GeomPiece/GeometryPiece.h>
-#include <Packages/Uintah/Core/Grid/GeomPiece/FileGeometryPiece.h>
+#include <Packages/Uintah/Core/Variables/CellIterator.h>
+#include <Packages/Uintah/Core/Variables/ParticleSet.h>
+#include <Packages/Uintah/Core/Variables/ParticleVariable.h>
+#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
+#include <Packages/Uintah/Core/GeometryPiece/FileGeometryPiece.h>
 #include <algorithm>
 
 using namespace Uintah;

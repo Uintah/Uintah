@@ -1,6 +1,6 @@
 #include <Packages/Uintah/CCA/Components/ICE/EOS/IdealGas.h>
-#include <Packages/Uintah/Core/Grid/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/CellIterator.h>
+#include <Packages/Uintah/Core/Variables/CCVariable.h>
+#include <Packages/Uintah/Core/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 
 using namespace Uintah;

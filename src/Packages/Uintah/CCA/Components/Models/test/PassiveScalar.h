@@ -2,7 +2,7 @@
 #ifndef Packages_Uintah_CCA_Components_Examples_PassiveScalar_h
 #define Packages_Uintah_CCA_Components_Examples_PassiveScalar_h
 #include <Packages/Uintah/CCA/Ports/ModelInterface.h>
-#include <Packages/Uintah/Core/Grid/VarTypes.h>
+#include <Packages/Uintah/Core/Variables/VarTypes.h>
 #include <map>
 #include <vector>
 

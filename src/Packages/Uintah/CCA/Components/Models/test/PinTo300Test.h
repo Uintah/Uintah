@@ -3,12 +3,12 @@
 #define Packages_Uintah_CCA_Components_Examples_PinTo300Test_h
 #include <Packages/Uintah/CCA/Ports/ModelInterface.h>
 
-#include <Packages/Uintah/Core/Grid/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/SFCXVariable.h>
-#include <Packages/Uintah/Core/Grid/SFCYVariable.h>
-#include <Packages/Uintah/Core/Grid/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/VarTypes.h>
+#include <Packages/Uintah/Core/Variables/ComputeSet.h>
+#include <Packages/Uintah/Core/Variables/CCVariable.h>
+#include <Packages/Uintah/Core/Variables/SFCXVariable.h>
+#include <Packages/Uintah/Core/Variables/SFCYVariable.h>
+#include <Packages/Uintah/Core/Variables/SFCZVariable.h>
+#include <Packages/Uintah/Core/Variables/VarTypes.h>
 #include <map>
 #include <vector>
 

@@ -9,8 +9,8 @@
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Core/Util/DebugStream.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/VarTypes.h>
+#include <Packages/Uintah/Core/Variables/CellIterator.h>
+#include <Packages/Uintah/Core/Variables/VarTypes.h>
 
 using namespace SCIRun;
 using namespace Uintah;

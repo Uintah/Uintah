@@ -45,11 +45,11 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/MPIScheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/MixedScheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/NullScheduler.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/SingleProcessorLoadBalancer.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/NirvanaLoadBalancer.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/ParticleLoadBalancer.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/RoundRobinLoadBalancer.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/SimpleLoadBalancer.h>
+#include <Packages/Uintah/CCA/Components/LoadBalancers/SingleProcessorLoadBalancer.h>
+#include <Packages/Uintah/CCA/Components/LoadBalancers/NirvanaLoadBalancer.h>
+#include <Packages/Uintah/CCA/Components/LoadBalancers/ParticleLoadBalancer.h>
+#include <Packages/Uintah/CCA/Components/LoadBalancers/RoundRobinLoadBalancer.h>
+#include <Packages/Uintah/CCA/Components/LoadBalancers/SimpleLoadBalancer.h>
 #include <Packages/Uintah/CCA/Components/Solvers/CGSolver.h>
 #include <Packages/Uintah/CCA/Components/Solvers/DirectSolve.h>
 #include <Packages/Uintah/CCA/Components/Solvers/HypreSolver.h>

@@ -14,6 +14,7 @@ SRCS	+= \
        $(SRCDIR)/SimpleRxn.cc \
        $(SRCDIR)/AdiabaticTable.cc \
        $(SRCDIR)/ArchesTable.cc \
+       $(SRCDIR)/MaterialProperties.cc \
        $(SRCDIR)/PinTo300Test.cc \
        $(SRCDIR)/PassiveScalar.cc \
        $(SRCDIR)/TableInterface.cc \

@@ -3,8 +3,8 @@
 
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
-#include <Packages/Uintah/Core/Grid/ComputeSet.h>
-#include <Packages/Uintah/Core/Grid/NCVariable.h>
+#include <Packages/Uintah/Core/Variables/ComputeSet.h>
+#include <Packages/Uintah/Core/Variables/NCVariable.h>
 
 
 

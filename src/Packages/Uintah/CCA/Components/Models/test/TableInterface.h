@@ -2,7 +2,7 @@
 #ifndef Uintah_TableInterface_h
 #define Uintah_TableInterface_h
 
-#include <Packages/Uintah/Core/Grid/CCVariable.h>
+#include <Packages/Uintah/Core/Variables/CCVariable.h>
 
 namespace Uintah {
 

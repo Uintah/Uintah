@@ -11,18 +11,12 @@ SRCS += \
 	$(SRCDIR)/MPIScheduler.cc \
 	$(SRCDIR)/MessageLog.cc \
 	$(SRCDIR)/MixedScheduler.cc \
-	$(SRCDIR)/LoadBalancerCommon.cc \
-	$(SRCDIR)/NirvanaLoadBalancer.cc \
 	$(SRCDIR)/NullScheduler.cc \
 	$(SRCDIR)/OnDemandDataWarehouse.cc \
 	$(SRCDIR)/Relocate.cc \
-	$(SRCDIR)/RoundRobinLoadBalancer.cc \
-	$(SRCDIR)/ParticleLoadBalancer.cc \
 	$(SRCDIR)/SchedulerCommon.cc \
 	$(SRCDIR)/SendState.cc \
-	$(SRCDIR)/SimpleLoadBalancer.cc \
 	$(SRCDIR)/SimpleScheduler.cc \
-	$(SRCDIR)/SingleProcessorLoadBalancer.cc \
 	$(SRCDIR)/SingleProcessorScheduler.cc \
 	$(SRCDIR)/TaskGraph.cc \
 	$(SRCDIR)/ThreadPool.cc \
@@ -40,6 +34,7 @@ PSELIBS := \
 	Packages/Uintah/CCA/Ports        \
 	Packages/Uintah/Core/Parallel    \
 	Packages/Uintah/Core/Exceptions  \
+	Packages/Uintah/Core/Variables  \
 	Packages/Uintah/CCA/Components/ProblemSpecification \
 	Core/Geometry                    \
 	Core/Containers                  \

@@ -1,10 +1,10 @@
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/PressureBC.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
-#include <Packages/Uintah/Core/Grid/GeomPiece/BoxGeometryPiece.h>
-#include <Packages/Uintah/Core/Grid/GeomPiece/CylinderGeometryPiece.h>
-#include <Packages/Uintah/Core/Grid/GeomPiece/SphereGeometryPiece.h>
-#include <Packages/Uintah/Core/Grid/GeomPiece/DifferenceGeometryPiece.h>
+#include <Packages/Uintah/Core/GeometryPiece/BoxGeometryPiece.h>
+#include <Packages/Uintah/Core/GeometryPiece/CylinderGeometryPiece.h>
+#include <Packages/Uintah/Core/GeometryPiece/SphereGeometryPiece.h>
+#include <Packages/Uintah/Core/GeometryPiece/DifferenceGeometryPiece.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <iostream>

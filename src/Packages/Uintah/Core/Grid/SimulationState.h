@@ -1,10 +1,10 @@
 #ifndef UINTAH_HOMEBREW_SimulationState_H
 #define UINTAH_HOMEBREW_SimulationState_H
 
-#include <Packages/Uintah/Core/ProblemSpec/RefCounted.h>
+#include <Packages/Uintah/Core/Util/RefCounted.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
-#include <Packages/Uintah/Core/Grid/ComputeSet.h>
+#include <Packages/Uintah/Core/Variables/ComputeSet.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MinMax.h>
 
