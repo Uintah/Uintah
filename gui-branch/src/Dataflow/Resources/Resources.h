@@ -42,6 +42,7 @@ public:
   string imaker_;
   string omaker_;
   vector<string> libs_;
+  string color_;
 };
 
 /*
@@ -74,9 +75,11 @@ public:
   string package_;
   string name_;
   string id_;
+
   vector<string> categories_;
   string maker_;
   string ui_;
+
   vector<ModulePortInfo*> iports_;
   vector<ModulePortInfo*> oports_;
   bool has_dynamic_port_;
@@ -105,6 +108,8 @@ public:
   string get_package_ui_path( const string & );
 
   // Modules
+  vector<ModuleInfo *> get_modules();
+
   ModuleInfo *get_module_info( const string & );
   const vector<string> &get_module_libs( const string & );
   string get_module_maker( const string & );

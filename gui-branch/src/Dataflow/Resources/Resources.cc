@@ -85,6 +85,19 @@ Resources::get_port_info( const string &type )
   return i == ports_.end() ? 0 : i->second;
 } 
 
+
+vector<ModuleInfo *>
+Resources::get_modules()
+{
+  vector<ModuleInfo *> info;
+
+  ModulesList::iterator i;
+  for (i=modules_.begin(); i!= modules_.end(); i++)
+    info.push_back( i->second );
+
+  return info;
+}
+
 /*
  * for compatability
  */

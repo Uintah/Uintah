@@ -30,6 +30,7 @@ PortParser::startElement( const XMLCh * const uri,
     info_->package_ = package_->name_;
     info_->imaker_ = "make_" + name + "IPort";
     info_->omaker_ = "make_" + name + "OPort";
+    info_->color_ = "white";
     resources_->ports_[info_->type_] = info_;
   }
 
@@ -50,6 +51,8 @@ PortParser::endElement (const XMLCh* const uri,
     info_->omaker_ = data_;
   else if ( tag == "lib" )
     info_->libs_.push_back( data_);
+  else if ( tag == "color" )
+    info_->color_ = data_;
   else if ( tag == "port" ) {
     info_->libs_.push_back( package_->lib_path_+"_Ports.so" );
     info_->libs_.push_back( package_->lib_path_+".so");
