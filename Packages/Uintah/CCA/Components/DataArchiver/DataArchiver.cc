@@ -200,6 +200,7 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
        MPI_Bcast(inbuf, inlen, MPI_CHAR, 0, d_myworld->getComm());
        inbuf[inlen]='\0';
        basename=inbuf;
+       delete[] inbuf;       
      }
      // Create a file, of the name p0_hostname-p0_pid-processor_number
      ostringstream myname;
