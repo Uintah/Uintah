@@ -248,7 +248,7 @@ void DWDatabase<VarType>::put(const VarLabel* label, int matlIndex,
    if(matlIndex >= (int)rr->vars.size()){
       int oldSize = (int)rr->vars.size();
       rr->vars.resize(matlIndex+1);
-      for(unsigned long i=oldSize;i<matlIndex;i++)
+      for(unsigned long i=oldSize;i<(unsigned long)matlIndex;i++)
 	 rr->vars[i]=0;
    }
 
@@ -367,6 +367,9 @@ void DWDatabase<VarType>::print(std::ostream& out)
 
 //
 // $Log$
+// Revision 1.21  2000/12/22 00:13:52  jas
+// Got rid of X,Y,Z FCVariable stuff.  Changes to get rid of g++ warnings.
+//
 // Revision 1.20  2000/12/10 09:06:10  sparker
 // Merge from csafe_risky1
 //
