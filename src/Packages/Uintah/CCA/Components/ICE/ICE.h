@@ -35,6 +35,10 @@ using namespace SCIRun;
     public:
       ICE(const ProcessorGroup* myworld);
       virtual ~ICE();
+
+      virtual bool restartableTimesteps();
+
+      virtual double recomputeTimestep(double current_dt);
       
       virtual void problemSetup(const ProblemSpecP& params, 
                                 GridP& grid,
