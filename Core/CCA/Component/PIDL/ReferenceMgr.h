@@ -100,7 +100,9 @@ DESCRIPTION
     ::std::vector<Reference*> getCollectiveReference(callType tip);
 
     /////////
-    // Retreives a pointer to the list of all references
+    // Retreives a pointer to the list of all references. If the
+    // current state of this object is contaminated (rank >= size)
+    // we return an empty reference list. 
     refList* getAllReferences() const;
 
     //////////
@@ -112,9 +114,10 @@ DESCRIPTION
     int getRemoteSize();
 
     //////////
-    // Create a subset. Only affects getCollectiveReference(...) and
+    // Create a subset. Only affects getCollectiveReference() and
     // the localRank and localSize variables. Passing 0 or a negative
-    // number resets the state of this object to no subsets.
+    // number resets the state of this object to no subsets. Passing a
+    // number larger than the current parallel size has no effect.
     void createSubset(int ssize);
     
     /////////
