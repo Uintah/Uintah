@@ -351,6 +351,8 @@ WARNING
 					   vector<IntVector>& sfz,
 					   int child) const;
      
+     bool haveBC(FaceType face,int mat_id,string bc_type,
+		 string bc_variable) const;
 
      bool atEdge(FaceType face) const;
      static FaceType nextFace(FaceType face) {
