@@ -515,10 +515,10 @@ TriangleCM2Widget::draw()
 
   return;
 
-  GLdouble blue[4] = { 0.1, 0.4, 1.0, 0.8 };
-  GLdouble green[4] = { 0.5, 1.0, 0.1, 0.7 };
-  GLdouble lt_green[4] = { 0.5, 1.0, 0.1, 0.4 };
-  GLdouble red[4] = { 0.8, 0.2, 0.4, 0.9 };
+  //GLdouble blue[4] = { 0.1, 0.4, 1.0, 0.8 };
+  //GLdouble green[4] = { 0.5, 1.0, 0.1, 0.7 };
+  //GLdouble lt_green[4] = { 0.5, 1.0, 0.1, 0.4 };
+  //GLdouble red[4] = { 0.8, 0.2, 0.4, 0.9 };
   GLdouble grey[4] = { 0.6, 0.6, 0.6, 0.6 }; 
   GLdouble white[4] = { 1.0, 1.0, 1.0, 1.0 }; 
   GLdouble black[4] = { 0.0, 0.0, 0.0, 1.0 }; 
