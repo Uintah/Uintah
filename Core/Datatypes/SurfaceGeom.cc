@@ -32,7 +32,10 @@ SurfaceGeom::io(Piostream& stream)
 {
   stream.begin_class(typeName(0).c_str(), SURFACEGEOM_VERSION);
   ContourGeom::io(stream);
+#if 0
+  // Commented out to fix compilation problem on linux - Steve
   Pio(stream, face_);
+#endif
   stream.end_class();
 }
 

@@ -31,7 +31,9 @@ PersistentTypeID GenFunction::type_id("GenFunction",
 void GenFunction::io(Piostream& stream){
 
   stream.begin_class("GenFunction", GENFUNCTION_VERSION);
-  
+
+#if 0  
+  // Commented out to fix compilation problem on linux - Steve
   Pio(stream, domDims_);
   Pio(stream, resDims_);
   Pio(stream, fnsDims_);
@@ -39,6 +41,7 @@ void GenFunction::io(Piostream& stream){
   Pio(stream, isChanged_);
 
   Pio(stream, fstr_);
+#endif
 
   if(stream.reading()){
     set_funcs(fstr_, domDims_);
