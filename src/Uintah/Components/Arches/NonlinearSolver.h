@@ -61,7 +61,8 @@ public:
   ////////////////////////////////////////////////////////////////////////
   // Solve the nonlinear system, return some error code.
   //    [in] data User data needed for solve 
-  virtual int nonlinearSolve(const LevelP&, SchedulerP& sched,
+  virtual int nonlinearSolve(double time, double deltat, 
+			     const LevelP&, SchedulerP& sched,
 			     const DataWarehouseP& old_dw,
 			     DataWarehouseP& new_dw) = 0;
   

@@ -23,6 +23,7 @@ namespace Components {
   using Uintah::Interface::SchedulerP;
   using Uintah::Parallel::ProcessorContext;
 
+class PhysicalConstants;
 class NonlinearSolver;
 class Properties;
 class TurbulenceModel;
@@ -37,23 +38,28 @@ public:
 
     virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
 			      DataWarehouseP&);
+
+    virtual void problemInit(const LevelP& level,
+			     SchedulerP& sched, DataWarehouseP& dw,
+			     bool restrt);
     virtual void computeStableTimestep(const LevelP& level,
 				       SchedulerP&, DataWarehouseP&);
     virtual void timeStep(double t, double dt,
 			  const LevelP& level, SchedulerP&,
 			  const DataWarehouseP&, DataWarehouseP&);
-    void actuallyComputeStableTimestep(const LevelP& level,
-				       DataWarehouseP& dw);
-    void advanceTimeStep(const ProcessorContext*,
-			 const Region* region,
-			 const DataWarehouseP& old_dw,
-			 DataWarehouseP& new_dw);
+    void sched_paramInit(const LevelP& level,
+			 SchedulerP& sched, DataWarehouseP& dw);
+
 private:
     Arches(const Arches&);
     Arches& operator=(const Arches&);
+    void paramInit(const ProcessorContext*,
+		   const Region* region,
+		   const DataWarehouseP& old_dw);
     double d_deltaT;
+    PhysicalConstants* d_physicalConsts;
     NonlinearSolver* d_nlSolver;
-  // properties...solves density, temperature and specie concentrations
+  // properties...solves density, temperature and species concentrations
     Properties* d_props;
   
   // Turbulence Model
@@ -67,6 +73,9 @@ private:
 
 //
 // $Log$
+// Revision 1.11  2000/04/11 19:55:52  rawat
+// modified nonlinear solver for initialization
+//
 // Revision 1.10  2000/04/07 23:02:16  sparker
 // Fixed arches compile
 //

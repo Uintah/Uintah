@@ -3,6 +3,7 @@
 #include <Uintah/Components/Arches/Properties.h>
 #include <Uintah/Components/Arches/BoundaryCondition.h>
 #include <Uintah/Components/Arches/TurbulenceModel.h>
+#include <Uintah/Components/Arches/PhysicalConstants.h>
 #include <Uintah/Components/Arches/PressureSolver.h>
 #include <Uintah/Components/Arches/MomentumSolver.h>
 #include <Uintah/Components/Arches/ScalarSolver.h>
@@ -15,8 +16,10 @@ using Uintah::Components::PicardNonlinearSolver;
 
 PicardNonlinearSolver::PicardNonlinearSolver(Properties& props, 
 					     BoundaryCondition& bc,
-					     TurbulenceModel& turbModel):
-  d_properties(props), d_boundaryCondition(bc), d_turbModel(turbModel)
+					     TurbulenceModel& turbModel,
+					     PhysicalConstants& physConst):
+  d_properties(props), d_boundaryCondition(bc), d_turbModel(turbModel),
+  d_physicalConsts(physConst)
 {
 }
 
@@ -24,45 +27,43 @@ PicardNonlinearSolver::~PicardNonlinearSolver()
 {
 }
 
-void PicardNonlinearSolver::problemSetup(const ProblemSpecP& params, 
-					 DataWarehouseP& dw)
+void PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
 {
-  ProblemSpecP db = params->findBlock("Picard Solver");
-  int nonlinear_its;
-  db->require("max_iter", nonlinear_its);
+  ProblemSpecP db = params->findBlock("PicardSolver");
+  db->require("max_iter", d_nonlinear_its);
   dw->put(nonlinear_its, "max_nonlinear_its");
-  double resTol;
-  db->require("res_tol", resTol);
-  dw->put(resTol, "nlresidualTolerence");
+  db->require("res_tol", d_resTol);
   bool calPress;
   db->require("cal_pressure", calPress);
   if (calPress) {
-    d_pressSolver = new PressureSolver(d_turbModel, d_boundaryCondition);
-    d_pressSolver->problemSetup(db, dw);
+    d_pressSolver = new PressureSolver(d_turbModel, d_boundaryCondition,
+				       d_physicalConsts);
+    d_pressSolver->problemSetup(db);
   }
   bool calMom;
   db->require("cal_momentum", calMom);
   if (calMom) {
     d_momSolver = new MomentumSolver(d_turbModel, d_boundaryCondition);
-    d_momSolver->problemSetup(db, dw);
+    d_momSolver->problemSetup(db);
   }
   bool calScalar;
   db->require("cal_scalar", calScalar);
   if (calScalar) {
     d_scalarSolver = new ScalarSolver(d_turbModel, d_boundaryCondition);
-    d_scalarSolver->problemSetup(db, dw);
+    d_scalarSolver->problemSetup(db);
   }
   
 }
 
-int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
+int PicardNonlinearSolver::nonlinearSolve(double time, double delta_t,
+					  const LevelP& level,
 					  SchedulerP& sched,
 					  const DataWarehouseP& old_dw,
 					  DataWarehouseP& new_dw)
 {
   int nlIterations = 0;
  //initializes and allocates vars for new_dw
-  initialize(level, sched, old_dw, new_dw);
+  sched_initialize(level, sched, old_dw, new_dw);
   double nlResidual;
   do{
     //create a new data warehouse to store new values during the
@@ -74,34 +75,39 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     d_boundaryCondition->sched_setInletVelocityBC(level, sched, new_dw, 
 						nonlinear_dw);
     // linearizes and solves pressure eqn
-    d_pressSolver->solve(level, sched, new_dw, nonlinear_dw);
+    d_pressSolver->solve(time, delta_t, level, sched, new_dw, nonlinear_dw);
     // if external boundary then recompute velocities using new pressure
     // and puts them in nonlinear_dw
-    d_boundaryCondition->computePressureBC(pc, level, new_dw,
-					   nonlinear_dw);
+    d_boundaryCondition->sched_computePressureBC(pc, level, new_dw,
+						 nonlinear_dw);
     // x-velocity    
     for (int index = 1; index <= Arches::NDIM; ++index) {
-      d_momSolver->solve(index, level, sched, new_dw, nonlinear_dw);
+      d_momSolver->solve(time, delta_t, index, level, sched, new_dw, nonlinear_dw);
     }
     
     // equation for scalars
-    int index = 1;
-    // in this case we're only solving for one scalar...but
-    // the same subroutine can be used to solve different scalars
-    d_scalarSolver->solve(index, level, sched, new_dw, nonlinear_dw);
+    for (int index = 1;index <= d_props->getNumMixVars(); index ++) {
+      // in this case we're only solving for one scalar...but
+      // the same subroutine can be used to solve different scalars
+      d_scalarSolver->solve(index, level, sched, new_dw, nonlinear_dw);
+    }
     // update properties
-    d_properties->computeProperties(level, sched, new_dw, nonlinear_dw);
+    d_props->sched_computeProps(level, sched, new_dw, nonlinear_dw);
     // LES Turbulence model to compute turbulent viscosity
     // that accounts for sub-grid scale turbulence
     d_turbModel->sched_computeTurbSubmodel(level, sched, new_dw, nonlinear_dw);
     // residual represents the degrees of inaccuracies
     nlResidual = computeResidual(level, sched, new_dw, nonlinear_dw);
-    ++nlIterations;
+    // not sure...but we need to execute tasks somewhere
+    ProcessorContext* pc = ProcessorContext::getRootContext();
+    scheduler->execute(pc);
+     ++nlIterations;
     new_dw = nonlinear_dw;
-  }while((nlIterations < d_nonlinear_its)||(nlResidual > d_residual));
+  }while((nlIterations < d_nonlinear_its)||(nlResidual > d_resTol));
        
   return(0);
 }
+
 
 double PicardNonlinearSolver::computeResidual(const LevelP& level,
 					    SchedulerP& sched,
@@ -109,31 +115,33 @@ double PicardNonlinearSolver::computeResidual(const LevelP& level,
 					    DataWarehouseP& new_dw)
 {
   double nlresidual;
-  double residual;
-  double omg;
-  
-  residual = d_pressSolver->getResidual();
-  omg = d_pressSolver->getOrderMagnitude();
+  SoleVariable<double> residual;
+  SoleVariable<double> omg;
+  // not sure of the syntax...this operation is supposed to get 
+  // L1norm of the residual over the whole level
+  new_dw->get(residual,"pressResidual",reduce);
+  new_dw->get(omg,"pressomg",reduce);
   nlresidual = MACHINEPRECISSION + log(residual/omg);
   for (int index = 1; index <= Arches::NDIM; ++index) {
-    residual = d_momSolver->getResidual(index);
-    omg = d_momSolver->getOrderMagnitude(index);
+    new_dw->get(residual,"velocityResidual", index, reduce);
+    new_dw->get(omg,"velocityomg", index, reduce);
     nlresidual = max(nlresidual, MACHINEPRECISSION+log(residual/omg));
   }
   //for multiple scalars iterate
-  int index = 1;
-  residual = d_scalarSolver->getResidual(index);
-  omg = d_scalarSolver->getOrderMagnitude(index);
-  nlresidual = max(nlresidual, MACHINEPRECISSION+log(residual/omg));
+  for (int index = 1;index <= d_props->getNumMixVars(); index ++) {
+    new_dw->get(residual,"scalarResidual", index, reduce);
+    new_dw->get(omg,"scalaromg", index, reduce);
+    nlresidual = max(nlresidual, MACHINEPRECISSION+log(residual/omg));
+  }
   return nlresidual;
 }
   
   
 
-void PicardNonlinearSolver::scheduler_initialize(const LevelP& level,
-						 SchedulerP& sched,
-						 const DataWarehouseP& old_dw,
-						 DataWarehouseP& new_dw)
+void PicardNonlinearSolver::sched_initialize(const LevelP& level,
+					     SchedulerP& sched,
+					     const DataWarehouseP& old_dw,
+					     DataWarehouseP& new_dw)
 {
   for(Level::const_regionIterator iter=level->regionsBegin();
       iter != level->regionsEnd(); iter++){
@@ -144,27 +152,27 @@ void PicardNonlinearSolver::scheduler_initialize(const LevelP& level,
       Task* tsk = new Task("PicardNonlinearSolver::initialize",region,
 			   old_dw, new_dw, this,
 			   PicardNonlinearSolver::initialize);
-      tsk->requires(old_dw, "pressure", region, 1,
+      tsk->requires(old_dw, "pressure", region, 0,
 		    CCVariable<double>::getTypeDescription());
-      tsk->requires(old_dw, "velocity", region, 1,
+      tsk->requires(old_dw, "velocity", region, 0,
 		    FCVariable<Vector>::getTypeDescription());
-      tsk->requires(old_dw, "scalar", region, 1,
+      tsk->requires(old_dw, "scalar", region, 0,
 		    CCVariable<Vector>::getTypeDescription());
-      tsk->requires(old_dw, "density", region, 1,
+      tsk->requires(old_dw, "density", region, 0,
 		    CCVariable<double>::getTypeDescription());
-      tsk->requires(old_dw, "viscosity", region, 1,
+      tsk->requires(old_dw, "viscosity", region,0,
 		    CCVariable<double>::getTypeDescription());
       // do we need 0 or 1...coz we need to use ghost cell information
       // for computing stencil coefficients
-      tsk->computes(new_dw "pressure", region, 1,
+      tsk->computes(new_dw "pressure", region, 0,
 		    CCVariable<double>::getTypeDescription());
-      tsk->computes(new_dw, "velocity", region, 1,
+      tsk->computes(new_dw, "velocity", region, 0,
 		    FCVariable<Vector>::getTypeDescription());
-      tsk->computes(new_dw, "scalar", region, 1,
+      tsk->computes(new_dw, "scalar", region, 0,
 		    CCVariable<Vector>::getTypeDescription());
-      tsk->computes(new_dw, "density", region, 1,
+      tsk->computes(new_dw, "density", region, 0,
 		    CCVariable<double>::getTypeDescription());
-      tsk->computes(new_dw, "viscosity", region, 1,
+      tsk->computes(new_dw, "viscosity", region, 0,
 		    CCVariable<double>::getTypeDescription());
       sched->addTask(tsk);
     }
@@ -180,15 +188,15 @@ void PicardNonlinearSolver::initialize(const ProcessorContext* pc,
 				       DataWarehouseP& new_dw)
 {
   CCVariable<double> pressure;
-  old_dw->get(pressure, "pressure", region, 1);
+  old_dw->get(pressure, "pressure", region, 0);
   FCVariable<Vector> velocity;
-  old_dw->get(velocity, "velocity", region, 1);
+  old_dw->get(velocity, "velocity", region, 0);
   CCVariable<Vector> scalar;
-  old_dw->get(scalar, "scalar", region, 1);
+  old_dw->get(scalar, "scalar", region, 0);
   CCVariable<double> density;
-  old_dw->get(density, "density", region, 1);
+  old_dw->get(density, "density", region, 0);
   CCVariable<double> viscosity;
-  old_dw->get(viscosity, "viscosity", region, 1);
+  old_dw->get(viscosity, "viscosity", region, 0);
   // Create vars for new_dw
   CCVariable<double> pressure_new;
   new_dw->allocate(pressure_new,"pressure",region, 1);
@@ -205,11 +213,11 @@ void PicardNonlinearSolver::initialize(const ProcessorContext* pc,
   CCVariable<double> viscosity_new;
   new_dw->allocate(viscosity_new,"viscosity",region, 1);
   viscosity_new = viscosity; // copy old into new
-  new_dw->put(pressure_new, "pressure", region, 1);
-  new_dw->put(velocity_new, "velocity", region, 1);
-  new_dw->put(scalar_new, "scalar", region, 1);
-  new_dw->put(density_new, "density", region, 1);
-  new_dw->put(viscosity_new, "viscosity", region, 1);
+  new_dw->put(pressure_new, "pressure", region, 0);
+  new_dw->put(velocity_new, "velocity", region, 0);
+  new_dw->put(scalar_new, "scalar", region, 0);
+  new_dw->put(density_new, "density", region, 0);
+  new_dw->put(viscosity_new, "viscosity", region, 0);
 }
 
 
