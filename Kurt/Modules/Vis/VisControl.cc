@@ -399,6 +399,9 @@ VisControl::buildData(DataArchive& archive, vector< double >& times,
 	     indexbox.max().z() - indexbox.min().z());
   vf->set_bounds(spatialbox.min(), spatialbox.max());
   sf->set_bounds(spatialbox.min(), spatialbox.max());
+  std::cerr<< "Bounds = ( "<<spatialbox.min()<<", "<<spatialbox.max()<<
+    " )\n";
+
 
    
   ParticleSubset* dest_subset = new ParticleSubset();
