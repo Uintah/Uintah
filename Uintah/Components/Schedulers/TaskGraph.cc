@@ -213,57 +213,6 @@ TaskGraph::allDependenciesCompleted(Task*) const
     return true;
 }
 
-void
-TaskGraph::dumpDependencies(DOM_Element edges) const
-{
-    ofstream depfile("dependencies");
-    if (!depfile) {
-	cerr << "TaskGraph::dumpDependencies: unable to open output file!\n";
-	return;	// dependency dump failure shouldn't be fatal to anything else
-    }
-
-    vector<Task*>::const_iterator iter;
-    for (iter = d_tasks.begin(); iter != d_tasks.end(); iter++) {
-    	const Task* task = *iter;
-
-	const vector<Task::Dependency*>& deps = task->getRequires();
-	vector<Task::Dependency*>::const_iterator dep_iter;
-	for (dep_iter = deps.begin(); dep_iter != deps.end(); dep_iter++) {
-	    const Task::Dependency* dep = *dep_iter;
-
-	    if (!dep->d_dw->isFinalized()) {
-
-		TaskProduct p(dep->d_patch, dep->d_matlIndex, dep->d_var);
-		map<TaskProduct, Task*>::const_iterator deptask =
-	    	    d_allcomps.find(p);
-
-		const Task* task1 = task;
-		const Task* task2 = deptask->second;
-
-    	    	ostringstream name1;
-		name1 << task1->getName();
-		if (task1->getPatch())
-		    name1 << "\\nPatch" << task1->getPatch()->getID();
-		
-		ostringstream name2;
-		name2 << task2->getName();
-		if (task2->getPatch())
-		    name2 << "\\nPatch" << task2->getPatch()->getID();
-		    
-    	    	depfile << "\"" << name1.str() << "\" \""
-		    	<< name2.str() << "\"\n";
-
-    	    	DOM_Element edge = edges.getOwnerDocument().createElement("edge");
-    	    	appendElement(edge, "source", name1.str());
-		appendElement(edge, "target", name2.str());
-    	    	edges.appendChild(edge);
-	    }
-	}
-    }
-
-    depfile.close();
-}
-
 int TaskGraph::getNumTasks() const
 {
    return (int)d_tasks.size();
@@ -276,6 +225,10 @@ Task* TaskGraph::getTask(int idx)
 
 //
 // $Log$
+// Revision 1.4  2000/07/25 20:59:28  jehall
+// - Simplified taskgraph output implementation
+// - Sort taskgraph edges; makes critical path algorithm eastier
+//
 // Revision 1.3  2000/07/19 21:47:59  jehall
 // - Changed task graph output to XML format for future extensibility
 // - Added statistical information about tasks to task graph output

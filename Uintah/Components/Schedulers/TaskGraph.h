@@ -60,10 +60,6 @@ WARNING
       // Insert Documentation Here:
       bool allDependenciesCompleted(Task* task) const;
 
-      //////////
-      // Insert Documentation Here:
-      void dumpDependencies(DOM_Element edges) const;
-
       int getNumTasks() const;
       Task* getTask(int i);
 
@@ -86,6 +82,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.3  2000/07/25 20:59:28  jehall
+// - Simplified taskgraph output implementation
+// - Sort taskgraph edges; makes critical path algorithm eastier
+//
 // Revision 1.2  2000/07/19 21:47:59  jehall
 // - Changed task graph output to XML format for future extensibility
 // - Added statistical information about tasks to task graph output
