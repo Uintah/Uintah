@@ -956,7 +956,7 @@ Gui::handleMousePress(int button, int mouse_x, int mouse_y)
   						     activeGui->dpy_->ppc );
     if( hit.was_hit ) {
       current_obj = hit.hit_obj;
-      cout << "Mouse down on object "<<current_obj->get_name()<<endl;
+//        cout << "Mouse down on object "<<current_obj->get_name()<<endl;
       cbFunc mouseCB = MouseCallBack::getCB_MD( current_obj );
       if(mouseCB)
 	mouseCB( mouse_x, mouse_y, current_obj, ray, hit );
@@ -1032,7 +1032,7 @@ Gui::handleMouseRelease(int button, int mouse_x, int mouse_y)
   						     activeGui->dpy_->ppc );
     if( hit.was_hit ) {
       current_obj = hit.hit_obj;
-      cout << "Mouse up on object "<<current_obj->get_name()<<endl;
+//        cout << "Mouse up on object "<<current_obj->get_name()<<endl;
       cbFunc mouseCB = MouseCallBack::getCB_MU( current_obj );
       if(mouseCB)
 	mouseCB( mouse_x, mouse_y, current_obj, ray, hit );
@@ -1209,7 +1209,7 @@ Gui::handleMouseMotionCB( int mouse_x, int mouse_y )
   						     activeGui->dpy_->ppc );
     if( hit.was_hit ) {
       current_obj = hit.hit_obj;
-      cout << "Mouse moving on object "<<current_obj->get_name()<<endl;
+//        cout << "Mouse moving on object "<<current_obj->get_name()<<endl;
       cbFunc mouseCB = MouseCallBack::getCB_MM( current_obj );
       if (mouseCB)
 	mouseCB( mouse_x, mouse_y, current_obj, ray, hit );
