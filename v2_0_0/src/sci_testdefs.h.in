@@ -57,6 +57,8 @@
 @DEF_COLLAB_VIS@
 @DEF_INSIGHT@
 
+@DEF_NEED_OSX_HACK@
+
 #define MAKE_CMMD "@MAKE@"
 
 /* MPI++ on SGI has a bad interaction with <iostream>.  This prevents
