@@ -506,8 +506,13 @@ void
 RectangleCM2Widget::io(Piostream &stream)
 {
   stream.begin_class("RectangleCM2Widget", RECTANGLECM2WIDGET_VERSION);
-  
-  Pio(stream, (int&)type_);
+
+  int tmp = (int)type_;
+  Pio(stream, tmp);
+  if (stream.reading())
+  {
+    type_ = (CM2RectangleType)tmp;
+  }
 
   Pio(stream, left_x_);
   Pio(stream, left_y_);
