@@ -31,6 +31,11 @@ CutPlane::CutPlane(Object* child, PlaneDpy* dpy)
     d=dpy->d;
 }
 
+CutPlane::CutPlane(Object* child, const Vector& n, const double d)
+  : Object(0), child(child), dpy(0), n(n), d(d),
+    active(true), use_material(true)
+{}
+
 CutPlane::~CutPlane()
 {
 }
@@ -59,7 +64,11 @@ void CutPlane::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
       } else if (use_material && (get_matl() != 0)) {
 	// the plane has a material, so use it :)
 	if (child_bbox.contains_point(ray, t))
-	  hit.hit(this,t);
+	  if (hit.hit(this,t)) {
+	    // stash the normal
+	    Vector *v = (Vector*)hit.scratchpad;
+	    *v = n;
+	  }
       }
     } else {
       // On far side of plane...
@@ -69,7 +78,11 @@ void CutPlane::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
       if (use_material && (get_matl() != 0)) {
 	if (child_bbox.contains_point(ray, t)) {
 	  // We hit the plane before we can get to the child
-	  hit.hit(this,t);
+	  if (hit.hit(this,t)) {
+	    // Stash the normal
+	    Vector *v = (Vector*)hit.scratchpad;
+	    *v = -n;
+	  }
 	} else {
 	  // Need to compute intersection with the child
 	  Point p(orig+dir*t);
@@ -99,10 +112,11 @@ void CutPlane::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
   }
 }
 
-Vector CutPlane::normal(const Point&, const HitInfo&)
+Vector CutPlane::normal(const Point&, const HitInfo& hit)
 {
   //    cerr << "Error: Group normal should not be called!\n";
-  return n.normal();
+  Vector *v = (Vector*)hit.scratchpad;
+  return (*v).normal();
 }
 
 void CutPlane::light_intersect(Ray& ray, HitInfo& hit, Color& atten,
