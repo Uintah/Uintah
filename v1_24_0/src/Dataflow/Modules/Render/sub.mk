@@ -53,7 +53,7 @@ SRCS     += \
 	$(SRCDIR)/Tex.cc\
 	$(SRCDIR)/ViewGeom.cc\
 	$(SRCDIR)/ViewWindow.cc\
-	$(SRCDIR)/ViewImage.cc\
+	$(SRCDIR)/ViewSlices.cc\
 	$(SRCDIR)/Viewer.cc\
 	$(SRCDIR)/glMath.cc\
 #[INSERT NEW CODE FILE HERE]
