@@ -21,14 +21,21 @@ class CallbackData;
 class DBCallbackBase;
 
 class DBContext {
+public:
+    enum RangeType {
+	Bounded,
+	Unbounded,
+	Wrapped,
+    };
 protected:
     friend class Dialbox;
     struct Knob {
 	clString name;
-	clString value_string;
 	double min;
 	double max;
+	double scale;
 	double value;
+	RangeType rangetype;
 
 	DBCallbackBase* callback;
 
@@ -46,48 +53,54 @@ public:
     void set_knob(int, const clString&,
 		  DBCallbackBase*);
     void set_range(int, double, double);
+    void set_wraprange(int, double, double);
     void set_value(int, double);
+    void set_scale(int, double);
 };
 
 class DBCallbackBase {
-    virtual void perform(DBContext*, int, void*)=0;
     Mailbox<MessageBase*>* mailbox;
     void* userdata;
 public:
     DBCallbackBase(Mailbox<MessageBase*>* mailbox,
 		   void* userdata);
+    void dispatch(DBContext*, int, double, double);
     virtual ~DBCallbackBase();    
+    virtual void perform(DBContext*, int, double, double, void*)=0;
 };
 
 class DBCallback_Message : public MessageBase {
 public:
-    DBCallback_Message(DBCallbackBase* mcb, DBContext*, int);
-    virtual ~DBCallback_Message();
     DBCallbackBase* mcb;
-    CallbackData* cbdata;
+    DBContext* context;
+    int which;
+    double value;
+    double delta;
+    void* cbdata;
+    DBCallback_Message(DBCallbackBase* mcb, DBContext*, int, double, double, void* cbdata);
+    virtual ~DBCallback_Message();
 };
 
 #define FIXCB2(mailbox, obj, meth, data) \
-   (mailbox, obj, (void (DBCallbackBase::*)(DBContext*, int, void*))meth, data)
+   (mailbox, obj, (void (DBCallbackBase::*)(DBContext*, int, double, double, void*))meth, data)
 
 template<class T> class DBCallback : public DBCallbackBase {
     T* obj;
-    void (DBCallbackBase::*method)(DBContext*, int, void*);
+    void (DBCallbackBase::*method)(DBContext*, int, double, double, void*);
 #if 0
-    void (T::*method)(DBContext*, int, void*);
+    void (T::*method)(DBContext*, int, double, double, void*);
 #endif
-    virtual void perform(DBContext*, int, void*);
+    virtual void perform(DBContext*, int, double, double, void*);
 public:
     DBCallback(Mailbox<MessageBase*>* mailbox, T* obj,
-	       void (DBCallbackBase::*method)(DBContext*, int, void*),
+	       void (DBCallbackBase::*method)(DBContext*, int, double, double, void*),
 	       void*);
 #if 0
     DBCallback(Mailbox<MessageBase*>* mailbox, T* obj,
-	       void (T::*method)(DBContext*, int, void*),
+	       void (T::*method)(DBContext*, int, double, double, void*),
 	       void*);
 #endif
     virtual ~DBCallback();
 };
 
 #endif
-

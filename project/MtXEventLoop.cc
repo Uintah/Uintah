@@ -14,6 +14,7 @@
 #include <MtXEventLoop.h>
 #include <Classlib/ArgProcessor.h>
 #include <Multitask/ITC.h>
+#include <Dialbox.h>
 #include <iostream.h>
 #include <stdio.h> // For perror
 #include <stdlib.h>
@@ -95,7 +96,16 @@ int MtXEventLoop::body(int)
 
     // Go into main loop;
     started=1;
-    XtAppMainLoop(context);
+    int dbevent_type=Dialbox::get_event_type();
+    while(1){
+	XEvent event;
+	XtAppNextEvent(context, &event);
+	if(event.type == dbevent_type){
+	    Dialbox::handle_event((void*)&event);
+	} else {
+	    XtDispatchEvent(&event);
+	}
+    }
 
     // Never reached...
     return 0;

@@ -33,7 +33,7 @@ protected:
     int err;
 public:
     virtual ~Piostream();
-    virtual void begin_class(const clString& name)=0;
+    virtual int begin_class(const clString& name, int current_version)=0;
     virtual void end_class()=0;
 
     virtual void begin_cheap_delim()=0;
@@ -66,7 +66,7 @@ public:
     BinaryPiostream(ifstream*, int);
 
     virtual ~BinaryPiostream();
-    virtual void begin_class(const clString& name);
+    virtual int begin_class(const clString& name, int);
     virtual void end_class();
 
     virtual void begin_cheap_delim();
@@ -93,7 +93,7 @@ public:
     TextPiostream(const clString& filename, Direction dir);
     TextPiostream(ifstream*, int);
     virtual ~TextPiostream();
-    virtual void begin_class(const clString& name);
+    virtual int begin_class(const clString& name, int);
     virtual void end_class();
 
     virtual void begin_cheap_delim();

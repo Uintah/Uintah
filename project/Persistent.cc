@@ -171,18 +171,25 @@ TextPiostream::~TextPiostream()
 	delete ostr;
 }
 
-void TextPiostream::begin_class(const clString& classname)
+int TextPiostream::begin_class(const clString& classname,
+			       int current_version)
 {
-    if(err)return;
+    if(err)return -1;
+    int version=current_version;
     if(dir==Read){
 	expect('{');
 	for(int i=0;i<classname.len();i++){
 	    expect(classname(i));
 	}
+	expect(' ');
+	ifstream& in=*istr;
+	in >> version;
+	expect(' ');
     } else {
 	ofstream& out=*ostr;
-	out << "{" << classname << " ";
+	out << "{" << classname << " " << current_version << " ";
     }
+    return version;
 }
 
 void TextPiostream::end_class()
@@ -395,10 +402,11 @@ void TextPiostream::expect(char expected)
     }
     if(c != expected){
 	err=1;
-	cerr << "Expected: '" << expected << "', got '" << c << "'." << endl;
+	cerr << "Persistent Object Stream: Expected '" << expected << "', got '" << c << "'." << endl;
 	char buf[100];
 	in.getline(buf, 100);
 	cerr << "Rest of line is: " << buf << endl;
+	cerr << "Object is not intact" << endl;
 	return;
     }
 }

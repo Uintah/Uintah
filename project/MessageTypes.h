@@ -19,6 +19,7 @@ class MessageTypes {
 public:
     enum MessageType {
 	DoCallback,
+	DoDBCallback,
 	ExecuteModule,
 	ReSchedule,
 
@@ -29,6 +30,9 @@ public:
 	GeometryDelObj,
 	GeometryDelAll,
 	GeometryFlush,
+
+	AttachDialbox,
+	DialMoved,
     };
 };
 

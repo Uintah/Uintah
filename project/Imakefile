@@ -42,7 +42,7 @@ SCI_LIBS = \
 	make_templates ../../templates
 
 SCI_LDFLAGS = -laudio -laudiofile SCI_LM SCI_LTHREAD SCI_LMOTIF \
-	SCI_LX11 -lgen -lGLw -lGLU -lGL -ptv
+	SCI_LX11 -lXi -lgen -lGLw -lGLU -lGL -ptv
 
 depend:: XQColorDB.h
 

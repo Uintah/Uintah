@@ -213,7 +213,6 @@ void GeomSphere::draw(DrawInfo* di)
     double cy=cen.y();
     double cz=cen.z();
     int i, j;
-    cerr << "drawtype=" << di->drawtype << endl;
     switch(di->drawtype){
     case DrawInfo::WireFrame:
 	for(i=0;i<nu-1;i++){

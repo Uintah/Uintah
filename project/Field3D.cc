@@ -16,6 +16,8 @@
 #include <Classlib/String.h>
 #include <Math/MinMax.h>
 
+#define FIELD3D_VERSION 2
+
 int Field3D::get_nx()
 {
     return nx;
@@ -64,7 +66,10 @@ double Field3D::get(int i, int j, int k)
 
 Point Field3D::get_point(int i, int j, int k)
 {
-    return Point(i,j,k);
+    double x=min.x()+diagonal.x()*double(i)/double(nx);
+    double y=min.y()+diagonal.y()*double(j)/double(ny);
+    double z=min.z()+diagonal.z()*double(k)/double(nz);
+    return Point(x,y,z);
 }
 
 void Field3D::set_size(int _nx, int _ny, int _nz)
@@ -76,9 +81,6 @@ void Field3D::set_size(int _nx, int _ny, int _nz)
 	s_grid.newsize(nx, ny, nz);
     else
 	v_grid.newsize(nx, ny, nz);
-    min=Point(0,0,0);
-    max=Point(nx-1, ny-1, nz-1);
-    diagonal=max-min;
 }
 
 void Field3D::set(int i, int j, int k, const Vector& v)
@@ -103,7 +105,7 @@ void Field3D::set_type(FieldType _fieldtype)
 
 void Field3D::io(Piostream& stream)
 {
-    stream.begin_class("Field3D");
+    int version=stream.begin_class("Field3D", FIELD3D_VERSION);
     int* repp=(int*)&rep;
     stream.io(*repp);
     int* fp=(int*)&fieldtype;
@@ -116,6 +118,17 @@ void Field3D::io(Piostream& stream)
 	if(stream.reading()){
 	    // Allocate the array...
 	    set_size(nx, ny, nz);
+	}
+	if(version==1){
+	    min=Point(0,0,0);
+	    max=Point(nx-1, ny-1, nz-1);
+	} else {
+	    stream.io(min);
+	    stream.io(max);
+	    if(stream.reading()){
+		// Set the diagonal
+		diagonal=max-min;
+	    }
 	}
 	if(fieldtype==ScalarField){
 	    for(int i=0;i<nx;i++){
