@@ -43,6 +43,7 @@
 #include <sci_defs.h>
 
 #include <Dataflow/Modules/Render/PBuffer.h>
+#include <Core/Util/Assert.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
@@ -58,9 +59,14 @@ PBuffer::PBuffer( int doubleBuffer /* = GL_FALSE */ ):
   depthBits_(8),
   valid_(false),
   cx_(0),
+#ifdef HAVE_PBUFFER
   fbc_(0),
-  pbuffer_(0)
+  pbuffer_(0),
+#endif
+  dpy_(0)
 {}
+
+#ifdef HAVE_PBUFFER
 
 bool
 PBuffer::create(Display* dpy, int screen,
@@ -200,4 +206,35 @@ PBuffer::is_current()
 #endif
 }
 
+#else // ifdef HAVE_PBUFFER
+
+bool
+PBuffer::create(Display* /*dpy*/, int /*screen*/, int /*width*/,
+                int /*height*/, int /*colorBits*/, int /*depthBits*/)
+{
+  return false;
+}
+
+void
+PBuffer::destroy()
+{
+  valid_ = false;
+}
+
+void
+PBuffer::makeCurrent()
+{
+  // This better not be called, because create returned false.
+  ASSERTFAIL("PBuffer::makeCurrent: HAVE_PBUFFER is not defined");
+}
+
+bool
+PBuffer::is_current()
+{
+  return false;
+}
+
+#endif // ifdef HAVE_PBUFFER
+
 } // end namespace SCIRun
+

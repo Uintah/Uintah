@@ -52,6 +52,9 @@
 #endif
 
 
+#if (defined(__linux) && !defined(__ECC)) || defined(__APPLE__)
+#define HAVE_PBUFFER
+#endif
 
 /* minimalistic pbuffer */
 
@@ -84,8 +87,10 @@ private:
   bool valid_;
 
   GLXContext cx_;
+#ifdef HAVE_PBUFFER
   GLXFBConfig* fbc_;
   GLXPbuffer pbuffer_;  //win_
+#endif
   Display* dpy_;
   int screen_;
 };
