@@ -768,8 +768,10 @@ itcl_class Roe {
 		-text "SCIRun geom object file (ASCII)" -value "scirun_ascii"
 	radiobutton $ex.vrml -variable $this-saveformat \
 		-text "VRML file" -value "vrml"
+	radiobutton $ex.rib -variable $this-saveformat \
+		-text "RenderMan RIB file" -value "rib"
 	$ex.geomb select
-	pack $ex.geomb $ex.geoma $ex.vrml -side top -anchor w
+	pack $ex.geomb $ex.geoma $ex.vrml $ex.rib -side top -anchor w
     }
     method doSaveObjects {} {
 	global $this-saveobjfile $this-saveformat
