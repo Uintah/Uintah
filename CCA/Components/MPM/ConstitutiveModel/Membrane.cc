@@ -84,12 +84,14 @@ void Membrane::addParticleState(std::vector<const VarLabel*>& from,
    from.push_back(lb->pStressLabel);
    from.push_back(lb->pTang1Label);
    from.push_back(lb->pTang2Label);
+   from.push_back(lb->pNormLabel);
    from.push_back(defGradInPlaneLabel);
 
    to.push_back(lb->pDeformationMeasureLabel_preReloc);
    to.push_back(lb->pStressLabel_preReloc);
    to.push_back(lb->pTang1Label_preReloc);
    to.push_back(lb->pTang2Label_preReloc);
+   to.push_back(lb->pNormLabel_preReloc);
    to.push_back(defGradInPlaneLabel_preReloc);
 }
 
@@ -160,8 +162,8 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
     constParticleVariable<double> pmass,pvolume;
     ParticleVariable<double> pvolume_deformed;
     constParticleVariable<Vector> pvelocity;
-    constParticleVariable<Vector> ptang1,ptang2;
-    ParticleVariable<Vector> T1,T2;
+    constParticleVariable<Vector> ptang1,ptang2,pnorm;
+    ParticleVariable<Vector> T1,T2,T3;
     constNCVariable<Vector> gvelocity;
     delt_vartype delT;
     if(d_8or27==27){
@@ -180,12 +182,14 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
     old_dw->get(defGradIPOld,        defGradInPlaneLabel,          pset);
     old_dw->get(ptang1,              lb->pTang1Label,              pset);
     old_dw->get(ptang2,              lb->pTang2Label,              pset);
+    old_dw->get(pnorm,               lb->pNormLabel,               pset);
     new_dw->allocate(pstress_new,    lb->pStressLabel_preReloc,    pset);
     new_dw->allocate(pvolume_deformed, lb->pVolumeDeformedLabel,   pset);
     new_dw->allocate(deformationGradient_new,
 				lb->pDeformationMeasureLabel_preReloc, pset);
     new_dw->allocate(T1,        lb->pTang1Label_preReloc,              pset);
     new_dw->allocate(T2,        lb->pTang2Label_preReloc,              pset);
+    new_dw->allocate(T3,        lb->pNormLabel_preReloc,               pset);
     new_dw->allocate(defGradIP, defGradInPlaneLabel_preReloc,          pset);
 
     new_dw->get(gvelocity,           lb->gVelocityLabel, matlindex,patch,
@@ -303,29 +307,29 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
 
 //    End of rotation tensor computation
 
-      T1[idx] = R*Vector(1,0,0);
-      T2[idx] = R*Vector(0,0,1);
+      T1[idx] = R*ptang1[idx];
+      T2[idx] = R*ptang2[idx];
 
       // T3 = T1 X T2
-      Vector T3(T1[idx].y()*T2[idx].z() - T1[idx].z()*T2[idx].y(),
-              -(T1[idx].x()*T2[idx].z() - T1[idx].z()*T2[idx].x()),
-                T1[idx].x()*T2[idx].y() - T1[idx].y()*T2[idx].x());
+      T3[idx] = Vector( T1[idx].y()*T2[idx].z() - T1[idx].z()*T2[idx].y(),
+                      -(T1[idx].x()*T2[idx].z() - T1[idx].z()*T2[idx].x()),
+                        T1[idx].x()*T2[idx].y() - T1[idx].y()*T2[idx].x());
 
       Matrix3 Q(Dot(T1[idx],I), Dot(T1[idx],J), Dot(T1[idx],K),
                 Dot(T2[idx],I), Dot(T2[idx],J), Dot(T2[idx],K),
-                Dot(T3     ,I), Dot(T3     ,J), Dot(T3     ,K));
+                Dot(T3[idx],I), Dot(T3[idx],J), Dot(T3[idx],K));
 
       Matrix3 L_ij_ip(0.0), L_ip(0.0), L_local;
 
       L_ij_ip(1,1) = Dot(T1[idx], velGrad*T1[idx]);
       L_ij_ip(1,2) = Dot(T1[idx], velGrad*T2[idx]);
-      L_ij_ip(1,3) = Dot(T1[idx], velGrad*T3     );
+      L_ij_ip(1,3) = Dot(T1[idx], velGrad*T3[idx]);
       L_ij_ip(2,1) = Dot(T2[idx], velGrad*T1[idx]);
       L_ij_ip(2,2) = Dot(T2[idx], velGrad*T2[idx]);
-      L_ij_ip(2,3) = Dot(T2[idx], velGrad*T3     );
-      L_ij_ip(3,1) = Dot(T3     , velGrad*T1[idx]);
-      L_ij_ip(3,2) = Dot(T3     , velGrad*T2[idx]);
-      L_ij_ip(3,3) = Dot(T3     , velGrad*T3     );
+      L_ij_ip(2,3) = Dot(T2[idx], velGrad*T3[idx]);
+      L_ij_ip(3,1) = Dot(T3[idx], velGrad*T1[idx]);
+      L_ij_ip(3,2) = Dot(T3[idx], velGrad*T2[idx]);
+      L_ij_ip(3,3) = Dot(T3[idx], velGrad*T3[idx]);
 
       Matrix3 T1T1, T1T2, T2T1, T2T2;
 
@@ -342,6 +346,11 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
              T2T1*L_ij_ip(2,1) + T2T2*L_ij_ip(2,2);
 
       L_local = Q * L_ip * Q.Transpose();
+
+      // BE SURE TO FIX THIS
+      T1[idx] = ptang1[idx];
+      T2[idx] = ptang2[idx];
+      T3[idx] = pnorm[idx];
 
       Matrix3 defGradIPInc = L_local * delT + Identity;
 
@@ -440,6 +449,7 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
     new_dw->put(sum_vartype(se),        lb->StrainEnergyLabel);
     new_dw->put(T1,                     lb->pTang1Label_preReloc);
     new_dw->put(T2,                     lb->pTang2Label_preReloc);
+    new_dw->put(T3,                     lb->pNormLabel_preReloc);
 
   }
 }
@@ -459,6 +469,7 @@ void Membrane::addComputesAndRequires(Task* task,
 						   matlset, Ghost::None);
    task->requires(Task::OldDW, lb->pTang1Label,    matlset, Ghost::None);
    task->requires(Task::OldDW, lb->pTang2Label,    matlset, Ghost::None);
+   task->requires(Task::OldDW, lb->pNormLabel,     matlset, Ghost::None);
    task->requires(Task::NewDW, lb->gVelocityLabel,
 						 matlset, Ghost::AroundCells,1);
    task->requires(Task::OldDW, lb->delTLabel);
@@ -473,6 +484,7 @@ void Membrane::addComputesAndRequires(Task* task,
    task->computes(lb->pVolumeDeformedLabel,              matlset);
    task->computes(lb->pTang1Label_preReloc,              matlset);
    task->computes(lb->pTang2Label_preReloc,              matlset);
+   task->computes(lb->pNormLabel_preReloc,               matlset);
 }
 
 // The "CM" versions use the pressure-volume relationship of the CNH model
