@@ -197,6 +197,8 @@ ChangeFieldDataAtAlgoCreateT<FSRC>::execute(ProgressReporter *mod,
   }
   else if (at == Field::NODE && fsrc->data_at() == Field::CELL)
   {
+    mesh->synchronize(Mesh::NODE_NEIGHBORS_E);
+
     typename FSRC::mesh_type::Cell::size_type nsize;
     mesh->size(nsize);
     const int ncols = nsize;
@@ -242,6 +244,8 @@ ChangeFieldDataAtAlgoCreateT<FSRC>::execute(ProgressReporter *mod,
   }
   else if (at == Field::NODE && fsrc->data_at() == Field::FACE)
   {
+    mesh->synchronize(Mesh::NODE_NEIGHBORS_E);
+
     typename FSRC::mesh_type::Face::size_type nsize;
     mesh->size(nsize);
     const int ncols = nsize;
@@ -287,6 +291,8 @@ ChangeFieldDataAtAlgoCreateT<FSRC>::execute(ProgressReporter *mod,
   }
   else if (at == Field::NODE && fsrc->data_at() == Field::EDGE)
   {
+    mesh->synchronize(Mesh::NODE_NEIGHBORS_E);
+
     typename FSRC::mesh_type::Edge::size_type nsize;
     mesh->size(nsize);
     const int ncols = nsize;
