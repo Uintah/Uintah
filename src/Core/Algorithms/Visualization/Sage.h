@@ -16,7 +16,7 @@
 #define Sage_h
 
 #include <stdio.h>
-
+#include <iostream.h>
 
 #include <SCICore/Containers/String.h>
 #include <SCICore/Thread/Time.h>
@@ -67,7 +67,7 @@ namespace PSECommon {
 	 Screen *screen;
 
 	 // View parameters
-	 View *view;
+	 //	 View *view;
 	 double znear, zfar;
 	 int xres, yres;
 	 
@@ -87,12 +87,13 @@ namespace PSECommon {
 	 
 	 SysTime::SysClock extract_time;
 	 SysTime::SysClock scan_time;
+	 int scan_number, tri_number;
       public:
 	 SageBase( AI *ai) : ai(ai) {}
 	 virtual ~SageBase() {}
 
 	 void setScreen( Screen *s ) { screen = s; }
-	 void setView( View *, double, double, int, int  );
+	 void setView( const View &, double, double, int, int  );
 	 void setParameters( int, int, int, int, int);
 	 virtual void search( double, GeomGroup*, GeomPts * ) {}
       };
@@ -193,25 +194,25 @@ namespace PSECommon {
 
 
     template< class AI>
-    void SageBase<AI>::setView (View *v, double znear, double zfar, 
+    void SageBase<AI>::setView (const View &view, double znear, double zfar, 
 			    int xres, int yres )
     {
-      view = v;
+      //view = v;
       this->znear = znear;
       this->zfar = zfar;
       this->xres = xres;
       this->yres = yres;
 
-      eye = view->eyep();
+      eye = view.eyep();
 
-      Z = Vector(view->lookat()-eye);
+      Z = Vector(view.lookat()-eye);
       Z.normalize();
-      X = Vector(Cross(Z, view->up()));
+      X = Vector(Cross(Z, view.up()));
       X.normalize();
       Y = Vector(Cross(X, Z));
-      //   yviewsize= 1./Tan(DtoR(view->fov()/2.));
+      //   yviewsize= 1./Tan(DtoR(view.fov()/2.));
       //   xviewsize=yviewsize*gd->yres/gd->xres;;
-      double xviewsize= 1./Tan(DtoR(view->fov()/2.));
+      double xviewsize= 1./Tan(DtoR(view.fov()/2.));
       double yviewsize=xviewsize*yres/xres;;
       U = X*xviewsize;
       V = Y*yviewsize;
@@ -462,6 +463,9 @@ namespace PSECommon {
       extract_time = 0;
       scan_time = 0;
       counter = 0;
+      scan_number = 0;
+      tri_number = 0;
+
       int prev_counter = 0;
       double size = 5*pow(dx*dy*dz,2.0/3);
       while ( !stack->empty() ) {
@@ -642,13 +646,19 @@ namespace PSECommon {
       }
       SysTime::SysClock search_end = SysTime::currentTicks();
       
-      printf("Search time = %.3f   projection= %.3f   vis = %.3f\n"
-	     "extract time = %.3f  scan time = %.3f\n",
-	     (search_end - search_begin)*SysTime::secondsPerTick(),
+      printf("Search time = %.3f:\n"
+	     "\t projection= %.3f\n"
+	     "\t vis = %.3f\n"
+	     "\t extract time = %.3f\n"
+	     "\t\t scan: time = %.3f number %d   (%g)\n"
+	     "\t triangles = %d (per scan %.2f)\n",
+	     (search_end - (long long)search_begin)*SysTime::secondsPerTick(),
 	     projection_time*SysTime::secondsPerTick(),
 	     vis_time*SysTime::secondsPerTick(),
 	     extract_time*SysTime::secondsPerTick(),
-	     scan_time*SysTime::secondsPerTick());
+	     scan_time*SysTime::secondsPerTick(),
+	     scan_number, scan_time*SysTime::secondsPerTick()/scan_number,
+	     tri_number, tri_number/(double)scan_number);
     }
     
     template <class T, class F, class AI>
@@ -770,6 +780,8 @@ namespace PSECommon {
 	  SysTime::SysClock t = SysTime::currentTicks();
 	  vis += screen->scan(p, e,  scan_edges, double_edges);
 	  scan_time += SysTime::currentTicks() - t;
+	  scan_number++;
+	  tri_number += e-2;
 	}
 	else
 	  vis = 1;
