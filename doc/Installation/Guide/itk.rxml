@@ -66,23 +66,15 @@ the <ulink url="http://www.cmake.org">CMake web site</ulink>.</para>
 <title>CMake Special Instructions</title>
 
 <para>CMake is a program that generates Makefiles that build ITK.
-CMake's configuration variables determine how ITK will be built.
-Command <command>ccmake</command> is used to configure variables that
-determine the type of ITK build.  In particular, the values of CMake
-variables <varname>ITK_USE_SYSTEM_PNG</varname> and
-<varname>BUILD_SHARED_LIBS</varname> must be explicitly set.  Note
-that <command>ccmake</command> must be run in "advanced" mode to set
-the value of <varname>ITK_USE_SYSTEM_PNG</varname>.</para>
+CMake's configuration variables determine how ITK is built.  Command
+<command>ccmake</command> is used to configure CMake's variables.  In
+particular, the value of CMake variable
+<varname>BUILD_SHARED_LIBS</varname> must be explicitly set.</para>
 
-
-<para>On all platforms the value of CMake variable
-<varname>ITK_USE_SYSTEM_PNG</varname> must be set 
-<userinput>ON</userinput>.</para>
-
-<para>On SGI and Linux, CMake variable
+<para>On SGI and Linux, <varname>BUILD_SHARED_LIBS</varname> must be
+set <userinput>ON</userinput>.  On OSX
 <varname>BUILD_SHARED_LIBS</varname> must be set
-<userinput>ON</userinput>.  On OSX <varname>BUILD_SHARED_LIBS</varname>
-must be set <userinput>OFF</userinput></para>
+<userinput>OFF</userinput></para>
 
 </section>
 
