@@ -141,14 +141,14 @@ GradientAlgo::get_compile_info(const TypeDescription *ftd,
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
-		       ftd->get_filename() + "." +
+		       ftd->get_filename() +
 		       ttd->get_filename() + ".",
                        base_class_name, 
                        template_class_name, 
 
 #ifdef __sgi
-                       ftd->get_name() + "<" + ttd->get_name()+ " >" + "," +
-                       ftd->get_name() + "<Vector> ");
+                       ftd->get_name() + "<" + ttd->get_name()+ " >" + ", " +
+                       ftd->get_name() + "<Vector > ");
 #else
                        ftd->get_name() + ", " +
 		       ttd->get_name());
