@@ -75,6 +75,7 @@ public:
   CrowdMonitor     widget_lock_;
   BoxWidget *box_;
   Transform        box_initial_transform_;
+  Transform        field_initial_transform_;
   BBox             box_initial_bounds_;
   int              generation_;
 
@@ -323,6 +324,7 @@ EditField::build_widget(FieldHandle f)
   box_initial_transform_.pre_trans(r);
   box_initial_transform_.pre_translate(center.asVector());
 
+
   box_->SetScale(l2norm * 0.015);
   box_->SetPosition(center, right, down, in);
   
@@ -365,12 +367,48 @@ EditField::execute()
   }
 
 
-  // build the transform widget
+  // build the transform widget and set the the initial
+  // field transform.
   if (generation_ != fh.get_rep()->generation) {
     generation_ = fh.get_rep()->generation;
     // get and display the attributes of the input field
     update_input_attributes(fh);
     build_widget(fh);
+    BBox bbox = fh->mesh()->get_bounding_box();
+    Vector size(bbox.max()-bbox.min());
+     if (fabs(size.x())<1.e-4) {
+      size.x(2.e-4); 
+      bbox.extend(bbox.min()-Vector(1.e-4,0,0));
+    }
+    if (fabs(size.y())<1.e-4) {
+      size.y(2.e-4); 
+      bbox.extend(bbox.min()-Vector(0,1.e-4,0));
+    }
+    if (fabs(size.z())<1.e-4) {
+      size.z(2.e-4); 
+      bbox.extend(bbox.min()-Vector(0,0,1.e-4));
+    }
+    Point center(bbox.min() + size/2.);
+    Vector sizex(size.x(),0,0);
+    Vector sizey(0,size.y(),0);
+    Vector sizez(0,0,size.z());
+
+    Point right(center + sizex/2.);
+    Point down(center + sizey/2.);
+    Point in(center +sizez/2.);
+
+    double l2norm(size.length());
+    Transform r;
+    Point unused;
+    field_initial_transform_.load_identity();
+    field_initial_transform_.pre_scale(Vector((right-center).length(),
+					      (down-center).length(),
+					      (in-center).length()));
+    r.load_frame(unused, (right-center).normal(),
+		 (down-center).normal(),
+		 (in-center).normal());
+    field_initial_transform_.pre_trans(r);
+    field_initial_transform_.pre_translate(center.asVector());
   }
 
   if (!cfldname_.get() &&
@@ -498,9 +536,10 @@ EditField::execute()
   t.pre_trans(r);
   t.pre_translate(center.asVector());
 
-  Transform inv(box_initial_transform_);
+  Transform inv(field_initial_transform_);
   inv.invert();
   t.post_trans(inv);
+
   if (cgeom_.get())
   {
     ef->mesh_detach();
