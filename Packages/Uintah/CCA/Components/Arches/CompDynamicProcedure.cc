@@ -134,6 +134,9 @@ CompDynamicProcedure::sched_reComputeTurbSubmodel(SchedulerP& sched,
 		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, 
 		  Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
+		  Ghost::AroundCells, Arches::TWOGHOSTCELLS);
+
     if (d_dynScalarModel) {
       if (d_reactingFlow)
         tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
@@ -550,7 +553,7 @@ CompDynamicProcedure::reComputeTurbSubmodel(const ProcessorGroup* pc,
     }
 
     new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
-		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+		  Ghost::AroundCells, Arches::TWOGHOSTCELLS);
 
     
     SFCXVariable<double> filterRhoU;
