@@ -17,35 +17,35 @@
 -->
 
 <sect1>
-<para>
-  <table>
-    <tgroup cols="4">
-      <thead>
-        <row>
-          <entry></entry>
-          <entry>Processor(s)</entry>
-          <entry>Main memory</entry>
-          <entry>Other hardware/software</entry>
-        </row>
-      </thead>
-      <tbody>
-        <row>
-          <entry>SGI</entry>
-          <entry>250 MHz R10K</entry>
-          <entry>256 MB</entry>
-          <entry>Texture mapping hardware and memory</entry>
-        </row>
-        <row>
-          <entry>Linux</entry>
-          <entry>500 MHz Pentium III</entry>
-          <entry>256 MB</entry>
-          <entry>
-            NVIDIA GeForce3 graphics card, XFree86 version 4.1.0,
-            nvidia drivers version 1.0-1251
-          </entry>
-        </row>
-      </tbody>
-    </tgroup>
-  </table>
-</para>
+  <para>
+    <table>
+      <tgroup cols="4">
+        <thead>
+          <row>
+            <entry></entry>
+            <entry>Processor(s)</entry>
+            <entry>Main memory</entry>
+            <entry>Other hardware/software</entry>
+          </row>
+        </thead>
+        <tbody>
+          <row>
+            <entry>SGI</entry>
+            <entry>250 MHz R10K</entry>
+            <entry>256 MB</entry>
+            <entry>Texture mapping hardware/memory</entry>
+          </row>
+          <row>
+            <entry>Linux</entry>
+            <entry>700 MHz Pentium III</entry>
+            <entry>256 MB</entry>
+            <entry>
+              NVIDIA GeForce3 graphics card, XFree86 version 4.1.0,
+              nvidia drivers version 1.0-1541
+            </entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+  </para>
 </sect1>

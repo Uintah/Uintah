@@ -204,7 +204,7 @@ python install 32 12
 /usr/local/SCIRun_Thirdparty_32/src/itcl3.1.0
 /usr/local/SCIRun_Thirdparty_32/src/tcl8.3.2
 /usr/local/SCIRun_Thirdparty_32/src/tk8.3.2
-/usr/local/SCIRun_Thirdparty_32/src/xerces-c-src1_4_0
+/usr/local/SCIRun_Thirdparty_32/src/xerces-c-src1_5_1
        </computeroutput>
      </sect2>
 
@@ -300,9 +300,9 @@ CFLAGS = "-O -DXML_USE_NATIVE_TRANSCODER -DXML_USE_INMEM_MESSAGELOADER"
 
        <para>
          Where <term>XERCES_C_ROOT</term> is the root of the unzipped
-         and untarred xerces 1.4.0 distribution.  For the example
+         and untarred xerces 1.5.1 distribution.  For the example
          given above, <term>XERCES_C_ROOT</term> would be
-         "/usr/local/SCIRun_Thirdparty_32/src/xerces-c-src1_4_0". 
+         "/usr/local/SCIRun_Thirdparty_32/src/xerces-c-src1_5_1". 
        </para>
      </sect2>
   </sect1>
