@@ -388,8 +388,6 @@ DynamicLoader::create_cc(const CompileInfo &info, bool empty, ostream &serr)
 
     if (!((s.substr(0, 5) == STD_STR) || s == "builtin"))
     {
-      printf("looking for %s in:\n            %s\n", SCIRUN_SRCDIR, s.c_str());
-
       string::size_type loc = s.find(SCIRUN_SRCDIR);
       if( loc != string::npos ) {
 	string::size_type endloc = s.find("SCIRun/src") + 11;
