@@ -75,6 +75,7 @@ private:
   GuiInt interp_mode;
 
   GLVolumeRenderer* volren;
+  Point dmin;
   Vector ddx;
   Vector ddy;
   Vector ddz;

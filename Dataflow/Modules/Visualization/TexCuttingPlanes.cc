@@ -79,10 +79,16 @@ TexCuttingPlanes::tcl_command( TCLArgs& args, void* userdata)
       Point w(control_widget->ReferencePoint());
       if (args[2] == "xplus") {
 	w+=ddx*atof(args[3].c_str());
+      } else if (args[2] == "xat") {
+	w=dmin+ddx*atof(args[3].c_str());
       } else if (args[2] == "yplus") {
 	w+=ddy*atof(args[3].c_str());
+      } else if (args[2] == "yat") {
+	w=dmin+ddy*atof(args[3].c_str());
       } else if (args[2] == "zplus") {
 	w+=ddz*atof(args[3].c_str());
+      } else if (args[2] == "zat") {
+	w=dmin+ddz*atof(args[3].c_str());
       } else if (args[2] == "vplus"){
 	GeometryData* data = ogeom->getData( 0, 1);
 	Vector view = data->view->lookat() - data->view->eyep();
@@ -91,6 +97,7 @@ TexCuttingPlanes::tcl_command( TCLArgs& args, void* userdata)
       }
       control_widget->SetPosition(w);
       widget_moved(1);
+      ogeom->flushViews();				  
   } else {
     Module::tcl_command(args, userdata);
   }
@@ -146,9 +153,10 @@ void TexCuttingPlanes::execute(void)
     Vector dv(b.diagonal());
     int nx, ny, nz;
     Transform t(tex->get_field_transform());
-    ddx=t.project(Point(1,0,0))-t.project(Point(0,0,0));
-    ddy=t.project(Point(0,1,0))-t.project(Point(0,0,0));
-    ddz=t.project(Point(0,0,1))-t.project(Point(0,0,0));
+    dmin=t.project(Point(0,0,0));
+    ddx=t.project(Point(1,0,0))-dmin;
+    ddy=t.project(Point(0,1,0))-dmin;
+    ddz=t.project(Point(0,0,1))-dmin;
     tex->get_dimensions(nx,ny,nz);
     ddview = (dv.length()/(std::max(nx, std::max(ny,nz)) -1));
     control_widget->SetPosition(Interpolate(b.min(), b.max(), 0.5));
@@ -183,9 +191,10 @@ void TexCuttingPlanes::execute(void)
       Vector dv(b.diagonal());
       int nx, ny, nz;
       Transform t(tex->get_field_transform());
-      ddx=t.project(Point(1,0,0))-t.project(Point(0,0,0));
-      ddy=t.project(Point(0,1,0))-t.project(Point(0,0,0));
-      ddz=t.project(Point(0,0,1))-t.project(Point(0,0,0));
+      dmin=t.project(Point(0,0,0));
+      ddx=t.project(Point(1,0,0))-dmin;
+      ddy=t.project(Point(0,1,0))-dmin;
+      ddz=t.project(Point(0,0,1))-dmin;
       tex->get_dimensions(nx,ny,nz);
       ddview = (dv.length()/(std::max(nx, std::max(ny,nz)) -1));
       if (!b.inside(control_widget->GetPosition())) {
