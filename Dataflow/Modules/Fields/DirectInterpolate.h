@@ -63,8 +63,23 @@ DirectInterpScalarAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
   typename Loc::iterator itr, itr_end;
   mesh->begin(itr);
   mesh->end(itr_end);
+  int found=0, total=0;
+
+  while (itr != itr_end) {
+    double val=0;
+    Point p;
+    if (sfi->interpolate(val,p)) found++;
+    fld->set_value((typename Fld::value_type)val, *itr);
+    total++;
+    ++itr;
+  }
+  cerr << "found "<<found<<" of "<<total<<" inside\n";
+
+  mesh->begin(itr);
   while (itr != itr_end)
   {
+    if ((((int)(*itr))%100) == 0) 
+      cerr << (int) (*itr) << " / " << ((int)(*itr_end))-1 << "\n";
     Point p;
     mesh->get_center(p, *itr);
 
