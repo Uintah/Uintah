@@ -36,7 +36,7 @@ else
 endif
 LIBS := $(XML_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(GL_LIBS)
 
-include $(SRCTOP)/scripts/program.mk
+include $(SCIRUN_SCRIPTS)/program.mk
 
 SRCS := $(SRCDIR)/puda.cc
 PROGRAM := Packages/Uintah/StandAlone/puda
@@ -59,7 +59,7 @@ PSELIBS := \
 endif
 LIBS 	:= $(XML_LIBRARY) $(MPI_LIBRARY)
 
-include $(SRCTOP)/scripts/program.mk
+include $(SCIRUN_SCRIPTS)/program.mk
 
 SRCS := $(SRCDIR)/compare_uda.cc
 PROGRAM := Packages/Uintah/StandAlone/compare_uda
@@ -82,7 +82,7 @@ PSELIBS := \
 endif
 LIBS 	:= $(XML_LIBRARY) $(MPI_LIBRARY)
 
-include $(SRCTOP)/scripts/program.mk
+include $(SCIRUN_SCRIPTS)/program.mk
 
 # A convenience target (use make sus)
 sus: Packages/Uintah/StandAlone/sus

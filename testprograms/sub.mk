@@ -5,7 +5,7 @@ SUBDIRS := $(SRCDIR)/TestSuite \
 	$(SRCDIR)/TestConsecutiveRangeSet \
 	$(SRCDIR)/TestRangeTree
 
-include $(SRCTOP)/scripts/recurse.mk
+include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PROGRAM := $(SRCDIR)/RunTests
 
@@ -18,4 +18,4 @@ PSELIBS := Packages/Uintah/testprograms/TestSuite \
 
 LIBS := $(XML_LIBRARY) -lm
 
-include $(SRCTOP)/scripts/program.mk
+include $(SCIRUN_SCRIPTS)/program.mk

@@ -5,5 +5,5 @@ SUBDIRS := \
 	$(SRCDIR)/Components \
 	$(SRCDIR)/Ports \
 
-include $(SRCTOP_ABS)/scripts/recurse.mk
+include $(SCIRUN_SCRIPTS)/recurse.mk
 

@@ -3,4 +3,4 @@
 SRCDIR := Packages/Uintah/Test
 SUBDIRS := $(SRCDIR)/helpers
 
-include $(SRCTOP_ABS)/scripts/recurse.mk
+include $(SCIRUN_SCRIPTS)/recurse.mk
