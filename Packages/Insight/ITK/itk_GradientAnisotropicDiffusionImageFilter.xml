@@ -53,7 +53,6 @@
       <name>time_step</name>
       <type>double</type>
       <call>SetTimeStep</call>
-      <default>1.25</default>
     </param>
     <param>
       <name>iterations</name>
@@ -65,7 +64,7 @@
       <name>conductance_parameter</name>
       <type>double</type>
       <call>SetConductanceParameter</call>
-      <default>1.5</default>
+      <default>1.0</default>
     </param>
   </parameters>
 

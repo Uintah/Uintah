@@ -15,7 +15,7 @@
   University of Utah. All Rights Reserved.
 -->
 
-<!ELEMENT filter-itk (description, templated, datatypes*, inputs, outputs, parameters, includes)>
+<!ELEMENT filter-itk (description, templated, datatypes?, inputs?, outputs?, parameters?, includes)>
   <!ATTLIST filter-itk name CDATA #REQUIRED>
 
 <!ELEMENT description (#PCDATA)>
