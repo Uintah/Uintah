@@ -84,6 +84,7 @@ public:
 			 ostream &serr = std::cerr);
 
   //! All modules should use this function to get the loader.
+  static void init_scirun_loader();
   static DynamicLoader& scirun_loader();
 
 private:
@@ -105,7 +106,6 @@ private:
 
   //! static vars.
   static DynamicLoader        *scirun_loader_;
-  static Mutex                 scirun_loader_lock_;
 };
 
 } // End namespace SCIRun
