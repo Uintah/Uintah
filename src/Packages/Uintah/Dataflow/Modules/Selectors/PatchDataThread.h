@@ -7,16 +7,11 @@
 #include <Core/Thread/Runnable.h>
 #include <Core/Datatypes/LatVolField.h>
 #include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Util/Endian.h>
 #include <Packages/Uintah/Core/Grid/Variable.h>
 #include <Packages/Uintah/Core/Grid/Array3.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/CCA/Ports/DataArchive.h>
 #include <Core/Util/Timer.h>
-
-namespace SCIRun {
-  void swapbytes( Uintah::Matrix3& m);
-} //end namespace SCIRun
 
 #include <string>
 #include <iostream>
@@ -40,27 +35,20 @@ public:
 		  const string& varname,
 		  int matnum,
 		  const Patch* patch,
-		  double time, Semaphore* sema,
-		  bool swapbytes = false) :
+		  double time, Semaphore* sema) :
     archive_(archive),
     iter_(iter),
     name_(varname),
     mat_(matnum),
     patch_(patch),
     time_(time),
-    sema_(sema),
-    swapbytes_(swapbytes){}
+    sema_(sema) {}
 
   void run() 
     {
       Var v; 
       archive_.query( v, name_, mat_, patch_, time_); 
       *iter_ = v; 
-      if( swapbytes_){
-	typename Var::iterator it(v.begin()), it_end(v.end()); 
-	for(; it !=  it_end; ++it)
-	  swapbytes( *it );
-      }
       sema_->up();
     }
   
@@ -75,7 +63,6 @@ private:
   const Patch *patch_;
   double time_;
   Semaphore *sema_;
-  bool swapbytes_;
 };
   
 
@@ -88,8 +75,7 @@ public:
 			      const string& varname,
 			      int matnum,
 			      const Patch* patch,
-			      double time, Semaphore* sema,
-			      bool swapbytes = false) :
+			      double time, Semaphore* sema) :
     archive_(archive),
     fld_(fld),
     offset_(offset),
@@ -97,8 +83,7 @@ public:
     mat_(matnum),
     patch_(patch),
     time_(time),
-    sema_(sema),
-    swapbytes_(swapbytes){}
+    sema_(sema) {}
 
   void run() 
     {
@@ -131,19 +116,10 @@ public:
 	Array3<Data>::const_iterator vit = vals.begin();
 	cerr<<"Done with setup\n";
 	cerr<<"Time = "<<TIMER.time()<<endl;
-	if(swapbytes_){
-	  for(;it != it_end; ++it){
-	    IntVector idx = vit.getIndex() - offset_;
-	    fld_->fdata()[*it] = *vit;
-	    swapbytes( fld_->fdata()[*it]);
-	    ++vit;
-	  }
-	} else {
-	  for(;it != it_end; ++it){
-	    IntVector idx = vit.getIndex() - offset_;
-	    fld_->fdata()[*it] = *vit;
-	    ++vit;
-	  }
+	for(;it != it_end; ++it){
+	  IntVector idx = vit.getIndex() - offset_;
+	  fld_->fdata()[*it] = *vit;
+	  ++vit;
 	}
       } else {
 
@@ -162,19 +138,10 @@ public:
 
 	const Array3<Data> &vals = v;
 	Array3<Data>::const_iterator vit = vals.begin();
-	if(swapbytes_){
-	  for(;it != it_end; ++it){
-	    //	    IntVector idx = vit.getIndex() - offset_;
-	    fld_->fdata()[*it] = *vit;
-	    swapbytes( fld_->fdata()[*it]);
-	    ++vit;
-	  }
-	} else {
-	  for(;it != it_end; ++it){
-	    //	    IntVector idx = vit.getIndex() - offset_;
-	    fld_->fdata()[*it] = *vit;
-	    ++vit;
-	  }
+	for(;it != it_end; ++it){
+	  //	    IntVector idx = vit.getIndex() - offset_;
+	  fld_->fdata()[*it] = *vit;
+	  ++vit;
 	}
       }
       cerr<<"Finished:  Time = "<<TIMER.time()<<endl;
@@ -193,7 +160,6 @@ private:
   const Patch *patch_;
   double time_;
   Semaphore *sema_;
-  bool swapbytes_;
 };
   
 
