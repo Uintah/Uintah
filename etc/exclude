@@ -1,12 +1,6 @@
-project/modules/IsoSurface/mcube.h
-project/tcl/tkFScale
-lib/GL
-project/tcl/tk3.6
-project/tcl/tcl7.3
-project/util
-project/vfield
+Modules/Visualization/IsoSurface/mcube.h
+tcl/tkFScale
+tcl/tk3.6
+tcl/tcl7.3
 templates
-wrapper
 .~
-xc/
-bugs/
