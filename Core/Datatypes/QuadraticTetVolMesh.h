@@ -35,8 +35,6 @@ public:
   { return new QuadraticTetVolMesh(*this); }
   virtual ~QuadraticTetVolMesh();
 
-  bool get_dim(vector<unsigned int>&) const { return false;  }
-
   void begin(Node::iterator &) const;
   void begin(Edge::iterator &) const;
   void begin(Face::iterator &) const;
@@ -55,85 +53,9 @@ public:
   void get_nodes(Node::array_type &array, Edge::index_type idx) const;
   void get_nodes(Node::array_type &array, Face::index_type idx) const;
   void get_nodes(Node::array_type &array, Cell::index_type idx) const;
-  void get_edges(Edge::array_type &array, Face::index_type idx) const;
-  void get_edges(Edge::array_type &array, Cell::index_type idx) const;
-  void get_faces(Face::array_type &array, Cell::index_type idx) const;
 
-  //! get the parent element(s) of the given index
-  bool get_edges(Edge::array_type &, Node::index_type) const { return 0; }
-  bool get_faces(Face::array_type &, Node::index_type) const { return 0; }
-  bool get_faces(Face::array_type &, Edge::index_type) const { return 0; }
-  bool get_cells(Cell::array_type &, Node::index_type) const { return 0; }
-  bool get_cells(Cell::array_type &, Edge::index_type) const { return 0; }
-  bool get_cells(Cell::array_type &, Face::index_type) const { return 0; }
-
-  //! must call compute_node_neighbors before calling get_neighbors.
-  bool get_neighbor(Cell::index_type &neighbor, Cell::index_type from,
-		   Face::index_type idx) const;
-  void get_neighbors(Cell::array_type &array, Cell::index_type idx) const;
-  void get_neighbors(Node::array_type &array, Node::index_type idx) const;
-
-  //! Get the size of an elemnt (length, area, volume)
-  double get_size(Node::index_type idx) const { return 0.0; }
-  double get_size(Edge::index_type idx) const 
-  {
-    Node::array_type arr;
-    get_nodes(arr, idx);
-    Point p0, p1;
-    get_center(p0, arr[0]);
-    get_center(p1, arr[1]);
-    return (p1.asVector() - p0.asVector()).length();
-  }
-  double get_size(Face::index_type idx) const
-  {
-    Node::array_type ra;
-    get_nodes(ra,idx);
-    Point p0,p1,p2;
-    get_point(p0,ra[0]);
-    get_point(p1,ra[1]);
-    get_point(p2,ra[2]);
-    return (Cross(p0-p1,p2-p0)).length()*0.5;
-  }
-  double get_size(Cell::index_type idx) const 
-  { 
-    ASSERTFAIL("dont know how to compute the volume for Quad Tets yet");
-    return 0.0;
-  };
-  double get_length(Edge::index_type idx) const { return get_size(idx); };
-  double get_area(Face::index_type idx) const { return get_size(idx); };
-  double get_volume(Cell::index_type idx) const { return get_size(idx); };
-
-  int get_valence(Node::index_type idx) const
-  {
-    Node::array_type arr;
-    get_neighbors(arr, idx);
-    return arr.size();
-  }
-  int get_valence(Edge::index_type idx) const { return 0; }
-  int get_valence(Face::index_type idx) const { return 0; }
-  int get_valence(Cell::index_type idx) const
-  {
-    Cell::array_type arr;
-    get_neighbors(arr, idx);
-    return arr.size();
-  }
-
-
-  //! get the center point (in object space) of an element
-  void get_center(Point &result, Node::index_type idx) const;
-  void get_center(Point &result, Edge::index_type idx) const;
-  void get_center(Point &result, Face::index_type idx) const;
-  void get_center(Point &result, Cell::index_type idx) const;
-
-  //! return false if point is out of range.
-  bool locate(Node::index_type &loc, const Point &p);
-  bool locate(Edge::index_type &loc, const Point &p);
-  bool locate(Face::index_type &loc, const Point &p);
-  bool locate(Cell::index_type &loc, const Point &p);
 
   void get_point(Point &result, Node::index_type index) const;
-  void get_normal(Vector &/*normal*/, Node::index_type /*index*/) const
-  { ASSERTFAIL("not implemented") }
 
   void get_weights(const Point& p, Node::array_type &l, vector<double> &w);
   void get_weights(const Point &, Edge::array_type &, vector<double> &) 
@@ -142,6 +64,7 @@ public:
   { ASSERTFAIL("QuadraticTetVolMesh::get_weights for faces isn't supported"); }
   void get_weights(const Point &p, Cell::array_type &l, vector<double> &w)
   { TetVolMesh::get_weights(p, l, w); }
+
   //! get gradient relative to point p
   void get_gradient_basis(Cell::index_type ci, const Point& p,
 			    Vector& g0, Vector& g1, Vector& g2, Vector& g3, 
@@ -167,10 +90,8 @@ public:
 
   virtual void compute_nodes();
 
-protected:
-
-
 private:
+
   vector<int> node_2_edge_;
 #ifdef HAVE_HASH_MAP
   typedef hash_multimap<int,int,Edge::CellEdgeHasher, Edge::eqEdge> E2N;
