@@ -4,8 +4,8 @@
 
       double precision PI
 
-      DATA PI/3.141593D0/
 
+      pi = dacos(-1.0D0)
 c     calculate incident flux at cell centers and radiative source
 
       do 30 k=idxlo(3),idxhi(3)
@@ -15,7 +15,7 @@ c     calculate incident flux at cell centers and radiative source
                volq(i,j,k) = volq(i,j,k) + cenint(i,j,k) * wt(l)
       
                src(i,j,k) = (abskg(i,j,k)) * volq(i,j,k)
-     &              - 4.0*PI * (esrcg(i,j,k))
+     &              - 4.0D0*PI * (esrcg(i,j,k))
 
 c      if((j.eq.7).and.(k.eq.7))write(6,*)i,abs(src(i,j,k))
 

@@ -24,8 +24,9 @@ C***********************************************************************
 
         integer negint,I,J,K,L,II,JJ,KK,IST,IEND,JST,JEND,KST,KEND
 	
-        DATA PI/3.141593d0/,SIG/5.67d-08/
+        DATA SIG/5.67d-08/
 
+      pi = dacos(-1.0D0)
       IEND=idxhi(1)+1
       JEND=idxhi(2)+1
       KEND=idxhi(3)+1
