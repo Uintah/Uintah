@@ -1,4 +1,4 @@
-c## $Id$
+## $Id$
 ## XXX: Should probably set AC_PREFIX_DEFAULT to something good some day.
 ## TODO:
 ##  - Automatically detect TEMPLATE_BOX and TEMPLATE_TAG variables
@@ -68,6 +68,15 @@ AC_ARG_WITH(xerces,
 	[xerces="$withval"],
 	[xerces=""])
 
+##-- check for supplied vampir path ------------------------------------------
+
+AC_ARG_WITH(vampir,
+	[  --with-vampir=<path-to-vampir>  <path-to-vampir>],
+	[withvampir="$withval"],
+	[withvampir=""])
+VAMPIR_DIR=$withvampir
+AC_SUBST(VAMPIR_DIR)
+
 ##-- Canonical Host Type -----------------------------------------------------
 
 AC_CANONICAL_HOST
@@ -107,6 +116,10 @@ if test "$optimize" = "yes"; then
   extra_cflags="-O2 ${extra_cflags}";
 elif ! test "$optimize" = "no"; then
   extra_cflags="$optimize ${extra_cflags}";
+fi
+
+if test "$withvampir" != ""; then
+  extra_cflags="-DUSE_VAMPIR ${extra_cflags}"
 fi
 
 if ! test "$output_avg_walltime" = "no"; then
@@ -860,6 +873,9 @@ AC_OUTPUT(Makefile \
 
 #
 # $Log$
+# Revision 1.80  2000/12/10 09:05:02  sparker
+# Support for VAMPIR from Wayne Witzel
+#
 # Revision 1.79  2000/11/29 07:54:26  moulding
 # - changed some instances of TCL_VERSION to ITCL_VERSION
 # - moved ITCL_INIT_DIR ahead of TCL_INIT_DIR in the createTclIndex
@@ -897,6 +913,12 @@ AC_OUTPUT(Makefile \
 # Revision 1.70  2000/10/21 19:17:42  moulding
 # added some comment lines that will be un-commented when the new module maker
 # comes on line.
+#
+# Revision 1.69.2.2  2000/11/01 21:41:46  witzel
+# Added enable/disable output-avg-walltime option
+#
+# Revision 1.69.2.1  2000/10/07 00:06:37  witzel
+# Added support for vampir library (mpi performance analysis).
 #
 # Revision 1.69  2000/09/14 15:33:47  sparker
 # Added a configure flag --disable-sci-malloc
