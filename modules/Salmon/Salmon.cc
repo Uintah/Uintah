@@ -366,7 +366,6 @@ void Salmon::flushViews()
 void Salmon::addObj(int portno, int serial, GeomObj *obj,
 		    const clString& name)
 {
-//    cerr << "I'm adding an Object!\n";
     HashTable<int, GeomObj*>* serHash;
     if (!portHash.lookup(portno, serHash)) {
 	// need to make this table
@@ -384,13 +383,16 @@ void Salmon::delObj(int portno, int serial)
     HashTable<int, GeomObj*>* serHash;
     if (portHash.lookup(portno, serHash)) {
 	GeomObj *g;
-	serHash->lookup(serial, g);
-	serHash->remove(serial);
-	for (int i=0; i<topRoe.size(); i++)
-	    topRoe[i]->itemDeleted(g);
-	delete g;
+	if(serHash->lookup(serial, g)){
+	    serHash->remove(serial);
+	    for (int i=0; i<topRoe.size(); i++)
+		topRoe[i]->itemDeleted(g);
+	    delete g;
+	} else {
+	    cerr << "Error deleting object, object not in database...(serial=" << serial << ")" << endl;
+	}
     } else {
-	cerr << "Error deleting object, not it database...(" << serial << ")" << endl;
+	cerr << "Error deleting object, port not in database...(port=" << portno << ")" << endl;
     }
 }
 

@@ -188,6 +188,8 @@ void Roe::RoeInit(Salmon* s) {
     drawinfo->drawtype=DrawInfo::Gouraud;
     drawinfo->pick_mode=False;
     drawinfo->edit_mode=False;
+    drawinfo->currently_lit=1;
+    drawinfo->lighting=1;
     firstGen=False;
     dialog=new DialogShellC;
     dialog->SetAllowShellResize(true);
@@ -519,7 +521,11 @@ void Roe::initCB(CallbackData*, void*) {
     graphics->GetValues();
     // Create a GLX context
     evl->lock();
-    cx = glXCreateContext(XtDisplay(*graphics), vi, 0, GL_TRUE);
+    cx = glXCreateContext(XtDisplay(*graphics), vi, 0, GL_FALSE);
+    if(!cx){
+	cerr << "Error making glXCreateContext\n";
+	exit(0);
+    }
     make_current();
 
     // set the view
@@ -679,10 +685,15 @@ void Roe::redrawAll()
 			//  or if we're not in pick-mode
 			if (geomItemA[i]->vis && 
 			    (drawinfo->edit_mode || !drawinfo->pick_mode || 
-			     geom->pick))
+			     geom->pick)){
 			    if (drawinfo->edit_mode || drawinfo->pick_mode)
 				glLoadName((GLuint)geom);
+			    if (drawinfo->pick_mode)
+				glPushName((GLuint)geom->pick);
 			    geom->draw(drawinfo);
+			    if (drawinfo->pick_mode)
+				glPopName();
+			}
 	    }
 	}
 	drawinfo->pop_matl();
@@ -852,10 +863,7 @@ void Roe::wireCB(CallbackData*, void*)
 {
     drawinfo->drawtype=DrawInfo::WireFrame;
     drawinfo->current_matl=0;
-    evl->lock();
-    make_current();
-    glDisable(GL_LIGHTING);
-    evl->unlock();
+    drawinfo->lighting=0;
     need_redraw=1;
 }
 
@@ -863,10 +871,7 @@ void Roe::flatCB(CallbackData*, void*)
 {
     drawinfo->drawtype=DrawInfo::Flat;
     drawinfo->current_matl=0;
-    evl->lock();
-    make_current();
-    glDisable(GL_LIGHTING);
-    evl->unlock();
+    drawinfo->lighting=0;
     need_redraw=1;
 }
 
@@ -874,10 +879,7 @@ void Roe::gouraudCB(CallbackData*, void*)
 {
     drawinfo->drawtype=DrawInfo::Gouraud;
     drawinfo->current_matl=0;
-    evl->lock();
-    make_current();
-    glEnable(GL_LIGHTING);
-    evl->unlock();
+    drawinfo->lighting=1;
     need_redraw=1;
 }
 
@@ -885,10 +887,7 @@ void Roe::phongCB(CallbackData*, void*)
 {
     drawinfo->drawtype=DrawInfo::Phong;
     drawinfo->current_matl=0;
-    evl->lock();
-    make_current();
-    glEnable(GL_LIGHTING);
-    evl->unlock();
+    drawinfo->lighting=1;
     need_redraw=1;
 }
 
@@ -1459,25 +1458,29 @@ void Roe::mouse_pick(int action, int x, int y, int, int)
 	    int hits=glRenderMode(GL_RENDER);
 	    GLuint min_z;
 	    GLuint pick_index=0;
+	    GLuint pick_pick=0;
 	    if(hits >= 1){
 		min_z=pick_buffer[1];
 		pick_index=pick_buffer[3];
+		pick_pick=pick_buffer[4];
 		for (int h=1; h<hits; h++) {
-		    ASSERT(pick_buffer[h*4]==1);
-		    if (pick_buffer[h*4+1] < min_z) {
-			min_z=pick_buffer[h*4+1];
-			pick_index=pick_buffer[h*4+3];
+		    ASSERT(pick_buffer[h*5]==2);
+		    if (pick_buffer[h*5+1] < min_z) {
+			min_z=pick_buffer[h*5+1];
+			pick_index=pick_buffer[h*5+3];
+			pick_pick=pick_buffer[h*5+4];
 		    }
 		}
 	    }
 	    geomSelected=(GeomObj *)pick_index;
+	    gpick=(GeomPick*)pick_pick;
 	    if (geomSelected) {
 		for (int i=0; i<geomItemA.size(); i++) {
 		    if (geomItemA[i]->geom == geomSelected)
 			update_mode_string(clString("pick: ")+
 					   geomItemA[i]->name);
 		}
-		geomSelected->pick->pick();
+		gpick->pick();
 	    } else {
 		update_mode_string("pick: none");
 	    }
@@ -1486,7 +1489,7 @@ void Roe::mouse_pick(int action, int x, int y, int, int)
 	break;
     case BUTTON_MOTION:
 	{
-	    if (!geomSelected) break;
+	    if (!geomSelected || !gpick) break;
 	    double xmtn=last_x-x;
 	    double ymtn=last_y-y;
 	    xmtn/=30;
@@ -1516,20 +1519,17 @@ void Roe::mouse_pick(int action, int x, int y, int, int)
 	    Vector dir(Point(x1, y1, z1)-Point(x0,y0,z0));
 	    double dist=dir.length();
 	    dir.normalize();
-	    cerr << "Direction: " << dir.string() << "\n";
 	    double dot=0;
 	    int prin_dir=-1;
 	    double currdot;
-	    for (int i=0; i<geomSelected->pick->nprincipal(); i++) {
-		if ((currdot=Dot(dir, geomSelected->pick->principal(i))) >dot){
+	    for (int i=0; i<gpick->nprincipal(); i++) {
+		if ((currdot=Dot(dir, gpick->principal(i))) >dot){
 		    dot=currdot;
 		    prin_dir=i;
 		}
 	    }
 	    if(prin_dir != -1){
-		Vector mtn(geomSelected->pick->principal(prin_dir)*dist);
-		cerr << "Pick motion..." <<
-		    mtn.string() << "\n";
+		Vector mtn(gpick->principal(prin_dir)*dist);
 		total_x+=mtn.x();
 		total_y+=mtn.y();
 		total_z+=mtn.z();
@@ -1545,9 +1545,7 @@ void Roe::mouse_pick(int action, int x, int y, int, int)
 					   ", "+to_string(total_y)+
 					   ", "+to_string(total_z));
 		}
-		cerr << "Calling moved (geomSelected=" << geomSelected << ", geomSelected->pick=" << geomSelected->pick << ")\n";
-		geomSelected->pick->moved(prin_dir, dist, mtn);
-		cerr << "done" << endl;
+		gpick->moved(prin_dir, dist, mtn);
 	    } else {
 		update_mode_string(clString("Bad direction..."));
 	    }
@@ -1557,10 +1555,11 @@ void Roe::mouse_pick(int action, int x, int y, int, int)
 	}
 	break;
     case BUTTON_UP:
-	if(geomSelected){
-	    geomSelected->pick->release();
+	if(gpick){
+	    gpick->release();
 	} else {
 	    geomSelected=0;
+	    gpick=0;
 	}
 	update_mode_string("");
 	break;

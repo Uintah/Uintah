@@ -25,6 +25,7 @@ class DrawInfo;
 class DrawingAreaC;
 class FormC;
 class FrameC;
+class GeomPick;
 class GLwMDrawC;
 class LabelC;
 class MainWindowC;
@@ -164,6 +165,7 @@ class Roe {
     clString mode_string;
     void update_mode_string(const clString&);
     GeomObj *geomSelected;
+    GeomPick* gpick;
 
     void redraw_perf(CallbackData*, void*);
     clString perf_string1;
