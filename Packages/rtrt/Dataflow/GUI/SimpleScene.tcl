@@ -30,7 +30,7 @@ itcl_class rtrt_Scenes_SimpleScene {
 	global $this-reflectance
 	set $this-reflectance 0.5
 	global $this-shininess
-	set $this-shininess 30.0
+	set $this-shininess 30
     }
 
     method raiseColor {swatch color msg} {
