@@ -227,7 +227,7 @@
                 
                <geom_object>
                     <tri>
-                      <name>trwnozzlentop3_01mesh</name>
+                      <name>../../../../src/Packages/Uintah/StandAlone/inputs/MPMICE/complex_MPM_geometries/trwnozzlentop3_01mesh</name>
                     </tri>
                     <res>              [2,2,2]          </res>
                     <velocity>         [0.,0.,0.]       </velocity>
@@ -257,7 +257,7 @@
                     <max>           [ 10.0, 10.0, 10.0]   </max>
                 </box>
               <tri label = "gpicehole">
-                   <name>trwnozzlentop3_01mesh</name>
+                   <name>../../../../src/Packages/Uintah/StandAlone/inputs/MPMICE/complex_MPM_geometries/trwnozzlentop3_01mesh</name>
                 </tri>
               </difference>
                <res>                      [2,2,2]       </res>
