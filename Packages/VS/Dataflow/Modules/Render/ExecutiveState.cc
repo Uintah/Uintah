@@ -67,6 +67,10 @@
 #include <iomanip>
 
 #define AXIS_LENGTH 10
+#define ALARM_THRESHOLD -1
+#define ALARM_OFFSET 5880
+
+typedef struct {GLdouble x; GLdouble y; GLdouble z;} tuple;
 
 extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 extern Tcl_Interp* the_interp;
@@ -174,8 +178,12 @@ private:
   GuiInt                               gui_play_mode_;
   GuiInt                               gui_time_markers_mode_;
   GuiInt                               gui_selected_marker_;
-
   GuiInt                               gui_plot_count_;
+  GuiDouble                            gui_font_scale_;
+  GuiInt                               gui_show_name_;
+  GuiInt                               gui_show_vectors_;
+  GuiInt                               gui_show_cross_;
+
   vector<GuiString*>                   gui_nw_label_;
   vector<GuiString*>                   gui_sw_label_;
   vector<GuiString*>                   gui_label_;
@@ -220,11 +228,16 @@ private:
   LabelTex 				*status_label1a;
   LabelTex 				*status_label1b;
   LabelTex 				*status_label1c;
+  LabelTex 				*status_label1d;
   LabelTex 				*status_label2;
   LabelTex 				*status_label3;
   LabelTex				*name_label;
+  LabelTex				*x_axis_label;
   string				name_text;
+  LabelTex				*time_label;
+  string				time_text;
   int 					injury_offset_;
+  int 					alarm_offset_;
   int 					lvp_index_;
   int 					rvp_index_;
   int 					ttd_index_;
@@ -235,6 +248,10 @@ private:
   int 					vector_index_;
   bool					alarm_now;
   LabelTex				*alarm_label;
+  GLfloat				*color_dat;
+  tuple					*injury_point;
+  tuple					*alarm_point;
+  tuple					*x_axis_point;
 
   bool                  make_current();
   void                  synch_plot_vars(int s);
@@ -386,6 +403,10 @@ ExecutiveState::ExecutiveState(GuiContext* ctx) :
   gui_time_markers_mode_(ctx->subVar("time_markers_mode")),
   gui_selected_marker_(ctx->subVar("selected_marker")),
   gui_plot_count_(ctx->subVar("plot_count")),
+  gui_font_scale_(ctx->subVar("font_scale")),
+  gui_show_name_(ctx->subVar("show_name")),
+  gui_show_vectors_(ctx->subVar("show_vectors")),
+  gui_show_cross_(ctx->subVar("show_cross")),
   ctx_(0),
   dpy_(0),
   win_(0),
@@ -407,8 +428,12 @@ ExecutiveState::ExecutiveState(GuiContext* ctx) :
   pan_y_(-AXIS_LENGTH/2),
   scale_(-8.0),
   name_label(0),
+  x_axis_label(0),
   name_text(" "),
+  time_label(0),
+  time_text("Time: 00:00:00"),
   injury_offset_(0),
+  alarm_offset_(ALARM_OFFSET),
   lvp_index_(0),
   rvp_index_(0),
   ttd_index_(0),
@@ -628,24 +653,34 @@ ExecutiveState::init_plots()
   FreeTypeFace *font = fonts_["anatomical"];
   if (! font) return;
 
-  font->set_points(18.0);
+  font->set_points(18.0 * gui_font_scale_.get());
   status_label1a = scinew LabelTex("Estimated time to death: ");
   status_label1a->bind(font);
   status_label1b = scinew LabelTex(" ");
   status_label1b->bind(font);
-  status_label1c = scinew LabelTex(" ");
+  status_label1c = scinew LabelTex(" Prob. of death: ");
   status_label1c->bind(font);
+  status_label1d = scinew LabelTex(" ");
+  status_label1d->bind(font);
   status_label2 = scinew LabelTex(" ");
   status_label2->bind(font);
   status_label3 = scinew LabelTex(" ");
   status_label3->bind(font);
 
-  font->set_points(18.0);
+  font->set_points(18.0 * gui_font_scale_.get());
   if (name_label) delete name_label;
   name_label = scinew LabelTex(name_text);
   name_label->bind(font);
 
-  font->set_points(36.0);
+  if (time_label) delete time_label;
+  time_label = scinew LabelTex(time_text);
+  time_label->bind(font);
+
+  if (x_axis_label) delete x_axis_label;
+  x_axis_label = scinew LabelTex("Amplitude, LV Waveform");
+  x_axis_label->bind(font);
+
+  font->set_points(36.0 * gui_font_scale_.get());
   if (alarm_label) delete alarm_label;
   alarm_label = scinew LabelTex("Alarm");
   alarm_label->bind(font);
@@ -667,12 +702,12 @@ ExecutiveState::init_plots()
     const string num = to_string(i);
     Plot &g = *iter++;
 
-    font->set_points(36.0);
+    font->set_points(36.0 * gui_font_scale_.get());
     if (g.aux_data_) delete g.aux_data_;
       g.aux_data_ = scinew LabelTex(" ");
       g.aux_data_->bind(font);
 
-    font->set_points(12.0);
+    font->set_points(12.0 * gui_font_scale_.get());
     if (! gui_nw_label_[i]) {
       gui_nw_label_[i] = scinew GuiString(ctx->subVar("nw_label-" + num));
     }
@@ -691,7 +726,7 @@ ExecutiveState::init_plots()
       g.sw_label_->bind(font);
     }
 
-    font->set_points(18.0);
+    font->set_points(18.0 * gui_font_scale_.get());
     if (! gui_label_[i]) {
       gui_label_[i] = scinew GuiString(ctx->subVar("label-" + num));
     }
@@ -709,7 +744,7 @@ ExecutiveState::init_plots()
       g.aux_data_label_->bind(font);
     }
 
-    font->set_points(14.0);
+    font->set_points(14.0 * gui_font_scale_.get());
     if (! gui_min_ref_label_[i]) {
       gui_min_ref_label_[i] = scinew GuiString(
 					ctx->subVar("min_ref_label-" + num));
@@ -854,53 +889,53 @@ ExecutiveState::draw_plots()
 
     int i(1);
     glBegin(GL_LINES);
-    glColor4f(1.0, 1.0, 0.0, 1.0);
-    for (i = 1; i < AXIS_LENGTH; i++) {
-      glVertex3f(i, 0.0, 0.0);
-      glVertex3f(i, -0.1, 0.0);
-    }
+      glColor4f(1.0, 1.0, 0.0, 1.0);
+      for (i = 1; i < AXIS_LENGTH; i++) {
+        glVertex3f(i, 0.0, 0.0);
+        glVertex3f(i, -0.1, 0.0);
+      }
+
+      for (i = 3; i < AXIS_LENGTH; i+=3) {
+        glVertex3f(0.0, i, 0.0);
+        glVertex3f(-0.1, i, 0.0);
+      }
     glEnd();
 
-    glBegin(GL_LINES);
-    glColor4f(1.0, 1.0, 0.0, 1.0);
-    for (i = 3; i < AXIS_LENGTH; i+=3) {
-      glVertex3f(0.0, i, 0.0);
-      glVertex3f(-0.1, i, 0.0);
-    }
-    glEnd();
-
-    //glPointSize(6);
-    //glBegin(GL_POINTS);
-    //  glColor4f(1.0, 1.0, 0.0, 1.0);
-    //  glVertex3f(0.0, 0.0, 0.0);
-    //glEnd();
-    //if (name_label) {
-    //  glPushMatrix();
-    //  glMatrixMode(GL_PROJECTION);
-    //  glLoadIdentity();
-
-    //  glMatrixMode(GL_MODELVIEW);
-    //  glLoadIdentity();
-
-    //  glScaled(2.0, 2.0, 2.0);
-    //  glEnable(GL_TEXTURE_2D);
-    //    name_label->draw(pan_x_, pan_y_, sx, sy);
-    //  glDisable(GL_TEXTURE_2D);
-    //  glPopMatrix();
+    //glBegin(GL_LINES);
+    //glColor4f(1.0, 1.0, 0.0, 1.0);
+    //for (i = 3; i < AXIS_LENGTH; i+=3) {
+     // glVertex3f(0.0, i, 0.0);
+      //glVertex3f(-0.1, i, 0.0);
     //}
+    //glEnd();
+
+    if (gui_show_vectors_.get()) {
+      glBegin(GL_LINES);
+        glColor4f(1.0, 0.0, 0.0, 0.6);
+        glVertex3f(-1.0, 0.0, 0.0);
+        glVertex3f(-1.0, 10.0, 0.0);
+
+        glVertex3f(-1.2, 10.0, 0.0);
+        glVertex3f(-0.8, 10.0, 0.0);
+
+        glVertex3f(-1.2, 0.0, 0.0);
+        glVertex3f(-0.8, 0.0, 0.0);
+      glEnd();
+    }
+
+    GLint vp[4];
+    GLdouble mm[16], pm[16];
+    glGetIntegerv(GL_VIEWPORT, vp);
+    glGetDoublev(GL_MODELVIEW_MATRIX, mm);
+    glGetDoublev(GL_PROJECTION_MATRIX, pm);
+
+    gluProject((GLdouble)5.0, (GLdouble)-0.1, (GLdouble)0.0, mm, pm, vp, &x_axis_point->x, &x_axis_point->y, &x_axis_point->z);
 
     // path, points on path, crosshairs, second difference vector
     if (data_.get_rep()) {
       //if (cur_idx_ > 0) {
       if (cur_idx_ >= 0) {
         float *dat = (float *)data_->nrrd->data;
-
-        //glPushMatrix();
-         // glTranslatef(dat[cur_idx_*3], dat[cur_idx_*3+1], dat[cur_idx_*3+2]);
-         // glDisable(GL_TEXTURE_2D);
-         //   glCallList(CONTROL_SPACE_LIST);
-         // glEnable(GL_TEXTURE_2D);
-        //glPopMatrix();
 
         glPushMatrix();
           //glDisable(GL_TEXTURE_2D);
@@ -917,7 +952,19 @@ ExecutiveState::draw_plots()
           float y = dat[cur_idx_*3+1];
           float z = dat[cur_idx_*3+2];
 
-          if (data2_.get_rep()) {
+          if (cur_idx_ >= injury_offset_ * 100 && cur_idx_ < injury_offset_ * 100 + 6000) {
+            injury_point->x = x;
+            injury_point->y = y;
+            injury_point->z = z;
+          }
+
+          if (cur_idx_ >= alarm_offset_ * 100 && cur_idx_ < alarm_offset_ * 100 + 6000) {
+            alarm_point->x = x;
+            alarm_point->y = y;
+            alarm_point->z = z;
+          }
+
+          if (data2_.get_rep() && gui_show_vectors_.get()) {
             float *dat2 = (float *)data2_->nrrd->data;
             int dat2_id = cur_idx_ * data2_->nrrd->axis[0].size + vector_index_;
 
@@ -931,11 +978,14 @@ ExecutiveState::draw_plots()
               glVertex3f(x+x2, y+y2, z+z2);
             glEnd();
 
-            glBegin(GL_LINES);
-              glColor4f(0.0, 1.0, 1.0, 1.0);
-              glVertex3f(x, y, z);
-              glVertex3f(x+x2, y, z+z2);
-            glEnd();
+            glPushMatrix();
+              glTranslatef(-x, 0.0, 0.0);
+              glBegin(GL_LINES);
+                glColor4f(0.0, 1.0, 1.0, 1.0);
+                glVertex3f(x, y, z);
+                glVertex3f(x+x2, y, z+z2);
+              glEnd();
+            glPopMatrix();
           }
 
           glPointSize(6);
@@ -944,14 +994,30 @@ ExecutiveState::draw_plots()
             glVertex3f(x, y, z);
           glEnd();
 
-          glBegin(GL_LINES);
-            glColor4f(0.0, 1.0, 1.0, 1.0);
-            glVertex3f(x-0.15, y, z);
-            glVertex3f(x+0.15, y, z);
-
-            glVertex3f(x, y-0.15, z);
-            glVertex3f(x, y+0.15, z);
+          if (cur_idx_ >= injury_offset_ * 100) {
+          glBegin(GL_POINTS);
+            glColor4f(0.0, 1.0, 0.0, 1.0);
+            glVertex3f(injury_point->x, injury_point->y, injury_point->z);
           glEnd();
+          }
+
+          if (cur_idx_ >= alarm_offset_ * 100) {
+          glBegin(GL_POINTS);
+            glColor4f(1.0, 0.0, 0.0, 1.0);
+            glVertex3f(alarm_point->x, alarm_point->y, alarm_point->z);
+          glEnd();
+          }
+
+          if (gui_show_cross_.get()) {
+            glBegin(GL_LINES);
+              glColor4f(0.0, 1.0, 1.0, 1.0);
+              glVertex3f(x-0.15, y, z);
+              glVertex3f(x+0.15, y, z);
+
+              glVertex3f(x, y-0.15, z);
+              glVertex3f(x, y+0.15, z);
+            glEnd();
+          }
         glPopMatrix();
       }
     }
@@ -981,12 +1047,32 @@ ExecutiveState::draw_plots()
       alarm_label->draw(w/2 - xoff/2, h/2 - yoff*0.5, sx, sy);
     }
 
-    if (name_label) {
+    if (name_label && gui_show_name_.get()) {
       float yoff = name_label->tex_height_ * name_label->v_ * 1.5;
       glColor4f(1.0, 1.0, 1.0, 1.0);
       //(alarm_now)?glDisable(GL_BLEND):glEnable(GL_BLEND);
       name_label->draw(x_margin, h - yoff, sx, sy);
       //(alarm_now)?glEnable(GL_BLEND):glDisable(GL_BLEND);
+    }
+
+    if (x_axis_label) {
+      glColor4f(1.0, 1.0, 0.0, 1.0);
+      float xoff = x_axis_label->tex_width_ * x_axis_label->u_;
+      float yoff = x_axis_label->tex_height_ * x_axis_label->v_ * 1.5;
+      x_axis_label->draw(x_axis_point->x - xoff/2, x_axis_point->y - yoff, sx, sy);
+    }
+
+    if (time_label) {
+      FreeTypeFace *font = fonts_["anatomical"];
+      font->set_points(18.0 * gui_font_scale_.get());
+      time_label->set(time_text);
+      time_label->bind(font);
+                                                                                
+      float yoff = time_label->tex_height_ * time_label->v_ * 1.5;
+      float xoff = time_label->tex_width_ * time_label->u_;
+                                                                                
+      glColor4f(1.0, 1.0, 1.0, 1.0);
+      time_label->draw(w - x_margin - xoff, h - yoff, sx, sy);
     }
 
     if (data2_.get_rep()) {
@@ -1006,7 +1092,7 @@ ExecutiveState::draw_plots()
       pos *= 100;
 
       FreeTypeFace *font = fonts_["anatomical"];
-      font->set_points(18.0);
+      font->set_points(18.0 * gui_font_scale_.get());
 
       yoff += y_margin;
 
@@ -1063,7 +1149,7 @@ ExecutiveState::draw_plots()
         yoff += status_label2->tex_height_*status_label2->v_ + y_margin + 2;
       }
 
-      if (status_label1a && status_label1b && status_label1c) {
+      if (status_label1a && status_label1b && status_label1c && status_label1d) {
         float prob = 100 - pos;
 
         //ostringstream stata;
@@ -1076,17 +1162,20 @@ ExecutiveState::draw_plots()
         status_label1b->set(statb.str());
         status_label1b->bind(font);
 
-        ostringstream statc;
-        statc << " Prob. of Death: " << prob << "%";
-        status_label1c->set(statc.str());
-        status_label1c->bind(font);
+        //ostringstream statc;
+        //statc << " Prob. of Death: ";
+        //status_label1c->set(statc.str());
+        //status_label1c->bind(font);
+
+        ostringstream statd;
+        statd << " " << prob << "%";
+        status_label1d->set(statd.str());
+        status_label1d->bind(font);
 
         float xoff(x_margin);
         if (ttd == ttd && pos == pos) {
           glColor4f(1.0, 1.0, 1.0, 1.0);
-          //glDisable(GL_BLEND);
           status_label1a->draw(xoff, yoff, sx, sy);
-          //glEnable(GL_BLEND);
 
           xoff += status_label1a->tex_width_ * status_label1a->u_;
 
@@ -1095,16 +1184,21 @@ ExecutiveState::draw_plots()
           else
             glColor4f(1.0, 1.0, 1.0, 1.0);
 
-          //glDisable(GL_BLEND);
           status_label1b->draw(xoff, yoff, sx, sy);
-          //glEnable(GL_BLEND);
 
           xoff += status_label1b->tex_width_ * status_label1b->u_;
 
           glColor4f(1.0, 1.0, 1.0, 1.0);
-          //glDisable(GL_BLEND);
           status_label1c->draw(xoff, yoff, sx, sy);
-          //glEnable(GL_BLEND);
+
+          xoff += status_label1c->tex_width_ * status_label1c->u_;
+
+          if (prob > 80)
+            glColor4f(1.0, 0.0, 0.0, 1.0);
+          else
+            glColor4f(1.0, 1.0, 1.0, 1.0);
+
+          status_label1d->draw(xoff, yoff, sx, sy);
         }
       }
 
@@ -1128,150 +1222,6 @@ ExecutiveState::draw_plots()
       //glPopMatrix();
     }
   glPopMatrix();
-
-/*
-  vector<Plot>::iterator iter = plots_.begin();
-  while (iter != plots_.end())
-  {
-    Plot &g = *iter++;
-    glColor4f(g.r_, g.g_, g.b_, 1.0);
-
-    if (g.nw_label_) { 
-      float xoff = g.nw_label_->tex_width_ * g.nw_label_->u_;
-      g.nw_label_->draw(cur_x - xoff, cur_y, sx, sy);
-    }    
-    if (g.sw_label_) { 
-      float xoff = g.sw_label_->tex_width_ * g.sw_label_->u_;
-      g.sw_label_->draw(cur_x - xoff, cur_y - gr_ht * 0.5, sx, sy);
-    }
-    if (g.min_ref_label_) { 
-      float xoff = g.min_ref_label_->tex_width_ * g.min_ref_label_->u_ + 3;
-      float yoff = g.min_ref_label_->tex_height_ * g.min_ref_label_->v_ * 0.5;
-      g.min_ref_label_->draw(cur_x, cur_y - gr_ht - yoff, sx, sy);
-      if (g.lines_ == 1) {
-        glDisable(GL_TEXTURE_2D);
-        glBegin(GL_LINES);
-        glVertex2f((cur_x + xoff) * sx, (cur_y - gr_ht) * sy);
-        glVertex2f((cur_x + (w * .70)) * sx, (cur_y - gr_ht) * sy);
-        glEnd();
-        glEnable(GL_TEXTURE_2D);
-      }
-    }    
-    if (g.max_ref_label_) { 
-      float xoff = g.max_ref_label_->tex_width_ * g.max_ref_label_->u_ + 3;
-      float yoff = g.max_ref_label_->tex_height_ * g.max_ref_label_->v_ * 0.5;
-      g.max_ref_label_->draw(cur_x, cur_y - yoff, sx, sy);
-      if (g.lines_ == 1) {
-        glDisable(GL_TEXTURE_2D);
-        glBegin(GL_LINES);
-        glVertex2f((cur_x + xoff) * sx, cur_y * sy);
-        glVertex2f((cur_x + (w * .70)) * sx, cur_y * sy);
-        glEnd();
-        glEnable(GL_TEXTURE_2D);
-      }
-    }
-    if (g.label_) { 
-      g.label_->draw(cur_x + w * 0.70, cur_y, sx, sy);
-    }
-    if (g.draw_aux_data == 1) { 
-      if (g.aux_data_label_)
-        g.aux_data_label_->draw(cur_x + w * 0.70 + 80, cur_y, sx, sy);
-
-      if (data_.get_rep()) {
-         int idx = cur_idx_;
-         if (idx > data_->nrrd->axis[1].size) {
-            idx -= data_->nrrd->axis[1].size;
-         }
-         float *dat = (float *)data_->nrrd->data;
-         int dat_index = idx * data_->nrrd->axis[0].size + g.auxindex_;
-         
-         int val = (int)dat[dat_index];
-
-         ostringstream auxstr;
-         auxstr << val;
-         ostringstream prevstr;
-         prevstr << g.previous_;
-
-         FreeTypeFace *font = fonts_["anatomical"];
-         font->set_points(50.0);
-	 if (val == -1)
-         g.aux_data_->set(prevstr.str());
-	 else {
-         g.aux_data_->set(auxstr.str());
-         g.previous_ = val;
-	 }
-
-         g.aux_data_->bind(font);
-
-         g.aux_data_->draw(cur_x + w * 0.70 + 70, cur_y - 50, sx, sy);
-      }
-    }
-    if (data_.get_rep()) {
-      const float norm = (float)gr_ht / (g.max_ - g.min_);
-      // draw the plot
-      //1 millimeters = 0.0393700787 inches
-      const float dpi = gui_dots_per_inch_.get();
-      const float pixels_per_mm = dpi * 0.0393700787;
-      const float sweep_speed = gui_sweep_speed_.get() * pixels_per_mm; 
-      const float samp_rate = gui_sample_rate_.get();  // samples per second.
-      const float pix_per_sample = sweep_speed / samp_rate;
-      const float gwidth = w * .75;  // total width of the drawable area.
-      const float samples = gwidth / pix_per_sample;
-      float start_y = cur_y - gr_ht;
-      //glColor4f(0.0, 0.9, 0.1, 1.0);
-      glDisable(GL_TEXTURE_2D);
-
-      glBegin(GL_LINE_STRIP);
-      for (int i = 0; i < (int)samples; i++) {
-	int idx = i + cur_idx_;
-	if (idx > data_->nrrd->axis[1].size) {
-	  idx -= data_->nrrd->axis[1].size;
-	}
-	float *dat = (float*)data_->nrrd->data;
-	int dat_index = idx * data_->nrrd->axis[0].size + g.index_;
-	float val = (dat[dat_index] - g.min_) * norm;
-	glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, (start_y + val) * sy);
-
-	if (idx % (int)samp_rate == 0){
-	  float tick = gr_ht * .15;// * norm;
-	  if (gui_time_markers_mode_.get()) {
-	     //glColor4f(0.0, 0.1, 0.9, 1.0);
-	     glColor4f(1.0, 1.0, 1.0, 1.0);
-	     glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, 
-	   	     (start_y + val + tick) * sy);
-	     glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, 
-	   	     (start_y + val - tick) * sy);
-	     glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, 
-	   	     (start_y + val) * sy);
-	  }
-	  glColor4f(g.r_, g.g_, g.b_, 1.0);
-	}
-      }
-      glEnd();
-
-      if (data2_.get_rep() && data2_->nrrd->axis[1].size == data_->nrrd->axis[1].size && g.snd_ == 1) {
-        glBegin(GL_LINE_STRIP);
-        for (int i = 0; i < (int)samples; i++) {
-          int idx = i + cur_idx_;
-          if (idx > data2_->nrrd->axis[1].size) {
-            idx -= data2_->nrrd->axis[1].size;
-          }
-          float *dat = (float*)data2_->nrrd->data;
-          int dat_index = idx * data2_->nrrd->axis[0].size + g.index_;
-          float val = (dat[dat_index] - g.min_) * norm;
-          glVertex2f((cur_x + 15 + (i * pix_per_sample)) * sx, (start_y + val) * sy);
-
-          glColor4f(0.5, 0.5, 0.5, 0.7);
-        }
-        glEnd();
-      }
-
-      glEnable(GL_TEXTURE_2D);     
-    }
-
-    cur_y -= gr_ht + 20;
-  }
-*/
 
   CHECK_OPENGL_ERROR("end draw_plots")
 }
@@ -1345,6 +1295,8 @@ ExecutiveState::setup_gl_view()
   glDisable(GL_LIGHTING);
   glDisable(GL_CULL_FACE);
 
+  glShadeModel(GL_FLAT);
+
   //if (data_.get_rep()) {
    // float *dat = (float *)data_->nrrd->data;
     //glEnableClientState(GL_VERTEX_ARRAY);
@@ -1380,6 +1332,8 @@ ExecutiveState::setTimeLabel()
     timestr << setw(2) << min << ":";
     timestr << setw(2) << sec;
     gui->execute(id + " setTimeLabel {" + timestr.str() + "}");
+ 
+    time_text.replace(0, time_text.length(), timestr.str());
 }
 
 void 
@@ -1520,7 +1474,37 @@ ExecutiveState::createDecisionSpace()
     float *dat = (float *)data_->nrrd->data;
     glEnableClientState(GL_VERTEX_ARRAY);
     glVertexPointer(3, GL_FLOAT, 0, dat);
+
+    int size = data_->nrrd->axis[1].size;
+    color_dat = scinew GLfloat[size * 4];
+    int i = 0;
+
+    int inj = injury_offset_ * 100 * 4;
+    int falrm = alarm_offset_ * 100 * 4;
+    for (i = 0; i < size * 4; i+=4) {
+       if (i <= inj) {
+         color_dat[i] = 0.0;
+         color_dat[i+1] = 1.0;
+         color_dat[i+2] = 0.0;
+       } else if (i <= falrm) {
+         color_dat[i] = 0.0;
+         color_dat[i+1] = 0.0;
+         color_dat[i+2] = 1.0;
+       } else {
+         color_dat[i] = 1.0;
+         color_dat[i+1] = 0.0;
+         color_dat[i+2] = 0.0;
+       }
+       color_dat[i+3] = 1.0;
+    }
+
+    glEnableClientState(GL_COLOR_ARRAY);
+    glColorPointer(4, GL_FLOAT, 0, color_dat);
   }
+
+  injury_point = new tuple;
+  alarm_point = new tuple;
+  x_axis_point = new tuple;
 
   CONTROL_SPACE_LIST = glGenLists(1);
                                                                                 
