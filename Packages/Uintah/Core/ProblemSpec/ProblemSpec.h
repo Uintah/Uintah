@@ -109,6 +109,7 @@ WARNING
       ProblemSpecP get(const std::string& name, vector<double>& value);
 
       void getAttributes(std::map<std::string,std::string>& value);
+      bool getAttribute(const std::string& value, std::string& result);
 
       static const TypeDescription* getTypeDescription();
       

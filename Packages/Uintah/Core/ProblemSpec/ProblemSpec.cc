@@ -51,12 +51,6 @@ ProblemSpecP ProblemSpec::findBlock(const std::string& name) const
    DOM_Node found_node = findNode(name,d_node);
 
   if (found_node.isNull()) {
-#if 0
-    if (d_write) {
-       cerr << "Didn't find the tag . . " << name << endl;
-       cerr << "Setting to Null . . " << endl;
-    }
-#endif
     return 0;
   }
   else {
@@ -490,9 +484,7 @@ void ProblemSpec::requireOptional(const std::string& name, std::string& value)
 void ProblemSpec::getAttributes(map<string,string>& attributes)
 {
 
-  DOM_Node attr_node = d_node;
-  
-  DOM_NamedNodeMap attr = attr_node.getAttributes();
+  DOM_NamedNodeMap attr = d_node.getAttributes();
   int num_attr = attr.getLength();
 
   for (int i = 0; i<num_attr; i++) {
@@ -504,6 +496,20 @@ void ProblemSpec::getAttributes(map<string,string>& attributes)
 
 }
 
+bool ProblemSpec::getAttribute(const string& attribute, string& result)
+{
+
+  DOM_NamedNodeMap attr = d_node.getAttributes();
+  DOMString search_name(attribute.c_str());
+  DOM_Node n = attr.getNamedItem(search_name);
+  if(n == 0)
+     return false;
+  DOMString val = n.getNodeValue();
+  char* s = val.transcode();
+  result=s;
+  delete[] s;
+  return true;
+}
 
 const TypeDescription* ProblemSpec::getTypeDescription()
 {
