@@ -21,9 +21,9 @@ MeltingTempModel* MeltingTempModelFactory::create(ProblemSpecP& ps)
    if(!child->getAttribute("type", mat_type))
       throw ProblemSetupException("MPM::ConstitutiveModel:No type for melting temp model.");
    
-   if (mat_type == "constant")
+   if (mat_type == "constant_Tm")
       return(scinew ConstantMeltTemp(child));
-   else if (mat_type == "scg")
+   else if (mat_type == "scg_Tm")
       return(scinew SCGMeltTemp(child));
    else 
       throw ProblemSetupException("MPM::ConstitutiveModel:Unknown Melting Temp Model ("+mat_type+")");

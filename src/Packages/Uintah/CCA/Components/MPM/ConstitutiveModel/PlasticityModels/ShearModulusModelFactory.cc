@@ -26,15 +26,15 @@ ShearModulusModel* ShearModulusModelFactory::create(ProblemSpecP& ps)
    if(!child->getAttribute("type", mat_type))
       throw ProblemSetupException("MPM::ConstitutiveModel:No type for shear modulus model.");
    
-   if (mat_type == "constant")
+   if (mat_type == "constant_shear")
       return(scinew ConstantShear(child));
-   else if (mat_type == "mts")
+   else if (mat_type == "mts_shear")
       return(scinew MTSShear(child));
-   else if (mat_type == "scg")
+   else if (mat_type == "scg_shear")
       return(scinew SCGShear(child));
-   else if (mat_type == "ptw")
+   else if (mat_type == "ptw_shear")
       return(scinew PTWShear(child));
-   else if (mat_type == "np")
+   else if (mat_type == "np_shear")
       return(scinew NPShear(child));
    else 
       throw ProblemSetupException("MPM::ConstitutiveModel:Unknown Shear Modulus Model ("+mat_type+")");

@@ -20,7 +20,7 @@ namespace Uintah {
 
     double d_mu0;    // Material constant 
     double d_zeta;   // Material constant 
-    double d_slope_mu_p; // Material constant
+    double d_slope_mu_p_over_mu0; // Material constant
     double d_C;      // Material constant
     double d_m;      // atomic mass
 
