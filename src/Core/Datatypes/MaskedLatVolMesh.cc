@@ -46,6 +46,9 @@ PersistentTypeID MaskedLatVolMesh::type_id("MaskedLatVolMesh", "LatVolMesh", mak
 
 
 MaskedLatVolMesh::MaskedLatVolMesh():
+  LatVolMesh(),
+  synchronized_(0),
+  nodes_(),
   masked_cells_(), 
   masked_nodes_count_(0),
   masked_edges_count_(0),
@@ -59,6 +62,8 @@ MaskedLatVolMesh::MaskedLatVolMesh(unsigned int x,
 				   const Point &min,
 				   const Point &max) :
   LatVolMesh(x, y, z, min, max),
+  synchronized_(0),
+  nodes_(),
   masked_cells_(), 
   masked_nodes_count_(0),
   masked_edges_count_(0),
@@ -67,6 +72,8 @@ MaskedLatVolMesh::MaskedLatVolMesh(unsigned int x,
 
 MaskedLatVolMesh::MaskedLatVolMesh(const MaskedLatVolMesh &copy) :
   LatVolMesh(copy),
+  synchronized_(copy.synchronized_),
+  nodes_(copy.nodes_),
   masked_cells_(copy.masked_cells_), 
   masked_nodes_count_(copy.masked_nodes_count_),
   masked_edges_count_(copy.masked_edges_count_),
