@@ -18,6 +18,7 @@ SRCS     += $(SRCDIR)/MPMaterial.cc $(SRCDIR)/MPRead.cc \
 ifeq ($(BUILD_PARALLEL),yes)
 SRCS += $(SRCDIR)/Particles_sidl.cc $(SRCDIR)/PIDLObject.cc \
 	$(SRCDIR)/PIDLObjectPort.cc
+GENHDRS := $(SRCDIR)/Particles_sidl.h
 endif
 
 PSELIBS := PSECore/Dataflow SCICore/Persistent SCICore/Exceptions \
@@ -33,6 +34,10 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.4  2000/03/23 11:18:15  sparker
+# Makefile tweaks for sidl files
+# Added GENHDRS to program.mk
+#
 # Revision 1.3  2000/03/21 06:13:33  sparker
 # Added pattern rule for .sidl files
 # Compile component testprograms

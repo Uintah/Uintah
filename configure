@@ -3455,7 +3455,11 @@ test "$no_create" = yes || ${CONFIG_SHELL-/bin/sh} $CONFIG_STATUS || exit 1
 
 #
 # $Log$
-# Revision 1.48  2000/03/23 10:33:09  sparker
+# Revision 1.49  2000/03/23 11:18:12  sparker
+# Makefile tweaks for sidl files
+# Added GENHDRS to program.mk
+#
+# Revision 1.52  2000/03/23 10:33:10  sparker
 # Configure new exception facility (using libexc on SGI)
 #
 # Revision 1.51  2000/03/20 23:07:06  yarden
