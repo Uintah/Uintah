@@ -169,7 +169,7 @@ Place this in a file that you load, or directly in your .emacs file.
 
 <para>
 The SCIRun coding standard can be found <ulink
-url="../Guide/dev.codingstandards.html">online</ulink>.
+url=<!--%=doc.treeUrl("doc/Developer/Guide/dev.codingstandards.html") %-->>online</ulink>.
 </para>
 </answer>
 
@@ -283,12 +283,12 @@ What does XML have to do with SCIRun?
 Each module in BioPSE requires an XML format description of its
 functionality.  The information in the XML specification provides
 information to assist the <ulink
-url="../Developer/Guide/create_module.html"> module-maker</ulink> do
+url=<!--%=doc.treeUrl("doc/Developer/Guide/create_module.html") %-->> module-maker</ulink> do
 its job and help create the template for a module.  It also forms the
 basis of a Reference Manual of all modules.  And it even provides
 information to SCIRun about the number of type of ports that the
 module needs when it appears in a network diagram.  The document
-<citetitle><ulink url="../../Documentum/module-xml/index.html">XML
+<citetitle><ulink url=<!--%=doc.treeUrl("doc/Documentum/module-xml/index.html") %-->>XML
 Module Descriptions (Explicated)</ulink></citetitle> describes the
 format and content of the XML file in detail.
 </para>
