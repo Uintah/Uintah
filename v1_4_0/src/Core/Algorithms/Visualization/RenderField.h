@@ -306,15 +306,16 @@ RenderField<Fld>::render_materials(const Fld *sfld,
 	if (def_color) mat = def_mat_handle_;
 	else mat = color_handle_->lookup(val);
 	
-	ind_mat_t::iterator iter = mats_->find(*niter);
+	int nidx = *niter;
+	ind_mat_t::iterator iter = mats_->find(nidx);
 	if (iter != mats_->end()) {
 	  // we have stored a color before.
-	  MaterialHandle &existing = (*mats_)[*niter];
+	  MaterialHandle &existing = (*mats_)[nidx];
 	  //actually change the underlying object for all who point to it.
 	  *(existing.get_rep()) = *(mat.get_rep());
 	} else {
 	  mat.detach();
-	  (*mats_)[*niter] = mat;
+	  (*mats_)[nidx] = mat;
 	}
 	++niter;  
       }
@@ -323,15 +324,15 @@ RenderField<Fld>::render_materials(const Fld *sfld,
 
   case Field::EDGE:
     {
-      typename Fld::mesh_type::Edge::iterator citer;  
-      mesh->begin(citer);  
-      typename Fld::mesh_type::Edge::iterator citer_end;  
-      mesh->end(citer_end);
+      typename Fld::mesh_type::Edge::iterator eiter;  
+      mesh->begin(eiter);  
+      typename Fld::mesh_type::Edge::iterator eiter_end;  
+      mesh->end(eiter_end);
       
-      while (citer != citer_end) {
+      while (eiter != eiter_end) {
 	typename Fld::value_type tmp;
 	
-	if (!(sfld->value(tmp, *citer) && (to_double(tmp, val)))) { 
+	if (!(sfld->value(tmp, *eiter) && (to_double(tmp, val)))) { 
 	  def_color = true; 
 	}
 	
@@ -339,33 +340,34 @@ RenderField<Fld>::render_materials(const Fld *sfld,
 	if (color_handle_.get_rep() == 0) def_color = true;
 	if (def_color) mat = def_mat_handle_;
 	else mat = color_handle_->lookup(val);
-	
-	ind_mat_t::iterator iter = mats_->find(*citer);
+
+	int eidx = *eiter;
+	ind_mat_t::iterator iter = mats_->find(eidx);
 	if (iter != mats_->end()) {
 	  // we have stored a color before.
-	  MaterialHandle &existing = (*mats_)[*citer];
+	  MaterialHandle &existing = (*mats_)[eidx];
 	  //actually change the underlying object for all who point to it.
 	  *(existing.get_rep()) = *(mat.get_rep());
 	} else {
 	  mat.detach();
-	  (*mats_)[*citer] = mat;
+	  (*mats_)[eidx] = mat;
 	}
-	++citer;  
+	++eiter;  
       }
     }
     break;
 
   case Field::FACE:
     {
-      typename Fld::mesh_type::Face::iterator citer;  
-      mesh->begin(citer);  
-      typename Fld::mesh_type::Face::iterator citer_end;  
-      mesh->end(citer_end);
+      typename Fld::mesh_type::Face::iterator fiter;  
+      mesh->begin(fiter);  
+      typename Fld::mesh_type::Face::iterator fiter_end;  
+      mesh->end(fiter_end);
       
-      while (citer != citer_end) {
+      while (fiter != fiter_end) {
 	typename Fld::value_type tmp;
 	
-	if (!(sfld->value(tmp, *citer) && (to_double(tmp, val)))) { 
+	if (!(sfld->value(tmp, *fiter) && (to_double(tmp, val)))) { 
 	  def_color = true; 
 	}
 	
@@ -374,17 +376,18 @@ RenderField<Fld>::render_materials(const Fld *sfld,
 	if (def_color) mat = def_mat_handle_;
 	else mat = color_handle_->lookup(val);
 	
-	ind_mat_t::iterator iter = mats_->find(*citer);
+	int fidx = *fiter;
+	ind_mat_t::iterator iter = mats_->find(fidx);
 	if (iter != mats_->end()) {
 	  // we have stored a color before.
-	  MaterialHandle &existing = (*mats_)[*citer];
+	  MaterialHandle &existing = (*mats_)[fidx];
 	  //actually change the underlying object for all who point to it.
 	  *(existing.get_rep()) = *(mat.get_rep());
 	} else {
 	  mat.detach();
-	  (*mats_)[*citer] = mat;
+	  (*mats_)[fidx] = mat;
 	}
-	++citer;  
+	++fiter;  
       }
     }
     break;
@@ -408,15 +411,16 @@ RenderField<Fld>::render_materials(const Fld *sfld,
 	if (def_color) mat = def_mat_handle_;
 	else mat = color_handle_->lookup(val);
 	
-	ind_mat_t::iterator iter = mats_->find(*citer);
+	int cidx = *citer;
+	ind_mat_t::iterator iter = mats_->find(cidx);
 	if (iter != mats_->end()) {
 	  // we have stored a color before.
-	  MaterialHandle &existing = (*mats_)[*citer];
+	  MaterialHandle &existing = (*mats_)[cidx];
 	  //actually change the underlying object for all who point to it.
 	  *(existing.get_rep()) = *(mat.get_rep());
 	} else {
 	  mat.detach();
-	  (*mats_)[*citer] = mat;
+	  (*mats_)[cidx] = mat;
 	}
 	++citer;  
       }
