@@ -43,9 +43,16 @@ SRCS      := $(SRCDIR)/newmain.cc
 ifeq ($(LARGESOS),yes)
   PSELIBS := Core/CCA/Component
 else
+ifeq ($(HAVE_GLOBUS),yes)	
   PSELIBS := Core/Exceptions Core/CCA/Component/Comm\
         Core/CCA/Component/PIDL Core/globus_threads Core/CCA/spec \
 	SCIRun Core/CCA/Component/SSIDL Core/Thread
+else
+  PSELIBS := Core/Exceptions Core/CCA/Component/Comm\
+        Core/CCA/Component/PIDL Core/CCA/spec \
+	SCIRun Core/CCA/Component/SSIDL Core/Thread
+endif
+
 endif
 
 LIBS := $(GLOBUS_LIBRARY)
@@ -59,9 +66,17 @@ include $(SCIRUN_SCRIPTS)/program.mk
 ifeq ($(LARGESOS),yes)
   PSELIBS := Core/CCA/Component
 else
+
+ifeq ($(HAVE_GLOBUS),yes)
   PSELIBS := Core/Exceptions Core/CCA/Component/Comm\
         Core/CCA/Component/PIDL Core/globus_threads Core/CCA/spec \
 	SCIRun Core/CCA/Component/SSIDL Core/Thread 
+else
+  PSELIBS := Core/Exceptions Core/CCA/Component/Comm\
+        Core/CCA/Component/PIDL Core/CCA/spec \
+	SCIRun Core/CCA/Component/SSIDL Core/Thread 
+endif
+
 endif
 
 LIBS := $(MPI_LIBRARY) 
