@@ -1,5 +1,6 @@
 
 #include <Packages/rtrt/Core/Image.h>
+#include <sci_values.h>
 
 #include <GL/gl.h>
 
@@ -136,6 +137,33 @@ void Image::draw( int window_size, bool fullscreen )
   }
 }
 
+void Image::draw_depth( float max_depth ) {
+  int num_pixels = xres*yres;
+  float *pixel = &depth[0][0];
+#if 0
+  float max = *pixel;
+  for(int i = 1; i < num_pixels; i++) {
+    float val = *pixel;
+    if (val > max)
+      max = val;
+    pixel++;
+  }
+  cerr << "max = "<<max<<"\n";
+  float inv_md = 1.0f/max;
+#else
+  float inv_md = 1.0f/max_depth;
+#endif
+  pixel = &depth[0][0];
+  for(int i = 0; i < num_pixels; i++) {
+    //
+    *pixel = sqrtf((*pixel)*inv_md);    
+    pixel++;
+  }
+  glDrawBuffer(GL_BACK);
+  glRasterPos2i(0,0);
+  glDrawPixels(xres, yres, GL_LUMINANCE, GL_FLOAT, &depth[0][0]);
+}
+
 void Image::set(const Pixel& value)
 {
     for(int y=0;y<yres;y++){
@@ -143,6 +171,14 @@ void Image::set(const Pixel& value)
 	    image[y][x]=value;
 	}
     }
+}
+
+void Image::set_depth(int x, int y, double d) {
+  if (d <= MAXFLOAT/10)
+    depth[y][x] = d;
+  else
+    //    depth[y][x] = MAXFLOAT/10;
+    depth[y][x] = 0;
 }
 
 void Image::save(char* filename)

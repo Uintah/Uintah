@@ -131,6 +131,7 @@ public:
 
   void draw( int  window_size, // 0 == large, 1 == medium
 	     bool fullscreen ); 
+  void draw_depth( float max_depth = 100 ); 
 
   void set(const Pixel& value);
   inline Pixel& operator()(int x, int y) {
@@ -139,9 +140,7 @@ public:
   void set(int x, int y, const Color& value) {
     image[y][x].set(value);
   }
-  void set_depth(int x, int y, float d) {
-    depth[y][x] = d;
-  }
+  void set_depth(int x, int y, double d);
   void save(char* file);
   void save_ppm(char *filename);
 };
