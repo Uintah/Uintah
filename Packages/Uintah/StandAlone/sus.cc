@@ -535,13 +535,15 @@ main( int argc, char** argv )
 
 	ctl->run();
 
-	delete sim;
-	delete output;
-	delete bal;
-	delete ctl;
-	delete reader;
+
 	sch->removeReference();
 	delete sch;
+	delete bal;
+	delete sim;
+	delete solve;
+	delete output;
+	delete reader;
+	delete ctl;
     } catch (Exception& e) {
 
       cerrLock.lock();
