@@ -10,6 +10,7 @@
  *  Copyright (C) 1997 SCI Group
  */
 
+#include <Tester/RigorousTest.h>
 #include <Classlib/HashTable.h>
 #include <Classlib/NotFinished.h>
 #include <Classlib/Queue.h>

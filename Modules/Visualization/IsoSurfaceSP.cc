@@ -11,6 +11,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
+#include <Tester/RigorousTest.h>
 #include <Classlib/BitArray1.h>
 #include <Classlib/HashTable.h>
 #include <Classlib/NotFinished.h>

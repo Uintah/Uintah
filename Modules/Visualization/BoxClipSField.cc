@@ -11,6 +11,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
+#include <Tester/RigorousTest.h>
 #include <Classlib/NotFinished.h>
 #include <Classlib/Array3.h>
 #include <Dataflow/Module.h>

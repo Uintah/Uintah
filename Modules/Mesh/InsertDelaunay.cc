@@ -10,6 +10,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
+#include <Tester/RigorousTest.h>
 #include <Classlib/HashTable.h>
 #include <Classlib/NotFinished.h>
 #include <Dataflow/Module.h>

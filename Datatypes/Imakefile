@@ -73,7 +73,7 @@ SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS), $(SO_LIBS), $(SO_LDFLAGS))
 
 clean::
-	$(RM) $(GENSRCS) $(GENH)
+	$(RM) $(GENH) $(GENSRCS) 
 
 ScalarFieldRGchar.h: ScalarFieldRGTYPE.h
 	sed 's/TYPE/char/g' < ScalarFieldRGTYPE.h > ScalarFieldRGchar.h
@@ -116,3 +116,7 @@ ScalarFieldRG.h: ScalarFieldRGdouble.h
 
 ScalarFieldRG.cc: ScalarFieldRGdouble.cc
 	sed 's/ScalarFieldRGdouble/ScalarFieldRG/g' < ScalarFieldRGdouble.cc > ScalarFieldRG.cc
+
+ManhattanDist.o: ScalarFieldRGint.h ManhattanDist.cc
+
+Octree.o: ScalarFieldRG.h Octree.cc

@@ -149,6 +149,9 @@ AugmentSurf
 ContoursToSurf
 GenSurface
 SurfToGeom
+SurfGen
+SurfBust
+mySimpSurface
 
 Category: Treat
 TreatFEM

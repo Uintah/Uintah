@@ -3,7 +3,7 @@
 
 SUBDIRS = ASCI Contours CFD EEG FDM FEM Fields HP Image Iterators Matrix \
 	Mesh Readers \
-	Salmon Surface Treat Visualization Writers
+	Salmon Simplify Surface Treat Visualization Writers
 
 
 SCISubdirs($(SUBDIRS))

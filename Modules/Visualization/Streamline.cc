@@ -28,6 +28,7 @@ hook up user interface buttons
  *  Copyright (C) 1994 SCI Group
  */
 
+#include <Tester/RigorousTest.h>
 #include <Classlib/HashTable.h>
 #include <Classlib/NotFinished.h>
 #include <Math/Trig.h>

@@ -14,6 +14,7 @@
 #include <config.h>
 #undef SCI_ASSERTION_LEVEL_3
 #define SCI_ASSERTION_LEVEL_2
+#include <Tester/RigorousTest.h>
 #include <Classlib/BitArray1.h>
 #include <Classlib/HashTable.h>
 #include <Classlib/NotFinished.h>
