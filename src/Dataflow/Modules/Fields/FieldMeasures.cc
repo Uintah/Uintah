@@ -51,6 +51,7 @@ private:
   GuiInt xFlag_;
   GuiInt yFlag_;
   GuiInt zFlag_;
+  GuiInt idxFlag_;
   GuiInt sizeFlag_;
   GuiInt valenceFlag_;
   GuiInt lengthFlag_;
@@ -77,7 +78,8 @@ FieldMeasures::FieldMeasures(GuiContext* ctx)
   : Module("FieldMeasures", ctx, Filter, "Fields", "SCIRun"),
     nodeBased_(ctx->subVar("nodeBased")),
     xFlag_(ctx->subVar("xFlag")), yFlag_(ctx->subVar("yFlag")),
-    zFlag_(ctx->subVar("zFlag")), sizeFlag_(ctx->subVar("sizeFlag")),
+    zFlag_(ctx->subVar("zFlag")), idxFlag_(ctx->subVar("idxFlag")),
+    sizeFlag_(ctx->subVar("sizeFlag")),
     valenceFlag_(ctx->subVar("valenceFlag")), 
     lengthFlag_(ctx->subVar("lengthFlag")), 
     aspectRatioFlag_(ctx->subVar("aspectRatioFlag")),
@@ -98,10 +100,13 @@ FieldMeasures::measure_pointcloud()
   int x = xFlag_.get();
   int y = yFlag_.get();
   int z = zFlag_.get();
+  int idx = idxFlag_.get();
   int ncols = 0;
   if (x) ncols++;
   if (y) ncols++;
   if (z) ncols++;
+  if (idx) ncols++;
+
   PointCloudMesh::Node::size_type nnodes;
   mesh->size(nnodes);
   if (ncols<=0) {
@@ -124,6 +129,7 @@ FieldMeasures::measure_pointcloud()
     if (x) { (*dm)[row][col]=p.x(); col++; }
     if (y) { (*dm)[row][col]=p.y(); col++; }
     if (z) { (*dm)[row][col]=p.z(); col++; }
+    if (idx) { (*dm)[row][col]=row; col++; }
     ++ni;
     row++;
   }
@@ -142,6 +148,7 @@ FieldMeasures::measure_trisurf()
   int x = xFlag_.get();
   int y = yFlag_.get();
   int z = zFlag_.get();
+  int idx = idxFlag_.get();
   int length = lengthFlag_.get();
   int valence = valenceFlag_.get();
   if (valence) {
@@ -157,9 +164,11 @@ FieldMeasures::measure_trisurf()
   if (x) ncols++;
   if (y) ncols++;
   if (z) ncols++;
+  if (idx) ncols++;
   const string &type = nodeBased_.get();
   if (type == "node") {
     if (valence) ncols++;
+    if (idx) ncols++;
     TriSurfMesh::Node::size_type nnodes;
     mesh->size(nnodes);
     if (ncols<=0) {
@@ -181,6 +190,7 @@ FieldMeasures::measure_trisurf()
       if (x) { (*dm)[row][col]=p.x(); col++; }
       if (y) { (*dm)[row][col]=p.y(); col++; }
       if (z) { (*dm)[row][col]=p.z(); col++; }
+      if (idx) { (*dm)[row][col]=row; col++; }
       if (valence) { 
 	mesh->get_neighbors(nbrs,*ni);
 	(*dm)[row][col]=nbrs.size(); 
@@ -217,6 +227,7 @@ FieldMeasures::measure_trisurf()
       if (x) { (*dm)[row][col]=p.x(); col++; }
       if (y) { (*dm)[row][col]=p.y(); col++; }
       if (z) { (*dm)[row][col]=p.z(); col++; }
+      if (idx) { (*dm)[row][col]=row; col++; }
       if (length) { (*dm)[row][col]=(p1-p0).length(); col++; }
       ++ni;
       row++;
@@ -246,6 +257,7 @@ FieldMeasures::measure_trisurf()
       if (x) { (*dm)[row][col]=p.x(); col++; }
       if (y) { (*dm)[row][col]=p.y(); col++; }
       if (z) { (*dm)[row][col]=p.z(); col++; }
+      if (idx) { (*dm)[row][col]=row; col++; }
       if (elemSize) { (*dm)[row][col]=mesh->get_area(*ei); col++; }
       if (aspectRatio) { (*dm)[row][col]=0; col++; }  // FIXME: should be aspect_ratio
       ++ei;
@@ -269,6 +281,7 @@ FieldMeasures::measure_tetvol()
   int x = xFlag_.get();
   int y = yFlag_.get();
   int z = zFlag_.get();
+  int idx = idxFlag_.get();
   int length = lengthFlag_.get();
   int valence = valenceFlag_.get();
   int aspectRatio = aspectRatioFlag_.get();
@@ -281,6 +294,7 @@ FieldMeasures::measure_tetvol()
   if (x) ncols++;
   if (y) ncols++;
   if (z) ncols++;
+  if (idx) ncols++;
   const string &type = nodeBased_.get();
   if (type == "node") {
     if (valence) ncols++;
@@ -305,6 +319,7 @@ FieldMeasures::measure_tetvol()
       if (x) { (*dm)[row][col]=p.x(); col++; }
       if (y) { (*dm)[row][col]=p.y(); col++; }
       if (z) { (*dm)[row][col]=p.z(); col++; }
+      if (idx) { (*dm)[row][col]=row; col++; }
       if (valence) { 
 	mesh->get_neighbors(nbrs, *ni); 
 	(*dm)[row][col]=nbrs.size(); 
@@ -341,6 +356,7 @@ FieldMeasures::measure_tetvol()
       if (x) { (*dm)[row][col]=p.x(); col++; }
       if (y) { (*dm)[row][col]=p.y(); col++; }
       if (z) { (*dm)[row][col]=p.z(); col++; }
+      if (idx) { (*dm)[row][col]=row; col++; }
       if (length) { (*dm)[row][col]=(p1-p0).length(); col++; }
       ++ni;
       row++;
@@ -370,6 +386,7 @@ FieldMeasures::measure_tetvol()
       if (x) { (*dm)[row][col]=p.x(); col++; }
       if (y) { (*dm)[row][col]=p.y(); col++; }
       if (z) { (*dm)[row][col]=p.z(); col++; }
+      if (idx) { (*dm)[row][col]=row; col++; }
       if (elemSize) { (*dm)[row][col]=mesh->get_volume(*ei); col++; }
       if (aspectRatio) { (*dm)[row][col]=0; col++; }  // FIXME: should be aspect_ratio
       ++ei;
@@ -392,6 +409,7 @@ FieldMeasures::measure_quadtetvol()
   int x = xFlag_.get();
   int y = yFlag_.get();
   int z = zFlag_.get();
+  int idx = idxFlag_.get();
   int length = lengthFlag_.get();
   int valence = valenceFlag_.get();
   int aspectRatio = aspectRatioFlag_.get();
@@ -404,6 +422,7 @@ FieldMeasures::measure_quadtetvol()
   if (x) ncols++;
   if (y) ncols++;
   if (z) ncols++;
+  if (idx) ncols++;
   const string &type = nodeBased_.get();
   if (type == "node") {
     if (valence) ncols++;
@@ -428,6 +447,7 @@ FieldMeasures::measure_quadtetvol()
       if (x) { (*dm)[row][col]=p.x(); col++; }
       if (y) { (*dm)[row][col]=p.y(); col++; }
       if (z) { (*dm)[row][col]=p.z(); col++; }
+      if (idx) { (*dm)[row][col]=row; col++; }
       if (valence) { 
 	mesh->get_neighbors(nbrs, *ni); 
 	(*dm)[row][col]=nbrs.size(); 
@@ -464,6 +484,7 @@ FieldMeasures::measure_quadtetvol()
       if (x) { (*dm)[row][col]=p.x(); col++; }
       if (y) { (*dm)[row][col]=p.y(); col++; }
       if (z) { (*dm)[row][col]=p.z(); col++; }
+      if (idx) { (*dm)[row][col]=row; col++; }
       if (length) { (*dm)[row][col]=(p1-p0).length(); col++; }
       ++ni;
       row++;
@@ -493,6 +514,7 @@ FieldMeasures::measure_quadtetvol()
       if (x) { (*dm)[row][col]=p.x(); col++; }
       if (y) { (*dm)[row][col]=p.y(); col++; }
       if (z) { (*dm)[row][col]=p.z(); col++; }
+      if (idx) { (*dm)[row][col]=row; col++; }
       if (elemSize) { (*dm)[row][col]=mesh->get_volume(*ei); col++; }
       if (aspectRatio) { (*dm)[row][col]=0; col++; }  // FIXME: should be aspect_ratio
       ++ei;
@@ -513,6 +535,7 @@ FieldMeasures::measure_latvol()
   int x = xFlag_.get();
   int y = yFlag_.get();
   int z = zFlag_.get();
+  int idx = idxFlag_.get();
   int length = lengthFlag_.get();
   int valence = valenceFlag_.get();
   if (valence) {
@@ -533,6 +556,7 @@ FieldMeasures::measure_latvol()
   if (x) ncols++;
   if (y) ncols++;
   if (z) ncols++;
+  if (idx) ncols++;
   const string &type = nodeBased_.get();
   if (type == "node") {
     if (valence) ncols++;
@@ -556,6 +580,7 @@ FieldMeasures::measure_latvol()
       if (x) { (*dm)[row][col]=p.x(); col++; }
       if (y) { (*dm)[row][col]=p.y(); col++; }
       if (z) { (*dm)[row][col]=p.z(); col++; }
+      if (idx) { (*dm)[row][col]=row; col++; }
       if (valence) { (*dm)[row][col]=0; col++; }  // FIXME: should be num_nbrs
       ++ni;
       row++;
@@ -588,6 +613,7 @@ FieldMeasures::measure_latvol()
       if (x) { (*dm)[row][col]=p.x(); col++; }
       if (y) { (*dm)[row][col]=p.y(); col++; }
       if (z) { (*dm)[row][col]=p.z(); col++; }
+      if (idx) { (*dm)[row][col]=row; col++; }
       if (length) { (*dm)[row][col]=(p1-p0).length(); col++; }
       ++ni;
       row++;
@@ -617,6 +643,7 @@ FieldMeasures::measure_latvol()
       if (x) { (*dm)[row][col]=p.x(); col++; }
       if (y) { (*dm)[row][col]=p.y(); col++; }
       if (z) { (*dm)[row][col]=p.z(); col++; }
+      if (idx) { (*dm)[row][col]=row; col++; }
       if (elemSize) { (*dm)[row][col]=0; col++; } // FIXME: should be volume
       if (aspectRatio) { (*dm)[row][col]=0; col++; }  // FIXME: should be aspect_ratio
       ++ei;
