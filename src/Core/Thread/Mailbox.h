@@ -153,6 +153,9 @@ Mailbox<Item>::Mailbox(const char* name, int size)
 template<class Item>
 Mailbox<Item>::~Mailbox()
 {
+  // release all waiting threads
+  empty_.conditionBroadcast();
+  full_.conditionBroadcast();
 }
 
 template<class Item>
