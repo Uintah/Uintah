@@ -637,14 +637,21 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    set sd [$w.sd childsite]
 	    set listbox $sd.listbox
 	    $listbox.list delete 0 end
-	}
 	
-	global tree
-	$tree delete root
+	    global tree
+	    $tree delete root
+	}
+
+	global $this-filename
+	global $this-datasets
+	global $this-dumpname
+	global $this-animate
 
 	set $this-filename ""
 	set $this-datasets ""
 	set $this-dumpname ""
+
+	set $this-animate 0
     }
 
     method build_tree { filename } {
