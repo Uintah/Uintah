@@ -63,10 +63,16 @@ struct Node : public Datatype {
     Node(const Node&);
     virtual ~Node();
     virtual void io(Piostream&);
+    virtual Node* clone();
     static PersistentTypeID type_id;
     void* operator new(size_t);
     void operator delete(void*, size_t);
 };
+
+struct NodeVersion1 {
+    Point p;
+};
+void Pio(Piostream& stream, NodeVersion1& node);
 
 struct Face {
     int n[3];

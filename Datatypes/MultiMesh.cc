@@ -58,7 +58,7 @@ MultiMesh* MultiMesh::clone()
 
 void MultiMesh::io(Piostream& stream)
 {
-    int version=stream.begin_class("MultiMesh", MultiMesh_VERSION);
+    /*int version=*/stream.begin_class("MultiMesh", MultiMesh_VERSION);
     Pio(stream, meshes);
     stream.end_class();
 }
