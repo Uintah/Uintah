@@ -22,7 +22,7 @@
 #define SCI_LinkerNeedsCppFlags
 #endif
 #define SCI_LinkerLib SCI_GNULinkerLib
-#define SCI_ShLib g++ -shared
+#define SCI_ShLib SCI_GNULinker -shared
 #define SCI_CCLibs
 
 #define SCI_TemplateLib
