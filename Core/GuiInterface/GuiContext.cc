@@ -39,7 +39,7 @@ using namespace SCIRun;
 GuiContext::GuiContext(GuiInterface* gui, const std::string& name, bool save)
   : gui(gui), name(name), cached(false), save(save), usedatadir(false)
 {
-  gui->execute("initVar \""+name+"\""); 
+  if (save) { gui->execute("initVar \""+name+"\""); }
 }
 
 GuiContext* GuiContext::subVar(const std::string& subname, bool saveChild)
@@ -96,7 +96,7 @@ bool GuiContext::getSub(const std::string& subname, std::string& value)
 void GuiContext::set(const std::string& value)
 {
   string tmp;
-  if (get(tmp) && tmp == value) { return; }
+  if (save && get(tmp) && tmp == value) { return; }
   cached=false;
   gui->set(name, value);
 }
@@ -138,7 +138,7 @@ void GuiContext::set(double value)
   ostringstream val;
   val << setprecision(17) << value;
   string tmp;
-  if (get(tmp) && tmp == val.str()) { return; }
+  if (save && get(tmp) && tmp == val.str()) { return; }
   cached=false;
   gui->set(name, val.str());
 }
@@ -182,7 +182,7 @@ void GuiContext::set(int value)
   ostringstream val;
   val << value;
   string tmp;
-  if (get(tmp) && tmp == val.str()) { return; }
+  if (save && get(tmp) && tmp == val.str()) { return; }
   cached=false;
   gui->set(name, val.str());
 }
