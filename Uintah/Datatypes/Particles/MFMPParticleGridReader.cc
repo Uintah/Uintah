@@ -169,7 +169,7 @@ int MFMPParticleGridReader::readfile()
   }
   
   vector<MPRead *> readers;
-  for( int i = 0; i < fnames.size(); i++){
+  for( int i = 0; i < (int)fnames.size(); i++){
     readers.insert(readers.end(), scinew MPRead( fnames[i].c_str() ));
   }
   
@@ -177,14 +177,14 @@ int MFMPParticleGridReader::readfile()
   clString filetype;
   clString comments;
   
-  for(int i = 0; i < readers.size(); i++) {
+  for(int i = 0; i < (int)readers.size(); i++) {
     readers[i]->ReadHeader( title, filetype, comments);
   }
   
   clString blocktype;
   int returnval = 1;
   while ( returnval ) {
-    for(int i = 0; i < readers.size(); i++) {
+    for(int i = 0; i < (int)readers.size(); i++) {
       returnval = readers[i]->ReadBlock( blocktype );
     }
     
@@ -214,7 +214,7 @@ void MFMPParticleGridReader::readGrid( vector<MPRead*>& readers)
   double xmin,ymin,zmin, xmax,ymax,zmax;
   xmin = ymin = zmin = 1.0e6;
   xmax = ymax = zmax = -1.0e6;
-  for(int i = 0; i < readers.size(); i++) {
+  for(int i = 0; i < (int)readers.size(); i++) {
     readers[i]->GetGridInfo( name , type, sizex, sizey, sizez,
                              scalars, vectors);
     readers[i]->GetGridPoints( ox, oy, oz, dx, dy, dz );
@@ -233,9 +233,9 @@ void MFMPParticleGridReader::readGrid( vector<MPRead*>& readers)
 
   clString svars = "";
   clString vvars = "";
-  for(int i = 0; i < scalars.size(); i++)
+  for(int i = 0; i < (int)scalars.size(); i++)
     svars = svars+scalars[i]+" ";
-  for(int i = 0; i < vectors.size(); i++)
+  for(int i = 0; i < (int)vectors.size(); i++)
     vvars = vvars+vectors[i]+" ";
 
   // create the single scalar field
@@ -247,11 +247,11 @@ void MFMPParticleGridReader::readGrid( vector<MPRead*>& readers)
   ScalarFieldHandle sfh;
   int si, sj, sk;
   int i,j,k;
-  for(int ss = 0; ss< scalars.size(); ss++){
+  for(int ss = 0; ss< (int)scalars.size(); ss++){
     ScalarFieldRG *sfrg = scinew ScalarFieldRG();
     sfrg->set_bounds( minPt, maxPt );
     sfrg->resize( sizex, sizey, sizez );
-    for(int rs = 0; rs < readers.size(); rs++){
+    for(int rs = 0; rs < (int)readers.size(); rs++){
       readers[rs]->GetScalarField( sfh );
       ScalarFieldRG* sf = sfh->getRG();
       Point minp;
@@ -274,12 +274,12 @@ void MFMPParticleGridReader::readGrid( vector<MPRead*>& readers)
   }
 
   VectorFieldHandle vfh;
-  for(int vs = 0; vs< vectors.size(); vs++){
+  for(int vs = 0; vs< (int)vectors.size(); vs++){
     VectorFieldRG *vfrg = scinew VectorFieldRG();
     vfrg->resize( sizex, sizey, sizez );
     vfrg->set_bounds( minPt, maxPt );
 
-    for(int rs = 0; rs < readers.size(); rs++){
+    for(int rs = 0; rs < (int)readers.size(); rs++){
       readers[rs]->GetVectorField( vfh );
       VectorFieldRG* vf = vfh->getRG();
       Point minp;
@@ -314,18 +314,18 @@ void MFMPParticleGridReader::readParticles(vector<MPRead*>& readers)
   Array1<int> nps;
   int total = 0, nParticles;
   cfdlibTimeStep* ts = scinew cfdlibTimeStep();
-  for(i = 0; i < readers.size(); i++) {
+  for(i = 0; i < (int)readers.size(); i++) {
     readers[i]->GetParticleInfo(name, nParticles, sVars, vVars);
     nps.add( nParticles );
     total += nParticles;
   }
   MPVizParticleSet *ps = scinew MPVizParticleSet(name);
   
-  for( i = 0; i < sVars.size(); i++){
+  for( i = 0; i < (int)sVars.size(); i++){
     ps->addScalarVar( sVars[i] );
   }
   ps->addVectorVar( "XYZ" );
-  for (i = 0; i< vVars.size(); i++){
+  for (i = 0; i< (int)vVars.size(); i++){
     ps->addVectorVar( vVars[i] );
   }
   
@@ -335,16 +335,16 @@ void MFMPParticleGridReader::readParticles(vector<MPRead*>& readers)
   Point p;
   Array1< double > scalars;
   Array1< Vector > vectors;
-  for( k = 0; k < readers.size(); k++){
+  for( k = 0; k < (int)readers.size(); k++){
     nParticles = nps[k];
     MPRead *reader = readers[k];
     for( i = 0; i < nParticles; i++ ){
       reader->GetParticle(p, scalars, vectors);
       ts->vectors[0].add( p.vector() );
-      for(j = 0; j < scalars.size(); j++ ){
+      for(j = 0; j < (int)scalars.size(); j++ ){
 	ts->scalars[j].add( scalars[j] );
       }
-      for( j = 0; j < vectors.size(); j++ ){
+      for( j = 0; j < (int)vectors.size(); j++ ){
 	ts->vectors[j+1].add( vectors[j] );
       }
     }
