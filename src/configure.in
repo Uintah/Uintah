@@ -897,9 +897,9 @@ fi
 case $host in 
   *-irix*)
     ac_objext=o
-    MIPSPRO=/opt/MIPSpro/bin
     USRBIN=/usr/bin
-    AC_PATH_PROG(CC,cc,,$MIPSPRO,)
+#    MIPSPRO=/opt/MIPSpro/bin
+#    AC_PATH_PROG(CC,cc,,$MIPSPRO,)
     if test -z "$CC"; then
       AC_PATH_PROG(CC,cc,,$USRBIN,)
       if test -z "$CC"; then
@@ -908,7 +908,7 @@ case $host in
     fi
     SCI_CHECK_VERSION($CC,-version,7.3.1.1,,
       echo configure: error: wrong $CC version.; exit)
-    AC_PATH_PROG(F77,f77,,$MIPSPRO,)
+#    AC_PATH_PROG(F77,f77,,$MIPSPRO,)
     if test -z "$F77"; then
       AC_PATH_PROG(F77,f77,,$USRBIN,)
       if test -z "$F77"; then
@@ -917,7 +917,7 @@ case $host in
     fi
     SCI_CHECK_VERSION($F77,-version,7.3.1.1,,
       echo configure: error: wrong $CC version.; exit)
-    AC_PATH_PROG(CXX,CC,,$MIPSPRO,)
+#    AC_PATH_PROG(CXX,CC,,$MIPSPRO,)
     if test -z "$CXX"; then
       AC_PATH_PROG(CXX,CC,,$USRBIN,)
       if test -z "$CXX"; then
@@ -926,7 +926,7 @@ case $host in
     fi
     SCI_CHECK_VERSION($CXX,-version,7.3.1.1,,
       echo configure: error: wrong $CXX version.; exit)
-    AC_PATH_PROG(AS,as,,$MIPSPRO,)
+#    AC_PATH_PROG(AS,as,,$MIPSPRO,)
     if test -z "$AS"; then
       AC_PATH_PROG(AS,as,,$USRBIN,)
       if test -z "$AS"; then
@@ -935,7 +935,7 @@ case $host in
     fi
     SCI_CHECK_VERSION($AS,-version,7.3.1.1,,
       echo configure: error: wrong $CC version.; exit)
-    AC_PATH_PROG(LD,ld,,$MIPSPRO,)
+#    AC_PATH_PROG(LD,ld,,$MIPSPRO,)
     if test -z "$LD"; then
       AC_PATH_PROG(LD,ld,,$USRBIN,)
       if test -z "$LD"; then
