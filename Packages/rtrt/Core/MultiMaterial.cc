@@ -34,7 +34,7 @@ MultiMaterial::io(SCIRun::Piostream &str)
     } else {
       m = material_stack_[i];
     }
-    Pio(str, *m);
+    SCIRun::Pio(str, *m);
   }
   str.end_class();
 }
