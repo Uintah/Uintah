@@ -1,0 +1,14 @@
+performanceTest.ups - 1 processor
+
+3.48523		    Initial - 12/10/2003
+2.81833		    -Ofast
+
+
+
+../src/configure '--enable-64bit' '--enable-package=Uintah'
+'--enable-optimize=-Ofast -G0 -OPT:div_split=OFF -OPT:Olimit=0'
+'--disable-sci-malloc' '--enable-assertion-level=0'
+'--with-hypre=/usr/sci/projects/Uintah/Thirdparty/1.0.0/IRIX64/MIPSpro-7.3.1.3m-64bit/hypre-1.7.7b'
+
+performanceTest.ups with SecondOrder instead of SecondOrderCE
+1.0309		    Initial - Ofast
