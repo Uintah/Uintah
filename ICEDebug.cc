@@ -10,6 +10,7 @@
 #include <Packages/Uintah/Core/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/OS/Dir.h> // for MKDIR
 #include <iostream>
 #include <fstream>
 #include <sys/stat.h>
@@ -629,10 +630,10 @@ void ICE::createDirs( const Patch* patch,
   // make the directories
   // code = 0 if successful
   path = udaDir + "/" + dirName;
-  mkdir( path.c_str(), 0777 );
+  MKDIR( path.c_str(), 0777 );
   
   path = udaDir + "/" + dirName + "/" + DW.str();
-  mkdir( path.c_str(), 0777 );
+  MKDIR( path.c_str(), 0777 );
   
   // write out the simulation time
   string filename = path + "/simTime";
@@ -644,16 +645,16 @@ void ICE::createDirs( const Patch* patch,
   
   // finish making the directories
   path = udaDir + "/" + dirName + "/" + DW.str() + "/" + levelIndex.str();
-  mkdir( path.c_str(), 0777 );
+  MKDIR( path.c_str(), 0777 );
   
   path = udaDir + "/" + dirName + "/" + DW.str() + "/" + levelIndex.str()
          + "/" + patchDir;
-  mkdir( path.c_str(), 0777 );
+  MKDIR( path.c_str(), 0777 );
   
   if (matDir != "") { 
     path = udaDir + "/" + dirName + "/" + DW.str() + "/" + levelIndex.str() 
             + "/" + patchDir + "/" + matDir ;
-    mkdir( path.c_str(), 0777 );
+    MKDIR( path.c_str(), 0777 );
   }
 }
 /*_______________________________________________________________________
