@@ -57,6 +57,7 @@ SRCS     += \
 	$(SRCDIR)/RGBPixelToVector.cc\
 	$(SRCDIR)/Image2DToImage3D.cc\
 	$(SRCDIR)/Image3DToImage2D.cc\
+	$(SRCDIR)/NrrdToImage.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Packages/Insight/Core/Datatypes \
