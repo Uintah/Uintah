@@ -2475,9 +2475,14 @@ class BioImageApp {
         #-----------------------------------------------------------
         # Transfer Function Widgets
         #-----------------------------------------------------------
-        button $page.paint -text "Add Paint Layer" \
+	frame $page.buttons -bd 0
+        button $page.buttons.paint -text "Add Paint Layer" \
            -command "$mods(EditColorMap2D)-c addpaint"
-        pack $page.paint -side top -expand 0 -padx 10 -pady 3
+        button $page.buttons.undo -text "Undo Paint Stroke" \
+           -command "$mods(ViewSlices)-c undo"
+	pack $page.buttons.paint $page.buttons.undo -side left \
+           -fill x -padx 10 -pady 3 -expand 1
+        pack $page.buttons -side top -expand 0 -padx 0 -fill x -pady 3
 
         $mods(EditColorMap2D) label_widget_columns $page.widgets_label
         pack $page.widgets_label -side top -fill x -padx 2
