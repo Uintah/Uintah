@@ -1,5 +1,5 @@
 #!/bin/tcsh -f
 
 itclsh3.0 << END
-auto_mkindex .
+auto_mkindex $1
 END
