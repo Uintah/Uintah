@@ -23,12 +23,12 @@ static DebugStream dbg("NullScheduler", false);
 
 NullScheduler::NullScheduler(const ProcessorGroup* myworld,
 			     Output* oport)
-   : SchedulerCommon(myworld, oport)
+  : SchedulerCommon(myworld, oport)
 {
-   d_generation = 0;
-   delt = VarLabel::create("delT",
-    ReductionVariable<double, Reductions::Min<double> >::getTypeDescription());
-   firstTime=true;
+  d_generation = 0;
+  delt = VarLabel::create("delT",
+			  ReductionVariable<double, Reductions::Min<double> >::getTypeDescription());
+  firstTime=true;
 }
 
 NullScheduler::~NullScheduler()
@@ -58,7 +58,7 @@ NullScheduler::advanceDataWarehouse(const GridP& grid)
 }
 
 void
-NullScheduler::compile(const ProcessorGroup* pg, bool init_timestep)
+NullScheduler::compile( const ProcessorGroup * pg, bool scrub_new, bool scrub_old )
 {
   if( dts_ )
     delete dts_;
@@ -86,7 +86,7 @@ NullScheduler::compile(const ProcessorGroup* pg, bool init_timestep)
   dts_->assignMessageTags(graph.getTasks());
   int me=pg->myrank();
   dts_->computeLocalTasks(me);
-  dts_->createScrublists(init_timestep);
+  dts_->createScrublists(scrub_new, scrub_old);
 }
 
 void

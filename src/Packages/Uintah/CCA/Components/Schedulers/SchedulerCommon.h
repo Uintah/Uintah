@@ -60,7 +60,7 @@ WARNING
     // Insert Documentation Here:
     virtual void initialize();
        
-    virtual void compile( const ProcessorGroup * pc, bool init_timestep ) = 0;
+    virtual void compile( const ProcessorGroup * pc, bool scrub_new, bool scrub_old=true ) = 0;
 
     //////////
     // Insert Documentation Here:

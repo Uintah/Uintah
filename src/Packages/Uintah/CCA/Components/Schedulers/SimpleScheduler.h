@@ -51,7 +51,7 @@ WARNING
       
     //////////
     // Insert Documentation Here:
-    virtual void compile( const ProcessorGroup * pc, bool init_timestep );
+    virtual void compile( const ProcessorGroup * pc, bool scrub_new, bool scrub_old = true );
     virtual void execute( const ProcessorGroup * pc );
     virtual SchedulerP createSubScheduler();
       
