@@ -215,77 +215,6 @@ set $m22-faces-on {1}
 # global array indexed by module name to keep track of modules
 global mods
 
-# set mods(NrrdReader1) $m0
-# set mods(DicomToNrrd1) $m97
-# set mods(AnalyzeToNrrd1) $m96
-# set mods(ChooseNrrd1) $m45
-# set mods(NrrdInfo1) $m62
-# 
-# ### Original Data Stuff
-# set mods(UnuSlice1) $m1
-# set mods(UnuProject1) $m57
-# set mods(ShowField-Orig) $m8
-# set mods(ChooseNrrd-ToProcess) $m113
-# 
-# ### Registered
-# set mods(ShowField-Reg) $m9
-# set mods(UnuSlice2) $m5
-# set mods(UnuJoin) $m47
-# set mods(TendEpireg) $m2
-# set mods(ChooseNrrd2) $m49
-# set mods(ChooseNrrd-ToReg) $m105
-# set mods(ChooseNrrd-ToSmooth) $m104
-# 
-# set mods(NrrdReader-Gradient) $m50
-# 
-# set mods(NrrdReader-BMatrix) $m63
-# 
-# ### T2 Reference Image
-# set mods(NrrdReader-T2) $m48
-# set mods(DicomToNrrd-T2) $m99
-# set mods(AnalyzeToNrrd-T2) $m100
-# set mods(ChooseNrrd-T2) $m98
-# 
-# 
-# set mods(GenStandardColorMaps1)  $m58
-# set mods(RescaleColorMap2) $m61
-# 
-# ### Build DT
-# set mods(TendEstim) $m3
-# set mods(UnuResample-XY) $m103
-# set mods(UnuResample-Z) $m106
-# set mods(ChooseNrrd-DT) $m114
-# 
-# ### Planes
-# set mods(ChooseField-ColorPlanes) $m27
-# set mods(GenStandardColorMaps-ColorPlanes) $m29
-# set mods(RescaleColorMap-ColorPlanes) $m30
-# 
-# ### Isosurface
-# set mods(ShowField-Isosurface) $m13
-# set mods(ChooseField-Isoval) $m23
-# set mods(ChooseField-Isosurface) $m24
-# set mods(GenStandardColorMaps-Isosurface) $m26
-# set mods(RescaleColorMap-Isosurface) $m25
-# set mods(Isosurface) $m17
-# 
-# # Planes
-# set mods(SamplePlane-X) $m67
-# set mods(SamplePlane-Y) $m68
-# set mods(SamplePlane-Z) $m69
-# 
-# set mods(QuadToTri-X) $m73
-# set mods(QuadToTri-Y) $m74
-# set mods(QuadToTri-Z) $m75
-# 
-# set mods(ChooseField-X) $m33
-# set mods(ChooseField-Y) $m82
-# set mods(ChooseField-Z) $m83
-# 
-# set mods(ShowField-X) $m31
-# set mods(ShowField-Y) $m86
-# set mods(ShowField-Z) $m87
-# 
 
 ### Viewer
 set mods(Viewer) $m7
@@ -307,68 +236,6 @@ set mods(GenStandardColorMaps) $m8
 
 global data_mode
 set data_mode "DWI"
-
-### planes variables that must be globals (all checkbuttons)
-global show_planes
-set show_planes 1
-global show_plane_x
-set show_plane_x 1
-global show_plane_y
-set show_plane_y 1
-global show_plane_z
-set show_plane_z 1
-global plane_x
-set plane_x 0
-global plane_y
-set plane_y 0
-global plane_z
-set plane_z 0
-
-### registration globals
-global ref_image
-set ref_image 1
-global ref_image_state
-set ref_image_state 0
-
-global clip_to_isosurface
-set clip_to_isosurface 0
-
-global clip_to_isosurface_color
-set clip_to_isosurface_color ""
-global clip_to_isosurface_color-r
-set clip_to_isosurface_color-r 0.5
-global clip_to_isosurface_color-g
-set clip_to_isosurface_color-g 0.5
-global clip_to_isosurface_color-b
-set clip_to_isosurface_color-b 0.5
-
-global bmatrix
-set bmatrix "compute"
-
-### DT Globals
-global xy_radius
-set xy_radius 1.0
-global z_radius 
-set z_radius 1.0
-
-### isosurface variables
-global clip_by_planes
-set clip_by_planes 0
-
-global do_registration 
-set do_registration 1
-
-global do_smoothing
-set do_smoothing 0
-
-global isosurface_color
-set isosurface_color ""
-global isosurface_color-r
-set isosurface_color-r 0.5
-global isosurface_color-g
-set isosurface_color-g 0.5
-global isosurface_color-b
-set isosurface_color-b 0.5
 
 
 #######################################################
@@ -431,43 +298,18 @@ class ForwardFEMApp {
         set vis_tab1 ""
         set vis_tab2 ""
      
-        set reg_tab1 ""
-        set reg_tab2 ""
-
-        set dt_tab1 ""
-        set dt_tab2 ""
-
 	set volumes 0
         set size_x 0
         set size_y 0
         set size_z 0
 
-        set ref_image1 ""
-        set ref_image2 ""
-
-        set reg_thresh1 ""
-        set reg_thresh2 ""
-
         set error_module ""
-
-        set variance_tab1 ""
-        set variance_tab2 ""
-
-        set planes_tab1 ""
-        set planes_tab2 ""
 
         set isosurface_tab1 ""
         set isosurface_tab2 ""
 
         set streamlines_tab1 ""
         set streamlines_tab2 ""
-
-        set nrrd_tab1 ""
-        set nrrd_tab2 ""
-        set dicom_tab1 ""
-        set dicom_tab2 ""
-        set analyze_tab1 ""
-        set analyze_tab2 ""
 
 	set data_next_button1 ""
 	set data_next_button2 ""
@@ -479,13 +321,6 @@ class ForwardFEMApp {
 	set execute_color "#5377b5"
         set feedback_color "dodgerblue4"
         set error_color "red4"
-
-        # planes
-        set last_x 2
-        set last_y 4
-        set last_z 6
-        set plane_inc "-0.1"
-        set plane_type "Principle Eigenvector"
 
         # colormaps
         set colormap_width 150
@@ -1174,69 +1009,6 @@ class ForwardFEMApp {
 	# the module variables
 	global data_mode
 	puts $fileid "set data_mode $data_mode"
-	
-	### planes variables that must be globals (all checkbuttons)
-	global show_planes
-	puts $fileid "set show_planes \{$show_planes\}"
-	global show_plane_x
-	puts $fileid "set show_plane_x $show_plane_x"
-	global show_plane_y
-	puts $fileid "set show_plane_y $show_plane_y"
-	global show_plane_z
-	puts $fileid "set show_plane_z $show_plane_z"
-	global plane_x
-	puts $fileid "set plane_x $plane_x"
-	global plane_y
-	puts $fileid "set plane_y $plane_y"
-	global plane_z
-	puts $fileid "set plane_z $plane_z"
-	
-	### registration globals
-	global ref_image
-	puts $fileid "set ref_image $ref_image"
-	global ref_image_state
-	puts $fileid "set ref_image_state $ref_image_state"
-	
-	global clip_to_isosurface
-	puts $fileid "set clip_to_isosurface $clip_to_isosurface"
-	
-	global clip_to_isosurface_color
-	puts $fileid "set clip_to_isosurface_color $clip_to_isosurface_color"
-	global clip_to_isosurface_color-r
-	puts $fileid "set clip_to_isosurface_color-r $clip_to_isosurface_color-r"
-	global clip_to_isosurface_color-g
-	puts $fileid "set clip_to_isosurface_color-g $clip_to_isosurface_color-g"
-	global clip_to_isosurface_color-b
-	puts $fileid "set clip_to_isosurface_color-b $clip_to_isosurface_color-b"
-	
-	global bmatrix
-	puts $fileid "set bmatrix $bmatrix"
-	
-	### DT Globals
-	global xy_radius
-	puts $fileid "set xy_radius $xy_radius"
-	global z_radius 
-	puts $fileid "set z_radius $z_radius"
-	
-	### isosurface variables
-	global clip_by_planes
-	puts $fileid "set clip_by_planes $clip_by_planes"
-	
-	global do_registration 
-	puts $fileid "set do_registration $do_registration"
-	
-	global do_smoothing
-	puts $fileid "set do_smoothing $do_smoothing"
-	
-	global isosurface_color
-	puts $fileid "set isosurface_color $isosurface_color"
-	global isosurface_color-r
-	puts $fileid "set isosurface_color-r $isosurface_color-r"
-	global isosurface_color-g
-	puts $fileid "set isosurface_color-g $isosurface_color-g"
-	global isosurface_color-b
-	puts $fileid "set isosurface_color-b $isosurface_color-b"
-	
     }
     
     
@@ -1335,7 +1107,6 @@ class ForwardFEMApp {
     method update_progress { which state } {
 	global mods
 	global $mods(ShowField-Isosurface)-faces-on
-	global show_plane_x show_plane_y show_plane_z
 	
 	return
 	
@@ -1382,42 +1153,7 @@ class ForwardFEMApp {
 		set size_x [expr [set $mods(NrrdInfo1)-size1] - 1]
 		set size_y [expr [set $mods(NrrdInfo1)-size2] - 1]
 		set size_z [expr [set $mods(NrrdInfo1)-size3] - 1]
-		
-		configure_sample_planes
-		
-		if {$data_mode == "DWI"} {
-		    # new data has been loaded, build/configure
-		    # the variance slider
-		    fill_in_data_pages
-		    
-		    # reconfigure registration reference image slider
-		    $ref_image1.s.ref configure -from 1 -to $volumes
-		    $ref_image2.s.ref configure -from 1 -to $volumes
-		} else {
-		    set data_completed 1
-		    set reg_completed 1
-		    set dt_completed 1
-		    activate_vis
-		}
 	    }
-        } elseif {$which == $mods(SamplePlane-X) && $state == "NeedData" && $show_plane_x == 1} {
-	    change_indicator_labels "Visualization..."
-	    change_indicate_val 1
-	} elseif {$which == $mods(ShowField-X) && $state == "Completed" && $show_plane_x == 1} {
-	    if {$dt_completed} {
-		activate_vis
-	    }
-	    change_indicate_val 0
-	} elseif {$which == $mods(SamplePlane-Y) && $state == "NeedData" && $show_plane_y == 1} {
-	    change_indicator_labels "Visualization..."
-	    change_indicate_val 1
-	} elseif {$which == $mods(ShowField-Y) && $state == "Completed" && $show_plane_y == 1} {
-	    change_indicate_val 0
-	} elseif {$which == $mods(SamplePlane-Z) && $state == "NeedData" && $show_plane_z == 1} {
-	    change_indicator_labels "Visualization..."
-	    change_indicate_val 1
-	} elseif {$which == $mods(ShowField-Z) && $state == "Completed" && $show_plane_z == 1} {
-	    change_indicate_val 0
 	} elseif {$which == $mods(Isosurface) && $state == "NeedData" && [set $mods(ShowField-Isosurface)-faces-on] == 1} {
 	    change_indicator_labels "Visualization..."
 	    change_indicate_val 1
@@ -1427,57 +1163,6 @@ class ForwardFEMApp {
     }
 
     
-    method configure_sample_planes {} {
-	global mods
-	global $mods(SamplePlane-X)-sizex
-	global $mods(SamplePlane-X)-sizey
-	
-	global $mods(SamplePlane-Y)-sizex
-	global $mods(SamplePlane-Y)-sizey
-	
-	global $mods(SamplePlane-Z)-sizex
-	global $mods(SamplePlane-Z)-sizey
-	
-	# X Axis
-	set $mods(SamplePlane-X)-sizex $size_z
-	set $mods(SamplePlane-X)-sizey $size_y
-	
-	# Y Axis
-	set $mods(SamplePlane-Y)-sizex $size_x
-	set $mods(SamplePlane-Y)-sizey $size_z
-	
-	# Z Axis
-	set $mods(SamplePlane-Z)-sizex $size_x
-	set $mods(SamplePlane-Z)-sizey $size_y
-	
-	global plane_x plane_y plane_z
-	set plane_x [expr $size_x/2]
-	set plane_y [expr $size_y/2]
-	set plane_z [expr $size_z/2]
-	
-	# configure SamplePlane positions
-	global $mods(SamplePlane-X)-pos
-	global $mods(SamplePlane-Y)-pos
-	global $mods(SamplePlane-Z)-pos
-	
-	set result_x [expr [expr $plane_x / [expr $size_x / 2.0] ] - 1.0]
-	set $mods(SamplePlane-X)-pos $result_x
-	
-	set result_y [expr [expr $plane_y / [expr $size_y / 2.0] ] - 1.0]
-	set $mods(SamplePlane-Y)-pos $result_y
-	
-	set result_z [expr [expr $plane_z / [expr $size_z / 2.0] ] - 1.0]
-	set $mods(SamplePlane-Z)-pos $result_z
-	
-	# configure ClipByFunction string
-	global $mods(ClipByFunction-Seeds)-clipfunction
-	global $mods(Isosurface)-isoval
-	set $mods(ClipByFunction-Seeds)-clipfunction "(v > [set $mods(Isosurface)-isoval]) && (x $clip_x $plane_x) && (y $clip_y $plane_y) && (z$clip_z $plane_z)"
-        
-	
-    }
-    
-
     method indicate_error { which msg_state } {
 	if {$msg_state == "Error"} {
 	    if {$error_module == ""} {
@@ -1512,110 +1197,14 @@ class ForwardFEMApp {
 	
         if {$data_mode == "DWI"} {
            configure_readers all
-
-	    # configure text for DWI Volume
-	   $nrrd_tab1.dwil configure -text "DWI Volume:"
-	   $nrrd_tab2.dwil configure -text "DWI Volume:"
-
-           $dicom_tab1.dwil configure -text "DWI Volume:"
-           $dicom_tab2.dwil configure -text "DWI Volume:"
-
-           $analyze_tab1.dwil configure -text "DWI Volume:"
-           $analyze_tab2.dwil configure -text "DWI Volume:"
-
-           # enable T2 stuff
-           $nrrd_tab1.t2l configure -state normal
-           $nrrd_tab2.t2l configure -state normal
-           $nrrd_tab1.file2 configure -state normal -foreground black
-           $nrrd_tab2.file2 configure -state normal -foreground black
-           $nrrd_tab1.load2 configure -state normal
-           $nrrd_tab2.load2 configure -state normal
-
-           $dicom_tab1.t2l configure -state normal
-           $dicom_tab2.t2l configure -state normal
-           $dicom_tab1.load2 configure -state normal
-           $dicom_tab2.load2 configure -state normal
-
-           $analyze_tab1.t2l configure -state normal
-           $analyze_tab2.t2l configure -state normal
-           $analyze_tab1.load2 configure -state normal
-           $analyze_tab2.load2 configure -state normal
-
-           # configure ChooseNrrd
-           set $mods(ChooseNrrd-DT)-port-index 0
-
-           # enable registration and dt tabs
-	    activate_registration
-
-	    activate_dt
-	
         } else {
            configure_readers all
-
-           # configure labels
-	   $nrrd_tab1.dwil configure -text "Tensor Volume:"
-	   $nrrd_tab2.dwil configure -text "Tensor Volume:"
-
-           $dicom_tab1.dwil configure -text "Tensor Volume:"
-           $dicom_tab2.dwil configure -text "Tensor Volume:"
-
-           $analyze_tab1.dwil configure -text "Tensor Volume:"
-           $analyze_tab2.dwil configure -text "Tensor Volume:"
-
-           # disable T2 stuff
-           $nrrd_tab1.t2l configure -state disabled
-           $nrrd_tab2.t2l configure -state disabled
-           $nrrd_tab1.file2 configure -state disabled -foreground grey64
-           $nrrd_tab2.file2 configure -state disabled -foreground grey64
-           $nrrd_tab1.load2 configure -state disabled
-           $nrrd_tab2.load2 configure -state disabled
-
-           $dicom_tab1.t2l configure -state disabled
-           $dicom_tab2.t2l configure -state disabled
-           $dicom_tab1.load2 configure -state disabled
-           $dicom_tab2.load2 configure -state disabled
-
-           $analyze_tab1.t2l configure -state disabled
-           $analyze_tab2.t2l configure -state disabled
-           $analyze_tab1.load2 configure -state disabled
-           $analyze_tab2.load2 configure -state disabled
-
-           # configure ChooseNrrd
-           set $mods(ChooseNrrd-DT)-port-index 1
 
 	    # disable Next button
 	    $data_next_button1 configure -state disabled \
 	       -background grey75 -foreground grey64
 	    $data_next_button2 configure -state disabled \
 	       -background grey75 -foreground grey64
-
-           # disable registation and dt tabs
-  	   foreach w [winfo children $reg_tab1] {
-	     disable_widget $w
-           }
-	   foreach w [winfo children $reg_tab2] {
-	     disable_widget $w
-           }
-
-	    # fix next and execute in registration
-	    $reg_tab1.last.ne configure -foreground grey64 -background grey75
-	    $reg_tab2.last.ne configure -foreground grey64 -background grey75
-
-	    $reg_tab1.last.ex configure -foreground grey64 -background grey75
-	    $reg_tab2.last.ex configure -foreground grey64 -background grey75
-
-
-  	   foreach w [winfo children $dt_tab1] {
-	     disable_widget $w
-           }
-	   foreach w [winfo children $dt_tab2] {
-	     disable_widget $w
-           }
-
-	    # fix execute in dt
-	    $dt_tab1.last.ex configure -foreground grey64 -background grey75
-	    $dt_tab2.last.ex configure -foreground grey64 -background grey75
-	    
         }
     }
 
@@ -1725,7 +1314,6 @@ class ForwardFEMApp {
 	$mods(FieldReader1)-c needexecute
 	#$mods(FieldReader2)-c needexecute
 	set data_completed 1	
-	#activate_registration
 
 	# enable Next button
 	$data_next_button1 configure -state normal \
@@ -1734,6 +1322,7 @@ class ForwardFEMApp {
 	    -foreground black -background $next_color
     }
     
+
     method toggle_streamlines {} {
 	global mods
 	global $mods(ShowField-StreamLines)-edges-on
@@ -1783,6 +1372,7 @@ class ForwardFEMApp {
 	}
 	$mods(ShowField-StreamLines)-c toggle_display_edges
     }
+
 
     method build_streamlines_tab { f } {
 	global mods
@@ -1884,7 +1474,6 @@ class ForwardFEMApp {
     method build_colormap_tab { f } {
 	global mods
 	if {![winfo exists $f.show]} {
-	    global isosurface_color
 
 	    set isocolor $f
 	    frame $isocolor.select
@@ -2002,47 +1591,6 @@ class ForwardFEMApp {
     }
     
     
-    method select_isosurface_color { w } {
-	global mods
-       	global $mods(ChooseField-Isosurface)-port-index
-	
-	set which [$w.color get]
-	
-        if {$which == "Principle Eigenvector"} {
-	    $isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state disabled
-	    $isosurface_tab2.isocolor.childsite.select.colorFrame.set_color configure -state disabled
-	    disableModule $mods(RescaleColorMap-Isosurface) 1
-	    set $mods(ChooseField-Isosurface)-port-index 3
-        } elseif {$which == "Fractional Anisotropy"} {
-	    $isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state disabled
-	    $isosurface_tab2.isocolor.childsite.select.colorFrame.set_color configure -state disabled	    
-	    disableModule $mods(RescaleColorMap-Isosurface) 0
-	    set $mods(ChooseField-Isosurface)-port-index 0
-        } elseif {$which == "Linear Anisotropy"} {
-	    $isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state disabled
-	    $isosurface_tab2.isocolor.childsite.select.colorFrame.set_color configure -state disabled	   
-	    disableModule $mods(RescaleColorMap-Isosurface) 0
-	    set $mods(ChooseField-Isosurface)-port-index 1
-        } elseif {$which == "Planar Anisotropy"} {
-	    $isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state disabled
-	    $isosurface_tab2.isocolor.childsite.select.colorFrame.set_color configure -state disabled	    
-	    disableModule $mods(RescaleColorMap-Isosurface) 0
-	    set $mods(ChooseField-Isosurface)-port-index 2
-        } else {
-	    # constant color
-	    $isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state normal
-	    $isosurface_tab2.isocolor.childsite.select.colorFrame.set_color configure -state normal	   
-	    disableModule $mods(RescaleColorMap-Isosurface) 1
-        }
-
-	$isosurface_tab1.isocolor.childsite.select.color select $which
-	$isosurface_tab2.isocolor.childsite.select.color select $which
-	
-        # execute 
-        $mods(ChooseField-Isosurface)-c needexecute
-    }
-    
-
     method draw_colormap { which canvas } {
 	set color ""
 	if {$which == "Gray"} {
@@ -2192,637 +1740,6 @@ class ForwardFEMApp {
 	return $index*$range
     }
     
- 
-
-    method addColorSelection {frame text color mod} {
-	#add node color picking 
-	global $color
-	global $color-r
-	global $color-g
-	global $color-b
-	#add node color picking 
-	set ir [expr int([set $color-r] * 65535)]
-	set ig [expr int([set $color-g] * 65535)]
-	set ib [expr int([set $color-b] * 65535)]
-	
-	frame $frame.colorFrame
-	frame $frame.colorFrame.col -relief ridge -borderwidth \
-	    4 -height 0.6c -width 1.0c \
-	    -background [format #%04x%04x%04x $ir $ig $ib]
-	
-	set cmmd "$this raiseColor $frame.colorFrame.col $color $mod"
-	button $frame.colorFrame.set_color \
-	    -state disabled \
-	    -text $text -command $cmmd
-	
-	#pack the node color frame
-	pack $frame.colorFrame.set_color \
-	    -side left -ipadx 3 -ipady 3
-	pack $frame.colorFrame.col -side left 
-	pack $frame.colorFrame -side left -padx 3
-    }
-    
-    
-    method raiseColor {col color mod} {
-	global $color
-	set window .standalone
-	if {[winfo exists $window.color]} {
-	    raise $window.color
-	    return;
-	} else {
-	    toplevel $window.color
-	    makeColorPicker $window.color $color \
-		"$this setColor $col $color $mod" \
-		"destroy $window.color"
-	}
-    }
-    
-    method setColor {col color mod} {
-	global $color
-	global $color-r
-	global $color-g
-	global $color-b
-	set ir [expr int([set $color-r] * 65535)]
-	set ig [expr int([set $color-g] * 65535)]
-	set ib [expr int([set $color-b] * 65535)]
-	
-	set window .standalone
-	$col config -background [format #%04x%04x%04x $ir $ig $ib]
-	
-	if {$color == "clip_to_isosurface_color"} {
-	    # set the default colors for the three ShowFields
-	    global mods
-	    global $mods(ShowField-X)-def-color-r
-	    global $mods(ShowField-X)-def-color-g
-	    global $mods(ShowField-X)-def-color-b
-            set $mods(ShowField-X)-def-color-r [set $color-r]
-            set $mods(ShowField-X)-def-color-g [set $color-g]
-            set $mods(ShowField-X)-def-color-b [set $color-b]
-	    
-            global $mods(ShowField-Y)-def-color-r
-            global $mods(ShowField-Y)-def-color-g
-            global $mods(ShowField-Y)-def-color-b
-            set $mods(ShowField-Y)-def-color-r [set $color-r]
-            set $mods(ShowField-Y)-def-color-g [set $color-g]
-            set $mods(ShowField-Y)-def-color-b [set $color-b]
-
-            global $mods(ShowField-Z)-def-color-r
-            global $mods(ShowField-Z)-def-color-g
-            global $mods(ShowField-Z)-def-color-b
-            set $mods(ShowField-Z)-def-color-r [set $color-r]
-            set $mods(ShowField-Z)-def-color-g [set $color-g]
-            set $mods(ShowField-Z)-def-color-b [set $color-b]
-
-            $mods(ChooseField-ColorPlanes)-c needexecute
-         } elseif {$color == "isosurface_color"} {
-            # set the default color for ShowField
-            global mods
-            global $mods(ShowField-Isosurface)-def-color-r
-            global $mods(ShowField-Isosurface)-def-color-g
-            global $mods(ShowField-Isosurface)-def-color-b
-            set $mods(ShowField-Isosurface)-def-color-r [set $color-r]
-            set $mods(ShowField-Isosurface)-def-color-g [set $color-g]
-            set $mods(ShowField-Isosurface)-def-color-b [set $color-b]
-
-            $mods(Isosurface)-c needexecute
-	}
-    }
-
-   
-    
-    method select_color_planes_color { w } {
-        global mods
-	global $mods(ChooseField-ColorPlanes)-port-index
-	
-        set which [$w.color get]
-	
-        if {$which == "Principle Eigenvector"} {
-	    set plane_type "Principle Eigenvector"
-            $planes_tab1.color.childsite.select.colorFrame.set_color configure -state disabled
-            $planes_tab2.color.childsite.select.colorFrame.set_color configure -state disabled
-	    disableModule $mods(RescaleColorMap-ColorPlanes) 1
-	    set $mods(ChooseField-ColorPlanes)-port-index 3
-        } elseif {$which == "Fractional Anisotropy"} {
-	    set plane_type "Fractional Anisotropy"
-            $planes_tab1.color.childsite.select.colorFrame.set_color configure -state disabled
-            $planes_tab2.color.childsite.select.colorFrame.set_color configure -state disabled
-	    disableModule $mods(RescaleColorMap-ColorPlanes) 0
-	    set $mods(ChooseField-ColorPlanes)-port-index 0
-        } elseif {$which == "Linear Anisotropy"} {
-	    set plane_type "Linear Anisotropy"
-            $planes_tab1.color.childsite.select.colorFrame.set_color configure -state disabled
-            $planes_tab2.color.childsite.select.colorFrame.set_color configure -state disabled
-	    disableModule $mods(RescaleColorMap-ColorPlanes) 0
-	    set $mods(ChooseField-ColorPlanes)-port-index 1
-        } elseif {$which == "Planar Anisotropy"} {
-	    set plane_type "Planar Anisotropy"
-            $planes_tab1.color.childsite.select.colorFrame.set_color configure -state disabled
-            $planes_tab2.color.childsite.select.colorFrame.set_color configure -state disabled
-	    disableModule $mods(RescaleColorMap-ColorPlanes) 0
-	    set $mods(ChooseField-ColorPlanes)-port-index 2
-        } else {
-	    set plane_type "Constant"
-	    # specified color
-            $planes_tab1.color.childsite.select.colorFrame.set_color configure -state normal
-            $planes_tab2.color.childsite.select.colorFrame.set_color configure -state normal
-	    disableModule $mods(RescaleColorMap-ColorPlanes) 1
-        }
-
-	$planes_tab1.color.childsite.select.color select $which
-	$planes_tab2.color.childsite.select.color select $which
-	
-        # execute 
-        $mods(ChooseField-ColorPlanes)-c needexecute
-    }
-  
-
-    method initialize_clip_info {} {
-        global mods
-        global $mods(Viewer)-ViewWindow_0-global-clip
-        set $mods(Viewer)-ViewWindow_0-global-clip 0
-
-        global $mods(Viewer)-ViewWindow_0-clip
-        set clip $mods(Viewer)-ViewWindow_0-clip
-
-	global $clip-num
-        set $clip-num 6
-
-	global $clip-normal-x
-	global $clip-normal-y
-	global $clip-normal-z
-	global $clip-normal-d
-	global $clip-visible
-	set $clip-visible 0
-	set $clip-normal-d 0.0
-	set $clip-normal-x 0.0
-	set $clip-normal-y 0.0
-	set $clip-normal-z 0.0
-          
-        # initialize to 0
-	for {set i 1} {$i <= [set $clip-num]} {incr i 1} {
-	    set mod $i
-
-	    global $clip-normal-x-$mod
-	    global $clip-normal-y-$mod
-	    global $clip-normal-z-$mod
-	    global $clip-normal-d-$mod
-	    global $clip-visible-$mod
-
-	    set $clip-visible-$mod 0
-	    set $clip-normal-d-$mod 0.0
-	    set $clip-normal-x-$mod 0.0
-	    set $clip-normal-y-$mod 0.0
-	    set $clip-normal-z-$mod 0.0
-        }
-
-        global plane_x plane_y plane_z
-
-        # 1
-        set plane(-X) "on"
-        global $clip-normal-x-1
-        set $clip-normal-x-1 "-1.0"
-        global $clip-normal-d-1 
-        set $clip-normal-d-1 [expr -$plane_x + $plane_inc]
-        global $clip-visible-1
-        set $clip-visible-1 1
-
-        # 2
-        set plane(+X) "off"
-        global $clip-normal-x-2
-        set $clip-normal-x-2 1.0
-        global $clip-normal-d-2 
-        set $clip-normal-d-2 [expr $plane_x + $plane_inc]
-
-        # 3
-        set plane(-Y) "on"
-        global $clip-normal-y-3
-        set $clip-normal-y-3 "-1.0"
-        global $clip-normal-d-3 
-        set $clip-normal-d-3 [expr -$plane_y + $plane_inc]
-        global $clip-visible-3
-        set $clip-visible-3 1
-
-        # 4
-        set plane(+Y) "off"
-        global $clip-normal-y-4
-        set $clip-normal-y-4 1.0
-        global $clip-normal-d-4 
-        set $clip-normal-d-4 [expr $plane_y + $plane_inc]
-
-        # 5
-        set plane(-Z) "on"
-        global $clip-normal-z-5
-        set $clip-normal-z-5 "-1.0"
-        global $clip-normal-d-5 
-        set $clip-normal-d-5 [expr -$plane_z + $plane_inc]
-        global $clip-visible-5
-        set $clip-visible-5 1
-
-        # 6
-        set plane(+Z) "off"
-        global $clip-normal-z-6
-        set $clip-normal-z-6 1.0
-        global $clip-normal-d-6 
-        set $clip-normal-d-6 [expr $plane_z + $plane_inc]
-
-        $mods(Viewer)-ViewWindow_0-c redraw
-    }
-
-    method toggle_clip_by_planes { w } {
-	global mods
-        global clip_by_planes
-        global $mods(Viewer)-ViewWindow_0-global-clip
-        if {$clip_by_planes == 0} {
-	    set $mods(Viewer)-ViewWindow_0-global-clip 0
-	    $isosurface_tab1.clip.flipx configure -state disabled
-	    $isosurface_tab2.clip.flipx configure -state disabled
-	    
-	    $isosurface_tab1.clip.flipy configure -state disabled
-	    $isosurface_tab2.clip.flipy configure -state disabled
-	    
-	    $isosurface_tab1.clip.flipz configure -state disabled
-	    $isosurface_tab2.clip.flipz configure -state disabled
-        } else {
-	    set $mods(Viewer)-ViewWindow_0-global-clip 1
-
-	    $isosurface_tab1.clip.flipx configure -state normal
-	    $isosurface_tab2.clip.flipx configure -state normal
-	    
-	    $isosurface_tab1.clip.flipy configure -state normal
-	    $isosurface_tab2.clip.flipy configure -state normal
-	    
-	    $isosurface_tab1.clip.flipz configure -state normal
-	    $isosurface_tab2.clip.flipz configure -state normal
-        }
-
-        $mods(Viewer)-ViewWindow_0-c redraw
-    }
-
-    method flip_x_clipping_plane {} {
-        global mods
-        global show_plane_x
-        global $mods(Viewer)-ViewWindow_0-clip
-        set clip $mods(Viewer)-ViewWindow_0-clip
-
-        if {$show_plane_x == 1} {
-           if {$plane(-X) == "on"} {
-              global $clip-visible-1
-              set $clip-visible-1 0
-              set plane(-X) "off"
-
-              global $clip-visible-2
-              set $clip-visible-2 1
-              set plane(+X) "on"
-
-              set last_x 2
-           } else {
-              global $clip-visible-1
-              set $clip-visible-1 1
-              set plane(-X) "on"
-
-              global $clip-visible-2
-              set $clip-visible-2 0
-              set plane(+X) "off"
-
-              set last_x 1
-           }
-          
-           global plane_x plane_y plane_z
-           if {$clip_x == "<"} {
-             set clip_x ">"
-           } else {
-             set clip_x "<"
-           }
-           global $mods(ClipByFunction-Seeds)-clipfunction
-           global $mods(Isosurface)-isoval
-           set $mods(ClipByFunction-Seeds)-clipfunction "(v > [set $mods(Isosurface)-isoval]) && (x $clip_x $plane_x) && (y $clip_y $plane_y) && (z$clip_z $plane_z)"
-
-           $mods(Viewer)-ViewWindow_0-c redraw
-        }
-    }
-
-    method flip_y_clipping_plane {} {
-        global mods
-        global show_plane_y
-        global $mods(Viewer)-ViewWindow_0-clip
-        set clip $mods(Viewer)-ViewWindow_0-clip
-
-        if {$show_plane_y == 1} {
-           if {$plane(-Y) == "on"} {
-              global $clip-visible-3
-              set $clip-visible-3 0
-              set plane(-Y) "off"
-
-              global $clip-visible-4
-              set $clip-visible-4 1
-              set plane(+Y) "on"
-
-              set last_y 4
-           } else {
-              global $clip-visible-3
-              set $clip-visible-3 1
-              set plane(-Y) "on"
-
-              global $clip-visible-4
-              set $clip-visible-4 0
-              set plane(+Y) "off"
-
-              set last_y 3
-           }
-
-           global plane_x plane_y plane_z
-           if {$clip_y == "<"} {
-             set clip_y ">"
-           } else {
-             set clip_y "<"
-           }
-           global $mods(ClipByFunction-Seeds)-clipfunction
-           global $mods(Isosurface)-isoval
-           set $mods(ClipByFunction-Seeds)-clipfunction "(v > [set $mods(Isosurface)-isoval]) && (x $clip_x $plane_x) && (y $clip_y $plane_y) && (z$clip_z $plane_z)"
-
-           $mods(Viewer)-ViewWindow_0-c redraw
-        }
-    }
-
-    method flip_z_clipping_plane {} {
-        global mods
-        global show_plane_z
-        global $mods(Viewer)-ViewWindow_0-clip
-        set clip $mods(Viewer)-ViewWindow_0-clip
-
-        if {$show_plane_z == 1} {
-           if {$plane(-Z) == "on"} {
-              global $clip-visible-5
-              set $clip-visible-5 0
-              set plane(-Z) "off"
-
-              global $clip-visible-6
-              set $clip-visible-6 1
-              set plane(+Z) "on"
-
-              set last_z 6
-           } else {
-              global $clip-visible-5
-              set $clip-visible-5 1
-              set plane(-Z) "on"
-
-              global $clip-visible-6
-              set $clip-visible-6 0
-              set plane(+Z) "off"
-
-              set last_z 5
-           }
-
-           global plane_x plane_y plane_z
-           if {$clip_z == "<"} {
-             set clip_z ">"
-           } else {
-             set clip_z "<"
-           }
-           global $mods(ClipByFunction-Seeds)-clipfunction
-           global $mods(Isosurface)-isoval
-           set $mods(ClipByFunction-Seeds)-clipfunction "(v > [set $mods(Isosurface)-isoval]) && (x $clip_x $plane_x) && (y $clip_y $plane_y) && (z$clip_z $plane_z)"
-
-           $mods(Viewer)-ViewWindow_0-c redraw
-        }
-    }
-
-    method toggle_clip_to_isosurface {} {
-       global mods
-       global clip_to_isosurface
-       global $mods(ChooseField-X)-port-index
-       global $mods(ChooseField-Y)-port-index
-       global $mods(ChooseField-Z)-port-index
-
-       if {$clip_to_isosurface == 1} {
-	# enable Unstructure modules and change ChooseField port to 1
-        disableModule $mods(QuadToTri-X) 0
-        disableModule $mods(QuadToTri-Y) 0
-        disableModule $mods(QuadToTri-Z) 0
- 
-        set $mods(ChooseField-X)-port-index 1
-        set $mods(ChooseField-Y)-port-index 1
-        set $mods(ChooseField-Z)-port-index 1
-       } else {
-	# disable Unstructure modules and change ChooseField port to 0
-        disableModule $mods(QuadToTri-X) 1
-        disableModule $mods(QuadToTri-Y) 1
-        disableModule $mods(QuadToTri-Z) 1
- 
-        set $mods(ChooseField-X)-port-index 0
-        set $mods(ChooseField-Y)-port-index 0
-        set $mods(ChooseField-Z)-port-index 0
-       }
-
-       # re-execute
-       $mods(ChooseField-ColorPlanes)-c needexecute
-    }
-
-    method update_plane_x { } {
-       global mods plane_x plane_y plane_z
-       global $mods(SamplePlane-X)-pos
- 
-       if {$size_x != 0} {
-          # set the sample plane position to be the normalized value
-          set result [expr [expr $plane_x / [expr $size_x / 2.0] ] - 1.0]
-          set $mods(SamplePlane-X)-pos $result
-
-          # set the glabal clipping planes values
-          set clip $mods(Viewer)-ViewWindow_0-clip
-          global $clip-normal-d-1
-          global $clip-normal-d-2
-          set $clip-normal-d-1 [expr -$plane_x  + $plane_inc]
-          set $clip-normal-d-2 [expr $plane_x  + $plane_inc]
-
-          # configure ClipByFunction
-          global $mods(ClipByFunction-Seeds)-clipfunction
-          global $mods(Isosurface)-isoval
-          set $mods(ClipByFunction-Seeds)-clipfunction "(v > [set $mods(Isosurface)-isoval]) && (x $clip_x $plane_x) && (y $clip_y $plane_y) && (z$clip_z $plane_z)"
-
-          $mods(SamplePlane-X)-c needexecute
-          $mods(Viewer)-ViewWindow_0-c redraw
-       }
-    }
-
-    method update_plane_y {} {
-       global mods plane_x plane_y plane_z
-       global $mods(SamplePlane-Y)-pos
- 
-       if {$size_y != 0} {
-          # set the sample plane position to be the normalized value
-          set result [expr [expr $plane_y / [expr $size_y / 2.0] ] - 1.0]
-          set $mods(SamplePlane-Y)-pos $result
-
-          # set the glabal clipping planes values
-          set clip $mods(Viewer)-ViewWindow_0-clip
-          global $clip-normal-d-3
-          global $clip-normal-d-4
-          set $clip-normal-d-3 [expr -$plane_y  + $plane_inc]
-          set $clip-normal-d-4 [expr $plane_y  + $plane_inc]
-
-          # configure ClipByFunction
-          global $mods(Isosurface)-isoval
-          global $mods(ClipByFunction-Seeds)-clipfunction
-          set $mods(ClipByFunction-Seeds)-clipfunction "(v > [set $mods(Isosurface)-isoval]) && (x $clip_x $plane_x) && (y $clip_y $plane_y) && (z$clip_z $plane_z)"
-
-          $mods(SamplePlane-Y)-c needexecute
-          $mods(Viewer)-ViewWindow_0-c redraw
-       }
-    }
-
-    method update_plane_z {} {
-       global mods plane_x plane_y plane_z
-       global $mods(SamplePlane-Z)-pos
- 
-       if {$size_z != 0} {
-          # set the sample plane position to be the normalized value
-          set result [expr [expr $plane_z / [expr $size_z / 2.0] ] - 1.0]
-          set $mods(SamplePlane-Z)-pos $result
-
-          # set the glabal clipping planes values
-          set clip $mods(Viewer)-ViewWindow_0-clip
-          global $clip-normal-d-5
-          global $clip-normal-d-6
-          set $clip-normal-d-5 [expr -$plane_z  + $plane_inc]
-          set $clip-normal-d-6 [expr $plane_z  + $plane_inc]
-
-          # configure ClipByFunction
-          global $mods(Isosurface)-isoval
-          global $mods(ClipByFunction-Seeds)-clipfunction
-          set $mods(ClipByFunction-Seeds)-clipfunction "(v > [set $mods(Isosurface)-isoval]) && (x $clip_x $plane_x) && (y $clip_y $plane_y) && (z$clip_z $plane_z)"
-
-          $mods(SamplePlane-Z)-c needexecute
-          $mods(Viewer)-ViewWindow_0-c redraw
-       }
-    }
-
-    method toggle_plane { which } {
-       global mods
-       global show_plane_x show_plane_y show_plane_z
-       global $mods(ShowField-X)-faces-on
-       global $mods(ShowField-Y)-faces-on
-       global $mods(ShowField-Z)-faces-on
-       global $mods(Viewer)-ViewWindow_0-clip
-       set clip $mods(Viewer)-ViewWindow_0-clip
-
-
-       # turn off showfields and configure global clipping planes
-
-       if {$which == "X"} {
-          global $clip-visible-$last_x
-          if {$show_plane_x == 0} {
-              # turn off 
-              set $mods(ShowField-X)-faces-on 0
-              set $clip-visible-$last_x 0
-          } else {
-              set $mods(ShowField-X)-faces-on 1
-              set $clip-visible-$last_x 1
-          }  
-          $mods(ShowField-X)-c toggle_display_faces  
-          $mods(Viewer)-ViewWindow_0-c redraw
-       } elseif {$which == "Y"} {
-          global $clip-visible-$last_y
-          if {$show_plane_y == 0} {
-              set $mods(ShowField-Y)-faces-on 0
-              set $clip-visible-$last_y 0             
-          } else {
-              set $mods(ShowField-Y)-faces-on 1
-              set $clip-visible-$last_y 1              
-          }   
-          $mods(ShowField-Y)-c toggle_display_faces
-          $mods(Viewer)-ViewWindow_0-c redraw
-       } else {
-	   # Z plane
-          global $clip-visible-$last_z
-          if {$show_plane_z == 0} {
-              set $mods(ShowField-Z)-faces-on 0
-              set $clip-visible-$last_z 0              
-          } else {
-              set $mods(ShowField-Z)-faces-on 1
-              set $clip-visible-$last_z 1             
-          }   
-
-          $mods(ShowField-Z)-c toggle_display_faces
-          $mods(Viewer)-ViewWindow_0-c redraw
-       }
-    }
-
-    method toggle_plane_y {} {
-       global mods
-       global show_plane_y
-       global $mods(ShowField-Y)-faces-on
-
-       if {$show_plane_y == 0} {
-           set $mods(ShowField-Y)-faces-on 0
-       } else {
-           set $mods(ShowField-X)-faces-on 1
-       }     
- 
-       # execute showfield
-       $mods(ShowField-X)-c toggle_display_faces
-    }
-
-    method toggle_plane_x {} {
-       global mods
-       global show_plane_x
-       global $mods(ShowField-X)-faces-on
-
-       if {$show_plane_x == 0} {
-           set $mods(ShowField-X)-faces-on 0
-       } else {
-           set $mods(ShowField-X)-faces-on 1
-       }     
- 
-       # execute showfield
-       $mods(ShowField-X)-c toggle_display_faces
-    }
-
-    method toggle_show_planes {} {
-      global mods
-      global show_planes
-
-      global $mods(ShowField-X)-faces-on
-      global $mods(ShowField-Y)-faces-on
-      global $mods(ShowField-Z)-faces-on
-
-      global $mods(Viewer)-ViewWindow_0-clip
-      set clip $mods(Viewer)-ViewWindow_0-clip
-
-      global $clip-visible-$last_x
-      global $clip-visible-$last_y
-      global $clip-visible-$last_z
-
-      if {$show_planes == 0} {
-         # turn off global clipping planes
-         set $clip-visible-$last_x 0
-         set $clip-visible-$last_y 0
-         set $clip-visible-$last_z 0
- 
-         set $mods(ShowField-X)-faces-on 0
-         set $mods(ShowField-Y)-faces-on 0
-         set $mods(ShowField-Z)-faces-on 0
-
-         $mods(ChooseField-ColorPlanes)-c needexecute
-         $mods(Viewer)-ViewWindow_0-c redraw
-      } else {
-         global show_plane_x show_plane_y show_plane_z
-
-         if {$show_plane_x} {
-            set $mods(ShowField-X)-faces-on 1
-            set $clip-visible-$last_x 1
-         }
-         if {$show_plane_y} {
-            set $mods(ShowField-Y)-faces-on 1
-            set $clip-visible-$last_y 1
-         }
-         if {$show_plane_z} {
-            set $mods(ShowField-Z)-faces-on 1
-            set $clip-visible-$last_z 1
-         }
-         $mods(ChooseField-ColorPlanes)-c needexecute
-         $mods(Viewer)-ViewWindow_0-c redraw
-      }
-    }
 
     method toggle_show_isosurface {} {
        global mods
@@ -2853,251 +1770,7 @@ class ForwardFEMApp {
     }
 
 
-    method fill_in_data_pages {} {
-	global mods
-        global $mods(UnuSlice1)-position
-	   set f1 $variance_tab1
-	   set f2 $variance_tab2
-
-        global $mods(NrrdInfo1)-size3
-        set num_slices [expr [set $mods(NrrdInfo1)-size3] - 1]
-           if {![winfo exists $f1.instr]} {
-              # detached
-              checkbutton $f1.orig -text "View Variance of Original Data" \
-                  -variable $mods(ShowField-Orig)-faces-on \
-                  -command {
-                     global mods
-                     $mods(ShowField-Orig)-c toggle_display_faces
-                   }
-
-              checkbutton $f1.reg -text "View Variance of Registered Data" \
-                  -variable $mods(ShowField-Reg)-faces-on \
-                  -state disabled \
-                  -command {
-                     global mods
-                     $mods(ShowField-Reg)-c toggle_display_faces
-                   }
-
-              pack $f1.orig $f1.reg -side top -anchor nw -padx 3 -pady 3
-
-              message $f1.instr -width [expr $notebook_width - 60] \
-                  -text "Select a slice in the Z direction to view the variance."
-              pack $f1.instr -side top -anchor n -padx 3 -pady 3
-
-              ### Slice Slider 
-	      scale $f1.slice -label "Slice:" \
-                  -variable $mods(UnuSlice1)-position \
-                  -from 0 -to $num_slices \
-                  -showvalue true \
-                  -orient horizontal \
-                  -command "$this change_variance_slice" \
-                  -length [expr $notebook_width - 60]
-
-              pack $f1.slice -side top -anchor n -padx 3 -pady 3
-
-      	      bind $f1.slice <ButtonRelease> "app update_variance_slice"
-
-
-              # attached
-              checkbutton $f2.orig -text "View Variance of Original Data" \
-                  -variable $mods(ShowField-Orig)-faces-on \
-                  -command {
-                     global mods
-                     $mods(ShowField-Orig)-c toggle_display_faces
-                   }
-
-              checkbutton $f2.reg -text "View Variance of Registered Data" \
-                  -variable $mods(ShowField-Reg)-faces-on \
-                  -state disabled \
-                  -command {
-                     global mods
-                     $mods(ShowField-Reg)-c toggle_display_faces
-                   }
-
-              pack $f2.orig $f2.reg -side top -anchor nw -padx 3 -pady 3
-
-              message $f2.instr -width [expr $notebook_width - 60] \
-                  -text "Select a slice in the Z direction to view the variance."
-              pack $f2.instr -side top -anchor n -padx 3 -pady 3
- 
-	      scale $f2.slice -label "Slice:" \
-                  -variable $mods(UnuSlice1)-position \
-                  -from 0 -to $num_slices \
-                  -showvalue true \
-                  -orient horizontal \
-                  -command "$this change_variance_slice" \
-                  -length [expr $notebook_width - 60]                  
-
-              pack $f2.slice -side top -anchor n -padx 3 -pady 3
-
-
-   	      bind $f2.slice <ButtonRelease> "app update_variance_slice"
-          } else {
-              # configure ref image scale
-              $f1.slice configure -from 1 -to $num_slices
-              $f2.slice configure -from 1 -to $num_slices
-
-              update
-          }
-
-    }
-
-    method update_variance_slice {} {
-      global mods
-      $mods(UnuSlice1)-c needexecute
-
-      if {$reg_completed} {
-        $mods(UnuSlice2)-c needexecute
-      }
-
-    }
-
-    method execute_DT {} {
-       global mods
- 
-       # Check bmatrix has been loaded
-       global $mods(NrrdReader-BMatrix)-filename
-       global bmatrix
-
-	if {$bmatrix == "load"} {
-	    if {[set $mods(NrrdReader-BMatrix)-filename] == ""} {
-		set answer [tk_messageBox -message \
-				"Please load a B-Matrix file containing." -type ok -icon info -parent .standalone]
-		return
-	    }
-	} else {
-	    # unblock modules
-	    disableModule $mods(TendEstim) 0
-	    disableModule $mods(ChooseNrrd-DT) 0
-	    
-	    # unblock modules
-	    disableModule $mods(TendEstim) 0
-	    disableModule $mods(ChooseNrrd-DT) 0
-	    
-	    # execute
-	    $mods(ChooseNrrd-ToSmooth)-c needexecute
-
-	    set dt_completed 1
-	    
-	    view_Vis
-	}
-    }
-
-
-    method change_variance_slice { val } {
-       global mods
-       global $mods(UnuSlice2)-position
-       set $mods(UnuSlice2)-position $val
-    }
-
-
-    method view_Vis {} {
-        if {$dt_completed} {
-            # view planes tab
-            $vis_tab1 view "Planes"
-            $vis_tab2 view "Planes"
-        } else {
-            set answer [tk_messageBox -message \
-                 "Please finish constructing the Diffusion Tensors." -type ok -icon info -parent .standalone]
-        }
-    }
-
-
-    method activate_registration { } {
-        global mods
-	foreach w [winfo children $reg_tab1] {
-	    activate_widget $w
-        }
-
-	foreach w [winfo children $reg_tab2] {
-	    activate_widget $w
-        }
-
-	# configure Registrations next button
-	if {$reg_completed} {
-	    $reg_tab1.last.ne configure -state normal \
-		-foreground black -background $next_color
-	    $reg_tab2.last.ne configure -state normal \
-		-foreground black -background $next_color
-	} else {
-	    $reg_tab1.last.ne configure -state disabled \
-		-foreground grey64 -background grey75
-	    $reg_tab2.last.ne configure -state disabled \
-		-foreground grey64 -background grey75
-
-	}
-	
-        toggle_reference_image_state
-	toggle_registration_threshold
-
-        # configure ref image scale
-        global $mods(NrrdInfo1)-size0
-        $ref_image1.s.ref configure -from 1 -to [expr [set $mods(NrrdInfo1)-size0] + 1]
-        $ref_image2.s.ref configure -from 1 -to [expr [set $mods(NrrdInfo1)-size0] + 1]
-
-
-    }
-
-
-    method activate_dt { } {
-	foreach w [winfo children $dt_tab1] {
-	    activate_widget $w
-        }
-
-	foreach w [winfo children $dt_tab2] {
-	    activate_widget $w
-        }
-
-        toggle_do_smoothing
-
-        toggle_dt_threshold
-
-        toggle_b_matrix
-
-    }
-
-
     method activate_vis {} {
-       global mods
-
-       if {![winfo exists $planes_tab1.show]} {
-          # build vis tabs
-          build_planes_tab $planes_tab1
-          build_planes_tab $planes_tab2
-
-          build_isosurface_tab $isosurface_tab1
-          build_isosurface_tab $isosurface_tab2
-
-          # turn off variances
-          global $mods(ShowField-Orig)-faces-on
-          global $mods(ShowField-Reg)-faces-on
-          set $mods(ShowField-Orig)-faces-on 0
-          set $mods(ShowField-Reg)-faces-on 0
-          $mods(ShowField-Orig)-c toggle_display_faces
- 	  $mods(ShowField-Reg)-c toggle_display_faces
-
-          $mods(Viewer)-ViewWindow_0-c autoview
-          global $mods(Viewer)-ViewWindow_0-pos
-          set $mods(Viewer)-ViewWindow_0-pos "z1_y0"
-          $mods(Viewer)-ViewWindow_0-c Views
-
-          uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (8)\}" 0
-          uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (7)\}" 0
-          uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-Probe Selection Widget (11)\}" 0
-          uplevel \#0 set "\{$mods(Viewer)-ViewWindow_0-StreamLines rake (12)\}" 0
-
-          $mods(Viewer)-ViewWindow_0-c redraw
-
-          # setup global clipping planes
-	  initialize_clip_info
-
-          change_indicator_labels "Visualization..."
-
-          # bring planes tab forward
-          view_Vis
-      } else {
-	  puts "FIX ME: Configure tabs???"
-      }
     }
 
     method activate_widget {w} {
@@ -3173,27 +1846,6 @@ class ForwardFEMApp {
         }
     }
 
-    method set_resampling_filter { w } {
-        set value [$w get]
-
-	$reg_tab1.rf select $value
-	$reg_tab2.rf select $value
-
-        set kern ""
-        if {$value == "Linear"} {
-          set kern "tent"
-        } elseif {$value == "Catmull-Rom"} {
-          set kern "cubicCR"
-        } elseif {$value == "Windowed Sinc"} {
-          set kern "hann"
-        }
-
-        global mods
-        global $mods(TendEpireg)-kernel
-        set $mods(TendEpireg)-kernel $kern
-    }
-
- 
     method change_vis_tab { which } {
 	# change vis tab for attached/detached
 
@@ -3230,7 +1882,6 @@ class ForwardFEMApp {
 
     method change_processing_tab { which } {
 	global mods
-	global do_registration
 
 	change_indicate_val 0
 	if {$initialized} {
@@ -3239,284 +1890,12 @@ class ForwardFEMApp {
 		$proc_tab1 view "Data"
 		$proc_tab2 view "Data"
 		change_indicator_labels "Data Acquisition..."
-	    } elseif {$which == "Registration"} {
-		# Registration step
-		if {$data_completed} {
-		    $proc_tab1 view "Registration"
-		    $proc_tab2 view "Registration"
-		    change_indicator_labels "Registration..."
-		} 
-	    } elseif {$which == "Build DTs"} {
-		if {!$do_registration} {
-		    set reg_completed 1
-		    disableModule $mods(ChooseNrrd-ToReg) 0
-		    disableModule $mods(RescaleColorMap2) 0
-		    disableModule $mods(TendEpireg) 1
-		    disableModule $mods(UnuJoin) 1
-		    $mods(ChooseNrrd-ToReg)-c needexecute
-		    activate_dt
-		    $proc_tab1 view "Build DTs"
-		    $proc_tab2 view "Build DTs"
-		} elseif {$reg_completed} {
-		    # Building DTs step
-		    $proc_tab1 view "Build DTs"
-		    $proc_tab2 view "Build DTs"
-		    change_indicator_labels "Building Diffusion Tensors..."
-		}
 	    }
-	    
 	    set indicator 0
 	}
     }
 	
 	
-    method configure_isosurface_tabs {} {
-	global mods
-	global $mods(ShowField-Isosurface)-faces-on
-
-	if {$initialized != 0} {
-	    if {[set $mods(ShowField-Isosurface)-faces-on] == 1} {
-		# configure color button
-		if {$plane_type == "Constant"} {
-		    $isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state normal
-		    $isosurface_tab2.isocolor.childsite.select.colorFrame.set_color configure -state normal
-		} else {
-		    $isosurface_tab1.isocolor.childsite.select.colorFrame.set_color configure -state disabled
-		    $isosurface_tab2.isocolor.childsite.select.colorFrame.set_color configure -state disabled
-		}
-	    }
-
-	    # configure flip buttons
-	    global clip_by_planes
-	    if {$clip_by_planes == 1} {
-		$isosurface_tab1.clip.flipx configure -state normal -foreground black
-		$isosurface_tab2.clip.flipx configure -state normal -foreground black
-
-		$isosurface_tab1.clip.flipy configure -state normal -foreground black
-		$isosurface_tab2.clip.flipy configure -state normal -foreground black
-
-		$isosurface_tab1.clip.flipz configure -state normal -foreground black
-		$isosurface_tab2.clip.flipz configure -state normal -foreground black
-	    } else {
-		$isosurface_tab1.clip.flipx configure -state disabled
-		$isosurface_tab2.clip.flipx configure -state disabled
-
-		$isosurface_tab1.clip.flipy configure -state disabled
-		$isosurface_tab2.clip.flipy configure -state disabled
-
-		$isosurface_tab1.clip.flipz configure -state disabled
-		$isosurface_tab2.clip.flipz configure -state disabled
-            }
-	}
-    }
-
- 
-    method configure_fitting_label { val } {
-	$reg_tab1.fit.f configure -text "[expr round([expr $val * 100])]"
-	$reg_tab2.fit.f configure -text "[expr round([expr $val * 100])]"
-    }
-
-
-    method toggle_registration_threshold {} {
-       global mods
-       global $mods(TendEpireg)-use-default-threshold
-       if {[set $mods(TendEpireg)-use-default-threshold] == 0 } {
-          $reg_thresh1.choose.entry configure -state normal -foreground black
-          $reg_thresh2.choose.entry configure -state normal -foreground black
-       } else {
-          $reg_thresh1.choose.entry configure -state disabled -foreground grey64
-          $reg_thresh2.choose.entry configure -state disabled -foreground grey64
-       }
-    }
-
-    method toggle_dt_threshold {} {
-	global mods
-        global $mods(TendEstim)-use-default-threshold
-
-        if {[set $mods(TendEstim)-use-default-threshold] == 1} {
-            $dt_tab1.thresh.childsite.choose.entry configure -state disabled -foreground grey64
-            $dt_tab2.thresh.childsite.choose.entry configure -state disabled -foreground grey64
-        } else {
-            $dt_tab1.thresh.childsite.choose.entry configure -state normal -foreground black
-            $dt_tab2.thresh.childsite.choose.entry configure -state normal -foreground black
-        }
-    }
-
-    method toggle_b_matrix {} {
-	global bmatrix
-	
-	if {$bmatrix == "compute"} {
-            $dt_tab1.bm.childsite.load.e configure -state disabled \
-                -foreground grey64
-            $dt_tab1.bm.childsite.browse configure -state disabled
-	    
-            $dt_tab2.bm.childsite.load.e configure -state disabled \
-                -foreground grey64
-            $dt_tab2.bm.childsite.browse configure -state disabled
-	} else {
-            $dt_tab1.bm.childsite.load.e configure -state normal \
-                -foreground black
-            $dt_tab1.bm.childsite.browse configure -state normal
-	    
-            $dt_tab2.bm.childsite.load.e configure -state normal \
-                -foreground black
-            $dt_tab2.bm.childsite.browse configure -state normal
-	}
-    }
-
-
-    method toggle_reference_image_state {} {
-       global mods
-       global  $mods(TendEpireg)-reference
-       global ref_image_state ref_image
-
-       if {$ref_image_state == 0 } {
-          # implicit reference image
-          set $mods(TendEpireg)-reference "-1"
-          $ref_image1.s.ref configure -state disabled
-          $ref_image1.s.label configure -state disabled
-          $ref_image2.s.ref configure -state disabled
-          $ref_image2.s.label configure -state disabled
-       } else {
-          # choose reference image
-          set $mods(TendEpireg)-reference [expr $ref_image - 1]
-          $ref_image1.s.ref configure -state normal
-          $ref_image1.s.label configure -state normal
-          $ref_image2.s.ref configure -state normal
-          $ref_image2.s.label configure -state normal
-       }
-    }
-
-    method configure_reference_image { val } {
-       global ref_image ref_image_state
-       set ref_image $val
-       if {$ref_image_state == 1} {
-  	  global mods
-          global $mods(TendEpireg)-reference
-	  set $mods(TendEpireg)-reference [expr $val - 1]
-       }
-    }
-
-
-    method toggle_do_smoothing {} {
-        global mods
-        global $mods(ChooseNrrd-ToSmooth)-port-index
-        global do_smoothing
-
-        if {$do_smoothing == 0} {
-           # activate smoothing scrollbar
-           $dt_tab1.blur.childsite.rad1.l configure -state disabled
-           $dt_tab2.blur.childsite.rad1.l configure -state disabled
-
-           $dt_tab1.blur.childsite.rad1.s configure -state disabled -foreground grey64
-           $dt_tab2.blur.childsite.rad1.s configure -state disabled -foreground grey64
-
-           $dt_tab1.blur.childsite.rad1.v configure -state disabled
-           $dt_tab2.blur.childsite.rad1.v configure -state disabled
-
-           $dt_tab1.blur.childsite.rad2.l configure -state disabled
-           $dt_tab2.blur.childsite.rad2.l configure -state disabled
-
-           $dt_tab1.blur.childsite.rad2.s configure -state disabled -foreground grey64
-           $dt_tab2.blur.childsite.rad2.s configure -state disabled -foreground grey64
-
-           $dt_tab1.blur.childsite.rad2.v configure -state disabled
-           $dt_tab2.blur.childsite.rad2.v configure -state disabled
-
-           set $mods(ChooseNrrd-ToSmooth)-port-index 1
-        } else {
-           # disable smoothing scrollbar
-           $dt_tab1.blur.childsite.rad1.l configure -state normal
-           $dt_tab2.blur.childsite.rad1.l configure -state normal
-
-           $dt_tab1.blur.childsite.rad1.s configure -state normal -foreground black
-           $dt_tab2.blur.childsite.rad1.s configure -state normal -foreground black
-
-           $dt_tab1.blur.childsite.rad1.v configure -state normal
-           $dt_tab2.blur.childsite.rad1.v configure -state normal
-
-           $dt_tab1.blur.childsite.rad2.l configure -state normal
-           $dt_tab2.blur.childsite.rad2.l configure -state normal
-
-           $dt_tab1.blur.childsite.rad2.s configure -state normal -foreground black
-           $dt_tab2.blur.childsite.rad2.s configure -state normal -foreground black
-
-           $dt_tab1.blur.childsite.rad2.v configure -state normal
-           $dt_tab2.blur.childsite.rad2.v configure -state normal
-
-           set $mods(ChooseNrrd-ToSmooth)-port-index 0
-
-        }
-    }
-
-    method toggle_do_registration {} {
-        global mods
-        global $mods(ChooseNrrd-ToReg)-port-index
-        global do_registration
-	
-	if {$do_registration == 1} {
-	    disableModule $mods(TendEpireg) 0
-	    disableModule $mods(UnuJoin) 0
-	    
-	    activate_registration
-
-	    # change ChooseNrrd
-	    set $mods(ChooseNrrd-ToReg)-port-index 0
-        } else {
-	    disableModule $mods(TendEpireg) 1
-	    disableModule $mods(UnuJoin) 1
-	    
-	    # disable registration tab
-	    foreach w [winfo children $reg_tab1] {
-		disable_widget $w
-	    }
-	    foreach w [winfo children $reg_tab2] {
-		disable_widget $w
-	    }
-	    
-	    toggle_reference_image_state
-	    toggle_registration_threshold
-	    
-	    # re-enable checkbutton 
-	    $reg_tab1.doreg configure -state normal -foreground black
-	    $reg_tab2.doreg configure -state normal -foreground black
-	    
-	    # re-enable next button
-	    $reg_tab1.last.ne configure -state normal \
-		-foreground black -background $next_color
-	    $reg_tab2.last.ne configure -state normal \
-		-foreground black -background $next_color
-
-	    # grey out execute button
-	    $reg_tab1.last.ex configure -background grey75 -foreground grey64
-	    $reg_tab2.last.ex configure -background grey75 -foreground grey64
-	    	    
-	    # change ChooseNrrd
-	    set $mods(ChooseNrrd-ToReg)-port-index 1
-
-        }
-    }
-
-    method change_xy_smooth { val } {
-        global mods
-        global $mods(UnuResample-XY)-sigma
-        global $mods(UnuResample-XY)-extent
-	
-        set $mods(UnuResample-XY)-sigma $val
-        set $mods(UnuResample-XY)-extent [expr $val*3.0]
-    }	
-
-    method change_z_smooth { val } {
-        global mods
-        global $mods(UnuResample-Z)-sigma
-        global $mods(UnuResample-Z)-extent
-	
-        set $mods(UnuResample-Z)-sigma $val
-        set $mods(UnuResample-Z)-extent [expr $val*3.0]
-    }
-
-
-
     method change_indicator {} {
        if {[winfo exists $indicator2] == 1} {
 	   
@@ -3751,19 +2130,7 @@ class ForwardFEMApp {
     variable data_tab1
     variable data_tab2
 
-    variable reg_tab1
-    variable reg_tab2
-
-    variable dt_tab1
-    variable dt_tab2
-
     # Data tabs
-    variable nrrd_tab1
-    variable nrrd_tab2
-    variable dicom_tab1
-    variable dicom_tab2
-    variable analyze_tab1
-    variable analyze_tab2
     variable data_next_button1
     variable data_next_button2
     variable data_ex_button1
@@ -3777,25 +2144,11 @@ class ForwardFEMApp {
     variable vis_tab1
     variable vis_tab2
 
-    variable variance_tab1
-    variable variance_tab2
-
-    variable planes_tab1
-    variable planes_tab2
-
     variable isosurface_tab1
     variable isosurface_tab2
 
     variable streamlines_tab1
     variable streamlines_tab2
-
-    # pointers to widgets
-    variable ref_image1
-    variable ref_image2
-
-    variable reg_thresh1
-    variable reg_thresh2
-
 
     # Application placing and size
     variable notebook_width
@@ -3820,13 +2173,6 @@ class ForwardFEMApp {
     variable execute_color
     variable feedback_color
     variable error_color
-
-    # planes
-    variable last_x
-    variable last_y
-    variable last_z
-    variable plane_inc
-    variable plane_type
 
     # colormaps
     variable colormap_width
