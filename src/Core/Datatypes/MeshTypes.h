@@ -66,14 +66,10 @@ class ImageMeshFace;
 const TypeDescription *get_type_description(ImageMeshNode *);
 const TypeDescription *get_type_description(ImageMeshFace *);
 
-//class LatVolMeshNode;
-//class LatVolMeshEdge;
-//class LatVolMeshFace;
-//class LatVolMeshCell;
-//const TypeDescription *get_type_description(LatVolMeshNode *);
-//const TypeDescription *get_type_description(LatVolMeshEdge *);
-//const TypeDescription *get_type_description(LatVolMeshFace *);
-//const TypeDescription *get_type_description(LatVolMeshCell *);
+class LatVolMeshNode;
+class LatVolMeshCell;
+const TypeDescription *get_type_description(LatVolMeshNode *);
+const TypeDescription *get_type_description(LatVolMeshCell *);
 
 //class MaskedLatVolMeshNode;
 //class MaskedLatVolMeshEdge;
@@ -92,8 +88,8 @@ class PrismVolMeshCell;
 const TypeDescription *get_type_description(PrismVolMeshNode *);
 const TypeDescription *get_type_description(PrismVolMeshCell *);
 
-//class QuadraticLatVolMeshNode;
-//const TypeDescription *get_type_description(QuadraticLatVolMeshNode *);
+class QuadraticLatVolMeshNode;
+const TypeDescription *get_type_description(QuadraticLatVolMeshNode *);
 
 class QuadSurfMeshNode;
 class QuadSurfMeshFace;
