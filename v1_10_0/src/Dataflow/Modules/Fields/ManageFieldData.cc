@@ -80,13 +80,9 @@ ManageFieldData::execute()
     return;
   }
 
-  // Compute output matrix.
-  if (ifieldhandle->data_at() == Field::NONE)
-  {
-    error("This module does not support fields containing no data.");
-    return;
-  }
-
+  // TODO: Using datasize this way appears to be wrong, as it depends
+  // on the input DATA_AT size and not the one picked for output.
+  int datasize = 0;
   int svt_flag = 0;
   if (ifieldhandle->query_scalar_interface(this))
   {
@@ -101,20 +97,27 @@ ManageFieldData::execute()
     svt_flag = 2;
   }
 
-  int datasize;
-  CompileInfoHandle ci_field =
-    ManageFieldDataAlgoField::
-    get_compile_info(ifieldhandle->get_type_description(), svt_flag);
-  Handle<ManageFieldDataAlgoField> algo_field;
-  if (!module_dynamic_compile(ci_field, algo_field)) return;
-
-  MatrixOPort *omp = (MatrixOPort *)get_oport("Output Matrix");
-  if (!omp) {
-    error("Unable to initialize oport 'Output Matrix'.");
+  // Compute output matrix.
+  if (ifieldhandle->data_at() == Field::NONE)
+  {
+    remark("Input field contains no data, no matrix created.");
   }
   else
   {
-    omp->send(algo_field->execute(ifieldhandle, datasize));
+    CompileInfoHandle ci_field =
+      ManageFieldDataAlgoField::
+      get_compile_info(ifieldhandle->get_type_description(), svt_flag);
+    Handle<ManageFieldDataAlgoField> algo_field;
+    if (!module_dynamic_compile(ci_field, algo_field)) return;
+
+    MatrixOPort *omp = (MatrixOPort *)get_oport("Output Matrix");
+    if (!omp) {
+      error("Unable to initialize oport 'Output Matrix'.");
+    }
+    else
+    {
+      omp->send(algo_field->execute(ifieldhandle, datasize));
+    }
   }
 
   // Compute output field.
