@@ -189,7 +189,7 @@ int CoregPtsAnalytic::computeTrans() {
 				       (ra[0]*rp[0]+
 					ra[1]*rp[1]*Cos(theta[0]-theta[1])+
 					ra[2]*rp[2]*Cos(theta[0]-theta[2])));
-  Theta.pre_rotate(theta_best, Vector(0,0,1));
+  Theta.pre_rotate(-theta_best, Vector(0,0,1));
 
   // lastly, rotate the a points into position and solve for scale
   
