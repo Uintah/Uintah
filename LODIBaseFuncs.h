@@ -359,15 +359,15 @@ void FaceVelLODI(const Patch* patch,
 
    for( int corner = 0; corner < 4; corner ++ ) {
      IntVector c = crn[corner];
-     uVel = vel[c].x() - delT 
+     uVel = * rho_tmp[c] * vel[c].x() - delT 
           * ((d[1][c].x() + d[1][c].y() + d[1][c].z()) * vel[c].x()  
           +  (d[3][c].x() + d[4][c].y() + d[5][c].z()) * rho_tmp[c]);
 
-     vVel = vel[c].y() - delT 
+     vVel = rho_tmp[c] * vel[c].y()   - delT 
           * ((d[1][c].x() + d[1][c].y() + d[1][c].z()) * vel[c].y() 
           +  (d[4][c].x() + d[3][c].y() + d[4][c].z()) * rho_tmp[c]);
 
-     wVel = vel[c].z() - delT 
+     wVel = rho_tmp[c] * vel[c].z()   - delT 
           * ((d[1][c].x() + d[1][c].y() + d[1][c].z()) * vel[c].z() 
           +  (d[5][c].x() + d[5][c].y() + d[3][c].z()) * rho_tmp[c]);
           
