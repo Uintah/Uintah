@@ -42,6 +42,10 @@ sub do_cmd_textgreater {
     join('', qq|&gt;|, $_[0]);
 }
 
+sub do_cmd_textasciitilde {
+    join('', qq|&tilde;|, $_[0]);
+}
+
 sub do_cmd_xmlstarttag {
     local($_) = @_;
     s/$next_pair_pr_rx//o;
