@@ -104,6 +104,7 @@ using namespace SCIRun;
 					    const MaterialSet*);
       
       void setICELabel(ICELabel* Ilb) {
+	delete lb;
 	lb = Ilb;
       };
       

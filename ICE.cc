@@ -260,6 +260,10 @@ void ICE::scheduleInitialize(const LevelP& level,
   t->computes(d_sharedState->get_delt_label());
 
   sched->addTask(t, level->eachPatch(), d_sharedState->allICEMaterials());
+
+  // The task will have a reference to press_matl
+  if (press_matl->removeReference())
+    delete press_matl; // shouln't happen, but...
 }
 
 void ICE::restartInitialize()
@@ -338,7 +342,10 @@ void ICE::scheduleTimeAdvance(const LevelP& level,
   if(switchTestConservation) {
     schedulePrintConservedQuantities(sched, patches, press_matl,all_matls); 
   }
-  
+
+  // whatever tasks use press_matl will have their own reference to it.
+  if (press_matl->removeReference())
+    delete press_matl;
 }
 
 /* ---------------------------------------------------------------------
