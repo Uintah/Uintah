@@ -133,7 +133,7 @@ namespace SCIRun {
 
     //////////
     // Erases the ScheduleEntry with a particular name
-    void clear(std::string distname);
+    void clear(std::string distname, sched_t sch);
 
     //////////
     // Prints this object

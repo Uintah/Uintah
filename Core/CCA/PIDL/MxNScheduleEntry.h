@@ -73,12 +73,6 @@ namespace SCIRun {
     }
   };
   
-  ////////////
-  // Enumerated type denoting caller and callee. Used to
-  // tag this object as caller or callee in respect
-  // to the distribution.
-  typedef enum { caller, callee } sched_t;
-
   ///////////
   // List of array descriptions
   typedef std::vector<MxNArrayRep*> descriptorList;
@@ -130,6 +124,10 @@ namespace SCIRun {
     // whether that many descriptions have already been recieved.
     // If that is the case, we raise a synchronization semaphore.
     void reportMetaRecvDone(int size);
+
+    //////////
+    // Clears existing arrays of MxNArrayReps
+    void clear(sched_t sch); 
 
     ///////////
     // Prints the contents of this object
