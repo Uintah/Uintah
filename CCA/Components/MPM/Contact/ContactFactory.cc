@@ -24,11 +24,11 @@ Contact* ContactFactory::create(const ProblemSpecP& ps, SimulationStateP &ss,
 
    for (ProblemSpecP child = mpm_ps->findBlock("contact"); child != 0;
 	child = child->findNextBlock("contact")) {
-      std::string con_type;
-      child->require("type",con_type);
-    
+     std::string con_type;
+     child->getWithDefault("type",con_type, "null");
+     
       if (con_type == "null")
-	 return(scinew NullContact(child,ss,lb,flag));
+	 return(scinew NullContact(ss,lb,flag));
       
       else if (con_type == "single_velocity")
 	 return(scinew SingleVelContact(child,ss,lb,flag));
@@ -50,8 +50,9 @@ Contact* ContactFactory::create(const ProblemSpecP& ps, SimulationStateP &ss,
         throw ProblemSetupException(" E R R O R----->MPM:Unknown Contact type");
 	 //      exit(1);
       }
-    
    }
-   return 0;
+   
+   // null contact model if no <contact> block specified
+   return(scinew NullContact(ss,lb,flag));
 }
 
