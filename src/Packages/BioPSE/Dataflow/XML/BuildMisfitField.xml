@@ -32,10 +32,6 @@
   <io>
     <inputs lastportdynamic="no">
       <port>
-        <name>FEM Mesh</name>
-	<datatype>SCIRun::Field</datatype>
-      </port>
-      <port>
         <name>Leadfield (nelecs x nelemsx3)</name>
 	<datatype>SCIRun::Matrix</datatype>
       </port>
@@ -46,8 +42,8 @@
     </inputs>
     <outputs>
       <port>
-        <name>Misfit Field</name>
-	<datatype>SCIRun::Field</datatype>
+        <name>Misfit Vector</name>
+	<datatype>SCIRun::Matrix</datatype>
       </port>
     </outputs>
   </io>
