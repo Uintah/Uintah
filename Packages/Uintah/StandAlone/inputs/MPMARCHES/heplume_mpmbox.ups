@@ -163,8 +163,8 @@
 		    <inletType>primary</inletType>
 		    <geom_object>
 		      <box label="inlet">
-			<min>[-4,0.118,0.118]</min>
-			<max>[0,0.182,0.182]</max>
+			<min>[-4,0.468,0.468]</min>
+			<max>[0,0.532,0.532]</max>
 		      </box>
 		    </geom_object>
 		</FlowInlet>
@@ -185,11 +185,11 @@
 		    <RefPressure>0.0</RefPressure>
 		    <geom_object>
 		      <box label="topWall">
-			<min>[.3,-1,-1]</min>
+			<min>[1,-1,-1]</min>
 			<max>[3,2,2]</max>
 		      </box>
 		      <box label="posY_xzWall">
-			<min>[0,.3,-1]</min>
+			<min>[0,1,-1]</min>
 			<max>[1,2,2]</max>
 		      </box>
 		      <box label="zeroY_xzWall">
@@ -197,7 +197,7 @@
 			<max>[1,0,2]</max>
 		      </box>
 		      <box label="posZ_xyWall">
-			<min>[0,-1,.3]</min>
+			<min>[0,-1,1]</min>
 			<max>[1,2,2]</max>
 		      </box>
                       <box label="zeroZ_xyWall">	
