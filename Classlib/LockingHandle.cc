@@ -17,6 +17,7 @@
 
 #include <Classlib/LockingHandle.h>
 #include <Classlib/Assert.h>
+#include <iostream.h>
 
 template<class T>
 LockingHandle<T>::LockingHandle()
