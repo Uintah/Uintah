@@ -33,7 +33,7 @@
     </summary>
     <description>
       <p>
-         The field in input port 1 holds the mesh and data that are 
+         The field in the first input port holds the mesh that is
          to be visualized. It only needs to have a mesh, in which case 
          it will be rendered in the default color, which is editable from
          the ui. If there is a color map attached to port 2, and there is
@@ -46,7 +46,12 @@
          Faces and text can be rendered or not.
       </p>
       <p>
-         Vector and Tensor vis are forthcoming.
+         If the Orientation Field contains Vector data, then that
+         field is used to draw vectors or oriented glyphs.  These can
+         then be colored with the values derived from the first input
+         port.  In order for the vectors to be colored properly, the
+         Field and Orientation Field ports must share the same mesh
+         and have data at the same locations.
       </p>
       <developer>
 	<p>
@@ -88,6 +93,12 @@
 	<name>Orientation Field</name>
 	<description>
 	  <p>
+	     Optional Input.  If this is a Vector or Tensor field,
+  then arrows or oriented glyphs can be drawn where the data are in
+  the field.  These glyphs are then colored by the data values from
+the first input port.  In order for the coloring to work properly,
+  both the Field and Orientation Field input ports must contain fields
+  with the same mesh and data at the same locations.
           </p>
 	</description>
 	<datatype>SCIRun::Field</datatype>

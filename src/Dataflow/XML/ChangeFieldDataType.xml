@@ -32,10 +32,12 @@
     </summary>
     <description>
       <p>
-        ChangeFieldDataType allows the user to change the datatype at each field data_at location.
-      </p>
-      <p>
-        ChangeFieldDataType will default to the input field datatype on the first execution.  The user can then change the type via the pull-down menu to the desired Typename.
+        ChangeFieldDataType allows the user to change the datatype
+        at each field data_at location.  It also tries to convert the
+        data in the field to the new type if it is possible.  If no
+        conversion can be done the output field will contain default
+        zero values.  Note that conversion from a large data type to a
+        smaller data type usually results in a loss of precision.
       </p>
     </description>
   </overview>
