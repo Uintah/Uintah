@@ -198,6 +198,51 @@ NrrdData::verify_tuple_label(const string &s, vector<string> &elems) const
 }
 
 
+// return a comma separated list of just the type names along the tuple axis.
+string
+NrrdData::concat_tuple_types() const
+{
+  string rval;
+  const string s(nrrd->axis[0].label);
+
+  // first char must be part of name set
+  string::size_type nm_idx = 0;
+  string::size_type type_idx = s.size();
+
+  if (! s.size()) return false;
+
+  //cout << "label is: " << s << endl;
+  for(string::size_type i = 0; i < s.size(); i++) {
+    //cout << s[i] << endl;
+    if (s[i] == ':') {
+      // substring up until here must be a name
+      string sub = s.substr(nm_idx, i - nm_idx);
+      if (! in_name_set(sub)) return false;
+      // set nm_idx to something invalid for now.
+      type_idx = i+1;
+
+    } else if (s[i] == ',' || (i == s.size() - 1)) {
+      int off = 0;
+      if (i == s.size() - 1) {
+	off = 1;
+      }
+      // substring up until here must be an elem
+      //cout << "sub from : " << type_idx << " to: " << i << endl;
+      string sub = s.substr(type_idx, i - type_idx + off);
+      if (rval.size() == 0) {
+	rval = sub;
+      } else {
+	rval += string(",") + sub;
+      }
+      // start looking for next valid elem
+      nm_idx = i+1;
+      // set type_idx to something invalid for now.
+      type_idx = s.size();
+    }
+  }
+  return rval;
+}
+
 bool
 NrrdData::get_tuple_indecies(vector<string> &elems) const
 {
