@@ -156,6 +156,16 @@ void doNothingCB()
 {
   cout << "doNothingCB\n";
   if( fullscreen ) {
+
+glViewport(0, 0, 1280, 1024);
+glMatrixMode(GL_PROJECTION);
+glLoadIdentity();
+gluOrtho2D(0, 1280, 0, 1024);
+glDisable( GL_DEPTH_TEST );
+glMatrixMode(GL_MODELVIEW);
+glLoadIdentity();
+glTranslatef(0.375, 0.375, 0.0);
+
     backgroundTexQuad->draw();
     glutSwapBuffers();
     backgroundTexQuad->draw();
