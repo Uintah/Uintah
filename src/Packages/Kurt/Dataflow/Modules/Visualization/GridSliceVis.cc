@@ -35,7 +35,6 @@
 #include <Core/Math/MiscMath.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Packages/Uintah/Core/Datatypes/LevelMesh.h>
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Thread/CrowdMonitor.h>
 
@@ -61,7 +60,6 @@ using SCIRun::AuditAllocator;
 using SCIRun::DumpAllocator;
 using SCIRun::LatVolMesh;
 using SCIRun::Interpolate;
-using Uintah::LevelMesh;
 
 static string control_name("Control Widget");
 			 
@@ -190,16 +188,8 @@ void GridSliceVis::execute(void)
   if(!control_widget){
     control_widget=scinew PointWidget(this, &control_lock, 0.2);
     
-    if(LevelMesh *mesh = dynamic_cast<LevelMesh *> (tex->mesh().get_rep()))
-    {
-      BBox bb = mesh->get_bounding_box();
-      Smin = bb.min();
-      Smax = bb.max();
-      nx = mesh->get_nx();
-      ny = mesh->get_ny();
-      nz = mesh->get_nz();
-    } else if( LatVolMesh *mesh =
-	       dynamic_cast<LatVolMesh *> (tex->mesh().get_rep()))
+    if( LatVolMesh *mesh =
+	dynamic_cast<LatVolMesh *> (tex->mesh().get_rep()))
     {
       BBox bb = mesh->get_bounding_box();
       Smin = bb.min();
@@ -265,15 +255,7 @@ void GridSliceVis::execute(void)
     bool needbuild = false;
     if( tex.get_rep() != old_tex.get_rep() ){
       old_tex = tex;
-    if(LevelMesh *mesh = dynamic_cast<LevelMesh *> (tex->mesh().get_rep()))
-    {
-      BBox bb = mesh->get_bounding_box();
-      Smin = bb.min();
-      Smax = bb.max();
-      nx = mesh->get_nx();
-      ny = mesh->get_ny();
-      nz = mesh->get_nz();
-    } else if( LatVolMesh *mesh =
+    if( LatVolMesh *mesh =
 	       dynamic_cast<LatVolMesh *> (tex->mesh().get_rep()))
     {
       BBox bb = mesh->get_bounding_box();

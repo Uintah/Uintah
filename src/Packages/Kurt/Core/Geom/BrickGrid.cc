@@ -8,7 +8,7 @@
 #include <Core/Math/MinMax.h>
 #include <Core/Datatypes/LatVolField.h>
 #include <Core/Datatypes/FieldAlgo.h>
-#include <Packages/Uintah/Core/Datatypes/LevelField.h>
+#include <Core/Util/NotFinished.h>
 #include <Packages/Uintah/Core/Grid/ShareAssignArray3.h>
 #include <iostream>
 #include <vector>
@@ -30,7 +30,6 @@ using SCIRun::Min;
 using SCIRun::LatVolField;
 using SCIRun::field_minmax;
 using SCIRun::Field;
-using Uintah::LevelField;
 using Uintah::ShareAssignArray3;
 using SCIRun::Min;
 using SCIRun::Max;
@@ -46,7 +45,7 @@ BrickGrid::BrickGrid(FieldHandle tex, int bricksize, bool fixed,
 void BrickGrid::init() 
 {
   const string field_type = tex_->get_type_name(0);
-  if( field_type != "LatVolField" && field_type != "LevelField"){
+  if( field_type != "LatVolField"){
     cerr<<"BrickGrid not compatible with field type "<<field_type<<endl;
     return;
   }
@@ -58,45 +57,25 @@ void BrickGrid::init()
 	dynamic_cast<LatVolField<double>*>(tex_.get_rep());
       if( !is_fixed_ )
 	field_minmax(*fld, minmax_);
-      lat_vol_init(*fld);
+      init(*fld);
     } else if (data_type == "int" ) {
       LatVolField<int> *fld =
 	dynamic_cast<LatVolField<int>*>(tex_.get_rep());
       if( !is_fixed_ )
 	field_minmax(*fld, minmax_);
-      lat_vol_init(*fld);
+      init(*fld);
     } else if (data_type == "short" ) {
       LatVolField<short> *fld =
 	dynamic_cast<LatVolField<short>*>(tex_.get_rep());
       if( !is_fixed_ )
 	field_minmax(*fld, minmax_);
-      lat_vol_init(*fld);
+      init(*fld);
     } else if (data_type == "unsigned_char" ) {
       LatVolField<unsigned char> *fld =
 	dynamic_cast<LatVolField<unsigned char>*>(tex_.get_rep());
       if( !is_fixed_ )
 	field_minmax(*fld, minmax_);
-      lat_vol_init(*fld);
-    }
-  } else {
-    if( data_type == "double" ) {
-      LevelField<double> *fld =
-	dynamic_cast<LevelField<double>*>(tex_.get_rep());
-      if( !is_fixed_ )
-	fld->minmax( minmax_ );
-      level_field_init(*fld);
-    } else if( data_type == "float" ) {
-      LevelField<float> *fld =
-	dynamic_cast<LevelField<float>*>(tex_.get_rep());
-      if( !is_fixed_ )
-	fld->minmax(minmax_);
-      level_field_init(*fld);
-    } else if( data_type == "long" ) {
-      LevelField<long> *fld =
-	dynamic_cast<LevelField<long>*>(tex_.get_rep());
-      if( !is_fixed_ )
-	fld->minmax(minmax_);
-      level_field_init(*fld);
+      init(*fld);
     }
   }
 }
