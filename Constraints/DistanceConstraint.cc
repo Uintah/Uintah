@@ -80,8 +80,24 @@ DistanceConstraint::Satisfy( const Index index, const Scheme scheme )
       break;
    case 2:
       t = (v1.Get() - v0.Get()).length();
-      if (t < minimum)
+      if (t < minimum) {
 	 t = minimum;
+	 if (index == 1) {
+	    v = (v1.Get() - v0.Get());
+	    if (v.length2() < v1.GetEpsilon())
+	       v = guess;
+	    else
+	       v.normalize();
+	    v0.Assign(v0.Get() + (v*t), scheme);
+	 } else {
+	    v = (v0.Get() - v1.Get());
+	    if (v.length2() < v0.GetEpsilon())
+	       v = guess;
+	    else
+	       v.normalize();
+	    v1.Assign(v1.Get() + (v*t), scheme);
+	 }
+      }
       v2.Assign(Point(t, 0, 0), scheme);
       break;
    default:

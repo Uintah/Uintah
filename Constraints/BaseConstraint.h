@@ -232,9 +232,7 @@ Variable::GetRef()
 inline Index
 BaseConstraint::ChooseChange( const Index index, const Scheme scheme )
 {
-   callingMethod = index;
-   
-   return whichMethod = var_choices(scheme, index);
+   return whichMethod = var_choices(scheme, callingMethod = index);
 }
 
 

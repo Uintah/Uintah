@@ -6,7 +6,6 @@
 OBJS = BaseConstraint.o \
 	AngleConstraint.o \
 	DistanceConstraint.o \
-	HypotenuseConstraint.o  \
 	LineConstraint.o \
 	MidpointConstraint.o \
 	PlaneConstraint.o \
@@ -16,7 +15,6 @@ OBJS = BaseConstraint.o \
 SRCS = BaseConstraint.cc \
 	AngleConstraint.cc \
 	DistanceConstraint.cc \
-	HypotenuseConstraint.cc  \
 	LineConstraint.cc \
 	MidpointConstraint.cc \
 	PlaneConstraint.cc \
