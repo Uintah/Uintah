@@ -33,7 +33,7 @@ static void circle_points(int x, int y, int x_center, int y_center);
 
 VolumeVisDpy::VolumeVisDpy(Array1<Color> &matls, Array1<AlphaPos> &alphas,
 			   int ncolors, float t_inc, char *in_file):
-  DpyBase("VolumeVis GUI"), in_file(in_file), data_min(MAXFLOAT),
+  DpyBase("VolumeVis GUI"), histmax(0), in_file(in_file), data_min(MAXFLOAT),
   data_max(-MAXFLOAT), original_t_inc(0.01), current_t_inc(t_inc), 
   t_inc(t_inc), colors_index(matls), alpha_list(alphas), ncolors(ncolors), 
   nalphas(ncolors), new_fast_render_mode(true), fast_render_mode(true)
@@ -146,6 +146,7 @@ void VolumeVisDpy::run() {
 	  // Again only compute the histogram when the user requests
 	  //	  need_hist=true;
 	  nhist=xres-10;
+	  histmax=0;
 	} else {
 	  redraw=true;
 	}
@@ -391,35 +392,39 @@ void VolumeVisDpy::compute_hist(GLuint fid) {
 
 void VolumeVisDpy::draw_hist(GLuint fid, XFontStruct* font_struct) {
   int descent=font_struct->descent;
-  int textheight=font_struct->descent+font_struct->ascent+2;
-
   glViewport(0, 0, xres, yres);
   glClearColor(0, 0, 0, 1);
   glClear(GL_COLOR_BUFFER_BIT);
-  int nhist=xres-10;
 
   int s=yres/2; // start
   int e=yres; // end
   int h=e-s;
+  
   glViewport(5, s, xres-10, e-s);
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  gluOrtho2D(0, xres-10, -float(textheight)*histmax/(h-textheight), histmax);
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
+
+  if (histmax > 0) {
+    int textheight=font_struct->descent+font_struct->ascent+2;
     
-  ScalarTransform1D<int,Color*> stripes(color_transform.get_results_ptr());
-  stripes.scale(0,nhist-1);
-  glBegin(GL_LINES);
-  for(int i=0;i<nhist;i++){
-    Color *c=stripes.lookup(i);
-    //    cout << "color[i="<<i<<"] = " << *c << endl;
-    glColor3f(c->red(), c->green(), c->blue());
-    glVertex2i(i, 0);
-    glVertex2i(i, hist[i]);
+    int nhist=xres-10;
+    
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluOrtho2D(0, xres-10, -float(textheight)*histmax/(h-textheight), histmax);
+    
+    ScalarTransform1D<int,Color*> stripes(color_transform.get_results_ptr());
+    stripes.scale(0,nhist-1);
+    glBegin(GL_LINES);
+    for(int i=0;i<nhist;i++){
+      Color *c=stripes.lookup(i);
+      //    cout << "color[i="<<i<<"] = " << *c << endl;
+      glColor3f(c->red(), c->green(), c->blue());
+      glVertex2i(i, 0);
+      glVertex2i(i, hist[i]);
+    }
+    glEnd();
   }
-  glEnd();
-      
+
+  
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
   gluOrtho2D(0, xres, 0, h);
@@ -427,9 +432,14 @@ void VolumeVisDpy::draw_hist(GLuint fid, XFontStruct* font_struct) {
   // print the min on the left
   sprintf(buf, "%g", data_min);
   printString(fid, 2, descent+1, buf, Color(1,1,1));
-  // print the name in the middle
-  int x = (int)((xres - calc_width(font_struct,"Data Histogram"))/2);
-  printString(fid, x, descent+1, "Data Histogram", Color(1,1,1));
+  if (histmax > 0) {
+    // print the name in the middle
+    int x = (int)((xres - calc_width(font_struct,"Data Histogram"))/2);
+    printString(fid, x, descent+1, "Data Histogram", Color(1,1,1));
+  } else {
+    int x = (int)((xres - calc_width(font_struct,"Press 'h' to see histogram"))/2);
+    printString(fid, x, descent+1, "Press 'h' to see histogram", Color(1,1,1));
+  }
   // print the max on the right
   sprintf(buf, "%g", data_max);
   int w=calc_width(font_struct, buf);
