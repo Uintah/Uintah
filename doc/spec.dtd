@@ -1,0 +1,63 @@
+<!-- paragraph element common to many other elements -->
+<!ELEMENT para (#PCDATA)>
+<!ELEMENT img (#PCDATA)>
+<!ELEMENT name (#PCDATA)>
+<!ELEMENT ref (#PCDATA)>
+
+<!-- top level element spec -->
+<!ELEMENT spec (info, gui*, testing)>
+
+<!-- info element has all the build and meta data -->
+<!ELEMENT info (name, creation, description, author, version, IO, also)>
+
+<!-- creation function name -->
+<!ELEMENT creation (#PCDATA)>
+<!ELEMENT description (purpose, builder, dev, references?)>
+<!ELEMENT purpose (para+)>
+<!ELEMENT builder (para+)>
+<!ELEMENT dev (para+,img*)>
+<!ELEMENT references (ref+)>
+<!ELEMENT author (name+)>
+<!ELEMENT version (#PCDATA)>
+
+<!-- IO input and output info both datatype info and context info -->
+<!ELEMENT IO (ports, modules, example)>
+<!ELEMENT ports (in*, out*)>
+<!ELEMENT in (EMPTY)>
+<!ATTLIST in type (t1 | t2 | t3 | t4) "t1">
+<!ELEMENT out (EMPTY)>
+<!ATTLIST out type (t1 | t2 | t3 | t4) "t4">
+
+<!-- typical modules used upstream and downstream -->
+<!ELEMENT modules (typin+, typout+)>
+<!ELEMENT typin (name+)>
+<!ELEMENT typout (name+)>
+
+<!-- pointer to and example map (some .sr file) -->
+<!ELEMENT example (#PCDATA)>
+
+<!-- refer to similar modules, datatypes, etc... -->
+<!ELEMENT also (ref+)>
+
+<!-- gui element has all the gui related documentation -->
+<!ELEMENT gui (parameter+, img+)>
+<!ELEMENT parameter (label, use, developer)>
+<!ELEMENT label (#PCDATA)>
+<!ELEMENT use (para+)>
+<!ELEMENT developer (widgets, polling)>
+<!ELEMENT widgets (#PCDATA)>
+<!ELEMENT polling (#PCDATA)>
+
+<!-- testing element has all the testing related info -->
+<!ELEMENT testing (plan, expected)>
+<!ELEMENT plan (purpose, steps)>
+
+<!-- procedure describes what the steps below are trying to accomplish -->
+<!ELEMENT procedure (para+)>
+<!ELEMENT steps (step+)>
+
+<!-- each step in the test plan (a script telling you what to do)-->
+<!ELEMENT step (#PCDATA)>
+
+<!-- expected element has paragraphs that describe the expected results -->
+<!ELEMENT expected (para+)>

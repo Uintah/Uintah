@@ -1,0 +1,83 @@
+<?xml version='1.0' encoding='us-ascii' ?>
+<!DOCTYPE spec SYSTEM "spec.dtd">
+
+<spec>
+  <info>
+    <name></name>
+    <creation></creation>
+    <description>
+      <purpose>
+	<para></para>
+      </purpose>
+      <builder>
+	<para></para>
+      </builder>
+      <dev>
+	<para></para>
+	<img></img>
+      </dev>
+    </description>
+    <author>
+      <name></name>
+    </author>
+    <version></version>
+    <IO>
+      <ports>
+	<in type="t1">
+	  <EMPTY></EMPTY>
+	</in>
+	<out type="t4">
+	  <EMPTY></EMPTY>
+	</out>
+      </ports>
+      <modules>
+	<typin>
+	  <name></name>
+	</typin>
+	<typout>
+	  <name></name>
+	</typout>
+      </modules>
+      <example></example>
+    </IO>
+    <also>
+      <ref></ref>
+    </also>
+  </info>
+  <gui>
+    <parameter>
+      <label></label>
+      <use>
+	<para></para>
+      </use>
+      <developer>
+	<widgets></widgets>
+	<polling></polling>
+      </developer>
+    </parameter>
+    <parameter>
+      <label></label>
+      <use>
+	<para></para>
+      </use>
+      <developer>
+	<widgets></widgets>
+	<polling></polling>
+      </developer>
+    </parameter>
+    <img></img>
+  </gui>
+  <testing>
+    <plan>
+      <purpose>
+	<para></para>
+      </purpose>
+      <steps>
+	<step></step>
+      </steps>
+    </plan>
+    <expected>
+      <para></para>
+    </expected>
+  </testing>
+</spec>
