@@ -70,15 +70,14 @@ itcl_class Teem_DataIO_ImageExporter {
 	# to be modified for particular reader
 
 	# extansion to append if no extension supplied by user
-	set defext ".nd"
+	set defext ".*"
 	
 	# name to appear initially
-	set defname "MyNrrd"
-	set title "Save nrrd file"
+	set defname "MyImage"
+	set title "Save image file"
 
 	# file types to appers in filter box
 	set types {
-	    {{Nrrd Data (and separate .nrrd)}     {.nd}      }
 	    {{All Files}       {.*}   }
 	}
 	
