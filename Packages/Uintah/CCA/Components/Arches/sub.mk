@@ -34,9 +34,10 @@ endif
 PSELIBS := \
 	Packages/Uintah/Core/Parallel    \
 	Packages/Uintah/Core/ProblemSpec \
-	Packages/Uintah/CCA/Ports       \
+	Packages/Uintah/CCA/Ports        \
 	Packages/Uintah/Core/Grid        \
 	Packages/Uintah/Core/Exceptions  \
+	Core/Thread 			 \
 	Core/Geometry                    \
 	Core/Exceptions
 

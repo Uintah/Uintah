@@ -160,7 +160,8 @@ public:
 			 CellInformation* cellinfo,
 			 const ArchesLabel* lab);
 
-   virtual void matrixCreate(const LevelP& level, LoadBalancer* lb);
+   virtual void matrixCreate(const PatchSet* allpatches,
+			     const PatchSubset* mypatches);
    virtual void setPressMatrix(const ProcessorGroup* pc, const Patch* patch,
 			       ArchesVariables* vars,
 			       const ArchesLabel* lab);
