@@ -167,7 +167,7 @@ EnthalpySolver::solve(const LevelP& level,
 void 
 EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
 					SchedulerP& sched,
-					const PatchSet* patches,
+					const PatchSet*,
 					const MaterialSet* matls,
 		    			const TimeIntegratorLabel* timelabels)
 {

@@ -36,7 +36,9 @@ none
 #ifndef included_ImplicitTimeIntegrator
 #define included_ImplicitTimeIntegrator
 
-#include <iostream.h>
+#incldue <sgi_stl_warnings_off.h>
+#include <iosfwd>
+#incldue <sgi_stl_warnings_on.h>
 #include "NonlinearSolver.h"
 
 
