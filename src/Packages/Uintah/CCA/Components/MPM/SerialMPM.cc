@@ -762,10 +762,14 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
-    PerPatch<long> NAPID(0);
-    if(new_dw->exists(lb->ppNAPIDLabel, 0, patch))
-      new_dw->get(NAPID,lb->ppNAPIDLabel, 0, patch);
-
+    CCVariable<short int> cellNAPID;
+    if(new_dw->exists(lb->pCellNAPIDLabel, 0, patch))
+      new_dw->get(cellNAPID,lb->pCellNAPIDLabel, 0, patch, Ghost::None, 0);
+    else {
+      cellNAPID.allocate(patch);
+      cellNAPID.initialize(0);
+    }
+    
     for(int m=0;m<matls->size();m++){
       //cerrLock.lock();
       //NOT_FINISHED("not quite right - mapping of matls, use matls->get()");
@@ -774,9 +778,7 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
        particleIndex numParticles = mpm_matl->countParticles(patch);
        totalParticles+=numParticles;
 
-       mpm_matl->createParticles(numParticles, NAPID, patch, new_dw);
-
-       NAPID=NAPID + numParticles;
+       mpm_matl->createParticles(numParticles, cellNAPID, patch, new_dw);
 
        mpm_matl->getConstitutiveModel()->initializeCMData(patch,
 						mpm_matl, new_dw);
@@ -789,7 +791,7 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
 
        contactModel->initializeContact(patch,dwindex,new_dw);
     }
-    new_dw->put(NAPID, lb->ppNAPIDLabel, 0, patch);
+    new_dw->put(cellNAPID, lb->pCellNAPIDLabel, 0, patch);
   }
   new_dw->put(sumlong_vartype(totalParticles), lb->partCountLabel);
 }
