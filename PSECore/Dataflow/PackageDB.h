@@ -28,6 +28,13 @@ namespace PSECore {
                             ModuleMaker moduleMaker,
                             const clString& tclUIFile);
 
+	void createAlias(const clString& fromPackageName,
+			 const clString& fromCategoryName,
+			 const clString& fromModuleName,
+			 const clString& toPackageName,
+			 const clString& toCategoryName,
+			 const clString& toModuleName);
+
         Module* instantiateModule(const clString& packageName,
                                   const clString& categoryName,
                                   const clString& moduleName,
