@@ -121,22 +121,19 @@ void WidgetTest::execute()
 	 w->add(widgets[i]->GetWidget());
       widget_id = ogeom->addObj(w, module_name, &widget_lock);
    }
-//   widget_lock.write_lock();
-
-   // Update Arrow/Critical point widget
-   if ((widgets[WT_Arrow]->ReferencePoint()-Point(0,0,0)).length2() >= 1e-6)
-      ((ArrowWidget*)widgets[WT_Arrow])->SetDirection((Point(0,0,0)-widgets[WT_Arrow]->ReferencePoint()).normal());
-   if ((widgets[WT_Crit]->ReferencePoint()-Point(0,0,0)).length2() >= 1e-6)
-      ((CriticalPointWidget*)widgets[WT_Crit])->SetDirection((Point(0,0,0)-widgets[WT_Crit]->ReferencePoint()).normal());
-
-//   widget_lock.write_unlock();
-
    widgets[widget_type.get()]->execute();
    ogeom->flushViews();
 }
 
 void WidgetTest::geom_moved(int, double, const Vector&, void*)
 {
+    // Update Arrow/Critical point widget
+    if ((widgets[WT_Arrow]->ReferencePoint()-Point(0,0,0)).length2() >= 1e-6)
+	((ArrowWidget*)widgets[WT_Arrow])->SetDirection((Point(0,0,0)-widgets[WT_Arrow]->ReferencePoint()).normal());
+    if ((widgets[WT_Crit]->ReferencePoint()-Point(0,0,0)).length2() >= 1e-6)
+	((CriticalPointWidget*)widgets[WT_Crit])->SetDirection((Point(0,0,0)-widgets[WT_Crit]->ReferencePoint()).normal());
+    widgets[widget_type.get()]->execute();
+
     widget_lock.read_lock();
     cout << "Gauge ratio " << ((GuageWidget*)widgets[WT_Guage])->GetRatio() << endl;
     cout << "Ring angle " << ((RingWidget*)widgets[WT_Ring])->GetRatio() << endl;
