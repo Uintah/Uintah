@@ -35,81 +35,89 @@
 #include <vector>
 
 namespace SCIRun {
-  class Connection;
-  class Module;
-  class Port {
-  public:
-    Port(Module* module, const std::string& type_name,
-	 const std::string& port_name, const std::string& color_name);
-    virtual ~Port();
+class Connection;
+class Module;
 
-    int nconnections();
-    Connection* connection(int);
-    virtual void attach(Connection* conn);
-    virtual void detach(Connection* conn);
-    virtual void reset()=0;
-    virtual void finish()=0;
 
-    Module* get_module();
-    int get_which_port();
-    std::string get_typename();
-    std::string get_colorname();
-    std::string get_portname();
+class Port {
+public:
+  Port(Module* module, const std::string& type_name,
+       const std::string& port_name, const std::string& color_name);
+  virtual ~Port();
 
-    enum ConnectionState {
-      Connected,
-      Disconnected
-    };
-  protected:
-    enum PortState {
-	Off,
-	Resetting,
-	Finishing,
-	On
-    };
-    Module* module;
-    int which_port;
-    PortState portstate;
+  int num_unblocked_connections();
+  int nconnections();
+  Connection* connection(int);
+  virtual void attach(Connection* conn);
+  virtual void detach(Connection* conn);
+  virtual void reset()=0;
+  virtual void finish()=0;
 
-    std::vector<Connection*> connections;
+  Module* get_module();
+  int get_which_port();
+  std::string get_typename();
+  std::string get_colorname();
+  std::string get_portname();
 
-    void turn_on(PortState st=On);
-    void turn_off();
-    friend class Module;
-    void set_which_port(int);
-    virtual void update_light() = 0;
-  private:
-    std::string type_name;
-    std::string port_name;
-    std::string color_name;
-
-    Port(const Port&);
-    Port& operator=(const Port&);
+  enum ConnectionState {
+    Connected,
+    Disconnected
   };
-  class IPort : public Port {
-  public:
-    IPort(Module* module, const std::string& type_name,
-	 const std::string& port_name, const std::string& color_name);
-    virtual ~IPort();
-  private:
-    IPort(const IPort&);
-    IPort& operator=(const IPort&);
-
-    virtual void update_light();
+protected:
+  enum PortState {
+    Off,
+    Resetting,
+    Finishing,
+    On
   };
-  class OPort : public Port {
-  public:
-    OPort(Module* module, const std::string& type_name,
-	 const std::string& port_name, const std::string& color_name);
-    virtual ~OPort();
-    virtual bool have_data()=0;
-    virtual void resend(Connection*)=0;
-  private:
-    OPort(const OPort&);
-    OPort& operator=(const OPort&);
+  Module* module;
+  int which_port;
+  PortState portstate;
 
-    virtual void update_light();
-  };
+  std::vector<Connection*> connections;
+
+  void turn_on(PortState st=On);
+  void turn_off();
+  friend class Module;
+  void set_which_port(int);
+  virtual void update_light() = 0;
+private:
+  std::string type_name;
+  std::string port_name;
+  std::string color_name;
+
+  Port(const Port&);
+  Port& operator=(const Port&);
+};
+
+
+class IPort : public Port {
+public:
+  IPort(Module* module, const std::string& type_name,
+	const std::string& port_name, const std::string& color_name);
+  virtual ~IPort();
+private:
+  IPort(const IPort&);
+  IPort& operator=(const IPort&);
+
+  virtual void update_light();
+};
+
+
+class OPort : public Port {
+public:
+  OPort(Module* module, const std::string& type_name,
+	const std::string& port_name, const std::string& color_name);
+  virtual ~OPort();
+  virtual bool have_data()=0;
+  virtual void resend(Connection*)=0;
+private:
+  OPort(const OPort&);
+  OPort& operator=(const OPort&);
+
+  virtual void update_light();
+};
+
 }
 
 #endif
