@@ -147,7 +147,7 @@ itcl_class SCIRun_Fields_FieldSubSample {
 		$this-$index-stop $this-$index-stop2
 
 	    scaleEntry2 $w.$index.skip \
-		1 50 100 $this-$index-skip $this-$index-skip2
+		1 [expr [set $this-$index-dim] - 1] 100 $this-$index-skip $this-$index-skip2
 
 	    checkbutton $w.$index.wrap -variable $this-$index-wrap \
 		    -state $wrap -disabledforeground "" \
@@ -344,14 +344,16 @@ itcl_class SCIRun_Fields_FieldSubSample {
 		# Update the sliders to have the new bounds.
 		$w.$index.start.s configure -from          0 -to $stop_val
 		$w.$index.stop.s  configure -from $start_val -to [expr [set $this-$index-dim] - 1]
+		$w.$index.skip.s  configure -from 1 -to [expr [set $this-$index-dim] - 1]
 
 		bind $w.$index.start.e <Return> "$this manualSliderEntry4          0 $stop_val $this-$index-start $this-$index-start2 i"
 		bind $w.$index.stop.e  <Return> "$this manualSliderEntry  $start_val [expr [set $this-$index-dim] - 1] $this-$index-stop $this-$index-stop2"
+		bind $w.$index.skip.e  <Return> "$this manualSliderEntry  1 [expr [set $this-$index-dim] - 1] $this-$index-skip $this-$index-skip2"
 	    }
 
 	    # Update the stop values to be at the initials values.
 	    set $this-$index-start 0	    
-	    set $this-$index-stop  $stop_val
+	    set $this-$index-stop  [expr [set $this-$index-dim] - 1]
 	    set $this-$index-skip  1
 
 	    # Update the text values.
