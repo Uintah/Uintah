@@ -247,7 +247,7 @@ BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::execute(MeshHandle src_meshH, Me
 		      (locs[max_idx], 1.0));
 	}
       }
-      if (exhaustive_seach && failed) {
+      if (exhaustive_search && failed) {
 	typename LSRC::index_type index;
 	double d=find_closest_src_loc(index, src_mesh, p);
 	if (dist<=0 || d<dist)
