@@ -9,6 +9,7 @@
 #include <Core/Exceptions/ErrnoException.h>
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
+#include <Core/Util/FancyAssert.h>
 #include <sstream>
 #include <zlib.h>
 #include <math.h>
@@ -229,7 +230,7 @@ void Variable::read(InputContext& ic, long end, const string& compressionMode)
     readNormal(instream);
   ASSERT(instream.fail() == 0);
 #ifdef __sgi // should be removed when we get gcc-3.0+ working
-  ASSERT((unsigned long)instream.tellg() == uncompressedData->size());
+  ASSERTEQ((unsigned long)instream.tellg(), uncompressedData->size());
 #endif
 }
 
