@@ -31,6 +31,7 @@ namespace Uintah {
       const VarLabel* pExternalForceLabel;
       const VarLabel* pXLabel;
       const VarLabel* pSurfLabel;
+      const VarLabel* pCrackSurfaceNormalLabel; //for fracture
       const VarLabel* pSurfaceNormalLabel; //for fracture
       const VarLabel* pAverageMicrocrackLength; //for fracture
       const VarLabel* pTemperatureLabel; //for heat conduction
@@ -49,6 +50,7 @@ namespace Uintah {
       const VarLabel* pExternalForceLabel_preReloc;
       const VarLabel* pXLabel_preReloc;
       const VarLabel* pSurfLabel_preReloc;
+      const VarLabel* pCrackSurfaceNormalLabel_preReloc; //for fracture
       const VarLabel* pSurfaceNormalLabel_preReloc; //for fracture
       const VarLabel* pAverageMicrocrackLength_preReloc; //for fracture
       const VarLabel* pTemperatureLabel_preReloc; //for heat conduction
@@ -80,6 +82,7 @@ namespace Uintah {
       const VarLabel* gStressLabel;
       
       const VarLabel* cSelfContactLabel; //for fracture, CCVariable
+      const VarLabel* cCrackedCellLabel; //for fracture, CCVariable
       const VarLabel* cSurfaceNormalLabel; //for fracture, CCVariable
       const VarLabel* cBurnedMassLabel; //for burn models
 
@@ -99,6 +102,9 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.21  2000/08/08 19:55:59  tan
+// Added cCrackedCellLabel and pCrackSurfaceNormalLabel for fracture.
+//
 // Revision 1.20  2000/08/04 16:42:42  guilkey
 // Added VarLabels specific to FrictionContact so that those variables
 // can be pleaseSaved.
