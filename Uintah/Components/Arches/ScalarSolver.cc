@@ -52,7 +52,7 @@ ScalarSolver::ScalarSolver(TurbulenceModel* turb_model,
 				SFCYVariable<double>::getTypeDescription() );
   d_wVelocityMSLabel = scinew VarLabel("wVelocityMS",
 				SFCZVariable<double>::getTypeDescription() );
-  d_densitySIVBCLabel = scinew VarLabel("densitySIVBC",
+  d_densityCPLabel = scinew VarLabel("densityCP",
 				CCVariable<double>::getTypeDescription() );
   d_viscosityCTSLabel = scinew VarLabel("viscosityCTS",
 				CCVariable<double>::getTypeDescription() );
@@ -120,7 +120,7 @@ ScalarSolver::solve(const LevelP& level,
   //++d_generation;
 
   //computes stencil coefficients and source terms
-  // requires : scalarSP, [u,v,w]VelocityMS, densitySIVBC, viscosityCTS
+  // requires : scalarSP, [u,v,w]VelocityMS, densityCP, viscosityCTS
   // computes : scalCoefSBLM, scalLinSrcSBLM, scalNonLinSrcSBLM
   //sched_buildLinearMatrix(level, sched, new_dw, matrix_dw, delta_t, index);
   sched_buildLinearMatrix(level, sched, old_dw, new_dw, delta_t, index);
@@ -163,15 +163,15 @@ ScalarSolver::sched_buildLinearMatrix(const LevelP& level,
       // This task requires
       tsk->requires(old_dw, d_scalarSPLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
+      tsk->requires(old_dw, d_densityCPLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      tsk->requires(old_dw, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
       tsk->requires(new_dw, d_uVelocityMSLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
       tsk->requires(new_dw, d_vVelocityMSLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
       tsk->requires(new_dw, d_wVelocityMSLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(new_dw, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(old_dw, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
 
       /// requires convection coeff because of the nodal
@@ -198,13 +198,13 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				     double delta_t, int index)
 {
   // compute ith componenet of velocity stencil coefficients
-  // inputs : scalarSP, [u,v,w]VelocityMS, densitySIVBC, viscosityCTS
+  // inputs : scalarSP, [u,v,w]VelocityMS, densityCP, viscosityCTS
   // outputs: scalCoefSBLM
   d_discretize->calculateScalarCoeff(pc, patch, old_dw, new_dw, 
 				     delta_t, index);
 
   // Calculate scalar source terms
-  // inputs : [u,v,w]VelocityMS, scalarSP, densitySIVBC, viscosityCTS
+  // inputs : [u,v,w]VelocityMS, scalarSP, densityCP, viscosityCTS
   // outputs: scalLinSrcSBLM, scalNonLinSrcSBLM
   d_source->calculateScalarSource(pc, patch, old_dw, new_dw, 
 				  delta_t, index);
@@ -217,7 +217,7 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
   // similar to mascal
   // inputs :
   // outputs:
-  d_source->modifyScalarMassSource(pc, patch, new_dw,
+  d_source->modifyScalarMassSource(pc, patch, old_dw,
 				   new_dw, delta_t, index);
 
   // Calculate the scalar diagonal terms
@@ -229,6 +229,9 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.15  2000/07/03 05:30:16  bbanerje
+// Minor changes for inlbcs dummy code to compile and work. densitySIVBC is no more.
+//
 // Revision 1.14  2000/06/29 23:37:11  bbanerje
 // Changed FCVarsto SFC[X,Y,Z]Vars and added relevant getIndex() calls.
 //

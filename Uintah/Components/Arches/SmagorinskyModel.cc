@@ -77,8 +77,6 @@ SmagorinskyModel::SmagorinskyModel(PhysicalConstants* phyConsts):
 				    SFCYVariable<double>::getTypeDescription() );
   d_wVelocityCPBCLabel = scinew VarLabel("wVelocityCPBC",
 				    SFCZVariable<double>::getTypeDescription() );
-  d_densitySIVBCLabel = scinew VarLabel("densitySIVBC",
-				   CCVariable<double>::getTypeDescription() );
 
   d_uVelLinSrcPBLMLabel = scinew VarLabel("uVelLinSrcPBLM",
 				    SFCXVariable<double>::getTypeDescription() );
@@ -465,7 +463,7 @@ void SmagorinskyModel::calcVelocityWallBC(const ProcessorGroup* pc,
   }
 
   CCVariable<double> density;
-  old_dw->get(density, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(density, d_densityCPLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
 
   // Get the PerPatch CellInformation data
@@ -696,6 +694,9 @@ void SmagorinskyModel::calcVelocitySource(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.25  2000/07/03 05:30:16  bbanerje
+// Minor changes for inlbcs dummy code to compile and work. densitySIVBC is no more.
+//
 // Revision 1.24  2000/07/02 05:47:31  bbanerje
 // Uncommented all PerPatch and CellInformation stuff.
 // Updated array sizes in inlbcs.F

@@ -52,7 +52,7 @@ MomentumSolver::MomentumSolver(TurbulenceModel* turb_model,
 				     SFCYVariable<double>::getTypeDescription() );
   d_wVelocityCPBCLabel = scinew VarLabel("wVelocityCPBC",
 				     SFCZVariable<double>::getTypeDescription() );
-  d_densitySIVBCLabel = scinew VarLabel("densitySIVBC",
+  d_densityCPLabel = scinew VarLabel("densityCP",
 				   CCVariable<double>::getTypeDescription() );
   d_viscosityCTSLabel = scinew VarLabel("viscosityCTS",
 				     CCVariable<double>::getTypeDescription() );
@@ -138,7 +138,7 @@ MomentumSolver::solve(const LevelP& level,
   //++d_generation;
 
   //computes stencil coefficients and source terms
-  // require : pressurePS, [u,v,w]VelocityCPBC, densitySIVBC, viscosityCTS
+  // require : pressurePS, [u,v,w]VelocityCPBC, densityCP, viscosityCTS
   // compute : [u,v,w]VelCoefMBLM, [u,v,w]VelConvCoefMBLM
   //           [u,v,w]VelLinSrcMBLM, [u,v,w]VelNonLinSrcMBLM
   //sched_buildLinearMatrix(level, sched, new_dw, matrix_dw, delta_t, index);
@@ -181,6 +181,10 @@ MomentumSolver::sched_buildLinearMatrix(const LevelP& level,
 
       int numGhostCells = 0;
       int matlIndex = 0;
+      tsk->requires(old_dw, d_densityCPLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
+      tsk->requires(old_dw, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
+		    numGhostCells);
       tsk->requires(new_dw, d_pressurePSLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
       tsk->requires(new_dw, d_uVelocityCPBCLabel, matlIndex, patch, Ghost::None,
@@ -188,10 +192,6 @@ MomentumSolver::sched_buildLinearMatrix(const LevelP& level,
       tsk->requires(new_dw, d_vVelocityCPBCLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
       tsk->requires(new_dw, d_wVelocityCPBCLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(new_dw, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(old_dw, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
 
       /// requires convection coeff because of the nodal
@@ -226,32 +226,32 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				  double delta_t, int index)
 {
   // compute ith componenet of velocity stencil coefficients
-  // inputs : [u,v,w]VelocityCPBC, densitySIVBC, viscosityCTS
+  // inputs : [u,v,w]VelocityCPBC, densityCP, viscosityCTS
   // outputs: [u,v,w]VelConvCoefMBLM, [u,v,w]VelCoefMBLM
   d_discretize->calculateVelocityCoeff(pc, patch, old_dw, new_dw, 
 				       delta_t, index,
 				       Discretization::MOMENTUM);
 
   // Calculate velocity source
-  // inputs : [u,v,w]VelocityCPBC, densitySIVBC, viscosityCTS
+  // inputs : [u,v,w]VelocityCPBC, densityCP, viscosityCTS
   // outputs: [u,v,w]VelLinSrcMBLM, [u,v,w]VelNonLinSrcMBLM
-  d_source->calculateVelocitySource(pc, patch, new_dw, new_dw, 
+  d_source->calculateVelocitySource(pc, patch, old_dw, new_dw, 
 				    delta_t, index,
 				    Discretization::MOMENTUM);
 
   // Velocity Boundary conditions
-  //  inputs : densitySIVBC, [u,v,w]VelocityCPBC, [u,v,w]VelCoefMBLM
+  //  inputs : densityCP, [u,v,w]VelocityCPBC, [u,v,w]VelCoefMBLM
   //           [u,v,w]VelLinSrcMBLM, [u,v,w]VelNonLinSrcMBLM
   //  outputs: [u,v,w]VelCoefMBLM, [u,v,w]VelLinSrcMBLM, 
   //           [u,v,w]VelNonLinSrcMBLM
-  d_boundaryCondition->velocityBC(pc, patch, new_dw, new_dw, 
+  d_boundaryCondition->velocityBC(pc, patch, old_dw, new_dw, 
 				  index,
 				  Discretization::MOMENTUM);
 
   // similar to mascal
   // inputs :
   // outputs:
-  d_source->modifyVelMassSource(pc, patch, new_dw,
+  d_source->modifyVelMassSource(pc, patch, old_dw,
 			     new_dw, delta_t, index);
 
   // Calculate Velocity Diagonal
@@ -270,6 +270,9 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.14  2000/07/03 05:30:14  bbanerje
+// Minor changes for inlbcs dummy code to compile and work. densitySIVBC is no more.
+//
 // Revision 1.13  2000/06/29 22:56:42  bbanerje
 // Changed FCVars to SFC[X,Y,Z]Vars, and added the neceesary getIndex calls.
 //

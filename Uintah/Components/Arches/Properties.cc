@@ -27,8 +27,6 @@ Properties::Properties()
 				   CCVariable<double>::getTypeDescription() );
   d_densityCPLabel = scinew VarLabel("densityCP",
 				   CCVariable<double>::getTypeDescription() );
-  d_densitySIVBCLabel = scinew VarLabel("densitySIVBC",
-				   CCVariable<double>::getTypeDescription() );
   d_densityRCPLabel = scinew VarLabel("densityRCP",
 				   CCVariable<double>::getTypeDescription() );
 }
@@ -134,7 +132,7 @@ Properties::sched_reComputeProps(const LevelP& level,
       int numGhostCells = 0;
       int matlIndex = 0;
       // requires scalars
-      tsk->requires(old_dw, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_densityCPLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
       tsk->computes(new_dw, d_densityRCPLabel, matlIndex, patch);
       sched->addTask(tsk);
@@ -215,7 +213,7 @@ Properties::reComputeProps(const ProcessorGroup*,
   CCVariable<double> density;
   int matlIndex = 0;
   int nofGhostCells = 0;
-  old_dw->get(density, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(density, d_densityCPLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
 
   // Create the CCVariable for storing the computed density
@@ -258,6 +256,9 @@ Properties::Stream::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.22  2000/07/03 05:30:15  bbanerje
+// Minor changes for inlbcs dummy code to compile and work. densitySIVBC is no more.
+//
 // Revision 1.21  2000/07/01 05:20:59  bbanerje
 // Changed CellInformation calcs for Turbulence model requirements ..
 // CellInformation still needs work.

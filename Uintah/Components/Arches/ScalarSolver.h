@@ -149,7 +149,7 @@ private:
       const VarLabel* d_uVelocityMSLabel;
       const VarLabel* d_vVelocityMSLabel;
       const VarLabel* d_wVelocityMSLabel;
-      const VarLabel* d_densitySIVBCLabel;
+      const VarLabel* d_densityCPLabel;
       const VarLabel* d_viscosityCTSLabel;
 
       // const VarLabel* (computed)
@@ -169,6 +169,9 @@ private:
 
 //
 // $Log$
+// Revision 1.12  2000/07/03 05:30:16  bbanerje
+// Minor changes for inlbcs dummy code to compile and work. densitySIVBC is no more.
+//
 // Revision 1.11  2000/06/22 23:06:38  bbanerje
 // Changed velocity related variables to FCVariable type.
 // ** NOTE ** We may need 3 types of FCVariables (one for each direction)

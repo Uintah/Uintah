@@ -39,7 +39,7 @@ Source::Source()
 				    SFCYVariable<double>::getTypeDescription() );
   d_wVelocitySIVBCLabel = scinew VarLabel("wVelocitySIVBC",
 				    SFCZVariable<double>::getTypeDescription() );
-  d_densitySIVBCLabel = scinew VarLabel("densitySIVBC",
+  d_densityCPLabel = scinew VarLabel("densityCP",
 				    CCVariable<double>::getTypeDescription() );
   d_viscosityCTSLabel = scinew VarLabel("viscosityCTS",
 				    CCVariable<double>::getTypeDescription() );
@@ -152,25 +152,25 @@ Source::calculateVelocitySource(const ProcessorGroup* pc,
   // get data
   switch(eqnType) {
   case Discretization::PRESSURE:
-    old_dw->get(uVelocity, d_uVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
+    new_dw->get(uVelocity, d_uVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
 		numGhostCells);
-    old_dw->get(vVelocity, d_vVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
+    new_dw->get(vVelocity, d_vVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
 		numGhostCells);
-    old_dw->get(wVelocity, d_wVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
+    new_dw->get(wVelocity, d_wVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
 		numGhostCells);
     break;
   case Discretization::MOMENTUM:
-    old_dw->get(uVelocity, d_uVelocityCPBCLabel, matlIndex, patch, Ghost::None,
+    new_dw->get(uVelocity, d_uVelocityCPBCLabel, matlIndex, patch, Ghost::None,
 		numGhostCells);
-    old_dw->get(vVelocity, d_vVelocityCPBCLabel, matlIndex, patch, Ghost::None,
+    new_dw->get(vVelocity, d_vVelocityCPBCLabel, matlIndex, patch, Ghost::None,
 		numGhostCells);
-    old_dw->get(wVelocity, d_wVelocityCPBCLabel, matlIndex, patch, Ghost::None,
+    new_dw->get(wVelocity, d_wVelocityCPBCLabel, matlIndex, patch, Ghost::None,
 		numGhostCells);
     break;
   default:
     throw InvalidValue("Equation type can be only PRESSURE or MOMENTUM");
   }
-  old_dw->get(density, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(density, d_densityCPLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   old_dw->get(viscosity, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
@@ -333,13 +333,13 @@ Source::calculatePressureSource(const ProcessorGroup*,
 
   old_dw->get(pressure, d_pressureINLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-  old_dw->get(density, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(density, d_densityCPLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-  old_dw->get(uVelocity, d_uVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
+  new_dw->get(uVelocity, d_uVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-  old_dw->get(uVelocity, d_vVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
+  new_dw->get(uVelocity, d_vVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-  old_dw->get(uVelocity, d_wVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
+  new_dw->get(uVelocity, d_wVelocitySIVBCLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   for (int ii = 0; ii < nofStencils; ii++) {
     new_dw->get(uVelCoeff[ii], d_uVelCoefPBLMLabel, matlIndex, patch, 
@@ -479,7 +479,7 @@ Source::calculateScalarSource(const ProcessorGroup*,
   // ** WARNING ** The scalar is got based on the input index
   old_dw->get(scalar, d_scalarSPLabel, index, patch, Ghost::None,
 	      numGhostCells);
-  new_dw->get(density, d_densitySIVBCLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(density, d_densityCPLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   old_dw->get(viscosity, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
@@ -607,6 +607,9 @@ Source::addPressureSource(const ProcessorGroup* ,
 
 //
 //$Log$
+//Revision 1.18  2000/07/03 05:30:16  bbanerje
+//Minor changes for inlbcs dummy code to compile and work. densitySIVBC is no more.
+//
 //Revision 1.17  2000/07/02 05:47:31  bbanerje
 //Uncommented all PerPatch and CellInformation stuff.
 //Updated array sizes in inlbcs.F

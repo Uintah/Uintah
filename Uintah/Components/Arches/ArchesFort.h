@@ -169,7 +169,7 @@ extern "C"
 
     ////////////////////////////////////////////////////////////////////////
     //
-    // Cset flat profiles for scalars:
+    // set flat profiles for scalars:
     //
     void
     FORT_PROFSCALAR(const int* domainLow, const int* domainHigh, 
@@ -177,7 +177,10 @@ extern "C"
 		    double* scalar, int* cellType,
 		    double * sValue, const int* celltypeval);
 
-  // turbulence model
+    ////////////////////////////////////////////////////////////////////////
+    //
+    // turbulence model
+    //
     void
     FORT_SMAGMODEL(const int* domLoU, const int* domHiU, 
 		   double* uVelocity, 
@@ -193,12 +196,36 @@ extern "C"
 		   double* sew, double * sns, double* stb, double* mol_visc,
 		   double* cf, double* fac_msh, double* filterl);
 
+    ////////////////////////////////////////////////////////////////////////
+    //
+    // Update inlet velocities in order to match total flow rates while
+    // inlet area densities are changing
+    //
+    void
+    FORT_INLBCS(const int* domLoU, const int* domHiU, 
+		const int* idxLoU, const int* idxHiU,
+		double* uVelocity, 
+		const int* domLoV, const int* domHiV, 
+		const int* idxLoV, const int* idxHiV,
+		double* vVelocity, 
+		const int* domLoW, const int* domHiW, 
+		const int* idxLoW, const int* idxHiW,
+		double* wVelocity, 
+		const int* domLo, const int* domHi, 
+		const int* idxLo, const int* idxHi, 
+		const double* density,
+		const int* cellType,
+		const int* cellTypeVal);
+
 }
 
 #endif
 
 //
 // $Log$
+// Revision 1.9  2000/07/03 05:30:13  bbanerje
+// Minor changes for inlbcs dummy code to compile and work. densitySIVBC is no more.
+//
 // Revision 1.8  2000/06/30 04:19:16  rawat
 // added turbulence model and compute properties
 //

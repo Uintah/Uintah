@@ -11,8 +11,8 @@ CellInformation::CellInformation(const Patch* patch)
 {
   IntVector indexLow = patch->getCellLowIndex();
   IntVector indexHigh = patch->getCellHighIndex();
-  int xLo = indexLow.x(); int yLo = indexLow.x(); int zLo = indexLow.x();
-  int xHi = indexHigh.x(); int yHi = indexHigh.x(); int zHi = indexHigh.x();
+  int xLo = indexLow.x(); int yLo = indexLow.y(); int zLo = indexLow.z();
+  int xHi = indexHigh.x(); int yHi = indexHigh.y(); int zHi = indexHigh.z();
   int xSize = xHi-xLo; 
   int ySize = yHi-yLo;
   int zSize = zHi-zLo;

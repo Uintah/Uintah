@@ -133,12 +133,12 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
 
     //correct inlet velocities to account for change in properties
     // require : densityCP, [u,v,w]VelocitySP
-    // compute : densitySIVBC, [u,v,w]VelocitySIVBC
+    // compute : [u,v,w]VelocitySIVBC
     d_boundaryCondition->sched_setInletVelocityBC(level, sched, old_dw, 
 						  new_dw);
 
     // linearizes and solves pressure eqn
-    // require : pressureIN, densitySIVBC, viscosityCTS, [u,v,w]VelocitySIVBC
+    // require : pressureIN, densityCP, viscosityCTS, [u,v,w]VelocitySIVBC
     // compute : [u,v,w]VelConvCoefPBLM, [u,v,w]VelCoefPBLM, 
     //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM,
     //           presResidualPS, presCoefPS, presNonLinSrcPS, pressurePS
@@ -148,13 +148,13 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
 
     // if external boundary then recompute velocities using new pressure
     // and puts them in nonlinear_dw
-    // require : densitySIVBC, pressurePS, [u,v,w]VelocitySIVBC
+    // require : densityCP, pressurePS, [u,v,w]VelocitySIVBC
     // compute : [u,v,w]VelocityCPBC
-    d_boundaryCondition->sched_computePressureBC(level, sched, new_dw,
+    d_boundaryCondition->sched_computePressureBC(level, sched, old_dw,
 						 new_dw);
 
     // Momentum solver
-    // require : pressurePS, [u,v,w]VelocityCPBC, densitySIVBC, viscosityCTS
+    // require : pressurePS, [u,v,w]VelocityCPBC, densityCP, viscosityCTS
     // compute : [u,v,w]VelCoefMBLM, [u,v,w]VelConvCoefMBLM
     //           [u,v,w]VelLinSrcMBLM, [u,v,w]VelNonLinSrcMBLM
     //           [u,v,w]VelResidualMS, [u,v,w]VelCoefMS, 
@@ -165,7 +165,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     }
     
     // equation for scalars
-    // require : scalarSP, [u,v,w]VelocityMS, densitySIVBC, viscosityCTS
+    // require : scalarSP, [u,v,w]VelocityMS, densityCP, viscosityCTS
     // compute : scalarCoefSBLM, scalarLinSrcSBLM, scalarNonLinSrcSBLM
     //           scalResidualSS, scalCoefSS, scalNonLinSrcSS, scalarSS
     for (int index = 0;index < d_props->getNumMixVars(); index ++) {
@@ -175,9 +175,9 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     }
 
     // update properties
-    // require : densitySIVBC
+    // require : densityCP
     // compute : densityRCP
-    d_props->sched_reComputeProps(level, sched, new_dw, new_dw);
+    d_props->sched_reComputeProps(level, sched, old_dw, new_dw);
 
     // LES Turbulence model to compute turbulent viscosity
     // that accounts for sub-grid scale turbulence
@@ -379,6 +379,9 @@ PicardNonlinearSolver::computeResidual(const LevelP& level,
 
 //
 // $Log$
+// Revision 1.33  2000/07/03 05:30:15  bbanerje
+// Minor changes for inlbcs dummy code to compile and work. densitySIVBC is no more.
+//
 // Revision 1.32  2000/07/02 05:47:30  bbanerje
 // Uncommented all PerPatch and CellInformation stuff.
 // Updated array sizes in inlbcs.F
