@@ -9,6 +9,7 @@ SRCDIR := Packages/Moulding/Dataflow/Modules
 
 SUBDIRS := \
 	$(SRCDIR)/Visualization\
+	$(SRCDIR)/Fields\
 #[INSERT NEW CATEGORY DIR HERE]
 
 include $(SRCTOP_ABS)/scripts/recurse.mk
