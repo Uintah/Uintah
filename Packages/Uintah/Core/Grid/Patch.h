@@ -433,8 +433,7 @@ WARNING
 
      void computeVariableExtents(VariableBasis basis,
 				 const IntVector& boundaryLayer,
-				 Ghost::GhostType gtype,
-				 int numGhostCells,
+				 Ghost::GhostType gtype, int numGhostCells,
 				 IntVector& low, IntVector& high) const;
      
      void computeVariableExtents(TypeDescription::Type basis,
@@ -554,18 +553,20 @@ WARNING
      IntVector neighborsHigh() const;
      
      //////////
-     // Insert Documentation Here:
+     // Locations in space of opposite box corners:
      IntVector d_lowIndex;
      IntVector d_highIndex;
 
+     //////////
+     // Insert Documentation here.
      IntVector d_inLowIndex;
      IntVector d_inHighIndex;
      IntVector d_nodeHighIndex;
      
-     int d_id;
+     int d_id; // Patch ID
      
      // Added an extra vector<> for each material
-     BCType d_bctypes[numFaces];
+     BCType d_bctypes[numFaces];  // specifies bc type for each face
      vector<BCData> d_bcs;
      map<Patch::FaceType,BCDataArray > array_bcs;
      bool in_database;

@@ -895,13 +895,15 @@ long Patch::totalCells() const
    return res.x()*res.y()*res.z();
 }
 
-void Patch::performConsistencyCheck() const
+void
+Patch::performConsistencyCheck() const
 {
-   IntVector res(d_highIndex-d_lowIndex);
-   if(res.x() < 1 || res.y() < 1 || res.z() < 1) {
-      ostringstream msg;
-      msg << "Degenerate patch: " << toString() << " (resolution=" << res << ")";
-      SCI_THROW(InvalidGrid( msg.str() ));
+  // make sure that the patch's size is at least [1,1,1] 
+  IntVector res(d_highIndex-d_lowIndex);
+  if(res.x() < 1 || res.y() < 1 || res.z() < 1) {
+    ostringstream msg;
+    msg << "Degenerate patch: " << toString() << " (resolution=" << res << ")";
+    SCI_THROW(InvalidGrid( msg.str() ));
   }
 }
 

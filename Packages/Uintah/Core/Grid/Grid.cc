@@ -38,7 +38,7 @@ Level* Grid::addLevel(const Point& anchor, const Vector& dcell, int id)
 
 void Grid::performConsistencyCheck() const
 {
-  // See if patches on each level do not overlap
+  // Verify that patches on a single level do not overlap
   for(int i=0;i<(int)d_levels.size();i++)
     d_levels[i]->performConsistencyCheck();
 

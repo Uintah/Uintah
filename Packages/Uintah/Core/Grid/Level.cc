@@ -160,6 +160,7 @@ void Level::performConsistencyCheck() const
   }
 
   // This is O(n^2) - we should fix it someday if it ever matters
+  //   This checks that patches do not overlap
   for(int i=0;i<(int)d_virtualAndRealPatches.size();i++){
     Patch* r1 = d_virtualAndRealPatches[i];
     for(int j=i+1;j<(int)d_virtualAndRealPatches.size();j++){
@@ -172,7 +173,7 @@ void Level::performConsistencyCheck() const
     }
   }
 
-  // See if abutting boxes have consistent bounds
+  // Insert code to see if abutting boxes have consistent bounds
 }
 
 void Level::findNodeIndexRange(IntVector& lowIndex,IntVector& highIndex) const
