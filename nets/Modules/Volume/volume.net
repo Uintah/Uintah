@@ -1,4 +1,4 @@
-# SCIRun Network v1.22.0
+# SCIRun Network v1.23.0
 
 # The MIT License
 # 
@@ -30,8 +30,8 @@ init_DATADIR_and_DATASET
 
 set name {Main}
 set bbox {10 9 406 368}
-set creationDate {Tue Jun 29 2004}
-set creationTime {10:23:50}
+set creationDate {Thu Oct 14 2004}
+set creationTime {17:27:57}
 set runDate {}
 set runTime {}
 set notes {}
@@ -39,10 +39,10 @@ set notes {}
 # Create a SCIRun->DataIO->FieldReader Module
 set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 10 10]
 
-# Create a Volume->Visualization->TextureBuilder Module
+# Create a SCIRun->Visualization->TextureBuilder Module
 set m2 [addModuleAtPosition "SCIRun" "Visualization" "TextureBuilder" 10 88]
 
-# Create a Volume->Visualization->VolumeVisualizer Module
+# Create a SCIRun->Visualization->VolumeVisualizer Module
 set m3 [addModuleAtPosition "SCIRun" "Visualization" "VolumeVisualizer" 79 234]
 
 # Create a SCIRun->Visualization->GenStandardColorMaps Module
@@ -59,13 +59,13 @@ set c4 [addConnection $m4 0 $m3 1]
 
 # Set GUI variables for the SCIRun->DataIO->FieldReader Module
 set $m1-filename "$DATADIR/aneurysm/aneurysm-mra.lvs.fld"
-set $m1-types {{{{SCIRun Field File} {.fld} } {{SCIRun Field Any} {.*} } {{TextCurveField} {{.pts} {.edge}} } {{TextHexVolField} {{.pts} {.hex}} } {{TextPointCloudField} {.pts} } {{TextPointCloudString} {.pcs.txt} } {{TextQuadSurfField} {{.pts} {.quad}} } {{TextStructCurveField} {.pts} } {{TextStructHexVolField} {.pts} } {{TextStructQuadSurfField} {.pts} } {{TextTetVolField} {{.pts} {.tet}} } {{TextTriSurfField} {{.pts} {.fac} {.tri}} } {{VTKtoTriSurfField} {.vtk} } {{VTKtoTriSurfField-swap} {.vtk} } }}
 
-# Set GUI variables for the Volume->Visualization->TextureBuilder Module
-set $m2-card_mem {8}
+# Set GUI variables for the SCIRun->Visualization->TextureBuilder Module
+set $m2-vmin {0.0}
+set $m2-vmax {251.0}
+set $m2-card_mem {256}
 
-# Set GUI variables for the Volume->Visualization->VolumeVisualizer Module
-set $m3-num_slices {250}
+# Set GUI variables for the SCIRun->Visualization->VolumeVisualizer Module
 set $m3-alpha_scale {-0.796}
 
 # Set GUI variables for the SCIRun->Visualization->GenStandardColorMaps Module
@@ -75,38 +75,27 @@ set $m4-width {295}
 set $m4-height {40}
 
 $m5 addViewer
-set $m5-ViewWindow_0-geometry 654x646+86+22
+set $m5-ViewWindow_0-geometry 654x645+86+36
 
 # Set GUI variables for the SCIRun->Render->Viewer Module
-set $m5-ViewWindow_0-pos {}
-set $m5-ViewWindow_0-caxes {0}
-set $m5-ViewWindow_0-raxes {1}
-set $m5-ViewWindow_0-iaxes {}
-set $m5-ViewWindow_0-have_collab_vis {0}
-set $m5-ViewWindow_0-view-eyep-x {383.972722772}
-set $m5-ViewWindow_0-view-eyep-y {340.318886455}
-set $m5-ViewWindow_0-view-eyep-z {641.455262775}
+set $m5-ViewWindow_0-view-eyep-x {151.081663385}
+set $m5-ViewWindow_0-view-eyep-y {-72.6688290196}
+set $m5-ViewWindow_0-view-eyep-z {2271.29075544}
 set $m5-ViewWindow_0-view-lookat-x {383.49984}
 set $m5-ViewWindow_0-view-lookat-y {334.99962}
 set $m5-ViewWindow_0-view-lookat-z {119.99976}
-set $m5-ViewWindow_0-view-up-x {0.0164881316678}
-set $m5-ViewWindow_0-view-up-y {0.999811891806}
-set $m5-ViewWindow_0-view-up-z {-0.0102138394986}
-set $m5-ViewWindow_0-view-fov {20}
+set $m5-ViewWindow_0-view-up-x {0.971205340202}
+set $m5-ViewWindow_0-view-up-y {0.19183487781}
+set $m5-ViewWindow_0-view-up-z {0.141278331028}
+set $m5-ViewWindow_0-view-fov {20.0}
 set $m5-ViewWindow_0-view-eyep_offset-x {}
 set $m5-ViewWindow_0-view-eyep_offset-y {}
 set $m5-ViewWindow_0-view-eyep_offset-z {}
-set $m5-ViewWindow_0-global-light0 {1}
-set $m5-ViewWindow_0-global-light1 {0}
-set $m5-ViewWindow_0-global-light2 {0}
-set $m5-ViewWindow_0-global-light3 {0}
-set $m5-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
-set $m5-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
-set $m5-ViewWindow_0-bgcolor-r {0}
-set $m5-ViewWindow_0-bgcolor-g {0}
-set $m5-ViewWindow_0-bgcolor-b {0}
-set $m5-ViewWindow_0-shading {}
+set $m5-ViewWindow_0-sr {1}
 set $m5-ViewWindow_0-do_stereo {0}
+set $m5-ViewWindow_0-ortho-view {0}
+set $m5-ViewWindow_0-trackViewWindow0 {1}
+set $m5-ViewWindow_0-raxes {1}
 set $m5-ViewWindow_0-ambient-scale {1.0}
 set $m5-ViewWindow_0-diffuse-scale {1.0}
 set $m5-ViewWindow_0-specular-scale {0.4}
@@ -117,22 +106,18 @@ set $m5-ViewWindow_0-polygon-offset-units {0.0}
 set $m5-ViewWindow_0-point-size {1.0}
 set $m5-ViewWindow_0-line-width {1.0}
 set $m5-ViewWindow_0-sbase {0.4}
-set $m5-ViewWindow_0-sr {1}
-set $m5-ViewWindow_0-do_bawgl {0}
-set $m5-ViewWindow_0-drawimg {}
-set $m5-ViewWindow_0-saveprefix {}
-set $m5-ViewWindow_0-resx {}
-set $m5-ViewWindow_0-resy {}
-set $m5-ViewWindow_0-aspect {}
-set $m5-ViewWindow_0-aspect_ratio {}
-set $m5-ViewWindow_0-global-light {1}
-set $m5-ViewWindow_0-global-fog {0}
-set $m5-ViewWindow_0-global-debug {0}
-set $m5-ViewWindow_0-global-clip {1}
-set $m5-ViewWindow_0-global-cull {0}
-set $m5-ViewWindow_0-global-dl {0}
-set $m5-ViewWindow_0-global-type {Gouraud}
-set $m5-ViewWindow_0-ortho-view {0}
+set $m5-ViewWindow_0-bgcolor-r {0}
+set $m5-ViewWindow_0-bgcolor-g {0}
+set $m5-ViewWindow_0-bgcolor-b {0}
+set $m5-ViewWindow_0-fogusebg {1}
+set $m5-ViewWindow_0-fogcolor-r {0.0}
+set $m5-ViewWindow_0-fogcolor-g {0.0}
+set $m5-ViewWindow_0-fogcolor-b {1.0}
+set $m5-ViewWindow_0-fog-start {0.0}
+set $m5-ViewWindow_0-fog-end {0.714265}
+set $m5-ViewWindow_0-currentvisual {0}
+set $m5-ViewWindow_0-caxes {0}
+set $m5-ViewWindow_0-pos {}
 set $m5-ViewWindow_0-clip-num {}
 set $m5-ViewWindow_0-clip-visible {}
 set $m5-ViewWindow_0-clip-selected {}
@@ -166,6 +151,20 @@ set $m5-ViewWindow_0-clip-normal-x-6 {}
 set $m5-ViewWindow_0-clip-normal-y-6 {}
 set $m5-ViewWindow_0-clip-normal-z-6 {}
 set $m5-ViewWindow_0-clip-normal-d-6 {}
+set $m5-ViewWindow_0-global-light0 {1}
+set $m5-ViewWindow_0-global-light1 {0}
+set $m5-ViewWindow_0-global-light2 {0}
+set $m5-ViewWindow_0-global-light3 {0}
+set $m5-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+set $m5-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+set $m5-ViewWindow_0-global-light {1}
+set $m5-ViewWindow_0-global-fog {0}
+set $m5-ViewWindow_0-global-debug {0}
+set $m5-ViewWindow_0-global-clip {1}
+set $m5-ViewWindow_0-global-cull {0}
+set $m5-ViewWindow_0-global-dl {0}
+set $m5-ViewWindow_0-global-type {Gouraud}
+set "$m5-ViewWindow_0-VolumeRenderer Transparent (1)" {1}
 
 
 ::netedit scheduleok
