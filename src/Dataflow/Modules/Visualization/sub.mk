@@ -47,6 +47,7 @@ SRCS     += \
 	$(SRCDIR)/GenAxes.cc\
 	$(SRCDIR)/GenClock.cc\
 	$(SRCDIR)/GenStandardColorMaps.cc\
+	$(SRCDIR)/GenTitle.cc\
 	$(SRCDIR)/GenTransferFunc.cc\
 	$(SRCDIR)/Isosurface.cc\
 	$(SRCDIR)/RescaleColorMap.cc\
