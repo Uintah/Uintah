@@ -34,8 +34,10 @@ extern "C" {
   return scinew SimpleOPort<SpanUniverseHandle>(module,name);
 }
 }
-
-template<> clString SimpleIPort<SpanUniverseHandle>::port_type("SpanUniverse");
-template<> clString SimpleIPort<SpanUniverseHandle>::port_color("SteelBlue4");
-
 } // End namespace Yarden
+
+namespace SCIRun {
+template<> clString SimpleIPort<Yarden::SpanUniverseHandle>::port_type("SpanUniverse");
+template<> clString SimpleIPort<Yarden::SpanUniverseHandle>::port_color("SteelBlue4");
+
+} // End namespace SCIRun

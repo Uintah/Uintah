@@ -19,7 +19,8 @@ SRCS     += \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Packages/Yarden/Core/Datatypes Packages/Yarden/Dataflow/Ports \
-	Dataflow/Network Core/Persistent Core/Containers Core/Util \
+	Dataflow/Ports Dataflow/Network \
+	Core/Persistent Core/Containers Core/Util \
 	Core/Exceptions Core/Thread Core/TclInterface \
 	Core/Geom Core/Datatypes Core/Geometry \
 	Core/TkExtensions
