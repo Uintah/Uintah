@@ -279,31 +279,25 @@ void HypoElasticPlastic::initializeCMData(const Patch* patch,
   //               At present only Gaussian available.
   if (d_porosity.porosityDist != "constant") {
 
-    SCIRun::Gaussian gaussGen;
+    SCIRun::Gaussian gaussGen(d_porosity.f0, d_porosity.f0_std, 0);
     ParticleSubset::iterator iter = pset->begin();
     for(;iter != pset->end();iter++){
 
-      // Generate a Gaussian distributed random number between 0 an 1
-      double rand = gaussGen.rand();
-
-      // Assume mean and std. dev have same value, scale the random
-      // number to the allowable range, and assign to the porosity
-      pPorosity[*iter] = 2.0*rand*d_porosity.f0;
+      // Generate a Gaussian distributed random number given the mean
+      // porosity and the std.
+      pPorosity[*iter] = fabs(gaussGen.rand());
     }
   }
 
   if (d_scalarDam.scalarDamageDist != "constant") {
 
-    SCIRun::Gaussian gaussGen;
+    SCIRun::Gaussian gaussGen(d_scalarDam.D0, d_scalarDam.D0_std, 0);
     ParticleSubset::iterator iter = pset->begin();
     for(;iter != pset->end();iter++){
 
-      // Generate a Gaussian distributed random number between 0 an 1
-      double rand = gaussGen.rand();
-
-      // Assume mean and std. dev have same value, scale the random
-      // number to the allowable range, and assign to the damage
-      pDamage[*iter] = 2.0*rand*d_scalarDam.D0;
+      // Generate a Gaussian distributed random number given the mean
+      // damage and the std.
+      pDamage[*iter] = fabs(gaussGen.rand());
     }
   }
 
