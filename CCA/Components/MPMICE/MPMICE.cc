@@ -168,7 +168,7 @@ void MPMICE::scheduleInterpolatePressureToParticles(const Patch* patch,
                                                 DataWarehouseP& old_dw,
                                                 DataWarehouseP& new_dw)
 {
-   cout << "scheduleInterpolatePressureToParticles" << endl;
+//   cout << "scheduleInterpolatePressureToParticles" << endl;
    int numMPMMatls = d_sharedState->getNumMPMMatls();
    Task* t=scinew Task("MPMICE::interpolatePressureToParticles",
 		        patch, old_dw, new_dw,
@@ -194,7 +194,7 @@ void MPMICE::scheduleInterpolateNCToCC_0(const Patch* patch,
                                        DataWarehouseP& new_dw)
 {
    /* interpolateNCToCC */
-   cout << "scheduleInterpolateNCToCC_0" << endl;
+//   cout << "scheduleInterpolateNCToCC_0" << endl;
    int numMPMMatls = d_sharedState->getNumMPMMatls();
    Task* t=scinew Task("MPMICE::interpolateNCToCC_0",
 		        patch, old_dw, new_dw,
@@ -218,7 +218,6 @@ void MPMICE::scheduleInterpolateNCToCC_0(const Patch* patch,
      t->computes(new_dw, MIlb->cv_CCLabel,         idx, patch);
 //     t->computes(new_dw, MIlb->int_eng_L_CCLabel,  idx, patch);
      
-//     cout << "schedule cmopute for vel_CC on matl = " << idx << endl;
    }
 
    sched->addTask(t);
@@ -231,7 +230,7 @@ void MPMICE::scheduleInterpolateNCToCC(const Patch* patch,
                                        DataWarehouseP& old_dw,
                                        DataWarehouseP& new_dw)
 {
-   cout << "scheduleInterpolateNCToCC" << endl;
+//   cout << "scheduleInterpolateNCToCC" << endl;
    /* interpolateNCToCC */
 
    int numMPMMatls = d_sharedState->getNumMPMMatls();
@@ -264,7 +263,7 @@ void MPMICE::scheduleCCMomExchange(const Patch* patch,
                                    DataWarehouseP& old_dw,
                                    DataWarehouseP& new_dw)
 {
-   cout << "scheduleCCMomExchange" << endl;
+//   cout << "scheduleCCMomExchange" << endl;
    Task* t=scinew Task("MPMICE::doCCMomExchange",
 		        patch, old_dw, new_dw,
 		        this, &MPMICE::doCCMomExchange);
@@ -315,7 +314,7 @@ void MPMICE::scheduleComputeEquilibrationPressure(const Patch* patch,
 						  DataWarehouseP& old_dw,
 						  DataWarehouseP& new_dw)
 {
-  cout << "scheduleComputeEquilibrationPressure" << endl;
+//  cout << "scheduleComputeEquilibrationPressure" << endl;
   Task* task = scinew Task("MPMICE::computeEquilibrationPressure",
                         patch, old_dw, new_dw,this,
 			   &MPMICE::computeEquilibrationPressure);
@@ -402,7 +401,7 @@ void MPMICE::interpolatePressureToParticles(const ProcessorGroup*,
                                             DataWarehouseP& new_dw)
 {
 
-  cout << "Doing interpolatePressureToParticles \t\t MPMICE" << endl;
+//  cout << "Doing interpolatePressureToParticles \t\t MPMICE" << endl;
   
   CCVariable<double> pressCC;
   NCVariable<double> pressNC;
@@ -462,7 +461,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
  // double vol = dx.x()*dx.y()*dx.z();    MIGHT BE EXTRA
   double d_SMALL_NUM = 1.e-100;       // TEMPORARY THIS SHOULD BE PRIVATE DATA
   cout << "\n_________________________________________________"<< endl;  
-  cout << "Doing interpolateNCToCC_0 \t\t\t MPMICE" << endl;
+//  cout << "Doing interpolateNCToCC_0 \t\t\t MPMICE" << endl;
 
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -560,7 +559,7 @@ void MPMICE::interpolateNCToCC(const ProcessorGroup*,
 {
   int numMatls = d_sharedState->getNumMPMMatls();
   Vector zero(0.,0.,0.);
-  cout << "Doing interpolateNCToCC \t\t\t MPMICE" << endl;
+//  cout << "Doing interpolateNCToCC \t\t\t MPMICE" << endl;
 
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -614,7 +613,7 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
                              DataWarehouseP& old_dw,
                              DataWarehouseP& new_dw)
 {
-  cout << "Doing Heat and momentum exchange \t\t MPMICE" << endl;
+//  cout << "Doing Heat and momentum exchange \t\t MPMICE" << endl;
   int numMPMMatls = d_sharedState->getNumMPMMatls();
   int numICEMatls = d_sharedState->getNumICEMatls();
   int numALLMatls = numMPMMatls + numICEMatls;
