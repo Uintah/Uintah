@@ -18,12 +18,16 @@ include $(SRCTOP)/scripts/recurse.mk
 PSELIBS := Uintah/Interface Uintah/Grid Uintah/Parallel \
 	Uintah/Exceptions SCICore/Exceptions SCICore/Thread \
 	SCICore/Geometry
-LIBS :=
+LIBS := $(XML_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.4  2000/04/12 22:59:03  sparker
+# Working to make it compile
+# Added xerces to link line
+#
 # Revision 1.3  2000/03/20 19:38:23  sparker
 # Added VPATH support
 #

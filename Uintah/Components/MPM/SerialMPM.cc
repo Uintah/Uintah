@@ -62,6 +62,7 @@ SerialMPM::~SerialMPM()
 void SerialMPM::problemSetup(const ProblemSpecP&, GridP& grid,
 			     DataWarehouseP& dw)
 {
+#if 0
     string infile("in.mpm");
     Problem Enigma;
     Enigma.preProcessor(infile);
@@ -100,6 +101,7 @@ void SerialMPM::problemSetup(const ProblemSpecP&, GridP& grid,
 	cerr << "Creating particles for region\n";
 	Enigma.createParticles(region, dw);
     }
+#endif
     cerr << "SerialMPM::problemSetup not done\n";
 }
 
@@ -692,6 +694,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.13  2000/04/12 22:59:03  sparker
+// Working to make it compile
+// Added xerces to link line
+//
 // Revision 1.12  2000/04/12 16:57:23  guilkey
 // Converted the SerialMPM.cc to have multimaterial/multivelocity field
 // capabilities.  Tried to guard all the functions against breaking the
