@@ -40,8 +40,20 @@ University of Utah. All Rights Reserved.
         <li> Fixed OSX problem with mutex::lock(). </li>
         <li> Dynamic compilation types are now thread safe. </li>
         <li> Fixed save image directory listing. </li>
+	<li> Call initialize_ui instead of ui in PowerApps.  Before we
+             were calling the ui method and it would not display the GUI
+             window more than once.
       </ul>
-     </div>
+      <h1>
+      Packages
+      </h1>
+      <ul>
+	<li>
+	  Insight: Fixed initialization of TendEvecRGB's evec variable to store integer
+                   instead of string.
+	</li>
+      </ul>
+    </div>
   </body>
 </html>
 
