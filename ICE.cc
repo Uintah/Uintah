@@ -2025,7 +2025,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
           ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
           rho_micro[m][c] = 
            ice_matl->getEOS()->computeRhoMicro(press_new[c],gamma[m][c],
-                                               cv[m][c],Temp[m][c]);
+                                          cv[m][c],Temp[m][c],rho_micro[m][c]);
 
           double div = 1./rho_micro[m][c];
           
@@ -2188,7 +2188,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
           IntVector c = *iter;
           rho_micro[m][c] = 
             ice_matl->getEOS()->computeRhoMicro(press_new[c],gamma[m][c],
-                                                cv[m][c],Temp[m][c]);
+                                           cv[m][c],Temp[m][c],rho_micro[m][c]);
         }
       } // face loop
 #endif 
