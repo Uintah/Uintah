@@ -52,7 +52,9 @@ private:
 
 public:
   // Signals
-  Signal1 <GuiVar *> var_set;
+  Signal1 <GuiVar *> var_set_signal;
+  Signal1 <const string & > command_signal;
+  Signal2 <const string &, string &> eval_signal; 
 
 public:
   PartPort( Part *part ) : part_(part) {}

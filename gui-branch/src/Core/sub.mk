@@ -42,7 +42,6 @@ SUBDIRS := \
 	$(SRCDIR)/Parts \
 	$(SRCDIR)/Algorithms \
 #	$(SRCDIR)/2d \
-#	$(SRCDIR)/PartsGui
 
 ifeq ($(BUILD_PARALLEL),yes)
 SUBDIRS := \
