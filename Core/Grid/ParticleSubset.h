@@ -92,6 +92,18 @@ WARNING
       
       //////////
       // Insert Documentation Here:
+      const particleIndex* getPointer() const
+      {
+       return &d_particles[0];
+      }
+      
+      particleIndex* getPointer()
+      {
+       return &d_particles[0];
+      }
+      
+      //////////
+      // Insert Documentation Here:
       iterator end() {
 	 return d_particles.end();
       }
