@@ -191,7 +191,6 @@ void EditField::update_input_attributes(FieldHandle f)
   TCL::execute(string("set ")+id+"-numnodes "+to_string(num_nodes));
   TCL::execute(string("set ")+id+"-numelems "+to_string(num_elems));
 
-
   const BBox bbox = f->mesh()->get_bounding_box();
   Point min = bbox.min();
   Point max = bbox.max();
@@ -361,7 +360,12 @@ void EditField::build_widget(FieldHandle f)
     min = Point(minx_.get(),miny_.get(),minz_.get());
     max = Point(maxx_.get(),maxy_.get(),maxz_.get());
   }
-    
+  if ((max-min).length() < 1e-6)
+  {
+    min -= Vector(min) * 0.01;
+    max += Vector(max) * 0.01;
+  }
+  
   center = Point(min.x()+(max.x()-min.x())/2.,
 		 min.y()+(max.y()-min.y())/2.,
 		 min.z()+(max.z()-min.z())/2.);
@@ -372,8 +376,8 @@ void EditField::build_widget(FieldHandle f)
   l2norm = (max-min).length();
   
   box_ = scinew ScaledBoxWidget(this,&widget_lock_,1);
-  box_->SetScale(l2norm*.015);
-  box_->SetPosition(center,right,down,in);
+  box_->SetScale(l2norm * 0.015);
+  box_->SetPosition(center, right, down, in);
   box_->AxisAligned(1);
   
   GeomGroup *widget_group = scinew GeomGroup;
@@ -387,7 +391,8 @@ void EditField::build_widget(FieldHandle f)
 }
 
 
-void EditField::execute(){
+void EditField::execute()
+{
   FieldIPort *iport=0; 
   FieldHandle fh;
   Field *f=0;
