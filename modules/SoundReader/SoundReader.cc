@@ -58,7 +58,6 @@ Module* SoundReader::clone(int deep)
 void SoundReader::execute()
 {
     // Open the sound port...
-#if 0
     AFfilehandle afile=AFopenfile(filename(), "r", 0);
     if(!afile){
 	cerr << "Error opening file: " << afile << endl;
@@ -83,15 +82,7 @@ void SoundReader::execute()
     } else {
 	which=2;
     }
-#endif
-#if 1
-    double rate=8000;
-    osound->set_sample_rate(rate);
-    ifstream in(filename());
-    int nsamples=int(10*rate);
-#endif
-#if 0
-    int sample=0;
+    long sample=0;
     int size=(int)(rate/20);
     signed char* sampc=new char[size*nchannels];
     short* samps=new short[size*nchannels];
@@ -99,6 +90,28 @@ void SoundReader::execute()
     int done=0;
     switch(which){
     case 0:
+	while(!done){
+	    long status=AFreadframes(afile, AF_DEFAULT_TRACK,
+				     (void*)sampc, size);
+	    if(status==0){
+		done=1;
+	    } else if(status < 0){
+		error("Error in AFreadsamps");
+		done=1;
+	    } else {
+		signed char* p=sampc;
+		for(int i=0;i<status;i++){
+		    double s=0;
+		    for(int j=0;j<nchannels;j++)
+			s+=double(*p++)*mx;
+		    osound->put_sample(s);
+		}
+		sample+=status;
+		update_progress((int)sample++, (int)nsamples);
+		while(sample >= nsamples)
+		    sample-=nsamples;
+	    }
+	}
 	break;
     case 1:
 	while(!done){
@@ -110,35 +123,49 @@ void SoundReader::execute()
 		error("Error in AFreadsamps");
 		done=1;
 	    } else {
+		short* p=samps;
 		for(int i=0;i<status;i++){
 		    double s=0;
 		    for(int j=0;j<nchannels;j++)
-			s+=double(samps[i+j])*mx;
+			s+=double(*p++)*mx;
 		    osound->put_sample(s);
 		}
 		sample+=status;
-		update_progress(sample++, (int)nsamples);
+		update_progress((int)sample++, (int)nsamples);
+		while(sample >= nsamples)
+		    sample-=nsamples;
 	    }
 	}
 	break;
     case 2:
+	while(!done){
+	    long status=AFreadframes(afile, AF_DEFAULT_TRACK,
+				     (void*)sampl, size);
+	    if(status==0){
+		done=1;
+	    } else if(status < 0){
+		error("Error in AFreadsamps");
+		done=1;
+	    } else {
+		long* p=sampl;
+		cerr << "status=" << status << ", mx=" << mx << endl;
+		for(int i=0;i<status;i++){
+		    double s=0;
+		    for(int j=0;j<nchannels;j++)
+			s+=double(*p++)*mx;
+		    osound->put_sample(s);
+		}
+		sample+=status;
+		update_progress((int)sample++, (int)nsamples);
+		while(sample >= nsamples)
+		    sample-=nsamples;
+	    }
+	}
 	break;
-#endif
-#if 1
-	int sample=0;
-	while(1){
-	    signed char c1;
-	    in.get(c1);
-	    if(!in)break;
-	    double s=c1/128.0;
-	    osound->put_sample(s);
-	    
-	    // Tell everyone how we are doing...
-	    update_progress(sample++, (int)nsamples);
-	    if(sample >= nsamples)
-		sample=0;
-#endif
     }
+    delete samps;
+    delete sampl;
+    delete sampc;
 }
 
 void SoundReader::mui_callback(void*, int)
