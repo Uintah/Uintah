@@ -27,14 +27,22 @@
     <summary>Cheap histogram-based median filtering</summary>
     <description>
       <p>Cheap histogram-based median filtering. Only works on 1, 2,
-or 3 dimensions. The window over which filtering is done is always
-square, and only a simplistic weighting scheme is available. The
-filtering works by forming a histogram of the values in the window,
-and updating it as the window slides through the volume. Because of
-this histogramming, precision will be lost on anything other than
-8-bit data (assuming a sane # bins "-b"). Also, this is "cheap"
-because it doesn't do any filtering on the border (as defined by
-radius "-r"); values at these locations are simply copied from input.
+or 3 dimensional data (not counting the tuple axis). The window over
+which filtering is done is always square, and only a simplistic
+weighting scheme is available. The filtering works by forming a
+histogram of the values in the window, and updating it as the window
+slides through the volume. Because of this histogramming, precision
+will be lost on anything other than 8-bit data (assuming a sane #
+bins). Also, this is "cheap" because it doesn't do any filtering on
+the border (as defined by radius). values at these locations are
+simply copied from input.
+      </p>
+      <p>
+The filter is applied as if there were always scalars along the tuple
+axis, for example if you have a Vector set in along the tuple axis,
+then your Vectors x component is in the first position, y the second,
+z the third along the tuple axis. Each component gets the filter
+applied independently.
       </p>
     </description>
     <examplesr>Teem/nets/cmedian.net</examplesr>
