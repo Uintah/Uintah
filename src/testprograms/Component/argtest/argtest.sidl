@@ -18,13 +18,21 @@
 
 package argtest {
     interface ref {
-	int test();
+      int test();
+    };
+    enum TestEnum {
+      Foo, Bar,
     };
     interface Server {
 	int return_int();
 	void in_int(in int a);
 	void out_int(out int a);
 	void inout_int(inout int a);
+
+	TestEnum return_enum();
+	void in_enum(in TestEnum a);
+	void out_enum(out TestEnum a);
+	void inout_enum(inout TestEnum a);
 
 	string return_string();
 	void in_string(in string a);
