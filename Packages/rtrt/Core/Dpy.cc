@@ -163,7 +163,7 @@ Dpy::Dpy( Scene* scene, char* criteria1, char* criteria2,
 	  int nworkers, bool bench, int ncounters, int c0, int c1,
 	  float, float, bool display_frames, 
 	  int pp_size, int scratchsize, bool fullscreen, bool frameless,
-	  bool rserver)
+	  bool rserver, bool stereo)
   : DpyBase("Real-time Ray Tracer"), fullScreenMode_( fullscreen ), 
   doAutoJitter_( false ),
   showLights_( false ), lightsShowing_( false ),
@@ -238,6 +238,8 @@ Dpy::Dpy( Scene* scene, char* criteria1, char* criteria2,
 
   stealth_       = new Stealth( translate_scale, rotate_scale, gravity );
   objectStealth_ = new Stealth( translate_scale, rotate_scale, gravity );
+
+  priv->stereo=stereo;
 }
 
 Dpy::~Dpy()
@@ -321,7 +323,6 @@ Dpy::run()
   priv->up=0;
 
   priv->exposed=true;
-  priv->stereo=false;
 
   double benchstart=0;
   int frame=0;

@@ -128,7 +128,7 @@ public:
       int nworkers, bool bench, int ncounters, int c0, int c1,
       float xScale,float yScale, bool display_frames, 
       int pp_size, int scratchsize, bool fullscreen, bool frameless,
-      bool rserver);
+      bool rserver, bool stereo=false);
   virtual ~Dpy();
     void release(Window win);
 
