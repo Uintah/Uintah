@@ -44,7 +44,7 @@ namespace SCIRun {
   // default program settings and .rc files. It is HIGHLY RECOMMENDED
   // that you use the sci versions of putenv and getenv to keep things
   // consistent.
-  void sci_putenv( const string & key, const string & val );
+  int sci_putenv( const string & key, const string & val );
 
   // sci_getenv_p will lookup the value of the environment variable
   // 'key' and returns false if the variable is equal to 'false',
