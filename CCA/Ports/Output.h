@@ -3,7 +3,6 @@
 
 #include <Packages/Uintah/Core/Parallel/UintahParallelPort.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
-#include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
@@ -66,11 +65,11 @@ WARNING
       virtual void combinePatchSetup(Dir& fromDir) = 0;
 
      virtual bool need_recompile(double time, double delt,
-				 const LevelP& level) = 0;
+				 const GridP& grid) = 0;
 
       //////////
       // Call this after all other tasks have been added to the scheduler
-      virtual void finalizeTimestep(double t, double delt, const LevelP&,
+      virtual void finalizeTimestep(double t, double delt, const GridP&,
 				    SchedulerP&) = 0;
 
       //////////
