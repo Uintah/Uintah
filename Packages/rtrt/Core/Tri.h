@@ -27,7 +27,27 @@ public:
 				 HitInfo& hit, double dist, Color& atten,
 				 DepthStats* st, PerProcessorContext*);
     virtual Vector normal(const Point&, const HitInfo& hit);
+    inline Vector normal() { return n; }
     virtual void compute_bounds(BBox&, double offset);
+
+    Point centroid()
+    {
+	double one_third = 1./3.;
+
+	return AffineCombination(p1,one_third,
+				 p2,one_third,
+				 p3,one_third);
+    }
+    Point pt(int i)
+    {
+	if (i==0)
+	    return p1;
+	else if (i==1)
+	    return p2;
+	else 
+	    return p3;
+    }
+	       
 };
 
 } // end namespace rtrt
