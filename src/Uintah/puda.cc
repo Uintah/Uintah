@@ -33,9 +33,15 @@ void usage(const std::string& badarg, const std::string& progname)
 {
     if(badarg != "")
 	cerr << "Error parsing argument: " << badarg << '\n';
-    cerr << "Usage: " << progname << " [options]\n\n";
+    cerr << "Usage: " << progname << " [options] <archive file>\n\n";
     cerr << "Valid options are:\n";
-    cerr << "NOT FINISHED\n";
+    cerr << "  -h[elp]\n";
+    cerr << "  -timesteps\n";
+    cerr << "  -gridstats\n";
+    cerr << "  -listvariables\n";
+    cerr << "  -varsummary\n\n";
+
+    cerr << "USAGE IS NOT FINISHED\n\n";
     exit(1);
 }
 
@@ -50,11 +56,6 @@ int main(int argc, char** argv)
    bool do_varsummary=false;
    string filebase;
    
-   try {
-      XMLPlatformUtils::Initialize();
-   } catch(const XMLException& toCatch) {
-      cerr << "Caught XML exception: " << toString(toCatch.getMessage()) << '\n';
-   }
    /*
     * Parse arguments
     */
@@ -68,6 +69,8 @@ int main(int argc, char** argv)
 	 do_listvars=true;
       } else if(s == "-varsummary"){
 	 do_varsummary=true;
+      } else if( (s == "-help") || (s == "-h") ) {
+	usage( "", argv[0] );
       } else {
 	 if(filebase!="")
 	    usage(s, argv[0]);
@@ -75,12 +78,20 @@ int main(int argc, char** argv)
 	    filebase = argv[i];
       }
    }
-   
+
    if(filebase == ""){
       cerr << "No archive file specified\n";
       usage("", argv[0]);
    }
    
+   try {
+      XMLPlatformUtils::Initialize();
+   } catch(const XMLException& toCatch) {
+      cerr << "Caught XML exception: " << toString(toCatch.getMessage()) 
+	   << '\n';
+      exit( 1 );
+   }
+
    try {
       DataArchive* da = new DataArchive(filebase);
       
@@ -235,6 +246,9 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.2  2000/05/20 19:54:52  dav
+// browsing puda, added a couple of things to usage, etc.
+//
 // Revision 1.1  2000/05/20 08:09:01  sparker
 // Improved TypeDescription
 // Finished I/O
