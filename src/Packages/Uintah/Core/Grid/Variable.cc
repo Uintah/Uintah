@@ -163,7 +163,7 @@ string* Variable::gzipCompress(string* pUncompressed, string* pBuffer)
 }
 
 
-void Variable::read(InputContext& ic, long end, string compressionMode)
+void Variable::read(InputContext& ic, long end, const string& compressionMode)
 {
   bool use_rle = false;
   bool use_gzip = false;
