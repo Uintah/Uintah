@@ -33,7 +33,10 @@
 #include <Core/2d/Polyline.h>
 #include <Core/2d/BBox2d.h>
 
-#include <stdio.h>
+#include <iostream>
+#include <sstream>
+
+using namespace std;
 
 namespace SCIRun {
 
