@@ -244,7 +244,7 @@ void EditField::build_widget(FieldHandle f)
 {
   double l2norm;
   Point center, right, down, in;
-  Point min,max;
+  Point min, max;
 
   if (!cbbox_.get()) {
     // build a widget identical to the BBox
@@ -256,10 +256,23 @@ void EditField::build_widget(FieldHandle f)
     min = Point(minx_.get(),miny_.get(),minz_.get());
     max = Point(maxx_.get(),maxy_.get(),maxz_.get());
   }
-  if ((max-min).length() < 1e-6)
+
+  // Fix degenerate boxes.
+  const double size_estimate = MAX((max-min).length() * 0.01, 1.0e-5);
+  if (fabs(max.x() - min.x()) < 1.0e-6)
   {
-    min -= Vector(min) * 0.01;
-    max += Vector(max) * 0.01;
+    min.x(min.x() - size_estimate);
+    max.x(max.x() + size_estimate);
+  }
+  if (fabs(max.y() - min.y()) < 1.0e-6)
+  {
+    min.y(min.y() - size_estimate);
+    max.y(max.y() + size_estimate);
+  }
+  if (fabs(max.z() - min.z()) < 1.0e-6)
+  {
+    min.z(min.z() - size_estimate);
+    max.z(max.z() + size_estimate);
   }
   
   center = Point(min.x()+(max.x()-min.x())/2.,
