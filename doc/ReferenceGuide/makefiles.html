@@ -49,7 +49,7 @@ subdirectory.
    the "convert" directories of old.
  <li> Fewer .d files on irix - there is now one per directory.
  <li> No more addfile Fred/Foo/Makefile to the configure.in
- <li> No more --enable-Fred options, use --enable-package="SCIRun Uintah Fred" 
+ <li> No more --enable-Fred options, use --enable-package="Uintah Fred" 
    instead.
  <li> All of the .so's get built into a single "lib" directory, which
    makes the management of -rpath much simpler.
@@ -201,6 +201,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.5  2000/12/22 00:42:22  dmw
+# fixed a typo
+#
 # Revision 1.4  2000/12/22 00:23:05  dmw
 # changed the name from PSE to SCIRun in all the documentation
 #
@@ -245,6 +248,9 @@ include $(SRCTOP)/scripts/program.mk
 
 #
 # $Log$
+# Revision 1.5  2000/12/22 00:42:22  dmw
+# fixed a typo
+#
 # Revision 1.4  2000/12/22 00:23:05  dmw
 # changed the name from PSE to SCIRun in all the documentation
 #
@@ -276,9 +282,10 @@ something different, please talk to Steve.
 <h1>Configure and configure options</h1>
 
 <table border="2" cellspacing="2" cellpadding="4">
-<tr><td>--enable-package</td><td>Compile the listed packages.  For
-example, to build the SCIRun and Uintah modules, use:
---enable-package="SCIRun Uintah".</td></tr>
+<tr><td>--enable-package</td><td>Compile the listed packages.  SCIRun 
+modules are compiled automatically.  To also build the BioPSE and
+Uintah modules, use:
+--enable-package="BioPSE Uintah".</td></tr>
 <tr><td>--enable-exename</td><td>Overrides the default executable name
 for SCIRun.  The default is scirun.</td></tr>
 <tr><td>--enable-threads</td><td>Threads are always enabled, but this
@@ -335,7 +342,7 @@ Useful targets include:
 created in the build process.
   <li><b>distclean:</b> -  Performs a "make clean", and then removes all
 of the Makefiles.
-  <li><b>lib/libSCICore_Thread.so</b> -  Builds only the Thread library.
+  <li><b>lib/libSCIRun_Thread.so</b> -  Builds only the Thread library.
 This can be used for any individual shared object.
 </ul>
 
