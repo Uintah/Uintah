@@ -307,7 +307,7 @@ MPMLabel::~MPMLabel()
 
   delete pStrainEnergyLabel;
   delete pRotationRateLabel;
-  
+
   //PermanentParticleState
   delete pStressLabel;
   delete pVolumeLabel;

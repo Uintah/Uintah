@@ -4,7 +4,6 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMPhysicalModules.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
-#include <Packages/Uintah/CCA/Components/MPM/HeatConduction/HeatConduction.h>
 #include <Packages/Uintah/CCA/Components/MPM/Fracture/Fracture.h>
 #include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
@@ -688,8 +687,8 @@ void SerialMPM::scheduleCarryForwardVariables(SchedulerP& sched,
 }
 
 void SerialMPM::printParticleCount(const ProcessorGroup* pg,
-				   const PatchSubset* patches,
-				   const MaterialSubset* matls,
+				   const PatchSubset*,
+				   const MaterialSubset*,
 				   DataWarehouse*,
 				   DataWarehouse* new_dw)
 {
@@ -757,7 +756,7 @@ void SerialMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
 void SerialMPM::computeConnectivity(
                    const ProcessorGroup*,
 		   const PatchSubset* patches,
-		   const MaterialSubset* matls,
+		   const MaterialSubset*,
 		   DataWarehouse* old_dw,
 		   DataWarehouse* new_dw)
 {
@@ -772,7 +771,7 @@ void SerialMPM::computeConnectivity(
 
 void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 					   const PatchSubset* patches,
-					   const MaterialSubset* matls,
+					   const MaterialSubset* ,
 					   DataWarehouse* old_dw,
 					   DataWarehouse* new_dw)
 {

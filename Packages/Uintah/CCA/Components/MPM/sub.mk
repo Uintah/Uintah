@@ -10,7 +10,6 @@ SRCS     += $(SRCDIR)/SerialMPM.cc \
 	$(SRCDIR)/MPMPhysicalModules.cc
 
 SUBDIRS := $(SRCDIR)/ConstitutiveModel $(SRCDIR)/Contact \
-	$(SRCDIR)/HeatConduction \
 	$(SRCDIR)/Fracture \
 	$(SRCDIR)/ThermalContact \
 	$(SRCDIR)/GeometrySpecification \
