@@ -68,8 +68,8 @@ POSSIBLE REVISIONS:
 #include <vector>
 #include <iostream>
 
-using namespace std;
 namespace Uintah {
+using namespace std;
   class KD_Tree;
   class ChemkinInterface;
   class Stream;

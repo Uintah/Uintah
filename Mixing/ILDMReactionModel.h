@@ -58,8 +58,8 @@ POSSIBLE REVISIONS:
 
 #include <vector>
 
-using namespace std;
 namespace Uintah {
+using namespace std;
   class KD_Tree;
   class MixingModel; //Change to PDFMixingModel???
   class Stream;
