@@ -58,8 +58,6 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	global $this-node_select_on
 	set $this-node_select_on 0
 	
-	$this-c needexecute
-
 	#Node or Cell oriented data
 	global $this-var_orientation
 	set $this-var_orientation 0
@@ -134,7 +132,7 @@ itcl_class Uintah_Visualization_GridVisualizer {
     }
     
     method buildColorMenus {w} {
-	set n "$this-c needexecute "
+	set n "$this-c needexecute"
 	puts "GridVisualizer.tcl::buildColorMenus:w = $w"
 	if {[set $this-nl] > 0} {
 	    # color menu stuff
