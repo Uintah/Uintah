@@ -42,6 +42,7 @@ class SamplerGui : public PartGui {
 public:
   // Signals
   Signal1<int> num_iter;
+  Signal1<int> subsample;
   Signal1<int> go;
 
   // Slots

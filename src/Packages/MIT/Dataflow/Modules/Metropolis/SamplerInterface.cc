@@ -39,7 +39,8 @@ SamplerInterface::SamplerInterface( Sampler *part, PartInterface *parent )
   : PartInterface( part, parent, "SamplerInterface" ), sampler_(part)
 {
   num_iterations_ = 1000;
-  current_iter_ = 0;
+  current_iter_ = 1;
+  subsample_ = 1;
 }
  
 SamplerInterface::~SamplerInterface()

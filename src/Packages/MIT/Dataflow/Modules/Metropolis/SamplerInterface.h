@@ -45,6 +45,7 @@ protected:
 
   int num_iterations_;
   int current_iter_;
+  int subsample_;
 
 public:
   SamplerInterface( Sampler *, PartInterface *parent );
@@ -52,11 +53,13 @@ public:
 
   // get values
   int iterations() { return num_iterations_; }
+  int subsample() { return subsample_; }
 
   // set values
   void num_iterations( int i ) { num_iterations_ = i; } 
   void current_iter( int i ) { current_iter_ = i; current_iter_changed(i); }
   void go( int );
+  void subsample( int i ) { subsample_ = i ; }
 
   // Signals
   Signal1<int> current_iter_changed;

@@ -28,6 +28,7 @@ SRCS     += \
         $(SRCDIR)/mvtpdf.F\
         $(SRCDIR)/mnormpdf.F\
 	$(SRCDIR)/ItPDSimPartGui.cc \
+	$(SRCDIR)/IGaussianPDSimPartGui.cc \
 #[INSERT NEW CODE FILE HERE]
 
 
