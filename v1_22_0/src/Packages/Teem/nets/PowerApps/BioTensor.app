@@ -175,6 +175,8 @@ set m134 [addModuleAtPosition "SCIRun" "Visualization" "ChooseColorMap" 1068 128
 set m135 [addModuleAtPosition "SCIRun" "Visualization" "ChooseColorMap" 1274 1358]
 set m136 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 204 392]
 set m137 [addModuleAtPosition "Teem" "UnuAtoM" "UnuAxinfo"  269 666]
+set m138 [addModuleAtPosition "Teem" "UnuNtoZ" "UnuSave" 198 850]
+set m139 [addModuleAtPosition "Teem" "NrrdData" "ChooseNrrd" 199 771]
 
 setProgressText "Loading BioTensor Connections, Please Wait..."
 # Create the Connections between Modules
@@ -362,6 +364,8 @@ set c179 [addConnection $m136 0 $m103 0]
 set c180 [addConnection $m105 0 $m136 1]
 set c181 [addConnection $m102 0 $m111 3]
 set c182 [addConnection $m137 0 $m114 1]
+set c182 [addConnection $m114 0 $m139 0]
+set c183 [addConnection $m139 0 $m138 0]
 
 setProgressText "Loading BioTensor Settings, Please Wait..."
 
@@ -1559,6 +1563,8 @@ set $m136-port-index {0}
 
 set $m137-kind {nrrdKind3DMaskedSymTensor}
 
+set $m138-filename {/tmp/tensors.nrrd}
+
 ::netedit scheduleok
 
 
@@ -1607,6 +1613,8 @@ set mods(TendEstim) $m3
 set mods(UnuResample-XY) $m103
 set mods(UnuResample-Z) $m106
 set mods(ChooseNrrd-DT) $m114
+set mods(UnuSave-Tensors) $m138
+set mods(ChooseNrrd-Save) $m139
 
 ### Planes
 set mods(ChooseField-ColorPlanes) $m27
@@ -1751,6 +1759,8 @@ global xy_radius
 set xy_radius 1.0
 global z_radius 
 set z_radius 1.0
+global save_tensors
+set save_tensors 0
 
 ### isosurface variables
 global clip_by_planes
@@ -2200,6 +2210,8 @@ class BioTensorApp {
         disableModule $mods(NrrdReader-BMatrix) 1
         disableModule $mods(TendEstim) 1
 	disableModule $mods(ChooseNrrd-DT) 1
+	disableModule $mods(UnuSave-Tensors) 1
+	disableModule $mods(ChooseNrrd-Save) 1
 
 	# Disable execute buttons so that only the set button
 	# can be used for NrrdReaders
@@ -2809,8 +2821,8 @@ class BioTensorApp {
 		set dt_tab1 $step_tab
             } else {
 		set dt_tab2 $step_tab
-            }
-	    
+            }	   
+
 	    # DWI Smooting
             iwidgets::labeledframe $step_tab.blur \
 		-labeltext "DWI Smoothing" \
@@ -2944,7 +2956,48 @@ class BioTensorApp {
 		-state disabled -width 12
 	    
             pack $bm.browse -side top -anchor ne -padx 35 -pady 5
+
+	    # Saving Tensor
+	    iwidgets::labeledframe $step_tab.save \
+		-labeltext "Save Tensors" \
+		-labelpos nw -foreground grey64
+	    pack $step_tab.save -side top \
+		-fill x -padx 3 -pady 0 -anchor nw
+	    set save [$step_tab.save childsite]
 	    
+	    global save_tensors
+	    checkbutton $save.do_save -text "Save Computed Tensors" \
+		-command "$this toggle_save_tensors" \
+		-variable save_tensors \
+		-foreground grey64
+
+	    pack $save.do_save -side top -anchor nw -padx 3 -pady 3 
+
+	    Tooltip $save.do_save "Save computed tensors as a nrrd.\nSpecify the filename by typing it\nin the Tensor File entry or using the\nBrowse button to navigate to a file."
+
+	    frame $save.file
+	    pack $save.file -side top -anchor nw
+
+	    label $save.file.l -text "Tensor File:" -foreground grey64
+
+	    entry $save.file.e -width 20 \
+		-textvariable $mods(UnuSave-Tensors)-filename \
+		-foreground grey64
+
+	    pack $save.file.l $save.file.e -side left
+
+	    Tooltip $save.file.e "Save computed tensors as a nrrd.\nSpecify the filename by typing it\nin the Tensor File entry or using the\nBrowse button to navigate to a file."
+
+	    bind $save.file.e <Return> "$this execute_save"
+
+	    button $save.browse -text "Browse" \
+		-command "$mods(UnuSave-Tensors) create_filebox" \
+		-foreground grey64 -width 15
+
+	    pack $save.browse \
+		-side top -anchor n -padx 3 -pady 3
+	    
+	    Tooltip $save.browse "Save computed tensors as a nrrd.\nSpecify the filename by typing it\nin the Tensor File entry or using the\nBrowse button to navigate to a file."
         
 	    # Execute and Next
             frame $step_tab.last
@@ -9126,6 +9179,28 @@ class BioTensorApp {
 	}
     }
 
+    method toggle_save_tensors {} {
+	global mods save_tensors
+	if {$save_tensors ==  0} {
+	    # disable UnuSave
+	    disableModule $mods(UnuSave-Tensors) 1
+	    disableModule $mods(ChooseNrrd-Save) 1
+	} else {
+	    # enable Save module
+	    disableModule $mods(UnuSave-Tensors) 0
+	    disableModule $mods(ChooseNrrd-Save) 0
+
+	    if {$dt_completed == 1} {
+		$this execute_save
+	    }
+	}
+    }
+
+    method execute_save {} {
+	global mods
+	$mods(UnuSave-Tensors)-c needexecute
+    }
+
     
 
 
@@ -9244,7 +9319,6 @@ class BioTensorApp {
 	
     # fibers
     variable fiber_type
-
 
 }
 
