@@ -3,7 +3,6 @@
 
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
-#include <Packages/Uintah/CCA/Ports/Output.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
@@ -295,8 +294,6 @@ private:
   FractureMPM(const FractureMPM&);
   FractureMPM& operator=(const FractureMPM&);
 	 
-  Output* dataArchiver;
-
 };
       
 } // end namespace Uintah
