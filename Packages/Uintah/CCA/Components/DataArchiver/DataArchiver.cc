@@ -22,7 +22,6 @@
 #include <Core/Exceptions/ErrnoException.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/FancyAssert.h>
-#include <Core/Util/NotFinished.h>
 #include <Core/Util/Endian.h>
 #include <Core/Thread/Time.h>
 
@@ -309,8 +308,13 @@ void DataArchiver::initializeOutput(const ProblemSpecP& params) {
        fprintf(tmpout, "%s\n", dirname.c_str());
        if(fflush(tmpout) != 0)
 	 throw ErrnoException("fflush", errno);
+#if defined(__APPLE__)
+       if(fsync(fileno(tmpout)) != 0)
+	 throw ErrnoException("fsync", errno);
+#else
        if(fdatasync(fileno(tmpout)) != 0)
 	 throw ErrnoException("fdatasync", errno);
+#endif
        if(fclose(tmpout) != 0)
 	 throw ErrnoException("fclose", errno);
      }
