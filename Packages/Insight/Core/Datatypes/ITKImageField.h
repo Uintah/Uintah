@@ -39,6 +39,8 @@
 #include <itkImageRegionConstIterator.h>
 #include <itkRegion.h>
 
+#include <Core/Geometry/BBox.h>
+
 namespace Insight {
 
 using std::string;
@@ -46,7 +48,6 @@ using namespace SCIRun;
 
 template<class T> class ITKFData2d;
 template<class T> void Pio(Piostream& stream, ITKFData2d<T>& array);
-
 
 template <class Data>
 class ITKConstIterator2d : public itk::ImageRegionConstIterator<itk::Image<Data,2> > {
@@ -217,6 +218,14 @@ public:
     const_end_->GoToEnd();
     
     image_set_ = true;
+  }
+
+  void set_image_origin(double * origin) {
+    image_->SetOrigin( origin );
+  }
+
+  void set_image_spacing(double * spacing) {
+    image_->SetSpacing( spacing );
   }
 
   unsigned int size() { return dim1() * dim2(); }
@@ -412,7 +421,7 @@ ITKImageField<Data>::~ITKImageField()
 }
 
 
-#define IMAGE_FIELD_VERSION 2
+#define ITK_IMAGE_FIELD_VERSION 1
 
 template <class Data>
 Persistent* 
@@ -431,7 +440,45 @@ template <class Data>
 void
 ITKImageField<Data>::io(Piostream &stream)
 {
-  ASSERTFAIL("ITKImageField::io not implemented. Please use Insight->ImageWriter.");
+
+  int version = stream.begin_class(type_name(-1), ITK_IMAGE_FIELD_VERSION);
+  if(stream.reading()) {
+    GenericField<ImageMesh, ITKFData2d<Data> >::io(stream);
+    stream.end_class();
+    
+    // set spacing
+    typedef typename itk::Image<Data, 2> ImageType;
+    const BBox bbox = mesh()->get_bounding_box();
+    Point mesh_center;
+    Vector mesh_size;
+    if(bbox.valid()) {
+      mesh_center = bbox.center();
+      mesh_size = bbox.diagonal();
+    }
+    else {
+      std::cerr << "No bounding box to get center\n"; // fix
+      return;
+    }
+
+    // image origin and spacing
+    double origin[ ImageType::ImageDimension ];
+    origin[0] = mesh_center.x();
+    origin[1] = mesh_center.y();
+    
+    fdata().set_image_origin( origin );
+    
+    double spacing[ ImageType::ImageDimension ];
+    spacing[0] = mesh_size.x()/fdata().dim1();
+    spacing[1] = mesh_size.y()/fdata().dim2();
+
+    fdata().set_image_spacing( spacing );
+
+    return;
+  } else {
+    GenericField<ImageMesh, ITKFData2d<Data> >::io(stream);
+    stream.end_class();
+    return;
+  }
 }
 
 template <class Data>
@@ -483,10 +530,57 @@ ITKImageField<T>::get_type_description(int n) const
   return td;
 }
 
+#define ITKFData2d_VERSION 1
+
 template<class T> 
-void Pio(Piostream& stream, ITKFData2d<T>& array)
+void Pio(Piostream& stream, ITKFData2d<T>& data)
 {
-  ASSERTFAIL("Pio not written for ITKImageField. Please use Insight->ImageWriter."); 
+  stream.begin_class("ITKFData2d", ITKFData2d_VERSION);
+  if(stream.reading()) {
+    typedef typename itk::Image<T, 2> ImageType;
+    typename ImageType::Pointer img = ImageType::New();
+
+    // image start index
+    typename ImageType::IndexType start;
+    start[0] = 0;
+    start[1] = 0;
+    
+    // image size
+    unsigned int size_x = 0;
+    unsigned int size_y = 0;
+
+    Pio(stream, size_x);
+    Pio(stream, size_y);
+
+    typename ImageType::SizeType size;
+    size[0] = size_x;
+    size[1] = size_y;
+    
+    // allocate image
+    typename ImageType::RegionType region;
+    region.SetSize( size );
+    region.SetIndex( start );
+    
+    img->SetRegions( region );
+    img->Allocate();
+
+    // set the image
+    data.set_image(img);
+  } else {
+    unsigned int x = data.dim1();
+    unsigned int y = data.dim2();
+    Pio(stream, x);
+    Pio(stream, y);
+  }
+  // loop through data and call Pio
+  typename ITKFData2d<T>::const_iterator b, e;
+  b = data.begin();
+  e = data.end();
+  while(b != e) {
+    Pio(stream, const_cast<T&>(*b));
+    ++b;
+  }
+  stream.end_class();
 }
 
 } // end namespace Insight

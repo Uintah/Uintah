@@ -39,6 +39,8 @@
 #include <itkImageRegionConstIterator.h>
 #include <itkRegion.h>
 
+#include <Core/Geometry/BBox.h>
+
 namespace Insight {
 
 using std::string;
@@ -75,6 +77,7 @@ public:
   Data &operator*() { return Value();}
 };
 
+#define ITKFData3d_VERSION 1
 
 template <class Data>
 class ITKFData3d {
@@ -268,6 +271,14 @@ public:
     image_set_ = true;
   }
   
+  void set_image_origin(double * origin) {
+    image_->SetOrigin( origin );
+  }
+
+  void set_image_spacing(double * spacing) {
+    image_->SetSpacing( spacing );
+  }
+
   unsigned int size() { return (dim1() * dim2() * dim3()); }
 
   unsigned int dim1();
@@ -537,7 +548,7 @@ ITKLatVolField<T>::get_type_description(int n) const
   return td;
 }
 
-#define ITK_LAT_VOL_FIELD_VERSION 3
+#define ITK_LAT_VOL_FIELD_VERSION 1
 
 template <class Data>
 Persistent* 
@@ -556,7 +567,46 @@ template <class Data>
 void
 ITKLatVolField<Data>::io(Piostream &stream)
 {
-  ASSERTFAIL("ITKLatVolField::io not implemented.  Please use an Insight->ImageWriter");
+  int version = stream.begin_class(type_name(-1), ITK_LAT_VOL_FIELD_VERSION);
+  if(stream.reading()) {
+    GenericField<LatVolMesh, ITKFData3d<Data> >::io(stream);
+    stream.end_class();
+    
+    // set spacing
+    typedef typename itk::Image<Data, 3> ImageType;
+    const BBox bbox = mesh()->get_bounding_box();
+    Point mesh_center;
+    Vector mesh_size;
+    if(bbox.valid()) {
+      mesh_center = bbox.center();
+      mesh_size = bbox.diagonal();
+    }
+    else {
+      std::cerr << "No bounding box to get center\n"; // fix
+      return;
+    }
+
+    // image origin and spacing
+    double origin[ ImageType::ImageDimension ];
+    origin[0] = mesh_center.x();
+    origin[1] = mesh_center.y();
+    origin[2] = mesh_center.z();
+    
+    fdata().set_image_origin( origin );
+    
+    double spacing[ ImageType::ImageDimension ];
+    spacing[0] = mesh_size.x()/fdata().dim1();
+    spacing[1] = mesh_size.y()/fdata().dim2();
+    spacing[2] = mesh_size.z()/fdata().dim3();
+
+    fdata().set_image_spacing( spacing );
+
+    return;
+  } else {
+    GenericField<LatVolMesh, ITKFData3d<Data> >::io(stream);
+    stream.end_class();
+    return;
+  }
 
 }
 
@@ -647,9 +697,61 @@ bool ITKLatVolField<Data>::get_gradient(Vector &g, const Point &p)
 }
 
 template<class T> 
-void Pio(Piostream& stream, ITKFData3d<T>& array)
+void Pio(Piostream& stream, ITKFData3d<T>& data)
 {
-  ASSERTFAIL("Pio not written for ITKLatVolField. Please use Insight->ImageWriter.");
+  stream.begin_class("ITKFData3d", ITKFData3d_VERSION);
+  if(stream.reading()) {
+    typedef typename itk::Image<T, 3> ImageType;
+    typename ImageType::Pointer img = ImageType::New();
+
+    // image start index
+    typename ImageType::IndexType start;
+    start[0] = 0;
+    start[1] = 0;
+    start[2] = 0;
+    
+    // image size
+    unsigned int size_x = 0;
+    unsigned int size_y = 0;
+    unsigned int size_z = 0;
+
+    Pio(stream, size_x);
+    Pio(stream, size_y);
+    Pio(stream, size_z);
+
+    typename ImageType::SizeType size;
+    size[0] = size_x;
+    size[1] = size_y;
+    size[2] = size_z;
+    
+    // allocate image
+    typename ImageType::RegionType region;
+    region.SetSize( size );
+    region.SetIndex( start );
+    
+    img->SetRegions( region );
+    img->Allocate();
+
+    // set the image
+    data.set_image(img);
+  } else {
+    unsigned int x = data.dim1();
+    unsigned int y = data.dim2();
+    unsigned int z = data.dim3();
+    Pio(stream, x);
+    Pio(stream, y);
+    Pio(stream, z);
+  }
+  // loop through data and call Pio
+  typename ITKFData3d<T>::const_iterator b, e;
+  b = data.begin();
+  e = data.end();
+  while(b != e) {
+    Pio(stream, const_cast<T&>(*b));
+    ++b;
+  }
+  stream.end_class();
+
 }
 
 } // end namespace Insight
