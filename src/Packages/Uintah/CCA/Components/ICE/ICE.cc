@@ -373,7 +373,6 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 void ICE::addMaterial(const ProblemSpecP& prob_spec, GridP& grid,
                       SimulationStateP&   sharedState)
 {
-  cout << "In ICE::addMaterial" << endl;
   d_recompile = true;
   ProblemSpecP mat_ps       =  prob_spec->findBlock("AddMaterialProperties");
   ProblemSpecP ice_mat_ps   = mat_ps->findBlock("ICE");  
@@ -391,6 +390,8 @@ void ICE::addMaterial(const ProblemSpecP& prob_spec, GridP& grid,
     throw ProblemSetupException("Cannot find exchange_properties tag");
   
   ProblemSpecP exch_co_ps = exch_ps->findBlock("exchange_coefficients");
+  d_K_mom.clear();
+  d_K_heat.clear();
   exch_co_ps->require("momentum",d_K_mom);
   exch_co_ps->require("heat",d_K_heat);
 
@@ -417,16 +418,19 @@ void ICE::addMaterial(const ProblemSpecP& prob_spec, GridP& grid,
     exch_ps->require("convective_fluid",d_conv_fluid_matlindex);
     exch_ps->require("convective_solid",d_conv_solid_matlindex);
   }
+  // problem setup for each model  
+  for(vector<ModelInterface*>::iterator iter = d_models.begin();
+     iter != d_models.end(); iter++){
+    (*iter)->activateModel(grid, sharedState, d_modelSetup);
+  }
 }
 
 void ICE::scheduleInitializeAddedMaterial(const LevelP& level,SchedulerP& sched)
 {
                                                                                 
-//  cout_doing << "Doing ICE::scheduleInitializeAddedMaterial " << endl;
-  cout << "Doing ICE::scheduleInitializeAddedMaterial " << endl;
+  cout_doing << "Doing ICE::scheduleInitializeAddedMaterial " << endl;
   Task* t = scinew Task("ICE::actuallyInitializeAddedMaterial",
                   this, &ICE::actuallyInitializeAddedMaterial);
-//  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
 
   int numALLMatls = d_sharedState->getNumMatls();
   MaterialSubset* add_matl = scinew MaterialSubset();
@@ -5142,8 +5146,9 @@ void ICE::checkNeedAddMaterial(const ProcessorGroup*,
     cout_doing << "Checking some as yet undetermined criteria to see if we need to add a new ICE material " << patch->getID() << "\t ICE" << endl;
                                                                                 
     double time = d_sharedState->getElapsedTime();
- 
+
     static bool added = false;
+ 
     if(time>.05e100 && !added){
       d_sharedState->setNeedAddMaterial(true);
       added = true;
