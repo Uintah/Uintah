@@ -1206,6 +1206,7 @@ case $host in
     fi
 
     if test "$enable_64bit" = "yes"; then
+       FFLAGS="-fPIC $FFLAGS"
        CFLAGS="-fPIC $CFLAGS"
        CXXFLAGS="-fPIC $CXXFLAGS"
     fi
