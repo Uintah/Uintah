@@ -16,7 +16,7 @@ SCGMeltTemp::SCGMeltTemp(ProblemSpecP& ps )
 {
   ps->require("Gamma_0",d_Gamma0);
   ps->require("a",d_a);
-  ps->require("Tm_0",d_Tm0);
+  ps->require("T_m0",d_Tm0);
 }
 
 // Construct a copy of a melt temp model.  

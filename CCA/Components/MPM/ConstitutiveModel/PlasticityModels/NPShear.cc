@@ -16,7 +16,7 @@ NPShear::NPShear(ProblemSpecP& ps )
 {
   ps->require("mu_0",d_mu0);
   ps->require("zeta",d_zeta);
-  ps->require("slope_mu_p",d_slope_mu_p);
+  ps->require("slope_mu_p_over_mu0",d_slope_mu_p_over_mu0);
   ps->require("C",d_C);
   ps->require("m",d_m);
 }
@@ -26,7 +26,7 @@ NPShear::NPShear(const NPShear* smm)
 {
   d_mu0 = smm->d_mu0;
   d_zeta = smm->d_zeta;
-  d_slope_mu_p = smm->d_slope_mu_p;
+  d_slope_mu_p_over_mu0 = smm->d_slope_mu_p_over_mu0;
   d_C = smm->d_C;
   d_m = smm->d_m;
 }
@@ -50,7 +50,7 @@ NPShear::computeShearModulus(const PlasticityState* state)
   ASSERT(eta > 0.0);
   eta = pow(eta, 1.0/3.0);
 
-  double t1 = d_mu0 + d_slope_mu_p*state->pressure/eta;
+  double t1 = d_mu0*(1.0 + d_slope_mu_p_over_mu0*state->pressure/eta);
   double t2 = 1.0 - That;
   double k_amu = 1.38e4/1.6605402;
   double t3 = state->density*k_amu*state->temperature/(d_C*d_m);

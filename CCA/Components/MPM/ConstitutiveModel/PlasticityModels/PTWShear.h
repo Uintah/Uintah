@@ -22,7 +22,7 @@ namespace Uintah {
     double d_mu0;     // Material constant 
     double d_alpha;   // Material constant 
     double d_alphap;  // Material constant 
-    double d_slope_mu_p; // Material constant (constant A in SCG model)
+    double d_slope_mu_p_over_mu0; // Material constant (constant A in SCG model)
 
     PTWShear& operator=(const PTWShear &smm);
 
