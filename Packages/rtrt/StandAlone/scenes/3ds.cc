@@ -807,7 +807,7 @@ Scene* make_scene(int argc, char* argv[])
 
     Color bgcolor(0,0,0);
 
-    Plane groundplane ( Point(0, 0, 0), Vector(1, 0, 0) );
+    rtrt::Plane groundplane ( rtrt::Point(0, 0, 0), Vector(1, 0, 0) );
     Scene* scene=new Scene(0, cam,
 			   bgcolor, groundcolor*bgcolor, bgcolor, groundplane,
 			   ambient_scale);

@@ -685,7 +685,7 @@ Scene* make_scene(int argc, char* argv[], int) {
 
   Color bgcolor(0,0,0);
 
-  Plane groundplane ( Point(0, 0, 0), Vector(1, 0, 0) );
+  rtrt::Plane groundplane ( rtrt::Point(0, 0, 0), Vector(1, 0, 0) );
   Scene* scene=new Scene(all, cam,
 			 bgcolor, groundcolor*bgcolor, bgcolor, groundplane,
 			 ambient_scale);
@@ -709,4 +709,4 @@ Scene* make_scene(int argc, char* argv[], int) {
 // usage:
 // ./rtrt -np 16 -no_shadows -bv 3 -gridcellsize 80 -scene scenes/3dsm_ase /home/sci/dmw/stadium/Ford\ SGI\ model\ 003.ASE
 //
-// ./rtrt -np 16 -no_shadows -bv 4 -hgridcellsize 40 20 10 -minobjs 100 1000 -scene scenes/3dsm_ase /home/sci/dmw/stadium/Ford\ SGI\ model\ 003.ASE
+// ./rtrt -np 16 -no_shadows -bv 4 -hgridcellsize 20 15 10 -minobjs 20 20 -scene scenes/3dsm_ase /home/sci/dmw/stadium/Ford\ SGI\ model\ 003.ASE
