@@ -29,8 +29,6 @@
 #ifndef SCIRun_src_main_sci_version_h
 #define SCIRun_src_main_sci_version_h
 
-// This needs to be synced with the contents of 
-// SCIRun/doc/edition.xml
 #define SCIRUN_VERSION "1.24.0"
 
 #endif
