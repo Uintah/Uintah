@@ -64,46 +64,6 @@ TetVolMesh::get_bounding_box() const
   return result;
 }
 
-TetVolMesh::Face::Face() {
-  nodes_[0] = -1;
-  nodes_[1] = -1;
-  cells_[0] = -1;
-  cells_[1] = -1;
-}
-// nodes_ must be sorted. See Hash Function below.
-TetVolMesh::Face::Face(node_index n1, node_index n2, node_index n3) {
-  cells_[0] = -1;
-  cells_[1] = -1;
-  if ((n1 < n2) && (n1 < n3)) {
-    nodes_[0] = n1;
-    if (n2 < n3) {
-      nodes_[1] = n2; 
-      nodes_[2] = n3;
-    } else {
-      nodes_[1] = n3;
-      nodes_[2] = n2;
-    } 
-  } else if ((n2 < n1) && (n2 < n3)) {
-    nodes_[0] = n2;
-    if (n1 < n3) {
-      nodes_[1] = n1; 
-      nodes_[2] = n3;
-    } else {
-      nodes_[1] = n3;
-      nodes_[2] = n1;
-    } 
-  } else {
-    nodes_[0] = n3;
-    if (n1 < n2) {
-      nodes_[1] = n1; 
-      nodes_[2] = n2;
-    } else {
-      nodes_[1] = n2;
-      nodes_[2] = n1;
-    } 
-  }
-}
-
 void 
 TetVolMesh::hash_face(node_index n1, node_index n2, node_index n3,
 		      cell_index ci, hash_set<Face, FaceHash> &table) const {
@@ -126,27 +86,25 @@ TetVolMesh::hash_face(node_index n1, node_index n2, node_index n3,
 void 
 TetVolMesh::compute_faces()
 {
-
+  
   cell_iterator ci = cell_begin();
   while (ci != cell_end()) {
     node_array arr;
     get_nodes(arr, *ci); ++ci;
     // 4 faces
-    hash_face(arr[0], arr[1], arr[2], *ci, faces_);
-    hash_face(arr[0], arr[1], arr[3], *ci, faces_);
-    hash_face(arr[0], arr[2], arr[3], *ci, faces_);
-    hash_face(arr[1], arr[2], arr[3], *ci, faces_);
+    hash_face(arr[0], arr[1], arr[2], *ci, face_table_);
+    hash_face(arr[0], arr[1], arr[3], *ci, face_table_);
+    hash_face(arr[0], arr[2], arr[3], *ci, face_table_);
+    hash_face(arr[1], arr[2], arr[3], *ci, face_table_);
   }
-#if 0
   // dump edges into the edges_ container.
-  faces_.resize(table.size());
+  faces_.resize(face_table_.size());
   vector<Face>::iterator              f_iter = faces_.begin();
-  hash_set<Face, FaceHash>::iterator ht_iter = table.begin();
-  while (ht_iter != table.end()) {
+  hash_set<Face, FaceHash>::iterator ht_iter = face_table_.begin();
+  while (ht_iter != face_table_.end()) {
     *f_iter = *ht_iter;
     ++f_iter; ++ht_iter;
   }
-#endif
 }
 
 void 
@@ -169,25 +127,23 @@ TetVolMesh::hash_edge(node_index n1, node_index n2,
 void 
 TetVolMesh::compute_edges()
 {
-  hash_set<Edge, EdgeHash> table;
-
   cell_iterator ci = cell_begin();
   while (ci != cell_end()) {
     node_array arr;
     get_nodes(arr, *ci); ++ci;
     // 6 edges
-    hash_edge(arr[0], arr[1], *ci, table);
-    hash_edge(arr[0], arr[2], *ci, table);
-    hash_edge(arr[0], arr[3], *ci, table);
-    hash_edge(arr[1], arr[2], *ci, table);
-    hash_edge(arr[1], arr[3], *ci, table);
-    hash_edge(arr[2], arr[3], *ci, table);
+    hash_edge(arr[0], arr[1], *ci, edge_table_);
+    hash_edge(arr[0], arr[2], *ci, edge_table_);
+    hash_edge(arr[0], arr[3], *ci, edge_table_);
+    hash_edge(arr[1], arr[2], *ci, edge_table_);
+    hash_edge(arr[1], arr[3], *ci, edge_table_);
+    hash_edge(arr[2], arr[3], *ci, edge_table_);
   }
   // dump edges into the edges_ container.
-  edges_.resize(table.size());
+  edges_.resize(edge_table_.size());
   vector<Edge>::iterator              e_iter = edges_.begin();
-  hash_set<Edge, EdgeHash>::iterator ht_iter = table.begin();
-  while (ht_iter != table.end()) {
+  hash_set<Edge, EdgeHash>::iterator ht_iter = edge_table_.begin();
+  while (ht_iter != edge_table_.end()) {
     *e_iter = *ht_iter;
     ++e_iter; ++ht_iter;
   }
@@ -228,13 +184,13 @@ TetVolMesh::edge_end() const
 TetVolMesh::face_iterator
 TetVolMesh::face_begin() const
 {
-  return face_iterator(faces_.begin());
+  return 0;
 }
 
 TetVolMesh::face_iterator
 TetVolMesh::face_end() const
 {
-  return face_iterator(faces_.end());
+  return faces_.size();
 }
 
 TetVolMesh::cell_iterator
@@ -262,13 +218,7 @@ TetVolMesh::get_nodes(node_array &array, edge_index idx) const
 void
 TetVolMesh::get_nodes(node_array &array, face_index idx) const
 {
-  face_iterator i = faces_.begin();
-  while(1) {
-    if (*i == idx) break;
-    ++i;
-  }
-
-  Face f = *i.hiter_;
+  Face f = faces_[idx];
   array.push_back(f.nodes_[0]); 
   array.push_back(f.nodes_[1]);
   array.push_back(f.nodes_[2]);
@@ -335,14 +285,7 @@ bool
 TetVolMesh::get_neighbor(cell_index &neighbor, cell_index from,
 			 face_index idx) const
 {
-  face_iterator i = faces_.begin();
-  while(1) {
-    if (*i == idx) break;
-    ++i;
-  }
-
-  Face f = *i.hiter_;
-
+  const Face &f= faces_[idx];
   if (from == f.cells_[0]) {
     neighbor = f.cells_[1];
   } else { 
