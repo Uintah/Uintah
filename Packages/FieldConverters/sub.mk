@@ -5,6 +5,7 @@ SRCDIR := Packages/FieldConverters
 SUBDIRS := \
         $(SRCDIR)/Core \
         $(SRCDIR)/Dataflow \
+        $(SRCDIR)/StandAlone \
 
 include $(SRCTOP)/scripts/recurse.mk
 
