@@ -467,6 +467,7 @@ void EditField::tcl_command(TCLArgs& args, void* userdata)
     if (max.x()<=min.x() ||
 	max.y()<=min.y() ||
 	max.z()<=min.z()) {
+      widget_moved(1);           // force values back to widget settings
       postMessage("EditField: Degenerate BBox requested!");
       return;                    // degenerate 
     }
