@@ -314,7 +314,6 @@ DataTransmitter::runRecvingThread(){
 	  msg->to_addr=addr;
 	  msg->autofree=true;
 	  msg->fr_addr=iter->first;
-	  //int id=*((int *)msg->buf);
 	  DTPoint *pt=msg->recver;
 	  SemaphoreMap::iterator found=semamap.find(pt);
 	  //cerr<<"Recv Message:";
@@ -430,27 +429,49 @@ DataTransmitter::sendall(int sockfd, void *buf, int len)
 {
   int total = 0;        // how many bytes we've sent
   int n;
-  
+
+  int scnt=0;
   while(total < len) {
     n = send(sockfd, (char*)buf+total, len, 0);
     if (n == -1) throw CommError("recv", errno);
     total += n;
     len -= n;
+    scnt++;
   }
 } 
+
+/*
+DataTransmitter::sendall(int sockfd, void *buf, int len)
+{
+  const int PACKSIZE=1024;
+  int m=len/PACKSIZE;
+  int r=len%PACKSIZE;
+  for(int i=0; i<m; i++, (char*)buf+=PACKSIZE){
+    SendAll(sockfd, buf, PACKSIZE);
+  }
+  if(r>0) SendAll(sockfd, buf, r);
+}
+*/
+
 
 int
 DataTransmitter::recvall(int sockfd, void *buf, int len)
 {
+  int left=len;
   int total = 0;        // how many bytes we've recved
   int n;
-  
+  int cnt=0;
   while(total < len) {
-    n = recv(sockfd, (char*)buf+total, len, 0);
+    n = recv(sockfd, (char*)buf+total, left, MSG_WAITALL);
     if (n == -1) throw CommError("recv", errno);
     if(n==0) return 0;
     total += n;
-    len -= n;
+    left -= n;
+    cnt++;
+  }
+  if(cnt>1){
+    cerr<<"#### recv "<<cnt <<" times\n";
+    cerr<<"len/total="<<len<<"/"<<total<<endl;
   }
   return total;
 } 

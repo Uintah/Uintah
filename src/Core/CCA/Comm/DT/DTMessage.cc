@@ -46,31 +46,16 @@ DTMessage::~DTMessage(){
 void 
 DTMessage::display(){
 #ifdef DISPLAY_MSG      
-  char *str=new char[length];
-  strncpy(str, buf+sizeof(int), length-sizeof(int));
-  str[length-sizeof(int)]='\0';
+  //char *str=new char[length];
+  //strncpy(str, buf+sizeof(int), length-sizeof(int));
+  //str[length-sizeof(int)]='\0';
   std::cerr<<"DTMessage:\n"
 	   <<"\t recver="<<(long)recver<<"\n"
 	   <<"\t sender="<<(long)sender<<"\n"
 	   <<"\t fr_addr="<<fr_addr.ip<<"/"<<fr_addr.port<<"\n"
 	   <<"\t to_addr="<<to_addr.ip<<"/"<<to_addr.port<<"\n"
 	   <<"\t length="<<length<<"\n"
-	   <<"\t buf(id)="<<*((int*)(this->buf))<<"\n";
-  /*
-    int n=length-sizeof(int);
-    std::cerr<<"\t buf(msg)=";
-      for(int i=0; i<n; ){
-      if(i>=4 && i<36+4){
-	  std::cerr<<" "<<*(buf+sizeof(int)+i);
-	  i++;
-	  }
-	  else{
-	  std::cerr<<" "<<*(int*)(buf+sizeof(int)+i);
-	  i+=sizeof(int);
-	  }
-	  }
-	  std::cerr<<"\n";      
-  */
+    	   <<"\t buf(id)="<<*((int*)(this->buf))<<"\n";
 #endif      
 }
 
