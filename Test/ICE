@@ -1,48 +1,10 @@
 #!/usr/local/bin/python
 
-from os import environ,mkdir,path,system,chdir
-from time import asctime,localtime,time
 from sys import argv,exit
-from helpers.runSusTest import runSusTest,input,modes,num_processes
+from helpers.runSusTest import runSusTests
 
-TESTS = [   ("advect.ups",		    ["dbg", "opt"]), 	\
-            ("hotBlob2mat.ups",		    ["dbg", "opt"]) 	\
+TESTS = [   ("advect", "advect.ups", 1),	\
+            ("hotBlob2mat", "hotBlob2mat.ups", 1)     \
     	]
 
-if len(argv) < 2:
-    print "usage: %s <mode>" % argv[0]
-    print "    where <mode> is a short string used to select tests to run."
-    exit(1)
-mode = argv[1]
-
-testdir = "%s/ICE-%s" % (environ['BUILDROOT'], mode)
-susdir = "%s/SCIRun/src/Packages/Uintah/StandAlone" % (environ['BUILDROOT'])
-mkdir(testdir)
-chdir(testdir)
-
-failcode = 0
-
-DO_RESTART = "yes"
-
-for test in TESTS:
-  if mode not in modes(test):
-    continue
-
-  testname = path.splitext(input(test))[0];
-  mkdir(testname)
-  chdir(testname)
-
-  # Run normal test
-  rc = runSusTest(test, mode, susdir, "ice")
-  if rc == 0:
-    # Run restart test
-    rc = runSusTest(test, mode, susdir, "ice", DO_RESTART)
-    if rc == 1:
-	failcode = 1
-  else:
-    failcode = 1
-
-  chdir("..")
-
-exit(failcode)
-
+exit(runSusTests(argv, TESTS, "ice"))
