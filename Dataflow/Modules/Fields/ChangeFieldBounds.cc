@@ -129,8 +129,6 @@ ChangeFieldBounds::clear_vals()
   inputsizex_.set("---");
   inputsizey_.set("---");
   inputsizez_.set("---");
-
-  gui->execute(id+" update_multifields");
 }
 
 
@@ -156,8 +154,6 @@ ChangeFieldBounds::update_input_attributes(FieldHandle f)
   inputsizex_.set(to_string(size.x()));
   inputsizey_.set(to_string(size.y()));
   inputsizez_.set(to_string(size.z()));
-
-  gui->execute(id+" update_multifields");
 }
 
 

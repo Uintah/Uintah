@@ -76,35 +76,19 @@ itcl_class SCIRun_Fields_FieldInfo {
 	
 	labelpair $att.l1 "Name" $this-fldname
 	labelpair $att.l2 "Typename" $this-typename
-        labelpairmulti $att.l3 "Center (x,y,z)" "[set $this-cx], \
-                               [set $this-cy], [set $this-cz]"
-        labelpairmulti $att.l4 "Size (x,y,z)" "[set $this-sizex], \
-                               [set $this-sizey] [set $this-sizez]" 
-	labelpairmulti $att.l5 "Data min,max" "[set $this-datamin], \
-		                          [set $this-datamax]"
+        labelpair3 $att.l3 "Center (x,y,z)" $this-cx $this-cy $this-cz
+        labelpair3 $att.l4 "Size (x,y,z)" $this-sizex $this-sizey $this-sizez
+	labelpair2 $att.l5 "Data min,max" $this-datamin $this-datamax
 	labelpair $att.l7 "# Nodes" $this-numnodes
 	labelpair $att.l8 "# Elements" $this-numelems
 	labelpair $att.l9 "Data at" $this-dataat
 	pack $att.l1 $att.l2 $att.l3 $att.l4 $att.l5 \
-	     $att.l7 $att.l8 $att.l9 -side top 
+	     $att.l7 $att.l8 $att.l9 -side top -expand y -fill x
 
 	frame $w.exec
 	pack $w.exec -side bottom -padx 5 -pady 5
 	button $w.exec.execute -text "Execute" -command "$this-c needexecute"
 	pack $w.exec.execute -side top -e n
-    }
-
-    method update_multifields {} {
-        set w .ui[modname]
-	if {![winfo exists $w]} {
-	    return
-	}
-	set att [$w.att childsite]
-	$att.l3.l2 configure -text "[set $this-cx], [set $this-cy], \
-		                  [set $this-cz]"
-	$att.l4.l2 configure -text "[set $this-sizex], [set $this-sizey], \
-		                  [set $this-sizez]"
-	$att.l5.l2 configure -text "[set $this-datamin], [set $this-datamax]"
     }
 
     method labelpair { win text1 text2 } {
@@ -114,22 +98,46 @@ itcl_class SCIRun_Fields_FieldInfo {
 		      -anchor w -just left
 	label $win.colon  -text ":" -width 2 -anchor w -just left 
 	label $win.l2 -textvar $text2 -width 40 -anchor w -just left \
-		-fore darkred
+		-fore darkred -borderwidth 0
 	pack $win.l1 $win.colon $win.l2 -side left
     } 
 
-    method labelpairmulti { win text1 text2 } {
+    method labelpair2 { win text1 text2x text2y } {
 	frame $win 
 	pack $win -side top -padx 5
 	label $win.l1 -text $text1 -width [set $this-firstwidth] \
 		      -anchor w -just left
-	label $win.colon  -text ":" -width 2 -anchor w -just left 
-	label $win.l2 -text $text2 -width 40 -anchor w -just left \
-		-fore darkred
-	pack $win.l1 $win.colon $win.l2 -side left
+	label $win.colon  -text ": " -width 2 -anchor w -just left
+	label $win.l2x -textvar $text2x -anchor w -just left \
+	    -fore darkred -borderwidth 0
+	label $win.comma1  -text ", " -anchor w -just left  \
+	    -fore darkred -borderwidth 0
+	label $win.l2y -textvar $text2y -anchor w -just left \
+	    -fore darkred -borderwidth 0
+	pack $win.l1 $win.colon \
+	    $win.l2x $win.comma1 $win.l2y -side left -padx 0
     } 
 
-
+    method labelpair3 { win text1 text2x text2y text2z } {
+	frame $win 
+	pack $win -side top -padx 5
+	label $win.l1 -text $text1 -width [set $this-firstwidth] \
+		      -anchor w -just left
+	label $win.colon  -text ": " -width 2 -anchor w -just left
+	label $win.l2x -textvar $text2x -anchor w -just left \
+	    -fore darkred -borderwidth 0
+	label $win.comma1  -text ", " -anchor w -just left  \
+	    -fore darkred -borderwidth 0
+	label $win.l2y -textvar $text2y -anchor w -just left \
+	    -fore darkred -borderwidth 0
+	label $win.comma2  -text ", " -anchor w -just left \
+	    -fore darkred -borderwidth 0
+	label $win.l2z -textvar $text2z -anchor w -just left \
+	    -fore darkred -borderwidth 0
+	pack $win.l1 $win.colon \
+	    $win.l2x $win.comma1 $win.l2y $win.comma2 $win.l2z \
+	    -side left -padx 0
+    } 
 }
 
 

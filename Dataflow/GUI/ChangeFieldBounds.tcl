@@ -71,14 +71,14 @@ itcl_class SCIRun_Fields_ChangeFieldBounds {
 	iwidgets::Labeledframe $w.att -labelpos nw \
 		               -labeltext "Input Field Attributes" 
 			       
-	pack $w.att -side top
+	pack $w.att -side top -fill x -expand y
 	set att [$w.att childsite]
 	
-        labelpairmulti $att.l1 "Center (x,y,z)" \
-	    "[set $this-inputcenterx], [set $this-inputcentery], [set $this-inputcenterz]"
-        labelpairmulti $att.l2 "Size (x,y,z)" "[set $this-inputsizex], \
-                               [set $this-inputsizey], [set $this-inputsizez]"
-	pack $att.l1 $att.l2 -side top 
+        labelpair3 $att.l1 "Center (x,y,z)" \
+	    $this-inputcenterx $this-inputcentery $this-inputcenterz
+        labelpair3 $att.l2 "Size (x,y,z)" \
+	    $this-inputsizex $this-inputsizey $this-inputsizez
+	pack $att.l1 $att.l2 -side top -fill x
 
 	frame $w.copy
 	pack $w.copy -side top -padx 5 -pady 5
@@ -107,27 +107,25 @@ itcl_class SCIRun_Fields_ChangeFieldBounds {
 	pack $w.exec.execute -side top
     }
 
-    method update_multifields {} {
-        set w .ui[modname]
-	if {![winfo exists $w]} {
-	    return
-	}
-	set att [$w.att childsite]
-	$att.l1.l2 configure -text \
-	    "[set $this-inputcenterx], [set $this-inputcentery], [set $this-inputcenterz]"
-	$att.l2.l2 configure -text \
-	    "[set $this-inputsizex], [set $this-inputsizey], [set $this-inputsizez]"
-    }
-
-    method labelpairmulti { win text1 text2 } {
+    method labelpair3 { win text1 text2x text2y text2z } {
 	frame $win 
 	pack $win -side top -padx 5
 	label $win.l1 -text $text1 -width [set $this-firstwidth] \
 		      -anchor w -just left
-	label $win.colon  -text ":" -width 2 -anchor w -just left 
-	label $win.l2 -text $text2 -width 40 -anchor w -just left \
-		-fore darkred
-	pack $win.l1 $win.colon $win.l2 -side left
+	label $win.colon  -text ": " -width 2 -anchor w -just left
+	label $win.l2x -textvar $text2x -anchor w -just left \
+	    -fore darkred -borderwidth 0
+	label $win.comma1  -text ", " -anchor w -just left  \
+	    -fore darkred -borderwidth 0
+	label $win.l2y -textvar $text2y -anchor w -just left \
+	    -fore darkred -borderwidth 0
+	label $win.comma2  -text ", " -anchor w -just left \
+	    -fore darkred -borderwidth 0
+	label $win.l2z -textvar $text2z -anchor w -just left \
+	    -fore darkred -borderwidth 0
+	pack $win.l1 $win.colon \
+	    $win.l2x $win.comma1 $win.l2y $win.comma2 $win.l2z \
+	    -side left -padx 0
     } 
 
     method labelentry2 { win text1 text2 text3 var } {

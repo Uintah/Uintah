@@ -123,8 +123,6 @@ FieldInfo::clear_vals()
   gui_sizex_.set("---");
   gui_sizey_.set("---");
   gui_sizez_.set("---");
-
-  gui->execute(id+" update_multifields");
 }
 
 
@@ -205,8 +203,6 @@ FieldInfo::update_input_attributes(FieldHandle f)
     gui_fldname_.set("--- Name Not Assigned ---");
   }
 
-  gui->execute(id+" update_multifields");
-
   // Do this last, sometimes takes a while.
   const TypeDescription *meshtd = f->mesh()->get_type_description();
   CompileInfoHandle ci = FieldInfoAlgoCount::get_compile_info(meshtd);
@@ -219,8 +215,6 @@ FieldInfo::update_input_attributes(FieldHandle f)
 
   gui_numnodes_.set(to_string(num_nodes));
   gui_numelems_.set(to_string(num_elems));
-
-  gui->execute(id+" update_multifields");
 }
 
 
