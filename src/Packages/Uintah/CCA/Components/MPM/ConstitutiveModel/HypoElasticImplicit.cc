@@ -26,7 +26,7 @@ using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
 
-HypoElasticImplicit::HypoElasticImplicit(ProblemSpecP& ps,  MPMLabel* Mlb, int n8or27)
+HypoElasticImplicit::HypoElasticImplicit(ProblemSpecP& ps,  MPMLabel* Mlb, int /*n8or27*/)
 {
   lb = Mlb;
   ps->require("G",d_initialData.G);
@@ -59,26 +59,26 @@ void HypoElasticImplicit::initializeCMData(const Patch* patch,
   }
 }
 
-
-void HypoElasticImplicit::allocateCMDataAddRequires(Task* task,
-						   const MPMMaterial* matl,
-						   const PatchSet* patch,
-						   MPMLabel* lb) const
+void
+HypoElasticImplicit::allocateCMDataAddRequires( Task* task,
+						const MPMMaterial* /*matl*/,
+						const PatchSet* patch,
+						MPMLabel* lb ) const
 {
-  const MaterialSubset* matlset = matl->thisMaterial();
+  //const MaterialSubset* matlset = matl->thisMaterial(); <- Unused
   task->requires(Task::OldDW,lb->pDeformationMeasureLabel, Ghost::None);
   task->requires(Task::OldDW,lb->pStressLabel, Ghost::None);
 }
 
-
-void HypoElasticImplicit::allocateCMDataAdd(DataWarehouse* new_dw,
-					    ParticleSubset* addset,
-					    map<const VarLabel*, ParticleVariableBase*>* newState,
-					    ParticleSubset* delset,
-					    DataWarehouse* old_dw)
+void
+HypoElasticImplicit::allocateCMDataAdd( DataWarehouse* new_dw,
+					ParticleSubset* addset,
+					map<const VarLabel*, ParticleVariableBase*>* newState,
+					ParticleSubset* delset,
+					DataWarehouse* old_dw )
 {
-   // Put stuff in here to initialize each particle's
-   // constitutive model parameters and deformationMeasure
+  // Put stuff in here to initialize each particle's
+  // constitutive model parameters and deformationMeasure
   Matrix3 Identity, zero(0.);
   Identity.Identity();
 
@@ -101,9 +101,9 @@ void HypoElasticImplicit::allocateCMDataAdd(DataWarehouse* new_dw,
 }
 
 
-
-void HypoElasticImplicit::addParticleState(std::vector<const VarLabel*>& from,
-				   std::vector<const VarLabel*>& to)
+void
+HypoElasticImplicit::addParticleState( std::vector<const VarLabel*>& from,
+				       std::vector<const VarLabel*>& to )
 {
    from.push_back(lb->pDeformationMeasureLabel);
    from.push_back(lb->pStressLabel);
