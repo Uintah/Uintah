@@ -80,11 +80,14 @@ Volvis2DDpy::createBGText( float vmin, float vmax, float gmin, float gmax ) {
 
 
 
-// first wipes out texture information and then repaints widget textures
-// uses two textures to prevent volume rendering "streaks"
+// Refreshes the transfer function texture.  Uses up to two additional 
+//  textures to prevent volume rendering "streaks" and increase performance.
 // template<class T>
 void
 Volvis2DDpy::loadCleanTexture( void ) {
+  // If all the widget textures have been painted on the transfer function
+  //  and have been saved ("maintained"), all we need to do is copy these
+  //  values over to another texture and paint on the manipulated widget last.
   if( widgetsMaintained ) {
     for( int i = 0; i < textureHeight; i++ )
       for( int j = 0; j < textureWidth; j++ ) {
@@ -99,8 +102,11 @@ Volvis2DDpy::loadCleanTexture( void ) {
       } // for(j)
     widgets[pickedIndex]->paintTransFunc( transTexture2->textArray,
 					  master_opacity );
+    // Transfer function is now ready to be refreshed in one step to remove
+    //  black rendering streaks in rendering window.
     for( int i = 0; i < textureHeight; i++ )
       for( int j = 0; j < textureWidth; j++ ) {
+	// if the opacity is 0, there is no need to copy the RGB values
 	if( transTexture2->textArray[i][j][3] == 0.0f )
 	  transTexture1->textArray[i][j][3] = 0.0f;
 	else {
@@ -130,12 +136,14 @@ Volvis2DDpy::loadCleanTexture( void ) {
     // repaint widget textures onto invisible texture
     bindWidgetTextures();
     
+    // if a cutplane probe is displayed, paint its texture onto the transFunc
     if( display_probe )
       cp_probe->paintTransFunc( transTexture2->textArray, master_opacity );
     
     // copy visible values from fresh texture onto visible texture
     for( int i = 0; i < textureHeight; i++ )
       for( int j = 0; j < textureWidth; j++ ) {
+	// if opacity is 0, we can skip the RGB values
 	if( transTexture2->textArray[i][j][3] == 0.0f )
 	  transTexture1->textArray[i][j][3] = 0.0f;
 	else {
@@ -146,6 +154,8 @@ Volvis2DDpy::loadCleanTexture( void ) {
 	}
       }
   } // !widgetMaintained
+  // these two functions set the rendering acceleration value to greatly
+  //  improve volume rendering performance.
   setupAccGrid();
   AccGridToInt();
 } // loadCleanTexture()
@@ -155,22 +165,27 @@ Volvis2DDpy::loadCleanTexture( void ) {
 void
 Volvis2DDpy::setupAccGrid( void )
 {
+  // initialize grid
   for( int i = 0; i < gridsize; i++ )
     UIgridblock[i] = false;
 
+  // Divide up transfer function into rows and columns.
+  // Force height and width to be legitimate values.
   int gridHeight = (int)sqrt((float)gridsize);
   while(gridsize%gridHeight)
     gridHeight--;
-
   int gridWidth = gridsize/gridHeight;
-  float heightConvert = (float)(gridHeight)/((float)textureHeight);
-  float widthConvert = (float)(gridWidth)/((float)textureWidth);
+
+  float heightConvert = (float)gridHeight/(float)textureHeight;
+  float widthConvert = (float)gridWidth/(float)textureWidth;
+  // set up the grid
   for(int i = 0; i < textureHeight; i++ ) {
     int grid_y = (int)((float)i*heightConvert);
     for(int j = 0; j < textureWidth; j++ ) {
       int grid_x = (int)((float)j*widthConvert);
       int grid_elem = grid_y*gridWidth + grid_x;
-
+      // if any part of this transfer function block contains opacity > 0,
+      //  set the acceleration grid to true
       if( transTexture1->textArray[i][j][3] > 0 )
 	UIgridblock[grid_elem] = true;
     }
@@ -181,9 +196,13 @@ Volvis2DDpy::setupAccGrid( void )
 void
 Volvis2DDpy::AccGridToInt( void )
 {
-  UIgrid = 0;
+  // use a temporary variable to prevent the used value from being wiped clean
+  unsigned long long temp = 0;
+  // turn on bits in UIgrid that correspond to UIgridblock indeces
   for( int index = 0; index < gridsize; index++ )
-    UIgrid |= UIgridblock[index] << index;
+    temp |= (unsigned long long)(UIgridblock[index]) << index;
+  // resulting UIgrid value used for volume rendering acceleration method
+  UIgrid = temp;
 }
 
 
@@ -196,13 +215,14 @@ Volvis2DDpy::drawBackground( void ) {
   glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
   glBindTexture( GL_TEXTURE_2D, bgTextName );
 
+  // recompute the histogram if it has changed
   if( hist_changed ) {
     glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, textureWidth, textureHeight,
 		     GL_RGBA, GL_FLOAT, bgTextImage->textArray );
     hist_changed = false;
   }
   
-  // maps the histogram onto worldspace
+  // map the histogram onto worldspace
   glBegin( GL_QUADS );
   glTexCoord2f( 0.0, 0.0 );    glVertex2f( borderSize,
 					   borderSize+menuHeight);
@@ -219,17 +239,18 @@ Volvis2DDpy::drawBackground( void ) {
   glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
   glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, GL_BLEND );
   glBindTexture( GL_TEXTURE_2D, transFuncTextName );
-  // recalculate the transfer functions only if it has changed
+  // recalculate changed parts of the transfer function
   if( transFunc_changed ) {
       GLint xoffset = (GLint)(subT_left);
       GLint yoffset = (GLint)(subT_bottom);
-//        GLsizei width = (GLsizei)(subT_right-subT_left+1);
-      GLsizei width = (GLsizei)(textureWidth-subT_left);
+      // Making subT_right less than textureWidth creates rendering problems
+      //  on some machines for some reason.  Thus, turn accelerated texturing
+      //  on only if no problems occur.
+      GLsizei width = (GLsizei)((fastTextureMode?subT_right+1:textureWidth)
+				- subT_left);
       GLsizei height = (GLsizei)(subT_top-subT_bottom+1);
       SubTexture<GLfloat> subImage( subT_left, subT_bottom,
-//    				    subT_right-subT_left+1,
-  				    textureWidth-subT_left,
-				    subT_top-subT_bottom+1,
+				    width, height,
 				    transTexture1->textArray );
       
       glTexSubImage2D( GL_TEXTURE_2D, 0, xoffset, yoffset, width, height,
@@ -237,6 +258,7 @@ Volvis2DDpy::drawBackground( void ) {
     transFunc_changed = false;
   }
 
+  // map the transfer function onto world space
   glBegin( GL_QUADS );
   glTexCoord2f(0.0, 0.0);    glVertex2f(borderSize, borderSize+menuHeight);
   glTexCoord2f(0.0, 1.0);    glVertex2f(borderSize, worldHeight-borderSize);
@@ -249,45 +271,47 @@ Volvis2DDpy::drawBackground( void ) {
   glDisable( GL_BLEND );
   glDisable( GL_TEXTURE_2D );
 
+  // draw cutplane probe widget frame if one is being used
   if(display_probe)
     cp_probe->draw();
 
 } // drawBackground()
 
 
-
+// calculate the borders of the parts of the transfer function that change
 void
 Volvis2DDpy::boundSubTexture( Widget* widget ) {
   float toTextureX = ((float)textureWidth-1.0)/(worldWidth - 2*borderSize);
   float toTextureY = ((float)textureHeight-1.0)/(worldHeight - menuHeight
 						 - 2*borderSize);
   if( waiting_for_redraw ) {
-    subT_left = min((int)((min(widget->getTextULBound()->x,
-			       widget->getTextLLBound()->x)
+    subT_left = min((int)((min(widget->uboundLeft->x,
+			       widget->lboundLeft->x)
 			   - borderSize)*toTextureX), subT_left);
-    subT_top = max((int)((widget->getTextULBound()->y -
+    subT_top = max((int)((widget->uboundLeft->y -
 			  menuHeight - borderSize) * toTextureY), subT_top);
-    subT_right = max((int)((max(widget->getTextLRBound()->x,
-				widget->getTextURBound()->x)
+    subT_right = max((int)((max(widget->lboundRight->x,
+				widget->uboundRight->x)
 			    - borderSize)*toTextureX), subT_right);
-    subT_bottom = min((int)((widget->getTextLRBound()->y
+    subT_bottom = min((int)((widget->lboundRight->y
 			     - menuHeight - borderSize) * toTextureY),
 		      subT_bottom);
   } else {
-    subT_left = (int)((min(widget->getTextULBound()->x,
-			   widget->getTextLLBound()->x)
+    subT_left = (int)((min(widget->uboundLeft->x,
+			   widget->lboundLeft->x)
 		       - borderSize)*toTextureX);
-    subT_top = (int)((widget->getTextULBound()->y -
+    subT_top = (int)((widget->uboundLeft->y -
 		     menuHeight - borderSize) * toTextureY);
-    subT_right = (int)((max(widget->getTextLRBound()->x,
-			    widget->getTextURBound()->x)
+    subT_right = (int)((max(widget->lboundRight->x,
+			    widget->uboundRight->x)
 			- borderSize)*toTextureX);
-    subT_bottom = (int)((widget->getTextLRBound()->y
+    subT_bottom = (int)((widget->lboundRight->y
 			 - menuHeight - borderSize) * toTextureY);
+    redraw = true;
+    transFunc_changed = true;
     waiting_for_redraw = true;
   }
 }
-
 
 
 // create a new widget
@@ -297,7 +321,9 @@ Volvis2DDpy::addWidget( int x, int y ) {
   float halfWidth = 30.0f*pixel_width;
   // create new widget if placement keeps entire widget inside window
   if( (float)x/pixel_width-halfWidth >= borderSize &&
-      (float)x/pixel_width+halfWidth <= worldWidth - borderSize ) {
+      (float)x/pixel_width+halfWidth <= worldWidth - borderSize &&
+      (float)(worldHeight-y/pixel_height) <= worldHeight - borderSize &&
+      (float)(worldHeight-y/pixel_height) >= menuHeight+borderSize ) {
     widgets.push_back( new TriWidget( (float)x/pixel_width, 2*halfWidth,
 				      worldHeight - borderSize - menuHeight -
 				      (float)y/pixel_height ) );
@@ -307,9 +333,6 @@ Volvis2DDpy::addWidget( int x, int y ) {
       widgets[widgets.size()-2]->changeColor( 0.85, 0.6, 0.6 );
     
     boundSubTexture( widgets[widgets.size()-1] );
-
-    transFunc_changed = true;
-    redraw = true;
   }
 } // addWidget()
 
@@ -345,8 +368,6 @@ Volvis2DDpy::cycleWidgets(void) {
 
   delete old_wid;
   widgets.push_back( new_wid );
-  transFunc_changed  = true;
-  redraw = true;
 } // cycleWidgets()
 
 
@@ -507,16 +528,6 @@ Volvis2DDpy::init() {
   glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
   glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, textureWidth, textureHeight,
 		0, GL_RGBA, GL_FLOAT, transTexture1->textArray ); 
-//    glBegin( GL_QUADS );
-//    glTexCoord2f( 0.0, 0.0 );    glVertex2f( borderSize,
-//  					   borderSize+menuHeight);
-//    glTexCoord2f( 0.0, 1.0 );    glVertex2f( borderSize,
-//  					   worldHeight-borderSize);
-//    glTexCoord2f( 1.0, 1.0 );    glVertex2f( worldWidth-borderSize,
-//  					   worldHeight-borderSize);
-//    glTexCoord2f( 1.0, 0.0 );    glVertex2f( worldWidth-borderSize,
-//  					   borderSize+menuHeight);
-//    glEnd();
 
   // create widget probe texture
   glPixelStoref( GL_UNPACK_ALIGNMENT, 1 );
@@ -658,7 +669,6 @@ Volvis2DDpy::adjustRaySize( unsigned long key ) {
     t_inc_diff *= 0.5;
     break;
   } // switch()
-  transFunc_changed  = false;
   redraw = true;
 } // adjustRaySize()
 
@@ -687,7 +697,12 @@ Volvis2DDpy::key_pressed(unsigned long key) {
     text_x_convert = ((float)textureWidth-1.0f)/(current_vmax-current_vmin);
     text_y_convert = ((float)textureHeight-1.0f)/(current_gmax-current_gmin);
     createBGText( selected_vmin, selected_vmax, selected_gmin, selected_gmax );
-    redraw = true;
+    break;
+
+  case XK_f:
+  case XK_F:
+    fast_render_mode = !fast_render_mode;
+    cerr << "fast_render_mode is now " << fast_render_mode << endl;
     break;
 
     // help output for user
@@ -722,6 +737,7 @@ Volvis2DDpy::key_pressed(unsigned long key) {
 	 << "\twhich the new histogram parameters will be calculated.\n"
 	 << "\tType B/b again to turn this histogram selection mode off.\n"
 	 << "C/c: creates user-defined histogram\n"
+	 << "F/f: toggles hvolume rendering acceleration\n"
 	 << "H/h: brings up this menu help screen\n"
 	 << "I/i: file information is output to shell\n"
 	 << "O/o: reverts histogram to original parameters (zoom out)\n"
@@ -730,6 +746,8 @@ Volvis2DDpy::key_pressed(unsigned long key) {
 	 << "\tCAUTION: will decrease image quality.\n"
 	 << "S/s: switch a single widget's texture alignment between\n"
 	 << "\ta vertical or horizontal alignment.\n"
+	 << "T/t: toggle accelerated texturing for widget manipulation.\n"
+	 << "\tNote: does not work on all machines; turn off if buggy.\n"
 	 << "0-9: save widget configuration into one of ten states\n"
 	 << "Ctrl+(0-9): load widget configuration from one of ten states\n"
 	 << "Delete: deletes widget in focus (the one with the blue frame)\n"
@@ -774,7 +792,6 @@ Volvis2DDpy::key_pressed(unsigned long key) {
     text_x_convert = ((float)textureWidth-1.0f)/(current_vmax-current_vmin);
     text_y_convert = ((float)textureHeight-1.0f)/(current_gmax-current_gmin);
     createBGText( vmin, vmax, gmin, gmax );
-    redraw = true;
     break;
 
     // exit program
@@ -789,7 +806,7 @@ Volvis2DDpy::key_pressed(unsigned long key) {
   case XK_r:
   case XK_R:
     render_mode = !render_mode;
-    cerr << "rendering hack is now " << render_mode << ".\n";
+    cerr << "Rendering hack is now " << render_mode << ".\n";
     break;
 
     // switch between vertically/horizontally aligned widget transfer functions
@@ -798,11 +815,16 @@ Volvis2DDpy::key_pressed(unsigned long key) {
     if( pickedIndex >= 0 ) {
       widgets[pickedIndex]->changeTextureAlignment();
       boundSubTexture( widgets[pickedIndex] );
-      transFunc_changed = true;
-      redraw = true;
     }
     break;
 
+    // toggle fast texturing for widget manipulation
+  case XK_t:
+  case XK_T:
+    fastTextureMode = !fastTextureMode;
+    cerr << "Accelerated texturing is now " << fastTextureMode << ".\n";
+    break;
+    
     // remove widget in focus
   case XK_Delete:
     if( widgets.size() != 0 ) {
@@ -812,8 +834,6 @@ Volvis2DDpy::key_pressed(unsigned long key) {
 	widgets[widgets.size()-1]->changeColor( 0.0, 0.6, 0.85 );
       boundSubTexture( old_wid );
       delete old_wid;
-      transFunc_changed = true;
-      redraw = true;
     } // if
     break;
 
@@ -1079,8 +1099,6 @@ Volvis2DDpy::button_motion(MouseButton button, const int x, const int y) {
 				      master_opacity );
 	widgetsMaintained = true;
       }
-      transFunc_changed = true;
-      redraw = true;
     }
 
     // if the user has selected a widget by its texture
@@ -1092,9 +1110,6 @@ Volvis2DDpy::button_motion(MouseButton button, const int x, const int y) {
       if( widgets[pickedIndex]->type != Tri )
 	// invert the widget frame's color to make it visible on texture
 	widgets[pickedIndex]->invertFocus();
-
-      transFunc_changed = true;
-      redraw = true;
     } // if(pickedindex>=0)
       
     // if the user is trying to adjust the master opacity level
@@ -1461,11 +1476,11 @@ Volvis2DDpy::saveUIState( unsigned long key ) {
       outfile << "\nWidth: "
 	      << widgets[i]->width;
       outfile << "\nLeftLowerbound: "
-	      << (widgets[i]->getTextLRBound())->x << ' '
-	      << (widgets[i]->getTextLRBound())->y;
+	      << (widgets[i]->lboundRight)->x << ' '
+	      << (widgets[i]->lboundRight)->y;
       outfile << "\nLeftUpperbound: "
-	      << (widgets[i]->getTextULBound())->x << ' '
-	      << (widgets[i]->getTextULBound())->y;
+	      << (widgets[i]->uboundLeft)->x << ' '
+	      << (widgets[i]->uboundLeft)->y;
       outfile << "\nWidgetOpacityStarPosition: "
 	      << widgets[i]->opac_x;
       outfile << "\nWidgetTextureColormapOffset: "
@@ -1583,7 +1598,8 @@ Volvis2DDpy::loadUIState( unsigned long key ) {
     float vmn, vmx;
     float gmn, gmx;
     infile >> vmn >> vmx >> gmn >> gmx;
-    if( vmn < vmin || vmx > vmax || gmn < gmin || gmx > gmax ) {
+    float eps = 5.0e-3;
+    if( vmn+eps < vmin || vmx-eps > vmax || gmn+eps < gmin || gmx-eps > gmax ){
       printf( "Load file's histogram bounds outside current histogram limits");
       printf( "\nAborting file load!\n" );
       return;
@@ -1929,6 +1945,8 @@ Volvis2DDpy::Volvis2DDpy( float t_inc, bool cut ):DpyBase("Volvis2DDpy"),
   subT_top = textureHeight-1;
   subT_right = textureWidth-1;
   subT_bottom = 0;
+  fastTextureMode = false;
+  fast_render_mode = true;
 } // Volvis2DDpy()
 
 
