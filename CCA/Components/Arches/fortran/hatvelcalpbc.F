@@ -47,7 +47,7 @@ c*********************************************************************
 c     Local Variables :
 c*********************************************************************
       logical*1 LNORM, LTRACTION
-      integer IST, JST, KST, IEND, JEND, KEND
+      integer IST, JST, KST, IEND, JEND, KEND, jst_mod, kst_mod
       integer i, j, k
       double precision DXPRD, DTPRD, DPMAG, PPP, P0, FACK, URFBC
       double precision EEE, FFF, GGG, HHH, GE
@@ -148,16 +148,12 @@ c                        VVEL = 0.0
 c                        WVEL = 0.0
                      ELSE
                         UVEL = UMAG*ABS(UVEL)/UMAGINT
-                        VVEL = VVEL*ABS(UMAG)/UMAGINT
-                        WVEL = WVEL*ABS(UMAG)/UMAGINT
                      END IF
                      UVEL = UVEL*URFBC + UU(I+1,J,K)*(1.0-URFBC)
                   end if
                   UU(I,J,K) = UVEL
                   UU(I+1,J,K) = UVEL
 c                  if (uvel.lt.0.0) then
-                     VV(I,J,K) = VVEL
-                     WW(I,J,K) = WVEL
                      PP(I,J,K) = PPP
 c                  endif
 c                     uu(i,j,k) =  sqrt(umag*umag+uu(I-1,j,k)*
@@ -166,6 +162,64 @@ c                     uu(i+1,j,k) = uu(i,j,k)
                END IF
  180        CONTINUE
  190     CONTINUE
+         jst_mod=jst
+         if (yminus) jst_mod=jst_mod+1
+         DO K=KST,KEND
+	    DO J=JST_mod,JEND
+               IF (PCELL(I,J,K) .EQ. PFIELD) THEN
+                  PPP = BndryPress
+                  DENFACE = 0.5*(DEN(I,J,K)+DEN(I-1,J,K))
+                  DELP = PPP - PP(I-1,J,K)
+                  UMAG = -SIGN(SQRT(ABS(DELP)/DENFACE),DELP)
+                  UMAG = UMAG/SQRT(FACK)
+                  UVEL = UU(I-1,J,K)
+                  VVEL = VV(I-1,J,K)
+                  WVEL = WW(I-1,J,K)
+                  if (.not.ltraction) then
+                     UMAGINT = SQRT(UVEL*UVEL + VVEL*VVEL + WVEL*WVEL)
+                     IF (LNORM.OR.UMAGINT.EQ.0.0) THEN
+                        UVEL = UMAG
+c                        VVEL = 0.0
+c                        WVEL = 0.0
+                     ELSE
+                        VVEL = VVEL*ABS(UMAG)/UMAGINT
+                     END IF
+                  end if
+c                  if (uvel.lt.0.0) then
+                     VV(I,J,K) = VVEL
+c                  endif
+               END IF
+            end do
+         end do
+         kst_mod=kst
+         if (zminus) kst_mod=kst_mod+1
+         DO K=KST_mod,KEND
+	    DO J=JST,JEND
+               IF (PCELL(I,J,K) .EQ. PFIELD) THEN
+                  PPP = BndryPress
+                  DENFACE = 0.5*(DEN(I,J,K)+DEN(I-1,J,K))
+                  DELP = PPP - PP(I-1,J,K)
+                  UMAG = -SIGN(SQRT(ABS(DELP)/DENFACE),DELP)
+                  UMAG = UMAG/SQRT(FACK)
+                  UVEL = UU(I-1,J,K)
+                  VVEL = VV(I-1,J,K)
+                  WVEL = WW(I-1,J,K)
+                  if (.not.ltraction) then
+                     UMAGINT = SQRT(UVEL*UVEL + VVEL*VVEL + WVEL*WVEL)
+                     IF (LNORM.OR.UMAGINT.EQ.0.0) THEN
+                        UVEL = UMAG
+c                        VVEL = 0.0
+c                        WVEL = 0.0
+                     ELSE
+                        WVEL = WVEL*ABS(UMAG)/UMAGINT
+                     END IF
+                  end if
+c                  if (uvel.lt.0.0) then
+                     WW(I,J,K) = WVEL
+c                  endif
+               END IF
+            end do
+         end do
       endif
 C
 C	Compute PBC for J=1 (South) side of domain
