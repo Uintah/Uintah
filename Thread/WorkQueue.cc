@@ -12,6 +12,8 @@ extern "C" {
 #endif
 #include <stdio.h>
 
+extern Mutex io;
+
 /*
  * Doles out work assignment to various worker threads.  Simple
  * attempts are made at evenly distributing the workload.
@@ -86,6 +88,9 @@ void WorkQueue::init() {
 	    if(current_assignment >= totalAssignments){
 		break;
 	    }
+	}
+	if(current_assignment >= totalAssignments){
+	  break;
 	}
 	current_assignmentsize-=decrement;
 	if(current_assignmentsize<1)
