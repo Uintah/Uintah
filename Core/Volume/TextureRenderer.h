@@ -113,7 +113,7 @@ protected:
   DrawInfoOpenGL* di_;
 
 #ifdef SCI_OPENGL  
-  int cmap_size_;
+  int cmap2_size_;
   Array2<unsigned char> cmap1_array_;
   unsigned int cmap1_tex_;
   Array3<float> raster_array_;
