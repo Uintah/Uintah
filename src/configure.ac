@@ -171,6 +171,36 @@ sci_check_globus=no
 sci_check_qt=no
 sci_check_uuid=no
 
+## find the machine's pwd, and don't use the sh built-in pwd.
+## sh pwd can print the wd with symbolic links depending on
+## how you got to that directory, and thus has the potential
+## to print different pwd's for the same wd, and change files
+## like sci_defs.h
+
+sci_pwd=""
+for my_pwd in pwd /bin/pwd /usr/bin/pwd; do
+  mkdir pwd_test
+  ln -s pwd_test pwd_temp
+
+  cd pwd_test
+  pwd_1=`$my_pwd`
+
+  cd ../pwd_temp
+  pwd_2=`$my_pwd`
+
+  cd ..
+  rm -r pwd_test pwd_temp
+  if test "$pwd_1" = "$pwd_2"; then
+    sci_pwd=$my_pwd
+    alias pwd="$my_pwd"
+    break
+  fi
+done
+if test -z "$sci_pwd"; then
+   AC_MSG_WARN("Using unstable version of pwd")
+   sci_pwd=pwd
+fi
+
 
 ##  initialize the recognized argument lists
 sci_arg_with_list="--no-create --no-recursion"
@@ -822,14 +852,8 @@ case $host in
     ;;
 
   *)
+    # linux
     ac_objext=o
-    #
-    # put '_' at end and two '_'s if there is a '_' in name. 
-    # This flag is used by the genfspec.pl script in Uintah (generated
-    # from fspec.pl.in).
-    #
-    FORTRAN_UNDERSCORE=linux
-
     BASE_LIB_DIR=lib
     CFLAGS=" -Wall"
     if test "$CC" != "pgcc"; then
@@ -854,6 +878,11 @@ case $host in
       *g77*)
          # extra_fflags has array checking if in debug mode.
          FFLAGS="$FFLAGS $extra_cflags $extra_fflags"
+
+         # put '_' at end and two '_'s if there is a '_' in name. 
+         # This flag is used by the genfspec.pl script in Uintah (generated
+         # from fspec.pl.in).
+	 FORTRAN_UNDERSCORE=linux
          ;;
       *)
          FFLAGS="$FFLAGS $extra_cflags"
@@ -1871,7 +1900,7 @@ if test $sci_check_fortran = "yes"; then
       ;;
     *linux*)
       # Linux Library Check
-      if test "$F77" = "pgf90"; then
+      if test "$F77" = "pgf77"; then
         SCI_TRY_LINK(F,required fortran libraries,,,pgftnrtl,,,,not-optional)
       else
         SCI_TRY_LINK(F,required fortran libraries,,,g2c,,,,not-optional)
@@ -2972,6 +3001,18 @@ fi
 #  ignore --no-create and --no-recursion flags
 no_create=no
 no_recursion=no
+
+# these are to alias pwd to the right thing in the config.status
+# script so that pwd returns the same value for a path even if you
+# get there by two different paths (symbolic links)
+cat > sedscript << SCIEOF
+/debug=false/i\\
+alias pwd=$sci_pwd
+SCIEOF
+
+AC_CONFIG_COMMANDS_POST(sed -f sedscript < config.status > config_test.status;\
+			    mv config_test.status config.status ;\
+			    chmod 755 config.status)
 
 
 AC_CONFIG_COMMANDS([do_stamp],[echo timestamp > stamp-h ])
