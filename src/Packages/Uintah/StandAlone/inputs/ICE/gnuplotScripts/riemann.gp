@@ -1,7 +1,7 @@
 #__________________________________
 #   Move data to a central location
 #__________________________________
-!../inputs/ICE/gnuplotScripts/combinePatches
+#!../inputs/ICE/gnuplotScripts/combinePatches
 !cp ../inputs/ICE/gnuplotScripts/riemann.dat /tmp/exactSolution
 !cp BOT_explicit_Pressure/78/L-0/patch_combined/Press_CC /tmp/.
 !cp BOT_Advection_after_BC/78/L-0/patch_combined/Mat_0/Temp_CC /tmp/.

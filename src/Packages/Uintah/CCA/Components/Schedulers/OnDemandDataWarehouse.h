@@ -289,6 +289,14 @@ public:
    ScrubMode getScrubMode() const {
      return d_scrubMode;
    }
+
+   // The following is for support of regriding
+   void getVarLabelMatlPatchTriples( vector<VarLabelMatlPatch>& vars ) const;
+   void getVarLabelMatlLevelTriples( vector<VarLabelMatlLevel>& vars ) const;
+
+   friend class SchedulerCommon;
+   friend class AMRSimulationController;
+
 private:
    enum AccessType {
      NoAccess = 0, PutAccess, GetAccess, ModifyAccess

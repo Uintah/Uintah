@@ -15,6 +15,7 @@
 #include <Packages/Uintah/Core/Grid/SoleVariable.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
+#include <Packages/Uintah/Core/Grid/VarLabelMatlLevel.h>
 #include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Regridder.h>
@@ -28,6 +29,7 @@
 #include <Packages/Uintah/Core/DataArchive/DataArchive.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <TauProfilerForSCIRun.h>
 #include <iostream>
 #include <iomanip>
@@ -103,26 +105,27 @@ void AMRSimulationController::run()
    output->problemSetup(ups, sharedState.get_rep());
    
    // Setup the initial grid
-   GridP grid=scinew Grid();
+   GridP currentGrid=scinew Grid();
+   GridP oldGrid = currentGrid;
 
-   grid->problemSetupAMR(ups, d_myworld);
+   currentGrid->problemSetupAMR(ups, d_myworld);
    
-   if(grid->numLevels() == 0){
+   if(currentGrid->numLevels() == 0){
       cerr << "No problem specified.  Exiting AMRSimulationController.\n";
       return;
    }
    
    // Check the grid
-   grid->performConsistencyCheck();
+   currentGrid->performConsistencyCheck();
    // Print out meta data
    if (d_myworld->myrank() == 0)
-     grid->printStatistics();
+     currentGrid->printStatistics();
 
    // Initialize the CFD and/or MPM components
    SimulationInterface* sim = dynamic_cast<SimulationInterface*>(getPort("sim"));
    if(!sim)
      throw InternalError("No simulation component");
-   sim->problemSetup(ups, grid, sharedState);
+   sim->problemSetup(ups, currentGrid, sharedState);
 
    // Finalize the shared state/materials
    sharedState->finalizeMaterials();
@@ -139,7 +142,7 @@ void AMRSimulationController::run()
 
    // set up regridder with initial infor about grid
    Regridder* regridder = dynamic_cast<Regridder*>(getPort("regridder"));
-   regridder->problemSetup(ups, grid, sharedState);
+   regridder->problemSetup(ups, currentGrid, sharedState);
 
    if(d_myworld->myrank() == 0){
      cout << "Compiling initialization taskgraph...\n";
@@ -147,9 +150,9 @@ void AMRSimulationController::run()
    double start = Time::currentSeconds();
    
    scheduler->initialize(1, 1);
-   scheduler->advanceDataWarehouse(grid);
+   scheduler->advanceDataWarehouse(currentGrid);
    // for dynamic lb's, set up initial patch config
-   lb->possiblyDynamicallyReallocate(grid, false); 
+   lb->possiblyDynamicallyReallocate(currentGrid, false); 
 
    double t;
 
@@ -167,7 +170,7 @@ void AMRSimulationController::run()
 			 d_myworld->myrank(), d_myworld->size());
      
      double delt = 0;
-     archive.restartInitialize(d_restartTimestep, grid,
+     archive.restartInitialize(d_restartTimestep, currentGrid,
 			       scheduler->get_dw(1), &t, &delt);
      
      ProblemSpecP pspec = archive.getRestartTimestepDoc();
@@ -188,20 +191,20 @@ void AMRSimulationController::run()
    } else {
      sharedState->setCurrentTopLevelTimeStep( 0 );
      // Initialize the CFD and/or MPM data
-     for(int i=0;i<grid->numLevels();i++)
-       sim->scheduleInitialize(grid->getLevel(i), scheduler);
+     for(int i=0;i<currentGrid->numLevels();i++)
+       sim->scheduleInitialize(currentGrid->getLevel(i), scheduler);
    }
    
    double start_time = Time::currentSeconds();
 
    if (!d_restarting){
      t = timeinfo.initTime;
-     for(int i=0;i<grid->numLevels();i++)
-       sim->scheduleComputeStableTimestep(grid->getLevel(i),scheduler);
+     for(int i=0;i<currentGrid->numLevels();i++)
+       sim->scheduleComputeStableTimestep(currentGrid->getLevel(i),scheduler);
    }
 
    if(output)
-      output->finalizeTimestep(t, 0, grid, scheduler, true);
+      output->finalizeTimestep(t, 0, currentGrid, scheduler, true);
 
    amrout << "Compiling initial schedule\n";
    scheduler->compile();
@@ -223,6 +226,7 @@ void AMRSimulationController::run()
    ////////////////////////////////////////////////////////////////////////////
    // The main time loop; here the specified problem is actually getting solved
    
+   bool first=true;
    int  iterations = 0;
    double prev_delt = 0;
    while( ( t < timeinfo.maxTime ) && 
@@ -231,12 +235,83 @@ void AMRSimulationController::run()
      // After one step (either timestep or initialization) and correction
      // the delta we can finally, finalize our old timestep, eg. 
      // finalize and advance the Datawarehouse
-     scheduler->advanceDataWarehouse(grid);
+
+     // Put the current time into the shared state so other components
+     // can access it.  Also increment (by one) the current time step
+     // number so components can tell what timestep they are on.  Remember the old
+     // timestep to print the stats
+     int lastTimestep = sharedState->getCurrentTopLevelTimeStep();
+     sharedState->setElapsedTime(t);
+     sharedState->incrementCurrentTopLevelTimeStep();
+
+     oldGrid = currentGrid;
+
+     if (regridder->needsToReGrid() && !first) {
+       cout << "REGRIDDING!!!!!\n";
+	scheduler->advanceDataWarehouse(currentGrid);
+	currentGrid = regridder->regrid(oldGrid.get_rep(), scheduler);
+
+	cout << "---------- OLD GRID ----------" << endl << *(oldGrid.get_rep());
+	cout << "---------- NEW GRID ----------" << endl << *(currentGrid.get_rep());
+
+
+	cout << "---------- ABOUT TO RESCHEDULE ----------" << endl;
+        scheduler->initialize();
+
+	for ( int levelIndex = 0; levelIndex < currentGrid->numLevels(); levelIndex++ ) {
+	  Task* task = new Task("SchedulerCommon::copyDataToNewGrid",
+			      dynamic_cast<SchedulerCommon*>(scheduler.get_rep()),
+			      &SchedulerCommon::copyDataToNewGrid);
+	  scheduler->addTask(task, currentGrid->getLevel(levelIndex)->eachPatch(), sharedState->allMaterials());
+	}
+	
+
+        scheduler->compile();
+
+        scheduler->execute();
+
+	vector<VarLabelMatlLevel> reductionVariableInfo;
+
+	OnDemandDataWarehouse* oldDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(scheduler->get_dw(0));
+	OnDemandDataWarehouse* newDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(scheduler->get_dw(1));
+
+	oldDataWarehouse->getVarLabelMatlLevelTriples(reductionVariableInfo);
+
+	cerr << getpid() << ": RANDY: Copying reduction variables" << endl;
+
+	for ( unsigned int i = 0; i < reductionVariableInfo.size(); i++ ) {
+	  VarLabelMatlLevel currentReductionVar = reductionVariableInfo[i];
+	  cout << "REDUNCTION:  Label(" << setw(15) << currentReductionVar.label_->getName() << "): Patch(" << reinterpret_cast<int>(currentReductionVar.level_) << "): Material(" << currentReductionVar.matlIndex_ << ")" << endl; 
+	  const Level* oldLevel = currentReductionVar.level_;
+	  const Level* newLevel = NULL;
+	  if (oldLevel) {
+	    newLevel = (newDataWarehouse->getGrid()->getLevel( oldLevel->getIndex() )).get_rep();
+	  }
+
+	  if(!oldDataWarehouse->d_reductionDB.exists(currentReductionVar.label_, currentReductionVar.matlIndex_, currentReductionVar.level_))
+	    SCI_THROW(UnknownVariable(currentReductionVar.label_->getName(), oldDataWarehouse->getID(), currentReductionVar.level_, currentReductionVar.matlIndex_,
+				      "in copyDataTo ReductionVariable"));
+	  ReductionVariableBase* v = oldDataWarehouse->d_reductionDB.get(currentReductionVar.label_, currentReductionVar.matlIndex_, currentReductionVar.level_);
+	  newDataWarehouse->d_reductionDB.put(currentReductionVar.label_, currentReductionVar.matlIndex_, newLevel, v->clone(), false);
+	}
+	cout << "---------- DONE RESCHEDULING ----------" << endl;
+
+	scheduler->advanceDataWarehouse(currentGrid);
+
+	if (oldGrid == currentGrid) {
+	  cerr << "The grids are the same!" << endl;
+	} else {
+	  cerr << "The grids are different!" << endl;
+	}
+	//	level = currentGrid->getLevel(0);
+      } else {
+	scheduler->advanceDataWarehouse(currentGrid);
+      }
 
      // Compute number of dataWarehouses
      int totalFine=1;
-     for(int i=1;i<grid->numLevels();i++)
-       totalFine *= grid->getLevel(i)->timeRefinementRatio();
+     for(int i=1;i<currentGrid->numLevels();i++)
+       totalFine *= currentGrid->getLevel(i)->timeRefinementRatio();
      
      iterations ++;
      double wallTime = Time::currentSeconds() - start_time;
@@ -361,7 +436,7 @@ void AMRSimulationController::run()
      //output timestep statistics
      if(d_myworld->myrank() == 0){
        cout << "Time=" << t 
-            << " (timestep " << sharedState->getCurrentTopLevelTimeStep() 
+            << " (timestep " << lastTimestep
             << "), delT=" << delt << ", elap T = " << wallTime;
 
        if (n > 3)
@@ -386,65 +461,60 @@ void AMRSimulationController::run()
        n++;
      }
 
-     // Put the current time into the shared state so other components
-     // can access it.  Also increment (by one) the current time step
-     // number so components can tell what timestep they are on.
-     sharedState->setElapsedTime(t);
-     sharedState->incrementCurrentTopLevelTimeStep();
-
-     if(needRecompile(t, delt, grid, sim, output, lb, regridder, levelids)){
+     if(needRecompile(t, delt, currentGrid, sim, output, lb, regridder, levelids) || first){
+       first=false;
        if(d_myworld->myrank() == 0)
 	 cout << "Compiling taskgraph...\n";
        double start = Time::currentSeconds();
        
        scheduler->initialize(1, totalFine);
-       scheduler->fillDataWarehouses(grid);
+       scheduler->fillDataWarehouses(currentGrid);
 
        // Set up new DWs, DW mappings.
        scheduler->clearMappings();
        scheduler->mapDataWarehouse(Task::OldDW, 0);
        scheduler->mapDataWarehouse(Task::NewDW, totalFine);
        
-       sim->scheduleTimeAdvance(grid->getLevel(0), scheduler, 0, 1);
+       sim->scheduleTimeAdvance(currentGrid->getLevel(0), scheduler, 0, 1);
        
-       if(grid->numLevels() > 1)
-	 subCycle(grid, scheduler, sharedState, 0, totalFine, 1, sim);
+       if(currentGrid->numLevels() > 1)
+	 subCycle(currentGrid, scheduler, sharedState, 0, totalFine, 1, sim);
 
        scheduler->clearMappings();
        scheduler->mapDataWarehouse(Task::OldDW, 0);
        scheduler->mapDataWarehouse(Task::NewDW, totalFine);
-       for(int i=0;i<grid->numLevels();i++){
+       for(int i=0;i<currentGrid->numLevels();i++){
 	 Task* task = scinew Task("initializeErrorEstimate", this,
 				  &AMRSimulationController::initializeErrorEstimate,
 				  sharedState);
 	 task->computes(sharedState->get_refineFlag_label());
-	 sched->addTask(task, grid->getLevel(i)->eachPatch(),
+	 sched->addTask(task, currentGrid->getLevel(i)->eachPatch(),
 			sharedState->allMaterials());
-	 sim->scheduleErrorEstimate(grid->getLevel(i), scheduler);
-	 sim->scheduleComputeStableTimestep(grid->getLevel(i), scheduler);
+	 sim->scheduleErrorEstimate(currentGrid->getLevel(i), scheduler);
+	 sim->scheduleComputeStableTimestep(currentGrid->getLevel(i), scheduler);
        }
        if(output)
-	 output->finalizeTimestep(t, delt, grid, scheduler,true);
+	 output->finalizeTimestep(t, delt, currentGrid, scheduler,true);
 
        scheduler->compile();
 
        double dt=Time::currentSeconds()-start;
        if(d_myworld->myrank() == 0)
 	 cout << "DONE TASKGRAPH RE-COMPILE (" << dt << " seconds)\n";
-       levelids.resize(grid->numLevels());
-       for(int i=0;i<grid->numLevels();i++)
-	 levelids[i]=grid->getLevel(i)->getID();
+       levelids.resize(currentGrid->numLevels());
+       for(int i=0;i<currentGrid->numLevels();i++)
+	 levelids[i]=currentGrid->getLevel(i)->getID();
      }
      else {
        if (output)
-         output->finalizeTimestep(t, delt, grid, scheduler, false);
+         output->finalizeTimestep(t, delt, currentGrid, scheduler, false);
      }
 
      oldDW->override(delt_vartype(delt), sharedState->get_delt_label());
      double delt_fine = delt;
      int skip=totalFine;
-     for(int i=0;i<grid->numLevels();i++){
-       const Level* level = grid->getLevel(i).get_rep();
+     for(int i=0;i<currentGrid->numLevels();i++){
+       const Level* level = currentGrid->getLevel(i).get_rep();
        if(i != 0){
 	 delt_fine /= level->timeRefinementRatio();
 	 skip /= level->timeRefinementRatio();
