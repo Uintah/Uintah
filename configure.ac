@@ -218,6 +218,18 @@ SCI_ARG_WITH(fortran,
   [with_fortran="$withval"
    sci_required_fortran=yes],
   [with_fortran=""])
+SCI_ARG_WITH(ptolemyII,
+  AC_HELP_STRING(--with-ptolemyII=DIR, 
+                 Use the Ptolemy II (eg: ptII4.0.1) installation in DIR (Ptolemy package only)),
+  [with_ptolemyII="$withval"
+   sci_required_ptolemyII=yes],
+  [with_ptolemyII=""])
+SCI_ARG_WITH(java,
+  AC_HELP_STRING(--with-java=DIR,
+                 Use the Java distribution in DIR (Ptolemy package only)),
+  [with_java="$withval"
+   sci_required_java=yes],
+  [with_java=""])
 SCI_ARG_WITH(mpi,
   AC_HELP_STRING(--with-mpi=DIR,
                  Use the mpi installation in DIR),
@@ -605,6 +617,16 @@ if test "$pkg_Fusion" = "yes"; then
       SCI_SET_PACKAGE_CHECKS(DataIO, $host)
       package="$package DataIO"
   fi
+fi
+
+if test "$pkg_Ptolemy" = "yes"; then
+  # check versions?
+  # check --with-ptolemyII
+  if test -z "$with_ptolemyII"; then
+    AC_MSG_WARN(Ptolemy II is required by the Ptolemy package.)
+    AC_MSG_ERROR(Use the --with-ptolemyII=DIR option to set the installation directory.)
+  fi
+  SCI_SET_PACKAGE_CHECKS(Ptolemy, $host)
 fi
 
 for i in $package; do
@@ -3088,6 +3110,69 @@ AC_SUBST(INC_INSIGHT_H)
 AC_SUBST(INSIGHT_LIB_FLAG)
 AC_SUBST(INSIGHT_LIB_DIR_FLAG)
 sci_defs_files="$sci_defs_files include/sci_defs/insight_testdefs.h"
+
+##  --  search for Ptolemy II ---------------------------------------------------
+if test "$sci_required_ptolemyII" = "yes"; then
+
+  AC_MSG_CHECKING(for Java.)
+
+  # check for Java
+  if test -z "$with_java"; then
+
+    AC_MSG_WARN(Java is required by the Ptolemy package.)
+    AC_MSG_CHECKING(for environment variable JAVA_HOME or JAVAHOME)
+
+    if test -z "$JAVA_HOME"; then
+      if test -z "$JAVAHOME"; then # Ptolemy build uses JAVAHOME
+
+	AC_MSG_WARN(Package Ptolemy requires Java.)
+	AC_MSG_ERROR(Use the --with-java=DIR option or set the environment variable JAVA_HOME to the directory that contains your Java distribution.)
+
+      else # JAVAHOME set in environment
+	jdir="$JAVAHOME"
+      fi
+    else # JAVA_HOME set in environment
+      jdir="$JAVA_HOME"
+    fi
+  else # --with-java
+    jdir="$with_java"
+  fi
+
+  if test -d "$jdir"; then
+    AC_MSG_RESULT($jdir)
+
+    JAVA_PATH="$jdir"
+  else
+
+    AC_MSG_ERROR(Java installation directory is missing.)
+
+  fi
+
+  AC_MSG_CHECKING(for Ptolemy II.)
+
+
+  # search here
+  if test "$with_ptolemyII"; then
+    pdir="$with_ptolemyII"
+  fi
+
+  if test -d "$pdir"; then
+    AC_MSG_RESULT($pdir)
+
+    PTOLEMY_PATH="$pdir"
+    PTOLEMY_CLASSPATH="$PTOLEMY_PATH:/lib/diva.jar:/lib/java_cup.jar:/lib/sootclasses.jar:/lib/jasminclasses.jar:/lib/ptCal.jar:/lib/ptjacl.jar:/lib/jython.jar:/lib/mapss.jar:/lib/saxon7.jar:/ptolemy/ptolemy.jar:/ptolemy/ptsupport.jar:/ptolemy/vergil/vergil.jar:$JAVA_PATH/jre:/lib/rt.jar"
+    HAVE_PTOLEMY="yes"
+  else
+    AC_MSG_ERROR(Ptolemy II directory is missing.)
+  fi
+
+fi
+
+AC_SUBST(HAVE_PTOLEMY)
+AC_SUBST(JAVA_PATH)
+AC_SUBST(PTOLEMY_PATH)
+AC_SUBST(PTOLEMY_CLASSPATH)
+sci_defs_files="$sci_defs_files include/sci_defs/ptolemy_testdefs.h"
 
 ##  --  search for xalan  ---------------------------------------------------
 if test "$sci_required_xalan" ; then
