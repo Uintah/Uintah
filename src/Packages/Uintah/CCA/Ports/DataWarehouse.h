@@ -106,9 +106,6 @@ WARNING
 				 ParticleSubset*) = 0;
       virtual void put(ParticleVariableBase&, const VarLabel*,
 		       bool replace = false) = 0;
-      inline void modify(ParticleVariableBase& var,
-			 const VarLabel* label)
-      { put(var, label, true); }
      
       virtual ParticleVariableBase* getParticleVariable(const VarLabel*,
 							ParticleSubset*) = 0;
@@ -134,9 +131,6 @@ WARNING
       { getCopy_template(var, label, matlIndex, patch, gtype, numGhostCells); }
       virtual void put(NCVariableBase&, const VarLabel*,
 		       int matlIndex, const Patch*, bool replace = false) = 0;
-      inline void modify(NCVariableBase& var, const VarLabel* label,
-		       int matlIndex, const Patch* patch)
-      { put(var, label, matlIndex, patch, true); }
       
       // Cell Centered (CC) Variables
       virtual void allocate(CCVariableBase&, const VarLabel*,
@@ -157,9 +151,6 @@ WARNING
       { getCopy_template(var, label, matlIndex, patch, gtype, numGhostCells); }
       virtual void put(CCVariableBase&, const VarLabel*,
 		       int matlIndex, const Patch*, bool replace = false) = 0;
-      inline void modify(CCVariableBase& var, const VarLabel* label,
-			  int matlIndex, const Patch* patch)
-      { put(var, label, matlIndex, patch, true); }
 
       // Staggered Variables in all three directions (SFCX, SFCY, SFCZ)
       virtual void allocate(SFCXVariableBase&, const VarLabel*,
@@ -180,9 +171,6 @@ WARNING
       { getCopy_template(var, label, matlIndex, patch, gtype, numGhostCells); }
       virtual void put(SFCXVariableBase&, const VarLabel*,
 		       int matlIndex, const Patch*, bool replace = false) = 0;
-      inline void modify(SFCXVariableBase& var, const VarLabel* label,
-			  int matlIndex, const Patch* patch)
-      { put(var, label, matlIndex, patch, true); }
 
       virtual void allocate(SFCYVariableBase&, const VarLabel*,
 			    int matlIndex, const Patch*,
@@ -202,9 +190,6 @@ WARNING
       { getCopy_template(var, label, matlIndex, patch, gtype, numGhostCells); }
       virtual void put(SFCYVariableBase&, const VarLabel*,
 		       int matlIndex, const Patch*, bool replace = false) = 0;
-      inline void modify(SFCYVariableBase& var, const VarLabel* label,
-			 int matlIndex, const Patch* patch)
-      { put(var, label, matlIndex, patch, true); }
 
       virtual void allocate(SFCZVariableBase&, const VarLabel*,
 			    int matlIndex, const Patch*,
@@ -224,18 +209,12 @@ WARNING
       { getCopy_template(var, label, matlIndex, patch, gtype, numGhostCells); }
       virtual void put(SFCZVariableBase&, const VarLabel*,
 		       int matlIndex, const Patch*, bool replace = false) = 0;
-      inline void modify(SFCZVariableBase& var, const VarLabel* label,
-			  int matlIndex, const Patch* patch)
-      { put(var, label, matlIndex, patch, true); }
 
       // PerPatch Variables
       virtual void get(PerPatchBase&, const VarLabel*,
 				int matlIndex, const Patch*) = 0;
       virtual void put(PerPatchBase&, const VarLabel*,
 		       int matlIndex, const Patch*, bool replace = false) = 0;
-      inline void modify(PerPatchBase& var, const VarLabel* label,
-			  int matlIndex, const Patch* patch)
-      { put(var, label, matlIndex, patch, true); }
      
       // Remove particles that are no longer relevant
       virtual void deleteParticles(ParticleSubset* delset) = 0;
