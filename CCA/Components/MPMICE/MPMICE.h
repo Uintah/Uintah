@@ -58,9 +58,13 @@ WARNING
   
 ****************************************/
 
+enum MPMType {STAND_MPMICE = 0, RIGID_MPMICE, SHELL_MPMICE};
+
 class MPMICE : public SimulationInterface, public UintahParallelComponent {
+
 public:
   MPMICE(const ProcessorGroup* myworld);
+  MPMICE(const ProcessorGroup* myworld, MPMType type);
   virtual ~MPMICE();
   
   virtual bool restartableTimesteps();
@@ -230,6 +234,7 @@ public:
                 FIXED,
                 SYMMETRY,
                 NEIGHBOR };
+
 
 protected:
   MPMICE(const MPMICE&);
