@@ -49,46 +49,21 @@ PWorld::~PWorld(){
 }
 
 void PWorld::setServices(const sci::cca::Services::pointer& svc){
-  typedef char urlString[100] ;
-  urlString s;
 
   int mpi_size, mpi_rank;
   MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
   MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
   services=svc;
-  urlString *buf;
 
-  sci::cca::TypeMap::pointer props(0); // = svc->createTypeMap();
+  //create common property for collective port
+  sci::cca::TypeMap::pointer cprops= svc->createTypeMap();
+  cprops->putInt("rank", mpi_rank);
+  cprops->putInt("size", mpi_size);
 
   /////////////////////////////////////////////////
   //add StringPort
   StringPort::pointer strport=StringPort::pointer(new StringPort);
-  strcpy(s, strport->getURL().getString().c_str());
-  if(mpi_rank==0){
-    buf=new urlString[mpi_size];
-  }
-  MPI_Gather(  s, 100, MPI_CHAR,    buf, 100, MPI_CHAR,   0, MPI_COMM_WORLD);
-  if(mpi_rank==0){
-    vector<URL> URLs; 
-    for(int i=0; i<mpi_size; i++){
-      string url(buf[i]);
-      URLs.push_back(url);
-      cerr<<"stringport URL["<<i<<"]="<<url<<endl;
-    }
-    Object::pointer obj=PIDL::objectFrom(URLs,1,mpi_rank);
-    sci::cca::ports::StringPort::pointer pstrport=pidl_cast<sci::cca::ports::StringPort::pointer>(obj);
-
-    //cerr<<"$$$ "<<pstrport->getString()<< " $$$"<<endl ;
-    
-    svc->addProvidesPort(pstrport,"stringport","sci.cca.ports.StringPort", props);
-    delete buf;
-  }
-
-  MPI_Barrier(MPI_COMM_WORLD );
-
-
-
-
+  svc->addProvidesPort(strport,"stringport","sci.cca.ports.StringPort", cprops);
 }
 
 std::string 

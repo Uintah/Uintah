@@ -22,14 +22,13 @@
  *   Keming Zhang
  *   Department of Computer Science
  *   University of Utah
- *   March 2002
+ *   May. 2003
  *
  */
 
 #include <sci_config.h> // For MPIPP_H on SGI
 #include <CCA/Components/PHello/PHello.h>
 #include <iostream>
-#include <CCA/Components/Builder/QtUtils.h>
 #include <Core/CCA/PIDL/PIDL.h>
 #include <mpi.h>
 #include <unistd.h>
@@ -41,7 +40,6 @@ extern "C" sci::cca::Component::pointer make_SCIRun_PHello()
   return sci::cca::Component::pointer(new PHello());
 }
 
-
 PHello::PHello(){
 }
 
@@ -49,74 +47,38 @@ PHello::~PHello(){
 }
 
 void PHello::setServices(const sci::cca::Services::pointer& svc){
-  typedef char urlString[100] ;
-  urlString s;
-
   int mpi_size, mpi_rank;
   MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
   MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
   services=svc;
-  urlString *buf;
 
-  sci::cca::TypeMap::pointer props(0); // = svc->createTypeMap();
+  //create common property for collective port
+  sci::cca::TypeMap::pointer cprops= svc->createTypeMap();
+  cprops->putInt("rank", mpi_rank);
+  cprops->putInt("size", mpi_size);
 
-  /////////////////////////////////////////////////
+
   //add UI Port
   myUIPort::pointer uip=myUIPort::pointer(new myUIPort);
-  strcpy(s, uip->getURL().getString().c_str());
-  if(mpi_rank==0){
-    buf=new urlString[mpi_size];
-  }
-  MPI_Gather(  s, 100, MPI_CHAR,    buf, 100, MPI_CHAR,   0, MPI_COMM_WORLD);
-  if(mpi_rank==0){
-    vector<URL> URLs; 
-    for(int i=0; i<mpi_size; i++){
-      string url(buf[i]);
-      URLs.push_back(url);
-    }
-    Object::pointer obj=PIDL::objectFrom(URLs,1,mpi_rank);
-    sci::cca::ports::UIPort::pointer puip=pidl_cast<sci::cca::ports::UIPort::pointer>(obj);
-    svc->addProvidesPort(puip,"ui","sci.cca.ports.UIPort", props);
-    delete buf;
-  }
+  svc->addProvidesPort(uip,"ui","sci.cca.ports.UIPort", cprops);
 
 
-  /////////////////////////////////////////////////
   //add Go Port
   myGoPort::pointer gop=myGoPort::pointer(new myGoPort(svc));
-  strcpy(s, gop->getURL().getString().c_str());
-  if(mpi_rank==0){
-    buf=new urlString[mpi_size];
-  }
-  MPI_Gather(  s, 100, MPI_CHAR,    buf, 100, MPI_CHAR,   0, MPI_COMM_WORLD);
-  if(mpi_rank==0){
-    vector<URL> URLs; 
-    for(int i=0; i<mpi_size; i++){
-      string url(buf[i]);
-      URLs.push_back(url);
-    }
-    Object::pointer obj=PIDL::objectFrom(URLs, 1, mpi_rank);
-    sci::cca::ports::GoPort::pointer pgop=pidl_cast<sci::cca::ports::GoPort::pointer>(obj);
-    svc->addProvidesPort(pgop,"go","sci.cca.ports.GoPort", props);
-    delete buf;
-  }
+  svc->addProvidesPort(gop,"go","sci.cca.ports.GoPort", cprops);
 
-
-  /////////////////////////////////////////////////
   //register StringPort
   if(mpi_rank==0){
+    sci::cca::TypeMap::pointer props(0); 
     svc->registerUsesPort("stringport","sci.cca.ports.StringPort", props);
   }
-
-  MPI_Barrier(MPI_COMM_WORLD );
-  
 }
 
 int myUIPort::ui(){
   int mpi_size, mpi_rank;
   MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
   MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
-  cout<<"UI button is clicked at #"<<mpi_rank<<"!\n";
+  cout<<"UI button is clicked at rank="<<mpi_rank<<"!\n";
   return 0;
 }
 
@@ -136,9 +98,9 @@ int myGoPort::go(){
   }  
   sci::cca::ports::StringPort::pointer sp=pidl_cast<sci::cca::ports::StringPort::pointer>(pp);
   std::string name=sp->getString();
-  //  MPI_Barrier(MPI_COMM_WORLD );
 
   services->releasePort("stringport");
+
   cout<<"PHello "<<name<<endl;
   return 0;
 }
