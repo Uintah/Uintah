@@ -4,12 +4,33 @@
 <meta name="generator" content="Adobe GoLive 4">
 <title>Bioelectric Field Simulation</title>
 <!-- Changed by: Ted Dustman, 22-Feb-2002 -->
+<!-- Last update: Fri Mar  1 01:12:57 2002 by Rob MacLeod
+    - last round before the March 1 release.  -->
 </head>
 
 <body bgcolor="#a9a9a9">
 <table align="center" border="0" cellpadding="0" cellspacing="0" width="306" bgcolor="#cccccc">
 <tr>
-<td><img height="92" width="600" src="images/sub-banner.jpg" border="0" usemap="#sub-banner8662a0c4"><map name="sub-banner8662a0c4"><area coords="581,65,598,84" shape="rect" title nohref><area href="chapter_7.html" coords="557,64,575,83" shape="rect" title="Feedback"><area href="chapter_6.html" coords="532,64,550,82" shape="rect" title="Putting Simulation and Visualization Together"><area href="chapter_5.html" coords="508,64,527,83" shape="rect" title="Bioelectric Field Simulation"><area href="chapter_4.html" coords="483,64,502,83" shape="rect" title="Multi-Vis"><area href="chapter_3.html" coords="460,64,478,83" shape="rect" title="Derived Fields"><area href="chapter_2.html" coords="436,64,454,83" shape="rect" title="Looking at the Data"><area href="chapter_1.html" coords="412,64,430,81" shape="rect" title="Geometry Visualization"><area href="Intro.html" coords="354,64,406,84" shape="rect" title="Introduction"><area href="http://software.sci.utah.edu/doc/index.html" coords="205,63,343,83" shape="rect" title="Documentation"><area href="http://software.sci.utah.edu/" coords="103,63,195,82" shape="rect" title="Software"><area href="index.html" coords="1,65,92,81" shape="rect" title="Tutorial Home"></map></td>
+<td><img height="92" width="600" src="images/sub-banner.jpg" border="0"
+    usemap="#sub-banner8662a0c4"><map name="sub-banner8662a0c4"><area
+    coords="581,65,598,84" shape="rect" title nohref><area
+    href="chapter_7.html" coords="557,64,575,83" shape="rect"
+    title="Feedback"><area href="chapter_6.html" coords="532,64,550,82"
+    shape="rect" title="Putting Simulation and Visualization
+    Together"><area href="chapter_5.html" coords="508,64,527,83"
+    shape="rect" title="Bioelectric Field Simulation"><area
+    href="chapter_4.html" coords="483,64,502,83" shape="rect"
+    title="Multi-Vis"><area href="chapter_3.html" coords="460,64,478,83"
+    shape="rect" title="Derived Fields"><area href="chapter_2.html"
+    coords="436,64,454,83" shape="rect" title="Looking at the Data"><area
+    href="chapter_1.html" coords="412,64,430,81" shape="rect"
+    title="Geometry Visualization"><area href="Intro.html"
+    coords="354,64,406,84" shape="rect" title="Introduction"><area
+    href="http://software.sci.utah.edu/doc/index.html"
+    coords="205,63,343,83" shape="rect" title="Documentation"><area
+    href="http://software.sci.utah.edu/" coords="103,63,195,82"
+    shape="rect" title="Software"><area href="index.html"
+    coords="1,65,92,81" shape="rect" title="Tutorial Home"></map></td> 
 </tr>
 
 <tr>
@@ -29,7 +50,8 @@
         <div align="left">
 	
 	<p><b><H4><A href="#section 1">Volume conductor problem</H4></b></A>
-	<p><b><H4><A href="#section 2">Finite element simulation network</H4></b></A>
+	<p><b><H4><A href="#section 2">Finite element simulation
+	    network</H4></b></A> 
 	<p><b><H4><A href="#section 3">FEM user interface settings</H4></b></A>
 	<p><b><H4><A href="#section 4">Running the simulation</H4></b></A>
 	
@@ -46,24 +68,21 @@
 	
 
 	<p>Those modules are general purpose
-        tools--not targeted towards any specific application. In this chapter we will use 
-	modules from the BioPSE package, a set of tools specifically written for the
+        tools--not targeted towards any specific application. In this
+	    chapter we will use  
+	modules from the BioPSE package, a set of tools specifically
+	    written for the 
         modeling, simulation, and visualization of bioelectric field
         problems.
 
-	<!-- Hack out the next 2 paragraphs.  See note below -->
 	<p>Typically, Packages (<b>Figure 5.1</b>) are logically
 	grouped sets of modules and the supporting code for those
-	modules.Packages can be created by anyone, 
-	and compiled into SCIRun. They can be wholly dependent upon SCIRun code, or
-	can depend upon any additional third party code. To learn more about packages, see <a NAME:"sec:packages" 
-	HREF="node7.html">User's Guide 6.0, Packages.</a>
-
-	<p>Packages can, in fact, simply wrap around third party code, such that
-	SCIRun can use Dataflow functionality. Bridging is the concept that
-	SCIRun can be used in conjunction with other useful software
-	such as Matlab or Teem. Packages are a major
-	mechanism to bridging in SCIRun.<Useful information but doesn't belong here.>
+	modules.   To learn more about packages, see <a   
+	HREF="../../usersguide/srug6.html#sec:packages">User's Guide 6.0,
+	Packages.</a>  We will specify a module by its package name and
+	then the category to which it belongs, then the module name,
+	for example SCIRun/DataIO/FieldReader to the FileReader module
+	in the DataIO category of the package SCIRun.
 
 	</div>
 	<center>
@@ -80,8 +99,9 @@
 	field induced by the source through the domain. An analytic
 	solution exists for problems of some very specific geometric
 	models (<i>e.g.</i>, cylinders or spheres). 
-	
-	<p>However, for most real-world problems, we can only obtain the solution
+
+	<p>However, for most real-world problems, we can only obtain the
+        solution 
 	through discretization.  For this application, we will
 	discretize our domain into tetrahedral finite elements, where
 	each element contains a conductivity tensor that defines how
@@ -92,7 +112,9 @@
 	<p>The above problem is governed mathematically by Poisson's
 	equation:<br>
 
-	<img src="images/equation.gif" align="absbottom"></p>
+        <center>
+	<img src="images/equation.gif" align="absbottom">
+        </center>
 
 	<p>where <img height="16" width="11" src="images/sigma.gif">
 	is the local conductivity tensor, <img height="16" width="13"
@@ -107,7 +129,8 @@
 	src="images/phi.gif" align="absbottom">) is zero everywhere
 	there is not a current source. 
 
-	<p>Discretizing this onto our tetrahedral domain, we approximate the divergence 
+	<p>Discretizing this onto our tetrahedral domain, we approximate
+	the divergence  
 	of the electric field with the stiffness matrix <font
 	size="4"><b>A</b></font>. <img height="16" width="13"
 	src="images/phi.gif"> is a vector composed of voltages at the
@@ -118,10 +141,12 @@
 	size="4"><b>A</b></font>, and a source vector, <font
 	size="4"><b>b</b></font>, we can solve the linear system:<br>
 
+        <center>
 	<p><img height="15" width="14" src="images/A.gif"><img
 	height="16" width="13" src="images/phi.gif"><img height="16"
 	width="20" src="images/equals.gif"><img height="16" width="10"
-	src="images/b.gif"><br>
+	src="images/b.gif">
+        </center>
 
 	<p>to determine the potentials,<img height="16" width="13"
 	src="images/phi.gif">, through the field. Taking the gradient,
@@ -157,12 +182,12 @@
 
 	<p>All of these modules should be connected as shown in <b>Figure 5.2</b>.  The User
 	Interface settings for each of the modules are described in
-	the following sections.
+	the following sections.<A NAME="figure-5.2">
 
       </div>
 	<center>
 	<p><img height="461" width="450" src="images/figures/5_2.gif"><br>
-	<b>Figure 5.2</b></p>
+	<b> Figure 5.2</b></p>
 	</center>
 	<div align="left">
 	<p><br>
@@ -171,7 +196,8 @@
         <p><b><A name="section 3">FEM user interface settings</b><br></A>
 
 	<p>The SetupFEMatrix module constructs a finite element
-	stiffness matrix from a tetrahedral volume mesh. We can choose (<b>Figure 5.3</b>) whether
+	stiffness matrix from a tetrahedral volume mesh. We can choose
+	(<b>Figure 5.3</b>) whether 
 	to incorporate the
 	local conductivity tensors into the stiffness matrix, or
 	whether to use a uniform conductivity.  For this application,
@@ -187,8 +213,7 @@
 	<ul>
 	<li>The ApplyFEMCurrentSource module modifies the right hand
 	side vector to account for current sources within the model.
-	<li>On the UI (<b>Figure 5.4</b>), you can choose (<b>Figure
-	5.4</b>) whether the
+	<li>On the UI (<b>Figure 5.4</b>), you can choose whether the
 	current sources are due to a dipole or to a source/sink
 	electrode pair.  
 	<li>Select the "dipole" setting.</ul>
@@ -208,7 +233,8 @@
 	Target Error to 0.0001.
 	<li>Set the Maximum Iterations to 200.</ol>
 	
-	<p><b>Note:</b> the SolveMatrix UI must remain either open or minimized
+	<p><b>Note:</b> the SolveMatrix UI must remain either open or
+	minimized 
 	while the solver is running; it must not be closed completely.
 
 	</div>
@@ -220,26 +246,30 @@
 	<p><br>
 
 	<p>Lastly, for this simulation:
-	<ol><li value="1.">Choose the utahtorso-lowres-mesh.tvt.fld Field 
-	for the FieldReader on the left. 
-	<li>Choose the utahtorso-lowres-dipole.pcv.fld Field for the
-        FieldReader on the right.  
-	<li>Load the mesh and dipole sources:
-	<li>Load the mesh (utahtorso-lowres-mesh.tvt.fld) with the left-most FieldReader.
-	<li>Load the dipole sources (utahtorso-lowres-dipole.pcv.fld) with
-	  the right-most FieldReader.</ol>
-
-	<p>The mesh Field contains the tetrahedral finite element mesh with conductivity 
-	indices stored at each element of the model.  The dipole Field contains a single dipole vector, positioned
-        within the torso volume.
+	<ol>
+	  <li value="1.">For the FieldReader on the left, choose the
+	      mesh Field utahtorso-lowres-mesh.tvt.fld. 
+	  <li>For the FieldReader on the right,  choose the
+	      dipole Field utahtorso-lowres-dipole.pcv.fld.   
+	</OL>
+	    
+	<p>The mesh Field contains the tetrahedral finite element mesh,
+	i.e., the geometry of the torso, and also pointers to the electrical
+	conductivity values that are assigned to each element of this
+	model.  These are the values of sigma in the Poisson's equation we
+	are solving.  The dipole Field
+	contains a single dipole vector, positioned 
+        within the torso volume; this is our bioelectric source.
 
         <p><b><A name="section 4">Running the simulation</b><br></A>
 		
 	<p>To run the simulation:
 	
-	<ol><li value="1.">Select the "Execute" item from one of the modules' 
-	icon dropdown menus, or:
-	<li>Press the "Execute" button on a module's user interface.</ol>
+	<ol>
+	  <li value="1.">Select the "Execute" item from a dropdown menu
+	  on any of the modules, or
+	  <li>Press the "Execute" button on a module's user interface.
+	</ol>
   
 	<p>As the simulation progresses, you will see the residual plot in
 	the SolveMatrix module converge which is located at the bottom

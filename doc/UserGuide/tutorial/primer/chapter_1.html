@@ -65,7 +65,8 @@ color="maroon">
     <p><b>Chapter Overview</b><br>
     
     <p>In this first chapter, we will construct a SCIRun network(see the 
-    <a NAME="sec:startingup" HREF="node3.html">User's Guide 3.0, Starting SCIRun</a>) to perform a visualization task:
+    <a HREF="../../usersguide/srug3.html#sec:startingup">User's Guide 3.0,
+    Starting SCIRun</a>) to perform a visualization task: 
     rendering of a
     tetrahedral mesh.  Our &quot;net,&quot will consist of three
     modules: data reader, geometry converter, and renderer.<br> 
@@ -93,13 +94,17 @@ color="maroon">
     <p><b><H4><A name="#section 1">FieldReader User Interface</A></b></H4>
     
     <p>You should set two environment variables in your shell
-     before starting SCIRun. For more information about environment variables, you may consult the <a NAME="sec:scrundata" HREF="node3.html">User's Guide 3.4, SCIRun _DATA</a>.  
-<ol>
-  <li value="1.">The SCIRUN_DATA variable points to the location 
-  of the SCIRunData directory on your system.  
-  <li value="2.0">The SCIRUN_DATASET variable indicates which dataset to load
-  since many of our example networks run with a variety of inputs.
-</ol> 
+     before starting SCIRun. For more information about environment
+     variables, you may consult the <a
+     HREF="../../usersguide/srug3.html#sec:scirundata">User's Guide 3.4,
+     SCIRun_DATA</a>.   
+    <ol>
+      <li value="1.">The SCIRUN_DATA variable points to the location 
+      of the SCIRunData directory on your system.  
+      <li value="2.0">The SCIRUN_DATASET variable indicates which dataset
+      to load 
+      since many of our example networks run with a variety of inputs.
+    </ol> 
 
 <p>For example, we will construct a network that loads a geometric mesh
 from disk and renders it to the screen. Such a network will work on a wide
@@ -150,7 +155,10 @@ interest.<br>
     
     <p>We will first create a FieldReader module,from the
     SCIRun menu, select DataIO/FieldReader, as shown in
-    <b>Figure 1.3.1.</b> To find out more about using nets, see the <a NAME="sec:workingwithnets" HREF="node5.html">User's Guide 4.0, Working with Networks.</a>
+    <b>Figure 1.3.1.</b> To find out more about using nets, see the <a
+    HREF="../../usersguide/srug4.html#sec:workingwithnets">User's Guide
+    4.0, Working 
+    with Networks.</a> 
     
     </div>
     <center>
@@ -386,12 +394,14 @@ interest.<br>
       <li> Next, press the "Execute" button on the ShowField UI
       that forces the module to execute its algorithm.
     </ol>
-    <p>Consult the <a NAME="sec:executenet" HREF="node5.html">User's Guide 4.5, Executing a Network</a> for more details.
+    <p>Consult the <a HREF="../../usersguide/srug4.html#sec:executenet">
+    User's Guide 4.5,
+    Executing a Network</a> for more details. 
     <p>ShowField works with any of the SCIRun Field data types.
     However, you will notice a delay when ShowField is asked to
     visualize a Field data type for the first time--this is because
     the data type must be first compiled into a shared library (which
-    is saved for future runs of SCIRun).  See <a
+    is saved for future runs of SCIRun).  See the pdf document <a
     href="http://www.sci.utah.edu/publications/mcole01/dyn.pdf">Dynamic
     Compilation</a> for more information.
 
@@ -409,7 +419,9 @@ interest.<br>
     <p><b><A name="#section 5">Viewer module</b><br></A>
     
     <p>The Viewer module is the last that we will add to our
-    network. You may find more information about the Viewer in the <a NAME="sec:viewer" HREF="node6.html">User's Guide 5.0, Visualization with the Viewer</a>.
+    network. You may find more information about the Viewer in the <a
+    HREF="../../usersguide/srug5.html#sec:viewer">User's Guide 5.0,
+    Visualization with the Viewer</a>. 
     <ol>
       <li>Locate the Viewer under the SCIRun/Render
 	  menu.  
@@ -437,7 +449,10 @@ interest.<br>
        <p><b><A name="#section 6">Navigating the Viewer Window</b><br></A>
     
     <p>Since the Viewer is one of the most important modules of SCIRun,
-    you may want to know more about its functionality.  The <a NAME="sec:view-anatomy" HREF="node6.html">User's Guide 5.1, Anatomy of the Viewer Window</a> provides a full description of the Viewer.  
+    you may want to know more about its functionality.  The <a
+    HREF="../../usersguide/srug5.html#sec:view-anatomy">User's Guide 5.1,
+    Anatomy of the Viewer Window</a> provides a full description of the
+    Viewer.   
     
     <p> <b>Figure 1.10</b> shows the Viewer window from the
     network you have built earlier in this chapter. In the lower right
@@ -447,7 +462,9 @@ interest.<br>
     
     <p><b><A name="section 7">Mouse controls</b><br></A>
     
-    <p>The mouse has functionality that works with the Viewer. The <a NAME="sec:view-mouse" HREF="node6.html">User's Guide 5.2, Mouse Control in the Viewer</a>
+    <p>The mouse has functionality that works with the Viewer. The <a
+    HREF="../../usersguide/srug5.html#sec:view-mouse">User's Guide 5.2,
+    Mouse Control in the Viewer</a> 
 	provides more complete information.
     <p>To get a feel for this functionality:
     <ol>
@@ -540,8 +557,10 @@ interest.<br>
 	  options <b>(Figure 1.10.3)</b>. 
 	  
       <li>Select features for all objects or for specific objects 
-	  in the display through the Extended Control Window, detailed in the<a NAME="sec:view-control" 
-	HREF="node6.html">User's Guide 5.3, Extended Control Window</a>.
+	  in the display through the Extended Control Window, detailed in
+	  the <a
+	  HREF="../../usersguide/srug5.html#sec:view-control">User's Guide
+	  5.3, Extended Control Window</a>. 
     </ul> 
 
     </div>
@@ -560,11 +579,13 @@ interest.<br>
     
     <p>Default settings apply to all objects that contain the
     "default" selection.  We suggest that you manipulate all of these
-    settings to see their possible effects, and consult the <a NAME="usersguide.html" HREF="node1.html"> User's Guide</a>
+    settings to see their possible effects, and consult the <a
+    HREF="../../usersguide/srug1.html"> User's Guide</a> 
     for a more complete description.
     
  
-    <p>Learn more about the Viewer's components in the <a NAME="sec:viewer" HREF="node6.html">User's Guide 5.0, 
+    <p>Learn more about the Viewer's components in the <a
+    HREF="../../usersguide/srug5.html#sec:viewer">User's Guide 5.0,  
 	Visualization with the Viewer</a>
  
     <p><b><A name="section 10">Saving and reloading networks</b><br></A> 
@@ -624,7 +645,8 @@ interest.<br>
     </ul>
     
     <p>For more information on the File menu options (such as Insert and
-    Clear), please refer to <a NAME="sec:workwithnets" HREF="node5.html">User's Guide 4.0, 
+    Clear), please refer to <a
+    HREF="../../usersguide/srug4.html#sec:workwithnets"> User's Guide 4.0,  
     Working with Networks</a>.
     
     <p><b><H4>Summary</b></H4>
