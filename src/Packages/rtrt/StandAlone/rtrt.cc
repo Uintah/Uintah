@@ -58,7 +58,6 @@
 #  include "oogl/planarQuad.h"
 #  include "oogl/shadedPrim.h"
 #  include "oogl/renderPass.h"
-#endif
 
 /////////////////////////////////////////////////
 // OOGL stuff
@@ -84,6 +83,7 @@ extern BasicTexture * rtrtMidBotTex; // Medium Size RTRT Render Window (512x320)
 extern ShadedPrim   * rtrtMidBotTexQuad;
 
 /////////////////////////////////////////////////
+#endif
 
 using namespace rtrt;
 using namespace std;
@@ -104,7 +104,7 @@ extern bool pin;
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-static void mld_alloc(unsigned long size, int nmld, 
+static void mld_alloc(long size, int nmld, 
 		      pmo_handle_t*& mlds, pmo_handle_t& mldset)
 {
   mlds = new pmo_handle_t[nmld];
@@ -505,9 +505,9 @@ main(int argc, char* argv[])
 
 #ifdef __sgi
   if(use_pm){
-    unsigned long mempernode = 300*1024*1024;
+    long mempernode = 300*1024*1024;
     // How can we tell if it should be 2 or 4 processors per node?
-    unsigned long numnodes = Thread::numProcessors()/4;
+    int numnodes = static_cast<int>(Thread::numProcessors()/4);
     pmo_handle_t *mlds=0;
     pmo_handle_t mldset=0;
     mld_alloc(mempernode, numnodes, mlds, mldset);
@@ -544,17 +544,21 @@ main(int argc, char* argv[])
     SCIRun::Pio(*str, sh);
     scene = sh.get_rep();
   } else {
-    sprintf(scenefile, "./%s.mo", scenename);
+    // First try .rs
+    sprintf(scenefile, "./%s.rs", scenename);
     void* handle=dlopen(scenefile, RTLD_NOW);
     if(!handle){
-      //    cerr << "Error opening scene: " << scenefile << '\n';
-      //    cerr << dlerror() << '\n';
-      //    cerr << "Trying: "<< scenename << "\n";
+      // Now try .mo
+      sprintf(scenefile, "./%s.mo", scenename);
       handle=dlopen(scenename, RTLD_NOW);
       if(!handle){
-	cerr << "Error opening scene: " << scenename << '\n';
-	cerr << dlerror() << '\n';
-	exit(1);
+        // Try exactly whatever they passed in
+        handle=dlopen(scenename, RTLD_NOW);
+        if(!handle){
+          cerr << "Error opening scene: " << scenename << '\n';
+          cerr << dlerror() << '\n';
+          exit(1);
+        }
       }
     }
     void* scene_fn=dlsym(handle, "make_scene");
@@ -887,6 +891,7 @@ main(int argc, char* argv[])
     Trigger * trigger = triggers[cnt];
     if( !trigger->isSoundTrigger() )
       {
+#if defined(HAVE_OOGL)
 	trigger->setDrawableInfo( blendTex, blendTexQuad, blend );
 	Trigger * next = trigger->getNext();
 
@@ -895,6 +900,7 @@ main(int argc, char* argv[])
 	    next->setDrawableInfo( blendTex, blendTexQuad, blend );
 	    next = next->getNext();
 	  }
+#endif
       }
   }
 #if defined(HAVE_OOGL)
