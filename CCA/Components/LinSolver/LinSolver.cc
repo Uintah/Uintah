@@ -33,7 +33,6 @@
 #include <iostream>
 #include <fstream>
 #include <qmessagebox.h>
-#include "Matrix.h"
 
 using namespace std;
 using namespace SCIRun;
@@ -56,6 +55,7 @@ LinSolver::~LinSolver()
 
 void LinSolver::setServices(const sci::cca::Services::pointer& svc)
 {
+
   services=svc;
   //add provides ports here ...  
 
@@ -70,7 +70,7 @@ void LinSolver::setServices(const sci::cca::Services::pointer& svc)
   // Actually - the ref counting will take care of that automatically - Steve
 }
 
-bool LinSolver::jacobi(const sci::cca::Matrix::pointer &A, 
+bool LinSolver::jacobi(const SSIDL::array2<double> &A, 
 		       const SSIDL::array1<double> &b)
 {
   //we might set the accurracy by UI
@@ -88,7 +88,7 @@ bool LinSolver::jacobi(const sci::cca::Matrix::pointer &A,
     for(int i=0; i<N; i++){
       double res_i=0;
       for(int k=0; k<N; k++){
-	res_i+=A->getElement(i,k)*x[k];
+	res_i+=A[i][k]*x[k];
       }
       res_i-=b[i];
       norm+=res_i*res_i;
@@ -101,9 +101,9 @@ bool LinSolver::jacobi(const sci::cca::Matrix::pointer &A,
       tempx[i]=b[i];
       for(int k=0; k<N; k++){
 	if(i==k) continue;
-	tempx[i]-=A->getElement(i,k)*x[k];
+	tempx[i]-=A[i][k]*x[k];
       }
-      tempx[i]/=A->getElement(i,i);
+      tempx[i]/=A[i][i];
     }
     x=tempx;
   }
@@ -129,12 +129,16 @@ int myGoPort::go()
   sci::cca::ports::PDEMatrixPort::pointer matrixPort=
     pidl_cast<sci::cca::ports::PDEMatrixPort::pointer>(pp);
   
-  sci::cca::Matrix::pointer A=matrixPort->getMatrix();
+  SSIDL::array2<double> A;
+  matrixPort->getMatrix(A);
   SSIDL::array1<double> b=matrixPort->getVector();
-  
+
+  cerr<<"#### A.sizes="<<A.size1()<<":"<<A.size2()<<endl;
+  cerr<<"#### b.sizes="<<b.size()<<endl;
+ 
   com->getServices()->releasePort("matrix");	
   
-  if(A.isNull()){
+  if(A.size1()==0 || A.size2()==0){
     QMessageBox::warning(0, "LinSolver", "Bad input matrix and vector!");
     return 0;
   }
