@@ -784,6 +784,9 @@ int main(int argc, char** argv)
 	filebase1 = argv[i];
     }
   }
+
+  cerr << "Using absolute tolerance: " << abs_tolerance << endl;
+  cerr << "Using relative tolerance: " << rel_tolerance << endl;
   
   if (filebase2 == ""){
     cerr << "Must specify two archive directories.\n";
