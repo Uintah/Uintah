@@ -35,6 +35,7 @@
 #include <Core/CCA/Component/Comm/Message.h>
 #include <Core/CCA/Component/Comm/ReplyEP.h>
 #include <Core/CCA/Component/PIDL/TypeInfo_internal.h>
+#include <Core/CCA/Component/PIDL/PIDL.h>
 #include <Core/Exceptions/InternalError.h>
 #include <iostream>
 using namespace SCIRun;
