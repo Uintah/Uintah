@@ -6,7 +6,7 @@
 CLASS
    StencilMatrix
    
-   Class StencilMatrix stores the data for 7 stencils needed for
+   Class StencilMatrix stores the data for 9 stencils needed for
    Coefficient calculation.
 
 GENERAL INFORMATION
@@ -67,7 +67,7 @@ public:
 
 private:
 
-      T d_data[7];
+      T d_data[9];
 
 }; // end Class Source
 
@@ -86,7 +86,7 @@ template<class T>
 template<class T>
   StencilMatrix<T>::StencilMatrix(const StencilMatrix<T>& sm)
   {
-    for (int ii = 0; ii < 7; ii++)
+    for (int ii = 0; ii < 9; ii++)
       d_data[ii] = sm.d_data[ii];
       //d_data.push_back(sm.d_data[ii]);
   }
@@ -106,7 +106,7 @@ template<class T>
   T&
   StencilMatrix<T>::operator[](int index)
   {
-    if (index < 0 || index > 6){
+    if (index < 0 || index > 9){
       std::cerr << "Invalid Index" << index << std::endl;
       throw InvalidValue("Valid Indices for StencilMatrix are AP,AE,AW,AN,AS,AT and AB ");
     }

@@ -336,6 +336,20 @@ Source::calculatePressureSourcePred(const ProcessorGroup*,
 		   vars->old_density, vars->old_old_density, vars->uVelRhoHat,
                    vars->vVelRhoHat, vars->wVelRhoHat, delta_t,
 		   cellinfo->sew, cellinfo->sns, cellinfo->stb);
+  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+  if (xplus) {
+    int ii = idxHi.x();
+    for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
+      for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
+	IntVector currcell(ii,jj,kk);
+	IntVector nextcell(ii+1,jj,kk);
+	double avgden = (vars->density[currcell]+vars->density[nextcell])/0.5;
+	double area = cellinfo->sns[jj]*cellinfo->stb[kk]/cellinfo->sew[ii];
+	vars->pressNonlinearSrc[currcell] -= 2.0*delta_t*avgden*area*
+	                                     vars->pressure[currcell];
+      }
+    }
+  }
 #endif
 }
 

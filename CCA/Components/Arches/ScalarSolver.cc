@@ -12,6 +12,7 @@
 #include <Packages/Uintah/CCA/Components/Arches/RBGSSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/Source.h>
 #include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
+#include <Packages/Uintah/CCA/Components/Arches/ScaleSimilarityModel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
@@ -429,6 +430,10 @@ ScalarSolver::sched_buildLinearMatrixPred(SchedulerP& sched,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
   tsk->requires(Task::NewDW, d_lab->d_wVelocityOUTBCLabel,
 		Ghost::AroundFaces, Arches::ONEGHOSTCELL);
+  if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) 
+    tsk->requires(Task::OldDW, d_lab->d_scalarFluxCompLabel, d_lab->d_scalarFluxMatl,
+		  Task::OutOfDomain, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
 
 #ifdef Scalar_ENO
     tsk->requires(Task::OldDW, d_lab->d_maxAbsU_label);
@@ -457,6 +462,8 @@ void ScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 					 DataWarehouse* new_dw,
 					 int index)
 {
+  double time = d_lab->d_sharedState->getElapsedTime();
+
   delt_vartype delT;
   old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
   double delta_t = delT;
@@ -558,18 +565,64 @@ void ScalarSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 				    delta_t, index, cellinfo, 
 				    &scalarVars );
 
+    // for scalesimilarity model add scalarflux to the source of scalar eqn.
+    if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
+      StencilMatrix<CCVariable<double> > scalarFlux; //3 point stencil
+      for (int ii = 0; ii < d_lab->d_scalarFluxMatl->size(); ii++) {
+	old_dw->getCopy(scalarFlux[ii], 
+			d_lab->d_scalarFluxCompLabel, ii, patch,
+			Ghost::AroundCells, Arches::ONEGHOSTCELL);
+      }
+      IntVector indexLow = patch->getCellFORTLowIndex();
+      IntVector indexHigh = patch->getCellFORTHighIndex();
+      
+      // set density for the whole domain
+      
+      
+      // Store current cell
+      double sue, suw, sun, sus, sut, sub;
+      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
+	for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
+	  for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
+	    IntVector currCell(colX, colY, colZ);
+	    IntVector prevXCell(colX-1, colY, colZ);
+	    IntVector prevYCell(colX, colY-1, colZ);
+	    IntVector prevZCell(colX, colY, colZ-1);
+	    IntVector nextXCell(colX+1, colY, colZ);
+	    IntVector nextYCell(colX, colY+1, colZ);
+	    IntVector nextZCell(colX, colY, colZ+1);
+	    
+	    sue = 0.5*cellinfo->sns[colY]*cellinfo->stb[colZ]*
+	      ((scalarFlux[0])[currCell]+(scalarFlux[0])[nextXCell]);
+	    suw = 0.5*cellinfo->sns[colY]*cellinfo->stb[colZ]*
+	      ((scalarFlux[0])[prevXCell]+(scalarFlux[0])[currCell]);
+	    sun = 0.5*cellinfo->sew[colX]*cellinfo->stb[colZ]*
+	      ((scalarFlux[1])[currCell]+ (scalarFlux[1])[nextYCell]);
+	    sus = 0.5*cellinfo->sew[colX]*cellinfo->stb[colZ]*
+	      ((scalarFlux[1])[currCell]+(scalarFlux[1])[prevYCell]);
+	    sut = 0.5*cellinfo->sns[colY]*cellinfo->sew[colX]*
+	      ((scalarFlux[2])[currCell]+ (scalarFlux[2])[nextZCell]);
+	    sub = 0.5*cellinfo->sns[colY]*cellinfo->sew[colX]*
+	      ((scalarFlux[2])[currCell]+ (scalarFlux[2])[prevZCell]);
+#if 1
+	    scalarVars.scalarNonlinearSrc[currCell] += suw-sue+sus-sun+sub-sut;
+#endif
+	  }
+	}
+      }
+    }
     // Calculate the scalar boundary conditions
     // inputs : scalarSP, scalCoefSBLM
     // outputs: scalCoefSBLM
-
-
+    
+    
     d_boundaryCondition->scalarBC(pc, patch,  index, cellinfo, 
 				  &scalarVars);
-  // apply multimaterial intrusion wallbc
+    // apply multimaterial intrusion wallbc
     if (d_MAlab)
       d_boundaryCondition->mmscalarWallBC(pc, patch, cellinfo,
 					  &scalarVars);
-
+    
     // similar to mascal
     // inputs :
     // outputs:
