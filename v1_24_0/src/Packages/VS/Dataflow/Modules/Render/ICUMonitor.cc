@@ -1438,6 +1438,9 @@ ICUMonitor::setConfigFromData()
      } // end if(string(name, 0, 5) == "DSPY_")
   } // end for ( c from  0 to data_->nproperties()-1 )
 
+  // tell the ICUMonitor to redraw
+  plots_dirty_ = true;
+
 } // end setConfigFromData()
 
 void 
