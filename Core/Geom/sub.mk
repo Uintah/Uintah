@@ -31,6 +31,7 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/GeomColorMap.cc	                \
 	$(SRCDIR)/GeomCone.cc		                \
 	$(SRCDIR)/GeomContainer.cc	                \
+	$(SRCDIR)/GeomCull.cc	                \
 	$(SRCDIR)/GeomCylinder.cc	                \
 	$(SRCDIR)/GeomDL.cc                             \
 	$(SRCDIR)/GeomDisc.cc		                \
@@ -83,7 +84,11 @@ PSELIBS := Core/Persistent Core/Geometry Core/Exceptions \
 	Core/Datatypes Core/Math Core/Containers Core/Thread \
 	Core/GuiInterface
 
+
 LIBS := $(GL_LIBRARY) $(M_LIBRARY)
+
+#INCLUDES += -I/usr/include/freetype2 -I/scratch/FTGL/include
+#LIBS := -lfreetype $(GL_LIBRARY) $(M_LIBRARY) /scratch/FTGL/unix/src/*.o
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
