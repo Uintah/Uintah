@@ -906,11 +906,11 @@ void AMRSimpleCFD::coarsen(const ProcessorGroup*,
 }
 //______________________________________________________________________
 //
-void AMRSimpleCFD::refine(const ProcessorGroup*,
-			   const PatchSubset* patches,
-			   const MaterialSubset* matls,
-			   DataWarehouse* old_dw,
-			   DataWarehouse* new_dw)
+void AMRSimpleCFD::refine ( const ProcessorGroup*,
+			    const PatchSubset* patches,
+			    const MaterialSubset* matls,
+			    DataWarehouse* old_dw,
+			    DataWarehouse* new_dw )
 {
   cout << "RANDY: AMRSimpleCFD::refine() BGN" << endl;
 //    new_dw->transferFrom(old_dw, lb_->bctype, patches, matls);
@@ -918,6 +918,8 @@ void AMRSimpleCFD::refine(const ProcessorGroup*,
   cout_doing << "Doing refine \t\t\t AMRSimpleCFD" << '\n';
   const Level* fineLevel = getLevel(patches);
   const Level* coarseLevel = fineLevel->getCoarserLevel().get_rep();
+  IntVector rr(coarseLevel->getRefinementRatio());
+  double ratio = 1./(rr.x()*rr.y()*rr.z());
 
   //  IntVector rr(fineLevel->getRefinementRatio());
   //  double ratio = 1./(rr.x()*rr.y()*rr.z());
@@ -952,15 +954,36 @@ void AMRSimpleCFD::refine(const ProcessorGroup*,
 	} else {
 	  CCVariable<double> pressure;
 	  new_dw->allocateAndPut(pressure, lb_->pressure, matl, finePatch);
-	}
-        /*	if (old_dw->exists(lb_->pressure2, m, finePatch)) {
-	  new_dw->transferFrom(old_dw, lb_->pressure2, patches, matls);
-	} else {
-	  CCVariable<double> pressure2;
-	  new_dw->allocateAndPut(pressure2, lb_->pressure2, matl, finePatch);
-        }
+
+ /*
+	  for ( int i = 0; i < coarsePatches.size(); i++ ) {
+	    const Patch* coarsePatch = coarsePatches[i];
+	    constCCVariable<double> coarse_pres;
+	    new_dw->get(coarse_pres, lb_->pressure, matl, coarsePatch, Ghost::None, 0);
+                  
+	    IntVector cl(coarsePatch->getCellLowIndex());
+	    IntVector ch(coarsePatch->getCellHighIndex());
+	    IntVector l(coarseLevel->mapCellToFiner(cl));
+	    IntVector h(coarseLevel->mapCellToFiner(ch));
+	    l = Max(l, finePatch->getCellLowIndex());
+	    h = Min(h, finePatch->getCellHighIndex());
+       
+	    for(CellIterator iter(l, h); !iter.done(); iter++){
+	      double tmp=0;
+	      IntVector coarseStart(fineLevel->mapCellToCoarser(*iter));
+         
+	      for(CellIterator inside(IntVector(0,0,0), coarseLevel->getRefinementRatio());
+		  !inside.done(); inside++){
+		tmp+=coarse_pres[coarseStart+*inside];
+	      }
+	      pressure[*iter]=tmp*ratio;
+	    }
+	  } // for(int i=0;i<coarsePatches.size();i++) {
 */
-      }
+
+	} // if (old_dw->exists(lb_->pressure, m, finePatch)) {
+
+      } // if(keep_pressure) {
 
       //__________________________________
       //   D E N S I T Y
