@@ -5,7 +5,7 @@
 
 using namespace Uintah;
 
-GeometryObject2::GeometryObject2(ICEMaterial* ice_matl,
+GeometryObject2::GeometryObject2(ICEMaterial* /*ice_matl*/,
                                GeometryPiece* piece,
                             ProblemSpecP& ps)
    : d_piece(piece)
