@@ -71,10 +71,3 @@ def modUPS(directory, filename, changes):
     system("rm -f sedscript")
     system("rm -rf tempfilename")
     return "tmp/MOD-%s" % filename
-
-
-file1 = modUPS("inputs/ICE","advect.ups",[])
-file2 = modUPS("inputs/ICE","advect.ups",[])
-file3 = modUPS("inputs/ICE","advect.ups",[])
-
-print "%s %s %s" % (file1, file2, file3)
