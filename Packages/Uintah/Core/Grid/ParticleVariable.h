@@ -111,7 +111,7 @@ public:
 			   const ProcessorGroup* pg,
 			   ParticleSubset* pset);
   virtual void emitNormal(ostream& out, DOM_Element varnode);
-  virtual void emitRLE(ostream& out, DOM_Element varnode);
+  virtual bool emitRLE(ostream& out, DOM_Element varnode);
   
   virtual void readNormal(istream& in);
   virtual void readRLE(istream& in);
@@ -387,7 +387,7 @@ private:
   }
 
   template<class T>
-  void
+  bool
   ParticleVariable<T>::emitRLE(ostream& out, DOM_Element varnode)
   {
     const TypeDescription* td = fun_getTypeDescription((T*)0);
@@ -404,6 +404,7 @@ private:
 	rle.addItem((*this)[*iter]);
       rle.write(out);
     }
+    return true;
   }
   
   template<class T>
