@@ -29,6 +29,7 @@ SUBDIRS := \
 	$(SRCDIR)/Exceptions \
 	$(SRCDIR)/GUI \
 	$(SRCDIR)/Geom \
+	$(SRCDIR)/GeomInterface \
 	$(SRCDIR)/Geometry \
 	$(SRCDIR)/GLVolumeRenderer \
 	$(SRCDIR)/GuiInterface \
@@ -37,7 +38,6 @@ SUBDIRS := \
 	$(SRCDIR)/OS \
 	$(SRCDIR)/Persistent \
 	$(SRCDIR)/Process \
-	$(SRCDIR)/Tester \
 	$(SRCDIR)/Thread \
 	$(SRCDIR)/TkExtensions \
 	$(SRCDIR)/Util \
