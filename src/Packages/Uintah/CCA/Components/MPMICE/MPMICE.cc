@@ -26,10 +26,10 @@ using namespace std;
 
 //#define DOING
 #undef DOING
-//#define EOSCM
-#undef EOSCM
-#define IDEAL_GAS
-//#undef IDEAL_GAS
+#define EOSCM
+//#undef EOSCM
+//#define IDEAL_GAS
+#undef IDEAL_GAS
 /*`==========TESTING==========*/ 
 // KEEP THIS AROUND UNTIL
 // I'M SURE OF THE NEW STYLE OF SETBC -Todd
@@ -731,10 +731,17 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
      Temp_CC.initialize(0.0);
      for(CellIterator iter =patch->getExtraCellIterator();!iter.done();iter++){
         patch->findNodesFromCell(*iter,nodeIdx);
+
+	double MassXTemp = 0; 
+	double MassSum = 0;
         for (int in=0;in<8;in++){
-         Temp_CC[*iter] += .125*gtemperature[nodeIdx[in]];
-        }
-      }
+	  MassXTemp += gtemperature[nodeIdx[in]] * gmass[nodeIdx[in]];
+	  MassSum += gmass[nodeIdx[in]];
+	}
+
+	if (MassSum > 1.e-20) 
+	  Temp_CC[*iter] = MassXTemp / MassSum;    
+     }
 #endif
 
   #if 0
