@@ -105,7 +105,7 @@ cat "$BUILDROOT"/opt/log >> "$BUILDROOT"/log
 echo "</pre></body></html>" >> "$HTMLLOG"
 echo "" >> "$BUILDROOT"/log
 
-chmod -R g+w "$BUILDROOT"
+#chmod -R g+w "$BUILDROOT"
 chmod -R g+w "$TEST_DATA" > /dev/null 2>&1
 
 if [ "$VERBOSE" = "no" -a "$SEND_MAIL_TO" != "" ]; then
