@@ -578,11 +578,18 @@ NrrdDataHandle MDSPlusDataReader::readDataset( string& server,
     dtype = DTYPE_DOUBLE;
     nrrd_type = get_nrrd_type<double>();
     break;
+  case DTYPE_CSTRING:
+    {
+      ostringstream str;
+      str << "String data is not supported for signal " << signal;
+      error( str.str() );
+      error_ = true;
+    }
   default:
     {
       ostringstream str;
-      str << "Unknown type for signal " << signal;
-      remark( str.str() );
+      str << "Unknown type (" << mds_data_type << ") for signal " << signal;
+      error( str.str() );
       error_ = true;
     }
     

@@ -13,8 +13,6 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/Fusion/Dataflow/Modules/DataIO
 
 SRCS     += \
-	$(SRCDIR)/FusionFieldReader.cc\
-	$(SRCDIR)/FusionFieldSetReader.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
