@@ -24,6 +24,11 @@
 #include <cantera/zerodim.h>
 #include <stdio.h>
 
+// TODO:
+// SGI build
+// Memory leaks in cantera
+// bigger problems
+// profile
 
 using namespace Uintah;
 using namespace std;
@@ -95,10 +100,12 @@ void Mixing2::problemSetup(GridP&, SimulationStateP& in_state,
     gas->setState_TPY(200, 101325, "H2:1");
 #endif
     if(d_myworld->myrank() == 0){
+#if 0
       cerr.precision(17);
       cerr << "Using ideal gas " << id << "(from " << fname << ") with " << nel << " elements and " << nsp << " species\n";
       gas->setState_TPY(300., 101325., "CH4:0.1, O2:0.2, N2:0.7");
       cerr << *gas;
+#endif
 #if 0
       
       //equilibrate(*gas, UV);
@@ -363,6 +370,7 @@ void Mixing2::react(const ProcessorGroup*,
 			       matl, patch, Ghost::None, 0);
       }
 
+      Reactor r;
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
 	IntVector idx = *iter;
 	double mass = density[idx]*volume;
@@ -370,7 +378,7 @@ void Mixing2::react(const ProcessorGroup*,
 	for(int i = 0; i< numSpecies; i++)
 	  tmp_mf[i] = mf[i][*iter];
 
-#if 1
+#if 0
 	double sum = 0;
 	for(int i=0;i<numSpecies;i++){
 	  //ASSERT(tmp_mf[i] >= 0 && tmp_mf[i] <= 1);
@@ -382,17 +390,6 @@ void Mixing2::react(const ProcessorGroup*,
 	}
 	if(sum < 1-1.e-8 || sum > 1+1.e-8){
 	  cerr << "mf sum" << idx << "=" << sum << '\n';
-#if 0
-	  for(int i=0;i<numSpecies;i++)
-	    cerr << i << ": " << tmp_mf[i] << " ";
-	  cerr << '\n';
-#endif
-	}
-#endif
-#if 0
-	for(int i=0;i<numSpecies;i++){
-	  if(Abs(tmp_mf[i]) > 1.e-10)
-	     cerr << "b: " << gas->speciesName(i) << " = " << tmp_mf[i] << '\n';
 	}
 #endif
 	
@@ -406,67 +403,21 @@ void Mixing2::react(const ProcessorGroup*,
 #endif
 	
 	// create a reactor
-	Reactor r;
 	  
 	// specify the thermodynamic property and kinetics managers
 	r.setThermoMgr(*gas);
 	r.setKineticsMgr(*gas);
-
-#if 0
-	double orig_density = gas->density();
-	double orig_enthalpy = gas->enthalpy_mass();
-	double orig_energy = gas->intEnergy_mass();
-	cerr << "ICE density: " << density[idx] << '\n';
-	cerr << "enth=" << gas->enthalpy_mass()*mass << ", volume=" << volume << '\n';
-	cerr << "eng=" << gas->intEnergy_mass()*mass << ", volume=" << volume << '\n';
-	cerr << "b" << *iter << ": " << "\t" << gas->temperature() << "\t" << gas->density() << "\t" << gas->pressure() << '\n';
-#endif
+	r.initialize();
 	r.advance(dt);
-#if 0
-	cerr << "a" << *iter << ": " << "\t" << gas->temperature() << "\t" << gas->density() << "\t" << gas->pressure() << '\n';
-	double dpress = gas->pressure()-press;
-#endif
 	double dtemp = gas->temperature()-temp;
-#if 0
-	double denthalpy = gas->enthalpy_mass()-orig_enthalpy;
-	double denergy = gas->intEnergy_mass()-orig_energy;
-#endif
 	double energyx = dtemp*d_cv*mass;
 	energySource[idx] += energyx;
 	gas->getMassFractions(new_mf);
-#if 0
-	double ddens = gas->density()-orig_density;
-	cerr << "dpress=" << dpress << ", dtemp=" << dtemp << ", ddens=" << ddens << ", denthalpy=" << denthalpy << ", denergy=" << denergy << '\n';
-	double dt1 = dtemp * 1293.908298567086* 1.240786866259094 * mass;
-	double dt2 = energyx/(mass*1293.908298567086* 1.240786866259094);
-	cerr << "denergy1=" << dt1 << ", dtemp2=" << dt2 << '\n';
-	for(int i=0;i<numSpecies;i++){
-	  double diff = new_mf[i] - tmp_mf[i];
-	  if(Abs(diff) > 1.e-10)
-	    cerr << gas->speciesName(i) << " += " << diff << '\n';
-	}
-	for(int i=0;i<numSpecies;i++){
-	  if(Abs(new_mf[i]) > 1.e-10)
-	     cerr << "a: " << gas->speciesName(i) << " = " << new_mf[i] << '\n';
-	}
-	cerr << "eng=" << gas->enthalpy_mass()*mass << ", volume=" << volume << '\n';
-#endif
-#if 0
-	if(idx == IntVector(2,2,0)){
-	  static ofstream out1("press.dat");
-	  static ofstream out2("temp.dat");
-	  out1 << sharedState->getElapsedTime() << " " << gas->pressure() << " " << press << '\n';
-	  out2 << sharedState->getElapsedTime() << " " << gas->temperature() << " " << " " << temp << '\n';
-	}
-#endif
 	for(int i = 0; i< numSpecies; i++)
 	  mfsource[i][*iter] += new_mf[i]-tmp_mf[i];
-#if 0
-	// Modify the mass fractions
-	mass_source_from[idx] -= mass_rxn;
-	mass_source_to[idx] += mass_rxn;
-#endif
       }
+      
+#if 0
       {
 	static ofstream outt("temp.dat");
 	outt << sharedState->getElapsedTime() << " " << temperature[IntVector(2,2,0)] << " " << temperature[IntVector(3,2,0)] << " " << temperature[IntVector(3,3,0)] << '\n';
@@ -475,6 +426,7 @@ void Mixing2::react(const ProcessorGroup*,
 	outp << sharedState->getElapsedTime() << " " << pressure[IntVector(2,2,0)] << " " << pressure[IntVector(3,2,0)] << " " << pressure[IntVector(3,3,0)] << '\n';
 	outp.flush();
       }
+#endif
       delete[] tmp_mf;
       delete[] new_mf;
     }
