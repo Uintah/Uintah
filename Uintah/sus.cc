@@ -277,22 +277,16 @@ int main(int argc, char** argv)
 	cerr << "Caught exception: " << e.message() << '\n';
 	if(e.stackTrace())
 	   cerr << "Stack trace: " << e.stackTrace() << '\n';
-	/*
 	Parallel::finalizeManager(Parallel::Abort);
 	abort();
-	*/
     } catch (std::exception e){
         cerr << "Caught std exception: " << e.what() << '\n';
-	/*
 	Parallel::finalizeManager(Parallel::Abort);
 	abort();       
-	*/
     } catch(...){
 	cerr << "Caught unknown exception\n";
-	/*
 	Parallel::finalizeManager(Parallel::Abort);
 	abort();
-	*/
     }
 
     /*
@@ -303,6 +297,12 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.26  2000/09/29 19:54:22  dav
+// Uncommented the commented out sections that called
+// Parallel::finlaizeManager().  They were commented out because the abort
+// was causing print statements to be lost.  Hopefully with the cerr/cout
+// flush in Parallel.cc and a sleep, this should be fixed...
+//
 // Revision 1.25  2000/09/29 05:32:06  sparker
 // Quiet warning from g++
 //
