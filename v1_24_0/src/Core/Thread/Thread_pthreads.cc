@@ -257,14 +257,27 @@ Thread_shutdown(Thread* thread)
       active[i-1]=active[i];
    }
    numActive--;
+
+   // This can't be done in checkExit, because of a potential race
+   // condition.
+   int done=true;
+   for(int i=0;i<numActive;i++){
+     Thread_private* p=active[i];
+     if(!p->thread->isDaemon()){
+       done=false;
+       break;
+     }
+   }
    unlock_scheduler();
+
    bool wait_main = priv->ismain;
    delete thread;
    if(pthread_setspecific(thread_key, 0) != 0)
      fprintf(stderr, "Warning: pthread_setspecific failed");
    priv->thread=0;
    delete priv;
-   Thread::checkExit();
+   if (done)
+     Thread::exitAll(0);
    if(wait_main) {
         main_sema.down();
    }
