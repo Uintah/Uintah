@@ -3,8 +3,6 @@
 # $Id$
 #
 
-include $(SRCTOP)/scripts/smallso_prologue.mk
-
 SRCDIR   := Uintah/Datatypes/Particles
 
 SRCS     += $(SRCDIR)/MPMaterial.cc $(SRCDIR)/MPRead.cc \
@@ -21,19 +19,11 @@ SRCS += $(SRCDIR)/Particles_sidl.cc $(SRCDIR)/PIDLObject.cc \
 GENHDRS := $(SRCDIR)/Particles_sidl.h
 endif
 
-PSELIBS := PSECore/Dataflow SCICore/Persistent SCICore/Exceptions \
-	SCICore/Datatypes SCICore/Containers SCICore/Thread \
-	SCICore/Geometry
-LIBS := 
-ifeq ($(BUILD_PARALLEL),yes)
-PSELIBS := $(PSELIBS) Component/CIA Component/PIDL
-LIBS := $(LIBS) $(GLOBUS_LIBS) -lglobus_nexus
-endif
-
-include $(SRCTOP)/scripts/smallso_epilogue.mk
-
 #
 # $Log$
+# Revision 1.5  2000/06/20 20:13:38  kuzimmer
+# updated so that Archiver reader will compile in Uintah
+#
 # Revision 1.4  2000/03/23 11:18:15  sparker
 # Makefile tweaks for sidl files
 # Added GENHDRS to program.mk
