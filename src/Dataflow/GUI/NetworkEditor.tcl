@@ -497,7 +497,6 @@ proc popupSaveMenu {} {
 
     if { $netedit_savefile != "" } {
 	netedit savenetwork  $netedit_savefile
-	saveMacroModules $netedit_savefile
     }
 }
 
