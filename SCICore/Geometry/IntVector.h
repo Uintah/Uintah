@@ -67,16 +67,16 @@ namespace SCICore {
 			     d_value[2]-v.d_value[2]);
 	}
 
-	// IntVector i(1)=i.x()
-	//           i(2)=i.y()
-	//           i(3)=i.z()
+	// IntVector i(0)=i.x()
+	//           i(1)=i.y()
+	//           i(2)=i.z()
 	//   --tan
 	inline int operator()(int i) const {
-	    return d_value[i-1];
+	    return d_value[i];
 	}
 
 	inline int& operator()(int i) {
-	    return d_value[i-1];
+	    return d_value[i];
 	}
 
 	inline int x() const {
@@ -131,6 +131,9 @@ std::ostream& operator<<(std::ostream&, const SCICore::Geometry::IntVector&);
 
 //
 // $Log$
+// Revision 1.8  2000/07/10 20:19:13  tan
+// For IntVector i, i(0)=i.x(),i(1)=i.y(),i(2)=i.z()
+//
 // Revision 1.7  2000/07/07 03:09:43  tan
 // Added operator operator()(int i) to index IntVector element by integer.
 //

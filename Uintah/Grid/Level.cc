@@ -121,7 +121,7 @@ void Level::getIndexRange(IntVector& lowIndex,IntVector& highIndex) const
     Patch* patch = d_patches[p];
     IntVector l( patch->getNodeLowIndex() );
     IntVector u( patch->getNodeHighIndex() );
-    for(int i=1;i<=3;i++) {
+    for(int i=0;i<3;i++) {
       if( l(i) < lowIndex(i) ) lowIndex(i) = l(i);
       if( u(i) > highIndex(i) ) highIndex(i) = u(i);
     }
@@ -267,6 +267,9 @@ void Level::assignBCS(const ProblemSpecP& grid_ps)
 
 //
 // $Log$
+// Revision 1.16  2000/07/10 20:20:13  tan
+// For IntVector i, i(0)=i.x(),i(1)=i.y(),i(2)=i.z()
+//
 // Revision 1.15  2000/07/07 03:08:24  tan
 // It is better that IndexRange expressed by IntVector instead of BBox,
 // and the function is const.
