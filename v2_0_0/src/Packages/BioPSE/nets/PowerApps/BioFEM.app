@@ -1253,3 +1253,4 @@ bind all <Control-v> {
     global mods
     $mods(Viewer)-ViewWindow_0-c autoview
 }
+
