@@ -138,13 +138,13 @@
 
 <area coords="296,62,437,83">
 <xsl:attribute name="href">
-<xsl:value-of select="concat($swidk,'/doc/')" />
+<xsl:value-of select="concat($swidk,'/doc/index.html')" />
 </xsl:attribute>
 </area>
 
 <area coords="449,62,544,83">
 <xsl:attribute name="href">
-  <xsl:value-of select="concat($swidk,'/doc/UserGuide/usersguide')" />
+  <xsl:value-of select="concat($swidk,'/doc/UserGuide/usersguide/index.html')" />
 </xsl:attribute>
 </area>
 
