@@ -335,7 +335,7 @@ void setBC(CCVariable<double>& press_CC,
     //   lv->setLodiBcs = false
     bool is_lodi_pressBC = patch->haveBC(face,mat_id,"LODI","Pressure");
     int topLevelTimestep = sharedState->getCurrentTopLevelTimeStep();
-    
+
     if(kind == "Pressure"      && is_lodi_pressBC 
        && topLevelTimestep > 0 && lv->setLodiBcs){
        FacePress_LODI(patch, press_CC, rho_micro, sharedState,face,lv);
@@ -607,8 +607,12 @@ void setBC(CCVariable<double>& var,
           SimulationStateP& sharedState,
           const int mat_id)
 {
-  Lodi_vars* lv = 0;
+  Lodi_vars* lv = new Lodi_vars();
+  lv->setLodiBcs = false;
+  
   setBC(var, type, patch, sharedState, mat_id, lv);
+  
+  delete lv;
 } 
   
 void setBC(CCVariable<double>& press_CC,          
@@ -620,9 +624,13 @@ void setBC(CCVariable<double>& press_CC,
          SimulationStateP& sharedState,
          const int mat_id, 
          DataWarehouse* new_dw) {
-  Lodi_vars_pressBC* lv = 0;
+  Lodi_vars_pressBC* lv = new Lodi_vars_pressBC(0);
+  lv->setLodiBcs = false;
+  
   setBC(press_CC, rho_micro, sp_vol, whichVar, kind, p, sharedState, mat_id, 
-        new_dw, lv);            
+        new_dw, lv); 
+        
+  delete lv;           
 }          
 void setBC(CCVariable<Vector>& variable,
           const std::string& type,
@@ -630,8 +638,12 @@ void setBC(CCVariable<Vector>& variable,
           SimulationStateP& sharedState,
           const int mat_id)
 { 
-  Lodi_vars* lv = 0;
+  Lodi_vars* lv = new Lodi_vars();
+  lv->setLodiBcs = false;
+  
   setBC( variable, type, p, sharedState, mat_id, lv);
+  
+  delete lv; 
 }
 
 
