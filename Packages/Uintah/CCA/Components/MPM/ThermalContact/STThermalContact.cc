@@ -33,8 +33,8 @@ void STThermalContact::computeHeatExchange(const ProcessorGroup*,
 
     int numMatls = d_sharedState->getNumMPMMatls();
 
-    StaticArray<NCVariable<double> > gmass(numMatls);
-    StaticArray<NCVariable<double> > gTemperature(numMatls);
+    StaticArray<constNCVariable<double> > gmass(numMatls);
+    StaticArray<constNCVariable<double> > gTemperature(numMatls);
     StaticArray<NCVariable<double> > thermalContactHeatExchangeRate(numMatls);
 
     delt_vartype delT;
@@ -98,6 +98,7 @@ void STThermalContact::addComputesAndRequires(Task* t,
 					    const PatchSet*,
 					    const MaterialSet*) const
 {
+  t->requires(Task::OldDW, lb->delTLabel);  
   t->requires(Task::NewDW, lb->gMassLabel, Ghost::None);
   t->requires(Task::NewDW, lb->gTemperatureLabel, Ghost::None);
 

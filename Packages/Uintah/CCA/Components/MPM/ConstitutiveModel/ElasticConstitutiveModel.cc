@@ -25,9 +25,9 @@ ElasticConstitutiveModel::ElasticConstitutiveModel(ProblemSpecP &ps)
 {
   ps->require("youngs_modulus",d_initialData.YngMod);
   ps->require("poissons_ratio",d_initialData.PoiRat); 
-  p_cmdata_label = scinew VarLabel("p.cmdata",
+  p_cmdata_label = VarLabel::create("p.cmdata",
 				ParticleVariable<CMData>::getTypeDescription());
-  p_cmdata_label_preReloc = scinew VarLabel("p.cmdata+",
+  p_cmdata_label_preReloc = VarLabel::create("p.cmdata+",
 				ParticleVariable<CMData>::getTypeDescription());
 
 }

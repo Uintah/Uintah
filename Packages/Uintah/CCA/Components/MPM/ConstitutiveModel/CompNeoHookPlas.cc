@@ -33,14 +33,14 @@ CompNeoHookPlas::CompNeoHookPlas(ProblemSpecP& ps, MPMLabel* Mlb)
   ps->require("hardening_modulus",d_initialData.K);
   ps->require("alpha",d_initialData.Alpha);
 
-  p_statedata_label = scinew VarLabel("p.statedata_cnhp",
+  p_statedata_label = VarLabel::create("p.statedata_cnhp",
                              ParticleVariable<StateData>::getTypeDescription());
-  p_statedata_label_preReloc = scinew VarLabel("p.statedata_cnhp+",
+  p_statedata_label_preReloc = VarLabel::create("p.statedata_cnhp+",
                              ParticleVariable<StateData>::getTypeDescription());
  
-  bElBarLabel = scinew VarLabel("p.bElBar",
+  bElBarLabel = VarLabel::create("p.bElBar",
 		ParticleVariable<Matrix3>::getTypeDescription());
-  bElBarLabel_preReloc = scinew VarLabel("p.bElBar+",
+  bElBarLabel_preReloc = VarLabel::create("p.bElBar+",
 		ParticleVariable<Matrix3>::getTypeDescription());
 }
 
@@ -111,9 +111,9 @@ void CompNeoHookPlas::computeStableTimestep(const Patch* patch,
   int matlindex = matl->getDWIndex();
   // Retrieve the array of constitutive parameters
   ParticleSubset* pset = new_dw->getParticleSubset(matlindex, patch);
-  ParticleVariable<StateData> statedata;
-  ParticleVariable<double> pmass, pvolume;
-  ParticleVariable<Vector> pvelocity;
+  constParticleVariable<StateData> statedata;
+  constParticleVariable<double> pmass, pvolume;
+  constParticleVariable<Vector> pvelocity;
 
   new_dw->get(statedata, p_statedata_label,  pset);
   new_dw->get(pmass,     lb->pMassLabel,     pset);
@@ -130,16 +130,17 @@ void CompNeoHookPlas::computeStableTimestep(const Patch* patch,
      particleIndex idx = *iter;
 
      // Compute wave speed at each particle, store the maximum
+     Vector pvelocity_idx = pvelocity[idx];
      if(pmass[idx] > 0){
        c_dil = sqrt((bulk + 4.*mu/3.)*pvolume[idx]/pmass[idx]);
      }
      else{
        c_dil = 0.0;
-       pvelocity[idx] = Vector(0.0,0.0,0.0);
+       pvelocity_idx = Vector(0.0,0.0,0.0);
      }
-     WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
-		      Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
-		      Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
+     WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
+		      Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
+		      Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
   }
 
   WaveSpeed = dx/WaveSpeed;
@@ -173,28 +174,38 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
 
     int matlindex = matl->getDWIndex();
     ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
-    ParticleVariable<Point> px;
-    ParticleVariable<Matrix3> deformationGradient, bElBar, pstress;
+    constParticleVariable<Point> px;
+    ParticleVariable<Matrix3> deformationGradient_new, bElBar_new;
+    constParticleVariable<Matrix3> deformationGradient, bElBar;
+    ParticleVariable<Matrix3> pstress;
+    constParticleVariable<StateData> statedata_old;
     ParticleVariable<StateData> statedata;
-    ParticleVariable<double> pmass, pvolume;
-    ParticleVariable<Vector> pvelocity;
-    NCVariable<Vector> gvelocity;
+    constParticleVariable<double> pmass, pvolume;
+    ParticleVariable<double> pvolume_deformed;
+    constParticleVariable<Vector> pvelocity;
+    constNCVariable<Vector> gvelocity;
     delt_vartype delT;
 
     old_dw->get(px,                  lb->pXLabel,                  pset);
     old_dw->get(bElBar,              bElBarLabel,                  pset);
-    old_dw->get(statedata,           p_statedata_label,            pset);
+    old_dw->get(statedata_old,       p_statedata_label,            pset);
     old_dw->get(pmass,               lb->pMassLabel,               pset);
     old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
     new_dw->allocate(pstress,        lb->pStressLabel,             pset);
+    new_dw->allocate(pvolume_deformed, lb->pVolumeDeformedLabel, pset);
+    new_dw->allocate(deformationGradient_new,
+		     lb->pDeformationMeasureLabel_preReloc, pset);
+    new_dw->allocate(bElBar_new, bElBarLabel_preReloc, pset);
+    new_dw->allocate(statedata, p_statedata_label_preReloc, pset);
+    statedata.copyData(statedata_old);
 
     new_dw->get(gvelocity, lb->gVelocityLabel, matlindex,patch,
 	      Ghost::AroundCells, 1);
     old_dw->get(delT, lb->delTLabel);
 
-    ParticleVariable<int> pConnectivity;
+    constParticleVariable<int> pConnectivity;
     ParticleVariable<Vector> pRotationRate;
     ParticleVariable<double> pStrainEnergy;
     if(matl->getFractureModel()) {
@@ -252,7 +263,7 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
        }
        else {
          for(int k = 0; k < 8; k++) {
-	    Vector& gvel = gvelocity[ni[k]];
+	    const Vector& gvel = gvelocity[ni[k]];
 	    for (int j = 0; j<3; j++){
 	       for (int i = 0; i<3; i++) {
 	          velGrad(i+1,j+1) += gvel(i) * d_S[k](j) * oodx[j];		  
@@ -273,8 +284,8 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
       Jinc = deformationGradientInc.Determinant();
 
       // Update the deformation gradient tensor to its time n+1 value.
-      deformationGradient[idx] = deformationGradientInc *
-                               deformationGradient[idx];
+      deformationGradient_new[idx] = deformationGradientInc *
+                                     deformationGradient[idx];
 
       // get the volume preserving part of the deformation gradient increment
       fbar = deformationGradientInc * pow(Jinc,-onethird);
@@ -288,7 +299,7 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
       shearTrial = (bElBarTrial - Identity*IEl)*shear;
 
       // get the volumetric part of the deformation
-      J = deformationGradient[idx].Determinant();
+      J = deformationGradient_new[idx].Determinant();
 
       // get the hydrostatic part of the stress
       p = 0.5*bulk*(J - 1.0/J);
@@ -313,12 +324,12 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
 
 	// Deal with history variables
 	statedata[idx].Alpha = alpha + sqtwthds*delgamma;
-	bElBar[idx] = Shear/shear + Identity*IEl;
+	bElBar_new[idx] = Shear/shear + Identity*IEl;
       }
       else {
 	// not plastic
 
-	bElBar[idx] = bElBarTrial;
+	bElBar_new[idx] = bElBarTrial;
 	Shear = shearTrial;
       }
 
@@ -327,11 +338,11 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
 
       // Compute the strain energy for all the particles
       U = .5*bulk*(.5*(pow(J,2.0) - 1.0) - log(J));
-      W = .5*shear*(bElBar[idx].Trace() - 3.0);
+      W = .5*shear*(bElBar_new[idx].Trace() - 3.0);
 
-      pvolume[idx]=Jinc*pvolume[idx];
+      pvolume_deformed[idx]=Jinc*pvolume[idx];
       
-      double e = (U + W)*pvolume[idx]/J;
+      double e = (U + W)*pvolume_deformed[idx]/J;
       
       if(matl->getFractureModel()) pStrainEnergy[idx] = e;
 
@@ -339,16 +350,17 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
 
       // Compute wave speed at each particle, store the maximum
 
+      Vector pvelocity_idx = pvelocity[idx];
       if(pmass[idx] > 0) {
-        c_dil = sqrt((bulk + 4.*shear/3.)*pvolume[idx]/pmass[idx]);
+        c_dil = sqrt((bulk + 4.*shear/3.)*pvolume_deformed[idx]/pmass[idx]);
       }
       else{
         c_dil = 0.0;
-        pvelocity[idx] = Vector(0.0,0.0,0.0);
+        pvelocity_idx = Vector(0.0,0.0,0.0);
       }
-      WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
-		       Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
-		       Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
+      WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
+		       Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
+		       Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
 
     }
 
@@ -367,11 +379,11 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
 
     new_dw->put(delt_vartype(delT_new), lb->delTLabel);
     new_dw->put(pstress,                lb->pStressLabel_afterStrainRate);
-    new_dw->put(deformationGradient,    lb->pDeformationMeasureLabel_preReloc);
-    new_dw->put(bElBar,                 bElBarLabel_preReloc);
+    new_dw->put(deformationGradient_new,lb->pDeformationMeasureLabel_preReloc);
+    new_dw->put(bElBar_new,             bElBarLabel_preReloc);
     new_dw->put(sum_vartype(se),        lb->StrainEnergyLabel);
     new_dw->put(statedata,              p_statedata_label_preReloc);
-    new_dw->put(pvolume,                lb->pVolumeDeformedLabel);
+    new_dw->put(pvolume_deformed,       lb->pVolumeDeformedLabel);
 
     if( matl->getFractureModel() ) {
       new_dw->put(pRotationRate, lb->pRotationRateLabel);
@@ -388,6 +400,7 @@ void CompNeoHookPlas::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, p_statedata_label,           matlset,Ghost::None);
   task->requires(Task::OldDW, lb->pMassLabel,              matlset,Ghost::None);
   task->requires(Task::OldDW, lb->pVolumeLabel,            matlset,Ghost::None);
+  task->requires(Task::OldDW, lb->pVelocityLabel,          matlset,Ghost::None);
   task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
   task->requires(Task::OldDW, bElBarLabel,                 matlset,Ghost::None);
   task->requires(Task::NewDW, lb->gVelocityLabel,          matlset, 
