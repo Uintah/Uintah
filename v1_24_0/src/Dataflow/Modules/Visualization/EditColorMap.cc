@@ -1012,7 +1012,6 @@ EditColorMap::execute()
 {
   ColorMapIPort *inport = (ColorMapIPort *)get_iport("ColorMap");
   ColorMapOPort *outport = (ColorMapOPort *)get_oport("ColorMap");
-  GeometryOPort *ogeomport = (GeometryOPort *)get_oport("Geometry");
 
   ColorMapHandle newcmap;
   if (inport->get(newcmap) && newcmap.get_rep() &&
