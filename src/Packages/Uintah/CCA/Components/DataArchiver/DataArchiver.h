@@ -164,6 +164,7 @@ using std::pair;
       };
 
    private:
+      DOM_Document loadDocument(std::string xmlName);     
 
       void initSaveLabels(SchedulerP& sched);
       void initCheckpoints(SchedulerP& sched);
@@ -244,7 +245,6 @@ using std::pair;
       double d_nextCheckpointTime; // used when d_checkpointInterval != 0
       int d_nextCheckpointTimestep; // used when d_checkpointTimestepInterval != 0
       Mutex d_outputLock;
-      Mutex d_outputReductionLock;
 
       DataArchiver(const DataArchiver&);
       DataArchiver& operator=(const DataArchiver&);
