@@ -261,6 +261,7 @@ case $host in
      SOFLAGS="-shared ${SOFLAGS}"
      LDRUN_PREFIX="-L"
      TIME_IMPL=Time_unix.cc
+     PLATFORM_LDFLAGS="-ldl"
            ;;
   *)
      echo "WARNING: Untested configuration - you are on your own!"
@@ -268,6 +269,7 @@ case $host in
      AC_PROG_CXX
      ;;
 esac
+AC_SUBST(PLATFORM_LDFLAGS)
 
 ##-- Part II thread configuration --------------------------------------------
 
