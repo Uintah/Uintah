@@ -222,7 +222,7 @@ if test -n "$5"; then
       if test -z "$has_minus"; then
          has_minus_l=`echo $lib | sed 's/-l.*//'`
          has_minus_framework=`echo $lib | sed 's/-framework.*//'`
-         if test -n "$has_minus_l" || test -n "$has_minus_framework"; then
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
             # Has some other -?.
             AC_MSG_WARN(Only -l options are allowed in arg 5 of $1 check (disregarding $lib).)
             continue
