@@ -33,7 +33,7 @@ tarball : tar
 
 # Build all docs and put them in a tar archive.
 tar: products
-	echo "Making a tar archive"
+	@echo "Making a tar archive"
 	-rm -f SCIRunDocs.tar
 	cd ..; tar cvf doc/SCIRunDocs.tar \
 		doc/index.html \
@@ -48,7 +48,13 @@ tar: products
 		doc/User/Guide/usersguide2.ps.gz \
 		doc/Developer/index.html \
                 doc/Developer/Guide/*.html \
-		doc/Developer/Modules \
+		doc/Developer/Modules/*.html \
+		src/Dataflow/XML/*.html \
+		src/Packages/BioPSE/Dataflow/XML/*.html \
+		src/Packages/Teem/Dataflow/XML/*.html \
+		src/Packages/VDT/Dataflow/XML/*.html \
+		src/Packages/MatlabInterface/Dataflow/XML/*.html \
+		src/Packages/Fusion/Dataflow/XML/*.html \
 		doc/Developer/CodeViews/html \
 		doc/FAQBook/*.html \
                 doc/Utilities/HTML/doc_styles.css \
