@@ -80,11 +80,7 @@ namespace Uintah {
   const double TREF = 200.0;
   const double TLOW = 100.00;
   const double THIGH = 4000.0;
-  const int MAXITER = 1000;
-  // includes all the vars except vectors...
-  // increase the value if want to increase number of variables
-  //static const int NUM_DEP_VARS = 7;
-  const int NUM_DEP_VARS = 7;
+ 
 
   class StanjanEquilibriumReactionModel: public ReactionModel, public DynamicTable{
   public:
@@ -180,6 +176,11 @@ namespace Uintah {
     // variables as a function of independent variables.
     // This could be implemented either as a k-d or a binary tree data structure.
     KD_Tree* d_rxnTable;
+
+    static const int MAXITER = 1000;
+    // includes all the vars except vectors...
+    // increase the value if want to increase number of variables
+    static const int NUM_DEP_VARS = 7;
  
   }; // End Class StanjanEquilibriumReactionModel
 

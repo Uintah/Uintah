@@ -163,27 +163,17 @@ ChemkinInterface::getMassDensity(double press, double temp,
 vector<double>
 ChemkinInterface::convertMolestoMass(vector<double> Xvec)
 {
-  double* yArray = new double[d_numSpecies];
-  ckxty(&Xvec[0], d_ickwrk, d_rckwrk, yArray);
-  // Cast array as vector for return
-  vector<double> Y(d_numSpecies);
-  for (int i = 0; i < d_numSpecies; i++)
-    Y[i] = yArray[i];
-  delete [] yArray;
-  return Y;
+  vector<double> Yvec(d_numSpecies);
+  ckxty(&Xvec[0], d_ickwrk, d_rckwrk, &Yvec[0]);
+  return Yvec;
 }
 
 vector<double>
 ChemkinInterface::convertMasstoMoles(vector<double> Yvec)
 {
-  double* xArray = new double[d_numSpecies];
-  ckytx(&Yvec[0], d_ickwrk, d_rckwrk, xArray);
-  // Cast array as vector for return
-  vector<double> X(d_numSpecies);
-  for (int i = 0; i < d_numSpecies; i++)
-    X[i] = xArray[i];
-  delete [] xArray;
-  return X;
+  vector<double> Xvec(d_numSpecies);
+  ckytx(&Yvec[0], d_ickwrk, d_rckwrk, &Xvec[0]);
+  return Xvec;
 }
 
 void
