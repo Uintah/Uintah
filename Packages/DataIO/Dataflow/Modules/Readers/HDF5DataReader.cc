@@ -1566,7 +1566,15 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
       else
 	last++;
 
-      string tmp_filename( "/tmp/" );
+      char* tmpdir = getenv( "SCIRUN_TMP_DIR" );
+
+      string tmp_filename;
+
+      if( tmpdir )
+	tmp_filename = tmpdir + string( "/" );
+      else
+	tmp_filename = string( "/tmp/" );
+
       tmp_filename.append( new_filename, last, new_filename.length()-last );
       tmp_filename.append( ".dump" );
 
