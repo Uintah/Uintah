@@ -3,6 +3,9 @@ c
 c
 c*********************************************************************
 
+#if 1
+#include <Packages/Uintah/CCA/Components/Arches/fortran/arrmax_fort.h>
+#else
       SUBROUTINE arrmax(indexLow, indexHigh, 
      &     A,ARMAX)
 C-----------------------------------------------------------------------

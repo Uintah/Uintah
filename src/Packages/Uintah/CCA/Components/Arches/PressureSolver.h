@@ -7,14 +7,13 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/VarLabel.h>
+#include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <Core/Geometry/IntVector.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
 
 namespace Uintah {
 
+  class MPMArchesLabel;
+  class ArchesLabel;
 class ProcessorGroup;
 class ArchesVariables;
 class TurbulenceModel;

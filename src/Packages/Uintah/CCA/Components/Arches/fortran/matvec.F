@@ -3,6 +3,9 @@ c
 c
 c*********************************************************************
 
+#if 1
+#include <Packages/Uintah/CCA/Components/Arches/fortran/matvec_fort.h>
+#else
       SUBROUTINE matvec(indexLow, indexHigh,
      &     PHI,APHI,
      &     AE,AW,AN,AS,AT,AB,AP)

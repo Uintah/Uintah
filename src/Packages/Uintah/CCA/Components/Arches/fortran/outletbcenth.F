@@ -3,16 +3,7 @@ c
 c
 c*********************************************************************
 
-      SUBROUTINE outletbcenth(domLoS, domHiS, H,
-     $     domLoS_old, domHiS_old, old_H,    
-     &     domLoCT, domHiCT,
-     $     idxLo, idxHi, PCELL,
-     &     PFIELD, uvwout,
-     $     xminus, xplus, yminus, yplus, zminus, zplus,
-     $     delta_t,
-     $     domLoGeom, domHiGeom,
-     $     dxpw,
-     &     ierr)
+#include <Packages/Uintah/CCA/Components/Arches/fortran/outletbcenth_fort.h>
 C-----------------------------------------------------------------------
 C
 C     Routine to calculate outlet velocity at specified pressure b.c.'s
@@ -51,31 +42,6 @@ C               .FALSE. gets the direction from the first interior
 C               node.
 C
 C-----------------------------------------------------------------------
-      implicit none
-
-#include "param4.h"
-
-c*********************************************************************
-c     Arguments :
-c*********************************************************************
-      integer domLoS(3), domHiS(3)
-      double precision H(domLoS(1):domHiS(1), domLoS(2):domHiS(2), 
-     &     domLoS(3):domHiS(3))
-      integer domLoS_old(3), domHiS_old(3)
-      double precision old_H(domLoS_old(1):domHiS_old(1),
-     $     domLoS_old(2):domHiS_old(2), 
-     &     domLoS_old(3):domHiS_old(3))
-      integer domLoCT(3), domHiCT(3)
-      integer idxLo(3), idxHi(3)
-      integer PCELL(domLoCT(1):domHiCT(1), domLoCT(2):domHiCT(2), 
-     &     domLoCT(3):domHiCT(3))
-      double precision uvwout
-      integer PFIELD
-      integer xminus, xplus, yminus, yplus, zminus, zplus
-      double precision delta_t
-      integer domLoGeom(3), domHiGeom(3)
-      double precision dxpw(domLoGeom(1):domHiGeom(1))
-      integer ierr
 
 c*********************************************************************
 c     Local Variables :

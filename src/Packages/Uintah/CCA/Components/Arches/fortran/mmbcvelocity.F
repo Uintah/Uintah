@@ -3,58 +3,12 @@ c
 c
 c*********************************************************************
 
-      SUBROUTINE mmbcvelocity(domLoUng, domHiUng,
-     $     idxLoU, idxHiU,
-     &     AE, AW, AN, AS, AT, AB,
-     &     SU, SP,
-     &     domLo, domHi, PCELL, MMWALLID,
-     &     ioff, joff, koff,
-     &     ierr)
+#include <Packages/Uintah/CCA/Components/Arches/fortran/mmbcvelocity_fort.h>
+#include "param4.h"
 C---------------------------------------------------------------------
 C     THREE-DIMENSIONAL VERSION
 C     THIS SUBROUTINE WILL compute matrix coefficients for uvelocity
 C---------------------------------------------------------------------
-
-      implicit none
-
-#include "param4.h"
-
-c*********************************************************************
-c     Arguments :
-c*********************************************************************
-      integer domLoUng(3), domHiUng(3)
-      integer idxLoU(3), idxHiU(3)
-      double precision AE(domLoUng(1):domHiUng(1),
-     $     domLoUng(2):domHiUng(2), 
-     &     domLoUng(3):domHiUng(3))
-      double precision AW(domLoUng(1):domHiUng(1),
-     $     domLoUng(2):domHiUng(2), 
-     &     domLoUng(3):domHiUng(3))
-      double precision AN(domLoUng(1):domHiUng(1),
-     $     domLoUng(2):domHiUng(2), 
-     &     domLoUng(3):domHiUng(3))
-      double precision AS(domLoUng(1):domHiUng(1),
-     $     domLoUng(2):domHiUng(2), 
-     &     domLoUng(3):domHiUng(3))
-      double precision AT(domLoUng(1):domHiUng(1),
-     $     domLoUng(2):domHiUng(2), 
-     &     domLoUng(3):domHiUng(3))
-      double precision AB(domLoUng(1):domHiUng(1),
-     $     domLoUng(2):domHiUng(2), 
-     &     domLoUng(3):domHiUng(3))
-      double precision SU(domLoUng(1):domHiUng(1), 
-     $     domLoUng(2):domHiUng(2), 
-     &     domLoUng(3):domHiUng(3))
-      double precision SP(domLoUng(1):domHiUng(1), 
-     $     domLoUng(2):domHiUng(2), 
-     &     domLoUng(3):domHiUng(3))
-      integer domLo(3), domHi(3)
-      integer PCELL(domLo(1):domHi(1), 
-     $     domLo(2):domHi(2), 
-     &     domLo(3):domHi(3))
-      integer MMWALLID
-      integer ioff, joff, koff
-      integer ierr
 
 c*********************************************************************
 c     Local Variables :

@@ -3,13 +3,8 @@ c
 c
 c*********************************************************************
 
-      SUBROUTINE profscalar(domainLow, domainHigh,
-     $     domainLowCT, domainHighCT,
-     &     indexLow, indexHigh,
-     &     SCALAR, PCELL,
-     &     SVAL, PFIELD,
-     $     xminus, xplus, yminus, yplus, zminus, zplus,
-     &     ierr)
+#include <Packages/Uintah/CCA/Components/Arches/fortran/profscalar_fort.h>
+#include "param4.h"
 C---------------------------------------------------------------------
 C     THREE-DIMENSIONAL VERSION
 C     THIS SUBROUTINE WILL ASSIGN FLAT VELOCITY PROFILES
@@ -18,29 +13,6 @@ C     SK, 3/25/95: also sets flat profiles for density here
 C     (instead of in profp.f - because if lrdpr density profiles are
 C     also read in.)
 C---------------------------------------------------------------------
-
-      implicit none
-
-#include "param4.h"
-
-c*********************************************************************
-c     Arguments :
-c*********************************************************************
-      integer domainLow(3)
-      integer domainHigh(3)
-      integer domainLowCT(3)
-      integer domainHighCT(3)
-      integer indexLow(3)
-      integer indexHigh(3)
-      integer PCELL(domainLowCT(1):domainHighCT(1), 
-     &     domainLowCT(2):domainHighCT(2), 
-     &     domainLowCT(3):domainHighCT(3))
-      double precision SCALAR(domainLow(1):domainHigh(1), 
-     &     domainLow(2):domainHigh(2), domainLow(3):domainHigh(3))
-      double precision SVAL
-      integer PFIELD
-      integer xminus, xplus, yminus, yplus, zminus, zplus
-      integer ierr
 
 c*********************************************************************
 c     Local Variables :

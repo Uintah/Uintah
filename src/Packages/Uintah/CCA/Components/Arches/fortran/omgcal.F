@@ -3,6 +3,9 @@ c
 c
 c*********************************************************************
 
+#if 1
+#include <Packages/Uintah/CCA/Components/Arches/fortran/omgcal_fort.h>
+#else
       SUBROUTINE omgcal(indexLow, indexHigh, 
      &     PHI,SCF,RES,
      &     AE,AW,AN,AS,AT,AB,AP,SU,

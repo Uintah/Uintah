@@ -22,15 +22,8 @@ else
 SRCS +=	$(SRCDIR)/FakePetscSolver.cc
 endif
 
-$(SRCDIR)/SmagorinskyModel.o: $(SRCDIR)/fortran/smagmodel_fort.h
-
-ifneq ($(CC_DEPEND_REGEN),-MD)
-# The fortran code doesn't work under g++ yet
 SUBDIRS := $(SRCDIR)/fortran $(SRCDIR)/Mixing
-
 include $(SCIRUN_SCRIPTS)/recurse.mk
-FLIB := -lftn
-endif
 
 PSELIBS := \
 	Packages/Uintah/Core/Parallel    \
@@ -43,19 +36,76 @@ PSELIBS := \
 	Core/Geometry                    \
 	Core/Exceptions
 
-LIBS := $(XML_LIBRARY) $(FLIB) $(MPI_LIBRARY) -lm
+LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) -lm
 ifneq ($(PETSC_DIR),)
 LIBS := $(LIBS) $(PETSC_LIBS) -lpetscsles -lpetscdm -lpetscmat -lpetscvec -lpetsc -lblas
 endif
-#CFLAGS += -DARCHES_PETSC_DEBUG
-#CFLAGS += -g -DARCHES_VEL_DEBUG
-#CFLAGS += -g -DARCHES_DEBUG -DARCHES_GEOM_DEBUG -DARCHES_BC_DEBUG -DARCHES_COEF_DEBUG 
-CFLAGS += 
-#CFLAGS += -DARCHES_SRC_DEBUG -DARCHES_PRES_DEBUG -DARCHES_VEL_DEBUG
+LIBS := $(LIBS) $(FLIBS) 
 ifneq ($(PETSC_DIR),)
 CFLAGS +=	-DHAVE_PETSC
 endif
-#LIBS += -lblas
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
+$(SRCDIR)/SmagorinskyModel.o: $(SRCDIR)/fortran/smagmodel_fort.h
+$(SRCDIR)/Arches.o: $(SRCDIR)/fortran/init_fort.h
+$(SRCDIR)/Arches.o: $(SRCDIR)/fortran/initScal_fort.h
+$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/celltypeInit_fort.h
+$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/mmcelltypeinit_fort.h
+$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/areain_fort.h
+$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/profscalar_fort.h
+$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/calpbc_fort.h
+$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/inlbcs_fort.h
+$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/denaccum_fort.h
+$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/bcinout_fort.h
+$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/outarea_fort.h
+$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/outletbc_fort.h
+$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/outletbcenth_fort.h
+$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/bcscalar_fort.h
+$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/bcuvel_fort.h
+$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/bcvvel_fort.h
+$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/bcwvel_fort.h
+$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/bcpress_fort.h
+$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/profv_fort.h
+$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/bcenthalpy_fort.h
+$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/enthalpyradwallbc_fort.h
+$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/addpressuregrad_fort.h
+$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/mmbcvelocity_fort.h
+$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/mmwallbc_fort.h
+$(SRCDIR)/CellInformation.o: $(SRCDIR)/fortran/cellg_fort.h
+$(SRCDIR)/Discretization.o: $(SRCDIR)/fortran/explicit_vel_fort.h
+$(SRCDIR)/Discretization.o: $(SRCDIR)/fortran/mm_modify_prescoef_fort.h
+$(SRCDIR)/Discretization.o: $(SRCDIR)/fortran/scalcoef_fort.h
+$(SRCDIR)/Discretization.o: $(SRCDIR)/fortran/apcal_fort.h
+$(SRCDIR)/Discretization.o: $(SRCDIR)/fortran/apcal_vel_fort.h
+$(SRCDIR)/Discretization.o: $(SRCDIR)/fortran/uvelcoef_fort.h
+$(SRCDIR)/Discretization.o: $(SRCDIR)/fortran/vvelcoef_fort.h
+$(SRCDIR)/Discretization.o: $(SRCDIR)/fortran/wvelcoef_fort.h
+$(SRCDIR)/Discretization.o: $(SRCDIR)/fortran/prescoef_fort.h
+$(SRCDIR)/PetscSolver.o: $(SRCDIR)/fortran/underelax_fort.h
+$(SRCDIR)/PetscSolver.o: $(SRCDIR)/fortran/rescal_fort.h
+$(SRCDIR)/PressureSolver.o: $(SRCDIR)/fortran/add_hydrostatic_term_topressure_fort.h
+$(SRCDIR)/PressureSolver.o: $(SRCDIR)/fortran/normpress_fort.h
+$(SRCDIR)/RBGSSolver.o: $(SRCDIR)/fortran/explicit_velocity_fort.h
+$(SRCDIR)/RBGSSolver.o: $(SRCDIR)/fortran/underelax_fort.h
+$(SRCDIR)/RBGSSolver.o: $(SRCDIR)/fortran/explicit_fort.h
+$(SRCDIR)/RBGSSolver.o: $(SRCDIR)/fortran/rescal_fort.h
+$(SRCDIR)/RBGSSolver.o: $(SRCDIR)/fortran/linegs_fort.h
+$(SRCDIR)/SmagorinskyModel.o: $(SRCDIR)/fortran/smagmodel_fort.h
+$(SRCDIR)/SmagorinskyModel.o: $(SRCDIR)/fortran/scalarvarmodel_fort.h
+$(SRCDIR)/Source.o: $(SRCDIR)/fortran/scalsrc_fort.h
+$(SRCDIR)/Source.o: $(SRCDIR)/fortran/mascal_scalar_fort.h
+$(SRCDIR)/Source.o: $(SRCDIR)/fortran/uvelsrc_fort.h
+$(SRCDIR)/Source.o: $(SRCDIR)/fortran/vvelsrc_fort.h
+$(SRCDIR)/Source.o: $(SRCDIR)/fortran/wvelsrc_fort.h
+$(SRCDIR)/Source.o: $(SRCDIR)/fortran/mascal_fort.h
+$(SRCDIR)/Source.o: $(SRCDIR)/fortran/pressrcpred_fort.h
+$(SRCDIR)/Source.o: $(SRCDIR)/fortran/computeVel_fort.h
+$(SRCDIR)/Source.o: $(SRCDIR)/fortran/pressrc_fort.h
+$(SRCDIR)/Source.o: $(SRCDIR)/fortran/enthalpyradflux_fort.h
+$(SRCDIR)/Source.o: $(SRCDIR)/fortran/enthalpyradsrc_fort.h
+$(SRCDIR)/Source.o: $(SRCDIR)/fortran/enthalpyradthinsrc_fort.h
+$(SRCDIR)/Source.o: $(SRCDIR)/fortran/addpressgrad_fort.h
+$(SRCDIR)/Source.o: $(SRCDIR)/fortran/addtranssrc_fort.h
+$(SRCDIR)/Source.o: $(SRCDIR)/fortran/calcpressgrad_fort.h
+$(SRCDIR)/Source.o: $(SRCDIR)/fortran/mmmomsrc_fort.h

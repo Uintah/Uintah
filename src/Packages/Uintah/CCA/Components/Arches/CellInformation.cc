@@ -1,6 +1,8 @@
+
+#include <Packages/Uintah/CCA/Components/Arches/debug.h>
 #include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesFort.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
+#include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Core/Geometry/Point.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
@@ -9,6 +11,8 @@
 using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
+
+#include <Packages/Uintah/CCA/Components/Arches/fortran/cellg_fort.h>
 
 CellInformation::CellInformation(const Patch* patch)
 {
@@ -23,37 +27,21 @@ CellInformation::CellInformation(const Patch* patch)
   IntVector idxHiV = patch->getSFCYFORTHighIndex();
   IntVector idxLoW = patch->getCellFORTLowIndex();
   IntVector idxHiW = patch->getCellFORTHighIndex();
-  IntVector Size = domHi - domLo;
 
   // cell information
-  xx.resize(Size.x()); yy.resize(Size.y()); zz.resize(Size.z());
+  xx.resize(domLo.x(), domHi.x());
+  yy.resize(domLo.y(), domHi.y());
+  zz.resize(domLo.z(), domHi.z());
 
   // cell grid information, for nonuniform grid it will be more
   // complicated
   const Level* level = patch->getLevel();
-  Point lowerPos = level->getCellPosition(domLo);
-  Point upperPos = level->getCellPosition(domHi-IntVector(1,1,1));
-  xx[0] = lowerPos.x();
-  //  xx[0] = (patch->getBox().lower()).x()+0.5*(patch->dCell()).x();
-  for (int ii = 1; ii < Size.x()-1; ii++) {
-    xx[ii] = xx[ii-1]+patch->dCell().x();
-  }
-  xx[Size.x()-1] = upperPos.x();
-  //  xx[Size.x()-1] = (patch->getBox().upper()).x()-0.5*(patch->dCell()).x();
-  //  yy[0] = (patch->getBox().lower()).y()+0.5*(patch->dCell()).y();
-  yy[0] = lowerPos.y();
-   for (int ii = 1; ii < Size.y()-1; ii++) {
-    yy[ii] = yy[ii-1]+patch->dCell().y();
-  }
-   yy[Size.y()-1] = upperPos.y();
-   // yy[Size.y()-1] = (patch->getBox().upper()).y()-0.5*(patch->dCell()).y();
-   //  zz[0] = (patch->getBox().lower()).z()+0.5*(patch->dCell()).z();
-   zz[0] = lowerPos.z();
-  for (int ii = 1; ii < Size.z()-1; ii++) {
-    zz[ii] = zz[ii-1]+patch->dCell().z();
-  }
-  zz[Size.z()-1] = upperPos.z();
-  //  zz[Size.z()-1] = (patch->getBox().upper()).z()-0.5*(patch->dCell()).z();
+  for (int ii = domLo.x(); ii < domHi.x(); ii++)
+    xx[ii] = level->getCellPosition(IntVector(ii, domLo.y(), domLo.z())).x();
+  for (int ii = domLo.y(); ii < domHi.y(); ii++)
+    yy[ii] = level->getCellPosition(IntVector(domLo.x(), ii, domLo.z())).y();
+  for (int ii = domLo.z(); ii < domHi.z(); ii++)
+    zz[ii] = level->getCellPosition(IntVector(domLo.x(), domLo.y(), ii)).z();
   /* #define ARCHES_GEOM_DEBUG 1 */
 #ifdef ARCHES_GEOM_DEBUG
   cerr << "Lower x = " << patch->getBox().lower().x() << endl;
@@ -74,108 +62,86 @@ CellInformation::CellInformation(const Patch* patch)
 #endif
   
   //  allocate memory for x-dim arrays
-  dxep.resize(Size.x());
-  dxpw.resize(Size.x());
-  sew.resize(Size.x());
-  xu.resize(Size.x());
-  dxpwu.resize(Size.x());
-  dxepu.resize(Size.x());
-  sewu.resize(Size.x());
-  cee.resize(Size.x());
-  cww.resize(Size.x());
-  cwe.resize(Size.x());
-  ceeu.resize(Size.x());
-  cwwu.resize(Size.x());
-  cweu.resize(Size.x());
-  efac.resize(Size.x());
-  wfac.resize(Size.x());
-  fac1u.resize(Size.x());
-  fac2u.resize(Size.x());
-  iesdu.resize(Size.x());
-  fac3u.resize(Size.x());
-  fac4u.resize(Size.x());
-  iwsdu.resize(Size.x());
+  dxep.resize(domLo.x(), domHi.x());
+  dxpw.resize(domLo.x(), domHi.x());
+  sew.resize(domLo.x(), domHi.x());
+  xu.resize(domLo.x(), domHi.x());
+  dxpwu.resize(domLo.x(), domHi.x());
+  dxepu.resize(domLo.x(), domHi.x());
+  sewu.resize(domLo.x(), domHi.x());
+  cee.resize(domLo.x(), domHi.x());
+  cww.resize(domLo.x(), domHi.x());
+  cwe.resize(domLo.x(), domHi.x());
+  ceeu.resize(domLo.x(), domHi.x());
+  cwwu.resize(domLo.x(), domHi.x());
+  cweu.resize(domLo.x(), domHi.x());
+  efac.resize(domLo.x(), domHi.x());
+  wfac.resize(domLo.x(), domHi.x());
+  fac1u.resize(domLo.x(), domHi.x());
+  fac2u.resize(domLo.x(), domHi.x());
+  iesdu.resize(domLo.x(), domHi.x());
+  fac3u.resize(domLo.x(), domHi.x());
+  fac4u.resize(domLo.x(), domHi.x());
+  iwsdu.resize(domLo.x(), domHi.x());
   // allocate memory for y-dim arrays
-  dynp.resize(Size.y());
-  dyps.resize(Size.y());
-  sns.resize(Size.y());
-  yv.resize(Size.y());
-  dynpv.resize(Size.y());
-  dypsv.resize(Size.y());
-  snsv.resize(Size.y());
-  cnn.resize(Size.y());
-  css.resize(Size.y());
-  csn.resize(Size.y());
-  cnnv.resize(Size.y());
-  cssv.resize(Size.y());
-  csnv.resize(Size.y());
-  enfac.resize(Size.y());
-  sfac.resize(Size.y());
-  fac1v.resize(Size.y());
-  fac2v.resize(Size.y());
-  jnsdv.resize(Size.y());
-  fac3v.resize(Size.y());
-  fac4v.resize(Size.y());
-  jssdv.resize(Size.y());
+  dynp.resize(domLo.y(), domHi.y());
+  dyps.resize(domLo.y(), domHi.y());
+  sns.resize(domLo.y(), domHi.y());
+  yv.resize(domLo.y(), domHi.y());
+  dynpv.resize(domLo.y(), domHi.y());
+  dypsv.resize(domLo.y(), domHi.y());
+  snsv.resize(domLo.y(), domHi.y());
+  cnn.resize(domLo.y(), domHi.y());
+  css.resize(domLo.y(), domHi.y());
+  csn.resize(domLo.y(), domHi.y());
+  cnnv.resize(domLo.y(), domHi.y());
+  cssv.resize(domLo.y(), domHi.y());
+  csnv.resize(domLo.y(), domHi.y());
+  enfac.resize(domLo.y(), domHi.y());
+  sfac.resize(domLo.y(), domHi.y());
+  fac1v.resize(domLo.y(), domHi.y());
+  fac2v.resize(domLo.y(), domHi.y());
+  jnsdv.resize(domLo.y(), domHi.y());
+  fac3v.resize(domLo.y(), domHi.y());
+  fac4v.resize(domLo.y(), domHi.y());
+  jssdv.resize(domLo.y(), domHi.y());
   //allocate memory for z-dim arrays
-  dztp.resize(Size.z());
-  dzpb.resize(Size.z());
-  stb.resize(Size.z());
-  zw.resize(Size.z());
-  dztpw.resize(Size.z());
-  dzpbw.resize(Size.z());
-  stbw.resize(Size.z());
-  ctt.resize(Size.z());
-  cbb.resize(Size.z());
-  cbt.resize(Size.z());
-  cttw.resize(Size.z());
-  cbbw.resize(Size.z());
-  cbtw.resize(Size.z());
-  tfac.resize(Size.z());
-  bfac.resize(Size.z());
-  fac1w.resize(Size.z());
-  fac2w.resize(Size.z());
-  ktsdw.resize(Size.z());
-  fac3w.resize(Size.z());
-  fac4w.resize(Size.z());
-  kbsdw.resize(Size.z());
+  dztp.resize(domLo.z(), domHi.z());
+  dzpb.resize(domLo.z(), domHi.z());
+  stb.resize(domLo.z(), domHi.z());
+  zw.resize(domLo.z(), domHi.z());
+  dztpw.resize(domLo.z(), domHi.z());
+  dzpbw.resize(domLo.z(), domHi.z());
+  stbw.resize(domLo.z(), domHi.z());
+  ctt.resize(domLo.z(), domHi.z());
+  cbb.resize(domLo.z(), domHi.z());
+  cbt.resize(domLo.z(), domHi.z());
+  cttw.resize(domLo.z(), domHi.z());
+  cbbw.resize(domLo.z(), domHi.z());
+  cbtw.resize(domLo.z(), domHi.z());
+  tfac.resize(domLo.z(), domHi.z());
+  bfac.resize(domLo.z(), domHi.z());
+  fac1w.resize(domLo.z(), domHi.z());
+  fac2w.resize(domLo.z(), domHi.z());
+  ktsdw.resize(domLo.z(), domHi.z());
+  fac3w.resize(domLo.z(), domHi.z());
+  fac4w.resize(domLo.z(), domHi.z());
+  kbsdw.resize(domLo.z(), domHi.z());
   // for fortran
   idxHi = idxHi - IntVector(1,1,1);
   domHi = domHi - IntVector(1,1,1);
 
   // for computing geometry parameters
-  FORT_CELLG(domLo.get_pointer(), domHi.get_pointer(), 
-	     idxLo.get_pointer(), idxHi.get_pointer(),
-	     idxLoU.get_pointer(), idxHiU.get_pointer(),
-	     idxLoV.get_pointer(), idxHiV.get_pointer(),
-	     idxLoW.get_pointer(), idxHiW.get_pointer(),
-	     sew.get_objs(), sns.get_objs(), stb.get_objs(),
-	     sewu.get_objs(), snsv.get_objs(), stbw.get_objs(),
-	     dxep.get_objs(), dynp.get_objs(), dztp.get_objs(),
-	     dxepu.get_objs(), dynpv.get_objs(), dztpw.get_objs(),
-	     dxpw.get_objs(), dyps.get_objs(), dzpb.get_objs(),
-	     dxpwu.get_objs(), dypsv.get_objs(), dzpbw.get_objs(),
-	     cee.get_objs(), cwe.get_objs(), cww.get_objs(),
-	     ceeu.get_objs(), cweu.get_objs(), cwwu.get_objs(),
-	     cnn.get_objs(), csn.get_objs(), css.get_objs(),
-	     cnnv.get_objs(), csnv.get_objs(), cssv.get_objs(),
-	     ctt.get_objs(), cbt.get_objs(), cbb.get_objs(),
-	     cttw.get_objs(), cbtw.get_objs(), cbbw.get_objs(),
-	     //	     rr, ra, rv, rone,
-	     //	     rcv, rcva,
-	     xx.get_objs(), xu.get_objs(), 
-	     yy.get_objs(), yv.get_objs(), zz.get_objs(), zw.get_objs(),
-	     efac.get_objs(), wfac.get_objs(), enfac.get_objs(), 
-	     sfac.get_objs(), tfac.get_objs(), bfac.get_objs(),
-	     fac1u.get_objs(), fac2u.get_objs(), 
-	     fac3u.get_objs(), fac4u.get_objs(),
-	     fac1v.get_objs(), fac2v.get_objs(), 
-	     fac3v.get_objs(), fac4v.get_objs(),
-	     fac1w.get_objs(), fac2w.get_objs(), 
-	     fac3w.get_objs(), fac4w.get_objs(),
-	     iesdu.get_objs(), iwsdu.get_objs(), 
-	     jnsdv.get_objs(), jssdv.get_objs(), 
-	     ktsdw.get_objs(), kbsdw.get_objs());
+  fort_cellg(domLo, domHi, idxLo, idxHi, idxLoU, idxHiU, idxLoV, idxHiV,
+	     idxLoW, idxHiW,
+	     sew, sns, stb, sewu, snsv, stbw, dxep, dynp, dztp,
+	     dxepu, dynpv, dztpw, dxpw, dyps, dzpb, dxpwu, dypsv, dzpbw,
+	     cee, cwe, cww, ceeu, cweu, cwwu, cnn, csn, css,
+	     cnnv, csnv, cssv, ctt, cbt, cbb, cttw, cbtw, cbbw,
+	     xx, xu, yy, yv, zz, zw, efac, wfac, enfac, sfac, tfac, bfac,
+	     fac1u, fac2u, fac3u, fac4u, fac1v, fac2v, fac3v, fac4v,
+	     fac1w, fac2w, fac3w, fac4w, iesdu, iwsdu, jnsdv, jssdv, 
+	     ktsdw, kbsdw);
 
 #ifdef ARCHES_GEOM_DEBUG
   cerr << " After CELLG : " << endl;
@@ -560,7 +526,6 @@ CellInformation::CellInformation(const Patch* patch)
   }
   cerr << endl;
 #endif
-
 }
 
 CellInformation::~CellInformation()

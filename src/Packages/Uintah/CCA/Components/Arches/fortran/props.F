@@ -3,6 +3,9 @@ c
 c
 c*********************************************************************
 
+#if 1
+#include <Packages/Uintah/CCA/Components/Arches/fortran/props_fort.h>
+#else
       SUBROUTINE props(indexLow, indexHigh, PCELL,
      &     FF,
      &     DEN, VIS,

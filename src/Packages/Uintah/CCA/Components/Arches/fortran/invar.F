@@ -3,6 +3,9 @@ c
 c
 c*********************************************************************
 
+#if 1
+#include <Packages/Uintah/CCA/Components/Arches/fortran/invar_fort.h>
+#else
       SUBROUTINE invar(indexLow, indexHigh, PCELL,
      &     UU,VV,WW,FF,
      &     FLOWIN,TKEIN,FMIXIN,

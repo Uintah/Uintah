@@ -3,6 +3,9 @@ c
 c
 c*********************************************************************
 
+#if 1
+#include <Packages/Uintah/CCA/Components/Arches/fortran/erchek_fort.h>
+#else
       SUBROUTINE erchek(indexLow, indexHigh, PCELL,
      &     UU, VV, WW,
      &     XX, YY, ZZ, XU, YV, ZW,

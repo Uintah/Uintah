@@ -3,6 +3,9 @@ c
 c
 c*********************************************************************
 
+#if 1
+#include <Packages/Uintah/CCA/Components/Arches/fortran/bcwp_fort.h>
+#else
       SUBROUTINE bcwp(indexLow, indexHigh, NITER, PCELL,
      &     UU, VV, WW,
      &     AE, AW, AN, AS, AT, AB,

@@ -51,7 +51,7 @@ C     width in the input file as PRLS.  Note the discussion in
 C     Mason (1994) Q.J.R. Meteorol. Soc., 120, pp. 1-26
 C     The filter length will become the cell size if it is very small
 C--------------------------------------------------------------------
-               DMESH = ((SNS(J-jst+1)*SEW(I-ist+1)*STB(K-kst+1))**(1/3))
+               DMESH = ((SNS(J)*SEW(I)*STB(K))**(1/3))
                PMIXL = CF*MAX(FILTERL,FAC_MESH*DMESH)
                CMLTM = 1.0
 C--------------------------------------------------------------------
@@ -61,32 +61,32 @@ C--------------------------------------------------------------------
      &              UU(I+1,J,K)+UU(I,J+1,K)+UU(I+1,J+1,K))/4.0
                USP = (UU(I,J,K)+
      &              UU(I+1,J,K)+UU(I,J-1,K)+UU(I+1,J-1,K))/4.0
-               DUDY = (UNP-USP)/SNS(J-jst+1)
+               DUDY = (UNP-USP)/SNS(J)
                UTP = (UU(I,J,K)+
      &              UU(I+1,J,K)+UU(I,J,K+1)+UU(I+1,J,K+1))/4.0
                UBP = (UU(I,J,K)+
      &              UU(I+1,J,K)+UU(I,J,K-1)+UU(I+1,J,K-1))/4.0 
-               DUDZ = (UTP-UBP)/STB(K-kst+1) 
+               DUDZ = (UTP-UBP)/STB(K) 
                VEP = (VV(I,J,K)+
      &              VV(I,J+1,K)+VV(I+1,J,K)+VV(I+1,J+1,K))/4.0
                VWP = (VV(I,J,K)+
      &              VV(I,J+1,K)+VV(I-1,J,K)+VV(I-1,J+1,K))/4.0
-               DVDX = (VEP-VWP)/SEW(I-ist+1)
+               DVDX = (VEP-VWP)/SEW(I)
                VTP = (VV(I,J,K)+
      &              VV(I,J+1,K)+VV(I,J,K+1)+VV(I,J+1,K+1))/4.0
                VBP = (VV(I,J,K)+
      &              VV(I,J+1,K)+VV(I,J,K-1)+VV(I,J+1,K-1))/4.0 
-               DVDZ = (VTP-VBP)/STB(K-kst+1)
+               DVDZ = (VTP-VBP)/STB(K)
                WEP = (WW(I,J,K)+
      &              WW(I,J,K+1)+WW(I+1,J,K)+WW(I+1,J,K+1))/4.0
                WWP = (WW(I,J,K)+
      &              WW(I,J,K+1)+WW(I-1,J,K)+WW(I-1,J,K+1))/4.0
-               DWDX = (WEP-WWP)/SEW(I-ist+1)
+               DWDX = (WEP-WWP)/SEW(I)
                WNP = (WW(I,J,K)+
      &              WW(I,J,K+1)+WW(I,J+1,K)+WW(I,J+1,K+1))/4.0
                WSP = (WW(I,J,K)+
      &              WW(I,J,K+1)+WW(I,J-1,K)+WW(I,J-1,K+1))/4.0
-               DWDY = (WNP-WSP)/SNS(J-jst+1)
+               DWDY = (WNP-WSP)/SNS(J)
 Cmjb... estimate gradient of velocity in transverse direction
 Cmjb     * for a uni-axial flow, this would be "du/dy"
 Cmjb       but must be generalized for 3D problems.

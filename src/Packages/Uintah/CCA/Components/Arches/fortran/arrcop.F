@@ -3,6 +3,9 @@ c
 c
 c*********************************************************************
 
+#if 1
+#include <Packages/Uintah/CCA/Components/Arches/fortran/addcop_fort.h>
+#else
       SUBROUTINE arrcop(indexLow, indexHigh,
      &     A,B,ALPHA)
 C-----------------------------------------------------------------------

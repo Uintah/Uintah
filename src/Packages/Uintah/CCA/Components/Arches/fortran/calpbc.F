@@ -3,14 +3,7 @@ c
 c
 c*********************************************************************
 
-      SUBROUTINE calpbc(domLoU, domHiU, UU,
-     &     domLoV, domHiV, VV,
-     &     domLoW, domHiW, WW,
-     &     domLoDen, domHiDen, domLoPress, domHiPress,domLoCT, domHiCT,
-     $     idxLo, idxHi, PP, DEN, PCELL,
-     &     PFIELD, BndryPress,
-     $     xminus, xplus, yminus, yplus, zminus, zplus,
-     &     ierr)
+#include <Packages/Uintah/CCA/Components/Arches/fortran/calpbc_fort.h>
 C-----------------------------------------------------------------------
 C
 C     Routine to calculate velocity at specified pressure b.c.'s
@@ -49,42 +42,11 @@ C               .FALSE. gets the direction from the first interior
 C               node.
 C
 C-----------------------------------------------------------------------
-      implicit none
-
-#include "param4.h"
-
-c*********************************************************************
-c     Arguments :
-c*********************************************************************
-      integer domLoU(3), domHiU(3)
-      double precision UU(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
-     &     domLoU(3):domHiU(3))
-      integer domLoV(3), domHiV(3)
-      double precision VV(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
-     &     domLoV(3):domHiV(3))
-      integer domLoW(3), domHiW(3)
-      double precision WW(domLoW(1):domHiW(1), domLoW(2):domHiW(2), 
-     &     domLoW(3):domHiW(3))
-      integer domLoDen(3), domHiDen(3), domLoPress(3), domHiPress(3),
-     $     domLoCT(3), domHiCT(3)
-      integer idxLo(3), idxHi(3)
-      double precision PP(domLoPress(1):domHiPress(1), 
-     $     domLoPress(2):domHiPress(2), 
-     &     domLoPress(3):domHiPress(3))
-      double precision DEN(domLoDen(1):domHiDen(1), 
-     $     domLoDen(2):domHiDen(2), 
-     &     domLoDen(3):domHiDen(3))
-      integer PCELL(domLoCT(1):domHiCT(1), domLoCT(2):domHiCT(2), 
-     &     domLoCT(3):domHiCT(3))
-      double precision BndryPress
-      integer PFIELD
-      integer xminus, xplus, yminus, yplus, zminus, zplus
-      integer ierr
 
 c*********************************************************************
 c     Local Variables :
 c*********************************************************************
-      logical LNORM, LTRACTION
+      logical*1 LNORM, LTRACTION
       integer IST, JST, KST, IEND, JEND, KEND
       integer i, j, k
       double precision DXPRD, DTPRD, DPMAG, PPP, P0, FACK, URFBC

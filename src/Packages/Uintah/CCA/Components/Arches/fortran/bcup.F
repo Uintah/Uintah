@@ -3,6 +3,9 @@ c
 c
 c*********************************************************************
 
+#if 1
+#include <Packages/Uintah/CCA/Components/Arches/fortran/bcup_fort.h>
+#else
       SUBROUTINE bcup(indexLow, indexHigh, NITER, PCELL,
      &     UU, VV, WW,
      &     AE, AW, AN, AS, AT, AB,

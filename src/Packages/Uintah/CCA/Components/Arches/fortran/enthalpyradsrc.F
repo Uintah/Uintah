@@ -1,39 +1,6 @@
 c
 c
-      subroutine enthalpyradsrc(domLoS, domHiS, idxLo, idxHi,
-     $     SU,
-     $     domLo, domHi,
-     $     qfluxe, qfluxw, qfluxn, qfluxs, qfluxt, qfluxb,
-     $     domLoG, domHiG,
-     $     sew, sns, stb)
-
-      implicit none
-      INCLUDE 'param4.h'
-
-*     passed variables
-
-      integer domLoS(3), domHiS(3)
-      integer idxLo(3), idxHi(3)
-      double precision su(domLoS(1):domHiS(1), domLoS(2):domHiS(2),
-     $     domLoS(3):domHiS(3))
-      integer domLo(3), domHi(3)
-      double precision qfluxe(domLo(1):domHi(1), domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
-      double precision qfluxw(domLo(1):domHi(1), domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
-      double precision qfluxn(domLo(1):domHi(1), domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
-      double precision qfluxs(domLo(1):domHi(1), domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
-      double precision qfluxt(domLo(1):domHi(1), domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
-      double precision qfluxb(domLo(1):domHi(1), domLo(2):domHi(2),
-     $     domLo(3):domHi(3))
-      integer domLoG(3), domHiG(3)
-      double precision sew(domLoG(1):domHiG(1))
-      double precision sns(domLoG(2):domHiG(2))
-      double precision stb(domLoG(3):domHiG(3))
-
+#include <Packages/Uintah/CCA/Components/Arches/fortran/enthalpyradsrc_fort.h>
       
 *     local variables
 

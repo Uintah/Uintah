@@ -33,27 +33,25 @@ WARNING
 ****************************************/
 
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
-#include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/CCA/Ports/CFDInterface.h>
+#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Packages/Uintah/Core/ProblemSpec/Handle.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/VarTypes.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
-#include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
-#include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
+#include <Packages/Uintah/Core/Grid/ComputeSet.h>
+
 // #define correctorstep 1
 namespace Uintah {
 
-class VarLabel;
-class PhysicalConstants;
-class NonlinearSolver;
-class Properties;
-class TurbulenceModel;
-class BoundaryCondition;
+  class VarLabel;
+  class PhysicalConstants;
+  class NonlinearSolver;
+  class Properties;
+  class TurbulenceModel;
+  class BoundaryCondition;
+  class MPMArchesLabel;
+  class ArchesLabel;
 
 class Arches : public UintahParallelComponent, public CFDInterface {
 

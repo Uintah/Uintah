@@ -3,6 +3,9 @@ c
 c
 c*********************************************************************
 
+#if 1
+#include <Packages/Uintah/CCA/Components/Arches/fortran/pdep_fort.h>
+#else
       SUBROUTINE pdep(indexLow, indexHigh, NNN, NI, NJ, NK,
      &     NITER, PCELL, 
      $     UU,VV,WW,PP,

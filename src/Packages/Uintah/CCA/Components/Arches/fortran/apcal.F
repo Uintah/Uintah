@@ -11,8 +11,7 @@ c Added apcal stuff in calcVelDiagonal
 c
 c
 
-      SUBROUTINE apcal(dim_lo, dim_hi, valid_lo, valid_hi,
-     &     AP,AE,AW,AN,AS,AT,AB,SP)
+#include <Packages/Uintah/CCA/Components/Arches/fortran/apcal_fort.h>
 C-----------------------------------------------------------------------
 C     WRITTEN BY SESHADRI KUMAR, OCTOBER 14, 1996
 C
@@ -23,54 +22,6 @@ C     TERMS, SP.  THE CALCULATION IS ONLY DONE FOR THE INTERIOR NODES
 C     WHICH ARE SOLVED FOR IN THE CALCULATION, BETWEEN (IST,JST,KST) AND
 C     (IEND,JEND,KEND).
 *-----------------------------------------------------------------------
-      implicit none
-
-      integer dim_lo(3)
-      integer dim_hi(3)
-      integer valid_lo(3)
-      integer valid_hi(3)
-*
-*     passed variables
-*
-      double precision ap(
-     $     dim_lo(1):dim_hi(1),
-     $     dim_lo(2):dim_hi(2),
-     $     dim_lo(3):dim_hi(3))
-
-      double precision ae(
-     $     dim_lo(1):dim_hi(1),
-     $     dim_lo(2):dim_hi(2),
-     $     dim_lo(3):dim_hi(3))
-
-      double precision aw(
-     $     dim_lo(1):dim_hi(1),
-     $     dim_lo(2):dim_hi(2),
-     $     dim_lo(3):dim_hi(3))
-
-      double precision an(
-     $     dim_lo(1):dim_hi(1),
-     $     dim_lo(2):dim_hi(2),
-     $     dim_lo(3):dim_hi(3))
-
-      double precision as(
-     $     dim_lo(1):dim_hi(1),
-     $     dim_lo(2):dim_hi(2),
-     $     dim_lo(3):dim_hi(3))
-
-      double precision at(
-     $     dim_lo(1):dim_hi(1),
-     $     dim_lo(2):dim_hi(2),
-     $     dim_lo(3):dim_hi(3))
-
-      double precision ab(
-     $     dim_lo(1):dim_hi(1),
-     $     dim_lo(2):dim_hi(2),
-     $     dim_lo(3):dim_hi(3))
-
-      double precision sp(
-     $     dim_lo(1):dim_hi(1),
-     $     dim_lo(2):dim_hi(2),
-     $     dim_lo(3):dim_hi(3))
 
 *
 *     local variables
@@ -81,9 +32,9 @@ C     (IEND,JEND,KEND).
 c-----------------------------------------------------------------------
 c     executable statements
 c-----------------------------------------------------------------------
-      do 350 k = dim_lo(3), dim_hi(3)
-         do 250 j = dim_lo(2), dim_hi(2)
-            do 150 i = dim_lo(1), dim_hi(1)
+      do 350 k = valid_lo(3), valid_hi(3)
+         do 250 j = valid_lo(2), valid_hi(2)
+            do 150 i = valid_lo(1), valid_hi(1)
 
                ap(i,j,k) = 0.0
 

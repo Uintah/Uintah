@@ -2,12 +2,8 @@ c
 c $Id $
 c 
 
-      SUBROUTINE mascal(dim_lo, dim_hi, dim_long, dim_hing,
-     $     valid_lo, valid_hi,
-     $     phi,ae,aw,an,as,at,ab,su,sp,
-c    $     spm,sign,
-c    $     tcons,
-     $     cesav,cwsav,cnsav,cssav,ctsav,cbsav)
+#include <Packages/Uintah/CCA/Components/Arches/fortran/mascal_fort.h>
+#include "param4.h"
 C--------------------------------------------------------------------
 C     WRITTEN BY SESHADRI KUMAR, OCTOBER 14, 1996
 *     last modified, September 15, 1998
@@ -41,100 +37,6 @@ C		Convection fluxes on the east,west,north,south,top,
 C		and bottom faces of the P-cell (i/p)
 C
 C--------------------------------------------------------------------
-      implicit none
-
-      INCLUDE 'param4.h'
-*
-*     declare passed variables
-*
-      integer dim_lo(3)
-      integer dim_hi(3)
-      integer dim_long(3)
-      integer dim_hing(3)
-      integer valid_lo(3)
-      integer valid_hi(3)
-      
-      double precision phi(
-     $     dim_lo(1):dim_hi(1),
-     $     dim_lo(2):dim_hi(2),
-     $     dim_lo(3):dim_hi(3))
-
-      double precision ae(
-     $     dim_long(1):dim_hing(1),
-     $     dim_long(2):dim_hing(2),
-     $     dim_long(3):dim_hing(3))
-
-      double precision aw(
-     $     dim_long(1):dim_hing(1),
-     $     dim_long(2):dim_hing(2),
-     $     dim_long(3):dim_hing(3))
-
-      double precision an(
-     $     dim_long(1):dim_hing(1),
-     $     dim_long(2):dim_hing(2),
-     $     dim_long(3):dim_hing(3))
-
-      double precision as(
-     $     dim_long(1):dim_hing(1),
-     $     dim_long(2):dim_hing(2),
-     $     dim_long(3):dim_hing(3))
-
-      double precision at(
-     $     dim_long(1):dim_hing(1),
-     $     dim_long(2):dim_hing(2),
-     $     dim_long(3):dim_hing(3))
-
-      double precision ab(
-     $     dim_long(1):dim_hing(1),
-     $     dim_long(2):dim_hing(2),
-     $     dim_long(3):dim_hing(3))
-
-      double precision su(
-     $     dim_long(1):dim_hing(1),
-     $     dim_long(2):dim_hing(2),
-     $     dim_long(3):dim_hing(3))
-
-      double precision sp(
-     $     dim_long(1):dim_hing(1),
-     $     dim_long(2):dim_hing(2),
-     $     dim_long(3):dim_hing(3))
-
-c     double precision spm(
-c    $     dim_lo(1):dim_hi(1),
-c    $     dim_lo(2):dim_hi(2),
-c    $     dim_lo(3):dim_hi(3))
-
-c     double precision sign
-
-      double precision cesav(
-     $     dim_long(1):dim_hing(1),
-     $     dim_long(2):dim_hing(2),
-     $     dim_long(3):dim_hing(3))
-
-      double precision cwsav(
-     $     dim_long(1):dim_hing(1),
-     $     dim_long(2):dim_hing(2),
-     $     dim_long(3):dim_hing(3))
-
-      double precision cnsav(
-     $     dim_long(1):dim_hing(1),
-     $     dim_long(2):dim_hing(2),
-     $     dim_long(3):dim_hing(3))
-
-      double precision cssav(
-     $     dim_long(1):dim_hing(1),
-     $     dim_long(2):dim_hing(2),
-     $     dim_long(3):dim_hing(3))
-
-      double precision ctsav(
-     $     dim_long(1):dim_hing(1),
-     $     dim_long(2):dim_hing(2),
-     $     dim_long(3):dim_hing(3))
-
-      double precision cbsav(
-     $     dim_long(1):dim_hing(1),
-     $     dim_long(2):dim_hing(2),
-     $     dim_long(3):dim_hing(3))
 
 *
 *     declare local variables
@@ -143,7 +45,7 @@ c     double precision sign
       double precision cpplus
       double precision cpo
       double precision tcons
-      logical ltest, l2up
+      logical*1 ltest, l2up
 
       integer i
       integer j

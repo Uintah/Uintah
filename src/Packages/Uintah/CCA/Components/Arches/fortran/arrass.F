@@ -3,9 +3,7 @@ c
 c
 c*********************************************************************
 
-      SUBROUTINE arrass(
-     $     AA,alpha,
-     &     dim_lo, dim_hi, valid_lo, valid_hi)
+#include <Packages/Uintah/CCA/Components/Arches/fortran/arrass_fort.h>
 C-----------------------------------------------------------------------
 C     WRITTEN, OCTOBER 14, 1996, BY SESHADRI KUMAR
 C
@@ -14,40 +12,7 @@ C
 C     AA = ALPHA
 C
 C-----------------------------------------------------------------------
-      implicit none
 
-c*********************************************************************
-c     Arguments :
-c*********************************************************************
-      integer dim_lo(3)
-c
-c     lower indices for dimension of AA
-c
-      integer dim_hi(3)
-c
-c     upper indices for dimension of AA
-c
-      integer valid_lo(3)
-c
-c     lower indices of valid region of AA over which operation is
-c     to be performed
-c
-      integer valid_hi(3)
-c
-c     upper indices of valid region of AA over which operation is
-c     to be performed
-c
-      double precision AA(
-     $     dim_lo(1):dim_hi(1),
-     $     dim_lo(2):dim_hi(2),
-     $     dim_lo(3):dim_hi(3))
-c     
-c     input array, modified as output
-c
-      double precision ALPHA
-c     
-c     constant scalar multiple
-c
 c*********************************************************************
 c     Local Variables :
 c*********************************************************************
