@@ -38,6 +38,7 @@
 namespace SCIRun {
   class CCAPortInstance;
   class Services;
+  class Mutex;
 
   class CCAComponentInstance : public ComponentInstance, public sci::cca::Services {
   public:
@@ -84,6 +85,7 @@ namespace SCIRun {
     };
     std::map<std::string, CCAPortInstance*> ports;
     sci::cca::Component::pointer component;
+    Mutex *mutex;
 
     CCAComponentInstance(const CCAComponentInstance&);
     CCAComponentInstance& operator=(const CCAComponentInstance&);
