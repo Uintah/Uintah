@@ -199,7 +199,7 @@ void MatMat::conjugate_gradient_sci(Matrix* matrix,
   data->stats=new PStats[data->np];
   data->max_error=1.0e-5;
   data->toomany=matrix->nrows()*2;
-  Thread::parallel(Parallel<MatMat>(this, MatMat::parallel_conjugate_gradient),
+  Thread::parallel(Parallel<MatMat>(this, &MatMat::parallel_conjugate_gradient),
 		   data->np, true);
   delete data->stats;
   delete data;
@@ -452,6 +452,9 @@ void MatMat::parallel_conjugate_gradient(int processor)
 
 //
 // $Log$
+// Revision 1.2  1999/09/10 04:09:02  jmk
+// Added & so it will compile on Linux
+//
 // Revision 1.1  1999/09/07 04:02:23  dmw
 // more modules that were left behind...
 //
