@@ -129,7 +129,6 @@ public:
   inline double w() const;
 
   void rotz90(const int);
-  inline Point point() const;
     
   string get_string() const;
 
@@ -146,7 +145,8 @@ public:
 
   friend SCICORESHARE void Pio( Piostream&, Vector& );
 
-  inline Point asPoint() const;
+  inline const Point &point() const;
+  inline Point &asPoint() const;
   inline double minComponent() const {
     if(_x<_y){
       if(_x<_z)
@@ -388,11 +388,6 @@ inline double Vector::w() const
     return _z;
 }
 
-inline Point Vector::point() const
-{
-    return Point(_x,_y,_z);
-}
-
 inline double Dot(const Vector& v1, const Vector& v2)
 {
     return v1._x*v2._x+v1._y*v2._y+v1._z*v2._z;
@@ -426,8 +421,12 @@ double Vector::safe_normalize()
 }
 
 
-inline Point Vector::asPoint() const {
-    return Point(_x,_y,_z);
+inline const Point &Vector::point() const {
+    return (const Point &)(*this);
+}
+
+inline Point &Vector::asPoint() const {
+    return (Point &)(*this);
 }
 
 

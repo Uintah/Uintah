@@ -76,8 +76,8 @@ public:
   inline double y() const;
   inline void z(const double);
   inline double z() const;
-  inline Vector vector() const;
-  inline Vector asVector() const;
+  inline const Vector &vector() const;
+  inline Vector &asVector() const;
     
   string get_string() const;
 
@@ -262,15 +262,14 @@ inline double Point::z() const
     return _z;
 }
 
-// THIS ONE SHOULD BE REMOVED
-inline Vector Point::vector() const
+inline const Vector &Point::vector() const
 {
-    return Vector(_x,_y,_z);
+    return (const Vector &)(*this);
 }
 
-inline Vector Point::asVector() const
+inline Vector &Point::asVector() const
 {
-    return Vector(_x,_y,_z);
+    return (Vector &)(*this);
 }
 
 inline Point Min(const Point& p1, const Point& p2)
