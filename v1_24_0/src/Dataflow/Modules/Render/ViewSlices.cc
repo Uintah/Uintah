@@ -762,8 +762,10 @@ ViewSlices::ViewSlices(GuiContext* ctx) :
   nrrd_generations_[0] = -1;
   nrrd_generations_[1] = -1;
 
-  for (int a = 0; a < 3; ++a)
+  for (int a = 0; a < 3; ++a) {
     mip_slices_[a] = 0;
+    max_slice_[a] = -1;
+  }
 
   runner_ = scinew RealDrawer(this);
   runner_thread_ = scinew Thread(runner_, string(id+" OpenGL drawer").c_str());
@@ -978,7 +980,7 @@ ViewSlices::draw_guide_lines(SliceWindow &window, float x, float y, float z) {
 void
 ViewSlices::draw_slice_lines(SliceWindow &window)
 {
-  //  if (max_slice_[window.axis_] <= 0) return;
+  if (max_slice_[window.axis_] <= 0) return;
   Vector tmp = screen_to_world(window, 1, 0) - screen_to_world(window, 0, 0);
   tmp[window.axis_] = 0;
   double screen_space_one = Max(fabs(tmp[0]), fabs(tmp[1]), fabs(tmp[2]));
@@ -2620,9 +2622,10 @@ ViewSlices::handle_gui_motion(GuiArgs &args) {
 
   // Take care of zooming/panning first because it can affect cursor position
   if (zooming_) {
-    const double diff = pick_y_ - Y;
-    zooming_->zoom_ = 
-      Clamp(original_zoom_+diff*2.0*zooming_->zoom_/1000.0, 1.0, 3200.0);
+    const double dy = (Y-pick_y_);
+    const double dx = (X-pick_x_);
+    const double zoom = original_zoom_+(dx+dy);
+    zooming_->zoom_ = Clamp(zoom, 1.0, 3200.0);
   } else if (panning_) {
     panning_->x_ = original_pan_.first+(pick_x_ - X)/(panning_->zoom_/100.0);
     panning_->y_ = original_pan_.second+(Y - pick_y_)/(panning_->zoom_/100.0);
