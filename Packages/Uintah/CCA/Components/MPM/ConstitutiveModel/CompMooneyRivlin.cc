@@ -45,27 +45,22 @@ void CompMooneyRivlin::initializeCMData(const Patch* patch,
 					const MPMMaterial* matl,
 					DataWarehouse* new_dw)
 {
-   // Put stuff in here to initialize each particle's
-   // constitutive model parameters and deformationMeasure
-   Matrix3 Identity, zero(0.);
-   Identity.Identity();
-   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
-   ParticleVariable<Matrix3> deformationGradient, pstress;
+  // Put stuff in here to initialize each particle's
+  // constitutive model parameters and deformationMeasure
+  Matrix3 Identity, zero(0.);
+  Identity.Identity();
+  ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
+  ParticleVariable<Matrix3> deformationGradient, pstress;
 
-   new_dw->allocateAndPut(deformationGradient, lb->pDeformationMeasureLabel, pset);
-   new_dw->allocateAndPut(pstress, lb->pStressLabel,             pset);
+  new_dw->allocateAndPut(deformationGradient,lb->pDeformationMeasureLabel,pset);
+  new_dw->allocateAndPut(pstress,            lb->pStressLabel,            pset);
 
-   for(ParticleSubset::iterator iter = pset->begin();
-          iter != pset->end(); iter++) {
-         deformationGradient[*iter] = Identity;
-         pstress[*iter] = zero;
-   }
-   // allocateAndPut instead:
-   /* new_dw->put(deformationGradient, lb->pDeformationMeasureLabel); */;
-   // allocateAndPut instead:
-   /* new_dw->put(pstress,             lb->pStressLabel); */;
+  for(ParticleSubset::iterator iter =pset->begin();iter != pset->end();iter++){
+        deformationGradient[*iter] = Identity;
+        pstress[*iter] = zero;
+  }
 
-   computeStableTimestep(patch, matl, new_dw);
+  computeStableTimestep(patch, matl, new_dw);
 }
 
 void CompMooneyRivlin::computeStableTimestep(const Patch* patch,
@@ -80,8 +75,8 @@ void CompMooneyRivlin::computeStableTimestep(const Patch* patch,
   ParticleSubset* pset = new_dw->getParticleSubset(matlindex, patch);
   constParticleVariable<double> pmass, pvolume;
   constParticleVariable<Vector> pvelocity;
-  new_dw->get(pmass,     lb->pMassLabel, pset);
-  new_dw->get(pvolume,   lb->pVolumeLabel, pset);
+  new_dw->get(pmass,     lb->pMassLabel,     pset);
+  new_dw->get(pvolume,   lb->pVolumeLabel,   pset);
   new_dw->get(pvelocity, lb->pVelocityLabel, pset);
 
   double c_dil = 0.0;
@@ -140,16 +135,17 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     delt_vartype delT;
     constParticleVariable<Vector> psize;
     if(d_8or27==27){
-      old_dw->get(psize,             lb->pSizeLabel,                  pset);
+      old_dw->get(psize,             lb->pSizeLabel,                     pset);
     }
 
-    old_dw->get(px,                  lb->pXLabel,                  pset);
-    old_dw->get(pmass,               lb->pMassLabel,               pset);
-    old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
-    old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
-    new_dw->allocateAndPut(pstress, lb->pStressLabel_preReloc,    pset);
+    old_dw->get(px,                  lb->pXLabel,                        pset);
+    old_dw->get(pmass,               lb->pMassLabel,                     pset);
+    old_dw->get(pvelocity,           lb->pVelocityLabel,                 pset);
+    old_dw->get(deformationGradient, lb->pDeformationMeasureLabel,       pset);
+    new_dw->allocateAndPut(pstress,        lb->pStressLabel_preReloc,    pset);
     new_dw->allocateAndPut(pvolume_deform, lb->pVolumeDeformedLabel,     pset);
-    new_dw->allocateAndPut(deformationGradient_new, lb->pDeformationMeasureLabel_preReloc, pset);
+    new_dw->allocateAndPut(deformationGradient_new,
+                                  lb->pDeformationMeasureLabel_preReloc, pset);
 
     new_dw->get(gvelocity, lb->gVelocityLabel, matlindex,patch,
 		Ghost::AroundCells, 1);
@@ -251,14 +247,7 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     
     if(delT_new < 1.e-12) delT_new = MAXDOUBLE;
     new_dw->put(delt_vartype(delT_new), lb->delTLabel);    
-    // allocateAndPut instead:
-    /* new_dw->put(pstress,                lb->pStressLabel_preReloc); */;
-    // allocateAndPut instead:
-    /* new_dw->put(deformationGradient_new,lb->pDeformationMeasureLabel_preReloc); */;
     new_dw->put(sum_vartype(se),        lb->StrainEnergyLabel);
-    // allocateAndPut instead:
-    /* new_dw->put(pvolume_deform,         lb->pVolumeDeformedLabel); */;
-
   }
 }
 
@@ -307,7 +296,6 @@ double CompMooneyRivlin::computeRhoMicroCM(double /*pressure*/,
 {
 #if 0
   double rho_orig = matl->getInitialDensity();
-//  double p_ref=101325.0;
   double bulk = d_initialData.Bulk;
 
   double p_gauge = pressure - p_ref;

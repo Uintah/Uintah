@@ -52,32 +52,25 @@ void Membrane::initializeCMData(const Patch* patch,
                                         const MPMMaterial* matl,
                                         DataWarehouse* new_dw)
 {
-   // Put stuff in here to initialize each particle's
-   // constitutive model parameters and deformationMeasure
-   Matrix3 Identity, zero(0.);
-   Identity.Identity();
+  // Put stuff in here to initialize each particle's
+  // constitutive model parameters and deformationMeasure
+  Matrix3 Identity, zero(0.);
+  Identity.Identity();
 
-   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
-   ParticleVariable<Matrix3> deformationGradient, pstress, defGradIP;
+  ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
+  ParticleVariable<Matrix3> deformationGradient, pstress, defGradIP;
 
-   new_dw->allocateAndPut(deformationGradient, lb->pDeformationMeasureLabel, pset);
-   new_dw->allocateAndPut(defGradIP, defGradInPlaneLabel,          pset);
-   new_dw->allocateAndPut(pstress, lb->pStressLabel,             pset);
+  new_dw->allocateAndPut(deformationGradient,lb->pDeformationMeasureLabel,pset);
+  new_dw->allocateAndPut(defGradIP,          defGradInPlaneLabel,         pset);
+  new_dw->allocateAndPut(pstress,            lb->pStressLabel,            pset);
 
-   for(ParticleSubset::iterator iter = pset->begin();
+  for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++) {
           deformationGradient[*iter] = Identity;
           defGradIP[*iter] = Identity;
           pstress[*iter] = zero;
-   }
-   // allocateAndPut instead:
-   /* new_dw->put(deformationGradient, lb->pDeformationMeasureLabel); */;
-   // allocateAndPut instead:
-   /* new_dw->put(defGradIP,           defGradInPlaneLabel); */;
-   // allocateAndPut instead:
-   /* new_dw->put(pstress,             lb->pStressLabel); */;
-
-   computeStableTimestep(patch, matl, new_dw);
+  }
+  computeStableTimestep(patch, matl, new_dw);
 }
 
 void Membrane::addParticleState(std::vector<const VarLabel*>& from,
@@ -105,9 +98,9 @@ void Membrane::computeStableTimestep(const Patch* patch,
   // This is only called for the initial timestep - all other timesteps
   // are computed as a side-effect of cSTensor
   Vector dx = patch->dCell();
-  int matlindex = matl->getDWIndex();
+  int dwi = matl->getDWIndex();
   // Retrieve the array of constitutive parameters
-  ParticleSubset* pset = new_dw->getParticleSubset(matlindex, patch);
+  ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
   constParticleVariable<double> pmass, pvolume;
   constParticleVariable<Vector> pvelocity;
 
@@ -155,8 +148,8 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
     Vector dx = patch->dCell();
     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
-    int matlindex = matl->getDWIndex();
-    ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
+    int dwi = matl->getDWIndex();
+    ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
     constParticleVariable<Point> px;
     ParticleVariable<Matrix3> deformationGradient_new;
     constParticleVariable<Matrix3> deformationGradient;
@@ -177,25 +170,25 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
     Vector J(0,1,0);
     Vector K(0,0,1);
 
-    old_dw->get(px,                  lb->pXLabel,                  pset);
-    old_dw->get(pmass,               lb->pMassLabel,               pset);
-    old_dw->get(pstress,             lb->pStressLabel,             pset);
-    old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
-    old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
-    old_dw->get(defGradIPOld,        defGradInPlaneLabel,          pset);
-    old_dw->get(ptang1,              lb->pTang1Label,              pset);
-    old_dw->get(ptang2,              lb->pTang2Label,              pset);
-    old_dw->get(pnorm,               lb->pNormLabel,               pset);
-    new_dw->allocateAndPut(pstress_new, lb->pStressLabel_preReloc,    pset);
-    new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel,   pset);
-    new_dw->allocateAndPut(deformationGradient_new, lb->pDeformationMeasureLabel_preReloc, pset);
-    new_dw->allocateAndPut(T1, lb->pTang1Label_preReloc,              pset);
-    new_dw->allocateAndPut(T2, lb->pTang2Label_preReloc,              pset);
-    new_dw->allocateAndPut(T3, lb->pNormLabel_preReloc,               pset);
-    new_dw->allocateAndPut(defGradIP, defGradInPlaneLabel_preReloc,          pset);
+    old_dw->get(px,                         lb->pXLabel,                  pset);
+    old_dw->get(pmass,                      lb->pMassLabel,               pset);
+    old_dw->get(pstress,                    lb->pStressLabel,             pset);
+    old_dw->get(pvelocity,                  lb->pVelocityLabel,           pset);
+    old_dw->get(defGradIPOld,               defGradInPlaneLabel,          pset);
+    old_dw->get(ptang1,                     lb->pTang1Label,              pset);
+    old_dw->get(ptang2,                     lb->pTang2Label,              pset);
+    old_dw->get(pnorm,                      lb->pNormLabel,               pset);
+    old_dw->get(deformationGradient,        lb->pDeformationMeasureLabel, pset);
+    new_dw->allocateAndPut(pstress_new,     lb->pStressLabel_preReloc,    pset);
+    new_dw->allocateAndPut(pvolume_deformed,lb->pVolumeDeformedLabel,     pset);
+    new_dw->allocateAndPut(T1,              lb->pTang1Label_preReloc,     pset);
+    new_dw->allocateAndPut(T2,              lb->pTang2Label_preReloc,     pset);
+    new_dw->allocateAndPut(T3,              lb->pNormLabel_preReloc,      pset);
+    new_dw->allocateAndPut(defGradIP,       defGradInPlaneLabel_preReloc, pset);
+    new_dw->allocateAndPut(deformationGradient_new,
+                                   lb->pDeformationMeasureLabel_preReloc, pset);
 
-    new_dw->get(gvelocity,           lb->gVelocityLabel, matlindex,patch,
-            Ghost::AroundCells, 1);
+    new_dw->get(gvelocity, lb->gVelocityLabel, dwi,patch, Ghost::AroundCells,1);
     old_dw->get(delT, lb->delTLabel);
 
     double shear = d_initialData.Shear;
@@ -445,22 +438,7 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
     new_dw->put(delt_vartype(delT_new), lb->delTLabel);
-    // allocateAndPut instead:
-    /* new_dw->put(pstress_new,            lb->pStressLabel_preReloc); */;
-    // allocateAndPut instead:
-    /* new_dw->put(deformationGradient_new,lb->pDeformationMeasureLabel_preReloc); */;
-    // allocateAndPut instead:
-    /* new_dw->put(defGradIP,              defGradInPlaneLabel_preReloc); */;
-    // allocateAndPut instead:
-    /* new_dw->put(pvolume_deformed,       lb->pVolumeDeformedLabel); */;
     new_dw->put(sum_vartype(se),        lb->StrainEnergyLabel);
-    // allocateAndPut instead:
-    /* new_dw->put(T1,                     lb->pTang1Label_preReloc); */;
-    // allocateAndPut instead:
-    /* new_dw->put(T2,                     lb->pTang2Label_preReloc); */;
-    // allocateAndPut instead:
-    /* new_dw->put(T3,                     lb->pNormLabel_preReloc); */;
-
   }
 }
 

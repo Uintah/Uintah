@@ -791,11 +791,12 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         }
 
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
-        totalmass           += gmass[*iter];
-        gmassglobal[*iter]  += gmass[*iter];
-	gvelocity[*iter]    /= gmass[*iter];
-        gTemperature[*iter] /= gmass[*iter];
-        gTemperatureNoBC[*iter] = gTemperature[*iter];
+        IntVector c = *iter; 
+        totalmass           += gmass[c];
+        gmassglobal[c]  += gmass[c];
+	gvelocity[c]    /= gmass[c];
+        gTemperature[c] /= gmass[c];
+        gTemperatureNoBC[c] = gTemperature[c];
       }
 
       // Apply grid boundary conditions to the velocity before storing the data
@@ -836,7 +837,8 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     }  // End loop over materials
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
-        gtempglobal[*iter] /= gmassglobal[*iter];
+        IntVector c = *iter;
+        gtempglobal[c] /= gmassglobal[c];
     }
   }  // End loop over patches
 }
@@ -964,7 +966,8 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       }
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
-        gstress[*iter] /= gmass[*iter];
+        IntVector c = *iter;
+        gstress[c] /= gmass[c];
     }
 
     IntVector low = patch-> getInteriorNodeLowIndex();
@@ -1016,7 +1019,8 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
   new_dw->put(sum_vartype(integralTraction), lb->NTractionZMinusLabel);
 
   for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
-    gstressglobal[*iter] /= gmassglobal[*iter];
+    IntVector c = *iter;
+    gstressglobal[c] /= gmassglobal[c];
   }
   }
 }
@@ -1184,14 +1188,14 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
 
       if(doMechOld < -1.5){
        for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
-         acceleration[*iter] =
-                 (internalforce[*iter] + externalforce[*iter])/mass[*iter] +
-                 gravity + gradPAccNC[*iter] + AccArchesNC[*iter];
-//         acceleration[*iter] =
-//            (internalforce[*iter] + externalforce[*iter]
-//                                        -1000.*velocity[*iter]*mass[*iter])
-//                             /mass[*iter] +
-//                             gravity + gradPAccNC[*iter] + AccArchesNC[*iter];
+         IntVector c = *iter;
+         acceleration[c] =
+                 (internalforce[c] + externalforce[c])/mass[c] +
+                 gravity + gradPAccNC[c] + AccArchesNC[c];
+//         acceleration[c] =
+//            (internalforce[c] + externalforce[c]
+//                                        -1000.*velocity[c]*mass[c])/mass[c]
+//                                + gravity + gradPAccNC[c] + AccArchesNC[c];
        }
       }
     }
@@ -1293,10 +1297,10 @@ void SerialMPM::solveHeatEquations(const ProcessorGroup*,
       tempRate.initialize(0.0);
 
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
-	  tempRate[*iter] = (internalHeatRate[*iter]
-		          +  externalHeatRate[*iter]) /
-                            (mass[*iter] * specificHeat) + 
-                             thermalContactHeatExchangeRate[*iter];
+          IntVector c = *iter;
+	  tempRate[c] = (internalHeatRate[c]
+		          +  externalHeatRate[c])/(mass[c] * specificHeat) + 
+                             thermalContactHeatExchangeRate[c];
       }
     }
   }
@@ -1332,7 +1336,8 @@ void SerialMPM::integrateAcceleration(const ProcessorGroup*,
       velocity_star.initialize(0.0);
 
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
-	velocity_star[*iter] = velocity[*iter] + acceleration[*iter] * delT;
+        IntVector c = *iter;
+	velocity_star[c] = velocity[c] + acceleration[c] * delT;
       }
     }
   }
@@ -1369,7 +1374,8 @@ void SerialMPM::integrateTemperatureRate(const ProcessorGroup*,
       tempStar.initialize(0.0);
 
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
-        tempStar[*iter] = temperature[*iter] + temperatureRate[*iter] * delT;
+        IntVector c = *iter;
+        tempStar[c] = temperature[c] + temperatureRate[c] * delT;
       }
     }
   }
