@@ -1475,15 +1475,22 @@ inline void OnDemandDataWarehouse::checkGetAccess(const VarLabel* label,
 						  const Patch* patch)
 {
 #if SCI_ASSERTION_LEVEL >= 1
+  const Task* currentTask = getCurrentTask();
+  if (currentTask == 0)
+    // don't check if done outside of any task (i.e. SimulationController)
+    return; 
+  
+  VarAccessMap& currentTaskAccesses = getCurrentTaskAccesses();
+  
   // If it was accessed by the current task already, then it should
   // have get access (i.e. if you put it in, you should be able to get it
   // right back out).
   map<SpecificVarLabel, AccessType>::iterator findIter;
-  findIter = d_currentTaskAccesses.find(SpecificVarLabel(label, matlIndex,
+  findIter = currentTaskAccesses.find(SpecificVarLabel(label, matlIndex,
 							 patch));
-  if (findIter == d_currentTaskAccesses.end()) {
+  if (findIter == currentTaskAccesses.end()) {
     // it hasn't been accessed by this task previous, so check that it can.
-    if (!hasGetAccess(label, matlIndex, patch)) {
+    if (!hasGetAccess(currentTask, label, matlIndex, patch)) {
       const Task* currentTask = getCurrentTask();
       if (currentTask == 0 ||
 	  (string(currentTask->getName()) != "Relocate::relocateParticles")) {
@@ -1495,7 +1502,7 @@ inline void OnDemandDataWarehouse::checkGetAccess(const VarLabel* label,
     //throw DeniedAccess(label, getCurrentTask(), replace ? "modify" : "put");
     }
     else {
-      d_currentTaskAccesses[SpecificVarLabel(label, matlIndex, patch)]
+      currentTaskAccesses[SpecificVarLabel(label, matlIndex, patch)]
 	= GetAccess;
     }
   }
@@ -1507,10 +1514,14 @@ OnDemandDataWarehouse::checkPutAccess(const VarLabel* label, int matlIndex,
 				      const Patch* patch, bool replace)
 { 
 #if SCI_ASSERTION_LEVEL >= 1
-  if (!hasPutAccess(label, matlIndex, patch, replace)) {
-    const Task* currentTask = getCurrentTask();
-    if (currentTask == 0 ||
-	(string(currentTask->getName()) != "Relocate::relocateParticles")) {
+  const Task* currentTask = getCurrentTask();
+  if (currentTask == 0)
+    return; // don't check if outside of any task (i.e. SimulationController)
+  
+  VarAccessMap& currentTaskAccesses = getCurrentTaskAccesses();
+  
+  if (!hasPutAccess(currentTask, label, matlIndex, patch, replace)) {
+    if (string(currentTask->getName()) != "Relocate::relocateParticles") {
       DeniedAccess errorObj(label, currentTask, matlIndex, patch,replace ? "modifies" : "computes", replace ? "modify into the datawarehouse" : "put into the datawarehouse");
       if (show_warnings) {
 	cerr << errorObj.message() << endl;
@@ -1519,7 +1530,7 @@ OnDemandDataWarehouse::checkPutAccess(const VarLabel* label, int matlIndex,
     }
   }
   else {
-    d_currentTaskAccesses[SpecificVarLabel(label, matlIndex, patch)] =
+    currentTaskAccesses[SpecificVarLabel(label, matlIndex, patch)] =
       replace ? ModifyAccess : PutAccess;
   }
 #endif
@@ -1532,51 +1543,59 @@ OnDemandDataWarehouse::checkModifyAccess(const VarLabel* label, int matlIndex,
 
 
 inline bool
-OnDemandDataWarehouse::hasGetAccess(const VarLabel* label, int matlIndex,
+OnDemandDataWarehouse::hasGetAccess(const Task* currentTask,
+				    const VarLabel* label, int matlIndex,
 				    const Patch* patch)
 { 
-  const Task* currentTask = getCurrentTask();
-  if (currentTask) {
-    return
-      currentTask->hasRequires(label, matlIndex, patch,
-			       isFinalized() ? Task::OldDW : Task::NewDW);
-  }
-  else
-    return true; // may just be the simulation controller calling this
+  return currentTask->hasRequires(label, matlIndex, patch,
+				  isFinalized() ? Task::OldDW : Task::NewDW);
 }
 
 inline
-bool OnDemandDataWarehouse::hasPutAccess(const VarLabel* label, int matlIndex,
+bool OnDemandDataWarehouse::hasPutAccess(const Task* currentTask,
+					 const VarLabel* label, int matlIndex,
 					 const Patch* patch, bool replace)
 {
-  const Task* currentTask = getCurrentTask();
-  if (currentTask) {
-    if (replace)
-      return currentTask->hasModifies(label, matlIndex, patch);
-    else
-      return currentTask->hasComputes(label, matlIndex, patch);
-  }
+  if (replace)
+    return currentTask->hasModifies(label, matlIndex, patch);
   else
-    return true; // may just be the simulation controller calling this
+    return currentTask->hasComputes(label, matlIndex, patch);
 }
 
 void OnDemandDataWarehouse::setCurrentTask(const Task* task)
 {
+ d_lock.writeLock();
   if (task)
-    d_runningTasks[Thread::self()] = task;
+    d_runningTasks[Thread::self()] = CurrentTaskInfo(task);
   else
     d_runningTasks.erase(Thread::self());
-  d_currentTaskAccesses.clear();
+ d_lock.writeUnlock();
+}
+
+inline OnDemandDataWarehouse::CurrentTaskInfo* OnDemandDataWarehouse::getCurrentTaskInfo()
+{
+ d_lock.readLock();
+  CurrentTaskInfo* taskInfo = 0;
+  map<Thread*, CurrentTaskInfo>::iterator findIt =
+    d_runningTasks.find(Thread::self());
+  if (findIt != d_runningTasks.end())
+    taskInfo = &(*findIt).second;
+ d_lock.readUnlock();
+ return taskInfo;
 }
 
 inline const Task* OnDemandDataWarehouse::getCurrentTask()
 {
-  map<Thread*, const Task*>::iterator findIt =
-    d_runningTasks.find(Thread::self());
-  if (findIt == d_runningTasks.end())
-    return 0;
-  else
-    return (*findIt).second;
+  CurrentTaskInfo* taskInfo = getCurrentTaskInfo();
+  return taskInfo ? taskInfo->d_task : 0;
+
+}
+
+inline OnDemandDataWarehouse::VarAccessMap& OnDemandDataWarehouse::getCurrentTaskAccesses()
+{
+  CurrentTaskInfo* taskInfo = getCurrentTaskInfo();
+  ASSERT(taskInfo != 0);
+  return taskInfo->d_accesses;
 }
 
 void OnDemandDataWarehouse::checkTasksAccesses(const PatchSubset* patches,
@@ -1610,6 +1629,8 @@ OnDemandDataWarehouse::checkAccesses(const Task* currentTask,
 {
   if (currentTask->isReductionTask())
     return; // no need to check reduction tasks.
+
+  VarAccessMap& currentTaskAccesses = getCurrentTaskAccesses();
   
   PatchSubset default_patches;
   MaterialSubset default_matls;
@@ -1660,8 +1681,8 @@ OnDemandDataWarehouse::checkAccesses(const Task* currentTask,
 	
 	SpecificVarLabel key(label, matl, patch);
 	map<SpecificVarLabel, AccessType>::iterator find_iter;
-	find_iter = d_currentTaskAccesses.find(key);
-	if (find_iter == d_currentTaskAccesses.end() ||
+	find_iter = currentTaskAccesses.find(key);
+	if (find_iter == currentTaskAccesses.end() ||
 	    (*find_iter).second != accessType) {
 	  if (show_warnings) {
 	    cerr << "Task Dependency Warning: " << currentTask->getName() << " was supposed to ";
