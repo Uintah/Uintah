@@ -38,7 +38,8 @@ bool rtrt::DpyBase::useXThreads = false;
 DpyBase::DpyBase(const char *name, const int window_mode,
                  bool delete_on_exit):
   Runnable(delete_on_exit),
-  xres(300), yres(300), opened(false), close_display_flag(true),
+  xres(300), yres(300), opened(false), have_ogl_context(false),
+  close_display_flag(true),
   cleaned(false), on_death_row(false),
   redraw(true), control_pressed(false), shift_pressed(false),
   window_mode(window_mode), scene(0)
@@ -145,6 +146,8 @@ int DpyBase::open_display(Window parent, bool needevents) {
   strcat(criteria, ", max rgb");
 #endif
 
+  cerr << "criteria = \""<<criteria<<"\"\n";
+  
   if(!visPixelFormat(criteria)){
     cerr << "Error setting pixel format for visinfo\n";
     cerr << "Syntax error in criteria: " << criteria << '\n';
@@ -196,6 +199,8 @@ int DpyBase::open_display(Window parent, bool needevents) {
   GLXContext cx=glXCreateContext(dpy, vi, NULL, True);
   if(!glXMakeCurrent(dpy, win, cx)){
     cerr << "glXMakeCurrent failed!\n";
+  } else {
+    have_ogl_context = true;
   }
 
   // set up the fonts
@@ -252,6 +257,7 @@ void DpyBase::Hide() {
   xunlock();
   XFlush(dpy);
 }
+
 void DpyBase::Show() {
   xlock();
   XMapRaised(dpy, win);
@@ -263,15 +269,23 @@ int DpyBase::close_display() {
   if (!opened) return 1;
   else opened = false;
 
+  xlock();
+
+  // This will make sure that we will not be rendering anything while
+  // we try to close the windows.
+  if (have_ogl_context)
+    if (!glXMakeCurrent(dpy,None, NULL)) {
+      cerr << "DpyBase::close_display()::glXMakeCurrent failed\n";
+    }
+  
   if (close_display_flag) {
-    xlock();
     
     cerr << "Closing dpy:"<<window_name<<"\n";
     XCloseDisplay(dpy);
     cerr << "Closed dpy:"<<window_name<<"\n";
     
-    xunlock();
   }
+  xunlock();
   
   return 0;
 }

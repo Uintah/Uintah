@@ -49,6 +49,9 @@ protected:
   // This is set to true once open_display is called.  Set back to
   // false once it is closed.
   bool opened;
+  // This tells if we have an OpenGL context.  Dependent on if you
+  // called open_display or open_events_display.
+  bool have_ogl_context;
   
   // This opens the window.
   int open_display(Window parent = 0, bool needevents = true);
