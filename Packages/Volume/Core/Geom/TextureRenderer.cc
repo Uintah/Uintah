@@ -297,6 +297,7 @@ TextureRenderer::TextureRenderer(TextureHandle tex,
   irate_(0.5),
   imode_(false),
   slice_alpha_(0.5),
+  sw_raster_(false),
   cmap_size_(128),
   cmap1_tex_(0),
   cmap2_tex_(0),
@@ -322,6 +323,7 @@ TextureRenderer::TextureRenderer(const TextureRenderer& copy) :
   irate_(copy.irate_),
   imode_(copy.imode_),
   slice_alpha_(copy.slice_alpha_),
+  sw_raster_(copy.sw_raster_),
   cmap_size_(copy.cmap_size_),
   cmap1_tex_(copy.cmap1_tex_),
   cmap2_tex_(copy.cmap2_tex_),
@@ -381,6 +383,17 @@ TextureRenderer::set_slice_alpha(double alpha)
     mutex_.lock();
     slice_alpha_ = alpha;
     alpha_dirty_ = true;
+    mutex_.unlock();
+  }
+}
+
+void
+TextureRenderer::set_sw_raster(bool b)
+{
+  if(sw_raster_ != b) {
+    mutex_.lock();
+    sw_raster_ = b;
+    cmap2_dirty_ = true;
     mutex_.unlock();
   }
 }
@@ -744,9 +757,8 @@ void
 TextureRenderer::build_colormap2()
 {
   if(cmap2_dirty_ || alpha_dirty_) {
-    use_pbuffer_ = false;
 
-    if(use_pbuffer_ && !raster_buffer_) {
+    if(!sw_raster_ && use_pbuffer_ && !raster_buffer_) {
       raster_buffer_ = new Pbuffer(256, 64, GL_FLOAT, 32, true, GL_FALSE);
       cmap2_buffer_ = new Pbuffer(256, 64, GL_INT, 8, true, GL_FALSE);
       shader_factory_ = new CM2ShaderFactory();
@@ -769,7 +781,7 @@ TextureRenderer::build_colormap2()
       }
     }
 
-    if(use_pbuffer_) {
+    if(!sw_raster_ && use_pbuffer_) {
       //--------------------------------------------------------------
       // hardware rasterization
       if(cmap2_dirty_) {
@@ -790,13 +802,11 @@ TextureRenderer::build_colormap2()
         glEnable(GL_BLEND);
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         // rasterize widgets
-        cmap2_->lock_widgets();
-        vector<CM2Widget*> widgets = cmap2_->get_widgets();
+        vector<CM2Widget*> widgets = cmap2_->widgets();
         for (unsigned int i=0; i<widgets.size(); i++)
         {
-          widgets[i]->rasterize(*shader_factory_);
+          widgets[i]->rasterize(*shader_factory_, cmap2_->faux());
         }
-        cmap2_->unlock_widgets();
         glDisable(GL_BLEND);
         raster_buffer_->swapBuffers();
         raster_buffer_->deactivate();
@@ -818,7 +828,8 @@ TextureRenderer::build_colormap2()
       cmap2_shader_->bind();
       double bp = mode_ == MODE_MIP ? 1.0 : 
         tan(1.570796327 * (0.5 - slice_alpha_*0.49999));
-      cmap2_shader_->setLocalParam(0, bp, sampling_rate_, 0.0, 0.0);
+      cmap2_shader_->setLocalParam(0, bp, imode_ ? 1.0/irate_ : 1.0/sampling_rate_,
+                                   0.0, 0.0);
       glActiveTexture(GL_TEXTURE0);
       glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
       raster_buffer_->bind(GL_FRONT);
@@ -858,13 +869,11 @@ TextureRenderer::build_colormap2()
             raster_array_(i,j,3) = 0.0;
           }
         }
-        cmap2_->lock_widgets();
-        vector<CM2Widget*>& widget = cmap2_->get_widgets();
+        vector<CM2Widget*>& widget = cmap2_->widgets();
         // rasterize widgets
         for(unsigned int i=0; i<widget.size(); i++) {
-          widget[i]->rasterize(raster_array_);
+          widget[i]->rasterize(raster_array_, cmap2_->faux());
         }
-        cmap2_->unlock_widgets();
         for(int i=0; i<raster_array_.dim1(); i++) {
           for(int j=0; j<raster_array_.dim2(); j++) {
             raster_array_(i,j,0) = CLAMP(raster_array_(i,j,0), 0.0f, 1.0f);
@@ -954,7 +963,7 @@ TextureRenderer::bind_colormap2()
   // bind texture to unit 2
   glActiveTexture(GL_TEXTURE2_ARB);
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-  if(use_pbuffer_) {
+  if(!sw_raster_ && use_pbuffer_) {
     cmap2_buffer_->bind(GL_FRONT);
   } else {
     glEnable(GL_TEXTURE_2D);

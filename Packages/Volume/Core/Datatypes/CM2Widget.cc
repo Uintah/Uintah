@@ -69,6 +69,29 @@ const string CM2ShaderString[CM2_LAST] =
     "MOV c.xyz, color.xyzz; \n"
     "MOV result.color, c; \n"
     "END",
+    // CM2_TRIANGLE_FAUX
+    "!!ARBfp1.0 \n"
+    "PARAM color = program.local[0]; \n"
+    "PARAM geom0 = program.local[1]; # {base, top_x, top_y, 0.0} \n"
+    "PARAM geom1 = program.local[2]; # {width, bottom, 0.0, 0.0} \n"
+    "PARAM sz = program.local[3]; # {1/sx, 1/sy, 0.0, 0.0} \n"
+    "TEMP c, p, t;"
+    "MUL p.xy, fragment.position.xyyy, sz.xyyy; \n"
+    "MUL p.z, geom1.y, geom0.z; \n"
+    "SUB p.z, p.y, p.z; \n"
+    "KIL p.z; \n"
+    "RCP t.z, geom0.z; \n"
+    "MUL t.x, p.y, t.z; \n"
+    "LRP c.x, t.x, geom0.y, geom0.x; \n"
+    "MUL c.y, t.x, geom1.x; \n"
+    "MUL c.y, c.y, 0.5; \n"
+    "RCP c.y, c.y; \n"
+    "SUB c.z, p.x, c.x; \n"
+    "MUL c.z, c.y, c.z; \n"
+    "ABS c.z, c.z; \n"
+    "SUB c.z, 1.0, c.z; \n"
+    "MUL result.color, color, c.z; \n"
+    "END",
     // CM2_RECTANGLE_1D
     "!!ARBfp1.0 \n"
     "PARAM color = program.local[0]; \n"
@@ -91,7 +114,30 @@ const string CM2ShaderString[CM2_LAST] =
     "MOV c.xyz, color.xyzz; \n"
     "MOV result.color, c; \n"
     "END",
+    // CM2_RECTANGLE_1D_FAUX
+    "!!ARBfp1.0 \n"
+    "PARAM color = program.local[0]; \n"
+    "PARAM geom0 = program.local[1]; # {left_x, left_y, width, height} \n"
+    "PARAM geom1 = program.local[2]; # {offset, 1/offset, 1/(1-offset), 0.0} \n"
+    "PARAM sz = program.local[3]; # {1/sx, 1/sy, 0.0, 0.0} \n"
+    "TEMP c, p, t; \n"
+    "MUL p.xy, fragment.position.xyyy, sz.xyyy; \n"
+    "SUB p.xy, p.xyyy, geom0.xyyy; \n"
+    "RCP p.z, geom0.z; \n"
+    "RCP p.w, geom0.w; \n"
+    "MUL p.xy, p.xyyy, p.zwww; \n"
+    "SUB t.x, p.x, geom1.x; \n"
+    "MUL t.y, t.x, geom1.y; \n"
+    "MUL t.z, t.x, geom1.z; \n"
+    "CMP t.w, t.y, t.y, t.z; \n"
+    "ABS t.w, t.w; \n"
+    "SUB t.w, 1.0, t.w; \n"
+    "MUL result.color, color, t.w; \n"
+    "END",
     // CM2_RECTANGLE_ELLIPSOID
+    "!!ARBfp1.0 \n"
+    "END",
+    // CM2_RECTANGLE_ELLIPSOID_FAUX
     "!!ARBfp1.0 \n"
     "END"
   };
@@ -197,9 +243,9 @@ TriangleCM2Widget::clone()
 }
 
 void
-TriangleCM2Widget::rasterize(CM2ShaderFactory& factory)
+TriangleCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux)
 {
-  FragmentProgramARB* shader = factory.shader(CM2_TRIANGLE);
+  FragmentProgramARB* shader = factory.shader(faux ? CM2_TRIANGLE_FAUX : CM2_TRIANGLE);
   shader->bind();
   shader->setLocalParam(0, color_.r(), color_.g(), color_.b(), alpha_);
   shader->setLocalParam(1, base_, base_+top_x_, top_y_, 0.0);
@@ -220,7 +266,7 @@ TriangleCM2Widget::rasterize(CM2ShaderFactory& factory)
 }
 
 void
-TriangleCM2Widget::rasterize(Array3<float>& array)
+TriangleCM2Widget::rasterize(Array3<float>& array, bool faux)
 {
   //std::cerr << tex->size(0) << " " << tex->size(1) << std::endl;
   if(array.dim3() != 4) return;
@@ -233,33 +279,77 @@ TriangleCM2Widget::rasterize(Array3<float>& array)
   int ilb = CLAMP(lb, 0, size_y-1);
   int ile = CLAMP(le, 0, size_y-1);
   //cerr << lb << " | " << le << endl;
-  for(int i=ilb; i<=ile; i++) {
-    float fb = (i/(float)le)*top_left + base_;
-    float fe = (i/(float)le)*top_right + base_;
-    float fm = (i/(float)le)*top_x_ + base_;
-    int rb = (int)(fb*size_x);
-    int re = (int)(fe*size_x);
-    int rm = (int)(fm*size_x);
-    int jrb = CLAMP(rb, 0, size_x-1);
-    int jre = CLAMP(re, 0, size_x-1);
-    int jrm = CLAMP(rm, 0, size_x-1);
-    float da = alpha_/(rm-rb);
-    float a = alpha_-std::abs(rm-jrm+1)*da;
-    for(int j=jrm-1; j>=jrb; j--, a-=da) {
-      array(i,j,0) = array(i,j,0)*(1-a) + color_.r();
-      array(i,j,1) = array(i,j,1)*(1-a) + color_.g();
-      array(i,j,2) = array(i,j,2)*(1-a) + color_.b();
-      array(i,j,3) = array(i,j,3)*(1-a) + a;
+  if(faux) {
+    for(int i=ilb; i<=ile; i++) {
+      float fb = (i/(float)le)*top_left + base_;
+      float fe = (i/(float)le)*top_right + base_;
+      float fm = (i/(float)le)*top_x_ + base_;
+      int rb = (int)(fb*size_x);
+      int re = (int)(fe*size_x);
+      int rm = (int)(fm*size_x);
+      int jrb = CLAMP(rb, 0, size_x-1);
+      int jre = CLAMP(re, 0, size_x-1);
+      int jrm = CLAMP(rm, 0, size_x-1);
+      float da = alpha_/(rm-rb);
+      float dr = color_.r()/(rm-rb);
+      float dg = color_.g()/(rm-rb);
+      float db = color_.b()/(rm-rb);
+      float a = alpha_-std::abs(rm-jrm+1)*da;
+      float r = color_.r()-std::abs(rm-jrm+1)*dr;
+      float g = color_.g()-std::abs(rm-jrm+1)*dg;
+      float b = color_.b()-std::abs(rm-jrm+1)*db;
+      for(int j=jrm-1; j>=jrb; j--, a-=da, r-=dr, b-=db, g-=dg) {
+        array(i,j,0) = array(i,j,0)*(1-a) + r;
+        array(i,j,1) = array(i,j,1)*(1-a) + g;
+        array(i,j,2) = array(i,j,2)*(1-a) + b;
+        array(i,j,3) = array(i,j,3)*(1-a) + a;
+      }
+      da = alpha_/(re-rm);
+      dr = color_.r()/(re-rm);
+      dg = color_.g()/(re-rm);
+      db = color_.b()/(re-rm);
+      a = alpha_-std::abs(rm-jrm)*da;
+      r = color_.r()-std::abs(rm-jrm)*dr;
+      g = color_.g()-std::abs(rm-jrm)*dg;
+      b = color_.b()-std::abs(rm-jrm)*db;
+      //cerr << mTop.x << " " << fm << " -> " << fe << std::endl;
+      for (int j=jrm; j<=jre; j++, a-=da, r-=dr, b-=db, g-=dg)
+      {
+        array(i,j,0) = array(i,j,0)*(1-a) + r;
+        array(i,j,1) = array(i,j,1)*(1-a) + g;
+        array(i,j,2) = array(i,j,2)*(1-a) + b;
+        array(i,j,3) = array(i,j,3)*(1-a) + a;
+      }
     }
-    da = alpha_/(re-rm);
-    a = alpha_-std::abs(rm-jrm)*da;
-    //cerr << mTop.x << " " << fm << " -> " << fe << std::endl;
-    for (int j=jrm; j<=jre; j++, a-=da)
-    {
-      array(i,j,0) = array(i,j,0)*(1-a) + color_.r();
-      array(i,j,1) = array(i,j,1)*(1-a) + color_.g();
-      array(i,j,2) = array(i,j,2)*(1-a) + color_.b();
-      array(i,j,3) = array(i,j,3)*(1-a) + a;
+  } else {
+    for(int i=ilb; i<=ile; i++) {
+      float fb = (i/(float)le)*top_left + base_;
+      float fe = (i/(float)le)*top_right + base_;
+      float fm = (i/(float)le)*top_x_ + base_;
+      int rb = (int)(fb*size_x);
+      int re = (int)(fe*size_x);
+      int rm = (int)(fm*size_x);
+      int jrb = CLAMP(rb, 0, size_x-1);
+      int jre = CLAMP(re, 0, size_x-1);
+      int jrm = CLAMP(rm, 0, size_x-1);
+      float da = alpha_/(rm-rb);
+      float a = alpha_-std::abs(rm-jrm+1)*da;
+      for(int j=jrm-1; j>=jrb; j--, a-=da) {
+        array(i,j,0) = array(i,j,0)*(1-a) + color_.r();
+        array(i,j,1) = array(i,j,1)*(1-a) + color_.g();
+        array(i,j,2) = array(i,j,2)*(1-a) + color_.b();
+        array(i,j,3) = array(i,j,3)*(1-a) + a;
+      }
+      da = alpha_/(re-rm);
+      a = alpha_-std::abs(rm-jrm)*da;
+      //cerr << mTop.x << " " << fm << " -> " << fe << std::endl;
+      for (int j=jrm; j<=jre; j++, a-=da)
+      {
+        array(i,j,0) = array(i,j,0)*(1-a) + color_.r();
+        array(i,j,1) = array(i,j,1)*(1-a) + color_.g();
+        array(i,j,2) = array(i,j,2)*(1-a) + color_.b();
+        array(i,j,3) = array(i,j,3)*(1-a) + a;
+      }
     }
   }
 }
@@ -456,9 +546,9 @@ RectangleCM2Widget::clone()
 }
 
 void
-RectangleCM2Widget::rasterize(CM2ShaderFactory& factory)
+RectangleCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux)
 {
-  FragmentProgramARB* shader = factory.shader(type_);
+  FragmentProgramARB* shader = factory.shader(faux ? type_+1 : type_);
 
   shader->bind();
   shader->setLocalParam(0, color_.r(), color_.g(), color_.b(), alpha_);
@@ -486,7 +576,7 @@ RectangleCM2Widget::rasterize(CM2ShaderFactory& factory)
 }
 
 void
-RectangleCM2Widget::rasterize(Array3<float>& array)
+RectangleCM2Widget::rasterize(Array3<float>& array, bool faux)
 {
   if(array.dim3() != 4) return;
   int size_x = array.dim2();
@@ -519,33 +609,72 @@ RectangleCM2Widget::rasterize(Array3<float>& array)
           float w = 1-2*sqrt(x*x+y*y)/size_y;
           if (w < 0) w = 0;
           float a = alpha_*w;
-          array(i,j,0) = array(i,j,0)*(1-a) + color_.r();
-          array(i,j,1) = array(i,j,1)*(1-a) + color_.g();
-          array(i,j,2) = array(i,j,2)*(1-a) + color_.b();
+          float r = faux ? color_.r()*w : color_.r();
+          float g = faux ? color_.r()*w : color_.g();
+          float b = faux ? color_.r()*w : color_.b();
+          array(i,j,0) = array(i,j,0)*(1-a) + r;
+          array(i,j,1) = array(i,j,1)*(1-a) + g;
+          array(i,j,2) = array(i,j,2)*(1-a) + b;
           array(i,j,3) = array(i,j,3)*(1-a) + a;
         }
       }
     } break;
 
     case CM2_RECTANGLE_1D: {
-      float da = ra <= rb+1 ? 0.0 : alpha_/(ra-rb-1);
-      float a = ra <= rb+1 ? alpha_ : alpha_-std::abs(ra-jra)*da;
-      for(int j=jra-1; j>=jrb; j--, a-=da) {
-        for(int i=ilb; i<=ile; i++) {
-          array(i,j,0) = array(i,j,0)*(1-a) + color_.r();
-          array(i,j,1) = array(i,j,1)*(1-a) + color_.g();
-          array(i,j,2) = array(i,j,2)*(1-a) + color_.b();
-          array(i,j,3) = array(i,j,3)*(1-a) + a;
+      if(faux) {
+        float da = ra <= rb+1 ? 0.0 : alpha_/(ra-rb-1);
+        float dr = ra <= rb+1 ? 0.0 : color_.r()/(ra-rb-1);
+        float dg = ra <= rb+1 ? 0.0 : color_.g()/(ra-rb-1);
+        float db = ra <= rb+1 ? 0.0 : color_.b()/(ra-rb-1);
+        float a = ra <= rb+1 ? alpha_ : alpha_-std::abs(ra-jra)*da;
+        float r = ra <= rb+1 ? color_.r() : color_.r()-std::abs(ra-jra)*dr;
+        float g = ra <= rb+1 ? color_.g() : color_.g()-std::abs(ra-jra)*dg;
+        float b = ra <= rb+1 ? color_.b() : color_.b()-std::abs(ra-jra)*db;
+        for(int j=jra-1; j>=jrb; j--, a-=da, r-=dr, b-=db, g-=dg) {
+          for(int i=ilb; i<=ile; i++) {
+          
+            array(i,j,0) = array(i,j,0)*(1-a) + r;
+            array(i,j,1) = array(i,j,1)*(1-a) + g;
+            array(i,j,2) = array(i,j,2)*(1-a) + b;
+            array(i,j,3) = array(i,j,3)*(1-a) + a;
+          }
         }
-      }
-      da = ra < re-1 ? alpha_/(re-ra-1) : 0.0;
-      a = alpha_-std::abs(ra-jra)*da;
-      for(int j=jra; j<=jre; j++, a-=da) {
-        for(int i=ilb; i<=ile; i++) {
-          array(i,j,0) = array(i,j,0)*(1-a) + color_.r();
-          array(i,j,1) = array(i,j,1)*(1-a) + color_.g();
-          array(i,j,2) = array(i,j,2)*(1-a) + color_.b();
-          array(i,j,3) = array(i,j,3)*(1-a) + a;
+        da = ra < re-1 ? alpha_/(re-ra-1) : 0.0;
+        dr = ra < re-1 ? color_.r()/(re-ra-1) : 0.0;
+        dg = ra < re-1 ? color_.g()/(re-ra-1) : 0.0;
+        db = ra < re-1 ? color_.b()/(re-ra-1) : 0.0;
+        a = alpha_-std::abs(ra-jra)*da;
+        r = color_.r()-std::abs(ra-jra)*dr;
+        g = color_.g()-std::abs(ra-jra)*dg;
+        b = color_.b()-std::abs(ra-jra)*db;
+        for(int j=jra; j<=jre; j++, a-=da, r-=dr, b-=db, g-=dg) {
+          for(int i=ilb; i<=ile; i++) {
+            array(i,j,0) = array(i,j,0)*(1-a) + r;
+            array(i,j,1) = array(i,j,1)*(1-a) + g;
+            array(i,j,2) = array(i,j,2)*(1-a) + b;
+            array(i,j,3) = array(i,j,3)*(1-a) + a;
+          }
+        }
+      } else { // !faux
+        float da = ra <= rb+1 ? 0.0 : alpha_/(ra-rb-1);
+        float a = ra <= rb+1 ? alpha_ : alpha_-std::abs(ra-jra)*da;
+        for(int j=jra-1; j>=jrb; j--, a-=da) {
+          for(int i=ilb; i<=ile; i++) {
+            array(i,j,0) = array(i,j,0)*(1-a) + color_.r();
+            array(i,j,1) = array(i,j,1)*(1-a) + color_.g();
+            array(i,j,2) = array(i,j,2)*(1-a) + color_.b();
+            array(i,j,3) = array(i,j,3)*(1-a) + a;
+          }
+        }
+        da = ra < re-1 ? alpha_/(re-ra-1) : 0.0;
+        a = alpha_-std::abs(ra-jra)*da;
+        for(int j=jra; j<=jre; j++, a-=da) {
+          for(int i=ilb; i<=ile; i++) {
+            array(i,j,0) = array(i,j,0)*(1-a) + color_.r();
+            array(i,j,1) = array(i,j,1)*(1-a) + color_.g();
+            array(i,j,2) = array(i,j,2)*(1-a) + color_.b();
+            array(i,j,3) = array(i,j,3)*(1-a) + a;
+          }
         }
       }
     } break;

@@ -38,8 +38,10 @@ itcl_class Volume_Visualization_EditTransferFunc2 {
     }
 
     method set_defaults {} {
-	global $this-rgbhsv
-	set $this-rgbhsv 1
+	global $this-faux
+	set $this-faux 0
+	global $this-histo
+	set $this-histo 0.5
     }
 
     method ui {} {
@@ -61,7 +63,7 @@ itcl_class Volume_Visualization_EditTransferFunc2 {
         } else {
             set n "$this-c needexecute"
 	    
-            frame $w.f.gl
+            frame $w.f.gl -relief groove -borderwidth 2
             pack $w.f.gl -padx 2 -pady 2
             # create an OpenGL widget
             opengl $w.f.gl.gl -geometry 512x256 -doublebuffer true -direct true \
@@ -75,6 +77,19 @@ itcl_class Volume_Visualization_EditTransferFunc2 {
             bind $w.f.gl.gl <Destroy> "$this-c closewindow"
             # place the widget on the screen
             pack $w.f.gl.gl -fill both -expand 1
+            # histogram opacity
+            scale $w.f.gl.shisto -variable $this-histo \
+                -from 0.0 -to 1.0 -label "Histogram Opacity" \
+                -showvalue true -resolution 0.001 \
+                -orient horizontal -command "$this-c redraw"
+            pack $w.f.gl.shisto -side top -fill x -padx 4
+            # faux shading
+            frame $w.f.f0 -relief groove -borderwidth 2
+            pack $w.f.f0 -padx 2 -pady 2 -fill x
+            checkbutton $w.f.f0.faux -text "Opacity Modulation (Faux Shading)" \
+                -relief flat -variable $this-faux -onvalue 1 -offvalue 0 \
+                -anchor w -command "$n; $this-c redrawcmap"
+            pack $w.f.f0.faux -side top -fill x -padx 4
         }
     }
 }

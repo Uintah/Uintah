@@ -47,26 +47,21 @@ class Colormap2 : public SCIRun::Datatype
 {
 public:
   Colormap2();
+  Colormap2(vector<CM2Widget*>& widgets, bool updating, bool faux);
   virtual ~Colormap2();
 
-  inline void lock_widgets() { widget_lock_.lock(); }
-  inline void unlock_widgets() { widget_lock_.unlock(); }
-  void set_widgets(vector<CM2Widget*>& widgets);
-  inline vector<CM2Widget*>& get_widgets() { return widget_; }
+  inline vector<CM2Widget*>& widgets() { return widgets_; }
   
-  inline bool is_dirty() { return dirty_; }
-  inline bool is_updating() { return updating_; }
-  inline void set_dirty(bool b) { dirty_ = b; }
-  inline void set_updating(bool b) { updating_ = b; }
+  inline bool updating() { return updating_; }
+  inline bool faux() { return faux_; }
 
   virtual void io(SCIRun::Piostream&);
   static SCIRun::PersistentTypeID type_id;
 
 protected:
-  bool dirty_;
   bool updating_;
-  vector<CM2Widget *> widget_;
-  SCIRun::Mutex widget_lock_;
+  bool faux_;
+  vector<CM2Widget *> widgets_;
 };
 
 typedef SCIRun::LockingHandle<Colormap2> Colormap2Handle;
