@@ -15,6 +15,7 @@
 #define SCI_Geom_VCTriStrip_h 1
 
 #include <Geom/Geom.h>
+#include <Geom/Material.h>
 #include <Classlib/Array1.h>
 #include <Geometry/Point.h>
 #include <Geometry/Vector.h>
@@ -33,11 +34,11 @@ public:
     virtual void get_bounds(BBox&);
 
 #ifdef SCI_OPENGL
-    virtual void objdraw(DrawInfoOpenGL*);
+    virtual void objdraw(DrawInfoOpenGL*, Material*);
 #endif
     virtual void make_prims(Array1<GeomObj*>& free,
 			    Array1<GeomObj*>& dontfree);
-    virtual void intersect(const Ray& ray, const MaterialHandle& matl,
+    virtual void intersect(const Ray& ray, Material*,
 			   Hit& hit);
 };
 

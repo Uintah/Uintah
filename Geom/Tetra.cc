@@ -48,21 +48,21 @@ void GeomTetra::make_prims(Array1<GeomObj*>& free,
 			   Array1<GeomObj*>&)
 {
     GeomLine* l1=new GeomLine(p1, p2);
-    l1->set_matl(matl);
+//    l1->set_matl(matl);
     free.add(l1);
     GeomLine* l2=new GeomLine(p2, p3);
-    l2->set_matl(matl);
+//    l2->set_matl(matl);
     free.add(l2);
     GeomLine* l3=new GeomLine(p3, p4);
-    l3->set_matl(matl);
+//    l3->set_matl(matl);
     free.add(l3);
     GeomLine* l4=new GeomLine(p1, p4);
-    l4->set_matl(matl);
+//    l4->set_matl(matl);
     free.add(l4);
 }
 
-void GeomTetra::intersect(const Ray& ray, const MaterialHandle& matl,
-			  Hit& hit)
+void GeomTetra::intersect(const Ray&, Material*,
+			  Hit&)
 {
     NOT_FINISHED("GeomTetra::intersect");
 }

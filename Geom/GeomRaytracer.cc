@@ -42,7 +42,7 @@ MaterialHandle Hit::matl() const
     return _matl;
 }
 
-void Hit::hit(double new_t, GeomObj* new_prim, const MaterialHandle& new_matl)
+void Hit::hit(double new_t, GeomObj* new_prim, Material* new_matl)
 {
     if(new_t > 1.e-6 && (new_t < _t || !_prim)){
 	_t=new_t;

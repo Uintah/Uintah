@@ -110,10 +110,10 @@ void GeomCylinder::make_prims(Array1<GeomObj*>& free,
 	    Point p2(b2+rv);
 	    if(j>0){
 		GeomTri* t1=new GeomTri(l1, l2, p1);
-		t1->set_matl(matl);
+//		t1->set_matl(matl);
 		free.add(t1);
 		GeomTri* t2=new GeomTri(l2, p1, p2);
-		t2->set_matl(matl);
+//		t2->set_matl(matl);
 		free.add(t2);
 	    }
 	    l1=p1;
@@ -122,7 +122,7 @@ void GeomCylinder::make_prims(Array1<GeomObj*>& free,
     }
 }
 
-void GeomCylinder::intersect(const Ray&, const MaterialHandle&,
+void GeomCylinder::intersect(const Ray&, Material*,
 			 Hit&)
 {
     NOT_FINISHED("GeomCylinder::intersect");

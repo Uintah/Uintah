@@ -60,3 +60,40 @@ void Material::io(Piostream& stream)
     Pio(stream, shininess);
     Pio(stream, emission);
 }
+
+GeomMaterial::GeomMaterial(GeomObj* obj, const MaterialHandle& matl)
+: GeomContainer(obj), matl(matl)
+{
+}
+
+GeomMaterial::GeomMaterial(const GeomMaterial& copy)
+: GeomContainer(copy), matl(copy.matl)
+{
+}
+
+GeomMaterial::~GeomMaterial()
+{
+}
+
+GeomObj* GeomMaterial::clone()
+{
+    return new GeomMaterial(*this);
+}
+
+void GeomMaterial::objdraw(DrawInfoOpenGL* di, Material* /* old_matl */)
+{
+    child->draw(di, matl.get_rep());
+}
+
+void GeomMaterial::make_prims(Array1<GeomObj*>& free,
+			      Array1<GeomObj*>& dontfree)
+{
+    child->make_prims(free, dontfree);
+}
+
+void GeomMaterial::intersect(const Ray& ray, Material* /* old_matl */,
+			     Hit& hit)
+{
+    child->intersect(ray, matl.get_rep(), hit);
+}
+

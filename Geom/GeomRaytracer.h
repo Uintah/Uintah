@@ -23,7 +23,7 @@ class View;
 class Hit {
     double _t;
     GeomObj* _prim;
-    MaterialHandle _matl;
+    Material* _matl;
 public:
     Hit();
     ~Hit();
@@ -32,7 +32,7 @@ public:
     GeomObj* prim() const;
     MaterialHandle matl() const;
 
-    void hit(double t, GeomObj*, const MaterialHandle&);
+    void hit(double t, GeomObj*, Material*);
 };
 
 struct OcclusionData {

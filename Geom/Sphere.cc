@@ -88,20 +88,19 @@ void GeomSphere::make_prims(Array1<GeomObj*>& free,
 	    Point p4(x1*r1+cx, y1*r1+cy, z1+cz);
 	    if(j<nv-2){
 		GeomTri* t1=new GeomTri(p1, p3, p4);
-		t1->set_matl(matl);
+//		t1->set_matl(matl);
 		free.add(t1);
 	    }
 	    if(j>0){
 		GeomTri* t2=new GeomTri(p1, p4, p2);
-		t2->set_matl(matl);
+//		t2->set_matl(matl);
 		free.add(t2);
 	    }
 	}
     }
 }
 
-void GeomSphere::intersect(const Ray& ray, const MaterialHandle& matl,
-			   Hit& hit)
+void GeomSphere::intersect(const Ray& ray, Material* matl, Hit& hit)
 {
     Vector OC(cen-ray.origin());
     double tca=Dot(OC, ray.direction());

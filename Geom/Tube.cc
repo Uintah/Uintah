@@ -99,8 +99,7 @@ void GeomTube::make_prims(Array1<GeomObj*>&,
   NOT_FINISHED("GeomTube::make_prims");
 }
 
-void GeomTube::intersect(const Ray&, const MaterialHandle&,
-			 Hit&)
+void GeomTube::intersect(const Ray&, Material*, Hit&)
 {
     NOT_FINISHED("GeomTube::intersect");
 }

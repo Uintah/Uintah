@@ -75,7 +75,7 @@ void GeomGroup::reset_bbox()
     bb.reset();
 }
 
-void GeomGroup::intersect(const Ray& ray, const MaterialHandle& matl,
+void GeomGroup::intersect(const Ray& ray, Material* matl,
 			  Hit& hit)
 {
     for(int i=0;i<objs.size();i++){

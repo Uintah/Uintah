@@ -37,7 +37,7 @@ void GeomTriStrip::make_prims(Array1<GeomObj*>& free,
     int n=pts.size()-2;
     for(int i=0;i<n;i++){
 	GeomTri* tri=new GeomTri(pts[i], pts[i+1], pts[i+2]);
-	tri->set_matl(matl);
+//	tri->set_matl(matl);
 	free.add(tri);
     }
 }
@@ -59,8 +59,7 @@ void GeomTriStrip::add(const Point& pt, const Vector& norm)
     norms.add(norm);
 }
 
-void GeomTriStrip::intersect(const Ray&, const MaterialHandle&,
-			 Hit&)
+void GeomTriStrip::intersect(const Ray&, Material*, Hit&)
 {
     NOT_FINISHED("GeomTriStrip::intersect");
 }

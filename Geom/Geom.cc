@@ -16,32 +16,17 @@
 #include <iostream.h>
 
 GeomObj::GeomObj(int lit)
-: lit(lit), matl(0), pick(0)
+: lit(lit)
 {
 }
 
 GeomObj::GeomObj(const GeomObj& copy)
-: matl(copy.matl), pick(copy.pick)
+: lit(copy.lit)
 {
 }
 
 GeomObj::~GeomObj()
 {
-}
-
-void GeomObj::set_pick(GeomPick* _pick)
-{
-    pick=_pick;
-}
-
-GeomPick* GeomObj::get_pick()
-{
-    return pick;
-}
-
-void GeomObj::set_matl(const MaterialHandle& _matl)
-{
-    matl=_matl;
 }
 
 void GeomObj::reset_bbox()

@@ -47,7 +47,7 @@ void GeomLine::make_prims(Array1<GeomObj*>&,
     dontfree.add(line);
 }
 
-void GeomLine::intersect(const Ray&, const MaterialHandle&,
+void GeomLine::intersect(const Ray&, Material*,
 			 Hit&)
 {
     NOT_FINISHED("GeomLine::intersect");

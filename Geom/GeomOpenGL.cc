@@ -21,6 +21,7 @@
 #include <Geom/HeadLight.h>
 #include <Geom/Light.h>
 #include <Geom/Line.h>
+#include <Geom/Material.h>
 #include <Geom/PointLight.h>
 #include <Geom/Polyline.h>
 #include <Geom/RenderMode.h>
@@ -44,14 +45,11 @@ DrawInfoOpenGL::DrawInfoOpenGL()
 : current_matl(0)
 {
     qobj=gluNewQuadric();
-    stack=new Material*[MAX_MATL_STACK];
-    sp=0;
 }
 
 DrawInfoOpenGL::~DrawInfoOpenGL()
 {
     gluDeleteQuadric(qobj);
-    delete[] stack;
 }
 
 void DrawInfoOpenGL::set_drawtype(DrawType dt)
@@ -80,16 +78,10 @@ void DrawInfoOpenGL::set_drawtype(DrawType dt)
 
 void DrawInfoOpenGL::set_matl(Material* matl)
 {
-    current_matl=matl;
-}
-
-void DrawInfoOpenGL::set_matl()
-{
-    if(appl_matl==current_matl)
+    if(matl==current_matl)
 	return;
-    appl_matl=current_matl;
+    current_matl=matl;
     float color[4];
-    Material* matl=current_matl;
     matl->ambient.get_color(color);
     glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, color);
     matl->diffuse.get_color(color);
@@ -102,27 +94,8 @@ void DrawInfoOpenGL::set_matl()
     glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, color);
 }
 
-void DrawInfoOpenGL::push_matl(Material* matl)
+void GeomObj::draw(DrawInfoOpenGL* di, Material* matl)
 {
-    stack[sp++]=matl;
-    ASSERT(sp<MAX_MATL_STACK);
-    set_matl(matl);
-}
-
-void DrawInfoOpenGL::pop_matl()
-{
-    sp--;
-    if(sp){
-	set_matl(stack[sp]);
-    } else {
-	current_matl=0;
-    }
-}
-
-void GeomObj::draw(DrawInfoOpenGL* di)
-{
-    if(matl.get_rep())
-	di->push_matl(matl.get_rep());
     if(lit && di->lighting && !di->currently_lit){
 	di->currently_lit=1;
 	glEnable(GL_LIGHTING);
@@ -131,18 +104,12 @@ void GeomObj::draw(DrawInfoOpenGL* di)
 	di->currently_lit=0;
 	glDisable(GL_LIGHTING);
     }
-    if(di->pickmode && pick)
-	glPushName((GLuint)pick);
-    objdraw(di);
-    if(di->pickmode && pick)
-	glPopName();
-    if(matl.get_rep())
-	di->pop_matl();
+    objdraw(di, matl);
 }
 
-void GeomCone::objdraw(DrawInfoOpenGL* di)
+void GeomCone::objdraw(DrawInfoOpenGL* di, Material* matl)
 {
-    di->set_matl();
+    di->set_matl(matl);
     glPushMatrix();
     glTranslated(bottom.x(), bottom.y(), bottom.z());
     glRotated(RtoD(zrotangle), zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
@@ -151,9 +118,9 @@ void GeomCone::objdraw(DrawInfoOpenGL* di)
     glPopMatrix();
 }
 
-void GeomCylinder::objdraw(DrawInfoOpenGL* di)
+void GeomCylinder::objdraw(DrawInfoOpenGL* di, Material* matl)
 {
-    di->set_matl();
+    di->set_matl(matl);
     glPushMatrix();
     glTranslated(bottom.x(), bottom.y(), bottom.z());
     glRotated(RtoD(zrotangle), zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
@@ -162,9 +129,9 @@ void GeomCylinder::objdraw(DrawInfoOpenGL* di)
     glPopMatrix();
 }
 
-void GeomDisc::objdraw(DrawInfoOpenGL* di)
+void GeomDisc::objdraw(DrawInfoOpenGL* di, Material* matl)
 {
-    di->set_matl();
+    di->set_matl(matl);
     glPushMatrix();
     glTranslated(cen.x(), cen.y(), cen.z());
     glRotated(RtoD(zrotangle), zrotaxis.x(), zrotaxis.y(), zrotaxis.z());
@@ -173,14 +140,14 @@ void GeomDisc::objdraw(DrawInfoOpenGL* di)
     glPopMatrix();
 }
 
-void GeomGroup::objdraw(DrawInfoOpenGL* di)
+void GeomGroup::objdraw(DrawInfoOpenGL* di, Material* matl)
 {
     for (int i=0; i<objs.size(); i++)
-	objs[i]->draw(di);
+	objs[i]->draw(di, matl);
 }
 
-void GeomLine::objdraw(DrawInfoOpenGL* di) {
-    di->set_matl();
+void GeomLine::objdraw(DrawInfoOpenGL* di, Material* matl) {
+    di->set_matl(matl);
     di->polycount++;
     glBegin(GL_LINE_STRIP);
     glVertex3d(p1.x(), p1.y(), p1.z());
@@ -188,8 +155,8 @@ void GeomLine::objdraw(DrawInfoOpenGL* di) {
     glEnd();
 }
 
-void GeomPolyline::objdraw(DrawInfoOpenGL* di) {
-    di->set_matl();
+void GeomPolyline::objdraw(DrawInfoOpenGL* di, Material* matl) {
+    di->set_matl(matl);
     di->polycount+=pts.size()-1;
     glBegin(GL_LINE_STRIP);
     for(int i=0;i<pts.size();i++){
@@ -201,8 +168,8 @@ void GeomPolyline::objdraw(DrawInfoOpenGL* di) {
 
 // --------------------------------------------------
 
-void GeomTube::objdraw(DrawInfoOpenGL* di) {
-    di->set_matl();
+void GeomTube::objdraw(DrawInfoOpenGL* di, Material* matl) {
+    di->set_matl(matl);
     Array1<Point> c1; 
     Array1<Point> c2; 
     Vector n1, n2; 
@@ -241,20 +208,20 @@ void GeomTube::objdraw(DrawInfoOpenGL* di) {
 
 // --------------------------------------------------
 
-void GeomRenderMode::objdraw(DrawInfoOpenGL* di)
+void GeomRenderMode::objdraw(DrawInfoOpenGL* di, Material* matl)
 {
 //    int save_lighting=di->lighting;
     NOT_FINISHED("GeomRenderMode");
     if(child){
-	child->draw(di);
+	child->draw(di, matl);
 	// We don't put things back if no children...
 	
     }
 }    
 
-void GeomSphere::objdraw(DrawInfoOpenGL* di)
+void GeomSphere::objdraw(DrawInfoOpenGL* di, Material* matl)
 {
-    di->set_matl();
+    di->set_matl(matl);
     glPushMatrix();
     glTranslated(cen.x(), cen.y(), cen.z());
     di->polycount+=nu*nv;
@@ -262,8 +229,8 @@ void GeomSphere::objdraw(DrawInfoOpenGL* di)
     glPopMatrix();
 }
 
-void GeomTetra::objdraw(DrawInfoOpenGL* di) {
-    di->set_matl();
+void GeomTetra::objdraw(DrawInfoOpenGL* di, Material* matl) {
+    di->set_matl(matl);
     di->polycount+=4;
     switch(di->get_drawtype()){
     case DrawInfoOpenGL::WireFrame:
@@ -338,8 +305,8 @@ void GeomTetra::objdraw(DrawInfoOpenGL* di) {
     }
 }
 
-void GeomTri::objdraw(DrawInfoOpenGL* di) {
-    di->set_matl();
+void GeomTri::objdraw(DrawInfoOpenGL* di, Material* matl) {
+    di->set_matl(matl);
     di->polycount++;
     switch(di->get_drawtype()){
     case DrawInfoOpenGL::WireFrame:
@@ -368,8 +335,8 @@ void GeomTri::objdraw(DrawInfoOpenGL* di) {
     }
 }
 
-void GeomTriStrip::objdraw(DrawInfoOpenGL* di) {
-    di->set_matl();
+void GeomTriStrip::objdraw(DrawInfoOpenGL* di, Material* matl) {
+    di->set_matl(matl);
     if(pts.size() <= 2)
 	return;
     di->polycount+=pts.size()-2;
@@ -424,14 +391,14 @@ void GeomTriStrip::objdraw(DrawInfoOpenGL* di) {
     }
 }
 
-void GeomVCTriStrip::objdraw(DrawInfoOpenGL* di) {
+void GeomVCTriStrip::objdraw(DrawInfoOpenGL* di, Material* matl) {
     if(pts.size() <= 2)
 	return;
     di->polycount+=pts.size()-2;
     switch(di->get_drawtype()){
     case DrawInfoOpenGL::WireFrame:
 	{
-	    di->set_matl();
+	    di->set_matl(matl);
 	    glBegin(GL_LINES);
 	    Point p1(pts[0]);
 	    Point p2(pts[1]);
@@ -456,7 +423,7 @@ void GeomVCTriStrip::objdraw(DrawInfoOpenGL* di) {
 	break;
     case DrawInfoOpenGL::Flat:
 	{
-	    di->set_matl();
+	    di->set_matl(matl);
 	    glBegin(GL_TRIANGLE_STRIP);
 	    for(int i=0;i<pts.size();i++){
 		Point p(pts[i]);
@@ -468,15 +435,13 @@ void GeomVCTriStrip::objdraw(DrawInfoOpenGL* di) {
     case DrawInfoOpenGL::Gouraud:
 	{
 	    glBegin(GL_TRIANGLE_STRIP);
-	    di->push_matl(mmatl[0].get_rep());
-	    di->set_matl();
+	    di->set_matl(mmatl[0].get_rep());
 	    for(int i=0;i<pts.size();i++){
 		Vector n(norms[i]);
 		glNormal3d(n.x(), n.y(), n.z());
 		Point p(pts[i]);
 		glVertex3d(p.x(), p.y(), p.z());
 	    }
-	    di->pop_matl();
 	    glEnd();
 	}
 	break;
@@ -487,10 +452,8 @@ void GeomVCTriStrip::objdraw(DrawInfoOpenGL* di) {
 		Vector n(norms[i]);
 		glNormal3d(n.x(), n.y(), n.z());
 		Point p(pts[i]);
-		di->push_matl(mmatl[i].get_rep());
-		di->set_matl();
+		di->set_matl(mmatl[i].get_rep());
 		glVertex3d(p.x(), p.y(), p.z());
-		di->pop_matl();
 	    }
 	    glEnd();
 	}
@@ -498,11 +461,11 @@ void GeomVCTriStrip::objdraw(DrawInfoOpenGL* di) {
     }
 }
 
-void GeomVCTri::objdraw(DrawInfoOpenGL* di) {
+void GeomVCTri::objdraw(DrawInfoOpenGL* di, Material* matl) {
     di->polycount++;
     switch(di->get_drawtype()){
     case DrawInfoOpenGL::WireFrame:
-	di->set_matl();
+	di->set_matl(matl);
 	glBegin(GL_LINE_LOOP);
 	glVertex3d(p1.x(), p1.y(), p1.z());
 	glVertex3d(p2.x(), p2.y(), p2.z());
@@ -510,7 +473,7 @@ void GeomVCTri::objdraw(DrawInfoOpenGL* di) {
 	glEnd();
 	break;
     case DrawInfoOpenGL::Flat:
-	di->set_matl();
+	di->set_matl(matl);
 	glBegin(GL_TRIANGLES);
 	glVertex3d(p1.x(), p1.y(), p1.z());
 	glVertex3d(p2.x(), p2.y(), p2.z());
@@ -520,29 +483,21 @@ void GeomVCTri::objdraw(DrawInfoOpenGL* di) {
     case DrawInfoOpenGL::Gouraud:
 	glBegin(GL_TRIANGLES);
 	glNormal3d(-n.x(), -n.y(), -n.z());
-	di->push_matl(m1.get_rep());
-	di->set_matl();
+	di->set_matl(m1.get_rep());
 	glVertex3d(p1.x(), p1.y(), p1.z());
 	glVertex3d(p2.x(), p2.y(), p2.z());
 	glVertex3d(p3.x(), p3.y(), p3.z());
-	di->pop_matl();
 	glEnd();
 	break;
     case DrawInfoOpenGL::Phong:
 	glBegin(GL_TRIANGLES);
 	glNormal3d(-n.x(), -n.y(), -n.z());
-	di->push_matl(m1.get_rep());
-	di->set_matl();
+	di->set_matl(m1.get_rep());
 	glVertex3d(p1.x(), p1.y(), p1.z());
-	di->pop_matl();
-	di->push_matl(m2.get_rep());
-	di->set_matl();
+	di->set_matl(m2.get_rep());
 	glVertex3d(p2.x(), p2.y(), p2.z());
-	di->pop_matl();
-	di->push_matl(m3.get_rep());
-	di->set_matl();
+	di->set_matl(m3.get_rep());
 	glVertex3d(p3.x(), p3.y(), p3.z());
-	di->pop_matl();
 	glEnd();
 	break;
     }

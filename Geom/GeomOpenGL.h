@@ -14,7 +14,6 @@
 #ifndef SCI_Geom_GeomOpenGL_h
 #define SCI_Geom_GeomOpenGL_h 1
 
-#include <Classlib/Stack.h>
 #include <GL/glu.h>
 class Material;
 
@@ -40,13 +39,7 @@ public:
     int pickmode;
 
     Material* current_matl;
-    Material* appl_matl;
-    Material** stack;
-    int sp;
-    void set_matl();
     void set_matl(Material*);
-    void push_matl(Material*);
-    void pop_matl();
 
     GLUquadricObj* qobj;
 };

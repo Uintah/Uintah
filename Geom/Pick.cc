@@ -15,20 +15,20 @@
 #include <Geom/PickMessage.h>
 #include <Dataflow/Module.h>
 
-GeomPick::GeomPick(Module* module)
-: module(module), mailbox(0), cbdata(0)
+GeomPick::GeomPick(GeomObj* obj, Module* module)
+: GeomContainer(obj), module(module), mailbox(0), cbdata(0)
 {
 }
 
-GeomPick::GeomPick(Module* module, const Vector& v1)
-: module(module), directions(2), mailbox(0), cbdata(0)
+GeomPick::GeomPick(GeomObj* obj, Module* module, const Vector& v1)
+: GeomContainer(obj), module(module), directions(2), mailbox(0), cbdata(0)
 {
     directions[0]=v1;
     directions[1]=-v1;
 }
 
-GeomPick::GeomPick(Module* module, const Vector& v1, const Vector& v2)
-: module(module), directions(4), mailbox(0), cbdata(0)
+GeomPick::GeomPick(GeomObj* obj, Module* module, const Vector& v1, const Vector& v2)
+: GeomContainer(obj), module(module), directions(4), mailbox(0), cbdata(0)
 {
     directions[0]=v1;
     directions[1]=-v1;
@@ -36,9 +36,9 @@ GeomPick::GeomPick(Module* module, const Vector& v1, const Vector& v2)
     directions[3]=-v2;
 }
 
-GeomPick::GeomPick(Module* module, const Vector& v1, const Vector& v2,
+GeomPick::GeomPick(GeomObj* obj, Module* module, const Vector& v1, const Vector& v2,
 		   const Vector& v3)
-: module(module), directions(6), mailbox(0), cbdata(0)
+: GeomContainer(obj), module(module), directions(6), mailbox(0), cbdata(0)
 {
     directions[0]=v1;
     directions[1]=-v1;
@@ -48,13 +48,24 @@ GeomPick::GeomPick(Module* module, const Vector& v1, const Vector& v2,
     directions[5]=-v3;
 }
 
+GeomPick::GeomPick(const GeomPick& copy)
+: GeomContainer(copy), directions(copy.directions), highlight(copy.highlight),
+  mailbox(0), cbdata(copy.cbdata), module(copy.module)
+{
+}
+
+GeomObj* GeomPick::clone()
+{
+    return new GeomPick(*this);
+}
+
 GeomPick::~GeomPick()
 {
 }
 
 void GeomPick::set_highlight(const MaterialHandle& matl)
 {
-    hightlight=matl;
+    highlight=matl;
 }
 
 void GeomPick::set_cbdata(void* _cbdata)

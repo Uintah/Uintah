@@ -17,21 +17,18 @@
 #include <Classlib/Array1.h>
 #include <Classlib/Handle.h>
 #include <variant.h>
-#include <Geom/Material.h>
 
 class BBox;
 class DrawInfoOpenGL;
 class DrawInfoX11;
-class GeomPick;
 class Hit;
+class Material;
 class Vector;
 class Point;
 class Ray;
 
 class GeomObj {
 protected:
-    MaterialHandle matl;
-    GeomPick* pick;
     int lit;
 public:
     GeomObj(int lit);
@@ -39,23 +36,18 @@ public:
     virtual ~GeomObj();
     virtual GeomObj* clone() = 0;
 
-
     virtual void reset_bbox();
     virtual void get_bounds(BBox&) = 0;
-    void set_matl(const MaterialHandle&);
-    void set_pick(GeomPick*);
-    GeomPick* get_pick();
-
 
     // For OpenGL
 #ifdef SCI_OPENGL
-    void draw(DrawInfoOpenGL*);
-    virtual void objdraw(DrawInfoOpenGL*)=0;
+    void draw(DrawInfoOpenGL*, Material*);
+    virtual void objdraw(DrawInfoOpenGL*, Material*)=0;
 #endif
 
     // For X11
-    void draw(DrawInfoX11*);
-    virtual void objdraw(DrawInfoX11*);
+    void draw(DrawInfoX11*, Material*);
+    virtual void objdraw(DrawInfoX11*, Material*);
     virtual double depth(DrawInfoX11*);
     virtual void get_hit(Vector&, Point&);
 
@@ -64,7 +56,7 @@ public:
 			    Array1<GeomObj*>& dontfree) = 0;
 
     // For Raytracing
-    virtual void intersect(const Ray& ray, const MaterialHandle& matl,
+    virtual void intersect(const Ray& ray, Material* matl,
 			   Hit& hit)=0;
     virtual Vector normal(const Point& p);
 };
