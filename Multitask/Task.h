@@ -108,7 +108,6 @@ public:
     int start_itimer(const TaskTime& start, const TaskTime& interval,
 			    void (*handler)(void*), void* data);
     void cancel_itimer(int);
-    static int test_malloc_lock();
 
     // Interface to select...
     static int mtselect(int, fd_set*, fd_set*, fd_set*, struct timeval*);

@@ -15,7 +15,6 @@
 #include <Multitask/ITC.h>
 #include <Classlib/Args.h>
 #include <Classlib/NotFinished.h>
-#include <Malloc/New.h>
 #include <iostream.h>
 #include <stdlib.h>
 #include <ulocks.h>
@@ -424,32 +423,8 @@ void Task::exit_all(int code)
     kill(0, SIGQUIT);
 }
 
-static LibMutex* malloc_lock;
-
-static void locker()
-{
-    malloc_lock->lock();
-}
-
-static void unlocker()
-{
-    malloc_lock->unlock();
-}
-
-int Task::test_malloc_lock()
-{
-    if(malloc_lock->try_lock()){
-	malloc_lock->unlock();
-	return 1;
-    } else {
-	return 0;
-    }
-}
-
 void Task::initialize(char* pn)
 {
-    malloc_lock=new LibMutex;
-    MemoryManager::set_locker(locker, unlocker);
     progname=strdup(pn);
     tick=CLK_TCK;
     pagesize=getpagesize();
