@@ -25,9 +25,10 @@ namespace Uintah {
   
 using namespace SCIRun;
 
-  DECLARE_MAKER(TimestepSelector)
+DECLARE_MAKER(TimestepSelector)
 
 //--------------------------------------------------------------- 
+
 TimestepSelector::TimestepSelector(GuiContext* ctx) 
   : Module("TimestepSelector", ctx, Filter, "Selectors", "Uintah"),
     tcl_status(ctx->subVar("tcl_status")), 
@@ -47,9 +48,12 @@ TimestepSelector::TimestepSelector(GuiContext* ctx)
 { 
 } 
 
-//------------------------------------------------------------ 
 TimestepSelector::~TimestepSelector(){} 
-void TimestepSelector::execute() 
+
+//------------------------------------------------------------ 
+
+void
+TimestepSelector::execute() 
 { 
   tcl_status.set("Calling TimestepSelector!"); 
   in = (ArchiveIPort *) get_iport("Data Archive");
@@ -80,6 +84,13 @@ void TimestepSelector::execute()
      return;
    }
   
+   // Check to see if the text color has changed.
+   Color current_text_color( def_color_r_.get(), def_color_g_.get(), def_color_b_.get() );
+   if( def_mat_handle_->diffuse != current_text_color ) {
+     Material *m = scinew Material(Color(def_color_r_.get(), def_color_g_.get(),
+					 def_color_b_.get()));
+     def_mat_handle_ = m;
+   }
 
    // what time is it?
    
@@ -193,26 +204,6 @@ void TimestepSelector::execute()
 
    tcl_status.set("Done");
    // DumpAllocator(default_allocator, "timedump.allocator");
-}
-
-void
-TimestepSelector::tcl_command(GuiArgs& args, void* userdata) {
-  if(args.count() < 2){
-    args.error("TimestepSelector needs a minor command");
-    return;
-  }
-
-  if (args[1] == "default_color_change") {
-    def_color_r_.reset();
-    def_color_g_.reset();
-    def_color_b_.reset();
-    Material *m = scinew Material(Color(def_color_r_.get(), def_color_g_.get(),
-					def_color_b_.get()));
-    def_mat_handle_ = m;
-    want_to_execute();
-  } else {
-    Module::tcl_command(args, userdata);
-  }
 }
 
 } // End namespace Uintah
