@@ -87,10 +87,13 @@ $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/denaccum_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/enthalpyradwallbc_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/hatvelcalpbc_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/inlbcs_fort.h
+$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/intrusion_computevel_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/mm_computevel_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/mm_explicit_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/mm_explicit_vel_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/mmbcvelocity_fort.h
+$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/mmbcvelocity_momex_fort.h
+$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/mmbcenthalpy_energyex_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/mmcelltypeinit_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/mmwallbc_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/outarea_fort.h

@@ -149,7 +149,7 @@ public:
       ///////////////////////////////////////////////////////////////////////
       // Set the boundary consition pointer
 
-      inline void setBC(const BoundaryCondition* bc) {
+      inline void setBC(BoundaryCondition* bc) {
 	d_bc = bc;
       }
 
@@ -280,7 +280,7 @@ private:
       double d_denUnderrelax;
       IntVector d_denRef;
       MixingModel* d_mixingModel;
-      const BoundaryCondition* d_bc;
+      BoundaryCondition* d_bc;
 #ifdef PetscFilter
       Filter* d_filter;
 #endif

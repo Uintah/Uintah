@@ -70,6 +70,9 @@ using namespace SCIRun;
 #include <Packages/Uintah/CCA/Components/Arches/fortran/bcenthalpy_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/enthalpyradwallbc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/addpressuregrad_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/intrusion_computevel_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/mmbcenthalpy_energyex_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/mmbcvelocity_momex_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mmbcvelocity_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mmcelltypeinit_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mmwallbc_fort.h>
@@ -171,6 +174,16 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
   else {
     d_outletBoundary = false;
   }
+  if (ProblemSpecP intrusion_db = db->findBlock("intrusions")) {
+    d_intrusionBoundary = true;
+    d_intrusionBC = scinew IntrusionBdry(total_cellTypes);
+    d_intrusionBC->problemSetup(intrusion_db);
+    d_cellTypes.push_back(total_cellTypes);
+    ++total_cellTypes;
+  }
+  else {
+    d_intrusionBoundary = false;
+  }
   // if multimaterial then add an id for multimaterial wall
   if (d_MAlab) 
     d_mmWallID = total_cellTypes;
@@ -192,20 +205,7 @@ BoundaryCondition::sched_cellTypeInit(SchedulerP& sched, const PatchSet* patches
 			  &BoundaryCondition::cellTypeInit);
   tsk->computes(d_lab->d_cellTypeLabel);
   sched->addTask(tsk, patches, matls);
-#if 0
-  for(Level::const_patchIterator iter=level->patchesBegin();
-      iter != level->patchesEnd(); iter++){
-    const Patch* patch=*iter;
 
-    // cell type initialization
-    Task* tsk = scinew Task("BoundaryCondition::cellTypeInit",
-			 patch, old_dw, new_dw, this,
-			 &BoundaryCondition::cellTypeInit);
-    int matlIndex = 0;
-    tsk->computes(new_dw, d_lab->d_cellTypeLabel, matlIndex, patch);
-    sched->addTask(tsk);
-  }
-#endif
 }
 
 //****************************************************************************
@@ -363,6 +363,25 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
       }
     }
     
+    {
+      if (d_intrusionBoundary) {
+	int nofGeomPieces = (int)d_intrusionBC->d_geomPiece.size();
+	for (int ii = 0; ii < nofGeomPieces; ii++) {
+	  GeometryPiece*  piece = d_intrusionBC->d_geomPiece[ii];
+	  Box geomBox = piece->getBoundingBox();
+	  Box b = geomBox.intersect(patchBox);
+	  if (!(b.degenerate())) {
+	    CellIterator iter = patch->getCellIterator(b);
+	    IntVector idxLo = iter.begin();
+	    IntVector idxHi = iter.end() - IntVector(1,1,1);
+	    celltypeval = d_intrusionBC->d_cellTypeID;
+	    fort_celltypeinit(idxLo, idxHi, cellType, celltypeval);
+	  }
+	}
+      }
+    }
+
+
 #ifdef ARCHES_GEOM_DEBUG
     // Testing if correct values have been put
     cerr << " In C++ (BoundaryCondition.cc) after flow inlet init " << endl;
@@ -381,13 +400,6 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
       }
     }
 #endif
-#if 0
-    cerr << "Print Cell type init " << endl;
-    cellType.print(cerr);
-#endif
-    
-    // allocateAndPut instead:
-    /* new_dw->put(cellType, d_lab->d_cellTypeLabel, matlIndex, patch); */;
   }
 }  
 
@@ -833,41 +845,6 @@ BoundaryCondition::sched_setInletVelocityBC(SchedulerP& sched, const PatchSet* p
   
   sched->addTask(tsk, patches, matls);
   
-#if 0
-  for(Level::const_patchIterator iter=level->patchesBegin();
-      iter != level->patchesEnd(); iter++){
-    const Patch* patch=*iter;
-    {
-      Task* tsk = scinew Task("BoundaryCondition::setInletVelocityBC",
-			      patch, old_dw, new_dw, this,
-			      &BoundaryCondition::setInletVelocityBC);
-
-      int matlIndex = 0;
-
-      // This task requires densityCP, [u,v,w]VelocitySP from new_dw
-      tsk->requires(old_dw, d_lab->d_cellTypeLabel, matlIndex, patch, Ghost::None,
-		    Arches::ZEROGHOSTCELLS);
-      tsk->requires(new_dw, d_lab->d_densityINLabel, matlIndex, patch, Ghost::None,
-		    Arches::ZEROGHOSTCELLS);
-      // changes to make it work for the task graph
-      tsk->requires(new_dw, d_lab->d_densityINLabel, matlIndex, patch, 
-		    Ghost::AroundCells, Arches::ZEROGHOSTCELLS+2);
-      tsk->requires(new_dw, d_lab->d_uVelocityINLabel, matlIndex, patch, Ghost::None,
-		    Arches::ZEROGHOSTCELLS);
-      tsk->requires(new_dw, d_lab->d_vVelocityINLabel, matlIndex, patch, Ghost::None,
-		    Arches::ZEROGHOSTCELLS);
-      tsk->requires(new_dw, d_lab->d_wVelocityINLabel, matlIndex, patch, Ghost::None,
-		    Arches::ZEROGHOSTCELLS);
-
-      // This task computes new density, uVelocity, vVelocity and wVelocity
-      tsk->computes(new_dw, d_lab->d_uVelocitySIVBCLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_lab->d_vVelocitySIVBCLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_lab->d_wVelocitySIVBCLabel, matlIndex, patch);
-
-      sched->addTask(tsk);
-    }
-  }
-#endif
 }
 
 void
@@ -1303,15 +1280,6 @@ BoundaryCondition::transOutletBC(const ProcessorGroup* ,
 
   // Put the calculated data into the new DW
     new_dw->put(sum_vartype(flowout), d_lab->d_netflowOUTBCLabel);
-    // allocateAndPut instead:
-    /* new_dw->put(uVelocity, d_lab->d_uVelocityOUTBCLabel, matlIndex, patch); */;
-    // allocateAndPut instead:
-    /* new_dw->put(vVelocity, d_lab->d_vVelocityOUTBCLabel, matlIndex, patch); */;
-    // allocateAndPut instead:
-    /* new_dw->put(wVelocity, d_lab->d_wVelocityOUTBCLabel, matlIndex, patch); */;
-    for (int ii = 0; ii < d_nofScalars; ii++) 
-      // allocateAndPut instead:
-      /* new_dw->put(scalar[ii], d_lab->d_scalarOUTBCLabel, matlIndex, patch); */;
   }
 } 
 
@@ -1590,18 +1558,6 @@ BoundaryCondition::velocityBC(const ProcessorGroup*,
     cerr << "Invalid Index value" << endl;
     break;
   }
-  // Calculate the velocity wall BC
-  // For Arches::PRESSURE
-  //  inputs : densityCP, [u,v,w]VelocitySIVBC, [u,v,w]VelCoefPBLM
-  //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
-  //  outputs: [u,v,w]VelCoefPBLM, [u,v,w]VelLinSrcPBLM, 
-  //           [u,v,w]VelNonLinSrcPBLM
-  // For Arches::MOMENTUM
-  //  inputs : densityCP, [u,v,w]VelocitySIVBC, [u,v,w]VelCoefMBLM
-  //           [u,v,w]VelLinSrcMBLM, [u,v,w]VelNonLinSrcMBLM
-  //  outputs: [u,v,w]VelCoefMBLM, [u,v,w]VelLinSrcMBLM, 
-  //           [u,v,w]VelNonLinSrcMBLM
-  //  d_turbModel->calcVelocityWallBC(pc, patch, old_dw, new_dw, index, eqnType);
 }
 
 //****************************************************************************
@@ -2772,6 +2728,294 @@ BoundaryCondition::addPressureGrad(const ProcessorGroup* ,
   }
 }
 
+void
+BoundaryCondition::intrusionTemperatureBC(const ProcessorGroup*,
+					  const Patch* patch,
+					  constCCVariable<int>& cellType,
+					  CCVariable<double>& temperature)
+{
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+  for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+    for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+      for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	IntVector currCell = IntVector(colX, colY, colZ);	  
+	if (cellType[currCell]==d_intrusionBC->d_cellTypeID)
+	  temperature[currCell] = d_intrusionBC->d_temperature;
+      }
+    }
+  }
+}
+
+
+// compute intrusion wall bc
+void 
+BoundaryCondition::intrusionVelocityBC(const ProcessorGroup*,
+				const Patch* patch,
+				int index, CellInformation*,
+				ArchesVariables* vars) 
+{
+    // Call the fortran routines
+  switch(index) {
+  case 1:
+    intrusionuVelocityBC(patch,
+		  vars);
+    break;
+  case 2:
+    intrusionvVelocityBC(patch,
+		  vars);
+    break;
+  case 3:
+    intrusionwVelocityBC(patch,
+		  vars);
+    break;
+  default:
+    cerr << "Invalid Index value" << endl;
+    break;
+
+  }
+}
+
+void 
+BoundaryCondition::intrusionuVelocityBC(const Patch* patch,
+					ArchesVariables* vars)
+{
+  // Get the low and high index for the patch and the variables
+  IntVector idxLoU = patch->getSFCXFORTLowIndex();
+  IntVector idxHiU = patch->getSFCXFORTHighIndex();
+  int ioff = 1;
+  int joff = 0;
+  int koff = 0;
+
+  fort_mmbcvelocity(idxLoU, idxHiU,
+		    vars->uVelocityCoeff[Arches::AE],
+		    vars->uVelocityCoeff[Arches::AW],
+		    vars->uVelocityCoeff[Arches::AN],
+		    vars->uVelocityCoeff[Arches::AS],
+		    vars->uVelocityCoeff[Arches::AT],
+		    vars->uVelocityCoeff[Arches::AB],
+		    vars->uVelNonlinearSrc, vars->uVelLinearSrc,
+		    vars->cellType, d_intrusionBC->d_cellTypeID, ioff, joff, koff);
+}
+
+void 
+BoundaryCondition::intrusionvVelocityBC(const Patch* patch,
+				 ArchesVariables* vars)
+{
+  // Get the low and high index for the patch and the variables
+  IntVector idxLoU = patch->getSFCYFORTLowIndex();
+  IntVector idxHiU = patch->getSFCYFORTHighIndex();
+  
+  int ioff = 0;
+  int joff = 1;
+  int koff = 0;
+
+  fort_mmbcvelocity(idxLoU, idxHiU,
+		    vars->vVelocityCoeff[Arches::AN],
+		    vars->vVelocityCoeff[Arches::AS],
+		    vars->vVelocityCoeff[Arches::AT],
+		    vars->vVelocityCoeff[Arches::AB],
+		    vars->vVelocityCoeff[Arches::AE],
+		    vars->vVelocityCoeff[Arches::AW],
+		    vars->vVelNonlinearSrc, vars->vVelLinearSrc,
+		    vars->cellType,d_intrusionBC->d_cellTypeID, ioff, joff, koff);
+}
+
+void 
+BoundaryCondition::intrusionwVelocityBC( const Patch* patch,
+				  ArchesVariables* vars) {
+  // Get the low and high index for the patch and the variables
+  IntVector idxLoU = patch->getSFCZFORTLowIndex();
+  IntVector idxHiU = patch->getSFCZFORTHighIndex();
+
+  int ioff = 0;
+  int joff = 0;
+  int koff = 1;
+
+  fort_mmbcvelocity(idxLoU, idxHiU,
+		    vars->wVelocityCoeff[Arches::AT],
+		    vars->wVelocityCoeff[Arches::AB],
+		    vars->wVelocityCoeff[Arches::AE],
+		    vars->wVelocityCoeff[Arches::AW],
+		    vars->wVelocityCoeff[Arches::AN],
+		    vars->wVelocityCoeff[Arches::AS],
+		    vars->wVelNonlinearSrc, vars->wVelLinearSrc,
+		    vars->cellType, d_intrusionBC->d_cellTypeID, ioff, joff, koff);
+}
+
+void 
+BoundaryCondition::intrusionMomExchangeBC(const ProcessorGroup*,
+					  const Patch* patch,
+					  int index, CellInformation* cellinfo,
+					  ArchesVariables* vars) 
+{
+  // Call the fortran routines
+  switch(index) {
+  case 1:
+    intrusionuVelMomExBC(patch, cellinfo, vars);
+    break;
+  case 2:
+    intrusionvVelMomExBC(patch, cellinfo, vars);
+    break;
+  case 3:
+    intrusionwVelMomExBC(patch, cellinfo, vars);
+    break;
+  default:
+    cerr << "Invalid Index value" << endl;
+    break;
+
+  }
+}
+
+void 
+BoundaryCondition::intrusionuVelMomExBC(const Patch* patch,
+					CellInformation* cellinfo,
+					ArchesVariables* vars)
+{
+  // Get the low and high index for the patch and the variables
+  IntVector idxLoU = patch->getSFCXFORTLowIndex();
+  IntVector idxHiU = patch->getSFCXFORTHighIndex();
+  int ioff = 1;
+  int joff = 0;
+  int koff = 0;
+  double Viscos = d_physicalConsts->getMolecularViscosity();
+  fort_mmbcvelocity_momex(idxLoU, idxHiU,
+			  vars->uVelocityCoeff[Arches::AN],
+			  vars->uVelocityCoeff[Arches::AS],
+			  vars->uVelocityCoeff[Arches::AT],
+			  vars->uVelocityCoeff[Arches::AB],
+			  vars->uVelLinearSrc,
+			  cellinfo->sewu, cellinfo->sns, cellinfo->stb,
+			  cellinfo->yy, cellinfo->yv, cellinfo->zz, cellinfo->zw,
+			  Viscos,
+			  vars->cellType, 
+			  d_intrusionBC->d_cellTypeID, ioff, joff, koff);
+}
+
+
+void 
+BoundaryCondition::intrusionvVelMomExBC(const Patch* patch,
+					CellInformation* cellinfo,
+					ArchesVariables* vars)
+{
+  // Get the low and high index for the patch and the variables
+  IntVector idxLoU = patch->getSFCYFORTLowIndex();
+  IntVector idxHiU = patch->getSFCYFORTHighIndex();
+  int ioff = 0;
+  int joff = 1;
+  int koff = 0;
+  double Viscos = d_physicalConsts->getMolecularViscosity();
+  fort_mmbcvelocity_momex(idxLoU, idxHiU,
+			  vars->vVelocityCoeff[Arches::AT],
+			  vars->vVelocityCoeff[Arches::AB],
+			  vars->vVelocityCoeff[Arches::AE],
+			  vars->vVelocityCoeff[Arches::AW],
+			  vars->vVelLinearSrc,
+			  cellinfo->snsv, cellinfo->stb, cellinfo->sew,
+			  cellinfo->zz, cellinfo->zw, cellinfo->xx, cellinfo->xu,
+			  Viscos,
+			  vars->cellType, 
+			  d_intrusionBC->d_cellTypeID, ioff, joff, koff);
+}
+
+void 
+BoundaryCondition::intrusionwVelMomExBC(const Patch* patch,
+					CellInformation* cellinfo,
+					ArchesVariables* vars)
+{
+  // Get the low and high index for the patch and the variables
+  IntVector idxLoU = patch->getSFCZFORTLowIndex();
+  IntVector idxHiU = patch->getSFCZFORTHighIndex();
+  int ioff = 0;
+  int joff = 0;
+  int koff = 1;
+  double Viscos = d_physicalConsts->getMolecularViscosity();
+  fort_mmbcvelocity_momex(idxLoU, idxHiU,
+			  vars->wVelocityCoeff[Arches::AE],
+			  vars->wVelocityCoeff[Arches::AW],
+			  vars->wVelocityCoeff[Arches::AN],
+			  vars->wVelocityCoeff[Arches::AS],
+			  vars->wVelLinearSrc,
+			  cellinfo->stbw, cellinfo->sew, cellinfo->sns,
+			  cellinfo->xx, cellinfo->xu, cellinfo->yy, cellinfo->yv,
+			  Viscos,
+			  vars->cellType, 
+			  d_intrusionBC->d_cellTypeID, ioff, joff, koff);
+}
+
+void 
+BoundaryCondition::intrusionEnergyExBC(const ProcessorGroup*,
+				       const Patch* patch,
+				       CellInformation* cellinfo,
+				       ArchesVariables* vars)
+{
+  // Get the low and high index for the patch and the variables
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+  double Viscos = d_physicalConsts->getMolecularViscosity();
+  fort_mmbcenthalpy_energyex(idxLo, idxHi,
+			     vars->scalarNonlinearSrc,
+			     vars->temperature,
+			     vars->cp,
+			     cellinfo->sew, cellinfo->sns, cellinfo->stb,
+			     cellinfo->xx, cellinfo->xu,
+			     cellinfo->yy, cellinfo->yv,
+			     cellinfo->zz, cellinfo->zw,
+			     Viscos,
+			     vars->cellType, 
+			     d_intrusionBC->d_cellTypeID);
+}
+
+
+void 
+BoundaryCondition::intrusionPressureBC(const ProcessorGroup*,
+				       const Patch* patch,
+				       CellInformation*,
+				       ArchesVariables* vars) {
+  // Get the low and high index for the patch
+  IntVector idxLo = patch->getCellFORTLowIndex();
+
+  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector domLong = vars->pressLinearSrc.getFortLowIndex();
+  IntVector domHing = vars->pressLinearSrc.getFortHighIndex();
+  for(int i=0;i<7;i++){
+     ASSERTEQ(domLong,
+	      vars->pressCoeff[i].getWindow()->getLowIndex());
+     ASSERTEQ(domHing+IntVector(1,1,1),
+	      vars->pressCoeff[i].getWindow()->getHighIndex());
+  }
+  ASSERTEQ(domLong, vars->pressNonlinearSrc.getWindow()->getLowIndex());
+  ASSERTEQ(domHing+IntVector(1,1,1), vars->pressNonlinearSrc.getWindow()->getHighIndex());
+
+  //fortran call
+  fort_mmwallbc(idxLo, idxHi,
+		vars->pressCoeff[Arches::AE], vars->pressCoeff[Arches::AW],
+		vars->pressCoeff[Arches::AN], vars->pressCoeff[Arches::AS],
+		vars->pressCoeff[Arches::AT], vars->pressCoeff[Arches::AB],
+		vars->pressNonlinearSrc, vars->pressLinearSrc,
+		vars->cellType, d_intrusionBC->d_cellTypeID);
+}
+// applies multimaterial bc's for scalars and pressure
+void
+BoundaryCondition::intrusionScalarBC( const ProcessorGroup*,
+				      const Patch* patch,
+				      CellInformation*,
+				      ArchesVariables* vars) {
+  // Get the low and high index for the patch
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+  //fortran call
+  fort_mmwallbc(idxLo, idxHi,
+		vars->scalarCoeff[Arches::AE], vars->scalarCoeff[Arches::AW],
+		vars->scalarCoeff[Arches::AN], vars->scalarCoeff[Arches::AS],
+		vars->scalarCoeff[Arches::AT], vars->scalarCoeff[Arches::AB],
+		vars->scalarNonlinearSrc, vars->scalarLinearSrc,
+		vars->cellType, d_intrusionBC->d_cellTypeID);
+}
+
+
+
+
       // compute multimaterial wall bc
 void 
 BoundaryCondition::mmvelocityBC(const ProcessorGroup*,
@@ -2820,9 +3064,7 @@ BoundaryCondition::mmuVelocityBC(const Patch* patch,
 		    vars->uVelocityCoeff[Arches::AT],
 		    vars->uVelocityCoeff[Arches::AB],
 		    vars->uVelNonlinearSrc, vars->uVelLinearSrc,
-		    vars->cellType, 
-		    d_mmWallID,
-		    ioff, joff, koff);
+		    vars->cellType, d_mmWallID, ioff, joff, koff);
 }
 
 void 
@@ -2838,16 +3080,14 @@ BoundaryCondition::mmvVelocityBC(const Patch* patch,
   int koff = 0;
 
   fort_mmbcvelocity(idxLoU, idxHiU,
+		    vars->vVelocityCoeff[Arches::AE],
+		    vars->vVelocityCoeff[Arches::AW],
 		    vars->vVelocityCoeff[Arches::AN],
 		    vars->vVelocityCoeff[Arches::AS],
 		    vars->vVelocityCoeff[Arches::AT],
 		    vars->vVelocityCoeff[Arches::AB],
-		    vars->vVelocityCoeff[Arches::AE],
-		    vars->vVelocityCoeff[Arches::AW],
 		    vars->vVelNonlinearSrc, vars->vVelLinearSrc,
-		    vars->cellType, 
-		    d_mmWallID,
-		    ioff, joff, koff);
+		    vars->cellType, d_mmWallID, ioff, joff, koff);
 }
 
 void 
@@ -2862,16 +3102,14 @@ BoundaryCondition::mmwVelocityBC( const Patch* patch,
   int koff = 1;
 
   fort_mmbcvelocity(idxLoU, idxHiU,
-		    vars->wVelocityCoeff[Arches::AT],
-		    vars->wVelocityCoeff[Arches::AB],
 		    vars->wVelocityCoeff[Arches::AE],
 		    vars->wVelocityCoeff[Arches::AW],
 		    vars->wVelocityCoeff[Arches::AN],
 		    vars->wVelocityCoeff[Arches::AS],
+		    vars->wVelocityCoeff[Arches::AT],
+		    vars->wVelocityCoeff[Arches::AB],
 		    vars->wVelNonlinearSrc, vars->wVelLinearSrc,
-		    vars->cellType, 
-		    d_mmWallID,
-		    ioff, joff, koff);
+		    vars->cellType, d_mmWallID, ioff, joff, koff);
 }
 
 void 
@@ -2936,20 +3174,28 @@ BoundaryCondition::WallBdry::problemSetup(ProblemSpecP& params)
 {
   ProblemSpecP geomObjPS = params->findBlock("geom_object");
   GeometryPieceFactory::create(geomObjPS, d_geomPiece);
-  // loop thru all the wall bdry geometry objects
-  //for (ProblemSpecP geom_obj_ps = params->findBlock("geom_object");
-    // geom_obj_ps != 0; 
-    // geom_obj_ps = geom_obj_ps->findNextBlock("geom_object") ) {
-    //vector<GeometryPiece> pieces;
-    //GeometryPieceFactory::create(geom_obj_ps, pieces);
-    //if(pieces.size() == 0){
-    //  throw ParameterNotFound("No piece specified in geom_object");
-    //} else if(pieces.size() > 1){
-    //  d_geomPiece = scinew UnionGeometryPiece(pieces);
-    //} else {
-    //  d_geomPiece = pieces[0];
-    //}
-  //}
+}
+
+//****************************************************************************
+// constructor for BoundaryCondition::WallBdry
+//****************************************************************************
+BoundaryCondition::IntrusionBdry::IntrusionBdry(int cellID):
+  d_cellTypeID(cellID)
+{
+}
+
+//****************************************************************************
+// Problem Setup for BoundaryCondition::WallBdry
+//****************************************************************************
+void 
+BoundaryCondition::IntrusionBdry::problemSetup(ProblemSpecP& params)
+{
+  if (params->findBlock("temperature"))
+    params->require("temperature", d_temperature);
+  else
+    d_temperature = 300;
+  ProblemSpecP geomObjPS = params->findBlock("geom_object");
+  GeometryPieceFactory::create(geomObjPS, d_geomPiece);
 }
 
 
@@ -3152,6 +3398,71 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
     mixfracvar_db->require("Mixfracvar", mixfracvar);
     streamMixturefraction.d_mixVarVariance.push_back(mixfracvar);
   }
+}
+
+void
+BoundaryCondition::calculateIntrusionVel(const ProcessorGroup* ,
+					 const Patch* patch,
+					 int index,
+					 CellInformation* cellinfo,
+					 ArchesVariables* vars)
+{
+  
+  int ioff, joff, koff;
+  IntVector idxLoU;
+  IntVector idxHiU;
+
+  switch(index) {
+
+  case Arches::XDIR:
+
+    idxLoU = patch->getSFCXFORTLowIndex();
+    idxHiU = patch->getSFCXFORTHighIndex();
+    ioff = 1; joff = 0; koff = 0;
+
+    fort_intrusion_computevel(vars->uVelRhoHat,
+			      ioff, joff, koff,
+			      vars->cellType,
+			      idxLoU, idxHiU,
+			      d_intrusionBC->d_cellTypeID);
+
+    break;
+
+  case Arches::YDIR:
+
+    idxLoU = patch->getSFCYFORTLowIndex();
+    idxHiU = patch->getSFCYFORTHighIndex();
+    ioff = 0; joff = 1; koff = 0;
+
+    fort_intrusion_computevel(vars->vVelRhoHat,
+			      ioff, joff, koff,
+			      vars->cellType,
+			      idxLoU, idxHiU,
+			      d_intrusionBC->d_cellTypeID);
+
+    break;
+
+  case Arches::ZDIR:
+
+    idxLoU = patch->getSFCZFORTLowIndex();
+    idxHiU = patch->getSFCZFORTHighIndex();
+
+    ioff = 0; joff = 0; koff = 1;
+    
+    fort_intrusion_computevel(vars->wVelRhoHat,
+		       ioff, joff, koff,
+		       vars->cellType,
+		       idxLoU, idxHiU,
+		       d_intrusionBC->d_cellTypeID);
+
+    break;
+
+  default:
+    
+    throw InvalidValue("Invalid index in Source::calcVelSrc");
+    
+  }
+  
 }
 
 void

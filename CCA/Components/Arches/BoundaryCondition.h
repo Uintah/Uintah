@@ -5,6 +5,7 @@
 #include <Packages/Uintah/CCA/Ports/SchedulerP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Core/Containers/Array1.h>
+#include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/Stream.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/InletStream.h>
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
@@ -89,6 +90,10 @@ public:
       ////////////////////////////////////////////////////////////////////////
       // Returns pressureBC flag
       int getPressureBC() { return d_pressBoundary; }
+
+      bool getIntrusionBC() {
+	return d_intrusionBoundary;
+      }
 
       ////////////////////////////////////////////////////////////////////////
       // Get the number of inlets (primary + secondary)
@@ -283,6 +288,44 @@ public:
 				    const MaterialSubset* matls,
 				    DataWarehouse* old_dw,
 				    DataWarehouse* new_dw);
+      // for computing intrusion bc's
+
+      void intrusionTemperatureBC(const ProcessorGroup*,
+				  const Patch* patch,
+				  constCCVariable<int>& cellType,
+				  CCVariable<double>& temperature);
+
+      void calculateIntrusionVel(const ProcessorGroup*,
+				 const Patch* patch,
+				 int index,
+				 CellInformation* cellinfo,
+				 ArchesVariables* vars);
+
+      void intrusionVelocityBC(const ProcessorGroup*,
+			       const Patch* patch,
+			       int index, CellInformation* cellinfo,
+			       ArchesVariables* vars);
+
+      void intrusionMomExchangeBC(const ProcessorGroup*,
+				  const Patch* patch,
+				  int index, CellInformation* cellinfo,
+				  ArchesVariables* vars);
+
+      void intrusionEnergyExBC(const ProcessorGroup*,
+			       const Patch* patch,
+			       CellInformation* cellinfo,
+			       ArchesVariables* vars);
+
+      void intrusionPressureBC(const ProcessorGroup*,
+			       const Patch* patch,
+			       CellInformation* cellinfo,
+			       ArchesVariables* vars);
+
+      void intrusionScalarBC(const ProcessorGroup*,
+			     const Patch* patch,
+			     CellInformation* cellinfo,
+			     ArchesVariables* vars);
+
 
       // compute multimaterial wall bc
       void mmvelocityBC(const ProcessorGroup*,
@@ -438,6 +481,34 @@ private:
 		       double VISCOS,
 		       CellInformation* cellinfo,
 		        ArchesVariables* vars);
+
+      void intrusionuVelocityBC(const Patch* patch,
+				ArchesVariables* vars);
+		      
+
+      ////////////////////////////////////////////////////////////////////////
+      // Call Fortran to compute v velocity BC terms
+      void intrusionvVelocityBC(const Patch* patch,
+				ArchesVariables* vars);
+
+      ////////////////////////////////////////////////////////////////////////
+      // Call Fortran to compute w velocity BC terms
+      void intrusionwVelocityBC(const Patch* patch,
+				ArchesVariables* vars);
+
+
+      void intrusionuVelMomExBC(const Patch* patch,
+				CellInformation* cellinfo,
+				ArchesVariables* vars);
+
+      void intrusionvVelMomExBC(const Patch* patch,
+				CellInformation* cellinfo,
+				ArchesVariables* vars);
+
+      void intrusionwVelMomExBC(const Patch* patch,
+				CellInformation* cellinfo,
+				ArchesVariables* vars);
+
 
       void mmuVelocityBC(const Patch* patch,
 			 ArchesVariables* vars);
@@ -615,6 +686,18 @@ private:
 	void problemSetup(ProblemSpecP& params);
       };
 
+      ////////////////////////////////////////////////////////////////////////
+      // Intrusion Boundary
+      struct IntrusionBdry {
+	int d_cellTypeID;
+	double area;
+	double d_temperature;
+	// stores the geometry information, read from problem specs
+	std::vector<GeometryPiece*> d_geomPiece;
+	IntrusionBdry(int cellID);
+	void problemSetup(ProblemSpecP& params);
+      };
+
 private:
 
       // const VarLabel* inputs
@@ -648,6 +731,8 @@ private:
       PressureInlet* d_pressureBdry;
       bool d_outletBoundary;
       FlowOutlet* d_outletBC;
+      bool d_intrusionBoundary;
+      IntrusionBdry* d_intrusionBC;
       int d_flowfieldCellTypeVal;
 
 }; // End of class BoundaryCondition
