@@ -172,10 +172,6 @@
        <MPM>
          <material>
                 <burn type = "null"/>
-               <EOS type = "ideal_gas">
-                  <gas_constant>      287               </gas_constant>
-               </EOS>
-              
                 <density>   8900.0   </density>
                 <constitutive_model type = "comp_neo_hook">
                   <useModifiedEOS>     true             </useModifiedEOS>
@@ -212,9 +208,7 @@
        <ICE>
          <material>
            <burn type = "null"/>
-           <EOS type = "ideal_gas">
-              <gas_constant>            287            </gas_constant>
-           </EOS>
+           <EOS type = "ideal_gas">                     </EOS>
            <viscosity>                  1.0e-2         </viscosity>
            <thermal_conductivity>       0.0            </thermal_conductivity>
            <specific_heat>              716.0          </specific_heat>
@@ -241,9 +235,7 @@
          </material>
          <material>
            <burn type = "null"/>
-           <EOS type = "ideal_gas">
-              <gas_constant>            287           </gas_constant>
-           </EOS>
+           <EOS type = "ideal_gas">                     </EOS>
            <viscosity>                  1.0e-2         </viscosity>
            <thermal_conductivity>       0.0            </thermal_conductivity>
            <specific_heat>              716.0          </specific_heat>

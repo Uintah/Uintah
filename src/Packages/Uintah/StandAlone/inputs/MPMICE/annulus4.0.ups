@@ -229,9 +229,6 @@
               <fracture type = "normal">
                 <constraint> 0 </constraint>
               </fracture>
-               <EOS type = "ideal_gas">
-                  <gas_constant>      287               </gas_constant>
-               </EOS>
               <pressure_rate> 0. </pressure_rate>
               <explosive_pressure> 0 </explosive_pressure>
               <initial_pressure> 0. </initial_pressure>
@@ -270,9 +267,6 @@
               <fracture type = "normal">
                 <constraint> 0 </constraint>
               </fracture>
-               <EOS type = "ideal_gas">
-                  <gas_constant>      287               </gas_constant>
-               </EOS>
               <pressure_rate> 0. </pressure_rate>
               <explosive_pressure> 0 </explosive_pressure>
               <initial_pressure> 0. </initial_pressure>
@@ -315,9 +309,7 @@
        <ICE>
          <material name = "Inner air" >
            <burn type = "null" />
-           <EOS type = "ideal_gas">
-              <gas_constant>            287           </gas_constant>
-           </EOS>
+           <EOS type = "ideal_gas">                     </EOS>
            <viscosity>                  0.0            </viscosity>
            <thermal_conductivity>       0.0            </thermal_conductivity>
            <specific_heat>              716.0          </specific_heat>
@@ -338,9 +330,7 @@
          </material>
          <material name = "Surrounding air" >
            <burn type = "null" />
-           <EOS type = "ideal_gas">
-              <gas_constant>            287           </gas_constant>
-           </EOS>
+           <EOS type = "ideal_gas">                     </EOS>
            <viscosity>                  0.0            </viscosity>
            <thermal_conductivity>       0.0            </thermal_conductivity>
            <specific_heat>              716.0          </specific_heat>

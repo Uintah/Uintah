@@ -211,9 +211,7 @@
          <BurnCoeff>             1.0                     </BurnCoeff>
          <refPressure>           1.0                     </refPressure>
          </burn>
-         <EOS type = "ideal_gas">
-           <gas_constant>      188.92                     </gas_constant>
-         </EOS>
+         
          <density>              1.789990995722571500e+00  </density>
          <constitutive_model type="comp_neo_hook">
              <bulk_modulus>       43.875e3               </bulk_modulus>
@@ -242,9 +240,7 @@
        <ICE>
            <material Rx = "product" >
            <burn type = "null" />
-           <EOS type = "ideal_gas">
-           <gas_constant>      188.92                   </gas_constant>
-           </EOS>
+           <EOS type = "ideal_gas">                     </EOS>
            <viscosity>          1e-2                    </viscosity>
            <thermal_conductivity>0.0                    </thermal_conductivity>
            <specific_heat>      652.9                   </specific_heat>

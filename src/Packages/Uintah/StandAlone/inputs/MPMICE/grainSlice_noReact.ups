@@ -160,9 +160,6 @@
        <MPM>
          <material name = " Piston Piston">
                 <burn type = "null"/>
-                <EOS type = "ideal_gas">
-                    <gas_constant>       0.0         </gas_constant>
-                </EOS>
                 <density>                  1.902e8         </density>
                 <constitutive_model type = "comp_neo_hook_plastic">
                   <bulk_modulus>           10.2e8        </bulk_modulus>
@@ -186,9 +183,6 @@
          </material>
        
          <material name = "HMX Grain">
-                <EOS type = "ideal_gas">
-                    <gas_constant>       0.0          </gas_constant>
-                </EOS>
                <density>                 1.902e6      </density>
                <burn type = "null"/>
                 <constitutive_model type = "comp_neo_hook_plastic">
@@ -229,10 +223,8 @@
       <!--__________________________________ -->   
        <ICE>
          <material name = "Inside air">
-            <burn type = "null"/>
-            <EOS type = "ideal_gas">
-                 <gas_constant>         0.0              </gas_constant>
-            </EOS>
+           <burn type = "null"/>
+           <EOS type = "ideal_gas">                     </EOS>
            <viscosity>                  0.0             </viscosity>
            <thermal_conductivity>       0.0             </thermal_conductivity>
            <specific_heat>              716.0e-8        </specific_heat>
@@ -254,9 +246,7 @@
          
          <material name = "Outside air">
             <burn type = "null"/>
-            <EOS type = "ideal_gas">
-                 <gas_constant>         0.0              </gas_constant>
-            </EOS>
+            <EOS type = "ideal_gas">                     </EOS>
            <viscosity>                  0.0             </viscosity>
            <thermal_conductivity>       0.0             </thermal_conductivity>
            <specific_heat>              716.0e-8        </specific_heat>
