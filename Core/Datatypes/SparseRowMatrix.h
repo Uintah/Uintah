@@ -51,11 +51,25 @@ public:
   double* a;
 
   //! Constructors
+
+  // Fuck the SGI compiler for hinting that someone should strip out
+  // all of the variable names from these.  Every time I use this god
+  // forsaken class I have to redecipher this terrible interface.
+  // Here's the document for next time.
+  //   r   = number of rows
+  //   c   = number of columns
+  //   rr  = row accumulation buffer containing r+1 entries where
+  //         rr[N+1]-rr[N] is the number of non-zero entries in row N
+  //   cc  = column number for each nonzero data entry.  Sorted by
+  //         row/col orderand corresponds with the spaces in the rr array.
+  //   nnz = number of non zero entries.
+  //   d   = non zero data values.
   SparseRowMatrix();
-  SparseRowMatrix(int, int, Array1<int>&, Array1<int>&);
-  SparseRowMatrix(int, int, int*, int*, int, double*);
-  SparseRowMatrix(int, int, int*, int*, int);
+  SparseRowMatrix(int r, int c, Array1<int>& rr, Array1<int>& cc);
+  SparseRowMatrix(int r, int c, int *rr, int *cc, int nnz, double *d);
+  SparseRowMatrix(int r, int c, int *rr, int *cc, int nnz);
   SparseRowMatrix(const SparseRowMatrix&);
+
   //! Destructor
   virtual ~SparseRowMatrix();
 
