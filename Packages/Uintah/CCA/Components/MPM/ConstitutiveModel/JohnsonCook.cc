@@ -231,12 +231,12 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
   double temperature = 0.0;
   double flowStress = 0.0;
   double totalStrainEnergy = 0.0;
-  double tolerance = 1.0e-10;
+  double tolerance = 5.0e-10;
   Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
 
   double bulk  = d_initialData.Bulk;
   double shear = d_initialData.Shear;
-  //double lambda = bulk - (2.0/3.0)*shear;
+  double lambda = bulk - (2.0/3.0)*shear;
   double sqrtTwo = sqrt(2.0);
   double sqrtThree = sqrt(3.0);
 
@@ -317,18 +317,25 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pDamage_new, pDamageLabel_preReloc, pset);
     new_dw->allocateAndPut(pVolume_deformed, lb->pVolumeDeformedLabel, pset);
 
-
     // Loop thru particles
     for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
       particleIndex idx = *iter;
 
       // Calculate the velocity gradient (L) from the grid velocity
-      if(d_8or27==27) tensorL = computeVelocityGradient(patch, oodx, px[idx], psize[idx], gVelocity);
-      else tensorL = computeVelocityGradient(patch, oodx, px[idx], gVelocity);
+      if(d_8or27==27) 
+         tensorL = computeVelocityGradient(patch, oodx, px[idx], psize[idx], gVelocity);
+      else 
+         tensorL = computeVelocityGradient(patch, oodx, px[idx], gVelocity);
 
       // Calculate rate of deformation tensor (D) and spin tensor (W)
       tensorD = (tensorL + tensorL.Transpose())*0.5;
       tensorW = (tensorL - tensorL.Transpose())*0.5;
+      for (int ii = 1; ii < 4; ++ii) {
+        for (int jj = 1; jj < 4; ++jj) {
+          if (fabs(tensorD(ii,jj)) < tolerance) tensorD(ii,jj) = 0.0;
+          if (fabs(tensorW(ii,jj)) < tolerance) tensorW(ii,jj) = 0.0;
+        }
+      }
 
       // Calculate the incremental update of the left stretch (V) and the rotation (R)
       tensorV = pLeftStretch[idx];
@@ -351,24 +358,30 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
       // the plastic rate of deformation tensor, and the Cauchy stress
       // back to the material configuration and calculate their
       // deviatoric parts
-      //cout << " tensorL = \n" << tensorL << endl;
-      //cout << " tensorD = \n" << tensorD << endl;
-      //cout << " tensorR = \n" << tensorR << endl;
+      //cout << endl << "Particle # = " << idx << " Position = " << px[idx] << endl; 
+      //cout << "Bulk modulus = " << bulk << " Shear modulus = " << shear << endl;
+      //cout << "Velocity Gradient = \n" << tensorL << endl;
       tensorD = (tensorR.Transpose())*(tensorD*tensorR);
       tensorEta = tensorD - one*(tensorD.Trace()/3.0);
+      //cout << "Rate of Deformation = \n" << tensorD << endl;
+      //cout << "Deviatoric part of rate of deformation = \n" << tensorEta << endl;
 
       tensorSig = pStress[idx];
       tensorSig = (tensorR.Transpose())*(tensorSig*tensorR);
       tensorS = tensorSig - one*(tensorSig.Trace()/3.0);
       Matrix3 tensorHy = tensorSig - tensorS;
-      //cout << "Tensor Sigma = \n" << tensorSig << endl;
-      //cout << "Tensor Hydro = \n" << tensorHy << endl;
-      //cout << "Tensor Devia = \n" << tensorS << endl;
+      //cout << "Stress at beginning of time step = \n" << tensorSig << endl;
+      //cout << "Hydrostatic part of stress = \n" << tensorHy << endl;
+      //cout << "Deviatoric part of stress = \n" << tensorS << endl;
 
       // Integrate the stress rate equation to get a elastic trial stress
       Matrix3 trialSig = tensorSig + 
-	                 (one*(tensorD.Trace()*bulk) + tensorD*(2.0*shear))*delT;
-      Matrix3 trialS = trialSig - one*(trialSig.Trace()/3.0);
+	                 (one*(tensorD.Trace()*lambda) + tensorD*(2.0*shear))*delT;
+      Matrix3 trialS_old = trialSig - one*(trialSig.Trace()/3.0);
+      Matrix3 trialS = tensorS + tensorEta*(2.0*shear*delT);
+      //cout << "Trial Stress = \n" << trialSig << endl;
+      //cout << "Deviatoric part of Trial Stress (old) = \n" << trialS_old << endl;
+      //cout << "Deviatoric part of Trial Stress (new) = \n" << trialS << endl;
 
       // To determine if the stress is above or below yield used a von Mises yield
       // criterion 
@@ -389,10 +402,14 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
       // Calculate the J2 equivalent stress (assuming isotropic yield surface)
       equivStress = (trialS.NormSquared())*1.5;
 
+      //cout << "Checking for plasticity : sig_eq = " << sqrt(equivStress) 
+      //     << " sig_flow = " << sqrt(flowStress) << endl;
+      
       if (flowStress > equivStress) {
 
         // For the elastic region : the updated stress is the trial stress
         tensorSig = trialSig;
+        //cout << "Elastic Stress = \n" << tensorSig << endl;
 
         // Compute the strain energy for the particles
         double pStrainEnergy = (tensorD(1,1)*tensorSig(1,1) +
@@ -456,7 +473,8 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
 
         // Calculate Stilde
         double denom = 1.0 + (3.0*sqrtTwo*shear*delGamma)/sig; ASSERT(denom != 0);
-        Matrix3 Stilde = (tensorS + tensorEta*(2.0*shear*delT))/denom;
+        //Matrix3 Stilde = (tensorS + tensorEta*(2.0*shear*delT))/denom;
+        Matrix3 Stilde = trialS/denom;
         
         // Do radial return adjustment
         tensorS = Stilde*(sig*sqrtTwo/(sqrtThree*Stilde.Norm()));
@@ -469,6 +487,7 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
         tensorSig = tensorS + tensorHy;
         //cout << "New Stress after plastic update for particle "<<idx<<" = \n" << tensorS << endl
         //     << "+" << tensorHy << endl;
+        //cout << "Plastic Stress = \n" << tensorSig << endl;
 
         // Compute the strain energy for the particles
         double pStrainEnergy = (tensorD(1,1)*tensorSig(1,1) +
@@ -486,7 +505,6 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
         pDeformRatePlastic_new[idx] = tensorEta;
         pStress_new[idx] = tensorSig;
         pPlasticStrain_new[idx] = plasticStrain;
-
       }
 
       // Calculate the updated scalar damage parameter
@@ -504,6 +522,8 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
       Matrix3 deformationGradientInc = tensorF_new*(tensorF.Inverse());
       double Jinc = deformationGradientInc.Determinant();
       pVolume_deformed[idx]=Jinc*pVolume[idx];
+      //cout << "Old Volume = " << pVolume[idx] 
+      //     << " New Volume = " << pVolume_deformed[idx] << endl;
 
       // Compute wave speed at each particle, store the maximum
       Vector pVel = pVelocity[idx];
