@@ -26,7 +26,7 @@ extern "C" {
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/Array2.h>
 #include <Core/Thread/Thread.h>
-#include <Core/Algorithms/DataIO/GuiFile.h>
+//#include <Core/Algorithms/DataIO/GuiFile.h>
 #include <Core/2d/LockedPolyline.h>
 #include <Core/2d/Diagram.h>
 #include <Core/2d/Graph.h>
