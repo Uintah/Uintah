@@ -20,6 +20,8 @@ extern char gui_skeleton[];
 extern char share_skeleton[];
 extern char dllentry_skeleton[];
 extern char package_submk_skeleton[];
+extern char dataflow_submk_skeleton[];
+extern char core_submk_skeleton[];
 extern char modules_submk_skeleton[];
 extern char category_submk_skeleton[];
 extern char datatypes_submk_skeleton[];

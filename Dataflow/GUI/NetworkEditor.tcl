@@ -551,7 +551,8 @@ proc GetPathAndPackage { compaddr compname catname } {
          $w.row12.catname_label  $w.row12.catname\
          -side left -f both -e y 
 
-    label $w.row2.psepath_l -text "root of PSE src tree to insert into:"
+    label $w.row2.psepath_l \
+	    -text "root of the SCIRun source tree to insert into:"
     entry $w.row2.psepath 
     pack $w.row2.psepath_l $w.row2.psepath\
 	 -side left -f both -e y \
