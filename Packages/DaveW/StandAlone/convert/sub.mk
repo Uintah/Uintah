@@ -37,6 +37,10 @@ PROGRAM := $(SRCDIR)/MakeRadialCylinder
 SRCS := $(SRCDIR)/MakeRadialCylinder.cc
 include $(SRCTOP)/scripts/program.mk
 
+PROGRAM := $(SRCDIR)/FieldInfo
+SRCS := $(SRCDIR)/FieldInfo.cc
+include $(SRCTOP)/scripts/program.mk
+
 #PROGRAM := $(SRCDIR)/MeshToJAS
 #SRCS := $(SRCDIR)/MeshToJAS.cc
 #include $(SRCTOP)/scripts/program.mk
