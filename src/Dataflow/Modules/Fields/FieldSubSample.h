@@ -341,6 +341,9 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle field_h,
 	    ++ocellItr;
 	  }
 	  break;
+
+	default:
+	break:
 	}
 
 	++onodeItr;
