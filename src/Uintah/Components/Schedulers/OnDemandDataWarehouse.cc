@@ -69,6 +69,22 @@ OnDemandDataWarehouse::get(ReductionVariableBase& var,
    var.copyPointer(*iter->second->var);
 }
 
+bool
+OnDemandDataWarehouse::exists(const VarLabel* label, int matlIndex,
+			      const Patch* patch)
+{
+
+  if(d_perpatchDB.exists(label,matlIndex,patch))
+	return true;
+  if(d_ncDB.exists(label,matlIndex,patch))
+	return true;
+  if(d_ccDB.exists(label,matlIndex,patch))
+	return true;
+
+  return false;
+
+}
+
 void
 OnDemandDataWarehouse::allocate(ReductionVariableBase&,
 				const VarLabel*)
@@ -417,6 +433,31 @@ OnDemandDataWarehouse::put(const NCVariableBase& var,
 }
 
 void
+OnDemandDataWarehouse::get(PerPatchBase& var, const VarLabel* label,
+                           int matlIndex, const Patch* patch)
+{
+  if(!d_perpatchDB.exists(label, matlIndex, patch))
+     throw UnknownVariable(label->getName());
+  d_perpatchDB.get(label, matlIndex, patch, var);
+
+}
+
+void
+OnDemandDataWarehouse::put(const PerPatchBase& var,
+			   const VarLabel* label,
+			   int matlIndex, const Patch* patch)
+{
+   ASSERT(!d_finalized);
+
+   // Error checking
+   if(d_perpatchDB.exists(label, matlIndex, patch))
+     throw InternalError("PerPatch variable already exists: "+label->getName());
+
+   // Put it in the database
+   d_perpatchDB.put(label, matlIndex, patch, var, true);
+}
+
+void
 OnDemandDataWarehouse::allocate(CCVariableBase& var,
 				const VarLabel* label,
 				int matlIndex,
@@ -683,6 +724,9 @@ OnDemandDataWarehouse::ReductionRecord::ReductionRecord(ReductionVariableBase* v
 
 //
 // $Log$
+// Revision 1.30  2000/06/05 19:50:22  guilkey
+// Added functionality for PerPatch variable.
+//
 // Revision 1.29  2000/06/03 05:27:23  sparker
 // Fixed dependency analysis for reduction variables
 // Removed warnings

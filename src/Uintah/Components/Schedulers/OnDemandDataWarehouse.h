@@ -56,6 +56,8 @@ public:
    
    virtual void setGrid(const GridP&);
 
+   virtual bool exists(const VarLabel*, int matIndex, const Patch*);
+
    // Reduction Variables
    virtual void allocate(ReductionVariableBase&, const VarLabel*);
    virtual void get(ReductionVariableBase&, const VarLabel*);
@@ -86,6 +88,11 @@ public:
 		    const Patch*, Ghost::GhostType, int numGhostCells);
    virtual void put(const CCVariableBase&, const VarLabel*,
 		    int matlIndex, const Patch*);
+
+   // PerPatch Variables
+   virtual void get(PerPatchBase&, const VarLabel*, int matIndex, const Patch*);
+   virtual void put(const PerPatchBase&, const VarLabel*,
+				 int matIndex, const Patch*);
 
    //////////
    // Insert Documentation Here:
@@ -158,6 +165,7 @@ private:
    DWDatabase<CCVariableBase>       d_ccDB;
    DWDatabase<ParticleVariableBase> d_particleDB;
    reductionDBtype                  d_reductionDB;
+   DWDatabase<PerPatchBase>         d_perpatchDB;
 
    // Record of which DataWarehouse has the data for each variable...
    //  Allows us to look up the DW to which we will send a data request.
@@ -185,6 +193,9 @@ private:
 
 //
 // $Log$
+// Revision 1.25  2000/06/05 19:50:22  guilkey
+// Added functionality for PerPatch variable.
+//
 // Revision 1.24  2000/06/03 05:27:24  sparker
 // Fixed dependency analysis for reduction variables
 // Removed warnings
