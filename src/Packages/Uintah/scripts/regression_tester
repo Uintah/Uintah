@@ -109,9 +109,10 @@ fi
 
 # Set up the various test cases
 
-mpm_test_cases="disks2mat4patch heatcond2mat inclined_plane_sphere foam_crush const_test_hypo const_test_cmr const_test_nhp const_test_vs"
-ice_test_cases="advect hotBlob2mat hotBlob2mat_sym hotBlob2mat8patch"
-mpmice_test_cases="advect thermx massX guni2dRT TRWnoz thermx8patch"
+
+mpm_test_cases="disks2mat4patch heatcond2mat inclined_plane_sphere const_test_hypo const_test_nh const_test_cmr const_test_nhp const_test_vs test_corrug_plate test_cyl_pene_no_ero test_cyl_pene_hypo_jc_ero test_gurson_beckerdrucker_mts"
+ice_test_cases="advect rieman_sm hotBlob2mat hotBlob2mat_sym hotBlob2mat8patch"
+mpmice_test_cases="advect massX thermx thermx8patch guni2dRT TRWnoz"
 impm_test_cases="4disks_2d.1mat billet.static"
 arches_test_cases="methane_explicit_table"
 mpmarches_test_cases="matest_heptwb_cyl"
@@ -206,7 +207,7 @@ mpmice_test () {
 	fi
 	if test "$n" = "guni2dRT"; 
 	    then
-	    udadir=guni.orig
+	    udadir=guni2d
 	fi
 	echo "compare_uda $test_dir/$DIR/MPMICE/$udadir/$uda $uda &> $n.compare"
 	compare_uda $test_dir/$DIR/MPMICE/$udadir/$uda $uda &> $n.compare
