@@ -477,7 +477,7 @@ OnDemandDataWarehouse::get(CCVariableBase& var, const VarLabel* label,
 			   const Patch* patch, Ghost::GhostType gtype,
 			   int numGhostCells)
 {
-#if 1
+#if 0
    if(gtype == Ghost::None) {
       if(numGhostCells != 0)
 	 throw InternalError("Ghost cells specified with task type none!\n");
@@ -485,7 +485,7 @@ OnDemandDataWarehouse::get(CCVariableBase& var, const VarLabel* label,
       if(!d_ccDB.exists(label, matlIndex, patch))
 	 throw UnknownVariable(label->getName());
       d_ccDB.get(label, matlIndex, patch, var);
-#if 1
+#if 0
    } else {
       int l,h;
       IntVector gc(numGhostCells, numGhostCells, numGhostCells);
@@ -682,6 +682,8 @@ OnDemandDataWarehouse::exists(const VarLabel* label, const Patch* patch) const
    } else {
       if(d_ncDB.exists(label, patch))
 	 return true;
+      if(d_ccDB.exists(label, patch))
+	 return true;
       if(d_particleDB.exists(label, patch))
 	 return true;
    }
@@ -701,6 +703,11 @@ void OnDemandDataWarehouse::emit(OutputContext& oc, const VarLabel* label,
       ParticleVariableBase* var = d_particleDB.get(label, matlIndex, patch);
       var->emit(oc);
       return;
+   }
+   if(d_ccDB.exists(label, matlIndex, patch)) {
+     CCVariableBase* var = d_ccDB.get(label, matlIndex, patch);
+     var->emit(oc);
+     return;
    }
    throw UnknownVariable(label->getName());
 }
@@ -724,6 +731,9 @@ OnDemandDataWarehouse::ReductionRecord::ReductionRecord(ReductionVariableBase* v
 
 //
 // $Log$
+// Revision 1.31  2000/06/14 00:31:06  jas
+// Added cc_DB to the emit method.
+//
 // Revision 1.30  2000/06/05 19:50:22  guilkey
 // Added functionality for PerPatch variable.
 //
