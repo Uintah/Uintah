@@ -20,7 +20,7 @@ namespace Uintah {
 static DebugStream cout_doing("LODI_DOING_COUT", false);
 static DebugStream cout_dbg("LODI_DBG_COUT", false);
 
-/* --------------------------------------------------------------------- 
+/* ---------------------------------------------------------------------
  Function~  using_LODI_BC--   
  Purpose~   returns if we are using LODI BC on any face, 
  ---------------------------------------------------------------------  */
@@ -60,7 +60,7 @@ bool using_LODI_BC(const ProblemSpecP& prob_spec)
 bool is_LODI_face(const Patch* patch,
                   Patch::FaceType face,
                   SimulationStateP& sharedState)
-{ 
+{
   bool is_lodi_face = false;
   int numMatls = sharedState->getNumICEMatls();
 
@@ -119,7 +119,75 @@ void lodi_getVars_pressBC( const Patch* patch,
     lodi_vars->gamma[m]   = gamma[m];
     lodi_vars->cv[m]      = cv[m];
   }
-}  
+}
+/*__________________________________________________________________
+ Function~ Di-- do the actual work of computing di
+____________________________________________________________________*/
+inline void Di(StaticArray<CCVariable<Vector> >& d,
+               const int dir,
+               const int dir1,
+               const int dir2,
+               const IntVector& c, 
+               const double speedSound,
+               const double rho,
+               const double vel_bndry,
+               const double drho_dx,
+               const double dp_dx,
+               const Vector dVel_dx)
+{
+  //__________________________________
+  // L Wave Amplitude  Equations 9.15-19
+  double speedSoundsqr = speedSound * speedSound;
+
+  double A = rho * speedSound * dVel_dx[dir];
+   
+  double L1 = (vel_bndry - speedSound) * (dp_dx - A);
+
+  double L2 = vel_bndry * (speedSoundsqr * drho_dx - dp_dx);
+
+  double L3 = vel_bndry * dVel_dx[dir1];
+
+  double L4 = vel_bndry * dVel_dx[dir2];
+
+  double L5 = (vel_bndry + speedSound) * (dp_dx + A);
+  //__________________________________
+  // Compute d1-5  Equations 9.13
+  d[1][c][dir] = (L2 + 0.5 * (L1 + L5))/speedSoundsqr;
+  d[2][c][dir] = 0.5 * (L5 + L1);
+  d[3][c][dir] = 0.5 * (L5 - L1)/(rho * speedSound);
+  d[4][c][dir] = L3;
+  d[5][c][dir] = L4;
+
+   //__________________________________
+   //  debugging
+   // hardCode the cells you want to intergate;
+   vector<IntVector> dbgCells;
+   #if 0
+   dbgCells.push_back(IntVector(100,4,0));
+   dbgCells.push_back(IntVector(100,5,0));
+   dbgCells.push_back(IntVector(100,6,0));
+   dbgCells.push_back(IntVector(100,7,0));
+   #endif 
+   
+   for (int i = 0; i<(int) dbgCells.size(); i++) {
+     if (c == dbgCells[i]) {
+       cout << c << " dir " << dir << " dir1 " << dir1 << " dir2" << dir2<< endl;
+       cout << " vel_bndry " << vel_bndry << " drho_dx " 
+            << drho_dx << " dp_dx " << dp_dx << endl;
+       cout << " dvel_dx " << dVel_dx<< endl;
+       cout << " L1: \t" << L1 << endl;
+       cout << " L2: \t" << L2 << endl;
+       cout << " L3: \t" << L3 << endl;
+       cout << " L4: \t" << L4 << endl;
+       cout << " L5: \t" << L5 << endl;
+       for (int i = 1; i<= 5; i++ ) {
+         cout << " d[" << i << "]:\t"<< d[i][c]<< endl;
+       }
+       cout << " ----------------------------\n"<<endl;
+     }  // if(dbgCells)
+   }  // dbgCells loop
+} 
+
 
 /*__________________________________________________________________
  Function~ computeDi--
@@ -136,7 +204,6 @@ void computeDi(StaticArray<CCVariable<Vector> >& d,
 {
   cout_doing << "LODI computeLODIFirstOrder "<< endl;
   Vector dx = patch->dCell();
-
   vector<IntVector> R_Offset(6);
   R_Offset[Patch::xminus] = IntVector(1,0,0);  // right cell offset
   R_Offset[Patch::xplus]  = IntVector(0,0,0);
@@ -153,8 +220,10 @@ void computeDi(StaticArray<CCVariable<Vector> >& d,
   L_Offset[Patch::zminus] = IntVector(0, 0, 0);
   L_Offset[Patch::zplus]  = IntVector(0, 0, -1);
   
+  Vector nanV(-9e1000, -9e1000, -9e1000);
+  
   for (int i = 1; i<= 5; i++ ) {    // don't initialize inside main loop
-    d[i].initialize(Vector(0,0,0)); // you'll overwrite previously compute di
+    d[i].initialize(nanV);          // you'll overwrite previously compute di
   }
   // Iterate over the faces encompassing the domain
   // only set DI on Boundariesfaces that are LODI
@@ -168,13 +237,13 @@ void computeDi(StaticArray<CCVariable<Vector> >& d,
       cout_dbg << " computing DI on face " << face 
                << " patch " << patch->getID()<<endl;
       //_____________________________________
-      //Compute Di at
+      // S I D E   M I N U S   E D G E S
       IntVector axes = patch->faceAxes(face);
-      int dir0 = axes[0]; // find the principal dir and other 2 directions
+      int P_dir = axes[0]; // find the principal dir and other 2 directions
       int dir1 = axes[1]; 
       int dir2 = axes[2];    
 
-      double delta = dx[dir0];
+      double delta = dx[P_dir];
 
       for(CellIterator iter=patch->getFaceCellIterator(face, "plusEdgeCells"); 
           !iter.done();iter++) {
@@ -182,54 +251,62 @@ void computeDi(StaticArray<CCVariable<Vector> >& d,
         IntVector r = c + R_Offset[face];
         IntVector l = c + L_Offset[face];
 
-        double speedSound = speedSound_[c];
-        double speedSoundsqr = speedSound * speedSound;
-        double vel_bndry = vel[c][dir0];
-
         double drho_dx = (rho[r] - rho[l])/delta; 
         double dp_dx   = (press[r] - press[l])/delta;
         Vector dVel_dx = (vel[r] - vel[l])/(delta);
                 
+        Di(d, P_dir, dir1, dir2, c,
+           speedSound_[c], rho[c], vel[c][P_dir], drho_dx, dp_dx, dVel_dx); 
+           
+      }  // faceCelliterator
+      //__________________________________
+      //    E D G E S  -- on boundaryFaces only
+      vector<Patch::FaceType> b_faces;
+      getBoundaryEdges(patch,face,b_faces);
+
+      vector<Patch::FaceType>::const_iterator iter;  
+      for(iter = b_faces.begin(); iter != b_faces.end(); ++ iter ) {
+        Patch::FaceType face0 = *iter;
+
         //__________________________________
-        // L1 Wave Amplitude
-        double L1 = (vel_bndry - speedSound) 
-           * (dp_dx - rho[c] * speedSound * dVel_dx[dir0]);
+        //  Find the offset for the r and l cells
+        //  and the Vector components Edir1 and Edir2
+        //  for this particular edge
+        IntVector offset = patch->faceDirection(face0);
+
+        IntVector axes = patch->faceAxes(face0);
+        int Edir1 = axes[0];
+        int Edir2 = otherDirection(P_dir, Edir1);
+        double delta = dx[Edir1];
         
-        double L2 = vel_bndry * (speedSoundsqr * drho_dx - dp_dx);
-        
-        double L3 = vel_bndry * dVel_dx[dir1];
-        
-        double L4 = vel_bndry * dVel_dx[dir2];
-        
-        double L5 = (vel_bndry + speedSound) 
-           * (dp_dx + rho[c] * speedSound * dVel_dx[dir0]);
-        //__________________________________
-        // Compute d1-5
-        d[1][c][dir0] = (L2 + 0.5 * (L1 + L5))/speedSoundsqr;
-        d[2][c][dir0] = 0.5 * (L5 + L1);
-        d[3][c][dir0] = 0.5 * (L5 - L1)/(rho[c] * speedSound);
-        d[4][c][dir0] = L3;
-        d[5][c][dir0] = L4;
-        
-        //__________________________________
-        //  debugging
-#if 0
-        if (c.y() == -1 && c.x() == -1) {
-        cout << c << endl;
-          cout << " L1: \t" << L1 << endl;
-          cout << " L2: \t" << L2 << endl;
-          cout << " L3: \t" << L3 << endl;
-          cout << " L4: \t" << L4 << endl;
-          cout << " L5: \t" << L5 << endl;
-          for (int i = 1; i<= 5; i++ ) {
-            cout << " d[" << i << "]:\t"<< d[i][c]<< endl;
+        CellIterator iterLimits =  
+                    patch->getEdgeCellIterator(face, face0, "plusCornerCells");
+
+        for(CellIterator iter = iterLimits;!iter.done();iter++){ 
+          IntVector c = *iter;
+          IntVector interior = c - offset;
+          
+          // One sided derivatives
+          double drho_dx= 0, dp_dx = 0;
+          Vector dVel_dx(0);
+          if (offset[Edir1] > 0 ) { // right, top, front edges
+            drho_dx = (rho[c]   - rho[interior])/delta; 
+            dp_dx   = (press[c] - press[interior])/delta;
+            dVel_dx = (vel[c]   - vel[interior])/(delta);
+          }else{                    // left, bottom, back edges
+            drho_dx = (rho[interior]   - rho[c])/delta; 
+            dp_dx   = (press[interior] - press[c])/delta;
+            dVel_dx = (vel[interior]   - vel[c])/(delta);
           }
-        }
-#endif     
-      }
-    } // if(onEdgeOfDomain) 
-  } //end of for loop over faces
-}//end of function
+          
+          Di(d, Edir1, P_dir, Edir2, c,
+             speedSound_[c], rho[c], vel[c][Edir1], drho_dx, dp_dx, dVel_dx);
+             
+        }  // edgeCellIterator loop
+      }  // edgeloop
+    }  // if(onEdgeOfDomain) 
+  }  // loop over faces
+}// end of function
 
 /*__________________________________________________________________
  Function~ computeNu--                    L   O   D   I
@@ -431,7 +508,7 @@ void  lodi_bc_preprocess( const Patch* patch,
       CellIterator iterPlusGhost2 = patch->addGhostCell_Iter(iterLimits,2);
 
       //  plus one layer of ghostcells
-      Vector nanV(getNan(), getNan(), getNan());
+      Vector nanV(-9e1000, -9e1000, -9e1000);
       for(CellIterator iter = iterPlusGhost1; !iter.done(); iter++) {  
         IntVector c = *iter;
         nu[c] = nanV;
@@ -675,6 +752,17 @@ void FaceVel_LODI(const Patch* patch,
   if (!lv){
     throw InternalError("FaceVelLODI: Lodi_vars = null");
   }
+ 
+/*`==========TESTING==========*/
+// hardCode the cells you want to intergate;
+vector<IntVector> dbgCells;
+#if 0
+dbgCells.push_back(IntVector(100,4,0));
+dbgCells.push_back(IntVector(100,5,0));
+dbgCells.push_back(IntVector(100,6,0));
+dbgCells.push_back(IntVector(100,7,0));
+#endif 
+/*===========TESTING==========`*/
      
   // shortcuts       
   StaticArray<CCVariable<Vector> >& d = lv->di;      
@@ -777,48 +865,49 @@ void FaceVel_LODI(const Patch* patch,
                     + delT *rho_old[c] * gravity[dir2];
     vel_CC[c] = mom/rho_new[c];
     
-/*`==========TESTING==========*/
-#if 0
-    cout.setf(ios::scientific,ios::floatfield);
-    cout.precision(10);
-    if (c == IntVector (10,50,0)|| c == IntVector(20,25,0) ) {
-      int Pd = P_dir + 1;
-      int d1 = dir1 + 1;
-      int d2 = dir2 + 1;
-      cout << " \n c " << c << "--------------------------  F A C E " << face << " P_dir " << P_dir << endl;
-      cout << " rho_old[c] * vel_old[c]["<<Pd<<"]:             " << rho_old[c] * vel_old[c][P_dir] << endl;
-      cout << " vel_old[c]["<<Pd<<"] * d[1][c]["<<Pd<<"]:      " << term1[P_dir] << endl;
-      cout << " rho_old[c] * d[3][c]["<<Pd<<"]:                " << term2[P_dir] << endl;
-      cout << " convect1["<<Pd<<"] + convect2["<<Pd<<"]:       " << convect1[P_dir] + convect2[P_dir] << endl;
-      cout << " convect1: rho_old, vel_old["<<Pd<<"], vel_old["<<d1<<"], dx["<<d1<<"]" << endl;
-      cout << " convect2: rho_old, vel_old["<<Pd<<"], vel_old["<<d2<<"], dx["<<d2<<"]" << endl; 
-      cout << " pressGradient["<<Pd<<"]:                       " << pressGradient[P_dir] << endl;
-      cout << " rho_old[c] * gravity["<<Pd<<"]:                " << rho_old[c] * gravity[P_dir] << endl;
-      
-      cout << " \n-----------------------  ("<<d1<<")----- R1 " << r1 << ":  L1 " << l1 << endl;
-      cout << " rho_old[c] * vel_old[c]["<<d1<<"]:            " << rho_old[c] * vel_old[c][dir1] << endl;
-      cout << " vel_old[c]["<<d1<<"] * d[1][c]["<<Pd<<"]:     " << term1[dir1] << endl;
-      cout << " rho_old[c] * d[4][c]["<<Pd<<"]:               " << term2[dir1] << endl;
-      cout << " convect1["<<d1<<"] + convect2["<<d1<<"]:      " <<  convect1[dir1] + convect2[dir1] << endl;
-      cout << " convect1: rho_old, vel_old["<<d1<<"], vel_old["<<d1<<"], dx["<<d1<<"]" << endl;
-      cout << " convect2: rho_old, vel_old["<<d1<<"], vel_old["<<d2<<"], dx["<<d2<<"]" << endl;
-      cout << " pressGradient["<<d1<<"]:                      " << pressGradient[dir1] << " p[r1] " << p[r1] << " p[l1] " << p[l1] << endl;
-      cout << " rho_old[c] * gravity["<<d1<<"]:               " << rho_old[c] * gravity[dir1]<<endl;
-      
-      cout << " \n-----------------------  ("<<d2<<")----- R2 " << r2 << ":  L2 " << l2 << endl;
-      cout << " rho_old[c] * vel_old[c]["<<d2<<"]             " << rho_old[c] * vel_old[c][dir2] << endl;
-      cout << " vel_old[c]["<<d2<<"] * d[1][c]["<<Pd<<"]:     "<< term1[dir2] << endl;
-      cout << " rho_old[c] * d[5][c]["<<Pd<<"]:               " << term2[dir2] << endl;
-      cout << " convect1["<<d2<<"] + convect2["<<d2<<"]:      " << convect1[dir2] + convect2[dir2] << endl;
-      cout << " convect1: rho_old, vel_old["<<d2<<"], vel_old["<<d1<<"], dx["<<d1<<"]" << endl;
-      cout << " convect2: rho_old, vel_old["<<d2<<"], vel_old["<<d2<<"], dx["<<d2<<"]" << endl;
-      cout << " pressGradient["<<d2<<"]:                      " << pressGradient[dir2] << " p[r2] " << p[r2] << " p[l2] " << p[l2] << endl;
-      cout << " rho_old[c] * gravity["<<d2<<"]:               " <<rho_old[c] * gravity[dir2] <<endl ;
-      cout << " mom /delT " << mom/delT<<endl;     
-      cout << " vel_CC " << vel_CC[c] << "\n\n"<<endl;
-    }
-#endif 
-/*===========TESTING==========`*/
+
+    //__________________________________
+    //  debugging
+    for (int i = 0; i<(int) dbgCells.size(); i++) {
+      if (c == dbgCells[i]) {
+        cout.setf(ios::scientific,ios::floatfield);
+        cout.precision(10);
+        int Pd = P_dir + 1;
+        int d1 = dir1 + 1;
+        int d2 = dir2 + 1;
+        cout << " \n c " << c << "--------------------------  F A C E " << face << " P_dir " << P_dir << endl;
+        cout << " rho_old[c] * vel_old[c]["<<Pd<<"]:             " << rho_old[c] * vel_old[c][P_dir] << endl;
+        cout << " vel_old[c]["<<Pd<<"] * d[1][c]["<<Pd<<"]:      " << term1[P_dir] << endl;
+        cout << " rho_old[c] * d[3][c]["<<Pd<<"]:                " << term2[P_dir] << endl;
+        cout << " convect1["<<Pd<<"] + convect2["<<Pd<<"]:       " << convect1[P_dir] + convect2[P_dir] << endl;
+        cout << " convect1: rho_old, vel_old["<<Pd<<"], vel_old["<<d1<<"], dx["<<d1<<"]" << endl;
+        cout << " convect2: rho_old, vel_old["<<Pd<<"], vel_old["<<d2<<"], dx["<<d2<<"]" << endl; 
+        cout << " pressGradient["<<Pd<<"]:                       " << pressGradient[P_dir] << endl;
+        cout << " rho_old[c] * gravity["<<Pd<<"]:                " << rho_old[c] * gravity[P_dir] << endl;
+
+        cout << " \n-----------------------  ("<<d1<<")----- R1 " << r1 << ":  L1 " << l1 << endl;
+        cout << " rho_old[c] * vel_old[c]["<<d1<<"]:            " << rho_old[c] * vel_old[c][dir1] << endl;
+        cout << " vel_old[c]["<<d1<<"] * d[1][c]["<<Pd<<"]:     " << term1[dir1] << endl;
+        cout << " rho_old[c] * d[4][c]["<<Pd<<"]:               " << term2[dir1] << endl;
+        cout << " convect1["<<d1<<"] + convect2["<<d1<<"]:      " <<  convect1[dir1] + convect2[dir1] << endl;
+        cout << " convect1: rho_old, vel_old["<<d1<<"], vel_old["<<d1<<"], dx["<<d1<<"]" << endl;
+        cout << " convect2: rho_old, vel_old["<<d1<<"], vel_old["<<d2<<"], dx["<<d2<<"]" << endl;
+        cout << " pressGradient["<<d1<<"]:                      " << pressGradient[dir1] << " p[r1] " << p[r1] << " p[l1] " << p[l1] << endl;
+        cout << " rho_old[c] * gravity["<<d1<<"]:               " << rho_old[c] * gravity[dir1]<<endl;
+
+        cout << " \n-----------------------  ("<<d2<<")----- R2 " << r2 << ":  L2 " << l2 << endl;
+        cout << " rho_old[c] * vel_old[c]["<<d2<<"]             " << rho_old[c] * vel_old[c][dir2] << endl;
+        cout << " vel_old[c]["<<d2<<"] * d[1][c]["<<Pd<<"]:     "<< term1[dir2] << endl;
+        cout << " rho_old[c] * d[5][c]["<<Pd<<"]:               " << term2[dir2] << endl;
+        cout << " convect1["<<d2<<"] + convect2["<<d2<<"]:      " << convect1[dir2] + convect2[dir2] << endl;
+        cout << " convect1: rho_old, vel_old["<<d2<<"], vel_old["<<d1<<"], dx["<<d1<<"]" << endl;
+        cout << " convect2: rho_old, vel_old["<<d2<<"], vel_old["<<d2<<"], dx["<<d2<<"]" << endl;
+        cout << " pressGradient["<<d2<<"]:                " << pressGradient[dir2] << " p[r2] " << p[r2] << " p[l2] " << p[l2] << endl;
+        cout << " rho_old[c] * gravity["<<d2<<"]:         " <<rho_old[c] * gravity[dir2] <<endl ;
+        cout << " mom /delT " << mom/delT<<endl;     
+        cout << " vel_CC " << vel_CC[c] << "\n\n"<<endl;
+      }
+    }  //  dbgCells loop
   }
 
   //__________________________________
@@ -909,44 +998,41 @@ void FaceVel_LODI(const Patch* patch,
               
       vel_CC[c] = mom/rho_new[c];
       
-      
-/*`==========TESTING==========*/
       //__________________________________
       //  debugging
-#if 0
-      if (c == IntVector (20,50,0)|| c == IntVector(20,25,1) ) {
-      int Pd = P_dir + 1;
-      int E1 = Edir1 + 1;
-      int E2 = Edir2 + 1;
-      cout << " -------------------------- E D G E " << c <<" rho_old " << rho_old[c] << " P_dir " << P_dir << endl;
-      cout << " rho_old[c] * vel_old[c]["<<Pd<<"]                               " <<  rho_old[c] * vel_old[c][P_dir]  << endl;
-      cout << " vel_old[c]["<<Pd<<"] * d[1][c]["<<Pd<<"] + rho_old[c] * (d[3][c]["<<Pd<<"] " << term1[P_dir] << endl;
-      cout << " vel_old[c]["<<Pd<<"] * d[1][c]["<<E1<<"] + rho_old[c] * d[4][c]["<<E1<<"]  " << term2[P_dir] << endl;
-      cout << " convect1["<<Pd<<"]                                              " << convect1[P_dir] << endl;
-      cout << " convect1: rho_old, vel_old["<<E2<<"], vel_old["<<Pd<<"], dx["<<E2<<"]" << endl;
-      cout << " pressGradient["<<Pd<<"]                                         " << pressGradient[P_dir] << endl;
-      cout << " rho_old[c] * gravity["<<Pd<<"]                                  " << rho_old[c] * gravity[P_dir] << endl;
-      cout << " ----------------Edir1------ "<<E1<< endl;
-       cout << "  rho_old[c] * vel_old[c]["<<E1<<"]                             " <<  rho_old[c] * vel_old[c][Edir1]  << endl;
-      cout << " vel_old[c]["<<E1<<"] * d[1][c]["<<Pd<<"] + rho_old[c] * (d[3][c]["<<Pd<<"] " << term1[P_dir] << endl;
-      cout << " vel_old[c]["<<E1<<"] * d[1][c]["<<E1<<"] + rho_old[c] * d[4][c]["<<E1<<"]  " << term2[P_dir] << endl;
-      cout << " convect1["<<E1<<"]                                              " << convect1[Edir1] << endl;
-      cout << " convect1: rho_old, vel_old["<<E2<<"], vel_old["<<E1<<"], dx["<<E2<<"]" << endl;
-      cout << " pressGradient["<<E1<<"]                                         " << pressGradient[Edir1] << endl;
-      cout << " rho_old[c] * gravity["<<E1<<"]                                  " << rho_old[c] * gravity[Edir1] << endl;
-      cout << " ----------------Edir2------ "<<E2 << endl;
-      cout << "  rho_old[c] * vel_old[c]["<<E2<<"]                              " <<  rho_old[c] * vel_old[c][Edir2]  << endl;
-      cout << " vel_old[c]["<<E2<<"] * d[1][c]["<<Pd<<"] + rho_old[c] * (d[3][c]["<<Pd<<"] " << term1[P_dir] << endl;
-      cout << " vel_old[c]["<<E2<<"] * d[1][c]["<<E1<<"] + rho_old[c] * d[4][c]["<<E1<<"]  " << term2[P_dir] << endl;
-      cout << " convect1["<<E2<<"]                                              " << convect1[Edir2] << endl;
-      cout << " convect1: rho_old, vel_old["<<E2<<"], vel_old["<<E2<<"], dx["<<E2<<"]" << endl;
-      cout << " pressGradient["<<E2<<"]                                         " << pressGradient[Edir2] << endl;
-      cout << " rho_old[c] * gravity[Edir2]                                     " << rho_old[c] * gravity[Edir2] << endl;
-      cout << " mom/delt                                                        " << mom/delT << endl;
-      cout << " vel_CC                                                          " <<vel_CC[c] << "\n\n"<< endl;
-    }
-#endif 
-/*===========TESTING==========`*/
+      for (int i = 0; i<(int) dbgCells.size(); i++) {
+        if (c == dbgCells[i]) {
+          int Pd = P_dir + 1;
+          int E1 = Edir1 + 1;
+          int E2 = Edir2 + 1;
+          cout << " -------------------------- E D G E " << c <<" rho_old " << rho_old[c] << " P_dir " << P_dir << endl;
+          cout << " rho_old[c] * vel_old[c]["<<Pd<<"]                               " <<  rho_old[c] * vel_old[c][P_dir]  << endl;
+          cout << " vel_old[c]["<<Pd<<"] * d[1][c]["<<Pd<<"] + rho_old[c] * (d[3][c]["<<Pd<<"] " << term1[P_dir] << endl;
+          cout << " vel_old[c]["<<Pd<<"] * d[1][c]["<<E1<<"] + rho_old[c] * d[4][c]["<<E1<<"]  " << term2[P_dir] << endl;
+          cout << " convect1["<<Pd<<"]                                              " << convect1[P_dir] << endl;
+          cout << " convect1: rho_old, vel_old["<<E2<<"], vel_old["<<Pd<<"], dx["<<E2<<"]" << endl;
+          cout << " pressGradient["<<Pd<<"]                                         " << pressGradient[P_dir] << endl;
+          cout << " rho_old[c] * gravity["<<Pd<<"]                                  " << rho_old[c] * gravity[P_dir] << endl;
+          cout << " ----------------Edir1------ "<<E1<< endl;
+           cout << "  rho_old[c] * vel_old[c]["<<E1<<"]                             " <<  rho_old[c] * vel_old[c][Edir1]  << endl;
+          cout << " vel_old[c]["<<E1<<"] * d[1][c]["<<Pd<<"] + rho_old[c] * (d[3][c]["<<Pd<<"] " << term1[Edir1] << endl;
+          cout << " vel_old[c]["<<E1<<"] * d[1][c]["<<E1<<"] + rho_old[c] * d[4][c]["<<E1<<"]  " << term2[Edir1] << endl;
+          cout << " convect1["<<E1<<"]                                              " << convect1[Edir1] << endl;
+          cout << " convect1: rho_old, vel_old["<<E2<<"], vel_old["<<E1<<"], dx["<<E2<<"]" << endl;
+          cout << " pressGradient["<<E1<<"]                                         " << pressGradient[Edir1] << endl;
+          cout << " rho_old[c] * gravity["<<E1<<"]                                  " << rho_old[c] * gravity[Edir1] << endl;
+          cout << " ----------------Edir2------ "<<E2 << endl;
+          cout << "  rho_old[c] * vel_old[c]["<<E2<<"]                              " <<  rho_old[c] * vel_old[c][Edir2]  << endl;
+          cout << " vel_old[c]["<<E2<<"] * d[1][c]["<<Pd<<"] + rho_old[c] * (d[3][c]["<<Pd<<"] " << term1[Edir2] << endl;
+          cout << " vel_old[c]["<<E2<<"] * d[1][c]["<<E1<<"] + rho_old[c] * d[4][c]["<<E1<<"]  " << term2[Edir2] << endl;
+          cout << " convect1["<<E2<<"]                                              " << convect1[Edir2] << endl;
+          cout << " convect1: rho_old, vel_old["<<E2<<"], vel_old["<<E2<<"], dx["<<E2<<"]" << endl;
+          cout << " pressGradient["<<E2<<"]                                   " << pressGradient[Edir2] << endl;
+          cout << " rho_old[c] * gravity[Edir2]                               " << rho_old[c] * gravity[Edir2] << endl;
+          cout << " mom/delt                                                  " << mom/delT << endl;
+          cout << " vel_CC                                                    " <<vel_CC[c] << "\n\n"<< endl;
+        }
+      }
     }
   }  
 
@@ -978,7 +1064,7 @@ void FaceVel_LODI(const Patch* patch,
                                         + delT * rho_old[c] * gravity.z();
 
     vel_CC[c] = Vector(mom_x, mom_y, mom_z)/ rho_new[c];
-/*`==========TESTING==========*/
+
       //__________________________________
       //  debugging
 #if 0
@@ -988,10 +1074,9 @@ void FaceVel_LODI(const Patch* patch,
       cout << " term1 = " << term1 << endl;
       cout << " term2 = " << term2 << endl;
       cout << " mom/delT " <<  Vector(mom_x, mom_y, mom_z)/delT<< endl;
-      cout << " vel_CC[c] " << vel_CC[c] <<endl;
+      cout << " vel_CC[c] " << vel_CC[c] <<" \n\n"<< endl;
     }
 #endif 
-/*===========TESTING==========`*/
     
   }
 } //end of the function FaceVelLODI() 
@@ -1005,7 +1090,8 @@ void FaceTemp_LODI(const Patch* patch,
              const Patch::FaceType face,
              CCVariable<double>& temp_CC,
              Lodi_vars* lv, 
-             const Vector& dx)
+             const Vector& dx,
+             SimulationStateP& sharedState)
 {
   cout_doing << "Setting FaceTemp_LODI on face " <<face<< endl; 
   
@@ -1031,6 +1117,7 @@ void FaceTemp_LODI(const Patch* patch,
   int dir1  = axes[1];  // other vector directions
   int dir2  = axes[2];
   
+  Vector gravity = sharedState->getGravity();
   IntVector offset = IntVector(1,1,1) - Abs(patch->faceDirection(face));
   //__________________________________
   //    S I D E   M I N U S   E D G E S  
@@ -1070,8 +1157,17 @@ void FaceTemp_LODI(const Patch* patch,
     double term3 = rho_old[c] * ( vel_old[c][P_dir] * d[3][c][P_dir] + 
                                   vel_old[c][dir1]  * d[4][c][P_dir] +
                                   vel_old[c][dir2]  * d[5][c][P_dir] );
-                                                                                   
-    double E_new = E[c] - delT * (term1 + term2 + term3 + conv_dir1 + conv_dir2);               
+    
+    //__________________________________
+    //  See Thompson II, pg 451, eq 56
+    double gravityTerm = 0.0;
+    for(int dir = 0; dir <3; dir ++ ) { 
+      gravityTerm += rho_old[c] * vel_old[c][dir] * gravity[dir]; 
+    }
+    gravityTerm = 0.0;
+                                                                                 
+    double E_new = E[c] - delT * (term1 + term2 + term3 + conv_dir1 + conv_dir2
+                                  - gravityTerm);               
 
     temp_CC[c] = E_new/(rho_new[c]*cv[c]) - 0.5 * vel_new_sqr/cv[c];
   }
@@ -1142,7 +1238,15 @@ void FaceTemp_LODI(const Patch* patch,
           + rho_old[c] * vel_old[c][Edir1] * (d[5][c][P_dir] + d[3][c][Edir1]); 
       }      
      
-      double E_new = E[c] - delT * ( term1 + term2 + term3 + conv);
+      //__________________________________
+      //  See Thompson II, pg 451, eq 56
+      double gravityTerm = 0.0;
+      for(int dir = 0; dir <3; dir ++ ) { 
+        gravityTerm += rho_old[c] * vel_old[c][dir] * gravity[dir]; 
+      }
+      gravityTerm = 0.0;
+      
+      double E_new = E[c] - delT * ( term1 + term2 + term3 + conv - gravityTerm);
       double vel_new_sqr = vel_new[c].length2();
 
       temp_CC[c] = E_new/(rho_new[c] *cv[c]) - 0.5 * vel_new_sqr/cv[c];
@@ -1169,7 +1273,15 @@ void FaceTemp_LODI(const Patch* patch,
       + rho_old[c] * vel_old[c].y() * (d[4][c].x() + d[3][c].y() + d[4][c].z())  
       + rho_old[c] * vel_old[c].z() * (d[5][c].x() + d[5][c].y() + d[3][c].z()); 
 
-    double E_new = E[c] - delT * ( term1 + term2 + term3);
+      //__________________________________
+      //  See Thompson II, pg 451, eq 56
+      double gravityTerm = 0.0;
+      for(int dir = 0; dir <3; dir ++ ) { 
+        gravityTerm += rho_old[c] * vel_old[c][dir] * gravity[dir]; 
+      }
+
+    gravityTerm = 0.0;
+    double E_new = E[c] - delT * ( term1 + term2 + term3 - gravityTerm);
 
     temp_CC[c] = E_new/(rho_new[c] * cv[c]) - 0.5 * vel_new_sqr/cv[c]; 
   }
