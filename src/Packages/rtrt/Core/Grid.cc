@@ -91,15 +91,44 @@ void Grid::preprocess(double maxradius, int& pp_offset, int& scratchsize)
     diag=bbox.diagonal();
     double volume=diag.x()*diag.y()*diag.z();
     double c=cbrt(ncells/volume);
-    nx=(int)(c*diag.x()+0.5);
-    ny=(int)(c*diag.y()+0.5);
-    nz=(int)(c*diag.z()+0.5);
-    if(nx<2)
-	nx=2;
-    if(ny<2)
-	ny=2;
-    if(nz<2)
-	nz=2;
+
+    float fx = c*diag.x();
+    float fy = c*diag.y();
+    float fz = c*diag.z();
+
+    if(fx<2){
+      fy *= sqrt( fx/2 );
+      fz *= sqrt( fx/2 );
+      fx=2;
+    }
+    if(fy<2){
+      fx *= sqrt( fy/2 );
+      if( fx < 2 ) { 
+	fx = 2; 
+	fz *= fy/2;
+      } else {
+	fz *= sqrt( fy/2 );
+      }
+      fy=2;
+    }
+    if(fz<2){
+      fx *= sqrt( fz/2 );
+      if( fx < 2 ) { 
+	fx = 2; 
+	fy *= fz/2;
+      } else {
+	fy *= sqrt( fz/2 );
+      }
+      if( fy < 2 ){
+	fy = 2;
+      }
+      fz=2;
+    }
+
+    nx=(int)(fx+.5);
+    ny=(int)(fy+.5);
+    nz=(int)(fz+.5);
+
     int ngrid=nx*ny*nz;
     cerr << "Computing " << nx << 'x' << ny << 'x' << nz << " grid for " << ngrid << " cells (wanted " << ncells << ")\n";
 
