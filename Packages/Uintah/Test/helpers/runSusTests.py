@@ -74,8 +74,6 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
   compare_root = "%s/%s" % (gold_standard, ALGO)
 
   environ['PATH'] = "%s%s%s" % (helperspath, pathsep, environ['PATH'])
-  if environ['HOST'] == "rapture.sci.utah.edu":  
-    environ['PATH'] = "%s%s%s" % ("/usr/gnu/bin/", pathsep, environ['PATH'])
   environ['SCI_SIGNALMODE'] = 'exit'
   environ['SCI_EXCEPTIONMODE'] = 'abort'
 
