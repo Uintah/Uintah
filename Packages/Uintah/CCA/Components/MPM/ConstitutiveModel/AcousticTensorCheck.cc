@@ -62,7 +62,7 @@ AcousticTensorCheck::~AcousticTensorCheck()
 bool 
 AcousticTensorCheck::checkStability(const Matrix3& ,
 				    const Matrix3& ,
-				    TangentModulusTensor& tangentModulus,
+				    const TangentModulusTensor& tangentModulus,
 				    Vector& direction)
 {
   return isLocalized(tangentModulus, direction);
@@ -72,7 +72,7 @@ AcousticTensorCheck::checkStability(const Matrix3& ,
 //  theta =  Horizontal plane angle 
 //  phi   =  Polar angle 
 bool 
-AcousticTensorCheck::isLocalized(TangentModulusTensor& C,
+AcousticTensorCheck::isLocalized(const TangentModulusTensor& C,
 				 Vector& normal)
 {
   // Constants
@@ -103,8 +103,8 @@ AcousticTensorCheck::isLocalized(TangentModulusTensor& C,
   // Initial sweep through angles to find approximate local minima 
   findApproxLocalMins(detA, localMin, C);
 
-        // Create a vector to store the set of normals
-        vector<Vector> normalSet;
+  // Create a vector to store the set of normals
+  vector<Vector> normalSet;
 
   // Newton iteration to determine minima
   normal = zero;
@@ -131,7 +131,7 @@ AcousticTensorCheck::isLocalized(TangentModulusTensor& C,
 	  // Form acoustic tensor A and store determinant and inverse
 	  Matrix3 A(0.0);
 	  formAcousticTensor(normal, C, A);
-	  detA[ii][jj]= A.Determinant();
+	  detA[ii][jj] = A.Determinant();
 	  Matrix3 AInv = A.Inverse();
 
 	  // Form Jmn=det(A)*Cmkln*(A^-1)lk
@@ -140,7 +140,7 @@ AcousticTensorCheck::isLocalized(TangentModulusTensor& C,
 	    for (int nn = 0; nn < 3; nn++) {
 	      for (int kk = 0; kk < 3; kk++) {
 		for (int ll = 0; ll < 3; ll++) {
-		  J(mm,nn) += detA[ii][jj]*C(mm,kk,ll,nn)*AInv(ll,kk);
+		  J(mm+1,nn+1) += detA[ii][jj]*C(mm,kk,ll,nn)*AInv(ll+1,kk+1);
 		}
 	      }
 	    }
@@ -183,7 +183,7 @@ AcousticTensorCheck::isLocalized(TangentModulusTensor& C,
 void 
 AcousticTensorCheck::findApproxLocalMins(double** detA, 
                                          int** localMin, 
-                                         TangentModulusTensor& C)
+                                         const TangentModulusTensor& C)
 {
   // First sweep :
   // 1) Set initial normal
@@ -258,17 +258,17 @@ AcousticTensorCheck::findApproxLocalMins(double** detA,
 // Form the acoustic tensor
 void
 AcousticTensorCheck::formAcousticTensor(const Vector& normal,
-                                        TangentModulusTensor& C,
+                                        const TangentModulusTensor& C,
                                         Matrix3& A)
 {
   // Form the acoustic tensor  A = n*C*n
   for (int ii = 0; ii < 3; ++ii) {
     for (int kk = 0; kk < 3; ++kk) {
-      A(ii,kk) = 0.0;
+      A(ii+1,kk+1) = 0.0;
       for (int jj = 0; jj < 3; ++jj) {
 	for (int ll = 0; ll < 3; ++ll) {
            double cc = C(ii,jj,kk,ll);
-           A(ii,kk) += cc*normal[jj]*normal[ll];
+           A(ii+1,kk+1) += cc*normal[jj]*normal[ll];
 	}
       }
     }
@@ -309,7 +309,7 @@ AcousticTensorCheck::chooseNewNormal(Vector& prevNormal,
 // of all the normals. Typically there are two
 Vector 
 AcousticTensorCheck::chooseNormalFromNormalSet(vector <Vector> &normalSet, 
-                                               TangentModulusTensor &C)
+                                               const TangentModulusTensor &C)
 {
   // First item
   vector<Vector>::iterator iter = normalSet.begin();

@@ -1,15 +1,17 @@
 
 #include "IsoHardeningPlastic.h"	
 #include <Packages/Uintah/Core/Math/FastMatrix.h>	
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <math.h>
 
+using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 
 IsoHardeningPlastic::IsoHardeningPlastic(ProblemSpecP& ps)
 {
-  ps->require("K",d_const.K);
-  ps->require("sigma_Y",d_const.sigma_Y);
+  ps->require("K",d_CM.K);
+  ps->require("sigma_Y",d_CM.sigma_0);
 
   // Initialize internal variable labels for evolution
   pAlphaLabel = VarLabel::create("p.alpha",
@@ -128,7 +130,7 @@ IsoHardeningPlastic::computeFlowStress(const Matrix3& rateOfDeformation ,
     pPlasticStrain_new[idx] = pPlasticStrain[idx] + edot*delT;
   }
 
-  double flowStress = d_const.sigma_Y + d_const.K*pAlpha[idx];
+  double flowStress = d_CM.sigma_0 + d_CM.K*pAlpha[idx];
   return flowStress;
 }
 
@@ -154,17 +156,64 @@ IsoHardeningPlastic::computeTangentModulus(const Matrix3& stress,
 
   // Calculate gamma
   double shear = Ce(0,1,0,1);
-  double gamma = 1.0/(1+d_const.K/(3.0*shear));
+  double gamma = 1.0/(1+d_CM.K/(3.0*shear));
 
   // Form the elastic-plastic tangent modulus
   for (int ii = 0; ii < 3; ++ii) {
+    int ii1 = ii+1;
     for (int jj = 0; jj < 3; ++jj) {
+      int jj1 = jj+1;
       for (int kk = 0; kk < 3; ++kk) {
+        int kk1 = kk+1;
 	for (int ll = 0; ll < 3; ++ll) {
           Cep(ii,jj,kk,ll) = Ce(ii,jj,kk,ll) - 
-                             2.0*shear*gamma*nn(ii,jj)*nn(kk,ll);
+                             2.0*shear*gamma*nn(ii1,jj1)*nn(kk1,ll+1);
 	}  
       }  
     }  
   }  
+}
+
+double
+IsoHardeningPlastic::evalDerivativeWRTTemperature(double , double,
+                                                  const particleIndex )
+{
+  return 0.0;
+}
+
+double
+IsoHardeningPlastic::evalDerivativeWRTStrainRate(double , double,
+						 const particleIndex )
+{
+  return 0.0;
+}
+
+double
+IsoHardeningPlastic::evalDerivativeWRTAlpha(double , double,
+					    const particleIndex )
+{
+  return d_CM.K;
+}
+
+double
+IsoHardeningPlastic::evalDerivativeWRTPlasticStrain(double , double,
+						    const particleIndex )
+{
+  ostringstream desc;
+  desc << "IsoHardeningPlastic::evalDerivativeWRTPlasticStrain not yet "
+       << "implemented. " << endl;
+  throw ProblemSetupException(desc.str());
+  //return 0.0;
+}
+
+
+void
+IsoHardeningPlastic::evalDerivativeWRTScalarVars(double epdot,
+						 double T,
+						 const particleIndex idx,
+						 Vector& derivs)
+{
+  derivs[0] = evalDerivativeWRTStrainRate(epdot, T, idx);
+  derivs[1] = evalDerivativeWRTTemperature(epdot, T, idx);
+  derivs[2] = evalDerivativeWRTPlasticStrain(epdot, T, idx);
 }
