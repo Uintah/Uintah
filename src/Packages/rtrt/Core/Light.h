@@ -51,7 +51,7 @@ public:
 
   void updatePosition( const Point & newPos );
 
-  Sphere * getSphere() const { return sphere_; }
+  virtual Object *getSphere() const { return sphere_; }
 
 protected:
   //! finish construction.
@@ -69,7 +69,7 @@ protected:
 
   bool isOn_;
 
-  Sphere * sphere_; // sphere that will be rendered to represent this light.
+  Sphere *sphere_; // sphere that will be rendered to represent this light.
 
 };
 

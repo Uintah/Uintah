@@ -2,6 +2,7 @@
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/MusilRNG.h>
 #include <Packages/rtrt/Core/LightMaterial.h>
+#include <Packages/rtrt/Core/HaloMaterial.h>
 #include <math.h>
 
 using namespace rtrt;
@@ -50,8 +51,10 @@ void get_cone_vectors(const Vector& axis, double theta0, int n, Vector* incone)
      }
 }
 
-static Material * flat_yellow = NULL;
-static Material * flat_orange = NULL;
+static Material * flat_yellow   = NULL;
+static Material * flat_orange   = NULL;
+static Material * flat_white    = NULL;
+static HaloMaterial *white_halo = NULL;
 
 void Light::init() {
   Vector d(pos-Point(0,0,.5));
@@ -59,14 +62,18 @@ void Light::init() {
   beamdirs.resize(n*n);
   get_cone_vectors(d, .03, n, &beamdirs[0]);
 
-  if( !flat_yellow )
+  if ( !flat_yellow )
     flat_yellow = new LightMaterial(Color(.8,.8,.0));
-  if( !flat_orange )
+  if ( !flat_orange )
     flat_orange = new LightMaterial(Color(1.0,.7,.0));
+  if ( !flat_white )
+    flat_white = new LightMaterial(Color(1,1,1));
+  if ( !white_halo )
+    white_halo = new HaloMaterial(flat_white,4);
 
   // Create a yellow sphere that can be rendered in the location
   // of the light.
-  sphere_ = new Sphere( flat_yellow, pos, 0.1 );
+  sphere_ = new Sphere( white_halo /*flat_yellow*/, pos, 0.1 );
 }
 
 Light::Light(const Point& pos,
