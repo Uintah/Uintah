@@ -1615,13 +1615,13 @@ void GeomViewerItem::draw(DrawInfoOpenGL* di, Material *m, double time)
 {
   // Here we need to query the ViewWindow with our name and give it our
   // di so it can change things if they need to be.
-  di->viewwindow->setDI(di,name);
+  di->viewwindow->setDI(di, name_);
   
   BBox bb;
-  child->get_bounds(bb);
+  child_->get_bounds(bb);
   if (!(di->debug && bb.valid()))
   {
-    child->draw(di,m,time);
+    child_->draw(di,m,time);
   }
   else
   {

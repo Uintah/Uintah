@@ -167,15 +167,15 @@ void ViewWindow::itemAdded(GeomViewerItem* si)
 {
   ObjTag* vis;
     
-  viter = visible.find(si->name);
+  viter = visible.find(si->name_);
   if(viter==visible.end()){
     // Make one...
     vis=scinew ObjTag;
-    vis->visible=scinew GuiInt(ctx->subVar(si->name), 1);
+    vis->visible=scinew GuiInt(ctx->subVar(si->name_), 1);
     vis->tagid=maxtag++;
-    visible[si->name] = vis;
+    visible[si->name_] = vis;
     ostringstream str;
-    str << id << " addObject " << vis->tagid << " \"" << si->name << "\"";
+    str << id << " addObject " << vis->tagid << " \"" << si->name_ << "\"";
     gui->execute(str.str());
   } else {
     vis = (*viter).second;
@@ -192,7 +192,7 @@ void ViewWindow::itemDeleted(GeomViewerItem *si)
 {
   ObjTag* vis;
     
-  viter = visible.find(si->name);
+  viter = visible.find(si->name_);
   if (viter == visible.end()) { // if not found
     cerr << "Where did that object go???" << "\n";
   }
@@ -253,18 +253,18 @@ void ViewWindow::get_bounds(BBox& bbox)
 				// should be drawn...
       ObjTag* vis;
 	    
-      viter = visible.find(si->name);
+      viter = visible.find(si->name_);
 	    
       if (viter != visible.end()) { // if found
 	vis = (*viter).second;
 	if (vis->visible->get()) {
-	  if(si->lock) si->lock->readLock();
+	  if(si->crowd_lock_) si->crowd_lock_->readLock();
 	  si->get_bounds(bbox);
-	  if(si->lock) si->lock->readUnlock();
+	  if(si->crowd_lock_) si->crowd_lock_->readUnlock();
 	}
       }
       else {
-	cerr << "Warning: object " << si->name
+	cerr << "Warning: object " << si->name_
 	     << " not in visibility database...\n";
 	si->get_bounds(bbox);
       }
@@ -2147,7 +2147,7 @@ void ViewWindow::update_mode_string(GeomObj* pick_obj)
   if(!si){
     ms+="not a GeomViewerItem?";
   } else {
-    ms+=si->name;
+    ms+=si->name_;
   }
   if(pick_n != 0x12345678)
     ms+=", index="+to_string(pick_n);
@@ -2214,24 +2214,24 @@ void ViewWindow::do_for_visible(OpenGL* r, ViewWindowVisPMF pmf)
       // Look up the name to see if it should be drawn...
       ObjTag* vis;
       
-      viter = visible.find(si->name);
+      viter = visible.find(si->name_);
       if (viter != visible.end()) { // if found
 	vis = (*viter).second;
 	if (vis->visible->get()) {
-	  if (strstr(si->name.c_str(),"TransParent")) { // delay drawing
+	  if (strstr(si->name_.c_str(),"TransParent")) { // delay drawing
 	    transp_objs.push_back(si);
 	  }
 	  else {
-	    if(si->lock)
-	      si->lock->readLock();
+	    if(si->crowd_lock_)
+	      si->crowd_lock_->readLock();
 	    (r->*pmf)(manager, this, si);
-	    if(si->lock)
-	      si->lock->readUnlock();
+	    if(si->crowd_lock_)
+	      si->crowd_lock_->readUnlock();
 	  }
 	}
       }
       else {
-	cerr << "Warning: object " << si->name << " not in visibility database...\n";
+	cerr << "Warning: object " << si->name_ << " not in visibility database...\n";
       }
     }
   }
@@ -2241,11 +2241,11 @@ void ViewWindow::do_for_visible(OpenGL* r, ViewWindowVisPMF pmf)
   for(i=0;i<(int)transp_objs.size();i++) {
     GeomViewerItem *si = transp_objs[i];    
 
-    if(si->lock)
-      si->lock->readLock();
+    if(si->crowd_lock_)
+      si->crowd_lock_->readLock();
     (r->*pmf)(manager, this, si);
-    if(si->lock)
-      si->lock->readUnlock();
+    if(si->crowd_lock_)
+      si->crowd_lock_->readUnlock();
   }
 
   // now you are done...
