@@ -1,6 +1,0 @@
-- Ted needs to spell check his stuff.
-
-- Inconsistent use of section refs in html document. Ted uses \hyperref
-command to create section refs and Rob uses \ref command.
-
-- Replace many uses of \pse{} with \sr{}.
