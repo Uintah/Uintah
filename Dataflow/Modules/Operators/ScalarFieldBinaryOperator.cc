@@ -73,7 +73,7 @@ void ScalarFieldBinaryOperator::execute(void) {
 	 dynamic_cast<LatVolField<double>*>(right_FH.get_rep())) {
 
       LatVolField<double>  *scalarField_result =
-	scinew LatVolField<double>(left_FH->data_at());
+	scinew LatVolField<double>(left_FH->basis_order());
       performOperation(scalarField_left, scalarField_right,
 		       scalarField_result);
       fh = scalarField_result;
@@ -89,7 +89,7 @@ void ScalarFieldBinaryOperator::execute(void) {
 	 dynamic_cast<LatVolField<float>*>(right_FH.get_rep())) {
 
       LatVolField<float>  *scalarField_result =
-	scinew LatVolField<float>(left_FH->data_at());
+	scinew LatVolField<float>(left_FH->basis_order());
       performOperation(scalarField_left, scalarField_right,
 		       scalarField_result);
       fh = scalarField_result;
@@ -105,7 +105,7 @@ void ScalarFieldBinaryOperator::execute(void) {
 	 dynamic_cast<LatVolField<long64>*>(right_FH.get_rep())) {
 
       LatVolField<long64>  *scalarField_result =
-	scinew LatVolField<long64>(left_FH->data_at());
+	scinew LatVolField<long64>(left_FH->basis_order());
       performOperation(scalarField_left, scalarField_right,
 		       scalarField_result);
       fh = scalarField_result;
@@ -127,7 +127,7 @@ void ScalarFieldBinaryOperator::execute(void) {
 	 dynamic_cast<LatVolField<double>*>(right_FH.get_rep())) {
 
       LatVolField<double>  *scalarField_result =
-	scinew LatVolField<double>(left_FH->data_at());
+	scinew LatVolField<double>(left_FH->basis_order());
       performOperation(scalarField_left, scalarField_right,
 		       scalarField_result);
       fh = scalarField_result;
@@ -136,7 +136,7 @@ void ScalarFieldBinaryOperator::execute(void) {
 		dynamic_cast<LatVolField<long64>*>(right_FH.get_rep())) {
 
       LatVolField<long64>  *scalarField_result =
-	scinew LatVolField<long64>(left_FH->data_at());
+	scinew LatVolField<long64>(left_FH->basis_order());
       performOperation(scalarField_left, scalarField_right,
 		       scalarField_result);
       fh = scalarField_result;
@@ -145,7 +145,7 @@ void ScalarFieldBinaryOperator::execute(void) {
 		dynamic_cast<LatVolField<float>*>(right_FH.get_rep())) {
 
       LatVolField<double>  *scalarField_result =
-	scinew LatVolField<double>(left_FH->data_at());
+	scinew LatVolField<double>(left_FH->basis_order());
       performOperation(scalarField_left, scalarField_right,
 		       scalarField_result);
       fh = scalarField_result;
@@ -162,7 +162,7 @@ void ScalarFieldBinaryOperator::execute(void) {
 	 dynamic_cast<LatVolField<double>*>(right_FH.get_rep())) {
 
       LatVolField<double>  *scalarField_result =
-	scinew LatVolField<double>(left_FH->data_at());
+	scinew LatVolField<double>(left_FH->basis_order());
       performOperation(scalarField_left, scalarField_right,
 		       scalarField_result);
       fh = scalarField_result;
@@ -171,7 +171,7 @@ void ScalarFieldBinaryOperator::execute(void) {
 		dynamic_cast<LatVolField<long64>*>(right_FH.get_rep())) {
 
       LatVolField<long64>  *scalarField_result =
-	scinew LatVolField<long64>(left_FH->data_at());
+	scinew LatVolField<long64>(left_FH->basis_order());
       performOperation(scalarField_left, scalarField_right,
 		       scalarField_result);
       fh = scalarField_result;
@@ -180,7 +180,7 @@ void ScalarFieldBinaryOperator::execute(void) {
 		dynamic_cast<LatVolField<float>*>(right_FH.get_rep())) {
 
       LatVolField<float>  *scalarField_result =
-	scinew LatVolField<float>(left_FH->data_at());
+	scinew LatVolField<float>(left_FH->basis_order());
       performOperation(scalarField_left, scalarField_right,
 		       scalarField_result);
       fh = scalarField_result;
@@ -197,7 +197,7 @@ void ScalarFieldBinaryOperator::execute(void) {
 	 dynamic_cast<LatVolField<double>*>(right_FH.get_rep())) {
 
       LatVolField<long64>  *scalarField_result =
-	scinew LatVolField<long64>(left_FH->data_at());
+	scinew LatVolField<long64>(left_FH->basis_order());
       performOperation(scalarField_left, scalarField_right,
 		       scalarField_result);
       fh = scalarField_result;
@@ -206,7 +206,7 @@ void ScalarFieldBinaryOperator::execute(void) {
 		dynamic_cast<LatVolField<long64>*>(right_FH.get_rep())) {
 
       LatVolField<long64>  *scalarField_result =
-	scinew LatVolField<long64>(left_FH->data_at());
+	scinew LatVolField<long64>(left_FH->basis_order());
       performOperation(scalarField_left, scalarField_right,
 		       scalarField_result);
       fh = scalarField_result;
@@ -215,7 +215,7 @@ void ScalarFieldBinaryOperator::execute(void) {
 		dynamic_cast<LatVolField<float>*>(right_FH.get_rep())) {
 
       LatVolField<long64>  *scalarField_result =
-	scinew LatVolField<long64>(left_FH->data_at());
+	scinew LatVolField<long64>(left_FH->basis_order());
       performOperation(scalarField_left, scalarField_right,
 		       scalarField_result);
       fh = scalarField_result;

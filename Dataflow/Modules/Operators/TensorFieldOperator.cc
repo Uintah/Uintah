@@ -58,7 +58,7 @@ void TensorFieldOperator::execute(void)
   if( LatVolField<Matrix3> *tensorField =
       dynamic_cast<LatVolField<Matrix3>*>(hTF.get_rep())) {
 
-    scalarField = scinew LatVolField<double>(hTF->data_at());
+    scalarField = scinew LatVolField<double>(hTF->basis_order());
 
     performOperation( tensorField, scalarField );
     sfout->send(scalarField);

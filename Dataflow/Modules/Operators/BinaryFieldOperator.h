@@ -74,13 +74,12 @@ bool BinaryFieldOperator::initField(FieldLeft* left_field,
 				    FieldRight * right_field,
 				    ScalarField* scalarField) {
   // We need to make sure that the data for the two fields are the same
-  if ( left_field->data_at() != right_field->data_at() )
+  if ( left_field->basis_order() != right_field->basis_order() )
     return false;
 
   // Now we can check if we have code to support the type of field coming in.
   // Currently we only have support for Node and Cell centered data.
-  if ( left_field->data_at() != FieldLeft::CELL &&
-       left_field->data_at() != FieldLeft::NODE )
+  if ( left_field->basis_order() > 1 )
     return false;
 
   // We need to get the mesh dimensions and make sure they are the same for
