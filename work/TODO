@@ -1,3 +1,15 @@
+Linux:
+    X11
+	Transformations
+	DoubleBuffer
+	TrueColor
+	dithering
+	Move Bounding boxes only
+	Handle overlapping polygons
+    Threads
+	Pre-emptive
+	Call sigpause
+
 Fix from SC94:
     Mesh
     BuildFEMatrix
@@ -69,6 +81,7 @@ DONE	 Progressive refinement
          Fix mouse motions - backwards
          Move bounding boxes only
          Handle overlapping polygons
+	 OPTIMIZE!!
 
 Features/improvements:
    Make progress, time, etc run off of TCL variables
