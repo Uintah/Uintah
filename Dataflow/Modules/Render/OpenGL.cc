@@ -934,9 +934,9 @@ void OpenGL::real_get_pick(Viewer*, ViewWindow* ViewWindow, int x, int y,
   }
   // Setup the view...
   View view(viewwindow->view.get());
-  double aspect=double(xres)/double(yres);
+  //double aspect=double(xres)/double(yres);
   // XXX - UNICam change-- should be '1.0/aspect' not 'aspect' below
-  double fovy=RtoD(2*Atan(1.0/aspect*Tan(DtoR(view.fov()/2.))));
+  //double fovy=RtoD(2*Atan(1.0/aspect*Tan(DtoR(view.fov()/2.))));
   
   viewer->geomlock.readLock();
   
@@ -1022,7 +1022,7 @@ void OpenGL::real_get_pick(Viewer*, ViewWindow* ViewWindow, int x, int y,
     GLuint hit_pick_index = 0x12345678;  // need for object indexing
 #else
     GLuint hit_obj=0;
-    GLuint hit_obj_index = 0x12345678;  // need for object indexing
+    //GLuint hit_obj_index = 0x12345678;  // need for object indexing
     GLuint hit_pick=0;
     GLuint hit_pick_index = 0x12345678;  // need for object indexing
 #endif
@@ -1517,7 +1517,7 @@ void OpenGL::listvisuals(TCLArgs& args)
     if(vinfo[i].screen != screen)
       continue;
     char buf[20];
-    sprintf(buf, "id=%02x, ", vinfo[i].visualid);
+    sprintf(buf, "id=%02x, ", (unsigned int)(vinfo[i].visualid));
     clString tag(buf);
     GETCONFIG(GLX_DOUBLEBUFFER);
     if(value){
