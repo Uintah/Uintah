@@ -29,6 +29,7 @@
 #include <Core/Datatypes/TriSurfField.h>
 #include <Core/Datatypes/QuadSurfField.h>
 #include <Core/Datatypes/CurveField.h>
+#include <algorithm>
 
 namespace SCIRun {
 
@@ -345,15 +346,7 @@ FieldBoundaryAlgoCurveT<Msh>::execute(const MeshHandle mesh_untyped,
 	  ++niter;
 	}
 
-	if (determine_tri_order(p[0], p[1], p[2], center))
-	{
-	  tmesh->add_elem(node_idx);
-	}
-	else
-	{
-	  std::reverse(node_idx.begin(), node_idx.end());
-	  tmesh->add_elem(node_idx);
-	}
+	tmesh->add_elem(node_idx);
       }
     }
   }
