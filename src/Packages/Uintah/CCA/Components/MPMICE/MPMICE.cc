@@ -1717,12 +1717,13 @@ void MPMICE::computeMassBurnRate(const ProcessorGroup*,
     //__________________________________
     // M P M  matls
     // compute the burned mass and released Heat
-    // if burnModel != null
+    // if burnModel != null  && material == reactant
     for(int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-      if(mpm_matl)  {
-        int dwindex = matl->getDWIndex();
+      
+      if(mpm_matl && (mpm_matl->getRxProduct() == Material::reactant))  {
+        int dwindex = mpm_matl->getDWIndex();
         CCVariable<double> solidTemperature;
         CCVariable<double> solidMass;
 
