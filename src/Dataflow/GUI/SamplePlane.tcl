@@ -37,6 +37,7 @@ itcl_class SCIRun_FieldsCreate_SamplePlane {
     method set_defaults {} {
 	global $this-sizex
 	global $this-sizey
+        global $this-auto_size
 	global $this-axis
 	global $this-padpercent
 	global $this-data-at
@@ -51,6 +52,7 @@ itcl_class SCIRun_FieldsCreate_SamplePlane {
 
 	set $this-sizex 20
 	set $this-sizey 20
+        set $this-auto_size 0
 	set $this-axis 0
 	set $this-padpercent 0
 	set $this-data-at Nodes
@@ -110,11 +112,15 @@ itcl_class SCIRun_FieldsCreate_SamplePlane {
 	
 	label $w.row1.xsize_label -text "Width    "
 	entry $w.row1.xsize -textvariable $this-sizex
+        radiobutton $w.row1.auto_size  -text "Manual size" \
+            -value 0 -variable $this-auto_size -borderwidth 2
 	label $w.row2.ysize_label -text "Height   "
 	entry $w.row2.ysize -textvariable $this-sizey
+        radiobutton $w.row2.auto_size  -text "Auto size" \
+            -value 1 -variable $this-auto_size -borderwidth 2
 
-	pack $w.row1.xsize_label $w.row1.xsize -side left
-	pack $w.row2.ysize_label $w.row2.ysize -side left
+	pack $w.row1.xsize_label $w.row1.xsize $w.row1.auto_size -side left
+	pack $w.row2.ysize_label $w.row2.ysize $w.row2.auto_size -side left
 
 	label $w.row21.zsize_label -text "Pad Percentage"
 	entry $w.row21.zsize -textvariable $this-padpercent
