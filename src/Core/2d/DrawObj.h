@@ -34,8 +34,7 @@
 #include <Core/Geom/Color.h>
 #include <Core/Containers/Array1.h>
 #include <Core/2d/BBox2d.h>
-//#include <Core/Datatypes/Datatype.h>
-#include <Core/Datatypes/PropertyManager.h>
+#include <Core/Datatypes/Datatype.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <sci_config.h>
 #include <stdio.h>
@@ -49,7 +48,7 @@ class  BBox2D;
 class  OpenGLWindow;
 using std::vector;
 
-class SCICORESHARE DrawObj : public PropertyManager {
+class SCICORESHARE DrawObj : public Datatype {
 private:
   string name_;
   DrawObj *parent_;
