@@ -1,5 +1,6 @@
 #include <Packages/Uintah/CCA/Components/MPM/RigidMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/ContactFactory.h>
@@ -75,7 +76,7 @@ void RigidMPM::computeStressTensor(const ProcessorGroup*,
 
   cout_doing <<"Doing computeStressTensor " <<"\t\t\t\t RigidMPM"<< endl;
 
-  if (d_doErosion) {
+  if (flags->d_doErosion) {
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
       ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();

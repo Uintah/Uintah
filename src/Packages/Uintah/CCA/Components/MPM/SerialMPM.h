@@ -10,6 +10,7 @@
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
 #include <Core/Geometry/Vector.h>
+#include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
 #include <Packages/Uintah/Core/Grid/ParticleSet.h>
 #include <Packages/Uintah/Core/Grid/ParticleVariable.h>
@@ -97,7 +98,7 @@ public:
 
   int get8or27()
   {
-       return d_8or27;
+       return flags->d_8or27;
   };
 
   enum bctype { NONE=0,
@@ -118,9 +119,7 @@ protected:
 
   virtual void materialProblemSetup(const ProblemSpecP& prob_spec, 
 				    SimulationStateP& sharedState,
-				    MPMLabel* lb, int n8or27,
-				    string integrator, bool haveLoadCurve,
-				    bool doErosion);
+				    MPMLabel* lb, MPMFlags* flags);
 	 
   virtual void actuallyInitialize(const ProcessorGroup*,
 				  const PatchSubset* patches,
@@ -298,6 +297,14 @@ protected:
 		       DataWarehouse* new_dw);
 
 
+  /*!  Convert the localized particles into particles of a new material
+       with a different velocity field */
+  void convertLocalizedParticles(const ProcessorGroup*,
+		                 const PatchSubset* patches,
+		                 const MaterialSubset* matls,
+		                 DataWarehouse* old_dw,
+		                 DataWarehouse* new_dw);
+
   //////////
   // Insert Documentation Here:
   void interpolateToParticlesAndUpdate(const ProcessorGroup*,
@@ -359,33 +366,25 @@ protected:
   void scheduleAddNewParticles( SchedulerP&, const PatchSet*,
 				const MaterialSet*);
 
+  void scheduleConvertLocalizedParticles(         SchedulerP&, const PatchSet*,
+				                  const MaterialSet*);
   void scheduleCalculateDampingRate(              SchedulerP&, const PatchSet*,
                                                   const MaterialSet*);
   SimulationStateP d_sharedState;
   MPMLabel* lb;
-  bool             d_artificial_viscosity;
+  MPMFlags* flags;
+
   double           d_nextOutputTime;
   double           d_outputInterval;
   double           d_SMALL_NUM_MPM;
-  int              d_8or27;  // Number of nodes a particle can interact with
   bool             d_doGridReset;  // Default is true, standard MPM
   double           d_min_part_mass; // Minimum particle mass before it's deleted
   double           d_max_vel; // Maxmimum particle velocity before it's deleted
   int              NGP;      // Number of ghost particles needed.
   int              NGN;      // Number of ghost nodes     needed.
 
-  double           d_artificialDampCoeff; // Artificial damping coefficient
   double           d_artificialViscCoeff1; // Artificial viscosity coefficient 1
   double           d_artificialViscCoeff2; // Artificial viscosity coefficient 2
-  bool             d_accStrainEnergy; // Flag for accumulating strain energy
-  bool             d_useLoadCurves; // Flag for using load curves
-  bool             d_doErosion; // Flag to decide whether to erode or not
-  bool             d_createNewParticles; // Flag to decide whether to create
-                                         // new particles after failure
-  std::string      d_erosionAlgorithm; // Algorithm to erode material points
-  double           d_adiabaticHeating; // Flag adiabatic plastic heating on/off
-  double           d_forceIncrementFactor; // Increment in ForceBC applied force
-
   vector<MPMPhysicalBC*> d_physicalBCs;
   bool             d_fracture;
   bool             d_with_ice;

@@ -11,6 +11,7 @@
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/CCA/Components/MPM/Contact/Contact.h>
 #include <Core/Geometry/Vector.h>
+#include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBC.h>
 #include <Packages/Uintah/Core/Grid/ParticleSet.h>
 #include <Packages/Uintah/Core/Grid/ParticleVariable.h>
@@ -98,7 +99,7 @@ public:
 
   int get8or27()
   {
-       return d_8or27;
+       return flags->d_8or27;
   };
 
   enum bctype { NONE=0,
@@ -366,22 +367,15 @@ private:
   SimulationStateP d_sharedState;
   Output* dataArchiver;
   MPMLabel* lb;
+  MPMFlags* flags;
 
-  bool             d_artificial_viscosity;
   double           d_nextOutputTime;
   double           d_outputInterval;
   double           d_SMALL_NUM_MPM;
-  int              d_8or27;   // Number of nodes a particle can interact with
   double           d_min_part_mass; // Minimum particle mass before it's deleted
   double           d_max_vel; // Maxmimum particle velocity before it's deleted
   int              NGP;       // Number of ghost particles needed.
   int              NGN;       // Number of ghost nodes     needed.
-
-  double           d_artificialDampCoeff; // Artificial damping coefficient
-  bool             d_accStrainEnergy; // Flag for accumulating strain energy
-  bool             d_useLoadCurves; // Flag for using load curves
-  bool             d_doErosion; // Flag to decide whether to erode or not
-  std::string      d_erosionAlgorithm; // Algorithm used to erode material points
 
   vector<MPMPhysicalBC*> d_physicalBCs;
   bool             d_fracture;
