@@ -97,6 +97,7 @@ namespace SCIRun {
     std::vector<Module*> updateMiniView_modules;
 
   private:
+    QString filename;
     gov::cca::Services::pointer services;
     void buildPackageMenus();
     BuilderWindow(const BuilderWindow&);

@@ -52,7 +52,7 @@ public:
   NetworkCanvasView(BuilderWindow* p2BuilderWindow, QCanvas* canvas, QWidget* parent=0);
   void setServices(const gov::cca::Services::pointer &services);
   virtual ~NetworkCanvasView();
-  void addModule(const std::string& name, int x, int y, CIA::array1<std::string> & up, CIA::array1<std::string> &pp, const gov::cca::ComponentID::pointer &cid);
+  void addModule(const std::string& name, int x, int y, CIA::array1<std::string> & up, CIA::array1<std::string> &pp, const gov::cca::ComponentID::pointer &cid, bool reposition);
   void addConnection(Module *m1, const std::string & portname1, Module *m2, const std::string & portname2);	
   void removeConnection(QCanvasItem *c);
   void highlightConnection(QCanvasItem *c);
@@ -65,7 +65,7 @@ public:
   std::vector<Connection*> getConnections();
   BuilderWindow* p2BuilderWindow;
 
-  void addChild( Module* child, int x = 0, int y = 0 );
+  void addChild( Module* child, int x, int y, bool reposition);
 
 public slots:
   void removeModule(Module *);
