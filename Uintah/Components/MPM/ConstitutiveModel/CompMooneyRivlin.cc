@@ -240,7 +240,7 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
       // Compute the strain energy for all the particles
       se += (C1*(invar1-3.0) + C2*(invar2-3.0) +
             C3*(1.0/(invar3*invar3) - 1.0) +
-            C4*(invar3-1.0)*(invar3-1.0))*pvolume[idx];
+            C4*(invar3-1.0)*(invar3-1.0))*pvolume[idx]/J;
     }
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
@@ -332,7 +332,7 @@ double CompMooneyRivlin::computeStrainEnergy(const Patch* patch,
   
      se += (C1*(invar1-3.0) + C2*(invar2-3.0) +
            C3*(1.0/(invar3*invar3) - 1.0) +
-           C4*(invar3-1.0)*(invar3-1.0))*pvolume[idx];
+           C4*(invar3-1.0)*(invar3-1.0))*pvolume[idx]/J;
   }
 #endif
   return se;
@@ -366,6 +366,9 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 }
 
 // $Log$
+// Revision 1.52  2000/08/14 22:38:10  bard
+// Corrected strain energy calculation.
+//
 // Revision 1.51  2000/08/08 01:32:42  jas
 // Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
 // stuff.

@@ -249,7 +249,7 @@ void CompNeoHook::computeStressTensor(const Patch* patch,
 
     pvolume[idx]=Jinc*pvolume[idx];
 
-    se += (U + W)*pvolume[idx];
+    se += (U + W)*pvolume[idx]/J;
 
     // Compute wave speed at each particle, store the maximum
     muBar = IEl * shear;
@@ -320,7 +320,7 @@ double CompNeoHook::computeStrainEnergy(const Patch* patch,
      U = .5*bulk*(.5*(pow(J,2.0) - 1.0) - log(J));
      W = .5*shear*(bElBar[idx].Trace() - 3.0);
 
-     se += (U + W)*pvolume[idx];
+     se += (U + W)*pvolume[idx]/J;
   }
 #endif
 
@@ -386,6 +386,9 @@ const TypeDescription* fun_getTypeDescription(CompNeoHook::CMData*)
 }
 
 // $Log$
+// Revision 1.33  2000/08/14 22:38:10  bard
+// Corrected strain energy calculation.
+//
 // Revision 1.32  2000/08/08 01:32:42  jas
 // Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
 // stuff.
