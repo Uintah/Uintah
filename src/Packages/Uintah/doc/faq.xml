@@ -44,6 +44,24 @@
   </entry>
 
   <entry>
+    <keywords>fspec.pl</keywords>
+    <question>
+      <p>
+        How do I get the simulation to only run a set number of
+	iterations instead of going to a set time?
+      </p>
+    <answer>
+      <p>
+        In the "Time" field of the .ups file, put in a
+        "max_iterations" tag.  Set the value to the number of
+	iterations you want executed.  The simulation will run that
+        many iterations (or till maxTime, which ever comes first.)
+      </p>
+    </answer>
+  </entry>
+
+
+  <entry>
     <keywords>mpirun, MixedScheduler</keywords>
     <question>
       <p>
