@@ -26,8 +26,6 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-
-#define protected public
 /*
  *  ViewWindow.cc:  The Geometry Viewer Window
  *
@@ -39,13 +37,16 @@
  *
  *  Copyright (C) 1994 SCI Group
  */
+
 #include <sci_defs/collab_vis_defs.h>
 #include <sci_defs/chromium_defs.h>
 
 #include <Dataflow/Modules/Render/Viewer.h>
 #include <Dataflow/Modules/Render/ViewWindow.h>
+#include <Dataflow/Modules/Render/OpenGL.h>
 #include <Dataflow/Modules/Render/Ball.h>
 #include <Dataflow/Modules/Render/BallMath.h>
+#include <Dataflow/Network/Network.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/Timer.h>
@@ -73,243 +74,191 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Core/Thread/FutureValue.h>
-#include "OpenGL.h"
 #include <iostream>
-using std::cerr;
-#include <stdio.h>
-#include <string.h>
+#include <string>
 #include <sstream>
-using std::ostringstream;
+#include <stdio.h>
 
-// CollabVis code begin
-#ifdef HAVE_COLLAB_VIS
-#include <Dataflow/Network/Network.h>
-#endif
-// CollabVis code end
+using std::cerr;
+using std::ostringstream;
 
 #define MouseStart 0
 #define MouseEnd 1
 #define MouseMove 2
 
 namespace SCIRun {
-  
 
-ViewWindow::ViewWindow(Viewer* s, GuiInterface* gui, GuiContext* ctx)
-  : gui(gui), ctx(ctx), manager(s),
-    pos(ctx->subVar("pos")),
-    caxes(ctx->subVar("caxes")),
-    raxes(ctx->subVar("raxes")),
-    // CollabVis code begin
-    HaveCollabVis_(ctx->subVar("have_collab_vis")),
-    // CollabVis code end
-    doingImage(false),
-    doingMovie(false),
-    makeMPEG(false),
-    curFrame(0),
-    curName("./movie.%04d"),
-    dolly_throttle(0),
-    // CollabVis code begin
-#ifdef HAVE_COLLAB_VIS
-    groupInfo( NULL ),
-    groupInfoLock( "GroupInfoLock" ),
-    handlingOneTimeRequest( false ),
-    viewStateLock("ViewStateLock"),
-#endif
-    // CollabVis code end
-    show_rotation_axis(false),
-    id(ctx->getfullname()),
-    need_redraw( false ),
-    view(ctx->subVar("view")),
-    homeview(Point(2.1, 1.6, 11.5), Point(.0, .0, .0), Vector(0,1,0), 20),
-    track_view_window_0_(ctx->subVar("trackViewWindow0")),
-    light0(ctx->subVar("global-light0")),
-    light1(ctx->subVar("global-light1")),
-    light2(ctx->subVar("global-light2")),
-    light3(ctx->subVar("global-light3")),
-    lightColors(ctx->subVar("lightColors")),
-    lightVectors(ctx->subVar("lightVectors")),
-    bgcolor(ctx->subVar("bgcolor")), 
-    shading(ctx->subVar("shading")),
-    do_stereo(ctx->subVar("do_stereo")), 
-    ambient_scale(ctx->subVar("ambient-scale")),
-    diffuse_scale(ctx->subVar("diffuse-scale")),
-    specular_scale(ctx->subVar("specular-scale")),
-    emission_scale(ctx->subVar("emission-scale")),
-    shininess_scale(ctx->subVar("shininess-scale")),
-    polygon_offset_factor(ctx->subVar("polygon-offset-factor")),
-    polygon_offset_units(ctx->subVar("polygon-offset-units")),
-    point_size(ctx->subVar("point-size")),
-    line_width(ctx->subVar("line-width")),
-    sbase(ctx->subVar("sbase")),
-    sr(ctx->subVar("sr")),
-    // --  BAWGL -- 
-    do_bawgl(ctx->subVar("do_bawgl")),  
-    // --  BAWGL -- 
-    drawimg(ctx->subVar("drawimg")),
-    saveprefix(ctx->subVar("saveprefix")),
-    file_resx(ctx->subVar("resx")),
-    file_resy(ctx->subVar("resy")),
-    file_aspect(ctx->subVar("aspect")),
-    file_aspect_ratio(ctx->subVar("aspect_ratio")),
-    gui_global_light_(ctx->subVar("global-light")),
-    gui_global_fog_(ctx->subVar("global-fog")),
-    gui_global_debug_(ctx->subVar("global-debug")),
-    gui_global_clip_(ctx->subVar("global-clip")),
-    gui_global_cull_(ctx->subVar("global-cull")),
-    gui_global_dl_(ctx->subVar("global-dl")),
-    gui_global_type_(ctx->subVar("global-type")),
+ViewWindow::ViewWindow(Viewer* viewer, GuiInterface* gui, GuiContext* ctx)
+  : id_(ctx->getfullname()),
+    inertia_mode_(0),
+    ball_(scinew BallData()),
+    angular_v_(0.0),
+    rot_view_(),
+    prev_trans_(),
+    eye_dist_(0.0),
+    gui_view_(ctx->subVar("view")),
+    gui_sr_(ctx->subVar("sr")),
+    gui_do_stereo_(ctx->subVar("do_stereo")), 
     gui_ortho_view_(ctx->subVar("ortho-view")),
+    gui_track_view_window_0_(ctx->subVar("trackViewWindow0")),
+    gui_raxes_(ctx->subVar("raxes")),
+    gui_ambient_scale_(ctx->subVar("ambient-scale")),
+    gui_diffuse_scale_(ctx->subVar("diffuse-scale")),
+    gui_specular_scale_(ctx->subVar("specular-scale")),
+    gui_emission_scale_(ctx->subVar("emission-scale")),
+    gui_shininess_scale_(ctx->subVar("shininess-scale")),
+    gui_polygon_offset_factor_(ctx->subVar("polygon-offset-factor")),
+    gui_polygon_offset_units_(ctx->subVar("polygon-offset-units")),
+    gui_point_size_(ctx->subVar("point-size")),
+    gui_line_width_(ctx->subVar("line-width")),
+    gui_sbase_(ctx->subVar("sbase")),
+    gui_bgcolor_(ctx->subVar("bgcolor")), 
+    // Private Variables
+    viewer_(viewer),
+    renderer_(new OpenGL(gui, viewer, this)),
+    gui_(gui), 
+    ctx_(ctx),
+    visible_(),
+    obj_tag_(),
+    need_redraw_(false),
+    pick_n_(0),
+    maxtag_(0),
+    last_x_(0),
+    last_y_(0),
+    last_time_(0),
+    mouse_action_(false),
+    total_x_(0.0),
+    total_y_(0.0),
+    total_z_(0.0),
+    total_scale_(.01),
+    homeview_(Point(2.1, 1.6, 11.5), Point(.0, .0, .0), Vector(0,1,0), 20),
+    rotate_valid_p_(0),
+    pick_pick_(0),
+    pick_obj_(0),
+    viewwindow_objs_(),
+    viewwindow_objs_draw_(),
+    dolly_total_(0.0),
+    dolly_vector_(0.0, 0.0, 0.0),
+    dolly_throttle_(0.0),
+    dolly_throttle_scale_(0.0),
+    unicam_state_(0),
+    down_x_(0),
+    down_y_(0),
+    down_pt_(),
+    dtime_(0.0),
+    uni_dist_(0.0),
+    focus_sphere_(scinew GeomSphere),
     gui_current_time_(ctx->subVar("current_time",false)),
-    gui_currentvisual_(ctx->subVar("currentvisual"))
+    gui_currentvisual_(ctx->subVar("currentvisual")),
+    gui_caxes_(ctx->subVar("caxes")),
+    gui_pos_(ctx->subVar("pos"))
 {
-  inertia_mode=0;
-  bgcolor.set(Color(0,0,0));
+  gui_->add_command(id_ + "-c", this, 0);
 
-  view.set(homeview);
+  gui_bgcolor_.set(Color(0,0,0));
+  gui_view_.set(homeview_);
 
-  gui->add_command(id+"-c", this, 0);
-  current_renderer=new OpenGL(gui);
-  maxtag=0;
-  ball = new BallData();
-  ball->Init();
-  // --  BAWGL -- 
-  bawgl = new SCIBaWGL();
-  // --  BAWGL -- 
+  ball_->Init();
   
   // 0 - Axes, visible
-  viewwindow_objs.push_back( createGenAxes() );
-  viewwindow_objs_draw.push_back(true);              
+  viewwindow_objs_.push_back( createGenAxes() );
+  viewwindow_objs_draw_.push_back(true);              
 
   // 1 - Unicam control sphere, not visible by default.
-  focus_sphere = scinew GeomSphere;
-  Color c(0.0, 0.0, 1.0);
-  MaterialHandle focus_color = scinew Material(c);
-  viewwindow_objs.push_back(scinew GeomMaterial(focus_sphere, focus_color));
-  viewwindow_objs_draw.push_back(false);
+  MaterialHandle focus_color = scinew Material(Color(0.0, 0.0, 1.0));
+  viewwindow_objs_.push_back(scinew GeomMaterial(focus_sphere_, focus_color));
+  viewwindow_objs_draw_.push_back(false);
 
-  // CollabVis code begin
-#ifdef HAVE_COLLAB_VIS
-  //cerr << "[HAVE_COLLAB_VIS] (ViewWindow::ViewWindow) 1\n";
-
-  // Allocate memory for server object
-  server = scinew ViewServer();
-  
-  // Add the view server to the network. All further module adds/subs/mods
-  // will now be noted.
-  s->getNetwork()->write_lock();
-  //s->getNetwork()->server = &server;
-  s->getNetwork()->server = server;
-  //server.network = s->getNetwork();
-  server->network = s->getNetwork();
-  s->getNetwork()->write_unlock();
-
-  //cout << "[HAVE_COLLAB_VIS] (ViewWindow::ViewWindow) Setting HaveCollabVis_ to 1\n";
-  // Set have_collab_vis variable to true in the GUI
-  HaveCollabVis_.set(1);
-  
-#else
-
-  // Set have_collab_vis variable to false in the GUI
-  HaveCollabVis_.set(0);
-  
-#endif
-  // CollabVis code end
-
-  // Clip plane variables, declare them so that they are saved out.
-  ctx->subVar("clip-num");
-  ctx->subVar("clip-visible");
-  ctx->subVar("clip-selected");
+  // Clip plane variables, declare them so that they are saved out
+  ctx_->subVar("clip-num");
+  ctx_->subVar("clip-visible");
+  ctx_->subVar("clip-selected");
   for (unsigned int i = 0; i < 6; i++)
   {
     const string istr = to_string(i+1);
-    ctx->subVar("clip-visible-" + istr);
-    ctx->subVar("clip-normal-x-" + istr);
-    ctx->subVar("clip-normal-y-" + istr);
-    ctx->subVar("clip-normal-z-" + istr);
-    ctx->subVar("clip-normal-d-" + istr);
-  }
-}
-
-
-string ViewWindow::set_id(const string& new_id)
-{
-  string old_id=id;
-  id=new_id;
-  return old_id;
-}
-
-void ViewWindow::itemAdded(GeomViewerItem* si)
-{
-  // Invalidate the bounding box
-  bb.reset();
-  const string &name = si->name_;
-  map<string,GuiInt*>::iterator gui_iter = visible.find(name);
-  if(gui_iter==visible.end()){
-    visible[name] = scinew GuiInt(ctx->subVar(name), 1);
-    const int num = maxtag++;
-    obj_tag[name] = num;
-    gui->eval(id+" addObject "+to_string(num)+" {"+name+"}");
-  } else {
-    gui->eval(id+" addObject2 "+to_string(obj_tag[name]));
+    ctx_->subVar("clip-visible-" + istr);
+    ctx_->subVar("clip-normal-x-" + istr);
+    ctx_->subVar("clip-normal-y-" + istr);
+    ctx_->subVar("clip-normal-z-" + istr);
+    ctx_->subVar("clip-normal-d-" + istr);
   }
 
-  need_redraw = true;
+  // Lighting Variables, declare them so that they are saved out
+  ctx_->subVar("global-light0");
+  ctx_->subVar("global-light1");
+  ctx_->subVar("global-light2");
+  ctx_->subVar("global-light3");
+  ctx_->subVar("lightColors");
+  ctx_->subVar("lightVectors");
+
+  // Global DrawInfo Varialbes, declare them so that they are saved
+  ctx_->subVar("global-light");
+  ctx_->subVar("global-fog");
+  ctx_->subVar("global-debug");
+  ctx_->subVar("global-clip");
+  ctx_->subVar("global-cull");
+  ctx_->subVar("global-dl");
+  ctx_->subVar("global-type");
 }
 
-void ViewWindow::itemDeleted(GeomViewerItem *si)
+// Destructor
+ViewWindow::~ViewWindow()
+{
+  delete renderer_;
+  delete ball_;
+  gui_->delete_command(id_+"-c" ); 
+}
+
+void
+ViewWindow::itemAdded(GeomViewerItem* si)
 {
   const string &name = si->name_;
-  map<string,GuiInt*>::iterator gui_iter = visible.find(name);
-  if (gui_iter == visible.end()) { // if not found
+  map<string,GuiInt*>::iterator gui_iter = visible_.find(name);
+  if(gui_iter==visible_.end()){
+    visible_[name] = scinew GuiInt(ctx_->subVar(name), 1);
+    obj_tag_[name] = maxtag_++;
+  }
+  gui_->eval(id_+" addObject "+to_string(obj_tag_[name])+" {"+name+"}");
+  need_redraw_ = true;
+}
+
+void
+ViewWindow::itemDeleted(GeomViewerItem *si)
+{
+  const string &name = si->name_;
+  map<string,GuiInt*>::iterator gui_iter = visible_.find(name);
+  if (gui_iter == visible_.end()) { // if not found
     cerr << name << " has dissappeared from the viewer\n";
   } else {
-    gui->eval(id+" removeObject "+to_string(obj_tag[name]));
+    gui_->eval(id_+" removeObject "+to_string(obj_tag_[name]));
   }
-				// invalidate the bounding box
-  bb.reset();
-  need_redraw=true;
+  need_redraw_=true;
 }
 
-void ViewWindow::itemRenamed(GeomViewerItem *si, string newname)
+void
+ViewWindow::itemRenamed(GeomViewerItem *si, string newname)
 {
-  const BBox bbox_cache = bb;
-  const int need_redraw_cache = need_redraw;
+  const int need_redraw_cache = need_redraw_;
   itemDeleted(si);
   si->name_ = newname;
   itemAdded(si);
-  bb = bbox_cache;
-  need_redraw = need_redraw_cache;
+  need_redraw_ = need_redraw_cache;
 }
 
-
-ViewWindow::~ViewWindow()
-{
-  delete current_renderer;
-  delete ball;
-  delete bawgl;
-  gui->delete_command( id+"-c" ); 
-}
-
-void ViewWindow::get_bounds(BBox& bbox)
+void
+ViewWindow::get_bounds(BBox& bbox)
 {
   bbox.reset();
-
-  GeomIndexedGroup::IterIntGeomObj iter = manager->ports_.getIter();
-    
+  GeomIndexedGroup::IterIntGeomObj iter = viewer_->ports_.getIter();
   for ( ; iter.first != iter.second; iter.first++) {
-	
     GeomIndexedGroup::IterIntGeomObj serIter =
       ((GeomViewerPort*)((*iter.first).second.get_rep()))->getIter();
-
-				// items in the scen are all
-				// GeomViewerItem's...
+    // items in the scene are all GeomViewerItem's...
     for ( ; serIter.first != serIter.second; serIter.first++) {
       GeomViewerItem *si=(GeomViewerItem*)((*serIter.first).second.get_rep());
-	    
-				// Look up the name to see if it
-				// should be drawn...
-      map<string,GuiInt*>::iterator gui_iter = visible.find(si->name_);
-      if (gui_iter != visible.end()) { // if found
+      // Look up the name to see if it should be drawn...
+      map<string,GuiInt*>::iterator gui_iter = visible_.find(si->name_);
+      if (gui_iter != visible_.end()) { // if found
 	if ((*gui_iter).second->get()) {
 	  if(si->crowd_lock_) si->crowd_lock_->readLock();
 	  si->get_bounds(bbox);
@@ -325,13 +274,11 @@ void ViewWindow::get_bounds(BBox& bbox)
   }
 
   // XXX - START - ASF ADDED FOR UNICAM
-  //   cerr << "viewwindow_objs.size() = " << viewwindow_objs.size() << "\n";
-  //int objs_size = viewwindow_objs.size();
-  unsigned int draw_size = viewwindow_objs_draw.size();
-  for(unsigned int i=0;i<viewwindow_objs.size();i++) {
-    
-    if (i<draw_size && viewwindow_objs_draw[i])
-      viewwindow_objs[i]->get_bounds(bbox);
+  const unsigned int objs_size = viewwindow_objs_.size();
+  const unsigned int draw_size = viewwindow_objs_draw_.size();
+  for(unsigned int i = 0; i < objs_size; i++) {
+    if (i < draw_size && viewwindow_objs_draw_[i])
+      viewwindow_objs_[i]->get_bounds(bbox);
   }
   // XXX - END   - ASF ADDED FOR UNICAM
 
@@ -343,419 +290,39 @@ void ViewWindow::get_bounds(BBox& bbox)
   }
 }
 
-// CollabVis code begin
-#ifdef HAVE_COLLAB_VIS
-
-#define _sub(a,x,y) a[ (x) + (y) * xres * 3 ]
-
-void ViewWindow::sendImageToServer( char * image, int xres, int yres ) {
-  //cout << "[HAVE_COLLAB_VIS] (ViewWindow::sendImageToServer) 0\n";
-  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::sendImageToServer) entered\n" );
-  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::sendImageToServer) locking groupInfoLock\n" );
-
-  //groupInfoLock.lock();
-  if( !groupInfoLock.tryLock() )
-  {
-    Log::log( SemotusVisum::Logging::WARNING, "(ViewWindow::sendImageToServer) failed to lock groupInfoLock\n" );
-    return;
-  }
-
-  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::sendImageToServer) before ImageRenderer *ir\n" );
-  
-  ImageRenderer *ir = (ImageRenderer *)(groupInfo->group->getRenderer());
-
-  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::sendImageToServer) before getSubimage\n" );
-  
-  if ( ir->getSubimage() ) {
-    WallClockTimer t;
-    t.start();
-    // Try this - see how much of the image is non-background.
-    int left = 0, top = 0;
-    int right = xres-1, bottom = yres-1;
-    char THRESHOLD = 4; // if it's within this, it's background!
-    
-    Color bg(bgcolor.get());
-    char r = (char)(bg.r() * 255) % 255;
-    char g = (char)(bg.g() * 255) % 255;
-    char b = (char)(bg.b() * 255) % 255;
-    
-    
-    // Top
-    for ( int i = top; i < bottom; i++ )
-      for ( int j = left; j < right*3; j+=3 )
-	if ( Abs( _sub( image, j, i ) - r ) > THRESHOLD ||
-	     Abs( _sub( image, j+1, i ) - g ) > THRESHOLD ||
-	     Abs( _sub( image, j+2, i ) - b ) > THRESHOLD ) {
-	  top = i;
-	  goto left;
-	}
-  left:
-    for ( int i = left; i < right*3; i+=3 )
-      for ( int j = top; j < bottom; j++ )
-	if ( Abs( _sub( image, i, j ) - r ) > THRESHOLD ||
-	     Abs( _sub( image, i+1, j ) - g ) > THRESHOLD ||
-	     Abs( _sub( image, i+2, j ) - b ) > THRESHOLD ) {
-	  left = i/3;
-	  goto bottom;
-	}
-  bottom:
-    for ( int i = bottom; i > top; i-- )
-      for ( int j = left; j < right*3; j+=3 )
-	if ( Abs( _sub( image, j, i ) - r ) > THRESHOLD ||
-	     Abs( _sub( image, j+1, i ) - g ) > THRESHOLD ||
-	     Abs( _sub( image, j+2, i ) - b ) > THRESHOLD ) {
-	  bottom = i;
-	  goto right;
-	}
-  right:
-    for ( int i = right*3; i > left; i-=3 )
-      for ( int j = top; j < bottom; j++ )    
-	if ( Abs( _sub( image, i, j ) - r ) > THRESHOLD ||
-	     Abs( _sub( image, i+1, j ) - g ) > THRESHOLD ||
-	     Abs( _sub( image, i+2, j ) - b ) > THRESHOLD ) {
-	  right = i/3;
-	  goto done;
-	}
-  done:
-    t.stop();
-    cerr << "Subimage Took " << t.time() * 1000.0 << " ms." << endl;
-    
-    int xdim = right-left;
-    int ydim = bottom-top;
-    
-    char *newImage = scinew char[ xdim * ydim * 3 ];
-    for ( int i = 0, y = top; i < ydim; i++, y++ )
-      memcpy( &newImage[ i*xdim*3 ],
-	      &image[ left*3 + y*xres*3 ],
-	      xdim*3 );
-    //server.sendImage( newImage, xdim, ydim, left, top, xres, yres, bg,
-    //	      groupInfo->group->getRenderer() );
-    Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::sendImageToServer) before server->sendImage 1\n" );
-    server->sendImage( newImage, xdim, ydim, left, top, xres, yres, bg,
-    	      groupInfo->group->getRenderer() );
-    delete[] image;
-  }
-  else
-  {
-    //server.sendImage( image, xres, yres, groupInfo->group->getRenderer() );
-    Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::sendImageToServer) before server->sendImage 2\n" );
-    server->sendImage( image, xres, yres, groupInfo->group->getRenderer() );
-  }
-
-  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::sendImageToServer) unlocking groupInfoLock\n" );
-  groupInfoLock.unlock();
-
-  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::sendImageToServer) leaving\n" );
-  cerr << "End of ViewWindow::sendImageToServer\n";
-}
-
-#undef _sub
-	   
-void  ViewWindow::getViewState( ViewWindowState &state ) {
-  //cout << "[HAVE_COLLAB_VIS] (ViewWindow::getViewState) 0" << endl;
-  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::getViewState) entered\n" );
-  char buffer[1000];
-  snprintf( buffer, 1000,
-	    "(ViewWindow::getViewState) Getting view state for state 0x%x, window 0x%x",
-	    (void *)(&state), (void *)this );
-  Log::log( SemotusVisum::Logging::DEBUG, buffer );
-  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::getViewState) calling viewStateLock.readLock()" );
-  viewStateLock.readLock();
-  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::getViewState) finished calling viewStateLock.readLock()" );
-  state.angular_v = angular_v;
-  state.ball = *ball;
-  state.dolly_total = dolly_total;
-  state.dolly_vector = dolly_vector;
-  state.dolly_throttle = dolly_throttle;
-  state.eye_dist = eye_dist;
-  state.inertia_mode = inertia_mode;
-  state.last_x = last_x;
-  state.last_y = last_y;
-  state.last_time = last_time;
-  state.prev_quat[0] = prev_quat[0];
-  state.prev_quat[1] = prev_quat[1];
-  state.prev_quat[2] = prev_quat[2];
-  state.prev_time[0] = prev_time[0];
-  state.prev_time[1] = prev_time[1];
-  state.prev_time[2] = prev_time[2];
-  state.prev_trans = prev_trans;
-  state.rot_point = rot_point;
-  state.rot_point_valid = rot_point_valid;
-  state.rot_view = rot_view;
-  state.total_scale = total_scale;
-  state.total_x = total_x; 
-  state.total_y = total_y; 
-  state.total_z = total_z;
-  // New 5-25-02
-
-  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::getViewState) checking state.view" );
-  
-  if ( state.view == NULL )
-  {
-    //state.view = scinew GuiView(view); // this function isn't actually implemented
-    state.view = scinew GuiView(ctx);
-    *state.view = view;
-  }
-  else
-  {
-    *state.view = view;
-  }
-
-
-  /*
-  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::getViewState) before logging statements" );
-  
-  // Old state.view = view;
-
-  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::getViewState) before state.view->get()" );
-  View v = state.view->get();
-  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::getViewState) before eye" );
-  snprintf( buffer, 1000, "Eye for get state 0x%x: (%f,%f,%f)",
-	    (void *)(&state),
-	    v.eyep().x(),
-	    v.eyep().y(),
-	    v.eyep().z() );
-  Log::log( SemotusVisum::Logging::DEBUG, buffer );
-  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::getViewState) before lookat" );
-  snprintf( buffer, 1000, "Lookat for get state 0x%x: (%f,%f,%f)",
-	    (void *)(&state),
-	    v.lookat().x(),
-	    v.lookat().y(),
-	    v.lookat().z() );
-  Log::log( SemotusVisum::Logging::DEBUG, buffer );
-  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::getViewState) before up" );
-  snprintf( buffer, 1000, "Up for get state 0x%x: (%f,%f,%f)",
-	    (void *)(&state),
-	    v.up().x(),
-	    v.up().y(),
-	    v.up().z() );
-  Log::log( SemotusVisum::Logging::DEBUG, buffer );
-  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::getViewState) before fov" );
-  snprintf( buffer, 1000, "Fov for get state 0x%x: %f",
-	    (void *)(&state),
-	    v.fov() );
-  Log::log( SemotusVisum::Logging::DEBUG, buffer );
-  */
-  
-	    
-  // GUI parameters 
-  //get_gui_stringvar( id, "global-light", state.lighting ); 
-  //get_gui_stringvar( id, "global-fog", state.fog ); 
-  //get_gui_stringvar( id, "global-type", state.shading );
- 
-  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::getViewState) calling viewStateLock.readUnlock()" );
-  
-  viewStateLock.readUnlock();
-  snprintf( buffer, 1000,
-	    "Got view state for state 0x%x, window 0x%x",
-	    (void *)(&state), (void *)this );
-  Log::log( SemotusVisum::Logging::DEBUG, buffer );
-  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::getViewState) leaving\n" );
-}
-
-void  ViewWindow::setViewState( const ViewWindowState &state ) {
-  //cout << "[HAVE_COLLAB_VIS] (ViewWindow::setViewState) 0" << endl;
-  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::setViewState) entered" );
-  char buffer[1000];
-  snprintf( buffer, 1000,
-	    "Setting view state for state 0x%x, window 0x%x",
-	    (void *)(&state), (void *)this );
-
-  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::setViewState) before setting state" );
-  
-  viewStateLock.writeLock();
-  angular_v = state.angular_v;
-  *ball = state.ball;
-  dolly_total = state.dolly_total;
-  dolly_vector = state.dolly_vector;
-  dolly_throttle = state.dolly_throttle;
-  eye_dist = state.eye_dist;
-  inertia_mode = state.inertia_mode;
-  last_x = state.last_x;
-  last_y = state.last_y;
-  last_time = state.last_time;
-  prev_quat[0] = state.prev_quat[0];
-  prev_quat[1] = state.prev_quat[1];
-  prev_quat[2] = state.prev_quat[2];
-  prev_time[0] = state.prev_time[0];
-  prev_time[1] = state.prev_time[1];
-  prev_time[2] = state.prev_time[2];
-  prev_trans = state.prev_trans;
-  rot_point = state.rot_point;
-  rot_point_valid = state.rot_point_valid;
-  rot_view = state.rot_view;
-  total_scale = state.total_scale;
-  total_x = state.total_x;
-  total_y = state.total_y;
-  total_z = state.total_z;
-
-  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::setViewState) before checking state view" );
-   
-  // New 5-25-2
-  if ( state.view == NULL ) {
-    Log::log( WARNING, "Loading a view window with a NULL view!" );
-  }
-  else
-    view = *state.view;
-    // Old view = state.view;
-
-  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::setViewState) before logging state" );
-
-  /*
-  View v = view.get();
-  snprintf( buffer, 1000, "Eye for set state 0x%x: (%f,%f,%f)",
-	    (void *)(&state),
-	    v.eyep().x(),
-	    v.eyep().y(),
-	    v.eyep().z() );
-  Log::log( SemotusVisum::Logging::DEBUG, buffer );
-  snprintf( buffer, 1000, "Lookat for set state 0x%x: (%f,%f,%f)",
-	    (void *)(&state),
-	    v.lookat().x(),
-	    v.lookat().y(),
-	    v.lookat().z() );
-  Log::log( SemotusVisum::Logging::DEBUG, buffer );
-  snprintf( buffer, 1000, "Up for set state 0x%x: (%f,%f,%f)",
-	    (void *)(&state),
-	    v.up().x(),
-	    v.up().y(),
-	    v.up().z() );
-  Log::log( SemotusVisum::Logging::DEBUG, buffer );
-  snprintf( buffer, 1000, "Fov for set state 0x%x: %f",
-	    (void *)(&state),
-	    v.fov() );
-  Log::log( SemotusVisum::Logging::DEBUG, buffer );
-  */
-  
-  // GUI parameters
-  //set_guivar( id, "global-light", state.lighting );
-  //set_guivar( id, "global-fog", state.fog );
-  //set_guivar( id, "global-type", state.shading );
-
-  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::setViewState) before writeUnlock" );
-   
-  viewStateLock.writeUnlock();
-  snprintf( buffer, 1000,
-	    "Set view state for state 0x%x, window 0x%x",
-	    (void *)(&state), (void *)this );
-  Log::log( SemotusVisum::Logging::DEBUG, "(ViewWindow::setViewState) leaving" );
-}
-
-
-Array1<GeomObj*> ViewWindow::getGeometry() {
-  //cout << "[HAVE_COLLAB_VIS] (ViewWindow::getGeometry) 0" << endl;
-
-}
-
-// CollabVis code end
-#endif
-
-
-void ViewWindow::rotate(double /*angle*/, Vector /*v*/, Point /*c*/)
-{
-  NOT_FINISHED("ViewWindow::rotate");
-#ifdef OLDUI
-  evl->lock();
-  make_current();
-  double temp[16];
-  glGetDoublev(GL_MODELVIEW_MATRIX, temp);
-  glPopMatrix();
-  glLoadIdentity();
-  glTranslated(c.x(), c.y(), c.z());
-  glRotated(angle,v.x(), v.y(), v.z());
-  glTranslated(-c.x(), -c.y(), -c.z());
-  glMultMatrixd(temp);
-  for (int i=0; i<kids.size(); i++)
-    kids[i]->rotate(angle, v, c);
-  evl->unlock();
-#endif
-  need_redraw=true;
-}
-
-void ViewWindow::rotate_obj(double /*angle*/, const Vector& /*v*/, const Point& /*c*/)
-{
-  NOT_FINISHED("ViewWindow::rotate_obj");
-#ifdef OLDUI
-  evl->lock();
-  make_current();
-  glTranslated(c.x(), c.y(), c.z());
-  glRotated(angle, v.x(), v.y(), v.z());
-  glTranslated(-c.x(), -c.y(), -c.z());
-  for(int i=0; i<kids.size(); i++)
-    kids[i]->rotate(angle, v, c);
-  evl->unlock();
-#endif
-  need_redraw=true;
-}
-
-void ViewWindow::translate(Vector /*v*/)
-{
-  NOT_FINISHED("ViewWindow::translate");
-#ifdef OLDUI
-  evl->lock();
-  make_current();
-  double temp[16];
-  glGetDoublev(GL_MODELVIEW_MATRIX, temp);
-  glPopMatrix();
-  glLoadIdentity();
-  glTranslated(v.x()*mtnScl, v.y()*mtnScl, v.z()*mtnScl);
-  glMultMatrixd(temp);
-  for (int i=0; i<kids.size(); i++)
-    kids[i]->translate(v);
-  evl->unlock();
-#endif
-  need_redraw=true;
-}
-
-void ViewWindow::scale(Vector /*v*/, Point /*c*/)
-{
-  NOT_FINISHED("ViewWindow::scale");
-#ifdef OLDUI
-  evl->lock();
-  make_current();
-  glTranslated(c.x(), c.y(), c.z());
-  glScaled(v.x(), v.y(), v.z());
-  glTranslated(-c.x(), -c.y(), -c.z());
-  mtnScl*=v.x();
-  for (int i=0; i<kids.size(); i++)
-    kids[i]->scale(v, c);
-  evl->unlock();
-#endif
-  need_redraw=true;
-}
-
-void ViewWindow::mouse_translate(int action, int x, int y, int, int, int)
+void
+ViewWindow::mouse_translate(int action, int x, int y, int, int, int)
 {
   switch(action){
   case MouseStart:
     {
-      if (inertia_mode) {
-	inertia_mode=0;
+      if (inertia_mode_) {
+	inertia_mode_=0;
 	redraw();
       }
-      last_x=x;
-      last_y=y;
-      total_x = 0;
-      total_y = 0;
+      last_x_=x;
+      last_y_=y;
+      total_x_ = 0;
+      total_y_ = 0;
       update_mode_string("translate: ");
     }
     break;
   case MouseMove:
     {
-      int xres=current_renderer->xres;
-      int yres=current_renderer->yres;
-      double xmtn=double(last_x-x)/double(xres);
-      double ymtn=-double(last_y-y)/double(yres);
-      last_x = x;
-      last_y = y;
+      int xres=renderer_->xres_;
+      int yres=renderer_->yres_;
+      double xmtn=double(last_x_-x)/double(xres);
+      double ymtn=-double(last_y_-y)/double(yres);
+      last_x_ = x;
+      last_y_ = y;
       // Get rid of roundoff error for the display...
-      if (Abs(total_x) < .001) total_x = 0;
-      if (Abs(total_y) < .001) total_y = 0;
+      if (Abs(total_x_) < .001) total_x_ = 0;
+      if (Abs(total_y_) < .001) total_y_ = 0;
 
-      View tmpview(view.get());
+      View tmpview(gui_view_.get());
       double aspect=double(xres)/double(yres);
       double znear, zfar;
-      if(!current_renderer->compute_depth(this, tmpview, znear, zfar))
+      if(!renderer_->compute_depth(tmpview, znear, zfar))
 	return; // No objects...
       double zmid=(znear+zfar)/2.;
       Vector u,v;
@@ -764,25 +331,25 @@ void ViewWindow::mouse_translate(int action, int x, int y, int, int, int)
       double vl=v.length();
       Vector trans(u*xmtn+v*ymtn);
 
-      total_x+=ul*xmtn;
-      total_y+=vl*ymtn;
+      total_x_+=ul*xmtn;
+      total_y_+=vl*ymtn;
 
       // Translate the view...
       tmpview.eyep(tmpview.eyep()+trans);
       tmpview.lookat(tmpview.lookat()+trans);
 
       // Put the view back...
-      view.set(tmpview);
+      gui_view_.set(tmpview);
 
-      need_redraw=true;
+      need_redraw_=true;
       ostringstream str;
-      str << "translate: " << total_x << ", " << total_y;
+      str << "translate: " << total_x_ << ", " << total_y_;
       update_mode_string(str.str());
     }
     break;
   case MouseEnd:
     update_mode_string("");
-    //need_redraw=true; -- this would be needed for mouse-adaptive rendering
+    //need_redraw_=true; -- this would be needed for mouse-adaptive rendering
     break;
   }
 }
@@ -794,31 +361,31 @@ void ViewWindow::mouse_translate(int action, int x, int y, int, int, int)
 // -- throttle is *not* reset on mouse release
 // -- throttle is reset on autoview
 // -- throttle is normalized by the length of the diagonal of the scene's bbox 
-
-void ViewWindow::mouse_dolly(int action, int x, int y, int, int, int)
+void
+ViewWindow::mouse_dolly(int action, int x, int y, int, int, int)
 {
   switch(action){
   case MouseStart:
     {
-      if (inertia_mode) {
-	inertia_mode=0;
+      if (inertia_mode_) {
+	inertia_mode_=0;
 	redraw();
       }
-      if (dolly_throttle == 0) {
+      if (dolly_throttle_ == 0) {
 	BBox bbox;
 	get_bounds(bbox);
-	dolly_throttle_scale=bbox.diagonal().length()/
-	  Max(current_renderer->xres, current_renderer->yres);
-	dolly_throttle=1;
+	dolly_throttle_scale_=bbox.diagonal().length()/
+	  Max(renderer_->xres_, renderer_->yres_);
+	dolly_throttle_=1;
       }
 
-      last_x=x;
-      last_y=y;
+      last_x_ = x;
+      last_y_ = y;
 
-      View tmpview(view.get());
+      View tmpview(gui_view_.get());
       float curpt[2];
       NormalizeMouseXY(x, y, &curpt[0], &curpt[1]);
-      dolly_vector = tmpview.lookat() - tmpview.eyep();
+      dolly_vector_ = tmpview.lookat() - tmpview.eyep();
 
       // if the user clicked near the center of the screen, just move
       //   towards the lookat point, since read the z-values is sorta slow
@@ -830,43 +397,41 @@ void ViewWindow::mouse_dolly(int action, int x, int y, int, int, int)
 	redraw();
 
 	Point pick_pt;
-	if (current_renderer->pick_scene(x, y, &pick_pt)) {
-	  dolly_vector = pick_pt - tmpview.eyep();
+	if (renderer_->pick_scene(x, y, &pick_pt)) {
+	  dolly_vector_ = pick_pt - tmpview.eyep();
 	}
       }
 
-      dolly_vector.normalize();
-      dolly_total=0;
+      dolly_vector_.normalize();
+      dolly_total_=0;
       char str[100];
-      sprintf(str, "dolly: %.3g (th=%.3g)", dolly_total,
-	      dolly_throttle);
+      sprintf(str, "dolly: %.3g (th=%.3g)", dolly_total_, dolly_throttle_);
       update_mode_string(str);
     }
     break;
   case MouseMove:
     {
       double dly;
-      double xmtn=last_x-x;
-      double ymtn=last_y-y;
-      last_x = x;
-      last_y = y;
+      double xmtn=last_x_-x;
+      double ymtn=last_y_-y;
+      last_x_ = x;
+      last_y_ = y;
 
       if (Abs(xmtn)>Abs(ymtn)) {
 	double scl=-xmtn/200;
 	if (scl<0) scl=1/(1-scl); else scl+=1;
-	dolly_throttle *= scl;
+	dolly_throttle_ *= scl;
       } else {
-	dly=-ymtn*(dolly_throttle*dolly_throttle_scale);
-	dolly_total+=dly;
-	View tmpview(view.get());
-	tmpview.lookat(tmpview.lookat()+dolly_vector*dly);
-	tmpview.eyep(tmpview.eyep()+dolly_vector*dly);
-	view.set(tmpview);
-	need_redraw=true;
+	dly=-ymtn*(dolly_throttle_*dolly_throttle_scale_);
+	dolly_total_+=dly;
+	View tmpview(gui_view_.get());
+	tmpview.lookat(tmpview.lookat()+dolly_vector_*dly);
+	tmpview.eyep(tmpview.eyep()+dolly_vector_*dly);
+	gui_view_.set(tmpview);
+	need_redraw_=true;
       }
       char str[100];
-      sprintf(str, "dolly: %.3g (th=%.3g)", dolly_total, 
-	      dolly_throttle);
+      sprintf(str, "dolly: %.3g (th=%.3g)", dolly_total_, dolly_throttle_);
       update_mode_string(str);
     }
     break;
@@ -876,40 +441,41 @@ void ViewWindow::mouse_dolly(int action, int x, int y, int, int, int)
   }
 }
 
-void ViewWindow::mouse_scale(int action, int x, int y, int, int, int)
+void
+ViewWindow::mouse_scale(int action, int x, int y, int, int, int)
 {
   switch(action){
   case MouseStart:
     {
-      if (inertia_mode) {
-	inertia_mode=0;
+      if (inertia_mode_) {
+	inertia_mode_=0;
 	redraw();
       }
       update_mode_string("scale: ");
-      last_x=x;
-      last_y=y;
-      total_scale=1;
+      last_x_=x;
+      last_y_=y;
+      total_scale_=1.0;
     }
     break;
   case MouseMove:
     {
       double scl;
-      const double xmtn = (last_x-x) * 6.0 / current_renderer->xres;
-      const double ymtn = (last_y-y) * 6.0 / current_renderer->yres;
-      last_x = x;
-      last_y = y;
+      const double xmtn = (last_x_-x) * 6.0 / renderer_->xres_;
+      const double ymtn = (last_y_-y) * 6.0 / renderer_->yres_;
+      last_x_ = x;
+      last_y_ = y;
       const double len = sqrt(xmtn * xmtn + ymtn * ymtn);
       if (Abs(xmtn)>Abs(ymtn)) scl = xmtn; else scl = ymtn;
       if (scl<0) scl = 1.0 / (1.0 + len); else scl = len + 1.0;
-      total_scale*=scl;
+      total_scale_*=scl;
 
-      View tmpview(view.get());
+      View tmpview(gui_view_.get());
       tmpview.eyep(tmpview.lookat() + (tmpview.eyep() - tmpview.lookat())*scl);
 
-      view.set(tmpview);
-      need_redraw=true;
+      gui_view_.set(tmpview);
+      need_redraw_=true;
       ostringstream str;
-      str << "scale: " << 100.0/total_scale << "%";
+      str << "scale: " << 100.0/total_scale_ << "%";
       update_mode_string(str.str());
     }
     break;
@@ -919,73 +485,31 @@ void ViewWindow::mouse_scale(int action, int x, int y, int, int, int)
   }
 }
 
-float ViewWindow::WindowAspect()
+float
+ViewWindow::WindowAspect()
 {
-  float w = current_renderer->xres;
-  float h = current_renderer->yres;
+  float w = renderer_->xres_;
+  float h = renderer_->yres_;
 
   return w/h;
 }
 
-void ViewWindow::MyTranslateCamera(Vector offset)
+void
+ViewWindow::MyTranslateCamera(Vector offset)
 {
-  View tmpview(view.get());
+  View tmpview(gui_view_.get());
 
   tmpview.eyep  (tmpview.eyep  () + offset);
   tmpview.lookat(tmpview.lookat() + offset);
 
-  view.set(tmpview);
-  need_redraw=true;
+  gui_view_.set(tmpview);
+  need_redraw_=true;
 }
 
-// surprised this wasn't definied somewhere in Core?
-Point operator*(Transform &t, const Point &d)
+void
+ViewWindow::MyRotateCamera(Point  center, Vector axis, double angle) // radians
 {
-  float result[4], tmp[4];
-  result[0] = result[1] = result[2] = result[3] = 0;
-  tmp[0] = d(0);
-  tmp[1] = d(1);
-  tmp[2] = d(2);
-  tmp[3] = 1.0;
-
-  double mat[16];
-  t.get(mat);
-
-  for(int i=0;i<4;i++) {
-    for(int j=0;j<4;j++) {
-      result[i] += mat[4*i + j] * tmp[j];
-    }
-  }
-
-  return Point(result[0], result[1], result[2]);
-}
-
-Vector operator*(Transform &t, const Vector &d)
-{
-  float result[4], tmp[4];
-  result[0] = result[1] = result[2] = result[3] = 0;
-  tmp[0] = d.x();
-  tmp[1] = d.y();
-  tmp[2] = d.z();
-  tmp[3] = 0.0;
-
-  double mat[16];
-  t.get(mat);
-
-  for(int i=0;i<4;i++) {
-    for(int j=0;j<4;j++) {
-      result[i] += mat[4*i + j] * tmp[j];
-    }
-  }
-
-  return Vector(result[0], result[1], result[2]);
-}
-
-void ViewWindow::MyRotateCamera( Point  center,
-                          Vector axis,
-                          double angle )  // radians
-{
-  View tmpview(view.get());
+  View tmpview(gui_view_.get());
 
   Point Origin(0,0,0);
 
@@ -1003,27 +527,28 @@ void ViewWindow::MyRotateCamera( Point  center,
   tmpview.lookat(mat * a);
   tmpview.up    (mat * u);
 
-  view.set(tmpview);
-  need_redraw=true;
+  gui_view_.set(tmpview);
+  need_redraw_=true;
 }
 
 void
-ViewWindow::NormalizeMouseXY( int X, int Y, float *NX, float *NY )
+ViewWindow::NormalizeMouseXY(int X, int Y, float *NX, float *NY)
 {
-  *NX = -1.0 + 2.0 * double(X) / double(current_renderer->xres);
-  *NY =  1.0 - 2.0 * double(Y) / double(current_renderer->yres);
+  *NX = -1.0 + 2.0 * double(X) / double(renderer_->xres_);
+  *NY =  1.0 - 2.0 * double(Y) / double(renderer_->yres_);
 }
 
 void
 ViewWindow::UnNormalizeMouseXY(float NX, float NY, int *X, int *Y )
 {
-  *X = Round((NX + 1.0) * double(current_renderer->xres) / 2.0);
-  *Y = Round((1.0 - NY) * double(current_renderer->yres) / 2.0);
+  *X = Round((NX + 1.0) * double(renderer_->xres_) / 2.0);
+  *Y = Round((1.0 - NY) * double(renderer_->yres_) / 2.0);
 }
 
-Vector ViewWindow::CameraToWorld(Vector v)
+Vector
+ViewWindow::CameraToWorld(Vector v)
 {
-  View tmpview(view.get());
+  View tmpview(gui_view_.get());
 
   Vector z_axis,y_axis,x_axis;
 
@@ -1040,24 +565,9 @@ Vector ViewWindow::CameraToWorld(Vector v)
   return mat * v;
 }
 
-void ViewWindow::unicam_choose(int X, int Y)
+void
+ViewWindow::unicam_choose(int X, int Y)
 {
-  //   MyTranslateCamera(Vector(0.1,0,0));
-  //   BBox bbox;
-  //   get_bounds(bbox);
-  //   Point ctr = (bbox.valid() ? bbox.center() : Point(0,0,0));
-  //   MyRotateCamera(ctr,
-  //                  Vector(0,1,0),
-  //                  1 * M_PI/180.0);
-
-  //   cerr << CameraToWorld(Vector(1,0,0)) << "\n";
-  //   cerr << CameraToWorld(Vector(0,1,0)) << "\n";
-  //   cerr << CameraToWorld(Vector(0,0,1)) << "\n";
-
-  //   float nx, ny;
-  //   NormalizeMouseXY(x, y, &nx, &ny);
-  //   cerr << nx << "\t" << ny << "\n";
-
   int   te[2];  // pixel location
   te[0] = X;
   te[1] = Y;
@@ -1066,18 +576,18 @@ void ViewWindow::unicam_choose(int X, int Y)
   NormalizeMouseXY(X, Y, &curpt[0], &curpt[1]);
   
   float delta[2];
-  delta[0] = curpt[0] - _last_pos[0];
-  delta[1] = curpt[1] - _last_pos[1];
-  _last_pos[0] = te[0];
-  _last_pos[1] = te[1];
+  delta[0] = curpt[0] - last_pos_[0];
+  delta[1] = curpt[1] - last_pos_[1];
+  last_pos_[0] = te[0];
+  last_pos_[1] = te[1];
 
-  double tdelt(the_time() - _dtime);
+  double tdelt(the_time() - dtime_);
 
-  _dist += sqrt(delta[0] * delta[0] + delta[1] * delta[1]);
+  uni_dist_ += sqrt(delta[0] * delta[0] + delta[1] * delta[1]);
 
   float sdelt[2];
-  sdelt[0] = te[0] - _start_pix[0];
-  sdelt[1] = te[1] - _start_pix[1];
+  sdelt[0] = te[0] - start_pix_[0];
+  sdelt[1] = te[1] - start_pix_[1];
 
   int xa=0,ya=1;
   if (sci_getenv("FLIP_CAM_MANIP")) {
@@ -1088,48 +598,30 @@ void ViewWindow::unicam_choose(int X, int Y)
      
   float len = sqrt(sdelt[0] * sdelt[0] + sdelt[1] * sdelt[1]);
   if (fabs(sdelt[ya])/len > 0.9 && tdelt > 0.05) {
-    unicam_state = UNICAM_ZOOM;
-    //     ptr->set_old(_start_pix);
-  } else if (tdelt < 0.1 && _dist < 0.03)
+    unicam_state_ = UNICAM_ZOOM;
+    //     ptr->set_old(start_pix_);
+  } else if (tdelt < 0.1 && uni_dist_ < 0.03)
     return;
   else {
     if (fabs(sdelt[xa])/len > 0.6 )
-      unicam_state = UNICAM_PAN;
-    else unicam_state = UNICAM_ZOOM;
-    //     ptr->set_old(_start_pix);
+      unicam_state_ = UNICAM_PAN;
+    else unicam_state_ = UNICAM_ZOOM;
+    //     ptr->set_old(start_pix_);
   }
 }
 
-void ViewWindow::unicam_rot(int x, int y)
+void
+ViewWindow::unicam_rot(int x, int y)
 {
-  //  float myTEST = X;
-  //  cerr << "myTEST = " << myTEST << "\t" << "X = " << X << "\n";
-  Point center = focus_sphere->cen;
-
-  //   this->ComputeWorldToDisplay(center[0], center[1], center[2], cpt);
-  // XXX - this code did not seem to work to return normalized window
-  // XXX - coordinates.
-  // //   float cpt[3];
-  // //   View tmpview(view.get());
-  // //   Point tmp = tmpview.objspace_to_eyespace(center, WindowAspect());
-  // //   cpt[0] = tmp(0);
-  // //   cpt[1] = tmp(1);
-  // //   NormalizeMouseXY(cpt[0], cpt[1], &cpt[0], &cpt[1]);
+  Point center = focus_sphere_->cen;
   float cpt[3];
-  NormalizeMouseXY(_down_x, _down_y, &cpt[0], &cpt[1]);
-
+  NormalizeMouseXY(down_x_, down_y_, &cpt[0], &cpt[1]);
   double radsq = pow(1.0+fabs(cpt[0]),2); // squared rad of virtual cylinder
-
-  //   XYpt        tp    = ptr->old(); 
-  //   XYpt        te    = ptr->cur();
   float tp[2], te[2];
-  NormalizeMouseXY((int)(_last_pix[0]), (int)(_last_pix[1]), &tp[0], &tp[1]);
+  NormalizeMouseXY((int)(last_pix_[0]), (int)(last_pix_[1]), &tp[0], &tp[1]);
   NormalizeMouseXY(x, y, &te[0], &te[1]);
-  _last_pix[0] = x;
-  _last_pix[1] = y;
-
-  //    Wvec   op  (tp[0], 0, 0);             // get start and end X coordinates
-  //    Wvec   oe  (te[0], 0, 0);             //    of cursor motion
+  last_pix_[0] = x;
+  last_pix_[1] = y;
   float op[3], oe[3];
   op[0] = tp[0];
   op[1] = 0;
@@ -1137,212 +629,111 @@ void ViewWindow::unicam_rot(int x, int y)
   oe[0] = te[0];
   oe[1] = 0;
   oe[2] = 0;
-
-  //   double opsq = op * op, oesq = oe * oe;
   double opsq = op[0] * op[0], oesq = oe[0] * oe[0];
-
   double lop  = opsq > radsq ? 0 : sqrt(radsq - opsq);
   double loe  = oesq > radsq ? 0 : sqrt(radsq - oesq);
-
-  //   Wvec   nop  = Wvec(op[0], 0, lop).normalize();
-  //   Wvec   noe  = Wvec(oe[0], 0, loe).normalize();
   Vector nop = Vector(op[0], 0, lop).normal();
   Vector noe = Vector(oe[0], 0, loe).normal();
-
-  //   double dot  = nop * noe;
   double dot = Dot(nop, noe);
 
   if (fabs(dot) > 0.0001) {
-    //       data->rotate(Wline(data->center(), Wvec::Y),
-    //                    -2*acos(Clamp(dot,-1.,1.)) * Sign(te[0]-tp[0]));
-
     double angle = -2*acos(Clamp(dot,-1.,1.)) * Sign(te[0]-tp[0]);
     MyRotateCamera(center, Vector(0,1,0), angle);
-
-
-    // 2nd part of rotation
-    //      View tmpview(view.get());
-
-    //       Wvec   dvec  = data->from() - data->center();
-     
     double rdist = te[1]-tp[1];
-    //      Point  from = tmpview.eyep();
-    //      Vector dvec = (from - center);
-    //      double tdist = acos(Wvec::Y * dvec.normalize());
-    //Vector Yvec(0,1,0);
-
-    //    double tdist = acos(Clamp(Dot(Yvec, dvec.normal()), -1., 1.));
-
-    //       CAMdataptr   dd = new CAMdata(*data);
-    //       Wline raxe(data->center(),data->right_v());
-    //       data->rotate(raxe, rdist);
     Vector right_v = (film_pt(1, 0) - film_pt(0, 0)).normal();
-
     MyRotateCamera(center, right_v, rdist);
-
-    View tmpview = view.get(); // update tmpview params given last rotation
+    View tmpview = gui_view_.get(); // update tmpview given last rotation
     tmpview.up(Vector(0,1,0));
-    view.set(tmpview);
-
-    //       if (data->right_v() * dd->right_v() < 0)
-    //          *data = *dd;
+    gui_view_.set(tmpview);
   }
 }
 
-void ViewWindow::unicam_zoom(int X, int Y)
+void
+ViewWindow::unicam_zoom(int X, int Y)
 {
   float cn[2], ln[2];
   NormalizeMouseXY(X, Y, &cn[0], &cn[1]);
-  NormalizeMouseXY((int)(_last_pix[0]), (int)(_last_pix[1]), &ln[0], &ln[1]);
-
+  NormalizeMouseXY((int)(last_pix_[0]), (int)(last_pix_[1]), &ln[0], &ln[1]);
   float delta[2];
   delta[0] = cn[0] - ln[0];
   delta[1] = cn[1] - ln[1];
-  _last_pix[0] = X;
-  _last_pix[1] = Y;
+  last_pix_[0] = X;
+  last_pix_[1] = Y;
 
-  // PART A: Zoom in/out
-  // (assume perspective projection for now..)
-  View tmpview(view.get());
-  
-  Vector movec   = (_down_pt - tmpview.eyep());
+  // PART A: Zoom in/out (assume perspective projection for now..)
+  View tmpview(gui_view_.get());
+  Vector movec   = (down_pt_ - tmpview.eyep());
   Vector movec_n = movec.normal(); // normalized movec
-
   Vector trans1  = movec_n * (movec.length() * delta[1] * -4);
-
   MyTranslateCamera(trans1);
 
-
-  // PART B: Pan left/right.
-  // Camera has moved, update tmpview..
-  tmpview = view.get();
-
-  movec   = (_down_pt - tmpview.eyep());  // (recompute since cam changed)
+  // PART B: Pan left/right. Camera has moved, update tmpview..
+  tmpview = gui_view_.get();
+  movec   = (down_pt_ - tmpview.eyep());  // (recompute since cam changed)
   Vector at_v  = film_dir(0,0);
   double depth = Dot(movec, at_v);
-
   Vector right_v = film_pt(1, 0, depth) - film_pt(-1, 0,depth);
-  //Vector up_v    = film_pt(0, 1, depth) - film_pt( 0,-1,depth);
-
   Vector trans2  = right_v * (-delta[0]/2);
-
   MyTranslateCamera(trans2);
 }
 
-void ViewWindow::unicam_pan(int X, int Y)
+void
+ViewWindow::unicam_pan(int X, int Y)
 {
   float cn[2], ln[2];
   NormalizeMouseXY(X, Y, &cn[0], &cn[1]);
-  NormalizeMouseXY((int)(_last_pix[0]), (int)(_last_pix[1]), &ln[0], &ln[1]);
-
+  NormalizeMouseXY((int)(last_pix_[0]), (int)(last_pix_[1]), &ln[0], &ln[1]);
   float delta[2];
   delta[0] = cn[0] - ln[0];
   delta[1] = cn[1] - ln[1];
-  _last_pix[0] = X;
-  _last_pix[1] = Y;
-
-  View tmpview(view.get());
-
-  Vector movec   = (_down_pt - tmpview.eyep());
-
+  last_pix_[0] = X;
+  last_pix_[1] = Y;
+  View tmpview(gui_view_.get());
+  Vector movec   = (down_pt_ - tmpview.eyep());
   Vector at_v  = film_dir(0,0);
   double depth = Dot(movec, at_v);
-
   Vector right_v = film_pt(1, 0, depth) - film_pt(-1, 0,depth);
   Vector up_v    = film_pt(0, 1, depth) - film_pt( 0,-1,depth);
-
-  // add_pt(this, film_pt(0,0,depth), .01);
-  // add_pt(this, film_pt(1,0,depth), .01);
-  // add_pt(this, film_pt(0,1,depth), .01);
-
-  Vector trans = (right_v * (-delta[0]/2) +
-                  up_v    * (-delta[1]/2));
-
+  Vector trans = (right_v * (-delta[0]/2) + up_v*(-delta[1]/2));
   MyTranslateCamera(trans);
 }
 
 void
 ViewWindow::ShowFocusSphere()
 {
-  viewwindow_objs_draw[1] = true;
+  viewwindow_objs_draw_[1] = true;
 }
 
 void
 ViewWindow::HideFocusSphere()
 {
-  viewwindow_objs_draw[1] = false;
+  viewwindow_objs_draw_[1] = false;
 }
 
-// XXX - obsolete-- delete this method below.
-// This method returns the world space point under the pixel <x, y>
-// XXX - in addition to drawing the simple sphere 'focus sphere', picking
-// was difficult to do too.  initially the problem was understanding how
-// the example in 'mouse_pick(..)' worked (parameters, what was returned).
-Point ViewWindow::GetPointUnderCursor( int /* x */, int /* y */)
+Vector
+ViewWindow::film_dir(double x, double y)
 {
-  return Point(0,0,0);
-}
-
-Vector ViewWindow::film_dir   (double x, double y)
-{
-  View tmpview(view.get());
+  View tmpview(gui_view_.get());
   Point at = tmpview.eyespace_to_objspace(Point( x, y, 1), WindowAspect());
   return (at - tmpview.eyep()).normal();
 }
 
-Point ViewWindow::film_pt    (double x, double y, double z)
+Point
+ViewWindow::film_pt(double x, double y, double z)
 {
-  View tmpview(view.get());
-
+  View tmpview(gui_view_.get());
   Vector dir = film_dir(x,y);
-
   return tmpview.eyep() + dir * z;
 }
 
-void ViewWindow::mouse_unicam(int action, int x, int y, int, int, int)
+void
+ViewWindow::mouse_unicam(int action, int x, int y, int, int, int)
 {
-  //   static int first=1;
-  //   if (first) {
-  //     first = 0;
-  //     need_redraw = 1;
-
-  //     Point l = film_pt(-1, 0, 5);
-  //     Point r = film_pt( 1, 0, 5);
-  //     double s = (l - r).length() / 20.0;
-
-  //     for(int i=0;i<5;i++) {
-  //       double u = double(i) / 4.0;
-
-  //       Point p = film_pt(-1.0 + u * 2.0, 0, 5);
-
-  //       GeomSphere *obj = scinew GeomSphere;
-  //       obj->move(p, s);
-  //       viewwindow_objs.add(obj);
-  //     }
-  //   }
-
-  //   if (action == MouseStart) {
-  //     Point p;
-
-  //     current_renderer->pick_scene(x, y, &p);
-
-  //     Vector at_v = (view.get().lookat() - view.get().eyep()).normal();
-  //     Vector vec  = (p - view.get().eyep()) * at_v;
-  //     double s = 0.008 * vec.length();
-
-  //     GeomSphere *obj = scinew GeomSphere;
-  //     obj->move(p, s);
-  //     viewwindow_objs.add(obj);
-    
-  //     need_redraw = 1;
-  //   }
-  // return;    
-
   switch(action){
   case MouseStart:
     {
-      if (inertia_mode) {
-	inertia_mode=0;
+      if (inertia_mode_) {
+	inertia_mode_=0;
 	redraw();
       }
       extern int CAPTURE_Z_DATA_HACK;
@@ -1350,123 +741,97 @@ void ViewWindow::mouse_unicam(int action, int x, int y, int, int, int)
       redraw();
 
       update_mode_string("unicam: ");
-      last_x=x;
-      last_y=y;
-
-      _dtime    = the_time();
-      _dist     = 0;
+      last_x_ = x;
+      last_y_ = y;
+      dtime_    = the_time();
 
       // cam manip init
       float curpt[2];
       NormalizeMouseXY(x, y, &curpt[0], &curpt[1]);
-      _last_pos[0] = curpt[0];
-      _last_pos[1] = curpt[1];
-
-      // XXX - erroneously had 'x' be a capital 'X', which was a
-      // bug, but the compiler didn't catch it.  Innocent
-      // mistake was not caught by the compiler for some reason,
-      // caused bad behavior in user interaction, and eventually
-      // was debugged.
-      //             _start_pix[0] = _last_pix[0] = X; // doesn't produce error!?
-      //             _start_pix[1] = _last_pix[1] = Y; // doesn't produce error!?
-      _start_pix[0] = _last_pix[0] = x;
-      _start_pix[1] = _last_pix[1] = y;
-
-      // find '_down_pt'  (point in world space under the cursor tip)
-      current_renderer->pick_scene(x, y, &_down_pt);
-      _down_x = x;
-      _down_y = y;
-      //             cerr << "_down_x = " << _down_x << "\n";
-      //             cerr << "_down_y = " << _down_y << "\n";
-            
+      last_pos_[0] = curpt[0];
+      last_pos_[1] = curpt[1];
+      start_pix_[0] = last_pix_[0] = x;
+      start_pix_[1] = last_pix_[1] = y;
+      // find 'down_pt_'  (point in world space under the cursor tip)
+      renderer_->pick_scene(x, y, &down_pt_);
+      down_x_ = x;
+      down_y_ = y;
       // if someone has already clicked to make a dot and
       // they're not clicking on it now, OR if the user is
       // clicking on the perimeter of the screen, then we want
       // to go into rotation mode.
-      if ((fabs(curpt[0]) > .85 || fabs(curpt[1]) > .9) || viewwindow_objs_draw[1]) {
-	if (viewwindow_objs_draw[1])
-	  _center = focus_sphere->cen;
-              
-	unicam_state = UNICAM_ROT;
+      if ((fabs(curpt[0]) > .85 || fabs(curpt[1]) > .9) || 
+	  viewwindow_objs_draw_[1]) {
+	unicam_state_ = UNICAM_ROT;
       } else {
-	unicam_state = UNICAM_CHOOSE;
+	unicam_state_ = UNICAM_CHOOSE;
       }
     }
     break;
   case MouseMove:
     {
-      switch (unicam_state) {
+      switch (unicam_state_) {
       case UNICAM_CHOOSE:   unicam_choose(x, y); break;
       case UNICAM_ROT:      unicam_rot(x, y); break;
       case UNICAM_PAN:      unicam_pan(x, y); break;
       case UNICAM_ZOOM:     unicam_zoom(x, y); break;
       }
-
-      need_redraw=true;
-
+      need_redraw_=true;
       ostringstream str;
       char *unicamMode[] = {"Choose", "Rotate", "Pan", "Zoom"};
-      str << "unicam: " << unicamMode[unicam_state];
+      str << "unicam: " << unicamMode[unicam_state_];
       update_mode_string(str.str());
     }
     break;
 
   case MouseEnd:
-    if (unicam_state == UNICAM_ROT && viewwindow_objs_draw[1] ) {
+    if (unicam_state_ == UNICAM_ROT && viewwindow_objs_draw_[1] ) {
       HideFocusSphere();
-    } else if (unicam_state == UNICAM_CHOOSE) {
-      if (viewwindow_objs_draw[1]) {
+    } else if (unicam_state_ == UNICAM_CHOOSE) {
+      if (viewwindow_objs_draw_[1]) {
 	HideFocusSphere();
       } else {
-	// XXX - need to select 's' to make focus_sphere 1/4 or so
+	// XXX - need to select 's' to make focus_sphere_ 1/4 or so
 	// inches on the screen always...  how?
-	Vector at_v = (view.get().lookat() - view.get().eyep()).normal();
-	Vector vec  = (_down_pt - view.get().eyep()) * at_v;
+	Vector at_v=(gui_view_.get().lookat()-gui_view_.get().eyep()).normal();
+	Vector vec  = (down_pt_ - gui_view_.get().eyep()) * at_v;
 	double s = 0.008 * vec.length();
-
-	focus_sphere->move(_down_pt, s);
+	focus_sphere_->move(down_pt_, s);
 	ShowFocusSphere();
       }
     }
-        
-    need_redraw = true;
-
+    need_redraw_ = true;
     update_mode_string("");
     break;
   }	
 }
 
-void ViewWindow::mouse_rotate(int action, int x, int y, int, int, int time)
+void
+ViewWindow::mouse_rotate(int action, int x, int y, int, int, int time)
 {
   switch(action){
   case MouseStart:
     {
-      if(inertia_mode){
-	inertia_mode=0;
+      if(inertia_mode_){
+	inertia_mode_=0;
 	redraw();
       }
       update_mode_string("rotate:");
-      last_x=x;
-      last_y=y;
+      last_x_ = x;
+      last_y_ = y;
 
       // Find the center of rotation...
-      View tmpview(view.get());
-      int xres=current_renderer->xres;
-      int yres=current_renderer->yres;
-      double aspect=double(xres)/double(yres);
+      View tmpview(gui_view_.get());
+      int xres=renderer_->xres_;
+      int yres=renderer_->yres_;
       double znear, zfar;
-      rot_point_valid=0;
-      if(!current_renderer->compute_depth(this, tmpview, znear, zfar))
+      rotate_valid_p_=0;
+      if(!renderer_->compute_depth(tmpview, znear, zfar))
 	return; // No objects...
-      double zmid=(znear+zfar)/2.;
-      //             cerr << "zmid = " << zmid << "\n";
+      //double zmid=(znear+zfar)/2.;
 
-      Point ep(0, 0, zmid);
-      rot_point=tmpview.eyespace_to_objspace(ep, aspect);
-
-      rot_point = tmpview.lookat();
-      rot_view=tmpview;
-      rot_point_valid=1;
+      rot_view_=tmpview;
+      rotate_valid_p_=1;
 
       double rad = 0.8;
       HVect center(0,0,0,1.0);
@@ -1474,67 +839,63 @@ void ViewWindow::mouse_rotate(int action, int x, int y, int, int, int time)
       // we also want to keep the old transform information
       // around (so stuff correlates correctly)
       // OGL uses left handed coordinate system!
-	
       Vector z_axis,y_axis,x_axis;
 
       y_axis = tmpview.up();
       z_axis = tmpview.eyep() - tmpview.lookat();
-      eye_dist = z_axis.normalize();
+      eye_dist_ = z_axis.normalize();
       x_axis = Cross(y_axis,z_axis);
       x_axis.normalize();
       y_axis = Cross(z_axis,x_axis);
       y_axis.normalize();
       tmpview.up(y_axis); // having this correct could fix something?
 
-      prev_trans.load_frame(Point(0.0,0.0,0.0),x_axis,y_axis,z_axis);
+      prev_trans_.load_frame(Point(0.0,0.0,0.0),x_axis,y_axis,z_axis);
 
-      ball->Init();
-      ball->Place(center,rad);
+      ball_->Init();
+      ball_->Place(center,rad);
       HVect mouse((2.0*x)/xres - 1.0,2.0*(yres-y*1.0)/yres - 1.0,0.0,1.0);
-      ball->Mouse(mouse);
-      ball->BeginDrag();
+      ball_->Mouse(mouse);
+      ball_->BeginDrag();
 
-      prev_time[0] = time;
-      prev_quat[0] = mouse;
-      prev_time[1] = prev_time[2] = -100;
-      ball->Update();
-      last_time=time;
-      inertia_mode=0;
-      need_redraw = 1;
+      prev_time_[0] = time;
+      prev_quat_[0] = mouse;
+      prev_time_[1] = prev_time_[2] = -100;
+      ball_->Update();
+      last_time_=time;
+      inertia_mode_=0;
+      need_redraw_ = 1;
     }
     break;
   case MouseMove:
     {
-      int xres=current_renderer->xres;
-      int yres=current_renderer->yres;
-      //double aspect=double(xres)/double(yres);
+      int xres=renderer_->xres_;
+      int yres=renderer_->yres_;
 
-      if(!rot_point_valid)
+      if(!rotate_valid_p_)
 	break;
 
       HVect mouse((2.0*x)/xres - 1.0,2.0*(yres-y*1.0)/yres - 1.0,0.0,1.0);
-      prev_time[2] = prev_time[1];
-      prev_time[1] = prev_time[0];
-      prev_time[0] = time;
-      ball->Mouse(mouse);
-      ball->Update();
+      prev_time_[2] = prev_time_[1];
+      prev_time_[1] = prev_time_[0];
+      prev_time_[0] = time;
+      ball_->Mouse(mouse);
+      ball_->Update();
 
-      prev_quat[2] = prev_quat[1];
-      prev_quat[1] = prev_quat[0];
-      prev_quat[0] = mouse;
+      prev_quat_[2] = prev_quat_[1];
+      prev_quat_[1] = prev_quat_[0];
+      prev_quat_[0] = mouse;
 
-      // now we should just sendthe view points through
-      // the rotation (after centerd around the ball)
-      // eyep lookat and up
-
-      View tmpview(rot_view);
+      // now we should just send the view points through the rotation
+      // (after centerd around the ball), eyep, lookat, and up
+      View tmpview(rot_view_);
 
       Transform tmp_trans;
       HMatrix mNow;
-      ball->Value(mNow);
+      ball_->Value(mNow);
       tmp_trans.set(&mNow[0][0]);
 
-      Transform prv = prev_trans;
+      Transform prv = prev_trans_;
       prv.post_trans(tmp_trans);
 
       HMatrix vmat;
@@ -1544,29 +905,27 @@ void ViewWindow::mouse_rotate(int action, int x, int y, int, int, int time)
       Point z_a(vmat[0][2],vmat[1][2],vmat[2][2]);
 
       tmpview.up(y_a.vector());
-      tmpview.eyep((z_a*(eye_dist)) + tmpview.lookat().vector());
+      tmpview.eyep((z_a*(eye_dist_)) + tmpview.lookat().vector());
 
-      view.set(tmpview);
-      need_redraw=1;
+      gui_view_.set(tmpview);
+      need_redraw_=1;
       update_mode_string("rotate:");
 
-      last_time=time;
-      inertia_mode=0;
+      last_time_=time;
+      inertia_mode_=0;
     }
     break;
   case MouseEnd:
-    if(time-last_time < 20){
+    if(time-last_time_ < 20){
       // now setup the normalized quaternion
- 
-
-      View tmpview(rot_view);
+      View tmpview(rot_view_);
 	    
       Transform tmp_trans;
       HMatrix mNow;
-      ball->Value(mNow);
+      ball_->Value(mNow);
       tmp_trans.set(&mNow[0][0]);
 	    
-      Transform prv = prev_trans;
+      Transform prv = prev_trans_;
       prv.post_trans(tmp_trans);
 	    
       HMatrix vmat;
@@ -1576,84 +935,83 @@ void ViewWindow::mouse_rotate(int action, int x, int y, int, int, int time)
       Point z_a(vmat[0][2],vmat[1][2],vmat[2][2]);
 	    
       tmpview.up(y_a.vector());
-      tmpview.eyep((z_a*(eye_dist)) + tmpview.lookat().vector());
+      tmpview.eyep((z_a*(eye_dist_)) + tmpview.lookat().vector());
 	    
-      view.set(tmpview);
-      prev_trans = prv;
+      gui_view_.set(tmpview);
+      prev_trans_ = prv;
 
       // now you need to use the history to 
       // set up the arc you want to use...
-
-      ball->Init();
+      ball_->Init();
       double rad = 0.8;
       HVect center(0,0,0,1.0);
 
-      ball->Place(center,rad);
+      ball_->Place(center,rad);
 
       int index=2;
 
-      if (prev_time[index] == -100)
+      if (prev_time_[index] == -100)
 	index = 1;
 
-      ball->vDown = prev_quat[index];
-      ball->vNow  = prev_quat[0];
-      ball->dragging = 1;
-      ball->Update();
+      ball_->vDown = prev_quat_[index];
+      ball_->vNow  = prev_quat_[0];
+      ball_->dragging = 1;
+      ball_->Update();
 	    
-      ball->qNorm = ball->qNow.Conj();
-      double mag = ball->qNow.VecMag();
+      ball_->qNorm = ball_->qNow.Conj();
+      double mag = ball_->qNow.VecMag();
 
       // Go into inertia mode...
-      inertia_mode=1;
-      need_redraw=1;
+      inertia_mode_=1;
+      need_redraw_=1;
 
       if (mag < 0.00001) { // arbitrary ad-hoc threshold
-	inertia_mode = 0;
-	need_redraw = 1;
+	inertia_mode_ = 0;
+	need_redraw_ = 1;
       }
       else {
 	double c = 1.0/mag;
-	double dt = prev_time[0] - prev_time[index];// time between last 2 events
-	ball->qNorm.x *= c;
-	ball->qNorm.y *= c;
-	ball->qNorm.z *= c;
-	angular_v = 2*acos(ball->qNow.w)*1000.0/dt;
-//	cerr << dt << "\n";
+	// time between last 2 events
+	double dt = prev_time_[0] - prev_time_[index];
+	ball_->qNorm.x *= c;
+	ball_->qNorm.y *= c;
+	ball_->qNorm.z *= c;
+	angular_v_ = 2*acos(ball_->qNow.w)*1000.0/dt;
       }
     } else {
-      inertia_mode=0;
+      inertia_mode_=0;
     }
-    ball->EndDrag();
-    rot_point_valid = 0; // so we don't have to draw this...
-    need_redraw = 1;     // always update this...
+    ball_->EndDrag();
+    rotate_valid_p_ = 0; // so we don't have to draw this...
+    need_redraw_ = 1;     // always update this...
     update_mode_string("");
     break;
   }
 }
 
-void ViewWindow::mouse_rotate_eyep(int action, int x, int y, int, int, int time)
+void
+ViewWindow::mouse_rotate_eyep(int action, int x, int y, int, int, int time)
 {
   switch(action){
   case MouseStart:
     {
-      if(inertia_mode){
-	inertia_mode=0;
+      if(inertia_mode_){
+	inertia_mode_=0;
 	redraw();
       }
       update_mode_string("rotate lookatp:");
-      last_x=x;
-      last_y=y;
+      last_x_ = x;
+      last_y_ = y;
 
       // Find the center of rotation...
-      View tmpview(view.get());
-      int xres=current_renderer->xres;
-      int yres=current_renderer->yres;
+      View tmpview(gui_view_.get());
+      int xres=renderer_->xres_;
+      int yres=renderer_->yres_;
 
-      rot_point_valid=0;
+      rotate_valid_p_=0;
 
-      rot_point = tmpview.eyep();
-      rot_view=tmpview;
-      rot_point_valid=1;
+      rot_view_=tmpview;
+      rotate_valid_p_=1;
       
       double rad = 12;
       HVect center(0,0,0,1.0);
@@ -1661,66 +1019,64 @@ void ViewWindow::mouse_rotate_eyep(int action, int x, int y, int, int, int time)
       // we also want to keep the old transform information
       // around (so stuff correlates correctly)
       // OGL uses left handed coordinate system!
-	
       Vector z_axis,y_axis,x_axis;
 
       y_axis = tmpview.up();
       z_axis = tmpview.eyep() - tmpview.lookat();
-      eye_dist = z_axis.normalize();
+      eye_dist_ = z_axis.normalize();
       x_axis = Cross(y_axis,z_axis);
       x_axis.normalize();
       y_axis = Cross(z_axis,x_axis);
       y_axis.normalize();
       tmpview.up(y_axis); // having this correct could fix something?
 
-      prev_trans.load_frame(Point(0.0,0.0,0.0),x_axis,y_axis,z_axis);
+      prev_trans_.load_frame(Point(0.0,0.0,0.0),x_axis,y_axis,z_axis);
 
-      ball->Init();
-      ball->Place(center,rad);
+      ball_->Init();
+      ball_->Place(center,rad);
       HVect mouse(2.0*(xres-x)/xres - 1.0, 2.0*y/yres - 1.0, 0.0, 1.0);
-      ball->Mouse(mouse);
-      ball->BeginDrag();
+      ball_->Mouse(mouse);
+      ball_->BeginDrag();
 
-      prev_time[0] = time;
-      prev_quat[0] = mouse;
-      prev_time[1] = prev_time[2] = -100;
-      ball->Update();
-      last_time=time;
-      inertia_mode=0;
-      need_redraw = 1;
+      prev_time_[0] = time;
+      prev_quat_[0] = mouse;
+      prev_time_[1] = prev_time_[2] = -100;
+      ball_->Update();
+      last_time_=time;
+      inertia_mode_=0;
+      need_redraw_ = 1;
     }
     break;
   case MouseMove:
     {
-      int xres=current_renderer->xres;
-      int yres=current_renderer->yres;
+      int xres=renderer_->xres_;
+      int yres=renderer_->yres_;
 
-      if(!rot_point_valid)
+      if(!rotate_valid_p_)
 	break;
 
       HVect mouse(2.0*(xres-x)/xres - 1.0, 2.0*y/yres - 1.0, 0.0, 1.0);
-      prev_time[2] = prev_time[1];
-      prev_time[1] = prev_time[0];
-      prev_time[0] = time;
-      ball->Mouse(mouse);
-      ball->Update();
+      prev_time_[2] = prev_time_[1];
+      prev_time_[1] = prev_time_[0];
+      prev_time_[0] = time;
+      ball_->Mouse(mouse);
+      ball_->Update();
 
-      prev_quat[2] = prev_quat[1];
-      prev_quat[1] = prev_quat[0];
-      prev_quat[0] = mouse;
+      prev_quat_[2] = prev_quat_[1];
+      prev_quat_[1] = prev_quat_[0];
+      prev_quat_[0] = mouse;
 
       // now we should just sendthe view points through
       // the rotation (after centerd around the ball)
       // eyep lookat and up
-
-      View tmpview(rot_view);
+      View tmpview(rot_view_);
 
       Transform tmp_trans;
       HMatrix mNow;
-      ball->Value(mNow);
+      ball_->Value(mNow);
       tmp_trans.set(&mNow[0][0]);
 
-      Transform prv = prev_trans;
+      Transform prv = prev_trans_;
       prv.post_trans(tmp_trans);
 
       HMatrix vmat;
@@ -1730,26 +1086,26 @@ void ViewWindow::mouse_rotate_eyep(int action, int x, int y, int, int, int time)
       Point z_a(vmat[0][2],vmat[1][2],vmat[2][2]);
 
       tmpview.up(y_a.vector());
-      tmpview.lookat(tmpview.eyep()-(z_a*(eye_dist)).vector());
-      view.set(tmpview);
-      need_redraw=1;
+      tmpview.lookat(tmpview.eyep()-(z_a*(eye_dist_)).vector());
+      gui_view_.set(tmpview);
+      need_redraw_=1;
       update_mode_string("rotate lookatp:");
 
-      last_time=time;
-      inertia_mode=0;
+      last_time_=time;
+      inertia_mode_=0;
     }
     break;
   case MouseEnd:
-    if(time-last_time < 20){
+    if(time-last_time_ < 20){
       // now setup the normalized quaternion
-      View tmpview(rot_view);
+      View tmpview(rot_view_);
 	    
       Transform tmp_trans;
       HMatrix mNow;
-      ball->Value(mNow);
+      ball_->Value(mNow);
       tmp_trans.set(&mNow[0][0]);
 	    
-      Transform prv = prev_trans;
+      Transform prv = prev_trans_;
       prv.post_trans(tmp_trans);
 	    
       HMatrix vmat;
@@ -1759,135 +1115,63 @@ void ViewWindow::mouse_rotate_eyep(int action, int x, int y, int, int, int time)
       Point z_a(vmat[0][2],vmat[1][2],vmat[2][2]);
 	    
       tmpview.up(y_a.vector());
-      tmpview.lookat(tmpview.eyep()-(z_a*(eye_dist)).vector());
-      view.set(tmpview);
-      prev_trans = prv;
+      tmpview.lookat(tmpview.eyep()-(z_a*(eye_dist_)).vector());
+      gui_view_.set(tmpview);
+      prev_trans_ = prv;
 
       // now you need to use the history to 
       // set up the arc you want to use...
 
-      ball->Init();
+      ball_->Init();
       double rad = 12;
       HVect center(0,0,0,1.0);
 
-      ball->Place(center,rad);
+      ball_->Place(center,rad);
 
       int index=2;
 
-      if (prev_time[index] == -100)
+      if (prev_time_[index] == -100)
 	index = 1;
 
-      ball->vDown = prev_quat[index];
-      ball->vNow  = prev_quat[0];
-      ball->dragging = 1;
-      ball->Update();
+      ball_->vDown = prev_quat_[index];
+      ball_->vNow  = prev_quat_[0];
+      ball_->dragging = 1;
+      ball_->Update();
 	    
-      ball->qNorm = ball->qNow.Conj();
-      double mag = ball->qNow.VecMag();
+      ball_->qNorm = ball_->qNow.Conj();
+      double mag = ball_->qNow.VecMag();
 
       // Go into inertia mode...
-      inertia_mode=2;
-      need_redraw=1;
+      inertia_mode_=2;
+      need_redraw_=1;
 
       if (mag < 0.00001) { // arbitrary ad-hoc threshold
-	inertia_mode = 0;
-	need_redraw = 1;
+	inertia_mode_ = 0;
+	need_redraw_ = 1;
       }
       else {
 	double c = 1.0/mag;
-	double dt = prev_time[0] - prev_time[index];// time between last 2 events
-	ball->qNorm.x *= c;
-	ball->qNorm.y *= c;
-	ball->qNorm.z *= c;
-	angular_v = 2*acos(ball->qNow.w)*1000.0/dt;
-//	cerr << dt << "\n";
+	// time between last 2 events
+	double dt = prev_time_[0] - prev_time_[index];
+	ball_->qNorm.x *= c;
+	ball_->qNorm.y *= c;
+	ball_->qNorm.z *= c;
+	angular_v_ = 2*acos(ball_->qNow.w)*1000.0/dt;
       }
     } else {
-      inertia_mode=0;
+      inertia_mode_=0;
     }
-    ball->EndDrag();
-    rot_point_valid = 0; // so we don't have to draw this...
-    need_redraw = 1;     // always update this...
+    ball_->EndDrag();
+    rotate_valid_p_ = 0; // so we don't have to draw this...
+    need_redraw_ = 1;     // always update this...
     update_mode_string("");
     break;
   }
 }
 
-// -- BAWGL -- 
-//static int prevPrinc;
-void ViewWindow::bawgl_pick(int action, int iv[3], GLfloat fv[3])
-{
-  BState bs;
-  switch(action) {
-  case BAWGL_PICK_START:
-    {
-	    
-      current_renderer->get_pick(manager, this, iv[0], iv[1],
-				 pick_obj, pick_pick, pick_n); 
-      if (pick_obj.get_rep()){
-	update_mode_string(pick_obj);
-	pick_pick->set_picked_obj(pick_obj);
-	pick_pick->pick(this,bs);
-	total_x=0;
-	total_y=0;
-	total_z=0;
-	//need_redraw=1;
-      } else {
-	update_mode_string("pick: none");
-      }
 
-    }
-    break;
-  case BAWGL_PICK_MOVE:
-    {
-      if (!pick_obj.get_rep() || !pick_pick.get_rep()) break;
-      Vector dir(fv[0],fv[1],fv[2]);
-      //float dv= sqrt(fv[0]*fv[0]+fv[1]*fv[1]+fv[2]*fv[2]);
-      //pick_pick->moved(0, dv, dir, bs);
-
-      double maxdot=0;
-      int prin_dir=-1;
-      for (int i=0; i<pick_pick->nprincipal(); i++) {
-	double pdot=Dot(dir, pick_pick->principal(i));
-	if(pdot > maxdot){
-	  maxdot=pdot;
-	  prin_dir=i;
-	}
-      }
-      if(prin_dir != -1){
-	//prevPrinc= prin_dir;
-	double dist=dir.length();
-	Vector mtn(pick_pick->principal(prin_dir)*dist);
-	total_x+=mtn.x();
-	total_y+=mtn.y();
-	total_z+=mtn.z();
-	if (Abs(total_x) < .0001) total_x=0;
-	if (Abs(total_y) < .0001) total_y=0;
-	if (Abs(total_z) < .0001) total_z=0;
-	update_mode_string(pick_obj);
-	// TODO: Verify that this is the correct pick offset.
-	Vector pick_offset(total_x, total_y, total_z);
-	pick_pick->moved(prin_dir, dist, mtn, bs, pick_offset);
-      } else {
-	update_mode_string("pick: Bad direction...");
-      }
-    }
-    break;
-  case BAWGL_PICK_END:
-    {
-      if(pick_pick.get_rep()){
-	pick_pick->release( bs );
-      }
-      pick_pick=0;
-      pick_obj=0;
-      update_mode_string("");
-    }
-    break;
-  }
-}
-// -- BAWGL --
-
-void ViewWindow::mouse_pick(int action, int x, int y, int state, int btn, int)
+void
+ViewWindow::mouse_pick(int action, int x, int y, int state, int btn, int)
 {
   BState bs;
   bs.shift=1; // Always for widgets...
@@ -1897,26 +1181,25 @@ void ViewWindow::mouse_pick(int action, int x, int y, int state, int btn, int)
   switch(action){
   case MouseStart:
     {
-      if (inertia_mode) {
-	inertia_mode=0;
+      if (inertia_mode_) {
+	inertia_mode_=0;
 	redraw();
       }
-      total_x=0;
-      total_y=0;
-      total_z=0;
-      last_x=x;
-      last_y=current_renderer->yres-y;
-      pick_x = last_x;
-      pick_y = last_y;
-      current_renderer->get_pick(manager, this, x, y,
-				 pick_obj, pick_pick, pick_n);
+      total_x_=0;
+      total_y_=0;
+      total_z_=0;
+      last_x_ = x;
+      last_y_ = renderer_->yres_-y;
+      pick_x_ = last_x_;
+      pick_y_ = last_y_;
+      renderer_->get_pick(x, y, pick_obj_, pick_pick_, pick_n_);
 
-      if (pick_obj.get_rep()){
-	update_mode_string(pick_obj);
-	pick_pick->set_picked_obj(pick_obj);
-	pick_pick->pick(this,bs);
+      if (pick_obj_.get_rep()){
+	update_mode_string(pick_obj_);
+	pick_pick_->set_picked_obj(pick_obj_);
+	pick_pick_->pick(this,bs);
 
-	need_redraw=1;
+	need_redraw_=1;
       } else {
 	update_mode_string("pick: none");
       }
@@ -1924,87 +1207,88 @@ void ViewWindow::mouse_pick(int action, int x, int y, int state, int btn, int)
     break;
   case MouseMove:
     {
-      if (!pick_obj.get_rep() || !pick_pick.get_rep()) break;
+      if (!pick_obj_.get_rep() || !pick_pick_.get_rep()) break;
       // project the center of the item grabbed onto the screen -- take the z
       // component and unprojec the last and current x, y locations to get a 
       // vector in object space.
-      y=current_renderer->yres-y;
+      y=renderer_->yres_-y;
       BBox itemBB;
-      pick_obj->get_bounds(itemBB);
-      View tmpview(view.get());
+      pick_obj_->get_bounds(itemBB);
+      View tmpview(gui_view_.get());
       Point cen(itemBB.center());
       double depth=tmpview.depth(cen);
       Vector u,v;
-      int xres=current_renderer->xres;
-      int yres=current_renderer->yres;
+      int xres=renderer_->xres_;
+      int yres=renderer_->yres_;
       double aspect=double(xres)/double(yres);
       tmpview.get_viewplane(aspect, depth, u, v);
-      const double ndx = 2.0 * (x - last_x) / (xres - 1.0);
-      const double ndy = 2.0 * (y - last_y) / (yres - 1.0);
+      const double ndx = 2.0 * (x - last_x_) / (xres - 1.0);
+      const double ndy = 2.0 * (y - last_y_) / (yres - 1.0);
       Vector motionv(u*ndx+v*ndy);
 
-      const double pdx = (x - pick_x) / (xres - 1.0);
-      const double pdy = (y - pick_y) / (yres - 1.0);
+      const double pdx = (x - pick_x_) / (xres - 1.0);
+      const double pdy = (y - pick_y_) / (yres - 1.0);
       Vector pmotionv(u*pdx + v*pdy);
 
       double maxdot=0;
       int prin_dir=-1;
-      for (int i=0; i<pick_pick->nprincipal(); i++) {
-	double pdot=Dot(motionv, pick_pick->principal(i));
+      for (int i=0; i<pick_pick_->nprincipal(); i++) {
+	double pdot=Dot(motionv, pick_pick_->principal(i));
 	if(pdot > maxdot){
 	  maxdot=pdot;
 	  prin_dir=i;
 	}
       }
       if(prin_dir != -1){
-//	double dist=motionv.length2()/maxdot;
+	//	double dist=motionv.length2()/maxdot;
         double dist=motionv.length();
-	Vector mtn(pick_pick->principal(prin_dir)*dist);
-	total_x+=mtn.x();
-	total_y+=mtn.y();
-	total_z+=mtn.z();
-	if (Abs(total_x) < .0001) total_x=0;
-	if (Abs(total_y) < .0001) total_y=0;
-	if (Abs(total_z) < .0001) total_z=0;
-	need_redraw=1;
-	update_mode_string(pick_obj);
-	pick_pick->moved(prin_dir, dist, mtn, bs, pmotionv);
-	need_redraw=1;
+	Vector mtn(pick_pick_->principal(prin_dir)*dist);
+	total_x_+=mtn.x();
+	total_y_+=mtn.y();
+	total_z_+=mtn.z();
+	if (Abs(total_x_) < .0001) total_x_=0;
+	if (Abs(total_y_) < .0001) total_y_=0;
+	if (Abs(total_z_) < .0001) total_z_=0;
+	need_redraw_=1;
+	update_mode_string(pick_obj_);
+	pick_pick_->moved(prin_dir, dist, mtn, bs, pmotionv);
+	need_redraw_=1;
       } else {
 	update_mode_string("pick: Bad direction...");
       }
-      last_x = x;
-      last_y = y;
+      last_x_ = x;
+      last_y_ = y;
     }
     break;
   case MouseEnd:
-    if(pick_pick.get_rep()){
-      pick_pick->release( bs );
-      need_redraw=1;
+    if(pick_pick_.get_rep()){
+      pick_pick_->release( bs );
+      need_redraw_=1;
     }
-    pick_pick=0;
-    pick_obj=0;
+    pick_pick_=0;
+    pick_obj_=0;
     update_mode_string("");
     break;
   }
 }
 
-void ViewWindow::redraw_if_needed()
+void
+ViewWindow::redraw_if_needed()
 {
-  if(need_redraw){
-    need_redraw=0;
+  if (need_redraw_) {
+    need_redraw_=0;
     redraw();
   }
-
 }
 
-void ViewWindow::tcl_command(GuiArgs& args, void*)
+void
+ViewWindow::tcl_command(GuiArgs& args, void*)
 {
   if (args.count() < 2) {
     args.error("ViewWindow needs a minor command");
     return;
   }
-  if (args[1] == "have_mpeg") {
+  if (args[1] == "have_mpeg") { // TODO: Should be moved to environment vars
 #ifdef HAVE_MPEG
     args.result("1");
 #else
@@ -2012,26 +1296,21 @@ void ViewWindow::tcl_command(GuiArgs& args, void*)
 #endif // HAVE_MPEG
   } else if (args[1] == "dump_viewwindow") {
     if (args.count() != 6) {
-      args.error("ViewWindow::dump_viewwindow needs an output file name and type");
+      args.error("ViewWindow::dump_viewwindow needs output filename and type");
       return;
     }
-    // We need to dispatch this one to the
-    // remote thread.  We use an ID string
-    // instead of a pointer in case this
-    // viewwindow gets killed by the time the
+    // We need to dispatch this one to the remote thread.  We use an ID string
+    // instead of a pointer in case this viewwindow gets killed by the time the
     // redraw message gets dispatched.
-    manager->
-      mailbox.send(scinew  ViewerMessage(MessageTypes::ViewWindowDumpImage,
-					 id, args[2], args[3],args[4],args[5]));
+    ViewerMessage *msg = scinew ViewerMessage
+      (MessageTypes::ViewWindowDumpImage,id_,args[2], args[3],args[4],args[5]);
+    viewer_->mailbox.send(msg);
   } else if (args[1] == "startup") {
     // Fill in the visibility database...
-    GeomIndexedGroup::IterIntGeomObj iter = manager->ports_.getIter();
-    
+    GeomIndexedGroup::IterIntGeomObj iter = viewer_->ports_.getIter();
     for ( ; iter.first != iter.second; iter.first++) {
-      
       GeomIndexedGroup::IterIntGeomObj serIter =
 	((GeomViewerPort*)((*iter.first).second.get_rep()))->getIter();
-      
       for ( ; serIter.first != serIter.second; serIter.first++) {
 	GeomViewerItem *si =
 	  (GeomViewerItem*)((*serIter.first).second.get_rep());
@@ -2039,20 +1318,16 @@ void ViewWindow::tcl_command(GuiArgs& args, void*)
       }
     }
   } else if (args[1] == "redraw") {
-    // We need to dispatch this one to the
-    // remote thread We use an ID string
-    // instead of a pointer in case this
-    // viewwindow gets killed by the time the
+    // We need to dispatch this one to the  remote thread We use an ID string
+    // instead of a pointer in case this viewwindow gets killed by the time the
     // redraw message gets dispatched.
-    if(!manager->mailbox.trySend(scinew ViewerMessage(id)))
+    if(!viewer_->mailbox.trySend(scinew ViewerMessage(id_)))
       cerr << "Redraw event dropped, mailbox full!\n";
   } else if(args[1] == "anim_redraw"){
-    // We need to dispatch this one to the
-    // remote thread We use an ID string
-    // instead of a pointer in case this
-    // viewwindow gets killed by the time the
+    // We need to dispatch this one to the remote thread We use an ID string
+    // instead of a pointer in case this viewwindow gets killed by the time the
     // redraw message gets dispatched.
-    if(args.count() != 6){
+    if(args.count() != 6) {
       args.error("anim_redraw wants tbeg tend nframes framerate");
       return;
     }
@@ -2066,9 +1341,9 @@ void ViewWindow::tcl_command(GuiArgs& args, void*)
       args.error("Can't figure out tend");
       return;
     }
-    int nframes;
-    if(!string_to_int(args[4], nframes)){
-      args.error("Can't figure out nframes");
+    int num;
+    if(!string_to_int(args[4], num)){
+      args.error("Can't figure out num");
       return;
     }
     double framerate;
@@ -2076,125 +1351,42 @@ void ViewWindow::tcl_command(GuiArgs& args, void*)
       args.error("Can't figure out framerate");
       return;
     }
-    if(!manager->mailbox.trySend(scinew ViewerMessage(id, tbeg, tend,
-						      nframes, framerate)))
-      cerr << "Redraw event dropped, mailbox full!\n";
-  } else if(args[1] == "mtranslate"){
+    ViewerMessage *msg = scinew ViewerMessage(id_, tbeg, tend, num, framerate);
+    if(!viewer_->mailbox.trySend(msg))
+       cerr << "Redraw event dropped, mailbox full!\n";
+  } else if(args[1] == "mtranslate") {
     do_mouse(&ViewWindow::mouse_translate, args);
-  } else if(args[1] == "mdolly"){
+  } else if(args[1] == "mdolly") {
     do_mouse(&ViewWindow::mouse_dolly, args);
-  } else if(args[1] == "mrotate"){
+  } else if(args[1] == "mrotate") {
     do_mouse(&ViewWindow::mouse_rotate, args);
-  } else if(args[1] == "mrotate_eyep"){
+  } else if(args[1] == "mrotate_eyep") {
     do_mouse(&ViewWindow::mouse_rotate_eyep, args);
-  } else if(args[1] == "mscale"){
+  } else if(args[1] == "mscale") {
     do_mouse(&ViewWindow::mouse_scale, args);
-  } else if(args[1] == "municam"){
+  } else if(args[1] == "municam") {
     do_mouse(&ViewWindow::mouse_unicam, args);
-  } else if(args[1] == "mpick"){
+  } else if(args[1] == "mpick") {
     do_mouse(&ViewWindow::mouse_pick, args);
-  } else if(args[1] == "sethome"){
-    homeview=view.get();
-  } else if(args[1] == "gohome"){
-    inertia_mode=0;
-    view.set(homeview);
-    manager->mailbox.send(scinew ViewerMessage(id)); // Redraw
-  } else if(args[1] == "autoview"){
+  } else if(args[1] == "sethome") {
+    homeview_=gui_view_.get();
+  } else if(args[1] == "gohome") {
+    inertia_mode_=0;
+    gui_view_.set(homeview_);
+    viewer_->mailbox.send(scinew ViewerMessage(id_)); // Redraw
+  } else if(args[1] == "autoview") {
     BBox bbox;
-    inertia_mode=0;
+    inertia_mode_=0;
     get_bounds(bbox);
     autoview(bbox);
-  } else if(args[1] == "Snap") {
-    inertia_mode=0;
-    View sv(view.get());
-    
-    // determine closest eyep position
-    Vector lookdir(sv.eyep() - sv.lookat());
-    cerr << "lookdir = " << lookdir << "\n";
-    double distance = lookdir.length();
-    
-    double x = lookdir.x();
-    double y = lookdir.y();
-    double z = lookdir.z();
-    
-    // determine closest up vector position
-    if( fabs(x) > fabs(y)) {
-      if( fabs(x) > fabs(z)) {
-	if(lookdir.x() < 0.0) {
-	  distance *= -1;
-	  sv.eyep(Point(distance, 0.0, 0.0, 1.0));
-	} else {
-	  sv.eyep(Point(distance, 0.0, 0.0, 1.0));
-	}
-      } else if (fabs(z) > fabs(y)) {
-	if(lookdir.z() < 0.0) {
-	  distance *= -1;
-	  sv.eyep(Point(0.0, 0.0, distance, 1.0));
-	} else {
-	  sv.eyep(Point(0.0, 0.0, distance, 1.0)); 
-	}
-      }
-    } else if( fabs(y) > fabs(z)) {
-      if(lookdir.y() < 0.0) {
-	distance *= -1;
-	sv.eyep(Point(0.0, distance, 0.0, 1.0));
-      } else {
-	sv.eyep(Point(0.0, distance, 0.0, 1.0));
-      }
-    } else {
-      if(lookdir.z() < 0.0) {
-	distance *= -1;
-        sv.eyep(Point(0.0, 0.0, distance, 1.0)); 
-      } else {
-	sv.eyep(Point(0.0, 0.0, distance, 1.0));   
-      }
-    }
-    
-    x = sv.up().x();
-    y = sv.up().y();
-    z = sv.up().z();
-    Vector v;
-    
-    // determine closest up vector position
-    if( fabs(x) > fabs(y)) {
-      if( fabs(x) > fabs(z)) {
-	if(sv.up().x() < 0.0) {
-	  v = Vector(-1.0, 0.0, 0.0);
-	} else {
-	  v = Vector(1.0, 0.0, 0.0);
-	}
-      } else if( fabs(z) > fabs(y)) {
-	if(sv.up().z() < 0.0) {
-	  v = Vector(0.0, 0.0, -1.0);
-	} else {
-	  v = Vector(0.0, 0.0, 1.0);
-	}
-      }
-    } else if( fabs(y) > fabs(z)) {
-      if(sv.up().y() < 0.0) {
-	v = Vector(0.0, -1.0, 0.0);
-      } else {
-	v = Vector(0.0, 1.0, 0.0);
-      }
-    } else {
-      if(sv.up().z() < 0.0) {
-	v = Vector(0.0, 0.0, -1.0);
-      } else {
-	v = Vector(0.0, 0.0, 1.0);
-      }
-    }
-    Vector lookdir2(sv.eyep() - sv.lookat());
-    cerr << "lookdir = " << lookdir2 << "\n";
-    sv.up(v);   // set the up vector
-    animate_to_view(sv, 2.0); 
   } else if(args[1] == "Views") {
-    View df(view.get());
+    View df(gui_view_.get());
     // position tells first which axis to look down 
     // (with x1 being the positive x axis and x0 being
     // the negative x axis) and then which axis is up
     // represented the same way
-    pos.reset();
-    string position = pos.get();
+    gui_pos_.reset();
+    string position = gui_pos_.get();
     const string prefix("ViewWindow");
     args.result("");
     if (position.find(prefix) == 0) {
@@ -2202,7 +1394,9 @@ void ViewWindow::tcl_command(GuiArgs& args, void*)
       const string str(position, prefix.size(), position.size()-prefix.size());
       if (string_to_int(str,vw)) {
 	FutureValue<GeometryData*> reply("Geometry getData reply");
-	manager->mailbox.send(scinew GeometryComm(MessageTypes::GeometryGetData, 0, &reply, vw, GEOM_VIEW));
+	GeometryComm *msg = scinew GeometryComm
+	  (MessageTypes::GeometryGetData, 0, &reply, vw, GEOM_VIEW);
+	viewer_->mailbox.send(msg);
 	GeometryData *data = reply.receive();
 	df = *(data->view);
       }
@@ -2240,7 +1434,7 @@ void ViewWindow::tcl_command(GuiArgs& args, void*)
       return;
     }
     // We need to dispatch a message to the remote viewer thread
-    // via the manager.
+    // via the viewer_.
     bool on;
     int on_int;
     int lightNo;
@@ -2252,30 +1446,27 @@ void ViewWindow::tcl_command(GuiArgs& args, void*)
     sscanf(args[4].c_str(), "%f%f%f", &x, &y, &z);
     sscanf(args[5].c_str(), "%f%f%f", &r, &g, &b);
 
-//     cerr<<"light vector "<< x <<", "<<y<<", "<<z<<endl;
-//     cerr<<"color  "<< r <<", "<<g<<", "<<b<<endl;
-    manager->
+    viewer_->
       mailbox.send(scinew ViewerMessage(MessageTypes::ViewWindowEditLight,
-					id, lightNo, on, Vector(x,y,z),
+					id_, lightNo, on, Vector(x,y,z),
 					Color(r,g,b)));
-
+    
   } else if(args[1] == "saveobj") {
     if(args.count() != 6){
-      args.error("ViewWindow::dump_viewwindow needs an output file name and format!");
+      args.error(args[0]+" invalid number of arguments");
       return;
     }
-    // We need to dispatch this one to the
-    // remote thread We use an ID string
-    // instead of a pointer in case this
-    // viewwindow gets killed by the time the
+    // We need to dispatch this one to the remote thread We use an ID string
+    // instead of a pointer in case this viewwindow gets killed by the time the
     // redraw message gets dispatched.
-    manager->mailbox.send(scinew ViewerMessage(MessageTypes::ViewWindowDumpObjects,
-					       id, args[2], args[3],args[4],args[5]));
-  } else if(args[1] == "listvisuals"){
-    current_renderer->listvisuals(args);
-  } else if(args[1] == "switchvisual"){
+    ViewerMessage *msg = scinew ViewerMessage
+      (MessageTypes::ViewWindowDumpObjects,id_,args[2],args[3],args[4],args[5]);
+    viewer_->mailbox.send(msg);
+  } else if(args[1] == "listvisuals") {
+    renderer_->listvisuals(args);
+  } else if(args[1] == "switchvisual") {
     if(args.count() != 6){
-      args.error("switchvisual needs a window name, a visual index, a width and a height");
+      args.error(args[0]+" needs a window id, visual index, width,and height");
       return;
     }
     int idx;
@@ -2293,65 +1484,30 @@ void ViewWindow::tcl_command(GuiArgs& args, void*)
       args.error("Bad height");
       return;
     }
-    current_renderer->setvisual(args[2], idx, width, height);
-    // --  BAWGL -- 
-  } else if(args[1] == "startbawgl") {
-    if( bawgl->start(this, "bench.config")  == 0 )
-    {
-      bawgl_error = 0;
-    }
-    else
-    {
-      do_bawgl.set(0);
-      bawgl_error = 1;
-      args.error("Bummer!\n Check if the device daemons are alive!");
-    }
-  } else if(args[1] == "stopbawgl"){
-    if( !bawgl_error ) bawgl->stop();
-    // --  BAWGL -- 
+    renderer_->setvisual(args[2], idx, width, height);
   } else if(args[1] == "centerGenAxes") { 
     // have to do this here, as well as in redraw() so the axes can be
     // turned on/off even while spinning with inertia
-    if(caxes.get() == 1) {
-      viewwindow_objs_draw[0] = 1;
-    } else {
-      viewwindow_objs_draw[0] = 0;
-    }
-  } else if(args[1] == "rotateGenAxes") { 
-    // have to do this here, as well as in redraw() so the axes can be
-    // turned on/off even while spinning with inertia
-    show_rotation_axis = raxes.get();
-#ifdef HAVE_COLLAB_VIS     // CollabVis code begin
-    //cerr << "[HAVE_COLLAB_VIS] (tcl_command) 0\n";
-  } else if (args[1] == "doServer") {
-    //cerr << "GET: " << view_server.get() << endl;
-    if ( server->existsDataViewWindow( this ) ) {
-      //cerr << "Removing data window: " << this << endl;
-      server->removeDataViewWindow( this );
-    }
-    else {
-      //cerr << "Adding data window: " << this << endl;
-      server->addDataViewWindow( this );
-      //cerr << "DONE!" << endl;
-    }
-    // CollabVis code end  
-#endif
+    viewwindow_objs_draw_[0] = gui_caxes_.get();
   }else
     args.error("Unknown minor command '" + args[1] + "' for ViewWindow");
 }
 
-
-void ViewWindow::do_mouse(MouseHandler handler, GuiArgs& args)
+void
+ViewWindow::do_mouse(MouseHandler handler, GuiArgs& args)
 {
-  if(args.count() != 5 && args.count() != 7 && args.count() != 8 && args.count() != 6){
+  if(args.count() != 5 && args.count() != 7 &&
+     args.count() != 8 && args.count() != 6){
     args.error(args[1]+" needs start/move/end and x y");
     return;
   }
   int action;
   if(args[2] == "start"){
-    action=MouseStart; mouse_action_ = true;
+    action=MouseStart;
+    mouse_action_ = true;
   } else if(args[2] == "end"){
-    action=MouseEnd; mouse_action_ = false;
+    action=MouseEnd;
+    mouse_action_ = false;
   } else if(args[2] == "move"){
     action=MouseMove;
   } else {
@@ -2373,7 +1529,6 @@ void ViewWindow::do_mouse(MouseHandler handler, GuiArgs& args)
     if(!string_to_int(args[5], state)){
       args.error("error parsing state");
       return;
-
     }
     if(!string_to_int(args[6], btn)){
       args.error("error parsing btn");
@@ -2395,26 +1550,24 @@ void ViewWindow::do_mouse(MouseHandler handler, GuiArgs& args)
   }
 
   // We have to send this to the Viewer thread...
-  if(!manager->mailbox.trySend(scinew ViewWindowMouseMessage(id, handler, action, x, y, state, btn, time)))
+  ViewWindowMouseMessage *msg = scinew ViewWindowMouseMessage
+    (id_, handler, action, x, y, state, btn, time);
+  if (!viewer_->mailbox.trySend(msg))
     cerr << "Mouse event dropped, mailbox full!\n";
 }
 
-
-void ViewWindow::autoview(const BBox& bbox)
+void
+ViewWindow::autoview(const BBox& bbox)
 {
-  dolly_throttle=0;
+  dolly_throttle_=0;
   if (bbox.valid())
   {
-    View cv(view.get());
+    View cv(gui_view_.get());
     // Animate lookat point to center of BBox...
     cv.lookat(bbox.center());
     animate_to_view(cv, 2.0);
-        
     // Move forward/backwards until entire view is in scene.
-    // change this a little, make it so that the FOV must
-    // be 60 deg.
-    // I'm changing this to be 20 degrees - Dave
-
+    // change this a little, make it so that the FOV must be 20 deg.
     double myfov=20.0;
 
     Vector diag(bbox.diagonal());
@@ -2429,33 +1582,32 @@ void ViewWindow::autoview(const BBox& bbox)
   }
 }
 
-
-void ViewWindow::redraw()
+void
+ViewWindow::redraw()
 {
-  need_redraw=0;
-  ctx->reset();
-  // Get animation variables
+  need_redraw_=0;
+  ctx_->reset(); // Get animation variables
+
   double ct = gui_current_time_.get();
   // Find out whether to draw the axes or not.  Generally, this is handled
   //  in the centerGenAxes case of the tcl_command, but for the first redraw
   //  it's needed here (can't check it in the constructor since the variable
   //  might not exist on the tcl side yet)
-  viewwindow_objs_draw[0] = caxes.get();
-  show_rotation_axis = raxes.get();
+  viewwindow_objs_draw_[0] = gui_caxes_.get();
 
-  current_renderer->redraw(manager, this, ct, ct, 1, 0);
+  renderer_->redraw(ct, ct, 1, 0);
 }
 
-void ViewWindow::redraw(double tbeg, double tend, int nframes, double framerate)
+void
+ViewWindow::redraw(double tbeg, double tend, int nframes, double framerate)
 {
-  need_redraw=0;
-  ctx->reset();
-
-  // Get animation variables
-  current_renderer->redraw(manager, this, tbeg, tend, nframes, framerate);
+  need_redraw_=0;
+  ctx_->reset();   // Get animation variables
+  renderer_->redraw(tbeg, tend, nframes, framerate);
 }
 
-void ViewWindow::update_mode_string(GeomHandle pick_obj)
+void
+ViewWindow::update_mode_string(GeomHandle pick_obj)
 {
   string ms="pick: ";
   GeomViewerItem* si=dynamic_cast<GeomViewerItem*>(pick_obj.get_rep());
@@ -2464,21 +1616,21 @@ void ViewWindow::update_mode_string(GeomHandle pick_obj)
   } else {
     ms+=si->name_;
   }
-  if(pick_n != 0x12345678)
-    ms+=", index="+to_string(pick_n);
+  if(pick_n_ != 0x12345678)
+    ms+=", index="+to_string(pick_n_);
   update_mode_string(ms);
 }
 
-void ViewWindow::update_mode_string(const string& msg)
+void
+ViewWindow::update_mode_string(const string& msg)
 {
-  ostringstream str;
-  str << id << " updateMode \"" << msg << "\"";
-  gui->execute(str.str());
+  gui_->eval(id_ + " updateMode {"+msg+"}");
 }
 
-ViewWindowMouseMessage::ViewWindowMouseMessage(const string& rid, MouseHandler handler,
-				 int action, int x, int y, int state, int btn,
-				 int time)
+ViewWindowMouseMessage::ViewWindowMouseMessage(const string& rid, 
+					       MouseHandler handler,
+					       int action, int x, int y, 
+					       int state, int btn, int time)
   : MessageBase(MessageTypes::ViewWindowMouse), rid(rid), handler(handler),
     action(action), x(x), y(y), state(state), btn(btn), time(time)
 {
@@ -2488,47 +1640,36 @@ ViewWindowMouseMessage::~ViewWindowMouseMessage()
 {
 }
 
-void ViewWindow::animate_to_view(const View& v, double /*time*/)
+void
+ViewWindow::animate_to_view(const View& v, double /*time*/)
 {
-  //NOT_FINISHED("ViewWindow::animate_to_view");  // Quiet please.
-  view.set(v);
-  manager->mailbox.send(scinew ViewerMessage(id));
+  gui_view_.set(v);
+  viewer_->mailbox.send(scinew ViewerMessage(id_));
 }
 
-void ViewWindow::force_redraw()
+void
+ViewWindow::do_for_visible(OpenGL* r, ViewWindowVisPMF pmf)
 {
-  need_redraw=1;
-}
-
-void ViewWindow::do_for_visible(OpenGL* r, ViewWindowVisPMF pmf)
-{
-				// Do internal objects first...
+  // Do internal objects first...
   unsigned int i;
-  for (i = 0; i < viewwindow_objs.size(); i++){
-    if (viewwindow_objs_draw[i] == 1) {
-      (r->*pmf)(manager, this, viewwindow_objs[i].get_rep());
+  for (i = 0; i < viewwindow_objs_.size(); i++){
+    if (viewwindow_objs_draw_[i] == 1) {
+      (r->*pmf)(viewer_, this, viewwindow_objs_[i].get_rep());
     }
   }
   
-  
   for (int pass=0; pass < 4; pass++)
   {
-
-    GeomIndexedGroup::IterIntGeomObj iter = manager->ports_.getIter();
-  
+    GeomIndexedGroup::IterIntGeomObj iter = viewer_->ports_.getIter();
     for ( ; iter.first != iter.second; iter.first++) {
-      
       GeomIndexedGroup::IterIntGeomObj serIter = 
 	((GeomViewerPort*)((*iter.first).second.get_rep()))->getIter();
-    
       for ( ; serIter.first != serIter.second; serIter.first++) {
-	    
 	GeomViewerItem *si =
 	  (GeomViewerItem*)((*serIter.first).second.get_rep());
-      
 	// Look up the name to see if it should be drawn...
-	map<string,GuiInt*>::iterator gui_iter = visible.find(si->name_);
-	if (gui_iter != visible.end()) { // if found
+	map<string,GuiInt*>::iterator gui_iter = visible_.find(si->name_);
+	if (gui_iter != visible_.end()) { // if found
 	  if ((*gui_iter).second->get())
 	  {
 	    const bool transparent =
@@ -2543,7 +1684,7 @@ void ViewWindow::do_for_visible(OpenGL* r, ViewWindowVisPMF pmf)
 	    {
 	      if(si->crowd_lock_)
 		si->crowd_lock_->readLock();
-	      (r->*pmf)(manager, this, si);
+	      (r->*pmf)(viewer_, this, si);
 	      if(si->crowd_lock_)
 		si->crowd_lock_->readUnlock();
 	    }
@@ -2559,12 +1700,14 @@ void ViewWindow::do_for_visible(OpenGL* r, ViewWindowVisPMF pmf)
   }
 }
 
-void ViewWindow::set_current_time(double time)
+void
+ViewWindow::set_current_time(double time)
 {
   gui_current_time_.set((int)time);
 }
 
-void ViewWindow::dump_objects(const string& filename, const string& format)
+void
+ViewWindow::dump_objects(const string& filename, const string& format)
 {
   if(format == "scirun_binary" || format == "scirun_ascii"){
     Piostream* stream;
@@ -2576,9 +1719,9 @@ void ViewWindow::dump_objects(const string& filename, const string& format)
       delete stream;
       return;
     }
-    manager->geomlock_.readLock();
-    GeomScene scene(bgcolor.get(), view.get(), &manager->lighting_,
-		    &manager->ports_);
+    viewer_->geomlock_.readLock();
+    GeomScene scene(gui_bgcolor_.get(), gui_view_.get(), 
+		    &viewer_->lighting_, &viewer_->ports_);
     Pio(*stream, scene);
     if(stream->error()){
       cerr << "Error writing geom file: " << filename << "\n";
@@ -2586,39 +1729,37 @@ void ViewWindow::dump_objects(const string& filename, const string& format)
       cerr << "Done writing geom file: " << filename << "\n";
     }
     delete stream;
-    manager->geomlock_.readUnlock();
+    viewer_->geomlock_.readUnlock();
   } else {
     cerr << "WARNING: format " << format << " not supported!\n";
   }
 }
 
-void ViewWindow::getData(int datamask, FutureValue<GeometryData*>* result)
+void
+ViewWindow::getData(int datamask, FutureValue<GeometryData*>* result)
 {
-  if(current_renderer){
-    current_renderer->getData(datamask, result);
+  if(renderer_){
+    renderer_->getData(datamask, result);
   } else {
     result->send(0);
   }
 }
 
-void ViewWindow::setView(View newView) {
-  view.set(newView);
-  manager->mailbox.send(scinew ViewerMessage(id)); // Redraw
+void
+ViewWindow::setView(View newView) {
+  gui_view_.set(newView);
+  viewer_->mailbox.send(scinew ViewerMessage(id_)); // Redraw
 }
 
-GeomHandle ViewWindow::createGenAxes() {     
-  MaterialHandle dk_red = scinew Material(Color(0,0,0), Color(.2,0,0),
-					  Color(.5,.5,.5), 20);
-  MaterialHandle dk_green = scinew Material(Color(0,0,0), Color(0,.2,0),
-					    Color(.5,.5,.5), 20);
-  MaterialHandle dk_blue = scinew Material(Color(0,0,0), Color(0,0,.2),
-					   Color(.5,.5,.5), 20);
-  MaterialHandle lt_red = scinew Material(Color(0,0,0), Color(.8,0,0),
-					  Color(.5,.5,.5), 20);
-  MaterialHandle lt_green = scinew Material(Color(0,0,0), Color(0,.8,0),
-					    Color(.5,.5,.5), 20);
-  MaterialHandle lt_blue = scinew Material(Color(0,0,0), Color(0,0,.8),
-					   Color(.5,.5,.5), 20);
+GeomHandle
+ViewWindow::createGenAxes() {
+  const Color black(0,0,0), grey(.5,.5,.5);
+  MaterialHandle dk_red =   scinew Material(black, Color(.2,0,0), grey, 20);
+  MaterialHandle dk_green = scinew Material(black, Color(0,.2,0), grey, 20);
+  MaterialHandle dk_blue =  scinew Material(black, Color(0,0,.2), grey, 20);
+  MaterialHandle lt_red =   scinew Material(black, Color(.8,0,0), grey, 20);
+  MaterialHandle lt_green = scinew Material(black, Color(0,.8,0), grey, 20);
+  MaterialHandle lt_blue =  scinew Material(black, Color(0,0,.8), grey, 20);
 
   GeomGroup* xp = scinew GeomGroup; 
   GeomGroup* yp = scinew GeomGroup;
@@ -2650,6 +1791,5 @@ GeomHandle ViewWindow::createGenAxes() {
   
   return all;
 }
-
 
 } // End namespace SCIRun
