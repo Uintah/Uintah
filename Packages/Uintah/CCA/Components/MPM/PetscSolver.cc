@@ -169,12 +169,12 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
   PetscTruth exists;
   PetscObjectExists((PetscObject)d_A,&exists);
   if (exists == PETSC_FALSE) {
-#if 0
+#if 1
     MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
 		    globalcolumns, PETSC_DEFAULT, PETSC_NULL, PETSC_DEFAULT,
 		    PETSC_NULL, &d_A);
 #endif
-#if 1
+#if 0
     MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
 		    globalcolumns, PETSC_DEFAULT, diag, 
 		    PETSC_DEFAULT,PETSC_NULL, &d_A);
