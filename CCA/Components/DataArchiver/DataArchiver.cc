@@ -40,9 +40,6 @@
 #include <strings.h>
 #include <unistd.h>
 #include <math.h>
-#ifdef __aix
-#include <time.h>
-#endif
 
 #define PADSIZE 1024L
 
