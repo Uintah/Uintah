@@ -147,10 +147,9 @@ itcl_class Teem_DataIO_HDF5DataReader {
 #	    return;
 #	}
 
-	# When building the UI prevent the selection from taking place
-	# since it is not valid.
-	global allow_selection
-	set allow_selection false
+	# Before building the tree save the current selections since
+	# they erased when the tree is built.
+	set datasets [set $this-datasets]
 
 
 	toplevel $w
@@ -167,12 +166,6 @@ itcl_class Teem_DataIO_HDF5DataReader {
 
 	pack $f.fname $f.sel -side top -fill x -expand yes
 	pack $w.f -fill x -expand yes -side top
-
-
-	# Before building the tree save the current selections since
-	# they erased when the tree is built.
-	set datasets [set $this-datasets]
-
 
 
 	option add *TreeView.font { Courier 12 }
@@ -193,7 +186,7 @@ itcl_class Teem_DataIO_HDF5DataReader {
 	blt::treeview $treeframe.tree \
 	    -width 0 \
 	    -selectmode multiple \
-	    -selectcommand [list $this SelectDataSet] \
+	    -selectcommand [list $this SelectNotify] \
 	    -tree $tree
 
   	pack $treeframe.tree
@@ -209,34 +202,8 @@ itcl_class Teem_DataIO_HDF5DataReader {
 
   	pack $w.treeview -fill both -expand yes -side top
 
-	if { [string length [set $this-dumpname]] > 0 } {
-	    # Rebuild the tree
-	    build_tree [set $this-dumpname]
-
-	    if { [string length $datasets] > 0 } {
-
-		if { [string first "\{" $datasets] == 0 } {
-		    set tmp $datasets
-		} else {
-		    set tmp "\{"
-		    append tmp $datasets
-		    append tmp "\}"
-		}
-
-		# Reselect the datasets
-		foreach dataset $tmp {
-		    set id [eval $treeframe.tree find -exact -full "{$dataset}"]
-
-		    if {"$id" != ""} {
-			$treeframe.tree selection set $id
-		    } else {
-
-			set message "Could not find dataset: "
-			append message $dataset
-			$this-c error $message
-		    }
-		}
-	    }
+	$treeframe.tree column bind all <ButtonRelease-3> {
+	    %W configure -flat no
 	}
 
 	$treeframe.tree column bind all <ButtonRelease-3> {
@@ -280,12 +247,17 @@ itcl_class Teem_DataIO_HDF5DataReader {
 	pack $w.l.count     -side left -padx 110
 	pack $w.l.stride    -side left -padx  50
 
-	global $this-ndims
+	frame $w.msg
+	label $w.msg.text -text "Data selections do not have the same dimensions" -width 50 -anchor w -just center
 
+	pack $w.msg.text -side top
+
+
+	global $this-ndims
 	global max_dims
 
 	for {set i 0} {$i < $max_dims} {incr i 1} {
-	    if     { $i == 0 } { set index i
+	    if       { $i == 0 } { set index i
 	    } elseif { $i == 1 } { set index j
 	    } elseif { $i == 2 } { set index k
 	    } elseif { $i == 3 } { set index l
@@ -337,14 +309,57 @@ itcl_class Teem_DataIO_HDF5DataReader {
 
 	pack $w.l -side top -padx 10 -pady 5
 
-	for {set i 0} {$i < [set $this-ndims]} {incr i 1} {
-	    pack $w.$i
+	if { [set $this-ndims] == 0 } {
+	    pack $w.msg -side top -pady 5
+	} else {
+	    for {set i 0} {$i < [set $this-ndims]} {incr i 1} {
+		pack $w.$i
+	    }
 	}
 
 	pack $w.misc -side top -padx 10 -pady 5	    
 
+
+	# When building the UI prevent the selection from taking place
+	# since it is not valid.
+	global allow_selection
+	set allow_selection false
+
+	if { [string length [set $this-dumpname]] > 0 } {
+	    # Rebuild the tree
+	    build_tree [set $this-dumpname]
+
+	    if { [string length $datasets] > 0 } {
+
+		if { [string first "\{" $datasets] == 0 } {
+		    set tmp $datasets
+		} else {
+		    set tmp "\{"
+		    append tmp $datasets
+		    append tmp "\}"
+		}
+
+		# Reselect the datasets
+		foreach dataset $tmp {
+		    set id [eval $treeframe.tree find -exact -full "{$dataset}"]
+
+		    if {"$id" != ""} {
+			$treeframe.tree selection set $id
+			$treeframe.tree open $id
+		    } else {
+
+			set message "Could not find dataset: "
+			append message $dataset
+			$this-c error $message
+		    }
+		}
+	    }
+	}
+
 	# Makesure the datasets are saved once everything is built.
 	set $this-datasets $datasets
+
+ 	set allow_selection true
     }
 
     method scaleEntry2 { win start count length var1 var2 } {
@@ -485,7 +500,8 @@ itcl_class Teem_DataIO_HDF5DataReader {
 	set info(type) @blt::tv::normalOpenFolder
 	set info(Type) ""
 	set info(Value) ""
-	set node [$tree insert $parent -label $name -data [array get info]]
+	set node [$tree insert $parent -tag "group" -label $name \
+		      -data [array get info]]
 
 	while {[gets $fileId line] >= 0 && [string first "\}" $line] == -1} {
 
@@ -535,7 +551,7 @@ itcl_class Teem_DataIO_HDF5DataReader {
 	    set info(type) ""
 	    set info(Type) "Attribute"
 	    set info(Value) $attr
-	    $tree insert $parent  -tag "attribute" -label $name \
+	    $tree insert $parent -tag "attribute" -label $name \
 		-data [array get info]
 	}
     }
@@ -599,14 +615,20 @@ itcl_class Teem_DataIO_HDF5DataReader {
 
 	    global max_dims
 
+	    pack forget $w.msg
+
 	    for {set i 0} {$i < $max_dims} {incr i 1} {
 		pack forget $w.$i
 	    }
 
 	    pack forget $w.misc
 
-	    for {set i 0} {$i < [set $this-ndims]} {incr i 1} {
-		pack $w.$i -side top -padx 10 -pady 5
+	    if { [set $this-ndims] == 0 } {
+		pack $w.msg -side top -pady 5
+	    } else {
+		for {set i 0} {$i < [set $this-ndims]} {incr i 1} {
+		    pack $w.$i -side top -padx 10 -pady 5
+		}
 	    }
 	    
 	    pack $w.misc -side top -padx 10 -pady 5	    
@@ -674,38 +696,42 @@ itcl_class Teem_DataIO_HDF5DataReader {
 	}
     }
 
-    method SelectDataSet { } {
+    method SelectNotify { } {
 
 	global allow_selection
 
-	if { "$allow_selection" == "true" } {
+	if { $allow_selection == "true" } {
+
+	    set allow_selection false
 
 	    set w .ui[modname]
-
-	    global tree
 
 	    if [ expr [winfo exists $w] ] {
 
 		set treeframe [$w.treeview childsite]
 
-		set datasets [$treeframe.tree tag nodes "dataset"]
+		set groups     [$treeframe.tree tag nodes "group"]
+		set attributes [$treeframe.tree tag nodes "attribute"]
 
 		set ids [$treeframe.tree curselection]
 
 		foreach id $ids {
 
-		    set deactivate true
-
-		    foreach dataset $datasets {
-
-			if { $dataset == $id } { 
-			    set deactivate "false"
+#		    Check to see if the selection is an attribute
+		    foreach attribute $attributes {
+			if { $attribute == $id } { 
+			    $treeframe.tree selection clear $id
 			    break
 			}
 		    }
 
-		    if { $deactivate == "true" } {
-			$treeframe.tree selection clear $id
+#		    Check to see if the selection is a group
+		    foreach group $groups {
+			if { $group == $id } { 
+			    $treeframe.tree selection clear $id
+			    SelectChildrenDataSet $id
+			    break
+			}
 		    }
 		}
 
@@ -717,8 +743,42 @@ itcl_class Teem_DataIO_HDF5DataReader {
 
 		$this-c update_selection;
 	    }
-	} else {
+
 	    set allow_selection true
+	}
+    }
+
+    method SelectChildrenDataSet { parent } {
+	set w .ui[modname]
+
+	if [ expr [winfo exists $w] ] {
+
+	    set treeframe [$w.treeview childsite]
+
+	    set datasets [$treeframe.tree tag nodes "dataset"]
+	    set groups   [$treeframe.tree tag nodes "group"]
+
+	    set children [eval $treeframe.tree entry children $parent]
+	    
+	    foreach child $children {
+
+		foreach dataset $datasets {
+		    if { $dataset == $child } {
+# Open the node so it can be selected properly
+			$treeframe.tree open $child
+			$treeframe.tree selection set $child
+			$treeframe.tree close $child
+			break
+		    }
+		}
+
+		foreach group $groups {
+		    if { $group == $child } { 
+			SelectChildrenDataSet $child
+			break
+		    }
+		}
+	    }
 	}
     }
 }
