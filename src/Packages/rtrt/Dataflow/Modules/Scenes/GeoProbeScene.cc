@@ -68,6 +68,10 @@ private:
   GuiDouble gui_color_r_;
   GuiDouble gui_color_g_;
   GuiDouble gui_color_b_;
+  //  Material *surfmat;
+  void update_isosurface_color();
+
+  Object *hvol;
   
   Scene* make_scene(Object *obj);
   SceneContainerHandle sceneHandle_;
@@ -93,6 +97,8 @@ GeoProbeScene::GeoProbeScene(GuiContext* ctx)
     gui_color_r_(ctx->subVar("color-r")),
     gui_color_g_(ctx->subVar("color-g")),
     gui_color_b_(ctx->subVar("color-b")),
+    //    surfmat(0),
+    hvol(0),
     gpfilename_(ctx->subVar("gpfilename")),
     iso_min_(ctx->subVar("iso_min")),
     iso_max_(ctx->subVar("iso_max")),
@@ -156,30 +162,18 @@ void GeoProbeScene::execute()
     return;
   }
 
-  cout << "Before first_execute_\n";
   if (first_execute_) {
-    cout << "Went into first_execute_\n";
     int nx, ny, nz;
     Point min, max;
     unsigned char datamin, datamax;
     Array3<unsigned char> data;
     cerr << "input file = "<<gpfilename_.get()<<"\n";
-#if 1
     if (!read_geoprobe(gpfilename_.get().c_str(), nx, ny, nz, min, max, 
 		       datamin, datamax, data)) {
       error("Could not read GeoProbe input file");
       return;
     }
-#else
-    nx = 335;
-    ny = 205;
-    nz = 945;
-    data.resize(nx,ny,nz);
-    min = Point(0,0,0);
-    max = Point(nx-1, ny-1, nz-1);
-    datamin = 0;
-    datamax = 255;
-#endif
+    // Print to the console some information about the data
     printf("dim = (%d, %d, %d)\n", nx, ny, nz);
     cout << "min = "<<min<<", max = "<<max<<"\n";
     cout << "datamin = "<<(int)datamin<<", datamax = "<<(int)datamax<<"\n";
@@ -198,28 +192,30 @@ void GeoProbeScene::execute()
     za = max.z()*za+min.z()*(1-za);
     zb = max.z()*zb+min.z()*(1-zb);
     Group *g = new Group;
-    Material *surfmat = new LambertianMaterial(Color(0.5, 0.5, 0.5));
-    ColorMap *cmap =new ColorMap("/opt/SCIRun/data/Geometry/volumes/vol_cmap");
-    CutPlaneDpy *cpdpy = new CutPlaneDpy(Vector(1,0,0), Point(xa,0,0));
-    Material *cutmat = new CutMaterial(surfmat, cmap, cpdpy);
+    Material *surfmat = new LambertianMaterial(Color(gui_color_r_.get(),
+						     gui_color_g_.get(),
+						     gui_color_b_.get()));
+    //    ColorMap *cmap =new ColorMap("/opt/SCIRun/data/Geometry/volumes/vol_cmap");
+    //    CutPlaneDpy *cpdpy = new CutPlaneDpy(Vector(1,0,0), Point(xa,0,0));
+    //    Material *cutmat = new CutMaterial(surfmat, cmap, cpdpy);
     iso_val_.set(82.5);
     //    CutVolumeDpy *cvdpy = new CutVolumeDpy(iso_val_.get(), cmap);
     vdpy = new VolumeDpy(iso_val_.get());
     vdpy->set_minmax(datamin, datamax);
-    HVolume<unsigned char, BrickArray3<unsigned char>, 
-      BrickArray3<VMCell<unsigned char> > > *hvol = 
-        new HVolume<unsigned char, BrickArray3<unsigned char>, 
-                    BrickArray3<VMCell<unsigned char> > >
-                      (surfmat, vdpy, 3 /*depth*/, 2 /*np*/, nx, ny, nz, 
-	  	       min, max, datamin, datamax, data);
+    hvol = new HVolume<unsigned char, BrickArray3<unsigned char>, 
+      BrickArray3<VMCell<unsigned char> > >
+      (surfmat, vdpy, 3 /*depth*/, 2 /*np*/, nx, ny, nz, 
+       min, max, datamin, datamax, data);
+    g->add(hvol);
+#if 0
     BBox temp;
     hvol->compute_bounds(temp, 0);
     cout <<"hvol.compte_bounds.min = "<<temp.min()<<", max = "<<temp.max()<<"\n";
     //    cout <<"hvol.min = "<<hvol->min<<", datadiag = "<<hvol->datadiag<<"\n";
-    g->add(hvol);
     temp.reset();
     g->compute_bounds(temp, 0);
     cout <<"group.min = "<<temp.min()<<", max = "<<temp.max()<<"\n";
+#endif
     Scene *scene = make_scene(g);
     SceneContainer *container = scinew SceneContainer();
     container->put_scene(scene);
@@ -232,8 +228,6 @@ void GeoProbeScene::execute()
     cmap_generation_ = cmH->generation;
     execute_string_ = "";
     return;
-  } else {
-    cout << "Didn't go into first_execute_\n";
   }
 
 
@@ -267,17 +261,38 @@ void GeoProbeScene::tcl_command(GuiArgs& args, void* userdata)
   } else if (args[1] == "update_plane") {
     want_to_execute();
   } else if (args[1] == "update_isosurface_material") {
-    cout << "Updating isosurface color\n";
-    //    update_isosurface_color();
+    update_isosurface_color();
   } else if (args[1] == "update_isosurface_value") {
-    //    cout << "Updating isosurface value\n";
     update_isosurface_value();
   } else {
     Module::tcl_command(args, userdata);
   }
 }
 
+void GeoProbeScene::update_isosurface_color() {
+  if (first_execute_)
+    // haven't initialized anything yet
+    return;
+  
+  reset_vars();
+  
+  // Get a pointer to the old material, so that we can delete it.
+  Material *oldmat = hvol->get_matl();
+  // Create the new material
+  Material *newmat = new LambertianMaterial(Color(gui_color_r_.get(),
+						  gui_color_g_.get(),
+						  gui_color_b_.get()));
+  // Now set the material for the object
+  hvol->set_matl(newmat);
+  // Delete the old material
+  if (oldmat) delete oldmat;
+}
+
 void GeoProbeScene::update_isosurface_value() {
+  if (first_execute_)
+    // haven't initialized anything yet
+    return;
+  
   reset_vars();
   vdpy->change_isoval((float)(iso_val_.get()));
 }
