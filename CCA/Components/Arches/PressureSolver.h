@@ -252,12 +252,6 @@ private:
 			  const Patch* patch,
 			  ArchesVariables* vars);
 
-      void buildLinearMatrixInterm(const ProcessorGroup* pc,
-				 const PatchSubset* patches,
-				 const MaterialSubset* matls,
-				 DataWarehouse* new_dw,
-				 DataWarehouse* matrix_dw);
-
       void buildLinearMatrixPressInterm(const ProcessorGroup* pc,
 				  const PatchSubset* patches,
 				  const MaterialSubset* matls,

@@ -161,12 +161,14 @@ public:
       void modifyScalarMassSource(const ProcessorGroup* pc,
 				  const Patch* patch,
 				  double delta_t, 
-				  int index, ArchesVariables* vars);
+				  int index, ArchesVariables* vars,
+				  int conv_scheme);
 
       void modifyEnthalpyMassSource(const ProcessorGroup* pc,
 				  const Patch* patch,
 				  double delta_t, 
-				  ArchesVariables* vars);
+				  ArchesVariables* vars,
+				  int conv_scheme);
 
       ////////////////////////////////////////////////////////////////////////
       // Set source terms. Will need more parameters...like velocity and

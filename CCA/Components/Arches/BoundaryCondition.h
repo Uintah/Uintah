@@ -117,6 +117,16 @@ public:
       inline int wallCellType() const { 
 	return d_wallBdry->d_cellTypeID; 
       }
+        ////////////////////////////////////////////////////////////////////////
+      // Outlet boundary ID
+      inline int outletCellType() const { 
+	return d_outletBC->d_cellTypeID; 
+      }
+        ////////////////////////////////////////////////////////////////////////
+      // Pressure boundary ID
+      inline int pressureCellType() const { 
+	return d_pressureBdry->d_cellTypeID; 
+      }
 
       ////////////////////////////////////////////////////////////////////////
       // sets boolean for energy exchange between solid and fluid
@@ -336,15 +346,74 @@ public:
 			      ArchesVariables* vars,
 			      CellInformation* cellinfo,
 			      const ArchesLabel*);
+// New boundary conditions
+      void sched_copyINtoOUT(SchedulerP& sched, const PatchSet* patches,
+					    const MaterialSet* matls);
+
       void scalarPressureBC(const ProcessorGroup* pc,
 		    const Patch* patch,
 		    int index,
 		    CellInformation* cellinfo,
 		    ArchesVariables* vars);
+
       void enthalpyPressureBC(const ProcessorGroup* pc,
 		    const Patch* patch,
 		    CellInformation* cellinfo,
 		    ArchesVariables* vars);
+
+      void scalarOutletBC(const ProcessorGroup* pc,
+			    const Patch* patch,
+			    int index,
+			    CellInformation* cellinfo,
+			    ArchesVariables* vars,
+			    const double delta_t);
+
+      void enthalpyOutletBC(const ProcessorGroup* pc,
+			    const Patch* patch,
+			    CellInformation* cellinfo,
+			    ArchesVariables* vars,
+			    const double delta_t);
+
+      void velRhoHatInletBC(const ProcessorGroup* pc,
+			    const Patch* patch,
+			    CellInformation* cellinfo,
+			    ArchesVariables* vars);
+
+      void velRhoHatPressureBC(const ProcessorGroup* pc,
+			    const Patch* patch,
+			    CellInformation* cellinfo,
+			    ArchesVariables* vars);
+
+      void velRhoHatOutletBC(const ProcessorGroup* pc,
+			    const Patch* patch,
+			    CellInformation* cellinfo,
+			    ArchesVariables* vars,
+			    const double delta_t);
+
+      void velocityPressureBC(const ProcessorGroup* pc,
+			    const Patch* patch,
+			    const int index,
+			    CellInformation* cellinfo,
+			    ArchesVariables* vars);
+
+      void addPresGradVelocityOutletBC(const ProcessorGroup* pc,
+			    const Patch* patch,
+			    const int index,
+			    CellInformation* cellinfo,
+			    ArchesVariables* vars,
+			    const double delta_t);
+
+      void sched_getFlowINOUT(SchedulerP& sched,
+			      const PatchSet* patches,
+			      const MaterialSet* matls,
+  			      const int Runge_Kutta_current_step,
+			      const bool Runge_Kutta_last_step);
+
+      void sched_correctVelocityOutletBC(SchedulerP& sched,
+			   		 const PatchSet* patches,
+			   		 const MaterialSet* matls,
+			  		 const int Runge_Kutta_current_step,
+			  		 const bool Runge_Kutta_last_step);
 private:
 
       // GROUP:  Actual Computations (Private)  :
@@ -458,6 +527,28 @@ private:
 			  DataWarehouse* old_dw,
 			  DataWarehouse* new_dw);
 
+// New boundary conditions
+      void copyINtoOUT(const ProcessorGroup* pc,
+				  const PatchSubset* patches,
+				  const MaterialSubset* matls,
+				  DataWarehouse* old_dw,
+				  DataWarehouse* new_dw); 
+
+      void getFlowINOUT(const ProcessorGroup* pc,
+				    const PatchSubset* patches,
+				    const MaterialSubset* matls,
+				    DataWarehouse* old_dw,
+				    DataWarehouse* new_dw,
+  				    const int Runge_Kutta_current_step,
+				    const bool Runge_Kutta_last_step);
+
+      void correctVelocityOutletBC(const ProcessorGroup* pc,
+			      const PatchSubset* patches,
+			      const MaterialSubset* matls,
+			      DataWarehouse* old_dw,
+			      DataWarehouse* new_dw,
+			      const int Runge_Kutta_current_step,
+			      const bool Runge_Kutta_last_step);
 private:
 
       // GROUP:  Local DataTypes :
