@@ -147,6 +147,14 @@ protected:
   NrrdDataHandle	m_CSF_Energy;		// volume of floats
   NrrdDataHandle	m_Fat_Energy;		// volume of floats
 
+  GuiInt		gui_max_iter_;
+  GuiDouble		gui_min_change_;
+  GuiDouble		gui_pixel_dim_;
+  GuiDouble		gui_slice_thickness_;
+  GuiInt		gui_top_;
+  GuiInt		gui_anterior_;  
+  GuiInt		gui_eyes_visible_;
+
   int m_width, m_height, m_depth; // data volume dimensions
   int m_FatSat;                   // 1 if we have a fatsat image, 0 otherwise
   char m_OutputPrefix[100];       // prefix to output file names
