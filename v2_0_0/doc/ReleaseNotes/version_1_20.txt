@@ -1,0 +1,386 @@
+
+Release Notes - SCIRun Version 1.20 - Oct 27, 2003
+
+New Projects in Version 1.20
+----------------------------
+
+- Support for the NLM Insight Segmentation and Registration Toolkit
+  (www.itk.org)!  Many Insight Filters are wrapped with SCIRun
+  modules.  SCIRun infrastructure updated to easily allow wrapping of
+  new filters.  See Chapter 8 of the Users Guide on how to use ITK
+  Filters. For source distributions, Insight must be installed
+  separately.  See the installation guide on how to install Insight.
+  The RPM distribution includes Insight.
+
+- New stand alone SCIRun Power Apps!  These applications hide the
+  complexities of the powerful SCIRun dataflow interface, allowing the
+  user to focus on a specific task.  Currently there are two Power
+  Apps.  BioTensor and BioFEM.
+
+  * BioTensor is used for doing Diffusion Tensor Imaging.  This
+    application takes the user from data acquisition, through
+    registration and building diffusion tensors.  In addition, several
+    visualization techniques such as Planes, Isosurfaces, Glyphs and
+    Fibers are provided to allow the user to investigate the data.
+
+  * BioFEM is an encapsulation of the forward-fem network that is
+    included in the BioPSE package and described in the BioPSE
+    Tutorial.  With BioFEM, the user can run finite element
+    bioelectric field simulations based on volume conductor models and
+    dipolar sources, and can interactively visualize the simulation
+    results with electric field streamlines and isopotential surfaces.
+
+- Upgraded the Network Editor to be much more user friendly.  See
+  "Network Editor" below.
+
+Data Sets
+---------
+* New "insight" directory with sample data for Insight nets.
+* New "brain-dt" directory with sample data for the BioTensor Power App.
+
+New Modules
+-----------
+
+  SCIRun Modules: (Category in parentheses)
+  ---------------
+
+  - ChooseColorMap (Visualization) 
+  - ChooseField (FieldsOther) 
+  - ChooseMatrix (Math) 
+       The "Choose" modules are used to select one of many input ports
+       to pass to the single output port.
+
+  - FieldCage (FieldsOther)
+       Render an rgb 'cage' around the incoming field to
+       indicate field bounding box
+
+  - IsoClip (FieldsCreate) -- Clip a scalar field to a
+    specified isovalue.
+
+  - LinearAlgebra (Math) - Operations on input matrices to prodcue new
+    output matrices.
+
+  - ManageFieldMesh (FieldsGeometry) - Extract and change the positions
+    of the nodes in a mesh.
+
+  - MoveElemToNode (FieldsData) - Make a new field with data at nodes
+    instead of elements.
+
+  - MoveNodeToElem (FieldsData) - Make a new field with data at elements
+    instead of nodes.
+
+  - SampleStructHex (FieldsCreate) -- Make a StructHexVolField
+    that fits the source field.
+
+  - TransformData (FieldsData) -- Perform a specified
+    functional transform on all of the data in a field.
+
+  - TransformData2 (FieldsData) -- Perform a specified functional
+    transform to each pair of data elements in the two input fields.
+
+  - TransformData3 (FieldsData) -- Perform a specified functional
+    transform to each triple of data elements in the three input
+    fields.
+
+  Teem Modules: (Category in parentheses)
+  -------------
+
+  - ChooseNrrd (Teem - NrrdData) -- The "Choose" modules are used to
+       select one of many input ports to pass to the single output
+       port.
+
+  - EditTupleAxis (Teem - NrrdData) -- Allows user to re-organize the
+       entries on the 'tuple' axis, in order to group scalars into
+       Vectors/Tensors or vice-versa.
+
+  - TendFiber (Teem - Tend) -- Fiber tractography (streamlines through
+       Tensor fields).
+
+  - TendAnscale: Scale the anisotropic component of the tensors. This
+       maintains the isotropic component of the tensor, and fixes
+       either the trace or determinant, while scaling up (or down) the
+       "deviatoric" component of the tensor. Good for exaggerating the
+       shape of nearly isotropic tensors.
+
+  - TendBmat: Calculate B-matrix given gradient directions, assuming
+       no diffusion weighting from the other imaging gradients. The
+       input is a 3-by-N array of floats or doubles, each row being
+       one of the gradient directions used for diffusion-weighted
+       imaging. A plain text file with one gradient per line, no
+       punctuation, is an easy way to specify this information. The
+       gradient vector coefficients are used as is, without
+       normalization (since different gradient strengths are sometimes
+       desired). The output has one row of the B-matrix per line, with
+       coefficient ordering Bxx, Bxy, Bxz, Byy, Byz, Bzz, and with the
+       off-diagonal elements NOT pre-multiplied by 2.
+
+  - TendEpireg: Register diffusion-weighted echo-planar images. This
+       registration corrects the shear, scale, and translate along the
+       phase encoding direction (assumed to be the Y (second) axis of
+       the image) caused by eddy currents from the diffusion-encoding
+       gradients with echo-planar imaging. The method is based on
+       calculating moments of segmented images, where the segmentation
+       is a simple procedure based on blurring (optional),
+       thresholding and connected component analysis. The registered
+       DWIs are resampled with the chosen kernel, with the separate
+       DWIs stacked along axis 0.
+
+  - TendEstim: Estimate tensors from a set of DW images. The various
+       DWI volumes must be stacked along axis 0 (as with the output of
+       "tend epireg"). The tensor coefficient weightings associated
+       with each of the DWIs, the B-matrix, is given as a separate
+       array, see "tend bmat" usage info for details. A "confidence"
+       value is computed with the tensor, based on a soft thresholding
+       of the sum of all the DWIs, according to the threshold and
+       softness parameters.
+
+  - TendEvalClamp: Modify shape by clamping eigenvalues in some
+       range. The orientation of the tensor is unchanged. Note that
+       unlike "tend anscale", this operation can completely change the
+       shape of the tensor.
+
+  - TendEvalPow: Modify shape by raising eigenvalues to some
+       power. The orientation of the tensor is unchanged.
+
+  - TendEval: Calculate one or more eigenvalues in a DT volume.
+       
+  - TendEvecRGB: Make an RGB volume from an eigenvector and an
+       anisotropy.
+
+  - TendEvec: Calculate one or more eigenvectors in a DT volume.
+        
+  - TendExpand: Converts a 7-value DT volume to a 9-value DT
+       volume. The 7-value tensor is confidence value followed by the
+       unique tensor components (Dxx, Dxy, Dxz, Dyy, Dyz, Dzz). The
+       9-value tensor is the full matrix (Dxx, Dxy, Dxz, Dxy, Dyy,
+       Dyz, Dxz, Dyz, Dzz), which is set to all zeros when the
+       confidence is below the given threshold.
+
+  - TendMake: Create DT volume from confidence and eigensystem. The
+       input is in the form of three nrrds, one for confidence values
+       (3D), one for eigenvalues (4D, three evals per voxel), and one
+       for eigenvectors (4D, nine evec components per voxel).
+
+  - TendNorm: Normalize tensor size. This operates on the eigenvalues
+       of the tensor, and allows normalizing some user-defined
+       weighting ("-w") of the eigenvalues by some user-defined amount
+       ("-a").
+
+  - TendPoint: Describe everything about one sample in a DT volume.
+       
+  - TendSatin: Generate a pretty synthetic DT volume. The surface of a
+       sphere or tous is covered with either linear or planar
+       anisotropic tensors, or somewhere in between.
+
+  - TendShrink: Converts a 9-value DT volume to a 7-value DT
+       volume. The confidence value is set to 1.0 everwhere. You can
+       "unu splice" or nrrdSplice() something else in its place later.
+
+  - UnuAxmerge: Merge two adjacent axes into one. A more general
+       version of "unu axdelete". The underlying linear ordering of
+       the samples is unchanged, and the information about the other
+       axes is shifted downwards as needed.
+
+  - UnuAxsplit: Split one axis into two axes. More general version of
+       "unu axinsert", since a given axis can be split into fast and
+       slow axes of arbitrary size, as long as the product of the fast
+       and slow sizes is the same as the original size.
+
+  - UnuCmedian: Cheap histogram-based median/mode filtering. Only
+       works on 1, 2, or 3 dimensions. The window over which filtering
+       is done is always square, and only a simplistic weighting
+       scheme is available. The method is cheap because it does the
+       median or mode based on a histogram, which enforces a
+       quantization to the number of bins in the histogram, which
+       probably means a loss of precision for anything except 8-bit
+       data. Also, 8-bit integer values can be recovered exactly only
+       when the number of bins is exactly min-max+1 (as reported by
+       "Unuminmax").
+
+  - UnudHisto: Create (PGM) image of 1-D value histogram
+       
+  - UnuFlip: Reverse order of slices along one axis. Special case of
+       "Unushuffle".
+
+  - UnuHisto: Create 1-D histogram of values in a nrrd
+       
+  - UnuPad: Pad along each axis to make a bigger nrrd
+
+  - UnuProject: Collapse scanlines to scalars along some axis. The
+       scanline is reduced to a single scalar by "measuring" all the
+       values in the scanline with some measure. The output nrrd has
+       dimension one less than input; the output type depends on the
+       measure in a non-trivial way, or it can be set explicitly with
+       the "-t" option.
+
+  - UnuSlice: Slice at a position along an axis. Output nrrd dimension
+       is one less than input nrrd dimension. Per-axis information is
+       preserved.
+
+  BioPSE Modules: (Category in parentheses)
+  ---------------
+
+  - SetupBEMatrix (Forward) -- now supports an arbitrary
+       number of surfaces for BEM computations
+
+
+Module Enhancements
+-------------------
+
+  SCIRun Modules: (Category in parentheses)
+  ---------------
+
+  - FieldToCanonicalTransform (Math)
+
+  - GenTransferFunc (Visualization) -- HSV colormap construction/editing now
+      supported 
+
+  - HexToTet (FieldsGeometry)
+     - Supports LatVolMesh and StructHexVol fields
+
+  - Isosurface (Visualization)
+     - Added optional input matrix of isovalues
+     - Allow List of Isovals to use percentages
+
+  - LinAlgBinary 
+     - Supports SparseRowMatrix addition
+
+  - MaskLattice (FieldsData)
+     - Use dynamically compiled C++ code for clip function and copy data
+
+  - MatrixSelectVector (Math) -- modules can now be serially cascaded again
+      (used manually indicates whether there are downstream
+      inter-dependencies) 
+
+  - QuadToTri (FieldsGeometry)
+     - Supports ImageMesh and StructQuadSurfMesh fields
+
+  - ShowColorMap (Visualization) -- added support for ColorMap legend
+      units (via text entry) and scale-factor
+
+  - ShowField (Visualization)
+     - Added ability to draw scalar data (cell centers)
+     - Added field name to geometry descriptions
+     - Added more vector rendering options, needles
+     - Added support for transparent points and lines
+     - Added Vector RGB support
+     - Fast colormap switching for ShowField, uses 1D textures now
+     - Use Vertex Arrays for output
+     - Added Teem style diffusion tensor visualization (boxes,
+       ellipsoids, and superquadric glyphs)
+
+  - Viewer (Render)
+     - Reenable GeomDL
+     - Save clipping planes state
+     - Use consistent Filebox for saving images
+     - Use consistent Filebox for saving movies
+
+
+  BioPSE Modules:
+  ---------------
+
+  - Finite element modules -- now support native Tensor fields for
+       conductivity specification, instead of requiring a conductivity
+       table property and index-based access
+
+  - ForwardMagneticField - calculates the magnetic field due to given
+    dipoles at specified detector positions based on the Biot-Savart
+    law.
+
+  Teem Modules: (Category in parentheses)
+  -------------
+
+  - Reorganized the Teem package to more closely mirror Teem's Unu and
+    Tend interfaces.
+
+  - NrrdToField (DataIO) -- GUI option added to allow user to specify
+       computation of eigen-decomposition of Tensors, which can be passed
+       into SCIRun for use with box and superquadric glyph visualization.
+
+
+Infrastructure Enhancements
+---------------------------
+
+  - SCIRun Fields Modules Categorized - The Fields modules were
+    distributed into several subcategories (FieldsData, FieldsCreate,
+    FieldsGeometry, and FieldsOther) to make finding specific modules
+    easier.  Note, current users should review this distribution to
+    find the location of their favorite modules.
+
+  - ArrowWidget -- Can now be scaled. (Used in
+    BioPSE::Visualization::ShowDipoles)
+
+  - Numerous example networks were created.  See
+     ./src/nets/Modules/NOTES for details.
+
+  - Splash screen introduced, can be disabled with --nosplash option.
+
+  - Display License Agreement.  Create a generic $HOME/.scirunrc if
+    one does not exist.
+
+  - Add virtual destructor to Matrix: Fixes big memory leak. :-)
+
+  - Fix crash bugs in:
+         - StructHexVolMesh::transform
+         - when np_ invalid in StreamLines
+         - associated with deleting widgets
+         - linux when viewer window closed
+
+  - Dealt with boundary conditions in Field get_weights
+
+  - Fixed boundary condition error in LatVolMesh::get_cells
+
+  - Fixed locate functions for ImageMesh and LatVolMesh
+
+  - Fixed QuadSurfMesh::get_neighbor (wrong neighbor was possible)
+
+  - New get_weights for non-lattice fields
+
+  - Added get_canonical_transform to Mesh Concept
+
+New Nets
+--------
+  - forward-fem-multidipole (BioPSE Package) -- like forward-fem.net
+     but with multiple dipole sources so users can investigate effects
+     of changing magnitudes 
+  - BioFEM-ch{1,2,3a,3b,3c,4,5,6,7}.net (BioPSE Package) -- nets that
+     correspond to each chapter/section of the BioPSE Tutorial
+
+
+Network Editor Enhancements
+---------------------------
+
+  - Modules (and groups of modules) are now selectable.  Use the left
+    mouse button.  Control left click will add/remove modules from the
+    selection group.
+
+    - All modules selected can be moved around together.
+
+  - Menus in the Network Editor Main Window 
+
+    - Right click on Modules and Connections to bring up option menus.
+
+  - Modules and Pipes can now be disabled.  When disabled, modules do
+    not execute and pipes do not transfer data.  
+
+  - Pipes and Pipe Networks can be highlighted.
+
+    - Left click a Pipe or Port to highlight it.
+    - Control left click a Pipe or Port to highlight 
+
+  - Displaying Connection and Module Annotations 
+
+    - This feature allows the user to attach notes to each connection
+      and module on the canvas to remind the user of the purpose of
+      that connection.
+
+  - Undo 
+
+    - Connection creations and deletions can be undone/redone.  Use
+      Control-z (undo) and Control-y (redo) to cycle through changes.
+      (In other words, if you accidentally delete a connection, you
+      can get it back! :-)
+
+  - Tool tips added to many widgets.
+
+
