@@ -45,7 +45,7 @@ default: all
 
 #define PassCDebugFlags
 
-IMAKE_DEFINES = -I$(TOP)/.. -I../$(TOP)/..
+IMAKE_DEFINES = -I$(TOP) -I../$(TOP)
 
 #ifdef SCI_MakeTemplateLib
 #define SCI_TemplateCommand(objs, libs) \

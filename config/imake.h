@@ -7,7 +7,7 @@
  *  Feb, 1994
  */
 
-#include "../variant.h"
+#include "variant.h"
 
 /* machine variants */
 #ifdef SCI_MACHINE_SGI
