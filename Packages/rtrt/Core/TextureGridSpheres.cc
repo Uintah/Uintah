@@ -1255,7 +1255,7 @@ void TextureGridSphere::get_uv(UV& uv, const Point& hitpos, const Point& cen) {
 Color TextureGridSphere::interp_color(unsigned char *image,
 				      double u, double v)
 {
-#if 1  
+#if 0
   u *= tex_res;
   int iu = (int)u;
   if (iu == tex_res)
@@ -1270,32 +1270,45 @@ Color TextureGridSphere::interp_color(unsigned char *image,
   Color c(pixel[0], pixel[1], pixel[2]);
 
   return c*(1.0/255);
-#endif
+#else
   
-#if 0
   // u & v *= dimensions minus the slop(2) and the zero base difference (1)
   // for a total of 3
-  u *= tex_res-3;
-  v *= tex_res-3;
-  
+  u *= tex_res;
   int iu = (int)u;
+  int iu_high;
+  if (iu < tex_res-1) {
+    iu_high = iu + 1;
+  } else {
+    iu = tex_res - 1;
+    iu_high = 0;
+  }
+  double u_weight_high = u-iu;
+
+  v *= tex_res-1;
   int iv = (int)v;
-  
-  double tu = u-iu;
-  double tv = v-iv;
+  if (iv > tex_res - 2)
+    iv = tex_res - 2;
+  double v_weight_high = v-iv;
 
   unsigned char *pixel;
   pixel = image + (iv * tex_res + iu)*3;
   Color c00(pixel[0], pixel[1], pixel[2]);
-  Color c01(pixel[3], pixel[4], pixel[5]);
+
+  pixel = image + (iv * tex_res + iu_high)*3;
+  Color c01(pixel[0], pixel[1], pixel[2]);
+
   pixel = image + ((iv+1) * tex_res + iu)*3;
   Color c10(pixel[0], pixel[1], pixel[2]);
-  Color c11(pixel[3], pixel[4], pixel[5]);
+
+  pixel = image + ((iv+1) * tex_res + iu_high)*3;
+  Color c11(pixel[0], pixel[1], pixel[2]);
+
   Color c =
-    c00*(1-tu)*(1-tv)+
-    c01*   tu *(1-tv)+
-    c10*(1-tu)*   tv +
-    c11*   tu *   tv;
+    c00*(1-u_weight_high)*(1-v_weight_high)+
+    c01*   u_weight_high *(1-v_weight_high)+
+    c10*(1-u_weight_high)*   v_weight_high +
+    c11*   u_weight_high *   v_weight_high;
 
   return c*(1.0/255);
 #endif
