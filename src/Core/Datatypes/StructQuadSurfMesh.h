@@ -149,8 +149,6 @@ public:
   void get_random_point(Point &p, const Elem::index_type &ei, int seed=0) const
   { ASSERTFAIL("not implemented") }
 
-  double get_element_size(const Elem::index_type &fi) { return get_area(fi); }
-
   virtual bool is_editable() const { return true; }
 
   virtual void io(Piostream&);

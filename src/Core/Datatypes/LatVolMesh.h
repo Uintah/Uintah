@@ -517,7 +517,6 @@ public:
   double get_length(Edge::index_type idx) const { return get_size(idx); };
   double get_area(Face::index_type idx) const { return get_size(idx); };
   double get_volume(const Cell::index_type &i) const { return get_size(i); };
-  double get_element_size(const Elem::index_type &i) {  return get_size(i); }
 
   int get_valence(const Node::index_type &idx) const;
   int get_valence(Edge::index_type idx) const;

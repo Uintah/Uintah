@@ -174,7 +174,6 @@ public:
   void get_normal(Vector &n, Node::index_type i) const { n = normals_[i]; }
   void set_point(const Point &p, Node::index_type i) { points_[i] = p; }
 
-  double get_element_size(const Elem::index_type &fi) { return get_area(fi); }
   int get_valence(Node::index_type idx) const { return 0; }
   int get_valence(Edge::index_type idx) const { return 0; }
   int get_valence(Face::index_type idx) const { return 0; }
