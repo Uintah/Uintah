@@ -9,7 +9,10 @@ itcl_class PSECommon_Writers_ScalarFieldWriter {
     }
     method set_defaults {} {
 	global $this-filetype
+	global $this-split
+
 	set $this-filetype Binary
+	set $this-split 0
     }
     method ui {} {
 	set w .ui[modname]
@@ -21,7 +24,10 @@ itcl_class PSECommon_Writers_ScalarFieldWriter {
 
 	make_labeled_radio $w.filetype "Format:" "" left $this-filetype \
 		{Binary ASCII}
-	pack $w.filetype
+	checkbutton $w.split -text "Split" -relief flat \
+		-variable $this-split
+
+	pack $w.filetype $w.split
 	entry $w.f -textvariable $this-filename -width 40 \
 		-borderwidth 2 -relief sunken
 	pack $w.f -side bottom
