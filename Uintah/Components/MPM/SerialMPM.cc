@@ -50,6 +50,8 @@ static char *id="@(#) $Id$";
 #include <Uintah/Components/MPM/Fracture/Fracture.h>
 #include <Uintah/Components/MPM/ThermalContact/ThermalContact.h>
 
+#include <Uintah/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
+
 using namespace Uintah;
 using namespace Uintah::MPM;
 
@@ -68,6 +70,11 @@ SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
 
 SerialMPM::~SerialMPM()
 {
+  for(vector<MPMPhysicalBC*>::iterator bc = d_physicalBCs.begin();
+      bc != d_physicalBCs.end(); ++bc )
+  {
+    delete (*bc);
+  }
 }
 
 void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
@@ -76,6 +83,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
    d_sharedState = sharedState;
 
    MPMPhysicalModules::build(prob_spec,d_sharedState);
+   MPMPhysicalBCFactory::create(prob_spec,d_physicalBCs);
 
    Problem prob_description;
    prob_description.preProcessor(prob_spec, grid, d_sharedState);
@@ -1638,6 +1646,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 }
 
 // $Log$
+// Revision 1.111  2000/08/07 00:37:48  tan
+// Added MPMPhysicalBC class to handle all kinds of physical boundary conditions
+// in MPM.  Current implemented force boundary conditions.
+//
 // Revision 1.110  2000/08/04 16:50:56  tan
 // The "if(MPMPhysicalModules::heatConductionModel)" is removed.  Simulations
 // are thermal-mechanical.
