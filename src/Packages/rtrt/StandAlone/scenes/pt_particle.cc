@@ -13,6 +13,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Transform.h>
+#include <Core/Thread/Thread.h>
 
 #include <teem/nrrd.h>
 
