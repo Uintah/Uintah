@@ -169,6 +169,7 @@ void usage(const std::string& badarg, const std::string& progname)
     cerr << "Valid options are:\n";
     cerr << "  -h[elp]\n";
     cerr << "  -cmap [file with rgb triples]\n";
+    cerr << "  -cmaptype <type>     type can be several strings.\n";
     cerr << "  -ptonly (outputs only the point locations\n";
     cerr << "  -patch (outputs patch id with data)\n";
     cerr << "  -material (outputs material number with data)\n";
@@ -181,6 +182,7 @@ void usage(const std::string& badarg, const std::string& progname)
     cerr << "  -colordata [int]\n";
     cerr << "  -radiusfactor [float]\n";
     cerr << "  -radius [float]\n";
+    cerr << "  -radius_index [int]\n";
     cerr << "  -rate [float]\n";
     cerr << "  -dpyconfig [filename] file used to configure the display\n";
     
@@ -792,6 +794,9 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   // Only use var_include if the size is greater than 0.
   vector<std::string> var_include;
   char *cmap_file = 0; // Non zero when a file has been specified
+  char *cmap_type = "InvRainbow";
+  // This is the index to use for the radius.  -1 means don't use it.
+  int radius_index = -1;
 
   //------------------------------
   // Parse arguments
@@ -843,6 +848,8 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
       return(0);
     } else if (s == "-cmap") {
       cmap_file = argv[++i];
+    } else if (s == "-cmaptype") {
+      cmap_type = argv[++i];
     } else if (s == "-i" || (s == "--include")) {
       if (var_include.size() == 0) {
         // We are going to push back p.x right now, because we know we will
@@ -853,6 +860,8 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
       var_include.push_back(argv[i]);
     } else if (s == "-writedata") {
       write_data = true;
+    } else if(strcmp(argv[i], "-radius_index")==0) {
+      radius_index = atoi(argv[++i]);
     } else {
       if(filebase!="") {
         usage(s, argv[0]);
@@ -884,13 +893,17 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   // the value of colordata will be checked later and the
   // program will abort if the value is too large.
   GridSpheresDpy* display = new GridSpheresDpy(colordata-1, dpy_config);
+  if (radius_index >= 0)
+    display->set_radius_index(radius_index);
   SelectableGroup* alltime = new SelectableGroup(1/rate);
  
   RegularColorMap *cmap = 0;
   if (cmap_file)
     cmap = new RegularColorMap(cmap_file);
-  else 
-    cmap = new RegularColorMap(RegularColorMap::RegCMap_InvRainbow);
+  else {
+    int cmap_type_index = RegularColorMap::parseType(cmap_type);
+    cmap = new RegularColorMap(cmap_type_index);
+  }
 
   try {
     DataArchive* da = new DataArchive(filebase);
