@@ -165,7 +165,7 @@ public:
     UnfinishedIndex() : i_(0) {}
     UnfinishedIndex(int i) : i_(i) {}
 
-    operator const int() const { return i_; }
+    operator int() const { return i_; }
 
     int i_;
   };
