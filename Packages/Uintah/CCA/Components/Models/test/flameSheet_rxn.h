@@ -26,7 +26,7 @@ GENERAL INFORMATION
 
    flameSheet_rxn.h
 
-   Todd Harman
+   SteveParker
    Department of Computer Science
    University of Utah
 
@@ -63,10 +63,7 @@ WARNING
 					       const LevelP& level,
 					       const ModelInfo*);
       
-    virtual void scheduleMassExchange(SchedulerP&,
-				      const LevelP& level,
-				      const ModelInfo*);
-    virtual void scheduleMomentumAndEnergyExchange(SchedulerP&,
+    virtual void scheduleComputeModelSources(SchedulerP&,
 						   const LevelP& level,
 						   const ModelInfo*);
                                              
@@ -85,10 +82,10 @@ WARNING
 		      const MaterialSubset* matls, DataWarehouse*, 
 		      DataWarehouse* new_dw);
                      
-    void react(const ProcessorGroup*, 
-              const PatchSubset* patches,
-	       const MaterialSubset* matls, DataWarehouse*, 
-	       DataWarehouse* new_dw, const ModelInfo*);
+    void computeModelSources(const ProcessorGroup*, 
+                             const PatchSubset* patches,
+	                      const MaterialSubset* matls, DataWarehouse*, 
+	                      DataWarehouse* new_dw, const ModelInfo*);
 
     flameSheet_rxn(const flameSheet_rxn&);
     flameSheet_rxn& operator=(const flameSheet_rxn&);

@@ -43,33 +43,20 @@ WARNING
     Mixing(const ProcessorGroup* myworld, ProblemSpecP& params);
     virtual ~Mixing();
     
-    //////////
-    // Insert Documentation Here:
     virtual void problemSetup(GridP& grid, SimulationStateP& sharedState,
 			      ModelSetup* setup);
     
-    //////////
-    // Insert Documentation Here:
     virtual void scheduleInitialize(SchedulerP&,
 				    const LevelP& level,
 				    const ModelInfo*);
 
-    //////////
-    // Insert Documentation Here:
     virtual void restartInitialize() {}
       
-    //////////
-    // Insert Documentation Here:
     virtual void scheduleComputeStableTimestep(SchedulerP&,
 					       const LevelP& level,
 					       const ModelInfo*);
       
-    //////////
-    // Insert Documentation Here:
-    virtual void scheduleMassExchange(SchedulerP&,
-				      const LevelP& level,
-				      const ModelInfo*);
-    virtual void scheduleMomentumAndEnergyExchange(SchedulerP&,
+    virtual void scheduleComputeModelSources(SchedulerP&,
 						   const LevelP& level,
 						   const ModelInfo*);
                                              
@@ -83,12 +70,18 @@ WARNING
                                     const int);
 
   private:
-    void initialize(const ProcessorGroup*, const PatchSubset* patches,
-		    const MaterialSubset* matls, DataWarehouse*, 
-		    DataWarehouse* new_dw);
-    void react(const ProcessorGroup*, const PatchSubset* patches,
-	       const MaterialSubset* matls, DataWarehouse*, 
-	       DataWarehouse* new_dw, const ModelInfo*);
+    void initialize(const ProcessorGroup*, 
+                    const PatchSubset* patches,
+		      const MaterialSubset* matls, 
+                    DataWarehouse*, 
+		      DataWarehouse* new_dw);
+                  
+    void computeModelSources(const ProcessorGroup*, 
+                             const PatchSubset* patches,
+	                      const MaterialSubset* matls, 
+                             DataWarehouse*, 
+	                      DataWarehouse* new_dw, 
+                             const ModelInfo*);
 
     Mixing(const Mixing&);
     Mixing& operator=(const Mixing&);
