@@ -18,6 +18,13 @@ PersistentTypeID Satellite::type_id("Satellite", "Object", satellite_maker);
 void Satellite::animate(double t, bool& changed)
 {
   changed = false;
+
+  if (ORBIT_SPEED==0) {
+    theta_ = 0;
+    cen = Point(orb_radius_*cos(theta_),orb_radius_*sin(theta_),0);
+    if (parent_)
+      cen += (parent_->get_center().asVector());    
+  }
   
   // orbit
   if (orb_speed_) {
@@ -27,7 +34,7 @@ void Satellite::animate(double t, bool& changed)
     if (parent_)
       cen += (parent_->get_center().asVector());
     changed = true;
-  }
+  } 
   
   // revolution
   if (rev_speed_) {

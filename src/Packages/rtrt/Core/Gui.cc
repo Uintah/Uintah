@@ -568,8 +568,9 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
   case '+':
     if (activeGui->shiftDown_) {
       // increase planet orbit speed
-      if (ORBIT_SPEED==0) ORBIT_SPEED=1;
+      if (ORBIT_SPEED<.02) ORBIT_SPEED=1;
       else ORBIT_SPEED*=1.9;
+      cerr << "orbit speed: " << ORBIT_SPEED << endl;
     } else if (activeGui->ctrlDown_) {
       // increase planet rotate speed
       ROTATE_SPEED*=1.1;
@@ -583,6 +584,7 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
       // decrease planet orbit speed
       if (ORBIT_SPEED<.1) ORBIT_SPEED=0;
       else ORBIT_SPEED*=.6;
+      cerr << "orbit speed: " << ORBIT_SPEED << endl;
     } else if (activeGui->ctrlDown_) {
       // decrease planet rotate speed
       ROTATE_SPEED*=.6;
