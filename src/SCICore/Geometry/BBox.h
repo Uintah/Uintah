@@ -53,6 +53,7 @@ public:
     BBox();
     ~BBox();
     BBox(const BBox&);
+    BBox(const Point& min, const Point& max);
     inline int valid() const {return have_some;}
     void reset();
     void extend(const Point& p);
@@ -94,6 +95,9 @@ public:
 
 //
 // $Log$
+// Revision 1.4  2000/05/08 19:15:47  kuzimmer
+// Added a new constructor to BBox
+//
 // Revision 1.3  2000/04/11 19:06:09  kuzimmer
 // Includes an Overlap function to test to see if two BBoxes overlap
 //
