@@ -79,16 +79,15 @@ PersistentTypeID PropertyManager::type_id("PropertyManager",
 					  make_PropertyManager);
 
 
-PropertyManager::PropertyManager()
+PropertyManager::PropertyManager() : 
+  size_(0)
 {
 }
 
 
-PropertyManager::PropertyManager(const PropertyManager &copy)
+PropertyManager::PropertyManager(const PropertyManager &copy) :
+  size_(copy.size_), properties_(copy.properties_)
 {
-//   map_type::const_iterator pi = copy.properties_.begin();
-//   while (pi != copy.properties_.end())
-//     properties_[pi->first] = pi->second->clone();
 }
 
 
