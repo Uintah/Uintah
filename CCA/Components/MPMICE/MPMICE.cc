@@ -25,9 +25,9 @@ using namespace std;
 
 //#define DOING
 #undef DOING
-//#define EOSCM
+#define EOSCM
 //#undef EOSCM
-#define IDEAL_GAS
+//#define IDEAL_GAS
 //#undef IDEAL_GAS
 //#define BURN_DEBUG
 #undef BURN_DEBUG
@@ -155,8 +155,6 @@ void MPMICE::scheduleTimeAdvance(double, double,
                                                                   all_matls);
   d_ice->scheduleAccumulateEnergySourceSinks(     sched, patches, press_matl,
                                                                   all_matls);
-  d_ice->scheduleComputeLagrangianValues(         sched, patches, mpm_matls_sub,
-                                                                  ice_matls);
 
   scheduleInterpolatePressCCToPressNC(            sched, patches, press_matl,
                                                                   mpm_matls);
@@ -172,6 +170,10 @@ void MPMICE::scheduleTimeAdvance(double, double,
   d_mpm->scheduleIntegrateTemperatureRate(        sched, patches, mpm_matls);
 
   scheduleInterpolateNCToCC(                      sched, patches, mpm_matls);
+
+  d_ice->scheduleComputeLagrangianValues(         sched, patches, mpm_matls_sub,
+                                                                  ice_matls);
+
   scheduleCCMomExchange(                          sched, patches, ice_matls_sub,
                                                                   mpm_matls_sub,
                                                                   all_matls);
