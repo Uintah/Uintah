@@ -27,7 +27,11 @@ SRCS     += $(SRCDIR)/GuiManager.cc \
 	$(SRCDIR)/TCLInit.cc $(SRCDIR)/TCLTask.cc $(SRCDIR)/GuiVar.cc \
 	$(SRCDIR)/ThreadStats.cc \
 	$(SRCDIR)/TCLstrbuff.cc \
-	$(SRCDIR)/TclObj.cc \
+	$(SRCDIR)/TclObj.cc
+
+ifeq ($(BUILD_SCIRUN2),yes)
+SRCS +=	$(SRCDIR)/startTCL.cc
+endif
 
 PSELIBS := Core/Exceptions Core/Util Core/Thread \
 		Core/Containers Core/TkExtensions
