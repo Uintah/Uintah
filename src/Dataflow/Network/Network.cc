@@ -105,13 +105,12 @@ string Network::connect(Module* m1, int p1, Module* m2, int p2)
       return "";
     }
 
-    Connection* conn=scinew Connection(m1, p1, m2, p2);
     ostringstream ids;
     ids << m1->id << "_p" << p1 << "_to_" << m2->id << "_p" << p2;
-    conn->id=ids.str();
-    conn->connect();
+    Connection* conn=scinew Connection(m1, p1, m2, p2, ids.str());
     connections.push_back(conn);
-    // Reschedule next time we can...
+
+    // Reschedule next time we can.
     reschedule=1;
 
     return conn->id;
