@@ -65,6 +65,7 @@ public:
   virtual ~SeedField();
   virtual void execute();
   virtual void tcl_command(TCLArgs&, void*);
+  virtual void widget_moved(int);
 };
 
 extern "C" Module* make_SeedField(const clString& id) {
@@ -97,6 +98,12 @@ SeedField::SeedField(const clString& id)
 
 SeedField::~SeedField()
 {
+}
+
+void SeedField::widget_moved(int i)
+{
+  if (i==1) 
+    want_to_execute();
 }
 
 void SeedField::execute()
