@@ -19,9 +19,7 @@
 
 import os
 import sys
-import random
-from time import time
-
+import tempfile
 
 all_messages = []
 file_msg_map = {}
@@ -30,33 +28,23 @@ file_doc_map = {}
 all_progress = []
 file_progress_map = {}
 
-global editor
-editor = ''
+global use_editor
+use_editor = ''
 
 if os.environ.has_key('EDITOR') :
-    global editor
-    editor = os.environ['EDITOR']
-    print "generating messages with %s" % editor
-if editor == '' :
-    editor = 'emacs'
+    use_editor = os.environ['EDITOR']
+    print "generating messages with %s" % use_editor
+if use_editor == '' :
+    use_editor = 'emacs'
     print "no EDITOR env var, using emacs"
-
-#seed ranmdom with current time..
-random.seed(time())
 
 def do_it(cmmd) :
     #print cmmd
     os.system(cmmd)
 
-def generate_name(start) :
-    val = random.randrange(10000)
-    return "%s.%d" % (start, val)
-    
-
 def get_user_input(pre) :
     # load editor with random filename
-    f = generate_name(pre)
-    filename = "/tmp/%s.commit" % f
+    filename = tempfile.mktemp(".%s.commit" % pre)
     os.system("emacs %s" % filename)
     return filename
 
