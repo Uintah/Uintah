@@ -478,14 +478,8 @@ class BioImageApp {
  			"Original Samples: ($0_samples, $1_samples, $2_samples)"
  		    $history1.0.f0.childsite.ui.samples configure -text \
  			"Original Samples: ($0_samples, $1_samples, $2_samples)"
- 		} elseif {$dimension == 2} {
- 		    $history0.0.f0.childsite.ui.samples configure -text \
- 			"Original Samples: ($0_samples, $1_samples)"
- 		    $history1.0.f0.childsite.ui.samples configure -text \
- 			"Original Samples: ($0_samples, $1_samples)"
  		} else {
- 		    puts "ERROR: Only 2D and 3D data supported."
- 		    return
+		    tk_messageBox -message "BioImage only supports 3D data.\nPlease load in a 3D dataset." -type ok -icon info -parent .standalone
  		}
 	    }	
 	} elseif {[string first "NrrdInfo" $which 0] != -1 && $state == "Completed"} { 
