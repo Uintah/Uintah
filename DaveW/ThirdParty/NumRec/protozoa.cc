@@ -23,10 +23,10 @@ for (j=1;j<=ndim;j++) {\
    for (sum=0.0,k=1;k<=mpts;k++) sum += guesses(j,k);\
       psum[j]=sum;}
 #define SWAP(a,b) {swap=(a);(a)=(b);(b)=swap;}
-const CREATE_EARLY_GUESSES = 1;
-const USE_CROSS_TERMS = 1;
-const MIN_LEAST_SQUARES_EXTRAS = 1;
-const MAX_LEAST_SQUARES_EXTRAS = 10;
+const int CREATE_EARLY_GUESSES = 1;
+const int USE_CROSS_TERMS = 1;
+const int MIN_LEAST_SQUARES_EXTRAS = 1;
+const int MAX_LEAST_SQUARES_EXTRAS = 10;
 double errCorrect(double initialError)
     // we are squaring the error so that it is linear with the sum of sqares.  We are inverting the square because we want hlower values to be of more importance
 {
@@ -494,3 +494,32 @@ void protozoa(double **p, double y[], int ndim, double ftol,
 	   GET_PSUM
 	   p[ihi][i] = psum[i]/mpts;
 #endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
