@@ -1516,7 +1516,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
           B   +=  Q * inv_y;
           C   +=  inv_y;
         } 
-#endif
         double vol_frac_not_close_packed = 1.;
         delPress = (A - vol_frac_not_close_packed - B)/C;
 #ifdef OREN_PRESS_EQ
