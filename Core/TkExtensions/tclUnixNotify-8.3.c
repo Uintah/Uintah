@@ -711,7 +711,7 @@ Tcl_WaitForEvent(timePtr)
 #else
     int numFound;
 #endif
-    //fprintf(stderr, "****** Tcl wait for event\n");
+    /*fprintf(stderr, "****** Tcl wait for event\n");*/
     ThreadSpecificData *tsdPtr = TCL_TSD_INIT(&dataKey);
 
     if (tclStubs.tcl_WaitForEvent != Tcl_WaitForEvent) {
