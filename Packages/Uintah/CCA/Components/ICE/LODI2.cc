@@ -754,23 +754,15 @@ void FaceDensity_LODI(const Patch* patch,
   vector<Patch::FaceType>::const_iterator iter;  
   for(iter = b_faces.begin(); iter != b_faces.end(); ++ iter ) {
     Patch::FaceType face0 = *iter;
-    //__________________________________
-    //  Find the offset for the r and l cells
-    //  and the Vector components Edir1 and Edir2
-    //  for this particular edge
-    // IntVector offset = IntVector(1,1,1)  - Abs(patch->faceDirection(face)) 
-//                                          - Abs(patch->faceDirection(face0));
-//            
-//     IntVector axes = patch->faceAxes(face0);
-//     int Edir1 = axes[0];
-//     int Edir2 = remainingVectorComponent(P_dir, Edir1);
-  
+    
+    IntVector offset = IntVector(0,0,0)  - patch->faceDirection(face) 
+                                         - patch->faceDirection(face0);
     CellIterator iterLimits =  
                 patch->getEdgeCellIterator(face, face0, "minusCornerCells");
                 
     for(CellIterator iter = iterLimits;!iter.done();iter++){ 
       IntVector c = *iter;      
-      rho_CC[c] = 1.7899909957225715000;
+      rho_CC[c] = rho_CC[c + offset];
     }
   }
 
@@ -862,24 +854,15 @@ void FaceVel_LODI(const Patch* patch,
   vector<Patch::FaceType>::const_iterator iter;  
   for(iter = b_faces.begin(); iter != b_faces.end(); ++ iter ) {
     Patch::FaceType face0 = *iter;
-    
-    //__________________________________
-    //  Find the offset for the r and l cells
-    //  and the Vector components Edir1 and Edir2
-    //  for this particular edge
-    IntVector offset = IntVector(1,1,1)  - Abs(patch->faceDirection(face)) 
-                                         - Abs(patch->faceDirection(face0));
-           
-    //IntVector axes = patch->faceAxes(face0);
-    //int Edir1 = axes[0];
-    //int Edir2 = remainingVectorComponent(P_dir, Edir1);
-     
+   
+    IntVector offset = IntVector(0,0,0)  - patch->faceDirection(face) 
+                                         - patch->faceDirection(face0);
     CellIterator iterLimits =  
                 patch->getEdgeCellIterator(face, face0, "minusCornerCells");
                       
     for(CellIterator iter = iterLimits;!iter.done();iter++){ 
       IntVector c = *iter;
-      vel_CC[c] = Vector(0,0,0);
+      vel_CC[c] = vel_CC[c + offset];
     }
   }  
   //________________________________________________________
@@ -950,7 +933,7 @@ void FaceTemp_LODI(const Patch* patch,
              << " term5 " << term5
              << " dtemp_dx " << dtemp_dx << endl;
   }
-#if 1 
+
   //__________________________________
   //    E D G E S  -- on boundaryFaces only
   vector<Patch::FaceType> b_faces;
@@ -959,25 +942,15 @@ void FaceTemp_LODI(const Patch* patch,
   vector<Patch::FaceType>::const_iterator iter;  
   for(iter = b_faces.begin(); iter != b_faces.end(); ++ iter ) {
     Patch::FaceType face0 = *iter;
-    //__________________________________
-    //  Find the offset for the r and l cells
-    //  and the Vector components Edir1 and Edir2
-    //  for this particular edge
-    
-    //IntVector edge = Abs(patch->faceDirection(face)) 
-    //               + Abs(patch->faceDirection(face0));
-    //IntVector offset = IntVector(1,1,1) - edge;
-           
-    //IntVector axes = patch->faceAxes(face0);
-    //int Edir1 = axes[0];
-    //int Edir2 = remainingVectorComponent(P_dir, Edir1);
+    IntVector offset = IntVector(0,0,0)  - patch->faceDirection(face) 
+                                         - patch->faceDirection(face0); 
      
     CellIterator iterLimits =  
                 patch->getEdgeCellIterator(face, face0, "minusCornerCells");
-                  
+             
     for(CellIterator iter = iterLimits;!iter.done();iter++){ 
       IntVector c = *iter;
-      temp_CC[c] = 300; 
+      temp_CC[c] = temp_CC[c+offset]; 
     }
   }  
  
@@ -990,7 +963,7 @@ void FaceTemp_LODI(const Patch* patch,
     IntVector c = *itr;
     temp_CC[c] = 300;
   }
-#endif
+
 } //end of function FaceTempLODI()  
 
 
@@ -1039,6 +1012,35 @@ void FacePress_LODI(const Patch* patch,
     cout_dbg << " c " << c << " in " << in << " press_CC[c] "<< press_CC[c] 
              << " dpress_dx " << dpress_dx << " press_CC[in] " << press_CC[in]<<endl;
 
+  }
+  //__________________________________
+  //    E D G E S  -- on boundaryFaces only
+  vector<Patch::FaceType> b_faces;
+  getBoundaryEdges(patch,face,b_faces);
+  
+  vector<Patch::FaceType>::const_iterator iter;  
+  for(iter = b_faces.begin(); iter != b_faces.end(); ++ iter ) {
+    Patch::FaceType face0 = *iter;
+    IntVector offset = IntVector(0,0,0)  - patch->faceDirection(face) 
+                                         - patch->faceDirection(face0); 
+     
+    CellIterator iterLimits =  
+                patch->getEdgeCellIterator(face, face0, "minusCornerCells");
+             
+    for(CellIterator iter = iterLimits;!iter.done();iter++){ 
+      IntVector c = *iter;
+      press_CC[c] = press_CC[c+offset]; 
+    }
+  }  
+ 
+  //________________________________________________________
+  // C O R N E R S    
+  const vector<IntVector> corner = patch->getCornerCells(face);
+  vector<IntVector>::const_iterator itr;
+  
+  for(itr = corner.begin(); itr != corner.end(); ++ itr ) {
+    IntVector c = *itr;
+    press_CC[c] = 101325;
   }
 } 
    
