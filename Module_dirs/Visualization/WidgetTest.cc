@@ -21,6 +21,7 @@
 #include <Widgets/ArrowWidget.h>
 #include <Widgets/GuageWidget.h>
 #include <Widgets/RingWidget.h>
+#include <Widgets/FixedFrameWidget.h>
 #include <Widgets/FrameWidget.h>
 #include <Widgets/ScaledFrameWidget.h>
 #include <Widgets/SquareWidget.h>
@@ -32,8 +33,8 @@
 
 #include <iostream.h>
 
-const Index NumWidgetTypes = 12;
-enum WidgetTypes {Point, Arrow, Guage, Ring, Frame, SFrame, Square, SSquare, Box, SBox, Cube, SCube};
+const Index NumWidgetTypes = 13;
+enum WidgetTypes {Point, Arrow, Guage, Ring, FFrame, Frame, SFrame, Square, SSquare, Box, SBox, Cube, SCube};
 
 class WidgetTest : public Module {
     GeometryOPort* ogeom;
@@ -78,6 +79,7 @@ WidgetTest::WidgetTest(const clString& id)
     widgets[Arrow]=new ArrowWidget(this, &widget_lock, .1);
     widgets[Guage]=new GuageWidget(this, &widget_lock, .1);
     widgets[Ring]=new RingWidget(this, &widget_lock, .1);
+    widgets[FFrame]=new FixedFrameWidget(this, &widget_lock, .1);
     widgets[Frame]=new FrameWidget(this, &widget_lock, .1);
     widgets[SFrame]=new ScaledFrameWidget(this, &widget_lock, .1);
     widgets[Square]=new SquareWidget(this, &widget_lock, .1);
@@ -134,10 +136,9 @@ void WidgetTest::execute()
 void WidgetTest::geom_moved(int axis, double dist, const Vector& delta,
 			   void* cbdata)
 {
-    cerr << "Moved called..." << endl;
-
     widgets[widget_type.get()]->geom_moved(axis, dist, delta, cbdata);
     cout << "Gauge ratio " << ((GuageWidget*)widgets[Guage])->GetRatio() << endl;
+    cout << "Ring angle " << ((RingWidget*)widgets[Ring])->GetRatio() << endl;
     
     if(!abort_flag){
 	abort_flag=1;
