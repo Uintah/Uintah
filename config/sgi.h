@@ -41,7 +41,7 @@
 #define SCI_LMOTIF -lXm
 #define SCI_LX11 -lX11
 #define SCI_LXDR -lsun
-#define SCI_LAUDIO -laudio
+#define SCI_LAUDIO -laudio -laudiofile
 #define SCI_LGL -lGLw -lGLU -lGL
 
 #ifndef SCI_OBJROOT
