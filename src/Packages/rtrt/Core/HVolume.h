@@ -47,30 +47,35 @@ public:
   }
 };
 
+template<>
 class TypeInfo<unsigned char> {
 public:
   static unsigned char get_min() { return 0; }
   static unsigned char get_max() { return 255; }
 };
 
+template<>
 class TypeInfo<short> {
 public:
   static short get_min() { return MAXSHORT+1; }
   static short get_max() { return MAXSHORT; }
 };
 
+template<>
 class TypeInfo<int> {
 public:
   static int get_min() { return -MAXINT-1; }
   static int get_max() { return MAXINT; }
 };
 
+template<>
 class TypeInfo<float> {
 public:
   static float get_min() { return -MAXFLOAT; }
   static float get_max() { return MAXFLOAT; }
 };
   
+template<>
 class TypeInfo<double> {
 public:
   static double get_min() { return -MAXDOUBLE; }
@@ -959,8 +964,11 @@ void HVolume<T,A,B>::intersect(Ray& ray, HitInfo& hit,
   const Vector dir(ray.direction());
   const Point orig(ray.origin());
   Point max(min+hierdiag);
+  // MIN and MAX are the t values where the ray enters and leaves the box
   double MIN, MAX;
   double xinv_dir=1./dir.x();
+  // The dix_dx/diy_dy/diz_dz variables identify which direction the
+  // ray is travelling in the x/y/z direction.
   int dix_dx;
   int ddx;
   if(dir.x() > 0){
@@ -1027,8 +1035,9 @@ void HVolume<T,A,B>::intersect(Ray& ray, HitInfo& hit,
   }
   if(t>1.e29)
     return;
-  Point p(orig+dir*t);
-  Vector s((p-min)*ihierdiag);
+  // surface_p is the point on (or inside) the box where the ray intersects.
+  Point intersect_p(orig+dir*t);
+  Vector s((intersect_p-min)*ihierdiag);
   //cout << "s = " << s << "\tdepth = " << depth << endl;
   int cx=xsize[depth-1];
   int cy=ysize[depth-1];
@@ -1059,30 +1068,45 @@ void HVolume<T,A,B>::intersect(Ray& ray, HitInfo& hit,
   double dtdx, dtdy, dtdz;
   double icx=ixsize[depth-1];
   double x=min.x()+hierdiag.x()*double(ix+ddx)*icx;
-  next_x=(x-orig.x())*xinv_dir;
+  next_x=(x-intersect_p.x())*xinv_dir;
   dtdx=dix_dx*hierdiag.x()*icx*xinv_dir;
   double icy=iysize[depth-1];
   double y=min.y()+hierdiag.y()*double(iy+ddy)*icy;
-  next_y=(y-orig.y())*yinv_dir;
+  next_y=(y-intersect_p.y())*yinv_dir;
   dtdy=diy_dy*hierdiag.y()*icy*yinv_dir;
   double icz=izsize[depth-1];
   double z=min.z()+hierdiag.z()*double(iz+ddz)*icz;
-  next_z=(z-orig.z())*zinv_dir;
+  next_z=(z-intersect_p.z())*zinv_dir;
   dtdz=diz_dz*hierdiag.z()*icz*zinv_dir;
   
   Vector cellsize(cx,cy,cz);
-  Vector cellcorner((orig-min)*ihierdiag*cellsize);
+  Vector cellcorner((intersect_p-min)*ihierdiag*cellsize);
   Vector celldir(dir*ihierdiag*cellsize);
   float isoval=dpy->isoval;
   //cerr << "isoval = "<<isoval<<" ";
-  
-  isect(depth-1, isoval, t, dtdx, dtdy, dtdz, next_x, next_y, next_z,
+
+  // Make a new ray with the point intersect_p.  Be sure to offset t.
+  Ray new_ray(intersect_p, dir);
+  // Create a new HitInfo with the appropiate information
+  HitInfo new_hit;
+  if (hit.was_hit)
+    // Offset min_t by the t from our new_ray
+    new_hit.min_t = hit.min_t - t;
+  isect(depth-1, isoval, 0, dtdx, dtdy, dtdz, next_x, next_y, next_z,
 	ix, iy, iz, dix_dx, diy_dy, diz_dz,
 	0, 0, 0,
 	cellcorner, celldir,
-	ray, hit, st, ppc);
-  //  if (hit.was_hit && hit.hit_obj == this)
-  //    cerr << name_ << " was hit."<<endl;
+	new_ray, new_hit, st, ppc);
+  if (new_hit.was_hit) {
+    // Since this would only be true if the intersection point was
+    // closer than min_t, we can be safe to assume that the current
+    // object is now the closest object and we should update hit.
+    
+    // We need to offset hit.min_t
+    hit = new_hit;
+    hit.min_t += t;
+    //    cerr << name_ << " was hit."<<endl;
+  }
 }
 
 template<class T, class A, class B>
