@@ -56,7 +56,7 @@ void TypeDescription::register_type()
 TypeDescription::TypeDescription(Type type, const std::string& name,
 				 bool isFlat, MPI_Datatype (*mpitypemaker)())
    : d_type(type), d_subtype(0), d_name(name), d_isFlat(isFlat),
-     d_mpitype(-1), d_mpitypemaker(mpitypemaker), d_maker(0)
+     d_mpitype(MPI_Datatype(-1)), d_mpitypemaker(mpitypemaker), d_maker(0)
 {
   register_type();
 }
@@ -73,7 +73,7 @@ TypeDescription::TypeDescription(Type type, const std::string& name,
 				 Variable* (*maker)(),
 				 const TypeDescription* subtype)
    : d_type(type), d_subtype(subtype), d_name(name), d_isFlat(false),
-     d_mpitype(-2), d_mpitypemaker(0), d_maker(maker)
+     d_mpitype(MPI_Datatype(-2)), d_mpitypemaker(0), d_maker(maker)
 {
   register_type();
 }
@@ -114,9 +114,9 @@ TypeDescription::Register::~Register()
 
 MPI_Datatype TypeDescription::getMPIType() const
 {
-  if(d_mpitype == -1){
+  if(d_mpitype == MPI_Datatype(-1)){
     tdLock.lock();
-    if (d_mpitype == -1) {
+    if (d_mpitype == MPI_Datatype(-1)) {
       if(d_mpitypemaker){
 	d_mpitype = (*d_mpitypemaker)();
       } else {
@@ -126,7 +126,7 @@ MPI_Datatype TypeDescription::getMPIType() const
     }
     tdLock.unlock();
   }
-  ASSERT(d_mpitype != -2);
+  ASSERT(d_mpitype != MPI_Datatype(-2));
   return d_mpitype;
 }
 
