@@ -953,13 +953,13 @@ public:
   void get_point(Point &point, const Node::index_type &index) const
   { get_center(point, index); }
 
-  void get_random_point(Point &p, const Elem::index_type &ei, int seed=0) const
+  void get_random_point(Point &/*p*/, const Elem::index_type &/*ei*/, int /*seed=0*/) const
   { ASSERTFAIL("not implemented") }
 
   //! the double return val is the volume of the Hex.
-  double get_gradient_basis(Cell::index_type ci, Vector& g0, Vector& g1,
-			    Vector& g2, Vector& g3, Vector& g4,
-			    Vector& g5, Vector& g6, Vector& g7)
+  double get_gradient_basis(Cell::index_type /*ci*/, Vector& /*g0*/, Vector& /*g1*/,
+			    Vector& /*g2*/, Vector& /*g3*/, Vector& /*g4*/,
+			    Vector& /*g5*/, Vector& /*g6*/, Vector& /*g7*/)
   { ASSERTFAIL("not implemented") }
 
   void get_normal(Vector &/*normal*/, Node::index_type /*index*/) const
