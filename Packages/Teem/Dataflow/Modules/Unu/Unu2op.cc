@@ -52,11 +52,13 @@ private:
 
   GuiString    operator_;
   GuiDouble    float_input_;
+  GuiString    type_;
+  GuiInt       usetype_;
   bool         first_nrrd_;
   bool         second_nrrd_;
 
   unsigned int get_op(const string &op);
-  
+  unsigned int get_type(const string &type);
 };
 
 DECLARE_MAKER(Unu2op)
@@ -65,6 +67,8 @@ Unu2op::Unu2op(SCIRun::GuiContext *ctx) :
   Module("Unu2op", ctx, Filter, "UnuAtoM", "Teem"), 
   operator_(ctx->subVar("operator")),
   float_input_(ctx->subVar("float_input")),
+  type_(ctx->subVar("type")),
+  usetype_(ctx->subVar("usetype")),
   first_nrrd_(true), second_nrrd_(true)
 {
 }
@@ -118,6 +122,8 @@ Unu2op::execute()
   Nrrd *nin1 = 0;
   Nrrd *nin2 = 0;
   Nrrd *nout = nrrdNew();
+  Nrrd *ntmp1 = NULL;
+  Nrrd *ntmp2 = NULL;
 
   // can either have two nrrds, first nrrd and float, or second
   // nrrd and float
@@ -125,12 +131,43 @@ Unu2op::execute()
     error("Must have at least one nrrd connected.");
     return;
   }
-  if (first_nrrd_)
-    nin1 = nrrd_handle1->nrrd;
-  if (second_nrrd_)
-    nin2 = nrrd_handle2->nrrd;
 
   reset_vars();
+
+  // convert nrrds if indicated
+  if (!usetype_.get()) {
+    if (first_nrrd_) {
+      ntmp1 = nrrdNew();
+      if (nrrdConvert(ntmp1, nrrd_handle1->nrrd, get_type(type_.get()))) {
+	char *err = biffGetDone(NRRD);
+	error(string("Error converting nrrd: ") + err);
+	free(err);
+	return;
+      }
+    }
+    if (second_nrrd_) {
+      ntmp2 = nrrdNew();
+      if (nrrdConvert(ntmp2, nrrd_handle2->nrrd, get_type(type_.get()))) {
+	char *err = biffGetDone(NRRD);
+	error(string("Error converting nrrd: ") + err);
+	free(err);
+	return;
+      }
+    }
+  }
+  
+  if (first_nrrd_) {
+    if (!usetype_.get())
+      nin1 = ntmp1;
+    else
+      nin1 = nrrd_handle1->nrrd;
+  }
+  if (second_nrrd_) {
+    if (!usetype_.get())
+      nin2 = ntmp2;
+    else
+      nin2 = nrrd_handle2->nrrd;
+  }
 
   NrrdIter *in1 = nrrdIterNew();
   NrrdIter *in2 = nrrdIterNew();
@@ -201,6 +238,34 @@ Unu2op::get_op(const string &op) {
   else {
     error("Unknown operation. Using eq");
     return nrrdBinaryOpEqual;
+  }
+}
+
+unsigned int
+Unu2op::get_type(const string &type) {
+  if (type == "nrrdTypeChar")
+    return nrrdTypeChar;
+  else if (type == "nrrdTypeUChar") 
+    return nrrdTypeUChar;
+  else if (type == "nrrdTypeShort")
+    return nrrdTypeShort;
+  else if (type == "nrrdTypeUShort")
+    return nrrdTypeUShort;
+  else if (type == "nrrdTypeInt")
+    return nrrdTypeInt;
+  else if (type == "nrrdTypeUInt")
+    return nrrdTypeUInt;
+  else if (type == "nrrdTypeLLong")
+    return nrrdTypeLLong;
+  else if (type == "nrrdTypeULLong")
+    return nrrdTypeULLong;
+  else if (type == "nrrdTypeFloat")
+    return nrrdTypeFloat;
+  else if (type == "nrrdTypeDouble")
+    return nrrdTypeDouble;
+  else {
+    error("Unknown nrrd type. Defaulting to nrrdTypeFloat");
+    return nrrdTypeFloat;
   }
 }
 

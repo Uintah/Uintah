@@ -49,6 +49,7 @@
     <p>abs : absolute value</p>
     <p>sgn : -1, 0, 1 if value is  less than 0, ==0, or  greater than 0</p>
     <p>exists : 1 iff not NaN or +/-Inf, 0 otherwise.</p>
+    <p>Type : convert input nrrd to this type prior to doing the operation.  To leave it unchanged, check the 'Same as input type' checkbutton.</p>
     </description>
   </overview>
   <implementation>

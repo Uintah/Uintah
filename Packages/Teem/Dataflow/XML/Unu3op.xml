@@ -60,6 +60,7 @@
     be used if the second nrrd port isn't connected.</p>
     <p>Float Input 3: This value is the third float value and will only
     be used if the third nrrd port isn't connected.</p>
+    <p>Type : type to convert all input nrrds to prior to doing the operation.  To leave it unchanged, check the 'Same as input type' checkbutton.</p>
     </description>
   </overview>
   <implementation>
