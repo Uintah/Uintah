@@ -782,6 +782,37 @@ Source::addPressureSource(const ProcessorGroup* ,
     ioff = 1;
     joff = 0;
     koff = 0;
+#ifdef multimaterialform
+    Array3<double> bulkVolume(patch->getLowIndex(), patch->getHighIndex());
+    IntVector indexLow = patch->getCellLowIndex();
+    IntVector indexHigh = patch->getCellHighIndex();
+    MultiMaterialVars* mmVars = d_mmInterface->getMMVars();
+    for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
+      for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
+	for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
+	  // Store current cell
+	  IntVector currCell(colX, colY, colZ);
+	  bulkVolume[currCell] = cellInfo->sewu[colX]*cellInfo->sns[colY]*
+	                         cellInfo->stb[colZ];
+	  if (d_mmInterface)
+	    bulkVolume[currCell] *= mmVars->voidFraction[currCell];
+	}
+      }
+    }
+    FORT_ADDPRESSGRAD(domLoU.get_pointer(), domHiU.get_pointer(),
+		      domLoUng.get_pointer(), domHiUng.get_pointer(),
+		      idxLoU.get_pointer(), idxHiU.get_pointer(),
+		      vars->uVelocity.getPointer(),
+		      vars->uVelNonlinearSrc.getPointer(), 
+		      vars->uVelocityCoeff[Arches::AP].getPointer(),
+		      domLo.get_pointer(), domHi.get_pointer(),
+		      domLong.get_pointer(), domHing.get_pointer(),
+		      vars->pressure.getPointer(),
+		      vars->old_density.getPointer(),
+		      &delta_t, &ioff, &joff, &koff,
+		      bulkVolume.getPointer(),
+		      cellinfo->dxpw.get_objs());
+#endif    
     FORT_ADDPRESSGRAD(domLoU.get_pointer(), domHiU.get_pointer(),
 		      domLoUng.get_pointer(), domHiUng.get_pointer(),
 		      idxLoU.get_pointer(), idxHiU.get_pointer(),
@@ -810,6 +841,38 @@ Source::addPressureSource(const ProcessorGroup* ,
     koff = 0;
     // computes remaining diffusion term and also computes 
     // source due to gravity...need to pass ipref, jpref and kpref
+#ifdef multimaterialform
+    Array3<double> bulkVolume(patch->getLowIndex(), patch->getHighIndex());
+    IntVector indexLow = patch->getCellLowIndex();
+    IntVector indexHigh = patch->getCellHighIndex();
+    MultiMaterialVars* mmVars = d_mmInterface->getMMVars();
+    for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
+      for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
+	for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
+	  // Store current cell
+	  IntVector currCell(colX, colY, colZ);
+	  bulkVolume[currCell] = cellInfo->sew[colX]*cellInfo->snsv[colY]*
+	                         cellInfo->stb[colZ];
+	  if (d_mmInterface)
+	    bulkVolume[currCell] *= mmVars->voidFraction[currCell];
+	}
+      }
+    }
+    FORT_ADDPRESSGRAD(domLoU.get_pointer(), domHiU.get_pointer(),
+		      domLoUng.get_pointer(), domHiUng.get_pointer(),
+		      idxLoU.get_pointer(), idxHiU.get_pointer(),
+		      vars->vVelocity.getPointer(),
+		      vars->vVelNonlinearSrc.getPointer(), 
+		      vars->vVelocityCoeff[Arches::AP].getPointer(),
+		      domLo.get_pointer(), domHi.get_pointer(),
+		      domLong.get_pointer(), domHing.get_pointer(),
+		      vars->pressure.getPointer(),
+		      vars->old_density.getPointer(),
+		      &delta_t, &ioff, &joff, &koff,
+		      bulkVolume.getPointer(),
+		      cellinfo->dyps.get_objs());
+#endif    
+
     FORT_ADDPRESSGRAD(domLoU.get_pointer(), domHiU.get_pointer(),
 		      domLoUng.get_pointer(), domHiUng.get_pointer(),
 		      idxLoU.get_pointer(), idxHiU.get_pointer(),
@@ -836,6 +899,38 @@ Source::addPressureSource(const ProcessorGroup* ,
     ioff = 0;
     joff = 0;
     koff = 1;
+#ifdef multimaterialform
+    Array3<double> bulkVolume(patch->getLowIndex(), patch->getHighIndex());
+    IntVector indexLow = patch->getCellLowIndex();
+    IntVector indexHigh = patch->getCellHighIndex();
+    MultiMaterialVars* mmVars = d_mmInterface->getMMVars();
+    for (int colZ = indexLow.z(); colZ < indexHigh.z(); colZ ++) {
+      for (int colY = indexLow.y(); colY < indexHigh.y(); colY ++) {
+	for (int colX = indexLow.x(); colX < indexHigh.x(); colX ++) {
+	  // Store current cell
+	  IntVector currCell(colX, colY, colZ);
+	  bulkVolume[currCell] = cellInfo->sew[colX]*cellInfo->sns[colY]*
+	                         cellInfo->stbw[colZ];
+	  if (d_mmInterface)
+	    bulkVolume[currCell] *= mmVars->voidFraction[currCell];
+	}
+      }
+    }
+    FORT_ADDPRESSGRAD(domLoU.get_pointer(), domHiU.get_pointer(),
+		      domLoUng.get_pointer(), domHiUng.get_pointer(),
+		      idxLoU.get_pointer(), idxHiU.get_pointer(),
+		      vars->wVelocity.getPointer(),
+		      vars->wVelNonlinearSrc.getPointer(), 
+		      vars->wVelocityCoeff[Arches::AP].getPointer(),
+		      domLo.get_pointer(), domHi.get_pointer(),
+		      domLong.get_pointer(), domHing.get_pointer(),
+		      vars->pressure.getPointer(),
+		      vars->old_density.getPointer(),
+		      &delta_t, &ioff, &joff, &koff,
+		      bulkVolume.getPointer();
+		      cellinfo->dzpb.get_objs());
+
+#endif    
     // computes remaining diffusion term and also computes 
     // source due to gravity...need to pass ipref, jpref and kpref
     FORT_ADDPRESSGRAD(domLoU.get_pointer(), domHiU.get_pointer(),

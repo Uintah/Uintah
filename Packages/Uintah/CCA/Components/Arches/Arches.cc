@@ -78,8 +78,48 @@ Arches::problemSetup(const ProblemSpecP& params,
   // for gravity, read it from shared state 
   //d_physicalConsts->problemSetup(params);
   d_physicalConsts->problemSetup(db);
+#ifdef multimaterialform
+  bool multimaterial;
+  db->require("MultiMaterial",multimaterial);
+  if (multimaterial) {
+    d_mmInterface = new MultiMaterialInterface();
+    d_mmInterface(db, d_sharedState);
+  }
+  else
+    d_mmInterface = 0;
+  d_props = scinew Properties(d_lab);
+  d_props->problemSetup(db, d_mmInterface);
+  d_nofScalars = d_props->getNumMixVars();
 
+  // read turbulence model
+  string turbModel;
+  db->require("turbulence_model", turbModel);
+  if (turbModel == "smagorinsky") 
+    d_turbModel = scinew SmagorinskyModel(d_lab, d_physicalConsts);
+  else 
+    throw InvalidValue("Turbulence Model not supported" + turbModel);
+  d_turbModel->problemSetup(db);
+
+  // read boundary
+  d_boundaryCondition = scinew BoundaryCondition(d_lab, d_turbModel, d_props);
+  // send params, boundary type defined at the level of Grid
+  d_boundaryCondition->problemSetup(db);
+  d_props->setBC(d_boundaryCondition);
+
+  string nlSolver;
+  db->require("nonlinear_solver", nlSolver);
+  if(nlSolver == "picard") {
+    d_nlSolver = scinew PicardNonlinearSolver(d_lab, d_props, d_boundaryCondition,
+					      d_turbModel, d_physicalConsts,
+					      d_myworld);
+  }
+  else
+    throw InvalidValue("Nonlinear solver not supported: "+nlSolver);
+
+  d_nlSolver->problemSetup(db, d_mmInterface);
+#endif
   // read properties
+
   d_props = scinew Properties(d_lab);
   d_props->problemSetup(db);
   d_nofScalars = d_props->getNumMixVars();
