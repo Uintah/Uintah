@@ -244,7 +244,7 @@ remove_spaces(const string& str)
   string result;
   for (string::const_iterator i = str.begin(); i != str.end(); i++)
   {
-    if (*i != ' ') { result.push_back(*i); }
+    if (*i != ' ') { result += *i; }
   }
   return result;
 }
