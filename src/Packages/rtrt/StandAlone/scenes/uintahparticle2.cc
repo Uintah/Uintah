@@ -705,7 +705,7 @@ public:
 	      VariableData vardata;
 	      VariableData vardata2;
 	      // can extract Determinant(), Trace(), Norm()
-	      vardata.name = string(var+" Norm");
+	      vardata.name = string(var+" Hydrostatic stress");
 	      vardata2.name = string(var+" Equivalent stress");
 	      for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
 		  matlIter != matls.end(); matlIter++){
@@ -724,9 +724,9 @@ public:
 		  float *p2 = md2.data;
 		  for(ParticleSubset::iterator iter = pset->begin();
 		      iter != pset->end(); iter++) {
-		    float temp_value= (float)(value[*iter].Norm());
+		    float temp_value= (float)(value[*iter].Trace()/3.0);
 		    *p++ = temp_value;
-		    temp_value= (float)(sqrt(1.5 * value[*iter].Norm()));
+		    temp_value= (float)(sqrt(1.5 * value[*iter].NormSquared()));
 		    *p2++ = temp_value;
 		  }
 		  // add the extracted data to the variable
