@@ -41,7 +41,7 @@ MatrixHandle transport(int wordy, int flag, const char *hport, MatrixHandle mh)
  SparseRowMatrix *smatr;
  double *db;
  int    nr,nc;
-
+ 
  if(flag==1) /* RECEIVE OPERATION */
  {
   int    endi,lbuf,sd;
@@ -81,6 +81,9 @@ MatrixHandle transport(int wordy, int flag, const char *hport, MatrixHandle mh)
      cmatr=scinew ColumnMatrix(nr);
      mh=MatrixHandle(cmatr);
      db=&((*cmatr)[0]);
+     if(db==NULL) lbuf=0;
+     bring(wordy, 1, hport, lbuf, (char*)db);
+     if(endi!=endian()) endiswap(lbuf, (char*)db, sd);
     }
     else
     {
@@ -88,12 +91,24 @@ MatrixHandle transport(int wordy, int flag, const char *hport, MatrixHandle mh)
      dmatr=scinew DenseMatrix(nr,nc);
      mh=MatrixHandle(dmatr);
      db=&((*dmatr)[0][0]);
+     if(db==NULL) lbuf=0;
+
+     double *tt= scinew double [ nr*nc ];
+     if(tt==NULL) lbuf=0;
+
+     bring(wordy, 1, hport, lbuf, (char*)tt);
+     if(endi!=endian()) endiswap(lbuf, (char*)tt, sd);
+
+     /* Transposition on receive - Matlab style matrix storage */
+
+     // prt(tt,nr,nc);
+
+     trnsp(tt,db,nr,nc);
+     delete [] tt;
+
+     // prt(db,nc,nr);
+
     }
-
-    if(db==NULL) lbuf=0;
-
-    bring(wordy, 1, hport, lbuf, (char*)db);
-    if(endi!=endian()) endiswap(lbuf, (char*)db, sd);
     return(mh);
   }
 
@@ -160,8 +175,15 @@ MatrixHandle transport(int wordy, int flag, const char *hport, MatrixHandle mh)
    if(wordy>1) fprintf(stderr,"sending buffer: %i %s\n",lcb,cb);
    bring(wordy-2, 2, hport, lcb, cb);
 
-   if(bring(wordy-2, 2, hport, nr*nc*8, (char*)db)==NULL)
+   /* Transposition on send - Matlab style matrix storage */
+
+   double *tt= scinew double [ nr*nc ];
+   trnsp(db,tt,nc,nr);
+
+   if(bring(wordy-2, 2, hport, nr*nc*8, (char*)tt)==NULL)
       fprintf(stderr,"Not enough memory on receiving side");
+
+   delete [] tt;
 
    return mh;
   }
@@ -172,5 +194,39 @@ MatrixHandle transport(int wordy, int flag, const char *hport, MatrixHandle mh)
  return mh;
 }
 
-} // End namespace MatlabInterface
 
+/*
+   Transposition for matrix storage organization
+
+   p2=trnsp(p1);
+   p1(n,m);
+   p2(m,n);
+*/
+
+void trnsp(double *p1,double *p2,int n,int m)
+{
+  int n1,m1;
+
+  for(n1=0;n1<n;n1++)
+   for(m1=0;m1<m;m1++)
+     p2[m1+n1*m]=p1[n1+m1*n]; 
+
+/*  for(n1=0;n1<n*m;n1++) p1[n1]=p2[n1]; */
+
+}
+
+
+
+
+void prt(double *m,int n1,int n2)
+{
+ int k1,k2;
+ for(k1=0;k1<n1;k1++)
+ {
+  for(k2=0;k2<n2;k2++) printf("%g ",m[k1+n1*k2]);
+  printf("\n");
+ }
+ printf("\n");
+}
+
+} // End namespace MatlabInterface
