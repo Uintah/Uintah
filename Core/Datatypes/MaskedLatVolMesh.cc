@@ -331,6 +331,7 @@ bool
 MaskedLatVolMesh::update_count(MaskedLatVolMesh::Cell::index_type c, 
 			       bool masking)
 {
+  synchronized_ &= ~NODES_E;
   const bool i0 = (c.i_ > min_i_) && check_valid(c.i_-1, c.j_, c.k_);
   const bool j0 = (c.j_ > min_j_) && check_valid(c.i_, c.j_-1, c.k_);
   const bool k0 = (c.k_ > min_k_) && check_valid(c.i_, c.j_, c.k_-1);
@@ -587,6 +588,28 @@ get_neighbors_stencil(vector<pair<bool,Cell::index_type> > &nbrs,
 }
 
     
+unsigned int
+MaskedLatVolMesh::get_sequential_node_index(const Node::index_type idx)
+{
+  if (!synchronized_ & NODES_E)
+  {
+    nodes_.clear();
+    int i = 0;
+    Node::iterator node, nend;
+    begin(node);
+    end(nend);
+    while (node != nend)
+    {
+      nodes_[*node] = i++;
+      ++node;
+    }
+    synchronized_ |= NODES_E;
+  }
+
+  return nodes_[idx];
+}
+
+
 
 #define MASKED_LAT_VOL_MESH_VERSION 1
 

@@ -953,7 +953,11 @@ public:
 
   virtual const TypeDescription *get_type_description() const;
 
+  unsigned int	get_sequential_node_index(const Node::index_type idx);
+
 private:
+  unsigned int	synchronized_;
+  map<Node::index_type, unsigned>	nodes_;
   set<unsigned>	masked_cells_;
   unsigned	masked_nodes_count_;
   unsigned	masked_edges_count_;
