@@ -106,6 +106,7 @@ public:
     void flushViewsAndWait();
 
     void forward(GeometryComm* msg);
+    bool direct_forward(GeometryComm* msg);
 
     virtual bool have_data();
     virtual void resend(Connection*);
