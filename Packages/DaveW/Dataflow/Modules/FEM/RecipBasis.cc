@@ -101,7 +101,7 @@ void RecipBasis::execute() {
 	}
 	for (i=0; i<nelems; i++)
 	    for (int j=0; j<3; j++)
-		(*bmat)[counter*3+i][j]=(*sol_in.get_rep())[i][j];
+		(*bmat)[counter*3+i][j]=-(*sol_in.get_rep())[i][j];
 	counter++;
     }
     
@@ -113,6 +113,9 @@ void RecipBasis::execute() {
 
 //
 // $Log$
+// Revision 1.3  1999/09/16 00:36:55  dmw
+// added new Module that Chris Butson will work on (DipoleInSphere) and fixed SRCDIR references in DaveW makefiles
+//
 // Revision 1.2  1999/09/05 23:16:19  dmw
 // build scalar field of error values from Basis Matrix
 //

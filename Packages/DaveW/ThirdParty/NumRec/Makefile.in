@@ -3,8 +3,8 @@ SRCDIR   = @srcdir@
 OBJTOP   = ../../..
 
 SRCS     = amoeba.cc amotry.cc banbks.cc bandec.cc banmprv.cc banmul.cc \
-	   dpythag.cc dsvbksb.cc dsvdcmp.cc linbcg.cc nrutil.cc
+	   dpythag.cc dsvbksb.cc dsvdcmp.cc linbcg.cc nrutil.cc plgndr.cc
 
-INCLUDES = -I../OldLinAlg
+INCLUDES = -I$(SRCDIR)/../OldLinAlg
 
 include $(SRCTOP)/scripts/objs.mk
