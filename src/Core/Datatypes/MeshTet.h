@@ -15,44 +15,31 @@
 #define SCI_project_MeshTet_h 1
 
 #include <Core/Datatypes/Datatype.h>
+#include <Core/Datatypes/FieldIterator.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Containers/Array1.h>
+#include <Core/Containers/LockingHandle.h>
 
 
 namespace SCIRun {
 
 
-
 class SCICORESHARE MeshTet : public Datatype
 {
-private:
-
-  struct IntIter
-  {
-    int val;
-
-    IntIter(int i) : val(i) {}
-
-    operator int const &() const { return val; }
-    int operator *() { return val; };
-    int operator ++() { return val++; };
-  private:
-    int operator ++(int) { int tmp = val; val++; return tmp; }
-  };
-
 public:
+  typedef int index_type;
+  //! Index and Iterator types required for Mesh Concept.
+  typedef NodeIndex<index_type>       node_index;
+  typedef NodeIterator<index_type>    node_iterator;
 
-  typedef int          node_index;
-  typedef IntIter      node_iterator;
+  typedef EdgeIndex<index_type>       edge_index;
+  typedef EdgeIterator<index_type>    edge_iterator;
 
-  typedef int          edge_index;
-  typedef IntIter      edge_iterator;
+  typedef FaceIndex<index_type>       face_index;
+  typedef FaceIterator<index_type>    face_iterator;
 
-  typedef int          face_index;
-  typedef IntIter      face_iterator;
-
-  typedef int          cell_index;
-  typedef IntIter      cell_iterator;
+  typedef CellIndex<index_type>       cell_index;
+  typedef CellIterator<index_type>    cell_iterator;
 
   typedef vector<node_index> node_array;
   typedef vector<edge_index> edge_array;
@@ -60,6 +47,7 @@ public:
 
   MeshTet();
   MeshTet(const MeshTet &copy);
+  //MeshTet(const MeshRG &lattice);
   virtual ~MeshTet();
 
   virtual BBox get_bounding_box() const;
@@ -73,24 +61,27 @@ public:
   cell_iterator cell_begin() const;
   cell_iterator cell_end() const;
 
-  void get_nodes_from_edge(node_array &array, edge_index idx) const;
-  void get_nodes_from_face(node_array &array, face_index idx) const;
-  void get_nodes_from_cell(node_array &array, cell_index idx) const;
-  void get_edges_from_face(edge_array &array, face_index idx) const;
-  void get_edges_from_cell(edge_array &array, cell_index idx) const;
-  void get_faces_from_cell(face_array &array, cell_index idx) const;
+  void get_nodes(node_array &array, edge_index idx) const;
+  void get_nodes(node_array &array, face_index idx) const;
+  void get_nodes(node_array &array, cell_index idx) const;
+  void get_edges(edge_array &array, face_index idx) const;
+  void get_edges(edge_array &array, cell_index idx) const;
+  void get_faces(face_array &array, cell_index idx) const;
+  void get_neighbor(cell_index &neighbor, face_index idx) const;
+  void get_center(Point &result, node_index idx) const;
+  void get_center(Point &result, edge_index idx) const;
+  void get_center(Point &result, face_index idx) const;
+  void get_center(Point &result, cell_index idx) const;
 
-  void get_neighbor_from_face(cell_index &neighbor, face_index idx) const;
-
-  void locate_node(node_index &node, const Point &p);
+  void locate(node_index &node, const Point &p);
   //void locate_edge(edge_index &edge, const Point &p);
   //void locate_face(face_index &face, const Point &p);
-  void locate_cell(cell_index &cell, const Point &p);
+  void locate(cell_index &cell, const Point &p);
 
   void unlocate(Point &result, const Point &p);
 
   void get_point(Point &result, node_index index) const;
-
+  
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
@@ -100,11 +91,14 @@ private:
   bool inside4_p(int, const Point &p);
 
 
-  Array1<Point> points_;
-  Array1<int>   tets_;
-  Array1<int>   neighbors_;
+  Array1<Point>        points_;
+  Array1<index_type>   tets_;
+  Array1<index_type>   neighbors_;
 
 };
+
+// Handle type for MeshTet mesh.
+typedef LockingHandle<MeshTet> MeshTetHandle;
 
 } // namespace SCIRun
 
