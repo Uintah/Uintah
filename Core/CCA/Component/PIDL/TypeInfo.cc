@@ -35,7 +35,6 @@
 #include <Core/CCA/Component/Comm/Message.h>
 #include <Core/CCA/Component/Comm/ReplyEP.h>
 #include <Core/CCA/Component/PIDL/TypeInfo_internal.h>
-#include <Core/CCA/Component/PIDL/PIDL.h>
 #include <Core/Exceptions/InternalError.h>
 #include <iostream>
 using namespace SCIRun;
@@ -87,8 +86,8 @@ Object* TypeInfo::pidl_cast(Object* obj) const
   message->marshalInt(&uuid_size); 
   message->marshalChar(const_cast<char*>(d_priv->uuid.c_str()),uuid_size);
  
-  int addRef=PIDL::isNexus(); // Tell the isa handler to increment the ref count on the object
-  //Socket communication does not need addReference in isa()
+  int addRef=1; //Tell the isa handler to increment the ref count on the object
+
   message->marshalInt(&addRef);
 
   // Send the message

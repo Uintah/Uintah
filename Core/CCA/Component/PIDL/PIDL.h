@@ -101,11 +101,6 @@ DESCRIPTION
     // (only in parallel components)
     static IntraComm* getIntraComm();
 
-    //////////
-    // Test if the inter-component communication protocol
-    // is nexus
-    static bool isNexus();
-
   protected:
   private:
     //////////
