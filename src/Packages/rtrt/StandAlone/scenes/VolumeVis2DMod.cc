@@ -449,13 +449,9 @@ VolumeVis2D *create_volume_from_nrrd(char *filename,
 extern "C" 
 Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 {
-  int nx = 20;
-  int ny = 30;
-  int nz = 40;
   int scene_type = 0;
   vector<string> data_files;
   bool cut=false;
-  int ncolors=256;
   float t_inc = 0.01;
   double spec_coeff = 64;
   double ambient = 0.5;
@@ -477,15 +473,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Color bgcolor(1.,1.,1.);
   
   for(int i=1;i<argc;i++){
-    if(strcmp(argv[i], "-dim")==0){
-      i++;
-      if(sscanf(argv[i], "%dx%dx%d", &nx, &ny, &nz) != 3){
-	cerr << "Error parsing dimensions: " << argv[i] << '\n';
-	cerr << "dim = (" << nx << ", " << ny << ", " << nz << ")\n";
-	exit(1);
-      } 
-    }
-    else if (strcmp(argv[i], "-type")==0) {
+    if (strcmp(argv[i], "-type")==0) {
       i++;
       if (strcmp(argv[i], "nrrd") == 0) {
 	scene_type = 6;
@@ -511,20 +499,11 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 	  in >> file;
 	}
 	cout << "Read "<<data_files.size()<<" nrrd files.\n";
-      } else {
-	scene_type = atoi(argv[i]);
-	if (scene_type == 5) {
-	  i++;
-	  val = atof(argv[i]);
-	}
       }
     } else if(strcmp(argv[i], "-cut")==0){
       cut=true;
     } else if(strcmp(argv[i], "-colormap")==0){
       colormap_file = argv[++i];
-    } else if(strcmp(argv[i], "-ncolors")==0){
-      i++;
-      ncolors = atoi(argv[i]);
     } else if(strcmp(argv[i], "-tinc")==0){
       i++;
       t_inc = atof(argv[i]);
@@ -579,16 +558,9 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
       cerr << "Valid options for scene: " << argv[0] << '\n';
       cerr << " -dim [int]x[int]x[int]";
       cerr << " -type [int or \"nrrd\"]\n";
-      cerr << "\t\t0 - data = z\n";
-      cerr << "\t\t1 - data = y*z\n";
-      cerr << "\t\t2 - data = x*y*z\n";
-      cerr << "\t\t3 - data = y+z\n";
-      cerr << "\t\t4 - data = x+y+z\n";
-      cerr << "\t\t5 [val=float] - data = val\n";
       cerr << "\t\tnrrd [path to nrrd file] (-dim parameter ignored)\n";
       cerr << " -cut - turn on the cutting plane\n";
       cerr << " -lam - use a lambertian surface\n";
-      cerr << " -ncolors [int] - the size of the transfer function\n";
       cerr << " -tinc [float] - the number of samples per unit\n";
       cerr << " -spow [float] - the spectral exponent\n";
       cerr << " -ambient [float] - the ambient factor\n";
@@ -602,6 +574,11 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     }
   }
 
+  if (scene_type != 6 || scene_type != 7) {
+    cerr << "Invalid scene_type.  Try using -type [nrrd,nrrd2,nrrdlist]\n";
+    return 0;
+  }
+  
   if (scene_type == 6 && data_files.size() < 1) {
     cerr << "Need at least one nrrd data file.\n";
     return 0;
@@ -744,23 +721,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 	free(myfile);
     }
   } else {
-#if 1
     cerr << "Don't know how to make a scene of type "<<scene_type<<".\n";
     return 0;
-#else
-
-
-    VolumeVis2D *vv2d =  (Object*) create_volume_default
-	(scene_type, val, nx, ny, nz, override_data_min, data_min_in,
-	 override_data_max, data_max_in, spec_coeff, ambient,
-	 diffuse, specular, dpy);
-    if(cut) {
-      vv2d->initialize_cuttingPlane( cdpy );
-      vv2d->initialize_callbacks();
-    }
-    obj = (Object*)vv2d;
-
-#endif
   }
 
   Group* all = new Group();
