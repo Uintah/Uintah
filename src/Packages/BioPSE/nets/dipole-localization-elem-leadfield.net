@@ -67,7 +67,7 @@ set m20 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 648 671]
 set m21 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 843 433]
 set m22 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 825 494]
 set m23 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 825 577]
-set m24 [addModuleAtPosition "SCIRun" "Fields" "ScaleFieldData" 412 603]
+set m24 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 412 603]
 set m25 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 412 663]
 
 addConnection $m4 1 $m3 0
@@ -112,7 +112,7 @@ addConnection $m25 0 $m3 4
 addConnection $m0 0 $m1 0
 addConnection $m17 0 $m21 1
 addConnection $m6 1 $m24 1
-
+addConnection $m19 0 $m25 2
 set $m0-notes {}
 set $m0-show_status {1}
 set $m0-filename $DATADIR/$DATASET/$DATASET-mesh.tvt.fld
@@ -327,26 +327,26 @@ set $m24-notes {}
 set $m24-show_status {1}
 set $m25-notes {}
 set $m25-show_status {1}
-set $m25-nodes-on {1}
-set $m25-nodes-as-disks {1}
+set $m25-nodes-on {0}
 set $m25-edges-on {0}
 set $m25-use-normals {0}
 set $m25-use-transparency {0}
 set $m25-faces-on {0}
-set $m25-vectors-on {0}
-set $m25-normalize-vectors {0}
+set $m25-vectors-on {1}
+set $m25-normalize-vectors {1}
 set $m25-has_vec_data {1}
 set $m25-def-color-r {0.5}
 set $m25-def-color-g {0.5}
 set $m25-def-color-b {0.5}
 set $m25-node_display_type {Disks}
 set $m25-edge_display_type {Lines}
-set $m25-active_tab {Nodes}
+set $m25-active_tab {Vectors}
 set $m25-node_scale [expr 0.05 * ${global-scale}]
 set $m25-edge_scale [expr 0.03 * ${global-scale}]
-set $m25-vectors_scale [expr 0.03 * ${global-scale}]
+set $m25-vectors_scale [expr 0.05 * ${global-scale}]
 set $m25-show_progress {1}
-set $m25-node-resolution {20}
+set $m25-data-resolution {20}
+set $m25-data_display_type {Disks}
 $m1 initialize_ui
 $m2 initialize_ui
 $m10 initialize_ui
