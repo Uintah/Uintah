@@ -44,12 +44,7 @@ IMAKE_DEFINES = -I$(TOP) -I../$(TOP)
 #define SCI_TemplateCommand(objs, libs) \
 	 SCI_MakeTemplateLib SCI_TemplateDir objs libs @@	
 #else
-#ifdef SCI_PrelinkCommand
-#define SCI_TemplateCommand(objs, libs) \
-	SCI_PrelinkCommand objs @@	
-#else
 #define SCI_TemplateCommand(objs, libs)
-#endif
 #endif
 
 #define SCIProgramTarget(program, objs, libs, ldflags) 		@@\
