@@ -30,8 +30,8 @@ class IsoSurface : public UserModule {
     Point seed_point;
     double isoval;
 
-    void iso_cube(int, int, int, double, ObjGroup*);
-    void iso_tetra(int, double, ObjGroup*);
+    void iso_cube(int, int, int, double, ObjGroup*, const Field3DHandle&);
+    void iso_tetra(int, double, ObjGroup*, const Field3DHandle&);
 
     void iso_reg_grid(const Field3DHandle&, const Point&, ObjGroup*);
     void iso_reg_grid(const Field3DHandle&, double, ObjGroup*);
