@@ -866,8 +866,8 @@ OnDemandDataWarehouse::get(CCVariableBase& var, const VarLabel* label,
 	 const Patch* neighbor = neighbors[i];
 	 if(neighbor){
 	    if(!d_ccDB.exists(label, matlIndex, neighbor))
-	       throw InternalError("Position variable does not exist: "+ 
-				   label->getName());
+	       throw UnknownVariable(label->getName(), neighbor,
+				     matlIndex, "CCVariable");
 	    CCVariableBase* srcvar = 
 	       d_ccDB.get(label, matlIndex, neighbor);
 
@@ -972,8 +972,8 @@ OnDemandDataWarehouse::get(SFCXVariableBase& var, const VarLabel* label,
 	 const Patch* neighbor = neighbors[i];
 	 if(neighbor){
 	    if(!d_sfcxDB.exists(label, matlIndex, neighbor))
-	       throw InternalError("position variable does not exist: "+ 
-				   label->getName());
+	       throw UnknownVariable(label->getName(), neighbor,
+				     matlIndex, "SFCXVariable");
 	    SFCXVariableBase* srcvar = 
 	       d_sfcxDB.get(label, matlIndex, neighbor);
 
@@ -1090,8 +1090,8 @@ OnDemandDataWarehouse::get(SFCYVariableBase& var, const VarLabel* label,
 	 const Patch* neighbor = neighbors[i];
 	 if(neighbor){
 	    if(!d_sfcyDB.exists(label, matlIndex, neighbor))
-	       throw InternalError("position variable does not exist: "+ 
-				   label->getName());
+	       throw UnknownVariable(label->getName(), neighbor,
+				     matlIndex, "SFCYVariable");
 	    SFCYVariableBase* srcvar = 
 	       d_sfcyDB.get(label, matlIndex, neighbor);
 
@@ -1208,8 +1208,8 @@ OnDemandDataWarehouse::get(SFCZVariableBase& var, const VarLabel* label,
 	 const Patch* neighbor = neighbors[i];
 	 if(neighbor){
 	    if(!d_sfczDB.exists(label, matlIndex, neighbor))
-	       throw InternalError("position variable does not exist: "+ 
-				   label->getName());
+	       throw UnknownVariable(label->getName(), neighbor,
+				     matlIndex, "SFCZVariable");
 	    SFCZVariableBase* srcvar = 
 	       d_sfczDB.get(label, matlIndex, neighbor);
 
