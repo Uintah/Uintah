@@ -55,7 +55,8 @@ WARNING
       
     //////////
     // Insert Documentation Here:
-    virtual void problemSetup(const ProblemSpecP& params) = 0;
+    virtual void problemSetup(const ProblemSpecP& params,
+                              SimulationStateP& state) = 0;
 
     virtual void initializeOutput(const ProblemSpecP& params) = 0;
     //////////
@@ -78,8 +79,13 @@ WARNING
 				  SchedulerP&, bool = false) = 0;
 
     //////////
+    // Call this after a timestep restart to make sure we still
+    // have an output timestep
+    virtual void reEvaluateOutputTimestep(double old_delt, double new_delt)=0;
+
+    //////////
     // Call this after the timestep has been executed.
-    virtual void executedTimestep() = 0;
+    virtual void executedTimestep(double delt) = 0;
      
       //////////
       // Insert Documentation Here:
