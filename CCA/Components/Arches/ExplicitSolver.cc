@@ -521,6 +521,9 @@ ExplicitSolver::sched_dummySolve(SchedulerP& sched,
 
   tsk->requires(Task::OldDW, d_lab->d_maxUxplus_label);
 
+  tsk->requires(Task::OldDW, d_lab->d_divConstraintLabel);
+  tsk->computes(d_lab->d_divConstraintLabel);
+
   /*
   if (nofScalarVars > 0) {
     for (int ii = 0; ii < nofScalarVars; ii++) {
@@ -1600,6 +1603,14 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
       }
     }
     */
+
+    constCCVariable<double> div;
+    old_dw->get(div, d_lab->d_divConstraintLabel, matlIndex, patch, 
+		    Ghost::None, Arches::ZEROGHOSTCELLS);
+    CCVariable<double> div_new;
+    new_dw->allocateAndPut(div_new, d_lab->d_divConstraintLabel, 
+			   matlIndex, patch);
+    div_new.copyData(div); // copy old into new
 
     constCCVariable<double> pressure;
     old_dw->get(pressure, d_lab->d_pressurePSLabel, matlIndex, patch, 
