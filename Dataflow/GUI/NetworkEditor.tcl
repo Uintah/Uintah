@@ -15,8 +15,7 @@
 #  University of Utah. All Rights Reserved.
 #
 
-global SCIRUN_SRCDIR
-source $SCIRUN_SRCDIR/Dataflow/GUI/defaults.tcl
+source [netedit getenv SCIRUN_SRCDIR]/Dataflow/GUI/defaults.tcl
 
 set modname_font "-Adobe-Helvetica-Bold-R-Normal-*-12-120-75-*"
 set ui_font "-Adobe-Helvetica-Medium-R-Normal-*-12-120-75-*"
@@ -60,79 +59,30 @@ set netedit_savefile ""
 global NetworkChanged
 set NetworkChanged 0
 
-# boolToInt <variable name>
-#
-#   boolToInt will query the varaible's value.
-#   Usage example: boolToInt SCIRUN_INSERT_NET_COPYRIGHT
-#
-# Turns 'true/false', 'on/off', 'yes/no', '1/0' into '1/0' respectively
-#  (Non-existent variables are treated as 'false'.)
-#
-# This function is case insensitive.
-#
-proc boolToInt { var } {
+set CurrentlySelectedModules ""
 
-    global $var
-
-    if { ! [info exists $var] } {
-       return 0
-    }
-
-    set val [set $var]
-
-    if [string equal $val ""] {
+# envBool <variable name>
+#
+#   envBool will query the enviromnent varaible's value and return as a boolean
+#   Usage example:  envBool SCIRUN_INSERT_NET_COPYRIGHT
+#
+#   Turns 'true/false', 'on/off', 'yes/no', '1/0' into '1/0' respectively
+#   (Non-existent and empty  variables are treated as 'false'.)
+#
+#   This function is case insensitive.
+#
+proc envBool { var } {
+    set val [netedit getenv $var] ; # returns blank string if variable not set
+    if { [string equal $val ""] } {
 	return 0; # blank value is taken to mean false
     }
-    if ![string is boolean $val] {
-	puts "TCL boolToInt: Cannot determine boolean value of env: ${var}=${val}"
+    if { ![string is boolean $val] } {
+	puts "TCL envBool: Cannot determine boolean value of env: $var=$val"
 	return 1; # follows the C convention of any non-zero value equals true
     }
     return [string is true $val]
 }
 
-#
-# The setEnvVar and getEnvVar procedures are just convenience
-# functions that will set the environment variables value on the C
-# side or query the C side for the current value of the environment
-# variable.  You should NEVER USE THE env VARIABLE on the Tcl side.
-# The C side now completely controls the environment variables.
-#
-proc setEnvVar { var value } {
-    netedit setenv $var $value
-}
-proc getEnvVar { var } {
-    netedit getenv $var
-}
-
-#
-# Called from the C side at the end of the initialization so that
-# these variables can be populated with their current value.  There 
-# is currently nothing that keeps them up to date with the C side.
-#
-# These variables are now used as a convenience so that the C side
-# does not have to be queried (and result validated) every time
-# we access them.  However, it is possible that making the coder
-# query every time is better as then the values could not get out
-# of sync between the TCL and C side.
-#
-proc initEnviroVars {} {
-    puts "initEnviroVars"
-    # Ask the C side for the values of these commonly used environment variables.
-
-    global SCIRUN_DATA SCI_DATA PSE_DATA SCI_CONFIRM_OVERWRITE 
-    global SCIRUN_GUI_UseGuiFetch SCIRUN_GUI_MoveGuiToMouse
-    global SCIRUN_INSERT_NET_COPYRIGHT SCIRUN_NET_SUBSTITUTE_DATADIR 
-
-    set SCIRUN_DATA  [netedit getenv SCIRUN_DATA]
-    set SCI_DATA     [netedit getenv SCI_DATA]
-    set PSE_DATA     [netedit getenv PSE_DATA]
-
-    set SCI_CONFIRM_OVERWRITE          [netedit getenv SCI_CONFIRM_OVERWRITE]
-    set SCIRUN_GUI_UseGuiFetch         [netedit getenv SCIRUN_GUI_UseGuiFetch]
-    set SCIRUN_GUI_MoveGuiToMouse      [netedit getenv SCIRUN_GUI_MoveGuiToMouse]
-    set SCIRUN_INSERT_NET_COPYRIGHT    [netedit getenv SCIRUN_INSERT_NET_COPYRIGHT]
-    set SCIRUN_NET_SUBSTITUTE_DATADIR  [netedit getenv SCIRUN_NET_SUBSTITUTE_DATADIR]
-}
 
 proc makeNetworkEditor {} {
 
@@ -196,7 +146,7 @@ proc makeNetworkEditor {} {
 	    -command ".bot.neteditFrame.canvas postscript -file /tmp/canvas.ps -x 0 -y 0 -width 4500 -height 4500" -state disabled
     }
     .main_menu.file.menu add command -label "Execute All" -underline 0 \
-	-command "netedit scheduleall" -state disabled
+	-command "updateRunDateAndTime 0; netedit scheduleall" -state disabled
 
     .main_menu.file.menu add separator
     .main_menu.file.menu add cascade -label "New" -underline 0\
@@ -251,7 +201,7 @@ proc makeNetworkEditor {} {
 
     global maincanvas minicanvas mainCanvasHeight mainCanvasWidth Color
     canvas $maincanvas -bg "$Color(NetworkEditor)" \
-        -scrollregion "0 0 $mainCanvasWidth $mainCanvasHeight" \
+        -scrollregion "0 0 $mainCanvasWidth $mainCanvasHeight"
 	
     # bgRect is just a rectangle drawn on the neteditFrame Canvas
     # so that the Modules List Menu can be bound to it using mouse
@@ -312,6 +262,7 @@ proc makeNetworkEditor {} {
     $minicanvas create rectangle 0 0 1 1 -outline black -tag "viewAreaBox"
     $maincanvas configure \
 	-xscrollcommand "updateCanvasX" -yscrollcommand "updateCanvasY"
+    initInfo
 
     wm withdraw .
 }
@@ -323,6 +274,8 @@ proc canvasScroll { canvas { dx 0.0 } { dy 0.0 } } {
 
 # Activate the "File" menu items - called from C after all packages are loaded
 proc activate_file_submenus { } {
+    global smallIcon
+    set smallIcon [image create photo -file "[netedit getenv SCIRUN_SRCDIR]/pixmaps/scirun-icon-small.ppm"]
     .main_menu.file.menu entryconfig  0 -state active
     .main_menu.file.menu entryconfig  1 -state active
     .main_menu.file.menu entryconfig  2 -state active
@@ -358,14 +311,12 @@ proc activate_file_submenus { } {
     bind . <KeyPress-Left>  "canvasScroll $maincanvas -0.01 0.0"
     bind . <KeyPress-Right> "canvasScroll $maincanvas 0.01 0.0" 
     bind . <Destroy> {if {"%W"=="."} {exit 1}} 
-
-    # Destroy selected items with a Ctrl-D press
-    bind all <Control-d> "moduleDestroySelected"
-    # Clear the canvas
-    bind all <Control-l> "ClearCanvas"
-    bind all <Control-z> "undo"
-    bind all <Control-a> "selectAll"
-    bind all <Control-y> "redo"
+    bind . <Control-d> "moduleDestroySelected"
+    bind . <Control-l> "ClearCanvas"
+    bind . <Control-z> "undo"
+    bind . <Control-a> "selectAll"
+    bind . <Control-y> "redo"
+    bind all <Control-q> "NiceQuit"
 }
 
 proc modulesMenu { subnet x y } {
@@ -373,7 +324,10 @@ proc modulesMenu { subnet x y } {
     set mouseX $x
     set mouseY $y
     set canvas $Subnet(Subnet${subnet}_canvas)
-    createModulesMenu $subnet
+    createModulesMenu $canvas.modulesMenu $subnet
+    if { $subnet } {
+	createModulesMenu .subnet${subnet}.main_menu.packages.menu $subnet
+    }
     tk_popup $canvas.modulesMenu [expr $x + [winfo rootx $canvas]] \
 	[expr $y + [winfo rooty $canvas]]
 }
@@ -471,82 +425,73 @@ proc createPackageMenu {index} {
 		-command "addModule \"$ModuleMenu($pack)\" \"$ModuleMenu($cat)\" \"$ModuleMenu($mod)\""
 	}
     }
-
-    createModulesMenu 0
+    global maincanvas
+    createModulesMenu $maincanvas.modulesMenu 0
     update idletasks
 }
 
-proc createModulesMenu { subnet } {
+
+# createModulesMenu is called when the user right-clicks on the
+# canvas.  It presents them with a menu of all modules.  Selecting
+# a module name will create it at the clicked location
+proc createModulesMenu { menu subnet } {
     global ModuleMenu Subnet
+    # return if there is no information to put in menu
     if ![info exists ModuleMenu] return
-    set canvas $Subnet(Subnet${subnet}_canvas)
-    if [winfo exists $canvas.modulesMenu] {	
-	destroy $canvas.modulesMenu
+    # destroy the old menu
+    if [winfo exists $menu] {	
+	destroy $menu
     }
-	
-    if ![winfo exists $canvas.modulesMenu] {	
-	menu $canvas.modulesMenu -tearoff false
-	foreach pack $ModuleMenu(packages) {
-	    # Add a separator to the right-button menu for this package if this
-	    # isn't the first package to go in there
-	    if { [$canvas.modulesMenu index end] != "none" } \
-		{ $canvas.modulesMenu add separator }
-	    $canvas.modulesMenu add command -label "$ModuleMenu($pack)"
-	    foreach cat $ModuleMenu(${pack}_categories) {
-		# Add the category to the right-button menu
-		$canvas.modulesMenu add cascade -label "  $ModuleMenu($cat)" \
-		    -menu $canvas.modulesMenu.$cat
-		menu $canvas.modulesMenu.$cat -tearoff false
-		foreach mod $ModuleMenu(${pack}_${cat}_modules) {
-		    $canvas.modulesMenu.$cat add command \
-			-label "$ModuleMenu($mod)" \
-			-command "global Subnet
-                              set Subnet(Loading) $subnet
-                              addModuleAtMouse \"$ModuleMenu($pack)\" \"$ModuleMenu($cat)\" \"$ModuleMenu($mod)\"
-                              set Subnet(Loading) 0"
-		}
+    # create a new menu
+    menu $menu -tearoff false -disabledforeground black
+
+    foreach pack $ModuleMenu(packages) {
+	# Add a menu separator if this package isn't the first one
+	if { [$menu index end] != "none" } {
+	    $menu add separator 
+	}
+	# Add a label for the Package name
+	$menu add command -label "$ModuleMenu($pack)" -state disabled
+	foreach cat $ModuleMenu(${pack}_categories) {
+	    # Add the category to the right-button menu
+	    $menu add cascade -label "  $ModuleMenu($cat)" -menu $menu.$cat
+	    menu $menu.$cat -tearoff false
+
+	    foreach mod $ModuleMenu(${pack}_${cat}_modules) {
+		$menu.$cat add command -label "$ModuleMenu($mod)" \
+		    -command "addModuleAtMouse \"$ModuleMenu($pack)\" \"$ModuleMenu($cat)\" \"$ModuleMenu($mod)\" \"$subnet\""
 	    }
 	}
-	$canvas.modulesMenu add separator
-	$canvas.modulesMenu add cascade -label "Sub-Networks" \
-	    -menu $canvas.modulesMenu.subnet
-	menu $canvas.modulesMenu.subnet -tearoff false
     }
+    
+    $menu add separator
+    $menu add cascade -label "Sub-Networks" -menu $menu.subnet
+    menu $menu.subnet -tearoff false
 
-    createSubnetMenu $subnet
+    createSubnetMenu $menu $subnet
 	
     update idletasks
 }
 
-proc createSubnetMenu { { subnet 0 } } {
-    global SCIRUN_SRCDIR Subnet 
-    set filelist1 [glob -nocomplain -dir $SCIRUN_SRCDIR/Subnets *.net]
-    set filelist2 [glob -nocomplain -dir ~/SCIRun/Subnets *.net]
-    set subnetfiles [lsort -dictionary [concat $filelist1 $filelist2]]    
-    set menu $Subnet(Subnet${subnet}_canvas).modulesMenu
+proc createSubnetMenu { menu { subnet 0 } } {
+    global SubnetScripts
     
     $menu.subnet delete 0 end
     .main_menu.subnet.menu delete 0 end
+    set names [array names SubnetScripts *]
 
-    if ![llength $subnetfiles] {
+    if { ![llength $names] } {
 	$menu entryconfigure Sub-Networks -state disabled
 	.main_menu.subnet configure -state disabled
     } else {
 	$menu entryconfigure Sub-Networks -state normal
 	.main_menu.subnet configure -state normal
-	foreach file $subnetfiles {
-	    set filename [lindex [file split $file] end]
-	    set name [join [lrange [split  $filename "."] 0 end-1] "."]
+	foreach name $names {
 	    $menu.subnet add command -label "$name" \
-		-command "global Subnet
-			      set Subnet(Loading) $subnet
-			      loadSubnet {$file}
-                              set Subnet(Loading) 0"
+		-command "instanceSubnet \"$name\" 0 0 $subnet"
 	    
 	    .main_menu.subnet.menu add command -label "$name" \
-		-command "global Subnet
-                          set Subnet(Loading) 0
-                          loadSubnet {$file}"
+		-command "instanceSubnet \"$name\" 0 0 $subnet"
 	}
     }
 }
@@ -561,10 +506,14 @@ proc addModule { package category module } {
     return [addModuleAtPosition "$package" "$category" "$module" 10 10]
 }
 
-proc addModuleAtMouse { package category module } {
-    global mouseX mouseY
-    return [ addModuleAtPosition "$package" "$category" "$module" $mouseX \
-             $mouseY ]
+proc addModuleAtMouse { pack cat mod subnet_id } {
+    global mouseX mouseY Subnet
+    set Subnet(Loading) $subnet_id
+    set ret [addModuleAtPosition $pack $cat $mod $mouseX $mouseY]
+    set Subnet(Loading) 0
+    set mouseX 10
+    set mouseY 10
+    return $ret
 }
 
 proc addModuleAtPosition {package category module { xpos 10 } { ypos 10 } } {
@@ -842,129 +791,200 @@ proc ClearCanvas { {confirm 1} {subnet 0} } {
 
 proc NiceQuit {} {
     global NetworkChanged netedit_savefile
-    if {$NetworkChanged} {
-        if {[winfo exists .standalone] } {
-	    set result [createSciDialog -warning -title "Quit?" -button1 "Don't Save" -button2 "Cancel" -button3 "Save" \
-                           -message "Your session has not been saved.\nWould you like to save before exiting?"  ]
-	    if {![string compare "-1" $result]} { return }
-	    if {![string compare "2" $result]} { return }
-	    if {![string compare "3" $result]} { app save_session }
-	} else {
-	    set result [createSciDialog -warning -title "Quit?" -button1 "Don't Save" -button2 "Cancel" -button3 "Save" \
-                           -message "Your network has not been saved.\nWould you like to save before exiting?" ]
-	    if {![string compare "-1" $result]} { return }
-	    if {![string compare "2" $result]} { return }
-	    if {![string compare "3" $result]} { 
-		puts -nonewline "Saving $netedit_savefile..."
-		popupSaveMenu
-	    }	
+    if { $NetworkChanged } {
+	set result [createSciDialog -warning -title "Quit?" \
+		    -button1 "Don't Save" -button2 "Cancel" -button3 "Save" \
+		    -message "Your session has not been saved.\nWould you like to save before exiting?"]
+	switch -- $result { 
+	    "-1" return
+	    "2" return
+	    "3" {
+		if { [winfo exists .standalone] } {
+		    app save_session
+		} else {
+		    puts -nonewline "Saving $netedit_savefile..."
+		    popupSaveMenu
+		}
+	    }
 	}
-    } 
+    }
+			
     puts "Goodbye!"
     netedit quit
 }
 
-proc initInfo { {force 0 } } {
-    global userName runDate runTime notes 
-    if { $force || ![info exists userName] } {
-
-	set userName [netedit getenv LOGNAME]
-	if { $userName == "" } {
-	    set userName [netedit getenv USER] 
+proc initInfo { {subnet_number 0} } {
+    global Subnet
+    if { ![info exists Subnet(Subnet${subnet_number}_userName)] } {
+	set Subnet(Subnet${subnet_number}_userName) [netedit getenv LOGNAME] 
+	if { $Subnet(Subnet${subnet_number}_userName) == "" } {
+	    set Subnet(Subnet${subnet_number}_userName) [netedit getenv USER] 
 	}
-	if { $userName == "" } {
-	    set userName Unknown
+	if { $Subnet(Subnet${subnet_number}_userName) == "" } {
+	    set Subnet(Subnet${subnet_number}_userName) Unknown
 	}
+    }
+    if { ![info exists Subnet(Subnet${subnet_number}_creationDate)] } {
+	set Subnet(Subnet${subnet_number}_creationDate) \
+	    [clock format [clock seconds] -format "%a %b %d %Y"]
+    }
+    if { ![info exists Subnet(Subnet${subnet_number}_creationTime)] } {
+	set Subnet(Subnet${subnet_number}_creationTime) \
+	    [clock format [clock seconds] -format "%H:%M:%S"]
+    }
+    if { ![info exists Subnet(Subnet${subnet_number}_runDate)] } {
+	set Subnet(Subnet${subnet_number}_runDate) ""
+    }
+    if { ![info exists Subnet(Subnet${subnet_number}_runTime)] } {
+	set Subnet(Subnet${subnet_number}_runTime) ""
+    }
 
+    if { ![info exists Subnet(Subnet${subnet_number}_notes)] } { 
+	set Subnet(Subnet${subnet_number}_notes) "" 
     }
-    if { $force || ![info exists runDate] } {
-	set runDate [clock format [clock seconds] -format "%a %b %d %Y"]
-    }
-    if { $force || ![info exists runTime] } {
-	set runTime [clock format [clock seconds] -format "%H:%M:%S"]
-    }
-    if { ![info exists notes] } { set notes "" }    
+}
+
+proc updateRunDateAndTime { subnet_number } {
+    global Subnet
+    set Subnet(Subnet${subnet_number}_runDate) \
+	[clock format [clock seconds] -format "%a %b %d %Y"]
+    set Subnet(Subnet${subnet_number}_runTime) \
+	[clock format [clock seconds] -format "%H:%M:%S"]
+}    
+
+
+proc updateCreationDateAndTime { subnet_number } {
+    global Subnet
+    set Subnet(Subnet${subnet_number}_creationDate) \
+	[clock format [clock seconds] -format "%a %b %d %Y"]
+    set Subnet(Subnet${subnet_number}_creationTime) \
+	[clock format [clock seconds] -format "%H:%M:%S"]
 }    
 
 # This proc was added by Mohamed Dekhil to save some info about the net
-proc popupInfoMenu {} {
-    global userName runDate runTime notes
-    global oldUserName oldRunDate oldRunTime oldNotes
-    initInfo
+proc popupInfoMenu { {subnet_num 0 } } {
+    global Subnet 
+    initInfo $subnet_num
+    
+    lappend backupDateTimeNotes \
+	$Subnet(Subnet${subnet_num}_userName) \
+	$Subnet(Subnet${subnet_num}_runDate) \
+	$Subnet(Subnet${subnet_num}_runTime) \
+	$Subnet(Subnet${subnet_num}_creationDate) \
+	$Subnet(Subnet${subnet_num}_creationTime) \
+	$Subnet(Subnet${subnet_num}_notes) \
+	
 
-    set oldUserName $userName
-    set oldRunDate $runDate
-    set oldRunTime $runTime
-    set oldNotes $notes
-
-    set w .netedit_info
+    set w .netedit_info$subnet_num
+        
     if {[winfo exists $w]} {
 	raise $w
 	return
     }
+
     toplevel $w
+    wm title $w "$Subnet(Subnet${subnet_num}_Name) Information"
 
     frame $w.fname
     label $w.fname.lname -text "User: " -padx 3 -pady 3
-    entry $w.fname.ename -width 50 -relief sunken -bd 2 -textvariable userName
-
-    frame $w.fdt
-    label $w.fdt.ldate -text "Date: " -padx 3 -pady 3 
-    entry $w.fdt.edate -width 20 -relief sunken -bd 2 -textvariable runDate
-#    label $w.fdt.edate -text [exec date] -padx 3 -pady 3 -relief sunken
-
-    label $w.fdt.ltime -text "Time: " -padx 5 -pady 3 
-    entry $w.fdt.etime -width 10 -relief sunken -bd 2 -textvariable runTime
-
-    button $w.fdt.reset -text "Reset Date & Time" -command "initInfo 1"
-
-    frame $w.fnotes
-    label $w.fnotes.lnotes -text "Notes " -padx 2 -pady 5 
-    text $w.fnotes.tnotes -relief sunken -bd 2 -yscrollcommand "$w.fnotes.scroll set"
-    scrollbar $w.fnotes.scroll -command "$w.fnotes.tnotes yview"
-    if [info exists notes] {$w.fnotes.tnotes insert 1.0 $notes}
-
-    frame $w.fbuttons 
-    button $w.fbuttons.ok -text "Done" -command "infoOk $w"
-    button $w.fbuttons.clear -text "Clear All" -command "infoClear $w"
-    button $w.fbuttons.cancel -text "Cancel" -command "infoCancel $w"
-
-    pack $w.fname $w.fdt $w.fnotes $w.fbuttons -side top -padx 1 -pady 1 -ipadx 2 -ipady 2 -fill x
-
+    entry $w.fname.ename -width 50 -relief sunken -bd 2 \
+	-textvariable Subnet(Subnet${subnet_num}_userName)
     pack $w.fname.lname $w.fname.ename -side left
 
-    pack $w.fdt.ldate $w.fdt.edate $w.fdt.ltime $w.fdt.etime -side left
-    pack $w.fdt.reset -side right
+    set pre [expr $subnet_num?"Sub-":""]
+    frame $w.cdt
+    label $w.cdt.label -text "${pre}Network Created:"
+    label $w.cdt.ldate -text "   Date: " -padx 3 -pady 3 
+    entry $w.cdt.edate -width 20 -relief sunken -bd 2 \
+	-textvariable Subnet(Subnet${subnet_num}_creationDate)
 
-    pack $w.fnotes.lnotes $w.fnotes.tnotes -side left
-    pack $w.fnotes.scroll -side right -fill y
+    label $w.cdt.ltime -text "   Time: " -padx 5 -pady 3 
+    entry $w.cdt.etime -width 10 -relief sunken -bd 2 \
+	-textvariable Subnet(Subnet${subnet_num}_creationTime)
+
+    button $w.cdt.reset -text "Reset" \
+	-command "updateCreationDateAndTime $subnet_num"
+#    pack $w.cdt.label $w.cdt.ldate $w.cdt.edate $w.cdt.ltime $w.cdt.etime -side left -fill x
+#    pack $w.cdt.reset -side right
+    pack $w.cdt.label  -side left -fill x
+    pack $w.cdt.reset $w.cdt.etime $w.cdt.ltime $w.cdt.edate $w.cdt.ldate   -side right -padx 5
+
+
+    frame $w.fdt
+    label $w.fdt.label -text "${pre}Network Executed:"
+    label $w.fdt.ldate -text "   Date: " -padx 3 -pady 3 
+    entry $w.fdt.edate -width 20 -relief sunken -bd 2 \
+	-textvariable Subnet(Subnet${subnet_num}_runDate)
+
+    label $w.fdt.ltime -text "   Time: " -padx 5 -pady 3 
+    entry $w.fdt.etime -width 10 -relief sunken -bd 2 \
+	-textvariable Subnet(Subnet${subnet_num}_runTime)
+
+    button $w.fdt.reset -text "Reset" \
+	-command "updateRunDateAndTime $subnet_num"
+
+    pack $w.fdt.label  -side left -fill x
+    pack $w.fdt.reset $w.fdt.etime $w.fdt.ltime $w.fdt.edate $w.fdt.ldate   -side right -padx 5
+
+
+    frame $w.fnotes -relief groove
+    frame $w.fnotes.top
+    frame $w.fnotes.bot
+    label $w.fnotes.top.lnotes -text "Notes:" -padx 2 -pady 5 
+    text $w.fnotes.bot.tnotes -relief sunken -bd 2 \
+	-yscrollcommand "$w.fnotes.bot.scroll set"
+    scrollbar $w.fnotes.bot.scroll -command "$w.fnotes.bot tnotes yview"
+    $w.fnotes.bot.tnotes insert 1.0 $Subnet(Subnet${subnet_num}_notes)
+
+    pack $w.fnotes.top $w.fnotes.bot -expand 0 -fill x -side top
+    pack $w.fnotes.top.lnotes -side left
+    pack $w.fnotes.bot -expand 1 -fill both -side top
+    pack $w.fnotes.bot.tnotes  -expand 1 -side left -fill both
+    pack $w.fnotes.bot.scroll -expand 0 -side left -fill y
+
+
+    frame $w.fbuttons 
+    button $w.fbuttons.ok -text "Done" -command "infoOk $w $subnet_num"
+    button $w.fbuttons.clear -text "Clear All" \
+	-command "infoClear $w $subnet_num"
+    button $w.fbuttons.cancel -text "Cancel" \
+	-command "infoCancel $w $subnet_num $backupDateTimeNotes"
+
+    pack $w.fname $w.cdt $w.fdt -side top -padx 1 -pady 1 -ipadx 2 -ipady 2 -fill x
+    pack $w.fnotes -expand 1 -fill both
+    pack $w.fbuttons -side top -padx 1 -pady 1 -ipadx 2 -ipady 2 -fill x
+ 
 
     pack $w.fbuttons.ok $w.fbuttons.clear $w.fbuttons.cancel -side right -padx 5 -pady 5 -ipadx 3 -ipady 3
 }
 
-proc infoClear {w} {
-    global userName runDate runTime notes
-    set userName ""
-    set runDate ""
-    set runTime ""
-    set notes ""
-    $w.fnotes.tnotes delete 1.0 end
+proc infoClear {w subnet_num} {
+    global Subnet 
+    set Subnet(Subnet${subnet_num}_userName) ""
+    set Subnet(Subnet${subnet_num}_runDate) ""
+    set Subnet(Subnet${subnet_num}_runTime) ""
+    set Subnet(Subnet${subnet_num}_creationDate) ""
+    set Subnet(Subnet${subnet_num}_creationTime) ""
+    set Subnet(Subnet${subnet_num}_notes) ""
+    $w.fnotes.bot.tnotes delete 1.0 end
 }
 
-proc infoOk {w} {
-    global notes
-    set notes [$w.fnotes.tnotes get 1.0 end]
-    NetworkChanged
+proc infoOk {w subnet_num} {
+    global Subnet
+    set Subnet(Subnet${subnet_num}_notes) [$w.fnotes.bot.tnotes get 1.0 end]
+    networkHasChanged
     destroy $w
 }
 
-proc infoCancel {w} {
-    global userName runDate runTime notes
-    global oldUserName oldRunDate oldRunTime oldNotes
-    set userName $oldUserName
-    set runDate $oldRunDate
-    set runTime $oldRunTime
-    set notes $oldNotes
+proc infoCancel {w subnet_num args } {
+    global Subnet
+    set Subnet(Subnet${subnet_num}_userName) [lindex $args 0]
+    set Subnet(Subnet${subnet_num}_runDate) [lindex $args 1]
+    set Subnet(Subnet${subnet_num}_runTime) [lindex $args 2]
+    set Subnet(Subnet${subnet_num}_creationDate) [lindex $args 3]
+    set Subnet(Subnet${subnet_num}_creationTime) [lindex $args 4]
+    set Subnet(Subnet${subnet_num}_Notes) [lindex $args 5]
+
     destroy $w
 } 
 
@@ -985,9 +1005,6 @@ proc loadnet { netedit_loadfile } {
     global netedit_loadfile_global
     set netedit_loadfile_global $netedit_loadfile
 
-    global netedit_loadfile_global
-    set netedit_loadfile_global $netedit_loadfile
-
     global netedit_savefile NetworkChanged Subnet inserting
     if { !$inserting || ![string length $netedit_savefile] } {
 	# Cut off the path from the net name and put in on the title bar:
@@ -1003,8 +1020,6 @@ proc loadnet { netedit_loadfile } {
     if { !$inserting } { set NetworkChanged 0 }
     resetSourceCommand
 }
-
-
 
 
 proc renameSourceCommand {} {
@@ -1029,9 +1044,8 @@ proc SCIRunNew_source { args } {
 	    set lastSettings [string last .settings $args]
 	    if { $lastSettings != -1 && 
 		 [expr [string length $args] - $lastSettings] == 9 } {
-		global SCIRUN_SRCDIR
-		set file "$SCIRUN_SRCDIR/nets/default.settings"
-		displayErrorWarningOrInfo "*** '$args' file not found.\n*** Loading default settings file: '$file'" warning
+		set file "[netedit getenv SCIRUN_SRCDIR]/nets/default.settings"
+		displayErrorWarningOrInfo "*** The settings file '$args'  was not found.  Loading the default file:\n     $file" warning
 
 		uplevel SCIRunBackup_source \{$file\}
 		return
@@ -1043,22 +1057,20 @@ proc SCIRunNew_source { args } {
 
 
 proc showInvalidDatasetPrompt {} {
-    global SCIRUN_VERSION
     set filename [lindex [file split [info script]] end]
     return [createSciDialog -warning \
 		-parent . \
 		-button1 "Select Dataset" \
 		-button2 "Ignore Dataset" \
 		-button3 "Exit SCIRun" \
-		-message "The environment variables SCIRUN_DATA and/or SCIRUN_DATASET\nare not set or they are invalid.\n\nChoose 'Select Dataset' to select a valid dataset directory.\neg: /usr/sci/data/SCIRunData/${SCIRUN_VERSION}/sphere\n\nChoose 'Ignore Dataset' to load $filename anyway.  You will\nhave to manually set the reader modules to valid filenames.\n\nIf you set these environment variables before running SCIRun, then\nyou will not receive this dialog when loading $filename.\n\nYou may also permanently set these variables in the ~/.scirunrc file."]
+		-message "The environment variables SCIRUN_DATA and/or SCIRUN_DATASET\nare not set or they are invalid.\n\nChoose 'Select Dataset' to select a valid dataset directory.\neg: /usr/sci/data/SCIRunData/[netedit getenv SCIRUN_VERSION]/sphere\n\nChoose 'Ignore Dataset' to load $filename anyway.  You will\nhave to manually set the reader modules to valid filenames.\n\nIf you set these environment variables before running SCIRun, then\nyou will not receive this dialog when loading $filename.\n\nYou may also permanently set these variables in the ~/.scirunrc file."]
 }
 
 
 
 proc showChooseDatasetPrompt { initialdir } {
     if { ![string length $initialdir] } {
-	global SCIRUN_VERSION
-	set initialdir "/usr/sci/data/SCIRunData/${SCIRUN_VERSION}"
+	set initialdir "/usr/sci/data/SCIRunData/[netedit getenv SCIRUN_VERSION]"
     }
     set value [tk_chooseDirectory -parent . -mustexist 1 \
 		   -initialdir $initialdir]
@@ -1113,7 +1125,7 @@ proc sourceSettingsFile {} {
 
     set settings "$DATADIR/$DATASET/$DATASET.settings"
     if { [file isfile $settings] } {
-	source $settings
+	uplevel \#0 source $settings
     }
 
     return "$DATADIR $DATASET"
@@ -1157,8 +1169,6 @@ proc hideSplash { reset } {
 }
 
 proc showSplash { imgname {steps none} } {
-    global SCIRUN_SRCDIR
-
     if {[winfo exists .splash]} {
 	# Center on main SCIRun window
         wm geometry .splash +[expr 135+[winfo x .]]+[expr 170+[winfo y .]]
@@ -1170,7 +1180,7 @@ proc showSplash { imgname {steps none} } {
 	return
     }
 
-    set filename [file join $SCIRUN_SRCDIR $imgname]
+    set filename [file join [netedit getenv SCIRUN_SRCDIR] $imgname]
     image create photo ::img::splash -file "$filename"
     toplevel .splash
 
@@ -1203,8 +1213,8 @@ set licenseResult decline
 
 proc licenseDialog { {firsttime 0} } {
     if $firsttime { return "accept" }
-    global SCIRUN_SRCDIR licenseResult userData
-    set filename [file join $SCIRUN_SRCDIR LICENSE]
+    global licenseResult userData
+    set filename [file join [netedit getenv SCIRUN_SRCDIR] LICENSE]
     set stream [open $filename r]
     toplevel .license
 
@@ -1299,7 +1309,7 @@ proc licenseDialog { {firsttime 0} } {
 proc licenseAccept { } {
     set ouremail "scirun-register@sci.utah.edu"
     set majordomo "majordomo@sci.utah.edu"
-    global licenseResult userData SCIRUN_VERSION
+    global licenseResult userData
     if { [string length $userData(first)] &&
 	 [string length $userData(last)] &&
 	 [string length $userData(email)] } {
@@ -1315,7 +1325,7 @@ proc licenseAccept { } {
 	text $w.text -wrap word -height 10 -width 50  -borderwidth 1
 	$w.text insert end "To: $ouremail\n"
 	$w.text insert end "Subject: SCIRun_Registration_Notice\n\n"
-	$w.text insert end "The following e-mail was automatically generated by SCIrun v$SCIRUN_VERSION\n\n"
+	$w.text insert end "The following e-mail was automatically generated by SCIrun v$[netedit getenv SCIRUN_VERSION]\n\n"
 	$w.text insert end "First Name:  $userData(first)\n"
 	$w.text insert end "Last Name:  $userData(last)\n"
 	$w.text insert end "E-Mail:  $userData(email)\n"
@@ -1350,7 +1360,7 @@ proc licenseAccept { } {
 		puts "Cannot open $name for writing.  Giving up."
 		return
 	    }
-	    puts $out "\nThe following e-mail was automatically generated by SCIRun v$SCIRUN_VERSION"
+	    puts $out "\nThe following e-mail was automatically generated by SCIRun v$[neteedit getenv SCIRUN_VERSION]"
 	    puts $out "\nFirst Name:  $userData(first)"
 	    puts $out "Last Name:  $userData(last)"
 	    puts $out "E-Mail:  $userData(email)"
@@ -1386,8 +1396,8 @@ proc validDir { name } {
 }
 
 proc getOnTheFlyLibsDir {} {
-    global SCIRUN_OBJDIR tcl_platform
-    set binOTF [file join $SCIRUN_OBJDIR on-the-fly-libs]
+    global tcl_platform
+    set binOTF [file join $[netedit getenv SCIRUN_OBJDIR] on-the-fly-libs]
 
     set dir [netedit getenv SCIRUN_ON_THE_FLY_LIBS_DIR]
 
@@ -1420,7 +1430,7 @@ proc getOnTheFlyLibsDir {} {
 	return $binOTF
     }
 
-    set makefile [file join $SCIRUN_OBJDIR on-the-fly-libs Makefile]
+    set makefile [file join [netedit getenv SCIRUN_OBJDIR] on-the-fly-libs Makefile]
     if [catch "file copy -force $makefile $dir"] {
 	tk_messageBox -type ok -parent . -icon error -message \
 	    "SCIRun cannot copy $makefile to $dir.\n\nThe Makefile was generated during configure and is necessasary for dynamic compilation to work.  Please reconfigure SCIRun to re-generate this file.\n\nDynamic code generation will not work.  If you continue this session, networks may not execute correctly."
@@ -1443,7 +1453,7 @@ proc listRemove { name pos } {
     uplevel 1 set $name \[list [lreplace [uplevel 1 set $name] $pos $pos]\]
 }
 
-# Finds then removes an element from a list without a set - similar to lappend
+# Finds the first instance of elem in a list then removes it from the list 
 # ex: 
 #   set bob "foo bar foo2 bar2 foo3 bar3"
 #   listFindAndRemove bob foo2
@@ -1476,7 +1486,6 @@ proc setGlobal { var val } {
 }
 
 proc emitTCLStyleCopyright { out } {
-    puts $out "\#"
     puts $out "\# The contents of this file are subject to the University of Utah Public"
     puts $out "\# License (the \"License\"); you may not use this file except in compliance"
     puts $out "\# with the License."
@@ -1496,42 +1505,29 @@ proc emitTCLStyleCopyright { out } {
 
 proc init_DATADIR_and_DATASET {} {
     upvar DATADIR datadir DATASET dataset
-
-    # The following declarations make sure that these vars exist.
-    set DATADIR ""
-    set DATASET ""
+    sourceSettingsFile
     set datadir [netedit getenv SCIRUN_DATA]
     set dataset [netedit getenv SCIRUN_DATASET]
+    netedit setenv SCIRUN_NET_SUBSTITUTE_DATADIR true
 }
     
 
 proc writeNetwork { filename { subnet 0 } } {
-    global userName runDate runTime notes SCIRUN_VERSION
-
     set out [open $filename {WRONLY CREAT TRUNC}]
-    puts $out "\# SCI Network $SCIRUN_VERSION\n"
-    if {[boolToInt SCIRUN_INSERT_NET_COPYRIGHT]} {
+    puts $out "\# SCIRun Network v[netedit getenv SCIRUN_VERSION]\n"
+    if {[envBool SCIRUN_INSERT_NET_COPYRIGHT]} {
 	emitTCLStyleCopyright $out
     }
-    if {[boolToInt SCIRUN_NET_SUBSTITUTE_DATADIR]} {
+    if {[envBool SCIRUN_NET_SUBSTITUTE_DATADIR]} {
 	puts $out "\n# Ask SCIRun to tell us where the data is"
 	puts $out "init_DATADIR_and_DATASET\n"
     }
-    if {[info exists userName]} {
-	puts $out "global userName"
-	puts $out "set userName \"${userName}\"\n"
-    }
-    if {[info exists runDate]} {
-	puts $out "global runDate"
-	puts $out "set runDate \"${runDate}\"\n"
-    }
-    if {[info exists runTime]} {
-	puts $out "global runTime"
-	puts $out "set runTime \"${runTime}\"\n"
-    }
-    if {[info exists notes]} {
-	puts $out "global notes"
-	puts $out "set notes \"${notes}\"\n"
+
+    foreach var "userName runDate runTime notes" {
+	upvar \#0 $var val
+	if {[info exists val]} {
+	    puts $out "set $var \"$val\""
+	}
     }
     close $out
 
