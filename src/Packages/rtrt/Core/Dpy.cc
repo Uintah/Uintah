@@ -679,6 +679,13 @@ Dpy::renderFrame() {
 		   cum_dt);
       }
 #endif
+      if (priv->dumpFrame) {
+        if (!scene->display_depth)
+          displayedImage->save_ppm( "images/image" );
+        else
+          displayedImage->save_depth( "images/depth" );
+        priv->dumpFrame = false;
+      }
     }
   }
 
