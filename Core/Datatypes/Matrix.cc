@@ -40,6 +40,11 @@ PersistentTypeID Matrix::type_id("Matrix", "PropertyManager", 0);
 
 #define MATRIX_VERSION 3
 
+
+Matrix::~Matrix()
+{
+}
+
 void
 Matrix::io(Piostream& stream)
 {

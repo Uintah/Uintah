@@ -54,6 +54,7 @@ class SCICORESHARE Matrix : public PropertyManager
 {
 public:
   //! make a duplicate, needed to support detach from LockingHandle
+  virtual ~Matrix();
   virtual Matrix* clone() = 0;
 
   //! convert this matrix to a DenseMatrix.
