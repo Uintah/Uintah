@@ -75,6 +75,10 @@ WARNING
                                     
    virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
                                       SchedulerP& sched);
+
+   virtual void scheduleCheckNeedAddMaterial(SchedulerP&,
+                                             const LevelP& level,
+                                             const ModelInfo*);
                                       
   private:    
     void computeModelSources(const ProcessorGroup*, 
@@ -83,6 +87,13 @@ WARNING
                              DataWarehouse*, 
 		             DataWarehouse* new_dw, 
                              const ModelInfo*);
+
+    void checkNeedAddMaterial(const ProcessorGroup*, 
+                              const PatchSubset* patches,
+                              const MaterialSubset* matls,
+                              DataWarehouse*,
+                              DataWarehouse* new_dw,
+                              const ModelInfo*);
 
     Simple_Burn(const Simple_Burn&);
     Simple_Burn& operator=(const Simple_Burn&);
