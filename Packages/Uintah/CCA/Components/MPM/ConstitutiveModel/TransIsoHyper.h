@@ -24,7 +24,7 @@ namespace Uintah {
   class TransIsoHyper : public ConstitutiveModel {
   private:
     // Create datatype for storing model parameters
-    bool d_useModifiedEOS; 
+    bool d_useModifiedEOS;
   public:
     struct CMData {   //_________________________________________modified here
       double Bulk;
@@ -35,10 +35,16 @@ namespace Uintah {
       double c4;
       double c5;
       double lambda_star;
+      double failure;
+      double crit_shear;
+      double crit_stretch;
     };
 
     const VarLabel* pStretchLabel;  // For diagnostic
     const VarLabel* pStretchLabel_preReloc;  // For diagnostic
+    
+    const VarLabel* pFailureLabel;  // ____________________________fail_labels
+    const VarLabel* pFailureLabel_preReloc;
 
   private:
     CMData d_initialData;
