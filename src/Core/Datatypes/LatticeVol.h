@@ -168,11 +168,13 @@ const TypeDescription*
 get_type_description(LatticeVol<T>*)
 {
   static TypeDescription* td = 0;
-  static string lv("LatticeVol");
+  static string name("LatticeVol");
   static string path(__FILE__);
   if(!td){
     const TypeDescription *sub = SCIRun::get_type_description((T*)0);
-    td = scinew TypeDescription(lv, sub, path);
+    TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
+    (*subs)[0] = sub;
+    td = scinew TypeDescription(name, subs, path);
   }
   return td;
 }
