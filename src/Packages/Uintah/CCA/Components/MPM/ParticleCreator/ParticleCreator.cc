@@ -15,10 +15,12 @@
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/CrackBC.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <fstream>
 
 using namespace Uintah;
 using std::vector;
 using std::cerr;
+using std::ofstream;
 
 #define FRACTURE
 //#undef FRACTURE
@@ -53,6 +55,8 @@ ParticleCreator::createParticles(MPMMaterial* matl,
   int dwi = matl->getDWIndex();
   ParticleSubset* subset = allocateVariables(numParticles,dwi,lb,patch,new_dw);
 
+  // Create a file that contains the points just created.
+  ofstream source("created.pts");
   particleIndex start = 0;
   
   vector<GeometryObject*>::const_iterator obj;
@@ -144,6 +148,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
 	      if(piece->inside(p)){
                 particleIndex pidx = start+count; 
 		position[pidx]=p;
+		source << p.x() << "  " <<  p.y() << "  " << p.z() << endl;;
 #ifdef FRACTURE
                 pdisp[start+count] = Vector(0.,0.,0.);
 #endif
@@ -188,7 +193,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     } // end of else
     start += count;
   }
-
+  source.close();
   return subset;
 }
 
