@@ -57,6 +57,13 @@ using namespace SCIRun;
 #  define       __sigaction     sigaction
 #  define       __sigemptyset   sigemptyset
 #endif
+/* -- Dd for PDT */
+#ifdef PDT_PARSER
+#ifndef __sigemptyset
+#define __sigemptyset sigemptyset
+#endif /* __sigemptyset */
+#endif /* PDT_PARSER */
+
 /* -- end Dd */
 
 #ifdef __digital__
