@@ -35,9 +35,11 @@ ImageMaterial::ImageMaterial(const string &texfile, ImageMaterial::Mode umode,
       specpow(specpow), refl(refl),  transp(0), valid_(false)
 {
   PPMImage ppm(texfile);
-  if (ppm.valid()) valid_=true;
-  int nu, nv;
-  ppm.get_dimensions_and_data(image, nu, nv, flipped);
+  if (ppm.valid())  {
+      valid_=true;
+      int nu, nv;
+      ppm.get_dimensions_and_data(image, nu, nv, flipped);
+  }
   outcolor=Color(0,0,0);
 }
 
@@ -49,9 +51,11 @@ ImageMaterial::ImageMaterial(const string &texfile, ImageMaterial::Mode umode,
       specpow(specpow), refl(refl),  transp(transp), valid_(false)
 {
   PPMImage ppm(texfile);
-  if (ppm.valid()) valid_=true;
-  int nu, nv;
-  ppm.get_dimensions_and_data(image, nu, nv, flipped);
+  if (ppm.valid()) {
+      valid_=true;
+      int nu, nv;
+      ppm.get_dimensions_and_data(image, nu, nv, flipped);
+  }
   outcolor=Color(0,0,0);
 }
 
