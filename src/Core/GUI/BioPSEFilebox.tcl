@@ -1549,8 +1549,8 @@ proc biopseFDialog_Done {w {selectFilePath ""}} {
 	set biopsePriv(selectPath)     $data(selectPath)
 
 	set confirm 1
-	if { [string length $data(-confirmvar)] && 
-	     [info exists $data(-confirmvar)] &&
+	if { [info exists $data(-confirmvar)] &&
+	     [string length $data(-confirmvar)] && 
 	     ![set $data(-confirmvar)] } {
 	    set confirm 0
 	}
