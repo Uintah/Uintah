@@ -179,7 +179,8 @@ template<class T> std::vector<T>  IComPacket::getvector()
 	int datasize = getdatasize();
 			
 	if (elsize != sizeof(T)) throw invalid_data_format();
-	T* ptr = static_cast<T*>(getdatabuffer());
+	//T* ptr = static_cast<T*>(getdatabuffer());
+	T* ptr = static_cast<T*>(0); // FIXME: getdatabuffer is undefined
 	if (buffersize() < elsize*datasize) datasize = (buffersize()/elsize);
 	
 	std::vector<T> vec(datasize);
