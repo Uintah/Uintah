@@ -1,10 +1,28 @@
+% -*-latex-*-
+%
+%  The contents of this file are subject to the University of Utah Public
+%  License (the "License"); you may not use this file except in compliance
+%  with the License.
+%
+%  Software distributed under the License is distributed on an "AS IS"
+%  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+%  License for the specific language governing rights and limitations under
+%  the License.
+%
+%  The Original Source Code is SCIRun, released March 12, 2001.
+%
+%  The Original Source Code was developed by the University of Utah.
+%  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
+%  University of Utah. All Rights Reserved.
+%
+
 % network.tex
 %
 
 %begin{latexonly}
   \newcommand{\modgraphic}%
   {\centerline{\epsfig{file=Figures/modgraphic-1.eps.gz,width=4in,
-        bbllx=18, bblly=18, bburx=594, bbury=355}}}
+        bbllx=0, bblly=0, bburx=325, bbury=157}}}
 %end{latexonly}
 \begin{htmlonly}
   \newcommand{\modgraphic}{%
@@ -77,6 +95,11 @@ for all modules and consists of the following components:
 \item[Progress bar] Shows the module's progress.
 \item[Timer] Displays the amount of CPU time the module has consumed.
   Located to the left of the progress bar.
+\item[Message Indicator] Shows the presence of messages in a module's
+  log.  Colors represent message types.  Blue is for ``remarks''
+  (informational messages) and yellow is for ``warnings'' (your
+  attention is needed!).  Click the indicator to display the module's
+  log.
 \item[Pop-up Menu] Pressing mouse button 3 while the mouse
   pointer is over a module gives access to the module's pop-up menu.  The
   pop-up menu gives access to the following items:
@@ -86,8 +109,10 @@ for all modules and consists of the following components:
     package to which to module belongs.  The Instance part is a unique
     number which distinguishes multiple instances of the same module.
   \item[\menuitem{Execute}] Executes the network.
-  \item[\menuitem{Notes}] This item displays the module's note pad.  Use the note pad
-    to document the purpose of the module in the current network.
+  \item[\menuitem{Help}] Displays a module's help window.
+  \item[\menuitem{Notes}] This item displays the module's note pad.
+    You can use the note pad to document the purpose of the module in
+    the current network.
   \item[\menuitem{Destroy}] Destroys the module.
   \item[\menuitem{Show Log}] Displays the module's message log.  Most modules will
     write messages to their log during the course of their execution.
@@ -121,10 +146,6 @@ for all modules and consists of the following components:
   \begin{makeimage}
   \end{makeimage}
   \modgraphic
-%  \centerline{\epsfig{file=Figures/modgraphic.eps,width=6in}}
-%    \framebox{\parbox[3in]{\columnwidth}{The\dotfill Figure\\
-%    \vspace{2in}\\
-%    With some \dotfill dummy text}}
   \caption{\label{fig:modgraphic} Module Graphic (\module{Show
       Field} Module)}
 \end{figure}
@@ -133,10 +154,6 @@ for all modules and consists of the following components:
   \begin{makeimage}
   \end{makeimage}
   \moddialog
-%  \centerline{\epsfig{file=Figures/moddialog.eps,width=6in}}
-%    \framebox{\parbox[3in]{\columnwidth}{The\dotfill Figure\\
-%    \vspace{2in}\\
-%    With some \dotfill dummy text}}
   \caption{\label{fig:moddialog} Module Control Dialog (\module{Show
       Field} Module)}
 \end{figure}
@@ -180,16 +197,24 @@ dialog for the \module{Show Field}.
 coordinated fashion. The coordinated execution of modules is managed by
 \sr{}'s \dfn{scheduler}.
 
+Note that some modules may need to be compiled before they are
+executed --- compilation will delay execution of the network.  The
+modules will turn a different color while they are being compiled.
+See \secref{Dynamic Compilation}{sec:dyncomp} and
+\htmladdnormallinkfoot{\etitle{Dynamic
+    Compilation}}{http://www.sci.utah.edu/publications/mcole01/dyn.pdf}
+for for more information on dynamic compilation.
+
 \subsubsection{The Basics}
 
 The scheduler is invoked when an event occurs that \dfn{triggers} a
-module's execution.  The scheduler creates a list of all modules that must
-executed in coordination with the triggered module. Modules
-\dfn{upstream} (directly or indirectly) from the triggered module will be
-put on the execution list if they have not previously executed.  And all
-modules \dfn{downstream} from the triggered module will be put on the
-list.  Once the scheduler determines which modules must be executed, it
-executes them.
+module's execution.  The scheduler creates a list of all modules that
+must executed in coordination with the triggered module. Modules
+\dfn{upstream} (directly or indirectly) from the triggered module will
+be put on the execution list if they have not previously executed.
+And all modules \dfn{downstream} from the triggered module will be put
+on the list.  Once the scheduler determines which modules must be
+executed, it executes them.
 
 Network execution is mostly transparent.  That is, the events that trigger
 module execution will usually be generated automatically while you work
@@ -374,12 +399,12 @@ A complex network may not be entirely visible in the NetEdit frame.  You may
 use the NetEdit frame's scroll bars to bring other parts of a network into
 view.  Or you may use the navigation tool to view complex networks.
 
-The navigation pane shows the entire ``network world.''  The small
-rectangular region (outlined in black) within the navigation pane is the
-network navigation tool and it is a window on the network world.  The
-position of the navigation tool determines the part of the network that is
+The Global View Frame shows the entire ``network world.''  The small
+rectangular region (outlined in black) within the  is the
+network view tool and it is a window on the network world.  The
+position of the view tool determines the part of the network that is
 visible in the NetEdit frame.  To view other parts of the network, press
-button 1 while the pointer is anywhere in the navigation pane -- this will
+button 1 while the pointer is anywhere in the Global View Frame -- this will
 move the tool to the location of the pointer --  then drag the tool to the
 new location.
 

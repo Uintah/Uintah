@@ -50,7 +50,7 @@ products:
 
 # Cleanage
 define rmtgz
--rm -f SCIRunDocs.tar.gz; rm -f SCIRunDocs.tar
+-rm -f ${TARBALL}; rm -f ${TARFILE}
 endef
 
 clean:

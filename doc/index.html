@@ -33,14 +33,14 @@ p.title { text-align: center; font-size: xx-large }
 <script type="text/javascript">
 var treetop="";
 var path = location.pathname;
-var iLimit = 20;
-var i = 0;
-while (i < iLimit && path.substr(path.lastIndexOf("/")+1) != "doc") {
-treetop += "../";
-i += 1;
-path = path.substr(0, path.lastIndexOf("/"));
+var base = path.substr(path.lastIndexOf("/")+1)
+var roottag = "doc"
+while (base != roottag && base != "") {
+  treetop += "../";
+  path = path.substr(0, path.lastIndexOf("/"));
+  base = path.substr(path.lastIndexOf("/")+1)
 }
-var inDocTree = i < iLimit;
+var inDocTree = base == roottag
 if (inDocTree) {
 document.write("<link href='",treetop,"doc/Utilities/HTML/doc_styles.css' rel='stylesheet' type='text/css'/>")
 }
@@ -61,7 +61,7 @@ document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTM
 
 <p class="title">SCIRun Documentation</p>
 
-<hr />
+<br />
 <br />
 
 <table class="index" align="center">

@@ -28,14 +28,14 @@ version="1.0">
     <script type="text/javascript">
       var treetop="";
       var path = location.pathname;
-      var iLimit = 20;
-      var i = 0;
-      while (i &lt; iLimit &amp;&amp; path.substr(path.lastIndexOf("/")+1) != "doc") {
-        treetop += "../";
-        i += 1;
-        path = path.substr(0, path.lastIndexOf("/"));
+      var base = path.substr(path.lastIndexOf("/")+1)
+      var roottag = "doc"
+      while (base != roottag &amp;&amp; base != "") {
+      treetop += "../";
+      path = path.substr(0, path.lastIndexOf("/"));
+      base = path.substr(path.lastIndexOf("/")+1)
       }
-      var inDocTree = i &lt; iLimit;
+      var inDocTree = base == roottag
       if (inDocTree) {
       document.write("&lt;link href='",treetop,"doc/Utilities/HTML/srdocbook.css' rel='stylesheet' type='text/css'/&gt;")
       }

@@ -16,53 +16,52 @@
 -->
 
 <chapter id="inst">
-<title>SCIRun Installation and Build Instructions</title>
+<title>&sr; Installation and Build Instructions</title>
+
 
 <section>
+<title>Introduction</title>
+<para>This chapter provides instructions for downloading and building
+&sr;.</para>
+
 <para>
-This chapter provides detailed instructions for installing and
-building SCIRun and it's packages.
-</para>
+The process consists of these steps:
+<orderedlist>
+<listitem>
+<para>Downloading and unpacking &sr; sources, its packages,
+third party software, and sample data sets.</para>
+</listitem>
+<listitem>
+<para>Building and installing third party software.</para>
+</listitem>
+<listitem>
+<para>Configuring &sr;</para>
+</listitem>
+<listitem>
+<para>Building &sr;</para>
+</listitem>
+</orderedlist>
+</para> 
 </section>
 
 <section>
-<title>Prerequisites</title>
-<para>
-Use of this document requires experience with the SGI
-Irix operating system and/or the Linux operating system.
-Knowledge of file systems, programming in C/C++, building
-software from tarball distributions and shell scripting will
-be useful if not required.  The installation or upgrade of
-core system components (such as the OS and compilers) may be
-required.  As such, a system administrator's assistance may
-be warranted.
-</para>
-</section>
-
-<section>
-<title>Minimum System and Software Requirements</title>
+<title>System Prerequisites</title>
 
 <para>
-SCIRun is officially compatible with two platforms: SGI and Linux.
+&sr; is officially compatible with two platforms: SGI and Linux.
 <xref linkend="minsysrec"/> lists the recommened system requirements.
 </para>
 
 <para>&recommendations;</para>
 
-<para>
-<xref linkend="reqosbldtools"/>, <xref linkend="reqthirdparty"/>, and
-<xref linkend="optthirdparty"/> describe the minimum software
-requirements for SCIRun.
-</para>
+</section>
+
+<section>
+<title>Software Prerequisites</title>
 
 <para>
-Click on the links in the tables to get information about (software
-column) or to download (version column) the software.
-</para>
-
-<para>
-Refer to <xref linkend="thirdparty"/> for instructions on installing
-required software.
+<xref linkend="reqosbldtools"/> describes the minimum software
+requirements for building &sr;.
 </para>
 
 <para>&requirements;</para>
@@ -70,295 +69,361 @@ required software.
 </section>
 
 <section>
-<title>Installing SCIRun and Packages</title>
+<title>Downloading and Unpacking Sources</title>
 
-<para>
 <orderedlist>
+
 <listitem>
-<para>
-Obtain the source trees for SCIRun and any desired
-packages.
-</para>
-<para>          
-If you have access to the SCIRun CVS repository (i.e. you are
-a student or staff member of the SCI Institute), then contact a
-member of the senior staff for information regarding CVS access.
-</para>
-<para>
-Otherwise, go to the SCIRun <ulink url="http://software.sci.utah.edu/archive_entry.html">download page</ulink>.
-</para>
-</listitem>
-<listitem>
-<para>
-Unzip the SCIRun source tree into a directory of your
-choosing.
-</para>
-<para>
-The chosen directory will be referred to as 
-<replaceable>INSTALL_DIR</replaceable> from now on.
-</para>
-<para>
-SCIRun can be installed into any directory, within a user 
-home directory or a system application directory. There is
-no "make install" step in the build process, so SCIRun
-will be installed in the chosen directory. 
-</para> 
-<para>
-For example, if you choose to install SCIRun into user Bob's home
-directory, then 
-</para>
 
 <para>
-<replaceable>INSTALL_DIR</replaceable> = /home/bob
-</para>
-
-<para>
-Depending on how SCIRun was obtained, either 
-</para>
-
-<para>
-a) unzip and untar the SCIRun source tree:
-</para>
-
-<literallayout>
-cd <replaceable>INSTALL_DIR</replaceable>
-gunzip SCIRun<replaceable>.x.x.x.</replaceable>tar.gz
-tar xvf SCIRun<replaceable>.x.x.x.</replaceable>tar
-</literallayout>
-
-<para>
-or
-</para>
-
-<para>
-b) checkout the SCIRun source tree from the CVS repository:
-</para>
-
-<literallayout>
-cd <replaceable>INSTALL_DIR</replaceable>
-cvs checkout SCIRun
-</literallayout>
-
-<para>
-After installing, the <replaceable>INSTALL_DIR</replaceable>
-directory will have a sub directory named SCIRun.
+Obtain the source code for SCIRun and any desired packages.  Be sure
+to get the <filename>Thirdparty_install.x.x.x.tar.gz</filename> and
+<filename>DataSets.x.x.x.tar.gz</filename> files too.  The compressed
+tarballs for these sources can be downloaded from SCI's <ulink
+url="http://software.sci.utah.edu/archive_entry.html">software
+archive</ulink> page.
 </para>
 
 </listitem>
+
 <listitem>
 <para>
-Unzip the packages (if any) into
-<replaceable>INSTALL_DIR</replaceable>/SCIRun/src/Packages.
-</para>
-<para>
-For example, if installing the BioPSE package:
-</para>
-<literallayout>
-cd <replaceable>INSTALL_DIR</replaceable>/SCIRun/src/Packages
-gunzip BioPSE.PKG.x.x.x.tar.gz
-tar xvf BioPSE.PKG.x.x.x.tar
+Unpack the &sr; tarball in a directory of your choice:
+<literallayout class="monospaced">
+gunzip -c &sr;.x.x.x.tar.gz | tar xf -
 </literallayout>
+This will create a directory called <filename>&sr;</filename>. Below
+we use the term <quote>&sr;</quote> when referring to this
+directory (ignoring its full pathname).
+</para>
 </listitem>
-</orderedlist>
-</para> 
 
+<listitem>
+<para>
+Unpack the compressed package tarballs into
+<filename>&sr;/src/Packages</filename>, for example:
+<literallayout class="monospaced">
+gunzip -c BioPSE.PKG.x.x.x.tar.gz | (cd &sr;/src/Packages &amp;&amp; tar xf -)
+</literallayout>
+to unpack the BioPSE package.
+</para>
 <note>
-<title>Aside</title>
-<para>For those of you who download the sources from the
-&sr; site, <xref linkend="lsrcvs"/> discusses a method for putting the
+<title>Note</title>
+<para><xref linkend="lsrcvs"/> discusses a method for putting the
 downloaded &sr; sources under control of the CVS version control
 system.  This is useful if you will be writing modules or other &sr;
 code.  This is <emphasis>not</emphasis> a requirement for installing
 &sr; though!</para>
 </note>
+</listitem>
+
+<listitem>
+<para>
+Unpack the tarball containing sample datasets:
+<literallayout class="monospaced">
+gunzip -c DataSets.x.x.x.tar.gz | tar xf -
+</literallayout>
+This will create the directory <filename>SCIRunData</filename>.
+</para>
+</listitem>
+
+<listitem>
+<para>
+Unpack the third party tarball:
+<literallayout class="monospaced">
+gunzip -c Thirdparty_install.x.x.x.tar.gz | tar xf -
+</literallayout>
+This will create the directory
+<filename>Thirdparty_install.x.x.x</filename>. 
+</para>
+</listitem>
+
+</orderedlist>
 
 </section>
 
 <section>
-<title>Building SCIRun and Packages</title>
+<title>Building Third Party Software</title>
+
+<para>Third party software must be built before building &sr;.  Follow
+these steps:</para>
 
 <para>
+
 <orderedlist>
+
 <listitem>
 <para>
-Ensure that the target install machine matches the above 
-system requirements.
+<command>cd</command> to the third party software directory:
+<literallayout class="monospaced">
+cd Thirdparty_install.x.x.x
+</literallayout>
 </para>
+</listitem>
 
+<listitem>
 <para>
-See <xref linkend="thirdparty"/> for more information.
+Run the third party installation script:
+<literallayout class="monospaced">
+python install <replaceable>dir</replaceable> <replaceable>OS-name</replaceable> <replaceable>compiler</replaceable> <replaceable>32|64</replaceable> <replaceable>jobs</replaceable>
+</literallayout>
+where <replaceable>dir</replaceable> is the directory in which the
+third-party software will be installed (although it is actually
+installed in a sub-directory of the specified one),
+<replaceable>OS-name</replaceable> is the name of the OS (Irix or
+Linux), <replaceable>compiler</replaceable> is your compiler's name and
+version (e.g. gcc-3.04), <replaceable>32|64</replaceable> specifies
+one of 32 bit or 64 bit binaries, and <replaceable>jobs</replaceable>
+is the number of jobs that make will create when building the
+software.  For example:
+<literallayout class="monospaced">
+python install /usr/local/&sr;_Third_Party Irix CC 64 2
+</literallayout>
+or
+<literallayout class="monospaced">
+python install /usr/local/&sr;_Third_Party Linux gcc-3.1 32 1
+</literallayout>
+When finished, the installation script will display the complete name
+of the third-party software installation directory&mdash;make note of
+this value.  
 </para>
+<note>
+The name of the third-party installation directory
+reflects the parameters given to the install script.  This allows you
+to maintain multiple third-party installations for different operating
+systems and machine architectures.
+</note>
+<para>You may reinstall part or all of the third-party software by
+repeating the previous command.  You will be asked to replace all or
+part of the installation. Just answer <userinput>y</userinput> or
+<userinput>n</userinput> to the script until you have selected the
+exact reinstallation you wish.</para>
 
 </listitem>
-<listitem>
-<para>
-Run configure from a directory of your choosing.
-</para>
-<para>
-The chosen directory will be referred to as
-<replaceable>build dir</replaceable> from now on.
-</para>
-<para>
-An example of a typical configure command (please 
-excuse the line wrap):
+
+</orderedlist>
+
 </para>
 
-<literallayout>
-cd <replaceable>INSTALL_DIR</replaceable>/SCIRun/src
-./configure --with-thirdparty=/usr/local/SCIRun_Thirdparty_32 \
---enable-package="<replaceable>PACKNAME_1</replaceable> <replaceable>PACKNAME_2</replaceable> ..."
-</literallayout>
-
-<para>
-Where <replaceable>PACKNAME_X</replaceable> is the name of a SCIRun package
-installed above.
-</para>
-
-<para>
-There are many options for configuring SCIRun with location 
-as the chief option.  SCIRun can be configured from within
-the <replaceable>INSTALL_DIR</replaceable>/SCIRun/src 
-directory, as is commonly done, which yields the following:
-</para>
-
-<section>
-<para>
-<replaceable>build dir</replaceable> = <replaceable>INSTALL_DIR</replaceable>/SCIRun/src
-</para>
 </section>
 
-<para>
-However, SCIRun can also be configured from locations other 
-than the source directory which allows for having multiple
-builds for different platforms, or for for different ABI's
-(Applications Binary Interface) while still sharing a single 
-source directory: 
-</para>
+<section>
+<title>Building &sr;</title>
 
-<literallayout>
-cd <replaceable>INSTALL_DIR</replaceable>/SCIRun
-mkdir linux
-mkdir sgi32
-mkdir sgi64
-cd linux
-../src/configure <replaceable>configure options</replaceable>
-cd ../sgi32
-../src/configure <replaceable>configure options</replaceable>
-cd ../sgi64
-../src/configure --enable-64bit <replaceable>configure options</replaceable>
+<orderedlist>
+
+<listitem>
+
+<para>
+Run &sr;'s configure script.  This can be done from the
+<filename>&sr;/src</filename> directory:
+<literallayout class="monospaced">
+cd &sr;/src
+./configure --with-thirdparty=<replaceable>third-party-dir</replaceable> \
+--enable-package="<replaceable>package-name1 package-name2 &hellip;</replaceable>"
 </literallayout>
+or from another directory, for example a sub-directory of &sr;:
+<literallayout class="monospaced">
+mkdir &sr;/<replaceable>dir</replaceable>
+cd &sr;/<replaceable>dir</replaceable>
+../src/configure --with-thirdparty=<replaceable>third-party-dir</replaceable> \ 
+--enable-package="<replaceable>package-name1 package-name2 &hellip;</replaceable>"
+</literallayout>
+in which case &sr; will be built in the directory
+<filename>&sr;/<replaceable>dir</replaceable></filename> (where
+<replaceable>dir</replaceable> is a directory name).
+Above,
+<replaceable>third-party-dir</replaceable> is replaced by the name of
+the third party software installation directory and
+"<replaceable>package-name1 package-name2 &hellip;</replaceable>" is
+replaced by a list of (previously downloaded and unpacked) package
+names , e.g. "BioPSE MatlabInterface".  For example:
+<literallayout class="monospaced">
+../src/configure --with-thirdparty=/usr/local/&sr;_Third_Party/1.4.2/Irix/CC-32bit \
+                 --enable-package="BioPSE"
+</literallayout>
+</para>
 
 <para>
-In addition to the configure location, there are several 
-options that may be invoked at configure time by supplying
-the configure command with arguments. <xref linkend="appendix"/>
-lists configure options.
+It is useful to run the configure script from directories other than
+<filename>&sr;/src</filename> so that you can build multiple
+versions of &sr; from a single source directory.  For example, you may
+wish to build a Linux version and 32 bit and 64 bit Irix versions.
+Assuming <filename>&sr;</filename> resides on a volume shared by
+all machines you may do this:
+<literallayout class="monospaced">
+mkdir &sr;/linux
+mkdir &sr;/sgi32
+mkdir &sr;/sgi64
+</literallayout>
+Then, after logging onto the Linux machine:
+<literallayout class="monospaced">
+cd &sr;/linux
+../src/configure <replaceable>options</replaceable>
+</literallayout>
+Then from the Irix machine(s):
+<literallayout class="monospaced">
+cd &sr;/sgi32
+../src/configure <replaceable>options</replaceable>
+cd &sr;/sgi64
+../src/configure --enable-64bit <replaceable>options</replaceable>
+</literallayout>
 </para>
+
+<para>
+There are many options to the configure command in addition to the
+<option>--with-thirdparty</option> and
+<option>--enable-package</option> options you have already seen.
+<xref linkend="appendix"/> lists many of them.
+</para>
+
 </listitem>
+
 <listitem>
 <para>
-Run GNU make in the <replaceable>build dir</replaceable> directory.
-</para>
-<para>
-To run GNU make, simply type "make" or "gmake", depending
-on how the command for GNU make is spelled on the target
-install machine:
-</para>
-
-<literallayout>
-cd <replaceable>build dir</replaceable>
-gmake
+Run (GNU) make from the directory used previously when running
+configure (e.g. &sr;/linux, &sr;/sgi32, or &sr;/sgi64). Note
+that the <quote>configure</quote> directory will be called
+<replaceable>build_dir</replaceable> from now on.
+<literallayout class="monospaced">
+cd <replaceable>build_dir</replaceable>
+make
 </literallayout>
-
-<para>
-Just like configure, GNU make has some useful options.  The 
-"number of jobs" option, is the most commonly used option
-for building SCIRun : 
+Be sure that <command>make</command> invokes GNU make.  GNU make may
+be named <command>gmake</command> or <command>gnumake</command> on
+your system.
 </para>
 
-<literallayout>
-gmake -j <replaceable>num jobs</replaceable>
+<para>
+For a multiprocessor system you can use GNU make's <option>-j</option>
+option to reduce the build time:
+<literallayout class="monospaced">
+make -j <replaceable>N</replaceable>
 </literallayout>
-
-<para>
-Where <replaceable>num jobs</replaceable> is an integer. If the target
-install machine has multiple processors, setting
-<replaceable>num jobs</replaceable> to the number of processors
-available uses all the processors to build SCIRun 
-in parallel, often significantly speeding up the time to
-build SCIRun. 
-</para>
-
-<para>
-Additional options for GNU make can be found on this website
-<ulink url="http://www.gnu.org/manual/make/html_mono/make.html#SEC92">http://www.gnu.org/manual/make/html_mono/make.html#SEC92</ulink>
+where <replaceable>N</replaceable> is the number of processors
+available for use by make.  Using this option on a multiprocessor
+machine will often significantly reduce the time to build &sr;.
 </para>
 </listitem>
 </orderedlist>
+
+</section>
+
+<section id="dyncomp">
+
+<title id="dyncomptitle">Dynamic Compilation</title> 
+
+<para>Before executing &sr; you
+should be aware of a feature called <firstterm>Dynamic
+Compilation</firstterm>.</para> 
+
+<para>Dynamic compilition is a technique used by &sr; that discovers
+and generates code for the data types and algorithms used by modules
+in your networks.  This is done at runtime and is done once for each
+new data type and algorithm encountered.  This technique provides a
+number of benefits not discussed here.</para>
+
+<para>By default, code generated by dynamic compilation is stored in
+the directory
+<filename><replaceable>build_dir</replaceable>/on-the-fly-libs</filename>.
+The location of dynamically generated code can be changed (and doing
+so provides a number of benefits&mdash;see below) by setting
+the value of the environment variable
+<envar>SCIRUN_ON_THE_FLY_LIBS_DIR</envar> to the desired directory, for
+example:
+<literallayout class="monospaced">
+SCIRUN_ON_THE_FLY_LIBS_DIR=$HOME/on-the-fly-libs; export SCIRUN_ON_THE_FLY_LIBS_DIR
+</literallayout>
+for Bourne-like shells (sh, ksh, bash, etc.) or
+<literallayout class="monospaced">
+setenv SCIRUN_ON_THE_FLY_LIBS_DIR $HOME/on-the-fly-libs
+</literallayout>
+for csh-like shells.
+</para> 
+
+<para>It can also be changed by setting the value of this variable in
+your <filename>.scirunrc</filename>
+file. Your <filename>.scirunrc</filename> file would contain, for example:
+<literallayout class="monospaced">
+SCIRUN_ON_THE_FLY_LIBS_DIR=/home/me/on-the-fly-libs
+</literallayout>
+Your <filename>.scirunrc</filename> file is read by &sr; at startup.
+</para>
+
+<para>Customizing the value of this variable for each &sr; user has
+the following benefits:
+<itemizedlist>
+<listitem>
+<para>It allows multiple users to run the same instance of &sr; (at
+the same time) without worrying about dynamic compilation conflicts.
+For example, by specifying an <filename>on-the-fly-libs</filename>
+directory in their home directory, a user can run the same shared
+&sr; installed in <filename>/usr/local</filename> that another user
+is already running.</para>
+</listitem>
+<listitem>
+<para>It allows a <filename>/usr/local</filename> installation of &sr;
+to be secure by not requiring that
+<filename>/usr/local/&hellip;/on-the-fly-libs</filename> be writable by
+all (which is considered a potential security risk).</para>
+</listitem>
+<listitem>
+<para>It allows greater debugging and multiple build support by
+allowing the user to change dynamically compiled code locations
+between instances of &sr;.</para>
+</listitem>
+</itemizedlist>
 </para>
 </section>
 
 <section>
-<title>Running SCIRun</title>
-<para>
-After a successful build, there will be an executable in
-the <replaceable>build dir</replaceable> directory named "scirun".  Running
-this will open the SCIRun network editor window and start a
-console (called the SCIRun console) in the shell where scirun
-was started from. 
-</para>   
-<para>
-If the window does not appear, note any errors
-displayed in the SCIRun console and see the getting
-help section below.  Of course, it might just be
-hiding behind other windows on the desktop!
-</para>
+<title>Starting &sr;</title>
+
+<para> After a successful build, <replaceable>build_dir</replaceable>
+will contain the <filename>scirun</filename> executable. To start &sr;
+type <command>./scirun</command>.  &sr;'s network editor window should
+appear and the &sr; shell should start.</para>
+
+<para>If the window does not appear note any errors displayed in the
+&sr; console and see <xref endterm="helptitle"
+linkend="help"/>.</para>
+
+<para>See &sr;'s <ulink
+url="../../User/Tutorial/index.html"><citetitle>&sr;
+Tutorial</citetitle></ulink> for an introduction to the use of
+&sr;.  The tutorial uses the sample data sets previously downloaded.</para>
+
+<para>See the <ulink
+url="../../User/Guide/usersguide/index.html"><citetitle>&sr; Users
+Guide</citetitle></ulink> for particulars on the use of &sr;.</para>
 </section>
 
-<section>
-<title>Additional Documentation</title>
-<para>
-Additional Documentation about SCIRun can be obtained
-<ulink url="http://software.sci.utah.edu/software/doc/index.html">
-online.</ulink>
-</para>
-</section>
-
-<section>
-<title>Getting Help</title>
-<para>
-There is a mailing list available for asking questions about
-using or installing SCIRun or to get help with resolving a problem.
-To subscribe to the mailing list, send email to:
-</para>
+<section id="help">
+<title id="helptitle">Getting Help</title>
 
 <para>
-<email>majordomo@sci.utah.edu</email>
-</para>
-
-<para>
-with the following in the body of the message (no subject):
-</para>
-
-<literallayout>
+Subscribe to the &sr; users list.  Use it to get answers to your
+installation and use questions.  To subscribe send email to:
+<email>majordomo@sci.utah.edu</email> with the following in the body
+of the message (no subject):
+<literallayout class="monospaced">
 subscribe scirun-users
 </literallayout>
-
-<para>
-To use the mailing list, simply send your question or problem
-as an email to the list:
 </para>
 
-<para>
-<email>scirun-users@sci.utah.edu</email>
-</para>
+<para> To ask a question send email to:
+<email>scirun-users@sci.utah.edu</email></para>
 
 <para>
-To aid in problem resolution, include a verbatim (cut and paste) copy of
-the errors displayed (if any).  Also include a short description of
-what you we're doing (running a network, building the tree, etc.) and
-which version of SCIRun you have.
+Be sure to include a verbatim (cut and paste) copy of any errors
+displayed.  Also include a short description of what you we're doing
+(running a network, building the tree, etc.) and which version of &sr;
+you have.
 </para>
+
+<para>See also the <ulink
+url="../../FAQBook/index.html">FAQs</ulink></para>
+
 </section>
 
 </chapter>

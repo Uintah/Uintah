@@ -22,7 +22,6 @@
   "http://www.oasis-open.org/docbook/xml/4.0/docbookx.dtd" [
 <!ENTITY quickstart SYSTEM "quickstart.xml">
 <!ENTITY inst SYSTEM "inst.xml">
-<!ENTITY thirdparty SYSTEM "thirdparty.xml">
 <!ENTITY requirements  SYSTEM "requirements.xml">
 <!ENTITY recommendations SYSTEM "recommendations.xml">
 <!ENTITY appendix SYSTEM "appendix.xml">
@@ -31,12 +30,9 @@
 ]>
 
 <book id="main">
-  <bookinfo>
-  </bookinfo>
   <title>Installation Guide</title>
   &quickstart;
   &inst;
-  &thirdparty;
   &appendix;
   &cvs;
 </book>
