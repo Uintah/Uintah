@@ -59,6 +59,16 @@ using namespace SCITeem;
 
 namespace Volume {
 
+
+inline double
+CLAMP(double x, double l, double u)
+{
+  if (x < l) return l;
+  if (x > u) return u;
+  return x;
+}
+
+
 class Widget
 {
 public:
@@ -620,8 +630,41 @@ RectangleWidget::pick (int ix, int iy, int w, int h)
 
 
 void
-RectangleWidget::move (int obj, int x, int y, int w, int h)
+RectangleWidget::move (int obj, int ix, int iy, int w, int h)
 {
+  const double x = ix / (double)w;
+  const double y = iy / (double)h;
+  
+  switch (selected_)
+  {
+  case 2:
+    width_ = width_ + left_x_ - x;
+    left_x_ = x;
+    height_ = height_ + left_y_ - y;
+    left_y_ = y;
+    break;
+
+  case 3:
+    width_ = x - left_x_;
+    height_ = height_ + left_y_ - y;
+    left_y_ = y;
+    break;
+
+  case 4:
+    width_ = x - left_x_;
+    height_ = y - left_y_;
+    break;
+
+  case 5:
+    width_ = width_ + left_x_ - x;
+    left_x_ = x;
+    height_ = y - left_y_;
+    break;
+
+  case 6:
+    offset_ = CLAMP((x - left_x_) / width_, 0.0, 1.0);
+    break;
+  }
 }
 
 
