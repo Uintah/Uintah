@@ -515,7 +515,7 @@ Properties::reComputeProps(const ProcessorGroup*,
 	      double cmw = 12.0;
 	      double opl = 3.0;
 	      double factor = 0.01;
-	      if (inStream.d_mixVars[0] > 0.06)
+	      if (inStream.d_mixVars[0] > 0.1)
 		sootFV[currCell] = c3*bc*cmw/rhosoot*factor;
 	      else
 		sootFV[currCell] = 0.0;
