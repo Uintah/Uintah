@@ -284,3 +284,80 @@ Camera::updatePosition( Stealth & stealth,
   }
 }
 
+void
+Camera::moveForwardOrBack( double amount )
+{
+  Vector forward( direction );
+  forward.normalize();
+
+  eye    += forward * amount;
+  lookat += forward * amount;
+  setup();
+}
+
+void
+Camera::moveVertically( double amount )
+{
+  Vector theUp( u );
+  theUp.normalize();
+
+  eye    += theUp * amount;
+  lookat += theUp * amount;
+  setup();
+}
+
+void
+Camera::moveLaterally( double amount )
+{
+  Vector side( v );
+  side.normalize();
+
+  eye    += side * amount;
+  lookat += side * amount;
+  setup();
+}
+
+void
+Camera::changePitch( double amount )
+{
+  Vector side( v );
+  side.normalize();
+
+  Transform t;
+  t.post_translate( Vector(eye) );
+  t.post_rotate( amount, side );
+  t.post_translate( Vector(-eye) );
+
+  Point old_lookat = lookat;
+  Point new_lookat = t.project( lookat );
+
+  lookat = new_lookat;
+  setup();
+
+  Vector new_forward( direction );
+  new_forward.normalize();
+
+  if( Dot( new_forward, up ) > .9 || Dot( new_forward, up ) < -.9 )
+    {
+      // We have pitched up or down too much.  Reset eye to before
+      // this last pitch adjustment.  Tell stealth to stop pitching.
+      lookat = old_lookat;
+      setup();
+    }
+}
+
+void
+Camera::changeFacing( double amount )
+{
+  Vector theUp( u );
+  Transform t;
+
+  theUp.normalize();
+
+  t.post_translate( Vector(eye) );
+  t.post_rotate( amount, theUp );
+  t.post_translate( Vector(-eye) );
+
+  lookat = t.project( lookat );
+  setup();
+}

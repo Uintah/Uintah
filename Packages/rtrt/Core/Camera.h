@@ -48,16 +48,15 @@ public:
     void get_viewplane(Vector& u, Vector& v) const;
     virtual void setup();
     void print();
-    inline const Point& get_eye() const {
-	return eye;
-    }
 
+    inline const Point& get_eye() const { return eye; }
     // Returns 2 points on either side of the camera at 2*separation distance.
     void get_ears( Point & left, Point & right, double separation ) const;
 
     inline bool operator != (const Camera& c) const {
 	return eye != c.eye || lookat != c.lookat || up != c.up || fov != c.fov || eyesep != c.eyesep;
     }
+
     void set_lookat(const Point&);
     Point get_lookat() const;
     void set_fov(double fov);
@@ -75,6 +74,15 @@ public:
 
     void followPath( Stealth & stealth );
     void flatten(); // reset pitch to 0 and roll to 0.(note: no roll currently)
+
+
+    // Location/Look At update functions that most likely will
+    // (should) be called by the spaceball input:
+    void moveForwardOrBack( double amount );
+    void moveVertically( double amount );
+    void moveLaterally( double amount );
+    void changePitch( double amount );
+    void changeFacing( double amount );
 
 };
 
