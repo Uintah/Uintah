@@ -123,10 +123,6 @@ WARNING
      
       //////////
       // Insert Documentation Here:
-      virtual void carryForward(const DataWarehouseP& from) = 0;
-
-      //////////
-      // Insert Documentation Here:
       virtual void scheduleParticleRelocation(const LevelP& level,
 					      SchedulerP& sched,
 					      DataWarehouseP& dw,
@@ -187,6 +183,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.31  2000/06/16 19:46:46  sparker
+// Output interface doesn't need old_dw
+// DataWarehouse no longer needs carryForward
+//
 // Revision 1.30  2000/06/16 05:03:11  sparker
 // Moved timestep multiplier to simulation controller
 // Fixed timestep min/max clamping so that it really works now

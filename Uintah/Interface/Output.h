@@ -55,7 +55,6 @@ WARNING
       // Insert Documentation Here:
       virtual void finalizeTimestep(double t, double delt, const LevelP&,
 				    SchedulerP&,
-				    DataWarehouseP& old_dw,
 				    DataWarehouseP&) = 0;
 
    private:
@@ -67,6 +66,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.9  2000/06/16 19:46:46  sparker
+// Output interface doesn't need old_dw
+// DataWarehouse no longer needs carryForward
+//
 // Revision 1.8  2000/05/30 20:19:41  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch
