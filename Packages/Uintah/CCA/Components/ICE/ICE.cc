@@ -1264,8 +1264,8 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
     double dCFL = d_CFL;
     static double TIME = 0.;
 
-    for (int m = 0; m < d_sharedState->getNumMatls(); m++) {
-      Material* matl = d_sharedState->getMaterial(m);
+    for (int m = 0; m < d_sharedState->getNumICEMatls(); m++) {
+      Material* matl = d_sharedState->getICEMaterial(m);
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
       int indx= matl->getDWIndex(); 
@@ -4038,6 +4038,9 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
                        (mass_new[c]);
         vel_CC[c]    = (vel_L_ME + vel_advected);
 //      vel_CC[c] = (mom_L_ME[c] + qV_advected[c])/mass_new[c] ; 
+//        if(rho_CC[c] < 1.e-2){
+//            vel_CC[c] = Vector(0.,0.,0.);
+//        }
       }
       
 /*`==========TESTING==========*/
