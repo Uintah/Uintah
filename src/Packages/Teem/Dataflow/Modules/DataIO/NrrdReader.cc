@@ -267,8 +267,11 @@ void NrrdReader::execute()
   
 
   string ax(axis_.get());
-  ax.erase(ax.begin(), ax.begin() + 4); // get rid of the word axis
-  int axis = atoi(ax.c_str());
+  int axis = 0;
+  if (ax.size()) {
+    ax.erase(ax.begin(), ax.begin() + 4); // get rid of the word axis
+    axis = atoi(ax.c_str());
+  }
 
   if (axis != 0) {
     // purmute so that 0 is the tuple axis
