@@ -4,14 +4,18 @@
 
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Barrier.h>
-#include "Array1.h"
-#include "params.h"
+#include <Packages/rtrt/Core/Array1.h>
+#include <Packages/rtrt/Core/params.h>
+
+namespace SCIRun {
+  class Vector;
+  class Point;
+}
 
 namespace rtrt {
 
-using SCIRun::Runnable;
-using SCIRun::Barrier;
-
+  using namespace SCIRun;
+  
 //class Barrier;
 class Color;
 class Dpy;
@@ -19,8 +23,6 @@ class HitInfo;
 class Ray;
 class Scene;
 class Light;
-class Point;
-class Vector;
 class Object;
 class Stats;
 class PerProcessorContext;

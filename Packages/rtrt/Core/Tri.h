@@ -2,8 +2,8 @@
 #ifndef TRI_H
 #define TRI_H 1
 
-#include "Object.h"
-#include "Point.h"
+#include <Packages/rtrt/Core/Object.h>
+#include <Core/Geometry/Point.h>
 
 namespace rtrt {
 

@@ -1,12 +1,12 @@
 
-#include "Rect.h"
-#include "Ray.h"
-#include "Light.h"
-#include "HitInfo.h"
-#include "BBox.h"
-#include "MiscMath.h"
-#include "Stats.h"
-#include "UV.h"
+#include <Packages/rtrt/Core/Rect.h>
+#include <Packages/rtrt/Core/Ray.h>
+#include <Packages/rtrt/Core/Light.h>
+#include <Packages/rtrt/Core/HitInfo.h>
+#include <Packages/rtrt/Core/BBox.h>
+#include <Packages/rtrt/Core/MiscMath.h>
+#include <Packages/rtrt/Core/Stats.h>
+#include <Packages/rtrt/Core/UV.h>
 
 using namespace rtrt;
 
@@ -14,9 +14,9 @@ Rect::Rect(Material* matl, const Point& cen, const Vector& u,
 	   const Vector& v)
     : Object(matl, this), cen(cen), u(u), v(v)
 {
-    n=u.cross(v);
+    n=Cross(u, v);
     n.normalize();
-    d=n.dot(cen);
+    d=Dot(n, cen);
     double l1=1./u.length2();
     double l2=1./v.length2();
 
@@ -27,8 +27,8 @@ Rect::Rect(Material* matl, const Point& cen, const Vector& u,
 
     this->u*=l1;
     this->v*=l2;
-    d1=this->u.dot(cen);
-    d2=this->v.dot(cen);
+    d1=Dot(this->u, cen);
+    d2=Dot(this->v, cen);
 }
 
 Rect::~Rect()
@@ -41,17 +41,17 @@ void Rect::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
     st->rect_isect++;
     Vector dir(ray.direction());
     Point orig(ray.origin());
-    double dt=dir.dot(n);
+    double dt=Dot(dir, n);
     if(dt < 1.e-6 && dt > -1.e-6)
 	return;
-    double t=(d-n.dot(orig))/dt;
+    double t=(d-Dot(n, orig))/dt;
     if(hit.was_hit && t>hit.min_t)
 	return;
     Point p(orig+dir*t);
-    double a1=u.dot(p)-d1;
+    double a1=Dot(u, p)-d1;
     if(a1 > 1 || a1 < -1)
 	return;
-    double a2=v.dot(p)-d2;
+    double a2=Dot(v, p)-d2;
     if(a2 > 1 || a2 < -1)
 	return;
     hit.hit(this, t);
@@ -69,10 +69,10 @@ void Rect::light_intersect(Light* light, const Ray& ray,
     st->rect_light_isect++;
     Vector dir(ray.direction());
     Point orig(ray.origin());
-    double dt=dir.dot(n);
+    double dt=Dot(dir, n);
     if(dt < 1.e-4 && dt > -1.e-4)
 	return;
-    double t=(d-n.dot(orig))/dt;
+    double t=(d-Dot(n, orig))/dt;
 
 
     if(t<=1.e-6 || t>dist)
@@ -83,10 +83,10 @@ void Rect::light_intersect(Light* light, const Ray& ray,
 
     double delta=light->radius*t/dist;
 
-    double a1=un.dot(pv);
+    double a1=Dot(un, pv);
     if(a1 > du+delta || a1 < -(du+delta))
 	return;
-    double a2=vn.dot(pv);
+    double a2=Dot(vn, pv);
     if(a2 > dv+delta || a2 < -(dv+delta))
 	return;
     if(a1<du && a1>-du && a2<dv && a2>-dv){
@@ -126,7 +126,7 @@ void Rect::compute_bounds(BBox& bbox, double offset)
 void Rect::uv(UV& uv, const Point& hitpos, const HitInfo&)
 {
     Vector p(hitpos-cen);
-    double uu=(un.dot(p)*dv+1)*0.5;
-    double vv=(vn.dot(p)*du+1)*0.5;
+    double uu=(Dot(un, p)*dv+1)*0.5;
+    double vv=(Dot(vn, p)*du+1)*0.5;
     uv.set(uu,vv);
 }

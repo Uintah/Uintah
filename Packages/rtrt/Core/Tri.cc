@@ -1,12 +1,12 @@
 
-#include "Tri.h"
-#include "Ray.h"
-#include "HitInfo.h"
-#include "BBox.h"
-#include "Light.h"
-#include "MiscMath.h"
+#include <Packages/rtrt/Core/Tri.h>
+#include <Packages/rtrt/Core/Ray.h>
+#include <Packages/rtrt/Core/HitInfo.h>
+#include <Packages/rtrt/Core/BBox.h>
+#include <Packages/rtrt/Core/Light.h>
+#include <Packages/rtrt/Core/MiscMath.h>
 #include <Core/Thread/Mutex.h>
-#include "Stats.h"
+#include <Packages/rtrt/Core/Stats.h>
 #include <iostream>
 
 using namespace rtrt;
@@ -18,27 +18,37 @@ Tri::Tri(Material* matl, const Point& p1, const Point& p2,
 {
     Vector v1(p2-p1);
     Vector v2(p3-p1);
-    n=v1.cross(v2);
+    n=Cross(v1, v2);
+#if 1
+    double l = n.length2();
+    if (l > 1.e-16) {
+      bad = false;
+      n *= 1/sqrt(l);
+    } else {
+      bad = true;
+    }
+#else
     double l=n.normalize();
     if(l<1.e-8){
 	cerr << "Bad normal? " << n << '\n';
 	cerr << "l=" << l << '\n';
-	cerr << "before: " << v1.cross(v2) << ", after: " << n << '\n';
+	cerr << "before: " << Cross(v1, v2) << ", after: " << n << '\n';
 	cerr << "p1=" << p1 << ", p2=" << p2 << ", p3=" << p3 << '\n';
 	bad=true;
     } else {
 	bad=false;
     }
-    d=n.dot(p1);
+#endif
+    d=Dot(n, p1);
     e1=p3-p2;
     e2=p1-p3;
     e3=p2-p1;
     e1l=e1.normalize();
     e2l=e2.normalize();
     e3l=e3.normalize();
-    e1p=e1.cross(n);
-    e2p=e2.cross(n);
-    e3p=e3.cross(n);
+    e1p=Cross(e1, n);
+    e2p=Cross(e2, n);
+    e3p=Cross(e3, n);
 }
 
 Tri::~Tri()
@@ -56,17 +66,17 @@ void Tri::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
     Vector dir(ray.direction());
     Vector o(p1-ray.origin());
 
-    Vector e1e2(e1.cross(e2));
-    double det=e1e2.dot(dir);
+    Vector e1e2(Cross(e1, e2));
+    double det=Dot(e1e2, dir);
     if(det>1.e-9 || det < -1.e-9){
 	double idet=1./det;
 
-	Vector DX(dir.cross(o));
-	double A=-DX.dot(e2)*idet;
+	Vector DX(Cross(dir, o));
+	double A=-Dot(DX, e2)*idet;
 	if(A>0.0 && A<1.0){
-	    double B=DX.dot(e1)*idet;
+	    double B=Dot(DX, e1)*idet;
 	    if(B>0.0 && A+B<1.0){
-		double t=e1e2.dot(o)*idet;
+		double t=Dot(e1e2, o)*idet;
 		hit.hit(this, t);
 		st->tri_hit++;
 	    }
@@ -88,10 +98,10 @@ void Tri::light_intersect(Light* light, const Ray& ray,
     st->tri_light_isect++;
     Vector dir(ray.direction());
     Point orig(ray.origin());
-    double dt=dir.dot(n);
+    double dt=Dot(dir, n);
     if(dt < 1.e-9 && dt > -1.e-9)
 	return;
-    double t=(d-n.dot(orig))/dt;
+    double t=(d-Dot(n, orig))/dt;
     if(t<1.e-9)
 	return;
     if(t>dist)
@@ -104,22 +114,22 @@ void Tri::light_intersect(Light* light, const Ray& ray,
     }
 
     Vector pp1(p-p2);
-    double c1=pp1.dot(e1);
+    double c1=Dot(pp1, e1);
     if(c1<-delta || c1>e1l+delta)
 	return;
-    double d1=pp1.dot(e1p);
+    double d1=Dot(pp1, e1p);
 
     Vector pp2(p-p3);
-    double c2=pp2.dot(e2);
+    double c2=Dot(pp2, e2);
     if(c2<-delta || c2>e2l+delta)
 	return;
-    double d2=pp2.dot(e2p);
+    double d2=Dot(pp2, e2p);
 
     Vector pp3(p-p1);
-    double c3=pp3.dot(e3);
+    double c3=Dot(pp3, e3);
     if(c3<-delta || c3>e3l+delta)
 	return;
-    double d3=pp3.dot(e3p);
+    double d3=Dot(pp3, e3p);
 
 #if 0
 
@@ -224,9 +234,9 @@ void Tri::compute_bounds(BBox& bbox, double offset)
     e1.normalize();
     e2.normalize();
     e3.normalize();
-    double sina3=Abs(e1.cross(e2).length());
-    double sina2=Abs(e3.cross(e1).length());
-    double sina1=Abs(e2.cross(e3).length());
+    double sina3=Abs(Cross(e1, e2).length());
+    double sina2=Abs(Cross(e3, e1).length());
+    double sina1=Abs(Cross(e2, e3).length());
     Point p3p(p3+(e1-e2)*(offset/sina3));
     Point p2p(p2+(e3-e1)*(offset/sina2));
     Point p1p(p1+(e2-e3)*(offset/sina1));

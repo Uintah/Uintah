@@ -2,11 +2,13 @@
 #ifndef RAY_H
 #define RAY_H 1
 
-#include "Point.h"
-#include "Vector.h"
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
 
 namespace rtrt {
 
+  using namespace SCIRun;
+  
 class Ray {
     Point o;
     Vector d;

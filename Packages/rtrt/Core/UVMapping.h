@@ -2,10 +2,15 @@
 #ifndef UVMAPPING_H
 #define UVMAPPING_H 1
 
+namespace SCIRun {
+  class Point;
+}
+
 namespace rtrt {
+
+  using namespace SCIRun;
   
 class HitInfo;
-class Point;
 class UV;
 
 class UVMapping {

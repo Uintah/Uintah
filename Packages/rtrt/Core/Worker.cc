@@ -30,10 +30,7 @@
 #endif
 
 using namespace rtrt;
-using SCIRun::Thread;
-//using SCIRun:Mutex;
-//using SCIRun:Barrier;
-using SCIRun::Time;
+using namespace SCIRun;
 using std::cerr;
 using std::endl;
 

@@ -1,9 +1,9 @@
 #ifndef __RTRT_VOLUMEVIS_H__
 #define __RTRT_VOLUMEVIS_H__
 
+#include <Core/Geometry/Point.h>
 #include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/Material.h>
-#include <Packages/rtrt/Core/Point.h>
 #include <Packages/rtrt/Core/BrickArray3.h>
 #include <Packages/rtrt/Core/ScalarTransform1D.h>
 #include <Packages/rtrt/Core/Array1.h>
@@ -11,6 +11,8 @@
 
 namespace rtrt {
 
+  using namespace SCIRun;
+  
 #ifndef MAXUNSIGNEDSHORT
 #define MAXUNSIGNEDSHORT 65535
 #endif

@@ -1,23 +1,23 @@
-#include "Camera.h"
-#include "Light.h"
-#include "Scene.h"
-#include "Point.h"
-#include "Vector.h"
-#include "Transform.h"
-#include "Group.h"
-#include "Sphere.h"
-#include "Rect.h"
-#include "Phong.h"
-#include "MetalMaterial.h"
-#include "LambertianMaterial.h"
-#include "CoupledMaterial.h"
-#include "DielectricMaterial.h"
-#include "Checker.h"
+#include <Packages/rtrt/Core/Camera.h>
+#include <Packages/rtrt/Core/Light.h>
+#include <Packages/rtrt/Core/Scene.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Transform.h>
+#include <Packages/rtrt/Core/Group.h>
+#include <Packages/rtrt/Core/Sphere.h>
+#include <Packages/rtrt/Core/Rect.h>
+#include <Packages/rtrt/Core/Phong.h>
+#include <Packages/rtrt/Core/MetalMaterial.h>
+#include <Packages/rtrt/Core/LambertianMaterial.h>
+#include <Packages/rtrt/Core/CoupledMaterial.h>
+#include <Packages/rtrt/Core/DielectricMaterial.h>
+#include <Packages/rtrt/Core/Checker.h>
 #include <iostream>
 #include <math.h>
-#include "string.h"
+#include <string.h>
 #include <stdio.h>
-#include "Tri.h"
+#include <Packages/rtrt/Core/Tri.h>
 
 using namespace rtrt;
 

@@ -1,9 +1,9 @@
 
-#include "Noise.h"
-#include "Point.h"
-#include "Vector.h"
-#include "Spline.h"
-#include "Random.h"
+#include <Packages/rtrt/Core/Noise.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Packages/rtrt/Core/Spline.h>
+#include <Packages/rtrt/Core/Random.h>
 
 using namespace rtrt;
 

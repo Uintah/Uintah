@@ -13,8 +13,7 @@
 
 namespace rtrt {
 
-using SCIRun::WorkQueue;
-//using namespace SCIRun;
+  using namespace SCIRun;
 
 class Object;
 class Camera;

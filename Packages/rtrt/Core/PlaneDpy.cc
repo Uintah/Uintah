@@ -22,7 +22,7 @@ namespace rtrt {
 PlaneDpy::PlaneDpy(const Vector& n, const Point& cen)
     : n(n)
 {
-    d=n.dot(cen);
+    d=Dot(n, cen);
     xres=300;
     yres=300;
 }
