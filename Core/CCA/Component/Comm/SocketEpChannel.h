@@ -15,9 +15,21 @@
   University of Utah. All Rights Reserved.
 */
 
+/*
+ *  SocketEpChannel.h: Socket implemenation of Ep Channel
+ *
+ *  Written by:
+ *   Kosta Damevski and Keming Zhang
+ *   Department of Computer Science
+ *   University of Utah
+ *   Jun 2003
+ *
+ *  Copyright (C) 1999 SCI Group
+ */
 
-#ifndef SOCKET_EP_CHANNEL_H
-#define SOCKET_EP_CHANNEL_H 
+
+#ifndef CORE_CCA_COMPONENT_COMM_SOCKETEPCHANNEL_H
+#define CORE_CCA_COMPONENT_COMM_SOCKETEPCHANNEL_H
 
 #include <Core/CCA/Component/Comm/EpChannel.h>
 
@@ -60,12 +72,21 @@ namespace SCIRun {
     // Handler table size
     int table_size;
 
-    SocketMessage* msg; 
+    /////////////
+    // One message is associated with a channel, this is not reasonalbe!!!
+    SocketMessage* msg;
+ 
+    /////////////
+    // If we can kill the accept_thread expicitly, we keep this field,
     Thread *accept_thread;
 
+    /////////////
+    // Server context object
     void *object;
-    bool dead;
 
+    /////////////
+    // flag to indicate if the SpChannel is dead
+    bool dead;
   };
 }// namespace SCIRun
 

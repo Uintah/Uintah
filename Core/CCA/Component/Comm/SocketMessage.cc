@@ -15,22 +15,42 @@
   University of Utah. All Rights Reserved.
 */
 
-#include <Core/CCA/Component/Comm/SocketMessage.h>
+/*
+ *  SocketMessage.cc: Socket implemenation of Message
+ *
+ *  Written by:
+ *   Kosta Damevski and Keming Zhang
+ *   Department of Computer Science
+ *   University of Utah
+ *   Jun 2003
+ *
+ *  Copyright (C) 1999 SCI Group
+ */
+
+
+
+#include <stdlib.h>
+#include <string>
+#include <sstream>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <errno.h>
+#include <unistd.h>
+
+
+#include <iostream>
 #include <Core/CCA/Component/Comm/CommError.h>
+#include <Core/CCA/Component/Comm/SocketMessage.h>
 #include <Core/CCA/Component/Comm/SocketEpChannel.h>
 #include <Core/CCA/Component/Comm/SocketSpChannel.h>
 #include <Core/CCA/Component/PIDL/URL.h>
 
-#include <string>
-
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <errno.h>
-
-#include <iostream>
-
 using namespace std;
 using namespace SCIRun;
+
+
+string SocketMessage::sitetag;
+string SocketMessage::hostname;
 
 SocketMessage::SocketMessage(int sockfd, void *msg)
 {
@@ -38,6 +58,7 @@ SocketMessage::SocketMessage(int sockfd, void *msg)
   this->sp=NULL;
   this->msg=msg;
   this->sockfd=sockfd;
+  this->object=NULL;
   msg_size=0;
   //if(this->msg==NULL) createMessage();
 }
@@ -63,6 +84,7 @@ SocketMessage::createMessage()  {
   msg=realloc(msg, INIT_SIZE);
   capacity=INIT_SIZE;
   msg_size=sizeof(long)+sizeof(int);
+  object=NULL;
 }
 
 void 
@@ -97,10 +119,19 @@ SocketMessage::marshalLong(const long *buf, int size){
 void 
 SocketMessage::marshalSpChannel(SpChannel* channel){
   SocketSpChannel * chan = dynamic_cast<SocketSpChannel*>(channel);
-  marshalBuf(&(chan->sockfd), sizeof(int));
+
+  //cerr<<"MarshaSp:"<<chan->ep_url<<endl;
+
+  //marshalBuf(&(chan->sockfd), sizeof(int));
   int urlSize=chan->ep_url.size(); 
   marshalBuf(&urlSize, sizeof(int));
   marshalBuf(chan->ep_url.c_str(), urlSize);
+
+  int tagSize=sitetag.size();
+  marshalBuf(&tagSize, sizeof(int));
+  marshalBuf(sitetag.c_str(), tagSize);
+
+  marshalBuf(&(chan->object), sizeof(int));
 }
 
 void 
@@ -110,17 +141,10 @@ SocketMessage::sendMessage(int handler){
   
   if(sockfd==-1) sockfd=sp->sockfd;
   if(sockfd==-1) throw CommError("SocketMessage::sendMessage", -1);
-  /*
-  //print the msg
-  printf("\nMsg=");
-  for(int i=0; i<msg_size; i++){
-    printf("%4u",((unsigned char*)msg)[i]);
-  }
-  printf("\n\n");
-  */
 
-  if(sendall(sockfd, msg, &msg_size) == -1){ 
-      throw CommError("sendall", errno);
+  //cerr<<"SEND MSG (sid="<<sockfd<<"):"<<msg_size<<" bytes, handlerID="<<handler<<endl;
+  if(sendall(sockfd, msg, msg_size) == -1){ 
+      throw CommError("send", errno);
   }
 }
 
@@ -130,20 +154,19 @@ SocketMessage::waitReply(){
   if(sockfd==-1) throw CommError("waitReply", -1);
   int headerSize=sizeof(long)+sizeof(int);
   void *buf=malloc(headerSize);
-  int numbytes;
-  if ((numbytes=recv(sockfd, buf, headerSize, MSG_WAITALL)) == -1) {
+  if (recvall(sockfd, buf, headerSize) == -1) {
     throw CommError("recv", errno);
   }
   int id;
   memcpy(&msg_size, buf, sizeof(long));
   memcpy(&id, (char*)buf+sizeof(long), sizeof(int));
 
+  //cerr<<"WAITREPLY RECV MSG:"<<msg_size<<" bytes, handlerID="<<id<<endl;
+
   msg=realloc(msg, msg_size-headerSize);
-  if ((numbytes=recv(sockfd, msg, msg_size-headerSize, MSG_WAITALL)) == -1) {
+  if (recvall(sockfd, msg, msg_size-headerSize) == -1) {
     throw CommError("recv", errno);
   }
-
-  if(numbytes!=msg_size-headerSize) throw CommError("waitReply: numbytes!=msg_size-headerSize", -1);
   
   /*
   //print the msg
@@ -159,8 +182,6 @@ SocketMessage::waitReply(){
   */
   free(buf);
   
-
-
   msg_size=0;
 }
 
@@ -201,7 +222,7 @@ SocketMessage::unmarshalLong(long *buf, int size){
 void 
 SocketMessage::unmarshalSpChannel(SpChannel* channel){
   SocketSpChannel * chan = dynamic_cast<SocketSpChannel*>(channel);
-  unmarshalBuf(&(chan->sockfd), sizeof(int));
+  //unmarshalBuf(&(chan->sockfd), sizeof(int));
   int urlSize;
   unmarshalBuf(&urlSize, sizeof(int));
   char *buf=new char[urlSize+1];
@@ -209,11 +230,36 @@ SocketMessage::unmarshalSpChannel(SpChannel* channel){
   buf[urlSize]='\0';
   chan->ep_url=buf;
   delete []buf;
+  //cerr<<"UnmarshaSp:"<<chan->ep_url<<endl;
+
+
+  int tagSize;
+  unmarshalBuf(&tagSize, sizeof(int));
+  buf=new char[tagSize+1];
+  unmarshalBuf(buf, tagSize);
+  buf[tagSize]='\0';
+  string sp_sitetag=buf;
+  delete []buf;
+  //cerr<<"UnmarshaSp:"<<sp_sitetag<<endl;
+
+  marshalBuf(&object, sizeof(int));  
+
+  //if(!isLocal(sp_sitetag))
+
   chan->openConnection(URL(chan->ep_url));
+
+  //This is only a temporary solution
+  Message *msg=chan->getMessage();
+  msg->createMessage();
+  msg->sendMessage(-100);  //call deleteReference
+  msg->destroyMessage();
+  
+  ////////////////////////////////
 }
 
 void* 
 SocketMessage::getLocalObj(){
+  if(object!=NULL) return object;
   if(ep==NULL) return NULL; //throw CommError("SocketMessagegetLocalObj", -1);
   return ep->object; 
 }
@@ -242,21 +288,84 @@ SocketMessage::unmarshalBuf(void *buf, int fullsize){
 }
 
 
-int SocketMessage::sendall(int sockfd, void *buf, int *len)
+int 
+SocketMessage::sendall(int sockfd, void *buf, int len)
 {
   int total = 0;        // how many bytes we've sent
-  int bytesleft = *len; // how many we have left to send
   int n;
   
-  while(total < *len) {
-    n = send(sockfd, (char*)buf+total, bytesleft, 0);
+  while(total < len) {
+    n = send(sockfd, (char*)buf+total, len, 0);
     if (n == -1) { break; }
     total += n;
-    bytesleft -= n;
+    len -= n;
   }
-  
-  *len = total; // return number actually sent here
-  
   return n==-1?-1:0; // return -1 on failure, 0 on success
 } 
+
+
+int 
+SocketMessage::recvall(int sockfd, void *buf, int len)
+{
+  int total = 0;        // how many bytes we've recved
+  int n;
+  
+  while(total < len) {
+    n = recv(sockfd, (char*)buf+total, len, 0);
+    if (n == -1) { break; }
+    total += n;
+    len -= n;
+  }
+  if(n==-1) perror("recv");
+  return n==-1?-1:0; // return -1 on failure, 0 on success
+} 
+
+
+
+bool 
+SocketMessage::isLocal(const string& tag){
+  return tag==sitetag;
+}
+
+
+string
+SocketMessage::getHostname(){
+  return hostname;
+}
+
+void
+SocketMessage::setSiteTag(){
+  char *name=new char[128];
+  if(gethostname(name, 127)==-1){
+    throw CommError("gethostname", errno);
+  }
+  hostname=name;
+  delete []name;
+
+  pid_t pid=getpid();
+
+  ostringstream o;
+  o << hostname << ":" << pid;
+
+  sitetag=o.str();
+
+  //cerr<<"sitetag="<<sitetag<<endl;
+}
+
+string
+SocketMessage::getSiteTag(){
+  return sitetag;
+}
+
+
+void 
+SocketMessage::desplayMessage(){
+  //print the msg
+  printf("\nMsg=");
+  for(int i=0; i<msg_size; i++){
+    printf("%02x",((unsigned char*)msg)[i]);
+  }
+  printf("\n\n");
+}
+
 

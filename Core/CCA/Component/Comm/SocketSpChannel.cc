@@ -16,6 +16,20 @@
 */
 
 
+/*
+ *  SocketSpChannel.cc: Socket implemenation of Sp Channel
+ *
+ *  Written by:
+ *   Kosta Damevski and Keming Zhang
+ *   Department of Computer Science
+ *   University of Utah
+ *   Jun 2003
+ *
+ *  Copyright (C) 1999 SCI Group
+ */
+
+
+
 #include <iostream>
 #include <sstream>
 #include <unistd.h>
@@ -39,14 +53,18 @@ using namespace SCIRun;
 SocketSpChannel::SocketSpChannel() { 
   sockfd = -1;
   msg = NULL;
+  object=NULL;
 }
 
 SocketSpChannel::~SocketSpChannel(){
-  if(sockfd!=-1) close(sockfd);
+  /*  if(sockfd!=-1){
+    closeConnection();
+    }*/ 
   if(msg!=NULL) delete msg;
 }
 
 void SocketSpChannel::openConnection(const URL& url) {
+  if(sockfd!=-1) return;
   ep_url=url.getString();
   struct hostent *he;
   struct sockaddr_in their_addr; // connector's address information 
@@ -74,11 +92,13 @@ SpChannel* SocketSpChannel::SPFactory(bool deep) {
   //I am not sure about this yet.
   SocketSpChannel *new_sp=new SocketSpChannel(); 
   if(deep){
-    cerr<<"SPFactory(deep) is called\n";
     new_sp->openConnection(ep_url);
+    Message *msg=new_sp->getMessage();
+    msg->createMessage();
+    msg->sendMessage(-100);  //call deleteReference
+    msg->destroyMessage();
   }
   else{
-    cerr<<"SPFactory(non-deep) is called\n";
     new_sp->ep_url=ep_url;
     new_sp->sockfd=sockfd;
     msg=NULL; // should I copy msg too?
@@ -91,6 +111,7 @@ void SocketSpChannel::closeConnection() {
   msg->createMessage();
   msg->sendMessage(1);  //call deleteReference
   close(sockfd);
+  sockfd=-1;
 }
 
 Message* SocketSpChannel::getMessage() {
