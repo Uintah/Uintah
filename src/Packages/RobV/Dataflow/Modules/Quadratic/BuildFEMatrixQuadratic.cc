@@ -69,7 +69,7 @@ private:
   int gen;
   string lastBCFlag;
   int refnode;
-  QuadraticTetVolField<double>* qtv;
+  QuadraticTetVolField<int>* qtv;
   bit_vector bcArray;
   vector<pair<int, double> > dirichlet;
 
@@ -112,7 +112,7 @@ void BuildFEMatrixQuadratic::execute()
   if(!mesh.get_rep()){
     warning("No Data in port 1 field.");
     return;
-  } else if (mesh->get_type_name(-1) != "QuadraticTetVolField<double>") {
+  } else if (mesh->get_type_name(-1) != "QuadraticTetVolField<int>") {
     error("input must be a TetVol type, not a "+mesh->get_type_name(-1));
     return;
   }
@@ -130,9 +130,9 @@ void BuildFEMatrixQuadratic::execute()
   UseCond=UseCondGui.get();
 
   // keep a handle on the field.
-  qtv = dynamic_cast<QuadraticTetVolField<double>*>(mesh.get_rep());
+  qtv = dynamic_cast<QuadraticTetVolField<int>*>(mesh.get_rep());
   if (!qtv) {
-    error("failed dynamic cast to QuadraticTetVolField<double>*");
+    error("failed dynamic cast to QuadraticTetVolField<int>*");
     
     return;
   }
