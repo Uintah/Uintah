@@ -63,7 +63,6 @@
 // Standard lib includes
 #include <iostream>
 #include <assert.h>
-#include <limits>
 
 namespace SCIRun {
 
