@@ -387,7 +387,6 @@ OnDemandDataWarehouse::recvMPI(DataWarehouseP& old_dw,
 	 cerr << "RECV SGVAR NOTDONE\n";
 	 throw InternalError( "RECV SGVAR NOTDONE" );
       }
-   break;
    default:
       throw InternalError("recvMPI not implemented for "+label->getFullName(matlIndex, patch));
    } // end switch( label->getType() );
@@ -937,13 +936,21 @@ OnDemandDataWarehouse::put(const CCVariableBase& var, const VarLabel* label,
 {
   d_lock.writeLock();
    ASSERT(!d_finalized);
-
    // Error checking
    if(d_ccDB.exists(label, matlIndex, patch))
       throw InternalError("CC variable already exists: "+label->getName());
 
-   // Put it in the database
-   d_ccDB.put(label, matlIndex, patch, var.clone(), true);
+   IntVector low, high, size;
+   var.getSizes(low, high, size);
+   if(low != patch->getCellLowIndex() || high != patch->getCellHighIndex()){
+      cerr << "Warning, rewindowing array: " << label->getName() << " on patch " << patch->getID() << '\n';
+      CCVariableBase* newvar = var.clone();
+      newvar->rewindow(patch->getCellLowIndex(), patch->getCellHighIndex());
+      d_ccDB.put(label, matlIndex, patch, newvar, true);
+   } else {
+      // Put it in the database
+      d_ccDB.put(label, matlIndex, patch, var.clone(), true);
+   }
   d_lock.writeUnlock();
 }
 
@@ -1557,6 +1564,11 @@ OnDemandDataWarehouse::deleteParticles(ParticleSubset* delset)
 
 //
 // $Log$
+// Revision 1.54  2000/10/11 21:34:45  sparker
+// Workaround for put() bug (if there are ghostcells on the variable
+// put()ed, then put/get/sendMPI will do the wrong thing)  Currently
+// enabled only for CCVariables
+//
 // Revision 1.53  2000/10/10 05:13:31  sparker
 // Repaired (a) memory leak in particle relcation
 //
