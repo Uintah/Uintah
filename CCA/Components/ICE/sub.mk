@@ -12,7 +12,7 @@ SRCS       += \
        $(SRCDIR)/Diffusion.cc \
        $(SRCDIR)/BoundaryCond.cc \
        $(SRCDIR)/GeometryObject2.cc \
-       $(SRCDIR)/LODI.cc \
+       $(SRCDIR)/LODI2.cc \
        $(SRCDIR)/Turbulence.cc \
        $(SRCDIR)/SmagorinskyModel.cc \
        $(SRCDIR)/DynamicModel.cc \
