@@ -116,8 +116,9 @@ public:
 		const BBox& bbox, const BBox& tbox, bool alloc);
   virtual ~TextureBrickT();
   
-  GLenum tex_type() { return GLinfo<T>::type; }
-  void* tex_data(int c) { return data_[c]; }
+  virtual GLenum tex_type() { return GLinfo<T>::type; }
+  virtual void* tex_data(int c) { return data_[c]; }
+  
   T* data(int c) { return data_[c]; }
   
 protected:
