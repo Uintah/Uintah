@@ -19,7 +19,11 @@
 
 SRCDIR   := CCA/Components/VtkTest
 
-SUBDIRS := $(SRCDIR)/Renderer $(SRCDIR)/PolyDataMapper
+SUBDIRS := $(SRCDIR)/Renderer \
+	   $(SRCDIR)/PolyDataMapper \
+	   $(SRCDIR)/Actor \
+	   $(SRCDIR)/ContourFilter \
+	   $(SRCDIR)/StructuredPointsReader	
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
