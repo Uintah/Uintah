@@ -29,6 +29,7 @@
 	<save label="scalarSP"/>
 	<save label="densityCP"/>
 	<save label="viscosityCTS"/>
+	<checkpoint interval="0.01" cycle="2"/>
    </DataArchiver>
 
     <PhysicalConstants>
@@ -41,8 +42,8 @@
 	<Level>
 	    <Box label="1">
 	        <lower>[0,0,0]</lower>
-	        <upper>[.6,.6,.6]</upper>
-	        <resolution>[80,80,80]</resolution>
+	        <upper>[1.,1.,1.]</upper>
+	        <resolution>[100,100,100]</resolution>
                 <extraCells>[1,1,1]</extraCells>
 		<patches>[5,5,5]</patches>
 	    </Box>
@@ -111,7 +112,7 @@
 		    <RefPressure>0.0</RefPressure>
 		    <geom_object>
 		      <box label="topWall">
-			<min>[2,-1,-1]</min>
+			<min>[1,-1,-1]</min>
 			<max>[3,2,2]</max>
 		      </box>
 		      <box label="posY_xzWall">
