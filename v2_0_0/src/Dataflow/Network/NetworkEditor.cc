@@ -53,6 +53,7 @@
 #include <Core/GuiInterface/TCLstrbuff.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Thread/Thread.h>
+#include <Core/Util/sci_system.h>
 #include <fstream>
 #include <iostream>
 #include <stdio.h>
@@ -521,6 +522,13 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
 		     "  Check your paths and names and try again.");
 	return;
       }
+    } else if (args[1] == "sci_system" && args.count() > 2){
+      string command = args[2];
+      for (int i = 3; i < args.count(); i++) {
+	command = command + " " + args[i];
+      }
+      sci_system(command.c_str());
+      return;
     } else {
 	args.error("Unknown minor command for netedit");
     }
