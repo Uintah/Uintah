@@ -18,28 +18,12 @@ University of Utah. All Rights Reserved.
 */
 
 /*
-This stylesheet is used by html documents generated from docbook sources.
+This stylesheet is used by html documents generated from latex sources
+by the  tool latex2html.
 */
 
-body 
-{
-background-color:#CCCCCC; 
-text-color:#000000; 
-font-family:"times"; 
-margin-left:1em; 
-margin-right:1em; 
-margin-top:1em
-}
+@import url(common.css);
 
-div.top-banner-margins 
-{
-margin-left:-1em; 
-margin-right:-1em; 
-margin-top:-1em
-}
+pre,tt {
+color:#003366}
 
-div.bottom-banner-margins
-{
-margin-left:-1em; 
-margin-right:-1em
-}

@@ -21,128 +21,68 @@ University of Utah. All Rights Reserved.
 This stylesheet is used by html documents generated from docbook sources.
 */
 
-body 
-{
-background-color:#CCCCCC;
-color:#000000;
-font-family: Arial, Helvetica, sans-serif;
-font-size: 14px;
-margin-left:1em;
-margin-right:1em;
-margin-top:1em
-}
+@import url(common.css);
 
-div.top-banner-margins 
-{
-margin-left:-1em; 
-margin-right:-1em;
-margin-top:-1em
-}
+.screen {
+color:#003366}
 
-div.bottom-banner-margins 
-{
-margin-left:-1em; 
-margin-right:-1em
-}
+.literallayout {
+color:#003366}
 
-.screen
-{
-color:#003366
-}
-
-.literallayout
-{
-color:#003366
-}
-
-.programlisting
-{
-color:#003366
-}
+.programlisting {
+color:#003366}
 
 /* I wish there were some way to discriminate amongst all the different 
    uses of <tt>. */
-tt
-{
-color:#003366
-}
-
-a:link {color:#AA0000}
-
-a:visited {color:#660000}
-
-a:hover {color:#660066}
-
-a:active {color:#AA00AA}
+tt {
+color:#003366}
 
 /* things look wierd w/o setting font to Times; we set the font size
    as well, this is what the new browsers will all imply */
-div, .navheader, .navfooter, td, th 
-{
+div, .navheader, .navfooter, td, th {
 font-family: Arial, Helvetica, sans-serif;
-font-size: 14px;
-}
+font-size: 14px}
 
 /* evil to force size smaller but it does look better */
-.literal, .token, .database 
-{
-font-family: "Lucida Console", "Courier", monospace; 
-}
+.literal, .token, .database {
+font-family: "Lucida Console", "Courier", monospace;}
 
-.guiicon, .guibutton, .guilabel, .interface 
-{
-font-weight: bold;
-}
+.guiicon, .guibutton, .guilabel, .interface {
+font-weight: bold}
 
-.chapter h1 
-{ 
-font-size: 34px;
-}
+.chapter h1 { 
+font-size: 34px}
 
 /* we need the a specifier so this wins out over the chapter h1 */
-h1.section a 
-{ 
-font-size: 24px;
-}
+h1.section a { 
+font-size: 24px}
 
-.navheader td, .navfooter td 
-{
-  font-size: 12px;
+.navheader td, .navfooter td {
+font-size: 12px;
 font-weight: bold;
-background:  #CCCCCC;
-}
+background:  #CCCCCC}
 
-.navheader th
-{
+.navheader th {
 color: black;
-background: #CCCCCC;
-}
+background: #CCCCCC}
 
 /* General definitions for tables */ 
 /* background: white; */
-table 
-{
+table {
 border-width: 2;
-border-color: black;
-}
+border-color: black;}
 
 /* Table headers */ 
-th 
-{
+th {
 font-family: sans-serif;
 color: white;
-background: gray;
-}
+background: #003333}
 
 /* tweak tables */
-.calstable tr th 
-{
+.calstable tr th {
 background-color: black;
-color: white;
-}
+color: white}
 
-table.simplelist
-{
+table.simplelist{
 border: 0;
-frame: void;
-}
+frame: void}
