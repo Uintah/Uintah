@@ -16,7 +16,8 @@ SRCS     += $(SRCDIR)/BooleanPort.cc $(SRCDIR)/ColorMapPort.cc \
 	$(SRCDIR)/SurfacePort.cc $(SRCDIR)/VectorFieldPort.cc \
 	$(SRCDIR)/VoidStarPort.cc $(SRCDIR)/cMatrixPort.cc \
 	$(SRCDIR)/cVectorPort.cc $(SRCDIR)/SpanTree.cc \
-	$(SRCDIR)/SpanPort.cc $(SRCDIR)/templates.cc \
+	$(SRCDIR)/SpanPort.cc \
+	$(SRCDIR)/SpanSpace.cc $(SRCDIR)/templates.cc \
 	$(SRCDIR)/DomainPort.cc $(SRCDIR)/FieldWrapperPort.cc \
 	$(SRCDIR)/SFieldPort.cc $(SRCDIR)/AttribPort.cc \
 	$(SRCDIR)/GeomPort.cc \
@@ -31,6 +32,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3.2.3  2000/10/02 23:12:47  michaelc
+# add SpanSpace.cc, unresolved symbols
+#
 # Revision 1.3.2.2  2000/09/28 03:14:20  mcole
 # merge trunk into FIELD_REDESIGN branch
 #
