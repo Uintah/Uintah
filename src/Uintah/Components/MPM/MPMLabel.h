@@ -43,6 +43,7 @@ namespace Uintah {
       const VarLabel* pMicrocrackSizeLabel; //for fracture
       const VarLabel* pMicrocrackPositionLabel; //for fracture
       const VarLabel* pCrackingSpeedLabel; //for fracture
+      const VarLabel* pTensileStrengthLabel; //for fracture
       const VarLabel* pEnergyReleaseRateLabel; //for fracture
       const VarLabel* pTemperatureLabel; //for heat conduction
       const VarLabel* pTemperatureGradientLabel; //for heat conduction
@@ -65,6 +66,7 @@ namespace Uintah {
       const VarLabel* pMicrocrackSizeLabel_preReloc; //for fracture
       const VarLabel* pMicrocrackPositionLabel_preReloc; //for fracture
       const VarLabel* pCrackingSpeedLabel_preReloc; //for fracture
+      const VarLabel* pTensileStrengthLabel_preReloc; //for fracture
       const VarLabel* pEnergyReleaseRateLabel_preReloc; //for fracture
       const VarLabel* pTemperatureLabel_preReloc; //for heat conduction
       const VarLabel* pTemperatureGradientLabel_preReloc; //for heat conduction
@@ -115,6 +117,9 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.34  2000/09/16 04:27:34  tan
+// Modifications to make fracture works well.
+//
 // Revision 1.33  2000/09/11 18:56:18  tan
 // Crack surface contact force is now considered in the simulation.
 //
