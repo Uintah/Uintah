@@ -1,0 +1,97 @@
+% -*-latex-*-
+% Title: design.tex
+% 
+% Authors: Steve Parker and James Purciful
+% 
+% Synopsis: High level design for mapeditor 
+%
+% Last modified: 2-18-94
+%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentstyle[12pt,epsf]{report}
+%\newcommand{\X}[1]{{#1}\index{{#1}}}
+\topmargin -0.45in
+\textheight 9.0in
+\oddsidemargin -.0in
+\evensidemargin -.0in
+\textwidth 6.5in
+
+% Change the footnotes from numbers to a series of symbols
+%\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+
+\begin{document}
+
+\begin{enumerate}
+\item Primitives
+\begin{itemize}
+\item Switch - on/off
+\item Router
+\item Input
+\item Output
+\end{itemize}
+
+\item Geometry
+\begin{itemize}
+\item 2D Planar Geometry Viewer
+\item 3D Geometry Viewer
+\item Image viewer
+\item Key Frame Animator
+\item Interface(s) to video equipment
+\item Graph - 2D \& 3D
+\end{itemize}
+
+\item Widgets
+\begin{itemize}
+\item Real
+\item Integers
+\item Strings
+\item Color
+\end{itemize}
+
+\item Loop Control
+\begin{itemize}
+\item For
+\item While
+\end{itemize}
+
+
+\item Model Building
+\begin{itemize}
+\item LayerEditing
+\item Extract Layer
+\item Extract Surface
+\item Tesselate Surface
+\end{itemize}
+
+\item Visualization (Massagers)
+\begin{itemize}
+\item IsoContour
+\item HedgeHog
+\item Particle Tracer
+\item Mesh
+\item Vector Field Topology Module(s)
+\end{itemize}
+
+\item Computation (Massagers)
+\begin{itemize}
+\item Mesh Generator
+\item Triangulator
+\item Classifier
+\item Node Numberer
+\item Refiner
+\item Build FEM Matrix
+\item Solve Matrix
+\item Build Field
+\end{itemize}
+
+\item Operations on Fields
+\begin{itemize}
+\item Slice
+\item Gradient
+\item Vector Magnitude
+\item Extract Region
+\end{itemize}
+
+\end{enumerate}
+
+\end{document}
