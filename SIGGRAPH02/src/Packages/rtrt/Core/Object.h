@@ -34,6 +34,7 @@ class BBox;
 class PerProcessorContext;
 class UVMapping;
 class Object;
+class Grid2;
 
 template<class T> class Array1;
 }
@@ -53,8 +54,9 @@ namespace rtrt {
  */
 
 class Object : public virtual SCIRun::Persistent {
-  Material* matl;
-  UVMapping* uv;
+  Material  *matl;
+  UVMapping *uv;
+  Grid2     *animGrid;      
   unsigned long number; // id number
 protected:
   bool was_preprocessed;
@@ -111,6 +113,8 @@ public:
   virtual void recompute_bbox ();
   virtual void set_scene (Object *);
   virtual void update(const Vector& update);
+  virtual void set_anim_grid(Grid2 *g) { animGrid = g; }
+  virtual Grid2 *get_anim_grid() { return animGrid; }
 
   // This function should return TRUE when the point in question
   // (ray.v * t + ray.t0) can be mapped to a value by the object.

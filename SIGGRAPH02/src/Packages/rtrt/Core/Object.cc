@@ -17,7 +17,7 @@ static UVPlane default_mapping(Point(0,0,0), Vector(1,0,0), Vector(0,1,0));
 PersistentTypeID Object::type_id("Object", "Persistent", 0);
 
 Object::Object(Material* matl, UVMapping* uv)
-  : matl(matl), uv(uv), was_preprocessed(false)
+  : matl(matl), uv(uv), animGrid(0), was_preprocessed(false)
 {
   if(!uv)
     this->uv=&default_mapping;
