@@ -24,6 +24,7 @@
 #include <iostream>
 
 using std::cerr;
+using std::string;
 using namespace Uintah;
 using namespace SCIRun;
 
@@ -48,7 +49,7 @@ ViscoScramForBinder::ViscoScramForBinder(ProblemSpecP& ps,
   for (int ii = 0; ii < nn; ++ii) {
     char* buf = new char[16];
     sprintf(buf,"shear_modulus%.2d",(ii+1));
-    std::string shear(buf);
+    string shear(buf);
     ps->require(shear, d_initialData.shearModulus[ii]); 
   }
 
@@ -574,26 +575,31 @@ ViscoScramForBinder::doRungeKuttaForStress(void (ViscoScramForBinder::*fptr)
 
   for (int ii = 0; ii < n; ++ii) y_rk[ii] = y_n[ii];
   c_rk = c; 
-  Matrix3 k1[n];
+  Matrix3* k1 = new Matrix3[n];
   ((this->*fptr)(y_rk, c_rk, G_n, Tau_n, eDot, cDot, k1));
 
   for (int ii = 0; ii < n; ++ii) y_rk[ii] = y_n[ii]+k1[ii]*(0.5*h);
   c_rk = c + 0.5*h*rkc[0];
-  Matrix3 k2[n];
+  Matrix3* k2 = new Matrix3[n];
   ((this->*fptr)(y_rk, c_rk, G_n, Tau_n, eDot, cDot, k2));
 
   for (int ii = 0; ii < n; ++ii) y_rk[ii] = y_n[ii]+k2[ii]*(0.5*h);
   c_rk = c + 0.5*h*rkc[1];
-  Matrix3 k3[n];
+  Matrix3* k3 = new Matrix3[n];
   ((this->*fptr)(y_rk, c_rk, G_n, Tau_n, eDot, cDot, k3));
 
   for (int ii = 0; ii < n; ++ii) y_rk[ii] = y_n[ii]+k3[ii]*h;
   c_rk = c + 0.5*h*rkc[2];
-  Matrix3 k4[n];
+  Matrix3* k4 = new Matrix3[n];
   ((this->*fptr)(y_rk, c_rk, G_n, Tau_n, eDot, cDot, k4));
 
   for (int ii = 0; ii < n; ++ii) 
      y_rk[ii] = y_n[ii] + ((k1[ii]+k4[ii])+(k2[ii]+k3[ii])*2.0)*(h/6.0);
+
+  delete k1;
+  delete k2;
+  delete k3;
+  delete k4;
 }
 
 void
