@@ -37,6 +37,7 @@
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Widgets/GaugeWidget.h>
 #include <Core/Datatypes/PointCloud.h>
+#include <Core/Datatypes/TetVol.h>
 #include <math.h>
 
 #include <iostream>
@@ -98,7 +99,6 @@ SeedField::~SeedField()
 {
 }
 
-// FIX_ME upgrade to new fields.
 void SeedField::execute()
 {
   Point min,max;
@@ -145,7 +145,7 @@ void SeedField::execute()
   cerr << "num_seeds = " << num_seeds << endl;
   dir*=1./(num_seeds-1);
 
-  PointCloudMeshHandle mesh = scinew PointCloudMesh;
+  PointCloudMesh* mesh = scinew PointCloudMesh;
   int loop;
   for (loop=0;loop<num_seeds;++loop) {
     mesh->add_node(min+dir*loop);
@@ -153,7 +153,7 @@ void SeedField::execute()
 
   PointCloud<double> *seeds = scinew PointCloud<double>(mesh, Field::NODE);
   PointCloud<double>::fdata_type &fdata = seeds->fdata();
-
+  
   for (loop=0;loop<num_seeds;++loop) {
     fdata[loop]=1;
   }

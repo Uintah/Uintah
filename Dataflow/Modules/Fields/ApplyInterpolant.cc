@@ -36,6 +36,8 @@
 #include <Core/Datatypes/TetVol.h>
 #include <Core/Datatypes/LatticeVol.h>
 #include <Core/Datatypes/TriSurf.h>
+#include <Core/Datatypes/ContourField.h>
+#include <Core/Datatypes/PointCloud.h>
 #include <Core/Datatypes/Dispatch2.h>
 #include <iostream>
 #include <stdio.h>
@@ -169,6 +171,73 @@ template <>
 GenericField<TriSurfMesh, vector<vector<pair<LatVolMesh::cell_index, double> > > >::interp_type *
 GenericField<TriSurfMesh, vector<vector<pair<LatVolMesh::cell_index, double> > > >::query_interpolate() const;
 
+// ContourField
+
+template <>
+GenericField<ContourMesh, vector<vector<pair<TetVolMesh::node_index, double> > > >::interp_type *
+GenericField<ContourMesh, vector<vector<pair<TetVolMesh::node_index, double> > > >::query_interpolate() const;
+
+template <>
+GenericField<ContourMesh, vector<vector<pair<TetVolMesh::edge_index, double> > > >::interp_type *
+GenericField<ContourMesh, vector<vector<pair<TetVolMesh::edge_index, double> > > >::query_interpolate() const;
+
+template <>
+GenericField<ContourMesh, vector<vector<pair<TetVolMesh::face_index, double> > > >::interp_type *
+GenericField<ContourMesh, vector<vector<pair<TetVolMesh::face_index, double> > > >::query_interpolate() const;
+
+template <>
+GenericField<ContourMesh, vector<vector<pair<TetVolMesh::cell_index, double> > > >::interp_type *
+GenericField<ContourMesh, vector<vector<pair<TetVolMesh::cell_index, double> > > >::query_interpolate() const;
+
+template <>
+GenericField<ContourMesh, vector<vector<pair<LatVolMesh::node_index, double> > > >::interp_type *
+GenericField<ContourMesh, vector<vector<pair<LatVolMesh::node_index, double> > > >::query_interpolate() const;
+
+template <>
+GenericField<ContourMesh, vector<vector<pair<LatVolMesh::edge_index, double> > > >::interp_type *
+GenericField<ContourMesh, vector<vector<pair<LatVolMesh::edge_index, double> > > >::query_interpolate() const;
+
+template <>
+GenericField<ContourMesh, vector<vector<pair<LatVolMesh::face_index, double> > > >::interp_type *
+GenericField<ContourMesh, vector<vector<pair<LatVolMesh::face_index, double> > > >::query_interpolate() const;
+
+template <>
+GenericField<ContourMesh, vector<vector<pair<LatVolMesh::cell_index, double> > > >::interp_type *
+GenericField<ContourMesh, vector<vector<pair<LatVolMesh::cell_index, double> > > >::query_interpolate() const;
+
+// PointCloud
+
+template <>
+GenericField<PointCloudMesh, vector<vector<pair<TetVolMesh::node_index, double> > > >::interp_type *
+GenericField<PointCloudMesh, vector<vector<pair<TetVolMesh::node_index, double> > > >::query_interpolate() const;
+
+template <>
+GenericField<PointCloudMesh, vector<vector<pair<TetVolMesh::edge_index, double> > > >::interp_type *
+GenericField<PointCloudMesh, vector<vector<pair<TetVolMesh::edge_index, double> > > >::query_interpolate() const;
+
+template <>
+GenericField<PointCloudMesh, vector<vector<pair<TetVolMesh::face_index, double> > > >::interp_type *
+GenericField<PointCloudMesh, vector<vector<pair<TetVolMesh::face_index, double> > > >::query_interpolate() const;
+
+template <>
+GenericField<PointCloudMesh, vector<vector<pair<TetVolMesh::cell_index, double> > > >::interp_type *
+GenericField<PointCloudMesh, vector<vector<pair<TetVolMesh::cell_index, double> > > >::query_interpolate() const;
+
+template <>
+GenericField<PointCloudMesh, vector<vector<pair<LatVolMesh::node_index, double> > > >::interp_type *
+GenericField<PointCloudMesh, vector<vector<pair<LatVolMesh::node_index, double> > > >::query_interpolate() const;
+
+template <>
+GenericField<PointCloudMesh, vector<vector<pair<LatVolMesh::edge_index, double> > > >::interp_type *
+GenericField<PointCloudMesh, vector<vector<pair<LatVolMesh::edge_index, double> > > >::query_interpolate() const;
+
+template <>
+GenericField<PointCloudMesh, vector<vector<pair<LatVolMesh::face_index, double> > > >::interp_type *
+GenericField<PointCloudMesh, vector<vector<pair<LatVolMesh::face_index, double> > > >::query_interpolate() const;
+
+template <>
+GenericField<PointCloudMesh, vector<vector<pair<LatVolMesh::cell_index, double> > > >::interp_type *
+GenericField<PointCloudMesh, vector<vector<pair<LatVolMesh::cell_index, double> > > >::query_interpolate() const;
 
 template <> Vector TetVol<vector<pair<TetVolMesh::node_index, double> > >::cell_gradient(TetVolMesh::cell_index);
 template <> Vector TetVol<vector<pair<TetVolMesh::edge_index, double> > >::cell_gradient(TetVolMesh::cell_index);
@@ -572,6 +641,92 @@ ApplyInterpolant::execute()
 	cout << "Non-interpable source field type\n";
       }
     }
+    else if (itp_geom_name == "ContourField")
+    {
+      if (src_data_name == "Vector")
+      {
+	HAIRY_MACRO(TetVol, ContourField, Vector);
+      }
+      else if (src_data_name == "double")
+      {
+	HAIRY_MACRO(TetVol, ContourField, double);
+      }
+      else if (src_data_name == "float")
+      {
+	HAIRY_MACRO(TetVol, ContourField, float);
+      }
+      else if (src_data_name == "int")
+      {
+	HAIRY_MACRO(TetVol, ContourField, int);
+      }
+      else if (src_data_name == "unsigned int")
+      {
+	HAIRY_MACRO(TetVol, ContourField, unsigned int);
+      }
+      else if (src_data_name == "short")
+      {
+	HAIRY_MACRO(TetVol, ContourField, short);
+      }
+      else if (src_data_name == "unsigned short")
+      {
+	HAIRY_MACRO(TetVol, ContourField, unsigned short);
+      }
+      else if (src_data_name == "char")
+      {
+	HAIRY_MACRO(TetVol, ContourField, char);
+      }
+      else if (src_data_name == "unsigned char")
+      {
+	HAIRY_MACRO(TetVol, ContourField, unsigned char);
+      }
+      else
+      {
+	cout << "Non-interpable source field type\n";
+      }
+    }
+    else if (itp_geom_name == "PointCloud")
+    {
+      if (src_data_name == "Vector")
+      {
+	HAIRY_MACRO(TetVol, PointCloud, Vector);
+      }
+      else if (src_data_name == "double")
+      {
+	HAIRY_MACRO(TetVol, PointCloud, double);
+      }
+      else if (src_data_name == "float")
+      {
+	HAIRY_MACRO(TetVol, PointCloud, float);
+      }
+      else if (src_data_name == "int")
+      {
+	HAIRY_MACRO(TetVol, PointCloud, int);
+      }
+      else if (src_data_name == "unsigned int")
+      {
+	HAIRY_MACRO(TetVol, PointCloud, unsigned int);
+      }
+      else if (src_data_name == "short")
+      {
+	HAIRY_MACRO(TetVol, PointCloud, short);
+      }
+      else if (src_data_name == "unsigned short")
+      {
+	HAIRY_MACRO(TetVol, PointCloud, unsigned short);
+      }
+      else if (src_data_name == "char")
+      {
+	HAIRY_MACRO(TetVol, PointCloud, char);
+      }
+      else if (src_data_name == "unsigned char")
+      {
+	HAIRY_MACRO(TetVol, PointCloud, unsigned char);
+      }
+      else
+      {
+	cout << "Non-interpable source field type\n";
+      }
+    }
 #endif
     else
     {
@@ -704,6 +859,92 @@ ApplyInterpolant::execute()
       else if (src_data_name == "unsigned char")
       {
 	HAIRY_MACRO(LatticeVol, TriSurf, unsigned char);
+      }
+      else
+      {
+	cout << "Non-interpable source field type\n";
+      }
+    }
+    else if (itp_geom_name == "ContourField")
+    {
+      if (src_data_name == "Vector")
+      {
+	HAIRY_MACRO(LatticeVol, ContourField, Vector);
+      }
+      else if (src_data_name == "double")
+      {
+	HAIRY_MACRO(LatticeVol, ContourField, double);
+      }
+      else if (src_data_name == "float")
+      {
+	HAIRY_MACRO(LatticeVol, ContourField, float);
+      }
+      else if (src_data_name == "int")
+      {
+	HAIRY_MACRO(LatticeVol, ContourField, int);
+      }
+      else if (src_data_name == "unsigned int")
+      {
+	HAIRY_MACRO(LatticeVol, ContourField, unsigned int);
+      }
+      else if (src_data_name == "short")
+      {
+	HAIRY_MACRO(LatticeVol, ContourField, short);
+      }
+      else if (src_data_name == "unsigned short")
+      {
+	HAIRY_MACRO(LatticeVol, ContourField, unsigned short);
+      }
+      else if (src_data_name == "char")
+      {
+	HAIRY_MACRO(LatticeVol, ContourField, char);
+      }
+      else if (src_data_name == "unsigned char")
+      {
+	HAIRY_MACRO(LatticeVol, ContourField, unsigned char);
+      }
+      else
+      {
+	cout << "Non-interpable source field type\n";
+      }
+    }
+    else if (itp_geom_name == "PointCloud")
+    {
+      if (src_data_name == "Vector")
+      {
+	HAIRY_MACRO(LatticeVol, PointCloud, Vector);
+      }
+      else if (src_data_name == "double")
+      {
+	HAIRY_MACRO(LatticeVol, PointCloud, double);
+      }
+      else if (src_data_name == "float")
+      {
+	HAIRY_MACRO(LatticeVol, PointCloud, float);
+      }
+      else if (src_data_name == "int")
+      {
+	HAIRY_MACRO(LatticeVol, PointCloud, int);
+      }
+      else if (src_data_name == "unsigned int")
+      {
+	HAIRY_MACRO(LatticeVol, PointCloud, unsigned int);
+      }
+      else if (src_data_name == "short")
+      {
+	HAIRY_MACRO(LatticeVol, PointCloud, short);
+      }
+      else if (src_data_name == "unsigned short")
+      {
+	HAIRY_MACRO(LatticeVol, PointCloud, unsigned short);
+      }
+      else if (src_data_name == "char")
+      {
+	HAIRY_MACRO(LatticeVol, PointCloud, char);
+      }
+      else if (src_data_name == "unsigned char")
+      {
+	HAIRY_MACRO(LatticeVol, PointCloud, unsigned char);
       }
       else
       {
