@@ -208,11 +208,6 @@ main(int argc, char *argv[] )
   Scheduler* sched_task=new Scheduler(net);
 
   new NetworkEditor(net, gui);
-  // if loading an app, withdraw network editor
-  if(app) {
-    gui->eval("wm withdraw .", result);
-  }
-
 
   // Activate the scheduler.  Arguments and return
   // values are meaningless
@@ -273,11 +268,11 @@ main(int argc, char *argv[] )
       {
 	string homerc = string(HOME) + "/.scirunrc";
 	if (creat(homerc.c_str(), S_IREAD | S_IWRITE) != -1)
-	{
+	{	  string tclresult;
+
 	  cout << "Home directory found and is writeable.\n";
 
-	  string tclresult;
-	  gui->eval("showEULA", tclresult);
+	  gui->eval("licenseDialog 1", result);
 	  if (result == "cancel")
 	  {
 	    unlink(homerc.c_str());
@@ -292,14 +287,17 @@ main(int argc, char *argv[] )
     }
   }
 
+
   // wait for the main window to display before continuing the startup.
   // if loading an app, don't wait
   if(!app) {
+    gui->eval("wm deiconify .", result);
     gui->eval("tkwait visibility .top.globalViewFrame.canvas",result);
   }
 
   // load the packages
   packageDB->loadPackage();
+
 
   // Activate "File" menu sub-menus once packages are all loaded.
   gui->execute("activate_file_submenus");
