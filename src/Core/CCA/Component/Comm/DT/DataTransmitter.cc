@@ -140,9 +140,9 @@ DataTransmitter::getMessage(DTPoint *pt){
   //cerr<<"getMessage for point="<<(long)pt<<endl;
   //assuming only one or zero thread can access getMessage
   recvQ_mutex->lock();
-  /*while(recv_msgQ.size()==0){
-      recvQ_cond->wait(*recvQ_mutex);
-      }*/
+  while(recv_msgQ.size()==0){
+    recvQ_cond->wait(*recvQ_mutex);
+  }
   DTMessage *msg=NULL;
   deque<DTMessage*>::iterator iter=recv_msgQ.begin();
   for(deque<DTMessage*>::iterator iter=recv_msgQ.begin(); iter!=recv_msgQ.end(); iter++){
@@ -152,7 +152,7 @@ DataTransmitter::getMessage(DTPoint *pt){
       break;
     }
   }
-  //  recv_msgQ.pop_front();
+  //recv_msgQ.pop_front();
   recvQ_mutex->unlock();
   //showTime("end getMessage", msg);  
   return msg;
@@ -172,7 +172,7 @@ DataTransmitter::run(){
 
 void 
 DataTransmitter::runListeningThread(){
-  //at most 1024 waiting clients
+  //at most 10 waiting clients
   if (listen(sockfd, 10) == -1){ 
     throw CommError("listen", errno);
   }
@@ -185,7 +185,7 @@ DataTransmitter::runListeningThread(){
 
   while(!quit){
     timeout.tv_sec=0;
-    timeout.tv_usec=0;
+    timeout.tv_usec=1;
     FD_ZERO(&read_fds);
     FD_SET(sockfd, &read_fds);
     if (select(sockfd+1, &read_fds, NULL, NULL, &timeout) == -1) {
@@ -239,7 +239,6 @@ DataTransmitter::runSendingThread(){
     SocketMap::iterator iter=sockmap.find(msg->to_addr);
     int new_fd;
     if(iter==sockmap.end()){
-      cerr<<"Build new connection\n";
       new_fd=socket(AF_INET, SOCK_STREAM, 0);
       if( new_fd  == -1){
 	throw CommError("socket", errno);
@@ -260,10 +259,9 @@ DataTransmitter::runSendingThread(){
       sendall(new_fd, &addr.port, sizeof(short));
 
       sockmap[msg->to_addr]=new_fd;
-      cerr<<"add an entry to sockmap, new size="<<sockmap.size()<<endl;
+      //cerr<<"add an entry to sockmap, new size="<<sockmap.size()<<endl;
     }
     else{
-      cerr<<"Use old connection\n";
       new_fd=iter->second;
     }
     /*
@@ -275,7 +273,7 @@ DataTransmitter::runSendingThread(){
 
     sendall(new_fd, msg, sizeof(DTMessage));
     sendall(new_fd, msg->buf, msg->length);
-    showTime("server sent Message", msg);   
+    //showTime("server sent Message", msg);   
     //cerr<<"Message is sent to point="<<(long)msg->recver<<endl;
     msg->display();
     delete msg;
@@ -294,7 +292,7 @@ DataTransmitter::runRecvingThread(){
   struct timeval timeout;
   while(!quit){
     timeout.tv_sec=0;
-    timeout.tv_usec=0;
+    timeout.tv_usec=1;
     FD_ZERO(&read_fds);
     // add the listener to the master set
     int maxfd=0;
@@ -324,15 +322,15 @@ DataTransmitter::runRecvingThread(){
 	if(recvall(iter->second, msg, sizeof(DTMessage))!=0){
 	  msg->buf=(char *)malloc(msg->length);
 	  recvall(iter->second, msg->buf, msg->length);
-	  showTime("server received msg", msg);	
+	  //showTime("server received msg", msg);	
 	  msg->to_addr=addr;
 	  msg->autofree=true;
 	  msg->fr_addr=iter->first;
 	  msg->display();
-	  //recvQ_mutex->lock();
+	  recvQ_mutex->lock();
 	  recv_msgQ.push_back(msg);
-	  //recvQ_mutex->unlock();
-	  //recvQ_cond->conditionSignal();
+	  recvQ_mutex->unlock();
+	  recvQ_cond->conditionSignal();
 	  SemaphoreMap::iterator found=semamap.find(msg->recver);
 	  if(found!=semamap.end()){
 	    //showTime("server call sema up", msg);
