@@ -568,7 +568,7 @@ void Module::want_to_execute()
     sched->do_scheduling();
 }
 
-void Module::widget_moved(bool)
+void Module::widget_moved(bool,BaseWidget*)
 {
 }
 

@@ -129,13 +129,13 @@ GridSliceVis::tcl_command( SCIRun::GuiArgs& args, void* userdata)
 	w -= view*ddview;
       }
       control_widget->SetPosition(w);
-      widget_moved(1);
+      widget_moved(1,0);
   } else {
     Module::tcl_command(args, userdata);
   }
 }
 
-void GridSliceVis::widget_moved(int)
+void GridSliceVis::widget_moved(int, BaseWidget*)
 {
   if( sliceren ){
     Point w = control_widget->ReferencePoint();
@@ -320,7 +320,7 @@ void GridSliceVis::execute(void)
     if( control_id == -1 ){
       GeomHandle w=control_widget->GetWidget();
       control_id = ogeom->addObj( w, control_name, &control_lock);
-      widget_moved(1);
+      widget_moved(1,0);
     }
   } else {
     if( control_id != -1){

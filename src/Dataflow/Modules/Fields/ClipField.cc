@@ -99,7 +99,7 @@ public:
   virtual ~ClipField();
 
   virtual void execute();
-  virtual void widget_moved(bool);
+  virtual void widget_moved(bool, BaseWidget*);
 };
 
 
@@ -411,7 +411,7 @@ ClipField::execute()
 
 
 void
-ClipField::widget_moved(bool last)
+ClipField::widget_moved(bool last, BaseWidget*)
 {
   if (last)
   {
