@@ -366,6 +366,11 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 					    d_timeIntegratorLabels[curr_level]);
     }
     //}
+    if ((d_boundaryCondition->anyArchesPhysicalBC())&&
+        (d_timeIntegratorLabels[curr_level]->integrator_last_step)) {
+      d_boundaryCondition->sched_getScalarFlowRate(sched, patches, matls);
+      d_boundaryCondition->sched_getScalarEfficiency(sched, patches, matls);
+    }
 
     // Schedule an interpolation of the face centered velocity data 
     sched_interpolateFromFCToCC(sched, patches, matls,
@@ -579,6 +584,7 @@ ExplicitSolver::sched_dummySolve(SchedulerP& sched,
   tsk->computes(d_lab->d_totalflowOUTLabel);
   tsk->computes(d_lab->d_netflowOUTBCLabel);
   tsk->computes(d_lab->d_denAccumLabel);
+  tsk->computes(d_lab->d_scalarEfficiencyLabel);
   tsk->computes(d_lab->d_carbonEfficiencyLabel);
 
   tsk->requires(Task::OldDW, d_lab->d_maxAbsU_label);
@@ -1771,6 +1777,7 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
     double flowOUToutbc = 0.0;
     double denAccum = 0.0;
     double carbon_efficiency = 0.0;
+    double scalar_efficiency = 0.0;
 
 
     new_dw->put(delt_vartype(uvwout), d_lab->d_uvwoutLabel);
@@ -1779,6 +1786,7 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
     new_dw->put(delt_vartype(flowOUToutbc), d_lab->d_netflowOUTBCLabel);
     new_dw->put(delt_vartype(denAccum), d_lab->d_denAccumLabel);
     new_dw->put(delt_vartype(carbon_efficiency), d_lab->d_carbonEfficiencyLabel);
+    new_dw->put(delt_vartype(scalar_efficiency), d_lab->d_scalarEfficiencyLabel);
 
   }
 }

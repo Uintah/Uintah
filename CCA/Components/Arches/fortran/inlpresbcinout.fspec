@@ -5,5 +5,5 @@ void inlpresbcinout(constSFCXVariable<double> uu, constSFCYVariable<double> vv,
 	OffsetArray1<double> sew, OffsetArray1<double> sns,
 	OffsetArray1<double> stb, bool xminus, bool xplus, bool yminus,
 	bool yplus, bool zminus, bool zplus, bool cb,
-	CCVariable<double> co2, double co2in, double co2out);
+	constCCVariable<double> co2, double co2in, double co2out);
 

@@ -376,6 +376,12 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     tsk->computes(d_lab->d_totalflowOUTLabel);
     tsk->computes(d_lab->d_denAccumLabel);
     tsk->computes(d_lab->d_netflowOUTBCLabel);
+    tsk->computes(d_lab->d_scalarFlowRateLabel);
+    tsk->computes(d_lab->d_scalarEfficiencyLabel);
+    if (d_boundaryCondition->getCarbonBalance()) {
+    tsk->computes(d_lab->d_CO2FlowRateLabel);
+    tsk->computes(d_lab->d_carbonEfficiencyLabel);
+    }
   }
   tsk->computes(d_lab->d_totalKineticEnergyLabel);
   tsk->computes(d_lab->d_newCCVelocityLabel);
@@ -544,6 +550,11 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
 					    d_timeIntegratorLabels[curr_level]);
       d_boundaryCondition->sched_correctVelocityOutletBC(subsched, local_patches, local_matls,
 					    d_timeIntegratorLabels[curr_level]);
+    }
+    if ((d_boundaryCondition->anyArchesPhysicalBC())&&
+        (d_timeIntegratorLabels[curr_level]->integrator_last_step)) {
+      d_boundaryCondition->sched_getScalarFlowRate(subsched, local_patches, local_matls);
+      d_boundaryCondition->sched_getScalarEfficiency(subsched, local_patches, local_matls);
     }
   
     sched_interpolateFromFCToCC(subsched, local_patches, local_matls,
@@ -757,30 +768,46 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     }  
     }
     delt_vartype uvwout;
+    delt_vartype efficiency;
     sum_vartype flowin;
     sum_vartype flowout;
     sum_vartype denaccum;
     sum_vartype netflowoutbc;
-    double fin, fout, da, nbc;
+    sum_vartype scalarfr;
+    double fin, fout, da, nbc, sfr;
     if (d_boundaryCondition->anyArchesPhysicalBC()) {
       subsched->get_dw(3)->get(uvwout, d_lab->d_uvwoutLabel);
       subsched->get_dw(3)->get(flowin, d_lab->d_totalflowINLabel);
       subsched->get_dw(3)->get(flowout, d_lab->d_totalflowOUTLabel);
       subsched->get_dw(3)->get(denaccum, d_lab->d_denAccumLabel);
       subsched->get_dw(3)->get(netflowoutbc, d_lab->d_netflowOUTBCLabel);
+      subsched->get_dw(3)->get(scalarfr, d_lab->d_scalarFlowRateLabel);
+      subsched->get_dw(3)->get(efficiency, d_lab->d_scalarEfficiencyLabel);
       fin = flowin;
       fout = flowout;
       da = denaccum;
       nbc = netflowoutbc;
+      sfr = scalarfr;
       fin /= num_procs;
       fout /= num_procs;
       da /= num_procs;
       nbc /= num_procs;
+      sfr /= num_procs;
       new_dw->put(uvwout, d_lab->d_uvwoutLabel);
       new_dw->put(sum_vartype(fin), d_lab->d_totalflowINLabel);
       new_dw->put(sum_vartype(fout), d_lab->d_totalflowOUTLabel);
       new_dw->put(sum_vartype(da), d_lab->d_denAccumLabel);
       new_dw->put(sum_vartype(nbc), d_lab->d_netflowOUTBCLabel);
+      new_dw->put(sum_vartype(sfr), d_lab->d_scalarFlowRateLabel);
+      new_dw->put(efficiency, d_lab->d_scalarEfficiencyLabel);
+      if (d_boundaryCondition->getCarbonBalance()) {
+      subsched->get_dw(3)->get(scalarfr, d_lab->d_CO2FlowRateLabel);
+      subsched->get_dw(3)->get(efficiency, d_lab->d_carbonEfficiencyLabel);
+      sfr = scalarfr;
+      sfr /= num_procs;
+      new_dw->put(sum_vartype(sfr), d_lab->d_CO2FlowRateLabel);
+      new_dw->put(efficiency, d_lab->d_carbonEfficiencyLabel);
+      }
     }
     sum_vartype totalkineticenergy;
     subsched->get_dw(3)->get(totalkineticenergy, d_lab->d_totalKineticEnergyLabel);
@@ -1000,6 +1027,8 @@ PicardNonlinearSolver::sched_dummySolve(SchedulerP& sched,
   tsk->computes(d_lab->d_totalflowOUTLabel);
   tsk->computes(d_lab->d_netflowOUTBCLabel);
   tsk->computes(d_lab->d_denAccumLabel);
+  tsk->computes(d_lab->d_scalarEfficiencyLabel);
+  tsk->computes(d_lab->d_carbonEfficiencyLabel);
 
   tsk->requires(Task::OldDW, d_lab->d_maxAbsU_label);
   tsk->requires(Task::OldDW, d_lab->d_maxAbsV_label);
@@ -2169,6 +2198,8 @@ PicardNonlinearSolver::dummySolve(const ProcessorGroup* ,
     double flowOUT = 0.0;
     double flowOUToutbc = 0.0;
     double denAccum = 0.0;
+    double carbon_efficiency = 0.0;
+    double scalar_efficiency = 0.0;
 
 
     new_dw->put(delt_vartype(uvwout), d_lab->d_uvwoutLabel);
@@ -2176,6 +2207,8 @@ PicardNonlinearSolver::dummySolve(const ProcessorGroup* ,
     new_dw->put(delt_vartype(flowOUT), d_lab->d_totalflowOUTLabel);
     new_dw->put(delt_vartype(flowOUToutbc), d_lab->d_netflowOUTBCLabel);
     new_dw->put(delt_vartype(denAccum), d_lab->d_denAccumLabel);
+    new_dw->put(delt_vartype(carbon_efficiency), d_lab->d_carbonEfficiencyLabel);
+    new_dw->put(delt_vartype(scalar_efficiency), d_lab->d_scalarEfficiencyLabel);
 
   }
 }

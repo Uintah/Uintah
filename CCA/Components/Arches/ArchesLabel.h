@@ -421,6 +421,8 @@ namespace Uintah {
       const VarLabel* d_ShRFLabel;
       const VarLabel* d_CO2FlowRateLabel;
       const VarLabel* d_carbonEfficiencyLabel;
+      const VarLabel* d_scalarFlowRateLabel;
+      const VarLabel* d_scalarEfficiencyLabel;
 
     }; // End class ArchesLabel
 } // End namespace Uintah
