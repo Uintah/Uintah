@@ -1467,7 +1467,8 @@ allocateAndPutGridVar(VariableBase& var, DWDatabase& db,
     ASSERTEQ(Max(var.getHigh(), highIndex), highIndex);
     
     if (var.getLow() != patch->getLowIndex(basis) ||
-	var.getHigh() != patch->getHighIndex(basis)) {
+	var.getHigh() != patch->getHighIndex(basis) ||
+	var.getBasePointer() == 0 /* place holder for ghost patch */) {
       // It wasn't allocated as part of another patch's superpatch;
       // it existed as ghost patch of another patch.. so we have no
       // choice but to blow it away and replace it.
