@@ -11,16 +11,15 @@ fi
 
 cd "${BUILDROOT}/${mode}/build"
 
-if [ ! -x "${BUILDROOT}/${mode}/build/Packages/Uintah/StandAlone/sus" ]; then
-    echo ""
-    echo "Configuring ${mode} build at `date` using these arguments"
-    echo "  $CONFIGURE_ARGS"
-    echo "#!/bin/tcsh" > configure_command
-    echo "../../src/configure $CONFIGURE_ARGS" >> configure_command
-    chmod a+x configure_command
-    ./configure_command > "$BUILDROOT"/${mode}/configure.log 2>&1
-    retval=$?
-    if [ $retval != "0" ]; then
+echo ""
+echo "Configuring ${mode} build at `date` using these arguments"
+echo "  $CONFIGURE_ARGS"
+echo "#!/bin/tcsh" > configure_command
+echo "../../src/configure $CONFIGURE_ARGS" >> configure_command
+chmod a+x configure_command
+./configure_command > "$BUILDROOT"/${mode}/configure.log 2>&1
+retval=$?
+if [ $retval != "0" ]; then
 	echo "*** Configure failed with code $retval"
 	echo ""
 	echo "Showing configure log:"
@@ -32,30 +31,29 @@ if [ ! -x "${BUILDROOT}/${mode}/build/Packages/Uintah/StandAlone/sus" ]; then
 	    ln -s "$BUILDROOT" "configure-${mode}.lock"
 	fi
 	exit 1
-    fi
+fi
 
-    if [ -d "${BUILD_DIR}/configure-${mode}.lock" ]; then
+if [ -d "${BUILD_DIR}/configure-${mode}.lock" ]; then
 	# configured successfully - remove old configure lock 
 	rm "${BUILD_DIR}/configure-${mode}.lock"
-    fi
-
-    echo ""
-    echo "Starting $mode build at `date`"
-
-    cd "${BUILDROOT}/${mode}/build"
-    
-    rm -f "../make.log"
 fi
-while [ ! -x "${BUILDROOT}/${mode}/build/Packages/Uintah/StandAlone/sus" ]; do
-    nice gmake -k -j$MAKE_PARALLELISM >> ../make.log 2>&1
-    retval=$?
-    if [ $retval != "0" ]; then
+
+echo ""
+echo "Starting $mode build at `date`"
+
+cd "${BUILDROOT}/${mode}/build"
+    
+rm -f "../make.log"
+
+nice gmake -k -j$MAKE_PARALLELISM >> ../make.log 2>&1
+retval=$?
+if [ $retval != "0" ]; then
 	# try it again -- it may not go all the way the first time
 	echo "Failed first compile, try again"
 	nice gmake -k -j$MAKE_PARALLELISM >> ../make.log 2>&1
 	retval=$?
-    fi
-    if [ $retval != "0" ]; then
+fi
+if [ $retval != "0" ]; then
 	nice gmake -k -j$MAKE_PARALLELISM > ../remake.log 2>&1
 	
 	if  [ -x "${BUILDROOT}/${mode}/build/Packages/Uintah/StandAlone/sus" ]; then
@@ -81,8 +79,7 @@ while [ ! -x "${BUILDROOT}/${mode}/build/Packages/Uintah/StandAlone/sus" ]; do
 	    fi
 	    exit 1
 	fi
-    fi
-done
+fi
 
 if [ -d "${BUILD_DIR}/make-${mode}.lock" ]; then
     # built successfully - remove old make lock 
