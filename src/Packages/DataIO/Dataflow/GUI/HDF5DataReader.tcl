@@ -153,6 +153,8 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	global read_error
 	set read_error 0
+
+	trace variable $this-filename w "$this update_range"
     }
 
     method set_power_app { cmd } {
@@ -1512,7 +1514,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    -padx 5 -fill x -expand 0
 
 
-	update_range
+	update_range 0 0 0
 
 	# Restore range to pre-loaded value
 	set $this-range_min $rmin
@@ -1558,11 +1560,12 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	change_tab 0
     }
 
-    method update_range {} {
+    method update_range {name element op} {
 	global $this-animate_frame
 	set w [set $this-animate_frame]
 
         if {[winfo exists $w]} {
+
 	    upvar \#0 $this-selectable_min min
 	    upvar \#0 $this-selectable_max max
 
@@ -1579,7 +1582,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    set tmp [$extended_tab.inc childsite]
 	    $tmp.inc configure -from 1 -to [expr $max-$min]
 
-	    set $this-range_main $min
+	    set $this-range_min $min
 	    set $this-range_max $max
         }
     }
