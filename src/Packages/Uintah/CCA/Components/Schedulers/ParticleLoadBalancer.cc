@@ -64,7 +64,7 @@ ParticleLoadBalancer::ParticleLoadBalancer(const ProcessorGroup* myworld)
   d_lastLbTimestep = 0;
 
   d_dynamicAlgorithm = static_lb;  
-  d_state = needLoadBalance;
+  d_state = initLoadBalance;
   d_do_AMR = false;
   d_pspec = 0;
 }
@@ -73,8 +73,7 @@ ParticleLoadBalancer::~ParticleLoadBalancer()
 {
 }
 
-void ParticleLoadBalancer::assignPatchesParticle(const GridP& grid, 
-                                                 const SchedulerP& sch)
+bool ParticleLoadBalancer::assignPatchesParticle(const GridP& grid)
 {
   double time = Time::currentSeconds();
 
@@ -82,7 +81,7 @@ void ParticleLoadBalancer::assignPatchesParticle(const GridP& grid,
   int numPatches = 0;
   int myrank = d_myworld->myrank();
   int i;
-
+  bool doLoadBalancing = false;
   for(int l=0;l<grid->numLevels();l++){
     const LevelP& level = grid->getLevel(l);
     numPatches += level->numPatches();
@@ -95,7 +94,7 @@ void ParticleLoadBalancer::assignPatchesParticle(const GridP& grid,
 
   // get how many particles were each patch had at the end of the last timestep
   //   gather from each proc - based on the last location
-  SchedulerCommon* sc = const_cast<SchedulerCommon*>(dynamic_cast<const SchedulerCommon*>(sch.get_rep()));
+  SchedulerCommon* sc = const_cast<SchedulerCommon*>(dynamic_cast<const SchedulerCommon*>(d_scheduler));
 
   OnDemandDataWarehouse* dw = dynamic_cast<OnDemandDataWarehouse*>
     (sc->get_dw(0));
@@ -160,17 +159,17 @@ void ParticleLoadBalancer::assignPatchesParticle(const GridP& grid,
   MPI_Type_contiguous(3, MPI_INT, &particletype);
   MPI_Type_commit(&particletype);
 
-  MPI_Gatherv(&particleList[0],particleList.size(),particletype,
+  MPI_Allgatherv(&particleList[0],particleList.size(),particletype,
 	      &allParticles[0], &recvcounts[0], &displs[0], particletype,
-	      0, d_myworld->getComm());
+	      d_myworld->getComm());
   
   // proc 0 - associate patches to particles, load balance, 
   //   MPI_Bcast it to all procs
   
-  d_processorAssignment.clear();
-  d_processorAssignment.resize(numPatches);
+  //d_processorAssignment.clear();
+  //d_processorAssignment.resize(numPatches);
 
-  if (myrank == 0) {
+  //if (myrank == 0) {
     // sort the particle list.  We need the patch number in there as 
     // well in order to look up the patch number later
     int patchesLeft = numPatches;
@@ -230,15 +229,15 @@ void ParticleLoadBalancer::assignPatchesParticle(const GridP& grid,
           int lowpatch = allParticles[minPatch].id;
           if (patchesLeft >= 2*(numProcs-i)) {
             // give it min and max
-            d_processorAssignment[highpatch]=i;
+            d_tempAssignment[highpatch]=i;
             maxPatch--;
-            d_processorAssignment[lowpatch]=i;
+            d_tempAssignment[lowpatch]=i;
             minPatch++;
             patchesLeft -= 2;
             
           } else if (patchesLeft > 0) {
             //give it max
-            d_processorAssignment[maxPatch]=i;
+            d_tempAssignment[maxPatch]=i;
             maxPatch--;
             patchesLeft--;
           } else if (patchesLeft == 0) {
@@ -248,7 +247,6 @@ void ParticleLoadBalancer::assignPatchesParticle(const GridP& grid,
       }
     }
     else if (d_particleAlgo == 2) {
-      cout << " LB - PPP " << avg_costPerProc << endl;
       int procnum = 0;
       for (int p = 0; p < numPatches; p++) {
         if (allParticles[p].assigned)
@@ -258,9 +256,9 @@ void ParticleLoadBalancer::assignPatchesParticle(const GridP& grid,
         //int patches_to_assign = 1;
         if (patches_to_assign == 1) {
           allParticles[p].assigned = true;
-          cout << " LB - assigning patch " <<  allParticles[p].id << " with " 
+          dbg << " LB - assigning patch " <<  allParticles[p].id << " with " 
                << allParticles[p].numParticles << " to proc " << procnum << endl;
-          d_processorAssignment[p] = procnum;
+          d_tempAssignment[p] = procnum;
           procnum = (procnum+1 >= numProcs) ? 0 : procnum+1;
           patchesLeft--;
         }
@@ -271,7 +269,7 @@ void ParticleLoadBalancer::assignPatchesParticle(const GridP& grid,
           Patch::selectType n;
           IntVector lowIndex, highIndex;
           float target = avg_costPerProc *  patches_to_assign / (numPatches/numProcs);
-          cout << " LB - target PPP: " << target << endl;
+          dbg << " LB - target PPP: " << target << endl;
           float best = -100; // so that 0 will be better than this 
           int bestIndex = -1;
           int maxGhost = 2;
@@ -288,16 +286,16 @@ void ParticleLoadBalancer::assignPatchesParticle(const GridP& grid,
               bestIndex = neighbor->getID();
             }
           }
-          cout << " LB - assigning patch " << allParticles[p].id << " with " 
-               << allParticles[p].numParticles << " to proc " << procnum << endl;
+          dbg << " LB - assigning patch " << allParticles[p].id << " with " 
+              << allParticles[p].numParticles << " to proc " << procnum << endl;
           allParticles[p].assigned = true;
-          d_processorAssignment[p] = procnum;
+          d_tempAssignment[p] = procnum;
           patchesLeft--;          
           if (bestIndex != -1) { // had available neighbors
-            cout << " LB - assigning patch " << allParticles[bestIndex].id << " with " 
-                 << allParticles[bestIndex].numParticles << " to proc " << procnum << endl;
+            dbg << " LB - assigning patch " << allParticles[bestIndex].id << " with " 
+                << allParticles[bestIndex].numParticles << " to proc " << procnum << endl;
             allParticles[bestIndex].assigned = true;
-            d_processorAssignment[bestIndex] = procnum;
+            d_tempAssignment[bestIndex] = procnum;
             patchesLeft--;          
           }
           procnum = (procnum+1 >= numProcs) ? 0 : procnum+1;
@@ -330,11 +328,11 @@ void ParticleLoadBalancer::assignPatchesParticle(const GridP& grid,
 
       for (int p = 0; p < numPatches; p++) {
         if (patch_costs[p] > .9 * avg_costPerProc) {
-          d_processorAssignment[p] = currentProc;
+          d_tempAssignment[p] = currentProc;
           allParticles[p].assigned = true;
           totalCost -= patch_costs[p];
-          cout << "Patch " << p << "-> proc " << currentProc << " Cost: " 
-               << patch_costs[p] << endl;
+          //dbg << "Patch " << p << "-> proc " << currentProc << " Cost: " 
+          //  << patch_costs[p] << endl;
           currentProc++;
         }
       }
@@ -342,10 +340,10 @@ void ParticleLoadBalancer::assignPatchesParticle(const GridP& grid,
       if (currentProc > 0) {
         int optimal_procs = totalCost/((origTotalCost-totalCost)/currentProc)
           + currentProc;
-        cout << "This simulation would probably perform better on " 
-             << optimal_procs << "-" << optimal_procs+1 << " processors\n";
-        cout << "  or rather - origCost " << origTotalCost << ", costLeft " 
-             << totalCost << " after " << currentProc << " procs " << endl;
+        dbg << "This simulation would probably perform better on " 
+            << optimal_procs << "-" << optimal_procs+1 << " processors\n";
+        dbg << "  or rather - origCost " << origTotalCost << ", costLeft " 
+            << totalCost << " after " << currentProc << " procs " << endl;
       }
       avg_costPerProc = totalCost / (numProcs-currentProc);
 
@@ -389,34 +387,70 @@ void ParticleLoadBalancer::assignPatchesParticle(const GridP& grid,
              currentProcCost >=  .7*avg_costPerProc)) {
           // move to next proc and add this patch
           currentProc++;
-          d_processorAssignment[index] = currentProc;
+          d_tempAssignment[index] = currentProc;
           totalCost -= currentProcCost;
           avg_costPerProc = totalCost / (numProcs-currentProc);
           currentProcCost = patchCost;
-          cout << "Patch " << index << "-> proc " << currentProc 
-               << " PatchCost: " << patchCost << ", ProcCost: " 
-               << currentProcCost 
-               << ", idcheck: " << patchset[index]->getID() << endl;
+          //dbg << "Patch " << index << "-> proc " << currentProc 
+          //    << " PatchCost: " << patchCost << ", ProcCost: " 
+          //    << currentProcCost 
+          //    << ", idcheck: " << patchset[index]->getID() << endl;
         }
         else {
           // add patch to currentProc
-          d_processorAssignment[index] = currentProc;
+          d_tempAssignment[index] = currentProc;
           currentProcCost += patchCost;
-          cout << "Patch " << index << "-> proc " << currentProc 
-               << " PatchCost: " << patchCost << ", ProcCost: " 
-               << currentProcCost 
-               << ", idcheck: " << patchset[index]->getID() << endl;
+          //dbg << "Patch " << index << "-> proc " << currentProc 
+          //    << " PatchCost: " << patchCost << ", ProcCost: " 
+          //    << currentProcCost 
+          //    << ", idcheck: " << patchset[index]->getID() << endl;
         }
       }
     }
-  }
-  MPI_Bcast(&d_processorAssignment[0], numPatches, MPI_INT,0,d_myworld->getComm());
+    
+    // add up the costs each processor for the current assignment
+    // and for the temp assignment, then calculate the standard deviation
+    // for both.  If (curStdDev / tmpStdDev) > threshold, return true,
+    // and have possiblyDynamicallyRelocate change the load balancing
+    
+    vector<float> currentProcCosts(numProcs);
+    vector<float> tempProcCosts(numProcs);
+    
+    for (int i = 0; i < numPatches; i++) {
+      currentProcCosts[d_processorAssignment[i]] += patch_costs[i];
+      tempProcCosts[d_tempAssignment[i]] += patch_costs[i];
+    }
+    
+    // use the std dev formula:
+    // sqrt((n*sum_of_squares - sum squared)/n squared)
+    float sum_of_current = 0;
+    float sum_of_current_squares = 0;
+    float sum_of_temp = 0;
+    float sum_of_temp_squares = 0;
+
+    for (int i = 0; i < numProcs; i++) {
+      sum_of_current += currentProcCosts[i];
+      sum_of_current_squares += currentProcCosts[i]*currentProcCosts[i];
+      sum_of_temp += tempProcCosts[i];
+      sum_of_temp_squares += tempProcCosts[i]*tempProcCosts[i];
+    }
+    
+    float curStdDev = sqrt((numProcs*sum_of_current_squares - sum_of_current*sum_of_current)/(numProcs*numProcs));
+    float tmpStdDev = sqrt((numProcs*sum_of_temp_squares - sum_of_temp*sum_of_temp)/(numProcs*numProcs));
+
+    dbg << "CurrStdDev: " << curStdDev << " tmp " << tmpStdDev 
+        << " threshold: " << curStdDev/tmpStdDev << " minT " << d_lbThreshold << endl;
+
+    // if cur / tmp is greater than 1, it is an improvement
+    if (curStdDev / tmpStdDev >= d_lbThreshold)
+      doLoadBalancing = true;
+    //}
   time = Time::currentSeconds() - time;
-  cout << " Time to LB: " << time << endl;
+  dbg << " Time to LB: " << time << endl;
+  return doLoadBalancing;
 }
 
-void ParticleLoadBalancer::assignPatchesRandom(const GridP&, 
-                                               const SchedulerP&)
+bool ParticleLoadBalancer::assignPatchesRandom(const GridP&)
 {
   // this assigns patches in a random form - every time we re-load balance
   // We get a random seed on the first proc and send it out (so all procs
@@ -453,21 +487,22 @@ void ParticleLoadBalancer::assignPatchesRandom(const GridP&,
         max_ppp++;
     }
     proc_record[newproc]++;
-    d_processorAssignment[i] = newproc;
+    d_tempAssignment[i] = newproc;
   }
+  return true;
 }
 
-void ParticleLoadBalancer::assignPatchesCyclic(const GridP&, 
-                                               const SchedulerP&)
+bool ParticleLoadBalancer::assignPatchesCyclic(const GridP&)
 {
   // this assigns patches in a cyclic form - every time we re-load balance
   // we move each patch up one proc - this obviously isn't a very good
   // lb technique, but it tests its capabilities pretty well.
 
   int numProcs = d_myworld->size();
-  for (unsigned i = 0; i < d_processorAssignment.size(); i++) {
-    d_processorAssignment[i] = (d_processorAssignment[i] + 1 ) % numProcs;
+  for (unsigned i = 0; i < d_tempAssignment.size(); i++) {
+    d_tempAssignment[i] = (d_tempAssignment[i] + 1 ) % numProcs;
   }
+  return true;
 }
 
 
@@ -499,14 +534,16 @@ ParticleLoadBalancer::getOldProcessorAssignment(const VarLabel* var,
 }
 
 bool 
-ParticleLoadBalancer::needRecompile(double /*time*/, double delt, 
-				    const GridP& /*grid*/)
+ParticleLoadBalancer::needRecompile(double /*time*/, double /*delt*/, 
+				    const GridP& grid)
 {
   if (d_dynamicAlgorithm == static_lb)
     // should only happen on the first timestep, and we need to do this on a
     // restart
     return d_state != idle; 
-  
+
+  int old_state = d_state;
+
   double time = d_sharedState->getElapsedTime();
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
 
@@ -514,17 +551,28 @@ ParticleLoadBalancer::needRecompile(double /*time*/, double delt,
   // << time << d_lbTimestepInterval << ' ' << ' ' << d_lastLbTimestep
   //   << timestep << ' ' << d_lbInterval << ' ' << ' ' << d_lastLbTime << endl;
 
-  if (d_lbTimestepInterval != 0 && 
-      timestep >= d_lastLbTimestep + d_lbTimestepInterval) {
+  if (d_lbTimestepInterval != 0 && timestep >= d_lastLbTimestep + d_lbTimestepInterval) {
     d_lastLbTimestep = timestep;
-    d_state = needLoadBalance;
+    d_state = checkLoadBalance;
   }
   else if (d_lbInterval != 0 && time >= d_lastLbTime + d_lbInterval) {
     d_lastLbTime = time;
-    d_state = needLoadBalance;
+    d_state = checkLoadBalance;
   }
+  
+  // if we check for lb every timestep, but don't, we still need to recompile
+  // if we load balanced on the last timestep
+  if (possiblyDynamicallyReallocate(grid) || old_state == postLoadBalance) {
+    dbg << d_myworld->myrank() << " PLB - scheduling recompile " <<endl;
+    return true;
+  }
+  else {
+    dbg << d_myworld->myrank() << " PLB - NOT scheduling recompile " <<endl;
+    return false;
+  }
+    
 
-  //cout << d_myworld->myrank() << " PLB recompile: " << d_state << endl;
+  dbg << d_myworld->myrank() << " PLB recompile: " << d_state << endl;
   return d_state != idle; // to recompile when need to load balance or post lb
 } 
 
@@ -583,7 +631,8 @@ ParticleLoadBalancer::restartInitialize(ProblemSpecP& pspec, XMLURL tsurl)
 
 void 
 ParticleLoadBalancer::setDynamicAlgorithm(std::string algo, double interval,
-                                          int timestepInterval, float factor)
+                                          int timestepInterval, float factor,
+                                          double threshold)
 {
   if (algo == "cyclic")
     d_dynamicAlgorithm = cyclic_lb;
@@ -616,25 +665,27 @@ ParticleLoadBalancer::setDynamicAlgorithm(std::string algo, double interval,
   }
   d_lbInterval = interval;
   d_lbTimestepInterval = timestepInterval;
+  d_lbThreshold = threshold;
   d_cellFactor = factor;
 }
 
-
-void ParticleLoadBalancer::dynamicReallocation(const GridP& grid, 
-                                               const SchedulerP& sch)
+bool ParticleLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid)
 {
 
   dbg << d_myworld->myrank() << " In PLB - State: " << d_state << endl;
 
-  // if this is just during a recompile to compensate for 
-  // loadbalancing on the last timestep
-  if (d_state != needLoadBalance) {
+  if (d_state == idle) 
+    return false;
+
+  // if the last timestep was a load balance, we need to recompile the 
+  // task graph
+  else if (d_state == postLoadBalance) {
     d_oldAssignment = d_processorAssignment;
     d_state = idle;
-    return;
+    return true;
   }
   
-  SchedulerCommon* sc = const_cast<SchedulerCommon*>(dynamic_cast<const SchedulerCommon*>(sch.get_rep()));
+  SchedulerCommon* sc = const_cast<SchedulerCommon*>(dynamic_cast<const SchedulerCommon*>(d_scheduler));
 
   int numProcs = d_myworld->size();
   int numPatches = 0;
@@ -668,9 +719,8 @@ void ParticleLoadBalancer::dynamicReallocation(const GridP& grid,
     }
 
     d_oldAssignment = d_processorAssignment;
-    d_state = needLoadBalance;  // l.b. on next timestep
+    d_state = checkLoadBalance;  // l.b. on next timestep
   }
-
   // set up on a restart when lb is static
   else if (d_dynamicAlgorithm == static_lb) {
     d_oldAssignment = d_processorAssignment;
@@ -689,13 +739,25 @@ void ParticleLoadBalancer::dynamicReallocation(const GridP& grid,
     
   }
   else {
-    d_oldAssignment = d_processorAssignment;
+    //d_oldAssignment = d_processorAssignment;
+    d_tempAssignment.clear();
+    d_tempAssignment.resize(numPatches);
+    bool dynamicAllocate = false;
     switch (d_dynamicAlgorithm) {
-    case particle_lb:  assignPatchesParticle(grid, sch); break;
-    case cyclic_lb:    assignPatchesCyclic(grid, sch); break;
-    case random_lb:    assignPatchesRandom(grid, sch); break;
+    case particle_lb:  dynamicAllocate = assignPatchesParticle(grid); break;
+    case cyclic_lb:    dynamicAllocate = assignPatchesCyclic(grid); break;
+    case random_lb:    dynamicAllocate = assignPatchesRandom(grid); break;
+    // static_lb does nothing
     }
-    d_state = postLoadBalance;
+    if (dynamicAllocate) {
+      d_oldAssignment = d_processorAssignment;
+      d_processorAssignment = d_tempAssignment;
+      d_state = postLoadBalance;
+    }
+    else {
+      d_state = idle;
+      return false;
+    }
   }
   
   if (dbg.active()) {
@@ -704,4 +766,5 @@ void ParticleLoadBalancer::dynamicReallocation(const GridP& grid,
         dbg << myrank << " patch " << i << " -> proc " << d_processorAssignment[i] << " (old " << d_oldAssignment[i] << ") - " << d_processorAssignment.size() << ' ' << d_oldAssignment.size() << "\n";
     }
   }
+  return d_state != idle;
 }

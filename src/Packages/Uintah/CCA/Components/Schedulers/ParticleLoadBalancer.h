@@ -45,10 +45,25 @@ namespace Uintah {
     virtual int getOldProcessorAssignment(const VarLabel* var,
 					  const Patch* patch, const int matl);
     virtual bool needRecompile(double time, double delt, const GridP& grid); 
-    virtual bool isDynamic() { return d_dynamicAlgorithm != static_lb; }
-    // maintain lb state and call one of the assignPatches functions
-    virtual void dynamicReallocation(const GridP& grid, const SchedulerP& sch);
-    virtual void restartInitialize(ProblemSpecP& pspec, XMLURL tsurl);
+
+    /// maintain lb state and call one of the assignPatches functions.
+    /// Will initially need to load balance (on first timestep), and thus  
+    /// be called by the SimulationController before the first compile.  
+    /// Afterwards, if needRecompile function tells us we need to check for 
+    /// load balancing, it will set d_state to checkLoadBalance, and then call
+    /// this function (not called from simulation controller.)  We will then 
+    /// go through the motions of load balancing, and if it determines we need
+    /// to load balance (that the gain is greater than some threshold), it will
+    /// set the patches to their new location, set d_state to postLoadBalance,
+    /// return true, signifying that we need to recompile.
+    virtual bool possiblyDynamicallyReallocate(const GridP& grid);
+
+    //! Asks the load balancer if it is dynamic.
+    virtual bool isDynamic() { return true; }
+
+    //! Assigns the patches to the processors they ended up on in the previous
+    //! Simulation.
+    void restartInitialize(ProblemSpecP& pspec, XMLURL);
     
   private:
     enum { static_lb, cyclic_lb, random_lb, particle_lb };
@@ -56,17 +71,20 @@ namespace Uintah {
     ParticleLoadBalancer(const ParticleLoadBalancer&);
     ParticleLoadBalancer& operator=(const ParticleLoadBalancer&);
 
-    // these functions take care of setting d_processorAssignment on all procs
-    // and dynamicReallocation takes care of maintaining the state
-    void assignPatchesParticle(const GridP& level, const SchedulerP& sch);
-    void assignPatchesRandom(const GridP& level, const SchedulerP& sch);
-    void assignPatchesCyclic(const GridP& level, const SchedulerP& sch);
+    /// Helpers for possiblyDynamicallyRelocate.  These functions take care of setting 
+    /// d_tempAssignment on all procs and dynamicReallocation takes care of maintaining 
+    /// the state
+    bool assignPatchesParticle(const GridP& level);
+    bool assignPatchesRandom(const GridP& level);
+    bool assignPatchesCyclic(const GridP& level);
 
     virtual void setDynamicAlgorithm(std::string algo, double interval, 
-                                     int timestepInterval, float cellFactor);
+                                     int timestepInterval, float cellFactor,
+                                     double threshold);
     
-    std::vector<int> d_processorAssignment;
-    std::vector<int> d_oldAssignment;
+    std::vector<int> d_processorAssignment; ///< stores which proc each patch is on
+    std::vector<int> d_oldAssignment; ///< stores which proc each patch used to be on
+    std::vector<int> d_tempAssignment; ///< temp storage for checking to reallocate
 
     double d_lbInterval;
     double d_lastLbTime;
@@ -78,13 +96,14 @@ namespace Uintah {
     ProblemSpecP d_pspec;
     
     enum {
-      idle = 0, postLoadBalance = 1, needLoadBalance = 2
+      idle = 0, postLoadBalance = 1, checkLoadBalance = 2, initLoadBalance = 3
     };
     
+    double d_lbThreshold; //< gain threshold to exceed to require lb'ing
     float d_cellFactor;
     int d_dynamicAlgorithm;
     int d_particleAlgo;
-    int d_state; //< either idle, needLoadBalance, postLoadBalance
+    int d_state; //< idle, postLB, checkLB, initLB
   };
 } // End namespace Uintah
 
