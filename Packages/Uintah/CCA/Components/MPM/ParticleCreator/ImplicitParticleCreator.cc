@@ -112,7 +112,7 @@ ImplicitParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
   particle_state_preReloc.push_back(lb->pAccelerationLabel_preReloc);
 
   // Remove the pSp_volLabel, pSp_volLabel_preReloc,pdisplacement
-  vector<const VarLabel*>::iterator r1,r2;
+  vector<const VarLabel*>::iterator r1,r2,r3,r4;
 
   r1 = find(particle_state.begin(), particle_state.end(),lb->pSp_volLabel);
   particle_state.erase(r1);
@@ -120,4 +120,14 @@ ImplicitParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
   r2 = find(particle_state_preReloc.begin(), particle_state_preReloc.end(),
 	 lb->pSp_volLabel_preReloc);
   particle_state_preReloc.erase(r2);
+
+  if(d_useLoadCurves){
+    r3 = find(particle_state.begin(), particle_state.end(),
+              lb->pLoadCurveIDLabel);
+    particle_state.erase(r3);
+
+    r4 = find(particle_state_preReloc.begin(), particle_state_preReloc.end(),
+              lb->pLoadCurveIDLabel_preReloc);
+    particle_state_preReloc.erase(r4);
+  }
 }
