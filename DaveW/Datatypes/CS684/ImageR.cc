@@ -19,6 +19,7 @@
 #include <SCICore/Containers/String.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/MinMax.h>
+#include <SCICore/Util/NotFinished.h>
 
 #include <iostream.h>
 
@@ -50,6 +51,7 @@ ImageXYZ::ImageXYZ(const Array2<double>& XYZ) : VoidStar()
 ImageXYZ::ImageXYZ(const ImageXYZ& copy)
 : xyz(copy.xyz), VoidStar(copy)
 {
+    NOT_FINISHED("ImageXYZ::ImageXYZ");
 }
 
 ImageXYZ::~ImageXYZ() {
@@ -85,6 +87,7 @@ ImageRM::ImageRM(const ImageRM& copy)
   matlSpec(copy.matlSpec), matlName(copy.matlName), kd(copy.kd), 
   ks(copy.ks), ka(copy.ka), VoidStar(copy), LS(0), MS(0), KAS(0)
 {
+    NOT_FINISHED("ImageRM::ImageRM");
 }
 
 void ImageRM::getSpectraMinMax(double &min, double &max) {
@@ -363,6 +366,9 @@ void ImageRM::io(Piostream& stream) {
 
 //
 // $Log$
+// Revision 1.2  1999/08/23 05:48:00  dmw
+// Put back the NOT_FINISHED messages I accidentally removed.
+//
 // Revision 1.1  1999/08/23 02:52:56  dmw
 // Dave's Datatypes
 //
