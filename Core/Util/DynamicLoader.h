@@ -126,7 +126,7 @@ private:
   CrowdMonitor          map_crowd_;
   ConditionVariable     compilation_cond_;
   Mutex                 map_lock_;
-  static string		otf_dir_;
+  static string		otf_dir();
 
   //! static vars.
   static DynamicLoader *scirun_loader_;
