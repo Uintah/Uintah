@@ -341,31 +341,33 @@ for details about the implementation of the GENESIS module.
 data structures and functions for the parallel solution of partial
 differential equations.
 
-When PETSc is installed (and SCIRun is configured to use it), SCIRun's
+When PETSc is installed, and SCIRun is configured to use it, SCIRun's
 \module{SolveMatrix} module enables the use of PETSc solvers.
 
-Installation of PETSc is optional. SolveMatrix provides built-in
-solvers if PETSc is not available.
+Installation of PETSc is optional.  SolveMatrix provides built-in
+solvers if PETSc is not installed.
+
 
 \subsection{Extensibility}
 \label{sec:con-extend} 
 
 \SR{} is an extensible \index{extensible} problem solving environment.
-This is true in the sense that there are no limits to the
-different ways of connecting modules and creating new applications.  
+There are no limits to the different ways of connecting modules and
+creating new applications.
 
-\sr{} can also be extended by creating new packages and modules.
-Modules can be coded from scratch or with the assistance of the
-\sr's \dfn{Module Maker} component.
+\sr{} can be extended by creating new packages and modules.  Modules
+can be coded from scratch or with the assistance of the \sr's
+\dfn{Module Maker} component.
 
-\sci{} anticipates users  creating new modules. \sci{} 
-encourages users to contribute modules to a repository on the \BIOPSE{}
-web site \index{BioPSE@\BIOPSE{}!web site} 
-(\htmladdnormallink{www.sci.utah.edu/ncrr/software/biopse.html} 
-{http://www.sci.utah.edu/ncrr/software/biopse.html} where they will be reviewed, and useful modules will be included in subsequent releases of \sr{}.
-Future releases will include more extensive tools for building modules
-and wrapping existing codes within \SR{} module wrappers, to maximize
-intellectual investment in legacy code.
+\sci{} anticipates users creating new modules. \sci{} encourages users
+to contribute modules to a repository on the \BIOPSE{} web site
+\index{BioPSE@\BIOPSE{}!web site}
+(\htmladdnormallink{www.sci.utah.edu/ncrr/software/biopse.html})
+{http://www.sci.utah.edu/ncrr/software/biopse.html} where they will be
+reviewed, and useful modules will be included in subsequent releases
+of \sr{}.  To maximize intellectual investment in legacy code future
+releases of \sr{} will include more extensive tools for building
+modules and wrapping existing codes within \SR{} module wrappers.
 
 \subsection{\sr{} Objects}
 \label{sec:sr-objects}
@@ -373,7 +375,7 @@ intellectual investment in legacy code.
 
 \sr{}'s \datatype{Field}, \datatype{Mesh}, \datatype{Matrix}, and
 \datatype{ColorMap} objects are used frequently in networks.  These
-objects are described in sections that follow.
+objects are described in following sections.
 
 \subsubsection{Field}
 
