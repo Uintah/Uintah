@@ -20,6 +20,7 @@ c*********************************************************************
       double precision ESD, PESD, WSD, WWSD
       double precision SSD, PNSD, RNSD, SSSD
       double precision TSD, BSD, PTSD, BBSD
+      double precision local_small
 
 c*********************************************************************
 c     Start :
@@ -42,6 +43,9 @@ c*********************************************************************
       IENDU = indexHighU(1)
       JENDV = indexHighV(2)
       KENDW = indexHighW(3)
+c WARNING: set the following to remove the roundoff error. Needs to be changed
+c if abs values of variables can be that small
+      local_small=1.0D-12
 
 C-----------------------------------------------------------------------
 c     INIT to ZERO
@@ -186,6 +190,8 @@ C-----------------------------------------------------------------------
          CEEU(I) = DXPWU(I)/SEWU(I)
          CWWU(I) = DXEPU(I)/SEWU(I)
          CWEU(I) = PT5*(CWWU(I)-CEEU(I))
+         if (abs(cwe(i)).lt.local_small) cwe(i)=0.0D0
+         if (abs(cweu(i)).lt.local_small) cweu(i)=0.0D0
  780  CONTINUE
       DO 781 I = iBegGhost,iEndGhost
          EFAC(I) = (XX(I)-XU(I))/SEW(I)
@@ -202,6 +208,8 @@ C-----------------------------------------------------------------------
         WSD = PT5*(XU(I)+XU(I-1))
         PESD = XX(I)-ESD
         WWSD = XX(I-1)-WSD
+        if (abs(pesd).lt.local_small) pesd=0.0D0
+        if (abs(wwsd).lt.local_small) wwsd=0.0D0
         IF (PESD.LE.ZERO) THEN
           FAC1U(I) = (XX(I+1)-ESD)/DXPW(I+1)
           FAC2U(I) = (ESD-XX(I))/DXPW(I+1)
@@ -220,6 +228,10 @@ C-----------------------------------------------------------------------
           FAC4U(I) = (XX(I-1)-WSD)/DXPW(I-1)
           IWSDU(I) = -2
         END IF
+        if (abs(fac1u(i)).lt.local_small) fac1u(i)=0.0D0
+        if (abs(fac2u(i)).lt.local_small) fac2u(i)=0.0D0
+        if (abs(fac3u(i)).lt.local_small) fac3u(i)=0.0D0
+        if (abs(fac4u(i)).lt.local_small) fac4u(i)=0.0D0
   800 CONTINUE
 c      iwsdu(ist) = 0
 c      iesdu(ist) = 0
@@ -264,6 +276,8 @@ C-----------------------------------------------------------------------
          CNNV(J) = DYPSV(J)/SNSV(J)
          CSSV(J) = DYNPV(J)/SNSV(J)
          CSNV(J) = PT5*(CSSV(J)-CNNV(J))
+         if (abs(csn(j)).lt.local_small) csn(j)=0.0D0
+         if (abs(csnv(j)).lt.local_small) csnv(j)=0.0D0
   785 CONTINUE
       DO 786 J = jBegGhost,jEndGhost
          NFAC(J) = (YY(J)-YV(J))/SNS(J)
@@ -280,6 +294,8 @@ C-----------------------------------------------------------------------
         SSD = PT5*(YV(J)+YV(J-1))
         PNSD = YY(J)-RNSD
         SSSD = YY(J-1)-SSD
+        if (abs(pnsd).lt.local_small) pnsd=0.0D0
+        if (abs(sssd).lt.local_small) sssd=0.0D0
         IF (PNSD.LE.ZERO) THEN
           FAC1V(J) = (YY(J+1)-RNSD)/DYPS(J+1)
           FAC2V(J) = (RNSD-YY(J))/DYPS(J+1)
@@ -298,6 +314,10 @@ C-----------------------------------------------------------------------
           FAC4V(J) = (YY(J-1)-SSD)/DYPS(J-1)
           JSSDV(J) = -2
         END IF
+        if (abs(fac1v(j)).lt.local_small) fac1v(j)=0.0D0
+        if (abs(fac2v(j)).lt.local_small) fac2v(j)=0.0D0
+        if (abs(fac3v(j)).lt.local_small) fac3v(j)=0.0D0
+        if (abs(fac4v(j)).lt.local_small) fac4v(j)=0.0D0
   850 CONTINUE
 c        jssdv(jst) = 0
 c        jnsdv(jst) = 0
@@ -349,6 +369,8 @@ c      IF (LCORD) STBW(kEndGhost) = STBW(KST)
          CTTW(K) = DZPBW(K)/STBW(K)
          CBBW(K) = DZTPW(K)/STBW(K)
          CBTW(K) = PT5*(CBBW(K)-CTTW(K))
+         if (abs(cbt(k)).lt.local_small) cbt(k)=0.0D0
+         if (abs(cbtw(k)).lt.local_small) cbtw(k)=0.0D0
   790 CONTINUE
       DO 791 K = kBegGhost,kEndGhost
          TFAC(K) = (ZZ(K)-ZW(K))/STB(K)
@@ -366,6 +388,8 @@ C$DIR NO_RECURRENCE
         BSD = PT5*(ZW(K)+ZW(K-1))
         PTSD = ZZ(K)-TSD
         BBSD = ZZ(K-1)-BSD
+        if (abs(ptsd).lt.local_small) ptsd=0.0D0
+        if (abs(bbsd).lt.local_small) bbsd=0.0D0
         IF (PTSD.LE.ZERO) THEN
           FAC1W(K) = (ZZ(K+1)-TSD)/DZPB(K+1)
           FAC2W(K) = (TSD-ZZ(K))/DZPB(K+1)
@@ -386,6 +410,10 @@ C$DIR NO_RECURRENCE
             KBSDW(K) = -2
           END IF
         END IF
+        if (abs(fac1w(k)).lt.local_small) fac1w(k)=0.0D0
+        if (abs(fac2w(k)).lt.local_small) fac2w(k)=0.0D0
+        if (abs(fac3w(k)).lt.local_small) fac3w(k)=0.0D0
+        if (abs(fac4w(k)).lt.local_small) fac4w(k)=0.0D0
 c        KBSDW(KST) = 0
 c        ktsdw(kst) = 0
   900 CONTINUE
