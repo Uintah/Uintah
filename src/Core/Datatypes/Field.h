@@ -10,16 +10,17 @@
 
 #ifndef SCI_project_Field_h
 #define SCI_project_Field_h 1
-
 #include <SCICore/Datatypes/Datatype.h>
+#include <SCICore/Datatypes/LatticeGeom.h>
 #include <SCICore/Datatypes/FieldInterface.h>
 #include <SCICore/Containers/LockingHandle.h>
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Datatypes/Geom.h>
 #include <SCICore/Datatypes/Attrib.h>
-#include <iostream>
 
+#include <functional>
+#include <iostream>
 #include <vector>
 #include <string>
 
@@ -48,7 +49,7 @@ enum status_t{
 //////////
 // Where the attribute lives in the geometry
 enum elem_t{
-  NODAL,
+  NODE,
   EDGE,
   FACE,
   ELEM
@@ -67,22 +68,32 @@ public:
 
   //////////
   // If geom is set, set its name
-  inline void set_geom_name(string iname){if(geom.get_rep())
-    geom->set_name(iname);};
+  virtual bool set_geom_name(string iname) = 0;
 
   //////////
   // If attrib is set, set its name
-  inline void set_attrib_name(string iname){if(attrib.get_rep())
-    attrib->set_name(iname);};
+  virtual bool set_attrib_name(string iname) = 0;
 
   //////////
   // Return geometry
-  inline GeomHandle get_geom(){return geom;};
-
+  virtual Geom* get_geom() = 0;
+  
   //////////
   // Return the attribute
-  inline AttribHandle get_attrib(){return attrib;};
+  virtual Attrib* get_attrib() = 0;
 
+  //////////
+  // Return the upper and lower bounds
+  virtual bool get_bbox(BBox&) = 0;
+
+  //////////
+  // Set the bounding box
+  virtual bool set_bbox(const BBox&) = 0;
+  virtual bool set_bbox(const Point&, const Point&) = 0;
+
+  virtual bool longest_dimension(double&) = 0;
+  
+ 
   //////////
   // Test to see if this field includes (is derived from)
   // the given interface. As convention, the input string should be in
@@ -92,22 +103,21 @@ public:
   // SInterpolate *inter = some_field.query_interface("sinterpolate");
   //
   // Returns NULL if the given interface is not available for the field.
-  virtual FieldInterface* query_interface(const string&);
-
+  template <class T> T* query_interface();
+  
   /////////
   // The current status of the field
   status_t status;
-protected:
-
-  /////////
-  // The geometry and attribute associated with this field
-  GeomHandle geom;
-  AttribHandle attrib;
 
   /////////
   // Where the attributes live relative to the geometry.  Used only
   // for unstructured geometries.
-  elem_t elem_type;
+  elem_t data_loc;
+
+  // Persistent representation...
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
+protected:
 };
 
 

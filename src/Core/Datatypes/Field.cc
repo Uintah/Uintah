@@ -13,16 +13,21 @@
 namespace SCICore{
 namespace Datatypes{
 
+PersistentTypeID Field::type_id("Field", "Datatype", 0);
+
 Field::Field(){
   // Set default values;
   status = NEW;
-  elem_type = NODAL;
+  data_loc = NODE;
 
 }
 
-FieldInterface* Field::query_interface(const string& istring){
-  // Nothing mathced, return NULL;
-  return NULL;
+template <class T> T* Field::query_interface(){
+  return dynamic_cast<T*>(this);
+}
+
+
+void Field::io(Piostream&){
 }
 
 
