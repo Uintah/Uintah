@@ -95,6 +95,14 @@ public:
 			       const MaterialSet* mpm_matls,
 			       const MaterialSet* all_matls);
 
+  // Calculate integrated solid temperature from individual 
+  // materials in a given cell
+  void scheduleComputeIntegratedSolidProps(SchedulerP& sched,
+					   const PatchSet* patches,
+					   const MaterialSet* arches_matls,
+					   const MaterialSet* mpm_matls,
+					   const MaterialSet* all_matls);
+
   // Calculate momentum exchange terms for gas-solid interface
   void scheduleMomExchange(SchedulerP& sched,
 			   const PatchSet* patches,
@@ -153,6 +161,12 @@ public:
 		       DataWarehouse* old_dw,
 		       DataWarehouse* new_dw);
 
+
+  void computeIntegratedSolidProps(const ProcessorGroup*,
+				   const PatchSubset* patches,
+				   const MaterialSubset*,
+				   DataWarehouse* /*old_dw*/,
+				   DataWarehouse* new_dw);
 
   void doMomExchange(const ProcessorGroup*,
 		     const PatchSubset* patches,
@@ -225,6 +239,7 @@ public:
 
   double d_htcoeff;
   bool d_calcEnergyExchange;
+  bool d_DORad;
   int nofTimeSteps;
   bool d_recompile;
 
