@@ -37,6 +37,7 @@ public:
   AppendMatrix(GuiContext* ctx);
   virtual ~AppendMatrix();
   virtual void execute();
+  virtual void tcl_command(GuiArgs&, void *);
 };
 
 DECLARE_MAKER(AppendMatrix)
@@ -184,5 +185,21 @@ void AppendMatrix::execute() {
   }
 }
 
+void
+AppendMatrix::tcl_command(GuiArgs& args, void* userdata)
+{
+
+  if (args[1] == "clear")
+  {
+    //    DenseMatrix *omatrix = 0;
+    matrixH_=0;
+    want_to_execute();
+  } else {
+    Module::tcl_command(args, userdata);
+  }
+
+}
+
 } // End namespace SCIRun
+
 
