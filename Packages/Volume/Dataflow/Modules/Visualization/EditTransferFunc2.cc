@@ -996,7 +996,7 @@ EditTransferFunc2::update()
       cerr << "Shaders not supported; switching to software rasterization" << endl;
     }
   }
-
+  
   // create pbuffer
   if(use_pbuffer_ && (!pbuffer_
       || pbuffer_->width() != width_
@@ -1042,7 +1042,7 @@ EditTransferFunc2::update()
       widget_[i]->rasterize();
     }
 
-    glFlush();
+    pbuffer_->swapBuffers();
     
     glXMakeCurrent(dpy_, win_, ctx_);
   } else {
@@ -1119,6 +1119,7 @@ EditTransferFunc2::update()
                  axis_size[histo_->dim-1], 0, GL_LUMINANCE, GL_UNSIGNED_BYTE,
                  histo_->data);
     glBindTexture(GL_TEXTURE_2D, 0);
+    histo_dirty_ = false;
   }
 
   gui->unlock();
@@ -1158,10 +1159,11 @@ EditTransferFunc2::redraw()
 
   // draw histo
   if(histo_) {
+    glActiveTexture(GL_TEXTURE0);
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     glEnable(GL_TEXTURE_2D);
     glBindTexture(GL_TEXTURE_2D, histo_tex_);
-    glColor4f(0.7, 0.7, 0.7, 1.0);
+    glColor4f(0.75, 0.75, 0.75, 1.0);
     glBegin(GL_QUADS);
     {
       glTexCoord2f( 0.0,  0.0);
@@ -1207,7 +1209,7 @@ EditTransferFunc2::redraw()
     glDisable(GL_TEXTURE_2D);
   }
   glDisable(GL_BLEND);
-
+  
   // draw widgets
   for (unsigned int i = 0; i < widget_.size(); i++)
   {
