@@ -574,6 +574,9 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set w .ui[modname]
 
 	if [ expr [winfo exists $w] ] {
+	    $w config -cursor watch
+	    update idletasks
+
 	    set sd [$w.sd childsite]
 	    set listbox $sd.listbox
 	    $listbox.list delete 0 end
@@ -617,6 +620,8 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    foreach id $ids {
 		$treeview open $id
 	    }
+
+	    reset_cursor
 	}
     }
 
