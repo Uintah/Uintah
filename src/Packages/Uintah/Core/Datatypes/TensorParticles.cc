@@ -32,8 +32,8 @@ TensorParticles::TensorParticles()
 
 TensorParticles::TensorParticles(
 		 const vector<ShareAssignParticleVariable<Matrix3> >& tensors,
-		 PSet* pset, LevelP l) :
-  have_minmax(false),  psetH(pset), tensors(tensors), level(l)
+		 PSet* pset) :
+  have_minmax(false),  psetH(pset), tensors(tensors)
 {
 }
 
