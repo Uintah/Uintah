@@ -54,6 +54,9 @@ void DataArchiver::problemSetup(const ProblemSpecP& params)
 
    d_currentTimestep = 0;
 
+   if (d_outputInterval == 0) 
+	return;
+
    d_dir = makeVersionedDir(d_filebase);
 
    DOM_DOMImplementation impl;
@@ -84,6 +87,10 @@ void DataArchiver::finalizeTimestep(double time, double delt,
 				    DataWarehouseP& /*old_dw*/,
 				    DataWarehouseP& new_dw)
 {
+  
+   if (d_outputInterval == 0)
+      return;
+ 
    int timestep = d_currentTimestep;
 
    // Schedule task to dump out integrated data at every timestep
@@ -260,6 +267,9 @@ void DataArchiver::output(const ProcessorContext*,
 			  const VarLabel* var,
 			  int matlIndex)
 {
+   if (d_outputInterval == 0)
+      return;
+
    cerr << "output called on patch: " << patch->getID() << ", variable: " << var->getName() << ", material: " << matlIndex << " at time: " << timestep << "\n";
    
    ostringstream tname;
@@ -516,6 +526,9 @@ static Dir makeVersionedDir(const std::string nameBase)
 
 //
 // $Log$
+// Revision 1.6  2000/06/02 20:25:59  jas
+// If outputInterval is 0 (input file), no output is generated.
+//
 // Revision 1.5  2000/06/01 23:09:38  guilkey
 // Added beginnings of code to store integrated quantities.
 //
