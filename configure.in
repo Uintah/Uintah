@@ -69,8 +69,8 @@ SCI_ARG_WITH_LIST="--no-create --no-recursion"
 SCI_ARG_ENABLE_LIST=""
 
 ## Pass on the echo flags to the other scripts.
-ECHO_N=$ac_n
-ECHO_C=$ac_c
+#ECHO_N=$ac_n
+#ECHO_C=$ac_c
 
 AC_SUBST(ECHO_N)
 AC_SUBST(ECHO_C)
@@ -269,7 +269,6 @@ AC_DEFUN(SCI_CHECK_HEADERS,
         _SCI_FIRST_TIME_=no      
       fi
 
-      AC_MSG_CHECKING(for $_SCI_LOOP_VAR_)
       cat > conftest.$ac_ext <<EOF
       #include "confdefs.h"
       #include <$_SCI_LOOP_VAR_>
@@ -277,26 +276,29 @@ AC_DEFUN(SCI_CHECK_HEADERS,
         return 0;
       }
 EOF
-
-      ac_try="$ac_cpp conftest.$ac_ext -I$1 $5 >/dev/null 2>conftest.out"
-      (eval $ac_try) 2>&5
-      ac_err=`grep -v '^ *+' conftest.out | grep -v "WARNING" | grep -v "^conftest.${ac_ext}\$"`
-      if test -z "$ac_err"; then
-        AC_MSG_RESULT(yes)
-      else
-        eval $_SCI_VAR_NAME_=''
-        AC_MSG_RESULT(no)
-        _SCI_LOOPTEST_=false
-        eval $_SCI_NOTFOUND_
-      fi
+      for _SCI_LOOP_VAR2_ in $1; do
+        AC_MSG_CHECKING(for $_SCI_LOOP_VAR_ in $_SCI_LOOP_VAR2_)
+        ac_try="$ac_cpp conftest.$ac_ext -I$_SCI_LOOP_VAR2_ $5 >/dev/null 2>conftest.out"
+        (eval $ac_try) 2>&5
+        ac_err=`grep -v '^ *+' conftest.out | grep -v "WARNING" | grep -v "^conftest.${ac_ext}\$"`
+        if test -z "$ac_err"; then
+          AC_MSG_RESULT(yes)
+          break
+        else
+          eval $_SCI_VAR_NAME_=''
+          AC_MSG_RESULT(no)
+          _SCI_LOOPTEST_=false
+          eval $_SCI_NOTFOUND_
+        fi
 
 #      rm -f conftest* a.out
+      done
     done
 
     if test "$_SCI_LOOPTEST_" = "true"; then
-      if test "$1" != "/usr/include" &&
-         test "$1" != "/usr/include/"; then
-        eval $_SCI_VAR_NAME_='$1'
+      if test "$_SCI_LOOP_VAR2_" != "/usr/include" &&
+         test "$_SCI_LOOP_VAR2_" != "/usr/include/"; then
+        eval $_SCI_VAR_NAME_='$_SCI_LOOP_VAR2_'
       else
         eval $_SCI_VAR_NAME_='\ '
       fi
@@ -607,6 +609,14 @@ SCI_ARG_WITH(qt,
   [  --with-qt=DIR                     Use the Qt installation in DIR],
   [with_qt="$withval"],
   [with_qt=${with_qt='no'}])
+SCI_ARG_WITH(opengl,
+  [  --with-opengl=DIR                     Use the OpenGL installation in DIR],
+  [with_opengl="$withval"],
+  [with_opengl=${with_opengl='no'}])
+SCI_ARG_WITH(zlib,
+  [  --with-zlib=DIR                     Use the zlib installation in DIR],
+  [with_zlib="$withval"],
+  [with_zlib=${with_zlib='no'}])
 SCI_ARG_WITH(vdt,
   [  --with-vdt=DIR                    <path-to-vdt>],
   [with_vdt="$withval"],
@@ -728,7 +738,10 @@ case $host in
     AC_MSG_CHECKING(physical processor count)
     NUM_CPUS="`cat /proc/cpuinfo | fgrep processor | wc | cut -c1-7`"
     ;;
-  *)    
+  *-dec*)
+    NUM_CPUS=1
+    ;;
+  *)
     echo
     AC_MSG_WARN( !!!!!! this system is untested - You are on your own !!!!!!)
     echo
@@ -737,7 +750,7 @@ case $host in
     ;;
 esac
 
-if ! test $NUM_CPUS="`expr $NUM_CPUS + 0 2> /dev/null`" ; then
+if test -z $NUM_CPUS; then
   NUM_CPUS="1"
 fi
 AC_MSG_RESULT($NUM_CPUS)
@@ -785,7 +798,7 @@ ASSERTION_LEVEL=$enable_assertion_level
 
 extra_cflags="";
 
-if ! test "$output_avg_walltime" = "no"; then
+if test "$output_avg_walltime" != "no"; then
   extra_cflags="-DOUTPUT_AVG_ELAPSED_WALLTIME ${extra_cflags}"
 fi
 
@@ -890,7 +903,7 @@ else
   AC_MSG_RESULT(yes ($optimize) )
 fi
 
-if ! test "$perfex" = "no"; then
+if test "$perfex" != "no"; then
   extra_cflags="-DUSE_PERFEX_COUNTERS ${extra_cflags}"
 fi
 
@@ -979,17 +992,50 @@ case $host in
     fi
     rm -f wow.c wow.o
     ;;
+  *-dec*)
+    ac_objext=o
+    USRBIN=/usr/bin
+    AC_PATH_PROG(CC,cc,,$USRBIN,)
+    if test -z "$CC"; then
+      AC_MSG_ERROR(couldn't find the Compaq C compiler (cc))
+    fi
+    AC_PATH_PROG(F77,f77,,$USRBIN,)
+    if test -z "$F77"; then
+      AC_MSG_ERROR(couldn't find the MIPSPro Fortran compiler (f77))
+    fi
+    AC_PATH_PROG(CXX,cxx,,$USRBIN,)
+    if test -z "$CXX"; then
+      AC_MSG_ERROR(couldn't find the MIPSPro C++ compiler (CC))
+    fi
+    CPP="$CC"
+    CXXCPP="$CXX -c"
+    ##  this WOFF is required for configure 
+    CPPFLAGS=" -model ansi -pthread -D__USE_STD_IOSTREAM"
+    FFLAGS="$extra_cflags"
+    CFLAGS="-model ansi -pthread $extra_cflags -D__USE_STD_IOSTREAM"
+    CXXFLAGS="$CFLAGS"
+    SOFLAGS="-shared -warning_unresolved -update_registry \$(LIBDIR)so_locations"
+    LDFLAGS=""
+    LDRUN_PREFIX="-rpath "
+    REPOSITORY_FLAGS="-ptr"
+    ;;
   *)
-    CFLAGS=" -Wall"
     AC_PROG_CC
-    SCI_CHECK_VERSION($CC,--version,2.95.3,,
-      echo configure: error: wrong $CC version.; exit)
+    if test "$GCC" = yes; then
+      CFLAGS=" -Wall"
+      SCI_CHECK_VERSION($CC,--version,2.95.3,,
+        echo configure: error: wrong $CC version.; exit)
+    fi
     AC_PROG_F77
-    SCI_CHECK_VERSION($F77,--version,0.5.25,,
-      echo configure: error: wrong $CC version.; exit)
+    if test "$GCC" = yes; then
+      SCI_CHECK_VERSION($F77,--version,0.5.25,,
+        echo configure: error: wrong $CC version.; exit)
+    fi
     AC_PROG_CXX
-    SCI_CHECK_VERSION($CXX,--version,2.95.3,,
-      echo configure: error: wrong $CXX version.; exit)    
+    if test "$GCC" = yes; then
+      SCI_CHECK_VERSION($CXX,--version,2.95.3,,
+        echo configure: error: wrong $CXX version.; exit)    
+    fi
     AC_PROG_CPP
     AC_PROG_CXXCPP
     AC_CHECK_PROG(AS,as,as)
@@ -1019,8 +1065,8 @@ CC_DEPEND_REGEN=unknown
 CC_DEPEND_EXT=unknown
 
 # Try -MDupdate
-for flag in -MDupdate; do
-  if test $CC_DEPEND_MODE = unknown; then
+if test $CC_DEPEND_MODE = unknown; then
+  for flag in -MDupdate; do
     rm -f configure-test.o configure-test-dir/configure-test.o
     ac_try="$CXX $CFLAGS -c $flag configure-test-dir/configure-test.d -o configure-test-dir/configure-test.o configure-test-dir/configure-test.cc >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
@@ -1029,33 +1075,35 @@ for flag in -MDupdate; do
       CC_DEPEND_REGEN='-MDupdate $(dir $@)depend.mk'
       CC_DEPEND_EXT=depend.mk
     fi
-  fi
-done
+  done
+fi
 
 # Try -MD or -M
-for flag in -MD -M; do
-  for ext in d u; do
-    if test $CC_DEPEND_MODE = unknown; then
+if test $CC_DEPEND_MODE = unknown; then
+  for flag in -MD -M; do
+    for ext in d u o.d; do
       rm -f configure-test.o configure-test-dir/configure-test.o
       ac_try="$CXX $CFLAGS -c $flag configure-test-dir/configure-test.cc -o configure-test-dir/configure-test.o >/dev/null 2>conftest.out"
       (eval $ac_try) 2>&5
-      if test -f configure-test-dir/configure-test.d ; then
+      if test -f configure-test-dir/configure-test.$ext ; then
         CC_DEPEND_MODE=normal
 	CC_DEPEND_REGEN=$flag
 	CC_DEPEND_EXT=$ext
+        break 2
       fi
-      if test -f configure-test.d; then
+      if test -f configure-test.$ext; then
         CC_DEPEND_MODE=move
 	CC_DEPEND_REGEN=$flag
 	CC_DEPEND_EXT=$ext
+        break 2
       fi
-    fi
+    done
   done
-done
+fi
 
 # Last resort, try one that spits out to stdout
-for flag in -M; do
-  if test $CC_DEPEND_MODE = unknown; then
+if test $CC_DEPEND_MODE = unknown; then
+  for flag in -M; do
     rm -f configure-test.o configure-test-dir/configure-test.o
     ac_try="$CXX $CFLAGS -c $flag configure-test-dir/configure-test.cc >configure-test-dir/configure-test.d 2>conftest.out"
     (eval $ac_try) 2>&5
@@ -1063,9 +1111,10 @@ for flag in -M; do
       CC_DEPEND_MODE=stdout
       CC_DEPEND_REGEN=$flag
       CC_DEPEND_EXT=d
+      break
     fi
-  fi
-done
+  done
+fi
 
 if test $CC_DEPEND_MODE = unknown; then
   AC_MSG_ERROR(Cannot determine dependency generation flag)
@@ -1115,7 +1164,7 @@ AC_CHECK_PROG(ETAGS, etags, etags)
 
 ##  Create the Packages/Uintah/tools dir for later use.
 if test "$uintah" = "yes" ; then
-  if ! test -d "Packages/Uintah/tools"; then
+  if test ! -d "Packages/Uintah/tools"; then
     AC_MSG_RESULT(Creating Packages/Uintah/tools directory)
     mkdir -p "Packages/Uintah/tools"
   fi
@@ -1143,6 +1192,7 @@ AC_SUBST(extra_cflags)
 AC_SUBST(MAKE_PARALLELISM)
 AC_SUBST(NEED_SONAME)
 AC_SUBST(PERL)
+AC_SUBST(REPOSITORY_FLAGS)
 
 ##  set the default language after the build tools are found
 AC_LANG_CPLUSPLUS
@@ -1311,8 +1361,11 @@ case $host in
   *linux*)
     SCI_CHECK_LIB($thirdparty/lib,g2c,main,FLIBS=-lg2c,,,)
     ;;
+  *dec*)
+    SCI_CHECK_LIB($thirdparty/lib,for,main,FLIBS=-lfor,,,)
+    ;;
   *)
-    SCI_CHECK_LIB($thirdparty/lib,F77,main,FLIBS=-lF77,,,)
+#    SCI_CHECK_LIB($thirdparty/lib,F77,main,FLIBS=-lF77,,,)
     ;;
 esac
 
@@ -1375,10 +1428,19 @@ AC_SUBST(CFLAGS)
 ##  --  search for OpenGL  -----------------------------------------------
 
 FOUND_ALL_GL=no
-for i in /usr/lib /usr/X11R6/lib; do
+if test $with_opengl != no; then
+  opengl_lib=$with_opengl/lib
+  opengl_include=$with_opengl/include
+else
+  opengl_lib=
+  opengl_include=
+fi
+
+for i in $opengl_lib /usr/lib /usr/X11R6/lib; do
   if test ! -d "$i"; then 
     continue
   fi
+  AC_CHECKING(in $i)
 
   SCI_CHECK_LIB($i,GL,main,HAVE_LIBGL=yes,,)
   SCI_CHECK_LIB($i,GLU,main,HAVE_LIBGLU=yes,,-lGL -lpthread)
@@ -1393,14 +1455,15 @@ if test "$FOUND_ALL_GL" = "no";  then
   AC_MSG_ERROR(one or more OpenGL libraries are missing. exiting.)
 fi
 
-SCI_CHECK_HEADERS(/usr/include,GL/gl.h GL/glu.h GL/glx.h,,HAVE_GL_H=no)
+SCI_CHECK_HEADERS($opengl_include /usr/include,GL/gl.h GL/glu.h GL/glx.h,,HAVE_GL_H=no)
 
 if test "$HAVE_GL_H" = "no";  then
   AC_MSG_ERROR(one or more OpenGL headers is missing. exiting.)
 fi
 
 AC_SUBST(LIBGL)
-AC_SUBST(INCGL_H)
+GL_INCLUDE=$INCGL_GL_H
+AC_SUBST(GL_INCLUDE)
 
 ##  --  search for dlopen  -----------------------------------------------
 
@@ -1432,13 +1495,18 @@ AC_CHECK_HEADERS(stdio.h stdlib.h stddef.h stdarg.h string.h limits.h \
   sys/mman.h sys/param.h sys/ioctl.h sys/resource.h sys/wait.h \
   sys/utsname.h rpc/types.h netinet/in.h,,
   echo configure: error: could not find a required standard header. exiting.
-  exit)
+  exit 1)
+AC_CHECK_HEADERS(inttypes.h stdint.h)
+#if test -z "$INCINTTYPES_H" &&
+#   test -z "$INCSTDINT_H"; then
+#  AC_MSG_ERROR(need inttypes.h or stdint.h)
+#fi
 
 ##  --  required SGI headers
 if test "$host" = "irix"; then
   AC_CHECK_HEADERS(ieeefp.h ulocks.h sys/uuid.h,,
     echo configure: error: could not find a required standard header. exiting.
-  exit)
+  exit 1)
 fi
 
 ##  --  required STL headers
@@ -1462,10 +1530,13 @@ if test "$DEF_HASHMAP" = "None"; then
                  [DEF_HASHMAP=HAVE_GNU_HASHMAP])
 fi
 if test "$DEF_HASHMAP" = "None"; then
-  AC_MSG_ERROR("Cannot find hash_map")
+  DEF_HASHMAP=
+  AC_MSG_RESULT(not found)
+  AC_MSG_WARN([Cannot find hash_map, will use map instead])
+else
+  AC_MSG_RESULT(found: $DEF_HASHMAP)
+  DEF_HASHMAP="#define $DEF_HASHMAP"
 fi
-AC_MSG_RESULT(found: $DEF_HASHMAP)
-DEF_HASHMAP="#define $DEF_HASHMAP"
 AC_SUBST(DEF_HASHMAP)
 
 ##  --  search for tcl stuff  ---------------------------------------------
@@ -1586,6 +1657,31 @@ fi
 AC_SUBST(LIBXERCES_C)
 AC_SUBST(INCXERCESC_H)
 
+##  --  search for gzopen (and related)  ----------------------------------
+
+echo
+AC_CHECKING(for required zlib...)
+echo
+
+if test "$with_zlib" != no; then
+  SCI_CHECK_LIB($with_zlib/lib,z,main,,,)
+  ZLIB_INCLUDE=$with_zlib/include
+fi
+if test -z "$HAVE_LIBZ"; then
+  SCI_CHECK_LIB($thirdparty/lib,z,main,,,)
+fi
+SCI_CHECK_HEADERS($ZLIB_INCLUDE $thirdparty/include /usr/include,zlib.h)
+
+if test -z "$HAVE_LIBZ" ||
+   test -z "$INCZLIB_H"; then
+  AC_ERROR(Cannot find zlib)
+fi
+LIBZ_FLAG=-lz
+LIBZ_INCLUDE=$INCZLIB_H
+
+AC_SUBST(LIBZ_FLAG)
+AC_SUBST(LIBZ_INCLUDE)
+
 ##  --  search for mpi  --------------------------------------------------
 
 if test "$uintah" = "yes"; then
@@ -1644,7 +1740,7 @@ AC_SUBST(DEF_MPICH)
 
 if test "$uintah" = "yes"; then
   if test "$tau" ; then
-    if ! test -f "$tau" ; then
+    if test ! -f "$tau" ; then
       AC_MSG_ERROR('$tau' does not exist.  Bye!)
     fi
 
@@ -1670,7 +1766,10 @@ all:
 	$(TAU_CXX) -o conftest-tau-a.out $(TAU_DEFS) $(TAU_INCLUDE) conftest-tau.cc $(TAU_SHLIBS) $(TAU_MPI_LIBS)
 EOF
 
-    if ! (make TAU_MAKEFILE=${tau} -f conftest-tau-makefile > conftestout1) 2> conftesterr1 ; then
+    ac_try="make TAU_MAKEFILE=${tau} -f conftest-tau-makefile > conftestout1) 2> conftesterr1"
+    (eval $ac_try) 2>&5
+    ac_status=$?
+    if $ac_status; then
       rm -f conftest-tau.cc conftest-tau-makefile conftest-tau-a.out conftestout1 conftesterr1
       AC_MSG_ERROR(TAU libraries not working. Bye!)
     fi
@@ -2154,24 +2253,6 @@ else
 fi
 AC_SUBST(SCIRUN2_DEFINE)
 AC_SUBST(BUILD_SCIRUN2)
-
-##  --  search for gzopen (and related)  ----------------------------------
-
-SCI_CHECK_LIB($thirdparty/lib,z,main,,,)
-SCI_CHECK_HEADERS($thirdparty/include,zlib.h)
-
-if test -z "$HAVE_LIBZ" ||
-   test -z "$INCZLIB_H"; then
-  HAVE_LIBZ=''
-else
-  LIBZ_FLAG=-lz
-  DEF_Z="#define HAVE_Z 1"
-fi
-
-AC_SUBST(HAVE_LIBZ)
-AC_SUBST(LIBZ)
-AC_SUBST(LIBZ_FLAG)
-AC_SUBST(DEF_Z)
 
 ##  --  search for blas stuff  -------------------------------------------
 for i in $blas $thirdparty $SCI_LAB_TP_DEFAULT; do

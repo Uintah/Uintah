@@ -28,5 +28,7 @@
 #define HAVE_IEEEFP_H 0
 #define HAVE_SYS_UUID_H 0
 #define HAVE_UUID_UUID_H 0
+#define HAVE_STDINT_H 0
+#define HAVE_INTTYPES_H 0
 
 #endif
