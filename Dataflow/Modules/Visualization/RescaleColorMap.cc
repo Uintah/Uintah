@@ -97,6 +97,9 @@ RescaleColorMap::execute()
 
 	ScalarFieldInterface *sfi = field->query_scalar_interface();
 	VectorFieldInterface *vfi = field->query_vector_interface();
+	string units;
+	if (field->get_property("units", units))
+	  cmap->units=units;
 	if (sfi) {
 	  sfi->compute_min_max(minmax_.first, minmax_.second);
 	} else if (vfi) {

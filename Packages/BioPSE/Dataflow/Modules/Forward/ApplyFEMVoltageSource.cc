@@ -147,10 +147,15 @@ void ApplyFEMVoltageSource::execute()
       (rhsIn=dynamic_cast<ColumnMatrix*>(hRhsIn.get_rep())) && 
       (rhsIn->nrows() == nsize))
   {
+    string units;
+    if (rhsIn->get_property("units", units))
+      rhs->set_property("units", units, false);
+
     for (int i=0; i < nsize; i++) 
       (*rhs)[i]=(*rhsIn)[i];
   }
   else{
+    rhs->set_property("units", string("volts"), false);
  //   msgStream_ << "The supplied RHS doesn't correspond to the mesh in size. Creating own one..." << endl;
     rhs->zero();
   }

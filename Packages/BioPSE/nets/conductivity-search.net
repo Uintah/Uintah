@@ -78,9 +78,8 @@ set m19 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 452 567]
 set m20 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 263 626]
 set m21 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 434 627]
 set m22 [addModuleAtPosition "SCIRun" "Render" "Viewer" 365 712]
-set m23 [addModuleAtPosition "SCIRun" "Fields" "BuildInterpolant" 188 405]
-set m24 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 206 338]
-set m25 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 170 473]
+set m23 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 206 338]
+set m24 [addModuleAtPosition "SCIRun" "Fields" "ApplyInterpolant" 170 473]
 
 addConnection $m0 0 $m1 0
 addConnection $m0 0 $m2 0
@@ -114,12 +113,10 @@ addConnection $m19 0 $m21 1
 addConnection $m8 0 $m21 0
 addConnection $m20 0 $m22 0
 addConnection $m21 0 $m22 1
-addConnection $m24 0 $m23 1
-addConnection $m23 0 $m25 1
-addConnection $m10 0 $m25 0
-addConnection $m25 0 $m18 1
-addConnection $m25 0 $m20 0
-addConnection $m16 0 $m24 0
+addConnection $m23 1 $m24 1
+addConnection $m10 0 $m24 0
+addConnection $m24 0 $m18 1
+addConnection $m24 0 $m20 0
 addConnection $m16 0 $m23 0
 
 set $m0-filename $env(SCIRUN_DATA)/$DATASET/$DATASET-mesh.tvt.fld
@@ -129,9 +126,9 @@ set $m2-BCFlag {GroundZero}
 set $m3-sourceNodeTCL 4
 set $m3-sinkNodeTCL 14
 set $m3-modeTCL {electrodes}
-set $m4-target_error 1e-06
-set $m4-orig_error 1.41421
-set $m4-current_error {7.84145e-07}
+set $m4-target_error 1e-08
+set $m4-orig_error 0.00141421
+set $m4-current_error {7.84145e-09}
 set $m4-method {Conjugate Gradient & Precond. (SCI)}
 set $m4-precond {jacobi}
 set $m4-maxiter 2000
@@ -140,9 +137,9 @@ set $m4-emit_partial 0
 set $m4-np 1
 set $m5-interp_op_gui {}
 set $m7-filename $env(SCIRUN_DATA)/$DATASET/$DATASET-electrodes.pcd.fld
-set $m9-target_error 1e-06
-set $m9-orig_error 9.65643e-07
-set $m9-current_error {9.65643e-07}
+set $m9-target_error 1e-08
+set $m9-orig_error 9.65643e-09
+set $m9-current_error {9.65643e-09}
 set $m9-method {Conjugate Gradient & Precond. (SCI)}
 set $m9-precond {jacobi}
 set $m9-maxiter 2000
@@ -192,11 +189,9 @@ set $m22-ViewWindow_0-view-up-x ${view-up-x}
 set $m22-ViewWindow_0-view-up-y ${view-up-y}
 set $m22-ViewWindow_0-view-up-z ${view-up-z}
 set $m22-ViewWindow_0-view-fov ${view-fov}
-set $m23-interp_op_gui {}
+set $m22-ViewWindow_0-specular-scale {0.4}
 $m1 initialize_ui
 $m3 initialize_ui
-$m4 initialize_ui
-$m9 initialize_ui
 $m14 initialize_ui
 
 ::netedit scheduleok

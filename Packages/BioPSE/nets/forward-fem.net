@@ -182,6 +182,4 @@ set $m20-node_scale [expr 0.005 * ${global-scale}]
 set $m20-edge_scale [expr 0.005 * ${global-scale}]
 set $m20-resolution {4}
 
-$m3 initialize_ui
-
 ::netedit scheduleok

@@ -140,6 +140,7 @@ set $m4-ViewWindow_0-view-up-x ${view-up-x}
 set $m4-ViewWindow_0-view-up-y ${view-up-y}
 set $m4-ViewWindow_0-view-up-z ${view-up-z}
 set $m4-ViewWindow_0-view-fov ${view-fov}
+set $m4-ViewWindow_0-specular-scale {0.4}
 
 set $m5-filename $DATADIR/$DATASET/$DATASET-mesh.tvt.fld
 
@@ -214,7 +215,5 @@ set $m17-flip {1}
 set $m17-voltage {-5}
 
 set $m19-bcFlag {DirSub}
-
-$m9 initialize_ui
 
 ::netedit scheduleok

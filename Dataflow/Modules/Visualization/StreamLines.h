@@ -37,22 +37,23 @@ public:
 		       double tolerance,
 		       double stepsize,
 		       int maxsteps,
-		       CurveMeshHandle cmesh) = 0;
+		       CurveMeshHandle cmesh,
+		       bool remove_colinear_p) = 0;
 
 
   //! support the dynamically compiled algorithm concept
   static CompileInfo *get_compile_info(const TypeDescription *smesh,
 				       const TypeDescription *sloc);
 protected:
-  bool interpolate(VectorFieldInterface *vfi, const Point &p, Vector &v);
+  //bool interpolate(VectorFieldInterface *vfi, const Point &p, Vector &v);
 
   //! This particular implementation uses Runge-Kutta-Fehlberg.
   void FindStreamLineNodes(vector<Point>&, Point, double, double, int, 
-			   VectorFieldInterface *);
+  			   VectorFieldInterface *, bool remove_colinear_p);
 
   //! Compute the inner terms of the RKF formula.
-  bool ComputeRKFTerms(vector<Vector> &, const Point&, double,
-		       VectorFieldInterface *);
+  //bool ComputeRKFTerms(vector<Vector> &, const Point&, double,
+  //		       VectorFieldInterface *);
 
 };
 
@@ -67,7 +68,8 @@ public:
 		       double tolerance,
 		       double stepsize,
 		       int maxsteps,
-		       CurveMeshHandle cmesh);
+		       CurveMeshHandle cmesh,
+		       bool remove_colinear_p);
 };
 
 
@@ -79,7 +81,8 @@ StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle smesh_h,
 				       double tolerance,
 				       double stepsize,
 				       int maxsteps,
-				       CurveMeshHandle cmesh)
+				       CurveMeshHandle cmesh,
+				       bool rcp)
 {
   SMESH *smesh = dynamic_cast<SMESH *>(smesh_h.get_rep());
 
@@ -109,7 +112,7 @@ StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle smesh_h,
 
     // Find the positive streamlines.
     nodes.clear();
-    FindStreamLineNodes(nodes, seed, tolerance2, stepsize, maxsteps, vfi);
+    FindStreamLineNodes(nodes, seed, tolerance2, stepsize, maxsteps, vfi, rcp);
 
     node_iter = nodes.begin();
     if (node_iter != nodes.end())
@@ -127,7 +130,7 @@ StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle smesh_h,
 
     // Find the negative streamlines.
     nodes.clear();
-    FindStreamLineNodes(nodes, seed, tolerance2, -stepsize, maxsteps, vfi);
+    FindStreamLineNodes(nodes, seed, tolerance2, -stepsize, maxsteps, vfi, rcp);
 
     node_iter = nodes.begin();
     if (node_iter != nodes.end())

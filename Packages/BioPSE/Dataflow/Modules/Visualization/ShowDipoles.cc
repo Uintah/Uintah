@@ -35,13 +35,18 @@ class BioPSESHARE ShowDipoles : public Module {
   FieldIPort *ifield_;
   FieldOPort *ofield_;
   GeometryOPort* ogeom_;
-  int gen_;
+
   FieldHandle dipoleFldH_;
-  GuiString widgetSizeGui_;
+  GuiDouble widgetSizeGui_;
   GuiString scaleModeGui_;
   GuiInt showLastVecGui_;
   GuiInt showLinesGui_;
-  double lastSize_;
+  int lastGen_;
+  double lastWidgetSize_;
+  string lastScaleMode_;
+  int lastShowLastVec_;
+  int lastShowLines_;
+
   string execMsg_;
   Array1<GeomSwitch *> widget_switch_;
 public:
@@ -72,9 +77,13 @@ ShowDipoles::ShowDipoles(const string& id) :
   showLinesGui_("showLinesGui_", id, this),
   widget_lock_("ShowDipoles widget lock")
 {
-  gen_=-1;
+  lastGen_=-1;
+  lastWidgetSize_=-1;
+  lastScaleMode_="";
+  lastShowLastVec_=-1;
+  lastShowLines_=-1;
+
   nDips_=0;
-  lastSize_=-1;
   greenMatl_=new Material(Color(0.2, 0.8, 0.2));
   gidx_=0;
 }
@@ -110,13 +119,18 @@ void ShowDipoles::execute(){
   }
   PointCloudMeshHandle field_mesh = field_pcv->get_typed_mesh();
   
-  double widgetSize;
-  if (!string_to_double(widgetSizeGui_.get(), widgetSize)) {
-    widgetSize=1;
-    widgetSizeGui_.set("1.0");
-  }
-     
-  if (fieldH->generation != gen_ || lastSize_ != widgetSize) {// load this data in
+  double widgetSize = widgetSizeGui_.get();
+  string scaleMode = scaleModeGui_.get();
+  int showLastVec = showLastVecGui_.get();
+  int showLines = showLinesGui_.get();
+  int gen = fieldH->generation;
+  
+  if (gen != lastGen_ ||
+      widgetSize != lastWidgetSize_ ||
+      scaleMode != lastScaleMode_ ||
+      showLastVec != lastShowLastVec_ ||
+      showLines != lastShowLines_ ) {
+
     if (field_pcv->fdata().size() != nDips_) {
 	     
       cerr << "NEW SIZE FOR DIPOLEMATTOGEOM_  field_pcv->data().size()=" << 
@@ -149,17 +163,16 @@ void ShowDipoles::execute(){
 	}
 	nDips_=field_pcv->fdata().size();
       }
-      if (showLastVecGui_.get()) {
-	widget_[nDips_-1]->SetCurrentMode(0);
-	widget_[nDips_-1]->SetMaterial(0, deflMatl_);
-      } else {
-	widget_[nDips_-1]->SetCurrentMode(2);
-	widget_[nDips_-1]->SetMaterial(0, greenMatl_);
-      }
+    }
+    if (showLastVecGui_.get()) {
+      widget_[nDips_-1]->SetCurrentMode(0);
+      widget_[nDips_-1]->SetMaterial(0, deflMatl_);
+    } else {
+      widget_[nDips_-1]->SetCurrentMode(2);
+      widget_[nDips_-1]->SetMaterial(0, greenMatl_);
     }
     Array1<Point> pts;
     unsigned int i;
-    string scaleMode=scaleModeGui_.get();
     double max;
     for (i=0; i<field_pcv->fdata().size(); i++) {
       double dv=field_pcv->fdata()[i].length();
@@ -186,8 +199,8 @@ void ShowDipoles::execute(){
       widget_[i]->SetLength(2*sc);
     }
 
-    if (gidx_) ogeom_->delObj(gidx_);
-    if (showLinesGui_.get()) {
+    if (gidx_) { ogeom_->delObj(gidx_); gidx_=0; }
+    if (showLines) {
       GeomLines *g=new GeomLines;
       for (int i=0; i<pts.size()-1; i++) 
 	for (int j=i+1; j<pts.size(); j++) 
@@ -195,11 +208,8 @@ void ShowDipoles::execute(){
       GeomMaterial *gm=new GeomMaterial(g, new Material(Color(.8,.8,.2)));
       gidx_=ogeom_->addObj(gm, string("Dipole Lines"));
     }
-
-    gen_=fieldH->generation;
     fieldH.detach();
     dipoleFldH_=fieldH;
-    lastSize_=widgetSize;
     ogeom_->flushViews();
     ofield_->send(dipoleFldH_);
     //     } else if (execMsg_ == "widget_moved") {
@@ -213,28 +223,33 @@ void ShowDipoles::execute(){
       pts.add(p);
       Vector d=widget_[i]->GetDirection();
       double mag=widget_[i]->GetScale();
-      cerr << "mag="<<mag<<"  widgetSize="<<widgetSize<<"\n";
+//      cerr << "mag="<<mag<<"  widgetSize="<<widgetSize<<"\n";
       d=d*(mag/widgetSize);
       field_mesh->set_point(p, i);
       field_pcv->fdata()[i] = d;
     }
-    ogeom_->delObj(gidx_);
-    if (showLinesGui_.get()) {
+    if (showLines) {
       GeomLines *g=new GeomLines;
       for (int i=0; i<pts.size()-2; i++) 
 	for (int j=i+1; j<pts.size()-1; j++) 
 	  g->add(pts[i], pts[j]);
       GeomMaterial *gm=new GeomMaterial(g, new Material(Color(.8,.8,.2)));
+      ogeom_->delObj(gidx_);
       gidx_=ogeom_->addObj(gm, string("Dipole Lines"));
     }
     ogeom_->flushViews();
     dipoleFldH_=fieldH;
     ofield_->send(dipoleFldH_);
   } else {
-    // just send the same old matrix/vector as last time
+    // just send the same old dipoles as last time
     cerr << "sending old stuff!\n";
     ofield_->send(dipoleFldH_);
   }
+  lastGen_ = gen;
+  lastWidgetSize_ = widgetSize;
+  lastScaleMode_ = scaleMode;
+  lastShowLastVec_ = showLastVec;
+  lastShowLines_ = showLines;
 }
 
 void ShowDipoles::widget_moved(int last) {
@@ -245,5 +260,3 @@ void ShowDipoles::widget_moved(int last) {
   }
 } 
 } // End namespace BioPSE
-
-

@@ -144,10 +144,16 @@ class SolveMatrix : public Module {
   MatrixHandle solution;
   
 #ifdef UNI_PETSC
-  // the only contexts that this instance of SolveMatrix will use
-  SLES sles;  
-  KSP  ksp;
-  PC   pc;   
+  friend int PETSc_monitor(KSP,int n,PetscReal rnorm,void *);
+  Array1<double> PETSc_errlist;
+  Array1<double> PETSc_targetlist;
+  Array1<int> PETSc_targetidx;
+  double PETSc_log_orig;
+  double PETSc_log_targ;
+  double PETSc_max_err;
+  int PETSc_last_update;
+  int PETSc_last_errupdate;
+
   void petsc_solve(const char*, const char*,Matrix* ,
 		   ColumnMatrix *, ColumnMatrix *);
 #endif
@@ -214,17 +220,15 @@ SolveMatrix::SolveMatrix(const string& id)
     status("status",id,this),
     tcl_np("np", id, this)
 {
-#ifdef UNI_PETSC
+#ifdef UNI_PETSCe
   petsc_installed.set(1);
-  SLESCreate(PETSC_COMM_WORLD,&sles);
+#else
+  petsc_installed.set(0);
 #endif
 }
 
 SolveMatrix::~SolveMatrix()
 {
-#ifdef UNI_PETSC
-  SLESDestroy(sles);
-#endif
 }
 
 void SolveMatrix::execute()
@@ -268,6 +272,9 @@ void SolveMatrix::execute()
   } else {
     solution=scinew ColumnMatrix(rhs->nrows());
     solution->zero();
+    string units;
+    if (rhs->get_property("units", units))
+      solution->set_property("units", units, false);
   }
   
   int size=matrix->nrows();
@@ -275,8 +282,7 @@ void SolveMatrix::execute()
     error("Matrix should be square, but is " +
 	  to_string(size) + " x " + to_string(matrix->ncols()));
     return;
-  }
-  if(rhs->nrows() != size){
+  }  if(rhs->nrows() != size){
     error("Matrix size mismatch");
     return;
   }
@@ -347,13 +353,46 @@ void SolveMatrix::execute()
 }
 
 #ifdef UNI_PETSC
+
+int PETSc_monitor(KSP,int niter,PetscReal err,void *context)
+{  
+  SolveMatrix *solver = (SolveMatrix *)context;
+
+  if (niter == 1) solver->PETSc_log_orig=log(err);
+  
+  solver->PETSc_targetidx.add(niter);
+  solver->PETSc_targetlist.add(solver->PETSc_max_err);
+  solver->PETSc_errlist.add(err);
+  if(niter == 1 || niter == 5 || niter%10 == 0)
+  {
+    solver->iteration.set(niter);
+    solver->current_error.set(to_string(err));
+    //    double time=timer.time();
+    //flops.set(gflop*1.e9+flop);
+    //floprate.set((gflop*1.e3+flop*1.e-6)/time);
+    //memrefs.set(grefs*1.e9+memref);
+    //memrate.set((grefs*1.e3+memref*1.e-6)/time);
+    
+    solver->append_values(niter,
+			  solver->PETSc_errlist, solver->PETSc_last_update, 
+			  solver->PETSc_targetidx, solver->PETSc_targetlist, 
+			  solver->PETSc_last_errupdate);
+
+    double progress=((solver->PETSc_log_orig-log(err))/
+		     (solver->PETSc_log_orig-log(solver->PETSc_max_err)));
+    solver->update_progress(progress);
+    //    if(ep && niter%epcount == 0)
+    // solport->send_intermediate(rhs.clone());
+  }
+
+  return 0;
+}
+
+
 void SolveMatrix::petsc_solve(const char* prec, const char* meth, 
 			      Matrix* matrix, ColumnMatrix* rhs, 
 			      ColumnMatrix* sol)
 {
-  Mat A;
-  Vec x,b;
-
   PetscLock.lock();
 
   if (!Petsc.is_initialized()) {
@@ -361,63 +400,123 @@ void SolveMatrix::petsc_solve(const char* prec, const char* meth,
     return;
   }
 
+  int i,j;
   int rows = matrix->nrows();
   int cols = matrix->ncols();
 
   remark(string("rows, cols: " + to_string(rows) + ", " + to_string(cols)));
 
-  // create storage for the PETSc objects
-  MatCreate(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,
-	    rows, cols, &A);
-  MatSetType(A,MATSEQDENSE);
-  VecCreate(PETSC_COMM_WORLD, PETSC_DECIDE, rows,&x);
-  VecSetType(x,VEC_SEQ);
+  // Create PETSc vectors
+  Vec x,b;
+  VecCreate(PETSC_COMM_WORLD, &x);
+  VecSetSizes(x,PETSC_DECIDE, rhs->nrows());
+  //  VecSetType(x,VECSEQ);
+  VecSetFromOptions(x);
   VecDuplicate(x,&b);
+ 
+  // Copy SCIRun RHS Vector to PETSc
+  int *ix = scinew int[rows];
+  for (i = 0; i < rows; ++i) ix[i] = i;
+  VecSetValues(b,rows,ix,rhs->get_data(),INSERT_VALUES);
+  VecAssemblyBegin(b);
+  VecAssemblyEnd(b);
 
-  // copy the matrix and rhs vector to petsc
-  int i,j;
-  for (i=0;i<rows;++i) {
-    for (j=0;j<cols;++j) { 
-      MatSetValue(A,i,j,(*matrix)[i][j],INSERT_VALUES);
-    }
+  // Copy SCIRun Matrix to PETSc matrix
+  Mat A;
+  SparseRowMatrix *sparse = dynamic_cast<SparseRowMatrix *>(matrix);
+  if (sparse)
+  {
+    cerr << "Using Sparse Matrix\n";
+    MatCreateSeqAIJWithArrays(PETSC_COMM_WORLD, rows, cols,
+			      sparse->rows, sparse->columns, sparse->a, &A);
   }
-  VecSet(rhs->get_data(),b);
-  MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);
-  MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);
+  else
+  {
+    MatCreate(PETSC_COMM_WORLD, PETSC_DECIDE, PETSC_DECIDE,rows, cols, &A);
+    MatSetType(A,MATSEQDENSE);
+    for (i=0;i<rows;++i) {
+      for (j=0;j<cols;++j) { 
+	MatSetValue(A,i,j,(*matrix)[i][j],INSERT_VALUES);
+      }
+    }
+    MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);
+    MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);
+  }
 
-  // set up the equation
+
+  // Create linear solver context
+  SLES sles;  
+  SLESCreate(PETSC_COMM_WORLD,&sles);
   SLESSetOperators(sles,A,A,DIFFERENT_NONZERO_PATTERN);
 
-  // get handles to the method and preconditioner
+  // Get handles to the method and preconditioner
+  KSP  ksp;
+  PC   pc;   
   SLESGetKSP(sles,&ksp);
   SLESGetPC(sles,&pc);
 
-  // set the method and preconditioner
-  KSPSetType(ksp,(char*)meth);
+  // Set the method and preconditioner
   PCSetType(pc,(char*)prec);
+  KSPSetType(ksp,(char*)meth);
 
-  KSPSetTolerances(ksp,target_error.get(),
-		   PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT);
+  PETSc_max_err = target_error.get();
 
-  int its;
-  SLESSolve(sles,b,x,&its);
+  //Setup callback to chart graph
+  TCL::execute(id+" reset_graph");
+  PETSc_errlist.remove_all();
+  PETSc_last_update=1;
+  PETSc_targetidx.remove_all();
+  PETSc_targetlist.remove_all();
+  KSPSetMonitor(ksp, PETSc_monitor, (void *)this, PETSC_NULL);
 
-  // copy the solution out of petsc
-  double *s;
-  VecGetArray(x,&s);
-  for (i=0;i<rows;++i) {
-    sol->put(i,s[i]);
+  // If user wants inital non-zero guess, copy previous solution to PETSc
+  if(use_previous_soln.get())
+  {
+    VecSetValues(x,rows,ix,sol->get_data(),INSERT_VALUES);
+    VecAssemblyBegin(x);
+    VecAssemblyEnd(x);
+    KSPSetInitialGuessNonzero(ksp,PETSC_TRUE);
   }
-  VecRestoreArray(x,&s);
 
-  // clean up
+  // Set linear solver to stop at target error
+  KSPSetTolerances(ksp,1.0e-10, PETSc_max_err,10.0,maxiter.get());
+
+  // Solve the linear system
+  int its = maxiter.get();
+  SLESSolve(sles,b,x,&its);
+  iteration.set(its);
+
+  // Determine if solution converted or diverged
+  KSPConvergedReason reason;
+  KSPGetConvergedReason(ksp, &reason);
+  if (reason < 0)
+  {
+    error("SolveMatrix(PETSc) diverged.");
+  }
+  else
+  {
+    TCL::execute(id+" finish_graph");
+    append_values(its, PETSc_errlist, PETSc_last_update, 
+		  PETSc_targetidx, PETSc_targetlist, 
+		  PETSc_last_errupdate);
+  }
+
+            
+  // Copy the solution out of PETSc into SCIRun
+  double *solution;
+  VecGetArray(x,&solution);
+  memcpy(sol->get_data(), solution, sizeof(double)*sol->nrows());
+  VecRestoreArray(x,&solution);
+
+  // Cleanup PETSc memory
   VecDestroy(b);
   VecDestroy(x);
   MatDestroy(A);
-  
+  SLESDestroy(sles);
+  delete[] ix;
+
   PetscLock.unlock();
 
-  iteration.set(its);
   TCL::execute("update idletasks");
 }
 #endif
@@ -540,7 +639,7 @@ void SolveMatrix::jacobi_sci(Matrix* matrix,
 
 	Mult(Z, invdiag, Z, flop, memref);
 	ScMult_Add(lhs, 1, lhs, Z, flop, memref);
-//	Sub(lhs, lhs, Z, flop, memref);
+//	S10ub(lhs, lhs, Z, flop, memref);
 
 	matrix->mult(lhs, Z, flop, memref);
 	Sub(Z, rhs, Z, flop, memref);
@@ -555,7 +654,7 @@ void SolveMatrix::jacobi_sci(Matrix* matrix,
 	grefs+=memref/1000000000;
 	memref=memref%1000000000;
 
-	if(niter == 1 || niter == 5 || niter%10 == 0){
+ 	if(niter == 1 || niter == 5 || niter%10 == 0){
 	    iteration.set(niter);
 	    current_error.set(to_string(err));
 	    double time=timer.time();
@@ -569,7 +668,7 @@ void SolveMatrix::jacobi_sci(Matrix* matrix,
 	    double progress=(log_orig-log(err))/(log_orig-log_targ);
 	    update_progress(progress);
 	    if(ep && niter%epcount == 0)
-		solport->send_intermediate(rhs.clone());
+	      solport->send_intermediate(rhs.clone());
 	}
     }
     iteration.set(niter);

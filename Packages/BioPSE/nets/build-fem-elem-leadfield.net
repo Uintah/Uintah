@@ -123,7 +123,7 @@ set $m4-method {Conjugate Gradient & Precond. (SCI)}
 set $m4-precond {jacobi}
 set $m4-iteration 176
 set $m4-maxiter 2000
-set $m4-use_previous_soln 1
+set $m4-use_previous_soln 0
 set $m4-emit_partial 0
 set $m4-np 16
 set $m5-notes {Store the lead-field.  The size is nr=(# of electrodes - 1) x nc=(# of elements x 3).  Each
@@ -144,6 +144,5 @@ field port), we record the single nearest node from the finite element mesh and 
 
 }
 set $m10-filename $DATADIR/$DATASET/$DATASET-voltage.tvd.fld
-$m4 initialize_ui
 
 ::netedit scheduleok

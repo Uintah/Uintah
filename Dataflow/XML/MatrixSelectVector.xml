@@ -42,6 +42,10 @@
         <name>Weight Vector</name>
 	<datatype>SCIRun::Matrix</datatype>
       </port>
+      <port>
+        <name>Current Index</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
     </inputs>
     <outputs>
       <port>

@@ -337,6 +337,11 @@ public:
   GuiInt drawimg;
 
   GuiString saveprefix;
+
+  GuiInt file_resx;
+  GuiInt file_resy;
+  GuiInt file_aspect;
+  GuiDouble file_aspect_ratio;
   
 				// Object processing utility routines
   void do_for_visible(Renderer*, ViewWindowVisPMF);
