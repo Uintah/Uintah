@@ -149,6 +149,7 @@ private:
 
   bool is_cached(string name, string& data);
   void cache_value(string where, vector<double>& values, string &data);
+  void cache_value(string where, vector<int>& values, string &data);
   void cache_value(string where, vector<Vector>& values);
   void cache_value(string where, vector<Matrix3>& values);
   map< string, string > material_data_list;
