@@ -74,6 +74,6 @@ all: $(OTF_LIBS)
 
 %.dylib : %.o 
 	rm -f $@
-	$(CXX) $(CFLAGS) $(INCLUDES) $(SOFLAGS) $< -o $@ -L$(LIB_DIR) $(LIBS)
+	$(CXX) $(CFLAGS) $(INCLUDES) $(SOFLAGS) $< -o $@ -L$(LIBDIR) $(LIBS)
 
 
