@@ -14,7 +14,11 @@
 
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
+#include <iostream>
 namespace SCIRun {
+using std::cout;
+using std::cerr;
+using std::endl;
 
 //! Instead of calling this with a node_index just call get_point yourself.
 template <class Mesh, class Index>
