@@ -41,6 +41,7 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/NullScheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SingleProcessorLoadBalancer.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/NirvanaLoadBalancer.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/ParticleLoadBalancer.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/RoundRobinLoadBalancer.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SimpleLoadBalancer.h>
 #include <Packages/Uintah/CCA/Components/Solvers/CGSolver.h>
@@ -537,8 +538,8 @@ main( int argc, char** argv )
 	  bal = scinew NirvanaLoadBalancer(world, layout);
 	} else if( (loadbalancer == "ParticleLoadBalancer") ||
 		   (loadbalancer == "PLB") ) {
-	  bal = 0;
-	  //bal = scinew ParticleLoadBalancer(world);
+	  //bal = 0;
+	  bal = scinew ParticleLoadBalancer(world);
 	} else {
 	   bal = 0;
 	   quit( "Unknown load balancer: " + loadbalancer );
