@@ -24,8 +24,8 @@
 #include <vector>
 #include <string>
 
-namespace SCICore{
-namespace Datatypes{
+namespace SCICore {
+namespace Datatypes {
 
 using SCICore::Geometry::Vector;
 using SCICore::Geometry::Point;
@@ -37,7 +37,7 @@ using SCICore::Math::Interpolate;
 using SCICore::Geometry::Transform;
 
   
-class Lattice3Geom:public StructuredGeom
+class Lattice3Geom : public StructuredGeom
 {
 public:
 
@@ -47,20 +47,20 @@ public:
 
   ~Lattice3Geom();
 
-  virtual string get_info();
+  virtual string getInfo();
 
-  inline int get_nx() {return d_nx;};
-  inline int get_ny() {return d_ny;};
-  inline int get_nz() {return d_nz;};
-
+  inline int getSizeX() {return d_nx;};
+  inline int getSizeY() {return d_ny;};
+  inline int getSizeZ() {return d_nz;};
+		    
   virtual void resize(int x, int y, int z);
 
-  virtual void set_bbox(BBox &box);
+  virtual void setBoundingBox(BBox &box);
   const Transform &trans() { return d_trans; }
 
   //////////
   // Return the point relative to the min in the bounding box
-  virtual Point get_point(int, int, int);
+  virtual Point getPoint(int, int, int);
 
   virtual void transform(const Point &p, Point &r);
   virtual void itransform(const Point &p, Point &r);
@@ -90,7 +90,7 @@ public:
   inline int clampk(int k);
 
 protected:
-  virtual bool compute_bbox();
+  virtual bool computeBoundingBox();
   
   // Number of grid lines in each axis.
   int d_nx, d_ny, d_nz;

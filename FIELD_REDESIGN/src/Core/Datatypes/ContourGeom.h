@@ -16,18 +16,18 @@
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Geom/GeomTriangles.h>
 #include <SCICore/Geom/GeomPolyline.h>
-#include <SCICore/Datatypes/UnstructuredGeom.h>
+#include <SCICore/Datatypes/PointCloudGeom.h>
 #include <SCICore/Containers/LockingHandle.h>
 #include <SCICore/Math/MiscMath.h>
 #include <SCICore/Util/DebugStream.h>
-#include <sstream>
+//#include <sstream>
 #include <vector>
 #include <string>
-#include <set>
+//#include <set>
 
 
-namespace SCICore{
-namespace Datatypes{
+namespace SCICore {
+namespace Datatypes {
 
 using SCICore::Geometry::Vector;
 using SCICore::Geometry::Point;
@@ -42,14 +42,16 @@ using SCICore::PersistentSpace::PersistentTypeID;
 using SCICore::Math::Interpolate;
 using SCICore::Util::DebugStream;
 
-class ContourGeom:public UnstructuredGeom
+
+class ContourGeom : public PointCloudGeom
 {
 public:
 
+  ContourGeom();
   ContourGeom(const vector<NodeSimp>&, const vector<EdgeSimp>&);
   ~ContourGeom();
 
-  virtual string get_info();
+  virtual string getInfo();
   
   //////////
   // Interpolate
@@ -58,31 +60,28 @@ public:
 		    double eps=1.0e-6);
 
   //////////
-  // set nodes and tets vectors
-  // deletes these pointers if they are allready set
-  void set_nodes(const vector<NodeSimp>&);
-  void set_edges(const vector<EdgeSimp>&);
+  // Deletes these pointers if they are already set.
+  void setEdges(const vector<EdgeSimp>&);
 
- ///////////
+  ///////////
   // Persistent representation...
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
 
 protected:
-  virtual bool compute_bbox();
 
-  bool has_neighbors;
+  bool d_has_neighbors;
  
-  vector<NodeSimp> nodes;
-  vector<EdgeSimp> edges;
+  vector<EdgeSimp> d_edge;
 
 private:
   static DebugStream dbg;
 };
 
 template <class A>
-int ContourGeom::slinterpolate(A* att, elem_t elem_type, const Point& p, double& outval,
-				    double eps){
+int ContourGeom::slinterpolate(A* att, elem_t elem_type, const Point& p,
+			       double& outval, double eps)
+{
 }
 
 } // end Datatypes

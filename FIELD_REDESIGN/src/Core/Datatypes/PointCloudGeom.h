@@ -20,14 +20,14 @@
 #include <SCICore/Containers/LockingHandle.h>
 #include <SCICore/Math/MiscMath.h>
 #include <SCICore/Util/DebugStream.h>
-#include <sstream>
+//#include <sstream>
 #include <vector>
 #include <string>
-#include <set>
+//#include <set>
 
 
-namespace SCICore{
-namespace Datatypes{
+namespace SCICore {
+namespace Datatypes {
 
 using SCICore::Geometry::Vector;
 using SCICore::Geometry::Point;
@@ -42,14 +42,15 @@ using SCICore::PersistentSpace::PersistentTypeID;
 using SCICore::Math::Interpolate;
 using SCICore::Util::DebugStream;
 
-class PointCloudGeom:public UnstructuredGeom
+class PointCloudGeom : public UnstructuredGeom
 {
 public:
 
+  PointCloudGeom();
   PointCloudGeom(const vector<NodeSimp>&);
   ~PointCloudGeom();
 
-  virtual string get_info();
+  virtual string getInfo();
   
   //////////
   // Interpolate
@@ -59,29 +60,31 @@ public:
 
   //////////
   // set nodes and tets vectors
-  // deletes these pointers if they are allready set
-  void set_nodes(const vector<NodeSimp>&);
+  // Deletes these pointers if they are already set.
+  void setNodes(const vector<NodeSimp>&);
 
- ///////////
+  ///////////
   // Persistent representation...
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
 
 protected:
 
-  virtual bool compute_bbox();
+  virtual bool computeBoundingBox();
 
 
-  vector<NodeSimp> nodes;
+  vector<NodeSimp> d_node;
 
 private:
   static DebugStream dbg;
 };
 
-template <class A>
-int PointCloudGeom::slinterpolate(A* att, elem_t elem_type, const Point& p, double& outval,
-				  double eps){
 
+template <class A>
+int PointCloudGeom::slinterpolate(A* att, elem_t elem_type,
+				  const Point& p, double& outval,
+				  double eps)
+{
 }
 
 } // end Datatypes
