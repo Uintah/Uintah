@@ -85,7 +85,31 @@ Roe::Roe(Salmon* s)
 				&manager->mailbox, this,
 				&Roe::initCB,
 				0, 0);
-    
+    new MotifCallback<Roe>FIXCB(graphics, "<Btn1Up>", 
+				&manager->mailbox, this,
+				&Roe::btn1upCB, 0, 
+				&CallbackCloners::event_clone);
+    new MotifCallback<Roe>FIXCB(graphics, "<Btn1Down>",
+				&manager->mailbox, this,
+				&Roe::btn1downCB, 0, 
+				&CallbackCloners::event_clone);
+    new MotifCallback<Roe>FIXCB(graphics, "<Btn1Motion>",
+				&manager->mailbox, this,
+				&Roe::btn1motionCB, 0, 
+				&CallbackCloners::event_clone);
+    new MotifCallback<Roe>FIXCB(graphics, "<Btn2Up>",
+				&manager->mailbox, this,
+				&Roe::btn2upCB, 0, 
+				&CallbackCloners::event_clone);
+    new MotifCallback<Roe>FIXCB(graphics, "<Btn2Down>",
+				&manager->mailbox, this,
+				&Roe::btn2downCB, 0, 
+				&CallbackCloners::event_clone);
+    new MotifCallback<Roe>FIXCB(graphics, "<Btn2Motion>",
+				&manager->mailbox, this,
+				&Roe::btn2motionCB, 0, 
+				&CallbackCloners::event_clone);
+
     graphics->Create(*left, "opengl_viewer");
 
     controls=new RowColumnC;
@@ -251,8 +275,6 @@ void Roe::initCB(CallbackData*, void*) {
     // Create a GLX context
     evl->lock();
     cx = glXCreateContext(XtDisplay(*graphics), vi, 0, GL_TRUE);
-    make_current();
-    glEnable(GL_COLOR_MATERIAL);
     evl->unlock();
     doneInit=1;
 }
@@ -469,5 +491,29 @@ void Roe::translate(Vector v)
 void Roe::scale(Vector v)
 {
     NOT_FINISHED("Roe::scale");
+}
+
+void btn1upCB(CallbackData*, void*) {
+    NOT_FINSIHED("Roe::btn1up");
+}
+
+void btn1downCB(CallbackData*, void*) {
+    NOT_FINSIHED("Roe::btn1down");
+}
+
+void btn1motionCB(CallbackData*, void*) {
+    NOT_FINSIHED("Roe::btn1motion");
+}
+
+void btn2upCB(CallbackData*, void*) {
+    NOT_FINSIHED("Roe::btn2up");
+}
+
+void btn2downCB(CallbackData*, void*) {
+    NOT_FINSIHED("Roe::btn2down");
+}
+
+void btn2motionCB(CallbackData*, void*) {
+    NOT_FINSIHED("Roe::btn2motion");
 }
 

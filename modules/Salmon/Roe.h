@@ -73,6 +73,12 @@ class Roe {
     FrameC* gr_frame;
     Salmon* manager;
 
+    void btn1upCB(CallbackData*, void*);
+    void btn1downCB(CallbackData*, void*);
+    void btn1motionCB(CallbackData*, void*);
+    void btn2upCB(CallbackData*, void*);
+    void btn2downCB(CallbackData*, void*);
+    void btn2motionCB(CallbackData*, void*);
     void item1CB(CallbackData*, void*);
     void wireCB(CallbackData*, void*);
     void flatCB(CallbackData*, void*);
