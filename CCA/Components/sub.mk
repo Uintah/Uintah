@@ -25,7 +25,8 @@ ifeq ($(HAVE_QT),yes)
 SUBDIRS := $(SRCDIR)/Builder $(SRCDIR)/TxtBuilder $(SRCDIR)/Hello  $(SRCDIR)/ListPlotter \
 	$(SRCDIR)/ZList $(SRCDIR)/Viewer $(SRCDIR)/LinSolver \
 	$(SRCDIR)/FileReader $(SRCDIR)/FEM $(SRCDIR)/Tri $(SRCDIR)/TableTennis \
-	$(SRCDIR)/TTClient $(SRCDIR)/World $(SRCDIR)/HelloWorldBridge #$(SRCDIR)/HWBkwai 
+	$(SRCDIR)/TTClient $(SRCDIR)/World $(SRCDIR)/HelloWorldBridge \
+	$(SRCDIR)/WorldHelloBridge
 
 else
 SUBDIRS :=$(SRCDIR)/TxtBuilder $(SRCDIR)/Hello
@@ -39,9 +40,6 @@ endif
 #ifeq ($(HAVE_BABEL),yes)
 #SUBDIRS:= $(SUBDIRS) $(SRCDIR)/BabelTest
 #endif
-
-SUBDIRS := $(SRCDIR)/Builder  $(SRCDIR)/Viewer $(SRCDIR)/LinSolver \
-	$(SRCDIR)/FileReader $(SRCDIR)/FEM $(SRCDIR)/Tri $(SRCDIR)/PLinSolver
 
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
