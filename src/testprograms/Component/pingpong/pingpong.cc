@@ -1,6 +1,6 @@
 
 /*
- *  pingpong-pidl.cc
+ *  pingpong.cc
  *  $Id$
  *
  *  Written by:
@@ -37,7 +37,6 @@ int main(int argc, char* argv[])
     using Component::PIDL::Object;
     using Component::PIDL::PIDLException;
     using Component::PIDL::PIDL;
-    using Component::PIDL::Wharehouse;
     using PingPong::PingPong_impl;
     using PingPong::PingPong;
     using SCICore::Thread::Time;
@@ -111,6 +110,9 @@ int main(int argc, char* argv[])
 
 //
 // $Log$
+// Revision 1.3  1999/09/21 06:08:14  sparker
+// Removed extraneous using statement
+//
 // Revision 1.2  1999/09/17 05:08:45  sparker
 // Updates to work with automatic sidl code generation
 //
