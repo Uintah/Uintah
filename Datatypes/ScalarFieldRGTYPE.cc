@@ -24,7 +24,7 @@ static Persistent* maker()
 PersistentTypeID ScalarFieldRGTYPE::type_id("ScalarFieldRGTYPE", "ScalarField", maker);
 
 ScalarFieldRGTYPE::ScalarFieldRGTYPE()
-: ScalarFieldRGBase()
+: ScalarFieldRGBase("TYPE")
 {
 }
 

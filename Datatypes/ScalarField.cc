@@ -13,6 +13,7 @@
 
 #include <Datatypes/ScalarField.h>
 #include <Classlib/String.h>
+#include <iostream.h>
 
 PersistentTypeID ScalarField::type_id("ScalarField", "Datatype", 0);
 
@@ -27,7 +28,7 @@ ScalarField::~ScalarField()
 
 ScalarFieldRG* ScalarField::getRG()
 {
-    if(rep==RegularGrid)
+    if(rep==RegularGridBase)
 	return (ScalarFieldRG*)this;
     else
 	return 0;
@@ -41,10 +42,11 @@ ScalarFieldUG* ScalarField::getUG()
 	return 0;
 }
 
-ScalarFieldRGchar* ScalarField::getRGChar()
+ScalarFieldRGBase* ScalarField::getRGBase()
 {
-    if(rep==RegularGridChar)
-	return (ScalarFieldRGchar*)this;
+cerr << "rep="<<rep<<"\n";
+    if(rep==RegularGridBase)
+	return (ScalarFieldRGBase*)this;
     else
 	return 0;
 }
@@ -57,13 +59,6 @@ void ScalarField::get_minmax(double& min, double& max)
     }
     min=data_min;
     max=data_max;
-}
-
-void ScalarField::set_minmax(double min, double max)
-{
-  have_minmax=1;
-  data_min=min;
-  data_max=max;
 }
 
 double ScalarField::longest_dimension()

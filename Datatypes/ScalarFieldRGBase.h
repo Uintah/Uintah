@@ -15,22 +15,39 @@
 #define SCI_project_ScalarFieldRGBase_h 1
 
 #include <Datatypes/ScalarField.h>
-#include <Classlib/Array1.h>
 #include <Classlib/Array3.h>
+
+class ScalarFieldRGdouble;
+class ScalarFieldRGfloat;
+class ScalarFieldRGint;
+class ScalarFieldRGchar;
 
 class ScalarFieldRGBase : public ScalarField {
 public:
+    enum Representation {
+	Double,
+	Float,
+	Int,
+	Char,
+    };
     int nx;
     int ny;
     int nz;
-    Array1<double> xgrid;
-    Array1<double> ygrid;
-    Array1<double> zgrid;
- 
+
+private:
+    Representation rep;
+
+public:
+    clString getType() const;
+    ScalarFieldRGdouble* getRGDouble();
+    ScalarFieldRGfloat* getRGFloat();
+    ScalarFieldRGint* getRGInt();
+    ScalarFieldRGchar* getRGChar();
+
     Point get_point(int, int, int);
     void locate(const Point&, int&, int&, int&);
     void set_bounds(const Point &min, const Point &max);
-    ScalarFieldRGBase();
+    ScalarFieldRGBase(clString);
     ScalarFieldRGBase(const ScalarFieldRGBase&);
     virtual ~ScalarFieldRGBase();
     virtual void compute_bounds();

@@ -19,9 +19,9 @@
 #include <Geometry/Vector.h>
 #include <Geometry/Point.h>
 
+class ScalarFieldRGBase;
 class ScalarFieldRG;
 class ScalarFieldUG;
-class ScalarFieldRGchar;
 class ScalarField;
 typedef LockingHandle<ScalarField> ScalarFieldHandle;
 
@@ -39,9 +39,9 @@ protected:
     virtual void compute_minmax()=0;
 protected:
     enum Representation {
-	RegularGrid,
-	RegularGridChar,
+	RegularGridBase,
 	UnstructuredGrid,
+	RegularGrid,
     };
     ScalarField(Representation);
 private:
@@ -51,10 +51,9 @@ public:
     virtual ScalarField* clone()=0;
 
     ScalarFieldRG* getRG();
+    ScalarFieldRGBase* getRGBase();
     ScalarFieldUG* getUG();
-    ScalarFieldRGchar* getRGChar();
     void get_minmax(double&, double&);
-    void set_minmax(double, double);
     void get_bounds(Point&, Point&);
     double longest_dimension();
     virtual Vector gradient(const Point&)=0;
