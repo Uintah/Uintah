@@ -369,7 +369,7 @@ University of Utah. All Rights Reserved.
 
 <head>
 <title><xsl:value-of select="./bookinfo/title" /></title>
-<!-- Changed by: Ted Dustman, 25-Feb-2002 -->
+<!-- Changed by: Ted Dustman, 26-Feb-2002 -->
 <link rel="stylesheet" type="text/css">
 <xsl:attribute name="href">
 <xsl:value-of select="concat($swidk,'/doc/doc_styles.css')" />
@@ -734,6 +734,11 @@ NEXT
 </td>
 </tr>
 </table>
+<center><font size="-2" face="arial, helvetica, sans-serif">Scientific
+Computing and Imaging Institute &#149; 50 S. Central Campus Dr. Rm
+3490 &#149; Salt Lake City, UT 84112<br />
+
+(801) 585-1867 &#149; fax: (801) 585-6513 &#149; <a href="http://www.utah.edu/disclaimer/disclaimer_home.html">Disclaimer</a></font></center>
 </div>
 </xsl:if>
 

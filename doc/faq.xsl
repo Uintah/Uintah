@@ -100,55 +100,45 @@
 
 <xsl:if test="$cont!='print'">
 
-<center>
-<img usemap="#head-links" height="71" width="600" border="0">
+<div class="banner-margins">
+<table border="0" cellspacing="0" cellpadding="0" width="100%" height="91">
+<tr>
+<td align="center" width="%100">
+<xsl:attribute name="background">
+<xsl:value-of select="concat($swidk, '/doc/images/banner_top_fill.jpg')"/>
+</xsl:attribute>
+<img width="744" height="91" border="0" usemap="#banner">
 <xsl:attribute name="src">
-<xsl:value-of select="concat($swidk,'/doc/images/research_menuheader.jpg')" />
+<xsl:value-of select="concat($swidk, '/doc/images/banner_top.jpg')"/>
 </xsl:attribute>
 </img>
-</center>
-<map name="head-links">
-	<area href="http://www.sci.utah.edu" shape="rect" coords="7,4,171,33" alt="SCI Home" />
-	<area href="http://www.sci.utah.edu/software" shape="rect" coords="490,10,586,32" alt="Software" />
+</td>
+<map name="banner">
+<area href="http://www.sci.utah.edu" alt="Home" coords="92,62,186,83" />
+<area href="http://software.sci.utah.edu" alt="Software" coords="193,61,289,83" />
 
-	<area shape="rect" coords="340,10,480,32" alt="Documentation">
-        <xsl:attribute name="href">
-        <xsl:value-of select="concat($swidk,'/doc/index.html')" />
-        </xsl:attribute>
-        </area>
- 
+<area coords="296,62,437,83">
+<xsl:attribute name="href">
+<xsl:value-of select="concat($swidk,'/doc/')" />
+</xsl:attribute>
+</area>
 
-        <area coords="0,41,156,64" shape="rect" alt="Installation Guide">
-        <xsl:attribute name="href">
-        <xsl:value-of select="concat($swidk,'/doc/InstallGuide/installguide.xml?cont=0&amp;dir=2')" />
-        </xsl:attribute>
-        </area>
+<area coords="449,62,544,83">
+<xsl:attribute name="href">
+  <xsl:value-of select="concat($swidk,'/doc/UserGuide/usersguide')" />
+</xsl:attribute>
+</area>
 
- 
-        <area coords="157,41,256,64" shape="rect" alt="User's Guide"> 
-        <xsl:attribute name="href">
-        <xsl:value-of select="concat($swidk,'/doc/UserGuide/userguide.html')" />
-        </xsl:attribute>
-        </area>
+<area coords="550,62,692,83">
+<xsl:attribute name="href">
+  <xsl:value-of select="concat($swidk,'/doc/TechnicalGuide/TOC.html')" />
+</xsl:attribute>
+</area>
 
-        <area coords="257,41,397,64" shape="rect" alt="Developer's Guide">
-        <xsl:attribute name="href">
-        <xsl:value-of select="concat($swidk,'/doc/DeveloperGuide/devguide.xml?cont=0&amp;dir=2')" />
-        </xsl:attribute>
-        </area>
- 
-        <area coords="398,41,535,64" shape="rect" alt="Reference Guide">  
-        <xsl:attribute name="href">
-        <xsl:value-of select="concat($swidk,'/doc/ReferenceGuide/refguide.html')" />
-        </xsl:attribute>
-        </area>
-
-        <area coords="536,41,600,64" shape="rect" alt="FAQ">  
-        <xsl:attribute name="href">
-        <xsl:value-of select="concat($swidk,'/doc/FAQ/faq.xml?cont=0&amp;dir=2')" />
-        </xsl:attribute>
-        </area>
-</map> 
+</map>
+</tr>
+</table>
+</div>
 
 </xsl:if>
 
@@ -423,11 +413,27 @@
 
 <xsl:if test="$cont!='print'">
 
-<center>
-<hr size="1" width="600" />
-<font size="-1"><a href="http://www.sci.utah.edu">Scientific Computing and Imaging Institute</a> &#149; <a href="http://www.utah.edu">University of Utah</a> &#149; 
-(801) 585-1867</font>
-</center>
+<div class="banner-margins">
+<table border="0" cellspacing="0" cellpadding="0" height="32" width="100%">
+<tr>
+<td align="left" width="%100">
+  <xsl:attribute name="background">
+    <xsl:value-of select="concat($swidk, '/doc/images/banner_bottom_fill.jpg')"/>
+  </xsl:attribute>
+<img width="444" height="32" border="0">
+  <xsl:attribute name="src">
+    <xsl:value-of select="concat($swidk, '/doc/images/banner_bottom.jpg')"/>
+  </xsl:attribute>
+</img>
+</td>
+</tr>
+</table>
+<center><font size="-2" face="arial, helvetica, sans-serif">Scientific
+Computing and Imaging Institute &#149; 50 S. Central Campus Dr. Rm
+3490 &#149; Salt Lake City, UT 84112<br />
+
+(801) 585-1867 &#149; fax: (801) 585-6513 &#149; <a href="http://www.utah.edu/disclaimer/disclaimer_home.html">Disclaimer</a></font></center>
+</div>
 
 </xsl:if>
 
