@@ -18,6 +18,7 @@
 //#include <Core/Datatypes/Datatype.h>
 //#include <Core/Geometry/BBox.h>
 #include <Core/Datatypes/MeshBase.h>
+#include <Core/Datatypes/FieldIterator.h>
 #include <Core/Containers/Array1.h>
 
 #include <vector>
@@ -44,18 +45,22 @@ private:
 
 public:
 
-  typedef int          node_index;
-  typedef IntIter      node_iterator;
+  typedef int                         index_type;
 
-  typedef int          edge_index;
-  typedef IntIter      edge_iterator;
+  //! Index and Iterator types required for Mesh Concept.
+  typedef NodeIndex<index_type>       node_index;
+  typedef NodeIterator<index_type>    node_iterator;
 
-  typedef int          face_index;
-  typedef IntIter      face_iterator;
+  typedef EdgeIndex<index_type>       edge_index;
+  typedef EdgeIterator<index_type>    edge_iterator;
 
-  //typedef int          cell_index;
-  //typedef IntIter      cell_iterator;
+  typedef FaceIndex<index_type>       face_index;
+  typedef FaceIterator<index_type>    face_iterator;
 
+  //typedef CellIndex<index_type>       cell_index;
+  //typedef CellIterator<index_type>    cell_iterator;
+
+  
   typedef vector<node_index> node_array;
   typedef vector<edge_index> edge_array;
   //typedef vector<face_index> face_array;
@@ -75,14 +80,14 @@ public:
   //cell_iterator cell_begin() const;
   //cell_iterator cell_end() const;
 
-  void get_nodes_from_edge(node_array &array, edge_index idx) const;
-  void get_nodes_from_face(node_array &array, face_index idx) const;
+  void get_nodes(node_array &array, edge_index idx) const;
+  void get_nodes(node_array &array, face_index idx) const;
   //void get_nodes_from_cell(node_array &array, cell_index idx) const;
-  void get_edges_from_face(edge_array &array, face_index idx) const;
+  void get_edges(edge_array &array, face_index idx) const;
   //void get_edges_from_cell(edge_array &array, cell_index idx) const;
   //void get_faces_from_cell(face_array &array, cell_index idx) const;
 
-  void get_neighbor_from_edge(face_index &neighbor, edge_index idx) const;
+  void get_neighbor(face_index &neighbor, edge_index idx) const;
 
   void locate_node(node_index &node, const Point &p);
   //void locate_edge(edge_index &edge, const Point &p);

@@ -14,9 +14,6 @@
 
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/TypeName.h>
-#include <Core/Datatypes/TetVolMesh.h>
-#include <Core/Datatypes/TriSurfMesh.h>
-#include <Core/Datatypes/Lat3VolMesh.h>
 #include <Core/Containers/LockingHandle.h>
 #include <vector>
 
@@ -44,10 +41,10 @@ public:
   //virtual InterpolateToScalar* query_interpolate_to_scalar() const {};
 
   //! Required interface to support Field Concept.
-  //value_type &operator[] (typename Mesh::node_index i) {return fdata_[i]};
-  //value_type &operator[] (typename Mesh::edge_index i) {return fdata_[i]};
-  //value_type &operator[] (typename Mesh::face_index i) {return fdata_[i]};
-  //value_type &operator[] (typename Mesh::cell_index i) {return fdata_[i]};
+  value_type &operator[] (typename Mesh::node_index i) {return fdata_[i]};
+  value_type &operator[] (typename Mesh::edge_index i) {return fdata_[i]};
+  value_type &operator[] (typename Mesh::face_index i) {return fdata_[i]};
+  value_type &operator[] (typename Mesh::cell_index i) {return fdata_[i]};
   
   mesh_handle_type get_typed_mesh() { return mesh_; };
 

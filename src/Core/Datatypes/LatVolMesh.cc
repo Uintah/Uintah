@@ -1,5 +1,5 @@
 /*
- *  Lat3VolMesh.cc: Templated Mesh defined on a 3D Regular Grid
+ *  LatVolMesh.cc: Templated Mesh defined on a 3D Regular Grid
  *
  *  Written by:
  *   Michael Callahan &&
@@ -12,24 +12,24 @@
  *
  */
 
-#include <Core/Datatypes/Lat3VolMesh.h>
+#include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Math/MinMax.h>
 
 
 namespace SCIRun {
 
 
-PersistentTypeID Lat3VolMesh::type_id("Lat3VolMesh", "Datatype", maker);
+PersistentTypeID LatVolMesh::type_id("LatVolMesh", "Datatype", maker);
 
 
 Persistent *
-Lat3VolMesh::maker()
+LatVolMesh::maker()
 {
-  return new Lat3VolMesh(0, 0, 0, Point(0, 0, 0), Point(1, 1, 1));
+  return new LatVolMesh(0, 0, 0, Point(0, 0, 0), Point(1, 1, 1));
 }
 
 
-Lat3VolMesh::Lat3VolMesh(int x, int y, int z, Point &min, Point &max)
+LatVolMesh::LatVolMesh(int x, int y, int z, Point &min, Point &max)
   : nx_(x),
     ny_(y),
     nz_(z),
@@ -39,7 +39,7 @@ Lat3VolMesh::Lat3VolMesh(int x, int y, int z, Point &min, Point &max)
 }
 
 
-Lat3VolMesh::Lat3VolMesh(const Lat3VolMesh &copy)
+LatVolMesh::LatVolMesh(const LatVolMesh &copy)
   : nx_(copy.nx_),
     ny_(copy.ny_),
     nz_(copy.nz_),
@@ -49,13 +49,13 @@ Lat3VolMesh::Lat3VolMesh(const Lat3VolMesh &copy)
 }
 
 
-Lat3VolMesh::~Lat3VolMesh()
+LatVolMesh::~LatVolMesh()
 {
 }
 
 
 BBox 
-Lat3VolMesh::get_bounding_box() const
+LatVolMesh::get_bounding_box() const
 {
   BBox result;
   result.extend(min_);
@@ -65,86 +65,86 @@ Lat3VolMesh::get_bounding_box() const
 
 
 void
-Lat3VolMesh::unlocate(Point &result, const Point &p) const
+LatVolMesh::unlocate(Point &result, const Point &p) const
 {
   result = p;
 }
 
 
 inline void
-Lat3VolMesh::get_point(Point &result, const node_index &index) const
+LatVolMesh::get_point(Point &result, const node_index &index) const
 {
   get_center(result,index);
 }
 
 
-Lat3VolMesh::node_iterator
-Lat3VolMesh::node_begin() const
+LatVolMesh::node_iterator
+LatVolMesh::node_begin() const
 {
   return node_iterator(0, 0, 0);
 }
 
 
-Lat3VolMesh::node_iterator
-Lat3VolMesh::node_end() const
+LatVolMesh::node_iterator
+LatVolMesh::node_end() const
 {
   return node_iterator(nx_, ny_, nz_);
 }
 
 
-Lat3VolMesh::edge_iterator
-Lat3VolMesh::edge_begin() const
+LatVolMesh::edge_iterator
+LatVolMesh::edge_begin() const
 {
   return NULL;
 }
 
 
-Lat3VolMesh::edge_iterator
-Lat3VolMesh::edge_end() const
+LatVolMesh::edge_iterator
+LatVolMesh::edge_end() const
 {
   return NULL;
 }
 
 
-Lat3VolMesh::face_iterator
-Lat3VolMesh::face_begin() const
+LatVolMesh::face_iterator
+LatVolMesh::face_begin() const
 {
   return NULL;
 }
 
 
-Lat3VolMesh::face_iterator
-Lat3VolMesh::face_end() const
+LatVolMesh::face_iterator
+LatVolMesh::face_end() const
 {
   return NULL;
 }
 
 
-Lat3VolMesh::cell_iterator
-Lat3VolMesh::cell_begin() const
+LatVolMesh::cell_iterator
+LatVolMesh::cell_begin() const
 {
   return cell_iterator(0, 0, 0);
 }
 
 
-Lat3VolMesh::cell_iterator
-Lat3VolMesh::cell_end() const
+LatVolMesh::cell_iterator
+LatVolMesh::cell_end() const
 {
   return cell_iterator(nx_-1, ny_-1, nz_-1);
 }
 
 inline void
-Lat3VolMesh::get_nodes(node_array &, edge_index) const
+LatVolMesh::get_nodes(node_array &, edge_index) const
 {
 }
 
 inline void 
-Lat3VolMesh::get_nodes(node_array &, face_index) const
+LatVolMesh::get_nodes(node_array &, face_index) const
 {
 }
 
 inline void 
-Lat3VolMesh::get_nodes(node_array &array, cell_index idx) const
+LatVolMesh::get_nodes(node_array &array, cell_index idx) const
 {
   // NOTE: this code assumes that index_type is actually unsigned
 
@@ -181,57 +181,57 @@ Lat3VolMesh::get_nodes(node_array &array, cell_index idx) const
 }
 
 inline void 
-Lat3VolMesh::get_edges(edge_array &, face_index) const
+LatVolMesh::get_edges(edge_array &, face_index) const
 {
 }
 
 inline void 
-Lat3VolMesh::get_edges(edge_array &, cell_index) const
+LatVolMesh::get_edges(edge_array &, cell_index) const
 {
 }
 
 inline void 
-Lat3VolMesh::get_faces(face_array &, cell_index) const
+LatVolMesh::get_faces(face_array &, cell_index) const
 {
 }
 
 inline int 
-Lat3VolMesh::get_edges(edge_array &, node_index) const
+LatVolMesh::get_edges(edge_array &, node_index) const
 {
 }
 
 inline int 
-Lat3VolMesh::get_faces(face_array &, node_index) const
+LatVolMesh::get_faces(face_array &, node_index) const
 {
 }
 
 inline int 
-Lat3VolMesh::get_faces(face_array &, edge_index) const
+LatVolMesh::get_faces(face_array &, edge_index) const
 {
 }
 
 inline int 
-Lat3VolMesh::get_cells(cell_array &, node_index) const
+LatVolMesh::get_cells(cell_array &, node_index) const
 {
 }
 
 inline int 
-Lat3VolMesh::get_cells(cell_array &, edge_index) const
+LatVolMesh::get_cells(cell_array &, edge_index) const
 {
 }
 
 inline int 
-Lat3VolMesh::get_cells(cell_array &, face_index) const
+LatVolMesh::get_cells(cell_array &, face_index) const
 {
 }
 
 inline void 
-Lat3VolMesh::get_neighbor(cell_index &, face_index) const
+LatVolMesh::get_neighbor(cell_index &, face_index) const
 {
 }
 
 inline void 
-Lat3VolMesh::get_center(Point &result, node_index idx) const
+LatVolMesh::get_center(Point &result, node_index idx) const
 {
   // NOTE: this code assumes that index_type is actually unsigned
 
@@ -259,17 +259,17 @@ Lat3VolMesh::get_center(Point &result, node_index idx) const
 }
 
 inline void 
-Lat3VolMesh::get_center(Point &, edge_index) const
+LatVolMesh::get_center(Point &, edge_index) const
 {
 }
 
 inline void 
-Lat3VolMesh::get_center(Point &, face_index) const
+LatVolMesh::get_center(Point &, face_index) const
 {
 }
 
 inline void 
-Lat3VolMesh::get_center(Point &result, cell_index idx) const
+LatVolMesh::get_center(Point &result, cell_index idx) const
 {
   node_array nodes;
   Point min,max;
@@ -288,7 +288,7 @@ Lat3VolMesh::get_center(Point &result, cell_index idx) const
 }
 
 inline void 
-Lat3VolMesh::locate_node(node_index &node, const Point &p) const
+LatVolMesh::locate_node(node_index &node, const Point &p) const
 {
   double w[8];          // storage for weights
   node_array nodes;     // storage for node_indeces
@@ -314,17 +314,17 @@ Lat3VolMesh::locate_node(node_index &node, const Point &p) const
 }
 
 inline void 
-Lat3VolMesh::locate_edge(edge_index &, const Point &, double[2]) const
+LatVolMesh::locate_edge(edge_index &, const Point &, double[2]) const
 {
 }
 
 inline void 
-Lat3VolMesh::locate_face(face_index &, const Point &, double[4]) const 
+LatVolMesh::locate_face(face_index &, const Point &, double[4]) const 
 {
 }
 
 inline void 
-Lat3VolMesh::locate_cell(cell_index &cell, const Point &p, double[8] w) const
+LatVolMesh::locate_cell(cell_index &cell, const Point &p, double[8] w) const
 {
   // NOTE: this code assumes index_type is actually unsigned
   
@@ -370,12 +370,12 @@ Lat3VolMesh::locate_cell(cell_index &cell, const Point &p, double[8] w) const
   cell = x + y*(nx_-1) + z*(nx_-1)*(ny_-1);
 }
 
-#define LAT3VOLMESH_VERSION 1
+#define LATVOLMESH_VERSION 1
 
 void
-Lat3VolMesh::io(Piostream& stream)
+LatVolMesh::io(Piostream& stream)
 {
-  stream.begin_class(type_id.type.c_str(), LAT3VOLMESH_VERSION);
+  stream.begin_class(type_id.type.c_str(), LATVOLMESH_VERSION);
 
   // IO data members, in order
   Pio(stream, nx_);
