@@ -1487,8 +1487,14 @@ allocateAndPutGridVar(VariableBase& var, DWDatabase& db,
   }
 
   IntVector superLowIndex, superHighIndex;
+  // requiredSuper[Low/High]'s don't take numGhostCells into consideration
+  // -- just includes ghosts that will be required by later tasks.
+  IntVector requiredSuperLow, requiredSuperHigh;  
+
   const vector<const Patch*>* superPatchGroup =
-    d_scheduler->getSuperPatchExtents(label, patch, gtype, numGhostCells,
+    d_scheduler->getSuperPatchExtents(label, matlIndex, patch,
+				      gtype, numGhostCells,
+				      requiredSuperLow, requiredSuperHigh,
 				      superLowIndex, superHighIndex);
  
   ASSERT(superPatchGroup != 0);
@@ -1503,13 +1509,15 @@ allocateAndPutGridVar(VariableBase& var, DWDatabase& db,
   var.allocate(superLowIndex, superHighIndex);
   
   Level::selectType encompassedPatches;
-  if (numGhostCells == 0 && \
-      superLowIndex == lowIndex && superHighIndex == highIndex) {
+  if (requiredSuperLow == lowIndex && requiredSuperHigh == highIndex) {
     // only encompassing the patch currently being allocated
     encompassedPatches.push_back(patch);
   }
   else {
-    patch->getLevel()->selectPatches(superLowIndex, superHighIndex,
+    // Use requiredSuperLow/High instead of superLowIndex/superHighIndex
+    // so we don't put the var for patches in the datawarehouse that won't be
+    // required (this is important for scrubbing).
+    patch->getLevel()->selectPatches(requiredSuperLow, requiredSuperHigh,
 				     encompassedPatches);
   }
   
@@ -1546,10 +1554,11 @@ allocateAndPutGridVar(VariableBase& var, DWDatabase& db,
       enclosedLowIndex = clone->getLow();
       enclosedHighIndex = clone->getHigh();
       patchGroupMember = patchGroupMember->getRealPatch();
-      IntVector tmpLowIndex, tmpHighIndex;
+      IntVector dummy;
       if (d_scheduler->
-	  getSuperPatchExtents(label, patchGroupMember, gtype, numGhostCells,
-			       tmpLowIndex, tmpHighIndex) != 0) {
+	  getSuperPatchExtents(label, matlIndex, patchGroupMember, gtype,
+			       numGhostCells, dummy, dummy, dummy, dummy) != 0)
+      {
 	// The virtual patch refers to a real patch in which the label
 	// is computed locally, so don't overwrite the local copy.
 	delete clone;
