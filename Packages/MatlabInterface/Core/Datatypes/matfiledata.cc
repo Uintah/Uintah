@@ -90,7 +90,7 @@ matfiledata::~matfiledata()
 void matfiledata::clear()
 {
    if (m_ == 0) throw internal_error();
-   if ((m_->dataptr_ != 0)&&(m_->owndata_ = true)) delete[] static_cast<char *>(m_->dataptr_);
+   if ((m_->dataptr_ != 0)&&(m_->owndata_ == true)) delete[] static_cast<char *>(m_->dataptr_);
    m_->owndata_ = false;
    m_->dataptr_ = 0;	
    m_->bytesize_ = 0;	
