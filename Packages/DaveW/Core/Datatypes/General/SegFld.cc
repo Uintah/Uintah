@@ -1,7 +1,7 @@
 //static char *id="@(#) $Id$";
 
 /*
- *  SegFldToSurfs.cc:  SegFldToSurfs a set of points to a surface
+ *  SegFld.cc:  SegFld dataype
  *
  *  Written by:
  *   David Weinstein
@@ -421,6 +421,9 @@ void Pio(Piostream& stream, tripleInt& t) {
 
 //
 // $Log$
+// Revision 1.3  1999/09/02 04:45:51  dmw
+// magnetic field
+//
 // Revision 1.2  1999/09/01 05:27:36  dmw
 // more DaveW datatypes...
 //
