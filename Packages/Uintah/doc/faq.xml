@@ -111,6 +111,10 @@
       Whether you want the -g debug flag for compilation or not.
       </p>
       <p>
+      '--enable-optimize=-Ofast -G 0'
+      Optimization flag.  NOTE: Needs to be in quotes.
+      </p>
+      <p>
       --enable-parallel:
       Only used for the prototype CCA stuff.  Uintah does NOT require
       it and you probably shouldn't use it unless you know what you
