@@ -68,14 +68,14 @@ void Hello::setServices(const sci::cca::Services::pointer& svc){
   myGoPort::pointer gop=myGoPort::pointer(new myGoPort(svc));
 
   cerr<<"svc->addProvidesPort(uip)...";  
-  svc->addProvidesPort(uip,"ui","sci.cca.ports.UIPort", props);
+  svc->addProvidesPort(uip,"ui","sci.cca.ports.UIPort",  sci::cca::TypeMap::pointer(0));
   cerr<<"Done\n";
 
   cerr<<"svc->addProvidesPort(gop)...";  
-  svc->addProvidesPort(gop,"go","sci.cca.ports.GoPort", props);
+  svc->addProvidesPort(gop,"go","sci.cca.ports.GoPort",  sci::cca::TypeMap::pointer(0));
   cerr<<"Done\n";
 
-  svc->registerUsesPort("stringport","sci.cca.ports.StringPort", props);
+  svc->registerUsesPort("stringport","sci.cca.ports.StringPort", sci::cca::TypeMap::pointer(0));
 }
 
 int myUIPort::ui(){
