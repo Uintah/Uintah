@@ -136,10 +136,11 @@ Module::Module(const clString& name, const clString& id,
 	       SchedClass sched_class, const clString& cat,
 	       const clString& pack)
 : state(NeedData), helper(0), have_own_dispatch(0),
-    mailbox("Module execution FIFO", 100),
+  mailbox("Module execution FIFO", 100),
   name(name), abort_flag(0), need_execute(0), sched_class(sched_class),
   id(id), progress(0), handle(0), remote(0), skeleton(0),
-  notes("notes", id, this), show_status("show_status", id, this)
+  notes("notes", id, this), show_status("show_status", id, this),
+  d_msgStream("msgStream", id, this)
 {
   packageName=pack;
   categoryName=cat;

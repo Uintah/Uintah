@@ -24,6 +24,7 @@
 #include <Core/Util/Timer.h>
 #include <Core/TclInterface/TCL.h>
 #include <Core/TclInterface/TCLvar.h>
+#include <Core/TclInterface/TCLstrbuff.h>
 #include <Core/Thread/Mailbox.h>
 #include <Core/Geom/Pickable.h>
 #include <map>
@@ -47,8 +48,6 @@ namespace SCIRun {
 
 namespace SCIRun {
 
-
-
 class Connection;
 class Network;
 class NetworkEditor;
@@ -62,26 +61,32 @@ typedef IPort* (*iport_maker)(Module*, const clString&);
 typedef OPort* (*oport_maker)(Module*, const clString&);
 
 class PSECORESHARE Module : public TCL, public Pickable {
-    /*
-     * This exists to trip people up that still have clone and
-     * copy constructors in the modules - they shoudl be removed.
-     */
-    Module(const Module&);
+  /*
+   * This exists to trip people up that still have clone and
+   * copy constructors in the modules - they shoudl be removed.
+   */
+  Module(const Module&);
+  
+  // Added by Mohamed Dekhil for the CSAFE project
+  TCLstring  notes ;
+  TCLint show_status;
+  unsigned long stacksize;
 
-    // Added by Mohamed Dekhil for the CSAFE project
-    TCLstring notes ;
-    TCLint show_status;
-   unsigned long stacksize;
-public:
-    enum State {
-	NeedData,
-	JustStarted,
-	Executing,
-	Completed
-    };
-public:
-    int show_stat;
+protected:
+  //////////
+  // Log stream for the module
+  TCLstrbuff d_msgStream;
 
+public:
+  enum State {
+    NeedData,
+    JustStarted,
+    Executing,
+    Completed
+  };
+public:
+  int show_stat;
+  
     friend class ModuleHelper;
     virtual void do_execute();
     virtual void execute()=0;
