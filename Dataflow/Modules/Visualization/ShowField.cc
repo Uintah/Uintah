@@ -612,25 +612,25 @@ ShowField::execute()
   }
 
   node_display_type_.reset();
-  string ndt = node_display_type_.get();
+  const string ndt = node_display_type_.get();
   node_scale_.reset();
-  double ns = node_scale_.get();
+  const double ns = node_scale_.get();
   edge_display_type_.reset();
-  string edt = edge_display_type_.get();
+  const string edt = edge_display_type_.get();
   edge_scale_.reset();
-  double es = edge_scale_.get();
+  const double es = edge_scale_.get();
   data_display_type_.reset();
-  string vdt = data_display_type_.get();
+  const string vdt = data_display_type_.get();
   tensor_display_type_.reset();
-  string tdt = tensor_display_type_.get();
+  const string tdt = tensor_display_type_.get();
   scalar_display_type_.reset();
-  string sdt = scalar_display_type_.get();
+  const string sdt = scalar_display_type_.get();
   vectors_scale_.reset();
-  double vscale = vectors_scale_.get();
+  const double vscale = vectors_scale_.get();
   tensors_scale_.reset();
-  double tscale = tensors_scale_.get();
+  const double tscale = tensors_scale_.get();
   scalars_scale_.reset();
-  double sscale = scalars_scale_.get();
+  const double sscale = scalars_scale_.get();
 
 
   nodes_on_.reset();
@@ -752,7 +752,7 @@ ShowField::execute()
 					     color_map_,
 					     def_material_,
 					     vectors_usedefcolor_.get(),
-					     vdt, vscale,
+					     vdt, vscale, es,
 					     normalize_vectors_.get(),
 					     bidirectional_.get(),
 					     data_resolution_);
@@ -889,7 +889,9 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
     maybe_execute(NODE);
   } else if (args[1] == "edge_scale") {
     edges_dirty_ = true;
+    data_dirty_ = true;
     maybe_execute(EDGE);
+    maybe_execute(DATA);
   } else if (args[1] == "data_scale") {
     data_dirty_ = true;
     maybe_execute(DATA);
