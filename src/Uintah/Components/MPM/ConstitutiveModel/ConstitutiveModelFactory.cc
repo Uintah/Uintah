@@ -3,6 +3,7 @@
 #include "CompMooneyRivlin.h"
 #include "CompNeoHook.h"
 #include "CompNeoHookPlas.h"
+#include "ViscoScram.h"
 #include "HyperElasticDamage.h"
 #include "ViscoElasticDamage.h"
 #include <SCICore/Malloc/Allocator.h>
@@ -32,6 +33,8 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps)
       else if (mat_type == "comp_neo_hook_plastic")
 	 return(scinew CompNeoHookPlas(child));
 
+      else if (mat_type ==  "visco_scram")
+	 return(scinew ViscoScram(child));
       
       else if (mat_type == "hyper_elastic_damage")
 	 return(scinew HyperElasticDamage(child));

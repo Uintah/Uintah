@@ -9,12 +9,16 @@ SRCS     += $(SRCDIR)/CompMooneyRivlin.cc $(SRCDIR)/CompNeoHook.cc \
 	$(SRCDIR)/CompNeoHookPlas.cc $(SRCDIR)/ConstitutiveModelFactory.cc \
 	$(SRCDIR)/ConstitutiveModel.cc $(SRCDIR)/ElasticConstitutiveModel.cc \
 	$(SRCDIR)/HyperElasticDamage.cc $(SRCDIR)/ViscoElasticDamage.cc \
-	$(SRCDIR)/MPMMaterial.cc 
+	$(SRCDIR)/MPMMaterial.cc $(SRCDIR)/ViscoScram.cc
 
 PSELIBS := Uintah/Grid
 
 #
 # $Log$
+# Revision 1.6  2000/08/21 18:37:41  guilkey
+# Initial commit of ViscoScram stuff.  Don't get too excited yet,
+# currently these are just cosmetically modified copies of CompNeoHook.
+#
 # Revision 1.5  2000/04/19 05:26:05  sparker
 # Implemented new problemSetup/initialization phases
 # Simplified DataWarehouse interface (not finished yet)
