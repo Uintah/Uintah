@@ -564,6 +564,9 @@ void SerialMPM::actuallyInitialize(const ProcessorContext*,
 						mpm_matl, new_dw);
        int vfindex = matl->getVFIndex();
        d_contactModel->initializeContact(region,vfindex,new_dw);
+       
+       if(d_fractureModel)
+       d_fractureModel->initializeFracture(region,vfindex,new_dw);
     }
   }
 }
@@ -1048,6 +1051,9 @@ void SerialMPM::crackGrow(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.53  2000/05/12 01:45:17  tan
+// Added call to initializeFracture in SerialMPM's actuallyInitailize.
+//
 // Revision 1.52  2000/05/11 20:10:12  dav
 // adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
 //
