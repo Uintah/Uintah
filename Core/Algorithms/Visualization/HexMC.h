@@ -32,7 +32,8 @@
 
 #include <Core/Geometry/Point.h>
 #include <Core/Geom/GeomTriangles.h>
-#include <Core/Algorithms/Visualization/mc_table.h>
+//#include <Core/Algorithms/Visualization/mc_table.h>
+#include <Core/Algorithms/Visualization/mcube2.h>
 
 namespace SCIRun {
 
@@ -99,10 +100,10 @@ TriSurfMesh::node_index
 HexMC<Field>::find_or_add_edgepoint(node_index n0, node_index n1, Point p) {
   map<long int, TriSurfMesh::node_index>::iterator node_iter;
   long int key0 = 
-    (long int) n0.i_ + (nx_ + (long int) n0.j_ * (ny_ * (long int) n0.k_));
+    (long int) n0.i_ + nx_ * ((long int) n0.j_ + (ny_ * (long int) n0.k_));
   long int key1 = 
-    (long int) n1.i_ + (nx_ + (long int) n1.j_ * (ny_ * (long int) n1.k_));
-  int small_key;
+    (long int) n1.i_ + nx_ * ((long int) n1.j_ + (ny_ * (long int) n1.k_));
+  long int small_key;
   int dir;
   if (n0.k_ != n1.k_) dir=2;
   else if (n0.j_ != n1.j_) dir=1;
@@ -113,15 +114,14 @@ HexMC<Field>::find_or_add_edgepoint(node_index n0, node_index n1, Point p) {
   else if (n0.j_ > n1.j_) small_key = key1;
   else if (n0.i_ < n1.i_) small_key = key0;
   else small_key = key1;
-  long int key = (small_key << 2) + dir;
+  long int key = (small_key * 4) + dir;
   TriSurfMesh::node_index node_idx;
   node_iter = vertex_map_.find(key);
   if (node_iter == vertex_map_.end()) { // first time to see this node
     node_idx = trisurf_->add_point(p);
     vertex_map_[key] = node_idx;
-    vertex_map_[key] = node_idx;
   } else {
-    node_idx = (*node_iter).first;
+    node_idx = (*node_iter).second;
   }
   return node_idx;
 }
@@ -145,36 +145,36 @@ void HexMC<Field>::extract( const cell_index& cell, double iso )
   if ( code == 0 || code == 255 )
     return;
 
-  TriangleCase *tcase=&tri_case[code];
-  int *vertex = tcase->vertex;
+//  TriangleCase *tcase=&tri_case[code];
+  TRIANGLE_CASES *tcase=&triCases[code];
+  int *vertex = tcase->edges;
   
   Point q[12];
   TriSurfMesh::node_index surf_node[12];
 
   // interpolate and project vertices
   int v = 0;
-  for (int t=0; t<tcase->n; t++) {
+  Array1<int> visited(12);
+  visited.initialize(0);
+  while (vertex[v] != -1) {
     int i = vertex[v++];
-    for ( ; i != -1; i=vertex[v++] ) {
-      int v1 = edge_table[i][0];
-      int v2 = edge_table[i][1];
-      q[i] = Interpolate(p[v1], p[v2], 
-			 (value[v1]-iso)/double(value[v1]-value[v2]));
-      if (build_trisurf_)
-	surf_node[i] = find_or_add_edgepoint(node[v1], node[v2], q[i]);
-    }
-  }
+    if (visited[i]) continue;
+    visited[i]=1;
+    int v1 = edge_tab[i][0];
+    int v2 = edge_tab[i][1];
+    q[i] = Interpolate(p[v1], p[v2], 
+		       (value[v1]-iso)/double(value[v1]-value[v2]));
+    if (build_trisurf_)
+      surf_node[i] = find_or_add_edgepoint(node[v1], node[v2], q[i]);
+  }    
   
   v = 0;
-  for ( int i=0; i<tcase->n; i++) {
+  while(vertex[v] != -1) {
     int v0 = vertex[v++];
     int v1 = vertex[v++];
     int v2 = vertex[v++];
-    
-    for (; v2 != -1; v1=v2,v2=vertex[v++]) {
-      triangles_->add(q[v0], q[v1], q[v2]);
-      trisurf_->add_triangle(surf_node[v0], surf_node[v1], surf_node[v2]);
-    }
+    triangles_->add(q[v0], q[v1], q[v2]);
+    trisurf_->add_triangle(surf_node[v0], surf_node[v1], surf_node[v2]);
   }
 }
 
