@@ -75,12 +75,12 @@ WARNING
 
 	 // Per cell
          virtual double computeRhoMicro(double& press,double& gamma,
-                                        double& cv, double& Temp);
+                                        double& cv, double& Temp) =0;
 
          virtual void computePressEOS(double& rhoM, double& gamma,
                                       double& cv, double& Temp,
                                       double& press, double& dp_drho, 
-                                      double& dp_de);
+                                      double& dp_de) = 0;
 
 	 
 	 // Per patch
@@ -105,6 +105,9 @@ WARNING
 #endif  // __EQUATION_OF_STATE_H__
 
 // $Log$
+// Revision 1.4  2000/10/11 00:26:25  jas
+// Made some functions virtual = 0;
+//
 // Revision 1.3  2000/10/10 22:18:27  guilkey
 // Added some simple functions
 //
