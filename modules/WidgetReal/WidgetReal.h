@@ -14,9 +14,9 @@
 #ifndef SCI_project_module_WidgetReal_h
 #define SCI_project_module_WidgetReal_h
 
-#include <Module.h>
+#include <UserModule.h>
 
-class WidgetReal : public Module {
+class WidgetReal : public UserModule {
 public:
     WidgetReal();
     WidgetReal(const WidgetReal&, int deep);

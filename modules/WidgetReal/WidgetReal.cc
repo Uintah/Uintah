@@ -12,16 +12,19 @@
  */
 
 #include <WidgetReal/WidgetReal.h>
+#include <Port.h>
 #include <iostream.h>
 extern "C" int abs(int);
 
 WidgetReal::WidgetReal()
-: Module("WidgetReal")
+: UserModule("WidgetReal")
 {
+    add_iport(0, "Input", 0);
+    add_oport(0, "Output", 0);
 }
 
 WidgetReal::WidgetReal(const WidgetReal& copy, int deep)
-: Module(copy, deep)
+: UserModule(copy, deep)
 {
 }
 
@@ -42,7 +45,6 @@ Module* WidgetReal::clone(int deep)
 void WidgetReal::execute()
 {
     int nloops=10000000;
-    int x;
     int ii=0;
     for(int i=0;i<nloops;i++){
 	update_progress(i, nloops);
