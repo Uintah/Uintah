@@ -666,11 +666,15 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
    if(d_fractureModel) {
       new_dw->pleaseSave(lb->pDeformationMeasureLabel, numMatls);
    }
-   new_dw->pleaseSave(lb->gMassLabel, numMatls);
-   new_dw->pleaseSave(lb->pVolumeLabel, numMatls);
-   new_dw->pleaseSave(lb->pExternalForceLabel, numMatls);
-   new_dw->pleaseSave(lb->gVelocityLabel, numMatls);
+
    new_dw->pleaseSave(lb->pXLabel, numMatls);
+   new_dw->pleaseSave(lb->pVelocityLabel, numMatls);
+   new_dw->pleaseSave(lb->pVolumeLabel, numMatls);
+   new_dw->pleaseSave(lb->pMassLabel, numMatls);
+
+   new_dw->pleaseSave(lb->gVelocityLabel, numMatls);
+   new_dw->pleaseSave(lb->gMassLabel, numMatls);
+
    new_dw->pleaseSaveIntegrated(lb->StrainEnergyLabel);
    new_dw->pleaseSaveIntegrated(lb->KineticEnergyLabel);
 }
@@ -829,13 +833,12 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
 	    }
 	 }
       }
-#if 0
 
       // Apply grid boundary conditions to the velocity
       // before storing the data
+#if 0
       for(int face = 0; face<6; face++){
 	Patch::FaceType f=(Patch::FaceType)face;
-
 #if 0
 	switch(patch->getBCType(f)){
 	case Patch::None:
@@ -1037,16 +1040,18 @@ void SerialMPM::computeInternalHeatRate(
 		  Ghost::AroundNodes, 1);
       old_dw->get(pvol,    lb->pVolumeDeformedLabel, matlindex, patch,
 		  Ghost::AroundNodes, 1);
-      old_dw->get(pTemperatureGradient, lb->pTemperatureGradientLabel, matlindex, patch,
-		  Ghost::AroundNodes, 1);
+      old_dw->get(pTemperatureGradient, lb->pTemperatureGradientLabel,
+			matlindex, patch, Ghost::AroundNodes, 1);
 
-      new_dw->allocate(internalHeatRate, lb->gInternalHeatRateLabel, vfindex, patch);
+      new_dw->allocate(internalHeatRate, lb->gInternalHeatRateLabel,
+			vfindex, patch);
   
       ParticleSubset* pset = px.getParticleSubset();
 
       ASSERT(pset->numParticles() == px.getParticleSubset()->numParticles());
       ASSERT(pset->numParticles() == pvol.getParticleSubset()->numParticles());
-      ASSERT(pset->numParticles() == pTemperatureGradient.getParticleSubset()->numParticles());
+      ASSERT(pset->numParticles() ==
+		 pTemperatureGradient.getParticleSubset()->numParticles());
 
       internalHeatRate.initialize(0.);
 
@@ -1101,7 +1106,7 @@ void SerialMPM::solveEquationsMotion(const ProcessorContext*,
       NCVariable<Vector> internalforce;
       NCVariable<Vector> externalforce;
 
-      new_dw->get(mass,          lb->gMassLabel, vfindex, patch, Ghost::None, 0);
+      new_dw->get(mass,         lb->gMassLabel, vfindex, patch, Ghost::None, 0);
       new_dw->get(internalforce, lb->gInternalForceLabel, vfindex, patch,
 		  Ghost::None, 0);
       new_dw->get(externalforce, lb->gExternalForceLabel, vfindex, patch,
@@ -1124,7 +1129,6 @@ void SerialMPM::solveEquationsMotion(const ProcessorContext*,
       }
 
       // Put the result in the datawarehouse
-
       new_dw->put(acceleration, lb->gAccelerationLabel, vfindex, patch);
 
     }
@@ -1160,7 +1164,8 @@ void SerialMPM::solveHeatEquations(const ProcessorContext*,
 
       // Create variables for the results
       NCVariable<double> temperatureRate;
-      new_dw->allocate(temperatureRate, lb->gTemperatureRateLabel, vfindex, patch);
+      new_dw->allocate(temperatureRate, lb->gTemperatureRateLabel,
+							vfindex, patch);
 
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
 	if(mass[*iter]>0.0){
@@ -1274,7 +1279,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
       NCVariable<double> gTemperature; //for heat conduction
 
       old_dw->get(px,        lb->pXLabel, matlindex, patch, Ghost::None, 0);
-      old_dw->get(pvelocity, lb->pVelocityLabel, matlindex, patch, Ghost::None,0);
+      old_dw->get(pvelocity, lb->pVelocityLabel, matlindex, patch,
+							Ghost::None,0);
       old_dw->get(pmass,     lb->pMassLabel, matlindex, patch, Ghost::None, 0);
 
       // Get the arrays of grid data on which the new particle values depend
@@ -1290,15 +1296,17 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
       if(d_heatConductionInvolved) {
         old_dw->get(pTemperature, lb->pTemperatureLabel, matlindex, patch, 
                   Ghost::None, 0);
-        new_dw->allocate(pTemperatureRate, lb->pTemperatureRateLabel, vfindex, patch);
-        new_dw->allocate(pTemperatureGradient, lb->pTemperatureGradientLabel, vfindex, patch);
+        new_dw->allocate(pTemperatureRate,lb->pTemperatureRateLabel,
+							vfindex, patch);
+        new_dw->allocate(pTemperatureGradient, lb->pTemperatureGradientLabel,
+							vfindex, patch);
         new_dw->get(gTemperatureRate, lb->gTemperatureRateLabel, vfindex, patch,
-		  Ghost::AroundCells, 1);
+		 				 Ghost::AroundCells, 1);
       }
 
-#if 0
       // Apply grid boundary conditions to the velocity_star and
       // acceleration before interpolating back to the particles
+#if 0
       for(int face = 0; face<6; face++){
 	Patch::FaceType f=(Patch::FaceType)face;
 #if 0
@@ -1394,16 +1402,18 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
       new_dw->put(sum_vartype(ke), lb->KineticEnergyLabel);
 
       if(d_heatConductionInvolved) {
-        new_dw->put(pTemperatureRate, lb->pTemperatureRateLabel, matlindex, patch);
+        new_dw->put(pTemperatureRate, lb->pTemperatureRateLabel,
+						matlindex, patch);
         new_dw->put(pTemperature, lb->pTemperatureLabel, matlindex, patch);
-        new_dw->put(pTemperatureGradient, lb->pTemperatureGradientLabel, matlindex, patch);
+        new_dw->put(pTemperatureGradient, lb->pTemperatureGradientLabel,
+						matlindex, patch);
       }
 
     }
   }
 
-  static int ts=0;
 #if 0
+  static int ts=0;
   // Code to dump out tecplot files
   int freq = 10;
 
@@ -1452,12 +1462,12 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
     }
    }
   }
-#endif
 
   static ofstream tmpout("tmp.out");
 //  tmpout << ts << " " << ke << " " << se << std::endl;
   tmpout << ts << " " << ke << std::endl;
   ts++;
+#endif
 }
 
 void SerialMPM::crackGrow(const ProcessorContext*,
@@ -1468,6 +1478,9 @@ void SerialMPM::crackGrow(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.83  2000/06/08 22:23:46  guilkey
+// Removed a bunch of wrapped lines.
+//
 // Revision 1.82  2000/06/08 21:05:03  bigler
 // Added support to ouput gMass values (where pleaseSave is used).
 //
