@@ -39,6 +39,7 @@
 #include <Core/Geom/GeomCylinder.h>
 #include <Core/Geom/GeomSphere.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Datatypes/BoxClipper.h>
 #include <Dataflow/Network/Module.h>
 
 namespace SCIRun {
@@ -769,7 +770,7 @@ ScaledBoxWidget::AxisAligned( const Index yesno )
 }
 
 
-BoxClipper
+ClipperHandle
 ScaledBoxWidget::get_clipper()
 {
   Point center, right, down, in;
@@ -789,7 +790,7 @@ ScaledBoxWidget::get_clipper()
   t.pre_translate(Vector(center.x(), center.y(), center.z()));
   t.invert();
 
-  return BoxClipper(t);
+  return scinew BoxClipper(t);
 }
 
 
