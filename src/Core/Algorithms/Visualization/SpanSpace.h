@@ -69,7 +69,7 @@ class SpanSpace : public SpanSpaceBase {
 public:
   typedef SpanPoint<T,Index>  span_point_type;
   typedef Handle<SpanSpace<T, Index> > handle_type;
-  Array1<span_point_type> span;
+  vector<span_point_type> span;
     
 public:
   SpanSpace() {}
@@ -192,7 +192,7 @@ void SpanSpace<T,Index>::init(Field *field)
     }
 	
     if ( min < max ) // ignore elems with min == max
-      span.add( SpanPoint<T,Index>(min, max, *elem));
+      span.push_back( SpanPoint<T,Index>(min, max, *elem));
   }
       
   // init kd-tree
