@@ -31,6 +31,15 @@ using std::endl;
 namespace PSECore {
 namespace Datatypes {
 
+extern "C" {
+PSECORESHARE IPort* make_GeometryIPort(Module* module, const clString& name) {
+  return new GeometryIPort(module,name);
+}
+PSECORESHARE OPort* make_GeometryOPort(Module* module, const clString& name) {
+  return new GeometryOPort(module,name);
+}
+}
+
 static clString Geometry_type("Geometry");
 static clString Geometry_color("magenta3");
 
@@ -349,6 +358,10 @@ GeometryData::Print()
 
 //
 // $Log$
+// Revision 1.10  2000/11/22 17:14:41  moulding
+// added extern "C" make functions for input and output ports (to be used
+// by the auto-port facility).
+//
 // Revision 1.9  1999/12/07 02:53:34  dmw
 // made show_status variable persistent with network maps
 //

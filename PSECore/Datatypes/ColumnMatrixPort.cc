@@ -19,6 +19,17 @@ namespace Datatypes {
 
 using namespace SCICore::Datatypes;
 
+extern "C" {
+PSECORESHARE IPort* make_ColumnMatrixIPort(Module* module,
+					   const clString& name) {
+  return new SimpleIPort<ColumnMatrixHandle>(module,name);
+}
+PSECORESHARE OPort* make_ColumnMatrixOPort(Module* module,
+					   const clString& name) {
+  return new SimpleOPort<ColumnMatrixHandle>(module,name);
+}
+}
+
 template<> clString SimpleIPort<ColumnMatrixHandle>::port_type("ColumnMatrix");
 template<> clString SimpleIPort<ColumnMatrixHandle>::port_color("dodgerblue4");
 
@@ -27,6 +38,10 @@ template<> clString SimpleIPort<ColumnMatrixHandle>::port_color("dodgerblue4");
 
 //
 // $Log$
+// Revision 1.5  2000/11/22 17:14:41  moulding
+// added extern "C" make functions for input and output ports (to be used
+// by the auto-port facility).
+//
 // Revision 1.4  1999/08/30 20:19:22  sparker
 // Updates to compile with -LANG:std on SGI
 // Other linux/irix porting oscillations

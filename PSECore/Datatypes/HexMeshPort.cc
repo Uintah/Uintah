@@ -20,6 +20,15 @@ namespace Datatypes {
 
 using namespace SCICore::Datatypes;
 
+extern "C" {
+PSECORESHARE IPort* make_HexMeshIPort(Module* module, const clString& name) {
+  return new SimpleIPort<HexMeshHandle>(module,name);
+}
+PSECORESHARE OPort* make_HexMeshOPort(Module* module, const clString& name) {
+  return new SimpleOPort<HexMeshHandle>(module,name);
+}
+}
+
 template<> clString SimpleIPort<HexMeshHandle>::port_type("HexMesh");
 template<> clString SimpleIPort<HexMeshHandle>::port_color("yellow green");
 
@@ -28,6 +37,10 @@ template<> clString SimpleIPort<HexMeshHandle>::port_color("yellow green");
 
 //
 // $Log$
+// Revision 1.5  2000/11/22 17:14:41  moulding
+// added extern "C" make functions for input and output ports (to be used
+// by the auto-port facility).
+//
 // Revision 1.4  1999/08/30 20:19:23  sparker
 // Updates to compile with -LANG:std on SGI
 // Other linux/irix porting oscillations
