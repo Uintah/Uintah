@@ -167,6 +167,8 @@ ColorMapIEPlugin::operator==(const ColorMapIEPlugin &other) const
 void
 ColorMapIEPluginManager::get_importer_list(vector<string> &results)
 {
+  if (colormap_plugin_table == NULL) return;
+
   colormapIEPluginMutex.lock();
   map<string, ColorMapIEPlugin *>::const_iterator itr = colormap_plugin_table->begin();
   while (itr != colormap_plugin_table->end())
@@ -184,6 +186,8 @@ ColorMapIEPluginManager::get_importer_list(vector<string> &results)
 void
 ColorMapIEPluginManager::get_exporter_list(vector<string> &results)
 {
+  if (colormap_plugin_table == NULL) return;
+
   colormapIEPluginMutex.lock();
   map<string, ColorMapIEPlugin *>::const_iterator itr = colormap_plugin_table->begin();
   while (itr != colormap_plugin_table->end())
@@ -201,6 +205,8 @@ ColorMapIEPluginManager::get_exporter_list(vector<string> &results)
 ColorMapIEPlugin *
 ColorMapIEPluginManager::get_plugin(const string &name)
 {
+  if (colormap_plugin_table == NULL) return NULL;
+
   // Should check for invalid name.
   map<string, ColorMapIEPlugin *>::iterator loc = colormap_plugin_table->find(name);
   if (loc == colormap_plugin_table->end())

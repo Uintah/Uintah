@@ -166,6 +166,8 @@ FieldIEPlugin::operator==(const FieldIEPlugin &other) const
 void
 FieldIEPluginManager::get_importer_list(vector<string> &results)
 {
+  if (field_plugin_table == 0) return;
+
   fieldIEPluginMutex.lock();
   map<string, FieldIEPlugin *>::const_iterator itr = field_plugin_table->begin();
   while (itr != field_plugin_table->end())
@@ -183,6 +185,8 @@ FieldIEPluginManager::get_importer_list(vector<string> &results)
 void
 FieldIEPluginManager::get_exporter_list(vector<string> &results)
 {
+  if (field_plugin_table == 0) return;
+
   fieldIEPluginMutex.lock();
   map<string, FieldIEPlugin *>::const_iterator itr = field_plugin_table->begin();
   while (itr != field_plugin_table->end())
@@ -200,6 +204,8 @@ FieldIEPluginManager::get_exporter_list(vector<string> &results)
 FieldIEPlugin *
 FieldIEPluginManager::get_plugin(const string &name)
 {
+  if (field_plugin_table == 0) return NULL;
+
   // Should check for invalid name.
   map<string, FieldIEPlugin *>::iterator loc = field_plugin_table->find(name);
   if (loc == field_plugin_table->end())
