@@ -510,13 +510,15 @@ proc CreateNewPackage {} {
     }
 
     toplevel $w
+    wm title $w "Create a new module package"
     frame $w.ftop
     frame $w.fbot
     label $w.ftop.namelabel -text "New package name:"
-    entry $w.ftop.name -width 30 -background white 
+    entry $w.ftop.name -width 30 -background grey90 -relief sunken 
     button $w.fbot.ok -text "Ok" -command CreateNewPackageOk
     button $w.fbot.cancel -text "Cancel" -command CreateNewPackageCancel
-    pack $w.ftop $w.fbot $w.ftop.namelabel $w.ftop.name \
+    pack $w.ftop $w.fbot -side top
+    pack $w.ftop.namelabel $w.ftop.name \
          $w.fbot.ok $w.fbot.cancel -side left -padx 5 -pady 5
 
     focus $w.ftop.name
