@@ -12,7 +12,7 @@ def chemfile (test):
     return test[3]
 
 def chemfileCallback (test, susdir, inputsdir, compare_root, algo, mode, max_parallelism):
-  symlink("%s/inputs/ARCHES/input.dtd" % (susdir), "input.dtd")
-  symlink("%s/inputs/ARCHES/%s" % (susdir, chemfile(test)), "chem.bin")
+  symlink("%s/input.dtd" % (inputsdir), "input.dtd")
+  symlink("%s/%s" % (inputsdir, chemfile(test)), "chem.bin")
 
 exit(runSusTests(argv, TESTS, "arches", chemfileCallback))
