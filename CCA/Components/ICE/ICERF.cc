@@ -1224,7 +1224,8 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 /* ---------------------------------------------------------------------
  Function~  ICE::computeFaceCenteredVelocities--
  Purpose~   compute the face centered velocities minus the exchange
-            contribution.
+            contribution.  See Kashiwa Feb. 2001, 4.10a for description
+	    of term1-term4.
 _____________________________________________________________________*/
 void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,  
 					 const PatchSubset* patches,
@@ -1305,8 +1306,7 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
       vvel_FC.initialize(0.0, lowIndex,patch->getSFCYHighIndex());
       wvel_FC.initialize(0.0, lowIndex,patch->getSFCZHighIndex());
 
-      double term1, term2, term3, term4;
-      double sp_vol_brack, press_coeff, rho_micro_FC, rho_FC;
+      double term1, term2, term3, term4, sp_vol_brack, sig_L, sig_R;
       
       if(doMechOld < -1.5){
       //__________________________________
@@ -1317,29 +1317,31 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
 	 IntVector curcell = *iter;
 	 IntVector adjcell(curcell.x(),curcell.y()-1,curcell.z()); 
 
-	 rho_micro_FC = rho_micro_CC[adjcell] + rho_micro_CC[curcell];
-	 rho_FC       = rho_CC[adjcell]       + rho_CC[curcell];
 	 sp_vol_brack = 2.*(1./(rho_micro_CC[adjcell]*rho_micro_CC[curcell]))/
 			   (1./rho_micro_CC[adjcell]+1./rho_micro_CC[curcell]);
-	 ASSERT(rho_FC > 0.0);
 	 //__________________________________
 	 // interpolation to the face
-	 term1 = (rho_CC[adjcell] * vel_CC[adjcell].y() +
-		  rho_CC[curcell] * vel_CC[curcell].y())/(rho_FC);            
+	 term1 = (vel_CC[adjcell].y()/rho_micro_CC[curcell] +
+                  vel_CC[curcell].y()/rho_micro_CC[adjcell])/
+                 (rho_micro_CC[curcell] + rho_micro_CC[adjcell]);
 	 //__________________________________
 	 // pressure term
-	 press_coeff = 2.0/(rho_micro_FC);
-	 term2 =   delT * press_coeff *
-	   (press_CC[curcell] - press_CC[adjcell])/dx.y();                
+	 term2 = sp_vol_brack*(delT/dx.y()) * 
+				(press_CC[curcell] - press_CC[adjcell]);
 	 //__________________________________
 	 // gravity term
 	 term3 =  delT * gravity.y();
 
-//         term4 = (sp_vol_brack*delT/dx.y())*(
-//              (p_dYFC[*iter] - matl_press_CC[adjcell])/vol_frac[adjcell] -
-//              (matl_press_CC[curcell] - p_dYFC[*iter])/vol_frac[curcell]);
-         term4 = 0.;
-	 vvel_FC[curcell] = term1- term2 + term3 + term4;
+         // stress difference term
+         sig_L = vol_frac[adjcell]*(matl_press_CC[adjcell] - press_CC[adjcell]);
+         sig_R = vol_frac[curcell]*(matl_press_CC[curcell] - press_CC[curcell]);
+         term4 = (sp_vol_brack*delT/dx.y())*(
+                 (p_dYFC[*iter] - sig_L)/vol_frac[adjcell] +
+                 (sig_R - p_dYFC[*iter])/vol_frac[curcell]);
+
+         // Todd, I think that term4 should be a negative, since Bucky
+         // has a positive, but since sigma = -p*I.  What do you think?
+	 vvel_FC[curcell] = term1 - term2 + term3 - term4;
       }
 
       //__________________________________
@@ -1347,29 +1349,29 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
       for(CellIterator iter=patch->getSFCXIterator(offset);!iter.done();iter++){
 	 IntVector curcell = *iter;
 	 IntVector adjcell(curcell.x()-1,curcell.y(),curcell.z()); 
-
-	 rho_micro_FC = rho_micro_CC[adjcell] + rho_micro_CC[curcell];
-	 rho_FC       = rho_CC[adjcell]       + rho_CC[curcell];
-	 ASSERT(rho_FC > 0.0);
 	 //__________________________________
 	 // interpolation to the face
-	 term1 = (rho_CC[adjcell] * vel_CC[adjcell].x() +
-		  rho_CC[curcell] * vel_CC[curcell].x())/(rho_FC);
+	 term1 = (vel_CC[adjcell].x()/rho_micro_CC[curcell] +
+                  vel_CC[curcell].x()/rho_micro_CC[adjcell])/
+                 (rho_micro_CC[curcell] + rho_micro_CC[adjcell]);
 	 //__________________________________
 	 // pressure term
-	 press_coeff = 2.0/(rho_micro_FC);
-
-	 term2 =   delT * press_coeff *
-	   (press_CC[curcell] - press_CC[adjcell])/dx.x();
+	 term2 = sp_vol_brack*(delT/dx.x()) * 
+				(press_CC[curcell] - press_CC[adjcell]);
 	 //__________________________________
 	 // gravity term
 	 term3 =  delT * gravity.x();
 
-//         term4 = (sp_vol_brack*delT/dx.x())*(
-//              (p_dXFC[*iter] - matl_press_CC[adjcell])/vol_frac[adjcell] -
-//              (matl_press_CC[curcell] - p_dXFC[*iter])/vol_frac[curcell]);
-         term4 = 0.;
-	 uvel_FC[curcell] = term1- term2 + term3 + term4;
+         // stress difference term
+         sig_L = vol_frac[adjcell]*(matl_press_CC[adjcell] - press_CC[adjcell]);
+         sig_R = vol_frac[curcell]*(matl_press_CC[curcell] - press_CC[curcell]);
+         term4 = (sp_vol_brack*delT/dx.x())*(
+                 (p_dXFC[*iter] - sig_L)/vol_frac[adjcell] +
+                 (sig_R - p_dXFC[*iter])/vol_frac[curcell]);
+
+         // Todd, I think that term4 should be a negative, since Bucky
+         // has a positive, but since sigma = -p*I.  What do you think?
+	 uvel_FC[curcell] = term1 - term2 + term3 - term4;
       }
       
       //__________________________________
@@ -1377,29 +1379,29 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
       for(CellIterator iter=patch->getSFCZIterator(offset);!iter.done();iter++){
 	 IntVector curcell = *iter;
 	 IntVector adjcell(curcell.x(),curcell.y(),curcell.z()-1); 
-
-	 rho_micro_FC = rho_micro_CC[adjcell] + rho_micro_CC[curcell];
-	 rho_FC       = rho_CC[adjcell]       + rho_CC[curcell];
-	 ASSERT(rho_FC > 0.0);
 	 //__________________________________
 	 // interpolation to the face
-	 term1 = (rho_CC[adjcell] * vel_CC[adjcell].z() +
-		  rho_CC[curcell] * vel_CC[curcell].z())/(rho_FC);
+	 term1 = (vel_CC[adjcell].z()/rho_micro_CC[curcell] +
+                  vel_CC[curcell].z()/rho_micro_CC[adjcell])/
+                 (rho_micro_CC[curcell] + rho_micro_CC[adjcell]);
 	 //__________________________________
 	 // pressure term
-	 press_coeff = 2.0/(rho_micro_FC);
-
-	 term2 =   delT * press_coeff *
-	   (press_CC[curcell] - press_CC[adjcell])/dx.z();
+	 term2 = sp_vol_brack*(delT/dx.z()) * 
+				(press_CC[curcell] - press_CC[adjcell]);
 	 //__________________________________
 	 // gravity term
 	 term3 =  delT * gravity.z();
 
-//         term4 = (sp_vol_brack*delT/dx.z())*(
-//              (p_dZFC[*iter] - matl_press_CC[adjcell])/vol_frac[adjcell] -
-//              (matl_press_CC[curcell] - p_dZFC[*iter])/vol_frac[curcell]);
-         term4 = 0.;
-	 wvel_FC[curcell] = term1- term2 + term3 + term4;
+         // stress difference term
+         sig_L = vol_frac[adjcell]*(matl_press_CC[adjcell] - press_CC[adjcell]);
+         sig_R = vol_frac[curcell]*(matl_press_CC[curcell] - press_CC[curcell]);
+         term4 = (sp_vol_brack*delT/dx.z())*(
+                 (p_dZFC[*iter] - sig_L)/vol_frac[adjcell] +
+                 (sig_R - p_dZFC[*iter])/vol_frac[curcell]);
+
+         // Todd, I think that term4 should be a negative, since Bucky
+         // has a positive, but since sigma = -p*I.  What do you think?
+	 wvel_FC[curcell] = term1 - term2 + term3 - term4;
       }
       }  // if doMech
 
@@ -2237,6 +2239,12 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
         front    = *iter + IntVector(0,0,1);
         back     = *iter + IntVector(0,0,0);
 
+
+        // TODD:  Note that here, as in computeFCVelocities, I'm putting
+        // a negative sign in front of press_diff_source, since sigma=-p*I
+
+
+
         //__________________________________
         //    X - M O M E N T U M 
         pressure_source = (pressX_FC[right]-pressX_FC[left]) * vol_frac[*iter];
@@ -2248,7 +2256,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
                          (tau_Z_FC[front].x() - tau_Z_FC[back].x())  *delX*delY;
 
         mom_source[*iter].x( (-pressure_source * delY * delZ +
-                               viscous_source +
+                               viscous_source -
 			       press_diff_source * delY * delZ * include_term +
 			       mass * gravity.x() * include_term) * delT);
         //__________________________________
@@ -2262,7 +2270,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
                          (tau_Z_FC[front].y() - tau_Z_FC[back].y())  *delX*delY;
 
         mom_source[*iter].y( (-pressure_source * delX * delZ +
-                               viscous_source +
+                               viscous_source -
 			       press_diff_source * delX * delZ * include_term +
 			       mass * gravity.y() * include_term) * delT );
         //__________________________________
@@ -2276,7 +2284,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
                          (tau_Z_FC[front].z() - tau_Z_FC[back].z())  *delX*delY;
 
         mom_source[*iter].z( (-pressure_source * delX * delY +
-			       viscous_source + 
+			       viscous_source - 
 			       press_diff_source * delX * delY * include_term +
                                mass * gravity.z() * include_term) * delT );
                                
