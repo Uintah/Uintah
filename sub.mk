@@ -18,7 +18,8 @@ SRCS       += \
        $(SRCDIR)/DynamicModel.cc \
        $(SRCDIR)/TurbulenceFactory.cc \
        $(SRCDIR)/impICE.cc \
-       $(SRCDIR)/NG_NozzleBCs.cc 
+       $(SRCDIR)/NG_NozzleBCs.cc \
+       $(SRCDIR)/microSlipBCs.cc 
        
 SUBDIRS := $(SRCDIR)/EOS $(SRCDIR)/Advection
 
