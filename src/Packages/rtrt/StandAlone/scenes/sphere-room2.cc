@@ -9,7 +9,7 @@
 
 #include <Packages/rtrt/Core/Satellite.h>
 #include <Packages/rtrt/Core/PortalParallelogram.h>
-#include <Packages/rtrt/Core/Disc.h>
+#include <Packages/rtrt/Core/RingSatellite.h>
 
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/Camera.h>
@@ -23,10 +23,13 @@
 using namespace rtrt;
 using namespace std;
 
-#define DOORWIDTH              2
-#define DOORHEIGHT             3
-#define DOOROFFSET             5
+#define RENDERWALLS            1
+#define RENDERPLANETS          1
+#define DOORWIDTH              1.5
+#define DOORHEIGHT             2.3
+#define DOOROFFSET             5.25
 #define ROOMHEIGHT             30
+#define ROOMFLOOR              .5
 #define HEIGHTRATIO            (DOORHEIGHT/ROOMHEIGHT)
 #define ROOMRADIUS             50
 #define ROOMOFFSET             4
@@ -38,12 +41,12 @@ using namespace std;
 #define SYSTEM_DISTANCE_SCALE  6.76E-9 /*3.382080E-9*/
 #define SYSTEM_TIME_SCALE1     .4
 #define SYSTEM_TIME_SCALE2     .01
-#define FLIP_IMAGES            true
+#define FLIP_IMAGES            false
 #define ANIMATE                true
 #if 0
 #define IMAGEDIR      "/home/moulding/images/"
 #else
-#define IMAGEDIR      "/home/sci/moulding/images/"
+#define IMAGEDIR      "/usr/sci/data/Geometry/textures/holo-room/"
 #endif
 
 typedef struct {
@@ -114,8 +117,8 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
 {
   Group *solar_system = new Group();
 
-  Camera cam( Point(20,20,ROOMHEIGHT*.75), 
-              Point(ROOMCENTER, ROOMHEIGHT/2.), 
+  Camera cam( Point(10,0,1.8), 
+              Point(9,ROOMRADIUS,1.8), 
               Vector(0,0,1), 60.0 );
 
   //
@@ -166,16 +169,16 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   TileImageMaterial *matl0 = 
     new TileImageMaterial(IMAGEDIR"holowall.ppm",
                           4,Color(.5,.5,.5),0,0,0,FLIP_IMAGES);
-  matl0->SetScale(6,6);
+  matl0->SetScale(3,3);
 
   TileImageMaterial *matl1 = 
     new TileImageMaterial(IMAGEDIR"holowall.ppm",
                           4,Color(.5,.5,.5),0,0,0,FLIP_IMAGES);
-  matl1->SetScale(6,6*(ROOMHEIGHT/(double)(ROOMRADIUS*2)));
+  matl1->SetScale(3,3*(ROOMHEIGHT/(double)(ROOMRADIUS*2)));
 
   MultiMaterial *holo0 = new MultiMaterial();
   holo0->insert(matl0,.8);
-  holo0->insert(starfield,1);
+  holo0->insert(starfield,.5);
   MultiMaterial *holo1 = new MultiMaterial();
   holo1->insert(matl1,.8);
   holo1->insert(starfield,1);
@@ -188,10 +191,13 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   double orb_radius;
 
 
+
   // galaxy room
 
+#if RENDERWALLS
   Parallelogram *floor = new Parallelogram(holo0, 
-                                           Point(ROOMOFFSET,ROOMOFFSET,0),
+                                           Point(ROOMOFFSET,ROOMOFFSET,
+                                                 ROOMFLOOR),
                                            Vector(ROOMRADIUS*2,0,0),
                                            Vector(0,ROOMRADIUS*2,0));
 
@@ -203,22 +209,25 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
                                              Vector(0,ROOMRADIUS*2,0));
 
   Parallelogram *wall0 = new Parallelogram(holo1, 
-                                           Point(ROOMOFFSET,ROOMOFFSET,0),
+                                           Point(ROOMOFFSET,ROOMOFFSET,
+                                                 ROOMFLOOR),
                                            Vector(ROOMRADIUS*2,0,0),
                                            Vector(0,0,ROOMHEIGHT));
   Parallelogram *wall1 = new Parallelogram(holo1, \
                                            Point(ROOMRADIUS*2+ROOMOFFSET,
-                                                 ROOMRADIUS*2+ROOMOFFSET,0),
+                                                 ROOMRADIUS*2+ROOMOFFSET,
+                                                 ROOMFLOOR),
                                            Vector(-ROOMRADIUS*2,0,0),
                                            Vector(0,0,ROOMHEIGHT));
   Parallelogram *wall2 = new Parallelogram(holo1, 
                                            Point(ROOMRADIUS*2+ROOMOFFSET,
-                                                 ROOMOFFSET,0),
+                                                 ROOMOFFSET,ROOMFLOOR),
                                            Vector(0,ROOMRADIUS*2,0),
                                            Vector(0,0,ROOMHEIGHT));
   Parallelogram *wall3 = new Parallelogram(holo1, 
                                            Point(ROOMOFFSET,
-                                                 ROOMRADIUS*2+ROOMOFFSET,0),
+                                                 ROOMRADIUS*2+ROOMOFFSET,
+                                                 ROOMFLOOR),
                                            Vector(0,-ROOMRADIUS*2,0),
                                            Vector(0,0,ROOMHEIGHT));
 
@@ -233,25 +242,25 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   
   PortalParallelogram *door0a = 
     new PortalParallelogram(Point(ROOMOFFSET+DOOROFFSET,
-                                  ROOMOFFSET-PORTALOFFSET,0),
+                                  ROOMOFFSET-PORTALOFFSET,ROOMFLOOR),
                             Vector(DOORWIDTH,0,0),
                             Vector(0,0,DOORHEIGHT));
 
   PortalParallelogram *door0b = 
     new PortalParallelogram(Point(ROOMOFFSET+DOOROFFSET,
-                                  ROOMOFFSET+PORTALOFFSET,0),
+                                  ROOMOFFSET+PORTALOFFSET,ROOMFLOOR),
                             Vector(DOORWIDTH,0,0),
                             Vector(0,0,DOORHEIGHT));
 
   PortalParallelogram *door1a = 
     new PortalParallelogram(Point(ROOMOFFSET-PORTALOFFSET,
-                                  ROOMOFFSET+DOOROFFSET+DOORWIDTH,0),
+                                  ROOMOFFSET+DOOROFFSET+DOORWIDTH,ROOMFLOOR),
                             Vector(0,-DOORWIDTH,0),
                             Vector(0,0,DOORHEIGHT));
 
   PortalParallelogram *door1b = 
     new PortalParallelogram(Point(ROOMOFFSET+PORTALOFFSET,
-                                  ROOMOFFSET+DOOROFFSET+DOORWIDTH,0),
+                                  ROOMOFFSET+DOOROFFSET+DOORWIDTH,ROOMFLOOR),
                             Vector(0,-DOORWIDTH,0),
                             Vector(0,0,DOORHEIGHT));
 
@@ -261,10 +270,11 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   solar_system->add(door1b);
   PortalParallelogram::attach(door0a,door0b);
   PortalParallelogram::attach(door1a,door1b);
+#endif
 
-
+#if RENDERPLANETS
   // build the sun but don't add it to the scene 
-  // (represented later as a light in the scene)
+  // (represented later as the light in the scene)
   Satellite *sol = new Satellite(table[0].name_, white, 
                                  Point(ROOMCENTER, ROOMHEIGHT/2.), 
                                  .01, 0);
@@ -274,7 +284,7 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   table[0].self_ = sol;
   cerr << sol->name_ << " = " << sol << endl;
 
-  // build the earth (it has special texturing needs)
+  // build the earth first (it has special texturing needs)
   radius = table[1].radius_*SYSTEM_SIZE_SCALE;
   orb_radius = table[1].orb_radius_*SYSTEM_DISTANCE_SCALE;
   cerr << "earth radius = " << radius << endl;
@@ -287,7 +297,7 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   earth->set_rev_speed(1./table[1].rot_speed_*SYSTEM_TIME_SCALE1);
   table[1].self_ = earth;
   cerr << earth->name_ << " = " << earth << endl;
-  solar_system->add( earth );
+  //solar_system->add( earth );
   scene->addObjectOfInterest(earth,ANIMATE);
 
   // build the other satellites
@@ -315,7 +325,22 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
     newsat->set_orb_speed(1./table[loop].orb_speed_*SYSTEM_TIME_SCALE2);
     solar_system->add( newsat );
     scene->addObjectOfInterest( newsat, ANIMATE );
+
+    if (newsat->get_name() == "saturn") {
+      cerr << "adding rings!!!! " << radius << endl;
+      RingSatellite *rings = 
+        new RingSatellite("rings",white,
+                          newsat->get_center(),
+                          newsat->get_up(), 
+                          74400*SYSTEM_SIZE_SCALE,
+                          65754*SYSTEM_SIZE_SCALE,
+                          newsat);
+
+      solar_system->add( rings );
+      scene->addObjectOfInterest( rings, ANIMATE );
+    }
   }
+#endif
 
   // add the light (the sun, as mentioned above)
   Light2 *light = new Light2(sol_m, Color(1,.9,.8), 
