@@ -301,7 +301,7 @@ Dpy::run()
     resize(priv->xres, priv->yres);
     open_display(parentWindow, false);
 
-    // Don't close this if you are a child of the GLUT stuff.
+    // Don't close this if you are a child of another window.
     dont_close();
 
     init();
