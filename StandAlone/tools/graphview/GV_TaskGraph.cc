@@ -16,7 +16,8 @@ float safePercent(double num, double denom)
 GV_Task::GV_Task(string name, double duration, GV_TaskGraph* owner)
   : m_name(name), m_duration(duration),
     m_graph(owner),
-    m_maxBelowCost(0), m_maxAboveCost(0)
+    m_maxBelowCost(0), m_maxAboveCost(0),
+    m_visited(false), m_sorted(false)
 {}
 
 GV_Task::~GV_Task()
@@ -74,7 +75,7 @@ GV_TaskGraph::inflate(string xmlDir)
     return 0;
   }
 
-  DOM_Document firstDoc;
+  list<DOM_Document> docs;
 
   GV_TaskGraph* pGraph = scinew GV_TaskGraph();
   
@@ -101,8 +102,7 @@ GV_TaskGraph::inflate(string xmlDir)
       return 0;
     }
 
-    if (process == 0)
-      firstDoc = parser.getDocument();
+    docs.push_back(parser.getDocument());
 
     pGraph->readNodes(parser.getDocument());
     process++;
@@ -116,9 +116,11 @@ GV_TaskGraph::inflate(string xmlDir)
     return 0;
   }
   
-  // get the edges from the last document
-  // (they should all contain the same edges)
-  pGraph->readEdges(firstDoc);
+  for (list<DOM_Document>::iterator docIter = docs.begin();
+       docIter != docs.end(); docIter++) {
+    pGraph->readEdges(*docIter);
+  }
+  pGraph->computeMaxPathLengths();
   
   return pGraph;
 }
@@ -168,10 +170,12 @@ void GV_TaskGraph::readEdges(DOM_Document xmlDoc)
     GV_Task* targetTask = m_taskMap[target];
 
     if (sourceTask != NULL && targetTask != NULL) {
-      Edge* edge = sourceTask->addDependency(m_taskMap[target]);
-      if (edge) {
-	m_edges.push_back(edge);
-	m_edgeMap[source + "->" + target] = edge;
+      if (m_edgeMap.find(source + "->" + target) == m_edgeMap.end()) {
+	Edge* edge = targetTask->addDependency(sourceTask);
+	if (edge) {
+	  m_edges.push_back(edge);
+	  m_edgeMap[source + "->" + target] = edge;
+	}
       }
     }
     else {
@@ -181,10 +185,6 @@ void GV_TaskGraph::readEdges(DOM_Document xmlDoc)
 	cerr << "ERROR: Undefined task, '" << target << "'" << endl;
     }
   }
-  cout << "Processed " << m_tasks.size() << " nodes and "
-       << m_edges.size() << " edges" << endl;
-
-  computeMaxPathLengths();
 }
 
 GV_TaskGraph::~GV_TaskGraph()
@@ -197,8 +197,68 @@ GV_TaskGraph::~GV_TaskGraph()
     delete *iter;
 }
 
+void GV_TaskGraph::topologicallySortEdges()
+{
+  list<GV_Task*>::iterator iter;
+  for( iter = m_tasks.begin(); iter != m_tasks.end(); iter++ ) {
+    GV_Task* task = *iter;
+    task->resetFlags();
+  }
+
+  vector<GV_Task*> sortedTasks;
+  for( iter = m_tasks.begin(); iter != m_tasks.end(); iter++ ) {
+    GV_Task* task = *iter;
+    if(!task->sorted()){
+      task->processTaskForSorting(sortedTasks);
+    }
+  }
+
+  m_edges.clear();
+  for (int i = 0; i < sortedTasks.size(); i++) {
+    list<Edge*> dependentEdges = sortedTasks[i]->getDependentEdges();
+    for (list<Edge*>::iterator edgeIter = dependentEdges.begin();
+	 edgeIter != dependentEdges.end(); edgeIter++) {
+      m_edges.push_back(*edgeIter);
+    }
+  }
+}
+
+void
+GV_Task::processTaskForSorting(vector<GV_Task*>& sortedTasks)
+{
+  if(m_visited){
+    cerr << "Cycle detected in task graph: already did\n\t"
+	 << getName() << endl;
+    exit(1);
+  }
+
+  m_visited=true;
+   
+  list<Edge*>::iterator edgeIter;
+  for (edgeIter = m_dependencyEdges.begin();
+       edgeIter != m_dependencyEdges.end(); edgeIter++) {
+    GV_Task* target = (*edgeIter)->getTarget();
+    if(!target->m_sorted){
+      if(target->m_visited){
+	cerr << "Cycle detected in task graph: trying to do\n\t"
+	     << getName();
+	cerr << "\nbut already did:\n\t"
+	     << target->getName() << endl;
+	exit(1);
+      }
+      target->processTaskForSorting(sortedTasks);
+    }
+  }
+
+  // All prerequisites are done - add this task to the list
+  sortedTasks.push_back(this);
+  m_sorted=true;
+}
+
 void GV_TaskGraph::computeMaxPathLengths()
 {
+  topologicallySortEdges();
+  
   list<GV_Task*>::iterator task_it;
   list<Edge*>::iterator it;
   list<Edge*>::reverse_iterator r_it;
@@ -217,6 +277,9 @@ void GV_TaskGraph::computeMaxPathLengths()
     if ((*task_it)->getMaxInclBelowCost() > m_criticalPathCost)
       m_criticalPathCost = (*task_it)->getMaxInclBelowCost();
   }
+
+  cout << "Processed " << m_tasks.size() << " nodes and "
+       << m_edges.size() << " edges" << endl;  
 }
 
 GV_Task*

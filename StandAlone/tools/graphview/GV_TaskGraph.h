@@ -1,4 +1,5 @@
 #include <list>
+#include <vector>
 #include <map>
 #include <string>
 
@@ -53,6 +54,13 @@ public:
 
   float getMaxPathPercent() const;
 
+  void processTaskForSorting(std::vector<GV_Task*>& sortedTasks);
+
+  bool sorted()
+  { return m_sorted; }
+  
+  void resetFlags()
+  { m_visited = false; m_sorted = false; }
 private:
   // The below are called by Edge::relaxEdgeDown() and
   // Edge::relaxEdgeUp() respectively.
@@ -75,6 +83,9 @@ private:
   
   // maximum cost for any path above this GV_Task (paths of dependencies)
   double m_maxAboveCost;
+
+  bool m_sorted;
+  bool m_visited;
 };
 
 class Edge {
@@ -149,6 +160,8 @@ private:
   // node as well as the critical path cost.
   void computeMaxPathLengths(); // called when graph is created
 
+  void topologicallySortEdges();
+  
   std::list<GV_Task*> m_tasks;
   std::list<Edge*> m_edges;
   std::map<std::string, GV_Task*> m_taskMap;
