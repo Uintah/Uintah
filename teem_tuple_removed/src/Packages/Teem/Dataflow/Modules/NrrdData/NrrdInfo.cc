@@ -60,6 +60,7 @@ void
 NrrdInfo::clear_vals() 
 {
   gui->execute(string("set ") + id + "-type \"---\"");
+  gui->execute(string("set ") + id + "-name \"---\"");
 
   gui->execute(id + " delete_tabs");
 
@@ -114,6 +115,13 @@ NrrdInfo::clear_vals()
 void
 NrrdInfo::update_input_attributes(NrrdDataHandle nh) 
 {
+  string name;   ;
+  if (nh->get_property( "Name", name)) { 
+    gui->execute(string("set ") + id + "-name " + name);
+  } else {
+    gui->execute(string("set ") + id + "-name \"Unknown\"");
+  }
+
   switch (nh->nrrd->type) {
   case nrrdTypeChar :  
     gui->execute(string("set ") + id + "-type \"char\"");
