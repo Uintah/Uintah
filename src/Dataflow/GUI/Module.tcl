@@ -1325,7 +1325,7 @@ proc findModuleReplacements { module } {
 
     #TODO: SUBNETS
 
-    return [lsort $candidates]
+    return $candidates
 }
 
 
