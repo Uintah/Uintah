@@ -1,15 +1,16 @@
 #include <Packages/Uintah/CCA/Components/ICE/LODI.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
+#include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfState.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
+#include <Packages/Uintah/Core/Labels/ICELabel.h>
 #include <Packages/Uintah/Core/Math/MiscMath.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Math/MiscMath.h>
 #include <typeinfo>
-
 
 using namespace Uintah;
 namespace Uintah {
@@ -430,9 +431,10 @@ void  lodi_bc_preprocess( const Patch* patch,
       CellIterator iterPlusGhost2 = patch->addGhostCell_Iter(iterLimits,2);
 
       //  plus one layer of ghostcells
+      Vector nanV(getNan(), getNan(), getNan());
       for(CellIterator iter = iterPlusGhost1; !iter.done(); iter++) {  
         IntVector c = *iter;
-        nu[c] = Vector(nanValue,nanValue,nanValue ); 
+        nu[c] = nanV;
         E[c] = rho_old[c] * (cv[c] * temp_old[c]  + 0.5 * vel_old[c].length2() );    
       }
       //  plut two layers of ghostcells
@@ -1149,11 +1151,16 @@ void FacePress_LODI(const Patch* patch,
                                        cv[m][c],Temp_CC[m][c],
                                        press_eos[m],tmp,tmp);        
       } 
+#ifndef __APPLE__
       if(mpm_matl){                //  M P M
         mpm_matl->getConstitutiveModel()->
           computePressEOSCM(rho_micro[m][c],press_eos[m], press_ref,
                             tmp, tmp,mpm_matl);
-      }              
+      }
+#else
+      // This needs to be rethought, due to circular dependencies...
+      cerr << "Temporarily commented out by Steve\n";
+#endif
       press_CC[c] += f_theta[m][c]*press_eos[m];
 //     cout << "press_CC" << c << press_CC[c] << endl;           
     }  // for ALLMatls...
