@@ -3886,7 +3886,7 @@ C*****exponent range > +/-300
 C*****END exponent range > +/-300
       EXPARG = LOG(BIG)
 C
-      WRITE (LOUT,15)
+C      WRITE (LOUT,15)
    15 FORMAT (/1X,' CKLIB:  Chemical Kinetics Library',
      1        /1X,'         CHEMKIN-II Version 4.9, April 1994',
 C*****precision > double

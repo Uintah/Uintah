@@ -32,8 +32,8 @@ ChemkinInterface::ChemkinInterface() {
 	  strlen(cklinkfile));
   d_ickwrk = new int[d_leniwk];
   d_rckwrk = new double[d_lenrwk];
-  cout << "CK: lenrwk "<<d_lenrwk<<endl;
-  cout << "CK: leniwk "<<d_leniwk<<endl;
+  //cout << "CK: lenrwk "<<d_lenrwk<<endl;
+  //cout << "CK: leniwk "<<d_leniwk<<endl;
   if(!(d_ickwrk && d_rckwrk))
     {
       cout << "Error allocating ickwrk or rckwrk"<<endl; 
