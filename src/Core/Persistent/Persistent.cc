@@ -45,33 +45,6 @@ namespace SCIRun {
 
 static Piostream::MapStringPersistentTypeID* table = 0;  
 
-//////////
-// Constructors/Destructor
-PersistentTypeID::PersistentTypeID(const char* typeName, 
-				   const char* parentName,
-				   Persistent* (*maker)()) :
-  type(typeName), parent(parentName), maker(maker)
-{
-  if (!table) {
-    table = scinew Piostream::MapStringPersistentTypeID;
-  }
-  
-  Piostream::MapStringPersistentTypeID::iterator dummy;
-
-  dummy = table->find(type);
-  if (dummy != table->end()) {
-    if ((*dummy).second->maker != maker 
-	|| ((*dummy).second->parent != parent))
-    {
-      cerr << "WARNING: duplicate type in Persistent "
-	   << "Object Type Database: " << type << endl;
-    }
-  }
-  
-				// should this be else { ?
-  (*table)[type] = this;
-  
-}
 
 //----------------------------------------------------------------------
 PersistentTypeID::PersistentTypeID(const string& typeName, 

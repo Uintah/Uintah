@@ -83,40 +83,39 @@ ModuleInfo* GetModuleInfo(const string& name, const string& catname,
   return 0;
 }
 
-void *FindLibrarySymbol(const char* package, const char* type, 
-			const char* symbol)
+void *FindLibrarySymbol(const string &package, const string &/* type */, 
+			const string &symbol)
 {
   void* SymbolAddress = 0;
   LIBRARY_HANDLE so = 0;
 
-  string pname(package);
-  string pak_bname,cat_bname;
-  if (pname=="SCIRun") {
+  string pak_bname, cat_bname;
+  if (package == "SCIRun") {
     pak_bname = "libDataflow.so";
     cat_bname = "libDataflow_Ports.so";
   } else {
-    pak_bname = "libPackages_" + pname + "_Dataflow.so";
-    cat_bname = "libPackages_" + pname + "_Dataflow_Ports.so";
+    pak_bname = "libPackages_" + package + "_Dataflow.so";
+    cat_bname = "libPackages_" + package + "_Dataflow_Ports.so";
   }
 
   // maybe it's in the small version of the .so
   so = GetLibraryHandle(cat_bname.c_str());
   if (so) {
-    SymbolAddress = GetHandleSymbolAddress(so,symbol);
+    SymbolAddress = GetHandleSymbolAddress(so, symbol.c_str());
     if (SymbolAddress) goto found;
   }
 
   // maybe it's in the large version of the .so
   so = GetLibraryHandle(pak_bname.c_str());
   if (so) {
-    SymbolAddress = GetHandleSymbolAddress(so,symbol);
+    SymbolAddress = GetHandleSymbolAddress(so, symbol.c_str());
     if (SymbolAddress) goto found;
   }
 
   // maybe it's in a .so that doesn't conform to the naming convention
-  so = GetLibraryHandle(pname.c_str());
+  so = GetLibraryHandle(package.c_str());
   if (so) {
-    SymbolAddress = GetHandleSymbolAddress(so,symbol);
+    SymbolAddress = GetHandleSymbolAddress(so,symbol.c_str());
     if (SymbolAddress) goto found;
   }
 
@@ -124,31 +123,19 @@ void *FindLibrarySymbol(const char* package, const char* type,
   return SymbolAddress;
 }
 
-iport_maker FindIPort(const char* package, const char* datatype)
+iport_maker FindIPort(const string &package, const string &datatype)
 {
-  iport_maker maker = 0;
-  char* maker_symbol = new char[strlen(datatype)+11];
-
-  sprintf(maker_symbol,"make_%sIPort",datatype);
-
-  maker = (iport_maker)FindLibrarySymbol(package,datatype,maker_symbol);
-
-  delete[] maker_symbol;
-
+  string maker_symbol = "make_" + datatype + "IPort";
+  iport_maker maker =
+    (iport_maker)FindLibrarySymbol(package, datatype, maker_symbol);
   return maker;
 }  
 
-oport_maker FindOPort(const char* package, const char* datatype)
+oport_maker FindOPort(const string &package, const string &datatype)
 {
-  oport_maker maker = 0;
-  char* maker_symbol = new char[strlen(datatype)+11];
-
-  sprintf(maker_symbol,"make_%sOPort",datatype);
-
-  maker = (oport_maker)FindLibrarySymbol(package,datatype,maker_symbol);
-
-  delete[] maker_symbol;
-
+  string maker_symbol = "make_" + datatype + "OPort";
+  oport_maker maker =
+    (oport_maker)FindLibrarySymbol(package, datatype, maker_symbol);
   return maker;
 }  
 
@@ -396,12 +383,12 @@ void Module::rename_iport(int, const string&)
 }
 
 
-IPort *Module::get_iport(const char *name)
+IPort *Module::get_iport(const string &name)
 {
   return get_iport(get_iports(name).first->second);
 }
 
-OPort *Module::get_oport(const char *name)
+OPort *Module::get_oport(const string &name)
 {
   return get_oport(get_oports(name).first->second);
 }

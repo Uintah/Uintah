@@ -54,7 +54,6 @@ struct SCICORESHARE PersistentTypeID {
   string type;
   string parent;
   Persistent* (*maker)();
-  PersistentTypeID(const char* type, const char* parent, Persistent* (*maker)());
   PersistentTypeID(const string& type, const string& parent,
 		   Persistent* (*maker)());
   ~PersistentTypeID();
