@@ -184,7 +184,7 @@ ClipByFunctionAlgo::get_compile_info(const TypeDescription *fsrc,
     "  }\n" +
     "\n" +
     "  virtual string identify()\n" +
-    "  { return string(\"" + clipfunction + "\"); }\n" +
+    "  { return string(\"" + string_Cify(clipfunction) + "\"); }\n" +
     "};\n//";
 
   rval->add_include(include_path + class_declaration);

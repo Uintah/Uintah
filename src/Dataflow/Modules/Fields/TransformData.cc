@@ -176,7 +176,7 @@ TransformDataAlgo::get_compile_info(const TypeDescription *field_td,
     "  }\n" +
     "\n" +
     "  virtual string identify()\n" +
-    "  { return string(\"" + function + "\"); }\n" +
+    "  { return string(\"" + string_Cify(function) + "\"); }\n" +
     "};\n//";
 
   // Add in the include path to compile this obj

@@ -55,8 +55,12 @@ string basename(const string &path);
 // Return directory name
 string pathname(const string &path);
 
-  // Split a string into multiple parts, separated by the character sep
-  vector<string> split_string(const std::string& str, char sep);
+// Split a string into multiple parts, separated by the character sep
+vector<string> split_string(const std::string& str, char sep);
+
+/////////
+// C++ify a string, turn newlines into \n, use \t, \r, \\ \", etc.
+string string_Cify(const string &str);
 
 //////////
 // Unsafe cast from string to char *, used to export strings to C functions.
