@@ -174,14 +174,14 @@ HairObj::draw( bool )
   glPopMatrix();
 }
 
+#define CHAR_SIZE 0.04
 #define CHAR_W CHAR_SIZE
 #define CHAR_H CHAR_SIZE*1.61
   
 void
-Axes::draw( bool pick )
+XAxis::draw( bool pick )
 {
-  float CHAR_SIZE = 0.05;
-  float pos[] = {0,0,0};
+  float loc[] = {0,0,0};
   float norm[] = {0,0,-1};
   float up[] = {0,1,0};
   int loop;
@@ -192,82 +192,149 @@ Axes::draw( bool pick )
   }
 
   // draw the axes and tic marks
-  AxesObj::draw( pick );
+  XAxisObj::draw( pick );
 
-  // transform the positions to NDC (with y flip)
-  double ypos = (1.-ypos_)*2.-1.;
-  double xpos = xpos_*2.-1.;
+  if (!pick) {
+    // transform the positions to NDC (with y flip)
+    double pos = (1.-pos_)*2.-1.;
+    
+    double delta = 2./(num_tics_+1);
+    
+    // set the projection to NDC
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glOrtho(-1,1,-1,1,0,1);
+    
+    // draw the tic mark values
+    up[0] = 0.544;
+    up[1] = 0.839;
+    up[2] = 0.;
+    loc[1] = pos-0.0163;
+    for (loop=1;loop<=num_tics_;++loop) {
+      loc[0] = (loop*delta)-(.5*CHAR_W)-1.;
+      glprintf(loc,norm,up,CHAR_W,CHAR_H,"%-1.3f",
+	       parent_->x_get_at((loc[0]+1.)/2.));
+    }
 
-  double hdelta = 2./(num_h_tics_+1);
-  double vdelta = 2./(num_v_tics_+1);
-
-  // set the projection to NDC
-  glMatrixMode(GL_PROJECTION);
-  glPushMatrix();
-  glLoadIdentity();
-
-  // draw the tic mark values
-  up[0] = 0.544;
-  up[1] = 0.839;
-  up[2] = 0.;
-
-  pos[1] = ypos-0.0163;
-  for (loop=1;loop<=num_h_tics_;++loop) {
-    pos[0] = (loop*hdelta)-(.5*CHAR_W)-1.;
-    glprintf(pos,norm,up,CHAR_W,CHAR_H,"%-1.3f",
-	     parent_->x_get_at((pos[0]+1.)/2.));
+    glPopMatrix();
   }
-  up[0] = up[2] = 0;
-  up[1] = 1;
-  pos[0] = xpos+0.012;
-  for (loop=1;loop<=num_v_tics_;++loop) {
-    pos[1] = (loop*vdelta)+(.5*CHAR_H)-1.;
-    glprintf(pos,norm,up,CHAR_W,CHAR_H,"%-1.3f",
-	     parent_->y_get_at((pos[1]+1.)/2.));
+}
+
+void
+YAxis::draw( bool pick )
+{
+  float loc[] = {0,0,0};
+  float norm[] = {0,0,-1};
+  float up[] = {0,1,0};
+  int loop;
+  
+  if (!initialized_) {
+    initialized_ = true;
+    init_glprintf();
   }
 
-  glPopMatrix();
+  // draw the axes and tic marks
+  YAxisObj::draw( pick );
+
+  if (!pick) {
+    // transform the position to NDC 
+    double pos = pos_*2.-1.;
+
+    double delta = 2./(num_tics_+1);
+    
+    // set the projection to NDC
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glOrtho(-1,1,-1,1,0,1);
+    
+    // draw the tic mark values
+    up[0] = 0.;
+    up[1] = 1.;
+    up[2] = 0.;      
+    loc[0] = pos+0.01;
+    for (loop=1;loop<=num_tics_;++loop) {
+      loc[1] = (loop*delta)+(.5*CHAR_H)-1.;
+      glprintf(loc,norm,up,CHAR_W,CHAR_H,"%-1.3f",
+	       parent_->y_get_at((loc[1]+1.)/2.));
+    }
+    
+    glPopMatrix();
+  }
 }
 
 
 void 
-AxesObj::draw( bool )
+XAxisObj::draw( bool pick)
 {
-  double hdelta = 2./(num_h_tics_+1);
-  double vdelta = 2./(num_v_tics_+1);
+  double delta = 2./(num_tics_+1);
   int loop;
 
-  // transform the positions to NDC (with y flip)
-  double ypos = (1.-ypos_)*2.-1.;
-  double xpos = xpos_*2.-1.;
+  // transform the pos to NDC (with y flip if not picking)
+  double pos;
+  if (!pick)
+    pos = (1.-pos_)*2.-1.;
+  else
+    pos = pos_*2.-1.;
 
   // set the projection to NDC
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
-  glLoadIdentity();
+  glOrtho(-1,1,-1,1,0,1);
 
   glColor3f(0.f,0.f,0.f);
 
   // draw the axes lines
   glBegin(GL_LINES);
-    glVertex2f(-1.0f,ypos);
-    glVertex2f(1.0f,ypos);
-    glVertex2f(xpos,-1.0f);
-    glVertex2f(xpos,1.0f);
+    glVertex2f(-1.0f,pos);
+    glVertex2f(1.0f,pos);
   glEnd();
 
   // draw the tic marks
-  glBegin(GL_LINES);
-  for (loop=1;loop<=num_h_tics_;++loop) {
-    glVertex2d(loop*hdelta-1.,ypos+0.0161);
-    glVertex2d(loop*hdelta-1.,ypos-0.0161);
+  if (!pick) {
+    glBegin(GL_LINES);
+    for (loop=1;loop<=num_tics_;++loop) {
+      glVertex2d(loop*delta-1.,pos+0.0161);
+      glVertex2d(loop*delta-1.,pos-0.0161);
+    }
+    glEnd();
   }
 
-  for (loop=1;loop<=num_v_tics_;++loop) {
-    glVertex2d(xpos+0.01,vdelta*loop-1.);
-    glVertex2d(xpos-.01,vdelta*loop-1.);
-  }
+  // restore the original projection
+  glPopMatrix();
+}
+
+
+void 
+YAxisObj::draw( bool pick)
+{
+  double delta = 2./(num_tics_+1);
+  int loop;
+
+  // transform the position to NDC
+  double pos = pos_*2.-1.;
+
+  // set the projection to NDC
+  glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+  glOrtho(-1,1,-1,1,0,1);
+
+  glColor3f(0.f,0.f,0.f);
+
+  // draw the axes lines
+  glBegin(GL_LINES);
+    glVertex2f(pos,-1.0f);
+    glVertex2f(pos,1.0f);
   glEnd();
+
+  // draw the tic marks
+  if (!pick) {
+    glBegin(GL_LINES);
+    for (loop=1;loop<=num_tics_;++loop) {
+      glVertex2d(pos+0.01,delta*loop-1.);
+      glVertex2d(pos-.01,delta*loop-1.);
+    }
+    glEnd();
+  }
 
   // restore the original projection
   glPopMatrix();

@@ -221,8 +221,10 @@ Diagram::add_hairline()
 void
 Diagram::add_axes() 
 {
-  Axes *axes = scinew Axes( this, "Axes");
-  /*int w = */add_widget( axes );
+  YAxis *yaxis = scinew YAxis( this, "YAxis");
+  /*int w = */add_widget( yaxis );
+  XAxis *xaxis = scinew XAxis( this, "XAxis");
+  /*int w = */add_widget( xaxis );
 
   string window_name;
   tcl_eval( "new-opt " , window_name );
@@ -302,8 +304,8 @@ Diagram::set_windows( const string &menu, const string &tb,
 void
 Diagram::button_press( int x, int y, int button )
 {
-  GLuint buffer[10]; 
-  
+  GLuint buffer[10000]; 
+
   ogl_->pre();
   
   glMatrixMode(GL_PROJECTION);
@@ -315,7 +317,7 @@ Diagram::button_press( int x, int y, int button )
   
   gluPickMatrix(x, y, 10, 10, viewport );
   
-  glSelectBuffer( 10, buffer );
+  glSelectBuffer( 10000, buffer );
   glRenderMode( GL_SELECT );
   glInitNames();
   glPushName(2);
@@ -323,9 +325,11 @@ Diagram::button_press( int x, int y, int button )
   draw( true );
   
   int n = glRenderMode( GL_RENDER );
+  std::cerr << "number hits = " << n << std::endl;
   
   if ( n > 0 ) {
     selected_widget_ = buffer[3];
+    std::cerr << "selected widget = " << selected_widget_ << std::endl;
     widget_[ selected_widget_ ]->select( x, y, button );
   }
   

@@ -43,60 +43,118 @@ using std::ostringstream;
 
 namespace SCIRun {
 
-Persistent* make_Axes()
+Persistent* make_XAxis()
 {
-  return scinew Axes;
+  return scinew XAxis;
 }
 
-PersistentTypeID Axes::type_id("Axes", "AxesObj", make_Axes);
+PersistentTypeID XAxis::type_id("XAxis", "XAxisObj", make_XAxis);
 
-Axes::Axes( Diagram *p, const string &name)
-  : TclObj( "Axes" ), AxesObj(name), parent_(p), activepoly_(0),
+XAxis::XAxis( Diagram *p, const string &name)
+  : TclObj( "XAxis" ), XAxisObj(name), parent_(p), activepoly_(0),
     initialized_(false)
 {
 }
 
 
-Axes::~Axes()
+XAxis::~XAxis()
 {
 }
 
 
 void
-Axes::select( double x, double y, int b )
+XAxis::select( double x, double y, int b )
 {
-  cerr << "Axes select\n";
-  AxesObj::select( x, y, b );
+  cerr << "X Axis select\n";
+  XAxisObj::select( x, y, b );
   //  update();
 }
   
 void
-Axes::move( double x, double y, int b)
+XAxis::move( double x, double y, int b)
 {
-  AxesObj::move( x, y, b );
+  XAxisObj::move( x, y, b );
   //  update();
 }
   
 void
-Axes::release( double x, double y, int b)
+XAxis::release( double x, double y, int b)
 {
-  AxesObj::release( x, y, b );
+  XAxisObj::release( x, y, b );
   //  update();
 }
   
 
 void
-Axes::update()
+XAxis::update()
 {
 }
 
 
-#define AXES_VERSION 1
+#define XAXIS_VERSION 1
 
 void 
-Axes::io(Piostream& stream)
+XAxis::io(Piostream& stream)
 {
-  stream.begin_class("Axes", AXES_VERSION);
+  stream.begin_class("XAxis", XAXIS_VERSION);
+  Widget::io(stream);
+  stream.end_class();
+}
+
+Persistent* make_YAxis()
+{
+  return scinew YAxis;
+}
+
+PersistentTypeID YAxis::type_id("YAxis", "YAxisObj", make_YAxis);
+
+YAxis::YAxis( Diagram *p, const string &name)
+  : TclObj( "YAxis" ), YAxisObj(name), parent_(p), activepoly_(0),
+    initialized_(false)
+{
+}
+
+
+YAxis::~YAxis()
+{
+}
+
+
+void
+YAxis::select( double x, double y, int b )
+{
+  cerr << "Y Axis select\n";
+  YAxisObj::select( x, y, b );
+  //  update();
+}
+  
+void
+YAxis::move( double x, double y, int b)
+{
+  YAxisObj::move( x, y, b );
+  //  update();
+}
+  
+void
+YAxis::release( double x, double y, int b)
+{
+  YAxisObj::release( x, y, b );
+  //  update();
+}
+  
+
+void
+YAxis::update()
+{
+}
+
+
+#define YAXIS_VERSION 1
+
+void 
+YAxis::io(Piostream& stream)
+{
+  stream.begin_class("YAxis", YAXIS_VERSION);
   Widget::io(stream);
   stream.end_class();
 }

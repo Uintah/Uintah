@@ -45,25 +45,19 @@ using std::ostringstream;
 
 namespace SCIRun {
 
-Persistent* make_AxesObj()
+Persistent* make_XAxisObj()
 {
-  return scinew AxesObj;
+  return scinew XAxisObj;
 }
 
-PersistentTypeID AxesObj::type_id("AxesObj", "Widget", make_AxesObj);
+PersistentTypeID XAxisObj::type_id("XAxisObj", "Widget", make_XAxisObj);
 
-AxesObj::AxesObj( const string &name)
-  : HairObj(name), xpos_(0.5), ypos_(0.5), num_h_tics_(7), num_v_tics_(5)
-{
-}
-
-
-AxesObj::~AxesObj()
+XAxisObj::~XAxisObj()
 {
 }
 
 void
-AxesObj::recompute()
+XAxisObj::recompute()
 {
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -74,45 +68,103 @@ AxesObj::recompute()
   glGetIntegerv( GL_VIEWPORT, viewport );
   glPopMatrix();
 }
-void
-AxesObj::select( double x, double y, int  )
-{
-  recompute();
-}
-  
-void
-AxesObj::move( double x, double y, int )
-{
-  recompute();
 
-  GLdouble px, py, pz;
-  gluUnProject( x, y, 0, model, proj, viewport, &px, &py, &pz );
-  if ( px >= 0 && px < 1 )
-    xpos_ = px;
-  if ( py >= 0 && py < 1 )
-    ypos_ = py;
+void
+XAxisObj::select( double x, double y, int  )
+{
+  recompute();
 }
   
 void
-AxesObj::release( double x, double y, int )
+XAxisObj::move( double x, double y, int )
 {
   recompute();
 
   GLdouble px, py, pz;
   gluUnProject( x, y, 0, model, proj, viewport, &px, &py, &pz );
-  if ( px >= 0 && px < 1 )
-    xpos_ = px;
   if ( py >= 0 && py < 1 )
-    ypos_ = py;
+    pos_ = py;
 }
   
+void
+XAxisObj::release( double x, double y, int )
+{
+  recompute();
 
-#define TWO_D_AXES_VERSION 1
+  GLdouble px, py, pz;
+  gluUnProject( x, y, 0, model, proj, viewport, &px, &py, &pz );
+  if ( py >= 0 && py < 1 )
+    pos_ = py;
+}
+
+#define X_AXIS_VERSION 1
 
 void 
-AxesObj::io(Piostream& stream)
+XAxisObj::io(Piostream& stream)
 {
-  stream.begin_class("AxesObj", TWO_D_AXES_VERSION);
+  stream.begin_class("XAxisObj", X_AXIS_VERSION);
+  DrawObj::io(stream);
+  stream.end_class();
+}
+
+Persistent* make_YAxisObj()
+{
+  return scinew YAxisObj;
+}
+
+PersistentTypeID YAxisObj::type_id("YAxisObj", "Widget", make_YAxisObj);
+
+YAxisObj::~YAxisObj()
+{
+}
+
+void
+YAxisObj::recompute()
+{
+  glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+  glLoadIdentity();
+  glOrtho( 0, 1,  0, 1,  -1, 1 );
+  glGetDoublev( GL_PROJECTION_MATRIX, proj );
+  glGetDoublev( GL_MODELVIEW_MATRIX, model );
+  glGetIntegerv( GL_VIEWPORT, viewport );
+  glPopMatrix();
+}
+
+void
+YAxisObj::select( double x, double y, int  )
+{
+  recompute();
+}
+  
+void
+YAxisObj::move( double x, double y, int )
+{
+  recompute();
+
+  GLdouble px, py, pz;
+  gluUnProject( x, y, 0, model, proj, viewport, &px, &py, &pz );
+  if ( px >= 0 && px < 1 )
+    pos_ = px;
+}
+  
+void
+YAxisObj::release( double x, double y, int )
+{
+  recompute();
+
+  GLdouble px, py, pz;
+  gluUnProject( x, y, 0, model, proj, viewport, &px, &py, &pz );
+  if ( px >= 0 && px < 1 )
+    pos_ = px;
+}
+
+#define Y_AXIS_VERSION 1
+
+void 
+YAxisObj::io(Piostream& stream)
+{
+  stream.begin_class("YAxisObj", Y_AXIS_VERSION);
   DrawObj::io(stream);
   stream.end_class();
 }

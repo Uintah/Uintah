@@ -35,20 +35,18 @@
 
 namespace SCIRun {
   
-class SCICORESHARE AxesObj :  public HairObj {
-
+class SCICORESHARE XAxisObj :  public HairObj {
 protected:
-  double xpos_, ypos_;
-  int num_h_tics_,num_v_tics_;
+    int num_tics_;
 
 public:
   
-  AxesObj( const string &name="axes" );
-  virtual ~AxesObj();
+  XAxisObj( const string &name="xaxis" )  
+    : HairObj(name), num_tics_(7) { pos_ = .5; }
+  virtual ~XAxisObj();
 
   virtual void get_bounds( BBox2d & ) {} 
-  double x_at() { return xpos_; }
-  double y_at() { return ypos_; }
+  double at() { return pos_; }
   void recompute();
   virtual void select( double x, double y, int b );
   virtual void move( double x, double y, int b );
@@ -64,8 +62,39 @@ public:
   
 };
 
-void Pio(Piostream&, AxesObj*&);
+class SCICORESHARE YAxisObj :  public HairObj {
+protected:
+  int num_tics_;
+
+public:
+  
+  YAxisObj( const string &name="yaxes" )   
+    : HairObj(name), num_tics_(5) { pos_ = .5; }
+  virtual ~YAxisObj();
+
+  virtual void get_bounds( BBox2d & ) {} 
+  double at() { return pos_; }
+  void recompute();
+  virtual void select( double x, double y, int b );
+  virtual void move( double x, double y, int b );
+  virtual void release( double x, double y, int b );
+
+  // For OpenGL
+#ifdef SCI_OPENGL
+  virtual void draw( bool = false );
+#endif
+  static PersistentTypeID type_id;
+  
+  virtual void io(Piostream&);    
+  
+};
+
+void Pio(Piostream&, XAxisObj*&);
+void Pio(Piostream&, YAxisObj*&);
 
 } // namespace SCIRun
 
-#endif // SCI_HairObj_h
+#endif // SCI_AxesObj_h
+
+
+
