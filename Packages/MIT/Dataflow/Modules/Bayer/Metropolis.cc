@@ -72,6 +72,7 @@ private:
   Graph *graph;
   CrowdMonitor *monitor_;
 
+  bool user_ready;
 
   // theta_init;
   int seed;
@@ -169,7 +170,11 @@ void Metropolis::execute()
   update_state(JustStarted);
 
   reset();
-  metropolis();
+
+  if ( user_ready ) {
+    metropolis();
+    user_ready = false;
+  }
 }
 
 
@@ -200,6 +205,8 @@ Metropolis::init()
   graph = scinew Graph( id+"-Graph" );
   diagram = scinew Diagram("Metropolis");
   graph->add("Theta", diagram);
+
+  user_ready = false;
 }
 
 
@@ -507,6 +514,10 @@ void Metropolis::tcl_command(TCLArgs& args, void* userdata)
   if ( args[1] == "graph-window" ) {
     cerr << "Metropolis:: graph set window " << args[2] << endl;
     graph->set_window( args[2] ); 
+  } 
+  else if ( args[1] == "exec" ) {
+    user_ready = true;
+    want_to_execute();
   }
   else
     Module::tcl_command(args, userdata);
