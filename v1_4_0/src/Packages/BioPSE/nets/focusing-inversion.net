@@ -186,6 +186,5 @@ set $m20-averaging {0}
 set $m20-groundfirst {1}
 $m1 initialize_ui
 $m6 initialize_ui
-$m14 initialize_ui
 
 ::netedit scheduleok

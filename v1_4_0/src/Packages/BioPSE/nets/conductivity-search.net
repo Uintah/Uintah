@@ -192,8 +192,6 @@ set $m22-ViewWindow_0-view-fov ${view-fov}
 set $m22-ViewWindow_0-specular-scale {0.4}
 $m1 initialize_ui
 $m3 initialize_ui
-$m4 initialize_ui
-$m9 initialize_ui
 $m14 initialize_ui
 
 ::netedit scheduleok
