@@ -320,14 +320,29 @@ itcl_class SCIRun_Fields_EditField {
 	    }
 	}
 
-	if { $name2 == "unsigned char" || $name2 == "short" || $name2 == "int" || $name2 == "float" || $name2 == "double" }  {
-            return [list "${name1}<unsigned char>" \
-		         "${name1}<short>" \
-		         "${name1}<int>" \
-		         "${name1}<float>" \
-		         "${name1}<double>" ]
+#  	if { $name2 == "unsigned char" || $name2 == "short" || $name2 == "int" || $name2 == "float" || $name2 == "double" }  {
+#              return [list "${name1}<unsigned char>" \
+#  		         "${name1}<short>" \
+#  		         "${name1}<int>" \
+#  		         "${name1}<float>" \
+#  		         "${name1}<double>" ]
+#  	} else {
+#  	    return [list $type]
+#  	}
+
+        set tmp [list "${name1}<unsigned char> " \
+                      "${name1}<short> " \
+                      "${name1}<int> " \
+  		      "${name1}<float> " \
+  		      "${name1}<double> " \
+  		      "${name1}<Vector> " \
+  		      "${name1}<Tensor> " ]
+
+        set loc [lsearch -exact $tmp $type]
+        if { $loc == -1 } {
+            return [concat $tmp [list $type] ]
 	} else {
-	    return [list $type]
+	    return $tmp
 	}
     }
 

@@ -147,7 +147,7 @@ void EditField::clear_vals()
 void EditField::update_input_attributes(FieldHandle f) 
 {
   const string &tname = f->get_type_description()->get_name();
-  TCL::execute(string("set ")+id+"-typename " + tname);
+  TCL::execute(string("set ")+id+"-typename \"" + tname + "\"");
 
   switch(f->data_at())
   {
@@ -389,22 +389,50 @@ void EditField::execute()
   // Create a field identical to the input, except for the edits.
   const TypeDescription *fsrc_td = fh->get_type_description();
   CompileInfo *ci =
-    EditFieldAlgoCopy::get_compile_info(fsrc_td, typename_.get());
+    EditFieldAlgoCreate::get_compile_info(fsrc_td, typename_.get());
   DynamicAlgoHandle algo_handle;
   if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
   {
     cout << "Could not compile algorithm." << std::endl;
     return;
   }
-  EditFieldAlgoCopy *algo =
-    dynamic_cast<EditFieldAlgoCopy *>(algo_handle.get_rep());
+  EditFieldAlgoCreate *algo =
+    dynamic_cast<EditFieldAlgoCreate *>(algo_handle.get_rep());
   if (algo == 0)
   {
     cout << "Could not get algorithm." << std::endl;
     return;
   }
   TCL::execute(id + " set_state Executing 0");
-  FieldHandle ef(algo->execute(fh, dataat, transform_p, scale, translate));
+  bool same_value_type_p = false;
+  FieldHandle ef(algo->execute(fh, dataat, same_value_type_p));
+
+  // Do any necessary data transforms here.
+  const bool both_scalar_p =
+    ef->query_scalar_interface() && fh->query_scalar_interface();
+  if (both_scalar_p || same_value_type_p)
+  {
+    const TypeDescription *fdst_td = ef->get_type_description();
+    CompileInfo *ci =
+      EditFieldAlgoCopy::get_compile_info(fsrc_td, fdst_td,
+					  both_scalar_p && transform_p);
+    DynamicAlgoHandle algo_handle;
+    if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
+    {
+      cout << "Could not compile algorithm." << std::endl;
+      return;
+    }
+    EditFieldAlgoCopy *algo =
+      dynamic_cast<EditFieldAlgoCopy *>(algo_handle.get_rep());
+    if (algo == 0)
+    {
+      cout << "Could not get algorithm." << std::endl;
+      return;
+    }
+    TCL::execute(id + " set_state Executing 0");
+    algo->execute(fh, ef, scale, translate);
+  }
+  
 
   // Transform the mesh if necessary.
   if (cbbox_.get())
@@ -525,20 +553,20 @@ EditFieldAlgoCount::get_compile_info(const TypeDescription *mesh_td)
 
 
 CompileInfo *
-EditFieldAlgoCopy::get_compile_info(const TypeDescription *field_td,
+EditFieldAlgoCreate::get_compile_info(const TypeDescription *field_td,
 				    const string &fdstname)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  static const string template_class_name("EditFieldAlgoCopyT");
-  static const string base_class_name("EditFieldAlgoCopy");
+  static const string template_class("EditFieldAlgoCreateT");
+  static const string base_class_name("EditFieldAlgoCreate");
 
   CompileInfo *rval = 
-    scinew CompileInfo(template_class_name + "." +
+    scinew CompileInfo(template_class + "." +
 		       field_td->get_filename() + "." +
 		       to_filename(fdstname) + ".",
-                       base_class_name, 
-                       template_class_name, 
+		       base_class_name, 
+		       template_class,
                        field_td->get_name() + "," + fdstname + " ");
 
   // Add in the include path to compile this obj
@@ -546,6 +574,33 @@ EditFieldAlgoCopy::get_compile_info(const TypeDescription *field_td,
   field_td->fill_compile_info(rval);
   return rval;
 }
+
+
+CompileInfo *
+EditFieldAlgoCopy::get_compile_info(const TypeDescription *fsrctd,
+				    const TypeDescription *fdsttd,
+				    bool transform_p)
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class0("EditFieldAlgoCopyT");
+  static const string template_class1("EditFieldAlgoCopyTT");
+  static const string base_class_name("EditFieldAlgoCopy");
+
+  CompileInfo *rval = 
+    scinew CompileInfo((transform_p?template_class1:template_class0) + "." +
+		       fsrctd->get_filename() + "." +
+		       fdsttd->get_filename() + ".",
+                       base_class_name, 
+		       (transform_p?template_class1:template_class0),
+                       fsrctd->get_name() + "," + fdsttd->get_name() + " ");
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  fsrctd->fill_compile_info(rval);
+  return rval;
+}
+
 
 } // End namespace Moulding
 
