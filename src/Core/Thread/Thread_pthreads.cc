@@ -133,11 +133,17 @@ sem_t* SEM_INIT( const std::string name, int shared, unsigned int val )
 
 #  define sem_type sem_t
 #  define SEM_UNLOCK(sem)            sem_post((sem))
-#  define SEM_LOCK(sem)              sem_wait((sem))
 #  define SEM_TRYLOCK(sem)           sem_trywait((sem))
 #  define SEM_INIT(sem, shared, val) sem_init( (sem), (shared), (val) )
 #  define SEM_INIT_SUCCESS(val)      (((val)== 0)?true:false)
 #  define SEM_DESTROY(sem)           sem_destroy((sem))
+
+static int SEM_LOCK(sem_type* sem)
+{
+  int returnValue = 0;
+  while ( (returnValue = sem_wait(sem)) == -1 && (errno == EINTR) );
+  return returnValue;
+}
 
 #endif
 
