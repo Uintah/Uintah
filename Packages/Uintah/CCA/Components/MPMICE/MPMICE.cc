@@ -135,6 +135,12 @@ void MPMICE::scheduleInitialize(const LevelP& level,
   cout_norm << "--------------------------------\n"<<endl; 
 }
 
+void MPMICE::restartInitialize()
+{
+  d_mpm->restartInitialize();
+  d_ice->restartInitialize();
+}
+
 //______________________________________________________________________
 //
 void MPMICE::scheduleComputeStableTimestep(const LevelP& level,
