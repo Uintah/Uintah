@@ -107,10 +107,18 @@ DEALINGS IN THE SOFTWARE.
 	</listitem>
 	<listitem>
 	  <para>
-	    <filename>SCIRunData.<!--%= doc.version %-->.tar.gz</filename>
-	    (or
-	    <filename>FusionData.<!--%= doc.version %-->.tar.gz</filename>
-	    if downloading the Fusion specific RPM).
+	    <filename>SCIRunData.1.24.0b_to_1.24.1.tar.gz</filename>
+	    if updating an existing
+	    <filename>SCIRunData/1.24.0b</filename> directory.
+	  </para>
+	  <para>
+	    <filename>SCIRunData.<!--%= doc.version
+	    %-->.tar.gz</filename>, which contains all datasets for
+	    SCIRun <!--%= doc.version %-->.
+	  </para>
+	  <para>
+	    <filename>FusionData.<!--%= doc.version
+	    %-->.tar.gz</filename> for Fusion users.
 	  </para>
 	</listitem>
 	<listitem>
@@ -160,21 +168,48 @@ rpm -e SCIRun
   <section id="sec.rpm_data">
     <title>SCIRun's Sample Data Sets</title>
     <para>
-      Install
-      the sample data sets into
-      <filename>/usr/local/SCIRunData/<!--%= doc.version %--></filename>.
+      The following instructions install the sample data sets into
+      <filename>/usr/local/SCIRunData/<!--%= doc.version
+      %--></filename>.
     </para>
     <para>
       Use the <command>su</command> command to become the root user.  Then
-      <command>cd</command> to the directory containing the compressed
-      documentation tarball and type:
-
-      <literallayout class="monospaced">
-mkdir SCIRunData
-gunzip -c SCIRunData.<!--%= doc.version %-->.tar.gz | (cd /usr/local/SCIRunData &amp;&amp; tar xf -)
-      </literallayout>
-      This will create <filename>/usr/local/SCIRunData/<!--%=
-      doc.version %--></filename>, the sample data sets directory.
+      <command>cd</command> to the directory containing the 
+      dataset tarball and:
+      <itemizedlist>
+	<listitem>
+	  <para>
+	    If installing
+	    <filename>SCIRunData.1.24.0b_to_1.24.1.tar.gz</filename>
+	    type:
+	    <literallayout class="monospaced">
+mv /usr/local/SCIRunData/1.24.0b /usr/local/SCIRunData/1.24.1
+gunzip -c SCIRunData.1.24.0b_to_1.24.1.tar.gz \
+ | (cd /usr/local &amp;&amp; tar xf -)
+	    </literallayout>
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    If installing <filename>SCIRunData.<!--%= doc.version
+	    %-->.tar.gz</filename> type:
+	    <literallayout class="monospaced">
+gunzip -c SCIRunData.<!--%= doc.version %-->.tar.gz \
+ | (cd /usr/local &amp;&amp; tar xf -)
+	    </literallayout>
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    If installing <filename>FusionData.<!--%= doc.version
+	    %-->.tar.gz</filename> type:
+	    <literallayout class="monospaced">
+gunzip -c FusionData.<!--%= doc.version %-->.tar.gz \
+ | (cd /usr/local &amp;&amp; tar xf -)
+	    </literallayout>
+	  </para>
+	</listitem>
+      </itemizedlist>
       Type <command>exit</command> to leave the root account.
     </para>
   </section>
