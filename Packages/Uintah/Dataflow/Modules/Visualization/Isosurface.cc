@@ -76,6 +76,7 @@ static string widget_name("Isosurface");
 Isosurface::Isosurface(const string& id)
   : SCIRun::Isosurface( id ) 
 {
+  packageName = "Uintah";
 }
 Isosurface::~Isosurface()
 {
