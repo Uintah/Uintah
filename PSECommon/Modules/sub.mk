@@ -5,15 +5,26 @@
 
 SRCDIR := PSECommon/Modules
 
-SUBDIRS := $(SRCDIR)/Example $(SRCDIR)/FEM $(SRCDIR)/Fields \
-	$(SRCDIR)/Iterators $(SRCDIR)/Matrix $(SRCDIR)/Readers \
-	$(SRCDIR)/Salmon $(SRCDIR)/Surface $(SRCDIR)/Visualization \
-	$(SRCDIR)/Writers
+SUBDIRS := \
+	$(SRCDIR)/Example\
+        $(SRCDIR)/FEM\
+        $(SRCDIR)/Fields\
+	$(SRCDIR)/Iterators\
+        $(SRCDIR)/Matrix\
+        $(SRCDIR)/Readers\
+	$(SRCDIR)/Salmon\
+        $(SRCDIR)/Surface\
+        $(SRCDIR)/Visualization\
+	$(SRCDIR)/Writers\
+#[INSERT NEW SUBDIRS HERE]
 
 include $(SRCTOP)/scripts/recurse.mk
 
 #
 # $Log$
+# Revision 1.3  2000/06/07 00:07:05  moulding
+# made modifications to allow module maker to edit and add to this file
+#
 # Revision 1.2  2000/03/20 19:36:52  sparker
 # Added VPATH support
 #
