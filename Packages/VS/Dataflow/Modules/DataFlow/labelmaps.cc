@@ -4,7 +4,7 @@
  * Description: C source code for classes to provide an API for Visible Human
  *		segmentation information:  The Master Anatomy Label Map
  *		Spatial Adjacency relations for the anatomical structures
- *		and Bounding Boxes for each anatmocal entity.
+ *		and Bounding Boxes for each anatomical entity.
  *
  * Author: Stewart Dickson <mailto:dicksonsp@ornl.gov>
  *	   <http://www.csm.ornl.gov/~dickson>
@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <iostream>
+#include <vector>
 #include "labelmaps.h"
 
 using namespace std;
@@ -234,6 +235,13 @@ VH_MasterAnatomy::readFile(char *infilename)
 char *
 VH_MasterAnatomy::get_anatomyname(int labelindex)
 {
+  if(labelindex < 0 || labelindex >= num_names)
+  {
+    cerr << "VH_MasterAnatomy::get_anatomyname(): index " << labelindex;
+    cerr << " out of range " << num_names << endl;
+    // return "UNKNOWN"
+    return(anatomyname[0]);
+  }
   return(anatomyname[labelindex]);
 } // end VH_MasterAnatomy::get_anatomyname(int labelindex)
 
@@ -370,6 +378,18 @@ VH_AdjacencyMapping::get_num_rel(int index)
  * tissue.  Dimensions are in terms of voxels in the segmented volume.
  ******************************************************************************/
 
+void
+VH_AnatomyBoundingBox::append(VH_AnatomyBoundingBox *newNode)
+{
+  VH_AnatomyBoundingBox *lastNode = blink;
+  // append newNode to lastNode
+  newNode->flink = lastNode->flink;
+  lastNode->flink = newNode;
+
+  newNode->blink = lastNode;
+  blink = newNode;
+}
+
 VH_AnatomyBoundingBox *
 VH_Anatomy_readBoundingBox_File(char *infilename)
 {
@@ -409,11 +429,14 @@ VH_Anatomy_readBoundingBox_File(char *infilename)
       int charCnt = 0;
       // read free-form, space-separated fields up to first comma
       while(*linePtr++ != ',') charCnt++;
-      if(!(listPtr->anatomyname = (char *)malloc((charCnt+1) * sizeof(char))))
+      char *newStr = (char *)malloc((charCnt+1) * sizeof(char));
+      if(!newStr)
       {
         cerr << "VH_AnatomyBoundingBox::readFile(): cannot allocate" << endl;
+        return listRoot;
       }
-      strncpy(listPtr->anatomyname, inLine, charCnt);
+      strncpy(newStr, inLine, charCnt);
+      listPtr->set_anatomyname(newStr);
       // debugging...
       // fprintf(stderr, "anatomyname[%d] = '%s'\n",
       //                 inLine_cnt, listPtr->anatomyname);
@@ -421,20 +444,24 @@ VH_Anatomy_readBoundingBox_File(char *infilename)
 
       // linePtr is pointing to ','
       linePtr++;
+      int minX, maxX, minY, maxY, minZ, maxZ, minSlice, maxSlice;
       if(sscanf(linePtr, "%d,%d,%d,%d,%d,%d,%d,%d",
-                     &(listPtr->minX), &(listPtr->maxX),
-                     &(listPtr->minY), &(listPtr->maxY),
-                     &(listPtr->minZ), &(listPtr->maxZ),
-                     &(listPtr->minSlice), &(listPtr->maxSlice)
+                     &minX, &maxX, &minY, &maxY, &minZ, &maxZ,
+                     &minSlice, &maxSlice
                ) < 8)
       {
         fprintf(stderr,
            "VH_AnatomyBoundingBox::readFile(%s): format error line %d\n",
            infilename, inLine_cnt);
       }
+      listPtr->set_minX(minX); listPtr->set_maxX(maxX);
+      listPtr->set_minY(minY); listPtr->set_maxY(maxY);
+      listPtr->set_minZ(minZ); listPtr->set_maxZ(maxZ);
+      listPtr->set_minSlice(minSlice); listPtr->set_maxSlice(maxSlice);
+      // add the new node to the list
+      listRoot->append(listPtr);
       // allocate the next Anatomy Name/BoundingBox node
-      listPtr->flink = new VH_AnatomyBoundingBox();
-      listPtr = listPtr->flink;
+      listPtr = new VH_AnatomyBoundingBox();
     } // end if(strlen(inLine) > 0)
     // clear input buffer line
     strcpy(inLine, "");
@@ -458,32 +485,56 @@ VH_AnatomyBoundingBox::readFile(FILE *infileptr)
 VH_Anatomy_findBoundingBox(VH_AnatomyBoundingBox *list, char *targetname)
 {
   VH_AnatomyBoundingBox *listPtr = list;
-  while(listPtr->flink != (VH_AnatomyBoundingBox *)0)
+  while(listPtr->next() != list)
   {
-    if(!strcmp(listPtr->anatomyname, targetname)) break;
+    if(!strcmp(listPtr->get_anatomyname(), targetname)) break;
     // (else)
-    if(!(listPtr = listPtr->flink)) break;
+    if((listPtr = listPtr->next()) == list) break;
   } // end while(listPtr->flink != (VH_AnatomyBoundingBox *)0)
   return(listPtr);
 } // end VH_Anatomy_findBoundingBox()
 
-                                                                                
 /******************************************************************************
- * class VH_injuryList
+ * find the largest bounding volume in the segmentation
+ ******************************************************************************/
+VH_AnatomyBoundingBox *
+VH_Anatomy_findMaxBoundingBox(VH_AnatomyBoundingBox *list)
+{
+  VH_AnatomyBoundingBox *listPtr = list, *maxBoxPtr = list;
+  while(listPtr->next() != list)
+  {
+    if(listPtr->get_minX() <= maxBoxPtr->get_minX() &&
+       listPtr->get_minY() <= maxBoxPtr->get_minY() &&
+       listPtr->get_minZ() <= maxBoxPtr->get_minZ() &&
+       listPtr->get_maxX() >= maxBoxPtr->get_maxX() &&
+       listPtr->get_maxY() >= maxBoxPtr->get_maxY() &&
+       listPtr->get_maxZ() >= maxBoxPtr->get_maxZ())
+    {
+      maxBoxPtr = listPtr;
+    }
+    if((listPtr = listPtr->next()) == list) break;
+  } // end while(listPtr->flink != (VH_AnatomyBoundingBox *)0)
+  return(maxBoxPtr);
+} // end VH_Anatomy_findMaxBoundingBox()
+ 
+/******************************************************************************
+ * class VH_injury
  *
  * description: Contains the name of an injured tissue and
  *              iconic geometry to display to indicate the injury extent
  ******************************************************************************/                                                                                
+
 bool
-is_injured(char *targetName, char **injured_tissue_list, int size_injList)
+is_injured(char *targetName, vector<VH_injury> &injured_tissue_list)
 {
-  int i;
-  for(i = 0; i < size_injList; i++)
+  VH_injury injPtr;
+  for(unsigned int i = 0; i < injured_tissue_list.size(); i++)
   {
-    if(!strcmp(targetName, injured_tissue_list[i])) return true;
+    injPtr = (VH_injury)injured_tissue_list[i];
+    if(string(targetName) == injPtr.anatomyname) return true;
   }
   // (else)
   return false;
-}
+} // end is_injured()
  
 

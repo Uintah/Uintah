@@ -50,6 +50,11 @@ itcl_class VS_DataFlow_HotBox {
     global $this-boundingboxdatasource
     global $this-injurylistdatasource
     global $this-querytype
+    # The Probe Widget UI
+    global $this-gui_probeLocx
+    global $this-gui_probeLocy
+    global $this-gui_probeLocz
+    global $this-gui_probe_scale
 
     set $this-gui_label1 "label1"
     set $this-gui_label2 "label2"
@@ -80,6 +85,11 @@ itcl_class VS_DataFlow_HotBox {
     set $this-boundingboxdatasource ""
     set $this-injurylistdatasource ""
     set $this-querytype "1"
+    set $this-gui_probeLocx "0.0"
+    set $this-gui_probeLocy "0.0"
+    set $this-gui_probeLocz "0.0"
+    set $this-gui_probe_scale "1.0"
+
   }
   # end method set_defaults
 
@@ -253,8 +263,14 @@ itcl_class VS_DataFlow_HotBox {
       return
     }
 
+    ################################
+    # show/hide the data source URIs
+    ################################
     toplevel $w
     checkbutton $w.togFilesUI -text "Data Sources" -command "$this toggle_Files_on"
+    ################################
+    # if selected, show data sources
+    ################################
     if { [set $this-Files_on] == "yes" } {
     frame $w.files
     frame $w.files.row1
@@ -294,7 +310,9 @@ itcl_class VS_DataFlow_HotBox {
     # end if { [set $this-Files_on] == "yes" }
 
     frame $w.f
+    #############################################################
     # the UI buttons for selecting anatomical names (adjacencies)
+    #############################################################
     frame $w.f.row1
     if { [set $this-gui_is_injured1] == "1" } {
     button $w.f.row1.nw -background red -textvariable $this-gui_label1 -command "$this set_selection 1"
@@ -348,6 +366,30 @@ itcl_class VS_DataFlow_HotBox {
     pack $w.f.row3.sw $w.f.row3.s $w.f.row3.se\
         -side left -anchor n -expand yes -fill x
 
+    ######################################
+    # Probe UI
+    ######################################
+    frame $w.probeUI
+    frame $w.probeUI.loc
+    label $w.probeUI.loc.locLabel -text "Cursor Location" -just left
+    entry $w.probeUI.loc.locx -width 10 -textvariable $this-gui_probeLocx
+    entry $w.probeUI.loc.locy -width 10 -textvariable $this-gui_probeLocy
+    entry $w.probeUI.loc.locz -width 10 -textvariable $this-gui_probeLocz
+    bind $w.probeUI.loc.locx <KeyPress-Return> "$this-c needexecute"
+    bind $w.probeUI.loc.locy <KeyPress-Return> "$this-c needexecute"
+    bind $w.probeUI.loc.locz <KeyPress-Return> "$this-c needexecute"
+    pack $w.probeUI.loc.locLabel $w.probeUI.loc.locx $w.probeUI.loc.locy $w.probeUI.loc.locz \
+                -side left -anchor n -expand yes -fill x
+    scale $w.probeUI.slide -orient horizontal -label "Cursor Size" -from 0 -to 100 -showvalue true \
+             -variable $this-gui_probe_scale -resolution 0.25 -tickinterval 25
+    set $w.probeUI.slide $this-gui_probe_scale
+    bind $w.probeUI.slide <ButtonRelease> "$this-c needexecute"
+    bind $w.probeUI.slide <B1-Motion> "$this-c needexecute"
+    pack $w.probeUI.slide $w.probeUI.loc -side bottom -expand yes -fill x
+
+    ######################################
+    # Query UI
+    ######################################
     frame $w.controls
     set ::datasource "2"
     radiobutton $w.controls.adjOQAFMA -value 1 -text "OQAFMA" -variable datasource -command "$this set_data_source 1"
@@ -357,7 +399,11 @@ itcl_class VS_DataFlow_HotBox {
 
     checkbutton $w.controls.enableDraw -text "Enable Output Geom" -command "$this toggle_enableDraw"
 
+    ######################################
+    # Close the HotBox UI Window
+    ######################################
     button $w.controls.close -text "Close" -command "destroy $w"
+
     pack $w.controls.adjOQAFMA $w.controls.adjFILES $w.controls.togFME $w.controls.enableDraw $w.controls.close -side left -expand yes -fill x
 
     frame $w.controls2
@@ -370,9 +416,9 @@ itcl_class VS_DataFlow_HotBox {
     pack $w.controls2.querytypelabel $w.controls2.adjacenttobutton $w.controls2.containsbutton $w.controls2.partsbutton $w.controls2.partcontainsbutton -side left -expand yes -fill x
 
     if { [set $this-Files_on] == "yes" } {
-    pack $w.togFilesUI $w.files $w.f $w.controls2 $w.controls -side top -expand yes -fill both -padx 5 -pady 5
+    pack $w.togFilesUI $w.files $w.f $w.probeUI $w.controls2 $w.controls -side top -expand yes -fill both -padx 5 -pady 5
     } else {
-    pack $w.togFilesUI $w.f $w.controls2 $w.controls -side top -expand yes -fill both -padx 5 -pady 5
+    pack $w.togFilesUI $w.f $w.probeUI $w.controls2 $w.controls -side top -expand yes -fill both -padx 5 -pady 5
     }
 # pack $w.title -side top
   }

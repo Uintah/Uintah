@@ -12,13 +12,12 @@
  *
  *****************************************************************************/
 
+#include <Dataflow/Modules/Fields/Probe.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Ports/MatrixPort.h>
+#include <Dataflow/Widgets/PointWidget.h>
 #include <Core/Datatypes/FieldInterface.h>
-#include <Core/Datatypes/ColumnMatrix.h>
-#include <Core/Datatypes/PointCloudField.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Geom/GeomGroup.h>
@@ -35,6 +34,7 @@
 
 #include <sys/stat.h>
 #include <string.h>
+#include <vector>
 #include <iostream>
 // Foundational Model of Anatomy Web Services
 #include "soapServiceInterfaceSoapBindingProxy.h" // get proxy
@@ -70,11 +70,6 @@ using namespace SCIRun;
 
 class PSECORESHARE HotBox : public Module {
 private:
-
-  // the data from the input MatrixPort (Probe Element Index)
-  struct MatrixData {
-	int nrows, ncols;
-  };
 
   // values from the Knowledgebase Query -> UI
   // GuiString gui_entity_name_[9];
@@ -119,10 +114,30 @@ private:
   GuiString injurylistdatasource_;
   GuiString currentselection_;
 
-  // temporary:  fixed anatomical label map files
+  // fixed anatomical label map files
   VH_MasterAnatomy *anatomytable;
   VH_AdjacencyMapping *adjacencytable;
   VH_AnatomyBoundingBox *boundBoxList;
+  VH_AnatomyBoundingBox *maxSegmentVol;
+
+  // the probe widget
+  PointWidget *probeWidget_;
+  CrowdMonitor probeWidget_lock_;
+  GuiDouble gui_probeLocx_;
+  GuiDouble gui_probeLocy_;
+  GuiDouble gui_probeLocz_;
+  GuiDouble gui_probe_scale_;
+
+  FieldHandle InputFieldHandle;
+  int probeWidgetid_;
+  Point probeLoc;
+  int labelIndexVal;
+  BBox inFieldBBox;
+  Point maxSegBBextent;
+  double l2norm_;
+
+  // private methods
+  void executeProbe();
 
 public:
   HotBox(GuiContext*);
@@ -130,8 +145,10 @@ public:
   virtual ~HotBox();
 
   virtual void execute();
+  virtual void widget_moved(bool, BaseWidget*);
 
   virtual void tcl_command(GuiArgs&, void*);
+
 };
 
 /*
@@ -168,22 +185,29 @@ HotBox::HotBox(GuiContext* ctx)
   adjacencydatasource_(ctx->subVar("adjacencydatasource")),
   boundingboxdatasource_(ctx->subVar("boundingboxdatasource")),
   injurylistdatasource_(ctx->subVar("injurylistdatasource")),
-  currentselection_(ctx->subVar("currentselection"))
+  currentselection_(ctx->subVar("currentselection")),
+  probeWidget_lock_("Probe widget lock"),
+  gui_probeLocx_(ctx->subVar("gui_probeLocx")),
+  gui_probeLocy_(ctx->subVar("gui_probeLocy")),
+  gui_probeLocz_(ctx->subVar("gui_probeLocz")),
+  gui_probe_scale_(ctx->subVar("gui_probe_scale")),
+  probeWidgetid_(0)
 {
   // instantiate the HotBox-specific interaction structure
   VS_HotBoxUI = new VS_SCI_Hotbox();
-  // Start the Java Virtual Machine
-  // Initialize our interface (JNI via JACE)
-  // to the Protege Foundational Model of Anatomy (FMA)
-  // temporary -- use fixed text files
+  // instantiate label maps
   anatomytable = new VH_MasterAnatomy();
   adjacencytable = new VH_AdjacencyMapping();
   boundBoxList = (VH_AnatomyBoundingBox *)NULL;
+  // create the probe widget
+  probeWidget_ = scinew PointWidget(this, &probeWidget_lock_, 1.0);
+  probeWidget_->Connect((GeometryOPort*)get_oport("Probe Widget"));
 }
 
 HotBox::~HotBox(){
   delete anatomytable;
   delete adjacencytable;
+  delete probeWidget_;
 }
 
 void
@@ -197,39 +221,22 @@ void
   }
  
   // get handle to field from the input port
-  FieldHandle InputFieldHandle;
   if (!inputFieldPort->get(InputFieldHandle) ||
       !InputFieldHandle.get_rep())
   {
-    remark("No data on input field port.");
+    remark("HotBox::execute(): No data on input field port.");
     return;
   }
-
-  int labelIndexVal;
+  inFieldBBox = InputFieldHandle->mesh()->get_bounding_box();
+  Point bmin = inFieldBBox.min();
+  Point bmax = inFieldBBox.max();
+  Vector inFieldBBextent = bmax - bmin;
+  l2norm_ = inFieldBBextent.length();
 
   if(InputFieldHandle->query_scalar_interface(this).get_rep() != 0)
   {
     // we have scalar data in the input field
     remark("Scalar Data on Input");
-
-    // assume we have a PointCloudField on input containing a single point
-    PointCloudField<double> *
-    dpcf = dynamic_cast<PointCloudField<double>*>
-	(InputFieldHandle.get_rep());
-    if (dpcf != 0)
-    {
-      // we expect only one node in this field,
-      // get the field value at this node.
-      // It should be the LabelMap Index that HotBox needs.
-      float inputVal = dpcf->value((PointCloudMesh::Node::index_type)0); 
-      labelIndexVal = (int)inputVal;
-      cout << "VS/Hotbox::Label value<double>: " << labelIndexVal << endl;
-    }
-    else
-    {
-       remark("Input Field is not of type PointCloudField<unsigned short>.");
-    }
-
   } // end if(InputFieldHandle->query_scalar_interface()...)
   else if(InputFieldHandle->query_vector_interface(this).get_rep() != 0)
   {
@@ -241,25 +248,9 @@ void
     // we have tensor data in the input field
     remark("Tensor Data on Input");
   }
+  labelIndexVal = 0;
 
-  // get input matrix port
-  MatrixIPort *inputMatrixPort = (MatrixIPort *)get_iport("Input Matrix");
-  if (!inputMatrixPort) {
-    error("Unable to initialize input matrix port.");
-    return;
-  }
-                                                                                
-  // get handle to matrix from the input port
-  MatrixHandle inputMatrixHandle;
-  if(!inputMatrixPort->get(inputMatrixHandle) ||
-     !inputMatrixHandle.get_rep())
-  {
-    remark("No data on input matrix port.");
-    return;
-  }
-
-  // get the matrix data
-  //  Matrix *matrixPtr = inputMatrixHandle.get_rep();
+  executeProbe();
 
   const int dataSource(datasource_.get());
   const int queryType(querytype_.get());
@@ -315,6 +306,8 @@ void
     error("No Bounding Box file has been selected.  Please choose a file.");
     return;
   }
+
+  int segVolXextent, segVolYextent, segVolZextent;
   if(!boundBoxList)
   { // bounding boxes have not been read
     if (stat(boundingBoxDataSrc.c_str(), &buf)) {
@@ -324,7 +317,40 @@ void
 
     boundBoxList =
          VH_Anatomy_readBoundingBox_File((char *)boundingBoxDataSrc.c_str());
+
+    // find the largest bounding volume of the segmentation
+    maxSegmentVol = VH_Anatomy_findMaxBoundingBox(boundBoxList);
+    segVolXextent = maxSegmentVol->get_maxX() - maxSegmentVol->get_minX();
+    segVolYextent = maxSegmentVol->get_maxY() - maxSegmentVol->get_minY();
+    segVolZextent = maxSegmentVol->get_maxZ() - maxSegmentVol->get_minZ();
+    maxSegBBextent = Point((double)segVolXextent, (double)segVolYextent,
+                           (double)segVolZextent);
   }
+
+  // compare the bounding box of the input field
+  // with the largest bounding volume of the segmentation
+  cerr << "HotBox::execute(): input field(" << inFieldBBox.min();
+  cerr << "," << inFieldBBox.max() << "), extent(" << inFieldBBextent;
+  cerr << ")" << endl;
+  cerr << "                  segmentation([" << maxSegmentVol->get_minX();
+  cerr << "," << maxSegmentVol->get_minY() << "," << maxSegmentVol->get_minZ();
+  cerr << "],[" << maxSegmentVol->get_maxX() << "," << maxSegmentVol->get_maxY();
+  cerr << "," << maxSegmentVol->get_maxZ() << "]), extent(";
+  cerr << maxSegBBextent << ")" << endl;
+  cerr << maxSegmentVol->get_anatomyname() << endl;
+
+  // derive factors to translate/scale segmentation bounding boxes
+  // to the input labelmap field
+  Point boxTran(inFieldBBox.min().x() - (double)maxSegmentVol->get_minX(),
+                inFieldBBox.min().y() - (double)maxSegmentVol->get_minY(),
+                inFieldBBox.min().z() - (double)maxSegmentVol->get_minZ()
+               );
+  Point boxScale;
+  boxScale.x(inFieldBBextent.x() / maxSegBBextent.x());
+  boxScale.y(inFieldBBextent.y() / maxSegBBextent.y());
+  boxScale.z(inFieldBBextent.z() / maxSegBBextent.z());
+
+  cerr << "boxTran = " << boxTran << ", boxScale = " << boxScale << endl;
 
   // get the bounding box information for the selected entity
   VH_AnatomyBoundingBox *selectBox =
@@ -365,7 +391,7 @@ void
   DOMNodeList *
   injList = injListDoc->getElementsByTagName(to_xml_ch_ptr("region"));
   unsigned long i, num_struQLret, num_injList = injList->getLength();
-  char *injured_tissue[VH_LM_NUM_NAMES];
+  vector <VH_injury> injured_tissue;
 
   if (num_injList == 0) {
     cout << "HotBox.cc: no entities in Injury List" << endl;
@@ -397,7 +423,9 @@ void
           else
           {
               cout << " value: " << to_char_ptr(elem->getNodeValue()) << endl;
-              injured_tissue[i] = strdup(to_char_ptr(elem->getNodeValue()));
+              injured_tissue.push_back(
+                     VH_injury((char *)to_char_ptr(elem->getNodeValue()))
+                     );
           }
       } // end if(node.hasAttributes())
     } // end for (i = 0;i < num_injList; i++)
@@ -586,7 +614,7 @@ void
     cerr << "HotBox::execute(): adjacent[" << adjPtr[1] << "]: ";
     cerr << adjacentName << endl;
     gui_label1_.set(adjacentName);
-    if(is_injured(adjacentName, injured_tissue, num_injList))
+    if(is_injured(adjacentName, injured_tissue))
     { gui_is_injured1_.set(1); }
     else
     { gui_is_injured1_.set(0); }
@@ -607,7 +635,7 @@ void
     cerr << "HotBox::execute(): adjacent[" << adjPtr[2] << "]: ";
     cerr << adjacentName << endl;
     gui_label2_.set(adjacentName);
-    if(is_injured(adjacentName, injured_tissue, num_injList))
+    if(is_injured(adjacentName, injured_tissue))
     { gui_is_injured2_.set(1); }
     else
     { gui_is_injured2_.set(0); }
@@ -628,7 +656,7 @@ void
     cerr << "HotBox::execute(): adjacent[" << adjPtr[3] << "]: ";
     cerr << adjacentName << endl;
     gui_label3_.set(adjacentName);
-    if(is_injured(adjacentName, injured_tissue, num_injList))
+    if(is_injured(adjacentName, injured_tissue))
     { gui_is_injured3_.set(1); }
     else
     { gui_is_injured3_.set(0); }
@@ -649,7 +677,7 @@ void
     cerr << "HotBox::execute(): adjacent[" << adjPtr[4] << "]: ";
     cerr << adjacentName << endl;
     gui_label4_.set(adjacentName);
-    if(is_injured(adjacentName, injured_tissue, num_injList))
+    if(is_injured(adjacentName, injured_tissue))
     { gui_is_injured4_.set(1); }
     else
     { gui_is_injured4_.set(0); }
@@ -675,7 +703,7 @@ void
     cerr << "HotBox::execute(): adjacent[" << adjPtr[6] << "]: ";
     cerr << adjacentName << endl;
     gui_label6_.set(adjacentName);
-    if(is_injured(adjacentName, injured_tissue, num_injList))
+    if(is_injured(adjacentName, injured_tissue))
     { gui_is_injured6_.set(1); }
     else
     { gui_is_injured6_.set(0); }
@@ -696,7 +724,7 @@ void
     cerr << "HotBox::execute(): adjacent[" << adjPtr[7] << "]: ";
     cerr << adjacentName << endl;
     gui_label7_.set(adjacentName);
-    if(is_injured(adjacentName, injured_tissue, num_injList))
+    if(is_injured(adjacentName, injured_tissue))
     { gui_is_injured7_.set(1); }
     else
     { gui_is_injured7_.set(0); }
@@ -717,7 +745,7 @@ void
     cerr << "HotBox::execute(): adjacent[" << adjPtr[8] << "]: ";
     cerr << adjacentName << endl;
     gui_label8_.set(adjacentName);
-    if(is_injured(adjacentName, injured_tissue, num_injList))
+    if(is_injured(adjacentName, injured_tissue))
     { gui_is_injured8_.set(1); }
     else
     { gui_is_injured8_.set(0); }
@@ -738,7 +766,7 @@ void
     cerr << "HotBox::execute(): adjacent[" << adjPtr[9] << "]: ";
     cerr << adjacentName << endl;
     gui_label9_.set(adjacentName);
-    if(is_injured(adjacentName, injured_tissue, num_injList))
+    if(is_injured(adjacentName, injured_tissue))
     { gui_is_injured9_.set(1); }
     else
     { gui_is_injured9_.set(0); }
@@ -749,7 +777,7 @@ void
   // clean up
   if(dataSource == VS_DATASOURCE_OQAFMA)
   {
-     for (i = 0;i < num_struQLret; i++)
+     for (i = 0; i < num_struQLret; i++)
      {
        if(oqafma_relation[i] != 0)
        {
@@ -760,14 +788,7 @@ void
      num_struQLret = 0;
   } // end if(dataSource == VS_DATASOURCE_OQAFMA)
 
-  for(i = 0;i < num_injList; i++)
-  {
-    if(injured_tissue[i] != 0)
-    {
-       free(injured_tissue[i]);
-       injured_tissue[i] = 0;
-    }
-  }
+  injured_tissue.clear();
   num_injList = 0;
 
   if(enableDraw == "yes")
@@ -779,37 +800,123 @@ void
   }
 
   // set output geometry port -- hotbox drawn to viewer
-  GeometryOPort *outGeomPort = (GeometryOPort *)get_oport("HotBox Widget");
-  if(!outGeomPort) {
-    error("Unable to initialize output geometry port.");
+  GeometryOPort *HBoutGeomPort = (GeometryOPort *)get_oport("HotBox Widget");
+  if(!HBoutGeomPort) {
+    error("Unable to initialize HotBox Widget output geometry port.");
     return;
   }
   GeomSticky *sticky = scinew GeomSticky(HB_geomGroup);
-  outGeomPort->delAll();
-  outGeomPort->addObj( sticky, "HotBox Sticky" );
-  outGeomPort->flushViews();
+  HBoutGeomPort->delAll();
+  HBoutGeomPort->addObj( sticky, "HotBox Sticky" );
+  HBoutGeomPort->flushViews();
 
-  // set output matrix port -- bounding box of selection
-  MatrixOPort *outMatrixPort = (MatrixOPort *)get_oport("Bounding Box");
-  if(!outMatrixPort) {
-    error("Unable to initialize output matrix port.");
+  // set output geometry port -- Probe Widget
+  GeomGroup *probeWidget_group = scinew GeomGroup;
+  probeWidget_group->add(probeWidget_->GetWidget());
+  GeometryOPort *probeOutGeomPort = (GeometryOPort *)get_oport("Probe Widget");
+  if(!probeOutGeomPort)
+    {
+      error("Unable to initialize Probe Widget output geometry port.");
     return;
   }
+  probeWidgetid_ = probeOutGeomPort->addObj(probeWidget_group,
+                               "Probe Selection Widget",
+                               &probeWidget_lock_);
+  probeOutGeomPort->flushViews();
 
-  MatrixHandle cm = scinew ColumnMatrix(6);
-  if(selectBox)
-  {
-    cm->get(0, 0) = (double)selectBox->minX;
-    cm->get(1, 0) = (double)selectBox->minY;
-    cm->get(2, 0) = (double)selectBox->minZ;
-    cm->get(3, 0) = (double)selectBox->maxX;
-    cm->get(4, 0) = (double)selectBox->maxY;
-    cm->get(5, 0) = (double)selectBox->maxZ;
+  if(selectBox && selectionSource == "fromHotBoxUI")
+  { // set the Probe location to center of selection
+    Point bmax((double)selectBox->get_maxX(),
+    	       (double)selectBox->get_maxY(),
+    	       (double)selectBox->get_maxZ());
+    Point bmin((double)selectBox->get_minX(),
+    	       (double)selectBox->get_minY(),
+    	       (double)selectBox->get_minZ());
+    probeLoc = bmin + Vector(bmax - bmin) * 0.5;
+    // scale the bounding box of the segmented region
+    // to match the bounding box of the labelmap volume
+    probeLoc = Point(probeLoc.x() + boxTran.x(),
+                     probeLoc.y() + boxTran.y(),
+                     probeLoc.z() + boxTran.z());
+    probeLoc = Point(probeLoc.x()*boxScale.x(),
+                     probeLoc.y()*boxScale.y(),
+                     probeLoc.z()*boxScale.z()
+                    );
+    probeWidget_->SetPosition(probeLoc);
+
+    // update probe location in the Tcl GUI
+    gui_probeLocx_.set(probeLoc.x());
+    gui_probeLocy_.set(probeLoc.y());
+    gui_probeLocz_.set(probeLoc.z());
+  } // end if(selectBox && selectionSource == "fromHotBoxUI")
+
+  double probeScale = gui_probe_scale_.get();
+  // cerr << "HotBox: probe scale: " << probeScale;
+  // cerr << " * " << l2norm_ << " * 0.003 = ";
+  // cerr << probeScale * l2norm_ * 0.003;
+  probeWidget_->SetScale(probeScale * l2norm_ * 0.003);
+
+  if(selectionSource == "fromHotBoxUI")
+  { // clear selection source
+    selectionsource_.set("fromProbe");
   }
-  outMatrixPort->send(cm);
-
-
 } // end HotBox::execute()
+
+void
+HotBox::widget_moved(bool last, BaseWidget*)
+{
+  if (last)
+  {
+    want_to_execute();
+  }
+}
+
+void
+HotBox::executeProbe() {
+
+  const string selectionSource(selectionsource_.get());
+  if(selectionSource == "fromProbe")
+  { // get current position of widget
+    probeLoc = probeWidget_->GetPosition();
+    cerr << "HotBox::executeProbe(): probeWidget->Position: ";
+    cerr << probeLoc << endl;
+    // update the probe location in the Tcl GUI
+    gui_probeLocx_.set(probeLoc.x());
+    gui_probeLocy_.set(probeLoc.y());
+    gui_probeLocz_.set(probeLoc.z());
+  }
+
+  const TypeDescription *
+  meshTypeDescr = InputFieldHandle->mesh()->get_type_description();
+  CompileInfoHandle ci = ProbeLocateAlgo::get_compile_info(meshTypeDescr);
+  Handle<ProbeLocateAlgo> algo;
+  if (!module_dynamic_compile(ci, algo)) return;
+
+  string nodestr, edgestr, facestr, cellstr;
+  
+  // use probe defaults show-node=1 show-edge=0 show-face=0 show-cell=1
+  algo->execute(InputFieldHandle->mesh(), probeLoc,
+                  1, nodestr,
+                  0, edgestr,
+                  0, facestr,
+                  1, cellstr);
+
+  ScalarFieldInterfaceHandle sfi = 0;
+  if ((sfi = InputFieldHandle->query_scalar_interface(this)).get_rep())
+  {
+    double result;
+    if (!sfi->interpolate(result, probeLoc))
+    {
+      sfi->find_closest(result, probeLoc);
+    }
+    labelIndexVal = (int)result;
+  } // end if(ifieldhandle->query_scalar_interface(this)).get_rep())
+  else
+  {
+    remark("HotBox::executeProbe(): No data on input field port.");
+  }
+
+} // end HotBox::executeProbe()
 
 void
  HotBox::tcl_command(GuiArgs& args, void* userdata)

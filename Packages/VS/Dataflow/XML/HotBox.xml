@@ -46,10 +46,6 @@
         <name>Input Field</name>
         <datatype>SCIRun::Field</datatype>
       </port>
-      <port>
-        <name>Input Matrix</name>
-        <datatype>SCIRun::Matrix</datatype>
-      </port>
     </inputs>
     <outputs>
       <port>
@@ -57,8 +53,8 @@
         <datatype>SCIRun::Geometry</datatype>
       </port>
       <port>
-	<name>Bounding Box</name>
-        <datatype>SCIRun::Matrix</datatype>
+	<name>Probe Widget</name>
+        <datatype>SCIRun::Geometry</datatype>
       </port>
     </outputs>
   </io>
