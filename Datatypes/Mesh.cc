@@ -38,6 +38,8 @@ using sci::Edge;
 using sci::DirichletBC;
 using sci::Octree;
 
+#define OCTREE_MAXDEPTH 2
+
 static TrivialAllocator Element_alloc(sizeof(Element));
 static TrivialAllocator Node_alloc(sizeof(Node));
 static TrivialAllocator Face_alloc(sizeof(Face));
@@ -91,6 +93,7 @@ PersistentTypeID Node::type_id("Node", "Datatype", make_Node);
 Mesh::Mesh()
 : have_all_neighbors(0), current_generation(2)
 {
+  octree=0;
     cond_tensors.grow(1);
     cond_tensors[0].grow(6);
     cond_tensors[0][0]=1;
@@ -104,6 +107,7 @@ Mesh::Mesh()
 Mesh::Mesh(int nnodes, int nelems)
 : nodes(nnodes), elems(nelems), have_all_neighbors(0), current_generation(2)
 {
+  octree=0;
     cond_tensors.grow(1);
     cond_tensors[0].grow(6);
     cond_tensors[0][0]=1;
@@ -119,6 +123,7 @@ Mesh::Mesh(const Mesh& copy)
   cond_tensors(copy.cond_tensors), have_all_neighbors(copy.have_all_neighbors),
   current_generation(2)
 {
+  octree=0;
     int nelems=elems.size();
     for(int i=0;i<nelems;i++){
 	Element* e=new Element(*copy.elems[i], this);
@@ -782,7 +787,6 @@ int Mesh::locate(const Point& p, int& ix, double epsilon1, double epsilon2)
 	    int ni=elem->face(f);
 #if 0
 	    if(i==-1){
-		cerr << "Boundary, min=" << min << endl;
 		min=s0;
 		f=0;
 		if(s1<min && elem->face(1)!=-1){
@@ -812,7 +816,10 @@ int Mesh::locate(const Point& p, int& ix, double epsilon1, double epsilon2)
 		    cerr << "Boundary, min=" << min << endl;
 		}
 #endif
-		return min<-epsilon2?0:1;
+		if(min<-epsilon2)
+		  return locate2(p, ix, epsilon2);
+		else
+		  return 1;
 	    }
 	    i=ni;
 	    continue;
@@ -965,8 +972,10 @@ void Mesh::make_octree(int level, Octree*& octree,
 		       const Point& min, const Point& max,
 		       const Array1<int>& inelems)
 {
+  cerr << "building octree at level " << level << '\n';
+
   octree=new Octree();
-  if(level>8){
+  if(level>OCTREE_MAXDEPTH){
     for(int i=0;i<inelems.size();i++){
       octree->elems.add(inelems[i]);
     }
@@ -992,14 +1001,14 @@ void Mesh::make_octree(int level, Octree*& octree,
 	  double lx=ix==0?min.x():mid.x();
 	  double hx=ix==0?mid.x():max.x();
 	  if(overlaps(elem, Point(lx, ly, lz), Point(hx, hy, hz))){
-	    int idx=(iz<<2)|(iy<<1)|(iz);
+	    int idx=(iz<<2)|(iy<<1)|(ix);
 	    flags[idx]=true;
 	    count++;
 	  }
 	}
       }
     }
-    if(count > 3){
+    if(count > 6){
       octree->elems.add(inelems[i]);
     } else {
       for(int j=0;j<8;j++){
@@ -1009,6 +1018,7 @@ void Mesh::make_octree(int level, Octree*& octree,
       }
     }
   }
+  cerr << "keeping " << octree->elems.size() << " elements at level " << level << '\n';
   for(int j=0;j<8;j++){
     int iz=j&4;
     int iy=j&2;
@@ -1021,10 +1031,12 @@ void Mesh::make_octree(int level, Octree*& octree,
     double hx=ix==0?mid.x():max.x();
     
     if(passdown[j].size()>0){
+      cerr << "child " << j << ", " << passdown[j].size() << " elements\n";
       make_octree(level+1, octree->child[j], Point(lx, ly, lz),
 		  Point(hx, hy, hz), passdown[j]);
     }
   }
+  cerr << "done building octree at level " << level << '\n';
 }
 
 int Octree::locate(Mesh* mesh, const Point& p, double epsilon1)
@@ -1097,27 +1109,44 @@ int Octree::locate(Mesh* mesh, const Point& p, double epsilon1)
   int yi=(p.y()>mid.y())?2:0;
   int zi=(p.z()>mid.z())?4:0;
   int idx=xi+yi+zi;
-  if(child[idx])
-    return child[idx]->locate(mesh, p, epsilon1);
-  else
-    return 0;
+  if(child[idx]){
+    int s=child[idx]->locate(mesh, p, epsilon1);
+#if 0
+    if(s==-1){
+      int oidx=idx;
+      for(int idx=0;idx<8;idx++){
+	int t=child[idx]->locate(mesh, p, epsilon1);
+	if(t != -1){
+	  cerr << "point " << p << " found in " << idx << " instead of " << oidx << "\n";
+	}
+	return t;
+      }
+    }
+#endif
+    return s;
+   } else
+    return -1;
 }
 
 int Mesh::locate2(const Point& p, int& ix, double epsilon1)
 {
   if(!octree){
+    cerr << "creating topelems\n";
     Array1<int> topelems;
     topelems.resize(elems.size());
     for(int i=0;i<elems.size();i++)
       topelems[i]=i;
     Point min, max;
+    cerr << "calling get_bounds\n";
     get_bounds(min, max);
+    cerr << "done\n";
     make_octree(0, octree, min, max, topelems);
   }
   int idx=octree->locate(this, p, epsilon1);
   if(idx == -1) {
     return 0;
   } else {
+    cerr << "idx=" << idx << '\n';
     ix=idx;
     return 1;
   }
