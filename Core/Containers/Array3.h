@@ -150,11 +150,20 @@ public:
   //Rigorous Tests
   static void test_rigorous(RigorousTest* __test);
     
+#if defined(_AIX)
+  template <typename type>
+  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array3<type>&);
+  template <typename type>
+  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array3<type>&,
+					     const string &);
+  template <typename type>
+  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array3<type>*&);
+#else
   friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array3<T>&);
   friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array3<T>&, 
 					     const string &);
   friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array3<T>*&);
-
+#endif
 };
 
 template<class T>

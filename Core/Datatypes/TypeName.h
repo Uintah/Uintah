@@ -55,6 +55,8 @@ template <class T> const string find_type_name(T*)
   return T::type_name(-1);
 }
 
+template<class T, class S> const string find_type_name( pair<T,S> *);
+
 class Vector;
 class Point;
 class Transform;

@@ -34,6 +34,10 @@
 
 namespace SCIRun {
 
+#if defined(_AIX) && defined(PAGESIZE)  // On AIX (xlC) PAGESIZE is already defined.
+#  undef PAGESIZE
+#endif
+
 const int PAGESIZE = 64*1024-64;  // Leave some room for malloc's overhead
 
 TrivialAllocator::TrivialAllocator(unsigned int _size)

@@ -65,7 +65,12 @@ public:
 	return rep;
     }
 
-    friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream& stream, LockingHandle<T>& data);
+#if defined(_AIX)
+  template <typename Type> 
+  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream& stream,LockingHandle<Type>& data);
+#else
+  friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream& stream,LockingHandle<T>& data);
+#endif
 };
 
 template<class T>

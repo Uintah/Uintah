@@ -88,28 +88,32 @@ public:
     for (vector<char>::iterator c = mask_.begin(); c != mask_.end(); ++c) *c=masked;
   }
 
+  // Have to be explicit about where mesh_type comes from for IBM xlC
+  // compiler... is there a better way to do this?
+  typedef GenericField<TetVolMesh,vector<T> > GF;
+
   void resize_fdata() {
     if (data_at() == NODE)
     {
-      typename mesh_type::Node::size_type ssize;
+      typename GF::mesh_type::Node::size_type ssize;
       get_typed_mesh()->size(ssize);
       mask_.resize(ssize);
     }
     else if (data_at() == EDGE)
     {
-      typename mesh_type::Edge::size_type ssize;
+      typename GF::mesh_type::Edge::size_type ssize;
       get_typed_mesh()->size(ssize);
       mask_.resize(ssize);
     }
     else if (data_at() == FACE)
     {
-      typename mesh_type::Face::size_type ssize;
+      typename GF::mesh_type::Face::size_type ssize;
       get_typed_mesh()->size(ssize);
       mask_.resize(ssize);
     }
     else if (data_at() == CELL)
     {
-      typename mesh_type::Cell::size_type ssize;
+      typename GF::mesh_type::Cell::size_type ssize;
       get_typed_mesh()->size(ssize);
       mask_.resize(ssize);
     }

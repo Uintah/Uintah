@@ -44,9 +44,7 @@
 #include <set>
 
 
-
 namespace SCIRun {
-
 
 class SCICORESHARE TetVolMesh : public Mesh
 {
@@ -241,7 +239,7 @@ public:
   void size(Edge::size_type &) const;
   void size(Face::size_type &) const;
   void size(Cell::size_type &) const;
-  
+
   void get_nodes(Node::array_type &array, Edge::index_type idx) const;
   void get_nodes(Node::array_type &array, Face::index_type idx) const;
   void get_nodes(Node::array_type &array, Cell::index_type idx) const;
@@ -409,7 +407,7 @@ protected:
 #endif
   Edge::eqEdge		edge_eq_;
   Edge::HalfEdgeSet	all_edges_;
-#ifdef __digital__
+#if defined(__digital__) || defined(_AIX)
   mutable
 #endif
   Edge::EdgeSet		edges_;
@@ -423,7 +421,7 @@ protected:
 #endif
   Face::eqFace		face_eq_;
   Face::HalfFaceSet	all_faces_;
-#ifdef __digital__
+#if defined(__digital__) || defined(_AIX)
   mutable
 #endif
   Face::FaceSet		faces_;

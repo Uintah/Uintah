@@ -583,8 +583,8 @@ TetVolMesh::is_face(Node::index_type n0,Node::index_type n1,
   vector<under_type>::iterator c2 = cells_.insert(cells_.end(),n2);
 
   //! Search the all_face_ multiset for edges matching our fake_edge
-  pair<Face::HalfFaceSet::iterator, Face::HalfFaceSet::iterator> range =
-    all_faces_.equal_range(fake_face);
+  pair<Face::HalfFaceSet::const_iterator, Face::HalfFaceSet::const_iterator>
+     range = all_faces_.equal_range(fake_face);
 
   if (array)
   {
@@ -719,8 +719,8 @@ TetVolMesh::get_faces(Face::array_type &array, Cell::index_type idx) const
 void
 TetVolMesh::get_cells(Cell::array_type &array, Edge::index_type idx) const
 {
-  pair<Edge::HalfEdgeSet::iterator, Edge::HalfEdgeSet::iterator> range =
-      all_edges_.equal_range(idx);
+  pair<Edge::HalfEdgeSet::const_iterator, Edge::HalfEdgeSet::const_iterator>
+    range = all_edges_.equal_range(idx);
 
   //! ASSERT that this cell's edges have been computed
   ASSERT(range.first != range.second);
@@ -737,8 +737,8 @@ TetVolMesh::get_cells(Cell::array_type &array, Edge::index_type idx) const
 void
 TetVolMesh::get_cells(Cell::array_type &array, Face::index_type idx) const
 {
-  pair<Face::HalfFaceSet::iterator, Face::HalfFaceSet::iterator> range =
-      all_faces_.equal_range(idx);
+  pair<Face::HalfFaceSet::const_iterator, 
+       Face::HalfFaceSet::const_iterator> range = all_faces_.equal_range(idx);
 
   //! ASSERT that this cell's faces have been computed
   ASSERT(range.first != range.second);
@@ -772,14 +772,14 @@ TetVolMesh::get_neighbor(Cell::index_type &neighbor, Cell::index_type from,
 bool
 TetVolMesh::get_neighbor(Face::index_type &neighbor, Face::index_type idx)const
 {
-  pair<Face::HalfFaceSet::iterator,Face::HalfFaceSet::iterator> range =
-    all_faces_.equal_range(idx);
+  pair<Face::HalfFaceSet::const_iterator,
+       Face::HalfFaceSet::const_iterator> range = all_faces_.equal_range(idx);
 
   // ASSERT that this face was computed
   ASSERT(range.first != range.second);
 
   // Cell has no neighbor
-  Face::HalfFaceSet::iterator second = range.first;
+  Face::HalfFaceSet::const_iterator second = range.first;
   if (++second == range.second)
   {
     neighbor = -1;
@@ -805,10 +805,10 @@ TetVolMesh::get_neighbors(Cell::array_type &array, Cell::index_type idx) const
   for (int i = idx*4; i < idx*4+4;i++)
   {
     face.index_ = i;
-    pair<const Face::HalfFaceSet::iterator,
-         const Face::HalfFaceSet::iterator> range =
+    pair<const Face::HalfFaceSet::const_iterator,
+         const Face::HalfFaceSet::const_iterator> range =
       all_faces_.equal_range(face);
-    for (Face::HalfFaceSet::iterator iter = range.first;
+    for (Face::HalfFaceSet::const_iterator iter = range.first;
 	 iter != range.second; ++iter)
       if (*iter != i)
 	array.push_back(*iter/4);

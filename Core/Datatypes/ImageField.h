@@ -44,7 +44,7 @@ public:
    Data *end() { return &((*this)(dim1()-1,dim2()-1))+1; }
     
   FData2d() : Array2<Data>() {}
-  FData2d(const FData2d& data) { copy(data); }
+  FData2d(const FData2d& data) { Array2<Data>::copy(data); }
   virtual ~FData2d();
   
   const value_type &operator[](typename ImageMesh::Cell::index_type idx) const
