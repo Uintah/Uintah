@@ -36,7 +36,7 @@ VolumeVisDpy::VolumeVisDpy(Array1<Color> &matls, Array1<AlphaPos> &alphas,
   DpyBase("VolumeVis GUI"), in_file(in_file), data_min(MAXFLOAT),
   data_max(-MAXFLOAT), original_t_inc(0.01), current_t_inc(t_inc), 
   t_inc(t_inc), colors_index(matls), alpha_list(alphas), ncolors(ncolors), 
-  nalphas(ncolors)
+  nalphas(ncolors), new_fast_render_mode(true), fast_render_mode(true)
 {
   set_resolution(500,500);
   nhist = xres;
@@ -164,6 +164,10 @@ void VolumeVisDpy::run() {
 	case XK_h:
 	case XK_H:
 	  need_hist = true;
+	  break;
+	case XK_f:
+	case XK_F:
+	  new_fast_render_mode = !new_fast_render_mode;
 	  break;
 	case XK_Page_Up:
 	case XK_plus:
@@ -589,10 +593,17 @@ void VolumeVisDpy::create_color_transfer() {
 }
 
 void VolumeVisDpy::animate(bool& changed) {
-  if (current_t_inc != t_inc) {
+  if (current_t_inc != t_inc ||
+      new_fast_render_mode != fast_render_mode) {
     changed = true;
     t_inc = current_t_inc;
     cout << "t_inc now equals "<< t_inc<<endl;
+    fast_render_mode = new_fast_render_mode;
+    cout << "fast_render_mode is now ";
+    if (fast_render_mode)
+      cout << "true.\n";
+    else
+      cout << "false.\n";
   }
 }
 

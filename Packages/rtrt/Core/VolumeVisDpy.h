@@ -47,6 +47,7 @@ class VolumeVisDpy : public DpyBase {
   Array1<AlphaPos> alpha_list;
   int ncolors;
   int nalphas;
+  bool new_fast_render_mode;
 
   ScalarTransform1D<float,Color*> color_transform;
   ScalarTransform1D<float,float> alpha_transform;
@@ -81,6 +82,7 @@ public:
   }
 
   float t_inc;
+  bool fast_render_mode;
 };
 
 } // end namespace rtrt
