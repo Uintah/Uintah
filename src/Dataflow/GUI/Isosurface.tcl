@@ -186,8 +186,9 @@ itcl_class SCIRun_Visualization_Isosurface {
 	# Iso Value Selection Methods
 	iwidgets::labeledframe $w.f.iso -labelpos nw -labeltext "Isovalue Selection"
 	set isf [$w.f.iso childsite]
-
-	iwidgets::tabnotebook $isf.tabs -raiseselect true -height 130
+	global Color
+	iwidgets::tabnotebook $isf.tabs -raiseselect true -height 130 \
+	    -backdrop $Color(Basecolor)
 	pack $isf.tabs -side top -fill x -expand 1
 	pack $w.f.iso -side top -fill x -expand 1
 
