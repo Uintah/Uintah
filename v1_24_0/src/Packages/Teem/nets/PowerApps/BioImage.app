@@ -3803,9 +3803,13 @@ bind $winlevel.ww.e <Return> "$this change_window_width 1; $this update_planes_t
     method update_changes {} {
 	set mod ""
 
-        # for any crops in the pipeline, save out crop pads for widgets
+	$this check_crop
+
+        # for any crops in the pipeline that are still active, 
+	# save out crop pads for widgets
   	for {set i 1} {$i < $num_filters} {incr i} {
-             if {[lindex $filters($i) $filter_type] == "crop"} {
+             if {[lindex $filters($i) $filter_type] == "crop" && 
+		 [lindex $filters($i) $which_row] != -1} {
                  set UnuCrop [lindex [lindex $filters($i) $modules] 0]
 
 		 set bounds_set [lindex $filters($i) 10]
@@ -3837,9 +3841,8 @@ bind $winlevel.ww.e <Return> "$this change_window_width 1; $this update_planes_t
   	}
 
 	if {$has_executed == 1} {
-
-            if {$num_filters == 1} {
-                set mod [lindex [lindex $filters(0) $input] 0]
+            if {$grid_rows == 1} {
+		$this execute_Data
 	    } else {
 	        # find first valid filter and execute that
  	        for {set i 1} {$i < $num_filters} {incr i} {
@@ -3851,8 +3854,8 @@ bind $winlevel.ww.e <Return> "$this change_window_width 1; $this update_planes_t
 	 	        }
 		    }
                 }
+		$mod-c needexecute
             }
-            $mod-c needexecute
 	} else {
             $this execute_Data
 	}
