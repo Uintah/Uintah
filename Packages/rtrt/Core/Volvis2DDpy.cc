@@ -24,6 +24,13 @@ using std::vector;
 using namespace rtrt;
 using namespace SCIRun;
 
+static void checkGLerror(const char* name) {
+  GLenum glerr;
+  if ((glerr = glGetError()) != GL_NO_ERROR) {
+    const GLubyte* errString = gluErrorString(glerr);
+    cerr << "Error after point "<<name<<": "<<errString<<"\n";
+  }
+}
 
 // creates the histogram scatter plot
 // template<class T>
@@ -64,6 +71,7 @@ Volvis2DDpy::createBGText( float vmin, float vmax, float gmin, float gmax ) {
 
   // applies white histogram to background texture
   float logmax = 1/log10f(data_max+1);
+  cerr << "logmax = "<<logmax<<"\n";
   float c;
   for( int i = 0; i < textureHeight; i++ )
     for( int j = 0; j < textureWidth; j++ ) {
@@ -76,7 +84,7 @@ Volvis2DDpy::createBGText( float vmin, float vmax, float gmin, float gmax ) {
       transTexture2->textArray[i][j][2] = c;
       bgTextImage->textArray[i][j][2] = c;
       transTexture2->textArray[i][j][3] = 0.0f;
-      bgTextImage->textArray[i][j][3] = 1.0f;
+      bgTextImage->textArray[i][j][3] = 0.0f;
     } // for(j)
 
   hist_changed = true;
@@ -96,7 +104,7 @@ Volvis2DDpy::clearBGText() {
       transTexture2->textArray[i][j][2] = c;
       bgTextImage->textArray[i][j][2] = c;
       transTexture2->textArray[i][j][3] = 0.0f;
-      bgTextImage->textArray[i][j][3] = 1.0f;
+      bgTextImage->textArray[i][j][3] = 0.0f;
     } // for(j)
   hist_changed = true;
   redraw = true;
@@ -444,14 +452,18 @@ void
 Volvis2DDpy::drawBackground( void ) {
   // enable and set up texturing
   glEnable( GL_TEXTURE_2D );
+  checkGLerror("after glEnable(GL_TEXTURE_2D)");
   glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
+  checkGLerror("after glTexEnvf()");
   glBindTexture( GL_TEXTURE_2D, bgTextName );
+  checkGLerror("after glBindTexture");
 
   // recompute the histogram if it has changed
   if( hist_changed ) {
     glTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, textureWidth, textureHeight,
 		     GL_RGBA, GL_FLOAT, bgTextImage->textArray );
     hist_changed = false;
+    checkGLerror("after glTexSubImage2D");
   }
   
   // map the histogram onto worldspace
@@ -466,11 +478,16 @@ Volvis2DDpy::drawBackground( void ) {
 					   borderSize+menuHeight);
   glEnd();
 
+  checkGLerror("after GL_QUADS");
   // enable and set up texture blending for transfer functions
   glEnable( GL_BLEND );
+  checkGLerror("after glEnable(GL_BLEND)");
   glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-  glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, GL_BLEND );
+  checkGLerror("after glBlendFunc()");
+  glTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
+  checkGLerror("after glTexEnvf()");
   glBindTexture( GL_TEXTURE_2D, transFuncTextName );
+  checkGLerror("after glBindTexture(transFuncTextName)");
   // recalculate changed parts of the transfer function
   if( transFunc_changed ) {
       GLint xoffset = (GLint)(subT_left);
@@ -488,6 +505,7 @@ Volvis2DDpy::drawBackground( void ) {
       glTexSubImage2D( GL_TEXTURE_2D, 0, xoffset, yoffset, width, height,
 		       GL_RGBA, GL_FLOAT, subImage.textArray.get_dataptr() );
     transFunc_changed = false;
+    checkGLerror("after transFunc_changed");
   }
 
   // map the transfer function onto world space
@@ -500,13 +518,16 @@ Volvis2DDpy::drawBackground( void ) {
 					borderSize+menuHeight);
   glEnd();
 
+  checkGLerror("after GL_QUADS");
+  
   glDisable( GL_BLEND );
   glDisable( GL_TEXTURE_2D );
 
   // draw cutplane probe widget frame if one is being used
-  if(display_probe)
+  if(display_probe) {
     cp_probe->draw();
-
+    checkGLerror("after cp_probe->draw");
+  }
 } // drawBackground()
 
 
@@ -744,6 +765,8 @@ Volvis2DDpy::init() {
   glOrtho( 0.0, 500.0, 0.0, 330.0, -1.0, 1.0 );
   glDisable( GL_DEPTH_TEST );
 
+  checkGLerror("in init");
+
   // create scatterplot texture to reflect volume data
   //  createBGText( current_vmin, current_vmax, current_gmin, current_gmax );
   clearBGText();
@@ -755,7 +778,9 @@ Volvis2DDpy::init() {
   glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
   glTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
   glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, textureWidth, textureHeight,
-		0, GL_RGBA, GL_FLOAT, bgTextImage->textArray ); 
+		0, GL_RGBA, GL_FLOAT, bgTextImage->textArray );
+
+  checkGLerror("binding bgTextName");
 
   // create transfer function texture for widgets
   glPixelStoref( GL_UNPACK_ALIGNMENT, 1 );
@@ -768,6 +793,8 @@ Volvis2DDpy::init() {
   glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, textureWidth, textureHeight,
 		0, GL_RGBA, GL_FLOAT, transTexture1->textArray ); 
 
+  checkGLerror("binding transFuncTextName");
+
   // create widget probe texture
   glPixelStoref( GL_UNPACK_ALIGNMENT, 1 );
   glGenTextures( 1, &probeTextName );
@@ -779,7 +806,7 @@ Volvis2DDpy::init() {
   glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, textureWidth, textureHeight,
 		0, GL_RGBA, GL_FLOAT, cp_probe->transText->textArray );
   
-  glEnd();
+  checkGLerror("binding probeTextName");
 } // init()
 
 
@@ -861,16 +888,31 @@ Volvis2DDpy::display_hist_perimeter() {
 // template<class T>
 void
 Volvis2DDpy::display() {
+  checkGLerror("at begining of display");
+
   glClear( GL_COLOR_BUFFER_BIT );
+  checkGLerror("after glClear");
 //    if( transFunc_changed ) loadCleanTexture();
   loadCleanTexture();
+  checkGLerror("after loadCleanTexture");
   display_controls();
+  checkGLerror("after display_controls");
   drawBackground();
+  checkGLerror("after drawBackground");
   drawWidgets( GL_RENDER );
-  if( hist_adjust ) {display_hist_perimeter();}
-  if( cut && cp_voxels.size() == 9 ) {display_cp_voxels();}
+  checkGLerror("after drawWidgets");
+  if( hist_adjust ) {
+    display_hist_perimeter();
+    checkGLerror("after display_hist_perimeter");
+  }
+  if( cut && cp_voxels.size() == 9 ) {
+    display_cp_voxels();
+    checkGLerror("after display_cp_voxels");
+  }
   glFlush();
+  checkGLerror("after glFlush");
   glXSwapBuffers(dpy, win);
+  checkGLerror("after glXSwapBuffers");
   waiting_for_redraw = false;
 } // display()
 
@@ -1642,8 +1684,18 @@ Volvis2DDpy::voxel_lookup(Voxel2D<float> voxel, Color &color, float &opacity) {
     if( transTexture1->textArray[y_index][x_index][3] == 0.0f )
       opacity = 0.0f;
     else {
-      opacity = 1-powf( 1-transTexture1->textArray[y_index][x_index][3],
-			t_inc_diff );
+      // Here we have to be careful with powf.  It doesn't like values
+      // that equal 0 (spits back Nan).  I tried just comparing val to
+      // 1, but that didn't work I'm assuming because of floating
+      // point precision problems.  I tried comparing 1-val to zero,
+      // but that failed for the same reasons.  I finally tried
+      // comparing to some epsilon.  That is what you see below.
+      float val = transTexture1->textArray[y_index][x_index][3];
+      float one_minus_val = 1.0f - val;
+      if (one_minus_val >= 1e-6f)
+        opacity = 1-powf( one_minus_val, t_inc_diff );
+      else
+        opacity = 1;
       color = Color( transTexture1->textArray[y_index][x_index][0],
 		     transTexture1->textArray[y_index][x_index][1],
 		     transTexture1->textArray[y_index][x_index][2] );
