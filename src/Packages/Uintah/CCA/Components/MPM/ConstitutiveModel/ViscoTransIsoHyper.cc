@@ -272,10 +272,6 @@ void ViscoTransIsoHyper::addParticleState(std::vector<const VarLabel*>& from,
   //______________________________(EACH CM ADD ITS OWN STATE VARS)
   //______________________________AS PARTICLES MOVE FROM PATCH TO PATCH
 {
-  // Add the particle state data common to all constitutive models.
-  // This method is defined in the ConstitutiveModel base class.
-  addSharedParticleState(from, to);
-
   // Add the local particle state data for this constitutive model.
   from.push_back(lb->pFiberDirLabel);
   from.push_back(pStretchLabel);
@@ -420,9 +416,7 @@ void ViscoTransIsoHyper::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pfiberdir,           lb->pFiberDirLabel,           pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
     
-    if(d_8or27==27){
-      old_dw->get(psize,             lb->pSizeLabel,              pset);
-    }
+    old_dw->get(psize,             lb->pSizeLabel,              pset);
     new_dw->allocateAndPut(pstress,          lb->pStressLabel_preReloc,  pset);
     new_dw->allocateAndPut(pviscostress,     pViscoStressLabel_preReloc, pset);//visco
     new_dw->allocateAndPut(prevstress,       pPrevStressLabel_preReloc,  pset);

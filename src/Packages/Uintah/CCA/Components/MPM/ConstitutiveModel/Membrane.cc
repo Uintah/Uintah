@@ -43,6 +43,9 @@ Membrane::Membrane(ProblemSpecP& ps,  MPMLabel* Mlb,  MPMFlags* Mflag)
 
 Membrane::Membrane(const Membrane* cm)
 {
+  lb = cm->lb;
+  flag = cm->flag;
+  NGN = cm->NGN;
 
   d_initialData.Bulk = cm->d_initialData.Bulk;
   d_initialData.Shear = cm->d_initialData.Shear;
@@ -137,10 +140,6 @@ void Membrane::allocateCMDataAdd(DataWarehouse* new_dw,
 void Membrane::addParticleState(std::vector<const VarLabel*>& from,
 				   std::vector<const VarLabel*>& to)
 {
-  // Add the particle state data common to all constitutive models.
-  // This method is defined in the ConstitutiveModel base class.
-  addSharedParticleState(from, to);
-
   // Add the local particle state data for this constitutive model.
   from.push_back(defGradInPlaneLabel);
   to.push_back(defGradInPlaneLabel_preReloc);
