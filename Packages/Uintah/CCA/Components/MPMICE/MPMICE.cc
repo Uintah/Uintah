@@ -558,13 +558,13 @@ void MPMICE::scheduleInterpolateCCToNC(SchedulerP& sched,
  Note:  Handles both Rate and Equilibration form of solution technique
 _____________________________________________________________________*/
 void MPMICE::scheduleComputePressure(SchedulerP& sched,
-                                            const PatchSet* patches,
-                                            const MaterialSubset* ice_matls,
-                                            const MaterialSubset* mpm_matls,
-                                            const MaterialSubset* press_matl,
-                                            const MaterialSet* all_matls)
+                                     const PatchSet* patches,
+                                     const MaterialSubset* ice_matls,
+                                     const MaterialSubset* mpm_matls,
+                                     const MaterialSubset* press_matl,
+                                     const MaterialSet* all_matls)
 {
-  Task* t = 0;
+  Task* t;
   if (d_ice->d_RateForm) {     // R A T E   F O R M
     cout_doing << "MPMICE::scheduleComputeRateFormPressure" << endl;
     t = scinew Task("MPMICE::computeRateFormPressure",
@@ -592,7 +592,10 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
     t->requires(Task::OldDW,Ilb->vel_CCLabel,        ice_matls,  Ghost::None);
     t->requires(Task::NewDW,MIlb->vel_CCLabel,       mpm_matls,  Ghost::None);
   }
-
+    
+  if(d_ice->d_usingNG_hack){
+    addRequires_NGNozzle(t, "EqPress", Ilb, ice_matls); // NG hack
+  }
                               //  A L L _ M A T L S
   if (d_ice->d_RateForm) {   
     t->computes(Ilb->matl_press_CCLabel);
@@ -1682,9 +1685,22 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     Lodi_vars_pressBC lv(0);
     lv.setLodiBcs = false;
     
+/*`==========TESTING==========*/
+    NG_BC_vars* ng = new NG_BC_vars;    // NG hack
+    ng->setNGBcs = true;
+    if(d_ice->d_usingNG_hack) {
+      new_dw->allocateTemporary(ng->press_CC, patch);
+      new_dw->allocateTemporary(ng->rho_CC,   patch);
+      ng->press_CC.copyData(press_new);
+      ng->rho_CC.copyData(rho_CC_new[1]);
+      getVars_for_NGNozzle(old_dw, new_dw, Ilb, patch, 1,"EqPress",ng);
+    }
+/*===========TESTING==========`*/
+    
     setBC(press_new,   rho_micro, placeHolder,d_ice->d_surroundingMatl_indx,
-          "rho_micro", "Pressure", patch , d_sharedState, 0, new_dw, &lv);
-
+          "rho_micro", "Pressure", patch , d_sharedState, 0, new_dw, &lv, ng);
+    
+    delete ng;
     // Is this necessary?  - Steve
     press_copy.copyData(press_new);
      
