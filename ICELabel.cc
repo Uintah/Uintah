@@ -17,8 +17,10 @@ ICELabel::ICELabel()
     scinew VarLabel("press_CC",    CCVariable<double>::getTypeDescription());
   press_equil_CCLabel   =
     scinew VarLabel("press_equil_CC",CCVariable<double>::getTypeDescription());
-  delPress_CCLabel  =
-    scinew VarLabel("delPress_CC",  CCVariable<double>::getTypeDescription());
+  delP_DilatateLabel  =
+    scinew VarLabel("delP_Dilatate",CCVariable<double>::getTypeDescription());
+  delP_MassXLabel  =
+    scinew VarLabel("delP_MassX",   CCVariable<double>::getTypeDescription()); 
   rho_CCLabel       = 
     scinew VarLabel("rho_CC",       CCVariable<double>::getTypeDescription());
   rho_CC_top_cycleLabel       = 
@@ -145,7 +147,8 @@ ICELabel::~ICELabel()
     // Cell centered variables
     delete press_CCLabel;
     delete press_equil_CCLabel;
-    delete delPress_CCLabel;
+    delete delP_DilatateLabel;
+    delete delP_MassXLabel;
     delete rho_CCLabel;
     delete rho_CC_top_cycleLabel;
     delete temp_CCLabel;
