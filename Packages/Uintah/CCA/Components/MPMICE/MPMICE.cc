@@ -629,11 +629,6 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
     cout_doing << "Doing Initialize on patch " << patch->getID() 
      << "\t\t\t MPMICE" << endl;
 
-    CCVariable<double> rho_micro;
-    CCVariable<double> sp_vol_CC;
-    CCVariable<double> rho_CC; 
-    CCVariable<double> Temp_CC;
-    CCVariable<Vector> vel_CC;
     
     NCVariable<double> NC_CCweight;
     new_dw->allocate(NC_CCweight,  MIlb->NC_CCweightLabel,    0, patch);
@@ -660,6 +655,8 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
    int numALL_matls = d_sharedState->getNumMatls();
    int numMPM_matls = d_sharedState->getNumMPMMatls();
    for (int m = 0; m < numMPM_matls; m++ ) {
+      CCVariable<double> rho_micro, sp_vol_CC, rho_CC, Temp_CC;
+      CCVariable<Vector> vel_CC;
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
       int indx= mpm_matl->getDWIndex();
       new_dw->allocate(rho_micro,   Ilb->rho_micro_CCLabel,   indx,patch);
