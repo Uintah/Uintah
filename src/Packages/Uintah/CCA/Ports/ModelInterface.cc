@@ -11,3 +11,8 @@ ModelInterface::ModelInterface(const ProcessorGroup* myworld)
 ModelInterface::~ModelInterface()
 {
 }
+
+bool ModelInterface::computesThermoTransportProps() const
+{
+  return d_modelComputesThermoTransportProps;
+}
