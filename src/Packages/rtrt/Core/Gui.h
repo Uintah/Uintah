@@ -54,6 +54,8 @@ public:
   void setDpy( Dpy * dpy );
   void setStealth( Stealth * stealth );
 
+  void setBottomGraphic( Trigger * trig ) { bottomGraphicTrig_ = trig; }
+  void setLeftGraphic( Trigger * trig ) { leftGraphicTrig_ = trig; }
 
   void addLight( Light * light );
 
@@ -110,8 +112,12 @@ private:
 
   int                 glutDisplayWindowId;
 
-  // List of triggers that have fired but have not finished.
-  std::vector<Trigger*>    activeTriggers_;
+  // Main Text Trigger (MTT)
+  Trigger * activeMTT_; // If queued, the activeMMT is told to deactivate
+  Trigger * queuedMTT_; // and the queuedMTT will kick in as soon as it's done.
+
+  Trigger * bottomGraphicTrig_;
+  Trigger * leftGraphicTrig_;
 
   // Gui Component Variables
 
@@ -207,6 +213,8 @@ private:
 
   GLUI_Panel   * lightsColorPanel_;
   GLUI_Panel   * lightsPositionPanel_;
+
+  GLUI_Button  * lightOnOffBtn_;
 
   GLUI_Spinner * r_color_spin;
   GLUI_Spinner * g_color_spin;
@@ -309,6 +317,7 @@ private:
   void createLightWindow( GLUI * window );
   static void toggleLightsWindowCB( int id );
   static void toggleLightSwitchesCB( int id ); // turn all lights on/off
+  static void toggleLightOnOffCB( int id );    // turn off/on current light.
   static void toggleShowLightsCB( int id );    // display light positions
   //// Update the intensity of the currently selected light.
   static void updateIntensityCB( int id );
@@ -369,7 +378,7 @@ private:
   void setupFonts();
   void updateSoundPanel();
   void loadAllRoutes();
-
+  void handleTriggers();
 
   // Functions to draw text, etc on GL window.
   void displayText(GLuint fontbase, double x, double y,
