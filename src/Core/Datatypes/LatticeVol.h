@@ -44,6 +44,7 @@ public:
   Data *end() { return &((*this)(dim1()-1,dim2()-1,dim3()-1))+1; }
     
   FData3d():Array3<Data>() {}
+  FData3d(int):Array3<Data>() {}
   FData3d(const FData3d& data) {copy(data);}
   virtual ~FData3d(){}
   
