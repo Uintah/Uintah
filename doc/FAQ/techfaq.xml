@@ -148,4 +148,162 @@ installing, maintaining, and developing within SCIRun.
       </p>
     </answer>
   </entry>
+
+  <entry>
+    <keywords>SGI, Linux, ~</keywords>
+    <question>
+      <p>
+        I'm trying to install SCIRun or the thirdparty software into 
+        my home directory, but it fails when building.
+      </p>
+    </question>
+    <answer>
+      <p>
+        When installing any of the software into your home directory
+        be sure to use complete and absolute paths when providing
+        configure argumenst.  </b>Do Not</b> use tilde expansion or
+        any other short cuts, as they will not be properly expanded
+        by the install scripts and makefiles.
+      </p>
+    </answer>
+  </entry>
+
+  <entry>
+    <question>
+      <p>
+        How can I make a 64 bit build of SCIRun?
+      </p>
+    </question>
+    <answer>
+      <p>
+        64 bit is currently only available on the SGI platform.  To
+        build a 64 bit version of SCIRun, you first need to have 64
+        bit versions of the thirdparty software.  Then, configure
+        SCIRun with the "--enable-64bit" option and rebuild.
+      <p>
+      <p>
+        Unfortunately, most of the required third party software did
+        not take 64 bit SGI platforms into account when writing
+        configure scripts and makefiles. However, with some effort, it
+        is possible to build all the software in 64 bit. In general,
+        to get 64 bit versions of the third party software it is
+        necessary to edit Makefiles such that the CFLAGS and LFLAGS
+        macros have "-64" listed instead of "-n32". In the case of the
+        tcl distributions, this means editing the makefiles (after
+        configuring) by hand and replacing all instances of "-n32"
+        with "-64". For Xerces, this means changing the environment
+        variables listed above replacing all instances of " -n32 "
+        with " -64 ". 
+      </p>       
+    </answer>
+  </entry>
+
+  <entry>
+    <question>
+      <p>
+        I want to build the thirdparty software by hand.  What are the
+        gotchas and bugs I should be aware of?
+      </p>
+    </question>
+    <answer>
+      <p>
+        <b><i>Building [incr Tcl/Tk]</i></b>
+      </p>
+    
+      <p> 
+        The [incr Tcl/Tk] distribution listed in the system
+        requirements has a bug in it: the installation scripts are
+        bundled without execute permissions.  Before attempting to
+        configure or make [incr Tcl/Tk], type the following commands:  
+      </p>
+
+      <pre class="example"><font color=blue>cd itcl3.1.0/config
+chmod a+x install-sh mkinstalldirs</font>
+      </pre>
+
+      <p>
+        Then, proceed normally with the configure and make.
+      </p>
+
+      <p>
+        <b><i>Building BLT</i></b>
+      </p>
+    
+      <p>
+        The BLT make files have bugs in them that cause apparent
+        errors in the building process. To build without the apparent
+        errors, type the following (in the order shown) after
+        configuring: 
+      </p> 
+
+      <pre class="example"><font color=blue>cd blt2.4u
+make 
+cd src/shared
+make 
+cd ../..
+make -k install
+cd src/shared
+make -k install</font>
+      </pre>
+
+      <p>
+        Building Xerces-C++
+      </p>
+
+      <p>
+        Xerces-C++ uses a non-standard configure mechanism.  You must
+        specify most options as environment variables, and then run
+        the configure command with the --prefix option only.
+      </p>
+
+      <p>
+        The Xerces-C++ configure scripts are bundled without execute
+        permissions.  Before attempting to configure, type the following
+        commands: 
+      </p>
+
+      <pre class="example"><font color=blue>cd xerces-c-src1_4_0/src
+chmod a+x configure runConfigure</font>
+      </pre>
+
+      <p> 
+        There is no dependency tree for the copy phase of the xerces
+        build, so using a -j flag (number of jobs) as a GNU make
+        argument will cause the build to fail. 
+      </p>
+
+      <p>
+        There is no dependency tree for the "install" target within
+        the make files, so passing "install" as an argument to the
+        first time "make" is typed will cause the build to
+        fail. Instead type "make" first, then "make install."
+      </p>
+
+      <p>
+        The make system ignores errors in compilation and forces a
+        link.  Verify that the build was actually successful by
+        checking the size of libxerces-c1_4.so.  The sizes should be:
+        ~2.1MB for SGI 32 bit, ~2.4MB for SGI 64 bit, and ~1.4MB for
+        linux. 
+      </p>
+    </answer>
+  </entry>
+
+  <entry>
+    <question>
+      When I try to configure SCIRun, it says that it cannot find
+      header files for one or more of the Tcl distributions, but my 
+      system has the correct versions for all the Tcl distributions.
+    </question>
+    <answer>
+      SCIRun currently requires the full source of Tcl and Tk to be
+      installed.  This is required because SCIRun defines a few Tk
+      widgets of it's own, and needs some headers from the source that
+      aren't included with typical installations.  If your system
+      already has the correct Tcl and Tk versions installed, you will
+      have to re-install (see above) in order to have the sources
+      included. 
+    </answer>
+  </entry>
+
 </faq>

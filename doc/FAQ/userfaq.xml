@@ -75,4 +75,48 @@
       </p>
     </answer>
   </entry>
+
+  <entry>
+    <question>
+      <p>
+        What kind of systems is SCIRun compatible with?
+      </p>
+    </question>
+    <answer>
+      <p>
+        SCIRun should be generally compatible with any SGI or Linux machine.
+      </p>
+      <p>
+        SCIRun has been tested on the following Linux distributions:
+      </p>
+      <p>
+        <ol>
+          <li>Mandrake 7.2 & 8.0</li>
+          <li>Redhat 6.2, 7.0 & 7.1</li>
+          <li>SuSE 6.4, 7.0 & 7.2</li>
+          <li>Debian testing</li>
+        </ol> 
+      </p>
+      <p>
+        SCIRun has been tested on the following PC processor configurations:
+      </p>
+      <p>
+        <ol>
+          <li>Dual Intel Pentium II</li>
+          <li>Single Intel Pentium III</li>
+          <li>Dual Intel Pentium III</li>
+          <li>Single Intel Pentium 4</li>
+          <li>Single AMD Athlon</li>
+        </ol>
+      </p>
+      <p>
+        SCIRun has been tested with the following graphics cards:
+      </p>
+      <p>
+        <ol>
+          <li>NVIDIA GeForce, GeForce II, GeForce3</li>
+        </ol>
+      </p>
+    </answer>
+  </entry>
 </faq>
