@@ -1546,6 +1546,9 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 	  IntVector currCell(colX, colY, colZ);
 	  IntVector xminusCell(colX-1, colY, colZ);
           
+	  if (new_density[currCell]<=1.0e-12 || new_density[xminusCell]<=1.0e-12)
+	    new_uvel[currCell] = 0.0;
+	  else
 	    new_uvel[currCell] = (factor_old*old_uvel[currCell]*
 		(old_density[currCell]+old_density[xminusCell]) +
 		factor_new*new_uvel[currCell]*
@@ -1564,6 +1567,9 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 	  IntVector currCell(colX, colY, colZ);
 	  IntVector yminusCell(colX, colY-1, colZ);
           
+	  if (new_density[currCell]<=1.0e-12 || new_density[yminusCell]<=1.0e-12)
+	    new_vvel[currCell] = 0.0;
+	  else
 	    new_vvel[currCell] = (factor_old*old_vvel[currCell]*
 		(old_density[currCell]+old_density[yminusCell]) +
 		factor_new*new_vvel[currCell]*
@@ -1582,6 +1588,9 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 	  IntVector currCell(colX, colY, colZ);
 	  IntVector zminusCell(colX, colY, colZ-1);
           
+	  if (new_density[currCell]<=1.0e-12 || new_density[zminusCell]<=1.0e-12)
+	    new_wvel[currCell] = 0.0;
+	  else
 	    new_wvel[currCell] = (factor_old*old_wvel[currCell]*
 		(old_density[currCell]+old_density[zminusCell]) +
 		factor_new*new_wvel[currCell]*
