@@ -128,6 +128,7 @@ WARNING
     public:
       int index;
       string name;
+      // labels for this particular scalar
       VarLabel* scalar_CCLabel;
       VarLabel* scalar_source_CCLabel;
       VarLabel* diffusionCoefLabel;
@@ -137,6 +138,14 @@ WARNING
       double diff_coeff;
       int  initialize_diffusion_knob;
     };
+    
+    // general labels
+    class SimpleRxnLabel {
+    public:
+      VarLabel* lastProbeDumpTimeLabel;
+    };
+    
+    SimpleRxnLabel* Slb;
     Scalar* d_scalar;
     double d_rho_air;
     double d_rho_fuel;
@@ -155,7 +164,6 @@ WARNING
     vector<string> d_probePtsNames;
     bool d_usingProbePts;
     double d_probeFreq;
-    double d_oldProbeDumpTime;
   };
 }
 
