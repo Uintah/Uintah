@@ -116,8 +116,8 @@ public:
 				 const std::string &frameworkURL);
     QPopupMenu* componentContextMenu() const { return componentMenu; }
 
-    std::vector<Module*> updateMiniView_modules;
-    std::vector<Connection*> updateMiniView_connections;
+    //std::vector<Module*> updateMiniView_modules;
+    //std::vector<Connection*> updateMiniView_connections;
 
 public slots:
     void updateMiniView();
@@ -151,6 +151,7 @@ private:
 	*saveAsAction,
 	*clearAction,
 	*addInfoAction,
+	*addPathAction,
 	*quitAction,
 	*exitAction,
 	*addClusterAction,
@@ -178,6 +179,7 @@ private slots:
     void addCluster();
     void rmCluster();
     void refresh();
+    void addSidlXmlPath();
 };
 
 } // end namespace SCIRun
