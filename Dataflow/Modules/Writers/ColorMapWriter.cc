@@ -37,7 +37,7 @@ public:
     virtual void execute();
 };
 
-Module* make_ColorMapWriter(const clString& id) {
+extern "C" Module* make_ColorMapWriter(const clString& id) {
   return new ColorMapWriter(id);
 }
 
@@ -81,6 +81,11 @@ void ColorMapWriter::execute()
 
 //
 // $Log$
+// Revision 1.7  2000/03/17 09:27:40  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.6  1999/10/07 02:07:11  sparker
 // use standard iostreams and complex type
 //

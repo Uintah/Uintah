@@ -1,4 +1,4 @@
-#include "nrrd.h"
+#include "include/nrrd.h"
 
 /* for all the arrays that everyone needs.  See nrrd.h for documentation */
 

@@ -83,7 +83,7 @@ public:
     void tcl_command( TCLArgs&, void * );
 };
 
-Module* make_Flood(const clString& id)
+extern "C" Module* make_Flood(const clString& id)
 {
     return scinew Flood(id);
 }
@@ -402,6 +402,11 @@ void Flood::tcl_command(TCLArgs& args, void* userdata) {
 
 //
 // $Log$
+// Revision 1.2  2000/03/17 09:26:03  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.1  2000/03/10 07:45:48  dmw
 // new Tensor viz Module
 //

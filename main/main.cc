@@ -30,6 +30,8 @@
 #include <Component/PIDL/PIDL.h>
 #include <iostream>
 using std::cerr;
+using std::cout;
+using std::endl;
 using Component::PIDL::PIDL;
 #endif
 
@@ -161,6 +163,11 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.12  2000/03/17 09:30:48  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.11  1999/11/10 19:48:59  moulding
 // added some #ifdef's for win32
 //

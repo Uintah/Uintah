@@ -105,7 +105,7 @@ public:
     virtual void tcl_command(TCLArgs&, void*);
 };
 
-PSECOMMONSHARE Module* make_GenAxes(const clString& id) {
+extern "C" PSECOMMONSHARE Module* make_GenAxes(const clString& id) {
   return new GenAxes(id);
 }
 
@@ -190,6 +190,11 @@ void GenAxes::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.7  2000/03/17 09:27:30  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.6  1999/11/10 19:40:01  moulding
 // first commit of an NT'ified module for the new PSE
 //

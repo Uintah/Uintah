@@ -60,8 +60,8 @@
 
 #include <math.h>
 //using namespace Std;
-#include <iostream.h>
-#include <strstream.h>
+#include <iostream>
+#include <sstream>
 #include <values.h>
 
 #include <Yarden/Modules/Visualization/Screen.h>
@@ -448,7 +448,7 @@ public:
 };
   
 // extern "C" {
-Module* make_Sage(const clString& id)
+extern "C" Module* make_Sage(const clString& id)
 {
   return scinew Sage(id);
 }

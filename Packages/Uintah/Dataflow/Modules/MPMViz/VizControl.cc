@@ -46,7 +46,7 @@ namespace Modules {
 
 using namespace SCICore::Containers;
 
-PSECore::Dataflow::Module* make_VizControl( const clString& id ) {
+extern "C" PSECore::Dataflow::Module* make_VizControl( const clString& id ) {
   return new VizControl( id ); 
 }
 

@@ -2,8 +2,14 @@
 #ifndef UINTAH_HOMEBREW_OutputP_H
 #define UINTAH_HOMEBREW_OutputP_H
 
-template<class T> class Handle;
-class Output;
-typedef Handle<Output> OutputP;
+namespace Uintah {
+    namespace Grid {
+	template<class T> class Handle;
+    }
+    namespace Interface {
+	class Output;
+	typedef Uintah::Grid::Handle<Output> OutputP;
+    }
+}
 
 #endif

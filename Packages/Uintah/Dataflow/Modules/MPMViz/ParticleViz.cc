@@ -284,7 +284,7 @@ void ParticleViz::tcl_command(TCLArgs& args, void* userdata)
     }
 }
 
-Module* make_ParticleViz( const clString& id )
+extern "C" Module* make_ParticleViz( const clString& id )
 {
   return new ParticleViz( id );
 }
@@ -296,6 +296,11 @@ Module* make_ParticleViz( const clString& id )
 
 //
 // $Log$
+// Revision 1.3  2000/03/17 09:30:11  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.2  1999/10/15 20:23:01  sparker
 // Mostly working
 //

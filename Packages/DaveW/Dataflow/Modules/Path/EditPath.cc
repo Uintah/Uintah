@@ -19,6 +19,7 @@
 #include <SCICore/TclInterface/TCLvar.h>
 #include <iostream>
 using std::cerr;
+#undef mr
 
 namespace DaveW {
 namespace Modules {
@@ -45,7 +46,7 @@ public:
     virtual void execute();
 };
 
-Module* make_EditPath(const clString& id)
+extern "C" Module* make_EditPath(const clString& id)
 {
     return scinew EditPath(id);
 }
@@ -73,7 +74,8 @@ void EditPath::execute()
     update_state(NeedData);
     ipath->get(path);
     update_state(JustStarted);
-    View v(Point(mr()*2-1, mr()*2-1, mr()*2-1), Point(0,0,0), Vector(0,0,1), 10);
+    Point x(mr()*2-1, mr()*2-1, mr()*2-1);
+    View v(x, Point(0,0,0), Vector(0,0,1), 10);
     
     ogeom->setView(0,v);
 }
@@ -84,6 +86,11 @@ void EditPath::execute()
 
 //
 // $Log$
+// Revision 1.3  2000/03/17 09:25:54  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.2  1999/12/03 00:29:23  dmw
 // improved the module for John Day...
 //

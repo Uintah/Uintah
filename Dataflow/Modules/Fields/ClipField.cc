@@ -61,7 +61,7 @@ public:
     ScalarFieldRGBase* osf;
 };
 
-Module* make_ClipField(const clString& id) {
+extern "C" Module* make_ClipField(const clString& id) {
   return new ClipField(id);
 }
 
@@ -184,6 +184,11 @@ void ClipField::execute()
 
 //
 // $Log$
+// Revision 1.6  2000/03/17 09:26:56  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.5  1999/08/25 03:47:45  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

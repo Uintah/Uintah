@@ -39,7 +39,7 @@ public:
     virtual void execute();
 };
 
-Module* make_BuildFDField(const clString& id)
+extern "C" Module* make_BuildFDField(const clString& id)
 {
     return scinew BuildFDField(id);
 }
@@ -100,6 +100,11 @@ void BuildFDField::execute()
 
 //
 // $Log$
+// Revision 1.5  2000/03/17 09:25:40  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.4  1999/10/07 02:06:33  sparker
 // use standard iostreams and complex type
 //

@@ -42,7 +42,7 @@ public:
     virtual void execute();
 };
 
-Module* make_HexMeshToGeom(const clString& id)
+extern "C" Module* make_HexMeshToGeom(const clString& id)
 {
     return scinew HexMeshToGeom(id);
 }
@@ -127,6 +127,11 @@ void HexMeshToGeom::execute()
 
 //
 // $Log$
+// Revision 1.3  2000/03/17 09:29:12  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.2  2000/03/11 00:41:55  dahart
 // Replaced all instances of HashTable<class X, class Y> with the
 // Standard Template Library's std::map<class X, class Y, less<class X>>

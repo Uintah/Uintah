@@ -108,7 +108,7 @@ public:
     virtual void geom_pick(GeomPick*, void *);
 };
 
-Module* make_Radiosity(const clString& id)
+extern "C" Module* make_Radiosity(const clString& id)
 {
     return scinew Radiosity(id);
 }

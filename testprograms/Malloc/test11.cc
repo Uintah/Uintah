@@ -1,11 +1,14 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <strings.h>
 #ifdef __sun
-#include <string.h>
-#define bzero(p,sz)  memset(p,0,sz)
+  #include <string.h>
+  #define bcopy(src,dest,n) memcpy(dest,src,n)
 #else
-#include <bstring.h>
+  #ifndef __linux
+    #include <bstring.h>
+  #endif
 #endif
 
 main()

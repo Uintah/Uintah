@@ -1,4 +1,4 @@
-#include "nrrd.h"
+#include "include/nrrd.h"
 #include <math.h>
 
 int

@@ -48,7 +48,7 @@ public:
     virtual void execute();
 };
 
-Module* make_Gradient(const clString& id) {
+extern "C" Module* make_Gradient(const clString& id) {
   return new Gradient(id);
 }
 
@@ -179,6 +179,11 @@ void Gradient::execute()
 
 //
 // $Log$
+// Revision 1.7  2000/03/17 09:26:58  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.6  1999/10/07 02:06:48  sparker
 // use standard iostreams and complex type
 //

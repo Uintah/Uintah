@@ -56,7 +56,7 @@ EOF
 
 foreach t ($hdirs)
 set cleanname=`echo $t | sed -e 's,./,,' -e 's,/$,,'`
-if (`grep ^$cleanname\$ scripts/cocoon.skip` == "") then
+if (`grep ^$cleanname\$ src/scripts/cocoon.skip` == "") then
 set libname=`echo $cleanname | sed -e 's,/,::,g'`
 set webname=$cleanname
 if("$libname" == "") then

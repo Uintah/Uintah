@@ -52,7 +52,7 @@ public:
   virtual void execute();
 };
 
-Module* make_ImageViewer(const clString& id) {
+extern "C" Module* make_ImageViewer(const clString& id) {
   return new ImageViewer(id);
 }
 
@@ -125,6 +125,11 @@ void ImageViewer::execute()
 
 //
 // $Log$
+// Revision 1.8  2000/03/17 09:27:32  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.7  1999/10/07 02:07:06  sparker
 // use standard iostreams and complex type
 //

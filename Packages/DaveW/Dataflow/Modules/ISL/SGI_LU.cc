@@ -58,7 +58,7 @@ public:
 }; //class
 
 
-Module* make_SGI_LU(const clString& id) {
+extern "C" Module* make_SGI_LU(const clString& id) {
     return new SGI_LU(id);
 }
 
@@ -194,6 +194,11 @@ for (i=0;i<nrows+1;i++){
 
 //
 // $Log$
+// Revision 1.4  2000/03/17 09:25:47  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.3  1999/11/09 08:35:20  dmw
 // took out complibsgimath references, so this will compile on machines other than just rapture - as a result, SGI_LU and SGI_Solve don't work anymore
 //

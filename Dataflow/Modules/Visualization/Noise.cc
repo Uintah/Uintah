@@ -45,7 +45,7 @@ namespace Modules {
 
   using std::cerr;
 
-Module* make_Noise(const clString& id)
+extern "C" Module* make_Noise(const clString& id)
 {
     return scinew Noise(id);
 }
