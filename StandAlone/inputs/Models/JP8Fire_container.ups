@@ -275,7 +275,7 @@
       <save label= "modelEng_src"/>
       <save label="g.mass"/>
       <save label="g.temperature"/>  -->
-      <checkpoint cycle = "3" timestepInterval = "500"/>
+      <checkpoint cycle = "4" timestepInterval = "5000"/>
    </DataArchiver>
 
    <Debug>
