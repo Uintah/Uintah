@@ -68,6 +68,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/PathWidget.tcl \
 	$(SRCDIR)/PathWriter.tcl \
 	$(SRCDIR)/PointWidget.tcl \
+	$(SRCDIR)/Probe.tcl \
 	$(SRCDIR)/PromptedText.tcl \
 	$(SRCDIR)/PromptedEntry.tcl \
 	$(SRCDIR)/Rescale.tcl \
