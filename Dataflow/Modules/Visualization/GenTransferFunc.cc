@@ -146,10 +146,10 @@ extern "C" Module* make_GenTransferFunc( const clString& id) {
 }
 
 GenTransferFunc::GenTransferFunc( const clString& id)
-:Module("GenTransferFunc",id,Source),
- RGBorHSV("rgbhsv",id,this),lineVSspline("linespline",id,this),
- activeLine(-1),selNode(-1),graphStat(-1),bdown(-1),whichWin(-1),
- cmap_generation(-1)
+  : Module("GenTransferFunc",id,Source, "Visualization", "SCIRun"),
+    RGBorHSV("rgbhsv",id,this),lineVSspline("linespline",id,this),
+    activeLine(-1),selNode(-1),graphStat(-1),bdown(-1),whichWin(-1),
+    cmap_generation(-1)
 {
 
   cmap = scinew ColorMap; // start as nothing...

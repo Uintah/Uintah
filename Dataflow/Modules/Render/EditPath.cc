@@ -143,7 +143,7 @@ extern "C" Module* make_EditPath(const clString& id)
 }
 
 EditPath::EditPath(const clString& id)
-: Module("EditPath", id, Filter),
+: Module("EditPath", id, Filter, "Render", "SCIRun"),
   tcl_num_views("tcl_num_views", id, this),
   tcl_is_looped("tcl_is_looped", id, this),
   tcl_is_backed("tcl_is_backed", id, this),

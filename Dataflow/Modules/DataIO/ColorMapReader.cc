@@ -52,7 +52,8 @@ extern "C" Module* make_ColorMapReader(const clString& id) {
 }
 
 ColorMapReader::ColorMapReader(const clString& id)
-  : Module("ColorMapReader", id, Source), filename_("filename", id, this),
+  : Module("ColorMapReader", id, Source, "DataIO", "SCIRun"),
+    filename_("filename", id, this),
     old_filemodification_(0)
 {
   // Create the output port

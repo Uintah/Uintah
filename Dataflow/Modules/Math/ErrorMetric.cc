@@ -110,7 +110,7 @@ extern "C" Module* make_ErrorMetric(const clString& id)
 }
 
 ErrorMetric::ErrorMetric(const clString& id)
-  : Module("ErrorMetric", id, Filter),
+  : Module("ErrorMetric", id, Filter, "Math", "SCIRun"),
     haveUI_("haveUI", id, this),
     methodTCL_("methodTCL", id, this),
     pTCL_("pTCL", id, this)

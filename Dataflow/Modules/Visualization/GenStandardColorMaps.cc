@@ -110,7 +110,7 @@ extern "C" Module* make_GenStandardColorMaps(const clString& id) {
 
 //--------------------------------------------------------------- 
 GenStandardColorMaps::GenStandardColorMaps(const clString& id) 
-  : Module("GenStandardColorMaps", id, Filter),
+  : Module("GenStandardColorMaps", id, Filter, "Visualization", "SCIRun"),
     tcl_status("tcl_status",id,this),
     positionList("positionList", id, this),
     nodeList("nodeList", id, this),

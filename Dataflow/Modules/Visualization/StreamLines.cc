@@ -110,7 +110,7 @@ extern "C" PSECORESHARE Module* make_StreamLines(const clString& id) {
 }
 
 StreamLines::StreamLines(const clString& id)
-  : Module("StreamLines", id, Source)
+  : Module("StreamLines", id, Source, "Visualization", "SCIRun")
   //, "Visualization", "SCIRun")
 {
   vfport_ = scinew FieldIPort(this, "FlowField", FieldIPort::Atomic);

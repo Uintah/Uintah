@@ -48,10 +48,10 @@ extern "C" Module* make_RescaleColorMap(const clString& id) {
 }
 
 RescaleColorMap::RescaleColorMap(const clString& id)
-: Module("RescaleColorMap", id, Filter),
-  isFixed("isFixed", id, this),
-  min("min", id, this ),
-  max("max", id, this)
+  : Module("RescaleColorMap", id, Filter, "Visualization", "SCIRun"),
+    isFixed("isFixed", id, this),
+    min("min", id, this ),
+    max("max", id, this)
 {
     // Create the output port
     omap=scinew ColorMapOPort(this, "ColorMap", ColorMapIPort::Atomic);

@@ -50,7 +50,8 @@ extern "C" Module* make_MatrixWriter(const clString& id) {
 }
 
 MatrixWriter::MatrixWriter(const clString& id)
-  : Module("MatrixWriter", id, Source), filename_("filename", id, this),
+  : Module("MatrixWriter", id, Source, "DataIO", "SCIRun"),
+    filename_("filename", id, this),
     filetype_("filetype", id, this), split_("split", id, this)
 {
   // Create the output port

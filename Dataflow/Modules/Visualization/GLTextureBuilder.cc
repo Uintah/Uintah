@@ -54,7 +54,7 @@ extern "C" Module* make_GLTextureBuilder( const clString& id) {
 
 
 GLTextureBuilder::GLTextureBuilder(const clString& id)
-  : Module("GLTextureBuilder", id, Filter), 
+  : Module("GLTextureBuilder", id, Filter, "Visualization", "SCIRun"), 
     tex(0),
     max_brick_dim("max_brick_dim", id, this),
     min("min", id, this),

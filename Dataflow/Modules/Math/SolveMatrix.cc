@@ -170,16 +170,22 @@ extern "C" Module* make_SolveMatrix(const clString& id) {
 
 
 SolveMatrix::SolveMatrix(const clString& id)
-: Module("SolveMatrix", id, Filter),
+  : Module("SolveMatrix", id, Filter, "Math", "SCIRun"),
     target_error("target_error", id, this),
-  flops("flops", id, this), floprate("floprate", id, this),
-  memrefs("memrefs", id, this), memrate("memrate", id, this),
-  orig_error("orig_error", id, this), current_error("current_error", id, this),
-  method("method", id, this),precond("precond",id,this), iteration("iteration", id, this),
-  maxiter("maxiter", id, this),
-  use_previous_soln("use_previous_soln", id, this),
-  emit_partial("emit_partial", id, this),status("status",id,this),
-  tcl_np("np", id, this)
+    flops("flops", id, this),
+    floprate("floprate", id, this),
+    memrefs("memrefs", id, this),
+    memrate("memrate", id, this),
+    orig_error("orig_error", id, this),
+    current_error("current_error", id, this),
+    method("method", id, this),
+    precond("precond",id,this),
+    iteration("iteration", id, this),
+    maxiter("maxiter", id, this),
+    use_previous_soln("use_previous_soln", id, this),
+    emit_partial("emit_partial", id, this),
+    status("status",id,this),
+    tcl_np("np", id, this)
 {
     matrixport=scinew MatrixIPort(this, "Matrix", MatrixIPort::Atomic);
     add_iport(matrixport);

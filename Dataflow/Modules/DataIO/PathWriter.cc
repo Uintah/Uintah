@@ -49,7 +49,8 @@ extern "C" Module* make_PathWriter(const clString& id) {
 }
 
 PathWriter::PathWriter(const clString& id)
-  : Module("PathWriter", id, Source), filename_("filename", id, this),
+  : Module("PathWriter", id, Source, "DataIO", "SCIRun"),
+    filename_("filename", id, this),
     filetype_("filetype", id, this)
 {
   // Create the output port

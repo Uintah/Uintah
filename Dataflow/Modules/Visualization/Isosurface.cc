@@ -132,7 +132,7 @@ static clString surface_name("Isosurface");
 static clString widget_name("Isosurface");
 
 Isosurface::Isosurface(const clString& id)
-  : Module("Isosurface", id, Filter), 
+  : Module("Isosurface", id, Filter, "Visualization", "SCIRun"), 
     gui_iso_value("isoval", id, this),
     extract_from_new_field("extract-from-new-field", id, this ),
     use_algorithm("algorithm", id, this)

@@ -56,7 +56,7 @@ extern "C" Module* make_ApplyInterpolant(const clString& id)
 }
 
 ApplyInterpolant::ApplyInterpolant(const clString& id)
-  : Module("ApplyInterpolant", id, Filter)
+  : Module("ApplyInterpolant", id, Filter, "Fields", "SCIRun")
 {
   // Create the input ports
   source_field_ = scinew FieldIPort(this, "Source", FieldIPort::Atomic);
