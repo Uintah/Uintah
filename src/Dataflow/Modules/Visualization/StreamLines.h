@@ -32,8 +32,7 @@ namespace SCIRun {
 class StreamLinesAlgo : public DynamicAlgoBase
 {
 public:
-  virtual void execute(MeshHandle vmesh,
-		       MeshHandle smesh,
+  virtual void execute(MeshHandle smesh,
 		       VectorFieldInterface *vfi,
 		       double tolerance,
 		       double stepsize,
@@ -42,8 +41,7 @@ public:
 
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfo *get_compile_info(const TypeDescription *vmesh,
-				       const TypeDescription *smesh,
+  static CompileInfo *get_compile_info(const TypeDescription *smesh,
 				       const TypeDescription *sloc);
 protected:
   bool interpolate(VectorFieldInterface *vfi, const Point &p, Vector &v);
@@ -59,13 +57,12 @@ protected:
 };
 
 
-template <class VMESH, class SMESH, class SLOC>
+template <class SMESH, class SLOC>
 class StreamLinesAlgoT : public StreamLinesAlgo
 {
 public:
   //! virtual interface. 
-  virtual void execute(MeshHandle vmesh,
-		       MeshHandle smesh,
+  virtual void execute(MeshHandle smesh,
 		       VectorFieldInterface *vfi,
 		       double tolerance,
 		       double stepsize,
@@ -75,18 +72,18 @@ public:
 
 
 
-template <class VMESH, class SMESH, class SLOC>
+template <class SMESH, class SLOC>
 void 
-StreamLinesAlgoT<VMESH, SMESH, SLOC>::execute(MeshHandle vmesh_h,
-					      MeshHandle smesh_h,
-					      VectorFieldInterface *vfi,
-					      double tolerance,
-					      double stepsize,
-					      int maxsteps,
-					      ContourMeshHandle cmesh)
+StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle smesh_h,
+				       VectorFieldInterface *vfi,
+				       double tolerance,
+				       double stepsize,
+				       int maxsteps,
+				       ContourMeshHandle cmesh)
 {
-  VMESH *vmesh = dynamic_cast<VMESH *>(vmesh_h.get_rep());
   SMESH *smesh = dynamic_cast<SMESH *>(smesh_h.get_rep());
+
+  const double tolerance2 = tolerance * tolerance;
 
   Point seed;
   Vector test;
@@ -103,7 +100,7 @@ StreamLinesAlgoT<VMESH, SMESH, SLOC>::execute(MeshHandle vmesh_h,
     smesh->get_point(seed, *seed_iter);
 
     // Is the seed point inside the field?
-    if (!interpolate(vfi, seed, test))
+    if (!vfi->interpolate(test, seed))
     {
       cout << "StreamLines: WARNING: seed point was not inside the field.\n";
       ++seed_iter;
@@ -112,7 +109,7 @@ StreamLinesAlgoT<VMESH, SMESH, SLOC>::execute(MeshHandle vmesh_h,
 
     // Find the positive streamlines.
     nodes.clear();
-    FindStreamLineNodes(nodes, seed, tolerance, stepsize, maxsteps, vfi);
+    FindStreamLineNodes(nodes, seed, tolerance2, stepsize, maxsteps, vfi);
 
     node_iter = nodes.begin();
     if (node_iter != nodes.end())
@@ -130,7 +127,7 @@ StreamLinesAlgoT<VMESH, SMESH, SLOC>::execute(MeshHandle vmesh_h,
 
     // Find the negative streamlines.
     nodes.clear();
-    FindStreamLineNodes(nodes, seed, tolerance, -stepsize, maxsteps, vfi);
+    FindStreamLineNodes(nodes, seed, tolerance2, -stepsize, maxsteps, vfi);
 
     node_iter = nodes.begin();
     if (node_iter != nodes.end())

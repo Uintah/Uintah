@@ -104,12 +104,14 @@ bool
 StreamLinesAlgo::interpolate(VectorFieldInterface *vfi,
 			     const Point &p, Vector &v)
 {
-  const bool b = vfi->interpolate(v,p);
-  if (b && v.length2() > 0)
+  if (vfi->interpolate(v,p))
   {
-    v.normalize(); // try not to skip cells - needs help from stepsize
+    if (v.safe_normalize() > 0.0)
+    {
+      return true;
+    }
   }
-  return b;
+  return false;
 }
 
 
@@ -164,23 +166,17 @@ StreamLinesAlgo::ComputeRKFTerms(vector<Vector> &v, // storage for terms
 void
 StreamLinesAlgo::FindStreamLineNodes(vector<Point> &v, // storage for points
 				     Point x,          // initial point
-				     double t,          // error tolerance
-				     double s,          // initial step size
+				     double t2,       // square error tolerance
+				     double s,         // initial step size
 				     int n,            // max number of steps
 				     VectorFieldInterface *vfi) // the field
 {
-  int loop;
-  vector <Vector> terms;
-  Vector error;
-  double err;
-  Vector xv;
-
-  terms.resize(6, Vector(0.0, 0.0, 0.0));
+  vector <Vector> terms(6, Vector(0.0, 0.0, 0.0));
 
   // Add the initial point to the list of points found.
   v.push_back(x);
 
-  for (loop=0; loop<n; loop++)
+  for (int i=0; i<n; i++)
   {
 
     // Compute the next set of terms.
@@ -190,19 +186,18 @@ StreamLinesAlgo::FindStreamLineNodes(vector<Point> &v, // storage for points
     }
 
     // Compute the approximate local truncation error.
-    error = terms[0]*ab[0] + terms[1]*ab[1] + terms[2]*ab[2]
+    const Vector err = terms[0]*ab[0] + terms[1]*ab[1] + terms[2]*ab[2]
       + terms[3]*ab[3] + terms[4]*ab[4] + terms[5]*ab[5];
-    err = sqrt(error(0)*error(0) + error(1)*error(1) + error(2)*error(2));
+    const double err2 = err.x()*err.x() + err.y()*err.y() + err.z()*err.z();
     
     // Is the error tolerable?  Adjust the step size accordingly.
-    if (err < t/128.0)
+    if (err2 * 16384.0 < t2) // err < t/128.0
     {
       s *= 2;
     }
-    else if (err > t)
+    else if (err2 > t2)
     {
       s /= 2;
-      //loop--;         // Re-do this step.
       continue;
     }
 
@@ -211,7 +206,8 @@ StreamLinesAlgo::FindStreamLineNodes(vector<Point> &v, // storage for points
       terms[3]*a[3] + terms[4]*a[4] + terms[5]*a[5];
 
     // If the new point is inside the field, add it.  Otherwise stop.
-    if (interpolate(vfi, x, xv))
+    Vector xv;
+    if (vfi->interpolate(xv, x))
     {
       v.push_back(x);
     }
@@ -276,10 +272,9 @@ void StreamLines::execute()
   get_gui_doublevar(id, "stepsize", stepsize);
   get_gui_intvar(id, "maxsteps", maxsteps);
 
-  const TypeDescription *vmtd = vf_->mesh()->get_type_description();
   const TypeDescription *smtd = sf_->mesh()->get_type_description();
   const TypeDescription *sltd = sf_->data_at_type_description();
-  CompileInfo *ci = StreamLinesAlgo::get_compile_info(vmtd, smtd, sltd); 
+  CompileInfo *ci = StreamLinesAlgo::get_compile_info(smtd, sltd); 
   DynamicAlgoHandle algo_handle;
   if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
   {
@@ -293,7 +288,7 @@ void StreamLines::execute()
     cout << "Could not get algorithm." << std::endl;
     return;
   }
-  algo->execute(vf_->mesh(), sf_->mesh(), vfi,
+  algo->execute(sf_->mesh(), vfi,
 		tolerance, stepsize, maxsteps, cmesh);
 
   cf->resize_fdata();
@@ -318,8 +313,7 @@ void StreamLines::tcl_command(TCLArgs& args, void* userdata)
 
 
 CompileInfo *
-StreamLinesAlgo::get_compile_info(const TypeDescription *vmesh,
-				  const TypeDescription *smesh,
+StreamLinesAlgo::get_compile_info(const TypeDescription *smesh,
 				  const TypeDescription *sloc)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
@@ -329,18 +323,15 @@ StreamLinesAlgo::get_compile_info(const TypeDescription *vmesh,
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
-		       vmesh->get_filename() + "." +
 		       smesh->get_filename() + "." +
 		       sloc->get_filename() + ".",
                        base_class_name, 
                        template_class_name, 
-                       vmesh->get_name() + ", " +
 		       smesh->get_name() + ", " +
 		       sloc->get_name());
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
-  vmesh->fill_compile_info(rval);
   smesh->fill_compile_info(rval);
   return rval;
 }
