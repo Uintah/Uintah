@@ -27,7 +27,7 @@
 
 namespace SCIRun {
 
-#include <GL/glu.h>
+#include <sci_glu.h>
 //  GLenum errCode;
 //  const GLubyte *errString;
 

@@ -37,7 +37,7 @@
 #include <string.h>
 
 #include <GL/gl.h>
-#include <GL/glu.h>
+#include <sci_glu.h>
 #include <GL/glx.h>
 
 #include <Dataflow/Modules/Render/BaWGL.h>

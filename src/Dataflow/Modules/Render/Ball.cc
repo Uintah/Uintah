@@ -34,7 +34,7 @@
 #include "BallMath.h"
 #include <stdio.h>
 #include <GL/gl.h>
-#include <GL/glu.h>
+#include <sci_glu.h>
 #include <GL/glx.h>
 
 #define LG_NSEGS 4

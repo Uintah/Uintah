@@ -35,7 +35,7 @@
 #endif
 
 #include <GL/gl.h>
-#include <GL/glu.h>
+#include <sci_glu.h>
 #include <GL/glx.h>
 
 #ifdef _WIN32

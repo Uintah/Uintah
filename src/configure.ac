@@ -1360,8 +1360,18 @@ fi
 
 SCI_TRY_LINK(GL,OpenGL libraries and headers,[
 #include<GL/gl.h>
+
+#ifndef GLAPIENTRY
+  #define GLAPIENTRY
+#endif
+
+#ifndef GLAPI
+  #define GLAPI
+#endif
+
 #include<GL/glu.h>
 #include<GL/glx.h>
+
 ],$_sci_inc,GL GLU,$_sci_lib $GLU_OTHERS,,,not-optional)
 
 AC_SUBST(GL_LIB_FLAG)
