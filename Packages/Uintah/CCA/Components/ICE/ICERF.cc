@@ -1,4 +1,5 @@
 #include <Packages/Uintah/CCA/Components/ICE/ICE.h>
+#include <Packages/Uintah/CCA/Components/ICE/Diffusion.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
@@ -768,26 +769,11 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
         double thermalCond = ice_matl->getThermalConductivity();
         if(thermalCond != 0.0){ 
           old_dw->get(Temp_CC, lb->temp_CCLabel, indx,patch,gac,1);
-          
-          SFCXVariable<double> q_X_FC;
-          SFCYVariable<double> q_Y_FC;
-          SFCZVariable<double> q_Z_FC;
-          
-          computeQ_conduction_FC( new_dw, patch, 
-                                  rho_CC,  sp_vol_CC, Temp_CC, thermalCond,
-                                  q_X_FC, q_Y_FC, q_Z_FC);
-          
-          for(CellIterator iter = patch->getCellIterator(); !iter.done(); 
-                                                                    iter++){
-            IntVector c = *iter;
-            right  = c + IntVector(1,0,0);    left   = c ;    
-            top    = c + IntVector(0,1,0);    bottom = c ;    
-            front  = c + IntVector(0,0,1);    back   = c ; 
-
-            int_eng_source[c]-=((q_X_FC[right] - q_X_FC[left])  * areaX +         
-                                (q_Y_FC[top]   - q_Y_FC[bottom])* areaY +         
-                                (q_Z_FC[front] - q_Z_FC[back])  * areaZ)*delT;  
-          }
+       
+          bool use_vol_frac = true; // include vol_frac in diffusion calc.
+          scalarDiffusionOperator(new_dw, patch, use_vol_frac,
+                                  rho_CC, sp_vol_CC,  Temp_CC,
+                                  int_eng_source, thermalCond, delT);
         } 
       }
       
