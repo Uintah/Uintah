@@ -751,17 +751,23 @@ highwater_check.pl - Uintah/Test/helpers/highwater_check.pl - perl script
 Seems to be obsolete by highwater_percent.pl
 
 ---------------------
-replace_gold_standard - resultsdir/replace_gold_standard - sh script
----------------------
-Script created by runSusTests.  To be run at the command line, when deemed
+replace_gold_standard - resultsdir/replace_gold_standard - sh script (A)
+--------------------- - Uintah/Test/helpers/replace_gold_standard -  (B)
+A)Script created by runSusTests.  To be run at the command line, when deemed
   necessary.
 
 Overview:
   replaces the files in the gold standard with the ones created by this test.
+(A) calls (B)
 
 Usage:
-  replace_gold_standard
+(A)  replace_gold_standard
+(B)  replace_gold_standard gold_standard_dir replacement_dir testname
 
+  gold_standard_dir is the directory right above the testname 
+    i.e., goldstandard/ARCHES
+  replacement_dir is the directory to replace gold standard with
+  testname is the name of the test
 *****************************************************************************
 Other items
 *****************************************************************************
