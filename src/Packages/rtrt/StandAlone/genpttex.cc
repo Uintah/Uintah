@@ -354,6 +354,7 @@ int main(int argc, char** argv)
   int use_weighted_ave = 0;
   float threshold = 0.3;
   float luminance=1.0;
+  int num_sample_divs=0;
   
   for(int i=1;i<argc;i++) {
     if(strcmp(argv[i], "-light_pos")==0) {
@@ -404,6 +405,8 @@ int main(int argc, char** argv)
       threshold = atof(argv[++i]);
     } else if (strcmp(argv[i],"-lum")==0) {
       luminance = atof(argv[++i]);
+    } else if (strcmp(argv[i],"-nsdivs")==0) {
+      num_sample_divs = atoi(argv[++i]);
     } else {
       cerr<<"unrecognized option \""<<argv[i]<<"\""<<endl;
 
@@ -411,7 +414,8 @@ int main(int argc, char** argv)
       cerr<<"  -light_pos <lx> <ly> <lz>   position of light source (-0.25, 0.2, -0.1)\n";
       cerr<<"  -lr <float>                 radius of light source (0.01)\n";
       cerr<<"  -intensity <float>          intensity of light source (1000.0)\n";
-      cerr<<"  -num_samples <int>          number of samples per texel (100)\n";
+      cerr<<"  -num_samples <int>          maximum number of samples per texel (100)\n";
+      cerr<<"  -nsdivs <int>               number of samples divisions (0)\n";
       cerr<<"  -depth <int>                maximum ray depth (3)\n";
       cerr<<"  -tex_res <int>              texture resolution (16)\n";
       cerr<<"  -radius <float>             sphere radius (0.0)\n";
@@ -455,7 +459,8 @@ int main(int argc, char** argv)
   // Create the context for rendering
   Semaphore sem("genpttex::Semaphore", nworkers);
   PathTraceContext ptcontext(luminance, ptlight, geometry, emap,
-			     num_samples, depth, dilate, support, use_weighted_ave,
+			     num_samples, num_sample_divs, depth,
+			     dilate, support, use_weighted_ave,
 			     threshold, &sem);
 
   if (outfile == 0) {
