@@ -98,7 +98,7 @@
 		<first_order_drhodt>true</first_order_drhodt>
 	        <ref_point>[-1,-1,-1]</ref_point>
 	        <radiation>true</radiation>
-	        <filter_drhodt>true</filter_drhodt>
+                <filter_drhodt>false</filter_drhodt>
 	        <opl>3.0</opl>
 	        <empirical_soot>true</empirical_soot>
 	        <mixing_model>StaticMixingTable</mixing_model>
