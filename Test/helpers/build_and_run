@@ -82,13 +82,13 @@ if [ $retval != "0" ]; then
 	useFakeArches.pl "$BUILDROOT" > ../remake_without_arches.log 2>&1
 	cd "${BUILDROOT}/${mode}/build"
 	nice gmake -k -j$MAKE_PARALLELISM >> ../remake_without_arches.log 2>&1
+	retval=$?
 
 	# Restore sub.mk's -- I keep forgetting when arches is taken out
 	# and wondering why arches can't run after the problems been fixed.
 	cp "${BUILDROOT}/src/Packages/Uintah/StandAlone/sub.mk.orig" "${BUILDROOT}/src/Packages/Uintah/StandAlone/sub.mk"
 	cp "${BUILDROOT}/src/Packages/Uintah/CCA/Components/sub.mk.orig" "${BUILDROOT}/src/Packages/Uintah/CCA/Components/sub.mk"
 
-	retval=$?
 	failed_sus=0
 	if [ $retval == "0" ]; then
 	    echo "*** Make failed with ARCHES, but passed without it."
