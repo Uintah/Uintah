@@ -1,4 +1,4 @@
-g//  ICEMaterial.cc
+//  ICEMaterial.cc
 #include "ICE.h"
 #include "ICEMaterial.h"
 #include <Core/Geometry/IntVector.h>
@@ -14,8 +14,7 @@ g//  ICEMaterial.cc
 #include <iostream>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfStateFactory.h>
 #include <Packages/Uintah/CCA/Components/MPMICE/Combustion/BurnFactory.h>
-#include <Package/Uintah/CCA/Components/MPMICE/Combustion/Burn.h>
-
+#include <Packages/Uintah/CCA/Components/MPMICE/Combustion/Burn.h>
 
 #define SMALL_NUM 1.0e-100
 using namespace std;
