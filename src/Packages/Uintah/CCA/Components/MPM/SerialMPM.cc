@@ -594,6 +594,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   
   if(numMPMMatls!=numALLMatls){
     t->requires(Task::NewDW, lb->dTdt_NCLabel,            Ghost::AroundCells,1);
+    t->requires(Task::NewDW, lb->massBurnFractionLabel,   Ghost::AroundCells,1);
   }
 
   if(d_fracture) {
@@ -1615,13 +1616,12 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     Vector vel(0.0,0.0,0.0);
     Vector acc(0.0,0.0,0.0);
   
-    double tempRate;
-  
     // DON'T MOVE THESE!!!
     double thermal_energy = 0.0;
     Vector CMX(0.0,0.0,0.0);
     Vector CMV(0.0,0.0,0.0);
     double ke=0;
+    double massLost=0;
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     int numALLMatls=d_sharedState->getNumMatls();
 
@@ -1638,7 +1638,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       // Get the arrays of grid data on which the new part. values depend
       NCVariable<Vector> gvelocity_star, gacceleration;
       NCVariable<double> gTemperatureRate, gTemperature, gTemperatureNoBC;
-      NCVariable<double> dTdt;
+      NCVariable<double> dTdt, massBurnFraction;
 
       delt_vartype delT;
 
@@ -1669,10 +1669,15 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       if(numMPMMatls!=numALLMatls){
         new_dw->get(dTdt, lb->dTdt_NCLabel, dwindex,patch,Ghost::AroundCells,1);
+        new_dw->get(massBurnFraction, lb->massBurnFractionLabel,
+					    dwindex,patch,Ghost::AroundCells,1);
       }
       else{
         new_dw->allocate(dTdt, lb->dTdt_NCLabel,dwindex,patch,IntVector(1,1,1));
+        new_dw->allocate(massBurnFraction, lb->massBurnFractionLabel,
+						dwindex,patch,IntVector(1,1,1));
         dTdt.initialize(0.);
+        massBurnFraction.initialize(0.);
       }
 
       old_dw->get(delT, d_sharedState->get_delt_label() );
@@ -1793,7 +1798,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           vel = Vector(0.0,0.0,0.0);
           acc = Vector(0.0,0.0,0.0);
 
-          tempRate = 0;
+          double tempRate = 0;
 
           // Accumulate the contribution from each surrounding vertex
           for(int k = 0; k < 8; k++) {
@@ -1852,26 +1857,33 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
           vel = Vector(0.0,0.0,0.0);
           acc = Vector(0.0,0.0,0.0);
-          tempRate = 0;
+          double tempRate = 0;
+          double burnFraction = 0;
 
           // Accumulate the contribution from each surrounding vertex
           for (int k = 0; k < 8; k++) {
 	      vel      += gvelocity_star[ni[k]]  * S[k];
    	      acc      += gacceleration[ni[k]]   * S[k];
               tempRate += (gTemperatureRate[ni[k]] + dTdt[ni[k]]) * S[k];
+              burnFraction += massBurnFraction[ni[k]] * S[k];
           }
 
           // Update the particle's position and velocity
           pxnew[idx]      = px[idx] + vel * delT;
           pvelocitynew[idx] = pvelocity[idx] + acc * delT;
           pTemperatureNew[idx] = pTemperature[idx] + tempRate * delT;
-          pmassNew[idx]        = pmass[idx];
-          pvolumeNew[idx]      = pvolume[idx];
+	  double rho = pmass[idx]/pvolume[idx];
+          pmassNew[idx]        = pmass[idx]*(1.    - burnFraction);
+	  if(pmassNew[idx] < 0.0){
+		pmassNew[idx] = 0.;
+	  }
+          pvolumeNew[idx]      = pmassNew[idx]/rho;
 
           thermal_energy += pTemperature[idx] * pmass[idx] * Cp;
           ke += .5*pmass[idx]*pvelocitynew[idx].length2();
 	  CMX = CMX + (pxnew[idx]*pmass[idx]).asVector();
 	  CMV += pvelocitynew[idx]*pmass[idx];
+          massLost += (pmass[idx] - pmassNew[idx]);
         }
       }
 
@@ -1892,6 +1904,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     new_dw->put(sumvec_vartype(CMX), lb->CenterOfMassPositionLabel);
     new_dw->put(sumvec_vartype(CMV), lb->CenterOfMassVelocityLabel);
 
+  cout << "Solid mass lost this timestep = " << massLost << endl;
 //  cout << "Solid momentum after advection = " << CMV << endl;
 
 //  cout << "THERMAL ENERGY " << thermal_energy << endl;

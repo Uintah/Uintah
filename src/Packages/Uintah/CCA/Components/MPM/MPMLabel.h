@@ -107,9 +107,8 @@ using std::vector;
       const VarLabel* gMassContactLabel; //for crack surface contact
       const VarLabel* gradPressNCLabel;
       const VarLabel* dTdt_NCLabel; //for heat conduction
+      const VarLabel* massBurnFractionLabel; //for burn modeling
       
-      const VarLabel* cBurnedMassLabel; //for burn models
-
       const VarLabel* fVelocityLabel; //for interaction with ICE
       const VarLabel* fMassLabel; //for interaction with ICE
 
