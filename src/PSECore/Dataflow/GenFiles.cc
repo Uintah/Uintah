@@ -157,16 +157,18 @@ void GenComponent(component_node* n, char* packname, char* psepath)
   WriteComponentNodeToFile(n,filename);
   delete[] filename;
 
-  /* generate a skeleton .tcl file */
-  length = strlen(n->name)+strlen(psepath)+
-    strlen(packname)+15;
-  filename = new char[length];
-  sprintf(filename,"%s/src/%s/GUI/%s.tcl",psepath,
-	  packname,n->name);
-  file = fopen(filename,"w");
-  fprintf(file,gui_skeleton,packname,n->category,n->name,n->name,filename);
-  fclose(file);
-  delete[] filename;
+  if (n->gui->parameters->size()) {
+    /* generate a skeleton .tcl file */
+    length = strlen(n->name)+strlen(psepath)+
+      strlen(packname)+15;
+    filename = new char[length];
+    sprintf(filename,"%s/src/%s/GUI/%s.tcl",psepath,
+	    packname,n->name);
+    file = fopen(filename,"w");
+    fprintf(file,gui_skeleton,packname,n->category,n->name,n->name,filename);
+    fclose(file);
+    delete[] filename;
+  }
 
   /* edit the category sub.mk file - add the new component */
   char* modname = new char[strlen(n->name)+25];
@@ -177,13 +179,15 @@ void GenComponent(component_node* n, char* packname, char* psepath)
   delete[] string;
   delete[] modname;
 
-  /* edit the GUI sub.mk file - add the new component */
-  modname = new char[strlen(n->name)+25];
-  sprintf(modname,"\t$(SRCDIR)/%s.tcl\\\n",n->name);
-  string = new char[strlen(psepath)+strlen(packname)+strlen(n->category)+25];
-  sprintf(string,"%s/src/%s/GUI/sub.mk",psepath,packname);
-  InsertStringInFile(string,"#[INSERT NEW TCL FILE HERE]",modname);
-  delete[] string;
+  if (n->gui->parameters->size()) {
+    /* edit the GUI sub.mk file - add the new component */
+    modname = new char[strlen(n->name)+25];
+    sprintf(modname,"\t$(SRCDIR)/%s.tcl\\\n",n->name);
+    string = new char[strlen(psepath)+strlen(packname)+strlen(n->category)+25];
+    sprintf(string,"%s/src/%s/GUI/sub.mk",psepath,packname);
+    InsertStringInFile(string,"#[INSERT NEW TCL FILE HERE]",modname);
+    delete[] string;
+  }
 }
 
 } // Dataflow
