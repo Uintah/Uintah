@@ -141,7 +141,10 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   char *me, *err;
   float glyphScale, anisoThresh;
   Nrrd *nin;
+#ifdef USE_GLYPH_GROUP
   int gridcellsize;
+  int num_levels;
+#endif
 
   hestOptAdd(&opt, NULL, "input", airTypeOther, 1, 1, &nin, NULL,
 	     "input tensor volume, in nrrd format, with 7 floats per voxel.",
@@ -163,9 +166,14 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 	     "over-all glyph scaling");
   hestOptAdd(&opt, NULL, "thresh", airTypeFloat, 1, 1, &anisoThresh, NULL,
 	     "anisotropy threshold for testing");
-  hestOptAdd(&opt, NULL, "gridcellsize", airTypeInt, 1, 1, &gridcellsize, "3",
+#ifdef USE_GLYPH_GROUP
+  hestOptAdd(&opt, "-gridcellsize", "gridcellsize", airTypeInt, 0, 1,
+	     &gridcellsize, "3",
 	     "size of the grid cells to put around the GlyphGroup");
-	     
+  hestOptAdd(&opt, "-nl", "num_levels", airTypeInt, 0, 1, &num_levels, "10",
+	     "number of grid levels to use for optimizations");
+#endif
+  
   mop = airMopInit();
   airMopAdd(mop, opt, (airMopper)hestOptFree, airMopAlways);
   me = argv[0];
@@ -243,7 +251,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 	Color rgb;
 	dtiRgbGen(rgb, evec, c[anisoType]);
 	Phong *matl = new Phong(rgb, Color(1,1,1), 100);
-	//PhongMaterial *matl = new PhongMaterial(rgb, 1);
+	// These are cool transparent/reflective glyphs
+	//PhongMaterial *matl = new PhongMaterial(rgb, 0.3, 0.4, 100, true);
 	// all glyphs start at the origin
 
 	Sphere *obj = new Sphere(matl, Point(0,0,0), glyphScale);
@@ -263,9 +272,6 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 	Transform *tr = new Transform();
 	tr->set(C);
 
-	//Sphere *obj = new Sphere(matl, Point(x,y,z), glyphScale);
-	//	all->add(obj);
-
 #ifdef USE_GLYPH_GROUP
 	glyphs.add(new Glyph(new Instance(new InstanceWrapperObject(obj),tr),
 		 c[anisoType]));
@@ -278,7 +284,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   }
   printf("%s: created %d glyphs!\n", me, numGlyphs);
 #ifdef USE_GLYPH_GROUP
-  all->add(new GlyphGroup(glyphs, 3));
+  all->add(new GlyphGroup(glyphs, gridcellsize, num_levels));
   printf("%s: created GlyphGroup\n", me);
 #endif
 
