@@ -64,22 +64,21 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
     if(crk_ps==0) crackType[m]="NO_CRACK";
  
     if(crk_ps!=0) { 
-       // read in crack contact type, frictional coefficient,
-       // contcat volume and separate volume 
+       /* read in crack contact type, frictional coefficient if any, and
+          critical contact and separate volumes */
        crk_ps->require("type",crackType[m]);
      
-       // default values of critical volumes   
-       separateVol[m]=1.;
-       contactVol[m]=1.;
+       /* default values of critical volumes are set to be -1.0. Don't input them 
+          if use displacement criterion for crack contact check */   
+       separateVol[m] = -1.;
+       contactVol[m]  = -1.;
        if(crackType[m]=="frictional" || crackType[m]=="stick") {
-          if(crackType[m]=="frictional") {
-             crk_ps->require("mu",c_mu[m]);
-          }
-          else if(crackType[m]=="stick") {
-             c_mu[m]=0.0;
-          }
           crk_ps->get("separateVol",separateVol[m]);
           crk_ps->get("contactVol",contactVol[m]);
+          if(crackType[m]=="frictional") 
+             crk_ps->require("mu",c_mu[m]);
+          else 
+             c_mu[m]=0.0;
        }
        else if(crackType[m]=="null") {
           c_mu[m]=0.;
@@ -97,9 +96,11 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
        // read in quadrilaterals
        for(ProblemSpecP quad_ps=geom_ps->findBlock("quadrilateral");
           quad_ps!=0; quad_ps=quad_ps->findNextBlock("quadrilateral")) {
+          int n;
           Point p;   
           vector<Point> thisRect;
-          int n;
+
+          // four vertices of the quadrilateral
           quad_ps->require("pt1",p);
           thisRect.push_back(p);
           cmin[m]=Min(p,cmin[m]);
@@ -119,12 +120,11 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
           rectangles.push_back(thisRect);
           thisRect.clear();
           
-          // resolution of crack mesh 
+          // mesh resolution  
           quad_ps->require("n12",n); 
           n12.push_back(n);
           quad_ps->require("n23",n);
           n23.push_back(n);
-        
        }
        allRects[m]=rectangles;
        allN12[m]=n12;
@@ -136,10 +136,11 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
        // read in triangles         
        for(ProblemSpecP tri_ps=geom_ps->findBlock("triangle");
              tri_ps!=0; tri_ps=tri_ps->findNextBlock("triangle")) {
+          int n;
           Point p;
           vector<Point> thisTri;
-          int n;
 
+          // three vertices of the triangle
           tri_ps->require("pt1",p);
           thisTri.push_back(p);
           cmin[m]=Min(p,cmin[m]);
@@ -164,50 +165,43 @@ Crack::Crack(const ProblemSpecP& ps,SimulationStateP& d_sS,
     } // End of if crk_ps != 0
 
     m++; // next material
-  }  // End of loop materials
+  }  // End of loop over materials
 
   int numMatls=m;  // total number of materials
 
 #if 1  // output crack parameters
   cout << "*** Crack information ***" << endl;
   for(m=0; m<numMatls; m++) {
-     if(crackType[m]=="NO_CRACK") {
+     if(crackType[m]=="NO_CRACK") 
         cout << "\nMaterial " << m << ": no crack exists" << endl;
-     }
      else {
         cout << "\nMaterial " << m << ": crack contact type -- " 
              << "\'" << crackType[m] << "\'" << endl;
-        if(crackType[m]=="frictional") {
+
+        if(crackType[m]=="frictional") 
           cout << "            frictional coefficient: " << c_mu[m] << endl;
-        }
         else 
           cout << endl;
-        if(separateVol[m]<0. || contactVol[m]<0.) {
-          cout  << "Check crack contact by displacement criterion"
-                << endl;
-        }
-        else {
+
+        if(separateVol[m]<0. || contactVol[m]<0.) 
+          cout  << "Check crack contact by displacement criterion" << endl;
+        else 
           cout  << "Check crack contact by volume criterion with\n"
-                << "            separate volume = " 
-                << separateVol[m]
-                << "\n            contact volume = "
-                << contactVol[m] << endl;
-        }
+                << "            separate volume = " << separateVol[m]
+                << "\n            contact volume = " << contactVol[m] << endl;
       
         cout <<"\nCrack geometry:" << endl;
         for(int i=0;i<(int)allRects[m].size();i++) {
            cout << "Rectangle " << i << ": meshed by [" << allN12[m][i] 
                 << ", " << allN23[m][i] << "]" << endl;
-           for(int j=0;j<4;j++) {
+           for(int j=0;j<4;j++) 
               cout << "pt " << j << ": " << allRects[m][i][j] << endl;
-           }
         } 
         for(int i=0;i<(int)allTris[m].size();i++) {
            cout << "Triangle " << i << ": meshed by " 
                 << allNCell[m][i] << " cells on each side" << endl;
-           for(int j=0;j<3;j++) {
+           for(int j=0;j<3;j++) 
               cout << "pt " << j << ": " << allTris[m][i][j] << endl;
-           }
         }
         cout << "Crack extent: " << cmin[m] << "..." 
              <<  cmax[m] << endl << endl;
@@ -257,13 +251,13 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
          // resolutions for the quadrilateral 
          ni=allN12[m][k];       
          nj=allN23[m][k]; 
-         // four points for the quadrilateral 
+         // four vertices for the quadrilateral 
          p1=allRects[m][k][0];   
          p2=allRects[m][k][1];
          p3=allRects[m][k][2];
          p4=allRects[m][k][3];
 
-         // create temprary arraies
+         // create temporary arraies
          Point* side2=new Point[2*nj+1];
          Point* side4=new Point[2*nj+1];
 
@@ -298,26 +292,26 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
            nstart2=nstart1+(ni+1);
            nstart3=nstart2+ni;
            for(i=0; i<ni; i++) {
-              // there are four segments in each sub-rectangle
-              // for 1st segment, n1,n2,n3 three nodes of the triangle 
+              /* there are four elements in each sub-rectangle
+                 for the 1st element (n1,n2,n3 three nodes of the element) */
               n1=nstart2+i; 
               n2=nstart1+i; 
               n3=nstart1+(i+1);
               cElemNodes[m][ce]=IntVector(n1,n2,n3);
               cElemNorm[m][ce++]=TriangleNormal(cx[m][n1],cx[m][n2],cx[m][n3]);
-              // for 2nd segment
+              // for the 2nd element
               n1=nstart2+i;
               n2=nstart3+i;
               n3=nstart1+i;
               cElemNodes[m][ce]=IntVector(n1,n2,n3);
               cElemNorm[m][ce++]=TriangleNormal(cx[m][n1],cx[m][n2],cx[m][n3]);
-              // for 3 rd segment
+              // for the 3rd element
               n1=nstart2+i;
               n2=nstart1+(i+1);
               n3=nstart3+(i+1);
               cElemNodes[m][ce]=IntVector(n1,n2,n3);
               cElemNorm[m][ce++]=TriangleNormal(cx[m][n1],cx[m][n2],cx[m][n3]);
-              // for 4th element 
+              // for the 4th element 
               n1=nstart2+i;
               n2=nstart3+(i+1);
               n3=nstart3+i;
@@ -328,10 +322,11 @@ void Crack::CrackDiscretization(const ProcessorGroup*,
          nstart0+=((2*ni+1)*nj+ni+1);  
          delete [] side4;
          delete [] side2;
-       } // End ofloop over quadrilaterals 
+       } // End of loop over quadrilaterals 
 
        // discretize triangluar segments 
        for(k=0; k<(int)allTris[m].size(); k++) {  // loop over all triangles
+         // three vertices of the triangle
          p1=allTris[m][k][0];
          p2=allTris[m][k][1];
          p3=allTris[m][k][2];
@@ -413,7 +408,6 @@ void Crack::addComputesAndRequiresParticleVelocityField(Task* t,
                                 const PatchSet* /*patches*/,
                                 const MaterialSet* /*matls*/) const
 {  
-  //t->requires(Task::OldDW, lb->pXLabel, Ghost::None);
   t->requires(Task::OldDW, lb->pXLabel, Ghost::AroundCells, NGN);
   t->computes(lb->gNumPatlsLabel);
   t->computes(lb->GNumPatlsLabel);
@@ -467,7 +461,6 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
                                      iter!=pset->end();iter++) {
           for(int k=0; k<d_8or27; k++) pgCode[*iter][k]=1;
         }  
-
         // get number of particles around nodes 
         for(ParticleSubset::iterator itr=psetWGCs->begin();
                            itr!=psetWGCs->end();itr++) {
@@ -484,7 +477,7 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
 
       else {                         // for materials with crack(s)
 
-        //Step 1: determine if nodes in crack zone 
+        //Step 1: determine if nodes within crack zone 
         Ghost::GhostType  gac = Ghost::AroundCells;
         IntVector g_cmin, g_cmax, cell_idx;
         NCVariable<short> singlevfld;
@@ -505,9 +498,9 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
           IntVector c=*iter;
           if(c.x()>=g_cmin.x() && c.x()<=g_cmax.x() && c.y()>=g_cmin.y() &&
              c.y()<=g_cmax.y() && c.z()>=g_cmin.z() && c.z()<=g_cmax.z() )
-            singlevfld[c]=NO;  // in crack zone, dual vfld
+            singlevfld[c]=NO;  // in crack zone
           else
-            singlevfld[c]=YES; // in non-crack zone, single vfld
+            singlevfld[c]=YES; // in non-crack zone
         }
 
         /* Step 2: Detect if particle is above, below or in the same side, 
@@ -539,7 +532,7 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
               short  cross=SAMESIDE;
               Vector norm=Vector(0.,0.,0.);
 
-              // get node position
+              // get node position even if ni[k] beyond this patch
               Point gx=patch->nodePosition(ni[k]);
 
               for(int i=0; i<numElems[m]; i++) {  //loop over crack elements
@@ -1257,6 +1250,34 @@ void Crack::AdjustCrackContactIntegrated(const ProcessorGroup*,
   }  //End of loop over patches
 }
 
+void Crack::addComputesAndRequiresCalculateJIntegral(Task* /*t*/,
+                                const PatchSet* /*patches*/,
+                                const MaterialSet* /*matls*/) const
+{
+}
+
+void Crack::CalculateJIntegral(const ProcessorGroup*,
+                      const PatchSubset* /*patches*/,
+                      const MaterialSubset* /*matls*/,
+                      DataWarehouse* /*old_dw*/,
+                      DataWarehouse* /*new_dw*/)
+{
+}
+
+void Crack::addComputesAndRequiresPropagateCracks(Task* /*t*/,
+                                const PatchSet* /*patches*/,
+                                const MaterialSet* /*matls*/) const
+{
+}
+
+void Crack::PropagateCracks(const ProcessorGroup*,
+                      const PatchSubset* /*patches*/,
+                      const MaterialSubset* /*matls*/,
+                      DataWarehouse* /*old_dw*/,
+                      DataWarehouse* /*new_dw*/)
+{
+}
+
 void Crack::addComputesAndRequiresInitializeMovingCracks(Task* /*t*/,
                                 const PatchSet* /*patches*/,
                                 const MaterialSet* /*matls*/) const
@@ -1270,7 +1291,7 @@ void Crack::InitializeMovingCracks(const ProcessorGroup*,
                       DataWarehouse* /*old_dw*/,
                       DataWarehouse* /*new_dw*/)
 {
-  // just set if carck points moved to No
+  // just set if crack points moved to No
   int numMPMMatls=d_sharedState->getNumMPMMatls();
   for(int m=0; m<numMPMMatls; m++) {
     for(int i=0; i<numPts[m]; i++) {
@@ -1349,15 +1370,18 @@ void Crack::MoveCracks(const ProcessorGroup*,
            else if(d_8or27==27) 
              patch->findCellAndWeights27(cx[m][i], ni, S, psize[i]);
 
-           double sumS=0.0;
+           // sum of shape functions from nodes with particle(s) around them
+           double sumS=0.0;    
            for(int k =0; k < d_8or27; k++) {
              if(gnum[ni[k]]+Gnum[ni[k]]!=0) sumS+=S[k];
            }
 
            Vector vcm = Vector(0.0,0.0,0.0);
-           if(sumS>1.e-6) {
+           if(sumS>1.e-6) {   
              for(int k = 0; k < d_8or27; k++) {
-               if(gnum[ni[k]]+Gnum[ni[k]]==0) continue;
+               // for nodes without particles around them 
+               if(gnum[ni[k]]+Gnum[ni[k]]==0) continue; 
+
                double mg = gmass[ni[k]];
                double mG = Gmass[ni[k]];
                Vector vg = gvelocity_star[ni[k]];
@@ -1366,7 +1390,7 @@ void Crack::MoveCracks(const ProcessorGroup*,
              }
            }
            cx[m][i] += vcm*delT;
-           moved[m][i]+=1; // initialized to be 0 in PrepareMovingCracks
+           moved[m][i]+=1; 
         } // End of if not moved and in patch p
       } // End of loop over numPts[m]
     } //End of loop over matls
@@ -1386,7 +1410,6 @@ void Crack::UpdateCrackExtentAndNormals(const ProcessorGroup*,
                       DataWarehouse* /*old_dw*/,
                       DataWarehouse* /*new_dw*/)
 {
-  // Check if carck points moved and moved only once
   int numMPMMatls=d_sharedState->getNumMPMMatls();
 
   for(int m=0; m<numMPMMatls; m++) {
@@ -1405,14 +1428,14 @@ void Crack::UpdateCrackExtentAndNormals(const ProcessorGroup*,
       cmax[m]=Max(cmax[m],cx[m][i]);
     } // End of loop over crack points 
 
-     // update crack element normals
-     for(int i=0; i<numElems[m]; i++) {
-       // n3, n4, n5 three nodes of the element
-       int n3=cElemNodes[m][i].x();
-       int n4=cElemNodes[m][i].y();
-       int n5=cElemNodes[m][i].z();
-       cElemNorm[m][i]=TriangleNormal(cx[m][n3],cx[m][n4],cx[m][n5]);
-     } // End of loop crack elements
+    // update crack element normals
+    for(int i=0; i<numElems[m]; i++) {
+      // n3, n4, n5 three nodes of the element
+      int n3=cElemNodes[m][i].x();
+      int n4=cElemNodes[m][i].y();
+      int n5=cElemNodes[m][i].z();
+      cElemNorm[m][i]=TriangleNormal(cx[m][n3],cx[m][n4],cx[m][n5]);
+    } // End of loop crack elements
 
   } // End of loop over matls
 }
