@@ -79,6 +79,14 @@ BBox LevelMesh::get_bounding_box() const
   return b;
 }
 
+
+void
+LevelMesh::transform(Transform &t)
+{
+  ASSERTFAIL("Not Transformable mesh");
+}
+
+
 void 
 LevelMesh::get_nodes(Node::array_type &array, Cell::index_type idx) const
 {
