@@ -82,7 +82,6 @@ ICE::~ICE()
 void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
 		       SimulationStateP& sharedState)
 {
-
   d_sharedState = sharedState;
   d_SMALL_NUM = 1.e-12;
 
@@ -114,26 +113,6 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   cout << "K_heat = " << d_K_heat << endl;
 
   cout << "Number of ICE materials: " << d_sharedState->getNumICEMatls()<< endl;
-
-  // Pull out the initial conditions
-  
-  d_ic.resize(d_sharedState->getNumICEMatls());
-  
-  ProblemSpecP ic_ps = prob_spec->findBlock("InitialConditions");
-  ProblemSpecP ice_ic_ps = ic_ps->findBlock("ICE");
-  ice_ic_ps->require("pressure",d_pressure);
-  int m = 0;
-  for (ProblemSpecP ps = ice_ic_ps->findBlock("material"); ps != 0;
-       ps = ps->findNextBlock("material") ) {
-    ps->require("volume_fraction",d_ic[m].d_volume_fraction);
-    ps->require("velocity",d_ic[m].d_velocity);
-    ps->require("micro_density",d_ic[m].d_micro_density);
-    ps->require("temperature",d_ic[m].d_temperature);
-    m++;
-  }
-
-  
-    
 }
 
 void ICE::scheduleInitialize(const LevelP& level, SchedulerP& sched, 
@@ -537,6 +516,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
 
   CCVariable<double> rho_micro, temp, cv, rho_CC,press,speedSound;
   CCVariable<double> uvel_CC,vvel_CC,wvel_CC, visc_CC,vol_frac_CC;
+
   new_dw->allocate(press,lb->press_CCLabel,0,patch);
 
   FCVariable<double> uvel_FC,vvel_FC,wvel_FC;
@@ -551,7 +531,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
   setBC(press,"Pressure",patch);
 
 
-#if 1
+#if 0
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
     cout << "press["<< *iter<< "]=" << press[*iter] << endl;
   } 
@@ -577,16 +557,9 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       new_dw->allocate(wvel_FC,lb->wvel_FCLabel,dwindex,patch);
 
       // Set the initial conditions:
-      uvel_CC.initialize(d_ic[m].d_velocity.x());
-      vvel_CC.initialize(d_ic[m].d_velocity.y());
-      wvel_CC.initialize(d_ic[m].d_velocity.z());
-      rho_micro.initialize(d_ic[m].d_micro_density);
-      rho_CC.initialize(d_ic[m].d_micro_density*d_ic[m].d_volume_fraction);
-      temp.initialize(d_ic[m].d_temperature);
-      vol_frac_CC.initialize(d_ic[m].d_volume_fraction);
-      speedSound.initialize(ice_matl->getSpeedOfSound());
-      visc_CC.initialize(ice_matl->getViscosity());
-      cv.initialize(ice_matl->getSpecificHeat());
+      ice_matl->initializeCells(rho_micro, rho_CC, temp, cv, speedSound,
+				visc_CC, vol_frac_CC, uvel_CC, vvel_CC, wvel_CC,
+				patch, new_dw);
 
       // Initialize the face centered velocities to 0
 
@@ -939,13 +912,13 @@ void ICE::actuallyStep1c(const ProcessorGroup*,
 	IntVector adjcell(curcell.x(),curcell.y()+1,curcell.z()); 
 
 	rho_micro_FC = rho_micro_CC[adjcell] + rho_micro_CC[curcell];
-	cout << "rho_micro_CC adjacent = " << rho_micro_CC[adjcell] << 
-	  " current = " << rho_micro_CC[curcell] << endl;
-	cout << "Top face rho_micro_FC = " << rho_micro_FC << endl;
+//	cout << "rho_micro_CC adjacent = " << rho_micro_CC[adjcell] << 
+//	  " current = " << rho_micro_CC[curcell] << endl;
+//	cout << "Top face rho_micro_FC = " << rho_micro_FC << endl;
 	rho_FC       = rho_CC[adjcell]       + rho_CC[curcell];
-	cout << "Top face rho_FC = " << rho_FC << endl;
-	cout << "vvel_CC adjacent = " << vvel_CC[adjcell] << " current = " 
-	     << vvel_CC[curcell] << endl;
+//	cout << "Top face rho_FC = " << rho_FC << endl;
+//	cout << "vvel_CC adjacent = " << vvel_CC[adjcell] << " current = " 
+//	     << vvel_CC[curcell] << endl;
 
 	term1 = (rho_CC[adjcell] * vvel_CC[adjcell] +
 		 rho_CC[curcell] * vvel_CC[curcell])/rho_FC;
@@ -956,8 +929,8 @@ void ICE::actuallyStep1c(const ProcessorGroup*,
 			(press_CC[adjcell] - press_CC[curcell])/dx.y();
 	term3 =  delT * gravity.y();
 
-	cout << "Top face term 1 = " << term1 << " term 2 = " << term2 << 
-	  " term 3 = " << term3 << endl;
+//	cout << "Top face term 1 = " << term1 << " term 2 = " << term2 << 
+//	  " term 3 = " << term3 << endl;
 
 	// I don't know what this is going to look like yet
 	// but the equations are right I think.
@@ -980,8 +953,8 @@ void ICE::actuallyStep1c(const ProcessorGroup*,
 			(press_CC[adjcell] - press_CC[curcell])/dx.x();
 	term3 =  delT * gravity.x();
 
-	cout << "Right face term 1 = " << term1 << " term 2 = " << term2 << 
-	  " term 3 = " << term3 << endl;
+//	cout << "Right face term 1 = " << term1 << " term 2 = " << term2 << 
+//	  " term 3 = " << term3 << endl;
 
 	// I don't know what this is going to look like yet
 	// but the equations are right I think.
@@ -1004,8 +977,8 @@ void ICE::actuallyStep1c(const ProcessorGroup*,
 			(press_CC[adjcell] - press_CC[curcell])/dx.z();
 	term3 =  delT * gravity.z();
 
-	cout << "Front face term 1 = " << term1 << " term 2 = " << term2 << 
-	  " term 3 = " << term3 << endl;
+//	cout << "Front face term 1 = " << term1 << " term 2 = " << term2 << 
+//	  " term 3 = " << term3 << endl;
 
 	// I don't know what this is going to look like yet
 	// but the equations are right I think.
@@ -1027,8 +1000,8 @@ void ICE::actuallyStep1c(const ProcessorGroup*,
 #if 1
       for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
 	  iter++) {
-	cout << "face velocity = " << uvel_FC[*iter] << " " << 
-	  vvel_FC[*iter] << " " << wvel_FC[*iter] << endl;
+//	cout << "face velocity = " << uvel_FC[*iter] << " " << 
+//	  vvel_FC[*iter] << " " << wvel_FC[*iter] << endl;
       }
 #endif       
       // Put the result in the datawarehouse
@@ -1324,7 +1297,7 @@ void ICE::actuallyStep2(const ProcessorGroup*,
   CCVariable<double> pressure;
   CCVariable<double> delPress;
   CCVariable<double> pressdP;
-  new_dw->get(pressure,     lb->press_CCLabel,    0, patch,Ghost::None, 0);
+  new_dw->get(pressure,          lb->press_CCLabel,    0, patch,Ghost::None, 0);
   new_dw->allocate(delPress,     lb->delPress_CCLabel, 0, patch);
   new_dw->allocate(pressdP,      lb->pressdP_CCLabel,  0, patch);
 
@@ -2461,6 +2434,16 @@ const TypeDescription* fun_getTypeDescription(ICE::eflux*)
 
 //
 // $Log$
+// Revision 1.59  2000/11/22 01:28:05  guilkey
+// Changed the way initial conditions are set.  GeometryObjects are created
+// to fill the volume of the domain.  Each object has appropriate initial
+// conditions associated with it.  ICEMaterial now has an initializeCells
+// method, which for now just does what was previously done with the
+// initial condition stuct d_ic.  This will be extended to allow regions of
+// the domain to be initialized with different materials.  Sorry for the
+// lame GeometryObject2, this could be changed to ICEGeometryObject or
+// something.
+//
 // Revision 1.58  2000/11/21 21:52:27  jas
 // Simplified scheduleTimeAdvance now is a bunch of functions.  More
 // implementation of FC variables.
