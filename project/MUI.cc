@@ -202,6 +202,24 @@ MUI_slider_real::~MUI_slider_real()
 {
 }
 
+void MUI_slider_real::set_minmax(double min, double max)
+{
+    int imin=(int)(min/base);
+    int imax=(int)(max/base);
+    scale->SetMinimum(imin);
+    scale->SetMaximum(imax);
+    if(window)
+	scale->SetValues();
+}
+
+void MUI_slider_real::set_value(double val)
+{
+    int ival=(int)(val/base);
+    scale->SetValue(val);
+    if(window)
+	scale->SetValues();
+}
+
 void MUI_slider_real::attach(MUI_window* _window, EncapsulatorC* parent)
 {
     window=_window;

@@ -59,6 +59,7 @@ public:
     // These methods work for all types of representations
     int interpolate(const Point&, Vector&);
     int interpolate(const Point&, double&);
+    void get_minmax(double&, double&);
 
     // Only for regular grids
     int get_nx();

@@ -14,6 +14,7 @@
 #include <Field3D.h>
 #include <NotFinished.h>
 #include <Classlib/String.h>
+#include <Math/MinMax.h>
 
 int Field3D::get_nx()
 {
@@ -164,13 +165,13 @@ int Field3D::interpolate(const Point& p, double& value)
     double fx=x-ix;
     double fy=y-iy;
     double fz=z-iz;
-    double x00=Interpolate(s_grid(ix1, iy, iz), s_grid(ix, iy, iz), fx);
-    double x01=Interpolate(s_grid(ix1, iy, iz1), s_grid(ix, iy, iz1), fx);
-    double x10=Interpolate(s_grid(ix1, iy1, iz), s_grid(ix1, iy1, iz), fx);
-    double x11=Interpolate(s_grid(ix1, iy1, iz1), s_grid(ix1, iy1, iz1), fx);
-    double y0=Interpolate(x10, x00, fy);
-    double y1=Interpolate(x11, x01, fy);
-    value=Interpolate(y1, y0, fz);
+    double x00=Interpolate(s_grid(ix, iy, iz), s_grid(ix1, iy, iz), fx);
+    double x01=Interpolate(s_grid(ix, iy, iz1), s_grid(ix1, iy, iz1), fx);
+    double x10=Interpolate(s_grid(ix, iy1, iz), s_grid(ix1, iy1, iz), fx);
+    double x11=Interpolate(s_grid(ix, iy1, iz1), s_grid(ix1, iy1, iz1), fx);
+    double y0=Interpolate(x00, x10, fy);
+    double y1=Interpolate(x01, x11, fy);
+    value=Interpolate(y0, y1, fz);
     return 1;
 }
 
@@ -205,4 +206,23 @@ int Field3D::interpolate(const Point& p, Vector& value)
     Vector y1=Interpolate(x11, x01, fy);
     value=Interpolate(y1, y0, fz);
     return 1;
+}
+
+void Field3D::get_minmax(double& min, double& max)
+{
+    if(fieldtype != ScalarField)return;
+    if(rep != RegularGrid){
+	NOT_FINISHED("interpolate for non-regular grids");
+	return;
+    }
+    min=max=s_grid(0,0,0);
+    for(int i=0;i<nx;i++){
+	for(int j=0;j<ny;j++){
+	    for(int k=0;k<nz;k++){
+		double v=s_grid(i,j,k);
+		min=Min(min, v);
+		max=Max(max, v);
+	    }
+	}
+    }
 }

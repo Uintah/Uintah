@@ -99,7 +99,7 @@ public:
     virtual ~MUI_slider_real();
     virtual void attach(MUI_window*, EncapsulatorC*);
 
-    void set_minmax(double, double, int);
+    void set_minmax(double, double);
     void set_value(double);
     void set_orientation(MUI_widget::Orientation);
     void set_style(Style);
