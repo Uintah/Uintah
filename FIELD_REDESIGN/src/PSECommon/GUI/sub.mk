@@ -14,6 +14,7 @@ $(SRCDIR)/tclIndex: $(SRCDIR)/AddWells.tcl $(SRCDIR)/AddWells2.tcl \
 	$(SRCDIR)/ColorMapReader.tcl $(SRCDIR)/ColorMapWriter.tcl \
 	$(SRCDIR)/ColumnMatrixReader.tcl $(SRCDIR)/ColumnMatrixWriter.tcl \
 	$(SRCDIR)/CuttingPlane.tcl $(SRCDIR)/CuttingPlaneTex.tcl \
+	$(SRCDIR)/DomainManager.tcl \
 	$(SRCDIR)/Downsample.tcl $(SRCDIR)/DukeRawRead.tcl \
 	$(SRCDIR)/EditMatrix.tcl $(SRCDIR)/ErrorInterval.tcl \
 	$(SRCDIR)/ExtractSubmatrix.tcl $(SRCDIR)/FieldCage.tcl \
@@ -55,6 +56,9 @@ CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.2.2.1  2000/06/07 17:30:32  kuehne
+# revised sub.mk to include Domain modules
+#
 # Revision 1.2  2000/03/20 19:36:50  sparker
 # Added VPATH support
 #
