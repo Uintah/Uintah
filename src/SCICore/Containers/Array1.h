@@ -116,14 +116,14 @@ public:
     //////////
     // Accesses the nth element of the array
     inline const T& operator[](int n) const {
-	ASSERTRANGE(n, 0, _size);
+	CHECKARRAYBOUNDS(n, 0, _size);
 	return objs[n];
     }
 
     //////////
     // Accesses the nth element of the array
     inline T& operator[](int n) {
-	ASSERTRANGE(n, 0, _size);
+	CHECKARRAYBOUNDS(n, 0, _size);
 	return objs[n];
     }
     
@@ -376,6 +376,10 @@ void Pio(Piostream& stream, Containers::Array1<T>*& array) {
 
 //
 // $Log$
+// Revision 1.14  2000/03/23 10:29:18  sparker
+// Use new exceptions/ASSERT macros
+// Fixed compiler warnings
+//
 // Revision 1.13  2000/02/22 20:41:02  moulding
 // added a pragma to prevent a vc++ warning
 //

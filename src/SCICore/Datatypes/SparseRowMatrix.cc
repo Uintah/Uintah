@@ -17,7 +17,6 @@
 #include <SCICore/Math/MiscMath.h>
 #include <SCICore/Math/MinMax.h>
 #include <SCICore/Util/Assert.h>
-#include <SCICore/Exceptions/Exceptions.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Datatypes/ColumnMatrix.h>
 #include <SCICore/Malloc/Allocator.h>
@@ -235,7 +234,7 @@ void SparseRowMatrix::zero()
 
 void SparseRowMatrix::solve(ColumnMatrix&)
 {
-    EXCEPTION(SCICore::ExceptionsSpace::General("SparseRowMatrix can't do a direct solve!"));
+    ASSERTFAIL("SparseRowMatrix can't do a direct solve!");
 }
 
 void SparseRowMatrix::mult(const ColumnMatrix& x, ColumnMatrix& b,
@@ -328,6 +327,10 @@ void SparseRowMatrix::io(Piostream& stream)
 
 //
 // $Log$
+// Revision 1.8  2000/03/23 10:29:19  sparker
+// Use new exceptions/ASSERT macros
+// Fixed compiler warnings
+//
 // Revision 1.7  2000/03/04 00:18:30  dmw
 // added new Mesh BC and fixed sparserowmatrix bug
 //
