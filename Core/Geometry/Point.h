@@ -41,6 +41,7 @@ class Vector;
 class SCICORESHARE Point {
     double _x,_y,_z;
 public:
+    inline explicit Point(const Vector& v);
     inline Point(double x, double y, double z): _x(x), _y(y), _z(z)
 	    {}
     Point(double, double, double, double);
@@ -111,6 +112,11 @@ SCICORESHARE std::istream& operator>>(std::istream& os, Point& p);
 
 namespace SCICore {
 namespace Geometry {
+
+inline Point::Point(const Vector& v)
+    : _x(v._x), _y(v._y), _z(v._z)
+{
+}
 
 inline Point::Point(const Point& p)
 {
@@ -267,6 +273,10 @@ inline double Dot(const Point& p1, const Point& p2)
 
 //
 // $Log$
+// Revision 1.6  2000/04/12 22:56:00  sparker
+// Added IntVector (a vector of you-guess-what)
+// Added explicit ctors from point to vector and vice-versa
+//
 // Revision 1.5  2000/01/26 01:32:52  sparker
 // Added new stuff for C-SAFE
 //
