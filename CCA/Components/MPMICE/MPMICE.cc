@@ -188,6 +188,7 @@ void MPMICE::scheduleTimeAdvance(double, double,
                                                                   all_matls);
   scheduleInterpolateCCToNC(                      sched, patches, mpm_matls);
   d_mpm->scheduleExMomIntegrated(                 sched, patches, mpm_matls);
+  d_mpm->scheduleSetGridBoundaryConditions(       sched, patches, mpm_matls);
   d_mpm->scheduleInterpolateToParticlesAndUpdate( sched, patches, mpm_matls);
 
   if( d_mpm->withFracture() ) {
@@ -503,24 +504,23 @@ void MPMICE::interpolatePressCCToPressNC(const ProcessorGroup*,
 					 DataWarehouse*,
 					 DataWarehouse* new_dw)
 {			       
-#ifdef DOING
-  cout << "Doing interpolatePressCCToPressNC \t\t MPMICE" << endl;
-#endif 
-
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-
+#ifdef DOING
+  cout << "Doing interpolatePressCCToPressNC on patch "<< patch->getID()
+       <<"\t\t MPMICE" << endl;
+#endif 
     CCVariable<double> pressCC;
     NCVariable<double> pressNC;
 
     new_dw->get(pressCC, Ilb->press_CCLabel, 0, patch,Ghost::AroundCells, 1);
     new_dw->allocate(pressNC, MIlb->press_NCLabel, 0, patch);
-
+    pressNC.initialize(0.0);
+    
     IntVector cIdx[8];
     // Interpolate CC pressure to nodes
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
        patch->findCellsFromNode(*iter,cIdx);
-       pressNC[*iter] = 0.0;
        for (int in=0;in<8;in++){
 	pressNC[*iter]  += .125*pressCC[cIdx[in]];
        }
@@ -540,12 +540,12 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
                                   DataWarehouse* old_dw,
                                   DataWarehouse* new_dw)
 {
-#ifdef DOING
-    cout << "Doing interpolatePressureToParticles \t\t MPMICE" << endl;
-#endif 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-
+#ifdef DOING
+  cout << "Doing interpolatePressureToParticles on patch "<< patch->getID()
+       <<"\t\t MPMICE" << endl;
+#endif
     NCVariable<double> pressNC;
     IntVector ni[8];
     double S[8];
@@ -589,11 +589,10 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
       new_dw->get(mass,             MIlb->cMassLabel,        dwindex, patch,
 							 Ghost::AroundCells, 1);
       new_dw->allocate(gradPAccNC,  Mlb->gradPAccNCLabel,   dwindex, patch);
-
+      gradPAccNC.initialize(Vector(0.,0.,0.));
       // Interpolate CC pressure gradient (mom_source) to nodes (gradP*dA*dt)
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
         patch->findCellsFromNode(*iter,cIdx);
-        gradPAccNC[*iter] = zero;
         for (int in=0;in<8;in++){
 	  gradPAccNC[*iter]+=(mom_source[cIdx[in]]/(mass[cIdx[in]]*delT))*.125;
          }
@@ -678,12 +677,12 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
                                  DataWarehouse*,
                                  DataWarehouse* new_dw)
 {
-#ifdef DOING
-    cout << "Doing interpolateNCToCC_0 \t\t\t MPMICE" << endl;
-#endif 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-
+#ifdef DOING
+  cout << "Doing interpolateNCToCC_0 on patch "<< patch->getID()
+       <<"\t\t\t MPMICE" << endl;
+#endif
     int numMatls = d_sharedState->getNumMPMMatls();
     Vector zero(0.0,0.0,0.);
     Vector dx = patch->dCell();
@@ -783,12 +782,12 @@ void MPMICE::interpolateNCToCC(const ProcessorGroup*,
                                DataWarehouse*,
                                DataWarehouse* new_dw)
 {
-#ifdef DOING
-    cout << "Doing interpolateNCToCC \t\t\t MPMICE" << endl;
-#endif 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-
+#ifdef DOING
+  cout << "Doing interpolateNCToCC on patch "<< patch->getID()
+       <<"\t\t\t MPMICE" << endl;
+#endif
     int numMatls = d_sharedState->getNumMPMMatls();
     Vector zero(0.,0.,0.);
 
@@ -852,12 +851,12 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
                              DataWarehouse* old_dw,
                              DataWarehouse* new_dw)
 {
-#ifdef DOING
-    cout << "Doing Heat and momentum exchange \t\t MPMICE" << endl;
-#endif 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-
+#ifdef DOING
+  cout << "Doing doCCMomExchange on patch "<< patch->getID()
+       <<"\t\t\t MPMICE" << endl;
+#endif
     int numMPMMatls = d_sharedState->getNumMPMMatls();
     int numICEMatls = d_sharedState->getNumICEMatls();
     int numALLMatls = numMPMMatls + numICEMatls;
@@ -1129,8 +1128,8 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
 
           if (temp_bcs != 0) {
             TemperatureBoundCond* bc=
-	      dynamic_cast<TemperatureBoundCond*>(temp_bcs);
-	    if (bc->getKind() == "Dirichlet" || bc->getKind() == "Neumann"){
+	     dynamic_cast<TemperatureBoundCond*>(temp_bcs);
+	     if (bc->getKind() == "Dirichlet" || bc->getKind() == "Neumann"){
               dTdt_CC[m].fillFace(face,0);
             }
           }
@@ -1162,13 +1161,13 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
 			       const MaterialSubset* ,
 			       DataWarehouse* old_dw,
 			       DataWarehouse* new_dw)
-{
-#ifdef DOING
-    cout << "Doing interpolation of CC to NC  \t\t MPMICE" << endl;
-#endif 
+{ 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-
+#ifdef DOING
+  cout << "Doing interpolateCCToNC on patch "<< patch->getID()
+       <<"\t\t\t MPMICE" << endl;
+#endif
     //__________________________________
     // This is where I interpolate the CC 
     // changes to NCs for the MPMMatls
@@ -1249,12 +1248,12 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 					  DataWarehouse* old_dw,
 					  DataWarehouse* new_dw)
 {
-#ifdef DOING
-    cout << "Doing calc_equilibration_pressure \t\t MPMICE" << endl;
-#endif 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-
+#ifdef DOING
+  cout << "Doing computeEquilibrationPressure on patch "<< patch->getID()
+       <<"\t\t MPMICE" << endl;
+#endif
     double    converg_coeff = 100.;
     double    convergence_crit = converg_coeff * DBL_EPSILON;
     double    sum, tmp;
@@ -1740,13 +1739,12 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
 				 DataWarehouse* new_dw)
 
 {
-#ifdef DOING
-  cout << "Doing HEChemistry" << endl;
-#endif 
-
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-
+#ifdef DOING
+  cout << "Doing HEChemistry on patch "<< patch->getID()
+       <<"\t\t\t\t MPMICE" << endl;
+#endif
     int numALLMatls=d_sharedState->getNumMatls();
     StaticArray<CCVariable<double> > burnedMass(numALLMatls);
     StaticArray<CCVariable<double> > releasedHeat(numALLMatls);
@@ -1965,12 +1963,12 @@ void MPMICE::interpolateMassBurnFractionToNC(const ProcessorGroup*,
 					     DataWarehouse* old_dw,
 					     DataWarehouse* new_dw)
 {
-#ifdef DOING
-    cout << "Doing interpolateMassBurnFractionToNC  \t\t MPMICE" << endl;
-#endif 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-
+#ifdef DOING
+  cout << "Doing interpolateMassBurnFractionToNC on patch "<< patch->getID()
+       <<"\t MPMICE" << endl;
+#endif
     // Interpolate the CC burn fraction to the nodes
 
     int numALLMatls = d_sharedState->getNumMPMMatls() + 
