@@ -26,7 +26,6 @@ itcl_class BioPSE_Modeling_ModifyConductivities {
     method set_defaults {} {
 	global $this-num-entries
 
-
 	set $this-num-entries 0
     }
 
@@ -70,48 +69,49 @@ itcl_class BioPSE_Modeling_ModifyConductivities {
 		    set $this-m22-$i 1.0
 		}
 
-		if {![winfo exists $w.tensors.e-$i]} {
-		    frame $w.tensors.e-$i
-		    entry $w.tensors.e-$i.name \
+		set tensors [$w.tensors childsite]
+		if {![winfo exists $tensors.e-$i]} {
+		    frame $tensors.e-$i
+		    entry $tensors.e-$i.name \
 			-textvariable $this-names-$i -width 16
-		    entry $w.tensors.e-$i.scale \
+		    entry $tensors.e-$i.scale \
 			-textvariable $this-sizes-$i -width 8
-		    entry $w.tensors.e-$i.m00 \
+		    entry $tensors.e-$i.m00 \
 			-textvariable $this-m00-$i -width 6
-		    entry $w.tensors.e-$i.m01 \
+		    entry $tensors.e-$i.m01 \
 			-textvariable $this-m01-$i -width 6
-		    entry $w.tensors.e-$i.m02 \
+		    entry $tensors.e-$i.m02 \
 			-textvariable $this-m02-$i -width 6
-		    entry $w.tensors.e-$i.m10 \
+		    entry $tensors.e-$i.m10 \
 			-textvariable $this-m10-$i -width 6
-		    entry $w.tensors.e-$i.m11 \
+		    entry $tensors.e-$i.m11 \
 			-textvariable $this-m11-$i -width 6
-		    entry $w.tensors.e-$i.m12 \
+		    entry $tensors.e-$i.m12 \
 			-textvariable $this-m12-$i -width 6
-		    entry $w.tensors.e-$i.m20 \
+		    entry $tensors.e-$i.m20 \
 			-textvariable $this-m20-$i -width 6
-		    entry $w.tensors.e-$i.m21 \
+		    entry $tensors.e-$i.m21 \
 			-textvariable $this-m21-$i -width 6
-		    entry $w.tensors.e-$i.m22 \
+		    entry $tensors.e-$i.m22 \
 			-textvariable $this-m22-$i -width 6
-		    pack $w.tensors.e-$i.name $w.tensors.e-$i.scale \
-			$w.tensors.e-$i.m00 \
-			$w.tensors.e-$i.m01 \
-			$w.tensors.e-$i.m02 \
-			$w.tensors.e-$i.m10 \
-			$w.tensors.e-$i.m11 \
-			$w.tensors.e-$i.m12 \
-			$w.tensors.e-$i.m20 \
-			$w.tensors.e-$i.m21 \
-			$w.tensors.e-$i.m22 \
+		    pack $tensors.e-$i.name $tensors.e-$i.scale \
+			$tensors.e-$i.m00 \
+			$tensors.e-$i.m01 \
+			$tensors.e-$i.m02 \
+			$tensors.e-$i.m10 \
+			$tensors.e-$i.m11 \
+			$tensors.e-$i.m12 \
+			$tensors.e-$i.m20 \
+			$tensors.e-$i.m21 \
+			$tensors.e-$i.m22 \
 			-side left
-		    pack $w.tensors.e-$i
+		    pack $tensors.e-$i
 		}
 	    }
 
 	    # Destroy all the left over entries from prior runs.
-	    while {[winfo exists $w.tensors.e-$i]} {
-		destroy $w.tensors.e-$i
+	    while {[winfo exists $tensors.e-$i]} {
+		destroy $tensors.e-$i
 		incr i
 	    }
 	}
@@ -126,8 +126,8 @@ itcl_class BioPSE_Modeling_ModifyConductivities {
         }
         toplevel $w
 
-	#canvas $w.tensors -yscrollcommand "$w.vscroll set"
-	canvas $w.tensors
+	iwidgets::scrolledframe $w.tensors -hscrollmode none
+	set tensors [$w.tensors childsite]
 
 	#scrollbar $w.vscroll -orient vertical -command "$w.tensors yview"
 
@@ -144,10 +144,12 @@ itcl_class BioPSE_Modeling_ModifyConductivities {
 	label $w.title.m20 -text "M20" -width 6 -relief groove
 	label $w.title.m21 -text "M21" -width 6 -relief groove
 	label $w.title.m22 -text "M22" -width 6 -relief groove
+	label $w.title.empty -text "" -width 3
 	pack $w.title.name $w.title.scale \
 	    $w.title.m00 $w.title.m01 $w.title.m02 \
 	    $w.title.m10 $w.title.m11 $w.title.m12 \
 	    $w.title.m20 $w.title.m21 $w.title.m22 \
+	    $w.title.empty \
 	    -side left
 
 	frame $w.controls
@@ -163,8 +165,6 @@ itcl_class BioPSE_Modeling_ModifyConductivities {
 	
 	grid $w.title -in $w -padx 1 -pady 1 \
 	    -row 0 -column 0 -rowspan 1 -columnspan 1 -sticky news
-#	grid $w.vscroll -in $w -padx 1 -pady 1 \
-#	    -row 1 -column 1 -rowspan 1 -columnspan 1 -sticky news
 	grid $w.tensors -in $w -padx 1 -pady 1 \
 	    -row 1 -column 0 -rowspan 1 -columnspan 1 -sticky news
 	grid $w.controls -in $w -padx 1 -pady 1 \
