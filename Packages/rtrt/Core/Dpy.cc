@@ -182,7 +182,7 @@ Dpy::Dpy( Scene* scene, char* criteria1, char* criteria2,
     this->rserver = new RServer();
   else
     this->rserver = 0;
-  nstreams=1;
+  nstreams=4;
   ppc = new PerProcessorContext( pp_size, scratchsize );
 
   for( int i = 0; i < 4; i++ )

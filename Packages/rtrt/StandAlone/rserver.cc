@@ -16,10 +16,13 @@
 #include <unistd.h>
 #include <vector>
 #include <strings.h>
+#include <errno.h>
 using namespace std;
 using namespace rtrt;
 using namespace SCIRun;
-#define MAXFRAMES 4
+#define MAXFRAMES 2
+
+static Mutex io("io lock");
 
 void serve(int sock);
 
@@ -173,7 +176,9 @@ void RStream::run()
     perror("accept");
     Thread::exitAll(1);
   }
+  io.lock();
   cerr << "Receive thread accepted connection...\n";
+  io.unlock();
   for(;;){
     int total = 0;
     do {
@@ -183,7 +188,7 @@ void RStream::run()
 	return;
       }
       if(n == -1){
-	perror("read");
+	perror("1. read");
 	Thread::exitAll(1);
       }
       total += n;
@@ -200,7 +205,7 @@ void RStream::run()
 	return;
       }
       if(n == -1){
-	perror("read");
+	perror("2. read");
 	Thread::exitAll(1);
       }
       total += n;
@@ -211,37 +216,48 @@ void RStream::run()
     idx += sizeof(int);
     int curFrame = winfo.curFrame;
     if(framenumber < curFrame){
+      io.lock();
       cerr << "Received data for old frame: " << framenumber << " while on frame " << curFrame << '\n';
+      io.unlock();
       continue;
     } else if(framenumber == curFrame){
       // Normal, just unpack below...
-    } else if(framenumber < curFrame+MAXFRAMES){
+    } else {
       // update my curFrames and posssibly sync
-      winfo.curFrames[myidx] = framenumber;
-      int i;
-      for(i=0;i<winfo.streams.size();i++)
-	if(winfo.curFrames[i] < framenumber)
+      if(winfo.curFrames[myidx] < framenumber){
+	winfo.curFrames[myidx] = framenumber;
+	int i;
+	for(i=0;i<winfo.streams.size();i++)
+	  if(winfo.curFrames[i] <= curFrame)
 	  break;
-      if(i == winfo.streams.size()){
-	bool mustwrite=false;
-	winfo.lock.lock();
-	if(winfo.pendingCurFrame != framenumber){
-	  winfo.pendingCurFrame = framenumber;
-	  mustwrite=true;
-	}
-	winfo.lock.unlock();
-	if(mustwrite){
-	  int b;
-	  long s = write(winfo.sendPipe, &b, sizeof(b));
-	  if(s != sizeof(b)){
-	    perror("write");
-	    Thread::exitAll(1);
+	if(i == winfo.streams.size()){
+	  int writecount=0;
+	  winfo.lock.lock();
+	  if(winfo.pendingCurFrame != framenumber){
+	    writecount = framenumber-winfo.pendingCurFrame;
+	    winfo.pendingCurFrame = framenumber;
+	  }
+	  winfo.lock.unlock();
+	  for(int i=0;i<writecount;i++){
+	    int b;
+	    long s = write(winfo.sendPipe, &b, sizeof(b));
+	    if(s != sizeof(b)){
+	      perror("write");
+	      Thread::exitAll(1);
+	    }
 	  }
 	}
+	if(framenumber >= curFrame+MAXFRAMES){
+	  io.lock();
+	  cerr << "Stream reader " << myidx << " is too far ahead, spinning...\n";
+	  cerr << "pendingCurFrame=" << winfo.pendingCurFrame << ", curFrame=" << winfo.curFrame << "frameno=" << framenumber << '\n';
+	  io.unlock();
+	  while(framenumber > winfo.curFrame+1) {}
+	  io.lock();
+	  cerr << "Stream reader " << myidx << " done spinning...\n";
+	  io.unlock();
+	}
       }
-    } else {
-      cerr << "Stream reader " << myidx << " is too far ahead, spinning...\n";
-      while(framenumber > winfo.curFrame+1) {}
     }
     Image* image = winfo.images[framenumber%MAXFRAMES];
     int xres = image->get_xres();
@@ -256,6 +272,7 @@ void RStream::run()
       idx+=sizeof(ih);
       if(ih.row > yres || ih.col > xres || ih.channel == 3){
 	cerr << "protocol error, ih=" << ih.row << ", " << ih.col << ", " << ih.channel << ", " << ih.numEncodings << '\n';
+	cerr << "xres=" << xres << ", yres=" << yres << '\n';
 	Thread::exitAll(1);
       }
       int n = ih.numEncodings;
@@ -308,6 +325,7 @@ void setupStreams(WindowInfo& winfo, int newnstreams, RemoteReply& reply)
 
   if(winfo.listen_sock != -1)
     close(winfo.listen_sock);
+
   // Create a single port
   winfo.listen_sock = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -348,7 +366,7 @@ void processMessage(WindowInfo& winfo, int sock)
       return;
     }
     if(n == -1){
-      perror("read");
+      perror("3. read");
       Thread::exitAll(1);
     }
     total+=n;
@@ -448,6 +466,8 @@ void serve(int inbound)
   while(!winfo.done){
     fd_set readfds(fds);
     if(select(maxfd+1, &readfds, 0, 0, 0) == -1){
+      if(errno == EINTR)
+	continue;
       perror("select");
       Thread::exitAll(1);
     }
@@ -472,7 +492,7 @@ void serve(int inbound)
       int b;
       long s = read(winfo.recvPipe, &b, sizeof(b));
       if(s != sizeof(b)){
-	perror("read");
+	perror("4. read");
 	Thread::exitAll(1);
       }
       Image* image = winfo.images[winfo.curFrame%MAXFRAMES];
@@ -491,5 +511,7 @@ void serve(int inbound)
   if(winfo.listen_sock != -1)
     close(winfo.listen_sock);
   close(inbound);
+  close(winfo.sendPipe);
+  close(winfo.recvPipe);
   XCloseDisplay(winfo.dpy);
 }
