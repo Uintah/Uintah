@@ -33,8 +33,8 @@ WARNINGS
 POSSIBLE REVISIONS
     None
 ***************************************************************************/
-
 #include <Packages/Uintah/CCA/Components/Arches/Radiation/RadiationModel.h>
+#include <Packages/Uintah/CCA/Components/Arches/Radiation/RadiationSolver.h>
 
 namespace Uintah {
 
@@ -99,6 +99,7 @@ public:
 protected: 
        // boundary condition
       BoundaryCondition* d_boundaryCondition;
+
 private:
 
       double d_xumax;
@@ -119,9 +120,10 @@ private:
       int sfield;
       int pbcfld;
       int outletfield;
-      bool lprobone, lprobtwo, lprobthree, lradcal, loptthin;
+      bool d_SHRadiationCalc, lprobone, lprobtwo, lprobthree, lradcal, lwsgg, lplanckmean, lpatchmean;
 
       OffsetArray1<double> fraction;
+      OffsetArray1<double> fractiontwo;
 
       //      OffsetArray1<double> ord;
       OffsetArray1<double> oxi;
