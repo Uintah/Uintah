@@ -209,7 +209,7 @@ MatrixSelectVector::execute()
   MatrixHandle mh;
   if (!(imat->get(mh) && mh.get_rep()))
   {
-    remark("Empty input matrix.");
+    error("Empty input matrix.");
     return;
   }
   
