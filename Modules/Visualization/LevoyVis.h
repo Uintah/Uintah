@@ -17,9 +17,7 @@
 #include <Classlib/Array2.h>
 #include <Classlib/NotFinished.h>
 #include <Classlib/String.h>
-#include <Dataflow/Module.h>
-#include <Datatypes/ScalarFieldRGchar.h>
-#include <Datatypes/ScalarFieldRGBase.h>
+
 #include <Datatypes/ScalarFieldRG.h>
 #include <Datatypes/ScalarFieldPort.h>
 #include <Datatypes/ColormapPort.h>
@@ -28,50 +26,61 @@
 #include <Geom/View.h>
 #include <Geometry/Point.h>
 #include <Geometry/Vector.h>
+
 #include <Math/Trig.h>
-
 #include <Malloc/Allocator.h>
-#include <Math/MinMax.h>
-#include <Math/MiscMath.h>
-
 #include <iostream.h>
-#include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
+
+#define CANVAS_WIDTH 201
+
+const Color BLACK( 0., 0., 0. );
+const Color WHITE( 1., 1., 1. );
 
 class Levoy
 {
-public:
+private:
   
   ScalarFieldRG *homeSFRGrid;
-  int rasterX, rasterY;
 
   int colormapFlag;
   ColormapHandle cmap;
 
-  int minSV, maxSV;
+  Color backgroundColor;
 
+//  double * Opacity;
+//  double * SVArray;
+
+  Array1<double> Opacity;
+  Array1<double> SVArray;
+
+  double dmax;
   
-  Levoy( ScalarFieldRG * grid );
+public:
 
-  void AssignRaster ( int x, int y );
+  // constructor
+  
+  Levoy( ScalarFieldRG * grid, ColormapIPort * c,
+	Color& bg, Array1<double> Xarr, Array1<double> Yarr );
 
-void CalculateRayIncrements ( View myview, Vector& rayIncrementU,
-			     Vector& rayIncrementV );
-     
-double DetermineRayStepSize ();
+  void CalculateRayIncrements ( View myview, Vector& rayIncrementU,
+			       Vector& rayIncrementV, int rasterX, int rasterY );
+  
+  double DetermineRayStepSize ();
 
-double DetermineFarthestDistance ( const Point& e );
+  double DetermineFarthestDistance ( const Point& e );
 
-Color& CastRay ( Point eye, Vector ray, double rayStep,	double dmax, Color& backgroundColor, double Xval[], double Yval[] );
-		
-Color& SecondTry ( Point eye, Vector ray, double rayStep, double dmax, Color& backgroundColor );
+  Color& CastRay ( Point eye, Vector ray, double rayStep );
+  
+  Color& Three ( Point eye, Vector ray, double rayStep );
 
-Color& Three ( Point eye, Vector ray, double rayStep, double dmax, Color& backgroundColor, double Xval[], double Yval[] );
+  Color& Four ( Point eye, Vector ray, double rayStep );
 
-void TraceRays ( View myview,
-		Array2<char>& image, Array2<CharColor>& Image,
-		Color& bgColor, double Xval[], double Yval[] );
+  Color& Five ( Point eye, Vector ray, double rayStep );
+
+  Array2<CharColor>* TraceRays ( View myview, int x, int y,
+				int projectionType );
+
 
 };
 
