@@ -666,6 +666,8 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
    if(d_fractureModel) {
       new_dw->pleaseSave(lb->pDeformationMeasureLabel, numMatls);
    }
+   new_dw->pleaseSave(lb->gMassLabel, numMatls);
+   new_dw->pleaseSave(lb->pVolumeLabel, numMatls);
    new_dw->pleaseSave(lb->pExternalForceLabel, numMatls);
    new_dw->pleaseSave(lb->gVelocityLabel, numMatls);
    new_dw->pleaseSave(lb->pXLabel, numMatls);
@@ -1466,6 +1468,9 @@ void SerialMPM::crackGrow(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.82  2000/06/08 21:05:03  bigler
+// Added support to ouput gMass values (where pleaseSave is used).
+//
 // Revision 1.81  2000/06/08 16:56:51  guilkey
 // Added tasks and VarLabels for HE burn model stuff.
 //
