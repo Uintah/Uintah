@@ -26,56 +26,77 @@ using namespace SCIRun;
       struct eflux { double d_eflux[12]; };         //edge flux
       struct cflux { double d_cflux[8]; };          //corner flux
       
-      virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
-				SimulationStateP&);
+      virtual void problemSetup(const ProblemSpecP& params, 
+                                GridP& grid,
+				    SimulationStateP&);
       
-      virtual void scheduleInitialize(const LevelP& level, SchedulerP&);
+      virtual void scheduleInitialize(const LevelP& level, 
+                                      SchedulerP&);
       
-      virtual void scheduleComputeStableTimestep(const LevelP&,SchedulerP&);
+      virtual void scheduleComputeStableTimestep(const LevelP&,
+                                                SchedulerP&);
       
-      virtual void scheduleTimeAdvance(double t, double dt,const LevelP&,
-				       SchedulerP&);
+      virtual void scheduleTimeAdvance(double t, 
+                                      double dt,
+                                      const LevelP&,
+				          SchedulerP&);
                                                      
-      void scheduleComputeEquilibrationPressure(SchedulerP&, const PatchSet*,
-						const MaterialSet*);
+      void scheduleComputeEquilibrationPressure(SchedulerP&, 
+                                              const PatchSet*,
+                                              const MaterialSubset*,
+						    const MaterialSet*);
       
       void scheduleComputeFaceCenteredVelocities(SchedulerP&, 
                                                 const PatchSet*,
                                                 const MaterialSubset*,
                                                 const MaterialSubset*,
+                                                const MaterialSubset*,
                                                 const MaterialSet*);
       
-      void scheduleAddExchangeContributionToFCVel(SchedulerP&, const PatchSet*,
+      void scheduleAddExchangeContributionToFCVel(SchedulerP&, 
+                                            const PatchSet*,
 						  const MaterialSet*);
       
-      void scheduleComputeDelPressAndUpdatePressCC(SchedulerP&, const PatchSet*,
+      void scheduleComputeDelPressAndUpdatePressCC(SchedulerP&, 
+                                             const PatchSet*,
+                                             const MaterialSubset*,
 						   const MaterialSet*);
       
-      void scheduleComputePressFC(SchedulerP&, const PatchSet*,
+      void scheduleComputePressFC(SchedulerP&, 
+                              const PatchSet*,
+                              const MaterialSubset*,
 				  const MaterialSet*);
       
-      void scheduleAccumulateMomentumSourceSinks(SchedulerP&, const PatchSet*,
-						 const MaterialSet*);
+      void scheduleAccumulateMomentumSourceSinks(SchedulerP&, 
+                                            const PatchSet*,
+                                            const MaterialSubset*,
+						  const MaterialSet*);
       
-      void scheduleAccumulateEnergySourceSinks(SchedulerP&, const PatchSet*,
-					       const MaterialSet*);
+      void scheduleAccumulateEnergySourceSinks(SchedulerP&, 
+                                            const PatchSet*,
+                                            const MaterialSubset*,
+					         const MaterialSet*);
       
       void scheduleComputeLagrangianValues(SchedulerP&, 
                                           const PatchSet*,
                                           const MaterialSubset*,
 					       const MaterialSet*);
                  
-      void scheduleAddExchangeToMomentumAndEnergy(SchedulerP&, const PatchSet*,
-						   const MaterialSet*);
+      void scheduleAddExchangeToMomentumAndEnergy(SchedulerP&, 
+                                                  const PatchSet*,
+						        const MaterialSet*);
       
-      void scheduleAdvectAndAdvanceInTime(SchedulerP&, const PatchSet*,
-					  const MaterialSet*);
+      void scheduleAdvectAndAdvanceInTime(SchedulerP&, 
+                                          const PatchSet*,
+					       const MaterialSet*);
 
-      void scheduleMassExchange(SchedulerP&, const PatchSet*,
-				const MaterialSet*);
+      void scheduleMassExchange(SchedulerP&, 
+                                const PatchSet*,
+				    const MaterialSet*);
                              
-      void schedulePrintConservedQuantities(SchedulerP&, const PatchSet*,
-					    const MaterialSet*);
+      void schedulePrintConservedQuantities(SchedulerP&, 
+                                            const PatchSet*,
+					         const MaterialSet*);
             
       void setICELabel(ICELabel* Ilb) {
 	lb = Ilb;
