@@ -159,7 +159,7 @@ int* get_values( const char *signal, int size ) {
   return retVal;
 }
 
-/*  Query the double value of the node - as in the number of slices. */
+/*  Query the double value of the node - as in the slice time. */
 double get_datum( const char *signal ) {
 
   /* Local vars */
