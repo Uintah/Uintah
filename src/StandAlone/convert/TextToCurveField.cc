@@ -32,7 +32,7 @@
 // an optional one line header specifying number of points... and if it
 // doesn't, you have to use the -noPtsCount command-line argument) and a
 // .edge file (specifying i/j indices for each edge, also one per 
-// line, again with an optional one line header (use -noEdgesCount if it's 
+// line, again with an optional one line header (use -noElementsCount if it's 
 // not there).  The edge entries are assumed to be zero-based, unless you 
 // specify -oneBasedIndexing.  And the SCIRun output file is written in 
 // ASCII, unless you specify -binOutput.
@@ -53,14 +53,14 @@ using namespace SCIRun;
 
 bool ptsCountHeader;
 int baseIndex;
-bool edgesCountHeader;
+bool elementsCountHeader;
 bool binOutput;
 bool debugOn;
 
 void setDefaults() {
   ptsCountHeader=true;
   baseIndex=0;
-  edgesCountHeader=true;
+  elementsCountHeader=true;
   binOutput=false;
   debugOn=false;
 }
@@ -71,8 +71,8 @@ int parseArgs(int argc, char *argv[]) {
     if (!strcmp(argv[currArg],"-noPtsCount")) {
       ptsCountHeader=false;
       currArg++;
-    } else if (!strcmp(argv[currArg], "-noEdgesCount")) {
-      edgesCountHeader=false;
+    } else if (!strcmp(argv[currArg], "-noElementsCount")) {
+      elementsCountHeader=false;
       currArg++;
     } else if (!strcmp(argv[currArg], "-oneBasedIndexing")) {
       baseIndex=1;
@@ -92,7 +92,7 @@ int parseArgs(int argc, char *argv[]) {
 }
 
 void printUsageInfo(char *progName) {
-  cerr << "\n Usage: "<<progName<<" pts edges CurveMesh [-noPtsCount] [-noEdgesCount] [-oneBasedIndexing] [-binOutput] [-debug]\n\n";
+  cerr << "\n Usage: "<<progName<<" pts edges CurveMesh [-noPtsCount] [-noElementsCount] [-oneBasedIndexing] [-binOutput] [-debug]\n\n";
   cerr << "\t This program will read in a .pts (specifying the x/y/z \n";
   cerr << "\t coords of each point, one per line, entries separated by \n";
   cerr << "\t white space, file can have an optional one line header \n";
@@ -100,7 +100,7 @@ void printUsageInfo(char *progName) {
   cerr << "\t to use the -noPtsCount command-line argument) and a .edge \n";
   cerr << "\t file (specifying i/j indices for each edge, also one per \n";
   cerr << "\t line, again with an optional one line header (use \n";
-  cerr << "\t -noEdgesCount if it's not there).  The edge entries are \n";
+  cerr << "\t -noElementsCount if it's not there).  The edge entries are \n";
   cerr << "\t assumed to be zero-based, unless you specify \n";
   cerr << "\t -oneBasedIndexing.  And the SCIRun output file is written in \n";
   cerr << "\t ASCII, unless you specify -binOutput.\n\n";
@@ -139,9 +139,9 @@ main(int argc, char **argv) {
   cerr << "done adding points.\n";
 
   int nedges;
-  if (!edgesCountHeader) nedges = getNumNonEmptyLines(edgesName);
+  if (!elementsCountHeader) nedges = getNumNonEmptyLines(edgesName);
   ifstream edgesstream(edgesName);
-  if (edgesCountHeader) edgesstream >> nedges;
+  if (elementsCountHeader) edgesstream >> nedges;
   cerr << "number of edges = "<< nedges <<"\n";
   for (i=0; i<nedges; i++) {
     int n1, n2;

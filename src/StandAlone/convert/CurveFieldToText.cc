@@ -35,7 +35,7 @@
 // user specifies the -noPtsCount command-line argument.
 // The .edge file will specify the i/j indices for each edge, 
 // also one per line, again with a one line header (unless a 
-// -noEdgesCount flag is used).  The edge indicies will be zero-based, 
+// -noElementsCount flag is used).  The edge indicies will be zero-based, 
 // unless the user specifies -oneBasedIndexing.
 
 #include <Core/Datatypes/CurveField.h>
@@ -54,12 +54,12 @@ using namespace SCIRun;
 
 bool ptsCountHeader;
 int baseIndex;
-bool edgesCountHeader;
+bool elementsCountHeader;
 
 void setDefaults() {
   ptsCountHeader=true;
   baseIndex=0;
-  edgesCountHeader=true;
+  elementsCountHeader=true;
 }
 
 int parseArgs(int argc, char *argv[]) {
@@ -68,8 +68,8 @@ int parseArgs(int argc, char *argv[]) {
     if (!strcmp(argv[currArg],"-noPtsCount")) {
       ptsCountHeader=false;
       currArg++;
-    } else if (!strcmp(argv[currArg], "-noEdgesCount")) {
-      edgesCountHeader=false;
+    } else if (!strcmp(argv[currArg], "-noElementsCount")) {
+      elementsCountHeader=false;
       currArg++;
     } else if (!strcmp(argv[currArg], "-oneBasedIndexing")) {
       baseIndex=1;
@@ -83,7 +83,7 @@ int parseArgs(int argc, char *argv[]) {
 }
 
 void printUsageInfo(char *progName) {
-  cerr << "\n Usage: "<<progName<<" CurveField pts edges [-noPtsCount] [-noEdgesCount] [-oneBasedIndexing]\n\n";
+  cerr << "\n Usage: "<<progName<<" CurveField pts edges [-noPtsCount] [-noElementsCount] [-oneBasedIndexing]\n\n";
   cerr << "\t This program will read in a SCIRun CurveField, and will save \n";
   cerr << "\t out the CurveMesh into two files: a .pts file and a .edge \n";
   cerr << "\t file.  The .pts file will specify the x/y/z coordinates of \n";
@@ -92,7 +92,7 @@ void printUsageInfo(char *progName) {
   cerr << "\t of points, unless the user specifies the -noPtsCount \n";
   cerr << "\t command-line argument.  The .edge file will specify the i/j \n";
   cerr << "\t indices for each edge, also one per line, again with a one \n";
-  cerr << "\t line header (unless a -noEdgesCount flag is used).  The edge \n";
+  cerr << "\t line header (unless a -noElementsCount flag is used).  The edge \n";
   cerr << "\t indicies will be zero-based, unless the user specifies \n";
   cerr << "\t -oneBasedIndexing.\n\n";
 }
@@ -164,7 +164,7 @@ main(int argc, char **argv) {
     cerr << "Error opening output file "<<edgesName<<"\n";
     exit(0);
   }
-  if (edgesCountHeader) fprintf(fEdges, "%d\n", (unsigned)(esize));
+  if (elementsCountHeader) fprintf(fEdges, "%d\n", (unsigned)(esize));
   cerr << "Number of edges = "<< esize <<"\n";
   while(eiter != eiter_end) {
     cm->get_nodes(edge_nodes, *eiter);
