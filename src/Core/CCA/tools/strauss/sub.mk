@@ -27,33 +27,18 @@
 #
 
 
-#
 # Makefile fragment for this subdirectory
-#
+
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Core/CCA/tools/strauss
-STRAUSS_SRCDIR := $(SRCDIR)
 
-SUBDIRS := \
-        $(SRCDIR)/c++ruby
+SRCS     += $(SRCDIR)/strauss.cc 
 
-include $(SCIRUN_SCRIPTS)/recurse.mk
 
-GENSRCS := $(SRCDIR)/parser.cc $(SRCDIR)/strauss.h $(SRCDIR)/strauss.cc
-SRCS := $(SRCDIR)/main.cc $(SRCDIR)/strauss.cc 
 
-PROGRAM := $(SRCDIR)/strauss
-STRAUSS_EXE := $(PROGRAM)
-PSELIBS := Core/CCA/tools/strauss/c++ruby
-INCLUDES := $(INCLUDES) $(RUBY_INCLUDE)
-LIBS := $(XML_LIBRARY) $(RUBY_LIBRARY) -lcrypt -ldl
+PSELIBS := 
+LIBS := $(XML_LIBRARY) $(RUBY_LIBRARY)
 
-include $(SCIRUN_SCRIPTS)/program.mk
-
-$(SRCDIR)/strauss.o: $(SRCDIR)/strauss.cc
-	$(CXX)  $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
-
-$(SRCDIR)/main.o: $(SRCDIR)/main.cc
-	$(CXX) $(INCLUDES) $(CC_DEPEND_REGEN) -c $< -o $@
-
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

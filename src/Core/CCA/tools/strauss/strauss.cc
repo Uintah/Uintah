@@ -36,9 +36,8 @@
 #include <assert.h>
 #include <unistd.h>
 
-#include <Dataflow/XMLUtil/StrX.h>
-#include <Dataflow/XMLUtil/XMLUtil.h>
 
+#include <Core/Util/sci_system.h>
 #include <Core/CCA/tools/strauss/strauss.h>
 
 using namespace std;
@@ -61,39 +60,32 @@ string absPath(string& file)
   else return file;
 }
 
-Strauss::Strauss(string plugin, string portspec, 
-		 string header, string implementation)
+Strauss::Strauss(string plugin, string hdrplugin, string portspec, 
+		 string header, string implementation,
+		 string util, string templateArgv)
   :header(header), implementation(implementation), plugin(plugin), 
-   portSpec(portspec)
+   hdrplugin(hdrplugin), portspec(portspec), util(util), templateArgv(templateArgv)
 {
   emitted = false;
+
+  //Make paths absolute for plugin and portSpec 
+  plugin = absPath(plugin);
+  portspec = absPath(portspec);
 
   //Create name the bridge component class
   ostringstream o;
   srand(time(NULL));
   o << "Bridge" << 1+(int)(100000.0*rand()/(RAND_MAX+1.0));
   bridgeComponent = o.str();
-
-  //Make paths absolute for plugin and portSpec 
-  plugin = absPath(plugin);
-  portSpec = absPath(portSpec);
-
-  //Init Ruby
-  ruby = RubyEval::instance();
-
-  cout << "Strauss constructor\n";
 }
 
 Strauss::~Strauss()
 {
-  fHeader.close();
-  fImpl.close();
 }
 
 int Strauss::emit()
 {
-  int n;
-  char* scratchfile = "scratchfile";
+  string scratchfile = "scratchfile";
   int bufsize=512;
   char *buf=new char[bufsize];
 
@@ -108,44 +100,62 @@ int Strauss::emit()
   hdr << "#ifndef STRAUSS_GENERATED_" << bridgeComponent << "\n";
   hdr << "#define STRAUSS_GENERATED_" << bridgeComponent << "\n";
 
-  //make component function
+  //create the name of the make component function
   string makename = header.substr(0,header.rfind("."));
   makename = makename.substr(header.rfind("/")+1);
+
+  //Run SUPA
+  int status;
+  string execline;
+  string executable = "supa";
+
+  ///////////////////////////
+  //IMPLEMENTATION:
+  execline = executable + " " + "-t " + plugin + " -o " + scratchfile + " -r " + bridgeComponent + " -T " + makename;
+  if(util != "") execline += " -R " + util;
+  execline += " " + portspec;
+  cerr << execline << "\n";
+  status = sci_system(execline.c_str());
+  if(status!=0) {
+    return -1;
+  }
   
-  ofstream osfile(scratchfile);
-  osfile << portSpec << "\n";
-  osfile << plugin << "\n";
-  osfile << makename << "\n"; 
-  osfile << bridgeComponent << "\n";
-  osfile.close();
-
-  ruby->run_file("../src/Core/CCA/tools/strauss/ruby/erbrun.rb");
-
-  bool once = false;
-  ifstream isfile(scratchfile);
-  while(!isfile.eof()) {
-    isfile.getline(buf,bufsize-1);
+  ifstream ifile(scratchfile.c_str());
+  while(!ifile.eof()) {
+    ifile.getline(buf,bufsize-1);
     string sbuf(buf);
-    if((!once)&&(sbuf=="START HEADER")) {
-      string pbuf;
-      while (pbuf!="END HEADER") {
-        hdr << pbuf << "\n";
-      	isfile.getline(buf,bufsize-1);
-        pbuf = buf;
-      } 
-      once = true; 
-      continue;
-    }
     impl << sbuf << "\n";
   }
-  isfile.close();
-  delete buf;
+ 
 
+  ///////////////////////
+  //HEADER
+  execline = executable + " " + "-t " + hdrplugin + " -o " + scratchfile + " -r " + bridgeComponent; 
+  if(util != "") execline += " -R " + util;
+  execline += " " + portspec;
+  cerr << execline << "\n";
+  status = sci_system(execline.c_str());
+  if(status!=0) {
+    return -1;
+  }
+  
+  ifstream hfile(scratchfile.c_str());
+  while(!hfile.eof()) {
+    hfile.getline(buf,bufsize-1);
+    string sbuf(buf);
+    hdr << sbuf << "\n";
+  }
+  ////////////////////
+
+  delete buf;
   hdr << "#endif\n";
 
+  /////
+  // Calculate CRC and commit to files:
   impl.calcCRC(bridgeComponent); 
   hdr.calcCRC(bridgeComponent);
   emitted = true;
+  commitToFiles();
 
   return 0;
 }
@@ -160,9 +170,13 @@ unsigned long Strauss::getHdrCRC()
   return hdr.crc;
 }
 
+//PRIVATE:
+
 void Strauss::commitToFiles()
 {
   if(emitted) {
+    ofstream fHeader;
+    ofstream fImpl;
     fHeader.open(header.c_str()); 
     fImpl.open(implementation.c_str());
     if((!fHeader)||(!fImpl)) {

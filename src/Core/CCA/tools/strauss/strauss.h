@@ -44,11 +44,11 @@
 #ifndef strauss_h
 #define strauss_h
 
+#include <iostream>
 #include <fstream>
 #include <vector>
 #include <sstream>
 
-#include <Core/CCA/tools/strauss/c++ruby/rubyeval.h>
 using namespace std;
 
 //CRCState is used a container to emit code into
@@ -92,7 +92,7 @@ class CRCState : public std::ostringstream {
 
   //Calculate CRC of current text
   //omit specifies a string to skip in calculation 
-  unsigned long calcCRC(std::string& omit)    
+  unsigned long calcCRC(std::string omit)    
   {
     string text = this->str();
     unsigned int oi = text.find(omit);
@@ -120,8 +120,9 @@ std::ostream& operator<<(CRCState& out, const Leader&);
 namespace SCIRun {
   class Strauss {
   public:
-    Strauss(string plugin, string portspec, 
-	    string header, string implementation);
+    Strauss(string plugin, string hdrplugin, string portspec, 
+	    string header, string implementation, 
+	    string util, string templateArgv = "");
     ~Strauss();
 
     /////
@@ -134,11 +135,11 @@ namespace SCIRun {
     unsigned long getImplCRC();
     unsigned long getHdrCRC();
 
+  private:
     /////
     // Commits emitted data into output files 
     void commitToFiles();	    
 
-  private:
     Strauss();    
 
     ///////
@@ -146,20 +147,14 @@ namespace SCIRun {
     string header;
     string implementation;
     string plugin;
-    string portSpec;
-
-    //////////
-    // Collection of file streams that we emit bridge into.
-    ofstream fHeader;
-    ofstream fImpl;
-
-    //////
-    // Ruby expression evaluating class   
-    RubyEval* ruby; 
+    string hdrplugin;
+    string portspec;
+    string util; 
+    string templateArgv;
 
     /////
-    // Bridge Component Name (generated here)
-    string bridgeComponent; 
+    // Randomly generated name for the generated component
+    string bridgeComponent;
 
     ////
     // Output containing classes
