@@ -442,16 +442,18 @@ void MPMICE::scheduleHEChemistry(SchedulerP& sched,
 		    this, &MPMICE::HEChemistry);
  
   t->requires(Task::NewDW, Ilb->press_equil_CCLabel, press_matl, Ghost::None);
-  t->requires(Task::OldDW, Ilb->temp_CCLabel,     ice_matls,  Ghost::None);
-  t->requires(Task::OldDW, Ilb->vol_frac_CCLabel, ice_matls, Ghost::None);
+  t->requires(Task::NewDW, Ilb->rho_micro_CCLabel,   ice_matls,  Ghost::None);
+  t->requires(Task::OldDW, Ilb->temp_CCLabel,        ice_matls,  Ghost::None);
+  t->requires(Task::OldDW, Ilb->vol_frac_CCLabel,    ice_matls,  Ghost::None);
 
-  t->requires(Task::NewDW, MIlb->temp_CCLabel,     mpm_matls, Ghost::None);
-  t->requires(Task::NewDW, MIlb->cMassLabel,       mpm_matls, Ghost::None);
-  t->requires(Task::NewDW, Mlb->gMassLabel,        mpm_matls, Ghost::AroundCells,1);
+  t->requires(Task::NewDW, MIlb->temp_CCLabel, mpm_matls, Ghost::None);
+  t->requires(Task::NewDW, MIlb->cMassLabel,   mpm_matls, Ghost::None);
+  t->requires(Task::NewDW, Mlb->gMassLabel,    mpm_matls, Ghost::AroundCells,1);
   
   t->computes(MIlb->burnedMassCCLabel);
   t->computes(MIlb->releasedHeatCCLabel);
-    
+  t->computes( Ilb->created_vol_CCLabel);
+
   sched->addTask(t, patches, all_matls);
 }
 
@@ -1749,33 +1751,43 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
     int numALLMatls=d_sharedState->getNumMatls();
     StaticArray<CCVariable<double> > burnedMass(numALLMatls);
     StaticArray<CCVariable<double> > releasedHeat(numALLMatls);
+    StaticArray<CCVariable<double> > createdVol(numALLMatls);
     CCVariable<double> gasTemperature;
     CCVariable<double> gasPressure;
     CCVariable<double> gasVolumeFraction;
     CCVariable<double> sumBurnedMass;
     CCVariable<double> sumReleasedHeat;
+    CCVariable<double> sumCreatedVol;
+
+    int product_indx = -1;
 
     for(int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       int dwindex = matl->getDWIndex();
       new_dw->allocate(burnedMass[m],  MIlb->burnedMassCCLabel, dwindex, patch);
       new_dw->allocate(releasedHeat[m],MIlb->releasedHeatCCLabel,dwindex,patch);
+      new_dw->allocate(createdVol[m],   Ilb->created_vol_CCLabel,dwindex,patch);
       burnedMass[m].initialize(0.0);
       releasedHeat[m].initialize(0.0);
+      createdVol[m].initialize(0.0);
+
+      if (matl->getRxProduct() == Material::product){
+        product_indx = matl->getDWIndex();
+      }
     }
     new_dw->allocate(sumBurnedMass,  MIlb->sumBurnedMassLabel,   0,patch);
     new_dw->allocate(sumReleasedHeat,MIlb->sumReleasedHeatLabel, 0,patch);
+    new_dw->allocate(sumCreatedVol,  MIlb->sumCreatedVolLabel,   0,patch);
 
     sumBurnedMass.initialize(0.0);
     sumReleasedHeat.initialize(0.0);
+    sumCreatedVol.initialize(0.0);
     //__________________________________
     // Pull out ICE data
-    ICEMaterial* ice_matl = d_sharedState->getICEMaterial(0);
-    int dwindex = ice_matl->getDWIndex();
-
     old_dw->get(gasVolumeFraction, Ilb->vol_frac_CCLabel, 
-		dwindex,patch,Ghost::None,0);
-    old_dw->get(gasTemperature, Ilb->temp_CCLabel, dwindex,patch,Ghost::None,0);
+					      product_indx,patch,Ghost::None,0);
+    old_dw->get(gasTemperature, Ilb->temp_CCLabel,
+					      product_indx,patch,Ghost::None,0);
     new_dw->get(gasPressure,    Ilb->press_equil_CCLabel,0,patch,Ghost::None,0);
 
     delt_vartype delT;
@@ -1794,6 +1806,7 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
     // M P M  matls
     // compute the burned mass and released Heat
     // if burnModel != null  && material == reactant
+    double total_created_vol = 0;
     for(int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
@@ -1802,13 +1815,17 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
         int dwindex = mpm_matl->getDWIndex();
         CCVariable<double> solidTemperature;
         CCVariable<double> solidMass;
+        CCVariable<double> rho_micro_CC;
 	NCVariable<double> NCsolidMass;  
 
-        new_dw->get(solidTemperature, MIlb->temp_CCLabel, dwindex, patch, 
-		    Ghost::None, 0);
-        new_dw->get(solidMass, MIlb->cMassLabel, dwindex, patch,Ghost::None, 0);
-	new_dw->get(NCsolidMass, Mlb->gMassLabel, dwindex, patch, 
-		    Ghost::AroundCells, 1);
+        new_dw->get(solidTemperature, MIlb->temp_CCLabel,      dwindex, patch, 
+							 Ghost::None, 0);
+        new_dw->get(solidMass,        MIlb->cMassLabel,        dwindex, patch,
+							 Ghost::None, 0);
+        new_dw->get(rho_micro_CC,      Ilb->rho_micro_CCLabel, dwindex, patch,
+							 Ghost::None, 0);
+	new_dw->get(NCsolidMass,       Mlb->gMassLabel,        dwindex, patch, 
+							 Ghost::AroundCells, 1);
 
         double delt = delT;
         double cv_solid = mpm_matl->getSpecificHeat();
@@ -1817,63 +1834,59 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
 	  
 	  // Find if the cell contains surface:
 	  
-	  double gradRhoX, gradRhoY, gradRhoZ;
-	  double normalX,  normalY,  normalZ;
-
 	  patch->findNodesFromCell(*iter,nodeIdx);
 	  
-	  gradRhoX = 0.25 * (( NCsolidMass[nodeIdx[0]]+
-			       NCsolidMass[nodeIdx[1]]+
-			       NCsolidMass[nodeIdx[2]]+
-			       NCsolidMass[nodeIdx[3]] ) -
-			     ( NCsolidMass[nodeIdx[4]]+
-			       NCsolidMass[nodeIdx[5]]+
-			       NCsolidMass[nodeIdx[6]]+
-			       NCsolidMass[nodeIdx[7]] )) / delX;
-	  gradRhoY = 0.25 * (( NCsolidMass[nodeIdx[0]]+
-			       NCsolidMass[nodeIdx[1]]+
-			       NCsolidMass[nodeIdx[4]]+
-			       NCsolidMass[nodeIdx[5]] ) -
-			     ( NCsolidMass[nodeIdx[2]]+
-			       NCsolidMass[nodeIdx[3]]+
-			       NCsolidMass[nodeIdx[6]]+
-			       NCsolidMass[nodeIdx[7]] )) / delY;
-	  gradRhoZ = 0.25 * (( NCsolidMass[nodeIdx[1]]+
-			       NCsolidMass[nodeIdx[3]]+
-			       NCsolidMass[nodeIdx[5]]+
-			       NCsolidMass[nodeIdx[7]] ) -
-			     ( NCsolidMass[nodeIdx[0]]+
-			       NCsolidMass[nodeIdx[2]]+
-			       NCsolidMass[nodeIdx[4]]+
-			       NCsolidMass[nodeIdx[6]] )) / delZ;
-
 	  double MaxMass = NCsolidMass[nodeIdx[0]];
 	  double MinMass = NCsolidMass[nodeIdx[0]];
-	  for (int nodeNumber=0; nodeNumber<8; nodeNumber++)
-	    {
+	  for (int nodeNumber=0; nodeNumber<8; nodeNumber++) {
 	      if (NCsolidMass[nodeIdx[nodeNumber]]>MaxMass)
 		MaxMass = NCsolidMass[nodeIdx[nodeNumber]];
 	      if (NCsolidMass[nodeIdx[nodeNumber]]<MinMass)
 		MinMass = NCsolidMass[nodeIdx[nodeNumber]];
-	    }	  
-
-	  double absGradRho = sqrt(gradRhoX*gradRhoX +
-				   gradRhoY*gradRhoY +
-				   gradRhoZ*gradRhoZ );
+	  }	  
 
 	  double Temperature = 0;
 	  if (gasVolumeFraction[*iter] < 1.e-5) 
             Temperature = solidTemperature[*iter];
           else Temperature = gasTemperature[*iter];
 
-	  bool doTheBurn = 1;
-    
 	  /* Here is the new criterion for the surface:
 	     if (MnodeMax - MnodeMin) / Mcell > 0.5 - consider it a surface
 	  */
-	  if ((MaxMass-MinMass)/MaxMass < .5) doTheBurn = 0;
-    
-	  if (doTheBurn) {
+	  if ((MaxMass-MinMass)/MaxMass > 0.9){
+// && (MaxMass-MinMass)/MaxMass < 0.99999) {
+
+	      double gradRhoX, gradRhoY, gradRhoZ;
+	      double normalX,  normalY,  normalZ;
+
+	      gradRhoX = 0.25 * (( NCsolidMass[nodeIdx[0]]+
+			           NCsolidMass[nodeIdx[1]]+
+			           NCsolidMass[nodeIdx[2]]+
+			           NCsolidMass[nodeIdx[3]] ) -
+			         ( NCsolidMass[nodeIdx[4]]+
+			           NCsolidMass[nodeIdx[5]]+
+			           NCsolidMass[nodeIdx[6]]+
+			           NCsolidMass[nodeIdx[7]] )) / delX;
+	      gradRhoY = 0.25 * (( NCsolidMass[nodeIdx[0]]+
+			           NCsolidMass[nodeIdx[1]]+
+			           NCsolidMass[nodeIdx[4]]+
+			           NCsolidMass[nodeIdx[5]] ) -
+			         ( NCsolidMass[nodeIdx[2]]+
+			           NCsolidMass[nodeIdx[3]]+
+			           NCsolidMass[nodeIdx[6]]+
+			           NCsolidMass[nodeIdx[7]] )) / delY;
+	      gradRhoZ = 0.25 * (( NCsolidMass[nodeIdx[1]]+
+			           NCsolidMass[nodeIdx[3]]+
+			           NCsolidMass[nodeIdx[5]]+
+			           NCsolidMass[nodeIdx[7]] ) -
+			         ( NCsolidMass[nodeIdx[0]]+
+			           NCsolidMass[nodeIdx[2]]+
+			           NCsolidMass[nodeIdx[4]]+
+			           NCsolidMass[nodeIdx[6]] )) / delZ;
+
+	      double absGradRho = sqrt(gradRhoX*gradRhoX +
+				       gradRhoY*gradRhoY +
+				       gradRhoZ*gradRhoZ );
 
 	      normalX = gradRhoX/absGradRho;
 	      normalY = gradRhoY/absGradRho;
@@ -1905,22 +1918,31 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
 
 	      releasedHeat[m][*iter] +=
 			 cv_solid*solidTemperature[*iter]*burnedMass[m][*iter];
+	      createdVol[m][*iter]    =
+			 burnedMass[m][*iter]/rho_micro_CC[*iter];
              
-	      sumBurnedMass[*iter]    += burnedMass[m][*iter];
-	      sumReleasedHeat[*iter]  += releasedHeat[m][*iter];
+	      sumBurnedMass[*iter]   += burnedMass[m][*iter];
+	      sumReleasedHeat[*iter] += releasedHeat[m][*iter];
+	      sumCreatedVol[*iter]   += createdVol[m][*iter];
+	      total_created_vol      += createdVol[m][*iter];
              // reactantants: (-)burnedMass
              // products:     (+)burnedMass
              // Need the proper sign on burnedMass in ICE::DelPress calc
              burnedMass[m][*iter]      = -burnedMass[m][*iter];
- 
-	    }
+	     // We've gotten all the use we need out of createdVol by
+	     // accumulating it in sumCreatedVol
+	     createdVol[m][*iter]      = 0.0;
+	  }
 	  else {
-	    burnedMass[m][*iter]=0;
-	    releasedHeat[m][*iter]=0;
+	     burnedMass[m][*iter]      = 0.0;
+	     releasedHeat[m][*iter]    = 0.0;
+	     createdVol[m][*iter]      = 0.0;
 	  }
 	}
       }
-    }  
+    }
+
+//    cout << "TCV = " << total_created_vol << endl;
 
     for(int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
@@ -1929,10 +1951,12 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
       if (ice_matl && (ice_matl->getRxProduct() == Material::product)) {
         new_dw->put(sumBurnedMass,  MIlb->burnedMassCCLabel,   dwindex, patch);
         new_dw->put(sumReleasedHeat,MIlb->releasedHeatCCLabel, dwindex, patch);
+	new_dw->put(sumCreatedVol,   Ilb->created_vol_CCLabel, dwindex, patch);
       }
       else{
         new_dw->put(burnedMass[m],   MIlb->burnedMassCCLabel,  dwindex, patch);
         new_dw->put(releasedHeat[m], MIlb->releasedHeatCCLabel,dwindex, patch);
+	new_dw->put(createdVol[m],    Ilb->created_vol_CCLabel,dwindex, patch);
       }
     }
     //---- P R I N T   D A T A ------ 

@@ -70,6 +70,8 @@ ICELabel::ICELabel()
     scinew VarLabel("burnedMass",   CCVariable<double>::getTypeDescription());
   releasedHeat_CCLabel =
     scinew VarLabel("releasedHeat", CCVariable<double>::getTypeDescription());
+  created_vol_CCLabel =
+    scinew VarLabel("created_vol",  CCVariable<double>::getTypeDescription());
 
   term1Label = 
     scinew VarLabel("term1",        CCVariable<double>::getTypeDescription());
@@ -153,6 +155,7 @@ ICELabel::~ICELabel()
     delete mass_CCLabel;
     delete burnedMass_CCLabel;
     delete releasedHeat_CCLabel;
+    delete created_vol_CCLabel;
     delete speedSound_CCLabel;
     delete div_velfc_CCLabel;
     delete vol_frac_CCLabel;
