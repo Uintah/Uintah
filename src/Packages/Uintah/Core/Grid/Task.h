@@ -124,7 +124,7 @@ WARNING
 			const MaterialSubset* matls,
 			DataWarehouse* fromDW,
 			DataWarehouse* toDW) {
-	(ptr->*pmf)(pc, patch, fromDW, toDW, arg1);
+	(ptr->*pmf)(pc, patches, matls, fromDW, toDW, arg1);
       }
     }; // end class Action1
     
