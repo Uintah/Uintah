@@ -227,6 +227,8 @@ void CompMooneyRivlin::computeStressTensor(const Region* region,
 
     // This is just carried forward.
     new_dw->put(cmdata, p_cmdata_label, matlindex, region);
+    // Volume is currently just carried forward, but will be updated.
+    new_dw->put(pvolume, pVolumeLabel, matlindex, region);
 }
 
 void CompMooneyRivlin::addComputesAndRequires(Task* task,
@@ -251,8 +253,9 @@ void CompMooneyRivlin::addComputesAndRequires(Task* task,
 
    task->computes(new_dw, deltLabel);
    task->computes(new_dw, pStressLabel, matl->getDWIndex(),  region);
-   task->computes(new_dw, pDeformationMeasureLabel, matl->getDWIndex(),  region);
+   task->computes(new_dw, pDeformationMeasureLabel, matl->getDWIndex(), region);
    task->computes(new_dw, p_cmdata_label, matl->getDWIndex(),  region);
+   task->computes(new_dw, pVolumeLabel, matl->getDWIndex(), region);
 }
 
 double CompMooneyRivlin::computeStrainEnergy(const Region* /*region*/,
@@ -347,6 +350,15 @@ ConstitutiveModel* CompMooneyRivlin::readRestartParametersAndCreate(
 #endif
 
 // $Log$
+// Revision 1.27  2000/05/18 16:06:24  guilkey
+// Implemented computeStrainEnergy for CompNeoHookPlas.  In both working
+// constitutive models, moved the carry forward of the particle volume to
+// computeStressTensor.  This "carry forward" will be replaced by a real
+// update eventually.  Removed the carry forward in the SerialMPM and
+// then replaced where the particle volume was being required from the old_dw
+// with requires from the new_dw.  Don't update these files until I've
+// checked in a new SerialMPM.cc, which should be in a few minutes.
+//
 // Revision 1.26  2000/05/11 20:10:13  dav
 // adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
 //
