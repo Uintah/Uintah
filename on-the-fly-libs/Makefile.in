@@ -69,11 +69,10 @@ endif
 Makefile: $(OTF_SRC)/Makefile.in $(SCIRUN_OBJTOP)/config.status
 	@( Here="`pwd`" ; cd $(OTF_SRCTOP_ABS) ; Top="`pwd`" ; CONFIG_FILES="`echo $${Here} | sed -e "s!^$${Top}/!!" -e "s!^$${Top}!.!"`/Makefile" CONFIG_HEADERS="" ./config.status ) 1>&2
 
-
-$(OTF_LIBS) : $(patsubst %.so,%.cc,$(OTF_LIBS)) $(CURRENT_LIBS)
+%.so : %.cc $(CURRENT_LIBS)
 	rm -f $@
-	echo $(LIBDIR)
-	echo $(SOFLAGS)
-	$(CXX) $(CFLAGS) $($(patsubst $(OTF_SRC)/%.cc,%INCLUDES,$<)) $(INCLUDES) $(CC_DEPEND_REGEN) $(SOFLAGS) $< -o $@ $($(patsubst $(OTF_SRC)/%.cc,%LIBPATH,$<)) $($(patsubst $(OTF_SRC)/%.cc,%LIBS,$<)) $(CURRENT_LIBS)
+	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(SOFLAGS) $< -o $@ $(CURRENT_LIBS)
+
+$(OTF_LIBS) : $(SRCS) $(CURRENT_LIBS)
 
 all: $(OTF_LIBS)
