@@ -188,7 +188,7 @@ void
 SimpleOPort<T>::reset()
 {
   sent_something_ = false;
-  handle_ = 0;
+  //handle_ = 0;
 }
 
 
@@ -203,7 +203,7 @@ SimpleOPort<T>::finish()
     for (int i = 0; i < nconnections(); i++)
     {
       Connection* conn = connections[i];
-      SimplePortComm<T>* msg = scinew SimplePortComm<T>();
+      SimplePortComm<T>* msg = scinew SimplePortComm<T>(handle_);
       ((SimpleIPort<T>*)conn->iport)->mailbox.send(msg);
     }
 
