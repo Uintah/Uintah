@@ -225,6 +225,30 @@ proc makeNetworkEditor {} {
     $maincanvas configure \
 	-xscrollcommand "updateCanvasX" -yscrollcommand "updateCanvasY"
 
+    wm withdraw .
+}
+
+proc canvasScroll { canvas { dx 0.0 } { dy 0.0 } } {
+    if {$dx!=0.0} {$canvas xview moveto [expr $dx+[lindex [$canvas xview] 0]]}
+    if {$dy!=0.0} {$canvas yview moveto [expr $dy+[lindex [$canvas yview] 0]]}
+}
+
+# Activate the "File" menu items - called from C after all packages are loaded
+proc activate_file_submenus { } {
+    .main_menu.file.menu entryconfig  0 -state active
+    .main_menu.file.menu entryconfig  1 -state active
+    .main_menu.file.menu entryconfig  2 -state active
+    .main_menu.file.menu entryconfig  3 -state active
+    .main_menu.file.menu entryconfig  5 -state active
+    .main_menu.file.menu entryconfig  6 -state active
+    .main_menu.file.menu entryconfig  7 -state active
+    .main_menu.file.menu entryconfig  9 -state active
+    .main_menu.file.menu entryconfig 11 -state active
+
+    ###################################################################
+    # Bind all the actions after SCIRun has loaded everything...
+    global maincanvas minicanvas
+
     bind $minicanvas <B1-Motion> "updateCanvases %x %y"
     bind $minicanvas <1> "updateCanvases %x %y"
     bind $maincanvas <Configure> "handleResize %w %h"
@@ -251,26 +275,6 @@ proc makeNetworkEditor {} {
     bind all <Control-z> "undo"
     bind all <Control-a> "selectAll"
     bind all <Control-y> "redo"
-
-    wm withdraw .
-}
-
-proc canvasScroll { canvas { dx 0.0 } { dy 0.0 } } {
-    if {$dx!=0.0} {$canvas xview moveto [expr $dx+[lindex [$canvas xview] 0]]}
-    if {$dy!=0.0} {$canvas yview moveto [expr $dy+[lindex [$canvas yview] 0]]}
-}
-
-# Activate the "File" menu items - called from C after all packages are loaded
-proc activate_file_submenus { } {
-    .main_menu.file.menu entryconfig  0 -state active
-    .main_menu.file.menu entryconfig  1 -state active
-    .main_menu.file.menu entryconfig  2 -state active
-    .main_menu.file.menu entryconfig  3 -state active
-    .main_menu.file.menu entryconfig  5 -state active
-    .main_menu.file.menu entryconfig  6 -state active
-    .main_menu.file.menu entryconfig  7 -state active
-    .main_menu.file.menu entryconfig  9 -state active
-    .main_menu.file.menu entryconfig 11 -state active
 }
 
 proc modulesMenu { subnet x y } {
