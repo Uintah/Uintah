@@ -39,8 +39,7 @@ namespace Volume {
 class Shader
 {
 public:
-  Shader (const std::string& name)
-    : mName(name), mId(0), mDirty(false) {}
+  Shader (const std::string& name);
   virtual ~Shader () {}
 
   virtual void create () = 0;
@@ -87,6 +86,8 @@ public:
   
   void setLocalParam (int i, float x, float y, float z, float w);
 
+  bool valid ();
+  
 protected:
   uint mType;
   std::string mFilename;

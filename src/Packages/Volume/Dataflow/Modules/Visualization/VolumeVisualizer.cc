@@ -22,6 +22,7 @@
 #include <Packages/Volume/Core/Geom/VolumeRenderer.h>
 #include <Packages/Volume/Core/Datatypes/Texture.h>
 #include <Packages/Volume/Dataflow/Ports/TexturePort.h>
+#include <Packages/Volume/Dataflow/Ports/Colormap2Port.h>
 
 #include <iostream>
 #ifdef __sgi
@@ -49,6 +50,7 @@ private:
   TextureHandle tex;
 
   ColorMapIPort* icmap;
+  Colormap2IPort* icmap2;
   TextureIPort* intexture;
   GeometryOPort* ogeom;
   ColorMapOPort* ocmap;
@@ -102,8 +104,9 @@ VolumeVisualizer::~VolumeVisualizer(){
 }
 
 void
- VolumeVisualizer::execute(){
+VolumeVisualizer::execute(){
 
+  cerr << "VolumeVisualizer::execute" << endl;
   static Point oldmin(0,0,0), oldmax(0,0,0);
   static int oldni = 0, oldnj = 0, oldnk = 0;
   static GeomID geomID  = 0;
@@ -111,13 +114,14 @@ void
   
   intexture = (TextureIPort *)get_iport("Texture");
   icmap = (ColorMapIPort *)get_iport("ColorMap");
+  icmap2 = (Colormap2IPort*)get_iport("ColorMap2");
   ogeom = (GeometryOPort *)get_oport("Geometry");
   ocmap = (ColorMapOPort *)get_oport("ColorMap");
   if (!intexture) {
     error("Unable to initialize iport 'GL Texture'.");
     return;
   }
-  if (!icmap) {
+  if (!icmap && !icmap2) {
     error("Unable to initialize iport 'ColorMap'.");
     return;
   }
@@ -135,7 +139,10 @@ void
   }
   
   ColorMapHandle cmap;
-  if( !icmap->get(cmap)){
+  Colormap2Handle cmap2;
+  bool c = icmap->get(cmap);
+  bool c2 = icmap2->get(cmap2);
+  if(!c && !c2){
     return;
   }
 
@@ -153,7 +160,7 @@ void
 
   //AuditAllocator(default_allocator);
   if( !volren_ ){
-    volren_ = new VolumeRenderer(tex, cmap);
+    volren_ = new VolumeRenderer(tex, cmap, cmap2);
     oldmin = tex->min();
     oldmax = tex->max();
     tex->get_dimensions(oldni, oldnj, oldnk);
@@ -161,13 +168,14 @@ void
     //    ogeom->delAll();
     geomID = ogeom->addObj( volren_, "VolumeRenderer TransParent");
   } else {
-    volren_->SetTexture( tex );
-    volren_->SetColorMap( cmap );
+    volren_->SetTexture(tex);
+    volren_->SetColorMap(cmap);
+    volren_->SetColormap2(cmap2);
     int ni, nj, nk;
-    tex->get_dimensions( ni, nj, nk );
+    tex->get_dimensions(ni, nj, nk);
     if( oldmin != tex->min() || oldmax != tex->max() ||
 	ni != oldni || nj != oldnj || nk != oldnk ){
-      ogeom->delObj( geomID );
+      ogeom->delObj(geomID);
       geomID = ogeom->addObj( volren_, "VolumeRenderer TransParent");
       oldni = ni; oldnj = nj; oldnk = nk;
       oldmin = tex->min();
@@ -207,14 +215,15 @@ void
     error("Unable to initialize oport 'Color Map'.");
     return;
   } else {
-    ColorMapHandle outcmap;
-    outcmap = new ColorMap(*cmap.get_rep()); 
-    double vmin, vmax, gmin, gmax;
-    tex->get_min_max(vmin, vmax, gmin, gmax);
-    outcmap->Scale(vmin, vmax);
-    ocmap->send(outcmap);
+    if(c) {
+      ColorMapHandle outcmap;
+      outcmap = new ColorMap(*cmap.get_rep()); 
+      double vmin, vmax, gmin, gmax;
+      tex->get_min_max(vmin, vmax, gmin, gmax);
+      outcmap->Scale(vmin, vmax);
+      ocmap->send(outcmap);
+    }
   }    
-
 }
 
 void

@@ -43,11 +43,12 @@ class SliceRenderer : public TextureRenderer
 public:
 
   SliceRenderer();
-  SliceRenderer(TextureHandle tex, ColorMapHandle map);
+  SliceRenderer(TextureHandle tex, ColorMapHandle map, Colormap2Handle cmap2);
   SliceRenderer(const SliceRenderer&);
   ~SliceRenderer();
 
   virtual void BuildTransferFunction();
+  virtual void BuildTransferFunction2();
 
   void SetControlPoint( const Point& point){ control_point_ = point; }
 

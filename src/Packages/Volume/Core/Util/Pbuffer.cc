@@ -37,7 +37,7 @@
 #elif defined(__APPLE__)
 #include <AGL/agl.h>
 #else
-#include <GL/glxew.h>
+#include <sci_glx.h>
 #endif
 
 using std::cerr;

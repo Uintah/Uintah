@@ -98,8 +98,8 @@ SliceRenderer::SliceRenderer():
   lighting_ = 1;
 }
 
-SliceRenderer::SliceRenderer(TextureHandle tex, ColorMapHandle map):
-  TextureRenderer(tex, map),
+SliceRenderer::SliceRenderer(TextureHandle tex, ColorMapHandle map, Colormap2Handle cmap2):
+  TextureRenderer(tex, map, cmap2),
   control_point_( Point(0,0,0) ),
   drawX_(false),
   drawY_(false),
@@ -119,7 +119,7 @@ SliceRenderer::SliceRenderer(TextureHandle tex, ColorMapHandle map):
 }
 
 SliceRenderer::SliceRenderer( const SliceRenderer& copy ) :
-  TextureRenderer(copy.tex_, copy.cmap_),
+  TextureRenderer(copy.tex_, copy.cmap_, copy.cmap2_),
   control_point_( copy.control_point_),
   drawX_(copy.drawX_),
   drawY_(copy.drawY_),
@@ -471,3 +471,7 @@ SliceRenderer::BuildTransferFunction()
   }
 }
 
+void
+SliceRenderer::BuildTransferFunction2()
+{
+}

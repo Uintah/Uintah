@@ -47,11 +47,12 @@ public:
   enum vol_ren_mode{ OVEROP, MIP, ATTENUATE };
 
   VolumeRenderer();
-  VolumeRenderer(TextureHandle tex, ColorMapHandle map);
+  VolumeRenderer(TextureHandle tex, ColorMapHandle map, Colormap2Handle cmap2);
   VolumeRenderer(const VolumeRenderer&);
   ~VolumeRenderer(){};
   
   virtual void BuildTransferFunction();
+  virtual void BuildTransferFunction2();
   
   void SetNSlices(int s) { slices_ = s;}
   void SetSliceAlpha( double as){ slice_alpha_ = as;}
@@ -87,12 +88,12 @@ protected:
   
   FragmentProgramARB* VolShader1;
   FragmentProgramARB* VolShader4;
+  FragmentProgramARB* VolShader1_2;
+  FragmentProgramARB* VolShader4_2;
   FragmentProgramARB* FogVolShader1;
   FragmentProgramARB* FogVolShader4;
   FragmentProgramARB* LitVolShader;
   FragmentProgramARB* LitFogVolShader;
-  FragmentProgramARB* MipShader1;
-  FragmentProgramARB* MipShader4;
   VertexProgramARB* FogVertexShader;
 };
 
