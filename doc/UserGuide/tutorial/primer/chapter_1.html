@@ -45,7 +45,7 @@
 
 		<p>In this first chapter, we will construct a SCIRun
                 network [link] to perform a visualization task:
-                rendering of a tetrahedral mesh.  Our &quot;net&quot;
+                rendering of a tetrahedral mesh.  Our &quot;net&quot;,
                 will consist of three modules: data reader, geometry
                 converter, and renderer.  We will read in the datafile
                 from disk, set some rendering properties for the
@@ -59,7 +59,7 @@
 
                 <p>&lt;subhead:FieldReader User Interface&gt;
 
-                <p>You should set several encironment variables in
+                <p>You should set several environment variables in
                 your shell before we begin running SCIRun.  First, the
                 SCIRUN_DATA variable should point to the location of
                 the SCIRunData directory on your system.  Second,
@@ -68,10 +68,10 @@
                 indicates which dataset to load.
 
                 <p>For example, the network that we construct in this
-                chapter will load a geometric mesh from disk and
+                chapter loads a geometric mesh from disk and
                 render it to the screen.  Such a network will work on
                 a wide variety of inputs, and so the SCIRUN_DATASET
-                variable can be used to indicate which one the user
+                variable indicates which one the user
                 would like to see.  In your Unix shell window, set
                 your SCIRUN_DATA variable to point where you have
                 installed the SCIRun data, and set your SCIRUN_DATASET
@@ -83,11 +83,11 @@
                 The SCIRun NetworkEditor window will appear on your
                 screen, as shown in Figure 3.
 
-                <p>The first module we will instantiate in our network
+                <p>The first module we instantiate in our network
                 will be a FieldReader.  To create a FieldReader
                 module, pulldown the SCIRun menu and select
                 DataIO/FieldReader, as shown in Figure XX.  As the
-                module instantiates, it will appear on the network map
+                module instantiates, appears on the network map
                 as a box, as seen in Figure XX.  The box has a user
                 interface button that, when pressed, launches a file
                 browser window.  You can type, or point-and-click
@@ -96,12 +96,12 @@
                 mesh of a human torso.  When you select the filename
                 in the file- browser window, and press &quot;OK&quot;,
                 the file-browser window will disappear, and the
-                FieldReader module will begin executing.  When it
-                finishes computing the progress bar will turn green,
-                and the module icon will display a number indicating
-                the amount of CPU time it required to complete.
+                FieldReader module will begin to execute.  When the module
+                finishes computing, the progress bar turns green
+                and the module icon displays a number indicating
+                the amount of CPU time required to complete.
 
-		<p> The dataset we just read in is called a SCIRun
+		<p> The dataset that we just read-in is called a SCIRun
                 &quot;Field&quot;.  The definition of a Field is that
                 it contains a geometric mesh, and a collection of data
                 values mapped onto that mesh.  In this case, we have a
@@ -154,22 +154,23 @@
                 <p>We will now add a second module to our network.
                 Select ShowField from the SCIRun/Visualization menu.
                 This module is used for visualizing our various field
-                types.  Its User Interfce (UI) has options for
+                types.  The module's User Interface (UI) has options for
                 rendering various geometry from the field, as well as
-                some special options for rendering vector data.  It
+                some special options for rendering vector data.  ShowField
                 can use color to represent data within the geometry if
                 so desired.  For now we will want to just render the
                 nodes of the geometry as blue spheres.
 
-                <p>Select the UI button on the ShowField module.  By
-                default the Nodes tab is selected and the Sphere
-                Display Type is selected.  The default color however
-                is grey.  To change the default color select the
+                <p>Select the UI button on the ShowField module.  The Nodes
+                tab is selected by default in addition to the
+                Sphere
+                Display Type.  However, the default color 
+                is grey.  To change the default color, select the
                 Default Color button near the bottom of the dialogue.
-                This will pop up a new dialogue with Red, Green, and
-                Blue sliders.  Set Red and Green to 0.0, and Blue to
+                This will pop up a new dialogue with red, green, and
+                blue sliders.  Set red and green to 0.0, and blue to
                 1.00.  Then select the &quot;OK&quot; button in this
-                color dialogue.  To remove the Dialogue from view
+                color dialogue.  To remove the Dialogue from view,
                 select &quot;Cancel&quot;.
 
                 <p>Turn off the display of edges and faces.  Select
@@ -182,10 +183,10 @@
 
                 <p>Now that you have two modules in your canvas, they
                 need to be connected so that data can flow between
-                them.  Output ports in scirun are always on the bottom
+                them.  Output ports in SCIRun are always on the bottom
                 of the module, whereas input ports are always on top.
                 Ports that have the same color may be connected.  Each
-                datatype in scirun that can be passed through ports
+                datatype in SCIRun that can be passed through ports
                 has a unique color.
                   
                 <p>Using your middle mouse select the yellow output port
@@ -268,7 +269,7 @@
                 from the File menu bar, and select
                 SCIRun/src/nets/show-torso-mesh.net The net should
                 reload into SCIRun, just as it was when you saved it.
-                If we change something (e.g.  rotate your view in the
+                If we change something (e.g.,  rotate your view in the
                 ViewWindow or change the rendering color of the nodes
                 in ShowField), then we have two options if we want to
                 re-save our net.  First, we can overwrite the existing
