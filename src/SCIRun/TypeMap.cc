@@ -70,7 +70,7 @@ int
 TypeMap::getInt(const std::string& key, int dflt)
 {
   IntMap::iterator found = intMap.find(key);
-  if (found!=intMap.end()) {
+  if (found != intMap.end()) {
     return found->second;
   }
   return dflt;
@@ -81,7 +81,7 @@ long
 TypeMap::getLong(const std::string& key, long dflt)
 {
   LongMap::iterator found = longMap.find(key);
-  if (found!=longMap.end()) {
+  if (found != longMap.end()) {
     return found->second;
   }
   return dflt;  
@@ -91,16 +91,22 @@ TypeMap::getLong(const std::string& key, long dflt)
 float
 TypeMap::getFloat(const std::string& key, float dflt)
 {
-  std::cerr<<"method not implemented" << std::endl;  
-  return dflt;
+    FloatMap::iterator found = floatMap.find(key);
+    if (found != floatMap.end()) {
+        return found->second;
+    }
+    return dflt;
 }
 
 // double .sci.cca.TypeMap.getDouble(in string key, in double dflt)throws .sci.cca.TypeMismatchException
 double
 TypeMap::getDouble(const std::string& key, double dflt)
 {
-  std::cerr<<"method not implemented" << std::endl;  
-  return dflt;
+    DoubleMap::iterator found = doubleMap.find(key);
+    if (found != doubleMap.end()) {
+        return found->second;
+    }
+    return dflt;
 }
 
 // std::complex<float>  .sci.cca.TypeMap.getFcomplex(in string key, in std::complex<float>  dflt)throws .sci.cca.TypeMismatchException
@@ -123,9 +129,8 @@ TypeMap::getDcomplex(const std::string& key, std::complex<double>  dflt)
 std::string
 TypeMap::getString(const std::string& key, const std::string& dflt)
 {
-  //std::cerr<<"method not implemented" << std::endl;  
   StringMap::iterator found = stringMap.find(key);
-  if (found!=stringMap.end()) {
+  if (found != stringMap.end()) {
     return found->second;
   }
   return dflt;
@@ -135,8 +140,11 @@ TypeMap::getString(const std::string& key, const std::string& dflt)
 bool
 TypeMap::getBool(const std::string& key, bool dflt)
 {
-  std::cerr<<"method not implemented" << std::endl;  
-  return dflt;
+    BoolMap::iterator found = boolMap.find(key);
+    if (found != boolMap.end()) {
+        return found->second;
+    }
+    return dflt;
 }
 
 // array1< int, 1> .sci.cca.TypeMap.getIntArray(in string key, in array1< int, 1> dflt)throws .sci.cca.TypeMismatchException
@@ -277,8 +285,8 @@ TypeMap::putString(const std::string& key, const std::string& value)
 void
 TypeMap::putBool(const std::string& key, bool value)
 {
-  std::cerr<<"method not implemented" << std::endl;  
-  return;
+    boolMap[key] = value;
+    return;
 }
    
 // void .sci.cca.TypeMap.putIntArray(in string key, in array1< int, 1> value)

@@ -45,7 +45,7 @@
 #include <vector>
 #include <map>
 #include <string>
-//using namespace std;
+
 namespace SCIRun {
 
   class TypeMap : public sci::cca::TypeMap {
@@ -53,8 +53,18 @@ namespace SCIRun {
     typedef std::map<std::string, std::string> StringMap;
     typedef std::map<std::string, int> IntMap;
     typedef std::map<std::string, long> LongMap;
+    typedef std::map<std::string, float> FloatMap;
+    typedef std::map<std::string, double> DoubleMap;
+    typedef std::map<std::string, bool> BoolMap;
+    typedef std::map<std::string, std::complex<float> > FcomplexMap;
+    typedef std::map<std::string, std::complex<double> > DcomplexMap;
     typedef std::map<std::string, SSIDL::array1<int> > IntArrayMap;
     typedef std::map<std::string, SSIDL::array1<long> > LongArrayMap;
+    typedef std::map<std::string, SSIDL::array1<float> > FloatArrayMap;
+    typedef std::map<std::string, SSIDL::array1<double> > DoubleArrayMap;
+    typedef std::map<std::string, SSIDL::array1< std::complex<float> > > FcomplexArrayMap;
+    typedef std::map<std::string, SSIDL::array1< std::complex<double> > > DcomplexArrayMap;
+    typedef std::map<std::string, SSIDL::array1<bool> > BoolArrayMap;
     typedef std::map<std::string, SSIDL::array1<std::string> > StringArrayMap;
     
 
@@ -66,7 +76,7 @@ namespace SCIRun {
 
     // .sci.cca.TypeMap .sci.cca.TypeMap.cloneEmpty()
     virtual TypeMap::pointer cloneEmpty();
-
+    
     // int .sci.cca.TypeMap.getInt(in string key, in int dflt)throws .sci.cca.TypeMismatchException
     virtual int getInt(const std::string& key, int dflt);
     
@@ -178,11 +188,19 @@ namespace SCIRun {
     StringMap stringMap;
     IntMap intMap;
     LongMap longMap;
+    FloatMap floatMap;
+    DoubleMap doubleMap;
+    FcomplexMap fcomplexMap;
+    DcomplexMap dcomplexMap;
+    BoolMap boolMap;
     IntArrayMap intArrayMap;
     LongArrayMap longArrayMap;
+    FloatArrayMap floatArrayMap;
+    DoubleArrayMap doubleArrayMap;
+    FcomplexArrayMap fcomplexArrayMap;
+    DcomplexArrayMap dcomplexArrayMap;
+    BoolArrayMap boolArrayMap;
     StringArrayMap stringArrayMap;
-
-
   };
 
 } //SCIRun namespace
