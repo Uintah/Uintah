@@ -179,7 +179,7 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle field_h,
   imesh->begin( inodeItr );
   omesh->begin( onodeItr );
 
-  // For structured geometery we need to set the correct plane.
+  // For structured geometery we need to set the correct location.
   if( ifield->get_type_description(0)->get_name() == "LatVolField" ||
       ifield->get_type_description(0)->get_name() == "ImageField" ||
       ifield->get_type_description(0)->get_name() == "ScanlineField" ) {
@@ -217,6 +217,8 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle field_h,
     trans.pre_translate( (Vector) (-o) );
 
     trans.pre_scale( Vector( iskip, jskip, kskip ) );
+
+    trans.pre_translate( (Vector) (o) );
 
     trans.pre_translate( (Vector) (p-o) );
       
