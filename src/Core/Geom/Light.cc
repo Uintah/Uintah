@@ -34,8 +34,8 @@ namespace SCIRun {
 
 PersistentTypeID Light::type_id("Light", "Persistent", 0);
 
-Light::Light(const string& name)
-: name(name)
+Light::Light(const string& name, bool on)
+  : name(name), on(on)
 {
 }
 

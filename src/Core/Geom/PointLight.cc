@@ -41,8 +41,8 @@ Persistent* make_PointLight()
 PersistentTypeID PointLight::type_id("PointLight", "Light", make_PointLight);
 
 PointLight::PointLight(const string& name,
-		       const Point& p, const Color& c)
-: Light(name), p(p), c(c)
+		       const Point& p, const Color& c, bool on)
+: Light(name, on), p(p), c(c)
 {
 }
 

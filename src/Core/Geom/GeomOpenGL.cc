@@ -40,6 +40,7 @@
 #include <Core/Geom/GeomOpenGL.h>
 #include <Core/Geom/GeomArrows.h>
 #include <Core/Geom/BBoxCache.h>
+#include <Core/Geom/DirectionalLight.h>
 #include <Core/Geom/GeomBillboard.h>
 #include <Core/Geom/GeomBox.h>
 #include <Core/Geom/GeomCone.h>
@@ -1952,12 +1953,16 @@ void GeomLine::draw(DrawInfoOpenGL* di, Material* matl, double)
     if(!pre_draw(di, matl, 0)) return;
     di->polycount++;
     // Set line width. Set it 
+    GLfloat lw;
+    glGetFloatv(GL_LINE_WIDTH, &lw);
+    glLineWidth(lineWidth_);
     glBegin(GL_LINE_STRIP);
     glVertex3d(p1.x(), p1.y(), p1.z());
     glVertex3d(p2.x(), p2.y(), p2.z());
     glEnd();
     // HACK set line width back to default
     // our scenegraph needs more graceful control of such state.
+    glLineWidth(lw);
     post_draw(di);
 }
 
@@ -4479,8 +4484,26 @@ void GeomCVertex::emit_matl(DrawInfoOpenGL* /*di*/)
     glColor3f(color.r(),color.g(),color.b());
 }
 
+void DirectionalLight::opengl_setup( const View&, DrawInfoOpenGL*, int& idx)
+{
+  if(on ) {
+    int i = idx++;
+    float f[4];
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+      glLoadIdentity();
+      f[0]=v.x(); f[1]=v.y(); f[2]=v.z(); f[3]=0.0;
+      glLightfv((GLenum)(GL_LIGHT0+i), GL_POSITION, f);
+      c.get_color(f);
+      glLightfv((GLenum)(GL_LIGHT0+i), GL_DIFFUSE, f);
+      glLightfv((GLenum)(GL_LIGHT0+i), GL_SPECULAR, f);
+    glPopMatrix();
+  }
+}
+    
 void PointLight::opengl_setup(const View&, DrawInfoOpenGL*, int& idx)
 {
+  if( on ) {
     int i=idx++;
     float f[4];
     f[0]=p.x(); f[1]=p.y(); f[2]=p.z(); f[3]=1.0;
@@ -4488,24 +4511,26 @@ void PointLight::opengl_setup(const View&, DrawInfoOpenGL*, int& idx)
     c.get_color(f);
     glLightfv((GLenum)(GL_LIGHT0+i), GL_DIFFUSE, f);
     glLightfv((GLenum)(GL_LIGHT0+i), GL_SPECULAR, f);
+  }
 }
 
 void HeadLight::opengl_setup(const View& /*view*/, DrawInfoOpenGL*, int& idx)
 {
+  if ( on ) {
     int i=idx++;
 //    Point p(view.eyep());
     float f[4];
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
     glLoadIdentity();
-//    f[0]=p.x(); f[1]=p.y(); f[2]=p.z(); f[3]=0.0;
+    //    f[0]=p.x(); f[1]=p.y(); f[2]=p.z(); f[3]=0.0;
     f[0] = f[1] = f[3] = 0.0;
     f[2] = 1.0;
     glLightfv((GLenum)(GL_LIGHT0+i), GL_POSITION, f);
     c.get_color(f);	   
     glLightfv((GLenum)(GL_LIGHT0+i), GL_DIFFUSE, f);
     glLightfv((GLenum)(GL_LIGHT0+i), GL_SPECULAR, f);
-
+    
 #if 0
     i=idx++;
     f[2] = -1.0; 
@@ -4514,6 +4539,7 @@ void HeadLight::opengl_setup(const View& /*view*/, DrawInfoOpenGL*, int& idx)
     glLightfv(GL_LIGHT0+i, (GLenum)GL_SPECULAR, f);
 #endif
     glPopMatrix();
+  }
 }
 
 //----------------------------------------------------------------------
