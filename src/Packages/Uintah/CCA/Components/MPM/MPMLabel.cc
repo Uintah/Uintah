@@ -24,6 +24,9 @@ MPMLabel::MPMLabel()
   pContactNormalLabel = scinew VarLabel("p.contactNormal",
 			ParticleVariable<Vector>::getTypeDescription());
 
+  pTouchNormalLabel = scinew VarLabel("p.touchNormal",
+			ParticleVariable<Vector>::getTypeDescription());
+
   pXXLabel = scinew VarLabel("p.positionXX",
 			ParticleVariable<Point>::getTypeDescription());
   
@@ -293,6 +296,7 @@ MPMLabel::~MPMLabel()
   delete pDeformationMeasureLabel;
   delete pConnectivityLabel;
   delete pContactNormalLabel;
+  delete pTouchNormalLabel;
   delete pXXLabel;
 
   delete pStressAfterFractureReleaseLabel;
