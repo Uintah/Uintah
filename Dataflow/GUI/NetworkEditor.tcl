@@ -97,8 +97,6 @@ proc makeNetworkEditor {} {
     menubutton .main_menu.stats -text "Statistics" -underline 0 \
 	-menu .main_menu.stats.menu
     menu .main_menu.stats.menu
-    .main_menu.stats.menu add command -label "Debug..." -underline 0 \
-	    -command showDebugSettings
     .main_menu.stats.menu add command -label "Memory..." -underline 0 \
 	    -command showMemStats
     .main_menu.stats.menu add command -label "Threads..." -underline 0 \
