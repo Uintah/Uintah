@@ -14,38 +14,9 @@ using SCICore::Geometry::Vector;
 namespace Uintah {
 namespace MD {
    
-/**************************************
-
-CLASS
-   SerialMD
-   
-   Short description...
-
-GENERAL INFORMATION
-
-   SerialMD.h
-
-   Steven G. Parker
-   Department of Computer Science
-   University of Utah
-
-   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
-   Copyright (C) 2000 SCI Group
-
-KEYWORDS
-   SerialMD
-
-DESCRIPTION
-   Long description...
-  
-WARNING
-  
-****************************************/
-
 class SerialMD : public UintahParallelComponent, public MDInterface {
 public:
-  SerialMD( int MpiRank, int MpiProcesses);
+  SerialMD( const ProcessorGroup* myworld );
   virtual ~SerialMD();
 	 
   //////////
@@ -84,6 +55,9 @@ private:
    
 //
 // $Log$
+// Revision 1.2  2000/06/20 01:55:55  tan
+// Changed ProcessorContext to ProcessorGroup
+//
 // Revision 1.1  2000/06/09 18:01:51  tan
 // Create SerialMD to do molecular dynamics simulations.
 //
