@@ -109,7 +109,7 @@ ClipByFunctionAlgoT<FIELD>::execute(ModuleReporter *mod,
       if (elemdata_valid) { field->value(v, *bi); }
       inside = vinside_p(p.x(), p.y(), p.z(), v);
     }
-    else if (clipmode < 0)
+    else if (clipmode > 0)
     {
       typename FIELD::mesh_type::Node::array_type onodes;
       mesh->get_nodes(onodes, *bi);
