@@ -19,6 +19,10 @@ namespace rtrt {
 class VolumeVisBase : public Object, public Material {
 protected:
   VolumeVisDpy* dpy;
+
+  inline int clamp(const int min, const int val, const int max) {
+    return (val>min?(val<max?val:max):min);
+  }
 public:
   VolumeVisBase(VolumeVisDpy* dpy);
   virtual ~VolumeVisBase();
@@ -30,8 +34,8 @@ public:
 
   virtual void animate(double t, bool& changed);
   virtual void compute_hist(int nhist, int* hist,
-    float datamin, float datamax){}
-  virtual void get_minmax(float& min, float& max){};
+			    float datamin, float datamax)=0;
+  virtual void get_minmax(float& min, float& max)=0;
   virtual void shade(Color& result, const Ray& ray,
 		     const HitInfo& hit, int depth,
 		     double atten, const Color& accumcolor,
