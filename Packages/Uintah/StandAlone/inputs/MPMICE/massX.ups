@@ -215,10 +215,11 @@
        <MPM>
          <material Rx = "reactant" >
                 <burn type = "simple" >
-                <ThresholdTemp> 299 </ThresholdTemp>
+                <ThresholdTemp>     299 </ThresholdTemp>
                 <ThresholdPressure> 500 </ThresholdPressure>
-                 <Enthalpy>  0.0 </Enthalpy>
-                 <BurnCoeff> 1   </BurnCoeff>
+                 <Enthalpy>         0.0 </Enthalpy>
+                 <BurnCoeff>        1   </BurnCoeff>
+                 <refPressure>      1   </refPressure>
                 </burn>
                <EOS type = "ideal_gas">
                   <gas_constant>      287               </gas_constant>
