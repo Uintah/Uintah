@@ -65,13 +65,12 @@ SRCS     += \
 	$(SRCDIR)/TendSatin.cc\
 	$(SRCDIR)/TendShrink.cc\
 
-PSELIBS := Packages/Teem/Core/Datatypes Core/Datatypes \
+PSELIBS := Core/Datatypes \
 	Dataflow/Network Dataflow/Ports \
         Core/Persistent Core/Containers Core/Util \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/GeomInterface Core/Datatypes Core/Geometry \
-        Core/TkExtensions Packages/Teem/Core/Datatypes \
-	Packages/Teem/Dataflow/Ports
+        Core/TkExtensions Packages/Teem/Dataflow/Ports
 
 LIBS := $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY)
 

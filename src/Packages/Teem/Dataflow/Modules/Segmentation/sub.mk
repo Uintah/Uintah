@@ -45,12 +45,10 @@ SRCS     += \
 #[INSERT NEW CODE FILE HERE]
 
 
-PSELIBS := Packages/Teem/Core/Datatypes Core/Datatypes \
-	Dataflow/Network Dataflow/Ports \
-        Core/Persistent Core/Containers Core/Util \
+PSELIBS := Core/Persistent Core/Containers Core/Util \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/GeomInterface Core/Datatypes Core/Geometry \
-        Core/TkExtensions Packages/Teem/Core/Datatypes \
+        Core/TkExtensions Dataflow/Network Dataflow/Ports \
 	Packages/Teem/Dataflow/Ports
 
 LIBS := $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(M_LIBRARY)

@@ -34,7 +34,7 @@ SRCDIR := Packages/Teem/StandAlone/convert
 ifeq ($(LARGESOS),yes)
 PSELIBS := Core Packages/Teem/Core
 else
-PSELIBS := Core/Datatypes Core/Containers Core/Persistent Core/Exceptions Core/Math Core/Thread Core/Geometry Core/Math Core/Util Packages/Teem/Core/Datatypes
+PSELIBS := Core/Datatypes Core/Containers Core/Persistent Core/Exceptions Core/Math Core/Thread Core/Geometry Core/Math Core/Util
 endif
 LIBS := $(TEEM_LIBRARY) $(LAPACK_LIBRARY) $(XML_LIBRARY) $(M_LIBRARY)
 

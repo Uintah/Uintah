@@ -43,7 +43,7 @@
 #define SCI_Teem_NrrdPort_h 1
 
 #include <Dataflow/Ports/SimplePort.h>
-#include <Teem/Core/Datatypes/NrrdData.h>
+#include <Core/Datatypes/NrrdData.h>
 
 namespace SCITeem {
 

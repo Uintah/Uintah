@@ -46,12 +46,10 @@ SRCS     += \
 	$(SRCDIR)/VULCANConverter.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
-        Core/Persistent Core/Containers Core/Util \
+PSELIBS := Core/Persistent Core/Containers Core/Util \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/GeomInterface Core/Datatypes Core/Geometry \
-        Core/TkExtensions \
-	Packages/Teem/Core/Datatypes
+        Core/TkExtensions Dataflow/Network Dataflow/Ports
 
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(TEEM_LIBRARY) $(M_LIBRARY)
 

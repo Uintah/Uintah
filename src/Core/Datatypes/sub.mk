@@ -49,6 +49,7 @@ SRCS +=	$(SRCDIR)/Clipper.cc		    	\
 	$(SRCDIR)/Matrix.cc		    	\
 	$(SRCDIR)/MatrixOperations.cc	    	\
 	$(SRCDIR)/Mesh.cc		    	\
+	$(SRCDIR)/NrrdData.cc		    	\
 	$(SRCDIR)/PointCloudMesh.cc         	\
 	$(SRCDIR)/PropertyManager.cc	    	\
 	$(SRCDIR)/PrismVolMesh.cc	    	\
@@ -80,10 +81,11 @@ endif
 PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
 	Core/Thread Core/Geometry Core/GuiInterface \
 	Core/Math Core/Util
-LIBS := $(GL_LIBRARY) $(M_LIBRARY) $(BLAS_LIBRARY) $(F_LIBRARY)
+LIBS := $(GL_LIBRARY) $(M_LIBRARY) $(BLAS_LIBRARY) $(F_LIBRARY) \
+	$(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
+INCLUDES += $(TEEM_INCLUDE)
 INCLUDES += $(BLAS_INCLUDE)
-
 
