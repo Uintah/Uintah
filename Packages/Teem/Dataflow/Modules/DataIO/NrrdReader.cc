@@ -280,7 +280,17 @@ void NrrdReader::execute()
   // in the gui.
   vector<string> elems;
   if (add_.get() || (! handle_->get_tuple_indecies(elems))) {
-    handle_->nrrd->axis[0].label = strdup(lbl.c_str());
+    int axis_size = handle_->nrrd->axis[0].size;
+    string full_label = lbl;
+    int count;
+    if (type_.get() == "Scalar") count=axis_size-1;
+    else if (type_.get() == "Vector") count=axis_size/3-1;
+    else /* if (type_.get() == "Tensor") */ count=axis_size/7-1;
+    while (count > 0) {
+      full_label += string("," + lbl);
+      count--;
+    }
+    handle_->nrrd->axis[0].label = strdup(full_label.c_str());
   }
   // Send the data downstream
   outport_->send(handle_);
