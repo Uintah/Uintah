@@ -50,7 +50,7 @@
 ##  --------------------------------------------------------------------
 
 ##  initialize configure 
-AC_INIT([SCIRun],[1.10],[scirun-users@sci.utah.edu])
+AC_INIT([SCIRun],[1.20],[scirun-users@sci.utah.edu])
 
 ##  require autoconf version 2.53
 AC_PREREQ(2.53)
@@ -1168,7 +1168,7 @@ fi
 ##  if thirdparty not set use defaults
 
 if test -z "$thirdparty"; then
-  sci_tp_version=1.10
+  sci_tp_version=1.20
   sci_tp_arch=`uname -s`
   sci_compiler_vers=gcc-3.0.4
   ac_try="$CC -v > /dev/null 2> conftest.out"
