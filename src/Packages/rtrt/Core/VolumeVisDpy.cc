@@ -25,12 +25,21 @@ static void printString(GLuint fontbase, double x, double y,
 			const char *s, const Color& c);
 static int calc_width(XFontStruct* font_struct, const char* str);
 
-VolumeVisDpy::VolumeVisDpy(Array1<Color*> *matls, Array1<float> *alphas,
-			   float t_inc, char *in_file):
-  hist(0), xres(500),yres(500), color_transform(matls),
-  alpha_transform(alphas), original_t_inc(0.01), current_t_inc(0),
-  t_inc(t_inc), in_file(in_file)
-{}
+VolumeVisDpy::VolumeVisDpy(Array1<Color> &matls, Array1<AlphaPos> &alphas,
+			   int ncolors, float t_inc, char *in_file):
+  hist(0), xres(500), yres(500), colors_index(matls), alpha_list(alphas),
+  ncolors(ncolors), nalphas(ncolors),
+  original_t_inc(0.01), current_t_inc(t_inc), t_inc(t_inc),
+  in_file(in_file)
+{
+  // need to allocate memory for alpha_transform and color_transform
+  Array1<Color*> *c = new Array1<Color*>(ncolors);
+  for(unsigned int i = 0; i < ncolors; i++)
+    (*c)[i] = new Color();
+  color_transform.set_results_ptr(c);
+  alpha_transform.set_results_ptr(new Array1<float>(nalphas));
+  alpha_stripes.set_results_ptr(new Array1<float>(nalphas));
+}
   
 VolumeVisDpy::~VolumeVisDpy()
 {
@@ -71,9 +80,12 @@ void VolumeVisDpy::setup_vars() {
     alpha_transform.scale(data_min,data_max);
   }// end if(volumes.size() > 0)
 
+  // create the colors for the color transform
+  create_color_transfer();
   // rescale the alpha values
-  current_t_inc = original_t_inc;
-  rescale_alphas(t_inc);
+  //  current_t_inc = t_inc;
+  // create the alphas for the alpha transform
+  create_alpha_transfer();
 }
 
 void VolumeVisDpy::run() {
@@ -171,6 +183,8 @@ void VolumeVisDpy::run() {
     }
     if(redraw){
       draw_hist(fontbase, fontInfo);
+      draw_alpha_curve(fontbase, fontInfo);
+      glFinish();
       redraw=false;
     }
     XEvent e;
@@ -201,6 +215,16 @@ void VolumeVisDpy::run() {
       case XK_Shift_R:
 	cerr << "Pressed shift\n";
 	shift_pressed = true;
+	break;
+      case XK_Page_Up:
+      case XK_plus:
+	rescale_alphas(current_t_inc/2);
+	cout << "current_t_inc = " << current_t_inc << endl;
+	break;
+      case XK_Page_Down:
+      case XK_minus:
+	rescale_alphas(current_t_inc*2);
+	cout << "current_t_inc = " << current_t_inc << endl;
 	break;
       case XK_w:
       case XK_W:
@@ -306,7 +330,9 @@ void VolumeVisDpy::compute_hist(GLuint fid) {
   // loop over all the data and compute histograms
   for (int v = 0; v < volumes.size() ; v++) {
     VolumeVis* volume = volumes[v];
-#if 1
+    // must index the data using three dimesions rather than as one, because
+    // a BrickArray3 uses buffers on the ends to make the bricks all the same
+    // size.
     for (int x = 0; x < volume->data.dim1(); x++) {
       for (int y = 0; y < volume->data.dim2(); y++) {
 	for (int z = 0; z < volume->data.dim3(); z++) {
@@ -317,26 +343,6 @@ void VolumeVisDpy::compute_hist(GLuint fid) {
 	}
       }
     }
-#else
-    float* p=volume->data.get_dataptr();
-    int ndata=volume->data.dim1() * volume->data.dim2() * volume->data.dim3(); 
-    for(int i=0;i<ndata;i++,p++){
-      float normalized=(*p-data_min)*scale;
-      int idx=(int)(normalized*(nhist-1));
-      //int idx=color_transform.get_lookup_index(*p++);
-      if (idx >= 0 && idx < nhist)
-	hist[idx]++;
-      cerr << "p = " << *p << ", data_min="<<data_min<<", data_max = "<<data_max<<", scale = "<<scale<<endl;
-      cerr << "idx=" << idx << '\n';
-#if 0
-      if(idx<0 || idx>=nhist){
-	cerr << "idx out of bounds!\n";
-	Thread::exitAll(-1);
-      }
-      hist[idx]++;
-#endif
-    }
-#endif
   } // end loop for all volumes
   
   //cerr << "VolumeVisDpy:compute_hist:past compute histograms\n";
@@ -357,23 +363,21 @@ void VolumeVisDpy::draw_hist(GLuint fid, XFontStruct* font_struct) {
   int descent=font_struct->descent;
   int textheight=font_struct->descent+font_struct->ascent+2;
 
-  glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
   glViewport(0, 0, xres, yres);
   glClearColor(0, 0, 0, 1);
   glClear(GL_COLOR_BUFFER_BIT);
   int nhist=xres-10;
 
-  int s=yres-300; // start
+  int s=yres/2; // start
   int e=yres; // end
   int h=e-s;
-  glViewport(5, s, xres-5, e-s);
+  glViewport(5, s, xres-10, e-s);
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  gluOrtho2D(0, xres, -float(textheight)*histmax/(h-textheight), histmax);
+  gluOrtho2D(0, xres-10, -float(textheight)*histmax/(h-textheight), histmax);
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
     
-  //  glColor3f(0,0,1);
   ScalarTransform1D<int,Color*> stripes(color_transform.get_results_ptr());
   stripes.scale(0,nhist-1);
   glBegin(GL_LINES);
@@ -401,12 +405,58 @@ void VolumeVisDpy::draw_hist(GLuint fid, XFontStruct* font_struct) {
   int w=calc_width(font_struct, buf);
   printString(fid, xres-2-w, descent+1, buf, Color(1,1,1));
   
-  glFinish();
   int errcode;
   while((errcode=glGetError()) != GL_NO_ERROR){
     cerr << "We got an error from GL: " << (char*)gluErrorString(errcode) << endl;
   }
-  //cerr << "VolumeVisDpy:draw_hist:end\n";
+  cerr << "VolumeVisDpy:draw_hist:end\n";
+}
+
+// displays the alpha transfer curve as well as a representation of the colors
+// and their corresponding opacities.  No alpha blending is used, because we
+// are using a black background.  This allows us the ablility to just multiply
+// the corresponding colors, by the alpha value.
+void VolumeVisDpy::draw_alpha_curve(GLuint /*fid*/, XFontStruct* font_struct) {
+  int descent=font_struct->descent;
+  int textheight=font_struct->descent+font_struct->ascent+2;
+
+  // set up the frame for the lower half of the user interface.
+  int s=5;
+  int e=yres/2-5;
+  int h=e-s;
+  int width = xres -10;
+  glViewport(5, s, width, h);
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  gluOrtho2D(0, width, 0, h);
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+
+  // draw the background
+  // stripes allows us the oportunity to use an integer index based on the
+  // width of the window to grab a color.
+  ScalarTransform1D<int,Color*> stripes(color_transform.get_results_ptr());
+  stripes.scale(0,width-1);
+  alpha_stripes.scale(0,width-1);
+
+  glBegin(GL_LINES);
+  for(int i=0;i<width;i++){
+    Color *c=stripes.lookup(i); // get the color
+    float alpha = alpha_stripes.lookup(i); // get the alpha
+    glColor3f(c->red()*alpha, c->green()*alpha, c->blue()*alpha);
+    glVertex2i(i, 0);
+    glVertex2i(i, h);
+  }
+  glEnd();
+  
+  // now draw the alpha curve
+  glColor3f(1.0, 1.0, 1.0);
+  glBegin(GL_LINE_STRIP);
+  for(unsigned int i = 0; i < alpha_list.size(); i++) {
+    //    cout << "drawing a point at ("<<alpha_list[i].x<<", "<<alpha_list[i].val<<")\n";
+    glVertex2i(alpha_list[i].x*width, alpha_list[i].val*h);
+  }
+  glEnd();
 }
 
 void VolumeVisDpy::rescale_alphas(float new_t_inc) {
@@ -423,9 +473,84 @@ void VolumeVisDpy::rescale_alphas(float new_t_inc) {
     alpha_transform[i] = 1 - powf(1 - alpha_transform[i], d2_div_d1);
     cout <<"alpha_transform[i="<<i<<"] = "<<alpha_transform[i]<<", ";
   }
+  cout << endl;
   current_t_inc = new_t_inc;
 }
 
+// assuming that the data in alpha_transform and alpha_stripes is already
+// allocated.
+// This is not too trivial as the alpha values in alpha_list are not evenly
+// spaced.  
+void VolumeVisDpy::create_alpha_transfer() {
+  // the ratio of values as explained in rescale_alphas
+  float d2_div_d1 = current_t_inc/original_t_inc;
+  // i_f is the number between 0 and 1 that represent how far we are along
+  float i_f = 0;
+  float i_f_inc = 1.0/(alpha_transform.size()-1);
+  int a_index = 0; // the index of the alpha_list
+  // slope of the line made up of alpha_list[a_index] and alpha_list[a_index+1]
+  // defined as alpha_list[a_index].x <= i_f < alpha_list[a_index+1].x
+  float slope = 0; 
+  float c = 0; // the constant for the line equasion
+
+  // we need to get a value for every entry in alpha_transform
+  for(unsigned int i = 0; i < alpha_transform.size(); i++) {
+    // this will be the interpolated value
+    float val; 
+    //    cout <<"a_index = "<<a_index<<", i_f = "<<i_f<<", ";
+    // if this (alpha_list[a_index].x <= i_f < alpha_list[a_index+1].x) no
+    // longer holds true we need to increment a_index and recompute the slope
+    // and constant.
+    if (i_f > alpha_list[a_index+1].x) {
+      a_index++;
+      //      cout << "a_index = "<<a_index<<", ";
+      // slope is rise of run
+      slope = (alpha_list[a_index+1].val - alpha_list[a_index].val) /
+	(alpha_list[a_index+1].x - alpha_list[a_index].x);
+      // c = y1 - slope * x1;
+      c = alpha_list[a_index].val - slope * alpha_list[a_index].x;
+      //      cout <<"slope = "<<slope<<", c = "<<c<<", ";
+    }
+    // calculate the interpolated value
+#if 0
+    if ((a_index+1) < alpha_list.size()) {
+      val = slope * i_f + c;
+    } else {
+      // the last element
+      val = alpha_list[a_index].val;
+    }
+#else
+    val = slope * i_f + c;
+#endif
+    
+    cout << "val = "<<val<<", ";
+    alpha_stripes[i] = val;
+    // apply the alpha scaling
+    alpha_transform[i] = 1 - powf(1 - val, d2_div_d1);
+    cout <<"alpha_transform[i="<<i<<"] = "<<alpha_transform[i]<<"\n";
+    i_f += i_f_inc;
+  }
+}
+
+// assuming that the data in color_transform already allocated
+// This is really easy to compute.  All we do is take the color_index and
+// interpolate the values.  We are assuming that each color is evenly spaced.
+void VolumeVisDpy::create_color_transfer() {
+  ScalarTransform1D<unsigned int,Color> c_index(&colors_index);
+  c_index.scale(0,color_transform.size()-1);
+  for(unsigned int i = 0; i < color_transform.size(); i++) {
+    Color *c = color_transform[i];
+    *c = c_index.interpolate(i);
+  }
+}
+
+void VolumeVisDpy::animate(bool& changed) {
+  if (current_t_inc != t_inc) {
+    changed = true;
+    t_inc = current_t_inc;
+    cout << "t_inc now equals "<< t_inc<<endl;
+  }
+}
 
 static void printString(GLuint fontbase, double x, double y,
 			const char *s, const Color& c)
