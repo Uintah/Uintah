@@ -44,11 +44,13 @@ SRCDIR   := Packages/MatlabInterface/Dataflow/Modules/DataIO
 SRCS     += \
 	$(SRCDIR)/Matlab.cc\
 	$(SRCDIR)/MatlabDataReader.cc\
+	$(SRCDIR)/MatlabDataWriter.cc\
+	$(SRCDIR)/MatlabFieldsReader.cc \
+	$(SRCDIR)/MatlabFieldsWriter.cc \
 	$(SRCDIR)/MatlabMatricesReader.cc\
 	$(SRCDIR)/MatlabMatricesWriter.cc \
 	$(SRCDIR)/MatlabNrrdsReader.cc \
 	$(SRCDIR)/MatlabNrrdsWriter.cc \
-	$(SRCDIR)/MatlabFieldsReader.cc \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \

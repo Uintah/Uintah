@@ -88,7 +88,7 @@ private:
 	//   string to TCL with all the names and formats of the matrices.
 	//   NOTE: This Function explicitly depends on the TCL code.
 	
-	void		indexmatlabfile();
+	void		indexmatlabfile(bool postmsg);
 	
 	// readmatlabarray():
 	//   This function reads the in the gui selected matlab array. It
@@ -136,7 +136,7 @@ MatlabFieldsReader::MatlabFieldsReader(GuiContext* ctx)
     guimatrixnames_(ctx->subVar("matrixnames")),    
 	guimatrixname_(ctx->subVar("matrixname"))
 {
-	indexmatlabfile();
+	indexmatlabfile(false);
 }
 
 // Destructor:
@@ -197,7 +197,7 @@ void MatlabFieldsReader::execute()
 			// creates a SCIRun matrix object
 	
 			SCIRun::FieldHandle mh;
-			translate_.mlArrayTOsciField(ma,mh);
+			translate_.mlArrayTOsciField(ma,mh,static_cast<SCIRun::Module *>(this));
 			
 			// Put the SCIRun matrix in the hands of the scheduler
 			ofield_[p]->send(mh);
@@ -255,7 +255,7 @@ void MatlabFieldsReader::tcl_command(GuiArgs& args, void* userdata)
 		ctx->reset();
 		
 		// Find out what the .mat file contains
-		indexmatlabfile();
+		indexmatlabfile(true);
 		return;
 	}
 	else 
@@ -312,7 +312,7 @@ matlabarray MatlabFieldsReader::readmatlabarray(long p)
 
 
 
-void MatlabFieldsReader::indexmatlabfile()
+void MatlabFieldsReader::indexmatlabfile(bool postmsg)
 {
 	
 	std::string filename = "";
@@ -323,6 +323,8 @@ void MatlabFieldsReader::indexmatlabfile()
 	
 	guimatrixinfotexts_.set(matrixinfotexts);
 	guimatrixnames_.set(matrixnames);
+	
+	translate_.setpostmsg(postmsg);
 	
 	filename = guifilename_.get();	
 
@@ -373,7 +375,7 @@ void MatlabFieldsReader::indexmatlabfile()
 		for (p=0, r=0;p<mfile.getnummatlabarrays();p++)
 		{
 			ma = mfile.getmatlabarrayinfo(p); // do not load all the data fields
-			if (cindex = translate_.sciFieldCompatible(ma,infotext))
+			if (cindex = translate_.sciFieldCompatible(ma,infotext,static_cast<SCIRun::Module *>(this)))
 			{
 				// in case we need to propose a matrix to load, select
 				// the one that is most compatible with the data

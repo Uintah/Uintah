@@ -102,9 +102,6 @@ private:
   GuiString				guimatrixname_;   	// A list of the matrix names
   GuiString				guidataformat_;		// A list of the dataformat for each matrix (int, double etc.)
   GuiString				guimatrixformat_;   // A list of the matlabarray format (numeric array, structured array)
-
-  // Input ports 
-  SCITeem::NrrdIPort *iport_[NUMPORTS];
   
 };
 
@@ -118,7 +115,7 @@ DECLARE_MAKER(MatlabNrrdsWriter)
 // e.g. as a structured object or an object with the dataarray only
 
 MatlabNrrdsWriter::MatlabNrrdsWriter(GuiContext* ctx)
-  : Module("MatlabNrrdsWriter", ctx, Source, "DataIO", "MatlabInterface"),
+  : Module("MatlabNrrdsWriter", ctx, Sink, "DataIO", "MatlabInterface"),
     guifilename_(ctx->subVar("filename")),
     guimatrixname_(ctx->subVar("matrixname")),     
     guidataformat_(ctx->subVar("dataformat")),    
@@ -143,17 +140,18 @@ void MatlabNrrdsWriter::execute()
 	SCITeem::NrrdDataHandle matrixhandle[NUMPORTS];
 	
 	// find and evaluate which ports have been used
+	SCITeem::NrrdIPort *iport;	
 	
 	for (long p=0; p<NUMPORTS; p++)
 	{
-		iport_[p] = static_cast<SCITeem::NrrdIPort *>(getIPort(p));
-		if (!iport_[p]) 
+		iport = static_cast<SCITeem::NrrdIPort *>(getIPort(p));
+		if (!iport) 
 		{
 			error("MatlabNrrdsWriter: Unable to initialize iport");
 			return;
 		}
 		
-		if (!iport_[p]->get(matrixhandle[p]) || !matrixhandle[p].get_rep())
+		if (!iport->get(matrixhandle[p]) || !matrixhandle[p].get_rep())
 		{
 			porthasdata[p] = false;
 		}
@@ -239,7 +237,6 @@ void MatlabNrrdsWriter::execute()
 				// can also store some data from the property manager
 				translate_.converttostructmatrix();
 				translate_.setdatatype(convertdataformat(dataformat[p]));
-				translate_.sciNrrdDataTOmlArray(matrixhandle[p],ma);
 			}
 			
 			if (matrixformat[p] == "numeric array")
@@ -247,8 +244,8 @@ void MatlabNrrdsWriter::execute()
 				// only store the numeric parts of the data
 				translate_.converttonumericmatrix();
 				translate_.setdatatype(convertdataformat(dataformat[p]));
-				translate_.sciNrrdDataTOmlArray(matrixhandle[p],ma);
 			}
+			translate_.sciNrrdDataTOmlArray(matrixhandle[p],ma,static_cast<SCIRun::Module *>(this));
 				
 			if (ma.isempty())
 			{

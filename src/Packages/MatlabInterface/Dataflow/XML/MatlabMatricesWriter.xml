@@ -73,11 +73,14 @@
 	<section>
 	<title>See Also </title>
 	<p>
+	<modref package="MatlabInterface" name="MatlabDataReader" />,	
+	<modref package="MatlabInterface" name="MatlabDataWriter" />,	
 	<modref package="MatlabInterface" name="MatlabFieldsReader" />,
+	<modref package="MatlabInterface" name="MatlabFieldsWriteer" />,
 	<modref package="MatlabInterface" name="MatlabMatricesReader" />,
-	<modref package="MatlabInterface" name="MatlabNrrdsReader" />,
+	<modref package="MatlabInterface" name="MatlabFieldsReader" />,
 	<modref package="MatlabInterface" name="MatlabMatricesWriter" />,
-	<modref package="MatlabInterface" name="MatlabNrrdsWriter" />	
+	<modref package="MatlabInterface" name="MatlabFieldsWriter" />	
 	</p>
 	</section>
 	

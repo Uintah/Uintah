@@ -28,18 +28,21 @@
 
  
 /*
- * FILE: MatlabMatricesWriter.cc
+ * FILE: MatlabDataWriter.cc
  * AUTH: Jeroen G Stinstra
- * DATE: 30 MAR 2004
+ * DATE: 30 JUL 2004
  */ 
 
 #include <sstream>
 #include <string>
 #include <vector>
+#include <Core/Datatypes/Field.h>
+#include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Network/Module.h>
+#include <Packages/Teem/Dataflow/Ports/NrrdPort.h>
+#include <Packages/Teem/Core/Datatypes/NrrdData.h>
 #include <Core/Malloc/Allocator.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabfile.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabarray.h>
@@ -50,16 +53,16 @@ namespace MatlabIO {
 
 using namespace SCIRun;
 
-class MatlabMatricesWriter : public Module 
+class MatlabDataWriter : public Module 
 {
 
 public:
 
 	// Constructor
-	MatlabMatricesWriter(GuiContext*);
+	MatlabDataWriter(GuiContext*);
 
 	// Destructor
-	virtual ~MatlabMatricesWriter();
+	virtual ~MatlabDataWriter();
 
 	// Std functions for each module
 	// execute():
@@ -96,17 +99,18 @@ private:
 
 private:
 
-  enum { NUMPORTS = 6};
+  enum { NUMPORTS = 9};
   
   // GUI variables
   GuiString				guifilename_;		// .mat filename (import from GUI)
   GuiString				guimatrixname_;   	// A list of the matrix names
   GuiString				guidataformat_;		// A list of the dataformat for each matrix (int, double etc.)
   GuiString				guimatrixformat_;   // A list of the matlabarray format (numeric array, structured array)
-  
+
+
 };
 
-DECLARE_MAKER(MatlabMatricesWriter)
+DECLARE_MAKER(MatlabDataWriter)
 
 // Constructor:
 // Initialise all the variables shared between TCL and SCIRun
@@ -115,11 +119,11 @@ DECLARE_MAKER(MatlabMatricesWriter)
 // matrixformat contains a list of the way the object is represented in matlab
 // e.g. as a structured object or an object with the dataarray only
 
-MatlabMatricesWriter::MatlabMatricesWriter(GuiContext* ctx)
-  : Module("MatlabMatricesWriter", ctx, Sink, "DataIO", "MatlabInterface"),
+MatlabDataWriter::MatlabDataWriter(GuiContext* ctx)
+  : Module("MatlabDataWriter", ctx, Sink, "DataIO", "MatlabInterface"),
     guifilename_(ctx->subVar("filename")),
-    guimatrixname_(ctx->subVar("matrixname")),     
-    guidataformat_(ctx->subVar("dataformat")),    
+    guimatrixname_(ctx->subVar("matrixname")),  
+	guidataformat_(ctx->subVar("dataformat")),       
 	guimatrixformat_(ctx->subVar("matrixformat"))
 {
 }
@@ -127,38 +131,82 @@ MatlabMatricesWriter::MatlabMatricesWriter(GuiContext* ctx)
 // Destructor:
 // All my objects have descrutors and hence nothing needs
 // explicit descruction
-MatlabMatricesWriter::~MatlabMatricesWriter()
+MatlabDataWriter::~MatlabDataWriter()
 {
 }
 
 // Execute:
 // Inner workings of this module
 
-void MatlabMatricesWriter::execute()
+void MatlabDataWriter::execute()
 {
 
 	bool porthasdata[NUMPORTS];
-	SCIRun::MatrixHandle matrixhandle[NUMPORTS];
+	SCIRun::FieldHandle fieldhandle[3];
+	SCIRun::MatrixHandle matrixhandle[3];
+	SCITeem::NrrdDataHandle nrrdhandle[3];
+
 	
 	// find and evaluate which ports have been used
-  
-	SCIRun::MatrixIPort *iport;	
-	for (long p=0; p<NUMPORTS; p++)
+	
+	for (long p=0; p<3; p++)
 	{
-		iport = static_cast<SCIRun::MatrixIPort *>(getIPort(p));
+		SCIRun::FieldIPort *iport;
+  		iport = static_cast<SCIRun::FieldIPort *>(getIPort(p));
 		if (!iport) 
 		{
-			error("MatlabMatricesWriter: Unable to initialize iport");
+			error("MatlabDataWriter: Unable to initialize field input port");
 			return;
 		}
 		
-		if (!iport->get(matrixhandle[p]) || !matrixhandle[p].get_rep())
+		if (!iport->get(fieldhandle[p]) || !fieldhandle[p].get_rep())
 		{
 			porthasdata[p] = false;
 		}
 		else
 		{
 			porthasdata[p] = true;
+		}
+	}
+	
+	for (long p=0; p<3; p++)
+	{
+		SCIRun::MatrixIPort *iport;
+  		iport = static_cast<SCIRun::MatrixIPort *>(getIPort(p+3));
+		if (!iport) 
+		{
+			error("MatlabDataWriter: Unable to initialize field input port");
+			return;
+		}
+		
+		if (!iport->get(matrixhandle[p]) || !matrixhandle[p].get_rep())
+		{
+			porthasdata[p+3] = false;
+		}
+		else
+		{
+			porthasdata[p+3] = true;
+		}
+	}
+	
+	
+	for (long p=0; p<3; p++)
+	{
+		SCITeem::NrrdIPort *iport;
+  		iport = static_cast<SCITeem::NrrdIPort *>(getIPort(p+6));
+		if (!iport) 
+		{
+			error("MatlabDataWriter: Unable to initialize field input port");
+			return;
+		}
+		
+		if (!iport->get(nrrdhandle[p]) || !nrrdhandle[p].get_rep())
+		{
+			porthasdata[p+6] = false;
+		}
+		else
+		{
+			porthasdata[p+6] = true;
 		}
 	}
 	
@@ -175,7 +223,7 @@ void MatlabMatricesWriter::execute()
 	// If the filename is empty, launch an error
 	if (filename == "")
 	{
-		error("MatlabMatricesWriter: No file name was specified");
+		error("MatlabDataWriter: No file name was specified");
 		return;
 	}
 
@@ -184,13 +232,13 @@ void MatlabMatricesWriter::execute()
 	// get all the settings from the GUI
 	
 	std::vector<std::string> matrixname;
-	std::vector<std::string> dataformat;
 	std::vector<std::string> matrixformat;
-	
+	std::vector<std::string> dataformat;
+		
 	matrixname = converttcllist(guimatrixname_.get());
-	dataformat = converttcllist(guidataformat_.get());
 	matrixformat = converttcllist(guimatrixformat_.get());
-	
+	dataformat = converttcllist(guidataformat_.get());
+		
 	// Check the validity of the matrixnames
 
 	for (long p=0;p<matrixname.size();p++)
@@ -198,7 +246,7 @@ void MatlabMatricesWriter::execute()
 		if (porthasdata[p] == false) continue; // Do not check not used ports
 		if (!translate_.isvalidmatrixname(matrixname[p]))
 		{
-			error("MatlabMatricesWriter: The matrix name specified is invalid");
+			error("MatlabDataWriter: The matrix name specified is invalid");
 			return;
 		}
 		for (long q=0;q<p;q++)
@@ -206,7 +254,7 @@ void MatlabMatricesWriter::execute()
 			if (porthasdata[q] == false) continue;
 			if (matrixname[q] == matrixname[p])
 			{
-				error("MatlabMatricesWriter: A matrix name is used twice");
+				error("MatlabDataWriter: A matrix name is used twice");
 				return;
 			}
 		}
@@ -224,7 +272,7 @@ void MatlabMatricesWriter::execute()
 		// Do not start the file with 'SCI ', otherwise the file looks like a
 		// native SCIRun file which uses the same extension.
 		
-		mfile.setheadertext("Matlab V5 compatible file generated by SCIRun [module MatlabMatricesWriter version 1.0]");
+		mfile.setheadertext("Matlab V5 compatible file generated by SCIRun [module MatlabDataWriter version 1.0]");
 		
 		for (long p=0;p<NUMPORTS;p++)
 		{
@@ -236,18 +284,21 @@ void MatlabMatricesWriter::execute()
 			{   
 				// translate the matrix into a matlab structured array, which
 				// can also store some data from the property manager
-				translate_.converttostructmatrix();
 				translate_.setdatatype(convertdataformat(dataformat[p]));
+				translate_.converttostructmatrix();
 			}
 			
 			if (matrixformat[p] == "numeric array")
 			{
 				// only store the numeric parts of the data
-				translate_.converttonumericmatrix();
 				translate_.setdatatype(convertdataformat(dataformat[p]));
+				translate_.converttonumericmatrix();
 			}
+
+			if (p<3)			{ translate_.sciFieldTOmlArray(fieldhandle[p],ma,static_cast<SCIRun::Module *>(this)); }		
+			if ((p>2)&&(p<6))   { translate_.sciMatrixTOmlArray(matrixhandle[p-3],ma,static_cast<SCIRun::Module *>(this)); }
+			if (p>5)			{ translate_.sciNrrdDataTOmlArray(nrrdhandle[p-6],ma,static_cast<SCIRun::Module *>(this)); }
 			
-			translate_.sciMatrixTOmlArray(matrixhandle[p],ma,static_cast<SCIRun::Module *>(this));	
 			if (ma.isempty())
 			{
 				warning("One of the matrices is empty");
@@ -264,21 +315,21 @@ void MatlabMatricesWriter::execute()
 		
 	catch (matlabfile::could_not_open_file)
 	{
-		error("MatlabMatricesWriter: Could not open file");
+		error("MatlabDataWriter: Could not open file");
 	}
 	catch (matlabfile::invalid_file_format)
 	{
-		error("MatlabMatricesWriter: Invalid file format");
+		error("MatlabDataWriter: Invalid file format");
 	}
 	catch (matlabfile::io_error)
 	{   // IO error from ferror
-		error("MatlabMatricesWriter: IO error");
+		error("MatlabDataWriter: IO error");
 	}
 	catch (matlabfile::matfileerror) 
 	{   // All other errors are classified as internal
 		// matfileerrror is the base class on which all
 		// other exceptions are based.
-		error("MatlabMatricesWriter: Internal error in writer");
+		error("MatlabDataWriter: Internal error in writer");
 	}
 	// No handling of the SCIRun errors here yet, most SCIRun functions used
 	// do not use exceptions yet.
@@ -292,7 +343,7 @@ void MatlabMatricesWriter::execute()
 // convertdataformat
 // Convert the string TCL returns into a matlabarray::mitype
 
-matlabarray::mitype MatlabMatricesWriter::convertdataformat(std::string dataformat)
+matlabarray::mitype MatlabDataWriter::convertdataformat(std::string dataformat)
 {
 	matlabarray::mitype type;
 	if (dataformat == "same as data")  { type = matlabarray::miSAMEASDATA; }
@@ -313,7 +364,7 @@ matlabarray::mitype MatlabMatricesWriter::convertdataformat(std::string dataform
 // converts a TCL formatted list into a STL array
 // of strings
 
-std::vector<std::string> MatlabMatricesWriter::converttcllist(std::string str)
+std::vector<std::string> MatlabDataWriter::converttcllist(std::string str)
 {
 	std::string result;
 	std::vector<std::string> list(0);
@@ -346,7 +397,7 @@ std::vector<std::string> MatlabMatricesWriter::converttcllist(std::string str)
 // overwrite:
 // Ask the user whether the file should be overwritten
 
-bool MatlabMatricesWriter::overwrite()
+bool MatlabDataWriter::overwrite()
 {
   std::string result;
   gui->lock();
@@ -363,7 +414,7 @@ bool MatlabMatricesWriter::overwrite()
 // This function should be replaced with a more
 // general function in SCIRun for displaying errors
 
-void MatlabMatricesWriter::displayerror(std::string str)
+void MatlabDataWriter::displayerror(std::string str)
 {
   gui->lock();
   // Explicit call to TCL
