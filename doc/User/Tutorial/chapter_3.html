@@ -3,7 +3,6 @@
 <meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
 <meta name="generator" content="Adobe GoLive 4">
 <title>Derived Fields</title>
-<!-- Changed by: Ted Dustman, 21-Mar-2002 -->
 </head>
 
 <body bgcolor="#a9a9a9">
@@ -57,8 +56,8 @@
         <p>In Chapters 1 and 2, we constructed SCIRun networks to
         visualize the geometry and data values in a Field.   In this
         Chapter, we will explore additional visualization techniques,
-        and examine &quot;filter&quot; modules that receive a Field as input,
-        and output a newly derived Field.  
+        and examine <i>filter</i> modules that receive a field as input,
+        and output a newly derived field.  
 
 	<p>Rather than building one net to introduce all of these new
 	    modules, we 
@@ -105,14 +104,14 @@
 
         <p><b><A name="section-2">3B:DirectInterpolate</b><br></A>
 
-	<p>Next, we will interpolate data values from one Field to another Field.  In this section, we will load two datasets: 
+	<p>Next, we will interpolate data values from one field to another field.  In this section, we will load two datasets: 
 	<ul> 
-	  <p><li>The first contains the utahtorso-lowres-voltage.tvd.fld that we examined in <A href="chapter_1.html#voltage">Chapter 1</a>, which we will refer to as the &quotvolume field.&quot</p>
+	  <p><li>The first contains the utahtorso-lowres-voltage.tvd.fld that we examined in <A href="chapter_1.html#voltage">Chapter 1</a>, which we will refer to as the <i>volume field</i>.</p>
 	  <p><li>The second contains the electrode positions in utahtorso-lowres-electrodes.pcd.fld, from
 	      <a href="chapter_2.html#electrodes">Chapter 2</a>.</p>
 	</ul>
 	
-	<p>Now that we have loaded the datasets, we will ceate a new Field by interpolating the electrode positions and voltage values.</p>
+	<p>Now that we have loaded the datasets, we will ceate a new field by interpolating the electrode positions and voltage values.</p>
 
 	<p>Interpolation is the means by which we calculate the value at a certain point by using the known values at surrounding points. For each electrode, 
 	we must find the corresponding voltage value
@@ -127,7 +126,7 @@
 	<li>One RescaleColorMap module 
 	<li>One Viewer module  
 	</ul>
-	<p>These should be hooked together as shown in <b>Figure 3.3</b>. NOTE: </b>be sure to a) set the Node Scale in the ShowField UI to be at
+	<p>These should be hooked together as shown in <b>Figure 3.3</b>.  NOTE: </b>be sure to a) set the Node Scale in the ShowField UI to be at
 	least 4-6, and b) hit the Autoview button in the ViewWindow.</p> 
 
       </div>
@@ -188,9 +187,9 @@ You should save this net as <i>3B.net</i>, which you'll use in Chapter 4 of this
 
 <p>The SampleField module can generate the samples randomly or we
 	can select samples using a 3D widget.  For Streamline visualization, we
-	use a 3D "rake" widget for distributing seed points. You may interactively position the rake of seed points within the volume:
+	use a 3D <i>rake</i> widget for distributing seed points. You may interactively position the rake of seed points within the volume:
 	<ul>
-	    <p><li>From the SampleField UI, select the "rake" option and 
+	    <p><li>From the SampleField UI, select the rake option and 
 	      set the number of samples to 30.</p>
 	</ul>
 
@@ -200,7 +199,7 @@ You should save this net as <i>3B.net</i>, which you'll use in Chapter 4 of this
 	  <p><li> With the FieldReader, select the input file
 	  utahtorso-lowres-voltage.tvd.fld.</p> 
 	  <p><li>In the ShowField UI, display only Nodes, either as spheres
-	      or points, with NodeScale set to about 1--2.</p>
+	      or points, with NodeScale set to approximately 1--2.</p>
 	   <li> For the second ShowField module lower-left in <b>Figure 3.5</b>, set the UI to display Edges only as cylinders with a Cylinder Scale of 2.</p> 
 	</ul>
 You should save this net as <i>3B.net</i>, which you'll use in Chapter 4 of this tutorial, <b><A href="chapter_4.html#section-2">Putting the nets together</b></A>.</p>
@@ -243,7 +242,7 @@ You should save this net as <i>3B.net</i>, which you'll use in Chapter 4 of this
 	can select samples using a 3D widget.  For Streamline visualization, we
 	use a 3D "rake" widget for distributing seed points. You may interactively position the rake of seed points within the volume:
 	<ul>
-	    <p><li>From the SampleField UI, select the "rake" option and 
+	    <p><li>From the SampleField UI, select the rake option and 
 	      set the number of samples to 30.</p>
 	</ul>
 
@@ -297,11 +296,11 @@ You should save this net as <i>3C.net</i>, which you'll use in Chapter 4 of this
 	dependence</b><br></A> 
 	
 	<p>There are several ways to execute a SCIRun
-	network that has not yet "fired." In the StreamLines network:
+	network that has not yet fired. In the StreamLines network:
 	<ul>
-	<p><li>On the module itself, right-click the mouse and select the "Execute" option from the
+	<p><li>On the module itself, right-click the mouse and select the Execute option from the
 	      dropdown menu (<b>Figure 3.7</b>).</p> 
-	<p><li>Or, in several modules, such as ShowField and StreamLines, the UI has its own "Execute" option.</p>  
+	<p><li>Or, in several modules, such as ShowField and StreamLines, the UI has its own Execute option.</p>  
 	</ul> 
 
 	<p>These actions will execute the selected module, as well as any modules 
