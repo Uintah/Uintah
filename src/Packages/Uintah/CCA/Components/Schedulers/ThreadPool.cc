@@ -194,7 +194,11 @@ Worker::run()
 
     // However, only N threads are allowed to actually "do_work" at
     // the same time.  This semaphore assures that.
-    do_work_->down();
+    if( !do_work_->tryDown() ) {
+      cout << "all workers are busy, waiting...\n";
+      do_work_->down();
+      cout << "worker available, continuing...\n";
+    }
 
 #if DAV_DEBUG
     if( mixedDebug.active() ) {
@@ -439,7 +443,11 @@ ThreadPool::assignThread( const ProcessorGroup  * pg,
   }
 #endif
 
-  num_threads_->down();
+  if( !num_threads_->tryDown() ) {
+    cout << "no threads available to do work... going to wait.\n";
+    num_threads_->down();
+    cout << "thread now available, continuing...\n";
+  }
 
 #if DAV_DEBUG
   if( mixedDebug.active() ) {
