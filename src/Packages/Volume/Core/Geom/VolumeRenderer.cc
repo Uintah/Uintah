@@ -9,7 +9,7 @@
 #include <Packages/Volume/Core/Util/SliceTable.h>
 #include <Core/Util/DebugStream.h>
 
-//static SCIRun::DebugStream dbg("VolumeRenderer", false);
+static SCIRun::DebugStream dbg("VolumeRenderer", false);
 
 //ATTRIB fc = fragment.color;
 //MUL_SAT result.color, c, fc;
@@ -368,8 +368,9 @@ VolumeRenderer::draw()
       }
       // set shader parameters
       GLfloat pos[4];
-      glGetLightfv(GL_LIGHT0, GL_POSITION, pos);
+      glGetLightfv(GL_LIGHT0+light_, GL_POSITION, pos);
       Vector l(pos[0], pos[1], pos[2]);
+      dbg << pos << endl;
       double m[16], m_tp[16];
       glGetDoublev(GL_MODELVIEW_MATRIX, m);
       for (int ii=0; ii<4; ii++)

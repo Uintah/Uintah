@@ -197,7 +197,8 @@ void
   volren_->setShading(gui_shading_.get());
   volren_->setMaterial(gui_ambient_.get(), gui_diffuse_.get(),
                        gui_specular_.get(), gui_shine_.get());
-
+  volren_->setLight(gui_light_.get());
+  
   //AuditAllocator(default_allocator);
   ogeom->flushViews();				  
   //AuditAllocator(default_allocator);
