@@ -66,6 +66,7 @@ Allocator* default_allocator;
 #define OBJFREE 1
 #define OBJINUSE 2
 #define OBJFREEING 3
+#define OBJMEMALIGNFREEING 4
 
 #define SENT_VAL_FREE 0xdeadbeef
 #define SENT_VAL_INUSE 0xbeefface
@@ -434,7 +435,7 @@ Allocator* MakeAllocator()
     return a;
 }
 
-void* Allocator::alloc(size_t size, char* tag)
+void* Allocator::alloc(size_t size, const char* tag)
 {
     if(size > MEDIUM_THRESHOLD)
 	return alloc_big(size, tag);
@@ -508,7 +509,7 @@ void* Allocator::alloc(size_t size, char* tag)
     return (void*)d;
 }
 
-void* Allocator::alloc_big(size_t size, char* tag)
+void* Allocator::alloc_big(size_t size, const char* tag)
 {
     lock();
 
@@ -696,6 +697,30 @@ void* Allocator::realloc(void* dobj, size_t newsize)
     return nobj;
 }
 
+void* Allocator::memalign(size_t alignment, size_t size, const char* ctag)
+{
+    if(alignment <= 8)
+	return alloc(size, ctag);
+
+    size_t asize=size+sizeof(Tag)+sizeof(Sentinel)+alignment-8;
+    void* addr=(char*)alloc(asize, ctag);
+    char* m=(char*)addr;
+    size_t misalign=((size_t)m+sizeof(Tag)+sizeof(Sentinel))%alignment;
+    misalign=misalign==0?0:alignment-misalign;
+    m+=misalign;
+    Tag* tag=(Tag*)m;
+    m+=sizeof(Tag);
+    tag->bin=0;
+    tag->next=tag->prev=(Tag*)addr;
+    tag->hunk=0;
+    tag->reqsize=size;
+    tag->tag=ctag;
+    Sentinel* sent1=(Sentinel*)m;
+    m+=sizeof(Sentinel);
+    sent1->first_word=sent1->second_word=SENT_VAL_INUSE;
+    return m;
+}
+
 void Allocator::free(void* dobj)
 {
 //    fprintf(stderr, "Freeing %x\n", dobj);
@@ -705,6 +730,16 @@ void Allocator::free(void* dobj)
     dd-=sizeof(Sentinel);
     dd-=sizeof(Tag);
     Tag* obj=(Tag*)dd;
+
+    if(!obj->bin){
+	// This was allocated with memalign...
+	if(!lazy)
+	    audit(obj, OBJMEMALIGNFREEING);
+	if(obj->next != obj->prev)
+	    AllocError("Memalign tag inconsistency, or memory corrupt!\n");
+	free((void*)obj->prev);
+	return;
+    }
 
     // Make sure that it is still intact...
     if(trace_out)
@@ -837,7 +872,8 @@ void Allocator::audit(Tag* obj, int what)
     Sentinel* sent1=(Sentinel*)data;
     data+=sizeof(Sentinel);
     char* d=data;
-    data+=obj_maxsize(obj);
+    if(what != OBJMEMALIGNFREEING)
+	data+=obj_maxsize(obj);
     Sentinel* sent2=(Sentinel*)data;
 
 //    fprintf(stderr, "sentinels: %x %x %x %x\n", sent1->first_word, sent1->second_word, sent2->first_word, sent2->second_word);
@@ -866,7 +902,7 @@ void Allocator::audit(Tag* obj, int what)
 		AllocError("Freed object corrupt");
 	    }
 	}
-    } else if(what == OBJFREEING || what == OBJINUSE){
+    } else if(what == OBJFREEING || what == OBJINUSE || what == OBJMEMALIGNFREEING){
 	if(sent1->first_word != SENT_VAL_INUSE || sent1->second_word != SENT_VAL_INUSE){
 	    if(sent1->first_word == SENT_VAL_FREE){
 		if(what == OBJFREEING){
@@ -884,21 +920,23 @@ void Allocator::audit(Tag* obj, int what)
 		AllocError("Memory Object corrupt");
 	    }
 	}
-	if(sent2->first_word != SENT_VAL_INUSE || sent2->second_word != SENT_VAL_INUSE){
-	    if(sent2->first_word == SENT_VAL_FREE){
-		if(what == OBJFREEING){
-		    fprintf(stderr, "Pointer (%x) was freed twice! (tail only?)\n", d);
-		    fprintf(stderr, "Object was allocated with this tag:\n%s\n", obj->tag);
-		    AllocError("Freeing pointer twice");
+	if(what != OBJMEMALIGNFREEING){
+	    if(sent2->first_word != SENT_VAL_INUSE || sent2->second_word != SENT_VAL_INUSE){
+		if(sent2->first_word == SENT_VAL_FREE){
+		    if(what == OBJFREEING){
+			fprintf(stderr, "Pointer (%x) was freed twice! (tail only?)\n", d);
+			fprintf(stderr, "Object was allocated with this tag:\n%s\n", obj->tag);
+			AllocError("Freeing pointer twice");
+		    } else {
+			fprintf(stderr, "Object was allocated with this tag:\n%s\n", obj->tag);
+			AllocError("Object should be inuse, but is tagged as FREE");
+		    }
 		} else {
+		    fprintf(stderr, "Object has been corrupted within\n");
+		    fprintf(stderr, "the 8 bytes after the allocated region\n");
 		    fprintf(stderr, "Object was allocated with this tag:\n%s\n", obj->tag);
-		    AllocError("Object should be inuse, but is tagged as FREE");
+		    AllocError("Memory Object corrupt");
 		}
-	    } else {
-		fprintf(stderr, "Object has been corrupted within\n");
-		fprintf(stderr, "the 8 bytes after the allocated region\n");
-		fprintf(stderr, "Object was allocated with this tag:\n%s\n", obj->tag);
-		AllocError("Memory Object corrupt");
 	    }
 	}
     }
@@ -1146,6 +1184,9 @@ void DumpAllocator(Allocator* a)
 
 //
 // $Log$
+// Revision 1.7  1999/09/30 00:33:46  sparker
+// Added support for memalign (got orphaned in move from SCIRun)
+//
 // Revision 1.6  1999/09/25 08:30:54  sparker
 // Added support for MALLOC_STATS environment variable.  If set, it will
 //   send statistics about malloc and a list of all unfreed objects at
