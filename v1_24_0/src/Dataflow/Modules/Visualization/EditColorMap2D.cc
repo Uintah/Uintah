@@ -775,7 +775,7 @@ EditColorMap2D::update_from_gui()
     }
     
     if (widgets_[i]->alpha() != gui_color_a_[i]->get()) {
-      widgets_[i]->set_alpha(widgets_[i]->alpha());
+      widgets_[i]->set_alpha(gui_color_a_[i]->get());
       cmap_dirty_ = true;
     }
 
