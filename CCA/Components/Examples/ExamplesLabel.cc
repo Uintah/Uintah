@@ -6,6 +6,7 @@
 #include <Packages/Uintah/Core/Grid/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
+#include <Packages/Uintah/Core/Grid/ParticleVariable.h>
 #include <Packages/Uintah/Core/Grid/Stencil7.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
@@ -93,6 +94,29 @@ ExamplesLabel::ExamplesLabel()
 					      CCVariable<double>::getTypeDescription());
   pressure_gradient_mag = VarLabel::create("pressure_gradient_magnitude",
 					   CCVariable<double>::getTypeDescription());
+
+  pXLabel = VarLabel::create("p.x",
+                             ParticleVariable<Point>::getTypeDescription() );
+
+  pXLabel_preReloc = VarLabel::create( "p.x+",
+			ParticleVariable<Point>::getTypeDescription(),
+			IntVector(0,0,0),
+			VarLabel::PositionVariable);
+
+  pParticleIDLabel = VarLabel::create("p.particleID",
+			ParticleVariable<long64>::getTypeDescription() );
+
+  pParticleIDLabel_preReloc = VarLabel::create("p.particleID+",
+			ParticleVariable<long64>::getTypeDescription() );
+
+  pMassLabel_preReloc = VarLabel::create( "p.mass+",
+			ParticleVariable<double>::getTypeDescription() );
+
+  pMassLabel = VarLabel::create( "p.mass",
+			ParticleVariable<double>::getTypeDescription() );
+
+
+
 }
 
 ExamplesLabel::~ExamplesLabel()
@@ -130,6 +154,12 @@ ExamplesLabel::~ExamplesLabel()
   VarLabel::destroy(pressure_gradient_mag);
   VarLabel::destroy(temperature_gradient_mag);
   VarLabel::destroy(density_gradient_mag);
+  VarLabel::destroy(pXLabel);
+  VarLabel::destroy(pXLabel_preReloc);
+  VarLabel::destroy(pMassLabel);
+  VarLabel::destroy(pMassLabel_preReloc);
+  VarLabel::destroy(pParticleIDLabel);
+  VarLabel::destroy(pParticleIDLabel_preReloc);
 }
 
 } // end namespace uintah 

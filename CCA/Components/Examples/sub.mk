@@ -9,6 +9,7 @@ SRCS     += \
 	$(SRCDIR)/Poisson2.cc \
 	$(SRCDIR)/Burger.cc \
 	$(SRCDIR)/Poisson3.cc \
+	$(SRCDIR)/ParticleTest1.cc \
 	$(SRCDIR)/SimpleCFD.cc \
 	$(SRCDIR)/AMRSimpleCFD.cc \
 	$(SRCDIR)/Interpolator.cc \
