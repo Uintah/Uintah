@@ -46,6 +46,7 @@ class TurbulenceModel;
 class Properties;
 class BoundaryCondition;
 class PhysicalConstants;
+class ThermalNOxSolver; //Thermal NOx solver
 class EnthalpySolver;
 class ExplicitSolver: public NonlinearSolver {
 
@@ -62,6 +63,7 @@ public:
 		     PhysicalConstants* physConst,
 		     bool calcReactscalar,
 		     bool calcEnthalpy,
+                     bool calcThermalNOx,
 		     const ProcessorGroup* myworld);
 
       // GROUP: Destructors:
@@ -282,6 +284,9 @@ private:
       ScalarSolver* d_scalarSolver;
       // reacting scalar solver
       ReactiveScalarSolver* d_reactingScalarSolver;
+      // Thermal NOx solver 
+      bool d_thermalNOxSolve;
+      ThermalNOxSolver* d_thermalNOxSolver;
       // physcial constatns
       PhysicalConstants* d_physicalConsts;
 

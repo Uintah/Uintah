@@ -129,7 +129,14 @@ public:
 				   CellInformation* cellinfo,
 				   ArchesVariables* vars,
 				   ArchesConstVariables* constvars);
-
+      // Source term for Thermal NOx
+      void thermalNOxSource(const ProcessorGroup*,
+                                   const Patch* patch,
+                                   double delta_t,
+                                   int,
+                                   CellInformation* cellinfo,
+                                   ArchesVariables* vars,
+                                   ArchesConstVariables* constvars);
 
       void calculateEnthalpySource(const ProcessorGroup* pc,
 				 const Patch* patch,
