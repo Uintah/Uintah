@@ -197,6 +197,7 @@ static void usage(char* progname)
   cerr << " -fullscreen      - run in full screen mode\n";
   cerr << " -demo            - spiffy gratuitous border animations\n";
   cerr << " -jitter          - jittered masks - fixed table for now\n";
+  cerr << " -stereo          - display in stereo mode\n";
   cerr << " -worker_gltest   - calls run_gl_test from worker threads\n";
   cerr << " -display_gltest  - calls run_gl_test from display thread\n";
   cerr << " -displayless     - do not display and write a frame to displayless.ppm\n";
@@ -298,6 +299,8 @@ main(int argc, char* argv[])
 
   Camera usercamera(Point(1,0,0), Point(0,0,0), Vector(0,0,1), 60);
   bool use_usercamera = false;
+
+  bool stereo = false;
   
   int scene_argc=-1;
   char** scene_argv=0;
@@ -483,8 +486,10 @@ main(int argc, char* argv[])
       rtrt_engine->worker_run_gl_test = true;
     } else if (strcmp(argv[i], "-display_gltest") == 0) {
       rtrt_engine->display_run_gl_test = true;
-    } else if (strcmp(argv[i], "-no_gui") == 0) {
+    } else if (strcmp(argv[i], "-no_gui") == 0 || strcmp(argv[i], "-nogui") == 0) {
       show_gui = false;
+    } else if (strcmp(argv[i], "-stereo") == 0) {
+      stereo = true;
     } else {
       cerr << "Unknown option: " << argv[i] << '\n';
       usage(argv[0]);
@@ -717,7 +722,8 @@ main(int argc, char* argv[])
   // Start up display thread...
   Dpy* dpy=new Dpy(scene, criteria1, criteria2, rtrt_engine->nworkers, bench,
 		   ncounters, c0, c1, 1.0, 1.0, display_frames,
-		   pp_size, scratchsize, fullscreen, do_frameless==true, rserver );
+		   pp_size, scratchsize, fullscreen, do_frameless==true, rserver,
+		   stereo );
 
   Gui * gui = new Gui();
 
