@@ -103,9 +103,9 @@ SpecifiedBodyContact::findVel(double t) const
         }
       double l  = (d_vel_profile[smin+1].first-d_vel_profile[smin].first);
       double xi = (t-d_vel_profile[smin].first)/l;
-      double vx = xi*d_vel_profile[smin].second[0]+(1-xi)*d_vel_profile[smin].second[0];
-      double vy = xi*d_vel_profile[smin].second[1]+(1-xi)*d_vel_profile[smin].second[1];
-      double vz = xi*d_vel_profile[smin].second[2]+(1-xi)*d_vel_profile[smin].second[2];
+      double vx = xi*d_vel_profile[smin+1].second[0]+(1-xi)*d_vel_profile[smin].second[0];
+      double vy = xi*d_vel_profile[smin+1].second[1]+(1-xi)*d_vel_profile[smin].second[1];
+      double vz = xi*d_vel_profile[smin+1].second[2]+(1-xi)*d_vel_profile[smin].second[2];
       return Vector(vx,vy,vz);
     }
 }
@@ -190,7 +190,6 @@ void SpecifiedBodyContact::exMomIntegrated(const ProcessorGroup*,
     // set velocity to profile vel
     double tcurr = d_sharedState->getElapsedTime();
     Vector new_velocity = findVel(tcurr);
-    std::cout << "velocity at t = " << tcurr << " = " << new_velocity << std::endl;
     
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
       IntVector c = *iter; 
