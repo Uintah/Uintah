@@ -34,6 +34,7 @@ using namespace SCICore::GeomSpace;
 using namespace SCICore::Geometry;
 using namespace SCICore::TclInterface;
 
+#define MAX_CLASS 30
 class MeshToGeom : public Module {
     MeshIPort* imesh;
     GeometryOPort* ogeom;
@@ -77,15 +78,15 @@ void MeshToGeom::execute()
     update_state(JustStarted);
     int i;
 #if 0
-    GeomGroup* groups[7];
-    for(i=0;i<7;i++) groups[i] = scinew GeomGroup;
+    GeomGroup* groups[MAX_CLASS];
+    for(i=0;i<MAX_CLASS;i++) groups[i] = scinew GeomGroup;
 #else
-    GeomTrianglesP* groups[7];
-    for(i=0;i<7;i++) groups[i] = scinew GeomTrianglesP;
+    GeomTrianglesP* groups[MAX_CLASS];
+    for(i=0;i<MAX_CLASS;i++) groups[i] = scinew GeomTrianglesP;
 #endif
-    bool have_tris[7];
+    bool have_tris[MAX_CLASS];
     int j;
-    for(j=0;j<7;j++)
+    for(j=0;j<MAX_CLASS;j++)
       have_tris[j]=false;
     for (i=0; i<mesh->elems.size(); i++) {
 	if (i%500 == 0) update_progress(i, mesh->elems.size());
@@ -112,17 +113,17 @@ void MeshToGeom::execute()
 				   mesh->nodes[mesh->elems[i]->n[3]]->p));
 
 #else
-	    have_tris[cond%7]=true;
-	    groups[cond%7]->add(mesh->nodes[mesh->elems[i]->n[0]]->p,
+	    have_tris[cond%MAX_CLASS]=true;
+	    groups[cond%MAX_CLASS]->add(mesh->nodes[mesh->elems[i]->n[0]]->p,
 			      mesh->nodes[mesh->elems[i]->n[1]]->p,
 			      mesh->nodes[mesh->elems[i]->n[2]]->p);
-	    groups[cond%7]->add(mesh->nodes[mesh->elems[i]->n[1]]->p,
+	    groups[cond%MAX_CLASS]->add(mesh->nodes[mesh->elems[i]->n[1]]->p,
 			      mesh->nodes[mesh->elems[i]->n[2]]->p,
 			      mesh->nodes[mesh->elems[i]->n[3]]->p);
-	    groups[cond%7]->add(mesh->nodes[mesh->elems[i]->n[0]]->p,
+	    groups[cond%MAX_CLASS]->add(mesh->nodes[mesh->elems[i]->n[0]]->p,
 			      mesh->nodes[mesh->elems[i]->n[1]]->p,
 			      mesh->nodes[mesh->elems[i]->n[3]]->p);
-	    groups[cond%7]->add(mesh->nodes[mesh->elems[i]->n[0]]->p,
+	    groups[cond%MAX_CLASS]->add(mesh->nodes[mesh->elems[i]->n[0]]->p,
 			      mesh->nodes[mesh->elems[i]->n[2]]->p,
 			      mesh->nodes[mesh->elems[i]->n[3]]->p);
 #endif
@@ -131,23 +132,23 @@ void MeshToGeom::execute()
 	    cerr << "Elements should have been packed!\n";
 	}
     }
-    GeomPts *pts[7];
-    bool have_pts[7];
+    GeomPts *pts[MAX_CLASS];
+    bool have_pts[MAX_CLASS];
 
-    for(i=0;i<7;i++){
+    for(i=0;i<MAX_CLASS;i++){
 	pts[i] = scinew GeomPts(1);
 	have_pts[i]=false;
     }
 
     for (i=0; i<mesh->elems.size(); i++) {
 	if (mesh->elems[i]) {
-	  have_pts[mesh->elems[i]->cond%7]=true;
-	    pts[mesh->elems[i]->cond%7]->add(mesh->elems[i]->centroid());
+	  have_pts[mesh->elems[i]->cond%MAX_CLASS]=true;
+	    pts[mesh->elems[i]->cond%MAX_CLASS]->add(mesh->elems[i]->centroid());
 	}
     }
 
-    GeomMaterial* matls[7];
-    GeomMaterial* matlsb[7];
+    GeomMaterial* matls[MAX_CLASS];
+    GeomMaterial* matlsb[MAX_CLASS];
 
 
     ogeom->delAll();
@@ -161,12 +162,12 @@ void MeshToGeom::execute()
     c[5]=scinew Material(Color(.2,.2,.2),Color(.1,.7,.7),Color(.5,.5,.5),20);
     c[6]=scinew Material(Color(.2,.2,.2),Color(.6,.6,.6),Color(.5,.5,.5),20);
 
-    for(i=0;i<7;i++) {
+    for(i=0;i<MAX_CLASS;i++) {
 	matls[i] = scinew GeomMaterial(pts[i],
-				       c[i]);
+				       c[i%7]);
 
 	matlsb[i] = scinew GeomMaterial(groups[i],
-					c[i]);
+					c[i%7]);
 
 	clString tmps("Data ");
 	tmps += (char) ('0' + i);
@@ -201,6 +202,9 @@ void MeshToGeom::execute()
 
 //
 // $Log$
+// Revision 1.3  1999/12/09 09:52:44  dmw
+// supports more than 7 unique regions now
+//
 // Revision 1.2  1999/10/07 02:08:20  sparker
 // use standard iostreams and complex type
 //
