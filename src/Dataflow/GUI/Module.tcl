@@ -24,14 +24,23 @@ global port_height
 set port_height 7 
 
 global selected_color
-#set selected_color blue
-set selected_color darkgray
+set selected_color LightSkyBlue2
+#set selected_color darkgray
 
 global unselected_color
 set unselected_color gray
 
 global CurrentlySelectedModules
 set CurrentlySelectedModules ""
+
+global sel_module_box
+set sel_module_box ""
+
+global startX
+set startX 0
+
+global startY
+set startY 0
 
 global modules
 set modules ""
@@ -148,9 +157,12 @@ itcl_class Module {
 	set modframe $canvas.module[modname]
 	frame $modframe -relief raised -borderwidth 3 
 	
-	bind $modframe <1> "moduleStartDrag $canvas [modname] %X %Y"
+	bind $modframe <1> "moduleStartDrag $canvas [modname] %X %Y 0"
 	bind $modframe <B1-Motion> "moduleDrag $canvas $minicanvas [modname] %X %Y"
-	bind $modframe <ButtonRelease-1> "moduleEndDrag $modframe $canvas"
+	bind $modframe <ButtonRelease-1> "moduleEndDrag $modframe $canvas %X %Y"
+	bind $modframe <Control-Button-1> "moduleStartDrag $canvas [modname] %X %Y 1"
+#$this toggleSelected $canvas 1"
+
 	bind $modframe <3> "popup_menu %X %Y $canvas $minicanvas [modname]"
 	
 	frame $modframe.ff
@@ -273,33 +285,11 @@ itcl_class Module {
 	bind all <Control-z> "undo"
 	bind all <Control-y> "redo"
         
-	# Select the clicked item, and unselect all others
-	bind $p <2> "$this toggleSelected $canvas 0"
-	bind $p.title <2> "$this toggleSelected $canvas 0"
-	if {$make_time} {
-	    bind $p.time <2> "$this toggleSelected $canvas 0"
-	    bind $p.inset <2> "$this toggleSelected $canvas 0" 
-	}
-	if {[have_ui]} {
-	    bind $p.ui <2> "$this toggleSelected $canvas 0"
-	}
-
-	# Select the item in focus, leaving all others selected
-	bind $p <Control-Button-2> "$this toggleSelected $canvas 1"
-	bind $p.title <Control-Button-2> "$this toggleSelected $canvas 1"
-	if {$make_time} {
-	    bind $p.time <Control-Button-2> "$this toggleSelected $canvas 1"
-	    bind $p.inset <Control-Button-2> "$this toggleSelected $canvas 1"
-	}
-	if {[have_ui]} {
-	    bind $p.ui <Control-Button-2> "$this toggleSelected $canvas 1"
-	}
-	 
 	# Select the item in focus, and unselect all others
-	bind $canvas <2> "startBox %X %Y $canvas 0"
-	bind $canvas <Control-Button-2> "startBox %X %Y $canvas 1"
-	bind $canvas <B2-Motion> "makeBox %X %Y $canvas"
-	bind $canvas <ButtonRelease-2> "endBox %X %Y $canvas"
+	bind $canvas <1> "startBox %X %Y $canvas 0"
+	bind $canvas <Control-Button-1> "startBox %X %Y $canvas 1"
+	bind $canvas <B1-Motion> "makeBox %X %Y $canvas"
+	bind $canvas <ButtonRelease-1> "endBox %X %Y $canvas"
 
 	bind $p <1> "$canvas raise $this"
 
@@ -443,11 +433,15 @@ itcl_class Module {
     
     method toggleSelected { canvas option } {
 	global CurrentlySelectedModules
-	global selected_color
+	global selected_color unselected_color
 	if { $option == 0 } {
 	    unselectAll
 	}
-	addSelected $canvas $selected_color
+	if [is_selected] {
+	    removeSelected $canvas $unselected_color
+	} else {
+	    addSelected $canvas $selected_color	    
+	}
     }
     
     method lightOPort {which color} {
@@ -775,8 +769,14 @@ proc buildConnection {connid portcolor omodid owhich imodid iwhich} {
     $maincanvas bind $connid <ButtonPress-1> "lightPipe $temp $omodid $owhich $imodid $iwhich"
     $maincanvas bind $connid <ButtonRelease-1> "resetPipe $temp $omodid $imodid"
     $maincanvas bind $connid <Control-Button-1> "raisePipe $connid"
-
+    
+#    global $connid-annotation
+#    set $connid-annotation "$owhich to $iwhich"
+#    eval $maincanvas create text [lindex $path 2] [lindex $path 3] -text "$connid-annotation" -width [expr abs([lindex $path 4] - [lindex $path 2])] -fill \"$portcolor\" -tags $connid-annotation
+#    $maincanvas bind $connid-annotation <ButtonPress-1> "puts \"you clicked on $connid !\""
+    
     eval $minicanvas create line [scalePath $path] -width 1 -fill \"$portcolor\" -tags $connid
+    
 
     $minicanvas lower $connid
 }
@@ -1178,16 +1178,28 @@ proc computeDist {x1 y1 x2 y2} {
     set dy [expr $y2-$y1]
     return [expr sqrt($dx*$dx+$dy*$dy)]
 }
+proc moduleStartDrag {maincanvas modid x y toggleOnly} {
+    global ignoreModuleMove 
+    set ignoreModuleMove 0
 
-proc moduleStartDrag {maincanvas modid x y} {
+    if $toggleOnly {
+	$modid toggleSelected $maincanvas 1
+      	global ignoreModuleMove
+	set ignoreModuleMove 1
+	return
+    }
+
     #raise the module icon
     set wname "$maincanvas.module$modid"
     raise $wname
 
     #set module movement coordinates
+    global startX startY
     global lastX lastY
     set lastX $x
     set lastY $y
+    set startX $x
+    set startY $y
        
     #if clicked module isnt selected, unselect all and select this
     if { ! [$modid is_selected] } {
@@ -1207,6 +1219,8 @@ proc moduleStartDrag {maincanvas modid x y} {
 }
 
 proc moduleDrag {maincanvas minicanvas modid x y} {
+    global ignoreModuleMove
+    if $ignoreModuleMove return
     global grouplastX
     global grouplastY
     global lastX
@@ -1253,6 +1267,7 @@ proc moduleDrag {maincanvas minicanvas modid x y} {
 }    
 
 proc do_moduleDrag {maincanvas minicanvas modid x y} {
+
     global xminwarped
     global xmaxwarped
     global yminwarped
@@ -1457,10 +1472,20 @@ proc do_moduleDrag {maincanvas minicanvas modid x y} {
     set lastY $templastY
 }
 
-proc moduleEndDrag {mframe maincanvas} {
-    global sel_module_box
-    $maincanvas delete $sel_module_box
+proc moduleEndDrag {mframe maincanvas x y} {
+    global ignoreModuleMove
+    if $ignoreModuleMove return
+
+    global sel_module_box CurrentlySelectedModules
+    if {$sel_module_box != ""} {
+	$maincanvas delete $sel_module_box
+    }
     computeModulesBbox
+    global startX startY
+    
+    if {[expr [expr abs($startX-$x) > 2] || \
+	     [expr abs($startY-$y) > 2]] && \
+	    [llength $CurrentlySelectedModules] == 1} unselectAll    
 }
 
 proc moduleHelp {modid} {
