@@ -1,79 +1,115 @@
-/*
- *  EditPath.cc:  edit new or existing path datatype; iterates along camera path
- *
- *  Written by:
- *   David Weinstein & Alexei Samsonov
- *   Department of Computer Science
- *   University of Utah
- *   July 1994, July 2000
- *
- *  Copyright (C) 1994 SCI Group
- */
+/*----------------------------------------------------------------------
+CLASS
+    EditPath
+
+    Interactive tool editing and playbacking camera path in Salmon module
+
+GENERAL INFORMATION
+
+    Created by:
+    Alexei Samsonov
+    Department of Computer Science
+    University of Utah
+    July 2000
+    
+    Copyright (C) 2000 SCI Group
+
+KEYWORDS
+    Quaternion
+
+DESCRIPTION
+   EditPath module provides a set of interactive tools for creation and manipulation of
+   camera path in Salmon module. The basic features of the modules are as follows:
+    
+   - Interactive adding/inserting/deleting of key frames of current camera position in edited path
+   - Navigation through existing key frames</para>
+   - Three interpolation modes - Linear, Cubic and no interpolation (key frames only playback)
+   - Two acceleration modes - smooth start/end(in interpolated mode) and no acceleration
+   - Path step(smoothness) and sampling rate specification for current path
+   - Automatic generation of circle path based on current camera position and position of reference widget
+   - Looped and reversed path modes
+
+PATTERNS
+
+WARNING    
+    
+POSSIBLE REVISIONS
+    Adding additional interpolation modes (subject to experiment)
+    Adding support of PathWidget
+----------------------------------------------------------------------*/
 
 #include <PSECore/Datatypes/GeometryPort.h>
 #include <PSECore/Datatypes/PathPort.h>
+#include <PSECore/Widgets/CrosshairWidget.h>
+
 #include <SCICore/Geom/View.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Containers/HashTable.h>
-#include <sys/timeb.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <SCICore/TclInterface/TCLTask.h>
-#include <iostream>
 #include <SCICore/Datatypes/Path.h>
-#include <SCICore/Thread/Semaphore.h>
-#include <SCICore/Thread/Mutex.h>
-#include <iosfwd>
+
 #include <SCICore/Util/Timer.h>
 #include <SCICore/Thread/Time.h>
+#include <SCICore/Thread/CrowdMonitor.h>
+#include <SCICore/Thread/Semaphore.h>
+#include <SCICore/Thread/Mutex.h>
 
+#include <SCICore/Geometry/Quaternion.h>
+#include <SCICore/Geometry/Transform.h>
+#include <math.h>
+
+#include <iostream>
 using std::cout;
 using namespace std;
 
 #undef mr
 
-#define msg(m) cout << m  << endl;
+// #define msg(m) cout << m  << endl;
 
 namespace PSECommon {
 namespace Modules {
 
 using namespace PSECore::Dataflow;
 using namespace PSECore::Datatypes;
-using namespace SCICore::Datatypes;
-
 using namespace SCICore::Containers;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Geometry;
 using namespace SCICore::TclInterface;
 using namespace SCICore::Datatypes;
+
+using PSECore::Widgets::CrosshairWidget;
 using SCICore::Thread::Semaphore;
 using SCICore::Thread::Mutex;
 using SCICore::Thread::Time;
-using namespace std;
 
 class EditPath : public Module {
 
-    enum ExecMsg { Default=1, add_vp, rem_vp, ins_vp, init, init_new, 
-		   init_exist, test_path, stop_test, test_views, save_path, get_to_view, 
-		   calc_path, refr_tcl_info, update_path, switch_loop, switch_dir, set_rate, set_step_size};
+    enum ExecMsg { Default=1, add_vp, rem_vp, ins_vp, rpl_vp, init_new, 
+		   init_exist, test_path, save_path, get_to_view, 
+		   prev_view, next_view, set_step_size, mk_circle_path, w_show, 
+		   set_acc_mode, set_path_t};
     
-  //  HashTable<clString, ExecMsg>    msg_lookup;
-  //    void         RegisterMessages();
-  
-    TCLvarint    tcl_is_new, tcl_curr_view, tcl_num_views,
-                 tcl_intrp_type, tcl_speed_mode, tcl_acc_mode, 
-                 tcl_is_looped, tcl_is_backed, tcl_auto_start;
+    TCLint     tcl_num_views, tcl_is_looped, tcl_is_backed, tcl_auto_start;
 
-    TCLvarint    tcl_msg_box, tcl_curr_roe, tcl_acc_pat;   
-    TCLvardouble tcl_step_size, tcl_speed_val, tcl_acc_val, tcl_rate;
-    TCLvarint    UI_Init;
-
-    double       acc_val, speed_val, rate, step_size;
-    int          curr_view, speed_mode, acc_mode, acc_patt;
+    TCLint    tcl_curr_roe;   
+    TCLdouble tcl_step_size, tcl_speed_val, tcl_acc_val, tcl_rate;
+    TCLint    UI_Init;
+    TCLvarint tcl_msg_box, tcl_intrp_type, tcl_acc_mode, tcl_widg_show, tcl_curr_view, tcl_is_new, tcl_stop;
+    TCLstring tcl_info;
+    
+    double       acc_val, speed_val, rate;
+    int          curr_view, acc_mode;
     int          curr_roe; 
     bool         is_changed, is_new, is_init, is_auto;
     ExecMsg      exec_msg;
     View         c_view;
-  
+    clString     message;
+
+    CrosshairWidget* cross_widget;
+    CrowdMonitor     widget_lock;
+    GeomID           cross_id;
+
     Semaphore    sem;
     Mutex        exec_lock;
   
@@ -81,7 +117,7 @@ class EditPath : public Module {
     PathOPort*   opath;
     GeometryOPort* ogeom;
     PathHandle   ext_path_h, new_path_h, curr_path_h;
-   
+    
 public:
     EditPath(const clString& id);
     virtual ~EditPath();
@@ -89,7 +125,8 @@ public:
     virtual void tcl_command(TCLArgs&, void*);
     bool init_new_path();
     bool init_exist_path(PathHandle);
-    void update_tcl_var(ExecMsg msg=Default);
+    void update_tcl_var();
+    void init_tcl_update();
     bool Msg_Box(const clString&, const clString&);
 };
 
@@ -100,91 +137,66 @@ extern "C" Module* make_EditPath(const clString& id)
 
 EditPath::EditPath(const clString& id)
 : Module("EditPath", id, Filter),
+  tcl_stop("tcl_stop", id, this),
+  tcl_msg_box("tcl_msg_box", id, this),
+  tcl_widg_show("tcl_widg_show", id, this),
   tcl_is_new("tcl_is_new", id, this), 
   tcl_rate("tcl_rate", id, this), 
-  tcl_curr_view("tcl_curr_view", id, this), 
-  tcl_num_views("tcl_num_views", id, this), 
-  tcl_intrp_type("tcl_intrp_type", id, this), 
-  tcl_speed_mode("tcl_speed_mode", id, this), 
-  tcl_acc_mode("tcl_acc_mode", id, this), 
+  tcl_curr_view("tcl_curr_view", id, this),
+  tcl_acc_mode("tcl_acc_mode", id, this),
+  tcl_intrp_type("tcl_intrp_type", id, this),   
   tcl_is_looped("tcl_is_looped", id, this),
   tcl_is_backed("tcl_is_backed", id, this),
-  tcl_msg_box("tcl_msg_box", id, this),
+  tcl_step_size("tcl_step_size", id, this),
   tcl_curr_roe("tcl_curr_roe", id, this),
-  tcl_acc_pat("tcl_acc_pat", id, this),
-  tcl_step_size("tcl_step_size", id, this), 
+  tcl_auto_start("tcl_auto_start", id, this),
+  tcl_num_views("tcl_num_views", id, this),
   tcl_speed_val("tcl_speed_val", id, this), 
   tcl_acc_val("tcl_acc_val", id, this),
-  tcl_auto_start("tcl_auto_start", id, this),
+  tcl_info("tcl_info", id, this),
   UI_Init("UI_Init", id, this),
   curr_view(0),
-  speed_mode(0),
   acc_mode(0),
   is_changed(false),
   is_auto(false),
   curr_roe(0),        // no Roe yet
   acc_val(0),
   speed_val(0),
-  acc_patt(0),
   rate(1),
-  step_size(0.01),
-  exec_msg(init),
+  exec_msg(Default),
+  widget_lock("EditPath module widget lock"),
   sem("EditPath Semaphore", 0),
-  exec_lock("exec_lock")
+  exec_lock("exec_lock"),
+  message("")
 {
-    // Create the input port
-    msg("Entering constructor")
-    ipath=scinew PathIPort(this, "Path", PathIPort::Atomic);
-    add_iport(ipath);
-    opath=scinew PathOPort(this, "Path", PathIPort::Atomic);
-    add_oport(opath);
-    ogeom=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
-    add_oport(ogeom);
-    
-    is_new=true;
-    new_path_h=curr_path_h=scinew Path();
-    new_path_h->set_step(step_size);
-    
-    //    RegisterMessages();
+  ipath=scinew PathIPort(this, "Path", PathIPort::Atomic);
+  add_iport(ipath);
+  opath=scinew PathOPort(this, "Path", PathIPort::Atomic);
+  add_oport(opath);
+  ogeom=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
+  add_oport(ogeom);
 
-    UI_Init.set(0);
-    update_tcl_var();
+  cross_widget =scinew CrosshairWidget(this, &widget_lock, 0.01);
+  cross_widget->SetState(0);
+  cross_widget->SetPosition(Point(0, 0, 0));
+  cross_id=0;
+  
+  new_path_h=curr_path_h=scinew Path();
+  is_new=true;
+  
+  UI_Init.set(0);
+ 
+  init_tcl_update();
     
-    is_init=false;
-
-    cout << "Leaving constructor" << endl;
+  is_init=false;
+  need_execute=1;
+  
+  sem.up();
 }
 
 EditPath::~EditPath()
 {
 }
-
-// void EditPath::RegisterMessages(){
-//     msg_lookup.insert("Default", Default);
-//     msg_lookup.insert("add_vp", add_vp);
-//     msg_lookup.insert("rem_vp", rem_vp);
-//     msg_lookup.insert("ins_vp", ins_vp);
-//     msg_lookup.insert("init", init);
-//     msg_lookup.insert("init_new", init_new);
-//     msg_lookup.insert("init_exist", init_exist);
-//     msg_lookup.insert("test_path", test_path);
-//     msg_lookup.insert(" stop_test",  stop_test);
-//     msg_lookup.insert("test_views", test_views);
-//     msg_lookup.insert("save_path", save_path);
-//     msg_lookup.insert("get_to_view", get_to_view);
-//     msg_lookup.insert("calc_path", calc_path);
-//     msg_lookup.insert("refr_tcl_info", refr_tcl_info);
-//     msg_lookup.insert("update_path", update_path);
-//     msg_lookup.insert("switch_loop", switch_loop);
-//     msg_lookup.insert("switch_dir", switch_dir);
-//     msg_lookup.insert("set_rate", set_rate);
-//     msg_lookup.insert("set_step_size", set_step_size);
-//     //     msg_lookup.insert("", );
-//     //     msg_lookup.insert("", );
-//     //     msg_lookup.insert("", );
-
-// }
-
 
 void EditPath::execute()
 {
@@ -194,16 +206,18 @@ void EditPath::execute()
   { 
     PathHandle p;
     GeometryData* data=0;
-    
+    int cv;
+    bool is_next=false;
+
+    // first - time initialization
     if (!is_init){
       is_init=true;
+      cross_id=ogeom->addObj(cross_widget->GetWidget(), clString("Crosshair"), &widget_lock);
       if (!ipath->get(p)){
 	init_new_path();
-	update_tcl_var();
       }
       else {
 	if (init_exist_path(p) && (is_auto=tcl_auto_start.get())) {
-	  update_tcl_var();
 	  exec_msg=test_path;
 	  want_to_execute();
 	  // !!! no sem.up() here - no certain UI parts interference
@@ -212,356 +226,498 @@ void EditPath::execute()
 	}
       }
     }
-    
+    else {
+      // execute request from upstream module
+      if (ipath->get(p))
+	if (ext_path_h.get_rep()==0 || p->generation!=ext_path_h->generation){ // new path appeared on the input
+	  if (init_exist_path(p)) {
+	    opath->send(curr_path_h);
+	    exec_msg=Default;
+	    sem.up();
+	    exec_lock.unlock();
+	    return;
+	  }
+	}
+    }
+ 
     switch (exec_msg) {
-    case init_new:
-      if (init_new_path()){
-	opath->send(curr_path_h);
-      }
-      update_tcl_var();
-      break;
-      
-    case init_exist:
-      if (ipath->get(p)){
-	if (init_exist_path(p)) {
+
+      // ******************************************************
+      case init_new:
+	if (init_new_path()){
 	  opath->send(curr_path_h);
 	}
-      }
-      update_tcl_var();
-      break;
-      
-    case add_vp:
-      data=ogeom->getData(0, 1);
-
-      if (data && data->view){
-	curr_path_h->add_keyF(*(data->view));
-	curr_view=(curr_path_h->get_num_views()-1);
-	is_changed=true;
-	update_tcl_var();
-      }
-      break;
-      
-    case rem_vp:    
-      data=ogeom->getData(0, 1);
-      if (data && data->view){
-	if (curr_path_h->get_keyF(curr_view, c_view) && *(data->view)==c_view){
-	  curr_path_h->del_keyF(curr_view);
-	  if (curr_path_h->get_keyF(--curr_view, c_view))
-	    ogeom->setView(0, c_view);
-	  is_changed=true;
+	break;
+	
+      case init_exist:
+	if (ipath->get(p)){
+	  if (init_exist_path(p)) {
+	    opath->send(curr_path_h);
+	  }
+	}
+	else {
+	  message="Cann't get path from outside";
 	  update_tcl_var();
 	}
-	else{ 
-	  // attempt to delete not existing view message !!!
+	break;
+      
+      // ******************************************************	
+      case mk_circle_path:{
+	
+	data=ogeom->getData(0, 1);
+	if (data && data->view){
+	  c_view=*(data->view);
+	  if (!cross_widget->GetState() && !Msg_Box("No visible widget message","No active widget is visible for specifying path center. Would you like to use its current position?")){
+	    break;
+	  }
+
+	  const Point wpos=cross_widget->GetPosition();
+	  Point eye=c_view.eyep();
+	  Point lookp=c_view.lookat();
+	  Vector lookdir=lookp-eye;
+	  Vector rdir=wpos-eye;
+	  const double proj=Dot(lookdir.normal(), rdir.normal())*rdir.length();
+	  const double radius=(proj>0)?proj:-proj;
+	  if (rdir.length()<10e-7|| radius<10e-5){
+	    message="Bad Geometry: No circle";
+	    update_tcl_var();
+	    break;
+	  }
+ 
+	  if (init_new_path()){
+	    const int npts=40;
+	    const double PI=3.14159265358979323846;
+	    
+	    Vector tang=Cross(lookdir, c_view.up());
+	    Vector u=Cross(tang, lookdir);
+	    double f=c_view.fov();
+	    Point center=eye+lookdir.normal()*proj;	   
+	    Array1<Point> pts;
+	    pts.resize(npts);
+       
+	    u.normalize();
+	    double angle=0;
+	    for (int i=0; i<npts-1; i++){ // first and last frames don't coincide ???
+	      angle=(i*PI)/(npts-1);
+	      Quaternion rot(cos(angle), u*sin(angle));
+	      Vector dir=rot.rotate(eye-center);
+	      pts[i]=center+dir;
+	      curr_path_h->add_keyF(View(pts[i], center, u, f));
+	    }
+	    
+	    is_changed=true;
+	    curr_path_h->set_path_t(KEYFRAMED);
+	    curr_path_h->set_acc_t(SMOOTH);
+	    init_tcl_update();
+	    opath->send(curr_path_h);
+	  }
 	}
+	break;
       }
-      
-      break;
-      
-    case ins_vp:
-      data=ogeom->getData(0, 1);
-      if (data && data->view){
-	curr_path_h->ins_keyF(++curr_view, *(data->view));
-	is_changed=true;
-	update_tcl_var(); 
-      }
-      break;
-      
-    case test_path:
-      // self-messaging mode; sem is down all the time;
-      // exit could be done by "on-fly" exec_msg changing in tcl_command()
 
-
-      bool is_next=curr_path_h->get_nextPP(c_view, curr_view, speed_val, acc_val);
-      
-  
-      ogeom->setView(0, c_view);  
-      if (is_next){ 
-	  exec_msg=test_path;
-	  Time::waitFor((double)rate);
-	  want_to_execute();
-	  // !!! no sem.up() here - no certain UI parts interference
-	  exec_lock.unlock();
-	  return;
+      // ******************************************************	
+      case add_vp:
+	data=ogeom->getData(0, 1);
+    
+	if (data && data->view){
+	  if (curr_path_h->add_keyF(*(data->view))){
+	    curr_view=(curr_path_h->get_num_views()-1);
+	    is_changed=true;
+	    message="Key frame added";
+	  }
+	  else {
+	    message="Cann't add keyframe at the same position";
+	  }
 	}
-      else {
-	curr_path_h->seek_start();
-	sem.up();
-      }
-      break;
+	else {
+	  message="Cann't get view";
+	}
+	update_tcl_var();
+	break;
+      
+      // ******************************************************		
+      case rem_vp:    
+	data=ogeom->getData(0, 1);
+	if (data && data->view){
+	  if (curr_path_h->get_keyF(curr_view, c_view)){
+	      //      && *(data->view)==c_view){
+	    curr_path_h->del_keyF(curr_view);
 
-    case test_views:
-      // self-messaging mode; sem is down all the time;
-      // exit could be done by "on-fly" exec_msg changing in tcl_command()
-      if(curr_path_h->get_nextKF(c_view, curr_view, speed_val, acc_patt)){
-          ogeom->setView(0, c_view);  
-	  exec_msg=test_views;
-	  Time::waitFor((double)(rate*3)); 
-	  want_to_execute();
-	  // !!! no sem.up() here - no certain UI parts interference
-	  exec_lock.unlock();
-	  return;
-      }
-      else {
-	curr_path_h->seek_start(); 
-	sem.up();
-      }
-      break;
+	    if (curr_view==curr_path_h->get_num_views())  // last view deleted
+	      curr_view--;
+	    
+	    if (curr_path_h->get_keyF(curr_view, c_view))
+	      ogeom->setView(0, c_view);
+	    is_changed=true;
+	    message="Key frame removed";
+	  }
+	  else{ 
+	    // attempt to delete not existing view message !!!
+	    message="Cann't delete non-active view";
+	  }
+	}
+	else {
+	  message="Cann't get view";
+	}
+	update_tcl_var();
+	break;
 
-    case get_to_view:
-      int cv=tcl_curr_view.get();
-      if (curr_path_h->get_keyF(cv, c_view)){
-	ogeom->setView(0, c_view);
-	curr_view=cv;
+      // ******************************************************		
+      case ins_vp:
+	data=ogeom->getData(0, 1);
+	if (data && data->view){
+	  if (curr_path_h->ins_keyF(curr_view, *(data->view))){
+	    is_changed=true;
+	    message="Key frame inserted";
+	  }
+	  else {
+	    message="No insertion";
+	  }
+	}
+	else {
+	  message="Cann't get view";
+	}
+	update_tcl_var();
+	break;
+
+      // ******************************************************		
+      case rpl_vp:
+	data=ogeom->getData(0, 1);
+	if (data && data->view){
+	  if (curr_path_h->get_keyF(curr_view, c_view)){ 
+	    curr_path_h->del_keyF(curr_view);
+
+	    if (curr_view==curr_path_h->get_num_views()) // last view deleted
+	      if (curr_path_h->add_keyF(*(data->view))){
+		message="Last keyframe replaced";
+	      }
+	      else {
+		message="Cann't replace (neighboor keyframe at the same position)";
+		curr_path_h->add_keyF(c_view);
+	      }
+	    else {
+	      if (curr_path_h->ins_keyF(curr_view, *(data->view))){
+		message="Keyframe replaced";
+	      }
+	      else {
+		message="Cann't replace (neighboor keyframe at the same position)";
+		curr_path_h->ins_keyF(curr_view, c_view);
+	      }
+	    }
+	    curr_path_h->get_keyF(curr_view, c_view);
+	    ogeom->setView(0, c_view);
+	    is_changed=true;
+	  }
+	  else{ 
+	    // attempt to delete not existing view message !!!
+	    message="Cann't delete view";
+	  }
+	}      
+	else {
+	  message="Cann't get view";
+	}
+	
+	update_tcl_var();
+	break;
+
+      // ******************************************************		
+      case test_path: {
+	// self-messaging mode; sem is down all the time;
+
+	if (curr_path_h->set_step(tcl_step_size.get())
+	    || curr_path_h->set_loop(tcl_is_looped.get())
+	    || curr_path_h->set_back(tcl_is_backed.get())
+	    || curr_path_h->set_path_t(tcl_intrp_type.get())
+	    || curr_path_h->set_acc_t(tcl_acc_mode.get())) {
+	  is_changed=true;
+	}
+	
+	if (!curr_path_h->is_started()){
+	  tcl_stop.set(0);
+	}
+					 
+	if (!tcl_stop.get()){
+	  cout << "moving ahead! tcl_stop is" << tcl_stop.get() << endl;
+	  double olds=speed_val;
+	  is_next=curr_path_h->get_nextPP(c_view, cv, speed_val, acc_val);  
+	  ogeom->setView(0, c_view);
+	  speed_val/=(rate=tcl_rate.get());
+	  acc_val=is_next?((speed_val-olds)/rate):0;
+
+	  tcl_speed_val.set(speed_val);
+	  tcl_acc_val.set(acc_val);
+	  
+	  if (is_next){  
+	    curr_view=cv;
+	    update_tcl_var();
+	    exec_msg=test_path;
+	    Time::waitFor(rate);
+	    want_to_execute();
+	    // !!! no sem.up() here - no certain UI parts interference
+	    exec_lock.unlock();
+	    return;
+	  }
+	  else {
+	    cout << "stopped!" << endl;
+	    curr_path_h->seek_start();
+	    curr_view=cv;
+	    update_tcl_var();
+	  }
+	}
+	curr_path_h->stop();
+	opath->send(curr_path_h);
       }
       break;
+    
+      //********************************************************			
+      case get_to_view:
+	cv=tcl_curr_view.get();
+	if (curr_path_h->get_keyF(cv, c_view)){
+	  ogeom->setView(0, c_view);
+	  curr_view=cv;
+	  update_tcl_var();
+	}
+	break;
 
-    case calc_path:
-      break;
-    case refr_tcl_info:
-      break;
-    case update_path:
-      break;
-    case switch_loop:
-      break;
-    case stop_test:
-      break;
-    case save_path:
-      opath->send(curr_path_h);
-      break;
-    default:
-      break;
+      // ******************************************************
+      case next_view:
+	cv=curr_view+1;
+	if (curr_path_h->get_keyF(cv, c_view)){
+	  curr_view=cv;
+	  ogeom->setView(0, c_view);
+	}
+	else {
+	  if (curr_path_h->get_keyF(curr_view, c_view))
+	      ogeom->setView(0, c_view);
+	}
+	update_tcl_var();
+	break;
+
+      // ******************************************************
+      case prev_view:
+	cv=curr_view-1;
+	if (curr_path_h->get_keyF(cv, c_view)){
+	  curr_view=cv;
+	  ogeom->setView(0, c_view);
+	}
+	else {
+	  if (curr_path_h->get_keyF(curr_view, c_view))
+	      ogeom->setView(0, c_view);
+	}
+	update_tcl_var();
+	break;
+
+      // ******************************************************
+      case set_path_t:
+      case set_acc_mode:  	
+	if (curr_path_h->set_path_t(tcl_intrp_type.get())
+	    || curr_path_h->set_acc_t(tcl_acc_mode.get()))
+	  opath->send(curr_path_h);
+	break;
+	
+      // ******************************************************
+      case save_path:
+	if (curr_path_h->build_path()){
+	  curr_path_h->set_path_t(tcl_intrp_type.get());
+	  curr_path_h->set_acc_t(tcl_acc_mode.get());
+	  curr_path_h->set_step(tcl_step_size.get());
+	  curr_path_h->set_loop(tcl_is_looped.get());
+	  curr_path_h->set_back(tcl_is_backed.get());
+	  opath->send(curr_path_h);
+	  message="Path Saved";
+	  update_tcl_var();
+	}
+	break;
+
+      // ******************************************************
+      default:
+	break;
     }
   }
   exec_msg=Default;
   sem.up();
-  exec_lock.unlock();
+  exec_lock.unlock();  
 }
 
 void EditPath::tcl_command(TCLArgs& args, void* userdata)
 {   
- //  ExecMsg em=(msg_lookup.lookup(args[1], em))?em:Default;
-//   cout << "tcl_command function call: "  << args[1] << endl;
-  
-//   // messages to be executed one after another
-//   switch(em){
-//   case add_vp:
-//   case rem_vp:
-//   case ins_vp:
-//   case init:
-//   case init_new:
-//   case init_exist:
-//   case test_path:
-//   case test_views:
-//   case save_path:
-//   case get_to_view:
-//     if (exec_lock.tryLock() && sem.tryDown()){      // previos msg handled and execute() isn't running
-//       exec_msg=em;
-//       want_to_execute();
-//     }
-//     return;
-//   }
-
-//   // messages to set "run-time" parameters
-//   switch(em){
-//   case stop_test:
-//     // substitute active message assuming that execute() is in loop
-//     exec_lock.lock();
-//     if (exec_msg==test_path || exec_msg==test_views){  
-//       exec_msg=stop_test;
-//     }
-//     exec_lock.unlock();
-//   case switch_loop:
-//     exec_lock.lock();
-//       curr_path_h->set_loop(tcl_is_looped.get());
-//     exec_lock.unlock();
-//   case set_rate:
-//     exec_lock.lock();
-//       rate=tcl_rate.get();
-//     exec_lock.unlock();
-//     return;
-//   case switch_dir:
-//     exec_lock.lock();
-//      curr_path_h->set_back(tcl_is_backed.get());
-//     exec_lock.unlock();
-//     return;
-//   case set_step_size:
-//     exec_lock.lock();
-//      curr_path_h->set_step(step_size=tcl_step_size.get());
-//      is_changed=true;
-//     exec_lock.unlock();
-//     return;
-//   default:
-//     Module::tcl_command(args, userdata);
-//   }
-// }
-
-
-    if (args[1] == "add_vp"){
-       if(sem.tryDown()){
- 	exec_msg=add_vp;
- 	want_to_execute();
-       }
-     }  
-     else if (args[1] == "rem_vp"){
-       if(sem.tryDown()){
- 	exec_msg=rem_vp;
- 	want_to_execute();
-       }
-     }
-     else if (args[1] == "ins_vp"){
-       if(sem.tryDown()){
- 	exec_msg=ins_vp;
- 	want_to_execute();
-       }
-     }
-     else if (args[1] == "init"){
-       if(sem.tryDown()){
- 	exec_msg=init;
- 	want_to_execute();
-       }
-     }
-     else if (args[1] == "init_new"){ 
-       if(sem.tryDown()){
-        exec_msg=init_new; 
-        want_to_execute();
-       }
-     }
-     else if (args[1] == "init_exist"){
-       if(sem.tryDown()){
-        exec_msg=init_exist;
-        want_to_execute();
-       }
-     }
-     else if (args[1] == "test_path"){
-       msg ("In test_path TCL handler");
-       if(sem.tryDown()){
- 	msg ("Sending exec message");
- 	exec_msg=test_path;
- 	want_to_execute();
-       }
-     }
-     else if (args[1] == "stop_test"){
- 	// substitute active message assuming that execute() is in loop
- 	exec_lock.lock();
- 	  exec_msg=stop_test;
- 	exec_lock.unlock();
-     }
-     else if (args[1] == "test_views"){
- 	if(sem.tryDown()){
-           exec_msg=test_views;
- 	  want_to_execute();
- 	}
-     }
-     else if (args[1] == "save_path"){
- 	if(sem.tryDown()){
-           exec_msg=save_path;
- 	  want_to_execute();
- 	}
-     } 
-     else if (args[1] == "get_to_view"){
-       if(sem.tryDown()){
+  if (args[1] == "add_vp"){
+    if(sem.tryDown()){
+      exec_msg=add_vp;
+      want_to_execute();
+    }
+  }  
+  else if (args[1] == "rem_vp"){
+    if(sem.tryDown()){
+      exec_msg=rem_vp;
+      want_to_execute();
+    }
+  }
+  else if (args[1] == "ins_vp"){
+    if(sem.tryDown()){
+      exec_msg=ins_vp;
+      want_to_execute();
+    }
+  }
+  else if (args[1] == "rpl_vp"){
+    if(sem.tryDown()){
+      exec_msg=rpl_vp;
+      want_to_execute();
+    }
+  }
+  else if (args[1] == "init_new"){ 
+    if(sem.tryDown()){
+      exec_msg=init_new; 
+      want_to_execute();
+    }
+    else {
+      update_tcl_var();
+    }
+  }
+  else if (args[1] == "init_exist"){
+    if(sem.tryDown()){
+      exec_msg=init_exist;
+      want_to_execute();
+    }
+    else {
+      update_tcl_var();
+    }
+  }
+  else if (args[1] == "test_path"){
+    msg ("In test_path TCL handler");
+    if(sem.tryDown()){
+      msg ("Sending exec message");
+      tcl_stop.set(0);
+      exec_msg=test_path;
+      want_to_execute();
+    }
+  }
+  else if (args[1] == "save_path"){
+    if(sem.tryDown()){
+      exec_msg=save_path;
+      want_to_execute();
+    }
+  } 
+  else if (args[1] == "get_to_view"){
+    if(sem.tryDown()){
  	exec_msg=get_to_view;
- 	curr_view=tcl_curr_view.get();
  	want_to_execute();
-       }
-     }
-     else if (args[1] == "calc_path"){
-       exec_msg=calc_path;
-     }
-     else if (args[1] == "refr_tcl_info"){
-       exec_msg=refr_tcl_info;
-     }
-     else if (args[1] == "update_path"){
-       exec_msg=update_path;
-     }
-     else if (args[1] == "switch_loop"){
-       exec_lock.lock();
- 	curr_path_h->set_loop(tcl_is_looped.get());
-       exec_lock.unlock();
-     }
-     else if (args[1] == "switch_dir"){
-       exec_lock.lock();
- 	curr_path_h->set_back(tcl_is_backed.get());
-       exec_lock.unlock();
-     }
-     else if (args[1] == "set_rate"){
-       exec_lock.lock();
- 	rate=tcl_rate.get();
-       exec_lock.unlock();
-     }
-     else if (args[1] == "set_step_size"){
-       exec_lock.lock();
-         curr_path_h->set_step(step_size=tcl_step_size.get());
- 	is_changed=true;
-       exec_lock.unlock();
-     }
-     else if (args[1] == "" || args[1] == "Default"){
-       //exec_msg=Default;
-     }
-     else{
-       Module::tcl_command(args, userdata);
-     }
+    }
+    else {
+      update_tcl_var();
+    }
+  }
+  else if (args[1] == "next_view"){
+    if(sem.tryDown()){
+      exec_msg=next_view;
+      want_to_execute();
+    }
+    else {
+      update_tcl_var();
+    }
+  }
+  else if (args[1] == "prev_view"){
+    if(sem.tryDown()){
+      exec_msg=prev_view;
+      want_to_execute();
+    }
+     else {
+      update_tcl_var();
+    }
+  }
+  else if (args[1] == "w_show"){
+    widget_lock.writeLock();
+    cross_widget->SetState(tcl_widg_show.get());
+    ogeom->flushViews();
+    widget_lock.writeUnlock();
+  }
+  else if (args[1] == "mk_circle_path"){
+    if(sem.tryDown()){
+      exec_msg=mk_circle_path;
+      want_to_execute();
+    }
+  }
+  else{
+    Module::tcl_command(args, userdata);
+  }
 }
 
 bool EditPath::init_new_path(){
-  if (is_changed && !Msg_Box("Modified Buffer Exists", "There is modified buffer. Do you want to discard it?"))
-      return false;
+ 
+  if (is_changed && !Msg_Box("Modified Buffer Exists", "There is modified buffer. Do you want to discard it?")){
+    update_tcl_var();
+    return false;
+  }
   is_new=true;
   is_changed=false;
+  curr_view=0;
+  
   new_path_h->reset();
   curr_path_h=new_path_h;
+
+  curr_path_h->set_acc_t(SMOOTH);
+  curr_path_h->set_path_t(CUBIC);
+  message="Editing new path";
+  init_tcl_update();
+
   return true;
 }
 
 bool EditPath::init_exist_path(PathHandle p){
-  if (p.get_rep()){
-    if (is_changed && !Msg_Box("Modified Buffer Exists", "There is modified buffer. Do you want to discard it?"))
-      return false;
-    
-    is_new=false;
-    is_changed=false;
-    curr_path_h=p;
-    return true;
-  }
-  else {
-    // empty path handle!!!
+
+  if (is_changed && !Msg_Box("Modified Buffer Exists", "There is modified buffer. Do you want to discard it?")){
+    update_tcl_var();
     return false;
+  }
+
+  is_new=false;
+  is_changed=false;
+  curr_path_h=ext_path_h=p;
+  message="Editing existing path";
+  init_tcl_update();
+  return true;  
+}
+
+// setting tcl vars to initial state
+void EditPath::init_tcl_update(){
+  tcl_num_views.set(curr_path_h->get_num_views());
+  tcl_intrp_type.set(curr_path_h->get_path_t());
+  tcl_acc_mode.set(curr_path_h->get_acc_t());
+  tcl_is_looped.set(curr_path_h->is_looped());
+  tcl_is_backed.set(curr_path_h->is_backed());
+  tcl_step_size.set(curr_path_h->get_step());
+  tcl_curr_roe.set(curr_roe);
+  tcl_auto_start.set(is_auto);
+  tcl_rate.set(1);
+  tcl_info.set(message);
+
+  widget_lock.readLock();
+  tcl_widg_show.set(cross_widget->GetState());
+  widget_lock.readUnlock();
+
+  tcl_is_new.set(is_new);
+  tcl_speed_val.set(speed_val);
+  tcl_acc_val.set(acc_val);
+  tcl_msg_box.set(0);
+  tcl_curr_view.set(curr_view);
+  
+  if (UI_Init.get()){
+    TCLTask::lock();
+    TCL::execute(id+" refresh ");
+    TCLTask::unlock();
   }
 }
 
-void EditPath::update_tcl_var(ExecMsg msg){
-  msg ("Updating TCL variables");
- 
-  switch(msg){
+void EditPath::update_tcl_var(){
+  TCL::reset_vars();  
+  tcl_is_new.set(is_new);
+  tcl_speed_val.set(speed_val);
+  tcl_acc_val.set(acc_val);
+  tcl_curr_view.set(curr_view);
+  tcl_num_views.set(curr_path_h->get_num_views());
+  tcl_info.set(message);
+  message="";
   
-//   case ins_vp:
-//   case rem_vp:
-//   case add_vp:
-//     tcl_curr_view.set(curr_view+1);
-    
-//     break;
- 
-  case init:
-  default:  
-    tcl_is_new.set(is_new);
-    tcl_rate.set(rate);
-    tcl_curr_view.set(curr_view+1);  // adjustion for zero-indexed arrays
-    tcl_num_views.set(curr_path_h->get_num_views());
-    tcl_intrp_type.set(curr_path_h->get_path_type());
-    tcl_speed_mode.set(speed_mode);
-    tcl_acc_mode.set(acc_mode);
-    tcl_is_looped.set(curr_path_h->is_looped());
-    tcl_is_backed.set(curr_path_h->is_backed());
-    tcl_msg_box.set(0);
-    tcl_step_size.set(curr_path_h->get_step());
-    tcl_speed_val.set(speed_val);
-    tcl_acc_val.set(acc_val);
-    tcl_acc_pat.set(curr_path_h->get_acc_patt(curr_view));
-    tcl_curr_roe.set(curr_roe);
-    tcl_auto_start.set(is_auto);
-  }
-
   if (UI_Init.get()){
     TCLTask::lock();
     TCL::execute(id+" refresh ");
@@ -577,12 +733,10 @@ bool EditPath::Msg_Box(const clString& title, const clString& message){
      TCLTask::unlock();
   }
 
-  if (tcl_msg_box.get()!=0){
-//     MSG ("MSGBOX returning true");
+  if (tcl_msg_box.get()>0){
     return true;
   }
   else {
-//     MSG ("MSGBOX returning false");
     return false;
   }
 }
@@ -593,8 +747,8 @@ bool EditPath::Msg_Box(const clString& title, const clString& message){
 
 //
 // $Log$
-// Revision 1.3  2000/07/19 19:28:53  samsonov
-// Moving from DaveW
+// Revision 1.4  2000/08/09 08:01:45  samsonov
+// final version
 //
 // Revision 1.2  2000/07/19 19:27:16  samsonov
 // Moving from DaveW package
