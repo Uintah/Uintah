@@ -88,6 +88,9 @@ SFInterface<F>::finterpolate(double &result, const Point &p) const
       vector<double> weights;
       mesh->get_weights(p, locs, weights);
 
+      // weights is empty if point not found.
+      if (weights.size() <= 0) return false;
+
       result = 0;
       for (unsigned int i = 0; i < locs.size(); i++)
       {
@@ -105,6 +108,9 @@ SFInterface<F>::finterpolate(double &result, const Point &p) const
       typename F::mesh_type::Edge::array_type locs;
       vector<double> weights;
       mesh->get_weights(p, locs, weights);
+
+      // weights is empty if point not found.
+      if (weights.size() <= 0) return false;
 
       result = 0;
       for (unsigned int i = 0; i < locs.size(); i++)
@@ -124,6 +130,9 @@ SFInterface<F>::finterpolate(double &result, const Point &p) const
       vector<double> weights;
       mesh->get_weights(p, locs, weights);
 
+      // weights is empty if point not found.
+      if (weights.size() <= 0) return false;
+
       result = 0;
       for (unsigned int i = 0; i < locs.size(); i++)
       {
@@ -141,6 +150,9 @@ SFInterface<F>::finterpolate(double &result, const Point &p) const
       typename F::mesh_type::Cell::array_type locs;
       vector<double> weights;
       mesh->get_weights(p, locs, weights);
+
+      // weights is empty if point not found.
+      if (weights.size() <= 0) return false;
 
       result = 0;
       for (unsigned int i = 0; i < locs.size(); i++)
@@ -320,6 +332,9 @@ VFInterface<F>::finterpolate(Vector  &result, const Point &p) const
       vector<double> weights;
       mesh->get_weights(p, locs, weights);
 
+      // weights is empty if point not found.
+      if (weights.size() <= 0) return false;
+
       result = 0;
       for (unsigned int i = 0; i < locs.size(); i++)
       {
@@ -337,6 +352,9 @@ VFInterface<F>::finterpolate(Vector  &result, const Point &p) const
       typename F::mesh_type::Edge::array_type locs;
       vector<double> weights;
       mesh->get_weights(p, locs, weights);
+
+      // weights is empty if point not found.
+      if (weights.size() <= 0) return false;
 
       result = 0;
       for (unsigned int i = 0; i < locs.size(); i++)
@@ -356,6 +374,9 @@ VFInterface<F>::finterpolate(Vector  &result, const Point &p) const
       vector<double> weights;
       mesh->get_weights(p, locs, weights);
 
+      // weights is empty if point not found.
+      if (weights.size() <= 0) return false;
+
       result = 0;
       for (unsigned int i = 0; i < locs.size(); i++)
       {
@@ -373,6 +394,9 @@ VFInterface<F>::finterpolate(Vector  &result, const Point &p) const
       typename F::mesh_type::Cell::array_type locs;
       vector<double> weights;
       mesh->get_weights(p, locs, weights);
+
+      // weights is empty if point not found.
+      if (weights.size() <= 0) return false;
 
       result = 0;
       for (unsigned int i = 0; i < locs.size(); i++)
