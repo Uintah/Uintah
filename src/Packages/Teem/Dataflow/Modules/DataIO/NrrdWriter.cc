@@ -80,6 +80,11 @@ void NrrdWriter::execute()
 
   if(!inport_->get(handle))
     return;
+  
+  if (!handle.get_rep()) {
+    error("Null input");
+    return;
+  }
 
   // If no name is provided, return
   string fn(filename_.get());
