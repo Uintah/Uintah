@@ -47,8 +47,14 @@ namespace PSECore {
 
     // SpanSpace
 
+    class SpanSpaceBase {
+    public:
+      SpanSpaceBase() {}
+      ~SpanSpaceBase() {}
+    };
+
     template <class T>
-      class SpanSpace 
+      class SpanSpace : public SpanSpaceBase
       {
       public:
 	Array1< SpanPoint<T> > span;
@@ -222,53 +228,28 @@ namespace PSECore {
       }
 
 
-    SpanSpaceBuildUG::SpanSpaceBuildUG ( ScalarFieldUG *field)
-      {
-	Array1<Element*> &elems = field->mesh->elems;
-	Array1<double> &data = field->data;
-	
-	for (int i=0; i<field->mesh->elems.size(); i++ ) {
-	  int *n = elems[i]->n;
-	  
-	  double min, max;
-	  min = max = data[n[0]];
-	  for ( int j=1; j<4; j++) {
-	    double v = data[n[j]];
-	    if ( v < min ) min = v;
-	    else if ( v > max ) max = v;
-	  }
-	  
-	  span.add( SpanPoint<double>( min, max, i ) );
-	}
-      }
 
-#ifdef UNIVERSE
-    
-    template <class T>
-      class SpanUniverse : public Datatype 
+    class SpanUniverse : public Datatype 
       {
       public:
-	Array1< SpanSpace<T> > space;
+	Array1< SpanSpaceBase *> space;
 	ScalarFieldHandle field;
 	int generation;
 	BBox bbox;
 	int dx, dy;
 	
       public:
-	SpanUniverse(){}
+	SpanUniverse( ScalarFieldHandle field) : field(field) {}
 	virtual ~SpanUniverse() {}
-      
+
+	void add( SpanSpaceBase *base) { space.add(base); }
+
 	// Persistent representation
 	virtual void io(Piostream&) {};
 	static PersistentTypeID type_id;
-    };
+      };
     
-     template <class T> 
-       class SpaceUniverse; 
-    
-     typedef LockingHandle<SpanUniverse> SpanUniversetHandle; 
-
-#endif
+    typedef LockingHandle<SpanUniverse> SpanUniverseHandle; 
   
   } // End namespace Datatypes
 } // End namespace PSECore}
