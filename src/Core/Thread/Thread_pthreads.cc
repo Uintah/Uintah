@@ -543,7 +543,7 @@ Thread::exitAll(int code)
 	  }
 	}
       }
-      if(SEM_DESTROY(&main_sema) != 0)
+      if((SEM_DESTROY(&main_sema) != 0)&&(errno != EBUSY)) 
 	throw ThreadError(std::string("SEM_DESTROY failed") + strerror(errno));
       unlock_scheduler();
     }
