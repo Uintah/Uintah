@@ -1232,7 +1232,7 @@ void  DataArchiver::initSaveLabels(SchedulerP& sched)
       saveItem.label_ = var;
       ConsecutiveRangeSet matlsToSave =
 	(ConsecutiveRangeSet((*found).second)).intersected((*it).matls);
-      saveItem.setMaterials(matlsToSave);
+      saveItem.setMaterials(matlsToSave, prevMatls_, prevMatlSet_);
       
       if (((*it).matls != ConsecutiveRangeSet::all) &&
 	  ((*it).matls != matlsToSave)) {
@@ -1286,7 +1286,7 @@ void DataArchiver::initCheckpoints(SchedulerP& sched)
 				  " variable not found to checkpoint.");
 
       saveItem.label_ = var;
-      saveItem.setMaterials((*mapIter).second);
+      saveItem.setMaterials((*mapIter).second, prevMatls_, prevMatlSet_);
 
       if (saveItem.label_->typeDescription()->isReductionVariable())
          d_checkpointReductionLabels.push_back(saveItem);
@@ -1295,16 +1295,15 @@ void DataArchiver::initCheckpoints(SchedulerP& sched)
    }
 }
 
-ConsecutiveRangeSet DataArchiver::SaveItem::prevMatls_;
-MaterialSetP DataArchiver::SaveItem::prevMatlSet_ = 0;
-
-void DataArchiver::SaveItem::setMaterials(const ConsecutiveRangeSet& matls)
+void DataArchiver::SaveItem::setMaterials(const ConsecutiveRangeSet& matls,
+					  ConsecutiveRangeSet& prevMatls,
+					  MaterialSetP& prevMatlSet)
 {
   // reuse material sets when the same set of materials is used for different
   // SaveItems in a row -- easier than finding all reusable material set, but
   // effective in many common cases.
-  if ((prevMatlSet_ != 0) && (matls == prevMatls_)) {
-    matlSet_ = prevMatlSet_;
+  if ((prevMatlSet != 0) && (matls == prevMatls)) {
+    matlSet_ = prevMatlSet;
   }
   else {
     matlSet_ = scinew MaterialSet();
@@ -1314,8 +1313,8 @@ void DataArchiver::SaveItem::setMaterials(const ConsecutiveRangeSet& matls)
 	 iter != matls.end(); iter++)
       matlVec.push_back(*iter);
     matlSet_->addAll(matlVec);
-    prevMatlSet_ = matlSet_;
-    prevMatls_ = matls;
+    prevMatlSet = matlSet_;
+    prevMatls = matls;
   }
 }
 
