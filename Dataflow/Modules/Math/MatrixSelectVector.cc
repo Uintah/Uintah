@@ -429,7 +429,13 @@ MatrixSelectVector::execute()
       }
       stop = stop_;
       send_selection(mh, which, use_row, stop);
-      if (!stop && delay > 0) { usleep(delay * 1000); }
+      if (!stop && delay > 0)
+      {
+	const unsigned int secs = delay / 1000;
+	const unsigned int msecs = delay % 1000;
+	if (secs)  { sleep(secs); }
+	if (msecs) { usleep(msecs * 1000); }
+      }
       if (playmode_.get() == "once")
       {
 	which = next;
