@@ -31,7 +31,7 @@ DEALINGS IN THE SOFTWARE.
 <!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
 <!--% doc = Doc.create(Doc::DocBook) %-->
 
-<!--% osx = (Doc::Platform == Doc::OSX) ? "_osx" : "" %-->
+<!--% tpsuffix = (Doc::Platform == Doc::OSX) ? "osx_src" : "install" %-->
 
 <section id="sec.sources">
   <title id="sec.title.sources">Downloading and Unpacking
@@ -99,7 +99,7 @@ DEALINGS IN THE SOFTWARE.
 	</simplelist>
       </para>
 
-      <para>In all cases, the file <filename>Thirdparty_install<!--%= osx
+      <para>In all cases, the file <filename>Thirdparty_<!--%= tpsuffix
       %-->.<!--%= doc.version() %-->.tar.gz</filename> must also be
       obtained.</para>
 
@@ -142,10 +142,11 @@ gunzip -c BioPSE.PKG.<!--%= doc.version() %-->.tar.gz | (cd SCIRun/src/Packages 
 	<literallayout class="monospaced">
 gunzip -c SCIRunData.<!--%= doc.version() %-->.tar.gz | tar xf -
 	</literallayout>
-	This creates the directory <filename>SCIRunData</filename>.
-	<filename>SCIRunData</filename> should be moved to a location
-	accessible to all SCIRun users, say
-	<filename>/usr/local</filename>.
+	This creates the directory <filename><!--%= doc.version()
+	%--></filename>.  <filename><!--%= doc.version()
+	%--></filename> should be moved to a location accessible to
+	all SCIRun users, say
+	<filename>/usr/local/SCIRunData</filename>.
       </para>
     </listitem>
 
@@ -155,9 +156,9 @@ gunzip -c SCIRunData.<!--%= doc.version() %-->.tar.gz | tar xf -
       </para>
       <para>
 	<literallayout class="monospaced">
-gunzip -c Thirdparty_install<!--%= osx %-->.<!--%= doc.version() %-->.tar.gz | tar xf -
+gunzip -c Thirdparty_<!--%= tpsuffix %-->.<!--%= doc.version() %-->.tar.gz | tar xf -
 	</literallayout>
-	This creates the directory <filename>Thirdparty_install<!--%= osx %-->.<!--%= doc.version() %--></filename>.
+	This creates the directory <filename>Thirdparty_<!--%= tpsuffix %-->.<!--%= doc.version() %--></filename>.
       </para>
     </listitem>
 
@@ -168,12 +169,12 @@ gunzip -c Thirdparty_install<!--%= osx %-->.<!--%= doc.version() %-->.tar.gz | t
 gunzip -c SCIRunDocs.<!--%= doc.version() %-->.tar.gz | tar xf -
 	</literallayout>
 	This creates the directory
-	<filename>SCIRunDocs</filename>.<!--%= doc.version() %-->. This
-	directory may be moved to a new location (e.g.:
-	<filename>/usr/local</filename>) accessible to all SCIRun users.
-	Point a browser at
-	<filename>SCIRunDocs.<!--%= doc.version() %-->/doc/index.html</filename> to access SCIRun's
-	online documentation.
+	<filename>SCIRunDocs</filename>.<!--%= doc.version()
+	%-->. This directory may be moved to a new location (e.g.:
+	<filename>/usr/local</filename>) accessible to all SCIRun
+	users.  Point a browser at <filename>SCIRunDocs.<!--%=
+	doc.version() %-->/doc/index.html</filename> to access
+	SCIRun's online documentation.
       </para>
     </listitem>
 
