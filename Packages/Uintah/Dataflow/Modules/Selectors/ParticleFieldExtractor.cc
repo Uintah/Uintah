@@ -160,7 +160,7 @@ void ParticleFieldExtractor::setVars(ArchiveHandle ar)
       case  TypeDescription::Point:
         pointVars.push_back(VarInfo(names[i], matls));
 	break;
-      case TypeDescription::long_type:
+      case TypeDescription::long64_type:
 	particleIDVar = VarInfo(names[i], matls);
       default:
 	cerr<<"Unknown particle type\n";
@@ -267,7 +267,7 @@ void ParticleFieldExtractor::addGraphingVars(long particleID,
   }
 }
 
-void ParticleFieldExtractor::callback(long particleID)
+void ParticleFieldExtractor::callback(long64 particleID)
 {
   cerr<< "ParticleFieldExtractor::callback request data for index "<<
     particleID << ".\n";
@@ -431,7 +431,7 @@ void ParticleFieldExtractor::PFEThread::run(){
   ParticleVariable< double > pvs;
   ParticleVariable< Point  > pvp;
   ParticleVariable< int > pvint;
-  ParticleVariable< long > pvi;
+  ParticleVariable< long64 > pvi;
 
   //int numMatls = 29;
   for(int matl = 0; matl < pfe->num_materials; matl++) {
@@ -637,7 +637,12 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list,
   TCL::execute(id + " setTime_list " + vector_to_string(indices).c_str());
 
   string name_list("");
-  long partID = atol(particleID.c_str());
+  long64 partID = atoll(particleID.c_str());
+  cout << "partID = "<<partID<<endl;
+  cerr << "mat_list.size() = "<<mat_list.size()<<endl;
+  for(int m = 0; m < (int)mat_list.size(); m++) {
+    cerr << "mat_list["<<m<<"] = "<<mat_list[m]<<endl;
+  }
   const TypeDescription* subtype = td->getSubType();
   switch ( subtype->getType() ) {
   case TypeDescription::double_type:
@@ -650,6 +655,7 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list,
 	// query the value and then cache it
 	vector< double > values;
 	int matl = atoi(mat_list[i].c_str());
+	cerr << "querying data archive for "<<varname<<" with matl="<<matl<<", particleID="<<partID<<", from time "<<times[0]<<" to time "<<times[times.size()-1]<<endl;
 	archive.query(values, varname, matl, partID, times[0], times[times.size()-1]);
 	cerr << "Received data.  Size of data = " << values.size() << endl;
 	cache_value(particleID+" "+varname+" "+mat_list[i],values,data);
@@ -725,6 +731,7 @@ void ParticleFieldExtractor::graph(string varname, vector<string> mat_list,
   default:
     cerr<<"Unknown var type\n";
   }// else { Tensor,Other}
+  cerr << "callig graph_data with \"particleID="<<particleID<<" varname="<<varname<<" name_list="<<name_list<<endl;
   TCL::execute(id+" graph_data "+particleID.c_str()+" "+varname.c_str()+" "+
 	       name_list.c_str());
 
