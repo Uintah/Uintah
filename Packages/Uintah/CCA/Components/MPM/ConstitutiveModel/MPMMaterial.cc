@@ -17,8 +17,8 @@
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
-#include <Packages/Uintah/CCA/Components/MPMICE/Combustion/BurnFactory.h>
-#include <Packages/Uintah/CCA/Components/MPMICE/Combustion/Burn.h>
+#include <Packages/Uintah/CCA/Components/HETransformation/BurnFactory.h>
+#include <Packages/Uintah/CCA/Components/HETransformation/Burn.h>
 #include <Packages/Uintah/CCA/Components/MPM/Fracture/FractureFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/Fracture/Fracture.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
