@@ -86,8 +86,8 @@ protected:
     virtual void compute_minmax()=0;
 
     int separate_raw;
-    clString raw_filename;
-    clString filename;
+    string raw_filename;
+    string filename;
 
 protected:
     enum Representation {
@@ -157,11 +157,11 @@ public:
     // separate raw files
     void set_raw(int v) { separate_raw = v; }
     int get_raw() { return separate_raw; }
-    void set_raw_filename( clString &f ) { raw_filename = f; separate_raw =1;}
-    clString &get_raw_filename() { return raw_filename; }
+    void set_raw_filename( string &f ) { raw_filename = f; separate_raw =1;}
+    string &get_raw_filename() { return raw_filename; }
 
-    clString get_filename() { return filename; }
-    void set_filename( clString &f) { filename = f ; }
+    string get_filename() { return filename; }
+    void set_filename( string &f) { filename = f ; }
 
 
     // Persistent representation...
