@@ -51,7 +51,6 @@ ImpMPM::ImpMPM(const ProcessorGroup* myworld) :
   lb = scinew MPMLabel();
   d_nextOutputTime=0.;
   d_SMALL_NUM_MPM=0.;
-  d_solver = 0;
   d_rigid_body = false;
 }
 
@@ -62,7 +61,10 @@ ImpMPM::~ImpMPM()
   if(d_perproc_patches && d_perproc_patches->removeReference())
     delete d_perproc_patches;
 
-  delete d_solver;
+  int numMatls = d_sharedState->getNumMPMMatls();
+  for(int m = 0; m < numMatls; m++){
+    delete d_solver[m];
+  }
 
 }
 
@@ -71,7 +73,6 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
 {
    d_sharedState = sharedState;
 
-  
    ProblemSpecP p = prob_spec->findBlock("DataArchiver");
    if(!p->get("outputInterval", d_outputInterval))
       d_outputInterval = 1.0;
@@ -114,21 +115,26 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
       d_rigid_body = true;
    }
 
+   int numMatls=0;
    for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
        ps = ps->findNextBlock("material") ) {
      MPMMaterial *mat = scinew MPMMaterial(ps, lb, 8,integrator_type);
      //register as an MPM material
      sharedState->registerMPMMaterial(mat);
+     numMatls++;
    }
    string solver;
    if (!mpm_ps->get("solver",solver))
      solver = "simple";
 
-   if (solver == "petsc")
-     d_solver = scinew MPMPetscSolver();
-   else if (solver == "simple")
-     d_solver = scinew SimpleSolver();
-   d_solver->initialize();
+   d_solver = vector<Solver*>(numMatls);
+   for(int m=0;m<numMatls;m++){
+     if (solver == "petsc")
+       d_solver[m] = scinew MPMPetscSolver();
+     else if (solver == "simple")
+       d_solver[m] = scinew SimpleSolver();
+     d_solver[m]->initialize();
+   }
 
 }
 
@@ -407,8 +413,6 @@ void ImpMPM::scheduleComputeInternalForce(SchedulerP& sched,
 void ImpMPM::scheduleIterate(SchedulerP& sched,const LevelP& level,
 			     const PatchSet*, const MaterialSet*)
 {
-
-  // NOT DONE
 
   Task* task = scinew Task("scheduleIterate", this, &ImpMPM::iterate,level,
 			   sched.get_rep());
@@ -745,8 +749,6 @@ void ImpMPM::scheduleCheckConvergence(SchedulerP& sched,
 				      const bool recursion)
 
 {
-  // NOT DONE
-
   Task* t = scinew Task("ImpMPM::checkConvergence", this,
 			&ImpMPM::checkConvergence,recursion);
 
@@ -905,7 +907,6 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 					   DataWarehouse* old_dw,
 					   DataWarehouse* new_dw)
 {
-  // DONE
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing <<"Doing interpolateParticlesToGrid on patch " << patch->getID()
@@ -978,7 +979,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       for(ParticleSubset::iterator iter = pset->begin();
 	  iter != pset->end(); iter++){
 	particleIndex idx = *iter;
-	
+
 	// Get the node indices that surround the cell
 	IntVector ni[8];
 	double S[8];
@@ -1072,11 +1073,11 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
     IntVector lowIndex = patch->getNodeLowIndex();
     IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
-    d_solver->copyL2G(l2g,patch);
-  
+
     // Apply grid boundary conditions to the velocity before storing the data
     IntVector offset =  IntVector(0,0,0);
     for (int m = 0; m < d_sharedState->getNumMPMMatls(); m++ ) {
+      d_solver[m]->copyL2G(l2g,patch);
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int matl = mpm_matl->getDWIndex();
       
@@ -1112,9 +1113,9 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
                dof[0] = l2g_node_num;
                dof[1] = l2g_node_num+1;
                dof[2] = l2g_node_num+2;
-               d_solver->d_DOF.insert(dof[0]);
-               d_solver->d_DOF.insert(dof[1]);
-               d_solver->d_DOF.insert(dof[2]);
+               d_solver[m]->d_DOF.insert(dof[0]);
+               d_solver[m]->d_DOF.insert(dof[1]);
+               d_solver[m]->d_DOF.insert(dof[2]);
             }
 	  }
 	}
@@ -1149,11 +1150,11 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
             dof[1] = l2g_node_num+1;
             dof[2] = l2g_node_num+2;
             if (DOF.x())
-              d_solver->d_DOF.insert(dof[0]);
+              d_solver[m]->d_DOF.insert(dof[0]);
             if (DOF.y())
-              d_solver->d_DOF.insert(dof[1]);
+              d_solver[m]->d_DOF.insert(dof[1]);
             if (DOF.z())
-              d_solver->d_DOF.insert(dof[2]);
+              d_solver[m]->d_DOF.insert(dof[2]);
 	  }
 	}
       }
@@ -1172,21 +1173,23 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
   if (recursion)
     return;
 
-
-  d_solver->createLocalToGlobalMapping(d_myworld,d_perproc_patches,patches);
-
   vector<int> dof_diag,dof_off;
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
     cout_doing <<"Doing createMatrix on patch " << patch->getID() 
 	       << "\t\t\t\t IMPM"    << "\n" << "\n";
+    int numMatls = d_sharedState->getNumMPMMatls();
+    for (int m = 0; m < numMatls; m++ ) {
+     d_solver[m]->createLocalToGlobalMapping(d_myworld,
+                                             d_perproc_patches,patches);
+    }
     IntVector lowIndex = patch->getNodeLowIndex();
     IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
-    d_solver->copyL2G(l2g,patch);
-    dof_diag.resize(l2g[patch->getNodeHighIndex()-IntVector(1,1,1)]+2,1);
-    dof_off.resize(l2g[patch->getNodeHighIndex()-IntVector(1,1,1)]+2,1);
     for (int m = 0; m < d_sharedState->getNumMPMMatls(); m++ ) {
+      d_solver[m]->copyL2G(l2g,patch);
+      dof_diag.resize(l2g[patch->getNodeHighIndex()-IntVector(1,1,1)]+2,1);
+      dof_off.resize(l2g[patch->getNodeHighIndex()-IntVector(1,1,1)]+2,1);
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();    
       constParticleVariable<Point> px;
@@ -1218,15 +1221,10 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
 	  }
 	}
       }
+      d_solver[m]->createMatrix(d_myworld,dof_diag,dof_off);
     }
-#if 0
-    for (int i = 0; i < (int)dof_diag.size(); i++) 
-      cout << "dof_diag[" << i << "]=" << dof_diag[i] << endl;
-#endif
-    
   }
   
-  d_solver->createMatrix(d_myworld,dof_diag,dof_off);
 }
 
 void ImpMPM::destroyMatrix(const ProcessorGroup*,
@@ -1239,7 +1237,9 @@ void ImpMPM::destroyMatrix(const ProcessorGroup*,
   cout_doing <<"Doing destroyMatrix " <<"\t\t\t\t\t IMPM"
 	       << "\n" << "\n";
 
-  d_solver->destroyMatrix(recursion);
+  for (int m = 0; m < d_sharedState->getNumMPMMatls(); m++ ) {
+    d_solver[m]->destroyMatrix(recursion);
+  }
 
 }
 
@@ -1250,15 +1250,13 @@ void ImpMPM::computeStressTensor(const ProcessorGroup*,
 				 DataWarehouse* new_dw,
 				 const bool recursion)
 {
-  // DONE
-
   cout_doing <<"Doing computeStressTensor " <<"\t\t\t\t IMPM"<< "\n" << "\n";
 
   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++) {
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->computeStressTensor(patches, mpm_matl, old_dw, new_dw,
-			    d_solver, recursion);
+			    d_solver[m], recursion);
   }
   
 }
@@ -1269,8 +1267,6 @@ void ImpMPM::computeStressTensor(const ProcessorGroup*,
 				 DataWarehouse* old_dw,
 				 DataWarehouse* new_dw)
 {
-  // DONE
-
   cout_doing <<"Doing computeStressTensor" <<"\t\t\t\t IMPM"<< "\n" 
 	     << "\n";
 
@@ -1290,8 +1286,6 @@ void ImpMPM::formStiffnessMatrix(const ProcessorGroup*,
 				      DataWarehouse* new_dw,
 				      const bool recursion)
 {
-  // DONE
-
   int nn = 0;
   IntVector nodes(0,0,0);
   for(int pp=0;pp<patches->size();pp++){
@@ -1313,12 +1307,12 @@ void ImpMPM::formStiffnessMatrix(const ProcessorGroup*,
     IntVector lowIndex = patch->getNodeLowIndex();
     IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
-    d_solver->copyL2G(l2g,patch);
 
     int numMatls = d_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int matlindex = mpm_matl->getDWIndex();
+      d_solver[m]->copyL2G(l2g,patch);
    
       constNCVariable<double> gmass;
       delt_vartype dt;
@@ -1343,13 +1337,13 @@ void ImpMPM::formStiffnessMatrix(const ProcessorGroup*,
 	dof[2] = l2g_node_num+2;
 
 	double v = gmass[*iter]*(4./(dt*dt));
-	d_solver->fillMatrix(dof[0],dof[0],v);
-	d_solver->fillMatrix(dof[1],dof[1],v);
-	d_solver->fillMatrix(dof[2],dof[2],v);
+	d_solver[m]->fillMatrix(dof[0],dof[0],v);
+	d_solver[m]->fillMatrix(dof[1],dof[1],v);
+	d_solver[m]->fillMatrix(dof[2],dof[2],v);
       }
+      d_solver[m]->finalizeMatrix();
     } 
   }
-  d_solver->finalizeMatrix();
 }
 	    
 void ImpMPM::computeInternalForce(const ProcessorGroup*,
@@ -1359,7 +1353,6 @@ void ImpMPM::computeInternalForce(const ProcessorGroup*,
 				  DataWarehouse* new_dw,
 				  const bool recursion)
 {
-  // DONE
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     
@@ -1450,7 +1443,6 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
 			const MaterialSubset*, DataWarehouse* old_dw,
 			DataWarehouse* new_dw, const bool recursion)
 {
-  // DONE
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
@@ -1460,11 +1452,12 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
     IntVector lowIndex = patch->getNodeLowIndex();
     IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
-    d_solver->copyL2G(l2g,patch);
-
-    delt_vartype dt;
 
     int dwi = 0;
+    int m   = 0;
+    d_solver[m]->copyL2G(l2g,patch);
+
+    delt_vartype dt;
     Ghost::GhostType  gnone = Ghost::None;
 
     constNCVariable<Vector> extForce, intForce;
@@ -1517,12 +1510,12 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
 	v[2] -= (dispNew[n].z()*fodts - velocity[n].z()*fodt -
 		 accel[n].z())*mass[n];
       }
-      d_solver->fillVector(dof[0],double(v[0]));
-      d_solver->fillVector(dof[1],double(v[1]));
-      d_solver->fillVector(dof[2],double(v[2]));
+      d_solver[m]->fillVector(dof[0],double(v[0]));
+      d_solver[m]->fillVector(dof[1],double(v[1]));
+      d_solver[m]->fillVector(dof[2],double(v[2]));
     }
+    d_solver[m]->assembleVector();
   }
-  d_solver->assembleVector();
 }
 
 void ImpMPM::removeFixedDOF(const ProcessorGroup*, 
@@ -1543,7 +1536,6 @@ void ImpMPM::removeFixedDOF(const ProcessorGroup*,
     IntVector lowIndex = patch->getNodeLowIndex();
     IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
-    d_solver->copyL2G(l2g,patch);
 
     IntVector nodes = patch->getNNodes();
     num_nodes += (nodes.x())*(nodes.y())*(nodes.z())*3;
@@ -1573,6 +1565,7 @@ void ImpMPM::removeFixedDOF(const ProcessorGroup*,
     for(int m = 0; m < numMatls; m++){
      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
      int matlindex = mpm_matl->getDWIndex();
+     d_solver[m]->copyL2G(l2g,patch);
      if(matlindex!=rig_index){
       constNCVariable<double> mass;
       if (recursion) {
@@ -1593,21 +1586,21 @@ void ImpMPM::removeFixedDOF(const ProcessorGroup*,
         
         // Just look on the grid to see if the gmass is 0 and then remove that  
         if (compare(mass[n],0.)) {
-           d_solver->d_DOF.insert(dof[0]);
-           d_solver->d_DOF.insert(dof[1]);
-           d_solver->d_DOF.insert(dof[2]);
+           d_solver[m]->d_DOF.insert(dof[0]);
+           d_solver[m]->d_DOF.insert(dof[1]);
+           d_solver[m]->d_DOF.insert(dof[2]);
         }
         if (!compare(mass_rig[n],0.)) {
 //         Y_ONLY  (Comment out 0 and 2 to get rigid effect in y-dir only)
-           d_solver->d_DOF.insert(dof[0]);
-           d_solver->d_DOF.insert(dof[1]);
-           d_solver->d_DOF.insert(dof[2]);
+           d_solver[m]->d_DOF.insert(dof[0]);
+           d_solver[m]->d_DOF.insert(dof[1]);
+           d_solver[m]->d_DOF.insert(dof[2]);
         }
       }
      }
+     d_solver[m]->removeFixedDOF(num_nodes);
     }
   }
-  d_solver->removeFixedDOF(num_nodes);
 }
 
 
@@ -1618,41 +1611,30 @@ void ImpMPM::solveForDuCG(const ProcessorGroup* /*pg*/,
 			       DataWarehouse* new_dw)
 
 {
-  // DONE
-  int num_nodes = 0;
-  IntVector nodes(0,0,0);
-  for(int p = 0; p<patches->size();p++) {
-    const Patch* patch = patches->get(p);
-    nodes = patch->getNNodes();
-    num_nodes += (nodes.x())*(nodes.y())*(nodes.z())*3;
-  }
-
-  d_solver->solve();
-
   for(int p = 0; p<patches->size();p++) {
     const Patch* patch = patches->get(p);
     
     cout_doing <<"Doing solveForDuCG on patch " << patch->getID()
 	       <<"\t\t\t\t IMPM"<< "\n" << "\n";
-    nodes = patch->getNNodes();
-    
+
     int numMatls = d_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int matlindex = mpm_matl->getDWIndex();
+      d_solver[m]->solve();
 
       NCVariable<Vector> dispInc;
       new_dw->allocateAndPut(dispInc,lb->dispIncLabel,matlindex,patch);
       dispInc.initialize(Vector(0.,0.,0.));
 
-      if(matlindex==0){
+      if(matlindex==0 || d_rigid_body==false){
         IntVector lowIndex = patch->getNodeLowIndex();
         IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
         Array3<int> l2g(lowIndex,highIndex);
-        d_solver->copyL2G(l2g,patch);
+        d_solver[m]->copyL2G(l2g,patch);
   
         vector<double> x;
-        int begin = d_solver->getSolution(x);
+        int begin = d_solver[m]->getSolution(x);
   
         for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
           IntVector n = *iter;
@@ -1677,7 +1659,6 @@ void ImpMPM::updateGridKinematics(const ProcessorGroup*,
 				  const bool recursion)
 
 {
-  // DONE
   for (int p = 0; p<patches->size();p++) {
     const Patch* patch = patches->get(p);
 
@@ -1788,7 +1769,6 @@ void ImpMPM::checkConvergence(const ProcessorGroup*,
     IntVector lowIndex = patch->getNodeLowIndex();
     IntVector highIndex = patch->getNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
-    d_solver->copyL2G(l2g,patch);
 
     cout_doing <<"Doing checkConvergence on patch " << patch->getID()
 	       <<"\t\t\t IMPM"<< "\n" << "\n";
@@ -1796,16 +1776,17 @@ void ImpMPM::checkConvergence(const ProcessorGroup*,
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
      int matlindex = mpm_matl->getDWIndex();
+     d_solver[m]->copyL2G(l2g,patch);
 
-     if(matlindex==0){
-      
+     if(matlindex==0 || d_rigid_body==false){
+
       constNCVariable<Vector> dispInc;
       new_dw->get(dispInc,lb->dispIncLabel,matlindex,patch,Ghost::None,0);
       
       double dispIncNorm  = 0.;
       double dispIncQNorm = 0.;
       vector<double> getQ;
-      int begin = d_solver->getRHS(getQ);
+      int begin = d_solver[m]->getRHS(getQ);
       for (NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++) {
 	IntVector n = *iter;
 	int dof[3];
@@ -1856,7 +1837,6 @@ void ImpMPM::checkConvergence(const ProcessorGroup*,
     }  // End of loop over materials
   }  // End of loop over patches
 
-  
 }
 
 void ImpMPM::computeAcceleration(const ProcessorGroup*,
@@ -1865,7 +1845,6 @@ void ImpMPM::computeAcceleration(const ProcessorGroup*,
 				 DataWarehouse* old_dw,
 				 DataWarehouse* new_dw)
 {
-  // DONE
   if (!dynamic)
     return;
   for(int p=0;p<patches->size();p++){
@@ -1908,7 +1887,6 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 						DataWarehouse* old_dw,
 						DataWarehouse* new_dw)
 {
-  // DONE
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
