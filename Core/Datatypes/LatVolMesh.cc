@@ -1136,7 +1136,17 @@ LatVolMesh::get_valence(const Cell::index_type &i) const
   return 1;
 }
 
+std::ostream& 
+operator<<(std::ostream& os, const LatVolMesh::LatIndex& n) {
+  os << "[" << n.i_ << "," << n.j_ << "," << n.k_ << "]";
+  return os;
+}
 
+std::ostream& 
+operator<<(std::ostream& os, const LatVolMesh::LatSize& n) {
+  os << (int)n << " (" << n.i_ << " x " << n.j_ << " x " << n.k_ << ")";
+  return os;
+}
 
 
 const TypeDescription*
@@ -1209,5 +1219,7 @@ get_type_description(LatVolMesh::Cell *)
   }
   return td;
 }
+
+
 
 } // namespace SCIRun
