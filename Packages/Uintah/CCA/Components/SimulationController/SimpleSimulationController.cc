@@ -388,6 +388,7 @@ SimpleSimulationController::run()
       t += delt;
       TAU_DB_DUMP();
    }
+   ups->getNode()->getOwnerDocument()->release();
 }
 
 void 
