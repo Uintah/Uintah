@@ -2845,6 +2845,15 @@ void ICE::setBC(CCVariable<double>& variable, const string& kind,
 	variable.fillFaceFlux(face,bc->getValue(),dx);
       
     }
+    if (bc_base->getType() == "Pressure") {
+      PressureBoundCond* bc = dynamic_cast<PressureBoundCond*>(bc_base);
+      if (bc->getKind() == "Dirichlet")
+        variable.fillFace(face,bc->getValue());
+
+      if (bc->getKind() == "Neumann")
+        variable.fillFaceFlux(face,bc->getValue(),dx);
+
+    }
   }
 }
 
