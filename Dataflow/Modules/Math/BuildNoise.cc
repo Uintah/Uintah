@@ -107,7 +107,6 @@ void BuildNoise::execute() {
   int nc = matH->ncols();
   double curr;
   double snr = snr_.get();
-  //cerr << "signal-to-noise ratio = "<<snr<<"\n";
   for (r=0; r<nr; r++)
     for (c=0; c<nc; c++) {
       curr = matH->get(r, c);
@@ -122,7 +121,6 @@ void BuildNoise::execute() {
   power /= nr*nc;
   
   sigma = sqrt(power)/(snr*Sqrt(2*M_PI));
-  //cerr << "sigma = "<<sigma<<"\n";
   
   for (r=0; r<nr; r++) 
     for (c=0; c<nc; c++) {
