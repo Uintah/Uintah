@@ -27,6 +27,7 @@
 #include <Geom/Sphere.h>
 #include <Geom/Tetra.h>
 #include <Geom/Tri.h>
+#include <Geom/Tube.h>
 #include <Geom/TriStrip.h>
 #include <Geom/View.h>
 #include <Math/TrigTable.h>
@@ -181,6 +182,47 @@ void GeomPolyline::objdraw(DrawInfoOpenGL* di) {
     }
     glEnd();
 }
+
+// --------------------------------------------------
+
+void GeomTube::objdraw(DrawInfoOpenGL* di) {
+    Array1<Point> c1; 
+    Array1<Point> c2; 
+    Vector n1, n2; 
+    Point  p1, p2; 
+    for(int i=0; i<pts.size(); i++) {
+       c1 = make_circle(pts[i], rad[i], normal[i]); 
+       c2 = make_circle(pts[i+1], rad[i+1], normal[i+1]); 
+
+       // draw triangle strips
+            glBegin(GL_TRIANGLE_STRIP);
+	    for(int j=0;j<c1.size();j++){
+
+		n1 = c1[j]-pts[i];
+		glNormal3d(n1.x(), n1.y(), n1.z());
+		p1 = c1[j];
+		glVertex3d(p1.x(), p1.y(), p1.z());
+
+		n2 = c2[j]-pts[i+1];
+		glNormal3d(n2.x(), n2.y(), n2.z());
+		p2 = c2[j];
+		glVertex3d(p2.x(), p2.y(), p2.z());
+	    }
+		n1 = c1[0]-pts[i];
+		glNormal3d(n1.x(), n1.y(), n1.z());
+		p1 = c1[0];
+		glVertex3d(p1.x(), p1.y(), p1.z());
+
+		n2 = c2[0]-pts[i+1];
+		glNormal3d(n2.x(), n2.y(), n2.z());
+		p2 = c2[0];
+		glVertex3d(p2.x(), p2.y(), p2.z());
+
+	    glEnd();
+     }
+  }
+
+// --------------------------------------------------
 
 void GeomRenderMode::objdraw(DrawInfoOpenGL* di)
 {
