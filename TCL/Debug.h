@@ -37,7 +37,7 @@ public:
    
    inline int operator!();
    
-   static DebugInfo* get_debuginfo(int &size) const;
+   static DebugInfo* get_debuginfo(int &size);
    
 private:
    TCLvarint flag;
