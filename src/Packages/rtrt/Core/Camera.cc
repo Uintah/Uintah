@@ -8,6 +8,7 @@
 #include <Packages/rtrt/Core/Stats.h>
 #include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/Light.h>
+#include <Packages/rtrt/Core/BBox.h>
 
 #include <Core/Geometry/Transform.h>
 #include <Core/Math/MiscMath.h>
@@ -594,7 +595,20 @@ void Camera::dolly(double scale)
   setup();
 }
 
+void Camera::autoview(BBox& bbox, double new_fov) {
+  if (new_fov > 0)
+    set_fov(new_fov);
 
+  Vector diag(bbox.diagonal());
+  double w=diag.length();
+  Vector lookdir(eye-lookat);
+  lookdir.normalize();
+  double scale = 1.0/(2*tan(DtoR(fov/2.0)));
+  double length = w*scale;
+  lookat = bbox.center();
+  eye = lookat+lookdir*length;
+  setup();
+}
 
 
 const int CAMERA_VERSION = 1;
