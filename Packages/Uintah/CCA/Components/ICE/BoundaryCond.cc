@@ -138,8 +138,6 @@ void setBC(CCVariable<double>& press_CC,
            fabs(gravity.y()) > 0.0  || 
            fabs(gravity.z()) > 0.0) {
         CCVariable<double> rho_micro_tmp;
-        ICELabel* lb;
-        lb = scinew ICELabel();
         new_dw->allocateTemporary(rho_micro_tmp,  patch);
         if (which_Var == "sp_vol") {
           for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++) {
@@ -280,11 +278,13 @@ void setBC(CCVariable<Vector>& variable, const string& kind,
     if (new_bcs != 0 && kind == "Neumann" ) {
       fillFaceFlux(variable,face,Vector(0.,0.,0.),dx, 1.0, offset);
     }
-
       
     if (new_bcs != 0 && kind == "Velocity") {
-      if (new_bcs->getKind() == "Dirichlet") 
+      if (new_bcs->getKind() == "Dirichlet"){ 
        fillFace(variable,face,new_bcs->getValue(), offset);
+       
+
+      }
 
       if (new_bcs->getKind() == "Neumann") {
         fillFaceFlux(variable,face,new_bcs->getValue(),dx, 1.0, offset);
@@ -296,6 +296,33 @@ void setBC(CCVariable<Vector>& variable, const string& kind,
         fillFaceFlux(variable,face,new_bcs->getValue(),dx, 1.0, offset);
         checkValveBC( variable, patch, face); 
       }
+      
+/*`==========TESTING==========*/
+#if 0
+        // jet boundary conditions
+         Vector origin(0.5, 0.0, 0.5);
+         double radius = 0.11;
+
+         IntVector low = variable.getLowIndex();
+         IntVector hi  = variable.getHighIndex();
+         for (int i = low.x(); i<hi.x(); i++) {
+           for (int k = low.z(); k<hi.z(); k++) {
+
+             double x = (double) (i) * dx.x() + dx.x()/2.0;
+             double z = (double) (k) * dx.z() + dx.z()/2.0;
+
+             double delX = origin.x() - x;
+             double delZ = origin.z() - z;
+             double h    = sqrt(delX * delX + delZ * delZ);
+
+             if (h < radius) {
+               //cout << "I'm going to set BC "<< i << " , "<< k << endl;
+               variable[IntVector(i,low.y(),k)] = Vector(0.0, 100.0, 0.0);
+             }
+           }
+         }
+ #endif 
+/*==========TESTING==========`*/     
     }  // end velocity loop
   }  // end face loop
 }
