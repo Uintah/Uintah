@@ -24,7 +24,7 @@ PSELIBS := Packages/MIT, Core
 else
 PSELIBS := Packages/MIT/Core/Datatypes \
 	   Core/Datatypes Core/Disclosure Core/Containers Core/Persistent \
-           Core/Exceptions Core/Thread 
+           Core/Exceptions Core/Thread Core/Geom
 endif
 LIBS := -lm
 
