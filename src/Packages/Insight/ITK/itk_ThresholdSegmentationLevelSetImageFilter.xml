@@ -5,7 +5,6 @@
   Segments structures in images based on image features derived from pseudo-canny-edges.
   </description>
   <templated>
-    <base>itk::Object</base>
     <template>ImageType</template>
     <template>FeatureImageType</template>
     <defaults>
@@ -16,22 +15,23 @@
   </templated>
 
   <inputs>
-    <input num="1">
-      <value>ImageType</value>
+    <input name="SeedImage">
+      <type>ImageType</type>
       <call>SetInput</call>
-      <name>SeedImage</name>
     </input>  
-    <input num="2">
-      <value>FeatureImageType</value>
+    <input name="FeatureImage">
+      <type>FeatureImageType</type>
       <call>SetFeatureImage</call>
-      <name>FeatureImage</name>
     </input>  
   </inputs>
   <outputs>
-    <output num="1">
-      <value>FeatureImageType</value>
+    <output name="OutputImage">
+      <type>FeatureImageType</type>
       <call>GetOutput</call>
-      <name>OutputImage</name>
+    </output>
+    <output name="SpeedImage">
+      <type>ImageType</type>
+      <call const="yes">GetSpeedImage</call>
     </output>
   </outputs>
 

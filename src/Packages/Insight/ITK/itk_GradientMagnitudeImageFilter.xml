@@ -5,7 +5,6 @@
 Computes the gradient magnitude of an image region at each pixel.
   </description>
   <templated>
-    <base>itk::Object</base>
     <template>InputImageType</template>
     <template>OutputImageType</template>
     <defaults>
@@ -15,17 +14,15 @@ Computes the gradient magnitude of an image region at each pixel.
   </templated>
 
   <inputs>
-    <input num="1">
-      <value>InputImageType</value>
+    <input name="InputImage">
+      <type>InputImageType</type>
       <call>SetInput</call>
-      <name>InputImage</name>
     </input>  
   </inputs>
   <outputs>
-    <output num="1">
-      <value>OutputImageType</value>
+    <output name="OutputImage">
+      <type>OutputImageType</type>
       <call>GetOutput</call>
-      <name>OutputImage</name>
     </output>
   </outputs>
 
