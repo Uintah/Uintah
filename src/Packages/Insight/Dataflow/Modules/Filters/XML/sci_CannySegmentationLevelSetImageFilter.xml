@@ -39,6 +39,17 @@
         <value>float</value>
       </type>
      </instance>
+    <instance>
+      <type name="SeedImageType">
+        <value>itk::Image&lt;float, 3&gt;</value>
+      </type>
+      <type name="FeatureImageType">
+        <value>itk::Image&lt;float, 3&gt;</value>
+      </type>
+      <type name="OutputPixelType">
+        <value>float</value>
+      </type>
+     </instance>
   </instantiations>
 
   <includes>
