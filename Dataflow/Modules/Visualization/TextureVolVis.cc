@@ -115,9 +115,9 @@ void TextureVolVis::execute(void)
 
   if(!control_widget){
     control_widget=scinew PointWidget(this, &control_lock, 0.2);
-    
-    Point Smin(tex->min());
-    Point Smax(tex->max());
+    Transform trans = tex->get_field_transform();
+    Point Smin(trans.project(tex->min()));
+    Point Smax(trans.project(tex->max()));
 
     double max =  std::max(Smax.x() - Smin.x(), Smax.y() - Smin.y());
     max = std::max( max, Smax.z() - Smin.z());
