@@ -1144,8 +1144,8 @@ void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
     t->requires(Task::NewDW, lb->modelVol_srcLabel,    gn);
   }
 
-  t->computes(lb->spec_vol_L_CCLabel);                             
-  t->computes(lb->spec_vol_source_CCLabel);                        
+  t->computes(lb->sp_vol_L_CCLabel);                             
+  t->computes(lb->sp_vol_src_CCLabel);                        
 
   sched->addTask(t, patches, matls);
 }
@@ -1236,7 +1236,7 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
   task->requires(Task::NewDW, lb->mom_L_ME_CCLabel,    gac,2);
   task->requires(Task::NewDW, lb->mass_L_CCLabel,      gac,2);
   task->requires(Task::NewDW, lb->eng_L_ME_CCLabel,    gac,2);
-  task->requires(Task::NewDW, lb->spec_vol_L_CCLabel,  gac,2);
+  task->requires(Task::NewDW, lb->sp_vol_L_CCLabel,    gac,2);
   task->requires(Task::NewDW, lb->specific_heatLabel,  gac,2);  
   task->requires(Task::NewDW, lb->speedSound_CCLabel,  gn, 0);
   
@@ -3462,13 +3462,11 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
     for(int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
-      CCVariable<double> spec_vol_L, spec_vol_source;
+      CCVariable<double> sp_vol_L, sp_vol_src;
       constCCVariable<double> speedSound;
-      new_dw->allocateAndPut(spec_vol_L,     lb->spec_vol_L_CCLabel,
-                                                            indx,patch);
-      new_dw->allocateAndPut(spec_vol_source,lb->spec_vol_source_CCLabel,
-                                                            indx,patch);
-      spec_vol_source.initialize(0.);
+      new_dw->allocateAndPut(sp_vol_L,  lb->sp_vol_L_CCLabel,   indx,patch);
+      new_dw->allocateAndPut(sp_vol_src,lb->sp_vol_src_CCLabel, indx,patch);
+      sp_vol_src.initialize(0.);
 
       new_dw->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx,patch,gn, 0);
       new_dw->get(rho_CC,     lb->rho_CCLabel,        indx,patch,gn, 0);
@@ -3476,23 +3474,32 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
       new_dw->get(speedSound, lb->speedSound_CCLabel, indx,patch,gn, 0);
 
       //__________________________________
-      //  compute spec_vol_L * mass
+      //  compute sp_vol_L * mass
       for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
         IntVector c = *iter;
-        spec_vol_L[c] = (rho_CC[c] * vol)*sp_vol_CC[c];
+        sp_vol_L[c] = (rho_CC[c] * vol)*sp_vol_CC[c];
+      }
+      
+      //---- P R I N T   D A T A ------ 
+      if (switchDebugLagrangianSpecificVol ) {
+        ostringstream desc;
+        desc <<"TOP_Lagrangian_sp_vol_Mat_"<<indx<< "_patch_"<<patch->getID();
+         printData( indx, patch,1, desc.str(), "rho_CC",     rho_CC);      
+         printData( indx, patch,1, desc.str(), "sp_vol_CC",  sp_vol_CC);     
+         printData( indx, patch,1, desc.str(), "sp_vol_L",   sp_vol_L);      
       }
       //__________________________________
       //   Contributions from models
-      if(d_models.size() > 0){
-        constCCVariable<double> Modelsp_vol_src;
+      constCCVariable<double> Modelsp_vol_src;
+      if(d_models.size() > 0){ 
         new_dw->get(Modelsp_vol_src, lb->modelVol_srcLabel, indx, patch, gn, 0);
         for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
          IntVector c = *iter;
-         spec_vol_L[c] += Modelsp_vol_src[c];
+         sp_vol_L[c] += Modelsp_vol_src[c];
         }
       }
       //__________________________________
-      //  add the sources to spec_vol_L
+      //  add the sources to sp_vol_L
       for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){
         IntVector c = *iter;
         //__________________________________
@@ -3504,31 +3511,41 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
 
         // This is actually mass * sp_vol
         double src = term1 + if_mpm_matl_ignore[m] * term2;
-        spec_vol_L[c]     += src;
-        spec_vol_source[c] = src/(rho_CC[c] * vol);
+        sp_vol_L[c]  += src;
+        sp_vol_src[c] = src/(rho_CC[c] * vol);
 
 /*`==========TESTING==========*/
 //    do we really want this?  -Todd        
-        spec_vol_L[c] = max(spec_vol_L[c], d_TINY_RHO * vol * sp_vol_CC[c]);
+        sp_vol_L[c] = max(sp_vol_L[c], d_TINY_RHO * vol * sp_vol_CC[c]);
 /*==========TESTING==========`*/
      }
 
       //  Set Neumann = 0 if symmetric Boundary conditions
-      setBC(spec_vol_L, "set_if_sym_BC",patch, d_sharedState, indx, new_dw);
+      setBC(sp_vol_L, "set_if_sym_BC",patch, d_sharedState, indx, new_dw);
+
+      //---- P R I N T   D A T A ------ 
+      if (switchDebugLagrangianSpecificVol ) {
+        ostringstream desc;
+        desc <<"BOT_Lagrangian_sp_vol_Mat_"<<indx<< "_patch_"<<patch->getID();
+        printData( indx, patch,1, desc.str(), "sp_vol_L",   sp_vol_L);    
+        printData( indx, patch,1, desc.str(), "sp_vol_src", sp_vol_src);  
+        if(d_models.size() > 0){
+          printData( indx, patch,1, desc.str(), "Modelsp_vol_src", Modelsp_vol_src);
+        }
+      }
 
       //____ B U L L E T   P R O O F I N G----
       IntVector neg_cell;
-      if (!areAllValuesPositive(spec_vol_L, neg_cell)) {
-        cout << "matl            "<< indx << endl;
-        cout << "sum_thermal_exp "<< sum_therm_exp[neg_cell] << endl;
-        cout << "spec_vol_source "<< spec_vol_source[neg_cell] << endl;
-//        cout << "sp_vol_comb     "<< sp_vol_comb[neg_cell] << endl;
-        cout << "mass sp_vol_L    "<< spec_vol_L[neg_cell] << endl;
-        cout << "mass sp_vol_L_old"
+      if (!areAllValuesPositive(sp_vol_L, neg_cell)) {
+        cout << "matl              "<< indx << endl;
+        cout << "sum_thermal_exp   "<< sum_therm_exp[neg_cell] << endl;
+        cout << "sp_vol_src        "<< sp_vol_src[neg_cell] << endl;
+        cout << "mass sp_vol_L     "<< sp_vol_L[neg_cell] << endl;
+        cout << "mass sp_vol_L_old "
              << (rho_CC[neg_cell]*vol*sp_vol_CC[neg_cell]) << endl;
         ostringstream warn;
         warn<<"ERROR ICE::computeLagrangianSpecificVolumeRF, mat "<<indx
-            << " cell " <<neg_cell << " spec_vol_L is negative\n";
+            << " cell " <<neg_cell << " sp_vol_L is negative\n";
         throw InvalidValue(warn.str());
      }
     }  // end numALLMatl loop
@@ -4017,7 +4034,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
 
       CCVariable<double> rho_CC, temp, sp_vol_CC,mach;
       CCVariable<Vector> vel_CC;
-      constCCVariable<double> int_eng_L_ME, mass_L,spec_vol_L,speedSound, cv;
+      constCCVariable<double> int_eng_L_ME, mass_L,sp_vol_L,speedSound, cv;
       constCCVariable<double> gamma, placeHolder;
       constCCVariable<Vector> mom_L_ME;
       constSFCXVariable<double > uvel_FC;
@@ -4033,7 +4050,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
       new_dw->get(cv,          lb->specific_heatLabel,    indx,patch,gac,2);
 
       new_dw->get(mom_L_ME,    lb->mom_L_ME_CCLabel,      indx,patch,gac,2);
-      new_dw->get(spec_vol_L,  lb->spec_vol_L_CCLabel,    indx,patch,gac,2);
+      new_dw->get(sp_vol_L,    lb->sp_vol_L_CCLabel,      indx,patch,gac,2);
       new_dw->get(int_eng_L_ME,lb->eng_L_ME_CCLabel,      indx,patch,gac,2);
       new_dw->getModifiable(sp_vol_CC, lb->sp_vol_CCLabel,indx,patch);
       new_dw->getModifiable(rho_CC,    lb->rho_CCLabel,   indx,patch);
@@ -4123,10 +4140,10 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
       //__________________________________
       // Advection of specific volume
       // Note sp_vol_L[m] is actually sp_vol[m] * mass
-      advector->advectQ(spec_vol_L,patch,q_advected, new_dw); 
+      advector->advectQ(sp_vol_L,patch,q_advected, new_dw); 
 
       update_q_CC<constCCVariable<double>, double>
-                  ("sp_vol",sp_vol_CC, spec_vol_L, q_advected, 
+                  ("sp_vol",sp_vol_CC, sp_vol_L, q_advected, 
                    mass_L, mass_new, mass_advected, PH, PH2, patch);
 
       //  Set Neumann = 0 if symmetric Boundary conditions
@@ -4217,7 +4234,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
        printData(   indx, patch,1, desc.str(), "mass_L",        mass_L); 
        printData(   indx, patch,1, desc.str(), "mass_advected", mass_advected);
        printVector( indx, patch,1, desc.str(), "mom_L_CC", 0, mom_L_ME); 
-       printData(   indx, patch,1, desc.str(), "sp_vol_L",    spec_vol_L);
+       printData(   indx, patch,1, desc.str(), "sp_vol_L",    sp_vol_L);
        printData(   indx, patch,1, desc.str(), "int_eng_L_CC",int_eng_L_ME);
        printData(   indx, patch,1, desc.str(), "rho_CC",      rho_CC);
        printData(   indx, patch,1, desc.str(), "Temp_CC",     temp);
