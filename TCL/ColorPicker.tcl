@@ -14,13 +14,13 @@ proc makeColorPicker {w var command cancel} {
     set rgb $picks.rgb
     scale $rgb.s1 -label Red -from 0.0 -to 1.0 -length 6c -showvalue true \
 	    -orient horizontal -resolution .01 \
-	    -digits 3 -variable r,$w
+	    -digits 3 -variable $w-r
     scale $rgb.s2 -label Green -from 0.0 -to 1.0 -length 6c -showvalue true \
 	    -orient horizontal -resolution .01 \
-	    -digits 3 -variable g,$w
+	    -digits 3 -variable $w-g
     scale $rgb.s3 -label Blue -from 0.0 -to 1.0 -length 6c -showvalue true \
 	    -orient horizontal -resolution .01 \
-	    -digits 3 -variable b,$w
+	    -digits 3 -variable $w-b
     pack $rgb.s1 -in $picks.rgb -side top -padx 2 -pady 2 -anchor nw -fill y
     pack $rgb.s2 -in $picks.rgb -side top -padx 2 -pady 2 -anchor nw -fill y
     pack $rgb.s3 -in $picks.rgb -side top -padx 2 -pady 2 -anchor nw -fill y
@@ -29,13 +29,13 @@ proc makeColorPicker {w var command cancel} {
     set hsv $picks.hsv
     scale $hsv.s1 -label Hue -from 0.0 -to 360.0 -length 6c -showvalue true \
 	    -orient horizontal -resolution .01 \
-	    -digits 3 -variable h,$w
+	    -digits 3 -variable $w-h
     scale $hsv.s2 -label Saturation -from 0.0 -to 1.0 -length 6c -showvalue true \
 	    -orient horizontal -resolution .01 \
-	    -digits 3 -variable s,$w
+	    -digits 3 -variable $w-s
     scale $hsv.s3 -label Value -from 0.0 -to 1.0 -length 6c -showvalue true \
 	    -orient horizontal -resolution .01 \
-	    -digits 3 -variable v,$w
+	    -digits 3 -variable $w-v
     pack $hsv.s1 -in $picks.hsv -side top -padx 2 -pady 2 -anchor nw -fill y
     pack $hsv.s2 -in $picks.hsv -side top -padx 2 -pady 2 -anchor nw -fill y
     pack $hsv.s3 -in $picks.hsv -side top -padx 2 -pady 2 -anchor nw -fill y
@@ -56,21 +56,21 @@ proc makeColorPicker {w var command cancel} {
     frame $w.c.opts
     button $w.c.opts.ok -text OK -command "cpcommitcolor $var $rgb.s1 $rgb.s2 $rgb.s3 \"$command\""
     button $w.c.opts.cancel -text Cancel -command $cancel
-    checkbutton $w.c.opts.rgb -text RGB -variable rgb,$w \
+    checkbutton $w.c.opts.rgb -text RGB -variable $w-rgb \
 	    -command "cptogrgb $w $picks $rgb"
-    checkbutton $w.c.opts.hsv -text HSV -variable hsv,$w \
+    checkbutton $w.c.opts.hsv -text HSV -variable $w-hsv \
 	    -command "cptoghsv $w $picks $hsv"
     pack $w.c.opts.ok -in $w.c.opts -side left -padx 2 -pady 2 -anchor w
     pack $w.c.opts.cancel -in $w.c.opts -side left -padx 2 -pady 2 -anchor w
     pack $w.c.opts.rgb -in $w.c.opts -side left -padx 2 -pady 2 -anchor e
     pack $w.c.opts.hsv -in $w.c.opts -side left -padx 2 -pady 2 -anchor e
 
-    global rgb,$w hsv,$w
-    if [expr ([set rgb,$w] == 1) || ([set hsv,$w] != 1)] {
-	set rgb,$w 1
+    global $w-rgb $w-hsv
+    if [expr ([set $w-rgb] == 1) || ([set $w-hsv] != 1)] {
+	set $w-rgb 1
 	pack $rgb -in $picks -side left -padx 2 -pady 2 -expand 1 -fill x
     }
-    if [expr [set hsv,$w] == 1] {
+    if [expr [set $w-hsv] == 1] {
 	pack $hsv -in $picks -side left -padx 2 -pady 2 -expand 1 -fill x
     }
 
@@ -195,17 +195,17 @@ proc cpcommitcolor {var rs gs bs command} {
     set r [$rs get]
     set g [$gs get]
     set b [$bs get]
-    global r,$var g,$var b,$var
-    set r,$var $r
-    set g,$var $g
-    set b,$var $b
+    global $var-r $var-g $var-b
+    set $var-r $r
+    set $var-g $g
+    set $var-b $b
     eval $command
 }
 
 proc cptogrgb {w picks rgb} {
-    global rgb,$w
+    global $w-rgb
 
-    if [expr [set rgb,$w] == 1] {
+    if [expr [set $w-rgb] == 1] {
 	pack $rgb -in $picks -side left
     } else {
 	pack forget $rgb
@@ -213,9 +213,9 @@ proc cptogrgb {w picks rgb} {
 }
 
 proc cptoghsv {w picks hsv} {
-    global hsv,$w
+    global $w-hsv
 
-    if [expr [set hsv,$w] == 1] {
+    if [expr [set $w-hsv] == 1] {
 	pack $hsv -in $picks -side left
     } else {
 	pack forget $hsv

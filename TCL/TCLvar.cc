@@ -25,7 +25,7 @@ extern Tcl_Interp* the_interp;
 
 TCLvar::TCLvar(const clString& name, const clString& id,
 	       TCL* tcl)
-: varname(name+","+id), is_reset(1), tcl(tcl)
+: varname(id+"-"+name), is_reset(1), tcl(tcl)
 {
     if(tcl)
 	tcl->register_var(this);
@@ -153,7 +153,6 @@ void TCLstring::set(const clString& val)
 	TCLTask::unlock();
     }
 }
-
 
 TCLvardouble::TCLvardouble(const clString& name, const clString& id, TCL* tcl)
 : TCLvar(name, id, tcl)

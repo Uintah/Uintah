@@ -3,19 +3,19 @@ proc makePoint {w title name command} {
     frame $w -relief groove -borderwidth 2
     label $w.label -text $title
     pack $w.label -side top
-    scale $w.x -orient horizontal -variable x,$name \
+    scale $w.x -orient horizontal -variable $name-x \
 	    -from -10 -to 10 -label "X:" \
 	    -showvalue true -tickinterval 5 \
 	    -resolution 0 -digits 3 \
 	    -command $command
     pack $w.x -side top -expand yes -fill x
-    scale $w.y -orient horizontal -variable y,$name \
+    scale $w.y -orient horizontal -variable $name-y \
 	    -from -10 -to 10 -label "Y:" \
 	    -showvalue true -tickinterval 5 \
 	    -resolution 0 -digits 3 \
 	    -command $command
     pack $w.y -side top -expand yes -fill x
-    scale $w.z -orient horizontal -variable z,$name \
+    scale $w.z -orient horizontal -variable $name-z \
 	    -from -10 -to 10 -label "Z:" \
 	    -showvalue true -tickinterval 5 \
 	    -resolution 0 -digits 3 \
@@ -55,25 +55,25 @@ proc makeNormalVector {w title name command} {
     frame $w -relief groove -borderwidth 2
     label $w.label -text $title
     pack $w.label -side top
-    global x,$name y,$name z,$name
+    global $name-x $name-y $name-z
     global unv_update
     set unv_update 0
-    trace variable x,$name w "updateNormalVector x,$name, y,$name z,$name"
-    trace variable y,$name w "updateNormalVector y,$name, z,$name x,$name"
-    trace variable z,$name w "updateNormalVector z,$name, x,$name y,$name"
-    scale $w.x -orient horizontal -variable x,$name \
+    trace variable $name-x w "updateNormalVector $name-x $name-y $name-z"
+    trace variable $name-y w "updateNormalVector $name-y $name-z $name-x"
+    trace variable $name-z w "updateNormalVector $name-z $name-x $name-y"
+    scale $w.x -orient horizontal -variable $name-x \
 	    -from -1 -to 1 -label "X:" \
 	    -showvalue true -tickinterval 1 \
 	    -resolution 0 -digits 3 \
 	    -command $command
     pack $w.x -side top -expand yes -fill x
-    scale $w.y -orient horizontal -variable y,$name \
+    scale $w.y -orient horizontal -variable $name-y \
 	    -from -1 -to 1 -label "Y:" \
 	    -showvalue true -tickinterval 1 \
 	    -resolution 0 -digits 3 \
 	    -command $command
     pack $w.y -side top -expand yes -fill x
-    scale $w.z -orient horizontal -variable z,$name \
+    scale $w.z -orient horizontal -variable $name-z \
 	    -from -1 -to 1 -label "Z:" \
 	    -showvalue true -tickinterval 1 \
 	    -resolution 0 -digits 3 \

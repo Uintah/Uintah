@@ -1,15 +1,15 @@
 proc makeFilebox {w var command cancel} {
-    global filter,$w path,$w oldpath,$w oldsel,$w
+    global $w-filter $w-path $w-oldpath $w-oldsel
     global $var
 
-    set filter,$w "*.*"
+    set $w-filter "*.*"
 
     set $var ""
-    set oldsel,$w ""
+    set $w-oldsel ""
 
     global env
-    set path,$w $env(SCI_DATA)
-    set oldpath,$w [set path,$w]
+    set $w-path $env(SCI_DATA)
+    set $w-oldpath [set $w-path]
 
     frame $w.f
 
@@ -65,7 +65,7 @@ proc makeFilebox {w var command cancel} {
 
     frame $w.f.filt
     label $w.f.filt.filtl -text Filter
-    entry $w.f.filt.filt -relief sunken -width 40 -textvariable filter,$w
+    entry $w.f.filt.filt -relief sunken -width 40 -textvariable $w-filter
     bind $w.f.filt.filt <Return> "fbupdate $w $dirs $files"
     pack $w.f.filt.filtl -in $w.f.filt -side top -padx 2 -pady 2 \
 	    -anchor w
@@ -74,7 +74,7 @@ proc makeFilebox {w var command cancel} {
 
     frame $w.f.path
     label $w.f.path.pathl -text Path
-    entry $w.f.path.path -relief sunken -width 40 -textvariable path,$w
+    entry $w.f.path.path -relief sunken -width 40 -textvariable $w-path
     bind $w.f.path.path <Return> "fbpath $w $dirs $files"
     pack $w.f.path.pathl -in $w.f.path -side top -padx 2 -pady 2 -anchor w
     pack $w.f.path.path -in $w.f.path -side bottom -padx 2 -pady 2 \
@@ -109,19 +109,19 @@ proc makeFilebox {w var command cancel} {
 }
 
 proc fbsel {w dirs files var command} {
-    global path,$w oldpath,$w oldsel,$w $var
+    global $w-path $w-oldpath $w-oldsel $var
 
     if [file isfile [set $var]] {
 	eval $command
     } elseif [file isdirectory [set $var]] {
 	fbcd $w [set $var] $dirs $files
     } else {
-	set $var [set oldsel,$w]
+	set $var [set $w-oldsel]
     }
 }
 
 proc fbdirs {y w dirs files} {
-    global path,$w
+    global $w-path
 
     set ind [$dirs nearest $y]
     $dirs selection set $ind
@@ -130,42 +130,42 @@ proc fbdirs {y w dirs files} {
     if [expr [string compare "." $dir] == 0] {
 	return
     } elseif [expr [string compare ".." $dir] == 0] {
-	fbcd $w [file dirname [set path,$w]] $dirs $files
+	fbcd $w [file dirname [set $w-path]] $dirs $files
     } else {
-	fbcd $w [set path,$w]/$dir $dirs $files
+	fbcd $w [set $w-path]/$dir $dirs $files
     }
 }
 
 proc fbpath {w dirs files} {
-    global path,$w
+    global $w-path
 
-    fbcd $w [set path,$w] $dirs $files
+    fbcd $w [set $w-path] $dirs $files
 }
 
 proc fbcd {w dir dirs files} {
-    global path,$w oldpath,$w
+    global $w-path $w-oldpath
 
     if [file isdirectory $dir] {
-	set path,$w $dir
-	set oldpath,$w [set path,$w]
+	set $w-path $dir
+	set $w-oldpath [set $w-path]
 	fbupdate $w $dirs $files
     } else {
-	set path,$w [set oldpath,$w]
+	set $w-path [set $w-oldpath]
     }
 }
 
 proc fbupdate {w dirs files} {
-    global filter,$w path,$w
+    global $w-filter $w-path
 
     $dirs delete 0 end
-    foreach i [lsort [glob -nocomplain [set path,$w]/.* [set path,$w]/*]] {
+    foreach i [lsort [glob -nocomplain [set $w-path]/.* [set $w-path]/*]] {
 	if [file isdirectory $i] {
 	    $dirs insert end [file tail $i]
 	}
     }
 
     $files delete 0 end
-    foreach i [lsort [glob -nocomplain [set path,$w]/{[set filter,$w]}]] {
+    foreach i [lsort [glob -nocomplain [set $w-path]/{[set $w-filter]}]] {
 	if [file isfile $i] {
 	    $files insert end [file tail $i]
 	}
@@ -181,10 +181,10 @@ proc fbchoose {y w files var command} {
 }
 
 proc fbselect {y w files var} {
-    global path,$w oldsel,$w $var
+    global $w-path $w-oldsel $var
 
     set ind [$files nearest $y]
     $files selection set $ind
-    set $var [set path,$w]/[$files get $ind]
-    set oldsel,$w [set $var]
+    set $var [set $w-path]/[$files get $ind]
+    set $w-oldsel [set $var]
 }
