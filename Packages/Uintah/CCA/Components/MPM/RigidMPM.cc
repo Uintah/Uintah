@@ -1525,7 +1525,7 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->allocateAndPut(pSp_volNew,   lb->pSp_volLabel_preReloc,     pset);
      
       ParticleSubset* delset = scinew ParticleSubset
-	(pset->getParticleSet(),false,dwi,patch);
+	(pset->getParticleSet(),false,dwi,patch, 0);
 
       pids_new.copyData(pids);
       if(d_8or27==27){

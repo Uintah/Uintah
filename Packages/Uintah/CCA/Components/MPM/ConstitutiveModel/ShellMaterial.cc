@@ -832,8 +832,6 @@ ShellMaterial::computeRotAcceleration(const PatchSubset* patches,
   // Loop thru patches
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    Vector dx = patch->dCell();
-    //    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
     // Get stuff from datawarehouse
