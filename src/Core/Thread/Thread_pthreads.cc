@@ -622,10 +622,6 @@ struct Mutex_private {
 Mutex::Mutex(const char* name)
     : name_(name)
 {
-  
-  if(!initialized)
-    Thread::initialize();
-  
   if(this == 0){
     fprintf(stderr, "WARNING: creation of null mutex\n");
   }
