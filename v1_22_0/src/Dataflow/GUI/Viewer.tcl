@@ -1946,6 +1946,7 @@ itcl_class ViewWindow {
 		-parent $w \
 		-filevar $this-saveFile \
 		-command "$this doSaveImage; wm withdraw $w" \
+	        -commandname Save \
 		-cancel "wm withdraw $w" \
 		-title $title \
 		-filetypes $types \

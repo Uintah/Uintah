@@ -104,6 +104,7 @@ itcl_class Teem_UnuNtoZ_UnuSave {
 		-parent $w \
 		-filevar $this-filename \
 		-command "wm withdraw $w" \
+	        -commandname Save \
 		-cancel "wm withdraw $w" \
 		-title $title \
 		-filetypes $types \
