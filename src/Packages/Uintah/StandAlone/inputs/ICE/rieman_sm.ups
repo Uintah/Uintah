@@ -134,6 +134,11 @@
        <dbg_timeStart>       0.00   </dbg_timeStart>
        <dbg_timeStop>        0.001  </dbg_timeStop>
        <dbg_outputInterval>  1e-9   </dbg_outputInterval>
+   <!--
+       <dbg_BeginIndex>     [0,0,0] </dbg_BeginIndex>
+       <dbg_EndIndex>       [2,2,2] </dbg_EndIndex>
+       <dbg_SigFigs>        10      </dbg_SigFigs>
+    -->
    <!--<debug label = "switchDebugInitialize"/>             
        <debug label = "switchDebug_EQ_RF_press"/>
        <debug label = "switchDebug_vel_FC"/>                   
