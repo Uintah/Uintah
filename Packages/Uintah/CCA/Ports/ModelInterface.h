@@ -10,6 +10,8 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/CCA/Ports/SchedulerP.h>
 
+#include <Packages/Uintah/Core/Grid/CCVariable.h>
+
 namespace Uintah {
 /**************************************
 
@@ -134,11 +136,20 @@ WARNING
      virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
                                                 const LevelP&,
                                                 const MaterialSet*) = 0;
-
+                                                
+     virtual void computeSpecificHeat(CCVariable<double>&,
+                                     const Patch* patch,
+                                     DataWarehouse* new_dw,
+                                     const int indx) = 0;
+                                     
+    
+    bool computesThermoTransportProps() const;
+    bool d_modelComputesThermoTransportProps;
+    
    protected:
      const ProcessorGroup* d_myworld;
    private:
-
+     
      ModelInterface(const ModelInterface&);
      ModelInterface& operator=(const ModelInterface&);
    };
