@@ -50,6 +50,10 @@ PSELIBS := $(subst /,_,$(PSELIBS))
 ALLTARGETS := $(ALLTARGETS) $(PROGRAM)
 ALLSRCS := $(ALLSRCS) $(SRCS)
 
+ifeq ($(HAVE_MPI),yes)
+LIBS += $(MPI_LIBRARY)
+endif
+
 # Tuck the value of $(LIBS) away in a mangled variable
 $(PROGRAM)_LIBS := $(LIBS)
 
