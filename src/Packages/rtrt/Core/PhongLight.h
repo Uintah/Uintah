@@ -5,6 +5,8 @@
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/Material.h>
 
+#include <Core/Math/Expon.h>
+
 namespace rtrt {
 
 class PhongLight : public Light
@@ -21,7 +23,7 @@ class PhongLight : public Light
   virtual ~PhongLight() {}
   void setDirection(const Vector &dir) { direction_ = dir; }
   virtual void updatePosition( const Point & newPos, const Vector &offset, const Vector &fwd) { direction_=fwd; Light::updatePosition(newPos, offset, fwd); }
-  virtual Color get_color(const Vector &v) { return currentColor_*Max(ipow(Dot(direction_,-v),pow_),0.0); }
+  virtual Color get_color(const Vector &v) { return currentColor_*Max(SCIRun::Pow(Dot(direction_,-v),pow_),0.0); }
 };
 
 } // end namespace

@@ -10,6 +10,8 @@
 #include <Packages/rtrt/Core/Worker.h>
 #include <Packages/rtrt/Core/Stats.h>
 
+#include <Core/Math/Expon.h>
+
 using namespace rtrt;
 using namespace SCIRun;
 
@@ -83,7 +85,7 @@ void Phong::shade(Color& result, const Ray& ray,
 	H.normalize();
 	double cos_alpha= Dot(H, normal);
 	if ( cos_alpha > 0 )
-	  speclight+=light->get_color(light_dir) * shadowfactor * ipow( cos_alpha, specpow);
+	  speclight+=light->get_color(light_dir) * shadowfactor * Pow( cos_alpha, specpow);
       }
     } else {
       cx->stats->ds[depth].inshadow++;

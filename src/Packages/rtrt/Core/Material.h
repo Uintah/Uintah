@@ -17,18 +17,6 @@ namespace SCIRun {
 
 namespace rtrt {
 
-inline double ipow(double x, int p)
-{
-  double result=1;
-  while(p){
-    if(p&1)
-      result*=x;
-    x*=x;
-    p>>=1;
-  }
-  return result;
-}
-
 struct Context;
 class  HitInfo;
 class  Ray;

@@ -9,6 +9,8 @@
 #include <Packages/rtrt/Core/Worker.h>
 #include <Packages/rtrt/Core/Context.h>
 
+#include <Core/Math/Expon.h>
+
 #include <math.h>
 
 //#ifndef HAVE_FASTM
@@ -16,6 +18,7 @@
 //#endif
 
 using namespace rtrt;
+using namespace SCIRun;
 
 // initialize the static member type_id
 SCIRun::PersistentTypeID Material::type_id("Material", "Persistent", 0);
@@ -77,7 +80,7 @@ double Material::phong_term( const Vector& E, const Vector& L, const Vector& n, 
   H.normalize();
   double cos_alpha= Dot(H, n );
   if ( cos_alpha > 0 )
-    return ipow( cos_alpha, ex );
+    return Pow( cos_alpha, ex );
   else
     return 0;
 }
@@ -145,7 +148,7 @@ void Material::phongshade(Color& result,
           double cos_alpha= Dot(H, normal);
           if ( cos_alpha > 0 )
             speclight+=light->get_color(light_dir) * /*shadowfactor * */
-                       ipow( cos_alpha, spec_coeff);
+                       Pow( cos_alpha, spec_coeff);
         }
       } else {
         cx->stats->ds[depth].inshadow++;
@@ -239,7 +242,7 @@ void Material::lambertianshade(Color& result,  const Color& diffuse,
   }
   double ray_objnormal_dot(Dot(ray.direction(),normal));
     
-  result = diffuse * amb;
+  result = diffuse * amb * ambient(cx->scene, normal);
   int ngloblights=cx->scene->nlights();
   int nloclights=my_lights.size();
   int nlights=ngloblights+nloclights;
