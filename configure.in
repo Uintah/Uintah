@@ -1069,6 +1069,10 @@ SCI_ARG_WITH(hypre,
   [  --with-hypre=<path-to-hypre>      <path-to-hypre>],
   [with_hypre="$withval"],
   [with_hypre=""])
+SCI_ARG_WITH(netsolve,
+  [  --with-petsc=<path-to-petsc>      <path-to-netsolve>],
+  [with_netsolve="$withval"],
+  [with_netsolve=""])
 SCI_ARG_WITH(petsc,
   [  --with-petsc=<path-to-petsc>      <path-to-petsc>],
   [with_petsc="$withval"],
@@ -1101,6 +1105,14 @@ SCI_ARG_WITH(vdt,
   [  --with-vdt=DIR                    <path-to-vdt>],
   [with_vdt="$withval"],
   [with_vdt=""])
+SCI_ARG_WITH(jpeg,
+  [  --with-jpeg=DIR                   <path-to-jpeg>],
+  [with_jpeg="$withval"],
+  [with_jpeg=""])
+SCI_ARG_WITH(tiff,
+  [  --with-tiff=DIR                   <path-to-tiff>],
+  [with_tiff="$withval"],
+  [with_tiff=""])
 SCI_ARG_WITH(imagemagick,
   [  --with-imagemagick=DIR            <path-to-imagemagick>],
   [with_imagemagick="$withval"],
@@ -1121,7 +1133,10 @@ SCI_ARG_WITH(oogl,
   [  --with-oogl=DIR                   Use the oogl installation in DIR],
   [with_oogl="$withval"],
   [with_oogl=""])
-
+SCI_ARG_WITH(audio,
+  [  --with-audio=DIR                   Use the audio installation in DIR],
+  [with_audio="$withval"],
+  [with_audio=""])
 
 SCI_ARG_ENABLE(verbosity,
   [  --enable-verbosity                Turn on verbose configure output],
@@ -1323,6 +1338,20 @@ else
 fi
 
 LARGESOS=$largesos
+
+u=`echo $package | sed 's/.*Remote.*/Remote/'`
+if test "$u" = "Remote" ; then
+   pkg_Remote=yes
+else
+   pkg_Remote=no
+fi
+
+u=`echo $package | sed 's/.*NetSolve.*/NetSolve/'`
+if test "$u" = "NetSolve" ; then
+   pkg_NetSolve=yes
+else
+   pkg_NetSolve=no
+fi
 
 u=`echo $package | sed 's/.*Uintah.*/Uintah/'`
 if test "$u" = "Uintah" ; then
@@ -1734,6 +1763,9 @@ fi
 
 ##AC_PROG_YACC
 AC_PROG_LEX
+
+LEX_LIB_FLAG="$LEXLIB"
+
 if test "$pkg_uintah" = "yes" ; then
   AC_CHECK_PROG(PERL, perl, perl, 
     echo configure: error: perl was not found in your PATH.;exit)
@@ -2075,6 +2107,50 @@ AC_SUBST(GLU_LIB_DIR_FLAG)
 INC_GL_H=$INC_GL_GL_H
 AC_SUBST(INC_GL_H)
 
+##  --  search for Remote ----------------------------------------------
+
+if test "$pkg_remote" = "yes"; then
+
+   if test "$with_jpeg"; then
+     dirs="$with_jpeg $SCI_LAB_TP_LIBS"
+   else
+     dirs="$SCI_LAB_TP_LIBS"
+   fi 
+   SCI_CHECK_LIB($dirs,jpeg,main,,,not-optional)
+
+   if test "$with_tiff"; then
+     dirs="$with_tiff $SCI_LAB_TP_LIBS"
+   else
+     dirs="$SCI_LAB_TP_LIBS"
+   fi
+
+   SCI_CHECK_LIB($dirs,tiff,main,,,not-optional)
+fi
+
+
+AC_SUBST(JPEG_LIB_FLAG)
+AC_SUBST(JPEG_LIB_DIR_FLAG)
+
+AC_SUBST(TIFF_LIB_FLAG)
+AC_SUBST(TIFF_LIB_DIR_FLAG)
+
+##  --  search for netsolve ----------------------------------------------
+
+if test "$pkg_netsolve" = "yes"; then
+
+   if test "$with_netsolve"; then
+     dirs="$with_netsolve $SCI_LAB_TP_LIBS"
+   else
+     dirs="$SCI_LAB_TP_LIBS"
+   fi
+
+   SCI_CHECK_LIB($dirs,netsolve,main,,,not-optional)
+fi
+
+AC_SUBST(NETSOLVE_LIB_FLAG)
+AC_SUBST(NETSOLVE_LIB_DIR_FLAG)
+
+ 
 ##  --  search for glut, glui and oogl -----------------------------------
 
 if test "$pkg_rtrt" = "yes"; then
@@ -2125,6 +2201,11 @@ if test "$pkg_rtrt" = "yes"; then
   if test "$HAVE_OOGL_BASICTEXTURE_H"; then
     INC_OOGL_H="$INC_OOGL_BASICTEXTURE_H"
   fi
+
+  $dirs="$with_audio"
+
+  SCI_CHECK_LIB($dirs,audio,main,,,optional)
+  SCI_CHECK_LIB($dirs,audiofile,main,,,optional)
 fi
 
 AC_SUBST(INC_GL_GLUT_H)
@@ -2138,6 +2219,12 @@ AC_SUBST(GLUI_LIB_DIR_FLAG)
 AC_SUBST(INC_OOGL_H)
 AC_SUBST(OOGL_LIB_FLAG)
 AC_SUBST(OOGL_LIB_DIR_FLAG)
+
+AC_SUBST(AUDIO_LIB_FLAG)
+AC_SUBST(AUDIO_LIB_DIR_FLAG)
+
+AC_SUBST(AUDIOFILE_LIB_FLAG)
+AC_SUBST(AUDIOFILE_LIB_DIR_FLAG)
 
 ##  --  search for dlopen  -----------------------------------------------
 
@@ -2517,6 +2604,9 @@ echo
 AC_CHECKING(for optional components...)
 echo
 
+SCI_CHECK_LIB(,fl,main,,,optional)
+SCI_CHECK_LIB(,ld,main,,,optional)
+
 ##  --  search for teem  -------------------------------------------------
 
 if test "$with_teem"; then
@@ -2736,13 +2826,16 @@ if test "$with_globus" && test ! "$DEF_GLOBUS"; then
   echo
 fi
 
+debugging=yes
+  SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_io,        main,,,optional)
+debugging=no
+
 if test "$is_linux" = "linux"; then
   SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_utp,       main,,,optional)
   SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_mp,        main,,,optional)
   SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_gss_assist,main,,,optional)
   SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_gss,       main,,,optional)
   SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_gaa,       main,,,optional)
-
 
   SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_utp,       main,$GLOBUS_LIB_DIR_FLAG $GLOBUS_LIB_FLAG $MISC_LIB_FLAG,,optional)
   SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_mp,        main,$GLOBUS_LIB_DIR_FLAG $GLOBUS_LIB_FLAG $GLOBUS_UTP_LIB_FLAG $MISC_LIB_FLAG,,optional)
@@ -2753,6 +2846,8 @@ if test "$is_linux" = "linux"; then
   GLOBUS_EXTRA_LIB_FLAG="$GLOBUS_GAA_LIB_FLAG $GLOBUS_GSS_LIB_FLAG $GLOBUS_GSS_ASSIST_LIB_FLAG $GLOBUS_MP_LIB_FLAG $GLOBUS_UTP_LIB_FLAG $MISC_LIB_FLAG"
 fi
 
+AC_SUBST(GLOBUS_IO_LIB_FLAG)
+AC_SUBST(GLOBUS_IO_LIB_DIR_FLAG)
 AC_SUBST(GLOBUS_COMMON_LIB_FLAG)
 AC_SUBST(GLOBUS_COMMON_LIB_DIR_FLAG)
 AC_SUBST(GLOBUS_LIB_FLAG)
@@ -2825,7 +2920,7 @@ if test "$pkg_vdt" = "yes"; then
     SCI_CHECK_LIB($i/src/vdt/Meschach/$ad,meschach,,,,not-optional)
 
 
-    MISC_LIB_FLAG="$ESI_LIB_FLAG $ELIXIR_LIB_FLAG $LPK_LIB_FLAG $PIRAT_LIB_FLAG $LOBS3D_LIB_FLAG $LOBS2D_LIB_FLAG $LOBS1D_LIB_FLAG $G3D_LIB_FLAG $CKIT_LIB_FLAG $MESCHACH_LIB_FLAG $X11_LIB_FLAG $XEXT_LIB_FLAG $XAW_LIB_FLAG $XT_LIB_FLAG $XMU_LIB_FLAG $M_LIB_FLAG $LEXLIB"
+    MISC_LIB_FLAG="$ESI_LIB_FLAG $ELIXIR_LIB_FLAG $LPK_LIB_FLAG $PIRAT_LIB_FLAG $LOBS3D_LIB_FLAG $LOBS2D_LIB_FLAG $LOBS1D_LIB_FLAG $G3D_LIB_FLAG $CKIT_LIB_FLAG $MESCHACH_LIB_FLAG $X11_LIB_FLAG $XEXT_LIB_FLAG $XAW_LIB_FLAG $XT_LIB_FLAG $XMU_LIB_FLAG $M_LIB_FLAG $LEX_LIB_FLAG"
   
     MISC_LIB_DIR_FLAG="$ESI_LIB_DIR_FLAG $ELIXIR_LIB_DIR_FLAG $LPK_LIB_DIR_FLAG $PIRAT_LIB_DIR_FLAG $LOBS3D_LIB_DIR_FLAG $LOBS2D_LIB_DIR_FLAG $LOBS1D_LIB_DIR_FLAG $G3D_LIB_DIR_FLAG $CKIT_LIB_DIR_FLAG $MESCHACH_LIB_DIR_FLAG $X11_LIB_DIR_FLAG"
   
