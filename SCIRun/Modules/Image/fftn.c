@@ -186,10 +186,6 @@ fft_free (void)
    if (Perm != NULL)	{ free (Perm);	Perm = NULL; }
 }
 
-#if !defined (__FILE__) && !defined (lint)
-Error: your compiler is sick!  define __FILE__ yourself (a string)
-eg, something like -D__FILE__=\"fftn.c\"
-#endif
 
 #ifndef M_PI
 # define M_PI	3.14159265358979323846264338327950288
