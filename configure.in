@@ -179,6 +179,7 @@ case $host in
   *-linux-gnu)
      CFLAGS="-Wall $extra_cflags"
      FFLAGS="$extra_cflags"
+     F77=g77
      FLIBS="-lg2c"
      TEMPLATE_TAG=
      TEMPLATE_BOX="<>"
