@@ -41,14 +41,20 @@
 #include <Classlib/String.h>
 #include <iostream.h>
 #include <stdlib.h>
+#include <string.h>
+
+#include <Classlib/Timer.h>
 
 #include <Modules/Visualization/LevoyVis.h>
 #include "kuswik.h"
 
 // the initial view data
 
+//const View homeview
+//(Point(2, 0.5, 0.5), Point(0.5, 0.5, 0.5), Vector(.0,.0,1), 45);
+
 const View homeview
-(Point(2, 0.5, 0.5), Point(0.5, 0.5, 0.5), Vector(.0,.0,1), 45);
+(Point(0.6, 2.6, 0.6), Point(0.6, 0.6, 0.6), Vector(1.,0.,0.), 30);
 
 // the_interp is the tcl interpreter corresponding to this
 // module
@@ -119,6 +125,9 @@ class VolVis : public Module {
   // associated with the nodes of "Opacity map" widget
   
   TCLstring Xarray, Yarray;
+  TCLstring Rsv, Rop;
+  TCLstring Gsv, Gop;
+  TCLstring Bsv, Bop;
 
   // projection type
 
@@ -135,11 +144,9 @@ class VolVis : public Module {
 
   // arrays with scalar value -- opacity mapping
   
-  Array1<double> Opacity;
-  Array1<double> ScalarVal;
+  Array1<double> Opacity[4];
+  Array1<double> ScalarVal[4];
   
-  double    Xvalues[CANVAS_WIDTH], Yvalues[CANVAS_WIDTH];
-
   // the number of nodes
   
   int       NodeCount;
@@ -162,6 +169,15 @@ class VolVis : public Module {
 
   Mutex imagelock;
 
+
+  // number of processors is necessary for proper division
+  // of data during parallel processing
+
+  int procCount;
+
+  // pointer to the levoy structure
+  
+  Levoy * calc;
   
   
   // initialize an OpenGL window
@@ -173,7 +189,7 @@ class VolVis : public Module {
   // place the {x,y}positions supplied by tcl-lists
   // into the arrays.
 
-  void UpdateTransferFncArray( clString x, clString y );
+  void UpdateTransferFncArray( clString x, clString y, int index );
 
 public:
 
@@ -205,6 +221,7 @@ public:
   
   void redraw_all();
   
+  void parallel(int proc);
 };
 
 
@@ -251,6 +268,12 @@ VolVis::VolVis(const clString& id)
   maxSV("maxSV", id, this),
   ibgColor("bgColor", id, this),
   projection("project", id, this),
+  Rsv("Rsv", id, this),
+  Gsv("Gsv", id, this),
+  Bsv("Bsv", id, this),
+  Rop("Rop", id, this),
+  Gop("Gop", id, this),
+  Bop("Bop", id, this),
   Xarray("Xarray", id, this),
   Yarray("Yarray", id, this)
 {
@@ -264,37 +287,34 @@ VolVis::VolVis(const clString& id)
   iport = scinew ScalarFieldIPort(this, "RGScalarField", ScalarFieldIPort::Atomic);
   add_iport(iport);
 
-  // initialize raster size
-  
-  iRasterX.set( 100 );
-  iRasterY.set( 100 );
+  // initialize the view to home view
 
   iView.set( homeview );
 
-  // initialize OpenGL window size (viewport size)
+  // initialize a few variables used by OpenGL
   
   ViewPort = 600;
 
   x_pixel_size = 1;
   y_pixel_size = 1;
 
-  Xarray.set("0 40 55 70 200");
-  Yarray.set("200 200 150 200 200");
-
-  Color temp(0.,0.,0.);
-  ibgColor.set( temp );
-  bgColor = temp;
-
   homeSFgeneration = -1;
-
-  minSV.set(0);
-  maxSV.set(121);
 
   rasterX = 100;
   rasterY = 100;
+  bgColor = BLACK;
+
+  // initialize this image in order to prevent seg faults
+  // by OpenGL when redrawing the screen with uninitialized
+  // (size of 0,0) array of pixels
 
   Image.newsize(100,100);
   Image.initialize( bgColor );
+
+  // TEMP: i have no clue why initialization of ibgColor in
+  // TCL code does not work.
+
+  ibgColor.set(BLACK);
 }
 
 
@@ -314,6 +334,12 @@ VolVis::VolVis(const VolVis& copy, int deep)
   minSV("minSV", id, this),
   ibgColor("bgColor", id, this),
   projection("project", id, this),
+  Rsv("Rsv", id, this),
+  Gsv("Gsv", id, this),
+  Bsv("Bsv", id, this),
+  Rop("Rop", id, this),
+  Gop("Gop", id, this),
+  Bop("Bop", id, this),
   Xarray("Xarray", id, this),
   Yarray("Yarray", id, this)
 {
@@ -348,6 +374,55 @@ VolVis::clone(int deep)
 
 
 
+
+/**************************************************************
+ *
+ *
+ *
+ **************************************************************/
+
+static void
+do_parallel(void* obj, int proc)
+{
+  VolVis* module=(VolVis*)obj;
+  module->parallel(proc);
+}
+
+
+
+
+
+/**************************************************************
+ *
+ *
+ *
+ **************************************************************/
+
+void
+VolVis::parallel( int proc )
+{
+  int interval = iRasterX.get() / procCount;
+
+  if ( proc == procCount - 1 )
+    {
+    if ( projection.get() )
+      calc->PerspectiveTrace( interval * proc, iRasterX.get() );
+    else
+      calc->ParallelTrace( interval * proc, iRasterX.get() );
+  }
+  else
+    {
+    if ( projection.get() )
+      calc->PerspectiveTrace( interval * proc, interval * ( proc + 1 ) );
+    else
+      calc->ParallelTrace( interval * proc, interval * ( proc + 1 ) );
+  }
+}
+
+
+
+
+
 /**************************************************************
  *
  * make sure that the scalar field handle points to valid
@@ -360,10 +435,6 @@ VolVis::Validate ( ScalarFieldRG **homeSFRGrid )
 {
   double min, max;
   
-  // make sure TCL variables are updated
-  
-  reset_vars();
-
   // get the scalar field handle
   
   iport->get(homeSFHandle);
@@ -407,7 +478,7 @@ VolVis::Validate ( ScalarFieldRG **homeSFRGrid )
  **************************************************************/
 
 void
-VolVis::UpdateTransferFncArray( clString x, clString y )
+VolVis::UpdateTransferFncArray( clString x, clString y, int index )
 {
   int i, len, position;
   char * array;
@@ -416,8 +487,8 @@ VolVis::UpdateTransferFncArray( clString x, clString y )
 
   // clear the scalar value and opacity arrays
 
-  Opacity.remove_all();
-  ScalarVal.remove_all();
+  Opacity[index].remove_all();
+  ScalarVal[index].remove_all();
 
   // read in an integer and store the rest of the string
   // in suppl
@@ -452,12 +523,8 @@ VolVis::UpdateTransferFncArray( clString x, clString y )
 	for ( i = len - 1; i >= 0; i-- )
 	  suppl[i] = '\0';
 
-      ScalarVal.add( 1.0 * position / CANVAS_WIDTH *
+      ScalarVal[index].add( 1.0 * position / CANVAS_WIDTH *
 	( maxSV.get() - minSV.get() ) + minSV.get() );
-      
-      Xvalues[NodeCount++] = 1.0 * position / CANVAS_WIDTH *
-	( maxSV.get() - minSV.get() ) + minSV.get();
-
     }
 
   /* read in the y-position */
@@ -484,32 +551,9 @@ VolVis::UpdateTransferFncArray( clString x, clString y )
 
       // in tcl, the y value increases as one moves down
 
-      Opacity.add( 1.0 * ( CANVAS_WIDTH - position )
+      Opacity[index].add( 1.0 * ( CANVAS_WIDTH - position )
 	/ ( CANVAS_WIDTH ) );
-
-      Yvalues[NodeCount++] = 1.0 * ( CANVAS_WIDTH - position )
-	/ ( CANVAS_WIDTH );
     }
-
-#if 0  
-  // check the 2 arrays (TEMP)
-
-  cerr << "The arrays are #" << NodeCount << ":\n";
-  
-  for ( i = 0; i < NodeCount; i++ )
-    {
-      cerr << i << ": ( " << Xvalues[i] << ", " << Yvalues[i]
-	<< " )\n";
-    }
-
-  cerr << "SV @# " << ScalarVal.size() << endl;
-  for ( i = 0; i < ScalarVal.size(); i++ )
-    cerr << i << " #@: " << ScalarVal[i] << endl;
-
-  cerr << "Opacity @# " << Opacity.size() << endl;
-  for ( i = 0; i < Opacity.size(); i++ )
-    cerr << i << " #@: " << Opacity[i] << endl;
-#endif  
 
 }
 
@@ -523,7 +567,9 @@ VolVis::UpdateTransferFncArray( clString x, clString y )
  **************************************************************/
 
 int
-VolVis::makeCurrent() {
+VolVis::makeCurrent()
+{
+  cerr << "Made current in " << Task::self()->get_name() << endl;
 
   // TEMP!!!  this used to be in the class; but i didn't need
   // it!  so, i moved these declarations down here...
@@ -551,7 +597,7 @@ VolVis::makeCurrent() {
       TCLTask::unlock();
       return 0;
     }
-  
+
   // X-display for window
   dpy=Tk_Display(tkwin);
 
@@ -615,10 +661,11 @@ VolVis::redraw_all()
   
   // if the handle was empty, just flush the buffer (to clear the window)
   // and return.
-  
+
   if (! homeSFHandle.get_rep())
     {
       glFlush();
+      cerr << "Made uncurrent #2\n";
       glXMakeCurrent(dpy, None, NULL);
       TCLTask::unlock();
       return;
@@ -627,6 +674,8 @@ VolVis::redraw_all()
   // lock because Image will be used
 
   imagelock.lock();
+
+  // initialize some OpenGL variables
 
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
   
@@ -638,8 +687,7 @@ VolVis::redraw_all()
 
   char *pixels=(char *) ( &(Image(0,0)) );
 
-  // make sure that the routine to draw pixels is given the raster y first.
-  // it wants width, then height
+  // glDrawPixles wants width, then height
   
   glDrawPixels( rasterX, rasterY, GL_RGB, GL_UNSIGNED_BYTE, pixels );
 
@@ -649,8 +697,9 @@ VolVis::redraw_all()
   while((errcode=glGetError()) != GL_NO_ERROR){
     cerr << "plot_matrices got an error from GL: " << (char*)gluErrorString(errcode) << endl;
   }
-  glXMakeCurrent(dpy, None, NULL);
 
+  cerr << "Made uncurrent..." << endl;
+  glXMakeCurrent(dpy, None, NULL);
 
   TCLTask::unlock();
 }	    
@@ -671,18 +720,25 @@ VolVis::execute()
   CharColor temp;
   Array2<CharColor> * tempImage;
 
+  TCL::execute(id+" get_data");
+  
+  // make sure TCL variables are updated
+  
+  reset_vars();
+
   // execute if the input ports are valid and if it is necessary
   // to execute
 
   if ( ! Validate( &homeSFRGrid ) )
     return;
 
-  cerr << "        EXECUTING\n";
+  // retrieve the scalar value-opacity/rgb values, and store them
+  // in arrays
 
-  // retrieve the scalar value-opacity values, and store them
-  // in an array
-
-  UpdateTransferFncArray( Xarray.get(), Yarray.get() );
+  UpdateTransferFncArray( Xarray.get(), Yarray.get(), 0 );
+  UpdateTransferFncArray( Rsv.get(), Rop.get(), 1 );
+  UpdateTransferFncArray( Gsv.get(), Gop.get(), 2 );
+  UpdateTransferFncArray( Bsv.get(), Bop.get(), 3 );
 
   // instantiate the levoy class
 
@@ -691,9 +747,27 @@ VolVis::execute()
 
   // calculate the new image
 
-  tempImage = levoyModule.TraceRays ( iView.get(),
-			 iRasterX.get(), iRasterY.get(), projection.get() );
+  levoyModule.SetUp( iView.get(), iRasterX.get(), iRasterY.get() );
 
+  calc = &levoyModule;
+
+  WallClockTimer watch;
+
+//  tempImage = levoyModule.TraceRays ( projection.get() );
+
+  watch.start();
+
+  procCount = Task::nprocessors();
+
+  Task::multiprocess(procCount, do_parallel, this);
+
+  watch.stop();
+
+  cerr << "my watch reports: " << watch.time() << "units of time\n";
+
+
+  tempImage = levoyModule.Image;
+  
   // lock it because the Image array will be modified
 
   imagelock.lock();
@@ -715,9 +789,10 @@ VolVis::execute()
   delete tempImage;
 
   // execute a tcl command
+  update_progress(0.5);
 
   TCL::execute(id+" redraw_when_idle");
-  
+
 }
 
 
@@ -732,8 +807,14 @@ VolVis::execute()
 void
 VolVis::tcl_command(TCLArgs& args, void* userdata) {
   
-  if ( args[1] == "redraw_all" )
+  if ( args[1] == "redraw_all" ){
+    if(strcmp(Task::self()->get_name(), "TCLTask")){
+      TCL::execute("after idle "+args[0]+" "+args[1]);
+      cerr << "Attempted redraw from " << Task::self()->get_name() << ", deferred...\n";
+    } else {
       redraw_all();
+    }
+  }
   else if ( args[1] == "wanna_exec" )
     want_to_execute();
   else

@@ -55,35 +55,56 @@ itcl_class VolVis {
 
 	global CanvasWidth CanvasHeight
 
+	global $this-rasterX $this-rasterY
+	global $this-bgColor
 	global $this-minSV $this-maxSV
 	global $this-project
+
+	global Selected
+
+	# set variables shared by c++ and tcl
+
+	set $this-rasterX   100
+	set $this-rasterY   100
+	
+#	set $this-bgColor-r 0
+#	set $this-bgColor-g 0
+#	set $this-bgColor-b 0
 
 	set $this-maxSV maxi
 	set $this-minSV what
 
 	set $this-project 1
 
-	set $this-rasterX   100
-	set $this-rasterY   100
-	
-	set $this-bgColor-r 0
-	set $this-bgColor-g 0
-	set $this-bgColor-b 0
+	# set protected variables and globals
 
-	set Inside   0
+	set AllNodeIndexes(0) {}
+	set Xvalues(0)     {}
+	set Yvalues(0)     {}
 
-	set AllNodeIndexes {}
-	set Xvalues {}
-	set Yvalues {}
+	set AllNodeIndexes(1) {}
+	set Xvalues(1)     {}
+	set Yvalues(1)     {}
 
-	set redrawing 0
+	set AllNodeIndexes(2) {}
+	set Xvalues(2)     {}
+	set Yvalues(2)     {}
+
+	set AllNodeIndexes(3) {}
+	set Xvalues(3)     {}
+	set Yvalues(3)     {}
+
+	set redrawing       0
+	set Selected        0
 
 	set CanvasWidth  201
 	set CanvasHeight 201
 
-	global Selected
+	set LineColor(0) black
+	set LineColor(1) red
+	set LineColor(2) green
+	set LineColor(3) blue
 
-	set Selected 0
     }
     
     #
@@ -103,8 +124,6 @@ itcl_class VolVis {
 	    raise $w.gl
 	} else {
 
-	    puts "hello"
-	    
 	    # initialize geometry and placement of the widget
 	    
 	    toplevel $w.gl
@@ -112,13 +131,9 @@ itcl_class VolVis {
 	    wm minsize $w.gl 200 200
 	    wm maxsize $w.gl 600 600
 
-	    puts "before creation..."
-
 	    # create an OpenGL widget
 	    
-	    opengl $w.gl.gl -geometry 600x600 -doublebuffer false -direct false -rgba true -redsize 2 -greensize 2 -bluesize 2 -depthsize 0
-
-	    puts "after creation"
+	    opengl $w.gl.gl -geometry 600x600 -doublebuffer false -direct true -rgba true -redsize 2 -greensize 2 -bluesize 2 -depthsize 0
 
 	    # every time the OpenGL widget is displayed, redraw it
 	    
@@ -126,12 +141,8 @@ itcl_class VolVis {
 	    
 	    # place the widget on the screen
 
-	    puts "placing on screen"
-	    
 	    pack $w.gl.gl -fill both -expand 1
 	}
-
-	puts "done!!!"
     }
     
     
@@ -163,7 +174,7 @@ itcl_class VolVis {
 	button $w.f.viewstuff -text "View" -command "$this makeViewPopup"
 	button $w.f.rastersize -text "Raster" -command "$this adjustRasterSize"
 	button $w.f.background -text "Background Color" -command "$this changeBackground"
-	button $w.f.graph -text "Opacity Map" -command "$this transferFunction"
+	button $w.f.graph -text "Transfer Map" -command "$this transferFunction"
 
 
 	frame $w.f.proj
@@ -174,9 +185,9 @@ itcl_class VolVis {
 		-value 0
 
 	
-	button $w.f.b -text "Redraw" -command "$this-c redraw_all"
-	button $w.f.execbutton -text "Execute" -command "$this get_data; $this-c wanna_exec"
-
+	button $w.f.b -text "Redraw" -command "$this-c redraw_all" -fg blue
+	button $w.f.execbutton -text "Execute" -command "$this-c wanna_exec" \
+		-fg blue
 
 	# place the buttons in a window
 
@@ -237,8 +248,6 @@ itcl_class VolVis {
 	$w.main.top.gcanvas bind node <Button-1> {
 	    set curX %x
 	    set curY %y
-
-	    set Selected 1
 	}
 
 	# interactively move the node
@@ -251,15 +260,29 @@ itcl_class VolVis {
 	$w.main.top.gcanvas bind node <Double-Button-3>  \
 		"$this deleteNode $w.main.top.gcanvas"
 
-	# introduce a new node
+	# introduce a new SV-Opacity node
 
 	bind $w.main.top.gcanvas <Double-Button-1>  \
-		"$this introduceNode $w.main.top.gcanvas %x %y"
+		"$this introduceNode $w.main.top.gcanvas %x %y 0"
+
+	# introduce a new SV-Red node
+
+	bind $w.main.top.gcanvas <Shift-Double-Button-1>  \
+		"$this introduceNode $w.main.top.gcanvas %x %y 1"
+
+	# introduce a new SV-Green node
+
+	bind $w.main.top.gcanvas <Control-Double-Button-1>  \
+		"$this introduceNode $w.main.top.gcanvas %x %y 2"
+
+	# introduce a new SV-Blue node
+
+	bind $w.main.top.gcanvas <Alt-Double-Button-1>  \
+		"$this introduceNode $w.main.top.gcanvas %x %y 3"
 
 	# let go of node; no node is selected
 
-	bind $w.main.top.gcanvas <ButtonRelease-1> { set Selected 0; \
-	    puts "released!"}
+	bind $w.main.top.gcanvas <ButtonRelease-1> { set Selected 0 }
     }
 
 
@@ -436,8 +459,6 @@ itcl_class VolVis {
 	    # position a few initial nodes
 
 	    MakeSomeNodes $w.main.top.gcanvas
-
-#	    get_data
 	}
 	
     }
@@ -456,20 +477,21 @@ itcl_class VolVis {
     method get_data { } {
 
 	global $this-Xarray $this-Yarray
-
-	puts ""
+	global $this-Rsv $this-Rop
+	global $this-Gsv $this-Gop
+	global $this-Bsv $this-Bop
 	
-	for { set i 0 } { $i < [llength $AllNodeIndexes] } { incr i } {
-	    set aaa [lindex $AllNodeIndexes $i]
-	    set bbb [lindex $Xvalues $i]
-	    set ccc [lindex $Yvalues $i]
-	    
-	    puts "$i: $aaa, $bbb, $ccc"
-	}
+	set $this-Xarray $Xvalues(0)
+	set $this-Yarray $Yvalues(0)
 
-	
-	set $this-Xarray $Xvalues
-	set $this-Yarray $Yvalues
+	set $this-Rsv $Xvalues(1)
+	set $this-Rop $Yvalues(1)
+
+	set $this-Gsv $Xvalues(2)
+	set $this-Gop $Yvalues(2)
+
+	set $this-Bsv $Xvalues(3)
+	set $this-Bop $Yvalues(3)
     }
 
 
@@ -516,12 +538,12 @@ itcl_class VolVis {
 		    [expr $x - 1] 1 [expr $x - 1] 6
 
 	} else {
-	    puts "i am selected, so i'm not updating the slider"
 	    
 	    set node    [ $w.main.top.gcanvas find withtag current ]
-	    set myIndex [lsearch $AllNodeIndexes $node]
-	    set newX    [lindex $Xvalues $myIndex]
-	    set newY    [lindex $Yvalues $myIndex]
+	    set line    $LineType($node)
+	    set myIndex [lsearch $AllNodeIndexes($line) $node]
+	    set newX    [lindex $Xvalues($line) $myIndex]
+	    set newY    [lindex $Yvalues($line) $myIndex]
 
 	    # draw the new side slider
 	    
@@ -576,8 +598,6 @@ itcl_class VolVis {
 
     method redraw_when_idle {} {
 
-	puts "in redraw_when_idle"
-	
 	if { ! $redrawing } {
 	    after idle $this redraw
 	    set redrawing 1
@@ -595,7 +615,6 @@ itcl_class VolVis {
     ################################################################
 
     method fillBlack { w } {
-	set Inside 1
 	$w itemconfigure current -fill black
     }
 
@@ -610,7 +629,6 @@ itcl_class VolVis {
     ################################################################
 
     method fillWhite { w } {
-	#    set Inside 0
 	$w itemconfigure current -fill white
     }
 
@@ -660,20 +678,31 @@ itcl_class VolVis {
 
     method MakeSomeNodes { where } {
 
-	puts "in MakeSome Nodes, come on!"
+	puts "Making some nodes"
 
-	set AllNodeIndexes {}
-	
-	makeNode $where 0 200
-	makeNode $where 40 200
-	makeNode $where 55 150
-	makeNode $where 70 200
-	makeNode $where 200 200
+	makeNode $where 0 200 0
+	makeNode $where 40 200 0
+	makeNode $where 55 150 0
+	makeNode $where 70 200 0
+	makeNode $where 200 200 0
 
-	makeEdge $where 0 1
-	makeEdge $where 1 2
-	makeEdge $where 2 3
-	makeEdge $where 3 4
+	makeNode $where 0 0 1
+	makeNode $where 200 0 1
+
+	makeNode $where 0 0 2
+	makeNode $where 200 0 2
+
+	makeNode $where 0 0 3
+	makeNode $where 200 0 3
+
+	makeEdge $where 0 1 0
+	makeEdge $where 1 2 0
+	makeEdge $where 2 3 0
+	makeEdge $where 3 4 0
+
+	makeEdge $where 0 1 1
+	makeEdge $where 0 1 2
+	makeEdge $where 0 1 3
     }
 
 
@@ -694,7 +723,7 @@ itcl_class VolVis {
 	# initialize variables
 	
 	toplevel $w
-	wm title $w "Opacity Map"
+	wm title $w "Transfer Map"
 	wm minsize $w 300 300
 	wm maxsize $w 300 300
 
@@ -805,8 +834,6 @@ itcl_class VolVis {
     method NameBottomRuler { where width } {
 
 	global $this-minSV $this-maxSV
-
-	puts "naming bottom ruler: [set $this-minSV] [set $this-maxSV]"
 
 	# create a frame for each label
 
@@ -1013,7 +1040,7 @@ itcl_class VolVis {
     #
     ################################################################
 
-    method makeNode { joyous x y } {
+    method makeNode { joyous x y line } {
 
 	global CanvasWidth
 
@@ -1022,9 +1049,8 @@ itcl_class VolVis {
 	# duplicate in the x-value.  proceed until no other node
 	# with position x exists.
 
-	while { ( [lsearch $Xvalues $x] != -1 ) && ( $x < $CanvasWidth ) } {
+	while { ( [lsearch $Xvalues($line) $x] != -1 ) && ( $x < $CanvasWidth ) } {
 	    incr x
-	    puts "Incrementing horizontal position"
 	}
 
 	if { $x >= $CanvasWidth } {
@@ -1034,10 +1060,8 @@ itcl_class VolVis {
 	    # draw a new node
 	    
 	    set new [ $joyous create oval [expr $x-2] [expr $y-2] \
-		    [expr $x+2] [expr $y+2] -outline black \
+		    [expr $x+2] [expr $y+2] -outline $LineColor($line) \
 		    -fill white -tags node]
-
-	    puts "made node $new: ($x, $y)"
 
 	    # initialize the edge lists corresponding to each node
 	    
@@ -1046,7 +1070,7 @@ itcl_class VolVis {
 
 	    # reflect the addition in the lists
 
-	    placeInLists $new $x $y
+	    placeInLists $new $x $y $line
 	}
     }
 
@@ -1060,20 +1084,20 @@ itcl_class VolVis {
     #
     ################################################################
 
-    method makeEdge { joyous one two } {
-
+    method makeEdge { joyous one two line } {
+	
 	# find the global index to both the nodes
 
-	set first  [ lindex $AllNodeIndexes $one ]
-	set second [ lindex $AllNodeIndexes $two ]
-	
-	puts "creating an edge for $first $second"
+	set first  [ lindex $AllNodeIndexes($line) $one ]
+	set second [ lindex $AllNodeIndexes($line) $two ]
 	
 	# draw the line
 
 	set edge [$joyous create line \
-		[lindex $Xvalues $one] [lindex $Yvalues $one] \
-		[lindex $Xvalues $two] [lindex $Yvalues $two] ]
+		[lindex $Xvalues($line) $one] [lindex $Yvalues($line) $one] \
+		[lindex $Xvalues($line) $two] [lindex $Yvalues($line) $two] \
+		-fill $LineColor($line) ]
+
 
 	# reflect the edge addition in the edge lists
 
@@ -1095,11 +1119,6 @@ itcl_class VolVis {
 
     method moveNode { joyous x y } {
 
-	# inside is true only if the mouse cursor is inside it
-	# (the node is black)
-	
-	if { $Inside == 1 } {
-
 	    global curX curY
 	    global CanvasHeight
 
@@ -1107,7 +1126,9 @@ itcl_class VolVis {
 	    
 	    set node [ $joyous find withtag current ]
 
-	    # xDist and yDist represent how many pixels the node
+	set line $LineType($node)
+
+	# xDist and yDist represent how many pixels the node
 	    # has moved
 	    
 	    set xDist [expr $x - $curX]
@@ -1116,9 +1137,10 @@ itcl_class VolVis {
 	    # remember previous node position and associated index
 	    # into the lists.  also, what are the new {X,Y} values?
 	    
-	    set myIndex [lsearch $AllNodeIndexes $node]
-	    set myXval  [lindex $Xvalues $myIndex]
-	    set myYval  [lindex $Yvalues $myIndex]
+	    set myIndex [lsearch $AllNodeIndexes($line) $node]
+
+	    set myXval  [lindex $Xvalues($line) $myIndex]
+	    set myYval  [lindex $Yvalues($line) $myIndex]
 
 	    set newXval [expr $myXval + $xDist]
 	    set newYval [expr $myYval + $yDist]
@@ -1136,7 +1158,7 @@ itcl_class VolVis {
 		set newYval 0
 	    }
 
-	    if { ( $myIndex == 0 ) || ( $myIndex == [expr [llength $AllNodeIndexes] - 1] ) } {
+	    if { ( $myIndex == 0 ) || ( $myIndex == [expr [llength $AllNodeIndexes($line)] - 1] ) } {
 
 		# the first and the last nodes must stay on the edges
 		# (cannot move in the x direction)
@@ -1153,8 +1175,8 @@ itcl_class VolVis {
 
 		# know the x-positions of nodes around me
 		
-		set leftXval  [lindex $Xvalues [expr $myIndex - 1] ]
-		set rightXval [lindex $Xvalues [expr $myIndex + 1] ]
+		set leftXval  [lindex $Xvalues($line) [expr $myIndex - 1] ]
+		set rightXval [lindex $Xvalues($line) [expr $myIndex + 1] ]
 
 		# compare the x values of nodes
 
@@ -1175,8 +1197,10 @@ itcl_class VolVis {
 
 	    # update the lists with new x,y values
 
-	    set Xvalues [lreplace $Xvalues $myIndex $myIndex $newXval]
-	    set Yvalues [lreplace $Yvalues $myIndex $myIndex $newYval]
+	    set Xvalues($line) [lreplace $Xvalues($line) $myIndex $myIndex \
+		    $newXval]
+	    set Yvalues($line) [lreplace $Yvalues($line) $myIndex $myIndex \
+		    $newYval]
 
 	    
 	    # connect the node to the nodes on the left and right of it
@@ -1197,7 +1221,6 @@ itcl_class VolVis {
 	    
 	    set curX $newXval
 	    set curY $newYval
-	}
     }
 
 
@@ -1216,13 +1239,16 @@ itcl_class VolVis {
 	
 	set node [ $where find withtag current ]
 
-	set myIndex [lsearch $AllNodeIndexes $node]
+	set line $LineType($node)
+
+	set myIndex [lsearch $AllNodeIndexes($line) $node]
 
 	# cannot delete the edge nodes
 	
-	if { ( $myIndex != 0 ) && ( $myIndex != [expr [llength $AllNodeIndexes] - 1] ) } {
+	if { ( $myIndex != 0 ) &&
+	( $myIndex != [expr [llength $AllNodeIndexes($line)] - 1] ) } {
 
-	    puts "deleting node $node ($myIndex)"
+#	    puts "deleting node $node ($myIndex)"
 
 	    # deleting associated edges
 
@@ -1240,15 +1266,18 @@ itcl_class VolVis {
 
 	    # deleting appropriate list entries
 	    
-	    set AllNodeIndexes [lreplace $AllNodeIndexes $myIndex $myIndex]
-	    set Xvalues        [lreplace $Xvalues        $myIndex $myIndex]
-	    set Yvalues        [lreplace $Yvalues        $myIndex $myIndex]
+	    set AllNodeIndexes($line) [lreplace $AllNodeIndexes($line) \
+		    $myIndex $myIndex]
+	    set Xvalues($line)        [lreplace $Xvalues($line) \
+		    $myIndex $myIndex]
+	    set Yvalues($line)        [lreplace $Yvalues($line) \
+		    $myIndex $myIndex]
 
 	    # connect the other 2 edges together
 
-	    makeEdge $where [expr $myIndex - 1] $myIndex
+	    makeEdge $where [expr $myIndex - 1] $myIndex $line
 	} else {
-	    puts "cannot delete an edge node"
+	    puts "Warning: cannot delete an edge node"
 	}
 	
     }
@@ -1268,55 +1297,40 @@ itcl_class VolVis {
     #
     ################################################################
 
-    method placeInLists { node x y } {
+    method placeInLists { node x y line } {
+
+	# set the line type for the particular node
+
+	set LineType($node) $line
 
 	global LastNodeMadeIndex
 
-	set len   [llength $AllNodeIndexes]
+	set len   [llength $AllNodeIndexes($line)]
 	set LastNodeMadeIndex $len
 
 	if { $len == 1 } {
-	    if { $x < [lindex $Xvalues 0] } {
+	    if { $x < [lindex $Xvalues($line) 0] } {
 		set LastNodeMadeIndex 0
 	    }
 	} else {
 	    
-	    puts "The list BEFORE:  (starting at 1)"
-	    for { set i 0 } { $i < [llength $AllNodeIndexes] } { incr i } {
-		set aaa [lindex $AllNodeIndexes $i]
-		set bbb [lindex $Xvalues $i]
-		set ccc [lindex $Yvalues $i]
+	    for { set i 0 } { $i < [llength $AllNodeIndexes($line)] } { incr i } {
+		set aaa [lindex $AllNodeIndexes($line) $i]
+		set bbb [lindex $Xvalues($line) $i]
+		set ccc [lindex $Yvalues($line) $i]
 		
-		puts "$i: $aaa, $bbb, $ccc"
-
 		if { ($bbb > $x)  && ($LastNodeMadeIndex == $len) } {
 		    set LastNodeMadeIndex $i
 		}
 	    }
 	}
 
-	puts "inserting at $LastNodeMadeIndex"
-
-	set AllNodeIndexes [linsert $AllNodeIndexes $LastNodeMadeIndex $node]
-	set Xvalues        [linsert $Xvalues        $LastNodeMadeIndex $x]
-	set Yvalues        [linsert $Yvalues        $LastNodeMadeIndex $y]
-
-	puts ""
-	puts "The list AFTER:"
-
-	set dask [llength $AllNodeIndexes]
-
-	for { set i 0 } { $i < [llength $AllNodeIndexes] } { incr i } {
-	    set aaa [lindex $AllNodeIndexes $i]
-	    set bbb [lindex $Xvalues $i]
-	    set ccc [lindex $Yvalues $i]
-	    
-	    puts "$i: $aaa, $bbb, $ccc"
-	}
-
-	#	lappend AllNodeIndexes $new
-	#	lappend Xvalues $x
-	#	lappend Yvalues $y
+	set AllNodeIndexes($line) [linsert $AllNodeIndexes($line) \
+		$LastNodeMadeIndex $node]
+	set Xvalues($line) [linsert $Xvalues($line) \
+		$LastNodeMadeIndex $x]
+	set Yvalues($line) [linsert $Yvalues($line) \
+		$LastNodeMadeIndex $y]
     }
     
 
@@ -1335,17 +1349,19 @@ itcl_class VolVis {
     #
     ################################################################
 
-    method introduceNode { where x y } {
+    method introduceNode { where x y line } {
 
 	global LastNodeMadeIndex
 
 	# makes a new node, attaches it to the end of ANI, Xv, Yv lists
 	
-	makeNode $where $x $y
+	makeNode $where $x $y $line
 
-	set node [lindex $AllNodeIndexes $LastNodeMadeIndex]
-	set left  [lindex $AllNodeIndexes [expr $LastNodeMadeIndex - 1] ]
-	set right [lindex $AllNodeIndexes [expr $LastNodeMadeIndex + 1] ]
+	set node  [lindex $AllNodeIndexes($line) $LastNodeMadeIndex]
+	set left  [lindex $AllNodeIndexes($line) \
+		[expr $LastNodeMadeIndex - 1] ]
+	set right [lindex $AllNodeIndexes($line) \
+		[expr $LastNodeMadeIndex + 1] ]
 
 	# disconnect the nodes around the new node
 
@@ -1359,19 +1375,19 @@ itcl_class VolVis {
 
 	# connect these nodes to the new node
 
-	makeEdge $where [expr $LastNodeMadeIndex - 1] $LastNodeMadeIndex
-	makeEdge $where $LastNodeMadeIndex [expr $LastNodeMadeIndex + 1]
+	makeEdge $where [expr $LastNodeMadeIndex - 1] $LastNodeMadeIndex $line
+	makeEdge $where $LastNodeMadeIndex [expr $LastNodeMadeIndex + 1] $line
     }
 
     protected redrawing
     
-    protected Inside
-
     protected AllNodeIndexes
     protected Xvalues
     protected Yvalues
 
     protected edgeFirst
     protected edgeSecond
-    
+
+    protected LineColor
+    protected LineType
 }

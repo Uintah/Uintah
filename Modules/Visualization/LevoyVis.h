@@ -26,16 +26,20 @@
 #include <Geom/View.h>
 #include <Geometry/Point.h>
 #include <Geometry/Vector.h>
+#include <Geometry/Plane.h>
+#include <Geometry/BBox.h>
 
 #include <Math/Trig.h>
 #include <Malloc/Allocator.h>
 #include <iostream.h>
 #include <stdlib.h>
 
-#define CANVAS_WIDTH 201
+#define CANVAS_WIDTH 200
 
-const Color BLACK( 0., 0., 0. );
-const Color WHITE( 1., 1., 1. );
+class Levoy;
+
+typedef Color (Levoy::*CRF) ( const Point&, Vector&, const double&,
+			     const Point&, const Point& );
 
 class Levoy
 {
@@ -48,35 +52,88 @@ private:
 
   Color backgroundColor;
 
-  Array1<double> Opacity;
-  Array1<double> SVArray;
+  Array1<double> * AssociatedVals;
+  Array1<double> * ScalarVals;
 
-  double dmax;
+  double rayStep;
+  double dmax, dmin;
+
+  int debug_flag;
+
+  int whiteFlag;
+
+  BBox box;
+  Point gmin, gmax;
+
+  // the ray increments in the u,v direction that are added
+  // to the original home ray or the original eye point.
   
+  Vector rayIncrementU, rayIncrementV;
+
+  // original eye position
+
+  Point eye;
+  
+  // the original ray from the eye point to the lookat point
+
+  Vector homeRay;
+
+  // pointer to the array of char colors
+
+  CRF CastRay;
+
+  // the size of the image
+
+  int x, y;
+
 public:
+
+  Array2<CharColor> * Image;
 
   // constructor
   
   Levoy( ScalarFieldRG * grid, ColormapIPort * c,
-	Color& bg, Array1<double> Xarr, Array1<double> Yarr );
+	Color& bg, Array1<double> * Xarr, Array1<double> * Yarr );
+
+  ~Levoy();
 
   void CalculateRayIncrements ( View myview, Vector& rayIncrementU,
-			       Vector& rayIncrementV, int rasterX, int rasterY );
+			       Vector& rayIncrementV, const int& rasterX,
+			       const int& rasterY );
   
   double DetermineRayStepSize ();
 
   double DetermineFarthestDistance ( const Point& e );
-
-  Color CastRay ( Point eye, Vector ray, double rayStep );
   
-  Color Four ( Point eye, Vector ray, double rayStep );
+  Color Cast( Point eye, Vector ray );
+  
+  Color Five ( const Point& eye, Vector& step, const double& rayStep,
+	      const Point& beg , const Point& end );
 
-  Color Five ( Point eye, Vector ray, double rayStep );
+  Color Six ( const Point& eye, Vector& step, const double& rayStep,
+	      const Point& beg , const Point& end );
 
-  Array2<CharColor>* TraceRays ( View myview, int x, int y,
-				int projectionType );
+  Color Seven ( const Point& eye, Vector& step, const double& rayStep,
+	      const Point& beg , const Point& end );
 
+  Color Eight ( const Point& eye, Vector& step , const double& rayStep,
+	      const Point& beg , const Point& end );
 
+  Color Nine ( const Point& eye, Vector& step, const double& rayStep,
+	      const Point& beg , const Point& end );
+
+  Color Ten ( const Point& eye, Vector& step, const double& rayStep,
+	      const Point& beg , const Point& end );
+
+  Array2<CharColor>* TraceRays ( int projectionType );
+
+  void SetUp ( const View& myview, const int& x, const int& y );
+
+  void PerspectiveTrace( int from, int till );
+  void ParallelTrace( int from, int till );
+
+  double AssociateValue( double scalarValue,
+			const Array1<double>& SVA, const Array1<double>& OA );
 };
 
 #endif
