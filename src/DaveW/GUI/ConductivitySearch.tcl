@@ -11,8 +11,10 @@ itcl_class DaveW_ISL_ConductivitySearch {
     method set_defaults {} {	
 	global $this-refnodeTCL
 	global $this-pinzeroTCL
+	global $this-seedTCL
 	set $this-refnodeTCL 0
 	set $this-pinzeroTCL 1
+	set $this-seedTCL 0
     }
 
     method make_entry {w text v c} {
@@ -45,7 +47,10 @@ itcl_class DaveW_ISL_ConductivitySearch {
 	global $this-refnodeTCL
 	make_entry $w.ref.refnode "Reference node:" $this-refnodeTCL {}
 	pack $w.ref.pinzero $w.ref.refnode -side top -fill x -expand 1
-	pack $w.g $w.ref -side top -fill x -expand 1
+	frame $w.seed
+	global $this-seedTCL
+	make_entry $w.seed.seed "Random number seed:" $this-seedTCL {}
+	pack $w.g $w.ref $w.seed -side top -fill x -expand 1
     }
 }
 
