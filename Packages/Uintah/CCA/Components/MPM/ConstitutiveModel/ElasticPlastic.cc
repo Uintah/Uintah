@@ -306,10 +306,6 @@ void
 ElasticPlastic::addParticleState(std::vector<const VarLabel*>& from,
                                  std::vector<const VarLabel*>& to)
 {
-  // Add the particle state data common to all constitutive models.
-  // This method is defined in the ConstitutiveModel base class.
-  addSharedParticleState(from, to);
-
   // Add the local particle state data for this constitutive model.
   from.push_back(pRotationLabel);
   from.push_back(pStrainRateLabel);

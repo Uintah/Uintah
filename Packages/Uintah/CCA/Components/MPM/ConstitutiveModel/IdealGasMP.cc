@@ -39,6 +39,9 @@ IdealGasMP::IdealGasMP(ProblemSpecP& ps,  MPMLabel* Mlb, MPMFlags* Mflag)
 
 IdealGasMP::IdealGasMP(const IdealGasMP* cm)
 {
+  lb = cm->lb;
+  flag = cm->flag;
+  NGN = cm->NGN;
   d_initialData.gamma = cm->d_initialData.gamma;
   d_initialData.cv = cm->d_initialData.cv;
 }
@@ -90,10 +93,6 @@ void IdealGasMP::allocateCMDataAdd(DataWarehouse* new_dw,
 void IdealGasMP::addParticleState(std::vector<const VarLabel*>& from,
                                    std::vector<const VarLabel*>& to)
 {
-  // Add the particle state data common to all constitutive models.
-  // This method is defined in the ConstitutiveModel base class.
-  addSharedParticleState(from, to);
-
   // Add the local particle state data for this constitutive model.
 }
 

@@ -172,10 +172,6 @@ void
 ShellMaterial::addParticleState(std::vector<const VarLabel*>& from,
 				std::vector<const VarLabel*>& to)
 {
-  // Add the particle state data common to all constitutive models.
-  // This method is defined in the ConstitutiveModel base class.
-  addSharedParticleState(from, to);
-
   // Add the local particle state data for this constitutive model.
   from.push_back(lb->pThickTopLabel);
   from.push_back(lb->pInitialThickTopLabel);
@@ -601,8 +597,7 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pThickTop0,  lb->pInitialThickTopLabel,    pset);
     old_dw->get(pThickBot0,  lb->pInitialThickBotLabel,    pset);
     old_dw->get(pX,          lb->pXLabel,                  pset);
-    if (flag->d_8or27 == 27)
-      old_dw->get(pSize,     lb->pSizeLabel,               pset);
+    old_dw->get(pSize,       lb->pSizeLabel,               pset);
     old_dw->get(pNormal,     lb->pNormalLabel,             pset);
     old_dw->get(pVelocity,   lb->pVelocityLabel,           pset);
     old_dw->get(pRotRate,    pNormalRotRateLabel,          pset);
@@ -864,8 +859,7 @@ ShellMaterial::addComputesRequiresRotInternalMoment(Task* task,
   Ghost::GhostType  gan   = Ghost::AroundNodes;
   const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW,   lb->pXLabel,               matlset, gan, NGN);
-  if(flag->d_8or27==27) 
-    task->requires(Task::OldDW, lb->pSizeLabel,            matlset, gan, NGN);
+  task->requires(Task::OldDW, lb->pSizeLabel,            matlset, gan, NGN);
   task->requires(Task::NewDW,   pAverageMomentLabel,       matlset, gan, NGN);
   task->computes(lb->gNormalRotMomentLabel, matlset);
 }

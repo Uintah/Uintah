@@ -76,8 +76,8 @@ TransIsoHyper::TransIsoHyper(const TransIsoHyper* cm)
 {
   lb = cm->lb;
   flag = cm->flag;
-  d_8or27 = cm->d_8or27;
   NGN = cm->NGN;
+  d_8or27 = cm->d_8or27;
 
   d_useModifiedEOS = cm->d_useModifiedEOS ;
 
@@ -154,10 +154,6 @@ void TransIsoHyper::addParticleState(std::vector<const VarLabel*>& from,
   //______________________________(EACH CM ADD ITS OWN STATE VARS)
   //______________________________AS PARTICLES MOVE FROM PATCH TO PATCH
 {
-  // Add the particle state data common to all constitutive models.
-  // This method is defined in the ConstitutiveModel base class.
-  addSharedParticleState(from, to);
-
   // Add the local particle state data for this constitutive model.
   from.push_back(lb->pFiberDirLabel);
   from.push_back(pStretchLabel);

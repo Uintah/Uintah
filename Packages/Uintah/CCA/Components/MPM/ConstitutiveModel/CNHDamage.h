@@ -30,8 +30,10 @@ namespace Uintah {
 
     const VarLabel* pFailureStrainLabel;
     const VarLabel* pFailedLabel;
+    const VarLabel* pDeformRateLabel;
     const VarLabel* pFailureStrainLabel_preReloc;
     const VarLabel* pFailedLabel_preReloc;
+    const VarLabel* pDeformRateLabel_preReloc;
 
   protected:
 

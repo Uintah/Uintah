@@ -41,6 +41,9 @@ MWViscoElastic::MWViscoElastic(ProblemSpecP& ps,MPMLabel* Mlb,MPMFlags* Mflag)
 
 MWViscoElastic::MWViscoElastic(const MWViscoElastic* cm)
 {
+  lb = cm->lb;
+  flag = cm->flag;
+  NGN = cm->NGN;
   d_initialData.E_Shear = cm->d_initialData.E_Shear;
   d_initialData.E_Bulk = cm->d_initialData.E_Bulk;
   d_initialData.VE_Shear = cm->d_initialData.VE_Shear;
@@ -162,10 +165,6 @@ void MWViscoElastic::allocateCMDataAdd(DataWarehouse* new_dw,
 void MWViscoElastic::addParticleState(std::vector<const VarLabel*>& from,
 				   std::vector<const VarLabel*>& to)
 {
-  // Add the particle state data common to all constitutive models.
-  // This method is defined in the ConstitutiveModel base class.
-  addSharedParticleState(from, to);
-
   // Add the local particle state data for this constitutive model.
 }
 

@@ -41,7 +41,7 @@ static DebugStream cout_CST1("HEP1",false);
 
 
 HypoElasticPlastic::HypoElasticPlastic(ProblemSpecP& ps, MPMLabel* Mlb, 
-				       MPMFlags* Mflag)
+                                       MPMFlags* Mflag)
   : ConstitutiveModel(Mlb,Mflag)
 {
 
@@ -169,7 +169,9 @@ HypoElasticPlastic::HypoElasticPlastic(ProblemSpecP& ps, MPMLabel* Mlb,
 
 HypoElasticPlastic::HypoElasticPlastic(const HypoElasticPlastic* cm)
 {
-
+  lb = cm->lb;
+  flag = cm->flag;
+  NGN = cm->NGN;
   d_initialData.Bulk = cm->d_initialData.Bulk;
   d_initialData.Shear = cm->d_initialData.Shear;
   d_useModifiedEOS = cm->d_useModifiedEOS;
@@ -273,10 +275,6 @@ void
 HypoElasticPlastic::addParticleState(std::vector<const VarLabel*>& from,
                                      std::vector<const VarLabel*>& to)
 {
-  // Add the particle state data common to all constitutive models.
-  // This method is defined in the ConstitutiveModel base class.
-  addSharedParticleState(from, to);
-
   // Add the local particle state data for this constitutive model.
   from.push_back(pLeftStretchLabel);
   from.push_back(pRotationLabel);
@@ -708,12 +706,12 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
       Matrix3 tensorL(0.0);
       short pgFld[27];
       if (flag->d_fracture) {
-	for(int k=0; k<27; k++) 
-	  pgFld[k]=pgCode[idx][k];
+        for(int k=0; k<27; k++) 
+          pgFld[k]=pgCode[idx][k];
 
-	computeVelocityGradient(tensorL,ni,d_S,oodx,pgFld,gVelocity,GVelocity);
+        computeVelocityGradient(tensorL,ni,d_S,oodx,pgFld,gVelocity,GVelocity);
       } else {
-	computeVelocityGradient(tensorL,ni,d_S,oodx,gVelocity);
+        computeVelocityGradient(tensorL,ni,d_S,oodx,gVelocity);
       }
 
       // Compute the deformation gradient increment using the time_step
@@ -1080,13 +1078,11 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
         pPlasticTemperature_new[idx] = pPlasticTemperature[idx] + dT; 
         double temp_new = temperature + dT;
 
-	if (cout_CST.active()) {
-	  cout_CST << "HEP::Particle = " << idx 
-		   << " T_old = " << temperature
-		   << " Tdot = " << Tdot
-		   << " dT = " << dT 
-		   << " T_new = " << temp_new << endl;
-	}
+            // cout_CST << "HEP::Particle = " << idx 
+                 //  << " T_old = " << temperature
+                 //  << " Tdot = " << Tdot
+                 //  << " dT = " << dT 
+                 //  << " T_new = " << temp_new << endl;
 
         /*
         // Calculate Tdot (do not allow negative Tdot)
@@ -1112,11 +1108,9 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
           // Check 1: Look at the temperature
           if (temp_new > Tm_cur && !isLocalized) {
 
-	    if (cout_CST.active()) {
-	      cout_CST << getpid() << "Particle " << idx << " localized. " 
-		       << " Tm_cur = " << Tm_cur << " temp_new = " << temp_new
-		       << endl;
-	    }
+            cout_CST << getpid() << "Particle " << idx << " localized. " 
+                     << " Tm_cur = " << Tm_cur << " temp_new = " << temp_new
+                     << endl;
             isLocalized = true;
           } 
 
@@ -1124,16 +1118,13 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
           if (d_checkTeplaFailureCriterion && !isLocalized) {
             double tepla = pPorosity_new[idx]/d_porosity.fc + pDamage_new[idx];
             if (tepla > 1.0) 
-	      isLocalized = true;
+              isLocalized = true;
 
             if (isLocalized)
-	      if (cout_CST.active()) {
-		cout_CST << getpid() << "Particle " << idx << " localized. " 
-			 << " porosity_new = " << pPorosity_new[idx]
-			 << " damage_new = " << pDamage_new[idx]
-			 << " TEPLA = " << tepla << endl;
-	      }
-	    
+               cout_CST << getpid() << "Particle " << idx << " localized. " 
+                        << " porosity_new = " << pPorosity_new[idx]
+                        << " damage_new = " << pDamage_new[idx]
+                        << " TEPLA = " << tepla << endl;
           } 
 
           // Check 4: Stability criterion
@@ -1162,12 +1153,10 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
             Vector direction(0.0,0.0,0.0);
             isLocalized = d_stable->checkStability(tensorSig, tensorD, Cep, 
                                                    direction);
-	    
+            
             if (isLocalized)
-	      if (cout_CST.active()) {
-		cout_CST << getpid() << "Particle " << idx << " localized. " 
-			 << " using stability criterion" << endl;
-	      }
+              cout_CST << getpid() << "Particle " << idx << " localized. " 
+                       << " using stability criterion" << endl;
           }
         }
 
@@ -1234,12 +1223,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
     new_dw->put(sum_vartype(totalStrainEnergy), lb->StrainEnergyLabel);
     delete interpolator;
   }
-  //if ((patches->get(0))->getID() == 19)
-
-  if (cout_CST.active())
-    cout_CST << getpid() << "... Out" << endl;
-
-  //cerr << getpid() << " .. End" << endl;
+  // cout_CST << getpid() << "... Out" << endl;
 }
 
 void 
@@ -1677,8 +1661,8 @@ void HypoElasticPlastic::checkNeedAddMPMMaterial(const PatchSubset* patches,
 {
   if (cout_CST.active()) {
     cout_CST << getpid() << "checkNeedAddMPMMaterial: In : Matl = " << matl
-	     << " id = " << matl->getDWIndex() <<  " patch = "
-	     << (patches->get(0))->getID();
+             << " id = " << matl->getDWIndex() <<  " patch = "
+             << (patches->get(0))->getID();
   }
 
   double need_add=0.;

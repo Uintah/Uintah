@@ -43,6 +43,9 @@ CompNeoHook::CompNeoHook(ProblemSpecP& ps,  MPMLabel* Mlb,
 
 CompNeoHook::CompNeoHook(const CompNeoHook* cm)
 {
+  lb = cm->lb;
+  flag = cm->flag;
+  NGN = cm->NGN;
   d_useModifiedEOS = cm->d_useModifiedEOS ;
   d_initialData.Bulk = cm->d_initialData.Bulk;
   d_initialData.Shear = cm->d_initialData.Shear;
@@ -96,10 +99,6 @@ void CompNeoHook::allocateCMDataAdd(DataWarehouse* new_dw,
 void CompNeoHook::addParticleState(std::vector<const VarLabel*>& from,
                                    std::vector<const VarLabel*>& to)
 {
-  // Add the particle state data common to all constitutive models.
-  // This method is defined in the ConstitutiveModel base class.
-  addSharedParticleState(from, to);
-
   // Add the local particle state data for this constitutive model.
 }
 

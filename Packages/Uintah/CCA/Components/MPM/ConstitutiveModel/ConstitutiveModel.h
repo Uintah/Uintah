@@ -410,13 +410,6 @@ namespace Uintah {
            map<const VarLabel*, ParticleVariableBase*>* newState);
 
     /////////////////////////////////////////////////////////////////
-    /*! Set up the particle state common to all constitutive models 
-        Called by addParticleState */
-    /////////////////////////////////////////////////////////////////
-    void addSharedParticleState(std::vector<const VarLabel*>& from,
-                                std::vector<const VarLabel*>& to);
-
-    /////////////////////////////////////////////////////////////////
     /*! Carry forward the data common to all constitutive models 
         when using RigidMPM.
         Called by carryForward */

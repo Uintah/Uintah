@@ -82,6 +82,9 @@ ViscoSCRAMHotSpot::ViscoSCRAMHotSpot(ProblemSpecP& ps, MPMLabel* Mlb,
 
 ViscoSCRAMHotSpot::ViscoSCRAMHotSpot(const ViscoSCRAMHotSpot* cm):ViscoScram(cm)
 {
+  lb = cm->lb;
+  flag = cm->flag;
+  NGN = cm->NGN;
   // Material constants
   d_matConst.Chi = cm->d_matConst.Chi;
   d_matConst.delH = cm->d_matConst.delH;
@@ -319,9 +322,7 @@ ViscoSCRAMHotSpot::computeStressTensor(const PatchSubset* patches,
     old_dw->get(pMass,         lb->pMassLabel,               pset);
     old_dw->get(pVol,          lb->pVolumeLabel,             pset);
     old_dw->get(pTemp,         lb->pTemperatureLabel,        pset);
-    if(flag->d_8or27==27){
-      old_dw->get(pSize,       lb->pSizeLabel,               pset);
-    }
+    old_dw->get(pSize,       lb->pSizeLabel,               pset);
     old_dw->get(pVel,          lb->pVelocityLabel,           pset);
     old_dw->get(pDefGrad,      lb->pDeformationMeasureLabel, pset);
     old_dw->get(pSig,          lb->pStressLabel,             pset);
