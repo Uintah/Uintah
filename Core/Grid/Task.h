@@ -11,6 +11,7 @@
 #include <Core/Containers/TrivialAllocator.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Exceptions/InternalError.h>
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
 #include <string>
 #include <vector>
@@ -496,8 +497,23 @@ WARNING
       ~Dependency();
       inline void addComp(Edge* edge);
       inline void addReq(Edge* edge);
+
+      inline const PatchSubset*
+      getPatchesUnderDomain(const PatchSubset* domainPatches) const
+      { return getComputeSubsetUnderDomain("patches_dom", patches_dom, patches,
+					   domainPatches); }
       
+      inline const MaterialSubset*
+      getMaterialsUnderDomain(const MaterialSubset* domainMaterials) const
+      { return getComputeSubsetUnderDomain("matls_dom", matls_dom, matls,
+					   domainMaterials); }
+
     private:
+      template <class T>
+      inline static const ComputeSubset<T>*
+      getComputeSubsetUnderDomain(string domString, DomainSpec dom,
+				  const ComputeSubset<T>* subset,
+				  const ComputeSubset<T>* domainSubset);
       Dependency();
       Dependency& operator=(const Dependency& copy);
       Dependency(const Dependency&);
@@ -634,6 +650,23 @@ WARNING
 	req_head=edge;
       req_tail=edge;
     }
+
+  template <class T>
+  inline const ComputeSubset<T>* Task::Dependency::
+  getComputeSubsetUnderDomain(string domString, Task::DomainSpec dom,
+			      const ComputeSubset<T>* subset,
+			      const ComputeSubset<T>* domainSubset)
+  {
+    switch(dom){
+    case Task::NormalDomain:
+      return ComputeSubset<T>::intersection(subset, domainSubset);
+    case Task::OutOfDomain:
+      return subset;
+    default:
+      throw InternalError(string("Unknown ") + domString + " type");
+    }
+  }
+
 } // End namespace Uintah
 
 

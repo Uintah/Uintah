@@ -210,12 +210,16 @@ Task::computes(const VarLabel* var,
 	       const PatchSubset* patches, DomainSpec patches_dom,
 	       const MaterialSubset* matls, DomainSpec matls_dom)
 {
-  if (matls == 0 && var->typeDescription()->isReductionVariable()) {
-    // default material for a reduction variable is the global material (-1)
-    matls = getGlobalMatlSubset();
-    matls_dom = OutOfDomain;
-  }  
-
+  if (var->typeDescription()->isReductionVariable()) {
+    if (matls == 0) {
+      // default material for a reduction variable is the global material (-1)
+      matls = getGlobalMatlSubset();
+      matls_dom = OutOfDomain;
+    }
+    ASSERT(patches == 0);
+    patches_dom = OutOfDomain;
+  }
+  
   Dependency* dep = scinew Dependency(this, NewDW, var, patches, matls,
 				      patches_dom, matls_dom);
   dep->next=0;
