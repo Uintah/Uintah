@@ -125,17 +125,17 @@ WARNING
       }
 
    template<class T>
-      void initialize(const T& value) {
+      void CCVariable<T>::initialize(const T& value) {
 	 std::cerr << "CCVariable::initialize!\n";
       }
       
    template<class T>
-      void copyPointer(const CCVariableBase&) {
+      void CCVariable<T>::copyPointer(const CCVariableBase&) {
 	 std::cerr << "CCVariable::copyPointer!\n";
       }
    
    template<class T>
-      void copyRegion(CCVariableBase* src,
+      void CCVariable<T>::copyRegion(CCVariableBase* src,
 		      const IntVector& lowIndex,
 		      const IntVector& highIndex) {
 	 std::cerr << "CCVariable::copyRegion!\n";
@@ -145,6 +145,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.8  2000/05/12 18:12:37  sparker
+// Added CCVariableBase.cc to sub.mk
+// Fixed copyPointer and other CCVariable methods - still not implemented
+//
 // Revision 1.7  2000/05/12 01:48:34  tan
 // Put two empty functions copyPointer and copyRegion just to make the
 // compiler work.
