@@ -113,7 +113,8 @@ void ParticleFieldExtractor::add_type(string &type_list,
   }
 }  
 
-bool ParticleFieldExtractor::setVars(DataArchive& archive)
+bool ParticleFieldExtractor::setVars(DataArchive& archive, int timestep,
+				     bool archive_dirty )
 {
   string command;
 
@@ -124,137 +125,148 @@ bool ParticleFieldExtractor::setVars(DataArchive& archive)
   vector< double > times;
   vector< int > indices;
   archive.queryTimesteps( indices, times );
-  GridP grid = archive.queryGrid(times[0]);
+  GridP grid = archive.queryGrid(times[timestep]);
   int levels = grid->numLevels();
   int guilevel = level_.get();
   LevelP level = grid->getLevel( (guilevel == levels ? 0 : guilevel) );
   Patch* r = *(level->patchesBegin());
-
-  //string type_list("");
-  //string name_list("");
-  scalarVars.clear();
-  vectorVars.clear();
-  tensorVars.clear();
-  pointVars.clear();
-  particleIDVar = VarInfo();
-  
-  //  string ptNames;
-  
-//   // reset the vars
-//   psVar.set("");
-//   pvVar.set("");
-//   ptVar.set("");
-
-  ostringstream os;
-  os << levels;
-
-  string psNames("");
-  string pvNames("");
-  string ptNames("");
-  int psIndex = -1;
-  int pvIndex = -1;
-  int ptIndex = -1;
-  bool psMatches = false;
-  bool pvMatches = false;
-  bool ptMatches = false;
-  // get all of the NC and Particle Variables
-  const TypeDescription *td;
-  bool found = false;
+  // get the number of materials for the particle Variables
+  int nm = 0;
   for( int i = 0; i < (int)names.size(); i++ ){
-    td = types[i];
-    if(td->getType() ==  TypeDescription::ParticleVariable){
-      const TypeDescription* subtype = td->getSubType();
-      ConsecutiveRangeSet matls = archive.queryMaterials(names[i], r,
-							 times[0]);
-      switch ( subtype->getType() ) {
-      case TypeDescription::double_type:
-      case TypeDescription::float_type:
-      case TypeDescription::int_type:
-        scalarVars.push_back(VarInfo(names[i], matls));
-	found = true;
-	if( psNames.size() != 0 )
-	  psNames += " ";
-	psNames += names[i];
-	if(psVar.get() == ""){ psVar.set(names[i].c_str()); }
-	if(psVar.get() == names[i].c_str()){
-	  psMatches = true;
-	} else {
-	  if( psIndex == -1){ psIndex = i; }
-	}
-	break;
-      case  TypeDescription::Vector:
-        vectorVars.push_back(VarInfo(names[i], matls));
-	found = true;
-	if( pvNames.size() != 0 )
-	  pvNames += " ";
-	pvNames += names[i];
-	if(pvVar.get() == ""){ pvVar.set(names[i].c_str()); }
-	if(pvVar.get() == names[i].c_str()){
-	  pvMatches = true;
-	} else {
-	  if( pvIndex == -1){ pvIndex = i; }
-	}
-	break;
-      case  TypeDescription::Matrix3:
-	tensorVars.push_back(VarInfo(names[i], matls));
-	found = true;
-	if( ptNames.size() != 0 )
-	  ptNames += " ";
-	ptNames += names[i];
-	if(ptVar.get() == ""){ ptVar.set(names[i].c_str()); }
-	if(ptVar.get() == names[i].c_str()){
-	  ptMatches = true;
-	} else {
-	  if( ptIndex == -1){ ptIndex = i; }
-	}
-	break;
-      case  TypeDescription::Point:
-        pointVars.push_back(VarInfo(names[i], matls));
-	found = true;
-	break;
-      case TypeDescription::long64_type:
-	particleIDVar = VarInfo(names[i], matls);
-	found = true;
-	break;
-      default:
-	cerr<<"Unknown particle type\n";
-	found = false;
-      }// else { Tensor,Other}
-    }
+    ConsecutiveRangeSet matls =
+      archive.queryMaterials(names[i], r, times[timestep]);
+    nm = ( matls.size() > nm ? matls.size() : nm );
   }
+  if( !archive_dirty && nm == num_materials ){
+    return true;
+  } else {
+    //string type_list("");
+    //string name_list("");
+    scalarVars.clear();
+    vectorVars.clear();
+    tensorVars.clear();
+    pointVars.clear();
+    particleIDVar = VarInfo();
   
-  if( !psMatches && psIndex != -1 ) {
-    psVar.set(names[psIndex].c_str());
-  } 
-  if( !pvMatches && pvIndex != -1 ) {
-    pvVar.set(names[pvIndex].c_str());
-  }
-  if( !ptMatches && ptIndex != -1 ) {
-    ptVar.set(names[ptIndex].c_str());
-  }
+    //  string ptNames;
+  
+    //   // reset the vars
+    //   psVar.set("");
+    //   pvVar.set("");
+    //   ptVar.set("");
 
-//   cerr<<"selected variables in setVar() are "<<
-//     psVar.get()<<" (index "<<psIndex<<"), "<<
-//     pvVar.get()<<" (index "<<pvIndex<<"), "<<
-//     ptVar.get()<<" (index "<<ptIndex<<")\n";
-  // get the number of materials for the NC & particle Variables
-  num_materials = archive.queryNumMaterials(r, times[0]);
-//   cerr << "Number of Materials " << num_materials << endl;
+    ostringstream os;
+    os << levels;
 
-  string visible;
-  gui->eval(id + " isVisible", visible);
-  if( visible == "1"){
-     gui->execute(id + " destroyFrames");
-     gui->execute(id + " build");
-     gui->execute(id + " buildLevels "+ os.str());
-//      gui->execute(id + " setParticleScalars " + psNames.c_str());
-//      gui->execute(id + " setParticleVectors " + pvNames.c_str());
-//      gui->execute(id + " setParticleTensors " + ptNames.c_str());
-     gui->execute(id + " buildPMaterials " + to_string(num_materials));
-//      gui->execute(id + " buildVarList");    
+    string psNames("");
+    string pvNames("");
+    string ptNames("");
+    int psIndex = -1;
+    int pvIndex = -1;
+    int ptIndex = -1;
+    bool psMatches = false;
+    bool pvMatches = false;
+    bool ptMatches = false;
+    // get all of the NC and Particle Variables
+    const TypeDescription *td;
+    bool found = false;
+    for( int i = 0; i < (int)names.size(); i++ ){
+      td = types[i];
+      if(td->getType() ==  TypeDescription::ParticleVariable){
+	const TypeDescription* subtype = td->getSubType();
+	ConsecutiveRangeSet matls = archive.queryMaterials(names[i], r,
+							   times[timestep]);
+	switch ( subtype->getType() ) {
+	case TypeDescription::double_type:
+	case TypeDescription::float_type:
+	case TypeDescription::int_type:
+	  scalarVars.push_back(VarInfo(names[i], matls));
+	  found = true;
+	  if( psNames.size() != 0 )
+	    psNames += " ";
+	  psNames += names[i];
+	  if(psVar.get() == ""){ psVar.set(names[i].c_str()); }
+	  if(psVar.get() == names[i].c_str()){
+	    psMatches = true;
+	  } else {
+	    if( psIndex == -1){ psIndex = i; }
+	  }
+	  break;
+	case  TypeDescription::Vector:
+	  vectorVars.push_back(VarInfo(names[i], matls));
+	  found = true;
+	  if( pvNames.size() != 0 )
+	    pvNames += " ";
+	  pvNames += names[i];
+	  if(pvVar.get() == ""){ pvVar.set(names[i].c_str()); }
+	  if(pvVar.get() == names[i].c_str()){
+	    pvMatches = true;
+	  } else {
+	    if( pvIndex == -1){ pvIndex = i; }
+	  }
+	  break;
+	case  TypeDescription::Matrix3:
+	  tensorVars.push_back(VarInfo(names[i], matls));
+	  found = true;
+	  if( ptNames.size() != 0 )
+	    ptNames += " ";
+	  ptNames += names[i];
+	  if(ptVar.get() == ""){ ptVar.set(names[i].c_str()); }
+	  if(ptVar.get() == names[i].c_str()){
+	    ptMatches = true;
+	  } else {
+	    if( ptIndex == -1){ ptIndex = i; }
+	  }
+	  break;
+	case  TypeDescription::Point:
+	  pointVars.push_back(VarInfo(names[i], matls));
+	  found = true;
+	  break;
+	case TypeDescription::long64_type:
+	  particleIDVar = VarInfo(names[i], matls);
+	  found = true;
+	  break;
+	default:
+	  cerr<<"Unknown particle type\n";
+	  found = false;
+	}// else { Tensor,Other}
+      }
+    }
+  
+    if( !psMatches && psIndex != -1 ) {
+      psVar.set(names[psIndex].c_str());
+    } 
+    if( !pvMatches && pvIndex != -1 ) {
+      pvVar.set(names[pvIndex].c_str());
+    }
+    if( !ptMatches && ptIndex != -1 ) {
+      ptVar.set(names[ptIndex].c_str());
+    }
+
+    // get the number of materials for the NC & particle Variables
+    num_materials = nm;
+    //   cerr << "Number of Materials " << num_materials << endl;
+
+    //   cerr<<"selected variables in setVar() are "<<
+    //     psVar.get()<<" (index "<<psIndex<<"), "<<
+    //     pvVar.get()<<" (index "<<pvIndex<<"), "<<
+    //     ptVar.get()<<" (index "<<ptIndex<<")\n";
+
+    string visible;
+    gui->eval(id + " isVisible", visible);
+    if( visible == "1"){
+      gui->execute(id + " destroyFrames");
+      gui->execute(id + " build");
+      gui->execute(id + " buildLevels "+ os.str());
+      //      gui->execute(id + " setParticleScalars " + psNames.c_str());
+      //      gui->execute(id + " setParticleVectors " + pvNames.c_str());
+      //      gui->execute(id + " setParticleTensors " + ptNames.c_str());
+      gui->execute(id + " buildPMaterials " + to_string(num_materials));
+      //      gui->execute(id + " buildVarList");    
+    }
+
+    return found;
   }
-
-  return found;
 }
 
 
@@ -316,7 +328,8 @@ ParticleFieldExtractor::getVarsForMaterials(list<VarInfo>& vars,
   string names = "";
   list<VarInfo>::iterator iter;
   for (iter = vars.begin(); iter != vars.end(); iter++) {
-     if (matls.intersected((*iter).matls).size() == matls.size()) {
+     if (matls.intersected((*iter).matls).size() == matls.size() &&
+	 matls.size() != 0 ) {
 	names += string(" ") + (*iter).name;
 	if (!(*iter).wasShown) {
 	   needToUpdate = true;
@@ -439,9 +452,12 @@ void ParticleFieldExtractor::execute()
    
    DataArchive& archive = *((*(handle.get_rep()))());
 
-   if ( handle.get_rep() != archiveH.get_rep() ) {
+   int new_generation = handle->generation;
+   bool archive_dirty = new_generation != generation;
+   if( archive_dirty ){
+     generation = new_generation;
      // we have a different archive
-     cerr<<"new DataArchive ... \n";
+//      cerr<<"new DataArchive ... \n";
      // empty the cache of stored variables
      material_data_list.clear();
      
@@ -454,13 +470,14 @@ void ParticleFieldExtractor::execute()
 
      }
      
-     if( !setVars( archive )){
-       warning("Cannot read any ParticleVariables, no action.");
-       return;
-      }
-
      archiveH = handle;
-    }
+   }
+     
+   if( !setVars( archive, archiveH->timestep(), archive_dirty )){
+     warning("Cannot read any ParticleVariables, no action.");
+     return;
+   }
+
    showVarsForMatls();
      
    ScalarParticles* sp = 0;
@@ -606,7 +623,7 @@ void PFEThread::run(){
 	//cerr << "Getting data for ParticleVariable<int>\n";
 	archive.query(pvint, pfe->psVar.get(), matl, patch, pfe->time);
 	if( !have_subset){
-	  source_subset = pvi.getParticleSubset();
+	  source_subset = pvint.getParticleSubset();
 	  have_subset = true;
 	}
 	//cerr << "Got data\n";
