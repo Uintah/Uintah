@@ -61,13 +61,16 @@ public:
         LatVolMesh::Cell::iterator it_end; it.end(it_end);
 
         typename Array3<Data>::iterator vit(&var_, min_);
-	
-	IntVector fi(it.i_, it.j_, it.k_);
-	IntVector ai(vit.getIndex());
+
+// 	IntVector fi(it.i_, it.j_, it.k_);
+// 	IntVector ai(vit.getIndex());
+	lock_.lock();
 	for(;it != it_end; ++it){
 	  fld_->fdata()[*it] = *vit;
 	  ++vit;
 	}
+	cerr<<endl;
+	lock_.unlock();
       } else {
 
         IntVector lo(min_ - offset_);
