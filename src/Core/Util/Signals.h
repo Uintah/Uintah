@@ -351,13 +351,12 @@ public:
 
 template<class Arg1,class Arg2>
 class Signal2 : public SignalBase {
-private:
-  vector<SlotBase2<Arg1,Arg2> *> slot_;
 public:
   void add( SlotBase2<Arg1,Arg2> *s) { SignalBase::add( s ); }
   void operator()(Arg1 a, Arg2 b )
     {
       lock_.lock();
+      cerr << "num connections: " << slot_.size() << endl;
       for (unsigned i=0; i<slot_.size(); i++)
 	static_cast<SlotBase2<Arg1,Arg2>*>(slot_[i])->send(a,b);
       lock_.unlock();
