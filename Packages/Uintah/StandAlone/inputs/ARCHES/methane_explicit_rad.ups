@@ -30,6 +30,11 @@
 	<save label="densityCP"/>
 	<save label="viscosityCTS"/>
 	<save label="tempIN"/>
+        <save label="co2IN"/>
+        <save label="enthalpyRXN"/>
+        <save label="enthalpySP"/>
+        <save label="absorpIN"/>
+        <save label="sootFVIN"/>
 	<save label="cellType"/>
 	<checkpoint interval="0.5" cycle="2"/>
    </DataArchiver>
@@ -45,7 +50,7 @@
 	    <Box label="1">
 	        <lower>[0,0,0]</lower>
 	        <upper>[3,3,3]</upper>
-	        <resolution>[80,80,80]</resolution>
+	        <resolution>[60,60,60]</resolution>
                 <extraCells>[1,1,1]</extraCells>
 		<patches>[2,2,2]</patches>
 	    </Box>
@@ -61,7 +66,7 @@
    	    <nonlinear_solver>explicit</nonlinear_solver>
     	    <turbulence_model>smagorinsky</turbulence_model>
             <reacting_flow>true</reacting_flow>
-            <solve_enthalpy>false</solve_enthalpy>	
+            <solve_enthalpy>true</solve_enthalpy>	
 	    <Turbulence>
 		<cf>0.001</cf>
 		<fac_mesh>1.0</fac_mesh>
@@ -71,10 +76,10 @@
 	    <Properties>
 		<denUnderrelax>0.9</denUnderrelax>
 	        <ref_point>[3,3,3]</ref_point>
-	        <radiation>false</radiation>
+	        <radiation>true</radiation>
 	        <mixing_model>pdfMixingModel</mixing_model>
 	        <PDFMixingModel>
-		  <adiabatic>true</adiabatic>
+		  <adiabatic>false</adiabatic>
                   <mixstatvars>0</mixstatvars>
                   <rxnvars>0</rxnvars>
 		  <reaction_model>EquilibriumReactionModel</reaction_model>
@@ -103,6 +108,12 @@
                     </Species>
 		  </Stream>
 		  <MixRxnTableInfo>
+                    <Enthalpy>
+                       <NumDivs>20</NumDivs>
+                       <MaxValue>1.0</MaxValue>
+                       <MinValue>-1.0</MinValue>
+                       <MidValue>0.0</MidValue>
+                    </Enthalpy>
                     <MixtureFraction>
                        <NumDivs>20</NumDivs>
                        <MaxValue>1.0</MaxValue>
@@ -227,7 +238,17 @@
 			<underrelax>0.9</underrelax>
 		    </LinearSolver>
 		</MixtureFractionSolver>
-		<cal_enthalpy>false</cal_enthalpy>
+		<cal_enthalpy>true</cal_enthalpy>
+		<EnthalpySolver>
+                    <radiation>true</radiation>
+		    <finite_difference>second</finite_difference>
+		    <linear_solver>linegs</linear_solver>
+		    <LinearSolver>
+			<max_iter>6</max_iter>
+			<res_tol>0.0003</res_tol>
+			<underrelax>0.9</underrelax>
+		    </LinearSolver>
+		</EnthalpySolver>
 	    </ExplicitSolver>
 
         </ARCHES>
