@@ -5990,17 +5990,18 @@ c
 c -- limit the magnitudes of changes
 c
 200    DTM = 0.2D0*TT
-       IF (ABS(DT).GT.DTM)  THEN
-           FAC = DTM/ABS(DT)
-           DT = FAC*DT
-           DP = FAC*DP
-           ENDIF
+       ABSDT = ABS(DT)
+       FAC =1.0D0
+       IF (ABSDT.GT.DTM) FAC = DTM/ABSDT
+       DT = FAC*DT
+       DP = FAC*DP
+
        DPM = 0.2D0*PT
-       IF (ABS(DP).GT.DPM)  THEN
-           FAC = DPM/ABS(DP)
-           DT = FAC*DT
-           DP = FAC*DP
-           ENDIF
+       ABSDP = ABS(DP)
+       FAC =1.0D0
+       IF (ABSDP.GT.DPM) FAC = DPM/ABSDP
+       DT = FAC*DT
+       DP = FAC*DP
 c
 c -- make the changes
 c
