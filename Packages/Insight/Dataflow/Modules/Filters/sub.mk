@@ -57,7 +57,7 @@ XMLS :=  \
 SRC_GEN := $(patsubst sci_%.xml, $(SRCDIR)/%.cc, $(XMLS))
 
 CATEGORY := Filters
-CODEGEN := GenerateSCIRunCode 
+CODEGEN := -classpath $(PATH_TO_SCIRUN)/tools/CodeGenerator/java:$(XALAN_PATH) SCIRun.GenerateSCIRunCode 
 
 SRCS += ${SRC_GEN} 
 
