@@ -103,8 +103,8 @@ void CompMooneyRivlin::computeStableTimestep(const Region* region,
     }
     double WaveSpeed = sqrt(Max(c_rot,c_dil));
     // Fudge factor of .8 added, just in case
-    double delt_new = .8*(Min(dx.x(), dx.y(), dx.z())/WaveSpeed);
-    new_dw->put(delt_vartype(delt_new), lb->deltLabel);
+    double delT_new = .8*(Min(dx.x(), dx.y(), dx.z())/WaveSpeed);
+    new_dw->put(delt_vartype(delT_new), lb->delTLabel);
 }
 
 void CompMooneyRivlin::computeStressTensor(const Region* region,
@@ -147,8 +147,8 @@ void CompMooneyRivlin::computeStressTensor(const Region* region,
 
   new_dw->get(gvelocity, lb->gMomExedVelocityLabel, matlindex,region,
 	      Ghost::AroundCells, 1);
-  delt_vartype delt;
-  old_dw->get(delt, lb->deltLabel);
+  delt_vartype delT;
+  old_dw->get(delT, lb->delTLabel);
 
   ParticleSubset* pset = px.getParticleSubset();
   ASSERT(pset == pstress.getParticleSubset());
@@ -182,7 +182,7 @@ void CompMooneyRivlin::computeStressTensor(const Region* region,
       // Compute the deformation gradient increment using the time_step
       // velocity gradient
       // F_n^np1 = dudx * dt + Identity
-      deformationGradientInc = velGrad * delt + Identity;
+      deformationGradientInc = velGrad * delT + Identity;
 
       // Update the deformation gradient tensor to its time n+1 value.
       deformationGradient[idx] = deformationGradientInc * deformationGradient[idx];
@@ -222,8 +222,8 @@ void CompMooneyRivlin::computeStressTensor(const Region* region,
     }
     WaveSpeed = sqrt(Max(c_rot,c_dil));
     // Fudge factor of .8 added, just in case
-    double delt_new = .8*Min(dx.x(), dx.y(), dx.z())/WaveSpeed;
-    new_dw->put(delt_vartype(delt_new), lb->deltLabel);
+    double delT_new = .8*Min(dx.x(), dx.y(), dx.z())/WaveSpeed;
+    new_dw->put(delt_vartype(delT_new), lb->delTLabel);
     new_dw->put(pstress, lb->pStressLabel, matlindex, region);
     new_dw->put(deformationGradient, lb->pDeformationMeasureLabel,
 		matlindex, region);
@@ -253,9 +253,9 @@ void CompMooneyRivlin::addComputesAndRequires(Task* task,
 		  Ghost::None);
    task->requires(new_dw, lb->gMomExedVelocityLabel, matl->getDWIndex(), region,
 		  Ghost::AroundCells, 1);
-   task->requires(old_dw, lb->deltLabel);
+   task->requires(old_dw, lb->delTLabel);
 
-   task->computes(new_dw, lb->deltLabel);
+   task->computes(new_dw, lb->delTLabel);
    task->computes(new_dw, lb->pStressLabel, matl->getDWIndex(),  region);
    task->computes(new_dw, lb->pDeformationMeasureLabel, matl->getDWIndex(), region);
    task->computes(new_dw, p_cmdata_label, matl->getDWIndex(),  region);
@@ -331,6 +331,9 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 }
 
 // $Log$
+// Revision 1.34  2000/05/30 17:08:26  dav
+// Changed delt to delT
+//
 // Revision 1.33  2000/05/26 21:37:33  jas
 // Labels are now created and accessed using Singleton class MPMLabel.
 //

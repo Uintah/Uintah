@@ -498,8 +498,8 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
 		  Ghost::None, 0);
     }
   }
-  delt_vartype delt;
-  old_dw->get(delt, lb->deltLabel);
+  delt_vartype delT;
+  old_dw->get(delT, lb->delTLabel);
 
   for(NodeIterator iter = region->getNodeIterator(); !iter.done(); iter++){
     centerOfMassMom=zero;
@@ -550,7 +550,7 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
 		normalDeltaVelocity;
 	    }
 	    Dvdt+=gvelocity_star[n][*iter];
-	    Dvdt=Dvdt/delt;
+	    Dvdt=Dvdt/delT;
 	    gacceleration[n][*iter]+=Dvdt;
           }
 	}
@@ -606,6 +606,9 @@ void FrictionContact::addComputesAndRequiresIntegrated( Task* t,
 }
 
 // $Log$
+// Revision 1.21  2000/05/30 17:08:54  dav
+// Changed delt to delT
+//
 // Revision 1.20  2000/05/26 22:05:40  jas
 // Using Singleton class MPMLabel for label management.
 //
