@@ -14,7 +14,7 @@
   Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
   University of Utah. All Rights Reserved.
 */
-  
+   
   
 /*
  * C++ (CC) FILE : NetInterface.cc
@@ -36,7 +36,7 @@
  *
  * Copyright (C) 2003 SCI Group
 */
-   
+    
 // SCIRun includes
 //#include <Core/Util/Comm/NetInterface.h>
 #include "NetInterface.h"

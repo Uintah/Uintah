@@ -13,14 +13,13 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Core/Util/Comm
 
 SRCS     += \
-	$(SRCDIR)/test.cc \
-#	$(SRCDIR)/NetInterface.cc \
-#	$(SRCDIR)/NetConnection.cc \
+	$(SRCDIR)/NetInterface.cc \
+	$(SRCDIR)/NetConnection.cc \
 #[INSERT NEW CODE FILE HERE]
-
-#INCLUDES += $(UNP_INCLUDE) $(SCISOCK_INCLUDE)
+ 
+INCLUDES += $(SCISOCK_INCLUDE)
 PSELIBS :=
-#LIBS := $(UNP_LIBRARY) $(SCISOCK_LIBRARY)
-
+LIBS := $(SCISOCK_LIBRARY)
+ 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

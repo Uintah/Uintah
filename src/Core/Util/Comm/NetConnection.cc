@@ -42,7 +42,7 @@
 // SCIRun includes
 //#include <Core/Util/Comm/NetConnection.h>
 #include "NetConnection.h"
-
+ 
 using namespace std;
 
 namespace SCIRun {

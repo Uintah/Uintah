@@ -46,7 +46,7 @@
 // SCIRun includes
 #include <Core/Malloc/Allocator.h>
 //#include <SCISockInterface/lib/NetConnectionC.h>
-#include "NetConnectionC.h"
+#include <NetConnectionC.h>
 
 // Standard lib includes
 #include <iostream>
