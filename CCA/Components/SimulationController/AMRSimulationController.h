@@ -54,7 +54,6 @@ class LoadBalancer;
       virtual void run();
 
    private:
-      void problemSetup(const ProblemSpecP&, GridP&);
       bool needRecompile(double t, double delt, const GridP& level,
 			 SimulationInterface* cfd, Output* output,
 			 LoadBalancer* lb, std::vector<int>& levelids);

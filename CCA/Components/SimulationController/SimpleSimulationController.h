@@ -55,7 +55,6 @@ class LoadBalancer;
       virtual void run();
 
    private:
-      void problemSetup(const ProblemSpecP&, GridP&);
       bool needRecompile(double t, double delt, const GridP& grid,
 			 SimulationInterface* cfd, Output* output,
 			 LoadBalancer* lb);
