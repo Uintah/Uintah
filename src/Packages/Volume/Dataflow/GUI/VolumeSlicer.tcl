@@ -60,7 +60,6 @@ itcl_class Volume_Visualization_VolumeSlicer {
 	} else {
 	    set $this-cyl_active 0
 	}
-	$this-c needexecute
     }
 
     method spin_in {new phi} {
@@ -211,19 +210,19 @@ itcl_class Volume_Visualization_VolumeSlicer {
 	global standard
 	set st "Standard"
 	set standard [$dof.tabs add -label $st \
-		-command "$this set_active_tab $st"]
+			  -command "$this set_active_tab $st"]
 
 	add_standard_tab $standard
 
 	global cyl
 	set c "Cylindrical"
 	set cyl [$dof.tabs add -label $c \
-		-command "$this set_active_tab $c"]
+		     -command "$this set_active_tab $c; $n"]
 
 	add_cyl_tab $cyl
- 
 	$dof.tabs view "Standard"	
 	$dof.tabs configure -tabpos "n"
+	$dof.tabs pageconfigure 0 -command "$this set_active_tab $st; $n"
 	pack $dof.tabs -side top -expand yes
 
 	pack $w.frame_title -side top -expand yes
@@ -246,6 +245,7 @@ itcl_class Volume_Visualization_VolumeSlicer {
 	moveToCursor $w
 
 	$this state 
+	
     }
 
 
