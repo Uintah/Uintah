@@ -55,6 +55,8 @@ Network::Network(int first)
   : the_lock("Network lock"),
     scheduler(0), first(first), nextHandle(0), slave_socket(0)
 {
+  width_ = 500;
+  height_ = 500;
 }
 
 Network::~Network()

@@ -69,6 +69,9 @@ private:
   Scheduler *scheduler ;
   int first;
   int nextHandle;
+  int width_;
+  int height_;
+
 public:				// mm-hack to get direct access
   vector<Connection*> connections;
   vector<Module*> modules;
@@ -84,7 +87,9 @@ public:
   ~Network();
   
   void initialize(Scheduler*);
-  
+
+  void get_frame( int &w, int &h ) { w = width_; h = height_; }
+
   void read_lock();
   void read_unlock();
   void write_lock();
