@@ -52,8 +52,6 @@ RealMax ( Real x1, Real x2 )
    return ((x1 > x2) ? x1 : x2);
 }
 
-
-#define NOT_FINISHED(what) cerr << what << ": Not Finished " << __FILE__ << " (line " << __LINE__ << ") " << endl
 #define ERROR_HERE(what) cerr << "Error: " << what << " in " << __FILE__ << " (line " << __LINE__ << ") " << endl
 
 } // End namespace Constraints

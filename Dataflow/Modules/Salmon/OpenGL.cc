@@ -23,7 +23,6 @@
 #include "image.h"
 #include <SCICore/Geom/GeomObj.h>
 #include <SCICore/Containers/HashTable.h>
-#include <SCICore/Util/NotFinished.h>
 #include <SCICore/Util/Timer.h>
 #include <SCICore/Geom/GeomObj.h>
 #include <SCICore/Geom/GeomOpenGL.h>
@@ -1467,6 +1466,10 @@ template class Mailbox<GetReq>;
 
 //
 // $Log$
+// Revision 1.3  1999/08/19 23:17:52  sparker
+// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
+// from files that did not need them.
+//
 // Revision 1.2  1999/08/17 06:37:37  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

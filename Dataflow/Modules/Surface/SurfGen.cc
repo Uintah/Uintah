@@ -7,7 +7,6 @@
 
 #include <sci_config.h>
 #include <SCICore/Containers/String.h>
-#include <SCICore/Util/NotFinished.h>
 #include <PSECore/Dataflow/Module.h>
 #include <SCICore/CoreDatatypes/BasicSurfaces.h>
 #include <PSECore/CommonDatatypes/SurfacePort.h>
@@ -117,6 +116,10 @@ void SurfGen::execute()
 
 //
 // $Log$
+// Revision 1.5  1999/08/19 23:17:54  sparker
+// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
+// from files that did not need them.
+//
 // Revision 1.4  1999/08/19 05:30:53  sparker
 // Configuration updates:
 //  - renamed config.h to sci_config.h

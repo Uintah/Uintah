@@ -14,7 +14,6 @@
 
 #include <SCICore/TclInterface/ThreadStats.h>
 
-#include <SCICore/Util/NotFinished.h>
 #include <SCICore/Multitask/Task.h>
 
 #include <iostream.h>
@@ -104,6 +103,10 @@ void ThreadStats::tcl_command(TCLArgs& args, void*)
 
 //
 // $Log$
+// Revision 1.3  1999/08/19 23:18:08  sparker
+// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
+// from files that did not need them.
+//
 // Revision 1.2  1999/08/17 06:39:46  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

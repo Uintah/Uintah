@@ -42,7 +42,6 @@
 
 
 
-#include <SCICore/Util/NotFinished.h>
 #include <PSECore/Dataflow/Module.h>
 #include <PSECore/CommonDatatypes/ColumnMatrixPort.h>
 #include <SCICore/CoreDatatypes/SparseRowMatrix.h>
@@ -1496,6 +1495,10 @@ void SolveMatrix::parallel_bi_conjugate_gradient(CGData* data, int processor)
 
 //
 // $Log$
+// Revision 1.5  1999/08/19 23:17:48  sparker
+// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
+// from files that did not need them.
+//
 // Revision 1.4  1999/08/19 05:30:52  sparker
 // Configuration updates:
 //  - renamed config.h to sci_config.h

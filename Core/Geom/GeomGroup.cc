@@ -14,7 +14,6 @@
 
 #include <SCICore/Geom/GeomGroup.h>
 #include <SCICore/Containers/Array2.h>
-#include <SCICore/Util/NotFinished.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Malloc/Allocator.h>
 #ifdef _WIN32
@@ -143,6 +142,10 @@ bool GeomGroup::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
+// Revision 1.4  1999/08/19 23:18:05  sparker
+// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
+// from files that did not need them.
+//
 // Revision 1.3  1999/08/17 23:50:21  sparker
 // Removed all traces of the old Raytracer and X11 renderers.
 // Also removed a .o and .d file

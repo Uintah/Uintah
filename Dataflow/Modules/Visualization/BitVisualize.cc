@@ -18,7 +18,6 @@
 #include <SCICore/Tester/RigorousTest.h>
 #include <SCICore/Containers/BitArray1.h>
 #include <SCICore/Containers/HashTable.h>
-#include <SCICore/Util/NotFinished.h>
 #include <PSECore/Dataflow/Module.h>
 #include <PSECore/CommonDatatypes/GeometryPort.h>
 #include <SCICore/CoreDatatypes/Mesh.h>
@@ -279,6 +278,10 @@ void BitVisualize::vol_render1_grid() {
 
 //
 // $Log$
+// Revision 1.5  1999/08/19 23:17:55  sparker
+// Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
+// from files that did not need them.
+//
 // Revision 1.4  1999/08/19 05:30:53  sparker
 // Configuration updates:
 //  - renamed config.h to sci_config.h
