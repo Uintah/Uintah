@@ -9,10 +9,626 @@
 #include <Packages/Uintah/Core/Grid/BoundCond.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
+#include <typeinfo>
 
 using namespace Uintah;
 namespace Uintah {
 
+  // CCVariable<T>
+template<class T> void fillFace(CCVariable<T>& var,Patch::FaceType face, 
+				const T& value, IntVector offset)
+{ 
+  IntVector low,hi;
+  low = var.getLowIndex() + offset;
+  hi = var.getHighIndex() - offset;
+  switch (face) {
+  case Patch::xplus:
+    for (int j = low.y(); j<hi.y(); j++) {
+      for (int k = low.z(); k<hi.z(); k++) {
+	var[IntVector(hi.x()-1,j,k)] = value;
+      }
+    }
+    break;
+  case Patch::xminus:
+    for (int j = low.y(); j<hi.y(); j++) {
+      for (int k = low.z(); k<hi.z(); k++) {
+	var[IntVector(low.x(),j,k)] = value;
+      }
+    }
+    break;
+  case Patch::yplus:
+    for (int i = low.x(); i<hi.x(); i++) {
+      for (int k = low.z(); k<hi.z(); k++) {
+	var[IntVector(i,hi.y()-1,k)] = value;
+      }
+    }
+    break;
+  case Patch::yminus:
+    for (int i = low.x(); i<hi.x(); i++) {
+      for (int k = low.z(); k<hi.z(); k++) {
+	var[IntVector(i,low.y(),k)] = value;
+      }
+    }
+    break;
+  case Patch::zplus:
+    for (int i = low.x(); i<hi.x(); i++) {
+      for (int j = low.y(); j<hi.y(); j++) {
+	var[IntVector(i,j,hi.z()-1)] = value;
+      }
+    }
+    break;
+  case Patch::zminus:
+    for (int i = low.x(); i<hi.x(); i++) {
+      for (int j = low.y(); j<hi.y(); j++) {
+	var[IntVector(i,j,low.z())] = value;
+      }
+    }
+    break;
+  case Patch::numFaces:
+    break;
+  case Patch::invalidFace:
+    break;
+  }
+  
+};
+
+template <class V, class T>  void fillFace(V& var, const Patch* patch, 
+					   Patch::FaceType face,
+					   const T& value, IntVector offset)
+{ 
+  //__________________________________
+  // Add (1,0,0) to low index when no 
+  // neighbor patches are present
+  IntVector low,hi,adjust; 
+  int numGC = 0;
+  low = patch->getCellLowIndex();
+
+  if (typeid(V) == typeid(SFCXVariable<double>))
+    adjust=IntVector(patch->getBCType(Patch::xminus)==Patch::Neighbor?numGC:1,
+		     patch->getBCType(Patch::yminus)==Patch::Neighbor?numGC:0,
+		     patch->getBCType(Patch::zminus)==Patch::Neighbor?numGC:0);
+
+  if (typeid(V) == typeid(SFCYVariable<double>))
+    adjust=IntVector(patch->getBCType(Patch::xminus)==Patch::Neighbor?numGC:0,
+		     patch->getBCType(Patch::yminus)==Patch::Neighbor?numGC:1,
+		     patch->getBCType(Patch::zminus)==Patch::Neighbor?numGC:0);
+
+  if (typeid(V) == typeid(SFCZVariable<double>))
+    adjust=IntVector(patch->getBCType(Patch::xminus)==Patch::Neighbor?numGC:0,
+		     patch->getBCType(Patch::yminus)==Patch::Neighbor?numGC:0,
+		     patch->getBCType(Patch::zminus)==Patch::Neighbor?numGC:1);
+
+  
+  low+= adjust;
+  low-= offset;
+  hi  = patch->getCellHighIndex();
+  hi += IntVector(patch->getBCType(Patch::xplus) ==Patch::Neighbor?numGC:0,
+		  patch->getBCType(Patch::yplus) ==Patch::Neighbor?numGC:0,
+		  patch->getBCType(Patch::zplus) ==Patch::Neighbor?numGC:0);
+  hi += offset;
+  // cout<< "fillFace: SFCXVariable.h"<<endl;
+  // cout<< "low: "<<low<<endl;
+  // cout<< "hi:  "<<hi <<endl;
+  
+  switch (face) {
+  case Patch::xplus:
+    for (int j = low.y(); j<hi.y(); j++) {
+      for (int k = low.z(); k<hi.z(); k++) {
+	var[IntVector(hi.x()-1,j,k)] = value;
+      }
+    }
+    break;
+  case Patch::xminus:
+    for (int j = low.y(); j<hi.y(); j++) {
+      for (int k = low.z(); k<hi.z(); k++) {
+	var[IntVector(low.x(),j,k)] = value;
+      }
+    }
+    break;
+  case Patch::yplus:
+    for (int i = low.x(); i<hi.x(); i++) {
+      for (int k = low.z(); k<hi.z(); k++) {
+	var[IntVector(i,hi.y()-1,k)] = value;
+      }
+    }
+    break;
+  case Patch::yminus:
+    for (int i = low.x(); i<hi.x(); i++) {
+      for (int k = low.z(); k<hi.z(); k++) {
+	var[IntVector(i,low.y(),k)] = value;
+      }
+    }
+    break;
+  case Patch::zplus:
+    for (int i = low.x(); i<hi.x(); i++) {
+      for (int j = low.y(); j<hi.y(); j++) {
+	var[IntVector(i,j,hi.z()-1)] = value;
+      }
+    }
+    break;
+  case Patch::zminus:
+    for (int i = low.x(); i<hi.x(); i++) {
+      for (int j = low.y(); j<hi.y(); j++) {
+	var[IntVector(i,j,low.z())] = value;
+      }
+    }
+    break;
+  case Patch::numFaces:
+    break;
+  case Patch::invalidFace:
+    break;
+  }
+  
+}
+
+#if 0
+
+template <class T>  void fillFace(SFCXVariable<T>& var, const Patch* patch, 
+				  Patch::FaceType face,
+				  const T& value, IntVector offset)
+{ 
+  //__________________________________
+  // Add (1,0,0) to low index when no 
+  // neighbor patches are present
+  IntVector low,hi; 
+  int numGC = 0;
+  low = patch->getCellLowIndex();
+  low+= IntVector(patch->getBCType(Patch::xminus)==Patch::Neighbor?numGC:1,
+		  patch->getBCType(Patch::yminus)==Patch::Neighbor?numGC:0,
+		  patch->getBCType(Patch::zminus)==Patch::Neighbor?numGC:0);
+  low-= offset;
+  hi  = patch->getCellHighIndex();
+  hi += IntVector(patch->getBCType(Patch::xplus) ==Patch::Neighbor?numGC:0,
+		  patch->getBCType(Patch::yplus) ==Patch::Neighbor?numGC:0,
+		  patch->getBCType(Patch::zplus) ==Patch::Neighbor?numGC:0);
+  hi += offset;
+  // cout<< "fillFace: SFCXVariable.h"<<endl;
+  // cout<< "low: "<<low<<endl;
+  // cout<< "hi:  "<<hi <<endl;
+  
+  switch (face) {
+  case Patch::xplus:
+    for (int j = low.y(); j<hi.y(); j++) {
+      for (int k = low.z(); k<hi.z(); k++) {
+	var[IntVector(hi.x()-1,j,k)] = value;
+      }
+    }
+    break;
+  case Patch::xminus:
+    for (int j = low.y(); j<hi.y(); j++) {
+      for (int k = low.z(); k<hi.z(); k++) {
+	var[IntVector(low.x(),j,k)] = value;
+      }
+    }
+    break;
+  case Patch::yplus:
+    for (int i = low.x(); i<hi.x(); i++) {
+      for (int k = low.z(); k<hi.z(); k++) {
+	var[IntVector(i,hi.y()-1,k)] = value;
+      }
+    }
+    break;
+  case Patch::yminus:
+    for (int i = low.x(); i<hi.x(); i++) {
+      for (int k = low.z(); k<hi.z(); k++) {
+	var[IntVector(i,low.y(),k)] = value;
+      }
+    }
+    break;
+  case Patch::zplus:
+    for (int i = low.x(); i<hi.x(); i++) {
+      for (int j = low.y(); j<hi.y(); j++) {
+	var[IntVector(i,j,hi.z()-1)] = value;
+      }
+    }
+    break;
+  case Patch::zminus:
+    for (int i = low.x(); i<hi.x(); i++) {
+      for (int j = low.y(); j<hi.y(); j++) {
+	var[IntVector(i,j,low.z())] = value;
+      }
+    }
+    break;
+  case Patch::numFaces:
+    break;
+  case Patch::invalidFace:
+    break;
+  }
+  
+}
+
+template <class T>  void fillFace(SFCYVariable<T>& var,const Patch* patch,
+				  Patch::FaceType face, const T& value, 
+				  IntVector offset)
+{ 
+  //__________________________________
+  // Add (0,1,0) to low index when no 
+  // neighbor patches are present 
+  IntVector low,hi; 
+  int numGC = 0;
+  low = patch->getCellLowIndex();
+  low+=IntVector(patch->getBCType(Patch::xminus)==Patch::Neighbor?numGC:0,
+		 patch->getBCType(Patch::yminus)==Patch::Neighbor?numGC:1,
+		 patch->getBCType(Patch::zminus)==Patch::Neighbor?numGC:0);
+  low-= offset;
+  hi  = patch->getCellHighIndex();
+  hi +=IntVector(patch->getBCType(Patch::xplus) ==Patch::Neighbor?numGC:0,
+		 patch->getBCType(Patch::yplus) ==Patch::Neighbor?numGC:0,
+		 patch->getBCType(Patch::zplus) ==Patch::Neighbor?numGC:0);
+  hi += offset;
+  // cout<< "fillFace: SFCYVariable.h"<<endl;
+  // cout<< "low: "<<low<<endl;
+  // cout<< "hi:  "<<hi <<endl;
+  
+  switch (face) {
+  case Patch::xplus:
+    for (int j = low.y(); j<hi.y(); j++) {
+      for (int k = low.z(); k<hi.z(); k++) {
+	var[IntVector(hi.x()-1,j,k)] = value;
+      }
+    }
+    break;
+  case Patch::xminus:
+    for (int j = low.y(); j<hi.y(); j++) {
+      for (int k = low.z(); k<hi.z(); k++) {
+	var[IntVector(low.x(),j,k)] = value;
+      }
+    }
+    break;
+  case Patch::yplus:
+    for (int i = low.x(); i<hi.x(); i++) {
+      for (int k = low.z(); k<hi.z(); k++) {
+	var[IntVector(i,hi.y()-1,k)] = value;
+      }
+    }
+    break;
+  case Patch::yminus:
+    for (int i = low.x(); i<hi.x(); i++) {
+      for (int k = low.z(); k<hi.z(); k++) {
+	var[IntVector(i,low.y(),k)] = value;
+      }
+    }
+    break;
+  case Patch::zplus:
+    for (int i = low.x(); i<hi.x(); i++) {
+      for (int j = low.y(); j<hi.y(); j++) {
+	var[IntVector(i,j,hi.z()-1)] = value;
+      }
+    }
+    break;
+  case Patch::zminus:
+    for (int i = low.x(); i<hi.x(); i++) {
+      for (int j = low.y(); j<hi.y(); j++) {
+	var[IntVector(i,j,low.z())] = value;
+      }
+    }
+    break;
+  case Patch::numFaces:
+    break;
+  case Patch::invalidFace:
+    break;
+  }
+  
+}
+
+template<class T> void fillFace(SFCZVariable<T>& var,const Patch* patch, 
+				Patch::FaceType face,const T& value, 
+				IntVector offset)
+{ 
+  //__________________________________
+  // Add (0,0,1) to low index when no 
+  // neighbor patches are present
+  IntVector low,hi; 
+  int numGC = 0;
+  low = patch->getCellLowIndex();
+  low+=IntVector(patch->getBCType(Patch::xminus)==Patch::Neighbor?numGC:0,
+		 patch->getBCType(Patch::yminus)==Patch::Neighbor?numGC:0,
+		 patch->getBCType(Patch::zminus)==Patch::Neighbor?numGC:1);
+  low-= offset;
+  hi  = patch->getCellHighIndex();
+  hi +=IntVector(patch->getBCType(Patch::xplus) ==Patch::Neighbor?numGC:0,
+		 patch->getBCType(Patch::yplus) ==Patch::Neighbor?numGC:0,
+		 patch->getBCType(Patch::zplus) ==Patch::Neighbor?numGC:0);
+  hi += offset;
+  // cout<< "fillFace: SFCZVariable.h"<<endl;
+  // cout<< "low: "<<low<<endl;
+  // cout<< "hi:  "<<hi <<endl;
+  
+  switch (face) {
+  case Patch::xplus:
+    for (int j = low.y(); j<hi.y(); j++) {
+      for (int k = low.z(); k<hi.z(); k++) {
+	var[IntVector(hi.x()-1,j,k)] = value;
+      }
+    }
+    break;
+  case Patch::xminus:
+    for (int j = low.y(); j<hi.y(); j++) {
+      for (int k = low.z(); k<hi.z(); k++) {
+	var[IntVector(low.x(),j,k)] = value;
+      }
+    }
+    break;
+  case Patch::yplus:
+    for (int i = low.x(); i<hi.x(); i++) {
+      for (int k = low.z(); k<hi.z(); k++) {
+	var[IntVector(i,hi.y()-1,k)] = value;
+      }
+    }
+    break;
+  case Patch::yminus:
+    for (int i = low.x(); i<hi.x(); i++) {
+      for (int k = low.z(); k<hi.z(); k++) {
+	var[IntVector(i,low.y(),k)] = value;
+      }
+    }
+    break;
+  case Patch::zplus:
+    for (int i = low.x(); i<hi.x(); i++) {
+      for (int j = low.y(); j<hi.y(); j++) {
+	var[IntVector(i,j,hi.z()-1)] = value;
+      }
+    }
+    break;
+  case Patch::zminus:
+    for (int i = low.x(); i<hi.x(); i++) {
+      for (int j = low.y(); j<hi.y(); j++) {
+	var[IntVector(i,j,low.z())] = value;
+      }
+    }
+    break;
+  case Patch::numFaces:
+    break;
+  case Patch::invalidFace:
+    break;
+  }
+  
+}
+
+#endif
+// Replace the values on the indicated face with value
+// using a 1st order difference formula for a Neumann BC condition
+// The plus_minus_one variable allows for negative interior BC, which is
+// simply the (-1)* interior value.
+  
+template<class T> void fillFaceFlux(CCVariable<T>& var, Patch::FaceType face, 
+				    const T& value,const Vector& dx,
+				    const double& plus_minus_one=1.0,
+				    IntVector offset )
+{ 
+  IntVector low,hi;
+  low = var.getLowIndex() + offset;
+  hi = var.getHighIndex() - offset;
+  
+  switch (face) {
+  case Patch::xplus:
+    for (int j = low.y(); j<hi.y(); j++) {
+      for (int k = low.z(); k<hi.z(); k++) {
+	var[IntVector(hi.x()-1,j,k)] = 
+	  (var[IntVector(hi.x()-2,j,k)])*plus_minus_one - 
+	  value*dx.x();
+      }
+    }
+    break;
+  case Patch::xminus:
+    for (int j = low.y(); j<hi.y(); j++) {
+      for (int k = low.z(); k<hi.z(); k++) {
+	var[IntVector(low.x(),j,k)] = 
+	  (var[IntVector(low.x()+1,j,k)])*plus_minus_one - 
+	  value * dx.x();
+      }
+    }
+    break;
+  case Patch::yplus:
+    for (int i = low.x(); i<hi.x(); i++) {
+      for (int k = low.z(); k<hi.z(); k++) {
+	var[IntVector(i,hi.y()-1,k)] = 
+	  (var[IntVector(i,hi.y()-2,k)])*plus_minus_one - 
+	  value * dx.y();
+      }
+    }
+    break;
+  case Patch::yminus:
+    for (int i = low.x(); i<hi.x(); i++) {
+      for (int k = low.z(); k<hi.z(); k++) {
+	var[IntVector(i,low.y(),k)] = 
+	  (var[IntVector(i,low.y()+1,k)])*plus_minus_one - 
+	  value * dx.y();
+      }
+    }
+    break;
+  case Patch::zplus:
+    for (int i = low.x(); i<hi.x(); i++) {
+      for (int j = low.y(); j<hi.y(); j++) {
+	var[IntVector(i,j,hi.z()-1)] = 
+	  (var[IntVector(i,j,hi.z()-2)])*plus_minus_one - 
+	  value * dx.z();
+      }
+    }
+    break;
+  case Patch::zminus:
+    for (int i = low.x(); i<hi.x(); i++) {
+      for (int j = low.y(); j<hi.y(); j++) {
+	var[IntVector(i,j,low.z())] =
+	  (var[IntVector(i,j,low.z()+1)])*plus_minus_one - 
+	  value * dx.z();
+      }
+    }
+    break;
+  case Patch::numFaces:
+    break;
+  case Patch::invalidFace:
+    break;
+  }
+  
+};
+
+template <class T> void fillFaceNormal(CCVariable<T>& var,Patch::FaceType, 
+				       IntVector)
+{
+  return;
+}
+
+template <> void fillFaceNormal(CCVariable<SCIRun::Vector>& var, 
+				Patch::FaceType face,
+				IntVector offset)
+{
+  IntVector low,hi;
+  low = var.getLowIndex() + offset;
+  hi = var.getHighIndex() - offset;
+  switch (face) {
+  case Patch::xplus:
+    for (int j = low.y(); j<hi.y(); j++) {
+      for (int k = low.z(); k<hi.z(); k++) {
+        var[IntVector(hi.x()-1,j,k)] =
+          Vector(-var[IntVector(hi.x()-2,j,k)].x(),
+                 var[IntVector(hi.x()-2,j,k)].y(),
+                   var[IntVector(hi.x()-2,j,k)].z());
+         //cout<<"fillFaceNORMAL Xplus "<<IntVector(hi.x()-1,j,k)<<endl;
+
+      }
+    }
+    break;
+  case Patch::xminus:
+    for (int j = low.y(); j<hi.y(); j++) {
+      for (int k = low.z(); k<hi.z(); k++) {
+        var[IntVector(low.x(),j,k)] = 
+          Vector(-var[IntVector(low.x()+1,j,k)].x(),
+                 var[IntVector(low.x()+1,j,k)].y(),
+                   var[IntVector(low.x()+1,j,k)].z());
+         //cout<<"fillFaceNORMAL Xminus "<<IntVector(low.x(),j,k)<<endl;
+      }
+    }
+    break;
+  case Patch::yplus:
+    for (int i = low.x(); i<hi.x(); i++) {
+      for (int k = low.z(); k<hi.z(); k++) {
+        var[IntVector(i,hi.y()-1,k)] =
+          Vector( var[IntVector(i,hi.y()-2,k)].x(),
+                -var[IntVector(i,hi.y()-2,k)].y(),
+                   var[IntVector(i,hi.y()-2,k)].z());
+         //cout<<"fillFaceNORMAL Yplus "<<IntVector(i,hi.y()-1,k)<<endl;
+      }
+    }
+    break;
+  case Patch::yminus:
+    for (int i = low.x(); i<hi.x(); i++) {
+      for (int k = low.z(); k<hi.z(); k++) {
+        var[IntVector(i,low.y(),k)] =
+          Vector( var[IntVector(i,low.y()+1,k)].x(),
+                -var[IntVector(i,low.y()+1,k)].y(),
+                   var[IntVector(i,low.y()+1,k)].z());
+         //cout<<"fillFaceNORMAL Yminus "<<IntVector(i,low.y(),k)<<endl;
+      }
+    }
+    break;
+  case Patch::zplus:
+    for (int i = low.x(); i<hi.x(); i++) {
+      for (int j = low.y(); j<hi.y(); j++) {
+        var[IntVector(i,j,hi.z()-1)] =
+          Vector( var[IntVector(i,j,hi.z()-2)].x(),
+                   var[IntVector(i,j,hi.z()-2)].y(),
+                -var[IntVector(i,j,hi.z()-2)].z());
+         //cout<<"fillFaceNORMAL Zplus "<<IntVector(i,j,hi.z()-1)<<endl;
+      }
+    }
+    break;
+  case Patch::zminus:
+    for (int i = low.x(); i<hi.x(); i++) {
+      for (int j = low.y(); j<hi.y(); j++) {
+        var[IntVector(i,j,low.z())] =
+          Vector( var[IntVector(i,j,low.z()+1)].x(),
+                   var[IntVector(i,j,low.z()+1)].y(),
+                -var[IntVector(i,j,low.z()+1)].z());
+         //cout<<"fillFaceNORMAL Zminus "<<IntVector(i,j,low.z())<<endl;
+      }
+    }
+    break;
+  case Patch::numFaces:
+    break;
+  case Patch::invalidFace:
+    break;
+  }
+}
+
+//______________________________________________________________________
+// Update pressure boundary conditions due to hydrostatic pressure
+
+void setHydrostaticPressureBC(CCVariable<double>& press,Patch::FaceType face, 
+			      Vector& gravity,
+			      const CCVariable<double>& rho,
+			      const Vector& dx, IntVector offset )
+{ 
+  IntVector low,hi;
+  low = press.getLowIndex() + offset;
+  hi = press.getHighIndex() - offset;
+  
+  // cout<< "CCVARIABLE LO" << low <<endl;
+  // cout<< "CCVARIABLE HI" << hi <<endl;
+  
+  switch (face) {
+  case Patch::xplus:
+    for (int j = low.y(); j<hi.y(); j++) {
+      for (int k = low.z(); k<hi.z(); k++) {
+	press[IntVector(hi.x()-1,j,k)] = 
+	  press[IntVector(hi.x()-2,j,k)] + 
+	  gravity.x() * rho[IntVector(hi.x()-2,j,k)] * dx.x();
+      }
+    }
+    break;
+  case Patch::xminus:
+    for (int j = low.y(); j<hi.y(); j++) {
+      for (int k = low.z(); k<hi.z(); k++) {
+	press[IntVector(low.x(),j,k)] = 
+	  press[IntVector(low.x()+1,j,k)] - 
+	  gravity.x() * rho[IntVector(low.x()+1,j,k)] * dx.x();;
+      }
+    }
+    break;
+  case Patch::yplus:
+    for (int i = low.x(); i<hi.x(); i++) {
+      for (int k = low.z(); k<hi.z(); k++) {
+	press[IntVector(i,hi.y()-1,k)] = 
+	  press[IntVector(i,hi.y()-2,k)] + 
+	  gravity.y() * rho[IntVector(i,hi.y()-2,k)] * dx.y();
+      }
+    }
+    break;
+  case Patch::yminus:
+    for (int i = low.x(); i<hi.x(); i++) {
+      for (int k = low.z(); k<hi.z(); k++) {
+	press[IntVector(i,low.y(),k)] = 
+	  press[IntVector(i,low.y()+1,k)] - 
+	  gravity.y() * rho[IntVector(i,low.y()+1,k)] * dx.y();
+      }
+    }
+    break;
+  case Patch::zplus:
+    for (int i = low.x(); i<hi.x(); i++) {
+      for (int j = low.y(); j<hi.y(); j++) {
+	press[IntVector(i,j,hi.z()-1)] = 
+	  press[IntVector(i,j,hi.z()-2)] +
+	  gravity.z() * rho[IntVector(i,j,hi.z()-2)] * dx.z();
+      }
+    }
+    break;
+  case Patch::zminus:
+    for (int i = low.x(); i<hi.x(); i++) {
+      for (int j = low.y(); j<hi.y(); j++) {
+	press[IntVector(i,j,low.z())] =
+	  press[IntVector(i,j,low.z()+1)] -  
+	  gravity.z() * rho[IntVector(i,j,low.z()+1)] * dx.z();
+      }
+    }
+    break;
+  case Patch::numFaces:
+    break;
+  case Patch::invalidFace:
+    break;
+  }
+};
+
+ 
 /* --------------------------------------------------------------------- 
  Function~  setBC--
  Purpose~   Takes care Pressure_CC
@@ -42,15 +658,15 @@ void setBC(CCVariable<double>& press_CC,
       continue;
  
     if (sym_bcs != 0) { 
-      press_CC.fillFaceFlux(face,0.0,dx, 1.0, offset);
+      fillFaceFlux(press_CC,face,0.0,dx, 1.0, offset);
     }
 
     if (new_bcs != 0) {
       if (new_bcs->getKind() == "Dirichlet") 
-       press_CC.fillFace(face,new_bcs->getValue());
+       fillFace(press_CC,face,new_bcs->getValue());
 
       if (new_bcs->getKind() == "Neumann") 
-        press_CC.fillFaceFlux(face,new_bcs->getValue(),dx, 1.0, offset);
+        fillFaceFlux(press_CC,face,new_bcs->getValue(),dx, 1.0, offset);
        
       //__________________________________
       //  When gravity is on 
@@ -73,7 +689,7 @@ void setBC(CCVariable<double>& press_CC,
             rho_micro_tmp[c] = rho_micro[c];
           }
         }
-       press_CC.setHydrostaticPressureBC(face, gravity, rho_micro, dx, offset);
+       setHydrostaticPressureBC(press_CC,face, gravity, rho_micro, dx, offset);
       }
     }
   }
@@ -104,7 +720,7 @@ void setBC(CCVariable<double>& variable, const string& kind,
  
     if (sym_bcs != 0) { 
       if (kind == "Density" || kind == "Temperature" || kind == "set_if_sym_BC") {
-        variable.fillFaceFlux(face,0.0,dx, 1.0, offset);
+        fillFaceFlux(variable,face,0.0,dx, 1.0, offset);
       }
     }   
     
@@ -113,11 +729,11 @@ void setBC(CCVariable<double>& variable, const string& kind,
       //  Density_CC
       if (kind == "Density") {
         if (new_bcs->getKind() == "Dirichlet") { 
-         variable.fillFace(face,new_bcs->getValue(), offset);
+         fillFace(variable,face,new_bcs->getValue(), offset);
         }
 
         if (new_bcs->getKind() == "Neumann") {
-         variable.fillFaceFlux(face,new_bcs->getValue(),dx, 1.0, offset);
+         fillFaceFlux(variable,face,new_bcs->getValue(),dx, 1.0, offset);
         }
       }
  
@@ -125,13 +741,13 @@ void setBC(CCVariable<double>& variable, const string& kind,
       // Temperature_CC
       if (kind == "Temperature" ){ 
         if (new_bcs->getKind() == "Dirichlet") { 
-           variable.fillFace(face,new_bcs->getValue(), offset);
+           fillFace(variable,face,new_bcs->getValue(), offset);
         }
            
          // Neumann && gravity                 
         if (new_bcs->getKind() == "Neumann" ) {  
 
-          variable.fillFaceFlux(face,new_bcs->getValue(),dx,1.0, offset);
+          fillFaceFlux(variable,face,new_bcs->getValue(),dx,1.0, offset);
             
           if(fabs(grav.x()) >0.0 ||fabs(grav.y()) >0.0 ||fabs(grav.z()) >0.0) {
             Material *matl = sharedState->getMaterial(mat_id);
@@ -180,24 +796,23 @@ void setBC(CCVariable<Vector>& variable, const string& kind,
     //  It's negInterior since it's on the opposite side of the
     //  plane of symetry
     if (sym_bcs != 0 && (kind == "Velocity" || kind =="set_if_sym_BC") ) {
-    
-      variable.fillFaceFlux(face,Vector(0.,0.,0.),dx, 1.0, offset);
-
-      variable.fillFaceNormal(face);
+      fillFaceFlux(variable,face,Vector(0.,0.,0.),dx, 1.0, offset);
+      fillFaceNormal(variable,face,offset);
     }
+
       
     if (new_bcs != 0 && kind == "Velocity") {
       if (new_bcs->getKind() == "Dirichlet") 
-       variable.fillFace(face,new_bcs->getValue(), offset);
+       fillFace(variable,face,new_bcs->getValue(), offset);
 
       if (new_bcs->getKind() == "Neumann") {
-        variable.fillFaceFlux(face,new_bcs->getValue(),dx, 1.0, offset);
+        fillFaceFlux(variable,face,new_bcs->getValue(),dx, 1.0, offset);
       }      
       if (new_bcs->getKind() == "NegInterior") {
-         variable.fillFaceFlux(face,Vector(0.0,0.0,0.0),dx, -1.0, offset);
+         fillFaceFlux(variable,face,Vector(0.0,0.0,0.0),dx, -1.0, offset);
       }
       if (new_bcs->getKind() == "Neumann_CkValve") {
-        variable.fillFaceFlux(face,new_bcs->getValue(),dx, 1.0, offset);
+        fillFaceFlux(variable,face,new_bcs->getValue(),dx, 1.0, offset);
         checkValveBC( variable, patch, face); 
       }
     }  // end velocity loop
@@ -211,16 +826,23 @@ void setBC(CCVariable<Vector>& variable, const string& kind,
  template<class T> void Neuman_SFC(T& var_FC,
                                    const Patch* patch, 
                                    Patch::FaceType face, 
-                                   const int XYZ_var,
-                                   const double value, 
+				   const double value, 
                                    const Vector& dx,
-                                   IntVector offset = IntVector(0,0,0))
+                                   IntVector offset)
 { 
   //__________________________________
   // Add 1 to low index when no neighbor patches are present
   IntVector low,hi;  
   int numGC = 0;
   low = patch->getCellLowIndex();
+  int XYZ_var;
+  if (typeid(T) == typeid(SFCXVariable<double>))
+    XYZ_var = 0;
+  if (typeid(T) == typeid(SFCYVariable<double>))
+    XYZ_var = 1;
+  if (typeid(T) == typeid(SFCZVariable<double>))
+    XYZ_var = 2;
+
   if (XYZ_var == 0) {         // SFCX_var
     low+=IntVector(patch->getBCType(Patch::xminus)==Patch::Neighbor?numGC:1,
                    patch->getBCType(Patch::yminus)==Patch::Neighbor?numGC:0,
@@ -344,7 +966,7 @@ void setBC(SFCXVariable<double>& variable, const  string& kind,
     if (sym_bcs != 0) {
       Vector dx = patch->dCell();
       // Set the tangential components
-      Neuman_SFC<SFCXVariable<double> >(variable,patch,face,0, 0.0,dx,offset);
+      Neuman_SFC<SFCXVariable<double> >(variable,patch,face, 0.0,dx,offset);
           
       // Set normal component = 0
       if( face == Patch::xplus || face == Patch::xminus ) {
@@ -360,11 +982,13 @@ void setBC(SFCXVariable<double>& variable, const  string& kind,
     if (new_bcs != 0) {
       string kind = new_bcs->getKind();
       if (kind == "Dirichlet" && comp == "x") {
-        variable.fillFace(patch, face,new_bcs->getValue().x(),offset);
+        fillFace<SFCXVariable<double>,double>(variable,patch, face,
+					      new_bcs->getValue().x(),
+					      offset);
       }
       if (kind == "Neumann" && comp == "x") {
         Vector dx = patch->dCell();
-        Neuman_SFC<SFCXVariable<double> >(variable, patch, face, 0,
+        Neuman_SFC<SFCXVariable<double> >(variable, patch, face,
                                           new_bcs->getValue().x(), dx, offset);
       }
     }
@@ -397,7 +1021,7 @@ void setBC(SFCYVariable<double>& variable, const  string& kind,
     if (sym_bcs != 0) {
       Vector dx = patch->dCell();
       // Set the tangential components
-      Neuman_SFC<SFCYVariable<double> >(variable,patch,face,1,0.0,dx, offset); 
+      Neuman_SFC<SFCYVariable<double> >(variable,patch,face,0.0,dx, offset); 
       
       // set normal compoent = 0
       if( face == Patch::yminus || face == Patch::yplus ) {
@@ -413,13 +1037,15 @@ void setBC(SFCYVariable<double>& variable, const  string& kind,
     if (new_bcs != 0) {
       string kind = new_bcs->getKind();
       if (kind == "Dirichlet" && comp == "y") {
-        variable.fillFace(patch, face,new_bcs->getValue().y(),offset);
+        fillFace<SFCYVariable<double>, double >(variable,patch, face,
+			   new_bcs->getValue().y(),
+			   offset);
       }
 
       if (kind == "Neumann" && comp == "y") {
         Vector dx = patch->dCell();    
-        Neuman_SFC<SFCYVariable<double> >(variable, patch, face, 1,
-                                          new_bcs->getValue().y(), dx, offset);
+        Neuman_SFC<SFCYVariable<double> >(variable, patch, face,
+					  new_bcs->getValue().y(), dx, offset);
       }
     }
   }
@@ -452,7 +1078,7 @@ void setBC(SFCZVariable<double>& variable, const  string& kind,
     if (sym_bcs != 0) {
       Vector dx = patch->dCell();
       // Set the tangential components
-      Neuman_SFC<SFCZVariable<double> >(variable,patch,face,2,0.0,dx,offset); 
+      Neuman_SFC<SFCZVariable<double> >(variable,patch,face,0.0,dx,offset); 
       
       // set normal component = 0
       if( face == Patch::zminus || face == Patch::zplus ) {
@@ -468,12 +1094,14 @@ void setBC(SFCZVariable<double>& variable, const  string& kind,
     if (new_bcs != 0) {
       string kind = new_bcs->getKind();
       if (kind == "Dirichlet" && comp == "z") {
-        variable.fillFace(patch, face,new_bcs->getValue().z(),offset);
+        fillFace<SFCZVariable<double>, double >(variable,patch, face,
+			   new_bcs->getValue().z(),
+			   offset);
       }
 
       if (kind == "Neumann" && comp == "z") {
         Vector dx = patch->dCell();
-        Neuman_SFC<SFCZVariable<double> >(variable, patch, face, 2,
+        Neuman_SFC<SFCZVariable<double> >(variable, patch, face,
                                           new_bcs->getValue().z(), dx, offset);
       }
     }
