@@ -192,10 +192,10 @@ TriangleCM2Widget::rasterize(Array3<float>& array, bool faux)
       float g = color_.g()-std::abs(rm-jrm+1)*dg;
       float b = color_.b()-std::abs(rm-jrm+1)*db;
       for(int j=jrm-1; j>=jrb; j--, a-=da, r-=dr, b-=db, g-=dg) {
-        array(i,j,0) = array(i,j,0)*(1-a) + r;
-        array(i,j,1) = array(i,j,1)*(1-a) + g;
-        array(i,j,2) = array(i,j,2)*(1-a) + b;
-        array(i,j,3) = array(i,j,3)*(1-a) + a;
+        array(i,j,0) = CLAMP(array(i,j,0)*(1-a) + r, 0.0f, 1.0f);
+        array(i,j,1) = CLAMP(array(i,j,1)*(1-a) + g, 0.0f, 1.0f);
+        array(i,j,2) = CLAMP(array(i,j,2)*(1-a) + b, 0.0f, 1.0f);
+        array(i,j,3) = CLAMP(array(i,j,3)*(1-a) + a, 0.0f, 1.0f);
       }
       da = alpha_/(re-rm);
       dr = color_.r()/(re-rm);
@@ -228,20 +228,20 @@ TriangleCM2Widget::rasterize(Array3<float>& array, bool faux)
       float da = alpha_/(rm-rb);
       float a = alpha_-std::abs(rm-jrm+1)*da;
       for(int j=jrm-1; j>=jrb; j--, a-=da) {
-        array(i,j,0) = array(i,j,0)*(1-a) + color_.r();
-        array(i,j,1) = array(i,j,1)*(1-a) + color_.g();
-        array(i,j,2) = array(i,j,2)*(1-a) + color_.b();
-        array(i,j,3) = array(i,j,3)*(1-a) + a;
+        array(i,j,0) = CLAMP(array(i,j,0)*(1.0f-a) + (float)color_.r(), 0.0f, 1.0f);
+        array(i,j,1) = CLAMP(array(i,j,1)*(1.0f-a) + (float)color_.g(), 0.0f, 1.0f);
+        array(i,j,2) = CLAMP(array(i,j,2)*(1.0f-a) + (float)color_.b(), 0.0f, 1.0f);
+        array(i,j,3) = CLAMP(array(i,j,3)*(1.0f-a) + a, 0.0f, 1.0f);
       }
       da = alpha_/(re-rm);
       a = alpha_-std::abs(rm-jrm)*da;
       //cerr << mTop.x << " " << fm << " -> " << fe << std::endl;
       for (int j=jrm; j<=jre; j++, a-=da)
       {
-        array(i,j,0) = array(i,j,0)*(1-a) + color_.r();
-        array(i,j,1) = array(i,j,1)*(1-a) + color_.g();
-        array(i,j,2) = array(i,j,2)*(1-a) + color_.b();
-        array(i,j,3) = array(i,j,3)*(1-a) + a;
+        array(i,j,0) = CLAMP(array(i,j,0)*(1.0f-a) + (float)color_.r(), 0.0f, 1.0f);
+        array(i,j,1) = CLAMP(array(i,j,1)*(1.0f-a) + (float)color_.g(), 0.0f, 1.0f);
+        array(i,j,2) = CLAMP(array(i,j,2)*(1.0f-a) + (float)color_.b(), 0.0f, 1.0f);
+        array(i,j,3) = CLAMP(array(i,j,3)*(1.0f-a) + a, 0.0f, 1.0f);
       }
     }
   }
@@ -554,10 +554,10 @@ RectangleCM2Widget::rasterize(Array3<float>& array, bool faux)
           float r = faux ? color_.r()*w : color_.r();
           float g = faux ? color_.r()*w : color_.g();
           float b = faux ? color_.r()*w : color_.b();
-          array(i,j,0) = array(i,j,0)*(1-a) + r;
-          array(i,j,1) = array(i,j,1)*(1-a) + g;
-          array(i,j,2) = array(i,j,2)*(1-a) + b;
-          array(i,j,3) = array(i,j,3)*(1-a) + a;
+          array(i,j,0) = CLAMP(array(i,j,0)*(1.0f-a) + r, 0.0f, 1.0f);
+          array(i,j,1) = CLAMP(array(i,j,1)*(1.0f-a) + g, 0.0f, 1.0f);
+          array(i,j,2) = CLAMP(array(i,j,2)*(1.0f-a) + b, 0.0f, 1.0f);
+          array(i,j,3) = CLAMP(array(i,j,3)*(1.0f-a) + a, 0.0f, 1.0f);
         }
       }
     } break;
@@ -575,10 +575,10 @@ RectangleCM2Widget::rasterize(Array3<float>& array, bool faux)
         for(int j=jra-1; j>=jrb; j--, a-=da, r-=dr, b-=db, g-=dg) {
           for(int i=ilb; i<=ile; i++) {
           
-            array(i,j,0) = array(i,j,0)*(1-a) + r;
-            array(i,j,1) = array(i,j,1)*(1-a) + g;
-            array(i,j,2) = array(i,j,2)*(1-a) + b;
-            array(i,j,3) = array(i,j,3)*(1-a) + a;
+            array(i,j,0) = CLAMP(array(i,j,0)*(1.0f-a) + r, 0.0f, 1.0f);
+            array(i,j,1) = CLAMP(array(i,j,1)*(1.0f-a) + g, 0.0f, 1.0f);
+            array(i,j,2) = CLAMP(array(i,j,2)*(1.0f-a) + b, 0.0f, 1.0f);
+            array(i,j,3) = CLAMP(array(i,j,3)*(1.0f-a) + a, 0.0f, 1.0f);
           }
         }
         da = ra < re-1 ? alpha_/(re-ra-1) : 0.0;
@@ -591,10 +591,10 @@ RectangleCM2Widget::rasterize(Array3<float>& array, bool faux)
         b = color_.b()-std::abs(ra-jra)*db;
         for(int j=jra; j<=jre; j++, a-=da, r-=dr, b-=db, g-=dg) {
           for(int i=ilb; i<=ile; i++) {
-            array(i,j,0) = array(i,j,0)*(1-a) + r;
-            array(i,j,1) = array(i,j,1)*(1-a) + g;
-            array(i,j,2) = array(i,j,2)*(1-a) + b;
-            array(i,j,3) = array(i,j,3)*(1-a) + a;
+            array(i,j,0) = CLAMP(array(i,j,0)*(1.0f-a) + r, 0.0f, 1.0f);
+            array(i,j,1) = CLAMP(array(i,j,1)*(1.0f-a) + g, 0.0f, 1.0f);
+            array(i,j,2) = CLAMP(array(i,j,2)*(1.0f-a) + b, 0.0f, 1.0f);
+            array(i,j,3) = CLAMP(array(i,j,3)*(1.0f-a) + a, 0.0f, 1.0f);
           }
         }
       } else { // !faux
@@ -602,20 +602,20 @@ RectangleCM2Widget::rasterize(Array3<float>& array, bool faux)
         float a = ra <= rb+1 ? alpha_ : alpha_-std::abs(ra-jra)*da;
         for(int j=jra-1; j>=jrb; j--, a-=da) {
           for(int i=ilb; i<=ile; i++) {
-            array(i,j,0) = array(i,j,0)*(1-a) + color_.r();
-            array(i,j,1) = array(i,j,1)*(1-a) + color_.g();
-            array(i,j,2) = array(i,j,2)*(1-a) + color_.b();
-            array(i,j,3) = array(i,j,3)*(1-a) + a;
+            array(i,j,0) = CLAMP(array(i,j,0)*(1.0f-a) + (float)color_.r(), 0.0f, 1.0f);
+            array(i,j,1) = CLAMP(array(i,j,1)*(1.0f-a) + (float)color_.g(), 0.0f, 1.0f);
+            array(i,j,2) = CLAMP(array(i,j,2)*(1.0f-a) + (float)color_.b(), 0.0f, 1.0f);
+            array(i,j,3) = CLAMP(array(i,j,3)*(1.0f-a) + a, 0.0f, 1.0f);
           }
         }
         da = ra < re-1 ? alpha_/(re-ra-1) : 0.0;
         a = alpha_-std::abs(ra-jra)*da;
         for(int j=jra; j<=jre; j++, a-=da) {
           for(int i=ilb; i<=ile; i++) {
-            array(i,j,0) = array(i,j,0)*(1-a) + color_.r();
-            array(i,j,1) = array(i,j,1)*(1-a) + color_.g();
-            array(i,j,2) = array(i,j,2)*(1-a) + color_.b();
-            array(i,j,3) = array(i,j,3)*(1-a) + a;
+            array(i,j,0) = CLAMP(array(i,j,0)*(1.0f-a) + (float)color_.r(), 0.0f, 1.0f);
+            array(i,j,1) = CLAMP(array(i,j,1)*(1.0f-a) + (float)color_.g(), 0.0f, 1.0f);
+            array(i,j,2) = CLAMP(array(i,j,2)*(1.0f-a) + (float)color_.b(), 0.0f, 1.0f);
+            array(i,j,3) = CLAMP(array(i,j,3)*(1.0f-a) + a, 0.0f, 1.0f);
           }
         }
       }
