@@ -70,48 +70,48 @@ itcl_class BioPSE_Modeling_ModifyConductivities {
 		    set $this-m22-$i 1.0
 		}
 
-		if {![winfo exists $w.f.tensors.e-$i]} {
-		    frame $w.f.tensors.e-$i
-		    entry $w.f.tensors.e-$i.name \
+		if {![winfo exists $w.tensors.e-$i]} {
+		    frame $w.tensors.e-$i
+		    entry $w.tensors.e-$i.name \
 			-textvariable $this-names-$i -width 16
-		    entry $w.f.tensors.e-$i.scale \
+		    entry $w.tensors.e-$i.scale \
 			-textvariable $this-sizes-$i -width 8
-		    entry $w.f.tensors.e-$i.m00 \
+		    entry $w.tensors.e-$i.m00 \
 			-textvariable $this-m00-$i -width 6
-		    entry $w.f.tensors.e-$i.m01 \
+		    entry $w.tensors.e-$i.m01 \
 			-textvariable $this-m01-$i -width 6
-		    entry $w.f.tensors.e-$i.m02 \
+		    entry $w.tensors.e-$i.m02 \
 			-textvariable $this-m02-$i -width 6
-		    entry $w.f.tensors.e-$i.m10 \
+		    entry $w.tensors.e-$i.m10 \
 			-textvariable $this-m10-$i -width 6
-		    entry $w.f.tensors.e-$i.m11 \
+		    entry $w.tensors.e-$i.m11 \
 			-textvariable $this-m11-$i -width 6
-		    entry $w.f.tensors.e-$i.m12 \
+		    entry $w.tensors.e-$i.m12 \
 			-textvariable $this-m12-$i -width 6
-		    entry $w.f.tensors.e-$i.m20 \
+		    entry $w.tensors.e-$i.m20 \
 			-textvariable $this-m20-$i -width 6
-		    entry $w.f.tensors.e-$i.m21 \
+		    entry $w.tensors.e-$i.m21 \
 			-textvariable $this-m21-$i -width 6
-		    entry $w.f.tensors.e-$i.m22 \
+		    entry $w.tensors.e-$i.m22 \
 			-textvariable $this-m22-$i -width 6
-		    pack $w.f.tensors.e-$i.name $w.f.tensors.e-$i.scale \
-			$w.f.tensors.e-$i.m00 \
-			$w.f.tensors.e-$i.m01 \
-			$w.f.tensors.e-$i.m02 \
-			$w.f.tensors.e-$i.m10 \
-			$w.f.tensors.e-$i.m11 \
-			$w.f.tensors.e-$i.m12 \
-			$w.f.tensors.e-$i.m20 \
-			$w.f.tensors.e-$i.m21 \
-			$w.f.tensors.e-$i.m22 \
+		    pack $w.tensors.e-$i.name $w.tensors.e-$i.scale \
+			$w.tensors.e-$i.m00 \
+			$w.tensors.e-$i.m01 \
+			$w.tensors.e-$i.m02 \
+			$w.tensors.e-$i.m10 \
+			$w.tensors.e-$i.m11 \
+			$w.tensors.e-$i.m12 \
+			$w.tensors.e-$i.m20 \
+			$w.tensors.e-$i.m21 \
+			$w.tensors.e-$i.m22 \
 			-side left
-		    pack $w.f.tensors.e-$i
+		    pack $w.tensors.e-$i
 		}
 	    }
 
 	    # Destroy all the left over entries from prior runs.
-	    while {[winfo exists $w.f.tensors.e-$i]} {
-		destroy $w.f.tensors.e-$i
+	    while {[winfo exists $w.tensors.e-$i]} {
+		destroy $w.tensors.e-$i
 		incr i
 	    }
 	}
@@ -128,50 +128,50 @@ itcl_class BioPSE_Modeling_ModifyConductivities {
 
 	wm minsize $w 200 150
 
-	frame $w.f
-	
-	frame $w.f.tensors
+	canvas $w.tensors -yscrollcommand "$w.vscroll set" \
+	    -scrollregion { 0 0 78c 8c }
+	#pack propagate $w.tensors false
 
-	scrollbar $w.f.tensors.v -orient vertical -command "$w.f.tensors yview"
-	pack $w.f.tensors.v -side right -expand y -fill y
+	scrollbar $w.vscroll -orient vertical -command "$w.tensors yview"
 
-	frame $w.f.tensors.title
-	label $w.f.tensors.title.name -text "Material Name" \
+	frame $w.title
+	label $w.title.name -text "Material Name" \
 	    -width 16 -relief groove
-	label $w.f.tensors.title.scale -text "Scale" -width 8 -relief groove
-	label $w.f.tensors.title.m00 -text "M00" -width 6 -relief groove
-	label $w.f.tensors.title.m01 -text "M01" -width 6 -relief groove
-	label $w.f.tensors.title.m02 -text "M02" -width 6 -relief groove
-	label $w.f.tensors.title.m10 -text "M10" -width 6 -relief groove
-	label $w.f.tensors.title.m11 -text "M11" -width 6 -relief groove
-	label $w.f.tensors.title.m12 -text "M12" -width 6 -relief groove
-	label $w.f.tensors.title.m20 -text "M20" -width 6 -relief groove
-	label $w.f.tensors.title.m21 -text "M21" -width 6 -relief groove
-	label $w.f.tensors.title.m22 -text "M22" -width 6 -relief groove
-	pack $w.f.tensors.title.name $w.f.tensors.title.scale \
-	    $w.f.tensors.title.m00 \
-	    $w.f.tensors.title.m01 \
-	    $w.f.tensors.title.m02 \
-	    $w.f.tensors.title.m10 \
-	    $w.f.tensors.title.m11 \
-	    $w.f.tensors.title.m12 \
-	    $w.f.tensors.title.m20 \
-	    $w.f.tensors.title.m21 \
-	    $w.f.tensors.title.m22 \
+	label $w.title.scale -text "Scale" -width 8 -relief groove
+	label $w.title.m00 -text "M00" -width 6 -relief groove
+	label $w.title.m01 -text "M01" -width 6 -relief groove
+	label $w.title.m02 -text "M02" -width 6 -relief groove
+	label $w.title.m10 -text "M10" -width 6 -relief groove
+	label $w.title.m11 -text "M11" -width 6 -relief groove
+	label $w.title.m12 -text "M12" -width 6 -relief groove
+	label $w.title.m20 -text "M20" -width 6 -relief groove
+	label $w.title.m21 -text "M21" -width 6 -relief groove
+	label $w.title.m22 -text "M22" -width 6 -relief groove
+	pack $w.title.name $w.title.scale \
+	    $w.title.m00 $w.title.m01 $w.title.m02 \
+	    $w.title.m10 $w.title.m11 $w.title.m12 \
+	    $w.title.m20 $w.title.m21 $w.title.m22 \
 	    -side left
-	pack $w.f.tensors.title -side top
 
-	frame $w.f.controls
-	button $w.f.controls.execute -text "Execute" \
+	frame $w.controls
+	button $w.controls.execute -text "Execute" \
 	    -command "$this-c needexecute"
-	button $w.f.controls.reset -text "Reset" \
+	button $w.controls.reset -text "Reset" \
 	    -command "$this-c reset_gui"
-	pack $w.f.controls.execute $w.f.controls.reset \
+	pack $w.controls.execute $w.controls.reset \
 	    -side left -fill x -expand y
 
-	pack $w.f.tensors -side top -anchor n
-	pack $w.f.controls -anchor s -expand y -fill x
-	pack $w.f
+	grid rowconfig    $w 0 -weight 1 -minsize 0
+	grid columnconfig $w 0 -weight 1 -minsize 0
+	
+	grid $w.title -in $w -padx 1 -pady 1 \
+	    -row 0 -column 0 -rowspan 1 -columnspan 1 -sticky news
+	grid $w.vscroll -in $w -padx 1 -pady 1 \
+	    -row 1 -column 1 -rowspan 1 -columnspan 1 -sticky news
+	grid $w.tensors -in $w -padx 1 -pady 1 \
+	    -row 1 -column 0 -rowspan 1 -columnspan 1 -sticky news
+	grid $w.controls -in $w -padx 1 -pady 1 \
+	    -row 2 -column 0 -rowspan 1 -columnspan 1 -sticky news
 
 	create_entries
     }
