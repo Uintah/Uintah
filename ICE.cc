@@ -290,7 +290,8 @@ void ICE::scheduleTimeAdvance(double t, double dt,const LevelP& level,
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
   const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
   const MaterialSet* all_matls = d_sharedState->allMaterials();  
-  const MaterialSubset* press_matl    = scinew MaterialSubset();
+  MaterialSubset* press_matl    = scinew MaterialSubset();
+  press_matl->add(0);
   press_matl ->addReference();
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
   const MaterialSubset* mpm_matls_sub = mpm_matls->getUnion();
