@@ -74,6 +74,7 @@ using namespace SCIRun;
       void scheduleAccumulateMomentumSourceSinks(SchedulerP&, 
                                             const PatchSet*,
                                             const MaterialSubset*,
+                                            const MaterialSubset*,
 						  const MaterialSet*);
       
       void scheduleAccumulateEnergySourceSinks(SchedulerP&, 
@@ -333,6 +334,30 @@ using namespace SCIRun;
 			  CCVariable<eflux>& r_out_y_CF,
 			  CCVariable<eflux>& r_out_z_CF,
 			  const Vector& dx);
+
+      void computeTauX_LeftandRightCellFace( const CCVariable<Vector> vel_CC,
+                          const IntVector curcell,
+                          const double viscosity,
+                          const Vector dx,
+                          StaticArray<double>& tau_XX,
+                          StaticArray<double>& tau_XY,
+                          StaticArray<double>& tau_XZ);
+                          
+      void computeTauY_BottomandTopCellFace( const CCVariable<Vector> vel_CC,
+                          const IntVector curcell,
+                          const double viscosity,
+                          const Vector dx,
+                          StaticArray<double>& tau_YX,
+                          StaticArray<double>& tau_YY,
+                          StaticArray<double>& tau_YZ);
+                          
+      void computeTauZ_BackandFrontCellFace( const CCVariable<Vector> vel_CC,
+                          const IntVector curcell,
+                          const double viscosity,
+                          const Vector dx,
+                          StaticArray<double>& tau_ZY,
+                          StaticArray<double>& tau_ZX,
+                          StaticArray<double>& tau_ZZ);
                    
        void printData_FC(const  Patch* patch,int include_GC,char message1[],
 		      char message2[], const SFCXVariable<double>& q_FC);
