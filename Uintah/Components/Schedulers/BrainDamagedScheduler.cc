@@ -12,6 +12,7 @@ static char *id="@(#) $Id$";
 #include <SCICore/Thread/ThreadPool.h>
 #include <iostream>
 #include <set>
+#include <algorithm>
 
 using namespace Uintah;
 
@@ -229,6 +230,9 @@ TaskRecord::TaskRecord(Task* t)
 
 //
 // $Log$
+// Revision 1.9  2000/04/28 21:12:04  jas
+// Added some includes to get it to compile on linux.
+//
 // Revision 1.8  2000/04/26 06:48:32  sparker
 // Streamlined namespaces
 //
