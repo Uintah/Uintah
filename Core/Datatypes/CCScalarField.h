@@ -2,10 +2,10 @@
 #define SCI_project_CCScalarField_h 1
 
 //#include "Packages/UintahScalarField.h"
-#include <Packages/Uintah/Core/Variables/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
-#include <Packages/Uintah/Core/Variables/CellIterator.h>
+#include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 
 #include <Core/Datatypes/ScalarFieldRGBase.h>
 #include <Core/Geometry/IntVector.h>

@@ -3,8 +3,8 @@
 #include <Core/Malloc/Allocator.h>
 #include <Uintah/Core/Datatypes/TensorParticles.h>
 #include <Uintah/Core/Datatypes/ScalarParticles.h>
-#include <Uintah/Core/Variables/ParticleVariable.h>
-#include <Uintah/Core/Variables/ParticleSubset.h>
+#include <Uintah/Core/Grid/Variables/ParticleVariable.h>
+#include <Uintah/Core/Grid/Variables/ParticleSubset.h>
 
 //#include <SCICore/Math/Mat.h>
 

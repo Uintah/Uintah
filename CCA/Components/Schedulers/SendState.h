@@ -3,7 +3,7 @@
 
 #include <map>
 #include <Packages/Uintah/Core/Grid/Ghost.h>
-#include <Packages/Uintah/Core/Variables/PSPatchMatlGhost.h>
+#include <Packages/Uintah/Core/Grid/Variables/PSPatchMatlGhost.h>
 
 namespace Uintah {
   using namespace std;

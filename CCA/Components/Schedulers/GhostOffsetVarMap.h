@@ -21,8 +21,8 @@
 #define UINTAH_GHOSTOFFSETVARMAP_H
 
 #include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Variables/ComputeSet.h>
-#include <Packages/Uintah/Core/Variables/VarLabelMatlPatch.h>
+#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
+#include <Packages/Uintah/Core/Grid/Variables/VarLabelMatlPatch.h>
 #include <Packages/Uintah/Core/Grid/Ghost.h>
 #include <map>
 

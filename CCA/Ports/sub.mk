@@ -17,6 +17,7 @@ SRCS += $(SRCDIR)/SimulationInterface.cc \
 
 PSELIBS := \
 	Packages/Uintah/Core/Parallel    \
+	Packages/Uintah/Core/Util        \
 	Packages/Uintah/Core/Grid        \
 	Packages/Uintah/Core/Disclosure  \
 	Packages/Uintah/Core/Exceptions  \

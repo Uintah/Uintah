@@ -1,12 +1,11 @@
 #ifndef UINTAH_HOMEBREW_DWDatabase_H
 #define UINTAH_HOMEBREW_DWDatabase_H
 
-#include <Packages/Uintah/Core/Exceptions/UnknownVariable.h>
-#include <Packages/Uintah/Core/Variables/VarLabel.h>
+#include <Packages/Uintah/Core/Grid/UnknownVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/MemoryLog.h>
-#include <Packages/Uintah/Core/Variables/VarLabelMatlDW.h>
-#include <Packages/Uintah/Core/Variables/VarLabelMatl.h>
-#include <Packages/Uintah/Core/Variables/VarLabelMatl.h>
+#include <Packages/Uintah/Core/Grid/Variables/VarLabelMatlDW.h>
+#include <Packages/Uintah/Core/Grid/Variables/VarLabelMatl.h>
 
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
 

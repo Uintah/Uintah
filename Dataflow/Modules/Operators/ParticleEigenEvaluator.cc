@@ -4,7 +4,7 @@
 #include <Uintah/Core/Datatypes/TensorParticles.h>
 #include <Uintah/Core/Datatypes/ScalarParticles.h>
 #include <Uintah/Core/Datatypes/VectorParticles.h>
-#include <Uintah/Core/Variables/ShareAssignParticleVariable.h>
+#include <Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
 
 namespace Uintah {
 

@@ -1,7 +1,7 @@
 #ifndef UINTAH_HOMEBREW_ICELABEL_H
 #define UINTAH_HOMEBREW_ICELABEL_H
 
-#include <Packages/Uintah/Core/Variables/VarLabel.h>
+#include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
 
 namespace Uintah {
 
