@@ -76,36 +76,36 @@ c*********************************************************************
       iEndGhostU = domHiU(1)
       jEndGhostU = domHiU(2)
       kEndGhostU = domHiU(3)
-      ISTU = idxLoU(1)
-      JSTU = idxLoU(2)
-      KSTU = idxLoU(3)
-      IENDU = idxHiU(1)
-      JENDU = idxHiU(2)
-      KENDU = idxHiU(3)
+      ISTU = iBegGhostU + 1
+      JSTU = jBegGhostU + 1
+      KSTU = kBegGhostU + 1
+      IENDU = iEndGhostU - 1
+      JENDU = jEndGhostU - 1
+      KENDU = kEndGhostU - 1
       iBegGhostV = domLoV(1)
       jBegGhostV = domLoV(2)
       kBegGhostV = domLoV(3)
       iEndGhostV = domHiV(1)
       jEndGhostV = domHiV(2)
       kEndGhostV = domHiV(3)
-      ISTV = idxLoV(1)
-      JSTV = idxLoV(2)
-      KSTV = idxLoV(3)
-      IENDV = idxHiV(1)
-      JENDV = idxHiV(2)
-      KENDV = idxHiV(3)
+      ISTV = iBegGhostV + 1
+      JSTV = jBegGhostV + 1
+      KSTV = kBegGhostV + 1
+      IENDV = iEndGhostV - 1
+      JENDV = jEndGhostV - 1
+      KENDV = kEndGhostV - 1
       iBegGhostW = domLoW(1)
       jBegGhostW = domLoW(2)
       kBegGhostW = domLoW(3)
       iEndGhostW = domHiW(1)
       jEndGhostW = domHiW(2)
       kEndGhostW = domHiW(3)
-      ISTW = idxLoW(1)
-      JSTW = idxLoW(2)
-      KSTW = idxLoW(3)
-      IENDW = idxHiW(1)
-      JENDW = idxHiW(2)
-      KENDW = idxHiW(3)
+      ISTW = iBegGhostW + 1
+      JSTW = jBegGhostW + 1
+      KSTW = kBegGhostW + 1
+      IENDW = iEndGhostW - 1
+      JENDW = jEndGhostW - 1
+      KENDW = kEndGhostW - 1
 
 C-------------------------------------------------------------------- 
 C     CALCULATION OF U IN PRIMARY STREAMS
@@ -191,6 +191,9 @@ c            WW(I,J,NK+1) = -AVGVELP
 c*********************************************************************
 c
 c $Log$
+c Revision 1.5  2000/08/08 23:34:20  rawat
+c fixed some bugs in profv.F and Properties.cc
+c
 c Revision 1.4  2000/06/30 22:41:19  bbanerje
 c Corrected behavior of profv and profscalar
 c

@@ -171,7 +171,7 @@ Properties::computeProps(const ProcessorGroup*,
 	    (scalar[ii])[IntVector(colX, colY, colZ)]/d_streams[ii].d_density;
 	  mixFracSum += (scalar[ii])[IntVector(colX, colY, colZ)];
 	}
-	local_den += (1.0 - mixFracSum)/d_streams[d_numMixingVars-1].d_density;
+	local_den += (1.0 - mixFracSum)/d_streams[d_numMixingVars].d_density;
 	// std::cerr << "local_den " << local_den << endl;
 	if (local_den <= 0.0)
 	  throw InvalidValue("Computed zero density in props" );
@@ -276,6 +276,9 @@ Properties::Stream::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.26  2000/08/08 23:34:18  rawat
+// fixed some bugs in profv.F and Properties.cc
+//
 // Revision 1.25  2000/08/04 03:02:01  bbanerje
 // Add some inits.
 //
