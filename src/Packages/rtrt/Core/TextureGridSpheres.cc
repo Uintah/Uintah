@@ -47,16 +47,18 @@ namespace rtrt {
 //#define USE_MINMAX_FOR_RENDERING 1
 
 TextureGridSpheres::TextureGridSpheres(float* spheres, size_t nspheres,
-				     float radius,
-				     int *tex_indices,
-				     unsigned char *tex_data, size_t ntextures,
-				     int tex_res,
-				     int nsides, int depth)
+				       float radius,
+				       int *tex_indices,
+				       unsigned char* tex_data, size_t ntextures,
+				       int tex_res,
+				       int nsides, int depth,
+				       const Color& color)
   : Object(this),
     spheres(spheres), nspheres(nspheres), radius(radius),
     tex_indices(tex_indices), tex_data(tex_data), ntextures(ntextures),
     tex_res(tex_res),
     cellsize(nsides), depth(depth),
+    color(color),
     ndata(3), preprocessed(false)
 {
   counts=0;
@@ -1233,7 +1235,7 @@ void TextureGridSpheres::shade(Color& result, const Ray& ray,
     v=0;
 
   // Get the pointer into the texture
-  unsigned char *texture = tex_data + (tex_index * tex_res * tex_res * 3);
+  unsigned char *texture = tex_data + (tex_index * tex_res * tex_res);
 
   Color surface_color = interp_color(texture, u, v);
 
@@ -1255,7 +1257,7 @@ void TextureGridSpheres::get_uv(UV& uv, const Point& hitpos, const Point& cen)
 }
 
 Color TextureGridSpheres::interp_color(unsigned char *image,
-				      double u, double v)
+				       double u, double v)
 {
 #if 0
   u *= tex_res;
@@ -1267,15 +1269,11 @@ Color TextureGridSpheres::interp_color(unsigned char *image,
   int iv = (int)v;
   if (iv == tex_res)
     iv = tex_res - 1;
-  
-  unsigned char *pixel=image + 3*(iv * tex_res + iu);
-  Color c(pixel[0], pixel[1], pixel[2]);
 
-  return c*one_over_255;
+  float lum=*(image + (iv * tex_res + iu));
+
+  return lum*color*one_over_255;
 #else
-  
-  // u & v *= dimensions minus the slop(2) and the zero base difference (1)
-  // for a total of 3
   u *= tex_res;
   int iu = (int)u;
   int iu_high;
@@ -1293,25 +1291,17 @@ Color TextureGridSpheres::interp_color(unsigned char *image,
     iv = tex_res - 2;
   double v_weight_high = v-iv;
 
-  unsigned char *pixel;
-  pixel = image + (iv * tex_res + iu)*3;
-  Color c00(pixel[0], pixel[1], pixel[2]);
+  float lum00 = *(image + (iv * tex_res + iu));
+  float lum01 = *(image + (iv * tex_res + iu_high));
+  float lum10 = *(image + ((iv+1) * tex_res + iu));
+  float lum11 = *(image + ((iv+1) * tex_res + iu_high));
+  
+  float lum = 
+    lum00*(1-u_weight_high)*(1-v_weight_high)+
+    lum01*   u_weight_high *(1-v_weight_high)+
+    lum10*(1-u_weight_high)*   v_weight_high +
+    lum11*   u_weight_high *   v_weight_high;
 
-  pixel = image + (iv * tex_res + iu_high)*3;
-  Color c01(pixel[0], pixel[1], pixel[2]);
-
-  pixel = image + ((iv+1) * tex_res + iu)*3;
-  Color c10(pixel[0], pixel[1], pixel[2]);
-
-  pixel = image + ((iv+1) * tex_res + iu_high)*3;
-  Color c11(pixel[0], pixel[1], pixel[2]);
-
-  Color c =
-    c00*(1-u_weight_high)*(1-v_weight_high)+
-    c01*   u_weight_high *(1-v_weight_high)+
-    c10*(1-u_weight_high)*   v_weight_high +
-    c11*   u_weight_high *   v_weight_high;
-
-  return c*one_over_255;
+  return lum*color*one_over_255;
 #endif
 }
