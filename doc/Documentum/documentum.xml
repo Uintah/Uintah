@@ -898,17 +898,56 @@ thus and such<sgmltag class="endtag">quote</sgmltag>.</para>
 </listitem>
 </varlistentry>
 <varlistentry>
-<term>Ellipsis</term>
+<term>Horizontal Ellipsis</term>
 <listitem>
 <para>Use <sgmltag class="genentity">hellip</sgmltag> to produce
 ellipsis.</para> 
 
-<para>Rather than typing <sgmltag
-class="starttag">quote</sgmltag>He said thus and such and ...<sgmltag
-class="endtag">quote</sgmltag>, type <sgmltag
-class="starttag">quote</sgmltag>He said thus and such and <sgmltag
-class="genentity">hellip</sgmltag><sgmltag
-class="endtag">quote</sgmltag></para>
+<para>Rather than typing:
+<literallayout> 
+<![CDATA[
+<quote>He said thus and such and ...</quote>
+]]>
+</literallayout>
+type:
+<![CDATA[
+<quote>He said thus and such and &hellip;</quote>
+]]>
+</para>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>Vertical Ellipsis</term>
+<listitem>
+<para>Use <sgmltag class="genentity">vellip</sgmltag> to produce
+ellipsis.</para> 
+
+<para>Type:
+<literallayout>
+<![CDATA[
+<para>
+&vellip;
+Above me and below me there is stuff.
+&vellip;
+</para>
+]]>
+</literallayout>
+rather than:
+<literallayout>
+<![CDATA[
+<para>
+.
+.
+.
+Above me and below me there is stuff.
+.
+.
+.
+</para>
+]]>
+</literallayout>
+</para>
+
 </listitem>
 </varlistentry>
 <varlistentry>
