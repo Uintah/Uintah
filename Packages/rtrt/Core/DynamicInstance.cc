@@ -1,0 +1,62 @@
+
+#include <Packages/rtrt/Core/DynamicInstance.h>
+
+#include <Packages/rtrt/Core/Stealth.h>
+#include <Packages/rtrt/Core/Camera.h>
+
+using namespace rtrt;
+using namespace SCIRun;
+
+DynamicInstance::DynamicInstance(InstanceWrapperObject * obj,
+				 Transform * trans,
+				 const Vector & location ) :
+  Instance(obj, trans),
+  origTransform(trans),
+  location_(location)
+{
+  currentTransform = new Transform(*trans); // Parent's variable.
+  newTransform     = new Transform(*trans);
+
+  bbox.extend( Point(0,0,0), 2 );
+}
+
+DynamicInstance::~DynamicInstance()
+{
+}
+
+void
+DynamicInstance::updateNewTransform( const float trans[4][4] )
+{
+  double mat[4][4];
+  for(int i=0;i<4;i++){
+    for(int j=0;j<4;j++){
+      mat[i][j]= trans[i][j];
+    }
+  }
+  newTransform->set( (double*)mat );
+  newTransform->pre_translate( location_ );
+}
+
+void
+DynamicInstance::updatePosition( const Stealth * stealth, const Camera * cam )
+{
+  double rotational_speed_damper = 100;
+  double speed;
+
+  Vector up, side;
+  //Vector forward = cam->get_lookat() - cam->get_eye();
+  cam->get_viewplane( up, side );
+
+  *newTransform = *origTransform;
+
+  if( ( speed = stealth->getSpeed(3) ) != 0 ) // Pitching
+    {
+      newTransform->post_rotate( speed/rotational_speed_damper, side );
+    }
+
+  if( ( speed = stealth->getSpeed(4) ) != 0 ) // Rotating
+    {
+      newTransform->post_rotate( -speed/rotational_speed_damper, up );
+    }
+
+}
