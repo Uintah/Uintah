@@ -18,9 +18,9 @@ using std::ostringstream;
 #include <tcl.h>
 #include <tk.h>
 
-#include <Core/2d/TclObj.h>
 #include <Core/2d/Graph.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/GuiInterface/TclObj.h>
 #include <Core/GuiInterface/TCLTask.h>
 #include <Core/GuiInterface/TCL.h>
 
