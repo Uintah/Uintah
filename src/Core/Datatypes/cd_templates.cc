@@ -274,6 +274,13 @@ TetVol<double>::query_scalar_interface() const
 
 template <>
 ScalarFieldInterface *
+TetVol<float>::query_scalar_interface() const
+{
+  return scinew SFInterface<TetVol<float> >(this);
+}
+
+template <>
+ScalarFieldInterface *
 TetVol<int>::query_scalar_interface() const
 {
   return scinew SFInterface<TetVol<int> >(this);
@@ -312,6 +319,13 @@ LatticeVol<double>::query_scalar_interface() const
 
 template <>
 ScalarFieldInterface *
+LatticeVol<float>::query_scalar_interface() const
+{
+  return scinew SFInterface<LatticeVol<float> >(this);
+}
+
+template <>
+ScalarFieldInterface *
 LatticeVol<int>::query_scalar_interface() const
 {
   return scinew SFInterface<LatticeVol<int> >(this);
@@ -346,6 +360,13 @@ ScalarFieldInterface *
 TriSurf<double>::query_scalar_interface() const
 {
   return scinew SFInterface<TriSurf<double> >(this);
+}
+
+template <>
+ScalarFieldInterface *
+TriSurf<float>::query_scalar_interface() const
+{
+  return scinew SFInterface<TriSurf<float> >(this);
 }
 
 template <>
