@@ -226,7 +226,7 @@ void BuildTriFEMatrix::build_local_matrix(double lcl_a[3][3],
   double area = hMesh_->get_gradient_basis(f_ind, grad1, grad2, grad3);
  
   typedef double onerow[3]; // This 'hack' is necessary to compile under IRIX CC
-  onerow *el_cond;
+  const onerow *el_cond;
 
   if (index_based_) el_cond = tens_[hFieldInt_->value(f_ind)].second.mat_;
   else el_cond = hFieldTensor_->value(f_ind).mat_;

@@ -78,10 +78,10 @@ public:
   void set_value(const value_type &val, typename mesh_type::Cell::index_type i);
 
   //! No safety check for the following calls, be sure you know where data is.
-  value_type value(typename mesh_type::Node::index_type i) const;
-  value_type value(typename mesh_type::Edge::index_type i) const;
-  value_type value(typename mesh_type::Face::index_type i) const;
-  value_type value(typename mesh_type::Cell::index_type i) const;
+  const value_type &value(typename mesh_type::Node::index_type i) const;
+  const value_type &value(typename mesh_type::Edge::index_type i) const;
+  const value_type &value(typename mesh_type::Face::index_type i) const;
+  const value_type &value(typename mesh_type::Cell::index_type i) const;
 
   virtual void resize_fdata();
 
@@ -327,25 +327,25 @@ GenericField<Mesh, FData>::set_value(const value_type &val, typename mesh_type::
 }
 
 template <class Mesh, class FData>
-typename GenericField<Mesh, FData>::value_type
+const typename GenericField<Mesh, FData>::value_type &
 GenericField<Mesh, FData>::value(typename mesh_type::Node::index_type i) const
 {
   return fdata_[i];
 }
 template <class Mesh, class FData>
-typename GenericField<Mesh, FData>::value_type
+const typename GenericField<Mesh, FData>::value_type &
 GenericField<Mesh, FData>::value(typename mesh_type::Edge::index_type i) const
 {
   return fdata_[i];
 }
 template <class Mesh, class FData>
-typename GenericField<Mesh, FData>::value_type
+const typename GenericField<Mesh, FData>::value_type &
 GenericField<Mesh, FData>::value(typename mesh_type::Face::index_type i) const 
 {
   return fdata_[i];
 }
 template <class Mesh, class FData>
-typename GenericField<Mesh, FData>::value_type
+const typename GenericField<Mesh, FData>::value_type &
 GenericField<Mesh, FData>::value(typename mesh_type::Cell::index_type i) const 
 {
   return fdata_[i];
