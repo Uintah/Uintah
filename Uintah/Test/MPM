@@ -11,6 +11,7 @@ TESTS = [   ("disks.ups",   	    ["dbg", "opt"]),    \
 	    ("disksel.ups",	    ["dbg", "opt"]), 	\
 	    ("disksf.ups",  	    ["dbg", "opt"]),	\
 	    ("disksplas.ups",	    ["dbg", "opt"]), 	\
+	    ("heatcond2mat.ups",    ["dbg", "opt"]),	\
 	    ("rodsplas.ups",	    [       "opt"]) 	\
     	]
 
