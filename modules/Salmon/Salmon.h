@@ -14,7 +14,9 @@
 #define SCI_project_module_Salmon_h
 
 #include <Module.h>
+#include <GeometryPort.h>
 #include <Classlib/Array1.h>
+#include <Multitask/ITC.h>
 class CallbackData;
 class DialogShellC;
 class DrawingAreaC;
@@ -44,6 +46,10 @@ class Salmon : public Module {
     FrameC* gr_frame;
     GLwMDrawC* graphics;
 
+    int max_portno;
+    // Per port information
+    
+
     //gotta store the geometry!
 
 public:
@@ -51,8 +57,10 @@ public:
     Salmon(const Salmon&, int deep);
     virtual ~Salmon();
     virtual Module* clone(int deep);
-    void addObj(int serial, GeomObj *obj);
-    void delObj(int serial);
+    void initPort(Mailbox<int>*);
+    void addObj(int portno, GeomID serial, GeomObj *obj);
+    void delObj(int portno, GeomID serial);
+    void delAll(int portno);
     void addTopRoe(Roe *r);
     void makeTopRoe();
     void delTopRoe(Roe *r);
