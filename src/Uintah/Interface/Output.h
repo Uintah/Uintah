@@ -56,6 +56,13 @@ WARNING
       virtual void problemSetup(const ProblemSpecP& params) = 0;
 
       //////////
+      // Call this when restarting from a checkpoint after calling
+      // problemSetup.
+      virtual void restartSetup(Dir& restartFromDir, int timestep,
+				double time, bool removeOldDir) = 0;
+      
+      
+      //////////
       // Insert Documentation Here:
       virtual void finalizeTimestep(double t, double delt, const LevelP&,
 				    SchedulerP&,
@@ -86,6 +93,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.14  2001/01/06 02:34:03  witzel
+// Added checkpoint/restart capabilities
+//
 // Revision 1.13  2000/09/25 20:39:14  sparker
 // Quiet g++ compiler warnings
 //

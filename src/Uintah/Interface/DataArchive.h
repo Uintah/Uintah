@@ -5,6 +5,9 @@
 #include <Uintah/Grid/NCVariable.h>
 #include <Uintah/Grid/CCVariable.h>
 #include <Uintah/Grid/GridP.h>
+#include <Uintah/Grid/Task.h>
+#include <Uintah/Interface/Scheduler.h>
+#include <Uintah/Parallel/ProcessorGroup.h>
 #include <SCICore/Thread/Mutex.h>
 #include <SCICore/Thread/Time.h>
 #include <SCICore/Util/DebugStream.h>
@@ -45,10 +48,10 @@ namespace Uintah {
      }
    };
 
-   typedef hash_map<const char*, pair<DOM_Node, XMLURL*>, hash<const char*>, 
+   typedef hash_map<const char*, pair<DOM_Node, XMLURL>, hash<const char*>, 
                     eqstr> VarHashMap;
 
-   typedef hash_map<const char*, pair<DOM_Node, XMLURL*>, hash<const char*>,
+   typedef hash_map<const char*, pair<DOM_Node, XMLURL>, hash<const char*>,
                     eqstr>::iterator VarHashMapIterator;
 
    /**************************************
@@ -83,74 +86,88 @@ namespace Uintah {
 class DataArchive {
 private:
 
-  /* Helper classes for storing hash maps of variable data. */
-  class PatchHashMaps;
-  class MaterialHashMaps;
+   /* Helper classes for storing hash maps of variable data. */
+   class PatchHashMaps;
+   class MaterialHashMaps;
+   
+   // Top of data structure for storing hash maps of variable data
+   // - containing data for each time step.
+   class TimeHashMaps {
+   public:
+      TimeHashMaps(const vector<double>& tsTimes,
+		   const vector<XMLURL>& tsUrls,
+		   const vector<DOM_Node>& tsTopNodes,
+		   int processor, int numProcessors);
+      
+      DOM_Node findVariable(const string& name, const Patch* patch, int matl,
+			    double time, XMLURL& foundUrl);
+   private:
+      map<double, PatchHashMaps> d_patchHashMaps;
+      map<double, PatchHashMaps>::iterator d_lastFoundIt;
+   };
+   
+   // Second layer of data structure for storing hash maps of variable data
+   // - containing data for each patch at a certain time step.
+   class PatchHashMaps {
+      friend class TimeHashMaps;
+   public:
+      PatchHashMaps();
+      void init(XMLURL tsUrl, DOM_Node tsTopNode,
+		int processor, int numProcessors);
+      
+      DOM_Node findVariable(const string& name, const Patch* patch,
+			    int matl, XMLURL& foundUrl);
+      const MaterialHashMaps* findPatchData(int patchid);
+   private:
+      void parse();    
+      void add(const string& name, int patchid, int matl,
+	       DOM_Node varNode, XMLURL url)
+      { d_matHashMaps[patchid].add(name, matl, varNode, url); }
+      
+      map<int, MaterialHashMaps> d_matHashMaps;
+      map<int, MaterialHashMaps>::iterator d_lastFoundIt;
+      list<XMLURL> d_xmlUrls;
+      bool d_isParsed;
+   };
 
-  // Top of data structure for storing hash maps of variable data
-  // - containing data for each time step.
-  class TimeHashMaps {
-  public:
-    TimeHashMaps(const vector<double>& tsTimes,
-		 const vector<XMLURL>& tsUrls,
-		 const vector<DOM_Node>& tsTopNodes);
-    
-    DOM_Node findVariable(const string& name, const Patch* patch, int matl,
-			  double time, XMLURL& foundUrl);
-  private:
-    map<double, PatchHashMaps> d_patchHashMaps;
-    map<double, PatchHashMaps>::iterator d_lastFoundIt;
-  };
+   // Third layer of data structure for storing hash maps of variable data
+   // - containing data for each material at a certain patch and time step.
+   class MaterialHashMaps {
+      friend class PatchHashMaps;
+   public:
+      MaterialHashMaps() {}
+      
+      DOM_Node findVariable(const string& name, int matl,
+			    XMLURL& foundUrl);
 
-  // Second layer of data structure for storing hash maps of variable data
-  // - containing data for each patch at a certain time step.
-  class PatchHashMaps {
-    friend class TimeHashMaps;
-  public:
-    PatchHashMaps();
-    void init(XMLURL tsUrl, DOM_Node tsTopNode);
-    
-    DOM_Node findVariable(const string& name, const Patch* patch,
-			  int matl, XMLURL& foundUrl)      ;
-  private:
-    void parse();    
-    void add(const string& name, int patchid, int matl,
-	     DOM_Node varNode, XMLURL* pUrl)
-    { d_matHashMaps[patchid].add(name, matl, varNode, pUrl); }
-
-    map<int, MaterialHashMaps> d_matHashMaps;
-    map<int, MaterialHashMaps>::iterator d_lastFoundIt;
-    list<XMLURL> d_xmlUrls;
-    bool d_isParsed;
-  };
-
-  // Third layer of data structure for storing hash maps of variable data
-  // - containing data for each material at a certain patch and time step.
-  class MaterialHashMaps {
-    friend class PatchHashMaps;
-  public:
-    MaterialHashMaps() {}
-
-    DOM_Node findVariable(const string& name, int matl,
-			  XMLURL& foundUrl);
-  private:
-    void add(const string& name, int matl, DOM_Node varNode, XMLURL* pUrl);
-
-    vector<VarHashMap> d_varHashMaps;
-
-    // store a copy of the variable names so that char*'s don't become invalid
-    // in the hash table.
-    list<string> d_varNames;
-  };
-  
+      // note that vector is offset by one to allow for matl=-1 at element 0
+      const vector<VarHashMap>& getVarHashMaps() const
+      { return d_varHashMaps; }
+   private:
+      void add(const string& name, int matl, DOM_Node varNode, XMLURL url);
+      
+      vector<VarHashMap> d_varHashMaps;
+      
+      // store a copy of the variable names so that char*'s don't become
+      // invalid in the hash table.
+      list<string> d_varNames;
+   };
+   
 public:
-   DataArchive(const std::string& filebase);
-  // GROUP: Destructors
-  //////////
-  // Destructor
-  virtual ~DataArchive();
+   DataArchive(const std::string& filebase,
+	       int processor=0 /* use if you want to different processors
+				  to read different parts of the archive */,
+	       int numProcessors=1);
 
-    
+   // GROUP: Destructors
+   //////////
+   // Destructor
+   virtual ~DataArchive();
+
+   void restartInitialize(int& timestep, GridP grid,
+			  DataWarehouseP dw,
+			  double* pTime /* passed back */);
+   
    // GROUP:  Information Access
    //////////
    // However, we need a means of determining the names of existing
@@ -182,6 +199,9 @@ public:
    int queryNumMaterials(const std::string& name, const Patch* patch,
 			double time);
 
+   void query( Variable& var, const std::string& name,
+	       int matlIndex, const Patch* patch, double tine );
+   
    //////////
    // query the variable value for a particular particle  overtime;
    // T = double/float/vector/Tensor I'm not sure of the proper
@@ -190,23 +210,6 @@ public:
    void query( ParticleVariable< T >&, const std::string& name, int matlIndex,
 	      particleId id,
 	      double min, double max);
-   
-   //////////
-   // query the variable value for a particular particle  overtime;
-   // T = double/float/vector/Tensor I'm not sure of the proper
-   // syntax.
-   template<class T>
-   void query( ParticleVariable< T >&, const std::string& name, int matlIndex,
-	      const Patch*, double time );
-   
-   //////////
-   // query the variable value for a particular particle  overtime;
-   // T = double/float/vector/Tensor I'm not sure of the proper
-   // syntax.
-   template<class T>
-   void query( NCVariable< T >&, const std::string& name, int matlIndex,
-	      const Patch*, double time );
-
 
    //////////
    // query the variable value for a particular particle  overtime;
@@ -216,15 +219,6 @@ public:
    void query( NCVariable< T >&, const std::string& name, int matlIndex,
 	      const IntVector& index,
 	      double min, double max);
-
-   //////////
-   // query the variable value for a particular particle  overtime;
-   // T = double/float/vector/Tensor I'm not sure of the proper
-   // syntax.
-   template<class T>
-   void query( CCVariable< T >&, const std::string& name, int matlIndex,
-	      const Patch*, double time );
-
 
    //////////
    // query the variable value for a particular particle  overtime;
@@ -265,6 +259,14 @@ private:
    DataArchive& operator=(const DataArchive&);
 
    DOM_Node getTimestep(double time, XMLURL& url);
+   void query( Variable& var, DOM_Node vnode, XMLURL url,
+			 int matlIndex,	const Patch* patch );
+
+   // for restartInitialize
+   void initVariable(const Patch* patch,
+		     DataWarehouseP& new_dw,
+		     VarLabel* label, int matl,
+		     pair<DOM_Node, XMLURL> dataRef);   
    
    std::string d_filebase;
    DOM_Document d_indexDoc;
@@ -276,7 +278,11 @@ private:
    std::vector<DOM_Node> d_tstop;
    std::vector<XMLURL> d_tsurl;
    TimeHashMaps* d_varHashMaps;
-  
+
+   // if used, different processors read different parts of the archive
+   int d_processor;
+   int d_numProcessors;
+   
    Mutex d_lock;
 
    DOM_Node findVariable(const string& name, const Patch* patch,
@@ -287,180 +293,13 @@ private:
    static DebugStream dbg;
 };
 
-template<class T>
-void DataArchive::query( ParticleVariable< T >& var, const std::string& name,
-			 int matlIndex,	const Patch* patch, double time )
-{
-   double tstart = Time::currentSeconds();
-   XMLURL url;
-   DOM_Node vnode = findVariable(name, patch, matlIndex, time, url);
-   if(vnode == 0){
-      cerr << "VARIABLE NOT FOUND: " << name << ", index " << matlIndex << ", patch " << patch->getID() << ", time " << time << '\n';
-      throw InternalError("Variable not found");
-   }
-   DOM_NamedNodeMap attributes = vnode.getAttributes();
-   DOM_Node typenode = attributes.getNamedItem("type");
-   if(typenode == 0)
-      throw InternalError("Variable doesn't have a type");
-   string type = toString(typenode.getNodeValue());
-   const TypeDescription* td = TypeDescription::lookupType(type);
-   ASSERT(td == ParticleVariable<T>::getTypeDescription());
-   int numParticles;
-   if(!get(vnode, "numParticles", numParticles))
-      throw InternalError("Cannot get numParticles");
-   ParticleSubset* psubset = scinew ParticleSubset(scinew ParticleSet(numParticles),
-						   true, matlIndex, patch);
-   var.allocate(psubset);
-   long start;
-   if(!get(vnode, "start", start))
-      throw InternalError("Cannot get start");
-   long end;
-   if(!get(vnode, "end", end))
-      throw InternalError("Cannot get end");
-   string filename;
-   if(!get(vnode, "filename", filename))
-      throw InternalError("Cannot get filename");
-   XMLURL dataurl(url, filename.c_str());
-   if(dataurl.getProtocol() != XMLURL::File)
-      throw InternalError(string("Cannot read over: ")
-			  +toString(dataurl.getProtocolName()));
-   string datafile(toString(dataurl.getPath()));
-
-   int fd = open(datafile.c_str(), O_RDONLY);
-   if(fd == -1)
-      throw ErrnoException("DataArchive::query (open call)", errno);
-#ifdef __sgi
-   off64_t ls = lseek64(fd, start, SEEK_SET);
-#else
-   off_t ls = lseek(fd, start, SEEK_SET);
-#endif
-   if(ls == -1)
-      throw ErrnoException("DataArchive::query (lseek64 call)", errno);
-
-   InputContext ic(fd, start);
-   var.read(ic);
-   ASSERTEQ(end, ic.cur);
-   int s = close(fd);
-   if(s == -1)
-      throw ErrnoException("DataArchive::query (read call)", errno);
-   dbg << "DataArchive::query(ParticleVariable) completed in " << Time::currentSeconds()-tstart << " seconds\n";
-}
    
-
-template<class T>
-void DataArchive::query( NCVariable< T >& var, const std::string& name,
-			 int matlIndex, const Patch* patch, double time )
-{
-   double tstart = Time::currentSeconds();
-   XMLURL url;
-   DOM_Node vnode = findVariable(name, patch, matlIndex, time, url);
-   if(vnode == 0){
-      cerr << "VARIABLE NOT FOUND: " << name << ", index " << matlIndex << ", patch " << patch->getID() << ", time " << time << '\n';
-      throw InternalError("Variable not found");
-   }
-   DOM_NamedNodeMap attributes = vnode.getAttributes();
-   DOM_Node typenode = attributes.getNamedItem("type");
-   if(typenode == 0)
-      throw InternalError("Variable doesn't have a type");
-   string type = toString(typenode.getNodeValue());
-   const TypeDescription* td = TypeDescription::lookupType(type);
-//   ASSERT(td == NCVariable<T>::getTypeDescription());
-   var.allocate(patch->getNodeLowIndex(), patch->getNodeHighIndex());
-   long start;
-   if(!get(vnode, "start", start))
-      throw InternalError("Cannot get start");
-   long end;
-   if(!get(vnode, "end", end))
-      throw InternalError("Cannot get end");
-   string filename;
-   if(!get(vnode, "filename", filename))
-      throw InternalError("Cannot get filename");
-   XMLURL dataurl(url, filename.c_str());
-   if(dataurl.getProtocol() != XMLURL::File)
-      throw InternalError(string("Cannot read over: ")
-			  +toString(dataurl.getProtocolName()));
-   string datafile(toString(dataurl.getPath()));
-
-   int fd = open(datafile.c_str(), O_RDONLY);
-   if(fd == -1)
-      throw ErrnoException("DataArchive::query (open call)", errno);
-#ifdef __sgi
-   off64_t ls = lseek64(fd, start, SEEK_SET);
-#else
-   off_t ls = lseek(fd, start, SEEK_SET);
-#endif
-   if(ls == -1)
-      throw ErrnoException("DataArchive::query (lseek64 call)", errno);
-
-   InputContext ic(fd, start);
-   var.read(ic);
-   ASSERTEQ(end, ic.cur);
-   int s = close(fd);
-   if(s == -1)
-      throw ErrnoException("DataArchive::query (read call)", errno);
-   dbg << "DataArchive::query(NCVariable) completed in " << Time::currentSeconds()-tstart << " seconds\n";
-}
-
 template<class T>
 void DataArchive::query( NCVariable< T >&, const std::string& name, int matlIndex,
 			const IntVector& index,
 			double min, double max)
 {
    cerr << "DataArchive::query not finished\n";
-}
-
-template<class T>
-void DataArchive::query( CCVariable< T >& var, const std::string& name,
-			 int matlIndex, const Patch* patch, double time )
-{
-   double tstart = Time::currentSeconds();
-   XMLURL url;
-   DOM_Node vnode = findVariable(name, patch, matlIndex, time, url);
-   if(vnode == 0){
-      cerr << "VARIABLE NOT FOUND: " << name << ", index " << matlIndex << ", patch " << patch->getID() << ", time " << time << '\n';
-      throw InternalError("Variable not found");
-   }
-   DOM_NamedNodeMap attributes = vnode.getAttributes();
-   DOM_Node typenode = attributes.getNamedItem("type");
-   if(typenode == 0)
-      throw InternalError("Variable doesn't have a type");
-   string type = toString(typenode.getNodeValue());
-   const TypeDescription* td = TypeDescription::lookupType(type);
-   ASSERT(td == CCVariable<T>::getTypeDescription());
-   var.allocate(patch->getCellLowIndex(), patch->getCellHighIndex());
-   long start;
-   if(!get(vnode, "start", start))
-      throw InternalError("Cannot get start");
-   long end;
-   if(!get(vnode, "end", end))
-      throw InternalError("Cannot get end");
-   string filename;
-   if(!get(vnode, "filename", filename))
-      throw InternalError("Cannot get filename");
-   XMLURL dataurl(url, filename.c_str());
-   if(dataurl.getProtocol() != XMLURL::File)
-      throw InternalError(string("Cannot read over: ")
-			  +toString(dataurl.getProtocolName()));
-   string datafile(toString(dataurl.getPath()));
-
-   int fd = open(datafile.c_str(), O_RDONLY);
-   if(fd == -1)
-      throw ErrnoException("DataArchive::query (open call)", errno);
-#ifdef __sgi
-   off64_t ls = lseek64(fd, start, SEEK_SET);
-#else
-   off_t ls = lseek(fd, start, SEEK_SET);
-#endif
-   if(ls == -1)
-      throw ErrnoException("DataArchive::query (lseek64 call)", errno);
-
-   InputContext ic(fd, start);
-   var.read(ic);
-   ASSERTEQ(end, ic.cur);
-   int s = close(fd);
-   if(s == -1)
-      throw ErrnoException("DataArchive::query (read call)", errno);
-   dbg << "DataArchive::query(CCVariable) completed in " << Time::currentSeconds()-tstart << " seconds\n";
 }
 
 template<class T>
@@ -627,6 +466,9 @@ void DataArchive::query(std::vector<T>& values, const std::string& name,
 
 //
 // $Log$
+// Revision 1.15  2001/01/06 02:34:03  witzel
+// Added checkpoint/restart capabilities
+//
 // Revision 1.14  2000/11/28 04:10:53  jas
 // Added X,Y,Z FCVariables and got rid of some compiler warnings.
 //

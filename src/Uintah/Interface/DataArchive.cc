@@ -1,7 +1,10 @@
 #include <Uintah/Interface/DataArchive.h>
 #include <Uintah/Grid/Grid.h>
 #include <Uintah/Grid/Level.h>
+#include <Uintah/Grid/VarLabel.h>
+#include <Uintah/Grid/UnknownVariable.h>
 #include <Uintah/Interface/InputContext.h>
+#include <Uintah/Interface/DataWarehouse.h>
 #include <SCICore/Exceptions/InternalError.h>
 #include <SCICore/Util/Assert.h>
 #include <SCICore/Thread/Time.h>
@@ -10,6 +13,7 @@
 #include <SCICore/Util/DebugStream.h>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <sax/SAXException.hpp>
 #include <sax/SAXParseException.hpp>
 #include <sax/ErrorHandler.hpp>
@@ -26,8 +30,11 @@ using SCICore::Util::DebugStream;
 
 DebugStream DataArchive::dbg("DataArchive", false);
 
-DataArchive::DataArchive(const std::string& filebase)
-   : d_filebase(filebase), d_varHashMaps(NULL), d_lock("DataArchive lock")
+DataArchive::DataArchive(const std::string& filebase,
+			 int processor /* =0 */, int numProcessors /* =1 */)
+   : d_filebase(filebase), d_varHashMaps(NULL),
+     d_processor(processor), d_numProcessors(numProcessors),
+     d_lock("DataArchive lock")
 {
    have_timesteps=false;
    string index(filebase+"/index.xml");
@@ -141,14 +148,15 @@ DOM_Node DataArchive::getTimestep(double searchtime, XMLURL& found_url)
 DOM_Node DataArchive::findVariable(const string& name, const Patch* patch,
 				   int matl, double time, XMLURL& url)
 {
-  if (d_varHashMaps == NULL) {
-    vector<int> indices;
-    vector<double> times;
-    queryTimesteps(indices, times);
-    d_varHashMaps = scinew TimeHashMaps(times, d_tsurl, d_tstop);
-  }
-  
-  return d_varHashMaps->findVariable(name, patch, matl, time, url);
+   if (d_varHashMaps == NULL) {
+      vector<int> indices;
+      vector<double> times;
+      queryTimesteps(indices, times);
+      d_varHashMaps = scinew TimeHashMaps(times, d_tsurl, d_tstop,
+					  d_processor, d_numProcessors);
+   }
+   
+   return d_varHashMaps->findVariable(name, patch, matl, time, url);
 }
 
 GridP DataArchive::queryGrid( double time )
@@ -223,12 +231,14 @@ GridP DataArchive::queryGrid( double time )
    return grid;
 }
 
-void DataArchive::queryLifetime( double& min, double& max, particleId id)
+void DataArchive::queryLifetime( double& /*min*/, double& /*max*/,
+				 particleId /*id*/)
 {
    cerr << "DataArchive::lifetime not finished\n";
 }
 
-void DataArchive::queryLifetime( double& min, double& max, const Patch* patch)
+void DataArchive::queryLifetime( double& /*min*/, double& /*max*/,
+				 const Patch* /*patch*/)
 {
    cerr << "DataArchive::lifetime not finished\n";
 }
@@ -270,6 +280,78 @@ void DataArchive::queryVariables( vector<string>& names,
    dbg << "DataArchive::queryVariables completed in " << Time::currentSeconds()-start << " seconds\n";
 }
 
+void DataArchive::query( Variable& var, const std::string& name,
+			 int matlIndex,	const Patch* patch, double time )
+{
+   double tstart = Time::currentSeconds();
+   XMLURL url;
+   DOM_Node vnode = findVariable(name, patch, matlIndex, time, url);
+   if(vnode == 0){
+      cerr << "VARIABLE NOT FOUND: " << name << ", index " << matlIndex << ", patch " << patch->getID() << ", time " << time << '\n';
+      throw InternalError("Variable not found");
+   }
+   query(var, vnode, url, matlIndex, patch);
+   dbg << "DataArchive::query() completed in "
+       << Time::currentSeconds()-tstart << " seconds\n";
+}
+
+void DataArchive::query( Variable& var, DOM_Node vnode, XMLURL url,
+			 int matlIndex,	const Patch* patch )
+{
+   DOM_NamedNodeMap attributes = vnode.getAttributes();
+   DOM_Node typenode = attributes.getNamedItem("type");
+   if(typenode == 0)
+      throw InternalError("Variable doesn't have a type");
+   string type = toString(typenode.getNodeValue());
+   const TypeDescription* td = var.virtualGetTypeDescription();
+   ASSERT(td->getName() == type);
+
+   if (td->getType() == TypeDescription::ParticleVariable) {
+      int numParticles;
+      if(!get(vnode, "numParticles", numParticles))
+	 throw InternalError("Cannot get numParticles");
+      ParticleSubset* psubset = scinew
+	 ParticleSubset(scinew ParticleSet(numParticles), true,
+			matlIndex, patch);
+      (dynamic_cast<ParticleVariableBase*>(&var))->allocate(psubset);
+   }
+   else if (td->getType() != TypeDescription::ReductionVariable)
+      var.allocate(patch);
+   
+   long start;
+   if(!get(vnode, "start", start))
+      throw InternalError("Cannot get start");
+   long end;
+   if(!get(vnode, "end", end))
+      throw InternalError("Cannot get end");
+   string filename;
+
+   if(!get(vnode, "filename", filename))
+      throw InternalError("Cannot get filename");
+   XMLURL dataurl(url, filename.c_str());
+   if(dataurl.getProtocol() != XMLURL::File)
+      throw InternalError(string("Cannot read over: ")
+			  +toString(dataurl.getPath()));
+   string datafile(toString(dataurl.getPath()));
+
+   int fd = open(datafile.c_str(), O_RDONLY);
+   if(fd == -1)
+      throw ErrnoException("DataArchive::query (open call)", errno);
+#ifdef __sgi
+   off64_t ls = lseek64(fd, start, SEEK_SET);
+#else
+   off_t ls = lseek(fd, start, SEEK_SET);
+#endif
+   if(ls == -1)
+      throw ErrnoException("DataArchive::query (lseek64 call)", errno);
+
+   InputContext ic(fd, start);
+   var.read(ic);
+   ASSERTEQ(end, ic.cur);
+   int s = close(fd);
+   if(s == -1)
+      throw ErrnoException("DataArchive::query (read call)", errno);
+}
 
 void 
 DataArchive::findPatchAndIndex(GridP grid, Patch*& patch, particleIndex& idx,
@@ -320,17 +402,111 @@ DataArchive::findPatchAndIndex(GridP grid, Patch*& patch, particleIndex& idx,
 	break;
     }
   }
-}  
+}
+
+void DataArchive::restartInitialize(int& timestep, GridP grid,
+				    DataWarehouseP dw, double* pTime)
+{
+   vector<int> indices;
+   vector<double> times;
+   queryTimesteps(indices, times);
+   
+   unsigned int i = 0;
+
+   if (timestep == -1 && indices.size() > 0) {
+      i = (unsigned int)(indices.size() - 1); 
+   }
+   else {
+      for (i = 0; i < indices.size(); i++)
+	 if (indices[i] == timestep)
+	    break;
+   }
+
+   if (i == indices.size()) {
+      // timestep not found
+      ostringstream message;
+      message << "Timestep " << i << " not found";
+      throw InternalError(message.str());
+   }
+
+   *pTime = times[i];
+   timestep = indices[i];
+   
+   ASSERTL3(indices.size() == d_tstop.size());
+   ASSERTL3(d_tsurl.size() == d_tstop.size());
+
+   PatchHashMaps patchMap;
+   patchMap.init(d_tsurl[i], d_tstop[i], d_processor, d_numProcessors);
+
+   // iterator through all patch, initializing on each patch
+   // (perhaps not the most efficient, but this is only initialization)
+   for (i = 0; i < grid->numLevels(); i++) {
+      LevelP level = grid->getLevel(i);
+      list<Patch*> patches;
+      patches.push_back(NULL); // add NULL patch for dealing with globals
+      
+      Level::patchIterator levelPatchIter = level->patchesBegin();
+      for ( ; levelPatchIter != level->patchesEnd(); levelPatchIter++)
+	 patches.push_back(*levelPatchIter);
+
+      for (list<Patch*>::iterator patchIter = patches.begin();
+	   patchIter != patches.end(); patchIter++)
+      {
+	 Patch* patch = *patchIter;
+	 int patchID = (patch ? patch->getID() : -1);
+	 const MaterialHashMaps* matlMap = patchMap.findPatchData(patchID);
+	 if (matlMap != NULL) {
+	    const vector<VarHashMap>& matVec = matlMap->getVarHashMaps();
+	    for (int matl = -1; matl < (int)matVec.size()-1; matl++) {
+	       const VarHashMap& hashMap = matVec[matl+1];
+	       for (VarHashMap::const_iterator varIter = hashMap.begin();
+		    varIter != hashMap.end(); varIter++) {
+		  VarLabel* label = VarLabel::find((*varIter).first);
+		  if (label == NULL)
+		     throw UnknownVariable(label->getName(), patch, matl,
+			       "on DataArchive::scheduleRestartInitialize");
+
+		  initVariable(patch, dw, label,
+			       matl, (*varIter).second);
+	       }
+	    }
+	 }
+      }
+   }
+}
+
+void DataArchive::initVariable(const Patch* patch,
+			       DataWarehouseP& dw,
+			       VarLabel* label, int matl,
+			       pair<DOM_Node, XMLURL> dataRef)
+{
+   Variable* var = label->typeDescription()->createInstance();
+   DOM_Node vnode = dataRef.first;
+   XMLURL url = dataRef.second;
+   query(*var, vnode, url, matl, patch);
+
+   ParticleVariableBase* particles;
+   if (particles = dynamic_cast<ParticleVariableBase*>(var)) {
+      if (!dw->haveParticleSubset(matl, patch)) {
+	 int numParticles = particles->getParticleSubset()->numParticles(); 
+	 dw->createParticleSubset(numParticles, matl, patch);
+      }
+   }
+
+   dw->put(var, label, matl, patch);
+}
 
 DataArchive::TimeHashMaps::TimeHashMaps(const vector<double>& tsTimes,
 					const vector<XMLURL>& tsUrls,
-					const vector<DOM_Node>& tsTopNodes)
+					const vector<DOM_Node>& tsTopNodes,
+					int processor, int numProcessors)
 {
    ASSERTL3(tsTimes.size() == tsTopNodes.size());
    ASSERTL3(tsUrls.size() == tsTopNodes.size());
 
    for (int i = 0; i < (int)tsTimes.size(); i++)
-     d_patchHashMaps[tsTimes[i]].init(tsUrls[i], tsTopNodes[i]);
+     d_patchHashMaps[tsTimes[i]].init(tsUrls[i], tsTopNodes[i],
+				      processor, numProcessors);
    
    d_lastFoundIt = d_patchHashMaps.end();
 }
@@ -361,29 +537,39 @@ DataArchive::PatchHashMaps::PatchHashMaps()
 {
 }
 
-void DataArchive::PatchHashMaps::init(XMLURL tsUrl, DOM_Node tsTopNode)
+void DataArchive::PatchHashMaps::init(XMLURL tsUrl, DOM_Node tsTopNode,
+				      int processor, int numProcessors)
 {
-  d_isParsed = false;
-  // grab the data xml files from the timestep xml file
-  ASSERTL3(tsTopNode != 0);
-  DOM_Node datanode = findNode("Data", tsTopNode);
-  if(datanode == 0)
-    throw InternalError("Cannot find Data in timestep");
-  for(DOM_Node n = datanode.getFirstChild(); n != 0; n=n.getNextSibling()){
-    if(n.getNodeName().equals(DOMString("Datafile"))){
-      DOM_NamedNodeMap attributes = n.getAttributes();
-      DOM_Node datafile = attributes.getNamedItem("href");
-      if(datafile == 0)
-	throw InternalError("timestep href not found");
-      
-      DOMString href_name = datafile.getNodeValue();
-      XMLURL url(tsUrl, toString(href_name).c_str());
-      d_xmlUrls.push_back(url);
-    }
-    else if(n.getNodeType() != DOM_Node::TEXT_NODE){
-      cerr << "WARNING: Unknown element in Data section: " << toString(n.getNodeName()) << '\n';
-    }
-  }
+   d_isParsed = false;
+   // grab the data xml files from the timestep xml file
+   ASSERTL3(tsTopNode != 0);
+   DOM_Node datanode = findNode("Data", tsTopNode);
+   if(datanode == 0)
+      throw InternalError("Cannot find Data in timestep");
+   for(DOM_Node n = datanode.getFirstChild(); n != 0; n=n.getNextSibling()){
+      if(n.getNodeName().equals(DOMString("Datafile"))){
+	 int proc = -1;
+	 DOM_NamedNodeMap attributes = n.getAttributes();
+	 DOM_Node procNode = attributes.getNamedItem("proc");
+	 if (procNode != NULL) {
+	    char* s = procNode.getNodeValue().transcode();
+	    int proc = atoi(s);
+	    delete[] s;
+	    if ((proc % numProcessors) != processor)
+	       continue;
+	 }
+	 
+	 DOM_Node datafile = attributes.getNamedItem("href");
+	 if(datafile == 0)
+	    throw InternalError("timestep href not found");
+	 DOMString href_name = datafile.getNodeValue();
+	 XMLURL url(tsUrl, toString(href_name).c_str());
+	 d_xmlUrls.push_back(url);
+      }
+      else if(n.getNodeType() != DOM_Node::TEXT_NODE){
+	 cerr << "WARNING: Unknown element in Data section: " << toString(n.getNodeName()) << '\n';
+      }
+   }
 }
 
 void DataArchive::PatchHashMaps::parse()
@@ -416,7 +602,7 @@ void DataArchive::PatchHashMaps::parse()
 	if(!get(r, "index", index))
 	  throw InternalError("Cannot get index");
 	
-	add(varname, patchid, index, r, &d_xmlUrls.back());
+	add(varname, patchid, index, r, *urlIt);
       } else if(r.getNodeType() != DOM_Node::TEXT_NODE){
 	cerr << "WARNING: Unknown element in Variables section: " << toString(r.getNodeName()) << '\n';
       }
@@ -451,16 +637,31 @@ DOM_Node DataArchive::PatchHashMaps::findVariable(const string& name,
   return DOM_Node();  
 }
 
+const DataArchive::MaterialHashMaps*
+DataArchive::PatchHashMaps::findPatchData(int patchid)
+{
+  if (!d_isParsed) parse(); // parse on demand
+
+  map<int, MaterialHashMaps>::iterator foundIt = d_matHashMaps.find(patchid);
+  
+  if (foundIt != d_matHashMaps.end())
+     return &((*foundIt).second);
+  return NULL;
+
+}
+
 DOM_Node DataArchive::MaterialHashMaps::findVariable(const string& name,
 						     int matl,
 						     XMLURL& foundUrl)
 {
+  matl++; // allows for matl=-1 for universal variables
+ 
   if (matl < (int)d_varHashMaps.size()) {
     VarHashMap& hashMap = d_varHashMaps[matl];
     VarHashMapIterator foundIt = hashMap.find(name.c_str());
     
     if (foundIt !=  hashMap.end()) {
-      foundUrl = *(*foundIt).second.second;
+      foundUrl = (*foundIt).second.second;
       return (*foundIt).second.first;
     }
   }
@@ -468,14 +669,16 @@ DOM_Node DataArchive::MaterialHashMaps::findVariable(const string& name,
 }
 
 void DataArchive::MaterialHashMaps::add(const string& name, int matl,
-					DOM_Node varNode, XMLURL* pUrl)
+					DOM_Node varNode, XMLURL url)
 {
+  matl++; // allows for matl=-1 for universal variables
+   
   d_varNames.push_back(name);
   const char* var_name = d_varNames.back().c_str();
   if (matl >= (int)d_varHashMaps.size())
     d_varHashMaps.resize(matl + 1);
-  pair<DOM_Node, XMLURL*> value(varNode, pUrl);
-  pair<const char*, pair<DOM_Node, XMLURL*> > valkeypair(var_name, value);
+  pair<DOM_Node, XMLURL> value(varNode, url);
+  pair<const char*, pair<DOM_Node, XMLURL> > valkeypair(var_name, value);
   if (d_varHashMaps[matl].insert(valkeypair).second == false) {
     cerr << "Duplicate variable name: " << name << endl;
   }
@@ -498,6 +701,9 @@ int DataArchive::queryNumMaterials( const string& name, const Patch* patch, doub
 
 //
 // $Log$
+// Revision 1.15  2001/01/06 02:34:03  witzel
+// Added checkpoint/restart capabilities
+//
 // Revision 1.14  2000/11/14 04:00:03  jas
 // Added limits for extraCells.
 //
