@@ -3651,7 +3651,7 @@ class BioTensorApp {
 	    # set a few variables that need to be reset
 	    set indicate 0
 	    set cycle 0
-	    set vis_activated 0
+	    # set vis_activated 0
 	    set IsPAttached 1
 	    set IsVAttached 1
 	    set executing_modules 0
