@@ -1338,13 +1338,6 @@ itcl_class ViewWindow {
         wm title $w "Record Movie"
 
 	label $w.l -text "Record Movie as:"
-        pack $w.l -side top -anchor w
-	checkbutton $w.resize -text "Resize: " \
-	    -variable $this-global-resize \
-	    -offvalue 0 -onvalue 1 -command "$this resize; $this-c redraw"
-	entry $w.e1 -textvariable $this-x-resize -width 4
-	label $w.x -text x
-	entry $w.e2 -textvariable $this-y-resize -width 4
 
         radiobutton $w.none -text "Stop Recording" \
             -variable $this-global-movie -value 0 -command "$this-c redraw"
@@ -1353,6 +1346,14 @@ itcl_class ViewWindow {
 	radiobutton $w.mpeg -text "Mpeg" \
 	    -variable $this-global-movie -value 2 -command "$this-c redraw"
 	
+	Tooltip $w.none "Press to stop recording the movie."
+	Tooltip $w.raw \
+           "When pressed, SCIRun will begin recording raw frames as they\n"\
+           "are displayed.  The frames are stored in PPM format and can\n" \
+           "be merged together into a movie using programs such as Quicktime."
+	Tooltip $w.mpeg \
+           "When pressed, SCIRun will begin recording an MPEG'd movie."
+
 	if { ![$this-c have_mpeg] } {
 	    $w.mpeg configure -state disabled -disabledforeground ""
 	} 
@@ -1361,26 +1362,53 @@ itcl_class ViewWindow {
 	label $w.moviebase.label -text "Name:" -width 6
         entry $w.moviebase.entry -relief sunken -width 13 \
 	    -textvariable "$this-global-movieName" 
-        pack $w.moviebase.label $w.moviebase.entry -side left
+
+        TooltipMultiWidget "$w.moviebase.label $w.moviebase.entry" \
+            "Name of the movie file.  The %%#d specifies number of digits\nto use in the frame number.  Eg: movie.%%04d will\nproduce names such as movie.0001.ppm"
 
 	frame $w.movieframe
 	label $w.movieframe.label -text "Frame:" -width 6
         entry $w.movieframe.entry -relief sunken -width 13 \
 	    -textvariable "$this-global-movieFrame" 
-        pack $w.movieframe.label $w.movieframe.entry -side left
 
-        pack $w.none $w.raw $w.mpeg -side top -anchor w
-        pack $w.moviebase  -side top -anchor w -pady 5 
-        pack $w.movieframe -side top -anchor w -pady 2
-	pack $w.resize $w.e1 $w.x $w.e2 -side left -anchor w -pady 5
+        TooltipMultiWidget "$w.movieframe.label $w.movieframe.entry" \
+            "Frame number at which to start numbering generated frames."
 
-	bind $w.e1 <Return> "$this resize"
-	bind $w.e2 <Return> "$this resize"
+        frame $w.resize_f
+	checkbutton $w.resize_f.resize -text "Resize: " \
+	    -variable $this-global-resize \
+	    -offvalue 0 -onvalue 1 -command "$this resize; $this-c redraw"
+	entry $w.resize_f.e1 -textvariable $this-x-resize -width 4
+	label $w.resize_f.x -text x
+	entry $w.resize_f.e2 -textvariable $this-y-resize -width 4
+ 
+        Tooltip $w.resize_f.resize \
+            "When selected, the output will be resized to these dimensions."
+	bind $w.resize_f.e1 <Return> "$this resize"
+	bind $w.resize_f.e2 <Return> "$this resize"
+
+	button $w.close -text "Close" -command "wm withdraw $w"
+
+        pack $w.l -padx 4 -anchor w
+        pack $w.none $w.raw $w.mpeg -padx 4 -anchor w
+
+        pack $w.moviebase.label $w.moviebase.entry -side left -padx 4
+        pack $w.moviebase -pady 5 -padx 4 -anchor w
+
+        pack $w.movieframe.label $w.movieframe.entry -side left -padx 4
+        pack $w.movieframe -pady 2 -padx 4 -anchor w
+
+	pack $w.resize_f.resize $w.resize_f.e1 $w.resize_f.x $w.resize_f.e2 \
+               -side left -pady 5 -padx 4
+        pack $w.resize_f -padx 4 -anchor w
+
+        pack $w.close -padx 4
+
 	if {[set $this-global-resize] == 0} {
 	    set color "#505050"
-	    $w.x configure -foreground $color
-	    $w.e1 configure -state disabled -foreground $color
-	    $w.e2 configure -state disabled -foreground $color
+	    $w.resize_f.x configure -foreground $color
+	    $w.resize_f.e1 configure -state disabled -foreground $color
+	    $w.resize_f.e2 configure -state disabled -foreground $color
 	}
     }
 
