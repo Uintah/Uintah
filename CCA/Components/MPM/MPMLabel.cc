@@ -216,8 +216,15 @@ MPMLabel::MPMLabel()
   massBurnFractionLabel  = VarLabel::create("massBurnFraction",
 			NCVariable<double>::getTypeDescription());
 
+  // Interaction with Arches, Fluid Mechanics
+
   AccArchesNCLabel = VarLabel::create("AccArchesNC",
 			NCVariable<Vector>::getTypeDescription() );
+
+  // Interaction with Arches, Heat Transfer
+
+  heaTranSolid_NCLabel = VarLabel::create("heaTranSolid_NC",
+                                         NCVariable<double>::getTypeDescription() );
 
   frictionalWorkLabel = VarLabel::create("frictionalWork",
 			NCVariable<double>::getTypeDescription());
@@ -370,6 +377,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(dTdt_NCLabel);
   VarLabel::destroy(massBurnFractionLabel);
   VarLabel::destroy(AccArchesNCLabel);
+  VarLabel::destroy(heaTranSolid_NCLabel);
   VarLabel::destroy(frictionalWorkLabel);
   VarLabel::destroy(gNumNearParticlesLabel);
 
