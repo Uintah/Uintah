@@ -34,12 +34,48 @@
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Widgets/BoxWidget.h>
 #include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/FieldInterface.h>
 #include <Core/Datatypes/Clipper.h>
 #include <Dataflow/Modules/Fields/ClipField.h>
+#include <Core/Containers/StringUtil.h>
 #include <iostream>
 #include <stack>
 
 namespace SCIRun {
+
+class ScalarClipper : public Clipper
+{
+private:
+  ScalarFieldInterface *sfi_;
+  string function_;
+  GuiInterface *gui_;
+  
+public:
+  ScalarClipper(ScalarFieldInterface *sfi,
+		string function,
+		GuiInterface *gui) :
+    sfi_(sfi),
+    function_(function),
+    gui_(gui)
+  { 
+  }
+
+  virtual bool inside_p(const Point &p)
+  {
+    double val;
+    if (sfi_->interpolate(val, p))
+    {
+      string result;
+      gui_->eval("set x " + to_string(val) + " ; expr " + function_, result);
+      if (result == "1")
+      {
+	return true;
+      }
+    }
+    return false;
+  }
+};
+
 
 using std::stack;
 
@@ -54,6 +90,8 @@ private:
   GuiInt    autoexec_;
   GuiInt    autoinvert_;
   GuiString exec_mode_;
+  GuiInt    usefunction_;
+  GuiString clipfunction_;
   int  last_input_generation_;
   int  last_clip_generation_;
   ClipperHandle clipper_;
@@ -81,6 +119,8 @@ ClipField::ClipField(GuiContext* ctx)
     autoexec_(ctx->subVar("autoexecute")),
     autoinvert_(ctx->subVar("autoinvert")),
     exec_mode_(ctx->subVar("execmode")),
+    usefunction_(ctx->subVar("usefunction")),
+    clipfunction_(ctx->subVar("clipfunction")),
     last_input_generation_(0),
     last_clip_generation_(0),
     widgetid_(0)
@@ -184,6 +224,20 @@ ClipField::execute()
 
     clipper_ = algo->execute(cfieldhandle->mesh());
     do_clip_p = true;
+  }
+
+  if (usefunction_.get())
+  {
+    ScalarFieldInterface *sfi = ifieldhandle->query_scalar_interface();
+    if (sfi)
+    {
+      clipper_ = scinew ScalarClipper(sfi, clipfunction_.get(), gui);
+      do_clip_p = true;
+    }
+    else
+    {
+      remark("Functional clips on non-scalar fields are not supported.");
+    }
   }
 
   // Update the widget.
