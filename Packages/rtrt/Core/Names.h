@@ -8,6 +8,7 @@
 
 namespace rtrt {
   class Object;
+  class Material;
   using namespace std;
   class Names {
   public:
@@ -28,6 +29,12 @@ namespace rtrt {
 
     // Return true if a name was found for the object, false otherwise.
     static bool hasName(const Object* ptr);
+
+    // The same for materials
+    static void nameMaterialWithUnique(const Material* ptr);
+    static void nameMaterial(const string& name, const Material* ptr);
+    static const string& getName(const Material* ptr);
+    static bool hasName(const Material* ptr);
   };
 }
 
