@@ -138,6 +138,8 @@ void GenStandardColorMaps::execute()
    if ( res != resolution.get()){
      res = resolution.get();
    }
+   
+   if( !cmap.get_rep() ) return;
 
    cmap.detach();
    cmap->ResetScale();
