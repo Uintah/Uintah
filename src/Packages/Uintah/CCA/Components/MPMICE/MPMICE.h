@@ -200,13 +200,13 @@ public:
                                        DataWarehouse* new_dw);
   void printData(const Patch* patch, 
                   int   include_EC,
-                  char  message1[],
-                  char  message2[],
+                  const string&    message1,        
+                  const string&    message2,  
                   const NCVariable<double>& q_NC);
                   
   void printNCVector(const Patch* patch, int include_EC,
-                     char    message1[],
-                     char    message2[],
+                     const string&    message1,        
+                     const string&    message2, 
                      int     component,
                      const NCVariable<Vector>& q_NC);
                      
