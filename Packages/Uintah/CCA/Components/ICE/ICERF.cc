@@ -30,7 +30,7 @@ void ICE::scheduleComputeFCPressDiffRF(SchedulerP& sched,
   cout_doing << "ICE::scheduleComputeFCPressDiffRF" << endl;
   Task* t = scinew Task("ICE::computeFCPressDiffRF",
                      this, &ICE::computeFCPressDiffRF);
-
+  
   t->requires(Task::OldDW,lb->delTLabel);
   t->requires(Task::NewDW,lb->rho_CCLabel,            Ghost::AroundCells,1);
   t->requires(Task::NewDW,lb->sp_vol_CCLabel,         Ghost::AroundCells,1);  
@@ -238,26 +238,23 @@ void ICE::computeFCPressDiffRF(const ProcessorGroup*,
     StaticArray<SFCYVariable<double>    > press_diffY_FC(numMatls);
     StaticArray<SFCZVariable<double>    > press_diffZ_FC(numMatls);
     constCCVariable<double> press_CC;
-    new_dw->get(press_CC,lb->press_equil_CCLabel,0,patch,Ghost::AroundCells,1);
+    Ghost::GhostType  gac = Ghost::AroundCells;
+    new_dw->get(press_CC,lb->press_equil_CCLabel,0,patch,gac,1);
 
     for(int m = 0; m < numMatls; m++)  {
       Material* matl = d_sharedState->getMaterial( m );
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
       int indx = matl->getDWIndex();
-      new_dw->get(rho_CC[m],       lb->rho_CCLabel,       indx,patch,
-                                                          Ghost::AroundCells,1);
-      new_dw->get(sp_vol_CC[m],    lb->sp_vol_CCLabel,    indx,patch,
-                                                          Ghost::AroundCells,1);
-      new_dw->get(speedSound[m],   lb->speedSound_CCLabel,indx,patch,
-                                                          Ghost::AroundCells,1); 
-      new_dw->get(matl_press[m],   lb->matl_press_CCLabel,indx,patch,
-                                                          Ghost::AroundCells,1);
+      new_dw->get(rho_CC[m],       lb->rho_CCLabel,       indx,patch, gac,1);
+      new_dw->get(sp_vol_CC[m],    lb->sp_vol_CCLabel,    indx,patch, gac,1);
+      new_dw->get(speedSound[m],   lb->speedSound_CCLabel,indx,patch, gac,1); 
+      new_dw->get(matl_press[m],   lb->matl_press_CCLabel,indx,patch, gac,1);
       if(ice_matl){
-        old_dw->get(vel_CC[m],lb->vel_CCLabel,indx,patch,Ghost::AroundCells,1);      
+        old_dw->get(vel_CC[m],lb->vel_CCLabel,indx,patch,gac,1);      
       }
       if(mpm_matl){
-        new_dw->get(vel_CC[m],lb->vel_CCLabel,indx,patch,Ghost::AroundCells,1);      
+        new_dw->get(vel_CC[m],lb->vel_CCLabel,indx,patch,gac,1);      
       }
       new_dw->allocate(press_diffX_FC[m],lb->press_diffX_FCLabel, indx, patch);
       new_dw->allocate(press_diffY_FC[m],lb->press_diffY_FCLabel, indx, patch);
@@ -297,31 +294,31 @@ void ICE::computeFCPressDiffRF(const ProcessorGroup*,
       //  For each face compute the press_Diff
       for (int dir= 0; dir < 3; dir++) {
         for(CellIterator iter=patch->getSFCIterator(dir);!iter.done(); iter++){
-          IntVector cur = *iter;
-          IntVector adj = cur + adj_offset[dir]; 
+          IntVector R = *iter;
+          IntVector L = R + adj_offset[dir]; 
 
 //__________________________________
 //WARNING: We're currently using the 
 // isentropic compressibility instead of 
 // its cousin the isothermal compressiblity.  
-          double inv_kappa_cur = ( speedSound[m][cur] * speedSound[m][cur] )/
-                                 ( sp_vol_CC[m][cur]);
-          double inv_kappa_adj = ( speedSound[m][adj] * speedSound[m][adj] )/
-                                 ( sp_vol_CC[m][adj]);
+          double kappa_R = ( speedSound[m][R] * speedSound[m][R] )/
+                           ( sp_vol_CC[m][R]);
+          double kappa_L = ( speedSound[m][L] * speedSound[m][L] )/
+                           ( sp_vol_CC[m][L]);
 
-          double rho_brack = (rho_CC[m][cur]*rho_CC[m][adj])/
-                             (rho_CC[m][cur]+rho_CC[m][adj]);           
+          double rho_brack = (rho_CC[m][R]*rho_CC[m][L])/
+                             (rho_CC[m][R]+rho_CC[m][L]);           
           
           double term1 = 
-                (matl_press[m][cur] - press_CC[cur]) * sp_vol_CC[m][cur] +
-                (matl_press[m][adj] - press_CC[adj]) * sp_vol_CC[m][adj];
+                (matl_press[m][R] - press_CC[R]) * sp_vol_CC[m][R] +
+                (matl_press[m][L] - press_CC[L]) * sp_vol_CC[m][L];
                 
           double term2 = -2.0 * delT *
-                         ((sp_vol_CC[m][cur] + sp_vol_CC[m][adj])/
-                         (inv_kappa_cur + inv_kappa_adj) ) *
-                         ((vel_CC[m][adj](dir) - vel_CC[m][cur](dir))/dx(dir));
+                         ((sp_vol_CC[m][R] + sp_vol_CC[m][L])/
+                         (kappa_R          + kappa_L) ) *
+                         ((vel_CC[m][R](dir) - vel_CC[m][L](dir))/dx(dir)); 
  
-          scratch[dir][cur] = rho_brack * (term1 + term2);
+          scratch[dir][R] = rho_brack * (term1 + term2);
         }
       } 
       //__________________________________
@@ -381,34 +378,34 @@ template<class T> void ICE::computeVelFaceRF(int dir, CellIterator it,
 {
   double term1, term2, term3, term4, sp_vol_brack, sig_L, sig_R;
   for(;!it.done(); it++){
-    IntVector cur = *it;
-    IntVector adj = cur + adj_offset; 
-    sp_vol_brack = 2.*(sp_vol_CC[adj] * sp_vol_CC[cur])/
-                      (sp_vol_CC[adj] + sp_vol_CC[cur]);
+    IntVector R = *it;
+    IntVector L = R + adj_offset; 
+    sp_vol_brack = 2.*(sp_vol_CC[L] * sp_vol_CC[R])/
+                      (sp_vol_CC[L] + sp_vol_CC[R]);
     //__________________________________
     // interpolation to the face           
-    term1 = (vel_CC[adj](dir) * sp_vol_CC[cur] +
-             vel_CC[cur](dir) * sp_vol_CC[adj])/
-             (sp_vol_CC[cur] + sp_vol_CC[adj]);
+    term1 = (vel_CC[L](dir) * sp_vol_CC[R] +
+             vel_CC[R](dir) * sp_vol_CC[L])/
+             (sp_vol_CC[R] + sp_vol_CC[L]);
 
     //__________________________________
     // pressure term
     term2 = sp_vol_brack * (delT/dx) * 
-                           (press_CC[cur] - press_CC[adj]);
+                           (press_CC[R] - press_CC[L]);
     //__________________________________
     // gravity term
     term3 =  delT * gravity;
 
     // stress difference term
-    sig_L = vol_frac[adj] * (matl_press_CC[adj] - press_CC[adj]);
-    sig_R = vol_frac[cur] * (matl_press_CC[cur] - press_CC[cur]);
+    sig_L = vol_frac[L] * (matl_press_CC[L] - press_CC[L]);
+    sig_R = vol_frac[R] * (matl_press_CC[R] - press_CC[R]);
     term4 = (sp_vol_brack * delT/dx) * (
-            (sig_bar_FC[cur] - sig_L)/vol_frac[adj] +
-            (sig_R - sig_bar_FC[cur])/vol_frac[cur]);
+            (sig_bar_FC[R] - sig_L)/vol_frac[L] +
+            (sig_R - sig_bar_FC[R])/vol_frac[R]);
 
     // Todd, I think that term4 should be a negative, since Bucky
     // has a positive, but since sigma = -p*I.  What do you think?
-    vel_FC[cur] = term1 - term2 + term3 - term4;
+    vel_FC[R] = term1 - term2 + term3 - term4;
   } 
 }
 //______________________________________________________________________
@@ -435,7 +432,8 @@ void ICE::computeFaceCenteredVelocitiesRF(const ProcessorGroup*,
 
     constCCVariable<double> press_CC;
     constCCVariable<double> matl_press_CC;
-    new_dw->get(press_CC,lb->press_equil_CCLabel, 0,patch,Ghost::AroundCells,1);
+    Ghost::GhostType  gac = Ghost::AroundCells; 
+    new_dw->get(press_CC,lb->press_equil_CCLabel, 0,patch,gac,1);
 
     // Compute the face centered velocities
     for(int m = 0; m < numMatls; m++) {
@@ -448,24 +446,18 @@ void ICE::computeFaceCenteredVelocitiesRF(const ProcessorGroup*,
       constSFCYVariable<double> p_dYFC;
       constSFCZVariable<double> p_dZFC;
       if(ice_matl){
-        new_dw->get(rho_CC, lb->rho_CCLabel, indx, patch, Ghost::AroundCells,1);
-        old_dw->get(vel_CC, lb->vel_CCLabel, indx, patch, Ghost::AroundCells,1);
+        new_dw->get(rho_CC, lb->rho_CCLabel, indx, patch, gac,1);
+        old_dw->get(vel_CC, lb->vel_CCLabel, indx, patch, gac,1);
       } else {
-        new_dw->get(rho_CC, lb->rho_CCLabel, indx, patch, Ghost::AroundCells,1);
-        new_dw->get(vel_CC, lb->vel_CCLabel, indx, patch, Ghost::AroundCells,1);
+        new_dw->get(rho_CC, lb->rho_CCLabel, indx, patch, gac,1);
+        new_dw->get(vel_CC, lb->vel_CCLabel, indx, patch, gac,1);
       }                                                  
-      new_dw->get(sp_vol_CC, lb->sp_vol_CCLabel,indx,patch,
-                                                         Ghost::AroundCells, 1);
-      new_dw->get(p_dXFC, lb->press_diffX_FCLabel, indx, patch,
-                                                          Ghost::AroundCells,1);
-      new_dw->get(p_dYFC, lb->press_diffY_FCLabel, indx, patch,
-                                                          Ghost::AroundCells,1);
-      new_dw->get(p_dZFC, lb->press_diffZ_FCLabel, indx, patch,
-                                                          Ghost::AroundCells,1);
-      new_dw->get(matl_press_CC,
-                        lb->matl_press_CCLabel,indx,patch,Ghost::AroundCells,1);
-      new_dw->get(vol_frac,
-                        lb->vol_frac_CCLabel,  indx,patch,Ghost::AroundCells,1);
+      new_dw->get(sp_vol_CC,     lb->sp_vol_CCLabel,      indx,patch,gac,1);
+      new_dw->get(p_dXFC,        lb->press_diffX_FCLabel, indx,patch,gac,1);  
+      new_dw->get(p_dYFC,        lb->press_diffY_FCLabel, indx,patch,gac,1); 
+      new_dw->get(p_dZFC,        lb->press_diffZ_FCLabel, indx,patch,gac,1);  
+      new_dw->get(matl_press_CC, lb->matl_press_CCLabel,  indx,patch,gac,1);
+      new_dw->get(vol_frac,      lb->vol_frac_CCLabel,    indx,patch,gac,1);
 
    //---- P R I N T   D A T A ------ 
       if (switchDebug_vel_FC ) {
