@@ -1,3 +1,10 @@
+#include <sci_defs.h>
+#if defined(HAVE_GLEW)
+#include <GL/glew.h>
+#else
+#include <GL/gl.h>
+#endif
+
 #include <Packages/Kurt/Core/Geom/GridSliceRen.h>
 #include <Packages/Kurt/Core/Geom/BrickGrid.h>
 #include <Core/GLVolumeRenderer/SliceTable.h>
