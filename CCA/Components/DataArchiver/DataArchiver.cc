@@ -722,7 +722,9 @@ void DataArchiver::finalizeTimestep(double time, double delt,
   }
   
   bool do_output=false;
-  if ((d_outputInterval != 0.0 || d_outputTimestepInterval != 0) && delt != 0) {
+
+  if ( (d_outputInterval != 0.0 || d_outputTimestepInterval != 0) && 
+       delt != 0 ) {
     // Schedule task to dump out reduction variables at every timestep
     Task* t = scinew Task("DataArchiver::outputReduction",
 			  this, &DataArchiver::outputReduction);
@@ -1084,23 +1086,40 @@ DataArchiver::scheduleOutputTimestep(Dir& baseDir,
 
 DOMDocument* DataArchiver::loadDocument(string xmlName)
 {
-   // Instantiate the DOM parser.
-   XercesDOMParser* parser = new XercesDOMParser;
-   parser->setDoValidation(false);
-   
-   SimpleErrorHandler handler;
-   parser->setErrorHandler(&handler);
+  dbg << "loadDocument()\n";
 
-   parser->parse(xmlName.c_str());
-   
-   if(handler.foundError)
-     throw InternalError("Error reading file: " + xmlName);
-   
-   // make a clone because the document is owned by the parser
-   DOMDocument* doc = dynamic_cast<DOMDocument*>(parser->getDocument()->cloneNode(true));
-   delete parser;
+  // Instantiate the DOM parser.
+  XercesDOMParser* parser = new XercesDOMParser;
 
-   return doc;
+  parser->setDoValidation(false);
+
+  SimpleErrorHandler handler;
+  parser->setErrorHandler(&handler);
+
+  parser->parse(xmlName.c_str());
+
+  if(handler.foundError)
+    throw InternalError("Error reading file: " + xmlName);
+   
+  // make a clone because the document is owned by the parser
+#if !defined( _AIX )
+  DOMDocument* doc = 
+    dynamic_cast<DOMDocument*>(parser->getDocument()->cloneNode(true));
+#else
+  // For some reason, xlC doesn't like the dynamic_cast... it fails.
+  // But it should work and the static_cast does work...
+  DOMDocument* doc = 
+     static_cast<DOMDocument*>(parser->getDocument()->cloneNode(true));
+#endif
+
+  if( !doc ){
+    cout << "dynamic_cast for loadDocument 'doc failed\n";
+    throw InternalError( "dynamic_cast for loadDocument 'doc' failed\n" );
+  }
+
+  delete parser;
+
+  return doc;
 }
 
 const string
@@ -1111,50 +1130,58 @@ DataArchiver::getOutputLocation() const
 
 void DataArchiver::indexAddGlobals()
 {
+  dbg << "indexAddGlobals()\n";
+
   // assume for now that global variables that get computed will not
   // change from timestep to timestep
   static bool wereGlobalsAdded = false;
-   if (d_writeMeta && !wereGlobalsAdded) {
-     wereGlobalsAdded = true;
-     // add saved global (reduction) variables to index.xml
-      string iname = d_dir.getName()+"/index.xml";
-      DOMDocument* indexDoc = loadDocument(iname);
-      DOMNode* leader = indexDoc->createTextNode(to_xml_ch_ptr("\n"));
-      indexDoc->getDocumentElement()->appendChild(leader);
-      DOMNode* globals = indexDoc->createElement(to_xml_ch_ptr("globals"));
-      indexDoc->getDocumentElement()->appendChild(globals);
-      for (vector<SaveItem>::iterator iter = d_saveReductionLabels.begin();
-           iter != d_saveReductionLabels.end(); iter++) {
-         SaveItem& saveItem = *iter;
-         const VarLabel* var = saveItem.label_;
-         const MaterialSubset* matls = saveItem.getMaterialSet()->getUnion();
-         for (int m = 0; m < matls->size(); m++) {
-            int matlIndex = matls->get(m);
-            ostringstream href;
-            href << var->getName();
-            if (matlIndex < 0)
-	      href << ".dat\0";
-            else
-	      href << "_" << matlIndex << ".dat\0";
-            DOMElement* newElem = indexDoc->createElement(to_xml_ch_ptr("variable"));
-            DOMText* leader = indexDoc->createTextNode(to_xml_ch_ptr("\n\t"));
-            DOMText* trailer = indexDoc->createTextNode(to_xml_ch_ptr("\n"));
-            globals->appendChild(leader);
-            globals->appendChild(newElem);
-            globals->appendChild(trailer);
-            newElem->setAttribute(to_xml_ch_ptr("href"), 
-				  to_xml_ch_ptr2(href.str().c_str()));
-            newElem->setAttribute(to_xml_ch_ptr("type"),
-				  to_xml_ch_ptr2(var->typeDescription()->getName().c_str()));
-            newElem->setAttribute(to_xml_ch_ptr("name"), to_xml_ch_ptr2(var->getName().c_str()));
-         }
-      }
 
-      ofstream indexOut(iname.c_str());
-      indexOut << indexDoc << endl;
-      indexDoc->release();
-   }
-}
+  if (d_writeMeta && !wereGlobalsAdded) {
+    wereGlobalsAdded = true;
+    // add saved global (reduction) variables to index.xml
+    string iname = d_dir.getName()+"/index.xml";
+
+    DOMDocument* indexDoc = loadDocument(iname);
+    DOMNode* leader = indexDoc->createTextNode(to_xml_ch_ptr("\n"));
+    indexDoc->getDocumentElement()->appendChild(leader);
+    DOMNode* globals = indexDoc->createElement(to_xml_ch_ptr("globals"));
+    indexDoc->getDocumentElement()->appendChild(globals);
+
+    for (vector<SaveItem>::iterator iter = d_saveReductionLabels.begin();
+	 iter != d_saveReductionLabels.end(); iter++) {
+      SaveItem& saveItem = *iter;
+      const VarLabel* var = saveItem.label_;
+      const MaterialSubset* matls = saveItem.getMaterialSet()->getUnion();
+      for (int m = 0; m < matls->size(); m++) {
+	int matlIndex = matls->get(m);
+	ostringstream href;
+	href << var->getName();
+	if (matlIndex < 0)
+	  href << ".dat\0";
+	else
+	  href << "_" << matlIndex << ".dat\0";
+	DOMElement* newElem = indexDoc->createElement(to_xml_ch_ptr("variable"));
+	DOMText* leader = indexDoc->createTextNode(to_xml_ch_ptr("\n\t"));
+	DOMText* trailer = indexDoc->createTextNode(to_xml_ch_ptr("\n"));
+	globals->appendChild(leader);
+	globals->appendChild(newElem);
+	globals->appendChild(trailer);
+	newElem->setAttribute(to_xml_ch_ptr("href"), 
+			      to_xml_ch_ptr2(href.str().c_str()));
+	newElem->setAttribute(
+                    to_xml_ch_ptr("type"),
+		    to_xml_ch_ptr2(var->typeDescription()->getName().c_str()));
+	newElem->setAttribute(to_xml_ch_ptr("name"),
+			      to_xml_ch_ptr2(var->getName().c_str()));
+      }
+    }
+
+    ofstream indexOut(iname.c_str());
+    indexOut << indexDoc << endl;
+    indexDoc->release();
+  }
+  dbg << "end indexAddGlobals()\n";
+} // end indexAddGlobals()
 
 void DataArchiver::outputReduction(const ProcessorGroup*,
 				   const PatchSubset* pss,
@@ -1275,176 +1302,185 @@ void DataArchiver::output(const ProcessorGroup*,
 
   // Not only lock to prevent multiple threads from writing over the same
   // file, but also lock because xerces (DOM..) has thread-safety issues.
- d_outputLock.lock(); 
- { // make sure doc's constructor is called after the lock.
-  DOMDocument* doc; 
-  ifstream test(xmlFilename.c_str());
-  if(test){
-    // Instantiate the DOM parser.
-    XercesDOMParser* parser = new XercesDOMParser;
-    parser->setDoValidation(false);
+  d_outputLock.lock(); 
+  { // make sure doc's constructor is called after the lock.
+    DOMDocument* doc; 
+    ifstream test(xmlFilename.c_str());
+    if(test){
+      // Instantiate the DOM parser.
+      XercesDOMParser* parser = new XercesDOMParser;
+      parser->setDoValidation(false);
+      
+      SimpleErrorHandler handler;
+      parser->setErrorHandler(&handler);
     
-    SimpleErrorHandler handler;
-    parser->setErrorHandler(&handler);
+      // Parse the input file
+      // No exceptions just yet, need to add
     
-    // Parse the input file
-    // No exceptions just yet, need to add
+      parser->parse(xmlFilename.c_str());
     
-    parser->parse(xmlFilename.c_str());
+      if(handler.foundError)
+	throw InternalError("Error reading file: "+xmlFilename);
     
-    if(handler.foundError)
-      throw InternalError("Error reading file: "+xmlFilename);
-    
-    // Add the parser contents to the ProblemSpecP d_doc
-    doc = dynamic_cast<DOMDocument*>(parser->getDocument()->cloneNode(true));
-    delete parser;
-  } else {
-    DOMImplementation* impl = DOMImplementationRegistry::getDOMImplementation(to_xml_ch_ptr("LS"));;
-    
-    doc = impl->createDocument(0,to_xml_ch_ptr("Uintah_Output"),
-			      0);
-  }
+      // Add the parser contents to the ProblemSpecP d_doc
+#if !defined( _AIX )
+      doc = dynamic_cast<DOMDocument*>(parser->getDocument()->cloneNode(true));
+#else
+      doc = static_cast<DOMDocument*>(parser->getDocument()->cloneNode(true));
+#endif
 
-  // Find the end of the file
-  DOMNode* n = doc->getDocumentElement();
-  ASSERT(n != NULL);
-  n = const_cast<DOMNode*>(findNode("Variable", n));
+      if( !doc ) {
+	cout << "DataArchiver.cc: dynamic_cast of 'doc' failed\n";
+	throw InternalError(" DataArchiver.cc: dynamic_cast of 'doc' failed" );
+      }
+      delete parser;
+    } else {
+      DOMImplementation* impl = 
+         DOMImplementationRegistry::getDOMImplementation(to_xml_ch_ptr("LS"));;
+      
+      doc = impl->createDocument(0,to_xml_ch_ptr("Uintah_Output"), 0);
+    }
+
+    // Find the end of the file
+    DOMNode* n = doc->getDocumentElement();
+    ASSERT(n != NULL);
+    n = const_cast<DOMNode*>(findNode("Variable", n));
    
-  long cur=0;
-  while(n != NULL){
-    DOMNode* endNode = const_cast<DOMNode*>(findNode("end", n));
-    ASSERT(endNode != 0);
-    const DOMNode* tn = findTextNode(endNode);
-    //DOMString val = tn->getNodeValue();
-    const char* s = to_char_ptr(tn->getNodeValue());
-    long end = atol(s);
+    long cur=0;
+    while(n != NULL){
+      DOMNode* endNode = const_cast<DOMNode*>(findNode("end", n));
+      ASSERT(endNode != 0);
+      const DOMNode* tn = findTextNode(endNode);
+      //DOMString val = tn->getNodeValue();
+      const char* s = to_char_ptr(tn->getNodeValue());
+      long end = atol(s);
     
-    if(end > cur)
-      cur=end;
-    n = const_cast<DOMNode*>(findNextNode("Variable", n));
-  }
+      if(end > cur)
+	cur=end;
+      n = const_cast<DOMNode*>(findNextNode("Variable", n));
+    }
 
 
-  DOMElement* rootElem = doc->getDocumentElement();
-  // Open the data file
-  int fd = open(dataFilename.c_str(), O_WRONLY|O_CREAT, 0666);
-  if(fd == -1){
-    cerr << "Cannot open dataFile: " << dataFilename << '\n';
-    throw ErrnoException("DataArchiver::output (open call)", errno);
-  }
+    DOMElement* rootElem = doc->getDocumentElement();
+    // Open the data file
+    int fd = open(dataFilename.c_str(), O_WRONLY|O_CREAT, 0666);
+    if(fd == -1){
+      cerr << "Cannot open dataFile: " << dataFilename << '\n';
+      throw ErrnoException("DataArchiver::output (open call)", errno);
+    }
 
-  struct stat st;
-  int s = fstat(fd, &st);
-  if(s == -1){
-    cerr << "Cannot fstat: " << dataFilename << '\n';
-    throw ErrnoException("DataArchiver::output (stat call)", errno);
-  }
-  ASSERTEQ(cur, st.st_size);
+    struct stat st;
+    int s = fstat(fd, &st);
+    if(s == -1){
+      cerr << "Cannot fstat: " << dataFilename << '\n';
+      throw ErrnoException("DataArchiver::output (stat call)", errno);
+    }
+    ASSERTEQ(cur, st.st_size);
 
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    int patchID = patch?patch->getID():-1;
-    for(int m=0;m<matls->size();m++){
-      int matlIndex = matls->get(m);
-      DOMElement* pdElem = doc->createElement(to_xml_ch_ptr("Variable"));
-      rootElem->appendChild(pdElem);
-      DOMText* tailer = doc->createTextNode(to_xml_ch_ptr("\n"));
-      rootElem->appendChild(tailer);
+    for(int p=0;p<patches->size();p++){
+      const Patch* patch = patches->get(p);
+      int patchID = patch?patch->getID():-1;
+      for(int m=0;m<matls->size();m++){
+	int matlIndex = matls->get(m);
+	DOMElement* pdElem = doc->createElement(to_xml_ch_ptr("Variable"));
+	rootElem->appendChild(pdElem);
+	DOMText* tailer = doc->createTextNode(to_xml_ch_ptr("\n"));
+	rootElem->appendChild(tailer);
   
-      appendElement(pdElem, doc->createTextNode(to_xml_ch_ptr("variable")), var->getName());
-      appendElement(pdElem, doc->createTextNode(to_xml_ch_ptr("index")), matlIndex);
-      appendElement(pdElem, doc->createTextNode(to_xml_ch_ptr("patch")), patchID);
-      pdElem->setAttribute(to_xml_ch_ptr("type"), 
-			   to_xml_ch_ptr2(var->typeDescription()->getName().c_str()));
+	appendElement(pdElem, doc->createTextNode(to_xml_ch_ptr("variable")), var->getName());
+	appendElement(pdElem, doc->createTextNode(to_xml_ch_ptr("index")), matlIndex);
+	appendElement(pdElem, doc->createTextNode(to_xml_ch_ptr("patch")), patchID);
+	pdElem->setAttribute(to_xml_ch_ptr("type"), 
+			     to_xml_ch_ptr2(var->typeDescription()->getName().c_str()));
 
 #ifdef __sgi
-      off64_t ls = lseek64(fd, cur, SEEK_SET);
+	off64_t ls = lseek64(fd, cur, SEEK_SET);
 #else
-      off_t ls = lseek(fd, cur, SEEK_SET);
+	off_t ls = lseek(fd, cur, SEEK_SET);
 #endif
-      if(ls == -1)
-	throw ErrnoException("DataArchiver::output (lseek64 call)", errno);
+	if(ls == -1)
+	  throw ErrnoException("DataArchiver::output (lseek64 call)", errno);
 
-      // Pad appropriately
-      if(cur%PADSIZE != 0){
-	long pad = PADSIZE-cur%PADSIZE;
-	char* zero = scinew char[pad];
-	bzero(zero, pad);
-	write(fd, zero, pad);
-	cur+=pad;
-	delete[] zero;
+	// Pad appropriately
+	if(cur%PADSIZE != 0){
+	  long pad = PADSIZE-cur%PADSIZE;
+	  char* zero = scinew char[pad];
+	  bzero(zero, pad);
+	  write(fd, zero, pad);
+	  cur+=pad;
+	  delete[] zero;
+	}
+	ASSERTEQ(cur%PADSIZE, 0);
+	appendElement(pdElem, doc->createTextNode(to_xml_ch_ptr("start")), cur);
+
+	OutputContext oc(fd, cur, pdElem);
+	new_dw->emit(oc, var, matlIndex, patch);
+	appendElement(pdElem, doc->createTextNode(to_xml_ch_ptr("end")), oc.cur);
+	appendElement(pdElem, doc->createTextNode(to_xml_ch_ptr("filename")), dataFilebase.c_str());
+	s = fstat(fd, &st);
+	if(s == -1)
+	  throw ErrnoException("DataArchiver::output (stat call)", errno);
+	ASSERTEQ(oc.cur, st.st_size);
+	cur=oc.cur;
       }
-      ASSERTEQ(cur%PADSIZE, 0);
-      appendElement(pdElem, doc->createTextNode(to_xml_ch_ptr("start")), cur);
-
-      OutputContext oc(fd, cur, pdElem);
-      new_dw->emit(oc, var, matlIndex, patch);
-      appendElement(pdElem, doc->createTextNode(to_xml_ch_ptr("end")), oc.cur);
-      appendElement(pdElem, doc->createTextNode(to_xml_ch_ptr("filename")), dataFilebase.c_str());
-      s = fstat(fd, &st);
-      if(s == -1)
-	throw ErrnoException("DataArchiver::output (stat call)", errno);
-      ASSERTEQ(oc.cur, st.st_size);
-      cur=oc.cur;
     }
-  }
 
-  s = close(fd);
-  if(s == -1)
-    throw ErrnoException("DataArchiver::output (close call)", errno);
+    s = close(fd);
+    if(s == -1)
+      throw ErrnoException("DataArchiver::output (close call)", errno);
 
-  ofstream out(xmlFilename.c_str());
-  out << doc << endl;
-  doc->release();
+    ofstream out(xmlFilename.c_str());
+    out << doc << endl;
+    doc->release();
 
-  if(d_writeMeta){
-    // Rewrite the index if necessary...
-    string iname = p_dir->getName()+"/index.xml";
-    DOMDocument* indexDoc = loadDocument(iname);
+    if(d_writeMeta){
+      // Rewrite the index if necessary...
+      string iname = p_dir->getName()+"/index.xml";
+      DOMDocument* indexDoc = loadDocument(iname);
     
-    DOMNode* vs;
-    string variableSection = (isReduction) ? "globals" : "variables";
+      DOMNode* vs;
+      string variableSection = (isReduction) ? "globals" : "variables";
 	 
-    vs = const_cast<DOMNode*>(findNode(variableSection, indexDoc->getDocumentElement()));
-    if(vs == 0){
-      DOMText* leader = indexDoc->createTextNode(to_xml_ch_ptr("\n"));
-      indexDoc->getDocumentElement()->appendChild(leader);
-      vs = indexDoc->createElement(to_xml_ch_ptr(variableSection.c_str()));
-      indexDoc->getDocumentElement()->appendChild(vs);
-    }
-    bool found=false;
-    for(DOMNode* n = vs->getFirstChild(); n != 0; n=n->getNextSibling()){
-      if(strcmp(to_char_ptr(n->getNodeName()),"variable") == 0) {
-	DOMNamedNodeMap* attributes = n->getAttributes();
-	DOMNode* varname = attributes->getNamedItem(to_xml_ch_ptr("name"));
-	if(varname == 0)
-	  throw InternalError("varname not found");
-	string vn = to_char_ptr(varname->getNodeValue());
-	if(vn == var->getName()){
-	  found=true;
-	  break;
+      vs = const_cast<DOMNode*>(findNode(variableSection, indexDoc->getDocumentElement()));
+      if(vs == 0){
+	DOMText* leader = indexDoc->createTextNode(to_xml_ch_ptr("\n"));
+	indexDoc->getDocumentElement()->appendChild(leader);
+	vs = indexDoc->createElement(to_xml_ch_ptr(variableSection.c_str()));
+	indexDoc->getDocumentElement()->appendChild(vs);
+      }
+      bool found=false;
+      for(DOMNode* n = vs->getFirstChild(); n != 0; n=n->getNextSibling()){
+	if(strcmp(to_char_ptr(n->getNodeName()),"variable") == 0) {
+	  DOMNamedNodeMap* attributes = n->getAttributes();
+	  DOMNode* varname = attributes->getNamedItem(to_xml_ch_ptr("name"));
+	  if(varname == 0)
+	    throw InternalError("varname not found");
+	  string vn = to_char_ptr(varname->getNodeValue());
+	  if(vn == var->getName()){
+	    found=true;
+	    break;
+	  }
 	}
       }
-    }
-    if(!found){
-      DOMText* leader = indexDoc->createTextNode(to_xml_ch_ptr("\n\t"));
-      vs->appendChild(leader);
-      DOMElement* newElem = indexDoc->createElement(to_xml_ch_ptr("variable"));
-      vs->appendChild(newElem);
-      newElem->setAttribute(to_xml_ch_ptr("type"), 
-			    to_xml_ch_ptr2(var->typeDescription()->getName().c_str()));
-      newElem->setAttribute(to_xml_ch_ptr("name"), to_xml_ch_ptr2(var->getName().c_str()));
-      DOMText* trailer = indexDoc->createTextNode(to_xml_ch_ptr("\n"));
-      vs->appendChild(trailer);
-    }
+      if(!found){
+	DOMText* leader = indexDoc->createTextNode(to_xml_ch_ptr("\n\t"));
+	vs->appendChild(leader);
+	DOMElement* newElem = indexDoc->createElement(to_xml_ch_ptr("variable"));
+	vs->appendChild(newElem);
+	newElem->setAttribute(to_xml_ch_ptr("type"), 
+			      to_xml_ch_ptr2(var->typeDescription()->getName().c_str()));
+	newElem->setAttribute(to_xml_ch_ptr("name"), to_xml_ch_ptr2(var->getName().c_str()));
+	DOMText* trailer = indexDoc->createTextNode(to_xml_ch_ptr("\n"));
+	vs->appendChild(trailer);
+      }
 
-    ofstream indexOut(iname.c_str());
-    indexOut << indexDoc << endl;  
-    indexDoc->release();
+      ofstream indexOut(iname.c_str());
+      indexOut << indexDoc << endl;  
+      indexDoc->release();
+    }
   }
- }
- d_outputLock.unlock(); 
-}
+  d_outputLock.unlock(); 
+} // end output()
 
 static
 Dir
@@ -1543,50 +1579,52 @@ makeVersionedDir(const std::string nameBase)
 void  DataArchiver::initSaveLabels(SchedulerP& sched)
 {
   dbg << "initSaveLabels called\n";
-   SaveItem saveItem;
-   d_saveReductionLabels.clear();
-   d_saveLabels.clear();
-  
-   d_saveLabels.reserve(d_saveLabelNames.size());
-   Scheduler::VarLabelMaterialMap* pLabelMatlMap;
-   pLabelMatlMap = sched->makeVarLabelMaterialMap();
-   for (list<SaveNameItem>::iterator it = d_saveLabelNames.begin();
-        it != d_saveLabelNames.end(); it++) {
+
+  SaveItem saveItem;
+  d_saveReductionLabels.clear();
+  d_saveLabels.clear();
+   
+  d_saveLabels.reserve(d_saveLabelNames.size());
+  Scheduler::VarLabelMaterialMap* pLabelMatlMap;
+  pLabelMatlMap = sched->makeVarLabelMaterialMap();
+  for (list<SaveNameItem>::iterator it = d_saveLabelNames.begin();
+       it != d_saveLabelNames.end(); it++) {
      
-      VarLabel* var = VarLabel::find((*it).labelName);
-      if (var == NULL)
-         throw ProblemSetupException((*it).labelName +
-				     " variable not found to save.");
+    VarLabel* var = VarLabel::find((*it).labelName);
+    if (var == NULL)
+      throw ProblemSetupException((*it).labelName +
+				  " variable not found to save.");
 
-      if ((*it).compressionMode != "")
-	var->setCompressionMode((*it).compressionMode);
+    if ((*it).compressionMode != "")
+      var->setCompressionMode((*it).compressionMode);
       
-      Scheduler::VarLabelMaterialMap::iterator found =
-	pLabelMatlMap->find(var->getName());
+    Scheduler::VarLabelMaterialMap::iterator found =
+      pLabelMatlMap->find(var->getName());
 
-      if (found == pLabelMatlMap->end())
-         throw ProblemSetupException((*it).labelName +
+    if (found == pLabelMatlMap->end())
+      throw ProblemSetupException((*it).labelName +
 				  " variable not computed for saving.");
       
-      saveItem.label_ = var;
-      ConsecutiveRangeSet matlsToSave =
-	(ConsecutiveRangeSet((*found).second)).intersected((*it).matls);
-      saveItem.setMaterials(matlsToSave, prevMatls_, prevMatlSet_);
+    saveItem.label_ = var;
+    ConsecutiveRangeSet matlsToSave =
+      (ConsecutiveRangeSet((*found).second)).intersected((*it).matls);
+    saveItem.setMaterials(matlsToSave, prevMatls_, prevMatlSet_);
       
-      if (((*it).matls != ConsecutiveRangeSet::all) &&
-	  ((*it).matls != matlsToSave)) {
-         throw ProblemSetupException((*it).labelName +
-	  " variable not computed for all materials specified to save.");
-      }
+    if (((*it).matls != ConsecutiveRangeSet::all) &&
+	((*it).matls != matlsToSave)) {
+      throw ProblemSetupException((*it).labelName +
+				  " variable not computed for all materials specified to save.");
+    }
       
-      if (saveItem.label_->typeDescription()->isReductionVariable()) {
-	d_saveReductionLabels.push_back(saveItem);
-      }
-      else
-         d_saveLabels.push_back(saveItem);
-   }
-   d_saveLabelNames.clear();
-   delete pLabelMatlMap;
+    if (saveItem.label_->typeDescription()->isReductionVariable()) {
+      d_saveReductionLabels.push_back(saveItem);
+    }
+    else
+      d_saveLabels.push_back(saveItem);
+  }
+  d_saveLabelNames.clear();
+  delete pLabelMatlMap;
+  dbg << "end of initSaveLabels\n";
 }
 
 
