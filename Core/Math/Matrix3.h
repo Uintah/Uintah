@@ -39,6 +39,10 @@ class Matrix3 {
 //  field storage stuff.
 //  inline Matrix3(double mat3[3][3]);
   inline Matrix3(const Matrix3&);
+  // Create a matrix using dyadic multiplication M = v1*v2^T
+  inline Matrix3(const Vector& v1, const Vector& v2);
+  // Create a rotation matrix using rotation angle and axis 
+  inline Matrix3(double angle, const Vector& axis);
 
   // copy constructor
 //  Matrix3(const Matrix3 &m3);
@@ -278,6 +282,35 @@ inline Matrix3::Matrix3(const Matrix3& copy)
   mat3[1][0] = copy.mat3[1][0]; mat3[1][1] = copy.mat3[1][1]; mat3[1][2] = copy.mat3[1][2];
   mat3[2][0] = copy.mat3[2][0]; mat3[2][1] = copy.mat3[2][1]; mat3[2][2] = copy.mat3[2][2];
 
+}
+
+// Create a matrix using dyadic multiplication M = a*b^T
+inline Matrix3::Matrix3(const Vector& a, const Vector& b)
+{
+  // Dyadic multiplication of two vectors a and b
+  mat3[0][0] = a[0]*b[0]; mat3[0][1] = a[0]*b[1]; mat3[0][2] = a[0]*b[2];
+  mat3[1][0] = a[1]*b[0]; mat3[1][1] = a[1]*b[1]; mat3[1][2] = a[1]*b[2];
+  mat3[2][0] = a[2]*b[0]; mat3[2][1] = a[2]*b[1]; mat3[2][2] = a[2]*b[2];
+}
+
+// Create a rotation matrix using the angle of rotation and the
+// axis of rotation
+inline Matrix3::Matrix3(double angle, const Vector& axis)
+{
+  // Create matrix A  = [[0 -axis3 axis2];[axis3 0 -axis1];[-axis2 axis1 0]]
+  // Calculate the dyad aa
+  // Calculate the rotation matrix
+  // R = (I - aa)*cos(angle) + aa - A*sin(angle);
+  double ca = cos(angle); double sa = sin(angle);
+  mat3[0][0] = (1.0 - axis[0]*axis[0])*ca + axis[0]*axis[0];
+  mat3[0][1] = (- axis[0]*axis[1])*ca + axis[0]*axis[1] + axis[2]*sa;
+  mat3[0][2] = (- axis[0]*axis[2])*ca + axis[0]*axis[2] - axis[1]*sa;
+  mat3[1][0] = (- axis[1]*axis[0])*ca + axis[1]*axis[0] - axis[2]*sa;
+  mat3[1][1] = (1.0 - axis[1]*axis[1])*ca + axis[1]*axis[1]; 
+  mat3[1][2] = (- axis[1]*axis[2])*ca + axis[1]*axis[2] + axis[0]*sa;
+  mat3[2][0] = (- axis[2]*axis[0])*ca + axis[2]*axis[0] + axis[1]*sa;
+  mat3[2][1] = (- axis[2]*axis[1])*ca + axis[2]*axis[1] - axis[0]*sa; 
+  mat3[2][2] = (1.0 - axis[2]*axis[2])*ca + axis[2]*axis[2];
 }
 
 inline Matrix3::~Matrix3()
