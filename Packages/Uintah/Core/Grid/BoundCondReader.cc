@@ -23,7 +23,7 @@
 #include <list>
 
 #define PRINT
-#undef PRINT
+//#undef PRINT
 
 using namespace std;
 using namespace Uintah;
@@ -331,7 +331,9 @@ void BCReader::combineBCS()
 	  // Create a unionbcdata for all the remaining bcs and remove the 
 	  // sidebcdata.  
 	  UnionBCData* union_bc = scinew UnionBCData();
-	  union_bc->child = bcd_itr->second;
+	  for (vector<BCGeomBase*>::const_iterator i = bcd_itr->second.begin();
+	       i != bcd_itr->second.end(); ++i)
+	    union_bc->child.push_back((*i)->clone());
 	  vector<BCGeomBase*>::iterator itr, new_end = 
 	    remove_if(union_bc->child.begin(),
 		      union_bc->child.end(),
