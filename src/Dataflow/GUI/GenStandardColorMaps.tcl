@@ -25,11 +25,9 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
     protected curY
     protected selected
     constructor {config} { 
-	puts "constructing GenStandardColorMaps"
         set name GenStandardColorMaps 
         set_defaults 
 	buildColorMaps
-#	SetColorMap
     } 
     
     method set_defaults {} { 

@@ -20,7 +20,6 @@ itcl_class SCIRun_Visualization_RescaleColorMap {
 
     protected  bVar
     constructor {config} { 
-		puts "constructing RescaleColorMap"
         set name RescaleColorMap 
         set_defaults 
     } 
