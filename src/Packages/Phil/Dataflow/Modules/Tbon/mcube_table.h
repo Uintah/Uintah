@@ -1,4 +1,4 @@
-$Id$
+//static char *id="@(#) $Id$";
 
 /*
   mcube_table.h
@@ -1629,6 +1629,9 @@ static TRIANGLE_CASES_UG triCasesUG[] = {
 
 //
 // $Log$
+// Revision 1.2  2000/02/04 22:11:14  psutton
+// fixed ID problem
+//
 // Revision 1.1  2000/02/04 20:56:53  psutton
 // initial revision
 //

@@ -1,4 +1,4 @@
-$Id$
+//static char *id="@(#) $Id$";
 
 /* Bono.cc
    Branch-on-Need Octree (BONO) implementation
@@ -321,6 +321,9 @@ Bono::processQuery() {
 
 //
 // $Log$
+// Revision 1.2  2000/02/04 22:07:17  psutton
+// fixed ID problem
+//
 // Revision 1.1  2000/02/04 00:23:35  psutton
 // initial revision
 //

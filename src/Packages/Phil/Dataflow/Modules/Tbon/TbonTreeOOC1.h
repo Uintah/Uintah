@@ -1,4 +1,4 @@
-$Id$
+//static char *id="@(#) $Id$";
 
 /* TbonTreeOOC1.h
    class declarations and code for the T-BON tree
@@ -912,6 +912,9 @@ TbonTreeOOC1<T>::readBricks( int x, int y, int z, int branching ) {
 
 //
 // $Log$
+// Revision 1.2  2000/02/04 22:15:09  psutton
+// fixed ID problem
+//
 // Revision 1.1  2000/02/04 21:11:58  psutton
 // initial revision
 //

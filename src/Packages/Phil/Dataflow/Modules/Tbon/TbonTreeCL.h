@@ -1,4 +1,4 @@
-$Id$
+//static char *id="@(#) $Id$";
 
 /* TbonTreeCL.h
    class declarations and code for the T-BON tree, curvilinear implementation
@@ -1829,6 +1829,9 @@ TbonTreeCL<T>::searchSecondPass( int currtree, int myindex, int d,
 
 //
 // $Log$
+// Revision 1.2  2000/02/04 22:13:04  psutton
+// fixed ID problem
+//
 // Revision 1.1  2000/02/04 21:05:41  psutton
 // initial revision
 //
