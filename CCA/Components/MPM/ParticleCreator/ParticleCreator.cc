@@ -81,9 +81,11 @@ ParticleCreator::createParticles(MPMMaterial* matl,
       particleIndex oldStart = start;
       int numP = sgp->createParticles(patch, position, pvolume,
                                       psize, start);
+      IntVector cell_idx;
       for (int ii = 0; ii < numP ; ++ii) {
         particleIndex pidx = oldStart + ii;
-	initNonGeomPartVar(pidx, patch, obj, matl, cellNAPID);
+        patch->findCell(position[pidx], cell_idx);
+	initNonGeomPartVar(pidx, patch, obj, matl, cell_idx, cellNAPID);
       }
     } else {
       // Special case exception for FileGeometryPieces
@@ -185,9 +187,9 @@ ParticleCreator::applyForceBC(const Vector& dxpp,
       //cout << "BC Box = " << bcBox << " Point = " << pp << endl;
       if(bcBox.contains(pp)) {
         pExtForce = bc->getForceDensity() * pMass;
-        cout << "External Force on Particle = " << pExtForce 
-             << " Force Density = " << bc->getForceDensity() 
-             << " Particle Mass = " << pMass << endl;
+        //cout << "External Force on Particle = " << pExtForce 
+        //     << " Force Density = " << bc->getForceDensity() 
+        //     << " Particle Mass = " << pMass << endl;
       }
     } 
   }
@@ -381,7 +383,7 @@ ParticleCreator::initializeParticle(const Patch* patch,
   pvolume[i] = dxpp.x()*dxpp.y()*dxpp.z();
   psize[i] = size;
 
-  initNonGeomPartVar(i, patch, obj, matl, cellNAPID);
+  initNonGeomPartVar(i, patch, obj, matl, cell_idx, cellNAPID);
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -392,6 +394,7 @@ ParticleCreator::initNonGeomPartVar(particleIndex pidx,
                                     const Patch* patch,
                                     vector<GeometryObject*>::const_iterator obj,
 				    MPMMaterial* matl,
+                                    IntVector cell_idx,
 				    CCVariable<short int>& cellNAPID)
 {
   pvelocity[pidx] = (*obj)->getInitialVelocity();
@@ -400,31 +403,19 @@ ParticleCreator::initNonGeomPartVar(particleIndex pidx,
   pmass[pidx] = matl->getInitialDensity()*pvolume[pidx];
   pdisp[pidx] = Vector(0.,0.,0.);
 
-  IntVector cell_idx;
-  patch->findCell(position[pidx], cell_idx);
-  pparticleID[pidx] = createParticleID(cell_idx, cellNAPID);
-
   Vector pExtForce(0,0,0);
   Vector dxpp = patch->dCell()/(*obj)->getNumParticlesPerCell();
   ParticleCreator::applyForceBC(dxpp, position[pidx], pmass[pidx], pExtForce);
   pexternalforce[pidx] = pExtForce;
-}
 
-//////////////////////////////////////////////////////////////////////////
-/*! \brief Compute the particle ID */
-//////////////////////////////////////////////////////////////////////////
-long64 
-ParticleCreator::createParticleID(IntVector cell_idx, 
-                                  CCVariable<short int>& cellNAPID)
-{
   ASSERT(cell_idx.x() <= 0xffff && cell_idx.y() <= 0xffff
 	 && cell_idx.z() <= 0xffff);
   long64 cellID = ((long64)cell_idx.x() << 16) | 
     ((long64)cell_idx.y() << 32) | ((long64)cell_idx.z() << 48);
   short int& myCellNAPID = cellNAPID[cell_idx];
-  return (cellID | (long64) myCellNAPID);
-  //ASSERT(myCellNAPID < 0x7fff);
-  //myCellNAPID++;
+  pparticleID[pidx] = (cellID | (long64) myCellNAPID);
+  ASSERT(myCellNAPID < 0x7fff);
+  myCellNAPID++;
 }
 
 particleIndex 

@@ -82,13 +82,8 @@ namespace Uintah {
                                     const Patch* patch,
                                     vector<GeometryObject*>::const_iterator obj,
 			            MPMMaterial* matl,
+                                    IntVector cell_idx,
 			            CCVariable<short int>& cellNAPI);
-
-    //////////////////////////////////////////////////////////////////////////
-    /*! \brief Compute the particle ID */
-    //////////////////////////////////////////////////////////////////////////
-    long64 createParticleID(IntVector cell_idx, 
-                            CCVariable<short int>& cellNAPID);
 
     //////////////////////////////////////////////////////////////////////////
     /*! Get the LoadCurveID applicable for this material point */
