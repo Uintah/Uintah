@@ -373,7 +373,10 @@ double get_slice_time( const char *name )
 
 
 /*  Query the server for the slice real space data. */
-double *get_realspace_data( const char *name, const char *node, int *dims )
+double *get_slice_data( const char *name,
+			const char *space,
+			const char *node,
+			int *dims )
 {
   char *sliceStr = "\\NIMROD::TOP.OUTPUTS.CODE.SLICES";
 
@@ -382,7 +385,7 @@ double *get_realspace_data( const char *name, const char *node, int *dims )
   int i, rank, size = 1;
 
   /*  */
-  sprintf(buf, "%s.%s.REALSPACE.%s", sliceStr, name, node);
+  sprintf(buf, "%s.%s.%s.%s", sliceStr, name, space, node);
 
   /* Fetch the rank and size of the signal. */
   rank = get_dims( buf, dims );
@@ -394,7 +397,7 @@ double *get_realspace_data( const char *name, const char *node, int *dims )
       size *= dims[i];
 
     /* Fetch the data from the node */
-    sprintf(buf,"%s.%s.REALSPACE.%s", sliceStr, name, node);
+    sprintf(buf,"%s.%s.%s.%s", sliceStr, name, space, node);
 
     return get_data( buf, size );
   }
