@@ -3,6 +3,9 @@
 
 #include <Uintah/Grid/RefCounted.h>
 #include <vector>
+#include <iostream>
+using std::cerr;
+using std::endl;
 
 namespace Uintah {
   namespace Grid {
@@ -49,6 +52,10 @@ namespace Uintah {
        int getNumMatls() const {
 	  return (int)matls.size();
        }
+       int getNumVelFields() const {
+	  cerr << "This needs to be fixed " << endl;
+	  return (int)matls.size();
+       }
        Material* getMaterial(int idx) const {
 	  return matls[idx];
        }
@@ -66,6 +73,9 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.3  2000/04/25 22:29:33  guilkey
+// Added method to return number of velocity fields.  Needs to be completed.
+//
 // Revision 1.2  2000/04/24 21:04:38  sparker
 // Working on MPM problem setup and object creation
 //
