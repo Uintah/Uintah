@@ -43,7 +43,9 @@
 #include <Core/Datatypes/Color.h>
 
 // general libs
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 namespace rtrt {
 
@@ -130,9 +132,6 @@ GeoProbeScene::GeoProbeScene(GuiContext* ctx)
     yb_(ctx->subVar("yb")),
     za_(ctx->subVar("za")),
     zb_(ctx->subVar("zb")),
-    gui_color_r_(ctx->subVar("color-r")),
-    gui_color_g_(ctx->subVar("color-g")),
-    gui_color_b_(ctx->subVar("color-b")),
     xa_act_(ctx->subVar("xa-active")),
     xa_mat_(ctx->subVar("xa-usemat")),
     xb_act_(ctx->subVar("xb-active")),
@@ -145,6 +144,9 @@ GeoProbeScene::GeoProbeScene(GuiContext* ctx)
     za_mat_(ctx->subVar("za-usemat")),
     zb_act_(ctx->subVar("zb-active")),
     zb_mat_(ctx->subVar("zb-usemat")),
+    gui_color_r_(ctx->subVar("color-r")),
+    gui_color_g_(ctx->subVar("color-g")),
+    gui_color_b_(ctx->subVar("color-b")),
     //    surfmat(0),
     hvol(0),
     gpfilename_(ctx->subVar("gpfilename")),
