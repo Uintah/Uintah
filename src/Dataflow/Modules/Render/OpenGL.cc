@@ -1585,10 +1585,10 @@ OpenGL::put_scanline(int y, int width, Color* scanline, int repeat)
 
 
 void
-OpenGL::pick_draw_obj(Viewer* viewer, ViewWindow*, GeomObj* obj)
+OpenGL::pick_draw_obj(Viewer* viewer, ViewWindow*, GeomHandle obj)
 {
 #if (_MIPS_SZPTR == 64)
-  unsigned long o=(unsigned long)obj;
+  unsigned long o=(unsigned long)(obj.get_rep());
   unsigned int o1=(o>>32)&0xffffffff;
   unsigned int o2=o&0xffffffff;
   glPopName();
@@ -1599,7 +1599,7 @@ OpenGL::pick_draw_obj(Viewer* viewer, ViewWindow*, GeomObj* obj)
   glPushName(0x12345678);
 #else
   glPopName();
-  glPushName((GLuint)obj);
+  glPushName((GLuint)(obj.get_rep()));
   glPushName(0x12345678);
 #endif
   obj->draw(drawinfo, viewer->default_material_.get_rep(), current_time);
@@ -1608,7 +1608,7 @@ OpenGL::pick_draw_obj(Viewer* viewer, ViewWindow*, GeomObj* obj)
 
 
 void
-OpenGL::redraw_obj(Viewer* viewer, ViewWindow* viewwindow, GeomObj* obj)
+OpenGL::redraw_obj(Viewer* viewer, ViewWindow* viewwindow, GeomHandle obj)
 {
   drawinfo->viewwindow = viewwindow;
   obj->draw(drawinfo, viewer->default_material_.get_rep(), current_time);
@@ -2281,7 +2281,8 @@ OpenGL::real_getData(int datamask, FutureValue<GeometryData*>* result)
 #ifdef HAVE_COLLAB_VIS
 void OpenGL::collect_triangles(Viewer *viewer,
 			       ViewWindow *viewwindow,
-			       GeomObj *obj) {
+			       GeomHandle obj)
+{
   cerr << "[HAVE_COLLAB_VIS] (OpenGL::collect_triangles) 0" << endl;
   obj->get_triangles(*triangles);
   cerr << "found " << (*triangles).size()/3 << "  triangles" << endl;
