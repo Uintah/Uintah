@@ -1731,30 +1731,27 @@ PaintCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux,
     double pany = (modelview[13]+1.0)/2.0;
     double scalex = (modelview[0])/2.0;
     double scaley = (modelview[5])/2.0;
+
+    GLint vp[4];
+    glGetIntegerv(GL_VIEWPORT, vp);
     
     shader->bind();
     shader->setLocalParam(0, color_.r(), color_.g(), color_.b(), alpha_);
-    
-    GLint vp[4];
-    glGetIntegerv(GL_VIEWPORT, vp);
     shader->setLocalParam(3, 1.0/vp[2], 1.0/vp[3], pany, pany);
     if(pbuffer)
       shader->setLocalParam(4, 1.0/pbuffer->width(), 1.0/pbuffer->height(), 
 			    0.0, 0.0);
     double halfx = 1/35.0;
-    glColor4d(color_.r(), color_.g(), color_.b(), alpha_);
-    
+
     GLdouble mid[4] = { color_.r(), color_.g(), color_.b(), alpha_ };
     GLdouble edg[4] = { color_.r(), color_.g(), color_.b(), 0 };
-    
-    glShadeModel(GL_SMOOTH);
-    
-    glBegin(GL_QUADS);
+    glShadeModel(GL_SMOOTH);    
     for (unsigned int s = 0; s < strokes_.size(); ++s)
     {
       const unsigned int coordinates = strokes_[s].size();
       for (unsigned c = 1; c < coordinates; ++c)
       {
+	glBegin(GL_QUADS);
 	glColor4dv(edg);
 	glVertex2d(strokes_[s][c-1].first-halfx, strokes_[s][c-1].second);
 	
@@ -1779,12 +1776,15 @@ PaintCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux,
 	
 	glColor4dv(mid);
 	glVertex2d(strokes_[s][c].first, strokes_[s][c].second);
+	glEnd();
+	if (pbuffer && (s < strokes_.size()-1)) {
+	  pbuffer->release();
+	  pbuffer->swapBuffers();
+	  pbuffer->bind();
+	}
       }
     }
-    glEnd();
-    
     glShadeModel(GL_FLAT);
-    
     shader->release();
   }
   
