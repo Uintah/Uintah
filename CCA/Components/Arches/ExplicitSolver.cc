@@ -177,7 +177,7 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
 					TimeIntegratorStepType::BEEmulation3));
     }
     else {
-      throw ProblemSetupException("Integrator type is not defined"+d_timeIntegratorType);
+      throw ProblemSetupException("Integrator type is not defined "+d_timeIntegratorType);
     }
 }
 
@@ -239,7 +239,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 			    d_timeIntegratorLabels[curr_level], index);
     }
 
-    if (d_reactingScalarSolver) {
+    if (d_reactingScalarSolve) {
       int index = 0;
       // in this case we're only solving for one scalar...but
       // the same subroutine can be used to solve multiple scalars
@@ -292,7 +292,7 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       }
       d_momSolver->sched_averageRKHatVelocities(sched, patches, matls,
 					    d_timeIntegratorLabels[curr_level]);
-    }
+    } 
 
     d_props->sched_computeDrhodt(sched, patches, matls,
 				 d_timeIntegratorLabels[curr_level]);
@@ -444,7 +444,7 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
       tsk->computes(d_lab->d_scalarTempLabel);
   }
 
-  if (d_reactingScalarSolver) {
+  if (d_reactingScalarSolve) {
     tsk->computes(d_lab->d_reactscalarSPLabel);
     if (d_timeIntegratorLabels[0]->multiple_steps)
       tsk->computes(d_lab->d_reactscalarTempLabel);
@@ -455,7 +455,6 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
     tsk->computes(d_lab->d_enthalpyTempLabel);
   }
   tsk->computes(d_lab->d_densityCPLabel);
-  tsk->computes(d_lab->d_densityOldOldLabel);
   if (d_timeIntegratorLabels[0]->multiple_steps)
     tsk->computes(d_lab->d_densityTempLabel);
   tsk->computes(d_lab->d_viscosityCTSLabel);
@@ -496,7 +495,7 @@ ExplicitSolver::sched_dummySolve(SchedulerP& sched,
   tsk->computes(d_lab->d_uvwoutLabel);
   tsk->computes(d_lab->d_totalflowINLabel);
   tsk->computes(d_lab->d_totalflowOUTLabel);
-  tsk->computes(d_lab->d_totalflowOUToutbcLabel);
+  tsk->computes(d_lab->d_netflowOUTBCLabel);
   tsk->computes(d_lab->d_denAccumLabel);
 
   tsk->requires(Task::OldDW, d_lab->d_maxAbsU_label);
@@ -1091,9 +1090,6 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     CCVariable<double> density_new;
     new_dw->allocateAndPut(density_new, d_lab->d_densityCPLabel, matlIndex, patch);
     density_new.copyData(density); // copy old into new
-    CCVariable<double> density_oldold;
-    new_dw->allocateAndPut(density_oldold, d_lab->d_densityOldOldLabel, matlIndex, patch);
-    density_oldold.copyData(density); // copy old into new
     if (d_timeIntegratorLabels[0]->multiple_steps) {
       CCVariable<double> density_temp;
       new_dw->allocateAndPut(density_temp, d_lab->d_densityTempLabel, matlIndex, patch);
@@ -1182,7 +1178,7 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
     new_dw->put(delt_vartype(uvwout), d_lab->d_uvwoutLabel);
     new_dw->put(delt_vartype(flowIN), d_lab->d_totalflowINLabel);
     new_dw->put(delt_vartype(flowOUT), d_lab->d_totalflowOUTLabel);
-    new_dw->put(delt_vartype(flowOUToutbc), d_lab->d_totalflowOUToutbcLabel);
+    new_dw->put(delt_vartype(flowOUToutbc), d_lab->d_netflowOUTBCLabel);
     new_dw->put(delt_vartype(denAccum), d_lab->d_denAccumLabel);
 
   }
