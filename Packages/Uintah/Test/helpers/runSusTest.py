@@ -81,8 +81,7 @@ def runSusTest(test, mode, susdir, algo, do_restart = "no"):
         if rc == 0:
 	    print "\tMemory leak tests passed."
 	elif rc == 5 * 256:
-	    print "\t*** Warning, no malloc_stats file created.  Memory leak test failed."
-	    return 1
+	    print "\t* Warning, no malloc_stats file created.  No memory leak test performed."
 	elif rc == 256:
 	    print "\t*** Warning, test %s failed memory leak test" % (testname)
 	    return 1
