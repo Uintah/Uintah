@@ -126,7 +126,6 @@ int main(int argc, char* argv[])
 
 	Server pp;
 	if(server) {
-	    cerr << "Creating memstress object\n";
 	    pp=new Server_impl;
 	    cerr << "Waiting for memstress connections...\n";
 	    cerr << pp->getURL().getString() << '\n';
