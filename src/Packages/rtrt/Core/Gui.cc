@@ -12,6 +12,7 @@
 #include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/Image.h>
 #include <Packages/rtrt/Core/CycleMaterial.h>
+#include <Packages/rtrt/Core/FontString.h>
 
 #include <Core/Math/Trig.h>
 #include <Core/Thread/Time.h>
@@ -159,11 +160,19 @@ Gui::idleFunc()
 
     activeGui->dpy_->showImage_->draw();
     activeGui->dpy_->showImage_ = NULL;
+
+    // Display textual information on the screen:
+    char buf[100];
+    sprintf( buf, "%3.1 fps", activeGui->priv->FrameRate );
+    activeGui->displayText(GLUT_BITMAP_HELVETICA_10, 10, 3, buf, Color(1,1,1));
+
     glutSwapBuffers(); 
 
     // Let the Dpy thread start drawing the next image.
     activeGui->priv->waitDisplay->unlock();
-    activeGui->update(); // update the gui each time a frame is finished.
+    if( activeGui->mainWindowVisible ) {
+      activeGui->update(); // update the gui each time a frame is finished.
+    }
   }
 }
 
@@ -215,6 +224,9 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
   // TURN left and right
   case '4':
     activeGui->stealth_->turnLeft();
+    break;
+  case '5':    // STOP rotations (pitch/turn)
+    activeGui->stealth_->stopPitchAndRotate();
     break;
   case '6':
     activeGui->stealth_->turnRight();
@@ -572,6 +584,8 @@ Gui::handleMouseMotionCB( int mouse_x, int mouse_y )
 
   double     & last_time = priv->last_time;
   BallData  *& ball      = priv->ball;
+
+  cout << "mouse is at: " << mouse_x << ", " << mouse_y << "\n";
 
   switch( activeGui->mouseDown_ ) {
   case GLUT_LEFT_BUTTON:
@@ -1029,12 +1043,14 @@ Gui::createMenus( int winId )
 
   // Ambient
   GLUI_Panel * ambient = 
-    activeGui->mainWindow->add_panel_to_panel( display_panel, "Ambient" );
-  activeGui->shadowModeLB_ = activeGui->mainWindow->
-    add_listbox_to_panel( shadows, "Mode:", &activeGui->dpy_->ambientMode_ );
+    activeGui->mainWindow->add_panel_to_panel(display_panel, "Ambient Light");
+  activeGui->ambientModeLB_ = activeGui->mainWindow->
+    add_listbox_to_panel( ambient, "Mode:", &activeGui->dpy_->ambientMode_ );
+
   activeGui->ambientModeLB_->add_item( Constant_Ambient, "Constant" );
   activeGui->ambientModeLB_->add_item( Arc_Ambient, "Arc" );
   activeGui->ambientModeLB_->add_item( Sphere_Ambient, "Sphere" );
+  activeGui->shadowModeLB_->set_int_val( activeGui->dpy_->ambientMode_ );
 
   // Jitter
   GLUI_Panel * jitter = 
@@ -1451,30 +1467,28 @@ Gui::cycleShadowMode()
   shadowModeLB_->set_int_val( dpy_->shadowMode_ );
 }
 
-namespace rtrt {
-
 /////////////////////////////////////////////////////////////////////
 // Draws the string "s" to the GL window at x,y.
-
-static void printString(GLuint fontbase, double x, double y,
-			char *s, const Color& c)
+//
+void
+Gui::displayText(void * font, double x, double y, char *s, const Color& c)
 {
   glColor3f(c.red(), c.green(), c.blue());
+  glRasterPos2d(x, y);
 
-  glRasterPos2d(x,y);
-  /*glBitmap(0, 0, x, y, 1, 1, 0);*/
-  glPushAttrib (GL_LIST_BIT);
-  glListBase(fontbase);
-  glCallLists((int)strlen(s), GL_UNSIGNED_BYTE, (GLubyte *)s);
-  glPopAttrib ();
+  int len = (int) strlen(s);
+  for( int i = 0; i < len; i++ ) {
+    glutBitmapCharacter(font, s[i]);
+  }
 }
 
-static void printString2(GLuint fontbase, double x, double y,
-			 char *s, const Color& c)
+// Looks like this displays the string with a shadow on it...
+void
+Gui::displayShadowText(void * font,
+		       double x, double y, char *s, const Color& c)
 {
   Color b(0,0,0);
-  printString(fontbase, x-1, y-1, s, b);
-  printString(fontbase, x, y, s, c);
+  displayText(font, x-1, y-1, s, b);
+  displayText(font, x, y, s, c);
 }
 
-} // end namespace rtrt
