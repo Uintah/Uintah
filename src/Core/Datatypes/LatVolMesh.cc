@@ -53,56 +53,54 @@ LatVolMesh::get_point(Point &result, const node_index &index) const
 inline LatVolMesh::node_iterator
 LatVolMesh::node_begin() const
 {
-  return node_iterator(0, 0, 0);
+  return node_iterator(this,0, 0, 0);
 }
 
 
 inline LatVolMesh::node_iterator
 LatVolMesh::node_end() const
 {
-  return node_iterator(nx_, ny_, nz_);
+  return node_iterator(this,nx_, ny_, nz_);
 }
-
 
 inline LatVolMesh::edge_iterator
 LatVolMesh::edge_begin() const
 {
-  return NULL;
+  return 0;
 }
 
 
 inline LatVolMesh::edge_iterator
 LatVolMesh::edge_end() const
 {
-  return NULL;
+  return 0;
 }
 
 
 inline LatVolMesh::face_iterator
 LatVolMesh::face_begin() const
 {
-  return NULL;
+  return 0;
 }
 
 
 inline LatVolMesh::face_iterator
 LatVolMesh::face_end() const
 {
-  return NULL;
+  return 0;
 }
-
 
 inline LatVolMesh::cell_iterator
 LatVolMesh::cell_begin() const
 {
-  return cell_iterator(0, 0, 0);
+  return cell_iterator(this,0, 0, 0);
 }
 
 
 inline LatVolMesh::cell_iterator
 LatVolMesh::cell_end() const
 {
-  return cell_iterator(nx_-1, ny_-1, nz_-1);
+  return cell_iterator(this,nx_-1, ny_-1, nz_-1);
 }
 
 inline void
@@ -121,16 +119,16 @@ LatVolMesh::get_nodes(node_array &array, cell_index idx) const
   node_index a;
 
   // return the node_indexex  in this cell
-  a.x_ = idx.x_; a.y_ = idx.y_; a.z_ = idx.z_;
+  a.i_ = idx.i_; a.j_ = idx.j_; a.k_ = idx.k_;
   array[0] = a;
-  array[1] = array[0]; array[1].x_+=1;
-  array[2] = array[0]; array[2].y_+=1;
-  array[3] = array[0]; array[3].x_+=1; array[3].y_+=1;
+  array[1] = array[0]; array[1].i_+=1;
+  array[2] = array[0]; array[2].j_+=1;
+  array[3] = array[0]; array[3].i_+=1; array[3].j_+=1;
 
-  array[4] = array[0]; array[4].z_+=1;
-  array[5] = array[1]; array[5].z_+=1;
-  array[6] = array[2]; array[6].z_+=1;
-  array[7] = array[3]; array[7].z_+=1;
+  array[4] = array[0]; array[4].k_+=1;
+  array[5] = array[1]; array[5].k_+=1;
+  array[6] = array[2]; array[6].k_+=1;
+  array[7] = array[3]; array[7].k_+=1;
 }
 
 inline void 
@@ -148,34 +146,40 @@ LatVolMesh::get_faces(face_array &, cell_index) const
 {
 }
 
-inline int 
+inline unsigned
 LatVolMesh::get_edges(edge_array &, node_index) const
 {
+  return 0;
 }
 
-inline int 
+inline unsigned
 LatVolMesh::get_faces(face_array &, node_index) const
 {
+  return 0;
 }
 
-inline int 
+inline unsigned
 LatVolMesh::get_faces(face_array &, edge_index) const
 {
+  return 0;
 }
 
-inline int 
+inline unsigned
 LatVolMesh::get_cells(cell_array &, node_index) const
 {
+  return 0;
 }
 
-inline int 
+inline unsigned
 LatVolMesh::get_cells(cell_array &, edge_index) const
 {
+  return 0;
 }
 
-inline int 
+inline unsigned
 LatVolMesh::get_cells(cell_array &, face_index) const
 {
+  return 0;
 }
 
 inline void 
@@ -194,9 +198,9 @@ LatVolMesh::get_center(Point &result, node_index idx) const
   zgap = (max_.z()-min_.z())/(nz_-1);
   
   // return the node_index converted to object space
-  result.x(min_.x()+idx.x_*xgap);
-  result.y(min_.y()+idx.y_*ygap);
-  result.z(min_.z()+idx.z_*zgap);
+  result.x(min_.x()+idx.i_*xgap);
+  result.y(min_.y()+idx.j_*ygap);
+  result.z(min_.z()+idx.k_*zgap);
 }
 
 inline void 
@@ -265,7 +269,7 @@ LatVolMesh::locate_face(face_index &, const Point &, double[4]) const
 }
 
 inline void 
-LatVolMesh::locate_cell(cell_index &cell, const Point &p, double[8] w) const
+LatVolMesh::locate_cell(cell_index &cell, const Point &p, double w[8]) const
 {
   double xgap,ygap,zgap;
   Point min,max;
@@ -282,14 +286,14 @@ LatVolMesh::locate_cell(cell_index &cell, const Point &p, double[8] w) const
   fz = 1000./zgap;
 
   // compute the cell_index (divide and truncate)
-  cell.x_ = (unsigned)(p.x()/xgap);
-  cell.y_ = (unsigned)(p.y()/ygap);
-  cell.z_ = (unsigned)(p.z()/zgap);
+  cell.i_ = (unsigned)(p.x()/xgap);
+  cell.j_ = (unsigned)(p.y()/ygap);
+  cell.k_ = (unsigned)(p.z()/zgap);
 
   // compute the min and max Points of the cell
-  min.x(x*xgap);
-  min.y(y*ygap);
-  min.z(y*zgap);
+  min.x(cell.i_*xgap);
+  min.y(cell.j_*ygap);
+  min.z(cell.k_*zgap);
   max.x(min.x()+xgap);
   max.y(min.y()+ygap);
   max.z(min.z()+zgap);

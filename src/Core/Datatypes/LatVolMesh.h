@@ -17,7 +17,7 @@
 #include <Core/Datatypes/FieldIterator.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Containers/LockingHandle.h>
-#include <Core/Containers/MeshBase.h>
+#include <Core/Datatypes/MeshBase.h>
 
 
 namespace SCIRun {
@@ -46,19 +46,19 @@ public:
     NodeIndex(unsigned i, unsigned j, unsigned k) : LatIndex(i,j,k) {}    
   };
   
-  struct NCIter : public LatIndex
+  struct LatIter : public LatIndex
   {
-    NCIter(const LatVolMesh *m, unsigned i, unsigned j, unsigned k) 
+    LatIter(const LatVolMesh *m, unsigned i, unsigned j, unsigned k) 
       : LatIndex(i, j, k), mesh_(m) {}
     
     const LatIndex &operator *() { return *this; }
     
-    bool operator ==(const NCIter &a)
+    bool operator ==(const LatIter &a)
     {
       return i_ == a.i_ && j_ == a.j_ && k_ == a.k_ && mesh_ == a.mesh_;
     }
     
-    bool operator !=(const NCIter &a)
+    bool operator !=(const LatIter &a)
     {
       return !(*this == a);
     }
@@ -67,64 +67,65 @@ public:
   };
   
   
-  struct NodeIter : public NCIter
+  struct NodeIter : public LatIter
   {
     NodeIter(const LatVolMesh *m, unsigned i, unsigned j, unsigned k) 
-      : NCIter(m, i, j, k) {}
+      : LatIter(m, i, j, k) {}
     
     NodeIter &operator++()
     {
       i_++;
-      if (i_ > mesh_->nx_)
-	{
-	  i_ = 0;
-	  j_++;
-	  if (j_ > mesh_->ny_)
-	    {
-	      j_ = 0;
-	      k_++;
-	    }
+      if (i_ > mesh_->nx_)	{
+	i_ = 0;
+	j_++;
+	if (j_ > mesh_->ny_) {
+	  j_ = 0;
+	  k_++;
 	}
+      }
       return *this;
     }
     
+  private:
+#if 0
     NodeIter operator++(unsigned)
     {
       NodeIter result(*this);
       operator++();
       return result;
     }
+#endif
   };
   
   
-  struct CellIter : public NCIter
+  struct CellIter : public LatIter
   {
     CellIter(const LatVolMesh *m, unsigned i, unsigned j, unsigned k) 
-      : NCIter(m, i, j, k) {}
+      : LatIter(m, i, j, k) {}
     
     CellIter &operator++()
     {
       i_++;
-      if (i_ >= mesh_->nx_)
-	{
-	  i_ = 0;
-	  j_++;
-	  if (j_ >= mesh_->ny_)
-	    {
-	      j_ = 0;
-	      k_++;
-	    }
+      if (i_ >= mesh_->nx_) {
+	i_ = 0;
+	j_++;
+	if (j_ >= mesh_->ny_) {
+	  j_ = 0;
+	  k_++;
 	}
+      }
       return *this;
     }
     
   private:
+#if 0
     CellIter operator++(unsigned)
     {
       CellIter result(*this);
       operator++();
       return result;
     }
+#endif
   };
   
   typedef LatIndex index_type;
@@ -140,8 +141,8 @@ public:
  
   //typedef FaceIndex       face_index;
   //typedef FaceIterator    face_iterator;
-  typedef int             face_index;
-  typedef int             face_iterator;
+  typedef unsigned        face_index;
+  typedef unsigned        face_iterator;
  
   typedef CellIndex       cell_index;
   typedef CellIter        cell_iterator;
@@ -153,6 +154,9 @@ public:
   typedef edge_index  edge_array[12];
   typedef face_index  face_array[6];
   typedef cell_index  cell_array[8];
+
+  friend class NodeIter;
+  friend class CellIter;
 
   LatVolMesh()
     : nx_(1),ny_(1),nz_(1),min_(Point(0,0,0)),max_(Point(1,1,1)) {};
@@ -225,11 +229,11 @@ public:
 
 private:
 
-  //! the object space extents of a LatVolMesh
-  Point min_, max_;
-
   //! the node_index space extents of a LatVolMesh (min=0, max=n)
   unsigned nx_, ny_, nz_;
+
+  //! the object space extents of a LatVolMesh
+  Point min_, max_;
 
   // returns a LatVolMesh
   static Persistent *maker() { return new LatVolMesh(); }
