@@ -18,7 +18,8 @@ SRCS     += $(SRCDIR)/BooleanPort.cc $(SRCDIR)/ColorMapPort.cc \
 	$(SRCDIR)/cVectorPort.cc \
 	$(SRCDIR)/SpanSpace.cc $(SRCDIR)/SpanPort.cc \
 	$(SRCDIR)/templates.cc \
-	$(SRCDIR)/PathPort.cc $(SRCDIR)/CameraViewPort.cc 
+	$(SRCDIR)/PathPort.cc $(SRCDIR)/CameraViewPort.cc \
+	$(SRCDIR)/GLTexture3DPort.cc
 
 
 PSELIBS := PSECore/Dataflow PSECore/Comm SCICore/Containers \
@@ -30,6 +31,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.8  2000/12/09 17:43:23  moulding
+# Port Kurt's volume rendering stuff to linux and move it to PSECommon.
+#
 # Revision 1.7  2000/08/20 04:23:22  samsonov
 # *** empty log message ***
 #
