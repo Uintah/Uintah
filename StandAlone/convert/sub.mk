@@ -47,6 +47,10 @@ PROGRAM := $(SRCDIR)/CVRTItoTetVolDirichlet
 SRCS := $(SRCDIR)/CVRTItoTetVolDirichlet.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
+PROGRAM := $(SRCDIR)/CVRTItoPointCloudGrad
+SRCS := $(SRCDIR)/CVRTItoPointCloudGrad.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
 PROGRAM := $(SRCDIR)/CVRTItoTetVolGrad
 SRCS := $(SRCDIR)/CVRTItoTetVolGrad.cc
 include $(SCIRUN_SCRIPTS)/program.mk
