@@ -10,6 +10,7 @@
     <!-- this is ignored for now -->
     <soName>libKurt.so</soName>
   </soNames>
+<!--
   <dataflow-component name="VolVis">
     <meta>
       <authors>
@@ -26,6 +27,7 @@
       <creationFunction>make_VolVis</creationFunction>
     </implementation>
   </dataflow-component>
+-->
   <dataflow-component name="PadField">
     <meta>
       <authors>
@@ -90,6 +92,7 @@
       <creationFunction>make_TexCuttingPlanes</creationFunction>
     </implementation>
   </dataflow-component>
+<!--
   <dataflow-component name="VisControl">
     <meta>
       <authors>
@@ -106,6 +109,7 @@
       <creationFunction>make_VisControl</creationFunction>
     </implementation>
   </dataflow-component>
+-->
   <dataflow-component name="RescaleColorMapForParticles">
     <meta>
       <authors>
@@ -122,6 +126,7 @@
       <creationFunction>make_RescaleColorMapForParticles</creationFunction>
     </implementation>
   </dataflow-component>
+<!--
   <dataflow-component name="ParticleVis">
     <meta>
       <authors>
@@ -138,6 +143,7 @@
       <creationFunction>make_ParticleVis</creationFunction>
     </implementation>
   </dataflow-component>
+-->
   <dataflow-component name="AnimatedStreams">
     <meta>
       <authors>
