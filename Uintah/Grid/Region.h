@@ -236,6 +236,9 @@ WARNING
 	  d_bottomLeftBack, d_bottomLeftFront;
       Box d_right, d_left, d_back, d_front, d_rightBack,
 	  d_rightFront, d_leftBack, d_leftFront;
+
+      // Number of Ghost Cells used in the calculation of the ghost regions.
+      int d_numGhostCells;
       
       ////////// 
       // Pre-calculates the upper/lower points of the 26 adjacent
@@ -260,6 +263,9 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Region* r);
 
 //
 // $Log$
+// Revision 1.22  2000/05/30 17:10:11  dav
+// MPI stuff
+//
 // Revision 1.21  2000/05/28 17:25:06  dav
 // adding mpi stuff
 //

@@ -121,7 +121,8 @@ BrainDamagedScheduler::performTask(TaskRecord* task,
    double start = Time::currentSeconds();
    task->task->doit(pc);
    double dt = Time::currentSeconds()-start;
-   cout << "Completed task: " << task->task->getName() << " on region: " << task->task->getRegion()->getID() << " (" << dt << " seconds)\n";
+   cout << "Completed task: " << task->task->getName() << " on region: " 
+	<< task->task->getRegion()->getID() << " (" << dt << " seconds)\n";
 }
 
 void
@@ -139,8 +140,42 @@ BrainDamagedScheduler::execute(const ProcessorContext * pc,
     vector<TaskRecord*>::iterator iter;
     for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
        TaskRecord* task = *iter;
-       if(!task->task->isCompleted())
-	  performTask(task, pc);
+       if(!task->task->isCompleted()){
+
+	 const Region * region = task->task->getRegion();
+
+	 // Figure out which MPI node should be doing this task.
+	 // need to actually figure it out... THIS IS A HACK
+	 int taskLocation;
+	 if( region->getID() >= 0 && region->getID() <= 2 )
+	   taskLocation = 0;
+	 else if( region->getID() >= 3 && region->getID() <= 11 )
+	   taskLocation = 1;
+	 else
+	    throw InternalError("BrainDamagedScheduler: Unknown region");		                              
+	 // If it is this node, then kick off the task.
+	 // Either way, record which node is doing the task so
+	 // so that if one of our tasks needs data from it, we
+	 // will know where to go get it from.
+
+	 // Run through all the variables that this task computes and
+	 // register them in the DataWarehouse so that the DW will know
+	 // where to find them if it needs to at some future point.
+	 const vector<Task::Dependency*> & computes = 
+		                                  task->task->getComputes();
+	 vector<Task::Dependency*>::const_iterator iter = 
+		                                  computes.begin();
+	 while( iter != computes.end() ) {
+	   dwp->registerOwnership( (*iter)->d_var,
+				   (*iter)->d_region,
+				   taskLocation );
+	   iter++;
+	 }
+
+	 if( d_MpiRank == taskLocation ) {  // I am responsible for this task
+	   performTask(task, pc);
+	 }
+       }
     }
 	  
 #if 0
@@ -328,6 +363,9 @@ TaskRecord::TaskRecord(Task* t)
 
 //
 // $Log$
+// Revision 1.15  2000/05/30 17:09:37  dav
+// MPI stuff
+//
 // Revision 1.14  2000/05/21 20:10:48  sparker
 // Fixed memory leak
 // Added scinew to help trace down memory leak

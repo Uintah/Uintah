@@ -59,8 +59,12 @@ OnDemandDataWarehouse::get(ReductionVariableBase& var,
 			   const VarLabel* label)
 {
    reductionDBtype::const_iterator iter = d_reductionDB.find(label);
-   if(iter == d_reductionDB.end())
+
+   if(iter == d_reductionDB.end()) {
+      cerr << "OnDemandDataWarehouse: get Reduction: UnknownVariable: " 
+	   << label->getName() << "\n";
       throw UnknownVariable(label->getName());
+   }
 
    var.copyPointer(*iter->second->var);
 }
@@ -205,9 +209,9 @@ OnDemandDataWarehouse::get(ParticleVariableBase& var,
       for(int ix=l;ix<=h;ix++){
 	 for(int iy=l;iy<=h;iy++){
 	    for(int iz=l;iz<=h;iz++){
-	       const Region* neighbor = region->getNeighbor(IntVector(ix,iy,iz));
+	       const Region* neighbor=region->getNeighbor(IntVector(ix,iy,iz));
 	       if(neighbor){
-		  if(!d_particleDB.exists(d_positionLabel, matlIndex, neighbor))
+		  if(!d_particleDB.exists(d_positionLabel,matlIndex,neighbor))
 		     throw InternalError("Position variable does not exist: "+ 
 			  d_positionLabel->getName());
 		  if(!d_particleDB.exists(label, matlIndex, neighbor))
@@ -217,7 +221,8 @@ OnDemandDataWarehouse::get(ParticleVariableBase& var,
 		  ParticleVariable<Point> pos;
 		  d_particleDB.get(d_positionLabel, matlIndex, neighbor, pos);
 		  ParticleSubset* pset = pos.getParticleSubset();
-		  ParticleSubset* subset = scinew ParticleSubset(pset->getParticleSet(), false);
+		  ParticleSubset* subset = 
+                        scinew ParticleSubset(pset->getParticleSet(), false);
 		  for(ParticleSubset::iterator iter = pset->begin();
 		      iter != pset->end(); iter++){
 		     particleIndex idx = *iter;
@@ -226,7 +231,8 @@ OnDemandDataWarehouse::get(ParticleVariableBase& var,
 		     }
 		  }
 		  totalParticles+=subset->numParticles();
-		  neighborvars.push_back(d_particleDB.get(label, matlIndex, neighbor));
+		  neighborvars.push_back(
+                                 d_particleDB.get(label, matlIndex, neighbor));
 		  subsets.push_back(subset);
 	       }
 	    }
@@ -336,7 +342,7 @@ OnDemandDataWarehouse::get(NCVariableBase& var, const VarLabel* label,
       case Ghost::AroundCells:
 	 if(numGhostCells == 0)
 	    throw InternalError("No ghost cells specified with Task::AroundCells");
-	 // Uppwer neighbors
+	 // Upper neighbors
 	 l=0;
 	 h=1;
 	 lowIndex = region->getCellLowIndex();
@@ -417,7 +423,12 @@ OnDemandDataWarehouse::allocate(CCVariableBase& var,
 				int matlIndex,
 				const Region* region)
 {
-  throw InternalError( "CC Var allocate not implemented yet!" );  
+   // Error checking
+   if(d_ccDB.exists(label, matlIndex, region))
+      throw InternalError("CC variable already exists: "+label->getName());
+
+   // Allocate the variable
+   var.allocate(region->getNodeLowIndex(), region->getNodeHighIndex());
 }
 
 void
@@ -428,12 +439,17 @@ OnDemandDataWarehouse::get(CCVariableBase&, const VarLabel*, int matlIndex,
 }
 
 void
-OnDemandDataWarehouse::put(const CCVariableBase&, const VarLabel*,
-			   int matlIndex, const Region*)
+OnDemandDataWarehouse::put(const CCVariableBase& var, const VarLabel* label,
+			   int matlIndex, const Region* region )
 {
    ASSERT(!d_finalized);
 
-   throw InternalError( "CC Var put not implemented yet!" );    
+   // Error checking
+   if(d_ccDB.exists(label, matlIndex, region))
+      throw InternalError("CC variable already exists: "+label->getName());
+
+   // Put it in the database
+   d_ccDB.put(label, matlIndex, region, var, true);
 }
 
 int
@@ -568,6 +584,9 @@ OnDemandDataWarehouse::ReductionRecord::ReductionRecord(ReductionVariableBase* v
 
 //
 // $Log$
+// Revision 1.25  2000/05/30 17:09:37  dav
+// MPI stuff
+//
 // Revision 1.24  2000/05/21 20:10:49  sparker
 // Fixed memory leak
 // Added scinew to help trace down memory leak

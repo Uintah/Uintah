@@ -37,9 +37,7 @@ Region::Region(const Point& lower, const Point& upper,
       d_neighbors[i]=0;
    d_neighbors[1*9+1*3+1]=this;
 
-   int gc = 2; // Number of ghostcells for this region...
-
-   determineGhostRegions( gc );
+   d_numGhostCells = -1;
 }
 
 Region::~Region()
@@ -313,50 +311,58 @@ void Region::setNeighbor(const IntVector& n, const Region* neighbor)
 void
 Region::determineGhostRegions( int numGhostCells )
 {
-   int gc = numGhostCells;
+   // if the number of ghost cells changes, then we have to recalculate.
+   if( d_numGhostCells != numGhostCells ) {
 
-   // Determine the coordinates of all the sub-ghostRegions around
-   // this region.
+      int gc = numGhostCells;
+      d_numGhostCells = numGhostCells;
 
-   int minX = Min( d_box.lower().x(), d_box.upper().x() );
-   int minY = Min( d_box.lower().y(), d_box.upper().y() );
-   int minZ = Min( d_box.lower().z(), d_box.upper().z() );
+      // Determine the coordinates of all the sub-ghostRegions around
+      // this region.
 
-   int maxX = Max( d_box.lower().x(), d_box.upper().x() );
-   int maxY = Max( d_box.lower().y(), d_box.upper().y() );
-   int maxZ = Max( d_box.lower().z(), d_box.upper().z() );
+      int minX = Min( d_box.lower().x(), d_box.upper().x() );
+      int minY = Min( d_box.lower().y(), d_box.upper().y() );
+      int minZ = Min( d_box.lower().z(), d_box.upper().z() );
 
-   d_top.set( minX, minY, maxZ, maxX, maxY, maxZ + gc );
-   d_topRight.set( maxX, minY, maxZ, maxX + gc, maxY, maxZ + gc );
-   d_topLeft.set( minX - gc, minY, maxZ ,minX, maxY, maxZ + gc );
-   d_topBack.set( minX, maxY, maxZ ,maxX, maxY + gc, maxZ + gc );
-   d_topFront.set( minX, minY - gc, maxZ , maxX, minY, maxZ + gc );
-   d_topRightBack.set( maxX, maxY, maxZ, maxX + gc, maxY + gc, maxZ + gc );
-   d_topRightFront.set( maxX, minY, maxZ, maxX + gc, minY - gc, maxZ + gc );
-   d_topLeftBack.set( minX, maxY, maxZ, minX - gc, maxY + gc, maxZ + gc );
-   d_topLeftFront.set( minX - gc, minY - gc, maxX, minX, minY, maxZ + gc );
-   d_bottom.set( minX, minY, minZ - gc, maxX, maxY, minZ );
-   d_bottomRight.set( maxX, minY, minZ - gc, maxX + gc, maxY, minZ );
-   d_bottomLeft.set( minX - gc, minY, minZ - gc, minX, maxY, minZ );
-   d_bottomBack.set( minX, maxY, minZ - gc, maxX, maxY + gc, minZ );
-   d_bottomFront.set( minX, minY - gc, minZ - gc, maxX, minY, minZ );
-   d_bottomRightBack.set( maxX, maxY, minZ, maxX + gc, maxY + gc, minZ - gc );
-   d_bottomRightFront.set( maxX, minY, minZ, maxX + gc, minY - gc, minZ - gc );
-   d_bottomLeftBack .set( minX, maxY, minZ, minX - gc, maxY + gc, minZ - gc );
-   d_bottomLeftFront.set( minX, minY, minZ, minX - gc, minY - gc, minZ - gc );
-   d_right.set( maxX, minY, minZ, maxX + gc, maxY, maxZ );
-   d_left.set( minX, minY, minZ, minX - gc, maxY, maxZ );
-   d_back.set( minX, maxY, minZ, maxX, maxY + gc, maxZ );
-   d_front.set( minX, minY, minZ, maxX, minY - gc, maxZ );
-   d_rightBack.set( maxX, maxY, minZ, maxX + gc, maxY + gc, maxZ );
-   d_rightFront.set( maxX, minY, minZ, maxX + gc, maxY, minZ - gc );
-   d_leftBack.set( minX, maxY, minZ, minX - gc, maxY - gc, maxZ );
-   d_leftFront.set( minX, minY, minZ, minX - gc, minY - gc, maxZ );
+      int maxX = Max( d_box.lower().x(), d_box.upper().x() );
+      int maxY = Max( d_box.lower().y(), d_box.upper().y() );
+      int maxZ = Max( d_box.lower().z(), d_box.upper().z() );
+
+      d_top.set( minX, minY, maxZ, maxX, maxY, maxZ + gc );
+      d_topRight.set( maxX, minY, maxZ, maxX + gc, maxY, maxZ + gc );
+      d_topLeft.set( minX - gc, minY, maxZ ,minX, maxY, maxZ + gc );
+      d_topBack.set( minX, maxY, maxZ ,maxX, maxY + gc, maxZ + gc );
+      d_topFront.set( minX, minY - gc, maxZ , maxX, minY, maxZ + gc );
+      d_topRightBack.set( maxX, maxY, maxZ, maxX + gc, maxY + gc, maxZ + gc );
+      d_topRightFront.set( maxX, minY, maxZ, maxX + gc, minY - gc, maxZ + gc );
+      d_topLeftBack.set( minX, maxY, maxZ, minX - gc, maxY + gc, maxZ + gc );
+      d_topLeftFront.set( minX - gc, minY - gc, maxX, minX, minY, maxZ + gc );
+      d_bottom.set( minX, minY, minZ - gc, maxX, maxY, minZ );
+      d_bottomRight.set( maxX, minY, minZ - gc, maxX + gc, maxY, minZ );
+      d_bottomLeft.set( minX - gc, minY, minZ - gc, minX, maxY, minZ );
+      d_bottomBack.set( minX, maxY, minZ - gc, maxX, maxY + gc, minZ );
+      d_bottomFront.set( minX, minY - gc, minZ - gc, maxX, minY, minZ );
+      d_bottomRightBack.set( maxX, maxY, minZ, maxX + gc, maxY+gc, minZ-gc );
+      d_bottomRightFront.set( maxX, minY, minZ, maxX + gc, minY-gc, minZ-gc );
+      d_bottomLeftBack .set( minX, maxY, minZ, minX - gc, maxY + gc, minZ-gc );
+      d_bottomLeftFront.set( minX, minY, minZ, minX-gc, minY-gc, minZ-gc );
+      d_right.set( maxX, minY, minZ, maxX + gc, maxY, maxZ );
+      d_left.set( minX, minY, minZ, minX - gc, maxY, maxZ );
+      d_back.set( minX, maxY, minZ, maxX, maxY + gc, maxZ );
+      d_front.set( minX, minY, minZ, maxX, minY - gc, maxZ );
+      d_rightBack.set( maxX, maxY, minZ, maxX + gc, maxY + gc, maxZ );
+      d_rightFront.set( maxX, minY, minZ, maxX + gc, maxY, minZ - gc );
+      d_leftBack.set( minX, maxY, minZ, minX - gc, maxY - gc, maxZ );
+      d_leftFront.set( minX, minY, minZ, minX - gc, minY - gc, maxZ );
+   }
 }
       
 
 //
 // $Log$
+// Revision 1.21  2000/05/30 17:10:11  dav
+// MPI stuff
+//
 // Revision 1.20  2000/05/28 17:25:06  dav
 // adding mpi stuff
 //

@@ -139,6 +139,7 @@ void SimulationController::run()
 				 cfd, mpm);
    
    ProcessorContext* pc = ProcessorContext::getRootContext();
+
    scheduler->execute(pc, old_ds);
    
    while(t < timeinfo.maxTime) {
@@ -146,6 +147,7 @@ void SimulationController::run()
 
       delt_vartype delt_var;
       old_ds->get(delt_var, sharedState->get_delt_label());
+
       double delt = delt_var;
 
       if(delt < timeinfo.delt_min){
@@ -167,6 +169,8 @@ void SimulationController::run()
 	   << ", elapsed time = " << wallTime << '\n';
 
       scheduler->initialize();
+
+      cerr << "Done with scheduling initialize\n";
 
       DataWarehouseP new_ds = scheduler->createDataWarehouse( d_generation );
       d_generation++;
@@ -424,6 +428,9 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.24  2000/05/30 17:09:54  dav
+// MPI stuff
+//
 // Revision 1.23  2000/05/26 18:58:15  guilkey
 // Uncommented code to allow a maximum timestep to be set and effectively
 // used.  The minimum time step still doesn't work, but for an explicit
