@@ -1,4 +1,6 @@
 
+#include <sci_defs.h> // For HAVE_OOGL
+
 #include <Packages/rtrt/Core/Gui.h>
 #include <Packages/rtrt/Core/Dpy.h>
 #include <Packages/rtrt/Core/DpyPrivate.h>
@@ -142,22 +144,26 @@ static int routeNumber = 0;
 #define MAX_NUM_THREADS 120
 
 Gui::Gui() :
+  activeMTT_(NULL), queuedMTT_(NULL),
+  bottomGraphicTrig_(NULL), leftGraphicTrig_(NULL),
+  visWomanTrig_(NULL), csafeTrig_(NULL), geophysicsTrig_(NULL),
+  recheckBackgroundCnt_(10),
   selectedLightId_(0), selectedRouteId_(0), selectedObjectId_(0),
-  selectedTriggerId_(-1), selectedSoundId_(0), soundsWindowVisible(false),
+  selectedSoundId_(0), selectedTriggerId_(-1),
   routeWindowVisible(false), lightsWindowVisible(false), 
-  triggersWindowVisible(false),
-  objectsWindowVisible(false), mainWindowVisible(true),
-  lightList(NULL), routeList(NULL), soundList_(NULL),
-  r_color_spin(NULL), g_color_spin(NULL), b_color_spin(NULL), 
-  lightIntensity_(NULL), enableSounds_(false),
-  lightBrightness_(1.0),
-  mouseDown_(0), beQuiet_(true),
-  lightsOn_(true), lightsBeingRendered_(false),
-  rightButtonMenuActive_(true),
+  objectsWindowVisible(false),
+  soundsWindowVisible(false), triggersWindowVisible(false),
+  mainWindowVisible(true),
+  enableSounds_(false),
+  mouseDown_(0), rightButtonMenuActive_(true), beQuiet_(true),
   displayRStats_(false), displayPStats_(false),
-  bottomGraphicTrig_(NULL), activeMTT_(NULL), queuedMTT_(NULL),
-  leftGraphicTrig_(NULL), recheckBackgroundCnt_(10),
-  csafeTrig_(NULL), geophysicsTrig_(NULL), visWomanTrig_(NULL)
+  lightsOn_(true), lightsBeingRendered_(false),
+  lightList(NULL),
+  r_color_spin(NULL), g_color_spin(NULL), b_color_spin(NULL), 
+  lightIntensity_(NULL), 
+  lightBrightness_(1.0),
+  routeList(NULL),
+  soundList_(NULL)
 {
   inputString_[0] = 0;
 }
@@ -321,7 +327,7 @@ Gui::handleTriggers()
 
   // Check all triggers.
   vector<Trigger*> & triggers = dpy_->scene->getTriggers();
-  for( int cnt = 0; cnt < triggers.size(); cnt++ )
+  for( unsigned int cnt = 0; cnt < triggers.size(); cnt++ )
     {
       Trigger * trigger = triggers[cnt];
       bool result = trigger->check( activeGui->camera_->eye );
@@ -400,6 +406,7 @@ Gui::handleTriggers()
 void
 Gui::drawBackground()
 {
+#if defined(HAVE_OOGL)
   glutSetWindow( glutDisplayWindowId );
 
   glViewport(0, 0, 1280, 1024);
@@ -419,6 +426,7 @@ Gui::drawBackground()
   backgroundTexQuad->draw();
   // reset the viewport after the flickering is fixed
   glViewport(0, 0, 1280, 1024);
+#endif
 #endif
 }
 
@@ -1428,7 +1436,7 @@ Gui::createObjectWindow( GLUI * window )
   for( int num = 0; num < objects.size(); num++ )
     {
       char name[ 1024 ];
-      sprintf( name, "%s", Names::getName(objects[num]));
+      sprintf( name, "%s", Names::getName(objects[num]).c_str() );
 
       SelectableGroup *sg = dynamic_cast<SelectableGroup*>(objects[num]);
       if (sg) {
@@ -1547,14 +1555,14 @@ Gui::createTriggersWindow( GLUI * window )
   triggerList_ = window->add_listbox_to_panel( panel, "Selected Trigger",
 					       &selectedTriggerId_ );
 					     
-  GLUI_Button * doit = window->add_button_to_panel( panel, "Activate",
+  /*GLUI_Button * doit = */window->add_button_to_panel( panel, "Activate",
 						    -1, activateTriggerCB );
 
   window->add_button( "Close", -1, toggleTriggersWindowCB );
 
   if( triggers.size() > 0 ) selectedTriggerId_ = 0;
 
-  for( int num = 0; num < triggers.size(); num++ )
+  for( unsigned int num = 0; num < triggers.size(); num++ )
     {
       char name[ 1024 ];
       sprintf( name, "%s", triggers[ num ]->getName().c_str() );
@@ -2388,7 +2396,7 @@ Gui::loadAllRoutes()
   string routeName;
   char name[1024];
 
-  for( int i = 0; i < routes.size(); i++ )
+  for( unsigned int i = 0; i < routes.size(); i++ )
     {
       routeName = routes[i];
 
