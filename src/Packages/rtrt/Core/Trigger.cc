@@ -30,10 +30,9 @@ Trigger::Trigger( const string  & name,
 		  bool            fading,    /* = true */
 		  Trigger       * next       /* = NULL */ ) :
   name_(name), locations_(locations), distance2_(distance*distance),
-  delay_(delay), image_(image), showOnGui_(showOnGui),
-  sound_(sound), timeLeft_(0.0), next_(next), fades_(fading),
-  blend_(NULL), tex_(NULL), texQuad_(NULL), priority_(LowTriggerPriority),
-  basePriority_(LowTriggerPriority)
+  sound_(sound), image_(image), tex_(NULL), texQuad_(NULL), blend_(NULL),
+  delay_(delay), timeLeft_(0.0), showOnGui_(showOnGui), fades_(fading),
+  next_(next), priority_(LowTriggerPriority), basePriority_(LowTriggerPriority)
 {
   if( blank == NULL )
     {
@@ -86,7 +85,7 @@ Trigger::check( const Point & eye )
 
   if( timeLeft_ == 0 )
     {
-      for( int cnt = 0; cnt < locations_.size(); cnt++ )
+      for( unsigned int cnt = 0; cnt < locations_.size(); cnt++ )
 	{
 	  double dist2 = (eye - locations_[cnt]).length2();
 	  if( dist2 < distance2_ )
@@ -135,6 +134,7 @@ Trigger::advance( Trigger *& next )
       sound_->playNow();
       return false;
     }
+#if defined(HAVE_OOGL)
   else // image to display
     {
       // If a tex has not been specified, just return.
@@ -181,6 +181,9 @@ Trigger::advance( Trigger *& next )
 	  return true;
 	}
     }
+#else
+  return false;
+#endif
 }
 
 bool
