@@ -26,6 +26,12 @@
 	<xsl:value-of select="/filter/filter-itk/parameters/param"/>
 </xsl:variable>	      
 
+<!-- Variable has_defined_objects indicates whethter this filter
+     has defined objects using the datatype tag.  If this is the
+     case, we need to add a dimension variable and set a window
+     in size. 
+-->
+<xsl:variable name="has_defined_objects"><xsl:value-of select="/filter/filter-itk/datatypes"/></xsl:variable>
 
 
 <!-- =========================================== -->
@@ -68,14 +74,20 @@
 <xsl:choose>
 <xsl:when test="$gui_specified = ''">
 <xsl:for-each select="/filter/filter-itk/parameters/param">
+<xsl:variable name="defined_object"><xsl:value-of select="@defined"/></xsl:variable>
+<!-- don't define globals for variables dependent on changing dimension -->
+<!-- this would be indicated by the attribute defined being empty string -->
+<xsl:if test="$defined_object = ''">
          global $this-<xsl:value-of select="name"/>  
+</xsl:if>
 </xsl:for-each>
+<xsl:if test="$has_defined_objects != ''">
+         global $this-dimension</xsl:if>
 </xsl:when>
 <xsl:otherwise>
+<!-- FIX ME -->
 <xsl:for-each select="/filter/filter-gui/parameters/param">
-<xsl:text>
-         global $this-</xsl:text> 
-<xsl:value-of select="@name"/>  
+         global $this-<xsl:value-of select="@name"/>  
 </xsl:for-each>
 </xsl:otherwise>
 </xsl:choose>
@@ -90,11 +102,16 @@
 <xsl:choose>
 <xsl:when test="$gui_specified = ''">
 <xsl:for-each select="/filter/filter-itk/parameters/param">
-         set $this-<xsl:value-of select="name"/> 0 
+<xsl:variable name="defined_object"><xsl:value-of select="@defined"/></xsl:variable>
+<xsl:if test="$defined_object = ''">
+         set $this-<xsl:value-of select="name"/> 0</xsl:if>
 </xsl:for-each>
+<xsl:if test="$has_defined_objects != ''">
+         set $this-dimension 0</xsl:if>
 </xsl:when>
 
 <xsl:otherwise>
+<!-- FIX ME -->
 <xsl:for-each select="/filter/filter-gui/parameters/param">
          set $this-<xsl:value-of select="@name"/><xsl:text> </xsl:text><xsl:value-of select="default"/></xsl:for-each>
 </xsl:otherwise>
@@ -119,6 +136,11 @@
         }
 
         toplevel $w
+<!-- Set a min window size if any part of the gui is dependent on dimension -->
+<xsl:if test="$has_defined_objects != ''">
+        wm minsize $w 150 80
+</xsl:if>
+
 <!-- Create parameter widgets.  If no gui was specified 
      have everything default to a text entry
 -->  
@@ -127,8 +149,22 @@
 <xsl:when test="$gui_specified = ''">
 <xsl:for-each select="/filter/filter-itk/parameters/param">
 <xsl:variable name="gui"><xsl:value-of select="gui"/></xsl:variable>
+<xsl:variable name="defined_object"><xsl:value-of select="@defined"/></xsl:variable>
+<xsl:choose>
+<xsl:when test="$defined_object = ''">
 <xsl:call-template name="create_text_entry">
-  </xsl:call-template>
+  </xsl:call-template></xsl:when>
+<xsl:otherwise>
+        frame $w.<xsl:value-of select="name"/> -relief groove -borderwidth 2
+        pack $w.<xsl:value-of select="name"/> -padx 2 -pady 2 -side top -expand yes
+
+        if {[set $this-dimension] == 0} {
+            label $w.<xsl:value-of select="name"/>.label -text &quot;Module must Execute to determine dimensions to build GUI for <xsl:value-of select="name"/>.&quot;
+            pack $w.<xsl:value-of select="name"/>.label
+       } else {
+            init_<xsl:value-of select="name"/>_dimensions
+       }
+</xsl:otherwise></xsl:choose>
 </xsl:for-each>
 </xsl:when>
 
@@ -137,6 +173,7 @@
      its gui and each gui will be created in its own frame.
  -->
 <xsl:otherwise>
+<!-- FIX ME -->
 <xsl:for-each select="/filter/filter-gui/parameters/param">
 <xsl:variable name="gui"><xsl:value-of select="gui"/></xsl:variable>
 <xsl:choose>
@@ -177,6 +214,107 @@
 </xsl:text>
 </xsl:otherwise>
 </xsl:choose>
+
+<!-- If we have any defined objects, we need a clear_gui method -->
+    method clear_gui {} {
+        set w .ui[modname]
+<xsl:choose>
+<xsl:when test="$gui_specified = ''">         
+<xsl:for-each select="/filter/filter-itk/parameters/param">
+<xsl:variable name="path">$w.<xsl:value-of select="name"/>.<xsl:value-of select="name"/>$i</xsl:variable>
+        for {set i 0} {$i &lt; [set $this-dimension]} {incr i} {
+
+            # destroy widget for each dimension
+            if {[winfo exists <xsl:value-of select="$path"/>]} {
+		destroy <xsl:value-of select="$path"/>
+            }
+        }
+
+        # destroy label explaining need to execute
+        if {[winfo exists $w.<xsl:value-of select="name"/>.label]} {
+ 		destroy $w.<xsl:value-of select="name"/>.label
+        }
+</xsl:for-each>
+</xsl:when>
+<xsl:otherwise>
+   <!-- FIX ME -->
+</xsl:otherwise>
+</xsl:choose>
+     }
+
+<!-- For every object defined variable, we need an init_VAR_dimensions,
+     set_default_VAR_vals, and create_VAR_widget methods.
+-->
+<xsl:choose>
+<xsl:when test="$gui_specified = ''">
+<xsl:for-each select="/filter/filter-itk/parameters/param">
+<xsl:variable name="path">$w.<xsl:value-of select="name"/>.<xsl:value-of select="name"/></xsl:variable>
+    method init_<xsl:value-of select="name"/>_dimensions {} {
+     	set w .ui[modname]
+        if {[winfo exists $w]} {
+
+            # destroy label explaining need to execute in case
+            # it wasn't previously destroyed
+	    if {[winfo exists $w.<xsl:value-of select="name"/>.label]} {
+	       destroy $w.<xsl:value-of select="name"/>.label
+            }
+
+	    # pack new widgets for each dimension
+            label $w.<xsl:value-of select="name"/>.label -text &quot;<xsl:value-of select="name"/> (by dimension):"
+            pack $w.<xsl:value-of select="name"/>.label -side top -padx 5 -pady 5 -anchor n
+
+            for	{set i 0} {$i &lt; [set $this-dimension]} {incr i} {
+		if {! [winfo exists $w.<xsl:value-of select="$path"/>$i]} {
+		    # create widget for this dimension
+                    create_<xsl:value-of select="name"/>_widget <xsl:value-of select="$path"/>$i &quot;<xsl:value-of select="name"/> in $i&quot; $i
+                }
+
+            }
+
+        }
+    }
+
+    method create_<xsl:value-of select="name"/>_widget {w title i} {
+	global $this-<xsl:value-of select="name"/>$i
+        set $this-<xsl:value-of select="name"/>$i 0
+
+        frame $w
+	pack $w -side top -anchor nw
+
+        label $w.label -text $title
+        entry $w.entry -textvariable $this-<xsl:value-of select="name"/>$i
+        pack $w.label $w.entry -side left -anchor nw -padx 5 -pady 5
+    }
+
+    method set_default_<xsl:value-of select="name"/>_vals {} {
+	set w .ui[modname]
+
+<xsl:choose>
+<xsl:when test="$gui_specified = ''">         
+<xsl:for-each select="/filter/filter-itk/parameters/param">
+<xsl:variable name="path">$w.<xsl:value-of select="name"/>.<xsl:value-of select="name"/>$i</xsl:variable>
+  	for {set i 0} {$i &lt; [set $this-dimension]} {incr i} {
+	    if {[winfo exists $w.<xsl:value-of select="$path"/>]} {
+		global $this-<xsl:value-of select="name"/>$i
+                set $this-<xsl:value-of select="name"/>$i 0
+            }
+
+ 	}
+</xsl:for-each>
+</xsl:when>
+<xsl:otherwise>
+  <!-- FIX ME -->
+</xsl:otherwise>
+</xsl:choose>
+    }
+   
+</xsl:for-each>
+</xsl:when>
+<xsl:otherwise>
+  <!-- FIX ME -->
+</xsl:otherwise>
+</xsl:choose>
+
 }
 </xsl:template>
 
