@@ -104,7 +104,7 @@ ApplyInterpolant::execute()
 				      fitp_h->get_type_description(),
 				      fitp_h->data_at_type_description());
   Handle<ApplyInterpAlgo> algo;
-  if (!DynamicCompilation::compile(ci, algo)) return;
+  if (!DynamicCompilation::compile(ci, algo, this)) return;
 
   ofp = (FieldOPort *)getOPort("Output");
   if (!ofp) {
