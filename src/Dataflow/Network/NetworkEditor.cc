@@ -338,7 +338,7 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
         return;
       }
       args.result(args.make_list(packageDB->moduleNames(args[2],args[3])));
-    } else if(args[1] == "findiports"){
+    } else if(args[1] == "findiports" || args[1] == "find.i.ports"){
 	// Find all of the iports in the network that have the same type
 	// As the specified one...
 	if(args.count() < 4){
@@ -370,7 +370,7 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
 	    }
 	}
 	args.result(args.make_list(iports));
-    } else if(args[1] == "findoports"){
+    } else if(args[1] == "findoports" || args[1] == "find.o.ports"){
 	// Find all of the oports in the network that have the same type
 	// As the specified one...
 	if(args.count() < 4){

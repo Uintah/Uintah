@@ -418,35 +418,35 @@ void Module::remove_iport(int which)
       iports[loop1]->connection(loop2)->id = 
 	omod+"_p"+op+"_to_"+imod+"_p"+ip;
 
-      command = "global netedit_canvas\n$netedit_canvas itemconfigure " +
+      command = "global maincanvas; $maincanvas itemconfigure " +
 	omod + "_p" + op + "_to_" + imod + "_p" + to_string(loop1+1) +
 	" -tags " + iports[loop1]->connection(loop2)->id;
       gui->execute(command);
 
-      command = "global netedit_mini_canvas\n$netedit_mini_canvas itemconfigure " +
+      command = "global minicanvas; $minicanvas itemconfigure " +
 	omod + "_p" + op + "_to_" + imod + "_p" + to_string(loop1+1) +
 	" -tags " + iports[loop1]->connection(loop2)->id;
       gui->execute(command);
       
-      command = "global netedit_canvas\n$netedit_canvas bind " +
+      command = "global maincanvas; $maincanvas bind " +
 	iports[loop1]->connection(loop2)->id +
 	" <ButtonPress-3> \"destroyConnection " +
 	iports[loop1]->connection(loop2)->id +
-	" " + omod + " " + imod + "\"";
+	" " + omod + " " + imod + "1\"";
       gui->execute(command);
 
-      command = "global netedit_canvas\nset temp \"a\"\n$netedit_canvas bind " +
+      command = "global maincanvas; set temp \"a\"\n$maincanvas bind " +
 	iports[loop1]->connection(loop2)->id +
 	" <ButtonPress-1> \"lightPipe $temp "+ omod + " " + op + " " +
 	imod + " " + ip + "\"";
       gui->execute(command);
 
-      command = "global netedit_canvas\n$netedit_canvas bind " +
+      command = "global maincanvas; $maincanvas bind " +
 	iports[loop1]->connection(loop2)->id +
 	" <ButtonRelease-1> \"resetPipe $temp " + omod + " " + imod + "\"";
       gui->execute(command);
 
-      command = "global netedit_canvas\n$netedit_canvas bind " +
+      command = "global maincanvas; $maincanvas bind " +
 	iports[loop1]->connection(loop2)->id +
 	" <Control-Button-1> \"raisePipe " +
 	iports[loop1]->connection(loop2)->id + "\"";
@@ -668,7 +668,7 @@ void Module::tcl_command(GuiArgs& args, void*)
     args.error("netedit needs a minor command");
     return;
   }
-  if(args[1] == "iportinfo"){
+  if(args[1] == "iportinfo" || args[1] == "i.portinfo"){
     vector<string> info(iports.size());
     for(int i=0;i<iports.size();i++){
       IPort* port=iports[i];
@@ -680,7 +680,7 @@ void Module::tcl_command(GuiArgs& args, void*)
       info[i]=args.make_list(pi);
     }
     args.result(args.make_list(info));
-  } else if(args[1] == "oportinfo"){
+  } else if(args[1] == "oportinfo" || args[1] == "o.portinfo"){
     vector<string> info(oports.size());
     for(int i=0;i<oports.size();i++){
       OPort* port=oports[i];
