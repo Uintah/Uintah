@@ -38,7 +38,7 @@ PSELIBS := Core/Datatypes Core/Util Core/Containers Core/Persistent Core/Util \
            Core/Exceptions Core/Thread Core/Geometry Core/Math Core/Geom \
 	   Core/ImportExport
 endif
-LIBS := $(PLPLOT_LIBRARY) $(XML_LIBRARY) $(M_LIBRARY)
+LIBS := $(XML_LIBRARY) $(M_LIBRARY)
 
 
 PROGRAM := $(SRCDIR)/CurveFieldToText
