@@ -2,16 +2,18 @@
 // Athour:  Yarden Livnat
 
 #include <stdio.h>
-#include <stream.h>
+#include <iostream>
 #include <stdlib.h>
-#include <SCICore/Containers/Array3.h>
 #include <SCICore/Geom/GeomTriangles.h>
+#include <SCICore/Containers/Array3.h>
 #include <PSECommon/Modules/Visualization/table.h>
 #include <PSECore/Datatypes/SpanTree.h>
 
 
 namespace PSECommon {
 namespace Modules {
+
+  using std::cerr;
 
   //using namespace PSECore::Dataflow;
 using namespace PSECore::Datatypes;
