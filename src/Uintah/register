@@ -71,14 +71,35 @@ if( $ARGV[0] eq "-a" ){
 	else {
 	    
 	    use Net::FTP;
-	    $ftp = Net::FTP->new("panda.cs.utah.edu")             or die "Can't connect: $@\n";
-	    $ftp->login('blazer','blazer2001')       or die "Couldn't login\n";       
-	    $dir2 =  "d:\\apusers\\uintah\\tmp";
-	    $ftp->cwd($dir2)                  or die "Couldn't change directory\n"; 
-	    $ftp->type("I");	
-	    $ftp->put($fileNM);
-	    $url1->query_form(Job_ID => $jobid, filename =>$fileNM );   
+	    if(( -s $fileNM) < 10000){
+		$ftp = Net::FTP->new("panda.cs.utah.edu")             or die "Can't connect: $@\n";
+		$ftp->login('blazer','blazer2001')       or die "Couldn't login\n";       
+		$dir2 =  "d:\\apusers\\uintah\\tmp";
+		$ftp->cwd($dir2)                  or die "Couldn't change directory\n"; 
+		$ftp->type("I");	
+		$ftp->put($fileNM);
+		$url1->query_form(Job_ID => $jobid, filename =>$fileNM,scope => "local");   
 	    $content = get($url1);	
+	    }
+	    else{
+		my $url2 = url('http://panda.cs.utah.edu/blazer/getSimName');
+		my $url3 = url('http://panda.cs.utah.edu/blazer/getVersion');
+		$url2->query_form(Job_ID => $jobid);   
+		$simNM = get($url2);
+		$url3->query_form(Job_ID => $jobid);   
+		$simNM = get($url3);		    
+		$ftp = Net::FTP->new("rapture.cs.utah.edu")             or die "Can't connect: $@\n";
+		$ftp->login('blazer','onfire4u')       or die "Couldn't login\n";       
+		$ftp->mkdir($simNM)                    or die "Couldn't mkdir\n";               
+		$ftp->cwd($simNM)                  or die "Couldn't change directory\n"; 
+		$ftp->mkdir($version)                  or die "Couldn't mkdir\n";
+		$ftp->cwd($version)                  or die "Couldn't change directory\n"; 
+		$ftp->type("I");	
+		$ftp->put($fileNM);
+		$url1->query_form(Job_ID => $jobid, filename =>$fileNM,scope =>"remote" );   
+		$content = get($url1);	
+	    }
+	    
 	}
     }
     else{
@@ -224,6 +245,7 @@ if($argu1 ne "-uda"){
         
     my $url = url('http://panda.cs.utah.edu/blazer/NewBlazer');
     $files1 = join("|",@NewFile);
+    $files1 = $files1."|" ;
 #print $files1;
     if( -e $InputImage ){
 	$url->query_form(SysName => $dirName, Image => $InputImage, Creator => $creator,  Files => $files1);
