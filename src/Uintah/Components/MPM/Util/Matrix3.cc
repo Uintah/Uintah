@@ -16,7 +16,7 @@ using std::endl;
 using std::ostream;
 #include <stdlib.h>
 #include <Uintah/Grid/TypeDescription.h>
-#include <Uintah/Math/CubicPolyRoots.h>
+#include <Uintah/Math/CubeRoot.h>
 #include <SCICore/Util/FancyAssert.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Util/Assert.h>
@@ -344,42 +344,49 @@ int Matrix3::getEigenValues(double& e1, double& e2, double& e3) const
 {
   // eigen values will be roots of the following cubic polynomial
   // x^3 + b*x^2 + c*x + d
-  double b = -Trace();
+  double c[4];
+  c[3] = 1;
+  c[2] = -Trace();
 
-  double c = 0;
+  c[1] = 0;
   for (int i = 0; i < 2; i++) {
     for (int j = i+1; j < 3; j++)
-      c += mat3[i][i]*mat3[j][j] - mat3[i][j]*mat3[j][i];
+      c[1] += mat3[i][i]*mat3[j][j] - mat3[i][j]*mat3[j][i];
   }
   
-  double d = -Determinant();
+  c[0] = -Determinant();
+  double r[3];
 
-  cout << "b " << b << endl;
-  cout << "c " << c << endl;
-  cout << "d " << d << endl;
+  // num_values will be either 1, 2, or 3
+  int num_values = SolveCubic(c, r);
 
-  // num_values will be either 1 or 3
-  double r1, r2, r3;
-  int num_values = cubic_poly_roots(b, c, d, r1, r2, r3);
-
+  // sort the eigen values
   if (num_values == 3) {
     int least = 1;
-    e1 = r1;    
-    if (r2 < e1) {
-      e1 = r2;
+    e1 = r[0];    
+    if (r[1] < e1) {
+      e1 = r[1];
       least = 2;
     }
-    if (r3 < e1) {
-      e1 = r3;
+    if (r[2] < e1) {
+      e1 = r[2];
       least = 3;
     }
-    e2 = (least != 2) ? r2 : r1;
-    e3 = (least != 3) ? r3 : r1;
+    e2 = (least != 2) ? r[1] : r[0];
+    e3 = (least != 3) ? r[2] : r[0];
     if (e2 > e3)
       swap(e2, e3);
   }
-  else
-    e1 = r1;
+  else if (num_values == 2)
+    if (r[0] < r[1]) {
+      e1 = r[0];
+      e2 = r[1];
+    } else {
+      e1 = r[1];
+      e2 = r[0];
+    }
+  else // num_values == 1
+    e1 = r[0];
 
   return num_values;
 }
@@ -417,6 +424,10 @@ MPI_Datatype makeMPI_Matrix3()
 }
 
 //$Log$
+//Revision 1.7  2000/08/19 00:07:30  witzel
+//Use graphics gems' CubeRoots instead of my CubicPolyRoots
+//(theirs may be more reliable).
+//
 //Revision 1.6  2000/08/15 22:01:59  witzel
 //Sorting eigenvalues e1, e2, e3.
 //
