@@ -469,10 +469,6 @@ DetailedTask::addScrub(const VarLabel* var, Task::WhichDW dw)
 void
 DetailedTasks::createScrublists(bool scrub_new, bool scrub_old)
 {
-  if (scrub_old)
-    cerr << "Scrub old!!!\n";
-  if (scrub_new)
-    cerr << "Scrub new!!!\n";
   // For now, turn scrubbing off when using internal dependencies
   // (i.e. threaded version) as it needs to be fixed to work right).
   if (mustConsiderInternalDependencies())
@@ -491,13 +487,13 @@ DetailedTasks::createScrublists(bool scrub_new, bool scrub_old)
       if(req->var->typeDescription()->getType() ==
 	 TypeDescription::ReductionVariable)
 	continue;
-      if(!scrub_old && req->dw == Task::OldDW){
+      if(scrub_old && req->dw == Task::OldDW){
 	// Go ahead and scrub.  Replace an older one if necessary
 	oldmap[req->var]=dtask;
       } else {
 	// Only scrub if it is not part of the original requires and
 	// This is not an initialization timestep
-	if(!scrub_new && initreqs.find(req->var) == initreqs.end()){
+	if(scrub_new && initreqs.find(req->var) == initreqs.end()){
 	  newmap[req->var]=dtask;
 	}
       }
@@ -511,7 +507,7 @@ DetailedTasks::createScrublists(bool scrub_new, bool scrub_old)
       // Only scrub if this is not an initialization timestep.
 	// Only scrub if it is not part of the original requires and
 	// This is not an initialization timestep
-      if(!scrub_new && initreqs.find(req->var) == initreqs.end()){
+      if(scrub_new && initreqs.find(req->var) == initreqs.end()){
 	newmap[req->var]=dtask;
       }
     }
@@ -525,7 +521,7 @@ DetailedTasks::createScrublists(bool scrub_new, bool scrub_old)
 	 TypeDescription::ReductionVariable)
 	continue;
       ASSERTEQ(comp->dw, Task::NewDW);
-      if(!scrub_new && initreqs.find(comp->var) == initreqs.end()
+      if(scrub_new && initreqs.find(comp->var) == initreqs.end()
 	 && newmap.find(comp->var) == newmap.end()){
 	// Only scrub if it is not part of the original requires and
 	// This is not timestep 0
