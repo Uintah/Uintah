@@ -385,7 +385,7 @@ if test "$uintah" = "yes" ; then
 
   # Create the Packages/Uintah/tools dir for later use.
   if ! test -d "Packages/Uintah/tools"; then
-	echo "Creating Packages/Uintah/tools directory"; 	
+	AC_MSG_RESULT(Creating Packages/Uintah/tools directory)
 	mkdir -p "Packages/Uintah/tools"
   fi
 
@@ -1011,13 +1011,13 @@ if test "${with_mpeg+set}" = set; then
     if test -e "${withval}/include/mpege.h"; then
       MPEG_PREFIX="$withval"
     else
-      echo "\n*** Error - could not find MPEG in ${withval}/include/mpege.h\n"
+      AC_MSG_WARN(*** Warning - could not find MPEG in ${withval}/include/mpege.h)
     fi
   else
     if test -e "$thirdparty/include/mpege.h" ; then
       MPEG_PREFIX=$thirdparty
     else
-      echo "\n*** Error - could not find MPEG in $thirdparty/include/mpege.h\n";
+      AC_MSG_WARN(*** Warning - could not find MPEG in $thirdparty/include/mpege.h)
     fi
   fi
 fi
@@ -1083,7 +1083,7 @@ if ! test "${with_nektar}" = "no"; then
   NEKTAR_INCLUDE_DIR="${NEKTAR_PREFIX}/include"
   NEKTAR_LIB_DIR="${NEKTAR_PREFIX}/lib"
   NEKTAR_LIB_FLAG="-lhybridopt -lvec"
-  echo "with Nektar at ${NEKTAR_PREFIX}"
+  AC_MSG_RESULT(with Nektar at ${NEKTAR_PREFIX})
 fi
 
 AC_SUBST(NEKTAR_INCLUDE_DIR)
@@ -1095,7 +1095,7 @@ AC_SUBST(NEKTAR_LIB_FLAG)
 
 AC_PATH_PROG(ETAGS, etags, notfound)
 if test "$ETAGS" = "notfound" ; then
-  echo "\tetags not found"
+  AC_MSG_WARN(etags not found)
 fi
  
 
@@ -1441,7 +1441,7 @@ AC_ARG_WITH(with_globus,
 
 if test "$enable_parallel" = "yes"; then
   if test "$with_globus" = "no"; then
-    echo "Must include --with-globus with --enable-parallel"
+    AC_MSG_ERROR(Must include --with-globus with --enable-parallel)
     exit 1
   fi
 
@@ -1449,12 +1449,18 @@ if test "$enable_parallel" = "yes"; then
   BUILD_PARALLEL="yes"
   GLOBUS_INCLUDE="-I$with_globus/include"
   GLOBUS_LIB="$with_globus/lib$NBITS"
+
+  is_linux=`echo $host | sed 's/.*linux.*/linux/'`
+  if test "$is_linux" = "linux"; then
+    GLOBUS_EXTRA_DIRS="-lglobus_gaa -lglobus_gss -lglobus_gss_assist -lglobus_mp -lglobus_utp -lssl -lcrypto"
+  fi
 else
   PARALLEL_DEFINE=""
   BUILD_PARALLEL="no"
   GLOBUS_INCLUDE=""
   GLOBUS_LIB=""
 fi
+AC_SUBST(GLOBUS_EXTRA_DIRS)
 AC_SUBST(GLOBUS_INCLUDE)
 AC_SUBST(GLOBUS_LIB)
 AC_SUBST(PARALLEL_DEFINE)
@@ -1521,7 +1527,7 @@ for i in Dataflow/Modules/Fields/Manip Dataflow/Modules/Math/Manip \
           on-the-fly-libs; do
   AC_MSG_CHECKING(existence of $i)
   if test ! -d $i; then
-    echo "creating $i..."
+    AC_MSG_RESULT(creating $i...)
     mkdir -p $i
     AC_MSG_RESULT([not found, created])
   else
@@ -1551,9 +1557,9 @@ fi
 AC_OUTPUT( [$output_files], echo timestamp > stamp-h )
 
 if cmp -s sci_defs.h sci_testdefs.h 2>/dev/null; then
-  echo "sci_defs.h is unchanged"
+  AC_MSG_RESULT(sci_defs.h is unchanged)
   rm -f sci_testdefs.h
 else
   mv sci_testdefs.h sci_defs.h
-  echo "sci_defs.h is changed"
+  AC_MSG_WARN(sci_defs.h is changed)
 fi
