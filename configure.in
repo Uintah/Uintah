@@ -499,22 +499,24 @@ AC_SUBST(ITCL_WIDGETS)
 
 ##-- Find Nektar--------------------------------------------------------------
 
-echo -n "Looking for Pre-built Nektar... "
-
 AC_ARG_WITH(with_nektar,
 	[  --with-nektar=DIR		Use the nektar installation in DIR],
 	[with_nektar="$withval"],
 	[with_nektar=${with_nektar='no'}])
 
-if ! test "$with_nektar" = "no"; then
+
+if ! test "${with_nektar}" = "no"; then
   NEKTAR_PREFIX=${with_nektar}
   NEKTAR_INCLUDE_DIR="${NEKTAR_PREFIX}/include"
   NEKTAR_LIB_DIR="${NEKTAR_PREFIX}/lib"
   NEKTAR_LIB_FLAG="-lhybridopt -lvec"
-  echo ${NEKTAR_PREFIX}
-else
-  echo "not found"
+  echo "with Nektar at ${NEKTAR_PREFIX}"
 fi
+
+AC_SUBST(NEKTAR_INCLUDE_DIR)
+AC_SUBST(NEKTAR_LIB_DIR)
+AC_SUBST(NEKTAR_LIB_FLAG)
+
 
 ##-- Find etags ------------------------------------------------------------
 
@@ -727,6 +729,9 @@ AC_OUTPUT(Makefile \
 
 #
 # $Log$
+# Revision 1.64  2000/08/10 15:22:55  kirby
+# nektar fixes
+#
 # Revision 1.63  2000/08/10 14:29:34  jehall
 # Minor fixes to Nektar section of configure
 #

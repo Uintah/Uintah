@@ -90,8 +90,8 @@ BLT_LIB_FLAG := @BLT_LIB_FLAG@
 BLT_TLINK := -L$(BLT_LIB_DIR)
 ITCL_WIDGETS  := @ITCL_WIDGETS@
 
-NEKTAR_LIB_DIR = @TCL_LIB_DIR@
-NEKTAR_LIB_FLAG = @TCL_LIB_FLAG@
+NEKTAR_LIB_DIR := @NEKTAR_LIB_DIR@
+NEKTAR_LIB_FLAG := @NEKTAR_LIB_FLAG@
 
 LDRUN_PREFIX  := @LDRUN_PREFIX@
 
@@ -365,6 +365,9 @@ endif
 
 #
 # $Log$
+# Revision 1.36  2000/08/10 15:22:55  kirby
+# nektar fixes
+#
 # Revision 1.35  2000/08/10 03:33:36  yarden
 # add --with-nektar
 #
