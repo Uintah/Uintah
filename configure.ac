@@ -1002,8 +1002,22 @@ if test "$YACC" = "nobison"; then
   exit
 fi
 
-AC_PROG_LEX
-LEX_LIB_FLAG="$LEXLIB"
+LEX_LIB_FLAG="-lfl"
+AC_CHECK_PROG(FLEX, flex, flex, notfound, $PATH /usr/bin)
+if test "$FLEX" = "notfound"; then
+  AC_CHECK_PROG(LEX, lex, lex, notfound, $PATH /usr/bin)
+  LEX_LIB_FLAG="-ll"
+  if test "$LEX" = "notfound"; then	
+    echo "configure: error: flex or lex is required, and was not found in your PATH."
+    echo "                  Please add it to your PATH, or set the environment"
+    echo "                  variable LEX to the appropriate lex executable,"
+    echo "                  then run configure again."
+    exit
+  fi
+else 
+LEX=$FLEX
+fi 
+
 AC_SUBST(LEX_LIB_FLAG)
 
 AC_CHECK_PROG(ETAGS, etags, etags)
