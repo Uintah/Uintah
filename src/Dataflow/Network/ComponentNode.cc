@@ -1140,7 +1140,11 @@ int ReadComponentNodeFromFile(component_node* n, const char* filename,
   DOMDocument *doc = parser.getDocument();
   DOMNodeList *list = doc->getElementsByTagName(to_xml_ch_ptr("component"));
   unsigned long nlist = list->getLength();
-  if (nlist == 0) return 0;
+  if (nlist == 0) {
+    cout << "ComponentNode.cc: Error parsing xml file: " << filename << "\n";
+    return 0;
+  }
+
   for (unsigned long i = 0;i < nlist; i++) {
     DOMNode* node = list->item(i);
     if (!node) {
