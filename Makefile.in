@@ -100,6 +100,8 @@ X11_LIBS := $(X_LIBS) $(X_PRE_LIBS) -lXext -lX11 $(X_EXTRA_LIBS)
 
 PROGRAM_PSE   := @EXENAME@
 
+TRACEBACK_LIB := @TRACEBACK_LIB@
+
 LEX := @LEX@
 YACC := @YACC@ -d -v
 
@@ -275,6 +277,9 @@ endif
 
 #
 # $Log$
+# Revision 1.18  2000/03/23 10:33:09  sparker
+# Configure new exception facility (using libexc on SGI)
+#
 # Revision 1.17  2000/03/22 09:59:15  sparker
 # Assorted make performance improvements
 # Added a "make objs" target that only builds the .o files and bypasses
