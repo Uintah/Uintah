@@ -216,13 +216,7 @@ A) Appendix
    PSE may require them.
 
    You are already familiar with the "Modules" directory which houses the
-   category directories, and subsiquently the modules themselves.  Note the
-   "sub.mk" files within the Modules tree.  All the sub.mk files are used
-   to create makefiles for each directory.  They have information such as
-   subdirectory traversal, source files to be included in the build, and
-   libraries to be linked against.  See the appendix for skeleton versions
-   of each type of sub.mk file.  See the appendix for a skeleton version
-   of the .cc file that defines a module.
+   category directories, and subsiquently the modules themselves.
 
    The "GUI" directory holds all the user interface files.  Currently,
    all the user interfaces in the PSE are written in tcl.  The tcl files
@@ -249,6 +243,126 @@ A) Appendix
    created, etc.) of the modules in the package.  See the appendix for 
    examples of a components.xml file.
 
+   The "sub.mk" files that are scattered throughout the heirarchy are used
+   to create makefiles for each directory.  They include information such
+   as sub directories, files to include in the build, and libraries to 
+   be linked against.  The appendix has skeleton files for each type of
+   sub.mk in the tree.
+
+   If you choose to generate or edit these files by hand rather than using
+   the automatic module maker, you will want to consider conforming to
+   file formats that the module maker uses, so that others can still use
+   the module maker with these files after you're done with them.
+
+   Each of the sub.mk and components.xml files have a format that the 
+   module maker uses.  This format allows the module maker to properly
+   go through each file and insert paragraphs or lines.
+
+   The first element of this format is a comment line of the form:
+
+   #[INSERT NEW ????? HERE]
+
+   for sub.mk files and
+
+   <!-- INSERT NEW ??????? HERE -->
+
+   for components.xml files.
+
+   The second element of this format is the context in which these lines
+   are set.
+
+   If either element of the format is disturbed, the module maker will
+   no longer be able to properly do it's job, and may even break files.
+
+   Here is an example of modifying a sub.mk file within a category 
+   directory to add a module:
+
+	 before:
+
+       SRCS     += \
+			$(SRCDIR)/ColorMapKey.cc\
+			$(SRCDIR)/CuttingPlane.cc\
+			$(SRCDIR)/GenAxes.cc\
+       #[INSERT NEW MODULE HERE]
+
+     after:
+
+       SRCS     += \
+			$(SRCDIR)/ColorMapKey.cc\
+			$(SRCDIR)/CuttingPlane.cc\
+			$(SRCDIR)/GenAxes.cc\
+			$(SRCDIR)/NEW_MODULE_HERE.cc\
+       #[INSERT NEW MODULE HERE]
+
+   One important thing to note here is that the new module was inserted
+   above the line where the [INSERT NEW MODULE HERE] comment line existed.
+   It is also important to note that the end of the newly inserted line
+   includes a backslash as the last character.
+
+   The same format rules apply to sub.mk files within a packages "Modules"
+   directory.
+
+   Modification of the components.xml file is similar:
+
+     before:
+
+  <dataflow-component name="MeshReader">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_MeshReader</creationFunction>
+    </implementation>
+  </dataflow-component>
+
+  <!-- INSERT NEW Readers COMPONENT HERE -->
+
+	 after:
+
+  <dataflow-component name="MeshReader">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_MeshReader</creationFunction>
+    </implementation>
+  </dataflow-component>
+
+  <dataflow-component name="MatrixReader">
+    <meta>
+      <authors>
+        <author>Steven G. Parker</author>
+      </authors>
+      <version-date>July 1994</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_MatrixReader</creationFunction>
+    </implementation>
+  </dataflow-component>
+
+  <!-- INSERT NEW Readers COMPONENT HERE -->
+
 
 6) Adding a User Interface
 
@@ -267,10 +381,11 @@ A) Appendix
 7) Adding ports and functionality
 
 
-   Once you have built the package heirarchy and created all other files
-   from the skeletons and example files in the appendix, you now need to
-   add functionality to your new module.
-
+   Once you have created your new module, and created or chosen a package
+   for it, you must give it functionality.  To function properly, each 
+   module needs to do three things: Get data, operate on the data, generate
+   result data.
+   
    The first step is to decide how your module will get it's input data,
    and what it will do with the output data that it generates.  There are
    two methods of getting data into a module (input ports and read from
@@ -321,7 +436,7 @@ A) Appendix
    execution cycle, it calls the execute() member function of your module.
    It is in this function that you need to add lines of code to extract 
    data from the input ports, run your module's algorithm on that data,
-   and send it to the output port:
+   and send the result to the output port:
 
      MeshHandle mesh;
      MatrixHandle matrix;
@@ -345,7 +460,7 @@ A) Appendix
 
 
    What you're still reading?  You know, the more you read, the more I
-   have to write - arrgh!?!?  Alright smart guy, you asked for it...
+   have to write - arrgh!?!?  Alright smarty pants, you asked for it...
 
    Keen readers will wonder how a package _really_ works.  After all, a 
    bunch of source code and fancy schmancy directory trees do not an
@@ -570,15 +685,16 @@ A) Appendix
 
        include $(OBJTOP_ABS)/scripts/smallso_prologue.mk
 
-       SRCDIR   := NEW_PACKAGE/Modules/none
+       SRCDIR   := PACKAGE_NAME/Modules/CATEGORY_NAME
 
-       SRCS     += $(SRCDIR)/none.cc
+       SRCS     += \
+       #[INSERT NEW MODULE HERE]
 
        PSELIBS := PSECore/Datatypes PSECore/Dataflow \
-               SCICore/Persistent SCICore/Containers SCICore/Util \
-               SCICore/Exceptions SCICore/Thread SCICore/TclInterface \
-               SCICore/Geom SCICore/Datatypes SCICore/Geometry \
-               SCICore/TkExtensions
+	       SCICore/Persistent SCICore/Containers SCICore/Util \
+	       SCICore/Exceptions SCICore/Thread SCICore/TclInterface \
+	       SCICore/Geom SCICore/Datatypes SCICore/Geometry \
+	       SCICore/TkExtensions
        LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
 
        include $(OBJTOP_ABS)/scripts/smallso_epilogue.mk
@@ -747,7 +863,7 @@ itcl_class PSECommon_Visualization_GenAxes {
 
 ...
 
-
+  <!-- INSERT NEW FEM COMPONENT HERE -->
   </scirun-library>
   <scirun-library category="Readers">
   <soNames>
@@ -792,7 +908,10 @@ itcl_class PSECommon_Visualization_GenAxes {
 
 ...
 
+  <!-- INSERT NEW Readers COMPONENT HERE -->
   </scirun-library>
+
+  <!-- INSERT NEW CATEGORY HERE -->
 </package>
 
 
