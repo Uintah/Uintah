@@ -1,4 +1,21 @@
 /*
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+*/
+
+/*
  * DiscreteGaussianImageFilter.cc
  *
  *   Auto Generated File For DiscreteGaussianImageFilter
@@ -34,6 +51,8 @@ public:
 
   ITKDatatypeOPort* outport1_;
   ITKDatatypeHandle outhandle1_;
+
+  ITKDatatype* im;
 
   
   DiscreteGaussianImageFilter(GuiContext*);
@@ -88,12 +107,11 @@ bool DiscreteGaussianImageFilter::run( itk::Object *obj1)
 
   // get filter output
   
-  if(!outhandle1_.get_rep())
-  {
-    ITKDatatype* im = scinew ITKDatatype;
-    im->data_ = filter->GetOutput();
-    outhandle1_ = im; 
-  }
+  //if(!outhandle1_.get_rep())
+  //{
+  im->data_ = filter->GetOutput();
+  outhandle1_ = im; 
+  //}
   
   return true;
 }
@@ -106,6 +124,7 @@ DiscreteGaussianImageFilter::DiscreteGaussianImageFilter(GuiContext* ctx)
      gui_variance_(ctx->subVar("variance")),
      gui_maximum_error_(ctx->subVar("maximum_error"))
 {
+  im = scinew ITKDatatype;
 }
 
 DiscreteGaussianImageFilter::~DiscreteGaussianImageFilter() 
@@ -114,6 +133,7 @@ DiscreteGaussianImageFilter::~DiscreteGaussianImageFilter()
 
 void DiscreteGaussianImageFilter::execute() 
 {
+  std::cerr << "In execute\n";
   // check input ports
   inport1_ = (ITKDatatypeIPort *)get_iport("InputImage");
   if(!inport1_) {
