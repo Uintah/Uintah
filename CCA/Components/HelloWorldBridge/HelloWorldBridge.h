@@ -43,7 +43,7 @@
 
 #include <Core/CCA/spec/cca_sidl.h>
 #include <CCA/Components/BabelTest/NewPort/NewPort_StringPort.hh>
-#include <SIDL_String.h>
+#include <sidl_String.h>
 
 #include <SCIRun/Bridge/BridgeComponent.h>
 #include <SCIRun/Bridge/BridgeServices.h>

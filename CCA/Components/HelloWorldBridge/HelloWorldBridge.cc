@@ -58,7 +58,7 @@ char* skel_NewPort_StringPort_getString( struct NewPort_StringPort__object* self
   std::string _result;
   somethingspc::StringPort* _this = reinterpret_cast< somethingspc::StringPort*>(self->d_data);
   _result = _this->getString();
-  return SIDL_String_strdup(_result.c_str());
+  return sidl_String_strdup(_result.c_str());
 }
 
 void skel_NewPort_StringPort__ctor(struct NewPort_StringPort__object* self ) {
