@@ -18,11 +18,14 @@
 #include <Packages/rtrt/Core/CoupledMaterial.h>
 #include <Packages/rtrt/Core/DielectricMaterial.h>
 #include <Packages/rtrt/Core/Checker.h>
+
 #include <iostream>
+
 #include <math.h>
 #include <string.h>
 
 using namespace rtrt;
+using namespace std;
 
 using SCIRun::Thread;
 
