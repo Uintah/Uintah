@@ -202,9 +202,7 @@ ManageFieldDataAlgoMeshScalar<MSRC, FOUT>::execute(Module *mod,
   {
     int index = 0;
     ofield = scinew FOUT(imesh, Field::NODE);
-    Mesh::synchronized_t sync;
-    sync.set(Mesh::NODES_E);
-    imesh->synchronize(sync);
+    imesh->synchronize(Mesh::NODES_E);
     typename MSRC::Node::iterator iter; imesh->begin(iter);
     typename MSRC::Node::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -217,9 +215,7 @@ ManageFieldDataAlgoMeshScalar<MSRC, FOUT>::execute(Module *mod,
   {
     int index = 0;
     ofield = scinew FOUT(imesh, Field::EDGE);
-    Mesh::synchronized_t sync;
-    sync.set(Mesh::EDGES_E);
-    imesh->synchronize(sync);
+    imesh->synchronize(Mesh::EDGES_E);
     typename MSRC::Edge::iterator iter; imesh->begin(iter);
     typename MSRC::Edge::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -232,9 +228,7 @@ ManageFieldDataAlgoMeshScalar<MSRC, FOUT>::execute(Module *mod,
   {
     int index = 0;
     ofield = scinew FOUT(imesh, Field::FACE);
-    Mesh::synchronized_t sync;
-    sync.set(Mesh::FACES_E);
-    imesh->synchronize(sync);
+    imesh->synchronize(Mesh::FACES_E);
     typename MSRC::Face::iterator iter; imesh->begin(iter);
     typename MSRC::Face::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -247,9 +241,7 @@ ManageFieldDataAlgoMeshScalar<MSRC, FOUT>::execute(Module *mod,
   {
     int index = 0;
     ofield = scinew FOUT(imesh, Field::CELL);
-    Mesh::synchronized_t sync;
-    sync.set(Mesh::CELLS_E);
-    imesh->synchronize(sync);
+    imesh->synchronize(Mesh::CELLS_E);
     typename MSRC::Cell::iterator iter; imesh->begin(iter);
     typename MSRC::Cell::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -262,9 +254,7 @@ ManageFieldDataAlgoMeshScalar<MSRC, FOUT>::execute(Module *mod,
   {
     int index = 0;
     ofield = scinew FOUT(imesh, Field::NODE);
-    Mesh::synchronized_t sync;
-    sync.set(Mesh::NODES_E);
-    imesh->synchronize(sync);
+    imesh->synchronize(Mesh::NODES_E);
     typename MSRC::Node::iterator iter; imesh->begin(iter);
     typename MSRC::Node::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -277,9 +267,7 @@ ManageFieldDataAlgoMeshScalar<MSRC, FOUT>::execute(Module *mod,
   {
     int index = 0;
     ofield = scinew FOUT(imesh, Field::EDGE);
-    Mesh::synchronized_t sync;
-    sync.set(Mesh::EDGES_E);
-    imesh->synchronize(sync);
+    imesh->synchronize(Mesh::EDGES_E);
     typename MSRC::Edge::iterator iter; imesh->begin(iter);
     typename MSRC::Edge::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -292,9 +280,7 @@ ManageFieldDataAlgoMeshScalar<MSRC, FOUT>::execute(Module *mod,
   {
     int index = 0;
     ofield = scinew FOUT(imesh, Field::FACE);
-    Mesh::synchronized_t sync;
-    sync.set(Mesh::FACES_E);
-    imesh->synchronize(sync);
+    imesh->synchronize(Mesh::FACES_E);
     typename MSRC::Face::iterator iter; imesh->begin(iter);
     typename MSRC::Face::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -307,9 +293,7 @@ ManageFieldDataAlgoMeshScalar<MSRC, FOUT>::execute(Module *mod,
   {
     int index = 0;
     ofield = scinew FOUT(imesh, Field::CELL);
-    Mesh::synchronized_t sync;
-    sync.set(Mesh::CELLS_E);
-    imesh->synchronize(sync);
+    imesh->synchronize(Mesh::CELLS_E);
     typename MSRC::Cell::iterator iter; imesh->begin(iter);
     typename MSRC::Cell::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -362,9 +346,7 @@ ManageFieldDataAlgoMeshVector<MSRC, FOUT>::execute(Module *mod,
   {
     int index = 0;
     ofield = scinew FOUT(imesh, Field::NODE);
-    Mesh::synchronized_t sync;
-    sync.set(Mesh::NODES_E);
-    imesh->synchronize(sync);
+    imesh->synchronize(Mesh::NODES_E);
     typename MSRC::Node::iterator iter; imesh->begin(iter);
     typename MSRC::Node::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -381,9 +363,7 @@ ManageFieldDataAlgoMeshVector<MSRC, FOUT>::execute(Module *mod,
   {
     int index = 0;
     ofield = scinew FOUT(imesh, Field::EDGE);
-    Mesh::synchronized_t sync;
-    sync.set(Mesh::EDGES_E);
-    imesh->synchronize(sync);
+    imesh->synchronize(Mesh::EDGES_E);
     typename MSRC::Edge::iterator iter; imesh->begin(iter);
     typename MSRC::Edge::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -400,9 +380,7 @@ ManageFieldDataAlgoMeshVector<MSRC, FOUT>::execute(Module *mod,
   {
     int index = 0;
     ofield = scinew FOUT(imesh, Field::FACE);
-    Mesh::synchronized_t sync;
-    sync.set(Mesh::FACES_E);
-    imesh->synchronize(sync);
+    imesh->synchronize(Mesh::FACES_E);
     typename MSRC::Face::iterator iter; imesh->begin(iter);
     typename MSRC::Face::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -419,9 +397,7 @@ ManageFieldDataAlgoMeshVector<MSRC, FOUT>::execute(Module *mod,
   {
     int index = 0;
     ofield = scinew FOUT(imesh, Field::CELL);
-    Mesh::synchronized_t sync;
-    sync.set(Mesh::CELLS_E);
-    imesh->synchronize(sync);
+    imesh->synchronize(Mesh::CELLS_E);
     typename MSRC::Cell::iterator iter; imesh->begin(iter);
     typename MSRC::Cell::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -438,9 +414,7 @@ ManageFieldDataAlgoMeshVector<MSRC, FOUT>::execute(Module *mod,
   {
     int index = 0;
     ofield = scinew FOUT(imesh, Field::NODE);
-    Mesh::synchronized_t sync;
-    sync.set(Mesh::NODES_E);
-    imesh->synchronize(sync);
+    imesh->synchronize(Mesh::NODES_E);
     typename MSRC::Node::iterator iter; imesh->begin(iter);
     typename MSRC::Node::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -457,9 +431,7 @@ ManageFieldDataAlgoMeshVector<MSRC, FOUT>::execute(Module *mod,
   {
     int index = 0;
     ofield = scinew FOUT(imesh, Field::EDGE);
-    Mesh::synchronized_t sync;
-    sync.set(Mesh::EDGES_E);
-    imesh->synchronize(sync);
+    imesh->synchronize(Mesh::EDGES_E);
     typename MSRC::Edge::iterator iter; imesh->begin(iter);
     typename MSRC::Edge::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -476,9 +448,7 @@ ManageFieldDataAlgoMeshVector<MSRC, FOUT>::execute(Module *mod,
   {
     int index = 0;
     ofield = scinew FOUT(imesh, Field::FACE);
-    Mesh::synchronized_t sync;
-    sync.set(Mesh::FACES_E);
-    imesh->synchronize(sync);
+    imesh->synchronize(Mesh::FACES_E);
     typename MSRC::Face::iterator iter; imesh->begin(iter);
     typename MSRC::Face::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -495,9 +465,7 @@ ManageFieldDataAlgoMeshVector<MSRC, FOUT>::execute(Module *mod,
   {
     int index = 0;
     ofield = scinew FOUT(imesh, Field::CELL);
-    Mesh::synchronized_t sync;
-    sync.set(Mesh::CELLS_E);
-    imesh->synchronize(sync);
+    imesh->synchronize(Mesh::CELLS_E);
     typename MSRC::Cell::iterator iter; imesh->begin(iter);
     typename MSRC::Cell::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -555,9 +523,7 @@ ManageFieldDataAlgoMeshTensor<MSRC, FOUT>::execute(Module *mod,
   {
     int index = 0;
     ofield = scinew FOUT(imesh, Field::NODE);
-    Mesh::synchronized_t sync;
-    sync.set(Mesh::NODES_E);
-    imesh->synchronize(sync);
+    imesh->synchronize(Mesh::NODES_E);
     typename MSRC::Node::iterator iter; imesh->begin(iter);
     typename MSRC::Node::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -583,9 +549,7 @@ ManageFieldDataAlgoMeshTensor<MSRC, FOUT>::execute(Module *mod,
   {
     int index = 0;
     ofield = scinew FOUT(imesh, Field::EDGE);
-    Mesh::synchronized_t sync;
-    sync.set(Mesh::EDGES_E);
-    imesh->synchronize(sync);
+    imesh->synchronize(Mesh::EDGES_E);
     typename MSRC::Edge::iterator iter; imesh->begin(iter);
     typename MSRC::Edge::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -611,9 +575,7 @@ ManageFieldDataAlgoMeshTensor<MSRC, FOUT>::execute(Module *mod,
   {
     int index = 0;
     ofield = scinew FOUT(imesh, Field::FACE);
-    Mesh::synchronized_t sync;
-    sync.set(Mesh::FACES_E);
-    imesh->synchronize(sync);
+    imesh->synchronize(Mesh::FACES_E);
     typename MSRC::Face::iterator iter; imesh->begin(iter);
     typename MSRC::Face::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -639,9 +601,7 @@ ManageFieldDataAlgoMeshTensor<MSRC, FOUT>::execute(Module *mod,
   {
     int index = 0;
     ofield = scinew FOUT(imesh, Field::CELL);
-    Mesh::synchronized_t sync;
-    sync.set(Mesh::CELLS_E);
-    imesh->synchronize(sync);
+    imesh->synchronize(Mesh::CELLS_E);
     typename MSRC::Cell::iterator iter; imesh->begin(iter);
     typename MSRC::Cell::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -667,9 +627,7 @@ ManageFieldDataAlgoMeshTensor<MSRC, FOUT>::execute(Module *mod,
   {
     int index = 0;
     ofield = scinew FOUT(imesh, Field::NODE);
-    Mesh::synchronized_t sync;
-    sync.set(Mesh::NODES_E);
-    imesh->synchronize(sync);
+    imesh->synchronize(Mesh::NODES_E);
     typename MSRC::Node::iterator iter; imesh->begin(iter);
     typename MSRC::Node::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -695,9 +653,7 @@ ManageFieldDataAlgoMeshTensor<MSRC, FOUT>::execute(Module *mod,
   {
     int index = 0;
     ofield = scinew FOUT(imesh, Field::EDGE);
-    Mesh::synchronized_t sync;
-    sync.set(Mesh::EDGES_E);
-    imesh->synchronize(sync);
+    imesh->synchronize(Mesh::EDGES_E);
     typename MSRC::Edge::iterator iter; imesh->begin(iter);
     typename MSRC::Edge::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -723,9 +679,7 @@ ManageFieldDataAlgoMeshTensor<MSRC, FOUT>::execute(Module *mod,
   {
     int index = 0;
     ofield = scinew FOUT(imesh, Field::FACE);
-    Mesh::synchronized_t sync;
-    sync.set(Mesh::FACES_E);
-    imesh->synchronize(sync);
+    imesh->synchronize(Mesh::FACES_E);
     typename MSRC::Face::iterator iter; imesh->begin(iter);
     typename MSRC::Face::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
@@ -751,9 +705,7 @@ ManageFieldDataAlgoMeshTensor<MSRC, FOUT>::execute(Module *mod,
   {
     int index = 0;
     ofield = scinew FOUT(imesh, Field::CELL);
-    Mesh::synchronized_t sync;
-    sync.set(Mesh::CELLS_E);
-    imesh->synchronize(sync);
+    imesh->synchronize(Mesh::CELLS_E);
     typename MSRC::Cell::iterator iter; imesh->begin(iter);
     typename MSRC::Cell::iterator eiter; imesh->end(eiter);
     while (iter != eiter)
