@@ -978,13 +978,11 @@ static Persistent* make_RTTrin()
 #define RTTrin_VERSION 1
 void RTTrin::io(Piostream& stream) {
     using SCICore::Datatypes::Pio;
-    using SCICore::Geometry::Pio;
-    using SCICore::Containers::Pio;
 
     /* int version=*/stream.begin_class("RTTrin", RTTrin_VERSION);
     RTObject::io(stream);    
-    Pio(stream, surf);		     
-    Pio(stream, bb);		     
+    SCICore::Containers::Pio(stream, surf);		     
+    SCICore::Geometry::Pio(stream, bb);		     
     stream.end_class();
 }
 
@@ -1192,6 +1190,9 @@ void Pio(Piostream& stream, RTLight& l)
 
 //
 // $Log$
+// Revision 1.4  2000/03/17 08:20:56  sparker
+// Fixed Pio namespaces
+//
 // Revision 1.3  1999/10/07 02:06:18  sparker
 // use standard iostreams and complex type
 //
