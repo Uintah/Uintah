@@ -428,13 +428,13 @@ void DataArchiver::finalizeTimestep(double time, double delt,
     sched->addTask(t, 0, 0);
     
     dbg << "Created reduction variable output task" << endl;
-    if (d_outputInterval != 0 && time+delt >= d_nextOutputTime){
+    if (d_wasOutputTimestep){
       scheduleOutputTimestep(d_dir, d_saveLabels, level, sched);
       do_output=true;
     }
   }
     
-  if (d_checkpointInterval != 0 && time+delt >= d_nextCheckpointTime) {
+  if (d_wasCheckpointTimestep){
     // output checkpoint timestep
     Task* t = scinew Task("DataArchiver::outputCheckpointReduction",
 			  this, &DataArchiver::outputCheckpointReduction);
@@ -524,7 +524,7 @@ void DataArchiver::beginOutputTimestep(double time, double delt,
 }
 
 void DataArchiver::outputTimestep(Dir& baseDir,
-				  vector<DataArchiver::SaveItem>& saveLabels,
+				  vector<DataArchiver::SaveItem>&,
 				  double time, double delt,
 				  const LevelP& level,
 				  string* pTimestepDir /* passed back */,
@@ -552,7 +552,7 @@ void DataArchiver::outputTimestep(Dir& baseDir,
       rootElem.appendChild(timeElem);
       
       appendElement(timeElem, "timestepNumber", timestep);
-      appendElement(timeElem, "currentTime", time);
+      appendElement(timeElem, "currentTime", time+delt);
       appendElement(timeElem, "delt", delt);
       
       DOM_Element gridElem = doc.createElement("Grid");
@@ -587,7 +587,7 @@ void DataArchiver::outputTimestep(Dir& baseDir,
       DOM_Element dataElem = doc.createElement("Data");
       rootElem.appendChild(dataElem);
       ostringstream lname;
-      if (saveLabels.size() > 0) {
+      {
 	lname << "l0"; // Hard coded - steve
 	for(int i=0;i<d_myworld->size();i++){
 	  ostringstream pname;
@@ -776,12 +776,13 @@ void DataArchiver::indexAddGlobals()
 }
 
 void DataArchiver::outputReduction(const ProcessorGroup*,
-				   const PatchSubset* patches,
-				   const MaterialSubset* matls,
+				   const PatchSubset*,
+				   const MaterialSubset*,
 				   DataWarehouse* /*old_dw*/,
 				   DataWarehouse* new_dw)
 {
   // Dump the stuff in the reduction saveset into files in the uda
+  dbg << "DataArchiver::outputReduction called\n";
 
   for(int i=0;i<(int)d_saveReductionLabels.size();i++) {
     SaveItem& saveItem = d_saveReductionLabels[i];
@@ -809,8 +810,8 @@ void DataArchiver::outputReduction(const ProcessorGroup*,
 }
 
 void DataArchiver::outputCheckpointReduction(const ProcessorGroup* world,
-					     const PatchSubset* patches,
-					     const MaterialSubset* matls,
+					     const PatchSubset*,
+					     const MaterialSubset*,
 					     DataWarehouse* old_dw,
 					     DataWarehouse* new_dw)
 {
@@ -1104,6 +1105,7 @@ static Dir makeVersionedDir(const std::string nameBase)
 
 void  DataArchiver::initSaveLabels(SchedulerP& sched)
 {
+  dbg << "initSaveLabels called\n";
    SaveItem saveItem;
   
    d_saveLabels.reserve(d_saveLabelNames.size());
@@ -1210,14 +1212,15 @@ bool DataArchiver::need_recompile(double time, double dt ,
     if(d_wasCheckpointTimestep)
       recompile=true;
   }
+  dbg << "wasOutputTimestep=" << d_wasOutputTimestep << '\n';
+  dbg << "wasCheckpointTimestep=" << d_wasCheckpointTimestep << '\n';
+  dbg << "time=" << time << '\n';
+  dbg << "dt=" << dt << '\n';
+  dbg << "do_output=" << do_output << '\n';
   if(do_output)
     beginOutputTimestep(time, dt, level);
   else
     d_wasCheckpointTimestep=d_wasOutputTimestep=false;
-  dbg << "wasOutputTimestep=" << d_wasOutputTimestep << '\n';
-  dbg << "wasCheckpointTiemstep=" << d_wasCheckpointTimestep << '\n';
-  dbg << "time=" << time << '\n';
-  dbg << "dt=" << dt << '\n';
   if(recompile)
     dbg << "We do request recompile\n";
   else
