@@ -233,14 +233,25 @@ Worker::run()
 
 
 #if DAV_DEBUG
-  if( mixedDebug.active() ) {
-    cerrLock.lock(); mixedDebug << "Worker " << proc_group_ << "-" << d_id 
-				<< " done with doit, calling done()\n";
-    mixedDebug << "detailed task is " << task << " with task "
-	       << task->getTask() << "\n";
-    cerrLock.unlock();
-  }
+      if( mixedDebug.active() ) {
+	cerrLock.lock(); mixedDebug << "Worker " << proc_group_ << "-" << d_id 
+				    << " done with doit, calling done()\n";
+	mixedDebug << "detailed task is " << task << " with task "
+		   << task->getTask() << "\n";
+	cerrLock.unlock();
+      }
 #endif
+  
+      MPIScheduler::sendMPIData( d_pg, task, *mpi_info_, *sends_, 
+			       *ss_, dws_, reloc_label_ );
+
+#if DAV_DEBUG
+      if( mixedDebug.active() ) {
+	cerrLock.lock();mixedDebug<<"Done with send mpi data: " <<*d_task<< "\n";
+	cerrLock.unlock();
+      }
+#endif
+  
       task->done();
 
     } catch (Exception& e) {
@@ -271,15 +282,6 @@ Worker::run()
     if( mixedDebug.active() ) {
       cerrLock.lock(); mixedDebug << "Worker " << proc_group_ << "-" << d_id 
 			    << " done with done()\n";
-      cerrLock.unlock();
-    }
-#endif
-    MPIScheduler::sendMPIData( d_pg, task, *mpi_info_, *sends_, 
-			       *ss_, dws_, reloc_label_ );
-
-#if DAV_DEBUG
-    if( mixedDebug.active() ) {
-      cerrLock.lock();mixedDebug<<"Done with send mpi data: " <<*d_task<< "\n";
       cerrLock.unlock();
     }
 #endif
