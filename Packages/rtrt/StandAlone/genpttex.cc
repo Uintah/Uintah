@@ -5,7 +5,7 @@
 
  # Use these to quantize the textures and copy them to ppms
  
- unu join -a 3 -i old/sphere0000*.nrrd | unu quantize -b 8 | unu dice -a 3 -o sphere
+ unu join -a 3 -i sphere0000*.nrrd | unu gamma -g 2 | unu quantize -b 8 | unu dice -a 3 -o sphere
  echo 'for T in sphere*.png; do unu save -f pnm -i $T -o `basename $T .png`.ppm; done' | bash
 
  # This coppies the first column to the end to help with texture blending.
@@ -28,26 +28,27 @@ using namespace SCIRun;
 using namespace std;
 
 int tex_size = 16;
+double radius = 1.0;
 
 Group *make_geometry( )
 {
   Group* group=new Group();
 
-  group->add( new TextureSphere(Point(-1,-1,-1), 1, tex_size ) );
+  group->add( new TextureSphere(Point(-1,-1,-1), radius, tex_size ) );
   
-  group->add( new TextureSphere(Point(-1,1,-1), 1, tex_size ) );
+  group->add( new TextureSphere(Point(-1,1,-1), radius, tex_size ) );
 
-  group->add( new TextureSphere(Point(1,1,-1), 1, tex_size ) );
+  group->add( new TextureSphere(Point(1,1,-1), radius, tex_size ) );
 
-  group->add( new TextureSphere(Point(1,-1,-1), 1, tex_size ) );
+  group->add( new TextureSphere(Point(1,-1,-1), radius, tex_size ) );
   
-  group->add( new TextureSphere(Point(-1,-1,1), 1, tex_size ) );
+  group->add( new TextureSphere(Point(-1,-1,1), radius, tex_size ) );
 
-  group->add( new TextureSphere(Point(-1,1,1), 1, tex_size ) );
+  group->add( new TextureSphere(Point(-1,1,1), radius, tex_size ) );
 
-  group->add( new TextureSphere(Point(1,1,1), 1, tex_size ) );
+  group->add( new TextureSphere(Point(1,1,1), radius, tex_size ) );
 
-  group->add( new TextureSphere(Point(1,-1,1), 1, tex_size ) );
+  group->add( new TextureSphere(Point(1,-1,1), radius, tex_size ) );
   
   return group;
 }
@@ -70,6 +71,9 @@ int main(int argc, char** argv)
     else if(strcmp(argv[i],"-tex_size")==0) {
       tex_size=atoi(argv[++i]);
     }
+    else if(strcmp(argv[i],"-radius")==0) {
+      radius=atof(argv[++i]);
+    }
     else {
       cerr<<"unrecognized option \""<<argv[i]<<"\""<<endl;
 
@@ -82,7 +86,7 @@ int main(int argc, char** argv)
     }
   }
   
-  PathTraceLight ptlight(Point(-5, 10, 7.5), 1.0, intensity*Color(1,1,1));
+  PathTraceLight ptlight(Point(-5, 10, 7.5), 0.01, intensity*Color(1,1,1));
   Group *group = make_geometry();
   PathTraceContext ptcontext(Color(0.1,0.7,0.2), ptlight, group,
 			     num_samples, depth);
