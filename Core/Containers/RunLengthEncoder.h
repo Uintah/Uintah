@@ -676,7 +676,8 @@ long RunLengthEncoder<T, Sequencer>::read(istream& in) throw(InternalError)
     in.read((char*)&end_index, sizeof(unsigned long));
 
     group.length_ = end_index - start_index;
-    if (group.length_ * sizeof(T) == end_data_pos - start_data_pos)
+    if (group.length_ * sizeof(T) == 
+	(unsigned long)(end_data_pos - start_data_pos))
       // not a run -- signify by resizing the data
       group.data_.resize((end_data_pos - start_data_pos) / sizeof(T));
     else if (Sequencer::needRule() &&
