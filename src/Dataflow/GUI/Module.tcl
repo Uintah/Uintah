@@ -76,6 +76,9 @@ itcl_class Module {
     
     public msgLogStream
     public name
+    protected min_text_width 0
+    protected time_mapped 0
+    protected progress_mapped 0
     protected make_progress_graph 1
     protected make_time 1
     protected graph_width 50
@@ -230,6 +233,10 @@ itcl_class Module {
 	    label $p.time -text "00.00" -font $time_font
 	    pack $p.time -side left -padx 2
 	    Tooltip $p.time $ToolTipText(ModuleTime)
+	    set time_mapped 0
+	    bind $p.time <Map> "set time_mapped 1; $this setDone"
+	} else {
+	    set time_mapped 1
 	}
 
 	# Make the progress graph
@@ -240,8 +247,11 @@ itcl_class Module {
 	    frame $p.inset.graph -relief raised \
 		-width 0 -borderwidth 2 -background green
 	    Tooltip $p.inset $ToolTipText(ModuleProgress)
+	    set progress_mapped 0
+	    bind $p.inset <Map> "set progress_mapped 1; $this setDone"
+	} else {
+	    set progress_mapped 1
 	}
-
 
 	# Make the message indicator
 	frame $p.msg -relief sunken -height 15 -borderwidth 1 \
@@ -330,7 +340,7 @@ itcl_class Module {
 	}
 	    
     }
-       
+
     method addSelected {} {
 	if {![$this is_selected]} { 
 	    global CurrentlySelectedModules
@@ -545,32 +555,61 @@ itcl_class Module {
 
 
     method resize_icon {} {
+	if { ![set $this-done_bld_icon] } return
+	global Subnet port_spacing modname_font
+	set canvas $Subnet(Subnet$Subnet([modname])_canvas)
+
+
+	set text_widget $canvas.module[modname].ff.title
+	$text_widget configure -text $name
+	set text_width [font measure $modname_font $name]
+	set text_diff [expr $text_width - $min_text_width]
+
+
 	set iports [portCount "[modname] 0 i"]
 	set oports [portCount "[modname] 0 o"]
 	set nports [expr $oports>$iports?$oports:$iports]
-	if {[set $this-done_bld_icon]} {
-	    global Subnet port_spacing
-	    set canvas $Subnet(Subnet$Subnet([modname])_canvas)
-	    set width [expr 8+$nports*$port_spacing] 
-	    set width [expr ($width < $initial_width)?$initial_width:$width]
-	    $canvas itemconfigure [modname] -width $width
-	    #$canvas create window [lindex $pos 0] [lindex $pos 1] -anchor
-	    #-window $m -tags "module [modname]"
+	set ports_width [expr 8+$nports*$port_spacing] 
+	set port_diff [expr $ports_width - $initial_width]
+	set diff [expr $port_diff > $text_diff ? $port_diff : $text_diff]
 
+	if { $diff > 0 } {
+	    $canvas itemconfigure [modname] -width [expr $initial_width+$diff]
+	} else {
+	    $canvas itemconfigure [modname] -width $initial_width
 	}
+	    
     }
 
+
+       
+
+
     method setDone {} {
-	#module actually mapped to the canvas
-	if ![set $this-done_bld_icon] {
-	    set $this-done_bld_icon 1	
-	    global Subnet
-	    set canvas $Subnet(Subnet$Subnet([modname])_canvas)
-	    set initial_width [winfo width $canvas.module[modname]]
-	    resize_icon
-	    drawNotes [modname]
-	    drawConnections [portConnections "[modname] all o"]
+	#module already mapped to the canvas
+	if { [set $this-done_bld_icon] } return
+	if { !$progress_mapped } return
+	if { !$time_mapped } return
+
+	set $this-done_bld_icon 1
+	    
+	global Subnet IconWidth modname_font
+	set canvas $Subnet(Subnet$Subnet([modname])_canvas)
+	set initial_width [winfo width $canvas.module[modname]]
+	set progress_width 0
+	set time_width 0
+	if {$make_progress_graph} {
+	    set progress_width [winfo width $canvas.module[modname].ff.inset]
 	}
+	if {$make_time} {
+	    set time_width [winfo width $canvas.module[modname].ff.time]
+	}
+	set min_text_width [expr $progress_width+$time_width]
+	puts "min text width: $min_text_width"
+	
+	resize_icon
+	drawNotes [modname]
+	drawConnections [portConnections "[modname] all o"]
     }
 
     method execute {} {
