@@ -782,7 +782,7 @@ MixedScheduler::execute(const ProcessorGroup * pc,
             const Task::Dependency* dep = comps[0];
             OnDemandDataWarehouse* dw = 
               dynamic_cast<OnDemandDataWarehouse*>(dep->d_dw.get_rep());
-            dw->reduceMPI(dep->d_var, d_myworld);
+            dw->reduceMPI(dep->d_var, dep->d_matlIndex, d_myworld);
 #if DAV_DEBUG
             cerr << "reduceMPI finished\n";
 #endif
@@ -1697,6 +1697,9 @@ MixedScheduler::releaseLoadBalancer()
 
 //
 // $Log$
+// Revision 1.6  2000/12/06 23:57:38  witzel
+// Added material index to reduceMPI call
+//
 // Revision 1.5  2000/09/28 23:16:45  jas
 // Added (int) for anything returning the size of a STL component.  Added
 // <algorithm> and using std::find.  Other minor modifications to get
