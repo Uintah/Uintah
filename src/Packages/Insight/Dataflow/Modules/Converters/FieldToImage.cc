@@ -39,8 +39,6 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Dataflow/share/share.h>
-
 #include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Geometry/BBox.h>
@@ -59,7 +57,7 @@ using namespace SCIRun;
 
 enum FieldType {LATVOLFIELD, ITKLATVOLFIELD, IMAGEFIELD, ITKIMAGEFIELD};
 
-class PSECORESHARE FieldToImage : public Module {
+class FieldToImage : public Module {
 public:
   FieldIPort* infield_;
   FieldHandle infield_handle_;

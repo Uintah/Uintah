@@ -150,7 +150,6 @@ DECLARE_MAKER(<xsl:value-of select="/filter/filter-sci/@name"/>)
 #include &lt;Dataflow/Network/Module.h&gt;
 #include &lt;Core/Malloc/Allocator.h&gt;
 #include &lt;Core/GuiInterface/GuiVar.h&gt;
-#include &lt;Packages/Insight/share/share.h&gt;
 #include &lt;Packages/Insight/Dataflow/Ports/ITKDatatypePort.h&gt;
 <xsl:for-each select="/filter/filter-sci/includes/file">
 #include &lt;<xsl:value-of select="."/>&gt;
@@ -165,7 +164,7 @@ DECLARE_MAKER(<xsl:value-of select="/filter/filter-sci/@name"/>)
 
 <!-- ====== CREATE_CLASS_DECL ====== -->
 <xsl:template name="create_class_decl">
-<xsl:text>class </xsl:text><xsl:value-of select="$package"/><xsl:text>SHARE </xsl:text>
+<xsl:text>class </xsl:text>
 <xsl:value-of select="/filter/filter-sci/@name"/>
 <xsl:text> : public Module 
 {

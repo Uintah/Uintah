@@ -39,8 +39,6 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Packages/Insight/share/share.h>
-
 #include <Insight/Dataflow/Ports/ITKDatatypePort.h>
 #include "itkImageFileReader.h"
 
@@ -49,7 +47,7 @@ namespace Insight {
 
 using namespace SCIRun;
 
-class InsightSHARE ImageReaderFloat3D : public Module {
+class ImageReaderFloat3D : public Module {
 public:
   //! GUI variables
   GuiString gui_filename_;

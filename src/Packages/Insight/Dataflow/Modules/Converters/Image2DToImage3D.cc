@@ -39,8 +39,6 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Dataflow/share/share.h>
-
 #include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
 
 #include <itkCastImageFilter.h>
@@ -50,7 +48,7 @@ namespace Insight {
 
 using namespace SCIRun;
 
-class PSECORESHARE Image2DToImage3D : public Module {
+class Image2DToImage3D : public Module {
 public:
   // Declare Ports
   ITKDatatypeIPort* inport_InputImage_;

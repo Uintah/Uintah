@@ -39,8 +39,6 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Dataflow/share/share.h>
-
 #include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
 #include "itkImageRegionIterator.h"
 
@@ -52,7 +50,7 @@ namespace Insight {
 
 using namespace SCIRun;
 
-class PSECORESHARE NrrdToImage : public Module {
+class NrrdToImage : public Module {
 public:
   NrrdIPort *inrrd_;
   NrrdDataHandle inrrd_handle_;
