@@ -66,11 +66,13 @@ C$DIR SCALAR
             DO 600 J = JST,JEND
                IF ((PCELL(IEND+1,J,K).NE.WALL .AND.
      &              PCELL(IEND,J,K).NE.WALL).AND.xplus) then
+                  AP(IEND,J,K) = AP(IEND,J,K)-AE(IEND,J,K)
                   AE(IEND,J,K) = ZERO
                END IF
                IF ((PCELL(IST-1,J,K).NE.WALL .AND.
      &              PCELL(IST,J,K).NE.WALL).AND.
      $              xminus) THEN
+                  AP(IST,J,K) = AP(IST,J,K)-AW(IST,J,K)
                   AW(IST,J,K) = ZERO
                END IF
  600        CONTINUE
