@@ -50,8 +50,8 @@ public:
 		  DataWarehouseP& old_dw, 
 		  DataWarehouseP& new_dw) = 0;
 
-	 Fracture(ProblemSpecP& ps);
-        ~Fracture();
+  Fracture(ProblemSpecP& ps);
+  virtual ~Fracture();
 
 protected:
   MPMLabel*        lb;
@@ -63,6 +63,9 @@ protected:
 #endif //__FRACTURE_H__
 
 // $Log$
+// Revision 1.32  2000/11/28 03:57:36  jas
+// Made the destructor virtual.
+//
 // Revision 1.31  2000/11/21 20:47:57  tan
 // Implemented different models for fracture simulations.  SimpleFracture model
 // is for the simulation where the resolution focus only on macroscopic major
