@@ -30,9 +30,6 @@ using namespace std;
 //  setenv SCI_DEBUG "MODELS_DOING_COUT:+,ADIABATIC_TABLE_DBG_COUT:+"
 //  ADIABATIC_TABLE_DBG:  dumps out during problemSetup
 static DebugStream cout_doing("MODELS_DOING_COUT", false);
-/*`==========TESTING==========*/
-static DebugStream oldStyleAdvect("oldStyleAdvect",false); 
-/*==========TESTING==========`*/
 //______________________________________________________________________              
 VorticityConfinement::VorticityConfinement(const ProcessorGroup* myworld, 
                      ProblemSpecP& params)
@@ -57,19 +54,6 @@ void
 VorticityConfinement::problemSetup(GridP&, SimulationStateP& in_state,
                                    ModelSetup* /*setup*/)
 {
-/*`==========TESTING==========*/
-if (!oldStyleAdvect.active()){
-  ostringstream desc;
-  desc<< "\n----------------------------\n"
-      <<" ICE need the following environmental variable \n"
-       << " \t setenv SCI_DEBUG oldStyleAdvect:+ \n"
-       << "for this model to work.  This is gross--Todd"
-       << "\n----------------------------\n";
-  throw ProblemSetupException(desc.str());  
-} 
-/*==========TESTING==========`*/
-
-
   cout_doing << "Doing problemSetup \t\t\t\tADIABATIC_TABLE" << endl;
   sharedState = in_state;
   d_matl = sharedState->parseAndLookupMaterial(params, "material");
