@@ -143,6 +143,18 @@ clString TCLstring::get()
     return value;
 }
 
+void TCLstring::set(const clString& val)
+{
+    is_reset=0;
+    if(val != value){
+	TCLTask::lock();
+	value=val;
+	Tcl_SetVar(the_interp, varname(), value(), TCL_GLOBAL_ONLY);
+	TCLTask::unlock();
+    }
+}
+
+
 TCLvardouble::TCLvardouble(const clString& name, const clString& id, TCL* tcl)
 : TCLvar(name, id, tcl)
 {
