@@ -223,126 +223,73 @@ void EditField::update_input_attributes(FieldHandle f)
 
 bool EditField::check_types(FieldHandle f)
 {
-  string fldtype = typename_.get();
-  fldtype = fldtype.substr(0,fldtype.find('<'));
-  if (fldtype!=f->get_type_name(0)) {
-    postMessage(string("EditField: type mismatch ")+fldtype+", "+
-		f->get_type_name(0));
-    return false;
-  } 
-
-  int idx1,idx2;
-  fldtype = typename_.get();
-  idx1 = fldtype.find('<') + 1;
-  idx2 = fldtype.find('>');
-  fldtype = fldtype.substr(idx1,idx2-idx1);
-  
-  if ( (f->get_type_name(1) == "Vector" && fldtype != "Vector") ||
-       (f->get_type_name(1) == "Tensor" && fldtype != "Tensor") ) {
-    postMessage(string("EditField: type mismatch ")+fldtype+", "+
-		f->get_type_name(1));
-    return false;
-  }
-
   return true;
 }
 
-template <class field_type_in, class field_type_out>
-field_type_out *
-EditField::create_edited_field(field_type_in *f, field_type_out * ) 
+template <class FSRC, class FOUT>
+FOUT *
+EditField::create_edited_field(FSRC *f, FOUT *)
 {
-  typedef typename field_type_in::mesh_type          mesh_type_in;
-  typedef typename field_type_in::fdata_type         fdata_type_in;
-  typedef typename fdata_type_in::value_type         value_type_in;
-  typedef typename field_type_out::mesh_type         mesh_type_out;
-  typedef typename field_type_out::fdata_type        fdata_type_out;
-  typedef typename fdata_type_out::value_type        value_type_out;
-  typedef typename mesh_type_in::Node::iterator      node_iter;
-  typedef typename mesh_type_in::Cell::iterator      cell_iter;
-  typedef typename mesh_type_in::Elem::iterator      elem_iter;
-
-  mesh_type_in *imesh = f->get_typed_mesh().get_rep(); // input mesh
-
-  // create storage for a new mesh
-  mesh_type_out *omesh = scinew mesh_type_out(*imesh);
-
-  // transform the mesh if necessary
-  if (cbbox_.get()) {
-    BBox old = imesh->get_bounding_box();
-    Point oldc = old.min()+(old.max()-old.min())/2.;
-    Point center, right, down, in;
-    box_->GetPosition(center,right,down,in);
-    // rotate * scale * translate
-    Transform t,r;
-    Point unused;
-    t.load_identity();
-    r.load_frame(unused,(right-center).normal(),
-		 (down-center).normal(),
-		 (in-center).normal());
-    t.pre_trans(r);
-    t.pre_scale(Vector((right-center).length()/(old.max().x()-oldc.x()),
-		       (down-center).length()/(old.max().y()-oldc.y()),
-		       (in-center).length()/(old.max().z()-oldc.z())));
-    t.pre_translate(Vector(center.x(),center.y(),center.z()));
-    omesh->transform(t);
-  }
-
-  // identify the new data location
+  // Identify the new data location.
   Field::data_location dataat;
-  if (cdataat_.get()) {
+  if (cdataat_.get())
+  {
     string d = dataat_.get();
-    if (d=="Field::CELL")
+    if (d == "Field::CELL")
       dataat = Field::CELL;
-    else if (d=="Field::NODE")
+    else if (d == "Field::NODE")
       dataat = Field::NODE;
     else 
       dataat = Field::NONE; // defaults to NONE
-  } else
+  }
+  else
+  {
     dataat = f->data_at();
+  }
 
-  // create the field with the new mesh and data location
-  field_type_out *field = scinew field_type_out(omesh,dataat);
+  // Create the field with the new mesh and data location.
+  FOUT *field = scinew FOUT(f->get_typed_mesh(), dataat);
 
-  // copy the (possibly transformed) data to the new field
+  // Copy the (possibly transformed) data to the new field.
   field->resize_fdata();
-  fdata_type_out &ofdata = field->fdata();
-  fdata_type_in &ifdata = f->fdata();
+  typename FSRC::fdata_type &ifdata = f->fdata();
+  typename FOUT::fdata_type &ofdata = field->fdata();
   TCL::execute(id + " set_state Executing 0");
-  int loop = 0;
-  typename fdata_type_in::iterator in = ifdata.begin();
-  typename fdata_type_out::iterator out = ofdata.begin();
-  if (dataat == f->data_at()) {
-    if (!cdataminmax_.get()) {
-      while (in != ifdata.end()) {
-	*out = (value_type_out)(*in);
-	++in; ++out; ++loop;
+  typename FSRC::fdata_type::iterator in = ifdata.begin();
+  typename FOUT::fdata_type::iterator out = ofdata.begin();
+  if (dataat == f->data_at())
+  {
+    if (!cdataminmax_.get())
+    {
+      while (in != ifdata.end())
+      {
+	*out = (typename FOUT::value_type)(*in);
+	++in; ++out;
       }
-    } else {
-      while (in != ifdata.end()) {
-	//linearly transform the data
-	*out = (value_type_out)
-	  (datamin_.get()+mag_val((((*in)-minmax_.first)/
-				   (minmax_.second-minmax_.first))*
-	   (datamax_.get()-datamin_.get())));
-	++in; ++out; ++loop;
+    }
+    else
+    {
+      
+      while (in != ifdata.end())
+      {
+	// Linearly transform the data.
+	*out = (typename FOUT::value_type)
+	  (datamin_.get() + mag_val((((*in) - minmax_.first) /
+				     (minmax_.second - minmax_.first)) *
+				    (datamax_.get() - datamin_.get())));
+	++in; ++out;
       }
     } 
-  } else {
+  }
+  else
+  {
     // changing from node to cell or cell to node - now what?
   }
 
-  // set some field attributes
-  ScalarFieldInterface* sfi = field->query_scalar_interface();
-  if (cfldname_.get()) 
-    field->store(string("name"),fldname_.get());
-  if (sfi) {
-    std::pair<double,double> minmax(1,0);
-    sfi->compute_min_max(minmax.first,minmax.second);
-    field->store(string("minmax"),minmax);
-  }
-    
   return field;
 }
+
+
 
 void EditField::build_widget(FieldHandle f)
 {
@@ -1148,6 +1095,45 @@ void EditField::execute()
 
   }
 
+  // Transform the mesh if necessary.
+  if (cbbox_.get())
+  {
+    BBox old = f->mesh()->get_bounding_box();
+    Point oldc = old.min() + (old.max() - old.min()) / 2.0;
+    Point center, right, down, in;
+    box_->GetPosition(center, right, down, in);
+
+    // Rotate * Scale * Translate.
+    Transform t, r;
+    Point unused;
+    t.load_identity();
+    r.load_frame(unused, (right-center).normal(),
+		 (down-center).normal(),
+		 (in-center).normal());
+    t.pre_trans(r);
+    t.pre_scale(Vector((right-center).length() / (old.max().x() - oldc.x()),
+		       (down-center).length() / (old.max().y() - oldc.y()),
+		       (in-center).length() / (old.max().z() - oldc.z())));
+    t.pre_translate(Vector(center.x(), center.y(), center.z()));
+
+    ef->mesh_detach();
+    ef->mesh()->transform(t);
+  }
+
+  // Set some field attributes.
+  if (cfldname_.get())
+  {
+    ef->store(string("name"), fldname_.get());
+  }
+
+  ScalarFieldInterface* sfi = ef->query_scalar_interface();
+  if (sfi)
+  {
+    std::pair<double, double> minmax(1, 0);
+    sfi->compute_min_max(minmax.first, minmax.second);
+    ef->store(string("minmax"), minmax);
+  }
+    
   oport->send(ef);
 }
     
