@@ -139,7 +139,6 @@ void FieldExtractor::build_field(DataArchive& archive,
 
     IntVector range = hi - low;
 
-    cerr<<"indices are "<<low<<" to "<<hi<<" and size is "<<range<<endl;
     int z_min = low.z();
     int z_max = low.z() + hi.z() - low.z();
     int z_step, i, z, N = 0;
