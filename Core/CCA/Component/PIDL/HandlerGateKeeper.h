@@ -88,7 +88,11 @@ DESCRIPTION
 
     /////////
     // Semaphore used to hold out of order invocations
-    SCIRun::Semaphore d_gate_sema;
+    Semaphore d_gate_sema;
+
+    ///////
+    // Mutex used to control access of the callsToGo variable above
+    Mutex d_gate_mutex;
 
   };
 } // End namespace SCIRun

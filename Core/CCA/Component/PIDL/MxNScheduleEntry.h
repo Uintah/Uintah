@@ -101,7 +101,7 @@ namespace SCIRun {
     // The number of remote objects (size) is passed in to check
     // whether that many descriptions have already been recieved.
     // If that is the case, we raise a synchronization semaphore.
-    void reportMetaRecvFinished(int size);
+    void reportMetaRecvDone(int size);
 
     //////////
     // Retrieves pointer to the actual array without regard to the
@@ -122,7 +122,7 @@ namespace SCIRun {
     // Blocks until data redistribution is complete and placed
     // within the array. After that is complete we return the
     // pointer to the array. 
-    void* getCompleteArray();
+    void* waitCompleteArray();
 
     /////////
     // This method is called when we have recieved the distribution

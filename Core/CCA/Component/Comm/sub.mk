@@ -41,3 +41,7 @@ LIBS := $(GLOBUS_COMMON_LIBRARY) $(GLOBUS_LIBRARY) $(GLOBUS_IO_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
+SUBDIRS := \
+        $(SRCDIR)/Intra 
+
+include $(SCIRUN_SCRIPTS)/recurse.mk

@@ -109,12 +109,16 @@ void* MxNScheduleEntry::getArrayWait()
 
 void MxNScheduleEntry::setArray(void** a_ptr)
 {
+  //Make sure all the meta data arrived
+  meta_sema.down();
+  //set array
   arr_mutex.lock();
   if (allowArraySet) {
     arr_ptr = (*a_ptr);
     allowArraySet = false;
     //Raise getArrayWait's semaphore if 
     //there is somebody waiting on it
+    ::std::cout << "setArray -- Raised sema +" << caller_rep.size()+1 << "\n";
     arr_wait_sema.up((int) caller_rep.size()+1);
   }
   else {
@@ -123,7 +127,7 @@ void MxNScheduleEntry::setArray(void** a_ptr)
   arr_mutex.unlock();
 }
 
-void* MxNScheduleEntry::getCompleteArray()
+void* MxNScheduleEntry::waitCompleteArray()
 {
   descriptorList rl;
   if (scht == callee) {
@@ -143,17 +147,22 @@ void* MxNScheduleEntry::getCompleteArray()
     }
 
     //Wait until all of those requests are received
-    descriptorList::iterator iter = rl.begin();
-    for(unsigned int i=0; i < rl.size(); iter++, i++) {
+    descriptorList::iterator iter;
+    for(int i=0; i < (int)rl.size(); iter++, i++) {
+      if(i == 0) iter = rl.begin();
       recv_mutex.lock();
       bool recv_flag = (*iter)->received;
       recv_mutex.unlock();
       if (recv_flag == false) {
+	::std::cout << "rank=" << i << " of " << rl.size() << " is not here yet\n";
 	recv_sema.down();
-	i=0;
-	iter = rl.begin();
+	i=-1; //Next loop iteration will increment it to 0
+      }
+      else {
+	::std::cout <<  "rank=" << i << " of " << rl.size() << " is here\n";
       }
     } 
+    ::std::cout << "All redistribution have arrived...\n";
     //Mark all of them as not received to get ready for next time
     iter = rl.begin();
     for(unsigned int i=0; i < rl.size(); iter++, i++) {
@@ -161,19 +170,22 @@ void* MxNScheduleEntry::getCompleteArray()
       (*iter)->received = false;
       recv_mutex.unlock();
     }
-    //Raise the meta semaphore, since by now we have all the meta
-    //data we will ever need
-    meta_sema.up();
+    //Refresh semaphores
+    //while (meta_sema.tryDown());
+    meta_sema.up(2);
+    while (arr_wait_sema.tryDown());
+
   }  
   allowArraySet = true;
   return arr_ptr;
 }
 
-void MxNScheduleEntry::reportMetaRecvFinished(int size)
+void MxNScheduleEntry::reportMetaRecvDone(int size)
 {
   if (scht == callee) {
+    ::std::cout << "Meta " << caller_rep.size() << " of " << size << "\n"; 
     if (size == static_cast<int>(caller_rep.size())) 
-      meta_sema.up();
+      meta_sema.up(2);
   }  
 }
 
@@ -183,6 +195,7 @@ void MxNScheduleEntry::doReceive(int rank)
     for(unsigned int i=0; i < caller_rep.size(); i++) {
       if (caller_rep[i]->getRank() == rank) {
 	recv_mutex.lock();
+	::std::cout << "received dist rank=" << i << "\n";
 	caller_rep[i]->received = true;
 	recv_mutex.unlock();
 	recv_sema.up();

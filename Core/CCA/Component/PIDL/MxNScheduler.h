@@ -100,20 +100,27 @@ namespace SCIRun {
     void* getArray(std::string distname);
     void* getArrayWait(std::string distname);
     void setArray(std::string distname, void** arr);
-    void* getCompleteArray(std::string distname);
+    
+    ////////////
+    // (Callee Method)
+    // Waits to recieve all distributions necessary
+    // before it returns the array. The notification that
+    // a distribution has been received comes through the
+    // reportRedisDone() method.
+    void* waitCompleteArray(std::string distname);
  
     ////////////
     // (Callee Method)
     // Marks a particular remote array description as received
     // when the actual data it describes has been received
-    void markReceived(std::string distname,int rank);
+    void reportRedisDone(std::string distname,int rank);
 
     ///////////
     // (Callee Method)
     // Report the reception of array distribution metadata. Size denotes the
     // number of metadata receptions we are expecting.
     // See Also: MxNScheduleEntry::reportMetaRecvFinished(...)
-    void reportMetaRecvFinished(std::string distname,int size); 
+    void reportMetaRecvDone(std::string distname,int size); 
 
     ///////////
     // (Caller Method) 

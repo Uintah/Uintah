@@ -39,7 +39,7 @@ namespace SCIRun {
 
   class SpChannel;
   class URL;
-
+  class IntraComm;
 /**************************************
  
 CLASS
@@ -95,12 +95,23 @@ DESCRIPTION
     // Return the object Warehouse.  Most clients will not
     // need to use this.
     static Warehouse* getWarehouse();
+
+    //////////
+    // Get the inter-component communication object
+    // (only in parallel components)
+    static IntraComm* getIntraComm();
+
   protected:
   private:
     //////////
     // Initialize proper communication library to
     // be used throughout the PIDL
     static void setCommunication(int c);
+
+    //////////
+    // Initialize a parallel communication library to
+    // be used within a component 
+    static void setIntraCommunication(int c);
 
     //////////
     // The warehouse singleton object

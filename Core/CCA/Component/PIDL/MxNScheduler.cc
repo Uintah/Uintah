@@ -117,16 +117,16 @@ void MxNScheduler::setArray(std::string distname,void** arr)
   }
 }
 
-void* MxNScheduler::getCompleteArray(std::string distname)
+void* MxNScheduler::waitCompleteArray(std::string distname)
 {
   schedList::iterator iter = entries.find(distname);
   if (iter != entries.end()) {
-    return ((*iter).second)->getCompleteArray();
+    return ((*iter).second)->waitCompleteArray();
   }
   return NULL;
 }
 
-void MxNScheduler::markReceived(std::string distname, int rank)
+void MxNScheduler::reportRedisDone(std::string distname, int rank)
 {
   schedList::iterator iter = entries.find(distname);
   if (iter != entries.end()) {
@@ -134,11 +134,11 @@ void MxNScheduler::markReceived(std::string distname, int rank)
   }
 }
 
-void MxNScheduler::reportMetaRecvFinished(std::string distname, int size)
+void MxNScheduler::reportMetaRecvDone(std::string distname, int size)
 {
   schedList::iterator iter = entries.find(distname);
   if (iter != entries.end()) {
-    ((*iter).second)->reportMetaRecvFinished(size);
+    ((*iter).second)->reportMetaRecvDone(size);
   }
 }
  

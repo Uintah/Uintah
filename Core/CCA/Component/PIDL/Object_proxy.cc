@@ -25,6 +25,7 @@
 #include <Core/CCA/Component/PIDL/Object_proxy.h>
 #include <Core/CCA/Component/PIDL/TypeInfo.h>
 #include <Core/CCA/Component/PIDL/URL.h>
+#include <Core/CCA/Component/PIDL/PIDL.h>
 #include <iostream>
 #include <string>
 
@@ -57,6 +58,8 @@ Object_proxy::Object_proxy(const int urlc, const URL urlv[], int mysize, int myr
   }
   rm.localSize = mysize;
   rm.localRank = myrank;
+  //Exchange parallel IDs among processes
+  rm.intracomm = PIDL::getIntraComm();
 }
 
 Object_proxy::Object_proxy(const std::vector<URL>& urlv, int mysize, int myrank)
@@ -70,10 +73,14 @@ Object_proxy::Object_proxy(const std::vector<URL>& urlv, int mysize, int myrank)
   }
   rm.localSize = mysize;
   rm.localRank = myrank;
+  //Exchange parallel IDs among processes
+  rm.intracomm = PIDL::getIntraComm();
 }
 
 Object_proxy::~Object_proxy()
 {
+::std::cout << "~Object_proxy\n";
+  delete (rm.intracomm);
 }
 
 

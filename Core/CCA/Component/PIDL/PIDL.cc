@@ -36,14 +36,20 @@
 #include <Core/CCA/Component/Comm/CommNexus.h>
 #include <Core/CCA/Component/Comm/SocketSpChannel.h>
 #include <Core/CCA/Component/Comm/SocketEpChannel.h>
+#include <Core/CCA/Component/Comm/Intra/IntraCommMPI.h>
 #include <Core/Exceptions/InternalError.h> 
 #include <iostream>
 #include <sstream>
 
+//Inter-Component Comm libraries supported
 #define COMM_SOCKET 1
 #define COMM_NEXUS 2
-static int comm_type = 0;
 
+//Intra-Component Comm libraries supported
+#define INTRA_COMM_MPI 1
+
+static int comm_type = 0;
+static int intra_comm_type = 0;
 using namespace SCIRun;
 
 Warehouse* PIDL::warehouse;
@@ -55,10 +61,11 @@ PIDL::initialize(int, char*[])
   setCommunication(COMM_NEXUS);
   CommNexus::initialize();
 
+  setIntraCommunication(INTRA_COMM_MPI);
+
   if(!warehouse){
     warehouse=new Warehouse;
   }
-
 }
 
 void
@@ -105,7 +112,6 @@ PIDL::getWarehouse()
   return warehouse;
 }
 
-
 Object::pointer
 PIDL::objectFrom(const URL& url)
 {
@@ -132,6 +138,16 @@ PIDL::serveObjects()
   warehouse->run();
 }
 
+IntraComm* 
+PIDL::getIntraComm()
+{
+  switch (intra_comm_type) {
+  case (INTRA_COMM_MPI):
+    return (new IntraCommMPI());
+  default:
+    return (new IntraCommMPI());
+  }
+}
  
 //PRIVATE:
 
@@ -144,3 +160,17 @@ PIDL::setCommunication(int c)
     comm_type = c;
   }
 }
+
+void
+PIDL::setIntraCommunication(int c)
+{
+  if (intra_comm_type != 0)
+    throw SCIRun::InternalError("Cannot modify communication setting after it has been set once\n");
+  else {
+    intra_comm_type = c;
+  }
+}
+
+
+
+
