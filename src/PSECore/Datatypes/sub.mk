@@ -16,7 +16,8 @@ SRCS     += $(SRCDIR)/BooleanPort.cc $(SRCDIR)/ColorMapPort.cc \
 	$(SRCDIR)/SurfacePort.cc $(SRCDIR)/VectorFieldPort.cc \
 	$(SRCDIR)/VoidStarPort.cc $(SRCDIR)/cMatrixPort.cc \
 	$(SRCDIR)/cVectorPort.cc $(SRCDIR)/SpanTree.cc \
-	$(SRCDIR)/SpanPort.cc $(SRCDIR)/templates.cc
+	$(SRCDIR)/SpanPort.cc $(SRCDIR)/templates.cc \
+	$(SRCDIR)/PathPort.cc
 
 
 PSELIBS := PSECore/Dataflow PSECore/Comm SCICore/Containers \
@@ -28,6 +29,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.4  2000/07/19 06:35:00  samsonov
+# PathPort datatype moved from DaveW
+#
 # Revision 1.3  2000/03/21 03:01:24  sparker
 # Partially fixed special_get method in SimplePort
 # Pre-instantiated a few key template types, in an attempt to reduce
