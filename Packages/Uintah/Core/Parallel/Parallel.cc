@@ -5,6 +5,7 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/Thread.h>
+#include <Core/Thread/Time.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <sstream>
@@ -13,6 +14,7 @@
 
 using namespace Uintah;
 using SCIRun::Thread;
+using SCIRun::Time;
 using SCIRun::InternalError;
 using SCIRun::AllocatorSetDefaultTagMalloc;
 using SCIRun::AllocatorMallocStatsAppendNumber;
@@ -248,7 +250,7 @@ Parallel::finalizeManager(Circumstances circumstances)
         cout << "An exception was thrown... Goodbye.\n";
       cerr.flush();
       cout.flush();
-      sleep(1);
+      Time::waitFor(1.0);
       MPI_Abort(worldComm, errorcode);
     } else {
       int status;
