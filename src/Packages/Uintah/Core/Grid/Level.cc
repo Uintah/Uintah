@@ -559,10 +559,8 @@ void Level::assignBCS(const ProblemSpecP& grid_ps)
 {
   ProblemSpecP bc_ps = grid_ps->findBlock("BoundaryConditions");
   if (bc_ps == 0) {
-    if (Parallel::getMPIRank() == 0) {
-      static ProgressiveWarning warn("No BoundaryConditions specified", -1);
-      warn.invoke();
-    }
+    static ProgressiveWarning warn("No BoundaryConditions specified", -1);
+    warn.invoke();
     return;
   }
 
