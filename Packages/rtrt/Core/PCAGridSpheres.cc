@@ -23,13 +23,13 @@ using namespace std;
 PCAGridSpheres::PCAGridSpheres(float* spheres, size_t nspheres,
 			       float radius,
 			       int *tex_indices,
-			       unsigned char *tex_data, int nbases,
-			       int tex_res,
+			       unsigned char* tex_data, int nbases, int tex_res,
 			       float *xform, float *mean, int nchannels,
 			       float tex_min, float tex_max,
-			       int nsides, int depth):
+			       int nsides, int depth,
+			       const Color& color) :
  TextureGridSpheres(spheres, nspheres, radius, tex_indices, tex_data,
-		    nbases, tex_res, nsides, depth),
+		    nbases, tex_res, nsides, depth, color),
  xform(xform), mean(mean), nbases(nbases), nchannels(nchannels),
  tex_min(tex_min)
 {
@@ -53,37 +53,25 @@ void PCAGridSpheres::shade(Color& result, const Ray& ray,
 			      Context* /*cx*/)
 {
   // cell is the index of the sphere which was intersected.  To get to
-  // the actuall data you need to simply just add cell to spheres.  To
+  // the actual data you need to simply just add cell to spheres.  To
   // get the number of the sphere which was intersected you need to
   // divide by the number of data items.
   int cell=*(int*)hit.scratchpad;
-  // Because our sphere index will get multiplied by 3 (RGB) to
-  // actually index into the texture data, it seems silly to divide by
-  // 3 (ndata) and then multiply by 3.  I will add an assert to make
-  // sure that this condition hold though.
-  ASSERT(ndata == 3);
-  int sphere_index = cell;
+  int sphere_index = cell/ndata;
 
   // Get the texture index
-  int red_index, green_index, blue_index;
-  if (tex_indices) {
-    red_index = *(tex_indices + sphere_index);
-    green_index = *(tex_indices + sphere_index+1);
-    blue_index = *(tex_indices + sphere_index+2);
-  } else {
-    red_index = sphere_index;
-    green_index = sphere_index + 1;
-    blue_index = sphere_index + 2;
+  int tex_index;
+  if (tex_indices)
+    tex_index = *(tex_indices + sphere_index);
+  else
+    tex_index = sphere_index;
+
+  if (tex_index >= nchannels) {
+    // bad index
+    result = Color(1,0,1);
+    return;
   }
-
-  if (red_index >= nchannels || green_index >= nchannels ||
-      blue_index >= nchannels)
-    {
-      // bad index
-      result = Color(1,0,1);
-      return;
-    }
-
+  
   // Get the hitpos
   Point hitpos(ray.origin()+ray.direction()*hit.min_t);
 
@@ -108,16 +96,16 @@ void PCAGridSpheres::shade(Color& result, const Ray& ray,
   else if(v<0)
     v=0;
 
-  Color surface_color = interp_color(u, v, red_index, green_index, blue_index);
+  Color surface_color = interp_color(u, v, tex_index);
 
   result = surface_color;
 }
 
-// Given the pixel and texture index compute the pixel's color
+// Given the pixel and texture index compute the pixel's luminance
 float PCAGridSpheres::getPixel(int x, int y, int channel_index) {
   float outdata = 0;
-  unsigned char *btdata = tex_data + (y*tex_res+x)*nbases;
-  float *tdata = xform + (channel_index*nbases);
+  unsigned char* btdata = tex_data + (y*tex_res+x)*nbases;
+  float* tdata = xform + (channel_index*nbases);
 
   // Compute the dot produce between the column vector of the tranform
   // and the pixel of the basis texture.
@@ -130,8 +118,7 @@ float PCAGridSpheres::getPixel(int x, int y, int channel_index) {
   return outdata;
 }
 
-Color PCAGridSpheres::interp_color(double u, double v, int red_index,
-				   int green_index, int blue_index)
+Color PCAGridSpheres::interp_color(double u, double v, int index)
 {
 #if 0
   u *= tex_res;
@@ -150,9 +137,6 @@ Color PCAGridSpheres::interp_color(double u, double v, int red_index,
 
   return c*one_over_255;
 #else
-  
-  // u & v *= dimensions minus the slop(2) and the zero base difference (1)
-  // for a total of 3
   u *= tex_res;
   int iu = (int)u;
   int iu_high;
@@ -170,25 +154,17 @@ Color PCAGridSpheres::interp_color(double u, double v, int red_index,
     iv = tex_res - 2;
   double v_weight_high = v-iv;
 
-  Color c00(getPixel(iu,      iv,   red_index),
-	    getPixel(iu,      iv,   green_index),
-	    getPixel(iu,      iv,   blue_index));
-  Color c01(getPixel(iu_high, iv,   red_index),
-	    getPixel(iu_high, iv,   green_index),
-	    getPixel(iu_high, iv,   blue_index));
-  Color c10(getPixel(iu,      iv+1, red_index),
-	    getPixel(iu,      iv+1, green_index),
-	    getPixel(iu,      iv+1, blue_index));
-  Color c11(getPixel(iu_high, iv+1, red_index),
-	    getPixel(iu_high, iv+1, green_index),
-	    getPixel(iu_high, iv+1, blue_index));
+  float lum00 = getPixel(iu,      iv,   index);
+  float lum01 = getPixel(iu_high, iv,   index);
+  float lum10 = getPixel(iu,      iv+1, index);
+  float lum11 = getPixel(iu_high, iv+1, index);
+  
+  float lum = 
+    lum00*(1-u_weight_high)*(1-v_weight_high)+
+    lum01*   u_weight_high *(1-v_weight_high)+
+    lum10*(1-u_weight_high)*   v_weight_high +
+    lum11*   u_weight_high *   v_weight_high;
 
-  Color c =
-    c00*(1-u_weight_high)*(1-v_weight_high)+
-    c01*   u_weight_high *(1-v_weight_high)+
-    c10*(1-u_weight_high)*   v_weight_high +
-    c11*   u_weight_high *   v_weight_high;
-
-  return c*one_over_255;
+  return lum*color*one_over_255;
 #endif
 }
