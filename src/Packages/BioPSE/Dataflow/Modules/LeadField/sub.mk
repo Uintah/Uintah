@@ -27,7 +27,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/BioPSE/Dataflow/Modules/LeadField
 
 SRCS     += \
-	$(SRCDIR)/BuildLeadField.cc\
+	$(SRCDIR)/BuildElemLeadField.cc\
 	$(SRCDIR)/BuildMisfitField.cc\
 #[INSERT NEW CODE FILE HERE]
 
