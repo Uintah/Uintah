@@ -43,7 +43,7 @@ namespace SCIRun {
  * The BaseConstraint constructor allocates the constraint's standard
  *      structures.
  */
-BaseConstraint::BaseConstraint( const clString& name, const Index nschemes,
+BaseConstraint::BaseConstraint( const string& name, const Index nschemes,
 				const Index varCount )
 : name(name), nschemes(nschemes), varCount(varCount),
   vars(varCount), var_indexs(varCount), var_choices(nschemes, varCount)

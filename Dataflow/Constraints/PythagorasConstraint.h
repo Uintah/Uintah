@@ -39,7 +39,7 @@ namespace SCIRun {
 
 class PSECORESHARE PythagorasConstraint : public BaseConstraint {
 public:
-   PythagorasConstraint( const clString& name,
+   PythagorasConstraint( const string& name,
 			 const Index numSchemes,
 			 RealVariable* dist1, RealVariable* dist2,
 			 RealVariable* hypo );

@@ -46,7 +46,7 @@ static DebugSwitch pc_debug("Constraints", "Project");
  * The last line should call the BaseConstraint Register method, which
  *      registers the constraint with its variables.
  */
-ProjectConstraint::ProjectConstraint( const clString& name,
+ProjectConstraint::ProjectConstraint( const string& name,
 				      const Index numSchemes,
 				      PointVariable* projection, PointVariable* point,
 				      PointVariable* p1, PointVariable* p2 )

@@ -47,7 +47,7 @@ static DebugSwitch sc_debug("Constraints", "Segment");
  * The last line should call the BaseConstraint Register method, which
  *      registers the constraint with its variables.
  */
-SegmentConstraint::SegmentConstraint( const clString& name,
+SegmentConstraint::SegmentConstraint( const string& name,
 				      const Index numSchemes,
 				      PointVariable* end1, PointVariable* end2,
 				      PointVariable* p )

@@ -39,7 +39,7 @@ namespace SCIRun {
 
 class PSECORESHARE RatioConstraint : public BaseConstraint {
 public:
-   RatioConstraint( const clString& name,
+   RatioConstraint( const string& name,
 		    const Index numSchemes,
 		    RealVariable* numer, RealVariable* denom,
 		    RealVariable* ratio );

@@ -47,7 +47,7 @@ static DebugSwitch dc_debug("Constraints", "Distance");
  * The last line should call the BaseConstraint Register method, which
  *      registers the constraint with its variables.
  */
-DistanceConstraint::DistanceConstraint( const clString& name,
+DistanceConstraint::DistanceConstraint( const string& name,
 					const Index numSchemes,
 					PointVariable* p1, PointVariable* p2,
 					RealVariable* dist )

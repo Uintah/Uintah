@@ -46,7 +46,7 @@ static DebugSwitch rc_debug("Constraints", "Ratio");
  * The last line should call the BaseConstraint Register method, which
  *      registers the constraint with its variables.
  */
-RatioConstraint::RatioConstraint( const clString& name,
+RatioConstraint::RatioConstraint( const string& name,
 				  const Index numSchemes,
 				  RealVariable* numer, RealVariable* denom,
 				  RealVariable* ratio )

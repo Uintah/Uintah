@@ -41,7 +41,7 @@ namespace SCIRun {
 
 class PSECORESHARE ProjectConstraint : public BaseConstraint {
 public:
-   ProjectConstraint( const clString& name,
+   ProjectConstraint( const string& name,
 		      const Index numSchemes,
 		      PointVariable* projection, PointVariable* point,
 		      PointVariable* p1, PointVariable* p2 );

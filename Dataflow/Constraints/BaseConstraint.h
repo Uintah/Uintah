@@ -36,7 +36,10 @@
 #include <Dataflow/Constraints/BaseVariable.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/Array2.h>
-#include <Core/Containers/String.h>
+#include <string>
+
+using std::string;
+
 
 namespace SCIRun {
 
@@ -45,7 +48,7 @@ class PSECORESHARE BaseConstraint {
    friend class BaseVariable;
    friend class ConstraintSolver;
 public:
-   BaseConstraint( const clString& name, const Index numSchemes,
+   BaseConstraint( const string& name, const Index numSchemes,
 		   const Index VariableCount );
    virtual ~BaseConstraint();
 
@@ -75,7 +78,7 @@ public:
    void printc( std::ostream& os, const Scheme scheme );
 
 protected:
-   clString name;
+   string name;
    Index nschemes;
    
    Index varCount;

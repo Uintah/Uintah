@@ -39,7 +39,7 @@ namespace SCIRun {
 
 class PSECORESHARE DistanceConstraint : public BaseConstraint {
 public:
-   DistanceConstraint( const clString& name,
+   DistanceConstraint( const string& name,
 		       const Index numSchemes,
 		       PointVariable* p1, PointVariable* p2,
 		       RealVariable* dist );

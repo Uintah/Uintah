@@ -46,7 +46,7 @@ static DebugSwitch pc_debug("Constraints", "Pythagoras");
  * The last line should call the BaseConstraint Register method, which
  *      registers the constraint with its variables.
  */
-PythagorasConstraint::PythagorasConstraint( const clString& name,
+PythagorasConstraint::PythagorasConstraint( const string& name,
 					    const Index numSchemes,
 					    RealVariable* dist1, RealVariable* dist2,
 					    RealVariable* hypo )

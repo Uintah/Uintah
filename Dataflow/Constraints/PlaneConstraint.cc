@@ -48,7 +48,7 @@ static DebugSwitch pc_debug("Constraints", "Plane");
  * The last line should call the BaseConstraint Register method, which
  *      registers the constraint with its variables.
  */
-PlaneConstraint::PlaneConstraint( const clString& name,
+PlaneConstraint::PlaneConstraint( const string& name,
 				  const Index numSchemes,
 				  PointVariable* p1, PointVariable* p2,
 				  PointVariable* p3, PointVariable* p4)

@@ -39,7 +39,7 @@ namespace SCIRun {
 
 class PSECORESHARE AngleConstraint : public BaseConstraint {
 public:
-   AngleConstraint( const clString& name,
+   AngleConstraint( const string& name,
 		    const Index numSchemes,
 		    PointVariable* center, PointVariable* end1,
 		    PointVariable* end2, PointVariable* p,

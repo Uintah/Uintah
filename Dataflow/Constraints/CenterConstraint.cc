@@ -46,7 +46,7 @@ static DebugSwitch cc_debug("Constraints", "Center");
  *      registers the constraint with its variables.
  * This constructor centers between two PointVariables.
  */
-CenterConstraint::CenterConstraint( const clString& name,
+CenterConstraint::CenterConstraint( const string& name,
 				    const Index numSchemes,
 				    PointVariable* center,
 				    PointVariable* p1, PointVariable* p2 )
@@ -68,7 +68,7 @@ CenterConstraint::CenterConstraint( const clString& name,
  *      registers the constraint with its variables.
  * This constructor centers between three PointVariables.
  */
-CenterConstraint::CenterConstraint( const clString& name,
+CenterConstraint::CenterConstraint( const string& name,
 				    const Index numSchemes,
 				    PointVariable* center,
 				    PointVariable* p1, PointVariable* p2,
@@ -92,7 +92,7 @@ CenterConstraint::CenterConstraint( const clString& name,
  *      registers the constraint with its variables.
  * This constructor centers between four PointVariables.
  */
-CenterConstraint::CenterConstraint( const clString& name,
+CenterConstraint::CenterConstraint( const string& name,
 				    const Index numSchemes,
 				    PointVariable* center,
 				    PointVariable* p1, PointVariable* p2,

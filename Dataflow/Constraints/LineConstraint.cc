@@ -46,7 +46,7 @@ static DebugSwitch lc_debug("Constraints", "Line");
  * The last line should call the BaseConstraint Register method, which
  *      registers the constraint with its variables.
  */
-LineConstraint::LineConstraint( const clString& name,
+LineConstraint::LineConstraint( const string& name,
 				const Index numSchemes,
 				PointVariable* p1, PointVariable* p2,
 				PointVariable* p3 )
