@@ -42,9 +42,6 @@ static DebugStream cout_doing("MPMICE_DOING_COUT", false);
 
 #define MAX_BASIS 27
 
-#undef RIGID_MPM
-//#define RIGID_MPM
-
 #undef SHELL_MPM
 //#define SHELL_MPM
 
@@ -2206,7 +2203,7 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
             Temp =std::max(Temp, gasTempZ_FC[c + IntVector(0,0,1)] );
            }
            surfaceTemp[c] = Temp;
-#if 1
+#if 0
             double gradRhoX = 0.25 *
                               ((NCsolidMass[nodeIdx[0]]*NC_CCweight[nodeIdx[0]]+
                                 NCsolidMass[nodeIdx[1]]*NC_CCweight[nodeIdx[1]]+
@@ -2254,8 +2251,8 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
              double TmpZ = fabs(normalZ*delZ);
 #endif
 
-             double surfArea = delX*delY*delZ / (TmpX+TmpY+TmpZ); 
-//             double surfArea = delX*delY; 
+//             double surfArea = delX*delY*delZ / (TmpX+TmpY+TmpZ); 
+             double surfArea = delX*delY; 
              onSurface[c] = surfArea; // debugging var
              
              
