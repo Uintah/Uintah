@@ -74,6 +74,7 @@ SerialMPM::~SerialMPM()
   delete lb;
   delete contactModel;
   delete thermalContactModel;
+  MPMPhysicalBCFactory::clean();
 }
 
 void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
