@@ -18,11 +18,15 @@
 #include <Core/Geometry/Plane.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
+#include <Core/Persistent/Persistent.h>
+
 namespace SCIRun {
 
 class Vector;
 class Point;
 class Quaternion;
+
+void SCICORESHARE Pio(Piostream&, Transform&);
 
 class SCICORESHARE Transform {
   double mat[4][4];
@@ -83,6 +87,8 @@ public:
 		   int xres, int yres);
   void compute_imat();
   void invert();
+
+  friend void SCICORESHARE Pio(Piostream&, Transform&);
 };
 
 } // End namespace SCIRun
