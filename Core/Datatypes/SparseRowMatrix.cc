@@ -157,7 +157,7 @@ SparseRowMatrix *SparseRowMatrix::transpose()
 {
   double *t_a = scinew double[nnz];
   int *t_columns = scinew int[nnz];
-  int *t_rows = scinew int[nnrows+1];
+  int *t_rows = scinew int[nncols+1];
   int t_nnz = nnz;
   int t_nncols = nnrows;
   int t_nnrows = nncols;
