@@ -337,7 +337,7 @@ void SecondOrderCEAdvector::advectQ(const CCVariable<double>& q_CC,
   
   allocateAndCompute_Q_ave<double>(q_CC, patch, new_dw, q_OAFS, q_OAFE, q_OAFC);
               
-  advect(q_OAFS, q_OAFE, q_OAFC, patch, q_advected,
+  advect(q_OAFS, q_OAFE, q_OAFC, patch, q_CC,q_advected,
           d_notUsedX, d_notUsedY, d_notUsedZ, ignoreFaceFluxesD);
 
 }
@@ -357,7 +357,7 @@ void SecondOrderCEAdvector::advectQ(const CCVariable<double>& q_CC,
   allocateAndCompute_Q_ave<double>(q_CC, patch, new_dw, q_OAFS, q_OAFE, q_OAFC);
 
               
-  advect(q_OAFS, q_OAFE, q_OAFC, patch, q_advected,
+  advect(q_OAFS, q_OAFE, q_OAFC, patch, q_CC, q_advected,
           q_XFC, q_YFC, q_ZFC, saveFaceFluxes);
 
 }
@@ -373,7 +373,7 @@ void SecondOrderCEAdvector::advectQ(const CCVariable<Vector>& q_CC,
   
   allocateAndCompute_Q_ave<Vector>(q_CC, patch, new_dw, q_OAFS, q_OAFE, q_OAFC);
          
-  advect(q_OAFS, q_OAFE, q_OAFC, patch, q_advected,
+  advect(q_OAFS, q_OAFE, q_OAFC, patch, q_CC, q_advected,
           d_notUsedX, d_notUsedY, d_notUsedZ, ignoreFaceFluxesV); 
 }
 
@@ -385,6 +385,7 @@ template <class T, typename F>
                                        StaticArray<CCVariable<T> >& q_OAFE,
 				           StaticArray<CCVariable<T> >& q_OAFC,
                                        const Patch* patch,
+                                       const CCVariable<T>& q_CC,
                                        CCVariable<T>& q_advected,
                                        SFCXVariable<double>& q_XFC,
                                        SFCYVariable<double>& q_YFC,
@@ -466,7 +467,7 @@ template <class T, typename F>
 
     //__________________________________
     //  inline function to compute q_FC 
-    save_q_FC(c, q_XFC, q_YFC, q_ZFC, faceVol, q_face_flux);                                         
+    save_q_FC(c, q_XFC, q_YFC, q_ZFC, faceVol, q_face_flux, q_CC);                                         
   }  //cell iterator
 }
 
