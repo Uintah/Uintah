@@ -6,6 +6,7 @@ gold_standard_dir="$1"
 replacement_dir="$2"
 testname="$3"
 force="$4" # if set to -f then it won't ask you yes/no questions
+           # if set to -m then it won't ask, but will only replace memory stats
 
 # prompt for and replace udas
 if [ $# -ne 3 -a $# -ne 4 ]; then
@@ -17,8 +18,8 @@ if [ ! -d $gold_standard_dir/$testname ]; then
   exit 1
 fi
 
-if [ ! -d $replacement_dir/$testname/*.uda ]; then
-  echo "No udas to replace"
+if [ ! -d $replacement_dir/$testname/*.uda -o "$force" = "-m" ]; then
+  echo "No udas to replace, or not replacing them"
 else
 
   if [ "$force" = "-f" ]; then
