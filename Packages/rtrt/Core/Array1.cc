@@ -195,5 +195,6 @@ void Pio(Piostream& stream, Array1<T>*& array) {
     Pio(stream, *array);
 }
 
-#endif // __ARRAY1_CC__
 } // end namespace rtrt
+
+#endif // __ARRAY1_CC__
