@@ -64,7 +64,7 @@ extern "C" Module* make_GLTextureBuilder( const string& id) {
 GLTextureBuilder::GLTextureBuilder(const string& id)
   : SCIRun::GLTextureBuilder( id )
 {
-
+  packageName = "Uintah";
 }
 
 GLTextureBuilder::~GLTextureBuilder()
