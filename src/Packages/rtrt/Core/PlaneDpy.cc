@@ -89,7 +89,8 @@ void PlaneDpy::display()
       char buf[100];
       sprintf(buf, "%s: %g", name, v);
       int w=calc_width(fontInfo, buf);
-      printString(fontbase, v-w/wid/yres, 1./yres, buf, Color(1,1,1));
+//        printString(fontbase, v-w/wid/yres, 1./yres, buf, Color(1,1,1));
+      printString( fontbase, 0, 1./yres, buf, Color(1,1,1));
     }
     redraw=false;
   }
@@ -139,17 +140,24 @@ void PlaneDpy::button_motion(MouseButton button, const int x, const int /*y*/) {
 
 void PlaneDpy::move(int x, int y)
 {
+  float movement_sensitivity = 1.0f;
     float xn=float(x)/xres;
+    // Adjust how sensitive x is
+    if ( shift_pressed )
+      movement_sensitivity = 0.1f;
+    else if( control_pressed )
+      movement_sensitivity = 10.0f;
+    
     float yn=float(y)/yres;
     if(yn>.75){
-	d=xn*20-10;
+	d=movement_sensitivity*(xn*20-10);
     } else if(yn>.5){
-	n.z(xn*2-1);
+	n.z(movement_sensitivity*(xn*2-1));
     } else if(yn>.25){
-	n.y(xn*2-1);
+	n.y(movement_sensitivity*(xn*2-1));
     } else {
 	// X...
-	n.x(xn*2-1);
+	n.x(movement_sensitivity*(xn*2-1));
     }
 }
 
