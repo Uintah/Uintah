@@ -31,6 +31,7 @@ SRCS     += $(SRCDIR)/Arches.cc \
 	$(SRCDIR)/CompDynamicProcedure.cc \
 	$(SRCDIR)/CompLocalDynamicProcedure.cc \
 	$(SRCDIR)/OdtClosure.cc \
+	$(SRCDIR)/OdtData.cc \
 	$(SRCDIR)/Source.cc \
 	$(SRCDIR)/TurbulenceModel.cc
 
