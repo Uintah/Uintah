@@ -77,12 +77,21 @@ void
 StaticMixingTable::computeProps(const InletStream& inStream,
 			     Stream& outStream)
 {
-  double small=1.0e-20;
+  double small=1.0e-10;
   // Extracting the independent variables from the in stream 
   double mixFrac = inStream.d_mixVars[0];
   double mixFracVars = 0.0;
   if (inStream.d_mixVarVariance.size() != 0)
     mixFracVars = inStream.d_mixVarVariance[0];
+  if(mixFrac > 1.0)
+	mixFrac=1.0;
+  else if (mixFrac < small)
+	mixFrac=0.0;
+  if(mixFracVars < small)
+	mixFracVars=0.0;
+  double var_limit=mixFracVars/((mixFrac*(1.0-mixFrac))+small);
+  if(var_limit > 0.9)
+  	mixFracVars=(2.0/3.0)*mixFracVars;
   // Heat loss for adiabatic case
   double heat_loss=0.0;
   //Absolute enthalpy
@@ -95,33 +104,39 @@ StaticMixingTable::computeProps(const InletStream& inStream,
 	sensible_enthalpy=tableLookUp(mixFrac, mixFracVars, heat_loss, 4);
 	enthalpy=inStream.d_enthalpy;
         adia_enthalpy=tableLookUp(mixFrac, 0.0, heat_loss, 3);
-  	heat_loss=(adia_enthalpy-enthalpy)/(sensible_enthalpy+small);
+        if (inStream.d_initEnthalpy)
+          	heat_loss = 0.0;
+        else
+  		heat_loss=(adia_enthalpy-enthalpy)/(sensible_enthalpy+small);
+        if(heat_loss < -1.0 || heat_loss > 1.0){
+		cout<< "Heat loss is exceeding the bounds: "<<heat_loss << endl;
+		cout<< "Absolute enthalpy is : "<< enthalpy << endl;
+		cout<< "Adiabatic enthalpy is : "<< adia_enthalpy << endl;
+		cout<< "Sensible enthalpy is : "<< sensible_enthalpy << endl;
+  		cout<< "Mixture fraction is :  "<< mixFrac << endl;
+  		cout<< "Mixture fraction variance is :  "<< mixFracVars << endl;
+	}
+	if(abs(heat_loss) < small)
+		heat_loss=0.0;
         if(heat_loss > enthalpyLoss[d_enthalpycount-1])
 		heat_loss = enthalpyLoss[d_enthalpycount-1];
 	else if (heat_loss < enthalpyLoss[0])
 		heat_loss = enthalpyLoss[0];
   }
-  //heat_loss=-1.0+((double)(rand()%200))/100.0;
-  //heat_loss=0.55;
-  //mixFrac=((double)(rand()%1000))/1000.0;
-  //mixFrac=0.008102625;
-  //mixFracVars=4.2261461801809210526315789473683e-4;
-  //heat_loss=-1.0+((double)(rand()%200))/100.0;
-  //cout<< "Heat loss is :  "<< heat_loss << endl;
-  //cout<< "Mixture fraction is :  "<< mixFrac << endl;
-  //cout<< "Mixture fraction variance is :  "<< mixFracVars << endl;
+  // Looking for the properties corresponding to the heat loss
+  
   outStream.d_temperature=tableLookUp(mixFrac, mixFracVars, heat_loss, 0);  
   outStream.d_density=tableLookUp(mixFrac, mixFracVars, heat_loss, 1);  
   outStream.d_cp=tableLookUp(mixFrac, mixFracVars, heat_loss, 2);  
   outStream.d_enthalpy=tableLookUp(mixFrac, mixFracVars, heat_loss, 3);  
   outStream.d_co2=tableLookUp(mixFrac, mixFracVars, heat_loss, co2_index);  
   outStream.d_h2o=tableLookUp(mixFrac, mixFracVars, heat_loss, h2o_index);  
-  /*  if(outStream.d_temperature < 293.0 || outStream.d_density > 1.21){
-  	cout<<"Temperature of the outstream is:  "<<outStream.d_temperature<<endl;
-  	cout<<"Density of the outstream is:  "<<outStream.d_density<<endl;
-  	cout<<"Mixture fraction is :  "<<mixFrac<<endl;
-  	cout<<"Mixture fraction variance is :  "<<mixFracVars<<endl;
-  	cout<<"Heat loss is :  "<<heat_loss<<endl;
+  /*if((outStream.d_temperature - 293.0) <= -0.01 || (outStream.d_density - 1.20002368329336) >= 0.001){
+  	cout<<"Temperature for properties outbound is:  "<<outStream.d_temperature<<endl;
+  	cout<<"Density for properties outbound is:  "<<outStream.d_density<<endl;
+  	cout<<"Mixture fraction for properties outbound  is :  "<<mixFrac<<endl;
+  	cout<<"Mixture fraction variance for properties outbound is :  "<<mixFracVars<<endl;
+  	cout<<"Heat loss for properties outbound is :  "<<heat_loss<<endl;
   }*/
 }
 
@@ -129,31 +144,22 @@ StaticMixingTable::computeProps(const InletStream& inStream,
 
 double StaticMixingTable::tableLookUp(double mixfrac, double mixfracVars, double heat_loss, int var_index)
 {
-  double small = 1.0e-20;
+  double small = 1.0e-10;
   // compute index
   // nx - mixfrac, ny - mixfracVars, var_index - index of the variable
   //cout<<"Mixture fraction is :"<<mixfrac<<endl;
   //mixfrac=0.5;
-  if(mixfrac > 1.0)
-	mixfrac=1.0;
-  else if (mixfrac < 0.0)
-	mixfrac=0.0;
-  if(mixfracVars < 0.0)
-	mixfracVars=0.0;
-  double var_limit=mixfracVars/((mixfrac*(1.0-mixfrac))+small);
-  if(var_limit > 0.9)
-  	mixfracVars=(2.0/3.0)*mixfracVars;
   //mixfracVars=0.0;
   //cout<< "Mixture fraction variance is :"<<mixfracVars<<endl;
   // Enthalpy loss lookup
   double fmg, fpmg,s1,s2,var_value;
   int nhl_lo=0, nhl_hi=0;
   double dhl_lo=0.0, dhl_hi=0.0;
-  if(heat_loss == 0.0 && d_enthalpycount ==1){
+  if(heat_loss==0.0  && d_enthalpycount ==1){
 	nhl_lo=0;
 	nhl_hi=0;
-        dhl_lo=1.0;
-        dhl_hi=0.0;
+        dhl_lo=0.0;
+        dhl_hi=1.0;
   }
   else{
 	for(int hl_index=0; hl_index < d_enthalpycount-1; hl_index++){
@@ -243,10 +249,15 @@ double StaticMixingTable::tableLookUp(double mixfrac, double mixfracVars, double
   fpmg=(gp-double(k2))*table[m_index*d_mixfraccount*d_mixvarcount+nx_hi*d_mixvarcount+k2p][var_index]-(gp-double(k2p))*table[m_index*d_mixfraccount*d_mixvarcount+nx_hi*d_mixvarcount+k2][var_index];
   //cout<< "FPMG is : "<<fpmg<<endl;
 
-  if(m_index == nhl_lo)
-  	s2=(df1*fpmg-df2*fmg)/(df1-df2);
-  else
+  if(nhl_lo==nhl_hi){
+	s1=(df1*fpmg-df2*fmg)/(df1-df2);
+        s2=s1;
+	break;
+  }
+  else if(m_index == nhl_lo)
   	s1=(df1*fpmg-df2*fmg)/(df1-df2);
+  else
+  	s2=(df1*fpmg-df2*fmg)/(df1-df2);
 	
   }
   //cout<<"value of S1 is "<<s1<<endl;
