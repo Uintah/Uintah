@@ -507,6 +507,8 @@ RectangleCM2Widget::io(Piostream &stream)
 {
   stream.begin_class("RectangleCM2Widget", RECTANGLECM2WIDGET_VERSION);
 
+  // Originally used "Pio(stream, (int)type_);", but this did not
+  // compile on the SGI, so needed to do it this way.
   int tmp = (int)type_;
   Pio(stream, tmp);
   if (stream.reading())
