@@ -248,7 +248,13 @@ void CompNeoHook::computeStressTensor(const Patch* patch,
     // Compute wave speed at each particle, store the maximum
     muBar = IEl * shear;
 
-    c_dil = sqrt((bulk + 4.*muBar/3.)*pvolume[idx]/pmass[idx]);
+    if(pmass[idx] > 0){
+      c_dil = sqrt((bulk + 4.*shear/3.)*pvolume[idx]/pmass[idx]);
+    }
+    else{
+      c_dil = 0.0;
+      pvelocity[idx] = Vector(0.0,0.0,0.0);
+    }
     WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
 		     Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
 		     Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
@@ -365,6 +371,10 @@ const TypeDescription* fun_getTypeDescription(CompNeoHook::CMData*)
 }
 
 // $Log$
+// Revision 1.30  2000/07/25 19:10:26  guilkey
+// Changed code relating to particle combustion as well as the
+// heat conduction.
+//
 // Revision 1.29  2000/07/07 23:57:21  guilkey
 // Added volumetric dilation to particle volume.
 //

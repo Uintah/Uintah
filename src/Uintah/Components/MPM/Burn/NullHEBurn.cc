@@ -44,29 +44,17 @@ void NullHEBurn::initializeBurnModelData(const Patch* patch,
 
 }
 
-void NullHEBurn::addCheckIfComputesAndRequires(Task* task,
-                                               const MPMMaterial* matl,
-                                               const Patch* /*patch*/,
-                                               DataWarehouseP& /*old_dw*/,
-                                               DataWarehouseP& /*new_dw*/) const
-{
-  // Nothing is done so no dependencies
-
-}
-
 bool NullHEBurn::getBurns() const
 {
   return d_burnable;
 }
 
-void NullHEBurn::addMassRateComputesAndRequires(Task* task,
-                                               const MPMMaterial* matl,
-                                               const Patch* patch,
-                                               DataWarehouseP& old_dw,
-                                               DataWarehouseP& new_dw) const
+void NullHEBurn::addComputesAndRequires(Task* task,
+                                        const MPMMaterial* matl,
+                                        const Patch* patch,
+                                        DataWarehouseP& old_dw,
+                                        DataWarehouseP& new_dw) const
 {
-  //  const MPMLabel* lb = MPMLabel::getLabels();
-
   task->requires(old_dw, lb->pMassLabel, matl->getDWIndex(),
                                 patch, Ghost::None);
   
@@ -76,15 +64,6 @@ void NullHEBurn::addMassRateComputesAndRequires(Task* task,
   task->computes(new_dw, lb->pMassLabel_preReloc,matl->getDWIndex(),patch);
 
   task->computes(new_dw, lb->pVolumeLabel_preReloc,matl->getDWIndex(),patch);
-}
-
-void NullHEBurn::checkIfIgnited(const Patch* patch,
-				const MPMMaterial* matl,
-				DataWarehouseP& old_dw,
-				DataWarehouseP& new_dw)
-{
-  // For the NullHEBurn model, nothing needs to be done here
-
 }
 
 void NullHEBurn::computeMassRate(const Patch* patch,
@@ -108,6 +87,10 @@ void NullHEBurn::computeMassRate(const Patch* patch,
 }
 
 // $Log$
+// Revision 1.9  2000/07/25 19:10:25  guilkey
+// Changed code relating to particle combustion as well as the
+// heat conduction.
+//
 // Revision 1.8  2000/07/05 23:43:31  jas
 // Changed the way MPMLabel is used.  No longer a Singleton class.  Added
 // MPMLabel* lb to various classes to retain the original calling

@@ -63,10 +63,6 @@ WARNING
 	 // Basic burn methods
 
 	  bool isBurnable();
-          virtual void checkIfIgnited(const Patch* patch,
-				      const MPMMaterial* matl,
-				      DataWarehouseP& old_dw,
-				      DataWarehouseP& new_dw) = 0;
 
           virtual void computeMassRate(const Patch* patch,
 				       const MPMMaterial* matl,
@@ -83,13 +79,7 @@ WARNING
                                                const MPMMaterial* matl,
                                                DataWarehouseP& new_dw) = 0;
 
-          virtual void addCheckIfComputesAndRequires(Task* task,
-					      const MPMMaterial* matl,
-					      const Patch* patch,
-					      DataWarehouseP& old_dw,
-					      DataWarehouseP& new_dw) const = 0;
-
-          virtual void addMassRateComputesAndRequires(Task* task,
+          virtual void addComputesAndRequires(Task* task,
 					      const MPMMaterial* matl,
 					      const Patch* patch,
 					      DataWarehouseP& old_dw,
@@ -106,6 +96,10 @@ WARNING
 } // end namespace Uintah
    
 // $Log$
+// Revision 1.7  2000/07/25 19:10:25  guilkey
+// Changed code relating to particle combustion as well as the
+// heat conduction.
+//
 // Revision 1.6  2000/07/05 23:43:31  jas
 // Changed the way MPMLabel is used.  No longer a Singleton class.  Added
 // MPMLabel* lb to various classes to retain the original calling

@@ -71,114 +71,42 @@ bool SimpleHEBurn::getBurns() const
   return d_burnable;
 }
 
-void SimpleHEBurn::addCheckIfComputesAndRequires(Task* task,
-                                                 const MPMMaterial* matl,
-                                                 const Patch* patch,
-                                                 DataWarehouseP& old_dw,
-                                                 DataWarehouseP& new_dw) const
+void SimpleHEBurn::addComputesAndRequires(Task* task,
+                                          const MPMMaterial* matl,
+                                          const Patch* patch,
+                                          DataWarehouseP& old_dw,
+                                          DataWarehouseP& new_dw) const
 {
+//  task->requires(new_dw, lb->pTemperatureRateLabel, matl->getDWIndex(),
+//				patch, Ghost::None);
 
-  //  const MPMLabel* lb = MPMLabel::getLabels();
+  task->requires(new_dw, lb->pTemperatureLabel_preReloc, matl->getDWIndex(),
+				patch, Ghost::None);
 
   task->requires(old_dw, lb->pIsIgnitedLabel, matl->getDWIndex(),
 				patch, Ghost::None);
 
-//  task->requires(new_dw, lb->pTemperatureRateLabel, matl->getDWIndex(),
+//  task->requires(old_dw, lb->pSurfLabel, matl->getDWIndex(),
 //				patch, Ghost::None);
 
-  task->requires(old_dw, lb->pSurfLabel, matl->getDWIndex(),
-				patch, Ghost::None);
-
   task->requires(old_dw, lb->pMassLabel, matl->getDWIndex(),
 				patch, Ghost::None);
-
-  task->requires(old_dw, lb->cBurnedMassLabel,matl->getDWIndex(), 
-				patch, Ghost::None);
-
-  task->computes(new_dw, lb->pIsIgnitedLabel_preReloc,matl->getDWIndex(),patch);
-
-  task->computes(new_dw, lb->cBurnedMassLabel,matl->getDWIndex(),patch);
-  task->computes(new_dw, lb->pSurfLabel_preReloc,matl->getDWIndex(),patch);
-
-  task->requires(old_dw, lb->delTLabel);
-
-}
-
-void SimpleHEBurn::addMassRateComputesAndRequires(Task* task,
-                                                  const MPMMaterial* matl,
-                                                  const Patch* patch,
-                                                  DataWarehouseP& old_dw,
-                                                  DataWarehouseP& new_dw) const
-{
-  //  const MPMLabel* lb = MPMLabel::getLabels();
-
-  task->requires(old_dw, lb->pMassLabel, matl->getDWIndex(),
-				patch, Ghost::None);
-
-  task->requires(new_dw, lb->pIsIgnitedLabel_preReloc, matl->getDWIndex(),
-				patch, Ghost::None);
-
-  task->requires(old_dw, lb->delTLabel);
 
   task->requires(new_dw, lb->pVolumeDeformedLabel, matl->getDWIndex(),
                                 patch, Ghost::None);
 
-  task->computes(new_dw, lb->pMassLabel_preReloc,matl->getDWIndex(),patch);
+  task->requires(old_dw, lb->cBurnedMassLabel,matl->getDWIndex(), 
+				patch, Ghost::None);
 
+  task->requires(old_dw, lb->delTLabel);
+
+  task->computes(new_dw, lb->pIsIgnitedLabel_preReloc,matl->getDWIndex(),patch);
+  task->computes(new_dw, lb->pMassLabel_preReloc,matl->getDWIndex(),patch);
+  task->computes(new_dw, lb->cBurnedMassLabel,matl->getDWIndex(),patch);
+//  task->computes(new_dw, lb->pSurfLabel_preReloc,matl->getDWIndex(),patch);
   task->computes(new_dw, lb->pVolumeLabel_preReloc,matl->getDWIndex(),patch);
 }
 
-void SimpleHEBurn::checkIfIgnited(const Patch* patch,
-				  const MPMMaterial* matl,
-				  DataWarehouseP& old_dw,
-				  DataWarehouseP& new_dw)
-{
-
-   //  double heatFluxToParticle;
-
-  int matlindex = matl->getDWIndex();
-
-  //  const MPMLabel* lb = MPMLabel::getLabels();
-  // Create array for the particle's "IsIgnited" flag
-  ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
-  ParticleVariable<int> pIsIgnited;
-  old_dw->get(pIsIgnited, lb->pIsIgnitedLabel, pset);
-
-  ParticleVariable<int> pissurf;
-  old_dw->get(pissurf, lb->pSurfLabel, pset);
-
-//  ParticleVariable<double> pTemperatureRate;
-//  new_dw->get(pTemperatureRate, lb->pTemperatureRateLabel,
-//                                matlindex, patch,Ghost::None,0);
-
-  ParticleVariable<double> pmass;
-  old_dw->get(pmass, lb->pMassLabel, pset);
-
-  delt_vartype delT;
-  old_dw->get(delT, lb->delTLabel);
-
-  //  double specificHeat = matl->getSpecificHeat();
-
-  for(ParticleSubset::iterator iter = pset->begin();
-      iter != pset->end(); iter++){
-     particleIndex idx = *iter;
-
-//     heatFluxToParticle = pmass[idx]*pTemperatureRate[idx]*delT
-//							*specificHeat;
-
-     //Insert some conditional on heatFluxToParticle here
-     if(pissurf[idx] == 1){
-	pIsIgnited[idx] = 1;
-     }
-     else {
-	pIsIgnited[idx] = 0;
-     }
-  }
-
-  new_dw->put(pIsIgnited,lb->pIsIgnitedLabel_preReloc);
-  new_dw->put(pissurf,lb->pSurfLabel_preReloc);
-}
- 
 void SimpleHEBurn::computeMassRate(const Patch* patch,
 				   const MPMMaterial* matl,
 				   DataWarehouseP& old_dw,
@@ -186,22 +114,30 @@ void SimpleHEBurn::computeMassRate(const Patch* patch,
 {
 
   int matlindex = matl->getDWIndex();
-  //  const MPMLabel* lb = MPMLabel::getLabels();
 
   ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
+
   ParticleVariable<double> pmass;
   old_dw->get(pmass, lb->pMassLabel, pset);
   ParticleVariable<double> pvolume;
   new_dw->get(pvolume,lb->pVolumeDeformedLabel, pset);
   ParticleVariable<Point> px;
   old_dw->get(px, lb->pXLabel, pset);
-
-  ParticleVariable<int> pIsIgnited;
-  new_dw->get(pIsIgnited, lb->pIsIgnitedLabel_preReloc, pset);
-
+  ParticleVariable<int> pIsIgnitedOld;
+  old_dw->get(pIsIgnitedOld, lb->pIsIgnitedLabel, pset);
+//  ParticleVariable<int> pissurf;
+//  old_dw->get(pissurf, lb->pSurfLabel, pset);
+  ParticleVariable<double> pTemperature;
+  old_dw->get(pTemperature, lb->pTemperatureLabel, pset);
   CCVariable<double> burnedMass;
   old_dw->get(burnedMass, lb->cBurnedMassLabel,
 			matlindex, patch,Ghost::None,0);
+
+  delt_vartype delT;
+  old_dw->get(delT, lb->delTLabel);
+
+  ParticleVariable<int> pIsIgnitedNew;
+  new_dw->allocate(pIsIgnitedNew, lb->pIsIgnitedLabel_preReloc, pset);
 
   ParticleSubset* remove_subset =
 	new ParticleSubset(pset->getParticleSet(), false, matlindex, patch);
@@ -210,33 +146,62 @@ void SimpleHEBurn::computeMassRate(const Patch* patch,
       iter != pset->end(); iter++){
      particleIndex idx = *iter;
 
-     if(pIsIgnited[idx]==1){
+     if(pTemperature[idx] > b || pIsIgnitedOld[idx]==1){
+        pIsIgnitedNew[idx]=1;
 	IntVector ci;
 	if(patch->findCell(px[idx],ci)){
-	   pmass[idx]   = pmass[idx] - .5*a;
-	   pvolume[idx] = pmass[idx]/1000.0;
-	   burnedMass[ci] += .5*a;
+          if(pmass[idx]>0.0){
+           double rho = pmass[idx]/pvolume[idx];
+	   pmass[idx] -= a;
+	   pvolume[idx] = pmass[idx]/rho;
+	   burnedMass[ci] += a;
 	
 	   if(pmass[idx]<=0.0){
+	     burnedMass[ci] -= pmass[idx];
 	     pmass[idx]=0.0;
-	     burnedMass[ci] -= .5*a;
+	     pvolume[idx]=0.0;
 	     remove_subset->addParticle(idx);
+             cout << px[idx] << " " <<  pmass[idx] << endl;
+	     //Find neighboring particle, ignite it
+	     double npd=9999.9;
+	     double cpd;
+	     particleIndex newburn_idx = idx;
+	     for(ParticleSubset::iterator iter2 = pset->begin();
+                 iter2 != pset->end(); iter2++){
+                  particleIndex idx2 = *iter2;
+
+		  cpd = (px[idx] - px[idx2]).length();
+		  if(cpd < npd && idx !=idx2 && pIsIgnitedOld[idx2]==0){
+			npd = cpd;
+			newburn_idx=idx2;
+		  }
+	     }
+             cout << "NewParticle " << px[newburn_idx] << endl;
+	     pIsIgnitedNew[newburn_idx]=1;
+	     pIsIgnitedNew[idx]=2;
 	   }
+          }
 	}
      }
-     else {
-	// Do nothing to the particle mass and volume
+     else if(pIsIgnitedOld[idx]==2){
+	pIsIgnitedNew[idx]=2;
      }
   }
 
   new_dw->put(pmass,lb->pMassLabel_preReloc);
   new_dw->put(pvolume,lb->pVolumeLabel_preReloc);
+//  new_dw->put(pissurf,lb->pSurfLabel_preReloc);
   new_dw->put(burnedMass,lb->cBurnedMassLabel, matlindex, patch);
+  new_dw->put(pIsIgnitedNew,lb->pIsIgnitedLabel_preReloc);
 
   new_dw->deleteParticles(remove_subset);
 }
  
 // $Log$
+// Revision 1.14  2000/07/25 19:10:25  guilkey
+// Changed code relating to particle combustion as well as the
+// heat conduction.
+//
 // Revision 1.13  2000/07/05 23:43:32  jas
 // Changed the way MPMLabel is used.  No longer a Singleton class.  Added
 // MPMLabel* lb to various classes to retain the original calling

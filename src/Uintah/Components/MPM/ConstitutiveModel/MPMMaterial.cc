@@ -115,7 +115,7 @@ ConstitutiveModel * MPMMaterial::getConstitutiveModel()
 
 HEBurn * MPMMaterial::getBurnModel()
 {
-  // Return the pointer to the constitutive model associated
+  // Return the pointer to the burn model associated
   // with this material
 
   return d_burn;
@@ -149,7 +149,7 @@ void MPMMaterial::createParticles(particleIndex numParticles,
    ParticleVariable<double> pvolume;
    new_dw->allocate(pvolume, lb->pVolumeLabel, subset);
    ParticleVariable<int> pissurf;
-   new_dw->allocate(pissurf, lb->pSurfLabel, subset);
+//   new_dw->allocate(pissurf, lb->pSurfLabel, subset);
    ParticleVariable<double> ptemperature;
    new_dw->allocate(ptemperature, lb->pTemperatureLabel, subset);
    ParticleVariable<long> pparticleID;
@@ -185,7 +185,7 @@ void MPMMaterial::createParticles(particleIndex numParticles,
    new_dw->put(pexternalforce, lb->pExternalForceLabel);
    new_dw->put(pmass, lb->pMassLabel);
    new_dw->put(pvolume, lb->pVolumeLabel);
-   new_dw->put(pissurf, lb->pSurfLabel);
+//   new_dw->put(pissurf, lb->pSurfLabel);
    new_dw->put(ptemperature, lb->pTemperatureLabel);
    new_dw->put(pparticleID, lb->pParticleIDLabel);
 }
@@ -270,7 +270,7 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
 		  temperature[start+count]=obj->getInitialTemperature();
 		  mass[start+count]=d_density * volume[start+count];
 		  // Determine if particle is on the surface
-		  pissurf[start+count]=checkForSurface(piece,p,dxpp);
+//		  pissurf[start+count]=checkForSurface(piece,p,dxpp);
 		  pexternalforce[start+count]=Vector(0,0,0); // for now
 		  particleID[start+count]=
 				(patch_number | (NAPID + start + count));
@@ -337,6 +337,10 @@ double MPMMaterial::getHeatTransferCoefficient() const
 
 
 // $Log$
+// Revision 1.41  2000/07/25 19:10:26  guilkey
+// Changed code relating to particle combustion as well as the
+// heat conduction.
+//
 // Revision 1.40  2000/07/20 19:45:12  guilkey
 // Commented out requirement for a heat transfer coefficient as the
 // current ThermalContact class doesn't use it.
