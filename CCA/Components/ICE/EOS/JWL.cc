@@ -23,7 +23,7 @@ JWL::~JWL()
 {
 }
 
-double JWL::computeRhoMicro(double press, double gamma,
+double JWL::computeRhoMicro(double press, double,
                             double cv, double Temp)
 {
   // Pointwise computation of microscopic density
@@ -91,7 +91,7 @@ double JWL::computeRhoMicro(double press, double gamma,
 }
 
 // Return (1/v)*(dv/dT)  (constant pressure thermal expansivity)
-double JWL::getAlpha(double Temp, double sp_v, double P, double cv)
+double JWL::getAlpha(double, double sp_v, double P, double cv)
 {
   // Cheating here a bit, computing v*(dT/dv) and returning the inverse of that
   double alpha;
@@ -107,7 +107,7 @@ double JWL::getAlpha(double Temp, double sp_v, double P, double cv)
 void JWL::computeTempCC(const Patch* patch,
                         const string& comp_domain,
                         const CCVariable<double>& press, 
-                        const double& gamma,
+                        const double&,
                         const double& cv,
                         const CCVariable<double>& rhoM, 
                         CCVariable<double>& Temp,
@@ -134,7 +134,7 @@ void JWL::computeTempCC(const Patch* patch,
 //__________________________________
 //
 
-void JWL::computePressEOS(double rhoM, double gamma,
+void JWL::computePressEOS(double rhoM, double,
                           double cv, double Temp,
                           double& press, double& dp_drho, double& dp_de)
 {
