@@ -39,7 +39,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <include/sci_defs/ogl_defs.h>
+#include <sci_defs/ogl_defs.h>
 
 #ifdef _WIN32
 #define WINGDIAPI __declspec(dllimport)
