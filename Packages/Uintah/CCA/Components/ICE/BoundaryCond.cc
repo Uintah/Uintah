@@ -1,5 +1,6 @@
 #include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
+#include <Packages/Uintah/CCA/Components/ICE/LODIBaseFuncs.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
@@ -15,8 +16,10 @@
 /*`==========TESTING==========*/
 #define JET_BC 0
 
-#define JOHN_BCS
+//#define JOHN_BCS
 #undef  JOHN_BCS
+
+// LODI_BCS IS DEFINED IN BOUNDARYCOND.H
 /*==========TESTING==========`*/
 
 
@@ -56,9 +59,9 @@ bool insideOfObject(const int i,
    ---------------------------------------------------------------------*/
   template <class V, class T> void 
       AddSourceBC(V& var, const Patch* patch, 
-		    Patch::FaceType face,                                
-		    const T& value,                                      
-		    IntVector offset = IntVector(0,0,0))                    
+                  Patch::FaceType face,                                
+                  const T& value,                                      
+                  IntVector offset = IntVector(0,0,0))                    
 { 
   //__________________________________
   //  hard coded to only apply on yminus
@@ -83,7 +86,7 @@ bool insideOfObject(const int i,
       for (int j = low.y(); j<hi.y(); j++) {
         for (int k = low.z(); k<hi.z(); k++) {
          if (insideOfObject(j, k,patch)) {            
-	    var[IntVector(hi.x()-1,j,k)] = value;
+           var[IntVector(hi.x()-1,j,k)] = value;
          }
         }
       }
@@ -92,7 +95,7 @@ bool insideOfObject(const int i,
       for (int j = low.y(); j<hi.y(); j++) {
         for (int k = low.z(); k<hi.z(); k++) {
           if (insideOfObject(j, k,patch)) {
-	     var[IntVector(low.x() + oneZero,j,k)] = value;
+            var[IntVector(low.x() + oneZero,j,k)] = value;
           }
         }
       }
@@ -101,7 +104,7 @@ bool insideOfObject(const int i,
       for (int i = low.x(); i<hi.x(); i++) {
         for (int k = low.z(); k<hi.z(); k++) {
           if (insideOfObject(i, k,patch)) {
-	     var[IntVector(i,hi.y()-1,k)] = value;
+            var[IntVector(i,hi.y()-1,k)] = value;
           }
         }
       }
@@ -110,7 +113,7 @@ bool insideOfObject(const int i,
       for (int i = low.x(); i<hi.x(); i++) {
         for (int k = low.z(); k<hi.z(); k++) {
           if (insideOfObject(i, k,patch)) {
-	     var[IntVector(i,low.y() + oneZero,k)] = value;
+            var[IntVector(i,low.y() + oneZero,k)] = value;
 //            cout << " I'm applying BC at "<< IntVector(i,low.y() + oneZero,k) << " " << value << endl;
           }
         }
@@ -120,7 +123,7 @@ bool insideOfObject(const int i,
       for (int i = low.x(); i<hi.x(); i++) {
         for (int j = low.y(); j<hi.y(); j++) {
           if (insideOfObject(i, j,patch)) {
-	     var[IntVector(i,j,hi.z()-1)] = value;
+            var[IntVector(i,j,hi.z()-1)] = value;
           }
         }
       }
@@ -129,7 +132,7 @@ bool insideOfObject(const int i,
       for (int i = low.x(); i<hi.x(); i++) {
         for (int j = low.y(); j<hi.y(); j++) {
           if (insideOfObject(i, j,patch)) {
-	     var[IntVector(i,j,low.z() + oneZero)] = value;
+            var[IntVector(i,j,low.z() + oneZero)] = value;
           }
         }
       }
@@ -147,9 +150,9 @@ bool insideOfObject(const int i,
 // Update pressure boundary conditions due to hydrostatic pressure
 
 void setHydrostaticPressureBC(CCVariable<double>& press,Patch::FaceType face, 
-			      Vector& gravity,
-			      const CCVariable<double>& rho,
-			      const Vector& dx, IntVector offset )
+                           Vector& gravity,
+                           const CCVariable<double>& rho,
+                           const Vector& dx, IntVector offset )
 { 
   IntVector low,hi;
   low = press.getLowIndex() + offset;
@@ -162,54 +165,54 @@ void setHydrostaticPressureBC(CCVariable<double>& press,Patch::FaceType face,
   case Patch::xplus:
     for (int j = low.y(); j<hi.y(); j++) {
       for (int k = low.z(); k<hi.z(); k++) {
-	press[IntVector(hi.x()-1,j,k)] = 
-	  press[IntVector(hi.x()-2,j,k)] + 
-	  gravity.x() * rho[IntVector(hi.x()-2,j,k)] * dx.x();
+       press[IntVector(hi.x()-1,j,k)] = 
+         press[IntVector(hi.x()-2,j,k)] + 
+         gravity.x() * rho[IntVector(hi.x()-2,j,k)] * dx.x();
       }
     }
     break;
   case Patch::xminus:
     for (int j = low.y(); j<hi.y(); j++) {
       for (int k = low.z(); k<hi.z(); k++) {
-	press[IntVector(low.x(),j,k)] = 
-	  press[IntVector(low.x()+1,j,k)] - 
-	  gravity.x() * rho[IntVector(low.x()+1,j,k)] * dx.x();;
+       press[IntVector(low.x(),j,k)] = 
+         press[IntVector(low.x()+1,j,k)] - 
+         gravity.x() * rho[IntVector(low.x()+1,j,k)] * dx.x();;
       }
     }
     break;
   case Patch::yplus:
     for (int i = low.x(); i<hi.x(); i++) {
       for (int k = low.z(); k<hi.z(); k++) {
-	press[IntVector(i,hi.y()-1,k)] = 
-	  press[IntVector(i,hi.y()-2,k)] + 
-	  gravity.y() * rho[IntVector(i,hi.y()-2,k)] * dx.y();
+       press[IntVector(i,hi.y()-1,k)] = 
+         press[IntVector(i,hi.y()-2,k)] + 
+         gravity.y() * rho[IntVector(i,hi.y()-2,k)] * dx.y();
       }
     }
     break;
   case Patch::yminus:
     for (int i = low.x(); i<hi.x(); i++) {
       for (int k = low.z(); k<hi.z(); k++) {
-	press[IntVector(i,low.y(),k)] = 
-	  press[IntVector(i,low.y()+1,k)] - 
-	  gravity.y() * rho[IntVector(i,low.y()+1,k)] * dx.y();
+       press[IntVector(i,low.y(),k)] = 
+         press[IntVector(i,low.y()+1,k)] - 
+         gravity.y() * rho[IntVector(i,low.y()+1,k)] * dx.y();
       }
     }
     break;
   case Patch::zplus:
     for (int i = low.x(); i<hi.x(); i++) {
       for (int j = low.y(); j<hi.y(); j++) {
-	press[IntVector(i,j,hi.z()-1)] = 
-	  press[IntVector(i,j,hi.z()-2)] +
-	  gravity.z() * rho[IntVector(i,j,hi.z()-2)] * dx.z();
+       press[IntVector(i,j,hi.z()-1)] = 
+         press[IntVector(i,j,hi.z()-2)] +
+         gravity.z() * rho[IntVector(i,j,hi.z()-2)] * dx.z();
       }
     }
     break;
   case Patch::zminus:
     for (int i = low.x(); i<hi.x(); i++) {
       for (int j = low.y(); j<hi.y(); j++) {
-	press[IntVector(i,j,low.z())] =
-	  press[IntVector(i,j,low.z()+1)] -  
-	  gravity.z() * rho[IntVector(i,j,low.z()+1)] * dx.z();
+       press[IntVector(i,j,low.z())] =
+         press[IntVector(i,j,low.z()+1)] -  
+         gravity.z() * rho[IntVector(i,j,low.z()+1)] * dx.z();
       }
     }
     break;
@@ -219,6 +222,7 @@ void setHydrostaticPressureBC(CCVariable<double>& press,Patch::FaceType face,
     break;
   }
 }
+
 
 #ifndef JOHN_BCS
 /* --------------------------------------------------------------------- 
@@ -390,8 +394,6 @@ void setBC(CCVariable<double>& variable, const string& kind,
 /* --------------------------------------------------------------------- 
  Function~  setBC--        
  Purpose~   Takes care of Velocity_CC Boundary conditions
- Notes:      CheckValveBC removes any inflow from outside
-             the domain.
  ---------------------------------------------------------------------  */
 void setBC(CCVariable<Vector>& variable, const string& kind, 
               const Patch* patch, const int mat_id) 
@@ -430,13 +432,6 @@ void setBC(CCVariable<Vector>& variable, const string& kind,
 
       if (new_bcs->getKind() == "Neumann") {
         fillFaceFlux(variable,face,new_bcs->getValue(),dx, 1.0, offset);
-      }      
-      if (new_bcs->getKind() == "NegInterior") {
-         fillFaceFlux(variable,face,Vector(0.0,0.0,0.0),dx, -1.0, offset);
-      }
-      if (new_bcs->getKind() == "Neumann_CkValve") {
-        fillFaceFlux(variable,face,new_bcs->getValue(),dx, 1.0, offset);
-        checkValveBC( variable, patch, face); 
       }
       
 /*`==========TESTING==========*/
@@ -459,7 +454,7 @@ void setBC(CCVariable<Vector>& variable, const string& kind,
  template<class T> void Neuman_SFC(T& var_FC,
                                    const Patch* patch, 
                                    Patch::FaceType face, 
-				   const double value, 
+                               const double value, 
                                    const Vector& dx,
                                    IntVector offset)
 { 
@@ -617,8 +612,8 @@ void setBC(SFCXVariable<double>& variable, const  string& kind,
       string kind = new_bcs->getKind();
       if (kind == "Dirichlet" && comp == "x") {
         fillFace<SFCXVariable<double>,double>(variable,patch, face,
-					      new_bcs->getValue().x(),
-					      offset);
+                                         new_bcs->getValue().x(),
+                                         offset);
       }
       if (kind == "Neumann" && comp == "x") {
         Vector dx = patch->dCell();
@@ -673,14 +668,14 @@ void setBC(SFCYVariable<double>& variable, const  string& kind,
       string kind = new_bcs->getKind();
       if (kind == "Dirichlet" && comp == "y") {
         fillFace<SFCYVariable<double>, double >(variable,patch, face,
-			   new_bcs->getValue().y(),
-			   offset);
+                        new_bcs->getValue().y(),
+                        offset);
       }
 
       if (kind == "Neumann" && comp == "y") {
         Vector dx = patch->dCell();    
         Neuman_SFC<SFCYVariable<double> >(variable, patch, face,
-					  new_bcs->getValue().y(), dx, offset);
+                                     new_bcs->getValue().y(), dx, offset);
       }
     }
 /*`==========TESTING==========*/
@@ -740,8 +735,8 @@ void setBC(SFCZVariable<double>& variable, const  string& kind,
       string kind = new_bcs->getKind();
       if (kind == "Dirichlet" && comp == "z") {
         fillFace<SFCZVariable<double>, double >(variable,patch, face,
-			   new_bcs->getValue().z(),
-			   offset);
+                        new_bcs->getValue().z(),
+                        offset);
       }
 
       if (kind == "Neumann" && comp == "z") {
@@ -752,67 +747,7 @@ void setBC(SFCZVariable<double>& variable, const  string& kind,
     }
   }
 }
-
 #endif
-/* --------------------------------------------------------------------- 
- Function~  checkValveBC--      
- Purpose~   Velocity/momentum can only go out of the domain,  If setBC(Neumann)
-            calculated an inflow condition this routine sets the velocity 
-            to 0.0;  Note call this function after setBC(Neumann)
- ---------------------------------------------------------------------  */
-void checkValveBC( CCVariable<Vector>& var, 
-                   const Patch* patch,
-                   Patch::FaceType face)        
-{ 
-  switch (face) {
-  case Patch::xplus:
-    for(CellIterator iter = patch->getFaceCellIterator(face); 
-                                             !iter.done(); iter++) { 
-      IntVector c = *iter;
-      var[c].x( std::max( var[c].x(), 0.0) );
-    }
-    break;
-  case Patch::xminus:
-    for(CellIterator iter = patch->getFaceCellIterator(face); 
-                                             !iter.done(); iter++) { 
-      IntVector c = *iter;
-      var[c].x(std::min( var[c].x(), 0.0) );
-    }
-    break;
-  case Patch::yplus:
-    for(CellIterator iter = patch->getFaceCellIterator(face); 
-                                             !iter.done(); iter++) { 
-      IntVector c = *iter;
-      var[c].y(std::max( var[c].y(), 0.0) );
-    }
-    break;
-  case Patch::yminus:
-    for(CellIterator iter = patch->getFaceCellIterator(face); 
-                                             !iter.done(); iter++) { 
-      IntVector c = *iter;
-      var[c].y(std::min( var[c].y(), 0.0) );
-    }
-    break;
-  case Patch::zplus:
-    for(CellIterator iter = patch->getFaceCellIterator(face); 
-                                             !iter.done(); iter++) { 
-      IntVector c = *iter;
-      var[c].z(std::max( var[c].z(), 0.0) );
-    }
-    break;
-  case Patch::zminus:
-    for(CellIterator iter = patch->getFaceCellIterator(face); 
-                                             !iter.done(); iter++) { 
-      IntVector c = *iter;
-      var[c].z(std::min( var[c].z(), 0.0) );
-    }
-    break;
-  case Patch::numFaces:
-    break;
-  case Patch::invalidFace:
-    break; 
-  }
-}
 /* --------------------------------------------------------------------- 
  Function~  ImplicitMatrixBC--      
  Purpose~   Along each face of the domain set the stencil weight in
@@ -925,66 +860,66 @@ void setBC(CCVariable<double>& press_CC,
       // it is symmetric, neumann, dirichlet, and its value,
       int numChildren = patch->getBCDataArray(face)->getNumberChildren();
       for (int child = 0;  child < numChildren; child++) {
-	vector<IntVector> bound,inter,sfx,sfy,sfz;
-	const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
-							  kind,bound,inter,
-							  sfx,sfy,sfz,
-							  child);
-	const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
-							      "Symmetric",
-							      bound,inter,
-							      sfx,sfy,sfz,
-							      child);
+       vector<IntVector> bound,inter,sfx,sfy,sfz;
+       const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
+                                                   kind,bound,inter,
+                                                   sfx,sfy,sfz,
+                                                   child);
+       const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
+                                                       "Symmetric",
+                                                       bound,inter,
+                                                       sfx,sfy,sfz,
+                                                       child);
 
-	const BoundCond<double> *new_bcs = 
-	  dynamic_cast<const BoundCond<double> *>(bc);	
-	double bc_value=0;
-	string bc_kind="";
-	if (new_bcs != 0) {
-	  bc_value = new_bcs->getValue();
-	  bc_kind = new_bcs->getKind();
+       const BoundCond<double> *new_bcs = 
+         dynamic_cast<const BoundCond<double> *>(bc);       
+       double bc_value=0;
+       string bc_kind="";
+       if (new_bcs != 0) {
+         bc_value = new_bcs->getValue();
+         bc_kind = new_bcs->getKind();
 #if 0
-	  cout << "BC kind = " << bc_kind << endl;
-	  cout << "BC value = " << bc_value << endl;
+         cout << "BC kind = " << bc_kind << endl;
+         cout << "BC value = " << bc_value << endl;
 #endif
-	}
-	
-	// Apply the boundary conditions
-	vector<IntVector>::const_iterator boundary,interior;
-	  
-	if (bc_kind == "Dirichlet")
-	  for (boundary=bound.begin(); boundary != bound.end(); 
-	       boundary++) 
-	    press_CC[*boundary] = bc_value;
-	
-	if (bc_kind == "Neumann") {
-	  for (boundary=bound.begin(),interior=inter.begin(); 
-	       boundary != bound.end();   boundary++,interior++) {
-	    press_CC[*boundary] = press_CC[*interior] - bc_value*spacing;
-	  }
-	}
-	  
-	
-	if (sym_bc != 0)
-	  for (boundary=bound.begin(),interior=inter.begin(); 
-	       boundary != bound.end(); boundary++,interior++) 
-	    press_CC[*boundary] = press_CC[*interior];
-	
-	// If we have gravity, need to apply hydrostatic condition
-	if ((sharedState->getGravity()).length() > 0.) {
-	  if (which_Var == "sp_vol") {
-	    for (boundary=bound.begin(),interior=inter.begin();
-		 boundary != bound.end(); boundary++,interior++) 
-	      press_CC[*boundary] = press_CC[*interior] + 
-		gravity*spacing/rho_micro[*interior];
-	  }
-	  if (which_Var == "rho_micro") {
-	    for (boundary=bound.begin(),interior=inter.begin(); 
-		 boundary != bound.end(); boundary++,interior++) 
-	      press_CC[*boundary] = press_CC[*interior] +
-		gravity*spacing*rho_micro[*interior];
-	  }
-	}
+       }
+       
+       // Apply the boundary conditions
+       vector<IntVector>::const_iterator boundary,interior;
+         
+       if (bc_kind == "Dirichlet")
+         for (boundary=bound.begin(); boundary != bound.end(); 
+              boundary++) 
+           press_CC[*boundary] = bc_value;
+       
+       if (bc_kind == "Neumann") {
+         for (boundary=bound.begin(),interior=inter.begin(); 
+              boundary != bound.end();   boundary++,interior++) {
+           press_CC[*boundary] = press_CC[*interior] - bc_value*spacing;
+         }
+       }
+         
+       
+       if (sym_bc != 0)
+         for (boundary=bound.begin(),interior=inter.begin(); 
+              boundary != bound.end(); boundary++,interior++) 
+           press_CC[*boundary] = press_CC[*interior];
+       
+       // If we have gravity, need to apply hydrostatic condition
+       if ((sharedState->getGravity()).length() > 0.) {
+         if (which_Var == "sp_vol") {
+           for (boundary=bound.begin(),interior=inter.begin();
+               boundary != bound.end(); boundary++,interior++) 
+             press_CC[*boundary] = press_CC[*interior] + 
+              gravity*spacing/rho_micro[*interior];
+         }
+         if (which_Var == "rho_micro") {
+           for (boundary=bound.begin(),interior=inter.begin(); 
+               boundary != bound.end(); boundary++,interior++) 
+             press_CC[*boundary] = press_CC[*interior] +
+              gravity*spacing*rho_micro[*interior];
+         }
+       }
       }
     }
   }
@@ -992,8 +927,8 @@ void setBC(CCVariable<double>& press_CC,
 //______________________________________________________________________
 //
 void determineSpacingAndGravity(Patch::FaceType face, 
-				Vector& dx,SimulationStateP& sharedState,
-				double& spacing, double& gravity)
+                            Vector& dx,SimulationStateP& sharedState,
+                            double& spacing, double& gravity)
 {
   if (face == Patch::xminus || face == Patch::xplus) spacing = dx.x();
   if (face == Patch::yminus || face == Patch::yplus) spacing = dx.y();
@@ -1011,8 +946,8 @@ void determineSpacingAndGravity(Patch::FaceType face,
 //______________________________________________________________________
 // Take care of the Density and Temperature
 void setBC(CCVariable<double>& variable, const string& kind, 
-	       const Patch* patch,  SimulationStateP& sharedState,
-	       const int mat_id)
+              const Patch* patch,  SimulationStateP& sharedState,
+              const int mat_id)
 {
   Vector dx = patch->dCell();
   for (Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
@@ -1024,79 +959,79 @@ void setBC(CCVariable<double>& variable, const string& kind,
     if (patch->getBCType(face) == Patch::None) {
       int numChildren = patch->getBCDataArray(face)->getNumberChildren();
       for (int child = 0; child < numChildren; child++) {
-	vector<IntVector> bound,inter,sfx,sfy,sfz;
-	const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
-							  kind, bound,inter,
-							  sfx,sfy,sfz,
-							  child);
+       vector<IntVector> bound,inter,sfx,sfy,sfz;
+       const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
+                                                   kind, bound,inter,
+                                                   sfx,sfy,sfz,
+                                                   child);
       
-	const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
-							      "Symmetric",
-							      bound,inter,
-							      sfx,sfy,sfz,
-							      child);
-	const BoundCond<double> *new_bcs = 
-	  dynamic_cast<const BoundCond<double> *>(bc);	
-	
-	double bc_value=0;
-	string bc_kind="";
-	if (new_bcs != 0) {
-	  bc_value = new_bcs->getValue();
-	  bc_kind = new_bcs->getKind();
+       const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
+                                                       "Symmetric",
+                                                       bound,inter,
+                                                       sfx,sfy,sfz,
+                                                       child);
+       const BoundCond<double> *new_bcs = 
+         dynamic_cast<const BoundCond<double> *>(bc);       
+       
+       double bc_value=0;
+       string bc_kind="";
+       if (new_bcs != 0) {
+         bc_value = new_bcs->getValue();
+         bc_kind = new_bcs->getKind();
 #if 0
-	  cout << "BC kind = " << bc_kind << endl;
-	  cout << "BC value = " << bc_value << endl;
+         cout << "BC kind = " << bc_kind << endl;
+         cout << "BC value = " << bc_value << endl;
 #endif
-	}
-	
-	// Apply the "zeroNeumann"
-	vector<IntVector>::const_iterator boundary,interior;
-	if (kind == "zeroNeumann")
-	  for (boundary=bound.begin(),interior=inter.begin(); 
-	       boundary != bound.end(); boundary++,interior++) 
-	    variable[*boundary] = variable[*interior];
-	
-	if (sym_bc != 0) {
-	  if (kind == "Density" || kind == "Temperature" 
-	      || kind == "set_if_sym_BC")
-	  for (boundary=bound.begin(),interior=inter.begin(); 
-	       boundary != bound.end(); boundary++,interior++) 
-	      variable[*boundary] = variable[*interior];
-	}
-	
-	if (kind == "Density") {
-	  if (bc_kind == "Dirichlet")
-	    for (boundary=bound.begin(); boundary != bound.end(); boundary++) 
-	      variable[*boundary] = bc_value;
-	  if (bc_kind == "Neumann")
-	    for (boundary=bound.begin(),interior=inter.begin(); 
-		 boundary != bound.end(); boundary++,interior++) 
-	      variable[*boundary] =  variable[*interior] - bc_value*spacing;
-	}
-	
-	if (kind == "Temperature") {
-	  if (bc_kind == "Dirichlet")
-	    for (boundary=bound.begin(); boundary != bound.end(); boundary++) 
-	      variable[*boundary] = bc_value;
-	  if (bc_kind == "Neumann") {
-	    for (boundary=bound.begin(),interior=inter.begin(); 
-		 boundary != bound.end(); boundary++,interior++) 
-	      variable[*boundary] = variable[*interior] - bc_value*spacing;
-	    // We have gravity
-	    if ((sharedState->getGravity()).length() > 0.) {
-	      // Do the hydrostatic temperature adjustment
-	      Material *matl = sharedState->getMaterial(mat_id);
-	      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-	      if (ice_matl) {
-		double cv = ice_matl->getSpecificHeat();
-		double gamma = ice_matl->getGamma();
-		for (boundary=bound.begin(); boundary != bound.end(); 
-		     boundary++) 
-		  variable[*boundary] += gravity*spacing/((gamma-1.)*cv);
-	      }
-	    }
-	  }
-	}
+       }
+       
+       // Apply the "zeroNeumann"
+       vector<IntVector>::const_iterator boundary,interior;
+       if (kind == "zeroNeumann")
+         for (boundary=bound.begin(),interior=inter.begin(); 
+              boundary != bound.end(); boundary++,interior++) 
+           variable[*boundary] = variable[*interior];
+       
+       if (sym_bc != 0) {
+         if (kind == "Density" || kind == "Temperature" 
+             || kind == "set_if_sym_BC")
+         for (boundary=bound.begin(),interior=inter.begin(); 
+              boundary != bound.end(); boundary++,interior++) 
+             variable[*boundary] = variable[*interior];
+       }
+       
+       if (kind == "Density") {
+         if (bc_kind == "Dirichlet")
+           for (boundary=bound.begin(); boundary != bound.end(); boundary++) 
+             variable[*boundary] = bc_value;
+         if (bc_kind == "Neumann")
+           for (boundary=bound.begin(),interior=inter.begin(); 
+               boundary != bound.end(); boundary++,interior++) 
+             variable[*boundary] =  variable[*interior] - bc_value*spacing;
+       }
+       
+       if (kind == "Temperature") {
+         if (bc_kind == "Dirichlet")
+           for (boundary=bound.begin(); boundary != bound.end(); boundary++) 
+             variable[*boundary] = bc_value;
+         if (bc_kind == "Neumann") {
+           for (boundary=bound.begin(),interior=inter.begin(); 
+               boundary != bound.end(); boundary++,interior++) 
+             variable[*boundary] = variable[*interior] - bc_value*spacing;
+           // We have gravity
+           if ((sharedState->getGravity()).length() > 0.) {
+             // Do the hydrostatic temperature adjustment
+             Material *matl = sharedState->getMaterial(mat_id);
+             ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+             if (ice_matl) {
+              double cv = ice_matl->getSpecificHeat();
+              double gamma = ice_matl->getGamma();
+              for (boundary=bound.begin(); boundary != bound.end(); 
+                   boundary++) 
+                variable[*boundary] += gravity*spacing/((gamma-1.)*cv);
+             }
+           }
+         }
+       }
       }
     } 
     
@@ -1107,8 +1042,6 @@ void setBC(CCVariable<double>& variable, const string& kind,
 /* --------------------------------------------------------------------- 
  Function~  setBC--        
  Purpose~   Takes care of Velocity_CC Boundary conditions
- Notes:      CheckValveBC removes any inflow from outside
-             the domain.
  ---------------------------------------------------------------------  */
 void setBC(CCVariable<Vector>& variable, const string& kind, 
               const Patch* patch, const int mat_id) 
@@ -1134,91 +1067,55 @@ void setBC(CCVariable<Vector>& variable, const string& kind,
 
     if (patch->getBCType(face) == Patch::None) {
       for (int child = 0; 
-	   child < patch->getBCDataArray(face)->getNumberChildren(); child++) {
-	vector<IntVector> bound,inter,sfx,sfy,sfz;
-	const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
-							  kind,bound,inter,
-							  sfx,sfy,sfz,
-							  child);
+          child < patch->getBCDataArray(face)->getNumberChildren(); child++) {
+       vector<IntVector> bound,inter,sfx,sfy,sfz;
+       const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,
+                                                   kind,bound,inter,
+                                                   sfx,sfy,sfz,
+                                                   child);
       
-	const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
-							      "Symmetric",
-							      bound,inter,
-							      sfx,sfy,sfz,
-							      child);
-	const BoundCond<Vector> *new_bcs = 
-	  dynamic_cast<const BoundCond<Vector> *>(bc);	
-	
-	Vector bc_value(0.,0.,0.);
-	string bc_kind="";
-	if (new_bcs != 0) {
-	  bc_value = new_bcs->getValue();
-	  bc_kind = new_bcs->getKind();
+       const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
+                                                       "Symmetric",
+                                                       bound,inter,
+                                                       sfx,sfy,sfz,
+                                                       child);
+       const BoundCond<Vector> *new_bcs = 
+         dynamic_cast<const BoundCond<Vector> *>(bc);       
+       
+       Vector bc_value(0.,0.,0.);
+       string bc_kind="";
+       if (new_bcs != 0) {
+         bc_value = new_bcs->getValue();
+         bc_kind = new_bcs->getKind();
 #if 0
-	  cout << "BC kind = " << bc_kind << endl;
-	  cout << "BC value = " << bc_value << endl;
+         cout << "BC kind = " << bc_kind << endl;
+         cout << "BC value = " << bc_value << endl;
 #endif
-	}
-	vector<IntVector>::const_iterator boundary,interior;
-	if (sym_bc != 0 && (kind == "Velocity" || kind == "set_if_sym_BC")) {
-	  for (boundary=bound.begin(),interior=inter.begin(); 
-	       boundary != bound.end(); boundary++,interior++) {
-	    variable[*boundary] = variable[*interior];  
-	    variable[*boundary] = sign*variable[*interior];
-	  }
-	}
-	
-	if (bc_kind == "Neumann") 
-	  for (boundary=bound.begin(),interior=inter.begin(); 
-	       boundary != bound.end(); boundary++,interior++) 
-	    variable[*boundary] = variable[*interior];
-	
-	if (kind == "Velocity") {
-	  if (bc_kind == "Dirichlet")
-	    for (boundary=bound.begin(); boundary != bound.end(); boundary++) 
-	      variable[*boundary] = bc_value;
-	  
-	  if (bc_kind == "Neumann")
-	    for (boundary=bound.begin(),interior=inter.begin(); 
-		 boundary != bound.end(); boundary++,interior++) 
-	      variable[*boundary] = variable[*interior] - bc_value*spacing;
-	  
-	  if (bc_kind == "NegInterior") 
-	    for (boundary=bound.begin(),interior=inter.begin();
-		 boundary != bound.end(); boundary++,interior++) 
-	      variable[*boundary] = -variable[*interior];
-	  
-	  if (bc_kind == "Neumann_CkValve") {
-	    for (boundary=bound.begin(),interior=inter.begin(); 
-		 boundary != bound.end(); boundary++,interior++) 
-	      variable[*boundary] = variable[*interior] - bc_value*spacing;
-
-	    if (face == Patch::xplus)
-	      for (boundary=bound.begin();boundary!=bound.end();boundary++) 
-		variable[*boundary].x(std::max(variable[*boundary].x(),0.));
-	    
-	    if (face == Patch::xminus)
-	      for (boundary=bound.begin();boundary!=bound.end();boundary++) 
-		variable[*boundary].x(std::min(variable[*boundary].x(),0.));
-	    
-	    if (face == Patch::yplus)
-	      for (boundary=bound.begin();boundary!=bound.end();boundary++) 
-		variable[*boundary].y(std::max(variable[*boundary].y(),0.));
-	    
-	    if (face == Patch::yminus)
-	      for (boundary=bound.begin();boundary!=bound.end();boundary++) 
-		variable[*boundary].y(std::min(variable[*boundary].y(),0.));
-	    
-	    if (face == Patch::zplus)
-	      for (boundary=bound.begin();boundary!=bound.end();boundary++) 
-		variable[*boundary].z(std::max(variable[*boundary].z(),0.));
-	    
-	    if (face == Patch::zminus)
-	      for (boundary=bound.begin();boundary!=bound.end();boundary++) 
-		variable[*boundary].z(std::min(variable[*boundary].z(),0.));
-	    
-	  }
-	}
+       }
+       vector<IntVector>::const_iterator boundary,interior;
+       if (sym_bc != 0 && (kind == "Velocity" || kind == "set_if_sym_BC")) {
+         for (boundary=bound.begin(),interior=inter.begin(); 
+              boundary != bound.end(); boundary++,interior++) {
+           variable[*boundary] = variable[*interior];  
+           variable[*boundary] = sign*variable[*interior];
+         }
+       }
+       
+       if (bc_kind == "Neumann") 
+         for (boundary=bound.begin(),interior=inter.begin(); 
+              boundary != bound.end(); boundary++,interior++) 
+           variable[*boundary] = variable[*interior];
+       
+       if (kind == "Velocity") {
+         if (bc_kind == "Dirichlet")
+           for (boundary=bound.begin(); boundary != bound.end(); boundary++) 
+             variable[*boundary] = bc_value;
+         
+         if (bc_kind == "Neumann")
+           for (boundary=bound.begin(),interior=inter.begin(); 
+               boundary != bound.end(); boundary++,interior++) 
+             variable[*boundary] = variable[*interior] - bc_value*spacing;
+       }
       }
     }
   }
@@ -1226,7 +1123,7 @@ void setBC(CCVariable<Vector>& variable, const string& kind,
 //______________________________________________________________________
 //
 void determineSpacingAndSign(Patch::FaceType face, Vector& dx,double& spacing,
-			     double& sign)
+                          double& sign)
 {
   if (face == Patch::xminus || face == Patch::xplus) {
       spacing = dx.x();
@@ -1263,63 +1160,63 @@ void setBC(SFCXVariable<double>& variable, const  string& kind,
 
     if (patch->getBCType(face) == Patch::None) {
       for (int child = 0; 
-	   child < patch->getBCDataArray(face)->getNumberChildren(); child++) {
-	vector<IntVector> bound,inter,sfx,sfy,sfz;
-	const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,kind,
-							  bound,inter,
-							  sfx,sfy,sfz,child);
-	
-	const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
-							      "Symmetric",
-							      bound,inter,
-							      sfx,sfy,sfz,
-							      child);
-	
-	const BoundCond<Vector>* new_bcs  = 
-	  dynamic_cast<const BoundCond<Vector> *>(bc);
+          child < patch->getBCDataArray(face)->getNumberChildren(); child++) {
+       vector<IntVector> bound,inter,sfx,sfy,sfz;
+       const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,kind,
+                                                   bound,inter,
+                                                   sfx,sfy,sfz,child);
+       
+       const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
+                                                       "Symmetric",
+                                                       bound,inter,
+                                                       sfx,sfy,sfz,
+                                                       child);
+       
+       const BoundCond<Vector>* new_bcs  = 
+         dynamic_cast<const BoundCond<Vector> *>(bc);
     
-	Vector bc_value(0.,0.,0.);
-	string bc_kind="";
-	if (new_bcs != 0) {
-	  bc_value = new_bcs->getValue();
-	  bc_kind = new_bcs->getKind();
-	}
-	vector<IntVector>::const_iterator boundary,interior,sfcx;
-	//__________________________________
-	//  Symmetry boundary conditions
-	//  -set Neumann = 0 on all walls
-	if (sym_bc != 0) {
-	  // Since this is for the SFCXVariable, only set things on the 
-	  // y and z faces  -- set the tangential components
-	  if (face == Patch::yminus || face == Patch::yplus || 
-	      face == Patch::zminus || face == Patch::zplus)
-	    for (boundary=bound.begin(),interior=inter.begin(); 
-		 boundary != bound.end(); boundary++,interior++) 
-	      variable[*boundary] = variable[*interior];
-	  
-	  // Set normal component = 0
-	  if(face == Patch::xplus || face == Patch::xminus ) 
-	    for (boundary=bound.begin(); boundary != bound.end(); boundary++) 
-	      variable[*boundary] = 0.;
+       Vector bc_value(0.,0.,0.);
+       string bc_kind="";
+       if (new_bcs != 0) {
+         bc_value = new_bcs->getValue();
+         bc_kind = new_bcs->getKind();
+       }
+       vector<IntVector>::const_iterator boundary,interior,sfcx;
+       //__________________________________
+       //  Symmetry boundary conditions
+       //  -set Neumann = 0 on all walls
+       if (sym_bc != 0) {
+         // Since this is for the SFCXVariable, only set things on the 
+         // y and z faces  -- set the tangential components
+         if (face == Patch::yminus || face == Patch::yplus || 
+             face == Patch::zminus || face == Patch::zplus)
+           for (boundary=bound.begin(),interior=inter.begin(); 
+               boundary != bound.end(); boundary++,interior++) 
+             variable[*boundary] = variable[*interior];
+         
+         // Set normal component = 0
+         if(face == Patch::xplus || face == Patch::xminus ) 
+           for (boundary=bound.begin(); boundary != bound.end(); boundary++) 
+             variable[*boundary] = 0.;
         }
          
-	//__________________________________
-	// Neumann or Dirichlet
-	if (bc_kind == "Dirichlet") {
-	  // Use the interior index for the xminus face and 
-	  // no neighboring patches
-	  // Use the boundary index for the xplus face
-	  for (sfcx=sfx.begin(); sfcx != sfx.end(); sfcx++)
-	    variable[*sfcx] = bc_value.x();
-	}
-	if (bc_kind == "Neumann") {
-	  if (face == Patch::yminus || face == Patch::yplus || 
-	      face == Patch::zminus || face == Patch::zplus)
-	    for (boundary=bound.begin(),interior=inter.begin(); 
-		 boundary != bound.end(); boundary++,interior++) 
-	      variable[*boundary] = variable[*interior] + 
-		bc_value.x()*spacing*sign;
-	}
+       //__________________________________
+       // Neumann or Dirichlet
+       if (bc_kind == "Dirichlet") {
+         // Use the interior index for the xminus face and 
+         // no neighboring patches
+         // Use the boundary index for the xplus face
+         for (sfcx=sfx.begin(); sfcx != sfx.end(); sfcx++)
+           variable[*sfcx] = bc_value.x();
+       }
+       if (bc_kind == "Neumann") {
+         if (face == Patch::yminus || face == Patch::yplus || 
+             face == Patch::zminus || face == Patch::zplus)
+           for (boundary=bound.begin(),interior=inter.begin(); 
+               boundary != bound.end(); boundary++,interior++) 
+             variable[*boundary] = variable[*interior] + 
+              bc_value.x()*spacing*sign;
+       }
       }
     }
   }
@@ -1332,7 +1229,7 @@ void setBC(SFCXVariable<double>& variable, const  string& kind,
             hey are computed in AddExchangeContributionToFCVel.
  ---------------------------------------------------------------------  */
 void setBC(SFCYVariable<double>& variable, const  string& kind, 
-	       const string& comp, const Patch* patch, const int mat_id) 
+              const string& comp, const Patch* patch, const int mat_id) 
 {
   Vector dx = patch->dCell();
   for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
@@ -1342,62 +1239,62 @@ void setBC(SFCYVariable<double>& variable, const  string& kind,
 
     if (patch->getBCType(face) == Patch::None) {
       for (int child = 0; 
-	   child < patch->getBCDataArray(face)->getNumberChildren(); child++) {
-	vector<IntVector> bound,inter,sfx,sfy,sfz;
-	const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,kind,
-							  bound,inter,
-							  sfx,sfy,sfz,child);
-	
-	const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
-							      "Symmetric",
-							      bound,inter,
-							      sfx,sfy,sfz,
-							      child);
-	
-	const BoundCond<Vector>* new_bcs  = 
-	  dynamic_cast<const BoundCond<Vector> *>(bc);
+          child < patch->getBCDataArray(face)->getNumberChildren(); child++) {
+       vector<IntVector> bound,inter,sfx,sfy,sfz;
+       const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,kind,
+                                                   bound,inter,
+                                                   sfx,sfy,sfz,child);
+       
+       const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
+                                                       "Symmetric",
+                                                       bound,inter,
+                                                       sfx,sfy,sfz,
+                                                       child);
+       
+       const BoundCond<Vector>* new_bcs  = 
+         dynamic_cast<const BoundCond<Vector> *>(bc);
     
-	Vector bc_value(0.,0.,0.);
-	string bc_kind="";
-	if (new_bcs != 0) {
-	  bc_value = new_bcs->getValue();
-	  bc_kind = new_bcs->getKind();
-	}
-	vector<IntVector>::const_iterator boundary,interior,sfcy;
-	//__________________________________
-	//  Symmetry boundary conditions
-	//  -set Neumann = 0 on all walls
-	if (sym_bc != 0) {
-	  // Since this is for the SFCYVariable, only set things on the 
-	  // x and z faces  -- set the tangential components
-	  if (face == Patch::xminus || face == Patch::xplus || 
-	      face == Patch::zminus || face == Patch::zplus)
-	    for (boundary=bound.begin(),interior=inter.begin(); 
-		 boundary != bound.end(); boundary++,interior++) 
-	      variable[*boundary] = variable[*interior];
-	  
-	  // Set normal component = 0
-	  if( face == Patch::yplus || face == Patch::yminus ) 
-	    for (boundary=bound.begin(); boundary != bound.end(); boundary++) 
-	      variable[*boundary] = 0.;
+       Vector bc_value(0.,0.,0.);
+       string bc_kind="";
+       if (new_bcs != 0) {
+         bc_value = new_bcs->getValue();
+         bc_kind = new_bcs->getKind();
+       }
+       vector<IntVector>::const_iterator boundary,interior,sfcy;
+       //__________________________________
+       //  Symmetry boundary conditions
+       //  -set Neumann = 0 on all walls
+       if (sym_bc != 0) {
+         // Since this is for the SFCYVariable, only set things on the 
+         // x and z faces  -- set the tangential components
+         if (face == Patch::xminus || face == Patch::xplus || 
+             face == Patch::zminus || face == Patch::zplus)
+           for (boundary=bound.begin(),interior=inter.begin(); 
+               boundary != bound.end(); boundary++,interior++) 
+             variable[*boundary] = variable[*interior];
+         
+         // Set normal component = 0
+         if( face == Patch::yplus || face == Patch::yminus ) 
+           for (boundary=bound.begin(); boundary != bound.end(); boundary++) 
+             variable[*boundary] = 0.;
         }
          
-	//__________________________________
-	// Neumann or Dirichlet
-	if (bc_kind == "Dirichlet") {
-	  for (sfcy=sfy.begin();sfcy != sfy.end(); sfcy++) {
-	    variable[*sfcy] = bc_value.y();
-	  }
-	}
-	
-	if (bc_kind == "Neumann") {
-	  if (face == Patch::xminus || face == Patch::xplus || 
-	      face == Patch::zminus || face == Patch::zplus)
-	    for (boundary=bound.begin(),interior=inter.begin(); 
-		 boundary != bound.end(); boundary++,interior++) 
-	      variable[*boundary] = variable[*interior] + 
-		bc_value.y()*spacing*sign;
-	}
+       //__________________________________
+       // Neumann or Dirichlet
+       if (bc_kind == "Dirichlet") {
+         for (sfcy=sfy.begin();sfcy != sfy.end(); sfcy++) {
+           variable[*sfcy] = bc_value.y();
+         }
+       }
+       
+       if (bc_kind == "Neumann") {
+         if (face == Patch::xminus || face == Patch::xplus || 
+             face == Patch::zminus || face == Patch::zplus)
+           for (boundary=bound.begin(),interior=inter.begin(); 
+               boundary != bound.end(); boundary++,interior++) 
+             variable[*boundary] = variable[*interior] + 
+              bc_value.y()*spacing*sign;
+       }
       }
     }
   }
@@ -1410,7 +1307,7 @@ void setBC(SFCYVariable<double>& variable, const  string& kind,
             hey are computed in AddExchangeContributionToFCVel.
  ---------------------------------------------------------------------  */
 void setBC(SFCZVariable<double>& variable, const  string& kind, 
-	       const string& comp, const Patch* patch, const int mat_id) 
+              const string& comp, const Patch* patch, const int mat_id) 
 {
   Vector dx = patch->dCell();
   for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
@@ -1420,63 +1317,1149 @@ void setBC(SFCZVariable<double>& variable, const  string& kind,
     int numChildren = patch->getBCDataArray(face)->getNumberChildren();
     if (patch->getBCType(face) == Patch::None) {
       for (int child = 0;  child < numChildren; child++) {
-	vector<IntVector> bound,inter,sfx,sfy,sfz;
-	const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,kind,
-							  bound,inter,
-							  sfx,sfy,sfz,child);
-	
-	const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
-							      "Symmetric",
-							      bound,inter,
-							      sfx,sfy,sfz,
-							      child);
-	
-	const BoundCond<Vector>* new_bcs  = 
-	  dynamic_cast<const BoundCond<Vector> *>(bc);
+       vector<IntVector> bound,inter,sfx,sfy,sfz;
+       const BoundCondBase* bc = patch->getArrayBCValues(face,mat_id,kind,
+                                                   bound,inter,
+                                                   sfx,sfy,sfz,child);
+       
+       const BoundCondBase* sym_bc = patch->getArrayBCValues(face,mat_id,
+                                                       "Symmetric",
+                                                       bound,inter,
+                                                       sfx,sfy,sfz,
+                                                       child);
+       
+       const BoundCond<Vector>* new_bcs  = 
+         dynamic_cast<const BoundCond<Vector> *>(bc);
     
-	Vector bc_value(0.,0.,0.);
-	string bc_kind="";
-	if (new_bcs != 0) {
-	  bc_value = new_bcs->getValue();
-	  bc_kind = new_bcs->getKind();
-	}
-	vector<IntVector>::const_iterator boundary,interior,sfcz;
-	//__________________________________
-	//  Symmetry boundary conditions
-	//  -set Neumann = 0 on all walls
-	if (sym_bc != 0) {
-	  // Since this is for the SFCZVariable, only set things on the 
-	  // x and y faces  -- set the tangential components
-	  if (face == Patch::xminus || face == Patch::xplus || 
-	      face == Patch::yminus || face == Patch::yplus)
-	    for (boundary=bound.begin(),interior=inter.begin(); 
-		 boundary != bound.end(); boundary++,interior++) 
-	      variable[*boundary] = variable[*interior];
-	  
-	  // Set normal component = 0
-	  if( face == Patch::zplus || face == Patch::zminus ) 
-	    for (boundary=bound.begin(); boundary != bound.end(); boundary++) 
-	      variable[*boundary] = 0.;
+       Vector bc_value(0.,0.,0.);
+       string bc_kind="";
+       if (new_bcs != 0) {
+         bc_value = new_bcs->getValue();
+         bc_kind = new_bcs->getKind();
+       }
+       vector<IntVector>::const_iterator boundary,interior,sfcz;
+       //__________________________________
+       //  Symmetry boundary conditions
+       //  -set Neumann = 0 on all walls
+       if (sym_bc != 0) {
+         // Since this is for the SFCZVariable, only set things on the 
+         // x and y faces  -- set the tangential components
+         if (face == Patch::xminus || face == Patch::xplus || 
+             face == Patch::yminus || face == Patch::yplus)
+           for (boundary=bound.begin(),interior=inter.begin(); 
+               boundary != bound.end(); boundary++,interior++) 
+             variable[*boundary] = variable[*interior];
+         
+         // Set normal component = 0
+         if( face == Patch::zplus || face == Patch::zminus ) 
+           for (boundary=bound.begin(); boundary != bound.end(); boundary++) 
+             variable[*boundary] = 0.;
         }
          
-	//__________________________________
-	// Neumann or Dirichlet
-	if (bc_kind == "Dirichlet") 
-	  for (sfcz=sfz.begin();sfcz != sfz.end(); sfcz++)
-	    variable[*sfcz] = bc_value.z();
-	
-	if (bc_kind == "Neumann") {
-	  if (face == Patch::xminus || face == Patch::xplus || 
-	      face == Patch::yminus || face == Patch::yplus)
-	    for (boundary=bound.begin(),interior=inter.begin(); 
-		 boundary != bound.end(); boundary++,interior++) 
-	      variable[*boundary] = variable[*interior] + 
-		bc_value.z()*spacing*sign;
-	}
+       //__________________________________
+       // Neumann or Dirichlet
+       if (bc_kind == "Dirichlet") 
+         for (sfcz=sfz.begin();sfcz != sfz.end(); sfcz++)
+           variable[*sfcz] = bc_value.z();
+       
+       if (bc_kind == "Neumann") {
+         if (face == Patch::xminus || face == Patch::xplus || 
+             face == Patch::yminus || face == Patch::yplus)
+           for (boundary=bound.begin(),interior=inter.begin(); 
+               boundary != bound.end(); boundary++,interior++) 
+             variable[*boundary] = variable[*interior] + 
+              bc_value.z()*spacing*sign;
+       }
       }
     }
   }
 }
 #endif
+
+
+
+//______________________________________________________________________
+///______________________________________________________________________
+//
+#ifdef LODI_BCS
+/* --------------------------------------------------------------------- 
+ Function~  setBCDensityLODI--
+ Purpose~   Takes care of Symmetry BC, Dirichelet BC, Characteristic BC
+            for Density
+ ---------------------------------------------------------------------  */
+void setBCDensityLODI(CCVariable<double>& rho_CC,
+                const CCVariable<double>& d1_x,                       
+                const CCVariable<double>& d1_y,                       
+                const CCVariable<double>& d1_z,                       
+                const CCVariable<double>& nux,
+                const CCVariable<double>& nuy,
+                const CCVariable<double>& nuz,
+                CCVariable<double>& rho_tmp,
+                CCVariable<double>& p,
+                CCVariable<Vector>& vel,
+                constCCVariable<double>& c,
+                const double delT,
+                const double gamma,
+                const double R_gas,
+                const Patch* patch, 
+                const int mat_id)
+{ //function setBCDensityLODI: 1
+  Vector dx = patch->dCell();
+//  Vector grav = sharedState->getGravity();
+  IntVector offset(0,0,0);  
+  
+  for(Patch::FaceType face = Patch::startFace;
+      face <= Patch::endFace; face=Patch::nextFace(face)){ //loop over faces for a given patch: 2
+
+    const BoundCondBase *rho_bcs, *sym_bcs;
+    const BoundCond<double> *rho_new_bcs;
+
+    std::string rho_kind   = "Density";
+
+    if(patch->getBCType(face) == Patch::None) {
+      rho_bcs = patch->getBCValues(mat_id, rho_kind,face);
+      sym_bcs = patch->getBCValues(mat_id,"Symmetric",face);
+      rho_new_bcs   = dynamic_cast<const BoundCond<double> *>(rho_bcs);
+    } else {
+      continue;
+    }
+
+    if(sym_bcs != 0) {
+      fillFaceFlux(rho_CC, face, 0.0, dx, 1.0, offset);
+    }
+
+    if(rho_new_bcs != 0 && rho_new_bcs->getKind() == "Dirichlet") {
+      fillFace(rho_CC, face, rho_new_bcs->getValue(), offset);
+    }
+
+    if (rho_new_bcs != 0 && rho_new_bcs->getKind() == "Neumann") {
+      fillFaceFlux(rho_CC, face, 
+                 rho_new_bcs->getValue(), dx, 1.0, offset);
+    }
+ 
+    if(rho_new_bcs != 0 && rho_new_bcs->getKind() == "LODI"){ 
+     fillFaceDensityLODI(rho_CC, d1_x, d1_y, d1_z,
+                       nux, nuy, nuz, rho_tmp, p, vel, c, 
+                       face, delT, gamma, R_gas, 
+                       mat_id, dx);
+     }  
+      
+/*`==========TESTING==========
+#if JET_BC
+         //cout << " I'm in density "<< face << endl;
+//       double hardCodedDensity = 1.1792946927* (300.0/1000.0);
+         double hardCodedDensity = 1.1792946927;
+         AddSourceBC<CCVariable<double>,double >(variable, patch, face,
+                                hardCodedDensity, offset);  
+#endif 
+#if JET_BC
+//      //cout << " I'm in Temperature "<< face << endl;
+        double hardCodedTemperature = 1000;
+        AddSourceBC<CCVariable<double>, double >(variable, patch, face,
+                               hardCodedTemperature, offset);  
+#endif 
+==========TESTING==========`*/ 
+    } // end of loop over faces: 2
+  } //end of function setBCDensityLODI(): 1
+
+
+/* --------------------------------------------------------------------- 
+ Function~  setBCVelLODI--
+ Purpose~   Takes care of Symmetry BC, Dirichelet BC, Characteristic BC
+            for momentum equations
+ ---------------------------------------------------------------------  */
+void setBCVelLODI(CCVariable<Vector>& vel_CC,
+            const CCVariable<double>& d1_x, 
+            const CCVariable<double>& d3_x, 
+            const CCVariable<double>& d4_x, 
+            const CCVariable<double>& d1_y,  
+            const CCVariable<double>& d3_y, 
+            const CCVariable<double>& d4_y, 
+            const CCVariable<double>& d1_z,  
+            const CCVariable<double>& d3_z, 
+            const CCVariable<double>& d4_z, 
+            const CCVariable<double>& nux,
+            const CCVariable<double>& nuy,
+            const CCVariable<double>& nuz,
+            CCVariable<double>& rho_tmp,
+            const CCVariable<double>& p,
+            CCVariable<Vector>& vel,
+            constCCVariable<double>& c,
+            const double delT,
+            const double gamma,
+            const double R_gas,
+            const Patch* patch, 
+            const int mat_id)
+{ //function setBCVelLODI: 1
+  Vector dx = patch->dCell();
+  //Vector grav = sharedState->getGravity();
+  IntVector offset(0,0,0);
+
+  for(Patch::FaceType face = Patch::startFace;
+      face <= Patch::endFace; face=Patch::nextFace(face)){ //loop over faces for a given patch: 2
+
+    const BoundCondBase *vel_bcs, *sym_bcs;
+    const BoundCond<Vector> *vel_new_bcs;
+
+    std::string kind   = "Velocity";
+
+    if(patch->getBCType(face) == Patch::None) {
+      vel_bcs   = patch->getBCValues(mat_id, kind, face);
+      sym_bcs = patch->getBCValues(mat_id, "Symmetric", face);
+      vel_new_bcs   = dynamic_cast<const BoundCond<Vector> *>(vel_bcs);
+    } else {
+      continue;
+    }
+
+    if (sym_bcs != 0 && (kind == "Velocity" || kind =="set_if_sym_BC") ) {
+      fillFaceFlux(vel_CC,face,Vector(0.,0.,0.),dx, 1.0, offset);
+      fillFaceNormal(vel_CC,patch,face,offset);
+    }
+    
+    if (vel_new_bcs != 0 && kind == "Neumann" ) {
+      fillFaceFlux(vel_CC, face, Vector(0.,0.,0.), dx, 1.0, offset);
+    }
+      
+    if (vel_new_bcs != 0 && kind == "Velocity") {
+      if (vel_new_bcs->getKind() == "Dirichlet"){ 
+       fillFace(vel_CC, face, vel_new_bcs->getValue(), offset);
+      }
+
+      if (vel_new_bcs->getKind() == "Neumann") {
+        fillFaceFlux(vel_CC, face, vel_new_bcs->getValue(), dx, 1.0, offset);
+      }
+      
+      if(vel_new_bcs->getKind() == "LODI") {
+       fillFaceVelLODI(vel_CC, d1_x, d3_x, d4_x, 
+                               d1_y, d3_y, d4_y,
+                               d1_z, d3_z, d4_z, 
+                     nux, nuy, nuz, rho_tmp, p, vel, c, 
+                     face, delT, gamma, R_gas, 
+                     mat_id, dx);
+      }
+     }
+      
+/*`==========TESTING==========
+#if JET_BC
+         //cout << " I'm in density "<< face << endl;
+//       double hardCodedDensity = 1.1792946927* (300.0/1000.0);
+         double hardCodedDensity = 1.1792946927;
+         AddSourceBC<CCVariable<double>,double >(variable, patch, face,
+                                hardCodedDensity, offset);  
+#endif 
+#if JET_BC
+//      //cout << " I'm in Temperature "<< face << endl;
+        double hardCodedTemperature = 1000;
+        AddSourceBC<CCVariable<double>, double >(variable, patch, face,
+                               hardCodedTemperature, offset);  
+#endif 
+==========TESTING==========`*/ 
+    } 
+  } 
+/* --------------------------------------------------------------------- 
+ Function~  setBCTempLODI--
+ Purpose~   Takes care of Symmetry BC, Dirichelet BC, Characteristic BC 
+            for temperature
+ ---------------------------------------------------------------------  */
+ void setBCTempLODI(CCVariable<double>& temp_CC,
+              const CCVariable<double>& d1_x, 
+              const CCVariable<double>& d2_x, 
+              const CCVariable<double>& d3_x, 
+              const CCVariable<double>& d4_x, 
+              const CCVariable<double>& d5_x,
+              const CCVariable<double>& d1_y, 
+              const CCVariable<double>& d2_y, 
+              const CCVariable<double>& d3_y, 
+              const CCVariable<double>& d4_y, 
+              const CCVariable<double>& d5_y,
+              const CCVariable<double>& d1_z, 
+              const CCVariable<double>& d2_z, 
+              const CCVariable<double>& d3_z, 
+              const CCVariable<double>& d4_z, 
+              const CCVariable<double>& d5_z,
+              const CCVariable<double>& e,
+              const CCVariable<double>& rho_CC,
+              const CCVariable<double>& nux,
+              const CCVariable<double>& nuy,
+              const CCVariable<double>& nuz,
+              CCVariable<double>& rho_tmp,
+              CCVariable<double>& p,
+              CCVariable<Vector>& vel,
+              constCCVariable<double>& c,
+              const double delT,
+              const double cv,
+              const double gamma,
+              const Patch* patch, 
+              const int mat_id)
+{ //function setBCTempLODI: 1
+  Vector dx = patch->dCell();
+  //Vector grav = sharedState->getGravity();
+  IntVector offset(0,0,0);
+
+  for(Patch::FaceType face = Patch::startFace;
+      face <= Patch::endFace; face=Patch::nextFace(face)){ //loop over faces for a given patch: 2
+
+    const BoundCondBase *temp_bcs, *sym_bcs;
+    const BoundCond<double> *temp_new_bcs;
+
+    std::string temp_kind  = "Temperature";
+    if(patch->getBCType(face) == Patch::None) {
+      temp_bcs  = patch->getBCValues(mat_id, temp_kind,  face);
+      sym_bcs = patch->getBCValues(mat_id,"Symmetric",face);
+      temp_new_bcs  = dynamic_cast<const BoundCond<double> *>(temp_bcs);
+    } else {
+      continue;
+    }
+
+    if(sym_bcs != 0) {
+      fillFaceFlux(temp_CC , face, 0.0, dx, 1.0, offset);
+    }
+
+    if(temp_new_bcs != 0 && temp_new_bcs->getKind() == "Dirichlet") {
+      fillFace(temp_CC, face, temp_new_bcs->getValue(), offset);
+    }
+
+    if (temp_new_bcs != 0 && temp_new_bcs->getKind() == "Neumann") {
+      fillFaceFlux(temp_CC, face, 
+                 temp_new_bcs->getValue(), dx, 1.0, offset);
+    }
+
+    if (temp_new_bcs != 0 && temp_new_bcs->getKind() == "LODI") {
+       fillFaceTempLODI(temp_CC, d1_x, d2_x, d3_x, d4_x, d5_x, 
+                                 d1_y, d2_y, d3_y, d4_y, d5_y,
+                                 d1_z, d2_z, d3_z, d4_z, d5_z, 
+                        e, rho_CC, nux, nuy, nuz, rho_tmp, 
+                        p, vel, c, face, delT, cv, gamma,
+                        mat_id, dx);
+       }
+/*`==========TESTING==========
+#if JET_BC
+         //cout << " I'm in density "<< face << endl;
+//       double hardCodedDensity = 1.1792946927* (300.0/1000.0);
+         double hardCodedDensity = 1.1792946927;
+         AddSourceBC<CCVariable<double>,double >(variable, patch, face,
+                                hardCodedDensity, offset);  
+#endif 
+#if JET_BC
+//      //cout << " I'm in Temperature "<< face << endl;
+        double hardCodedTemperature = 1000;
+        AddSourceBC<CCVariable<double>, double >(variable, patch, face,
+                               hardCodedTemperature, offset);  
+#endif 
+==========TESTING==========`*/ 
+    } 
+  } 
+/*________________________________________________________________
+ Function~ computeDiFirstOrder--
+ Purpose~  Compute amplitudes of characteristic waves using First-order 
+           upwind difference and the di's which are necessary to calculate 
+           convection terms at boundary cells in the dircetion 
+           across the boundary.  
+__________________________________________________________________*/
+void computeDiFirstOrder(const double& faceNormal, double& d1, double& d2,
+                        double& d3, double& d4, double& d5, const double& rho1,
+                         const double& rho2, const double& p1, const double& p2, 
+                         const double& c, const Vector& vel1, const Vector& vel2, 
+                         const double& vel_cross_bound, const double& dx) 
+{       
+        double d_SMALL_NUM = 1.0e-100;
+        //________________________________________________________
+        double drho_dx,dp_dx,du_dx,dv_dx,dw_dx,L1,L2,L3,L4,L5;
+        drho_dx = (rho1 - rho2)/dx;
+        dp_dx   = (  p1 - p2  )/dx;
+        du_dx   = (vel1.x() - vel2.x())/dx;
+        dv_dx   = (vel1.y() - vel2.y())/dx;
+        dw_dx   = (vel1.z() - vel2.z())/dx;
+        
+        //__________________________________
+        // L1 Wave Amplitude
+        double L1_sign;
+        L1_sign = faceNormal * (vel_cross_bound - c)/
+                          (fabs(vel_cross_bound - c) + d_SMALL_NUM);
+          if(L1_sign > 0) {      // outgoing waves
+            L1 = (vel_cross_bound - c) * 
+                 (dp_dx - rho1 * c * du_dx);
+          } else {               // incomming waves
+            L1 = 0.0;
+          }
+        //__________________________________
+        // L2, 3, 4 Wave Amplitude
+        double L234_sign;
+        L234_sign = faceNormal * vel_cross_bound
+                / (fabs(vel_cross_bound) + d_SMALL_NUM);
+          if(L234_sign > 0) {     // outgoing waves
+            L2 = vel_cross_bound * (c * c * drho_dx - dp_dx);
+            L3 = vel_cross_bound * dv_dx;
+            L4 = vel_cross_bound * dw_dx;
+           } else {               // incomming waves
+            L2 = 0.0;
+            L3 = 0.0;
+            L4 = 0.0;
+          }
+
+        //__________________________________
+        // L5 Wave Amplitude
+        double L5_sign;
+        L5_sign = faceNormal * (vel_cross_bound + c)/
+                          (fabs(vel_cross_bound + c) + d_SMALL_NUM);
+          if(L5_sign > 0) {      // outgoing wave
+            L5 = (vel_cross_bound + c) * 
+                 (dp_dx + rho1 * c * du_dx);
+          } else {               // incomming waves
+            L5 = 0.0;
+          }
+
+        //__________________________________
+        // Compute d1-5
+        d1 = (L2 + 0.5 * (L1 + L5))/c/c;
+        d2 = 0.5 * (L5 + L1);
+        d3 = 0.5 * (L5 - L1)/rho1/c;
+        d4 = L3;
+        d5 = L4;
+}
+
+/*________________________________________________________________
+ Function~ computeDiSecondOrder--
+ Purpose~  Compute amplitudes of characteristic waves using second-order 
+           upwind difference and the di's which are necessary to calculate 
+           convection terms at boundary cells in the dircetion 
+           across the boundary.  
+__________________________________________________________________*/
+
+void computeDiSecondOrder(const double& faceNormal, double& d1, double& d2, double& d3, double& d4, 
+                          double& d5, const double& rho1, const double& rho2, const double& rho3, 
+                         const double& p1, const double& p2, const double& p3, const double& c, 
+                          const Vector& vel1, const Vector& vel2, const Vector& vel3, 
+                          const double& vel_cross_bound, const double& dx) 
+
+{       
+        double d_SMALL_NUM = 1.0e-100;
+        //________________________________________________________
+        double drho_dx,dp_dx,du_dx,dv_dx,dw_dx,L1,L2,L3,L4,L5;
+        drho_dx = faceNormal * (3.0 * rho1 - 4.0 * rho2 + rho3)/dx;
+        dp_dx   = faceNormal * (3.0 *   p1 - 4.0 *   p2 + p3)/dx;
+        du_dx   = faceNormal * (3.0 * vel1.x() - 4.0 * vel2.x() + vel3.x())/dx;
+        dv_dx   = faceNormal * (3.0 * vel1.y() - 4.0 * vel2.y() + vel3.y())/dx;
+        dw_dx   = faceNormal * (3.0 * vel1.z() - 4.0 * vel2.z() + vel3.z())/dx;
+        
+        //__________________________________
+        // L1 Wave Amplitude
+        double L1_sign;
+        L1_sign = faceNormal * (vel_cross_bound - c)/
+                          (fabs(vel_cross_bound - c) + d_SMALL_NUM);
+          if(L1_sign > 0) {      // outgoing waves
+            L1 = (vel_cross_bound - c) * 
+                 (dp_dx - rho1 * c * du_dx);
+          } else {               // incomming waves
+            L1 = 0.0;
+          }
+        //__________________________________
+        // L2, 3, 4 Wave Amplitude
+        double L234_sign;
+        L234_sign = faceNormal * vel_cross_bound
+                 / (fabs(vel_cross_bound) + d_SMALL_NUM);
+          if(L234_sign > 0) {     // outgoing waves
+            L2 = vel_cross_bound * (c * c * drho_dx - dp_dx);
+            L3 = vel_cross_bound * dv_dx;
+            L4 = vel_cross_bound * dw_dx;
+           } else {               // incomming waves
+            L2 = 0.0;
+            L3 = 0.0;
+            L4 = 0.0;
+          }
+
+        //__________________________________
+        // L5 Wave Amplitude
+        double L5_sign;
+        L5_sign = faceNormal * (vel_cross_bound + c)/
+                          (fabs(vel_cross_bound + c) + d_SMALL_NUM);
+          if(L5_sign > 0) {      // outgoing wave
+            L5 = (vel_cross_bound + c) * 
+                 (dp_dx + rho1 * c * du_dx);
+          } else {               // incomming waves
+            L5 = 0.0;
+          }
+
+        //__________________________________
+        // Compute d1-5
+        d1 = (L2 + 0.5 * (L1 + L5))/c/c;
+        d2 = 0.5 * (L5 + L1);
+        d3 = 0.5 * (L5 - L1)/rho1/c;
+        d4 = L3;
+        d5 = L4;
+}
+
+
+/*___________________________________________
+ Function~ computeEnergy--
+ Purpose~  compute the total energy at the boundary face
+____________________________________________________________________*/
+void computeEnergy(CCVariable<double>& e,
+                   CCVariable<Vector>& vel,
+                   CCVariable<double>& rho,
+                   const Patch* patch)
+{
+    IntVector low = e.getLowIndex();
+    IntVector hi  = e.getHighIndex();
+    int hi_x = hi.x() - 1;
+    int hi_y = hi.y() - 1;
+    int hi_z = hi.z() - 1;
+    
+    for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
+        face=Patch::nextFace(face)){
+    switch (face) { // switch:1
+      case Patch::xplus:
+        { //case: 2
+          //_____________________________________
+          //Compute total energy on xplus plane
+           //cout << "energy 1111" << endl;
+          for(int j = low.y(); j <= hi_y; j++) {
+            for (int k = low.z(); k <= hi_z; k++) {
+              IntVector r  =  IntVector(hi_x,j,k);
+              double vel_sqr = (vel[r].x() * vel[r].x()
+                             +  vel[r].y() * vel[r].y()
+                             +  vel[r].z() * vel[r].z());
+              double   KE = 0.5 * rho[r] * vel_sqr;
+                     e[r] = e[r] + KE;
+          
+          }//end of k loop
+         }//end of j loop
+        }//end of case Patch::xplus:
+      break;
+      //Insert other faces here
+      default:
+      break;
+    }//end of switch
+  } //end of for loop over faces
+}//end of function
+
+
+/*__________________________________________________________________
+ Function~ computeLODIFirstOrder--
+ Purpose~  compute Di's at the boundary cells using upwind first-order 
+           differenceing scheme
+____________________________________________________________________*/
+
+void computeLODIFirstOrder(CCVariable<double>& d1_x, 
+                           CCVariable<double>& d2_x, 
+                           CCVariable<double>& d3_x, 
+                           CCVariable<double>& d4_x, 
+                           CCVariable<double>& d5_x,
+                           CCVariable<double>& d1_y, 
+                           CCVariable<double>& d2_y, 
+                           CCVariable<double>& d3_y, 
+                           CCVariable<double>& d4_y, 
+                           CCVariable<double>& d5_y,
+                           CCVariable<double>& d1_z, 
+                           CCVariable<double>& d2_z, 
+                           CCVariable<double>& d3_z, 
+                           CCVariable<double>& d4_z, 
+                           CCVariable<double>& d5_z,
+                      CCVariable<double>& rho_tmp,  
+                      CCVariable<double>& p, 
+                      CCVariable<Vector>& vel, 
+                      constCCVariable<double>& c, 
+                      const Patch* patch,
+                      const int mat_id)
+
+{
+    IntVector low = p.getLowIndex();
+    IntVector hi  = p.getHighIndex();
+    Vector dx = patch->dCell();
+    int hi_x = hi.x() - 1;
+    int hi_y = hi.y() - 1;
+    int hi_z = hi.z() - 1;
+    double d1, d2, d3, d4, d5, vel_cross_bound, delta;
+    double faceNormal, rhoR, rhoL, pR, pL, cSpeed;
+    Vector velR, velL;
+    for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
+        face=Patch::nextFace(face)){
+    switch (face) { // switch:1
+      case Patch::xplus:
+        { //case: 2
+          //_____________________________________
+          //Compute Di at xplus plane
+          for(int j = low.y(); j <= hi_y; j++) {
+            for (int k = low.z(); k <= hi_z; k++) {
+              IntVector r  =  IntVector(hi_x,  j, k);
+              IntVector l  =  IntVector(hi_x-1,j, k);
+              faceNormal = 1.0;
+              rhoR = rho_tmp[r];
+              rhoL = rho_tmp[l];
+              pR   = p[r];
+              pL   = p[l];
+              cSpeed = c[r];
+              velR = vel[r];
+              velL = vel[l];
+              vel_cross_bound = velR.x();
+              delta = dx.x();
+              computeDiFirstOrder(faceNormal, d1, d2, d3, d4, d5, rhoR, rhoL, 
+                                  pR, pL, cSpeed, velR, velL, vel_cross_bound, delta);
+               d1_x[r] = d1;
+              d2_x[r] = d2;
+              d3_x[r] = d3;
+              d4_x[r] = d4;
+              d5_x[r] = d5;
+          }//end of k loop
+         }//end of j loop
+        }//end of case Patch::xplus:
+      break;
+      /*
+      case Patch::xminus:
+        { //case: 2
+          //_____________________________________
+          //Compute Di at xminus plane
+           for(int j = low.y(); j <= hi_y; j++) {
+            for (int k = low.z(); k <= hi_z; k++) {
+              IntVector r     =  IntVector(low.x()+1,  j, k);
+              IntVector l     =  IntVector(low.x(),j, k);
+              faceNormal      = -1.0;
+              rhoR            =  rho_tmp[r];
+              rhoL            =  rho_tmp[l];
+              pR              =  p[r];
+              pL              =  p[l];
+              cSpeed          =  c[l];
+              velR            =  vel[r];
+              velL            =  vel[l];
+              vel_cross_bound =  velL.x();
+              delta           =  dx.x();
+              computeDiFirstOrder(faceNormal, d1, d2, d3, d4, d5, rhoR, rhoL, 
+                                  pR, pL, cSpeed, velR, velL, vel_cross_bound, delta);
+              //cout << "d1_5, pR, pL" << l << "= " << d1 << "," << d2 << ",";
+              //cout << d3 << "," << d4 << "," << d5 << "," << pR << "," << pL << endl;
+              d1_x[l] = d1;
+              d2_x[l] = d2;
+              d3_x[l] = d3;
+              d4_x[l] = d4;
+              d5_x[l] = d5;
+          }//end of k loop
+         }//end of j loop
+        }//end of case Patch::xplus:
+      break;
+      case Patch::yplus:
+        { //case: 2
+          //_____________________________________
+          //Compute Di at yplus plane
+           for(int i = low.x(); i<= hi_x; i++) {
+            for (int k = low.z(); k <= hi_z; k++) {
+              IntVector t     = IntVector(i, hi_y,   k);
+              IntVector b     = IntVector(i, hi_y-1, k);
+              faceNormal      = 1.0;
+              rhoT            = rho_tmp[t];
+              rhoB            = rho_tmp[b];
+              pT              = p[t];
+              pB              = p[b];
+              cSpeed          = c[t];
+              velT            = vel[t];
+              velB            = vel[b];
+              vel_cross_bound = velT.y();
+              delta           = dx.y();
+              computeDiFirstOrder(faceNormal, d1, d2, d3, d4, d5, rhoT, rhoB, 
+                                  pT, pB, cSpeed, velT, velB, vel_cross_bound, delta);
+              //cout << "d1_5,pT, pB" << t << "= " << d1 << "," << d2 << ",";
+              //cout << d3 << "," << d4 << "," << d5 << "," << pT << "," << pB << endl;
+              d1_y[t] = d1;
+              d2_y[t] = d2;
+              d3_y[t] = d3;
+              d4_y[t] = d4;
+              d5_y[t] = d5;
+          }//end of k loop
+         }//end of j loop
+        }//end of case Patch::yplus:
+      break;
+      case Patch::yminus:
+        { //case: 2
+          //_____________________________________
+          //Compute Di at yminus plane
+           for(int i = low.x(); i<= hi_x; i++) {
+            for (int k = low.z(); k <= hi_z; k++) {
+              IntVector t = IntVector(i, low.y()+1, k);
+              IntVector b = IntVector(i, low.y(), k);
+              faceNormal = -1.0;
+                    rhoT = rho_tmp[t];
+                    rhoB = rho_tmp[b];
+                      pT = p[t];
+                      pB = p[b];
+                  cSpeed = c[b];
+                    velT = vel[t];
+                    velB = vel[b];
+                  vel_cross_bound = velB.y();
+                  delta = dx.y();
+              computeDiFirstOrder(faceNormal, d1, d2, d3, d4, d5, rhoT, rhoB, 
+                                  pT, pB, cSpeed, velT, velB, vel_cross_bound, delta);
+                //cout << "d1_5, pT, pB" << b << "= " << d1 << "," << d2 << ",";
+                //cout << d3 << "," << d4 << "," << d5 << "," << pT << "," << pB << endl;
+              d1_y[b] = d1;
+              d2_y[b] = d2;
+              d3_y[b] = d3;
+              d4_y[b] = d4;
+              d5_y[b] = d5;
+          }//end of k loop
+         }//end of j loop
+        }//end of case Patch::yminus:
+        break;
+      case Patch::zplus:
+        { //case: 2
+          //_____________________________________
+          //Compute Di at zplus plane
+           for(int i = low.x(); i <= hi_x; i++) {
+            for (int j = low.y(); j <= hi_y; j++) {
+              IntVector f  = IntVector(i, j, hi_z);
+              IntVector bk = IntVector(i, j, hi_z-1);
+              faceNormal = 1.0;
+                    rhoF = rho_tmp[f];
+                   rhoBK = rho_tmp[bk];
+                      pF = p[f];
+                     pBK = p[bk];
+                  cSpeed = c[f];
+                    velF = vel[f];
+                   velBK = vel[bk];
+                 vel_cross_bound = velF.z();
+                 delta = dx.z();
+              computeDiFirstOrder(faceNormal, d1, d2, d3, d4, d5, rhoF, rhoBK, 
+                                  pF, pBK, cSpeed, velF, velBK, vel_cross_bound, delta);
+             //cout << "d1_5, pF, pBK" << f << "= " << d1 << "," << d2 << ",";
+             //cout << d3 << "," << d4 << "," << d5 << "," << pF << "," << pBK << endl;
+              d1_z[f] = d1;
+              d2_z[f] = d2;
+              d3_z[f] = d3;
+              d4_z[f] = d4;
+              d5_z[f] = d5;
+          }//end of k loop
+         }//end of j loop
+        }//end of case Patch::zplus:
+      break;
+      case Patch::zminus:
+        { //case: 2
+          //_____________________________________
+          //Compute Di at zminus plane
+           for(int i = low.x(); i <= hi_x; i++) {
+            for (int j = low.y(); j <= hi_y; j++) {
+              IntVector f  = IntVector(i, j, low.z()+1);
+              IntVector bk = IntVector(i, j, low.z());
+              faceNormal = -1.0;
+                    rhoF = rho_tmp[f];
+                   rhoBK = rho_tmp[bk];
+                      pF = p[f];
+                     pBK = p[bk];
+                  cSpeed = c[bk];
+                    velF = vel[f];
+                   velBK = vel[bk];
+                 vel_cross_bound = velBK.z();
+                 delta = dx.z();
+              computeDiFirstOrder(faceNormal, d1, d2, d3, d4, d5, rhoF, rhoBK, 
+                                  pF, pBK, cSpeed, velF, velBK, vel_cross_bound, delta);
+             //cout << "d1_5, pF, pBK" << bk << "= " << d1 << "," << d2 << ",";
+             //cout << d3 << "," << d4 << "," << d5 << "," << pF << "," << pBK << endl;
+              d1_z[bk] = d1;
+              d2_z[bk] = d2;
+              d3_z[bk] = d3;
+              d4_z[bk] = d4;
+              d5_z[bk] = d5;
+          }//end of k loop
+         }//end of j loop
+        }//end of case Patch::zminus:
+      break;
+      */
+      default:
+      break;
+    }//end of switch
+  } //end of for loop over faces
+}//end of function
+
+
+/*__________________________________________________________________
+ Function~ computeLODISecondOrder--
+ Purpose~  compute Di's at the boundary cells using upwind second-order 
+           differenceing scheme
+____________________________________________________________________*/
+void computeLODISecondOrder(CCVariable<double>& d1_x, 
+                            CCVariable<double>& d2_x, 
+                            CCVariable<double>& d3_x, 
+                            CCVariable<double>& d4_x, 
+                            CCVariable<double>& d5_x,
+                            CCVariable<double>& d1_y, 
+                            CCVariable<double>& d2_y, 
+                            CCVariable<double>& d3_y, 
+                            CCVariable<double>& d4_y, 
+                            CCVariable<double>& d5_y,
+                            CCVariable<double>& d1_z, 
+                            CCVariable<double>& d2_z, 
+                            CCVariable<double>& d3_z, 
+                            CCVariable<double>& d4_z, 
+                            CCVariable<double>& d5_z,
+                       constCCVariable<double>& rho_tmp,  
+                       const CCVariable<double>& p, 
+                       constCCVariable<Vector>& vel, 
+                       constCCVariable<double>& c, 
+                       const Patch* patch,
+                       const int mat_id)
+
+{
+    IntVector low = p.getLowIndex();
+    IntVector hi  = p.getHighIndex();
+    Vector dx = patch->dCell();
+    int hi_x = hi.x() - 1;
+    int hi_y = hi.y() - 1;
+    int hi_z = hi.z() - 1;
+    double d1, d2, d3, d4, d5, vel_cross_bound, delta;
+    double faceNormal, rhoR, rhoM, rhoL, pR, pM, pL, cSpeed;
+    Vector velR, velM, velL;
+    for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
+        face=Patch::nextFace(face)){
+    switch (face) { // switch:1
+      case Patch::xplus:
+        { //case: 2
+          //_____________________________________
+          //Compute Di at xplus plane
+          for(int j = low.y(); j <= hi_y; j++) {
+            for (int k = low.z(); k <= hi_z; k++) {
+              IntVector r  =  IntVector(hi_x,  j, k);
+              IntVector m  =  IntVector(hi_x-1,j, k);
+              IntVector l  =  IntVector(hi_x-2,j, k);
+              faceNormal = 1.0;
+              rhoR = rho_tmp[r];
+              rhoM = rho_tmp[m];
+              rhoL = rho_tmp[l];
+              pR   = p[r];
+              pM   = p[m];
+              pL   = p[l];
+              cSpeed = c[r];
+              velR = vel[r];
+              velM = vel[m];
+              velL = vel[l];
+              vel_cross_bound = velR.x();
+              delta = dx.x();
+              computeDiSecondOrder(faceNormal, d1, d2, d3, d4, d5, rhoR, rhoM, rhoL, 
+                                   pR, pM, pL, cSpeed, velR, velM, velL, vel_cross_bound, delta);
+              d1_x[r] = d1;
+              d2_x[r] = d2;
+              d3_x[r] = d3;
+              d4_x[r] = d4;
+              d5_x[r] = d5;
+          }//end of k loop
+         }//end of j loop
+        }//end of case Patch::xplus:
+      break;
+      /*
+      case Patch::xminus:
+        { //case: 2
+          //_____________________________________
+          //Compute Di at xminus plane
+           for(int j = low.y(); j <= hi_y; j++) {
+            for (int k = low.z(); k <= hi_z; k++) {
+              IntVector r     =  IntVector(low.x()+2,  j, k);
+              IntVector m     =  IntVector(low.x()+1,  j, k);
+              IntVector l     =  IntVector(low.x(),j, k);
+              faceNormal      = -1.0;
+              rhoR            =  rho_tmp[r];
+              rhoM            =  rho_tmp[m];
+              rhoL            =  rho_tmp[l];
+              pR              =  p[r];
+              pM              =  p[m];
+              pL              =  p[l];
+              cSpeed          =  c[l];
+              velR            =  vel[r];
+              velM            =  vel[m];
+              velL            =  vel[l];
+              vel_cross_bound =  velL.x();
+              delta           =  dx.x();
+              computeDiSecondOrder(faceNormal, d1, d2, d3, d4, d5, rhoL, rhoM, rhoR, 
+                                   pL, pM, pR, cSpeed, velL, velM, velR, vel_cross_bound, delta);
+              //cout << "d1_5, pR, pL" << l << "= " << d1 << "," << d2 << ",";
+              //cout << d3 << "," << d4 << "," << d5 << "," << pR << "," << pL << endl;
+              d1_x[l] = d1;
+              d2_x[l] = d2;
+              d3_x[l] = d3;
+              d4_x[l] = d4;
+              d5_x[l] = d5;
+          }//end of k loop
+         }//end of j loop
+        }//end of case Patch::xplus:
+      break;
+      case Patch::yplus:
+        { //case: 2
+          //_____________________________________
+          //Compute Di at yplus plane
+           for(int i = low.x(); i<= hi_x; i++) {
+            for (int k = low.z(); k <= hi_z; k++) {
+              IntVector t     = IntVector(i, hi_y,   k);
+              IntVector m     = IntVector(i, hi_y-1,   k);
+              IntVector b     = IntVector(i, hi_y-2, k);
+              faceNormal      = 1.0;
+              rhoT            = rho_tmp[t];
+              rhoM            = rho_tmp[m];
+              rhoB            = rho_tmp[b];
+              pT              = p[t];
+              pM              = p[m];
+              pB              = p[b];
+              cSpeed          = c[t];
+              velT            = vel[t];
+              velM            = vel[m];
+              velB            = vel[b];
+              vel_cross_bound = velT.y();
+              delta           = dx.y();
+              computeDiSecondOrder(faceNormal, d1, d2, d3, d4, d5, rhoT, rhoM, rhoB, 
+                                   pT, pM, pB, cSpeed, velT, velM, velB, vel_cross_bound, delta);
+              //cout << "d1_5,pT, pB" << t << "= " << d1 << "," << d2 << ",";
+              //cout << d3 << "," << d4 << "," << d5 << "," << pT << "," << pB << endl;
+              d1_y[t] = d1;
+              d2_y[t] = d2;
+              d3_y[t] = d3;
+              d4_y[t] = d4;
+              d5_y[t] = d5;
+          }//end of k loop
+         }//end of j loop
+        }//end of case Patch::yplus:
+      break;
+      case Patch::yminus:
+        { //case: 2
+          //_____________________________________
+          //Compute Di at yminus plane
+           for(int i = low.x(); i<= hi_x; i++) {
+            for (int k = low.z(); k <= hi_z; k++) {
+              IntVector t = IntVector(i, low.y()+2, k);
+              IntVector m = IntVector(i, low.y()+1, k);
+              IntVector b = IntVector(i, low.y(), k);
+              faceNormal = -1.0;
+                    rhoT = rho_tmp[t];
+                    rhoM = rho_tmp[m];
+                    rhoB = rho_tmp[b];
+                      pT = p[t];
+                      pM = p[m];
+                      pB = p[b];
+                  cSpeed = c[b];
+                    velT = vel[t];
+                    velM = vel[m];
+                    velB = vel[b];
+                  vel_cross_bound = velB.y();
+                  delta = dx.y();
+              computeDiSecondOrder(faceNormal, d1, d2, d3, d4, d5, rhoB, rhoM, rhoT, 
+                                   pB, rhoM, pT, cSpeed, velB, velM, velT, vel_cross_bound, delta);
+                //cout << "d1_5, pT, pB" << b << "= " << d1 << "," << d2 << ",";
+                //cout << d3 << "," << d4 << "," << d5 << "," << pT << "," << pB << endl;
+              d1_y[b] = d1;
+              d2_y[b] = d2;
+              d3_y[b] = d3;
+              d4_y[b] = d4;
+              d5_y[b] = d5;
+          }//end of k loop
+         }//end of j loop
+        }//end of case Patch::yminus:
+        break;
+      case Patch::zplus:
+        { //case: 2
+          //_____________________________________
+          //Compute Di at zplus plane
+           for(int i = low.x(); i <= hi_x; i++) {
+            for (int j = low.y(); j <= hi_y; j++) {
+              IntVector f  = IntVector(i, j, hi_z);
+              IntVector m  = IntVector(i, j, hi_z-1);
+              IntVector bk = IntVector(i, j, hi_z-2);
+              faceNormal = 1.0;
+                    rhoF = rho_tmp[f];
+                    rhoM = rho_tmp[m];
+                   rhoBK = rho_tmp[bk];
+                      pF = p[f];
+                      pM = p[m];
+                     pBK = p[bk];
+                  cSpeed = c[f];
+                    velF = vel[f];
+                    velM = vel[m];
+                   velBK = vel[bk];
+                 vel_cross_bound = velF.z();
+                 delta = dx.z();
+              computeDiSecondOrder(faceNormal, d1, d2, d3, d4, d5, rhoF, rhoM, rhoBK, 
+                                   pF, pM, pBK, cSpeed, velF, velM, velBK, vel_cross_bound, delta);
+             //cout << "d1_5, pF, pBK" << f << "= " << d1 << "," << d2 << ",";
+             //cout << d3 << "," << d4 << "," << d5 << "," << pF << "," << pBK << endl;
+              d1_z[f] = d1;
+              d2_z[f] = d2;
+              d3_z[f] = d3;
+              d4_z[f] = d4;
+              d5_z[f] = d5;
+          }//end of k loop
+         }//end of j loop
+        }//end of case Patch::zplus:
+      break;
+      case Patch::zminus:
+        { //case: 2
+          //_____________________________________
+          //Compute Di at zminus plane
+           for(int i = low.x(); i <= hi_x; i++) {
+            for (int j = low.y(); j <= hi_y; j++) {
+              IntVector f  = IntVector(i, j, low.z()+2);
+              IntVector m  = IntVector(i, j, low.z()+1);
+              IntVector bk = IntVector(i, j, low.z());
+              faceNormal = -1.0;
+                    rhoF = rho_tmp[f];
+                    rhoM = rho_tmp[m];
+                   rhoBK = rho_tmp[bk];
+                      pF = p[f];
+                      pM = p[m];
+                     pBK = p[bk];
+                  cSpeed = c[bk];
+                    velF = vel[f];
+                    velM = vel[m];
+                   velBK = vel[bk];
+                 vel_cross_bound = velBK.z();
+                 delta = dx.z();
+              computeDiSecondOrder(faceNormal, d1, d2, d3, d4, d5, rhoBK, rhoM, rhoF, 
+                                   pBK, pM, pF, cSpeed, velBK, velM, velF, vel_cross_bound, delta);
+             //cout << "d1_5, pF, pBK" << bk << "= " << d1 << "," << d2 << ",";
+             //cout << d3 << "," << d4 << "," << d5 << "," << pF << "," << pBK << endl;
+              d1_z[bk] = d1;
+              d2_z[bk] = d2;
+              d3_z[bk] = d3;
+              d4_z[bk] = d4;
+              d5_z[bk] = d5;
+          }//end of k loop
+         }//end of j loop
+        }//end of case Patch::zminus:
+      break;
+      */
+      default:
+      break;
+    }//end of switch
+  } //end of for loop over faces
+}//end of function
+
+
+
+/*___________________________________________
+ Function~ computeNu--
+ Purpose~  compute dissipation coefficients 
+ __________________________________________*/ 
+
+void computeNu(CCVariable<double>& nux, CCVariable<double>& nuy, CCVariable<double>& nuz,
+               CCVariable<double>& p, const Patch* patch)
+{
+    IntVector low = patch->getLowIndex();
+    IntVector hi  = patch->getHighIndex();
+    double d_SMALL_NUM = 1.0e-100;
+    //cout << "beging the computeNU" << endl;
+    for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace; 
+                     face = Patch::nextFace(face))
+    { //loop over faces for a given patch: 1
+
+     switch (face) {// switch:2
+       case Patch::xplus:
+         {//case: 3
+          //---------------------------------
+          //Coefficients for artifical dissipation term
+          //cout << "I am in the switch, case" << endl;
+         
+        int hi_x = hi.x() - 1;
+        int hi_y = hi.y() - 1;
+        int hi_z = hi.z() - 1;
+        
+          for(int j = low.y()+1; j < hi_y; j++) {
+           for (int k = low.z()+1; k < hi_z; k++) {
+             IntVector r  =  IntVector(hi_x,  j,   k);
+             IntVector l  =  IntVector(hi_x-1,j,   k);
+             IntVector t  =  IntVector(hi_x,  j+1, k);
+             IntVector b  =  IntVector(hi_x,  j-1, k);
+             IntVector f  =  IntVector(hi_x,  j,   k+1);
+             IntVector bk =  IntVector(hi_x,  j,   k-1);
+             nuy[r] = fabs(p[t] - 2.0 * p[r] + p[b])/
+                     (fabs(p[t] - p[r]) + fabs(p[r] - p[b])  + d_SMALL_NUM);
+             nuz[r] = fabs(p[f] - 2.0 * p[r] + p[bk])/
+                     (fabs(p[f] - p[r]) + fabs(p[r] - p[bk]) + d_SMALL_NUM);
+           }
+         }
+         
+        //_____________________________________________________________________
+        //Compute the dissipation coefficients on the edge and corner of xplus
+        for (int k = low.z()+1; k < hi_z; k++) {
+          nuy[IntVector(hi_x,hi_y,k)] = nuy[IntVector(hi_x,hi_y-1,k)];
+        }
+        for (int k = low.z()+1; k < hi_z; k++) {
+          nuy[IntVector(hi_x,low.y(),k)] = nuy[IntVector(hi_x,low.y()+1,k)];
+        }
+        
+        for(int j = low.y(); j <= hi_y; j++) {
+          nuz[IntVector(hi_x,j,low.z())] = nuz[IntVector(hi_x,j,low.z()+1)];
+        }
+        for(int j = low.y(); j <= hi_y; j++) {
+          nuz[IntVector(hi_x,j,hi_z)] = nuz[IntVector(hi_x,j,hi_z-1)];
+        }
+      }// end of case Patch::xplus: 3
+      break;
+      //Insert other faces here
+      default:
+      break;
+    }//end of switch: 2
+  }//end of loop over faces
+}//end of function
+
+/* --------------------------------------------------------------------- 
+ Function~  setBCPress_LODI--
+ Purpose~   Takes care Pressure_CC
+ ---------------------------------------------------------------------  */
+void setBCPress_LODI(CCVariable<double>& press_CC,
+                     StaticArray<constCCVariable<double> >& sp_vol_CC,
+                     StaticArray<constCCVariable<double> >& Temp_CC,
+                     StaticArray<constCCVariable<double> >& f_theta,
+                     const string& kind, 
+                     const Patch* patch,
+                     SimulationStateP& sharedState, 
+                     const int mat_id,
+                     DataWarehouse* new_dw)
+{
+ 
+  Vector dx = patch->dCell();
+  Vector gravity = sharedState->getGravity();
+  IntVector offset(0,0,0);
+  int numALLMatls = sharedState->getNumMatls();  
+  StaticArray<CCVariable<double> > rho_micro(numALLMatls);
+  for (int m = 0; m < numALLMatls; m++) {
+    new_dw->allocateTemporary(rho_micro[m],  patch);
+    for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++) {
+      IntVector c = *iter;
+      rho_micro[m][c] = 1.0/sp_vol_CC[m][c];
+    }
+  }  
+  for(Patch::FaceType face = Patch::startFace;
+      face <= Patch::endFace; face=Patch::nextFace(face)){
+    const BoundCondBase *bcs, *sym_bcs;
+    const BoundCond<double> *new_bcs;
+    if (patch->getBCType(face) == Patch::None) {
+      bcs     = patch->getBCValues(mat_id,kind,face);
+      sym_bcs = patch->getBCValues(mat_id,"Symmetric",face);
+      new_bcs = dynamic_cast<const BoundCond<double> *>(bcs);
+    } else
+      continue;
+ 
+    if (sym_bcs != 0) { 
+      fillFaceFlux(press_CC,face,0.0,dx,1.0,offset);
+    }
+
+    if (new_bcs != 0) {
+      if (new_bcs->getKind() == "Dirichlet") {
+       fillFace(press_CC,face,new_bcs->getValue());
+      }
+
+      if (new_bcs->getKind() == "Neumann") { 
+        fillFaceFlux(press_CC,face,new_bcs->getValue(),dx, 1.0, offset);
+      }
+
+      if (new_bcs->getKind() == "LODI"){
+        fillFacePress_LODI(press_CC, rho_micro, Temp_CC, f_theta, numALLMatls,
+                           sharedState, face);
+      }
+               
+      //__________________________________
+      //  When gravity is on 
+      if ( fabs(gravity.x()) > 0.0  || 
+           fabs(gravity.y()) > 0.0  || 
+           fabs(gravity.z()) > 0.0) {
+       int SURROUND_MATL = 0;        // Mat index of surrounding matl.
+       setHydrostaticPressureBC(press_CC,face, gravity, 
+                                rho_micro[SURROUND_MATL], dx, offset);
+      }
+    }
+  }
+}
+#endif  // LODI_BCS
 
 }  // using namespace Uintah
