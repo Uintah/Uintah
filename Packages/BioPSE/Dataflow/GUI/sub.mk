@@ -26,8 +26,8 @@ SRCDIR := Packages/BioPSE/Dataflow/GUI
 ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 
 $(SRCDIR)/tclIndex: \
-	$(SRCDIR)/SetupFEMatrix.tcl
-	$(SRCDIR)/DipoleSearch.tcl\
+	$(SRCDIR)/SetupFEMatrix.tcl\
+	$(SRCDIR)/DipoleSearch.tcl
 #[INSERT NEW TCL FILE HERE]
 #	$(SRCDIR)/ApplyFEMCurrentSource.tcl\
 #	$(SRCDIR)/ShowDipoles.tcl\
