@@ -38,6 +38,7 @@ class GridSpheresDpy : public Runnable {
   float* new_color_end;
   int ndata;
   int colordata, newcolordata;
+  char* in_file;
   
   void compute_hist(GLuint fid);
   void draw_hist(GLuint fid, XFontStruct* font_struct, int& redraw_range);
@@ -52,8 +53,10 @@ class GridSpheresDpy : public Runnable {
   inline int bound(int val, int min, int max)
     { return (val>min?(val<max?val:max):min); }
 
+  void write_data_file(char *out_file);
+  
 public:
-  GridSpheresDpy(int colordata);
+  GridSpheresDpy(int colordata, char *in_file=0);
   //  GridSpheresDpy(GridSpheres* grid);
   virtual ~GridSpheresDpy();
   void attach(GridSpheres* g);

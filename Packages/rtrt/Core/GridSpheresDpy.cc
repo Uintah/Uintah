@@ -6,6 +6,8 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Time.h>
 #include <iostream>
+#include <fstream>
+#include <iomanip>
 #include <stdlib.h>
 #include <Packages/rtrt/visinfo/visinfo.h>
 #include <stdio.h>
@@ -22,9 +24,10 @@ namespace rtrt {
 } // end namespace rtrt
 
 
-GridSpheresDpy::GridSpheresDpy(int colordata)
+GridSpheresDpy::GridSpheresDpy(int colordata, char *in_file)
     : ndata(-1),hist(0),xres(500),yres(500),
-      colordata(colordata),newcolordata(colordata)
+      colordata(colordata),newcolordata(colordata),
+      in_file(in_file)
 {
 }
 
@@ -89,6 +92,42 @@ void GridSpheresDpy::setup_vars() {
 	new_color_begin[i]=min[i];
       original_max[i]=new_range_end[i]=range_end[i]=color_end[i]=
 	new_color_end[i]=max[i];
+    }
+
+    ////////////////////////////////////////////////////////////
+    // try to load in the data file
+
+    if (in_file != 0) {
+      // have a file name
+      ifstream in(in_file);
+      if(!in){
+	cerr << "GridSpheresDpy::setup_vars:Error opening file: " << in_file
+	     << ", using defaults.\n";
+	return;
+      }
+      int ndata_file;
+      in >> ndata_file;
+      in >> colordata;
+      newcolordata = colordata;
+      if (ndata_file != ndata)
+	return;
+      for(int i=0;i<ndata_file;i++){
+	in >> original_min[i] >> original_max[i];
+	in >> min[i] >> max[i];
+	scales[i]=1./(max[i]-min[i]);
+	in >> color_begin[i] >> color_end[i];
+	new_color_begin[i] = color_begin[i];
+	new_color_end[i] = color_end[i];
+	color_scales[i]=1./(color_end[i]-color_begin[i]);
+	in >> range_begin[i] >> range_end[i];
+	new_range_begin[i] = range_begin[i];
+	new_range_end[i] = range_end[i];
+      }
+      if(!in){
+	cerr << "GridSpheresDpy::setup_vars:Error reading file: " << in_file
+	     << "\n";
+	exit(1);
+      }
     }
   }
   cerr << "GridSpheresDpy:setup_vars:end\n";
@@ -220,6 +259,11 @@ void GridSpheresDpy::run()
       case XK_Shift_R:
 	//	cerr << "Pressed shift\n";
 	shift_pressed = true;
+	break;
+      case XK_w:
+      case XK_W:
+	write_data_file("gridspheredpy.cfg");
+	break;
       }
       break;
     case KeyRelease:
@@ -742,5 +786,22 @@ void GridSpheresDpy::changecolor(int y) {
   }
 }
 
+void GridSpheresDpy::write_data_file(char *out_file) {
+  ofstream out(out_file);
+  if (!out) {
+    cerr << "Error writing config file to " << out_file << endl;
+    return;
+  }
+  out << setprecision(17);
+  out << ndata << endl;
+  out << colordata << endl;
+  for(int i=0;i<ndata;i++){
+    out << original_min[i] << " " << original_max[i] << endl;
+    out << min[i] << " " << max[i] << endl;
+    out << color_begin[i] << " " << color_end[i] << endl;
+    out << range_begin[i] << " " << range_end[i] << endl;
+  }
+  cout << "Wrote config file to " << out_file << endl;
+}
 
 
