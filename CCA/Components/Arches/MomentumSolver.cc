@@ -225,17 +225,20 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patch
       // computes index components of velocity
       switch (index) {
       case Arches::XDIR:
-	tsk->computes(d_lab->d_uVelCoefMBLMLabel, d_lab->d_stencilMatl);
+	tsk->computes(d_lab->d_uVelCoefMBLMLabel,
+		      d_lab->d_stencilMatl, Task::OutOfDomain);
 	tsk->computes(d_lab->d_uVelLinSrcMBLMLabel);
 	tsk->computes(d_lab->d_uVelNonLinSrcMBLMLabel);
 	break;
       case Arches::YDIR:
-	tsk->computes(d_lab->d_vVelCoefMBLMLabel, d_lab->d_stencilMatl);
+	tsk->computes(d_lab->d_vVelCoefMBLMLabel,
+		      d_lab->d_stencilMatl, Task::OutOfDomain);
 	tsk->computes(d_lab->d_vVelLinSrcMBLMLabel);
 	tsk->computes(d_lab->d_vVelNonLinSrcMBLMLabel);
 	break;
       case Arches::ZDIR:
-	tsk->computes(d_lab->d_wVelCoefMBLMLabel, d_lab->d_stencilMatl);
+	tsk->computes(d_lab->d_wVelCoefMBLMLabel,
+		      d_lab->d_stencilMatl, Task::OutOfDomain);
 	tsk->computes(d_lab->d_wVelLinSrcMBLMLabel);
 	tsk->computes(d_lab->d_wVelNonLinSrcMBLMLabel);
 	break;
@@ -401,7 +404,8 @@ MomentumSolver::sched_velocityLinearSolve(SchedulerP& sched, const PatchSet* pat
 	// coefficient for the variable for which solve is invoked
     tsk->requires(Task::NewDW, d_lab->d_uVelocityCPBCLabel, 
 		  Ghost::AroundCells, numGhostCells);
-    tsk->requires(Task::NewDW, d_lab->d_uVelCoefMBLMLabel, d_lab->d_stencilMatl,
+    tsk->requires(Task::NewDW, d_lab->d_uVelCoefMBLMLabel,
+		  d_lab->d_stencilMatl, Task::OutOfDomain,
 		  Ghost::None, zeroGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_uVelNonLinSrcMBLMLabel, 
 		  Ghost::None, zeroGhostCells);
@@ -414,7 +418,8 @@ MomentumSolver::sched_velocityLinearSolve(SchedulerP& sched, const PatchSet* pat
     // coefficient for the variable for which solve is invoked
     tsk->requires(Task::NewDW, d_lab->d_vVelocityCPBCLabel,
 		  Ghost::AroundCells, numGhostCells);
-    tsk->requires(Task::NewDW, d_lab->d_vVelCoefMBLMLabel, d_lab->d_stencilMatl,
+    tsk->requires(Task::NewDW, d_lab->d_vVelCoefMBLMLabel,
+		  d_lab->d_stencilMatl, Task::OutOfDomain,
 		  Ghost::None, zeroGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_vVelNonLinSrcMBLMLabel, 
 		  Ghost::None, zeroGhostCells);
@@ -426,7 +431,8 @@ MomentumSolver::sched_velocityLinearSolve(SchedulerP& sched, const PatchSet* pat
     // coefficient for the variable for which solve is invoked
     tsk->requires(Task::NewDW, d_lab->d_wVelocityCPBCLabel,
 		  Ghost::AroundCells, numGhostCells);
-    tsk->requires(Task::NewDW, d_lab->d_wVelCoefMBLMLabel, d_lab->d_stencilMatl,
+    tsk->requires(Task::NewDW, d_lab->d_wVelCoefMBLMLabel,
+		  d_lab->d_stencilMatl, Task::OutOfDomain,
 		  Ghost::None, zeroGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_wVelNonLinSrcMBLMLabel, 
 		  Ghost::None, zeroGhostCells);
