@@ -323,18 +323,18 @@ void HypoElasticPlastic::allocateCMDataAddRequires(Task* task,
 						   MPMLabel* lb) const
 {
   //const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::OldDW,lb->pDeformationMeasureLabel, Ghost::None);
-  task->requires(Task::OldDW,lb->pStressLabel, Ghost::None);
+  task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc, Ghost::None);
+  task->requires(Task::NewDW,lb->pStressLabel_preReloc, Ghost::None);
 
-  task->requires(Task::OldDW,pLeftStretchLabel, Ghost::None);
-  task->requires(Task::OldDW,pRotationLabel, Ghost::None);
-  task->requires(Task::OldDW,pStrainRateLabel, Ghost::None);
-  task->requires(Task::OldDW,pPlasticStrainLabel, Ghost::None);
-  task->requires(Task::OldDW,pDamageLabel, Ghost::None);
-  task->requires(Task::OldDW,pLocalizedLabel, Ghost::None);
-  task->requires(Task::OldDW,pPorosityLabel, Ghost::None);
-  task->requires(Task::OldDW,pPlasticTempLabel, Ghost::None);
-  task->requires(Task::OldDW,pPlasticTempIncLabel, Ghost::None);
+  task->requires(Task::NewDW,pLeftStretchLabel_preReloc, Ghost::None);
+  task->requires(Task::NewDW,pRotationLabel_preReloc, Ghost::None);
+  task->requires(Task::NewDW,pStrainRateLabel_preReloc, Ghost::None);
+  task->requires(Task::NewDW,pPlasticStrainLabel_preReloc, Ghost::None);
+  task->requires(Task::NewDW,pDamageLabel_preReloc, Ghost::None);
+  task->requires(Task::NewDW,pLocalizedLabel_preReloc, Ghost::None);
+  task->requires(Task::NewDW,pPorosityLabel_preReloc, Ghost::None);
+  task->requires(Task::NewDW,pPlasticTempLabel_preReloc, Ghost::None);
+  task->requires(Task::NewDW,pPlasticTempIncLabel_preReloc, Ghost::None);
 
   d_plastic->allocateCMDataAddRequires(task,matl,patch,lb);
 }
@@ -377,18 +377,18 @@ void HypoElasticPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
   new_dw->allocateTemporary(pPlasticTemperature,addset);
   new_dw->allocateTemporary(pPlasticTempInc,addset);
 
-  old_dw->get(o_DeformGrad,lb->pDeformationMeasureLabel,delset);
-  old_dw->get(o_Stress,lb->pStressLabel,delset);
+  new_dw->get(o_DeformGrad,lb->pDeformationMeasureLabel_preReloc,delset);
+  new_dw->get(o_Stress,lb->pStressLabel_preReloc,delset);
 
-  old_dw->get(o_LeftStretch,pLeftStretchLabel,delset);
-  old_dw->get(o_Rotation,pRotationLabel,delset);
-  old_dw->get(o_StrainRate,pStrainRateLabel,delset);
-  old_dw->get(o_PlasticStrain,pPlasticStrainLabel,delset);
-  old_dw->get(o_Damage,pDamageLabel,delset);
-  old_dw->get(o_Localized,pLocalizedLabel,delset);
-  old_dw->get(o_Porosity,pPorosityLabel,delset);
-  old_dw->get(o_PlasticTemperature,pPlasticTempLabel,delset);
-  old_dw->get(o_PlasticTempInc,pPlasticTempIncLabel,delset);
+  new_dw->get(o_LeftStretch,pLeftStretchLabel_preReloc,delset);
+  new_dw->get(o_Rotation,pRotationLabel_preReloc,delset);
+  new_dw->get(o_StrainRate,pStrainRateLabel_preReloc,delset);
+  new_dw->get(o_PlasticStrain,pPlasticStrainLabel_preReloc,delset);
+  new_dw->get(o_Damage,pDamageLabel_preReloc,delset);
+  new_dw->get(o_Localized,pLocalizedLabel_preReloc,delset);
+  new_dw->get(o_Porosity,pPorosityLabel_preReloc,delset);
+  new_dw->get(o_PlasticTemperature,pPlasticTempLabel_preReloc,delset);
+  new_dw->get(o_PlasticTempInc,pPlasticTempIncLabel_preReloc,delset);
 
   n = addset->begin();
   for (o=delset->begin(); o != delset->end(); o++, n++) {
