@@ -12,14 +12,7 @@
  *
  *****************************************************************************/
 
-#include <Dataflow/Modules/Fields/Probe.h>
-#include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Dataflow/Widgets/PointWidget.h>
 #include <Core/Datatypes/FieldInterface.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/GuiVar.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomText.h>
 #include <Core/Geom/GeomLine.h>
@@ -27,6 +20,13 @@
 #include <Core/Geom/GeomTransform.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Geom/GeomSticky.h>
+#include <Core/GuiInterface/GuiVar.h>
+#include <Core/Malloc/Allocator.h>
+#include <Dataflow/Modules/Fields/Probe.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Ports/GeometryPort.h>
+#include <Dataflow/Widgets/PointWidget.h>
 #include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Dataflow/XMLUtil/StrX.h>
 
@@ -112,6 +112,7 @@ private:
   GuiString adjacencydatasource_;
   GuiString boundingboxdatasource_;
   GuiString injurylistdatasource_;
+  GuiString geometrypath_;
   GuiString currentselection_;
 
   // fixed anatomical label map files
@@ -144,6 +145,11 @@ private:
   void execAdjacency();
   void execInjuryList();
   void executeOQAFMA();
+  void executeHighlight();
+
+protected:
+  FieldHandle  geomFilehandle_;
+  string    geomFilename_;
 
 public:
   HotBox(GuiContext*);
@@ -191,6 +197,7 @@ HotBox::HotBox(GuiContext* ctx)
   adjacencydatasource_(ctx->subVar("adjacencydatasource")),
   boundingboxdatasource_(ctx->subVar("boundingboxdatasource")),
   injurylistdatasource_(ctx->subVar("injurylistdatasource")),
+  geometrypath_(ctx->subVar("geometrypath")),
   currentselection_(ctx->subVar("currentselection")),
   probeWidget_lock_("PointWidget lock"),
   gui_probeLocx_(ctx->subVar("gui_probeLocx")),
@@ -234,6 +241,7 @@ HotBox::execute()
     remark("HotBox::execute(): No data on input field port.");
     return;
   }
+  // get bounding box of input field
   inFieldBBox = InputFieldHandle->mesh()->get_bounding_box();
   Point bmin = inFieldBBox.min();
   Point bmax = inFieldBBox.max();
@@ -260,6 +268,7 @@ HotBox::execute()
   // run the probe's functions
   executeProbe();
 
+  // get parameters from HotBox Tcl GUI
   const int dataSource(datasource_.get());
   const string selectionSource(selectionsource_.get());
   const string currentSelection(currentselection_.get());
@@ -298,10 +307,15 @@ HotBox::execute()
     // clear selection source
     selectionsource_.set("fromProbe");
   }
-  else if(anatomytable->get_anatomyname(labelIndexVal) != 0)
-    strcpy(selectName, anatomytable->get_anatomyname(labelIndexVal));
   else
-    strcpy(selectName, "");
+  { // selection was from probe
+    if(anatomytable->get_anatomyname(labelIndexVal) != 0)
+      strcpy(selectName, anatomytable->get_anatomyname(labelIndexVal));
+    else
+      strcpy(selectName, "unknown");
+    // set currentselection in HotBox UI
+    currentselection_.set(selectName);
+  }
 
   if(strlen(selectName) != 0)
     cout << "VS/HotBox: selected '" << selectName << "'" << endl;
@@ -371,7 +385,7 @@ HotBox::execute()
     // get the ontological hierarchy information for the current selection
     executeOQAFMA();
   } // end if(dataSource == VS_DATASOURCE_OQAFMA)
-  // dataSource == FILES -- adjacency can only be gotten from FILES
+  // dataSource == FILES -- adjacency can only come from segmentation FILES
   fprintf(stderr, "dataSource = FILES[%d]\n", dataSource);
   // use fixed Adjacency Map files
   if(!adjacencytable->get_num_names())
@@ -384,6 +398,9 @@ HotBox::execute()
     cout << " entries" << endl;
   }
   // end else(use fixed Adjacency Map files)
+
+  // get the surface geometry corresponding to the current selection
+  executeHighlight();
 
   // draw HotBox Widget
   GeomGroup *HB_geomGroup = scinew GeomGroup();
@@ -401,7 +418,6 @@ HotBox::execute()
   // get the adjacency info for the current selection
   // and populate the adjacency UI
   execAdjacency();
-
 
   if(enableDraw == "yes")
   { // draw HotBox UI in the Viewer
@@ -438,7 +454,21 @@ HotBox::execute()
                                "Probe Selection Widget",
                                &probeWidget_lock_);
     probeOutGeomPort->flushViews();
+  } // end if (probeWidgetid_ == -1)
+
+  // get output geometry port -- Selection Highlight
+  SimpleOPort<FieldHandle> *
+  highlightOutport = (SimpleOPort<FieldHandle> *)
+                      getOPort("Selection Highlight");
+
+  // send the selected field (surface) downstream
+  if (!highlightOutport) {
+    error("Unable to initialize oport.");
+    return;
   }
+
+  if(geomFilehandle_.get_rep() != 0)
+    highlightOutport->send(geomFilehandle_);
 
   if(selectBox && selectionSource == "fromHotBoxUI")
   { // set the Probe location to center of selection
@@ -576,7 +606,6 @@ HotBox::execAdjacency()
   string selectName = currentselection_.get();
   gui_label5_.set(selectName);
   VS_HotBoxUI->set_text(5, string(selectName, 0, 18));
-  currentselection_.set(selectName);
   
   if(adjacencytable->get_num_rel(labelIndexVal) >= 6)
   { // Note: TCL UI is 1-indexed, row-major
@@ -896,6 +925,52 @@ HotBox::execInjuryList()
     } // end for (i = 0;i < num_injList; i++)
   } // end else (num_injList != 0)
 } // end execInjuryList()
+
+void
+HotBox::executeHighlight()
+{
+  struct stat buf;
+
+  const string geometryPath(geometrypath_.get());
+  if( geometryPath == "" )
+  {
+    error("Path to segmentation geometry is unset -- please set the directory");
+    return;
+  }
+  // set the file name from the path and current selection
+  const string currentSelection(currentselection_.get());
+  char filePrefix[256];
+  space_to_underbar(filePrefix, (char *)currentSelection.c_str());
+  string geometryFilename = geometryPath;
+  geometryFilename += "/";
+  geometryFilename += filePrefix;
+  geometryFilename += ".fld";
+
+  cerr << "executeHighlight: " << geometryFilename << endl;
+
+  if (stat(geometryFilename.c_str(), &buf)) {
+    error("File '" + geometryFilename + "' not found.");
+    return;
+  }
+
+  Piostream *stream = auto_istream(geometryFilename);
+  if (!stream)
+  {
+    error("Error reading file '" + geometryFilename + "'.");
+    return;
+  }
+
+  // Read the file
+  Pio(*stream, geomFilehandle_);
+  if (!geomFilehandle_.get_rep() || stream->error())
+  {
+    error("Error reading data from file '" + geometryFilename +"'.");
+    delete stream;
+    return;
+  }
+  delete stream;
+
+} // end executeHighlight()
 
 void
 HotBox::widget_moved(bool last, BaseWidget*)
