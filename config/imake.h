@@ -7,35 +7,35 @@
  *  Feb, 1994
  */
 
-#include "variant.h"
+#include "config_imake.h"
 
 /* machine variants */
 #ifdef SCI_MACHINE_SGI
 #include "sgi.h"
 #endif
-#ifdef SCI_MACHINE_SOLARIS
+#ifdef SCI_MACHINE_Solaris
 #include "solaris.h"
 #endif
-#ifdef SCI_MACHINE_LINUX
+#ifdef SCI_MACHINE_Linux
 #include "linux.h"
 #endif
 
 /* Compiler variants */
-#ifdef SCI_COMPILER_CFRONT
+#ifdef SCI_COMPILER_CFront
 #include "cfront.h"
 #endif
 #ifdef SCI_COMPILER_GNU
 #include "gnu.h"
 #endif
-#ifdef SCI_COMPILER_DELTA
+#ifdef SCI_COMPILER_Delta
 #include "delta.h"
 #endif
 
 /* Optimization variants */
-#ifdef SCI_VARIANT_DEBUG
+#ifdef SCI_VARIANT_Debug
 #include "debug.h"
 #endif
-#ifdef SCI_VARIANT_OPT
+#ifdef SCI_VARIANT_Optimized
 #include "opt.h"
 #endif
 
