@@ -120,8 +120,8 @@ TypeDescription::~TypeDescription()
 }
 
 string 
-TypeDescription::get_name(string type_sep_start, 
-			  string type_sep_end) const
+TypeDescription::get_name( const string & type_sep_start /* = "<"  */, 
+			   const string & type_sep_end   /* = "> " */ ) const
 {
   const string comma(",");
   bool do_end = true;
