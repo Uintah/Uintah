@@ -94,24 +94,18 @@ public:
       // Schedule the Initialization of non linear solver
       //    [in] 
       //        data User data needed for solve 
-      void sched_setInitialGuess(const LevelP&, 
-				 SchedulerP& sched,
-				 DataWarehouseP& old_dw,
-				 DataWarehouseP& new_dw);
+      void sched_setInitialGuess(SchedulerP&, const PatchSet* patches,
+				 const MaterialSet* matls);
 
       ///////////////////////////////////////////////////////////////////////
       // Schedule the interpolation of velocities from Face Centered Variables
       //    to a Cell Centered Vector
       //    [in] 
-      void sched_interpolateFromFCToCC(const LevelP&, 
-				       SchedulerP& sched,
-				       DataWarehouseP& old_dw,
-				       DataWarehouseP& new_dw);
+      void sched_interpolateFromFCToCC(SchedulerP&, const PatchSet* patches,
+				       const MaterialSet* matls);
 
-      void sched_probeData(const LevelP&, 
-			   SchedulerP& sched,
-			   DataWarehouseP& old_dw,
-			   DataWarehouseP& new_dw);
+      void sched_probeData(SchedulerP&, const PatchSet* patches,
+			   const MaterialSet* matls);
 
       // GROUP: Action Computations :
       ///////////////////////////////////////////////////////////////////////

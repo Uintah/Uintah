@@ -92,6 +92,7 @@ ScalarSolver::solve(const LevelP& level,
 		    DataWarehouseP& new_dw,
 		    double /*time*/, double delta_t, int index)
 {
+#if 0
   //create a new data warehouse to store matrix coeff
   // and source terms. It gets reinitialized after every 
   // pressure solve.
@@ -107,18 +108,20 @@ ScalarSolver::solve(const LevelP& level,
   // compute : scalResidualSS, scalCoefSS, scalNonLinSrcSS, scalarSP
   //d_linearSolver->sched_scalarSolve(level, sched, new_dw, matrix_dw, index);
   sched_scalarLinearSolve(level, sched, old_dw, new_dw, delta_t, index);
+#else
+  NOT_FINISHED("new task stuff");
+#endif
 }
 
 //****************************************************************************
 // Schedule build of linear matrix
 //****************************************************************************
 void 
-ScalarSolver::sched_buildLinearMatrix(const LevelP& level,
-				      SchedulerP& sched,
-				      DataWarehouseP& old_dw,
-				      DataWarehouseP& new_dw,
+ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patches,
+				      const MaterialSet* matls,
 				      double delta_t, int index)
 {
+#if 0
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
@@ -168,19 +171,21 @@ ScalarSolver::sched_buildLinearMatrix(const LevelP& level,
     }
 
   }
+#else
+  NOT_FINISHED("New task stuff");
+#endif
 }
 
 //****************************************************************************
 // Schedule linear solve of scalar
 //****************************************************************************
 void
-ScalarSolver::sched_scalarLinearSolve(const LevelP& level,
-				      SchedulerP& sched,
-				      DataWarehouseP& old_dw,
-				      DataWarehouseP& new_dw,
+ScalarSolver::sched_scalarLinearSolve(SchedulerP& sched, const PatchSet* patches,
+				      const MaterialSet* matls,
 				      double delta_t,
 				      int index)
 {
+#if 0
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
@@ -210,6 +215,9 @@ ScalarSolver::sched_scalarLinearSolve(const LevelP& level,
       sched->addTask(tsk);
     }
   }
+#else
+  NOT_FINISHED("New task stuff");
+#endif
 }
       
 //****************************************************************************

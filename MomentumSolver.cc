@@ -20,6 +20,7 @@
 #include <Packages/Uintah/Core/Grid/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
+#include <Core/Util/NotFinished.h>
 
 
 using namespace Uintah;
@@ -85,6 +86,7 @@ MomentumSolver::solve(const LevelP& level,
 		      DataWarehouseP& new_dw,
 		      double /*time*/, double delta_t, int index)
 {
+#if 0
   //create a new data warehouse to store matrix coeff
   // and source terms. It gets reinitialized after every 
   // velocity solve.
@@ -105,19 +107,20 @@ MomentumSolver::solve(const LevelP& level,
   //           [u,v,w]VelocityMS
   //  d_linearSolver->sched_velSolve(level, sched, new_dw, matrix_dw, index);
   sched_velocityLinearSolve(level, sched, old_dw, new_dw, delta_t, index);
-    
+#else
+  NOT_FINISHED("new task stuff");
+#endif
 }
 
 //****************************************************************************
 // Schedule the build of the linear matrix
 //****************************************************************************
 void 
-MomentumSolver::sched_buildLinearMatrix(const LevelP& level,
-					SchedulerP& sched,
-					DataWarehouseP& old_dw,
-					DataWarehouseP& new_dw,
+MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patches,
+					const MaterialSet* matls,
 					double delta_t, int index)
 {
+#if 0
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
@@ -246,15 +249,18 @@ MomentumSolver::sched_buildLinearMatrix(const LevelP& level,
       sched->addTask(tsk);
     }
   }
+#else
+  NOT_FINISHED("New task stuff");
+#endif
+
 }
 
 void
-MomentumSolver::sched_velocityLinearSolve(const LevelP& level,
-					  SchedulerP& sched,
-					  DataWarehouseP& old_dw,
-					  DataWarehouseP& new_dw,
+MomentumSolver::sched_velocityLinearSolve(SchedulerP& sched, const PatchSet* patches,
+					  const MaterialSet* matls,
 					  double delta_t, int index)
 {
+#if 0
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
@@ -319,6 +325,10 @@ MomentumSolver::sched_velocityLinearSolve(const LevelP& level,
       sched->addTask(tsk);
     }
   }
+#else
+  NOT_FINISHED("New task stuff");
+#endif
+
 }
       
 //****************************************************************************
