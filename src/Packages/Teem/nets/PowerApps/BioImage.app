@@ -112,7 +112,7 @@ class BioImageApp {
 	set notebook_width 305
 	set notebook_height [expr $viewer_height - 50]
 	
-	set process_width 305
+	set process_width 325
 	set process_height $viewer_height
 	
 	set vis_width [expr $notebook_width + 30]
@@ -509,7 +509,7 @@ class BioImageApp {
 	set w $win.viewers
 	iwidgets::panedwindow $w.topbot -orient horizontal -thickness 0 \
 	    -sashwidth 5000 -sashindent 0 -sashborderwidth 2 -sashheight 6 \
-	    -sashcursor sb_v_double_arrow -width 500 -height 500
+	    -sashcursor sb_v_double_arrow -width $viewer_width -height $viewer_height
 	pack $w.topbot -expand 1 -fill both -padx 0 -ipadx 0 -pady 0 -ipady 0
 	
 	$w.topbot add top -margin 0 -minimum 0
@@ -846,6 +846,7 @@ class BioImageApp {
 	    global $m15-shading $m15-ambient
 	    global $m15-diffuse $m15-specular
 	    global $m15-shine
+            global $m15-adaptive
 	    set $m15-sw_raster {1}
 	    set $m15-alpha_scale {-0.554}
 	    set $m15-shading {1}
@@ -853,6 +854,7 @@ class BioImageApp {
 	    set $m15-diffuse {0.5}
 	    set $m15-specular {0.388}
 	    set $m15-shine {24}
+            set $m15-adaptive {1}
 
 	    global $m19-bins
 	    global $m19-sbins
@@ -949,7 +951,7 @@ class BioImageApp {
 
 	# Build data tabs
 	iwidgets::tabnotebook $data.ui.tnb \
-	    -width [expr $process_width - 95] -height 75 \
+	    -width [expr $process_width - 115] -height 75 \
 	    -tabpos n 
 	pack $data.ui.tnb -side top -anchor nw \
 	    -padx 0 -pady 3
@@ -1152,7 +1154,7 @@ class BioImageApp {
 	    
 	    ### Vis Options Tab
 	    set v $page
-            iwidgets::tabnotebook $v.tnb -width [expr $notebook_width - 10] \
+            iwidgets::tabnotebook $v.tnb -width [expr $notebook_width - 20] \
 		-height [expr $vis_height - 35] -tabpos n \
                 -equaltabs false
 	    pack $v.tnb -padx 0 -pady 0 -anchor n -fill both -expand 1
@@ -1450,12 +1452,146 @@ class BioImageApp {
             pack $page.toggle -side top -anchor nw -padx 3 -pady 3
 
 
-            # repack EditTransferFunc2 ui
             button $page.vol -text "Edit Transfer Function" \
                 -command "$mods(EditTransferFunc) initialize_ui"
             pack $page.vol -side top -anchor n -padx 3 -pady 3
             
+            set VolumeVisualizer [lindex [lindex $filters(0) $modules] 14]
+            set n "[set VolumeVisualizer]-c needexecute"
+            set s "[set VolumeVisualizer] state"
+
+            global [set VolumeVisualizer]-render_style
+
+            frame $page.fmode
+            pack $page.fmode -padx 2 -pady 2 -fill x
+            label $page.fmode.mode -text "Mode"
+	    radiobutton $page.fmode.modeo -text "Over Operator" -relief flat \
+		    -variable [set VolumeVisualizer]-render_style -value 0 \
+    	  	    -anchor w -command $n
+   	    radiobutton $page.fmode.modem -text "MIP" -relief flat \
+		    -variable [set VolumeVisualizer]-render_style -value 1 \
+		    -anchor w -command $n
+   	    pack $page.fmode.mode $page.fmode.modeo $page.fmode.modem \
+                -side left -fill x -padx 4 -pady 4
+
+            frame $page.fres
+            pack $page.fres -padx 2 -pady 2 -fill x
+            label $page.fres.res -text "Resolution (bits)"
+	    radiobutton $page.fres.b0 -text 8 -variable [set VolumeVisualizer]-blend_res -value 8 \
+	        -command $n
+    	    radiobutton $page.fres.b1 -text 16 -variable [set VolumeVisualizer]-blend_res -value 16 \
+	        -command $n
+ 	    radiobutton $page.fres.b2 -text 32 -variable [set VolumeVisualizer]-blend_res -value 32 \
+	        -command $n
+	    pack $page.fres.res $page.fres.b0 $page.fres.b1 $page.fres.b2 \
+                -side left -fill x -padx 4 -pady 4
+
+        #-----------------------------------------------------------
+        # Shading
+        #-----------------------------------------------------------
+	checkbutton $page.shading -text "Shading" -relief flat \
+            -variable [set VolumeVisualizer]-shading -onvalue 1 -offvalue 0 \
+            -anchor w -command "$s; $n"
+        pack $page.shading -side top -fill x -padx 4
+
+        #-----------------------------------------------------------
+        # Light
+        #-----------------------------------------------------------
+ 	frame $page.f5
+ 	pack $page.f5 -padx 2 -pady 2 -fill x
+ 	label $page.f5.light -text "Attach Light to"
+ 	radiobutton $page.f5.light0 -text "Light 0" -relief flat \
+            -variable [set VolumeVisualizer]-light -value 0 \
+            -anchor w -command $n
+ 	radiobutton $page.f5.light1 -text "Light 1" -relief flat \
+            -variable [set VolumeVisualizer]-light -value 1 \
+            -anchor w -command $n
+        pack $page.f5.light $page.f5.light0 $page.f5.light1 \
+            -side left -fill x -padx 4
+
+#         #-----------------------------------------------------------
+#         # Material
+#         #-----------------------------------------------------------
+# 	frame $page.f6 -relief groove -borderwidth 2
+# 	pack $page.f6 -padx 2 -pady 2 -fill x
+#  	label $page.f6.material -text "Material"
+# 	global [set VolumeVisualizer]-ambient
+# 	scale $page.f6.ambient -variable [set VolumeVisualizer]-ambient \
+#             -from 0.0 -to 1.0 -label "Ambient" \
+#             -showvalue true -resolution 0.001 \
+#             -orient horizontal
+# 	global [set VolumeVisualizer]-diffuse
+# 	scale $page.f6.diffuse -variable [set VolumeVisualizer]-diffuse \
+# 		-from 0.0 -to 1.0 -label "Diffuse" \
+# 		-showvalue true -resolution 0.001 \
+# 		-orient horizontal
+# 	global [set VolumeVisualizer]-specular
+# 	scale $page.f6.specular -variable [set VolumeVisualizer]-specular \
+# 		-from 0.0 -to 1.0 -label "Specular" \
+# 		-showvalue true -resolution 0.001 \
+# 		-orient horizontal
+# 	global [set VolumeVisualizer]-shine
+# 	scale $page.f6.shine -variable [set VolumeVisualizer]-shine \
+# 		-from 1.0 -to 128.0 -label "Shine" \
+# 		-showvalue true -resolution 1.0 \
+# 		-orient horizontal
+#         pack $page.f6.material $page.f6.ambient $page.f6.diffuse \
+#             $page.f6.specular $page.f6.shine \
+#             -side top -fill x -padx 4
+
+        #-----------------------------------------------------------
+        # Sampling
+        #-----------------------------------------------------------
+        frame $page.sampling -relief groove -borderwidth 2
+        pack $page.sampling -padx 2 -pady 2 -fill x
+        label $page.sampling.l -text "Sampling"
+
+	scale $page.sampling.srate_hi -variable [set VolumeVisualizer]-sampling_rate_hi \
+            -from 0.5 -to 10.0 -label "Sampling Rate" \
+            -showvalue true -resolution 0.1 \
+            -orient horizontal \
+
+	scale $page.sampling.srate_lo -variable [set VolumeVisualizer]-sampling_rate_lo \
+            -from 0.1 -to 5.0 -label "Interactive Sampling Rate" \
+            -showvalue true -resolution 0.1 \
+            -orient horizontal \
+
+	pack $page.sampling.l $page.sampling.srate_hi \
+            $page.sampling.srate_lo -side top -fill x -padx 4 -pady 2
+        
+        #-----------------------------------------------------------
+        # Transfer Function
+        #-----------------------------------------------------------
+        frame $page.tf -relief groove -borderwidth 2
+        pack $page.tf -padx 2 -pady 2 -fill x
+        label $page.tf.l -text "Transfer Function"
+
+	scale $page.tf.stransp -variable [set VolumeVisualizer]-alpha_scale \
+		-from -1.0 -to 1.0 -label "Global Opacity" \
+		-showvalue true -resolution 0.001 \
+		-orient horizontal 
+
+	pack $page.tf.l $page.tf.stransp \
+            -side top -fill x -padx 4 -pady 2
+
+#        bind $page.f6.ambient <ButtonRelease> $n
+#        bind $page.f6.diffuse <ButtonRelease> $n
+#        bind $page.f6.specular <ButtonRelease> $n
+#        bind $page.f6.shine <ButtonRelease> $n
+
+	bind $page.sampling.srate_hi <ButtonRelease> $n
+	bind $page.sampling.srate_lo <ButtonRelease> $n
+
+	bind $page.tf.stransp <ButtonRelease> $n
+	
+
+
+
             $v.tnb select "Planes"
+
+
+
+
 
 	    ### Renderer Options Tab
 	    create_viewer_tab $vis
