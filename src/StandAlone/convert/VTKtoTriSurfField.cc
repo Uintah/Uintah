@@ -186,7 +186,7 @@ main(int argc, char **argv) {
   setDefaults();
 
   TriSurfMesh *tsm = scinew TriSurfMesh();
-  exit(5);
+  //exit(5);
   char *in = argv[1];
   char *out = argv[2];
   if (!parseArgs(argc, argv)) {
@@ -232,11 +232,6 @@ main(int argc, char **argv) {
 
   read_n_points<float>(tsm, n, vtk);
   
-  while (!vtk.eof()) {
-    cout << vtk.get();
-  }
-  cout << endl;
-  return 99;
   string poly;
   vtk >> poly;
 
