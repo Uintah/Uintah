@@ -36,6 +36,7 @@ SRCS     += $(SRCDIR)/ApplyFEMCurrentSource.cc\
 	    $(SRCDIR)/DipoleMatrixSourceRHSQuadratic.cc\
 	    $(SRCDIR)/FDMtoFEM.cc\
 	    $(SRCDIR)/GenDistanceField.cc\
+	    $(SRCDIR)/HexIntMask.cc\
 	    $(SRCDIR)/InsertElectrodes.cc\
 	    $(SRCDIR)/InsertVoltageSource.cc\
 	    $(SRCDIR)/MapDistanceField.cc\
