@@ -449,4 +449,12 @@ int video_card_memory_size()
     }
 }
 
+#else
+
+// TODO: Implement on SGI
+int video_card_memory_size()
+{
+  return 16;
+}
+
 #endif
