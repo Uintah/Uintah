@@ -26,12 +26,14 @@ CompNeoHookPlas::CompNeoHookPlas(ProblemSpecP& ps, MPMLabel* Mlb, int n8or27)
 {
   lb = Mlb;
 
+  d_useModifiedEOS = false;
   ps->require("bulk_modulus",d_initialData.Bulk);
   ps->require("shear_modulus",d_initialData.Shear);
   ps->require("yield_stress",d_initialData.FlowStress);
   ps->require("hardening_modulus",d_initialData.K);
   ps->require("alpha",d_initialData.Alpha);
-
+  ps->get("useModifiedEOS",d_useModifiedEOS);
+  
   p_statedata_label = VarLabel::create("p.statedata_cnhp",
                              ParticleVariable<StateData>::getTypeDescription());
   p_statedata_label_preReloc = VarLabel::create("p.statedata_cnhp+",
@@ -387,21 +389,13 @@ double CompNeoHookPlas::computeRhoMicroCM(double pressure,
   double p_gauge = pressure - p_ref;
   double rho_cur;
 
-#if 1
-  if(p_gauge > 0){
+  if(d_useModifiedEOS && p_gauge < 0.0) {
+    double A = p_ref;  // modified EOS
+    double n = p_ref/bulk;
+    rho_cur  = rho_orig*pow(pressure/A,n);
+  } else {             // Standard EOS
     rho_cur = rho_orig*(p_gauge/bulk + sqrt((p_gauge/bulk)*(p_gauge/bulk) +1));
   }
-  else{
-    double A = p_ref;
-    double n = p_ref/bulk;
-    rho_cur = rho_orig*pow(pressure/A,n);
-  }
-#endif
-
-#if 0
-  rho_cur = rho_orig*(p_gauge/bulk + sqrt((p_gauge/bulk)*(p_gauge/bulk) +1));
-#endif
-
   return rho_cur;
 }
 
@@ -413,28 +407,18 @@ void CompNeoHookPlas::computePressEOSCM(double rho_cur,double& pressure,
   double bulk = d_initialData.Bulk;
   double rho_orig = matl->getInitialDensity();
 
-#if 1
-  if(rho_cur > rho_orig){
-    double p_g = .5*bulk*(rho_cur/rho_orig - rho_orig/rho_cur);
-    pressure = p_ref + p_g;
-    dp_drho  = .5*bulk*(rho_orig/(rho_cur*rho_cur) + 1./rho_orig);
-    tmp = bulk/rho_cur;  // speed of sound squared
-  }
-  else{
-    double A = p_ref;
+  if(d_useModifiedEOS && rho_cur < rho_orig){
+    double A = p_ref;           // MODIFIED EOS
     double n = bulk/p_ref;
     pressure = A*pow(rho_cur/rho_orig,n);
     dp_drho  = (bulk/rho_orig)*pow(rho_cur/rho_orig,n-1);
-    tmp = dp_drho;  // speed of sound squared
-  }
-#endif
-
-#if 0
+    tmp      = dp_drho;         // speed of sound squared
+  } else {                      // STANDARD EOS            
     double p_g = .5*bulk*(rho_cur/rho_orig - rho_orig/rho_cur);
-    pressure = p_ref + p_g;
-    dp_drho  = .5*bulk*(rho_orig/(rho_cur*rho_cur) + 1./rho_orig);
-    tmp = bulk/rho_cur;  // speed of sound squared
-#endif
+    pressure   = p_ref + p_g;
+    dp_drho    = .5*bulk*(rho_orig/(rho_cur*rho_cur) + 1./rho_orig);
+    tmp        = bulk/rho_cur;  // speed of sound squared
+  }
 }
 
 double CompNeoHookPlas::getCompressibility()
