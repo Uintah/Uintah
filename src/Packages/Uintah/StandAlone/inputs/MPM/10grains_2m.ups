@@ -43,22 +43,22 @@
                 <burn>
                  <type>null</type>
                 </burn>
-                <density>190.0</density>
+                <density>1.9e8</density>
                 <material_type>comp_neo_hook_plastic</material_type>
                 <comp_neo_hook_plastic>
-                    <bulk_modulus>10.2</bulk_modulus>
-                    <shear_modulus>7.2</shear_modulus>
-                    <yield_stress>1.0</yield_stress>
-                    <hardening_modulus>0.0</hardening_modulus>
+                    <bulk_modulus>10.2e6</bulk_modulus>
+                    <shear_modulus>7.2e6</shear_modulus>
+                    <yield_stress>.27e6</yield_stress>
+                    <hardening_modulus>0.1e4</hardening_modulus>
                     <alpha> 0.0 </alpha>
                 </comp_neo_hook_plastic>
                 <toughness>10.e6</toughness>
                 <thermal_conductivity>1.0</thermal_conductivity>
-                <specific_heat>1</specific_heat>
+                <specific_heat>1.004e-5</specific_heat>
                 <geom_object>
                     <box label = "Piston">
-                        <min>[0.0005,0.0005,0.0095]</min>
-                        <max>[0.0095,0.0095,0.01]</max>
+                        <min>[0.0005,0.0005,0.009]</min>
+                        <max>[0.0095,0.0095,0.0095]</max>
                     </box>
                     <res>[2,2,2]</res>
                     <velocity>[0.0,0.0,-.01]</velocity>
@@ -69,13 +69,13 @@
 
             <material name = "HMX">
                 <burn> <type>null</type> </burn>
-                <density>1.9</density>
+                <density>1.9e6</density>
                 <material_type>comp_neo_hook_plastic</material_type>
                 <comp_neo_hook_plastic>
-                    <bulk_modulus>.102</bulk_modulus>
-                    <shear_modulus>.072</shear_modulus>
-                    <yield_stress>.0027</yield_stress>
-                    <hardening_modulus>0.001</hardening_modulus>
+                    <bulk_modulus>10.2e4</bulk_modulus>
+                    <shear_modulus>7.2e4</shear_modulus>
+                    <yield_stress>.27e4</yield_stress>
+                    <hardening_modulus>0.1e4</hardening_modulus>
                     <alpha> 0.0 </alpha>
                 </comp_neo_hook_plastic>
                 <toughness>10.e6</toughness>
@@ -198,8 +198,8 @@
         <Level>
             <Box label = "1">
                 <lower>[0.0,0.0,0.0]</lower>
-                <upper>[0.01,0.01,0.0105]</upper>
-                <resolution>[20,20,21]</resolution>
+                <upper>[0.01,0.01,0.01]</upper>
+                <resolution>[20,20,20]</resolution>
                 <patches>[1,1,1]</patches>
             </Box>
         </Level>

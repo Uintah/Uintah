@@ -63,7 +63,8 @@ ignites and burns away.
 
 Bigger runs:
 
-These granular compaction problems all use g, cm, us (10^-6 s) units.
+These granular compaction problems all use ug(micrograms, 10^-6 g), 
+cm, us (10^-6 s) units.
 
 10grains.ups 10 stationary grains compacted by a heavy rectangular 
 piston with an initial velocity of .01 cm/us = 100 m/s. Frictional
