@@ -43,6 +43,7 @@ itcl_class CardioWave_CreateModel_SetupFVMatrix {
 	set $this-sigz2 20
 	set $this-sprfile "SPR"
 	set $this-volumefile "VOLUME"
+	set $this-BW 0
     }
 
     method make_entry {w text v c} {
