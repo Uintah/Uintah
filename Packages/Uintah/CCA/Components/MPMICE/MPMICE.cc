@@ -232,8 +232,8 @@ void MPMICE::scheduleInterpolatePAndGradP(SchedulerP& sched,
                                                     Ghost::None);
    t->requires(Task::NewDW, Ilb->mom_source_CCLabel,mpm_matl, 
                                                     Ghost::AroundCells, 1);
-   t->computes(Mlb->pPressureLabel,   press_matl);
-   t->computes(Mlb->gradPressNCLabel, press_matl);
+   t->computes(Mlb->pPressureLabel,   mpm_matl);
+   t->computes(Mlb->gradPressNCLabel, mpm_matl);
    sched->addTask(t, patches, all_matls);
 #else
    NOT_FINISHED("new task stuff");
@@ -447,15 +447,13 @@ void MPMICE::scheduleComputeMassBurnRate(SchedulerP& sched,
 		    this, &MPMICE::computeMassBurnRate);
  
   t->requires(Task::NewDW, Ilb->press_CCLabel, press_matl, Ghost::None);
-  t->requires(Task::OldDW, Ilb->temp_CCLabel, /*all_matls*/Ghost::None);
+  t->requires(Task::OldDW, Ilb->temp_CCLabel,  ice_matls,  Ghost::None);
 
   t->requires(Task::NewDW, MIlb->temp_CCLabel,mpm_matls, Ghost::None);
   t->requires(Task::NewDW, MIlb->cMassLabel,  mpm_matls, Ghost::None);
   
-  t->computes(MIlb->burnedMass_CCLabel,   mpm_matls);
-  t->computes(MIlb->releasedHeat_CCLabel, mpm_matls);
-  t->computes(Ilb->burnedMass_CCLabel,    ice_matls);
-  t->computes(Ilb->releasedHeat_CCLabel,  ice_matls);
+  t->computes(MIlb->burnedMassCCLabel);
+  t->computes(MIlb->releasedHeatCCLabel);
     
   sched->addTask(t, patches, all_matls);
 #else
@@ -478,11 +476,11 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
 
   CCVariable<double> burnedMass;
   CCVariable<double> releasedHeat;
-  new_dw->allocate(burnedMass, MIlb->burnedMass_CCLabel, 0, patch);
-  new_dw->allocate(releasedHeat, MIlb->releasedHeat_CCLabel, 0, patch);
+  new_dw->allocate(burnedMass, MIlb->burnedMassCCLabel, 0, patch);
+  new_dw->allocate(releasedHeat, MIlb->releasedHeatCCLabel, 0, patch);
   
-  new_dw->put(burnedMass, MIlb->burnedMass_CCLabel, 0, patch);
-  new_dw->put(releasedHeat, MIlb->releasedHeat_CCLabel, 0, patch);
+  new_dw->put(burnedMass, MIlb->burnedMassCCLabel, 0, patch);
+  new_dw->put(releasedHeat, MIlb->releasedHeatCCLabel, 0, patch);
   }
 }
 
@@ -1673,6 +1671,8 @@ void MPMICE::computeMassBurnRate(const ProcessorGroup*,
 				 DataWarehouse* new_dw)
 
 {
+  cout << "Doing computeMassBurnRate" << endl;
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
@@ -1687,17 +1687,13 @@ void MPMICE::computeMassBurnRate(const ProcessorGroup*,
     for(int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       int dwindex = matl->getDWIndex();
-      new_dw->allocate(burnedMass[m],  MIlb->burnedMass_CCLabel, dwindex, patch);
-      new_dw->allocate(releasedHeat[m],MIlb->releasedHeat_CCLabel,dwindex,patch);
+      new_dw->allocate(burnedMass[m],  MIlb->burnedMassCCLabel, dwindex, patch);
+      new_dw->allocate(releasedHeat[m],MIlb->releasedHeatCCLabel,dwindex,patch);
       burnedMass[m].initialize(0.0);
       releasedHeat[m].initialize(0.0);
     }
-  #if 0
-    new_dw->allocate(sumBurnedMass,MIlb->sumBurnedMassLabel,0,patch);
-    new_dw->allocate(sumReleasedHeat,MIlb->sumReleasedHeatLabel,0,patch);
-  #else
-    NOT_FINISHED("These labels were messed up - Steve");
-  #endif
+    new_dw->allocate(sumBurnedMass,  MIlb->sumBurnedMassLabel,   0,patch);
+    new_dw->allocate(sumReleasedHeat,MIlb->sumReleasedHeatLabel, 0,patch);
 
     sumBurnedMass.initialize(0.0);
     sumReleasedHeat.initialize(0.0);
@@ -1722,70 +1718,42 @@ void MPMICE::computeMassBurnRate(const ProcessorGroup*,
 
         new_dw->get(solidTemperature, MIlb->temp_CCLabel, dwindex, patch, 
 		    Ghost::None, 0);
-        new_dw->get(solidMass, MIlb->cMassLabel, dwindex, patch, Ghost::None, 0);
+        new_dw->get(solidMass, MIlb->cMassLabel, dwindex, patch,Ghost::None, 0);
 
         for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
-         matl->getBurnModel()->computeBurn(gasTemperature[*iter],
-					    gasPressure[*iter],
-					    solidMass[*iter],
-					    solidTemperature[*iter],
-					    burnedMass[m][*iter],
-					    releasedHeat[m][*iter]);
+//          matl->getBurnModel()->computeBurn(gasTemperature[*iter],
+//					    gasPressure[*iter],
+//					    solidMass[*iter],
+//					    solidTemperature[*iter],
+//					    burnedMass[m][*iter],
+//					    releasedHeat[m][*iter]);
 
-    /*`==========TESTING==========*/ 
-    // ignore the burnModel while testing. 
+    /*`==========TESTING========== 
+     ignore the burnModel while testing. 
        if (solidMass[*iter] > d_SMALL_NUM)  {
-        // Unused variable - Steve
-         // Vector dx        = patch->dCell();
-        // Unused variable - Steve
-        // double vol       = dx.x()*dx.y()*dx.z();
         burnedMass[m][*iter]    = 0.1;
         releasedHeat[m][*iter]  = 0.0;
        }
-     /*==========TESTING==========`*/
+     ==========TESTING==========`*/
           sumBurnedMass[*iter]    += burnedMass[m][*iter];
           sumReleasedHeat[*iter]  += releasedHeat[m][*iter];
         }
       }
     }  
 
-    //__________________________________
-    // I C E matl
-    // dump all the heat and mass into the 
-    // products of reaction 
-    for(int m = 0; m < numALLMatls; m++) {
-      Material* matl = d_sharedState->getMaterial( m );
-  #if 0    
-      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-
-      if (ice_matl->getIsProductOfReaction()) {  
-        for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-          burnedMass[m][*iter]   = sumBurnedMass[*iter];
-          releasedHeat[m][*iter] = sumReleasedHeat[*iter];
-        }
-      }
-  #else
-      NOT_FINISHED("getIsProductOfReaction not defined? - Steve");
-  #endif
-    }
-
     for(int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       int dwindex = matl->getDWIndex();
-      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-      if (mpm_matl) {
-        new_dw->put(burnedMass[m],   MIlb->burnedMass_CCLabel,   dwindex, patch);
-        new_dw->put(releasedHeat[m], MIlb->releasedHeat_CCLabel, dwindex, patch);
-      }
-      if (ice_matl)
-      {
-  #if 0
-        new_dw->put(burnedMass[m],   Ilb->burnedMass_CCLabel,   dwindex, patch);
-        new_dw->put(releasedHeat[m], Ilb->releasedHeat_CCLabel, dwindex, patch);
-  #else
-        NOT_FINISHED("Somethins is messed with these labels - Steve");
+      if (ice_matl->getIsProductOfReaction()) {
+  #if 1
+        new_dw->put(sumBurnedMass,  MIlb->burnedMassCCLabel,   dwindex, patch);
+        new_dw->put(sumReleasedHeat,MIlb->releasedHeatCCLabel, dwindex, patch);
   #endif
+      }
+      else{
+        new_dw->put(burnedMass[m],   MIlb->burnedMassCCLabel,  dwindex, patch);
+        new_dw->put(releasedHeat[m], MIlb->releasedHeatCCLabel,dwindex, patch);
       }
     }
     cout << "Computed Burned mass \n";
@@ -1800,8 +1768,8 @@ void MPMICE::computeMassBurnRate(const ProcessorGroup*,
         char description[50];
         if(ice_matl) sprintf(description, "ICEsources/sinks_Mat_%d",dwindex);
         if(mpm_matl) sprintf(description, "MPMsources/sinks_Mat_%d",dwindex);
-        d_ice->printData( patch, 0, description, "burnedMass", burnedMass[m]);
-        d_ice->printData( patch, 0, description, "releasedHeat", releasedHeat[m]);
+        d_ice->printData( patch, 0, description,"burnedMass", burnedMass[m]);
+        d_ice->printData( patch, 0, description,"releasedHeat",releasedHeat[m]);
       }
     #endif
     }
