@@ -1500,6 +1500,7 @@ proc initVar { var save substitute } {
 
 proc setVarStates { var save substitute } {
     global ModuleSavedVars ModuleSubstitutedVars
+    set var [string trimleft $var :]
     if { [string first msgStream $var] != -1 } return
     set ids [split $var -]
     set module [lindex $ids 0]
