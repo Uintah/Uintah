@@ -397,26 +397,13 @@ Patch::determineGhostPatches( int numGhostCells )
    d_leftFront.set( minX, minY, minZ, minX - gc, minY - gc, maxZ );
 }
 
-IntVector Patch::getHighGhostCellIndex() const
-{
-  cerr<<"needed by tan."<<endl;
-  return IntVector(0,0,0); /*
-                             put IntVector(0,0,0) just for no compiling warning.
-                               --tan
-                            */
-}
-
-IntVector Patch::getLowGhostCellIndex() const
-{
-  cerr<<"needed by tan."<<endl;
-  return IntVector(0,0,0); /*
-                             put IntVector(0,0,0) just for no compiling warning.
-                               --tan
-                            */
-}
-      
+     
 //
 // $Log$
+// Revision 1.7  2000/06/07 18:31:00  tan
+// Requirement for getHighGhostCellIndex() and getLowGhostCellIndex()
+// cancelled.
+//
 // Revision 1.6  2000/06/05 19:25:14  tan
 // I need the following two functions,
 // (1) IntVector getHighGhostCellIndex() const;
