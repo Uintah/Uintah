@@ -95,7 +95,7 @@
         </BCType>
         <BCType id = "4" label = "Temperature"  var = "Dirichlet">
                      <!-- CH4 Temperature  -->
-                              <value> 300.0  </value>
+                              <value> 298.0  </value>
                      <!-- JP8 Temperature  -->
                      <!--
                               <value> 627.46570  </value>
@@ -125,7 +125,7 @@
                               <value> [0.,1.0,0.] </value>
         </BCType>
         <BCType id = "4" label = "Temperature"  var = "Dirichlet">
-                              <value> 300.0  </value>
+                              <value> 298.0  </value>
         </BCType>
         <BCType id = "4" label = "Density"      var = "Dirichlet">
                               <value> 1.1792946927374306  </value>
