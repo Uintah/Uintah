@@ -74,14 +74,14 @@ void InsertVoltageSource::execute() {
   if (!imesh->get(imeshH))
     return;
   if (!imeshH.get_rep()) {
-    cerr << "InsertVoltageSource: error - empty input mesh.\n";
+    error("Empty input mesh.");
     return;
   }
 
   MeshHandle tetVolH = imeshH->mesh();
   TetVolMesh *tvm = dynamic_cast<TetVolMesh *>(tetVolH.get_rep());
   if (!tvm) {
-    cerr << "InsertVoltageSource: error - input FEM wasn't a TetVolField\n";
+    error("Input FEM wasn't a TetVolField.");
     return;
   }
 
@@ -89,7 +89,7 @@ void InsertVoltageSource::execute() {
   if (!isource->get(isourceH))
     return;
   if (!isourceH.get_rep()) {
-    cerr << "InsertVoltageSource: error - empty input source.\n";
+    error("Empty input source.");
     return;
   }
 
@@ -138,10 +138,6 @@ void InsertVoltageSource::execute() {
     }
     algo->execute(isourceH, sources, vals);
   }
-
-//  cerr << "Here are the source positions and values:\n";
-//  for (int i=0; i<(int)sources.size(); i++)
-//    cerr << "    " <<i<< " : "<< sources[i] <<" : "<<vals[i]<<"\n";
 
   vector<pair<int, double> > dirichlet;
   imeshH->get_property("dirichlet", dirichlet);

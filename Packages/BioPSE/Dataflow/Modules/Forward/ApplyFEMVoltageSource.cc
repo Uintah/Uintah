@@ -39,6 +39,7 @@
 #include <Core/Math/MinMax.h>
 #include <Core/Math/Trig.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Core/Containers/StringUtil.h>
 #include <iostream>
 
 namespace BioPSE {
@@ -161,20 +162,21 @@ void ApplyFEMVoltageSource::execute()
 
   MatrixHandle  hMatIn;
   if (!iportMatrix_->get(hMatIn) || !hMatIn.get_rep()) {
-    cerr << "Error - need a stiffness matrix.\n";
+    error("Need a stiffness matrix.");
     return;
   }
   SparseRowMatrix *matIn;
   if (!(matIn = dynamic_cast<SparseRowMatrix*>(hMatIn.get_rep()))) {
-    cerr << "Error - input stiffness matrix wasn't sparse.\n";
+    error("Input stiffness matrix wasn't sparse.");
     return;
   }
   if (matIn->nrows() != matIn->ncols()) {
-    cerr << "Error - input stiffness matrix wasn't square.\n";
+    error("Input stiffness matrix wasn't square.");
     return;
   }
   if (nsize != matIn->nrows()) {
-    cerr << "Error - input stiffness matrix was "<<nsize<<" nodes, matrix has "<<matIn->nrows()<<" rows.\n";
+    error("Input stiffness matrix was " + to_string(nsize)  +
+	  " nodes, matrix has " + to_string(matIn->nrows()) + " rows.");
     return;
   }
 

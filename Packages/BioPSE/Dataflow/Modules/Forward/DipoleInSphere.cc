@@ -48,7 +48,6 @@
 
 
 #include <iostream>
-using std::cerr;
 #include <stdio.h>
 #include <math.h>
 

@@ -26,8 +26,6 @@
 
 #include <Packages/BioPSE/share/share.h>
 
-using std::cerr;
-
 namespace BioPSE {
 
 using namespace SCIRun;
@@ -92,7 +90,10 @@ ShowDipoles::ShowDipoles(GuiContext *context) :
 ShowDipoles::~ShowDipoles(){
 }
 
-void ShowDipoles::execute(){
+
+void
+ShowDipoles::execute()
+{
   ifield_ = (FieldIPort *)get_iport("dipoleFld");
   ofield_ = (FieldOPort *)get_oport("dipoleFld");
   ogeom_ = (GeometryOPort *)get_oport("Geometry");
@@ -115,7 +116,7 @@ void ShowDipoles::execute(){
   PointCloudField<Vector> *field_pcv;
   if (!ifield_->get(fieldH) || 
       !(field_pcv=dynamic_cast<PointCloudField<Vector>*>(fieldH.get_rep()))) {
-    cerr << "No vald input in ShowDipoles Field port.\n";
+    error("No vald input in ShowDipoles Field port.");
     return;
   }
   PointCloudMeshHandle field_mesh = field_pcv->get_typed_mesh();
@@ -134,8 +135,8 @@ void ShowDipoles::execute(){
 
     if (field_pcv->fdata().size() != nDips_) {
 	     
-      cerr << "NEW SIZE FOR DIPOLEMATTOGEOM_  field_pcv->data().size()=" << 
-	field_pcv->fdata().size() << " nDips_=" << nDips_ << "\n";
+      msgStream_<< "NEW SIZE FOR DIPOLEMATTOGEOM_ field_pcv->data().size()="
+		<< field_pcv->fdata().size() << " nDips_=" << nDips_ << "\n";
 	     
       // nDips_ always just says how many switches we have set to true
       // need to fix switch setting first and then do allocations if
@@ -186,7 +187,6 @@ void ShowDipoles::execute(){
       pts.add(p);
       widget_[i]->SetPosition(p);
       Vector v(field_pcv->fdata()[i]);
-      //	     cerr << "widget_["<<i<<"] is at position "<<p<<" and dir "<<v<<"\n";
       double str=v.length();
       if (str<0.0000001) v.z(1);
       v.normalize();
@@ -213,8 +213,6 @@ void ShowDipoles::execute(){
     dipoleFldH_=fieldH;
     ogeom_->flushViews();
     ofield_->send(dipoleFldH_);
-    //     } else if (execMsg_ == "widget_moved") {
-    //	 cerr << "Can't handle widget_moved callbacks yet...\n";
   } else if (execMsg_ == "widget_moved") {
     execMsg_="";
     Array1<Point> pts;
@@ -224,7 +222,6 @@ void ShowDipoles::execute(){
       pts.add(p);
       Vector d=widget_[i]->GetDirection();
       double mag=widget_[i]->GetScale();
-//      cerr << "mag="<<mag<<"  widgetSize="<<widgetSize<<"\n";
       d=d*(mag/widgetSize);
       field_mesh->set_point(p, i);
       field_pcv->fdata()[i] = d;
@@ -243,7 +240,7 @@ void ShowDipoles::execute(){
     ofield_->send(dipoleFldH_);
   } else {
     // just send the same old dipoles as last time
-    cerr << "sending old stuff!\n";
+    remark("Sending old stuff.");
     ofield_->send(dipoleFldH_);
   }
   lastGen_ = gen;
@@ -253,11 +250,17 @@ void ShowDipoles::execute(){
   lastShowLines_ = showLines;
 }
 
-void ShowDipoles::widget_moved(int last) {
-  if(last && !abort_flag) {
+
+void
+ShowDipoles::widget_moved(int last)
+{
+  if(last && !abort_flag)
+  {
     abort_flag=1;
     execMsg_="widget_moved";
     want_to_execute();
   }
-} 
+}
+
+ 
 } // End namespace BioPSE

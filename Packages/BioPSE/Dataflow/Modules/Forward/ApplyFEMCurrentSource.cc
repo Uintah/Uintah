@@ -243,23 +243,23 @@ void ApplyFEMCurrentSource::execute()
     if (hInterp.get_rep()) {
       PointCloudField<vector<pair<TetVolMesh::Node::index_type, double> > >* interp = dynamic_cast<PointCloudField<vector<pair<TetVolMesh::Node::index_type, double> > > *>(hInterp.get_rep());
       if (!interp) {
-	cerr << "Input interp field wasn't interp'ing PointCloudField from a TetVolMesh::Node\n";
+	error("Input interp field wasn't interp'ing PointCloudField from a TetVolMesh::Node.");
 	return;
       } else if (sourceNode < interp->fdata().size() &&
 		 sinkNode < interp->fdata().size()) {
 	sourceNode = interp->fdata()[sourceNode].begin()->first;
 	sinkNode = interp->fdata()[sinkNode].begin()->first;
       } else {
-	cerr << "SourceNode or SinkNode was out of interp range.\n";
+	error("SourceNode or SinkNode was out of interp range.");
 	return;
       }
     }
     if (sourceNode >= nsize || sinkNode >= nsize)
     {
-      cerr << "SourceNode or SinkNode was out of mesh range.\n";
+      error("SourceNode or SinkNode was out of mesh range.");
       return;
     }
-    cerr << "ApplyFEMCurrentSource: sourceNode="<<sourceNode<<" sinkNode="<<sinkNode<<"\n";
+    msgStream_ << "sourceNode="<<sourceNode<<" sinkNode="<<sinkNode<<"\n";
     (*rhs)[sourceNode] += -1;
     (*rhs)[sinkNode] += 1;
   }

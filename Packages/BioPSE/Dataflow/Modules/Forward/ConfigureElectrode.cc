@@ -61,12 +61,12 @@ void ConfigureElectrode::execute() {
   if (!ielec->get(ielecH))
     return;
   if (!ielecH.get_rep()) {
-    cerr << "ConfigureElectrode: error - empty input electrode.\n";
+    error("Empty input electrode.");
     return;
   }
   CurveField<double> *elecFld = dynamic_cast<CurveField<double>*>(ielecH.get_rep());
   if (!elecFld) {
-    cerr << "ConfigureElectrode: error - input electrode wasn't a CurveField<double>\n";
+    error("Input electrode wasn't a CurveField<double>.");
     return;
   }
 

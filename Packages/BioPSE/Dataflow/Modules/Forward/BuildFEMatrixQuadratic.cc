@@ -29,6 +29,7 @@
 #include <Core/Thread/Parallel.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Barrier.h>
+#include <Core/Containers/StringUtil.h>
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
@@ -89,10 +90,10 @@ private:
 DECLARE_MAKER(BuildFEMatrixQuadratic)
 
 
-BuildFEMatrixQuadratic::BuildFEMatrixQuadratic(GuiContext *context)
-  : Module("BuildFEMatrixQuadratic", context, Source, "Forward", "BioPSE"),
-    barrier("BuildFEMatrixQuadratic barrier"),
-    BCFlag(context->subVar("BCFlag")),
+  BuildFEMatrixQuadratic::BuildFEMatrixQuadratic(GuiContext *context)
+    : Module("BuildFEMatrixQuadratic", context, Source, "Forward", "BioPSE"),
+      barrier("BuildFEMatrixQuadratic barrier"),
+      BCFlag(context->subVar("BCFlag")),
     UseCondGui(context->subVar("UseCondTCL")),
     refnodeGui(context->subVar("refnodeTCL")),
     bcArray(256, false),
@@ -100,10 +101,14 @@ BuildFEMatrixQuadratic::BuildFEMatrixQuadratic(GuiContext *context)
 {
 }
 
-BuildFEMatrixQuadratic::~BuildFEMatrixQuadratic(){
+
+BuildFEMatrixQuadratic::~BuildFEMatrixQuadratic()
+{
 }
 
-void BuildFEMatrixQuadratic::execute()
+
+void
+BuildFEMatrixQuadratic::execute()
 {
   ifld_ = (FieldIPort *)get_iport("QuadTetVolField");
   FieldHandle mesh;
@@ -113,10 +118,13 @@ void BuildFEMatrixQuadratic::execute()
   ifld_->get(mesh);
   imat_->get(mat_handle);
 
-  if(!mesh.get_rep()){
+  if(!mesh.get_rep())
+  {
     warning("No Data in port 1 field.");
     return;
-  } else if (mesh->get_type_name(-1) != "QuadraticTetVolField<int>") {
+  }
+  else if (mesh->get_type_name(-1) != "QuadraticTetVolField<int>")
+  {
     error("input must be a TetVol type, not a "+mesh->get_type_name(-1));
     return;
   }
@@ -125,7 +133,8 @@ void BuildFEMatrixQuadratic::execute()
   printf("Beginning simulation: %s\n",ctime(&current_time));
 
   if (mesh->generation == gen && gbl_matrixH.get_rep() && rhsH.get_rep() &&
-      lastBCFlag == BCFlag.get()) {
+      lastBCFlag == BCFlag.get())
+  {
     outmatrix->send(gbl_matrixH);
     rhsoport->send(rhsH);
     return;
@@ -135,9 +144,9 @@ void BuildFEMatrixQuadratic::execute()
 
   // keep a handle on the field.
   qtv = dynamic_cast<QuadraticTetVolField<int>*>(mesh.get_rep());
-  if (!qtv) {
+  if (!qtv)
+  {
     error("failed dynamic cast to QuadraticTetVolField<int>*");
-    
     return;
   }
   QuadraticTetVolMeshHandle mesh_handle;
@@ -151,7 +160,8 @@ void BuildFEMatrixQuadratic::execute()
   bcArray.resize(nnodes, false);
 
   vector<pair<int, double> >::iterator iter = dirichlet.begin();
-  while (iter != dirichlet.end()) {
+  while (iter != dirichlet.end())
+  {
     bcArray[(*iter).first] = true;
     ++iter;
   }
@@ -163,13 +173,25 @@ void BuildFEMatrixQuadratic::execute()
 
   refnode=0;
   DirSub=PinZero=AverageGround=0;
-  if (BCFlag.get() == "DirSub") DirSub=1;
-  else if (BCFlag.get() == "PinZero") { 
+  if (BCFlag.get() == "DirSub")
+  {
+    DirSub=1;
+  }
+  else if (BCFlag.get() == "PinZero")
+  { 
     PinZero=1; DirSub=1;
     refnodeGui.reset();
     refnode = refnodeGui.get();
-  } else if (BCFlag.get() == "AverageGround") { AverageGround=1; DirSub=1; }
-  else cerr << "WARNING: BCFlag not set: " << BCFlag.get() << "!\n";
+  }
+  else if (BCFlag.get() == "AverageGround")
+  {
+    AverageGround=1;
+    DirSub=1;
+  }
+  else
+  {
+    warning("BCFlag not set '" + BCFlag.get() + "'!");
+  }
   lastBCFlag=BCFlag.get();
 
   MatrixHandle refnodeH;
@@ -178,23 +200,20 @@ void BuildFEMatrixQuadratic::execute()
   }
 
 
-  if (PinZero) cerr << "BuildFEM: pinning node "<<refnode<<" to zero.\n";
-  if (AverageGround) cerr << "BuildFEM: averaging of all nodes to zero.\n";
+  if (PinZero)
+  {
+    remark("Pinning node " + to_string(refnode) + " to zero.");
+  }
+  if (AverageGround)
+  {
+    remark("Averaging of all nodes to zero.");
+  }
 
     QuadraticTetVolMesh::Cell::array_type array;
   qtvm_->get_cells(array,(QuadraticTetVolMesh::Node::index_type)0);
 
   Thread::parallel(Parallel<BuildFEMatrixQuadratic>(this, &BuildFEMatrixQuadratic::parallel), np, true);
 
-
-  /*        for (int i=0; i<nnodes; i++) {
-  for (int j=0; j<nnodes; j++) {
-    cerr << gbl_matrix->get(i,j);
-  	 cerr << " ";
-         }
-         cerr << "\n";
-         }
-  */
 
   current_time = time(NULL);
   printf("End simulation: %s\n",ctime(&current_time));
@@ -204,11 +223,9 @@ void BuildFEMatrixQuadratic::execute()
   gbl_matrixH=MatrixHandle(gbl_matrix);
   outmatrix->send(gbl_matrixH);
   //outmatrix->send(gbl_matrix);
-  //cerr << "sent gbl_matrix to matrix port" << endl;
   rhsH=MatrixHandle(rhs);
   rhsoport->send(rhsH);
   //rhsoport->send(rhs);
-  //cerr << "sent rhs to coloumn matrix port" << endl;
   //this->mesh=0;
 }
 
@@ -270,7 +287,6 @@ void BuildFEMatrixQuadratic::parallel(int proc)
       st=ns;
     }
     colidx[np]=st;
-    cerr << "st=" << st << endl;
     allcols=scinew int[st];
   }
 
@@ -291,7 +307,6 @@ void BuildFEMatrixQuadratic::parallel(int proc)
   if(proc == 0){
     rows[nnodes]=st;  
     update_progress(3,6);
-    cerr << "There are " << st << " non zeros" << endl;
     gbl_matrix=scinew SparseRowMatrix(nnodes, nnodes, rows, allcols, st);
     rhs=scinew ColumnMatrix(nnodes);  
   }
@@ -397,7 +412,6 @@ void BuildFEMatrixQuadratic::build_local_matrix(double lcl_a[10][10], TetVolMesh
     Vector l1,l2,l3,l4; 
     vol = ((TetVolMesh*)qtvm_.get_rep())->get_gradient_basis(c_ind,l1,l2,l3,l4);  //get volume by using linear
     if(vol < 1.e-10){
-      cerr << "Skipping element..., volume=" << vol << endl;
       for(int i=0;i<10;i++)
 	for(int j=i;j<10;j++) {
 	  lcl_a[i][j]=0;
@@ -468,8 +482,6 @@ void BuildFEMatrixQuadratic::build_local_matrix(double lcl_a[10][10], TetVolMesh
   qtv->get_property("conductivity_table", tens);
   int  ind = qtv->value(c_ind);
 
-  //  cerr << "INDEX " << ind << "c_ind " <<  c_ind <<endl;
-
   if (UseCond) {
     el_cond[0][0] = tens[ind].second.mat_[0][0];
     el_cond[0][1] = tens[ind].second.mat_[0][1];
@@ -482,10 +494,6 @@ void BuildFEMatrixQuadratic::build_local_matrix(double lcl_a[10][10], TetVolMesh
     el_cond[2][2] = tens[ind].second.mat_[2][2];
   }
 
-  /* mutex.lock();
-    cerr << "Local: " << tens[ind].second.mat_[0][0] << " " << tens[ind].second.mat_[0][1] << " " << tens[ind].second.mat_[1][0] << " " << tens[ind].second.mat_[0][2] << " " << tens[ind].second.mat_[2][0] << " " << tens[ind].second.mat_[1][1] << " " << tens[ind].second.mat_[1][2] << " " << tens[ind].second.mat_[2][1] << " " << tens[ind].second.mat_[2][2] << " " << jac_el << "\n";
-   
-    mutex.unlock();*/
   // build the local matrix
   for(int i=0; i< 10; i++) {
     for(int j=i; j< 10; j++) {
@@ -510,16 +518,16 @@ void BuildFEMatrixQuadratic::build_local_matrix(double lcl_a[10][10], TetVolMesh
       }
       lcl_a[i][j] = I/6.0;
       lcl_a[j][i] = lcl_a[i][j];
- 
-      //     	  cerr << "Local: " << i << " " << j << " " << lcl_a[i][j] << "\n";
- 
     }
   }
 }
 
-void BuildFEMatrixQuadratic::add_lcl_gbl(Matrix& gbl_a, double lcl_a[10][10],
-					 ColumnMatrix& rhs,
-					 TetVolMesh::Cell::index_type c_ind, int s, int e)
+
+void
+BuildFEMatrixQuadratic::add_lcl_gbl(Matrix& gbl_a, double lcl_a[10][10],
+				    ColumnMatrix& rhs,
+				    TetVolMesh::Cell::index_type c_ind,
+				    int s, int e)
 {
 
   for (int i=0; i<10; i++) // this four should eventually be a
