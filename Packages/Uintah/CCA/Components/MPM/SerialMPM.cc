@@ -1226,7 +1226,8 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         }
       } // End of particle loop
 
-      for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+      for(NodeIterator iter = patch->getNodeIterator(flags->d_8or27);
+                       !iter.done();iter++){
         IntVector c = *iter; 
         totalmass       += gmass[c];
         gmassglobal[c]  += gmass[c];
@@ -1241,7 +1242,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       // Apply grid boundary conditions to the velocity before storing the data
 
       MPMBoundCond bc;
-      bc.setBoundaryCondition(patch,dwi,"Velocity",gvelocity);
+      bc.setBoundaryCondition(patch,dwi,"Velocity", gvelocity);
       bc.setBoundaryCondition(patch,dwi,"Symmetric",gvelocity);
       bc.setBoundaryCondition(patch,dwi,"Temperature",gTemperature);
 
@@ -2611,15 +2612,15 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         CMV += pvelocitynew[idx]*pmass[idx];
       }
 
-      // Delete particles that have left the domain if not using periodic BCs
-      if(pbcsl == 0){
-        for(ParticleSubset::iterator iter  = pset->begin();
-                                     iter != pset->end(); iter++){
-          particleIndex idx = *iter;
-          bool pointInLevel = lvl->containsPointInRealCells(pxnew[idx]);
-          if(!pointInLevel){
-            delset->addParticle(idx);
-          }
+      // Delete particles that have left the domain
+      // This is only needed if extra cells are being used.
+      for(ParticleSubset::iterator iter  = pset->begin();
+                                   iter != pset->end(); iter++){
+        particleIndex idx = *iter;
+        bool pointInReal = lvl->containsPointInRealCells(pxnew[idx]);
+        bool pointInAny = lvl->containsPoint(pxnew[idx]);
+        if(!pointInReal && pointInAny){
+          delset->addParticle(idx);
         }
       }
 
