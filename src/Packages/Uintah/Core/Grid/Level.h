@@ -120,9 +120,18 @@ WARNING
 
       static const int MAX_PATCH_SELECT = 32;
       typedef fixedvector<const Patch*, MAX_PATCH_SELECT> selectType;
+      
 
       void selectPatches(const IntVector&, const IntVector&,
 			 selectType&) const;
+
+      const Patch* selectPatch( const IntVector& idx) const
+      {
+	selectType pv;
+	selectPatches(idx,idx,pv);
+	// may need to check if pv is empty
+	return pv[0];
+      }
 
       bool containsPoint(const Point&) const;
    private:

@@ -25,7 +25,7 @@ Patch::Patch(const Level* level,
 	     int id)
     : d_level(level), d_lowIndex(lowIndex), d_highIndex(highIndex),
       d_inLowIndex(inLowIndex), d_inHighIndex(inHighIndex),
-      d_id( id )
+      d_id( id ), d_level_index(-1)
 {
    if(d_id == -1)
       d_id = ids++;
