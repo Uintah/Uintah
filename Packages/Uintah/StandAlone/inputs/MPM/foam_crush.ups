@@ -268,7 +268,7 @@
 		<lower>[0.0,0.0,0.0]</lower>
 		<upper>[0.1,0.1,0.106]</upper>
 	        <extraCells>   [0,0,1]    </extraCells>
-                <patches>[1,1,1]</patches>
+                <patches>[2,2,1]</patches>
 		<resolution>[50,50,53]</resolution>
 	    </Box>
             <periodic>[1,1,0]</periodic>
