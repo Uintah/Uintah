@@ -215,7 +215,7 @@ void MUI_slider_real::set_minmax(double min, double max)
 void MUI_slider_real::set_value(double val)
 {
     int ival=(int)(val/base);
-    scale->SetValue(val);
+    scale->SetValue(ival);
     if(window)
 	scale->SetValues();
 }
