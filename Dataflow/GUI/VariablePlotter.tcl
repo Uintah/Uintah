@@ -263,20 +263,20 @@ itcl_class Uintah_Visualization_VariablePlotter {
     }
     method setVar_list { args } {
 	set var_list $args
-	puts "var_list is now $var_list"
+#	puts "var_list is now $var_list"
     }
     method clearMat_list {} {
 	set mat_lists {}
-	puts "mat_lists cleared"
+#	puts "mat_lists cleared"
     }
     method appendMat_list { args } {
 	set mat_list $args
 	lappend mat_lists $mat_list
-	puts "mat_list is now $mat_lists"
+#	puts "mat_list is now $mat_lists"
     }
     method setType_list { args } {
 	set type_list $args
-	puts "type_list is now $type_list"
+#	puts "type_list is now $type_list"
     }
     method buildVarFrame {w} {
 	if {[llength $var_list] > 0} {
