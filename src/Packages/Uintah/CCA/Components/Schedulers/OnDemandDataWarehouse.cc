@@ -35,6 +35,7 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <stdio.h>
 
 //#define WAYNE_DEBUG
 
@@ -278,7 +279,7 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, SendState& rs, DependencyBatch* ba
       // than we want, there can be problems with dynamic load balancing, when patch
       // used to be on this processor and now we only want ghost data from patch.  So
       // check if dest previously sent us this entire patch, if so, just use that sendset
-      ParticleSubset* sendset = rs.find_sendset(dest, patch, matlIndex, Ghost::None, 0);
+      ParticleSubset* sendset = rs.find_sendset(dest, patch, matlIndex, Ghost::None, 0, old_dw->d_generation);
       if (sendset) {
         fflush(stdout);
         sendset = old_dw->getParticleSubset(matlIndex, patch, Ghost::None, 0);
@@ -286,7 +287,7 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, SendState& rs, DependencyBatch* ba
         ngc = 0;
       }
       else
-        sendset = ss.find_sendset(dest, patch, matlIndex, gt, ngc);
+        sendset = ss.find_sendset(dest, patch, matlIndex, gt, ngc, old_dw->d_generation);
       ssLock.unlock();  // Dd: ??
 
       if(!sendset){
@@ -321,12 +322,12 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, SendState& rs, DependencyBatch* ba
 #endif
         ASSERT(batch->messageTag >= 0);
         
-        // dbg << d_myworld->myrank() << " Sending PARTICLE message number " << (PARTICLESET_TAG|batch->messageTag) << ", to " << dest << ", length: " << 1 << "(" << numParticles << ")\n"; cerrLock.unlock();
+        // dbg << d_myworld->myrank() << " Sending PARTICLE message number " << (PARTICLESET_TAG|batch->messageTag) << ", to " << dest << ", patch " << patch->getID() << ", matl " << matlIndex << ", length: " << 1 << "(" << numParticles << ")\n"; cerrLock.unlock();
 
         MPI_Bsend(&numParticles, 1, MPI_INT, dest,
                   PARTICLESET_TAG|batch->messageTag, d_myworld->getComm());
         ssLock.lock();  // Dd: ??       
-        ss.add_sendset(sendset, dest, patch, matlIndex, gt, ngc);
+        ss.add_sendset(sendset, dest, patch, matlIndex, gt, ngc, old_dw->d_generation);
         ssLock.unlock();  // Dd: ??
       }
         
@@ -449,14 +450,14 @@ OnDemandDataWarehouse::recvMPI(SendState& rs, BufferInfo& buffer,
         ngc = 0;
       }
       else
-        recvset = rs.find_sendset(from, patch, matlIndex, gt, ngc);
+        recvset = rs.find_sendset(from, patch, matlIndex, gt, ngc, old_dw->d_generation);
       
       if(!recvset){
         int numParticles;
         MPI_Status status;
         ASSERT(batch->messageTag >= 0);
 	ASSERTRANGE(from, 0, d_myworld->size());
-        // dbg << d_myworld->myrank() << " Posting PARTICLES receive for message number " << (PARTICLESET_TAG|batch->messageTag) << " from " << from << ", length=" << 1 << "\n";      
+        // dbg << d_myworld->myrank() << " Posting PARTICLES receive for message number " << (PARTICLESET_TAG|batch->messageTag) << " from " << from << ", patch " << patch->getID() << ", matl " << matlIndex << ", length=" << 1 << "\n";      
         MPI_Recv(&numParticles, 1, MPI_INT, from,
                  PARTICLESET_TAG|batch->messageTag, d_myworld->getComm(),
                  &status);
@@ -469,13 +470,14 @@ OnDemandDataWarehouse::recvMPI(SendState& rs, BufferInfo& buffer,
           psubset = old_dw->createParticleSubset(numParticles, matlIndex, patch, gt, ngc);
         }
         else {
+          old_dw->printParticleSubsets();
           psubset = old_dw->getParticleSubset(matlIndex,patch,gt,ngc);
           ASSERTEQ(numParticles, psubset->numParticles());
         }
         ParticleSubset* recvset = new ParticleSubset(psubset->getParticleSet(),
                                                      true, matlIndex, patch, 
                                                      gt, ngc, 0);
-        rs.add_sendset(recvset, from, patch, matlIndex, gt, ngc);
+        rs.add_sendset(recvset, from, patch, matlIndex, gt, ngc, old_dw->d_generation);
       }
       ParticleSubset* pset = old_dw->getParticleSubset(matlIndex,patch,gt,ngc);
 
@@ -773,7 +775,7 @@ OnDemandDataWarehouse::saveParticleSubset(ParticleSubset* psubset,
 void OnDemandDataWarehouse::printParticleSubsets()
 {
   psetDBType::iterator iter;
-  cout << d_myworld->myrank() << " Available psets:\n";
+  cout << d_myworld->myrank() << " Available psets on DW " << d_generation << ":\n";
   for (iter = d_psetDB.begin(); iter != d_psetDB.end(); iter++) {
     cout << d_myworld->myrank() << " " <<*(iter->second) << endl;
   }
