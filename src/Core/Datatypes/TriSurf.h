@@ -30,7 +30,7 @@ public:
   TriSurf(Field::data_location data_at) : 
     GenericField<TriSurfMesh, vector<T> >(data_at) {};
   virtual ~TriSurf() {};
-
+  
   void    io(Piostream &stream);
   static  PersistentTypeID type_id;
   static const string type_name(int n = -1);
@@ -41,7 +41,7 @@ private:
 };
 
 // Pio defs.
-const double TET_VOL_VERSION = 1.0;
+const int TRI_SURF_VERSION = 1;
 
 
 template <class T>
@@ -62,7 +62,7 @@ template <class T>
 void 
 TriSurf<T>::io(Piostream& stream)
 {
-  stream.begin_class(type_name(), TET_VOL_VERSION);
+  stream.begin_class(type_name().c_str(), TRI_SURF_VERSION);
   GenericField<TriSurfMesh, vector<T> >::io(stream);
   stream.end_class();
 }
