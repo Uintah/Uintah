@@ -34,7 +34,7 @@
 
 #include <sci_gl.h>
 //#include <Packages/Volume/Core/Util/Pbuffer.h>
-#include <Packages/Volume/Core/Geom/FragmentProgramARB.h>
+#include <Packages/Volume/Core/Util/ShaderProgramARB.h>
 #include <Packages/Volume/Dataflow/Ports/Colormap2Port.h>
 #include <Packages/Teem/Core/Datatypes/NrrdData.h>
 #include <Packages/Teem/Dataflow/Ports/NrrdPort.h>

@@ -42,7 +42,7 @@ public:
   ShaderProgramARB(const std::string& program);
   ~ShaderProgramARB();
   
-  void create();
+  bool create();
   bool valid();
   void destroy();
 
@@ -58,8 +58,6 @@ protected:
   unsigned int mType;
   unsigned int mId;
   std::string mProgram;
-  static bool mInit;
-  static bool mSupported;
 };
 
 class VertexProgramARB : public ShaderProgramARB

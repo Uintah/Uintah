@@ -39,35 +39,28 @@ namespace Volume {
 class Pbuffer
 {
 public:
-  Pbuffer (int width, int height, bool isRenderTex);
-  Pbuffer (int width, int height, int format = GL_INT /* GL_INT or GL_FLOAT */,
-	   int numColorBits = 8 /* 8, 16, 32 */,
-	   /* int numChannels / 1, 2, 3, 4 /, */
-	   bool isRenderTex = true, int isDoubleBuffer = GL_TRUE,
-	   int numAuxBuffers = GL_DONT_CARE, int numDepthBits = GL_DONT_CARE,
-	   int numStencilBits = GL_DONT_CARE, int numAccumBits = GL_DONT_CARE);
-  ~Pbuffer ();
+  Pbuffer(int width, int height, bool isRenderTex);
+  Pbuffer(int width, int height, int format = GL_INT /* GL_INT or GL_FLOAT */,
+          int numColorBits = 8 /* 8, 16, 32 */,
+          /* int numChannels / 1, 2, 3, 4 /, */
+          bool isRenderTex = true, int isDoubleBuffer = GL_TRUE,
+          int numAuxBuffers = GL_DONT_CARE, int numDepthBits = GL_DONT_CARE,
+          int numStencilBits = GL_DONT_CARE, int numAccumBits = GL_DONT_CARE);
+  ~Pbuffer();
 
-  bool create ();
-  void destroy ();
-  void makeCurrent (); // no save state
-  void swapBuffers (); // flush if single
-  void bind (unsigned int buffer = GL_FRONT); // bind as 2D texture
-  void release (unsigned int buffer = GL_FRONT); 
+  bool create();
+  void destroy();
+  void makeCurrent(); // no save state
+  void swapBuffers(); // flush if single
+  void bind(unsigned int buffer = GL_FRONT); // bind as 2D texture
+  void release(unsigned int buffer = GL_FRONT); 
 
-  void enable ();
-  void disable ();
+  void enable();
+  void disable();
   
-  inline int getWidth () const { return mWidth; }
-  inline int getHeight () const { return mHeight; }
-  inline int getFormat () const { return mFormat; }
-  inline int getNumColorBits () const { return mNumColorBits; }
-  inline int getNumAccumBits () const { return mNumAccumBits; }
-  inline int isDoubleBuffer () const { return mDoubleBuffer; }
-  inline int getNumAuxBuffers () const { return mNumAuxBuffers; }
-  inline int getNumStencilBits () const { return mNumStencilBits; }
-  inline bool isRenderTex () const { return mRenderTex; }
-  inline int getVisualId () const { return mVisualId; }
+  inline int width() const { return mWidth; }
+  inline int height() const { return mHeight; }
+  inline int visual() const { return mVisualId; }
 
 protected:
   int mWidth, mHeight;
