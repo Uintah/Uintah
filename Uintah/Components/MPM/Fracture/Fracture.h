@@ -1,3 +1,6 @@
+#ifndef __FRACTURE_H__
+#define __FRACTURE_H__
+
 class Fracture {
  public:
   virtual void computeEnergyReleaseRate() = 0;
@@ -13,3 +16,6 @@ class TriangleSurfaceSplitter {
   virtual void splitTriangleSurfaces() = 0;
   virtual void mergeTriangleSurface() = 0;
 };
+
+
+#endif __FRACTURE_H__

@@ -1,3 +1,6 @@
+#ifndef __GEOMETRY_GRID_H__
+#define __GEOMETRY_GRID_H__
+
 
 #include <string>
 
@@ -15,7 +18,13 @@ public:
 
 };
 
+#endif __GEOMETRY_GRID_H__
+
+
 // $Log$
+// Revision 1.2  2000/03/15 21:58:24  jas
+// Added logging and put guards in.
+//
 // Revision 1.1  2000/03/14 22:10:49  jas
 // Initial creation of the geometry specification directory with the legacy
 // problem setup.
