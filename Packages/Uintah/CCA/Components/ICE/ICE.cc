@@ -44,8 +44,13 @@ using namespace Uintah;
 static int iterNum = 0;
 static bool computeDt = false;
 
-//#define DOING
-#undef DOING
+/*`==========TESTING==========  HACK: so we can get mass exchange off the ground*/
+#define HMX 1
+#define GAS 0
+ /*==========TESTING==========`*/
+ 
+#define DOING
+//#undef DOING
 
 ICE::ICE(const ProcessorGroup* myworld) 
   : UintahParallelComponent(myworld)
@@ -90,6 +95,7 @@ ICE::ICE(const ProcessorGroup* myworld)
   switchDebug_advance_advect      = false;
   switchDebug_advectQFirst        = false;
   switchTestConservation          = false;
+  switchMassExchange              = false;
   
 }
 
@@ -112,7 +118,6 @@ ICE::~ICE()
 }
 /* ---------------------------------------------------------------------
  Function~  ICE::problemSetup--
- Purpose~  Read the inputfile 
 _____________________________________________________________________*/
 void  ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& ,
 		       SimulationStateP&   sharedState)
@@ -121,7 +126,7 @@ void  ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& ,
   d_SMALL_NUM   = 1.e-100;
   cerr << "In the preprocessor . . ." << endl;
   
-  // Find the debug switches
+  // Find the switches
   ProblemSpecP debug_ps = prob_spec->findBlock("Debug");
   if (debug_ps) {
     for (ProblemSpecP child = debug_ps->findBlock("debug"); child != 0;
@@ -152,6 +157,8 @@ void  ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& ,
 	switchDebug_advectQFirst         = true;
       else if (debug_attr["label"] == "switchTestConservation")
 	switchTestConservation           = true;
+      else if (debug_attr["label"] == "switchMassExchange")
+	switchMassExchange               = true;
     }
   }
   cerr << "Pulled out the debugging switches from input file" << endl;
@@ -238,7 +245,6 @@ endl;
 }
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleInitialize--
- Purpose~  Initialize all the variables
 _____________________________________________________________________*/
 void ICE::scheduleInitialize(const LevelP& level, SchedulerP& sched,
 			     DataWarehouseP& dw)       
@@ -275,7 +281,6 @@ void ICE::scheduleInitialize(const LevelP& level, SchedulerP& sched,
 }
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleComputeStableTimestep--
- Purpose~  Compute the next timestep
 _____________________________________________________________________*/
 void ICE::scheduleComputeStableTimestep(const LevelP& level,SchedulerP& sched,
 					DataWarehouseP& dw)
@@ -302,7 +307,6 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,SchedulerP& sched,
 }
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleTimeAdvance--
- Purpose~  Schedule the main loop for ICE
 _____________________________________________________________________*/
 void ICE::scheduleTimeAdvance(double, double, const LevelP& level,
 			      SchedulerP& sched, DataWarehouseP& old_dw,
@@ -316,11 +320,13 @@ void ICE::scheduleTimeAdvance(double, double, const LevelP& level,
         
     scheduleComputeFaceCenteredVelocities(patch,  sched,  old_dw, new_dw);
     
-    scheduleAddExchangeContributionToFCVel(patch,  sched,  old_dw, new_dw);
-    
+    scheduleAddExchangeContributionToFCVel(patch,  sched,  old_dw, new_dw);    
+
     scheduleComputeDelPressAndUpdatePressCC(patch,  sched,  old_dw, new_dw);
     
     scheduleComputePressFC(patch,  sched,  old_dw, new_dw);
+    
+ //   scheduleMassExchange(patch,  sched,  old_dw,  new_dw);
     
     scheduleAccumulateMomentumSourceSinks(patch,  sched,  old_dw, new_dw);
     
@@ -342,7 +348,6 @@ void ICE::scheduleTimeAdvance(double, double, const LevelP& level,
 
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleComputeEquilibrationPressure--
- Purpose~   Compute the equilibration pressure
 _____________________________________________________________________*/
 void ICE::scheduleComputeEquilibrationPressure(const Patch* patch, 
 					       SchedulerP& sched,
@@ -350,7 +355,7 @@ void ICE::scheduleComputeEquilibrationPressure(const Patch* patch,
 					       DataWarehouseP& new_dw)
 {
   Task* task = scinew Task("ICE::computeEquilibrationPressure",
-			   patch, old_dw, new_dw,this,
+                        patch, old_dw, new_dw,this,
 			   &ICE::computeEquilibrationPressure);
   
   task->requires(old_dw,lb->press_CCLabel, 0,patch,Ghost::None);
@@ -377,7 +382,6 @@ void ICE::scheduleComputeEquilibrationPressure(const Patch* patch,
 
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleComputeFaceCenteredVelocities--
- Purpose~   Compute the face-centered velocities
 _____________________________________________________________________*/
 void ICE::scheduleComputeFaceCenteredVelocities(const Patch* patch,
 						SchedulerP& sched,
@@ -421,8 +425,6 @@ void ICE::scheduleComputeFaceCenteredVelocities(const Patch* patch,
 
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleAddExchangeContributionToFCVel--
- Purpose~   Schedule compute the momentum exchange for the face centered 
-            velocities
 _____________________________________________________________________*/
 void ICE::scheduleAddExchangeContributionToFCVel(const Patch* patch, 
 						 SchedulerP& sched,
@@ -458,7 +460,6 @@ void ICE::scheduleAddExchangeContributionToFCVel(const Patch* patch,
 
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleComputeDelPressAndUpdatePressCC--
- Purpose~   Schedule compute delpress and new press_CC
 _____________________________________________________________________*/
 void ICE::scheduleComputeDelPressAndUpdatePressCC(const Patch* patch,
 						  SchedulerP& sched,
@@ -494,7 +495,6 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(const Patch* patch,
 
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleComputePressFC--
- Purpose~   Schedule compute face centered pressure press_FC
 _____________________________________________________________________*/
 void ICE::scheduleComputePressFC(const Patch* patch, SchedulerP& sched,
 				 DataWarehouseP& old_dw, 
@@ -515,9 +515,32 @@ void ICE::scheduleComputePressFC(const Patch* patch, SchedulerP& sched,
 
   sched->addTask(task);
 }
+/*`==========TESTING==========*/ 
+/* ---------------------------------------------------------------------
+ Function~  ICE::scheduleMassExchange--
+_____________________________________________________________________*/
+void  ICE::scheduleMassExchange(const Patch* patch,
+					SchedulerP& sched,
+					DataWarehouseP& old_dw,
+					DataWarehouseP& new_dw)
+
+{
+  Task* task = scinew Task("ICE::massExchange",
+                        patch, old_dw, new_dw, this, &ICE::massExchange);
+  int numMatls=d_sharedState->getNumMatls(); 
+
+  for (int m = 0; m < numMatls; m++)  {
+    Material* matl = d_sharedState->getMaterial(m);
+    int dwindex = matl->getDWIndex();  
+    task->computes(new_dw,  lb->mass_sourceLabel, dwindex, patch);
+    task->computes(new_dw,  lb->mass_CCLabel,     dwindex, patch);
+    task->computes(new_dw,  lb->rho_CCLabel,      dwindex, patch);    
+  }
+  sched->addTask(task);
+}
+ /*==========TESTING==========`*/
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleAccumulateMomentumSourceSinks--
- Purpose~   Schedule compute sources and sinks of momentum
 _____________________________________________________________________*/
 void ICE::scheduleAccumulateMomentumSourceSinks(const Patch* patch, 
 						SchedulerP& sched,
@@ -554,7 +577,6 @@ void ICE::scheduleAccumulateMomentumSourceSinks(const Patch* patch,
 
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleAccumulateEnergySourceSinks--
- Purpose~   Schedule compute sources and sinks of energy
 _____________________________________________________________________*/
 void ICE::scheduleAccumulateEnergySourceSinks(const Patch* patch,
 					      SchedulerP& sched,
@@ -583,7 +605,6 @@ void ICE::scheduleAccumulateEnergySourceSinks(const Patch* patch,
 
 /* ---------------------------------------------------------------------
  Function~  ICE:: scheduleComputeLagrangianValues--
- Purpose~   Schedule compute lagrangian mass momentum and internal energy
  Note:      Only loop over ICE materials, mom_L for MPM is computed
             prior to this function.  
 _____________________________________________________________________*/
@@ -619,7 +640,6 @@ void ICE:: scheduleComputeLagrangianValues(const Patch* patch,
 
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleAddExchangeToMomentumAndEnergy--
- Purpose~   Schedule momentum and energy exchange on the lagrangian quantities
 _____________________________________________________________________*/
 void ICE::scheduleAddExchangeToMomentumAndEnergy(const Patch* patch,
 						 SchedulerP& sched,
@@ -648,9 +668,6 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(const Patch* patch,
 
 /* ---------------------------------------------------------------------
  Function~  ICE::scheduleAdvectAndAdvanceInTime--
- Purpose~   Schedule advance and advect in time for mass, momentum
-            and energy.  Note this function puts (*)vel_CC, rho_CC
-            and Temp_CC into new dw, not flux variables
 _____________________________________________________________________*/
 void ICE::scheduleAdvectAndAdvanceInTime(const Patch* patch, SchedulerP& sched,
 					 DataWarehouseP& old_dw, 
@@ -688,7 +705,6 @@ void ICE::scheduleAdvectAndAdvanceInTime(const Patch* patch, SchedulerP& sched,
 }
 /* ---------------------------------------------------------------------
  Function~  ICE::schedulePrintConservedQuantities--
- Purpose~   dump out the conserved quantities
 _____________________________________________________________________*/
 void ICE::schedulePrintConservedQuantities(const Patch* patch,
 					   SchedulerP& sched,
@@ -880,8 +896,6 @@ void ICE::actuallyInitialize(const ProcessorGroup*, const Patch* patch,
     new_dw->put(wvel_FC[m],       lb->wvel_FCLabel,           dwindex,patch);
     new_dw->put(visc_CC[m],       lb->viscosity_CCLabel,      dwindex,patch);
   
-  
-/*`==========TESTING==========*/ 
     if (switchDebugInitialize){
       cout << " Initial Conditions" << endl;       
       char description[50];
@@ -894,8 +908,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*, const Patch* patch,
       printVector( patch, 1, description, "uvel_CC", 0,  vel_CC[m]);
       printVector( patch, 1, description, "vvel_CC", 1,  vel_CC[m]);
       printVector( patch, 1, description, "wvel_CC", 2,  vel_CC[m]);
-    } 
- /*==========TESTING==========`*/   
+    }   
   }
   setBC(press_CC, rho_micro[SURROUND_MAT], "Pressure",patch);
   if (switchDebugInitialize){
@@ -995,12 +1008,12 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     }
   }
 
-  /*`==========DEBUG============*/ 
+ //---- P R I N T   D A T A ------  
   if (switchDebug_equilibration_press) {
-#if 0
 //__________________________________
 //  Stand alone ICE dumps it's output
 //  just before going into the routine
+  #if 0
     printData( patch, 1, "TOP_equilibration", "Press_CC_top", press);
               
    for (int m = 0; m < numMatls; m++)  {
@@ -1010,20 +1023,19 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
      sprintf(description, "TOP_equilibration_Mat_%d ",dwindex);
      printData( patch, 1, description, "rho_CC",          rho_CC[m]);
      printData( patch, 1, description, "rho_micro_CC",    rho_micro[m]);
-    // printData( patch, 0, description, "speedSound",      speedSound_new[m]);
+     printData( patch, 0, description, "speedSound",      speedSound_new[m]);
      printData( patch, 1, description, "Temp_CC",         Temp[m]);
      printData( patch, 1, description, "vol_frac_CC",     vol_frac[m]);
     }
-#endif
+   #endif
   }
- /*==========DEBUG============`*/
    
 //______________________________________________________________________
 // Done with preliminary calcs, now loop over every cell
   int count, test_max_iter = 0;
   for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++) {
     
-    IntVector curcell = *iter;    //So I have a chance at finding the bug
+    IntVector curcell = *iter;    //So I have a chance at finding bugs -Todd
     int i,j,k;
     i   = curcell.x();
     j   = curcell.y();
@@ -1050,8 +1062,6 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
                                            cv[m],Temp[m][*iter],
                                            press_eos[m], dp_drho[m], dp_de[m]);
      }
-
-
      //__________________________________
      // - compute delPress
      // - update press_CC     
@@ -1059,7 +1069,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
      for (int m = 0; m < numMatls; m++)   {
        Q[m] =  press_new[*iter] - press_eos[m];
        y[m] =  dp_drho[m] * ( rho_CC[m][*iter]/
-               (vol_frac[m][*iter] * vol_frac[m][*iter] + d_SMALL_NUM) ); 
+               (vol_frac[m][*iter] * vol_frac[m][*iter]) ); 
        A   +=  vol_frac[m][*iter];
        B   +=  Q[m]/(y[m] + d_SMALL_NUM);
        C   +=  1.0/(y[m]  + d_SMALL_NUM);
@@ -1081,14 +1091,13 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
      }
      //__________________________________
      // - compute the updated volume fractions
-     //  There are two different way of doing it
      for (int m = 0; m < numMatls; m++)  {
        delVol_frac[m]       = -(Q[m] + delPress)/( y[m] + d_SMALL_NUM );
        vol_frac[m][*iter]   = rho_CC[m][*iter]/rho_micro[m][*iter];
      }
      //__________________________________
-     // Find the speed of sound at ijk
-     // needed by eos and the the explicit
+     // Find the speed of sound 
+     // needed by eos and the explicit
      // del pressure function
      for (int m = 0; m < numMatls; m++)  {
         ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
@@ -1173,8 +1182,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
   }
   new_dw->put(press_new,lb->press_equil_CCLabel,0,patch);
   
-  
-/*`==========DEBUG============*/ 
+ //---- P R I N T   D A T A ------   
   if (switchDebug_equilibration_press) {
    printData( patch, 1, "BOTTOM", "Press_CC_equil", press_new);
               
@@ -1190,7 +1198,6 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
     
     }
   }
- /*==========DEBUG============`*/
 }
 
 /* ---------------------------------------------------------------------
@@ -1242,7 +1249,7 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
 		Ghost::AroundCells, 1);
  
 #if 0
-/*`==========TESTING==========*/ 
+ //---- P R I N T   D A T A ------ 
     if (switchDebug_vel_FC ) {
       char description[50];
       sprintf(description, "TOP_vel_FC_Mat_%d ",dwindex); 
@@ -1252,7 +1259,6 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
       printVector( patch,1, description, "vvel_CC", 1, vel_CC);
       printVector( patch,1, description, "wvel_CC", 2, vel_CC);
     }
- /*==========TESTING==========`*/
 #endif    
     
     SFCXVariable<double> uvel_FC;
@@ -1363,7 +1369,8 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
     new_dw->put(uvel_FC, lb->uvel_FCLabel, dwindex, patch);
     new_dw->put(vvel_FC, lb->vvel_FCLabel, dwindex, patch);
     new_dw->put(wvel_FC, lb->wvel_FCLabel, dwindex, patch);
-/*`==========DEBUG============*/ 
+    
+ //---- P R I N T   D A T A ------ 
     if (switchDebug_vel_FC ) {
       char description[50];
       sprintf(description, "bottom_of_vel_FC_Mat_%d ",dwindex);
@@ -1371,7 +1378,6 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
       printData_FC( patch,1, description, "vvel_FC", vvel_FC);
       printData_FC( patch,1, description, "wvel_FC", wvel_FC);
     }
- /*==========DEBUG============`*/
   }
 }
 
@@ -1605,7 +1611,8 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
     setBC(vvel_FCME[m],"Velocity","y",patch);
     setBC(wvel_FCME[m],"Velocity","z",patch);
   }
-   /*`==========DEBUG============*/ 
+  
+ //---- P R I N T   D A T A ------ 
   if (switchDebug_Exchange_FC ) {
     for (int m = 0; m < numMatls; m++)  {
     Material* matl = d_sharedState->getMaterial( m );
@@ -1617,27 +1624,7 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
     printData_FC( patch,1, description, "wvel_FCME", wvel_FCME[m]);
     }
   }
-  /*==========DEBUG============`*/
-  #if 0
-/**/  int i, j, k;
-/**/  double d_uvel_FCME, d_vvel_FCME, d_wvel_FCME;
-/**/  double d_uvel_FC, d_vvel_FC, d_wvel_FC;
-/**/  for (int m = 0; m < numMatls; m++)  {
-/**/    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
-/**/     IntVector curcell = *iter;       
-/**/     i = curcell.x();
-/**/     j = curcell.y();
-/**/     k = curcell.z();
-/**/     d_uvel_FCME = uvel_FCME[m][curcell];
-/**/     d_vvel_FCME = vvel_FCME[m][curcell];
-/**/     d_wvel_FCME = wvel_FCME[m][curcell];
-/**/
-/**/     d_uvel_FC  = uvel_FC[m][curcell];
-/**/     d_vvel_FC  = vvel_FC[m][curcell];
-/**/     d_wvel_FC  = wvel_FC[m][curcell];
-/**/    }
-/**/  }
-#endif
+
   for(int m = 0; m < numMatls; m++) {
     Material* matl = d_sharedState->getMaterial( m );
     int dwindex = matl->getDWIndex();
@@ -1735,17 +1722,16 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     //__________________________________
     //   First order advection of q_CC
     advectQFirst(q_CC, patch,OFS,OFE,OFC, q_advected);
-/*`==========DEBUG============*/ 
+    
+ //---- P R I N T   D A T A ------  
     if (switchDebug_explicit_press ) {
-#if 1
-    char description[50];
-    sprintf(description, "middle_of_explicit_Pressure_Mat_%d ",dwindex);
-    printData_FC( patch,1, description, "uvel_FC", uvel_FC[m]);
-    printData_FC( patch,1, description, "vvel_FC", vvel_FC[m]);
-    printData_FC( patch,1, description, "wvel_FC", wvel_FC[m]);
-#endif
+      char description[50];
+      sprintf(description, "middle_of_explicit_Pressure_Mat_%d ",dwindex);
+      printData_FC( patch,1, description, "uvel_FC", uvel_FC[m]);
+      printData_FC( patch,1, description, "vvel_FC", vvel_FC[m]);
+      printData_FC( patch,1, description, "wvel_FC", wvel_FC[m]);
     }
- /*==========DEBUG============`*/
+
     for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++) {
       //__________________________________
       //   Contributions from reactions
@@ -1781,12 +1767,11 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
   new_dw->put(delPress, lb->delPress_CCLabel, 0, patch);
   new_dw->put(press_CC, lb->press_CCLabel,    0, patch);
   
-/*`==========DEBUG============*/ 
+ //---- P R I N T   D A T A ------  
   if (switchDebug_explicit_press) {
     printData( patch, 1, "Bottom_of_explicit_Pressure ", "delPress_CC",  delPress);
     printData( patch, 1, "Bottom_of_explicit_Pressure",  "Press_CC",     press_CC);
   }
- /*==========DEBUG============`*/
 }
 
 /* ---------------------------------------------------------------------  
@@ -1880,14 +1865,67 @@ void ICE::computePressFC(const ProcessorGroup*,   const Patch* patch,
   new_dw->put(pressY_FC,lb->pressY_FCLabel, 0, patch);
   new_dw->put(pressZ_FC,lb->pressZ_FCLabel, 0, patch);
   
-/*`==========TESTING==========*/ 
+ //---- P R I N T   D A T A ------ 
   if (switchDebug_PressFC) {
     printData_FC( patch,0,"press_FC",   "press_FC_RIGHT", pressX_FC);
     printData_FC( patch,0,"press_FC",   "press_FC_TOP",   pressY_FC);
     printData_FC( patch,0,"press_FC",   "press_FC_FRONT", pressZ_FC);
   }
-  /*==========TESTING==========`*/
 }
+
+
+/* ---------------------------------------------------------------------
+ Function~  ICE::massExchange--
+ ---------------------------------------------------------------------  */
+void ICE::massExchange(const ProcessorGroup*,  
+					const Patch* patch,
+					DataWarehouseP& old_dw, 
+					DataWarehouseP& new_dw)
+{
+#if 0
+#ifdef DOING
+  cout << "Doing massExchange on patch " <<
+    patch->getID() << "\t MPMICE" << endl;
+#endif
+ double misha_change_in_mass_from_particles = 0.001;  //hardwired
+ double SMALL_NUM = 1.0e-100;
+ Vector dx = patch->dCell();
+ double vol=dx.x()*dx.y()*dx.z();     // We may have to use matl volume in mpmice
+ 
+ int numMatls=d_sharedState->getNumMatls();
+ vector<CCVariable<double> > mass_source(numMatls);
+ 
+  for(int m = 0; m < numMatls; m++) {
+    Material* matl = d_sharedState->getMaterial( m );
+    int dwindex = matl->getDWIndex();
+    
+    new_dw->allocate(mass_source[m],lb->mass_sourceLabel,dwindex,patch);
+    old_dw->get(rho_CC[m],lb->rho_CC_top_cycleLabel,   
+                                                 dwindex,patch,Ghost::None, 0);
+  }
+    
+  if(switchMassExchange){        
+    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+      for(int m = 0; m < numMatls; m++) {
+        mass_source[m][*iter] = 0.0;
+        
+        if (mass_source[HMX][*iter] > SMALL_NUM)  {
+          mass_source[HMX][*iter] =  -misha_change_in_mass_from_particles;
+          mass_source[GAS][*iter] =  mass_source[HMX][*iter]; 
+        }
+      } 
+    }
+  }
+  //__________________________________
+  // if there is no mass exchange carry forward
+  for(int m = 0; m < numMatls; m++) {
+    Material* matl = d_sharedState->getMaterial( m );
+    int dwindex = matl->getDWIndex();
+    new_dw->put(mass_source[m], lb->mass_sourceLabel, dwindex,patch);
+  }
+  #endif
+}
+ 
 
 /* ---------------------------------------------------------------------
  Function~  ICE::accumulateMomentumSourceSinks--
@@ -2017,7 +2055,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
     }
 
     new_dw->put(mom_source, lb->mom_source_CCLabel, dwindex, patch);
-    /*`==========TESTING==========*/ 
+    //---- P R I N T   D A T A ------ 
     if (switchDebugSource_Sink) {
       char description[50];
       sprintf(description, "sources/sinks_Mat_%d",dwindex);
@@ -2025,7 +2063,6 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
       printVector( patch, 1, description,    "ymom_source", 1, mom_source);
       printVector( patch, 1, description,    "zmom_source", 2, mom_source);
     }
-    /*==========TESTING==========`*/
   }
 }
 
@@ -2085,13 +2122,14 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
       B = rho_micro_CC[*iter]   * speedSound[*iter] * speedSound[*iter];
       int_eng_source[*iter] = (A/B) * delPress[*iter];
     }
-   /*`==========TESTING==========*/
+    
+    //---- P R I N T   D A T A ------ 
     if (switchDebugSource_Sink) {
       char description[50];
       sprintf(description, "sources/sinks_Mat_%d ",dwindex);
       printData( patch, 1, description,    "int_eng_source",  int_eng_source);
     }
-    /*==========TESTING==========`*/
+
     new_dw->put(int_eng_source,lb->int_eng_source_CCLabel,dwindex,patch);
   }
 }
@@ -2142,7 +2180,6 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,  const Patch* patch,
     double cv = ice_matl->getSpecificHeat();
     for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
 	iter++) {
-      IntVector curcell = *iter;       
 
       double mass = rho_CC[*iter] * vol;
       mass_L[*iter] = mass; 
@@ -2162,7 +2199,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,  const Patch* patch,
    }
   }  // end of numALLMatl loop
    
-  /*`==========DEBUG============*/ 
+  //---- P R I N T   D A T A ------ 
   // Dump out all the matls data
   if (switchDebugLagrangianValues ) {
     int gc;
@@ -2179,6 +2216,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,  const Patch* patch,
         new_dw->get(mom_L,     lb->mom_L_CCLabel,      dwindex,patch,
 		    Ghost::None,0);
       }
+      //---- P R I N T   D A T A ------
       char description[50];
       sprintf(description, "Bot_Lagrangian_Values_Mat_%d ",dwindex);
       printVector( patch,gc, description, "xmom_L_CC", 0, mom_L);
@@ -2187,7 +2225,6 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,  const Patch* patch,
       printData(   patch,gc, description, "int_eng_L_CC",int_eng_L);
     }
   }
-  /*==========DEBUG============`*/
 }
 
 /*---------------------------------------------------------------------
@@ -2505,7 +2542,6 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*, const Patch* patch,
     double cv = ice_matl->getSpecificHeat();
     //__________________________________
     //   Advection preprocessing
-
     influxOutfluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch,OFS,OFE,OFC);
     
     //__________________________________
@@ -2567,7 +2603,8 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*, const Patch* patch,
       }
      // Divide by the new rho_CC.  This must be done in the extraCells
      // for now, because I don't know how to set the BCs for sp_vol.
-     for(CellIterator iter =patch->getExtraCellIterator();!iter.done();iter++){        if(rho_CC[*iter] > 1000.*d_SMALL_NUM){
+     for(CellIterator iter =patch->getExtraCellIterator();!iter.done();iter++){        
+       if(rho_CC[*iter] > 1000.*d_SMALL_NUM){
                 sp_vol_CC[*iter] /= (rho_CC[*iter] + d_SMALL_NUM);
         }
         else{
@@ -2576,7 +2613,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*, const Patch* patch,
      }
     }
 
-    /*`==========DEBUG============*/  
+    //---- P R I N T   D A T A ------   
     if (switchDebug_advance_advect ) {
     char description[50];
     sprintf(description, "AFTER_Advection_after_BC_Mat_%d ",dwindex);
@@ -2590,7 +2627,6 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*, const Patch* patch,
     printVector( patch,1, description, "vvel_CC", 1, vel_CC);
     printVector( patch,1, description, "wvel_CC", 2, vel_CC);
     }
-    /*==========DEBUG============`*/
     
     new_dw->put(rho_CC,   lb->rho_CC_top_cycleLabel, dwindex,patch);
     new_dw->put(mass_CC,  lb->mass_CCLabel,          dwindex,patch);
@@ -2844,15 +2880,6 @@ void ICE::setBC(CCVariable<double>& variable, const string& kind,
       if (bc->getKind() == "Neumann") 
 	variable.fillFaceFlux(face,bc->getValue(),dx);
       
-    }
-    if (bc_base->getType() == "Pressure") {
-      PressureBoundCond* bc = dynamic_cast<PressureBoundCond*>(bc_base);
-      if (bc->getKind() == "Dirichlet")
-        variable.fillFace(face,bc->getValue());
-
-      if (bc->getKind() == "Neumann")
-        variable.fillFaceFlux(face,bc->getValue(),dx);
-
     }
   }
 }
@@ -3133,115 +3160,6 @@ void ICE::influxOutfluxVolume(const SFCXVariable<double>&     uvel_FC,
     OFC[*iter].d_cflux[BOT_L_BK]  = delY_bottom   * delX_left  * delZ_back;
     OFC[*iter].d_cflux[BOT_L_FR]  = delY_bottom   * delX_left  * delZ_front;
   }
-  //__________________________________
-  //     INFLUX TERMS
-#if 0
-  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
-    IntVector curcell = *iter,adjcell;
-    int i,j,k;
-    //__________________________________
-    //   INFLUX SLABS
-    i = curcell.x();
-    j = curcell.y();
-    k = curcell.z();
-    
-    adjcell = IntVector(i, j+1, k);
-    IFS[*iter].d_fflux[TOP]    = OFS[adjcell].d_fflux[BOTTOM];
-    
-    adjcell = IntVector(i, j-1, k);
-    IFS[*iter].d_fflux[BOTTOM] = OFS[adjcell].d_fflux[TOP];
-    
-    adjcell = IntVector(i+1, j, k);
-    IFS[*iter].d_fflux[RIGHT]  = OFS[adjcell].d_fflux[LEFT];
-    
-    adjcell = IntVector(i-1, j, k);
-    IFS[*iter].d_fflux[LEFT]   = OFS[adjcell].d_fflux[RIGHT];
-    
-    adjcell = IntVector(i, j, k+1);
-    IFS[*iter].d_fflux[FRONT]  = OFS[adjcell].d_fflux[BACK];
-    
-    adjcell = IntVector(i, j, k-1);
-    IFS[*iter].d_fflux[BACK]   = OFS[adjcell].d_fflux[FRONT];
-    
-    //__________________________________
-    //    INFLUX EDGES
-    adjcell = IntVector(i+1, j+1, k);
-    IFE[*iter].d_eflux[TOP_R]    = OFE[adjcell].d_eflux[BOT_L];
-    
-    adjcell = IntVector(i, j+1, k+1);
-    IFE[*iter].d_eflux[TOP_FR]   = OFE[adjcell].d_eflux[BOT_BK];
-    
-    adjcell = IntVector(i-1, j+1, k);
-    IFE[*iter].d_eflux[TOP_L]    = OFE[adjcell].d_eflux[BOT_R];
-    
-    adjcell = IntVector(i, j+1, k-1);
-    IFE[*iter].d_eflux[TOP_BK]   = OFE[adjcell].d_eflux[BOT_FR];
-    
-    adjcell = IntVector(i+1, j-1, k);
-    IFE[*iter].d_eflux[BOT_R]    = OFE[adjcell].d_eflux[TOP_L];
-    
-    adjcell = IntVector(i, j-1, k+1);
-    IFE[*iter].d_eflux[BOT_FR]    = OFE[adjcell].d_eflux[TOP_BK];
-    
-    adjcell = IntVector(i-1, j-1, k);
-    IFE[*iter].d_eflux[BOT_L]    = OFE[adjcell].d_eflux[TOP_R];
-    
-    adjcell = IntVector(i, j-1, k-1);
-    IFE[*iter].d_eflux[BOT_BK]    = OFE[adjcell].d_eflux[TOP_FR];
-    
-    adjcell = IntVector(i+1, j, k-1);
-    IFE[*iter].d_eflux[RIGHT_BK]  = OFE[adjcell].d_eflux[LEFT_FR];
-    
-    adjcell = IntVector(i+1, j, k+1);
-    IFE[*iter].d_eflux[RIGHT_FR]  = OFE[adjcell].d_eflux[LEFT_BK];
-    
-    adjcell = IntVector(i-1, j, k-1);
-    IFE[*iter].d_eflux[LEFT_BK]  = OFE[adjcell].d_eflux[RIGHT_FR];
-    
-    adjcell = IntVector(i-1, j, k+1);
-    IFE[*iter].d_eflux[LEFT_FR]  = OFE[adjcell].d_eflux[RIGHT_BK];
-    
-    //__________________________________
-    //   INFLUX CORNER FLUXES
-    adjcell = IntVector(i+1, j+1, k-1);
-    IFC[*iter].d_cflux[TOP_R_BK]= OFC[adjcell].d_cflux[BOT_L_FR];
-    
-    adjcell = IntVector(i+1, j+1, k+1);
-    IFC[*iter].d_cflux[TOP_R_FR]= OFC[adjcell].d_cflux[BOT_L_BK];
-    
-    adjcell = IntVector(i-1, j+1, k-1);
-    IFC[*iter].d_cflux[TOP_L_BK]= OFC[adjcell].d_cflux[BOT_R_FR];
-    
-    adjcell = IntVector(i-1, j+1, k+1);
-    IFC[*iter].d_cflux[TOP_L_FR]= OFC[adjcell].d_cflux[BOT_R_BK];
-    
-    adjcell = IntVector(i+1, j-1, k-1);
-    IFC[*iter].d_cflux[BOT_R_BK]= OFC[adjcell].d_cflux[TOP_L_FR];
-    
-    adjcell = IntVector(i+1, j-1, k+1);
-    IFC[*iter].d_cflux[BOT_R_FR]= OFC[adjcell].d_cflux[TOP_L_BK];
-    
-    adjcell = IntVector(i-1, j-1, k-1);
-    IFC[*iter].d_cflux[BOT_L_BK]= OFC[adjcell].d_cflux[TOP_R_FR];
-    
-    adjcell = IntVector(i-1, j-1, k+1);
-    IFC[*iter].d_cflux[BOT_L_FR]= OFC[adjcell].d_cflux[TOP_R_BK];
-    
-    //__________________________________
-    //  Bullet proofing
-    totalfluxin = 0.0;
-    for(int face = TOP; face <= BACK; face++ )  {
-      totalfluxin  += IFS[*iter].d_fflux[face];
-    }
-    for(int edge = TOP_R; edge <= LEFT_BK; edge++ )  {
-      totalfluxin  += IFE[*iter].d_eflux[edge];
-    }
-    for(int corner = TOP_R_BK; corner <= BOT_L_FR; corner++ )  {
-      totalfluxin  += IFC[*iter].d_cflux[corner];
-    }
-  }
-  ASSERT(totalfluxin < vol);
-#endif
 }
   
 
@@ -3257,8 +3175,6 @@ void ICE::influxOutfluxVolume(const SFCXVariable<double>&     uvel_FC,
 - Compute q outflux and q influx for each cell.
 - Finally sum the influx and outflux portions
        
- 01/02/01     Added corner flux terms and extened to 3d   
-
  advect_preprocessing MUST be done prior to this function
  ---------------------------------------------------------------------  */
 void ICE::advectQFirst(const CCVariable<double>&   q_CC,const Patch* patch,
@@ -3270,7 +3186,10 @@ void ICE::advectQFirst(const CCVariable<double>&   q_CC,const Patch* patch,
 {
   double  sum_q_outflux, sum_q_outflux_EF, sum_q_outflux_CF, sum_q_influx;
   double sum_q_influx_EF, sum_q_influx_CF;
-
+  double  total_fluxout;
+  Vector dx = patch->dCell();
+  double vol = dx.x() * dx.y() * dx.z();
+  
   IntVector adjcell;
   
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {     
@@ -3278,7 +3197,7 @@ void ICE::advectQFirst(const CCVariable<double>&   q_CC,const Patch* patch,
     int i = curcell.x();
     int j = curcell.y();
     int k = curcell.z();
-
+   
     sum_q_outflux       = 0.0;
     sum_q_outflux_EF    = 0.0;
     sum_q_outflux_CF    = 0.0;
@@ -3302,7 +3221,20 @@ void ICE::advectQFirst(const CCVariable<double>&   q_CC,const Patch* patch,
       sum_q_outflux_CF +=  q_CC[*iter] * OFC[*iter].d_cflux[corner];
     } 
 
+    //__________________________________
+    //  Bullet proofing
+    total_fluxout = 0.0;
+    for(int face = TOP; face <= BACK; face++ )  {
+      total_fluxout  += OFS[*iter].d_fflux[face];
+    }
+    for(int edge = TOP_R; edge <= LEFT_BK; edge++ )  {
+      total_fluxout  += OFE[*iter].d_eflux[edge];
+    }
+    for(int corner = TOP_R_BK; corner <= BOT_L_FR; corner++ )  {
+      total_fluxout  += OFC[*iter].d_cflux[corner];
+    }
 
+    ASSERT(total_fluxout < vol);
     //__________________________________
     //  INFLUX: SLABS
     adjcell = IntVector(i, j+1, k);	// TOP
@@ -4085,8 +4017,6 @@ void    ICE::Message(
         char    message2[],   
         char    message3[]) 
 {        
-  char    c[2];
-  
   fprintf(stderr,"\n\n ______________________________________________\n");
   fprintf(stderr,"%s\n",message1);
   fprintf(stderr,"%s\n",message2);
