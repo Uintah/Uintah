@@ -68,6 +68,7 @@ typedef struct {
 } device_node;
 
 typedef struct {
+  char lastportdynamic;
   std::map<int,inport_node*>* inports;
   std::map<int,outport_node*>* outports;
   std::map<int,file_node*>* infiles;
