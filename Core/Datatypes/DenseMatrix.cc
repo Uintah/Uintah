@@ -514,6 +514,22 @@ void DenseMatrix::scalar_multiply(double s)
 }
 
 
+MatrixHandle
+DenseMatrix::submatrix(int r1, int c1, int r2, int c2)
+{
+  ASSERTRANGE(r1, 0, r2+1);
+  ASSERTRANGE(r2, r1, nr);
+  ASSERTRANGE(c1, 0, c2+1);
+  ASSERTRANGE(c2, c1, nc);
+  DenseMatrix *mat = scinew DenseMatrix(r2 - r1 + 1, c2 - c1 + 1);
+  for (int i=r1; i <= r2; i++)
+  {
+    memcpy(mat->data[i-r1], data[i] + c1, (c2 - c1 + 1) * sizeof(double));
+  }
+  return mat;
+}
+
+
 #define DENSEMATRIX_VERSION 3
 
 void DenseMatrix::io(Piostream& stream)

@@ -31,8 +31,6 @@
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Containers/StringUtil.h>
-#include <iostream>
-#include <sstream>
 
 namespace SCIRun {
 
@@ -151,21 +149,12 @@ Submatrix::execute()
       mincol == 0 && maxcol == (imatrix->ncols()-1))
   {
     omp->send(imatrix);
-    return;
   }
-
-  // Build a dense matrix with the clipped values in it.
-  DenseMatrix *omatrix = scinew DenseMatrix(maxrow-minrow+1, maxcol-mincol+1);
-  int r, c;
-  for (r = 0; r <=maxrow-minrow; r++)
+  else
   {
-    for (c = 0; c<=maxcol-mincol; c++)
-    {
-      omatrix->put(r, c, imatrix->get(r + minrow, c + mincol));
-    }
+    MatrixHandle omatrix = imatrix->submatrix(minrow, mincol, maxrow, maxcol);
+    omp->send(omatrix);
   }
-  
-  omp->send(omatrix);
 }
 
 
