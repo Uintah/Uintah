@@ -6,16 +6,5 @@
 # element name is the name of a command and the value is
 # a script that loads the command.
 
-set auto_index(Packages/Kurt_Vis_PadField) [list source [file join $dir PadField.tcl]]
-set auto_index(Packages/Kurt_Vis_ArchiveReader) [list source [file join $dir ArchiveReader.tcl]]
 set auto_index(updateCanvas) [list source [file join $dir test.tcl]]
-set auto_index(Packages/Kurt_Vis_GLTextureBuilder) [list source [file join $dir GLTextureBuilder.tcl]]
-set auto_index(Packages/Kurt_Vis_VolVis) [list source [file join $dir VolVis.tcl]]
-set auto_index(Packages/Kurt_Vis_SFRG) [list source [file join $dir SFRG.tcl]]
-set auto_index(Packages/Kurt_Vis_RescaleColorMapForParticles) [list source [file join $dir RescaleColorMapForParticles.tcl]]
-set auto_index(Packages/Kurt_Vis_TexCuttingPlanes) [list source [file join $dir TexCuttingPlanes.tcl]]
-set auto_index(Packages/Kurt_Vis_AnimatedStreams) [list source [file join $dir AnimatedStreams.tcl]]
-set auto_index(Packages/Kurt_Vis_VisControl) [list source [file join $dir VisControl.tcl]]
-set auto_index(Packages/Kurt_Vis_Packages/KurtScalarFieldReader) [list source [file join $dir Packages/KurtScalarFieldReader.tcl]]
-set auto_index(Packages/Kurt_Vis_ParticleVis) [list source [file join $dir ParticleVis.tcl]]
-set auto_index(Packages/Kurt_Vis_TextureVolVis) [list source [file join $dir TextureVolVis.tcl]]
+set auto_index(Kurt_Visualization_GridVolVis) [list source [file join $dir GridVolVis.tcl]]
