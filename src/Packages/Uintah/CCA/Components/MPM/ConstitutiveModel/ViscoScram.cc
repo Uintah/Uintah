@@ -619,7 +619,6 @@ void ViscoScram::computePressEOSCM(const double rho_cur,double& pressure,
                                    double& dp_drho, double& tmp,
                                    const MPMMaterial* matl)
 {
-//  double p_ref=101325.0;
   double G = d_initialData.G[0] + d_initialData.G[1] +
  	     d_initialData.G[2] + d_initialData.G[3] + d_initialData.G[4];
   double bulk = (2.*G*(1. + d_initialData.PR))/(3.*(1.-2.*d_initialData.PR));
@@ -628,7 +627,7 @@ void ViscoScram::computePressEOSCM(const double rho_cur,double& pressure,
   double p_g = bulk*(1.0 - rho_orig/rho_cur);
   pressure = p_ref + p_g;
   dp_drho  = bulk*rho_orig/(rho_cur*rho_cur);
-  tmp = sqrt((bulk + 4.*G/3.)/rho_cur);  // speed of sound squared
+  tmp = (bulk + 4.*G/3.)/rho_cur;  // speed of sound squared
 
 #if 0
   cout << "NO VERSION OF computePressEOSCM EXISTS YET FOR ViscoScram" << endl;
