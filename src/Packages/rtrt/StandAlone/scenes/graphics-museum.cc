@@ -40,11 +40,211 @@ rtrt -np 8 -eye -18.5048 -25.9155 1.39435 -lookat -14.7188 -16.1192 0.164304 -up
 #include <Packages/rtrt/Core/ImageMaterial.h>
 #include <Packages/rtrt/Core/Parallelogram.h>
 #include <Packages/rtrt/Core/Cylinder.h>
+#include <Packages/rtrt/Core/ply.h>
 
 using namespace rtrt;
 
 #define MAXBUFSIZE 256
 #define SCALE 950
+
+typedef struct Vertex {
+  float x,y,z;             /* the usual 3-space position of a vertex */
+} Vertex;
+
+typedef struct Face {
+  unsigned char nverts;    /* number of vertex indices in list */
+  int *verts;              /* vertex index list */
+} Face;
+
+typedef struct TriStrip {
+  int nverts;    /* number of vertex indices in list */
+  int *verts;              /* vertex index list */
+} TriStrip;
+
+char *elem_names[] = { /* list of the kinds of elements in the user's object */
+  "vertex", "face", "tristrips"
+};
+
+PlyProperty vert_props[] = { /* list of property information for a vertex */
+  {"x", PLY_FLOAT, PLY_FLOAT, offsetof(Vertex,x), 0, 0, 0, 0},
+  {"y", PLY_FLOAT, PLY_FLOAT, offsetof(Vertex,y), 0, 0, 0, 0},
+  {"z", PLY_FLOAT, PLY_FLOAT, offsetof(Vertex,z), 0, 0, 0, 0},
+};
+
+PlyProperty face_props[] = { /* list of property information for a vertex */
+  {"vertex_indices", PLY_INT, PLY_INT, offsetof(Face,verts),
+   1, PLY_UCHAR, PLY_UCHAR, offsetof(Face,nverts)},
+};
+
+PlyProperty tristrip_props[] = { /*list of property information for a vertex*/
+  {"vertex_indices", PLY_INT, PLY_INT, offsetof(TriStrip,verts),
+   1, PLY_INT, PLY_INT, offsetof(TriStrip,nverts)},
+};
+
+Group *
+read_ply(char *fname, Material* matl)
+{
+  Group *g = new Group();
+  int i,j,k;
+  PlyFile *ply;
+  int nelems;
+  char **elist;
+  int file_type;
+  float version;
+  int nprops;
+  int num_elems;
+  PlyProperty **plist;
+  Vertex **vlist;
+  char *elem_name;
+  int num_comments;
+  char **comments;
+  int num_obj_info;
+  char **obj_info;
+
+  int NVerts=0;
+
+  /* open a PLY file for reading */
+  ply = ply_open_for_reading(fname, &nelems, &elist, &file_type, &version);
+  /* print what we found out about the file */
+  printf ("version %f\n", version);
+  printf ("type %d\n", file_type);
+
+  /* go through each kind of element that we learned is in the file */
+  /* and read them */
+  
+  for (i = 0; i < nelems; i++) {
+
+    /* get the description of the first element */
+    elem_name = elist[i];
+    plist = ply_get_element_description (ply, elem_name, &num_elems, &nprops);
+    
+    /* print the name of the element, for debugging */
+    printf ("element %s %d\n", elem_name, num_elems);
+    
+    /* if we're on vertex elements, read them in */
+    if (equal_strings ("vertex", elem_name)) {
+      
+      /* create a vertex list to hold all the vertices */
+      vlist = (Vertex **) malloc (sizeof (Vertex *) * num_elems);
+      
+      NVerts = num_elems;
+
+      /* set up for getting vertex elements */
+      
+      ply_get_property (ply, elem_name, &vert_props[0]);
+      ply_get_property (ply, elem_name, &vert_props[1]);
+      ply_get_property (ply, elem_name, &vert_props[2]);
+      
+      /* grab all the vertex elements */
+      for (j = 0; j < num_elems; j++) {
+	
+        /* grab and element from the file */
+        vlist[j] = (Vertex *) malloc (sizeof (Vertex));
+        ply_get_element (ply, (void *) vlist[j]);
+	
+        /* print out vertex x,y,z for debugging */
+//          printf ("vertex: %g %g %g\n", vlist[j]->x, vlist[j]->y, vlist[j]->z);
+      }
+    }
+    
+    /* if we're on face elements, read them in */
+    if (equal_strings ("face", elem_name)) {
+      
+      /* set up for getting face elements */
+      
+      ply_get_property (ply, elem_name, &face_props[0]);
+      
+      /* grab all the face elements */
+
+      // don't need to save faces for this application,
+      // so discard after use.
+      Face face;
+      for (j = 0; j < num_elems; j++) {
+	
+        /* grab an element from the file */
+        ply_get_element (ply, (void *) &face);
+	
+        /* print out face info, for debugging */
+        for (k = 0; k < face.nverts-2; k++) {
+	  Vertex *v0 = vlist[face.verts[0]];
+	  Vertex *v1 = vlist[face.verts[k+1]];
+	  Vertex *v2 = vlist[face.verts[k+2]];
+	  
+	  Point p0(v0->x,v0->y,v0->z);
+	  Point p1(v1->x,v1->y,v1->z);
+	  Point p2(v2->x,v2->y,v2->z);
+	  
+	  g->add(new Tri(matl,p0,p1,p2));
+	}
+      }
+    }
+
+    /* if we're on triangle strip elements, read them in */
+    if (equal_strings ("tristrips", elem_name)) {
+      
+      /* set up for getting face elements */
+      
+      ply_get_property (ply, elem_name, &tristrip_props[0]);
+      
+      TriStrip strip;
+
+      /* grab all the face elements */
+      for (j = 0; j < num_elems; j++) {
+	
+        /* grab an element from the file */
+        ply_get_element (ply, (void *) &strip);
+	
+	/* Make triangle strips from vertices */
+        for (k = 0; k < strip.nverts-2; k++) {
+	  int idx0 = strip.verts[k+0];
+	  int idx1 = strip.verts[k+1];
+	  int idx2 = strip.verts[k+2];
+
+	  if (idx0 < 0 || idx1 < 0 || idx2 < 0)
+	    {
+	      continue;
+	    }
+
+	  Vertex *v0 = vlist[idx0];
+	  Vertex *v1 = vlist[idx1];
+	  Vertex *v2 = vlist[idx2];
+
+	  Point p0(v0->x,v0->y,v0->z);
+	  Point p1(v1->x,v1->y,v1->z);
+	  Point p2(v2->x,v2->y,v2->z);
+
+	  
+	  g->add(new Tri(matl,p0,p1,p2));
+
+	}
+      }
+    }
+    /* print out the properties we got, for debugging */
+    for (j = 0; j < nprops; j++)
+      printf ("property %s\n", plist[j]->name);
+  }
+  /* grab and print out the comments in the file */
+  comments = ply_get_comments (ply, &num_comments);
+  for (i = 0; i < num_comments; i++)
+    printf ("comment = '%s'\n", comments[i]);
+  
+  /* grab and print out the object information */
+  obj_info = ply_get_obj_info (ply, &num_obj_info);
+  for (i = 0; i < num_obj_info; i++)
+    printf ("obj_info = '%s'\n", obj_info[i]);
+
+  /* close the PLY file */
+  ply_close (ply);
+
+  printf("*********************************DONE************************\n");
+
+  for (int j=0; j<NVerts; j++)
+      delete vlist[j];
+  delete(vlist);
+
+  return g;
+
+}
 
 extern "C"
 Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
@@ -167,8 +367,65 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 			  Point(-12,-16+.1,5)));
 
   // david pedestal
-  baseg->add(new Cylinder(flat_white,Point(-14,-20,0),Point(-14,-20,1),2.7/2.));
-  baseg->add(new Disc(flat_white,Point(-14,-20,1),Vector(0,0,1),2.7/2.));
+
+  Point dav_ped_top(-14,-20,1);
+  
+  baseg->add(new Cylinder(flat_white,
+			  Point(-14,-20,0),
+			  dav_ped_top,2.7/2.));
+  baseg->add(new Disc(flat_white,dav_ped_top,Vector(0,0,1),2.7/2.));
+
+  Group* davidg;
+
+#if 0
+  Transform david_pedT;
+
+  david_pedT.pre_translate(dav_ped_top.asVector());
+
+  davidg = new Group();
+  davidg->add(new Box(flat_white,
+		      david_pedT.project(Point(-1.033567, -0.596689, 0.000000)),
+		      david_pedT.project(Point(1.033567, 0.596689, 5.240253))));
+  // david model or surrogate
+#else 
+  davidg = read_ply("/usr/sci/projects/rtrt/Stanford_Sculptures/david_2mm.ply",flat_white);
+
+  BBox david_bbox;
+
+  davidg->compute_bounds(david_bbox,0);
+
+  Point min = david_bbox.min();
+  Point max = david_bbox.max();
+  Vector diag = david_bbox.diagonal();
+
+  printf("BBox: min: %lf %lf %lf max: %lf %lf %lf\nDimensions: %lf %lf %lf\n",
+	 min.x(),min.y(), min.z(),
+	 max.x(),max.y(), max.z(),
+	 diag.x(),diag.y(),diag.z());
+
+  Transform davidT;
+
+  davidT.pre_translate(-Vector((max.x()+min.x())/2.,min.y(),(max.z()+min.z())/2.)); // center david over 0
+  davidT.pre_rotate(M_PI_2,Vector(1,0,0));  // make z up
+  davidT.pre_scale(Vector(.001,.001,.001)); // make units meters
+  davidT.pre_translate(dav_ped_top.asVector());
+
+  davidg->transform(davidT);
+
+  david_bbox.reset();
+  davidg->compute_bounds(david_bbox,0);
+
+  min = david_bbox.min();
+  max = david_bbox.max();
+  diag = david_bbox.diagonal();
+
+  printf("BBox: min: %lf %lf %lf max: %lf %lf %lf\nDimensions: %lf %lf %lf\n",
+	 min.x(),min.y(), min.z(),
+	 max.x(),max.y(), max.z(),
+	 diag.x(),diag.y(),diag.z());
+#endif
+
+  baseg->add(davidg);
 
   // history hall pedestals
   baseg->add(new Box(flat_white,Point(-5.375,-9.25,0),Point(-4.625,-8.5,1.4)));
@@ -208,9 +465,10 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   g->add(east_wall);
   g->add(partitions);
   g->add(baseg);
+  g->add(davidg);
   
-  Color cdown(0.1, 0.1, 0.7);
-  Color cup(0.5, 0.5, 0.0);
+  Color cdown(0.1, 0.1, 0.1);
+  Color cup(0.1, 0.1, 0.1);
 
   rtrt::Plane groundplane(Point(0,0,-5), Vector(0,0,1));
   Color bgcolor(0.1, 0.1, 0.6);

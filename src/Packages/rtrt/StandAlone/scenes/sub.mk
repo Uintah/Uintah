@@ -45,9 +45,7 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/sphere-room.mo \
 	$(SRCDIR)/seaworld-tubes.mo \
 	$(SRCDIR)/multi-scene.mo \
-	$(SRCDIR)/cutdemo.mo \
-
-
+	$(SRCDIR)/cutdemo.mo 
 
 ifeq ($(findstring Uintah, $(LOAD_PACKAGE)),Uintah)
 SCENES += \

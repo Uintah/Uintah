@@ -113,7 +113,8 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/CutMaterial.cc \
 	$(SRCDIR)/CutVolumeDpy.cc \
 	$(SRCDIR)/CutPlaneDpy.cc \
-	$(SRCDIR)/ColorMap.cc
+	$(SRCDIR)/ColorMap.cc \
+	$(SRCDIR)/plyfile.c
 
 SUBDIRS := $(SRCDIR)/Shadows
 include $(SRCTOP)/scripts/recurse.mk

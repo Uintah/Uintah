@@ -116,11 +116,13 @@ void Transform::change_basis(Transform& T)
 void Transform::post_trans(Transform& T)
 {
   post_mulmat(T.mat);
+  inverse_valid = 0;
 }
 
 void Transform::pre_trans(Transform& T)
 {
   pre_mulmat(T.mat);
+  inverse_valid = 0;
 }
 
 void Transform::print(void)
@@ -151,6 +153,7 @@ void Transform::build_scale(double m[4][4], const Vector& v)
   m[0][0]=v.x();
   m[1][1]=v.y();
   m[2][2]=v.z();
+  inverse_valid = 0;
 }
     
 void Transform::pre_scale(const Vector& v)
@@ -205,6 +208,7 @@ void Transform::build_shear(double mat[4][4], const Vector& s, const Plane& p)
   for (int i=0; i<4; i++)
     for (int j=0; j<4; j++)
       mat[i][j]=*ptr++;
+  inverse_valid = 0;
 }
 
 void Transform::pre_shear(const Vector& s, const Plane& p)
@@ -229,6 +233,7 @@ void Transform::build_translate(double m[4][4], const Vector& v)
   m[0][3]=v.x();
   m[1][3]=v.y();
   m[2][3]=v.z();
+  inverse_valid = 0;
 }
 
 void Transform::pre_translate(const Vector& v)
@@ -275,6 +280,8 @@ void Transform::build_rotate(double m[4][4], double angle, const Vector& axis)
   m[3][1]=0;
   m[3][2]=0;
   m[3][3]=1;
+  
+  inverse_valid=0;
 }
 
 void Transform::pre_rotate(double angle, const Vector& axis)
@@ -321,6 +328,7 @@ void Transform::build_permute(double m[4][4],int xmap, int ymap, int zmap,
     if (ymap<0) m[-1-ymap][1]=-1; else m[ymap-1][1]=1;
     if (zmap<0) m[-1-zmap][2]=-1; else m[zmap-1][2]=1;
   }
+  inverse_valid = 0;
 }
 
 void Transform::pre_permute(int xmap, int ymap, int zmap) {
@@ -389,25 +397,28 @@ Point Transform::unproject(const Point& p)
 	       imat[3][0]*p.x()+imat[3][1]*p.y()+imat[3][2]*p.z()+imat[3][3]);
 }
 
-void Transform::unproject(const Point& p, Point& res) const
+void Transform::unproject(const Point& p, Point& res) 
 {
-    double invw=
-        1./(imat[3][0]*p.x()+imat[3][1]*p.y()+imat[3][2]*p.z()+imat[3][3]);
-    res.x(invw*
-          (imat[0][0]*p.x()+imat[0][1]*p.y()+imat[0][2]*p.z()+imat[0][3]));
-    res.y(invw*
-          (imat[1][0]*p.x()+imat[1][1]*p.y()+imat[1][2]*p.z()+imat[1][3]));
-    res.z(invw*
-          (imat[2][0]*p.x()+imat[2][1]*p.y()+imat[2][2]*p.z()+imat[2][3]));
+      
+  if(!inverse_valid) compute_imat();
+  double invw=
+    1./(imat[3][0]*p.x()+imat[3][1]*p.y()+imat[3][2]*p.z()+imat[3][3]);
+  res.x(invw*
+	(imat[0][0]*p.x()+imat[0][1]*p.y()+imat[0][2]*p.z()+imat[0][3]));
+  res.y(invw*
+	(imat[1][0]*p.x()+imat[1][1]*p.y()+imat[1][2]*p.z()+imat[1][3]));
+  res.z(invw*
+	(imat[2][0]*p.x()+imat[2][1]*p.y()+imat[2][2]*p.z()+imat[2][3]));
 }
 
-void Transform::unproject_inplace(Point& p) const
+void Transform::unproject_inplace(Point& p) 
 {
-    double invw=
+      if(!inverse_valid) compute_imat();
+      double invw=
         1./(imat[3][0]*p.x()+imat[3][1]*p.y()+imat[3][2]*p.z()+imat[3][3]);
-    p.x(invw*
+      p.x(invw*
           (imat[0][0]*p.x()+imat[0][1]*p.y()+imat[0][2]*p.z()+imat[0][3]));
-    p.y(invw*
+      p.y(invw*
           (imat[1][0]*p.x()+imat[1][1]*p.y()+imat[1][2]*p.z()+imat[1][3]));
     p.z(invw*
           (imat[2][0]*p.x()+imat[2][1]*p.y()+imat[2][2]*p.z()+imat[2][3]));
@@ -421,40 +432,45 @@ Vector Transform::unproject(const Vector& p)
 		imat[2][0]*p.x()+imat[2][1]*p.y()+imat[2][2]*p.z());
 }
 
-void Transform::unproject(const Vector& v, Vector& res) const
+void Transform::unproject(const Vector& v, Vector& res) 
 {
-    res.x(imat[0][0]*v.x()+imat[0][1]*v.y()+imat[0][2]*v.z());
-    res.y(imat[1][0]*v.x()+imat[1][1]*v.y()+imat[1][2]*v.z());
-    res.z(imat[2][0]*v.x()+imat[2][1]*v.y()+imat[2][2]*v.z());
+  if(!inverse_valid) compute_imat();
+  res.x(imat[0][0]*v.x()+imat[0][1]*v.y()+imat[0][2]*v.z());
+  res.y(imat[1][0]*v.x()+imat[1][1]*v.y()+imat[1][2]*v.z());
+  res.z(imat[2][0]*v.x()+imat[2][1]*v.y()+imat[2][2]*v.z());
 }
 
-void Transform::unproject_inplace(Vector& v) const
+void Transform::unproject_inplace(Vector& v) 
 {
-    v.x(imat[0][0]*v.x()+imat[0][1]*v.y()+imat[0][2]*v.z());
-    v.y(imat[1][0]*v.x()+imat[1][1]*v.y()+imat[1][2]*v.z());
-    v.z(imat[2][0]*v.x()+imat[2][1]*v.y()+imat[2][2]*v.z());
+  if(!inverse_valid) compute_imat();
+  v.x(imat[0][0]*v.x()+imat[0][1]*v.y()+imat[0][2]*v.z());
+  v.y(imat[1][0]*v.x()+imat[1][1]*v.y()+imat[1][2]*v.z());
+  v.z(imat[2][0]*v.x()+imat[2][1]*v.y()+imat[2][2]*v.z());
 }
 
-Vector Transform::project_normal(const Vector& p) const
+Vector Transform::project_normal(const Vector& p)
 {
-    double x=mat[0][0]*p.x()+mat[0][1]*p.x()+mat[0][2]*p.x()+mat[0][3];
-    double y=mat[1][0]*p.y()+mat[1][1]*p.y()+mat[1][2]*p.y()+mat[1][3];
-    double z=mat[2][0]*p.z()+mat[2][1]*p.z()+mat[2][2]*p.z()+mat[2][3];
-    return Vector(x, y, z);
+  if(!inverse_valid) compute_imat();
+  double x=imat[0][0]*p.x()+imat[1][0]*p.x()+imat[2][0]*p.x()+imat[3][0];
+  double y=imat[0][1]*p.y()+imat[1][1]*p.y()+imat[2][1]*p.y()+imat[3][1];
+  double z=imat[0][2]*p.z()+imat[1][2]*p.z()+imat[2][2]*p.z()+imat[3][2];
+  return Vector(x, y, z);
 }
 
-void Transform::project_normal(const Vector& p, Vector& res) const
+void Transform::project_normal(const Vector& p, Vector& res) 
 {
-    res.x(imat[0][0]*p.x()+imat[1][0]*p.x()+imat[2][0]*p.x()+imat[3][0]);
-    res.y(imat[0][1]*p.y()+imat[1][1]*p.y()+imat[2][1]*p.y()+imat[3][1]);
-    res.z(imat[0][2]*p.z()+imat[1][2]*p.z()+imat[2][2]*p.z()+imat[3][2]);
+  if(!inverse_valid) compute_imat();
+  res.x(imat[0][0]*p.x()+imat[1][0]*p.x()+imat[2][0]*p.x()+imat[3][0]);
+  res.y(imat[0][1]*p.y()+imat[1][1]*p.y()+imat[2][1]*p.y()+imat[3][1]);
+  res.z(imat[0][2]*p.z()+imat[1][2]*p.z()+imat[2][2]*p.z()+imat[3][2]);
 }
 
-void Transform::project_normal_inplace(Vector& p) const
+void Transform::project_normal_inplace(Vector& p) 
 {
-    p.x(imat[0][0]*p.x()+imat[1][0]*p.x()+imat[2][0]*p.x()+imat[3][0]);
-    p.y(imat[0][1]*p.y()+imat[1][1]*p.y()+imat[2][1]*p.y()+imat[3][1]);
-    p.z(imat[0][2]*p.z()+imat[1][2]*p.z()+imat[2][2]*p.z()+imat[3][2]);
+  if(!inverse_valid) compute_imat();
+  p.x(imat[0][0]*p.x()+imat[1][0]*p.x()+imat[2][0]*p.x()+imat[3][0]);
+  p.y(imat[0][1]*p.y()+imat[1][1]*p.y()+imat[2][1]*p.y()+imat[3][1]);
+  p.z(imat[0][2]*p.z()+imat[1][2]*p.z()+imat[2][2]*p.z()+imat[3][2]);
 }
 
 void Transform::get(double* gmat) const

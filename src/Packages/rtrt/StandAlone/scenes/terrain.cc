@@ -347,7 +347,7 @@ read_geom(Group *g, char *geomfile, char *locfile)
 	    for (int i=0; i<tris->objs.size(); i++)
 	    {
 		Tri *oldt = (Tri *)tris->objs[i];
-		Tri *t = new Tri(oldt->transform(T));
+		Tri *t = new Tri(oldt->copy_transform(T));
 
 		geomgrp->add(t);
 	    }
