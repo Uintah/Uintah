@@ -85,6 +85,7 @@ private:
   // The following classes are nested.  They have no scope outside
   // of GenStandardColormaps.
 
+  //----------------------------------------------------------------------
   // The abstract class for non-editable Colormaps
   class StandardColorMap
   {
@@ -98,6 +99,7 @@ private:
     Array1< Color > colors;
   }; // class StandardColorMap
 
+  //----------------------------------------------------------------------
   class GrayColorMap : public StandardColorMap
   {
   public:
@@ -106,6 +108,7 @@ private:
   
   }; // class GrayColorMap
 
+  //----------------------------------------------------------------------
   class InverseGrayColorMap : public StandardColorMap
   {
   public:
@@ -114,6 +117,7 @@ private:
   
   }; // class InverseGrayColorMap
 
+  //----------------------------------------------------------------------
   class RainbowColorMap : public StandardColorMap
   {
   public:
@@ -122,6 +126,7 @@ private:
   
   }; // class RainbowColorMap
 
+  //----------------------------------------------------------------------
   class InverseRainbow : public StandardColorMap
   {
   public:
@@ -129,6 +134,7 @@ private:
     virtual ~InverseRainbow(){}
   }; // class InverseRainbow
 
+  //----------------------------------------------------------------------
   class DarkHueColorMap : public StandardColorMap
   {
   public:
@@ -136,6 +142,7 @@ private:
     virtual ~DarkHueColorMap(){}
   }; // class DarkHueColorMap
 
+  //----------------------------------------------------------------------
   class LightHueColorMap : public StandardColorMap
   {
   public:
@@ -143,6 +150,7 @@ private:
     virtual ~LightHueColorMap(){}
   }; // class LightHueColorMap
 
+  //----------------------------------------------------------------------
   class InverseDarkHue : public StandardColorMap
   {
   public:
@@ -150,6 +158,7 @@ private:
     virtual ~InverseDarkHue(){}
   }; // class InverseDarkHue
 
+  //----------------------------------------------------------------------
   class BlackBodyColorMap : public StandardColorMap
   {
   public:
@@ -157,6 +166,15 @@ private:
     virtual ~BlackBodyColorMap(){}
   
   }; // class BlackBodyColorMap
+
+  //----------------------------------------------------------------------
+  class DonColorMap : public StandardColorMap
+  {
+  public:
+    DonColorMap();
+    virtual ~DonColorMap(){}
+  
+  }; // class DonColorMap
 
 }; //class GenStandardColorMaps
 
