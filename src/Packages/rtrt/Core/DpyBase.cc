@@ -27,7 +27,7 @@ namespace rtrt {
 } // end namespace rtrt
 
 DpyBase::DpyBase(const char *name, const int window_mode):
-  window_mode(window_mode), xres(300), yres(300),
+  window_mode(window_mode), xres(300), yres(300), on_death_row(false),
   redraw(true), control_pressed(false), shift_pressed(false)
 {
   window_name = strdup(name);
@@ -37,7 +37,7 @@ DpyBase::~DpyBase() {
   if (window_name) free(window_name);
 }
 
-int DpyBase::open_window() {
+int DpyBase::open_display() {
   xlock.lock();
   // Open an OpenGL window
   dpy = XOpenDisplay(NULL);
@@ -123,11 +123,15 @@ int DpyBase::open_window() {
   return 0;
 }
 
-int DpyBase::destroy_window() {
+int DpyBase::close_display() {
   xlock.lock();
   XCloseDisplay(dpy);
   xlock.unlock();
   return 0;
+}
+
+void DpyBase::stop() {
+  on_death_row = true;
 }
 
 void DpyBase::init() {
@@ -171,7 +175,7 @@ void DpyBase::set_resolution(const int xres_in, const int yres_in) {
 }
 
 void DpyBase::run() {
-  open_window();
+  open_display();
 
   // Create the Xevent handler
   for(;;){
@@ -184,8 +188,8 @@ void DpyBase::run() {
 
   for(;;){
     // Now we need to test to see if we should die
-    if (scene->get_rtrt_engine()->stop_execution()) {
-      destroy_window();
+    if (scene->get_rtrt_engine()->stop_execution() || on_death_row) {
+      close_display();
       return;
     }
     
@@ -197,8 +201,8 @@ void DpyBase::run() {
     // That way we don't waste time redrawing after each event
     while (XEventsQueued(dpy, QueuedAfterReading)) {
       // Now we need to test to see if we should die
-      if (scene->get_rtrt_engine()->stop_execution()) {
-	destroy_window();
+      if (scene->get_rtrt_engine()->stop_execution() || on_death_row) {
+	close_display();
 	return;
       }
     
