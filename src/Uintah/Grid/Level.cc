@@ -9,12 +9,14 @@
 #include <Uintah/Exceptions/InvalidGrid.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Util/FancyAssert.h>
+#include <SCICore/Math/MiscMath.h>
 #include <iostream>
 #include <PSECore/XMLUtil/XMLUtil.h>
 using namespace Uintah;
 using namespace SCICore::Geometry;
 using namespace std;
 using namespace PSECore::XMLUtil;
+using SCICore::Math::Floor;
 #include <algorithm>
 #include <map>
 #include <Uintah/Grid/BoundCondFactory.h>
@@ -198,8 +200,10 @@ Point Level::getCellPosition(const IntVector& v) const
 
 IntVector Level::getCellIndex(const Point& p) const
 {
-   Vector v((p-d_anchor)/d_dcell);
-   return IntVector((int)v.x(), (int)v.y(), (int)v.z());
+  Vector v((p-d_anchor)/d_dcell);
+  return IntVector(Floor(v.x()),
+		   Floor(v.y()),
+		   Floor(v.z()));
 }
 
 Point Level::positionToIndex(const Point& p) const
@@ -428,6 +432,9 @@ Box Level::getBox(const IntVector& l, const IntVector& h) const
 }
 //
 // $Log$
+// Revision 1.27  2001/01/08 19:31:41  kuzimmer
+// Changed getCellIndex to use Floor instead of (int) cast truncation, so that negative indexing works
+//
 // Revision 1.26  2000/12/10 09:06:16  sparker
 // Merge from csafe_risky1
 //
