@@ -120,6 +120,14 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
        mpm_ps->get("dynamic",d_dynamic);
        mpm_ps->getWithDefault("iters_before_timestep_restart",
                                d_max_num_iterations, 25);
+       mpm_ps->getWithDefault("num_iters_to_decrease_delT",
+                               d_num_iters_to_decrease_delT, 12);
+       mpm_ps->getWithDefault("num_iters_to_increase_delT",
+                               d_num_iters_to_increase_delT, 4);
+       mpm_ps->getWithDefault("delT_decrease_factor",
+                               d_delT_decrease_factor, .6);
+       mpm_ps->getWithDefault("delT_increase_factor",
+                               d_delT_increase_factor, 2);
      }
      else{
       throw ProblemSetupException("Can't use explicit integration with -impm");
@@ -254,7 +262,6 @@ void ImpMPM::actuallyInitialize(const ProcessorGroup*,
 
 void ImpMPM::scheduleComputeStableTimestep(const LevelP& lev, SchedulerP& sched)
 {
-
   Task* t;
   cout_doing << "ImpMPM::scheduleComputeStableTimestep " << endl;
   t = scinew Task("ImpMPM::actuallyComputeStableTimestep",
@@ -262,6 +269,7 @@ void ImpMPM::scheduleComputeStableTimestep(const LevelP& lev, SchedulerP& sched)
 
   const MaterialSet* matls = d_sharedState->allMPMMaterials();
   t->requires(Task::OldDW,d_sharedState->get_delt_label());
+  t->requires(Task::NewDW, lb->pVelocityLabel,   Ghost::None);
   t->computes(            d_sharedState->get_delt_label());
 
   sched->addTask(t,lev->eachPatch(), matls);
@@ -2258,22 +2266,60 @@ void ImpMPM::printParticleCount(const ProcessorGroup* pg,
 }
 
 void ImpMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
-                                           const PatchSubset*,
+                                           const PatchSubset* patches,
                                            const MaterialSubset*,
                                            DataWarehouse* old_dw,
                                            DataWarehouse* new_dw)
 {
-    if(d_numIterations==0){
-      new_dw->put(delt_vartype(d_initialDt), lb->delTLabel);
+  for(int p=0;p<patches->size();p++){
+   const Patch* patch = patches->get(p);
+                                                                                
+   cout_doing <<"Doing actuallyComputeStableTimestep on patch "
+              << patch->getID() <<"\t IMPM"<< "\n" << "\n";
+
+   if(d_numIterations==0){
+    new_dw->put(delt_vartype(d_initialDt), lb->delTLabel);
+   }
+   else{
+    Vector dx = patch->dCell();
+    delt_vartype old_delT;
+    old_dw->get(old_delT, d_sharedState->get_delt_label());
+
+    int numMPMMatls=d_sharedState->getNumMPMMatls();
+    for(int m = 0; m < numMPMMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwindex = mpm_matl->getDWIndex();
+
+      ParticleSubset* pset = new_dw->getParticleSubset(dwindex, patch);
+
+      constParticleVariable<Vector> pvelocity;
+      new_dw->get(pvelocity, lb->pVelocityLabel, pset);
+
+      Vector ParticleSpeed(1.e-12,1.e-12,1.e-12);
+
+      for(ParticleSubset::iterator iter=pset->begin();iter!=pset->end();iter++){
+        particleIndex idx = *iter;
+        ParticleSpeed=Vector(Max(fabs(pvelocity[idx].x()),ParticleSpeed.x()),
+                             Max(fabs(pvelocity[idx].y()),ParticleSpeed.y()),
+                             Max(fabs(pvelocity[idx].z()),ParticleSpeed.z()));
+      }
+      ParticleSpeed = dx/ParticleSpeed;
+      double delT_new = .5*ParticleSpeed.minComponent();
+      double old_dt=old_delT;
+      if(d_numIterations <= d_num_iters_to_increase_delT){
+        old_dt = d_delT_increase_factor*old_delT;
+      }
+      if(d_numIterations >= d_num_iters_to_decrease_delT){
+        old_dt = d_delT_decrease_factor*old_delT;
+      }
+      delT_new = min(delT_new, old_dt);
+      new_dw->put(delt_vartype(delT_new), lb->delTLabel);
     }
-    else{
-      delt_vartype old_delT;
-      old_dw->get(old_delT, d_sharedState->get_delt_label());
-      new_dw->put(old_delT, lb->delTLabel);
-    }
+   }
+  }
 }
 
 double ImpMPM::recomputeTimestep(double current_dt)
 {
-  return current_dt*.6;
+  return current_dt*d_delT_decrease_factor;
 }
