@@ -1,7 +1,7 @@
 #include <Packages/CardioWave/Core/Algorithms/Vulcan.h>
 #include <stdio.h>
 #include <stdlib.h> 
-#include <malloc.h>
+/* #include <malloc.h> */
 #include <math.h>
 #include <string.h>
 
