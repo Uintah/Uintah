@@ -45,6 +45,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <sstream>
 #include <fstream>
 #include <sgi_stl_warnings_on.h>
 
@@ -216,6 +217,10 @@ class SystemCall : public SystemCallBase {
 	void	unlock();
 
     void    use_stdout_timeout(bool use_timeout);
+    
+    bool    getexitcode(int &exitcode);
+
+
   ///////////////////////
   // The next set of functions is used by the thread to insert
   // data into the SystemCall object.
@@ -280,6 +285,10 @@ class SystemCall : public SystemCallBase {
         
     bool                use_timeout_;
     
+    protected:
+    int                 exitcode_;
+    bool                hasexitcode_;
+    
 };
 
 // If there is a long inactivity, pending data will be forwarded
@@ -333,7 +342,11 @@ inline void	SystemCall::set_stderr_buffersize(int size)
 	stderrbuffersize_ = size;
 }
 
-
+inline bool SystemCall::getexitcode(int &exitcode)
+{
+    exitcode = exitcode_;
+    return(hasexitcode_);
+}
 
 } // end namespace
 

@@ -600,14 +600,15 @@ void SystemCallManager::childmain()
                 ::fcntl(STDERR_FILENO,F_SETFD,0);
                 ::fcntl(fd_exit,F_SETFD,0);
             
-                ::system(command.c_str());
+                int retcode = ::system(command.c_str());
                 
                 // Write the word exit on this channel to indicate that the process
                 // is terminated
-                std::string exitstr = "EXIT\n";
-                ::write(fd_exit,&(exitstr[0]),5);
+                std::ostringstream oss;
+                oss << retcode << "\n";
+                std::string exitstr = oss.str();
+                ::write(fd_exit,&(exitstr[0]),exitstr.size());
 
-                
                 ::close(fd_stdin);
                 ::close(fd_stdout);
                 ::close(fd_stderr);
