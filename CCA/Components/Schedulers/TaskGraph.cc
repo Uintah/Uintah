@@ -350,26 +350,25 @@ void TaskGraph::addDependencyEdges(Task* task, Task::Dependency* req,
 	  Task::Dependency* comp = compiter->second;
 	  
 	  if (modifies) {
-	    // not just requires, but modifies, so the comps map must be
-	    // updated so future modifies or requires will link to this one.
-	    compiter->second = req;
-
 	    // Add dependency edges to each task that requires the data
 	    // before it is modified.
 	    for (Task::Edge* otherEdge = comp->req_head; otherEdge != 0;
 		 otherEdge = otherEdge->reqNext) {
 	      Task::Dependency* priorReq =
 		const_cast<Task::Dependency*>(otherEdge->req);
-	      Task::Edge* edge = scinew Task::Edge(priorReq, req);
-	      edges.push_back(edge);
-	      req->addComp(edge);
-	      priorReq->addReq(edge);
-	      if(dbg.active()){
-		dbg << "Creating edge from task: " << *priorReq->task << " to task: " << *req->task << '\n';
-		dbg << "Prior Req=" << *priorReq << '\n';
-		dbg << "Modify=" << *req << '\n';
+	      if (priorReq != req) {
+		ASSERT(priorReq->var->equals(req->var));
+		ASSERT(priorReq->task != task);		
+		Task::Edge* edge = scinew Task::Edge(priorReq, req);
+		edges.push_back(edge);
+		req->addComp(edge);
+		priorReq->addReq(edge);
+		if(dbg.active()){
+		  dbg << "Creating edge from task: " << *priorReq->task << " to task: " << *req->task << '\n';
+		  dbg << "Prior Req=" << *priorReq << '\n';
+		  dbg << "Modify=" << *req << '\n';
+		}
 	      }
-      
 	    }
 	  }
 	  
@@ -432,6 +431,12 @@ void TaskGraph::addDependencyEdges(Task* task, Task::Dependency* req,
 	  cerr << '\n';
 	}
 	throw InternalError("Scheduler could not find specific production for variable: "+req->var->getName()+", required for task: "+task->getName());
+      }
+      
+      if (modifies) {
+	// not just requires, but modifies, so the comps map must be
+	// updated so future modifies or requires will link to this one.
+	comps.insert(make_pair(req->var, req));
       }
     }
   }
