@@ -76,18 +76,18 @@ SecondOrderAdvector::inFluxOutFluxVolume( const SFCXVariable<double>& uvel_FC,
   double r_x, r_y, r_z;
 
   // Compute outfluxes 
-  double error_test = 0.0;
-  int    num_cells = 0;
 
   //__________________________________
   //  At patch boundaries you need to extend
   // the computational footprint by one cell in ghostCells
   CellIterator iter = patch->getExtraCellIterator();
   CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);
-  
+
+  bool error = false;
   for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
-    IntVector c = *iter;
+    const IntVector& c = *iter;
  
+    //!
     delY_top    = std::max(0.0, (vvel_FC[c+IntVector(0,1,0)] * delT));
     delY_bottom = std::max(0.0,-(vvel_FC[c                 ] * delT));
     delX_right  = std::max(0.0, (uvel_FC[c+IntVector(1,0,0)] * delT));
@@ -104,20 +104,23 @@ SecondOrderAdvector::inFluxOutFluxVolume( const SFCXVariable<double>& uvel_FC,
     double delX_Z_tmp = delX_tmp * delZ_tmp;
     double delX_Y_tmp = delX_tmp * delY_tmp;
     double delY_Z_tmp = delY_tmp * delZ_tmp;
-    d_OFS[c].d_fflux[TOP]   = delY_top   * delX_Z_tmp;
-    d_OFS[c].d_fflux[BOTTOM]= delY_bottom* delX_Z_tmp;
-    d_OFS[c].d_fflux[RIGHT] = delX_right * delY_Z_tmp;
-    d_OFS[c].d_fflux[LEFT]  = delX_left  * delY_Z_tmp;
-    d_OFS[c].d_fflux[FRONT] = delZ_front * delX_Y_tmp;
-    d_OFS[c].d_fflux[BACK]  = delZ_back  * delX_Y_tmp; 
+    fflux& ofs = d_OFS[c];
+    ofs.d_fflux[TOP]   = delY_top   * delX_Z_tmp;
+    ofs.d_fflux[BOTTOM]= delY_bottom* delX_Z_tmp;
+    ofs.d_fflux[RIGHT] = delX_right * delY_Z_tmp;
+    ofs.d_fflux[LEFT]  = delX_left  * delY_Z_tmp;
+    ofs.d_fflux[FRONT] = delZ_front * delX_Y_tmp;
+    ofs.d_fflux[BACK]  = delZ_back  * delX_Y_tmp; 
     //__________________________________
     //  Bullet proofing
+    //!
     double total_fluxout = 0.0;
     for(int face = TOP; face <= BACK; face++ )  {
-      total_fluxout  += d_OFS[c].d_fflux[face];
+      total_fluxout  += ofs.d_fflux[face];
     }
-    num_cells++;
-    error_test +=(vol - total_fluxout)/fabs(vol- total_fluxout); 
+    if(total_fluxout > vol){
+      error = true;
+    }
         
     //__________________________________
     //  centroid
@@ -125,37 +128,41 @@ SecondOrderAdvector::inFluxOutFluxVolume( const SFCXVariable<double>& uvel_FC,
     r_y = delY_bottom/2.0 - delY_top/2.0;
     r_z = delZ_back/2.0   - delZ_front/2.0;
 
-    r_out_x[c].d_fflux[RIGHT] = delX/2.0 - delX_right/2.0;
-    r_out_y[c].d_fflux[RIGHT] = r_y;
-    r_out_z[c].d_fflux[RIGHT] = r_z;
+    fflux& rx = r_out_x[c];
+    fflux& ry = r_out_y[c];
+    fflux& rz = r_out_z[c];
 
-    r_out_x[c].d_fflux[LEFT] = delX_left/2.0 - delX/2.0;
-    r_out_y[c].d_fflux[LEFT] = r_y;
-    r_out_z[c].d_fflux[LEFT] = r_z;
+    rx.d_fflux[RIGHT] = delX/2.0 - delX_right/2.0;
+    ry.d_fflux[RIGHT] = r_y;
+    rz.d_fflux[RIGHT] = r_z;
 
-    r_out_x[c].d_fflux[TOP] = r_x;
-    r_out_y[c].d_fflux[TOP] = delY/2.0 - delY_top/2.0;
-    r_out_z[c].d_fflux[TOP] = r_z;
+    rx.d_fflux[LEFT] = delX_left/2.0 - delX/2.0;
+    ry.d_fflux[LEFT] = r_y;
+    rz.d_fflux[LEFT] = r_z;
 
-    r_out_x[c].d_fflux[BOTTOM] = r_x;
-    r_out_y[c].d_fflux[BOTTOM] = delY_bottom/2.0 - delY/2.0;
-    r_out_z[c].d_fflux[BOTTOM] = r_z;
+    rx.d_fflux[TOP] = r_x;
+    ry.d_fflux[TOP] = delY/2.0 - delY_top/2.0;
+    rz.d_fflux[TOP] = r_z;
 
-    r_out_x[c].d_fflux[FRONT] = r_x;
-    r_out_y[c].d_fflux[FRONT] = r_y;
-    r_out_z[c].d_fflux[FRONT] = delZ/2.0 - delZ_front/2.0;
+    rx.d_fflux[BOTTOM] = r_x;
+    ry.d_fflux[BOTTOM] = delY_bottom/2.0 - delY/2.0;
+    rz.d_fflux[BOTTOM] = r_z;
 
-    r_out_x[c].d_fflux[BACK] = r_x;
-    r_out_y[c].d_fflux[BACK] = r_y;
-    r_out_z[c].d_fflux[BACK] = delZ_back/2.0 - delZ/2.0;
+    rx.d_fflux[FRONT] = r_x;
+    ry.d_fflux[FRONT] = r_y;
+    rz.d_fflux[FRONT] = delZ/2.0 - delZ_front/2.0;
+
+    rx.d_fflux[BACK] = r_x;
+    ry.d_fflux[BACK] = r_y;
+    rz.d_fflux[BACK] = delZ_back/2.0 - delZ/2.0;
   }//cell iterator
 
   //__________________________________
   // if total_fluxout > vol then 
   // find the cell and throw an exception.  
-  if (fabs(error_test - num_cells) > 1.0e-2 && bulletProof_test) {
+  if (error && bulletProof_test) {
     for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
-      IntVector c = *iter; 
+      const IntVector& c = *iter; 
       double total_fluxout = 0.0;
       for(int face = TOP; face <= BACK; face++ )  {
         total_fluxout  += d_OFS[c].d_fflux[face];
@@ -176,16 +183,13 @@ void SecondOrderAdvector::allocateAndCompute_Q_ave(
                               const CCVariable<T>& q_CC,
                               const Patch* patch,
                               DataWarehouse* new_dw,
-                              StaticArray<CCVariable<T> >& q_OAFS )
+                              CCVariable<facedata<T> >& q_OAFS )
 {
 
   CCVariable<T> grad_lim, q_grad_x,q_grad_y,q_grad_z;
   Ghost::GhostType  gac = Ghost::AroundCells;
   
-  for (int face = TOP; face <= BACK; face++) {
-    new_dw->allocateTemporary(q_OAFS[face], patch,gac,1);
-  }
-  
+  new_dw->allocateTemporary(q_OAFS, patch,gac,1);
   new_dw->allocateTemporary(grad_lim, patch, gac, 1);
   new_dw->allocateTemporary(q_grad_x, patch, gac, 1);  
   new_dw->allocateTemporary(q_grad_y, patch, gac, 1);  
@@ -209,12 +213,12 @@ void SecondOrderAdvector::advectQ( const CCVariable<double>& q_CC,
                                    DataWarehouse* new_dw)
 {
 
-  StaticArray<CCVariable<double> > q_OAFS(6);
+  CCVariable<facedata<double> > q_OAFS;
   allocateAndCompute_Q_ave<double>(q_CC, patch, new_dw, q_OAFS);
         
   advectSlabs<double>(q_OAFS,patch,q_CC, q_advected, 
-                      d_notUsedX, d_notUsedY, d_notUsedZ, 
-                      ignoreFaceFluxesD);
+		      d_notUsedX, d_notUsedY, d_notUsedZ, 
+		      ignoreFaceFluxesD());
 }
 //__________________________________
 //  S P E C I A L I Z E D   D O U B L E 
@@ -227,11 +231,11 @@ void SecondOrderAdvector::advectQ( const CCVariable<double>& q_CC,
                                    SFCZVariable<double>& q_ZFC,
 				       DataWarehouse* new_dw)
 {
-  StaticArray<CCVariable<double> > q_OAFS(6);
+  CCVariable<facedata<double> > q_OAFS;
   allocateAndCompute_Q_ave<double>(q_CC, patch, new_dw, q_OAFS);
         
   advectSlabs<double>(q_OAFS,patch, q_CC, q_advected, 
-                      q_XFC, q_YFC, q_ZFC, saveFaceFluxes);
+                      q_XFC, q_YFC, q_ZFC, saveFaceFluxes());
 }
 //__________________________________
 //     V E C T O R
@@ -240,19 +244,19 @@ void SecondOrderAdvector::advectQ(const CCVariable<Vector>& q_CC,
                                   CCVariable<Vector>& q_advected,
                                   DataWarehouse* new_dw)
 {
-  StaticArray<CCVariable<Vector> > q_OAFS(6);
+  CCVariable<facedata<Vector> > q_OAFS;
   allocateAndCompute_Q_ave<Vector>(q_CC, patch, new_dw, q_OAFS);
 
   advectSlabs<Vector>(q_OAFS,patch, q_CC, q_advected, 
                     d_notUsedX, d_notUsedY, d_notUsedZ, 
-                    ignoreFaceFluxesV);
+                    ignoreFaceFluxesV());
 }
 
 /* ---------------------------------------------------------------------
  Function~  Advect--  driver program that does the advection  
 _____________________________________________________________________*/
 template < class T, typename F>
-void SecondOrderAdvector::advectSlabs( StaticArray<CCVariable<T> >& q_OAFS,
+void SecondOrderAdvector::advectSlabs( CCVariable<facedata<T> >& q_OAFS,
                                   const Patch* patch,
                                   const CCVariable<T>& q_CC,                   
                                   CCVariable<T>& q_advected,
@@ -267,42 +271,34 @@ void SecondOrderAdvector::advectSlabs( StaticArray<CCVariable<T> >& q_OAFS,
   double invvol = 1.0/(dx.x() * dx.y() * dx.z());     
 
   for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
-    IntVector c = *iter;
-   
-    //__________________________________
-    //   all faces
+    const IntVector& c = *iter;
+ 
     T q_face_flux[6];
     double faceVol[6];
          
+    T sum_q_face_flux(0.0);
     for(int f = TOP; f <= BACK; f++ )  { 
-      
       //__________________________________
       //   S L A B S
       IntVector ac = c + S_ac[f];     // slab adjacent cell
       double outfluxVol = d_OFS[c ].d_fflux[OF_slab[f]];
       double influxVol  = d_OFS[ac].d_fflux[IF_slab[f]];
 
-      q_face_flux[f]  =  q_OAFS[IF_slab[f]][ac] * influxVol
-                       - q_OAFS[OF_slab[f]][c]  * outfluxVol;
+      T q_faceFlux_tmp = q_OAFS[ac].d_data[IF_slab[f]] * influxVol
+	                 - q_OAFS[c].d_data[OF_slab[f]] * outfluxVol;
                                 
-      faceVol[f]      =  outfluxVol +  influxVol;
-    }  // face loop 
-       
-    //__________________________________
-    //  sum up all the contributions
-    q_advected[c] = T(0.0);
-    for(int f = TOP; f <= BACK; f++ )  {
-      q_advected[c] += q_face_flux[f] * invvol;
-    }
+      faceVol[f]       =  outfluxVol +  influxVol;
+      q_face_flux[f]   = q_faceFlux_tmp; 
+      sum_q_face_flux += q_faceFlux_tmp;
+    }  
+    q_advected[c] = sum_q_face_flux*invvol;
     
     //__________________________________
     //  inline function to compute q_FC 
     save_q_FC(c, q_XFC, q_YFC, q_ZFC, faceVol, q_face_flux, q_CC);
   }
 }
-
 //______________________________________________________________________
-//
 template <class T>
 void
 SecondOrderAdvector::qAverageFlux( const CCVariable<T>& q_CC,
@@ -311,29 +307,27 @@ SecondOrderAdvector::qAverageFlux( const CCVariable<T>& q_CC,
                                    const CCVariable<T>& q_grad_x,
                                    const CCVariable<T>& q_grad_y,
                                    const CCVariable<T>& q_grad_z,
-                                   StaticArray<CCVariable<T> >& q_OAFS )
+                                   CCVariable<facedata<T> >& q_OAFS )
   
 {
   //__________________________________
-  // loop over each face of each patch 
-  // if the face DOESN'T have a neighbor
-  // then set q_OAFS = q_CC
-  for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
-      face=Patch::nextFace(face)){  
+  // on Boundary faces set q_OAFS = q_CC
+  vector<Patch::FaceType>::const_iterator itr;
   
-    if ( patch->getBCType(face) != Patch::Neighbor ){
+  for (itr  = patch->getBoundaryFaces()->begin(); 
+       itr != patch->getBoundaryFaces()->end(); ++itr){
+    Patch::FaceType face = *itr;
     
-      for(CellIterator iter = patch->getFaceCellIterator(face); 
-          !iter.done(); iter++) {
-        IntVector c = *iter;  // hit only those cells along that face
-        T Q_CC = q_CC[c];
-        
-        for (int face = TOP; face <= BACK; face ++){
-          q_OAFS[face][c] = Q_CC;
-        }
-        
-      }   
-    }
+    for(CellIterator iter = patch->getFaceCellIterator(face); 
+        !iter.done(); iter++) {
+      const IntVector& c = *iter;  // hit only those cells along that face
+      T Q_CC = q_CC[c];
+
+      facedata<T>& oafs = q_OAFS[c];
+      for (int face = TOP; face <= BACK; face ++){
+        oafs.d_data[face] = Q_CC;
+      }
+    } 
   }
    
   //__________________________________
@@ -343,38 +337,43 @@ SecondOrderAdvector::qAverageFlux( const CCVariable<T>& q_CC,
   CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);
     
   for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
-    IntVector c = *iter;
+    const IntVector& c = *iter;
+    const T& gradlim = grad_lim[c];
 
-    T q_grad_X = grad_lim[c] * q_grad_x[c];
-    T q_grad_Y = grad_lim[c] * q_grad_y[c];
-    T q_grad_Z = grad_lim[c] * q_grad_z[c];
+    T q_grad_X = gradlim * q_grad_x[c];
+    T q_grad_Y = gradlim * q_grad_y[c];
+    T q_grad_Z = gradlim * q_grad_z[c];
     
     T Q_CC = q_CC[c];
     //__________________________________
     //  OUTAVERAGEFLUX: SLAB
-    //  with limiter.    
-    q_OAFS[BACK][c] =   q_grad_X * r_out_x[c].d_fflux[BACK] + 
-                        q_grad_Y * r_out_y[c].d_fflux[BACK] +               
-                        q_grad_Z * r_out_z[c].d_fflux[BACK] + Q_CC;     
+    //  with limiter.
+    facedata<T>& oafs = q_OAFS[c];
+    const fflux& rx = r_out_x[c];
+    const fflux& ry = r_out_y[c];
+    const fflux& rz = r_out_z[c];
+    oafs.d_data[BACK] = q_grad_X * rx.d_fflux[BACK] + 
+                        q_grad_Y * ry.d_fflux[BACK] +               
+                        q_grad_Z * rz.d_fflux[BACK] + Q_CC;     
                                   
-    q_OAFS[FRONT][c] =  q_grad_X * r_out_x[c].d_fflux[FRONT] + 
-                        q_grad_Y * r_out_y[c].d_fflux[FRONT] + 
-                        q_grad_Z * r_out_z[c].d_fflux[FRONT] + Q_CC;
+    oafs.d_data[FRONT] =q_grad_X * rx.d_fflux[FRONT] + 
+                        q_grad_Y * ry.d_fflux[FRONT] + 
+                        q_grad_Z * rz.d_fflux[FRONT] + Q_CC;
 
-    q_OAFS[BOTTOM][c] = q_grad_X * r_out_x[c].d_fflux[BOTTOM] + 
-                        q_grad_Y * r_out_y[c].d_fflux[BOTTOM] + 
-                        q_grad_Z * r_out_z[c].d_fflux[BOTTOM] + Q_CC;
+    oafs.d_data[BOTTOM] = q_grad_X * rx.d_fflux[BOTTOM] + 
+                        q_grad_Y * ry.d_fflux[BOTTOM] + 
+                        q_grad_Z * rz.d_fflux[BOTTOM] + Q_CC;
                                   
-    q_OAFS[TOP][c] =    q_grad_X * r_out_x[c].d_fflux[TOP] + 
-                        q_grad_Y * r_out_y[c].d_fflux[TOP] + 
-                        q_grad_Z * r_out_z[c].d_fflux[TOP] +  Q_CC;
+    oafs.d_data[TOP] =    q_grad_X * rx.d_fflux[TOP] + 
+                        q_grad_Y * ry.d_fflux[TOP] + 
+                        q_grad_Z * rz.d_fflux[TOP] +  Q_CC;
                                   
-    q_OAFS[LEFT][c] =   q_grad_X * r_out_x[c].d_fflux[LEFT] + 
-                        q_grad_Y * r_out_y[c].d_fflux[LEFT] + 
-                        q_grad_Z * r_out_z[c].d_fflux[LEFT] + Q_CC;
+    oafs.d_data[LEFT] =   q_grad_X * rx.d_fflux[LEFT] + 
+                        q_grad_Y * ry.d_fflux[LEFT] + 
+                        q_grad_Z * rz.d_fflux[LEFT] + Q_CC;
 
-    q_OAFS[RIGHT][c] =  q_grad_X * r_out_x[c].d_fflux[RIGHT] + 
-                        q_grad_Y * r_out_y[c].d_fflux[RIGHT] + 
-                        q_grad_Z * r_out_z[c].d_fflux[RIGHT] + Q_CC;
+    oafs.d_data[RIGHT] =  q_grad_X * rx.d_fflux[RIGHT] + 
+                        q_grad_Y * ry.d_fflux[RIGHT] + 
+                        q_grad_Z * rz.d_fflux[RIGHT] + Q_CC;
   }
 }
