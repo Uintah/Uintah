@@ -225,15 +225,15 @@ ShowField::check_for_vector_data(FieldHandle fld_handle) {
 bool
 ShowField::fetch_typed_algorithm(FieldHandle fld_handle) 
 {
-  const TypeDescription *td = fld_handle->get_type_description();
+  const TypeDescription *ftd = fld_handle->get_type_description();
+  const TypeDescription *ltd = fld_handle->data_at_type_description();
 
   // Get the Algorithm.
-  CompileInfo *ci = RenderFieldBase::get_compile_info(td);
+  CompileInfo *ci = RenderFieldBase::get_compile_info(ftd, ltd);
   if (! DynamicLoader::scirun_loader().get(*ci, renderer_)) {
     fld_gen_ = -1;
     mesh_gen_ = -1;
-    error("Could not compile algorithm for ShowField -");
-    error(td->get_name().c_str());
+    error("Could not compile algorithm for ShowField -" + ftd->get_name());
     return false;
   }
     

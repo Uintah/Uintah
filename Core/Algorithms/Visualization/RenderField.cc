@@ -38,20 +38,24 @@ RenderFieldBase::~RenderFieldBase()
 {}
 
 CompileInfo *
-RenderFieldBase::get_compile_info(const TypeDescription *td) {
-  CompileInfo *rval = scinew CompileInfo(dyn_file_name(td), 
-					 base_class_name(), 
-					 template_class_name(), 
-					 td->get_name());
-  rval->add_include(get_h_file_path());
-  td->fill_compile_info(rval);
-  return rval;
-}
+RenderFieldBase::get_compile_info(const TypeDescription *ftd,
+				  const TypeDescription *ltd)
+{
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("RenderField");
+  static const string base_class_name("RenderFieldBase");
 
-const string& 
-RenderFieldBase::get_h_file_path() {
-  static const string path(TypeDescription::cc_to_h(__FILE__));
-  return path;
+  CompileInfo *rval = scinew CompileInfo(template_class_name + "." +
+					 ftd->get_filename() + "." +
+					 ltd->get_filename() + ".",
+					 base_class_name, 
+					 template_class_name, 
+					 ftd->get_name() + ", " +
+					 ltd->get_name());
+
+  rval->add_include(include_path);
+  ftd->fill_compile_info(rval);
+  return rval;
 }
 
 template <>
