@@ -25,7 +25,7 @@ extern "C" {
 namespace SCIRun {
   using namespace rtrt;
   
-  template<> string SimpleIPort<SceneHandle>::port_type("Scene");
-  template<> string SimpleIPort<SceneHandle>::port_color("lightsteelblue4");
+  template<> string SimpleIPort<SceneHandle>::port_type_("Scene");
+  template<> string SimpleIPort<SceneHandle>::port_color_("lightsteelblue4");
 }
 
