@@ -246,7 +246,7 @@ OpenGLCmd(clientData, interp, argc, argv)
 #endif
     OpenGLPtr->cx=0;
     OpenGLPtr->vi=vi;
-    
+
     cmap = XCreateColormap(Tk_Display(tkwin),
 			   RootWindow(Tk_Display(tkwin), vi->screen),
 			   vi->visual, AllocNone);
@@ -255,6 +255,7 @@ OpenGLCmd(clientData, interp, argc, argv)
 	Tcl_AppendResult(interp, "Error setting visual for window", (char*)NULL);
 	return TCL_ERROR;
     }
+    XSync(Tk_Display(tkwin), False);
 
     interp->result = Tk_PathName(OpenGLPtr->tkwin);
     return TCL_OK;
@@ -439,6 +440,8 @@ GLXContext OpenGLGetContext2(interp, name, dpy)
 {
     Tcl_CmdInfo info;
     OpenGL* OpenGLPtr;
+    if(dpy)
+	XSync(dpy, False);
     if(!Tcl_GetCommandInfo(interp, name, &info))
 	return 0;
     OpenGLPtr=(OpenGL*)info.clientData;
