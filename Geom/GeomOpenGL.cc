@@ -219,7 +219,7 @@ void GeomPick::draw(DrawInfoOpenGL* di, Material* matl, double time)
 {
     if(di->pickmode)
 	glPushName((GLuint)this);
-    if(selected){
+    if(selected && highlight.get_rep()){
 	di->set_matl(highlight.get_rep());
 	int old_ignore=di->ignore_matl;
 	di->ignore_matl=1;
