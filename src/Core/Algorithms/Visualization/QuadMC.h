@@ -78,7 +78,7 @@ public:
 	
   void extract( cell_index_type, double );
   void reset( int, bool build_mesh=false);
-  GeomObj *get_geom() { return lines_->pts.size() ? lines_ : 0; };
+  GeomObj *get_geom() { return lines_->size() ? lines_ : 0; };
   FieldHandle get_field(double val);
 };
   
