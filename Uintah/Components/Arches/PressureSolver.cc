@@ -23,7 +23,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/SFCZVariable.h>
 #include <SCICore/Util/NotFinished.h>
 #include <Uintah/Components/Arches/Arches.h>
-
+#include <Uintah/Components/Arches/ArchesFort.h>
 using namespace Uintah::ArchesSpace;
 using namespace std;
 
@@ -123,7 +123,6 @@ void PressureSolver::solve(const LevelP& level,
   // require :
   // compute :
   //sched_normPressure(level, sched, new_dw, matrix_dw);
-  sched_normPressure(level, sched, old_dw, new_dw);
   
 }
 
@@ -479,7 +478,7 @@ PressureSolver::pressureLinearSolve (const ProcessorGroup* pc,
   // apply underelaxation to eqn
   d_linearSolver->computePressUnderrelax(pc, patch, new_dw, matrix_dw,
 					 d_pressureVars);
-  // put back computes matrix coeffs and nonlinear source terms 
+  // put back computed matrix coeffs and nonlinear source terms 
   // modified as a result of underrelaxation 
   // into the matrix datawarehouse
 #if 0
@@ -491,7 +490,9 @@ PressureSolver::pressureLinearSolve (const ProcessorGroup* pc,
 #endif
   // for parallel code lisolve will become a recursive task and 
   // will make the following subroutine separate
-  d_linearSolver->pressLisolve(pc, patch, new_dw, matrix_dw, d_pressureVars);
+  d_linearSolver->pressLisolve(pc, patch, new_dw, matrix_dw, d_pressureVars, d_lab);
+
+  normPressure(pc, patch, d_pressureVars);
   // put back the results
   new_dw->put(d_pressureVars->pressure, d_lab->d_pressurePSLabel, 
 	      matlIndex, patch);
@@ -500,29 +501,30 @@ PressureSolver::pressureLinearSolve (const ProcessorGroup* pc,
   
 
 //****************************************************************************
-// Schedule the creation of the .. more documentation here
+// normalize the pressure solution
 //****************************************************************************
 void 
-PressureSolver::sched_normPressure(const LevelP& ,
-		                   SchedulerP& ,
-		                   DataWarehouseP& ,
-		                   DataWarehouseP& )
+PressureSolver::normPressure(const ProcessorGroup* pc,
+			     const Patch* patch,
+			     ArchesVariables* vars)
 {
+  IntVector domLo = vars->pressure.getFortLowIndex();
+  IntVector domHi = vars->pressure.getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
+  double pressref = d_pressureVars->pressure[d_pressRef];
+  FORT_NORMPRESS(domLo.get_pointer(),domHi.get_pointer(),
+		idxLo.get_pointer(), idxHi.get_pointer(),
+		vars->pressure.getPointer(), 
+		&pressref);
 }  
 
-//****************************************************************************
-// Actually do normPressure
-//****************************************************************************
-void 
-PressureSolver::normPressure(const Patch* ,
-	                     SchedulerP& ,
-	                     const DataWarehouseP& ,
-	                     DataWarehouseP& )
-{
-}
 
 //
 // $Log$
+// Revision 1.44  2000/08/11 21:26:36  rawat
+// added linear solver for pressure eqn
+//
 // Revision 1.43  2000/08/10 21:29:09  rawat
 // fixed a bug in cellinformation
 //

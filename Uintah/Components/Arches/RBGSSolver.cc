@@ -24,9 +24,10 @@ static char *id="@(#) $Id$";
 #include <Uintah/Components/Arches/Arches.h>
 #include <Uintah/Components/Arches/ArchesFort.h>
 #include <Uintah/Components/Arches/ArchesVariables.h>
+#include <Uintah/Components/Arches/ArchesLabel.h>
 #include <Uintah/Grid/VarTypes.h>
 #include <Uintah/Grid/ReductionVariable.h>
-
+#include <SCICore/Containers/Array1.h>
 using namespace Uintah::ArchesSpace;
 using namespace std;
 
@@ -87,7 +88,7 @@ RBGSSolver::computePressResidual(const ProcessorGroup*,
 		    vars->pressCoeff[Arches::AB].getPointer(), 
 		    vars->pressCoeff[Arches::AP].getPointer(), 
 		    vars->pressNonlinearSrc.getPointer(),
-		    &vars->residPress);
+		    &vars->residPress, &vars->truncPress);
 
 }
 
@@ -123,20 +124,12 @@ RBGSSolver::computePressUnderrelax(const ProcessorGroup*,
   IntVector idxHi = patch->getCellFORTHighIndex();
 
   //fortran call
-#ifdef WONT_COMPILE_YET
   FORT_UNDERELAX(domLo.get_pointer(), domHi.get_pointer(),
 		 idxLo.get_pointer(), idxHi.get_pointer(),
 		 vars->pressure.getPointer(),
 		 vars->pressCoeff[Arches::AP].getPointer(), 
-		 vars->pressCoeff[Arches::AE].getPointer(), 
-		 vars->pressCoeff[Arches::AW].getPointer(), 
-		 vars->pressCoeff[Arches::AN].getPointer(), 
-		 vars->pressCoeff[Arches::AS].getPointer(), 
-		 vars->pressCoeff[Arches::AT].getPointer(), 
-		 vars->pressCoeff[Arches::AB].getPointer(), 
-		 vars->pressNonLinSrc.getPointer(), 
+		 vars->pressNonlinearSrc.getPointer(), 
 		 &d_underrelax);
-#endif
 
 }
 
@@ -144,11 +137,12 @@ RBGSSolver::computePressUnderrelax(const ProcessorGroup*,
 // Actual linear solve for pressure
 //****************************************************************************
 void 
-RBGSSolver::pressLisolve(const ProcessorGroup*,
+RBGSSolver::pressLisolve(const ProcessorGroup* pc,
 			 const Patch* patch,
 			 DataWarehouseP& old_dw,
 			 DataWarehouseP& new_dw,
-			 ArchesVariables* vars)
+			 ArchesVariables* vars,
+			 const ArchesLabel* lab)
 {
  
   // Get the patch bounds and the variable bounds
@@ -156,21 +150,55 @@ RBGSSolver::pressLisolve(const ProcessorGroup*,
   IntVector domHi = vars->pressure.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
-
-#ifdef WONT_COMPILE_YET
-  //fortran call for red-black GS solver
-  FORT_RBGSLISOLV(domLo.get_pointer(), domHi.get_pointer(),
-		  idxLo.get_pointer(), idxHi.get_pointer(),
-		  vars->pressure.getPointer(),
-		  vars->pressCoeff[Arches::AP].getPointer(), 
-		  vars->pressCoeff[Arches::AE].getPointer(), 
-		  vars->pressCoeff[Arches::AW].getPointer(), 
-		  vars->pressCoeff[Arches::AN].getPointer(), 
-		  vars->pressCoeff[Arches::AS].getPointer(), 
-		  vars->pressCoeff[Arches::AT].getPointer(), 
-		  vars->pressCoeff[Arches::AB].getPointer(), 
-		  vars->pressNonLinSrc.getPointer());
-#endif
+  bool lswpwe = true;
+  bool lswpsn = true;
+  bool lswpbt = true;
+  Array1<double> e1;
+  Array1<double> f1;
+  Array1<double> e2;
+  Array1<double> f2;
+  Array1<double> e3;
+  Array1<double> f3;
+  IntVector Size = domHi - domLo + IntVector(1,1,1);
+  e1.resize(Size.x());
+  f1.resize(Size.x());
+  e2.resize(Size.y());
+  f2.resize(Size.y());
+  e3.resize(Size.z());
+  f3.resize(Size.z());
+  sum_vartype residP;
+  sum_vartype truncP;
+  old_dw->get(residP, lab->d_presResidPSLabel);
+  old_dw->get(truncP, lab->d_presTruncPSLabel);
+  double nlResid = residP;
+  double trunc_conv = truncP*1.0E-7;
+  double theta = 0.5;
+  int pressIter = 0;
+  double pressResid = 0.0;
+  do {
+  //fortran call for lineGS solver
+    FORT_LINEGS(domLo.get_pointer(), domHi.get_pointer(),
+		idxLo.get_pointer(), idxHi.get_pointer(),
+		vars->pressure.getPointer(),
+		vars->pressCoeff[Arches::AE].getPointer(), 
+		vars->pressCoeff[Arches::AW].getPointer(), 
+		vars->pressCoeff[Arches::AN].getPointer(), 
+		vars->pressCoeff[Arches::AS].getPointer(), 
+		vars->pressCoeff[Arches::AT].getPointer(), 
+		vars->pressCoeff[Arches::AB].getPointer(), 
+		vars->pressCoeff[Arches::AP].getPointer(), 
+		vars->pressNonlinearSrc.getPointer(),
+		e1.get_objs(), f1.get_objs(), e2.get_objs(), f2.get_objs(),
+		e3.get_objs(), f3.get_objs(), &theta);
+      //, &lswpwe, &lswpsn, &lswpbt);
+    computePressResidual(pc, patch, old_dw, new_dw, vars);
+    pressResid = vars->residPress;
+    ++pressIter;
+  } while((pressIter < d_maxSweeps)&&((pressResid > d_residual*nlResid)||
+				      (pressResid > trunc_conv)));
+  cerr << "After pressure solve " << pressIter << " " << pressResid << endl;
+  cerr << "After pressure solve " << nlResid << " " << trunc_conv <<  endl;
+  
 
 }
 
@@ -211,7 +239,7 @@ RBGSSolver::computeVelResidual(const ProcessorGroup* ,
 		      vars->uVelocityCoeff[Arches::AB].getPointer(), 
 		      vars->uVelocityCoeff[Arches::AP].getPointer(), 
 		      vars->uVelNonlinearSrc.getPointer(),
-		      &vars->residUVel);
+		      &vars->residUVel, &vars->truncUVel);
 
     break;
   case Arches::YDIR:
@@ -233,7 +261,7 @@ RBGSSolver::computeVelResidual(const ProcessorGroup* ,
 		      vars->vVelocityCoeff[Arches::AB].getPointer(), 
 		      vars->vVelocityCoeff[Arches::AP].getPointer(), 
 		      vars->vVelNonlinearSrc.getPointer(),
-		      &vars->residVVel);
+		      &vars->residVVel, &vars->truncVVel);
 
     break;
   case Arches::ZDIR:
@@ -255,7 +283,7 @@ RBGSSolver::computeVelResidual(const ProcessorGroup* ,
 		      vars->wVelocityCoeff[Arches::AB].getPointer(), 
 		      vars->wVelocityCoeff[Arches::AP].getPointer(), 
 		      vars->wVelNonlinearSrc.getPointer(),
-		      &vars->residWVel);
+		      &vars->residWVel, &vars->truncWVel);
 
     break;
   default:
@@ -475,7 +503,7 @@ RBGSSolver::computeScalarResidual(const ProcessorGroup* ,
 		    vars->scalarCoeff[Arches::AB].getPointer(), 
 		    vars->scalarCoeff[Arches::AP].getPointer(), 
 		    vars->scalarNonlinearSrc.getPointer(),
-		    &vars->residScalar);
+		    &vars->residScalar, &vars->truncScalar);
 }
 
 
@@ -563,6 +591,9 @@ RBGSSolver::scalarLisolve(const ProcessorGroup* ,
 
 //
 // $Log$
+// Revision 1.17  2000/08/11 21:26:36  rawat
+// added linear solver for pressure eqn
+//
 // Revision 1.16  2000/08/01 23:28:43  skumar
 // Added residual calculation procedure and modified templates in linear
 // solver.  Added template for order-of-magnitude term calculation.

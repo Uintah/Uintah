@@ -48,6 +48,7 @@ namespace Uintah {
 class ProcessorGroup;
 namespace ArchesSpace {
 class ArchesVariables;
+class ArchesLabel;
 // class StencilMatrix;
 using namespace SCICore::Containers;
 
@@ -99,7 +100,8 @@ public:
       virtual void pressLisolve(const ProcessorGroup* pc,
 			const Patch* patch,
 			DataWarehouseP& old_dw,
-			DataWarehouseP& new_dw, ArchesVariables* vars) = 0;
+			DataWarehouseP& new_dw, ArchesVariables* vars, 
+				const ArchesLabel* lab) = 0;
 
       ////////////////////////////////////////////////////////////////////////
       //
@@ -213,6 +215,9 @@ private:
 
 //
 // $Log$
+// Revision 1.11  2000/08/11 21:26:36  rawat
+// added linear solver for pressure eqn
+//
 // Revision 1.10  2000/08/01 23:28:43  skumar
 // Added residual calculation procedure and modified templates in linear
 // solver.  Added template for order-of-magnitude term calculation.

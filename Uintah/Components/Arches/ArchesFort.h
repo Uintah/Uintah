@@ -67,11 +67,13 @@ WARNING
 #define FORT_SCALARBC bcscalar_
 #define FORT_COMPUTERESID rescal_
 #define FORT_COLDPROPS cprops_
-#define FORT_UNDERRELAX urelax_
+#define FORT_UNDERELAX underelax_
 #define FORT_RBGLISOLV lisolv_
 #define FORT_BCUTURB bcut_
 #define FORT_BCVTURB bcvt_
 #define FORT_BCWTURB bcwt_
+#define FORT_LINEGS linegs_
+#define FORT_NORMPRESS normpress_
 
 // GROUP: Function Declarations:
 ////////////////////////////////////////////////////////////////////////
@@ -777,13 +779,56 @@ extern "C"
 		      double* coeffBottom,
 		      double* coeffDiagonal,
 		      double* nonlinearSrc,
-		      double* residualNorm);
+		      double* residualNorm,
+		      double* truncNorm);
+
+    ////////////////////////////////////////////////////////////////////////
+    //
+    // underrelaxation of the eqn
+    //
+    void
+    FORT_UNDERELAX(const int* domLo, const int* domHi,
+		    const int* idxLo, const int* idxHi,
+		    double* variable,
+		    double* coeffDiagonal,
+		    double* nonlinearSrc,
+		    double* urelax);
+
+  // linear solver
+  void
+  FORT_LINEGS(const int* domLo, const int* domHi,
+	      const int* idxLo, const int* idxHi,
+	      double* variable,
+	      double* coeffEast,
+	      double* coeffWest,
+	      double* coeffNorth,
+	      double* coeffSouth,
+	      double* coeffTop,
+	      double* coeffBottom,
+	      double* coeffDiagonal,
+	      double* nonlinearSrc,
+	      double* e1, double* f1,
+	      double* e2, double* f2,
+	      double* e3, double* f3,
+	      double* theta);
+  //, bool* lswpwe,
+  //	      bool* lswpsn, bool* lswpbt);
+  
+  // normalize pressure
+  FORT_NORMPRESS(const int* domLo, const int* domHi,
+		 const int* idxLo, const int* idxHi,
+		 double* pressure,
+		 double* refPress);
+
 }
 
 #endif
 
 //
 // $Log$
+// Revision 1.30  2000/08/11 21:26:35  rawat
+// added linear solver for pressure eqn
+//
 // Revision 1.29  2000/08/10 21:29:09  rawat
 // fixed a bug in cellinformation
 //
