@@ -51,6 +51,7 @@ namespace Uintah {
     const VarLabel* matrixLabel;
     const VarLabel* rhsLabel;
     const VarLabel* initialGuessLabel;
+    const VarLabel* betaLabel;
     const VarLabel* imp_delPLabel;
 /*==========TESTING==========`*/    
     // Face centered variables

@@ -70,17 +70,6 @@ ICELabel::ICELabel()
     VarLabel::create("mom_comb_CC",  CCVariable<Vector>::getTypeDescription());
   created_vol_CCLabel =
     VarLabel::create("created_vol",  CCVariable<double>::getTypeDescription());
-/*`==========TESTING==========*/
-  matrixLabel = 
-    VarLabel::create("matrix",       CCVariable<Stencil7>::getTypeDescription());     
-  rhsLabel = 
-    VarLabel::create("rhs",          CCVariable<double>::getTypeDescription());       
-  initialGuessLabel = 
-    VarLabel::create("initialGuess", CCVariable<double>::getTypeDescription());
-  imp_delPLabel = 
-    VarLabel::create("imp_delP",    CCVariable<double>::getTypeDescription());       
-
-/*==========TESTING==========`*/
   term2Label = 
     VarLabel::create("term2",        CCVariable<double>::getTypeDescription());
   term3Label = 
@@ -89,6 +78,20 @@ ICELabel::ICELabel()
     VarLabel::create("f_theta",      CCVariable<double>::getTypeDescription());
   Tdot_CCLabel =
     VarLabel::create("Tdot",         CCVariable<double>::getTypeDescription());
+ 
+/*`==========TESTING==========*/
+  // Implicit Labels
+  matrixLabel = 
+    VarLabel::create("matrix",      CCVariable<Stencil7>::getTypeDescription());      
+  rhsLabel = 
+    VarLabel::create("rhs",         CCVariable<double>::getTypeDescription());        
+  initialGuessLabel = 
+    VarLabel::create("initialGuess",CCVariable<double>::getTypeDescription());     
+  imp_delPLabel = 
+    VarLabel::create("imp_delP",    CCVariable<double>::getTypeDescription());       
+  betaLabel = 
+    VarLabel::create("beta",        CCVariable<double>::getTypeDescription());
+/*==========TESTING==========`*/ 
   
   // Face centered variables
   uvel_FCLabel       = 
@@ -188,9 +191,11 @@ ICELabel::~ICELabel()
     VarLabel::destroy(Tdot_CCLabel);
     //
 /*`==========TESTING==========*/
+    // Implicit Labels
     VarLabel::destroy(matrixLabel);
     VarLabel::destroy(rhsLabel); 
     VarLabel::destroy(initialGuessLabel);
+    VarLabel::destroy(betaLabel);
     VarLabel::destroy(imp_delPLabel);    
 /*==========TESTING==========`*/
     
