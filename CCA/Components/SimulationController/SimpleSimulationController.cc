@@ -432,8 +432,8 @@ SimpleSimulationController::problemSetup(const ProblemSpecP& params,
 	 
       if(!have_levelspacing && !have_patchspacing)
 	 throw ProblemSetupException("Box resolution is not specified");
-	 
-      LevelP level = scinew Level(grid.get_rep(), anchor, spacing);
+
+      LevelP level = grid->addLevel(anchor, spacing);
       
       for(ProblemSpecP box_ps = level_ps->findBlock("Box");
 	  box_ps != 0; box_ps = box_ps->findNextBlock("Box")){
@@ -520,7 +520,6 @@ SimpleSimulationController::problemSetup(const ProblemSpecP& params,
 	level->finalizeLevel();
       }
       level->assignBCS(grid_ps);
-      grid->addLevel(level);
    }
 }
 
