@@ -71,8 +71,10 @@ PropertyManager::~PropertyManager()
 {
   // Clear all the properties.
   map_type::iterator pi = properties_.begin();
-  while (pi != properties_.end())
+  while (pi != properties_.end()) {
     delete pi->second;
+    ++pi;
+  }
 }
 
 
