@@ -2254,11 +2254,10 @@ ViewImage::execute()
 
   if (temp_tex_data_) delete[] temp_tex_data_;
   // Temporary space to hold the colormapped texture
-  temp_tex_data_ = scinew (float)
-    [Max(pow2(max_slice_[0]), pow2(max_slice_[1]), pow2(max_slice_[2]))*
-     Mid(pow2(max_slice_[0]), pow2(max_slice_[1]), pow2(max_slice_[2]))*4];
+  temp_tex_data_ = scinew float[Max(pow2(max_slice_[0]), pow2(max_slice_[1]),
+                                    pow2(max_slice_[2]))*Mid(pow2(max_slice_[0]),
+                                    pow2(max_slice_[1]), pow2(max_slice_[2]))*4];
 
-     
 
   // Clear the volumes
   for (i = 0; i < volumes_.size(); ++i) 
