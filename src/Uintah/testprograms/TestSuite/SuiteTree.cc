@@ -53,7 +53,7 @@ void SuiteTreeNode::reportAllSuites()
     (*it)->reportAllSuites();  
 }
 
-string SuiteTreeLeaf::composeSummary(const string indent, bool expandAll,
+string SuiteTreeLeaf::composeSummary(const string indent, bool,
 				     bool& allPassed)
 {
   if (mySuite->hasAllPassed()) {
