@@ -148,7 +148,7 @@ public:
   void get_point(Point &result, Node::index_type idx) const
     { get_center(result,idx); }
   void get_normal(Vector & /* result */, Node::index_type /* index */) const
-  { ASSERTFAIL("not implemented") }
+    { ASSERTFAIL("not implemented") }
   void set_point(const Point &point, Node::index_type index)
     { nodes_[index] = point; }
 
@@ -156,9 +156,17 @@ public:
   Node::index_type add_node(const Point &p)
     { nodes_.push_back(p); return nodes_.size()-1; }
   Edge::index_type add_edge(Node::index_type i1, Node::index_type i2)
-    { edges_.push_back(index_pair_type(i1,i2)); return static_cast<Edge::index_type>(nodes_.size()-1); }
+    {
+      edges_.push_back(index_pair_type(i1,i2));
+      return static_cast<Edge::index_type>(nodes_.size()-1);
+    }
   Elem::index_type add_elem(Node::array_type a)
-  { edges_.push_back(index_pair_type(a[0],a[1])); return static_cast<Elem::index_type>(nodes_.size()-1); }
+    {
+      edges_.push_back(index_pair_type(a[0],a[1]));
+      return static_cast<Elem::index_type>(nodes_.size()-1);
+    }
+  Node::index_type add_point(const Point &point) { return add_node(point); }
+
   virtual bool is_editable() const { return true; }
     
   virtual void io(Piostream&);
