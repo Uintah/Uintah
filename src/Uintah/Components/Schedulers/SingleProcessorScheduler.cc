@@ -47,7 +47,7 @@ SingleProcessorScheduler::execute(const ProcessorGroup * pc,
    }
    dbg << "Executing " << ntasks << " tasks\n";
 
-   emitEdges(graph);
+   emitEdges(tasks);
 
    for(int i=0;i<ntasks;i++){
       time_t t = time(NULL);
@@ -80,6 +80,10 @@ SingleProcessorScheduler::createDataWarehouse( int generation )
 
 //
 // $Log$
+// Revision 1.5  2000/07/25 20:59:28  jehall
+// - Simplified taskgraph output implementation
+// - Sort taskgraph edges; makes critical path algorithm eastier
+//
 // Revision 1.4  2000/07/19 21:47:59  jehall
 // - Changed task graph output to XML format for future extensibility
 // - Added statistical information about tasks to task graph output
