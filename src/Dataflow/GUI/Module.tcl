@@ -1061,7 +1061,7 @@ proc startIPortConnection {imodid iwhich x y} {
     global netedit_canvas
         
     if { $mm == 1 } {
-	set coords [computeIPorCoords $fake_imodid $fake_iwhich]
+	set coords [computeIPortCoords $fake_imodid $fake_iwhich]
     } else {
 	set coords [computeIPortCoords $imodid $iwhich]
     }
@@ -1861,12 +1861,7 @@ proc trackOPortConnection {omodid which x y} {
     set ix [lindex $c 0]
     set iy [lindex $c 1]
 
-
-    set relativeMouseX [expr $x+int([expr (([lindex [.bot.neteditFrame.canvas xview] 0]*4500))])]
-    set relativeMouseY [expr $y+int([expr (([lindex [.bot.neteditFrame.canvas yview] 0]*4500))])]
-
-    set mindist [computeDist $relativeMouseX $relativeMouseY $ix $iy]
-    set mindist 6364
+    set mindist [computeDist $x $y $ix $iy]
     set minport ""
     global new_conn_iports
     
@@ -1878,7 +1873,7 @@ proc trackOPortConnection {omodid which x y} {
 	set ox [lindex $c 0]
 	set oy [lindex $c 1]
 
-	set dist [computeDist $relativeMouseX $relativeMouseY $ox $oy]
+	set dist [computeDist $x $y $ox $oy]
 	if {$dist < $mindist} {
 	    set mindist $dist
 	    set minport $i
