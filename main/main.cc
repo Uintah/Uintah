@@ -51,11 +51,14 @@ using std::cerr;
 using std::cout;
 using std::endl;
 
+#include <sys/stat.h>
+
 #ifdef _WIN32
 #include <afxwin.h>
 #endif
 
-#define VERSION "1.3.0"
+#define VERSION "1.3.0" // this needs to be synced with the contents of
+                        // SCIRun/doc/edition.xml
 
 using namespace SCIRun;
 
@@ -101,7 +104,7 @@ usage()
   exit( 0 );
 }
 
-// Apparently some args are past through to TCL where they are parsed...
+// Apparently some args are passed through to TCL where they are parsed...
 // Probably need to check to make sure they are at least valid here???
 
 void
@@ -117,6 +120,13 @@ parse_args( int argc, char *argv[] )
       } else if ( ( arg == "--help" ) || ( arg == "-help" ) ||
 		  ( arg == "-h" ) ||  ( arg == "--h" ) ) {
 	usage();
+      } else {
+	  struct stat buf;
+	  if (stat(arg.c_str(),&buf) < 0) {
+	      cerr << "Couldn't find net file " << arg
+		   << ".\nNo such file or directory.  Exiting." << endl;
+	      exit(0);
+	  }
       }
     }
 }
