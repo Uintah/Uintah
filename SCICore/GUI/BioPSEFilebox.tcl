@@ -798,7 +798,6 @@ proc biopseFDialog_Config {w type argList} {
 	set specs {
 	    {-filetypes "" "" ""}
 	    {-initialdir "" "" ""}
-	    {-initialfile "" "" ""}
 	    {-parent "" "" "."}
 	    {-title "" "" ""}
 	    {-command "" "" ""}
@@ -806,11 +805,11 @@ proc biopseFDialog_Config {w type argList} {
 	    {-cancel "" "" ""}
 	    {-defaultextension "" "" ""}
 	}
+	set data(-initialfile) ""
     } else {
 	# options for Save-boxes
 	set specs {
 	    {-defaultextension "" "" ""}
-	    {-defaultname "" "" ""}
 	    {-filetypes "" "" ""}
 	    {-initialdir "" "" ""}
 	    {-initialfile "" "" ""}
@@ -844,31 +843,21 @@ proc biopseFDialog_Config {w type argList} {
 	}
     }
     
-    # 4.a: setting initial file to the filevar contents, if the former isn't specifyied
-    if {![string compare $data(-initialfile) ""]} {
-	if { [info exists $data(-filevar)]} {
-	    if {[file exists  [set $data(-filevar)]] } {
+    # 4.a: setting initial file to the filevar contents, if it is specified
+    if { [info exists $data(-filevar)]} {
+	if {[file exists  [set $data(-filevar)]] } {
 	    set tmp [set $data(-filevar)]
 	    set data(-initialdir) [file dirname $tmp]
 	    set data(-initialfile) [file tail $tmp]
-	    } else {
-		# place to warn that specified file not found
-	    }
 	} else {
-	    # place to put default name if we are in the save box
-	    if {[string compare $type "open"]} {
-		set tmp ""
-		append tmp $data(-initialfile) $data(-defaultname)]
-		set data(-initialfile) $tmp
-	    }
+	    # place to warn that specified file not found
 	}
     }
-   
+    
     # 4.b: set the default directory and selection according to the -initial
     #    settings
     #
     if {[string compare $data(-initialdir) ""]} {
-	
 	if {[file isdirectory $data(-initialdir)]} {
 	    set data(selectPath) [glob $data(-initialdir)]
 	} else {
