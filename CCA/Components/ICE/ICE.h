@@ -595,6 +595,7 @@ namespace Uintah {
       bool switchDebugMomentumExchange_CC;
       bool switchDebugSource_Sink;
       bool switchDebug_advance_advect;
+      bool switchDebugConvergence;
       bool switchTestConservation; 
       
       // debugging variables
