@@ -80,28 +80,51 @@ itcl_class Volume_Visualization_VolumeVisualizer {
 	checkbutton $w.f4.shading -text "Shading" -relief flat \
             -variable $this-shading -onvalue 1 -offvalue 0 \
             -anchor w -command "$s; $n"
+        pack $w.f4.shading -side top -fill x -padx 4
+
+	frame $w.f6 -relief groove -borderwidth 2
+	pack $w.f6 -padx 2 -pady 2 -fill x
+ 	label $w.f6.material -text "Material"
 	global $this-ambient
-	scale $w.f4.ambient -variable $this-ambient \
+	scale $w.f6.ambient -variable $this-ambient \
             -from 0.0 -to 1.0 -label "Ambient" \
             -showvalue true -resolution 0.001 \
             -orient horizontal
 	global $this-diffuse
-	scale $w.f4.diffuse -variable $this-diffuse \
+	scale $w.f6.diffuse -variable $this-diffuse \
 		-from 0.0 -to 1.0 -label "Diffuse" \
 		-showvalue true -resolution 0.001 \
 		-orient horizontal
 	global $this-specular
-	scale $w.f4.specular -variable $this-specular \
+	scale $w.f6.specular -variable $this-specular \
 		-from 0.0 -to 1.0 -label "Specular" \
 		-showvalue true -resolution 0.001 \
 		-orient horizontal
 	global $this-shine
-	scale $w.f4.shine -variable $this-shine \
+	scale $w.f6.shine -variable $this-shine \
 		-from 1.0 -to 128.0 -label "Shine" \
 		-showvalue true -resolution 1.0 \
 		-orient horizontal
-        pack $w.f4.shading $w.f4.ambient $w.f4.diffuse \
-            $w.f4.specular $w.f4.shine \
+        pack $w.f6.material $w.f6.ambient $w.f6.diffuse \
+            $w.f6.specular $w.f6.shine \
+            -side top -fill x -padx 4
+
+ 	frame $w.f5 -relief groove -borderwidth 2
+ 	pack $w.f5 -padx 2 -pady 2 -fill x
+ 	label $w.f5.light -text "Attach Light to"
+ 	radiobutton $w.f5.light0 -text "Light 0" -relief flat \
+            -variable $this-light -value 0 \
+            -anchor w -command $n
+ 	radiobutton $w.f5.light1 -text "Light 1" -relief flat \
+            -variable $this-light -value 1 \
+            -anchor w -command $n
+ 	radiobutton $w.f5.light2 -text "Light 2" -relief flat \
+            -variable $this-light -value 2 \
+            -anchor w -command $n
+ 	radiobutton $w.f5.light3 -text "Light 3" -relief flat \
+            -variable $this-light -value 3 \
+            -anchor w -command $n
+        pack $w.f5.light $w.f5.light0 $w.f5.light1 $w.f5.light2 $w.f5.light3 \
             -side top -fill x -padx 4
 
 	frame $w.f3 -relief groove -borderwidth 2
@@ -114,19 +137,6 @@ itcl_class Volume_Visualization_VolumeVisualizer {
 		-variable $this-interp_mode -value 0 \
 		-anchor w -command $n
 	pack $w.f3.l $w.f3.interp $w.f3.near -side top -fill x -padx 4
-
-
-# 	frame $w.f5 -relief groove -borderwidth 2
-# 	pack $w.f5 -padx 2 -pady 2 -fill x
-# 	label $w.f5.light -text "Light" -justify left
-# 	radiobutton $w.f5.light0 -text "Light 0" -relief flat \
-# 		-variable $this-light -value 0 \
-# 		-anchor w -command $n
-# 	radiobutton $w.f5.light1 -text "Light 1" -relief flat \
-# 		-variable $this-light -value 1 \
-# 		-anchor w -command $n
-#         pack $w.f5.light $w.f5.light0 $w.f5.light1 \
-#             -side top -fill x -padx 4
 
 	global $this-num_slices
 	scale $w.nslice -variable $this-num_slices \
@@ -143,10 +153,10 @@ itcl_class Volume_Visualization_VolumeVisualizer {
 
 	pack $w.stransp $w.nslice  -side top -fill x -padx 4 -pady 2
 
-        bind $w.f4.ambient <ButtonRelease> $n
-        bind $w.f4.diffuse <ButtonRelease> $n
-        bind $w.f4.specular <ButtonRelease> $n
-        bind $w.f4.shine <ButtonRelease> $n
+        bind $w.f6.ambient <ButtonRelease> $n
+        bind $w.f6.diffuse <ButtonRelease> $n
+        bind $w.f6.specular <ButtonRelease> $n
+        bind $w.f6.shine <ButtonRelease> $n
 
 	bind $w.nslice <ButtonRelease> $n
 	bind $w.stransp <ButtonRelease> $n
@@ -159,21 +169,25 @@ itcl_class Volume_Visualization_VolumeVisualizer {
     method state {} {
 	set w .ui[modname]
 	if {[set $this-shading] == 1} {
-            $this activate $w.f4.ambient
-            $this activate $w.f4.diffuse
-            $this activate $w.f4.specular
-            $this activate $w.f4.shine
-#             $this activate $w.f5.light
-#             $this activate $w.f5.light0
-#             $this activate $w.f5.light1
+            $this activate $w.f6.ambient
+            $this activate $w.f6.diffuse
+            $this activate $w.f6.specular
+            $this activate $w.f6.shine
+            $this activate $w.f5.light
+            $this activate $w.f5.light0
+            $this activate $w.f5.light1
+            $this activate $w.f5.light2
+            $this activate $w.f5.light3
 	} else {
-            $this deactivate $w.f4.ambient
-            $this deactivate $w.f4.diffuse
-            $this deactivate $w.f4.specular
-            $this deactivate $w.f4.shine
-#             $this deactivate $w.f5.light
-#             $this deactivate $w.f5.light0
-#             $this deactivate $w.f5.light1
+            $this deactivate $w.f6.ambient
+            $this deactivate $w.f6.diffuse
+            $this deactivate $w.f6.specular
+            $this deactivate $w.f6.shine
+            $this deactivate $w.f5.light
+            $this deactivate $w.f5.light0
+            $this deactivate $w.f5.light1
+            $this deactivate $w.f5.light2
+            $this deactivate $w.f5.light3
 	}
     }
     method activate { w } {
