@@ -6,5 +6,5 @@ proc uiTYPEReader {modid} {
         return;
     }
     toplevel $w
-    makeFilebox $w filename($modid) "$modid needexecute"
+    makeFilebox $w filename,$modid "$modid needexecute"
 }
