@@ -2,6 +2,8 @@
 
 #include <Packages/rtrt/Core/DpyGui.h>
 #include <Packages/rtrt/Core/Dpy.h>
+#include <Packages/rtrt/Core/DpyPrivate.h>
+#include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/ExternalUIInterface.h>
 #include <Packages/rtrt/Core/rtrt.h>
 
@@ -17,13 +19,59 @@ using namespace rtrt;
 using namespace SCIRun;
 using namespace std;
 
+#ifdef HAVE_EXC
+#include <libexc.h>
+#elif defined(__GNUC__) && defined(__linux)
+#include <execinfo.h>
+#endif
+
+namespace rtrt {
+  void print_stack() {
+    static const int MAXSTACK = 100;
+#ifdef HAVE_EXC
+    // Use -lexc to print out a stack trace
+    static const int MAXNAMELEN = 1000;
+    __uint64_t addrs[MAXSTACK];
+    char* cnames_str = new char[MAXSTACK*MAXNAMELEN];
+    char* names[MAXSTACK];
+    for(int i=0;i<MAXSTACK;i++)
+      names[i]=cnames_str+i*MAXNAMELEN;
+    int nframes = trace_back_stack(0, addrs, names, MAXSTACK, MAXNAMELEN);
+    if(nframes == 0){
+      fprintf(stderr, "Backtrace not available!\n");
+    } else {
+      fprintf(stderr, "Backtrace:\n");
+      for(int i=0;i<nframes;i++)
+        fprintf(stderr, "0x%p: %s\n", (void*)addrs[i], names[i]);
+    }
+#elif defined(__GNUC__) && defined(__linux)
+    static void *addresses[MAXSTACK];
+    int n = backtrace( addresses, MAXSTACK );
+    if (n == 0){
+      fprintf(stderr, "Backtrace not available!\n");
+    } else {
+      fprintf(stderr, "Backtrace:\n");
+      char **names = backtrace_symbols( addresses, n );
+      for ( int i = 0; i < n; i++ )
+        {
+          fprintf (stderr, "%s\n", names[i]);
+        } 
+      free(names);
+    } 
+#endif
+  }
+}
+
 DpyGui::DpyGui():
   DpyBase("RTRT DpyGui"),
-  dpy(0),
+  rtrt_dpy(0),
   rtrt_engine(0),
   ui_mutex("DpyGui::ui_mutex")
 {
   cleaned = true;
+
+  resize_xres = xres;
+  resize_yres = yres;
 }
 
 void DpyGui::addExternalUIInterface(ExternalUIInterface* ui_interface) {
@@ -40,6 +88,19 @@ void DpyGui::removeExternalUIInterface(ExternalUIInterface* ui_interface) {
   ext_uis.erase(remove(ext_uis.begin(), ext_uis.end(), ui_interface),
                 ext_uis.end());
   ui_mutex.unlock();
+}
+
+void DpyGui::set_resolution(const int width, const int height) {
+  // Be sure not to pick wacked out values.
+  if (width > 0 && height > 0) {
+    resize_xres = width;
+    resize_yres = height;
+
+    if (!opened) {
+      xres = width;
+      yres = height;
+    }
+  }
 }
 
 void DpyGui::stopUIs() {
@@ -69,6 +130,17 @@ void DpyGui::run() {
       return;
     }
 
+    // Check to see if we need to resize the window.  We need to give
+    // preference to external resize events over what Dpy thinks it
+    // should be.
+    if (resize_xres != xres || resize_yres != yres) {
+      cerr << "resize ("<<resize_xres<<", "<<resize_yres<<") res ("<<xres<<", "<<yres<<")\n";
+      resize(resize_xres, resize_yres);
+    } else if (rtrt_dpy->priv->xres != xres || rtrt_dpy->priv->yres != yres) {
+      //      resize(rtrt_dpy->priv->xres, rtrt_dpy->priv->yres);
+    }
+
+    // Do some events
     wait_and_handle_events();
   }
 }
@@ -76,7 +148,7 @@ void DpyGui::run() {
 void DpyGui::init() {
   // This lets Dpy know that it can create its window, because you
   // have to wait for the parent (this here).
-  dpy->release(win);
+  rtrt_dpy->release(win);
   cerr << "DpyGui::init::parentSema up\n";
 }
   
@@ -90,16 +162,16 @@ void DpyGui::cleanup() {
   stopUIs();
 
   // Close the children
-  dpy->stop();
+  rtrt_dpy->stop();
 
   // Wait for the child to stop rendering
-  dpy->wait_on_close();
-  cerr << "dpy->wait_on_close() finished\n";
+  rtrt_dpy->wait_on_close();
+  cerr << "rtrt_dpy->wait_on_close() finished\n";
   
   // Can't delete it for now, because it will cause a recursive lock
   // when doing Thread::exitAll().
 
-  //  delete(dpy);
+  //  delete(rtrt_dpy);
 
   close_display();
   cerr << "DpyGui::cleanup::close_display finished\n";
@@ -108,6 +180,28 @@ void DpyGui::cleanup() {
 bool DpyGui::should_close() {
   return on_death_row ||
     (rtrt_engine && rtrt_engine->exit_engine);
+}
+
+void DpyGui::resize(const int width, const int height) {
+  xres = resize_xres = width;
+  yres = resize_yres = height;
+  if (width != xres || height != yres) {
+    // Check to see if the XServer already had the right geometry before resizing
+    XWindowAttributes win_attr;
+    XGetWindowAttributes(dpy, win, &win_attr);
+    if (win_attr.width != xres || win_attr.height != yres)
+      XResizeWindow(dpy, win, xres, yres);
+  }
+
+  if (rtrt_dpy->display_frames) {
+    //    cerr << "Setting Dpy's resolution to ("<<xres<<", "<<yres<<")\n";
+    // Need to make sure the Dpy class has the same resolution we do.
+    rtrt_dpy->priv->xres = xres;
+    rtrt_dpy->priv->yres = yres;
+    // Update the camera's aspect ratio
+    rtrt_dpy->guiCam_->setWindowAspectRatio((double)yres/xres);
+    //    print_stack();
+  }
 }
 
 #if 1
