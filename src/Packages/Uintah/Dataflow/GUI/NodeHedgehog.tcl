@@ -16,6 +16,10 @@ itcl_class Uintah_Visualization_NodeHedgehog {
     method set_defaults {} {
 	global $this-length_scale
 	set $this-length_scale 0.1
+	global $this-min_crop_length
+	set $this-min_crop_length 0
+	global $this-max_length
+	set $this-max_length 0
 	global $this-head_length
 	set $this-head_length 0.3
 	global $this-width_scale
@@ -25,9 +29,6 @@ itcl_class Uintah_Visualization_NodeHedgehog {
 	global $this-skip_node
 	set $this-skip_node 1
 	$this-c needexecute
-
-	global $this-var_orientation
-	set $this-var_orientation 0
 
 	# max vector stuff
 	global $this-max_vector_length
@@ -95,21 +96,14 @@ itcl_class Uintah_Visualization_NodeHedgehog {
 	frame $w.f2.var
 	pack $w.f2.var -side left -anchor w -pady 2 -ipadx 3
 
-	radiobutton $w.f2.var.node -variable $this-var_orientation \
-		-command $n -text "Node Centered" -value 0
-	pack $w.f2.var.node -side top -anchor w -pady 2 -ipadx 3
-
-	radiobutton $w.f2.var.cell -variable $this-var_orientation \
-		-command $n -text "Cell Centered" -value 1
-	pack $w.f2.var.cell -side top -anchor w -pady 2 -ipadx 3
-	
 	make_entry $w.f2.var.skip "Node Skip:" $this-skip_node $n
 	pack $w.f2.var.skip -side left -padx 5 -pady 2 -anchor w -fill x
 
 	frame $w.max -relief sunken -borderwidth 1
 	pack $w.max -side top -padx 8 -ipady 2 -pady 3 -fill x
 	
-	make_non_edit_box $w.max.length "Max length:" $this-max_vector_length
+	make_non_edit_box $w.max.length "Max length (non-cropped):" \
+		$this-max_vector_length
 	pack $w.max.length -side top -padx 5 -pady 2 -anchor w -fill x
 
 	make_non_edit_box $w.max.x "Max.x:" $this-max_vector_x
@@ -127,6 +121,18 @@ itcl_class Uintah_Visualization_NodeHedgehog {
 		-variable $this-length_scale -command $n
 
 	pack $w.f5.length_scale -side top -fill x
+
+	expscale $w.f5.min_length -orient horizontal \
+		-label "Minimum Length:" \
+		-variable $this-min_crop_length -command $n
+
+	pack $w.f5.min_length -side top -fill x
+
+	expscale $w.f5.max_length -orient horizontal \
+		-label "Maximum Length (not used if equal to 0):" \
+		-variable $this-max_crop_length -command $n
+
+	pack $w.f5.max_length -side top -fill x
 
 	scale $w.f5.head_length -orient horizontal -label "Head length:" \
 		-from 0 -to 1 -length 3c \
