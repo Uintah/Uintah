@@ -16,12 +16,13 @@ using std::ofstream;
 
 using namespace Uintah;
 
-Advector* AdvectionFactory::create(ProblemSpecP& ps)
+Advector* AdvectionFactory::create(ProblemSpecP& ps,
+                                   std::string& advect_type)
 {
     ProblemSpecP child = ps->findBlock("advection");
     if(!child)
       throw ProblemSetupException("Cannot find advection tag");
-    std::string advect_type;
+
     if(!child->getAttribute("type",advect_type))
       throw ProblemSetupException("No type for advection"); 
     
