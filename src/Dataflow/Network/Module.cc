@@ -349,13 +349,24 @@ void Module::update_progress(double p, Timer &t)
 
 void Module::update_progress(int n, int max)
 {
+  current_ = n;
+  max_ = max;
   update_progress(double(n)/double(max));
 }
 
 void Module::update_progress(int n, int max, Timer &t)
 {
-    
+  current_ = n;
+  max_ = max;
   update_progress(double(n)/double(max), t);
+}
+
+void Module::accumulate_progress(int n)
+{
+  progress_lock_.lock();
+  current_ += n;
+  progress_lock_.unlock();
+  update_progress(double(current_)/double(max_));
 }
 
 void Module::light_module0()
