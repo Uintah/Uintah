@@ -1,9 +1,10 @@
 SRCTOP   = @top_srcdir@
 SRCDIR   = @srcdir@
 OBJTOP   = ../..
+OBJTOP_ABS    = $(shell cd $(OBJTOP) ; pwd)
 
 INCLUDES = -I$(SRCTOP) -I$(SRCTOP)/DaveW/ThirdParty/Nrrd/include/ -I$(OBJTOP)
-LIBRARIES = -L$(OBJTOP)/SCICore -Wl,-rpath -Wl,/home/sci/u2/VR/SCI/PSE/src/SCICore/ -lSCICore -L../prebuilt -lnrrd
+LIBRARIES = -L$(OBJTOP)/SCICore -Wl,-rpath -Wl,$(OBJTOP_ABS)/SCICore/ -lSCICore -lm
 
 all:: prog-SurfToJAS
 
@@ -28,8 +29,17 @@ prog-MeshFix:
 prog-MeshToJAS:
 	@$(MAKE) --no-print-directory SRCS=MeshToJAS.cc PROGRAM=MeshToJAS MeshToJAS
 
+prog-MeshToSFUG:
+	@$(MAKE) --no-print-directory SRCS=MeshToSFUG.cc PROGRAM=MeshToSFUG MeshToSFUG
+
+prog-ResampleField:
+	@$(MAKE) --no-print-directory SRCS=ResampleField.cc PROGRAM=ResampleField ResampleField
+
 prog-SFRGfile:
 	@$(MAKE) --no-print-directory SRCS=SFRGfile.cc PROGRAM=SFRGfile SFRGfile
+
+prog-SFUGtoSFUG:
+	@$(MAKE) --no-print-directory SRCS=SFUGtoSFUG.cc PROGRAM=SFUGtoSFUG SFUGtoSFUG
 
 prog-STreeToTris:
 	@$(MAKE) --no-print-directory SRCS=STreeToTris.cc PROGRAM=STreeToTris STreeToTris
