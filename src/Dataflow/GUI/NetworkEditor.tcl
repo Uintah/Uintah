@@ -1047,12 +1047,27 @@ proc loadnet { netedit_loadfile } {
     }
 
     # The '#' below is not a comment... This souces the network file globally
+    renameSourceCommand
     uplevel \#0 {source $netedit_loadfile_global}
+    resetSourceCommand
+
     set Subnet(Subnet$Subnet(Loading)_Filename) $netedit_loadfile
     if { !$inserting } { set NetworkChanged 0 }
-    resetSourceCommand
 }
 
+proc SCIRunNew_source { args } {
+    if { [file exists $args] } {    
+	return [uplevel 1 SCIRunBackup_source \{$args\}]
+    }
+    set lastSettings [string last .settings $args]
+    if { $lastSettings != -1 && \
+	     ([expr [string length $args] - $lastSettings] == 9) } {
+	set file "[netedit getenv SCIRUN_SRCDIR]/nets/default.settings"
+	displayErrorWarningOrInfo "*** The settings file '$args'  was not found.  Loading the default file:\n     $file" warning
+	return [uplevel 1 SCIRunBackup_source \{$file\}]
+    }
+    puts "SCIRun TCL cannot source \'$args\': File does not exist."
+}
 
 proc renameSourceCommand {} {
     if { [llength [info commands SCIRunBackup_source]] } return
@@ -1060,33 +1075,14 @@ proc renameSourceCommand {} {
     rename SCIRunNew_source source
 }
 
+
+
 proc resetSourceCommand {} {
     if { ![llength [info commands SCIRunBackup_source]] } return
     rename source SCIRunNew_source
     rename SCIRunBackup_source source
 
 }
-
-
-proc SCIRunNew_source { args } {
-    if { ![file exists $args] } {
-	set script [string tolower [info script]]
-	set lastNet [string last .net $script]
-	if { $lastNet != -1 && [expr [string length $script] - $lastNet] == 4 } {
-	    set lastSettings [string last .settings $args]
-	    if { $lastSettings != -1 && 
-		 [expr [string length $args] - $lastSettings] == 9 } {
-		set file "[netedit getenv SCIRUN_SRCDIR]/nets/default.settings"
-		displayErrorWarningOrInfo "*** The settings file '$args'  was not found.  Loading the default file:\n     $file" warning
-
-		uplevel SCIRunBackup_source \{$file\}
-		return
-	    }
-	}
-    }
-    uplevel SCIRunBackup_source \{$args\}
-}
-
 
 proc showInvalidDatasetPrompt {} {
     set filename [lindex [file split [info script]] end]
@@ -1558,6 +1554,21 @@ proc setGlobal { var val } {
     uplevel \#0 set \"$var\" \{$val\}
 }
 
+proc popFront { listname } {
+    upvar 1 $listname list
+    if ![info exists list] return
+    set front [lindex $list 0]
+    set list [lrange $list 1 end]
+    return $front
+}
+
+proc popBack { listname } {
+    upvar 1 $listname list
+    if ![info exists list] return
+    set back [lindex $list end]
+    set list [lrange $list 0 end-1]
+    return $back
+}
 
 proc maybeWrite_init_DATADIR_and_DATASET { out } {
     global ModuleSubstitutedVars
