@@ -55,6 +55,9 @@
 
 #if defined(__APPLE__)
 #  include <Core/Datatypes/MacForceLoad.h>
+   namespace SCIRun {
+      extern void macImportExportForceLoad();
+   }
 #endif
 
 #include <string>
@@ -216,8 +219,10 @@ main(int argc, char *argv[], char **environment) {
   const int startnetno = parse_args( argc, argv );
 
 #if defined(__APPLE__)  
-  macForceLoad(); // Attempting to force load (and thus instantiation of
-	          // static constructors) Core/Datatypes;
+  macImportExportForceLoad(); // Attempting to force load (and thus
+                              // instantiation of static constructors) 
+  macForceLoad();             // of Core/Datatypes and Core/ImportExport.
+	          
 #endif
 
   // Start up TCL...
