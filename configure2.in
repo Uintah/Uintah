@@ -370,9 +370,8 @@ AC_DEFUN(SCI_CHECK_HEADERS,
              INCLUDE_FLAGS="-I$_CHECK_PATH_"
           fi
 
-          # The first expression cuts off any "dir/". The second -e
-          # capitalizes the string.
-          _SCI_HEADER_NAME_=`echo $_HEADER_ | sed -e "s/.*\///" -e 'y%abcdefghijklmnopqrstuvwxyz./-%ABCDEFGHIJKLMNOPQRSTUVWXYZ___%'`
+          # Using set to capitalize the string and replace / with _
+          _SCI_HEADER_NAME_=`echo $_HEADER_ | sed -e 'y%abcdefghijklmnopqrstuvwxyz./-%ABCDEFGHIJKLMNOPQRSTUVWXYZ___%'`
           eval $_SCI_HEADER_NAME_=''
           _SCI_HEADER_HAVE_=HAVE_$_SCI_HEADER_NAME_
           _SCI_INCLUDE_NAME_=INC$_SCI_HEADER_NAME_
@@ -396,6 +395,12 @@ EOF
              else
 	        AC_MSG_RESULT($_CHECK_PATH_)
              fi
+             # Save a list of defines in confdefs.h.  Something
+	     # later removes a bunch of them... haven't been able
+             # to figure out what yet.
+	     cat >> confdefs.h <<EOF
+#define $_SCI_HEADER_HAVE_ 1
+EOF
              break
           fi
        done ## End: loop over paths to search
@@ -1623,7 +1628,7 @@ SCI_CHECK_LIB($dirs,GLU,main,-lGL,,not-optional)
 
 SCI_CHECK_HEADERS($LIBGL/../include,GL/gl.h GL/glu.h GL/glx.h,,,not-optional)
 
-if ! test "$HAVE_GL_H"; then
+if ! test "$HAVE_GL_GL_H"; then
   SCI_MSG_ERROR(One or more of GL headers are missing.)
 fi
 
@@ -1761,7 +1766,11 @@ SCI_CHECK_HEADERS($LIBXERCES_C/../include/xercesc,\
 AC_SUBST(LIBXERCES_C)
 
 # All xerces includes are equivalent, so...
-INCXERCESC_H=$INCDOM_NODE_HPP
+INCXERCESC_H=$INCDOM_DOM_NODE_HPP
+if test "$INCXERCESC_H" = ""; then
+   AC_MSG_ERROR(xercesc_h not found... something is strange...)
+fi
+
 AC_SUBST(INCXERCESC_H)
 
 ##  --  search for mpi  --------------------------------------------------
