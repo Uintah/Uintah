@@ -528,7 +528,6 @@ TetVolMesh::locate(cell_index &cell, const Point &p) const
   if (grid_.get_rep() == 0) {
     ASSERTFAIL("Call compute_grid before calling locate!");
   }
-  cerr << "locate cell at " << p << endl;
   bool found_p = false;
   LatVolMeshHandle mesh = grid_->get_typed_mesh();
   LatVolMesh::cell_index ci;
