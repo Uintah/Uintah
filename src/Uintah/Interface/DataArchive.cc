@@ -7,6 +7,7 @@
 #include <SCICore/Thread/Time.h>
 #include <PSECore/XMLUtil/SimpleErrorHandler.h>
 #include <PSECore/XMLUtil/XMLUtil.h>
+#include <SCICore/Util/DebugStream.h>
 #include <iostream>
 #include <fstream>
 #include <sax/SAXException.hpp>
@@ -21,9 +22,12 @@ using namespace std;
 using namespace SCICore::Exceptions;
 using namespace PSECore::XMLUtil;
 using SCICore::Thread::Time;
+using SCICore::Util::DebugStream;
+
+static DebugStream dbg("DataArchive", false);
 
 DataArchive::DataArchive(const std::string& filebase)
-   : d_filebase(filebase)
+   : d_filebase(filebase), d_lock("DataArchive lock")
 {
    have_timesteps=false;
    string index(filebase+"/index.xml");
@@ -35,11 +39,8 @@ DataArchive::DataArchive(const std::string& filebase)
       char path[MAXPATHLEN];
       string url = string("file://")+getwd(path)+"/.";
       d_base.makeRelativeTo(url.c_str());
-      cerr << "made relative to: " << url << '\n';
       if(d_base.isRelative())
 	 cerr << "base is still relative!\n";
-   } else {
-      cerr << "not relative\n";
    }
    
    DOMParser parser;
@@ -173,7 +174,7 @@ static bool get(const DOM_Node& node,
 
 static bool get(const DOM_Node& node,
 		const std::string& name, 
-		Vector &value)
+		Vector& value)
 {
    DOM_Node found_node = findNode(name, node);
    if(found_node.isNull())
@@ -207,12 +208,12 @@ static bool get(const DOM_Node& node,
 
 static bool get(const DOM_Node& node,
 		const std::string& name, 
-		Point &value)
+		Point& value)
 {
-    Vector v;
-    bool status = get(node, name, v);
-    value = Point(v);
-    return status;
+   Vector v;
+   bool status=get(node, name, v);
+   value=Point(v);
+   return status;
 }
 
 static bool get(const DOM_Node& node,
@@ -254,51 +255,55 @@ void DataArchive::queryTimesteps( std::vector<int>& index,
 {
    double start = Time::currentSeconds();
    if(!have_timesteps){
-      DOM_Node ts = findNode("timesteps", d_indexDoc.getDocumentElement());
-      if(ts == 0)
-	 throw InternalError("timesteps node not found in index.xml");
-      for(DOM_Node t = ts.getFirstChild(); t != 0; t = t.getNextSibling()){
-	 if(t.getNodeType() == DOM_Node::ELEMENT_NODE){
-	    DOM_NamedNodeMap attributes = t.getAttributes();
-	    DOM_Node tsfile = attributes.getNamedItem("href");
-	    if(tsfile == 0)
-	       throw InternalError("timestep href not found");
+      d_lock.lock();
+      if(!have_timesteps){
+	 DOM_Node ts = findNode("timesteps", d_indexDoc.getDocumentElement());
+	 if(ts == 0)
+	    throw InternalError("timesteps node not found in index.xml");
+	 for(DOM_Node t = ts.getFirstChild(); t != 0; t = t.getNextSibling()){
+	    if(t.getNodeType() == DOM_Node::ELEMENT_NODE){
+	       DOM_NamedNodeMap attributes = t.getAttributes();
+	       DOM_Node tsfile = attributes.getNamedItem("href");
+	       if(tsfile == 0)
+		  throw InternalError("timestep href not found");
 	    
-	    DOMString href_name = tsfile.getNodeValue();
-	    XMLURL url(d_base, toString(href_name).c_str());
-	    DOMParser parser;
-	    parser.setDoValidation(false);
+	       DOMString href_name = tsfile.getNodeValue();
+	       XMLURL url(d_base, toString(href_name).c_str());
+	       DOMParser parser;
+	       parser.setDoValidation(false);
 	    
-	    SimpleErrorHandler handler;
-	    parser.setErrorHandler(&handler);
+	       SimpleErrorHandler handler;
+	       parser.setErrorHandler(&handler);
 	    
-	    //cerr << "reading: " << toString(url.getURLText()) << '\n';
-	    parser.parse(url.getURLText());
-	    if(handler.foundError)
-	       throw InternalError("Cannot read timestep file");
+	       //cerr << "reading: " << toString(url.getURLText()) << '\n';
+	       parser.parse(url.getURLText());
+	       if(handler.foundError)
+		  throw InternalError("Cannot read timestep file");
 	    
-	    DOM_Node top = parser.getDocument().getDocumentElement();
-	    d_tstop.push_back(top);
-	    d_tsurl.push_back(url);
-	    DOM_Node time = findNode("Time", top);
-	    if(time == 0)
-	       throw InternalError("Cannot find Time block");
+	       DOM_Node top = parser.getDocument().getDocumentElement();
+	       d_tstop.push_back(top);
+	       d_tsurl.push_back(url);
+	       DOM_Node time = findNode("Time", top);
+	       if(time == 0)
+		  throw InternalError("Cannot find Time block");
 	    
-	    int timestepNumber;
-	    if(!get(time, "timestepNumber", timestepNumber))
-	       throw InternalError("Cannot find timestepNumber");
-	    double currentTime;
-	    if(!get(time, "currentTime", currentTime))
-	       throw InternalError("Cannot find currentTime");
-	    d_tsindex.push_back(timestepNumber);
-	    d_tstimes.push_back(currentTime);
+	       int timestepNumber;
+	       if(!get(time, "timestepNumber", timestepNumber))
+		  throw InternalError("Cannot find timestepNumber");
+	       double currentTime;
+	       if(!get(time, "currentTime", currentTime))
+		  throw InternalError("Cannot find currentTime");
+	       d_tsindex.push_back(timestepNumber);
+	       d_tstimes.push_back(currentTime);
+	    }
 	 }
+	 have_timesteps=true;
       }
-      have_timesteps=true;
+      d_lock.unlock();
    }
    index=d_tsindex;
    times=d_tstimes;
-   cerr << "DataArchive::queryTimesteps completed in " << Time::currentSeconds()-start << " seconds\n";
+   dbg << "DataArchive::queryTimesteps completed in " << Time::currentSeconds()-start << " seconds\n";
 }
 
 DOM_Node DataArchive::getTimestep(double searchtime, XMLURL& found_url)
@@ -334,7 +339,13 @@ GridP DataArchive::queryGrid( double time )
 	 if(!get(n, numLevels))
 	    throw InternalError("Error parsing numLevels");
       } else if(n.getNodeName().equals(DOMString("Level"))){
-	 LevelP level = scinew Level(grid.get_rep());
+	 Point anchor;
+	 if(!get(n, "anchor", anchor))
+	    throw InternalError("Error parsing level anchor point");
+	 Vector dcell;
+	 if(!get(n, "cellspacing", dcell))
+	    throw InternalError("Error parsing level cellspacing");
+	 LevelP level = scinew Level(grid.get_rep(), anchor, dcell);
 	 int numPatches = -1234;
 	 long totalCells = 0;
 	 for(DOM_Node r = n.getFirstChild(); r != 0; r=r.getNextSibling()){
@@ -356,35 +367,29 @@ GridP DataArchive::queryGrid( double time )
 	       IntVector highIndex;
 	       if(!get(r, "highIndex", highIndex))
 		  throw InternalError("Error parsing patch highIndex");
-	       IntVector resolution;
-	       if(!get(r, "resolution", resolution))
-		  throw InternalError("Error parsing patch resolution");
-	       Point lower;
-	       if(!get(r, "lower", lower))
-		  throw InternalError("Error parsing patch lower");
-	       Point upper;
-	       if(!get(r, "upper", upper))
-		  throw InternalError("Error parsing patch upper");
 	       long totalCells;
 	       if(!get(r, "totalCells", totalCells))
 		  throw InternalError("Error parsing patch total cells");
-	       Patch* r = level->addPatch(lower, upper, lowIndex, highIndex,
-					    id);
+	       Patch* r = level->addPatch(lowIndex, highIndex, id);
 	       ASSERTEQ(r->totalCells(), totalCells);
-	       ASSERTEQ(r->getNCells(), resolution);
+	    } else if(r.getNodeName().equals("anchor")
+		      || r.getNodeName().equals("cellspacing")){
+	       // Nothing - handled above
 	    } else if(r.getNodeType() != DOM_Node::TEXT_NODE){
 	       cerr << "WARNING: Unknown level data: " << ::toString(n.getNodeName()) << '\n';
 	    }
 	 }
 	 ASSERTEQ(level->numPatches(), numPatches);
 	 ASSERTEQ(level->totalCells(), totalCells);
+	 level->finalizeLevel();
 	 grid->addLevel(level);
       } else if(n.getNodeType() != DOM_Node::TEXT_NODE){
 	 cerr << "WARNING: Unknown grid data: " << toString(n.getNodeName()) << '\n';
       }
    }
+   grid->performConsistencyCheck();
    ASSERTEQ(grid->numLevels(), numLevels);
-   cerr << "DataArchive::queryGrid completed in " << Time::currentSeconds()-start << " seconds\n";
+   dbg << "DataArchive::queryGrid completed in " << Time::currentSeconds()-start << " seconds\n";
    return grid;
 }
 
@@ -409,7 +414,8 @@ void DataArchive::query( ParticleVariable< T >& var, const std::string& name,
    int numParticles;
    if(!get(vnode, "numParticles", numParticles))
       throw InternalError("Cannot get numParticles");
-   ParticleSubset* psubset = scinew ParticleSubset(scinew ParticleSet(numParticles), true);
+   ParticleSubset* psubset = scinew ParticleSubset(scinew ParticleSet(numParticles),
+						   true, matlIndex, patch);
    var.allocate(psubset);
    long start;
    if(!get(vnode, "start", start))
@@ -435,11 +441,11 @@ void DataArchive::query( ParticleVariable< T >& var, const std::string& name,
 
    InputContext ic(fd, start);
    var.read(ic);
-   //ASSERTEQ(end, ic.cur);
+   ASSERTEQ(end, ic.cur);
    int s = close(fd);
    if(s == -1)
       throw ErrnoException("DataArchive::query (read call)", errno);
-   cerr << "DataArchive::query(ParticleVariable) completed in " << Time::currentSeconds()-tstart << " seconds\n";
+   dbg << "DataArchive::query(ParticleVariable) completed in " << Time::currentSeconds()-tstart << " seconds\n";
 }
    
 void DataArchive::queryLifetime( double& min, double& max, particleId id)
@@ -503,11 +509,11 @@ void DataArchive::query( NCVariable< T >& var, const std::string& name,
 
    InputContext ic(fd, start);
    var.read(ic);
-   //ASSERTEQ(end, ic.cur);
+   ASSERTEQ(end, ic.cur);
    int s = close(fd);
    if(s == -1)
       throw ErrnoException("DataArchive::query (read call)", errno);
-   cerr << "DataArchive::query(NCVariable) completed in " << Time::currentSeconds()-tstart << " seconds\n";
+   dbg << "DataArchive::query(NCVariable) completed in " << Time::currentSeconds()-tstart << " seconds\n";
 }
 
 template<class T>
@@ -550,7 +556,7 @@ void DataArchive::queryVariables( vector<string>& names,
 	 cerr << "WARNING: Unknown variable data: " << toString(n.getNodeName()) << '\n';
       }
    }
-   cerr << "DataArchive::queryVariables completed in " << Time::currentSeconds()-start << " seconds\n";
+   dbg << "DataArchive::queryVariables completed in " << Time::currentSeconds()-start << " seconds\n";
 }
 
 DOM_Node DataArchive::findVariable(const string& searchname,
@@ -628,13 +634,18 @@ int DataArchive::queryNumMaterials( const string& name, const Patch* patch, doub
       XMLURL url;
       rnode = findVariable(name, patch, i, time, url);
    } while(rnode != 0);
-   cerr << "DataArchive::queryNumMaterials completed in " << Time::currentSeconds()-start << " seconds\n";
+   dbg << "DataArchive::queryNumMaterials completed in " << Time::currentSeconds()-start << " seconds\n";
    return i;
 }
 
 
 //
 // $Log$
+// Revision 1.6  2000/06/15 21:57:21  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.5  2000/05/31 18:01:34  sparker
 // More region backwards compatibility
 //

@@ -28,6 +28,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Parallel/ProcessorContext.h>
 #include <Uintah/Grid/VarTypes.h>
 #include <iostream>
+#include <values.h>
 using std::cerr;
 using std::cout;
 
@@ -35,6 +36,7 @@ using SCICore::Geometry::IntVector;
 using SCICore::Geometry::Point;
 using SCICore::Geometry::Vector;
 using SCICore::Math::Abs;
+using SCICore::Geometry::Min;
 using SCICore::Thread::Time;
 using namespace Uintah;
 using SCICore::Containers::Array3;
@@ -176,8 +178,6 @@ void SimulationController::run()
 
       scheduler->initialize();
 
-      cerr << "Done with scheduling initialize\n";
-
       DataWarehouseP new_ds = scheduler->createDataWarehouse( d_generation );
       d_generation++;
 
@@ -211,7 +211,49 @@ void SimulationController::problemSetup(const ProblemSpecP& params,
    
    for(ProblemSpecP level_ps = grid_ps->findBlock("Level");
        level_ps != 0; level_ps = level_ps->findNextBlock("Level")){
-      LevelP level = scinew Level(grid.get_rep());
+      // Make two passes through the patches.  The first time, we
+      // want to find the spacing and the lower left corner of the
+      // problem domain.  Spacing can be specified with a dx,dy,dz
+      // on the level, or with a resolution on the patch.  If a
+      // resolution is used on a problem with more than one patch,
+      // the resulting grid spacing must be consistent.
+      Point anchor(MAXDOUBLE, MAXDOUBLE, MAXDOUBLE);
+      Vector spacing;
+      bool have_levelspacing=false;
+      if(level_ps->get("spacing", spacing))
+	 have_levelspacing=true;
+      bool have_patchspacing=false;
+	 
+      for(ProblemSpecP box_ps = level_ps->findBlock("Box");
+	  box_ps != 0; box_ps = box_ps->findNextBlock("Box")){
+	 Point lower;
+	 box_ps->require("lower", lower);
+	 Point upper;
+	 box_ps->require("upper", upper);
+	 anchor=SCICore::Geometry::Min(lower, anchor);
+
+	 IntVector resolution;
+	 if(box_ps->get("resolution", resolution)){
+	    if(have_levelspacing){
+	       throw ProblemSetupException("Cannot specify level spacing and patch resolution");
+	    } else {
+	       Vector newspacing = (upper-lower)/resolution;
+	       if(have_patchspacing){
+		  Vector diff = spacing-newspacing;
+		  if(diff.length() > 1.e-6)
+		     throw ProblemSetupException("Using patch resolution, and the patch spacings are inconsistent");
+	       } else {
+		  spacing = newspacing;
+	       }
+	       have_patchspacing=true;
+	    }
+	 }
+      }
+	 
+      if(!have_levelspacing && !have_patchspacing)
+	 throw ProblemSetupException("Box resolution is not specified");
+	 
+      LevelP level = scinew Level(grid.get_rep(), anchor, spacing);
       
       for(ProblemSpecP box_ps = level_ps->findBlock("Box");
 	  box_ps != 0; box_ps = box_ps->findNextBlock("Box")){
@@ -219,79 +261,43 @@ void SimulationController::problemSetup(const ProblemSpecP& params,
 	 box_ps->require("lower", lower);
 	 Point upper;
 	 box_ps->require("upper", upper);
-	 
-	 IntVector resolution;
-	 bool have_res=false;
-	 if(box_ps->get("resolution", resolution)){
-	    have_res=true;
+
+	 IntVector lowCell = level->getCellIndex(lower);
+	 IntVector highCell = level->getCellIndex(upper);
+	 Point lower2 = level->getNodePosition(lowCell);
+	 Point upper2 = level->getNodePosition(highCell);
+	 double diff_lower = (lower2-lower).length();
+	 if(diff_lower > 1.e-6)
+	    throw ProblemSetupException("Box lower corner does not coincide with grid");
+	 double diff_upper = (upper2-upper).length();
+	 if(diff_upper > 1.e-6){
+	    cerr << "upper=" << upper << '\n';
+	    cerr << "lowCell =" << lowCell << '\n';
+	    cerr << "highCell =" << highCell << '\n';
+	    cerr << "upper2=" << upper2 << '\n';
+	    cerr << "diff=" << diff_upper << '\n';
+	    throw ProblemSetupException("Box upper corner does not coincide with grid");
 	 }
-	 Vector spacing;
-	 if(box_ps->get("spacing", spacing)){
-	    if(have_res)
-	       throw ProblemSetupException("Cannot specify spacing AND resolution for Box");
-	    
-	    have_res=true;
-	    Vector diag = upper-lower;
-	    Vector res = diag/spacing;
-	    resolution.x((int)(res.x()+0.5));
-	    resolution.y((int)(res.y()+0.5));
-	    resolution.z((int)(res.z()+0.5));
-	    if(Abs(resolution.x() - res.x()) > 1.e-6
-	       || Abs(resolution.y() - res.y()) > 1.e-6
-	       || Abs(resolution.z() - res.z()) > 1.e-6)
-	       throw ProblemSetupException("Grid spacing does not allow an integer number of cells");
-	 }
-	 
-	 
-	 if(!have_res)
-	    throw ProblemSetupException("Box resolution is not specified");
-	 
+	 IntVector resolution(highCell-lowCell);
+	 if(resolution.x() < 1 || resolution.y() < 1 || resolution.z() < 1)
+	    throw ProblemSetupException("Degeneration patch");
+
 	 IntVector patches;
 	 if(box_ps->get("patches", patches)){
-	    Vector diag(upper-lower);
-	    Vector scale(1./patches.x(), 1./patches.y(), 1./patches.z());
-	    Array3<Patch*> all(patches.x(), patches.y(), patches.z());
 	    for(int i=0;i<patches.x();i++){
 	       for(int j=0;j<patches.y();j++){
 		  for(int k=0;k<patches.z();k++){
 		     IntVector startcell = resolution*IntVector(i,j,k)/patches;
 		     IntVector endcell = resolution*IntVector(i+1,j+1,k+1)/patches;
-		     const Patch* r = level->addPatch
-					(lower+diag*Vector(i,j,k)*scale,
-					 lower+diag*Vector(i+1,j+1,k+1)*scale,
-					 startcell, endcell);
-		     all(i,j,k)=const_cast<Patch*>(r);
-		  }
-	       }
-	    }
-	    for(int i=0;i<patches.x();i++){
-	       for(int j=0;j<patches.y();j++){
-		  for(int k=0;k<patches.z();k++){
-		     Patch* r = all(i,j,k);
-		     for(int ix=-1;ix<=1;ix++){
-			for(int iy=-1;iy<=1;iy++){
-			   for(int iz=-1;iz<=1;iz++){
-			      int x=i+ix;
-			      int y=j+iy;
-			      int z=k+iz;
-			      if(ix != 0 || iy != 0 || iz != 0){
-				 if(x>=0 && x<patches.x()
-				    && y>=0 && y<patches.y()
-				    && z>=0 && z<patches.z()){
-				    r->setNeighbor(IntVector(ix,iy,iz),
-						   all(x,y,z));
-				 }
-			      }
-			   }
-			}
-		     }
+		     level->addPatch(startcell+lowCell, endcell+lowCell);
 		  }
 	       }
 	    }
 	 } else {
-	    level->addPatch(lower, upper, IntVector(0,0,0), resolution);
+	    level->addPatch(lowCell, highCell);
 	 }
       }
+      level->finalizeLevel();
       grid->addLevel(level);
    }
 }
@@ -447,6 +453,11 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.32  2000/06/15 21:57:13  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.31  2000/06/09 23:36:33  bard
 // Removed cosmetic implementation of fudge factor (time step multiplier).
 // It needs to be put in the constitutive routines to have the correct effect.

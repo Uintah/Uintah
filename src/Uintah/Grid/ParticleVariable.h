@@ -68,19 +68,8 @@ WARNING
       
       //////////
       // Insert Documentation Here:
-      ParticleSet* getParticleSet() const {
-	 return d_pset->getParticleSet();
-      }
-      
-      //////////
-      // Insert Documentation Here:
-      ParticleSubset* getParticleSubset() const {
-	 return d_pset;
-      }
-      //////////
-      // Insert Documentation Here:
-     void resync() {
-       d_pdata->resize(getParticleSet()->numParticles());
+      void resync() {
+	 d_pdata->resize(getParticleSet()->numParticles());
       }
       
       //////////
@@ -113,7 +102,6 @@ WARNING
       //////////
       // Insert Documentation Here:
       ParticleData<T>* d_pdata;
-      ParticleSubset*  d_pset;
       
       static TypeDescription::Register registerMe;
    };
@@ -136,7 +124,7 @@ WARNING
    
    template<class T>
       ParticleVariable<T>::ParticleVariable()
-      : d_pdata(0), d_pset(0)
+      : ParticleVariableBase(0), d_pdata(0)
       {
       }
    
@@ -145,15 +133,12 @@ WARNING
       {
 	 if(d_pdata && d_pdata->removeReference())
 	    delete d_pdata;
-	 if(d_pset && d_pset->removeReference())
-	    delete d_pset;
       }
    
    template<class T>
       ParticleVariable<T>::ParticleVariable(ParticleSubset* pset)
-      : d_pset(pset)
+      : ParticleVariableBase(pset)
       {
-	 d_pset->addReference();
 	 d_pdata=scinew ParticleData<T>(pset->getParticleSet()->numParticles());
 	 d_pdata->addReference();
       }
@@ -181,12 +166,10 @@ WARNING
    
    template<class T>
       ParticleVariable<T>::ParticleVariable(const ParticleVariable<T>& copy)
-      : d_pdata(copy.d_pdata), d_pset(copy.d_pset)
+      : ParticleVariableBase(copy), d_pdata(copy.d_pdata)
       {
 	 if(d_pdata)
 	    d_pdata->addReference();
-	 if(d_pset)
-	    d_pset->addReference();
       }
    
    template<class T>
@@ -194,16 +177,12 @@ WARNING
       ParticleVariable<T>::operator=(const ParticleVariable<T>& copy)
       {
 	 if(this != &copy){
+	    ParticleVariableBase::operator=(copy);
 	    if(d_pdata && d_pdata->removeReference())
 	       delete d_pdata;
-	    if(d_pset && d_pset->removeReference())
-	       delete d_pset;
-	    d_pset = copy.d_pset;
 	    d_pdata = copy.d_pdata;
 	    if(d_pdata)
 	       d_pdata->addReference();
-	    if(d_pset)
-	       d_pset->addReference();
 	 }
 	 return *this;
       }
@@ -307,6 +286,11 @@ WARNING
 
 //
 // $Log$
+// Revision 1.17  2000/06/15 21:57:18  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.16  2000/06/05 20:56:42  tan
 // Added const T& operator[](particleIndex idx) const.
 //

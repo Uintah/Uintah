@@ -134,6 +134,8 @@ namespace Uintah {
 					     const Patch* patch,
 					     DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw) const;
+	 virtual void addParticleState(std::vector<const VarLabel*>& from,
+				       std::vector<const VarLabel*>& to);
 
 	 // Return the Lame constants
 	 virtual double getMu() const;
@@ -187,6 +189,11 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.11  2000/06/15 21:57:06  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.10  2000/05/30 20:19:04  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch

@@ -63,6 +63,10 @@ Task::requires(const DataWarehouseP& ds, const VarLabel* var, int matlIndex,
       if(numGhostCells != 0)
 	 throw InternalError("Ghost cells specified with task type none!\n");
       l=h=0;
+      if(!patch){
+	 d_reqs.push_back(scinew Dependency(ds, var, matlIndex, patch));
+	 return;
+      }
       break;
    case Ghost::AroundNodes:
       if(numGhostCells == 0)
@@ -105,22 +109,22 @@ Task::requires(const DataWarehouseP& ds, const VarLabel* var, int matlIndex,
    default:
       throw InternalError("Illegal ghost type");
    }
-   for(int ix=l;ix<=h;ix++){
-      for(int iy=l;iy<=h;iy++){
-	 for(int iz=l;iz<=h;iz++){
-	    const Patch* neighbor = patch->getNeighbor(IntVector(ix,iy,iz));
-	    if(neighbor)
-	       d_reqs.push_back(scinew Dependency(ds, var, matlIndex,
-						  neighbor));
-	 }
-      }
+   const Level* level = patch->getLevel();
+   std::vector<const Patch*> neighbors;
+   IntVector low(patch->getCellLowIndex()+IntVector(l,l,l));
+   IntVector high(patch->getCellHighIndex()+IntVector(h,h,h));
+   level->selectPatches(low, high, neighbors);
+   for(int i=0;i<neighbors.size();i++){
+      const Patch* neighbor = neighbors[i];
+      d_reqs.push_back(scinew Dependency(ds, var, matlIndex,
+					 neighbor));
    }
 }
 
 void
 Task::computes(const DataWarehouseP& ds, const VarLabel* var)
 {
-  d_comps.push_back(scinew Dependency(ds, var, -1, 0));
+  d_comps.push_back(scinew Dependency(ds, var, -1, d_patch));
 }
 
 void
@@ -164,6 +168,11 @@ Task::getRequires() const
 
 //
 // $Log$
+// Revision 1.14  2000/06/15 21:57:19  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.13  2000/06/03 05:29:45  sparker
 // Changed reduction variable emit to require ostream instead of ofstream
 // emit now only prints number without formatting

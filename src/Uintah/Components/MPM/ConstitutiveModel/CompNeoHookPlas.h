@@ -92,8 +92,12 @@ WARNING
 					     DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw) const;
 
+	 virtual void addParticleState(std::vector<const VarLabel*>& from,
+				       std::vector<const VarLabel*>& to);
  	 const VarLabel* p_cmdata_label;
          const VarLabel* bElBarLabel;
+ 	 const VarLabel* p_cmdata_label_preReloc;
+         const VarLabel* bElBarLabel_preReloc;
       };
 
    }
@@ -102,6 +106,11 @@ WARNING
 #endif  // __NEOHOOK_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.15  2000/06/15 21:57:04  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.14  2000/05/30 20:19:03  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch

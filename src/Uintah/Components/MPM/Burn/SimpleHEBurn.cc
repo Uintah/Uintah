@@ -49,18 +49,20 @@ void SimpleHEBurn::initializeBurnModelData(const Patch* patch,
 {
    const MPMLabel* lb = MPMLabel::getLabels();
 
+   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
    ParticleVariable<int> pIsIgnited;
-   new_dw->allocate(pIsIgnited, lb->pIsIgnitedLabel, matl->getDWIndex(), patch);
+   new_dw->allocate(pIsIgnited, lb->pIsIgnitedLabel, pset);
    CCVariable<double> burnedMass;
-   new_dw->allocate(burnedMass, lb->cBurnedMassLabel, matl->getDWIndex(),patch);
+   new_dw->allocate(burnedMass, lb->cBurnedMassLabel, matl->getDWIndex(), patch);
 
-   ParticleSubset* pset = pIsIgnited.getParticleSubset();
+
    for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++) {
         particleIndex idx = *iter;
 	pIsIgnited[idx]=0;
    }
-   new_dw->put(pIsIgnited, lb->pIsIgnitedLabel, matl->getDWIndex(), patch);
+
+   new_dw->put(pIsIgnited, lb->pIsIgnitedLabel);
    new_dw->put(burnedMass, lb->cBurnedMassLabel, matl->getDWIndex(), patch);
 }
 
@@ -85,7 +87,7 @@ void SimpleHEBurn::addCheckIfComputesAndRequires(Task* task,
   task->requires(old_dw, lb->cBurnedMassLabel,matl->getDWIndex(), 
 				patch, Ghost::None);
 
-  task->computes(new_dw, lb->pIsIgnitedLabel,matl->getDWIndex(),patch);
+  task->computes(new_dw, lb->pIsIgnitedLabel_preReloc,matl->getDWIndex(),patch);
 
   task->computes(new_dw, lb->cBurnedMassLabel,matl->getDWIndex(),patch);
 
@@ -112,9 +114,9 @@ void SimpleHEBurn::addMassRateComputesAndRequires(Task* task,
   task->requires(new_dw, lb->pVolumeDeformedLabel, matl->getDWIndex(),
                                 patch, Ghost::None);
 
-  task->computes(new_dw, lb->pMassLabel,matl->getDWIndex(),patch);
+  task->computes(new_dw, lb->pMassLabel_preReloc,matl->getDWIndex(),patch);
 
-  task->computes(new_dw, lb->pVolumeLabel,matl->getDWIndex(),patch);
+  task->computes(new_dw, lb->pVolumeLabel_preReloc,matl->getDWIndex(),patch);
 }
 
 void SimpleHEBurn::checkIfIgnited(const Patch* patch,
@@ -123,37 +125,30 @@ void SimpleHEBurn::checkIfIgnited(const Patch* patch,
 				  DataWarehouseP& new_dw)
 {
 
-  double heatFluxToParticle;
+   //  double heatFluxToParticle;
 
   int matlindex = matl->getDWIndex();
 
   const MPMLabel* lb = MPMLabel::getLabels();
   // Create array for the particle's "IsIgnited" flag
+  ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
   ParticleVariable<int> pIsIgnited;
-  old_dw->get(pIsIgnited, lb->pIsIgnitedLabel,
-                                matlindex, patch,Ghost::None,0);
-
+  old_dw->get(pIsIgnited, lb->pIsIgnitedLabel, pset);
 
   ParticleVariable<int> pissurf;
-  old_dw->get(pissurf, lb->pSurfLabel,
-                                matlindex, patch,Ghost::None,0);
-
+  old_dw->get(pissurf, lb->pSurfLabel, pset);
 
 //  ParticleVariable<double> pTemperatureRate;
 //  new_dw->get(pTemperatureRate, lb->pTemperatureRateLabel,
 //                                matlindex, patch,Ghost::None,0);
 
   ParticleVariable<double> pmass;
-  old_dw->get(pmass, lb->pMassLabel, matlindex, patch,Ghost::None,0);
+  old_dw->get(pmass, lb->pMassLabel, pset);
 
   delt_vartype delT;
   old_dw->get(delT, lb->delTLabel);
 
-  double specificHeat = matl->getSpecificHeat();
-
-  ParticleSubset* pset = pmass.getParticleSubset();
-//  ASSERT(pset == pTemperatureRate.getParticleSubset());
-  ASSERT(pset == pIsIgnited.getParticleSubset());
+  //  double specificHeat = matl->getSpecificHeat();
 
   for(ParticleSubset::iterator iter = pset->begin();
       iter != pset->end(); iter++){
@@ -171,8 +166,8 @@ void SimpleHEBurn::checkIfIgnited(const Patch* patch,
      }
   }
 
-  new_dw->put(pIsIgnited,lb->pIsIgnitedLabel, matlindex, patch);
-  new_dw->put(pissurf,lb->pSurfLabel, matlindex, patch);
+  new_dw->put(pIsIgnited,lb->pIsIgnitedLabel_preReloc);
+  new_dw->put(pissurf,lb->pSurfLabel);
 }
  
 void SimpleHEBurn::computeMassRate(const Patch* patch,
@@ -184,31 +179,27 @@ void SimpleHEBurn::computeMassRate(const Patch* patch,
   int matlindex = matl->getDWIndex();
   const MPMLabel* lb = MPMLabel::getLabels();
 
+  ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
   ParticleVariable<double> pmass;
-  old_dw->get(pmass, lb->pMassLabel, matlindex, patch,Ghost::None,0);
+  old_dw->get(pmass, lb->pMassLabel, pset);
   ParticleVariable<double> pvolume;
-  new_dw->get(pvolume,lb->pVolumeDeformedLabel, matlindex, patch,Ghost::None,0);
-
+  new_dw->get(pvolume,lb->pVolumeDeformedLabel, pset);
   ParticleVariable<Point> px;
-  old_dw->get(px, lb->pXLabel, matlindex, patch, Ghost::None, 0);
+  old_dw->get(px, lb->pXLabel, pset);
 
   ParticleVariable<int> pIsIgnited;
-  new_dw->get(pIsIgnited, lb->pIsIgnitedLabel,
-                                matlindex, patch,Ghost::None,0);
+  new_dw->get(pIsIgnited, lb->pIsIgnitedLabel, pset);
 
   CCVariable<double> burnedMass;
   old_dw->get(burnedMass, lb->cBurnedMassLabel,
 			matlindex, patch,Ghost::None,0);
 
-  IntVector ci;
-
-  ParticleSubset* pset = pmass.getParticleSubset();
-  ASSERT(pset == pvolume.getParticleSubset());
   for(ParticleSubset::iterator iter = pset->begin();
       iter != pset->end(); iter++){
      particleIndex idx = *iter;
 
      if(pIsIgnited[idx]==1){
+	IntVector ci;
 	if(patch->findCell(px[idx],ci)){
 	   pmass[idx]   = pmass[idx] - .5*a;
 	   pvolume[idx] = pmass[idx]/1000.0;
@@ -225,12 +216,17 @@ void SimpleHEBurn::computeMassRate(const Patch* patch,
      }
   }
 
-  new_dw->put(pmass,lb->pMassLabel, matlindex, patch);
-  new_dw->put(pvolume,lb->pVolumeLabel, matlindex, patch);
+  new_dw->put(pmass,lb->pMassLabel_preReloc);
+  new_dw->put(pvolume,lb->pVolumeLabel_preReloc);
   new_dw->put(burnedMass,lb->cBurnedMassLabel, matlindex, patch);
 }
  
 // $Log$
+// Revision 1.8  2000/06/15 21:57:02  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.7  2000/06/15 18:08:35  guilkey
 // A few changes to the SimpleHEBurn model.
 //

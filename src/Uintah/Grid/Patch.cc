@@ -14,6 +14,7 @@ static char *id="@(#) $Id$";
 
 #include <values.h>
 #include <iostream>
+#include <sstream>
 
 using namespace Uintah;
 using namespace SCICore::Geometry;
@@ -21,60 +22,28 @@ using namespace std;
 using SCICore::Exceptions::InternalError;
 using SCICore::Math::Floor;
 static SCICore::Thread::AtomicCounter ids("Patch ID counter");
+using SCICore::Geometry::Min;
+using SCICore::Geometry::Max;
 
-Patch::Patch(const Point& lower, const Point& upper,
-	       const IntVector& lowIndex, const IntVector& highIndex,
-	       int id)
-    : d_box(lower, upper), d_lowIndex(lowIndex), d_highIndex(highIndex),
+Patch::Patch(const Level* level,
+	     const IntVector& lowIndex, const IntVector& highIndex,
+	     int id)
+    : d_level(level), d_lowIndex(lowIndex), d_highIndex(highIndex),
       d_id( id )
 {
-   d_res = highIndex - lowIndex;
-
    if(d_id == -1)
       d_id = ids++;
-
-   for(int i=0;i<27;i++)
-      d_neighbors[i]=0;
-   d_neighbors[1*9+1*3+1]=this;
-
-   int gc = 2; // Number of ghostcells for this patch...
-
-   determineGhostPatches( gc );
 }
 
 Patch::~Patch()
 {
 }
 
-IntVector Patch::findCell(const Point& pos) const
-{
-   Vector cellpos = (pos-d_box.lower())*d_res/(d_box.upper()-d_box.lower());
-   int ix = Floor(cellpos.x());
-   int iy = Floor(cellpos.y());
-   int iz = Floor(cellpos.z());
-   return IntVector(ix,iy,iz);
-}
-
 bool Patch::findCell(const Point& pos, IntVector& ci) const
 {
-   Vector cellpos = (pos-d_box.lower())*d_res/(d_box.upper()-d_box.lower());
-   int ix = Floor(cellpos.x());
-   int iy = Floor(cellpos.y());
-   int iz = Floor(cellpos.z());
-   ci = IntVector(ix,iy,iz);
-   return ix>= 0 && iy>=0 && iz>=0 && ix<d_res.x() && iy<d_res.y() && iz<d_res.z();
+   ci = d_level->getCellIndex(pos);
+   return containsCell(ci);
 }
-
-#if 0
-void Patch::findCell(const Vector& pos, int& ix, int& iy, int& iz) const
-{
-    Vector cellpos = (pos-d_lower.asVector()) * 
-                      Vector(d_nx, d_ny, d_nz) / (d_upper-d_lower);
-    ix = Floor(cellpos.x());
-    iy = Floor(cellpos.y());
-    iz = Floor(cellpos.z());
-}
-#endif
 
 void Patch::findCellsFromNode( const IntVector& nodeIndex,
                                IntVector cellIndex[8]) const
@@ -113,18 +82,18 @@ void Patch::findNodesFromCell( const IntVector& cellIndex,
 bool Patch::findCellAndWeights(const Point& pos,
 				IntVector ni[8], double S[8]) const
 {
-   Vector cellpos = (pos-d_box.lower())*d_res/(d_box.upper()-d_box.lower());
+   Point cellpos = d_level->positionToIndex(pos);
    int ix = Floor(cellpos.x());
    int iy = Floor(cellpos.y());
    int iz = Floor(cellpos.z());
-   ni[0] = IntVector(ix, iy, iz)+d_lowIndex;
-   ni[1] = IntVector(ix, iy, iz+1)+d_lowIndex;
-   ni[2] = IntVector(ix, iy+1, iz)+d_lowIndex;
-   ni[3] = IntVector(ix, iy+1, iz+1)+d_lowIndex;
-   ni[4] = IntVector(ix+1, iy, iz)+d_lowIndex;
-   ni[5] = IntVector(ix+1, iy, iz+1)+d_lowIndex;
-   ni[6] = IntVector(ix+1, iy+1, iz)+d_lowIndex;
-   ni[7] = IntVector(ix+1, iy+1, iz+1)+d_lowIndex;
+   ni[0] = IntVector(ix, iy, iz);
+   ni[1] = IntVector(ix, iy, iz+1);
+   ni[2] = IntVector(ix, iy+1, iz);
+   ni[3] = IntVector(ix, iy+1, iz+1);
+   ni[4] = IntVector(ix+1, iy, iz);
+   ni[5] = IntVector(ix+1, iy, iz+1);
+   ni[6] = IntVector(ix+1, iy+1, iz);
+   ni[7] = IntVector(ix+1, iy+1, iz+1);
    double fx = cellpos.x() - ix;
    double fy = cellpos.y() - iy;
    double fz = cellpos.z() - iz;
@@ -139,7 +108,7 @@ bool Patch::findCellAndWeights(const Point& pos,
    S[5] = fx * fy1 * fz;
    S[6] = fx * fy * fz1;
    S[7] = fx * fy * fz;
-   return ix>= 0 && iy>=0 && iz>=0 && ix<d_res.x() && iy<d_res.y() && iz<d_res.z();
+   return ix>= d_lowIndex.x()-1 && iy>=d_lowIndex.y()-1 && iz>=d_lowIndex.z()-1 && ix<d_highIndex.x() && iy<d_highIndex.y() && iz<d_highIndex.z();
 }
 
 
@@ -147,161 +116,100 @@ bool Patch::findCellAndShapeDerivatives(const Point& pos,
 					 IntVector ni[8],
 					 Vector d_S[8]) const
 {
-    Vector cellpos = (pos-d_box.lower())*d_res/(d_box.upper()-d_box.lower());
-    int ix = Floor(cellpos.x());
-    int iy = Floor(cellpos.y());
-    int iz = Floor(cellpos.z());
-    ni[0] = IntVector(ix, iy, iz)+d_lowIndex;
-    ni[1] = IntVector(ix, iy, iz+1)+d_lowIndex;
-    ni[2] = IntVector(ix, iy+1, iz)+d_lowIndex;
-    ni[3] = IntVector(ix, iy+1, iz+1)+d_lowIndex;
-    ni[4] = IntVector(ix+1, iy, iz)+d_lowIndex;
-    ni[5] = IntVector(ix+1, iy, iz+1)+d_lowIndex;
-    ni[6] = IntVector(ix+1, iy+1, iz)+d_lowIndex;
-    ni[7] = IntVector(ix+1, iy+1, iz+1)+d_lowIndex;
-    double fx = cellpos.x() - ix;
-    double fy = cellpos.y() - iy;
-    double fz = cellpos.z() - iz;
-    double fx1 = 1-fx;
-    double fy1 = 1-fy;
-    double fz1 = 1-fz;
-    d_S[0] = Vector(- fy1 * fz1, -fx1 * fz1, -fx1 * fy1);
-    d_S[1] = Vector(- fy1 * fz,  -fx1 * fz,   fx1 * fy1);
-    d_S[2] = Vector(- fy  * fz1,  fx1 * fz1, -fx1 * fy);
-    d_S[3] = Vector(- fy  * fz,   fx1 * fz,   fx1 * fy);
-    d_S[4] = Vector(  fy1 * fz1, -fx  * fz1, -fx  * fy1);
-    d_S[5] = Vector(  fy1 * fz,  -fx  * fz,   fx  * fy1);
-    d_S[6] = Vector(  fy  * fz1,  fx  * fz1, -fx  * fy);
-    d_S[7] = Vector(  fy  * fz,   fx  * fz,   fx  * fy);
-    return ix>= 0 && iy>=0 && iz>=0 && ix<d_res.x() && iy<d_res.y() && iz<d_res.z();
+   Point cellpos = d_level->positionToIndex(pos);
+   int ix = Floor(cellpos.x());
+   int iy = Floor(cellpos.y());
+   int iz = Floor(cellpos.z());
+   ni[0] = IntVector(ix, iy, iz);
+   ni[1] = IntVector(ix, iy, iz+1);
+   ni[2] = IntVector(ix, iy+1, iz);
+   ni[3] = IntVector(ix, iy+1, iz+1);
+   ni[4] = IntVector(ix+1, iy, iz);
+   ni[5] = IntVector(ix+1, iy, iz+1);
+   ni[6] = IntVector(ix+1, iy+1, iz);
+   ni[7] = IntVector(ix+1, iy+1, iz+1);
+   double fx = cellpos.x() - ix;
+   double fy = cellpos.y() - iy;
+   double fz = cellpos.z() - iz;
+   double fx1 = 1-fx;
+   double fy1 = 1-fy;
+   double fz1 = 1-fz;
+   d_S[0] = Vector(- fy1 * fz1, -fx1 * fz1, -fx1 * fy1);
+   d_S[1] = Vector(- fy1 * fz,  -fx1 * fz,   fx1 * fy1);
+   d_S[2] = Vector(- fy  * fz1,  fx1 * fz1, -fx1 * fy);
+   d_S[3] = Vector(- fy  * fz,   fx1 * fz,   fx1 * fy);
+   d_S[4] = Vector(  fy1 * fz1, -fx  * fz1, -fx  * fy1);
+   d_S[5] = Vector(  fy1 * fz,  -fx  * fz,   fx  * fy1);
+   d_S[6] = Vector(  fy  * fz1,  fx  * fz1, -fx  * fy);
+   d_S[7] = Vector(  fy  * fz,   fx  * fz,   fx  * fy);
+   return ix>= d_lowIndex.x()-1 && iy>=d_lowIndex.y()-1 && iz>=d_lowIndex.z()-1 && ix<d_highIndex.x() && iy<d_highIndex.y() && iz<d_highIndex.z();
 }
-
-
-void decompose(int numProcessors, int sizex, int sizey, int sizez,
-	       int& numProcessors_x, int& numProcessors_y,
-	       int& numProcessors_z)
-{
-    Primes::FactorType factors;
-    int nump = Primes::factorize(numProcessors, factors);
-    
-    int axis[Primes::MaxFactors];
-    for(int i=0;i<nump;i++)
-	axis[i]=0;
-    numProcessors_x=numProcessors_y=numProcessors_z=-1;
-    double min = MAXDOUBLE;
-    for(;;){
-	// Compute area
-	int p[3];
-	p[0]=p[1]=p[2]=1;
-	for(int i=0;i<nump;i++)
-	    p[axis[i]] *= factors[i];
-	double area = 2*(double(p[0]-1)*sizey*sizez
-			 +double(p[1]-1)*sizex*sizez
-			 +double(p[2]-1)*sizex*sizey);
-
-	if(area < min){
-	    min = area;
-	    numProcessors_x=p[0];
-	    numProcessors_y=p[1];
-	    numProcessors_z=p[2];
-	}
-
-	// Go to next combination
-	int i;
-	for(i=0;i<nump;i++){
-	    axis[i]++;
-	    if(axis[i]>=3){
-		axis[i]=0;
-	    } else {
-		break;
-	    }
-	}
-	if(i==nump)
-	    break;
-    }
-}
-
-#if 0
-void Patch::subpatchIteratorPair(int i, int n,
-				   NodeSubIterator& iter,
-				   NodeSubIterator& end) const
-{
-    int npx, npy, npz;
-    int nodesx = d_nx+1;
-    int nodesy = d_ny+1;
-    int nodesz = d_nz+1;
-    decompose(n, nodesx, nodesy, nodesz, npx, npy, npz);
-    int ipz = i%npz;
-    int ipy = (i/npz)%npy;
-    int ipx = i/npz/npy;
-    int sx = ipx*nodesx/npx;
-    int ex = (ipx+1)*nodesx/npx;
-    int sy = ipy*nodesy/npy;
-    int ey = (ipy+1)*nodesy/npy;
-    int sz = ipz*nodesz/npz;
-    int ez = (ipz+1)*nodesz/npz;
-    iter = NodeSubIterator(sx, sy, sz, ex, ey, ez);
-    end = NodeSubIterator(ex, ey, ez, ex, ey, ez);
-}
-
-SubPatch Patch::subpatch(int i, int n) const
-{
-    int npx, npy, npz;
-    int nodesx = d_nx+1;
-    int nodesy = d_ny+1;
-    int nodesz = d_nz+1;
-    decompose(n, nodesx, nodesy, nodesz, npx, npy, npz);
-    int ipz = i%npz;
-    int ipy = (i/npz)%npy;
-    int ipx = i/npz/npy;
-    int sx = ipx*nodesx/npx;
-    int ex = (ipx+1)*nodesx/npx - 1;
-    int sy = ipy*nodesy/npy;
-    int ey = (ipy+1)*nodesy/npy - 1;
-    int sz = ipz*nodesz/npz;
-    int ez = (ipz+1)*nodesz/npz - 1;
-    Vector diag(d_upper-d_lower);
-    Point l(d_lower+diag*Vector(sx-1, sy-1, sz-1)/Vector(d_nx, d_ny, d_nz));
-    Point u(d_lower+diag*Vector(ex+1, ey+1, ez+1)/Vector(d_nx, d_ny, d_nz));
-    l=Max(l, d_lower); // For "ghost cell"
-    u=Min(u, d_upper);
-    return SubPatch(l, u, sx, sy, sz, ex, ey, ez);
-}
-#endif
 
 ostream& operator<<(ostream& out, const Patch* r)
 {
-  out << "(Patch: box=" << r->getBox() << ", res=" << r->getNCells() << ")";
+   out << "(Patch: box=" << r->getBox() << ", lowIndex=" << r->getCellLowIndex() << ", highIndex=" << r->getCellHighIndex() << ")";
   return out;
 }
 
 long Patch::totalCells() const
 {
-  return d_res.x()*d_res.y()*d_res.z();
+   IntVector res(d_highIndex-d_lowIndex);
+   return res.x()*res.y()*res.z();
 }
 
 void Patch::performConsistencyCheck() const
 {
-  if(d_res.x() < 1 || d_res.y() < 1 || d_res.z() < 1) {
-
-    char msg[ 1024 ];
-
-    sprintf( msg, "Degenerate patch %d: [res: %d, %d, %d] ", 
-	     d_id, d_res.x(), d_res.y(), d_res.z() );
-    throw InvalidGrid( string( msg ) + toString() );
+   IntVector res(d_highIndex-d_lowIndex);
+   if(res.x() < 1 || res.y() < 1 || res.z() < 1) {
+      ostringstream msg;
+      msg << "Degenerate patch: " << toString() << " (resolution=" << res << ")";
+      throw InvalidGrid( msg.str() );
   }
 }
 
 Patch::BCType 
 Patch::getBCType(Patch::FaceType face) const
 {
-  // Put in code to return whether the face is a symmetry plane,
-  // a fixed boundary, borders a neighboring patch or none
-  // The value of face ranges from 0-5.
+  return d_bctypes[face];
+}
 
-  return None;
+void
+Patch::setBCType(Patch::FaceType face, BCType newbc)
+{
+   d_bctypes[face]=newbc;
+}
 
-
+void
+Patch::getFace(FaceType face, int offset, IntVector& l, IntVector& h) const
+{
+   l=getCellLowIndex();
+   h=getCellHighIndex();
+   switch(face){
+   case xminus:
+      l.x(l.x()-offset);
+      h.x(l.x()+1-offset);
+      break;
+   case xplus:
+      l.x(h.x()-1+offset);
+      h.x(h.x()+offset);
+      break;
+   case yminus:
+      l.y(l.y()-offset);
+      h.y(l.y()+1-offset);
+      break;
+   case yplus:
+      l.y(h.y()-1+offset);
+      h.y(h.y()+offset);
+      break;
+   case zminus:
+      l.z(l.z()-offset);
+      h.z(l.z()+1-offset);
+      break;
+   case zplus:
+      l.z(h.z()-1+offset);
+      h.z(h.z()+offset);
+      break;
+   }
 }
 
 string
@@ -309,9 +217,10 @@ Patch::toString() const
 {
   char str[ 1024 ];
 
+  Box box(getBox());
   sprintf( str, "[ [%2.2lf, %2.2lf, %2.2lf] [%2.2lf, %2.2lf, %2.2lf] ]",
-	   d_box.lower().x(), d_box.lower().y(), d_box.lower().z(),
-	   d_box.upper().x(), d_box.upper().y(), d_box.upper().z() );
+	   box.lower().x(), box.lower().y(), box.lower().z(),
+	   box.upper().x(), box.upper().y(), box.upper().z() );
 
   return string( str );
 }
@@ -319,104 +228,43 @@ Patch::toString() const
 CellIterator
 Patch::getCellIterator(const Box& b) const
 {
-   Vector diag = d_box.upper()-d_box.lower();
-   Vector l = (b.lower() - d_box.lower())*d_res/diag;
-   Vector u = (b.upper() - d_box.lower())*d_res/diag;
-   
-   return CellIterator((int)l.x(), (int)l.y(), (int)l.z(),
-		       RoundUp(u.x()), RoundUp(u.y()), RoundUp(u.z()));
+   Point l = d_level->positionToIndex(b.lower());
+   Point u = d_level->positionToIndex(b.upper());
+   IntVector low((int)l.x(), (int)l.y(), (int)l.z());
+   IntVector high(RoundUp(u.x()), RoundUp(u.y()), RoundUp(u.z()));
+   low = SCICore::Geometry::Max(low, getCellLowIndex());
+   high = SCICore::Geometry::Min(high, getCellHighIndex());
+   return CellIterator(low, high);
 }
-      
+
+Box Patch::getGhostBox(const IntVector& lowOffset,
+		       const IntVector& highOffset) const
+{
+   return Box(d_level->getNodePosition(d_lowIndex+lowOffset),
+	      d_level->getNodePosition(d_highIndex+highOffset));
+}
+
 NodeIterator Patch::getNodeIterator() const
 {
    return NodeIterator(getNodeLowIndex(), getNodeHighIndex());
 }
 
-const Patch* Patch::getNeighbor(const IntVector& n) const
-{
-   if(n.x() == 0 && n.y() == 0 && n.z() == 0)
-      return this;
-   if(n.x() < -1 || n.y() < -1 || n.z() < -1
-      || n.x() > 1 || n.y() > 1 || n.z() > 1)
-      throw InternalError("Patch::getNeighbor not implemented for distant neighbors");
-   int ix=n.x()+1;
-   int iy=n.y()+1;
-   int iz=n.z()+1;
-   int idx = ix*9+iy*3+iz;
-   return d_neighbors[idx];
-}
-
 IntVector Patch::getNodeHighIndex() const
 {
    IntVector h(d_highIndex+
-	       IntVector(getNeighbor(IntVector(1,0,0))?0:1,
-			 getNeighbor(IntVector(0,1,0))?0:1,
-			 getNeighbor(IntVector(0,0,1))?0:1));
+	       IntVector(getBCType(xplus) == Neighbor?0:1,
+			 getBCType(yplus) == Neighbor?0:1,
+			 getBCType(zplus) == Neighbor?0:1));
    return h;
 }
 
-void Patch::setNeighbor(const IntVector& n, const Patch* neighbor)
-{
-   if(n.x() == 0 && n.y() == 0 && n.z() == 0)
-      throw InternalError("Cannot set neighbor 0,0,0");
-   if(n.x() < -1 || n.y() < -1 || n.z() < -1
-      || n.x() > 1 || n.y() > 1 || n.z() > 1)
-      throw InternalError("Patch::getNeighbor not implemented for distant neighbors");
-   int ix=n.x()+1;
-   int iy=n.y()+1;
-   int iz=n.z()+1;
-   int idx = ix*9+iy*3+iz;
-   cerr << "Patch " << getID() << " neighbor " << n << " is now " << neighbor->getID() << '\n';
-   d_neighbors[idx]=neighbor;
-}
-
-void
-Patch::determineGhostPatches( int numGhostCells )
-{
-   int gc = numGhostCells;
-
-   // Determine the coordinates of all the sub-ghostPatches around
-   // this patch.
-
-   int minX = Min( d_box.lower().x(), d_box.upper().x() );
-   int minY = Min( d_box.lower().y(), d_box.upper().y() );
-   int minZ = Min( d_box.lower().z(), d_box.upper().z() );
-
-   int maxX = Max( d_box.lower().x(), d_box.upper().x() );
-   int maxY = Max( d_box.lower().y(), d_box.upper().y() );
-   int maxZ = Max( d_box.lower().z(), d_box.upper().z() );
-
-   d_top.set( minX, minY, maxZ, maxX, maxY, maxZ + gc );
-   d_topRight.set( maxX, minY, maxZ, maxX + gc, maxY, maxZ + gc );
-   d_topLeft.set( minX - gc, minY, maxZ ,minX, maxY, maxZ + gc );
-   d_topBack.set( minX, maxY, maxZ ,maxX, maxY + gc, maxZ + gc );
-   d_topFront.set( minX, minY - gc, maxZ , maxX, minY, maxZ + gc );
-   d_topRightBack.set( maxX, maxY, maxZ, maxX + gc, maxY + gc, maxZ + gc );
-   d_topRightFront.set( maxX, minY, maxZ, maxX + gc, minY - gc, maxZ + gc );
-   d_topLeftBack.set( minX, maxY, maxZ, minX - gc, maxY + gc, maxZ + gc );
-   d_topLeftFront.set( minX - gc, minY - gc, maxX, minX, minY, maxZ + gc );
-   d_bottom.set( minX, minY, minZ - gc, maxX, maxY, minZ );
-   d_bottomRight.set( maxX, minY, minZ - gc, maxX + gc, maxY, minZ );
-   d_bottomLeft.set( minX - gc, minY, minZ - gc, minX, maxY, minZ );
-   d_bottomBack.set( minX, maxY, minZ - gc, maxX, maxY + gc, minZ );
-   d_bottomFront.set( minX, minY - gc, minZ - gc, maxX, minY, minZ );
-   d_bottomRightBack.set( maxX, maxY, minZ, maxX + gc, maxY + gc, minZ - gc );
-   d_bottomRightFront.set( maxX, minY, minZ, maxX + gc, minY - gc, minZ - gc );
-   d_bottomLeftBack .set( minX, maxY, minZ, minX - gc, maxY + gc, minZ - gc );
-   d_bottomLeftFront.set( minX, minY, minZ, minX - gc, minY - gc, minZ - gc );
-   d_right.set( maxX, minY, minZ, maxX + gc, maxY, maxZ );
-   d_left.set( minX, minY, minZ, minX - gc, maxY, maxZ );
-   d_back.set( minX, maxY, minZ, maxX, maxY + gc, maxZ );
-   d_front.set( minX, minY, minZ, maxX, minY - gc, maxZ );
-   d_rightBack.set( maxX, maxY, minZ, maxX + gc, maxY + gc, maxZ );
-   d_rightFront.set( maxX, minY, minZ, maxX + gc, maxY, minZ - gc );
-   d_leftBack.set( minX, maxY, minZ, minX - gc, maxY - gc, maxZ );
-   d_leftFront.set( minX, minY, minZ, minX - gc, minY - gc, maxZ );
-}
-
-     
 //
 // $Log$
+// Revision 1.11  2000/06/15 21:57:19  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.10  2000/06/14 19:58:03  guilkey
 // Added a different version of findCell.
 //

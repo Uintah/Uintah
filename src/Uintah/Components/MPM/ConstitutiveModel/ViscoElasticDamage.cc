@@ -38,11 +38,13 @@
 
 #include "ConstitutiveModelFactory.h"
 #include "ViscoElasticDamage.h"
+#include <SCICore/Exceptions/InternalError.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <fstream>
 #include <iostream>
 using namespace std;
 using namespace Uintah::MPM;
+using SCICore::Exceptions::InternalError;
 
 ViscoElasticDamage::ViscoElasticDamage(ProblemSpecP& ps)
 {
@@ -70,6 +72,12 @@ ViscoElasticDamage::ViscoElasticDamage(ProblemSpecP& ps)
   // initialization Hbar function at time=0
   func_Hbar_n.Identity();
  
+}
+
+void ViscoElasticDamage::addParticleState(std::vector<const VarLabel*>& from,
+				   std::vector<const VarLabel*>& to)
+{
+   throw InternalError("ViscoElasticDamage won't work");
 }
 
 ViscoElasticDamage::ViscoElasticDamage(double bulk, double shear,

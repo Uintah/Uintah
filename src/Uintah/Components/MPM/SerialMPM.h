@@ -178,6 +178,14 @@ private:
 		 DataWarehouseP& old_dw,
 		 DataWarehouseP& new_dw);
 
+
+  //////////
+  // Insert Documentation Here:
+  void checkLeave(const ProcessorContext*,
+		  const Patch* patch,
+		  DataWarehouseP& /*old_dw*/,
+		  DataWarehouseP& new_dw);
+
   SerialMPM(const SerialMPM&);
   SerialMPM& operator=(const SerialMPM&);
 	 
@@ -194,6 +202,11 @@ private:
    
 //
 // $Log$
+// Revision 1.39  2000/06/15 21:57:01  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.38  2000/06/08 16:56:51  guilkey
 // Added tasks and VarLabels for HE burn model stuff.
 //

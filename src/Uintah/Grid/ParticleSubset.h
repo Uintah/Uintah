@@ -1,11 +1,13 @@
 #ifndef PARTICLESUBSET_H
 #define PARTICLESUBSET_H
 
-#include "ParticleSet.h"
-#include "RefCounted.h"
+#include <Uintah/Grid/ParticleSet.h>
+#include <Uintah/Grid/RefCounted.h>
+#include <Uintah/Grid/Ghost.h>
 #include <vector>
 
 namespace Uintah {
+   class Patch;
 
 /**************************************
 
@@ -38,7 +40,13 @@ WARNING
 
    class ParticleSubset : public RefCounted {
    public:
-      ParticleSubset(ParticleSet* pset, bool fill);
+      ParticleSubset(ParticleSet* pset, bool fill,
+		     int matlIndex, const Patch*);
+      ParticleSubset(ParticleSet* pset, bool fill,
+		     int matlIndex, const Patch*,
+		     Ghost::GhostType gtype, int numGhostCells,
+		     const std::vector<const Patch*>& neighbors,
+		     const std::vector<ParticleSubset*>& subsets);
       ParticleSubset();
       ~ParticleSubset();
       
@@ -111,12 +119,41 @@ WARNING
       void set(particleIndex idx, particleIndex value) {
 	 d_particles[idx] = value;
       }
-      
+
+      int numGhostCells() const {
+	 return d_numGhostCells;
+      }
+      const Patch* getPatch() const {
+	 return d_patch;
+      }
+      Ghost::GhostType getGhostType() const {
+	 return d_gtype;
+      }
+      int getMatlIndex() const {
+	 return d_matlIndex;
+      }
+
+      const std::vector<const Patch*>& getNeighbors() const {
+	 return neighbors;
+      }
+      const std::vector<ParticleSubset*>& getNeighborSubsets() const {
+	 return neighbor_subsets;
+      }
    private:
       //////////
       // Insert Documentation Here:
       ParticleSet*               d_pset;
       std::vector<particleIndex> d_particles;
+
+      int d_matlIndex;
+      const Patch* d_patch;
+      Ghost::GhostType d_gtype;
+      int d_numGhostCells;
+
+      std::vector<const Patch*> neighbors;
+      std::vector<ParticleSubset*> neighbor_subsets;
+
+      void fillset();
       
       ParticleSubset(const ParticleSubset& copy);
       ParticleSubset& operator=(const ParticleSubset&);
@@ -126,6 +163,11 @@ WARNING
 
 //
 // $Log$
+// Revision 1.8  2000/06/15 21:57:18  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.7  2000/05/30 20:19:31  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch

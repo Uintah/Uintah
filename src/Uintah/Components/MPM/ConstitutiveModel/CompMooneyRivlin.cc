@@ -14,6 +14,7 @@
 #include <Uintah/Grid/VarTypes.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <Uintah/Components/MPM/MPMLabel.h>
+#include <values.h>
 #include <iostream>
 using std::cerr;
 using namespace Uintah::MPM;
@@ -34,6 +35,8 @@ CompMooneyRivlin::CompMooneyRivlin(ProblemSpecP& ps)
   ps->require("he_constant_4",d_initialData.C4);
   p_cmdata_label = scinew VarLabel("p.cmdata",
 				ParticleVariable<CMData>::getTypeDescription());
+  p_cmdata_label_preReloc = scinew VarLabel("p.cmdata+",
+				ParticleVariable<CMData>::getTypeDescription());
 }
 
 CompMooneyRivlin::~CompMooneyRivlin()
@@ -47,32 +50,32 @@ void CompMooneyRivlin::initializeCMData(const Patch* patch,
 {
    // Put stuff in here to initialize each particle's
    // constitutive model parameters and deformationMeasure
-  const MPMLabel* lb = MPMLabel::getLabels();
+   const MPMLabel* lb = MPMLabel::getLabels();
    Matrix3 Identity, zero(0.);
    Identity.Identity();
+   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
    ParticleVariable<CMData> cmdata;
-   new_dw->allocate(cmdata, p_cmdata_label, matl->getDWIndex(), patch);
+   new_dw->allocate(cmdata, p_cmdata_label, pset);
    ParticleVariable<Matrix3> deformationGradient;
-   new_dw->allocate(deformationGradient, lb->pDeformationMeasureLabel, matl->getDWIndex(), patch);
+   new_dw->allocate(deformationGradient, lb->pDeformationMeasureLabel, pset);
    ParticleVariable<Matrix3> pstress;
-   new_dw->allocate(pstress, lb->pStressLabel, matl->getDWIndex(), patch);
-   ParticleSubset* pset = cmdata.getParticleSubset();
+   new_dw->allocate(pstress, lb->pStressLabel, pset);
+
    for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++) {
 	 cmdata[*iter] = d_initialData;
          deformationGradient[*iter] = Identity;
          pstress[*iter] = zero;
    }
-   new_dw->put(cmdata, p_cmdata_label, matl->getDWIndex(), patch);
-   new_dw->put(deformationGradient, lb->pDeformationMeasureLabel, matl->getDWIndex(), patch);
-   new_dw->put(pstress, lb->pStressLabel, matl->getDWIndex(), patch);
+   new_dw->put(cmdata, p_cmdata_label);
+   new_dw->put(deformationGradient, lb->pDeformationMeasureLabel);
+   new_dw->put(pstress, lb->pStressLabel);
 
    computeStableTimestep(patch, matl, new_dw);
 }
 
 void CompMooneyRivlin::computeStableTimestep(const Patch* patch,
 					     const MPMMaterial* matl,
-//					     DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw)
 {
    // This is only called for the initial timestep - all other timesteps
@@ -81,15 +84,13 @@ void CompMooneyRivlin::computeStableTimestep(const Patch* patch,
   int matlindex = matl->getDWIndex();
   const MPMLabel* lb = MPMLabel::getLabels();
   // Retrieve the array of constitutive parameters
+  ParticleSubset* pset = new_dw->getParticleSubset(matlindex, patch);
   ParticleVariable<CMData> cmdata;
-  new_dw->get(cmdata, p_cmdata_label, matlindex, patch, Ghost::None, 0);
+  new_dw->get(cmdata, p_cmdata_label, pset);
   ParticleVariable<double> pmass;
-  new_dw->get(pmass, lb->pMassLabel, matlindex, patch, Ghost::None, 0);
+  new_dw->get(pmass, lb->pMassLabel, pset);
   ParticleVariable<double> pvolume;
-  new_dw->get(pvolume, lb->pVolumeLabel, matlindex, patch, Ghost::None, 0);
-
-  ParticleSubset* pset = pmass.getParticleSubset();
-  ASSERT(pset == pvolume.getParticleSubset());
+  new_dw->get(pvolume, lb->pVolumeLabel, pset);
 
   double c_dil = 0.0,c_rot = 0.0;
   for(ParticleSubset::iterator iter = pset->begin();
@@ -109,7 +110,11 @@ void CompMooneyRivlin::computeStableTimestep(const Patch* patch,
     }
     double WaveSpeed = sqrt(Max(c_rot,c_dil));
     // Fudge factor added, just in case
-    double delT_new = d_fudge*(Min(dx.x(), dx.y(), dx.z())/WaveSpeed);
+    double delT_new;
+    if(WaveSpeed < 1.e-12)
+       delT_new = MAXDOUBLE;
+    else
+       delT_new = d_fudge*(Min(dx.x(), dx.y(), dx.z())/WaveSpeed);
     new_dw->put(delt_vartype(delT_new), lb->delTLabel);
 }
 
@@ -121,7 +126,7 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
   Matrix3 Identity,deformationGradientInc,B,velGrad;
   double invar1,invar2,invar3,J,w1,w2,w3,i3w3,w1pi1w2;
   Identity.Identity();
-  double WaveSpeed = 0.0,c_dil = 0.0,c_rot = 0.0,se=0.0;
+  double c_dil = 0.0,c_rot = 0.0,se=0.0;
 
   Vector dx = patch->dCell();
   double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
@@ -130,26 +135,26 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
 
   const MPMLabel* lb = MPMLabel::getLabels();
   // Create array for the particle position
+  ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
   ParticleVariable<Point> px;
-  old_dw->get(px, lb->pXLabel, matlindex, patch, Ghost::None, 0);
+  old_dw->get(px, lb->pXLabel, pset);
   // Create array for the particle deformation
   ParticleVariable<Matrix3> deformationGradient;
-  old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, matlindex,
-	      patch, Ghost::None, 0);
+  old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
 
   // Create array for the particle stress
   ParticleVariable<Matrix3> pstress;
-  old_dw->get(pstress, lb->pStressLabel, matlindex, patch,Ghost::None, 0);
+  old_dw->get(pstress, lb->pStressLabel, pset);
 
   // Retrieve the array of constitutive parameters
   ParticleVariable<CMData> cmdata;
-  old_dw->get(cmdata, p_cmdata_label, matlindex, patch, Ghost::None, 0);
+  old_dw->get(cmdata, p_cmdata_label, pset);
   ParticleVariable<double> pmass;
-  old_dw->get(pmass, lb->pMassLabel, matlindex, patch, Ghost::None, 0);
+  old_dw->get(pmass, lb->pMassLabel, pset);
   ParticleVariable<double> pvolume;
-  old_dw->get(pvolume, lb->pVolumeLabel, matlindex, patch, Ghost::None, 0);
+  old_dw->get(pvolume, lb->pVolumeLabel, pset);
   ParticleVariable<double> pvolumedef;
-  new_dw->allocate(pvolumedef, lb->pVolumeDeformedLabel, matlindex, patch);
+  new_dw->allocate(pvolumedef, lb->pVolumeDeformedLabel, pset);
 
   NCVariable<Vector> gvelocity;
 
@@ -157,12 +162,6 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
 	      Ghost::AroundCells, 1);
   delt_vartype delT;
   old_dw->get(delT, lb->delTLabel);
-
-  ParticleSubset* pset = px.getParticleSubset();
-  ASSERT(pset == pstress.getParticleSubset());
-  ASSERT(pset == deformationGradient.getParticleSubset());
-  ASSERT(pset == pmass.getParticleSubset());
-  ASSERT(pset == pvolume.getParticleSubset());
 
   for(ParticleSubset::iterator iter = pset->begin();
      iter != pset->end(); iter++){
@@ -172,16 +171,17 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
      // Get the node indices that surround the cell
      IntVector ni[8];
      Vector d_S[8];
-     if(!patch->findCellAndShapeDerivatives(px[idx], ni, d_S))
-         continue;
+     if(!patch->findCellAndShapeDerivatives(px[idx], ni, d_S)){
+	cerr << "p=" << px[idx] << '\n';
+	cerr << "patch=" << patch << '\n';
+	throw InternalError("Particle not in this patch?");
+     }
 
       for(int k = 0; k < 8; k++) {
-	 if(patch->containsNode(ni[k])){
-	    Vector& gvel = gvelocity[ni[k]];
-	    for (int j = 0; j<3; j++){
-	       for (int i = 0; i<3; i++) {
-		  velGrad(i+1,j+1)+=gvel(i) * d_S[k](j) * oodx[j];
-	       }
+	 Vector& gvel = gvelocity[ni[k]];
+	 for (int j = 0; j<3; j++){
+	    for (int i = 0; i<3; i++) {
+	       velGrad(i+1,j+1)+=gvel(i) * d_S[k](j) * oodx[j];
 	    }
 	 }
       }
@@ -235,20 +235,30 @@ void CompMooneyRivlin::computeStressTensor(const Patch* patch,
             C4*(invar3-1.0)*(invar3-1.0))*pvolume[idx];
       pvolumedef[idx]=pvolume[idx];
     }
-    WaveSpeed = sqrt(Max(c_rot,c_dil));
+    double WaveSpeed = sqrt(Max(c_rot,c_dil));
     // Fudge factor added, just in case
-    double delT_new = d_fudge*Min(dx.x(), dx.y(), dx.z())/WaveSpeed;
+    double delT_new;
+    if(WaveSpeed < 1.e-12)
+       delT_new = MAXDOUBLE;
+    else
+       delT_new = d_fudge*(Min(dx.x(), dx.y(), dx.z())/WaveSpeed);
     new_dw->put(delt_vartype(delT_new), lb->delTLabel);
-    new_dw->put(pstress, lb->pStressLabel, matlindex, patch);
-    new_dw->put(deformationGradient, lb->pDeformationMeasureLabel,
-		matlindex, patch);
+    new_dw->put(pstress, lb->pStressLabel_preReloc);
+    new_dw->put(deformationGradient, lb->pDeformationMeasureLabel_preReloc);
 
     new_dw->put(sum_vartype(se), lb->StrainEnergyLabel);
 
     // This is just carried forward.
-    new_dw->put(cmdata, p_cmdata_label, matlindex, patch);
+    new_dw->put(cmdata, p_cmdata_label_preReloc);
     // Volume is currently just carried forward, but will be updated.
-    new_dw->put(pvolumedef, lb->pVolumeDeformedLabel, matlindex, patch);
+    new_dw->put(pvolumedef, lb->pVolumeDeformedLabel_preReloc);
+}
+
+void CompMooneyRivlin::addParticleState(std::vector<const VarLabel*>& from,
+					std::vector<const VarLabel*>& to)
+{
+   from.push_back(p_cmdata_label);
+   to.push_back(p_cmdata_label_preReloc);
 }
 
 void CompMooneyRivlin::addComputesAndRequires(Task* task,
@@ -273,10 +283,10 @@ void CompMooneyRivlin::addComputesAndRequires(Task* task,
    task->requires(old_dw, lb->delTLabel);
 
    task->computes(new_dw, lb->delTLabel);
-   task->computes(new_dw, lb->pStressLabel, matl->getDWIndex(),  patch);
-   task->computes(new_dw, lb->pDeformationMeasureLabel, matl->getDWIndex(), patch);
-   task->computes(new_dw, p_cmdata_label, matl->getDWIndex(),  patch);
-   task->computes(new_dw, lb->pVolumeDeformedLabel, matl->getDWIndex(), patch);
+   task->computes(new_dw, lb->pStressLabel_preReloc, matl->getDWIndex(),  patch);
+   task->computes(new_dw, lb->pDeformationMeasureLabel_preReloc, matl->getDWIndex(), patch);
+   task->computes(new_dw, p_cmdata_label_preReloc, matl->getDWIndex(),  patch);
+   task->computes(new_dw, lb->pVolumeDeformedLabel_preReloc, matl->getDWIndex(), patch);
    task->computes(new_dw, lb->StrainEnergyLabel);
 }
 
@@ -292,20 +302,16 @@ double CompMooneyRivlin::computeStrainEnergy(const Patch* patch,
   int matlindex = matl->getDWIndex();
 
   // Create array for the particle deformation
+  ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
   ParticleVariable<Matrix3> deformationGradient;
 
   const MPMLabel* lb = MPMLabel::getLabels();
-  new_dw->get(deformationGradient, lb->pDeformationMeasureLabel, matlindex,
-					 patch, Ghost::None, 0);
+  new_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
   // Retrieve the array of constitutive parameters
   ParticleVariable<CMData> cmdata;
-  new_dw->get(cmdata, p_cmdata_label, matlindex, patch, Ghost::None, 0);
+  new_dw->get(cmdata, p_cmdata_label, pset);
   ParticleVariable<double> pvolume;
-  new_dw->get(pvolume, lb->pVolumeLabel, matlindex, patch, Ghost::None, 0);
-
-  ParticleSubset* pset = pvolume.getParticleSubset();
-  ASSERT(pset == deformationGradient.getParticleSubset());
-  ASSERT(pset == cmdata.getParticleSubset());
+  new_dw->get(pvolume, lb->pVolumeLabel, pset);
 
   for(ParticleSubset::iterator iter = pset->begin();
      iter != pset->end(); iter++){
@@ -352,6 +358,11 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 }
 
 // $Log$
+// Revision 1.42  2000/06/15 21:57:03  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.41  2000/06/09 23:52:36  bard
 // Added fudge factors to time step calculations.
 //

@@ -33,6 +33,24 @@ namespace Uintah {
       const VarLabel* pParticleIDLabel;
       const VarLabel* pIsIgnitedLabel; //for burn models
       const VarLabel* pMassRateLabel; //for burn models
+
+      const VarLabel* pDeformationMeasureLabel_preReloc;
+      const VarLabel* pStressLabel_preReloc;
+      const VarLabel* pVolumeLabel_preReloc;
+      const VarLabel* pVolumeDeformedLabel_preReloc;
+      const VarLabel* pMassLabel_preReloc;
+      const VarLabel* pVelocityLabel_preReloc;
+      const VarLabel* pExternalForceLabel_preReloc;
+      const VarLabel* pXLabel_preReloc;
+      const VarLabel* pSurfLabel_preReloc;
+      const VarLabel* pSurfaceNormalLabel_preReloc; //for fracture
+      const VarLabel* pAverageMicrocrackLength_preReloc; //for fracture
+      const VarLabel* pTemperatureLabel_preReloc; //for heat conduction
+      const VarLabel* pTemperatureGradientLabel_preReloc; //for heat conduction
+      const VarLabel* pTemperatureRateLabel_preReloc; //for heat conduction
+      const VarLabel* pParticleIDLabel_preReloc;
+      const VarLabel* pIsIgnitedLabel_preReloc; //for burn models
+      const VarLabel* pMassRateLabel_preReloc; //for burn models
       
       const VarLabel* gMassLabel;
       const VarLabel* gAccelerationLabel;
@@ -55,6 +73,7 @@ namespace Uintah {
 
       const VarLabel* StrainEnergyLabel;
       const VarLabel* KineticEnergyLabel;
+      const VarLabel* TotalMassLabel;
 
       const VarLabel* ppNAPIDLabel;
       
@@ -64,6 +83,11 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.10  2000/06/15 21:57:00  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.9  2000/06/13 23:06:38  guilkey
 // Added a CCVariable for the burned particle mass to go into.
 //

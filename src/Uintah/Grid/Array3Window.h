@@ -37,7 +37,8 @@ namespace Uintah {
    template<class T> class Array3Window : public RefCounted {
    public:
       Array3Window(Array3Data<T>*);
-      Array3Window(Array3Data<T>*, const IntVector& lowIndex, const IntVector& highIndex);
+      Array3Window(Array3Data<T>*, const IntVector& offset,
+		   const IntVector& lowIndex, const IntVector& highIndex);
       virtual ~Array3Window();
       
       inline Array3Data<T>* getData() const {
@@ -52,12 +53,15 @@ namespace Uintah {
       inline IntVector getHighIndex() const {
 	 return highIndex;
       }
+      inline IntVector getOffset() const {
+	 return offset;
+      }
       inline T& get(const IntVector& idx) {
-	 //ASSERT(data);
+	 ASSERT(data);
 	 CHECKARRAYBOUNDS(idx.x(), lowIndex.x(), highIndex.x());
 	 CHECKARRAYBOUNDS(idx.y(), lowIndex.y(), highIndex.y());
 	 CHECKARRAYBOUNDS(idx.z(), lowIndex.z(), highIndex.z());
-	 return data->get(idx-lowIndex);
+	 return data->get(idx-offset);
       }
       
       ///////////////////////////////////////////////////////////////////////
@@ -81,6 +85,7 @@ namespace Uintah {
    private:
       
       Array3Data<T>* data;
+      IntVector offset;
       IntVector lowIndex;
       IntVector highIndex;
       Array3Window(const Array3Window<T>&);
@@ -90,7 +95,7 @@ namespace Uintah {
    template<class T>
       void Array3Window<T>::initialize(const T& val)
       {
-	 data->initialize(val, IntVector(0,0,0), highIndex-lowIndex);
+	 data->initialize(val, lowIndex-offset, highIndex-offset);
       }
    
    template<class T>
@@ -104,28 +109,29 @@ namespace Uintah {
 	 CHECKARRAYBOUNDS(e.x(), s.x(), highIndex.x()+1);
 	 CHECKARRAYBOUNDS(e.y(), s.y(), highIndex.y()+1);
 	 CHECKARRAYBOUNDS(e.z(), s.z(), highIndex.z()+1);
-	 data->initialize(val, s-lowIndex, e-lowIndex);
+	 data->initialize(val, s-offset, e-offset);
       }
    
    template<class T>
       Array3Window<T>::Array3Window(Array3Data<T>* data)
-      : data(data), lowIndex(0,0,0), highIndex(data->size())
+      : data(data), offset(0,0,0), lowIndex(0,0,0), highIndex(data->size())
       {
 	 data->addReference();
       }
    
    template<class T>
       Array3Window<T>::Array3Window(Array3Data<T>* data,
+				    const IntVector& offset,
 				    const IntVector& lowIndex,
 				    const IntVector& highIndex)
-      : data(data), lowIndex(lowIndex), highIndex(highIndex)
+      : data(data), offset(offset), lowIndex(lowIndex), highIndex(highIndex)
       {
-	 CHECKARRAYBOUNDS(lowIndex.x(), 0, data->size().x());
-	 CHECKARRAYBOUNDS(lowIndex.y(), 0, data->size().y());
-	 CHECKARRAYBOUNDS(lowIndex.z(), 0, data->size().z());
-	 CHECKARRAYBOUNDS(highIndex.x()-lowIndex.x(), 0, data->size().x()+1);
-	 CHECKARRAYBOUNDS(highIndex.y()-lowIndex.y(), 0, data->size().y()+1);
-	 CHECKARRAYBOUNDS(highIndex.z()-lowIndex.z(), 0, data->size().z()+1);
+	 CHECKARRAYBOUNDS(lowIndex.x()-offset.x(), 0, data->size().x());
+	 CHECKARRAYBOUNDS(lowIndex.y()-offset.y(), 0, data->size().y());
+	 CHECKARRAYBOUNDS(lowIndex.z()-offset.z(), 0, data->size().z());
+	 CHECKARRAYBOUNDS(highIndex.x()-offset.x(), 0, data->size().x()+1);
+	 CHECKARRAYBOUNDS(highIndex.y()-offset.y(), 0, data->size().y()+1);
+	 CHECKARRAYBOUNDS(highIndex.z()-offset.z(), 0, data->size().z()+1);
 	 data->addReference();
       }
    
@@ -140,6 +146,11 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.7  2000/06/15 21:57:15  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.6  2000/06/11 04:05:07  bbanerje
 // Added first cut of getPointer() needed for fortran calls.
 //

@@ -147,6 +147,9 @@ namespace Uintah {
 					     DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw) const;
 
+	 virtual void addParticleState(std::vector<const VarLabel*>& from,
+				       std::vector<const VarLabel*>& to);
+
 	 // Return the Lame constants
 	 virtual double getMu() const;
 	 virtual double getLambda() const;

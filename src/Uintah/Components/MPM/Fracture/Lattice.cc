@@ -6,6 +6,7 @@
 namespace Uintah {
 namespace MPM {
 
+#if 0
 Lattice::
 Lattice(const Patch* patch,const ParticleVariable<Point>& pX)
 : //Array3<Cell>(patch->getLowGhostCellIndex(),patch->getHighGhostCellIndex()),
@@ -40,12 +41,17 @@ const ParticleVariable<Point>& Lattice::getParticlesPosition() const
 {
   return d_pX;
 }
-
+#endif
   
 } //namespace MPM
 } //namespace Uintah
 
 // $Log$
+// Revision 1.7  2000/06/15 21:57:09  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.6  2000/06/08 17:58:27  tan
 // A small change
 //

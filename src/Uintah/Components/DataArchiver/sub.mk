@@ -10,13 +10,18 @@ SRCDIR   := Uintah/Components/DataArchiver
 SRCS     += $(SRCDIR)/DataArchiver.cc
 
 PSELIBS := Uintah/Interface Uintah/Parallel Uintah/Grid Uintah/Exceptions \
-	SCICore/OS SCICore/Exceptions PSECore/XMLUtil
+	SCICore/OS SCICore/Exceptions PSECore/XMLUtil SCICore/Util
 LIBS := $(XML_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3  2000/06/15 21:56:59  sparker
+# Added multi-patch support (bugzilla #107)
+# Changed interface to datawarehouse for particle data
+# Particles now move from patch to patch
+#
 # Revision 1.2  2000/05/20 08:09:04  sparker
 # Improved TypeDescription
 # Finished I/O

@@ -416,17 +416,16 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
       int matlindex = matl->getDWIndex();
       int vfindex = matl->getVFIndex();
       // Create arrays for the particle stress and grid stress
+      ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
       ParticleVariable<Matrix3> pstress;
       NCVariable<Matrix3>       gstress;
-      new_dw->get(pstress, lb->pStressLabel, matlindex, patch, Ghost::None, 0);
+      new_dw->get(pstress, lb->pStressLabel, pset);
       new_dw->allocate(gstress, gStressLabel, vfindex, patch);
       gstress.initialize(Matrix3(0.0));
 
       ParticleVariable<Point> px;
-      old_dw->get(px, lb->pXLabel, matlindex, patch, Ghost::None, 0);
+      old_dw->get(px, lb->pXLabel, pset);
 
-
-      ParticleSubset* pset = pstress.getParticleSubset();
       for(ParticleSubset::iterator iter = pset->begin();
          iter != pset->end(); iter++){
          particleIndex idx = *iter;
@@ -598,6 +597,11 @@ void FrictionContact::addComputesAndRequiresIntegrated( Task* t,
 }
 
 // $Log$
+// Revision 1.24  2000/06/15 21:57:08  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.23  2000/05/30 21:07:37  dav
 // delt to delT
 //

@@ -4,6 +4,7 @@
 #include <Uintah/Interface/DataWarehouseP.h>
 #include <Uintah/Interface/ProblemSpecP.h>
 #include <Uintah/Interface/ProblemSpec.h>
+#include <vector>
 
 namespace Uintah {
    class Task;
@@ -71,6 +72,9 @@ WARNING
 					     const Patch* patch,
 					     DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw) const = 0;
+
+	 virtual void addParticleState(std::vector<const VarLabel*>& from,
+				       std::vector<const VarLabel*>& to) = 0;
 	 /*
          const VarLabel* deltLabel;
 
@@ -91,6 +95,11 @@ WARNING
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.18  2000/06/15 21:57:05  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.17  2000/06/09 21:02:39  jas
 // Added code to get the fudge factor directly into the constitutive model
 // inititialization.

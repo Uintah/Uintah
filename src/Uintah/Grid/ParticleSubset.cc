@@ -21,20 +21,46 @@ ParticleSubset::ParticleSubset() :
    d_pset->addReference();
 }
 
-ParticleSubset::ParticleSubset(ParticleSet* pset, bool fill)
-    : d_pset(pset)
+ParticleSubset::ParticleSubset(ParticleSet* pset, bool fill,
+			       int matlIndex, const Patch* patch)
+    : d_pset(pset), d_matlIndex(matlIndex), d_patch(patch),
+      d_gtype(Ghost::None), d_numGhostCells(0)
 {
    d_pset->addReference();
-   if(fill){
-      int np = d_pset->numParticles();
-      d_particles.resize(np);
-      for(int i=0;i<np;i++)
-	 d_particles[i]=i;
-   }
+   if(fill)
+      fillset();
+}
+
+ParticleSubset::ParticleSubset(ParticleSet* pset, bool fill,
+			       int matlIndex, const Patch* patch,
+			       Ghost::GhostType gtype, int numGhostCells,
+			       const vector<const Patch*>& neighbors,
+			       const vector<ParticleSubset*>& neighbor_subsets)
+    : d_pset(pset), d_matlIndex(matlIndex), d_patch(patch),
+      d_gtype(gtype), d_numGhostCells(numGhostCells),
+      neighbors(neighbors), neighbor_subsets(neighbor_subsets)
+{
+   d_pset->addReference();
+   if(fill)
+      fillset();
+}
+
+void
+ParticleSubset::fillset()
+{
+   int np = d_pset->numParticles();
+   d_particles.resize(np);
+   for(int i=0;i<np;i++)
+      d_particles[i]=i;
 }
 
 //
 // $Log$
+// Revision 1.8  2000/06/15 21:57:18  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.7  2000/05/30 20:19:30  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch

@@ -15,6 +15,8 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/ParticleVariable.h>
 #include <Uintah/Grid/Level.h>
 #include <Uintah/Grid/Patch.h>
+#include <Uintah/Grid/Task.h>
+#include <Uintah/Interface/Scheduler.h>
 #include <SCICore/Malloc/Allocator.h>
 
 #include <iostream>
@@ -29,6 +31,8 @@ using SCICore::Exceptions::InternalError;
 using SCICore::Thread::Guard;
 using SCICore::Geometry::Point;
 
+static const TypeDescription* specialType;
+
 namespace Uintah {
 
 OnDemandDataWarehouse::OnDemandDataWarehouse( int MpiRank, 
@@ -39,9 +43,18 @@ OnDemandDataWarehouse::OnDemandDataWarehouse( int MpiRank,
   d_responseTag( 0 )
 {
   d_finalized = false;
+#if 0
   d_positionLabel = scinew VarLabel("__internal datawarehouse position variable",
 				ParticleVariable<Point>::getTypeDescription(),
 				VarLabel::Internal);
+#endif
+
+  if(!specialType)
+     specialType = new TypeDescription(TypeDescription::Other, "DataWarehouse::specialInternalScatterGatherType", false);
+  scatterGatherVariable = new VarLabel("DataWarehouse::scatterGatherVariable",
+				       specialType, VarLabel::Internal);
+
+  reloc_old_posLabel = reloc_new_posLabel = 0;
 }
 
 void
@@ -108,9 +121,9 @@ OnDemandDataWarehouse::put(const ReductionVariableBase& var,
 }
 
 void
-OnDemandDataWarehouse::sendMpiDataRequest( const string & varName,
-					         Patch * patch,
-					         int      numGhostCells )
+OnDemandDataWarehouse::sendMpiDataRequest( const string & /*varName*/,
+					         Patch * /*patch*/,
+					         int      /*numGhostCells*/ )
 {
   if( d_MpiProcesses == 1 ) {
       throw InternalError( "sendMpiDataRequest should not be called if"
@@ -180,147 +193,156 @@ OnDemandDataWarehouse::sendMpiDataRequest( const string & varName,
   free( buffer );
 }
 
-void
-OnDemandDataWarehouse::get(ParticleVariableBase& var,
-			   const VarLabel* label,
-			   int matlIndex,
-			   const Patch* patch,
-			   Ghost::GhostType gtype,
-			   int numGhostCells)
+ParticleSubset*
+OnDemandDataWarehouse::createParticleSubset(particleIndex numParticles,
+					    int matlIndex, const Patch* patch)
 {
-   if(!d_particleDB.exists(label, matlIndex, patch))
-      throw UnknownVariable(label->getName());
-#if 1
+   ParticleSet* pset = new ParticleSet(numParticles);
+   ParticleSubset* psubset = new ParticleSubset(pset, true, matlIndex, patch);
+   psetDBType::key_type key(matlIndex, patch);
+   if(d_psetDB.find(key) != d_psetDB.end())
+      throw InternalError("createParticleSubset called twice for patch");
+   d_psetDB[key]=psubset;
+   return psubset;
+}
+
+ParticleSubset*
+OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch)
+{
+   psetDBType::key_type key(matlIndex, patch);
+   psetDBType::iterator iter = d_psetDB.find(key);
+   if(iter == d_psetDB.end()){
+      cerr << "matlIndex = " << matlIndex << '\n';
+      cerr << "patch=" << patch << '\n';
+      throw UnknownVariable("Cannot find particle set on patch");
+   }
+   return iter->second;
+}
+
+ParticleSubset*
+OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
+					 Ghost::GhostType gtype,
+					 int numGhostCells,
+					 const VarLabel* pos_var)
+{
    if(gtype == Ghost::None){
       if(numGhostCells != 0)
 	 throw InternalError("Ghost cells specified with task type none!\n");
-#endif
-      d_particleDB.get(label, matlIndex, patch, var);
-#if 1
-   } else {
-      int l,h;
-      switch(gtype){
-      case Ghost::AroundNodes:
-	 if(numGhostCells == 0)
-	    throw InternalError("No ghost cells specified with Task::AroundNodes");
-	 // Lower neighbors
-	 l=-1;
-	 h=0;
-	 break;
-      case Ghost::AroundCells:
-	 if(numGhostCells == 0)
-	    throw InternalError("No ghost cells specified with Task::AroundCells");
-	 // All 27 neighbors
-	 l=-1;
-	 h=1;
-	 break;
-      default:
-	 throw InternalError("Illegal ghost type");
-      }
-      Box box = patch->getGhostBox(l, h);
-      particleIndex totalParticles = 0;
-      vector<ParticleVariableBase*> neighborvars;
-      vector<ParticleSubset*> subsets;
-      for(int ix=l;ix<=h;ix++){
-	 for(int iy=l;iy<=h;iy++){
-	    for(int iz=l;iz<=h;iz++){
-	       const Patch* neighbor = patch->getNeighbor(IntVector(ix,iy,iz));
-	       if(neighbor){
-		  if(!d_particleDB.exists(d_positionLabel,matlIndex,neighbor))
-		     throw InternalError("Position variable does not exist: "+ 
-			  d_positionLabel->getName());
-		  if(!d_particleDB.exists(label, matlIndex, neighbor))
-		     throw InternalError("Position variable does not exist: "+ 
-			  d_positionLabel->getName());
-
-		  ParticleVariable<Point> pos;
-		  d_particleDB.get(d_positionLabel, matlIndex, neighbor, pos);
-		  ParticleSubset* pset = pos.getParticleSubset();
-		  ParticleSubset* subset = 
-                        scinew ParticleSubset(pset->getParticleSet(), false);
-		  for(ParticleSubset::iterator iter = pset->begin();
-		      iter != pset->end(); iter++){
-		     particleIndex idx = *iter;
-		     if(box.contains(pos[idx])){
-			subset->addParticle(idx);
-		     }
-		  }
-		  totalParticles+=subset->numParticles();
-		  neighborvars.push_back(
-                                 d_particleDB.get(label, matlIndex, neighbor));
-		  subsets.push_back(subset);
-	       }
-	    }
-	 }
-      }
-      ParticleSet* newset = scinew ParticleSet(totalParticles);
-      ParticleSubset* newsubset = scinew ParticleSubset(newset, true);
-      var.gather(newsubset, subsets, neighborvars);
-      for(int i=0;i<subsets.size();i++)
-	 delete subsets[i];
+      return getParticleSubset(matlIndex, patch);
    }
-#endif
+   int l,h;
+   switch(gtype){
+   case Ghost::AroundNodes:
+      if(numGhostCells == 0)
+	 throw InternalError("No ghost cells specified with Task::AroundNodes");
+      // Lower neighbors
+      l=-1;
+      h=0;
+      break;
+   case Ghost::AroundCells:
+      if(numGhostCells == 0)
+	 throw InternalError("No ghost cells specified with Task::AroundCells");
+      // All 27 neighbors
+      l=-1;
+      h=1;
+      break;
+   default:
+      throw InternalError("Illegal ghost type");
+   }
+   Box box = patch->getGhostBox(IntVector(l,l,l), IntVector(h,h,h));
+   particleIndex totalParticles = 0;
+   vector<ParticleVariableBase*> neighborvars;
+   vector<ParticleSubset*> subsets;
+   const Level* level = patch->getLevel();
+   std::vector<const Patch*> neighbors;
+   IntVector low(patch->getCellLowIndex()+IntVector(l,l,l));
+   IntVector high(patch->getCellHighIndex()+IntVector(h,h,h));
+   level->selectPatches(low, high, neighbors);
+   for(int i=0;i<neighbors.size();i++){
+      const Patch* neighbor = neighbors[i];
+      if(neighbor){
+	 ParticleSubset* pset = getParticleSubset(matlIndex, neighbor);
+	 ParticleVariable<Point> pos;
+	 get(pos, pos_var, pset);
+	 ParticleSubset* subset = 
+	    scinew ParticleSubset(pset->getParticleSet(), false, -1, 0);
+	 for(ParticleSubset::iterator iter = pset->begin();
+	     iter != pset->end(); iter++){
+	    particleIndex idx = *iter;
+	    if(box.contains(pos[idx]))
+	       subset->addParticle(idx);
+	 }
+	 totalParticles+=subset->numParticles();
+	 subsets.push_back(subset);
+      }
+   }
+   ParticleSet* newset = scinew ParticleSet(totalParticles);
+   ParticleSubset* newsubset = scinew ParticleSubset(newset, true,
+						     matlIndex, patch,
+						     gtype, numGhostCells,
+						     neighbors, subsets);
+   return newsubset;
 }
 
 void
-OnDemandDataWarehouse::allocate(int numParticles,
-				ParticleVariableBase& var,
-				const VarLabel* label,
-				int matlIndex,
-				const Patch* patch)
+OnDemandDataWarehouse::get(ParticleVariableBase& var,
+			   const VarLabel* label,
+			   ParticleSubset* pset)
 {
-   // Error checking
-   if(d_particleDB.exists(label, matlIndex, patch))
-      throw InternalError("Particle variable already exists: "+label->getName());
-   if(!label->isPositionVariable())
-      throw InternalError("Particle allocate via numParticles should "
-			  "only be used for position variables");
-   if(d_particleDB.exists(d_positionLabel, matlIndex, patch))
-      throw InternalError("Particle position already exists in datawarehouse");
+   int matlIndex = pset->getMatlIndex();
+   const Patch* patch = pset->getPatch();
 
-   // Create the particle set and variable
-   ParticleSet* pset = scinew ParticleSet(numParticles);
-   ParticleSubset* psubset = scinew ParticleSubset(pset, true);
-   var.allocate(psubset);
-
-   // Put it in the database
-   d_particleDB.put(d_positionLabel, matlIndex, patch, var, false);
+   if(pset->getGhostType() == Ghost::None){
+      if(!d_particleDB.exists(label, matlIndex, patch))
+	 throw UnknownVariable("Unknown variable on neighbor: "+label->getName());
+      d_particleDB.get(label, matlIndex, patch, var);
+   } else {
+      const vector<const Patch*>& neighbors = pset->getNeighbors();
+      const vector<ParticleSubset*>& neighbor_subsets = pset->getNeighborSubsets();
+      vector<ParticleVariableBase*> neighborvars(neighbors.size());
+      for(int i=0;i<neighbors.size();i++){
+	 if(!d_particleDB.exists(label, matlIndex, neighbors[i]))
+	    throw UnknownVariable("Unknown variable on neighbor: "+label->getName());
+	 neighborvars[i] = d_particleDB.get(label, matlIndex, neighbors[i]);
+      }
+      var.gather(pset, neighbor_subsets, neighborvars);
+   }
 }
 
 void
 OnDemandDataWarehouse::allocate(ParticleVariableBase& var,
 				const VarLabel* label,
-				int matlIndex,
-				const Patch* patch)
+				ParticleSubset* pset)
 {
+   int matlIndex = pset->getMatlIndex();
+   const Patch* patch = pset->getPatch();
+
    // Error checking
    if(d_particleDB.exists(label, matlIndex, patch))
       throw InternalError("Particle variable already exists: " +
 			  label->getName());
-   if(!d_particleDB.exists(d_positionLabel, matlIndex, patch))
-      throw InternalError("Position variable does not exist: " + 
-			  d_positionLabel->getName());
-   ParticleVariable<Point> pos;
-   d_particleDB.get(d_positionLabel, matlIndex, patch, pos);
 
-   // Allocate the variable
-   var.allocate(pos.getParticleSubset());
+   var.allocate(pset);
 }
 
 void
 OnDemandDataWarehouse::put(const ParticleVariableBase& var,
-			   const VarLabel* label,
-			   int matlIndex,
-			   const Patch* patch)
+			   const VarLabel* label)
 {
    ASSERT(!d_finalized);
+
+   ParticleSubset* pset = var.getParticleSubset();
+   if(pset->numGhostCells() != 0 || pset->getGhostType() != 0)
+      throw InternalError("ParticleVariable cannot use put with ghost cells");
+   const Patch* patch = pset->getPatch();
+   int matlIndex = pset->getMatlIndex();
 
    // Error checking
    if(d_particleDB.exists(label, matlIndex, patch))
       throw InternalError("Variable already exists: "+label->getName());
 
    // Put it in the database
-   d_particleDB.put(label, matlIndex, patch, var, true);
+   d_particleDB.put(label, matlIndex, patch, var.clone(), true);
 }
 
 void
@@ -368,32 +390,33 @@ OnDemandDataWarehouse::get(NCVariableBase& var, const VarLabel* label,
       }
       var.allocate(lowIndex, highIndex);
       long totalNodes=0;
-      for(int ix=l;ix<=h;ix++){
-	 for(int iy=l;iy<=h;iy++){
-	    for(int iz=l;iz<=h;iz++){
-	       const Patch* neighbor = patch->getNeighbor(IntVector(ix,iy,iz));
-	       if(neighbor){
-		  if(!d_ncDB.exists(label, matlIndex, neighbor))
-		     throw InternalError("Position variable does not exist: "+ 
-					 label->getName());
-		  NCVariableBase* srcvar = 
-		    d_ncDB.get(label, matlIndex, neighbor);
+      const Level* level = patch->getLevel();
+      std::vector<const Patch*> neighbors;
+      IntVector low(patch->getCellLowIndex()+IntVector(l,l,l));
+      IntVector high(patch->getCellHighIndex()+IntVector(h,h,h));
+      level->selectPatches(low, high, neighbors);
+      for(int i=0;i<neighbors.size();i++){
+	 const Patch* neighbor = neighbors[i];
+	 if(neighbor){
+	    if(!d_ncDB.exists(label, matlIndex, neighbor))
+	       throw InternalError("Position variable does not exist: "+ 
+				   label->getName());
+	    NCVariableBase* srcvar = 
+	       d_ncDB.get(label, matlIndex, neighbor);
 
-		  using SCICore::Geometry::Max;
-		  using SCICore::Geometry::Min;
+	    using SCICore::Geometry::Max;
+	    using SCICore::Geometry::Min;
 
-		  IntVector low = Max(lowIndex, neighbor->getNodeLowIndex());
-		  IntVector high= Min(highIndex, neighbor->getNodeHighIndex());
+	    IntVector low = Max(lowIndex, neighbor->getNodeLowIndex());
+	    IntVector high= Min(highIndex, neighbor->getNodeHighIndex());
 
-		  if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
-		      || ( high.z() < low.z() ) )
-		     throw InternalError("Patch doesn't overlap?");
-
-		  var.copyPatch(srcvar, low, high);
-		  IntVector dnodes = high-low;
-		  totalNodes+=dnodes.x()*dnodes.y()*dnodes.z();
-	       }
-	    }
+	    if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
+		|| ( high.z() < low.z() ) )
+	       throw InternalError("Patch doesn't overlap?");
+	    
+	    var.copyPatch(srcvar, low, high);
+	    IntVector dnodes = high-low;
+	    totalNodes+=dnodes.x()*dnodes.y()*dnodes.z();
 	 }
       }
       IntVector dn = highIndex-lowIndex;
@@ -429,7 +452,7 @@ OnDemandDataWarehouse::put(const NCVariableBase& var,
       throw InternalError("NC variable already exists: "+label->getName());
 
    // Put it in the database
-   d_ncDB.put(label, matlIndex, patch, var, true);
+   d_ncDB.put(label, matlIndex, patch, var.clone(), true);
 }
 
 void
@@ -454,7 +477,7 @@ OnDemandDataWarehouse::put(const PerPatchBase& var,
      throw InternalError("PerPatch variable already exists: "+label->getName());
 
    // Put it in the database
-   d_perpatchDB.put(label, matlIndex, patch, var, true);
+   d_perpatchDB.put(label, matlIndex, patch, var.clone(), true);
 }
 
 void
@@ -516,33 +539,33 @@ OnDemandDataWarehouse::get(CCVariableBase& var, const VarLabel* label,
       }
       var.allocate(lowIndex, highIndex);
       long totalCells=0;
-      // change it to traverse only thru patches with adjoining faces
-      for(int ix=l;ix<=h;ix++){
-	 for(int iy=l;iy<=h;iy++){
-	    for(int iz=l;iz<=h;iz++){
-	       const Patch* neighbor = patch->getNeighbor(IntVector(ix,iy,iz));
-	       if(neighbor){
-		  if(!d_ccDB.exists(label, matlIndex, neighbor))
-		     throw InternalError("Position variable does not exist: "+ 
-					 label->getName());
-		  CCVariableBase* srcvar = 
-		    d_ccDB.get(label, matlIndex, neighbor);
+      const Level* level = patch->getLevel();
+      std::vector<const Patch*> neighbors;
+      IntVector low(patch->getCellLowIndex()+IntVector(l,l,l));
+      IntVector high(patch->getCellHighIndex()+IntVector(h,h,h));
+      level->selectPatches(low, high, neighbors);
+      for(int i=0;i<neighbors.size();i++){
+	 const Patch* neighbor = neighbors[i];
+	 if(neighbor){
+	    if(!d_ccDB.exists(label, matlIndex, neighbor))
+	       throw InternalError("Position variable does not exist: "+ 
+				   label->getName());
+	    CCVariableBase* srcvar = 
+	       d_ccDB.get(label, matlIndex, neighbor);
 
-		  using SCICore::Geometry::Max;
-		  using SCICore::Geometry::Min;
+	    using SCICore::Geometry::Max;
+	    using SCICore::Geometry::Min;
 
-		  IntVector low = Max(lowIndex, neighbor->getCellLowIndex());
-		  IntVector high= Min(highIndex, neighbor->getCellHighIndex());
+	    IntVector low = Max(lowIndex, neighbor->getCellLowIndex());
+	    IntVector high= Min(highIndex, neighbor->getCellHighIndex());
 
-		  if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
-		      || ( high.z() < low.z() ) )
-		     throw InternalError("Patch doesn't overlap?");
+	    if( ( high.x() < low.x() ) || ( high.y() < low.y() ) 
+		|| ( high.z() < low.z() ) )
+	       throw InternalError("Patch doesn't overlap?");
 
-		  var.copyPatch(srcvar, low, high);
-		  IntVector dcells = high-low;
-		  totalCells+=dcells.x()*dcells.y()*dcells.z();
-	       }
-	    }
+	    var.copyPatch(srcvar, low, high);
+	    IntVector dcells = high-low;
+	    totalCells+=dcells.x()*dcells.y()*dcells.z();
 	 }
       }
       IntVector dn = highIndex-lowIndex;
@@ -563,8 +586,9 @@ OnDemandDataWarehouse::put(const CCVariableBase& var, const VarLabel* label,
       throw InternalError("CC variable already exists: "+label->getName());
 
    // Put it in the database
-   d_ccDB.put(label, matlIndex, patch, var, true);
+   d_ccDB.put(label, matlIndex, patch, var.clone(), true);
 }
+
 void
 OnDemandDataWarehouse::allocate(FCVariableBase& var,
 				const VarLabel* label,
@@ -672,7 +696,7 @@ OnDemandDataWarehouse::put(const FCVariableBase& var, const VarLabel* label,
       throw InternalError("FC variable already exists: "+label->getName());
 
    // Put it in the database
-   d_fcDB.put(label, matlIndex, patch, var, true);
+   d_fcDB.put(label, matlIndex, patch, var.clone(), true);
 }
 
 
@@ -693,14 +717,18 @@ OnDemandDataWarehouse::findMpiNode( const VarLabel * label,
   // Run through all the different patches associated with "label" to
   // find which one contains the "patch" that has been requested.
 
+#if 0
   variableListType::iterator iter = varList->begin();
 
+  // Commented out because "contains" got axed, and it probably
+  // isn't the right thing to do - Steve
   while( iter != varList->end() ) {
     if( (*iter)->patch->contains( *patch ) ) {
       return (*iter)->mpiNode;
     }
     iter++;
   }
+#endif
 
   sprintf( msg, "findMpiNode: Requested patch: %s for\n"
 	   "patch %s is not in d_dataLocation",
@@ -733,8 +761,9 @@ OnDemandDataWarehouse::registerOwnership( const VarLabel * label,
 }
 
 void
-OnDemandDataWarehouse::carryForward(const DataWarehouseP& fromp)
+OnDemandDataWarehouse::carryForward(const DataWarehouseP& /*fromp*/)
 {
+#if 0
    OnDemandDataWarehouse* from = dynamic_cast<OnDemandDataWarehouse*>(fromp.get_rep());
 
    d_grid = from->d_grid;
@@ -748,6 +777,7 @@ OnDemandDataWarehouse::carryForward(const DataWarehouseP& fromp)
 	 d_particleDB.copyAll(from->d_particleDB, d_positionLabel, patch);
       }
    }
+#endif
 }
 
 void
@@ -844,10 +874,255 @@ OnDemandDataWarehouse::ReductionRecord::ReductionRecord(ReductionVariableBase* v
 {
 }
 
+struct ScatterMaterialRecord {
+   ParticleSubset* relocset;
+   vector<ParticleVariableBase*> vars;
+};
+
+struct ScatterRecord {
+   vector<ScatterMaterialRecord*> matls;
+};
+
+void
+OnDemandDataWarehouse::scatterParticles(const ProcessorContext*,
+					const Patch* patch,
+					DataWarehouseP& old_dw,
+					DataWarehouseP& new_dw)
+{
+   ASSERT(new_dw.get_rep() == this);
+
+   const Level* level = patch->getLevel();
+
+   // Particles are only allowed to be one cell out
+   IntVector l = patch->getCellLowIndex()-IntVector(1,1,1);
+   IntVector h = patch->getCellHighIndex()+IntVector(1,1,1);
+   vector<const Patch*> neighbors;
+   level->selectPatches(l, h, neighbors);
+
+   vector<ScatterRecord*> sr(neighbors.size());
+   for(int i=0;i<sr.size();i++)
+      sr[i]=0;
+   for(int m = 0; m < reloc_numMatls; m++){
+      ParticleSubset* pset = old_dw->getParticleSubset(m, patch);
+      ParticleVariable<Point> px;
+      get(px, reloc_old_posLabel, pset);
+
+      ParticleSubset* relocset = new ParticleSubset(pset->getParticleSet(),
+						    false, -1, 0);
+
+      for(ParticleSubset::iterator iter = pset->begin();
+	  iter != pset->end(); iter++){
+	 particleIndex idx = *iter;
+	 if(!patch->getBox().contains(px[idx])){
+	    //cerr << "WARNING: Particle left patch: " << px[idx] << ", patch: " << patch << '\n';
+	    relocset->addParticle(idx);
+	 }
+      }
+      if(relocset->numParticles() > 0){
+	 // Figure out where they went...
+	 for(ParticleSubset::iterator iter = relocset->begin();
+	     iter != relocset->end(); iter++){
+	    particleIndex idx = *iter;
+	    // This loop should change - linear searches are not good!
+	    int i;
+	    for(i=0;i<neighbors.size();i++){
+	       if(neighbors[i]->getBox().contains(px[idx])){
+		  break;
+	       }
+	    }
+	    if(i == neighbors.size()){
+	       // Make sure that the particle left the world
+	       if(level->containsPoint(px[idx]))
+		  throw InternalError("Particle fell through the cracks!");
+	    } else {
+	       if(!sr[i]){
+		  sr[i] = new ScatterRecord();
+		  sr[i]->matls.resize(reloc_numMatls);
+		  for(int m=0;m<reloc_numMatls;m++){
+		     sr[i]->matls[m]=0;
+		  }
+	       }
+	       if(!sr[i]->matls[m]){
+		  ScatterMaterialRecord* smr=new ScatterMaterialRecord();
+		  sr[i]->matls[m]=smr;
+		  smr->vars.push_back(d_particleDB.get(reloc_old_posLabel, m, patch));
+		  for(int v=0;v<reloc_old_labels.size();v++)
+		     smr->vars.push_back(d_particleDB.get(reloc_old_labels[v], m, patch));
+		  smr->relocset = new ParticleSubset(pset->getParticleSet(),
+						     false, -1, 0);
+	       }
+	       sr[i]->matls[m]->relocset->addParticle(idx);
+	    }
+	 }
+      } else {
+	 delete relocset;
+      }
+   }
+   for(int i=0;i<sr.size();i++){
+      if(patch != neighbors[i]){
+	 pair<const Patch*, const Patch*> idx(patch, neighbors[i]);
+	 if(d_sgDB.find(idx) != d_sgDB.end())
+	    throw InternalError("Scatter/Gather Variable duplicated?");
+	 d_sgDB[idx] = sr[i];
+      } else {
+	 if(sr[i])
+	    throw InternalError("Patch scattered particles to itself?");
+      }
+   }
+}
+
+void
+OnDemandDataWarehouse::gatherParticles(const ProcessorContext*,
+				       const Patch* patch,
+				       DataWarehouseP& old_dw,
+				       DataWarehouseP& new_dw)
+{
+   ASSERT(new_dw.get_rep() == this);
+
+   const Level* level = patch->getLevel();
+
+   // Particles are only allowed to be one cell out
+   IntVector l = patch->getCellLowIndex()-IntVector(1,1,1);
+   IntVector h = patch->getCellHighIndex()+IntVector(1,1,1);
+   vector<const Patch*> neighbors;
+   level->selectPatches(l, h, neighbors);
+
+   vector<ScatterRecord*> sr;
+   for(int i=0;i<neighbors.size();i++){
+      pair<const Patch*, const Patch*> idx(neighbors[i], patch);
+      if(patch != neighbors[i]){
+	 map<pair<const Patch*, const Patch*>, ScatterRecord*>::iterator iter = d_sgDB.find(idx);
+	 if(iter == d_sgDB.end())
+	    throw InternalError("Did not receive a scatter?");
+	 if(iter->second)
+	    sr.push_back(iter->second);
+      }
+   }
+   for(int m=0;m<reloc_numMatls;m++){
+      // Compute the new particle subset
+      vector<ParticleSubset*> subsets;
+      vector<ParticleVariableBase*> posvars;
+
+      // Get the local subset without the deleted particles...
+      ParticleSubset* pset = old_dw->getParticleSubset(m, patch);
+      ParticleVariable<Point> px;
+      get(px, reloc_old_posLabel, pset);
+
+      ParticleSubset* keepset = new ParticleSubset(pset->getParticleSet(),
+						   false, -1, 0);
+
+      for(ParticleSubset::iterator iter = pset->begin();
+	  iter != pset->end(); iter++){
+	 particleIndex idx = *iter;
+	 if(patch->getBox().contains(px[idx]))
+	    keepset->addParticle(idx);
+      }
+      subsets.push_back(keepset);
+      particleIndex totalParticles = keepset->numParticles();
+      ParticleVariableBase* pos = d_particleDB.get(reloc_old_posLabel, m, patch);
+      posvars.push_back(pos);
+
+      // Get the subsets from the neighbors
+      for(int i=0;i<sr.size();i++){
+	 if(sr[i]->matls[m]){
+	    subsets.push_back(sr[i]->matls[m]->relocset);
+	    posvars.push_back(sr[i]->matls[m]->vars[0]);
+	    totalParticles += sr[i]->matls[m]->relocset->numParticles();
+	 }
+      }
+      ParticleVariableBase* newpos = pos->clone();
+      ParticleSet* newset = new ParticleSet(totalParticles);
+      ParticleSubset* newsubset = new ParticleSubset(newset, true, m, patch);
+      newpos->gather(newsubset, subsets, posvars);
+      if(d_particleDB.exists(reloc_new_posLabel, m, patch))
+	 throw InternalError("Variable already exists: "+reloc_new_posLabel->getName());
+      d_particleDB.put(reloc_new_posLabel, m, patch, newpos, false);
+
+      for(int v=0;v<reloc_old_labels.size();v++){
+	 vector<ParticleVariableBase*> gathervars;
+	 ParticleVariableBase* var = d_particleDB.get(reloc_old_labels[v],
+						      m, patch);
+	 gathervars.push_back(var);
+	 for(int i=0;i<sr.size();i++){
+	    if(sr[i]->matls[m])
+	       gathervars.push_back(sr[i]->matls[m]->vars[v+1]);
+	 }
+	 ParticleVariableBase* newvar = var->clone();
+	 newvar->gather(newsubset, subsets, gathervars);
+	 if(d_particleDB.exists(reloc_new_labels[v], m, patch))
+	    throw InternalError("Variable already exists: "+reloc_new_labels[v]->getName());
+	 d_particleDB.put(reloc_new_labels[v], m, patch, newvar, false);
+      }
+
+      psetDBType::key_type key(m, patch);
+      if(d_psetDB.find(key) != d_psetDB.end())
+	 throw InternalError("ParticleSet already exists on patch");
+      d_psetDB[key]=newsubset;
+   }
+}
+
+void
+OnDemandDataWarehouse::scheduleParticleRelocation(const LevelP& level,
+						  SchedulerP& sched,
+						  DataWarehouseP& old_dw,
+						  const VarLabel* old_posLabel,
+						  const vector<const VarLabel*>& old_labels,
+						  const VarLabel* new_posLabel,
+						  const vector<const VarLabel*>& new_labels,
+						  int numMatls)
+{
+   reloc_old_posLabel = old_posLabel;
+   reloc_old_labels = old_labels;
+   reloc_new_posLabel = new_posLabel;
+   reloc_new_labels = new_labels;
+   reloc_numMatls = numMatls;
+   ASSERTEQ(reloc_new_labels.size(), reloc_old_labels.size());
+   DataWarehouseP new_dw (this);
+   for(Level::const_patchIterator iter=level->patchesBegin();
+       iter != level->patchesEnd(); iter++){
+
+      const Patch* patch=*iter;
+
+      Task* t = scinew Task("OnDemandDataWarehouse::scatterParticles",
+			    patch, old_dw, new_dw,
+			    this, &OnDemandDataWarehouse::scatterParticles);
+      for(int m=0;m < numMatls;m++){
+	 t->requires( this, old_posLabel, m, patch, Ghost::None);
+	 for(int i=0;i<old_labels.size();i++)
+	    t->requires( this, old_labels[i], m, patch, Ghost::None);
+      }
+      t->computes(this, scatterGatherVariable, 0, patch);
+      sched->addTask(t);
+
+      Task* t2 = scinew Task("OnDemandDataWarehouse::gatherParticles",
+			     patch, old_dw, new_dw,
+			     this, &OnDemandDataWarehouse::gatherParticles);
+      // Particles are only allowed to be one cell out
+      IntVector l = patch->getCellLowIndex()-IntVector(1,1,1);
+      IntVector h = patch->getCellHighIndex()+IntVector(1,1,1);
+      std::vector<const Patch*> neighbors;
+      level->selectPatches(l, h, neighbors);
+      for(int i=0;i<neighbors.size();i++)
+	 t2->requires(this, scatterGatherVariable, 0, neighbors[i], Ghost::None);
+      for(int m=0;m < numMatls;m++){
+	 t2->computes( this, new_posLabel, m, patch);
+	 for(int i=0;i<new_labels.size();i++)
+	    t2->computes(this, new_labels[i], m, patch);
+      }
+
+      sched->addTask(t2);
+   }
+}
+
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.33  2000/06/15 21:57:11  sparker
+// Added multi-patch support (bugzilla #107)
+// Changed interface to datawarehouse for particle data
+// Particles now move from patch to patch
+//
 // Revision 1.32  2000/06/14 23:39:26  jas
 // Added FCVariables.
 //
