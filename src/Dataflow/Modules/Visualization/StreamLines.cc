@@ -90,15 +90,13 @@ private:
 
   ContourMesh                   *cmesh_;
 
-  GenericInterpolate<Vector>    *interp_;
-
   GuiDouble                     stepsize_;
   GuiDouble                     tolerance_;
   GuiInt                        maxsteps_;
 
   //! interpolate using the generic linear interpolator
   bool interpolate(const Point &p, Vector &v) {
-    bool b = interp_->interpolate(p,v);
+    bool b = false; // interp_->interpolate(p,v); // FIXME:
     if (b)
       v.normalize(); // try not to skip cells - needs help from stepsize
     return b;
@@ -361,14 +359,6 @@ void StreamLines::execute()
   // might have to get Field::NODE
   cf_ = scinew ContourField<double>(Field::NODE);
   cmesh_ = dynamic_cast<ContourMesh*>(cf_->get_typed_mesh().get_rep());
-
-  interp_ = (GenericInterpolate<Vector>*)vf_->query_interpolate();
-
-  if (!interp_) {
-    postMessage("StreamLines: ERROR: unable to locate an interpolation"
-		" function for this field.  Exiting.");
-    return;
-  }
 
   // this is a pain...
   // use Marty's dispatch here instead...

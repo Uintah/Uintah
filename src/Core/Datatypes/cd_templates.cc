@@ -191,31 +191,31 @@ template class Property<pair<char,char> >;
 
 //! Instantiate the specialized query_scalar_interface methods just once.
 template <>
-SFIHandle 
+ScalarFieldInterface*
 TetVol<double>::query_scalar_interface() const
 {
-  return SFIHandle(scinew SFInterface<TetVol<double> >(this)); 
+  return scinew SFInterface<TetVol<double> >(this);
 }
 
 template <>
-SFIHandle 
+ScalarFieldInterface*
 TetVol<int>::query_scalar_interface() const
 {
-  return SFIHandle(scinew SFInterface<TetVol<int> >(this)); 
+  return scinew SFInterface<TetVol<int> >(this);
 }
 
 template <>
-SFIHandle 
+ScalarFieldInterface*
 TetVol<short>::query_scalar_interface() const
 {
-  return SFIHandle(scinew SFInterface<TetVol<short> >(this)); 
+  return scinew SFInterface<TetVol<short> >(this);
 }
 
 template <>
-SFIHandle 
+ScalarFieldInterface*
 TetVol<unsigned char>::query_scalar_interface() const
 {
-  return SFIHandle(scinew SFInterface<TetVol<unsigned char> >(this)); 
+  return scinew SFInterface<TetVol<unsigned char> >(this);
 }
 
 //! Compute the gradient g in cell ci.
