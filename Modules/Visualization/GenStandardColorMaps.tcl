@@ -93,7 +93,6 @@ itcl_class GenStandardColorMaps {
 	global $this-resolution
 	set w .ui$this
 	set n [set $this-resolution]
-	puts "tcl-resolution = $n"
 	set canvas $w.f.f1.canvas
 	$canvas delete all
 	set cw [winfo width $canvas]
