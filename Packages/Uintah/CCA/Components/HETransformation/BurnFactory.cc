@@ -1,6 +1,7 @@
 #include <Packages/Uintah/CCA/Components/HETransformation/BurnFactory.h>
 #include <Packages/Uintah/CCA/Components/HETransformation/NullBurn.h>
 #include <Packages/Uintah/CCA/Components/HETransformation/SimpleBurn.h>
+#include <Packages/Uintah/CCA/Components/HETransformation/PressureBurn.h>
 #include <Packages/Uintah/CCA/Components/HETransformation/IgnitionCombustion.h>
 #include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
@@ -24,6 +25,9 @@ Burn* BurnFactory::create(ProblemSpecP& ps)
     if (burn_type == "null")
       return(scinew NullBurn(child));
     
+    else if (burn_type == "pressure")
+      return(scinew PressureBurn(child));
+
     else if (burn_type == "simple")
       return(scinew SimpleBurn(child));
 
