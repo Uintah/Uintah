@@ -58,9 +58,9 @@ public:
   
 
   //! Required interfaces
-  virtual ScalarFieldInterface* query_scalar_interface(ModuleReporter *m = 0) const;
-  virtual VectorFieldInterface* query_vector_interface(ModuleReporter *m = 0) const;
-  virtual TensorFieldInterface* query_tensor_interface(ModuleReporter *m = 0) const;
+  virtual ScalarFieldInterface* query_scalar_interface(ModuleReporter *m = 0);
+  virtual VectorFieldInterface* query_vector_interface(ModuleReporter *m = 0);
+  virtual TensorFieldInterface* query_tensor_interface(ModuleReporter *m = 0);
 
   //! Persistent I/O.
   static  PersistentTypeID type_id;

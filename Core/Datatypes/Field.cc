@@ -55,7 +55,7 @@ Field::get_type_name(int n) const
 
 
 ScalarFieldInterface*
-Field::query_scalar_interface(ModuleReporter *m) const
+Field::query_scalar_interface(ModuleReporter *m)
 {
   const TypeDescription *ftd = get_type_description();
   const TypeDescription *ltd = data_at_type_description();
@@ -86,7 +86,7 @@ Field::query_scalar_interface(ModuleReporter *m) const
 
 
 VectorFieldInterface*
-Field::query_vector_interface(ModuleReporter *m) const
+Field::query_vector_interface(ModuleReporter *m)
 {
   const TypeDescription *ftd = get_type_description();
   const TypeDescription *ltd = data_at_type_description();
@@ -117,7 +117,7 @@ Field::query_vector_interface(ModuleReporter *m) const
 
 
 TensorFieldInterface*
-Field::query_tensor_interface(ModuleReporter *m) const
+Field::query_tensor_interface(ModuleReporter *m)
 {
   const TypeDescription *ftd = get_type_description();
   const TypeDescription *ltd = data_at_type_description();
