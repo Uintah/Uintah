@@ -952,13 +952,16 @@ void Dpy::run()
     cerr << "glXMakeCurrent failed!\n";
   }
 
-  XFontStruct* fontInfo = 
-      XLoadQueryFont(priv->dpy, 
-		     "-gnu-unifont-bold-*-*-*-16-*-*-*-*-*-*-*");
+  XFontStruct* fontInfo = XLoadQueryFont(priv->dpy, 
+        "-adobe-helvetica-bold-r-normal--17-120-100-100-p-88-iso8859-1");
 
   if (fontInfo == NULL) {
+    XFontStruct* fontInfo = XLoadQueryFont(priv->dpy, 
+		     "-gnu-unifont-bold-*-*-*-16-*-*-*-*-*-*-*");
+    if (fontInfo == NULL) {
       cerr << "no font found" << __FILE__ << "," << __LINE__ << std::endl;
-    Thread::exitAll(1);
+      Thread::exitAll(1);
+    }
   }
   Font id = fontInfo->fid;
   unsigned int first = fontInfo->min_char_or_byte2;
@@ -974,13 +977,16 @@ void Dpy::run()
 
   XFontStruct* fontInfo2 = 
       XLoadQueryFont(priv->dpy,
+     "-adobe-helvetica-bold-r-normal--12-120-*-*-p-*-iso8859-1");
+
+  if (fontInfo == NULL) {
+    XFontStruct* fontInfo = XLoadQueryFont(priv->dpy, 
 		     "-gnu-unifont-bold-*-*-*-16-*-*-*-*-*-*-*");
-
-  if (fontInfo2 == NULL) {
+    if (fontInfo == NULL) {
       cerr << "no font found" << __FILE__ << "," << __LINE__ << std::endl;
-    Thread::exitAll(1);
+      Thread::exitAll(1);
+    }
   }
-
 
   id = fontInfo2->fid;
   first = fontInfo2->min_char_or_byte2;
