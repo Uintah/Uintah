@@ -1,12 +1,27 @@
-/*
- *  ScalarFieldProbe.cc:  
- *
- *  Written by:
- *  Alexei Samsonov
- *  
- *  June 8, 2000
- *
- */
+/*----------------------------------------------------------------------
+CLASS
+    ScalarFieldProbe
+
+    Interactive tester/probe for scalar fields
+
+OVERVIEW TEXT
+
+KEYWORDS
+
+
+AUTHOR
+    Alexei Samsonov
+    Department of Computer Science
+    University of Utah
+    June 2000
+
+    Copyright (C) 2000 SCI Group
+
+LOG
+    Created June 2000
+----------------------------------------------------------------------*/
+
+
 
 #include <SCICore/Thread/CrowdMonitor.h>
 #include <PSECore/Dataflow/Module.h>
