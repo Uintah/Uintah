@@ -2193,8 +2193,10 @@ void ViewWindow::tcl_command(GuiArgs& args, void*)
     // (with x1 being the positive x axis and x0 being
     // the negative x axis) and then which axis is up
     // represented the same way
+    pos.reset();
     string position = pos.get();
     const string prefix("ViewWindow");
+    args.result("");
     if (position.find(prefix) == 0) {
       int vw;
       const string str(position, prefix.size(), position.size()-prefix.size());
