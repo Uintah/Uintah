@@ -83,7 +83,6 @@ private:
   FieldHandle                   vfhandle_;
   FieldHandle                   sfhandle_;
   FieldHandle                   ohandle_;
-  VectorFieldInterface          *vfinterface_;
 
   Field                         *vf_;  // vector field
   Field                         *sf_;  // seed point field
@@ -126,7 +125,6 @@ extern "C" PSECORESHARE Module* make_StreamLines(const string& id) {
 
 StreamLines::StreamLines(const string& id) : 
   Module("StreamLines", id, Source, "Visualization", "SCIRun"),
-  vfinterface_(0),
   vf_(0),
   sf_(0),
   cf_(0),
@@ -282,6 +280,8 @@ StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf)
   vf_mesh_type *vmesh =
     dynamic_cast<vf_mesh_type*>(vf->get_typed_mesh().get_rep());
 
+  VectorFieldInterface *vfi = vf->query_vector_interface();
+
   vmesh->finish_mesh();
 
   // try to find the streamline for each seed point
@@ -291,13 +291,15 @@ StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf)
 
   TCL::execute(id + " set_state Executing 0");
 
-  while (seed_iter!=smesh->node_end()) {
-
-    smesh->get_point(seed,*seed_iter);
+  while (seed_iter != smesh->node_end())
+  {
+    smesh->get_point(seed, *seed_iter);
 
     // Is the seed point inside the field?
-    if (vf->data_at() == Field::NODE) {
-      if (!interpolate(vfinterface_, seed, test)) {
+    if (vf->data_at() == Field::NODE)
+    {
+      if (!interpolate(vfi, seed, test))
+      {
 	postMessage("StreamLines: WARNING: seed point "
 		    "was not inside the field.");
 	++seed_iter;
@@ -311,14 +313,18 @@ StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf)
 
     // find the positive streamlines
     nodes.clear();
-    FindStreamLineNodes(nodes,seed,tolerance,stepsize,maxsteps,vfinterface_);
+    FindStreamLineNodes(nodes, seed, tolerance, stepsize, maxsteps, vfi);
 
     node_iter = nodes.begin();
     if (node_iter!=nodes.end())
+    {
       n1 = cmesh_->add_node(*node_iter);
-    while (node_iter!=nodes.end()) {
+    }
+    while (node_iter!=nodes.end())
+    {
       ++node_iter;
-      if (node_iter!=nodes.end()) {
+      if (node_iter!=nodes.end())
+      {
 	n2 = cmesh_->add_node(*node_iter);
 	cmesh_->add_edge(n1,n2);
 	n1 = n2;
@@ -327,14 +333,16 @@ StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf)
 
     // find the negative streamlines
     nodes.clear();
-    FindStreamLineNodes(nodes,seed,tolerance,-stepsize,maxsteps,vfinterface_);
+    FindStreamLineNodes(nodes, seed, tolerance, -stepsize, maxsteps, vfi);
 
     node_iter = nodes.begin();
     if (node_iter!=nodes.end())
       n1 = cmesh_->add_node(*node_iter);
-    while (node_iter!=nodes.end()) {
+    while (node_iter!=nodes.end())
+    {
       ++node_iter;
-      if (node_iter!=nodes.end()) {
+      if (node_iter!=nodes.end())
+      {
 	n2 = cmesh_->add_node(*node_iter);
 	cmesh_->add_edge(n1,n2);
 	n1 = n2;
@@ -347,6 +355,8 @@ StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf)
     TCL::execute(id + " set_progress " + to_string(loop/count) + " 0");
   }
 }
+
+
 
 void StreamLines::execute()
 {
@@ -379,8 +389,7 @@ void StreamLines::execute()
   }
   
   // Check that the flow field input is a vector field.
-  vfinterface_ = vf_->query_vector_interface();
-  if (!vfinterface_) {
+  if (!vf_->query_vector_interface()) {
     postMessage("StreamLines: ERROR: FlowField is not a Vector field."
 		"  Exiting.");
     return;
