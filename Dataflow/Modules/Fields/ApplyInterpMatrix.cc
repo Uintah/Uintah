@@ -45,7 +45,7 @@
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/MatrixOperations.h>
-#include <Dataflow/Modules/Fields/ManageFieldData.h>
+#include <Dataflow/Modules/Fields/ApplyInterpMatrix.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Containers/Handle.h>
 #include <iostream>
@@ -75,59 +75,28 @@ ApplyInterpMatrix::execute()
 {
   // Get source field.
   FieldIPort *sfp = (FieldIPort *)get_iport("Source");
-  FieldHandle sfieldhandle;
+  FieldHandle sfield;
   if (!sfp) {
     error("Unable to initialize iport 'Source'.");
     return;
   }
-  if (!(sfp->get(sfieldhandle) && (sfieldhandle.get_rep())))
+  if (!(sfp->get(sfield) && (sfield.get_rep())))
   {
-    error( "No handle or representation." );
+    error( "No source field found.");
     return;
   }
 
-  // TODO: Using datasize this way appears to be wrong, as it depends
-  // on the input DATA_AT size and not the one picked for output.
-  int datasize = 0;
-  int svt_flag = 0;
-  if (sfieldhandle->query_scalar_interface(this).get_rep())
-  {
-    svt_flag = 0;
-  }
-  else if (sfieldhandle->query_vector_interface(this).get_rep())
-  {
-    svt_flag = 1;
-  }
-  else if (sfieldhandle->query_tensor_interface(this).get_rep())
-  {
-    svt_flag = 2;
-  }
-
-  MatrixHandle smatrix(0);
-
-  // Extract the source mantrix.
-  if (sfieldhandle->data_at() == Field::NONE)
-  {
-    error("Input field contains no data, nothing to interpolate.");
+  // Get destination field.
+  FieldIPort *dfp = (FieldIPort *)get_iport("Destination");
+  FieldHandle dfield;
+  if (!dfp) {
+    error("Unable to initialize iport 'Source'.");
     return;
   }
-  else
+  if (!(dfp->get(dfield) && (dfield.get_rep())))
   {
-    CompileInfoHandle ci_field =
-      ManageFieldDataAlgoField::
-      get_compile_info(sfieldhandle->get_type_description(), svt_flag);
-    Handle<ManageFieldDataAlgoField> algo_field;
-    if (!DynamicCompilation::compile(ci_field, algo_field, true, this))
-    {
-      char errormsg[2048];
-      sprintf( errormsg, "Dynamic compilation failed: Unable to extract data from input field.\nFile was %s", ci_field->filename_.c_str() );
-      error( errormsg );
-      return;
-    }
-    else
-    {
-      smatrix = algo_field->execute(sfieldhandle, datasize);
-    }
+    error( "No desination field found.");
+    return;
   }
 
   // Get the interpolant matrix.
@@ -143,54 +112,27 @@ ApplyInterpMatrix::execute()
     return;
   }
 
-  // Do the matrix multiply.
-  MatrixHandle dmatrix = imatrixhandle * smatrix;
+  string accumtype = sfield->get_type_description(1)->get_name();
+  if (sfield->query_scalar_interface(this) != NULL) { accumtype = "double"; }
 
-  // Get destination field.
-  FieldIPort *dfp = (FieldIPort *)get_iport("Destination");
-  FieldHandle dfieldhandle;
-  if (!dfp) {
-    error("Unable to initialize iport 'Destination'.");
-    return;
-  }
-  if (!(dfp->get(dfieldhandle) && (dfieldhandle.get_rep())))
-  {
-    error( "No field available on the 'Destination' port." );
-    return;
-  }
-
-  int matrix_svt_flag = svt_flag;
-  if (dmatrix->nrows() == 9)
-  {
-    matrix_svt_flag = 2;
-  }
-  else if (dmatrix->nrows() == 3)
-  {
-    matrix_svt_flag = 1;
-  }
-  else if (dmatrix->nrows() == 1)
-  {
-    matrix_svt_flag = 0;
-  }
-
-  CompileInfoHandle ci_mesh =
-    ManageFieldDataAlgoMesh::
-    get_compile_info(dfieldhandle->get_type_description(),
-		     matrix_svt_flag,
-		     svt_flag);
-  Handle<ManageFieldDataAlgoMesh> algo_mesh;
-  if (!module_dynamic_compile(ci_mesh, algo_mesh)) return;
+  CompileInfoHandle ci =
+    ApplyInterpMatrixAlgo::get_compile_info(sfield->get_type_description(),
+					    sfield->data_at_type_description(),
+					    dfield->get_type_description(),
+					    dfield->data_at_type_description(),
+					    accumtype, true);
+  Handle<ApplyInterpMatrixAlgo> algo;
+  if (!module_dynamic_compile(ci, algo)) return;
 
   FieldHandle result_field =
-    algo_mesh->execute(this, dfieldhandle->mesh(), dmatrix);
+    algo->execute(sfield, dfield->mesh(),
+		  imatrixhandle, dfield->data_at());
 
-  if (!result_field.get_rep())
+  if (result_field.get_rep())
   {
-    return;
+    // Copy the properties from source field.
+    result_field->copy_properties(sfield.get_rep());
   }
-
-  // Copy the properties.
-  result_field->copy_properties(sfieldhandle.get_rep());
 
   FieldOPort *ofp = (FieldOPort *)get_oport("Output");
   if (!ofp) {
@@ -200,6 +142,57 @@ ApplyInterpMatrix::execute()
 
   ofp->send(result_field);
 }
+
+
+CompileInfoHandle
+ApplyInterpMatrixAlgo::get_compile_info(const TypeDescription *fsrc,
+					const TypeDescription *lsrc,
+					const TypeDescription *fdst,
+					const TypeDescription *ldst,
+					const string &accum,
+					bool fout_use_accum)
+{
+  // Use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("ApplyInterpMatrixAlgoT");
+  static const string base_class_name("ApplyInterpMatrixAlgo");
+
+  const string::size_type fdst_loc = fdst->get_name().find_first_of('<');
+  const string::size_type fsrc_loc = fsrc->get_name().find_first_of('<');
+  string fout;
+  if (fout_use_accum)
+  {
+    fout = fdst->get_name().substr(0, fdst_loc) +
+      "<" + accum + "> ";
+  }
+  else
+  {
+    fout = fdst->get_name().substr(0, fdst_loc) +
+      fsrc->get_name().substr(fsrc_loc);
+  }
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       fsrc->get_filename() + "." +
+		       lsrc->get_filename() + "." +
+		       to_filename(fout) + "." +
+		       ldst->get_filename() + "." +
+		       to_filename(accum) + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       fsrc->get_name() + ", " +
+                       lsrc->get_name() + ", " +
+                       fout + ", " +
+                       ldst->get_name() + ", " +
+                       accum);
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  fsrc->fill_compile_info(rval);
+  fdst->fill_compile_info(rval);
+  return rval;
+}
+
 
 
 } // namespace SCIRun
