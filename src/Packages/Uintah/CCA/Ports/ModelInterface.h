@@ -45,7 +45,7 @@ WARNING
   class ProcessorGroup;
   class VarLabel;
   class ModelSetup {
-  public:
+    public:
     virtual void registerTransportedVariable(const MaterialSubset* matls,
 					     const VarLabel* var,
 					     const VarLabel* src) = 0;
@@ -125,6 +125,10 @@ WARNING
      virtual void scheduleMomentumAndEnergyExchange(SchedulerP&,
 						    const LevelP& level,
 						    const ModelInfo*) = 0;
+                                              
+     virtual void scheduleModifyThermoTransportProperties(SchedulerP&,
+                                                const LevelP&,
+                                                const MaterialSet*) = 0;
 
    protected:
      const ProcessorGroup* d_myworld;
