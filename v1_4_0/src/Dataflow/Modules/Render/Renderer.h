@@ -66,8 +66,7 @@ public:
   virtual void get_pick(Viewer*, ViewWindow*, int x, int y,
 			GeomObj*&, GeomPick*&, int&)=0;
   virtual void hide()=0;
-  virtual void saveImage(const string&, const string&) = 0;
-  virtual void saveHiResImage(const string&, const string&) = 0;
+  virtual void saveImage(const string&, const string&, int, int) = 0;
   virtual void dump_image(const string&, const string&);
   virtual void put_scanline(int y, int width, Color* scanline, int repeat=1)=0;
   virtual void listvisuals(TCLArgs&);
