@@ -66,15 +66,18 @@ void print(std::ostream& out, const SCIRun::Point& t)
 void usage(const std::string& badarg, const std::string& progname)
 {
     if(badarg != "")
-	cerr << "Error parsing argument: " << badarg << '\n';
-    cerr << "Usage: " << progname << " [options] <archive file 1> <archive file 2\n\n";
+	cerr << "\nError parsing argument: " << badarg << '\n';
+    cerr << "\nUsage: " << progname 
+	 << " [options] <archive file 1> <archive file 2>\n\n";
     cerr << "Valid options are:\n";
     cerr << "  -h[elp]\n";
-    cerr << "  -abs_tolerance [double] (allowable absolute difference of any numbers)\n";
-    cerr << "  -rel_tolerance [double] (allowable relative difference of any numbers)\n";
+    cerr << "  -abs_tolerance [double] (allowable abs diff of any numbers)\n";
+    cerr << "  -rel_tolerance [double] (allowable rel diff of any numbers)\n";
     cerr << "  -as_warnings (treat tolerance errors as warnings and continue)\n";
-    cerr << "  -skip_unknown_types (skip variable comparisons of unknown types without error)";    
-    cerr << "\nNote: The absolute and relative tolerance tests must both fail\n      for a comparison to fail.\n";
+    cerr << "  -skip_unknown_types (skip variable comparisons" 
+	 << " of unknown types without error)\n";
+    cerr << "\nNote: The absolute and relative tolerance tests must both fail\n"
+	 << "      for a comparison to fail.\n\n";
     Thread::exitAll(1);
 }
 
@@ -583,7 +586,7 @@ void addParticleData(MaterialParticleDataMap& matlParticleDataMap,
 	  // Add a new MaterialPatchData for each matl for this next patch.
 	  MaterialParticleData& data = matlParticleDataMap[matl];
 	  data.setMatl(matl);
-	  ParticleVariableBase* pvb;
+	  ParticleVariableBase* pvb = NULL;
 	  switch(subtype->getType()){
 	  case Uintah::TypeDescription::double_type:
 	    pvb = scinew ParticleVariable<double>();
@@ -604,7 +607,8 @@ void addParticleData(MaterialParticleDataMap& matlParticleDataMap,
 	    pvb = scinew ParticleVariable<Matrix3>();
 	    break;
 	  default:
-	    cerr << "ParticleVariable of unsupported type: " << subtype->getName() << '\n';
+	    cerr << "ParticleVariable of unsupported type: " 
+		 << subtype->getName() << '\n';
 	    Thread::exitAll(-1);
 	  }
 	  da->query(*pvb, var, matl, patch, time);
@@ -976,19 +980,15 @@ void buildPatchMap(LevelP level, const string& filebase,
 }
 
 
-int main(int argc, char** argv)
+int
+main(int argc, char** argv)
 {
-  /*
-   * Default values
-   */
-  double rel_tolerance = 1e-6;
-  double abs_tolerance = 1e-9;
+  double rel_tolerance = 1e-6; // Default 
+  double abs_tolerance = 1e-9; //   values...
 
-  /*
-   * Parse arguments
-   */
-  for(int i=1;i<argc;i++){
-    string s=argv[i];
+  // Parse Args:
+  for( int i = 1; i < argc; i++ ) {
+    string s = argv[i];
     if(s == "-abs_tolerance"){
       if (++i == argc)
 	usage("-abs_tolerance, no value given", argv[0]);
@@ -1007,6 +1007,9 @@ int main(int argc, char** argv)
     else if(s == "-skip_unknown_types") {
       strict_types = false;
     }
+    else if(s[0] == '-' && s[1] == 'h' ) { // lazy check for -h[elp] option
+      usage( "", argv[0] );
+    }
     else {
       if (filebase1 != "") {
 	if (filebase2 != "")
@@ -1019,14 +1022,14 @@ int main(int argc, char** argv)
     }
   }
 
-  cerr << "Using absolute tolerance: " << abs_tolerance << endl;
-  cerr << "Using relative tolerance: " << rel_tolerance << endl;
-  
-  if (filebase2 == ""){
-    cerr << "Must specify two archive directories.\n";
+  if( filebase2 == "" ){
+    cerr << "\nYou must specify two archive directories.\n";
     usage("", argv[0]);
   }
 
+  cerr << "Using absolute tolerance: " << abs_tolerance << endl;
+  cerr << "Using relative tolerance: " << rel_tolerance << endl;
+  
   if (rel_tolerance <= 0) {
     cerr << "Must have a positive value rel_tolerance.\n";
     Thread::exitAll(1);
