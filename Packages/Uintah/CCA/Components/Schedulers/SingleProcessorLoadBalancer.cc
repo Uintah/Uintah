@@ -9,7 +9,7 @@ using namespace Uintah;
 using namespace std;
 
 SingleProcessorLoadBalancer::SingleProcessorLoadBalancer( const ProcessorGroup* myworld )
-   : UintahParallelComponent( myworld )
+   : LoadBalancerCommon( myworld )
 {
 }
 
@@ -17,32 +17,27 @@ SingleProcessorLoadBalancer::~SingleProcessorLoadBalancer()
 {
 }
 
-void SingleProcessorLoadBalancer::assignResources(DetailedTasks& graph,
-						  const ProcessorGroup*)
+void SingleProcessorLoadBalancer::assignResources(DetailedTasks& graph)
 {
   int ntasks = graph.numTasks();
   for(int i=0;i<ntasks;i++)
     graph.getTask(i)->assignResource(0);
 }
 
-int SingleProcessorLoadBalancer::getPatchwiseProcessorAssignment(const Patch*,
-								 const ProcessorGroup*)
+int SingleProcessorLoadBalancer::getPatchwiseProcessorAssignment(const Patch*)
 {
    return 0;
 }
 
 const PatchSet*
-SingleProcessorLoadBalancer::createPerProcessorPatchSet(const LevelP& level,
-							const ProcessorGroup*)
+SingleProcessorLoadBalancer::createPerProcessorPatchSet(const LevelP& level)
 {
   return level->allPatches();
 }
 
 
 void
-SingleProcessorLoadBalancer::createNeighborhood(const GridP&,
-						const ProcessorGroup*,
-						const Scheduler* /*sch*/)
+SingleProcessorLoadBalancer::createNeighborhood(const GridP&)
 {
   // Nothing to do
 }
