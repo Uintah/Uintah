@@ -69,7 +69,7 @@ DESCRIPTION
 WARNING
   
 ****************************************/
-  class CompTable;
+  class CompTable3;
   class Scheduler3Common;
 
   // this is so we can keep task independent of taskgraph
@@ -179,7 +179,7 @@ WARNING
      /// Used by (the public) createDetailedDependencies to store comps
      /// in a ComputeTable (See TaskGraph.cc).
      void remembercomps(DetailedTask3* task, Task::Dependency* comp,
-			CompTable& ct);
+			CompTable3& ct);
 
      /// This is the "detailed" version of addDependencyEdges.  It does for
      /// the public createDetailedDependencies member function essentially
@@ -188,7 +188,7 @@ WARNING
      /// processors.
      void createDetailedDependencies(DetailedTasks3* dt, LoadBalancer* lb,
 				     DetailedTask3* task, Task::Dependency* req,
-				     CompTable& ct, bool modifies);
+				     CompTable3& ct, bool modifies);
      
      /// Makes a DetailedTask from task with given PatchSubset and 
      /// MaterialSubset.
