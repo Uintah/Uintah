@@ -1179,9 +1179,18 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
     method Scrolled_Treeview { f args } {
 	frame $f
-	eval {blt::treeview $f.tree \
-		  -xscrollcommand [list $f.xscroll set] \
-		  -yscrollcommand [list $f.yscroll set]} $args
+
+	if { [string match "IRIX*" $::tcl_platform(os)] } {
+	    eval {blt::treeview $f.tree \
+		      -xscrollcommand [list $f.xscroll set] \
+		      -yscrollcommand [list $f.yscroll set]} $args
+	} else {
+	    eval {blt::treeview $f.tree \
+		      -xscrollcommand [list $f.xscroll set] \
+		      -yscrollcommand [list $f.yscroll set]}
+	    eval { $f.tree configure } $args
+	}
+
 	scrollbar $f.xscroll -orient horizontal \
 	    -command [list $f.tree xview]
 	scrollbar $f.yscroll -orient vertical \
