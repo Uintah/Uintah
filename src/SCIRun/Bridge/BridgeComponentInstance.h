@@ -58,7 +58,7 @@ namespace SCIRun {
     virtual ~BridgeComponentInstance();
 
     // Methods from BridgeServices
-    //Port* getDataflowPort(const std::string& name);
+    Port* getDataflowPort(const std::string& name);
     sci::cca::Port::pointer getCCAPort(const std::string& name);
     gov::cca::Port getBabelPort(const std::string& name);
     void releasePort(const std::string& name,const modelT model);
