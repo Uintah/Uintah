@@ -161,7 +161,7 @@ class VolVis : public Module {
 
 
 
-  // TEMP?  what are these used for anyways?
+  // points to the display
 
   Display* dpy;
 
@@ -441,8 +441,7 @@ VolVis::parallel( int proc )
   int i;
 
   int interval = iRasterX.get() / procCount / intervalCount.get();
-
-  cout << "The interval is: " << interval << endl;
+cerr << intervalCount.get();
 
   if ( projection.get() )
     {
@@ -451,8 +450,8 @@ VolVis::parallel( int proc )
 	  {
 	    calc->PerspectiveTrace( interval * ( proc + procCount * i ),
 				   interval * ( proc + 1 + procCount * i ) );
-	    cout << "between: " << interval * (proc + procCount * i ) << "  "
-	      << interval * (proc + 1 + procCount * i ) << endl;
+//	    cout << "between: " << interval * (proc + procCount * i ) << "  "
+//	      << interval * (proc + 1 + procCount * i ) << endl;
 	  }
       
       else
@@ -461,16 +460,16 @@ VolVis::parallel( int proc )
 	    {
 	    calc->PerspectiveTrace( interval * ( proc + procCount * i ),
 				   interval * ( proc + 1 + procCount * i ) );
-	    cout << "between: " << interval * (proc + procCount * i ) << "  "
-	      << interval * (proc + 1 + procCount * i ) << endl;
+//	    cout << "between: " << interval * (proc + procCount * i ) << "  "
+//	      << interval * (proc + 1 + procCount * i ) << endl;
 	  }
 	  
 	  calc->PerspectiveTrace(interval * ( proc + procCount *
 					      ( intervalCount.get() - 1 ) ),
 				 iRasterX.get() );
-	    cout << "between: " << interval * (proc + procCount *
-					       (intervalCount.get() - 1))
-	      << "  " << iRasterX.get() << endl;
+//	    cout << "between: " << interval * (proc + procCount *
+//					       (intervalCount.get() - 1))
+//	      << "  " << iRasterX.get() << endl;
 	}
     }
   else
@@ -712,9 +711,8 @@ VolVis::makeCurrent()
 {
   cerr << "Made current in " << Task::self()->get_name() << endl;
 
-  // TEMP!!!  this used to be in the class; but i didn't need
-  // it!  so, i moved these declarations down here...
-
+  // several variables used in this function
+  
   Tk_Window tkwin;
   Window win;
   GLXContext cx;
@@ -873,6 +871,8 @@ VolVis::redraw_all()
 void
 VolVis::execute()
 {
+  WallClockTimer watch;
+  
   // make sure TCL variables are updated
   
   ScalarFieldRG *homeSFRGrid;
@@ -892,20 +892,10 @@ VolVis::execute()
   if ( ! uiopen.get() )
     return;
   
-
-  ColormapHandle cmap;
-  CharColor temp;
-
-  WallClockTimer watch;
-
-  int ClipFar, ClipNear;
-
-  // get data from transfer map
+  // get data from transfer map and make sure these changes
+  // are reflected in the TCL variables
 
   TCL::execute(id+" get_data");
-
-  // make sure TCL variables are updated
-  
   reset_vars();
   
 
@@ -932,48 +922,22 @@ VolVis::execute()
     }
   else
     {
-
-//      data = new GeometryData( NULL, NULL, iView.get(), iRasterX.get(),
-//			      iRasterY.get(), 0, 0 );
-
-      
       calc = new Levoy ( homeSFRGrid, colormapport,
 			ibgColor.get() * ( 1. / 255 ), ScalarVal, Opacity );
 
       calc->SetUp( iView.get(), iRasterX.get(), iRasterY.get() );
     }      
 
-#if 0  
-  // calculate the new image
-
-  int g, h, k;
-
-  for ( g = 15; g < 17; g++ )
-    {
-      for ( h = 0; h < 63; h++ )
-	{
-	  for ( k = 10; k < 15; k++ )
-	    {
-//	      cerr << g << " " << h << " " << k << ": the val is: " <<
-//		homeSFRGrid->get_value( g, h, k ) << endl;
-	      
-	      cerr << " " << homeSFRGrid->get_value( g, h, k );
-	    }
-	  cerr << endl;
-	}
-      cerr << "\n**************************\n\n";
-    }
-#endif  
-
   watch.start();
 
-  if ( iProc.get() )
+  cerr << "projection is: " << projection.get() << " interval count is " <<
+    intervalCount.get() <<endl;
+  cerr << "raster size: " << iRasterX.get() << endl;
+  
+  if ( intervalCount.get() != 0 && iProc.get() )
     {
       procCount = Task::nprocessors();
 
-      cerr << "projection is: " << projection.get() << "interval count is: "
-	<< intervalCount.get() <<endl;
-      cerr << "raster size: " << iRasterX.get() << endl;
 
       Task::multiprocess(procCount, do_parallel, this);
     }

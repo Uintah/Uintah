@@ -134,9 +134,6 @@ protected:
   // a scalar value
 
   double AssociateValue( double scalarValue,
-			const Array1<double>& SVA, const Array1<double>& OA );
-  
-  double AssociateValue( double scalarValue,
 			const Array1<double>& SVA, const Array1<double>& OA,
 			const Array1<double>& Sl );
   
@@ -161,17 +158,6 @@ public:
 
   virtual void SetUp ( GeometryData * g );
   
-  // initial, most brute force algorithm
-
-  Color Five ( const Point& eye, Vector& step,
-	      const Point& beg , const Point& end );
-
-  Color Six ( const Point& eye, Vector& step,
-	      const Point& beg , const Point& end );
-
-  Color Seven ( const Point& eye, Vector& step,
-	      const Point& beg , const Point& end );
-
   
   // uses the new transfer map and ray-bbox intersections
 
@@ -181,14 +167,7 @@ public:
   Color Nine ( const Point& eye, Vector& step,
 	      const Point& beg , const Point& end );
 
-  Color Ten ( const Point& eye, Vector& step,
-	      const Point& beg , const Point& end );
-
-
   // uses the Bresenham algorithm and no interpolation
-  
-  Color Bresenham1 ( const Point& eye, Vector& step,
-	      const Point& beg , const Point& end );
 
   Color Bresenham2 ( const Point& eye, Vector& step,
 	      const Point& beg , const Point& end );
@@ -273,13 +252,6 @@ public:
 
   // allows the Salmon image and my volvis stuff to be superimposed
 
-#if 0  
-  virtual
-    void SetUp ( const View& myview, int x, int y,
-	      Array2<double>* db, Array2<Color>* cb, double Cnear,
-	      double Cfar );
-#endif
-  
   virtual
     void SetUp ( GeometryData * );
 
@@ -293,10 +265,6 @@ public:
 		const Point& beg , const Point& end, const int& px,
 	       const int& py );
   
-  Color Thirteen ( const Point& eye, Vector& step,
-		  const Point& beg , const Point& end, const int& px,
-	       const int& py );
-
   // performs a perspective trace in vertical slices
   
   virtual void PerspectiveTrace( int from, int till );

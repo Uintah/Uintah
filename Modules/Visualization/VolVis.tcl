@@ -407,7 +407,6 @@ itcl_class VolVis {
 	    toplevel $w
 	    wm title $w "Raster Size"
 	    wm minsize $w 200 150
-	    wm maxsize $w 200 150
 
 	    # create a frame with 2 scales
 

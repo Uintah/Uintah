@@ -290,19 +290,17 @@ Levoy::SetUp ( const View& myview, int x, int y )
   
   // determine the function to use
 
-  if ( colormapFlag )
-    CastRay = &Levoy::Ten;
-  else if ( whiteFlag )
-    CastRay = &Levoy::Eight;
-  else // user defined SV-color map
-    CastRay = &Levoy::Nine;
-  
-  if ( colormapFlag )
-    CastRay = &Levoy::Ten;
-  else if ( whiteFlag )
+  if ( whiteFlag )
     CastRay = &Levoy::Bresenham2;
   else // user defined SV-color map
     CastRay = &Levoy::Nine;
+
+  if ( whiteFlag )
+    CastRay = &Levoy::Eight;
+  else // user defined SV-color map
+    CastRay = &Levoy::Nine;
+
+
 }
 
 
@@ -317,345 +315,6 @@ void
 Levoy::SetUp ( GeometryData * g )
 {
 }
-
-double
-Levoy::AssociateValue ( double scalarValue,
-		       const Array1<double>& SVA, const Array1<double>& OA )
-{
-  double opacity;
-  int i;
-  
-  // set to a bogus value in order to easily recognize
-  // the case of scalarValue between the next-to-last and
-  // last nodes.
-  
-  opacity = -1;
-
-  for ( i = 1; i < SVA.size()-1; i++ )
-    {
-      if ( scalarValue < SVA[i] )
-	{
-	  opacity = ( OA[i] - OA[i-1] ) /
-	    ( SVA[i] - SVA[i-1] )         *
-	      ( scalarValue - SVA[i-1] )      +
-		OA[i-1];
-	  break;
-	}
-    }
-
-  // if this is true, then the scalar value is between
-  // next-to-last and last nodes
-  
-  if ( opacity == -1 )
-    {
-      i = SVA.size() - 1;
-      opacity = ( OA[i] - OA[i-1] ) /
-	( SVA[i] - SVA[i-1] )         *
-	  ( scalarValue - SVA[i-1] )      +
-	    OA[i-1];
-    }
-
-  return opacity;
-
-}
-
-
-/**************************************************************************
- *
- * calculates the pixel color by casting a ray from eye, going in the
- * direction step and proceeding at intervals of length rayStep.
- * the opacity map is not limited to 5 nodes.
- * the color associated with an opacity is retrieved from the
- * attached colormap module.
- *
- **************************************************************************/
-
-
-Color
-Levoy::Five ( const Point& eye, Vector& step,
-	     const Point& beg, const Point& end )
-{
-
-  // as the ray passes through the volume, the voxel's
-  // color contribution decreases
-  
-  double contribution;
-
-  // the current location in the volume
-
-  Point atPoint;
-
-  // accumulated color as the ray passes through the volume
-  
-  Color accumulatedColor;
-
-  // a scalar value corresponds to a particular point
-  // in space
-  
-  double scalarValue;
-
-  
-  // contribution of the first voxel's color and opacity
-  
-  contribution = 1.0;
-  
-  // begin trace at the eye (somewhat inefficient, TEMP)
-  
-  atPoint = eye;
-
-  // since no voxels have been crossed, no color has been
-  // accumulated.
-
-  accumulatedColor = BLACK;
-
-  // find step vector
-  
-  step.normalize();
-
-  step *= rayStep;
-
-  Color colr;
-
-  double opacity;
-
-  // keep going through the volume until the contribution of the voxel
-  // color is almost none.  also, keep going through if the we are still
-  // in the volume
-  
-  while ( contribution > EpsilonContribution &&  ( atPoint - eye ).length() < dmax )
-    {
-      atPoint += step;
-      scalarValue = 0;
-
-      if ( homeSFRGrid->interpolate( atPoint, scalarValue ) )
-	{
-
-	  // a MaterialHandle is retrieved through cmap->lookup(SV)
-	  
-	  colr = ( cmap->lookup( scalarValue ))->diffuse;
-
-	  opacity = AssociateValue( scalarValue,
-				   ScalarVals[0], AssociatedVals[0],
-				   Slopes[0] );
-
-	  accumulatedColor += colr * ( contribution * opacity );
-	  contribution = contribution * ( 1.0 - opacity );
-	}
-    }
-
-  // background color should contribute to the final color of
-  // the pixel
-  // if contribution is minute, the background is not visible
-  // therefore don't add the background color to the accumulated one.
-  
-  if ( contribution > EpsilonContribution )
-    accumulatedColor = backgroundColor * contribution + accumulatedColor;
-
-  return accumulatedColor;
-}
-
-
-
-
-
-/**************************************************************************
- *
- * calculates the pixel color by casting a ray from eye, going in the
- * direction step and proceeding at intervals of length rayStep.
- * the opacity map is not limited to 5 nodes.
- * the color associated with any SV is white, while the opacity varies
- *
- **************************************************************************/
-
-
-
-
-Color
-Levoy::Six ( const Point& eye, Vector& step,
-	     const Point& beg, const Point& end )
-{
-
-  // as the ray passes through the volume, the voxel's
-  // color contribution decreases
-  
-  double contribution;
-
-  // the current location in the volume
-
-  Point atPoint;
-
-  // accumulated color as the ray passes through the volume
-  
-  Color accumulatedColor;
-
-  // a scalar value corresponds to a particular point
-  // in space
-  
-  double scalarValue;
-
-  
-  // contribution of the first voxel's color and opacity
-  
-  contribution = 1.0;
-  
-  // begin trace at the eye (somewhat inefficient, TEMP)
-  
-  atPoint = eye;
-
-  // since no voxels have been crossed, no color has been
-  // accumulated.
-
-  accumulatedColor = BLACK;
-
-  // find step vector
-
-  step.normalize();
-
-  step *= rayStep;
-
-  Color colr = WHITE;
-
-  double opacity;
-
-
-  // keep going through the volume until the contribution of the voxel
-  // color is almost none.  also, keep going through if the we are still
-  // in the volume
-
-  while ( contribution > EpsilonContribution &&  ( atPoint - eye ).length() < dmax )
-    {
-      atPoint += step;
-      scalarValue = 0;
-
-      if ( homeSFRGrid->interpolate( atPoint, scalarValue ) )
-	{
-	  opacity = AssociateValue( scalarValue, ScalarVals[0],
-				   AssociatedVals[0], Slopes[0] );
-
-	  accumulatedColor += colr * ( contribution * opacity );
-	  contribution = contribution * ( 1.0 - opacity );
-	}
-    }
-
-  // background color should contribute to the final color of
-  // the pixel
-  // if contribution is minute, the background is not visible
-  // therefore don't add the background color to the accumulated one.
-  
-  if ( contribution > EpsilonContribution )
-    accumulatedColor = backgroundColor * contribution + accumulatedColor;
-
-  return accumulatedColor;
-}
-
-
-
-
-/**************************************************************************
- *
- * calculates the pixel color by casting a ray from eye, going in the
- * direction step and proceeding at intervals of length rayStep.
- * the opacity map is not limited to 5 nodes.
- * opacity and color vary according with the transfer map specified
- * by the user.
- *
- **************************************************************************/
-
-
-Color
-Levoy::Seven ( const Point& eye, Vector& step,
-	     const Point& beg, const Point& end )
-{
-
-  // as the ray passes through the volume, the voxel's
-  // color contribution decreases
-  
-  double contribution;
-
-  // the current location in the volume
-
-  Point atPoint;
-
-  // accumulated color as the ray passes through the volume
-  
-  Color accumulatedColor;
-
-  // a scalar value corresponds to a particular point
-  // in space
-  
-  double scalarValue;
-
-  
-  // contribution of the first voxel's color and opacity
-  
-  contribution = 1.0;
-  
-  // begin trace at the eye (somewhat inefficient, TEMP)
-  
-  atPoint = eye;
-
-  // since no voxels have been crossed, no color has been
-  // accumulated.
-
-  accumulatedColor = BLACK;
-
-  // find step vector
-  
-  step.normalize();
-
-  step *= rayStep;
-
-  Color colr;
-
-  double opacity;
-
-  // keep going through the volume until the contribution of the voxel
-  // color is almost none.  also, keep going through if the we are still
-  // in the volume
-  
-  while ( contribution > EpsilonContribution &&  ( atPoint - eye ).length() < dmax )
-    {
-      atPoint += step;
-      scalarValue = 0;
-
-      if ( homeSFRGrid->interpolate( atPoint, scalarValue ) )
-	{
-	  
-	  Color tempcolr( AssociateValue( scalarValue,
-					 ScalarVals[1], AssociatedVals[1],
-					 Slopes[1] ),
-			 AssociateValue( scalarValue,
-					ScalarVals[2], AssociatedVals[2],
-					Slopes[2] ),
-			 AssociateValue( scalarValue,
-					ScalarVals[3], AssociatedVals[3],
-					Slopes[3] ),
-			 );
-
-	  colr = tempcolr;
-
-	  opacity = AssociateValue( scalarValue,ScalarVals[0],
-				   AssociatedVals[0], Slopes[0]  );
-	  
-	  accumulatedColor += colr * ( contribution * opacity );
-	  contribution = contribution * ( 1.0 - opacity );
-	}
-    }
-
-  // background color should contribute to the final color of
-  // the pixel
-  // if contribution is minute, the background is not visible
-  // therefore don't add the background color to the accumulated one.
-  
-  if ( contribution > EpsilonContribution )
-    accumulatedColor = backgroundColor * contribution + accumulatedColor;
-
-  return accumulatedColor;
-}
-
-
-
-
 
 /**************************************************************************
  *
@@ -914,136 +573,11 @@ Levoy::Nine ( const Point& eye, Vector& step,
 
 
 
-
 /**************************************************************************
  *
- * calculates the pixel color by casting a ray starting at the first
- * intersection of the ray with the bbox, and ending at the second
- * intersection of the ray with the bbox.
  *
- * the color associated with an opacity is retrieved from the
- * attached colormap module.
  *
  **************************************************************************/
-
-
-Color
-Levoy::Ten ( const Point& eye, Vector& step,
-	     const Point& beg, const Point& end )
-{
-
-  // as the ray passes through the volume, the voxel's
-  // color contribution decreases
-  
-  double contribution;
-
-  // the current location in the volume
-
-  Point atPoint;
-
-  // accumulated color as the ray passes through the volume
-  
-  Color accumulatedColor;
-
-  // a scalar value corresponds to a particular point
-  // in space
-  
-  double scalarValue;
-
-  // step length
-
-  double stepLength;
-
-  // the length of the ray to be cast
-
-  double mylength;
-
-  // the length of ray stepped through so far
-
-  double traversed;
-
-  // the color corresponding to the scalar value
-
-  Color colr;
-
-  // the opacity corresponding to the scalar value
-
-  double opacity;
-
-  
-  // contribution of the first voxel's color and opacity
-  
-  contribution = 1.0;
-  
-  // begin trace at the eye (somewhat inefficient, TEMP)
-  
-  atPoint = eye;
-
-  // since no voxels have been crossed, no color has been
-  // accumulated.
-
-  accumulatedColor = BLACK;
-
-  // find step vector
-  
-  step.normalize();
-
-  step *= rayStep;
-
-  // find the step length
-
-  stepLength = step.length();
-
-  // position of the point in space at the beginning of the cast
-  
-  atPoint = beg + EpsilonVector - step;
-
-  // the length of the ray to be cast
-
-  mylength = (end - eye).length() - (beg - eye).length();
-
-  // the ray cast begins before entering the volume
-
-  traversed = - stepLength;
-
-  // begin traversing through the volume at the first point of
-  // intersection of the ray with the bbox.  keep going through
-  // the volume until the contribution of the voxel color
-  // is almost none, or until the second intersection point has
-  // been reached.
-
-  while ( contribution > EpsilonContribution && traversed <= mylength )
-    {
-      atPoint += step;
-      scalarValue = 0;
-      traversed += stepLength;
-
-      if ( homeSFRGrid->interpolate( atPoint, scalarValue ) )
-	{
-
-	  // a MaterialHandle is retrieved through cmap->lookup(SV)
-	  
-	  colr = ( cmap->lookup( scalarValue ))->diffuse;
-
-	  opacity = AssociateValue( scalarValue,
-				   ScalarVals[0], AssociatedVals[0],
-				   Slopes[0] );
-
-	  accumulatedColor += colr * ( contribution * opacity );
-	  contribution = contribution * ( 1.0 - opacity );
-	}
-    }
-
-  // background color should contribute to the final color of
-  // the pixel
-  // if contribution is minute, the background is not visible
-  // therefore don't add the background color to the accumulated one.
-  
-  if ( contribution > EpsilonContribution )
-    accumulatedColor = backgroundColor * contribution + accumulatedColor;
-
-  return accumulatedColor;
-}
 
 double
 Levoy::LightingComponent( const Vector& normal )
@@ -1053,6 +587,8 @@ Levoy::LightingComponent( const Vector& normal )
 
   return i;
 }
+
+
 
 /**************************************************************************
  *
@@ -1261,7 +797,7 @@ Levoy::Bresenham2 ( const Point& eye, Vector& step,
       
       imat += Primary;
     }
-// cerr << endl;
+
 
   if ( start == stop && imat != voxelE )
       {
@@ -1270,8 +806,12 @@ Levoy::Bresenham2 ( const Point& eye, Vector& step,
 
 	cerr << "ending voxel: " << voxelE << endl;
 	cerr << "imat is: "      << imat   << endl;
+	cerr << "beginning voxel: " << voxelB << endl;
+	cerr << "the primary step is: " << Primary << endl;
+	cerr << "the secondary step is: " << Secondary << endl;
+	cerr << "the tertiary step is: " << Tertiary << endl;
 	
-	ASSERT( imat == voxelE );
+//	ASSERT( imat == voxelE );
       }
 
   // begin traversing through the volume at the first point of
@@ -1477,9 +1017,7 @@ LevoyS::SetUp ( GeometryData * g )
   
   // determine the function to use
 
-  if ( colormapFlag )
-    CastRay = &LevoyS::Thirteen;
-  else if ( whiteFlag )
+  if ( whiteFlag )
     CastRay = &LevoyS::Eleven;
   else // user defined SV-color map
     CastRay = &LevoyS::Twelve;
@@ -1787,156 +1325,6 @@ LevoyS::Twelve ( const Point& eye, Vector& step,
 
   return accumulatedColor;
 }
-
-
-
-
-
-/**************************************************************************
- *
- * calculates the pixel color by casting a ray starting at the first
- * intersection of the ray with the bbox, and ending at the second
- * intersection of the ray with the bbox.
- *
- * the color associated with an opacity is retrieved from the
- * attached colormap module.
- *
- **************************************************************************/
-
-
-Color
-LevoyS::Thirteen ( const Point& eye, Vector& step,
-		 const Point& beg, const Point& end, const int& px,
-	      const int& py )
-{
-
-  // as the ray passes through the volume, the voxel's
-  // color contribution decreases
-  
-  double contribution;
-
-  // the current location in the volume
-
-  Point atPoint;
-
-  // accumulated color as the ray passes through the volume
-  
-  Color accumulatedColor;
-
-  // a scalar value corresponds to a particular point
-  // in space
-  
-  double scalarValue;
-
-  // step length
-
-  double stepLength;
-
-  // the length of the ray to be cast
-
-  double mylength;
-
-  // the length of ray stepped through so far
-
-  double traversed;
-
-  // the color corresponding to the scalar value
-
-  Color colr;
-
-  // the opacity corresponding to the scalar value
-
-  double opacity;
-
-  
-  // contribution of the first voxel's color and opacity
-  
-  contribution = 1.0;
-  
-  // begin trace at the eye (somewhat inefficient, TEMP)
-  
-  atPoint = eye;
-
-  // since no voxels have been crossed, no color has been
-  // accumulated.
-
-  accumulatedColor = BLACK;
-
-
-  // calculate the length from the eye to the DepthBuffer based point
-  // in space
-
-  int templength = step.length() * ( clipConst *
-		   geom->depthbuffer->get_depth(px,py) + nearTohome );
-
-  // compare the 2 lengths, pick the shorter one
-
-  if ( templength < mylength )
-      mylength = templength;
-  
-    
-  // find step vector
-  
-  step.normalize();
-
-  step *= rayStep;
-
-  // find the step length
-
-  stepLength = step.length();
-
-  // position of the point in space at the beginning of the cast
-  
-  atPoint = beg + EpsilonVector - step;
-
-  // the length of the ray to be cast
-
-  mylength = (end - eye).length() - (beg - eye).length();
-
-  // the ray cast begins before entering the volume
-
-  traversed = - stepLength;
-
-  // begin traversing through the volume at the first point of
-  // intersection of the ray with the bbox.  keep going through
-  // the volume until the contribution of the voxel color
-  // is almost none, or until the second intersection point has
-  // been reached.
-
-  while ( contribution > EpsilonContribution && traversed <= mylength )
-    {
-      atPoint += step;
-      scalarValue = 0;
-      traversed += stepLength;
-
-      if ( homeSFRGrid->interpolate( atPoint, scalarValue ) )
-	{
-
-	  // a MaterialHandle is retrieved through cmap->lookup(SV)
-	  
-	  colr = ( cmap->lookup( scalarValue ))->diffuse;
-
-	  opacity = AssociateValue( scalarValue,
-				   ScalarVals[0], AssociatedVals[0],
-				   Slopes[0] );
-
-	  accumulatedColor += colr * ( contribution * opacity );
-	  contribution = contribution * ( 1.0 - opacity );
-	}
-    }
-
-  // background color should contribute to the final color of
-  // the pixel
-  // if contribution is minute, the background is not visible
-  // therefore don't add the background color to the accumulated one.
-  
-  if ( contribution > EpsilonContribution )
-    accumulatedColor = geom->colorbuffer->get_pixel(px,py) * contribution +
-      accumulatedColor;
-
-  return accumulatedColor;
-}
-
 
 
 
