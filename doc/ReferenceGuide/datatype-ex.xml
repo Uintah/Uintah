@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE datatype SYSTEM "datatype.dtd">
+
+<datatype name="test">
+  <authors>
+    <author>Joe Test</author>
+  </authors>
+  <summary>Summary of test</summary>
+  <description>
+    <p>Description of test.</p>
+  </description>
+  <examplesr>test.sr</examplesr>
+  <senders>
+    <componentname>testsender</componentname>
+  </senders>
+  <receivers>
+    <componentname>testreceiver</componentname>
+  </receivers>
+  <testing>
+    <plan>
+      <description>
+	<p>A plan for testing test</p>
+      </description>
+      <steps>
+	<step>Step1</step>
+	<step>Step2</step>
+      </steps>
+    </plan>
+  </testing>
+</datatype>
+
