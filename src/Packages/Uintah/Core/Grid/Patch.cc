@@ -1,5 +1,6 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
+#include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/NodeIterator.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidGrid.h>
@@ -2031,4 +2032,18 @@ void Patch::finalizePatch()
       d_CornerCells[face].push_back(corner);
     } 
   }
+}
+
+int Patch::getGridIndex() const 
+{
+  int index = d_level_index;
+  int levelid = d_level->getIndex();
+  GridP grid = d_level->getGrid();
+
+  // add up all the patches in the preceding levels
+  for ( int i = 0; i < levelid && i < grid->numLevels(); i++) {
+    index += grid->getLevel(i)->numPatches();
+  }
+  return index;
+
 }
