@@ -449,6 +449,120 @@ VolumeRenderer::draw_volume()
 }
 
 
+
+void
+VolumeRenderer::draw_simple()
+{
+#ifdef HAVE_AVR_SUPPORT
+  tex_->lock_bricks();
+  
+  Ray view_ray = compute_view();
+  vector<TextureBrickHandle> bricks;
+  tex_->get_sorted_bricks(bricks, view_ray);
+  if(bricks.size() == 0) return;
+
+  if(adaptive_ && ((cmap2_.get_rep() && cmap2_->updating()) || di_->mouse_action))
+    set_interactive_mode(true);
+  else
+    set_interactive_mode(false);
+
+  const double rate = imode_ ? irate_ : sampling_rate_;
+  const Vector diag = tex_->bbox().diagonal();
+  const Vector cell_diag(diag.x()/tex_->nx(),
+			 diag.y()/tex_->ny(),
+			 diag.z()/tex_->nz());
+  const double dt = cell_diag.length()/rate;
+  const int num_slices = (int)(diag.length()/dt);
+
+  vector<float> vertex;
+  vector<float> texcoord;
+  vector<int> size;
+  vertex.reserve(num_slices*6);
+  texcoord.reserve(num_slices*6);
+  size.reserve(num_slices*6);
+
+  //--------------------------------------------------------------------------
+  GLfloat light_pos[4];
+  glGetLightfv(GL_LIGHT0+light_, GL_POSITION, light_pos);
+  GLfloat clear_color[4];
+  glGetFloatv(GL_COLOR_CLEAR_VALUE, clear_color);
+  int vp[4];
+  glGetIntegerv(GL_VIEWPORT, vp);
+
+  //--------------------------------------------------------------------------
+  // set up blending
+  glEnable(GL_BLEND);
+  switch(mode_) {
+  case MODE_OVER:
+    glBlendEquation(GL_FUNC_ADD);
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    break;
+  case MODE_MIP:
+    glBlendEquation(GL_MAX);
+    glBlendFunc(GL_ONE, GL_ONE);
+    break;
+  default:
+    break;
+  }
+  
+  glColor4f(1.0, 1.0, 1.0, 1.0);
+  glDepthMask(GL_FALSE);
+
+  //--------------------------------------------------------------------------
+  // load colormap texture
+  // rebuild if needed
+  build_colormap1(cmap1_array_, cmap1_tex_, cmap1_dirty_, alpha_dirty_);
+  bind_colormap1(cmap1_tex_);
+  
+  //--------------------------------------------------------------------------
+  // enable data texture unit 0
+  //glActiveTexture(GL_TEXTURE0_ARB);
+  glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+  glEnable(GL_TEXTURE_3D);
+
+  //--------------------------------------------------------------------------
+  // render bricks
+  const Transform &tform = tex_->transform();
+  double mvmat[16];
+  tform.get_trans(mvmat);
+  glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+  glMultMatrixd(mvmat);
+  
+  for(unsigned int i=0; i<bricks.size(); i++) {
+    TextureBrickHandle b = bricks[i];
+    load_brick(b);
+    vertex.clear();
+    texcoord.clear();
+    size.clear();
+    b->compute_polygons(view_ray, dt, vertex, texcoord, size);
+    draw_polygons(vertex, texcoord, size, false, false,
+                  blend_num_bits_ > 8 ? blend_buffer_ : 0);
+  }
+
+  glPopMatrix();
+  
+  glDepthMask(GL_TRUE);
+
+  //--------------------------------------------------------------------------
+  // release textures
+  release_colormap1();
+
+  //glActiveTexture(GL_TEXTURE0_ARB);
+  glDisable(GL_TEXTURE_3D);
+  glBindTexture(GL_TEXTURE_3D, 0);
+
+  //--------------------------------------------------------------------------
+  glDisable(GL_BLEND);
+
+  CHECK_OPENGL_ERROR("VolumeRenderer::draw_volume end");
+
+  tex_->unlock_bricks();
+#endif
+}
+
+
+
 void
 VolumeRenderer::multi_level_draw()
 {

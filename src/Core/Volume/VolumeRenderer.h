@@ -63,11 +63,11 @@ public:
   
 #ifdef SCI_OPENGL
   virtual void draw(DrawInfoOpenGL*, Material*, double time);
-//    virtual void draw();
 
-  virtual void draw_wireframe();
+  void draw_wireframe();
   void multi_level_draw();
-  virtual void draw_volume();
+  void draw_volume();
+  void draw_simple();
 #endif
 
   double num_slices_to_rate(int slices);
