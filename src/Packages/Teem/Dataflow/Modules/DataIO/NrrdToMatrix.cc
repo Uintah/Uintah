@@ -345,7 +345,6 @@ template<class PTYPE>
 MatrixHandle 
 NrrdToMatrix::create_sparse_matrix(NrrdDataHandle dataH, NrrdDataHandle rowsH,
 				   NrrdDataHandle colsH, int cols) {
-  cerr << "Columns: " << cols << "\n";
 
   Nrrd *data_n = dataH->nrrd;
   Nrrd *rows_n = rowsH->nrrd;
@@ -363,10 +362,8 @@ NrrdToMatrix::create_sparse_matrix(NrrdDataHandle dataH, NrrdDataHandle rowsH,
 	cols = cols_d[i];
     }
     cols += 1; 
-    cerr << "Columns now " << cols << "\n";
   }
   
-  cerr << "rows_n size: " << rows_n->axis[0].size << "\n";
   int rows = rows_n->axis[0].size-1;
   int offset = 0;
   if (rows_d[0] != 0) {
@@ -410,7 +407,6 @@ NrrdToMatrix::create_sparse_matrix(NrrdDataHandle dataH, NrrdDataHandle rowsH,
   // those values must be in increasing order
   for (int i=0; i<rows_n->axis[0].size-1; i++) {
     int span = rows_d[i+1] - rows_d[i];
-    cerr << "span: " << span << "\n";
     for(int j=i;j<(i+span-1);j++) {
       if (cols_d[j] > cols_d[j+1]) {
 	error("Columns nrrd ordered incorrectly.");
@@ -419,7 +415,6 @@ NrrdToMatrix::create_sparse_matrix(NrrdDataHandle dataH, NrrdDataHandle rowsH,
     }
   }
 
-  cerr << "Rows: " << rows << "\n";
   // pointers to matrix arrays
   double *d = scinew double[nnz];
   int *rr = scinew int[rows_n->axis[0].size+offset];
