@@ -42,7 +42,7 @@ protected:
   // if it was successful.
 
   // This opens the window.
-  int open_display();
+  int open_display(Window parent = 0, bool needevents = false);
   // Closes the display
   int close_display();
 

@@ -81,6 +81,7 @@
 #include <Packages/rtrt/Core/Worker.h>
 #include <Packages/rtrt/Core/MusilRNG.h>
 #include <Packages/rtrt/Core/Scene.h>
+#include <Packages/rtrt/Core/RServer.h>
 
 #include <Packages/rtrt/visinfo/visinfo.h>
 
@@ -159,8 +160,9 @@ double _HOLO_STATE_=1;
 Dpy::Dpy( Scene* scene, char* criteria1, char* criteria2,
 	  int nworkers, bool bench, int ncounters, int c0, int c1,
 	  float, float, bool display_frames, 
-	  int pp_size, int scratchsize, bool fullscreen, int frameless ) :
-  fullScreenMode_( fullscreen ), 
+	  int pp_size, int scratchsize, bool fullscreen, bool frameless,
+	  bool rserver)
+  : fullScreenMode_( fullscreen ), 
   showImage_(NULL), doAutoJitter_( false ),
   showLights_( false ), lightsShowing_( false ),
   turnOnAllLights_( false ), turnOffAllLights_( false ),
@@ -175,6 +177,11 @@ Dpy::Dpy( Scene* scene, char* criteria1, char* criteria2,
   c0(c0), c1(c1),
   frameless(frameless),synch_frameless(0), display_frames(display_frames)
 {
+  if(rserver)
+    this->rserver = new RServer();
+  else
+    this->rserver = 0;
+  nstreams=1;
   ppc = new PerProcessorContext( pp_size, scratchsize );
 
   for( int i = 0; i < 4; i++ )
@@ -193,6 +200,8 @@ Dpy::Dpy( Scene* scene, char* criteria1, char* criteria2,
 
   priv->waitDisplay = new Mutex( "wait for display" );
   priv->waitDisplay->lock();
+  priv->xres = 1;
+  priv->yres = 1;
 
   priv->followPath = false;
 
@@ -241,6 +250,12 @@ int Dpy::get_num_procs() {
   return nworkers;
 }
 
+void Dpy::release(Window win)
+{
+  parentWindow=win;
+  releaseSema.up();
+}
+
 void
 Dpy::run()
 {
@@ -250,15 +265,30 @@ Dpy::run()
   cerr << "display is pid " << getpid() << '\n';
   io_lock_.unlock();
 
+  releaseSema.down();
+  if(rserver){
+    rserver->openWindow(parentWindow);
+    rserver->resize(priv->xres, priv->yres);
+  } else {
+    resize(priv->xres, priv->yres);
+    open_display(parentWindow, false);
+
+    init();
+  
+    // Create the Xevent handler
+    for(;;){
+      XEvent e;
+      XNextEvent(dpy, &e);
+      if(e.type == MapNotify)
+	break;
+    }
+  }
+  
+
   if(ncounters)
     counters=new Counters(ncounters, c0, c1);
   else
     counters=0;
-
-  ////////////////////////////////////////////////////////////
-  // open the display
-  priv->xres = scene->get_image(0)->get_xres();
-  priv->yres = scene->get_image(0)->get_yres();
 
   priv->ball = new BallData();
   priv->ball->Init();
@@ -300,6 +330,13 @@ Dpy::run()
 	Thread::exit();
       }
       frame++;
+      // Slurp up X events...
+      if(!rserver){
+	while (XEventsQueued(dpy, QueuedAfterReading)){
+	  XEvent e;
+	  XNextEvent(dpy, &e);
+	}
+      }
     }
 } // end run()
 
@@ -558,8 +595,41 @@ Dpy::renderFrame() {
   //  cout << "Warning, gui has not displayed previous frame!\n";
   //}
 
-  if(!bench)
-    showImage_ = displayedImage;
+  if(!bench){
+    if(rserver){
+      rserver->sendImage(displayedImage, nstreams);
+    } else {
+      // Display textual information on the screen:
+      char buf[100];
+      sprintf( buf, "%3.1lf fps", priv->FrameRate );
+      
+      cerr << "Drawing image\n";
+      glMatrixMode(GL_PROJECTION);
+      glLoadIdentity();
+      gluOrtho2D(0, priv->xres, 0, priv->yres);
+      glMatrixMode(GL_MODELVIEW);
+      glLoadIdentity();
+      glTranslatef(0.375, 0.375, 0.0);
+      displayedImage->draw( renderWindowSize_, fullScreenMode_ );
+      printString(fontbase, 10, 3, buf, Color(1,1,1));
+      display();
+#if 0
+      if(priv->displayRStats_ )
+	drawrstats(dpy->nworkers, dpy->workers_,
+		   priv->showing_scene, fontbase2, 
+		   priv->xres, priv->yres,
+		   fontInfo2, priv->left, priv->up,
+		   0.0 /* dt */);
+      if(displayPStats_ ){
+	Stats * mystats = dpy->drawstats[!priv->showing_scene];
+	drawpstats(mystats, dpy->nworkers, dpy->workers_, 
+		   /*draw_framerate*/true, priv->showing_scene,
+		   fontbase, lasttime, cum_ttime,
+		   cum_dt);
+      }
+#endif
+    }
+  }
 
   // dump the frame and quit for now
   if (counter == 0) {
@@ -570,14 +640,17 @@ Dpy::renderFrame() {
   }
   counter--;
 
-  // Wait until the Gui (main) thread has displayed this image...
-  //priv->waitDisplay->lock();
-
   if( displayedImage->get_xres() != priv->xres ||
       displayedImage->get_yres() != priv->yres ) {
     delete displayedImage;
     displayedImage = new Image(priv->xres, priv->yres, stereo);
     scene->set_image(showing_scene, displayedImage);
+    if(rserver){
+      rserver->resize(priv->xres, priv->yres);
+    } else {
+      XResizeWindow(dpy, win, priv->xres, priv->yres);
+      resize(priv->xres, priv->yres);
+    }
   }
 
   // This is the last stat for the rendering scene (cyan)

@@ -12,14 +12,14 @@ using namespace SCIRun;
 
 ////////////////////////////////////////////
 // OOGL stuff
-extern BasicTexture * rtrtTopTex;
-extern ShadedPrim   * rtrtTopTexQuad;
-extern BasicTexture * rtrtBotTex;
-extern ShadedPrim   * rtrtBotTexQuad;
-extern BasicTexture * rtrtMidBotTex;
-extern ShadedPrim   * rtrtMidTopTexQuad;
-extern BasicTexture * rtrtMidTopTex;
-extern ShadedPrim   * rtrtMidBotTexQuad;
+BasicTexture * rtrtTopTex;
+ShadedPrim   * rtrtTopTexQuad;
+BasicTexture * rtrtBotTex;
+ShadedPrim   * rtrtBotTexQuad;
+BasicTexture * rtrtMidBotTex;
+ShadedPrim   * rtrtMidTopTexQuad;
+BasicTexture * rtrtMidTopTex;
+ShadedPrim   * rtrtMidBotTexQuad;
 ////////////////////////////////////////////
 
 Persistent* image_maker() {
