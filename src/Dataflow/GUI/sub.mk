@@ -104,6 +104,7 @@ SRCS := \
 	$(SRCDIR)/SolveMatrix.tcl \
 	$(SRCDIR)/StreamLines.tcl \
 	$(SRCDIR)/Submatrix.tcl \
+	$(SRCDIR)/Subnet.tcl \
 	$(SRCDIR)/SynchronizeGeometry.tcl \
 	$(SRCDIR)/TclStream.tcl \
 	$(SRCDIR)/TexCuttingPlanes.tcl \
