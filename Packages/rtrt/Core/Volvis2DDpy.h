@@ -13,7 +13,6 @@
 using std::vector;
 
 namespace rtrt {
-
   class Volvis2DDpy : public DpyBase {
     // creates the background texture
     virtual void createBGText();
@@ -23,7 +22,7 @@ namespace rtrt {
     virtual void drawBackground();
     // adds a new widget to the end of the vector
     virtual void addWidget( int x, int y );
-    // cycles through the possible widget types: tri->rect(ellipse)->rect(1d)->rect(rainbow)->tri...
+    // cycles through widget types: tri->rect(ellipse)->rect(1d)->rect(rainbow)->tri..
     virtual void cycleWidgets( int type );
     // draws all widgets in widgets vector without their textures
     virtual void drawWidgets( GLenum mode );
@@ -31,7 +30,7 @@ namespace rtrt {
     virtual void bindWidgetTextures();
     // determines whether a pixel is inside of a widget
     virtual bool insideAnyWidget( int x, int y );
-    // moves user-selected widget to the end of the widgets vector to be drawn last ("on top" )
+    // moves user-selected widget to end of widgets vector to be drawn last
     virtual void prioritizeWidgets();
     // retrieves information about picked widgets, determines which widget was picked
     virtual void processHits( GLint hits, GLuint buffer[] );
@@ -68,9 +67,12 @@ namespace rtrt {
 
     float original_t_inc;
     float t_inc;
+    bool m_alpha_adjusting;
     float master_alpha;
-    vector<Widget*> widgets;           // collection of widgets to be controlled in any function
-    int pickedIndex;                   // index of currently selected widget by frame
+    GLBar* m_alpha_slider;
+    GLBar* m_alpha_bar;
+    vector<Widget*> widgets;           // collection of widgets
+    int pickedIndex;                   // index of currently selected widget
     int old_x;                         // saved most recent x-coordinate
     int old_y;                         // saved most recent y-coordinate
     float x_pixel_width;               // screenspace-to-worldspace x-dim ratio
@@ -79,8 +81,8 @@ namespace rtrt {
     GLuint bgTextName;
     GLuint transFuncTextName;
     Texture <GLfloat> *bgTextImage;    // clean background texture
-    Texture <GLfloat> *transTexture1;  // collection of widget textures painted onto background
-    Texture <GLfloat> *transTexture2;  // used for texture swapping to remove volume rendering "streaks"
+    Texture <GLfloat> *transTexture1;  // collection of visible transfer functions
+    Texture <GLfloat> *transTexture2;  // swapped to remove rendering "streaks"
     vector<VolumeVis2D*> volumes;
     Volvis2DDpy( float t_inc );
   };
