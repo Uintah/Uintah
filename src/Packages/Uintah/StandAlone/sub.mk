@@ -292,7 +292,7 @@ include $(SCIRUN_SCRIPTS)/program.mk
 ###############################################
             
 link_inputs: 
-	@( ln -s $(SRCTOP_ABS)/Packages/Uintah/StandAlone/inputs Packages/Uintah/StandAlone/inputs)
+	@( ln -sf $(SRCTOP_ABS)/Packages/Uintah/StandAlone/inputs Packages/Uintah/StandAlone/inputs )
 
 TOP_ABS:= $(SRCTOP_ABS)/..
 faster_gmake: 
