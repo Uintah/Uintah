@@ -131,7 +131,7 @@ LatticeVol<Data>::maker()
 
 template <class Data>
 PersistentTypeID
-LatticeVol<Data>::type_id(LatticeVol<Data>::type_name(),
+LatticeVol<Data>::type_id(type_name(),
 		GenericField<LatVolMesh, FData3d<Data> >::type_name(),
                 maker); 
 
