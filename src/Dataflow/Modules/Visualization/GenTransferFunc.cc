@@ -48,8 +48,6 @@
 #undef Colormap
 
 #include <iostream>
-using std::cerr;
-using std::endl;
 #include <stdio.h>
 
 // tcl interpreter corresponding to this module
@@ -571,8 +569,7 @@ void GenTransferFunc::DoMotion(int, int x, int y)
 
   float val = GetVal(x,y);   // this remaps the Y coord!
 
-//  cerr << "TF: " << time << "  " << val << "\n";
-  // end conditions are special cases - can't change x!
+  // End conditions are special cases - can't change x!
 
   if (activeLine == 7) {
     if (selNode && selNode < alphas.size()-1) {
@@ -739,17 +736,19 @@ void GenTransferFunc::DoRelease(int win, int x, int y, int button)
   DrawGraphs();
 }
 
-void GenTransferFunc::execute(void)
+void
+GenTransferFunc::execute(void)
 {
-  
   ColorMapHandle newcmap;
-    int c = inport->get(newcmap);
+  int c = inport->get(newcmap);
 
-  if ( c && newcmap->generation != cmap_generation ) {
+  if ( c && newcmap->generation != cmap_generation )
+  {
     cmap_generation = newcmap->generation;
 
-    if (!newcmap->raw1d) {
-      cerr << "Old version of color map!\n";
+    if (!newcmap->raw1d)
+    {
+      error("Old version of color map!");
       return;
     }
 
@@ -760,48 +759,41 @@ void GenTransferFunc::execute(void)
 
     points.resize(newcmap->rawRampColor.size());
     
-    for(int i=0;i<points.size();i++) {
+    for(int i=0;i<points.size();i++)
+    {
       points[i]._t = newcmap->rawRampColorT[i];
       points[i]._rgb = newcmap->rawRampColor[i];
     }
 
     alphas = newcmap->rawRampAlpha;
     aTimes = newcmap->rawRampAlphaT;
-
-    
-  } else
-
-    {
-
+  }
+  else
+  {
     Array1<Color> ncolors(points.size());
     Array1<float> times(points.size());
     
-    for(int i=0;i<points.size();i++) {
+    for(int i=0;i<points.size();i++)
+    {
       ncolors[i] = points[i]._rgb;
       times[i] = points[i]._t;
     }
     cmap.get_rep()->SetRaw(ncolors,times,alphas,aTimes); 
 
-    cerr << endl << "We are sending a cmap!\n" << endl << endl;
-    // Bad for Volume Rendering...
-//    cmap = scinew ColorMap(ncolors,times,alphas,aTimes,Max(ncolors.size(),aTimes.size()));
+    // Bad for Volume Rendering?
     cmap = scinew ColorMap(ncolors,times,alphas,aTimes,256);
-//    cmap.get_rep()->SetRaw(ncolors,times,alphas,aTimes); 
-    cerr << cmap.get_rep() << endl;
-
-    cerr << cmap->colors.size() << " - Size\n";
-    cerr << cmap->min << " - " << cmap->max << endl;
-    
   }
   DrawGraphs(0);
 #if 0  
-  if (cmap.get_rep()) {
+  if (cmap.get_rep())
+  {
     delete cmap.get_rep();
   }
 #endif
 
-   outport->send(cmap);
+  outport->send(cmap);
 }
+
 
 int GenTransferFunc::makeCurrent(void)
 {
@@ -811,12 +803,12 @@ int GenTransferFunc::makeCurrent(void)
   TCLTask::lock();
 
   if (!ctxs[0]) {
-    string myname(".ui" + id + ".f.gl1.gl");
+    const string myname(".ui" + id + ".f.gl1.gl");
     tkwin = Tk_NameToWindow(the_interp, ccast_unsafe(myname),
 			    Tk_MainWindow(the_interp));
 
     if (!tkwin) {
-      cerr << "Unable to locate window!\n";
+      error("Unable to locate window!");
 
       // unlock mutex
       TCLTask::unlock();
@@ -833,19 +825,19 @@ int GenTransferFunc::makeCurrent(void)
     // check if it was created
     if(!ctxs[0])
       {
-	cerr << "Unable to create OpenGL Context!\n";
+	error("Unable to create OpenGL Context!");
 	TCLTask::unlock();
 	return 0;
       }
   }	
 
   if (!ctxs[1]) {
-    string myname(".ui" + id + ".f.gl2.gl");
+    const string myname(".ui" + id + ".f.gl2.gl");
     tkwin = Tk_NameToWindow(the_interp, ccast_unsafe(myname),
 			    Tk_MainWindow(the_interp));
 
     if (!tkwin) {
-      cerr << "Unable to locate window!\n";
+      error("Unable to locate window!");
 
       // unlock mutex
       TCLTask::unlock();
@@ -863,19 +855,19 @@ int GenTransferFunc::makeCurrent(void)
     // check if it was created
     if(!ctxs[1])
       {
-	cerr << "Unable to create OpenGL Context!\n";
+	error("Unable to create OpenGL Context!");
 	TCLTask::unlock();
 	return 0;
       }
   }	
 
   if (!ctxs[2]) {
-    string myname(".ui" + id + ".f.gl3.gl");
+    const string myname(".ui" + id + ".f.gl3.gl");
     tkwin = Tk_NameToWindow(the_interp, ccast_unsafe(myname),
 			    Tk_MainWindow(the_interp));
 
     if (!tkwin) {
-      cerr << "Unable to locate window!\n";
+      error("Unable to locate window!");
 
       // unlock mutex
       TCLTask::unlock();
@@ -902,8 +894,8 @@ int GenTransferFunc::makeCurrent(void)
   // do the other crap...
 
   return 1;
-
 }
+
 
 } // End namespace SCIRun
 

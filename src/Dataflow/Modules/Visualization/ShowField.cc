@@ -57,9 +57,6 @@
 #include <typeinfo>
 #include <map.h>
 #include <iostream>
-using std::cerr;
-using std::cin;
-using std::endl;
 #include <sstream>
 using std::ostringstream;
 
@@ -206,7 +203,7 @@ ShowField::execute()
   FieldHandle fld_handle;
   fld_->get(fld_handle);
   if(!fld_handle.get_rep()){
-    cerr << "No Data in port 1 field" << endl;
+    warning("No Data in port 1 field.");
     return;
   } else if (fld_gen_ != fld_handle->generation) {
     fld_gen_ = fld_handle->generation;  
@@ -217,7 +214,7 @@ ShowField::execute()
 
   color_->get(color_handle_);
   if(!color_handle_.get_rep()){
-    cerr << "No ColorMap in port 3 ColorMap" << endl;
+    warning("No ColorMap in port 3 ColorMap.");
     if (colm_gen_ != -1) {
       nodes_dirty_ = true; edges_dirty_ = true; faces_dirty_ = true;
     }
@@ -420,9 +417,6 @@ ShowField::render_faces(const Fld *sfld)
   if (faces_dirty_) {
     typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
     const bool with_normals = mesh->has_normals();
-    cerr << "mesh->has_normals(): " <<  mesh->has_normals() << endl;
-    cerr << "with_normals" <<  with_normals << endl;
-    cerr << mesh->type_name() << endl;
 
     GeomTriangles* faces = scinew GeomTriangles;
     face_switch_ = scinew GeomSwitch(faces);
