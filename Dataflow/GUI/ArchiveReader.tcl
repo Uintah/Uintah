@@ -56,8 +56,8 @@ itcl_class Uintah_DataIO_ArchiveReader {
 	    incr len
 	    $w.f.e configure -width $len
 	    set $this-filebase $filebase
+	    $this-c needexecute
 	}
-	$this-c needexecute
     }
 	
 }
