@@ -16,7 +16,7 @@
    </Time>
    <DataArchiver>
         <filebase>3PBENDCP.uda</filebase>
-        <outputTimestepInterval>1</outputTimestepInterval>
+        <outputTimestepInterval>5</outputTimestepInterval>
         <save label = "p.x"/>
         <save label = "p.volume"/>
         <save label = "g.mass"/>
@@ -62,8 +62,8 @@
                 <specific_heat>5</specific_heat>
                 <geom_object>
                     <box label = "rigid_rod">
-                        <min>[-22.0e-3, 100e-3, 0.0]</min>
-                        <max>[-18.0e-3, 110e-3, 2.0e-3]</max>
+                        <min>[-2.0e-3, 100e-3, 0.0]</min>
+                        <max>[ 2.0e-3, 110e-3, 2.0e-3]</max>
                     </box>
                     <res>[2,2,2]</res>
                     <velocity>[0.0, -5.0, 0.0]</velocity>
