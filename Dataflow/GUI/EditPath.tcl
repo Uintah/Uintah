@@ -66,11 +66,12 @@ itcl_class SCIRun_Render_EditPath {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
-            return;
+            return
         }
 
-        toplevel $w
+	# Withdraw immediately so it doesn't flicker when being
+	# created/moved to the mouse location.
+        toplevel $w; wm withdraw $w
 	wm title $w "Edit Camera Path"
         wm minsize $w 300 80
 
@@ -184,6 +185,9 @@ itcl_class SCIRun_Render_EditPath {
 	
 	refresh
 	set $this-UI_Init 1
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 
     method EraseWarn {t m} {

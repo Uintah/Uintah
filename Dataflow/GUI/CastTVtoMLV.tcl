@@ -34,7 +34,6 @@ itcl_class SCIRun_FieldsGeometry_CastTVtoMLV {
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
-            raise $w
             return
         }
         toplevel $w
@@ -59,6 +58,9 @@ itcl_class SCIRun_FieldsGeometry_CastTVtoMLV {
 	entry $w.z.entry -textvariable $this-nz
 	bind $w.z.entry <Return> "$this-c needexecute"
 	pack $w.z.label $w.z.entry -side left
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 }
 

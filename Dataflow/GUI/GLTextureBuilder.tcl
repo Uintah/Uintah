@@ -83,16 +83,16 @@ itcl_class SCIRun_Visualization_GLTextureBuilder {
         bind $w.f3.e1 <Return> $n
         bind $w.f3.e2 <Return> $n
 
-	button $w.b -text Close -command "wm withdraw $w"
-	pack $w.b -side bottom -fill x
-
-       if { [set $this-is_fixed] } {
+	if { [set $this-is_fixed] } {
             $w.f2.b select
             $this fixedScale
         } else {
             $w.f1.b select
             $this autoScale
         }
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
     }
 
     method autoScale { } {
