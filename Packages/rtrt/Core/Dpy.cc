@@ -535,6 +535,12 @@ Dpy::checkGuiFlags()
     priv->exposed=false;
   }
 
+  if( !priv->followPath ) {
+    guiCam_->updatePosition( *stealth_, scene, ppc );
+  } else {
+    guiCam_->followPath( *stealth_ );
+  }
+  
   if (numThreadsRequested_new != numThreadsRequested_)
     numThreadsRequested_ = numThreadsRequested_new;
   
