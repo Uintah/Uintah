@@ -305,7 +305,7 @@ ShowField::check_for_svt_data(FieldHandle fld_handle)
     { 
       has_vector_data_.set(1); 
     }
-    if (fld_handle->data_at() == Field::NODE && nodes_as_disks_.get() == 0)
+    if (fld_handle->data_at() == Field::NODE)
     {
       disks = true;
     }
