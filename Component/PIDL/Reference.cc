@@ -14,12 +14,14 @@
 
 #include <Component/PIDL/Reference.h>
 #include <Component/PIDL/TypeInfo.h>
+#include <globus_nexus.h>
 
 using Component::PIDL::Reference;
 
 Reference::Reference()
 {
     d_vtable_base=TypeInfo::vtable_invalid;
+    globus_nexus_startpoint_set_null(&d_sp);
 }
 
 Reference::Reference(const Reference& copy)
@@ -45,6 +47,9 @@ int Reference::getVtableBase() const
 
 //
 // $Log$
+// Revision 1.5  1999/09/24 20:03:36  sparker
+// Added cocoon documentation
+//
 // Revision 1.4  1999/09/21 06:13:00  sparker
 // Fixed bugs in multiple inheritance
 // Added round-trip optimization

@@ -20,6 +20,19 @@
 #include <Component/PIDL/TypeInfo.h>
 #include <SCICore/Exceptions/InternalError.h>
 
+/**************************************
+ 
+CLASS
+   pidl_cast
+   
+KEYWORDS
+   pidl_cast, dynamic_cast
+   
+DESCRIPTION
+   An equivalent to dynamic_cast for (possibly) remote objects.  This
+   tries to upcast locally, but will send a remote procedure call
+   (in TypeInfo::pidl_cast) if required.
+****************************************/
 template<class T>
 T pidl_cast(const Component::PIDL::Object& obj)
 {
@@ -44,6 +57,9 @@ T pidl_cast(const Component::PIDL::Object& obj)
 
 //
 // $Log$
+// Revision 1.3  1999/09/24 20:03:39  sparker
+// Added cocoon documentation
+//
 // Revision 1.2  1999/09/17 05:08:11  sparker
 // Implemented component model to work with sidl code generator
 //

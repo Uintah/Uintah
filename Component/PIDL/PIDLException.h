@@ -19,6 +19,21 @@
 
 namespace Component {
     namespace PIDL {
+/**************************************
+ 
+CLASS
+   PIDLException
+   
+KEYWORDS
+   PIDL, Exception
+   
+DESCRIPTION
+   The base class for all PIDL exceptions.  This provides a convenient
+   mechanism for catch all PIDL exceptions.  It is abstract because
+   SCICore::EXceptions::Exception is abstract, so cannot be instantiated.
+   It provides no additional methods beyond the SCICore base exception
+   class.
+****************************************/
 	class PIDLException : public SCICore::Exceptions::Exception {
 	public:
 	protected:
@@ -31,6 +46,9 @@ namespace Component {
 
 //
 // $Log$
+// Revision 1.4  1999/09/24 20:03:36  sparker
+// Added cocoon documentation
+//
 // Revision 1.3  1999/09/17 05:08:09  sparker
 // Implemented component model to work with sidl code generator
 //
