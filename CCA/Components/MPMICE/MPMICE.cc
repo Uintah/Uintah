@@ -306,31 +306,26 @@ void MPMICE::scheduleCCMomExchange(const Patch* patch,
     Material* matl = d_sharedState->getMaterial( m );
     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    int idx = matl->getDWIndex();
     if(ice_matl){                   // I C E
-      int iceidx = ice_matl->getDWIndex();
-      t->requires(old_dw,Ilb->rho_CCLabel,          iceidx,patch,Ghost::None);
-      t->requires(new_dw,Ilb->mom_L_CCLabel,        iceidx,patch,Ghost::None);
-      t->requires(new_dw,Ilb->int_eng_L_CCLabel,    iceidx,patch,Ghost::None);
-      t->requires(new_dw,Ilb->vol_frac_CCLabel,     iceidx,patch,Ghost::None);
-      t->requires(old_dw,Ilb->cv_CCLabel,           iceidx,patch,Ghost::None);
-      t->requires(new_dw,Ilb->rho_micro_CCLabel,    iceidx,patch,Ghost::None);
+      t->requires(old_dw,Ilb->cv_CCLabel,           idx,patch,Ghost::None);
 
-      t->computes(new_dw,Ilb->mom_L_ME_CCLabel,     iceidx,patch);
-      t->computes(new_dw,Ilb->int_eng_L_ME_CCLabel, iceidx,patch);
+      t->computes(new_dw,Ilb->mom_L_ME_CCLabel,     idx,patch);
+      t->computes(new_dw,Ilb->int_eng_L_ME_CCLabel, idx,patch);
    }
    if(mpm_matl){                    // M P M
-     int mpmidx = mpm_matl->getDWIndex();
-     t->requires(new_dw, MIlb->mom_L_CCLabel,       mpmidx,patch,Ghost::None,0);
-     t->requires(new_dw, MIlb->rho_CCLabel,         mpmidx,patch,Ghost::None,0);
-     t->requires(new_dw, MIlb->int_eng_L_CCLabel,   mpmidx,patch,Ghost::None,0);
-     t->requires(new_dw, MIlb->cv_CCLabel,          mpmidx,patch,Ghost::None,0);
-     t->requires(new_dw, Mlb->gVelocityStarLabel,   mpmidx,patch,Ghost::None,0);
-     t->requires(new_dw, Mlb->gAccelerationLabel,   mpmidx,patch,Ghost::None,0);
-     t->requires(new_dw, MIlb->rho_micro_CCLabel,   mpmidx,patch,Ghost::None,0);
+     t->requires(new_dw, MIlb->cv_CCLabel,          idx,patch,Ghost::None,0);
+     t->requires(new_dw, Mlb->gVelocityStarLabel,   idx,patch,Ghost::None,0);
+     t->requires(new_dw, Mlb->gAccelerationLabel,   idx,patch,Ghost::None,0);
 
-     t->computes(new_dw, Mlb->gMomExedVelocityStarLabel, mpmidx, patch);
-     t->computes(new_dw, Mlb->gMomExedAccelerationLabel, mpmidx, patch);
+     t->computes(new_dw, Mlb->gMomExedVelocityStarLabel, idx, patch);
+     t->computes(new_dw, Mlb->gMomExedAccelerationLabel, idx, patch);
    }
+   t->requires(new_dw,  Ilb->rho_CCLabel,         idx,patch,Ghost::None);
+   t->requires(new_dw, MIlb->mom_L_CCLabel,       idx,patch,Ghost::None,0);
+   t->requires(new_dw, MIlb->int_eng_L_CCLabel,   idx,patch,Ghost::None,0);
+   t->requires(new_dw, MIlb->rho_micro_CCLabel,   idx,patch,Ghost::None,0);
+   t->requires(new_dw,  Ilb->vol_frac_CCLabel,    idx,patch,Ghost::None);
  }
    sched->addTask(t);
 
@@ -773,64 +768,48 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
     Material* matl = d_sharedState->getMaterial( m );
     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    int dwindex = matl->getDWIndex();
     if(mpm_matl){
-      int dwindex = mpm_matl->getDWIndex();
-
       new_dw->get(gvelocity[m],    Mlb->gVelocityStarLabel,   dwindex, patch,
 							Ghost::None, 0);
       new_dw->get(gacceleration[m],Mlb->gAccelerationLabel,   dwindex, patch,
-							Ghost::None, 0);
-      new_dw->allocate(gMEvelocity[m],     Mlb->gMomExedVelocityStarLabel,
-						             dwindex, patch);
-      new_dw->allocate(gMEacceleration[m], Mlb->gMomExedAccelerationLabel,
-						             dwindex, patch);
-      new_dw->get(mom_L[m],        MIlb->mom_L_CCLabel,       dwindex, patch,
-							Ghost::None, 0);
-      new_dw->get(rho_CC[m],       MIlb->rho_CCLabel,         dwindex, patch,
-							Ghost::None, 0);
-      new_dw->get(int_eng_L[m],    MIlb->int_eng_L_CCLabel,   dwindex, patch,
 							Ghost::None, 0);
       new_dw->get(cv_CC[m],        MIlb->cv_CCLabel,          dwindex, patch,
 							Ghost::None, 0);
       new_dw->get(cmass[m],        MIlb->cMassLabel,          dwindex, patch,
 							Ghost::None, 0);
-      new_dw->get(rho_micro_CC[m], MIlb->rho_micro_CCLabel,   dwindex, patch,
-							Ghost::None, 0);
-      new_dw->get(vol_frac_CC[m],  MIlb->vol_frac_CCLabel,    dwindex, patch,
-							Ghost::None, 0);
-     new_dw->get(gmass[m]    ,     Mlb->gMassLabel,           dwindex, patch,
+      new_dw->get(gmass[m]   ,     Mlb->gMassLabel,           dwindex, patch,
 							Ghost::AroundCells, 1);
       new_dw->allocate(vel_CC[m],  MIlb->velstar_CCLabel,     dwindex, patch);
-      new_dw->allocate(mom_L_ME[m],MIlb->mom_L_ME_CCLabel,    dwindex, patch);
-      new_dw->allocate(dvdt_CC[m], MIlb->dvdt_CCLabel,        dwindex, patch);
       new_dw->allocate(Temp_CC[m], MIlb->temp_CC_scratchLabel,dwindex, patch);
-      new_dw->allocate(int_eng_L_ME[m],MIlb->int_eng_L_ME_CCLabel,
-                                                              dwindex, patch);
 
-      dvdt_CC[m].initialize(zero);
+      new_dw->allocate(gMEvelocity[m],     Mlb->gMomExedVelocityStarLabel,
+						             dwindex, patch);
+      new_dw->allocate(gMEacceleration[m], Mlb->gMomExedAccelerationLabel,
+						             dwindex, patch);
     }
     if(ice_matl){
-      int dwindex = ice_matl->getDWIndex();
-      new_dw->get(rho_CC[m],        Ilb->rho_CCLabel,
-                                              dwindex, patch, Ghost::None, 0);
-      new_dw->get(mom_L[m],         Ilb->mom_L_CCLabel,
-                                              dwindex, patch, Ghost::None, 0);
-      new_dw->get(int_eng_L[m],     Ilb->int_eng_L_CCLabel,
-                                              dwindex, patch, Ghost::None, 0);
-      new_dw->get(vol_frac_CC[m],   Ilb->vol_frac_CCLabel,
-                                              dwindex, patch, Ghost::None, 0);
-      new_dw->get(rho_micro_CC[m],  Ilb->rho_micro_CCLabel,
-                                              dwindex, patch, Ghost::None, 0);
-      old_dw->get(cv_CC[m],         Ilb->cv_CCLabel,
-                                              dwindex, patch, Ghost::None, 0);
+      old_dw->get(cv_CC[m],  Ilb->cv_CCLabel,  dwindex, patch, Ghost::None, 0);
 
       new_dw->allocate(vel_CC[m],      Ilb->vel_CCLabel,         dwindex,patch);
-      new_dw->allocate(mom_L_ME[m],    Ilb->mom_L_ME_CCLabel,    dwindex,patch);
       new_dw->allocate(Temp_CC[m],     Ilb->temp_CCLabel,        dwindex,patch);
-      new_dw->allocate(int_eng_L_ME[m],Ilb->int_eng_L_ME_CCLabel,dwindex,patch);
-      new_dw->allocate(dvdt_CC[m],     MIlb->dvdt_CCLabel,       dwindex,patch);
-      dvdt_CC[m].initialize(zero);
     }
+
+    new_dw->get(rho_CC[m],        Ilb->rho_CCLabel,       dwindex, patch,
+							Ghost::None, 0);
+    new_dw->get(rho_micro_CC[m],  Ilb->rho_micro_CCLabel, dwindex, patch,
+							Ghost::None, 0);
+    new_dw->get(mom_L[m],         Ilb->mom_L_CCLabel,     dwindex, patch,
+							Ghost::None, 0);
+    new_dw->get(int_eng_L[m],     Ilb->int_eng_L_CCLabel, dwindex, patch,
+							Ghost::None, 0);
+    new_dw->get(vol_frac_CC[m],   Ilb->vol_frac_CCLabel,  dwindex, patch,
+							Ghost::None, 0);
+    new_dw->allocate(dvdt_CC[m], MIlb->dvdt_CCLabel,      dwindex, patch);
+    new_dw->allocate(mom_L_ME[m], Ilb->mom_L_ME_CCLabel,  dwindex,patch);
+    new_dw->allocate(int_eng_L_ME[m],Ilb->int_eng_L_ME_CCLabel,dwindex,patch);
+
+    dvdt_CC[m].initialize(zero);
   }
 
   double vol = dx.x()*dx.y()*dx.z();
@@ -1137,30 +1116,23 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
     if(ice_matl){                    // I C E
-      old_dw->get(cv[m],      Ilb->cv_CCLabel,  dwindex, patch, Ghost::None,0);
-   // old_dw->get(rho_CC[m],  Ilb->rho_CCLabel, dwindex, patch, Ghost::None,0);  EXTRA
-      old_dw->get(Temp[m],    Ilb->temp_CCLabel,dwindex, patch, Ghost::None,0);
-      old_dw->get(mass_CC[m], Ilb->mass_CCLabel,dwindex, patch, Ghost::None,0);
+      old_dw->get(cv[m],       Ilb->cv_CCLabel,  dwindex, patch, Ghost::None,0);
+      old_dw->get(Temp[m],     Ilb->temp_CCLabel,dwindex, patch, Ghost::None,0);
+      old_dw->get(mass_CC[m],  Ilb->mass_CCLabel,dwindex, patch, Ghost::None,0);
       old_dw->get(sp_vol_CC[m],Ilb->sp_vol_CCLabel,
                                                 dwindex, patch, Ghost::None,0);
-      new_dw->allocate(speedSound_new[m],
-                                     Ilb->speedSound_CCLabel,dwindex, patch);
-      new_dw->allocate(rho_micro[m], Ilb->rho_micro_CCLabel, dwindex, patch);
-      new_dw->allocate(vol_frac[m],  Ilb->vol_frac_CCLabel,  dwindex, patch);
-      new_dw->allocate(rho_CC[m],    Ilb->rho_CCLabel,       dwindex, patch);
       new_dw->allocate(sp_vol_equil[m],
                                      Ilb->sp_vol_equilLabel, dwindex, patch);
-   }
+    }
     if(mpm_matl){                    // M P M    
       new_dw->get(Temp[m],   MIlb->temp_CCLabel,dwindex, patch, Ghost::None,0);
       new_dw->get(cv[m],     MIlb->cv_CCLabel,  dwindex, patch, Ghost::None,0);
       new_dw->get(mat_vol[m],MIlb->cVolumeLabel,dwindex, patch, Ghost::None,0);
-      new_dw->allocate(speedSound_new[m],
-                                     MIlb->speedSound_CCLabel,dwindex, patch);
-      new_dw->allocate(rho_micro[m], MIlb->rho_micro_CCLabel, dwindex, patch);
-      new_dw->allocate(vol_frac[m],  MIlb->vol_frac_CCLabel,  dwindex, patch);  
-      new_dw->allocate(rho_CC[m],    MIlb->rho_CCLabel,       dwindex, patch); 
     }
+    new_dw->allocate(rho_CC[m],    Ilb->rho_CCLabel,       dwindex, patch);
+    new_dw->allocate(vol_frac[m],  Ilb->vol_frac_CCLabel,  dwindex, patch);
+    new_dw->allocate(rho_micro[m], Ilb->rho_micro_CCLabel, dwindex, patch);
+    new_dw->allocate(speedSound_new[m], Ilb->speedSound_CCLabel,dwindex, patch);
   }
 
   press_new = press;
@@ -1471,7 +1443,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
        ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
        MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
 
-       if(ice_matl){                // I C E                                      
+       if(ice_matl){                // I C E
         mat_mass[m] = mass_CC[m][*iter];
        } 
           
@@ -1499,21 +1471,14 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
   for (int m = 0; m < numALLMatls; m++)   {
     Material* matl = d_sharedState->getMaterial( m );
     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
     int dwindex = matl->getDWIndex();
     if(ice_matl){
-      new_dw->put( vol_frac[m],      Ilb->vol_frac_CCLabel,   dwindex, patch);
-      new_dw->put( speedSound_new[m],Ilb->speedSound_CCLabel, dwindex, patch);
-      new_dw->put( rho_micro[m],     Ilb->rho_micro_CCLabel,  dwindex, patch);
-      new_dw->put( rho_CC[m],        Ilb->rho_CCLabel,        dwindex, patch);
       new_dw->put( sp_vol_equil[m],  Ilb->sp_vol_equilLabel,  dwindex, patch);
     }
-    if(mpm_matl){
-      new_dw->put( vol_frac[m],      MIlb->vol_frac_CCLabel,  dwindex, patch);
-      new_dw->put( speedSound_new[m],MIlb->speedSound_CCLabel,dwindex, patch);
-      new_dw->put( rho_micro[m],     MIlb->rho_micro_CCLabel, dwindex, patch);
-      new_dw->put( rho_CC[m],        MIlb->rho_CCLabel,       dwindex, patch);
-    }
+    new_dw->put( vol_frac[m],      Ilb->vol_frac_CCLabel,   dwindex, patch);
+    new_dw->put( speedSound_new[m],Ilb->speedSound_CCLabel, dwindex, patch);
+    new_dw->put( rho_micro[m],     Ilb->rho_micro_CCLabel,  dwindex, patch);
+    new_dw->put( rho_CC[m],        Ilb->rho_CCLabel,        dwindex, patch);
   }
   new_dw->put(press_new,Ilb->press_equil_CCLabel,0,patch);
   
