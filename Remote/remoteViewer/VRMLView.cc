@@ -9,11 +9,12 @@
 #include <Remote/Tools/Image/Image.h>
 #include <Remote/Tools/Math/Vector.h>
 #include <Remote/Tools/Model/Model.h>
-#include <Remote/Tools/Util/Timer.h>
+#include <SCICore/Util/Timer.h>
 #include <Remote/Tools/Image/ZImage.h>
 
 #include <GL/glut.h>
 
+#include <stdio.h>
 #include <iostream>
 #include <fstream>
 using namespace std;
@@ -106,7 +107,7 @@ static Vector Up(0, 1, 0);
 static Vector Pos(0,0,5);
 static double velocity = 0.05;
 
-static Timer Clock;
+static WallClockTimer Clock;
 static ArcBall Arc;
 static double globalScale;
 //static Vector globalTranslate;
@@ -304,13 +305,13 @@ static void InitGL()
 
   int i;
   for (i = 0; i < 8; i++) {
-    glLightfv(GL_LIGHT0+i, GL_AMBIENT, ambient);
-    glLightfv(GL_LIGHT0+i, GL_DIFFUSE, diffuse[i]);
-    glLightfv(GL_LIGHT0+i, GL_SPECULAR, specular);
-    glLightf(GL_LIGHT0+i, GL_CONSTANT_ATTENUATION, 1);
-    glLightf(GL_LIGHT0+i, GL_LINEAR_ATTENUATION, 0);
-    glLightf(GL_LIGHT0+i, GL_QUADRATIC_ATTENUATION, 0);
-    glDisable(GL_LIGHT0+i);
+    glLightfv((GLenum)(GL_LIGHT0+i), GL_AMBIENT, ambient);
+    glLightfv((GLenum)(GL_LIGHT0+i), GL_DIFFUSE, diffuse[i]);
+    glLightfv((GLenum)(GL_LIGHT0+i), GL_SPECULAR, specular);
+    glLightf((GLenum)(GL_LIGHT0+i), GL_CONSTANT_ATTENUATION, 1);
+    glLightf((GLenum)(GL_LIGHT0+i), GL_LINEAR_ATTENUATION, 0);
+    glLightf((GLenum)(GL_LIGHT0+i), GL_QUADRATIC_ATTENUATION, 0);
+    glDisable((GLenum)((GLenum)(GL_LIGHT0+i)));
   }
 
 
@@ -556,7 +557,7 @@ void Draw()
 
   int i;
   for (i = 0; i < 8; i++) {
-    glLightfv(GL_LIGHT0+i, GL_POSITION, light_pos[i]);
+    glLightfv((GLenum)(GL_LIGHT0+i), GL_POSITION, light_pos[i]);
   }
   
   /*
@@ -973,8 +974,9 @@ void Draw()
   NumFrames++;
   if(NumFrames >= NUM_FRAMES)
     {
-      eltime = Clock.Reset();
-      Clock.Start();
+      eltime = Clock.time();
+      Clock.clear();
+      Clock.start();
       NumFrames = 0;
     }
   
@@ -1176,8 +1178,8 @@ void SendZBuffer() {
     
     HeightSimp* HFSimplifier = new HeightSimp(ZBuf, 0x01000000, 0x01000000);
 
-    Timer T;
-    T.Start();
+    WallClockTimer T;
+    T.start();
 
     cout << "simplifying zbuf mesh" << endl;
     
@@ -1185,7 +1187,7 @@ void SendZBuffer() {
     
     delete HFSimplifier;
 
-    cerr << "After HFSimp = " << T.Read() << endl;
+    cerr << "After HFSimp = " << T.time() << endl;
 
     if (Simplify) {
       
@@ -1195,7 +1197,7 @@ void SendZBuffer() {
       SM->Dump();
       SM->Simplify(TargetTris, BScale);
       
-      cerr << "After Simp = " << T.Read() << endl;
+      cerr << "After Simp = " << T.time() << endl;
       
       SM->FixFacing();
       SM->Dump();
@@ -1206,7 +1208,7 @@ void SendZBuffer() {
 
     delete SM;
 
-    cerr << "After Export = " << T.Read() << endl;
+    cerr << "After Export = " << T.time() << endl;
 
     cerr << "transforming model" << endl;
     
@@ -1264,7 +1266,7 @@ void SendZBuffer() {
       *oldverts = newverts;
     }
 
-    cerr << "After Transform = " << T.Read() << endl;
+    cerr << "After Transform = " << T.time() << endl;
 
     //DEBUG(Mo->Objs[0].verts.size());
     Mo->RemoveTriangles(Pos, 0.2);
@@ -1275,7 +1277,7 @@ void SendZBuffer() {
 
     datasock->Write(VR_ENDMESSAGE);
 
-    cerr << "After Send = " << T.Read() << endl;
+    cerr << "After Send = " << T.time() << endl;
     cerr << "BBox = " << Mo->Box << endl;
     
     cerr << "done writing" << endl;
@@ -1507,14 +1509,14 @@ void SaveZBuffer()
   
   HeightSimp* HFSimplifier = new HeightSimp(ZBuf, 0x01000000, 0x01000000);
   
-  Timer T;
-  T.Start();
+  WallClockTimer T;
+  T.start();
   
   SimpMesh *SM = HFSimplifier->HFSimp();
   
   delete HFSimplifier;
   
-  cerr << "After HFSimp = " << T.Read() << endl;
+  cerr << "After HFSimp = " << T.time() << endl;
   
 				// if a view file exists,
   //int TargetTris = 1000;
@@ -1523,7 +1525,7 @@ void SaveZBuffer()
   //SM->Dump();
   //SM->Simplify(TargetTris, BScale);
   
-  cerr << "After Simp = " << T.Read() << endl;
+  cerr << "After Simp = " << T.time() << endl;
   
   SM->FixFacing();
   SM->Dump();
@@ -1532,7 +1534,7 @@ void SaveZBuffer()
   
   delete SM;
   
-  cerr << "After Export = " << T.Read() << endl;
+  cerr << "After Export = " << T.time() << endl;
   
   cerr << "transforming model" << endl;
   
@@ -1561,7 +1563,7 @@ void SaveZBuffer()
     *oldverts = newverts;
   }
   
-  cerr << "After Transform = " << T.Read() << endl;
+  cerr << "After Transform = " << T.time() << endl;
   
   Mo->Save("zbuf.obj");
   delete Mo;
@@ -2075,12 +2077,12 @@ void menu(int item)
 
   if (item >= '1' && item <= '8') {
     int lightnum = item-'1';
-    if(glIsEnabled(GL_LIGHT0+lightnum)) {
-      glDisable(GL_LIGHT0+lightnum);
+    if(glIsEnabled((GLenum)(GL_LIGHT0+lightnum))) {
+      glDisable((GLenum)(GL_LIGHT0+lightnum));
       cerr << "Light " << lightnum+1 << " is off.\n";
     }
     else {
-      glEnable(GL_LIGHT0+lightnum);
+      glEnable((GLenum)(GL_LIGHT0+lightnum));
       cerr << "Light " << lightnum+1 << " is on.\n";
     }
   }
@@ -2616,6 +2618,11 @@ void commThread::run() {
 
 }
 
+} // namespace Modules
+} // namespace Remote
+
+using namespace Remote::Modules;
+
 //----------------------------------------------------------------------
 int main(int argc, char **argv)
 {
@@ -2706,5 +2713,3 @@ int main(int argc, char **argv)
   return 0;
 }
 
-} // namespace Modules
-} // namespace Remote

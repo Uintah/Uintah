@@ -13,8 +13,10 @@ PSELIBS := SCICore Remote
 else
 PSELIBS := SCICore/OS SCICore/Thread Remote/Tools Remote/Modules/remoteSalmon
 endif
-LIBS := -L$(GLUT)/lib -lglut -lGLU -lGL \
-	-lXmu -lX11 -lXext -lm ### -L$(FLEX) -lfl -ltiff -ljpeg 
+LIBS := -L$(GLUT)/lib -lglut  $(XML_LIBRARY) $(TK_LIBRARY) $(GL_LIBS) \
+	 -lm
+
+# -lXmu -lX11 -lXext -lm ### -L$(FLEX) -lfl -ltiff -ljpeg 
 
 PROGRAM := $(SRCDIR)/VRMLView
 SRCS := $(SRCDIR)/VRMLView.cc
@@ -22,6 +24,11 @@ include $(SRCTOP)/scripts/program.mk
 
 #
 # $Log$
+# Revision 1.2  2000/07/11 20:32:55  yarden
+# replace Timer with SCIRun's WallClockTimer
+# move main outside of the namespace
+# correct the libraries in sub.mk
+#
 # Revision 1.1  2000/07/10 20:44:26  dahart
 # initial commit
 #
