@@ -3,9 +3,12 @@
 
 #include <GL/glu.h>
 #include <GL/glx.h>
+#include <math.h>
 #define textureHeight 128
 #define textureWidth 128
 
+namespace rtrt {
+  
 template <class T>
 class Texture
 {
@@ -204,8 +207,8 @@ class Texture
       for( i = 0; i < textureHeight; i++ )
 	for( j = 0; j < textureWidth; j++ )
 	  {
-	    intensity = 1.0 - 5*sqrt( (j-textureHeight/2)*(j-textureHeight/2) + (i-textureWidth/2)*(i-textureWidth/2) )/
-	                      sqrt( textureHeight*textureHeight/4 + textureWidth*textureWidth/4 );
+	    intensity = 1.0f - 5*sqrt( (j-textureHeight/2.0f)*(j-textureHeight/2.0f) + (i-textureWidth/2.0f)*(i-textureWidth/2.0f) )/
+	                      sqrt( textureHeight*textureHeight/4.0f + textureWidth*textureWidth/4.0f );
 	    if( intensity < 0 )
 	      intensity = 0;
 	    textArray[i][j][0] = current_color[0];
@@ -281,5 +284,7 @@ class Texture
       glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, textureWidth, textureHeight, 0, GL_RGBA, GL_FLOAT, textArray );
     }
 };
+
+} // end namespace rtrt
 
 #endif
