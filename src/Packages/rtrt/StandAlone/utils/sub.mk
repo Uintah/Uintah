@@ -71,3 +71,6 @@ LIBS += $(LAPACK_LIBRARY) $(F_LIBRARY)
 include $(SCIRUN_SCRIPTS)/program.mk
 endif
 
+PROGRAM := $(SRCDIR)/tex-compress
+SRCS := $(SRCDIR)/tex-compress.cc
+include $(SCIRUN_SCRIPTS)/program.mk
