@@ -1087,10 +1087,16 @@ AC_SUBST(LEX)
 AC_SUBST(LEXLIB)
 
 ##-- Generate Output Files ---------------------------------------------------
-
+if ! test -d "Dataflow/Modules/Fields/Manip"; then
+  mkdir -p "Dataflow/Modules/Fields/Manip";
+fi
+if ! test -d "Dataflow/Modules/Math/Manip"; then
+  mkdir -p "Dataflow/Modules/Math/Manip";
+fi
 AC_OUTPUT(	configVars.mk \
 		Makefile \
                 Dataflow/Modules/Fields/Manip/Makefile\
+		Dataflow/Modules/Math/Manip/Makefile\
 		sci_defs.h \
 		, echo timestamp > stamp-h)
 
