@@ -76,7 +76,7 @@
       </port>
       <port>
         <name>ColorMap2</name>
-	<datatype>SCIRun::Colormap2</datatype>
+	<datatype>SCIRun::ColorMap2</datatype>
       </port>
     </inputs>
     <outputs>

@@ -69,7 +69,7 @@ private:
 
   TextureIPort* intexture;
   ColorMapIPort* icmap1;
-  Colormap2IPort* icmap2;
+  ColorMap2IPort* icmap2;
   GeometryOPort* ogeom;
   ColorMapOPort* ocmap;
   int cmap1_prevgen;
@@ -140,7 +140,7 @@ VolumeVisualizer::execute()
   
   intexture = (TextureIPort*)get_iport("Texture");
   icmap1 = (ColorMapIPort*)get_iport("ColorMap");
-  icmap2 = (Colormap2IPort*)get_iport("ColorMap2");
+  icmap2 = (ColorMap2IPort*)get_iport("ColorMap2");
   ogeom = (GeometryOPort*)get_oport("Geometry");
   ocmap = (ColorMapOPort*)get_oport("ColorMap");
   if (!intexture) {

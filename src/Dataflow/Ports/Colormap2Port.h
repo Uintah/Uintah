@@ -37,8 +37,8 @@
 
 namespace SCIRun {
 
-typedef SimpleIPort<Colormap2Handle> Colormap2IPort;
-typedef SimpleOPort<Colormap2Handle> Colormap2OPort;
+typedef SimpleIPort<Colormap2Handle> ColorMap2IPort;
+typedef SimpleOPort<Colormap2Handle> ColorMap2OPort;
 
 } // End namespace SCIRun
 

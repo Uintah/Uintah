@@ -46,7 +46,7 @@
     <outputs>
       <port>
 	<name>Output Data</name>
-	<datatype>SCIRun::Colormap2</datatype>
+	<datatype>SCIRun::ColorMap2</datatype>
       </port>
     </outputs>
   </io>
