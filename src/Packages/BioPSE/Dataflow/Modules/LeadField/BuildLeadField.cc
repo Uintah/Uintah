@@ -34,13 +34,32 @@
 #include <Core/Datatypes/TetVol.h>
 
 #include <iostream>
-using std::cerr;
-using std::endl;
 #include <stdio.h>
 #include <math.h>
 
+
+namespace SCIRun {
+vector<pair<int, double> > 
+operator*(const vector<pair<int, double> >&r, double &) {
+  ASSERTFAIL("BuildLeadField.cc Bogus operator");
+  return r;
+}
+vector<pair<int, double> > 
+operator+=(const vector<pair<int, double> >&r, 
+	   const vector<pair<int, double> >&) {
+  ASSERTFAIL("BuildLeadField.cc Bogus operator");
+  return r;
+}
+}
+
 namespace BioPSE {
+
+using std::cerr;
+using std::endl;
+using std::pair;
+
 using namespace SCIRun;
+
 
 class BuildLeadField : public Module {    
   FieldIPort* mesh_iport_;
@@ -79,7 +98,7 @@ BuildLeadField::BuildLeadField(const clString& id)
   add_iport(sol_iport_);
   rhs_oport_ = new MatrixOPort(this,"RHS Vector",
 			      MatrixIPort::Atomic);
-
+  add_oport(rhs_oport_);
   leadfield_oport_ = new MatrixOPort(this, "Leadfield (nelecs x nelemsx3)",
 				 MatrixIPort::Atomic);
   add_oport(leadfield_oport_);
