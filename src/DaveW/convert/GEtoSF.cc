@@ -73,7 +73,6 @@ int read_legend(FILE **fpp) {
     FILE *fp=*fpp;
     int OKflag=1;
     int num_structures, default_matl;
-    int struc, matl;
 
     OKflag &= fscanf(fp, "%d", &num_structures);
     table.resize(num_structures);
@@ -202,7 +201,7 @@ void write_seg_field() {
 
 void write_mri_field() {
     char outname[100];
-    sprintf(outname, a"%s.sfrg", out);
+    sprintf(outname, "%s.sfrg", out);
     printf("Writing file: %s\n", outname);
     TextPiostream stream(outname, Piostream::Write);
     ScalarFieldHandle sh=sf;
