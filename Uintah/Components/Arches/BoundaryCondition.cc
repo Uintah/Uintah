@@ -1396,9 +1396,9 @@ BoundaryCondition::wVelocityBC(DataWarehouseP& new_dw,
 void 
 BoundaryCondition::pressureBC(const ProcessorGroup*,
 			      const Patch* patch,
-			      DataWarehouseP& old_dw,
-			      DataWarehouseP& new_dw,
-			      CellInformation* cellinfo,
+			      DataWarehouseP& /*old_dw*/,
+			      DataWarehouseP& /*new_dw*/,
+			      CellInformation* /*cellinfo*/,
 			      ArchesVariables* vars)
 {
   // Get the low and high index for the patch
@@ -1558,9 +1558,9 @@ BoundaryCondition::pressureBC(const ProcessorGroup*,
 void 
 BoundaryCondition::scalarBC(const ProcessorGroup*,
 			    const Patch* patch,
-			    DataWarehouseP& old_dw,
-			    DataWarehouseP& new_dw,
-			    int index,
+			    DataWarehouseP& /*old_dw*/,
+			    DataWarehouseP& /*new_dw*/,
+			    int /*index*/,
 			    CellInformation* cellinfo,
 			    ArchesVariables* vars)
 {
@@ -1848,6 +1848,14 @@ BoundaryCondition::setInletVelocityBC(const ProcessorGroup* ,
 #endif
 }
 
+template<class T> void rewindow(T& data, const IntVector& low, const IntVector& high)
+{
+   T newdata;
+   newdata.allocate(low, high);
+   newdata.copy(data, low, high);
+   data=newdata;
+}
+
 //****************************************************************************
 // Actually calculate the pressure BCs
 //****************************************************************************
@@ -1912,6 +1920,17 @@ BoundaryCondition::recomputePressureBC(const ProcessorGroup* ,
     cerr.width(10);
     cerr << "PPP"<<*iter << ": " << pressure[*iter] << "\n" ; 
   }
+#if 0
+  rewindow(pressure, patch->getCellLowIndex(), patch->getCellHighIndex());
+  IntVector n1 (4,0,0);
+  if(patch->containsCell(n1))
+     cerr << "4,0,0: " << pressure[n1] << '\n';
+  IntVector n2 (4,0,1);
+  if(patch->containsCell(n2))
+     cerr << "4,0,1: " << pressure[n2] << '\n';
+
+  cerr << "4,0: pressure: " << pressure.getLowIndex() << ", " << pressure.getHighIndex() << '\n';
+#endif
   int xminus = patch->getBCType(Patch::xminus) == Patch::Neighbor?0:1;
   int xplus =  patch->getBCType(Patch::xplus) == Patch::Neighbor?0:1;
   int yminus = patch->getBCType(Patch::yminus) == Patch::Neighbor?0:1;
@@ -1936,6 +1955,13 @@ BoundaryCondition::recomputePressureBC(const ProcessorGroup* ,
 	      &(d_pressureBdry->refPressure),
 	      &xminus, &xplus, &yminus, &yplus,
 	      &zminus, &zplus);
+#if 0
+  if(patch->containsCell(n1))
+     cerr << "4,0,0: " << pressure[n1] << '\n';
+  if(patch->containsCell(n2))
+     cerr << "4,0,1: " << pressure[n2] << '\n';
+#endif
+
   // set values of the scalars on the scalar boundary
   for (int ii = 0; ii < d_nofScalars; ii++) {
     FORT_PROFSCALAR(domLoScalar.get_pointer(), domHiScalar.get_pointer(),
@@ -1948,6 +1974,19 @@ BoundaryCondition::recomputePressureBC(const ProcessorGroup* ,
 		    &zminus, &zplus);
   }
       
+#if 0
+  if(patch->containsCell(n1))
+     cerr << "4,0,0: " << pressure[n1] << '\n';
+  if(patch->containsCell(n2))
+     cerr << "4,0,1: " << pressure[n2] << '\n';
+#endif
+
+  cerr << "After recomputecalpbc" << endl;
+  uVelocity.print(cerr);
+  cerr << "print vvelocity" << endl;
+  vVelocity.print(cerr);
+  cerr << "print pressure" << endl;
+
   cerr << "After recomputecalpbc print pressure" << endl;
   if (patch->containsCell(IntVector(2,3,3))) {
     cerr << "[2,3,3] press[2,3,3]" << pressure[IntVector(2,3,3)] << " " << 
@@ -1957,7 +1996,11 @@ BoundaryCondition::recomputePressureBC(const ProcessorGroup* ,
     cerr << "[2,3,3] press[1,3,3]" << pressure[IntVector(1,3,3)] << endl;
   }
  
+  rewindow(pressure, patch->getCellLowIndex(), patch->getCellHighIndex());
+
+  cerr << "recompute calpbc: pressure=\n";
   pressure.print(cerr);
+
   cerr << "print pcell" << endl;
   cellType.print(cerr);
   for(CellIterator iter = patch->getCellIterator();
@@ -1979,7 +2022,7 @@ BoundaryCondition::recomputePressureBC(const ProcessorGroup* ,
 // Actually set flat profile at flow inlet boundary
 //****************************************************************************
 void 
-BoundaryCondition::setFlatProfile(const ProcessorGroup* pc,
+BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
 				  const Patch* patch,
 				  DataWarehouseP& old_dw,
 				  DataWarehouseP& new_dw)
@@ -2231,7 +2274,7 @@ BoundaryCondition::WallBdry::problemSetup(ProblemSpecP& params)
 //****************************************************************************
 // constructor for BoundaryCondition::FlowInlet
 //****************************************************************************
-BoundaryCondition::FlowInlet::FlowInlet(int numMix, int cellID):
+BoundaryCondition::FlowInlet::FlowInlet(int /*numMix*/, int cellID):
   d_cellTypeID(cellID)
 {
   density = 0.0;
@@ -2282,7 +2325,7 @@ BoundaryCondition::FlowInlet::problemSetup(ProblemSpecP& params)
 //****************************************************************************
 // constructor for BoundaryCondition::PressureInlet
 //****************************************************************************
-BoundaryCondition::PressureInlet::PressureInlet(int numMix, int cellID):
+BoundaryCondition::PressureInlet::PressureInlet(int /*numMix*/, int cellID):
   d_cellTypeID(cellID)
 {
   //  streamMixturefraction.setsize(numMix-1);
@@ -2327,7 +2370,7 @@ BoundaryCondition::PressureInlet::problemSetup(ProblemSpecP& params)
 //****************************************************************************
 // constructor for BoundaryCondition::FlowOutlet
 //****************************************************************************
-BoundaryCondition::FlowOutlet::FlowOutlet(int numMix, int cellID):
+BoundaryCondition::FlowOutlet::FlowOutlet(int /*numMix*/, int cellID):
   d_cellTypeID(cellID)
 {
   //  streamMixturefraction.setsize(numMix-1);
@@ -2369,6 +2412,10 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.66  2000/10/11 17:40:28  sparker
+// Added rewindow hack to trim ghost cells from variables
+// fixed compiler warnings
+//
 // Revision 1.65  2000/10/11 16:37:29  rawat
 // modified calpbc for ghost cells
 //

@@ -425,6 +425,8 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
   default:
     throw InvalidValue("Invalid index in MomentumSolver");
   }
+  cerr << "momentum solver: pressure=\n";
+  velocityVars.pressure.print(cerr);
   if (patch->containsCell(IntVector(2,3,3))) {
     cerr << "[2,3,3] press[2,3,3]" << velocityVars.pressure[IntVector(2,3,3)] 
 	 << " " << velocityVars.pressure[IntVector(1,3,3)] << endl;
@@ -720,6 +722,10 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
   
 //
 // $Log$
+// Revision 1.35  2000/10/11 17:40:28  sparker
+// Added rewindow hack to trim ghost cells from variables
+// fixed compiler warnings
+//
 // Revision 1.34  2000/10/11 16:37:29  rawat
 // modified calpbc for ghost cells
 //
