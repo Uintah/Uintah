@@ -190,7 +190,7 @@
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
     <!--____________________________________________________________________-->   
     <PhysicalConstants>
-       <gravity>[0,0,0]</gravity>
+       <gravity>[0,-9.81,0]</gravity>
     </PhysicalConstants>
     <!--____________________________________________________________________-->
     <!--     MATERIAL PROPERTIES AND INITIAL CONDITIONS                     -->
