@@ -1,9 +1,17 @@
 
 #include <config/sci.cf>
 
+#ifdef SCI_COMPILER_GNU
+TMPL_DIR = gnupt
+TMPL_LIB = gnupt/libgnupt.o
+#else
+TMPL_DIR =
+TMPL_LIB =
+#endif
+
 SUBDIRS = Classlib Comm Constraints \
 	Dataflow Datatypes Devices Geom Geometry \
-	Malloc Math Modules Multitask TCL Widgets tcl
+	Malloc Math Modules Multitask TCL Widgets tcl $(TMPL_DIR)
 
 SCISubdirs($(SUBDIRS))
 
@@ -37,7 +45,9 @@ SR_LIBS = \
 	Malloc/libMalloc.a \
 	tcl/sci/libscitk.a \
 	tcl/tk3.6/libtk.a \
-	tcl/tcl7.3/libtcl.a
+	tcl/tcl7.3/libtcl.a \
+	$(TMPL_LIB)
+
 SR_LDFLAGS = SCI_LAUDIO SCI_LM SCI_LTHREAD SCI_LGL SCI_LX11
 SCIProgramTarget($(SR_TARGET), $(SR_OBJS), $(SR_LIBS), $(SR_LDFLAGS))
 
