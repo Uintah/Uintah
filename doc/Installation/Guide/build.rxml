@@ -150,6 +150,18 @@ cd SCIRun/<replaceable>build-dir</replaceable>
       </para>
 
       <para>
+	Support for TrueType (scalable anti-aliased) fonts in PowerApp
+	BioImage and module ViewSlices is enabled with option
+	<option>--with-freetype=<replaceable>path-to-freetype-lib-directory</replaceable></option>.
+	<replaceable>Path-to-freetype-lib-directory</replaceable> is
+	the path to a directory containing freetype2 libraries, for
+	example <filename os="osx">/sw/lib</filename><filename
+	os="linux;irix">/usr/local/lib</filename>.  Option
+	<option>--with-freetype</option> is not needed when freetype2
+	libraries exist in <filename>/usr/lib</filename>.
+      </para>
+
+      <para>
 	Not all of <command>configure</command>'s options have been
 	mentioned. Running <command>configure --help</command> lists them all.
       </para>
@@ -189,7 +201,8 @@ make -j <replaceable>N</replaceable>
 
   <tip>
     <para>It is possible to build SCIRun for multiple machine
-    architectures within the same source code directory.  See <xref
+    architectures and multiple sets of configure options within the
+    same source code directory.  See <xref
     linkend="app.multi_builds"/> for details.</para>
   </tip>
 
