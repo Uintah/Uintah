@@ -5,7 +5,9 @@ SRCDIR   := Packages/Uintah/CCA/Components/ICE/EOS
 SRCS     += $(SRCDIR)/EquationOfState.cc \
 	$(SRCDIR)/EquationOfStateFactory.cc \
 	$(SRCDIR)/IdealGas.cc \
-	$(SRCDIR)/JWL.cc 
+	$(SRCDIR)/JWL.cc      \
+	$(SRCDIR)/JWLC.cc     \
+	$(SRCDIR)/Murnahan.cc
 #	$(SRCDIR)/Harlow.cc \
 #	$(SRCDIR)/StiffGas.cc
 
