@@ -78,6 +78,8 @@ public:
   void resize(const ImageMesh::Cell::size_type &size)
   { Array2<Data>::resize(1, size); }
 
+  unsigned int size() { return dim1() * dim2(); }
+
   static const string type_name(int n = -1);
 };
 
