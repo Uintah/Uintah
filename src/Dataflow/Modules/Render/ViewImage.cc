@@ -161,6 +161,7 @@ class ViewImage : public Module
     UIdouble		x_;
     UIdouble		y_;
 
+    bool		clut_dirty_;
     UIint		clut_ww_;
     UIint		clut_wl_;
       
@@ -219,6 +220,13 @@ class ViewImage : public Module
   SliceWindow *		current_window_;
 
   Point			cursor_;
+
+  SliceWindow *		window_level_;
+  int			window_level_x_;
+  int			window_level_y_;
+  int			window_level_ww_;
+  int			window_level_wl_;
+
 
   int			max_slice_[3];
   double		scale_[3];
@@ -280,6 +288,7 @@ class ViewImage : public Module
 
   void			handle_gui_motion(GuiArgs &args);
   void			handle_gui_button(GuiArgs &args);
+  void			handle_gui_button_release(GuiArgs &args);
   void			handle_gui_keypress(GuiArgs &args);
   void			handle_gui_enter(GuiArgs &args);
   void			handle_gui_leave(GuiArgs &args);
@@ -319,6 +328,7 @@ ViewImage::SliceWindow::SliceWindow(GuiContext *ctx) :
   zoom_(ctx->subVar("zoom"), 100.0),
   x_(ctx->subVar("posx"),0.0),
   y_(ctx->subVar("posy"),0.0),
+  clut_dirty_(false),
   clut_ww_(ctx->subVar("clut_ww")),
   clut_wl_(ctx->subVar("clut_wl")),
   auto_levels_(ctx->subVar("auto_levels"),0),
@@ -376,6 +386,7 @@ ViewImage::ViewImage(GuiContext* ctx) :
   //  slices_(),
   colormap_(0),
   current_window_(0),
+  window_level_(0),
   min_(ctx->subVar("min"), -1),
   max_(ctx->subVar("max"), -1),
   ogeom_(0),
@@ -532,7 +543,7 @@ bool
 ViewImage::extract_colormap(SliceWindow &window)
 {
   if (!colormap_.get_rep()) return false;
-  bool recompute = false;
+  bool recompute = window.clut_dirty_;
   int ww = window.clut_ww_;
   int wl = window.clut_wl_;
   if (colormap_->generation != window.colormap_generation_) recompute = true;
@@ -574,7 +585,7 @@ ViewImage::extract_colormap(SliceWindow &window)
   
   for (unsigned int s = 0; s < window.slices_.size(); ++s)
     window.slices_[s]->dirty_ = true;
-
+  window.clut_dirty_ = false;
   return true;
 }
 
@@ -1496,7 +1507,7 @@ ViewImage::mouse_in_window(SliceWindow &window) {
 void
 ViewImage::handle_gui_motion(GuiArgs &args) {
   int state;
-  if (!string_to_int(args[4], state)) {
+  if (!string_to_int(args[5], state)) {
     args.error ("Cannot convert motion state");
     return;
   }
@@ -1520,9 +1531,19 @@ ViewImage::handle_gui_motion(GuiArgs &args) {
     if (mouse_in_window(window))
       cursor_ = screen_to_world(window, window.mouse_x_, window.mouse_y_);
   }
+
+  int X, Y;
+  string_to_int(args[7], X);
+  string_to_int(args[8], Y);
+
+  if (window_level_) {
+    SliceWindow &window = *window_level_;
+    window.clut_ww_ = window_level_ww_ + (X - window_level_x_)*2;
+    window.clut_wl_ = window_level_wl_ + (window_level_y_ - Y)*2;
+    window.clut_dirty_ = true;
+  }
+
   redraw_all();
-
-
 }
 
 
@@ -1587,14 +1608,14 @@ ViewImage::debug_print_state(int state) {
   cerr << std::endl;
 }
 
-
-
 void
-ViewImage::handle_gui_button(GuiArgs &args) {
+ViewImage::handle_gui_button_release(GuiArgs &args) {
   int button;
   int state;
+  int x;
+  int y;
 
-  if (args.count() != 5) {
+  if (args.count() != 7) {
     args.error(args[0]+" "+args[1]+" expects a window #, button #, and state");
     return;
   }
@@ -1609,6 +1630,60 @@ ViewImage::handle_gui_button(GuiArgs &args) {
     return;
   }
 
+  if (!string_to_int(args[5], x)) {
+    args.error ("Cannot convert X");
+    return;
+  }
+
+  if (!string_to_int(args[6], y)) {
+    args.error ("Cannot convert Y");
+    return;
+  }
+
+  if (layouts_.find(args[2]) == layouts_.end()) {
+    error ("Cannot handle button release on "+args[2]);
+    return;
+  }
+
+  switch (button) {
+  case 1:
+    window_level_ = 0;
+    break;
+  }
+}
+
+void
+ViewImage::handle_gui_button(GuiArgs &args) {
+  int button;
+  int state;
+  int x;
+  int y;
+
+  if (args.count() != 7) {
+    args.error(args[0]+" "+args[1]+" expects a window #, button #, and state");
+    return;
+  }
+
+  if (!string_to_int(args[3], button)) {
+    args.error ("Cannot convert window #");
+    return;
+  }
+
+  if (!string_to_int(args[4], state)) {
+    args.error ("Cannot convert button state");
+    return;
+  }
+
+  if (!string_to_int(args[5], x)) {
+    args.error ("Cannot convert X");
+    return;
+  }
+
+  if (!string_to_int(args[6], y)) {
+    args.error ("Cannot convert Y");
+    return;
+  }
+
   if (layouts_.find(args[2]) == layouts_.end()) {
     error ("Cannot handle motion on "+args[2]);
     return;
@@ -1620,6 +1695,14 @@ ViewImage::handle_gui_button(GuiArgs &args) {
     SliceWindow &window = *layout.windows_[w];
     if (!mouse_in_window(window)) continue;
     switch (button) {
+    case 1:
+      window_level_ = layout.windows_[w];
+      window_level_x_ = x;
+      window_level_y_ = y;
+      window_level_ww_ = window.clut_ww_();
+      window_level_wl_ = window.clut_wl_();
+      break;
+
     case 4:
       if (state & CONTROL_E == CONTROL_E) 
 	zoom_in(window);
@@ -1753,6 +1836,7 @@ ViewImage::tcl_command(GuiArgs& args, void* userdata) {
     return;
   } else if (args[1] == "motion") handle_gui_motion(args);
   else if (args[1] == "button") handle_gui_button(args);
+  else if (args[1] == "release") handle_gui_button_release(args);
   else if (args[1] == "keypress") handle_gui_keypress(args);
   else if (args[1] == "enter") handle_gui_enter(args);
   else if (args[1] == "leave") handle_gui_leave(args);
