@@ -474,19 +474,21 @@ Scene::io(SCIRun::Piostream &stream) {
 
 // Animate will only be called on objects added through this function.
 void
-Scene::addObjectOfInterest( Object * obj, bool animate /* = false */ )
+Scene::addObjectOfInterest( Object * obj, bool animate, bool redobbox )
 {
-  if( animate )
+  if( animate && !redobbox)
     animateObjects_.add( obj );
+  if( animate && redobbox)
+    dynamicBBoxObjects_.add( obj );
   if( Names::hasName(obj) )
     objectsOfInterest_.add( obj );
 }
 
 void
-Scene::addObjectOfInterest( const string& name, Object * obj, bool animate /* = false */ )
+Scene::addObjectOfInterest( const string& name, Object * obj, bool animate, bool redobbox )
 {
   Names::nameObject(name, obj);
-  addObjectOfInterest(obj, animate);
+  addObjectOfInterest(obj, animate, redobbox);
 }
 
 // For adding single route names
