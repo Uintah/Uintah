@@ -171,6 +171,12 @@ void VectorFieldExtractor::execute()
 	mesh_handle_ = scinew LatVolMesh(range.x(), range.y(),
 					 range.z(), box.min(),
 					 box.max());
+      }else if(mesh_handle_->get_ni() != range.x() ||
+	       mesh_handle_->get_nj() != range.y() ||
+	       mesh_handle_->get_nk() != range.z() ){
+	mesh_handle_ = scinew LatVolMesh(range.x(), range.y(),
+					 range.z(), box.min(),
+					 box.max());
       }
       switch ( subtype->getType() ) {
       case TypeDescription::Vector:
@@ -196,6 +202,12 @@ void VectorFieldExtractor::execute()
       }
     case TypeDescription::CCVariable:
       if( mesh_handle_.get_rep() == 0 ){
+	mesh_handle_ = scinew LatVolMesh(range.x(), range.y(),
+					 range.z(), box.min(),
+					 box.max());
+      } else if(mesh_handle_->get_ni() != range.x() ||
+	       mesh_handle_->get_nj() != range.y() ||
+	       mesh_handle_->get_nk() != range.z() ){
 	mesh_handle_ = scinew LatVolMesh(range.x(), range.y(),
 					 range.z(), box.min(),
 					 box.max());
@@ -227,6 +239,12 @@ void VectorFieldExtractor::execute()
 	mesh_handle_ = scinew LatVolMesh(range.x(), range.y()-1,
 					 range.z()-1, box.min(),
 					 box.max());
+      } else if(mesh_handle_->get_ni() != range.x() ||
+	       mesh_handle_->get_nj() != range.y()-1 ||
+	       mesh_handle_->get_nk() != range.z()-1 ){
+	mesh_handle_ = scinew LatVolMesh(range.x(), range.y()-1,
+					 range.z()-1, box.min(),
+					 box.max());
       }
       switch ( subtype->getType() ) {
       case TypeDescription::Vector:
@@ -255,6 +273,12 @@ void VectorFieldExtractor::execute()
 	mesh_handle_ = scinew LatVolMesh(range.x()-1, range.y(),
 					 range.z()-1, box.min(),
 					 box.max());
+      } else if(mesh_handle_->get_ni() != range.x()-1 ||
+	       mesh_handle_->get_nj() != range.y() ||
+	       mesh_handle_->get_nk() != range.z()-1 ){
+	mesh_handle_ = scinew LatVolMesh(range.x()-1, range.y(),
+					 range.z()-1, box.min(),
+					 box.max());
       }
       switch ( subtype->getType() ) {
       case TypeDescription::Vector:
@@ -280,6 +304,12 @@ void VectorFieldExtractor::execute()
       }
     case TypeDescription::SFCZVariable:
       if( mesh_handle_.get_rep() == 0 ){
+	mesh_handle_ = scinew LatVolMesh(range.x()-1, range.y()-1,
+					 range.z(), box.min(),
+					 box.max());
+      } else if(mesh_handle_->get_ni() != range.x()-1 ||
+	       mesh_handle_->get_nj() != range.y()-1 ||
+	       mesh_handle_->get_nk() != range.z() ){
 	mesh_handle_ = scinew LatVolMesh(range.x()-1, range.y()-1,
 					 range.z(), box.min(),
 					 box.max());
