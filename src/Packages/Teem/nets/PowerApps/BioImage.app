@@ -2430,15 +2430,15 @@ class BioImageApp {
 
         if {[set [set ChooseNrrdLighting]-port-index] == 1} {
 	    # lighing computed
-	    $attachedPFr.f.vis.childsite.tnb.canvas.notebook.cs.page2.cs.shading \
+	    .standalone.detachedV.f.vis.childsite.tnb.canvas.notebook.cs.page2.cs.shading \
 		configure -state normal
-	    $detachedPFr.f.vis.childsite.tnb.canvas.notebook.cs.page2.cs.shading \
+	    .standalone.attachedV.f.vis.childsite.tnb.canvas.notebook.cs.page2.cs.shading \
 		configure -state normal
 	} else {
 	    # lighting not computed
-	    $attachedPFr.f.vis.childsite.tnb.canvas.notebook.cs.page2.cs.shading \
+	    .standalone.detachedV.f.vis.childsite.tnb.canvas.notebook.cs.page2.cs.shading \
 		configure -state disabled
-	    $detachedPFr.f.vis.childsite.tnb.canvas.notebook.cs.page2.cs.shading \
+	    .standalone.attachedV.f.vis.childsite.tnb.canvas.notebook.cs.page2.cs.shading \
 		configure -state disabled
 	}
         [set ChooseNrrdLighting]-c needexecute
