@@ -216,14 +216,19 @@ Module::~Module()
 {
 }
 
+void Module::delete_warn() 
+{
+  MessageBase *msg = scinew MessageBase(MessageTypes::GoAwayWarn);
+  mailbox.send(msg);
+}
 
 void Module::kill_helper()
 {
   if (helper_thread)
   {
     // kill the helper thread
-    MessageBase msg(MessageTypes::GoAway);
-    mailbox.send(&msg);
+    MessageBase *msg = scinew MessageBase(MessageTypes::GoAway);
+    mailbox.send(msg);
     helper_thread->join();
     helper_thread = 0;
   }

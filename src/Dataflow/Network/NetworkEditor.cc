@@ -211,6 +211,13 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
 	if(!net->delete_module(args[2])){
 	    args.error("Cannot delete module "+args[2]);
 	}
+    } else if(args[1] == "deletemodule_warn"){
+	if(args.count() < 3){
+	    args.error("netedit deletemodule_warn needs a module name");
+	    return;
+	}
+	Module* mod=net->get_module_by_id(args[2]);
+	mod->delete_warn();
     } else if(args[1] == "addconnection"){
 	if(args.count() < 6){
 	    args.error("netedit addconnection needs 4 args");

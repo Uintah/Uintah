@@ -47,6 +47,7 @@ public:
 	ReSchedule,
 	MultiSend,
 	GoAway,
+	GoAwayWarn,
 
 	MUIDispatch,
 

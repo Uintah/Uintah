@@ -1571,6 +1571,7 @@ proc moduleHelp {modid} {
 }
 
 proc moduleDestroy {modid} {
+    netedit deletemodule_warn $modid
     global Subnet CurrentlySelectedModules
     networkHasChanged
     if [isaSubnetIcon $modid] {
