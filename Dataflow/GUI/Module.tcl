@@ -327,7 +327,7 @@ itcl_class Module {
 		# No progress graph so pack next to title
 		frame $p.msg -relief sunken -height 15 -borderwidth 2 \
 			-width [expr $indicator_width+2]
-		pack $p.msg -side left  -fill both -padx 2 -pady 2
+		pack $p.msg -side right  -fill both -padx 2 -pady 2
 		frame $p.msg.indicator -relief raised -width 0 -height 0 -borderwidth 2 \
 			-background blue
 	    } else {
@@ -339,6 +339,7 @@ itcl_class Module {
 	    }
 	    # Don't pack it in yet - the width is zero... 
 	    # pack $p.inset.graph -fill y -expand yes -anchor nw
+	    bind $p.msg.indicator <Button> "$this displayLog"
 	}
 
 	# Update the message state
