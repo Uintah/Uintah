@@ -66,7 +66,7 @@ int DebugBuf::overflow(int ch)
 
 
 DebugStream::DebugStream(const string& iname, bool defaulton):
-    std::ostream(0), std::ios(0)
+    std::ostream(0)
 {
   dbgbuf = new DebugBuf();
   init(dbgbuf);
