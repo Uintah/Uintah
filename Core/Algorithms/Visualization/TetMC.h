@@ -78,6 +78,10 @@ private:
     unsigned int first;
     unsigned int second;
     double dfirst;
+
+    inline bool operator<(const edgepair_t& e2) const {
+      return first < e2.first || (first == e2.first && second < e2.second);
+    }
   };
 
 #ifdef HAVE_HASH_MAP
@@ -96,18 +100,36 @@ private:
       hash<unsigned int> h;
       return h(a.first ^ a.second);
     }
+#ifdef __ECC
+    // These are particularly needed by ICC's hash stuff
+    static const size_t bucket_size = 4;
+    static const size_t min_buckets = 8;
+    
+    // This is a less than function.
+    bool operator()(const edgepair_t& ei1, const edgepair_t& ei2) const {
+      return ei1 < ei2;
+    }
+#endif
+    
   };
 
+#ifndef __ECC
   typedef hash_map<edgepair_t,
 		   TriSurfMesh::Node::index_type,
 		   edgepairhash,
 		   edgepairequal> edge_hash_type;
 #else
+  typedef hash_map<edgepair_t,
+                   TriSurfMesh::Node::index_type,
+                   edgepairhash> edge_hash_type;
+#endif // __ECC
+  
+#else
   struct edgepairless
   {
     bool operator()(const edgepair_t &a, const edgepair_t &b) const
     {
-      return a.first < b.first || (a.first == b.first && a.second < b.second);
+      return a < b;
     }
   };
 
