@@ -112,6 +112,9 @@ class Matrix3 {
   //NormSquared, M:M
   inline double NormSquared() const;
 
+  //Contraction of two tensors
+  inline double Contract(const Matrix3& mat) const;
+
   //Maximum element absolute value
   inline double MaxAbsElem() const;
   
@@ -292,6 +295,20 @@ inline double Matrix3::NormSquared() const
 inline double Matrix3::Norm() const
 {
   return sqrt(NormSquared());
+}
+
+inline double Matrix3::Contract(const Matrix3& mat) const
+{
+  // Return the contraction of this matrix with another 
+
+  double contract = 0.0;
+
+  for (int i = 0; i< 3; i++) {
+    for(int j=0;j<3;j++){
+	contract += mat3[i][j]*(mat.mat3[i][j]);
+    }
+  }
+  return contract;
 }
 
 inline double Matrix3::MaxAbsElem() const
