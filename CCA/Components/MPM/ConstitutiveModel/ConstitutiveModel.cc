@@ -84,7 +84,7 @@ ConstitutiveModel::addComputesAndRequires(Task*,
 {
 }
 
-void ConstitutiveModel::scheduleCheckNeedAddMPMMaterial(Task*, 
+void ConstitutiveModel::scheduleCheckNeedAddMPMMaterial(Task* task, 
                                                         const MPMMaterial*,
                                                         const PatchSet*) const
 {
@@ -132,7 +132,7 @@ ConstitutiveModel::computeStressTensor(const PatchSubset*,
 
 void ConstitutiveModel::checkNeedAddMPMMaterial(const PatchSubset*,
                                                 const MPMMaterial*,
-                                                DataWarehouse*,
+                                                DataWarehouse* new_dw,
                                                 DataWarehouse*)
 {
   double need_add=0.;
