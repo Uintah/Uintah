@@ -4285,7 +4285,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
       setBC(sp_vol_CC, "set_if_sym_BC",patch, d_sharedState, indx, new_dw); 
 
       //__________________________________
-      // Advect  model variables 
+      // Advect model variables 
       if(d_modelSetup && d_modelSetup->tvars.size() > 0){
         vector<TransportedVariable*>::iterator t_iter;
         for( t_iter  = d_modelSetup->tvars.begin();
@@ -4293,33 +4293,38 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
           TransportedVariable* tvar = *t_iter;
           
           if(tvar->matls->contains(indx)){
-            constCCVariable<double> q_L_CC,q_src;
-            CCVariable<double> q_new, q_CC;
+            constCCVariable<double> q_old,q_src;
+            CCVariable<double> q_L_CC, q_CC;
             
-            old_dw->get(q_L_CC,   tvar->var, indx, patch, gac, 2);         
+            old_dw->get(q_old,   tvar->var, indx, patch, gac, 2);         
             if(tvar->src){
               new_dw->get(q_src,  tvar->src, indx, patch, gac, 2);
             }
-            new_dw->allocateTemporary(q_new, patch, gac, 2);
+            new_dw->allocateTemporary(q_L_CC, patch, gac, 2);
             new_dw->allocateAndPut(q_CC, tvar->var, indx, patch);
-
-            if(tvar->src){  // if transported variable has a source
-              for(CellIterator iter(q_L_CC.getLowIndex(),q_L_CC.getHighIndex());
-                               !iter.done(); iter++){
-                  IntVector c = *iter;                            
-                  q_new[c]  = (q_L_CC[c] + q_src[c])*mass_L[c];
+            //__________________________________
+            //  compute Lagrangian values for tvars
+            // - q_L_CC must be computed in the extra cells
+            // - q_src must be 0.0 in the extra cells 
+            if(tvar->src){
+              for(CellIterator iter = patch->getExtraCellIterator(); 
+                                      !iter.done(); iter++) {
+                IntVector c = *iter;                            
+                q_L_CC[c]  = (q_old[c] + q_src[c])*mass_L[c];   // with source
               }
-            } else {
-              for(CellIterator iter(q_L_CC.getLowIndex(),q_L_CC.getHighIndex());
-                              !iter.done(); iter++){
-                  IntVector c = *iter;                            
-                  q_new[c]  = q_L_CC[c]*mass_L[c];
+            } else {       
+              for(CellIterator iter = patch->getExtraCellIterator(); 
+                                      !iter.done(); iter++) {
+                IntVector c = *iter;                            
+                q_L_CC[c]  = q_old[c]*mass_L[c];                // no source
               }
             }
-            advector->advectQ(q_new,patch,q_advected, new_dw);
+            
+            // now advect
+            advector->advectQ(q_L_CC,patch,q_advected, new_dw);
 
             update_q_CC<CCVariable<double>, double>
-                 ("q_new",q_CC, q_new, q_advected, 
+                 ("q_L_CC",q_CC, q_L_CC, q_advected, 
                   mass_L, mass_new, mass_advected, PH, PH2, patch);
 
             //  Set Boundary Conditions 
@@ -4327,7 +4332,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
             setBC(q_CC, Labelname,  patch, d_sharedState, indx, new_dw);
           }
         }
-      }
+      } 
 
       //__________________________________
       // A model *can* compute the specific heat
