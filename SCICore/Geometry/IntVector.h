@@ -79,6 +79,14 @@ namespace SCICore {
 	    return d_value[i];
 	}
 
+	inline int operator[](int i) const {
+	    return d_value[i];
+	}
+
+	inline int& operator[](int i) {
+	    return d_value[i];
+	}
+
 	inline int x() const {
 	    return d_value[0];
 	}
@@ -131,6 +139,9 @@ std::ostream& operator<<(std::ostream&, const SCICore::Geometry::IntVector&);
 
 //
 // $Log$
+// Revision 1.9  2000/09/12 15:09:31  sparker
+// Added [] operator
+//
 // Revision 1.8  2000/07/10 20:19:13  tan
 // For IntVector i, i(0)=i.x(),i(1)=i.y(),i(2)=i.z()
 //
