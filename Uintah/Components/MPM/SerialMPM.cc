@@ -28,6 +28,8 @@ static char *id="@(#) $Id$";
 namespace Uintah {
 namespace Components {
 
+using Uintah::Interface::Scheduler;
+
 using SCICore::Geometry::Vector;
 using SCICore::Geometry::Point;
 using SCICore::Math::Max;
@@ -605,6 +607,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 // end namespace Uintah
 
 // $Log$
+// Revision 1.7  2000/03/17 21:01:50  dav
+// namespace mods
+//
 // Revision 1.6  2000/03/17 02:57:01  dav
 // more namespace, cocoon, etc
 //
