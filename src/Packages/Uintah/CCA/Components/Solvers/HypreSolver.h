@@ -11,7 +11,7 @@ namespace Uintah {
     HypreSolver2(const ProcessorGroup* myworld);
     virtual ~HypreSolver2();
 
-    virtual SolverParameters* readParameters(const ProblemSpecP& params,
+    virtual SolverParameters* readParameters(ProblemSpecP& params,
 					     const std::string& name);
 
     virtual void scheduleSolve(const LevelP& level, SchedulerP& sched,

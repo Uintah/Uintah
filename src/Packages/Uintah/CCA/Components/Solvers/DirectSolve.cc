@@ -219,7 +219,7 @@ private:
   const DirectSolveParams* params;
 };
 
-SolverParameters* DirectSolve::readParameters(const ProblemSpecP& params, const string& varname)
+SolverParameters* DirectSolve::readParameters(ProblemSpecP& params, const string& varname)
 {
   DirectSolveParams* p = new DirectSolveParams();
   return p;
