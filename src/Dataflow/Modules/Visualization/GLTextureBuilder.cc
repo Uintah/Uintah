@@ -67,43 +67,6 @@ GLTextureBuilder::~GLTextureBuilder()
 
 }
 
-#if 0
-bool
-GLTextureBuilder::MakeContext(Display *dpy, GLXContext& cx)
-{
-  Tk_Window tkwin;
-  Window win;
-  XVisualInfo *vi;
-  
-  TCLTask::lock();
-  char *myn=strdup(".");
-  tkwin=Tk_NameToWindow(the_interp, myn, Tk_MainWindow(the_interp));
-  if(!tkwin){
-    glXMakeCurrent(dpy, None, NULL);
-    TCLTask::unlock();
-    return false;
-  }
-  dpy=Tk_Display(tkwin);
-  win=Tk_WindowId(tkwin);
-  vi = glXChooseVisual(dpy, DefaultScreen(dpy), attributeList);
-
-  cx=glXCreateContext(dpy, vi, 0, GL_TRUE);
-  if(!cx){
-    glXMakeCurrent(dpy, None, NULL);
-    TCLTask::unlock();
-    return false;
-  }
-  TCLTask::unlock();
-  return true;
-}
-
-void
-GLTextureBuilder::DestroyContext(Display *dpy, GLXContext& cx)
-{
-  glXDestroyContext(dpy,cx);
-} 
-#endif
-
 void GLTextureBuilder::execute(void)
 {
   infield_ = (FieldIPort *)get_iport("Field");
@@ -171,15 +134,17 @@ void GLTextureBuilder::real_execute(FieldHandle sfield)
       maxV = max;
     }
 
-    // see note above
-    tex_ = scinew GLTexture3D(sfield, minV, maxV, is_fixed);
-    if (!is_fixed) {
-      tex_->getminmax(minV, maxV);
-      min_.set(minV);
-      max_.set(maxV);
+    if( !tex_->replace_data(sfield, minV, maxV, is_fixed) ){
+      // see note above
+      tex_ = scinew GLTexture3D(sfield, minV, maxV, is_fixed);
+      if (!is_fixed) {
+	tex_->getminmax(minV, maxV);
+	min_.set(minV);
+	max_.set(maxV);
+      }
+      tex_->set_brick_size(sel_brick_dim_.get());
+      old_brick_size_ = sel_brick_dim_.get();
     }
-    tex_->set_brick_size(sel_brick_dim_.get());
-    old_brick_size_ = sel_brick_dim_.get();
   }
   else if (old_brick_size_ != sel_brick_dim_.get())
   {
@@ -193,15 +158,16 @@ void GLTextureBuilder::real_execute(FieldHandle sfield)
       maxV = max;
     }
 
-    // see note above
-    tex_ = scinew GLTexture3D(sfield, minV, maxV, is_fixed);
-    if (!is_fixed) {
-      tex_->getminmax(minV, maxV);
-      min_.set(minV);
-      max_.set(maxV);
-    }
-  }    
-
+    if( !tex_->replace_data(sfield, minV, maxV, is_fixed) ){
+      // see note above
+      tex_ = scinew GLTexture3D(sfield, minV, maxV, is_fixed);
+      if (!is_fixed) {
+	tex_->getminmax(minV, maxV);
+	min_.set(minV);
+	max_.set(maxV);
+      }
+    }    
+  }
   old_min_ = (int)minV;
   old_max_ = (int)maxV;
 
