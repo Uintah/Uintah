@@ -50,6 +50,7 @@ class BldTransform : public Module {
     TCLint zmapTCL;
     TCLint pre;
     TCLint whichxform;
+    TCLint widgetShowResizeHandles;
     TCLdouble widgetScale;
     ScaledBoxWidget *boxWidget;
     GeomSwitch *widget_switch;
@@ -58,7 +59,6 @@ class BldTransform : public Module {
     Transform composite, latestT, latestWidgetT, widget_trans, widget_pose_inv;
     Point widget_pose_center;
     int ignorechanges;
-    int autoupdate;
     int init;
 public:
     BldTransform(const clString& id);
@@ -89,8 +89,8 @@ BldTransform::BldTransform(const clString& id)
   whichxform("whichxform", id, this),
   sha("sha", id, this), shb("shb", id, this), shc("shc", id, this),
   shd("shd", id, this), widget_lock("BldTransform widget lock"),
-  widgetScale("widgetScale", id, this), ignorechanges(1), autoupdate(0), 
-  init(0)
+  widgetScale("widgetScale", id, this), ignorechanges(1),
+  init(0), widgetShowResizeHandles("widgetShowResizeHandles", id, this)
 {
     // Create the input port
     imatrix=scinew MatrixIPort(this, "Matrix", MatrixIPort::Atomic);
@@ -119,6 +119,7 @@ void BldTransform::execute()
 	C=Point(0,0,0); R=Point(1,0,0); D=Point(0,1,0), I=Point(0,0,1);
 	widget_pose_center=C;
 	boxWidget->SetPosition(C,R,D,I);
+	boxWidget->SetCurrentMode(2);
 	if (wh != 5) widget_switch->set_state(0);
 	ogeom->addObj(widget_switch, widget_name, &widget_lock);
 	ogeom->flushViews();
@@ -190,17 +191,54 @@ void BldTransform::execute()
 	// find the difference between widget_pose(_inv) and the current pose
 	if (!ignorechanges) {
 	    locT.load_frame(C,R-C,D-C,I-C);
+//	    cerr << "C,R-C,D-C,I-C\n";
+//	    locT.print();
+//	    cerr << "widget_pose_inv\n";
+//	    widget_pose_inv.print();
 	    locT.post_trans(widget_pose_inv);
-	    locT.post_translate(C-widget_pose_center);
+//	    cerr << "rotated and scaled\n";
+//	    locT.print();
+//	    cerr << "pre-translated\n";
+	    locT.post_translate(-widget_pose_center.vector());
+//	    locT.print();
+//	    cerr << "post-translated\n";
+	    locT.pre_translate(C.vector());
+//	    locT.print();
+//	    cerr << "widget_pose_center="<<widget_pose_center<<" C="<<C<<"\n";
+//	    locT.print();
 	}
 	// multiply that by widget_trans
-	locT.pre_trans(widget_trans);
+	cerr << "local trans=\n";
+	locT.print();
+	cerr << "latest trans=\n";
+	latestWidgetT.print();
+
+//	latestWidgetT=locT;
+	latestWidgetT.pre_trans(locT);
+
+//	locT.pre_trans(latestWidgetT);
+	cerr << "composite trans=\n";
+	locT=latestWidgetT;
+	locT.print();
 	latestWidgetT=locT;
+	widget_pose_center=C;
+	widget_pose_inv.load_frame(C,R-C,D-C,I-C);
+//	cerr << "WIDGET POSE :\n";	
+//	widget_pose_inv.print();
+	widget_pose_inv.invert();
+//	cerr << "WIDGDET POSE INV:\n";
+//	widget_pose_inv.print();
+//	if (ignorechanges) return;
     }
     DenseMatrix *dm=scinew DenseMatrix(4,4);
     omh=dm;
     
     // now either pre- or post-multiply the transforms and store in matrix
+
+    cerr << "ORIG=\n";
+    inT.print();
+    cerr << "OURS=\n";
+    locT.print();
     if (pre.get()) {
 	locT.post_trans(composite);
 	latestT=locT;
@@ -210,7 +248,8 @@ void BldTransform::execute()
 	latestT=locT;
 	locT.pre_trans(inT);
     }
-
+    cerr << "TOTAL=\n";
+    locT.print();
     double finalP[16];
     locT.get(finalP);
     double *p=&(finalP[0]);
@@ -227,8 +266,7 @@ void BldTransform::execute()
 
 void BldTransform::widget_moved(int last)
 {
-    if(last && !abort_flag && autoupdate && !ignorechanges) {
-	abort_flag=1;	
+    if (last) {
 	want_to_execute();
     }
 }
@@ -240,38 +278,32 @@ void BldTransform::tcl_command(TCLArgs& args, void* userdata) {
     } else if (args[1] == "show_widget") {
 	widget_switch->set_state(1);
 	ogeom->flushViews();
-    } else if (args[1] == "composite") {
-	composite=latestT;
-	Point C,R,D,I;
-	boxWidget->GetPosition(C, R, D, I);
-	widget_trans.load_identity();
-	widget_pose_inv.load_frame(C,R-C,D-C,I-C);
-	widget_pose_inv.invert();
-	widget_pose_center=C;
-    } else if (args[1] == "change_autoupdate") {
-	if (args[2] == "1") {	// start autoupdating
-	    autoupdate=1;
-	    want_to_execute();
-	} else {		// stop autoupdating
-	    autoupdate=0;
-	}
+    } else if (args[1] == "reset_widget" || args[1] == "reset" || 
+	       args[1] == "composite") {
+	if (args[1] == "reset")
+	    composite.load_identity();
+	else if (args[1] == "composite")
+	    composite=latestT;
+	latestT.load_identity();
+	latestWidgetT.load_identity();
+        boxWidget->SetPosition(Point(0,0,0), Point(1,0,0), Point(0,1,0), Point(0,0,1));
+	widget_pose_center=Point(0,0,0);
+	widget_pose_inv.load_identity();
+//	ignorechanges=1;
+	want_to_execute();
     } else if (args[1] == "change_ignore") {
 	if (args[2] == "1") {	// start ignoring
-	    Point R, D, I, C;
-	    boxWidget->GetPosition(C, R, D, I);
-	    widget_trans=latestWidgetT;
-	    widget_pose_inv.load_frame(C,R-C,D-C,I-C);
-	    widget_pose_inv.invert();
-	    widget_pose_center=C;
 	    ignorechanges=1;
 	} else {		// stop ignoring
-	    Point R, D, I, C;
-	    boxWidget->GetPosition(C, R, D, I);
-	    widget_trans=latestWidgetT;
-	    widget_pose_inv.load_frame(C,R-C,D-C,I-C);
-	    widget_pose_inv.invert();
-	    widget_pose_center=C;
 	    ignorechanges=0;
+	}
+    } else if (args[1] == "change_handles") {
+	if (args[2] == "1") {	// start showing
+	    boxWidget->SetCurrentMode(1);
+	    ogeom->flushViews();
+	} else {		// stop showing
+	    boxWidget->SetCurrentMode(2);
+	    ogeom->flushViews();
 	}
     } else {
         Module::tcl_command(args, userdata);
@@ -284,6 +316,9 @@ void BldTransform::tcl_command(TCLArgs& args, void* userdata) {
 
 //
 // $Log$
+// Revision 1.6  2000/08/13 04:45:02  dmw
+// Fixed widget-based transform
+//
 // Revision 1.5  2000/08/04 18:09:06  dmw
 // added widget-based transform generation
 //
