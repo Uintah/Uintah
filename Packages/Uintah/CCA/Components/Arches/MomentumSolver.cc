@@ -155,11 +155,11 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patch
   // from Task::NewDW
 
   tsk->requires(Task::NewDW, d_lab->d_uVelocitySIVBCLabel,
-		Ghost::AroundCells, numGhostCells+1);
+		Ghost::AroundFaces, numGhostCells+1);
   tsk->requires(Task::NewDW, d_lab->d_vVelocitySIVBCLabel,
-		Ghost::AroundCells, numGhostCells+1);
+		Ghost::AroundFaces, numGhostCells+1);
   tsk->requires(Task::NewDW, d_lab->d_wVelocitySIVBCLabel,
-		Ghost::AroundCells, numGhostCells+1);
+		Ghost::AroundFaces, numGhostCells+1);
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
 		Ghost::AroundCells, numGhostCells);
   tsk->requires(Task::NewDW, d_lab->d_densityINLabel,
@@ -180,11 +180,11 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patch
   case Arches::XDIR:
 
     tsk->requires(Task::NewDW, d_lab->d_uVelocityOUTBCLabel,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_vVelocityOUTBCLabel,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_wVelocityOUTBCLabel,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
 
     // for multimaterial
 
@@ -204,11 +204,11 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patch
     // use new uvelocity for v coef calculation
     
     tsk->requires(Task::NewDW, d_lab->d_uVelocityOUTBCLabel, 
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_vVelocityOUTBCLabel, 
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_wVelocityOUTBCLabel,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
 
     if (d_MAlab) {
 
@@ -225,11 +225,11 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patch
     // use new uvelocity for v coef calculation
 
     tsk->requires(Task::NewDW, d_lab->d_uVelocityOUTBCLabel, 
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_vVelocityOUTBCLabel, 
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_wVelocityOUTBCLabel, 
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
 
     if (d_MAlab) {
 
@@ -315,10 +315,10 @@ MomentumSolver::sched_velocityLinearSolve(SchedulerP& sched, const PatchSet* pat
 
 	// for the task graph to work
     tsk->requires(Task::NewDW, d_lab->d_uVelocitySIVBCLabel, 
-		      Ghost::AroundCells, numGhostCells+1);
+		      Ghost::AroundFaces, numGhostCells+1);
 	// coefficient for the variable for which solve is invoked
     tsk->requires(Task::NewDW, d_lab->d_uVelocityOUTBCLabel, 
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_uVelCoefMBLMLabel,
 		  d_lab->d_stencilMatl, Task::OutOfDomain,
 		  Ghost::None, zeroGhostCells);
@@ -331,10 +331,10 @@ MomentumSolver::sched_velocityLinearSolve(SchedulerP& sched, const PatchSet* pat
   case Arches::YDIR:
 
     tsk->requires(Task::NewDW, d_lab->d_vVelocitySIVBCLabel, 
-		  Ghost::AroundCells, numGhostCells+1);
+		  Ghost::AroundFaces, numGhostCells+1);
     // coefficient for the variable for which solve is invoked
     tsk->requires(Task::NewDW, d_lab->d_vVelocityOUTBCLabel,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_vVelCoefMBLMLabel,
 		  d_lab->d_stencilMatl, Task::OutOfDomain,
 		  Ghost::None, zeroGhostCells);
@@ -346,10 +346,10 @@ MomentumSolver::sched_velocityLinearSolve(SchedulerP& sched, const PatchSet* pat
   case Arches::ZDIR:
 
     tsk->requires(Task::NewDW, d_lab->d_wVelocitySIVBCLabel, 
-		  Ghost::AroundCells, numGhostCells+1);
+		  Ghost::AroundFaces, numGhostCells+1);
     // coefficient for the variable for which solve is invoked
     tsk->requires(Task::NewDW, d_lab->d_wVelocityOUTBCLabel,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     tsk->requires(Task::NewDW, d_lab->d_wVelCoefMBLMLabel,
 		  d_lab->d_stencilMatl, Task::OutOfDomain,
 		  Ghost::None, zeroGhostCells);
@@ -449,11 +449,11 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
     case Arches::XDIR:
 
       new_dw->getCopy(velocityVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
-		  matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		  matlIndex, patch, Ghost::AroundFaces, numGhostCells);
       new_dw->getCopy(velocityVars.vVelocity, d_lab->d_vVelocityOUTBCLabel, 
-		  matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		  matlIndex, patch, Ghost::AroundFaces, numGhostCells);
       new_dw->getCopy(velocityVars.wVelocity, d_lab->d_wVelocityOUTBCLabel, 
-		  matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		  matlIndex, patch, Ghost::AroundFaces, numGhostCells);
       new_dw->getCopy(velocityVars.old_uVelocity, d_lab->d_uVelocitySIVBCLabel, 
 		  matlIndex, patch, Ghost::None, zeroGhostCells);
 
@@ -501,11 +501,11 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
       // getting new value of u velocity
 
       new_dw->getCopy(velocityVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
-		  matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		  matlIndex, patch, Ghost::AroundFaces, numGhostCells);
       new_dw->getCopy(velocityVars.vVelocity, d_lab->d_vVelocityOUTBCLabel, 
-		  matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		  matlIndex, patch, Ghost::AroundFaces, numGhostCells);
       new_dw->getCopy(velocityVars.wVelocity, d_lab->d_wVelocityOUTBCLabel, 
-		  matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		  matlIndex, patch, Ghost::AroundFaces, numGhostCells);
       new_dw->getCopy(velocityVars.old_vVelocity, d_lab->d_vVelocitySIVBCLabel, 
 		  matlIndex, patch, Ghost::None, zeroGhostCells);
 
@@ -551,11 +551,11 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
       // getting new value of u velocity
 
       new_dw->getCopy(velocityVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
-		  matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		  matlIndex, patch, Ghost::AroundFaces, numGhostCells);
       new_dw->getCopy(velocityVars.vVelocity, d_lab->d_vVelocityOUTBCLabel, 
-		  matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		  matlIndex, patch, Ghost::AroundFaces, numGhostCells);
       new_dw->getCopy(velocityVars.wVelocity, d_lab->d_wVelocityOUTBCLabel, 
-		  matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		  matlIndex, patch, Ghost::AroundFaces, numGhostCells);
       new_dw->getCopy(velocityVars.old_wVelocity, d_lab->d_wVelocitySIVBCLabel, 
 		  matlIndex, patch, Ghost::None, zeroGhostCells);
 
@@ -814,9 +814,9 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
     case Arches::XDIR:
       {
       new_dw->allocate(velocityVars.uVelocity, d_lab->d_uVelocitySPBCLabel, 
-		  matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		  matlIndex, patch, Ghost::AroundFaces, numGhostCells);
       new_dw->copyOut(velocityVars.uVelocity, d_lab->d_uVelocityOUTBCLabel, 
-		  matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		  matlIndex, patch, Ghost::AroundFaces, numGhostCells);
       }
       for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++)
 	new_dw->getCopy(velocityVars.uVelocityCoeff[ii], 
@@ -832,9 +832,9 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
     case Arches::YDIR:
       {
       new_dw->allocate(velocityVars.vVelocity, d_lab->d_vVelocitySPBCLabel,
-		  matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		  matlIndex, patch, Ghost::AroundFaces, numGhostCells);
       new_dw->copyOut(velocityVars.vVelocity, d_lab->d_vVelocityOUTBCLabel, 
-		  matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		  matlIndex, patch, Ghost::AroundFaces, numGhostCells);
       }
       // initial guess for explicit calculations
       for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++)
@@ -850,9 +850,9 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
     case Arches::ZDIR:
       {
       new_dw->allocate(velocityVars.wVelocity, d_lab->d_wVelocitySPBCLabel, 
-		  matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		  matlIndex, patch, Ghost::AroundFaces, numGhostCells);
       new_dw->copyOut(velocityVars.wVelocity, d_lab->d_wVelocityOUTBCLabel, 
-		  matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		  matlIndex, patch, Ghost::AroundFaces, numGhostCells);
       }
       
       for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++)
@@ -1009,7 +1009,7 @@ MomentumSolver::sched_buildLinearMatrixPred(SchedulerP& sched, const PatchSet* p
   case Arches::XDIR:
 
     tsk->requires(Task::NewDW, d_lab->d_uVelRhoHatLabel,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
 #ifdef correctorstep
     tsk->computes(d_lab->d_uVelocityPredLabel);
 #else
@@ -1034,7 +1034,7 @@ MomentumSolver::sched_buildLinearMatrixPred(SchedulerP& sched, const PatchSet* p
     // use new uvelocity for v coef calculation
     
     tsk->requires(Task::NewDW, d_lab->d_vVelRhoHatLabel, 
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
 #ifdef correctorstep
     tsk->computes(d_lab->d_vVelocityPredLabel);
 #else
@@ -1055,7 +1055,7 @@ MomentumSolver::sched_buildLinearMatrixPred(SchedulerP& sched, const PatchSet* p
     // use new uvelocity for v coef calculation
 
     tsk->requires(Task::NewDW, d_lab->d_wVelRhoHatLabel, 
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
 #ifdef correctorstep
     tsk->computes(d_lab->d_wVelocityPredLabel);
 #else
@@ -1144,13 +1144,13 @@ MomentumSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 
 #ifdef correctorstep
       new_dw->allocate(velocityVars.uVelRhoHat, d_lab->d_uVelocityPredLabel,
-		       matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		       matlIndex, patch, Ghost::AroundFaces, numGhostCells);
 #else
       new_dw->allocate(velocityVars.uVelRhoHat, d_lab->d_uVelocitySPBCLabel,
-		       matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		       matlIndex, patch, Ghost::AroundFaces, numGhostCells);
 #endif
       new_dw->copyOut(velocityVars.uVelRhoHat, d_lab->d_uVelRhoHatLabel, 
-		  matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		  matlIndex, patch, Ghost::AroundFaces, numGhostCells);
 
       if (d_MAlab) {
 
@@ -1170,13 +1170,13 @@ MomentumSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
       // getting new value of u velocity
 #ifdef correctorstep
       new_dw->allocate(velocityVars.vVelRhoHat, d_lab->d_vVelocityPredLabel,
-		       matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		       matlIndex, patch, Ghost::AroundFaces, numGhostCells);
 #else
       new_dw->allocate(velocityVars.vVelRhoHat, d_lab->d_vVelocitySPBCLabel,
-		       matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		       matlIndex, patch, Ghost::AroundFaces, numGhostCells);
 #endif
       new_dw->copyOut(velocityVars.vVelRhoHat, d_lab->d_vVelRhoHatLabel, 
-		  matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		  matlIndex, patch, Ghost::AroundFaces, numGhostCells);
 
     // for multimaterial
 
@@ -1198,13 +1198,13 @@ MomentumSolver::buildLinearMatrixPred(const ProcessorGroup* pc,
       // getting new value of u velocity
 #ifdef correctorstep
       new_dw->allocate(velocityVars.wVelRhoHat, d_lab->d_wVelocityPredLabel,
-		       matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		       matlIndex, patch, Ghost::AroundFaces, numGhostCells);
 #else
       new_dw->allocate(velocityVars.wVelRhoHat, d_lab->d_wVelocitySPBCLabel,
-		       matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		       matlIndex, patch, Ghost::AroundFaces, numGhostCells);
 #endif
       new_dw->copyOut(velocityVars.wVelRhoHat, d_lab->d_wVelRhoHatLabel, 
-		  matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		  matlIndex, patch, Ghost::AroundFaces, numGhostCells);
       // for multimaterial
 
       if (d_MAlab) {
@@ -1338,7 +1338,7 @@ MomentumSolver::sched_buildLinearMatrixCorr(SchedulerP& sched, const PatchSet* p
   case Arches::XDIR:
 
     tsk->requires(Task::NewDW, d_lab->d_uVelRhoHatLabel,
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     tsk->computes(d_lab->d_uVelocitySPBCLabel);
 
     break;
@@ -1348,7 +1348,7 @@ MomentumSolver::sched_buildLinearMatrixCorr(SchedulerP& sched, const PatchSet* p
     // use new uvelocity for v coef calculation
     
     tsk->requires(Task::NewDW, d_lab->d_vVelRhoHatLabel, 
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     tsk->computes(d_lab->d_vVelocitySPBCLabel);
 
     break;
@@ -1358,7 +1358,7 @@ MomentumSolver::sched_buildLinearMatrixCorr(SchedulerP& sched, const PatchSet* p
     // use new uvelocity for v coef calculation
 
     tsk->requires(Task::NewDW, d_lab->d_wVelRhoHatLabel, 
-		  Ghost::AroundCells, numGhostCells);
+		  Ghost::AroundFaces, numGhostCells);
     tsk->computes(d_lab->d_wVelocitySPBCLabel);
 
     break;
@@ -1429,9 +1429,9 @@ MomentumSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
 
       {
       new_dw->allocate(velocityVars.uVelRhoHat, 
-		  d_lab->d_uVelocitySPBCLabel, matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		  d_lab->d_uVelocitySPBCLabel, matlIndex, patch, Ghost::AroundFaces, numGhostCells);
       new_dw->copyOut(velocityVars.uVelRhoHat, d_lab->d_uVelRhoHatLabel, 
-		  matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		  matlIndex, patch, Ghost::AroundFaces, numGhostCells);
       }
 
       break;
@@ -1442,9 +1442,9 @@ MomentumSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
 
       {
       new_dw->allocate(velocityVars.vVelRhoHat, 
-		  d_lab->d_vVelocitySPBCLabel, matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		  d_lab->d_vVelocitySPBCLabel, matlIndex, patch, Ghost::AroundFaces, numGhostCells);
       new_dw->copyOut(velocityVars.vVelRhoHat, d_lab->d_vVelRhoHatLabel, 
-		  matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		  matlIndex, patch, Ghost::AroundFaces, numGhostCells);
       }
 
       break;
@@ -1455,9 +1455,9 @@ MomentumSolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
 
       {
       new_dw->allocate(velocityVars.wVelRhoHat,
-		  d_lab->d_wVelocitySPBCLabel, matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		  d_lab->d_wVelocitySPBCLabel, matlIndex, patch, Ghost::AroundFaces, numGhostCells);
       new_dw->copyOut(velocityVars.wVelRhoHat, d_lab->d_wVelRhoHatLabel, 
-		  matlIndex, patch, Ghost::AroundCells, numGhostCells);
+		  matlIndex, patch, Ghost::AroundFaces, numGhostCells);
       }
       break;
 
