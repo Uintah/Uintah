@@ -29,15 +29,17 @@ using SCIRun::Thread;
 //class Barrier;
 //class Mutex;
 
-class  Scene;
-class  Stats;
-class  PerProcessorContext;
-class  Worker;
-class  Gui;
-  class RServer;
-class  Stealth;
-class  Counters;
-class  Camera;
+class Scene;
+class Stats;
+class PerProcessorContext;
+class Worker;
+class DpyGui;
+class Gui;
+class RServer;
+class RTRT;
+class Stealth;
+class Counters;
+class Camera;
 struct DpyPrivate;
 
 //////////////////////////////////////////////////////////
@@ -47,6 +49,7 @@ struct DpyPrivate;
   class Dpy : public DpyBase {
 
   friend class Gui;
+  friend class DpyGui;
 
   bool       fullScreenMode_;
     Window parentWindow;
@@ -87,6 +90,7 @@ struct DpyPrivate;
   // End Gui Interaction Flags.
 
   Scene    * scene;
+  RTRT     * rtrt_engine;
   char     * criteria1;
   char     * criteria2;
   Barrier  * barrier;
@@ -131,8 +135,12 @@ struct DpyPrivate;
     void start_bench(int num_frames=100, int warmup=5);
     // Call this to stop the currently in progress benchmark
     void stop_bench();
+
+    // Inherited from DpyBase
+    virtual bool should_close();
+    
 public:
-  Dpy(Scene* scene, char* criteria1, char* criteria2,
+  Dpy(Scene* scene, RTRT* rtrt_endinge, char* criteria1, char* criteria2,
       int nworkers, bool bench, int ncounters, int c0, int c1,
       float xScale,float yScale, bool display_frames, 
       int pp_size, int scratchsize, bool fullscreen, bool frameless,
