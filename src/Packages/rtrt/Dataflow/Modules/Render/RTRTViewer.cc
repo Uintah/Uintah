@@ -332,7 +332,6 @@ void RTRTViewer::start_rtrt() {
 		   ncounters, c0, c1,1.0,1.0,do_frameless==true);
   /* <<<< bigler >>>> */
   Thread* t = new Thread(dpy, "Display thread");
-  t->migrate(displayproc);
   
   // Start up worker threads...
   for(int i=0;i<rtrt_engine->nworkers;i++){
@@ -350,7 +349,6 @@ void RTRTViewer::start_rtrt() {
 				     pp_size, scratchsize,
 				     ncounters, c0, c1),
 			  buf);
-    t->migrate(i);
   }
 }
 
