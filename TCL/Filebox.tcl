@@ -95,7 +95,7 @@ proc makeFilebox {w var command cancel} {
     frame $w.f.but
     button $w.f.but.ok -text OK -command $command
     button $w.f.but.filt -text Filter -command "fbupdate $w $dirs $files"
-    button $w.f.but.home -text Home -command "fbcd $w [exec pwd] $dirs $files"
+    button $w.f.but.home -text Home -command "fbcd $w $env(PWD) $dirs $files"
     button $w.f.but.data -text Data -command "fbcd $w $env(SCI_DATA) $dirs $files"
     button $w.f.but.cancel -text Cancel -command $cancel
     pack $w.f.but.ok -in $w.f.but -side left -padx 2 -pady 2 -anchor w
