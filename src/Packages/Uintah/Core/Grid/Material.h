@@ -2,6 +2,7 @@
 #define __MATERIAL_H__
 
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
+#include <Packages/Uintah/Core/Grid/ComputeSet.h>
 
 namespace Uintah {
   class Burn;
@@ -41,9 +42,9 @@ WARNING
 
    class Material {
    public:
-      Material() {}
+     Material();
       
-      virtual ~Material() {}
+     virtual ~Material();
       
       //////////
       // Return index associated with this material's
@@ -59,6 +60,10 @@ WARNING
 
       void setDWIndex(int);
       void setVFIndex(int);
+
+     const MaterialSubset* thisMaterial() const {
+       return thismatl;
+     }
    protected:
 
       Burn* d_burn;
@@ -66,7 +71,7 @@ WARNING
       int d_dwindex;
       // Index associated with this material's velocity field
       int d_vfindex;
-      
+     MaterialSubset* thismatl;
    private:
       
       Material(const Material &mat);
