@@ -55,6 +55,7 @@ void BoundCondFactory::create(const ProblemSpecP& ps,BCData& objs)
      else if (bc_attr["label"] == "Velocity" && 
              (bc_attr["var"]   == "Neumann"  ||
               bc_attr["var"]   == "NegInterior"  ||
+              bc_attr["var"]   == "LODI" ||
               bc_attr["var"]   == "Neumann_CkValve"  ||
               bc_attr["var"]   == "Dirichlet") ) {
        BoundCondBase* bc = scinew VelocityBoundCond(child,bc_attr["var"]);
@@ -63,6 +64,7 @@ void BoundCondFactory::create(const ProblemSpecP& ps,BCData& objs)
      
      else if (bc_attr["label"] == "Temperature" &&
              (bc_attr["var"]   == "Neumann"  ||
+              bc_attr["var"]   == "LODI" ||
               bc_attr["var"]   == "Dirichlet") ) {
        BoundCondBase* bc = scinew TemperatureBoundCond(child,bc_attr["var"]);
        objs.setBCValues(mat_id,bc);
@@ -77,6 +79,7 @@ void BoundCondFactory::create(const ProblemSpecP& ps,BCData& objs)
      
      else if (bc_attr["label"] == "Density" &&
              (bc_attr["var"]   == "Neumann"  ||
+              bc_attr["var"]   == "LODI" ||
               bc_attr["var"]   == "Dirichlet") ) {
        BoundCondBase* bc = scinew DensityBoundCond(child,bc_attr["var"]);
        objs.setBCValues(mat_id,bc);
