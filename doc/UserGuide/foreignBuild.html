@@ -1,21 +1,21 @@
 <HTML>
 <HEAD>
-  <TITLE>PSE Build, Non-CS Machine</TITLE>
+  <TITLE>SCIRun Build, Non-CS Machine</TITLE>
   <LINK REL="STYLESHEET" HREF="/csafe_style_sheet.css" TYPE="text/css">
 </HEAD>
 <BODY>
 
-<H2> This document describes how to build the PSE on a machine outside
+<H2> This document describes how to build SCIRun on a machine outside
 of the Computer Science Department</H2>
 
-To build the PSE on a non-CS machine, you will need to follow these
+To build SCIRun on a non-CS machine, you will need to follow these
 steps:
 
 <B>(These instructions are only valid on SGI's.)</B>
 
 <OL>
-  <LI> Check out the PSE using cvs by following these instructions:
-     ?????where are the instructions for checking out the PSE????
+  <LI> Check out SCIRun using cvs by following these instructions:
+     ?????where are the instructions for checking out SCIRun????
 
   <LI> You will need the following:
 
@@ -65,21 +65,21 @@ steps:
 	<LI> Uncompress it.
 	<LI> Un-tar it (<I>tar -xvf xerces.tar</I>) in either a system
 	   wide or a local directory (see b.2 above.)
-        <LI> Edit the "configure" script in ./PSE/src and replace
+        <LI> Edit the "configure" script in ./SCIRun/src and replace
 	   /home/sci/sparker with the location you put the xerces
 	   software on your machine.
      </OL>
 
    <LI> globus
 
-  <LI> Use "configure" to build the Makefiles for the PSE.
+  <LI> Use "configure" to build the Makefiles for SCIRun.
     <OL>
-      <LI> cd ./PSE/src
+      <LI> cd ./SCIRun/src
       <LI> configure --enable-debug --enable-package=Uintah
     </OL>
-  <LI> Use "gmake" to compile the PSE.
+  <LI> Use "gmake" to compile SCIRun.
     <OL>
-      <LI> cd ./PSE/src
+      <LI> cd ./SCIRun/src
       <LI> gmake -j2   # The -j2 tells make to use 2 processors.
       Adjust this number based on the number of processors you have on
       your machine.

@@ -4,7 +4,7 @@
  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
  <meta name="Author" content="Erik Jorgensen">
  <link rel=stylesheet type="text/css" href="http://www.sci.utah.edu/scirun_docs/doc/doc_styles.css">
- <title>PSE inst and build instructions - Unix version</title>
+ <title>SCIRun inst and build instructions - Unix version</title>
 </head>
 
 <body>
@@ -20,7 +20,7 @@ src="http://www.sci.utah.edu/images/SCI_logo.gif" border="0" hspace="10" height=
       <LI><A HREF="#Requirements">System Software Requirements</A></LI>
       <LI><A HREF="#Installing">Installing SCIRun</A></LI>
       <LI><A HREF="#Building">Building SCIRun</A></LI>
-      <LI><A HREF="#RunningPSE">Running SCIRun</A></LI>
+      <LI><A HREF="#RunningSCIRun">Running SCIRun</A></LI>
       <LI><A HREF="#AdditionalDocs">Additional Documentation</A></LI>
       <LI><A HREF="#GettingHelp">Getting Help</A></LI>
       <LI><A HREF="#ThirdParty">Third Party Software Information</A></LI>
@@ -252,17 +252,17 @@ src="http://www.sci.utah.edu/images/SCI_logo.gif" border="0" hspace="10" height=
       The following are example installation transcripts:
     </p>
     <pre class="example">cd /usr/local/contrib
-gunzip PSE.tar.gz
-tar xvf PSE.tar
+gunzip SCIRun.tar.gz
+tar xvf SCIRun.tar
     </pre>
     <pre class="example">cd /usr/local/contrib
-cvs checkout PSE
+cvs checkout SCIRun
     </pre>
     <p class="firstpara"> 
-      The root of the resulting PSE source tree will be referred to 
-      as <i><b><font color=green>PSE_TOP</font></b></i> from now on.
-      The <i><b><font color=green>PSE_TOP</font></b></i> for the above
-      examples would be "/usr/local/contrib/PSE" .
+      The root of the resulting SCIRun source tree will be referred to 
+      as <i><b><font color=green>SCIRUN_TOP</font></b></i> from now on.
+      The <i><b><font color=green>SCIRUN_TOP</font></b></i> for the above
+      examples would be "/usr/local/contrib/SCIRun" .
     </p>
 
 
@@ -288,7 +288,7 @@ cvs checkout PSE
     <b>2) Run configure.</b>
   </p>
   <p>
-    From the <i><b><font color=green>PSE_TOP</font></b></i>/src
+    From the <i><b><font color=green>SCIRUN_TOP</font></b></i>/src
     directory type:
   </p>
 
@@ -300,7 +300,7 @@ cvs checkout PSE
     An example configure command:
   </p>
 
-  <pre class="example">configure --enable-package="SCIRun Uintah BioPSE" \
+  <pre class="example">configure --enable-package="Uintah BioPSE" \
 	  --with-tcl=/usr/local/scirun_thirdparty \
 	  --with-xerces=/usr/local/scirun_thirdparty/lib 
   </pre>
@@ -315,30 +315,30 @@ cvs checkout PSE
   </p>
 
   <p class="firstpara">
-    From the <i><b><font color=green>PSE_TOP</font></b></i>/src
+    From the <i><b><font color=green>SCIRUN_TOP</font></b></i>/src
     directory type:
   </p>
 
   <pre class="example">make</pre>
 
-<p class="head"><a name="RunningPSE">Running SCIRun</a></p>
+<p class="head"><a name="RunningSCIRun">Running SCIRun</a></p>
     <P class="firstpara">
-      After a successful build, there will be  an executable in
-      the <i><b><font color=green>PSE_TOP</font></b></i>/src directory named:
+      After a successful build, there will be an executable in
+      the <i><b><font color=green>SCIRUN_TOP</font></b></i>/src directory named:
     </P>
 
-    <pre class="example">pse
+    <pre class="example">scirun
     </pre>
 
     <p class="firstpara">
       Running this will open the SCIRun network editor window and start
-      a console (called the PSE console) in the shell where pse was
+      a console (called the SCIRun console) in the shell where scirun was
       started from.
     </p>   
 
     <p class="firstpara">
       If the window does not appear, note any errors
-      displayed in the PSE console and see the getting
+      displayed in the SCIRun console and see the getting
       help section below.  Of course, it might just be
       hiding behind other windows on the desktop!
     </p>
@@ -388,7 +388,7 @@ cvs checkout PSE
       To aid in problem resolution, include a verbatim copy of the error(s) 
       displayed (if any).  Also include a short description of what you
       we're doing (running a network, building the tree, etc.) and which
-      version of the PSE you have (PSE 1.0 beta).
+      version of the SCIRun you have (SCIRun 1.0 beta).
     </P>
 
 <p class="head"><a name="ThirdParty">Third Party Software Information</a></p>

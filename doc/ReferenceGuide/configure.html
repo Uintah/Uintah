@@ -9,13 +9,13 @@ Useful configuration flags:<p>
   <tr>
     <td>--enable-package=&lt;package_name&gt; <BR>
     <td>&lt;package_name&gt; should be one (or more) of: 
-           Uintah, SCIRun, BioPSE, DaveW, Yarden, Kurt, Phil.
-           ( eg: --enable-package="Uintah SCIRun" )
+           Uintah, BioPSE, DaveW, Yarden, Kurt, Phil.
+           ( eg: --enable-package="Uintah BioPSE" )
   </tr>
 
   <tr>
     <td>--enable-exename=NAME
-    <td>call the executable NAME instead of the default 'pse'
+    <td>call the executable NAME instead of the default 'scirun'
   </tr>
 
   <tr>
@@ -61,7 +61,7 @@ Useful configuration flags:<p>
 
   <tr>
     <td>--enable-parallel
-    <td>Compile the new distributed memory parallel PSE.  This is
+    <td>Compile the new distributed memory parallel SCIRun.  This is
         very experimental and may break many things.  It is also a
         much different world.
   </tr>
@@ -91,8 +91,8 @@ A typical configuration would be:<p>
 
 <code><ul>
 ./configure --enable-debug --enable-enterleave 
-            --enable-package="Uintah SCIRun"
+            --enable-package="Uintah BioPSE"
 </ul></code><p>
 
-For more detailed information on compiling the PSE, see the
+For more detailed information on compiling the SCIRun, see the
 <a href="building.html">building tutorial</a>.

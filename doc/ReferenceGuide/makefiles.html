@@ -93,7 +93,7 @@ SUBDIRS := $(SRCDIR)/ThirdParty $(SRCDIR)/Modules $(SRCDIR)/GUI
 include $(SRCTOP)/scripts/recurse.mk
 </pre>
   <li>Building a library.  One includes the appropriate so_prologue,
-defines the sources for this directory, defines the other PSE
+defines the sources for this directory, defines the other SCIRun
 libraries used to link this library, and any other (external)
 libraries.  Finally, it includes the so_epilogue which generates the
 rules for the subdirectory.  Here is an example:
@@ -201,6 +201,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.4  2000/12/22 00:23:05  dmw
+# changed the name from PSE to SCIRun in all the documentation
+#
 # Revision 1.3  2000/11/28 03:37:42  moulding
 # added the --with-? options for the tcl distributions and the xerces-c
 # library.
@@ -242,6 +245,9 @@ include $(SRCTOP)/scripts/program.mk
 
 #
 # $Log$
+# Revision 1.4  2000/12/22 00:23:05  dmw
+# changed the name from PSE to SCIRun in all the documentation
+#
 # Revision 1.3  2000/11/28 03:37:42  moulding
 # added the --with-? options for the tcl distributions and the xerces-c
 # library.
@@ -274,7 +280,7 @@ something different, please talk to Steve.
 example, to build the SCIRun and Uintah modules, use:
 --enable-package="SCIRun Uintah".</td></tr>
 <tr><td>--enable-exename</td><td>Overrides the default executable name
-for SCIRun.  The default is pse.</td></tr>
+for SCIRun.  The default is scirun.</td></tr>
 <tr><td>--enable-threads</td><td>Threads are always enabled, but this
 allows one to use a different implementation.  On the SGI,
 --enable-threads=pthreads and --enable-threads=sproc (default) are
@@ -344,7 +350,7 @@ directory.  The value is set by autoconf.
   <li><b>SRCDIR</b> - The current source directory, set within each sub.mk.
   <li><b>OBJTOP</b> - The top of the source tree.  This will be "."
 unless you use VPATH (i.e. if you configure in a different directory
-than PSE/src).
+than SCIRun/src).
   <li><b>OBJTOP_ABS</b> - The absolute path to the $(OBJTOP) directory.
   <li><b>SRCTOP_ABS</b> - The absolute path to the $(SRCTOP) directory.
   <li><b>LIBDIR</b> - The directory in which to put libraries.
@@ -399,7 +405,6 @@ this platform.
   <li><b>GL_LIBS</b> - How to find the OpenGL libraries.
   <li><b>X11_LIBS</b> - How to find the X11 libraries.  This is a
 combination of X_LIBS, X_PRE_LIBS, and X_EXTRA_LIBS described above.
-  <li><b>PROGRAM_PSE</b> - The name of the pse executable, set by --enable-exename.
   <li><b>LEX</b> - How to run lex.
   <li><b>YACC</b> - How to run yacc.
   <li><b>MAKE_PARALLELISM</b> - The number of processors to use for
@@ -448,9 +453,9 @@ from $(MAKEFILEDIRS).
   <li><b>OBJS</b> - The object files being currently addressed.  This
 value changes constantly, and is derived from $(SRCS) in
 so_epilogue.mk and program.mk
-  <li><b>PSELIBS</b> - A list of libraries within the PSE tree to link
+  <li><b>PSELIBS</b> - A list of libraries within the SCIRun tree to link
 against.  Used by so_epilogue.mk and progam.mk
-  <li><b>LIBS</b> - A list of libraries *not* within the PSE tree to link
+  <li><b>LIBS</b> - A list of libraries *not* within the SCIRun tree to link
 against.  Used by so_epilogue.mk and progam.mk
   <li><b>ALLTARGETS</b> - A list of the complete list of targets that
 will be built from "make all".  This includes an entry for each shared

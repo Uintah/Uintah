@@ -49,7 +49,7 @@ Datatype documentation dtd.
 <!-- Name of sr file which demonstrates use of this datatype.  -->
 <!ELEMENT examplesr %filename;>
 
-<!-- Name of a pse component -->
+<!-- Name of a SCIRun component -->
 <!ELEMENT componentname (#PCDATA)>
 
 <!-- List of commonly used components that send this datatype as output. -->

@@ -12,12 +12,12 @@
       <info-builder>
 	<!-- one or more paragraphs -->
 	<para>Elaborate and describe more comprehensively, for 
-         someone who does not write PSE modules</para>
+         someone who does not write SCIRun modules</para>
       </info-builder>
       <info-developer>
 	<!-- one or more paragraphs -->
 	<para>Put module implementation details here, for module
-              writers and PSE maintainers. If a drawing or two would 
+              writers and SCIRun maintainers. If a drawing or two would 
               help explain things, there is a place for them in the 
               next tag (img).</para>
 	<!-- zero or more images -->
@@ -75,7 +75,7 @@
     </IO>
     <also>
       <!-- one or more ref fields (list all valid) -->
-      <ref> See Also ... classes, modules, datatypes, files within the PSE, 
+      <ref> See Also ... classes, modules, datatypes, files within SCIRun, 
                       references, published papers, white papers, url's </ref>
       <link>http://www.cool.info.about.this.module.org</link>
     </also>

@@ -2,7 +2,7 @@
   <H1>WARNING: I think is this all out of date.  Dav.</H1>
 </FONT>
 
-<h1>How To Make a New Package In the PSE</h1>
+<h1>How To Make a New Package In SCIRun</h1>
 
 <i>Somebody should edit this for readability, but enough should be here now
 to help a little.</i><p>
@@ -12,7 +12,7 @@ module called <code>Euler</code>.<p>
 
 <h3>Create a Directory to Hold Your Package</h3>
 
-While in PSE/src:<p>
+While in SCIRun/src:<p>
 
 <ul><code>
   $ mkdir McQ<br>
@@ -21,7 +21,7 @@ While in PSE/src:<p>
 
 <h3>Create a GUI Directory Within Your Package</h3>
 
-While in PSE/src/McQ:
+While in SCIRun/src/McQ:
 
 <ul><code>
   $ mkdir GUI<br>
@@ -29,7 +29,7 @@ While in PSE/src/McQ:
 
 <h3>Create a Directory for Your Module</h3>
 
-While in PSE/src/McQ:
+While in SCIRun/src/McQ:
 
 <ul><code>
   $ mkdir Euler<br>
@@ -37,15 +37,14 @@ While in PSE/src/McQ:
 
 <h3>Create an <code>index.cc</code></h3>
 
-While in PSE/src/McQ:
+While in SCIRun/src/McQ:
 
 <ul><code>
-  #include &lt<nop>PSECore/Dataflow/PackageDB.h&gt<br>
-  #include &lt<nop>SCICore/Containers/String.h&gt<br>
+  #include &lt<nop>Dataflow/PackageDB.h&gt<br>
+  #include &lt<nop>Core/Containers/String.h&gt<br>
   #include "Euler/Euler.h"<br>
   <br>
-  using namespace SCICore::Containers;<br>
-  using namespace PSECore::Dataflow;<br>
+  using namespace SCIRun;
   using namespace McQ;<br>
   <br>
   extern "C" void initPackage(const clString& tcl) {
@@ -57,7 +56,7 @@ While in PSE/src/McQ:
 
 <h3>Create a <code>Makefile.in</code></h3>
 
-While in PSE/src/McQ:
+While in SCIRun/src/Packages/McQ:
 
 <ul><code>
   SRCTOP   = @top_srcdir@<br>
@@ -95,7 +94,7 @@ While in PSE/src/McQ:
 
 <h3>Create a GUI File for your Module</h3>
 
-Into file PSE/src/McQ/GUI/Euler.tcl:<p>
+Into file SCIRun/src/Packages/McQ/GUI/Euler.tcl:<p>
 
 <ul><code>
 itcl_class McQ_SAMRAI_Euler {<br>
@@ -129,24 +128,24 @@ Note that the itcl_class name (here "McQ_SAMRAI_Euler") needs to match
 the first three args to packageDB.registerModule concatenated with _'s
 and with the spaces removed.<p>
 
-The name in "set name" is what shows up on the module in the PSE GUI, and
+The name in "set name" is what shows up on the module in the SCIRun GUI, and
 can be whatever string you like.
 
 <h3>Create A Header For Your Module</h3>
 
-Into PSE/src/McQ/Euler/Euler.h:
+Into SCIRun/src/McQ/Euler/Euler.h:
 
 <ul><code>
 #ifndef __MCQ_EULER_H__<br>
 #define __MCQ_EULER_H__<br>
 <br>
-#include &lt<nop>PSECore/Dataflow/Module.h&gt<br>
+#include &lt<nop>SCIRunCore/Dataflow/Module.h&gt<br>
 #include &lt<nop>SCICore/Continers/String.h&gt<br>
 <br>
 namespace McQ {<br>
 <ul>
   using namespace SCICore::Containers;<br>
-  using namespace PSECore::Dataflow;<br>
+  using namespace SCIRunCore::Dataflow;<br>
 <br>
   class Euler: public Module {<br>
   <ul>
@@ -172,18 +171,18 @@ namespace McQ {<br>
 
 <h3>Create An Implementation Of Your Module</h3>
 
-Into PSE/src/McQ/Euler/Euler.cc:
+Into SCIRun/src/McQ/Euler/Euler.cc:
 
 <ul><code>
   #include &lt<nop>SCICore/Containers/String.h&gt<br>
-  #include &lt<nop><PSECore/Dataflow/Module.h&gt<br>
+  #include &lt<nop><SCIRunCore/Dataflow/Module.h&gt<br>
   #include "Euler.h"<br>
 <br>
   namespace McQ {<br>
   <ul>
 <br>
     using namespace SCICore::Containers;<br>
-    using namespace PSECore::Dataflow;<br>
+    using namespace SCIRunCore::Dataflow;<br>
 <br>
     Module* Euler::make(const clString& id) {<br>
     <ul>
@@ -209,7 +208,7 @@ Into PSE/src/McQ/Euler/Euler.cc:
 
 <h3>Create A <code>Makefile.in</code> For Your Module</h3>
 
-Into PSE/src/McQ/Euler/Makefile.in:
+Into SCIRun/src/McQ/Euler/Makefile.in:
 
 <ul><code>
 SRCTOP   = @top_srcdir@<br>
@@ -286,7 +285,7 @@ fi<br>
 
 <h4>Regenerate <code>configure</code> From <code>configure.in</code></h4>
 
-In PSE/src:
+In SCIRun/src:
 
 <ul><code>
   $ autoconf
@@ -294,7 +293,7 @@ In PSE/src:
 
 <h3>Building Your Module</h3>
 
-Run-run configure to turn your module on, then build it.  In PSE/src:
+Run-run configure to turn your module on, then build it.  In SCIRun/src:
 
 <ul><code>
   $ ./configure --enable-mcq<br>

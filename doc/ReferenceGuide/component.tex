@@ -137,7 +137,7 @@ like) is in turn formulated using the \dfn{eXtensible Mark-up Language}
 
 \Note{Components that are not accompanied by a valid and complete
   specification document will not be incorporated into official
-  releases of the \pse\ software.}
+  releases of the \sr\ software.}
 
 \subsection{\SUBSECwhyXml}
 \label{\SUBSECwhyXml}
@@ -345,8 +345,8 @@ element, which is used in several contexts, is not described in detail here
           provided by the file, e.g. ``These are potential data from body 
           surface of a human.''
           \elementitem{/description}
-          \elementitem{datatype} The name of a \pse\ data type, i.e. the 
-          data type being read from the file.  \Note{Only \pse\ data types
+          \elementitem{datatype} The name of a \sr\ data type, i.e. the 
+          data type being read from the file.  \Note{Only \sr\ data types
             may be read from files - no custom formats allowed!}
           \elementitem{/datatype}
         \end{description}
@@ -375,7 +375,7 @@ element, which is used in several contexts, is not described in detail here
           sent to the port, e.g. ``These are potential data from the body
           surface of a human.''
           \elementitem{/description}
-          \elementitem{datatype} The name of a \pse\ data type, i.e. the 
+          \elementitem{datatype} The name of a \sr\ data type, i.e. the 
           data type that is being transmitted on this port.
           \elementitem{/datatype}
           \elementitem{componentname} The name of a downstream component
@@ -595,7 +595,7 @@ shown by indentation.
       \sciurl.  Text bracketed by the start and end tags will be presented
       as a link in online documents.  The text may include phrase elements.
       \elementitem{/slink}%
-      \elementitem{rlink} Defines a \pse\ \cvs\ relative link
+      \elementitem{rlink} Defines a \sr\ \cvs\ relative link
       (\element{rlink} actually links to material on the documentation web
       site but it is more easily explained as a path into the cvs tree).  It
       requires a path relative to the location of your component

@@ -3,13 +3,13 @@
 <head>
    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
    <link rel=stylesheet type="text/css" href="http://www.sci.utah.edu/scirun_docs/doc/doc_styles.css">
-   <title>How to Create a New SCIRun PSE Module</title>
+   <title>How to Create a New SCIRun Module</title>
 </head>
 <body>
 <a href="http://www.sci.utah.edu"><img style="margin-left:-2em" src="/images/SCI_logo.gif" border="0" hspace="10" height="66" width="150"></a>
 
 <p class="title">How to Create A New Module<br>
-for the SCIRun PSE</p>
+for SCIRun</p>
 <p class="subtitle">(UNIX version, updated June 6, 2000)</p>
 
 <p class="head">Table of contents</p>
@@ -29,11 +29,11 @@ for the SCIRun PSE</p>
 	
 <p class="head"><a name="a">Prerequisites</a></p>
 
-<p class="firstpara">This document assumes that you have programming experience, understand what a PSE module is and know how to connect multiple modules together to solve a problem, and know how to manipulate a UNIX file system.</p>
+<p class="firstpara">This document assumes that you have programming experience, understand what a SCIRun module is and know how to connect multiple modules together to solve a problem, and know how to manipulate a UNIX file system.</p>
 	
 <p class="head"><a name="b">Overview</a></p>
 
-<p class="firstpara">Before you can effectively create and use a new PSE module, you must first have a working knowledge of what a module is on both a high and a low level.</p>
+<p class="firstpara">Before you can effectively create and use a new SCIRun module, you must first have a working knowledge of what a module is on both a high and a low level.</p>
 
 <p class="nextpara">From the most abstract level, a module is a single algorithm with inputs and outputs. On the nuts-and-bolts level it is bunch of files and directories somewhere in your file system. The key to effectively creating and using a module is knowing how those two levels relate to each other.</p>
 
@@ -41,14 +41,14 @@ for the SCIRun PSE</p>
 	
 <p class="head"><a name="c">The module hierarchy</a></p>
 
-<p class="firstpara">Having used the PSE and connected modules together, you know that modules are organized in a hierarchy: At the lowest level is a single module; Modules that have some arbitrary relation to each other (e.g. they have the same input data type, or they read data from disk) can be grouped together into a category. Categories that are also some how related can be grouped into a package (Modules cannot exist outside of a category or outside of a package. So, if you want to create a module, you must also choose, or create, a category and package for the module.)</p> 
+<p class="firstpara">Having used SCIRun and connected modules together, you know that modules are organized in a hierarchy: At the lowest level is a single module; Modules that have some arbitrary relation to each other (e.g. they have the same input data type, or they read data from disk) can be grouped together into a category. Categories that are also some how related can be grouped into a package (Modules cannot exist outside of a category or outside of a package. So, if you want to create a module, you must also choose, or create, a category and package for the module.)</p> 
 
-<p class="nextpara">The module hierarchy is embodied in the PSE as a series of pull down menus at the top of the PSE network canvas. Each menu item after "File" is a PSE package. If you click on the PSECommon package, a drop-down list of the categories that exist within that package is shown. If you then select one of the categories, another list is shown which represents the modules in that category.</p>
+<p class="nextpara">The module hierarchy is embodied in SCIRun as a series of pull down menus at the top of the SCIRun network canvas. Each menu item after "File" is a SCIRun package. If you click on the BioPSE package, a drop-down list of the categories that exist within that package is shown. If you then select one of the categories, another list is shown which represents the modules in that category.</p>
 
-<p class="nextpara"> So, on a high level, modules are organized in a tree structure. We can illustrate this using the PSECommon package as an example:</p>
+<p class="nextpara"> So, on a high level, modules are organized in a tree structure. We can illustrate this using the BioPSE package as an example:</p>
 	
 <pre class="example">
-      PSECommon --- Example -- GeomPortTest
+      BioPSE --- Example -- GeomPortTest
                  |
                  |- FEM ------ ApplyBC
                  |          |- BuildFEMatrix
@@ -60,19 +60,19 @@ for the SCIRun PSE</p>
 <p class="nextpara">This hierarchy also exists beyond the menu structure in the PSE. The modules are organized in a similar way inside the file structure in your PSE source tree:</p>
 	
 <pre class="example">
-      PSE -- src -- PSECommon -- Modules -- Example -- GeomPortTest.cc
-                                         |
-                                         |- FEM ------ ApplyBC.cc
-                                         |          |- BuildFEMatrix.cc
-                                         |          |- ...
-                                         |
-                                         |- ...
+      SCIRun -- src -- BioPSE -- Modules -- Example -- GeomPortTest.cc
+                                          |
+                                          |- FEM ------ ApplyBC.cc
+                                          |          |- BuildFEMatrix.cc
+                                          |          |- ...
+                                          |
+                                          |- ...
 </pre>
 
-<p class="nextpara">So, if you created a new module and inserted it into the PSECommon package (and into the Example category), the new trees  would look like this:</p>
+<p class="nextpara">So, if you created a new module and inserted it into the BioPSE package (and into the Example category), the new trees  would look like this:</p>
 	
 <pre class="example">
-      PSECommon --- Example -- GeomPortTest
+         BioPSE --- Example -- GeomPortTest
                  |          |- YOUR_NEW_MODULE
                  |
                  |- FEM ------ ApplyBC
@@ -81,19 +81,19 @@ for the SCIRun PSE</p>
                  |
                  |- ...
                       
-      PSE -- src -- PSECommon -- Modules -- Example -- GeomPortTest.cc
-                                         | |- YOUR_NEW_MODULE.cc
-                                         |
-                                         |- FEM ------ ApplyBC.cc
-                                         | |- BuildFEMatrix.cc
-                                         | |- ...
-                                         |
-                                         |- ...
+         SCIRun -- src -- BioPSE -- Modules -- Example -- GeomPortTest.cc
+                                             | |- YOUR_NEW_MODULE.cc
+                                             |
+                                             |- FEM ------ ApplyBC.cc
+                                             | |- BuildFEMatrix.cc
+                                             | |- ...
+                                             |
+                                             |- ...
 </pre>
 
-<p class="nextpara">You can see that the abstract notions of package, category and  module directly correspond to a particular type of file: A package is a directory within the PSE/src tree, a category is a  directory beneath a package directory and a single module is a  single .cc file (In the PSE .cc files are C++ files) inside a  category directory.</p>
+<p class="nextpara">You can see that the abstract notions of package, category and  module directly correspond to a particular type of file: A package is a directory within the SCIRun/src tree, a category is a  directory beneath a package directory and a single module is a  single .cc file (In the SCIRun .cc files are C++ files) inside a  category directory.</p>
 
-<p class="nextpara">So, is making a module as easy as making a couple of directories  and writing some C++ code? Yes and no. No, because there are  other files in the PSECommon tree, Not just directories and  C++ files. Yes, because creating this tree structure (along with  those other files) can be done with the click of a button via the  PSE.</p>
+<p class="nextpara">So, is making a module as easy as making a couple of directories  and writing some C++ code? Yes and no. No, because there are  other files in the BioPSE tree, Not just directories and  C++ files. Yes, because creating this tree structure (along with  those other files) can be done with the click of a button via SCIRun.</p>
 
 <p class="nextpara">The next sections will describe, in more detail, how to create all  the files needed to make a package directory.</p>
 	
@@ -102,15 +102,15 @@ for the SCIRun PSE</p>
 	
 <p class="firstpara"> Since you're probably like most other humans, you're too lazy to  read through the rest of this document, and just want to get on with  making a new module. Well, you're in luck. There is a way to create  modules, and the associated hierarchy of files, automatically. All  you need to use these facilities are three names: package, category  and module.</p>
 
-<p class="nextpara">From within the &quot;File&quot; menu at the top of the PSE network canvas,  select &quot;New&quot; and then &quot;Module&quot;. A dialog will pop up asking for  the three names mentioned above. Once you click the &quot;Ok&quot; button,  the PSE generates all the files, with the correct hierarchy, that  are necessary. It may also modify existing files if you insert  into an existing hierarchy.</p>
+<p class="nextpara">From within the &quot;File&quot; menu at the top of the SCIRun network canvas,  select &quot;New&quot; and then &quot;Module&quot;. A dialog will pop up asking for  the three names mentioned above. Once you click the &quot;Ok&quot; button,  SCIRun generates all the files, with the correct hierarchy, that  are necessary. It may also modify existing files if you insert  into an existing hierarchy.</p>
 
 <p class="nextpara">There are three possibilities for choosing names: 1)new package and new category, 2)existing package and new category, and 3)existing package and existing category.</p>
 
 <p class="nextpara">If you type in a package name or category name that already exists,  the module will be inserted into the proper hierarchy. If you type  names that do not already exist, then a new (whole or partial)  hierarchy will be created and/or inserted.</p>
 
-<p class="nextpara"> It is illegal to choose names that are blank or are names of already  existing files that are not part of valid PSE hierarchies. It is  also illegal to have two modules with the same name inside the same  category. You may have modules with the same name so long as they  are in different categories. You may also have categories with the  same name so long as they are in different packages.</p> 
+<p class="nextpara"> It is illegal to choose names that are blank or are names of already  existing files that are not part of valid SCIRun hierarchies. It is  also illegal to have two modules with the same name inside the same  category. You may have modules with the same name so long as they  are in different categories. You may also have categories with the  same name so long as they are in different packages.</p> 
  
-<p class="nextpara">Once you've created a new module, you will see a dialog that tells  you that you must rebuild the PSE before you can use it. In some  cases you must first re-configure and then rebuild. To rebuild  the PSE, you should simply run "gmake" from the PSE/src directory.  There is no need to "gmake clean" first. To re-configure, run:</p> 
+<p class="nextpara">Once you've created a new module, you will see a dialog that tells  you that you must rebuild SCIRun before you can use it. In some  cases you must first re-configure and then rebuild. To rebuild SCIRun, you should simply run "gmake" from the SCIRun/src directory.  There is no need to "gmake clean" first. To re-configure, run:</p> 
  
 <pre class="example"> configure --enable-package="OLD-PACKAGES NEW-PACKAGE"</pre> 
  
@@ -120,7 +120,7 @@ for the SCIRun PSE</p>
  
 <p class="head"><a name="e">Creating a Hierarchy by Hand</a></p> 
  
-<p class="firstpara"> Ah. You're not lazy. Wanting to know the nuts and bolts of a  system is the sign of a truly great programmer. Here is the full  directory structure for a PSE package:</p> 
+<p class="firstpara"> Ah. You're not lazy. Wanting to know the nuts and bolts of a  system is the sign of a truly great programmer. Here is the full  directory structure for a SCIRun package:</p> 
  
 <pre class="example">
      package -- Modules ------ category1 -- module1.cc
@@ -157,15 +157,15 @@ for the SCIRun PSE</p>
              |- sub.mk
 </pre>
  
-<p class="nextpara">Whew! So there are 5 directories (Modules, GUI, share, Datatypes  and ThirdParty) inside a package, and there are two non-directory files  inside a package (components.xml and sub.mk). It is possible for a  package to have superfluous directories and files without affecting  the integrity of a package. You should, however, not remove any of  the listed files, even if they are empty, as future versions of the  PSE may require them.</p> 
+<p class="nextpara">Whew! So there are 5 directories (Modules, GUI, share, Datatypes  and ThirdParty) inside a package, and there are two non-directory files  inside a package (components.xml and sub.mk). It is possible for a  package to have superfluous directories and files without affecting  the integrity of a package. You should, however, not remove any of  the listed files, even if they are empty, as future versions of the SCIRun may require them.</p> 
  
 <p class="nextpara">You are already familiar with the &quot;Modules&quot; directory which houses the  category directories, and subsequently the modules themselves.</p> 
  
-<p class="nextpara">The "GUI" directory holds all the user interface files. Currently,  all the user interfaces in the PSE are written in tcl. The tcl files  should all have a certain structure in order to work with the PSE.  You can see examples of the structure in the appendix. New modules  have no user interface file by default.</p> 
+<p class="nextpara">The "GUI" directory holds all the user interface files. Currently, all the user interfaces in SCIRun are written in tcl. The tcl files  should all have a certain structure in order to work with SCIRun.  You can see examples of the structure in the appendix. New modules  have no user interface file by default.</p> 
  
 <p class="nextpara">The "share" directory is a mechanism for remaining platform independent.  It holds information needed by windows machines for building .dll files.  Although the share directory is not strictly needed for UNIX platforms,  it does make life easier when porting your modules to windows.</p> 
  
-<p class="nextpara">The &quot;Datatypes&quot; directory holds information about new PSE data types that you define. See &quot;How to Create New Datatypes for the PSE&quot; for  more details on this part of the hierarchy.</p> 
+<p class="nextpara">The &quot;Datatypes&quot; directory holds information about new SCIRun data types that you define. See &quot;How to Create New Datatypes for SCIRun&quot; for  more details on this part of the hierarchy.</p> 
  
 <p class="nextpara">The "ThirdParty" directory is an empty directory that may be used to  store third party sources or libraries that your new modules may want  to link with. You can safely ignore this directory, if you have no  need for third party code.</p> 
  
@@ -287,9 +287,9 @@ for the SCIRun PSE</p>
 
 <p class="head"><a name="f">Adding a User Interface</a></p> 
  
-<p class="firstpara">If you want to add a user interface element to your module, you will  have to know tcl, and be familiar with the communication scheme in  the PSE which allows you to import and export information from the tcl  code into your module code. Both these topics are beyond the scope  of this document.</p> 
+<p class="firstpara">If you want to add a user interface element to your module, you will  have to know tcl, and be familiar with the communication scheme in  SCIRun which allows you to import and export information from the tcl  code into your module code. Both these topics are beyond the scope  of this document.</p> 
  
-<p class="nextpara">You will also have to create a .tcl file and place it into the GUI  directory. Please see the appendix for a skeleton .tcl file for a  PSE module user interface.</p> 
+<p class="nextpara">You will also have to create a .tcl file and place it into the GUI  directory. Please see the appendix for a skeleton .tcl file for a SCIRun module user interface.</p> 
  
 <p class="head"><a name="g">Adding ports and functionality</a></p> 
  
@@ -297,18 +297,18 @@ for the SCIRun PSE</p>
 
 <p class="nextpara">The first step is to decide how your module will get it's input data,  and what it will do with the output data that it generates. There are  two methods of getting data into a module (input ports and read from  disk) and two methods for outputting data (output ports and write to  disk).</p> 
  
-<p class="nextpara">Modules that read data from disk, or write data to disk are considered,  in the PSE, to be &quot;readers&quot; or &quot;writers&quot; respectively. These types  of modules are very closely tied to specific PSE data types. Their use  and convention is discussed in the &quot;How to Create New Data Types for  the PSE&quot; document and will not be discussed here.</p> 
+<p class="nextpara">Modules that read data from disk, or write data to disk are considered, in SCIRun, to be &quot;readers&quot; or &quot;writers&quot; respectively. These types  of modules are very closely tied to specific SCIRun data types. Their use and convention is discussed in the &quot;How to Create New Data Types for SCIRun&quot; document and will not be discussed here.</p> 
  
 <p class="nextpara">The other type of module is the kind that takes data into an input  port, runs some algorithm on the data, and then sends output data to the  output port. This is the most common type of module, and perhaps the  most useful. In order to create such a module, you will need to add  lines of code to the module's .cc file.</p> 
  
-<p class="nextpara">You will need to identify the PSE data type that you will use for  each port, input and output. Then add #include statements to the top  of the file for the header files that define the data type(s) you want.  For example, suppose you want to have a Mesh input port and a Matrix  output port. You would add the following lines to the top of your  module's .cc file:</p> 
+<p class="nextpara">You will need to identify the SCIRun data type that you will use for  each port, input and output. Then add #include statements to the top  of the file for the header files that define the data type(s) you want.  For example, suppose you want to have a Mesh input port and a Matrix  output port. You would add the following lines to the top of your  module's .cc file:</p> 
  
 <pre class="example">
-#include &lt;PSECore/Datatypes/MeshPort.h&gt;
-#include &lt;PSECore/Datatypes/MatrixPort.h&gt;
+#include &lt;Dataflow/Ports/FieldPort.h&gt;
+#include &lt;Dataflow/Ports/MatrixPort.h&gt;
 </pre> 
  
-<p class="nextpara">The data types can come from any package or core directory within your  PSE source tree (i.e. they don't have to come from PSECore).</p> 
+<p class="nextpara">The data types can come from any package or core directory within your SCIRun source tree (i.e. they don't have to come from src/Dataflow).</p> 
  
 <p class="nextpara">Next, add lines of code to the data declaration section of your module's  class declaration, and declare your ports:</p> 
  
@@ -352,7 +352,7 @@ add_oport(omatr);
  
 <p class="nextpara">Keen readers will wonder how a package _really_ works. After all, a  bunch of source code and fancy schmancy directory trees do not an  application make! Good eye.</p> 
  
-<p class="nextpara">There is a hidden aspect of the PSE package that hasn't been discussed  yet: what does a package's source files get compiled into, and how does  this object, or objects, interface with the PSE?</p> 
+<p class="nextpara">There is a hidden aspect of the SCIRun package that hasn't been discussed  yet: what does a package's source files get compiled into, and how does  this object, or objects, interface with SCIRun?</p> 
  
 <p class="nextpara">When a package is built, the end result has a couple of possibilities:  1) a single, large, shared object library, or 2) a handful of small  shared object libraries. You decide at configure time which kind  of libraries you want (--enable-largesos for large libraries, nothing  for small libraries).</p> 
  
@@ -362,9 +362,9 @@ add_oport(omatr);
  
 <p>for each module that is inside it.</p> 
  
-<p class="nextpara">So, in reality, any .so library that has Module-derived classes  defined within it, and also exports these &quot;make&quot; functions, could,  in a way, be considered a PSE package - regardless of whether or not  it came from the hierarchy described above or not. But, in order  for the package to be useful to the PSE, you would still need to  have a components.xml file and possibly a GUI directory for the .tcl  files, if any.</p> 
+<p class="nextpara">So, in reality, any .so library that has Module-derived classes  defined within it, and also exports these &quot;make&quot; functions, could,  in a way, be considered a SCIRun package - regardless of whether or not  it came from the hierarchy described above or not. But, in order  for the package to be useful to SCIRun, you would still need to  have a components.xml file and possibly a GUI directory for the .tcl  files, if any.</p> 
  
-<p class="nextpara">When the PSE starts it searches the enabled packages (defined  at configure time: --enable-package="...") for components.xml files.  It parses those that it finds and builds the package menus. The .xml  file tells the PSE where each module's .tcl file be found, which  library(s) to load, and tells it what the name of each module's make  function is. If an entry in the .xml file cannot be confirmed (i.e.  can't find the indicated make function), the associated module will  not be listed. Packages that have no valid modules are also not  listed.</p> 
+<p class="nextpara">When SCIRun starts it searches the enabled packages (defined  at configure time: --enable-package="...") for components.xml files.  It parses those that it finds and builds the package menus. The .xml  file tells SCIRun where each module's .tcl file be found, which  library(s) to load, and tells it what the name of each module's make  function is. If an entry in the .xml file cannot be confirmed (i.e.  can't find the indicated make function), the associated module will  not be listed. Packages that have no valid modules are also not  listed.</p> 
  
 <p class="head"><a name="i">Trouble shooting </a></p> 
  
@@ -510,7 +510,7 @@ add_oport(omatr);
 
   **** skeleton sub.mk files for various trees:
 
-    ** PSE/src/PACKAGE/sub.mk = 
+    ** SCIRun/src/PACKAGE/sub.mk = 
 
        include $(OBJTOP_ABS)/scripts/largeso_prologue.mk
 
@@ -526,7 +526,7 @@ add_oport(omatr);
 
        include $(OBJTOP_ABS)/scripts/largeso_epilogue.mk
 
-    ** PSE/src/PACKAGE/Modules/sub.mk = 
+    ** SCIRun/src/PACKAGE/Modules/sub.mk = 
 
        SRCDIR := NEW_PACKAGE/Modules
 
@@ -535,7 +535,7 @@ add_oport(omatr);
 
        include $(OBJTOP_ABS)/scripts/recurse.mk
 
-    ** PSE/src/PACKAGE/Modules/CATEGORY/sub.mk = 
+    ** SCIRun/src/PACKAGE/Modules/CATEGORY/sub.mk = 
 
        include $(OBJTOP_ABS)/scripts/smallso_prologue.mk
 
@@ -553,7 +553,7 @@ add_oport(omatr);
 
        include $(OBJTOP_ABS)/scripts/smallso_epilogue.mk
 
-    ** PSE/src/PACKAGE/GUI/sub.mk = 
+    ** SCIRun/src/PACKAGE/GUI/sub.mk = 
 
        SRCDIR := NEW_PACKAGE/GUI
 
@@ -564,7 +564,7 @@ add_oport(omatr);
 
        CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
-    ** PSE/src/PACKAGE/Datatypes/sub.mk = 
+    ** SCIRun/src/PACKAGE/Datatypes/sub.mk = 
 
        SRCDIR := NEW_PACKAGE/Datatypes
 
@@ -572,7 +572,7 @@ add_oport(omatr);
 
        include $(OBJTOP_ABS)/scripts/recurse.mk
 
-    ** PSE/src/PACKAGE/Datatypes/GROUP/sub.mk = 
+    ** SCIRun/src/PACKAGE/Datatypes/GROUP/sub.mk = 
 
        include $(OBJTOP_ABS)/scripts/smallso_prologue.mk
 
@@ -627,12 +627,12 @@ add_oport(omatr);
          return TRUE;
        }
 
-  **** example .tcl file (from GenAxes.tcl inside PSECommon).  The
+  **** example .tcl file (from GenAxes.tcl inside BioPSE).  The
        structure required (as mentioned above) is inheritance from
        Module, and the existence of a method name &quot;ui&quot;.  If &quot;ui&quot; 
        does not exist, then the module has no user interface:
 
-itcl_class PSECommon_Visualization_GenAxes {
+itcl_class SCIRun_Visualization_GenAxes {
     inherit Module
     constructor {config} {
         set name GenAxes
@@ -667,7 +667,7 @@ itcl_class PSECommon_Visualization_GenAxes {
 </pre>
 
 <pre class="example">
-  **** example components.xml file (from PSECommon package):
+  **** example components.xml file (from BioPSE package):
 
 &lt;?xml version='1.0' encoding='us-ascii' ?&gt;
 
