@@ -139,8 +139,7 @@
       <save label="press_CC"/>
       <save label="mom_L_ME_CC"/>
       <save label="rho_CC"/>
-      <save label="vel_CC"/>      
-      <!-- needed for regression tester dat comparisons -->       
+      <save label="vel_CC"/>         
       <save label="KineticEnergy"/>
       <save label="TotalIntEng"/>
       <checkpoint interval="0.005" cycle="2"/>"
@@ -150,8 +149,6 @@
       <dbg_timeStart>       0.00   </dbg_timeStart>
       <dbg_timeStop>        0.01   </dbg_timeStop>
       <dbg_outputInterval>  1e-9   </dbg_outputInterval>
-       <!-- need this one for regression tester dat comparisons -->       
-       <debug label = "switchTestConservation"/>   
      <!--
        <debug label = "switchDebug_EQ_RF_press"/>
        <debug label = "switchDebug_explicit_press"/> 
