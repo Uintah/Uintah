@@ -17,10 +17,12 @@
 #include <Dataflow/Module.h>
 #include <Datatypes/ColorMapPort.h>
 #include <Datatypes/GeometryPort.h>
-#include <Datatypes/VectorField.h>
-#include <Datatypes/VectorFieldPort.h>
+#include <Datatypes/ScalarField.h>
+#include <Datatypes/ScalarFieldPort.h>
 #include <Datatypes/TensorField.h>
 #include <Datatypes/TensorFieldPort.h>
+#include <Datatypes/VectorField.h>
+#include <Datatypes/VectorFieldPort.h>
 #include <Geom/Geom.h>
 #include <Geom/Material.h>
 #include <Geom/Group.h>
@@ -41,6 +43,8 @@
 MusilRNG mr;
 TensorFieldBase *tfield;
 VectorField *vfield;
+ScalarField *sfield;
+ColorMap* cmap;
 
 Vector matvecmult3by3(double A[][3], const Vector& v) {
     double x[3];
@@ -77,32 +81,50 @@ struct Fiber {
     Vector dir;
     int inside;
     int stagnate;
-    Fiber(const Point &p, int ns, double ss, const Vector &d)
+    int iDir;
+
+    Fiber(const Point &p, int ns, double ss, const Vector &d, int idir)
 	: pos(p), nsteps(ns), stepsize(ss), dir(d),
-          inside(1), stagnate(0) {};
+          inside(1), stagnate(0), iDir(idir) {};
     ~Fiber() {};
     int advanceV();
     int advanceT();
-    void advect(GeomLines *);
+    void advect(TexGeomLines *);
 };
 
-void Fiber::advect(GeomLines *lines) {
+void Fiber::advect(TexGeomLines *lines) {
     double lifetime=mr();
     lifetime=1-lifetime*lifetime;
+    Array1<double> time;
+    Array1<Point> posn;
+    Array1<Color> clrs;
+
+    posn.add(pos);
+    if (sfield && cmap) {
+	Color cv(0,0,0);
+	double sval;
+	if (sfield->interpolate(pos,sval)) {
+	    MaterialHandle matl(cmap->lookup(sval));
+	    cv = matl->diffuse;
+	}
+	clrs.add(cv);
+    }
     for (int i=0; i<nsteps*lifetime && inside; i++) {
-	Point p1=pos;
-	if (tfield) {
-	    if (advanceT()) {
-		Point p2=pos;
-		lines->add(p1, p2);
-	    }
-	} else {
-	    if (advanceV()) {
-		Point p2=pos;
-		lines->add(p1, p2);
+	if ((tfield && advanceT()) || (!tfield && advanceV())) {
+	    posn.add(pos);
+	    if (sfield && cmap) {
+		Color cv(0,0,0);
+		double sval;
+		if (sfield->interpolate(pos,sval)) {
+		    MaterialHandle matl(cmap->lookup(sval));
+		    cv = matl->diffuse;
+		}
+		clrs.add(cv);
 	    }
 	}
     }
+    if (posn.size() != clrs.size()) cerr << "ERROR -- time.size()="<<time.size()<<" posn.size()="<<posn.size()<<" clrs.size()="<<clrs.size()<<"\n";
+    if (posn.size()>1) lines->batch_add(time, posn, clrs);
 }
 
 int Fiber::advanceV() {
@@ -128,7 +150,7 @@ int Fiber::advanceV() {
     } else {
 	grad.normalize();
     }
-    F1 = grad*stepsize;
+    F1 = grad*(stepsize*iDir);
 
     if(!vfield->interpolate(p+F1*0.5, grad, ix)){
 	inside=0;
@@ -144,7 +166,7 @@ int Fiber::advanceV() {
     } else {
 	grad.normalize();
     }
-    F2 = grad*stepsize;
+    F2 = grad*(stepsize*iDir);
 
     if(!vfield->interpolate(p+F2*0.5, grad, ix)){
 	inside=0;
@@ -160,7 +182,7 @@ int Fiber::advanceV() {
     } else {
 	grad.normalize();
     }	
-    F3 = grad*stepsize;
+    F3 = grad*(stepsize*iDir);
 
     if(!vfield->interpolate(p+F3, grad, ix)){
 	inside=0;
@@ -176,7 +198,7 @@ int Fiber::advanceV() {
     } else {
 	grad.normalize();
     }
-    F4 = grad * stepsize;
+    F4 = grad*(stepsize*iDir);
     
     p += (F1 + F2 * 2.0 + F3 * 2.0 + F4) / 6.0;
     if(!vfield->interpolate(p, grad, ix)){
@@ -306,26 +328,28 @@ struct FiberBundle {
     double rad;
 
     FiberBundle(const Array1<Point> &pts, int nsteps, const Vector &v, 
-		int nfibers, double stepsize, double r);
+		int nfibers, double stepsize, double r, int idir);
     ~FiberBundle() {};
     GeomObj *advect(int niters);
 };
 
 FiberBundle::FiberBundle(const Array1<Point> &pts, int nsteps, const Vector &v,
-			 int nfibers, double stepsize, double r) {
+			 int nfibers, double stepsize, double r, int idir) {
     cerr << "Creating bundle in direction "<<v<<"...\n";
     rad=r;
     step=0;
     fibers.resize(nfibers);
     for (int i=0; i<nfibers; i++) {
       // find the position of each fiber, nad the step when it will be created
-	fibers[i]=new Fiber(pts[i], nsteps, stepsize, v);
+	fibers[i]=new Fiber(pts[i], nsteps, stepsize, v, idir);
     }
 }
 
 GeomObj *FiberBundle::advect(int niters) {
     cerr << "Advecting fibers through field...\n";
-    GeomLines *lines=new GeomLines;
+    TexGeomLines *lines=new TexGeomLines;
+    lines->alpha=1.;
+
     for (int i=0; i<niters; i++) {
 	Vector newCtr(0,0,0);
 	Vector newDir(0,0,0);
@@ -350,6 +374,7 @@ GeomObj *FiberBundle::advect(int niters) {
 class Bundles : public Module {
     TensorFieldIPort* itfport;
     VectorFieldIPort* ivfport;
+    ScalarFieldIPort* isfport;
     ColorMapIPort* icmport;
     GeometryOPort* ogport;
 
@@ -368,6 +393,8 @@ class Bundles : public Module {
     TensorFieldHandle tfh;
     VectorFieldHandle vfh;
     ColorMapHandle cmh;
+    ScalarFieldHandle sfh;
+
     clString msg;
 
     RingWidget *rw;
@@ -403,6 +430,10 @@ Bundles::Bundles(const clString& id)
     ivfport=scinew VectorFieldIPort(this, "Vector Field",
 				    VectorFieldIPort::Atomic);
     add_iport(ivfport);
+
+    isfport=scinew ScalarFieldIPort(this, "Scalar Field",
+				    ScalarFieldIPort::Atomic);
+    add_iport(isfport);
 
     icmport=scinew ColorMapIPort(this, "ColorMap", ColorMapIPort::Atomic);
     add_iport(icmport);
@@ -443,7 +474,11 @@ void Bundles::execute()
 	if (!ivfport->get(vfh)) return;
 	else vfield=vfh.get_rep();
 
-    if (!icmport->get(cmh)) return;
+    if (icmport->get(cmh)) cmap=cmh.get_rep();
+    else cmap=0;
+
+    if (isfport->get(sfh)) sfield=sfh.get_rep();
+    else sfield=0;
 
     if (first_execute) {
 	Point fmin, fmax, fctr;
@@ -451,20 +486,20 @@ void Bundles::execute()
 	if (havetensors) {
 	    TensorField<double> *tfd;
 	    tfd=dynamic_cast<TensorField<double> *>(tfh.get_rep());
-	    if (tfd) tfd->m_e_vectors[0]->get_bounds(fmin,fmax);
+	    if (tfd) tfd->get_bounds(fmin,fmax);
 	} else {
 	    vfh->get_bounds(fmin, fmax);
 	}
 	fdiag=(fmax-fmin);
-	fctr=fmin+fdiag*.5;
+	fctr=fmin+fdiag*.33;
 	double fscale=fdiag.length();
-	rw=scinew RingWidget(this, &widget_lock, fscale/100.);
+	rw=scinew RingWidget(this, &widget_lock, fscale/1000.);
 	rw->SetRatio(0.5);
 	Point ppp;
 	Vector vvv;
 	double sss;
 	rw->GetPosition(ppp, vvv, sss);
-	rw->SetPosition(fctr, vvv, fscale/20.);
+	rw->SetPosition(fctr, vvv, fscale/200.);
 
 	GeomObj *w=rw->GetWidget();
 	ogport->addObj(w, clString("Ring Widget"), &widget_lock);
@@ -487,10 +522,10 @@ void Bundles::execute()
     int whichDir=whichdir.get();
     if (whichDir==0 || whichDir==2)
 	fb_fwd=new FiberBundle(pts, nsteps.get(), nrml, nfibers.get(), 
-			       stepsize.get(), rad);
+			       stepsize.get(), rad, 1);
     if (whichDir==1 || whichDir==2)
 	fb_bwd=new FiberBundle(pts, nsteps.get(), -nrml, nfibers.get(),
-			       stepsize.get(), rad);	
+			       stepsize.get(), rad, -1);	
 
     GeomGroup *g=new GeomGroup;
     if (fb_fwd) g->add(fb_fwd->advect(niters.get()));
