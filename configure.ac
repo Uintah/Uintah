@@ -1533,7 +1533,7 @@ AC_SUBST(DL_LIB_DIR_FLAG)
 ##  --  search for required headers  --------------------------------------
 
 ##  --  required standard headers
-SCI_TRY_LINK(STD_HDRS,required standard headers,[
+SCI_TRY_LINK(STD_HDRS,standard headers,[
 #include <stdio.h> 
 #include <stdlib.h> 
 #include <stddef.h> 
@@ -1573,7 +1573,7 @@ case $host in
     ;;
   *-irix*)
     # test for required sqi headers as well
-    SCI_TRY_LINK(STD_HDRS,required standard headers,[
+    SCI_TRY_LINK(STD_HDRS,sgi standard headers,[
       #include <ieeefp.h> 
       #include <ulocks.h>
       #include <values.h>
@@ -1583,7 +1583,7 @@ case $host in
     AC_SUBST(DEF_IEEEFP)
     ;;
   *)
-    SCI_TRY_LINK(STD_HDRS,required standard headers,[
+    SCI_TRY_LINK(STD_HDRS,standard headers,[
       #include <values.h>
       #include <malloc.h>
       ],,,,,,not-optional)
@@ -1651,7 +1651,7 @@ if test -f "$_sci_lib/tclConfig.sh"; then
   _sci_tcl_inc="$_sci_inc $TCL_SRC_DIR/generic"
 fi
 
-SCI_TRY_LINK(TCL,required tcl library and headers,[
+SCI_TRY_LINK(TCL,tcl library and headers,[
 #include <tcl.h> 
 #include <tclPort.h>
 #include <tclMath.h>
@@ -1672,7 +1672,7 @@ fi
 #
 # Note: TK_DEFS (used below to help resolve tk issues) comes from tkConfig.sh
 #
-SCI_TRY_LINK(TK,required tk library and headers,[
+SCI_TRY_LINK(TK,tk library and headers,[
 #include <tk.h> 
 #include <tk3d.h>
 #include <tkPort.h>
@@ -1683,7 +1683,7 @@ AC_SUBST(TK_LIB_DIR_FLAG)
 AC_SUBST(INC_TK_H)
 
 # -- itcl --
-SCI_TRY_LINK(ITCL,required itcl library and headers,[
+SCI_TRY_LINK(ITCL,itcl library and headers,[
 #include <itcl.h> 
 ],$_sci_inc,itcl,$_sci_lib,$TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,not-optional)
 
@@ -1693,7 +1693,7 @@ AC_SUBST(ITCL_LIB_DIR_FLAG)
 AC_SUBST(INC_ITCL_H)
 
 # -- itk --
-SCI_TRY_LINK(ITK,required itk library and headers,[
+SCI_TRY_LINK(ITK,itk library and headers,[
 #include <itk.h> 
 ],$_x_inc_dir $_sci_inc,itk,$_sci_lib,$ITCL_LIB_DIR_FLAG $ITCL_LIB_FLAG $TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,not-optional)
 
@@ -1702,7 +1702,7 @@ AC_SUBST(ITK_LIB_DIR_FLAG)
 AC_SUBST(INC_ITK_H)
 
 # -- blt --
-SCI_TRY_LINK(BLT,required BLT library and headers,[
+SCI_TRY_LINK(BLT,BLT library and headers,[
 #include <blt.h> 
 ],$_sci_inc,BLT,$_sci_lib,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,not-optional)
 
@@ -1729,23 +1729,23 @@ if test "$sci_check_plplot" = "yes"; then
   fi
 
 
-#  SCI_TRY_LINK(PLPLOTTCLTK,optional optimized plplottcltk library and headers,[
+#  SCI_TRY_LINK(PLPLOTTCLTK,optimized plplottcltk library and headers,[
 #
 #  ],$_sci_inc,plplottcltk, $_sci_lib,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,optional)
 
 
 #  if test "$HAVE_PLPLOTTCLTK" = "no"; then
-#    SCI_TRY_LINK(PLPLOTTCLTK,optional debug plplottcltk library and headers,[
+#    SCI_TRY_LINK(PLPLOTTCLTK,debug plplottcltk library and headers,[
 #
 #    ],$_sci_inc,plplottcltkd, $_sci_lib,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,optional)
 #  fi
 
-  SCI_TRY_LINK(PLPLOT,optional optimized plplot library and headers,[
+  SCI_TRY_LINK(PLPLOT,optimized plplot library and headers,[
   #include <plplot/plplot.h> 
   ],$_sci_inc,plplot, $_sci_lib,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,optional)
 
   if test "$HAVE_PLPLOT" = "no"; then
-    SCI_TRY_LINK(PLPLOT,optional debug plplot library and headers,[
+    SCI_TRY_LINK(PLPLOT,debug plplot library and headers,[
     #include <plplot/plplot.h> 
     ],$_sci_inc,plplotd, $_sci_lib,$ITK_LIB_DIR_FLAG $ITK_LIB_FLAG $ITCL_LIB_DIR_FLAG $ITCL_LIB_FLAG,,optional)
   fi
@@ -1754,12 +1754,12 @@ if test "$sci_check_plplot" = "yes"; then
     DEF_PLPLOT="#define HAVE_PLPLOT 1"
   fi
 
-  SCI_TRY_LINK(TCLMATRIX,optional optimized tclMatrix library and headers,[
+  SCI_TRY_LINK(TCLMATRIX,optimized tclMatrix library and headers,[
   #include <plplot/tclMatrix.h> 
   ],$_sci_inc,tclmatrix, $_sci_lib,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,optional)
 
   if test "$HAVE_TCLMATRIX" = "no"; then
-    SCI_TRY_LINK(TCLMATRIX,optional debug tclMatrix library and headers,[
+    SCI_TRY_LINK(TCLMATRIX,debug tclMatrix library and headers,[
     #include <plplot/tclMatrix.h> 
     ],$_sci_inc,tclmatrixd, $_sci_lib,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,optional)
   fi
@@ -1937,7 +1937,7 @@ for i in $_sci_lib; do
     continue
   fi
 
-  SCI_TRY_LINK(MAGICK,optional ImageMagick library and headers,[
+  SCI_TRY_LINK(MAGICK,ImageMagick library and headers,[
   #include <magick/magick.h>
   ],$i/include,Magick,$i/lib,$IM_LDFLAGS $IM_LIBS,[
   WriteImage
@@ -1984,7 +1984,7 @@ for i in $_sci_lib; do
   fi
 
 
-  SCI_TRY_LINK(PNG,optional png library and headers,[
+  SCI_TRY_LINK(PNG,png library and headers,[
   #include <png.h>
   ],$i/include,png,$i/lib,,,optional)
 
@@ -2016,7 +2016,7 @@ else
   _sci_inc="$sci_thirdparty_includes"
 fi
 
-SCI_TRY_LINK(Z,required zlib library and header,[
+SCI_TRY_LINK(Z,zlib library and header,[
 #include <zlib.h>
 ],$_sci_inc,z,$_sci_lib,,,not-optional)
 
@@ -2040,29 +2040,29 @@ if test $sci_check_fortran = "yes"; then
   F_LIB_FLAG=""
   case $host in 
     *-irix*)
-      SCI_TRY_LINK(F,required fortran libraries,,,ftn fortran,,,,not-optional)
+      SCI_TRY_LINK(F,fortran libraries,,,ftn fortran,,,,not-optional)
       ;;
     *aix*)
       # AIX Fortran Library Check
-      SCI_TRY_LINK(F,required fortran libraries,,,xlf90,,,,not-optional)
+      SCI_TRY_LINK(F,fortran libraries,,,xlf90,,,,not-optional)
       ;;
     *linux*)
       # Linux Library Check
       if test "$F77" = "pgf77"; then
-        SCI_TRY_LINK(F,required fortran libraries,,,pgftnrtl,,,,not-optional)
+        SCI_TRY_LINK(F,fortran libraries,,,pgftnrtl,,,,not-optional)
       else
-        SCI_TRY_LINK(F,required fortran libraries,,,g2c,,,,not-optional)
+        SCI_TRY_LINK(F,fortran libraries,,,g2c,,,,not-optional)
       fi
       ;;
     *dec*)
-      SCI_TRY_LINK(F,required fortran libraries,,,for Ufor,,,,not-optional)
+      SCI_TRY_LINK(F,fortran libraries,,,for Ufor,,,,not-optional)
       ;;
     *-darwin*)
       # OSX Library Check
-      #SCI_TRY_LINK(F,required fortran libraries,,,g2c,/sw/lib,,,not-optional)
+      #SCI_TRY_LINK(F,fortran libraries,,,g2c,/sw/lib,,,not-optional)
       ;;
     *)
-      SCI_TRY_LINK(F,required fortran libraries,,,F77,,,,not-optional)
+      SCI_TRY_LINK(F,fortran libraries,,,F77,,,,not-optional)
       ;;
   esac
 fi  
@@ -2079,18 +2079,18 @@ if test "$sci_check_blas" = "yes"; then
   
   case $host in
     *aix*)
-       SCI_TRY_LINK(BLAS,optional essl library,,,
+       SCI_TRY_LINK(BLAS,essl library,,,
                       essl,$_sci_lib,$F_LIB_FLAG,,not-optional)
        ;;
     *dec*)
-       SCI_TRY_LINK(BLAS,optional cxml library,,,
+       SCI_TRY_LINK(BLAS,cxml library,,,
                       cxml,$_sci_lib,$F_LIB_FLAG,,not-optional)
        ;;
     *)
-       SCI_TRY_LINK(BLAS,optional blas library,,,
+       SCI_TRY_LINK(BLAS,blas library,,,
                       blas,$_sci_lib,$F_LIB_FLAG,,optional)
        if test "$HAVE_BLAS" = "no"; then
-         SCI_TRY_LINK(BLAS,optional fblas library,,,
+         SCI_TRY_LINK(BLAS,fblas library,,,
                       fblas,$_sci_lib,$F_LIB_FLAG,,not-optional)
        fi
        ;;
@@ -2115,7 +2115,7 @@ if test "$sci_check_ftgl" = "yes"; then
     _sci_lib="$sci_thirdparty_libs"
   fi
   
-  SCI_TRY_LINK(FTGL,optional FTGL library,[
+  SCI_TRY_LINK(FTGL,FTGL library,[
 #include <FTGLTextureFont.h>
 ],$_sci_inc,freetype ftgl,$_sci_lib,,,not-optional)
 
@@ -2142,14 +2142,14 @@ if test "$sci_check_lapack" = "yes" &&
   fi
 
 
-  SCI_TRY_LINK(LAPACK,optional lapack library,,,lapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
+  SCI_TRY_LINK(LAPACK,lapack library,,,lapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
 
   if test "$HAVE_LAPACK" = "no"; then
-    SCI_TRY_LINK(LAPACK,optional flapack library,,,flapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
+    SCI_TRY_LINK(LAPACK,flapack library,,,flapack,$_sci_lib,$BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
   fi
 
   if test "$HAVE_LAPACK" = "no"; then
-    SCI_TRY_LINK(LAPACK,optional complib.sgimath library,,,complib.sgimath,$_sci_lib,,,optional)
+    SCI_TRY_LINK(LAPACK,complib.sgimath library,,,complib.sgimath,$_sci_lib,,,optional)
     if test "$HAVE_LAPACK" = "yes"; then
        AC_MSG_WARN(Using complib for lapack)
     fi
@@ -2311,12 +2311,12 @@ else
   _sci_inc="$sci_thirdparty_includes"
 fi
 
-SCI_TRY_LINK(MPIUNI,optional mpi-uni libraries and headers,[
+SCI_TRY_LINK(MPIUNI,mpi-uni libraries and headers,[
 #include <mpi.h>
 ],$_sci_inc,mpiuni,$_sci_lib,,,optional)
 
 if test "$HAVE_MPIUNI" = "no"; then
-   SCI_TRY_LINK(MPIUNICH,optional mpiunich and pmpiunich libraries,,
+   SCI_TRY_LINK(MPIUNICH,mpiunich and pmpiunich libraries,,
                   $_sci_inc,mpiunich pmpiunich,$_sci_lib,,,optional)
 
    if test "$HAVE_MPIUNICH" = "yes"; then
@@ -2382,7 +2382,7 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPIUNI" = "yes") &&
     done  
   fi
 
-  SCI_TRY_LINK(PETSC,optional petsc libraries and headers,[
+  SCI_TRY_LINK(PETSC,petsc libraries and headers,[
   #include <petsc.h>
   ],$_sci_inc /usr/include/petsc,petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles petscfortran,$_sci_lib,$LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_H $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG $F_LIB_FLAG,,optional)
 
@@ -2399,7 +2399,7 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPIUNI" = "yes") &&
     _sci_inc="$with_unipetsc/bmake/$PETSC_ARCH $with_unipetsc/include"
   fi
 
-  SCI_TRY_LINK(PETSC_UNI,optional petsc-uni libraries and headers,[
+  SCI_TRY_LINK(PETSC_UNI,petsc-uni libraries and headers,[
   #include <petsc.h>
   ],$_sci_inc /usr/include/petsc,petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles petscfortran,$_sci_lib,$LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPIUNI_H $MPIUNI_LIB_DIR_FLAG $MPIUNI_LIB_FLAG $F_LIB_FLAG,,optional)
   if test "$HAVE_PETSC_UNI" = "yes" ; then
@@ -2555,7 +2555,7 @@ if test "$sci_check_babel" = "yes"; then
   fi
   echo $_sci_lib
   echo $_sci_inc
-  SCI_TRY_LINK(SIDL,optional sidl library and headers,[
+  SCI_TRY_LINK(SIDL,sidl library and headers,[
      #include <SIDL.h>
      ],$_sci_inc,sidl,$_sci_lib,,,optional)
   
