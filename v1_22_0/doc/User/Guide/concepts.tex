@@ -236,9 +236,10 @@ to grow, and adapt to changing needs and opportunities.
 \label{sec:con-modules} 
 
 %begin{latexonly}
-  \newcommand{\basicmodule}%
-  {\centerline{\epsfig{file=Figures/biopse-modmap.eps.gz,width=\columnwidth,
-  bbllx=0, bblly=0, bburx=768, bbury=208}}}
+\newcommand{\basicmodule}{%
+  \centerline{\includegraphics[bb=0 0 768 208,width=\columnwidth]
+    {Figures/biopse-modmap.eps.gz}}
+}
 %end{latexonly}
 \begin{htmlonly}
   \newcommand{\basicmodule}{%
@@ -259,7 +260,6 @@ Interface enables the selection of a desired isochrone surface.
   \begin{makeimage}
   \end{makeimage}
   \basicmodule
-%  \centerline{\epsfig{file=Figures/biopse-modmap.eps,width=6in}}
   \caption{\label{fig:conc-module} Example of a \SR{} module}
 \end{figure}
 
@@ -485,7 +485,7 @@ Below are figures of some mesh types:
 
 %begin{latexonly}
 \newcommand{\meshdoc}[4]{%
-  \includegraphics[0,0][100,#1]{Figures/#2.eps.gz}
+  \includegraphics[bb=0 0 100 #1]{Figures/#2.eps.gz}
   {#4}
 }
 %end{latexonly}

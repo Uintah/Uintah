@@ -31,86 +31,92 @@
 %%%%%%%%%%  Figures used in this file %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% The basic viewer window
 %begin{latexonly}
-  \newcommand{\viewerwindow}%
-  {\centerline{\epsfig{file=Figures/viewwindow.eps.gz,height=4in,
-  bbllx=0, bblly=0, bburx=660, bbury=660}}}
+\newcommand{\viewerwindow}{%
+  \centerline{\includegraphics[bb=0 0 491 501,height=4in]
+    {Figures/viewwindow.eps.gz}}
+}
 %end{latexonly}
 \begin{htmlonly}
   \newcommand{\viewerwindow}{%
-  \htmladdimg[align=top,width=645,alt="module"]
-  {../Figures/viewwindow.gif}}
+    \htmladdimg[alt="module"]{../Figures/viewwindow.gif}
+  }
 \end{htmlonly}
 
 %% View of the extended viewer window
 %begin{latexonly}
-  \newcommand{\extendedwindow}%
-  {\centerline{\epsfig{file=Figures/viewbottom.eps.gz,height=4in,
-  bbllx=0, bblly=0, bburx=654, bbury=293}}}
+\newcommand{\extendedwindow}{%
+  \centerline{\includegraphics[bb=0 0 602 420,height=4in]
+    {Figures/viewbottom.eps.gz}}
+}
 %end{latexonly}
 \begin{htmlonly}
   \newcommand{\extendedwindow}{%
-  \htmladdimg[align=top,width=649,alt="extended view window"]
-  {../Figures/viewbottom.gif}}
+  \htmladdimg[alt="extended view window"]{../Figures/viewbottom.gif}}
 \end{htmlonly}
 
 %% Gauge widget image
 %begin{latexonly}
-  \newcommand{\gaugewidget}%
-  {\centerline{\epsfig{file=Figures/widget-gauge.eps.gz,height=2in,
-  bbllx=0, bblly=0, bburx=457, bbury=340}}}
+\newcommand{\gaugewidget}{%
+  \centerline{\includegraphics[bb=0 0 457 340,height=2in]
+    {Figures/widget-gauge.eps.gz}}
+}
 %end{latexonly}
 \begin{htmlonly}
   \newcommand{\gaugewidget}{%
-  \htmladdimg[align=top,width=458,alt="gaugewidget"]
-  {../Figures/widget-gauge.gif}}
+    \htmladdimg[alt="gaugewidget"]{../Figures/widget-gauge.gif}
+  }
 \end{htmlonly}
 
 %% Frame widget image
 %begin{latexonly}
-  \newcommand{\framewidget}%
-  {\centerline{\epsfig{file=Figures/widget-frame.eps.gz,height=2in,
-  bbllx=0, bblly=0, bburx=328, bbury=268}}}
+\newcommand{\framewidget}{%
+  \centerline{\includegraphics[bb=0 0 328 268,height=2in]
+    {Figures/widget-frame.eps.gz}}
+}
 %end{latexonly}
 \begin{htmlonly}
   \newcommand{\framewidget}{%
-  \htmladdimg[align=top,width=329,alt="framewidget"]
-  {../Figures/widget-frame.gif}}
+  \htmladdimg[alt="framewidget"]{../Figures/widget-frame.gif}}
 \end{htmlonly}
 
 %% Box widget image
 %begin{latexonly}
-  \newcommand{\boxwidget}%
-  {\centerline{\epsfig{file=Figures/widget-box.eps.gz,height=2in,
-  bbllx=0, bblly=0, bburx=458, bbury=342}}}
+\newcommand{\boxwidget}{%
+  \centerline{\includegraphics[bb=0 0 458 342,height=2in]
+    {Figures/widget-box.eps.gz}}
+}
 %end{latexonly}
 \begin{htmlonly}
   \newcommand{\boxwidget}{%
-  \htmladdimg[align=top,width=459,alt="boxwidget"]
-  {../Figures/widget-box.gif}}
+    \htmladdimg[alt="boxwidget"]{../Figures/widget-box.gif}
+  }
 \end{htmlonly}
 
 %% Ring widget image
 %begin{latexonly}
-  \newcommand{\ringwidget}%
-  {\centerline{\epsfig{file=Figures/widget-ring.eps.gz,height=2in,
-  bbllx=0, bblly=0, bburx=507, bbury=467}}}
+\newcommand{\ringwidget}{%
+  \centerline{\includegraphics[bb=0 0 507 467,height=2in]
+  {Figures/widget-ring.eps.gz}}
+}
 %end{latexonly}
 \begin{htmlonly}
   \newcommand{\ringwidget}{%
-  \htmladdimg[align=top,width=508,alt="ringwidget"]
-  {../Figures/widget-ring.gif}}
+    \htmladdimg[alt="ringwidget"] {../Figures/widget-ring.gif}
+  }
 \end{htmlonly}
 
 %% Record movie dialog window
 %begin{latexonly}
-  \newcommand{\recordmoviewin}%
-  {\centerline{\epsfig{file=Figures/record_movie_win.eps.gz,
-  bbllx=0, bblly=0, bburx=257, bbury=175}}}
+\newcommand{\recordmoviewin}{%
+  \centerline{\includegraphics[bb=0 0 176 183]
+    {Figures/record_movie_win.eps.gz}}
+}
 %end{latexonly}
 \begin{htmlonly}
   \newcommand{\recordmoviewin}{%
-  \htmladdimg[align=top,alt="Movie Recording Dialog"]
-  {../Figures/record_movie_win.gif}}
+  \htmladdimg[alt="Movie Recording
+  Dialog"]{../Figures/record_movie_win.gif}
+}
 \end{htmlonly}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -125,7 +131,10 @@ the \viewer{}, which displays interactive graphical
 output to the computer screen.  The \viewer{} is used any time the user
 wants to see a geometry or spatial data. The \viewer{} also provides access to
 many simulation parameters and controls, and indirectly initiates new
-iterations of  simulation steps, which is important for computational steering (see \secref{Computational Steering}{sec:con-steering}).
+iterations of  simulation steps, which is important for computational
+steering (see \secref{Computational Steering}{sec:con-steering}).
+Multiple \viewer{} windows can be created.  Each viewer window is
+independent of the others.
 
 This section begins with an overview of the \viewer{} window and its
 controls, then describes the options and variations.
@@ -187,7 +196,7 @@ the \viewer{} window (see \secref{Extended Control Window}
 \index{Viewer@\viewer{}!menus}
 
 The \viewer{} window's menu bar contains the \menu{File}, \menu{Edit},
-and \menu{Visual} menus.
+and \menu{Visual} menus and the \guibutton{NewViewer} button.
 
 \begin{description}
   \menudesc{File} The \menu{File} menu contains the following items:
@@ -232,6 +241,10 @@ and \menu{Visual} menus.
   \menudesc{Visual} Allows the user to select different
   graphics hardware settings that are available on the workstation.
   The list is ordered heuristically from most to least useful.
+
+  \menudesc{NewViewer} \guibutton{NewViewer} creates a new \viewer{}
+  window when pressed.  Each viewer window is independent of other
+  viewer windows.
 \end{description}
 
 \section{Recording Movies}
@@ -245,35 +258,38 @@ and \menu{Visual} menus.
   \caption{\label{fig:recordmoviewin} Movie Recording Window}
 \end{figure}
 
-The \viewer{}'s recording control window controls movie recording.  See
-Figure~\ref{fig:recordmoviewin}.  Select \menuitem{Record Movie\dots} from
-the \viewer{} window's \menu{File} menu to show the movie control window.
+The \viewer{}'s recording control window controls movie recording.
+Figure~\ref{fig:recordmoviewin} shows the recording control window.
+Select \menuitem{Record Movie\dots} from the \viewer{} window's
+\menu{File} menu to show the movie control window.
 
-\sr{} records a movie by saving the content of the \viewer{} window to
-a file each time the \viewer{} window is redrawn.
+\sr{} makes a movie by recording the content of the \viewer{} window
+each time the \viewer{} window is redrawn.  The width and height of
+each frame is the same size as the width and height of the \viewer{}
+control window.  The width and height of each frame may be changed by
+clicking button \guibutton{Resize} and typing width and height values
+into the resize text boxes---this must be done before recording the
+movie.
 
-Two formats are supported, Silicon Graphic's RGB (``raw frames'') and
-MPEG.
+A movie can be saved as a series of PPM frames, one frame per
+file,  or as an MPEG file.
 
-When recorded as raw frames, a movie will be saved as a series of RGB
-files.  Each file is named as follows:
-\filename{\replaceable{ddd}.\replaceable{name}.raw}, where
-\replaceable{ddd} is a 3 digit frame number and \replaceable{name} is
-the name typed into the control window's text entry field.
+When saving a movie as a series of PPM files, the files are named
+according to the C-style format string in the the \guilabel{Name:}
+text box and the initial frame number in the \guilabel{Frame:} text
+box.  The frame number is formatted according to the conversion
+specification introduced by the percent '\%' character.  For example,
+if \guilabel{Name:} is \icode{movie.\%04d} and \guilabel{Frame:} is 1
+then the following series of file names are generated:
+\filename{movie.0001}, \filename{movie.0002}, \ldots,
+\filename{movied.1000} for a PPM movie with one thousand frames.
 
-When recorded in the MPEG format all frames of a movie will be saved
-in a file named \filename{\replaceable{name}.mpg}.
+When recording an MPEG movie, the \guilabel{Name:} text box contains
+the name of the MPEG file.
 
-The width and height of each frame is the same size as the width and
-height of the \viewer{} control window.  The width and height of each
-frame may be changed by clicking button \guibutton{Resize} and typing
-width and height values into the resize text boxes---this must be done
-before recording the movie.
-
-Click button \guibutton{Raw Frames} to begin a raw frames recording.
-Click button \guibutton{Mpeg} to begin an MPEG recording.  Each new
-\viewer{} window frame will be recorded.  Click button \guibutton{Stop
-\ Recording} to end a movie.
+Click radio button \guibutton{PPM} to begin a PPM recording.  Click
+button \guibutton{Mpeg} to begin an MPEG recording.  Click button
+\guibutton{Stop Recording} to end a movie.
 
 
 \section{Mouse Control in the \viewer{} Window}
@@ -368,32 +384,21 @@ window.
 \end{figure}
 
 
-\subsection{Object Selector}
+\subsection{Object Selection and Settings}
 
-The lower portion of the extended \viewer{} window is divided into three
-columns. The middle column contains a list of all objects in the
-display.  If the list becomes long, use the scroll bar on the left
-side to access other objects.  For each entry in the list there are
-the following controls, reading from left to right:
+The middle panel is a list of objects in the display.  Each entry in
+the list consists of the following (from left to right):
 
 \begin{itemize}
-  \item At the left end of each object
-        in the list is a selection indicator that displays red
-        when that object is 
-        selected.  The \viewer{} window only displays objects that
-        are selected.
-  \item Now comes the name of the object.
-  \item Next the \button{Shading} control box determines the
-        shading options used for rendering the object.
-        Options include: Lighting, BBox, Fog, Use Clip, Back Cull, and
-        Display List  (see
-        \secref{Rendering controls}{sec:view-rendering} for directions).
-  \item Lighting control is found at the right end of each entry, initially
-        marked \menu{Default}.  In the Default setting, the common
-        rendering controls described in \secref{Rendering
-        controls}{sec:view-rendering} below apply.  Clicking this box
-        reveals a set of options that only apply to this object that
-        include Wire, Flat, and Gouraud.
+\item Selection button.  An object is selected when the selection
+  button is depressed.  The \viewer{} window only displays selected
+  objects.
+\item An object's name.
+\item A \menu{Options...} pop-up menu.  The \menu{Options...} menu
+  controls object specific rendering settings.  If item \menuitem{Use
+    Global Controls} is set then object specific settings are ignored
+  and global rendering settings are used.  Use of rendering settings
+  are discussed in \secref{Rendering Controls}{sec:view-rendering}.
 \end{itemize}
 
 
@@ -401,13 +406,11 @@ the following controls, reading from left to right:
 \label{sec:view-rendering} 
 \index{Viewer@\viewer{}!rendering}
 
-The left column of the extended \viewer{} window contains controls that
-apply to all selected objects with ``Default'' lighting selected.
-Objects without the Default setting use their own object specific
-settings, as described in the previous section.  
+The left part of the extended \viewer{} window contains global
+rendering settings.  Objects can override global settings.
 
-The lighting and shading options available are:
-%
+The redenering options are:
+
 \begin{description}
   \descitem{Lighting} Toggles whether or not the \viewer{} applies
   lighting to the display.  Objects without lighting have a constant
