@@ -170,12 +170,13 @@ void WidgetTest::tcl_command(TCLArgs& args, void* userdata)
 	   widgets[i]->SetState(0);
    
        widgets[widget_type.get()]->SetState(1);
-       widgets[widget_type.get()]->SetScale(widget_scale.get());
        widget_lock.write_unlock();
+       widgets[widget_type.get()]->SetScale(widget_scale.get());
+//       widget_lock.write_unlock();
    } else if(args[1] == "scale"){
-       widget_lock.write_lock();
+//       widget_lock.write_lock();
        widgets[widget_type.get()]->SetScale(widget_scale.get());
-       widget_lock.write_unlock();
+//       widget_lock.write_unlock();
    } else {
       Module::tcl_command(args, userdata);
    }
