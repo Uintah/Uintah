@@ -331,7 +331,8 @@ void HDF5DataReader::execute() {
 	  
 	  ReadandSendData( filename, frame_paths[which],
 			   frame_datasets[which], true, which );
-	}
+	} else
+	  resend = true;
       } else {
 	error( "Input index is out of range" );
 	return;
@@ -1983,9 +1984,10 @@ HDF5DataReader::animate_execute( string new_filename,
       which = end;
 
     if( update_ ||
-	which != which_ )
+	which != which_ ) {
       ReadandSendData( new_filename, frame_paths[which],
 		       frame_datasets[which], cache, which );
+    }
     else
       resend = true;
 
