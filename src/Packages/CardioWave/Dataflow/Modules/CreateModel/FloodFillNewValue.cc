@@ -95,7 +95,7 @@ void FloodFillNewValue::execute(){
   PointCloudMesh::Node::index_type node0(0);
   Point p;
   pcf->get_typed_mesh()->get_center(p, node0);
-  int data_at = pcf->data_at();
+  int data_at = hvf->data_at();
   
   if (data_at == Field::NODE) {
     hvf->get_typed_mesh()->synchronize(Mesh::LOCATE_E);
@@ -107,7 +107,7 @@ void FloodFillNewValue::execute(){
     int new_val = pcf->fdata()[0];
     int old_val;
     if (!hvf->value(old_val, loc)) {
-      error("There's no datavalue in the HexVol at this location, even though the call to locate() succeeded.");
+      error("There's no datavalue in the HexVol at this Node location, even though the call to locate() succeeded.");
       return;
     }
     
@@ -182,7 +182,7 @@ void FloodFillNewValue::execute(){
     int new_val = pcf->fdata()[0];
     int old_val;
     if (!hvf->value(old_val, loc)) {
-      error("There's no datavalue in the HexVol at this location, even though the call to locate() succeeded.");
+      error("There's no datavalue in the HexVol at this Cell location, even though the call to locate() succeeded.");
       return;
     }
     
