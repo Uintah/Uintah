@@ -7,6 +7,8 @@
 #include <testprograms/Component/framework/cca_sidl.h>
 #include <testprograms/Component/framework/FrameworkImpl.h>
 
+#include <string>
+
 namespace SCIRun {
 class Thread;
 }
@@ -14,6 +16,8 @@ class Thread;
 namespace sci_cca {
 
 using namespace SCIRun;
+
+using std::string;
 
 class Server;
 
@@ -37,7 +41,7 @@ public:
   static bool init ( Component &);
   static void done();
 
-  friend Server;
+  friend class Server;
 };
 
 

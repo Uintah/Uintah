@@ -8,14 +8,20 @@
 #include <Core/Thread/CrowdMonitor.h>
 #include <testprograms/Component/framework/cca_sidl.h>
 
+#include <string>
+
 namespace sci_cca {
 
 using SCIRun::CrowdMonitor;
+using std::map;
+using std::string; 
 
 class ConnectionRecord;
 
 class PortRecord {
 public:
+  virtual ~PortRecord() {}
+
   ComponentID id_;
   PortInfo info_;
   ConnectionRecord *connection_;
@@ -67,7 +73,7 @@ public:
 
   virtual ProvidePortRecord *getProvideRecord( const string & );
   virtual UsePortRecord *getUseRecord( const string & );
-  friend FrameworkImpl;
+  friend class FrameworkImpl;
 };
 
 
@@ -89,4 +95,4 @@ public:
 
 } // namespace sci_cca
 
-#endif Registry_h
+#endif // Registry_h

@@ -8,9 +8,11 @@
 #include <testprograms/Component/framework/Registry.h>
 #include <testprograms/Component/framework/FrameworkImpl.h>
 
+#include <iostream>
 
 namespace sci_cca {
 
+using std::cerr;
 
 FrameworkImpl::FrameworkImpl() 
   : ports_lock_("Framework Ports lock")

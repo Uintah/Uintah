@@ -18,6 +18,7 @@
 namespace sci_cca {
 
 using namespace SCIRun;
+using namespace std;
 
 class Server : public Runnable {
 public:

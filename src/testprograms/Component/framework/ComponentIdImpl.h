@@ -8,6 +8,8 @@
 #include <Core/CCA/Component/PIDL/URL.h>
 #include <Core/Exceptions/InternalError.h>
 
+#include <string>
+
 namespace sci_cca {
 
 using SCIRun::InternalError;

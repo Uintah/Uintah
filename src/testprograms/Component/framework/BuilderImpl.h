@@ -7,7 +7,7 @@
 
 namespace sci_cca {
 
-class BuilderImpl : public Builder_interface, virtual public ComponentImpl {
+class BuilderImpl : virtual public Builder_interface, virtual public ComponentImpl {
 
 public:
   BuilderImpl();

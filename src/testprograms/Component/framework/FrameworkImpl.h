@@ -10,6 +10,8 @@
 
 namespace sci_cca {
 
+using std::map;
+using std::string;
 using SCIRun::CrowdMonitor;
 
 class ComponentRecord;
@@ -45,9 +47,9 @@ public:
   virtual void removeProvidesPort( const ComponentID &, const string &);
   virtual void releasePort( const ComponentID &, const string &);
 
-  friend ConnectionServicesImpl;
+  friend class ConnectionServicesImpl;
 };
 
 } // namespace sci_cca
 
-#endif FrameworkImpl_h
+#endif // FrameworkImpl_h

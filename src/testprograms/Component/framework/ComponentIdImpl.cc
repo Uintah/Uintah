@@ -3,13 +3,14 @@
 #include <testprograms/Component/framework/ComponentIdImpl.h>
 
 #include <sstream>
-
-using std::cerr;
+#include <iostream>
 
 namespace sci_cca {
 
 using SCIRun::AtomicCounter;
 using SCIRun::Mutex;
+using std::cerr;
+using std::ostringstream;
 
 static AtomicCounter* generation = 0;
 static Mutex lock("Component generation counter initialization lock");

@@ -22,4 +22,4 @@ public:
 
 } // namespace sci_cca
 
-#endif LocalFramework_h
+#endif // LocalFramework_h
