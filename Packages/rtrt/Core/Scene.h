@@ -153,7 +153,7 @@ public:
   void renderLights( bool on ); 
   // Remove lights from active light list.
   void turnOffAllLights( Light * exceptThisLight = NULL ); 
-  void turnOffAllLights( double elapsed ); 
+  void turnOffAllLights( double left ); 
   // Put all lights back in the active light list.
   void turnOnAllLights();
   void turnOffLight( Light * light );
@@ -186,6 +186,7 @@ public:
   
   void add_light(Light*);
   void add_per_matl_light(Light*);
+  void add_per_matl_mood_light(Light*);
   int nprims();
   
   WorkQueue work;
@@ -234,6 +235,10 @@ public:
   void addObjectOfInterest( Object * obj, bool animate = false );
 
   void attach_display(DpyBase *dpy);
+  void attach_auxiliary_display(DpyBase *dpy);
+  void hide_auxiliary_displays();
+  void show_auxiliary_displays();
+
   void init(const Camera& cam, const Color& bgcolor);
   void add_shadowmode(const char* name, ShadowBase* s);
   void select_shadow_mode( ShadowType st );
@@ -294,6 +299,7 @@ private:
   // Lights that are on.
   Array1<Light*> lights;
   Array1<Light*> per_matl_lights;
+  Array1<Light*> per_matl_mood_lights; //these increase intesity when it gets dark
 
   // Lights that have been turned off.
   Array1<Light*> nonActiveLights_;
@@ -301,6 +307,7 @@ private:
 
   RTRT *rtrt_engine;
   Array1<DpyBase*> displays;
+  Array1<DpyBase*> aux_displays;
   
   Color  ambientColor_;
   Color  origAmbientColor_;

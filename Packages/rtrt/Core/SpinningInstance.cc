@@ -155,8 +155,7 @@ void SpinningInstance::animate(double time, bool& changed) {
   //the pretranslate is done in the constructor
   currentTransform->pre_rotate(ctime*rate, axis);
   currentTransform->pre_translate(cen-Point(0,0,0));
-  changed = true;
-  
+  changed = true;  
 }
 
 void SpinningInstance::intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
@@ -196,20 +195,19 @@ void SpinningInstance::incMagnification()
 {
   //the pretranslate is done in the constructor
   location_trans->pre_scale(Vector(1.2,1.2,1.2));
-  //Transform *t = new Transform();
-  //t->pre_scale(Vector(1.2,1.2,1.2));
-  //bbox.transform(t);
 }
 void SpinningInstance::decMagnification()
 {
   //the pretranslate is done in the constructor
   location_trans->pre_scale(Vector(.83333,.83333,.83333));
-  //Transform *t = new Transform();
-  //t->pre_scale(Vector(.83333,.83333,.83333));
-  //bbox.transform(t);
 }
-
-
-
-
-
+void SpinningInstance::upPole()
+{
+  //the pretranslate is done in the constructor
+  location_trans->pre_translate(0.1*axis);
+}
+void SpinningInstance::downPole()
+{
+  //the pretranslate is done in the constructor
+  location_trans->pre_translate(-0.1*axis);
+}

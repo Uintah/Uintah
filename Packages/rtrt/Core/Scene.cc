@@ -155,6 +155,12 @@ void Scene::add_per_matl_light(Light* light)
     lightsGroup_->add( light->getSphere() );
     per_matl_lights.add(light);
 }
+void Scene::add_per_matl_mood_light(Light* light)
+{
+    lightsGroup_->add( light->getSphere() );
+    per_matl_mood_lights.add(light);
+    light->updateIntensity(0);
+}
 
 void Scene::preprocess(double bvscale, int& pp_offset, int& scratchsize)
 {
@@ -217,6 +223,19 @@ void Scene::attach_display(DpyBase *dpy) {
   dpy->set_scene(this);
 }
 
+void Scene::attach_auxiliary_display(DpyBase *dpy) {
+  aux_displays.add(dpy);
+}
+
+void Scene::hide_auxiliary_displays() {
+  for(int i=0;i<aux_displays.size();i++)
+    aux_displays[i]->Hide();
+}
+void Scene::show_auxiliary_displays() {
+  for(int i=0;i<aux_displays.size();i++)
+    aux_displays[i]->Show();
+}
+
 void
 Scene::turnOffAllLights( Light * exceptThisLight )
 {
@@ -233,7 +252,7 @@ Scene::turnOffAllLights( Light * exceptThisLight )
     }
 }
 void
-Scene::turnOffAllLights( double elapsed )
+Scene::turnOffAllLights( double left )
 {
   int numLights = lights.size();
 
@@ -241,8 +260,8 @@ Scene::turnOffAllLights( double elapsed )
     {
       Light * light = lights[cnt];
 
-      if (elapsed>0.0) {
-	light->updateIntensity(elapsed);
+      if (left>0.0) {
+	light->updateIntensity(left);
       } else {
 	light->updateIntensity(1.0);
 	light->turnOff();
@@ -250,6 +269,14 @@ Scene::turnOffAllLights( double elapsed )
 	lights.remove( cnt );
       }
     }
+
+  setAmbientLevel(0.9+0.1*left);
+
+  for(int i=0; i<per_matl_mood_lights.size(); i++){
+    Light* light = per_matl_mood_lights[i];    
+    light->updateIntensity(1-left);
+  }
+  
 }
 
 void
@@ -264,6 +291,14 @@ Scene::turnOnAllLights()
       light->turnOn();
       nonActiveLights_.remove( cnt );
     }
+
+  for(int i=0; i<per_matl_mood_lights.size(); i++){
+    Light* light = per_matl_mood_lights[i];    
+    light->updateIntensity(0);
+  }
+
+  setAmbientLevel(1.0);
+
 }
 
 void

@@ -224,6 +224,8 @@ private:
   GLUI_Checkbox * SIAutoButton_;
   GLUI_Button * SIIncMagButton_;
   GLUI_Button * SIDecMagButton_;
+  GLUI_Button * SIUpButton_;
+  GLUI_Button * SIDownButton_;
   GLUI_Button * CutToggleButton_;
 
   ////////////////////////////////////////////////////////////////

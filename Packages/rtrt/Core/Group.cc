@@ -122,3 +122,11 @@ void Group::transform(Transform& T)
   }
 
 }
+
+bool Group::interior_value(double& ret_val, const Ray &ref, const double t)
+{
+  for(int i=0;i<objs.size();i++){
+    if (objs[i]->interior_value(ret_val, ref, t)) return true;
+  }
+  return false;
+}

@@ -39,6 +39,8 @@ public:
     virtual void compute_bounds(BBox&, double offset);
     virtual void collect_prims(Array1<Object*>& prims);
     void transform(Transform &);
+
+    virtual bool interior_value(double& ret_val, const Ray &ref, const double t);
 };
 
 } // end namespace rtrt

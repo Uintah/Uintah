@@ -31,6 +31,7 @@ using SCIRun::Runnable;
 
 class DpyBase : public Runnable {
 protected:
+  
   // The width and height of the window.
   int xres, yres;
 
@@ -91,6 +92,9 @@ public:
   // name is the name of the window.
   DpyBase(const char *name, const int window_mode = DoubleBuffered);
   virtual ~DpyBase();
+
+  void Hide();
+  void Show();
 
   // Sets the resolution of the window.  Currently this only has an effect
   // before you create the window.

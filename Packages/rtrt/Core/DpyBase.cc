@@ -123,6 +123,19 @@ int DpyBase::open_display() {
   return 0;
 }
 
+void DpyBase::Hide() {
+  xlock.lock();
+  XUnmapWindow(dpy, win);
+  xlock.unlock();
+  XFlush(dpy);
+}
+void DpyBase::Show() {
+  xlock.lock();
+  XMapRaised(dpy, win);
+  xlock.unlock();
+  XFlush(dpy);
+}
+
 int DpyBase::close_display() {
   xlock.lock();
   XCloseDisplay(dpy);
