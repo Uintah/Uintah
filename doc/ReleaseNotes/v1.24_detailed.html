@@ -53,6 +53,20 @@ DEALINGS IN THE SOFTWARE.
     <h2> SCIRun Modules (Category in parentheses) </h2> 
 
     <ul>
+      <li>GatherFields (Fields) - more general version of (deprecated) GatherPoints</li>
+      <li>ApplyInterpMatrix (Fields)</li>
+      <li>SCIRun volume rendering was rewritten to add more functionality.
+        <ul>
+          <li>EditColorMap2D module added for editing two dimensional colormaps.</li>
+          <li>GLTextureBuilder module replaced with TextureBuilder.</li>
+          <li>TextureVolVis module replaced with VolumeVisualizer.</li>
+          <li>TexCuttingPlanes module replaced with VolumeSlicer.</li>
+        </ul>
+      </li>
+      <li>EditColorMap (Visualization) replaces GenTransferFunc and
+          provides many more features.</li>
+      <li>CangeFieldBasis (Fields) module replaces ChangeFieldDataAt</li>
+      <li></li>
       <li></li>
     </ul>
 
@@ -73,7 +87,32 @@ DEALINGS IN THE SOFTWARE.
     <h2> SCIRun Modules (Category in parentheses) </h2>
 
     <ul>
-      <li>Isosurface modules now automatically updates if the user changes the color via the GUI.</li>
+      <li>Viewer (Render)</li>
+        <ul>
+            <li>Add fog color controls to Viewer.</li>
+            <li>Use bounding sphere for fog near/far calculations, rotationally invariant</li>
+            <li>Add fog brightness controls</li>
+            <li>Add fog option for computing using all objects or just visible ones</li>
+        </ul>
+      <li>Isosurface (Visualization) modules now automatically updates
+          if the user changes the color via the GUI.</li>
+      <li>Auto-interpolation and Interpolant matrix generation added to
+          FieldBoundary, ChangeFieldBasis, ClipByFunction, IsoClip, and
+          IsoSurface modules.</li>
+      <li>GenStandardColormaps (Visualization) - New (better) default
+          rainbow colormap.  All colormaps are now reversible.</li>
+      <li>Disable faces and edges in ShowField if the field dimension
+          precludes them.</li>
+      <li> FieldReader (DataIO) - Added an example wget plugin for
+           fetching SCIRun fields from URLs.</li>
+      <li>ManageFieldData (Fields) - Enhanced to enable 6xN symmetric tensor matrix input.</li>
+      <li>SamplePlane (Fields) - Added customized sample plane support.</li>
+      <li>Gradient (Fields) - Fixed caching crash bug.</li>
+      <li>Isosurface (Visualization) UI improved (includes better value checking).</li>
+      <li>ScalarFieldStats (Fields) - Fixed numbering of Xa axis of histogram.</li>
+      <li>SampleField (Fields) - Now saves ring widget positions correctly.</li>
+      <li>GatherFields (Fields) - Now issues warning instead of error if input is empty.</li>
+      <li></li>
       <li></li>
     </ul>
 
@@ -84,20 +123,65 @@ DEALINGS IN THE SOFTWARE.
 
     <h2>Teem Modules (Category in parentheses)</h2>
     <ul>
+      <li>Move Nrrd converters into Teem/Converters category.</li>
+      <li>Optimize NrrdToField (Converters) to not compute points/connections for
+          lattices and structured fields as appropriate.</li>
+      <li>Implement copyless NrrdToField (Converters) for Vector Field data.</li>
+      <li>NrrdSelectTime (NrrdData) - Default to using the last axis
+          for time (instead of the first one).</li>
+      <li>Fix tcl crash bug in NrrdSelectTime (NrrdData).</li>
+      <li>ColorMapToNrrd (Converters) outputs a 4xN nrrd instead of a Nx4 nrrd.</li>
+      <li>MatrixToNrrd (Converters) - Fixed crash when it was executed
+      twice (non-allocated labels).</li>
+      <li>UnuJhisto (Unu) - check input generation
+      and previous values before executing.</li>
+      <li>UnuProject (Unu) - check input generation and previous
+      values before executing.</li>
+      <li>UnuHisto (Unu) and UnuDhisto (Unu) - Fixed defaults.</li>
+      <li>DicomNrrdReader (DataIO) - Changed to make volume of floats
+      (not ints) and load files based on the file name (like
+      ImageJ). Use DicomImageIO2 from Insight Toolkit to read in Dicom
+      files so that spacing is correct.</li>
+      <li>UnuQuantize (Unu) - Now uses min/max values of inputs.</li>
+      <li>Changed many of the Unu modules that required an execute
+      first to allow the user to input info first and create and
+      delete axes as needed. This effects UnuCrop, UnuJoin,
+      UnuResample, UnuPermute.</li>
+      <li>UnuCrop (Unu) - Now uses text entries instead of sliders and values can
+      be specified in terms of m and M (like the Unu commands).</li>
+      <li>NrrdToField (Converters) - Fixed conversion of cell centered data.</li>
+      <li>FieldToNrrd (Converters) - Now handles unstructured data of
+      constant basis with dimensionality of 0 properly and saves
+      transform as NrrdData property that can be used again if
+      converted back to a Field using NrrdToField.</li>
+      <li>NrrdWriter (DataIO) can write out just .nrrd or .nhdr
+      directly and will only write out a .nd file if specifed or if
+      there are NrrdData properties.</li>
+      <li>UnuResample (Unu) - Fixed to pass correct parameters to teem call.</li>
       <li></li>
     </ul>
 
     <h2>Insight Modules (Category in parentheses)</h2>
     <ul>
+      <li>Fixed setting pixel container when not copying data in
+          FieldToImage (Converters).</li>
+      <li>Handle buildling with ITK 1.4, 1.6, 1.9, and 1.10 (Note,
+      1.10 will be released soon.  We have preemptively fixed GCC 3.4
+      compile problems).</li>
+      <li></li>
+      <li></li>
       <li></li>
     </ul>
 
     <h1> Deprecated Modules </h1>
 
-    <h2>
-      SCIRun Modules (Category in parentheses)
-    </h2> 
+    <h2>SCIRun Modules (Category in parentheses)</h2> 
     <ul>
+      <li>GatherPoints (Fields) - replaced by GatherPoints.</li>
+      <li>GenTransferFunc (Visualization) replaced by EditColorMap.<li></li>
+      <li>ChangeFieldDataAt (Fields) moduled renamed to CangeFieldBasis</li>
+      <li></li>
+      <li></li>
       <li></li>
     </ul>
 
@@ -108,6 +192,35 @@ DEALINGS IN THE SOFTWARE.
 
     <h1>Infrastructure Enhancements</h1>
     <ul>
+
+      <li> PowerApps
+        <ul>
+          <li>Added control-n binding in powerapps to hide/show network editor.</li>
+          <li>Remove double-click to execute behavior from readers in
+              PowerApps so user must use Execute/Update buttons.</li>
+        </ul>
+      </li>
+
+      <li> BioTensor PowerApp
+        <ul>
+          <li>Added option to load a single 4D volume file (B0 and
+          DWI) into BioTensor and have BioTensor slice and crop it
+          into the two separate volumes. Users must specify how many
+          channels there are and which axis is changing the
+          fastest.</li>
+          <li>Allow users to use gradients file to compute B-Matrix in
+          BioTensor even if registration is not being done.</li>
+          <li>Fixed setting constant colors of isosurface, glyphs and fibers.</li>
+        </ul>
+      </li>
+      <li>New BioImage PowerApp and tutorial. BioImage is a PowerApp
+      for visualizing regular, three dimensional scalar volumes.
+      BioImage offers 2D visualization of three standard planes:
+      axial, sagittal, and coronal and provides a powerful volume
+      rendering tool that allows the user to interactively visualize
+      an area of interest by assigning a color to a range of values in
+      the volume. </li>
+
       <li>Added Bundle support.  Allows multiple data pipes to be
       combined into a single pipe.  (Can help de-clutter canvas.)</li>
       <li>Updated numerous files that had '#include "file"' to use the
@@ -116,13 +229,42 @@ DEALINGS IN THE SOFTWARE.
       runs well, but advanced visualization does not yet work.  It is
       yet to be determined how much effort will be put into supporting
       the Solaris port.</li>
-      <li>Added support for 64 bit linux builds.  We have run SCIRun
-      on 64 bit Altix and Gentoo linux.</li>
+      <li>Added support for 64 bit linux builds.  We have run preliminary
+      tests of SCIRun on 64 bit Altix and Gentoo linux.</li>
       <li>Clean up numerous compiler warnings.</li>
       <li>Added the src/scripts/repair.sh script which can be used to
       clean up Make dependency files that have become incorrect.</li>
       <li>Fixed configure to better handle case-insensitive file systems (Macs)
       when user specifies the packages names (eg: TEEM).</li>
+      <li>NRRD datatype moved from the Teem package into the SCIRun Core.</li>
+      <li>Fixed get_weights mesh_ crash in ImageMesh, bug #2303.</li>
+      <li>Fixed static synchronization crash bug in dynamic complilation code.</li>
+      <li>Fixed std::remove usage associated crashes.</li>
+      <li>Fixed texture map bind order in GeomColorMap (color synchronization bug).</li>
+      <li>Added missing closedir to tcl reader, should fix 'too many open files' bug.</li>
+      <li>Fixed FieldSubSample.net crash bug: preserve types when interping.</li>
+      <li>Added a 'to_index' member to the Mesh classes for portably
+      converting unsigned ints into element indices.</li>
+      <li>Make all of the IOable classes inherit from PropertyManager.</li>
+      <li>Added an experimental SCIRUN_NO_PORT_CACHING environment
+      variable.  This should allow SCIRun to work on larger data
+      sets.</li>
+      <li>Added a CleanupManager for registering callbacks to be
+      called just before Thread::exitAll is completed.  Allows modules
+      to clean up after themselves.</li>
+      <li>Optimized most of the Mesh::Node::array_type types by using StackVectors.</li>
+      <li>Use new SearchGrid for faster field locates with less memory usage.</li>
+      <li>Added new range widget.</li>
+      <li></li>
+      <li></li>
+      <li></li>
+      <li></li>
+      <li></li>
+      <li></li>
+      <li></li>
+      <li></li>
+      <li></li>
+      <li></li>
       <li></li>
     </ul>
 
