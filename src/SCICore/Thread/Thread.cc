@@ -245,7 +245,8 @@ Thread::niceAbort()
     	    fflush(stderr);
     	    while(read(fileno(stdin), buf, 100) <= 0){
     	    	if(errno != EINTR){
-    	    	    fprintf(stderr, "\nCould not read response, exiting\n");
+    	    	    fprintf(stderr, "\nCould not read response, sleeping for 20 seconds\n");
+		    sleep(20);
     	    	    buf[0]='e';
     	    	    exitAll(1);
     	    	}
@@ -367,6 +368,15 @@ Thread::getStateString(ThreadState state)
 
 //
 // $Log$
+// Revision 1.22  2000/12/10 08:33:16  sparker
+// (merge from csafe_risky1)
+// If we cannot read a response from the terminal, sleep for 20
+// seconds before exiting to allow time to attach a debugger
+//
+// Revision 1.21.2.1  2000/10/02 15:01:51  sparker
+// If we cannot read a response from the terminal, sleep for 20
+// seconds before exiting to allow time to attach a debugger
+//
 // Revision 1.21  2000/09/25 18:04:05  sparker
 // Added partial support for debuggin under linux
 // Added environment variable SCI_DBXCOMMAND
