@@ -38,7 +38,8 @@ namespace Uintah {
    class SendState {
    public:
       SendState();
-      std::map<std::pair<const Patch*, int>, ParticleSubset*> d_sendSubsets;
+      ~SendState();
+      std::map<std::pair<std::pair<const Patch*, int>, int>, ParticleSubset*> d_sendSubsets;
 
    private:
       SendState(const SendState&);
@@ -49,6 +50,10 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.1.2.2  2000/10/02 17:33:39  sparker
+// Fixed boundary particles code for multiple materials
+// Free ParticleSubsets used for boundary particle sends
+//
 // Revision 1.1.2.1  2000/10/02 15:02:45  sparker
 // Send only boundary particles
 //
