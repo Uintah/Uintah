@@ -107,6 +107,7 @@ static pthread_mutex_t sched_lock;
 static pthread_key_t thread_key;
 static sem_t main_sema;
 static sem_t control_c_sema;
+static Thread* mainthread;
 
 static
 void
@@ -190,9 +191,10 @@ Thread_shutdown(Thread* thread)
    }
    numActive--;
    unlock_scheduler();
+   bool wait_main = (priv->threadid == 0);
+   delete priv;
    Thread::checkExit();
-   if(priv->threadid == 0){
-      priv->state=Thread::PROGRAM_EXIT;
+   if(wait_main){
       if(sem_wait(&main_sema) == -1)
 	 throw ThreadError(std::string("sem_wait failed")
 			   +strerror(errno));
@@ -356,6 +358,23 @@ void
 Thread::exitAll(int code)
 {
     exiting=true;
+
+    // Uninitialize...
+    if(sem_destroy(&main_sema) != 0)
+	throw ThreadError(std::string("sem_init failed")
+			  +strerror(errno));
+    if(sem_destroy(&control_c_sema) != 0)
+	throw ThreadError(std::string("sem_init failed")
+			  +strerror(errno));
+    delete ThreadGroup::s_default_group;
+    if(pthread_mutex_destroy(&sched_lock) != 0)
+      throw ThreadError(std::string("pthread_mutex_destroy failed")
+			+strerror(errno));
+
+    if(pthread_key_delete(thread_key) != 0)
+      throw ThreadError(std::string("pthread_key_delete failed")
+			+strerror(errno));
+    initialized=false;
     ::exit(code);
 }
 
@@ -516,14 +535,6 @@ static void exit_handler()
     if(exiting)
         return;
     Thread_shutdown(Thread::self());
-    // Wait forever...
-    sem_t wait;
-    if(sem_init(&wait, 0, 0) != 0)
-	throw ThreadError(std::string("sem_init failed")
-			  +strerror(errno));
-    if(sem_wait(&wait) == -1)
-	throw ThreadError(std::string("sem_wait failed")
-			  +strerror(errno));
 }
 
 void
@@ -535,45 +546,47 @@ Thread::allow_sgi_OpenGL_page0_sillyness()
 void
 Thread::initialize()
 {
+  if(initialized)
+    return;
+  if(exiting)
+    abort(); // Something really weird happened!
   atexit(exit_handler);
-    if(pthread_mutex_init(&sched_lock, NULL) != 0)
-	throw ThreadError(std::string("pthread_mutex_init failed")
-			  +strerror(errno));
+  if(pthread_mutex_init(&sched_lock, NULL) != 0)
+    throw ThreadError(std::string("pthread_mutex_init failed")
+		      +strerror(errno));
+  
+  if(pthread_key_create(&thread_key, NULL) != 0)
+    throw ThreadError(std::string("pthread_key_create failed")
+		      +strerror(errno));
 
-    if(pthread_key_create(&thread_key, NULL) != 0)
-	throw ThreadError(std::string("pthread_key_create failed")
-			  +strerror(errno));
-
-    initialized=true;
-    ThreadGroup::s_default_group=new ThreadGroup("default group", 0);
-    Thread* mainthread=new Thread(ThreadGroup::s_default_group, "main");
-    mainthread->priv_=new Thread_private;
-    mainthread->priv_->thread=mainthread;
-    mainthread->priv_->state=RUNNING;
-    mainthread->priv_->bstacksize=0;
-    if(pthread_setspecific(thread_key, mainthread) != 0)
-	throw ThreadError(std::string("pthread_setspecific failed")
-			  +strerror(errno));
-    if(sem_init(&mainthread->priv_->done, 0, 0) != 0)
-	throw ThreadError(std::string("sem_init failed")
-			  +strerror(errno));
-    if(sem_init(&mainthread->priv_->delete_ready, 0, 0) != 0)
-	throw ThreadError(std::string("sem_init failed")
-			  +strerror(errno));
-    if(sem_init(&main_sema, 0, 0) != 0)
-	throw ThreadError(std::string("sem_init failed")
-			  +strerror(errno));
-    if(sem_init(&control_c_sema, 0, 1) != 0)
-	throw ThreadError(std::string("sem_init failed")
-			  +strerror(errno));
-    lock_scheduler();
-    active[numActive]=mainthread->priv_;
-    numActive++;
-    unlock_scheduler();
-    if(!getenv("THREAD_NO_CATCH_SIGNALS"))
-	install_signal_handlers();
-
-    
+  initialized=true;
+  ThreadGroup::s_default_group=new ThreadGroup("default group", 0);
+  mainthread=new Thread(ThreadGroup::s_default_group, "main");
+  mainthread->priv_=new Thread_private;
+  mainthread->priv_->thread=mainthread;
+  mainthread->priv_->state=RUNNING;
+  mainthread->priv_->bstacksize=0;
+  if(pthread_setspecific(thread_key, mainthread) != 0)
+    throw ThreadError(std::string("pthread_setspecific failed")
+		      +strerror(errno));
+  if(sem_init(&mainthread->priv_->done, 0, 0) != 0)
+    throw ThreadError(std::string("sem_init failed")
+		      +strerror(errno));
+  if(sem_init(&mainthread->priv_->delete_ready, 0, 0) != 0)
+    throw ThreadError(std::string("sem_init failed")
+		      +strerror(errno));
+  if(sem_init(&main_sema, 0, 0) != 0)
+    throw ThreadError(std::string("sem_init failed")
+		      +strerror(errno));
+  if(sem_init(&control_c_sema, 0, 1) != 0)
+    throw ThreadError(std::string("sem_init failed")
+		      +strerror(errno));
+  lock_scheduler();
+  active[numActive]=mainthread->priv_;
+  numActive++;
+  unlock_scheduler();
+  if(!getenv("THREAD_NO_CATCH_SIGNALS"))
+    install_signal_handlers();
 }
 
 void
@@ -808,9 +821,10 @@ ConditionVariable::ConditionVariable(const char* name)
 ConditionVariable::~ConditionVariable()
 {
   pthread_cond_broadcast(&priv_->cond);
-    if(pthread_cond_destroy(&priv_->cond) != 0)
-	throw ThreadError(std::string("pthread_cond_destroy: ")
-			  +strerror(errno));
+  if(pthread_cond_destroy(&priv_->cond) != 0)
+    throw ThreadError(std::string("pthread_cond_destroy: ")
+		      +strerror(errno));
+  delete priv_;
 }
 
 void

@@ -254,6 +254,8 @@ Thread::allow_sgi_OpenGL_page0_sillyness()
 void
 Thread::initialize()
 {
+  if(initialized)
+    return;
 #if 0
   if(mprotect(0, getpagesize(), PROT_NONE) != -1){
     //fprintf(stderr, "\007\007!!! WARNING: page 0 protected - talk to Steve if GL programs fail!\n");
