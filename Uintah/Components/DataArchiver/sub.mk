@@ -10,13 +10,17 @@ SRCDIR   := Uintah/Components/DataArchiver
 SRCS     += $(SRCDIR)/DataArchiver.cc
 
 PSELIBS := Uintah/Interface Uintah/Parallel Uintah/Grid Uintah/Exceptions \
-	SCICore/OS SCICore/Exceptions PSECore/XMLUtil SCICore/Util
+	SCICore/OS SCICore/Exceptions SCICore/Containers PSECore/XMLUtil \
+	 SCICore/Util
 LIBS := $(XML_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.4  2000/12/07 01:36:59  witzel
+# Added SCICore/Containers for my ConsecutiveRangeSet class used in DataArchiver
+#
 # Revision 1.3  2000/06/15 21:56:59  sparker
 # Added multi-patch support (bugzilla #107)
 # Changed interface to datawarehouse for particle data
