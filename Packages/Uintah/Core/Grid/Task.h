@@ -359,7 +359,9 @@ WARNING
 
     enum DomainSpec {
       NormalDomain,
-      OutOfDomain
+      OutOfDomain,
+      CoarseLevel,
+      FineLevel
     };
     
     //////////
@@ -515,6 +517,12 @@ WARNING
       getComputeSubsetUnderDomain(string domString, DomainSpec dom,
 				  const ComputeSubset<T>* subset,
 				  const ComputeSubset<T>* domainSubset);
+      template <class T>
+      static constHandle< ComputeSubset<T> >
+      getOtherLevelComputeSubset(DomainSpec dom,
+				 const ComputeSubset<T>* subset,
+				 const ComputeSubset<T>* domainSubset);
+      
       Dependency();
       Dependency& operator=(const Dependency& copy);
       Dependency(const Dependency&);
@@ -592,6 +600,14 @@ WARNING
     void setTaskNumber(int tn) {
       taskNumber = tn;
     }
+
+    // Assume that any data required/modified from the new dw that doesn't
+    // get computed in the TaskGraph will already be in the new dw.
+    void assumeDataInNewDW()
+    { d_assumeDataInNewDW = true; }
+    
+    bool assumesDataInNewDW() const
+    { return d_assumeDataInNewDW; }
     
   protected: // class Task
     friend class TaskGraph;
@@ -627,6 +643,7 @@ WARNING
     bool                d_usesThreads;
     bool                d_subpatchCapable;
     bool                d_hasSubScheduler;
+    bool                d_assumeDataInNewDW;
     TaskType		d_tasktype;
     
     Task(const Task&);
@@ -664,10 +681,24 @@ WARNING
       return ComputeSubset<T>::intersection(subset, domainSubset);
     case Task::OutOfDomain:
       return subset;
+    case Task::CoarseLevel:
+    case Task::FineLevel:      
+      getOtherLevelComputeSubset(dom, subset, domainSubset);
     default:
       throw InternalError(string("Unknown ") + domString + " type");
     }
   }
+
+  template <class T>
+  constHandle< ComputeSubset<T> > Task::Dependency::
+  getOtherLevelComputeSubset(Task::DomainSpec,
+			     const ComputeSubset<T>*,
+			     const ComputeSubset<T>*)
+  {
+    // PatchSubset and MaterialSubset specializations are in Task.cc
+    throw InternalError("Unhandled ComputeSubset type for Task::Dependency");
+  }
+  
 
 } // End namespace Uintah
 
