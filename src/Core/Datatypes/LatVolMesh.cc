@@ -401,6 +401,28 @@ LatVolMesh::get_faces(Face::array_type &array,
 }
 
 
+unsigned
+LatVolMesh::get_cells(Cell::array_type &array, Node::index_type idx) const
+{
+  array.clear();
+  const unsigned int i0 = idx.i_ ? idx.i_ - 1 : 0;
+  const unsigned int j0 = idx.j_ ? idx.j_ - 1 : 0;
+  const unsigned int k0 = idx.k_ ? idx.k_ - 1 : 0;
+
+  const unsigned int i1 = idx.i_ < ni_-1 ? idx.i_+1 : ni_-1;
+  const unsigned int j1 = idx.j_ < nj_-1 ? idx.j_+1 : nj_-1;
+  const unsigned int k1 = idx.k_ < nk_-1 ? idx.k_+1 : nk_-1;
+
+  unsigned int i, j, k;
+  for (k = k0; k < k1; k++)
+    for (j = j0; j < j1; j++)
+      for (i = i0; i < i1; i++)
+	array.push_back(Cell::index_type(this, i, j, k));
+
+  return array.size();
+}
+
+
 //! return all cell_indecies that overlap the BBox in arr.
 
 void
