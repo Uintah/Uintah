@@ -32,18 +32,7 @@ struct TSElement {
   inline TSElement(const TSElement& e):i1(e.i1), i2(e.i2), i3(e.i3) {}
 };
 
-struct TSEdge {
-  int i1;
-  int i2;
-  inline TSEdge(int i1, int i2):i1(i1), i2(i2) {}
-  inline TSEdge(const TSEdge& e):i1(e.i1), i2(e.i2) {}
-  void* operator new(size_t);
-  void operator delete(void*, size_t);
-};
-
 void Pio (Piostream& stream, TSElement &data);
-void Pio (Piostream& stream, TSEdge*& data);
-
 
 class SCICORESHARE TriSurface : public Surface
 {

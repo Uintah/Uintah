@@ -331,8 +331,8 @@ SurfTree::buildNodeInfo()
   }
   for (i=0; i<edges_.size(); i++)
   {
-    const int i1 = edges_[i]->i1;
-    const int i2 = edges_[i]->i2;
+    const int i1 = edges_[i].i1;
+    const int i2 = edges_[i].i2;
     nodeI_[i1].edges.add(i);
     nodeI_[i2].edges.add(i);
   }
@@ -638,6 +638,15 @@ Pio(Piostream& stream, NodeInfo& node)
   Pio(stream, node.faces);
   Pio(stream, node.edges);
   Pio(stream, node.nbrs);
+  stream.end_cheap_delim();
+}
+
+void
+Pio(Piostream& stream, TSEdge &data)
+{
+  stream.begin_cheap_delim();
+  Pio(stream, data.i1);
+  Pio(stream, data.i2);
   stream.end_cheap_delim();
 }
 

@@ -37,20 +37,6 @@ using std::cerr;
 
 namespace SCIRun {
 
-static TrivialAllocator TSEdge_alloc(sizeof(TSEdge));
-
-void *
-TSEdge::operator new(size_t)
-{
-  return TSEdge_alloc.alloc();
-}
-
-void
-TSEdge::operator delete(void* rp, size_t)
-{
-  TSEdge_alloc.free(rp);
-}
-
 
 static Persistent *
 make_TriSurface()
@@ -1127,25 +1113,13 @@ RandomPoint(Point& p1, Point& p2, Point& p3)
 void
 Pio(Piostream& stream, TSElement &data)
 {
-  if (stream.reading())
-    stream.begin_cheap_delim();
+  stream.begin_cheap_delim();
   Pio(stream, data.i1);
   Pio(stream, data.i2);
   Pio(stream, data.i3);
   stream.end_cheap_delim();
 }
 
-
-void
-Pio(Piostream& stream, TSEdge *&data)
-{
-  if (stream.reading())
-    data=new TSEdge(0,0);
-  stream.begin_cheap_delim();
-  Pio(stream, data->i1);
-  Pio(stream, data->i2);
-  stream.end_cheap_delim();
-}
 
 } // End namespace SCIRun
 
