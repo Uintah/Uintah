@@ -139,24 +139,28 @@ GenericField<Mesh, FData>::resize_fdata()
   if (data_at() == NODE)
   {
     typename mesh_type::Node::size_type ssize;
+    get_typed_mesh()->synchronize(Mesh::NODES_E);
     get_typed_mesh()->size(ssize);
     fdata().resize(ssize);
   }
   else if (data_at() == EDGE)
   {
     typename mesh_type::Edge::size_type ssize;
+    get_typed_mesh()->synchronize(Mesh::EDGES_E);
     get_typed_mesh()->size(ssize);
     fdata().resize(ssize);
   }
   else if (data_at() == FACE)
   {
     typename mesh_type::Face::size_type ssize;
+    get_typed_mesh()->synchronize(Mesh::FACES_E);
     get_typed_mesh()->size(ssize);
     fdata().resize(ssize);
   }
   else if (data_at() == CELL)
   {
     typename mesh_type::Cell::size_type ssize;
+    get_typed_mesh()->synchronize(Mesh::CELLS_E);
     get_typed_mesh()->size(ssize);
     fdata().resize(ssize);
   }
