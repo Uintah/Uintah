@@ -60,6 +60,21 @@ void ConstitutiveModel::addComputesAndRequires(Task*,
 {
 }
 
+
+void ConstitutiveModel::addRequiresDamageParameter(Task*, 
+						   const MPMMaterial*,
+						   const PatchSet*) const
+{
+}
+
+void 
+ConstitutiveModel::getDamageParameter(const Patch* patch,
+				      ParticleVariable<int>& damage,int dwi,
+				      DataWarehouse* new_dw)
+{
+
+}
+
 /////////
 // Add initial computes with erosion
 void 

@@ -580,15 +580,6 @@ ViscoScramForBinder::computeStressTensor(const PatchSubset* patches,
   }
 }
 
-void 
-ViscoScramForBinder::computeStressTensor(const PatchSubset* ,
-				const MPMMaterial* ,
-				DataWarehouse* ,
-				DataWarehouse* ,
-				Solver* ,
-				const bool )
-{
-}
 
 // Solve an ordinary differential equation of the form
 // dy/dt = f(y,t)

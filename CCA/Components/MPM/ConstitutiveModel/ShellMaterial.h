@@ -183,36 +183,10 @@ namespace Uintah {
 
     virtual double getCompressibility();
 
-    // class function to read correct number of parameters
-    // from the input file
-    static void readParameters(ProblemSpecP ps, double *p_array);
-
-    // class function to write correct number of parameters
-    // from the input file, and create a new object
-    static ConstitutiveModel* readParametersAndCreate(ProblemSpecP ps);
-
-    // member function to read correct number of parameters
-    // from the input file, and any other particle information
-    // need to restart the model for this particle
-    // and create a new object
-    static ConstitutiveModel* readRestartParametersAndCreate(ProblemSpecP ps);
-
-    // class function to create a new object from parameters
-    static ConstitutiveModel* create(double *p_array);
-
     virtual void addComputesAndRequires(Task* ,
 					const MPMMaterial* ,
 					const PatchSet* ,
 					const bool ) const
-    {
-    }
-
-    virtual void computeStressTensor(const PatchSubset* ,
-				     const MPMMaterial* ,
-				     DataWarehouse* ,
-				     DataWarehouse* ,
-				     Solver* ,
-				     const bool )
     {
     }
 	 

@@ -585,16 +585,6 @@ void HyperElasticPlastic::carryForward(const PatchSubset* patches,
 }
 
 void 
-HyperElasticPlastic::computeStressTensor(const PatchSubset* ,
-				const MPMMaterial* ,
-				DataWarehouse* ,
-				DataWarehouse* ,
-				Solver* ,
-				const bool )
-{
-}
-	 
-void 
 HyperElasticPlastic::addInitialComputesAndRequires(Task* task,
 						   const MPMMaterial* matl,
 						   const PatchSet* patch) const

@@ -83,13 +83,6 @@ WARNING
 				     DataWarehouse* old_dw,
 				     DataWarehouse* new_dw);
 
-    virtual void computeStressTensor(const PatchSubset* patches,
-				     const MPMMaterial* matl,
-				     DataWarehouse* old_dw,
-				     DataWarehouse* new_dw,
-				     Solver* solver,
-				     const bool recursion);
-
     // carry forward CM data for RigidMPM
     virtual void carryForward(const PatchSubset* patches,
                               const MPMMaterial* matl,
