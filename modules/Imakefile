@@ -2,9 +2,10 @@
 #define IHaveSubdirs
 #include <config/sci.cf>
 
-SUBDIRS = CrossFader IsoSurface LaceContours MeshView Readers Salmon \
+SUBDIRS = CrossFader Hedgehog \
+	IsoSurface LaceContours MeshView Readers Salmon \
 	SoundInput SoundFilter SoundMixer SoundOutput SoundReader \
-	SurfToGeom VoiceRemover
+	Streamline SurfToGeom VoiceRemover
 
 SCISubdirs($(SUBDIRS))
 
@@ -12,11 +13,13 @@ all:: modules.o
 
 MODULES = \
 	CrossFader/CrossFader.o \
+	Hedgehog/Hedgehog.o \
 	IsoSurface/IsoSurface.o \
 	LaceContours/LaceContours.o \
 	MeshView/MeshView.o \
 	Readers/ScalarFieldReader.o \
 	Readers/SurfaceReader.o \
+	Readers/VectorFieldReader.o \
 	Salmon/Salmon.o \
 	Salmon/Roe.o \
 	SoundInput/SoundInput.o \
@@ -24,6 +27,7 @@ MODULES = \
 	SoundMixer/SoundMixer.o \
 	SoundOutput/SoundOutput.o \
 	SoundReader/SoundReader.o \
+	Streamline/Streamline.o \
 	SurfToGeom/SurfToGeom.o \
 	VoiceRemover/VoiceRemover.o
 
