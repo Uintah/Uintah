@@ -39,7 +39,7 @@ using std::cout;
 using namespace mitest;
 using namespace SCIRun;
 
-class mitest_impl : public D_interface {
+class mitest_impl : public D {
 public:
   mitest_impl();
   virtual ~mitest_impl();
@@ -48,10 +48,10 @@ public:
   virtual int c();
   virtual int d();
 
-  virtual bool isa_mitest(const A&);
-  virtual bool isa_mitest(const B&);
-  virtual bool isa_mitest(const C&);
-  virtual bool isa_mitest(const D&);
+  virtual bool isa_mitestA(const A::pointer&);
+  virtual bool isa_mitestB(const B::pointer&);
+  virtual bool isa_mitestC(const C::pointer&);
+  virtual bool isa_mitestD(const D::pointer&);
 
 };
 
@@ -83,7 +83,7 @@ int mitest_impl::d()
   return 4;
 }
 
-bool mitest_impl::isa_mitest(const A& p)
+bool mitest_impl::isa_mitestA(const A::pointer& p)
 {
   if(dynamic_cast<mitest_impl*>(p.getPointer()))
     return true;
@@ -91,7 +91,7 @@ bool mitest_impl::isa_mitest(const A& p)
     return false;
 }
 
-bool mitest_impl::isa_mitest(const B& p)
+bool mitest_impl::isa_mitestB(const B::pointer& p)
 {
   if(dynamic_cast<mitest_impl*>(p.getPointer()))
     return true;
@@ -99,7 +99,7 @@ bool mitest_impl::isa_mitest(const B& p)
     return false;
 }
 
-bool mitest_impl::isa_mitest(const C& p)
+bool mitest_impl::isa_mitestC(const C::pointer& p)
 {
   if(dynamic_cast<mitest_impl*>(p.getPointer()))
     return true;
@@ -107,7 +107,7 @@ bool mitest_impl::isa_mitest(const C& p)
     return false;
 }
 
-bool mitest_impl::isa_mitest(const D& p)
+bool mitest_impl::isa_mitestD(const D::pointer& p)
 {
   if(dynamic_cast<mitest_impl*>(p.getPointer()))
     return true;
@@ -125,9 +125,9 @@ void usage(char* progname)
   exit(1);
 }
 
-static void test_d(D d, bool& failed)
+static void test_d(D::pointer d, bool& failed)
 {
-  if(!d){
+  if(d.isNull()){
     cerr << "Wrong object type!\n";
     abort();
   }
@@ -143,15 +143,15 @@ static void test_d(D d, bool& failed)
     cerr << "d=" << dd << '\n';
     failed=true;
   }
-  if(!d->isa_mitest(d)){
+  if(!d->isa_mitestD(d)){
     cerr << "isa_mitest(D) failed!\n";
     failed=true;
   }
 }
 
-static void test_c(C c, bool& failed)
+static void test_c(C::pointer c, bool& failed)
 {
-  if(!c){
+  if(c.isNull()){
     cerr << "Wrong object type!\n";
     abort();
   }
@@ -163,15 +163,15 @@ static void test_c(C c, bool& failed)
     cerr << "c=" << cc << '\n';
     failed=true;
   }
-  if(!c->isa_mitest(c)){
+  if(!c->isa_mitestC(c)){
     cerr << "isa_mitest(C) failed!\n";
     failed=true;
   }
 }
 
-static void test_b(B b, bool& failed)
+static void test_b(B::pointer b, bool& failed)
 {
-  if(!b){
+  if(b.isNull()){
     cerr << "Wrong object type!\n";
     abort();
   }
@@ -183,15 +183,15 @@ static void test_b(B b, bool& failed)
     cerr << "b=" << bb << '\n';
     failed=true;
   }
-  if(!b->isa_mitest(b)){
+  if(!b->isa_mitestB(b)){
     cerr << "isa_mitest(B) failed!\n";
     failed=true;
   }
 }
 
-static void test_a(A a, bool& failed)
+static void test_a(A::pointer a, bool& failed)
 {
-  if(!a){
+  if(a.isNull()){
     cerr << "Wrong object type!\n";
     abort();
   }
@@ -201,7 +201,7 @@ static void test_a(A a, bool& failed)
     cerr << "a=" << aa << '\n';
     failed=true;
   }
-  if(!a->isa_mitest(a)){
+  if(!a->isa_mitestA(a)){
     cerr << "isa_mitest(A) failed!\n";
     failed=true;
   }
@@ -244,94 +244,94 @@ int main(int argc, char* argv[])
       cerr << "Waiting for mitest connections...\n";
       cerr << pp->getURL().getString() << '\n';
     } else {
-      PIDL::Object obj=PIDL::PIDL::objectFrom(client_url);
+      PIDL::Object::pointer obj=PIDL::PIDL::objectFrom(client_url);
       bool failed=false;
 
       // From base Object
-      D d=pidl_cast<D>(obj);
+      D::pointer d=pidl_cast<D::pointer>(obj);
       test_d(d, failed);
       test_b(d, failed);
       test_c(d, failed);
       test_a(d, failed);
 
-      C c=pidl_cast<C>(obj);
+      C::pointer c=pidl_cast<C::pointer>(obj);
       test_c(c, failed);
       test_a(c, failed);
 
-      B b=pidl_cast<B>(obj);
+      B::pointer b=pidl_cast<B::pointer>(obj);
       test_b(b, failed);
       test_a(b, failed);
 
-      A a=pidl_cast<A>(obj);
+      A::pointer a=pidl_cast<A::pointer>(obj);
       test_a(a, failed);
 
       // From A
-      A a_from_a=pidl_cast<A>(a);
+      A::pointer a_from_a=pidl_cast<A::pointer>(a);
       test_a(a_from_a, failed);
 
-      B b_from_a=pidl_cast<B>(a);
+      B::pointer b_from_a=pidl_cast<B::pointer>(a);
       test_b(b_from_a, failed);
       test_a(b_from_a, failed);
 
-      C c_from_a=pidl_cast<C>(a);
+      C::pointer c_from_a=pidl_cast<C::pointer>(a);
       test_c(c_from_a, failed);
       test_a(c_from_a, failed);
 
-      D d_from_a=pidl_cast<D>(a);
+      D::pointer d_from_a=pidl_cast<D::pointer>(a);
       test_d(d_from_a, failed);
       test_c(d_from_a, failed);
       test_b(d_from_a, failed);
       test_a(d_from_a, failed);
 
       // From B
-      A a_from_b=pidl_cast<A>(b);
+      A::pointer a_from_b=pidl_cast<A::pointer>(b);
       test_a(a_from_b, failed);
 
-      B b_from_b=pidl_cast<B>(b);
+      B::pointer b_from_b=pidl_cast<B::pointer>(b);
       test_b(b_from_b, failed);
       test_a(b_from_b, failed);
 
-      C c_from_b=pidl_cast<C>(b);
+      C::pointer c_from_b=pidl_cast<C::pointer>(b);
       test_c(c_from_b, failed);
       test_a(c_from_b, failed);
 
-      D d_from_b=pidl_cast<D>(b);
+      D::pointer d_from_b=pidl_cast<D::pointer>(b);
       test_d(d_from_b, failed);
       test_c(c_from_b, failed);
       test_b(b_from_b, failed);
       test_a(a_from_b, failed);
 
       // From C
-      A a_from_c=pidl_cast<A>(c);
+      A::pointer a_from_c=pidl_cast<A::pointer>(c);
       test_a(a_from_c, failed);
 
-      B b_from_c=pidl_cast<B>(c);
+      B::pointer b_from_c=pidl_cast<B::pointer>(c);
       test_b(b_from_c, failed);
       test_a(b_from_c, failed);
 
-      C c_from_c=pidl_cast<C>(c);
+      C::pointer c_from_c=pidl_cast<C::pointer>(c);
       test_c(c_from_c, failed);
       test_a(c_from_c, failed);
 
-      D d_from_c=pidl_cast<D>(c);
+      D::pointer d_from_c=pidl_cast<D::pointer>(c);
       test_d(d_from_c, failed);
       test_c(c_from_c, failed);
       test_b(b_from_c, failed);
       test_a(a_from_c, failed);
 	    
       // From D
-      A a_from_d=pidl_cast<A>(d);
+      A::pointer a_from_d=pidl_cast<A::pointer>(d);
       test_a(a_from_d, failed);
 
-      B b_from_d=pidl_cast<B>(d);
+      B::pointer b_from_d=pidl_cast<B::pointer>(d);
       test_b(b_from_d, failed);
       test_a(b_from_d, failed);
 
-      C c_from_d=pidl_cast<C>(d);
+      C::pointer c_from_d=pidl_cast<C::pointer>(d);
       test_c(c_from_d, failed);
       test_a(c_from_d, failed);
 
-      D d_from_d=pidl_cast<D>(d);
+      D::pointer d_from_d=pidl_cast<D::pointer>(d);
       test_d(d_from_d, failed);
       test_c(c_from_d, failed);
       test_b(b_from_d, failed);
@@ -355,4 +355,3 @@ int main(int argc, char* argv[])
   }
   return 0;
 }
-
