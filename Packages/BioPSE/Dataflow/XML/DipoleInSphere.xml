@@ -27,7 +27,7 @@
       <author>Alexei Samsonov</author>
     </authors>
 
-    <summary>Due to the specified dipoles, DipoleInSphere fills the sphere field with potentials values.</summary>
+    <summary>Due to the specified dipoles, the DipoleInSphere module fills the sphere field with potentials values.</summary>
 
     <description>
       <p>Version Date: March 2001</p>
