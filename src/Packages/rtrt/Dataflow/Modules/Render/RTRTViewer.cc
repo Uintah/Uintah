@@ -378,7 +378,7 @@ void RTRTViewer::start_rtrt() {
   // Start up display thread...
   Dpy* dpy=new Dpy(current_scene, criteria1, criteria2, rtrt_engine->nworkers,
 		   bench, ncounters, c0, c1, 1.0, 1.0, display_frames,
-		   pp_size, scratchsize, do_frameless==true);
+		   pp_size, scratchsize, false, do_frameless==true, false);
   /* <<<< bigler >>>> */
   Thread* t = new Thread(dpy, "Display thread");
   t->detach();
