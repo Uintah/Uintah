@@ -236,20 +236,12 @@ MPMLabel::MPMLabel()
 
   // Implicit MPM labels
 
-  gVelocityNewLabel = VarLabel::create("g.velocityNew",
-				    NCVariable<Vector>::getTypeDescription()); 
-
-  gVelocityOldLabel = VarLabel::create("g.velocityOld",
-				    NCVariable<Vector>::getTypeDescription()); 
-
   dispNewLabel = VarLabel::create("dispNew",
 				  NCVariable<Vector>::getTypeDescription()); 
 
   dispIncLabel = VarLabel::create("dispInc",
 				  NCVariable<Vector>::getTypeDescription()); 
 
-  gAccelerationOldLabel = VarLabel::create("g.accelerationOld",
-				   NCVariable<Vector>::getTypeDescription()); 
   converged = VarLabel::create("converged",
 			       bool_and_vartype::getTypeDescription());
 
@@ -347,11 +339,8 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(CenterOfMassVelocityLabel);
   VarLabel::destroy(pCellNAPIDLabel);
 
-  VarLabel::destroy(gVelocityNewLabel);
-  VarLabel::destroy(gVelocityOldLabel);
   VarLabel::destroy(dispNewLabel);
   VarLabel::destroy(dispIncLabel);
-  VarLabel::destroy(gAccelerationOldLabel);
   VarLabel::destroy(pAccelerationLabel);
   VarLabel::destroy(converged);
   VarLabel::destroy(dispIncQNorm0);

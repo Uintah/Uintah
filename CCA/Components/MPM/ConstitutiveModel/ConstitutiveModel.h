@@ -69,8 +69,7 @@ WARNING
 	 virtual void computeStressTensorImplicitOnly(const PatchSubset* patches,
 						  const MPMMaterial* matl,
 						  DataWarehouse* old_dw,
-						  DataWarehouse* new_dw,
-						  SparseMatrix<double,int>& K);
+						      DataWarehouse* new_dw);
 	 
 
 	 //////////
