@@ -40,6 +40,7 @@ namespace Uintah {
       const VarLabel* gInternalForceLabel;
       const VarLabel* gSelfContactLabel; //for fracture
       const VarLabel* gTemperatureRateLabel; //for heat conduction
+      const VarLabel* gTemperatureLabel; //for heat conduction
       const VarLabel* gInternalHeatRateLabel;
       const VarLabel* gExternalHeatRateLabel;
       
@@ -53,6 +54,9 @@ namespace Uintah {
 
 
 // $Log$
+// Revision 1.4  2000/05/31 16:11:11  tan
+// gTemperatureLabel included
+//
 // Revision 1.3  2000/05/30 17:07:34  dav
 // Removed commented out labels.  Other MPI fixes.  Changed delt to delT so I would stop thinking of it as just delta.
 //
