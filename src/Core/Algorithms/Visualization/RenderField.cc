@@ -30,8 +30,7 @@ RenderFieldBase::RenderFieldBase() :
   edge_switch_(0),
   face_switch_(0),
   def_mat_handle_(0),
-  color_handle_(0),
-  mats_(0)
+  color_handle_(0)
 {}
 
 RenderFieldBase::~RenderFieldBase()

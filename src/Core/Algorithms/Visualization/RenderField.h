@@ -57,17 +57,9 @@ class GeomArrows;
 class RenderFieldBase : public DynamicAlgoBase
 {
 public:
-#ifdef HAVE_HASH_MAP
-  typedef hash_map<int, MaterialHandle> ind_mat_t;
-#else
-  typedef map<int, MaterialHandle> ind_mat_t;
-#endif
-
-  void set_mat_map(ind_mat_t *mm) { mats_ = mm; }
-
   virtual void render(FieldHandle f, bool nodes, bool edges, 
 		      bool faces, MaterialHandle def_mat, 
-		      bool def_col, ColorMapHandle color_handle,
+		      ColorMapHandle color_handle,
 		      const string &ndt, const string &edt, 
 		      double ns, double es, double vs, bool normalize, 
 		      int sphere_resolution, int cylinder_resolution,
@@ -104,7 +96,6 @@ public:
 protected:
   MaterialHandle           def_mat_handle_;
   ColorMapHandle           color_handle_;
-  ind_mat_t               *mats_;
 
   void add_sphere(const Point &p, double scale, 
 		  int resolution, GeomGroup *g, 
@@ -113,12 +104,6 @@ protected:
 		int resolution, GeomGroup *g, MaterialHandle m0);
   void add_axis(const Point &p, double scale, GeomLines *lines);
   void add_axis(const Point &p, double scale, GeomLines *lines, double val);
-
-  inline  MaterialHandle choose_mat(bool def, int idx) {  
-    if (def) return def_mat_handle_;
-    ASSERT(mats_ != 0); 
-    return (*mats_)[idx];
-  }
 };
 
 
@@ -130,7 +115,7 @@ public:
   virtual void render(FieldHandle fh,  
 		      bool nodes, bool edges, bool faces,
 		      MaterialHandle def_mat,
-		      bool data_at, ColorMapHandle color_handle,
+		      ColorMapHandle color_handle,
 		      const string &ndt, const string &edt, 
 		      double ns, double es, double vs, bool normalize, 
 		      int sphere_resolution, int cylinder_resolution,
@@ -205,7 +190,6 @@ private:
 				int fontsize,
 				int precision,
 				bool render_locations);
-  void render_materials(const Fld *fld, const string &data_display_mode);
 };
 
 
@@ -264,7 +248,7 @@ void
 RenderField<Fld, Loc>::render(FieldHandle fh,  bool nodes, 
 			      bool edges, bool faces,
 			      MaterialHandle def_mat,
-			      bool def_col, ColorMapHandle color_handle,
+			      ColorMapHandle color_handle,
 			      const string &ndt, const string &edt,
 			      double ns, double es, double vs, bool normalize, 
 			      int sphere_res, int cyl_res,
@@ -279,7 +263,6 @@ RenderField<Fld, Loc>::render(FieldHandle fh,  bool nodes,
   def_mat_handle_ = def_mat;
   color_handle_ = color_handle;
 
-  if (def_col) { render_materials(fld, ndt); }
   if (nodes)
   {
     node_switch_ = render_nodes(fld, ndt, ns, sphere_res, n_transp);
@@ -294,191 +277,6 @@ RenderField<Fld, Loc>::render(FieldHandle fh,  bool nodes,
   {
     face_switch_ = render_faces(fld, use_normals, f_transp);
   }
-}
-
-
-
-// if a colormap exists, and we have data at a location, map the index to 
-// a materialhandle to be used by all the render passes.
-template <class Fld, class Loc>
-void 
-RenderField<Fld, Loc>::render_materials(const Fld *sfld, 
-					const string &node_display_mode) 
-{
-  //cerr << "rendering materials" << endl;
-
-  const string dat_mat("data_at_materials");
-  typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
-
-  if (! mats_) {
-    ASSERTFAIL("must call set_mat_map first");
-  }
-
-  bool def_color = false;
-  // val is double because the color index field must be scalar.
-  double val = 0.L;
-  Vector vec(0,0,0);
-  switch (sfld->data_at()) {
-  case Field::NODE:
-    {
-      typename Fld::mesh_type::Node::iterator niter;  
-      mesh->begin(niter);  
-      typename Fld::mesh_type::Node::iterator niter_end;  
-      mesh->end(niter_end);
-      const bool disks_p = node_display_mode == "Disks";
-
-      while (niter != niter_end) {
-	typename Fld::value_type tmp;
-
-	if (disks_p) {
-	  if (sfld->value(tmp, *niter) && (to_vector(tmp, vec))) { 
-	    val = vec.length();
-	  } else {
-	    def_color = true; 
-	  }
-	} else {
-	  if (!(sfld->value(tmp, *niter) && (to_double(tmp, val)))) { 
-	    def_color = true; 
-	  }
-	}
-	
-	MaterialHandle mat;
-	if (color_handle_.get_rep() == 0) def_color = true;
-	if (def_color) mat = def_mat_handle_;
-	else mat = color_handle_->lookup(val);
-
-	int nidx = *niter;
-	ind_mat_t::iterator iter = mats_->find(nidx);
-	if (iter != mats_->end()) {
-	  // we have stored a color before.
-          MaterialHandle &existing = (*mats_)[nidx];
-	  //actually change the underlying object for all who point to it.
-          *(existing.get_rep()) = *(mat.get_rep());
-        } else {
-	  mat.detach();
-	  (*mats_)[nidx] = mat;
-        }
-	++niter;  
-      }
-    }
-    break;
-
-  case Field::EDGE:
-    {
-      mesh->synchronize(Mesh::EDGES_E);
-      typename Fld::mesh_type::Edge::iterator eiter;  
-      mesh->begin(eiter);  
-      typename Fld::mesh_type::Edge::iterator eiter_end;  
-      mesh->end(eiter_end);
-      
-      while (eiter != eiter_end) {
-	typename Fld::value_type tmp;
-	
-	if (!(sfld->value(tmp, *eiter) && (to_double(tmp, val)))) { 
-	  def_color = true; 
-	}
-	
-	MaterialHandle mat;
-	if (color_handle_.get_rep() == 0) def_color = true;
-	if (def_color) mat = def_mat_handle_;
-	else mat = color_handle_->lookup(val);
-
-	int eidx = *eiter;
-	ind_mat_t::iterator iter = mats_->find(eidx);
-	if (iter != mats_->end()) {
-	  // we have stored a color before.
-	  MaterialHandle &existing = (*mats_)[eidx];
-	  //actually change the underlying object for all who point to it.
-	  *(existing.get_rep()) = *(mat.get_rep());
-	} else {
-	  mat.detach();
-	  (*mats_)[eidx] = mat;
-	}
-	++eiter;  
-      }
-    }
-    break;
-
-  case Field::FACE:
-    {
-      typename Fld::mesh_type::Face::iterator fiter;  
-      mesh->begin(fiter);  
-      typename Fld::mesh_type::Face::iterator fiter_end;  
-      mesh->end(fiter_end);
-
-      while (fiter != fiter_end) {
-	typename Fld::value_type tmp;
-	
-	if (!(sfld->value(tmp, *fiter) && (to_double(tmp, val)))) { 
-	  def_color = true; 
-	}
-	
-	MaterialHandle mat;
-	if (color_handle_.get_rep() == 0) def_color = true;
-	if (def_color) mat = def_mat_handle_;
-	else mat = color_handle_->lookup(val);
-	
-	int fidx = *fiter;
-	ind_mat_t::iterator iter = mats_->find(fidx);
-	if (iter != mats_->end()) {
-	  // we have stored a color before.
-	  MaterialHandle &existing = (*mats_)[fidx];
-	  //actually change the underlying object for all who point to it.
-	  *(existing.get_rep()) = *(mat.get_rep());
-	} else {
-	  mat.detach();
-	  (*mats_)[fidx] = mat;
-	}
-	++fiter;  
-      }
-    }
-    break;
-
-  case Field::CELL:
-    {
-      typename Fld::mesh_type::Cell::iterator citer;  
-      mesh->begin(citer);  
-      typename Fld::mesh_type::Cell::iterator citer_end;  
-      mesh->end(citer_end);
-       
-      while (citer != citer_end) {
-	typename Fld::value_type tmp;
-	
-	if (!(sfld->value(tmp, *citer) && (to_double(tmp, val)))) { 
-	  def_color = true; 
-	}
-	
-	MaterialHandle mat;
-	if (color_handle_.get_rep() == 0) def_color = true;
-	if (def_color) mat = def_mat_handle_;
-	else mat = color_handle_->lookup(val);
-	
-	int cidx = *citer;
-	ind_mat_t::iterator iter = mats_->find(cidx);
-	if (iter != mats_->end()) {
-	  // we have stored a color before.
-	  MaterialHandle &existing = (*mats_)[cidx];
-	  //actually change the underlying object for all who point to it.
-	  *(existing.get_rep()) = *(mat.get_rep());
-	} else {
-	  mat.detach();
-	  (*mats_)[cidx] = mat;
-	}
-	++citer;  
-      }
-    }
-    break;
-
-  case Field::NONE:
-  default:
-    // Is known, we do nothing here.
-    break;
-  }
-
-  // Update these when the data changes. 
-  if (node_switch_.get_rep()) { node_switch_->reset_bbox(); }
-  if (edge_switch_.get_rep()) { edge_switch_->reset_bbox(); }
-  if (face_switch_.get_rep()) { face_switch_->reset_bbox(); }
 }
 
 
@@ -572,7 +370,6 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
       }
       else
       {
-	//points->add(p, choose_mat(def_color, *niter));
 	points->add(p, val);
       }
       break;
@@ -585,7 +382,7 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
       else
       {
 	add_sphere(p, node_scale, node_resolution, nodes,
-		   choose_mat(def_color, *niter));
+		   color_handle_->lookup(val));
       }
       break;
 
@@ -609,7 +406,7 @@ RenderField<Fld, Loc>::render_nodes(const Fld *sfld,
       else
       {
 	add_disk(p, vec, node_scale, node_resolution,
-		 nodes, choose_mat(def_color, *niter));
+		 nodes, color_handle_->lookup(val));
       }
       break;
     }
@@ -653,7 +450,6 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
   }
   else
   {
-    lines->setLineWidth(edge_scale);
     if (transparent_p)
     {
       lines = scinew GeomTranspLines;
@@ -664,6 +460,7 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
       lines = scinew GeomLines;
       display_list = scinew GeomDL(lines);
     }
+    lines->setLineWidth(edge_scale);
   }
   GeomSwitch *edge_switch =
     scinew GeomSwitch(scinew GeomColorMap(scinew GeomMaterial(display_list,
@@ -1031,7 +828,9 @@ RenderField<Fld, Loc>::render_text_data(FieldHandle field_handle,
       }
       else
       {
-	m = choose_mat(use_default_material, *iter);
+	double dval;
+	to_double(val, dval);
+	m = color_handle_->lookup(dval);
       }
       texts->add(buffer.str(), p, m->diffuse);
     }
@@ -1097,7 +896,9 @@ RenderField<Fld, Loc>::render_text_data_nodes(FieldHandle field_handle,
       }
       else
       {
-	m = choose_mat(use_default_material, *iter);
+	double dval;
+	to_double(val, dval);
+	m = color_handle_->lookup(dval);
       }
       if (culling_p)
       {
@@ -1173,13 +974,17 @@ RenderField<Fld, Loc>::render_text_nodes(FieldHandle field_handle,
     }
 
     MaterialHandle m;
-    if (use_default_material)
+    if (use_default_material || fld->data_at() != Field::NODE)
     {
       m = default_material;
     }
     else
     {
-      m = choose_mat(use_default_material, *iter);
+      typename Fld::value_type val;
+      fld->value(val, *iter);
+      double dval;
+      to_double(val, dval);
+      m = color_handle_->lookup(dval);
     }
     if (culling_p)
     {
@@ -1238,13 +1043,17 @@ RenderField<Fld, Loc>::render_text_edges(FieldHandle field_handle,
     }
 
     MaterialHandle m;
-    if (use_default_material)
+    if (use_default_material || fld->data_at() != Field::EDGE)
     {
       m = default_material;
     }
     else
     {
-      m = choose_mat(use_default_material, *iter);
+      typename Fld::value_type val;
+      fld->value(val, *iter);
+      double dval;
+      to_double(val, dval);
+      m = color_handle_->lookup(dval);
     }
     texts->add(buffer.str(), p, m->diffuse);
  
@@ -1294,13 +1103,17 @@ RenderField<Fld, Loc>::render_text_faces(FieldHandle field_handle,
     }
 
     MaterialHandle m;
-    if (use_default_material)
+    if (use_default_material || fld->data_at() != Field::FACE)
     {
       m = default_material;
     }
     else
     {
-      m = choose_mat(use_default_material, *iter);
+      typename Fld::value_type val;
+      fld->value(val, *iter);
+      double dval;
+      to_double(val, dval);
+      m = color_handle_->lookup(dval);
     }
     texts->add(buffer.str(), p, m->diffuse);
 
@@ -1308,6 +1121,7 @@ RenderField<Fld, Loc>::render_text_faces(FieldHandle field_handle,
   }
   return text_switch;
 }
+
 
 template <class Fld, class Loc>
 GeomSwitch *
@@ -1350,13 +1164,17 @@ RenderField<Fld, Loc>::render_text_cells(FieldHandle field_handle,
     }
 
     MaterialHandle m;
-    if (use_default_material)
+    if (use_default_material || fld->data_at() != Field::CELL)
     {
       m = default_material;
     }
     else
     {
-      m = choose_mat(use_default_material, *iter);
+      typename Fld::value_type val;
+      fld->value(val, *iter);
+      double dval;
+      to_double(val, dval);
+      m = color_handle_->lookup(dval);
     }
     texts->add(buffer.str(), p, m->diffuse);
 

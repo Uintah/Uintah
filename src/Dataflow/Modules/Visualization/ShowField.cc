@@ -46,7 +46,6 @@ namespace SCIRun {
 
 class ShowField : public Module 
 {
-  
   //! Private Data
 
   //! input ports
@@ -123,11 +122,6 @@ class ShowField : public Module
   GuiDouble                def_color_a_;
   MaterialHandle           def_mat_handle_;
 
-  RenderFieldBase::ind_mat_t idx_mats_;
-
-  //! re-render all the material handles?
-  bool                     data_at_dirty_;
-
   //! holds options for how to visualize nodes.
   GuiString                node_display_type_;
   GuiString                edge_display_type_;
@@ -171,7 +165,7 @@ public:
   ShowField(GuiContext* ctx);
   virtual ~ShowField();
   virtual void execute();
-  bool check_for_vector_data(FieldHandle fld_handle);
+  bool check_for_svt_data(FieldHandle fld_handle);
   bool fetch_typed_algorithm(FieldHandle fld_handle, FieldHandle vfld_handle,
 			     bool recompile_nonvector);
   bool determine_dirty(FieldHandle fld_handle, FieldHandle vfld_handle);
@@ -233,7 +227,6 @@ ShowField::ShowField(GuiContext* ctx) :
   def_color_b_(ctx->subVar("def-color-b")),
   def_color_a_(ctx->subVar("def-color-a")),
   def_mat_handle_(scinew Material(Color(0.5, 0.5, 0.5))),
-  data_at_dirty_(true),
   node_display_type_(ctx->subVar("node_display_type")),
   edge_display_type_(ctx->subVar("edge_display_type")),
   data_display_type_(ctx->subVar("data_display_type")),
@@ -283,7 +276,7 @@ ShowField::~ShowField()
 
 
 bool
-ShowField::check_for_vector_data(FieldHandle fld_handle)
+ShowField::check_for_svt_data(FieldHandle fld_handle)
 {
   // Test for vector data possibility
   if (fld_handle.get_rep() == 0) { return false; }
@@ -294,8 +287,18 @@ ShowField::check_for_vector_data(FieldHandle fld_handle)
   nodes_as_disks_.reset();
   bool disks = false;
   bool result = false;
-  if (fld_handle->query_vector_interface(this).get_rep() != 0)
+  if (fld_handle->query_scalar_interface(this).get_rep() != 0)
   {
+    cout << "Scalar\n";
+    if (! has_scalar_data_.get())
+    {
+      has_scalar_data_.set(1);
+    }
+    result = true;
+  }
+  else if (fld_handle->query_vector_interface(this).get_rep() != 0)
+  {
+    cout << "Vector\n";
     if (! has_vector_data_.get())
     { 
       has_vector_data_.set(1); 
@@ -308,17 +311,10 @@ ShowField::check_for_vector_data(FieldHandle fld_handle)
   }
   else if (fld_handle->query_tensor_interface(this).get_rep() != 0)
   {
+    cout << "Tensor\n";
     if (! has_tensor_data_.get())
     {
       has_tensor_data_.set(1);
-    }
-    result = true;
-  }
-  else if (fld_handle->query_scalar_interface(this).get_rep() != 0)
-  {
-    if (! has_scalar_data_.get())
-    {
-      has_scalar_data_.set(1);
     }
     result = true;
   }
@@ -355,6 +351,22 @@ ShowField::fetch_typed_algorithm(FieldHandle fld_handle,
   }
 
   if (vfld_handle.get_rep() && 
+      vfld_handle->query_scalar_interface(this).get_rep())
+  {
+    const TypeDescription *vftd = vfld_handle->get_type_description();
+    CompileInfoHandle dci =
+      RenderScalarFieldBase::get_compile_info(vftd, ftd, ltd);
+    if (!module_dynamic_compile(dci, data_scalar_renderer_))
+    {
+      field_generation_ = -1;
+      mesh_generation_ = -1;
+      vector_generation_ = -1;
+      data_scalar_renderer_ = 0;
+      return false;
+    }
+  }
+
+  if (vfld_handle.get_rep() && 
       vfld_handle->query_vector_interface(this).get_rep())
   {
     const TypeDescription *vftd = vfld_handle->get_type_description();
@@ -386,22 +398,6 @@ ShowField::fetch_typed_algorithm(FieldHandle fld_handle,
     }
   }
 
-  if (vfld_handle.get_rep() && 
-      vfld_handle->query_scalar_interface(this).get_rep())
-  {
-    const TypeDescription *vftd = vfld_handle->get_type_description();
-    CompileInfoHandle dci =
-      RenderScalarFieldBase::get_compile_info(vftd, ftd, ltd);
-    if (!module_dynamic_compile(dci, data_scalar_renderer_))
-    {
-      field_generation_ = -1;
-      mesh_generation_ = -1;
-      vector_generation_ = -1;
-      data_scalar_renderer_ = 0;
-      return false;
-    }
-  }
-
   return true;
 }
 
@@ -416,9 +412,9 @@ ShowField::determine_dirty(FieldHandle fld_handle, FieldHandle vfld_handle)
 
   if (mesh_new) {
     // completely new, all dirty, or just new geometry, so data_at invalid too.
-    if (!check_for_vector_data(fld_handle))
+    if (!check_for_svt_data(vfld_handle))
     {
-      check_for_vector_data(vfld_handle);
+      check_for_svt_data(fld_handle);
     }
     if (!fetch_typed_algorithm(fld_handle, vfld_handle, true))
     {
@@ -432,7 +428,6 @@ ShowField::determine_dirty(FieldHandle fld_handle, FieldHandle vfld_handle)
     edges_dirty_ = true; 
     faces_dirty_ = true; 
     data_dirty_ = true;
-    data_at_dirty_ = true;
     text_dirty_ = true;
     Material *m = scinew Material(Color(def_color_r_.get(), def_color_g_.get(),
 					def_color_b_.get()));
@@ -452,12 +447,13 @@ ShowField::determine_dirty(FieldHandle fld_handle, FieldHandle vfld_handle)
     if (bounding_vector_) delete bounding_vector_;
     bounding_vector_ = scinew Vector();
     *bounding_vector_ = fld_handle->mesh()->get_bounding_box().diagonal();
-    
-  } else if (!mesh_new && (field_new || vector_new)) {
+  }
+  else if (!mesh_new && (field_new || vector_new))
+  {
     // same geometry, new data.
-    if (!check_for_vector_data(fld_handle))
+    if (!check_for_svt_data(vfld_handle))
     {
-      check_for_vector_data(vfld_handle);
+      check_for_svt_data(fld_handle);
     }
 
     const TypeDescription *data_type_description = 
@@ -470,7 +466,6 @@ ShowField::determine_dirty(FieldHandle fld_handle, FieldHandle vfld_handle)
     { 
       return false;
     }
-    data_at_dirty_ = true; //we need to rerender colors..
     nodes_dirty_ = true; // Nodes don't cache color.
     edges_dirty_ = true; // Edges don't cache color.
     faces_dirty_ = true; // Faces don't cache color.
@@ -528,9 +523,9 @@ ShowField::execute()
       return;
     }
   }
-  else if (fld_handle->query_vector_interface(this).get_rep() ||
-	   fld_handle->query_tensor_interface(this).get_rep() ||
-	   fld_handle->query_scalar_interface(this).get_rep())
+  else if (fld_handle->query_scalar_interface(this).get_rep() ||
+	   fld_handle->query_vector_interface(this).get_rep() ||
+	   fld_handle->query_tensor_interface(this).get_rep())
   {
     vfld_handle = fld_handle;
   }
@@ -554,7 +549,6 @@ ShowField::execute()
   if(!color_handle.get_rep()){
     //warning("No ColorMap in port 2 ColorMap.");
     if (colormap_generation_ != -1) {
-      data_at_dirty_ = true;
       nodes_dirty_ = true;
       edges_dirty_ = true;
       faces_dirty_ = true;
@@ -564,7 +558,6 @@ ShowField::execute()
     colormap_generation_ = -1;
   } else if (colormap_generation_ != color_handle->generation) {
     colormap_generation_ = color_handle->generation;  
-    data_at_dirty_ = true;
     nodes_dirty_ = true;
     edges_dirty_ = true;
     faces_dirty_ = true;
@@ -589,7 +582,8 @@ ShowField::execute()
 
   // check to see if we have something to do.
   if ((!nodes_dirty_) && (!edges_dirty_) && 
-      (!faces_dirty_) && (!data_dirty_) && (!data_at_dirty_))  { 
+      (!faces_dirty_) && (!data_dirty_))
+  {
     return; 
   }
 
@@ -663,10 +657,9 @@ ShowField::execute()
   {
     if (faces_normals_.get()) fld_handle->mesh()->synchronize(Mesh::NORMALS_E);
 
-    renderer_->set_mat_map(&idx_mats_);
     renderer_->render(fld_handle, 
 		      do_nodes, do_edges, do_faces,
-		      def_mat_handle_, data_at_dirty_, color_handle,
+		      def_mat_handle_, color_handle,
 		      ndt, edt, ns, es, vscale, normalize_vectors_.get(),
 		      node_resolution_, edge_resolution_,
 		      faces_normals_.get(),
@@ -775,7 +768,6 @@ ShowField::execute()
       text_id_ = ogeom_->addObj(text, name);
     }
   }
-  if (data_at_dirty_) { data_at_dirty_ = false; }
 
   ogeom_->flushViews();
 }
@@ -868,9 +860,11 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
 					def_color_b_.get()));
     m->transparency = def_color_a_.get();
     def_mat_handle_ = m;
-    data_at_dirty_ = true;
+    nodes_dirty_ = true;
     edges_dirty_ = true;
     faces_dirty_ = true;
+    text_dirty_ = true;
+    data_dirty_ = true;
     maybe_execute(DATA_AT);
   } else if (args[1] == "text_color_change") {
     text_color_r_.reset();
