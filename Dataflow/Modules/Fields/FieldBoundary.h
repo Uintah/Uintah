@@ -194,7 +194,7 @@ FieldBoundaryAlgoTriT<Msh>::execute(const MeshHandle mesh_untyped,
 
     interp = scinew SparseRowMatrix(nrows, ncols, rr, cc, nrows, d);
   }
-  else 
+  else if (basis_order == 1)
   {
     TriSurfField<double> *ts = scinew TriSurfField<double>(tmesh, 1);
     boundary_fh = ts;
@@ -221,6 +221,10 @@ FieldBoundaryAlgoTriT<Msh>::execute(const MeshHandle mesh_untyped,
     rr[j] = j; // An extra entry goes on the end of rr.
 
     interp = scinew SparseRowMatrix(nrows, ncols, rr, cc, nrows, d);
+  }
+  else
+  {
+    interp = 0;
   }
 }
 
@@ -354,7 +358,7 @@ FieldBoundaryAlgoQuadT<Msh>::execute(const MeshHandle mesh_untyped,
 
     interp = scinew SparseRowMatrix(nrows, ncols, rr, cc, nrows, d);
   }
-  else
+  else if (basis_order == 1)
   {
     QuadSurfField<double> *ts =
       scinew QuadSurfField<double>(tmesh, 1);
@@ -382,6 +386,10 @@ FieldBoundaryAlgoQuadT<Msh>::execute(const MeshHandle mesh_untyped,
     rr[j] = j; // An extra entry goes on the end of rr.
 
     interp = scinew SparseRowMatrix(nrows, ncols, rr, cc, nrows, d);
+  }
+  else
+  {
+    interp = 0;
   }
 }
 
@@ -505,7 +513,7 @@ FieldBoundaryAlgoCurveT<Msh>::execute(const MeshHandle mesh_untyped,
 
     interp = scinew SparseRowMatrix(nrows, ncols, rr, cc, nrows, d);
   }
-  else
+  else if (basis_order == 1)
   {
     CurveField<double> *ts = scinew CurveField<double>(tmesh, 1);
     boundary_fh = ts;
@@ -532,6 +540,10 @@ FieldBoundaryAlgoCurveT<Msh>::execute(const MeshHandle mesh_untyped,
     rr[j] = j; // An extra entry goes on the end of rr.
 
     interp = scinew SparseRowMatrix(nrows, ncols, rr, cc, nrows, d);
+  }
+  else
+  {
+    interp = 0;
   }
 }
 
