@@ -122,15 +122,10 @@ itcl_class Uintah_MPMViz_VizControl {
 
 	    frame $parent.f$i.1 -relief flat -borderwidth 2
 	    pack $parent.f$i.1 -side top -expand yes -fill both -padx 2
+
+	    buildControlFrame $parent.f$i.1
 	    
-	    frame $parent.f$i.1.1 -relief flat -borderwidth 2
-	    label $parent.f$i.1.1.s -text "Scalars"
-	    pack $parent.f$i.1.1 -side left  -expand yes -fill both -padx 2
-	    pack $parent.f$i.1.1.s -side top
-	    frame $parent.f$i.1.2 -relief flat -borderwidth 2
-	    label $parent.f$i.1.2.v -text "Vectors"
-	    pack $parent.f$i.1.2 -side left -expand yes -fill both -padx 2
-	    pack $parent.f$i.1.2.v -side top
+
 	}
 
 
@@ -147,6 +142,26 @@ itcl_class Uintah_MPMViz_VizControl {
 
 	$this build
 
+    }
+    
+
+    method buildControlFrame { name } {
+
+	if { [winfo exists $name.1] } {
+	    destroy $name.1
+	}
+	if { [winfo exists $name.2] } {
+	    destroy $name.2
+	}
+
+	frame $name.1 -relief flat -borderwidth 2
+	label $name.1.s -text "Scalars"
+	pack $name.1 -side left  -expand yes -fill both -padx 2
+	pack $name.1.s -side top
+	frame $name.2 -relief flat -borderwidth 2
+	label $name.2.v -text "Vectors"
+	pack $name.2 -side left -expand yes -fill both -padx 2
+	pack $name.2.v -side top
     }
 
     method destroyFrames {} {
@@ -192,16 +207,19 @@ itcl_class Uintah_MPMViz_VizControl {
 	    }
 	    for { set i 0 } { $i < [llength $gNameList]} {incr i } {
 		set name [lindex $gNameList $i]
+		set lname [string tolower $name]
 		set c "$this buildVarList grid $name"
-		radiobutton $gf.names.$name -text $name \
+		radiobutton $gf.names.$lname -text $name \
 		    -variable $this-gName -command $c -value $name
-		pack $gf.names.$name -side left
+		pack $gf.names.$lname -side left
 	    }
 	    if { [set $this-gName] != "" } {
-		$gf.names.[set $this-gName] invoke
+		set lname [string tolower [set $this-gName]]
+		$gf.names.$lname invoke
 	    } else {
 		set name [lindex $gNameList 0]
-		$gf.names.$name invoke
+		set lname [string tolower $name]
+		$gf.names.$lname invoke
 	    }
 	    puts "gName = [set $this-gName]"
 	}
@@ -214,16 +232,19 @@ itcl_class Uintah_MPMViz_VizControl {
 	    }
 	    for { set i 0 } { $i < [llength $pNameList]} {incr i } {
 		set name [lindex $pNameList $i]
+		set lname [string tolower $name]
 		set c "$this buildVarList particleSet $name"
-		radiobutton $pf.names.$name -text $name \
+		radiobutton $pf.names.$lname -text $name \
 		    -variable $this-pName -command $c -value $name
-		pack $pf.names.$name -side left
+		pack $pf.names.$lname -side left
 	    }
 	    if { [set $this-pName] != "" } {
-		$pf.names.[set $this-pName] invoke
+		set lname [string tolower [set $this-pName]]
+		$pf.names.$lname invoke
 	    } else {
 		set name [lindex $pNameList 0]
-		$pf.names.$name invoke
+		set lname [string tolower $name]
+		$pf.names.$lname invoke
 	    }
 	    puts "pName = [set $this-pName]"
 
@@ -247,6 +268,7 @@ itcl_class Uintah_MPMViz_VizControl {
 	    ## set the Particle Scalar Variables
 	    puts $psVarList
 	    puts $pvVarList
+	    buildControlFrame $pf.1
 	    set varlist [split $psVarList]
 	    for {set i 0} { $i < [llength $varlist] } { incr i } {
 		set newvar [lindex $varlist $i]
@@ -286,6 +308,7 @@ itcl_class Uintah_MPMViz_VizControl {
 	    puts $gsVarList
 	    puts $gvVarList
 	    ## set the Particle Scalar Variables
+	    buildControlFrame $gf.1
 	    set varlist [split $gsVarList]
 	    for {set i 0} { $i < [llength $varlist] } { incr i } {
 		set newvar [lindex $varlist $i]
