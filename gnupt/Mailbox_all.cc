@@ -3,7 +3,7 @@
 #pragma implementation "ITC.h"
 
 #include <Multitask/ITC.cc>
-#include <Datatypes/GeometryPort.h>
+#include <Datatypes/GeometryComm.h>
 #include <Datatypes/ContourSetPort.h>
 #include <Datatypes/Matrix.h>
 #include <Datatypes/MeshPort.h>
