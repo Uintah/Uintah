@@ -58,7 +58,6 @@ WARNING
       virtual void copyPatch(FCVariableBase* src,
 			      const IntVector& lowIndex,
 			      const IntVector& highIndex) = 0;
-      virtual void emit(OutputContext&) = 0;
    protected:
       FCVariableBase(const FCVariableBase&);
       FCVariableBase();

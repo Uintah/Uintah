@@ -70,7 +70,6 @@ WARNING
 			   const ProcessorGroup* pg, int start, int n) = 0;
       virtual void packsizeMPI(int* bufpos,
 			       const ProcessorGroup* pg, int start, int n) = 0;
-      virtual void emit(OutputContext&) = 0;
 
       //////////
       // Insert Documentation Here:

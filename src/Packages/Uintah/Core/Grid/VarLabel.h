@@ -88,10 +88,17 @@ class Patch;
       private:
       };
 
+      void setCompressionMode(string compressionMode)
+      { d_compressionMode = compressionMode; }
+
+      const string& getCompressionMode() const
+      { return d_compressionMode; }
+
       string                 d_name;
    private:
       const TypeDescription* d_td;
       VarType                d_vartype;
+      string                 d_compressionMode;
 
       // Allow a variable of this label to be computed multiple
       // times in a TaskGraph without complaining.

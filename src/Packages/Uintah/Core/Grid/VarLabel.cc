@@ -16,7 +16,7 @@ map<string, VarLabel*> VarLabel::allLabels;
 VarLabel::VarLabel(const std::string& name, const TypeDescription* td,
 		   VarType vartype)
    : d_name(name), d_td(td), d_vartype(vartype),
-     d_allowMultipleComputes(false)
+     d_compressionMode(""), d_allowMultipleComputes(false) 
 {
    map<string, VarLabel*>::value_type mappair(name, this);
    if (allLabels.insert(mappair).second == false) {
