@@ -490,6 +490,8 @@ Properties::sched_computePropsFirst_mm(SchedulerP& sched, const PatchSet* patche
   if (d_radiationCalc) {
     tsk->requires(Task::OldDW, d_lab->d_absorpINLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
+    //    tsk->requires(Task::OldDW, d_lab->d_abskgINLabel, 
+    //		Ghost::None, Arches::ZEROGHOSTCELLS);
     tsk->requires(Task::OldDW, d_lab->d_sootFVINLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
     if (d_DORadiationCalc) {
@@ -529,6 +531,7 @@ Properties::sched_computePropsFirst_mm(SchedulerP& sched, const PatchSet* patche
 
   if (d_radiationCalc) {
     tsk->computes(d_lab->d_absorpINLabel);
+    //    tsk->computes(d_lab->d_abskgINLabel);
     tsk->computes(d_lab->d_sootFVINLabel);
     if (d_DORadiationCalc) {
     tsk->computes(d_lab->d_h2oINLabel);
@@ -652,6 +655,7 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
     }
 
     constCCVariable<double> absorpIN;
+    //    constCCVariable<double> abskgIN;
     constCCVariable<double> sootFVIN;
     constCCVariable<double> h2oIN;
     constCCVariable<double> radiationSRCIN;
@@ -662,6 +666,7 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
     constCCVariable<double> radiationFluxTIN;
     constCCVariable<double> radiationFluxBIN;
     CCVariable<double> absorpIN_new;
+    //    CCVariable<double> abskgIN_new;
     CCVariable<double> sootFVIN_new;
     CCVariable<double> h2oIN_new;
     CCVariable<double> radiationSRCIN_new;
@@ -676,12 +681,19 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
       old_dw->get(absorpIN, d_lab->d_absorpINLabel, matlIndex, patch,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
+      //      old_dw->get(abskgIN, d_lab->d_abskgINLabel, matlIndex, patch,
+      //		  Ghost::None, Arches::ZEROGHOSTCELLS);
+
       old_dw->get(sootFVIN, d_lab->d_sootFVINLabel, matlIndex, patch,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
       new_dw->allocateAndPut(absorpIN_new, d_lab->d_absorpINLabel, 
 		       matlIndex, patch);
       absorpIN_new.copyData(absorpIN);
+
+      //      new_dw->allocateAndPut(abskgIN_new, d_lab->d_abskgINLabel, 
+      //		       matlIndex, patch);
+      //      abskgIN_new.copyData(abskgIN);
 
       new_dw->allocateAndPut(sootFVIN_new, d_lab->d_sootFVINLabel,
 		       matlIndex, patch);
@@ -762,8 +774,8 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
 	  else{
 	    density[currCell] = 0.0;
 	    if (d_DORadiationCalc)
-	      //	      tempIN_new[currCell] = solidTemp[currCell];
-	      tempIN_new[currCell] = 298.0;
+	      tempIN_new[currCell] = solidTemp[currCell];
+	    //	      tempIN_new[currCell] = 298.0;
 	  }
 	}
       }
@@ -919,6 +931,8 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     TAU_PROFILE_TIMER(mixing, "Mixing", "[Properties::reCompute::mixing]" , TAU_USER);
 
     TAU_PROFILE_START(input);
+
+    //#define scalarSolve_debug
 
     double start_mixTime = Time::currentSeconds();
 
@@ -1123,11 +1137,19 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	    if ((colX==6) && (colY==9) && (colZ==9))
 	      cerr << "Mixture Vars at test = " << (scalar[ii])[currCell];
 #endif
+#ifdef scalarSolve_debug
+	    if ((colX==0) && (colY==8) && (colZ==8))
+	      cerr << "Mixture Vars at test = " << (scalar[ii])[currCell] << endl;
+#endif
 	  }
 
 	  if (d_numMixStatVars > 0) {
 	    for (int ii = 0; ii < d_numMixStatVars; ii++ ) {
 	      inStream.d_mixVarVariance[ii] = (scalarVar[ii])[currCell];
+#ifdef scalarSolve_debug
+	    if ((colX==0) && (colY==8) && (colZ==8))
+	      cerr << "Mixture Variance Vars at test = " << (scalarVar[ii])[currCell] << endl;
+#endif
 	    }
 	  }
 
@@ -1144,6 +1166,12 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	  else
 	    inStream.d_enthalpy = 0.0;
 
+#ifdef scalarSolve_debug
+	    if ((colX==0) && (colY==8) && (colZ==8))
+	      cerr << "Enthalpy at test = " << inStream.d_enthalpy << endl;
+#endif
+
+
 	  if (d_flamelet) {
 	    if (colX >= 0)
 	      inStream.d_axialLoc = colX;
@@ -1156,6 +1184,10 @@ Properties::reComputeProps(const ProcessorGroup* pc,
   TAU_PROFILE_STOP(mixing);
 
 	  double local_den = outStream.getDensity();
+#ifdef scalarSolve_debug
+	    if ((colX==0) && (colY==8) && (colZ==8))
+	      cerr << "Out Density at test = " << outStream.getDensity() << endl;
+#endif
 	  drhodf[currCell] = outStream.getdrhodf();
 
 	  if (d_flamelet) {
@@ -1242,18 +1274,49 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 
     if (d_MAlab) {
       cerr << " NEW DENSITY VALUES " << endl;
-      for (int ii = 5; ii <= 9; ii++) {
-	for (int jj = 7; jj <= 12; jj++) {
-	  for (int kk = 7; kk <= 12; kk++) {
-	    cerr.width(14);
-	    cerr << " point coordinates "<< ii << " " << jj << " " << kk ;
-	    cerr << " new density = " << new_density[IntVector(ii,jj,kk)] ; 
-	    cerr << " cellType = " << cellType[IntVector(ii,jj,kk)] ; 
-	    cerr << " void fraction = " << voidFraction[IntVector(ii,jj,kk)] << endl; 
+
+      // code to print all values of any variable within
+      // a box, for multi-patch case
+
+      int ibot = 0;
+      int itop = 2;
+      int jbot = 7;
+      int jtop = 8;
+      int kbot = 7;
+      int ktop = 8;
+
+      cout << "Index Low and Hi for x = " << indexLow.x() << "  " << indexHigh.x() << endl;
+      cout << "Index Low and Hi for y = " << indexLow.y() << "  " << indexHigh.y() << endl;
+      cout << "Index Low and Hi for z = " << indexLow.z() << "  " << indexHigh.z() << endl;
+
+      // values above can be changed for each case as desired
+
+      bool printvalues = true;
+      int idloX = Max(indexLow.x(),ibot);
+      int idhiX = Min(indexHigh.x()-1,itop);
+      int idloY = Max(indexLow.y(),jbot);
+      int idhiY = Min(indexHigh.y()-1,jtop);
+      int idloZ = Max(indexLow.z(),kbot);
+      int idhiZ = Min(indexHigh.z()-1,ktop);
+      cout << "idloX, idhiX = " << idloX << "  " << idhiX << endl;
+      cout << "idloY, idhiY = " << idloY << "  " << idhiY << endl;
+      cout << "idloZ, idhiZ = " << idloZ << "  " << idhiZ << endl;
+      if ((idloX > idhiX) || (idloY > idhiY) || (idloZ > idhiZ))
+	printvalues = false;
+
+      if (printvalues) {
+	for (int ii = idloX; ii <= idhiX; ii++) {
+	  for (int jj = idloY; jj <= idhiY; jj++) {
+	    for (int kk = idloZ; kk <= idhiZ; kk++) {
+	      cerr.width(14);
+	      cerr << " point coordinates "<< ii << " " << jj << " " << kk;
+	      cerr << " new density = " << new_density[IntVector(ii,jj,kk)]; 
+	      cerr << " cellType = " << cellType[IntVector(ii,jj,kk)]; 
+	      cerr << " void fraction = " << voidFraction[IntVector(ii,jj,kk)] << endl; 
+	    }
 	  }
 	}
       }
-
     }
 #endif
 
