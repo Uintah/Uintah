@@ -65,6 +65,14 @@ private:
   GuiInt gui_render_style_;
   GuiDouble gui_alpha_scale_;
   GuiInt gui_interp_mode_;
+
+  GuiInt gui_shading_;
+  GuiDouble gui_ambient_;
+  GuiDouble gui_diffuse_;
+  GuiDouble gui_specular_;
+  GuiDouble gui_shine_;
+  GuiInt gui_light_;
+  
   VolumeRenderer *volren_;
 };
 
@@ -80,6 +88,12 @@ VolumeVisualizer::VolumeVisualizer(GuiContext* ctx)
     gui_render_style_(ctx->subVar("render_style")),
     gui_alpha_scale_(ctx->subVar("alpha_scale")),
     gui_interp_mode_(ctx->subVar("interp_mode")),
+    gui_shading_(ctx->subVar("shading")),
+    gui_ambient_(ctx->subVar("ambient")),
+    gui_diffuse_(ctx->subVar("diffuse")),
+    gui_specular_(ctx->subVar("specular")),
+    gui_shine_(ctx->subVar("shine")),
+    gui_light_(ctx->subVar("light")),
     volren_(0)
 {
 }
@@ -94,7 +108,7 @@ void
   static int oldni = 0, oldnj = 0, oldnk = 0;
   static GeomID geomID  = 0;
 
-
+  
   intexture = (TextureIPort *)get_iport("Texture");
   icmap = (ColorMapIPort *)get_iport("ColorMap");
   ogeom = (GeometryOPort *)get_oport("Geometry");
@@ -179,6 +193,11 @@ void
   //AuditAllocator(default_allocator);
   volren_->SetNSlices( gui_num_slices_.get() );
   volren_->SetSliceAlpha( gui_alpha_scale_.get() );
+
+  volren_->setShading(gui_shading_.get());
+  volren_->setMaterial(gui_ambient_.get(), gui_diffuse_.get(),
+                       gui_specular_.get(), gui_shine_.get());
+
   //AuditAllocator(default_allocator);
   ogeom->flushViews();				  
   //AuditAllocator(default_allocator);
@@ -189,9 +208,9 @@ void
   } else {
     ColorMapHandle outcmap;
     outcmap = new ColorMap(*cmap.get_rep()); 
-    double min, max;
-    tex->get_min_max(min, max);
-    outcmap->Scale(min, max);
+    double vmin, vmax, gmin, gmax;
+    tex->get_min_max(vmin, vmax, gmin, gmax);
+    outcmap->Scale(vmin, vmax);
     ocmap->send(outcmap);
   }    
 

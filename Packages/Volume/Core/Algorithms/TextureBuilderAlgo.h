@@ -59,7 +59,8 @@ class TextureBuilderAlgoBase : public DynamicAlgoBase {
 public:
   TextureBuilderAlgoBase();
   virtual ~TextureBuilderAlgoBase();
-  virtual Texture*  build(FieldHandle, int, double, double) = 0;
+  virtual Texture*  build(FieldHandle, FieldHandle, int,
+                          double, double, double, double) = 0;
   
   virtual void replace_data() = 0;
 
@@ -68,16 +69,18 @@ public:
   static CompileInfoHandle get_compile_info(const TypeDescription *td );
 
 protected:
-  double min_, max_;
+  double vmin_, vmax_, gmin_, gmax_;
   int ni_, nj_, nk_;
+  int nc_, nb_[2];
   int vi_, vj_, vk_;
   Transform transform_;
   BBox bbox_;
-  void set_minmax( double min, double max ) { min_ = min; max_ = max; }
+  void set_minmax(double vmin, double vmax, double gmin, double gmax)
+  { vmin_ = vmin; vmax_ = vmax; gmin_ = gmin; gmax_ = gmax; }
 
   double SETVAL(double val)
   {
-    double v = (val - min_)*255/(max_ - min_);
+    double v = (val - vmin_)*255/(vmax_ - vmin_);
     if ( v < 0 ) return 0;
     else if (v > 255) return 255;
     else return v;
@@ -88,20 +91,26 @@ protected:
     return (unsigned char)SETVAL(val);
   }
 
-  void computeDivisions( int nx, int ny, int nz, int nbytes,
-		    int& max_tex, int& sx, int& sy, int& sz);
-  void buildBricks( BinaryTree<BrickNode *>*& tree, FieldHandle texfld,
-		    int max_tex, int sx, int sy, int sz);
-  BinaryTree<BrickNode *> *buildTree( int& mi, int& mj, int& mk,
-				   int& ni, int& nj, int& nk, BBox bbox,
-				   int& mvi, int &mvj, int& mvk,
-				   int& vi, int& vj, int& vk, BBox vbox,
-				   const double& di, const double& dj,
-				   const double& dk, const int& max_tex, 
-				   int axis, int& index);
-  virtual void fillTree( BinaryTree< BrickNode *> *tree, FieldHandle texfld) = 0;
-  virtual void filldata( BrickData* bdata,
-			 BrickWindow *bw, FieldHandle texfld) = 0;
+  void computeDivisions(int nx, int ny, int nz, int nb,
+                        int& max_tex, int& sx, int& sy, int& sz);
+  void buildBricks(BinaryTree<BrickNode*>*& tree,
+                   FieldHandle vfield, FieldHandle gfield,
+                   int max_tex, int sx, int sy, int sz, int nc, int* nb);
+  BinaryTree<BrickNode*>* buildTree(int& mi, int& mj, int& mk,
+                                    int& ni, int& nj, int& nk, int nc, int* nb,
+                                    BBox bbox,
+                                    int& mvi, int &mvj, int& mvk,
+                                    int& vi, int& vj, int& vk, BBox vbox,
+                                    const double& di, const double& dj,
+                                    const double& dk, const int& max_tex, 
+                                    int axis, int& index);
+  virtual void fillTree(BinaryTree<BrickNode*>* tree,
+                        FieldHandle vfield,
+                        FieldHandle gfield) = 0;
+  virtual void filldata(BrickData* bdata,
+			BrickWindow* bw,
+                        FieldHandle vfield,
+                        FieldHandle gfield) = 0;
 };
 
 // TextureBuilderAlgo<T>
@@ -110,69 +119,74 @@ template <class TexField>
 class TextureBuilderAlgo: public TextureBuilderAlgoBase
 {
 public:
-  typedef typename TexField::value_type       value_type;
+  typedef typename TexField::value_type value_type;
   
 public:
   TextureBuilderAlgo( ){}
   virtual ~TextureBuilderAlgo(){}
   
-  virtual Texture* build(FieldHandle, int, double, double);
+  virtual Texture* build(FieldHandle, FieldHandle, int,
+                         double, double, double, double);
   virtual void replace_data();
   
 protected:
-  virtual void fillTree( BinaryTree< BrickNode *> *tree, FieldHandle texfld);
-  virtual void filldata( BrickData* bdata,
-			 BrickWindow *bw, FieldHandle texfld);
-
-private:
-
+  virtual void fillTree(BinaryTree<BrickNode*>* tree,
+                        FieldHandle vfield,
+                        FieldHandle gfield);
+  virtual void filldata(BrickData* bdata,
+			BrickWindow* bw,
+                        FieldHandle vfield,
+                        FieldHandle gfield);
 }; 
 
 template<class TexField>
 Texture*
-TextureBuilderAlgo<TexField>::build( FieldHandle fieldH, int card_mem,
-				     double minval, double maxval)
+TextureBuilderAlgo<TexField>::build(FieldHandle vfield, FieldHandle gfield,
+                                    int card_mem, double vminval, double vmaxval,
+                                    double gminval, double gmaxval)
 				     
 {
   Texture* myTexture = 0;
 
-  set_minmax(minval, maxval);
+  set_minmax(vminval, vmaxval, gminval, gmaxval);
   // by now we've established that this is some sort of LatVolMesh
   // so this should work.
-  LatVolMeshHandle mesh = (LatVolMesh *)(fieldH->mesh().get_rep());
+  LatVolMeshHandle mesh = (LatVolMesh*)(vfield->mesh().get_rep());
   transform_ = mesh->get_transform();
+  
   ni_ = mesh->get_ni();
   nj_ = mesh->get_nj();
   nk_ = mesh->get_nk();
-
   
 //   bbox_.extend(Point(mesh->get_min_i(),
 // 		     mesh->get_min_k(), mesh->get_min_j()));
 
-  if( fieldH->data_at() == Field::CELL ){
+  if(vfield->data_at() == Field::CELL) {
     --ni_; --nj_; --nk_;
   }
 
   bbox_.reset();
-  bbox_.extend( mesh->get_bounding_box().min() );
-  bbox_.extend( mesh->get_bounding_box().max() );
+  bbox_.extend(mesh->get_bounding_box().min());
+  bbox_.extend(mesh->get_bounding_box().max());
 
-//   BrickNode *mybn = scinew BrickNode(0,0,0);
-  BinaryTree<BrickNode *> *root = 0; 
-//    = scinew BinaryTree<BrickNode *>( mybn, BinaryTree<BrickNode *>::PARENT);
-				    
-  int brick_mem = (int)((card_mem*1024*1024)*0.5);
-  int brick_size = brick_mem*8;
-
+  // compute subdivision
+  int brick_mem = card_mem*1024*1024/2;
+  nb_[0] = gfield.get_rep() ? 4 : 1;
+  nb_[1] = gfield.get_rep() ? 1 : 0;
+  nc_ = gfield.get_rep() ? 2 : 1;
   int sx = 0, sy = 0, sz = 0;
-  computeDivisions( ni_, nj_, nk_, 8, brick_size, sx, sy, sz);
-  buildBricks( root, fieldH, brick_mem, sx, sy, sz);
+  computeDivisions(ni_, nj_, nk_, nb_[0], brick_mem, sx, sy, sz);
 
+  // build brick tree
+  BinaryTree<BrickNode*>* root = 0; 
+  buildBricks(root, vfield, gfield, brick_mem, sx, sy, sz, nc_, nb_);
+
+  //
   Transform mytrans;
   mesh->transform(mytrans);
-  myTexture = new Texture( root, bbox_.min(), bbox_.max(), mytrans,
-			   minval, maxval);
-  BinaryTree<BrickNode*>* tree = myTexture->getTree();
+  myTexture = new Texture(root, bbox_.min(), bbox_.max(), mytrans,
+			  vminval, vmaxval, gminval, gmaxval);
+  //BinaryTree<BrickNode*>* tree = myTexture->getTree();
   return myTexture;
 }
 
@@ -182,80 +196,147 @@ TextureBuilderAlgo<TexField>::replace_data()
 {
 }
 
-
 template <class TexField>
 void
-TextureBuilderAlgo<TexField>::fillTree( BinaryTree< BrickNode *> *tree,
-			      FieldHandle texfld)
+TextureBuilderAlgo<TexField>::fillTree(BinaryTree< BrickNode *> *tree,
+                                       FieldHandle vfield,
+                                       FieldHandle gfield)
 {
   if( tree->type() == BinaryTree<BrickNode*>::PARENT ){
-    fillTree( tree->child(0), texfld);
-    fillTree( tree->child(1), texfld );
+    fillTree(tree->child(0), vfield, gfield);
+    fillTree(tree->child(1), vfield, gfield);
   } else {
     BrickNode* bn = tree->stored();
     BrickWindow* bw = bn->brickWindow();
     BrickData* bd = bn->brick()->data();
-    filldata( bd, bw, texfld);
+    filldata(bd, bw, vfield, gfield);
   }
 }
 
 template <class TexField>
 void 
-TextureBuilderAlgo<TexField>::filldata( BrickData* bdata,
-				  BrickWindow *bw,
-				  FieldHandle field)
+TextureBuilderAlgo<TexField>::filldata(BrickData* bdata,
+                                       BrickWindow* bw,
+                                       FieldHandle vfield,
+                                       FieldHandle gfield)
 {
+  LatVolField<value_type>* vfld = 
+    dynamic_cast<LatVolField<value_type>*>(vfield.get_rep());
+  LatVolField<Vector>* gfld = 
+    dynamic_cast<LatVolField<Vector>*>(gfield.get_rep());
 
-  if( LatVolField< value_type >* fld = 
-      dynamic_cast<LatVolField< value_type >* >(field.get_rep())){
+  int nc = bdata->nc();
+  
+  if (vfld && ((gfld && nc == 2) || nc == 1)) {
    
-    typename TexField::mesh_type *m = fld->get_typed_mesh().get_rep();
-    unsigned char*** tex;
-    TypedBrickData< unsigned char >* tbd;
-    if( tbd =  dynamic_cast<TypedBrickData< unsigned char > *>( bdata )) {
-      tex = tbd->data();
-    } else {
-      cerr<<"Some sort of error in TextureBuilderAlgo<TexField>::filldata() \n";
+    typename TexField::mesh_type* m = vfld->get_typed_mesh().get_rep();
+
+    TypedBrickData<unsigned char>* tbd =
+      dynamic_cast<TypedBrickData<unsigned char>*>(bdata);
+    
+    if(!tbd) {
+      cerr << "Some sort of error in TextureBuilderAlgo<TexField>::filldata() \n";
       return;
     }
 
-    int i,j,k, ii, jj, kk;
     int x0, y0, z0, x1, y1, z1;
-    bw->getBoundingIndices(x0,y0,z0,x1,y1,z1);
-  
-    if( field->data_at() == Field::CELL ){
-      typename TexField::mesh_type::RangeCellIter iter(m, x0, y0, z0,
-						       x1+1, y1+1, z1+1);
-      typename TexField::mesh_type::CellIter iter_end; iter.end( iter_end );
+    bw->getBoundingIndices(x0, y0, z0, x1, y1, z1);
     
-      double tmp = 0;
-      for( k = 0, kk = z0; kk <= z1; kk++,k++){
-	for(j = 0, jj = y0; jj <= y1; jj++, j++){
-	  for(i = 0, ii = x0; ii <= x1; ii++, i++){
-	    tex[k][j][i] = SETVALC( fld->fdata()[*iter] );
-	    ++iter;
-	  }
-	}
+    if (!gfld) {
+      unsigned char*** tex = tbd->data(0);
+      if(vfield->data_at() == Field::CELL) {
+        typename TexField::mesh_type::RangeCellIter iter(m, x0, y0, z0,
+                                                         x1+1, y1+1, z1+1);
+        typename TexField::mesh_type::CellIter iter_end;
+        iter.end(iter_end);
+    
+        //double tmp = 0;
+        for(int k=0, kk=z0; kk<=z1; kk++, k++) {
+          for(int j=0, jj=y0; jj<=y1; jj++, j++) {
+            for(int i=0, ii=x0; ii<=x1; ii++, i++) {
+              tex[k][j][i] = SETVALC(vfld->fdata()[*iter]);
+              ++iter;
+            }
+          }
+        }
+      } else {
+        typename TexField::mesh_type::RangeNodeIter iter(m, x0, y0, z0,
+                                                         x1+1, y1+1, z1+1);
+        typename TexField::mesh_type::NodeIter iter_end;
+        iter.end(iter_end);
+      
+        //double tmp = 0;
+        for(int k=0, kk=z0; kk<=z1; kk++, k++) {
+          for(int j=0, jj=y0; jj<=y1; jj++, j++) {
+            for(int i=0, ii=x0; ii<=x1; ii++, i++) {
+              tex[k][j][i] = SETVALC(vfld->fdata()[*iter]);
+              ++iter;
+            }
+          }
+        }
       }
     } else {
-      typename TexField::mesh_type::RangeNodeIter iter(m, x0, y0, z0,
-						       x1+1, y1+1, z1+1);
-      typename TexField::mesh_type::NodeIter iter_end; iter.end( iter_end );
+      unsigned char*** tex0 = tbd->data(0);
+      unsigned char*** tex1 = tbd->data(1);
       
-      double tmp = 0;
-      for( k = 0, kk = z0; kk <= z1; kk++,k++){
-	for(j = 0, jj = y0; jj <= y1; jj++, j++){
-	  for(i = 0, ii = x0; ii <= x1; ii++, i++){
-	    tex[k][j][i] = SETVALC( fld->fdata()[*iter] );
-	    ++iter;
-	  }
-	}
+      if(vfield->data_at() == Field::CELL) {
+        typename TexField::mesh_type::RangeCellIter iter(m, x0, y0, z0,
+                                                         x1+1, y1+1, z1+1);
+        typename TexField::mesh_type::CellIter iter_end;
+        iter.end(iter_end);
+    
+        //double tmp = 0;
+        for(int k=0, kk=z0; kk<=z1; kk++, k++) {
+          for(int j=0, jj=y0; jj<=y1; jj++, j++) {
+            for(int i=0, ii=x0; ii<=x1; ii++, i++) {
+              tex0[k][j][i*4+3] = SETVALC(vfld->fdata()[*iter]);
+              Vector v = gfld->fdata()[*iter];
+              double vlen = v.length();
+              if(vlen > std::numeric_limits<float>::epsilon())
+                v.normalize();
+              else
+                v = Vector(0.0, 0.0, 0.0);
+              tex0[k][j][i*4+0] = (unsigned char)((v.x()*0.5 + 0.5)*255);
+              tex0[k][j][i*4+1] = (unsigned char)((v.y()*0.5 + 0.5)*255);
+              tex0[k][j][i*4+2] = (unsigned char)((v.z()*0.5 + 0.5)*255);
+              tex1[k][j][i] = (unsigned char)((vlen-gmin_)/(gmax_-gmin_))*255;
+              ++iter;
+            }
+          }
+        }
+      } else {
+        typename TexField::mesh_type::RangeNodeIter iter(m, x0, y0, z0,
+                                                         x1+1, y1+1, z1+1);
+        typename TexField::mesh_type::NodeIter iter_end;
+        iter.end(iter_end);
+      
+        //double tmp = 0;
+        for(int k=0, kk=z0; kk<=z1; kk++, k++) {
+          for(int j=0, jj=y0; jj<=y1; jj++, j++) {
+            for(int i=0, ii=x0; ii<=x1; ii++, i++) {
+              tex0[k][j][i*4+3] = SETVALC(vfld->fdata()[*iter]);
+              Vector v = gfld->fdata()[*iter];
+              double vlen = v.length();
+              if(vlen > std::numeric_limits<float>::epsilon())
+                v.normalize();
+              else
+                v = Vector(0.0, 0.0, 0.0);
+              tex0[k][j][i*4+0] = (unsigned char)((v.x()*0.5 + 0.5)*255);
+              tex0[k][j][i*4+1] = (unsigned char)((v.y()*0.5 + 0.5)*255);
+              tex0[k][j][i*4+2] = (unsigned char)((v.z()*0.5 + 0.5)*255);
+              tex1[k][j][i] = (unsigned char)((vlen-gmin_)/(gmax_-gmin_))*255;
+              ++iter;
+            }
+          }
+        }
       }
+      
     }      
   } else {
-  cerr<<"Not a Lattice type---should not be here\n";
+    cerr<<"Not a Lattice type---should not be here\n";
   }
 }
 
 } // end namespace Volume
+
 #endif // GLTexture3DBuilder_h

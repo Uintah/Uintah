@@ -17,4 +17,3 @@ PSELIBS :=
 LIBS := $(TK_LIBRARY) $(GL_LIBS) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/largeso_epilogue.mk
- 

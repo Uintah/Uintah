@@ -21,17 +21,16 @@
 
 namespace Volume {
 
-#if defined(GL_ARB_fragment_program) && defined(__APPLE__)
+#if defined(GL_ARB_fragment_program)
 class FragmentProgramARB
 {
 public:
   FragmentProgramARB (const char* str, bool isFileName = false);
   ~FragmentProgramARB ();
   void init( const char* str, bool isFileName );
-
   
-  bool created();
   void create ();
+  bool valid ();
 //  void update ();
   void destroy ();
 
@@ -40,6 +39,8 @@ public:
   void enable ();
   void disable ();
   void makeCurrent ();
+
+  void setLocalParam(int, float, float, float, float);
   
 protected:
   unsigned int mId;

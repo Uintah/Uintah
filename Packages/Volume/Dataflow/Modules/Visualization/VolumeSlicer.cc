@@ -267,9 +267,9 @@ void
   } else {
     ColorMapHandle outcmap;
     outcmap = new ColorMap(*cmap.get_rep()); 
-    double min, max;
-    tex_->get_min_max(min, max);
-    outcmap->Scale(min, max);
+    double vmin, vmax, gmin, gmax;
+    tex_->get_min_max(vmin, vmax, gmin, gmax);
+    outcmap->Scale(vmin, vmax);
     ocmap_->send(outcmap);
   }    
   

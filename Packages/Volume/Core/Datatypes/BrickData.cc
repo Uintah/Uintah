@@ -20,17 +20,21 @@
 namespace Volume {
 
 BrickData::BrickData() :
-  nx_(0), ny_(0), nz_(0), nbytes_(0)
+  nx_(0), ny_(0), nz_(0), nc_(0), nb_(0)
 {
 }
 BrickData::~BrickData()
 {
+  delete[] nb_;
 //// delete tex;  This was given to us do not delete!  May change.
 }
 
-BrickData::BrickData( int nx, int ny, int nz, int nbytes ) :
-  nx_(nx), ny_(ny), nz_(nz), nbytes_(nbytes)
+BrickData::BrickData(int nx, int ny, int nz, int nc, int* nb) :
+  nx_(nx), ny_(ny), nz_(nz), nc_(nc)
 {
+  nb_ = new int[nc_];
+  for (int c=0; c<nc_; c++)
+    nb_[c] = nb[c];
 }  
 
 } // End namespace Volume

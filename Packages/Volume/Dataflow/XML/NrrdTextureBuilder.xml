@@ -18,7 +18,7 @@
   University of Utah. All Rights Reserved.
 -->
 
-<component name="TextureBuilder" category="Visualization">
+<component name="NrrdTextureBuilder" category="Visualization">
   <overview>
     <authors>
       <author>Kurt Zimmerman</author>
@@ -36,12 +36,12 @@
   <io>
     <inputs lastportdynamic="no">
       <port>
-	<name>Scalar Field</name>
-	<datatype>SCIRun::Field</datatype>
+	<name>Value / Normal-Value Nrrd</name>
+	<datatype>Teem::Nrrd</datatype>
       </port>
       <port>
-	<name>Gradient Field</name>
-	<datatype>SCIRun::Field</datatype>
+	<name>Gradmag Nrrd</name>
+	<datatype>Teem::Nrrd</datatype>
       </port>
     </inputs>
     <outputs>

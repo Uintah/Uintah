@@ -16,23 +16,19 @@
   University of Utah. All Rights Reserved.
 */
 
-#include <sci_defs.h>
-
-#if defined(HAVE_GLEW)
-#include <GL/glew.h>
-#else
-#include <GL/gl.h>
-#endif
+#include <sci_gl.h>
 
 #include <Packages/Volume/Core/Geom/FragmentProgramARB.h>
 
 #include <stdlib.h>
 #include <iostream>
+#include <string>
 using namespace Volume;
 using std::cerr;
 using std::endl;
+using std::string;
 
-#if defined(GL_ARB_fragment_program)  && defined(__APPLE__)
+#if defined(GL_ARB_fragment_program)
 FragmentProgramARB::FragmentProgramARB (const char* str, bool isFileName)
   : mId(0), mBuffer(0), mLength(0), mFile(0)
 {
@@ -79,7 +75,10 @@ FragmentProgramARB::~FragmentProgramARB ()
 }
 
 bool
-FragmentProgramARB::created() {return bool(mId);}
+FragmentProgramARB::valid()
+{
+  return glIsProgramARB(mId);
+}
 
 void
 FragmentProgramARB::create ()
@@ -88,11 +87,28 @@ FragmentProgramARB::create ()
   glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, mId);
   glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB,
 		     mLength, mBuffer);
-
   if (glGetError() != GL_NO_ERROR)
   {
-	cerr << "Fragment program error" << endl;
-	return;
+    string mProgram((const char*)mBuffer);
+    int position;
+    glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &position);
+    int start = position;
+    for (; start > 0 && mProgram[start] != '\n'; start--);
+    if (mProgram[start] == '\n') start++;
+    uint end = position;
+    for (; end < mProgram.length()-1 && mProgram[end] != '\n'; end++);
+    if (mProgram[end] == '\n') end--;
+    int ss = start;
+    int l = 1;
+    for (; ss >= 0; ss--) { if (mProgram[ss] == '\n') l++; }
+    string line((char*)(mProgram.c_str()+start), end-start+1);
+    string underline = line;
+    for (uint i=0; i<end-start+1; i++) underline[i] = '-';
+    underline[position-start] = '#';
+    glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, 0);
+    cerr << "Fragment program error at line " << l << ", character "
+         << position-start << endl << endl << line << endl
+         << underline << endl;
   }
 }
 
@@ -133,6 +149,12 @@ void
 FragmentProgramARB::makeCurrent ()
 {
   glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, mId);
+}
+
+void
+FragmentProgramARB::setLocalParam(int i, float x, float y, float z, float w)
+{
+  glProgramLocalParameter4fARB(GL_FRAGMENT_PROGRAM_ARB, i, x, y, z, w);
 }
 
 #endif

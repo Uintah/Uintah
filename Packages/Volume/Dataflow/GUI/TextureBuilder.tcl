@@ -26,11 +26,15 @@ itcl_class Volume_Visualization_TextureBuilder {
     }
     method set_defaults {} {
 	global $this-card_mem
-	global $this-min
-	global $this-max
+	global $this-vmin
+	global $this-vmax
+	global $this-gmin
+	global $this-gmax
 	global $this-is_fixed
-	set $this-min 0
-	set $this-max 1
+	set $this-vmin 0
+	set $this-vmax 1
+	set $this-gmin 0
+	set $this-gmax 1
 	set $this-is_fixed 0
 	set $this-card_mem 16
     }
@@ -70,7 +74,7 @@ itcl_class Volume_Visualization_TextureBuilder {
 	pack $bf.b0 $bf.b1 $bf.b2 $bf.b3 $bf.b4 $bf.b5 $bf.b6 -side left -expand yes\
                 -fill x
 
-	global $this-is_fixed
+	global $this-is_fixedmin
         frame $w.f1 -relief flat
         pack $w.f1 -side top -expand yes -fill x
         radiobutton $w.f1.b -text "Auto Scale"  -variable $this-is_fixed \
@@ -85,13 +89,20 @@ itcl_class Volume_Visualization_TextureBuilder {
 
         frame $w.f3 -relief flat
         pack $w.f3 -side top -expand yes -fill x
-        
-        label $w.f3.l1 -text "min:  "
-        entry $w.f3.e1 -textvariable $this-min
-
-        label $w.f3.l2 -text "max:  "
-        entry $w.f3.e2 -textvariable $this-max
+        label $w.f3.l1 -text "value min:  "
+        entry $w.f3.e1 -textvariable $this-vmin
+        label $w.f3.l2 -text "value max:  "
+        entry $w.f3.e2 -textvariable $this-vmax
         pack $w.f3.l1 $w.f3.e1 $w.f3.l2 $w.f3.e2 -side left \
+            -expand yes -fill x -padx 2 -pady 2
+
+        frame $w.f4 -relief flat
+        pack $w.f4 -side top -expand yes -fill x
+        label $w.f4.l1 -text " grad min:  "
+        entry $w.f4.e1 -textvariable $this-gmin
+        label $w.f4.l2 -text " grad max:  "
+        entry $w.f4.e2 -textvariable $this-gmax
+        pack $w.f4.l1 $w.f4.e1 $w.f4.l2 $w.f4.e2 -side left \
             -expand yes -fill x -padx 2 -pady 2
 
         bind $w.f3.e1 <Return> $n
@@ -123,7 +134,10 @@ itcl_class Volume_Visualization_TextureBuilder {
         $w.f3.l2 configure -foreground $color
         $w.f3.e2 configure -state disabled -foreground $color
 
-
+        $w.f4.l1 configure -foreground $color
+        $w.f4.e1 configure -state disabled -foreground $color
+        $w.f4.l2 configure -foreground $color
+        $w.f4.e2 configure -state disabled -foreground $color
    }	
 
     method fixedScale { } {
@@ -137,6 +151,11 @@ itcl_class Volume_Visualization_TextureBuilder {
         $w.f3.e1 configure -state normal -foreground black
         $w.f3.l2 configure -foreground black
         $w.f3.e2 configure -state normal -foreground black
+
+        $w.f4.l1 configure -foreground black
+        $w.f4.e1 configure -state normal -foreground black
+        $w.f4.l2 configure -foreground black
+        $w.f4.e2 configure -state normal -foreground black
         
     }
 

@@ -5,7 +5,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/Volume/Core/Datatypes
 
 SRCS     += \
- 	 $(SRCDIR)/Brick.cc \
+	 $(SRCDIR)/Brick.cc \
 	 $(SRCDIR)/BrickData.cc \
 	 $(SRCDIR)/BrickNode.cc \
 	 $(SRCDIR)/BrickWindow.cc \

@@ -37,9 +37,8 @@ namespace Volume {
 
 using SCIRun::GeomObj;
 using SCIRun::DrawInfoOpenGL;
-#if defined( GL_ARB_fragment_program) && defined(GL_ARB_multitexture) && defined(__APPLE__)
 class FragmentProgramARB;
-#endif
+
 class VolumeRenderer : public TextureRenderer
 {
 public:
@@ -57,6 +56,11 @@ public:
   void SetSliceAlpha( double as){ slice_alpha_ = as;}
   void SetRenderMode( vol_ren_mode vrm) { mode_ = vrm; }
 
+  inline void setShading(bool shading) { shading_ = shading; }
+  inline void setMaterial(double ambient, double diffuse, double specular, double shine)
+  { ambient_ = ambient; diffuse_ = diffuse; specular_ = specular; shine_ = shine; }
+  inline void setLight(int light) { light_ = light; }
+  
 #ifdef SCI_OPENGL
   virtual void draw(DrawInfoOpenGL*, Material*, double time);
   virtual void draw();
@@ -75,12 +79,18 @@ protected:
   double            slice_alpha_;
   vol_ren_mode      mode_;
   unsigned char     transfer_function_[1024];
+
+  bool shading_;
+  double ambient_, diffuse_, specular_, shine_;
+  int light_;
   
-#if defined( GL_ARB_fragment_program) && defined(GL_ARB_multitexture) && defined(__APPLE__)
-  FragmentProgramARB *VolShader;
-  FragmentProgramARB *FogVolShader;
-#endif
-  
+  FragmentProgramARB* VolShader1;
+  FragmentProgramARB* VolShader4;
+  FragmentProgramARB* FogVolShader1;
+  FragmentProgramARB* FogVolShader4;
+  FragmentProgramARB* LitVolShader;
+  FragmentProgramARB* LitFogVolShader;
+  FragmentProgramARB* MipShader4;
 };
 
 } // End namespace SCIRun

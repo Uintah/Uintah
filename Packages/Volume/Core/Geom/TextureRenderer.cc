@@ -1,11 +1,5 @@
-#include <sci_defs.h>
 #include <Packages/Volume/Core/Geom/TextureRenderer.h>
-
-#if defined( HAVE_GLEW )
-#include <GL/glew.h>
-#else
-#include <GL/gl.h>
-#endif
+#include <sci_gl.h>
 
 #include <Packages/Volume/Core/Datatypes/TypedBrickData.h>
 #include <Core/Util/NotFinished.h>
@@ -144,11 +138,9 @@ TextureRenderer::compute_view( Ray& ray)
 void
 TextureRenderer::load_texture(Brick& brick)
 {
-#if defined( GL_ARB_fragment_program) && defined(GL_ARB_multitexture) && defined(__APPLE__)
   glActiveTexture(GL_TEXTURE0_ARB);
 //   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
   glEnable(GL_TEXTURE_3D);
-#endif
 
   if(interp_){
     glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -169,8 +161,6 @@ TextureRenderer::load_texture(Brick& brick)
     glBindTexture(GL_TEXTURE_3D_EXT, brick.texName());
     //      glCheckForError("After glBindTexture");
     
-
-#if defined( GL_ARB_fragment_program )  && defined(GL_ARB_multitexture)  && defined(__APPLE__)
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP);
@@ -178,58 +168,48 @@ TextureRenderer::load_texture(Brick& brick)
 //       int border_color[4] = {0, 0, 0, 0};
 //       glTexParameteriv(GL_TEXTURE_3D, GL_TEXTURE_BORDER_COLOR, border_color);
 //     }
-#else
-    glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_S,
-		    GL_CLAMP);
-//      glCheckForError("glTexParameteri GL_TEXTURE_WRAP_S GL_CLAMP");
-    glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_T,
-		    GL_CLAMP);
-//      glCheckForError("glTexParameteri GL_TEXTURE_WRAP_T GL_CLAMP");
-    glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_WRAP_R_EXT,
-		    GL_CLAMP);
-//      glCheckForError("glTexParameteri GL_TEXTURE_WRAP_R GL_CLAMP");
-#endif
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 //      glCheckForError("After glPixelStorei(GL_UNPACK_ALIGNMENT, 1)");
     if( TypedBrickData<unsigned char> *br =
-        dynamic_cast<TypedBrickData<unsigned char>*> (brick.data())){
-#if defined( GL_ARB_fragment_program ) && defined(GL_ARB_multitexture) && defined(__APPLE__)
-      glTexImage3D(GL_TEXTURE_3D, 0,
-		   GL_INTENSITY,
-		   br->nx(),
-		   br->ny(),
-		   br->nz(),
-		   0,
-		   GL_LUMINANCE, GL_UNSIGNED_BYTE,
-		   br->texture());
-#elif defined( GL_TEXTURE_COLOR_TABLE_SGI ) 
-	  // set up the texture
-	  //glTexImage3DEXT(GL_TEXTURE_3D_EXT, 0,
-      glTexImage3D(GL_TEXTURE_3D, 0,
-		   GL_INTENSITY8,
-		   br->nx(),
-		   br->ny(),
-		   br->nz(),
-		   0,
-		   GL_RED, GL_UNSIGNED_BYTE,
-		   br->texture());
-      //      glCheckForError("After glTexImage3D SGI");
-#elif defined( GL_SHARED_TEXTURE_PALETTE_EXT )
-      glTexImage3D(GL_TEXTURE_3D_EXT, 0,
-		   GL_COLOR_INDEX8_EXT,
-		   br->nx(),
-		   br->ny(),
-		   br->nz(),
-		   0,
-		   GL_COLOR_INDEX, GL_UNSIGNED_BYTE,
-		   br->texture());
-#endif
+        dynamic_cast<TypedBrickData<unsigned char>*> (brick.data())) {
+
+      switch (br->nb(0)) {
+      case 1:
+        glTexImage3D(GL_TEXTURE_3D, 0,
+                     GL_LUMINANCE8,
+                     br->nx(),
+                     br->ny(),
+                     br->nz(),
+                     0,
+                     GL_LUMINANCE, GL_UNSIGNED_BYTE,
+                     br->texture(0));
+        break;
+      case 4:
+        glTexImage3D(GL_TEXTURE_3D, 0,
+                     GL_RGBA8,
+                     br->nx(),
+                     br->ny(),
+                     br->nz(),
+                     0,
+                     GL_RGBA, GL_UNSIGNED_BYTE,
+                     br->texture(0));
+        break;
+      default:
+        break;
+      }
     }
 //      glCheckForError("After glTexImage3D Linux");
   } else {
     glBindTexture(GL_TEXTURE_3D_EXT, brick.texName());
   }
   //#endif
+  int errcode = glGetError();
+  if (errcode != GL_NO_ERROR)
+  {
+    cerr << "VolumeRenderer::load_texture | "
+         << (char*)gluErrorString(errcode)
+         << "\n";
+  }
 }
 
 void
@@ -327,9 +307,10 @@ TextureRenderer::drawPolys( vector<Polygon *> polys )
   glMatrixMode(GL_MODELVIEW);
   glPushMatrix();
   glMultMatrixd(mvmat);
-
+  
   Point p0, t0;
-  unsigned int i,k;
+  unsigned int i;
+  unsigned int k;
   di_->polycount += polys.size();
   for (i = 0; i < polys.size(); i++) {
     switch (polys[i]->size() ) {
@@ -344,7 +325,7 @@ TextureRenderer::drawPolys( vector<Polygon *> polys )
       break;
     case 2:
             glBegin(GL_LINES);
-      for(k =0; k < polys[i]->size(); k++)
+      for(k =0; k < (unsigned int)polys[i]->size(); k++)
       {
         t0 = polys[i]->getTexCoord(k);
         p0 = polys[i]->getVertex(k);
@@ -361,7 +342,7 @@ TextureRenderer::drawPolys( vector<Polygon *> polys )
         n.normalize();
         glBegin(GL_TRIANGLES);
         glNormal3f(n.x(), n.y(), n.z());
-        for(k =0; k < polys[i]->size(); k++)
+        for(k =0; k < (unsigned int)polys[i]->size(); k++)
         {
           t0 = polys[i]->getTexCoord(k);
           p0 = polys[i]->getVertex(k);

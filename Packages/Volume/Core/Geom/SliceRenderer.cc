@@ -1,10 +1,4 @@
-#include <sci_defs.h>
-
-#if defined(HAVE_GLEW)
-#include <GL/glew.h>
-#else
-#include <GL/gl.h>
-#endif
+#include <sci_gl.h>
 
 #include <Core/Geom/GeomOpenGL.h>
 
@@ -39,7 +33,7 @@ SliceRenderer::SliceRenderer():
   phi1_(0),
   draw_cyl_(false)
 {
-#if defined(GL_ARB_fragment_program) && defined(__APPLE__)
+#if defined(GL_ARB_fragment_program)
   VolShader = new FragmentProgramARB( ShaderString, false );
 #endif
   lighting_ = 1;
@@ -58,7 +52,7 @@ SliceRenderer::SliceRenderer(TextureHandle tex, ColorMapHandle map):
   phi1_(0),
   draw_cyl_(false)
 {
-#if defined(GL_ARB_fragment_program) && defined(__APPLE__)
+#if defined(GL_ARB_fragment_program)
   VolShader = new FragmentProgramARB( ShaderString, false );
 #endif
   lighting_ = 1;
@@ -77,7 +71,7 @@ SliceRenderer::SliceRenderer( const SliceRenderer& copy ) :
   phi1_(copy.phi1_),
   draw_cyl_(copy.draw_cyl_)
 {
-#if defined(GL_ARB_fragment_program) && defined(__APPLE__)
+#if defined(GL_ARB_fragment_program)
   VolShader = copy.VolShader;
 #endif
   lighting_ = 1;
@@ -119,13 +113,13 @@ void
 SliceRenderer::setup()
 {
   // First set up the Textures.
-#if defined(GL_ARB_fragment_program) && defined(GL_ARB_multitexture) && defined(__APPLE__)
+#if defined(GL_ARB_fragment_program) && defined(GL_ARB_multitexture)
   glActiveTextureARB(GL_TEXTURE0_ARB);
 #endif
   glEnable(GL_TEXTURE_3D);
   glTexEnvi(GL_TEXTURE_ENV,GL_TEXTURE_ENV_MODE, GL_MODULATE); 
 
-#if defined(GL_ARB_fragment_program) && defined(GL_ARB_multitexture) && defined(__APPLE__)
+#if defined(GL_ARB_fragment_program) && defined(GL_ARB_multitexture)
     glActiveTextureARB(GL_TEXTURE1_ARB);
     glEnable(GL_TEXTURE_1D);
     glActiveTextureARB(GL_TEXTURE0_ARB);
@@ -154,7 +148,7 @@ SliceRenderer::cleanup()
   glDisable(GL_ALPHA_TEST);
   glDepthMask(GL_TRUE);
   if( cmap_.get_rep() ){
-#if defined(GL_ARB_fragment_program) && defined(GL_ARB_multitexture) && defined(__APPLE__)
+#if defined(GL_ARB_fragment_program) && defined(GL_ARB_multitexture)
     glActiveTextureARB(GL_TEXTURE1_ARB);
     glDisable(GL_TEXTURE_1D);
     glActiveTextureARB(GL_TEXTURE0_ARB);
@@ -300,14 +294,14 @@ SliceRenderer::draw(Brick& b, Polygon* poly)
   load_texture( b );
 //   make_texture_matrix( b );
 //   enable_tex_coords();
-#if defined( GL_ARB_fragment_program) && defined(GL_ARB_multitexture) && defined(__APPLE__)
-  if( !VolShader->created() ){
+#if defined( GL_ARB_fragment_program) && defined(GL_ARB_multitexture)
+  if( !VolShader->valid() ){
     VolShader->create();
   }
   VolShader->bind();
 #endif
   drawPolys( polys );
-#if defined( GL_ARB_fragment_program) && defined(GL_ARB_multitexture) && defined(__APPLE__)
+#if defined( GL_ARB_fragment_program) && defined(GL_ARB_multitexture)
   VolShader->release();
 #endif
 //   disable_tex_coords();
@@ -326,7 +320,7 @@ SliceRenderer::load_colormap()
 {
   const unsigned char *arr = transfer_function_;
 
-#if defined(GL_ARB_fragment_program) && defined(GL_ARB_multitexture)  && defined(__APPLE__)
+#if defined(GL_ARB_fragment_program) && defined(GL_ARB_multitexture)
 
   glActiveTextureARB(GL_TEXTURE1_ARB);
   {

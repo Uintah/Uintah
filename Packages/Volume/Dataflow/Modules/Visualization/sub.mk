@@ -6,6 +6,7 @@ SRCDIR   := Packages/Volume/Dataflow/Modules/Visualization
 
 SRCS     += \
 	$(SRCDIR)/TextureBuilder.cc \
+	$(SRCDIR)/NrrdTextureBuilder.cc \
 	$(SRCDIR)/VolumeSlicer.cc \
 	$(SRCDIR)/VolumeVisualizer.cc\
 #[INSERT NEW CODE FILE HERE]
