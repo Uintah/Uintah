@@ -8,7 +8,7 @@ TMPDIR=$5
 FLAGS=$6
 
 echo "$SUS_DIR/compare_uda $TEST_UDADIR $COMPARE_UDADIR"
-nice $SUS_DIR/compare_uda $FLAGS $TEST_UDADIR $COMPARE_UDADIR > $TMPDIR/compare_uda.log 2>&1
+$SUS_DIR/compare_uda $FLAGS $TEST_UDADIR $COMPARE_UDADIR > $TMPDIR/compare_uda.log 2>&1
 retval=$?
 cat $TMPDIR/compare_uda.log
 

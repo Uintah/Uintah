@@ -31,18 +31,18 @@ cd "${BUILDROOT}/${mode}/build"
     
 rm -f "../make.log" "../make_results.log"
 
-nice gmake -k -j$MAKE_PARALLELISM >> ../make.log 2>&1
+gmake -k -j$MAKE_PARALLELISM >> ../make.log 2>&1
 retval=$?
 if [ $retval != "0" ]; then
     # try it again -- it may not go all the way the first time
     echo "Failed first compile, try again"
-    nice gmake -k -j$MAKE_PARALLELISM >> ../make.log 2>&1
+    gmake -k -j$MAKE_PARALLELISM >> ../make.log 2>&1
     retval=$?
 fi
 if [ $retval != "0" ]; then
     # try it again -- it may not go all the way the first time
     echo "Failed second compile, try again (storing make errors)"
-    nice gmake -k -j$MAKE_PARALLELISM > ../remake_with_arches.log 2>&1
+    gmake -k -j$MAKE_PARALLELISM > ../remake_with_arches.log 2>&1
     retval=$?
 fi
 if [ $retval != "0" ]; then
@@ -66,7 +66,7 @@ if [ $retval != "0" ]; then
 
 	useFakeArches.pl "$BUILDROOT" > ../remake_without_arches.log 2>&1
 	cd "${BUILDROOT}/${mode}/build"
-	nice gmake -k -j$MAKE_PARALLELISM >> ../remake_without_arches.log 2>&1
+	gmake -k -j$MAKE_PARALLELISM >> ../remake_without_arches.log 2>&1
 	retval=$?
 
 	# Restore sub.mk's -- I keep forgetting when arches is taken out
