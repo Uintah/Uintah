@@ -25,7 +25,7 @@
 
 <article class="techreport">
 <title>&sr; Documentum</title>
-<subtitle>(&sr; Documentation Explicated)</subtitle>
+<subtitle>&sr; Documentation (Explicated)</subtitle>
 <articleinfo>
 <author>
 <firstname>Ted</firstname>
@@ -756,7 +756,48 @@ creating/editing &ltx; based module descriptions.</para>
 
 <section id="sec.editfaqdocs">
 <title>Editing FAQ Documents</title>
-<para> </para>
+<para>There are currently three FAQs:
+<simplelist>
+<member>Installation FAQ - <filename>doc/Installation/FAQ/faq.xml</filename></member>
+<member>User FAQ - <filename>doc/User/FAQ/faq.xml</filename></member>
+<member>Developer FAQ - <filename>doc/Developer/FAQ/faq.xml</filename></member>
+</simplelist>
+</para>
+<para>To add a new entry to one of these FAQs (using emacs/xemacs XML mode)
+do this:
+<orderedlist>
+<listitem>
+<para>Open the appropriate file with emacs/xemacs (recommended)</para>
+</listitem>
+<listitem>
+<para>Move cursor to just before the first <sgmltag>entry</sgmltag> element
+or just after the last <sgmltag>entry</sgmltag> element.</para>
+</listitem>
+<listitem>
+<para>Type <userinput>C-c C-e</userinput>.  The mini-buffer should show
+that XML mode is just about to insert a new <sgmltag>entry</sgmltag>
+element.  Press <userinput>RETURN</userinput>. </para>
+</listitem>
+</orderedlist>
+</para>
+<para>XML mode will insert the following:
+<programlisting>
+<![CDATA[
+<entry>
+<keywords></keywords>
+<question>
+</question>
+<answer>
+</answer>
+</entry>
+<entry>
+]]>
+</programlisting>
+Finish by inserting content into the  <sgmltag>keywords</sgmltag>,
+<sgmltag>question</sgmltag>, and <sgmltag>answer</sgmltag> elements.
+</para>
+<para>If you are not using emacs/xemacs then you will need to insert an
+<sgmltag>entry</sgmltag> element manually. </para>
 </section>
 
 <section id="sec.editltxdocs">
@@ -853,11 +894,9 @@ distribution.</para>
 <quote>...is a robust collection of tools and libraries to read, write, and
 manipulate an image in any of the more popular image formats including GIF,
 JPEG, PNG, PDF, and Photo CD...</quote></para> 
-
-<para>The
-<command>convert</command> utility from the ImageMagick package is being
-used to translate jpg and gif files to eps for use in the printable version
-of the users guide.</para>
+<para>The <command>convert</command> utility from the ImageMagick package
+is being used to translate jpg and gif files to eps for use in the
+printable version of the users guide.</para>
 </listitem>
 
 </varlistentry>
