@@ -104,12 +104,12 @@ void DebugStream::checkenv(string iname)
     string name, file;
     
     unsigned long oldcomma = 0;
-    unsigned long commapos = var.find(',', 0);
-    unsigned long colonpos = var.find(':', 0);
-    if(commapos == (int)string::npos){
+    string::size_type commapos = var.find(',', 0);
+    string::size_type colonpos = var.find(':', 0);
+    if(commapos == string::npos){
       commapos = var.size();
     }
-    while(colonpos != (int)string::npos){
+    while(colonpos != string::npos){
       name.assign(var, oldcomma, colonpos-oldcomma);
       if(name == iname){
 	file.assign(var, colonpos+1, commapos-colonpos-1);
@@ -136,7 +136,7 @@ void DebugStream::checkenv(string iname)
       oldcomma = commapos+1;
       commapos = var.find(',', oldcomma+1);
       colonpos = var.find(':', oldcomma+1);
-      if(commapos == (int)string::npos){
+      if(commapos == string::npos){
 	commapos = var.size();
       }
     }
