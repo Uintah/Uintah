@@ -176,15 +176,15 @@ itcl_class Uintah_Visualization_GridVisualizer {
 	frame $w.grid.select
 	pack $w.grid.select -side left -fill x -padx 2 -pady 2
 	
-	checkbutton $w.grid.select.plane_on -text "Selection plane" \
+	checkbutton $w.grid.select.plane_on -text "Show a plane of grid points" \
 		-variable $this-plane_on -command $n
 	pack $w.grid.select.plane_on -side top -anchor w -pady 2 -ipadx 3
 
-	checkbutton $w.grid.select.nselect_on -text "Node Select" \
+	checkbutton $w.grid.select.nselect_on -text "Show grid points" \
 		-variable $this-node_select_on -command $n
 	pack $w.grid.select.nselect_on -side top -anchor w -pady 2 -ipadx 3
 
-	checkbutton $w.grid.select.show_select_n -text "Show Selected Node" \
+	checkbutton $w.grid.select.show_select_n -text "Show selected point" \
 		-variable $this-show_selected_node \
 		-command "$this-c update_sn"
 	pack $w.grid.select.show_select_n -side top -anchor w -pady 2 -ipadx 3
