@@ -71,6 +71,10 @@ ICELabel::ICELabel()
     VarLabel::create("Tdot",         CCVariable<double>::getTypeDescription());
   turb_viscosity_CCLabel =
     VarLabel::create("turb_viscosity_CC",CCVariable<double>::getTypeDescription());
+  viscosityLabel =
+    VarLabel::create("viscosity",    CCVariable<double>::getTypeDescription());
+  thermalCondLabel =
+    VarLabel::create("thermalCond", CCVariable<double>::getTypeDescription()); 
  
   // Implicit Labels
   matrixLabel = 
@@ -212,6 +216,8 @@ ICELabel::~ICELabel()
     VarLabel::destroy(f_theta_CCLabel);
     VarLabel::destroy(Tdot_CCLabel);
     VarLabel::destroy(turb_viscosity_CCLabel);
+    VarLabel::destroy(viscosityLabel);
+    VarLabel::destroy(thermalCondLabel);    
     
     // Implicit Labels
     VarLabel::destroy(matrixLabel);
