@@ -55,6 +55,13 @@ namespace SCIRun {
 
 class ApplyInterpMatrix : public Module
 {
+private:
+  FieldHandle  fHandle_;
+
+  int sfGeneration_;
+  int dfGeneration_;
+  int mGeneration_;
+
 public:
   ApplyInterpMatrix(GuiContext* ctx);
 
@@ -65,7 +72,10 @@ public:
 DECLARE_MAKER(ApplyInterpMatrix)
 
 ApplyInterpMatrix::ApplyInterpMatrix(GuiContext* ctx)
-  : Module("ApplyInterpMatrix", ctx, Filter, "FieldsData", "SCIRun")
+  : Module("ApplyInterpMatrix", ctx, Filter, "FieldsData", "SCIRun"),
+  sfGeneration_(-1),
+  dfGeneration_(-1),
+  mGeneration_(-1)
 {
 }
 
@@ -80,9 +90,8 @@ ApplyInterpMatrix::execute()
     error("Unable to initialize iport 'Source'.");
     return;
   }
-  if (!(sfp->get(sfield) && (sfield.get_rep())))
-  {
-    error( "No source field found.");
+  if (!(sfp->get(sfield) && sfield.get_rep())) {
+    error( "No source field handle or representation" );
     return;
   }
 
@@ -93,54 +102,61 @@ ApplyInterpMatrix::execute()
     error("Unable to initialize iport 'Source'.");
     return;
   }
-  if (!(dfp->get(dfield) && (dfield.get_rep())))
-  {
-    error( "No desination field found.");
+  if (!(dfp->get(dfield) && dfield.get_rep())) {
+    error( "No destination field handle or representation" );
     return;
   }
 
   // Get the interpolant matrix.
   MatrixIPort *imatrix_port = (MatrixIPort *)get_iport("Interpolant");
-  MatrixHandle imatrixhandle;
+  MatrixHandle imatrix;
   if (!imatrix_port) {
     error("Unable to initialize iport 'Interpolant'.");
     return;
   }
-  if (!(imatrix_port->get(imatrixhandle) && imatrixhandle.get_rep()))
-  {
-    error("No interpolant matrix connected.");
+  if (!(imatrix_port->get(imatrix) && imatrix.get_rep())) {
+    error( "No source matrix handle or representation" );
     return;
   }
 
-  string accumtype = sfield->get_type_description(1)->get_name();
-  if (sfield->query_scalar_interface(this) != NULL) { accumtype = "double"; }
+  // Check to see if the source has changed.
+  if( sfGeneration_ != sfield->generation ||
+      dfGeneration_ != dfield->generation ||
+      mGeneration_  != imatrix->generation ) {
+    sfGeneration_ = sfield->generation;
+    dfGeneration_ = dfield->generation;
+    mGeneration_  = imatrix->generation;
 
-  CompileInfoHandle ci =
-    ApplyInterpMatrixAlgo::get_compile_info(sfield->get_type_description(),
-					    sfield->order_type_description(),
-					    dfield->get_type_description(),
-					    dfield->order_type_description(),
-					    accumtype, true);
-  Handle<ApplyInterpMatrixAlgo> algo;
-  if (!module_dynamic_compile(ci, algo)) return;
+    string accumtype = sfield->get_type_description(1)->get_name();
+    if (sfield->query_scalar_interface(this) != NULL) { accumtype = "double"; }
 
-  FieldHandle result_field =
-    algo->execute(sfield, dfield->mesh(),
-		  imatrixhandle, dfield->basis_order());
+    CompileInfoHandle ci =
+      ApplyInterpMatrixAlgo::get_compile_info(sfield->get_type_description(),
+					      sfield->order_type_description(),
+					      dfield->get_type_description(),
+					      dfield->order_type_description(),
+					      accumtype, true);
+    Handle<ApplyInterpMatrixAlgo> algo;
+    if (!module_dynamic_compile(ci, algo)) return;
 
-  if (result_field.get_rep())
-  {
-    // Copy the properties from source field.
-    result_field->copy_properties(sfield.get_rep());
+    fHandle_ = algo->execute(sfield, dfield->mesh(),
+			     imatrix, dfield->basis_order());
+
+
+    if (fHandle_.get_rep())
+      // Copy the properties from source field.
+      fHandle_->copy_properties(sfield.get_rep());
   }
 
-  FieldOPort *ofp = (FieldOPort *)get_oport("Output");
-  if (!ofp) {
-    error("Unable to initialize oport 'Output'.");
-    return;
-  }
+  if (fHandle_.get_rep()) {
+    FieldOPort *ofp = (FieldOPort *)get_oport("Output");
+    if (!ofp) {
+      error("Unable to initialize oport 'Output'.");
+      return;
+    }
 
-  ofp->send(result_field);
+    ofp->send(fHandle_);
+  }
 }
 
 

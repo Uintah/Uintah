@@ -58,22 +58,31 @@ namespace SCIRun {
 
 class ClipByFunction : public Module
 {
+public:
+  ClipByFunction(GuiContext* ctx);
+  virtual ~ClipByFunction();
+
+  virtual void execute();
+
 private:
-  GuiString clipmode_;
-  GuiString clipfunction_;
+  GuiString gMode_;
+  GuiString gFunction_;
   GuiDouble gui_uservar0_;
   GuiDouble gui_uservar1_;
   GuiDouble gui_uservar2_;
   GuiDouble gui_uservar3_;
   GuiDouble gui_uservar4_;
   GuiDouble gui_uservar5_;
-  int  last_input_generation_;
 
-public:
-  ClipByFunction(GuiContext* ctx);
-  virtual ~ClipByFunction();
+  string mode_;
+  string function_;
 
-  virtual void execute();
+  FieldHandle  fHandle_;
+  MatrixHandle mHandle_;
+
+  int fGeneration_;
+
+  bool error_;
 };
 
 
@@ -81,15 +90,16 @@ DECLARE_MAKER(ClipByFunction)
 
 ClipByFunction::ClipByFunction(GuiContext* ctx)
   : Module("ClipByFunction", ctx, Filter, "FieldsCreate", "SCIRun"),
-    clipmode_(ctx->subVar("clipmode")),
-    clipfunction_(ctx->subVar("clipfunction")),
+    gMode_(ctx->subVar("clipmode")),
+    gFunction_(ctx->subVar("clipfunction")),
     gui_uservar0_(ctx->subVar("u0")),
     gui_uservar1_(ctx->subVar("u1")),
     gui_uservar2_(ctx->subVar("u2")),
     gui_uservar3_(ctx->subVar("u3")),
     gui_uservar4_(ctx->subVar("u4")),
     gui_uservar5_(ctx->subVar("u5")),
-    last_input_generation_(0)
+    fGeneration_(-1),
+    error_(0)
 {
 }
 
@@ -105,101 +115,119 @@ ClipByFunction::execute()
 {
   // Get input field.
   FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
-  FieldHandle ifieldhandle;
+  FieldHandle fHandle;
   if (!ifp) {
     error("Unable to initialize iport 'Input Field'.");
     return;
   }
-  if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
-  {
+  if (!(ifp->get(fHandle) && fHandle.get_rep())) {
+    error( "No source field handle or representation" );
     return;
   }
-  if (!ifieldhandle->mesh()->is_editable())
-  {
+  if (!fHandle->mesh()->is_editable()) {
     error("Not an editable mesh type.");
     error("(Try passing Field through an Unstructure module first).");
     return;
   }
 
-  const TypeDescription *ftd = ifieldhandle->get_type_description();
-  Handle<ClipByFunctionAlgo> algo;
-  int hoffset = 0;
+  bool update = false;
 
-  // remove trailing white-space from the function string
-  string clipfunc=clipfunction_.get();
-  while (clipfunc.size() && isspace(clipfunc[clipfunc.size()-1]))
-    clipfunc.resize(clipfunc.size()-1);
+  // Check to see if the source field has changed.
+  if( fGeneration_ != fHandle->generation ) {
+    fGeneration_ = fHandle->generation;
+    update = true;
+  }
 
-  while (1)
-  {
-    CompileInfoHandle ci =
-      ClipByFunctionAlgo::get_compile_info(ftd, clipfunc, hoffset);
-    if (!DynamicCompilation::compile(ci, algo, false, this))
-    {
-      error("Your function would not compile.");
-      gui->eval(id + " compile_error "+ci->filename_);
-      DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
+  string mode = gMode_.get();
+  string function = gFunction_.get();
+
+  if( mode_     != mode ||
+      function_ != function ) {
+    update = true;
+    
+    mode_      = mode;
+    function_ = function;
+  }
+
+  if( !fHandle_.get_rep() ||
+      !mHandle_.get_rep() ||
+      update ||
+      error_ ) {
+
+    error_ = false;
+
+    // remove trailing white-space from the function string
+    while (function.size() && isspace(function[function.size()-1]))
+      function.resize(function.size()-1);
+
+    const TypeDescription *ftd = fHandle->get_type_description();
+    Handle<ClipByFunctionAlgo> algo;
+    int hoffset = 0;
+
+    while (1) {
+      CompileInfoHandle ci =
+	ClipByFunctionAlgo::get_compile_info(ftd, function, hoffset);
+      if (!DynamicCompilation::compile(ci, algo, false, this)){
+	  error("Your function would not compile.");
+	  gui->eval(id + " compile_error "+ci->filename_);
+	  DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
+	  error_ = true;
+	  return;
+	}
+      if (algo->identify() == function)
+	  break;
+
+      hoffset++;
+    }
+
+    int gMode = 0;
+    if (gMode_.get() == "cell")
+      gMode = 0;
+    else if (gMode_.get() == "onenode")
+      gMode = 1;
+    else if (gMode_.get() == "allnodes")
+      gMode = -1;
+
+    // User Variables.
+    algo->u0 = gui_uservar0_.get();
+    algo->u1 = gui_uservar1_.get();
+    algo->u2 = gui_uservar2_.get();
+    algo->u3 = gui_uservar3_.get();
+    algo->u4 = gui_uservar4_.get();
+    algo->u5 = gui_uservar5_.get();
+
+    fHandle_ = algo->execute(this, fHandle, gMode, mHandle_);
+  }
+
+
+  if( fHandle_.get_rep() ) {
+    FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
+    if (!ofield_port) {
+      error("Unable to initialize oport 'Output Field'.");
       return;
     }
-    if (algo->identify() == clipfunc)
-    {
-      break;
+
+    ofield_port->send(fHandle_);
+  }
+
+  if( mHandle_.get_rep() ) {
+    MatrixOPort *omatrix_port = (MatrixOPort *)get_oport("Interpolant");
+    if (!omatrix_port) {
+      error("Unable to initialize oport 'Interpolant'.");
+      return;
     }
-    hoffset++;
-  }
 
-  int clipmode = 0;
-  if (clipmode_.get() == "cell")
-  {
-    clipmode = 0;
+    omatrix_port->send(mHandle_);
   }
-  else if (clipmode_.get() == "onenode")
-  {
-    clipmode = 1;
-  }
-  else if (clipmode_.get() == "allnodes")
-  {
-    clipmode = -1;
-  }
-
-  // User Variables.
-  algo->u0 = gui_uservar0_.get();
-  algo->u1 = gui_uservar1_.get();
-  algo->u2 = gui_uservar2_.get();
-  algo->u3 = gui_uservar3_.get();
-  algo->u4 = gui_uservar4_.get();
-  algo->u5 = gui_uservar5_.get();
-
-  MatrixHandle interpolant(0);
-  FieldHandle ofield =
-    algo->execute(this, ifieldhandle, clipmode, interpolant);
-  
-  FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
-  if (!ofield_port)
-  {
-    error("Unable to initialize oport 'Output Field'.");
-    return;
-  }
-
-  ofield_port->send(ofield);
-
-  MatrixOPort *omatrix_port = (MatrixOPort *)get_oport("Interpolant");
-  if (!omatrix_port)
-  {
-    error("Unable to initialize oport 'Interpolant'.");
-    return;
-  }
-  omatrix_port->send(interpolant);
 }
-
 
 
 CompileInfoHandle
 ClipByFunctionAlgo::get_compile_info(const TypeDescription *fsrc,
-				     string clipfunction,
+				     string clipFunction,
 				     int hashoffset)
 {
-  unsigned int hashval = Hash(clipfunction, 0x7fffffff) + hashoffset;
+  unsigned int hashval = Hash(clipFunction, 0x7fffffff) + hashoffset;
 
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
@@ -221,11 +249,11 @@ ClipByFunctionAlgo::get_compile_info(const TypeDescription *fsrc,
     "  virtual bool vinside_p(double x, double y, double z,\n" +
     "                         typename FIELD::value_type v)\n" +
     "  {\n" +
-    "    return " + clipfunction + ";\n" +
+    "    return " + clipFunction + ";\n" +
     "  }\n" +
     "\n" +
     "  virtual string identify()\n" +
-    "  { return string(\"" + string_Cify(clipfunction) + "\"); }\n" +
+    "  { return string(\"" + string_Cify(clipFunction) + "\"); }\n" +
     "};\n";
 
   rval->add_include(include_path);

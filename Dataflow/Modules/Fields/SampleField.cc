@@ -64,55 +64,77 @@ namespace SCIRun {
 
 class SampleField : public Module
 {
-  FieldIPort     *ifport_;
-  FieldOPort     *ofport_;  
-  GeometryOPort  *ogport_;
-
-  BBox           ifield_bbox_;
-  BBox           ring_bbox_;
-  BBox           frame_bbox_;
-  int            widgetid_;
-  int            wtype_;   // 0 none, 1 rake, 2 ring, 3 frame
-  Point          endpoint0_;
-  Point          endpoint1_;
-
-  GuiString gui_wtype_;
-  GuiInt    endpoints_;
-  GuiDouble endpoint0x_;
-  GuiDouble endpoint0y_;
-  GuiDouble endpoint0z_;
-  GuiDouble endpoint1x_;
-  GuiDouble endpoint1y_;
-  GuiDouble endpoint1z_;
-  GuiDouble widgetscale_;
-  GuiString ringstate_;
-  GuiString framestate_;
-
-  GuiDouble maxSeeds_;
-  GuiInt numSeeds_;
-  GuiInt rngSeed_;
-  GuiInt rngInc_;
-  GuiInt clamp_;
-  GuiInt autoexec_;
-  GuiString randDistribution_;
-  GuiString whichTab_;
-  GuiInt force_rake_reset_;
-
-  CrowdMonitor widget_lock_;
-  GaugeWidget *rake_;
-  RingWidget *ring_;
-  FrameWidget *frame_;
-
-  void execute_rake(FieldHandle ifield);
-  void execute_ring(FieldHandle ifield);
-  void execute_frame(FieldHandle ifield);
-  void execute_random(FieldHandle ifield);
-  bool bbox_similar_to(const BBox &a, const BBox &b);
 public:
   SampleField(GuiContext* ctx);
   virtual ~SampleField();
   virtual void execute();
   virtual void widget_moved(bool last, BaseWidget*);
+
+private:
+  GuiString gui_wtype_;
+  GuiInt    gui_endpoints_;
+  GuiDouble gui_endpoint0x_;
+  GuiDouble gui_endpoint0y_;
+  GuiDouble gui_endpoint0z_;
+  GuiDouble gui_endpoint1x_;
+  GuiDouble gui_endpoint1y_;
+  GuiDouble gui_endpoint1z_;
+  GuiDouble gui_widgetscale_;
+  GuiString gui_ringstate_;
+  GuiString gui_framestate_;
+
+  GuiDouble gui_maxSeeds_;
+  GuiInt gui_numSeeds_;
+  GuiInt gui_rngSeed_;
+  GuiInt gui_rngInc_;
+  GuiInt gui_clamp_;
+  GuiInt gui_autoexec_;
+  GuiString gui_randdist_;
+  GuiString gui_whichTab_;
+  GuiInt gui_force_rake_reset_;
+
+  CrowdMonitor gui_widget_lock_;
+
+  GaugeWidget *rake_;
+  RingWidget *ring_;
+  FrameWidget *frame_;
+
+  int widgetid_;
+  int wtype_;      // 0 none, 1 rake, 2 ring, 3 frame
+
+
+  string whichTab_; // widget type name
+  string swtype_;   // widget type name
+
+  double maxSeeds_;
+  int numSeeds_;
+  string randdist_;
+  int rngSeed_;
+  int rngInc_;
+  int clamp_;
+
+  bool widget_change_;
+
+  FieldHandle fHandle_;
+
+  int fGeneration_;
+
+  bool error_;
+
+
+  BBox  ifield_bbox_;
+  BBox  ring_bbox_;
+  BBox  frame_bbox_;
+  Point endpoint0_;
+  Point endpoint1_;
+
+  GeometryOPort  *ogport_;
+
+  FieldHandle execute_rake(FieldHandle ifield);
+  FieldHandle execute_ring(FieldHandle ifield);
+  FieldHandle execute_frame(FieldHandle ifield);
+  FieldHandle execute_random(FieldHandle ifield);
+  bool bbox_similar_to(const BBox &a, const BBox &b);
 };
 
 
@@ -121,34 +143,40 @@ DECLARE_MAKER(SampleField)
 
 SampleField::SampleField(GuiContext* ctx)
   : Module("SampleField", ctx, Filter, "FieldsCreate", "SCIRun"),
-    widgetid_(0),
-    wtype_(0),
     gui_wtype_(ctx->subVar("wtype")),
-    endpoints_ (ctx->subVar("endpoints")),
-    endpoint0x_(ctx->subVar("endpoint0x")),
-    endpoint0y_(ctx->subVar("endpoint0y")),
-    endpoint0z_(ctx->subVar("endpoint0z")),
-    endpoint1x_(ctx->subVar("endpoint1x")),
-    endpoint1y_(ctx->subVar("endpoint1y")),
-    endpoint1z_(ctx->subVar("endpoint1z")),
-    widgetscale_(ctx->subVar("widgetscale")),
-    ringstate_(ctx->subVar("ringstate")),
-    framestate_(ctx->subVar("framestate")),
-    maxSeeds_(ctx->subVar("maxseeds")),
-    numSeeds_(ctx->subVar("numseeds")),
-    rngSeed_(ctx->subVar("rngseed")),
-    rngInc_(ctx->subVar("rnginc")),
-    clamp_(ctx->subVar("clamp")),
-    autoexec_(ctx->subVar("autoexecute")),
-    randDistribution_(ctx->subVar("dist")),
-    whichTab_(ctx->subVar("whichtab")),
-    force_rake_reset_(ctx->subVar("force-rake-reset", false)),
-    widget_lock_("SampleField widget lock"),
+    gui_endpoints_ (ctx->subVar("endpoints")),
+    gui_endpoint0x_(ctx->subVar("endpoint0x")),
+    gui_endpoint0y_(ctx->subVar("endpoint0y")),
+    gui_endpoint0z_(ctx->subVar("endpoint0z")),
+    gui_endpoint1x_(ctx->subVar("endpoint1x")),
+    gui_endpoint1y_(ctx->subVar("endpoint1y")),
+    gui_endpoint1z_(ctx->subVar("endpoint1z")),
+    gui_widgetscale_(ctx->subVar("widgetscale")),
+    gui_ringstate_(ctx->subVar("ringstate")),
+    gui_framestate_(ctx->subVar("framestate")),
+    gui_maxSeeds_(ctx->subVar("maxseeds")),
+    gui_numSeeds_(ctx->subVar("numseeds")),
+    gui_rngSeed_(ctx->subVar("rngseed")),
+    gui_rngInc_(ctx->subVar("rnginc")),
+    gui_clamp_(ctx->subVar("clamp")),
+    gui_autoexec_(ctx->subVar("autoexecute")),
+    gui_randdist_(ctx->subVar("dist")),
+    gui_whichTab_(ctx->subVar("whichtab")),
+    gui_force_rake_reset_(ctx->subVar("force-rake-reset", false)),
+
+    gui_widget_lock_("SampleField widget lock"),
+
     rake_(0),
     ring_(0),
-    frame_(0)
+    frame_(0),
+
+    widgetid_(0),
+
+    widget_change_(0),
+    fGeneration_(-1),
+    error_(0)
 {
-  endpoints_.set( 0 );
+  gui_endpoints_.set( 0 );
 }
 
 
@@ -163,34 +191,33 @@ SampleField::~SampleField()
 void
 SampleField::widget_moved(bool last, BaseWidget*)
 {
-  if (last)
-  {
-    if (rake_)
-    {
+  if (last) {
+    if (rake_) {
       rake_->GetEndpoints(endpoint0_, endpoint1_);
       double ratio = rake_->GetRatio();
       if (ratio < 0.0001) ratio = 0.0001; // To avoid infinte loop
       double num_seeds = Max(0.0, 1.0/ratio+1.0);
-      maxSeeds_.set(num_seeds);
+      gui_maxSeeds_.set(num_seeds);
 
-      endpoint0x_.set( endpoint0_.x() );
-      endpoint0y_.set( endpoint0_.y() );
-      endpoint0z_.set( endpoint0_.z() );
-      endpoint1x_.set( endpoint1_.x() );
-      endpoint1y_.set( endpoint1_.y() );
-      endpoint1z_.set( endpoint1_.z() );
+      gui_endpoint0x_.set( endpoint0_.x() );
+      gui_endpoint0y_.set( endpoint0_.y() );
+      gui_endpoint0z_.set( endpoint0_.z() );
+      gui_endpoint1x_.set( endpoint1_.x() );
+      gui_endpoint1y_.set( endpoint1_.y() );
+      gui_endpoint1z_.set( endpoint1_.z() );
+      
+      widget_change_ = true;
     }
 
-    autoexec_.reset();
-    if (autoexec_.get())
-    {
+    gui_autoexec_.reset();
+    if (gui_autoexec_.get())
       want_to_execute();
-    }
+
   } else { // rescaling the widget forces a "last=false" widget_moved event
-    if (rake_)
-      {
-	widgetscale_.set(rake_->GetScale());
-      }
+    if (rake_) {
+      gui_widgetscale_.set(rake_->GetScale());
+      widget_change_ = true;
+    }
   }
 }
 
@@ -198,20 +225,13 @@ SampleField::widget_moved(bool last, BaseWidget*)
 static bool
 check_ratio(double x, double y, double lower, double upper)
 {
-  if (fabs(x) < 1e-6)
-  {
+  if (fabs(x) < 1e-6) {
     if (!(fabs(y) < 1e-6))
-    {
       return false;
-    }
-  }
-  else
-  {
+  } else {
     const double ratio = y / x;
     if (ratio < lower || ratio > upper)
-    {
       return false;
-    }
   }
   return true;
 }
@@ -232,14 +252,13 @@ SampleField::bbox_similar_to(const BBox &a, const BBox &b)
 }
 
 
-
-void
+FieldHandle
 SampleField::execute_rake(FieldHandle ifield)
 {
   const BBox ibox = ifield->mesh()->get_bounding_box();
-  if (!bbox_similar_to(ifield_bbox_, ibox) || force_rake_reset_.get())
+  if (!bbox_similar_to(ifield_bbox_, ibox) || gui_force_rake_reset_.get())
   {
-    if (!endpoints_.get() || ifield_bbox_.valid() || force_rake_reset_.get())
+    if (!gui_endpoints_.get() || ifield_bbox_.valid() || gui_force_rake_reset_.get())
     {
       const Point &min = ibox.min();
       const Point &max = ibox.max();
@@ -251,47 +270,44 @@ SampleField::execute_rake(FieldHandle ifield)
   
       // This size seems empirically good.
       const double quarterl2norm = sqrt(dx * dx + dy * dy + dz * dz) / 4.0;
-      widgetscale_.set( quarterl2norm * .06 );
+      gui_widgetscale_.set( quarterl2norm * .06 );
 
-      endpoint0x_.set( center.x() - quarterl2norm     );
-      endpoint0y_.set( center.y() - quarterl2norm / 3 );
-      endpoint0z_.set( center.z() - quarterl2norm / 4 );
-      endpoint1x_.set( center.x() + quarterl2norm     );
-      endpoint1y_.set( center.y() + quarterl2norm / 2 );
-      endpoint1z_.set( center.z() + quarterl2norm / 3 );
+      gui_endpoint0x_.set( center.x() - quarterl2norm     );
+      gui_endpoint0y_.set( center.y() - quarterl2norm / 3 );
+      gui_endpoint0z_.set( center.z() - quarterl2norm / 4 );
+      gui_endpoint1x_.set( center.x() + quarterl2norm     );
+      gui_endpoint1y_.set( center.y() + quarterl2norm / 2 );
+      gui_endpoint1z_.set( center.z() + quarterl2norm / 3 );
 
-      endpoints_.set( 1 );
+      gui_endpoints_.set( 1 );
     }
 
-    endpoint0_ = Point(endpoint0x_.get(),endpoint0y_.get(),endpoint0z_.get()); 
-    endpoint1_ = Point(endpoint1x_.get(),endpoint1y_.get(),endpoint1z_.get()); 
+    endpoint0_ = Point(gui_endpoint0x_.get(),gui_endpoint0y_.get(),gui_endpoint0z_.get()); 
+    endpoint1_ = Point(gui_endpoint1x_.get(),gui_endpoint1y_.get(),gui_endpoint1z_.get()); 
 
-    if (rake_)
-    {
+    if (rake_) {
       rake_->SetEndpoints(endpoint0_, endpoint1_);
       rake_->SetRatio(1/16.0);
-      rake_->SetScale(widgetscale_.get());
+      rake_->SetScale(gui_widgetscale_.get());
       if (wtype_ == 1) { ogport_->flushViews(); }
     }
 
     ifield_bbox_ = ibox;
-    force_rake_reset_.set(0);
+    gui_force_rake_reset_.set(0);
   }
 
-  if (!rake_)
-  {
-    rake_ = scinew GaugeWidget(this, &widget_lock_, widgetscale_.get(), true);
+  if (!rake_) {
+    rake_ = scinew GaugeWidget(this, &gui_widget_lock_, gui_widgetscale_.get(), true);
     rake_->Connect(ogport_);
     rake_->SetEndpoints(endpoint0_,endpoint1_);
-    rake_->SetScale(widgetscale_.get());
+    rake_->SetScale(gui_widgetscale_.get());
     rake_->SetRatio(1/16.0);
   }
 
-  if (wtype_ != 1)
-  {
+  if (wtype_ != 1) {
     if (widgetid_)  { ogport_->delObj(widgetid_); }
     GeomHandle widget = rake_->GetWidget();
-    widgetid_ = ogport_->addObj(widget, "SampleField Rake", &widget_lock_);
+    widgetid_ = ogport_->addObj(widget, "SampleField Rake", &gui_widget_lock_);
     ogport_->flushViews();
     wtype_ = 1;
   }
@@ -300,15 +316,9 @@ SampleField::execute_rake(FieldHandle ifield)
   rake_->GetEndpoints(min, max);
   
   Vector dir(max-min);
-  double num_seeds = Max(0.0, maxSeeds_.get());
-  if (num_seeds <= 0)
-  {
-    remark("No seeds to send.");
-    return;
-  }
+  double num_seeds = Max(0.0, gui_maxSeeds_.get());
   remark("num_seeds = " + to_string(num_seeds));
-  if (num_seeds > 1)
-  {
+  if (num_seeds > 1) {
     const double ratio = 1.0/(num_seeds-1.0);
     rake_->SetRatio(ratio);
     dir *= ratio;
@@ -317,9 +327,7 @@ SampleField::execute_rake(FieldHandle ifield)
   PointCloudMesh* mesh = scinew PointCloudMesh;
   int loop;
   for (loop=0; loop<=(num_seeds-0.99999); ++loop)
-  {
     mesh->add_node(min+dir*loop);
-  }
 
   mesh->freeze();
   PointCloudField<double> *seeds =
@@ -327,50 +335,44 @@ SampleField::execute_rake(FieldHandle ifield)
   PointCloudField<double>::fdata_type &fdata = seeds->fdata();
   
   for (loop=0;loop<(num_seeds-0.99999);++loop)
-  {
     fdata[loop]=loop;
-  }
+
   seeds->freeze();
-  ofport_->send(seeds);
 
   update_state(Completed);
+
+  return seeds;
 }
 
 
-void
+FieldHandle
 SampleField::execute_ring(FieldHandle ifield)
 {
   const BBox ibox = ifield->mesh()->get_bounding_box();
-  bool reset = force_rake_reset_.get();
-  force_rake_reset_.set(0);
+  bool reset = gui_force_rake_reset_.get();
+  gui_force_rake_reset_.set(0);
   bool resize = ring_bbox_.valid() && !bbox_similar_to(ring_bbox_, ibox);
-  if (!ring_)
-  {
-    ring_ = scinew RingWidget(this, &widget_lock_, widgetscale_.get(), false);
+
+  if (!ring_) {
+    ring_ = scinew RingWidget(this, &gui_widget_lock_, gui_widgetscale_.get(), false);
     ring_->Connect(ogport_);
 
-    if (ringstate_.get() != "")
-    {
-      cout << "Setting state, reset = " << reset << "\n";
-      ring_->SetStateString(ringstate_.get());
+    if (gui_ringstate_.get() != "") {
+      ring_->SetStateString(gui_ringstate_.get());
 
       // Check for state validity here.  If not valid then // reset = true;
-    }
-    else
-    {
+    } else {
       reset = true;
     }
   }
 
-  if (reset || resize)
-  {
+  if (reset || resize) {
     Point c, nc;
     Vector n, nn;
     double r, nr;
     double s, ns;
 
-    if (reset)
-    {
+    if (reset) {
       const Vector xaxis(0.0, 0.0, 0.2);
       const Vector yaxis(0.2, 0.0, 0.0);
       c = Point (0.5, 0.0, 0.0);
@@ -381,9 +383,7 @@ SampleField::execute_ring(FieldHandle ifield)
       ring_bbox_.reset();
       ring_bbox_.extend(Point(-1.0, -1.0, -1.0));
       ring_bbox_.extend(Point(1.0, 1.0, 1.0));
-    }
-    else
-    {
+    } else {
       // Get the old coordinates.
       ring_->GetPosition(c, n, r);
       s = ring_->GetScale();
@@ -408,26 +408,20 @@ SampleField::execute_ring(FieldHandle ifield)
     ring_->SetPosition(nc, nn, nr);
     ring_->SetRadius(nr);
     ring_->SetScale(ns);
-    widgetscale_.set(ns);
+    gui_widgetscale_.set(ns);
 
     ring_bbox_ = ibox;
   }
 
-  if (wtype_ != 2)
-  {
+  if (wtype_ != 2) {
     if (widgetid_)  { ogport_->delObj(widgetid_); }
     GeomHandle widget = ring_->GetWidget();
-    widgetid_ = ogport_->addObj(widget, "SampleField Ring", &widget_lock_);
+    widgetid_ = ogport_->addObj(widget, "SampleField Ring", &gui_widget_lock_);
     ogport_->flushViews();
     wtype_ = 2;
   }
   
-  double num_seeds = Max(0.0, maxSeeds_.get());
-  if (num_seeds <= 0)
-  {
-    remark("No seeds to send.");
-    return;
-  }
+  double num_seeds = Max(0.0, gui_maxSeeds_.get());
   remark("num_seeds = " + to_string(num_seeds));
 
   PointCloudMesh* mesh = scinew PointCloudMesh;
@@ -437,8 +431,7 @@ SampleField::execute_ring(FieldHandle ifield)
   Vector normal, xaxis, yaxis;
   ring_->GetPosition(center, normal, r);
   ring_->GetPlane(xaxis, yaxis);
-  for (int i = 0; i < num_seeds; i++)
-  {
+  for (int i = 0; i < num_seeds; i++) {
     const double frac = 2.0 * M_PI * i / num_seeds;
     mesh->add_node(center + xaxis * r * cos(frac) + yaxis * r * sin(frac));
   }
@@ -448,48 +441,42 @@ SampleField::execute_ring(FieldHandle ifield)
     scinew PointCloudField<double>(mesh, 1);
   PointCloudField<double>::fdata_type &fdata = seeds->fdata();
   
-  for (int loop=0; loop<num_seeds; ++loop)
-  {
+  for (int loop=0; loop<num_seeds; ++loop) {
     fdata[loop]=loop;
   }
   seeds->freeze();
-  ofport_->send(seeds);
 
   update_state(Completed);
+
+  return seeds;
 }
 
 
-void
+FieldHandle
 SampleField::execute_frame(FieldHandle ifield)
 {
   const BBox ibox = ifield->mesh()->get_bounding_box();
-  bool reset = force_rake_reset_.get();
-  force_rake_reset_.set(0);
+  bool reset = gui_force_rake_reset_.get();
+  gui_force_rake_reset_.set(0);
   bool resize = frame_bbox_.valid() && !bbox_similar_to(frame_bbox_, ibox);
-  if (!frame_)
-  {
-    frame_ = scinew FrameWidget(this, &widget_lock_, widgetscale_.get());
+  if (!frame_) {
+    frame_ = scinew FrameWidget(this, &gui_widget_lock_, gui_widgetscale_.get());
     frame_->Connect(ogport_);
 
-    if (framestate_.get() != "")
-    {
-      frame_->SetStateString(framestate_.get());
+    if (gui_framestate_.get() != "") {
+      frame_->SetStateString(gui_framestate_.get());
 
       // Check for state validity here.  If not valid then // reset = true;
-    }
-    else
-    {
+    } else {
       reset = true;
     }
   }
 
-  if (reset || resize)
-  {
+  if (reset || resize) {
     Point c, nc, r, nr, d, nd;
     double s, ns;
 
-    if (reset)
-    {
+    if (reset) {
       c = Point(0.5, 0.0, 0.0);
       r = c + Vector(0.0, 0.0, 0.2);
       d = c + Vector(0.2, 0.0, 0.0);
@@ -498,9 +485,7 @@ SampleField::execute_frame(FieldHandle ifield)
       frame_bbox_.reset();
       frame_bbox_.extend(Point(-1.0, -1.0, -1.0));
       frame_bbox_.extend(Point(1.0, 1.0, 1.0));
-    }
-    else
-    {
+    } else {
       // Get the old coordinates.
       frame_->GetPosition(c, r, d);
       s = frame_->GetScale();
@@ -524,26 +509,21 @@ SampleField::execute_frame(FieldHandle ifield)
     // Apply the new coordinates.
     frame_->SetPosition(nc, nr, nd);
     frame_->SetScale(ns);
-    widgetscale_.set(ns);
+    gui_widgetscale_.set(ns);
 
     frame_bbox_ = ibox;
   }
 
-  if (wtype_ != 3)
-  {
+  if (wtype_ != 3) {
     if (widgetid_) { ogport_->delObj(widgetid_); }
     GeomHandle widget = frame_->GetWidget();
-    widgetid_ = ogport_->addObj(widget, "SampleField Frame", &widget_lock_);
+    widgetid_ = ogport_->addObj(widget, "SampleField Frame", &gui_widget_lock_);
     ogport_->flushViews();
     wtype_ = 3;
   }
 
-  double num_seeds = Max(0.0, maxSeeds_.get());
-  if (num_seeds <= 0)
-  {
-    remark("No seeds to send.");
-    return;
-  }
+  double num_seeds = Max(0.0, gui_maxSeeds_.get());
+
   remark("num_seeds = " + to_string(num_seeds));
 
   PointCloudMesh* mesh = scinew PointCloudMesh;
@@ -562,8 +542,7 @@ SampleField::execute_frame(FieldHandle ifield)
   edge[1] = corner[2] - corner[1];
   edge[2] = corner[3] - corner[2];
   edge[3] = corner[0] - corner[3];
-  for (int i = 0; i < num_seeds; i++)
-  {
+  for (int i = 0; i < num_seeds; i++) {
     const double frac =  4.0 * i / num_seeds;
     const int ei = (int)frac;
     const double eo = frac - ei;
@@ -576,97 +555,151 @@ SampleField::execute_frame(FieldHandle ifield)
   PointCloudField<double>::fdata_type &fdata = seeds->fdata();
   
   for (int loop=0; loop<num_seeds; ++loop)
-  {
     fdata[loop]=loop;
-  }
+
   seeds->freeze();
-  ofport_->send(seeds);
 
   update_state(Completed);
+
+  return seeds;
 }
 
 
-void
+FieldHandle
 SampleField::execute_random(FieldHandle ifield)
 {
   const TypeDescription *mtd = ifield->mesh()->get_type_description();
   CompileInfoHandle ci = SampleFieldRandomAlgo::get_compile_info(mtd);
   Handle<SampleFieldRandomAlgo> algo;
-  if (!module_dynamic_compile(ci, algo)) return;
-  FieldHandle seedhandle(algo->execute(this, ifield, numSeeds_.get(),
-				       rngSeed_.get(),
-				       randDistribution_.get(), 
-				       clamp_.get()));
-  if (rngInc_.get())
-  {
-    rngSeed_.set(rngSeed_.get()+1);
-  }
+  if (!module_dynamic_compile(ci, algo)) return 0;
 
-  if (widgetid_)
-  {
+  FieldHandle seedhandle(algo->execute(this, ifield, numSeeds_,
+				       rngSeed_, randdist_, clamp_));
+  if (rngInc_)
+    gui_rngSeed_.set(rngSeed_+1);
+
+  if (widgetid_) {
     ogport_->delObj(widgetid_);
     ogport_->flushViews();
     widgetid_ = 0;
     wtype_ = 0;
   }
 
-  ofport_->send(seedhandle);
-
   update_state(Completed);
-}
 
+ return seedhandle;
+}
 
 
 void
 SampleField::execute()
 {
-  ifport_ = (FieldIPort *)get_iport("Field to Sample");
-  ofport_ = (FieldOPort *)get_oport("Samples");
   ogport_ = (GeometryOPort *)get_oport("Sampling Widget");
 
-  if (!ifport_) {
-    error("Unable to initialize iport 'Field to Sample'.");
-    return;
-  }
-  if (!ofport_)  {
-    error("Unable to initialize oport 'Samples'.");
-    return;
-  }
   if (!ogport_) {
     error("Unable to initialize oport 'Sampling Widget'.");
     return;
   }
-  FieldHandle ifield;
+
+  FieldIPort *ifport = (FieldIPort *)get_iport("Field to Sample");
+  if (!ifport) {
+    error("Unable to initialize iport 'Field to Sample'.");
+    return;
+  }
+
+  FieldHandle fHandle;
   // The field input is required.
-  if (!ifport_->get(ifield) || !ifield.get_rep())
-  {
+  if (!(ifport->get(fHandle) && fHandle.get_rep())) {
     error("Required input field is empty.");
     return;
   }
 
-  if (ring_) { ringstate_.set(ring_->GetStateString()); }
-  if (frame_) { framestate_.set(frame_->GetStateString()); }
+  bool update = gui_force_rake_reset_.get();
 
-  const string &tab = whichTab_.get();
-  const string &wtype = gui_wtype_.get();
-  if (tab == "Widget")
-  {
-    if (wtype == "rake")
-    {
-      execute_rake(ifield);
-    }
-    else if (wtype == "ring")
-    {
-      execute_ring(ifield);
-    }
-    else if (wtype == "frame")
-    {
-      execute_frame(ifield);
+  // Check to see if the source field has changed.
+  if( fGeneration_ != fHandle->generation ) {
+    fGeneration_ = fHandle->generation;
+    update = true;
+  }
+
+  if (ring_ ) { gui_ringstate_.set(ring_->GetStateString()); }
+  if (frame_) { gui_framestate_.set(frame_->GetStateString()); }
+
+  // See if the tab has changed.
+  string whichTab = gui_whichTab_.get();
+
+  if( whichTab_ != whichTab ) {
+    whichTab_ = whichTab;
+    update = true;
+  }
+
+  if (whichTab == "Widget") {
+
+    // See if the widget type or number seeds has changed.
+    string swtype = gui_wtype_.get();
+    double maxSeeds = gui_maxSeeds_.get();
+
+    if( !fHandle_.get_rep() ||
+	update ||
+	widget_change_ ||
+	swtype_ != swtype ||
+	maxSeeds_ != maxSeeds ||
+	error_ ) {
+
+      widget_change_ = false;
+      swtype_ = swtype;
+      maxSeeds_ = maxSeeds;
+
+      error_ = false;
+
+      if (swtype == "rake")
+	fHandle_ = execute_rake(fHandle);
+      else if (swtype == "ring")
+	fHandle_ = execute_ring(fHandle);
+      else if (swtype == "frame")
+	fHandle_ = execute_frame(fHandle);
     }
   }
-  else if (tab == "Random")
-  {
-    execute_random(ifield);
+  else if (whichTab == "Random") {
+    int numSeeds = gui_numSeeds_.get();
+    string randdist = gui_randdist_.get();
+    int rngSeed  = gui_rngSeed_.get();
+    int rngInc   = gui_rngInc_.get();
+    int clamp   = gui_clamp_.get();
+
+    if( numSeeds_ != numSeeds ||
+	randdist_ != randdist ||
+	rngSeed_  != rngSeed ||
+	rngInc_   != rngInc  ||
+	clamp_    != clamp ) {
+
+      numSeeds_ = numSeeds;
+      randdist_ = randdist;
+      rngSeed_  = rngSeed;
+      rngInc_   = rngInc;
+      clamp_    = clamp;
+
+      update = true;
+   }
+
+    if( !fHandle_.get_rep() ||
+	update ||
+	error_ ) {
+      error_ = false;
+
+      fHandle_ = execute_random(fHandle);
+    }
+  }
+
+
+  if( fHandle_.get_rep() ) {
+    FieldOPort *ofield_port = (FieldOPort *)get_oport("Samples");
+    if (!ofield_port) {
+      error("Unable to initialize oport 'Samples'.");
+      return;
+    }
+
+    ofield_port->send(fHandle_);
   }
 }
 
