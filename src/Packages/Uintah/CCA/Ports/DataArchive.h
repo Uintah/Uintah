@@ -449,7 +449,7 @@ private:
 	  patch = ((LevelP)level)->getPatchFromPoint(level->getNodePosition(loc));
 	  break;
 	default:
-	  // Dd: Should this be an ERROR!?
+	  cerr << "Variable of unsupported type for this cell-based query: " << type->getType() << '\n';
 	  break;
 	}
       }
@@ -468,6 +468,7 @@ private:
 	query(var, name, matlIndex, patch, t);
 	values.push_back(var[loc]);
       } break;
+
       }
     }
     
