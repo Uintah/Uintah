@@ -41,7 +41,7 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps): Material(ps)
    // Step 2 -- get the general material properties
    ps->require("thermal_conductivity",d_thermalConductivity);
    ps->require("specific_heat",d_specificHeat);
-   ps->require("viscosity",d_viscosity);
+   ps->require("dynamic_viscosity",d_viscosity);
    ps->require("speed_of_sound",d_speed_of_sound);
    ps->require("gamma",d_gamma);
    
