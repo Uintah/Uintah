@@ -379,11 +379,18 @@ PPPLNrrdConverter::execute(){
 	return;
       }
 
-      for( int ic=1; ic<nHandle->nrrd->dim; ic++ ) {
+      if( data_.size() == 3 || data_.size() == 6 ) {
+	if( dataset[0].find( ":Scalar" ) == std::string::npos ) {
+	  error( "Bad tuple axis - data type must be scalar. Found:" );
+	  error( dataset[0] );
+	  error_ = true;
+	  return;
+	}
+      }
 
+      for( int ic=1; ic<nHandle->nrrd->dim; ic++ )
 	if( nHandle->nrrd->axis[ic].size != 1 )
 	  ddims.push_back( nHandle->nrrd->axis[ic].size );
-      }
 
       if( ddims.size() == mdims.size() ||
 	  ddims.size() == mdims.size() + 1 ) {
