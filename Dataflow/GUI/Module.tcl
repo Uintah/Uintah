@@ -363,6 +363,7 @@ itcl_class Module {
     }
     
     method update_progress {} {
+	if { !($progress >= 0) } { set progress 0 }
 	set width [expr int($progress*($graph_width-4))]
 	if {!$make_progress_graph || $width == $old_width } return
 	global Subnet
