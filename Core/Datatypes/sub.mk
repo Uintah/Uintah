@@ -46,6 +46,7 @@ SRCS += $(SRCDIR)/Brick.cc		    \
 	$(SRCDIR)/Polygon.cc \
 	$(SRCDIR)/SliceTable.cc \
 	$(SRCDIR)/VolumeUtils.cc \
+	$(SRCDIR)/LatVolMesh.cc \
 
 
 
