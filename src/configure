@@ -943,10 +943,9 @@ where DIR points to the --prefix option specified when installing ruby.  A stand
 where DIR points to the --prefix option specified when installing ruby.  A standard ruby install defaults to --prefix=/usr/localinstallation
 where DIR points to the --prefix option specified when installing ruby.  A standard ruby install defaults to --prefix=/usr/localin
 where DIR points to the --prefix option specified when installing ruby.  A standard ruby install defaults to --prefix=/usr/localDIR
---with-vtk=DIR          Build the VTK components. Use VTK build in DIR
---with-vtklibraries=DIR Build the VTK components. Use the vtk libraries in
-                          DIR
---with-vtkheaders=DIR   Build the VTK components. Use the vtk headers in DIR
+--with-vtk=DIR              Build the VTK components. Use VTK build in DIR.
+which is /usr/local by defaultDIR should be the directory specified in the VTK
+which is /usr/local by defaultCMake variable CMAKE_INSTALL_PREFIX
 --with-opengl=DIR       Use the OpenGL installation in DIR
 --with-zlib=DIR         Use the zlib installation in DIR
 --with-jpeg=DIR         Use the jpeg installation in DIR
@@ -1927,42 +1926,6 @@ fi;
   if test -n "$vtk" -a ! -e "$vtk"; then
     { { echo "$as_me:$LINENO: error: The file or directory parameter ($vtk) specified for --with-vtk does not exist!  Please verify that the path and file are correct." >&5
 echo "$as_me: error: The file or directory parameter ($vtk) specified for --with-vtk does not exist!  Please verify that the path and file are correct." >&2;}
-   { (exit 1); exit 1; }; }
-  fi
-
-
-
-
-# Check whether --with-vtklibraries or --without-vtklibraries was given.
-if test "${with_vtklibraries+set}" = set; then
-  withval="$with_vtklibraries"
-  with_vtk_libraries="$withval"
-   sci_required_vtk=yes
-else
-  with_vtk_libraries=""
-fi;
-  sci_arg_with_list="$sci_arg_with_list --with-vtklibraries --without-vtklibraries"
-  if test -n "$vtklibraries" -a ! -e "$vtklibraries"; then
-    { { echo "$as_me:$LINENO: error: The file or directory parameter ($vtklibraries) specified for --with-vtklibraries does not exist!  Please verify that the path and file are correct." >&5
-echo "$as_me: error: The file or directory parameter ($vtklibraries) specified for --with-vtklibraries does not exist!  Please verify that the path and file are correct." >&2;}
-   { (exit 1); exit 1; }; }
-  fi
-
-
-
-
-# Check whether --with-vtkheaders or --without-vtkheaders was given.
-if test "${with_vtkheaders+set}" = set; then
-  withval="$with_vtkheaders"
-  with_vtk_headers="$withval"
-   sci_required_vtk=yes
-else
-  with_vtk_headers=""
-fi;
-  sci_arg_with_list="$sci_arg_with_list --with-vtkheaders --without-vtkheaders"
-  if test -n "$vtkheaders" -a ! -e "$vtkheaders"; then
-    { { echo "$as_me:$LINENO: error: The file or directory parameter ($vtkheaders) specified for --with-vtkheaders does not exist!  Please verify that the path and file are correct." >&5
-echo "$as_me: error: The file or directory parameter ($vtkheaders) specified for --with-vtkheaders does not exist!  Please verify that the path and file are correct." >&2;}
    { (exit 1); exit 1; }; }
   fi
 
@@ -4230,7 +4193,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:4233:" \
+echo "$as_me:4196:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -31067,18 +31030,13 @@ fi # end sci_required_ruby
 
 ##  --  search for vtk  ----------------------------------------------------
 if test "$sci_required_vtk" = "yes"; then
-  if test "$with_vtk_libraries"; then
-    _sci_lib="$with_vtk_libraries"
+  if test "$with_vtk"; then
+    _sci_lib="$with_vtk/lib/vtk"
+    _vtk_inc="$with_vtk/include/vtk"
   else
     _sci_lib="$sci_thirdparty_libs"
+    _vtk_inc="$sci_thirdparty_includes"
   fi
-
-  if test "$with_vtk_headers"; then
-     _vtk_inc="$with_vtk_headers"
-  else
-     _vtk_inc="$sci_thirdparty_includes"
-  fi
-
 
   # Only looking for one .h file... assuming all the rest are in the same place.
 

@@ -277,22 +277,10 @@ SCI_ARG_WITH(ruby,
   [with_ruby=""])
 SCI_ARG_WITH(vtk,
   AC_HELP_STRING(--with-vtk=DIR,
-                 Build the VTK components. Use VTK build in DIR),
+                 Build the VTK components. Use VTK build in DIR.  DIR should be the directory specified in the VTK CMake variable CMAKE_INSTALL_PREFIX, which is /usr/local by default),
   [with_vtk="$withval"
    sci_required_vtk=yes],
   [with_vtk=""])
-SCI_ARG_WITH(vtklibraries,
-  AC_HELP_STRING(--with-vtklibraries=DIR,
-                 Build the VTK components. Use the vtk libraries in DIR),
-  [with_vtk_libraries="$withval"
-   sci_required_vtk=yes],
-  [with_vtk_libraries=""])
-SCI_ARG_WITH(vtkheaders,
-  AC_HELP_STRING(--with-vtkheaders=DIR,
-                 Build the VTK components. Use the vtk headers in DIR),
-  [with_vtk_headers="$withval"
-   sci_required_vtk=yes],
-  [with_vtk_headers=""])
 SCI_ARG_WITH(opengl,
   AC_HELP_STRING(--with-opengl=DIR,
                  Use the OpenGL installation in DIR),
@@ -3305,18 +3293,13 @@ AC_SUBST(RUBY_LIB_DIR_FLAG)
 
 ##  --  search for vtk  ----------------------------------------------------
 if test "$sci_required_vtk" = "yes"; then
-  if test "$with_vtk_libraries"; then
-    _sci_lib="$with_vtk_libraries"
+  if test "$with_vtk"; then
+    _sci_lib="$with_vtk/lib/vtk"
+    _vtk_inc="$with_vtk/include/vtk"
   else
     _sci_lib="$sci_thirdparty_libs"
+    _vtk_inc="$sci_thirdparty_includes"
   fi
-
-  if test "$with_vtk_headers"; then
-     _vtk_inc="$with_vtk_headers"
-  else
-     _vtk_inc="$sci_thirdparty_includes"
-  fi
-
   
   # Only looking for one .h file... assuming all the rest are in the same place.
   SCI_TRY_LINK(VTK,vtk library, vtkImageData.h,$_vtk_inc,vtkCommon vtkFiltering vtkGraphics vtkImaging vtkRendering vtkIO vtkjpeg vtkpng vtkzlib,$_sci_lib,,,optional)
