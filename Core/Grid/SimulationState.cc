@@ -30,7 +30,7 @@ SimulationState::SimulationState(ProblemSpecP &ps)
     phys_cons_ps->require("gravity",d_gravity);
     phys_cons_ps->get("reference_pressure",d_ref_press);
   } else {
-    d_gravity=0;
+    d_gravity=Vector(0,0,0);
     d_ref_press=0;
   }
 
