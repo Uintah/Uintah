@@ -3,8 +3,22 @@
 #include <Packages/Uintah/CCA/Components/SimulationController/SimulationController.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
+#include <Packages/Uintah/Core/Grid/SimulationTime.h>
+#include <Packages/Uintah/Core/Grid/Grid.h>
+#include <Packages/Uintah/Core/Grid/VarTypes.h>
+#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Packages/Uintah/CCA/Ports/ProblemSpecInterface.h>
+#include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
+#include <Packages/Uintah/CCA/Ports/Regridder.h>
+#include <Packages/Uintah/CCA/Ports/Output.h>
+#include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/OS/ProcessInfo.h>
+#include <Core/OS/Dir.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Thread/Time.h>
 
@@ -24,6 +38,7 @@ using namespace std;
 
 static DebugStream dbg("SimulationStats", true);
 static DebugStream dbgTime("SimulationTimeStats", false);
+static DebugStream simdbg("SimulationController", false);
 
 namespace Uintah {
 
@@ -35,8 +50,8 @@ namespace Uintah {
     return sqrt((n*sum_of_x_squares - sum_of_x*sum_of_x)/(n*n));
   }
 
-  SimulationController::SimulationController(const ProcessorGroup* myworld)
-    : UintahParallelComponent(myworld)
+  SimulationController::SimulationController(const ProcessorGroup* myworld, bool doAMR)
+    : UintahParallelComponent(myworld), d_doAMR(doAMR)
   {
     d_n = 0;
     d_wallTime = 0;
@@ -44,15 +59,260 @@ namespace Uintah {
     d_prevWallTime = 0;
     d_sumOfWallTimes = 0;
     d_sumOfWallTimeSquares = 0;
+
+    d_restarting = false;
+    d_combinePatches = false;
+
   }
 
   SimulationController::~SimulationController()
   {
+    delete d_timeinfo;
   }
 
-  void SimulationController::doCombinePatches(std::string /*fromDir*/)
+  void SimulationController::doCombinePatches(std::string fromDir)
   {
-    throw InternalError("Patch combining not implement for this simulation controller");
+    ASSERT(!d_doAMR);
+    d_combinePatches = true;
+    d_fromDir = fromDir;
+  }
+
+  void SimulationController::doRestart(std::string restartFromDir, int timestep,
+                                       bool fromScratch, bool removeOldDir)
+  {
+    d_restarting = true;
+    d_fromDir = restartFromDir;
+    d_restartTimestep = timestep;
+    d_restartFromScratch = fromScratch;
+    d_restartRemoveOldDir = removeOldDir;
+  }
+
+  void SimulationController::loadUPS( void )
+  {
+    UintahParallelPort* pp = getPort("problem spec");
+    ProblemSpecInterface* psi = dynamic_cast<ProblemSpecInterface*>(pp);
+    
+    if( !psi ){
+      cout << "SimpleSimulationController::run() psi dynamic_cast failed...\n";
+      throw InternalError("psi dynamic_cast failed");
+    }
+    
+    // Get the problem specification
+    d_ups = psi->readInputFile();
+    d_ups->writeMessages(d_myworld->myrank() == 0);
+    if(!d_ups)
+      throw ProblemSetupException("Cannot read problem specification");
+    
+    releasePort("problem spec");
+    
+    if(d_ups->getNodeName() != "Uintah_specification")
+      throw ProblemSetupException("Input file is not a Uintah specification");
+  }
+
+  void SimulationController::preGridSetup( void )
+  {
+    d_sharedState = scinew SimulationState(d_ups);
+    
+    d_output = dynamic_cast<Output*>(getPort("output"));
+    
+    if( !d_output ){
+      cout << "dynamic_cast of 'd_output' failed!\n";
+      throw InternalError("dynamic_cast of 'd_output' failed!");
+    }
+    d_output->problemSetup(d_ups, d_sharedState.get_rep());
+    
+  }
+
+  GridP SimulationController::gridSetup( void ) 
+  {
+    GridP grid;
+
+    // Setup the initial grid.  We need to load it from the data archive
+    // if we're restarting from an AMR grid. 
+
+    if (!d_doAMR || !d_restarting) {
+      grid = scinew Grid;
+      grid->problemSetup(d_ups, d_myworld, d_doAMR);
+      grid->performConsistencyCheck();
+    }
+    else {
+      // create a temporary DataArchive for reading in the grid
+      // for restarting.
+      Dir restartFromDir(d_fromDir);
+      Dir checkpointRestartDir = restartFromDir.getSubdir("checkpoints");
+      DataArchive archive(checkpointRestartDir.getName(),
+                          d_myworld->myrank(), d_myworld->size());
+
+      vector<int> indices;
+      vector<double> times;
+      archive.queryTimesteps(indices, times);
+
+      unsigned i;
+      // find the right time to query the grid
+      if (d_restartTimestep == 0) {
+        i = 0; // timestep == 0 means use the first timestep
+      }
+      else if (d_restartTimestep == -1 && indices.size() > 0) {
+        i = (unsigned int)(indices.size() - 1); 
+      }
+      else {
+        for (i = 0; i < indices.size(); i++)
+          if (indices[i] == d_restartTimestep)
+            break;
+      }
+      
+      if (i == indices.size()) {
+        // timestep not found
+        ostringstream message;
+        message << "Timestep " << d_restartTimestep << " not found";
+        throw InternalError(message.str());
+      }
+      
+      grid = archive.queryGrid(times[i], d_ups.get_rep());
+      
+    }
+    if(grid->numLevels() == 0){
+      throw InternalError("No problem (no levels in grid) specified.");
+    }
+    
+    // Print out meta data
+    if (d_myworld->myrank() == 0)
+      grid->printStatistics();
+    
+    return grid;
+  }
+
+  void SimulationController::restartSetup( GridP& grid, double& t )
+  {
+    simdbg << "Restarting... loading data\n";
+    
+    // create a temporary DataArchive for reading in the checkpoints
+    // archive for restarting.
+    Dir restartFromDir(d_fromDir);
+    Dir checkpointRestartDir = restartFromDir.getSubdir("checkpoints");
+    DataArchive archive(checkpointRestartDir.getName(),
+                        d_myworld->myrank(), d_myworld->size());
+    
+    double delt = 0;
+    
+    archive.restartInitialize(d_restartTimestep, grid, d_scheduler->get_dw(1), d_lb, 
+                              &t, &delt);
+    
+    d_sharedState->setCurrentTopLevelTimeStep( d_restartTimestep );
+    // Tell the scheduler the generation of the re-started simulation.
+    // (Add +1 because the scheduler will be starting on the next
+    // timestep.)
+    d_scheduler->setGeneration( d_restartTimestep+1 );
+    
+    d_scheduler->get_dw(1)->setID( d_restartTimestep );
+    
+    // just in case you want to change the delt on a restart....
+    if (d_timeinfo->override_restart_delt != 0) {
+      double newdelt = d_timeinfo->override_restart_delt;
+      if (d_myworld->myrank() == 0)
+        cout << "Overriding restart delt with " << newdelt << endl;
+      d_scheduler->get_dw(1)->override(delt_vartype(newdelt), 
+                                       d_sharedState->get_delt_label());
+      double delt_fine = newdelt;
+      for(int i=0;i<grid->numLevels();i++){
+        const Level* level = grid->getLevel(i).get_rep();
+        if(i != 0)
+          delt_fine /= level->timeRefinementRatio();
+        d_scheduler->get_dw(1)->override(delt_vartype(delt_fine), d_sharedState->get_delt_label(),
+                                         level);
+      }
+    }
+    d_scheduler->get_dw(1)->finalize();
+    ProblemSpecP pspec = archive.getRestartTimestepDoc();
+    XMLURL url = archive.getRestartTimestepURL();
+    d_lb->restartInitialize(pspec, url);
+    
+    d_output->restartSetup(restartFromDir, 0, d_restartTimestep, t,
+                           d_restartFromScratch, d_restartRemoveOldDir);
+  }
+  
+  void SimulationController::postGridSetup( GridP& grid)
+  {
+    // Initialize the CFD and/or MPM components
+    d_sim = dynamic_cast<SimulationInterface*>(getPort("sim"));
+    if(!d_sim)
+      throw InternalError("No simulation component");
+    d_sim->problemSetup(d_ups, grid, d_sharedState);
+    
+    // Finalize the shared state/materials
+    d_sharedState->finalizeMaterials();
+    
+    Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
+    sched->problemSetup(d_ups);
+    d_scheduler = sched;
+    
+    d_lb = dynamic_cast<LoadBalancer*>
+      (dynamic_cast<SchedulerCommon*>(sched)->getPort("load balancer"));
+    d_lb->problemSetup(d_ups, d_sharedState);
+    
+    // done after the sim->problemSetup to get defaults into the
+    // input.xml, which it writes along with index.xml
+    d_output->initializeOutput(d_ups);
+    
+    // set up regridder with initial infor about grid
+    if (d_doAMR) {
+      d_regridder = dynamic_cast<Regridder*>(getPort("regridder"));
+      d_regridder->problemSetup(d_ups, grid, d_sharedState);
+    }
+
+  }
+
+  void SimulationController::adjustDelT(double& delt, double prev_delt, int iterations, double t) 
+  {
+    delt *= d_timeinfo->delt_factor;
+      
+    if(delt < d_timeinfo->delt_min){
+      if(d_myworld->myrank() == 0)
+        cerr << "WARNING: raising delt from " << delt
+             << " to minimum: " << d_timeinfo->delt_min << '\n';
+      delt = d_timeinfo->delt_min;
+    }
+    if(iterations > 1 && d_timeinfo->max_delt_increase < 1.e90
+       && delt > (1+d_timeinfo->max_delt_increase)*prev_delt){
+      if(d_myworld->myrank() == 0)
+        cerr << "WARNING: lowering delt from " << delt 
+             << " to maxmimum: " << (1+d_timeinfo->max_delt_increase)*prev_delt
+             << " (maximum increase of " << d_timeinfo->max_delt_increase
+             << ")\n";
+      delt = (1+d_timeinfo->max_delt_increase)*prev_delt;
+    }
+    if(t <= d_timeinfo->initial_delt_range && delt > d_timeinfo->max_initial_delt){
+      if(d_myworld->myrank() == 0)
+        cerr << "WARNING: lowering delt from " << delt 
+             << " to maximum: " << d_timeinfo->max_initial_delt
+             << " (for initial timesteps)\n";
+      delt = d_timeinfo->max_initial_delt;
+    }
+    if(delt > d_timeinfo->delt_max){
+      if(d_myworld->myrank() == 0)
+        cerr << "WARNING: lowering delt from " << delt 
+             << " to maximum: " << d_timeinfo->delt_max << '\n';
+      delt = d_timeinfo->delt_max;
+    }
+    // clamp timestep to output/checkpoint
+    if (d_timeinfo->timestep_clamping && d_output) {
+      double orig_delt = delt;
+      double nextOutput = d_output->getNextOutputTime();
+      double nextCheckpoint = d_output->getNextCheckpointTime();
+      if (nextOutput != 0 && t + delt > nextOutput) {
+        delt = nextOutput - t;       
+      }
+      if (nextCheckpoint != 0 && t + delt > nextCheckpoint) {
+        delt = nextCheckpoint - t;
+      }
+      if (delt != orig_delt) {
+        if(d_myworld->myrank() == 0)
+          cerr << "WARNING: lowering delt from " << orig_delt 
+               << " to " << delt
+               << " to line up with output/checkpoint time\n";
+      }
+    }
+    
   }
 
   double SimulationController::getWallTime  ( void )

@@ -6,14 +6,19 @@
 #include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
+#include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/CCA/Ports/SchedulerP.h>
+#include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
+#include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 
 namespace Uintah {
 
 class SimulationInterface;
 class Output;
 class LoadBalancer;
+struct SimulationTime;
+class Regridder;
 /**************************************
       
   CLASS
@@ -46,23 +51,23 @@ class LoadBalancer;
 ****************************************/
 
    //! The main component that controls the execution of the 
-   //! entire simulation.
+   //! entire simulation. 
    class SimulationController : public UintahParallelComponent {
    public:
-      SimulationController(const ProcessorGroup* myworld);
+      SimulationController(const ProcessorGroup* myworld, bool doAMR);
       virtual ~SimulationController();
 
       //! Notifies (before calling run) the SimulationController
       //! that this is simulation is a restart.
-      virtual void doRestart(std::string restartFromDir, int timestep,
-		     bool fromScratch, bool removeOldDir) = 0;
+      void doRestart(std::string restartFromDir, int timestep,
+		     bool fromScratch, bool removeOldDir);
 
       //! Execute the simulation
       virtual void run() = 0;
 
       // notifies (before calling run) the simulationController
       //! that this run is a combinePatches run.
-      virtual void doCombinePatches(std::string fromDir);
+      void doCombinePatches(std::string fromDir);
      
       // for calculating memory usage when sci-malloc is disabled.
       static char* start_addr;
@@ -76,8 +81,45 @@ class LoadBalancer;
       void   calcStartTime   ( void );
       void   setStartSimTime ( double t );
 
+      void loadUPS();
+      void preGridSetup();
+      GridP gridSetup();
+      void restartSetup( GridP& grid, double& t);
+      void postGridSetup( GridP& grid);
+
+      //! adjust delt based on timeinfo and other parameters
+      void adjustDelT(double& delt, double prev_delt, int iterations, double t);
       void initSimulationStatsVars ( void );
       void printSimulationStats    ( Uintah::SimulationStateP sharedState, double delt, double time );
+
+      ProblemSpecP d_ups;
+      SimulationStateP d_sharedState;
+      SchedulerP d_scheduler;
+      LoadBalancer* d_lb;
+      Output* d_output;
+      SimulationTime* d_timeinfo;
+      SimulationInterface* d_sim;
+      Regridder* d_regridder;
+
+      bool d_doAMR;
+
+      /* for restarting */
+      bool           d_restarting;
+      std::string d_fromDir;
+      int d_restartTimestep;
+
+      bool d_combinePatches;
+
+      // If d_restartFromScratch is true then don't copy or move any of
+      // the old timesteps or dat files from the old directory.  Run as
+      // as if it were running from scratch but with initial conditions
+      // given by the restart checkpoint.
+      bool d_restartFromScratch;
+
+      // If !d_restartFromScratch, then this indicates whether to move
+      // or copy the old timesteps.
+      bool d_restartRemoveOldDir;
+
 
    private:
 
