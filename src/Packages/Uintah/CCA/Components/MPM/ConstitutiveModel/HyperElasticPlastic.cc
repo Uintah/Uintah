@@ -397,7 +397,7 @@ HyperElasticPlastic::computeStressTensor(const PatchSubset* patches,
       //     << "\n s_trial = " << trialS << endl;
 
       // Calculate the flow stress
-      flowStress = d_plasticity->computeFlowStress(tensorEta, tensorS, 
+      flowStress = d_plasticity->computeFlowStress(tensorEta, 
                                                    pTemperature[idx],
                                                    delT, d_tol, matl, idx);
       flowStress *= sqrtTwoThird;

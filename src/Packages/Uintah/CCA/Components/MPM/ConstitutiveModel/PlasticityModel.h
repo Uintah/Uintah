@@ -68,7 +68,6 @@ namespace Uintah {
     //////////
     // Calculate the flow stress
     virtual double computeFlowStress(const Matrix3& rateOfDeformation,
-				     const Matrix3& stress,
 				     const double& temperature,
 				     const double& delT,
 				     const double& tolerance,
