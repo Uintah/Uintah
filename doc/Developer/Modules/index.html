@@ -21,25 +21,32 @@ University of Utah. All Rights Reserved.
 
 <html>
 <head>
-<script language="JavaScript">
+
+<script type="text/javascript">
 var treetop="";
 var path = location.pathname;
-while (path.substr(path.lastIndexOf("/")+1) != "doc") {
+var iLimit = 20;
+var i = 0;
+while (i < iLimit && path.substr(path.lastIndexOf("/")+1) != "doc") {
 treetop += "../";
+i += 1;
 path = path.substr(0, path.lastIndexOf("/"));
 }
-document.write("<link href='",treetop,"doc/Utilities/HTML/doc_styles.css' rel='stylesheet' type='text/css'>")
+var inDocTree = i < iLimit;
+if (inDocTree) {
+document.write("<link href='",treetop,"doc/Utilities/HTML/doc_styles.css' rel='stylesheet' type='text/css'/>")
+}
 </script>
-<title></title>
-<!-- Changed by: Ted Dustman, 07-May-2002 -->
+
+<title>Index to SCIRun Modules by Package</title>
 </head>
 <body>
-<!-- ******************** DOCUMENTATION HEADER ********************* -->
-<script language="JavaScript">
-document.write('<script language="JavaScript" src="',treetop,'doc/Utilities/HTML/banner_top.js"><\/script>');
-</script>
-<!-- ****************** END DOCUMENTATION HEADER ******************* -->
 
+<script type="text/javascript">
+if (inDocTree) {
+document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_top.js"><\/script>');
+}
+</script>
 
 <p class="title">Index to Module Descriptions by Package<a>
 <hr size="1"/>
@@ -59,11 +66,10 @@ document.write('<script language="JavaScript" src="',treetop,'doc/Utilities/HTML
 </tr>
 </table>
 
-<!-- ******************** DOCUMENTATION FOOTER ********************* -->
-<script language="JavaScript">
-// Include JavaScript code that produces the bottom banner.
-document.write('<script language="JavaScript" src="',treetop,'doc/Utilities/HTML/banner_bottom.js"><\/script>');
+<script type="text/javascript">
+if (inDocTree) {
+document.write('<script type="text/javascript" src="',treetop,'doc/Utilities/HTML/banner_bottom.js"><\/script>');
+}
 </script>
-<!-- ****************** END DOCUMENTATION FOOTER ******************* -->
 </body>
 </html>
