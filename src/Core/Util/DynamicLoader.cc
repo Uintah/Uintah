@@ -390,7 +390,7 @@ DynamicLoader::create_cc(const CompileInfo &info, bool empty, ostream &serr)
     {
       string::size_type loc = s.find(SCIRUN_SRCDIR);
       if( loc != string::npos ) {
-	string::size_type endloc = s.find("SCIRun/src") + 11;
+	string::size_type endloc = loc+string(SCIRUN_SRCDIR).size();
 	fstr << "#include <" << s.substr(endloc) << ">\n";
       } else {
 	fstr << "#include \"" << s << "\"\n";
