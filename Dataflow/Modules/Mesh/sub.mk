@@ -25,7 +25,6 @@ SRCS     += \
 	$(SRCDIR)/MakeScalarField.cc\
 	$(SRCDIR)/MeshBoundary.cc\
 	$(SRCDIR)/MeshInterpVals.cc\
-	$(SRCDIR)/MeshNodeComponent.cc \
 	$(SRCDIR)/MeshRender.cc\
 	$(SRCDIR)/MeshToGeom.cc\
 	$(SRCDIR)/MeshView.cc
@@ -41,6 +40,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.8  2000/09/07 16:14:42  dmw
+# removed MeshNodeComponent from sub.mk -- it wasnt ready to be committed yet...
+#
 # Revision 1.7  2000/09/07 06:35:15  dmw
 # Removed SliceMeshToGeom.cc reference in sub.mk
 #
