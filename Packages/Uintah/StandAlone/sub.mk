@@ -154,4 +154,9 @@ LIBS    := $(XML_LIBRARY) -lm
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
+# Convenience targets for Specific executables (use make sus)
+sus: prereqs Packages/Uintah/StandAlone/sus
 
+puda: prereqs Packages/Uintah/StandAlone/puda
+
+compare_uda: prereqs Packages/Uintah/StandAlone/compare_uda
