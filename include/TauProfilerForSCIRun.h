@@ -36,5 +36,8 @@
 #define TAU_PROFILE_SET_CONTEXT(context)
 #define TAU_PROFILE_CALLSTACK()
 
+#define TAU_REGISTER_THREAD()
+#define TAU_DB_DUMP()
+
 #endif
 
