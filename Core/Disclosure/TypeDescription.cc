@@ -155,9 +155,10 @@ TypeDescription::lookup_type(const std::string& t)
    return iter->second;
 }
 
-string TypeDescription::cc_to_h(const string &dot_cc) {
+string TypeDescription::cc_to_h(const string &dot_cc)
+{
   static const string D_CC(".cc");
-  int l = dot_cc.length();
+  int l = (int)dot_cc.length();
   string dot_h = dot_cc;
   if (dot_h.substr(l-3, l) == D_CC) {
     // convert...
