@@ -64,15 +64,15 @@ SCIRunFramework::~SCIRunFramework()
     delete *iter;
 }
 
-gov::cca::Services::pointer
+sci::cca::Services::pointer
 SCIRunFramework::getServices(const std::string& selfInstanceName,
 			     const std::string& selfClassName,
-			     const gov::cca::TypeMap::pointer& selfProperties)
+			     const sci::cca::TypeMap::pointer& selfProperties)
 {
   return cca->createServices(selfInstanceName, selfClassName, selfProperties);
 }
 
-gov::cca::ComponentID::pointer
+sci::cca::ComponentID::pointer
 SCIRunFramework::createComponentInstance(const std::string& name,
 					 const std::string& t,
 					 const std::string& url)
@@ -129,7 +129,7 @@ SCIRunFramework::createComponentInstance(const std::string& name,
   return compIDs[compIDs.size()-1];
 }
 
-void SCIRunFramework::destroyComponentInstance(const gov::cca::ComponentID::pointer &cid, float timeout )
+void SCIRunFramework::destroyComponentInstance(const sci::cca::ComponentID::pointer &cid, float timeout )
 {
   //assuming no connections between this component and 
   //any other component
@@ -234,18 +234,18 @@ SCIRunFramework::lookupComponent(const std::string& name)
     return iter->second;
 }
 
-gov::cca::ComponentID::pointer
+sci::cca::ComponentID::pointer
 SCIRunFramework::lookupComponentID(const std::string& componentInstanceName)
 {
   for(unsigned i=0; i<compIDs.size();i++)
     if(componentInstanceName==compIDs[i]->getInstanceName()) 
       return compIDs[i];
-  return gov::cca::ComponentID::pointer(0);
+  return sci::cca::ComponentID::pointer(0);
 }
      
 
 
-gov::cca::Port::pointer
+sci::cca::Port::pointer
 SCIRunFramework::getFrameworkService(const std::string& type,
 				     const std::string& componentName)
 {
@@ -268,13 +268,13 @@ SCIRunFramework::listAllComponentTypes(vector<ComponentDescription*>& list,
     (*iter)->listAllComponentTypes(list, listInternal);
 }
 
-gov::cca::TypeMap::pointer SCIRunFramework::createTypeMap()
+sci::cca::TypeMap::pointer SCIRunFramework::createTypeMap()
 {
   cerr << "SCIRunFramework::createTypeMap not finished\n";
-  return gov::cca::TypeMap::pointer(0);
+  return sci::cca::TypeMap::pointer(0);
 }
 
-void SCIRunFramework::releaseServices(const gov::cca::Services::pointer& svc)
+void SCIRunFramework::releaseServices(const sci::cca::Services::pointer& svc)
 {
   cerr << "SCIRunFramework::releaseServices not finished\n";
 }
@@ -284,14 +284,14 @@ void SCIRunFramework::shutdownFramework()
   cerr << "SCIRunFramework::shutdownFramework not finished\n";
 }
 
-gov::cca::AbstractFramework::pointer SCIRunFramework::createEmptyFramework()
+sci::cca::AbstractFramework::pointer SCIRunFramework::createEmptyFramework()
 {
   cerr << "SCIRunFramework::createEmptyFramework not finished\n";
-  return gov::cca::AbstractFramework::pointer(0);
+  return sci::cca::AbstractFramework::pointer(0);
 }
 // do not delete the following 2 methods
 /* 
-void SCIRunFramework::share(const gov::cca::Services::pointer &svc)
+void SCIRunFramework::share(const sci::cca::Services::pointer &svc)
 {
   Thread* t = new Thread(new CCACommunicator(this,svc), "SCIRun CCA Communicator");
   t->detach(); 

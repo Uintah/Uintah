@@ -46,7 +46,7 @@ struct Packet
 
 class CCACommunicator:public Runnable{
  public:
-  CCACommunicator(SCIRunFramework *framework,const gov::cca::Services::pointer &svc);
+  CCACommunicator(SCIRunFramework *framework,const sci::cca::Services::pointer &svc);
   ~CCACommunicator(){}
   void run();
 
@@ -56,7 +56,7 @@ class CCACommunicator:public Runnable{
   std::vector<string> ccaFrameworkURL; //framework URLs
   std::vector<string> ccaSiteList; //machine IP addresses
   SCIRunFramework *framework;
-  gov::cca::Services::pointer services;
+  sci::cca::Services::pointer services;
 };
 
 

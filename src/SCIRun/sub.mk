@@ -41,7 +41,7 @@ include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := Core/OS Core/Containers Core/Util Dataflow/XMLUtil \
 	Dataflow/Network Core/GuiInterface Core/CCA/spec \
-	Core/CCA/Component/PIDL Core/CCA/Component/SIDL \
+	Core/CCA/Component/PIDL Core/CCA/Component/SSIDL \
 	Core/Exceptions Core/TkExtensions Core/Thread
 
 LIBS := $(XML_LIBRARY)

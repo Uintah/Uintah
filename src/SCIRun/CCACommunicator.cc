@@ -65,7 +65,7 @@ bool CCACommunicator::domainToIP(cosnt char *IP, const char *Addr)
 */
 
 CCACommunicator::CCACommunicator(SCIRunFramework *framework,
-				 const gov::cca::Services::pointer &svc)
+				 const sci::cca::Services::pointer &svc)
 {
   services=svc;
   ccaSiteList.push_back("qwerty.sci.utah.edu");
@@ -87,7 +87,7 @@ void CCACommunicator::readPacket(const Packet &pkt)
   ccaFrameworkURL.push_back(url);
 
   
-  gov::cca::ports::BuilderService::pointer bs = pidl_cast<gov::cca::ports::BuilderService::pointer>
+  sci::cca::ports::BuilderService::pointer bs = pidl_cast<sci::cca::ports::BuilderService::pointer>
     (services->getPort("cca.BuilderService"));
   if(bs.isNull()){
     cerr << "Fatal Error: Cannot find builder service\n";
