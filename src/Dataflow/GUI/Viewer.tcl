@@ -154,26 +154,26 @@ itcl_class ViewWindow {
 	if {![info exists $this-global-light2]} { set $this-global-light2 0 }
 	global $this-global-light3 
 	if {![info exists $this-global-light3]} { set $this-global-light3 0 }
-	global $this-global-light4 
-	if {![info exists $this-global-light4]} { set $this-global-light4 0 }
-	global $this-global-light5 
-	if {![info exists $this-global-light5]} { set $this-global-light5 0 }
-	global $this-global-light6
-	if {![info exists $this-global-light6]} { set $this-global-light6 0 }
-	global $this-global-light7 
-	if {![info exists $this-global-light7]} { set $this-global-light7 0 }
+# 	global $this-global-light4 
+# 	if {![info exists $this-global-light4]} { set $this-global-light4 0 }
+# 	global $this-global-light5 
+# 	if {![info exists $this-global-light5]} { set $this-global-light5 0 }
+# 	global $this-global-light6
+# 	if {![info exists $this-global-light6]} { set $this-global-light6 0 }
+# 	global $this-global-light7 
+# 	if {![info exists $this-global-light7]} { set $this-global-light7 0 }
 	global $this-lightVectors
 	if {![info exists $this-lightVectors]} { 
 	    set $this-lightVectors \
-		[list { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } \
-		     { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }]
+		[list { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }]
+# 		     { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }]
 	}
 	if {![info exists $this-lightColors]} {
 	    set $this-lightColors \
 		[list {1.0 1.0 1.0} {1.0 1.0 1.0} \
-		     {1.0 1.0 1.0} {1.0 1.0 1.0} \
-		     {1.0 1.0 1.0} {1.0 1.0 1.0} \
 		     {1.0 1.0 1.0} {1.0 1.0 1.0} ]
+# 		     {1.0 1.0 1.0} {1.0 1.0 1.0} \
+# 		     {1.0 1.0 1.0} {1.0 1.0 1.0} ]
 	}
 
 	global $this-sbase
@@ -1515,9 +1515,9 @@ itcl_class ViewWindow {
 	for { } {$i < 4} {incr i 1} {
 	    $this makeLightControl $w.tf $i
 	}
-	for { } {$i < 8} {incr i 1} {
-	    $this makeLightControl $w.bf $i
-	}
+# 	for { } {$i < 8} {incr i 1} {
+# 	    $this makeLightControl $w.bf $i
+# 	}
 
 	label $w.l -text \
 	    "Click on number to move light. Note: Headlight will not move."
@@ -1595,7 +1595,7 @@ itcl_class ViewWindow {
        destroy $w
    }
    method resetLights { w } {
-	for { set i 0 } { $i < 8 } { incr i 1 } {
+	for { set i 0 } { $i < 4 } { incr i 1 } {
 	    if { $i == 0 } {
 		set $this-global-light$i 1
 		$this lightSwitch $i
