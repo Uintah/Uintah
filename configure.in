@@ -83,7 +83,13 @@ if test "$davew" = "yes"; then
                   DaveW/Modules/EEG/Makefile \
                   DaveW/Modules/EGI/Makefile \
                   DaveW/Modules/FDM/Makefile \
+                  DaveW/Modules/FEM/Makefile \
+                  DaveW/Modules/ISL/Makefile \
+                  DaveW/Modules/MEG/Makefile \
+                  DaveW/Modules/Readers/Makefile \
                   DaveW/Modules/SiRe/Makefile \
+                  DaveW/Modules/Tensor/Makefile \
+                  DaveW/Modules/Writers/Makefile \
                 DaveW/ThirdParty/Makefile \
                   DaveW/ThirdParty/NumRec/Makefile \
                   DaveW/ThirdParty/OldLinAlg/Makefile \
