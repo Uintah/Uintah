@@ -33,6 +33,7 @@
 #include <Core/CCA/Component/Comm/SocketSpChannel.h>
 #include <Core/CCA/Component/Comm/SocketThread.h>
 #include <Core/CCA/Component/Comm/Message.h>
+#include <Core/CCA/Component/PIDL/ServerContext.h>
 
 using namespace SCIRun;
 using namespace std;
@@ -42,27 +43,28 @@ static Semaphore* startup;
 SocketThread::SocketThread(SocketEpChannel *ep, int id, int new_fd){
   this->ep=ep;
   this->id=id;
-  isEp=true;
   this->new_fd=new_fd;
 }
 
-SocketThread::SocketThread(SocketSpChannel *sp, int id, int new_fd){
-  this->sp=sp;
-  this->id=id;
-  isEp=false;
-  this->new_fd=new_fd;
-}
 
 void 
 SocketThread::run()
 {
-  if(isEp){
-    if(id==-1) ep->runAccept();
-    if(id==-2) ep->runService(new_fd);
-    else{
-      //cerr<<"calling handler #"<<id<<"\n";
-      Message *msg=ep->getMessage();
-      ep->handler_table[id](msg);
+  if(id==-1) ep->runAccept();
+  if(id==-2) ep->runService(new_fd);
+  else{
+    //cerr<<"calling handler #"<<id<<"\n";
+    Message *msg=ep->getMessage();
+    ep->handler_table[id](msg);
+    
+    if(id==1){
+      ::SCIRun::ServerContext* _sc=static_cast< ::SCIRun::ServerContext*>(ep->object);
+      if(_sc->d_objptr->getRefCount()==0){
+	cerr<<"calling accept_thread->exit()...";
+	ep->accept_thread->stop();
+	ep->accept_thread->exit();
+	cerr<<"Done";
+      }
     }
   }
 }
