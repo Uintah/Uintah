@@ -38,6 +38,7 @@ public:
   Matrix3 grid(int i, int j, int k);
   void SetGrid( GridP g ){ _grid = g; }
   void SetLevel( LevelP l){ _level = l; }
+  const LevelP GetLevel() { return _level; }
   void SetName( string vname ) { _varname = vname; }
   void SetMaterial( int index) { _matIndex = index; }
   void AddVar( const NCVariable<Matrix3>& var);
@@ -55,3 +56,5 @@ private:
 } // End namespace SCICore
 
 #endif
+
+
