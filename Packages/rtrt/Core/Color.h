@@ -36,6 +36,25 @@ public:
 	b+=c.b;
 	return *this;	
     }
+
+    inline float operator[](int i ) const {
+	switch( i ) {
+	case 0: return r; break;
+	case 1: return g; break;
+	case 2: return b; break;
+	default: return 0.0; break;
+	}
+    }
+
+    inline float& operator[](int i ) {
+	switch( i ) {
+	case 0: return r; break;
+	case 1: return g; break;
+	case 2: return b; break;
+	default: return r; break;
+	}
+    }
+
     inline float red() const {
 	return r;
     }
