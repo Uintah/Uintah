@@ -3,9 +3,13 @@
 
 <srcs>
   <src name="SliceIntoColumns">
-    <description>Slices the input matrix into column matrices. The number of columns is fixed within the manip. </description>
+    <description>Slices the input matrix into column matrices. The number of columns is fixed within the manip.</description>
+    <lib name="-lCore_Exceptions"/>
+    <lib name="-lCore_Util"/>
+    <lib name="-lCore_Datatypes"/>
+    <lib name="-lCore_Thread"/>
   </src>
   <src name="fred">
-    <description> This is a dummy matrix manip </description>
+    <description>This is a dummy matrix manip</description>
   </src>
 </srcs>
