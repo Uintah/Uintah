@@ -1,5 +1,5 @@
 /*
- *  ChangeCellType: Regular grid to unstructured grid - break hexes into tets
+ *  ChangeCellType: LatticeVol to TetVol - break hexes into tets
  *
  *  Written by:
  *   David Weinstein
@@ -11,11 +11,10 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Dataflow/Ports/FieldPort.h>
 #include <Core/Containers/Array3.h>
-#include <Core/Datatypes/ScalarField.h>
-#include <Core/Datatypes/ScalarFieldRG.h>
-#include <Core/Datatypes/ScalarFieldUG.h>
+#include <Core/Datatypes/TetVol.h>
+//#include <Core/Datatypes/TypeName.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/TclInterface/TCLvar.h>
 #include <Core/Tester/RigorousTest.h>
@@ -25,31 +24,24 @@ using std::cerr;
 using std::endl;
 #include <stdio.h>
 
+
+
 namespace SCIRun {
 
-/*
- * The values from Peters and DeMunck's 1991 papers:
- */
-
-#define AIR_CONDUCTIVITY 	0.0
-#define SKIN_CONDUCTIVITY 	1.0
-#define BONE_CONDUCTIVITY 	0.05
-#define CSF_CONDUCTIVITY 	4.620
-#define GREY_CONDUCTIVITY 	1.0
-#define WHITE_CONDUCTIVITY 	0.43
-
 class ChangeCellType : public Module {
-    ScalarFieldIPort* ifld;
-    ScalarFieldOPort* ofld;
-    TCLint scalarAsCondTCL;
-    TCLint removeAirTCL;
+  FieldIPort* input_;
+  FieldOPort* output_;
 public:
-    ChangeCellType(const clString& id);
-    virtual ~ChangeCellType();
-    virtual void execute();
-    void setConductivities(Mesh *m);
-    void genPtsAndTets(ScalarFieldRGBase *sf, ScalarFieldUG* sfug, 
-		       int removeAir, int scalarAsCond);
+  ChangeCellType(const clString& id);
+  virtual ~ChangeCellType();
+  virtual void execute();
+  
+  template <class Data>
+  void fill_tet_vol(LatticeVol<Data> *lvol, TetVol<Data> *tvol);
+  
+  template <class Iter, class Data>
+  void set_data(const LatticeVol<Data> &src, TetVol<Data> &dst, 
+		Iter begin, Iter end);
 };
 
 extern "C" Module* make_ChangeCellType(const clString& id)
@@ -58,14 +50,12 @@ extern "C" Module* make_ChangeCellType(const clString& id)
 }
 
 ChangeCellType::ChangeCellType(const clString& id)
-: Module("ChangeCellType", id, Filter),
-  scalarAsCondTCL("scalarAsCondTCL", id, this), 
-  removeAirTCL("removeAirTCL", id, this)
+  : Module("ChangeCellType", id, Filter)
 {
-    ifld=new ScalarFieldIPort(this, "SFRGin", ScalarFieldIPort::Atomic);
-    add_iport(ifld);
-    ofld=new ScalarFieldOPort(this, "SFUGout", ScalarFieldIPort::Atomic);
-    add_oport(ofld);
+  input_ = new FieldIPort(this, "LatticeVol-in", FieldIPort::Atomic);
+  add_iport(input_);
+  output_ = new FieldOPort(this, "TetVol-out", FieldIPort::Atomic);
+  add_oport(output_);
 }
 
 ChangeCellType::~ChangeCellType() {
@@ -79,150 +69,239 @@ ChangeCellType::~ChangeCellType() {
 // of the cells are at x, y, z positions: -0.25, 0.25, 0.75, 1.25
 // note: this is consistent with the SegFldToSurfTree and CStoSFRG modules
 
-void ChangeCellType::genPtsAndTets(ScalarFieldRGBase *sf, ScalarFieldUG *sfug,
-			       int removeAir, int scalarAsCond) {
-    Mesh *mesh=sfug->mesh.get_rep();
-    int offset=0;
-    int nx, ny, nz;
-    nx=sf->nx;
-    ny=sf->ny;
-    nz=sf->nz;
-    double dmin, dmax;
-    sf->get_minmax(dmin, dmax);
-    if (dmin==48 && dmax<54 && (sf->getRGChar()||sf->getRGUchar())) offset=48;
-    
-    Point min, max;
-    sf->get_bounds(min,max);
-    Vector d(max-min);
-    d.x(d.x()/(2.*(nx-1.)));
-    d.y(d.y()/(2.*(ny-1.)));
-    d.z(d.z()/(2.*(nz-1.)));
-    min-=d;
-    max+=d;
-    Array3<int> nodes(nx+1, ny+1, nz+1);
-    int currIdx=0;
-    int i, j, k;
-    cerr << "Starting node allocation...\n";
-    for (i=0; i<nx+1; i++) {
-	for (j=0; j<ny+1; j++) {
-	    for (k=0; k<nz+1; k++) {
-		nodes(i,j,k)=currIdx++;
-		const Point p = min + Vector(d.x()*i, d.y()*j, d.z()*k);
-		mesh->nodes.add(Node(p));
-	    }
-	}
-    }
-    cerr << "Done allocating nodes.\n";
+template <class Data>
+void ChangeCellType::fill_tet_vol(LatticeVol<Data> *lvol, TetVol<Data> *tvol)
+ {
+  MeshBaseHandle meshb = tet_vol_fh->get_mesh();
+  
+  MeshTet *mesh = dynamic_cast<MeshTet*>(meshb.get_rep());
+  if (mesh == 0) return;
 
-    Array1<Element *> e(5);
-    Array1<int> c(8);
-    for (i=0; i<nx; i++) {
-	for (int j=0; j<ny; j++) {
-	    for (int k=0; k<nz; k++) {
-		int cond=(int)(sf->get_value(i,j,k)-offset);
-		if (!cond && removeAir) continue;
-		c[0]=nodes(i,j,k);
-		c[1]=nodes(i+1,j,k);
-		c[2]=nodes(i+1,j+1,k);
-		c[3]=nodes(i,j+1,k);
-		c[4]=nodes(i,j,k+1);
-		c[5]=nodes(i+1,j,k+1);
-		c[6]=nodes(i+1,j+1,k+1);
-		c[7]=nodes(i,j+1,k+1);
-		if ((i+j+k)%2) {
-		    e[0]=new Element(mesh, c[0], c[1], c[2], c[5]);
-		    e[1]=new Element(mesh, c[0], c[2], c[3], c[7]);
-		    e[2]=new Element(mesh, c[0], c[2], c[5], c[7]);
-		    e[3]=new Element(mesh, c[0], c[4], c[5], c[7]);
-		    e[4]=new Element(mesh, c[2], c[5], c[6], c[7]);
-		} else {
-		    e[0]=new Element(mesh, c[1], c[0], c[3], c[4]);
-		    e[1]=new Element(mesh, c[1], c[3], c[2], c[6]);
-		    e[2]=new Element(mesh, c[1], c[3], c[4], c[6]);
-		    e[3]=new Element(mesh, c[1], c[5], c[4], c[6]);
-		    e[4]=new Element(mesh, c[3], c[4], c[7], c[6]);
-		}
-		if (scalarAsCond)
-		   e[0]->cond=e[1]->cond=e[2]->cond=e[3]->cond=e[4]->cond=cond;
-		mesh->elems.add(e[0]); 
-		mesh->elems.add(e[1]); 
-		mesh->elems.add(e[2]); 
-		mesh->elems.add(e[3]); 
-		mesh->elems.add(e[4]); 
-		sfug->data.add(cond);
-		sfug->data.add(cond);
-		sfug->data.add(cond);
-		sfug->data.add(cond);
-		sfug->data.add(cond);
-	    }
-	}
+  int nx, ny, nz;
+  nx=sf->nx;
+  ny=sf->ny;
+  nz=sf->nz;
+  int nodes_size = (nx+1) * (ny+1) * (nz+1);
+  vector<Point> *nodes = new vector<Point>(nodes_size);
+
+  int offset=0;
+  double dmin, dmax;
+  sf->get_minmax(dmin, dmax);
+  if (dmin==48 && dmax<54 && (sf->getRGChar()||sf->getRGUchar())) offset=48;
+  
+  Point min, max;
+  sf->get_bounds(min,max);
+  Vector d(max-min);
+  d.x(d.x()/(2.*(nx-1.)));
+  d.y(d.y()/(2.*(ny-1.)));
+  d.z(d.z()/(2.*(nz-1.)));
+  min-=d;
+  max+=d;
+  Array3<int> node_idx(nx+1, ny+1, nz+1);
+  int currIdx=0;
+  int i, j, k;
+
+  for (i=0; i<nx+1; i++) {
+    for (j=0; j<ny+1; j++) {
+      for (k=0; k<nz+1; k++) {
+	node_idx(i,j,k) = currIdx++;
+	const Point p = min + Vector(d.x()*i, d.y()*j, d.z()*k);
+	nodes.push_back(p);
+      }
     }
+  }
+
+  // tets are 4 indecies into the node vector.
+  vector<int> *tets = new vector<int>(4 * nodes_size);
+  Array1<int> c(8); // each hex cell
+  for (i=0; i<nx; i++) {
+    for (int j=0; j<ny; j++) {
+      for (int k=0; k<nz; k++) {
+
+	c[0]=node_idx(i,j,k);
+	c[1]=node_idx(i+1,j,k);
+	c[2]=node_idx(i+1,j+1,k);
+	c[3]=node_idx(i,j+1,k);
+	c[4]=node_idx(i,j,k+1);
+	c[5]=node_idx(i+1,j,k+1);
+	c[6]=node_idx(i+1,j+1,k+1);
+	c[7]=node_idx(i,j+1,k+1);
+	if ((i+j+k)%2) {
+	  // add in the tets
+	  //e[0]=new Element(mesh, c[0], c[1], c[2], c[5]);	
+	  tets.push_back(c[0]);
+	  tets.push_back(c[1]);
+	  tets.push_back(c[2]);
+	  tets.push_back(c[5]);
+	  
+	  //e[1]=new Element(mesh, c[0], c[2], c[3], c[7]);
+	  tets.push_back(c[0]);
+	  tets.push_back(c[2]);
+	  tets.push_back(c[3]);
+	  tets.push_back(c[7]);
+
+	  //e[2]=new Element(mesh, c[0], c[2], c[5], c[7]);
+	  tets.push_back(c[0]);
+	  tets.push_back(c[2]);
+	  tets.push_back(c[5]);
+	  tets.push_back(c[7]);
+
+	  //e[3]=new Element(mesh, c[0], c[4], c[5], c[7]);
+	  tets.push_back(c[0]);
+	  tets.push_back(c[4]);
+	  tets.push_back(c[5]);
+	  tets.push_back(c[7]);
+	  
+	  //e[4]=new Element(mesh, c[2], c[5], c[6], c[7]);
+	  tets.push_back(c[2]);
+	  tets.push_back(c[5]);
+	  tets.push_back(c[6]);
+	  tets.push_back(c[7]);
+	} else {
+	  //e[0]=new Element(mesh, c[1], c[0], c[3], c[4]);
+	  tets.push_back(c[1]);
+	  tets.push_back(c[0]);
+	  tets.push_back(c[3]);
+	  tets.push_back(c[4]);
+
+	  //e[1]=new Element(mesh, c[1], c[3], c[2], c[6]);
+	  tets.push_back(c[1]);
+	  tets.push_back(c[3]);
+	  tets.push_back(c[2]);
+	  tets.push_back(c[6]);
+
+	  //e[2]=new Element(mesh, c[1], c[3], c[4], c[6]);
+	  tets.push_back(c[1]);
+	  tets.push_back(c[3]);
+	  tets.push_back(c[4]);
+	  tets.push_back(c[6]);
+
+	  //e[3]=new Element(mesh, c[1], c[5], c[4], c[6]);
+	  tets.push_back(c[1]);
+	  tets.push_back(c[5]);
+	  tets.push_back(c[4]);
+	  tets.push_back(c[6]);
+
+	  //e[4]=new Element(mesh, c[3], c[4], c[7], c[6]);
+	  tets.push_back(c[3]);
+	  tets.push_back(c[4]);
+	  tets.push_back(c[7]);
+	  tets.push_back(c[6]);
+	}
+      }
+    }
+  }
+  
+  // FIX_ME TODO:   tvol->compute_neighbors();
+ 
+  // Load the data at the correct data location.
+  switch (lvol->data_at()) {
+  case Field::NODE :
+    {
+      set_data<MeshTet::node_iterator>(lvol, tvol, 
+				       tmesh->node_begin(),
+				       tmesh->node_end());
+    }
+  break;
+  case Field::EDGE:
+    {
+      set_data<MeshTet::edge_iterator>(lvol, tvol, 
+				       tmesh->edge_begin(),
+				       tmesh->edge_end());
+    }
+    break;
+  case Field::FACE:
+    {
+      set_data<MeshTet::face_iterator>(lvol, tvol, 
+				       tmesh->face_begin(),
+				       tmesh->face_end());
+    }
+    break;
+  case Field::CELL:
+    {
+      set_data<MeshTet::cell_iterator>(lvol, tvol, 
+				       tmesh->cell_begin(),
+				       tmesh->cell_end());
+    }
+    break;
+  }   
+  
 }
 
-void ChangeCellType::setConductivities(Mesh *m) {
-    m->cond_tensors.resize(6);
-    m->cond_tensors[0].resize(6);
-    m->cond_tensors[0].initialize(0);
-    m->cond_tensors[0][0]=m->cond_tensors[0][3]=m->cond_tensors[0][5]=AIR_CONDUCTIVITY;
-
-    m->cond_tensors[1].resize(6);
-    m->cond_tensors[1].initialize(0);
-    m->cond_tensors[1][0]=m->cond_tensors[1][3]=m->cond_tensors[1][5]=SKIN_CONDUCTIVITY;
-
-    m->cond_tensors[2].resize(6);
-    m->cond_tensors[2].initialize(0);
-    m->cond_tensors[2][0]=m->cond_tensors[2][3]=m->cond_tensors[2][5]=BONE_CONDUCTIVITY;
-
-    m->cond_tensors[3].resize(6);
-    m->cond_tensors[3].initialize(0);
-    m->cond_tensors[3][0]=m->cond_tensors[3][3]=m->cond_tensors[3][5]=CSF_CONDUCTIVITY;
-
-    m->cond_tensors[4].resize(6);
-    m->cond_tensors[4].initialize(0);
-    m->cond_tensors[4][0]=m->cond_tensors[4][3]=m->cond_tensors[4][5]=GREY_CONDUCTIVITY;
-    
-    m->cond_tensors[5].resize(6);
-    m->cond_tensors[5].initialize(0);
-    m->cond_tensors[5][0]=m->cond_tensors[5][3]=m->cond_tensors[5][5]=WHITE_CONDUCTIVITY;
-}
-
-void ChangeCellType::execute()
+// Walk the data location, setting the data as we go.
+// The Iter begin and end belong to the mesh in dst.
+template <class Iter, class Data>
+void
+ChangeCellType::set_data(const LatticeVol<Data> &src, TetVol<Data> &dst, 
+			 Iter begin, Iter end)
 {
-    ScalarFieldHandle ifldH;
+  Point p;
+  LinearInterp ftor(8); // FIX_ME get size right...
+  Iter iter = begin;
+  while(iter != end)
+  {
+    MeshTetHandle mesh = dst.get_tet_mesh();
+    p = mesh->get_center(*iter);
+    // Always interps at data location matching Iter.
+    src.interpolate(p, ftor); 
+    dst[*iter] = ftor.result_;
+  }
+}
+
+void 
+ChangeCellType::execute()
+{
+    FieldHandle input_handle;
     update_state(NeedData);
 
-    if (!ifld->get(ifldH))
+    if (!input_->get(input_handle))
 	return;
-    if (!ifldH.get_rep()) {
+    if (!input_handle.get_rep()) {
 	cerr << "Error: empty scalar field\n";
 	return;
     }
-    ScalarFieldRGBase *sfb;
-    if (!(sfb=ifldH->getRGBase())) {
-	cerr << "Error: field must be a regular grid\n";
+    
+
+    string type_string = input_handle->type_name(0);
+    if (type_string == "LatticeVol") {
+      update_state(JustStarted);
+      
+      // then we have proper input
+      if (input_handle->type_name(1) == "double") {
+
+	TetVol<double> *tvol = new TetVol<double>();
+	LatticeVol<double> *lvol = 
+	  dynamic_cast<LatticeVol<double>*>(input_handle.get_rep());
+	fill_tet_vol<double>(*lvol, *tvol);
+	output_->send(FieldHandle(tvol));
+      } else if (input_handle->type_name(1) == "float") {
+
+	TetVol<float> *tvol = new TetVol<float>();
+	LatticeVol<float> *lvol = 
+	  dynamic_cast<LatticeVol<float>*>(input_handle.get_rep());
+	fill_tet_vol<float>(*lvol, *tvol);
+	output_->send(FieldHandle(tvol));
+      } else if (input_handle->type_name(1) == "int") {
+
+	TetVol<int> *tvol = new TetVol<int>();
+	LatticeVol<int> *lvol = 
+	  dynamic_cast<LatticeVol<int>*>(input_handle.get_rep());
+	fill_tet_vol<int>(*lvol, *tvol);
+	output_->send(FieldHandle(tvol));
+      } else if (input_handle->type_name(1) == "char") {
+
+	TetVol<char> *tvol = new TetVol<char>();
+	LatticeVol<char> *lvol = 
+	  dynamic_cast<LatticeVol<char>*>(input_handle.get_rep());
+	fill_tet_vol<char>(*lvol, *tvol);
+	output_->send(FieldHandle(tvol));
+      } 
+    } else {
+	cerr << "Error: field must be a LatticeVol\n";
 	return;
     }
-    update_state(JustStarted);
-
-    int scalarAsCond = scalarAsCondTCL.get();
-    int removeAir = removeAirTCL.get();
-    
-    Mesh *m = new Mesh;
-    setConductivities(m);
-    MeshHandle mH(m);
-    ScalarFieldUG *sfug=new ScalarFieldUG(mH, ScalarFieldUG::ElementValues);
-
-    genPtsAndTets(sfb, sfug, removeAir, scalarAsCond);
-    m->pack_all();
-    cerr << "Mesh has been built and output -- "<<m->nodes.size()<<" nodes, "<<m->elems.size()<<" elements.\n";
-    for (int i=0; i<m->elems.size(); i++) {
-	m->elems[i]->mesh = m;
-	m->elems[i]->orient();
-	m->elems[i]->compute_basis();
-    }
-    m->compute_neighbors();
-    ofld->send(ScalarFieldHandle(sfug));
 }
+
 } // End namespace SCIRun
 
 
