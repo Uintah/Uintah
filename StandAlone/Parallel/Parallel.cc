@@ -4,7 +4,11 @@ static char *id="@(#) $Id$";
 #include "Parallel.h"
 #include <iostream>
 using std::cerr;
+#if HAVE_MPI
 #include <mpi.h>
+#endif
+#include <stdlib.h>
+
 
 namespace Uintah {
 namespace Parallel {
@@ -76,6 +80,11 @@ Parallel::finalizeManager()
 
 //
 // $Log$
+// Revision 1.3  2000/03/17 09:30:21  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.2  2000/03/16 22:08:38  dav
 // Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
 //

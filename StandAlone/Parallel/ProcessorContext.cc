@@ -18,18 +18,18 @@ using SCICore::Exceptions::InternalError;
 
 using std::cerr;
 
-static Mutex lock("ProcessorContext lock");
+static Mutex rootlock("ProcessorContext lock");
 static ProcessorContext* rootContext = 0;
 
 ProcessorContext*
 ProcessorContext::getRootContext()
 {
     if(!rootContext) {
-	lock.lock();
+	rootlock.lock();
 	if(!rootContext){
 	    rootContext = new ProcessorContext(0,0,Thread::numProcessors(),0);
 	}
-	lock.unlock();
+	rootlock.unlock();
     }
     return rootContext;
 }
@@ -75,6 +75,11 @@ ProcessorContext::reduce_min(double mymin) const
 
 //
 // $Log$
+// Revision 1.3  2000/03/17 09:30:21  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.2  2000/03/16 22:08:39  dav
 // Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
 //

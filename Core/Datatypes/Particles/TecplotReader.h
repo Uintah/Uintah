@@ -156,6 +156,11 @@ private:
 
 //
 // $Log$
+// Revision 1.1  2000/03/17 09:29:51  sparker
+// New makefile scheme: sub.mk instead of Makefile.in
+// Use XML-based files for module repository
+// Plus many other changes to make these two things work
+//
 // Revision 1.6  1999/12/28 21:11:45  kuzimmer
 // modified so that picking works again
 //

@@ -1,2 +1,3 @@
-Makefile
 sus
+depend.mk
+Makefile
