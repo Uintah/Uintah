@@ -4,8 +4,9 @@
 
 #include <Packages/Uintah/CCA/Ports/ModelInterface.h>
 #include <Packages/Uintah/Core/Grid/ComputeSet.h>
-#include <Packages/Uintah/CCA/Components/MPMICE/MPMICELabel.h>
+
 namespace Uintah {
+  class MPMICELabel;
 
 /**************************************
 
