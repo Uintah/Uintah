@@ -366,11 +366,28 @@ itcl_class SCIRun_Visualization_Isosurface {
 	global $this-isoval-min $this-isoval-max
 	set min [set $this-isoval-min]
 	set max [set $this-isoval-max]
+
 	if [ expr [winfo exists $w] ] {
+	    set lg [expr floor( log10($max-$min) ) ]
+	    set range [expr pow(10.0, $lg )]
+
+	    set scale 1.0
+
+	    if { $lg > 5.0 } {
+		set scale [expr pow(10.0, $lg-5 )]
+	    }
+
+	    scale $win.l.s \
+		-from $start -to $stop \
+		-length $length \
+		-variable $var1 -orient horizontal -showvalue false \
+		-command "$this updateSliderEntry $var1 $var2" \
+		-resolution [expr $range/(1.0e4*$scale)]
+
           $w.f.iso.childsite.tabs.canvas.notebook.cs.page1.cs.isoval.l.s \
 		  configure -from $min -to $max
           $w.f.iso.childsite.tabs.canvas.notebook.cs.page1.cs.isoval.l.s \
-	          configure -resolution [expr ($max - $min)/10000.]
+	          configure -resolution [expr $range/(1.0e4*$scale)]
 	  $w.f.iso.childsite.tabs.canvas.notebook.cs.page1.cs.isoval.l.s \
 		  configure -tickinterval [expr ($max - $min)/3.001]
 	  bind $w.f.iso.childsite.tabs.canvas.notebook.cs.page1.cs.isoval.r.e \
@@ -416,7 +433,6 @@ itcl_class SCIRun_Visualization_Isosurface {
 	    -variable $var1 -orient horizontal -showvalue false \
 	    -command "$this updateSliderEntry $var1 $var2" \
 	    -resolution [expr $range/(1.0e4*$scale)]
-
 #	    -tickinterval [expr $range/(4.*$scale)]
 
 	entry $win.r.e -width 7 -text $var2
