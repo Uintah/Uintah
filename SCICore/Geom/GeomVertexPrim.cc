@@ -27,6 +27,7 @@ using SCICore::PersistentSpace::Pio;
 
 static TrivialAllocator GeomVertex_alloc(sizeof(GeomVertex));
 static TrivialAllocator GeomNVertex_alloc(sizeof(GeomNVertex));
+static TrivialAllocator GeomMVertex_alloc(sizeof(GeomMVertex));
 static TrivialAllocator GeomNMVertex_alloc(sizeof(GeomNMVertex));
 static TrivialAllocator GeomCVertex_alloc(sizeof(GeomCVertex));
 
@@ -62,12 +63,12 @@ void GeomNMVertex::operator delete(void* rp, size_t)
 
 void* GeomMVertex::operator new(size_t)
 {
-  return GeomVertex_alloc.alloc();
+  return GeomMVertex_alloc.alloc();
 }
 
 void GeomMVertex::operator delete(void* rp, size_t)
 {
-  GeomVertex_alloc.free(rp);
+  GeomMVertex_alloc.free(rp);
 }
 
 void* GeomCVertex::operator new(size_t)
@@ -374,6 +375,9 @@ void Pio(Piostream& stream, GeomSpace::GeomVertex*& obj)
 
 //
 // $Log$
+// Revision 1.2  1999/08/02 22:54:35  kuzimmer
+// Added TrivialAllocator for GeomMVertex to fix memory overwriting error
+//
 // Revision 1.1  1999/07/27 16:56:47  mcq
 // Initial commit
 //
