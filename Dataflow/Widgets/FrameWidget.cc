@@ -66,11 +66,11 @@ enum { PickSphU, PickSphR, PickSphD, PickSphL, PickCyls,
  * Much of the work is accomplished in the BaseWidget constructor which
  *      includes some consistency checking to ensure full initialization.
  */
-FrameWidget::FrameWidget( Module* module, CrowdMonitor* lock, Real widget_scale )
+FrameWidget::FrameWidget( Module* module, CrowdMonitor* lock, double widget_scale )
 : BaseWidget(module, lock, "FrameWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
   oldrightaxis(1, 0, 0), olddownaxis(0, 1, 0)
 {
-   Real INIT = 5.0*widget_scale;
+   double INIT = 5.0*widget_scale;
    // Schemes 5/6 are used by the picks in GeomMoved!!
    variables[CenterVar] = scinew PointVariable("Center", solve, Scheme1, Point(0, 0, 0));
    variables[PointRVar] = scinew PointVariable("PntR", solve, Scheme1, Point(INIT, 0, 0));
@@ -187,7 +187,7 @@ FrameWidget::~FrameWidget()
 void
 FrameWidget::redraw()
 {
-   Real sphererad(widget_scale), resizerad(0.5*widget_scale), cylinderrad(0.5*widget_scale);
+   double sphererad(widget_scale), resizerad(0.5*widget_scale), cylinderrad(0.5*widget_scale);
    Vector Right(GetRightAxis()*variables[DistRVar]->real());
    Vector Down(GetDownAxis()*variables[DistDVar]->real());
    Point Center(variables[CenterVar]->point());
@@ -267,7 +267,7 @@ FrameWidget::geom_moved( GeomPick*, int axis, double dist,
 			 const Vector& delta, int pick, const BState& )
 {
    Vector delt(delta);
-   Real ResizeMin(1.5*widget_scale);
+   double ResizeMin(1.5*widget_scale);
    if (axis==1) dist = -dist;
 
    ((DistanceConstraint*)constraints[ConstRC])->SetDefault(GetRightAxis());
@@ -373,7 +373,7 @@ FrameWidget::GetPosition( Point& center, Point& R, Point& D )
 
 void
 FrameWidget::SetPosition( const Point& center, const Vector& normal,
-			  const Real size1, const Real size2 )
+			  const double size1, const double size2 )
 {
    Vector axis1, axis2;
    normal.find_orthogonal(axis1, axis2);
@@ -390,7 +390,7 @@ FrameWidget::SetPosition( const Point& center, const Vector& normal,
 
 void
 FrameWidget::GetPosition( Point& center, Vector& normal,
-			  Real& size1, Real& size2 )
+			  double& size1, double& size2 )
 {
    center = variables[CenterVar]->point();
    normal = Cross(GetRightAxis(), GetDownAxis());
@@ -400,15 +400,15 @@ FrameWidget::GetPosition( Point& center, Vector& normal,
 
 
 void
-FrameWidget::SetSize( const Real sizeR, const Real sizeD )
+FrameWidget::SetSize( const double sizeR, const double sizeD )
 {
    ASSERT((sizeR>=0.0)&&(sizeD>=0.0));
 
    Point center(variables[CenterVar]->point());
    Vector axisR(variables[PointRVar]->point() - center);
    Vector axisD(variables[PointDVar]->point() - center);
-   Real ratioR(sizeR/variables[DistRVar]->real());
-   Real ratioD(sizeD/variables[DistDVar]->real());
+   double ratioR(sizeR/variables[DistRVar]->real());
+   double ratioD(sizeD/variables[DistDVar]->real());
 
    variables[PointRVar]->Move(center+axisR*ratioR);
    variables[PointDVar]->Move(center+axisD*ratioD);
@@ -420,7 +420,7 @@ FrameWidget::SetSize( const Real sizeR, const Real sizeD )
 }
 
 void
-FrameWidget::GetSize( Real& sizeR, Real& sizeD ) const
+FrameWidget::GetSize( double& sizeR, double& sizeD ) const
 {
    sizeR = variables[DistRVar]->real();
    sizeD = variables[DistDVar]->real();

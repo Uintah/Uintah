@@ -33,7 +33,7 @@
 #define SCI_project_VarCore_h 1
 
 #include <Dataflow/share/share.h>
-#include <Dataflow/Constraints/manifest.h>
+#include <Dataflow/Constraints/manifest.h> 
 #include <Core/Geometry/Point.h>
 
 namespace SCIRun {
@@ -49,7 +49,7 @@ public:
 
    VarCore(const Point& p, Rigidity rigid=NonRigid)
    : vartype(PointVar), pointvalue(p), rigidity(rigid) {}
-   VarCore(const Real& r, Rigidity rigid=NonRigid)
+   VarCore(const double& r, Rigidity rigid=NonRigid)
    : vartype(RealVar), realvalue(r), rigidity(rigid) {}
 
    inline int isPoint() const { return (vartype==PointVar); }
@@ -57,26 +57,26 @@ public:
 
    inline const Point& point() const { ASSERT(vartype==PointVar); return pointvalue; }
    inline operator Point() const { ASSERT(vartype==PointVar); return pointvalue; }
-   inline Real real() const { ASSERT(vartype==RealVar); return realvalue; }
-   inline operator Real() const { ASSERT(vartype==RealVar); return realvalue; }
+   inline double real() const { ASSERT(vartype==RealVar); return realvalue; }
+   inline operator double() const { ASSERT(vartype==RealVar); return realvalue; }
 
    // CAN assign different types.
    inline VarCore& operator=( const VarCore& c );
    inline VarCore& operator=( const Point& p );
-   inline VarCore& operator=( const Real r );
+   inline VarCore& operator=( const double r );
    int operator==( const VarCore& c ) const;
    int operator==( const Point& p ) const;
-   int operator==( const Real r ) const;
+   int operator==( const double r ) const;
 
    VarCore& operator+=( const Vector& v );
-   VarCore& operator+=( const Real r );
+   VarCore& operator+=( const double r );
 
-   inline int epsilonequal( const Real Epsilon, const VarCore& v );
+   inline int epsilonequal( const double Epsilon, const VarCore& v );
    friend PSECORESHARE std::ostream& operator<<( std::ostream& os, VarCore& c );
 private:
    VarType vartype;
    Point pointvalue;
-   Real realvalue;
+   double realvalue;
    Rigidity rigidity;
 };
 
@@ -109,7 +109,7 @@ VarCore::operator=( const Point& p )
 
 
 inline VarCore&
-VarCore::operator=( const Real r )
+VarCore::operator=( const double r )
 {
    if (rigidity == Rigid) {
       ASSERT(vartype == RealVar);
@@ -122,14 +122,14 @@ VarCore::operator=( const Real r )
 
 
 inline int
-VarCore::epsilonequal( const Real Epsilon, const VarCore& v )
+VarCore::epsilonequal( const double Epsilon, const VarCore& v )
 {
    if (isPoint() && v.isPoint())
-      return ((RealAbs(pointvalue.x()-v.pointvalue.x()) < Epsilon)
-	      && (RealAbs(pointvalue.y()-v.pointvalue.y()) < Epsilon)
-	      && (RealAbs(pointvalue.z()-v.pointvalue.z()) < Epsilon));
+      return ((fabs(pointvalue.x()-v.pointvalue.x()) < Epsilon)
+	      && (fabs(pointvalue.y()-v.pointvalue.y()) < Epsilon)
+	      && (fabs(pointvalue.z()-v.pointvalue.z()) < Epsilon));
    else if (isReal() && v.isReal())
-      return (RealAbs(realvalue-v.realvalue) < Epsilon);
+      return (fabs(realvalue-v.realvalue) < Epsilon);
    else {
       ASSERTFAIL("Can't compare PointVariable with RealVariable!!");
       //return 0;

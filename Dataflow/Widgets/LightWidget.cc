@@ -66,11 +66,11 @@ enum { PickSource, PickDirect, PickCone, PickAxis, PickArrow };
  * Much of the work is accomplished in the BaseWidget constructor which
  *      includes some consistency checking to ensure full initialization.
  */
-LightWidget::LightWidget( Module* module, CrowdMonitor* lock, Real widget_scale )
+LightWidget::LightWidget( Module* module, CrowdMonitor* lock, double widget_scale )
 : BaseWidget(module, lock, "LightWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
   ltype(DirectionalLight), oldaxis(1, 0, 0)
 {
-   Real INIT = 10.0*widget_scale;
+   double INIT = 10.0*widget_scale;
    // Scheme4 is used for the Arrow.
    variables[SourceVar] = scinew PointVariable("Source", solve, Scheme1, Point(0, 0, 0));
    variables[DirectVar] = scinew PointVariable("Direct", solve, Scheme2, Point(INIT, 0, 0));
@@ -198,7 +198,7 @@ LightWidget::~LightWidget()
 void
 LightWidget::redraw()
 {
-   Real sphererad(widget_scale), cylinderrad(0.5*widget_scale);
+   double sphererad(widget_scale), cylinderrad(0.5*widget_scale);
    Point center(variables[SourceVar]->point());
    Vector direct(GetAxis());
    
@@ -356,7 +356,7 @@ LightWidget::GetAxis()
 void
 LightWidget::NextMode()
 {
-   Real s1, s2;
+   double s1, s2;
    switch(ltype) {
    case DirectionalLight:
    case PointLight:

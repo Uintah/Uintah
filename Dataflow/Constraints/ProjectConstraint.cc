@@ -81,8 +81,9 @@ ProjectConstraint::~ProjectConstraint()
  * Satisfy should return 1 if it is able to satisfy the constraint, and
  *      0 otherwise.
  */
-int
-ProjectConstraint::Satisfy( const Index index, const Scheme scheme, const Real Epsilon,
+bool
+ProjectConstraint::Satisfy( const Index index, const Scheme scheme,
+			    const double Epsilon,
 			    BaseVariable*& var, VarCore& c )
 {
    PointVariable& projection = *vars[0];
@@ -103,11 +104,12 @@ ProjectConstraint::Satisfy( const Index index, const Scheme scheme, const Real E
 	 c = (Point)p2;
       } else {
 	 norm.normalize();
-	 Real t(Dot((Point)point - p1, norm));
+	 const double t = Dot((Point)point - p1, norm);
 	 c = (Point)p1 + (norm * t);
       }
       var = vars[0];
-      return 1;
+      return true;
+
    case 1:
       {
 	  Point proj;
@@ -116,21 +118,23 @@ ProjectConstraint::Satisfy( const Index index, const Scheme scheme, const Real E
 	      proj = (Point)p2;
 	  } else {
 	      norm.normalize();
-	      Real t(Dot((Point)point - p1, norm));
+	      const double t = Dot((Point)point - p1, norm);
 	      proj = (Point)p1 + (norm * t);
 	  }
 	  c = (Point)projection + ((Point)point-proj);
 	  var = vars[1];
       }
-      return 1;
+      return true;
+
    case 2:
       ASSERTFAIL("ProjectConstraint:  Can only satisfy projection");
       //break;
+
    default:
       cerr << "Unknown variable in Project Constraint!" << endl;
       break;
    }
-   return 0;
+   return false;
 }
 
 } // End namespace SCIRun

@@ -130,9 +130,10 @@ CenterConstraint::~CenterConstraint()
  * Satisfy should return 1 if it is able to satisfy the constraint, and
  *      0 otherwise.
  */
-int
-CenterConstraint::Satisfy( const Index index, const Scheme scheme, const Real,
-			     BaseVariable*& var, VarCore& c )
+bool
+CenterConstraint::Satisfy( const Index index, const Scheme scheme,
+			   const double,
+			   BaseVariable*& var, VarCore& c )
 {
    PointVariable& p1 = *vars[1];
    PointVariable& p2 = *vars[2];
@@ -169,7 +170,7 @@ CenterConstraint::Satisfy( const Index index, const Scheme scheme, const Real,
       default:
 	 break;
       }
-      return 1;
+      return true;
    case 1:
    case 2:
       ASSERTFAIL("CenterConstraint:  Can only satisfy center");
@@ -186,7 +187,7 @@ CenterConstraint::Satisfy( const Index index, const Scheme scheme, const Real,
       cerr << "Unknown variable in Center Constraint!" << endl;
       break;
    }
-   return 0;
+   return false;
 }
 
 } // End namespace SCIRun

@@ -83,7 +83,7 @@ BoxWidget::BoxWidget( Module* module, CrowdMonitor* lock, double widget_scale,
   olddownaxis(0, 1, 0),
   oldinaxis(0, 0, 1)
 {
-   Real INIT = 5.0*widget_scale;
+   double INIT = 5.0*widget_scale;
    variables[CenterVar] = scinew PointVariable("Center", solve, Scheme1, Point(0, 0, 0));
    variables[PointRVar] = scinew PointVariable("PntR", solve, Scheme1, Point(INIT, 0, 0));
    variables[PointDVar] = scinew PointVariable("PntD", solve, Scheme2, Point(0, INIT, 0));
@@ -271,7 +271,7 @@ BoxWidget::~BoxWidget()
 void
 BoxWidget::redraw()
 {
-   Real sphererad(widget_scale), resizerad(0.5*widget_scale), cylinderrad(0.5*widget_scale);
+   double sphererad(widget_scale), resizerad(0.5*widget_scale), cylinderrad(0.5*widget_scale);
    Vector Right(GetRightAxis()*variables[DistRVar]->real());
    Vector Down(GetDownAxis()*variables[DistDVar]->real());
    Vector In(GetInAxis()*variables[DistIVar]->real());

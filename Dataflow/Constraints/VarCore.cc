@@ -57,7 +57,7 @@ VarCore::operator==( const Point& p ) const
 
 
 int
-VarCore::operator==( const Real r ) const
+VarCore::operator==( const double r ) const
 {
    if ((vartype == RealVar) && (realvalue == r))
       return 1;
@@ -76,7 +76,7 @@ VarCore::operator+=( const Vector& v )
 
 
 VarCore&
-VarCore::operator+=( const Real r )
+VarCore::operator+=( const double r )
 {
    ASSERT(vartype == RealVar);
    realvalue += r;

@@ -80,8 +80,9 @@ RatioConstraint::~RatioConstraint()
  * Satisfy should return 1 if it is able to satisfy the constraint, and
  *      0 otherwise.
  */
-int
-RatioConstraint::Satisfy( const Index index, const Scheme scheme, const Real Epsilon,
+bool
+RatioConstraint::Satisfy( const Index index, const Scheme scheme,
+			  const double Epsilon,
 			  BaseVariable*& var, VarCore& c )
 {
    RealVariable& numer = *vars[0];
@@ -92,13 +93,13 @@ RatioConstraint::Satisfy( const Index index, const Scheme scheme, const Real Eps
       ChooseChange(index, scheme);
       printc(cout, scheme);
    }
-   Real temp;
+   double temp;
    
    switch (ChooseChange(index, scheme)) {
    case 0:
       var = vars[0];
       c = denom * ratio;
-      return 1;
+      return true;
    case 1:
       if (ratio < Epsilon)
 	 temp = denom; // Don't change denom since 0/any == 0
@@ -106,7 +107,7 @@ RatioConstraint::Satisfy( const Index index, const Scheme scheme, const Real Eps
 	 temp = numer / ratio;
       var = vars[1];
       c = temp;
-      return 1;
+      return true;
    case 2:
       if (denom < Epsilon)
 	 temp = ratio; // Don't change denom since 0/any == 0
@@ -114,12 +115,12 @@ RatioConstraint::Satisfy( const Index index, const Scheme scheme, const Real Eps
 	 temp = numer / denom;
       var = vars[2];
       c = temp;
-      return 1;
+      return true;
    default:
       cerr << "Unknown variable in Ratio Constraint!" << endl;
       break;
    }
-   return 0;
+   return false;
 }
 
 } // End namespace SCIRun

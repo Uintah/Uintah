@@ -84,8 +84,9 @@ PlaneConstraint::~PlaneConstraint()
  * Satisfy should return 1 if it is able to satisfy the constraint, and
  *      0 otherwise.
  */
-int
-PlaneConstraint::Satisfy( const Index index, const Scheme scheme, const Real Epsilon,
+bool
+PlaneConstraint::Satisfy( const Index index, const Scheme scheme,
+			  const double Epsilon,
 			  BaseVariable*& var, VarCore& c )
 {
    PointVariable& p1 = *vars[0];
@@ -109,7 +110,7 @@ PlaneConstraint::Satisfy( const Index index, const Scheme scheme, const Real Eps
 	 Plane plane(p2, p3, p4);
 	 var = vars[0];
 	 c = plane.project(p1);
-	 return 1;
+	 return true;
       }
       break;
    case 1:
@@ -121,7 +122,7 @@ PlaneConstraint::Satisfy( const Index index, const Scheme scheme, const Real Eps
 	 Plane plane(p1, p3, p4);
 	 var = vars[1];
 	 c = plane.project(p2);
-	 return 1;
+	 return true;
       }
       break;
    case 2:
@@ -133,7 +134,7 @@ PlaneConstraint::Satisfy( const Index index, const Scheme scheme, const Real Eps
 	 Plane plane(p1, p2, p4);
 	 var = vars[2];
 	 c = plane.project(p3);
-	 return 1;
+	 return true;
       }
       break;
    case 3:
@@ -145,14 +146,14 @@ PlaneConstraint::Satisfy( const Index index, const Scheme scheme, const Real Eps
 	 Plane plane(p1, p2, p3);
 	 var = vars[3];
 	 c = plane.project(p4);
-	 return 1;
+	 return true;
       }
       break;
    default:
       cerr << "Unknown variable in Plane Constraint!" << endl;
       break;
    }
-   return 0;
+   return false;
 }
 
 } // End namespace SCIRun

@@ -50,7 +50,7 @@ BaseVariable::BaseVariable( const string& name,
 
 BaseVariable::BaseVariable( const string& name,
 			    ConstraintSolver* s, const Scheme scheme,
-			    const Real value )
+			    const double value )
 : name(name), data(value, VarCore::Rigid), solver(s),
   levellevel(0), level(0), numconstraints(0), scheme(scheme)
 {
@@ -99,7 +99,7 @@ BaseVariable::Set( const Point& newValue, const Scheme s )
 
 
 void
-BaseVariable::Set( const Real newValue, const Scheme s )
+BaseVariable::Set( const double newValue, const Scheme s )
 {
    if (s == DefaultScheme)
       solver->Solve(this, VarCore(newValue), scheme);
@@ -119,7 +119,7 @@ BaseVariable::SetDelta( const Vector& deltaValue, const Scheme s )
 
 
 void
-BaseVariable::SetDelta( const Real deltaValue, const Scheme s )
+BaseVariable::SetDelta( const double deltaValue, const Scheme s )
 {
    if (s == DefaultScheme)
       solver->Solve(this, VarCore(data.real() + deltaValue), scheme);
@@ -136,7 +136,7 @@ BaseVariable::Move( const Point& newValue )
 
 
 void
-BaseVariable::Move( const Real newValue )
+BaseVariable::Move( const double newValue )
 {
    data = newValue;
 }
@@ -150,7 +150,7 @@ BaseVariable::MoveDelta( const Vector& deltaValue )
 
 
 void
-BaseVariable::MoveDelta( const Real deltaValue )
+BaseVariable::MoveDelta( const double deltaValue )
 {
    data += deltaValue;
 }

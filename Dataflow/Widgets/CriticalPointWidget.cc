@@ -156,10 +156,10 @@ void
 CriticalPointWidget::redraw()
 {
    Vector direct(direction);
-   Real extent(4.5*widget_scale);
-   Real sphererad(widget_scale), cylinderrad(0.5*widget_scale);
-   Real twocenoff(extent-cylinderrad), cenoff(twocenoff/2.0), rad(0.6*widget_scale);
-   Real conelen(1.5*widget_scale), conerad(0.8*widget_scale), cyllen(extent-conelen);
+   double extent(4.5*widget_scale);
+   double sphererad(widget_scale), cylinderrad(0.5*widget_scale);
+   double twocenoff(extent-cylinderrad), cenoff(twocenoff/2.0), rad(0.6*widget_scale);
+   double conelen(1.5*widget_scale), conerad(0.8*widget_scale), cyllen(extent-conelen);
    Point center(variables[PointVar]->point());
    Vector v1, v2;
    direct.normal().find_orthogonal(v1,v2);
@@ -169,7 +169,7 @@ CriticalPointWidget::redraw()
    Point cylinder3end1, cylinder3end2;
    Point cylinder4end1, cylinder4end2;
    Point torus1center, torus2center, torus3center, torus4center;
-   Real torus1start=0, torus2start=0, torus3start=0, torus4start=0,
+   double torus1start=0, torus2start=0, torus3start=0, torus4start=0,
        torusangle(3.14159);
    Point cone1end1, cone1end2;
    Point cone2end1, cone2end2;
@@ -235,7 +235,7 @@ CriticalPointWidget::redraw()
       break;
    case AttractingFocus:
       {
-	  Real weird(3.14159-2.2);
+	  double weird(3.14159-2.2);
 	  torus1center = center+v2*cenoff;
 	  torus1start = 0+weird;
 	  torus2center = center+v1*cenoff;
@@ -274,7 +274,7 @@ CriticalPointWidget::redraw()
       break;
    case SpiralSaddle:
       {
-	  Real weird = 3.14159-2.2;
+	  double weird = 3.14159-2.2;
 	  torus1center = center+v2*cenoff;
 	  torus1start = 0+weird;
 	  torus2center = center+v1*cenoff;
@@ -489,7 +489,7 @@ CriticalPointWidget::widget_tcl( TCLArgs& args )
 	 args.error("criticalpoint widget needs axis translation");
 	 return;
       }
-      Real trans;
+      double trans;
       if (!string_to_double(args[3], trans)) {
 	 args.error("criticalpoint widget can't parse translation `"+args[3]+"'");
 	 return;

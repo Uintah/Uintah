@@ -135,11 +135,12 @@ BaseConstraint::VarChoices( const Scheme scheme,
  * Satisfy should return 1 if it is able to satisfy the constraint, and
  *      0 otherwise.
  */
-int
-BaseConstraint::Satisfy( const Index, const Scheme, const Real, BaseVariable*&, VarCore& )
+bool
+BaseConstraint::Satisfy( const Index, const Scheme, const double,
+			 BaseVariable*&, VarCore& )
 {
    ASSERTFAIL("BaseConstraint: Can't satisfy!");
-   //return 0;
+   // return false;
 }
 
 

@@ -105,7 +105,7 @@ BaseWidget::BaseWidget( Module* module, CrowdMonitor* lock,
 			const Index NumMaterials,
 			const Index NumModes,
 			const Index NumSwitches,
-			const Real widget_scale )
+			const double widget_scale )
   : module(module),
     lock(lock),
     name(name),
@@ -313,7 +313,7 @@ BaseWidget::tcl_command(TCLArgs& args, void*)
 	 args.error("widget needs user scale");
 	 return;
       }
-      Real us;
+      double us;
       if (!string_to_double(args[2], us)) {
 	 args.error("widget can't parse user scale `"+args[2]+"'");
 	 return;
@@ -354,7 +354,7 @@ BaseWidget::GetScale() const
 
 
 void
-BaseWidget::SetEpsilon( const Real Epsilon )
+BaseWidget::SetEpsilon( const double Epsilon )
 {
    epsilon = Epsilon;
    solve->SetEpsilon(epsilon*widget_scale);
@@ -526,7 +526,7 @@ BaseWidget::GetPointVar( const Index vindex ) const
 }
 
 
-Real
+double
 BaseWidget::GetRealVar( const Index vindex ) const
 {
    ASSERT(vindex<NumVariables);

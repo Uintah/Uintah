@@ -65,28 +65,28 @@ public:
    BaseVariable( const string& name, ConstraintSolver* s, const Scheme scheme,
 		 const Point& initialValue );
    BaseVariable( const string& name, ConstraintSolver* s, const Scheme scheme,
-		 const Real initialValue );
+		 const double initialValue );
    ~BaseVariable();
 
    void Order(); // Use to let the Variable order its constraints.
 
    // Widgets use these instead of Assign!
    void Set( const Point& newValue, const Scheme s = DefaultScheme );
-   void Set( const Real newValue, const Scheme s = DefaultScheme );
+   void Set( const double newValue, const Scheme s = DefaultScheme );
    void SetDelta( const Vector& deltaValue, const Scheme s = DefaultScheme );
-   void SetDelta( const Real deltaValue, const Scheme s = DefaultScheme );
+   void SetDelta( const double  deltaValue, const Scheme s = DefaultScheme );
 
    // Widgets use these to move whole widget.
    // i.e. they don't change constraints!!
    void Move( const Point& newValue );
-   void Move( const Real newValue );
+   void Move( const double newValue );
    void MoveDelta( const Vector& deltaValue );
-   void MoveDelta( const Real deltaValue );
+   void MoveDelta( const double deltaValue );
    
    inline Point point() const;
    inline operator Point() const;
-   inline Real real() const;
-   inline operator Real() const;
+   inline double real() const;
+   inline operator double() const;
 
    void print( std::ostream& os );
 
@@ -141,17 +141,17 @@ BaseVariable::operator Point() const
 }
 
 
-inline Real
+inline double
 BaseVariable::real() const
 {
-   return (Real)data;
+   return (double)data;
 }
 
 
 inline
-BaseVariable::operator Real() const
+BaseVariable::operator double() const
 {
-   return (Real)data;
+   return (double)data;
 }
 
 

@@ -57,17 +57,17 @@ public:
    void GetPosition( Point& center, Point& R, Point& D );
 
    void SetPosition( const Point& center, const Vector& normal,
-		     const Real size1, const Real size2 );
+		     const double size1, const double size2 );
    void GetPosition( Point& center, Vector& normal,
-		     Real& size1, Real& size2 );
+		     double& size1, double& size2 );
 
-   void SetRatioR( const Real ratio );
-   Real GetRatioR() const;
-   void SetRatioD( const Real ratio );
-   Real GetRatioD() const;
+   void SetRatioR( const double ratio );
+   double GetRatioR() const;
+   void SetRatioD( const double ratio );
+   double GetRatioD() const;
 
-   void SetSize( const Real sizeR, const Real sizeD );
-   void GetSize( Real& sizeR, Real& sizeD ) const;
+   void SetSize( const double sizeR, const double sizeD );
+   void GetSize( double& sizeR, double& sizeD ) const;
    
    const Vector& GetRightAxis();
    const Vector& GetDownAxis();

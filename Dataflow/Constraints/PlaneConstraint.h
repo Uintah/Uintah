@@ -46,8 +46,9 @@ public:
    virtual ~PlaneConstraint();
 
 protected:
-   virtual int Satisfy( const Index index, const Scheme scheme, const Real Epsilon,
-			BaseVariable*& var, VarCore& c );
+   virtual bool Satisfy( const Index index, const Scheme scheme,
+			 const double Epsilon,
+			 BaseVariable*& var, VarCore& c );
 };
 
 } // End namespace SCIRun

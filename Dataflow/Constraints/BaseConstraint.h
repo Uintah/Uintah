@@ -90,8 +90,9 @@ protected:
 
    void Register();
    inline Index ChooseChange( const Index index, const Scheme scheme );
-   virtual int Satisfy( const Index index, const Scheme scheme, const Real Epsilon,
-			BaseVariable*& var, VarCore& c );
+   virtual bool Satisfy( const Index index, const Scheme scheme,
+			 const double Epsilon,
+			 BaseVariable*& var, VarCore& c );
 };
 inline PSECORESHARE std::ostream& operator<<( std::ostream& os, BaseConstraint& v );
 
