@@ -21,8 +21,6 @@ set m6 [addModuleAtPosition "SCIRun" "Math" "SolveMatrix" 202 290]
 set m7 [addModuleAtPosition "SCIRun" "Math" "ManipMatrix" 238 150]
 set m8 [addModuleAtPosition "SCIRun" "Fields" "ManageFieldData" 184 354]
 
-after 2000
-
 addConnection $m4 0 $m3 0
 addConnection $m3 1 $m5 0
 addConnection $m2 0 $m6 1
