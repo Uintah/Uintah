@@ -2972,14 +2972,14 @@ class BioImageApp {
 	if { $loading || [expr $eye+1] != $which || \
 		 [lindex $filters($which) $filter_type] != "crop"} return
 
-
 	set ViewSlices $mods(ViewSlices)
 	set current_crop $which
 	set UnuCrop [lindex [lindex $filters($which) $modules] 0]
 	set reset 0
 	foreach axis "minAxis0 minAxis1 minAxis2 maxAxis0 maxAxis1 maxAxis2" {
+	    set num [string index $axis end]
 	    upvar \#0 $UnuCrop-$axis cropval
-	    set $ViewSlices-crop_$axis $cropval
+	    setGlobal $ViewSlices-crop_$axis $cropval
 	    if { $cropval == "M" } {
 		set reset 1		
 	    }
@@ -2987,10 +2987,6 @@ class BioImageApp {
 	$ViewSlices-c startcrop $reset
     }
 
-
-    method print_filters {} {
-	parray filters
-    }
 
     method add_Resample_UI {history row which} {
 	frame $history.$which
