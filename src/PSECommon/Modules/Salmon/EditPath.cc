@@ -65,9 +65,6 @@ POSSIBLE REVISIONS
 using std::cout;
 using namespace std;
 
-#undef mr
-
-// #define msg(m) cout << m  << endl;
 
 namespace PSECommon {
 namespace Modules {
@@ -97,7 +94,8 @@ using SCICore::Thread::Time;
     TCLint     tcl_num_views, tcl_is_looped, tcl_is_backed;
     
     TCLint    tcl_curr_roe;   
-    TCLdouble tcl_step_size, tcl_speed_val, tcl_acc_val, tcl_rate;
+    TCLdouble tcl_step_size, tcl_acc_val, tcl_rate;
+    TCLvardouble tcl_speed_val;
     TCLint    UI_Init, tcl_send_dir;
     TCLvarint tcl_msg_box, tcl_intrp_type, tcl_acc_mode, tcl_widg_show, tcl_curr_view, tcl_is_new, tcl_stop;
     TCLstring tcl_info;
@@ -115,7 +113,6 @@ using SCICore::Thread::Time;
     GeomID           cross_id;
     
     Semaphore    sem;
-    Mutex        exec_lock;
     
     PathIPort*   ipath;
     PathOPort*   opath;
@@ -173,9 +170,9 @@ EditPath::EditPath(const clString& id)
   exec_msg(Default),
   widget_lock("EditPath module widget lock"),
   sem("EditPath Semaphore", 0),
-  exec_lock("exec_lock"),
   message(""),
-  camv()
+  camv(),
+  c_view(Point(1, 1, 1), Point(0, 0, 0), Vector(-1, -1, 1), 20)
 {
   ipath=scinew PathIPort(this, "Path", PathIPort::Atomic);
   add_iport(ipath);
@@ -212,7 +209,6 @@ EditPath::~EditPath()
 
 void EditPath::execute()
 {
-  exec_lock.lock();
 
   sem.tryDown();
   { 
@@ -238,7 +234,6 @@ void EditPath::execute()
 	    opath->send(curr_path_h);
 	    exec_msg=Default;
 	    sem.up();
-	    exec_lock.unlock();
 	    return;
 	  }
 	}
@@ -325,7 +320,8 @@ void EditPath::execute()
     
 	if (data && data->view){
 	  c_view=*(data->view);
-	  if (curr_path_h->add_keyF(c_view)){
+	  speed_val=tcl_speed_val.get();
+	  if (curr_path_h->add_keyF(c_view, speed_val)){
 	    curr_view=(curr_path_h->get_num_views()-1);
 	    is_changed=true;
 	    send_view();
@@ -345,14 +341,14 @@ void EditPath::execute()
       case rem_vp:    
 	data=ogeom->getData(0, 1);
 	if (data && data->view){
-	  if (curr_path_h->get_keyF(curr_view, c_view)){
+	  if (curr_path_h->get_keyF(curr_view, c_view, speed_val)){
 	      //      && *(data->view)==c_view){
 	    curr_path_h->del_keyF(curr_view);
 
 	    if (curr_view==curr_path_h->get_num_views())  // last view deleted
 	      curr_view--;
 	    
-	    if (curr_path_h->get_keyF(curr_view, c_view)){
+	    if (curr_path_h->get_keyF(curr_view, c_view, speed_val)){
 	      send_view();
 	    }
 	      
@@ -374,7 +370,8 @@ void EditPath::execute()
       case ins_vp:
 	data=ogeom->getData(0, 1);
 	if (data && data->view){
-	  if (curr_path_h->ins_keyF(curr_view, *(data->view))){
+	  speed_val=tcl_speed_val.get();
+	  if (curr_path_h->ins_keyF(curr_view, *(data->view), speed_val)){
 	    send_view();
 	    is_changed=true;
 	    message="Key frame inserted";
@@ -393,27 +390,27 @@ void EditPath::execute()
       case rpl_vp:
 	data=ogeom->getData(0, 1);
 	if (data && data->view){
-	  if (curr_path_h->get_keyF(curr_view, c_view)){ 
+	  if (curr_path_h->get_keyF(curr_view, c_view, speed_val)){ 
 	    curr_path_h->del_keyF(curr_view);
 
 	    if (curr_view==curr_path_h->get_num_views()) // last view deleted
-	      if (curr_path_h->add_keyF(*(data->view))){
+	      if (curr_path_h->add_keyF(*(data->view), tcl_speed_val.get())){
 		message="Last keyframe replaced";
 	      }
 	      else {
 		message="Cann't replace (neighboor keyframe at the same position)";
-		curr_path_h->add_keyF(c_view);
+		curr_path_h->add_keyF(c_view, tcl_speed_val.get());
 	      }
 	    else {
-	      if (curr_path_h->ins_keyF(curr_view, *(data->view))){
+	      if (curr_path_h->ins_keyF(curr_view, *(data->view), tcl_speed_val.get())){
 		message="Keyframe replaced";
 	      }
 	      else {
 		message="Cann't replace (neighboor keyframe at the same position)";
-		curr_path_h->ins_keyF(curr_view, c_view);
+		curr_path_h->ins_keyF(curr_view, c_view, tcl_speed_val.get());
 	      }
 	    }
-	    curr_path_h->get_keyF(curr_view, c_view);
+	    curr_path_h->get_keyF(curr_view, c_view, speed_val);
 	    send_view();
 	    is_changed=true;
 	  }
@@ -448,39 +445,35 @@ void EditPath::execute()
 	if (!tcl_stop.get()){
 	  double olds=speed_val;
 	  is_next=curr_path_h->get_nextPP(c_view, cv, speed_val, acc_val);  
-	  send_view();
-
-	  speed_val/=(rate=tcl_rate.get());
-	  acc_val=is_next?((speed_val-olds)/rate):0;
-
-	  tcl_speed_val.set(speed_val);
-	  tcl_acc_val.set(acc_val);
-	  
-	  if (is_next){  
+	 
+	  if (is_next){
+	    send_view();
+	    acc_val=(speed_val-olds)/rate;
+	    
 	    curr_view=cv;
 	    update_tcl_var();
 	    exec_msg=test_path;
-	    Time::waitFor(rate);
+	    Time::waitFor(rate=tcl_rate.get());
 	    want_to_execute();
 	    // !!! no sem.up() here - no certain UI parts interference
-	    exec_lock.unlock();
 	    return;
 	  }
 	  else {
+	    acc_val=0;
 	    curr_path_h->seek_start();
 	    curr_view=cv;
 	    update_tcl_var();
 	  }
 	}
+     
 	curr_path_h->stop();
-	opath->send(curr_path_h);
       }
       break;
     
       //********************************************************			
       case get_to_view:
 	cv=tcl_curr_view.get();
-	if (curr_path_h->get_keyF(cv, c_view)){
+	if (curr_path_h->get_keyF(cv, c_view, speed_val)){
 	  send_view();
 	  curr_view=cv;
 	  update_tcl_var();
@@ -490,12 +483,12 @@ void EditPath::execute()
       // ******************************************************
       case next_view:
 	cv=curr_view+1;
-	if (curr_path_h->get_keyF(cv, c_view)){
+	if (curr_path_h->get_keyF(cv, c_view, speed_val)){
 	  curr_view=cv;
 	  send_view();
 	}
 	else {
-	  if (curr_path_h->get_keyF(curr_view, c_view)){
+	  if (curr_path_h->get_keyF(curr_view, c_view, speed_val)){
 	    send_view();
 	  }
 	}
@@ -505,12 +498,12 @@ void EditPath::execute()
       // ******************************************************
       case prev_view:
 	cv=curr_view-1;
-	if (curr_path_h->get_keyF(cv, c_view)){
+	if (curr_path_h->get_keyF(cv, c_view, speed_val)){
 	  curr_view=cv;
 	  send_view();
 	}
 	else {
-	  if (curr_path_h->get_keyF(curr_view, c_view)){
+	  if (curr_path_h->get_keyF(curr_view, c_view, speed_val)){
 	    send_view();
 	  }
 	}
@@ -546,7 +539,6 @@ void EditPath::execute()
   }
   exec_msg=Default;
   sem.up();
-  exec_lock.unlock();  
 }
 
 void EditPath::send_view(){
@@ -611,9 +603,7 @@ void EditPath::tcl_command(TCLArgs& args, void* userdata)
     }
   }
   else if (args[1] == "test_path"){
-    msg ("In test_path TCL handler");
     if(sem.tryDown()){
-      msg ("Sending exec message");
       tcl_stop.set(0);
       exec_msg=test_path;
       want_to_execute();
@@ -653,10 +643,13 @@ void EditPath::tcl_command(TCLArgs& args, void* userdata)
     }
   }
   else if (args[1] == "w_show"){
+    cout << "entering widget lock" << endl;
     widget_lock.writeLock();
+    cout << " behind widget lock " << endl;
     cross_widget->SetState(tcl_widg_show.get());
     ogeom->flushViews();
     widget_lock.writeUnlock();
+    cout << " out of w_show handler" << endl;
   }
   else if (args[1] == "mk_circle_path"){
     if(sem.tryDown()){
@@ -774,6 +767,9 @@ bool EditPath::Msg_Box(const clString& title, const clString& message){
 
 //
 // $Log$
+// Revision 1.7  2000/09/29 08:45:35  samsonov
+// Added camera speed support
+//
 // Revision 1.6  2000/09/15 21:49:26  samsonov
 // added output switch and send_view() function
 //
