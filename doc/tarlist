@@ -56,6 +56,7 @@ $stdout.print(Dir["
 #{root}/doc/Documentum/docbook_*_template.xml
 #{root}/doc/Documentum/*_template.html
 #{root}/doc/Installation/Guide/*.html
+#{root}/doc/Installation/Guide/*.gif
 #{root}/doc/Developer/Guide/*.html
 #{root}/doc/Developer/Modules/*.html
 #{root}/doc/FAQBook/*.html
