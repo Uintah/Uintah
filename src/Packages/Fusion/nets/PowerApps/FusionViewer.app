@@ -2016,10 +2016,40 @@ class FusionViewerApp {
 
 	pack $f.cm -side top -anchor w -padx 5 -pady 3
 
-	checkbutton $f.integration -text "Show Scalar Integration Points" \
+	frame $f.integration -relief groove -borderwidth 2
+
+	checkbutton $f.integration.show \
+	    -text "Show Scalar Integration Points" \
 	    -variable $mods(ShowField-StreamLines-Scalar)-nodes-on \
 	    -command "$this toggle_integration 0"
-	pack $f.integration -side top -anchor w -padx 20 -pady 3
+	pack $f.integration.show -side top -anchor w -padx 20 -pady 3
+
+	frame $f.integration.color
+	label $f.integration.color.label -text "Color Style:"
+	frame $f.integration.color.left
+	frame $f.integration.color.right
+	radiobutton $f.integration.color.left.const -text   "Seed Number" \
+	    -variable $mods(StreamLines)-color -value 0
+	radiobutton $f.integration.color.left.incr -text "Integration Step" \
+	    -variable $mods(StreamLines)-color -value 1
+	radiobutton $f.integration.color.right.delta \
+	    -text "Distance from Seed" \
+	    -variable $mods(StreamLines)-color -value 2
+	radiobutton $f.integration.color.right.total \
+	    -text "Streamline Length" \
+	    -variable $mods(StreamLines)-color -value 3
+
+	pack $f.integration.color.left.const \
+	    $f.integration.color.left.incr -side top -anchor w
+	pack $f.integration.color.right.delta \
+	    $f.integration.color.right.total -side top -anchor w
+
+	pack $f.integration.color.label -side top -anchor w
+	pack $f.integration.color.left -side left -anchor w
+	pack $f.integration.color.right -side left -padx 20
+
+	pack $f.integration.color -side top -anchor w -padx 5 -pady 3 -fill x
+	pack $f.integration -side top -anchor w -padx 5 -pady 3 -fill x
     }
 
 
@@ -2229,7 +2259,6 @@ class FusionViewerApp {
 	}
 
 	if { $show_scalarslice == 1 } {
-
 	    set on 1
 	    set disable 0
 
@@ -2239,19 +2268,6 @@ class FusionViewerApp {
 	    foreach w [winfo children $scalarslice_frame1] {
 		enable_widget $w
 	    }
-
-	    if { [set $mods(ShowField-Scalar-Slice)-edges-on] == 0 } {
-		foreach w [winfo children $scalarslice_frame0.contours] {
-		    disable_widget $w
-		}
-		foreach w [winfo children $scalarslice_frame1.contours] {
-		    disable_widget $w
-		}
-
-		enable_widget $scalarslice_frame0.contours.show
-		enable_widget $scalarslice_frame1.contours.show
-	    }
-
 	} else {
 	    set on 0
 	    set disable 1
@@ -2272,8 +2288,6 @@ class FusionViewerApp {
 	disableConnectionID $connections(isosurface_to_clipfuction) $disable
 	disableConnectionID $connections(matrix_to_matrix)          $disable
 	disableConnectionID $connections(matrix_to_choose)          $disable
-	disableConnectionID $connections(matrix_to_isosurface)      $disable
-	disableConnectionID $connections(isosurface_to_choose)      $disable
 	disableConnectionID $connections(choose_to_showfield)       $disable
 	disableConnectionID $connections(clipfuction_fld_to_matrix) $disable
 	disableConnectionID $connections(clipfuction_mtx_to_matrix) $disable
@@ -2297,7 +2311,6 @@ class FusionViewerApp {
 	if { $DEBUG == 1 } {
 	    puts stderr "in  toggle_contours $show_scalarslice $have_scalarslice $show_contours [set $mods(ShowField-Scalar-Slice)-faces-on] [set $mods(ShowField-Scalar-Slice)-edges-on]"
 	}
-
 
 	if { $update == 1 } {
 	    if { $show_scalarslice == 1 } {
@@ -2328,6 +2341,8 @@ class FusionViewerApp {
 	}
 
 	if { [set $mods(ShowField-Scalar-Slice)-edges-on] == 0 } {
+	    set disable 1
+
 	    foreach w [winfo children $scalarslice_frame0.contours] {
 		disable_widget $w
 	    }
@@ -2340,14 +2355,20 @@ class FusionViewerApp {
 		enable_widget $scalarslice_frame1.contours.show
 	    }
 	} elseif { $show_scalarslice == 1 } {
+	    set disable 0
+
 	    foreach w [winfo children $scalarslice_frame0.contours] {
 		enable_widget $w
 	    }
 	    foreach w [winfo children $scalarslice_frame1.contours] {
 		enable_widget $w
 	    }
+	} else {
+	    set disable 1 
 	}
 
+	disableConnectionID $connections(matrix_to_isosurface)      $disable
+	disableConnectionID $connections(isosurface_to_choose)      $disable
 
 	if { $have_scalarslice == 1 } {
 	    if { $update == 1 } {
@@ -2362,6 +2383,7 @@ class FusionViewerApp {
 		$mods(ShowField-Scalar-Slice)-c toggle_display_edges
 	    }
 	}
+
 	if { $DEBUG == 1 } {
 	    puts stderr "out toggle_contours $show_scalarslice $have_scalarslice $show_contours [set $mods(ShowField-Scalar-Slice)-faces-on] [set $mods(ShowField-Scalar-Slice)-edges-on]"
 	}
@@ -2607,25 +2629,43 @@ class FusionViewerApp {
 	    if { [set $mods(ShowField-StreamLines-Vector)-edges-on] } {
 		set $mods(ShowField-StreamLines-Scalar)-nodes-on \
 		    $show_integration
-
-		enable_widget $streamlines_frame0.integration
-		enable_widget $streamlines_frame1.integration
 	    } else {
 		set show_integration \
 		    [set $mods(ShowField-StreamLines-Scalar)-nodes-on]
 		set $mods(ShowField-StreamLines-Scalar)-nodes-on 0
-
-		disable_widget $streamlines_frame0.integration
-		disable_widget $streamlines_frame1.integration
 	    }
 	}
 
-	if {[set $mods(ShowField-StreamLines-Scalar)-nodes-on] } {
+	if {[set $mods(ShowField-StreamLines-Scalar)-nodes-on] == 0 } {
+	    set disable 1
+
+	    foreach w [winfo children $streamlines_frame0.integration] {
+		disable_widget $w
+	    }
+	    foreach w [winfo children $streamlines_frame1.integration] {
+		disable_widget $w
+	    }
+
+	    if { [set $mods(ShowField-StreamLines-Vector)-edges-on] } {
+		enable_widget $streamlines_frame0.integration.show
+		enable_widget $streamlines_frame1.integration.show
+	    } else {
+		disable_widget $streamlines_frame0.integration.show
+		disable_widget $streamlines_frame1.integration.show
+	    }
+	} elseif { [set $mods(ShowField-StreamLines-Vector)-edges-on] } {
 	    set disable 0
+	    
+	    foreach w [winfo children $streamlines_frame0.integration] {
+		enable_widget $w
+	    }
+	    foreach w [winfo children $streamlines_frame1.integration] {
+		enable_widget $w
+	    }
 	} else {
 	    set disable 1
 	}
-
+	 
 	disableConnectionID $connections(streamlines_to_showfield)    $disable
 	disableConnectionID $connections(streamlines_to_rescalecolor) $disable
 #       Disconnecting a dynamic port causes a hang
