@@ -2535,15 +2535,25 @@ esac
 # Again required for the following uni-petsc checks, that attempt to support
 # the MatrixSolver module.
 
-if test "$with_mpiuni"; then
-  _sci_lib="$with_mpiuni/lib"
-  _sci_inc="$with_mpiuni/include" 
+_sci_lib=
+_sci_inc=
+
+if test "$with_mpiuni" = "yes"; then
+  echo
+  AC_MSG_ERROR(You must specify a directory with the --with-mpiuni=dir.)
+  echo
 elif test "$with_unipetsc"; then
   _sci_lib="$with_unipetsc/lib/$PETSC_SUB/$PETSC_ARCH"
-  _sci_inc="$with_unipetsc/src/sys/src/mpiuni $with_unipetsc/bmake/$PETSC_ARCH" 
-else
-  _sci_lib="$sci_thirdparty_libs"
-  _sci_inc="$sci_thirdparty_includes"
+  if test ! -d "$_sci_lib" || test ! -d "$with_unipetsc/include/mpiuni" ||
+     test ! -d "$with_unipetsc/bmake/$PETSC_ARCH" ; then
+    echo
+    AC_MSG_WARN(Specified unipetsc directory is invalid.  One of the following dirs does not exist:)
+    AC_MSG_WARN($_sci_lib)
+    AC_MSG_WARN($with_unipetsc/include/mpiuni)
+    AC_MSG_WARN($with_unipetsc/bmake/$PETSC_ARCH)
+    AC_MSG_ERROR(Please fix this problem and reconfigure.)
+  fi
+  _sci_inc="$with_unipetsc/include/mpiuni $with_unipetsc/bmake/$PETSC_ARCH" 
 fi
 
 SCI_TRY_LINK(MPI_UNI,mpi-uni libraries and headers,mpi.h,$_sci_inc,mpiuni,$_sci_lib,,,optional)
@@ -2585,20 +2595,19 @@ AC_SUBST(MPI_UNI_LIB_FLAG)
 AC_SUBST(MPI_UNI_LIB_DIR_FLAG)
 
 
-#  --  search for mpi-uni  --------------------------------------------
+#  --  search for PETSc  --------------------------------------------
 if test -z "$PETSC_ARCH"; then
    AC_MSG_ERROR(PETSC_ARCH environment var is not set.  Please set.)
 fi
 
 # Make sure we have either mpi or mpi-uni, blas, and lapack
 # It seems that under AIX and OSF, the libs that cover blas also cover lapack
-if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && 
-    test "$HAVE_BLAS" = "yes" && 
+if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLAS" = "yes" && 
    (test "$PETSC_ARCH" = "rs6000_sp" || test "$PETSC_ARCH" = "dec" ||
     test "$HAVE_LAPACK" = "yes"); then
 
-  _sci_lib_dir=""
-  _sci_inc=""
+  _sci_lib_dir=
+  _sci_inc=
 
   if test "$with_petsc"; then
     _sci_lib_dir="$with_petsc/lib/$PETSC_SUB/$PETSC_ARCH"
@@ -2641,24 +2650,37 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") &&
   fi
 
   #  --  search for uni-petsc  --------------------------------------------
-  _sci_lib=""
-  _sci_inc=""
 
-  if test "$with_unipetsc"; then
-    _sci_lib="$with_unipetsc/lib/$PETSC_SUB/$PETSC_ARCH"
-    _sci_inc="$with_unipetsc/bmake/$PETSC_ARCH $with_unipetsc/include"
-  fi
+  if test "$HAVE_PETSC" != "yes" ; then
 
-  SCI_TRY_LINK(PETSC_UNI,petsc-uni libraries and headers,petsc.h,$_sci_inc /usr/include/petsc,petsc petscvec petscmat petscdm petsccontrib petscsnes petscts petscsles petscfortran,$_sci_lib,$LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_FLAG,,optional)
+    # Only check for uni petsc if petsc not found.
+    _sci_lib=""
+    _sci_inc=""
 
-  if test "$HAVE_PETSC_UNI" = "yes" ; then
-    DEF_PETSC_UNI="#define PETSC_UNI 1"
-  fi
+    if test "$with_unipetsc"; then
+      _sci_lib="$with_unipetsc/lib/$PETSC_SUB/$PETSC_ARCH"
+      _sci_inc="$with_unipetsc/bmake/$PETSC_ARCH $with_unipetsc/include"
+    fi
+
+    SCI_TRY_LINK(PETSC_UNI,
+                 petsc-uni libraries and headers,
+                 petsc.h,
+                 $_sci_inc /usr/include/petsc,
+                 petsc petscvec petscmat petscdm petscsnes petscts petscfortran,
+                 $_sci_lib,
+                 $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $M_LIB_FLAG $INC_MPI_UNI_H $MPI_UNI_LIB_DIR_FLAG $MPI_UNI_LIB_FLAG $F_LIB_FLAG,
+                 ,
+                 optional)
+
+    if test "$HAVE_PETSC_UNI" = "yes" ; then
+      DEF_PETSC_UNI="#define PETSC_UNI 1"
+    fi
    
-  if test "$with_unipetsc" && test ! "$DEF_PETSC_UNI"; then
-    echo
-    AC_MSG_ERROR(One or more of the UNI-PETSC components is missing.)
-    echo
+    if test "$with_unipetsc" && test ! "$DEF_PETSC_UNI"; then
+      echo
+      AC_MSG_ERROR(One or more of the UNI-PETSC components is missing.)
+      echo
+    fi
   fi
 
 else
