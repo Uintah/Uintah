@@ -28,6 +28,9 @@ HypotenousConstraint::HypotenousConstraint( const clString& name,
    Register();
 };
 
+HypotenousConstraint::~HypotenousConstraint()
+{
+}
 
 void
 HypotenousConstraint::Satisfy( const Index index )

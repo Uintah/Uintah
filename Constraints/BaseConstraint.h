@@ -82,7 +82,7 @@ class BaseConstraint {
 public:
    BaseConstraint( const clString& name, const Index numSchemes,
 		   const Index VariableCount );
-   ~BaseConstraint();
+    virtual ~BaseConstraint();
 
    // Use this to define the priorities of this constraint in relation
    // to each of its variables.

@@ -28,7 +28,11 @@ DistanceConstraint::DistanceConstraint( const clString& name,
 
    // Tell the variables about ourself.
    Register();
-};
+}
+
+DistanceConstraint::~DistanceConstraint()
+{
+}
 
 
 void
