@@ -27,53 +27,72 @@
 */
 
 
+
 /*
- *  MatrixReader.cc: Read a persistent matrix from a file
+ *  MatrixIEPlugin:  Data structure needed to make a SCIRun MatrixIE Plugin
  *
  *  Written by:
- *   Steven G. Parker
+ *   Michael Callahan
  *   Department of Computer Science
  *   University of Utah
- *   July 1994
+ *   May 2004
  *
- *  Copyright (C) 1994 SCI Group
+ *  Copyright (C) 2004 SCI Institute
  */
 
-#include <Dataflow/Ports/MatrixPort.h>
-#include <Dataflow/Modules/DataIO/GenericReader.h>
-#include <Core/ImportExport/Matrix/MatrixIEPlugin.h>
+#ifndef SCI_project_MatrixIEPlugin_h
+#define SCI_project_MatrixIEPlugin_h 1
+
+#include <Core/Util/Assert.h>
+#include <Core/share/share.h>
+#include <Core/Util/ProgressReporter.h>
+#include <Core/Datatypes/Matrix.h>
+
+#include <sgi_stl_warnings_off.h>
+#include <map>
+#include <sgi_stl_warnings_on.h>
 
 namespace SCIRun {
 
-template class GenericReader<MatrixHandle>;
+using std::string;
+using std::map;
 
-class MatrixReader : public GenericReader<MatrixHandle> {
-protected:
-  virtual bool call_importer(const string &filename);
 
+//----------------------------------------------------------------------
+class SCICORESHARE MatrixIEPlugin {
 public:
-  MatrixReader(GuiContext* ctx);
+  const string pluginname;
+
+  const string fileextension;
+  const string filemagic;
+
+  MatrixHandle (*filereader)(ProgressReporter *pr, const char *filename);
+  bool (*filewriter)(ProgressReporter *pr,
+		     MatrixHandle f, const char *filename);
+
+  MatrixIEPlugin(const string &name,
+		 const string &fileextension,
+		 const string &filemagic,
+		 MatrixHandle (*freader)(ProgressReporter *pr,
+					 const char *filename) = 0,
+		 bool (*fwriter)(ProgressReporter *pr, MatrixHandle f,
+				 const char *filename) = 0);
+
+  ~MatrixIEPlugin();
+
+  bool operator==(const MatrixIEPlugin &other) const;
 };
 
-DECLARE_MAKER(MatrixReader)
-MatrixReader::MatrixReader(GuiContext* ctx)
-  : GenericReader<MatrixHandle>("MatrixReader", ctx, "DataIO", "SCIRun")
-{
-}
 
 
-bool
-MatrixReader::call_importer(const string &filename)
-{
-  MatrixIEPluginManager mgr;
-  MatrixIEPlugin *pl = mgr.get_plugin("SomePlugin");
-  if (pl)
-  {
-    handle_ = pl->filereader(this, filename.c_str());
-    return handle_.get_rep();
-  }
-  return false;
-}
+class SCICORESHARE MatrixIEPluginManager {
+public:
+  void get_importer_list(vector<string> &results);
+  void get_exporter_list(vector<string> &results);
+  MatrixIEPlugin *get_plugin(const string &name);
+};
 
 
 } // End namespace SCIRun
+
+#endif

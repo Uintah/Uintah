@@ -48,14 +48,14 @@ namespace SCIRun {
 template class GenericReader<FieldHandle>;
 
 class FieldReader : public GenericReader<FieldHandle> {
+protected:
+  virtual bool call_importer(const string &filename);
+
 public:
   FieldReader(GuiContext* ctx);
-
-  virtual bool call_importer(const string &filename);
 };
 
 DECLARE_MAKER(FieldReader)
-
 
 FieldReader::FieldReader(GuiContext* ctx)
   : GenericReader<FieldHandle>("FieldReader", ctx, "DataIO", "SCIRun")

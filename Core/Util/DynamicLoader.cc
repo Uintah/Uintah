@@ -57,10 +57,14 @@ using namespace std;
   // declared here because it is not initializing properly when declared
   // in Persistent.cc.
   Mutex persistentTypeIDMutex("Persistent Type ID Table Lock");
-  Mutex fieldIEPluginMutex("FieldIE Plugin Table Lock");
+  Mutex colormapIEPluginMutex("ColorMap Import/Export Plugin Table Lock");
+  Mutex fieldIEPluginMutex("Field Import/Export Plugin Table Lock");
+  Mutex matrixIEPluginMutex("Matrix Import/Export Plugin Table Lock");
   const string ext("dylib");
 #else
-  Mutex fieldIEPluginMutex("FieldIE Plugin Table Lock");
+  Mutex colormapIEPluginMutex("ColorMap Import/Export Plugin Table Lock");
+  Mutex fieldIEPluginMutex("Field Import/Export Plugin Table Lock");
+  Mutex matrixIEPluginMutex("Matrix Import/Export Plugin Table Lock");
   const string ext("so");
 #endif
 

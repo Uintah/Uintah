@@ -41,12 +41,16 @@
 
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Modules/DataIO/GenericReader.h>
+#include <Core/ImportExport/ColorMap/ColorMapIEPlugin.h>
 
 namespace SCIRun {
 
 template class GenericReader<ColorMapHandle>;
 
 class ColorMapReader : public GenericReader<ColorMapHandle> {
+protected:
+  virtual bool call_importer(const string &filename);
+
 public:
   ColorMapReader(GuiContext* ctx);
 };
@@ -57,5 +61,20 @@ ColorMapReader::ColorMapReader(GuiContext* ctx)
   : GenericReader<ColorMapHandle>("ColorMapReader", ctx, "DataIO", "SCIRun")
 {
 }
+
+
+bool
+ColorMapReader::call_importer(const string &filename)
+{
+  ColorMapIEPluginManager mgr;
+  ColorMapIEPlugin *pl = mgr.get_plugin("SomePlugin");
+  if (pl)
+  {
+    handle_ = pl->filereader(this, filename.c_str());
+    return handle_.get_rep();
+  }
+  return false;
+}
+
 
 } // End namespace SCIRun

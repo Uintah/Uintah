@@ -29,38 +29,20 @@
 
 # Makefile fragment for this subdirectory
 
-# *** NOTE ***
-# Do not remove or modify the comment line:
-# #[INSERT NEW ?????? HERE]
-# It is required by the module maker to properly edit this file.
-# if you want to edit this file by hand, see the "Create A New Module"
-# documentation on how to do it correctly.
-
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Dataflow/Modules/DataIO
+SRCDIR   := Core/ImportExport/ColorMap
 
-SRCS     += \
-	$(SRCDIR)/ColorMapReader.cc\
-	$(SRCDIR)/ColorMapWriter.cc\
-	$(SRCDIR)/FieldReader.cc\
-	$(SRCDIR)/FieldWriter.cc\
-	$(SRCDIR)/MatrixReader.cc\
-	$(SRCDIR)/MatrixWriter.cc\
-	$(SRCDIR)/PathReader.cc\
-	$(SRCDIR)/PathWriter.cc\
-#[INSERT NEW CODE FILE HERE]
+SRCS +=	$(SRCDIR)/ColorMapIEPlugin.cc \
+	$(SRCDIR)/ExecConverter.cc
 
-PSELIBS := Dataflow/Network Dataflow/Ports Core/Datatypes \
-	Core/Persistent Core/Exceptions Core/Thread Core/Containers \
-	Core/GuiInterface Core/Geometry Core/Datatypes \
-	Core/Util Core/Geom Core/TkExtensions Core/GeomInterface \
-	Dataflow/Widgets Core/ImportExport/Field Core/ImportExport/Matrix \
-	Core/ImportExport/ColorMap
-LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
+PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
+	Core/Thread Core/Geometry Core/GuiInterface \
+	Core/Math Core/Util Core/Datatypes
+LIBS := $(GL_LIBRARY) $(M_LIBRARY) $(BLAS_LIBRARY) $(F_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
-ifeq ($(LARGESOS),no)
-SCIRUN_MODULES := $(SCIRUN_MODULES) $(LIBNAME)
-endif
+INCLUDES += $(BLAS_INCLUDE)
+
+
