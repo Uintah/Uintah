@@ -363,6 +363,11 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   // pedestals for columns
   ruins->add(new Box(seawhite, Point(-4.5, -13, -.8), Point(6.5, -10, -.2)));
 
+
+  ruins->add(new Box(seawhite, Point(7.3,-15.5,-1.5), Point(19.5,-3.3,0)));
+  ruins->add(new Box(seawhite, Point(-23.3,-25.5,-1.5), Point(-3.5,-3.5,0)));
+  
+  
   Array1<Material *> matls;
   string env_map;
   Transform t, t1, t2, t3;
@@ -423,7 +428,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   // columns by west tube
   t.load_identity();
   t.pre_scale(Vector(.02, .02, .02));
-  t.pre_translate(Vector(-16, -3, -.8));
+  t.pre_translate(Vector(-16, -2, -.8));
   if (!readObjFile("/usr/sci/data/Geometry/models/column01/COLUMN.obj",
                    "/usr/sci/data/Geometry/models/column01/COLUMN.mtl",
                    t,col8))
@@ -433,7 +438,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   t.pre_scale(Vector(.02, .02, .02));
   t.pre_rotate(.1, Vector(0, 1, 0));
   t.pre_rotate(.2, Vector(1, 0, 0));
-  t.pre_translate(Vector(-19, -3, -.8));
+  t.pre_translate(Vector(-19, -2, -.8));
   if (!readObjFile("/usr/sci/data/Geometry/models/column01/COLUMN.obj",
                    "/usr/sci/data/Geometry/models/column01/COLUMN.mtl",
                    t,col9))
@@ -938,91 +943,185 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   temp = new Grid (shell1, 15);
   temp->set_name("shell1");
   all_tubes->add(temp);
-  all_tubes->add(new Grid (shell2, 15));
-  all_tubes->add(new Grid (shell3, 15));
-  all_tubes->add(new Grid (pot1, 15));
-  all_tubes->add(new Grid (krabbe, 30));
-  all_tubes->add(new BV1  (anker));
-  all_tubes->add(new BV1  (shark1));
-  all_tubes->add(new Grid (col1, 15));
-  all_tubes->add(new Grid (col2, 15));
-  all_tubes->add(new Grid (col3, 15));
-  all_tubes->add(new Grid (col4, 15));
-  all_tubes->add(new Grid (col7, 15));
-  all_tubes->add(new Grid (col8, 15));
-  all_tubes->add(new Grid (col9, 15));
-  all_tubes->add(new Grid (col10, 15));
+
+  temp = new Grid (shell2, 15);
+  temp->set_name("shell2");
+  all_tubes->add(temp);
   
+  temp = new Grid (shell3, 15);
+  temp->set_name("shell3");
+  all_tubes->add(temp);
+ 
+  temp = new Grid (pot1, 15);
+  temp->set_name("pot1");
+  all_tubes->add(temp);
+  
+  temp = new Grid (krabbe, 15);
+  temp->set_name("krabbe");
+  all_tubes->add(temp);  
+
+  temp = new Grid (anker, 15);
+  temp->set_name("anker");
+  all_tubes->add(temp);  
+  
+  temp = new Grid (shark1, 15);
+  temp->set_name("shark1");
+  all_tubes->add(temp);
+  
+  temp = new Grid (col1, 15);
+  temp->set_name("col1");
+  all_tubes->add(temp);
+  
+  temp = new Grid (col2, 15);
+  temp->set_name("col2");
+  all_tubes->add(temp);
+  
+  temp = new Grid (col3, 15);
+  temp->set_name("col3");
+  all_tubes->add(temp);
+  
+  temp = new Grid (col4, 15);
+  temp->set_name("col4");
+  all_tubes->add(temp);
+  
+  temp = new Grid (col7, 15);
+  temp->set_name("col7");
+  all_tubes->add(temp);
+  
+  temp = new Grid (col8, 15);
+  temp->set_name("col8");
+  all_tubes->add(temp);
+  
+  temp = new Grid (col9, 15);
+  temp->set_name("col9");
+  all_tubes->add(temp);
+  
+  temp = new Grid (col10, 15);
+  temp->set_name("col10");
+  all_tubes->add(temp);
+  
+
   Group* erect_group = new Group();  
-  all_tubes->add(new Grid (col5, 35));
+
+  temp = new Grid (col5, 35);
+  temp->set_name("col5");
+  all_tubes->add(temp);
   //all_tubes->add(new HierarchicalGrid (col5, 6, 4, 4, 10, 10, 4));
 
-  all_tubes->add(new Grid (col6, 35));
+  temp = new Grid (col6, 35);
+  temp->set_name("col6");
+  all_tubes->add(temp);  
   //all_tubes->add(new HierarchicalGrid (col6, 6, 4, 4, 10, 10, 4));
 
-  all_tubes->add(new HierarchicalGrid (patch1, 4, 4, 4, 10, 10, 4));
+  temp = new HierarchicalGrid (patch1, 4, 4, 4, 10, 10, 4);
+  temp->set_name("patch1");
+  all_tubes->add(temp);  
   // all_tubes->add(new Grid (patch1, 25));
-
-  all_tubes->add(new HierarchicalGrid (patch2, 4, 4, 4, 10, 10, 4));
+  
+  temp = new HierarchicalGrid (patch2, 4, 4, 4, 10, 10, 4); 
+  temp->set_name("patch2");
+  all_tubes->add(temp);
   // all_tubes->add(new Grid (patch2, 30));
 
+  temp = new HierarchicalGrid (patch3, 6, 6, 6, 10, 10, 4); 
+  temp->set_name("patch3");
+  all_tubes->add(temp);  
   //  all_tubes->add(new Grid (patch3, 20));
   // all_tubes->add(new Grid (patch3, 20));
-  all_tubes->add(new HierarchicalGrid (patch3, 6, 6, 6, 10, 10, 4));
 
-  //  all_tubes->add(new BV1  (patch4));
-  all_tubes->add(new HierarchicalGrid (patch4, 6, 6, 6, 10, 10, 4));
+  temp = new HierarchicalGrid (patch4, 6, 6, 6, 10, 10, 4); 
+  temp->set_name("patch4");
+  all_tubes->add(temp);
+  // all_tubes->add(new BV1  (patch4));
+  // all_tubes->add(new HierarchicalGrid (patch4, 6, 6, 6, 10, 10, 4));
   // all_tubes->add(new Grid (patch4, 20));
 
-  //  all_tubes->add(new BV1  (patch5));
-  all_tubes->add(new HierarchicalGrid (patch5, 6, 6, 6, 10, 10, 4));
+  temp = new HierarchicalGrid (patch5, 6, 6, 6, 10, 10, 4);
+  temp->set_name("patch5");
+  all_tubes->add(temp);  
+  // all_tubes->add(new BV1  (patch5));
   // all_tubes->add(new Grid (patch5, 20));
 
-  //  all_tubes->add(new BV1  (patch6));
-  all_tubes->add(new HierarchicalGrid (patch6, 8, 8, 8, 10, 10, 4));
+  temp = new HierarchicalGrid (patch6, 6, 6, 6, 10, 10, 4);
+  temp->set_name("patch6");
+  all_tubes->add(temp);
+  // all_tubes->add(new BV1  (patch6));
   // all_tubes->add(new Grid (patch6, 20));
-
+      
+  temp = new HierarchicalGrid (gazebo, 8, 8, 6, 10, 10, 4);
+  temp->set_name("gazebo");
+  all_tubes->add(temp);  
   //  all_tubes->add(new Grid (gazebo, 15));
-  all_tubes->add(new HierarchicalGrid (gazebo, 8, 8, 6, 10, 10, 4));
 
+  temp = new HierarchicalGrid (erect, 10, 6, 6, 10, 10, 4);
+  temp->set_name("erect");
+  all_tubes->add(temp);  
   // all_tubes->add(new Grid (erect, 10));
-  erect_group->add(new HierarchicalGrid (erect, 10, 6, 6, 10, 10, 4));
 
+  temp = new HierarchicalGrid(temple, 6, 6, 6, 10, 10, 4);
+  temp->set_name("temple");
+  all_tubes->add(temp);  
   // all_tubes->add(new Grid(temple, 10));
-  all_tubes->add(new HierarchicalGrid(temple, 6, 6, 6, 10, 10, 4));
 
+  temp = new HierarchicalGrid(parth, 4, 4, 4, 10, 10, 4);
+  temp->set_name("parth");
+  all_tubes->add(temp);  
   // all_tubes->add(new Grid(parth, 10));
-  all_tubes->add(new HierarchicalGrid(parth, 4, 4, 4, 10, 10, 4));
 
+  temp = new HierarchicalGrid(temple2, 6, 6, 6, 10, 10, 4);
+  temp->set_name("temple2");
+  all_tubes->add(temp);  
   // all_tubes->add(new Grid(temple2, 20));
-  all_tubes->add(new HierarchicalGrid(temple2, 6, 6, 6, 10, 10, 4));
 
-  all_tubes->add(new HierarchicalGrid (rock1, 20, 6, 6, 10, 10, 4));
-//  all_tubes->add(new Grid (rock1, 40));
+  temp = new HierarchicalGrid (rock1, 20, 6, 6, 10, 10, 4);
+  temp->set_name("rock1");
+  all_tubes->add(temp); 
+  // all_tubes->add(new Grid (rock1, 40));
 
-//  all_tubes->add(new HierarchicalGrid (rock2, 20, 6, 6, 10, 10, 4));
-  erect_group->add(new Grid (rock2, 80));
+  temp = new Grid (rock2, 80);
+  temp->set_name("rock2");
+  all_tubes->add(temp);  
+  // all_tubes->add(new HierarchicalGrid (rock2, 20, 6, 6, 10, 10, 4));
 
-  all_tubes->add(new Grid (rock3, 80));
-//  all_tubes->add(new HierarchicalGrid (rock3, 20, 6, 6, 10, 10, 4));
-  
-  all_tubes->add(new Grid (rock4, 80));
-//  all_tubes->add(new HierarchicalGrid (rock4, 20, 6, 6, 10, 10, 4));
-  
-  all_tubes->add(new Grid (rock5, 80));
-//  all_tubes->add(new HierarchicalGrid (rock5, 20, 6, 6, 10, 10, 4));
-  
-  all_tubes->add(new Grid (iceberg, 40));
+  temp = new Grid (rock3, 80);
+  temp->set_name("rock3");
+  all_tubes->add(temp);  
+  // all_tubes->add(new HierarchicalGrid (rock3, 20, 6, 6, 10, 10, 4));
 
-  erect_group->add(new Grid (iceberg2, 40));
+  temp = new Grid (rock4, 80);
+  temp->set_name("rock4");
+  all_tubes->add(temp);  
+  //  all_tubes->add(new HierarchicalGrid (rock4, 20, 6, 6, 10, 10, 4));
 
-  all_tubes->add(new Grid (iceberg3, 40));
+  temp = new Grid (rock5, 80);
+  temp->set_name("rock5");
+  all_tubes->add(temp);  
+  //  all_tubes->add(new HierarchicalGrid (rock5, 20, 6, 6, 10, 10, 4));
 
-  all_tubes->add(new HierarchicalGrid(rock_tower, 6, 6, 6, 10, 10, 4));
+  temp = new Grid (iceberg, 40);
+  temp->set_name("iceberg");
+  all_tubes->add(temp);  
+
+  temp = new Grid (iceberg2, 40);
+  temp->set_name("iceberg2");
+  all_tubes->add(temp);  
+
+  temp = new Grid (iceberg3, 40);
+  temp->set_name("iceberg3");
+  all_tubes->add(temp);  
+
+  temp = new HierarchicalGrid(rock_tower, 6, 6, 6, 10, 10, 4);
+  temp->set_name("rock_tower");
+  all_tubes->add(temp);  
   // all_tubes->add(new Grid(rock_tower, 10));
- 
-  all_tubes->add(new BV1(erect_group));
-  all_tubes->add(new BV1(ruins));  
+  
+  temp = new BV1(erect_group);
+  temp->set_name("erect_group");
+  all_tubes->add(temp);
+
+  temp = new BV1(ruins);
+  temp->set_name("ruins");
+  all_tubes->add(temp);  
   
   /*********************************************************************/
   // bubbles
