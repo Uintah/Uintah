@@ -4,7 +4,6 @@ from sys import argv,exit
 from helpers.runSusTests import runSusTests
 
 TESTS = [   ("disks2mat4patch4proc", "disks2mat4patch.ups", 4), \
-	    ("disks_fracture", "disks_fracture.ups", 1), \
 	    ("periodic_disks", "periodic_disks.ups", 6),	\
 	    ("heatcond2mat", "heatcond2mat.ups", 1), \
     	    ("inclined_plane_sphere", "inclined_plane_sphere.ups", 1), \
