@@ -1,0 +1,111 @@
+# SCI Network 1.0
+
+######################
+# These commands generated automatically, DO NOT REMOVE!
+loadfile /nfs/sci/data1/darbyb/SCIRun/src/nets/srcLocBG.r.sr
+return
+######################
+::netedit dontschedule
+global userName
+set userName "darbyb"
+
+global runDate
+set runDate " Fri  Feb 23 19101"
+
+global runTime
+set runTime " 16:40:9"
+
+set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 185 12]
+set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 397 40]
+set m2 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 449 122]
+set m3 [addModuleAtPosition "SCIRun" "DataIO" "MatrixWriter" 243 124]
+set m4 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 27 213]
+set m5 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 252 213]
+set m6 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 473 216]
+set m7 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 689 216]
+set m8 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 601 373]
+set m9 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 759 371]
+set m10 [addModuleAtPosition "SCIRun" "Math" "ErrorMetric" 28 467]
+set m11 [addModuleAtPosition "SCIRun" "Fields" "SeedField" 92 551]
+set m12 [addModuleAtPosition "BioPSE" "Forward" "ApplyFEMCurrentSource" 427 665]
+set m13 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 707 724]
+set m14 [addModuleAtPosition "SCIRun" "DataIO" "MatrixReader" 49 850]
+set m15 [addModuleAtPosition "SCIRun" "Math" "ErrorMetric" 246 765]
+set m16 [addModuleAtPosition "SCIRun" "Render" "Viewer" 505 995]
+
+
+set ::SCIRun_DataIO_FieldReader_0-notes {}
+set ::SCIRun_DataIO_FieldReader_0-show_status 1
+set ::SCIRun_DataIO_FieldReader_0-filename {}
+set ::SCIRun_DataIO_FieldReader_1-notes {}
+set ::SCIRun_DataIO_FieldReader_1-show_status 1
+set ::SCIRun_DataIO_FieldReader_1-filename {}
+set ::SCIRun_DataIO_FieldReader_2-notes {}
+set ::SCIRun_DataIO_FieldReader_2-show_status 1
+set ::SCIRun_DataIO_FieldReader_2-filename {}
+set ::SCIRun_DataIO_MatrixWriter_0-notes {}
+set ::SCIRun_DataIO_MatrixWriter_0-show_status 1
+set ::SCIRun_DataIO_MatrixWriter_0-filename {}
+set ::SCIRun_DataIO_MatrixWriter_0-filetype {Binary}
+set ::SCIRun_DataIO_MatrixWriter_0-split 0
+set ::BioPSE_Forward_ApplyFEMCurrentSource_0-notes {}
+set ::BioPSE_Forward_ApplyFEMCurrentSource_0-show_status 1
+set ::BioPSE_Forward_ApplyFEMCurrentSource_0-sourceNodeTCL {0}
+set ::BioPSE_Forward_ApplyFEMCurrentSource_0-sinkNodeTCL {1}
+set ::BioPSE_Forward_ApplyFEMCurrentSource_0-modeTCL {dipole}
+set ::BioPSE_Forward_ApplyFEMCurrentSource_1-notes {}
+set ::BioPSE_Forward_ApplyFEMCurrentSource_1-show_status 1
+set ::BioPSE_Forward_ApplyFEMCurrentSource_1-sourceNodeTCL {0}
+set ::BioPSE_Forward_ApplyFEMCurrentSource_1-sinkNodeTCL {1}
+set ::BioPSE_Forward_ApplyFEMCurrentSource_1-modeTCL {dipole}
+set ::BioPSE_Forward_ApplyFEMCurrentSource_2-notes {}
+set ::BioPSE_Forward_ApplyFEMCurrentSource_2-show_status 1
+set ::BioPSE_Forward_ApplyFEMCurrentSource_2-sourceNodeTCL {0}
+set ::BioPSE_Forward_ApplyFEMCurrentSource_2-sinkNodeTCL {1}
+set ::BioPSE_Forward_ApplyFEMCurrentSource_2-modeTCL {dipole}
+set ::SCIRun_DataIO_MatrixReader_0-notes {}
+set ::SCIRun_DataIO_MatrixReader_0-show_status 1
+set ::SCIRun_DataIO_MatrixReader_0-filename {}
+set ::SCIRun_DataIO_MatrixReader_1-notes {}
+set ::SCIRun_DataIO_MatrixReader_1-show_status 1
+set ::SCIRun_DataIO_MatrixReader_1-filename {}
+set ::SCIRun_DataIO_MatrixReader_2-notes {}
+set ::SCIRun_DataIO_MatrixReader_2-show_status 1
+set ::SCIRun_DataIO_MatrixReader_2-filename {}
+set ::SCIRun_Math_ErrorMetric_0-notes {}
+set ::SCIRun_Math_ErrorMetric_0-show_status 1
+set ::SCIRun_Math_ErrorMetric_0-haveUI 0
+set ::SCIRun_Math_ErrorMetric_0-methodTCL {CCinv}
+set ::SCIRun_Math_ErrorMetric_0-pTCL {1}
+set ::SCIRun_Fields_SeedField_0-notes {}
+set ::SCIRun_Fields_SeedField_0-show_status 1
+set ::SCIRun_Fields_SeedField_0-seedRandTCL {}
+set ::SCIRun_Fields_SeedField_0-numDipolesTCL {}
+set ::SCIRun_Fields_SeedField_0-dipoleMagnitudeTCL {}
+set ::BioPSE_Forward_ApplyFEMCurrentSource_3-notes {}
+set ::BioPSE_Forward_ApplyFEMCurrentSource_3-show_status 1
+set ::BioPSE_Forward_ApplyFEMCurrentSource_3-sourceNodeTCL {0}
+set ::BioPSE_Forward_ApplyFEMCurrentSource_3-sinkNodeTCL {1}
+set ::BioPSE_Forward_ApplyFEMCurrentSource_3-modeTCL {dipole}
+set ::SCIRun_Visualization_GenStandardColorMaps_0-notes {}
+set ::SCIRun_Visualization_GenStandardColorMaps_0-show_status 1
+set ::SCIRun_Visualization_GenStandardColorMaps_0-tcl_status {}
+set ::SCIRun_Visualization_GenStandardColorMaps_0-positionList {}
+set ::SCIRun_Visualization_GenStandardColorMaps_0-nodeList {}
+set ::SCIRun_Visualization_GenStandardColorMaps_0-width 1
+set ::SCIRun_Visualization_GenStandardColorMaps_0-height 1
+set ::SCIRun_Visualization_GenStandardColorMaps_0-mapType 3
+set ::SCIRun_Visualization_GenStandardColorMaps_0-minRes 12
+set ::SCIRun_Visualization_GenStandardColorMaps_0-resolution 12
+set ::SCIRun_DataIO_MatrixReader_3-notes {}
+set ::SCIRun_DataIO_MatrixReader_3-show_status 1
+set ::SCIRun_DataIO_MatrixReader_3-filename {}
+set ::SCIRun_Math_ErrorMetric_1-notes {}
+set ::SCIRun_Math_ErrorMetric_1-show_status 1
+set ::SCIRun_Math_ErrorMetric_1-haveUI 0
+set ::SCIRun_Math_ErrorMetric_1-methodTCL {CCinv}
+set ::SCIRun_Math_ErrorMetric_1-pTCL {1}
+set ::SCIRun_Render_Viewer_0-notes {}
+set ::SCIRun_Render_Viewer_0-show_status 1
+
+::netedit scheduleok
