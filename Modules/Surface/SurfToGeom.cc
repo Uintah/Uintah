@@ -26,9 +26,9 @@
 #include <Geom/Material.h>
 #include <Geom/Group.h>
 #include <Geom/Tri.h>
+#include <Geom/Triangles.h>
 #include <Malloc/Allocator.h>
 #include <TCL/TCLvar.h>
-
 
 class SurfToGeom : public Module {
     SurfaceIPort* isurface;
@@ -100,11 +100,11 @@ void SurfToGeom::execute()
     ScalarFieldHandle sfield;
 
     int have_sf=ifield->get(sfield);
-    GeomGroup* group = scinew GeomGroup;
+    GeomTriangles* group = scinew GeomTriangles;
     TriSurface* ts=surf->getTriSurface();
-
+    
     if(ts){
-	for (int i=0; i<ts->elements.size(); i++) {
+	for (int i=0; i< ts->elements.size(); i++) {
 	    if (have_cm && have_sf) {
 		double interp;
 		MaterialHandle mat1,mat2,mat3;
@@ -122,28 +122,37 @@ void SurfToGeom::execute()
 		    mat3=cmap->lookup(interp);
 		else ok=0;
 		if (ok) {
-		    group->add(scinew GeomTri(ts->points[ts->elements[i]->i1], 
-					   ts->points[ts->elements[i]->i2],
-					   ts->points[ts->elements[i]->i3],
-					   mat1, mat2, mat3));
+		  if (cmap->non_diffuse_constant) {
+		    group->add(ts->points[ts->elements[i]->i1], mat1->diffuse,
+			       ts->points[ts->elements[i]->i2],mat2->diffuse,
+			       ts->points[ts->elements[i]->i3],mat3->diffuse);
+		  }
+		  else	
+		    group->add(ts->points[ts->elements[i]->i1], mat1,
+			       ts->points[ts->elements[i]->i2],mat2,
+			       ts->points[ts->elements[i]->i3],mat3);
 		} else {
 		    cerr << "One of the points was out of the field.\n";
 		}
 	    } else {
-		group->add(scinew GeomTri(ts->points[ts->elements[i]->i1], 
-				       ts->points[ts->elements[i]->i2],
-				       ts->points[ts->elements[i]->i3]));
+		group->add(ts->points[ts->elements[i]->i1], 
+			   ts->points[ts->elements[i]->i2],
+			   ts->points[ts->elements[i]->i3]);
 	    }
 	}
+
     } else {
 	error("Unknown representation for Surface in SurfToGeom");
     }
     GeomObj* topobj=group;
+#if 0
+    // what is this for????
     if (surf->name == "sagital.scalp") {
 	topobj=scinew GeomMaterial(group, scinew Material(Color(0,0,0),
 						    Color(0,.6,0), 
 						    Color(.5,.5,.5), 20));
     }
+#endif
     ogeom->delAll();
     ogeom->addObj(topobj, surf->name);
 }
