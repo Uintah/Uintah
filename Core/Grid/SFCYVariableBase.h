@@ -45,7 +45,8 @@ WARNING
   
 ****************************************/
 
-#define constSFCYVariableBase constVariableBase<SFCYVariableBase>
+  class SFCYVariableBase;
+  typedef constVariableBase<SFCYVariableBase> constSFCYVariableBase;
 
    class SFCYVariableBase : public Variable {
    public:

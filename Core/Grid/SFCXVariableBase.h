@@ -45,7 +45,8 @@ WARNING
   
 ****************************************/
 
-#define constSFCXVariableBase constVariableBase<SFCXVariableBase>
+  class SFCXVariableBase;
+  typedef constVariableBase<SFCXVariableBase> constSFCXVariableBase;
 
    class SFCXVariableBase : public Variable {
    public:

@@ -45,7 +45,8 @@ WARNING
   
 ****************************************/
 
-#define constNCVariableBase constVariableBase<NCVariableBase>
+  class NCVariableBase;
+  typedef constVariableBase<NCVariableBase> constNCVariableBase;
 
    class NCVariableBase : public Variable {
    public:
