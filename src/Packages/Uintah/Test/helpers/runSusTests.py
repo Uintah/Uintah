@@ -326,7 +326,7 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
   # set the command name for mpirun - differs on different platforms
   MPIHEAD="mpirun -np"
   if environ['OS'] == "Linux":
-    MPIHEAD="mpirun -x MALLOC_STATS -np" 
+    MPIHEAD="mpirun -x MALLOC_STATS,SCI_SIGNALMODE -np" 
 
   # set where to view the log files
   logpath = environ['WEBLOG']
@@ -362,6 +362,9 @@ def runSusTest(test, susdir, inputxml, compare_root, algo, mode, max_parallelism
     print "Running test %s%s on %s" % (testname, mpimsg, date())
     susinput = "%s" % (inputxml)
     restart_text = " "
+
+  # set sus to exit upon crashing (and not wait for a prompt)
+  environ['SCI_SIGNALMODE'] = "exit"
 
   if do_memory_test == 1:
     if restart == "yes":
