@@ -11,6 +11,7 @@
 #include <Packages/rtrt/Core/Camera.h>
 #include <Packages/rtrt/Core/Plane.h>
 #include <Packages/rtrt/Core/Light.h>
+#include <Packages/rtrt/Core/DielectricMaterial.h>
 #include <fstream>
 #include <iostream>
 
@@ -34,6 +35,7 @@ Material* get_material(ifstream &infile) {
   double specpow = 20;
   double reflectance = 0;
   double shinestrength = 1;
+  double transparency = 0;
   // loop until you get to the closing curley brace
   while (curley > 0) {
     // read the next token
@@ -62,7 +64,9 @@ Material* get_material(ifstream &infile) {
       infile >> specpow;
     } else if (token == "*MATERIAL_SHINESTRENGTH") {
       infile >> shinestrength;
+//      shinestrength *= 100;
     } else if (token == "*MATERIAL_TRANSPARENCY") {
+      infile >> transparency;
     } else if (token == "*MAP_DIFFUSE") {
       cout << "Found *MAP_DIFFUSE, but not parsing it.\n";
 #if 0
@@ -72,8 +76,13 @@ Material* get_material(ifstream &infile) {
   }
   cout << "ambient("<<ambient<<"), diffuse("<<diffuse<<"), specular("<<specular<<"), specpow("<<specpow<<"), reflectance("<<reflectance<<")\n";
   if (!result)
-    result = (Material*) new Phong(ambient, diffuse, specular*shinestrength,
-				   specpow, reflectance);
+    if (transparency == 0) {
+      result = (Material*) new Phong(ambient, diffuse, specular*shinestrength,
+				     specpow, reflectance);
+    } else {
+      result = (Material*) new DielectricMaterial(1.0, 1.0, 0.3, 400.0, Color(1,1,1), Color(1,1,1), false);
+//      result = (Material*) new Phong(ambient, Color(1,0,0), Color(1,0,0), 10, 0);
+    }
   return result;
 }
 
@@ -123,6 +132,7 @@ Object *get_object(ifstream &infile) {
   infile >> token;
   curley++;
   int matl_index = 0;
+  int obj_too_small=0;
   Array1<Object*> faces;
   while (curley > 0) {
     // read the next token
@@ -173,6 +183,10 @@ Object *get_object(ifstream &infile) {
 	  int num_faces;
 	  infile >> num_faces;
 	  cout << "Reading "<<num_faces<<" faces.\n";
+	  if (num_faces == 0) {
+	    cerr << "*** Note - object had no faces, disregarding it.\n";
+	    obj_too_small=1;
+	  }
 	  faces.resize(num_faces);
 	} else if (token == "*MESH_VERTEX_LIST") {
 	  cout << "Found *MESH_VERTEX_LIST.\n";
@@ -257,6 +271,7 @@ Object *get_object(ifstream &infile) {
   else if(((Group*)result)->numObjects()>2)
     result = new BV1(result);
 #endif
+  if (obj_too_small) { delete result; result = 0; }
   return result;
 }
 
