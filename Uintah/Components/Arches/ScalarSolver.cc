@@ -74,7 +74,7 @@ ScalarSolver::problemSetup(const ProblemSpecP& params)
   if (linear_sol == "linegs")
     d_linearSolver = scinew RBGSSolver();
   else if (linear_sol == "petsc")
-    d_linearSolver = scinew PetscSolver();
+     d_linearSolver = scinew PetscSolver(0); // CHEAT - steve d_myworld);
   else {
     throw InvalidValue("linear solver option"
 		       " not supported" + linear_sol);
@@ -92,7 +92,7 @@ ScalarSolver::solve(const LevelP& level,
 		    SchedulerP& sched,
 		    DataWarehouseP&,
 		    DataWarehouseP& new_dw,
-		    double time, double delta_t, int index)
+		    double /*time*/, double delta_t, int index)
 {
   //create a new data warehouse to store matrix coeff
   // and source terms. It gets reinitialized after every 
@@ -109,7 +109,6 @@ ScalarSolver::solve(const LevelP& level,
   // compute : scalResidualSS, scalCoefSS, scalNonLinSrcSS, scalarSP
   //d_linearSolver->sched_scalarSolve(level, sched, new_dw, matrix_dw, index);
   sched_scalarLinearSolve(level, sched, new_dw, matrix_dw, delta_t, index);
-    
 }
 
 //****************************************************************************
@@ -364,7 +363,7 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
   // apply underelax to eqn
   d_linearSolver->computeScalarUnderrelax(pc, patch, new_dw, matrix_dw, index, 
 					  d_scalarVars);
-#ifdef 0
+#if 0
   new_dw->allocate(d_scalarVars->old_scalar, d_lab->d_old_scalarGuess,
 		   index, patch);
   d_scalarVars->old_scalar = d_scalarVars->scalar;
@@ -379,6 +378,9 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.27  2000/09/20 18:05:34  sparker
+// Adding support for Petsc and per-processor tasks
+//
 // Revision 1.26  2000/09/14 17:04:54  rawat
 // converting arches to multipatch
 //

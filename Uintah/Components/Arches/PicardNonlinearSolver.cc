@@ -35,7 +35,8 @@ PicardNonlinearSolver(const ArchesLabel* label,
 		      Properties* props, 
 		      BoundaryCondition* bc,
 		      TurbulenceModel* turbModel,
-		      PhysicalConstants* physConst): NonlinearSolver(),
+		      PhysicalConstants* physConst,
+		      const ProcessorGroup* myworld): NonlinearSolver(myworld),
 		       d_lab(label), d_props(props), 
 		       d_boundaryCondition(bc), d_turbModel(turbModel),
 		       d_physicalConsts(physConst)
@@ -67,7 +68,7 @@ PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
   if (calPress) {
     d_pressSolver = scinew PressureSolver(d_lab,
 					  d_turbModel, d_boundaryCondition,
-					  d_physicalConsts);
+					  d_physicalConsts, d_myworld);
     d_pressSolver->problemSetup(db);
   }
   bool calMom;
@@ -172,6 +173,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     nlResidual = computeResidual(level, sched, old_dw, new_dw);
 
   }while((nlIterations < d_nonlinear_its)&&(nlResidual > d_resTol));
+
 
   // Schedule an interpolation of the face centered velocity data 
   // to a cell centered vector for used by the viz tools
@@ -520,6 +522,9 @@ PicardNonlinearSolver::computeResidual(const LevelP& /*level*/,
 
 //
 // $Log$
+// Revision 1.46  2000/09/20 18:05:33  sparker
+// Adding support for Petsc and per-processor tasks
+//
 // Revision 1.45  2000/09/12 15:46:58  sparker
 // Changed formatting of comments to keep from confusing emacs
 //

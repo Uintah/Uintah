@@ -46,6 +46,7 @@ none
 
 namespace Uintah {
 class ProcessorGroup;
+class LoadBalancer;
 namespace ArchesSpace {
 class ArchesVariables;
 class ArchesLabel;
@@ -210,6 +211,7 @@ public:
 				DataWarehouseP& new_dw, ArchesVariables* vars) = 0;
 
 
+   virtual void matrixCreate(const LevelP& level, LoadBalancer* lb) = 0;
 protected:
 
 private:
@@ -222,6 +224,9 @@ private:
 
 //
 // $Log$
+// Revision 1.14  2000/09/20 18:05:33  sparker
+// Adding support for Petsc and per-processor tasks
+//
 // Revision 1.13  2000/08/15 00:23:32  rawat
 // added explicit solve for momentum and scalar eqns
 //

@@ -205,6 +205,7 @@ public:
 			 CellInformation* cellinfo,
 			 const ArchesLabel* lab);
 
+   virtual void matrixCreate(const LevelP& level, LoadBalancer* lb);
 protected:
 
 private:
@@ -224,6 +225,9 @@ private:
   
 //
 // $Log$
+// Revision 1.19  2000/09/20 18:05:34  sparker
+// Adding support for Petsc and per-processor tasks
+//
 // Revision 1.18  2000/08/15 00:23:32  rawat
 // added explicit solve for momentum and scalar eqns
 //

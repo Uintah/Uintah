@@ -44,8 +44,14 @@ none
 #include <Uintah/Grid/VarLabel.h>
 #include <SCICore/Containers/Array1.h>
 #include <Uintah/Components/Arches/ArchesVariables.h>
+#ifdef HAVE_PETSC
+extern "C" {
+#include "sles.h"
+}
+#endif
 
 namespace Uintah {
+class LoadBalancer;
 class ProcessorGroup;
 namespace ArchesSpace {
   class ArchesLabel;
@@ -61,7 +67,7 @@ public:
       //
       // Construct an instance of a PetscSolver.
       //
-      PetscSolver();
+      PetscSolver(const ProcessorGroup* myworld);
 
       // GROUP: Destructors:
       ////////////////////////////////////////////////////////////////////////
@@ -204,6 +210,8 @@ public:
 			 const ArchesLabel* lab);
       // to close petsc 
       void finalizeSolver();
+
+   virtual void matrixCreate(const LevelP& level, LoadBalancer* lb);
 protected:
 
 private:
@@ -213,7 +221,11 @@ private:
       double d_underrelax;
       double d_initResid;
       double d_residual;
-
+   const ProcessorGroup* d_myworld;
+#ifdef HAVE_PETSC
+   vector<int> d_petscIndex;
+   Mat A;
+#endif
 }; // End class PetscSolver.h
 
 } // End namespace ArchesSpace
@@ -223,6 +235,9 @@ private:
   
 //
 // $Log$
+// Revision 1.4  2000/09/20 18:05:33  sparker
+// Adding support for Petsc and per-processor tasks
+//
 // Revision 1.3  2000/09/12 22:34:02  sparker
 // Moved petsc include to .cc file
 //
