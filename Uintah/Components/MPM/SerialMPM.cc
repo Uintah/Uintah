@@ -194,9 +194,12 @@ void SerialMPM::timeStep(double t, double dt,
 			       this, SerialMPM::computeStressTensor);
 	    t->requires(new_dw, "g.velocity", region, 0,
 			NCVariable<Vector>::getTypeDescription());
+/*
+#warning
 	    t->requires(old_dw, "p.cmdata", region, 0,
 			ParticleVariable<Uintah::Components::
                             CompMooneyRivlin::CMData>::getTypeDescription());
+*/
 	    t->requires(new_dw, "p.deformationMeasure", region, 0,
 			ParticleVariable<Matrix3>::getTypeDescription());
 	    t->requires(old_dw, "delt",
@@ -281,6 +284,8 @@ void SerialMPM::timeStep(double t, double dt,
 	    *		  the others according to specific rules)
 	    *   out(G.VELOCITY_STAR, G.ACCELERATION)
 	    */
+/*
+#warning
 	    Task* t = new Task("Contact::exMomIntegrated",
 				region, old_dw, new_dw,
 				this, Contact::exMomIntegrated);
@@ -295,6 +300,7 @@ void SerialMPM::timeStep(double t, double dt,
 	    t->computes(new_dw, "g.acceleration", region, 0,
 			NCVariable<Vector>::getTypeDescription());
 	    sched->addTask(t);
+*/
 	}
 
 	{
@@ -339,8 +345,10 @@ void SerialMPM::actuallyComputeStableTimestep(const ProcessorContext*,
     Vector dCell = region->dCell();
     double width = Min(dCell.x(), dCell.y(), dCell.z());
     double delt = 0.5*width/MaxWaveSpeed;
+/*
 #warning this needs to be fixed:
 //    new_dw->put(SoleVariable<double>(delt), "delt", DataWarehouse::Min);
+*/
 }
 
 void SerialMPM::interpolateParticlesToGrid(const ProcessorContext*,
@@ -417,9 +425,10 @@ void SerialMPM::computeStressTensor(const ProcessorContext*,
 				    const DataWarehouseP& old_dw,
 				    DataWarehouseP& new_dw)
 {
+/*
 #warning this needs to be fixed:
+*/
 #if 0
-
     for(int m = 0; m < numMatls; m++){
         Material* matl = materials[m];
         MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
@@ -631,6 +640,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.10  2000/03/21 02:13:56  dav
+// commented out bad portions of code so I could check in a version that compiles
+//
 // Revision 1.9  2000/03/21 01:29:39  dav
 // working to make MPM stuff compile successfully
 //
