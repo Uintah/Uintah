@@ -278,20 +278,51 @@ element, which is used in several contexts, is not described in detail here
       \elementitem{/examplesr}
     \end{description}
     \elementitem{/overview} 
-    \elementitem{io} Component's inputs and outputs.  Contains 2 elements,
-    \element{inputs} followed by \element{outputs}.
+    \elementitem{implementation} Lists the names of
+    a component's source code files \emph{excluding} the component's
+    primary source file (which is implied by the \element{component}
+    element's \attribute{name} attribute).
+
+    The need for an implementation section is rare - the source code for
+    most components is contained entirely within a component's primary
+    source code file.
+
+    The subelements \element{ccfile}, \element{cfile}, and \element{ffile}
+    list the names of c++, c, and fortran source code files respectively.
+    These elements may occur multiple times and in any order.
+    Note that file name extensions are omitted.
     \begin{description}
-      \elementitem{inputs} Describes the component's inputs. Inputs may
+      \elementitem{ccfile} Names 1 c++ file, e.g. \element{ccfile}foo\element{/ccfile}.
+      \elementitem{/ccfile}
+      \elementitem{cfile} Names 1 c file.
+      \elementitem{/cfile}
+      \elementitem{ffile} Names 1 fortran file.
+      \elementitem{/ffile}
+    \end{description}
+    \elementitem{/implementation}
+    \elementitem{io} Component's inputs and
+    outputs.  Contains 2 elements, \element{inputs} followed by
+    \element{outputs}.
+    \begin{description}
+      \elementitem{inputs lastportdynamic="(yes | no)"} Describes the component's inputs. Inputs may
       come from a port, a file, or a device.  Zero or more \element{port}
       elements are used to describe inputs from ports.  Zero or more
       \element{file} elements are used to describe inputs from files.  Zero
       or more \element{device} elements are used to describe inputs from
       devices.  There must be at least 1 \element{port} element or 1
       \element{file} element or 1 \element{device} element.
+
+      If your component's last port is dynamic then the
+      \attribute{lastportdynamic} attribute should be set to \keyboard{yes}
+      (\attribute{lastportdynamic="yes"}).  If your component's last port
+        is not dynamic then you may omit this attribute or set its value to
+        \keyboard{no}.
       \begin{description}
         \elementitem{port} States that input data comes from a port. 
         Sub-elements describe the data further.
         \begin{description}
+          \elementitem{name} The port's name.
+          \elementitem{/name}
           \elementitem{description} High level description of the data 
           accepted by the port, e.g. ``These are potential data from body 
           surface of a human.''
@@ -410,7 +441,10 @@ element, which is used in several contexts, is not described in detail here
       plan.  The \element{description} element is followed by 1 or more
       \element{step} elements.
       \elementitem{/description}
-      \elementitem{step} \ytbd
+      \elementitem{step} Detailed description of 1 step in the testing
+      procedure.   The content model of the \element{step} element is the
+      same as the that of the \element{description} element (i.e., see
+      section~\sechyperref{\SUBSECdescElement} for details).
       \elementitem{/step}
     \end{description}
     \elementitem{/plan}
