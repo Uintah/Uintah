@@ -10,8 +10,9 @@
     <description>
       <p>
 	This is the initial design doc for the <term>Histo</term> histogram
-	module.  It is based in part on information in the document <rlink
-									   path="src/SCICore/Datatypes/doc/domainDesign.html"><cite>Fields, Attributes, and Geometries</cite></rlink>.
+	module.  It is based in part on information in the document
+        <rlink path="src/SCICore/Datatypes/doc/domainDesign.html">
+        <cite>Fields, Attributes, and Geometries</cite></rlink>.
       </p>
 
       <p>
@@ -27,30 +28,30 @@
   <io>
     <inputs>
       <port>
-	<description>
-	  <p>Data for 1st variable - Required!</p>
-	</description>
-	<datatype>SAttribute1D</datatype>
-	<componentname>HistoDataGenerator</componentname>
+        <description>
+          <p>Data for 1st variable - Required!</p>
+        </description>
+        <datatype>SAttribute1D</datatype>
+        <componentname>HistoDataGenerator</componentname>
       </port>
       <port>
-	<description>
-	  <p>Data for 2nd variable - Optional</p>
-	</description>
-	<datatype>SAttribute1D</datatype>
-	<componentname>HistoDataGenerator</componentname>
+        <description>
+          <p>Data for 2nd variable - Optional</p>
+        </description>
+        <datatype>SAttribute1D</datatype>
+        <componentname>HistoDataGenerator</componentname>
       </port>
       <port>
-	<description>
-	  <p>Data for 3rd variable - Optional</p>
-	</description>
-	<datatype>SAttribute1D</datatype>
-	<componentname>HistoDataGenerator</componentname>
+        <description>
+          <p>Data for 3rd variable - Optional</p>
+        </description>
+        <datatype>SAttribute1D</datatype>
+        <componentname>HistoDataGenerator</componentname>
       </port>
     </inputs>
     <outputs>
       <port>
-	<description>
+        <description>
           <p>
 	    The histogram's frequency data are contained in the output
 	    field's attribute data.
@@ -67,9 +68,9 @@
 	    element (bin) of the field's geometry.
 	  </p>
         </description>
-	<datatype>SField</datatype>
-	<componentname>ShowField</componentname>
-	<componentname>ShowHisto</componentname>
+        <datatype>SField</datatype>
+        <componentname>ShowField</componentname>
+        <componentname>ShowHisto</componentname>
       </port>
     </outputs>
   </io>
@@ -88,7 +89,7 @@
     <parameter>
       <label>Min</label>
       <description>
-	<p>
+        <p>
 	  Specifies the minimum value of the variable to be included in the
 	  histogram.
 	</p>
@@ -97,7 +98,7 @@
     <parameter>
       <label>Max</label>
       <description>
-	<p>
+        <p>
 	  Specifies the maximum value of the variable to be included in
 	  the histogram.
 	</p>
@@ -106,7 +107,7 @@
     <parameter>
       <label>Bin Width</label>
       <description>
-	<p>
+        <p>
 	  Specifies the bin width of the input variable.  Either this value
 	  or the number of bins may be specified but not both.
 	</p>
@@ -115,7 +116,7 @@
     <parameter>
       <label># Bins</label>
       <description>
-	<p>
+        <p>
 	  Specifies the number of bins in the histograms.  Either this
 	  value or the bin width may be specified but not both.
 	</p>
@@ -126,16 +127,20 @@
   <testing>
     <plan>
       <description>
-	<p>
+        <p>
 	  Several sets of test data consisting of inputs and known outputs
 	  will be prepared.  The inputs will be supplied to the module and
 	  the outputs computed.  The computed outputs will be compared to
 	  known outputs.
 	</p>
       </description>
-      <steps>
-	<step>No steps yet.</step>
-      </steps>
+      <step>
+        <p>Read step 2</P>
+      </step>
+      <step>
+        <p>Don't do what step 1 said to do</P>
+      </step>      
     </plan>
   </testing>
 </component>
+

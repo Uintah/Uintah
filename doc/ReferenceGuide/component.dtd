@@ -38,6 +38,7 @@ Component  specification dtd.
 <!-- A couple of reusable elements  -->
 <!ELEMENT datatype (#PCDATA)>
 <!ELEMENT componentname (#PCDATA)>
+<!ELEMENT devicename (#PCDATA)>
 
 <!-- Top level -->
 <!ELEMENT component (overview, io, gui?, testing)>
@@ -76,7 +77,7 @@ Component  specification dtd.
 <!ELEMENT port (description, datatype, componentname+)>
 
 <!-- Describe data on device -->
-<!ELEMENT device (description)>
+<!ELEMENT device (devicename, description)>
 
 <!-- GUI description (words and pictures) -->
 <!ELEMENT gui (description, parameter+, img)>
@@ -94,10 +95,7 @@ Component  specification dtd.
 <!ELEMENT testing (plan+)>
 
 <!-- Specify 1 testing plan.  -->
-<!ELEMENT plan (description, steps)>
-
-<!-- Collection of testing steps -->
-<!ELEMENT steps (step+)>
+<!ELEMENT plan (description, step+)>
 
 <!-- Specify 1 testing step -->
 <!ELEMENT  step (#PCDATA)>
