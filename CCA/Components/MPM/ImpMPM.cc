@@ -162,8 +162,6 @@ void ImpMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pStressLabel);
   t->computes(lb->pCellNAPIDLabel);
   t->computes(lb->bElBarLabel);
-  t->computes(lb->dispIncQNorm0);
-  t->computes(lb->dispIncNormMax);
   t->computes(d_sharedState->get_delt_label());
 
   LoadBalancer* loadbal = sched->getLoadBalancer();
@@ -195,8 +193,6 @@ void ImpMPM::actuallyInitialize(const ProcessorGroup*,
     CCVariable<short int> cellNAPID;
     new_dw->allocateAndPut(cellNAPID, lb->pCellNAPIDLabel, 0, patch);
     cellNAPID.initialize(0);
-    new_dw->put(sum_vartype(0.),lb->dispIncQNorm0);
-    new_dw->put(sum_vartype(0.),lb->dispIncNormMax);
     
     for(int m=0;m<matls->size();m++){
       int matl = matls->get(m);
@@ -525,8 +521,6 @@ void ImpMPM::scheduleIterate(SchedulerP& sched,const LevelP& level,
   task->requires(Task::OldDW,d_sharedState->get_delt_label());
   task->requires(Task::NewDW,lb->dispIncQNorm0);
   task->requires(Task::NewDW,lb->dispIncNormMax);
-  task->requires(Task::NewDW,lb->dispIncQNorm);
-  task->requires(Task::NewDW,lb->dispIncNorm);
 
   sched->addTask(task,d_perproc_patches,d_sharedState->allMaterials());
 }
@@ -656,15 +650,10 @@ void ImpMPM::iterate(const ProcessorGroup*,
 
   subsched->compile(d_myworld);
 
-  sum_vartype dispIncNorm,dispIncNormMax,dispIncQNorm,dispIncQNorm0;
-  new_dw->get(dispIncNorm,   lb->dispIncNorm);
-  new_dw->get(dispIncQNorm,  lb->dispIncQNorm); 
-  new_dw->get(dispIncNormMax,lb->dispIncNormMax);
-  new_dw->get(dispIncQNorm0, lb->dispIncQNorm0);
-
   int count = 0;
   bool dispInc = false;
   bool dispIncQ = false;
+  sum_vartype dispIncQNorm,dispIncNorm,dispIncQNorm0,dispIncNormMax;
 
   // Get all of the required particle data that is in the old_dw and put it 
   // in the subscheduler's  new_dw.  Then once dw is advanced, subscheduler
@@ -681,40 +670,21 @@ void ImpMPM::iterate(const ProcessorGroup*,
       ParticleSubset* pset = 
 	subsched->get_dw(0)->getParticleSubset(matl, patch);
 
-      // Need to pull out the pX, pVolume, and pVolumeOld from old_dw
-      // and put it in the subschedulers new_dw.  Once it is advanced,
-      // the subscheduler will be pulling data from the old_dw per the
-      // task specifications in the scheduleIterate.
-      // Get out some grid quantities: gmass, gInternalForce, gExternalForce
-
       NCVariable<Vector> dispNew,velocity;
       new_dw->getModifiable(dispNew, lb->dispNewLabel,      matl,patch);
 
       delt_vartype dt;
       old_dw->get(dt,d_sharedState->get_delt_label());
-      sum_vartype dispIncQNorm0,dispIncNormMax;
-      double nothing = 0.;
-      if(m==0){
-        new_dw->get(dispIncQNorm0, lb->dispIncQNorm);
-        new_dw->get(dispIncNormMax,lb->dispIncNormMax);
-	if(d_myworld->myrank() != 0){
-          subsched->get_dw(3)->put(sum_vartype(nothing),lb->dispIncQNorm0);
-          subsched->get_dw(3)->put(sum_vartype(nothing),lb->dispIncNormMax);
-        }
-	else {
-          subsched->get_dw(3)->put(dispIncQNorm0, lb->dispIncQNorm0);
-          subsched->get_dw(3)->put(dispIncNormMax,lb->dispIncNormMax);
-        }
-      }
+      subsched->get_dw(3)->put(sum_vartype(0.0),lb->dispIncQNorm0);
+      subsched->get_dw(3)->put(sum_vartype(0.0),lb->dispIncNormMax);
 
       // New data to be stored in the subscheduler
       NCVariable<Vector> newdisp;
-
       double new_dt;
-      subsched->get_dw(3)->allocateAndPut(newdisp,      lb->dispNewLabel,
-                                          matl, patch);
 
+      subsched->get_dw(3)->allocateAndPut(newdisp,lb->dispNewLabel,matl,patch);
       subsched->get_dw(3)->saveParticleSubset(matl, patch, pset);
+
       newdisp.copyData(dispNew);
 
       new_dt = dt;
@@ -727,9 +697,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
 
   subsched->get_dw(3)->finalize();
   subsched->advanceDataWarehouse(grid);
-//  if(d_myworld->myrank() == 0){
-//    cerr << "dispInc = " << dispInc << " dispIncQ = " << dispIncQ << "\n";
-//  }
+
   while(!(dispInc && dispIncQ)) {
     if(d_myworld->myrank() == 0){
      cerr << "Beginning Iteration = " << count++ << "\n";
