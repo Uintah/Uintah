@@ -86,7 +86,7 @@ TCL_ETAGS_FILES := $(wildcard $(TCL_FILES))
 ETAGS := @ETAGS@
 CTAGS := ctags
 
-all:: prereqs packmaker $(ALLTARGETS) ontheflylibs
+all:: prereqs packmaker $(ALLTARGETS) ontheflylibs BioTensor BioFEM
 
 .PHONY: prereqs
 prereqs: $(MAKEFILEDIRS) $(MATLAB_ENGINE_FILES) $(CREATETCLINDEX) $(LIBDIR) $(SUBMAKEFILES) $(ALLGEN)
@@ -187,6 +187,7 @@ endif
 	rm -Rf $(LIBDIR)
 	-rm -f sciTAGS
 	rm -f on-the-fly-libs/*.*
+	rm -f BioTensor BioFEM
 
 distclean:: clean
 	rm -f config.status config.log config.cache
@@ -246,4 +247,20 @@ ifeq (,$(findstring objs,$(MAKECMDGOALS)))
 else
   # If we are making the special target "objs", we skip the dependencies.
   # This is a hack for a "quick" compile.
+endif
+
+# Copy Power App short cuts to the obj directory.
+ifneq ($(DEF_TEEM),)
+  $(OBJTOP)/BioTensor : $(SRCDIR)/Packages/Teem/nets/StandAlone/BioTensor
+	@cp $(SRCDIR)/Packages/Teem/nets/StandAlone/BioTensor $(OBJTOP)/BioTensor
+	@chmod +x BioTensor
+else
+  $(OBJTOP)/BioTensor :
+endif
+ifeq ($(findstring BioPSE,$(LOAD_PACKAGE)),BioPSE)
+  $(OBJTOP)/BioFEM : $(SRCDIR)/Packages/BioPSE/nets/StandAlone/BioFEM
+	@cp $(SRCDIR)/Packages/BioPSE/nets/StandAlone/BioFEM $(OBJTOP)/BioFEM
+	@chmod +x BioFEM
+else
+  $(OBJTOP)/BioFEM :
 endif
