@@ -203,9 +203,10 @@ private:
   
 public:
   DataArchive(const string& filebase,
-	      int processor=0 /* use if you want to different processors
-				 to read different parts of the archive */,
-	      int numProcessors=1);
+	      int processor = 0 /* use if you want to different processors
+				   to read different parts of the archive */,
+	      int numProcessors = 1,
+              bool verbose = true ); // If you want error messages printed to the screen.
   
   // GROUP: Destructors
   //////////

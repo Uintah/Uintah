@@ -35,10 +35,11 @@ using namespace SCIRun;
 DebugStream DataArchive::dbg("DataArchive", false);
 
 DataArchive::DataArchive(const std::string& filebase,
-			 int processor /* =0 */, int numProcessors /* =1 */)
-  : d_filebase(filebase), d_varHashMaps(NULL),
-    d_processor(processor), d_numProcessors(numProcessors),
-    d_lock("DataArchive lock")
+                         int processor /* = 0 */, int numProcessors /* = 1 */,
+                         bool verbose /* = true */ ) :
+  d_filebase(filebase), d_varHashMaps(NULL),
+  d_processor(processor), d_numProcessors(numProcessors),
+  d_lock("DataArchive lock")
 {
 
   try {
@@ -61,13 +62,15 @@ DataArchive::DataArchive(const std::string& filebase,
     char path[MAXPATHLEN];
     string url = string("file://")+getwd(path)+"/.";
     d_base.makeRelativeTo(url.c_str());
-    if(d_base.isRelative())
+    if( d_base.isRelative() && verbose )
       cerr << "base is still relative!\n";
   }
   
   char* urltext = XMLString::transcode(d_base.getURLText());
   ProblemSpecReader psr(urltext);
-  cerr << "Parsing " << urltext << endl;
+  if( verbose ) {
+    cerr << "Parsing " << urltext << endl;
+  }
   delete [] urltext;
 
   d_indexDoc = psr.readInputFile();
@@ -90,7 +93,8 @@ DataArchive::~DataArchive()
   }
 }
 
-string DataArchive::queryEndianness()
+string
+DataArchive::queryEndianness()
 {
   string ret;
   d_lock.lock();
@@ -116,7 +120,8 @@ string DataArchive::queryEndianness()
   return ret;
 }
 
-int DataArchive::queryNBits()
+int
+DataArchive::queryNBits()
 {
   int ret;
   d_lock.lock();
@@ -143,7 +148,7 @@ int DataArchive::queryNBits()
 
 void
 DataArchive::queryTimesteps( std::vector<int>& index,
-			     std::vector<double>& times )
+                             std::vector<double>& times )
 {
   double start = Time::currentSeconds();
   if(!have_timesteps){
@@ -159,7 +164,7 @@ DataArchive::queryTimesteps( std::vector<int>& index,
           string tsfile = attributes["href"];
           if(tsfile == "")
             throw InternalError("timestep href not found");
-      	  
+          
           XMLURL url(d_base, tsfile.c_str());
           
           char* urltext = XMLString::transcode(url.getURLText());
@@ -167,13 +172,13 @@ DataArchive::queryTimesteps( std::vector<int>& index,
           delete [] urltext;
           
           ProblemSpecP top = psr.readInputFile();
-      	  
+          
           d_tstop.push_back(top);
           d_tsurl.push_back(url);
           ProblemSpecP time = top->findBlock("Time");
           if(time == 0)
             throw InternalError("Cannot find Time block");
-      	  
+          
           int timestepNumber;
           if(!time->get("timestepNumber", timestepNumber))
             throw InternalError("Cannot find timestepNumber");
@@ -215,7 +220,7 @@ DataArchive::getTimestep(double searchtime, XMLURL& found_url)
 
 ProblemSpecP
 DataArchive::findVariable(const string& name, const Patch* patch,
-			  int matl, double time, XMLURL& url)
+                          int matl, double time, XMLURL& url)
 {
   return getTopLevelVarHashMaps()->findVariable(name, patch, matl, time, url);
 }
@@ -237,77 +242,77 @@ DataArchive::queryGrid( double time, const ProblemSpec* ups)
   for(ProblemSpecP n = gridnode->getFirstChild(); n != 0; n=n->getNextSibling()){
     if(n->getNodeName() == "numLevels") {
       if(!n->get(numLevels))
-	throw InternalError("Error parsing numLevels");
+        throw InternalError("Error parsing numLevels");
     } else if(n->getNodeName() == "Level"){
       Point anchor;
       if(!n->get("anchor", anchor))
-	throw InternalError("Error parsing level anchor point");
+        throw InternalError("Error parsing level anchor point");
       Vector dcell;
       if(!n->get("cellspacing", dcell))
-	throw InternalError("Error parsing level cellspacing");
+        throw InternalError("Error parsing level cellspacing");
       int id;
       if(!n->get("id", id)){
-	static bool warned_once=false;
-	if(!warned_once){
-	  cerr << "WARNING: Data archive does not have level ID\n";
-	  cerr << "This is okay, as long as you aren't trying to do AMR\n";
-	}
-	warned_once=true;
-	id=-1;
+        static bool warned_once=false;
+        if(!warned_once){
+          cerr << "WARNING: Data archive does not have level ID\n";
+          cerr << "This is okay, as long as you aren't trying to do AMR\n";
+        }
+        warned_once=true;
+        id=-1;
       }
       LevelP level = grid->addLevel(anchor, dcell, id);
       int numPatches = -1234;
       long totalCells = 0;
       IntVector periodicBoundaries(0, 0, 0);      
       for(ProblemSpecP r = n->getFirstChild(); r != 0; r=r->getNextSibling()){
-	if(r->getNodeName() == "numPatches" ||
-	   r->getNodeName() == "numRegions") {
-	  if(!r->get(numPatches))
-	    throw InternalError("Error parsing numRegions");
-	} else if(r->getNodeName() == "totalCells") {
-	  if(!r->get(totalCells))
-	    throw InternalError("Error parsing totalCells");
-	} else if(r->getNodeName() == "Patch" ||
-		  r->getNodeName() == "Region") {
-	  int id;
-	  if(!r->get("id", id))
-	    throw InternalError("Error parsing patch id");
-	  IntVector lowIndex;
-	  if(!r->get("lowIndex", lowIndex))
-	    throw InternalError("Error parsing patch lowIndex");
-	  IntVector highIndex;
-	  if(!r->get("highIndex", highIndex))
-	    throw InternalError("Error parsing patch highIndex");
+        if(r->getNodeName() == "numPatches" ||
+           r->getNodeName() == "numRegions") {
+          if(!r->get(numPatches))
+            throw InternalError("Error parsing numRegions");
+        } else if(r->getNodeName() == "totalCells") {
+          if(!r->get(totalCells))
+            throw InternalError("Error parsing totalCells");
+        } else if(r->getNodeName() == "Patch" ||
+                  r->getNodeName() == "Region") {
+          int id;
+          if(!r->get("id", id))
+            throw InternalError("Error parsing patch id");
+          IntVector lowIndex;
+          if(!r->get("lowIndex", lowIndex))
+            throw InternalError("Error parsing patch lowIndex");
+          IntVector highIndex;
+          if(!r->get("highIndex", highIndex))
+            throw InternalError("Error parsing patch highIndex");
           IntVector inLowIndex = lowIndex;
           IntVector inHighIndex = highIndex;
           r->get("interiorLowIndex", inLowIndex);
           r->get("interiorHighIndex", inHighIndex);
-	  long totalCells;
-	  if(!r->get("totalCells", totalCells))
-	    throw InternalError("Error parsing patch total cells");
-	  USE_IF_ASSERTS_ON(Patch* patch =) level->addPatch(lowIndex, highIndex,inLowIndex, inHighIndex,id);
-	  ASSERTEQ(patch->totalCells(), totalCells);
-	} else if(r->getNodeName() == "anchor"
-		  || r->getNodeName() == "cellspacing"
-		  || r->getNodeName() == "id") {
-	  // Nothing - handled above
-	} else if(r->getNodeName() == "periodic") {
-	  if(!n->get("periodic", periodicBoundaries))
-	    throw InternalError("Error parsing periodoc");
-	} else if(r->getNodeType() != ProblemSpec::TEXT_NODE){
-	  cerr << "WARNING: Unknown level data: " << r->getNodeName() << '\n';
-	}
+          long totalCells;
+          if(!r->get("totalCells", totalCells))
+            throw InternalError("Error parsing patch total cells");
+          USE_IF_ASSERTS_ON(Patch* patch =) level->addPatch(lowIndex, highIndex,inLowIndex, inHighIndex,id);
+          ASSERTEQ(patch->totalCells(), totalCells);
+        } else if(r->getNodeName() == "anchor"
+                  || r->getNodeName() == "cellspacing"
+                  || r->getNodeName() == "id") {
+          // Nothing - handled above
+        } else if(r->getNodeName() == "periodic") {
+          if(!n->get("periodic", periodicBoundaries))
+            throw InternalError("Error parsing periodoc");
+        } else if(r->getNodeType() != ProblemSpec::TEXT_NODE){
+          cerr << "WARNING: Unknown level data: " << r->getNodeName() << '\n';
+        }
       }
       ASSERTEQ(level->numPatches(), numPatches);
       ASSERTEQ(level->totalCells(), totalCells);
       
       if(periodicBoundaries != IntVector(0, 0, 0)){
-	level->finalizeLevel(periodicBoundaries.x() != 0,
-			     periodicBoundaries.y() != 0,
-			     periodicBoundaries.z() != 0);
+        level->finalizeLevel(periodicBoundaries.x() != 0,
+                             periodicBoundaries.y() != 0,
+                             periodicBoundaries.z() != 0);
       }
       else {
-	level->finalizeLevel();
+        level->finalizeLevel();
       }
       if (ups) {
         // this is not necessary on non-restarts.
@@ -329,21 +334,21 @@ DataArchive::queryGrid( double time, const ProblemSpec* ups)
 
 void
 DataArchive::queryLifetime( double& /*min*/, double& /*max*/,
-			    particleId /*id*/)
+                            particleId /*id*/)
 {
   cerr << "DataArchive::lifetime not finished\n";
 }
 
 void
 DataArchive::queryLifetime( double& /*min*/, double& /*max*/,
-			    const Patch* /*patch*/)
+                            const Patch* /*patch*/)
 {
   cerr << "DataArchive::lifetime not finished\n";
 }
 
 void
 DataArchive::queryVariables( vector<string>& names,
-			     vector<const TypeDescription*>& types)
+                             vector<const TypeDescription*>& types)
 {
   double start = Time::currentSeconds();
   d_lock.lock();
@@ -358,7 +363,7 @@ DataArchive::queryVariables( vector<string>& names,
 
 void
 DataArchive::queryGlobals( vector<string>& names,
-			   vector<const TypeDescription*>& types)
+                           vector<const TypeDescription*>& types)
 {
   double start = Time::currentSeconds();
   d_lock.lock();
@@ -374,7 +379,7 @@ DataArchive::queryGlobals( vector<string>& names,
 
 void
 DataArchive::queryVariables(ProblemSpecP vars, vector<string>& names,
-			    vector<const TypeDescription*>& types)
+                            vector<const TypeDescription*>& types)
 {
   for(ProblemSpecP n = vars->getFirstChild(); n != 0; n = n->getNextSibling()){
     if(n->getNodeName() == "variable") {
@@ -396,7 +401,7 @@ DataArchive::queryVariables(ProblemSpecP vars, vector<string>& names,
       types.push_back(td);
       string name = attributes["name"];
       if(name == "")
-      	throw InternalError("Variable name not found");
+        throw InternalError("Variable name not found");
       names.push_back(name);
     } else if(n->getNodeType() != ProblemSpec::TEXT_NODE){
       cerr << "WARNING: Unknown variable data: " << n->getNodeName() << '\n';
@@ -406,7 +411,7 @@ DataArchive::queryVariables(ProblemSpecP vars, vector<string>& names,
 
 void
 DataArchive::query( Variable& var, const std::string& name,
-		    int matlIndex, const Patch* patch, double time )
+                    int matlIndex, const Patch* patch, double time )
 {
   double tstart = Time::currentSeconds();
   XMLURL url;
@@ -424,7 +429,7 @@ DataArchive::query( Variable& var, const std::string& name,
 
 void
 DataArchive::query( Variable& var, ProblemSpecP vnode, XMLURL url,
-		    int matlIndex, const Patch* patch, const IntVector* boundary /* = 0 */)
+                    int matlIndex, const Patch* patch, const IntVector* boundary /* = 0 */)
 {
   d_lock.lock();
   map<string,string> attributes;
@@ -450,7 +455,7 @@ DataArchive::query( Variable& var, ProblemSpecP vnode, XMLURL url,
     {
      d_psetDB[key] = psubset =
        scinew ParticleSubset(scinew ParticleSet(numParticles), true,
-			     matlIndex, patch, 0);
+                             matlIndex, patch, 0);
     }
     (static_cast<ParticleVariableBase*>(&var))->allocate(psubset);
 //      (dynamic_cast<ParticleVariableBase*>(&var))->allocate(psubset);
@@ -513,8 +518,8 @@ DataArchive::query( Variable& var, ProblemSpecP vnode, XMLURL url,
 
 void 
 DataArchive::findPatchAndIndex(GridP grid, Patch*& patch, particleIndex& idx,
-			       long64 particleID, int matlIndex,
-			       double time)
+                               long64 particleID, int matlIndex,
+                               double time)
 {
   Patch *local = patch;
   if( patch != NULL ){
@@ -526,11 +531,11 @@ DataArchive::findPatchAndIndex(GridP grid, Patch*& patch, particleIndex& idx,
     else {
       ParticleSubset* subset = var.getParticleSubset();
       for(ParticleSubset::iterator p_iter = subset->begin();
-	  p_iter != subset->end(); p_iter++){
-	if( var[*p_iter] == particleID){
-	  idx = *p_iter;
-	  return;
-	}
+          p_iter != subset->end(); p_iter++){
+        if( var[*p_iter] == particleID){
+          idx = *p_iter;
+          return;
+        }
       }
     }
   }
@@ -541,23 +546,23 @@ DataArchive::findPatchAndIndex(GridP grid, Patch*& patch, particleIndex& idx,
     const LevelP level = grid->getLevel(level_nr);
     
     for (Level::const_patchIterator iter = level->patchesBegin();
-	 (iter != level->patchesEnd()) && (patch == NULL); iter++) {
+         (iter != level->patchesEnd()) && (patch == NULL); iter++) {
       if( *iter == local ) continue;
       ParticleVariable<long64> var;
       query(var, "p.particleID", matlIndex, *iter, time);
       ParticleSubset* subset = var.getParticleSubset();
       for(ParticleSubset::iterator p_iter = subset->begin();
-	  p_iter != subset->end(); p_iter++){
-	if( var[*p_iter] == particleID){
-	  patch = *iter;
-	  idx = *p_iter;
-	  //	  cerr<<"var["<<*p_iter<<"] = "<<var[*p_iter]<<endl;
-	  break;
-	}
+          p_iter != subset->end(); p_iter++){
+        if( var[*p_iter] == particleID){
+          patch = *iter;
+          idx = *p_iter;
+          //      cerr<<"var["<<*p_iter<<"] = "<<var[*p_iter]<<endl;
+          break;
+        }
       }
       
       if( patch != NULL )
-	break;
+        break;
     }
   }
 }
@@ -633,9 +638,9 @@ DataArchive::restartInitialize(int& timestep, const GridP& grid, DataWarehouse* 
 
     map<string, VarLabel*>::iterator labelIter;    
     for (list<Patch*>::iterator patchIter = patches.begin();
-	 patchIter != patches.end(); patchIter++)
+         patchIter != patches.end(); patchIter++)
       {
-	Patch* patch = *patchIter;
+        Patch* patch = *patchIter;
         // Check the load balancer to see if this patch's data belongs on this proc.
         // if patch is null, it is global data, and if lb is null, load the data anyway.
         if (!patch || !lb || lb->getPatchwiseProcessorAssignment(patch) == d_processor) {
@@ -662,13 +667,15 @@ DataArchive::restartInitialize(int& timestep, const GridP& grid, DataWarehouse* 
                   }
                 }
               }
-	    }
+            }
           }
         }
     }
   }
 }
-bool DataArchive::queryRestartTimestep(int& timestep)
+
+bool
+DataArchive::queryRestartTimestep(int& timestep)
 {
   ProblemSpecP restartNode = d_indexDoc->findBlock("restart");
   if (restartNode == 0) {
@@ -696,9 +703,9 @@ bool DataArchive::queryRestartTimestep(int& timestep)
 
 void
 DataArchive::initVariable(const Patch* patch,
-			  DataWarehouse* dw,
-			  VarLabel* label, int matl,
-			  pair<ProblemSpecP, XMLURL> dataRef)
+                          DataWarehouse* dw,
+                          VarLabel* label, int matl,
+                          pair<ProblemSpecP, XMLURL> dataRef)
 {
   Variable* var = label->typeDescription()->createInstance();
   ProblemSpecP vnode = dataRef.first;
@@ -714,7 +721,7 @@ DataArchive::initVariable(const Patch* patch,
     }
     else {
       ASSERTEQ(dw->getParticleSubset(matl, patch),
-	       particles->getParticleSubset());
+               particles->getParticleSubset());
     }
   }
 
@@ -752,9 +759,9 @@ DataArchive::setTimestepCacheSize(int new_size) {
 
 DataArchive::TimeHashMaps::TimeHashMaps(DataArchive *archive,
                                         const vector<double>& tsTimes,
-					const vector<XMLURL>& tsUrls,
-					const vector<ProblemSpecP>& tsTopNodes,
-					int processor, int numProcessors):
+                                        const vector<XMLURL>& tsUrls,
+                                        const vector<ProblemSpecP>& tsTopNodes,
+                                        int processor, int numProcessors):
   archive(archive)
 {
   ASSERTL3(tsTimes.size() == tsTopNodes.size());
@@ -764,7 +771,7 @@ DataArchive::TimeHashMaps::TimeHashMaps(DataArchive *archive,
   for (int i = 0; i < (int)tsTimes.size(); i++) {
     d_patchHashMaps[tsTimes[i]].setTime(tsTimes[i]);
     d_patchHashMaps[tsTimes[i]].init(tsUrls[i], tsTopNodes[i],
-				     processor, numProcessors);
+                                     processor, numProcessors);
     total_num_procs += d_patchHashMaps[tsTimes[i]].numSimProcessors();
   }
    
@@ -782,8 +789,8 @@ DataArchive::TimeHashMaps::TimeHashMaps(DataArchive *archive,
 
 ProblemSpecP
 DataArchive::TimeHashMaps::findVariable(const string& name,
-					const Patch* patch, int matl,
-					double time, XMLURL& foundUrl)
+                                        const Patch* patch, int matl,
+                                        double time, XMLURL& foundUrl)
 {
   //  cerr << "TimeHashMaps::findVariable\n";
   PatchHashMaps* timeData = findTimeData(time);
@@ -846,7 +853,9 @@ DataArchive::TimeHashMaps::findTimeData(double time)
   return NULL;
 }
 
-void DataArchive::TimeHashMaps::updateCacheSize(int new_size) {
+void
+DataArchive::TimeHashMaps::updateCacheSize(int new_size) 
+{
   dbg << "TimeHashMaps::updateCacheSize:new_size = "<<new_size<<", timestep_cache_size = "<<timestep_cache_size<<"\n";
   if (new_size >= timestep_cache_size ||
       new_size <= 0) {
@@ -893,8 +902,9 @@ DataArchive::PatchHashMaps::~PatchHashMaps() {
     docs[i]->releaseDocument();
 }
 
-void DataArchive::PatchHashMaps::init(XMLURL tsUrl, ProblemSpecP tsTopNode,
-				      int /*processor*/, int /*numProcessors*/)
+void
+DataArchive::PatchHashMaps::init(XMLURL tsUrl, ProblemSpecP tsTopNode,
+                                 int /*processor*/, int /*numProcessors*/)
 {
   //  cerr << "PatchHashMaps["<<time<<"]::init\n";
   d_allParsed = false;
@@ -935,7 +945,8 @@ void DataArchive::PatchHashMaps::init(XMLURL tsUrl, ProblemSpecP tsTopNode,
   d_lastFoundIt = d_matHashMaps.end();
 }
 
-void DataArchive::PatchHashMaps::purgeCache()
+void
+DataArchive::PatchHashMaps::purgeCache()
 {
   //  cerr << "PatchHashMaps::purgeCache\n";
   d_matHashMaps.clear();
@@ -951,7 +962,8 @@ void DataArchive::PatchHashMaps::purgeCache()
 }
 
 // This is the function that parses the patch.xml file for a single processor.
-void DataArchive::PatchHashMaps::parseProc(int proc)
+void
+DataArchive::PatchHashMaps::parseProc(int proc)
 {
   //  cerr << "PatchHashMaps::parseProc("<<proc<<")\n";
   if (proc < 0 || proc >= (int)d_xmlUrls.size()) {
@@ -1003,14 +1015,15 @@ void DataArchive::PatchHashMaps::parseProc(int proc)
 }
 
 // This is the function that parses all the patch.xml files.
-void DataArchive::PatchHashMaps::parse()
+void
+DataArchive::PatchHashMaps::parse()
 {
   for (int proc = 0; proc < (int)d_xmlUrls.size(); proc++) {
     parseProc(proc);
   }
   
-// This function needs to make sure that d_allParsed is set to true,
-// otherwise the findPatchData function could enter an infinate loop.
+  // This function needs to make sure that d_allParsed is set to true,
+  // otherwise the findPatchData function could enter an infinate loop.
   d_allParsed = true;
 
   // Might as well make the d_lastFoundIt point to the most likely
@@ -1020,9 +1033,9 @@ void DataArchive::PatchHashMaps::parse()
 
 ProblemSpecP
 DataArchive::PatchHashMaps::findVariable(const string& name,
-					 const Patch* patch,
-					 int matl,
-					 XMLURL& foundUrl)
+                                         const Patch* patch,
+                                         int matl,
+                                         XMLURL& foundUrl)
 {
   //  cerr << "PatchHashMaps::findVariable\n";
   MaterialHashMaps* patchData = findPatchData(patch);
@@ -1083,9 +1096,10 @@ DataArchive::PatchHashMaps::findPatchData(const Patch* patch)
   return NULL;  
 }
 
-ProblemSpecP DataArchive::MaterialHashMaps::findVariable(const string& name,
-                                                         int matl,
-                                                         XMLURL& foundUrl)
+ProblemSpecP
+DataArchive::MaterialHashMaps::findVariable(const string& name,
+                                            int matl,
+                                            XMLURL& foundUrl)
 {
   //  cerr << "MaterialHashMaps::findVariable:start\n";
   //  cerr << "name = "<<name<<", matl = "<<matl<<"\n";
@@ -1107,8 +1121,9 @@ ProblemSpecP DataArchive::MaterialHashMaps::findVariable(const string& name,
   return NULL;  
 }
 
-void DataArchive::MaterialHashMaps::add(const string& name, int matl,
-					ProblemSpecP varNode, XMLURL url)
+void
+DataArchive::MaterialHashMaps::add(const string& name, int matl,
+                                   ProblemSpecP varNode, XMLURL url)
 {
   matl++; // allows for matl=-1 for universal variables
    
@@ -1122,9 +1137,10 @@ void DataArchive::MaterialHashMaps::add(const string& name, int matl,
     d_varHashMaps[matl].insert(name, value);
 }
 
-ConsecutiveRangeSet DataArchive::queryMaterials( const string& name,
-						 const Patch* patch,
-						 double time)
+ConsecutiveRangeSet
+DataArchive::queryMaterials( const string& name,
+                             const Patch* patch,
+                             double time )
 {
   double start = Time::currentSeconds();
   d_lock.lock();
@@ -1153,7 +1169,8 @@ ConsecutiveRangeSet DataArchive::queryMaterials( const string& name,
   return result;
 }
 
-int DataArchive::queryNumMaterials(const Patch* patch, double time)
+int
+DataArchive::queryNumMaterials(const Patch* patch, double time)
 {
   double start = Time::currentSeconds();
 
@@ -1170,5 +1187,5 @@ int DataArchive::queryNumMaterials(const Patch* patch, double time)
   dbg << "DataArchive::queryNumMaterials completed in " << Time::currentSeconds()-start << " seconds\n";
 
   return (int)matlVarHashMaps->getVarHashMaps().size() - 1 /* the other 1 is
-							      for globals */;
+                                                              for globals */;
 }
