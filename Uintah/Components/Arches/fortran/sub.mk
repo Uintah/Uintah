@@ -34,13 +34,15 @@ SRCS     += $(SRCDIR)/init.F $(SRCDIR)/initScal.F
 PSELIBS :=
 #LIBS := -lftn -lm -lblas
 
-FFLAGS := -g -O3 -OPT:IEEE_arithmetic=3 -CG:if_conversion=false:reverse_i
-f_conversion=false -LNO:pf2=0 -avoid_gp_overflow -mp -I$(SRCDIR)
+FFLAGS += -g -O3 -OPT:IEEE_arithmetic=3 -CG:if_conversion=false:reverse_if_conversion=false -LNO:pf2=0 -avoid_gp_overflow -I$(SRCDIR)
 
 #include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.6  2000/06/13 20:51:45  bbanerje
+# Fortran flags not overwritten now (but still not done thru configure)
+#
 # Revision 1.5  2000/06/12 21:30:03  bbanerje
 # Added first Fortran routines, added Stencil Matrix where needed,
 # removed unnecessary CCVariables (e.g., sources etc.)
