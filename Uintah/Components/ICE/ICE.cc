@@ -82,6 +82,15 @@ void ICE::scheduleInitialize(const LevelP& level, SchedulerP& sched,
     Task* t = scinew Task("ICE::actuallyInitialize", patch, dw, dw,this,
 			    &ICE::actuallyInitialize);
     t->computes(dw, d_sharedState->get_delt_label());
+    for (int m = 0; m < d_sharedState->getNumMatls(); m++ ) {
+      Material* matl = d_sharedState->getMaterial(m);
+      ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+      if(ice_matl){
+	t->computes(dw, lb->temp_CCLabel,ice_matl->getDWIndex(),patch);
+	t->computes(dw, lb->rho_micro_CCLabel,ice_matl->getDWIndex(),patch);
+	t->computes(dw, lb->cv_CCLabel,ice_matl->getDWIndex(),patch);
+      }
+    }
     sched->addTask(t);
   }
 
@@ -117,8 +126,10 @@ void ICE::scheduleTimeAdvance(double t, double dt,
             ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
             if(ice_matl){
                EquationOfState* eos = ice_matl->getEOS();
+#if 1
                eos->addComputesAndRequiresSS( t,ice_matl,patch, old_dw, new_dw);
                eos->addComputesAndRequiresCEB(t,ice_matl,patch, old_dw, new_dw);
+#endif
             }
 	}
 	sched->addTask(t);
@@ -164,7 +175,14 @@ void ICE::scheduleTimeAdvance(double t, double dt,
       {
 	Task* t = scinew Task("ICE::step6and7",patch, old_dw, new_dw,this,
 			       &ICE::actuallyStep6and7);
-	for (int m = 0; m < numMatls; m++) {
+	for (int m = 0; m < d_sharedState->getNumMatls(); m++ ) {
+	  Material* matl = d_sharedState->getMaterial(m);
+	  ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+	  if(ice_matl){
+	    t->computes(new_dw, lb->temp_CCLabel,ice_matl->getDWIndex(),patch);
+	    t->computes(new_dw, lb->rho_micro_CCLabel,ice_matl->getDWIndex(),patch);
+	    t->computes(new_dw, lb->cv_CCLabel,ice_matl->getDWIndex(),patch);
+	  }
 	}
 	t->computes(new_dw, d_sharedState->get_delt_label());
 	sched->addTask(t);
@@ -181,9 +199,26 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
 
 {
 
-  cout << "Doing acutally Initialize" << endl;
+  cout << "Doing actually Initialize" << endl;
   double dT = 0.0001;
   new_dw->put(delt_vartype(dT), lb->delTLabel);
+
+  CCVariable<double> rho_micro, temp, cv;
+  for (int m = 0; m < d_sharedState->getNumMatls(); m++ ) {
+    Material* matl = d_sharedState->getMaterial(m);
+    ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+    if(ice_matl){
+      int vfindex = ice_matl->getDWIndex();
+      new_dw->allocate(rho_micro,lb->rho_micro_CCLabel,vfindex,patch);
+      new_dw->allocate(temp,lb->temp_CCLabel,vfindex,patch);
+      new_dw->allocate(cv,lb->cv_CCLabel,vfindex,patch);
+
+      new_dw->put(rho_micro,lb->rho_micro_CCLabel,vfindex,patch);
+      new_dw->put(temp,lb->temp_CCLabel,vfindex,patch);
+      new_dw->put(cv,lb->cv_CCLabel,vfindex,patch);
+    }
+  }
+  
 }
 
 void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
@@ -270,6 +305,22 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
   cout << "Doing actually step6 and 7" << endl;
   double dT = 0.0001;
   new_dw->put(delt_vartype(dT), lb->delTLabel);
+
+    CCVariable<double> rho_micro, temp, cv;
+  for (int m = 0; m < d_sharedState->getNumMatls(); m++ ) {
+    Material* matl = d_sharedState->getMaterial(m);
+    ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
+    if(ice_matl){
+      int vfindex = ice_matl->getDWIndex();
+      new_dw->allocate(rho_micro,lb->rho_micro_CCLabel,vfindex,patch);
+      new_dw->allocate(temp,lb->temp_CCLabel,vfindex,patch);
+      new_dw->allocate(cv,lb->cv_CCLabel,vfindex,patch);
+
+      new_dw->put(rho_micro,lb->rho_micro_CCLabel,vfindex,patch);
+      new_dw->put(temp,lb->temp_CCLabel,vfindex,patch);
+      new_dw->put(cv,lb->cv_CCLabel,vfindex,patch);
+    }
+  }
 }
 
 
@@ -279,6 +330,11 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.26  2000/10/06 03:47:26  jas
+// Added computes for the initialization so that step 1 works.  Added a couple
+// of CC labels for step 1. Can now go thru multiple timesteps doing work
+// only in step 1.
+//
 // Revision 1.25  2000/10/05 04:26:48  guilkey
 // Added code for part of the EOS evaluation.
 //

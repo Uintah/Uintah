@@ -86,6 +86,10 @@ ICELabel::ICELabel()
 
     cv_CCLabel        = 
      scinew VarLabel("cv_CC",     CCVariable<double>::getTypeDescription() );
+    rho_micro_CCLabel = 
+     scinew VarLabel("rho_micro_CC",CCVariable<double>::getTypeDescription());
+    speedSound_CCLabel = 
+     scinew VarLabel("speedSound_CC",CCVariable<double>::getTypeDescription());
     div_velfc_CCLabel = 
      scinew VarLabel("div_velfc_CC", CCVariable<double>::getTypeDescription() );
 
@@ -138,7 +142,9 @@ ICELabel::~ICELabel()
     delete vel_CCLabel_6_7;
 
     delete cv_CCLabel;
+    delete rho_micro_CCLabel;
     delete div_velfc_CCLabel;
+    delete speedSound_CCLabel;
 
     // Face centered variables
     delete vel_FCLabel;
@@ -148,6 +154,11 @@ ICELabel::~ICELabel()
     delete delTLabel;
 }
 // $Log$
+// Revision 1.3  2000/10/06 03:47:26  jas
+// Added computes for the initialization so that step 1 works.  Added a couple
+// of CC labels for step 1. Can now go thru multiple timesteps doing work
+// only in step 1.
+//
 // Revision 1.2  2000/10/04 20:17:52  jas
 // Change namespace ICE to ICESpace.
 //
