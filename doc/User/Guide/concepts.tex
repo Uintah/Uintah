@@ -426,6 +426,65 @@ The following mesh types may be stored in a field:
 
 \meshdoc{84}{hexvol}{Hex Vol Mesh}{A Hex Volume mesh is a subdivision of space into hexagonal elements.}
 
+\subsection{Field Types}
+\label{sec:field-types}
+
+
+A \sr{} field is an object that contains a geometric mesh and a
+collection of data values mapped on to that mesh.  Data can be stored
+at the nodes, edges, faces, and cells of the mesh.
+
+The following C++/SCI data types may be stored in a Field:
+
+\begin{itemize}
+\item double, float
+\item int, short, unsigned, unsigned short
+\item char, unsigned char
+\item Tensor
+\item Vector
+\end{itemize}
+
+The following mesh types may be stored in a field:
+
+%begin{latexonly}
+\newcommand{\meshdoc}[4]{%
+  \includegraphics[0,0][100,#1]{Figures/#2.eps.gz}
+  {#4}
+}
+%end{latexonly}
+\begin{htmlonly}
+  \newcommand{\meshdoc}[4]{%
+    \htmladdimg[align=left,alt="#3"]
+    {../../Tutorial/images/figures/#2.gif}
+    #4 \begin{rawhtml}<br clear="all"/>\end{rawhtml}
+  }
+\end{htmlonly}
+
+\meshdoc{100}{pointcloud}{Point Cloud Mesh}{A Point Cloud mesh is a
+  set of unconnected points.}
+
+\meshdoc{60}{ScanlineField}{Scanline Mesh}{A Scanline Mesh is a
+  regularly segmented straight line regularly segmented straight line
+  (a regular 1D grid).  (a regular 1D grid).}
+
+\meshdoc{60}{ContourField}{Contour Field Mesh}{A Curve mesh is a 
+  segmented curve.}
+
+\meshdoc{100}{ImageField}{Image Mesh}{An Image mesh is a regular 2D
+  grid. Note than an Image mesh is not used for image processing since
+  \sr{} does not support that function.}
+
+\meshdoc{65}{trisurf}{Tri Surface Mesh}{A Tri Surface mesh is a
+  surface made of connected triangles.}
+
+\meshdoc{83}{quadsurf}{Quad Surface Mesh}{A Quad Surface mesh is a surface made of connected quadrilaterals.}
+
+\meshdoc{87}{latticevol}{Lat Vol Mesh}{A Lattice Volume mesh is a regular 3D grid.}
+
+\meshdoc{60}{tetvol}{Tet Vol Mesh}{A Tet Volume mesh is a subdivision of space into tetrahedral elements.}
+
+\meshdoc{60}{hexvol}{Hex Vol Mesh}{A Hex Volume mesh is a subdivision of space into hexagonal elements.}
+
 %%% Local Variables: 
 %%% mode: latex
 %%% TeX-master: "usersguide"
