@@ -1,4 +1,3 @@
-#include <Packages/Uintah/CCA/Components/MPM/Crack/FractureDefine.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModelFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/Membrane.h>
 #include <Core/Malloc/Allocator.h>
@@ -262,12 +261,12 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
     new_dw->get(gvelocity, lb->gVelocityLabel, dwi,patch, gac,NGN);
     old_dw->get(delT, lb->delTLabel);
 
-#ifdef FRACTURE
     constParticleVariable<Short27> pgCode;
-    new_dw->get(pgCode, lb->pgCodeLabel, pset);
     constNCVariable<Vector> Gvelocity;
-    new_dw->get(Gvelocity,lb->GVelocityLabel, dwi, patch, gac, NGN);
-#endif
+    if (flag->d_fracture) {
+      new_dw->get(pgCode, lb->pgCodeLabel, pset);
+      new_dw->get(Gvelocity,lb->GVelocityLabel, dwi, patch, gac, NGN);
+    }
 
     double shear = d_initialData.Shear;
     double bulk  = d_initialData.Bulk;
@@ -292,19 +291,18 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
         Vector gvel;
         velGrad.set(0.0);
         for(int k = 0; k < flag->d_8or27; k++) {
-#ifdef FRACTURE
-	  if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]]; 
-	  if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
-#else
- 	  gvel = gvelocity[ni[k]];
-#endif
+	  if (flag->d_fracture) {
+	    if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]]; 
+	    if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
+	  } else 
+	    gvel = gvelocity[ni[k]];
 	  for (int j = 0; j<3; j++){
-             double d_SXoodx = d_S[k][j] * oodx[j];
-             for (int i = 0; i<3; i++) {
-               velGrad(i,j) += gvel[i] * d_SXoodx;
-             }
+	    double d_SXoodx = d_S[k][j] * oodx[j];
+	    for (int i = 0; i<3; i++) {
+	      velGrad(i,j) += gvel[i] * d_SXoodx;
+	    }
 	  }
-       }
+	}
 
       T1[idx] = ptang1[idx];
       T2[idx] = ptang2[idx];
@@ -553,10 +551,10 @@ void Membrane::addComputesAndRequires(Task* task,
    task->requires(Task::NewDW, lb->gVelocityLabel,         matlset,gac, NGN);
    task->requires(Task::OldDW, lb->delTLabel);
 
-#ifdef FRACTURE
-   task->requires(Task::NewDW, lb->pgCodeLabel,          matlset,Ghost::None); 
-   task->requires(Task::NewDW, lb->GVelocityLabel,       matlset, gac, NGN);
-#endif
+   if (flag->d_fracture) {
+     task->requires(Task::NewDW, lb->pgCodeLabel,       matlset,Ghost::None); 
+     task->requires(Task::NewDW, lb->GVelocityLabel,    matlset, gac, NGN);
+   }
 
    task->computes(lb->pStressLabel_preReloc,             matlset);
    task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
