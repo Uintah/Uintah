@@ -27,9 +27,11 @@ const LevelP& Grid::getLevel( int l ) const
   return d_levels[ l ];
 }
 
-void Grid::addLevel(const LevelP& level)
+Level* Grid::addLevel(const Point& anchor, const Vector& dcell)
 {
+  Level* level = scinew Level(this, anchor, dcell, (int)d_levels.size());  
   d_levels.push_back( level );
+  return level;
 }
 
 void Grid::performConsistencyCheck() const

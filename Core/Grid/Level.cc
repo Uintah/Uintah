@@ -26,8 +26,8 @@ using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
 
-Level::Level(Grid* grid, const Point& anchor, const Vector& dcell)
-   : grid(grid), d_anchor(anchor), d_dcell(dcell),
+Level::Level(Grid* grid, const Point& anchor, const Vector& dcell, int index)
+   : grid(grid), d_anchor(anchor), d_dcell(dcell), d_index(index),
      d_patchDistribution(-1,-1,-1),
      d_periodicBoundaries(0, 0, 0)
 {
@@ -213,6 +213,11 @@ void Level::setExtraCells(const IntVector& ec)
 GridP Level::getGrid() const
 {
    return grid;
+}
+
+const LevelP& Level::getRelativeLevel(int offset) const
+{
+  return grid->getLevel(d_index + offset);
 }
 
 Point Level::getNodePosition(const IntVector& v) const
