@@ -3,6 +3,8 @@
 
 #include <Uintah/Grid/Handle.h>
 #include <Uintah/Grid/RefCounted.h>
+#include <Uintah/Grid/ProblemSpecP.h>
+#include <string>
 
 namespace Uintah {
 namespace Grid {
@@ -43,14 +45,13 @@ WARNING
 
 class ProblemSpec : public RefCounted {
 public:
-
-    const double MAXTIME = .004;
-
     ProblemSpec();
     virtual ~ProblemSpec();
 
-    double getStartTime() const;
-    double getMaximumTime() const;
+    ProblemSpecP findBlock(const std::string& name) const;
+
+    void require(const std::string& name, double& value);
+    void require(const std::string& name, std::string& value);
 
     static const TypeDescription* getTypeDescription();
 private:
@@ -63,6 +64,9 @@ private:
 
 //
 // $Log$
+// Revision 1.3  2000/03/21 18:52:11  sparker
+// Prototyped header file for new problem spec functionality
+//
 // Revision 1.2  2000/03/16 22:08:00  dav
 // Added the beginnings of cocoon docs.  Added namespaces.  Did a few other coding standards updates too
 //
