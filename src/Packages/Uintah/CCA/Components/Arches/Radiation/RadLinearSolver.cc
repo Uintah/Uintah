@@ -28,7 +28,9 @@
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #undef CHKERRQ
+#ifdef HAVE_PETSC
 #define CHKERRQ(x) if(x) throw PetscError(x, __FILE__);
+#endif
 #include <vector>
 
 using namespace std;
@@ -59,6 +61,7 @@ RadLinearSolver::~RadLinearSolver()
 void 
 RadLinearSolver::problemSetup(const ProblemSpecP& params)
 {
+#ifdef HAVE_PETSC
   if (params) {
     ProblemSpecP db = params->findBlock("LinearSolver");
     if (db) {
@@ -113,6 +116,7 @@ RadLinearSolver::problemSetup(const ProblemSpecP& params)
   int ierr = PetscInitialize(&argc, &argv, PETSC_NULL, PETSC_NULL);
   if(ierr)
     throw PetscError(ierr, "PetscInitialize");
+#endif
 }
 
 
@@ -120,6 +124,7 @@ void
 RadLinearSolver::matrixCreate(const PatchSet* allpatches,
 			  const PatchSubset* mypatches)
 {
+#ifdef HAVE_PETSC
   // for global index get a petsc index that
   // make it a data memeber
   int numProcessors = d_myworld->size();
@@ -253,6 +258,7 @@ RadLinearSolver::matrixCreate(const PatchSet* allpatches,
   if(ierr)
     throw PetscError(ierr, "VecDuplicate(d_u)");
 #endif
+#endif
 }
 
 // ****************************************************************************
@@ -269,6 +275,7 @@ RadLinearSolver::setMatrix(const ProcessorGroup* ,
 			   CCVariable<double>& AW,
 			   CCVariable<double>& AP)
 {
+#ifdef HAVE_PETSC
   int ierr;
   ierr = MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
 			     globalcolumns, d_nz, PETSC_NULL, o_nz, PETSC_NULL, &A);
@@ -421,12 +428,14 @@ RadLinearSolver::setMatrix(const ProcessorGroup* ,
 #if 0
     cerr << " all done\n";
 #endif
+#endif
 }
 
 
 bool
 RadLinearSolver::radLinearSolve()
 {
+#ifdef HAVE_PETSC
   double solve_start = Time::currentSeconds();
   KSP ksp;
   PC peqnpc; // pressure eqn pc
@@ -613,12 +622,14 @@ RadLinearSolver::radLinearSolve()
     return true;
   else
     return true;
+#endif
 }
 
 
 void
 RadLinearSolver::copyRadSoln(const Patch* patch, ArchesVariables* vars)
 {
+#ifdef HAVE_PETSC
   // copy solution vector back into the array
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
@@ -644,11 +655,13 @@ RadLinearSolver::copyRadSoln(const Patch* patch, ArchesVariables* vars)
   ierr = VecRestoreArray(d_x, &xvec);
   if(ierr)
     throw PetscError(ierr, "VecRestoreArray");
+#endif
 }
   
 void
 RadLinearSolver::destroyMatrix() 
 {
+#ifdef HAVE_PETSC
   /* 
      Free work space.  All PETSc objects should be destroyed when they
      are no longer needed.
@@ -668,12 +681,14 @@ RadLinearSolver::destroyMatrix()
   if(ierr)
     throw PetscError(ierr, "MatDestroy");
 #endif
+#endif
 }
 
 
 // Shutdown PETSc
 void RadLinearSolver::finalizeSolver()
 {
+#ifdef HAVE_PETSC
 // The following is to enable PETSc memory logging
 //  int ierrd = PetscTrDump(NULL);
 //  if(ierrd)
@@ -681,6 +696,7 @@ void RadLinearSolver::finalizeSolver()
   int ierr = PetscFinalize();
   if(ierr)
     throw PetscError(ierr, "PetscFinalize");
+#endif
 }
 
 
