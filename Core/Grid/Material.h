@@ -70,6 +70,13 @@ WARNING
      const MaterialSubset* thisMaterial() const {
        return thismatl;
      }
+
+     bool hasName() const {
+       return haveName;
+     }
+     std::string getName() const {
+       return name;
+     }
    protected:
 
       Burn* d_burn;
@@ -81,6 +88,9 @@ WARNING
 
      RX_Prod d_rx_prod;
    private:
+
+     bool haveName;
+     std::string name;
       
       Material(const Material &mat);
       Material& operator=(const Material &mat);
