@@ -152,6 +152,25 @@ void Grid::getSpatialRange(BBox& b) const
   }
 }
 
+
+//__________________________________
+// Computes the length in each direction of the grid
+void Grid::getLength(Vector& length, const string flag) const
+{
+  BBox b;
+  // just call the same function for all the levels
+  for(int l=0; l < numLevels(); l++) {
+    getLevel(l)->getSpatialRange(b);
+  }
+  length = ( b.max() - b.min() );
+  if (flag == "minusExtraCells") {
+    Vector dx = getLevel(0)->dCell();
+    IntVector extraCells = getLevel(0)->getExtraCells();
+    Vector ec_length = IntVector(2,2,2) * extraCells * dx;
+    length = ( b.max() - b.min() )  - ec_length;
+  }
+}
+
 void 
 Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg)
 {
