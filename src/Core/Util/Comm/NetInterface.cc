@@ -37,7 +37,6 @@
  * Copyright (C) 2003 SCI Group
 */
     
-#include <sci_defs.h>
 #ifdef HAVE_SCISOCK
 
 // SCIRun includes
