@@ -152,6 +152,34 @@ Port* BridgeComponentInstance::getDataflowOPort(const std::string& name)
    return static_cast<Port*>(op);
 }
 
+vtk::Port* BridgeComponentInstance::getVtkPort(const std::string& name)
+{
+
+  mutex->lock();
+  map<string, PortInstance*>::iterator iter = ports.find(name);
+  if(iter == ports.end())
+    return 0;
+  VtkPortInstance* pr = dynamic_cast<VtkPortInstance*>(iter->second);
+  if(pr == NULL)
+    return 0;
+  mutex->unlock();
+  return pr->port;
+
+}
+
+void BridgeComponentInstance::addVtkPort(vtk::Port* vtkport, VtkPortInstance::PortType portT) 
+{
+  map<string, PortInstance*>::iterator iter;
+  std::string portName = vtkport->getName();
+
+  iter = ports.find(portName);
+  if(iter != ports.end()){
+    throw InternalError("port name conflicts with another one");
+  }
+                                                                                                      
+  ports.insert(make_pair(portName, new VtkPortInstance(NULL, vtkport, portT)));
+}
+
 void BridgeComponentInstance::releasePort(const std::string& name, const modelT model)
 {
   CCAPortInstance* cpr;
@@ -197,9 +225,13 @@ void BridgeComponentInstance::releasePort(const std::string& name, const modelT 
     break;
 
   case Dataflow:
-    
     ::std::cerr << "Don't know how to release a dataflow port\n";
     break;
+
+  case Vtk:
+    //We aren't releasing Vtk ports at this point of time
+    break;
+
   }
   return;
 }
@@ -264,6 +296,11 @@ void BridgeComponentInstance::registerUsesPort(const std::string& portName,
     //NO SCIRunComponentInstance to pass into SCIRunPortInstance, hopefully NULL is okay
     ports.insert(make_pair(portName, new SCIRunPortInstance(NULL, dflowport, portT)));
     break;
+
+  case Vtk:
+    throw InternalError("Use addVtkPort for Vtk component model");
+    break;
+
   }
   return;
 }
@@ -314,6 +351,10 @@ void BridgeComponentInstance::unregisterUsesPort(const std::string& portName, co
   case Dataflow:
     cerr<<"Don't know how to unregisterUsesPort for Dataflow ports\n";
     break;
+
+  case Vtk:
+    //Not implemented for now
+    break;
   }
   return;
 }
@@ -330,6 +371,7 @@ void BridgeComponentInstance::addProvidesPort(void* port,
   sci::cca::Port::pointer* ccaport;
   gov::cca::Port* babelport;
   Port* dflowport;
+  
   SCIRunPortInstance::PortType portT;
 
   switch (model) {
@@ -386,6 +428,11 @@ void BridgeComponentInstance::addProvidesPort(void* port,
     ports.insert(make_pair(portName, new SCIRunPortInstance(NULL, dflowport, portT)));
     
     break;
+
+  case Vtk:
+    throw InternalError("Use addVtkPort for Vtk component model");
+    break;
+
   }
   return;
 }
@@ -402,6 +449,10 @@ void BridgeComponentInstance::removeProvidesPort(const std::string& name, const 
   case Dataflow:
     cerr << "removeProvidesPort not done, name=" << name << '\n';
     break;
+  case Vtk:
+    cerr << "removeProvidesPort not done, name=" << name << '\n';
+    break;
+
   }
   return;
 }

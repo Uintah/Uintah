@@ -148,26 +148,32 @@ AutoBridge::~AutoBridge()
 std::string AutoBridge::genBridge(std::string modelFrom, std::string cFrom, std::string modelTo, std::string cTo) 
 {
   int status = 0;
-  string cCCA; //Used so that we read xml data only from cca components
+  string cCCA; //Used so that we read xml data only from components that have .cca files 
  
   if(modelFrom == "babel") {
     cFrom = cFrom.substr(0,cFrom.find(".")); //Babel xxx.Com 
+    if(modelTo != "cca") cCCA = cFrom;
   } else if(modelFrom == "cca") {
     cFrom = cFrom.substr(cFrom.find(".")+1); //CCA SCIRun.xxx
     cCCA = cFrom;
   } else if(modelFrom == "dataflow") {
     cFrom = cFrom.substr(cFrom.rfind(".")+1); //SCIRun.yyy.xxx
+  } else if(modelFrom == "vtk") {
+    cFrom = cFrom.substr(cFrom.rfind(".")+1); //Vtk.xxx
   }
   else {}
   
   
   if(modelTo == "babel") {
     cTo = cTo.substr(0,cTo.find(".")); //Babel xxx.Com 
+    if(modelFrom != "cca") cCCA = cTo;
   } else if(modelTo == "cca") {
     cTo = cTo.substr(cTo.find(".")+1); //CCA SCIRun.xxx
     cCCA = cTo;
   } else if(modelTo == "dataflow") {
     cTo = cTo.substr(cTo.rfind(".")+1); //SCIRun.yyy.xxx
+  } else if(modelTo == "vtk") {
+    cTo = cTo.substr(cTo.rfind(".")+1); //Vtk.xxx
   }
   else {}
 
@@ -181,25 +187,26 @@ std::string AutoBridge::genBridge(std::string modelFrom, std::string cFrom, std:
   string sidlfile = readMetaFile(cCCA,"cca");
   if(sidlfile=="") {cerr << "ERROR... exiting...\n"; return "";} 
 
-  //use .sidl file in kwai to generate portxml
-  cerr << "use .sidl file in kwai to generate portxml\n";
-  string execline = "kwai -o working.kwai " + sidlfile;
-  status = sci_system(execline.c_str());
-  if(status!=0) {
-    cerr << "**** kwai was unsuccessful\n";
-    return "";
-  }
-
   //determine right plugin
+  string hdrplugin;
   string plugin;
+  string util;
   if((modelFrom == "babel")&&(modelTo == "cca")) {
-    plugin = "../src/Core/CCA/tools/strauss/ruby/BabeltoCCA.erb";
+    plugin = "/home/sci/damevski/dev/supa/template/BabeltoCCA.erb";
+    hdrplugin = "/home/sci/damevski/dev/supa/template/BabeltoCCA.hdr.erb";
+    util = "/home/sci/damevski/dev/supa/template/CCAtoBabel.util.rb";
   } else if((modelFrom == "cca")&&(modelTo == "babel")) {
-    plugin = "../src/Core/CCA/tools/strauss/ruby/CCAtoBabel.erb";
+    plugin = "/home/sci/damevski/dev/supa/template/CCAtoBabel.erb";
+    hdrplugin = "/home/sci/damevski/dev/supa/template/CCAtoBabel.hdr.erb";
+    util = "/home/sci/damevski/dev/supa/template/CCAtoBabel.util.rb";
   } else if((modelFrom == "dataflow")&&(modelTo == "cca")) {
-    plugin = "../src/Core/CCA/tools/strauss/ruby/DataflowtoCCA.erb";
+    plugin = "/home/sci/damevski/dev/supa/template/BabeltoCCA.erb";
   } else if((modelFrom == "cca")&&(modelTo == "dataflow")) {
     plugin = "../src/Core/CCA/tools/strauss/ruby/CCAtoDataflow.erb";
+  } else if((modelFrom == "babel")&&(modelTo == "vtk")) {
+    plugin = "/home/sci/damevski/dev/supa/template/BabeltoVtk.erb";
+    hdrplugin = "/home/sci/damevski/dev/supa/template/BabeltoVtk.hdr.erb";
+    util = "/home/sci/damevski/dev/supa/template/BabeltoVtk.util.rb";
   }
   else {}
 
@@ -207,7 +214,7 @@ std::string AutoBridge::genBridge(std::string modelFrom, std::string cFrom, std:
   //use portxml + plugin in strauss to generate bridge
   cerr << "use portxml + plugin in strauss to generate bridge\n";
   string straussout = COMPILEDIR+"/"+name;
-  Strauss* strauss = new Strauss(plugin,"working.kwai",straussout+".h",straussout+".cc");
+  Strauss* strauss = new Strauss(plugin,hdrplugin,sidlfile,straussout+".h",straussout+".cc",util);
   status = strauss->emit();
   if(status!=0) {
     cerr << "**** strauss was unsuccessful\n";
@@ -218,13 +225,11 @@ std::string AutoBridge::genBridge(std::string modelFrom, std::string cFrom, std:
     if(isSameFile(name,strauss)) 
       return name;
   }
-  //a new bridge, write into files
-  strauss->commitToFiles();
   delete strauss;
 
   //compile bridge
   cerr << "compile bridge\n";
-  execline = "cd "+COMPILEDIR+" && gmake && cd ..";
+  string execline = "cd "+COMPILEDIR+" && gmake && cd ..";
   status = sci_system(execline.c_str());
   if(status!=0) {
     execline = "rm -f "+COMPILEDIR+"/"+name+".*"; 
@@ -245,8 +250,13 @@ bool AutoBridge::canBridge(PortInstance* pr1, PortInstance* pr2)
   std::string t2 = "." + pr2->getType();
   std::cerr << "Going with " << t1 << " and " << t2 << "\n"; 
   if( pr1->portType()!=pr2->portType() && 
-       t1.substr(t1.rfind("."),t1.size()) == t2.substr(t2.rfind("."),t2.size()) )
+      t1.substr(t1.rfind("."),t1.size()) == t2.substr(t2.rfind("."),t2.size()) )
     return true;
+  //For Vtk
+  if( pr1->portType()!=pr2->portType() &&
+      (pr1->getModel() == "vtk" || pr2->getModel() == "vtk") )
+    return true;
+
   return false;
 }
 
