@@ -693,6 +693,7 @@ class SpecificFieldComparator : public FieldComparator
 public:
   SpecificFieldComparator(Iterator begin)
     : begin_(begin) { }
+  virtual ~SpecificFieldComparator() {}
   
   virtual void
   compareFields(DataArchive* da1, DataArchive* da2, const string& var,
@@ -839,7 +840,7 @@ void SpecificFieldComparator<Field, Iterator>::
 compareFields(DataArchive* da1, DataArchive* da2, const string& var,
 	      ConsecutiveRangeSet matls, const Patch* patch,
 	      const Array3<const Patch*>& patch2Map,
-	      double time, double time2, double abs_tolerance,
+	      double time1, double time2, double abs_tolerance,
 	      double rel_tolerance)
 {
   Field* pField2;
@@ -849,7 +850,7 @@ compareFields(DataArchive* da1, DataArchive* da2, const string& var,
 		matlIter != matls.end(); matlIter++){
     int matl = *matlIter;
     Field field;
-    da1->query(field, var, matl, patch, time);
+    da1->query(field, var, matl, patch, time1);
 
     map<const Patch*, Field*> patch2FieldMap;
     map<const Patch*, Field*>::iterator findIter;
@@ -871,7 +872,7 @@ compareFields(DataArchive* da1, DataArchive* da2, const string& var,
       if (!compare(field[*iter], (*pField2)[*iter], abs_tolerance,
 		   rel_tolerance)) {
 	cerr << "DIFFERENCE " << *iter << "  ";
-	displayProblemLocation(var, matl, patch, patch2, time);
+	displayProblemLocation(var, matl, patch, patch2, time1);
  
        cerr << filebase1 << " (1)\t\t" << filebase2 << " (2)"<<endl;
 	cerr << field[*iter] << "\t\t" << (*pField2)[*iter] << endl;
@@ -895,7 +896,7 @@ compareFields(DataArchive* da1, DataArchive* da2, const string& var,
 // The same doesn't work if you used cells because nodes can go beyond
 // cells (when there is no neighbor on the greater side).
 void buildPatchMap(LevelP level, const string& filebase,
-		   Array3<const Patch*>& patchMap)
+		   Array3<const Patch*>& patchMap, double time)
 {
   const PatchSet* allPatches = level->allPatches();
   const PatchSubset* patches = allPatches->getUnion();
@@ -1059,14 +1060,14 @@ int main(int argc, char** argv)
 	abort_uncomparable();
       }
       
-      double time = times[t];
+      double time1 = times[t];
       double time2 = times2[t];
-      cerr << "time = " << time << "\n";
-      GridP grid = da1->queryGrid(time);
+      cerr << "time = " << time1 << "\n";
+      GridP grid = da1->queryGrid(time1);
       GridP grid2 = da2->queryGrid(times2[t]);
 
       if (grid->numLevels() != grid2->numLevels()) {
-	cerr << "Grid at time " << time << " in " << filebase1
+	cerr << "Grid at time " << time1 << " in " << filebase1
 	     << " has " << grid->numLevels() << " levels.\n";
 	cerr << "Grid at time " << time2 << " in " << filebase2
 	     << " has " << grid->numLevels() << " levels.\n";
@@ -1093,14 +1094,14 @@ int main(int argc, char** argv)
 	      iter != level->patchesEnd(); iter++) {
 	    const Patch* patch = *iter;
 	    if (first) {
-	      matls = da1->queryMaterials(var, patch, time);
+	      matls = da1->queryMaterials(var, patch, time1);
 	    }
-	    else if (matls != da1->queryMaterials(var, patch, time)) {
+	    else if (matls != da1->queryMaterials(var, patch, time1)) {
 	      cerr << "The material set is not consistent for variable "
-		   << var << " across patches at time " << time << endl;
+		   << var << " across patches at time " << time1 << endl;
 	      cerr << "Previously was: " << matls << endl;
 	      cerr << "But on patch " << patch->getID() << ": " <<
-		da1->queryMaterials(var, patch, time) << endl;
+		da1->queryMaterials(var, patch, time1) << endl;
 	      abort_uncomparable();
 	    }
 	    first = false;
@@ -1113,7 +1114,7 @@ int main(int argc, char** argv)
 	    if (matls != da2->queryMaterials(var, patch, time2)) {
 	      cerr << "Inconsistent material sets for variable "
 		   << var << " on patch2 = " << patch->getID()
-		   << ", time " << time << endl;
+		   << ", time " << time1 << endl;
 	      cerr << filebase1 << " (1) has material set: " << matls << ".\n";
 	      cerr << filebase2 << " (2) has material set: "
 		   << da2->queryMaterials(var, patch, time2) << ".\n";
@@ -1148,7 +1149,7 @@ int main(int argc, char** argv)
 	    LevelP level2 = grid2->getLevel(l);
 	    if (level->numPatches() != level2->numPatches()) {
 	      cerr << "Inconsistent number of patches on level " << l <<
-		" at time " << time << ":" << endl;
+		" at time " << time1 << ":" << endl;
 	      cerr << filebase1 << " has " << level->numPatches()
 		   << " patches.\n";
 	      cerr << filebase2 << " has " << level2->numPatches()
@@ -1165,7 +1166,7 @@ int main(int argc, char** argv)
 
 	      if (patch->getID() != patch2->getID()) {
 		cerr << "Inconsistent patch ids on level " << l
-		     << " at time " << time << endl;
+		     << " at time " << time1 << endl;
 		cerr << filebase1 << " has patch id " << patch->getID()
 		     << " where\n";
 		cerr << filebase2 << " has patch id " << patch2->getID() << endl;
@@ -1179,7 +1180,7 @@ int main(int argc, char** argv)
 		  !compare(patch->getBox().upper(), patch2->getBox().upper(),
 			   abs_tolerance, rel_tolerance)) {
 		cerr << "Inconsistent patch bounds on patch " << patch->getID()
-		     << " at time " << time << endl;
+		     << " at time " << time1 << endl;
 		cerr << filebase1 << " has bounds " << patch->getBox().lower()
 		     << " - " << patch->getBox().upper() << ".\n";
 		cerr << filebase2 << " has bounds " << patch2->getBox().lower()
@@ -1188,7 +1189,8 @@ int main(int argc, char** argv)
 		abort_uncomparable();  
 	      }
 
-	      ConsecutiveRangeSet matls = da1->queryMaterials(var, patch, time);
+	      ConsecutiveRangeSet matls = da1->queryMaterials(var, patch,
+							      time1);
 	      ConsecutiveRangeSet matls2 = da2->queryMaterials(var, patch2,
 							       time2);
 	      ASSERT(matls == matls2); // should have already been checked
@@ -1201,19 +1203,19 @@ int main(int argc, char** argv)
 		  switch(subtype->getType()){
 		  case Uintah::TypeDescription::double_type:
 		    compareParticles<double>(da1, da2, var, matl, patch, patch2,
-					     time, time2, abs_tolerance, rel_tolerance);
+					     time1, time2, abs_tolerance, rel_tolerance);
 		    break;
 		  case Uintah::TypeDescription::Point:
 		    compareParticles<Point>(da1, da2, var, matl, patch, patch2,
-					    time, time2, abs_tolerance, rel_tolerance);
+					    time1, time2, abs_tolerance, rel_tolerance);
 		    break;
 		  case Uintah::TypeDescription::Vector:
 		    compareParticles<Vector>(da1, da2, var, matl, patch, patch2,
-					     time, time2, abs_tolerance, rel_tolerance);
+					     time1, time2, abs_tolerance, rel_tolerance);
 		    break;
 		  case Uintah::TypeDescription::Matrix3:
 		    compareParticles<Matrix3>(da1, da2, var, matl, patch, patch2,
-					      time, time2, abs_tolerance, rel_tolerance);
+					      time1, time2, abs_tolerance, rel_tolerance);
 		    break;
 		  default:
 		    cerr << "ParticleVariable of unsupported type: " << subtype->getType() << '\n';
@@ -1234,7 +1236,8 @@ int main(int argc, char** argv)
 	  LevelP level2 = grid2->getLevel(l);
 	  MaterialParticleDataMap matlParticleDataMap1;
 	  MaterialParticleDataMap matlParticleDataMap2;
-	  addParticleData(matlParticleDataMap1, da1, vars, types, level, time);
+	  addParticleData(matlParticleDataMap1, da1, vars, types, level,
+			  time1);
 	  addParticleData(matlParticleDataMap2, da2, vars2, types2, level2,
 			  time2);
 	  MaterialParticleDataMap::iterator matlIter;
@@ -1248,7 +1251,7 @@ int main(int argc, char** argv)
 	    // This assert should already have been check above whan comparing
 	    // material sets.
 	    ASSERT((*matlIter).first == (*matlIter).first);
-	    (*matlIter).second.compare((*matlIter2).second, time, time2,
+	    (*matlIter).second.compare((*matlIter2).second, time1, time2,
 				       abs_tolerance, rel_tolerance);
 	  }
 	  // This assert should already have been check above whan comparing
@@ -1279,13 +1282,13 @@ int main(int argc, char** argv)
 	  Array3<const Patch*> patchMap;
 	  Array3<const Patch*> patch2Map;
 	  
-	  buildPatchMap(level, filebase1, patchMap);
-	  buildPatchMap(level2, filebase2, patch2Map);
+	  buildPatchMap(level, filebase1, patchMap, time1);
+	  buildPatchMap(level2, filebase2, patch2Map, time2);
 	  
 	  if (patchMap.getLowIndex() != patch2Map.getLowIndex() ||
 	      patchMap.getHighIndex() != patch2Map.getHighIndex()) {
 	    cerr << "Inconsistent patch coverage on level " << l
-		 << " at time " << time << endl;
+		 << " at time " << time1 << endl;
 	    cerr << "On " << filebase1 << "\n"
 		 << "\tRange: " << patchMap.getLowIndex() << " - "
 		 << patchMap.getHighIndex() << endl;
@@ -1301,7 +1304,7 @@ int main(int argc, char** argv)
 	    if ((patchMap[index] == 0 && patch2Map[index] != 0) ||
 		(patch2Map[index] == 0 && patchMap[index] != 0)) {
 	      cerr << "Inconsistent patch coverage on level " << l
-		   << " at time " << time << endl;
+		   << " at time " << time1 << endl;
 	      if (patchMap[index] != 0) {
 		cerr << index << " is covered by " << filebase1 << endl
 		     << " and not " << filebase2 << endl;
@@ -1320,13 +1323,13 @@ int main(int argc, char** argv)
 	      iter != level->patchesEnd(); iter++) {
 	    const Patch* patch = *iter;
  
-	    ConsecutiveRangeSet matls = da1->queryMaterials(var, patch, time);
+	    ConsecutiveRangeSet matls = da1->queryMaterials(var, patch, time1);
 
 	    FieldComparator* comparator =
 	      FieldComparator::makeFieldComparator(td, subtype, patch);
 	    if (comparator != 0) {
 	      comparator->compareFields(da1, da2, var, matls, patch,
-					patch2Map, time, time2,
+					patch2Map, time1, time2,
 					abs_tolerance, rel_tolerance);
 	      delete comparator;
 	    }
