@@ -277,8 +277,9 @@ public:
 
   Segments &	get_segments() { return segments_; }
   void		set_dirty(bool dirty){ dirty_ = dirty; }
-  virtual void	set_color(const Color &c) { color_ = c; dirty_ = true; }
-  virtual void	set_shadeType(int type) { shadeType_ = type; dirty_ = true; }
+  virtual void	set_color(const Color &c);
+  virtual void	set_shadeType(int type); 
+  virtual void	set_value_range(double, double);
 protected:
   // nrrdSpatialResample ...
   void				line(Array3<float> &, int, int, int, int);
@@ -287,6 +288,7 @@ protected:
   Segments			segments_;
   Array3<float>			pixels_;
   bool				dirty_;
+  bool				faux_;
 };
 
 
