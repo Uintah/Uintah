@@ -48,8 +48,6 @@ using namespace Uintah;
 static DebugStream cout_norm("ICE_NORMAL_COUT", false);  
 static DebugStream cout_doing("ICE_DOING_COUT", false);
 
-//#define ANNULUSICE 
-#undef ANNULUSICE
 ICE::ICE(const ProcessorGroup* myworld) 
   : UintahParallelComponent(myworld)
 {
@@ -71,9 +69,12 @@ ICE::ICE(const ProcessorGroup* myworld)
   switchDebug_advectQFirst        = false;
   switchTestConservation          = false;
 
-  d_massExchange = false;
-  d_RateForm     = false;
-  d_EqForm       = false;
+  d_massExchange      = false;
+  d_RateForm          = false;
+  d_EqForm            = false;
+  d_add_delP_Dilatate = true; 
+  d_add_heat          = false;
+
   d_dbgVar1      = 0;     //inputs for debugging
   d_dbgVar2      = 0;
   d_SMALL_NUM    = 1.0e-100; 
@@ -176,6 +177,9 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& /**/,
   ProblemSpecP cfd_ps = prob_spec->findBlock("CFD");
   cfd_ps->require("cfl",d_CFL);
   ProblemSpecP cfd_ice_ps = cfd_ps->findBlock("ICE");
+
+  cfd_ice_ps->get("add_delP_Dilatate", d_add_delP_Dilatate); 
+  
   cfd_ice_ps->require("max_iteration_equilibration",d_max_iter_equilibration);
   d_advector = AdvectionFactory::create(cfd_ice_ps);
   // Grab the solution technique
@@ -199,8 +203,25 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& /**/,
   }
   
   cout_norm << "cfl = " << d_CFL << endl;
+  cout_norm << "add_delP_Dilatate " << d_add_delP_Dilatate << endl;
   cout_norm << "max_iteration_equilibration "<<d_max_iter_equilibration<<endl;
   cout_norm << "Pulled out CFD-ICE block of the input file" << endl;
+  //__________________________________
+  //  Pull out add heat section
+  ProblemSpecP add_heat_ps = cfd_ice_ps->findBlock("ADD_HEAT");
+  if(add_heat_ps) {
+    d_add_heat = true;
+    add_heat_ps->require("add_heat_matls",d_add_heat_matls);
+    add_heat_ps->require("add_heat_coeff",d_add_heat_coeff);
+    add_heat_ps->require("add_heat_n_iters",d_add_heat_iters);
+    cout_norm << "HEAT WILL BE ADDED"<<endl;
+    cout_norm << "  d_add_heat_n_iters: "<< d_add_heat_iters<< endl;
+    for (int i = 0; i<(int) d_add_heat_matls.size(); i++) {
+      cout_norm << "  d_add_heat_matl " << d_add_heat_matls[i] 
+                << "  d_add_heat_coeff "<< d_add_heat_coeff[i]<< endl;
+    } 
+  }
+ 
     
   //__________________________________
   // Pull out from Time section
@@ -707,7 +728,6 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
     t->requires(Task::NewDW, lb->vol_frac_CCLabel,             gn);
   }
   if (d_RateForm) {     //RATE FORM
-    t->requires(Task::NewDW, lb->matl_press_CCLabel,         gn,0);
     t->requires(Task::NewDW, lb->f_theta_CCLabel,            gn,0);
     t->requires(Task::NewDW, lb->rho_CCLabel,                gn,0);
     t->requires(Task::OldDW, lb->vel_CCLabel,     ice_matls, gn,0);    
@@ -724,9 +744,9 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
     t->requires(Task::NewDW, lb->vol_frac_CCLabel,           gac,1);          
   }
 
-#ifdef ANNULUSICE
-  t->requires(Task::NewDW, lb->rho_CCLabel,                  Ghost::None);
-#endif
+  if(d_add_heat) {
+    t->requires(Task::NewDW, lb->rho_CCLabel,                gn,0);
+  }
   
   t->computes(lb->int_eng_source_CCLabel);
   
@@ -845,8 +865,7 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
     t->requires(Task::NewDW, lb->sp_vol_CCLabel,          gn);      
     t->requires(Task::NewDW, lb->rho_CCLabel,             gn);      
     t->requires(Task::NewDW, lb->speedSound_CCLabel,      gn);        
-    t->requires(Task::NewDW, lb->press_CCLabel,     press_matl, gn);  
-    t->requires(Task::NewDW, lb->delP_DilatateLabel,press_matl, gn);
+    t->requires(Task::NewDW, lb->press_CCLabel,     press_matl, gn);
     t->requires(Task::OldDW, lb->vel_CCLabel,       ice_matls,  gn);   
     t->requires(Task::NewDW, lb->vel_CCLabel,       mpm_matls,  gn);   
 
@@ -1918,11 +1937,18 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     }  //matl loop
     delete advector;
     press_CC.initialize(0.);
+    
+    double includeTerm = 1.0;
+    if(!d_add_delP_Dilatate) {
+      includeTerm = 0.0;
+    }
+
     for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
       IntVector c = *iter;
       delP_MassX[c]    =  term1[c]/term3[c];
       delP_Dilatate[c] = -term2[c]/term3[c];
-      press_CC[c]      = pressure[c] + delP_MassX[c] + delP_Dilatate[c];
+      press_CC[c]      = pressure[c] + delP_MassX[c] 
+                       + includeTerm * delP_Dilatate[c];
     }
     //____ B U L L E T   P R O O F I N G----
     // This was done to help robustify the equilibration
@@ -2361,10 +2387,6 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
                                   DataWarehouse* old_dw, 
                                   DataWarehouse* new_dw)
 {
-#ifdef ANNULUSICE
-  static int n_iter;
-  n_iter ++;
-#endif
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -2384,17 +2406,21 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
     constCCVariable<double> press_CC;
     constCCVariable<double> delP_Dilatate;
     constCCVariable<double> matl_press;
-
-    new_dw->get(press_CC,     lb->press_CCLabel,      0, patch,Ghost::None, 0);
-    new_dw->get(delP_Dilatate,lb->delP_DilatateLabel, 0, patch,Ghost::None, 0);
+    constCCVariable<double> rho_CC;
+    Ghost::GhostType  gn  = Ghost::None;
+    new_dw->get(press_CC,     lb->press_CCLabel,      0, patch,gn, 0);
+    new_dw->get(delP_Dilatate,lb->delP_DilatateLabel, 0, patch,gn, 0);
 
     for(int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       int indx    = matl->getDWIndex();   
       CCVariable<double> int_eng_source;
-      new_dw->get(sp_vol_CC,   lb->sp_vol_CCLabel,    indx,patch,Ghost::None,0);
-      new_dw->get(speedSound,  lb->speedSound_CCLabel,indx,patch,Ghost::None,0);
-      new_dw->get(vol_frac,    lb->vol_frac_CCLabel,  indx,patch,Ghost::None,0);
+      new_dw->get(sp_vol_CC,   lb->sp_vol_CCLabel,    indx,patch,gn,0);
+      new_dw->get(speedSound,  lb->speedSound_CCLabel,indx,patch,gn,0);
+      new_dw->get(vol_frac,    lb->vol_frac_CCLabel,  indx,patch,gn,0);
+      if(d_add_heat){
+        new_dw->get(rho_CC,    lb->rho_CCLabel,       indx,patch,gn,0);
+      }
       new_dw->allocateAndPut(int_eng_source, lb->int_eng_source_CCLabel, indx,patch);
 
       //__________________________________
@@ -2409,19 +2435,27 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
         int_eng_source[c] = (A/B) * delP_Dilatate[c];
       }
 
-#ifdef ANNULUSICE
-      if(n_iter <= 4000){
-        constCCVariable<double> rho_CC;
-        new_dw->get(rho_CC,      lb->rho_CCLabel,       indx,patch,Ghost::None,0);
-
-        if(m==2){
-          for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
-            IntVector c = *iter;
-            int_eng_source[c] += 8.e12 * delT * rho_CC[c] * vol;
-          }
-        }
-      }
-#endif
+      //__________________________________
+      //  User specified source/sink   
+      static int n_iter;
+      if (patch->getID() == 0 && indx == 0){
+        n_iter ++;
+      }  
+      
+      if(d_add_heat && n_iter <= d_add_heat_iters){
+        for (int i = 0; i<(int) d_add_heat_matls.size(); i++) {
+          if(m == d_add_heat_matls[i] ){
+             for(CellIterator iter = patch->getCellIterator();!iter.done();
+                                                                      iter++){            
+              IntVector c = *iter;
+              if ( vol_frac[c] > 0.001) {
+                int_eng_source[c] += d_add_heat_coeff[i]
+                                   * delT * rho_CC[c] * vol;
+              }
+            }  // iter loop
+          }  // if right matl
+        } 
+      }  // if add heat
 
       //---- P R I N T   D A T A ------ 
       if (switchDebugSource_Sink) {
@@ -2875,6 +2909,8 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
             <<patch->getID();
         printVector(indx, patch,1, desc.str(), "mom_L_ME", 0,mom_L_ME[m]);
         printData(  indx, patch,1, desc.str(),"int_eng_L_ME",int_eng_L_ME[m]);
+        printData(  indx, patch,1, desc.str(),"Tdot",        Tdot[m]);
+        printData(  indx, patch,1, desc.str(),"Temp_CC",     Temp_CC[m]);
       }
     }
   } //patches
