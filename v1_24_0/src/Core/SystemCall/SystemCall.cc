@@ -114,6 +114,10 @@ namespace SCIRun {
 
     bool done = false;
 	
+    Time::SysClock lastsend = Time::currentTicks();
+    Time::SysClock tickstowait = static_cast<Time::SysClock>(0.3*Time::ticksPerSecond());
+    Time::SysClock curtime = lastsend;
+    
     while(!done)
 	{
         bool timeout = false;
@@ -143,6 +147,7 @@ namespace SCIRun {
                 return;
             }      
             if (ret == 0) timeout = true;  
+            curtime = Time::currentTicks();
         }
         else
         {
@@ -169,7 +174,8 @@ namespace SCIRun {
 			while((linestart < buffersize)&&((stdout_buffer[linestart]=='\n')||(stdout_buffer[linestart]=='\r')||(stdout_buffer[linestart]=='\0'))) linestart++;			
             std::string newline = stdout_buffer.substr(linestart);
             stdout_buffer = "";
-            syscall_->insert_stdout_line(newline);                            
+            syscall_->insert_stdout_line(newline);
+            lastsend = curtime;                            
         }
 
         if (FD_ISSET(fd_exit,&selectset))
@@ -193,6 +199,7 @@ namespace SCIRun {
             if (bytesread > 0) stdout_buffer += read_buffer.substr(0,bytesread);	// add the newly read buffer to the buffer remaining from the previoud read operation
 		
             need_new_read = false;
+            
             while (!need_new_read)
               {
                 // figure out where the new line starts
@@ -209,6 +216,7 @@ namespace SCIRun {
                   {	
                     if(linestart < stdout_buffer.size()) newline = stdout_buffer.substr(linestart);
                     syscall_->insert_stdout_line(newline);
+                    lastsend = curtime;
                     dostdout = false;
                     if(syscall_->signal_stdout_eof()) { done = true;  break; }
                     break;   // Force exit out of lookp
@@ -228,10 +236,22 @@ namespace SCIRun {
                         newline = stdout_buffer.substr(linestart,(lineend-linestart)) + std::string("\n");
                         stdout_buffer = stdout_buffer.substr(lineend+1);
                         need_new_read = false;
+                        lastsend = curtime;
                         syscall_->insert_stdout_line(newline);
                       }
                   }
               }
+              
+            if (lastsend + tickstowait > curtime)
+            {
+                linestart = 0;
+                buffersize = stdout_buffer.size();
+                while((linestart < buffersize)&&((stdout_buffer[linestart]=='\n')||(stdout_buffer[linestart]=='\r')||(stdout_buffer[linestart]=='\0'))) linestart++;			
+                std::string newline = stdout_buffer.substr(linestart);
+                stdout_buffer = "";
+                syscall_->insert_stdout_line(newline);
+                lastsend = curtime;                        
+            }
 			
           }
 	
