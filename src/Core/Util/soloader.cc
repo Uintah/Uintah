@@ -50,8 +50,7 @@ void* GetHandleSymbolAddress(LIBRARY_HANDLE handle, const char* symbolname)
 #elif defined(__APPLE__)
   string name("_");
   name += symbolname;
-  void *symbol = dlsym(handle, name.c_str());
-  return symbol;
+  return dlsym(handle, name.c_str());
 #else
  return dlsym(handle,symbolname);
 #endif
