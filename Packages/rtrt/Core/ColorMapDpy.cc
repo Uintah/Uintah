@@ -28,10 +28,6 @@ using SCIRun::Mutex;
 using SCIRun::Thread;
 using namespace std;
 
-namespace rtrt {
-  extern Mutex xlock;
-} // end namespace rtrt
-
 static void draw_circle(int radius, int x_center, int y_center);
 static void circle_points(int x, int y, int x_center, int y_center);
 
@@ -154,7 +150,7 @@ void ColorMapDpy::run() {
     // Now we need to test to see if we should die
     //    if (scene->get_rtrt_engine()->stop_execution()) {
     if (on_death_row) {
-      close_display();
+      cleanup();
       return;
     }
 
