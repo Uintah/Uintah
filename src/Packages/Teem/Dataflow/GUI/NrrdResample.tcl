@@ -39,9 +39,9 @@ itcl_class Teem_Filters_NrrdResample {
         global $this-resampAxis1
         global $this-resampAxis2
         set $this-filtertype tent
-        set $this-resampAxis0 1x
-        set $this-resampAxis1 1x
-        set $this-resampAxis2 1x
+        set $this-resampAxis0 x1
+        set $this-resampAxis1 x1
+        set $this-resampAxis2 x1
     }
     method make_entry {w text v c} {
         frame $w
