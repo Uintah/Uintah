@@ -39,6 +39,9 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps)
    ps->require("density",d_density);
    ps->require("thermal_conductivity",d_thermalConductivity);
    ps->require("specific_heat",d_specificHeat);
+   ps->require("viscosity",d_viscosity);
+   ps->require("speed_of_sound",d_speed_of_sound);
+   ps->require("gamma",d_gamma);
 
    // Step 5 -- Assign the velocity field
    int vf;
@@ -84,7 +87,20 @@ double ICEMaterial::getGamma() const
   return d_gamma;
 }
 
+double ICEMaterial::getViscosity() const
+{
+  return d_viscosity;
+}
+
+double ICEMaterial::getSpeedOfSound() const
+{
+  return d_speed_of_sound;
+}
+
 // $Log$
+// Revision 1.5  2000/10/27 23:41:01  jas
+// Added more material constants and some debugging output.
+//
 // Revision 1.4  2000/10/06 04:05:18  jas
 // Move files into EOS directory.
 //
