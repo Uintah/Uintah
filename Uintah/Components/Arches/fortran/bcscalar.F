@@ -78,6 +78,8 @@ c     double precision ra(domLo(2):domHi(2))
 *     declare local variables
 *
       double precision areaew, arean, areas, areatb
+c read these values in - Rajesh
+      integer xminus, xplus, yminus, yplus, zminus, zplus
       integer i, j, k
       logical lwrap, lsymb, ltest, loutsf, liflx, lprdjk, lprdkk
       
@@ -121,8 +123,10 @@ c---------------------------------------------------------------------
      $     pcell, symtry, lprdjk, lprdkk)
 
 C  WARNING - should be domLong, domHing - Steve
-      call wallbc(domLo, domHi, domLo, domHi, idxLo, idxHi, ae,aw,an,as,at,ab,
-     $     pcell, wall)
+      call wallbc(domLo, domHi, domLo, domHi, idxLo, idxHi, 
+     $     ae,aw,an,as,at,ab,
+     $     pcell, wall,
+     $     xminus, xplus, yminus, yplus, zminus, zplus)
 
       if (liflx.and..not.ltest) then
 c----------------------------------------------------------------------
@@ -297,6 +301,9 @@ c--------------------------------------------------------------------
 
 c
 c $Log$
+c Revision 1.6  2000/10/06 23:07:53  rawat
+c fixed some more bc routines for mulit-patch
+c
 c Revision 1.5  2000/09/26 19:59:19  sparker
 c Work on MPI petsc
 c

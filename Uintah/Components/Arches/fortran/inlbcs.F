@@ -45,12 +45,6 @@ c*********************************************************************
 c*********************************************************************
 c     Locals :
 c*********************************************************************
-      integer iBegGhostU, iBegGhostV, iBegGhostW, iBegGhost
-      integer iEndGhostU, iEndGhostV, iEndGhostW, iEndGhost
-      integer jBegGhostU, jBegGhostV, jBegGhostW, jBegGhost
-      integer jEndGhostU, jEndGhostV, jEndGhostW, jEndGhost
-      integer kBegGhostU, kBegGhostV, kBegGhostW, kBegGhost
-      integer kEndGhostU, kEndGhostV, kEndGhostW, kEndGhost
       integer ISTU, IENDU, JSTU, JENDU, KSTU, KENDU
       integer ISTV, IENDV, JSTV, JENDV, KSTV, KENDV
       integer ISTW, IENDW, JSTW, JENDW, KSTW, KENDW
@@ -61,30 +55,6 @@ c*********************************************************************
 c*********************************************************************
 c     Get the indices of interest
 c*********************************************************************
-      iBegGhostU = domLoU(1)
-      jBegGhostU = domLoU(2)
-      kBegGhostU = domLoU(3)
-      iEndGhostU = domHiU(1)
-      jEndGhostU = domHiU(2)
-      kEndGhostU = domHiU(3)
-      iBegGhostV = domLoV(1)
-      jBegGhostV = domLoV(2)
-      kBegGhostV = domLoV(3)
-      iEndGhostV = domHiV(1)
-      jEndGhostV = domHiV(2)
-      kEndGhostV = domHiV(3)
-      iBegGhostW = domLoW(1)
-      jBegGhostW = domLoW(2)
-      kBegGhostW = domLoW(3)
-      iEndGhostW = domHiW(1)
-      jEndGhostW = domHiW(2)
-      kEndGhostW = domHiW(3)
-      iBegGhost = domLo(1)
-      jBegGhost = domLo(2)
-      kBegGhost = domLo(3)
-      iEndGhost = domHi(1)
-      jEndGhost = domHi(2)
-      kEndGhost = domHi(3)
       IST = idxLo(1)
       JST = idxLo(2)
       KST = idxLo(3)
@@ -96,19 +66,22 @@ C-----------------------------------------------------------------------
 C     EAST AND WEST INLETS
 C-----------------------------------------------------------------------
       if (xminus.or.xplus) then
-         DO 120 K = kBegGhost,kEndGhost
-            DO 100 J = jBegGhost,jEndGhost
-            
-               IF ((PCELL(iBegGhost,J,K).EQ.PFIELD).and.xminus) THEN
-                  UU(iBegGhostU+1,J,K) = UU(iBegGhostU,J,K) *
-     &                 DEN(iBegGhost,J,K)
-     &                 / (PT5*(DEN(iBegGhost,J,K) + DEN(IST,J,K)))
-               ENDIF
-               IF ((PCELL(iEndGhost,J,K).EQ.PFIELD).and.xplus) THEN
-                  UU(iEndGhostU-1,J,K) = UU(iEndGhostU,J,K) *
-     &                 DEN(iEndGhost,J,K)
-     &                 / (PT5*(DEN(iEndGhost,J,K) + DEN(IEND,J,K)))
-               ENDIF
+         DO 120 K = kst,kend
+            DO 100 J = jst,jend
+               IF (xminus) then
+                  if (PCELL(ist-1,J,K).EQ.PFIELD) THEN
+                     UU(ist,J,K) = UU(ist-1,J,K) *
+     &                    DEN(ist-1,J,K)
+     &                    / (PT5*(DEN(ist-1,J,K) + DEN(IST,J,K)))
+                  ENDIF
+               endif
+               if (xplus) then
+                  IF (PCELL(iend+1,J,K).EQ.PFIELD) THEN
+                     UU(iend+1,J,K) = UU(iend+2,J,K) *
+     &                    DEN(iend+1,J,K)
+     &                    / (PT5*(DEN(iend+1,J,K) + DEN(IEND,J,K)))
+                  ENDIF
+               endif
  100        CONTINUE
  120     CONTINUE
       endif
@@ -116,19 +89,22 @@ C--------------------------------------------------------------------
 C     NORTH AND SOUTH INLETS
 C--------------------------------------------------------------------
       if (yminus.or.yplus) then
-         DO 220 K = kBegGhost,kEndGhost
-            DO 200 I = iBegGhost,iEndGhost
-               
-               IF ((PCELL(I,jBegGhost,K).EQ.PFIELD).and.yminus) THEN
-                  VV(I,jBegGhostV+1,K) = VV(I,jBegGhostV,K) * 
-     &                 DEN(I,jBegGhost,K)
-     &                 / (PT5*(DEN(I,jBegGhost,K) + DEN(I,JST,K)))
-               ENDIF
-               IF ((PCELL(I,jEndGhost,K).EQ.PFIELD).and.yplus) THEN
-                  VV(I,jEndGhostV-1,K) = VV(I,jEndGhostV,K) * 
-     &                 DEN(I,jEndGhost,K)
-     &                 / (PT5*(DEN(I,jEndGhost,K) + DEN(I,JEND,K)))
-               ENDIF
+         DO 220 K = kst,kend
+            DO 200 I = ist,iend
+               if (yminus) then
+                  IF (PCELL(I,jst-1,K).EQ.PFIELD) THEN
+                     VV(I,jst,K) = VV(I,jst-1,K) * 
+     &                    DEN(I,jst-1,K)
+     &                    / (PT5*(DEN(I,jst-1,K) + DEN(I,JST,K)))
+                  ENDIF
+               endif
+               if (yplus) then
+                  IF (PCELL(I,jend+1,K).EQ.PFIELD) THEN
+                     VV(I,jend+1,K) = VV(I,jend+2,K) * 
+     &                    DEN(I,jend+1,K)
+     &                    / (PT5*(DEN(I,jend+1,K) + DEN(I,JEND,K)))
+                  ENDIF
+               endif
  200        CONTINUE
  220     CONTINUE
       endif
@@ -136,18 +112,21 @@ C--------------------------------------------------------------------
 C     TOP AND BOTTOM INLETS
 C--------------------------------------------------------------------
       if (zminus.or.zplus) then
-         DO 320 J = jBegGhost,jEndGhost
-            DO 300 I = iBegGhost,iEndGhost
-               
-               IF ((PCELL(I,J,kBegGhost).EQ.PFIELD).and.zminus) THEN
-                  WW(I,J,kBegGhostW+1) = WW(I,J,kBegGhostW)
-     &                 * DEN(I,J,kBegGhost)
-     &                 / (PT5*(DEN(I,J,kBegGhost) + DEN(I,J,KST)))
-               ENDIF
-               IF ((PCELL(I,J,kEndGhost).EQ.PFIELD).and.zplus) THEN
-                  WW(I,J,kEndGhostW-1) = WW(I,J,kEndGhostW)
-     &                 * DEN(I,J,kEndGhost)
-     &                 / (PT5*(DEN(I,J,kEndGhost) + DEN(I,J,KEND)))
+         DO 320 J = jst,jend
+            DO 300 I = ist,iend
+               if (zminus) then
+                  IF (PCELL(I,J,kst-1).EQ.PFIELD) THEN
+                     WW(I,J,kst) = WW(I,J,kst-1)
+     &                    * DEN(I,J,kst-1)
+     &                    / (PT5*(DEN(I,J,kst-1) + DEN(I,J,KST)))
+                  ENDIF
+               endif
+               if (zplus) then
+                  IF (PCELL(I,J,kend+1).EQ.PFIELD) THEN
+                     WW(I,J,kend+1) = WW(I,J,kend+2)
+     &                    * DEN(I,J,kend+1)
+     &                    / (PT5*(DEN(I,J,kend+1) + DEN(I,J,KEND)))
+                  endif
                ENDIF
  300        CONTINUE
  320     CONTINUE
@@ -161,6 +140,9 @@ C--------------------------------------------------------------------
 c*********************************************************************
 c
 c $Log$
+c Revision 1.6  2000/10/06 23:07:53  rawat
+c fixed some more bc routines for mulit-patch
+c
 c Revision 1.5  2000/10/05 16:39:49  rawat
 c modified bcs for multi-patch
 c

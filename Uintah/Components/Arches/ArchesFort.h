@@ -163,9 +163,11 @@ extern "C"
     void
     FORT_AREAIN(const int* domainLow, const int* domainHigh, 
 		const int* indexLow, const int* indexHigh,
-		  double* sew, double* sns,
+		double* sew, double* sns,
 		double* stb, double* area, int* celltype, 
-		int* celltypeID);
+		int* celltypeID,
+		int* xminus, int* xplus, int* yminus, int* yplus,
+		int* zminus, int* zplus);
 
     ////////////////////////////////////////////////////////////////////////
     //
@@ -406,8 +408,10 @@ extern "C"
 		    const int* domLoW, const int* domHiW,
 		    const double* wVelocity,
 		    const int* domLo, const int* domHi,
-		    const double* density, const double* old_density,
+		    const double* density, 
 		    const double* viscosity,
+		    const int* domLong, const int* domHing,
+		    const double* old_density,
 		    const double* gravity,
 		    const double* deltaT, const double* den_ref,
 		    const double* ceeu, const double* cweu, const double* cwwu,
@@ -435,8 +439,10 @@ extern "C"
 		    const int* domLoW, const int* domHiW,
 		    const double* wVelocity,
 		    const int* domLo, const int* domHi,
-		    const double* density, const double* old_density,
+		    const double* density, 
 		    const double* viscosity,
+		    const int* domLong, const int* domHing,
+		    const double* old_density,
 		    const double* gravity,
 		    const double* deltaT, const double* den_ref,
 		    const double* cee, const double* cwe, const double* cww,
@@ -464,8 +470,10 @@ extern "C"
 		    const int* domLoV, const int* domHiV,
 		    const double* vVelocity,
 		    const int* domLo, const int* domHi,
-		    const double* density, const double* old_density,
+		    const double* density, 
 		    const double* viscosity,
+		    const int* domLong, const int* domHing,
+		    const double* old_density,
 		    const double* gravity,
 		    const double* deltaT, const double* den_ref,
 		    const double* cee, const double* cwe, const double* cww,
@@ -552,7 +560,9 @@ extern "C"
 		const double* viscosity,
 		const double* sewu, const double* sns, const double* stb,
 		const double* yy, const double* yv,
-		const double* zz, const double* zw);
+		const double* zz, const double* zw,
+		int* xminus, int* xplus, int* yminus, int* yplus,
+		int* zminus, int* zplus);
 
     ////////////////////////////////////////////////////////////////////////
     //
@@ -584,7 +594,9 @@ extern "C"
 		const double* viscosity,
 		const double* sew, const double* snsv, const double* stb,
 		const double* xx, const double* xu,
-		const double* zz, const double* zw);
+		const double* zz, const double* zw,
+		int* xminus, int* xplus, int* yminus, int* yplus,
+		int* zminus, int* zplus);
 
     ////////////////////////////////////////////////////////////////////////
     //
@@ -616,7 +628,9 @@ extern "C"
 		const double* viscosity,
 		const double* sew, const double* sns, const double* stbw,
 		const double* xx, const double* xu,
-		const double* yy, const double* yv);
+		const double* yy, const double* yv,
+		int* xminus, int* xplus, int* yminus, int* yplus,
+		int* zminus, int* zplus);
 
 
 
@@ -744,7 +758,9 @@ extern "C"
 		 double* pressLinearSrc,
 		 int* cellType,
 		 int* wall_celltypeval, int* symmetry_celltypeval,
-		 int* flow_celltypeval);
+		 int* flow_celltypeval,
+		 int* xminus, int* xplus, int* yminus, int* yplus,
+		 int* zminus, int* zplus);
     ////////////////////////////////////////////////////////////////////////
     //
     // Calculate the pressure grad for [u,v,w] source
@@ -930,6 +946,9 @@ extern "C"
 
 //
 // $Log$
+// Revision 1.40  2000/10/06 23:07:47  rawat
+// fixed some more bc routines for mulit-patch
+//
 // Revision 1.39  2000/10/05 16:39:46  rawat
 // modified bcs for multi-patch
 //

@@ -6,7 +6,8 @@ c*********************************************************************
 
       SUBROUTINE wallbc(domLo, domHi, domLong, domHing, idxLo, idxHi,
      &     AE,AW,AN,AS,AT,AB,
-     &     PCELL, WALL)
+     &     PCELL, WALL,
+     $     xminus, xplus, yminus, yplus, zminus, zplus)
 *--------------------------------------------------------------------
 *     This subroutine handles intrusion boundary conditions
 *          for ETA, F, GETA, GF, HCN, NO, P, PP, and YFU.
@@ -41,6 +42,7 @@ c*********************************************************************
       integer PCELL(domLo(1):domHi(1), domLo(2):domHi(2), 
      &     domLo(3):domHi(3))
       integer WALL
+      integer xminus, xplus, yminus, yplus, zminus, zplus
 
 c*********************************************************************
 c     Local Variables :
@@ -52,18 +54,42 @@ c*********************************************************************
 c*********************************************************************
 c     Start :
 c*********************************************************************
-      iBegGhost = domLo(1)
-      jBegGhost = domLo(2)
-      kBegGhost = domLo(3)
-      iEndGhost = domHi(1)
-      jEndGhost = domHi(2)
-      kEndGhost = domHi(3)
       ist = idxLo(1)
       jst = idxLo(2)
       kst = idxLo(3)
       iend = idxHi(1)
       jend = idxHi(2)
       kend = idxHi(3)
+      if (xminus) then
+         iBegGhost = ist -1
+      else
+         iBegGhost = ist
+      endif
+      if (yminus) then
+         jBegGhost = jst -1
+      else
+         jBegGhost = jst
+      endif
+      if (zminus) then
+         kBegGhost = kst - 1
+      else
+         kBegGhost = kst
+      endif
+      if (xplus) then
+         iEndGhost = iend +1
+      else
+         iEndGhost = iend
+      endif
+      if (yplus) then
+         jEndGhost = jend + 1
+      else
+         jEndGhost = jend
+      endif
+      if (zplus) then
+         kEndGhost = kend+1
+      else
+         kEndGhost = kend
+      endif
       
       DO 500 K = kBegGhost,kEndGhost
          DO 400 J = jBegGhost,jEndGhost
@@ -103,6 +129,9 @@ c*********************************************************************
 c*********************************************************************
 c
 c $Log$
+c Revision 1.4  2000/10/06 23:07:53  rawat
+c fixed some more bc routines for mulit-patch
+c
 c Revision 1.3  2000/09/26 19:59:19  sparker
 c Work on MPI petsc
 c

@@ -9,7 +9,8 @@ c*********************************************************************
      &     SU, SP,
      &     domLoU, domHiU, UU,
      &     domLoW, domHiW, WW,
-     &     domLo, domHi, den, old_den, vis,
+     &     domLo, domHi, den, vis,
+     $     domLong, domHing, old_den,
      &     grav, deltat, den_ref,
      &     CEE, CWE, CWW, 
      &     CNNV, CSNV, CSSV,
@@ -53,10 +54,12 @@ c*********************************************************************
       integer domLo(3), domHi(3)
       double precision DEN(domLo(1):domHi(1), domLo(2):domHi(2), 
      &     domLo(3):domHi(3))
-      double precision old_DEN(domLo(1):domHi(1), domLo(2):domHi(2), 
-     &     domLo(3):domHi(3))
       double precision VIS(domLo(1):domHi(1), domLo(2):domHi(2), 
      &     domLo(3):domHi(3))
+      integer domLong(3), domHing(3)
+      double precision old_DEN(domLong(1):domHing(1), 
+     $     domLong(2):domHing(2), 
+     &     domLong(3):domHing(3))
       double precision DELTAT, GRAV, DEN_REF
       double precision CEE(domLo(1):domHi(1))
       double precision CWE(domLo(1):domHi(1))
@@ -155,6 +158,9 @@ c     viscous sources
 c*********************************************************************
 c
 c $Log$
+c Revision 1.6  2000/10/06 23:07:53  rawat
+c fixed some more bc routines for mulit-patch
+c
 c Revision 1.5  2000/10/06 05:58:09  sparker
 c Fixed calls to ARRASS (pass in ng array bounds)
 c
