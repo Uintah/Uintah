@@ -28,28 +28,24 @@ University of Utah. All Rights Reserved.
   <!-- Include customizations of qandaset -->
   <xsl:include href="srqandaset.xsl"/>
 
-  <!-- Generate java script code that locates root of doc tree -->
+  <!-- Load javascript tools -->
   <xsl:template name="user.head.content">
-    <link rel="stylesheet" type="text/css">
-      <xsl:attribute name="href">
-	<xsl:value-of select="$treetop"/>/doc/Utilities/HTML/srdocbook.css<xsl:text/>
-      </xsl:attribute>
-    </link>
-  </xsl:template>
-
-  <!-- Generate page "pre-content" -->
-  <xsl:template name="user.header.content">
     <script type="text/javascript">
       <xsl:attribute name="src">
 	<xsl:value-of select="$treetop"/>/doc/Utilities/HTML/tools.js<xsl:text/>
       </xsl:attribute>
     </script>
-    <script type="text/javascript">preDBContent();</script>
+    <script type="text/javascript">var doc = new DocBookDocument();</script>
+  </xsl:template>
+
+  <!-- Generate page "pre-content" -->
+  <xsl:template name="user.header.content">
+    <script type="text/javascript">doc.preContent();</script>
   </xsl:template>
 
   <!-- Generate page "post-content" -->
   <xsl:template name="user.footer.content">
-    <script type="text/javascript">postDBContent(); </script>
+    <script type="text/javascript">doc.postContent(); </script>
   </xsl:template>
 
   <!-- Change type from a 'charseq' to a 'monoseq' -->

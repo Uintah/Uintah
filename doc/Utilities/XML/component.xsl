@@ -587,11 +587,11 @@
 	<xsl:value-of select="$treetop"/>doc/Utilities/HTML/tools.js<xsl:text/>
       </xsl:attribute>
     </script>
-    <script type="text/javascript">preMSContent();</script>
+    <script type="text/javascript">var doc=new ModuleSpecDocument(); doc.preContent();</script>
   </xsl:template>
 
   <xsl:template name="post-content">
-    <script type="text/javascript">postMSContent();</script>
+    <script type="text/javascript">doc.postContent();</script>
   </xsl:template>
 
 </xsl:stylesheet>
