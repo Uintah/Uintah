@@ -16,6 +16,9 @@ fi
 #Set the default TestData directory
 DIR=dbg
 
+#Set the default inputs directory
+INPUTS=../../../../src/Packages/Uintah/StandAlone/inputs
+
 do_mpm=0
 do_ice=0
 do_mpmice=0
@@ -115,6 +118,8 @@ fi
 
 REMOVE () {
     rm *.out;
+    rm chem.bin;
+    rm input.dtd;
     rm *.compare; 
     rm -rf *.uda*
 }
@@ -123,9 +128,9 @@ mpm_test () {
     echo; echo "Testing $mpm_test_cases"
     
     for n in $mpm_test_cases; do
-	echo; echo "Running sus -mpm inputs/MPM/$n.ups"
-	uda=`grep filebase inputs/MPM/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
-	sus -mpm inputs/MPM/$n.ups &> $n.out
+	echo; echo "Running sus -mpm $INPUTS/MPM/$n.ups"
+	uda=`grep filebase $INPUTS/MPM/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
+	sus -mpm $INPUTS/MPM/$n.ups &> $n.out
 	success=`grep "successfully" $n.out`
 	if test -n "$success";
 	    then 
@@ -155,9 +160,9 @@ mpmice_test () {
     echo; echo "Testing $mpmice_test_cases"
     
     for n in $mpmice_test_cases; do
-	echo; echo "Running sus -mpmice inputs/MPMICE/$n.ups"
-	uda=`grep filebase inputs/MPMICE/$n.ups | sed s/\<*filebase\>//g | sed s/\<// | awk '{print $1}'  `
-	sus -mpmice inputs/MPMICE/$n.ups &> $n.out
+	echo; echo "Running sus -mpmice $INPUTS/MPMICE/$n.ups"
+	uda=`grep filebase $INPUTS/MPMICE/$n.ups | sed s/\<*filebase\>//g | sed s/\<// | awk '{print $1}'  `
+	sus -mpmice $INPUTS/MPMICE/$n.ups &> $n.out
 	success=`grep "successfully" $n.out`
 	if test -n "$success";
 	    then 
@@ -186,9 +191,9 @@ ice_test () {
     echo; echo "Testing $ice_test_cases"
     
     for n in $ice_test_cases; do
-	echo; echo "Running sus -ice inputs/ICE/$n.ups"
-	uda=`grep filebase inputs/ICE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
-	sus -ice inputs/ICE/$n.ups &> $n.out
+	echo; echo "Running sus -ice $INPUTS/ICE/$n.ups"
+	uda=`grep filebase $INPUTS/ICE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
+	sus -ice $INPUTS/ICE/$n.ups &> $n.out
 	success=`grep "successfully" $n.out`
 	if test -n "$success";
 	    then 
@@ -218,9 +223,11 @@ arches_test () {
     echo; echo "Testing $arches_test_cases"
     
     for n in $arches_test_cases; do
-	echo; echo "Running sus -arches inputs/ARCHES/$n.ups"
-	uda=`grep filebase inputs/ARCHES/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
-	sus -arches inputs/ARCHES/$n.ups &> $n.out
+	echo; echo "Running mpirun -np 1 sus -arches -mpi $INPUTS/ARCHES/$n.ups"
+	uda=`grep filebase $INPUTS/ARCHES/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
+	cp $INPUTS/ARCHES/chem_meth.linux.bin chem.bin
+	cp $INPUTS/ARCHES/input.dtd input.dtd
+	mpirun -np 1 sus -arches -mpi $INPUTS/ARCHES/$n.ups &> $n.out
 	success=`grep "successfully" $n.out`
 	if test -n "$success";
 	    then 
@@ -249,9 +256,9 @@ mpmarches_test () {
     echo; echo "Testing $mpmarches_test_cases"
     
     for n in $mpmarches_test_cases; do
-	echo; echo "Running sus -mpmarches inputs/MPMARCHES/$n.ups"
-	uda=`grep filebase inputs/MPMARCHES/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
-	sus -mpmarches inputs/MPMARCHES/$n.ups &> $n.out
+	echo; echo "Running sus -mpmarches $INPUTS/MPMARCHES/$n.ups"
+	uda=`grep filebase /MPMARCHES/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
+	sus -mpmarches $INPUTS/MPMARCHES/$n.ups &> $n.out
 	success=`grep "successfully" $n.out`
 	if test -n "$success";
 	    then 
@@ -280,9 +287,9 @@ examples_test () {
     echo; echo "Testing $examples_test_cases"
     
     for n in $examples_test_cases; do
-	echo; echo "Running sus -poisson1 inputs/Examples/$n.ups"
-	uda=`grep filebase inputs/Examples/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
-	sus -poisson1 inputs/Examples/$n.ups &> $n.out
+	echo; echo "Running sus -poisson1 $INPUTS/Examples/$n.ups"
+	uda=`grep filebase $INPUTS/Examples/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
+	sus -poisson1 $INPUTS/Examples/$n.ups &> $n.out
 	success=`grep "successfully" $n.out`
 	if test -n "$success";
 	    then 
