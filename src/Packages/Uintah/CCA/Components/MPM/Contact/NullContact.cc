@@ -58,8 +58,7 @@ void NullContact::exMomInterpolated(const ProcessorGroup*,
       NCVariable<Vector> gvelocity;
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
-      new_dw->get(   gvelocity, lb->gVelocityLabel, dwi, patch, Ghost::None, 0);
-      new_dw->modify(gvelocity, lb->gVelocityLabel, dwi, patch);
+      new_dw->getModifiable(   gvelocity, lb->gVelocityLabel, dwi, patch);
     }
   }
 }
@@ -80,8 +79,8 @@ void NullContact::exMomIntegrated(const ProcessorGroup*,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
 
-      new_dw->get(gv_star, lb->gVelocityStarLabel, dwi, patch, Ghost::None, 0);
-      new_dw->get(gacc,    lb->gAccelerationLabel, dwi, patch, Ghost::None, 0);
+      new_dw->getModifiable(gv_star, lb->gVelocityStarLabel, dwi, patch);
+      new_dw->getModifiable(gacc,    lb->gAccelerationLabel, dwi, patch);
 
       new_dw->allocate(frictionalWork, lb->frictionalWorkLabel, dwi, patch);
       frictionalWork.initialize(0.);

@@ -50,13 +50,13 @@ ViscoScram::ViscoScram(ProblemSpecP& ps, MPMLabel* Mlb)
   ps->require("DCp_DTemperature",d_initialData.DCp_DTemperature);
   d_se=0;
 
-  p_statedata_label          = scinew VarLabel("p.statedata_vs",
+  p_statedata_label          = VarLabel::create("p.statedata_vs",
                             ParticleVariable<StateData>::getTypeDescription());
-  p_statedata_label_preReloc = scinew VarLabel("p.statedata_vs+",
+  p_statedata_label_preReloc = VarLabel::create("p.statedata_vs+",
                             ParticleVariable<StateData>::getTypeDescription());
-  pRandLabel                 = scinew VarLabel( "p.rand",
+  pRandLabel                 = VarLabel::create( "p.rand",
                             ParticleVariable<double>::getTypeDescription() );
-  pRandLabel_preReloc        = scinew VarLabel( "p.rand+",
+  pRandLabel_preReloc        = VarLabel::create( "p.rand+",
                             ParticleVariable<double>::getTypeDescription() );
 }
 
@@ -143,9 +143,9 @@ void ViscoScram::computeStableTimestep(const Patch* patch,
   int matlindex = matl->getDWIndex();
   // Retrieve the array of constitutive parameters
   ParticleSubset* pset = new_dw->getParticleSubset(matlindex, patch);
-  ParticleVariable<StateData> statedata;
-  ParticleVariable<double> pmass, pvolume;
-  ParticleVariable<Vector> pvelocity;
+  constParticleVariable<StateData> statedata;
+  constParticleVariable<double> pmass, pvolume;
+  constParticleVariable<Vector> pvelocity;
 
   new_dw->get(statedata, p_statedata_label,  pset);
   new_dw->get(pmass,     lb->pMassLabel,     pset);
@@ -202,29 +202,37 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
     int matlindex = matl->getDWIndex();
     // Create array for the particle position
     ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
-    ParticleVariable<Point> px;
-    ParticleVariable<Matrix3> deformationGradient, pstress, pstressnew;
+    constParticleVariable<Point> px;
+    constParticleVariable<Matrix3> deformationGradient, pstress;
+    ParticleVariable<Matrix3> deformationGradient_new;
+    ParticleVariable<Matrix3> pstressnew;
     ParticleVariable<double> pCrackRadius;
     ParticleVariable<StateData> statedata;
-    ParticleVariable<double> pmass, pvolume, ptemperature;
-    ParticleVariable<Vector> pvelocity;
+    constParticleVariable<double> pmass, pvolume, ptemperature;
+    ParticleVariable<double> pvolume_deformed;    
+    constParticleVariable<Vector> pvelocity;
     ParticleVariable<double> pRand;
 
     old_dw->get(px,                  lb->pXLabel,                  pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
     old_dw->get(pstress,             lb->pStressLabel,             pset);
-    old_dw->get(statedata,           p_statedata_label,            pset);
     old_dw->get(pmass,               lb->pMassLabel,               pset);
     old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(ptemperature,        lb->pTemperatureLabel,        pset);
-    old_dw->get(pRand,               pRandLabel,                   pset);
-
+    new_dw->allocate(pvolume_deformed, lb->pVolumeDeformedLabel, pset);
+    new_dw->allocate(deformationGradient_new,
+		     lb->pDeformationMeasureLabel_preReloc, pset);
     new_dw->allocate(pstressnew,     lb->pStressLabel_afterStrainRate,  pset);
     new_dw->allocate(pCrackRadius,   lb->pCrackRadiusLabel_preReloc,    pset);
+    new_dw->allocate(statedata, p_statedata_label_preReloc, pset);
+    old_dw->copyOut(statedata, p_statedata_label, pset);    
+    new_dw->allocate(pRand, pRandLabel_preReloc, pset);
+    old_dw->copyOut(pRand, pRandLabel, pset);    
+
     ASSERTEQ(pset, statedata.getParticleSubset());
 
-    NCVariable<Vector> gvelocity;
+    constNCVariable<Vector> gvelocity;
 
     new_dw->get(gvelocity, lb->gVelocityLabel, matlindex,patch,
             Ghost::AroundCells, 1);
@@ -263,7 +271,7 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
       patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
 
        for(int k = 0; k < 8; k++) {
-           Vector& gvel = gvelocity[ni[k]];
+           const Vector& gvel = gvelocity[ni[k]];
            for (int j = 0; j<3; j++){
              for (int i = 0; i<3; i++) {
                  velGrad(i+1,j+1)+=gvel(i) * d_S[k](j) * oodx[j];
@@ -509,14 +517,14 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
        Jinc = deformationGradientInc.Determinant();
 
        // Update the deformation gradient tensor to its time n+1 value.
-       deformationGradient[idx] = deformationGradientInc *
+       deformationGradient_new[idx] = deformationGradientInc *
                              deformationGradient[idx];
 
        // get the volumetric part of the deformation
        // Unused variable - steve
        // J = deformationGradient[idx].Determinant();
 
-       pvolume[idx]=Jinc*pvolume[idx];
+       pvolume_deformed[idx]=Jinc*pvolume[idx];
 
        // FIX when have the particle temperatures, thermal properties
 
@@ -539,20 +547,20 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
 	        D(3,3)*OldStress(3,3) +
 	        2.*(D(1,2)*OldStress(1,2) +
 		    D(1,3)*OldStress(1,3) +
-		    D(2,3)*OldStress(2,3))) * pvolume[idx]*delT;
+		    D(2,3)*OldStress(2,3))) * pvolume_deformed[idx]*delT;
 
        // Compute wave speed at each particle, store the maximum
-
+       Vector pvelocity_idx = pvelocity[idx];
        if(pmass[idx] > 0){
-         c_dil = sqrt((bulk + 4.*G/3.)*pvolume[idx]/pmass[idx]);
+         c_dil = sqrt((bulk + 4.*G/3.)*pvolume_deformed[idx]/pmass[idx]);
        }
        else{
          c_dil = 0.0;
-         pvelocity[idx] = Vector(0.0,0.0,0.0);
+         pvelocity_idx = Vector(0.0,0.0,0.0);
        }
-       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
-		        Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
-		        Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
+       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
+		        Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
+		        Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
     }
 
     delt_vartype doMech;
@@ -569,11 +577,11 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
     new_dw->put(delt_vartype(delT_new),lb->delTLabel);
     new_dw->put(pstressnew,            lb->pStressLabel_afterStrainRate);
     new_dw->put(pCrackRadius,          lb->pCrackRadiusLabel_preReloc);
-    new_dw->put(deformationGradient,   lb->pDeformationMeasureLabel_preReloc);
+    new_dw->put(deformationGradient_new,lb->pDeformationMeasureLabel_preReloc);
     new_dw->put(sum_vartype(d_se),     lb->StrainEnergyLabel);
     new_dw->put(statedata,             p_statedata_label_preReloc);
     new_dw->put(pRand,                 pRandLabel_preReloc);
-    new_dw->put(pvolume,               lb->pVolumeDeformedLabel);
+    new_dw->put(pvolume_deformed,      lb->pVolumeDeformedLabel);
   }
 }
 
@@ -615,7 +623,6 @@ double ViscoScram::computeRhoMicroCM(double pressure,
   double G = d_initialData.G[0] + d_initialData.G[1] +
  	     d_initialData.G[2] + d_initialData.G[3] + d_initialData.G[4];
   double bulk = (2.*G*(1. + d_initialData.PR))/(3.*(1.-2.*d_initialData.PR));
-
 
   rho_cur = rho_orig*exp(p_gauge/bulk);
 

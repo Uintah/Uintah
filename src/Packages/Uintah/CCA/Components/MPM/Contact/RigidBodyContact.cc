@@ -68,12 +68,12 @@ void RigidBodyContact::exMomInterpolated(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     // Retrieve necessary data from DataWarehouse
-    StaticArray<NCVariable<double> > gmass(numMatls);
-    StaticArray<NCVariable<Vector> > gvelocity(numMatls),gvelocityME(numMatls);
+    StaticArray<constNCVariable<double> > gmass(numMatls);
+    StaticArray<NCVariable<Vector> > gvelocity(numMatls);
     for(int m=0;m<matls->size();m++){
       int dwi = matls->get(m);
       new_dw->get(gmass[m],    lb->gMassLabel,     dwi, patch,Ghost::None,0);
-      new_dw->get(gvelocity[m],lb->gVelocityLabel, dwi, patch,Ghost::None,0);
+      new_dw->getModifiable(gvelocity[m],lb->gVelocityLabel, dwi, patch);
     }
 
 #if 0
@@ -101,10 +101,12 @@ void RigidBodyContact::exMomInterpolated(const ProcessorGroup*,
     }
 
     // Store new velocities in DataWarehouse
+    /* Not necessary when using getModifiable
     for(int m=0;m<matls->size();m++){
       int dwindex = matls->get(m);
       new_dw->modify(gvelocity[m], lb->gVelocityLabel, dwindex, patch);
     }
+    */
   }
 }
 
@@ -123,7 +125,7 @@ void RigidBodyContact::exMomIntegrated(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     // Retrieve necessary data from DataWarehouse
-    StaticArray<NCVariable<double> > gmass(numMatls);
+    StaticArray<constNCVariable<double> > gmass(numMatls);
     StaticArray<NCVariable<Vector> > gvelocity_star(numMatls);
     StaticArray<NCVariable<Vector> > gacceleration(numMatls);
     StaticArray<NCVariable<double> > frictionalWork(numMatls);
@@ -131,10 +133,10 @@ void RigidBodyContact::exMomIntegrated(const ProcessorGroup*,
     for(int m=0;m<matls->size();m++){
       int dwindex = matls->get(m);
       new_dw->get(gmass[m], lb->gMassLabel,dwindex ,patch, Ghost::None, 0);
-      new_dw->get(gvelocity_star[m], lb->gVelocityStarLabel, dwindex,
-		  patch, Ghost::None, 0);
-      new_dw->get(gacceleration[m],  lb->gAccelerationLabel, dwindex,
-		  patch, Ghost::None, 0);
+      new_dw->getModifiable(gvelocity_star[m], lb->gVelocityStarLabel, dwindex,
+			    patch);
+      new_dw->getModifiable(gacceleration[m],  lb->gAccelerationLabel, dwindex,
+			    patch);
       new_dw->allocate(frictionalWork[m], lb->frictionalWorkLabel,
                                                             dwindex, patch);
       frictionalWork[m].initialize(0.);
@@ -172,11 +174,8 @@ void RigidBodyContact::exMomIntegrated(const ProcessorGroup*,
       }
     }
 
-    // Store new velocities and accelerations in DataWarehouse
     for(int m=0;m<matls->size();m++){
       int dwi = matls->get(m);
-      new_dw->modify(gvelocity_star[m],lb->gVelocityStarLabel, dwi,patch);
-      new_dw->modify(gacceleration[m], lb->gAccelerationLabel, dwi,patch);
       new_dw->put(frictionalWork[m],   lb->frictionalWorkLabel,dwi,patch);
     }
   }
@@ -197,6 +196,7 @@ void RigidBodyContact::addComputesAndRequiresIntegrated( Task* t,
 					     const MaterialSet* ms) const
 {
   const MaterialSubset* mss = ms->getUnion();
+  t->requires(Task::OldDW, lb->delTLabel);    
   t->requires(Task::NewDW, lb->gMassLabel,              Ghost::None);
 
   t->modifies(             lb->gVelocityStarLabel, mss);
