@@ -3038,7 +3038,7 @@ GeomTranspTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
 
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glDepthMask(GL_FALSE); // No zbuffering for now.
+  //glDepthMask(GL_FALSE); // No zbuffering for now.
 
   switch(di->get_drawtype())
   {
@@ -3098,7 +3098,7 @@ GeomTranspTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
     break;
   }
 
-  glDepthMask(GL_TRUE); // Turn zbuff back on.
+  //glDepthMask(GL_TRUE); // Turn zbuff back on.
   glDisable(GL_BLEND);
   glEnable(GL_NORMALIZE);
 
