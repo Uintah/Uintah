@@ -112,6 +112,11 @@ private:
   GuiString				guimatrixinfotexts_;   	// A list of matrix-information strings of the contents of a .mat-file
   GuiString				guimatrixnames_;	// A list of matrix-names of the contents of a .mat-file 
   GuiString				guimatrixname_;		// the name of the matrix that has been selected
+  GuiString				guipnrrds_;	
+  GuiString				guipnrrd_;	
+  GuiString				guipbundles_;	
+  GuiString				guipbundle_;	
+
 
   // Ports (We only use one output port)
   SCIRun::BundleOPort*			omatrix_[NUMPORTS];
@@ -134,7 +139,11 @@ MatlabBundlesReader::MatlabBundlesReader(GuiContext* ctx)
     guifilename_(ctx->subVar("filename")),
     guimatrixinfotexts_(ctx->subVar("matrixinfotexts")),     
     guimatrixnames_(ctx->subVar("matrixnames")),    
-	guimatrixname_(ctx->subVar("matrixname"))
+    guimatrixname_(ctx->subVar("matrixname")),
+    guipnrrds_(ctx->subVar("pnrrds")),    
+    guipnrrd_(ctx->subVar("pnrrd")),
+    guipbundles_(ctx->subVar("pbundles")),    
+    guipbundle_(ctx->subVar("pbundle"))
 {
 	indexmatlabfile(false);
 }
@@ -207,10 +216,33 @@ void MatlabBundlesReader::execute()
 				continue;
 			}
 
+      
+
+      std::string guipnrrd = guipnrrd_.get();
+      std::string pnrrd = "";
+      std::ostringstream ossnrrd;
+      ossnrrd << "lindex {" << guipnrrd << "} " << p;
+      gui->lock();
+      gui->eval(ossnrrd.str(),pnrrd);
+      gui->unlock();
+
+      std::string guipbundle = guipbundle_.get();
+      std::string pbundle = "";
+      std::ostringstream ossbundle;      
+      ossbundle << "lindex {" << guipbundle << "} " << p;
+      gui->lock();
+      gui->eval(ossbundle.str(),pbundle);
+      gui->unlock();
+
 			// The data is still in matlab format and the next function
 			// creates a SCIRun matrix object
 	
 			SCIRun::BundleHandle mh;
+      translate_.prefermatrices();
+      translate_.prefersciobjects();
+      if (pnrrd == "prefer nrrds") translate_.prefernrrds();
+      if (pbundle == "prefer bundles") translate_.preferbundles();
+      
 			translate_.mlArrayTOsciBundle(ma,mh,static_cast<SCIRun::Module *>(this));
 			
 			// Put the SCIRun matrix in the hands of the scheduler
