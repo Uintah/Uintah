@@ -16,6 +16,7 @@
 
 #include <Core/Geometry/Point.h>
 #include <Core/Containers/LockingHandle.h>
+#include <Core/Persistent/PersistentSTL.h>
 #include <Core/Datatypes/Mesh.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/IntVector.h>
