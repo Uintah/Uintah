@@ -941,6 +941,15 @@ proc genSubnetScript { subnet { tab "__auto__" }  } {
     set i 0
     foreach conn $connections {
 	incr i
+	if {![info exists modVar([oMod conn])] } {
+	    puts "Connection output module: [oMod conn] does not exist."
+	    continue
+	}
+	if {![info exists modVar([iMod conn])] } {
+	    puts "Connection input module: [iMod conn] does not exist."
+	    continue
+	}
+
         append script "${tab}set c$i \[addConnection "
 	append script "$modVar([oMod conn]) [oNum conn]"
 	append script " $modVar([iMod conn]) [iNum conn]\]\n"
