@@ -868,16 +868,23 @@ AC_DEFUN(SCI_ARG_ENABLE,
   ])
 
 ##  --------------------------------------------------------------------
+##  Save off the arguments to configure, being careful to save 
+##  Package strings for later parsing.
+##  --------------------------------------------------------------------
+
+IFS='^'
+args=`echo "$*" | sed 's% %_%g'`
+myargs=`echo $args | sed 's%\^% %g'`
+IFS=' '
+
+
+##  --------------------------------------------------------------------
 ##  -- Force the user to set compiler vars explicitly.  This will
 ##  -- remove any confusion as to what compiler will be used.
 ##  --------------------------------------------------------------------
 
 DIRNAME_IS=`which dirname`
 BASENAME_IS=`which dirname`
-
-IFS='^'
-saved_args=$*
-IFS=' '
 
 ## We use both of these in a number of spots, so I think this is fair:
 ## (Eventually we could write our own if necessary...
@@ -1060,10 +1067,7 @@ SCI_ARG_ENABLE(scirun2,
 ##  to modify this section.
 ##
 
-IFS='^'
-args=`echo "$saved_args" | sed 's% %_%g'`
-IFS=' '
-myargs=`echo $args | sed 's%\^% %g'`
+
 
 FOUND_ARG=no
 for i in $myargs; do
