@@ -77,6 +77,8 @@ ViewWindow::ViewWindow(Viewer* s, const clString& id)
     bgcolor("bgcolor", id, this), 
     shading("shading", id, this),
     do_stereo("do_stereo", id, this), 
+    sbase("sbase", id, this),
+    sr("sr", id, this),
     // --  BAWGL -- 
     do_bawgl("do_bawgl", id, this),  
     // --  BAWGL -- 

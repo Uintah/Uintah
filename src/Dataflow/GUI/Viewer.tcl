@@ -96,6 +96,13 @@ itcl_class ViewWindow {
 	if {![info exists $this-bgcolor-g]} {set $this-bgcolor-g 0}
 	global $this-bgcolor-b
 	if {![info exists $this-bgcolor-b]} {set $this-bgcolor-b 0}
+
+	global $this-sbase
+	if {![info exists $this-sbase]} {set $this-sbase 0.5}
+	global $this-sr
+	if {![info exists $this-sr]} {set $this-sr 0}
+	global $this-do_stereo
+	if {![info exists $this-do_stereo]} {set $this-do_stereo 0}
     }
 
     destructor {
@@ -468,6 +475,7 @@ itcl_class ViewWindow {
 	
 	global $this-do_stereo
 	global $this-sbase
+	global $this-sr
 	global $this-do_bawgl
 	global $this-tracker_state
 	
@@ -483,8 +491,6 @@ itcl_class ViewWindow {
 	set "$this-global-movieName" "movie"
 	set "$this-global-movieFrame" 0
 	    
-	set $this-do_stereo 0
-	set $this-sbase 0.01
 	set $this-do_bawgl 0
 	set $this-tracker_state 0
 	
@@ -577,15 +583,20 @@ itcl_class ViewWindow {
 		-command "$m.objlist.canvas yview"
 	pack $m.objlist.scroll -fill y -side right -padx 2 -pady 2
 	
+        checkbutton $m.caxes -text "Show Axes" -variable $this-caxes -onvalue 1 -offvalue 0 -command "$this-c centerGenAxes; $this-c redraw"
+	# checkbutton $m.iaxes -text "Icon Axes" -variable $this-iaxes -onvalue 1 -offvalue 0 -command "$this-c iconGenAxes; $this-c redraw"
+	# pack $m.caxes $m.iaxes -side top
+	pack $m.caxes -side top
+
 	checkbutton $m.stereo -text "Stereo" -variable $this-do_stereo \
 		-command "$this-c redraw"
 	pack $m.stereo -side top
 	
-#	scale $m.sbase -variable $this-sbase -length 100 -from 0.1 -to 10 \
-#		-resolution 0.1 -orient horizontal -label "Base Scale:"
-#	checkbutton $m.sr -text "Rot. Shift" -variable $this-sr -anchor w
-#	pack $m.sbase $m.sr -side top
-#	$m.sbase set 1
+	scale $m.sbase -variable $this-sbase -length 100 -from 0.1 -to 10 \
+		-resolution 0.1 -orient horizontal -label "Base Scale:"
+	pack $m.sbase -side top
+	checkbutton $m.sr -text "Rot. Shift" -variable $this-sr -anchor w
+	pack $m.sr -side top
 	
 	# the stuff below doesn't have corresponding c-functions
 	
@@ -605,10 +616,6 @@ itcl_class ViewWindow {
 #	    puts "Non-existing frame to initialize!"
 #	}
 
-        checkbutton $m.caxes -text "Show Axes" -variable $this-caxes -onvalue 1 -offvalue 0 -command "$this-c centerGenAxes; $this-c redraw"
-	# checkbutton $m.iaxes -text "Icon Axes" -variable $this-iaxes -onvalue 1 -offvalue 0 -command "$this-c iconGenAxes; $this-c redraw"
-	# pack $m.caxes $m.iaxes -side top
-	pack $m.caxes -side top
     }
 
     method switch_frames {} {

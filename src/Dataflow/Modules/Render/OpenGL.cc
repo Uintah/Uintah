@@ -430,7 +430,9 @@ void OpenGL::redraw_frame()
     throttle.start();
     Vector eyesep(0,0,0);
     if(do_stereo){
-      double eye_sep_dist=0.025/2;
+//      double eye_sep_dist=0.025/2;
+      double eye_sep_dist=viewwindow->sbase.get()*
+	(viewwindow->sr.get()?0.048:0.0125);
       Vector u, v;
       view.get_viewplane(aspect, 1.0, u, v);
       u.normalize();
@@ -519,10 +521,12 @@ void OpenGL::redraw_frame()
 	      if(do_stereo){
 		if(i==0){
 		  eyep-=eyesep;
-		  lookat-=eyesep;
+		  if (!viewwindow->sr.get())
+		    lookat-=eyesep;
 		} else {
 		  eyep+=eyesep;
-		  lookat+=eyesep;
+		  if (!viewwindow->sr.get())
+		    lookat+=eyesep;
 		}
 	      }
 	      Vector up(view.up());
