@@ -125,6 +125,12 @@ Unstructure::execute()
 	return;
       }
       ofieldhandle_ = algo->execute(ifieldhandle);
+
+      if (ofieldhandle_.get_rep())
+      {
+	*((PropertyManager *)(ofieldhandle_.get_rep())) =
+	  *((PropertyManager *)(ifieldhandle.get_rep()));
+      }
     }
   }
 
