@@ -15,6 +15,6 @@ extern "C" {
   }
 }
 
-template<> string SimpleIPort<ArchiveHandle>::port_type("Archive");
-template<> string SimpleIPort<ArchiveHandle>::port_color("lightsteelblue4");
+template<> string SimpleIPort<ArchiveHandle>::port_type_("Archive");
+template<> string SimpleIPort<ArchiveHandle>::port_color_("lightsteelblue4");
 
