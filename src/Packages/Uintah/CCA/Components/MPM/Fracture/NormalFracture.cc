@@ -326,6 +326,9 @@ void NormalFracture::computeFracture(
 		  DataWarehouse* old_dw, 
 		  DataWarehouse* new_dw)
 {
+  delt_vartype delT;
+  old_dw->get(delT, lb->delTLabel);
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
@@ -390,9 +393,6 @@ void NormalFracture::computeFracture(
       lb->pCrackSurfacePressureLabel, pset_p);
     new_dw->allocate(pVelocity_p_new, lb->pVelocityLabel, pset_p);
 
-    delt_vartype delT;
-    old_dw->get(delT, lb->delTLabel);
-  
     for(ParticleSubset::iterator iter = pset_p->begin();
           iter != pset_p->end(); iter++)
     {
@@ -494,6 +494,9 @@ void NormalFracture::computeCrackExtension(
 		  DataWarehouse* old_dw, 
 		  DataWarehouse* new_dw)
 {
+  delt_vartype delT;
+  old_dw->get(delT, lb->delTLabel);
+
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
 
@@ -520,9 +523,11 @@ void NormalFracture::computeCrackExtension(
   
     ParticleVariable<Point>   pX_p;
     ParticleVariable<Vector>  pTipNormal_p;
+    ParticleVariable<Vector>  pRotationRate_p;
 
     new_dw->get(pX_p, lb->pXXLabel, pset_p);
     old_dw->get(pTipNormal_p, lb->pTipNormalLabel, pset_p);
+    new_dw->get(pRotationRate_p, lb->pRotationRateLabel, pset_p);
 
     //Lattice for particle neighbor finding
     vector<int> pIdxEx( pset_p->numParticles() );
@@ -552,6 +557,16 @@ void NormalFracture::computeCrackExtension(
       else {
         pExtensionDirection_p_new[pIdx_p] = pExtensionDirection_pg[pIdx_pg];
         pTipNormal_p_new[pIdx_p] = pTipNormal_p[pIdx_p];
+	if(pExtensionDirection_p_new[pIdx_p].length2()>0.5) {
+          pExtensionDirection_p_new[pIdx_p] += 
+	    Cross( pRotationRate_p[pIdx_p] * delT, 
+	    pExtensionDirection_p_new[pIdx_p] );
+          pExtensionDirection_p_new[pIdx_p].normalize();
+          pTipNormal_p_new[pIdx_p] += 
+	    Cross( pRotationRate_p[pIdx_p] * delT, 
+	    pTipNormal_p_new[pIdx_p] );
+          pTipNormal_p_new[pIdx_p].normalize();
+	}
       }
 
       if(pIsBroken_pg[pIdx_pg]) continue;
