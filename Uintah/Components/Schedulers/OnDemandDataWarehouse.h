@@ -65,6 +65,11 @@ public:
 
    virtual bool exists(const VarLabel*, int matIndex, const Patch*) const;
 
+   // Generic put, passing Variable as a pointer rather than by reference
+   // to avoid ambiguity with other put overloaded methods.
+   virtual void put(const Variable*, const VarLabel*, int matlIndex,
+		    const Patch*);   
+   
    // Reduction Variables
    virtual void allocate(ReductionVariableBase&, const VarLabel*,
 			 int matIndex = -1);
@@ -113,7 +118,7 @@ public:
    virtual void put(const CCVariableBase&, const VarLabel*,
 		    int matlIndex, const Patch*);
 
-     // SFC[X-Z]Variables Variables
+   // SFC[X-Z]Variables Variables
    virtual void allocate(SFCXVariableBase&, const VarLabel*,
 			 int matlIndex, const Patch*);
    virtual void get(SFCXVariableBase&, const VarLabel*, int matlIndex,
@@ -211,6 +216,9 @@ private:
 
 //
 // $Log$
+// Revision 1.45  2000/12/23 00:45:40  witzel
+// Added generic put(Variable*, ...) method
+//
 // Revision 1.44  2000/12/22 00:13:52  jas
 // Got rid of X,Y,Z FCVariable stuff.  Changes to get rid of g++ warnings.
 //
