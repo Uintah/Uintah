@@ -18,7 +18,7 @@
 
 package require Iwidgets 3.1
 
-class PPexampleGui {
+itcl::class PPexampleGui {
 
     variable w
     variable n

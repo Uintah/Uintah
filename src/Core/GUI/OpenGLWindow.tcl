@@ -11,7 +11,7 @@
 #  Copyright (C) 2001 SCI Group
 #
 
-class OpenGLWindow {
+itcl::class OpenGLWindow {
 
     variable w
     variable prev

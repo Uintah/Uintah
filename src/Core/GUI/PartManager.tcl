@@ -13,7 +13,7 @@
 
 package require Iwidgets 3.1
 
-class PartManager {
+itcl::class PartManager {
 
     variable w
     variable n

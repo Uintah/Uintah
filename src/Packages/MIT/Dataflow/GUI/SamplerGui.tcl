@@ -18,7 +18,7 @@
 
 package require Iwidgets 3.1
 
-class SamplerGui {
+itcl::class SamplerGui {
 
     variable w
     variable n
