@@ -248,6 +248,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   scene->select_shadow_mode( Hard_Shadows );
   scene->maxdepth = 8;
 
+#if !defined(linux)
   if( argc < 2 || strcmp(argv[1],"-fast") ) {
     cout << "Creating TRIGGERS:\n";
 
@@ -333,7 +334,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     trig = new Trigger( "Atlantis Intro", loc, 2,100,ppm,true );
     scene->addTrigger( trig );
   }
-
+#endif
+  
   //////////////// GLOBE INSTANCE ////////////////////////
   if( argc < 2 ) {
     Transform globetrans;
