@@ -38,7 +38,7 @@ SRCS     += \
 	$(SRCDIR)/IsoSurface.cc\
 	$(SRCDIR)/IsoSurfaceDW.cc\
 	$(SRCDIR)/IsoSurfaceMRSG.cc\
-	$(SRCDIR)/IsoSurfaceSP.cc\
+	$(SRCDIR)/IsoSurfaceMSRG.cc\
 	$(SRCDIR)/IsoSurfaceSAGE.cc\
 	$(SRCDIR)/IsoSurfaceNOISE.cc\
 	$(SRCDIR)/Span.cc\
@@ -70,6 +70,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.10  2000/11/30 17:58:29  moulding
+# moved IsoSurfaceSP -> IsoSurfaceMSRG
+#
 # Revision 1.9  2000/10/24 05:57:39  moulding
 # new module maker Phase 2: new module maker goes online
 #
