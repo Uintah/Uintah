@@ -27,6 +27,12 @@ DebugSwitch::DebugSwitch(const clString& module, const clString& var)
 	debugs=new Debug;
     }
 
+    // Init flag
+    // cerr << "This part is broken...\n";
+    char* env=getenv("SCI_DEBUG");
+    if((env!=0)&&(strstr(env,(module+"("+var+")")())!=0))
+	flagvar=1;
+
     DebugIter debugsiter(debugs);
     if(debugsiter.search(module)){
 	DebugSwitch* that=this;
@@ -39,11 +45,6 @@ DebugSwitch::DebugSwitch(const clString& module, const clString& var)
     arr->add(that);
     debugs->insert(module, arr);
 
-    // Init flag
-    cerr << "This part is broken...\n"; // Also, it shouldn't return above???
-    char* env=getenv("SCI_DEBUG");
-    if((env!=0)&&(strstr(env,(module+"("+var+")")())!=0))
-	flagvar=1;
 }
 
 DebugSwitch::~DebugSwitch()
