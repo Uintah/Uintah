@@ -264,7 +264,7 @@ TextureRenderer::load_brick(TextureBrickHandle brick)
 #endif
   int idx[2];
   for(int c=0; c<nc; c++) {
-#ifdef GL_ARB_fragment_program
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
     glActiveTexture(GL_TEXTURE0+c);
 #endif
     int nb = brick->nb(c);
@@ -433,7 +433,7 @@ TextureRenderer::load_brick(TextureBrickHandle brick)
     }
   }
   brick->set_dirty(false);
-#ifdef GL_ARB_fragment_program 
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
   glActiveTexture(GL_TEXTURE0);
 #endif
   CHECK_OPENGL_ERROR("VolumeRenderer::load_texture end");
@@ -450,7 +450,7 @@ TextureRenderer::draw_polygons(vector<float>& vertex, vector<float>& texcoord,
     glGetFloatv(GL_MODELVIEW_MATRIX, mvmat);
   }
   if(buffer) {
-#ifdef GL_ARB_fragment_program 
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
     glActiveTexture(GL_TEXTURE3);
 #endif
     glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
@@ -474,7 +474,7 @@ TextureRenderer::draw_polygons(vector<float>& vertex, vector<float>& texcoord,
       for(int j=0; j<poly[i]; j++) {
         float* t = &texcoord[(k+j)*3];
         float* v = &vertex[(k+j)*3];
-#ifdef GL_ARB_fragment_program
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
         glMultiTexCoord3f(GL_TEXTURE0, t[0], t[1], t[2]);
         if(fog) {
           float vz = mvmat[2]*v[0] + mvmat[6]*v[1] + mvmat[10]*v[2] + mvmat[14];
@@ -494,7 +494,7 @@ TextureRenderer::draw_polygons(vector<float>& vertex, vector<float>& texcoord,
     k += poly[i];
   }
   if(buffer) {
-#ifdef GL_ARB_fragment_program 
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
     glActiveTexture(GL_TEXTURE0);
 #endif
   }
@@ -590,7 +590,7 @@ TextureRenderer::build_colormap1(Array2<float>& cmap_array,
     default:
       break;
     }
-#ifdef GL_ARB_fragment_program
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
     // This texture is not used if there is no shaders.
     // glColorTable is used instead.
     if (ShaderProgramARB::shaders_supported())
@@ -674,7 +674,7 @@ TextureRenderer::build_colormap2()
         glDisable(GL_BLEND);
         //glEnable(GL_BLEND);
         //glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-#ifdef GL_ARB_fragment_program 
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
         glActiveTexture(GL_TEXTURE0);
 #endif
         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
@@ -711,7 +711,7 @@ TextureRenderer::build_colormap2()
         tan(1.570796327 * (0.5 - slice_alpha_*0.49999));
       shader->setLocalParam(0, bp, imode_ ? 1.0/irate_ : 1.0/sampling_rate_,
                             0.0, 0.0);
-#ifdef GL_ARB_fragment_program 
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader) 
       glActiveTexture(GL_TEXTURE0);
 #endif
       glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
@@ -878,7 +878,7 @@ TextureRenderer::bind_colormap1(unsigned int cmap_tex)
 void
 TextureRenderer::bind_colormap2()
 {
-#ifdef GL_ARB_fragment_program
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
   if (ShaderProgramARB::shaders_supported())
   {
     // bind texture to unit 2
@@ -939,7 +939,7 @@ TextureRenderer::release_colormap1()
 void
 TextureRenderer::release_colormap2()
 {
-#ifdef GL_ARB_fragment_program
+#if defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
   if (ShaderProgramARB::shaders_supported())
   {
     glActiveTexture(GL_TEXTURE2_ARB);
