@@ -16,7 +16,7 @@ SRCS     += \
 	$(SRCDIR)/FusionSlicePlot.cc\
 	$(SRCDIR)/RadialGridDifferent.cc\
 	$(SRCDIR)/PPPLNrrdConverter.cc\
-#	$(SRCDIR)/NIMRODNrrdConverter.cc\
+	$(SRCDIR)/NIMRODNrrdConverter.cc\
 #	$(SRCDIR)/TransCoorSys.cc\
 #	$(SRCDIR)/ReactionDiffusion.cc\
 #[INSERT NEW CODE FILE HERE]
