@@ -94,6 +94,13 @@ WARNING
 	 return d_pdata->data[idx];
       }
       
+      //////////
+      // Insert Documentation Here:
+      const T& operator[](particleIndex idx) const {
+	 ASSERTRANGE(idx, 0, d_pdata->data.size());
+	 return d_pdata->data[idx];
+      }
+      
       virtual void copyPointer(const ParticleVariableBase&);
       virtual void allocate(ParticleSubset*);
       virtual void gather(ParticleSubset* dest,
@@ -300,6 +307,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.16  2000/06/05 20:56:42  tan
+// Added const T& operator[](particleIndex idx) const.
+//
 // Revision 1.15  2000/05/30 20:19:31  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch
