@@ -57,7 +57,7 @@ faq2.html: ${USERFAQ} ${STYLESHEET}
 faq3.html: ${DEVFAQ} ${STYLESHEET}
 	${call xmltohtml,faq3.html,3}
 
-printable.html: ${FAQBOOK} ${STYLESHEET}
+printable.html: ${FAQBOOK} ${FAQS}
 	${call xmltohtml,printable.html,print}
 
 clean:
