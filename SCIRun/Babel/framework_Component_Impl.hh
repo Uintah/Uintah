@@ -3,15 +3,15 @@
 // Symbol:        framework.Component-v1.0
 // Symbol Type:   class
 // Babel Version: 0.7.4
-// SIDL Created:  20021109 17:19:38 MST
-// Generated:     20021109 17:19:39 MST
+// SIDL Created:  20030306 10:46:20 MST
+// Generated:     20030306 10:46:23 MST
 // Description:   Server-side implementation for framework.Component
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
 // babel-version = 0.7.4
 // source-line   = 11
-// source-url    = file:/home/sparker/SCIRun/cca/../src/SCIRun/Babel/framework.sidl
+// source-url    = file:/home/sci/kzhang/SCIRun/cca-debug/../src/SCIRun/Babel/framework.sidl
 // 
 
 #ifndef included_framework_Component_Impl_hh
@@ -32,8 +32,8 @@
 #ifndef included_framework_Component_hh
 #include "framework_Component.hh"
 #endif
-#ifndef included_govcca_Services_hh
-#include "govcca_Services.hh"
+#ifndef included_gov_cca_Services_hh
+#include "gov_cca_Services.hh"
 #endif
 
 
@@ -85,12 +85,14 @@ namespace framework {
 
 
     /**
-     * Obtain Services handle, through which the component communicates with the
-     * framework. This is the one method that every CCA Component must implement. 
+     * Obtain Services handle, through which the 
+     * component communicates with the framework. 
+     * This is the one method that every CCA Component
+     * must implement. 
      */
     void
     setServices (
-      /*in*/ ::govcca::Services svc
+      /*in*/ ::gov::cca::Services services
     )
     throw () 
     ;
