@@ -49,7 +49,7 @@
 	<Level>
 	    <Box label="1">
 	        <lower>[0,0,0]</lower>
-	        <upper>[100,100,100]</upper>
+	        <upper>[50,50,50]</upper>
 	        <resolution>[40,40,40]</resolution>
                 <extraCells>[1,1,1]</extraCells>
 		<patches>[2,2,1]</patches>
@@ -68,7 +68,7 @@
     	    <turbulence_model>smagorinsky</turbulence_model>
             <reacting_flow>true</reacting_flow>
             <solve_enthalpy>true</solve_enthalpy>	
-
+	    <solve_reactingscalar>false</solve_reactingscalar>
 	    <Turbulence>
 		<cf>0.001</cf>
 		<fac_mesh>1.0</fac_mesh>
@@ -116,13 +116,17 @@
                        <MaxValue>1.0</MaxValue>
                        <MinValue>-1.0</MinValue>
                        <MidValue>0.0</MidValue>
+     		       <NumDivsBelow>10</NumDivsBelow>
+     		       <NumDivsAbove>10</NumDivsAbove>
                     </Enthalpy>
                     <MixtureFraction>
-                       <NumDivs>20</NumDivs>
+                       <NumDivs>40</NumDivs>
                        <MaxValue>1.0</MaxValue>
                        <MinValue>0.0</MinValue>
-                       <MidValue>0.5</MidValue>
-                    </MixtureFraction>
+                       <MidValue>0.1</MidValue>
+     		       <NumDivsBelow>20</NumDivsBelow>
+     		       <NumDivsAbove>20</NumDivsAbove>
+                     </MixtureFraction>
                   </MixRxnTableInfo>
 		  <Integrator>
 		     <favre>true</favre>
@@ -141,8 +145,8 @@
 		    <inletType>primary</inletType>
 		    <geom_object>
 		      <cylinder label = "inlet">
-			<bottom>[-5,50,50]</bottom>
-			<top>[0,50,50]</top>
+			<bottom>[-5,25,25]</bottom>
+			<top>[0,25,25]</top>
 			<radius> 5 </radius>
 		      </cylinder>
 		    </geom_object>
@@ -151,7 +155,7 @@
 		    <geom_object>
 		      <box label="botWall">
 			<min>[-1,-1,-1]</min>
-			<max>[0,101,101]</max>
+			<max>[0,51,51]</max>
 		      </box>
 		    </geom_object>
 		</WallBC>
@@ -164,20 +168,20 @@
 		    <RefPressure>0.0</RefPressure>
 		    <geom_object>
 		      <box label="posY_xzWall">
-			<min>[0,100,-1]</min>
-			<max>[100,101,101]</max>
+			<min>[0,50,-1]</min>
+			<max>[50,51,51]</max>
 		      </box>
 		      <box label="zeroY_xzWall">
 			<min>[0,-1,-1]</min>
-			<max>[100,0,101]</max>
+			<max>[50,0,51]</max>
 		      </box>
 		      <box label="posZ_xyWall">
-			<min>[0,-1,100]</min>
-			<max>[100,101,101]</max>
+			<min>[0,-1,50]</min>
+			<max>[50,51,51]</max>
 		      </box>
                       <box label="zeroZ_xyWall">	
 			<min>[0,-1,-1]</min>
-			<max>[100,101,0]</max>
+			<max>[50,51,0]</max>
 		      </box>
 		    </geom_object>
 		</PressureBC>
@@ -190,8 +194,8 @@
 		    <RefPressure>0.0</RefPressure>
 		    <geom_object>
 		      <box label="topWall">
-			<min>[100,-1,-1]</min>
-			<max>[101,101,101]</max>
+			<min>[50,-1,-1]</min>
+			<max>[51,51,51]</max>
 		      </box>
 		    </geom_object>
 		</outletBC>
