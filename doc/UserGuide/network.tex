@@ -1,6 +1,6 @@
 % network.tex
 %
-% Network subsection of the Running main section.
+% The Working with networks section.
 
 %begin{latexonly}
   \newcommand{\modgraphic}%
@@ -30,8 +30,8 @@ Create a module by selecting its name from one of the package (\eg \sr)
 menu's category submenu.  The package menus may be accessed from the main
 window's menu bar and from the network pane's popup menu.
 
-Activate the network pane's popup menu by clicking the right most mouse
-button while the mouse pointer is in the network pane.  The popup menu
+Activate the network pane's popup menu by clicking  mouse
+button 3 while the mouse pointer is in the network pane.  The popup menu
 contains a list of category submenus from the \sr package and any
 additional packages.  And of course each category submenu provides access
 to the modules within the category.
@@ -51,7 +51,8 @@ end'' consists of the following components:
 \item[Input ports] Zero or more input ports.  Each port corresponds to a
   data type and each data type has a unique color.
   Table~\ref{tab:portcolors} maps port colors to data types.  Input ports
-  connect to other modules' output ports.
+  connect to other modules' output ports.  Connections can only be made
+  between ports of the same type.
 \item[Output ports] Zero or more output ports.  Output ports connect to
   other modules' input ports.  Every module has, of course, at least 1 input
   or 1 output port.
@@ -61,21 +62,22 @@ end'' consists of the following components:
   control over the module.  
 \item[Progress bar] Shows the module's progress.
 \item[Timer] Displays the amount of CPU time the module has consumed.
-\item[Popup Menu] Pressing the right most mouse button while the mouse
+  Located to the left of the progress bar.
+\item[Popup Menu] Pressing mouse button 3 while the mouse
   pointer is over a module gives access to the module's popup menu.  The
   popup menu gives access to the following items:
   \begin{description}
-  \item[::Package_Category_Name_Instance]  This is item is just a label.
-    It tells you the name of the module and the category and package the
-    module belongs to.  The Instance part is a unique number which
-    distinguishes multiple module instances of the same type.
-  \item[Execute] Executes the network.
-  \item[Notes] This item displays the module's note pad.  Use the note pad
+  \item[::Package_Category_Name_Instance] This item is a label (not a
+    selectable item).  It provides the module's name and the category and
+    package to which to module belongs.  The Instance part is a unique
+    number which distinguishes multiple instances of the same module.
+  \item[\menuitem{Execute}] Executes the network.
+  \item[\menuitem{Notes}] This item displays the module's note pad.  Use the note pad
     to document the purpose of the module in the current network.
-  \item[Destroy] Destroys the module.
-  \item[Show Log] Displays the module's message log.  Most modules will
+  \item[\menuitem{Destroy}] Destroys the module.
+  \item[\menuitem{Show Log}] Displays the module's message log.  Most modules will
     write messages to the log during the course of their execution.
-  \item[Show Status] This item is a toggle button which turns off/on the
+  \item[\menuitem{Show Status}] This item is a toggle button which turns off/on the
     display of the progress indicator.  Turning off the progress indicator
     can help speed up the execution of complex networks.
   \end{description}
@@ -109,49 +111,114 @@ end'' consists of the following components:
 \end{figure}
 
 
-\subsection{Connecting Modules}
+\subsection{Making a Connection}
 \label{sec:connectmods}
 
+Button 2 is used to connect the input port of one module to
+the output port of another module (or vice-versa).  
 
+Position the mouse pointer over a module's input (output) port.  Then press
+button 2 and drag the the mouse pointer towards another module's output (input)
+port.   
 
-\subsection{Moving  Module}
+When button 2 is first pressed the program shows all valid connections as
+black lines.  It also draws one red colored connection which is the
+connection that will be made if you stop the drag by releasing the mouse
+button.
+
+Make the final connection by releasing button 2 when the pointer is over
+the desired destination port or when the red colored connection is the
+desired one.
+
+The connection will be drawn using an appropriate data type color.
+
+\subsection{Deleting a Connection}
+\label{sec:deleteconnections}
+
+A connection may be deleted by pressing button 3 while the pointer is
+over a connection.
+
+\subsection{Moving a  Module}
 \label{sec:movemod}
 
+Modules may be moved around in the network pane.  To move a module simply
+press button 1 while the pointer is over a module and drag the module to
+its new location.
 
-\subsection{Setting a Module's Properties}
+\subsection{Changing a Module's Properties}
 \label{sec:setmodprops}
 
+To change a module's properties click its \button{UI} button.  This will
+display the module's control dialog.  Use this dialog to change the
+module's properties.  Each module's reference documentation explains the
+use of its control dialog.
+
+
+\subsection{Deleting (Destroying) a Module}
+\label{sec:deletemod}
+
+Delete a module by selecting the \menuitem{Destroy} menu item from the
+module's popup menu.
 
 \subsection{Executing a Network}
 \label{sec:executenet}
 
 
-\subsection{Deleting a Connection}
-\label{sec:deleteconnections}
-
-
-\subsection{Deleting a Module}
-\label{sec:deletemod}
-
-
 \subsection{Documenting a Module}
 \label{sec:docmodule}
 
+It is often useful to document the purpose of a module within a network.
+Each module maintains a note pad for this purpose.  You may edit the
+module's note pad by selecting \menuitem{Notes} item from the module's
+popup menu.  This will display the module's note pad editor.  This simple
+editor allows you to write notes or otherwise document the use of the
+module within the context of its network.
 
 \subsection{Viewing a Module's Log}
 \label{sec:viewmodslog}
 
+Each module supports a message log.  The module may write error messages or
+other types of messages to its log.  To view this log select the
+\menuitem{Show Log} item from the module's popup menu.
 
 \subsection{Documenting a Network}
 \label{sec:docnetwork}
+
+It is useful to document the purpose of a network.  You may use a network's
+note pad for this purpose.  To edit the network's note pad select the
+\menuitem{Add Info} item from the main window's \menu{File} menu.  This
+will display the network's note pad editor.  This simple editor allows you
+to write notes or otherwise document the purpose and use of the network.
 
 
 \subsection{Saving a Network}
 \label{sec:savenet}
 
+To save a network select the \menuitem{Save} item from the main window's
+\menu{File} menu.
+
 
 \subsection{Opening a Network}
 \label{sec:opennet}
+
+To open a network select the \menuitem{Open} item from the main window's
+\menu{File} menu.
+
+
+\subsection{Navigating a Network}
+\label{sec:navnetwork}
+
+A complex network may not be entirely visible in the network pane.  You may
+use the network pane's scroll bars to bring other parts of a network into
+view.  Or you may use the navigation tool to view complex networks.
+
+The navigation pane shows the entire ``network world.''  The small
+rectangular region (outlined in black) within the navigation pane is the
+network navigation tool and it is a window on the network world.  The position of
+the navigation tool determines which part of the network is visible in the
+network pane.  To view other parts of the network, press button 1 while the
+pointer is in the navigation tool and drag the tool to a new location.
+
 
 
 %%% Local Variables: 
