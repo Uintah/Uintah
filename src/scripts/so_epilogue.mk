@@ -49,7 +49,7 @@ $(LIBNAME)_LIBS := $(LIBS)
 # we can use the -l syntax to link, but still express the dependicies.
 #
 $(LIBNAME): $(OBJS) $(patsubst %,$(LIBDIR)lib%.so,$(PSELIBS))
-	rm -f $(LIBNAME)
+	rm -f $@
 	$(CXX) $(SOFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) -o $@ $(filter %.o,$^) $(patsubst $(LIBDIR)/lib%.so,-l%,$(filter %.so,$^)) $($@_LIBS)
 
 #
@@ -70,6 +70,9 @@ endif
 
 #
 # $Log$
+# Revision 1.4  2000/03/17 10:40:17  sparker
+# Fixed rule to remove file - use $@ instead of $(PROGRAM)
+#
 # Revision 1.3  2000/03/17 09:53:22  sparker
 # remove before link (bugzilla #39)
 #
