@@ -205,7 +205,7 @@ class CCVariable : public Array3<T>, public CCVariableBase {
       virtual void emit(OutputContext&);
       virtual void read(InputContext&);
       static TypeDescription::Register registerMe;
-      
+
    private:
    };
       template<class T>
@@ -352,6 +352,14 @@ class CCVariable : public Array3<T>, public CCVariableBase {
 
 //
 // $Log$
+// Revision 1.15  2000/06/03 05:29:44  sparker
+// Changed reduction variable emit to require ostream instead of ofstream
+// emit now only prints number without formatting
+// Cleaned up a few extraneously included files
+// Added task constructor for an non-patch-based action with 1 argument
+// Allow for patches and actions to be null
+// Removed back pointer to this from Task::Dependency
+//
 // Revision 1.14  2000/06/01 22:04:23  tan
 // Using operator[](const IntVector&) and void initialize(const T&)
 // from Array3.

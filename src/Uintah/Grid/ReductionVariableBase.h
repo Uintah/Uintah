@@ -2,8 +2,7 @@
 #ifndef UINTAH_HOMEBREW_ReductionVariableBase_H
 #define UINTAH_HOMEBREW_ReductionVariableBase_H
 
-#include <iostream>
-#include <fstream>
+#include <iosfwd>
 using namespace std;
 
 namespace Uintah {
@@ -47,7 +46,7 @@ WARNING
       virtual void copyPointer(const ReductionVariableBase&) = 0;
       virtual ReductionVariableBase* clone() const = 0;
       virtual void reduce(const ReductionVariableBase&) = 0;
-      virtual void emit(ofstream&) = 0;
+      virtual void emit(ostream&) = 0;
    protected:
       ReductionVariableBase(const ReductionVariableBase&);
       ReductionVariableBase();
@@ -60,6 +59,14 @@ WARNING
 
 //
 // $Log$
+// Revision 1.6  2000/06/03 05:29:44  sparker
+// Changed reduction variable emit to require ostream instead of ofstream
+// emit now only prints number without formatting
+// Cleaned up a few extraneously included files
+// Added task constructor for an non-patch-based action with 1 argument
+// Allow for patches and actions to be null
+// Removed back pointer to this from Task::Dependency
+//
 // Revision 1.5  2000/06/01 23:16:18  guilkey
 // Added code to the ReductionVariable stuff to "emit" it's data.  Added
 // NPAction tasks.  NP=NonPatch, this is for tasks that don't need the patch.

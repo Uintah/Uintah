@@ -49,7 +49,7 @@ Task::subpatchCapable(bool state)
 void
 Task::requires(const DataWarehouseP& ds, const VarLabel* var)
 {
-  d_reqs.push_back(scinew Dependency(this, ds, var, -1, 0));
+  d_reqs.push_back(scinew Dependency(ds, var, -1, 0));
 }
 
 void
@@ -110,7 +110,7 @@ Task::requires(const DataWarehouseP& ds, const VarLabel* var, int matlIndex,
 	 for(int iz=l;iz<=h;iz++){
 	    const Patch* neighbor = patch->getNeighbor(IntVector(ix,iy,iz));
 	    if(neighbor)
-	       d_reqs.push_back(scinew Dependency(this, ds, var, matlIndex,
+	       d_reqs.push_back(scinew Dependency(ds, var, matlIndex,
 						  neighbor));
 	 }
       }
@@ -120,14 +120,14 @@ Task::requires(const DataWarehouseP& ds, const VarLabel* var, int matlIndex,
 void
 Task::computes(const DataWarehouseP& ds, const VarLabel* var)
 {
-  d_comps.push_back(scinew Dependency(this, ds, var, -1, 0));
+  d_comps.push_back(scinew Dependency(ds, var, -1, 0));
 }
 
 void
 Task::computes(const DataWarehouseP& ds, const VarLabel* var, int matlIndex,
 	       const Patch*)
 {
-  d_comps.push_back(scinew Dependency(this, ds, var, matlIndex, d_patch));
+  d_comps.push_back(scinew Dependency(ds, var, matlIndex, d_patch));
 }
 
 void
@@ -135,15 +135,15 @@ Task::doit(const ProcessorContext* pc)
 {
   if( d_completed )
       throw InternalError("Task performed, but already completed");
-  d_action->doit(pc, d_patch, d_fromDW, d_toDW);
+  if(d_action)
+     d_action->doit(pc, d_patch, d_fromDW, d_toDW);
   d_completed=true;
 }
 
-Task::Dependency::Dependency(Task* task, const DataWarehouseP& dw,
+Task::Dependency::Dependency(const DataWarehouseP& dw,
 			     const VarLabel* var, int matlIndex,
 			     const Patch* patch)
-    : d_task(task),
-      d_dw(dw),
+    : d_dw(dw),
       d_var(var),
       d_matlIndex(matlIndex),
       d_patch(patch)
@@ -164,6 +164,14 @@ Task::getRequires() const
 
 //
 // $Log$
+// Revision 1.13  2000/06/03 05:29:45  sparker
+// Changed reduction variable emit to require ostream instead of ofstream
+// emit now only prints number without formatting
+// Cleaned up a few extraneously included files
+// Added task constructor for an non-patch-based action with 1 argument
+// Allow for patches and actions to be null
+// Removed back pointer to this from Task::Dependency
+//
 // Revision 1.12  2000/05/30 20:19:34  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch
