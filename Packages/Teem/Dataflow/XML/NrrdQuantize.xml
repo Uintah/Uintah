@@ -23,11 +23,19 @@
   <overview>
     <authors>
       <author>David Weinstein</author>
+      <author>Martin Cole</author>
     </authors>
-    <summary>Summary not available yet.</summary>
+    <summary>Quantize values into 8, 16, 32 bit values.</summary>
     <description>
-      <p>Version Date: January 2000</p><p>Version: 1.0</p>
+      <p>Given an input nrrd, output a nrrd that is of type unsigned
+char, unsigned short, unsigned int (8,16,32 bit) values.  The input
+values are clamped to be in the range of the min and max values
+specified in the user interface.  The min and max in the user interface
+default to the actual min and max values of the input nrrd.  The space
+is then remapped such that min maps to 0, and max maps to the max
+value for the selected bit space.</p>
     </description>
+    <examplesr>Teem/nets/test/quantize.net</examplesr>
   </overview>
   <io>
     <inputs lastportdynamic="no">

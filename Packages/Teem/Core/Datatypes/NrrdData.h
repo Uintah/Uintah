@@ -51,6 +51,8 @@ public:
   NrrdData(const NrrdData&);
   ~NrrdData();
 
+  virtual NrrdData* clone();
+
   void set_orig_field(FieldHandle fh) { originating_field_ = fh; }
   FieldHandle get_orig_field() { return originating_field_; }
 

@@ -49,6 +49,7 @@ NrrdData::NrrdData(const NrrdData &copy) :
 {
   nrrd = nrrdNew();
   nrrdCopy(nrrd, copy.nrrd);
+  copy_sci_data(copy);
 }
 
 NrrdData::~NrrdData() {
@@ -58,6 +59,13 @@ NrrdData::~NrrdData() {
     nrrdNix(nrrd);
   }
 }
+
+NrrdData* 
+NrrdData::clone() 
+{
+  return new NrrdData(*this);
+}
+
 
 // This needs to parse axis 0 and see if the label is tuple as well...
 bool
@@ -95,6 +103,7 @@ NrrdData::get_tuple_indecies(vector<string> &elems) const
     elems.push_back(tup.substr(s, e));
     s = e + 1;
   }
+  return true;
 }
 
 bool 
