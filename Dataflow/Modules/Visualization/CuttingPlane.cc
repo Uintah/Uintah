@@ -871,37 +871,10 @@ CuttingPlane::interpolate(FieldHandle texfld_, const Point& p, double& val)
       return false;
     }
   } else if( texfld_->get_type_name(0) == "LatticeVol" ){
-    if (type == "double") {
-      LatticeVol<double> *fld =
-	dynamic_cast<LatticeVol<double>*>(texfld_.get_rep());
-      return fld->interpolate(val ,p);
-    } else if (type == "float") {
-      float result;
-      bool success;
-      LatticeVol<float> *fld =
-	dynamic_cast<LatticeVol<float>*>(texfld_.get_rep());
-      success = fld->interpolate(result ,p);   
-      val = (double)result;
-      return success;
-    } else if (type == "long") {
-      long result;
-      bool success;
-      LatticeVol<long> *fld =
-	dynamic_cast<LatticeVol<long>*>(texfld_.get_rep());
-      success =  fld->interpolate(result,p);
-      val = (double)result;
-      return success;
-    } else if (type == "int") {
-      int result;
-      bool success;
-      LatticeVol<int> *fld =
-	dynamic_cast<LatticeVol<int>*>(texfld_.get_rep());
-      success =  fld->interpolate(result,p);
-      val = (double)result;
-      return success;
-    } else {
-      cerr << "Uintah::CuttingPlane::interpolate:: error - unimplemented Field type: " << type << endl;
-      return false;
+    // use virtual field interpolation
+    ScalarFieldInterface *sfi;
+    if( sfi = texfld_->query_scalar_interface()){
+      return sfi->interpolate( val, p);
     }
   } else {
     return false;

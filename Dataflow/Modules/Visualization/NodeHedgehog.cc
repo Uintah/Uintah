@@ -536,17 +536,15 @@ NodeHedgehog::interpolate(FieldHandle vfld, const Point& p, Vector& val)
     }
   } else {
     if( field_type == "LatticeVol"){
-      if (type == "Vector") {
-	LatticeVol<Vector> *fld =
-	  dynamic_cast<LatticeVol<Vector>*>(vfld.get_rep());
-	return fld->interpolate(val ,p);
-      } else {
-	cerr << "Uintah::NodeHedgehog::interpolate:: error - unknown Field type: " << type << endl;
-	return false;
-      }
+   // use virtual field interpolation
+      VectorFieldInterface *vfi;
+      if( vfi = vfld->query_vector_interface()){
+	return vfi->interpolate( val, p);
+      } 
     }    
     return false;
   }
+  return false;
 }
 
 
@@ -584,37 +582,10 @@ NodeHedgehog::interpolate(FieldHandle sfld, const Point& p, double& val)
       return false;
     }
   } else if( sfld->get_type_name(0) == "LatticeVol" ){
-    if (type == "double") {
-      LatticeVol<double> *fld =
-	dynamic_cast<LatticeVol<double>*>(sfld.get_rep());
-      return fld->interpolate(val ,p);
-    } else if (type == "float") {
-      float result;
-      bool success;
-      LatticeVol<float> *fld =
-	dynamic_cast<LatticeVol<float>*>(sfld.get_rep());
-      success = fld->interpolate(result ,p);   
-      val = (double)result;
-      return success;
-    } else if (type == "long") {
-      long result;
-      bool success;
-      LatticeVol<long> *fld =
-	dynamic_cast<LatticeVol<long>*>(sfld.get_rep());
-      success =  fld->interpolate(result,p);
-      val = (double)result;
-      return success;
-    } else if (type == "int") {
-      int result;
-      bool success;
-      LatticeVol<int> *fld =
-	dynamic_cast<LatticeVol<int>*>(sfld.get_rep());
-      success =  fld->interpolate(result,p);
-      val = (double)result;
-      return success;
-    } else {
-      cerr << "Uintah::NodeHedgehog::interpolate:: error - unimplemented Field type: " << type << endl;
-      return false;
+    // use virtual field interpolation
+    ScalarFieldInterface *sfi;
+    if( sfi = sfld->query_scalar_interface()){
+      return sfi->interpolate( val, p);
     }
   } else {
     return false;
