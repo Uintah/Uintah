@@ -186,42 +186,17 @@ RenderTensorFieldBase::get_compile_info(const TypeDescription *vftd,
 
 template <>
 bool
-to_double(const double&in, double &out)
-{
-  out = in;
-  return true;
-}
-
-template <>
-bool
-to_double(const int&in, double &out)
-{
-  out = in;
-  return true;
-}
-
-template <>
-bool
-to_double(const short&in, double &out)
-{
-  out = in;
-  return true;
-}
-
-template <>
-bool
-to_double(const unsigned char&in, double &out)
-{
-  out = in;
-  return true;
-}
-
-template <>
-bool
 to_double(const Vector &in, double &out)
 {
   out = in.length();
   return true;
+}
+
+template <>
+bool
+to_double(const Tensor &in, double &out)
+{
+  return false;
 }
 
 template <>
