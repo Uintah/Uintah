@@ -15,7 +15,6 @@ SRCS := \
 	$(SRCDIR)/NIMRODConverter.tcl\
 	$(SRCDIR)/NrrdFieldConverter.tcl\
 	$(SRCDIR)/Plot2DViewer.tcl\
-#	$(SRCDIR)/ReactionDiffusion.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk

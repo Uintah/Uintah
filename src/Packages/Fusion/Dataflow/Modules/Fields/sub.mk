@@ -16,10 +16,6 @@ SRCS     += \
 	$(SRCDIR)/FusionSlicePlot.cc\
 	$(SRCDIR)/NrrdFieldConverter.cc\
 	$(SRCDIR)/NIMRODConverter.cc\
-#	$(SRCDIR)/Prism.cc\
-#	$(SRCDIR)/RadialGridDifferent.cc\
-#	$(SRCDIR)/TransCoorSys.cc\
-#	$(SRCDIR)/ReactionDiffusion.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
@@ -28,6 +24,6 @@ PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
         Core/Geom Core/Datatypes Core/Geometry \
         Core/TkExtensions
 
-LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
+LIBS := $(TEEM_LIBRARY) $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
