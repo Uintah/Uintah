@@ -141,11 +141,9 @@ WARNING
 	 return d_maxSerial;
       }
 
-      // Makes and returns a map that maps strings to VarLabels of
-      // that name and a list of material indices for which that
-      // variable is valid (at least according to d_allcomps).
-      typedef map< string, pair< const VarLabel*, list<int> > >
-              VarLabelMaterialMap;
+      // Makes and returns a map that associates VarLabels with
+      // the materials it is computed for.
+      typedef map< const VarLabel*, list<int> > VarLabelMaterialMap;
       VarLabelMaterialMap* makeVarLabelMaterialMap();
    private:
       TaskGraph(const TaskGraph&);
@@ -171,6 +169,12 @@ WARNING
 
 //
 // $Log$
+// Revision 1.8  2000/12/23 00:55:13  witzel
+// Changed the makeVarLabelMaterialMap method to make a map that just
+// associates VarLabel*'s with the materials it is computed for, and not
+// worry about mapping the name to the VarLabel since that is now handled
+// with VarLabel::find(..).
+//
 // Revision 1.7  2000/12/10 09:06:12  sparker
 // Merge from csafe_risky1
 //

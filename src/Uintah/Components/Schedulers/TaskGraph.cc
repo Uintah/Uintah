@@ -392,16 +392,13 @@ TaskGraph::VarLabelMaterialMap* TaskGraph::makeVarLabelMaterialMap()
    // materials
    for (it = d_allcomps.begin(); it != d_allcomps.end(); it++) {
       const VarLabel* label = (*it).first.getLabel();
-      pair< const VarLabel*, list<int> >& labelMatls
-         = (*result)[label->getName()];
-      labelMatls.first = label;
+      list<int>& matls = (*result)[label];
 
       // note that d_allcomps is sorted by materials first, so
       // duplicates in materials will be in order
       int material = (*it).second->d_matlIndex;
-      if (labelMatls.second.size() == 0 ||
-	  labelMatls.second.back() != material)
-         labelMatls.second.push_back(material);
+      if (matls.size() == 0 || matls.back() != material)
+         matls.push_back(material);
    }
   
    return result;
@@ -449,6 +446,12 @@ DependData::operator()( const DependData & d1, const DependData & d2 ) const {
 
 //
 // $Log$
+// Revision 1.12  2000/12/23 00:55:13  witzel
+// Changed the makeVarLabelMaterialMap method to make a map that just
+// associates VarLabel*'s with the materials it is computed for, and not
+// worry about mapping the name to the VarLabel since that is now handled
+// with VarLabel::find(..).
+//
 // Revision 1.11  2000/12/10 09:06:12  sparker
 // Merge from csafe_risky1
 //
