@@ -36,11 +36,12 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Persistent/PersistentSTL.h>
 #include <iostream>
+#include <vector>
 
 namespace SCIRun {
 using std::cerr;
 using std::endl;
-
+using std::vector;
 
 template <class Mesh, class FData>
 class GenericField: public Field 
@@ -205,7 +206,8 @@ void GenericField<Mesh, FData>::io(Piostream& stream)
 template <class Mesh, class FData>
 GenericField<Mesh, FData>::GenericField() : 
   Field(),
-  mesh_(mesh_handle_type(scinew mesh_type()))
+  mesh_(mesh_handle_type(scinew mesh_type())),
+  fdata_() //needed to instantiate constructor on sgi.
 {
   if (data_at() != NONE && mesh_.get_rep())
   {
@@ -216,10 +218,11 @@ GenericField<Mesh, FData>::GenericField() :
 template <class Mesh, class FData>
 GenericField<Mesh, FData>::GenericField(data_location data_at) : 
   Field(data_at),
-  mesh_(mesh_handle_type(scinew mesh_type()))
+  mesh_(mesh_handle_type(scinew mesh_type())),
+  fdata_() //needed to instantiate constructor on sgi.
 {
   if (data_at != NONE && mesh_.get_rep())
-  {
+  { 
     resize_fdata();
   }
 }
@@ -228,7 +231,8 @@ template <class Mesh, class FData>
 GenericField<Mesh, FData>::GenericField(mesh_handle_type mesh, 
 					data_location data_at) : 
   Field(data_at),
-  mesh_(mesh)
+  mesh_(mesh),
+  fdata_() //needed to instantiate constructor on sgi.
 {
   if (data_at != NONE && mesh_.get_rep())
   {
