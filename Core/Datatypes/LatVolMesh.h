@@ -67,12 +67,18 @@ public:
   {
     EdgeIndex() : UnfinishedIndex() {}
     EdgeIndex(unsigned i) : UnfinishedIndex(i) {}
+    friend void Pio(Piostream&, EdgeIndex&);
+    friend const TypeDescription* get_type_description(EdgeIndex *);
+    friend const string find_type_name(EdgeIndex *);
   };
 
   struct FaceIndex : public UnfinishedIndex
   {
     FaceIndex() : UnfinishedIndex() {}
     FaceIndex(unsigned i) : UnfinishedIndex(i) {}
+    friend void Pio(Piostream&, FaceIndex&);
+    friend const TypeDescription* get_type_description(FaceIndex *);
+    friend const string find_type_name(FaceIndex *);
   };
 
   struct UnfinishedIter : public UnfinishedIndex
@@ -148,6 +154,9 @@ public:
   {
     CellIndex() : LatIndex() {}
     CellIndex(unsigned i, unsigned j, unsigned k) : LatIndex(i,j,k) {}
+    friend void Pio(Piostream&, CellIndex&);
+    friend const TypeDescription* get_type_description(CellIndex *);
+    friend const string find_type_name(CellIndex *);
   };
 
   struct NodeIndex : public LatIndex
@@ -156,6 +165,8 @@ public:
     NodeIndex(unsigned i, unsigned j, unsigned k) : LatIndex(i,j,k) {}
     static string type_name(int i=-1) { ASSERT(i<1); return "LatVolMesh::NodeIndex"; }
     friend void Pio(Piostream&, NodeIndex&);
+    friend const TypeDescription* get_type_description(NodeIndex *);
+    friend const string find_type_name(NodeIndex *);
   };
 
   struct LatIter : public LatIndex
