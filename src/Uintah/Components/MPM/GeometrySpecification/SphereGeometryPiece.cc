@@ -1,5 +1,5 @@
 #include "SphereGeometryPiece.h"
-#include "Vector.h"
+#include <SCICore/Geometry/Vector.h>
 
 
 SphereGeometryPiece::SphereGeometryPiece()
@@ -33,7 +33,7 @@ int SphereGeometryPiece::checkShapesPositive(Point check_point,
 
   if (len_sq <= radius_sq) {
     pp = 3;
-    inPiece=piece_num;
+    d_in_piece=piece_num;
   }
   
   
@@ -70,7 +70,7 @@ void SphereGeometryPiece::computeNorm(Vector &norm, Point part_pos,
 {
 
   Vector dir(0.0,0.0,0.0);
-  norm.set(0.0,0.0,0.0);
+  norm = Vector(0.0,0.0,0.0);
   int small = 1;
 
   for(int i=1;i<=6;i++) {
@@ -87,8 +87,8 @@ void SphereGeometryPiece::computeNorm(Vector &norm, Point part_pos,
   for(int i=1;i<=6;i++){
     if(sf[i]==(0)){	
       // sphere's surface
-      Point tmp = (part_pos - d_origin)*2.;
-      dir.set(tmp.x(),tmp.y(),tmp.z());
+      Point tmp = Point((part_pos - d_origin)*2.);
+      dir = Vector(tmp.x(),tmp.y(),tmp.z());
       dir.normalize();
       norm+=dir;
     }
@@ -102,8 +102,8 @@ void SphereGeometryPiece::computeNorm(Vector &norm, Point part_pos,
     for(int i=1;i<=6;i++){
       if(sf[i]==(-30)){		
 	// sphere's surface
-	Point tmp = (part_pos - d_origin)*(-2.);
-	dir.set(tmp.x(),tmp.y(),tmp.z());
+	Point tmp = Point((part_pos - d_origin)*(-2.));
+	dir = Vector(tmp.x(),tmp.y(),tmp.z());
 	dir.normalize();
 	norm+=dir;
       }
@@ -116,6 +116,9 @@ void SphereGeometryPiece::computeNorm(Vector &norm, Point part_pos,
 
 
 // $Log$
+// Revision 1.2  2000/04/14 03:29:14  jas
+// Fixed routines to use SCICore's point and vector stuff.
+//
 // Revision 1.1  2000/04/14 02:05:46  jas
 // Subclassed out the GeometryPiece into 4 types: Box,Cylinder,Sphere, and
 // Tri.  This made the GeometryObject class simpler since many of the

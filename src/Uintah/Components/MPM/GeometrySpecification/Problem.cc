@@ -42,7 +42,7 @@ Problem::~Problem()
 
 
 void Problem::preProcessor(Uintah::Interface::ProblemSpecP prob_spec,
-			   Uintah::Grid::GridP grid)
+			   Uintah::Grid::GridP& grid)
 {
   int n;
   int obj, piece, surf;
@@ -159,6 +159,9 @@ vector<GeometryObject> * Problem::getObjects()
 
 
 // $Log$
+// Revision 1.5  2000/04/14 03:29:13  jas
+// Fixed routines to use SCICore's point and vector stuff.
+//
 // Revision 1.4  2000/04/14 02:05:46  jas
 // Subclassed out the GeometryPiece into 4 types: Box,Cylinder,Sphere, and
 // Tri.  This made the GeometryObject class simpler since many of the
