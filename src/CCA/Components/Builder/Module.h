@@ -31,11 +31,15 @@ public:
   enum PortType{USES, PROVIDES}; 
   Module(QWidget *parent, const char *name, gov::cca::ports::UIPort::pointer uip, CIA::array1<std::string> & up, CIA::array1<std::string> &pp, const gov::cca::ComponentID::pointer &cid);
 	QPoint usePortPoint(int num);
+	QPoint usePortPoint(const std::string &portname);
+	
 	QPoint providePortPoint(int num);
-        std::string providesPortName(int num);
+        QPoint providePortPoint(const std::string &portname);
+	std::string providesPortName(int num);
         std::string usesPortName(int num);	
 	QRect portRect(int portnum, PortType porttype);
-	bool clickedPort(QPoint localpos, PortType &porttype, int &portnum);
+	bool clickedPort(QPoint localpos, PortType &porttype,
+			 std::string &portname);
 
 public slots:
   void execute();
@@ -58,3 +62,30 @@ public:
 };
 
 #endif
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

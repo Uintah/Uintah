@@ -96,6 +96,24 @@ QPoint Module::providePortPoint(int num)
 	return QPoint(x,height());	
 }
 
+QPoint Module::usePortPoint(const std::string &portname)
+{
+  for(unsigned int i=0; i<up.size();i++){
+    if(up[i]==portname)
+	return usePortPoint(i);
+  }
+  return QPoint(0,0);
+}
+
+QPoint Module::providePortPoint(const std::string &portname)
+{
+  for(unsigned int i=0; i<pp.size();i++){
+    if(pp[i]==portname)
+	return providePortPoint(i);
+  }
+  return QPoint(0,0);
+}
+
 std::string Module::usesPortName(int num)
 {
 	return up[num];
@@ -114,19 +132,20 @@ void Module::mousePressEvent(QMouseEvent *e)
 	}
 }
 
-bool Module::clickedPort(QPoint localpos, PortType &porttype, int &portnum)
+bool Module::clickedPort(QPoint localpos, PortType &porttype,
+			 std::string &portname)
 {
     for(unsigned int i=0;i<pp.size();i++){
 	if(portRect(i, PROVIDES).contains(localpos)){
 		porttype=PROVIDES ;
-		portnum=i;
+		portname=pp[i];
 		return true;
 	}
     }	
     for(unsigned int i=0;i<up.size();i++){
         if(portRect(i, USES).contains(localpos)){ 
                 porttype=USES ;
-                portnum=i;
+                portname=up[i];
                 return true;
         }
     }
@@ -160,3 +179,9 @@ void Module::ui()
 	uiPort->ui();
 	//QMessageBox::warning(this, "UI", "User iterface is not implemented!");
 }
+
+
+
+
+
+
