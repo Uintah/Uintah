@@ -1,7 +1,7 @@
 #ifndef UINTAH_HOMEBREW_PROCESSORGROUP_H
 #define UINTAH_HOMEBREW_PROCESSORGROUP_H
 
-#include <sci_config.h> // For MPIPP_H on SGI
+#include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 #include <mpi.h>
 
 namespace Uintah {
