@@ -69,6 +69,7 @@ public:
    // This rotates through the "minimizations" or "gaudinesses" for the widget.
    // Doesn't have to be overloaded.
    virtual void NextMode();
+   virtual void SetCurrentMode(const Index);
    Index GetMode() const;
 
    void SetMaterial( const Index mindex, const MaterialHandle& matl );

@@ -9,6 +9,11 @@
  *   Jan. 1995
  *
  *  Copyright (C) 1995 SCI Group
+ *
+ *
+ *  Update Log
+ *  ~~~~~~ ~~~
+ *   7.1.95 -- DWM -- Added aligned member and methods (copied from  BoxWidget)
  */
 
 
@@ -55,9 +60,11 @@ enum { PickSphR, PickSphL, PickSphD, PickSphU, PickSphI, PickSphO,
  * Much of the work is accomplished in the BaseWidget constructor which
  *      includes some consistency checking to ensure full initialization.
  */
-ScaledBoxWidget::ScaledBoxWidget( Module* module, CrowdMonitor* lock, double widget_scale )
+ScaledBoxWidget::ScaledBoxWidget( Module* module, CrowdMonitor* lock, 
+				 double widget_scale, Index aligned )
 : BaseWidget(module, lock, "ScaledBoxWidget", NumVars, NumCons, NumGeoms, NumPcks, NumMatls, NumMdes, NumSwtchs, widget_scale),
-  oldrightaxis(1, 0, 0), olddownaxis(0, 1, 0), oldinaxis(0, 0, 1)
+  oldrightaxis(1, 0, 0), olddownaxis(0, 1, 0), oldinaxis(0, 0, 1),
+  aligned(aligned)
 {
    Real INIT = 5.0*widget_scale;
    variables[CenterVar] = scinew PointVariable("Center", solve, Scheme1, Point(0, 0, 0));
@@ -289,7 +296,7 @@ ScaledBoxWidget::ScaledBoxWidget( Module* module, CrowdMonitor* lock, double wid
 
    SetMode(Mode0, Switch0|Switch1|Switch2|Switch3);
    SetMode(Mode1, Switch0|Switch1|Switch2);
-   SetMode(Mode2, Switch0|Switch3);
+   SetMode(Mode2, Switch0|Switch1);
    SetMode(Mode3, Switch0);
 
    FinishWidget();
@@ -439,21 +446,27 @@ ScaledBoxWidget::geom_moved( GeomPick*, int axis, double dist,
 {
    switch(pick){
    case PickSphU:
+       if (!aligned)
       variables[PointDVar]->SetDelta(-delta);
       break;
    case PickSphR:
+       if (!aligned)
       variables[PointRVar]->SetDelta(delta);
       break;
    case PickSphD:
+       if (!aligned)
       variables[PointDVar]->SetDelta(delta);
       break;
    case PickSphL:
+       if (!aligned)
       variables[PointRVar]->SetDelta(-delta);
       break;
    case PickSphI:
+       if (!aligned)
       variables[PointIVar]->SetDelta(delta);
       break;
    case PickSphO:
+       if (!aligned)
       variables[PointIVar]->SetDelta(-delta);
       break;
    case PickResizeU:
@@ -694,4 +707,33 @@ ScaledBoxWidget::GetMaterialName( const Index mindex ) const
    }
 }
 
+
+
+Index
+ScaledBoxWidget::IsAxisAligned() const
+{
+   return aligned;
+}
+
+
+void
+ScaledBoxWidget::AxisAligned( const Index yesno )
+{
+   if (aligned == yesno) return;
+   
+   aligned = yesno;
+
+   if (aligned) {
+      Point center(variables[CenterVar]->point());
+      // Shouldn't need to resolve constraints...
+      variables[PointRVar]->Move(center+Vector(1,0,0)*variables[DistRVar]->real());
+      variables[PointDVar]->Move(center+Vector(0,1,0)*variables[DistDVar]->real());
+      variables[PointIVar]->Move(center+Vector(0,0,1)*variables[DistIVar]->real());
+      oldrightaxis = Vector(1,0,0);
+      olddownaxis = Vector(0,1,0);
+      oldinaxis = Vector(0,0,1);
+   }
+   
+   execute(0);
+}
 

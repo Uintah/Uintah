@@ -20,7 +20,8 @@
 
 class ScaledBoxWidget : public BaseWidget {
 public:
-   ScaledBoxWidget( Module* module, CrowdMonitor* lock, double widget_scale );
+   ScaledBoxWidget( Module* module, CrowdMonitor* lock, double widget_scale,
+		   Index aligned=0 );
    ScaledBoxWidget( const ScaledBoxWidget& );
    virtual ~ScaledBoxWidget();
 
@@ -45,6 +46,10 @@ public:
    const Vector& GetDownAxis();
    const Vector& GetInAxis();
 
+   // 0=no, 1=yes
+   Index IsAxisAligned() const;
+   void AxisAligned( const Index yesno );
+
    // Variable indexs
    enum { CenterVar, PointRVar, PointDVar, PointIVar,
 	  DistRVar, DistDVar, DistIVar, HypoRDVar, HypoDIVar, HypoIRVar,
@@ -57,6 +62,8 @@ protected:
    virtual clString GetMaterialName( const Index mindex ) const;   
    
 private:
+   Index aligned;
+
    Vector oldrightaxis, olddownaxis, oldinaxis;
 };
 

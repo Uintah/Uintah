@@ -364,6 +364,18 @@ BaseWidget::NextMode()
    execute(0);
 }
 
+void
+BaseWidget::SetCurrentMode(const Index mode)
+{
+   CurrentMode = mode % NumModes;
+   for (Index s=0; s<NumSwitches; s++)
+      if (modes[CurrentMode]&(1<<s))
+	 mode_switches[s]->set_state(1);
+      else
+	 mode_switches[s]->set_state(0);
+
+   execute(0);
+}
 
 Index
 BaseWidget::GetMode() const
