@@ -174,21 +174,20 @@ void MPMMaterial::createParticles(particleIndex numParticles,
    ParticleVariable<Vector> pCrackSurfaceNormal;
    ParticleVariable<Vector> pCrackSurfaceContactForce;
    ParticleVariable<double> pTensileStrength;
-   ParticleVariable<Vector> pImageVelocity;
-
+   
    if(d_fracture) {
      new_dw->allocate(pIsBroken, lb->pIsBrokenLabel, subset);
      new_dw->allocate(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel, subset);
      new_dw->allocate(pCrackSurfaceContactForce, lb->pCrackSurfaceContactForceLabel, subset);
      new_dw->allocate(pTensileStrength, lb->pTensileStrengthLabel, subset);
-     new_dw->allocate(pImageVelocity, lb->pImageVelocityLabel, subset);
    }
    
    particleIndex start = 0;
    for(int i=0; i<(int)d_geom_objs.size(); i++){
       start += createParticles( d_geom_objs[i], start, position,
 				pvelocity,pexternalforce,pmass,pvolume,
-				pissurf,ptemperature,pTensileStrength,pparticleID,NAPID,patch);
+				pissurf,ptemperature,pTensileStrength,
+				pparticleID,NAPID,patch);
    }
 
    particleIndex partclesNum = start;
@@ -207,29 +206,26 @@ void MPMMaterial::createParticles(particleIndex numParticles,
 	pIsBroken[pIdx] = 0;
 	pCrackSurfaceNormal[pIdx] = Vector(0.,0.,0.);
 	pCrackSurfaceContactForce[pIdx] = Vector(0.,0.,0.);
-	pImageVelocity[pIdx] = Vector(0.,0.,0.);
      }
 
      pexternalforce[pIdx] = Vector(0.0,0.0,0.0);
 
      //applyPhysicalBCToParticles
-     for (int i = 0; i<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); i++ )
-     {
+     for (int i = 0; i<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); i++ ) {
        string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[i]->getType();
         
-       if (bcs_type == "Force")
-       {
-         ForceBC* bc = dynamic_cast<ForceBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[i]);
+       if (bcs_type == "Force") {
+         ForceBC* bc = dynamic_cast<ForceBC*>
+			(MPMPhysicalBCFactory::mpmPhysicalBCs[i]);
 
          const Point& lower( bc->getLowerRange() );
          const Point& upper( bc->getUpperRange() );
           
-         if( lower.x() <= position[pIdx].x() && position[pIdx].x() <= upper.x() &&
-             lower.y() <= position[pIdx].y() && position[pIdx].y() <= upper.y() &&
-             lower.z() <= position[pIdx].z() && position[pIdx].z() <= upper.z() )
-         {
-             pexternalforce[pIdx] = bc->getForceDensity() * pmass[pIdx];
-             cout << pexternalforce[pIdx] << endl;
+         if(lower.x()<= position[pIdx].x() && position[pIdx].x() <= upper.x() &&
+            lower.y()<= position[pIdx].y() && position[pIdx].y() <= upper.y() &&
+            lower.z()<= position[pIdx].z() && position[pIdx].z() <= upper.z() ){
+               pexternalforce[pIdx] = bc->getForceDensity() * pmass[pIdx];
+               cout << pexternalforce[pIdx] << endl;
          }
        }
      }
@@ -252,7 +248,6 @@ void MPMMaterial::createParticles(particleIndex numParticles,
      new_dw->put(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel);
      new_dw->put(pCrackSurfaceContactForce, lb->pCrackSurfaceContactForceLabel);
      new_dw->put(pTensileStrength, lb->pTensileStrengthLabel);
-     new_dw->put(pImageVelocity, lb->pImageVelocityLabel);
    }
 }
 
@@ -426,11 +421,8 @@ double MPMMaterial::getHeatTransferCoefficient() const
 
 
 // $Log$
-// Revision 1.52  2000/11/21 20:51:04  tan
-// Implemented different models for fracture simulations.  SimpleFracture model
-// is for the simulation where the resolution focus only on macroscopic major
-// cracks. NormalFracture and ExplosionFracture models are more sophiscated
-// and specific fracture models that are currently underconstruction.
+// Revision 1.53  2000/11/22 01:40:59  guilkey
+// Moved forward declaration of GeometryPiece
 //
 // Revision 1.51  2000/09/25 20:23:19  sparker
 // Quiet g++ warnings
