@@ -425,9 +425,10 @@ bool
 MaskedLatVolMesh::locate(Node::index_type &idx, const Point &p)
 {
   LatVolMesh::Node::index_type i(this,idx.i_,idx.j_,idx.k_);
-  if (LatVolMesh::locate(i,p) && check_valid(idx))
+  bool lat = LatVolMesh::locate(i,p);
+  idx.i_ = i.i_; idx.j_ = i.j_; idx.k_ = i.k_; idx.mesh_ = this;
+  if (lat && check_valid(idx))
   {
-    idx.i_ = i.i_; idx.j_ = i.j_; idx.k_ = i.k_; idx.mesh_ = this;
     return true;
   }
   else return false;    
@@ -437,9 +438,10 @@ bool
 MaskedLatVolMesh::locate(Cell::index_type &idx, const Point &p)
 {
   LatVolMesh::Cell::index_type i(this,idx.i_,idx.j_,idx.k_);
-  if (LatVolMesh::locate(i,p) && check_valid(idx))
+  bool lat = LatVolMesh::locate(i,p);
+  idx.i_ = i.i_; idx.j_ = i.j_; idx.k_ = i.k_; idx.mesh_ = this;
+  if (lat && check_valid(idx))
   {
-    idx.i_ = i.i_; idx.j_ = i.j_; idx.k_ = i.k_; idx.mesh_ = this;
     return true;
   }
   else return false;
