@@ -106,7 +106,7 @@ namespace SCIRun {
 
 inline double& ColumnMatrix::operator[](int i) const
 {
-    ASSERTRANGE(i, 0, rows);
+    ASSERTRANGE(i, 0, rows)
     return data[i];
 }
 

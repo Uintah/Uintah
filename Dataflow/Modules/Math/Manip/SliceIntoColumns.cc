@@ -1,5 +1,6 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/ColumnMatrix.h>
+#include <Core/Util/Assert.h>
 #include <iostream>
 
 using namespace SCIRun;
