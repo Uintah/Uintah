@@ -54,10 +54,13 @@
     <h1>New Projects in Version 1.24.1</h1>
     <ul>
       <li>Upgraded SCIRun to work with new Teem version, 1.8.0.</li>
+      <li>Upgraded RPMs and OSX binary to use new ITK version, 2.0.0.</li>
       <li>Created a NrrdSetupTexture module for more efficiently building volume rendering data.</li>
       <li>Added a Math/MatrixInfo module.</li>
       <li>Interpolation modules were replaced with Mapping modules.  BuildInterpolant, ApplyInterpolant, DirectInterpolate, Interp2TransferMatrix, BuildInterpMatrix, and ApplyInterpMatrix are replaced with BuildMappingMatrix, ApplyMappingMatrix, and DirectMapping.</li>
       <li>SparseRowMatrix support was added to the LinAlgUnary and LinAlgBinary modules.  In addition support was added for Sparse-Sparse multiplies and various matrix bugs were fixed.</li>
+      <li>Painting in 2D window in BioImage updates all slices in real-time</li>
+      <li>Added painting of transfer function directly in EditColorMap2D module.</li>
     </ul>
 
     <h1>Documentation</h1>
@@ -74,7 +77,11 @@
 
     <h2>Power App (Package in parentheses)</h2> 
     <ul>
+      <li>BioImage (GUI) - Eye radio button is now between filters to better represent data.</li>
       <li>BioImage (Teem) - Optmized underlying network to make volume rendering much faster and use less memory.</li>
+      <li>BioImage (EditColorMap2D) - Optimized selection and moving of widgets to be much faster when volume rendering is on.</li>
+      <li>BioImage (ViewSlices) - Added size, on/off, and color controls for text in 2D windows.</li>
+      <li>BioImage (ViewSlices) - Color Lookup Table window width and window level can now handle floating point datasets.</li>
     </ul>
 
     <h1>GUI Enhancements</h1>
