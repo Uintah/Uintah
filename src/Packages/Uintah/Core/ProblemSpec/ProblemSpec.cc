@@ -188,11 +188,15 @@ ProblemSpecP ProblemSpec::get(const std::string& name, bool &value)
 	char *s = val.transcode();
 	std::string cmp(s);
 	delete[] s;
-	if (cmp == "false")
+	if (cmp == "false") {
 	   value = false;
-	else if (cmp == "true")
+       }
+	else if  (cmp == "true") {
 	  value = true;
-	
+       } else { 
+         string error = name + " Must be either true or false, no extra spaces";
+	  throw ProblemSetupException(error);
+       }
       }
     }
   }
