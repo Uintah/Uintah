@@ -118,7 +118,7 @@ itcl_class Uintah_Readers_ArchiveReader {
 	label $w.f.sel.sell -text Selection
 	entry $w.f.sel.sel -relief sunken -width 40 \
 	    -textvariable $this-filebase
-	bind $w.f.sel.sel <Return> "fbsel $w $dirs "
+	bind $w.f.sel.sel <Return> "$this fbsel $w $dirs "
 	pack $w.f.sel.sell -in $w.f.sel -side top -padx 2 -pady 2 -anchor w
 	pack $w.f.sel.sel -in $w.f.sel -side bottom -padx 2 -pady 2 \
 	     -anchor w -fill x
@@ -135,10 +135,10 @@ itcl_class Uintah_Readers_ArchiveReader {
     method fbsel {w dirs } {
     if [file isdirectory [set $this-filebase]] {
 	fbcd $w [set $this-filebase] $dirs 
-    } else {
-	eval $this selectfile
+#    } else {
+#	eval $this selectfile
+#    }
     }
-}
 
     method fbupdate {w dirs} {
 	$dirs delete 0 end
