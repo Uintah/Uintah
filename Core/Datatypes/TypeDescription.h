@@ -34,13 +34,16 @@ class CompileInfo;
 
 class TypeDescription {
 public:
+  typedef vector<const TypeDescription*> td_vec;
+
   TypeDescription(const string& name,
 		  const string& path);
-  TypeDescription(const string& name, const TypeDescription *td, 
+  TypeDescription(const string& name, 
+		  td_vec *sub, // this takes ownership of the memory. 
 		  const string& path);
   ~TypeDescription();
      
-  const TypeDescription* get_sub_type() const {
+  const td_vec* get_sub_type() const {
     return subtype_;
   }
   //! The arguments determine how the templated types are separated.
@@ -60,9 +63,7 @@ public:
   static const TypeDescription* lookup_type(const string&);
 
 private:
-
-  //FIX_ME need to support multiple subtypes....foo<bar, foobar, bilbo>
-  const TypeDescription*     subtype_;
+  td_vec                     *subtype_;
   string                     name_;
   string                     h_file_path_;
        
@@ -95,9 +96,29 @@ const TypeDescription* get_type_description(vector<T>*)
   static string path("std::vector"); // dynamic loader will parse off the std
   if(!td){
     const TypeDescription *sub = SCIRun::get_type_description((T*)0);
-    td = scinew TypeDescription(v, sub, path);
+    TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(1);
+    (*subs)[0] = sub;
+    td = scinew TypeDescription(v, subs, path);
   }
   return td;
+}
+
+template <class T1, class T2>
+const TypeDescription* get_type_description (pair<T1,T2> *)
+{
+  static TypeDescription* td = 0;
+  static string name("pair");
+  static string path("std::utility"); // dynamic loader will parse off the std
+  if(!td){
+    const TypeDescription *sub1 = SCIRun::get_type_description((T1*)0);
+    const TypeDescription *sub2 = SCIRun::get_type_description((T2*)0);
+    TypeDescription::td_vec *subs = scinew TypeDescription::td_vec(2);
+    (*subs)[0] = sub1;
+    (*subs)[1] = sub2;
+    td = scinew TypeDescription(name, subs, path);
+  }
+  return td;
+
 }
 
 } // End namespace SCIRun

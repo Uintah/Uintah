@@ -83,9 +83,9 @@ TypeDescription::TypeDescription(const string& name, const string& path) :
 }
 
 TypeDescription::TypeDescription(const string& name, 
-				 const TypeDescription* td, 
+				 td_vec* sub, 
 				 const string& path) : 
-  subtype_(td),
+  subtype_(sub),
   name_(name),
   h_file_path_(path)
 {
@@ -94,27 +94,43 @@ TypeDescription::TypeDescription(const string& name,
 
 TypeDescription::~TypeDescription()
 {
+  if (subtype_) delete subtype_;
 }
 
-string TypeDescription::get_name(string type_sep_start, 
-				 string type_sep_end) const
+string 
+TypeDescription::get_name(string type_sep_start, 
+			  string type_sep_end) const
 {
-   if(subtype_) {
-      return name_+ type_sep_start + subtype_->get_name() + type_sep_end;
-   } else {
-      return name_;
-   }
+  if(subtype_) {
+    string rval = name_ + type_sep_start;
+    td_vec::iterator iter = subtype_->begin();
+    while (iter != subtype_->end()) {
+      rval+=(*iter)->get_name();
+      ++iter;
+    }
+    rval += type_sep_end;
+    return rval;
+  } else {
+    return name_;
+  }
 }
 
 void 
 TypeDescription::fill_includes(CompileInfo *ci) const
 {
   ci->add_include(get_h_file_path());
-  if(subtype_) subtype_->fill_includes(ci);
+  if(subtype_) {
+    td_vec::iterator iter = subtype_->begin();
+    while (iter != subtype_->end()) {
+      (*iter)->fill_includes(ci);
+      ++iter;
+    }
+  }
 }
 
 
-const TypeDescription* TypeDescription::lookup_type(const std::string& t)
+const TypeDescription* 
+TypeDescription::lookup_type(const std::string& t)
 {
   if(!types)
     types=scinew map<string, const TypeDescription*>;   
