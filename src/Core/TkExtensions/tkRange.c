@@ -243,7 +243,7 @@ Tk_RangeCmd(clientData, interp, argc, argv)
     rangePtr->repeatInterval = 0;
     rangePtr->label = NULL;
     rangePtr->labelLength = 0;
-    rangePtr->state = tkNormalUid;
+    //    rangePtr->state = tkNormalUid;
     rangePtr->borderWidth = 0;
     rangePtr->bgBorder = NULL;
     rangePtr->activeBorder = NULL;
@@ -752,14 +752,14 @@ ConfigureRange(interp, rangePtr, argc, argv, flags)
 	rangePtr->labelLength = 0;
     }
 
-    if ((rangePtr->state != tkNormalUid)
-	    && (rangePtr->state != tkDisabledUid)
-	    && (rangePtr->state != tkActiveUid)) {
-	Tcl_AppendResult(interp, "bad state value \"", rangePtr->state,
-		"\":  must be normal, active, or disabled", (char *) NULL);
-	rangePtr->state = tkNormalUid;
-	return TCL_ERROR;
-    }
+/*     if ((rangePtr->state != tkNormalUid) */
+/* 	    && (rangePtr->state != tkDisabledUid) */
+/* 	    && (rangePtr->state != tkActiveUid)) { */
+/* 	Tcl_AppendResult(interp, "bad state value \"", rangePtr->state, */
+/* 		"\":  must be normal, active, or disabled", (char *) NULL); */
+/* 	rangePtr->state = tkNormalUid; */
+/* 	return TCL_ERROR; */
+/*     } */
 
     Tk_SetBackgroundFromBorder(rangePtr->tkwin, rangePtr->bgBorder);
 

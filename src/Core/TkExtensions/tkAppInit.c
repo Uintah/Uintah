@@ -5,17 +5,18 @@
  *	use in wish and similar Tk-based applications.
  *
  * Copyright (c) 1993 The Regents of the University of California.
- * Copyright (c) 1994 Sun Microsystems, Inc.
+ * Copyright (c) 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * SCCS: @(#) tkAppInit.c 1.22 96/05/29 09:47:08
+ * RCS: @(#) $Id$
  */
 
 #include <sci_config.h>
 #define BUILD_tcl
 #include <tk.h>
+#include "locale.h"
 #include <itk.h>
 #undef BUILD_tcl
 
@@ -50,8 +51,8 @@ extern int OpenGLCmd _ANSI_ARGS_((ClientData clientData,
 	Tcl_Interp *interp, int argc, char **argv));
 extern int BevelCmd _ANSI_ARGS_((ClientData clientData,
 	Tcl_Interp *interp, int argc, char **argv));
-extern int Tk_RangeCmd _ANSI_ARGS_((ClientData clientData,
-	Tcl_Interp *interp, int argc, char **argv));
+/* extern int Tk_RangeCmd _ANSI_ARGS_((ClientData clientData, */
+/* 	Tcl_Interp *interp, int argc, char **argv)); */
 extern int Tk_CursorCmd _ANSI_ARGS_((ClientData clientData,
 	Tcl_Interp *interp, int argc, char **argv));
 extern int BLineInit _ANSI_ARGS_((void));
@@ -80,6 +81,7 @@ int *tclDummyMathPtr = (int *) matherr;
 #endif
 
 #ifdef TK_TEST
+EXTERN int		Tcltest_Init _ANSI_ARGS_((Tcl_Interp *interp));
 EXTERN int		Tktest_Init _ANSI_ARGS_((Tcl_Interp *interp));
 #endif /* TK_TEST */
 
@@ -302,8 +304,8 @@ printf("main = %p\n", main);
 	printf("Adding bevel\n");
     Tcl_CreateCommand(interp, "bevel", BevelCmd, (ClientData) Tk_MainWindow(interp),
 		      (void (*)(PARAMETERTYPE)) NULL);
-    Tcl_CreateCommand(interp, "range", Tk_RangeCmd, (ClientData) Tk_MainWindow(interp),
-                      (void (*)(PARAMETERTYPE)) NULL);
+/*     Tcl_CreateCommand(interp, "range", Tk_RangeCmd, (ClientData) Tk_MainWindow(interp), */
+/*                       (void (*)(PARAMETERTYPE)) NULL); */
     Tcl_CreateCommand(interp, "cursor", Tk_CursorCmd,
 		      (ClientData) Tk_MainWindow(interp), NULL);
 
