@@ -16,6 +16,10 @@
 #include <Core/Datatypes/TypeName.h>
 #include <Core/Containers/LockingHandle.h>
 #include <vector>
+#include <iostream>
+
+using std::cerr;
+using std::endl;
 
 namespace SCIRun {
 
