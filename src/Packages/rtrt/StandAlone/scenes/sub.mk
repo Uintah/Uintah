@@ -96,6 +96,7 @@ SCENES += \
 	$(SRCDIR)/VolumeVis2DMod.mo \
 	$(SRCDIR)/VolumeVisRGBAMod.mo \
 	$(SRCDIR)/sketch.mo \
+	$(SRCDIR)/pt_particle.mo \
 #	$(SRCDIR)/dtiglyph.mo \
 #	$(SRCDIR)/science-room.mo \
 #	$(SRCDIR)/science-room-full.mo \
@@ -142,6 +143,9 @@ $(SRCDIR)/VolumeVisRGBAMod.mo: $(SRCDIR)/VolumeVisRGBAMod.o
 
 $(SRCDIR)/sketch.mo: $(SRCDIR)/sketch.o lib/libPackages_rtrt_Core.$(SO_OR_A_FILE)
 	$(CXX) -o $@ $(LDFLAGS) $(SOFLAGS) $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lCore_Exceptions -lCore_Geometry -lCore_Persistent -lCore_Malloc -lCore_Thread $(SCI_THIRDPARTY_LIBRARY) $(TEEM_LIBRARY) $(M_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY)
+
+$(SRCDIR)/pt_particle.mo: $(SRCDIR)/pt_particle.o
+	$(CXX) -o $@ $(LDFLAGS) $(SOFLAGS) $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lCore_Exceptions -lCore_Geometry -lCore_Persistent -lCore_Malloc -lCore_Thread $(SCI_THIRDPARTY_LIBRARY) $(TEEM_LIBRARY) $(M_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY) -lm
 
 $(SRCDIR)/dtiglyph.mo: $(SRCDIR)/dtiglyph.o
 	$(CXX) -o $@ $(LDFLAGS) $(SOFLAGS) $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lCore_Exceptions -lCore_Geometry -lCore_Persistent -lCore_Malloc -lCore_Thread -lten -ldye $(SCI_THIRDPARTY_LIBRARY) $(TEEM_LIBRARY) -lhest $(M_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY) -lm
