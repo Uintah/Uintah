@@ -107,11 +107,10 @@ will be installed in the chosen directory.
 For example, if you choose to install SCIRun into user Bob's home
 directory, then 
 </para>
-<section>
+
 <para>
 <replaceable>INSTALL_DIR</replaceable> = /home/bob
 </para>
-</section>
 
 <para>
 Depending on how SCIRun was obtained, either 
@@ -161,7 +160,18 @@ tar xvf BioPSE.PKG.x.x.x.tar
 </literallayout>
 </listitem>
 </orderedlist>
-</para>          
+</para> 
+
+<note>
+<title>Aside</title>
+<para>For those of you who download the sources from the
+&sr; site, <xref linkend="lsrcvs"/> discusses a method for putting the
+downloaded &sr; sources under control of the CVS version control
+system.  This is useful if you will be writing modules or other &sr;
+code.  This is <emphasis>not</emphasis> a requirement for installing
+&sr; though!</para>
+</note>
+
 </section>
 
 <section>
@@ -323,7 +333,7 @@ To subscribe to the mailing list, send email to:
 </para>
 
 <para>
-<email>majordomo@cs.utah.edu</email>
+<email>majordomo@sci.utah.edu</email>
 </para>
 
 <para>
@@ -340,7 +350,7 @@ as an email to the list:
 </para>
 
 <para>
-<email>scirun-users@cs.utah.edu</email>
+<email>scirun-users@sci.utah.edu</email>
 </para>
 
 <para>
