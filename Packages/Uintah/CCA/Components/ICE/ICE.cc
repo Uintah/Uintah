@@ -1927,7 +1927,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       }
       //__________________________________
       //   First order advection of q_CC 
-      advector->advectQ(q_CC, patch, q_advected); 
+      advector->advectQ(q_CC, patch, q_advected, new_dw); 
 
       for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
         IntVector c = *iter;
@@ -3020,7 +3020,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
         q_CC[c] = mass_L[c] * invvol;
       }
 
-      advector->advectQ(q_CC,patch,q_advected);
+      advector->advectQ(q_CC,patch,q_advected, new_dw);
 
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
         IntVector c = *iter;
@@ -3037,7 +3037,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
         qV_CC[c] = mom_L_ME[c] * invvol;
       }
 
-      advector->advectQ(qV_CC,patch,qV_advected);
+      advector->advectQ(qV_CC,patch,qV_advected, new_dw);
 
       for(CellIterator iter = patch->getCellIterator(); !iter.done();  iter++){
         IntVector c = *iter;
@@ -3053,7 +3053,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
         q_CC[c] = int_eng_L_ME[c] * invvol;
       }
 
-      advector->advectQ(q_CC,patch,q_advected);
+      advector->advectQ(q_CC,patch,q_advected, new_dw);
       
       if (d_EqForm){         // EQ FORM
         for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
@@ -3079,7 +3079,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
         q_CC[c] = spec_vol_L[c]*invvol;
       }
 
-      advector->advectQ(q_CC,patch,q_advected);
+      advector->advectQ(q_CC,patch,q_advected, new_dw);
 
       for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
         IntVector c = *iter;

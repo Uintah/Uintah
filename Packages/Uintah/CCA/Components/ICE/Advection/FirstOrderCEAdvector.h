@@ -38,18 +38,19 @@ namespace Uintah {
 
     virtual void advectQ(const CCVariable<double>& q_CC,
                       const Patch* patch,
-                      CCVariable<double>& q_advected);
+                      CCVariable<double>& q_advected,
+			 DataWarehouse* new_dw);
     
     virtual void advectQ(const CCVariable<Vector>& q_CC,
                       const Patch* patch,
-                      CCVariable<Vector>& q_advected);
+                      CCVariable<Vector>& q_advected,
+			 DataWarehouse* new_dw);
 
 
 
     struct eflux { double d_eflux[12]; };         //edge flux
     struct cflux { double d_cflux[8]; };          //corner flux
     
-    enum FACE {TOP, BOTTOM, RIGHT, LEFT, FRONT, BACK};
     enum EDGE {TOP_R = 0, TOP_FR, TOP_L, TOP_BK, BOT_R, BOT_FR, BOT_L, BOT_BK,
               RIGHT_BK, RIGHT_FR, LEFT_BK, LEFT_FR };
     enum CORNER {TOP_R_BK = 0, TOP_R_FR, TOP_L_BK, TOP_L_FR, BOT_R_BK, 
