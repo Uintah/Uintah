@@ -62,8 +62,7 @@ WARNING
       
       //////////
       // Insert Documentation Here:
-      virtual void scheduleTimeAdvance(double t, double dt,
-				       const LevelP& level, SchedulerP&) = 0;
+      virtual void scheduleTimeAdvance(const LevelP& level, SchedulerP&) = 0;
    private:
       MDInterface(const MDInterface&);
       MDInterface& operator=(const MDInterface&);
