@@ -44,37 +44,33 @@ typedef Handle<Attractor> AttractorHandle;
 class AttractNormalsAlgo : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(FieldHandle src,
-			      AttractorHandle a,
-			      bool scale_vectors_p) = 0;
+  virtual FieldHandle execute(FieldHandle src, AttractorHandle a) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfo *get_compile_info(const TypeDescription *fsrc,
-				       const TypeDescription *floc);
+				       const TypeDescription *floc,
+				       const TypeDescription *msrc,
+				       bool scale_p);
 };
 
 
-template <class FSRC, class FLOC, class FDST>
+template <class MSRC, class FLOC, class FDST>
 class AttractNormalsAlgoT : public AttractNormalsAlgo
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(FieldHandle src,
-			      AttractorHandle a,
-			      bool scale_vectors_p);
+  virtual FieldHandle execute(FieldHandle src, AttractorHandle a);
 };
 
 
 
-template <class FSRC, class FLOC, class FDST>
+template <class MSRC, class FLOC, class FDST>
 FieldHandle
-AttractNormalsAlgoT<FSRC, FLOC, FDST>::execute(FieldHandle field_h,
-					       AttractorHandle attr,
-					       bool scale_vectors_p)
+AttractNormalsAlgoT<MSRC, FLOC, FDST>::execute(FieldHandle field_h,
+					       AttractorHandle attr)
 {
-  FSRC *fsrc = static_cast<FSRC *>(field_h.get_rep());
-  typename FSRC::mesh_handle_type mesh = fsrc->get_typed_mesh();
-  FDST *fdst = scinew FDST(mesh, fsrc->data_at());
+  MSRC *mesh = static_cast<MSRC *>(field_h->mesh().get_rep());
+  FDST *fdst = scinew FDST(mesh, field_h->data_at());
 
   typename FLOC::iterator bi, ei;
   mesh->begin(bi);
@@ -89,12 +85,51 @@ AttractNormalsAlgoT<FSRC, FLOC, FDST>::execute(FieldHandle field_h,
     Vector vec;
     attr->execute(vec, c);
 
-    if (scale_vectors_p)
-    {
-      typename FSRC::value_type val;
-      fsrc->value(val, *bi);
-      vec = vec * val;
-    }
+    fdst->set_value(vec, *bi);
+
+    ++bi;
+  }
+  
+  return fdst;
+}
+
+
+template <class FSRC, class FLOC, class FDST>
+class AttractNormalsScaleAlgoT : public AttractNormalsAlgo
+{
+public:
+  //! virtual interface. 
+  virtual FieldHandle execute(FieldHandle src, AttractorHandle a);
+};
+
+
+
+template <class FSRC, class FLOC, class FDST>
+FieldHandle
+AttractNormalsScaleAlgoT<FSRC, FLOC, FDST>::execute(FieldHandle field_h,
+						    AttractorHandle attr)
+{
+  FSRC *fsrc = static_cast<FSRC *>(field_h.get_rep());
+  typename FSRC::mesh_handle_type mesh = fsrc->get_typed_mesh();
+  FDST *fdst = scinew FDST(mesh, field_h->data_at());
+
+  typename FLOC::iterator bi, ei;
+  mesh->begin(bi);
+  mesh->end(ei);
+
+  while (bi != ei)
+  {
+    Point c;
+
+    mesh->get_center(c, *bi);
+
+    Vector vec;
+    attr->execute(vec, c);
+
+    typename FSRC::value_type val;
+    fsrc->value(val, *bi);
+    if (val == 0) { val = 1.0e-3; }
+    vec = vec * val;
     
     fdst->set_value(vec, *bi);
 

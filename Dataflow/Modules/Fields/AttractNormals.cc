@@ -149,15 +149,16 @@ AttractNormals::execute()
   }
 
   bool scale_p = false;
-  if (ifieldhandle->query_scalar_interface() ||
-      ifieldhandle->query_vector_interface())
+  if (ifieldhandle->query_scalar_interface())
   {
     scale_p = true;
   }
 
   const TypeDescription *ftd = ifieldhandle->get_type_description();
   const TypeDescription *ltd = ifieldhandle->data_at_type_description();
-  CompileInfo *ci = AttractNormalsAlgo::get_compile_info(ftd, ltd);
+  const TypeDescription *mtd = ifieldhandle->mesh()->get_type_description();
+  CompileInfo *ci =
+    AttractNormalsAlgo::get_compile_info(ftd, ltd, mtd, scale_p);
   DynamicAlgoHandle algo_handle;
   if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
   {
@@ -171,7 +172,7 @@ AttractNormals::execute()
     cout << "Could not get algorithm." << std::endl;
     return;
   }
-  FieldHandle ofieldhandle(algo->execute(ifieldhandle, attractor, scale_p));
+  FieldHandle ofieldhandle(algo->execute(ifieldhandle, attractor));
 
   FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
   if (!ofield_port) {
@@ -218,23 +219,42 @@ LineAttractor::execute(Vector &v, const Point &p)
 
 CompileInfo *
 AttractNormalsAlgo::get_compile_info(const TypeDescription *fsrc_td,
-				     const TypeDescription *floc_td)
+				     const TypeDescription *floc_td,
+				     const TypeDescription *msrc_td,
+				     bool scale_p)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
   static const string template_class_name("AttractNormalsAlgoT");
+  static const string scale_template_class_name("AttractNormalsScaleAlgoT");
   static const string base_class_name("AttractNormalsAlgo");
   const string::size_type fsrc_loc = fsrc_td->get_name().find_first_of('<');
   const string fdst = fsrc_td->get_name().substr(0, fsrc_loc) + "<Vector> ";
 
-  CompileInfo *rval = 
-    scinew CompileInfo(template_class_name + "." +
-		       fsrc_td->get_filename() + "." +
-		       floc_td->get_filename() + ".",
-                       base_class_name, 
-                       template_class_name, 
-                       fsrc_td->get_name() + ", " +
-		       floc_td->get_name() + ", " + fdst);
+  CompileInfo *rval;
+
+  if (scale_p)
+  {
+    rval = 
+      scinew CompileInfo(scale_template_class_name + "." +
+			 fsrc_td->get_filename() + "." +
+			 floc_td->get_filename() + ".",
+			 base_class_name, 
+			 scale_template_class_name, 
+			 fsrc_td->get_name() + ", " +
+			 floc_td->get_name() + ", " + fdst);
+  }
+  else
+  {
+    rval = 
+      scinew CompileInfo(template_class_name + "." +
+			 msrc_td->get_filename() + "." +
+			 floc_td->get_filename() + ".",
+			 base_class_name, 
+			 template_class_name, 
+			 msrc_td->get_name() + ", " +
+			 floc_td->get_name() + ", " + fdst);
+  }
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
