@@ -1,0 +1,108 @@
+
+Pass const Matrix3& in const. models.
+2 pass particle creation
+profile parallel version - look for serial bottlenecks (free?)
+Time with normal malloc vs. my malloc
+free grids from old time-steps
+Malloc: return large chunks under memory pressure
+large pages
+further scatter/gather improvement
+
+change nx in Region to numCellsX or something
+Wrong ProcessorContext sent into serial codes - should be nthreads=1
+
+
+0.01 0.01 0.01		- about 100k (too fast for parallel)
+0.005 0.005 0.005	- 804320
+0.0025 0.0025 0.0025	- about 6.4m
+0.002 0.002 0.002	- about 12.5m
+0.001 0.001 0.001	- about 100m
+
+
+
+
+Non-zero values in ip2g
+
+
+
+MIND CONST
+
+Completely define the Task dependency descriptions
+
+Convert ICE to use scheduler
+What aboute face centered variables - ask Todd.
+implement BDmapper
+implement simple parallel mappers.
+Threaded ICE
+ImperativeScheduler
+constHandle?
+
+
+3. MPI
+  - decide on design
+
+4. Parallelism
+  - Nthreads per processor in Parallel class
+
+6. File format
+  - problem
+  - resource spec
+
+7. PSE integration
+  - sort out handles/RefCounted
+  - sort out exceptions
+  - namespaces
+
+Problem setup:
+ - simple
+ - complex
+
+cfd/mpm interface
+ICE
+MPM
+Parallelism (threads)
+MPI
+ParallelContext
+other stuff...
+
+Input file:
+
+
+
+
+Optimization:
+totaltime = 0.00002, dx=0.01
+initial						161.91
+-O2 -Olimit=5000				 29.91
+remove pow calls in con model			 29.86
+remove pow calls in GeometryObject		 25.87
+unsetenv MALLOC_STRICT				 28.01
+inline Array3Index stuff			 24.60
+removed extraneous "contains" code		 22.74
+modified velocity gradient loop			 19.18
+free memory					 23.63
+turn off assertions in homebrew			 15.92
+use 3D pointer instead of multiply in array3	 13.66
+-O3 -Olimit=0					 12.19
+-Ofast						 10.55
+
+
+		800k problem
+SerialMPM	78.36	51.59
+1
+2
+4
+8
+16		60.68	37.48
+24
+28
+
+
+2 million particle bar (total = .01)
+SerialMPM	696.787
+1		800.603
+2
+4
+8
+16
+25
