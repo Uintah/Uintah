@@ -58,7 +58,7 @@ public:
   bool get_gradient(Vector &, Point &);
   Vector cell_gradient(TetVolMesh::cell_index);
 
-  virtual SFIHandle query_scalar_interface() const;
+  virtual ScalarFieldInterface* query_scalar_interface() const;
 
   //! Persistent IO
   void    io(Piostream &stream);
@@ -102,23 +102,23 @@ TetVol<T>::~TetVol()
 }
 
 template <>
-SFIHandle 
+ScalarFieldInterface*
 TetVol<double>::query_scalar_interface() const;
 
 template <>
-SFIHandle 
+ScalarFieldInterface*
 TetVol<int>::query_scalar_interface() const;
 
 template <>
-SFIHandle 
+ScalarFieldInterface*
 TetVol<short>::query_scalar_interface() const;
 
 template <>
-SFIHandle 
+ScalarFieldInterface*
 TetVol<unsigned char>::query_scalar_interface() const;
 
 template <class T>
-SFIHandle 
+ScalarFieldInterface*
 TetVol<T>::query_scalar_interface() const
 {
   return 0;

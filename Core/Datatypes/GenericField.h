@@ -52,7 +52,6 @@ public:
   typedef Mesh                            mesh_type;
   typedef LockingHandle<mesh_type>        mesh_handle_type;
   typedef FData                           fdata_type;
-  typedef GenericInterpolate<value_type>  interp_type;
 
   // only Pio should use this constructor
   GenericField();
@@ -66,12 +65,6 @@ public:
   //! Required virtual functions from field base.
   virtual MeshBaseHandle mesh() const;
   virtual void mesh_detach();
-
-  //! Required interfaces from field base.
-  virtual SFIHandle query_scalar_interface() const;
-  virtual VectorFieldInterface* query_vector_interface() const;
-  virtual TensorFieldInterface* query_tensor_interface() const;
-  virtual interp_type* query_interpolate() const;
 
   virtual bool is_scalar() const;
 
@@ -108,15 +101,6 @@ public:
 
 private:
 
-  //! generic interpolate object, using linear interpolation.
-  template <class Data>
-  struct GInterp : public GenericInterpolate<Data> {
-    GInterp(const GenericField<Mesh, FData> *f) :
-      f_(f) {}
-    bool interpolate(const Point& p, Data &value) const;
-    const GenericField<Mesh, FData> *f_;
-  };
-
   static Persistent *maker();
 
   //! A (generic) mesh.
@@ -124,63 +108,6 @@ private:
   //! Data container.
   fdata_type                   fdata_;
 }; 
-
-
-//! Virtual interface.
-template <class Mesh, class FData>
-SFIHandle 
-GenericField<Mesh, FData>::query_scalar_interface() const
-{
-  ASSERTFAIL("GenericField::query_scalar_interface() not implemented");
-}
-template <class Mesh, class FData>
-VectorFieldInterface* 
-GenericField<Mesh, FData>::query_vector_interface() const
-{
-  ASSERTFAIL("GenericField::query_vector_interface() not implemented");
-}
-template <class Mesh, class FData>
-TensorFieldInterface* 
-GenericField<Mesh, FData>::query_tensor_interface() const
-{
-  ASSERTFAIL("GenericField::query_tensor_interface() not implemented");
-}
-
-//! internal interp object
-template <class Mesh, class FData> template <class Data>
-bool 
-GenericField<Mesh, FData>::GInterp<Data>::interpolate(const Point& p, 
-						      Data& value) const
-{
-  bool rval = false;
-  switch (f_->data_at()) {
-  case Field::NODE :
-    {
-      LinearInterp<GenericField<Mesh, FData>, typename Mesh::node_index > ftor;
-      rval = SCIRun::interpolate(*f_, p, ftor);
-      if (rval) { value = ftor.result_; }
-    }
-    break;
-  case Field::EDGE:
-    break;
-  case Field::FACE:
-    break;
-  case Field::CELL:
-    break;
-  case Field::NONE:
-    cerr << "Error: Field data at location NONE!!" << endl;
-    return false;
-  } 
-
-  return rval;
-}
-
-template <class Mesh, class FData>
-GenericField<Mesh, FData>::interp_type* 
-GenericField<Mesh, FData>::query_interpolate() const
-{
-  return new GInterp<value_type>(this); 
-}
 
 
 template <class Mesh, class FData>
@@ -213,15 +140,6 @@ GenericField<Mesh, FData>::resize_fdata()
   }
 }
 
-
-#if 0
-template <class Mesh, class FData>
-InterpolateToScalar* 
-GenericField<Mesh, FData>::query_interpolate_to_scalar() const
-{
-  return new GInterp<double>(this);
-}
-#endif
 
 // PIO
 const int GENERICFIELD_VERSION = 1;

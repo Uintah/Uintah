@@ -39,49 +39,18 @@
 
 namespace SCIRun {
 
-//! base class for interpolation objects
-class InterpBase {
-};  
-
-//! generic interpolation class
-template <class Data>
-class GenericInterpolate : public InterpBase {
-public:
-  virtual bool interpolate(const Point& p, Data &value) const = 0;
-};
-
-//! type needed to support query_interpolate_to_scalar() interface
-typedef GenericInterpolate<double> InterpolateToScalar;
 
 class ScalarFieldInterface {
 public:
-  //! needed interface for LockingHandle
-  Mutex lock;
-  int ref_cnt;
 
-  ScalarFieldInterface() :
-    lock("ScalarFieldInterface ref_cnt lock"),
-    ref_cnt(0)
-    
-  {
-  }
-
-  ScalarFieldInterface(const ScalarFieldInterface&) :
-    lock("ScalarFieldInterface ref_cnt lock"),
-    ref_cnt(0)
-  {
-  }
-  
+  ScalarFieldInterface() {}
+  ScalarFieldInterface(const ScalarFieldInterface&) {}
   virtual ~ScalarFieldInterface() {}
-  virtual bool minmax( pair<double, double>& mm) const = 0;
+
+  virtual bool compute_min_max(double &minout, double &maxout) const = 0;
   virtual bool interpolate(double &result, const Point &p) const = 0;
-  virtual void interpolate_many(vector<double> &results,
-				vector<bool> &success,
-				const vector<Point> &pts) const = 0;
 };
 
-
-typedef LockingHandle<ScalarFieldInterface> SFIHandle;
 
 //! Should only be instantiated for fields with scalar data.
 template <class F>
@@ -91,15 +60,13 @@ public:
     fld_(fld),
     interp_(this)
   {}
-
-  virtual bool minmax( pair<double, double>& mm) const;
+  
+  virtual bool compute_min_max(double &minout, double &maxout) const;
   virtual bool interpolate(double &result, const Point &p) const;
-  virtual void interpolate_many(vector<double> &results,
-				vector<bool> &success,
-				const vector<Point> &pts) const;
 
 private:
   friend class linear_interp;
+
   class linear_interp {
   public:
     typedef typename F::mesh_type Mesh;
@@ -181,35 +148,26 @@ private:
   linear_interp   interp_;
 };
 
+
 template <class Fld>
-bool SFInterface<Fld>::minmax(pair<double, double>& mm) const
+bool
+SFInterface<Fld>::interpolate(double &result, const Point &p) const
 {
-  ASSERTFAIL("not implemented");
+  return interp_(result, p);
 }
 
 template <class Fld>
-bool SFInterface<Fld>::interpolate(double &result, const Point &p) const
-{
-  if (interp_(result, p)) {
-    return true;
-  }
-  return false;
-}
-
-template <class F>
-void SFInterface<F>::interpolate_many(vector<double> &results,
-				      vector<bool> &success,
-				      const vector<Point> &pts) const
+bool
+SFInterface<Fld>::compute_min_max(double &minout, double &maxout) const
 {
   ASSERTFAIL("not implemented");
 }
 
 class VectorFieldInterface {
-
 };
 
-class TensorFieldInterface {
 
+class TensorFieldInterface {
 };
 
 } // end namespace SCIRun
