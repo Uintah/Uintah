@@ -25,10 +25,6 @@ SRCS +=	$(SRCDIR)/ExecConverter.cc \
 	$(SRCDIR)/FieldIEPlugin.cc \
 	$(SRCDIR)/TextPointCloudString_plugin.cc
 
-ifeq ($(OS_NAME),Darwin)
-  SRCS += $(SRCDIR)/MacForceLoad.cc
-endif
-
 PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
 	Core/Thread Core/Geometry Core/GuiInterface \
 	Core/Math Core/Util Core/Datatypes
