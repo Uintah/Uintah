@@ -40,11 +40,17 @@ using namespace SCIRun;
 CCAComponentInstance::CCAComponentInstance(SCIRunFramework* framework,
 					   const std::string& instanceName,
 					   const std::string& typeName,
-					   const sci::cca::TypeMap::pointer& /*properties*/,
+					   const sci::cca::TypeMap::pointer& com_properties,
 					   const sci::cca::Component::pointer& component
 )
   : ComponentInstance(framework, instanceName, typeName), component(component)
 {
+  if(com_properties.isNull()){ 
+    cerr<<"### Null properties for cca comp"<<endl;
+    this->com_properties=createTypeMap();
+  }
+  else
+    this->com_properties=com_properties;
   mutex=new Mutex("getPort mutex");
 }
 
@@ -151,7 +157,7 @@ void CCAComponentInstance::addProvidesPort(const sci::cca::Port::pointer& port,
 					   const std::string& portType,
 					   const sci::cca::TypeMap::pointer& properties)
 {
-
+  //mutex->lock();
   map<string, CCAPortInstance*>::iterator iter = ports.find(portName);
   if(iter != ports.end()){
     if(iter->second->porttype == CCAPortInstance::Provides)
@@ -188,9 +194,11 @@ void CCAComponentInstance::addProvidesPort(const sci::cca::Port::pointer& port,
       preports.erase(portName);
       precnt.erase(portName);
     }
+    //mutex->unlock();
     return;
   }
   ports.insert(make_pair(portName, new CCAPortInstance(portName, portType, properties, port, CCAPortInstance::Provides)));
+  //mutex->unlock();
 }
 
 void CCAComponentInstance::removeProvidesPort(const std::string& name)
@@ -199,7 +207,11 @@ void CCAComponentInstance::removeProvidesPort(const std::string& name)
 }
 
 sci::cca::TypeMap::pointer CCAComponentInstance::getPortProperties(const std::string& portName)
-{
+{ 
+  if(portName==""){
+    //return component property.
+    return com_properties;
+  }
   cerr << "getPortProperties not done, name=" << portName << '\n';
   return sci::cca::TypeMap::pointer(0);
 }

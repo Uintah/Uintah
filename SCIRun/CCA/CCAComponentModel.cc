@@ -229,9 +229,10 @@ ComponentInstance* CCAComponentModel::createInstance(const std::string& name,
     nodes.push_back(0);
     Object::pointer comObj=loader->createInstance(name, type, nodes);
     component=pidl_cast<sci::cca::Component::pointer>(comObj);
+    properties->putInt("np",loader->getSize() );
   }
   CCAComponentInstance* ci = new CCAComponentInstance(framework, name, type,
-						      sci::cca::TypeMap::pointer(0),
+						      properties, //sci::cca::TypeMap::pointer(0),
 						      component);
   ci->addReference(); //what is this for?
   component->setServices(sci::cca::Services::pointer(ci));
