@@ -104,13 +104,6 @@ void FractureMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
      mpm_soln_ps->get("artificial_viscosity", flags->d_artificial_viscosity);
      mpm_soln_ps->get("accumulate_strain_energy", flags->d_accStrainEnergy);
      mpm_soln_ps->get("use_load_curves", flags->d_useLoadCurves);
-     ProblemSpecP erosion_ps = mpm_soln_ps->findBlock("erosion");
-     if (erosion_ps) {
-       if (erosion_ps->getAttribute("algorithm", flags->d_erosionAlgorithm)) {
-          if (flags->d_erosionAlgorithm == "none") flags->d_doErosion = false;
-          else flags->d_doErosion = true;
-       }
-     }
    }
 
    if(flags->d_8or27==8){
@@ -213,19 +206,10 @@ void FractureMPM::scheduleInitialize(const LevelP& level,
 
   int numMPM = d_sharedState->getNumMPMMatls();
   const PatchSet* patches = level->eachPatch();
-  if (flags->d_doErosion) {
-    for(int m = 0; m < numMPM; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-      ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-      cm->addInitialComputesAndRequiresWithErosion(t, mpm_matl, patches,
-                                                   flags->d_erosionAlgorithm);
-    }
-  } else {
-    for(int m = 0; m < numMPM; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-      ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-      cm->addInitialComputesAndRequires(t, mpm_matl, patches);
-    }
+  for(int m = 0; m < numMPM; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+    cm->addInitialComputesAndRequires(t, mpm_matl, patches);
   }
 
   sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
@@ -368,10 +352,6 @@ void FractureMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   }
 //t->requires(Task::OldDW, lb->pExternalHeatRateLabel, gan,NGP);
 
-  if (flags->d_doErosion) {
-    t->requires(Task::OldDW, lb->pErosionLabel, gan, NGP);
-  }
-
   t->computes(lb->gMassLabel);
   t->computes(lb->gMassLabel,        d_sharedState->getAllInOneMatl(),
 	      Task::OutOfDomain);
@@ -460,18 +440,10 @@ void FractureMPM::scheduleComputeStressTensor(SchedulerP& sched,
   int numMatls = d_sharedState->getNumMPMMatls();
   Task* t = scinew Task("FractureMPM::computeStressTensor",
 		    this, &FractureMPM::computeStressTensor);
-  if (flags->d_doErosion) {
-    for(int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-      ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-      cm->addComputesAndRequiresWithErosion(t, mpm_matl, patches);
-    }
-  } else {
-    for(int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-      ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-      cm->addComputesAndRequires(t, mpm_matl, patches);
-    }
+  for(int m = 0; m < numMatls; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+    cm->addComputesAndRequires(t, mpm_matl, patches);
   }
 
   t->computes(d_sharedState->get_delt_label());
@@ -558,10 +530,6 @@ void FractureMPM::scheduleComputeInternalForce(SchedulerP& sched,
     t->requires(Task::NewDW, lb->p_qLabel,                gan,NGP);
   }
 
-  if (flags->d_doErosion) {
-    t->requires(Task::OldDW, lb->pErosionLabel, gan, NGP);
-  }
-
   t->computes(lb->gInternalForceLabel);
 #ifdef INTEGRAL_TRACTION
   t->computes(lb->NTractionZMinusLabel);
@@ -592,10 +560,6 @@ void FractureMPM::scheduleComputeInternalHeatRate(SchedulerP& sched,
   }
   t->requires(Task::NewDW, lb->pVolumeDeformedLabel, gan, NGP);
   t->requires(Task::NewDW, lb->gTemperatureLabel,    gac, 2*NGP);
-
-  if (flags->d_doErosion) {
-    t->requires(Task::OldDW, lb->pErosionLabel, gan, NGP);
-  }
 
   // for Fracture
   t->requires(Task::NewDW, lb->pgCodeLabel,          gan, NGP);
@@ -883,10 +847,6 @@ void FractureMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
    t->requires(Task::OldDW, lb->pSizeLabel,            Ghost::None);
   }
   t->requires(Task::NewDW, lb->pVolumeDeformedLabel,   Ghost::None);
-
-  if (flags->d_doErosion) {
-    t->requires(Task::OldDW, lb->pErosionLabel, Ghost::None);
-  }
 
   // for Fracture
   t->requires(Task::NewDW, lb->GAccelerationLabel,     gac,NGN);
@@ -1182,12 +1142,6 @@ void FractureMPM::actuallyInitialize(const ProcessorGroup*,
       mpm_matl->getConstitutiveModel()->initializeCMData(patch,
 							 mpm_matl,
 							 new_dw);
-      if (flags->d_doErosion) {
-	int index = mpm_matl->getDWIndex();
-	ParticleSubset* pset = new_dw->getParticleSubset(index, patch);
-	ParticleVariable<double> pErosion;
-	setParticleDefault(pErosion, lb->pErosionLabel, pset, new_dw, 1.0);
-      }
     }
   }
 
@@ -1342,14 +1296,6 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       Gdisplacement.initialize(Vector(0,0,0));
       GSp_vol.initialize(0.);
 
-      // Get the particle erosion information
-      constParticleVariable<double> pErosion;
-      if (flags->d_doErosion) {
-        old_dw->get(pErosion, lb->pErosionLabel, pset);
-      } else {
-        setParticleDefaultWithTemp(pErosion, pset, new_dw, 1.0);
-      }
-
       // Interpolate particle data to Grid data.
       // This currently consists of the particle velocity and mass
       // Need to compute the lumped global mass matrix and velocity
@@ -1383,7 +1329,6 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	// Must use the node indices
 	for(int k = 0; k < flags->d_8or27; k++) {
 	  if(patch->containsNode(ni[k])) {
-	    S[k] *= pErosion[idx];
             if(pgCode[idx][k]==1) {   // for primary field
               gdisplacement[ni[k]]  += pdisp[idx] * pmass[idx]        * S[k];
               gmass[ni[k]]          += pmass[idx]                     * S[k];
@@ -1463,18 +1408,10 @@ void FractureMPM::computeStressTensor(const ProcessorGroup*,
 
   cout_doing <<"Doing computeStressTensor " <<"\t\t\t\t MPM"<< endl;
 
-  if (flags->d_doErosion) {
-    for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-      ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-      cm->computeStressTensorWithErosion(patches, mpm_matl, old_dw, new_dw);
-    }
-  } else {
-    for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-      ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-      cm->computeStressTensor(patches, mpm_matl, old_dw, new_dw);
-    }
+  for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+    cm->computeStressTensor(patches, mpm_matl, old_dw, new_dw);
   }
 }
 
@@ -1674,14 +1611,6 @@ void FractureMPM::computeInternalForce(const ProcessorGroup*,
 	p_q = p_q_create; // reference created data
       }
 
-      // Get the particle erosion information
-      constParticleVariable<double> pErosion;
-      if (flags->d_doErosion) {
-        old_dw->get(pErosion, lb->pErosionLabel, pset);
-      } else {
-        setParticleDefaultWithTemp(pErosion, pset, new_dw, 1.0);
-      }
-
       IntVector ni[MAX_BASIS];
       double S[MAX_BASIS];
       Vector d_S[MAX_BASIS];
@@ -1709,7 +1638,6 @@ void FractureMPM::computeInternalForce(const ProcessorGroup*,
 	  if(patch->containsNode(ni[k])){
 	    Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
 		       d_S[k].z()*oodx[2]);
-	    div *= pErosion[idx];
             if(pgCode[idx][k]==1) {
               internalforce[ni[k]] -=
                   (div * (pstress[idx] + Id*p_pressure[idx]-Id*p_q[idx]) * pvol[idx]);
@@ -1826,14 +1754,6 @@ void FractureMPM::computeInternalHeatRate(const ProcessorGroup*,
         old_dw->get(psize,      lb->pSizeLabel,           pset);
       }
 
-      // Get the particle erosion information
-      constParticleVariable<double> pErosion;
-      if (flags->d_doErosion) {
-        old_dw->get(pErosion, lb->pErosionLabel, pset);
-      } else {
-        setParticleDefaultWithTemp(pErosion, pset, new_dw, 1.0);
-      }
-
       new_dw->get(gTemperature, lb->gTemperatureLabel,   dwi, patch, gac,2*NGN);
       new_dw->allocateAndPut(internalHeatRate, lb->gInternalHeatRateLabel,
 			     dwi, patch);
@@ -1871,7 +1791,6 @@ void FractureMPM::computeInternalHeatRate(const ProcessorGroup*,
 
 	pTemperatureGradient[idx] = Vector(0.0,0.0,0.0);
 	for (int k = 0; k < flags->d_8or27; k++){
-	  d_S[k] *= pErosion[idx];
 	  for (int j = 0; j<3; j++) {
             if(pgCode[idx][k]==1) {
               pTemperatureGradient[idx][j] +=
@@ -2573,14 +2492,6 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
  	massBurnFraction = massBurnFraction_create; // reference created data
       }
 
-      // Get the particle erosion information
-      constParticleVariable<double> pErosion;
-      if (flags->d_doErosion) {
-        old_dw->get(pErosion, lb->pErosionLabel, pset);
-      } else {
-        setParticleDefaultWithTemp(pErosion, pset, new_dw, 1.0);
-      }
-
       double Cp=mpm_matl->getSpecificHeat();
       double rho_init=mpm_matl->getInitialDensity();
 
@@ -2611,7 +2522,6 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 	// Accumulate the contribution from each surrounding vertex
 	for (int k = 0; k < flags->d_8or27; k++) {
-	  S[k] *= pErosion[idx];
           if(pgCode[idx][k]==1) {
              vel      += gvelocity_star[ni[k]]  * S[k];
              acc      += gacceleration[ni[k]]   * S[k];
