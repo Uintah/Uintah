@@ -8,7 +8,9 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 SRCDIR   := Uintah/Components/MPM
 
 SRCS     += $(SRCDIR)/SerialMPM.cc \
-	$(SRCDIR)/BoundCond.cc $(SRCDIR)/MPMLabel.cc
+	$(SRCDIR)/BoundCond.cc \
+	$(SRCDIR)/MPMLabel.cc \
+	$(SRCDIR)/MPMPhysicalModules.cc
 
 SUBDIRS := $(SRCDIR)/ConstitutiveModel $(SRCDIR)/Contact \
 	$(SRCDIR)/HeatConduction \
@@ -28,6 +30,11 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.16  2000/06/22 21:21:21  tan
+# MPMPhysicalModules class is created to handle all the physical modules
+# in MPM, currently those physical submodules include HeatConduction,
+# Fracture, Contact, and ThermalContact.
+#
 # Revision 1.15  2000/06/20 23:23:53  tan
 # Added HeatConduction directory.
 #

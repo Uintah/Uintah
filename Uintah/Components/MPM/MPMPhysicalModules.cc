@@ -1,0 +1,47 @@
+//Physical Models Interested:
+#include <Uintah/Components/MPM/Contact/ContactFactory.h>
+#include <Uintah/Components/MPM/Contact/Contact.h>
+#include <Uintah/Components/MPM/HeatConduction/HeatConductionFactory.h>
+#include <Uintah/Components/MPM/HeatConduction/HeatConduction.h>
+#include <Uintah/Components/MPM/Fracture/FractureFactory.h>
+#include <Uintah/Components/MPM/Fracture/Fracture.h>
+#include <Uintah/Components/MPM/ThermalContact/ThermalContactFactory.h>
+#include <Uintah/Components/MPM/ThermalContact/ThermalContact.h>
+
+/* REFERENCED */
+static char *id="@(#) $Id$";
+
+#include "MPMPhysicalModules.h"
+
+using namespace Uintah::MPM;
+
+HeatConduction*  MPMPhysicalModules::heatConductionModel;
+Fracture*        MPMPhysicalModules::fractureModel;
+Contact*         MPMPhysicalModules::contactModel;
+ThermalContact*  MPMPhysicalModules::thermalContactModel;
+
+void MPMPhysicalModules::build(const ProblemSpecP& prob_spec,
+                              SimulationStateP& sharedState)
+{
+   //solid mechanical contact
+   contactModel = ContactFactory::create(prob_spec,sharedState);
+
+   //solid heat conduction
+   heatConductionModel = HeatConductionFactory::create(prob_spec,sharedState);
+
+   //solid fracture
+   fractureModel = FractureFactory::create(prob_spec,sharedState);
+
+   //solid thermal contact
+   thermalContactModel = ThermalContactFactory::create(prob_spec,
+     sharedState);
+}
+
+
+//
+// $Log$
+// Revision 1.1  2000/06/22 21:22:07  tan
+// MPMPhysicalModules class is created to handle all the physical modules
+// in MPM, currently those physical submodules include HeatConduction,
+// Fracture, Contact, and ThermalContact.
+//
