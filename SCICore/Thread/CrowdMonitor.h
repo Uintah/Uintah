@@ -17,7 +17,9 @@
 
 #include <SCICore/share/share.h>
 
+#include <SCICore/Thread/Thread.h>
 #include <SCICore/Thread/Mutex.h>
+#include <SCICore/Thread/ConditionVariable.h>
 
 namespace SCICore {
     namespace Thread {
@@ -106,6 +108,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.9  1999/11/02 06:11:02  moulding
+// added some #includes to help the visual c++ compiler
+//
 // Revision 1.8  1999/09/24 18:55:06  moulding
 // added SCICORESHARE, for win32, to class declarations
 //
