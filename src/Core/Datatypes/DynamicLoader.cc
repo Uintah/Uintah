@@ -24,6 +24,9 @@
 #include <Core/Util/sci_system.h>
 #include <fstream>
 #include <iostream>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 namespace SCIRun {
 
@@ -69,10 +72,13 @@ DynamicLoader::compile_and_store(const CompileInfo &info)
   string full_so = OTF_OBJ_DIR + string("/") + 
     info.filename_ + string("so");
 
-  LIBRARY_HANDLE so = GetLibraryHandle(full_so.c_str());
-  if (so == 0) {
-    // the so does not exist.
-    
+  LIBRARY_HANDLE so = 0;
+  struct stat buf;
+  if (stat(full_so.c_str(), &buf) == 0) {
+    compile_so(info.filename_); // make sure
+    so = GetLibraryHandle(full_so.c_str());
+  } else {
+    // the so does not exist.    
     create_cc(info);
     compile_so(info.filename_);
     so = GetLibraryHandle(full_so.c_str());
@@ -80,25 +86,22 @@ DynamicLoader::compile_and_store(const CompileInfo &info)
     if (so == 0) { // does not compile
       cerr << "DYNAMIC COMPILATION ERROR: " << full_so 
 	   << " does not compile!!" << endl;
-
-
       cerr << SOError() << endl;
-
       return false;
     }
   }
 
-  typedef DynamicAlgoBase* (*maker_fun)();
   maker_fun maker = 0;
   maker = (maker_fun)GetHandleSymbolAddress(so, "maker");
   
   if (maker == 0) {
     cerr << "DYNAMIC LIB ERROR: " << full_so 
 	 << " no maker function!!" << endl;
+    cerr << SOError() << endl;
     return false;
   }
   // store this so that we can get at it again.
-  store(info.filename_, DynamicAlgoHandle(maker())); 
+  store(info.filename_, maker); 
   return true;
 }
 
@@ -116,6 +119,8 @@ DynamicLoader::compile_so(const string& file)
   if(!compiled) {
     cerr << "DynamicLoader::compile_so() error: "
 	 << "system call failed:" << endl << command << endl;
+  } else {
+    cerr << "DynamicLoader - successfully compiled " << file + "so" << endl;
   }
 
   return compiled;
@@ -166,25 +171,32 @@ DynamicLoader::create_cc(const CompileInfo &info)
        << info.template_arg_ << ">;" << endl
        << "}" << endl << "}" << endl;
 
+  cerr << "DynamicLoader - successfully created " << full << endl;
   return true;
 }
 
 void 
-DynamicLoader::store(const string &name, DynamicAlgoHandle algo)
+DynamicLoader::store(const string &name, maker_fun m)
 {
-  algo_map_[name] = algo;
+  algo_map_[name] = m;
 }
 
 bool 
-DynamicLoader::get(const string &name, DynamicAlgoHandle &algo)
+DynamicLoader::fetch(const CompileInfo &ci, DynamicAlgoHandle &algo)
 {
-  map_type::iterator loc = algo_map_.find(name);
+  map_type::iterator loc = algo_map_.find(ci.filename_);
   if (loc != algo_map_.end()) {
-    algo = loc->second;
+    maker_fun m = loc->second;
+    algo = DynamicAlgoHandle(m());
     return true;
   }
-  // do not have this algo.
   return false;
+}
+
+bool 
+DynamicLoader::get(const CompileInfo &ci, DynamicAlgoHandle &algo)
+{
+  return (fetch(ci, algo) || (compile_and_store(ci) && fetch(ci, algo)));
 }
 
 
