@@ -70,10 +70,10 @@ if [ -d "$TEST_UDADIR" ]; then
 
     compare_dats $TEST $TEST_UDADIR $COMPARE_UDADIR $TMPDIR
     compare_dats_retval=$?
-    if [ $compare_dats_retval == "1" ]; then
+    if [ $compare_dats_retval = "1" ]; then
 	echo 
 	echo "*** dat comparison tests failed ***"
-	if [ $inputs_differ == "1" ]; then
+	if [ $inputs_differ = "1" ]; then
 	    exit 5;
 	else
 	    exit 1
@@ -90,7 +90,7 @@ if [ -d "$TEST_UDADIR" ]; then
     if [ $retval != "0" ]; then
 	echo 
 	echo "*** uda comparison tests failed ***"
-	if [ $inputs_differ == "1" ]; then
+	if [ $inputs_differ = "1" ]; then
 	    exit 5;
 	else
 	    exit 1
@@ -107,21 +107,21 @@ if [ -d "$TEST_UDADIR" ]; then
 	echo 
 	echo "*** checkpoint comparison tests failed ***"
 	
-	if [ $inputs_differ == "1" ]; then
+	if [ $inputs_differ = "1" ]; then
 	    exit 5;
 	else
 	    exit 1
 	fi
     fi
 
-    if [ $compare_dats_retval == "-1" ]; then
-	if [ $inputs_differ == "1" ]; then
+    if [ $compare_dats_retval = "-1" ]; then
+	if [ $inputs_differ = "1" ]; then
 	    exit 5;
 	fi
 	exit -1
     fi
     
-    if [ $inputs_differ == "1" ]; then
+    if [ $inputs_differ = "1" ]; then
 	exit 10;
     fi
   fi

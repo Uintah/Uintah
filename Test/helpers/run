@@ -40,7 +40,7 @@ for test in *; do
 
 # match this test to being run in a daily or weekly context
     runThisTest=0;
-    if [ "$WEEKLY" == "1" ]; then
+    if [ "$WEEKLY" = "1" ]; then
       case "$test" in
         *.wk) runThisTest=1
               ;;
@@ -55,11 +55,11 @@ for test in *; do
               ;;
       esac
     fi
-    if [ "$runThisTest" == "0" ]; then
+    if [ "$runThisTest" = "0" ]; then
       continue
     fi
     if [ -f "$test" -a -x "$test" ]; then
-	if [ $WithArches == "no" -a $test == "ARCHES" ]; then
+	if [ $WithArches = "no" -a $test = "ARCHES" ]; then
 	    echo ""
 	    echo "Skipping test \"${test}-${mode}\" at `date`"
 	    echo "(ARCHES did not compile)"
@@ -82,7 +82,7 @@ for test in *; do
 	cat "${test}.log" >> "$HTMLLOG"
 	cd TestScripts
 
-	if [ $retval == "0" ]; then
+	if [ $retval = "0" ]; then
 	    echo "   Test Passed"
 	    # It was successful, so it can remove the lock
 	    if [ -d "${BUILD_DIR}/${test}-${mode}.lock" ]; then
@@ -101,7 +101,7 @@ done
 
 echo ""
 echo "Finished $mode tests on `date`"
-if [ $failed == "0" ]; then
+if [ $failed = "0" ]; then
     echo "All $mode tests passed!"
 else
     echo "*** Some $mode tests failed."

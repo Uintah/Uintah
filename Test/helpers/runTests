@@ -35,7 +35,7 @@ if [ "$WEEKLY" != "1" ]; then
   echo "\\--------------------------/" >> "$HTMLLOG"
 
 
-  if [ $VERBOSE == "yes" ]; then
+  if [ $VERBOSE = "yes" ]; then
 
     build_and_run "dbg" "$DBG_CONFIGURE"
   else
@@ -57,7 +57,7 @@ echo "/--------------------------\\" >> "$HTMLLOG"
 echo "|  OPTIMIZED TEST SUMMARY   |" >> "$HTMLLOG"
 echo "\\--------------------------/" >> "$HTMLLOG"
    
-if [ $VERBOSE == "yes" ]; then
+if [ $VERBOSE = "yes" ]; then
   build_and_run "opt" "$OPT_CONFIGURE"
 else
   build_and_run "opt" "$OPT_CONFIGURE" > "$BUILDROOT"/opt/log 2>&1
@@ -72,7 +72,7 @@ else
   echo "Optimized tests passed!" >> "$HTMLLOG"
 fi
 
-if [ $failed == "0" ]; then
+if [ $failed = "0" ]; then
   echo "All tests passed!" >> "$BUILDROOT"/log
   echo "All tests passed!" >> "$HTMLLOG"
 fi
@@ -112,8 +112,8 @@ echo "" >> "$BUILDROOT"/log
 chmod -R g+w "$BUILDROOT"
 chmod -R g+w "$TEST_DATA" > /dev/null 2>&1
 
-if [ "$VERBOSE" == "no" -a "$SEND_MAIL_TO" != "" ]; then
-    if [ $failed == "0" ]; then
+if [ "$VERBOSE" = "no" -a "$SEND_MAIL_TO" != "" ]; then
+    if [ $failed = "0" ]; then
 	subject="SUCCESS: Regression tests on `hostname`"
     else
 	subject="FAILURE: Regression tests on `hostname`***"
@@ -125,7 +125,7 @@ To: $SEND_MAIL_TO
 EOF
     cat "$BUILDROOT"/log >> "$BUILDROOT"/mail.msg
 
-    if [ $use_html == "1" ]; then
+    if [ $use_html = "1" ]; then
 	echo "See build and run logs at" >> "$BUILDROOT"/mail.msg
 	echo "$WEBLOG" >> "$BUILDROOT"/mail.msg
     fi
@@ -155,7 +155,7 @@ EOF
     rm -f "$BUILDROOT"/mail.msg
 fi
 
-if [ $failed == "0" ]; then
+if [ $failed = "0" ]; then
     if [ -d "${BUILD_DIR}/last_successful.lock" ]; then
 	rm -r "${BUILD_DIR}/last_successful.lock" 
     fi

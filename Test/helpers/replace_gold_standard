@@ -14,7 +14,7 @@ fi
 # if the YES env var is set to yes then don't prompt the user - effective for 
 # mass replaces
 
-if [ "$YES" == "y" -o "$YES" == "yes" ]; then
+if [ "$YES" = "y" -o "$YES" = "yes" ]; then
   yesno="yes"
 else
   echo "Are you sure you want to replace the gold standard at $gold_standard_dir/$testname with $replacement_dir/$testname? (Enter 'yes' or 'y' to continue.) "
@@ -23,7 +23,7 @@ fi
 
 
 # remove the udas, and copy the new ones
-if [ $yesno == "y" -o $yesno == "yes" ]; then
+if [ $yesno = "y" -o $yesno = "yes" ]; then
 #  echo "rm -rf $gold_standard_dir/$testname/*.uda"
   echo "Replacing $testname udas"
   rm -r $gold_standard_dir/$testname/*.uda
@@ -48,7 +48,7 @@ if [ $yesno == "y" -o $yesno == "yes" ]; then
   fi
 
   # don't prompt if env var is set
-  if [ "$YES" == "y" -o "$YES" == "yes" ]; then
+  if [ "$YES" = "y" -o "$YES" = "yes" ]; then
     yesno="yes"
   else
     echo "Are you sure you want to replace the memory usage results? (Enter 'yes' or 'y' to continue.) "
@@ -56,7 +56,7 @@ if [ $yesno == "y" -o $yesno == "yes" ]; then
   fi
 
   # replace the memory usage (both normal and restart)
-  if [ $yesno == "y" -o $yesno == "yes" ]; then
+  if [ $yesno = "y" -o $yesno = "yes" ]; then
 #    echo "rm $gold_standard_dir/$testname/*malloc*"
     echo "Replacing $testname memory results"
     rm $gold_standard_dir/$testname/*malloc* >& /dev/null

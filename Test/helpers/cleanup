@@ -44,7 +44,7 @@ fi
 
 find trash \( ! -user `id -un` \) -prune > trash/need_removal
 
-if [ "$VERBOSE" == "yes" ]; then
+if [ "$VERBOSE" = "yes" ]; then
     echo "Folders need to be removed by their owner:"
     echo ""
     cat trash/need_removal | xargs ls -ld
