@@ -12,8 +12,8 @@
 
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Core/Datatypes/ColorMap.h>
-#include <Dataflow/Ports/ScalarFieldPort.h>
-#include <Core/Datatypes/ScalarField.h>
+#include <Dataflow/Ports/FieldPort.h>
+#include <Core/Datatypes/Field.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
@@ -43,8 +43,8 @@ RescaleColorMap::RescaleColorMap(const clString& id)
     // Create the input ports
     imap=scinew ColorMapIPort(this, "ColorMap", ColorMapIPort::Atomic);
     add_iport(imap);
-    ScalarFieldIPort* ifield=scinew ScalarFieldIPort(this, "ScalarField",
-						     ScalarFieldIPort::Atomic);
+    FieldIPort* ifield=scinew FieldIPort(this, "ScalarField",
+						     FieldIPort::Atomic);
     add_iport(ifield);
     fieldports.add(ifield);
 }
@@ -56,6 +56,7 @@ RescaleColorMap::~RescaleColorMap()
 void
 RescaleColorMap::execute()
 {
+#if 0 //FIX_ME with new fields.
     ColorMapHandle cmap;
     if(!imap->get(cmap)) {
 	return;
@@ -64,7 +65,7 @@ RescaleColorMap::execute()
       cmap->Scale(min.get(), max.get());
     } else {
       for(int i=0;i<fieldports.size()-1;i++){
-        ScalarFieldHandle sfield;
+        FieldHandle sfield;
         if(fieldports[i]->get(sfield)){
 	  double min;
 	  double max;
@@ -76,6 +77,7 @@ RescaleColorMap::execute()
       }
     }
     omap->send(cmap);
+#endif
 }
 
 void 
@@ -86,8 +88,8 @@ RescaleColorMap::connection(ConnectionMode mode, int which_port, int)
 	    remove_iport(which_port);
 	    fieldports.remove(which_port-1);
 	} else {
-	    ScalarFieldIPort* p=scinew ScalarFieldIPort(this, "Field",
-							ScalarFieldIPort::Atomic);
+	    FieldIPort* p=scinew FieldIPort(this, "Field",
+							FieldIPort::Atomic);
 	    fieldports.add(p);
 	    add_iport(p);
 	}

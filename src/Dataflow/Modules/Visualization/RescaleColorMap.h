@@ -36,7 +36,7 @@ DESCRIPTION
 
 class RescaleColorMap : public Module {
   ColorMapOPort* omap;
-  Array1<ScalarFieldIPort*> fieldports;
+  Array1<FieldIPort*> fieldports;
   ColorMapIPort* imap;
 
 

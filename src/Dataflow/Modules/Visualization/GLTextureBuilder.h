@@ -7,13 +7,13 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Dataflow/Ports/FieldPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Datatypes/GLTexture3D.h>
 #include <Dataflow/Ports/GLTexture3DPort.h>
-#include <Core/Datatypes/ScalarField.h>
+#include <Core/Datatypes/Field.h>
 #include <GL/glx.h>
 
 
@@ -35,14 +35,14 @@ public:
   virtual void execute();
 
 private:
-  ScalarFieldIPort *inscalarfield;
+  FieldIPort *infield;
 
   GLTexture3DOPort* otexture;
    
   Point Smin,Smax;
   Vector ddv;
   
-  ScalarFieldHandle sfrg;
+  FieldHandle sfrg;
   GLTexture3DHandle tex;
 
   GuiInt max_brick_dim;

@@ -18,18 +18,12 @@ SRCS += $(SRCDIR)/Brick.cc		    \
         $(SRCDIR)/MeshBase.cc		    \
         $(SRCDIR)/Path.cc		    \
         $(SRCDIR)/PropertyManager.cc	    \
-        $(SRCDIR)/ScalarField.cc	    \
-        $(SRCDIR)/ScalarFieldHUG.cc	    \
-        $(SRCDIR)/ScalarFieldZone.cc	    \
         $(SRCDIR)/SparseRowMatrix.cc	    \
         $(SRCDIR)/SymSparseRowMatrix.cc	    \
         $(SRCDIR)/TetVolMesh.cc 	    \
         $(SRCDIR)/TriDiagonalMatrix.cc	    \
         $(SRCDIR)/TriSurfMesh.cc	    \
 	$(SRCDIR)/TypeName.cc		    \
-        $(SRCDIR)/VectorField.cc	    \
-        $(SRCDIR)/VectorFieldHUG.cc	    \
-        $(SRCDIR)/VectorFieldZone.cc	    \
         $(SRCDIR)/VoidStar.cc		    \
         $(SRCDIR)/templates.cc		    \
 	$(SRCDIR)/GLTexture3D.cc \
@@ -52,7 +46,6 @@ SRCS += $(SRCDIR)/Brick.cc		    \
 	$(SRCDIR)/SliceTable.cc \
 	$(SRCDIR)/VolumeUtils.cc \
 
-#        $(SRCDIR)/LatVolMesh.cc		    \
 
 
 PSELIBS := Core/Persistent Core/Exceptions Core/Containers \

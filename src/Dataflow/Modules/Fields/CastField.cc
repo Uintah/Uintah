@@ -19,9 +19,8 @@
  */
 
 #include "CastField.h"
-#include <Dataflow/Ports/ScalarFieldPort.h>
-#include <Core/Datatypes/ScalarField.h>
-//#include <Core/Datatypes/ScalarFieldRG.h>
+#include <Dataflow/Ports/FieldPort.h>
+#include <Core/Datatypes/Field.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
@@ -51,10 +50,10 @@ CastField::CastField(const clString& id)
   maxOutTCLX("maxOutTCLX", id, this), maxOutTCLY("maxOutTCLY", id, this), 
   maxOutTCLZ("maxOutTCLZ", id, this), outVoxelTCL("outVoxelTCL", id, this)
 {
-    iField=new ScalarFieldIPort(this, "Geometry", ScalarFieldIPort::Atomic);
+    iField=new FieldIPort(this, "Geometry", FieldIPort::Atomic);
     add_iport(iField);
     // Create the output ports
-    oField=new ScalarFieldOPort(this, "Geometry", ScalarFieldIPort::Atomic);
+    oField=new FieldOPort(this, "Geometry", FieldIPort::Atomic);
     add_oport(oField);
 }
 
@@ -222,28 +221,28 @@ void CastField::revoxelize() {
     cerr << "Omin="<<Omin<<"  Ospan="<<Ospan<<"\n";
     cerr << "Nmin="<<Nmin<<"  Nspan="<<Nspan<<"\n";
 
-    ScalarFieldRGuchar *ifuco=ifuc;
-    ScalarFieldRGchar *ifco=ifc;
-    ScalarFieldRGshort *ifso=ifs;
-    ScalarFieldRGushort *ifuso=ifus;
-    ScalarFieldRGint *ifio=ifi;
-    ScalarFieldRGfloat *iffo=iff;
-    ScalarFieldRGdouble *ifdo=ifd;
+    FieldRGuchar *ifuco=ifuc;
+    FieldRGchar *ifco=ifc;
+    FieldRGshort *ifso=ifs;
+    FieldRGushort *ifuso=ifus;
+    FieldRGint *ifio=ifi;
+    FieldRGfloat *iffo=iff;
+    FieldRGdouble *ifdo=ifd;
 
     if (outVoxel == UCHAR) {
-	ifuc = new ScalarFieldRGuchar(nx, ny, nz);
+	ifuc = new FieldRGuchar(nx, ny, nz);
     } else if (outVoxel == CHAR) {
-	ifc = new ScalarFieldRGchar(nx, ny, nz);
+	ifc = new FieldRGchar(nx, ny, nz);
     } else if (outVoxel == SHORT) {
-	ifs = new ScalarFieldRGshort(nx, ny, nz);
+	ifs = new FieldRGshort(nx, ny, nz);
     } else if (outVoxel == USHORT) {
-	ifus = new ScalarFieldRGushort(nx, ny, nz);
+	ifus = new FieldRGushort(nx, ny, nz);
     } else if (outVoxel == INT) {
-	ifi = new ScalarFieldRGint(nx, ny, nz);
+	ifi = new FieldRGint(nx, ny, nz);
     } else if (outVoxel == FLOAT) {
-	iff = new ScalarFieldRGfloat(nx, ny, nz);
+	iff = new FieldRGfloat(nx, ny, nz);
     } else if (outVoxel == DOUBLE) {
-	ifd = new ScalarFieldRGdouble(nx, ny, nz);
+	ifd = new FieldRGdouble(nx, ny, nz);
     }
 
     if (inVoxel == UCHAR) {

@@ -15,8 +15,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Dataflow/Ports/MatrixPort.h>
-//#include <Core/Datatypes/ScalarFieldRG.h>
-#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Dataflow/Ports/FieldPort.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
@@ -30,9 +29,9 @@ namespace SCIRun {
 
 
 class TransformField : public Module {
-    ScalarFieldIPort *iport;
+    FieldIPort *iport;
     MatrixIPort *imat;
-    ScalarFieldOPort *oport;
+    FieldOPort *oport;
     void MatToTransform(MatrixHandle mH, Transform& t);
 public:
     TransformField(const clString& id);
@@ -48,11 +47,11 @@ TransformField::TransformField(const clString& id)
 : Module("TransformField", id, Source)
 {
     // Create the input port
-    iport = scinew ScalarFieldIPort(this, "SFRG", ScalarFieldIPort::Atomic);
+    iport = scinew FieldIPort(this, "SFRG", FieldIPort::Atomic);
     add_iport(iport);
     imat = scinew MatrixIPort(this, "Matrix", MatrixIPort::Atomic);
     add_iport(imat);
-    oport = scinew ScalarFieldOPort(this, "SFRG",ScalarFieldIPort::Atomic);
+    oport = scinew FieldOPort(this, "SFRG",FieldIPort::Atomic);
     add_oport(oport);
 }
 
@@ -72,10 +71,10 @@ void TransformField::MatToTransform(MatrixHandle mH, Transform& t) {
 void TransformField::execute()
 {
 #if 0
-    ScalarFieldHandle sfIH;
+    FieldHandle sfIH;
     iport->get(sfIH);
     if (!sfIH.get_rep()) return;
-    ScalarFieldRGBase *sfrgb;
+    FieldRGBase *sfrgb;
     if ((sfrgb=sfIH->getRGBase()) == 0) return;
 
     MatrixHandle mIH;
@@ -85,14 +84,14 @@ void TransformField::execute()
     Transform t;
     MatToTransform(mIH, t);
 
-    ScalarFieldRGdouble *ifd, *ofd;
-    ScalarFieldRGfloat *iff, *off;
-    ScalarFieldRGint *ifi, *ofi;
-    ScalarFieldRGshort *ifs, *ofs;
-    ScalarFieldRGuchar *ifu, *ofu;
-    ScalarFieldRGchar *ifc, *ofc;
+    FieldRGdouble *ifd, *ofd;
+    FieldRGfloat *iff, *off;
+    FieldRGint *ifi, *ofi;
+    FieldRGshort *ifs, *ofs;
+    FieldRGuchar *ifu, *ofu;
+    FieldRGchar *ifc, *ofc;
     
-    ScalarFieldRGBase *ofb;
+    FieldRGBase *ofb;
 
     ifd=sfrgb->getRGDouble();
     iff=sfrgb->getRGFloat();
@@ -114,22 +113,22 @@ void TransformField::execute()
     Point max;
     sfrgb->get_bounds(min, max);
     if (ifd) {
-	ofd=scinew ScalarFieldRGdouble(nx, ny, nz); 
+	ofd=scinew FieldRGdouble(nx, ny, nz); 
 	ofb=ofd;
     } else if (iff) {
-	off=scinew ScalarFieldRGfloat(nx, ny, nz); 
+	off=scinew FieldRGfloat(nx, ny, nz); 
 	ofb=off;
     } else if (ifi) {
-	ofi=scinew ScalarFieldRGint(nx, ny, nz); 
+	ofi=scinew FieldRGint(nx, ny, nz); 
 	ofb=ofi;
     } else if (ifs) {
-	ofs=scinew ScalarFieldRGshort(nx, ny, nz); 
+	ofs=scinew FieldRGshort(nx, ny, nz); 
 	ofb=ofs;
     } else if (ifu) {
-	ofu=scinew ScalarFieldRGuchar(nx, ny, nz); 
+	ofu=scinew FieldRGuchar(nx, ny, nz); 
 	ofb=ofu;
     } else if (ifc) {
-	ofc=scinew ScalarFieldRGchar(nx, ny, nz); 
+	ofc=scinew FieldRGchar(nx, ny, nz); 
 	ofb=ofc;
     }
     ofb->set_bounds(Point(min.x(), min.y(), min.z()), 
@@ -160,7 +159,7 @@ void TransformField::execute()
 		    ofc->grid(i,j,k)=(char)val;
 		}
 	    }
-    ScalarFieldHandle sfOH(ofb);
+    FieldHandle sfOH(ofb);
     oport->send(sfOH);
 #endif
 }
