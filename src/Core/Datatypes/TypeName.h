@@ -60,6 +60,7 @@ template <class T> const string find_type_name(T*)
 template<class T, class S> const string find_type_name( pair<T,S> *);
 
 class Vector;
+class IntVector;
 class Point;
 class Transform;
 
@@ -78,6 +79,7 @@ template<> const string find_type_name(char*);
 template<> const string find_type_name(unsigned char*);
 template<> const string find_type_name(bool*);
 template<> const string find_type_name(Vector*);
+template<> const string find_type_name(IntVector*);
 template<> const string find_type_name(Point*);
 template<> const string find_type_name(Transform*);
 template<> const string find_type_name(string*);
