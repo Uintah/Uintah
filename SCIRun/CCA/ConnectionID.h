@@ -34,15 +34,15 @@
 namespace SCIRun {
   class SCIRunFramework;
   class ComponentID;
-  class ConnectionID : public gov::cca::ConnectionID {
+  class ConnectionID : public sci::cca::ConnectionID {
   public:
-    ConnectionID(const gov::cca::ComponentID::pointer& user,
+    ConnectionID(const sci::cca::ComponentID::pointer& user,
 		 const std::string& userPortName,
-		 const gov::cca::ComponentID::pointer& provider,
+		 const sci::cca::ComponentID::pointer& provider,
 		 const std::string& providerPortName);
     virtual ~ConnectionID();
-    gov::cca::ComponentID::pointer getProvider();
-    gov::cca::ComponentID::pointer getUser();
+    sci::cca::ComponentID::pointer getProvider();
+    sci::cca::ComponentID::pointer getUser();
     std::string getProviderPortName();
     std::string getUserPortName();
   private:
@@ -50,8 +50,8 @@ namespace SCIRun {
     ConnectionID& operator=(const ConnectionID&);
     std::string userPortName;
     std::string providerPortName;
-    gov::cca::ComponentID::pointer user;
-    gov::cca::ComponentID::pointer provider;
+    sci::cca::ComponentID::pointer user;
+    sci::cca::ComponentID::pointer provider;
   };
 }
 

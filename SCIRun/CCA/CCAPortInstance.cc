@@ -33,7 +33,7 @@ using namespace SCIRun;
 
 CCAPortInstance::CCAPortInstance(const std::string& name,
 				 const std::string& type,
-				 const gov::cca::TypeMap::pointer& properties,
+				 const sci::cca::TypeMap::pointer& properties,
 				 PortType porttype)
   : name(name), type(type), properties(properties), porttype(porttype),
     useCount(0)
@@ -42,8 +42,8 @@ CCAPortInstance::CCAPortInstance(const std::string& name,
 
 CCAPortInstance::CCAPortInstance(const std::string& name,
 				 const std::string& type,
-				 const gov::cca::TypeMap::pointer& properties,
-				 const gov::cca::Port::pointer& port,
+				 const sci::cca::TypeMap::pointer& properties,
+				 const sci::cca::Port::pointer& port,
 				 PortType porttype)
   : name(name), type(type), properties(properties), port(port),
     porttype(porttype), useCount(0)

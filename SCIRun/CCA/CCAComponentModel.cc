@@ -159,18 +159,18 @@ void CCAComponentModel::readComponentDescription(const std::string& file)
   }
 }
 
-gov::cca::Services::pointer
+sci::cca::Services::pointer
 CCAComponentModel::createServices(const std::string& instanceName,
 				  const std::string& className,
-				  const gov::cca::TypeMap::pointer& properties)
+				  const sci::cca::TypeMap::pointer& properties)
 {
   CCAComponentInstance* ci = new CCAComponentInstance(framework,
 						      instanceName, className,
 						      properties,
-						      gov::cca::Component::pointer(0));
+						      sci::cca::Component::pointer(0));
   framework->registerComponent(ci, instanceName);
   ci->addReference();
-  return gov::cca::Services::pointer(ci);
+  return sci::cca::Services::pointer(ci);
 }
 
 bool CCAComponentModel::haveComponent(const std::string& type)
@@ -183,7 +183,7 @@ ComponentInstance* CCAComponentModel::createInstance(const std::string& name,
 						     const std::string& type)
 {
   std::string url=""; 
-  gov::cca::Component::pointer component;
+  sci::cca::Component::pointer component;
   if(url==""){  //local component 
     componentDB_type::iterator iter = components.find(type);
     if(iter == components.end())
@@ -213,7 +213,7 @@ ComponentInstance* CCAComponentModel::createInstance(const std::string& name,
       cerr << SOError() << '\n';
       return 0;
     }
-    gov::cca::Component::pointer (*maker)() = (gov::cca::Component::pointer (*)())(maker_v);
+    sci::cca::Component::pointer (*maker)() = (sci::cca::Component::pointer (*)())(maker_v);
     component = (*maker)();
   }
   else{ //remote component: need to be created by framework at url 
@@ -224,8 +224,8 @@ ComponentInstance* CCAComponentModel::createInstance(const std::string& name,
       return 0;
     }
 
-    gov::cca::AbstractFramework::pointer remoteFramework=
-      pidl_cast<gov::cca::AbstractFramework::pointer>(obj);
+    sci::cca::AbstractFramework::pointer remoteFramework=
+      pidl_cast<sci::cca::AbstractFramework::pointer>(obj);
 
     std::string comURL; //=remoteFramework->createComponent(name, type);
     //cerr<<"comURL="<<comURL<<endl;
@@ -234,14 +234,14 @@ ComponentInstance* CCAComponentModel::createInstance(const std::string& name,
       cerr<<"got null obj(Component) from "<<url<<endl;
       return 0;
     }
-    component=pidl_cast<gov::cca::Component::pointer>(comObj);
+    component=pidl_cast<sci::cca::Component::pointer>(comObj);
 
   }
   CCAComponentInstance* ci = new CCAComponentInstance(framework, name, type,
-						      gov::cca::TypeMap::pointer(0),
+						      sci::cca::TypeMap::pointer(0),
 						      component);
   ci->addReference(); //what is this for?
-  component->setServices(gov::cca::Services::pointer(ci));
+  component->setServices(sci::cca::Services::pointer(ci));
   return ci;
 }
 
@@ -277,7 +277,7 @@ std::string CCAComponentModel::createComponent(const std::string& name,
 						     
 {
   
-  gov::cca::Component::pointer component;
+  sci::cca::Component::pointer component;
   componentDB_type::iterator iter = components.find(type);
   if(iter == components.end())
     return "";
@@ -306,7 +306,7 @@ std::string CCAComponentModel::createComponent(const std::string& name,
     cerr << SOError() << '\n';
     return "";
   }
-  gov::cca::Component::pointer (*maker)() = (gov::cca::Component::pointer (*)())(maker_v);
+  sci::cca::Component::pointer (*maker)() = (sci::cca::Component::pointer (*)())(maker_v);
   component = (*maker)();
   //need to make sure addReference() will not cause problem
   component->addReference();

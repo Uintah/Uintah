@@ -34,9 +34,9 @@
 using namespace SCIRun;
 using namespace std;
 
-ConnectionID::ConnectionID(const gov::cca::ComponentID::pointer& user,
+ConnectionID::ConnectionID(const sci::cca::ComponentID::pointer& user,
 			   const string& userPortName,
-			   const gov::cca::ComponentID::pointer& provider,
+			   const sci::cca::ComponentID::pointer& provider,
 			   const string& providerPortName)
 {
   this->user=user;
@@ -49,12 +49,12 @@ ConnectionID::~ConnectionID()
 {
 }
 
-gov::cca::ComponentID::pointer ConnectionID::getProvider()
+sci::cca::ComponentID::pointer ConnectionID::getProvider()
 {
   return provider;
 }
 
-gov::cca::ComponentID::pointer ConnectionID::getUser()
+sci::cca::ComponentID::pointer ConnectionID::getUser()
 {
   return user;
 }
