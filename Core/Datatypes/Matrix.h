@@ -35,6 +35,8 @@
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Containers/String.h>
+#include <iostream>
+using namespace std;
 
 namespace SCIRun {
 
@@ -100,6 +102,8 @@ public:
     virtual void mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
 				int& flops, int& memrefs, int beg=-1, int end=-1, int spVec=0)=0;
 
+  virtual void print(ostream&) const {};
+  virtual void print() const {};
     // separate raw files
     void set_raw(int v) { separate_raw = v; }
     int get_raw() { return separate_raw; }
