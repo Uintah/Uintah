@@ -337,6 +337,388 @@ void add_glass_box (Group* obj_group, Point CornerA, Point CornerB,
 
 }
 
+Group* insert_rtrt_room(Point& cen, double radius)
+{
+  Point minpt = Point(-1600,-1600,-200);
+  Point maxpt = Point(1600,1600,800);
+  Vector diagonal = maxpt-minpt;
+  double mus_scale = 2*radius/diagonal.length();
+
+  Transform grmusT;
+
+  grmusT.pre_translate(Vector(0,0,205));
+  grmusT.pre_scale(Vector(mus_scale,mus_scale,mus_scale));
+  grmusT.pre_translate(cen.asVector());
+
+  int subdivlevel = 4;
+  Material* silver = new MetalMaterial( Color(0.8, 0.8, 0.8) );
+
+  char buf[MAXBUFSIZE];
+  char *name;
+  FILE *fp;
+  double x,y,z;
+  //int minmaxset = 0;
+  //Point max, min;
+  Transform teapotT;
+  
+  teapotT.pre_rotate(M_PI_4,Vector(0,0,1));
+  teapotT.pre_scale(Vector(4,4,4));
+  teapotT.post_translate(Vector(20,0,0));
+  teapotT.pre_trans(grmusT);
+  
+  fp = fopen("/usr/sci/data/Geometry/models/teapot.dat","r");
+  Group* teapot=new Group();
+  while (fscanf(fp,"%s",buf) != EOF) {
+    if (!strcasecmp(buf,"bezier")) {
+      int numumesh, numvmesh, numcoords=3;
+      Mesh *m;
+      Bezier *b;
+      Point p;
+
+  	  fscanf(fp,"%s",buf);
+  	  name = new char[strlen(buf)+1];
+  	  strcpy(name,buf);
+	  
+  	  fscanf(fp,"%d %d %d\n",&numumesh,&numvmesh,&numcoords);
+  	  m = new Mesh(numumesh,numvmesh);
+  	  for (int j=0; j<numumesh; j++) {
+  	    for (int k=0; k<numvmesh; k++) {
+  	      fscanf(fp,"%lf %lf %lf",&x,&y,&z);
+  	      p = teapotT.project(Point(x,y,z));
+  	      m->mesh[j][k] = p;
+  	    }
+  	  }
+  	  b = new Bezier(silver,m);
+  	  b->SubDivide(subdivlevel,.5);
+  	  teapot->add(b->MakeBVH());
+	  
+          }
+        }
+        fclose(fp);
+      
+        Transform bunnyT;
+
+
+    fp = fopen("/usr/sci/data/Geometry/models/bun.ply","r");
+    if (!fp) {
+      fprintf(stderr,"No such file!\n");
+      exit(-1);
+    }
+    int num_verts, num_tris;
+  
+    fscanf(fp,"%d %d",&num_verts,&num_tris);
+  
+    double (*vert)[3] = new double[num_verts][3];
+    double conf,intensity;
+    int i;
+    double minval = MAXFLOAT;
+//    //Material* bunnymat=new LambertianMaterial (Color(.4,.4,.4));
+    Material *bunnymat = new Phong(Color(.63,.51,.5),Color(.3,.3,.3),400);
+  
+    for (i=0; i<num_verts; i++) {
+      fscanf(fp,"%lf %lf %lf %lf %lf",&vert[i][0],&vert[i][2],&vert[i][1],
+             &conf,&intensity);
+      if (vert[i][2] < minval)
+        minval = vert[i][2];
+    }
+
+    bunnyT.pre_translate(Vector(0,0,-minval));
+    bunnyT.pre_scale(Vector(SCALE,SCALE,SCALE));
+    bunnyT.pre_translate(Vector(-300,150,0));
+    bunnyT.pre_trans(grmusT);
+
+    int num_pts, pi0, pi1, pi2;
+
+    Group* bunny=new Group();
+    for (i=0; i<num_tris; i++) {
+      fscanf(fp,"%d %d %d %d\n",&num_pts,&pi0,&pi1,&pi2);
+      bunny->add(new Tri(bunnymat,
+                     bunnyT.project(Point(vert[pi0][0],vert[pi0][1],vert[pi0][2])),
+                     bunnyT.project(Point(vert[pi1][0],vert[pi1][1],vert[pi1][2])),
+                     bunnyT.project(Point(vert[pi2][0],vert[pi2][1],vert[pi2][2]))));
+    }
+    delete vert;
+    fclose(fp);
+    
+    Material* vwmat=new Phong (Color(.6,.6,0),Color(.5,.5,.5),30);
+    fp = fopen("/usr/sci/data/Geometry/models/vw.geom","r");
+    if (!fp) {
+      fprintf(stderr,"No such file!\n");
+      exit(-1);
+    }
+    
+  int vertex_count,polygon_count,edge_count;
+  int numverts;
+  
+  Transform vwT;
+
+  vwT.pre_translate(Vector(0,-1520,0));
+  vwT.post_rotate(M_PI_2,Vector(1,0,0));
+  vwT.post_rotate(M_PI_2,Vector(0,1,0));
+  vwT.post_scale(Vector(1.75,1.75,1.75));
+
+  vwT.pre_translate(Vector(-790,0,605));
+  vwT.post_rotate(.2,Vector(0,1,0));
+
+  vwT.pre_trans(grmusT);
+
+  fscanf(fp,"%d %d %d\n",&vertex_count,&polygon_count,&edge_count);
+  
+  vert = new double[vertex_count][3];
+  
+  for (int i=0; i<vertex_count; i++) 
+      fscanf(fp,"%lf %lf %lf",&vert[i][0],&vert[i][1],&vert[i][2]);
+  Group* vw=new Group();
+  while(fscanf(fp,"%d %d %d %d",&numverts, &pi0, &pi1, &pi2) != EOF) 
+  {
+      
+      vw->add(new Tri(vwmat,
+                     vwT.project(Point(vert[pi0-1][0],vert[pi0-1][1],vert[pi0-1][2])),
+                     vwT.project(Point(vert[pi1-1][0],vert[pi1-1][1],vert[pi1-1][2])),
+                     vwT.project(Point(vert[pi2-1][0],vert[pi2-1][1],vert[pi2-1][2]))));
+      
+      for (int i=0; i<numverts-3; i++) 
+      {
+          pi1 = pi2;
+          fscanf(fp,"%d",&pi2);
+	  Tri* t;
+	  if(pi0 != pi2 && pi1 != pi2 && pi0 != pi1){
+	      vw->add((t=new Tri(vwmat,
+				 vwT.project(Point(vert[pi0-1][0],vert[pi0-1][1],vert[pi0-1][2])),
+				 vwT.project(Point(vert[pi1-1][0],vert[pi1-1][1],vert[pi1-1][2])),
+				 vwT.project(Point(vert[pi2-1][0],vert[pi2-1][1],vert[pi2-1][2])))));
+	      
+	      if(t->isbad()){
+		  cerr << "BAD: " << pi0 << ", " << pi1 << ", " << pi2 << '\n';
+	      }
+	  }
+      }
+  }
+  //BBox b;
+
+  //g->compute_bounds(b,0);
+  //min = b.min();
+  //  max = b.max();
+  //printf("Pmax %lf %lf %lf\nPmin %lf %lf %lf\n",max.x(),max.y(),max.z(),
+  //min.x(),min.y(),min.z());
+
+   Material* bookcoverimg = new ImageMaterial(1,
+					      "/usr/sci/data/Geometry/textures/i3d97.smaller.gamma",
+                                              ImageMaterial::Clamp,
+                                              ImageMaterial::Clamp, 1,
+                                              Color(0,0,0), 0);
+   Material* papermat = new LambertianMaterial(Color(1,1,1));
+   Material* covermat = new LambertianMaterial(Color(0,0,0));
+
+   Transform bookT;
+
+   bookT.pre_scale(Vector(200,200,200));
+   bookT.pre_rotate(.3,Vector(0,0,1));
+   bookT.pre_trans(grmusT);
+
+   Vector v1 = bookT.project(Vector(-.774,0,0));
+   Vector v2 = bookT.project(Vector(0,1,0));
+  
+   Point p0 = grmusT.project(Point(0,150,0.01));
+   Parallelogram *bookback = new Parallelogram(covermat,p0,v2,v1);
+
+   Point p1 = grmusT.project(Point(0,150,10));
+   Parallelogram *bookcover = new Parallelogram(bookcoverimg,p1,v2,v1);
+
+   Parallelogram *bookside0 = new Parallelogram(papermat,p0,p1-p0,v1);
+  
+   Transform sideoff0;
+   sideoff0.pre_translate(v2);
+
+   Parallelogram *bookside1 = new Parallelogram(papermat,sideoff0.project(p0),p1-p0,v1);
+
+   Parallelogram *bookside2 = new Parallelogram(covermat,p0,p1-p0,v2);
+
+   Transform sideoff1;
+   sideoff1.pre_translate(v1);
+
+   Parallelogram *bookside3 = new Parallelogram(papermat,sideoff1.project(p0),p1-p0,v2);
+   Group* book=new Group();
+   book->add(bookback);
+   book->add(bookcover);
+   book->add(bookside0);
+   book->add(bookside1);
+   book->add(bookside2);
+   book->add(bookside3);
+
+      /*printf("Min: %lf %lf %lf\n",min.x(),min.y(),min.z());
+      printf("Max: %lf %lf %lf\n",max.x(),max.y(),max.z());*/
+      
+      Material* glass= new DielectricMaterial(1.5, 1.0, 0.04, 400.0, Color(.80, .93 , .87), Color(1,1,1), true, 0.001);
+
+      Object* box=new Box(glass, 
+			  grmusT.project(Point(-500,-100,-10)), 
+			  grmusT.project(Point(300,300,0)));
+      Group* table=new Group();
+      table->add(box);
+
+      Object* sphere = new Sphere(glass, 
+				  grmusT.project(Point(200, 200, 40)), 
+				  40 * mus_scale);
+      table->add(sphere);
+
+      Material* legs = new CoupledMaterial( Color(0.01, 0.01, 0.01) );
+
+      //legs
+      table->add( new Box(legs, grmusT.project(Point(-480,-80,-200)), grmusT.project(Point(-450,-50,-10)) ) );
+      table->add( new Box(legs, grmusT.project(Point(-480,250,-200)), grmusT.project(Point(-450,280,-10)) ) );
+      table->add( new Box(legs, grmusT.project(Point(250,-80,-200)), grmusT.project(Point(280,-50,-10)) ) );
+      table->add( new Box(legs, grmusT.project(Point(250,250,-200)), grmusT.project(Point(280,280,-10)) ) );
+
+      //crossbars
+      table->add( new Box(legs, grmusT.project(Point(-450,-70,-40)), grmusT.project(Point(250,-60,-10)) ) );
+      table->add( new Box(legs, grmusT.project(Point(-450,260,-40)), grmusT.project(Point(250,280,-10)) ) );
+      table->add( new Box(legs, grmusT.project(Point(-470,-70,-40)), grmusT.project(Point(-460,250,-10)) ) );
+      table->add( new Box(legs, grmusT.project(Point(260,-70,-40)), grmusT.project(Point(270,250,-10)) ) );
+
+      Material* white = new LambertianMaterial(Color(0.8,0.8,0.8));
+
+      Material* marble1=new CrowMarble(0.01, 
+                          grmusT.project(Vector(2,1,0)),
+                          Color(0.5,0.6,0.6),
+                          Color(0.4,0.55,0.52),
+                          Color(0.35,0.45,0.42)
+                                      );
+      Material* marble2=new CrowMarble(0.015, 
+                          grmusT.project(Vector(-1,3,0)),
+                          Color(0.4,0.3,0.2),
+                          Color(0.35,0.34,0.32),
+                          Color(0.20,0.24,0.24)
+                                      );
+
+      Material* matl1=new Checker(marble1,
+				  marble2,
+				  grmusT.project(Vector(0.005,0,0)), grmusT.project(Vector(0,0.0050,0)));
+      Object* check_floor=new Rect(matl1, grmusT.project(Point(0,0,-200)), grmusT.project(Vector(1600,0,0)), grmusT.project(Vector(0,1600,0)));
+      Group* room00=new Group();
+      Group* room01=new Group();
+      Group* room10=new Group();
+      Group* room11=new Group();
+      Group* roomtb=new Group();
+      roomtb->add(check_floor);
+      
+      //room
+
+      Material* whittedimg = new ImageMaterial(1,
+					       "/usr/sci/data/Geometry/textures/whitted",
+					       ImageMaterial::Clamp,
+					       ImageMaterial::Clamp, 1,
+					       Color(0,0,0), 0);
+
+      Vector whittedframev1 = grmusT.project(Vector(0,0,-350*1.2));
+      Vector whittedframev2 = grmusT.project(Vector(-500*1.2,0,0));
+      Object* pic1=
+	     new Parallelogram(whittedimg, grmusT.project(Point(300,-1600+22,700)),whittedframev1,whittedframev2)
+	     ;
+
+      Material* bumpimg = new ImageMaterial(1,
+					    "/usr/sci/data/Geometry/textures/bump",
+					    ImageMaterial::Clamp,
+					    ImageMaterial::Clamp, 1,
+					    Color(0,0,0), 0);
+
+      Vector bumpframev1 = grmusT.project(Vector(0,0,-214*2));
+      Vector bumpframev2 = grmusT.project(Vector(0,312*2,0));
+
+      Object* pic2=
+	     new Parallelogram(bumpimg,grmusT.project(Point(-1600+22,-900,600)),bumpframev1,bumpframev2);
+
+//        room10->add(
+//  		  new Rect(white, grmusT.project(Point(1600,0,600)), grmusT.project(Vector(0,0,800)), grmusT.project(Vector(0,1600,0)))
+//              );
+
+      room00->add(
+         new Rect(white, grmusT.project(Point(-1600,0,600)), grmusT.project(Vector(0,0,800)), grmusT.project(Vector(0,1600,0)))
+            );
+
+//        room11->add(
+//  		  new Rect(white, grmusT.project(Point(0,1600,600)), grmusT.project(Vector(0,0,800)), grmusT.project(Vector(1600, 0,0)))
+//              );
+
+      room01->add(
+		  new Rect(white, grmusT.project(Point(0,-1600,600)), grmusT.project(Vector(0,0,800)), grmusT.project(Vector(1600, 0,0)))
+            );
+
+//        roomtb->add(
+//           new Rect(white, grmusT.project(Point(0,0,1400)), grmusT.project(Vector(0,1600,0)), grmusT.project(Vector(1600, 0,0)))
+//              );
+
+      Material *wood = new Speckle( 0.02,  Color(0.3, 0.2, 0.1), Color(0.39, 0.26, 0.13) );
+      Material *moulding = new LambertianMaterial( Color(0.1, 0.1, 0.1) );
+
+      //moulding
+      room01->add( new Box(moulding, grmusT.project(Point(-1600,-1600,-200)), grmusT.project(Point(1600,-1575,-170)) ));
+//        room11->add( new Box(moulding, grmusT.project(Point(-1600,1575,-200)), grmusT.project(Point(1600,1600,-170)) ));
+      room00->add( new Box(moulding, grmusT.project(Point(-1600,-1600,-200)), grmusT.project(Point(-1575,1600,-170)) ));
+//        room10->add( new Box(moulding, grmusT.project(Point(1575,-1600,-200)), grmusT.project(Point(1600,1600,-170)) ));
+
+Material *brick = new Speckle(0.01, Color(0.5,0.5,0.5), Color(0.6, 0.62, 0.64) );
+     Group* wall1=new Group();
+     Group* wall2=new Group();
+
+     int nbrick=0;
+     for (double xcorner = -1700*mus_scale; xcorner < 1600*mus_scale; xcorner += 220*mus_scale) {
+	 for (double zcorner = -200*mus_scale; zcorner < 1400*mus_scale; zcorner += 200*mus_scale) {
+	     wall1->add( new Box(brick, Point(xcorner,-1610*mus_scale,zcorner),
+				 Point(xcorner+200*mus_scale,-1580*mus_scale, zcorner+80*mus_scale) ));
+	     wall1->add( new Box(brick, Point(xcorner+100*mus_scale,-1610*mus_scale,zcorner+100*mus_scale),
+				 Point(xcorner+300*mus_scale,-1580*mus_scale, zcorner+180*mus_scale) ));
+	     // other wall
+	     wall2->add( new Box(brick, Point(-1610*mus_scale, xcorner, zcorner),
+				 Point(-1580*mus_scale, xcorner+200*mus_scale, zcorner+80*mus_scale) ));
+	     wall2->add( new Box(brick, Point(-1610*mus_scale, xcorner+100*mus_scale, zcorner+100*mus_scale),
+				 Point(-1580*mus_scale, xcorner+300*mus_scale, zcorner+180*mus_scale) ));
+	     nbrick+=4;
+	 }
+     }
+     cerr << "Created " << nbrick << " bricks\n";
+
+      //shelves
+     Group* bookcase=new Group();
+     bookcase->add( new Box(wood, grmusT.project(Point(-1110,-1580,-200)), grmusT.project(Point(-1100,-1470,800)) ));
+     bookcase->add( new Box(wood, grmusT.project(Point(-600,-1580,-200)), grmusT.project(Point(-590,-1470,800)) ));
+     bookcase->add( new Box(wood, grmusT.project(Point(-1100,-1580,-200)), grmusT.project(Point(-600,-1579,800)) ));
+
+     bookcase->add( new Box(wood, grmusT.project(Point(-1100,-1580,-200)), grmusT.project(Point(-600,-1470,-150)) ));
+     bookcase->add( new Box(wood, grmusT.project(Point(-1100,-1580, 0)), grmusT.project(Point(-600,-1470, 10)) ));
+     bookcase->add( new Box(wood, grmusT.project(Point(-1100,-1580, 150)), grmusT.project(Point(-600,-1470, 160)) ));
+     bookcase->add( new Box(wood, grmusT.project(Point(-1100,-1580, 300)), grmusT.project(Point(-600,-1470, 310)) ));
+     bookcase->add( new Box(wood, grmusT.project(Point(-1100,-1580, 450)), grmusT.project(Point(-600,-1470, 460)) ));
+     bookcase->add( new Box(wood, grmusT.project(Point(-1100,-1580, 610)), grmusT.project(Point(-600,-1470, 620)) ));
+     bookcase->add( new Box(wood, grmusT.project(Point(-1100,-1580, 780)), grmusT.project(Point(-600,-1470, 790)) ));
+
+      Group *g = new Group();
+      Group* shadow = new Group();
+      g->add(new Disc(covermat, grmusT.project(Point(14.1,14.1,.01)), grmusT.project(Vector(0,0,1)), 60*mus_scale));
+      g->add(new BV1(teapot)); shadow->add(new BV1(teapot));
+      g->add(new Grid(bunny, 35)); shadow->add(new BV1(bunny));
+      BV1* vw_bv = new BV1(vw);
+      bookcase->add(vw_bv); shadow->add(vw_bv);
+      g->add(book); shadow->add(book);
+      g->add(table); shadow->add(table);
+      room01->add(pic1); shadow->add(pic1);
+      room00->add(pic2); shadow->add(pic2);
+      g->add(new BV1(room00));
+      g->add(new BV1(room01));
+//        g->add(new BV1(room10));
+//        g->add(new BV1(room11));
+//        g->add(roomtb);
+
+      //Grid* wall1grid = new Grid(wall1, 11);
+      //Grid* wall2grid = new Grid(wall2, 11);
+      //g->add(wall1grid); shadow->add(wall1grid);
+      //g->add(wall2grid); shadow->add(wall2grid);
+      BV1* bookcase_bv = new BV1(bookcase);
+      g->add(bookcase_bv); shadow->add(bookcase_bv);
+
+      return g;
+}
+
 void build_history_hall (Group* main_group, Scene *scene) {
 
   Material* flat_yellow = new LambertianMaterial(Color(.8,.8,.0));
@@ -852,7 +1234,7 @@ void build_david_room (Group* main_group, Scene *scene) {
 
   /*  0 for David, 1 for Bender */
 
-#if 0
+#if 1
  Transform bender_trans;
   Point bender_center (-12.5,-20,0);
 
@@ -921,7 +1303,7 @@ void build_david_room (Group* main_group, Scene *scene) {
 
 #endif
 
-  /* **************** couches in David room **************** */
+//    /* **************** couches in David room **************** */
   Transform sofa_trans;
   Point sofa_center (-19,-20,0);
 
@@ -1240,7 +1622,6 @@ void build_modern_room (Group *main_group, Scene *scene) {
   Material* light_marble1 
     = new CrowMarble(4.5, Vector(.3, .3, 0), Color(.9,.9,.9), 
 		     Color(.8, .8,.8), Color(.7, .7, .7)); 
-  FILE *fp;
   const float ped_ht = 1.0;
 
   //  pedestals
@@ -1277,15 +1658,122 @@ void build_modern_room (Group *main_group, Scene *scene) {
   /* Stanford bunny */
   moderng->add(new Box(flat_white,Point(-15-0.375,-6-0.375,0),
 		       Point(-15+0.375,-6+0.375,ped_ht)));
-  Point bun_ped_top (-14,-6,ped_ht);
+  Point bun_ped_top (-15,-6,ped_ht);
+
+#if 1
+  FILE *fp;
+
+  Transform bunnyT;
+  
+  fp = fopen("/usr/sci/data/Geometry/models/bun.ply","r");
+  if (!fp) {
+    fprintf(stderr,"No such file!\n");
+    exit(-1);
+  }
+  int num_verts, num_tris;
+  
+  fscanf(fp,"%d %d",&num_verts,&num_tris);
+  
+  double (*vert)[3] = new double[num_verts][3];
+  double conf,intensity;
+  int i;
+  double minval = MAXFLOAT;
+
+  Material *bunnymat = new Phong(Color(.63,.51,.5),Color(.3,.3,.3),400);
+  
+  BBox bunny_bbox;
+
+  for (i=0; i<num_verts; i++) {
+    fscanf(fp,"%lf %lf %lf %lf %lf",&vert[i][0],&vert[i][2],&vert[i][1],
+	   &conf,&intensity);
+    bunny_bbox.extend(Point(vert[i][0],vert[i][1],vert[i][2]));
+  }
+  
+  Point bunny_min = bunny_bbox.min();
+  Point bunny_max = bunny_bbox.max();
+  Vector bunny_diagonal = bunny_bbox.diagonal();
+
+  bunnyT.pre_translate(Vector(-.5*(bunny_max.x()+bunny_min.x()),
+			      -.5*(bunny_max.y()+bunny_min.y()),
+			      -bunny_min.z()));
+  bunnyT.pre_rotate(M_PI,Vector(0,0,1));
+  double bunny_rad = 2*.375 / (sqrt(bunny_diagonal.x()*bunny_diagonal.x() + 
+				  bunny_diagonal.y()*bunny_diagonal.y()));
+  bunnyT.pre_scale(Vector(bunny_rad,bunny_rad,bunny_rad));
+  bunnyT.pre_translate(bun_ped_top.asVector());
+
+  int num_pts, pi0, pi1, pi2;
+  
+  Group* bunny=new Group();
+  for (i=0; i<num_tris; i++) {
+    fscanf(fp,"%d %d %d %d\n",&num_pts,&pi0,&pi1,&pi2);
+    bunny->add(new Tri(bunnymat,
+		       bunnyT.project(Point(vert[pi0][0],vert[pi0][1],vert[pi0][2])),
+		       bunnyT.project(Point(vert[pi1][0],vert[pi1][1],vert[pi1][2])),
+		       bunnyT.project(Point(vert[pi2][0],vert[pi2][1],vert[pi2][2]))));
+  }
+  delete vert;
+  fclose(fp);
+
+  main_group->add (bunny);
+
+#endif
+
   /*  Venus  */
   moderng->add(new Box(flat_white,Point(-13-0.375,-6-0.375,0),
 		       Point(-13+0.375,-6+0.375,ped_ht)));
+
+  Point venus_ped_top(-13,-6,ped_ht);
+
+  // read in the venus geometry
+    Group* venusg = read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/venus.ply",flat_white);
+
+  BBox venus_bbox;
+
+  venusg->compute_bounds(venus_bbox,0);
+
+  Point vmin = venus_bbox.min();
+  Point vmax = venus_bbox.max();
+  Vector vdiag = venus_bbox.diagonal();
+  /*
+  printf("BBox: min: %lf %lf %lf max: %lf %lf %lf\nDimensions: %lf %lf %lf\n",
+	 vmin.x(),vmin.y(), vmin.z(),
+	 vmax.x(),vmax.y(), vmax.z(),
+	 vdiag.x(),vdiag.y(),vdiag.z());
+  */
+  Transform venusT;
+
+  venusT.pre_translate(-Vector((vmax.x()+vmin.x())/2.,vmin.y(),(vmax.z()+vmin.z())/2.)); // center david over 0
+  venusT.pre_rotate(M_PI_2,Vector(1,0,0));  // make z up
+  double ven_scale = .375*2./(sqrt(vdiag.x()*vdiag.x()+vdiag.z()*vdiag.z()));
+  venusT.pre_scale(Vector(ven_scale,ven_scale,ven_scale)); // make units meters
+  venusT.pre_translate(venus_ped_top.asVector());
+
+  venusg->transform(venusT);
+
+  venus_bbox.reset();
+  venusg->compute_bounds(venus_bbox,0);
+
+  vmin = venus_bbox.min();
+  vmax = venus_bbox.max();
+  vdiag = venus_bbox.diagonal();
+
+  printf("BBox: min: %lf %lf %lf max: %lf %lf %lf\nDimensions: %lf %lf %lf\n",
+	 vmin.x(),vmin.y(), vmin.z(),
+	 vmax.x(),vmax.y(), vmax.z(),
+	 vdiag.x(),vdiag.y(),vdiag.z());
+  main_group->add(venusg);
+
 
   // center of room
   /* rtrt room */
   moderng->add(new Box(flat_white,Point(-14-0.6,-10-0.6,0),
 		       Point(-14+0.6,-10+0.6,0.6)));
+
+  Point rtrt_room_centerpt(-14,-10,.6);
+  double rtrt_room_radius = .6;
+
+  moderng->add(insert_rtrt_room(rtrt_room_centerpt,rtrt_room_radius));
 
   // St Matthew's Pedestal in northwest corner of room
   /*
@@ -1431,39 +1919,6 @@ void build_modern_room (Group *main_group, Scene *scene) {
 
   cerr << "East Wall:  " << EastPoint-Vector(0,img_size,0) << endl;
 
-#if 0
-  Transform bunnyT;
-  fp = fopen("/usr/sci/data/Geometry/models/bun.ply","r");
-  if (!fp) {
-    fprintf(stderr,"No such file!\n");
-    exit(-1);
-  }
-  int num_verts, num_tris;
-  
-  fscanf(fp,"%d %d",&num_verts,&num_tris);
-  
-  double (*vert)[3] = new double[num_verts][3];
-  double conf,intensity;
-  int i;
-  Material *bunnymat = new Phong(Color(.63,.51,.5),Color(.3,.3,.3),400);
-  
-  bunnyT.pre_scale(Vector(SCALE,SCALE,SCALE));
-  bunnyT.pre_translate(Vector( -14,-6.5,1.5));
-  int num_pts, pi0, pi1, pi2;
-  
-  Group* bunny=new Group();
-  for (i=0; i<num_tris; i++) {
-    fscanf(fp,"%d %d %d %d\n",&num_pts,&pi0,&pi1,&pi2);
-    bunny->add(new Tri(shinyred,
-		       bunnyT.project(Point(vert[pi0][0],vert[pi0][1],vert[pi0][2])),
-		       bunnyT.project(Point(vert[pi1][0],vert[pi1][1],vert[pi1][2])),
-		       bunnyT.project(Point(vert[pi2][0],vert[pi2][1],vert[pi2][2]))));
-  }
-  delete vert;
-  fclose(fp);
-
-  main_group->add (bunny);
-#endif
 
   main_group->add(moderng);
 
