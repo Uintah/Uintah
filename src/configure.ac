@@ -2253,6 +2253,7 @@ if test "$HAVE_PNG" = "no"; then
   fi
 else
   if test "$_sci_optional" = "specific"; then
+       AC_MSG_CHECKING(that PNG is in requestion location '$with_png/lib')
        # verify that it was found in the location requested.
        if test ! -e $with_png/lib/libpng.so &&
           test ! -e $with_png/lib/libpng.a &&
@@ -2260,6 +2261,7 @@ else
             echo
             AC_MSG_ERROR(Found libpng but not in requested directory: $with_png/lib)
        fi
+       AC_MSG_RESULT(yes.)
     fi
 fi
 
