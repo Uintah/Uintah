@@ -47,7 +47,9 @@ extern int sci_glew_init();
 
 #else /* !HAVE_GLEW */
 
+#define GL_GLEXT_PROTOTYPES
 #include <GL/gl.h>
+#include <GL/glext.h>
 
 #endif
 
