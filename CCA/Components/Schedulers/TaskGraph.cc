@@ -869,6 +869,12 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
     
     constHandle<PatchSubset> patches =
       req->getPatchesUnderDomain(task->patches);
+    if (req->var->typeDescription()->isReductionVariable() &&
+	req->dw == Task::NewDW) {
+      // make sure newdw reduction variable requires link up to the
+      // reduction tasks.
+      patches = 0;
+    }
     constHandle<MaterialSubset> matls =
       req->getMaterialsUnderDomain(task->matls);
 
