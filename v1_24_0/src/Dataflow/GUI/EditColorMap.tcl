@@ -28,10 +28,10 @@
 
 
 
-itcl_class SCIRun_Visualization_GenTransferFunc {
+itcl_class SCIRun_Visualization_EditColorMap {
     inherit Module
     constructor {config} {
-	set name GenTransferFunc
+	set name EditColorMap
 	set_defaults
     }
     method set_defaults {} {

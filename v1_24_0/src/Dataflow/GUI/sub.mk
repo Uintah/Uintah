@@ -88,6 +88,7 @@ SRCS := \
         $(SRCDIR)/CriticalPointWidget.tcl \
         $(SRCDIR)/CrosshairWidget.tcl \
         $(SRCDIR)/DirectInterpolate.tcl \
+        $(SRCDIR)/EditColorMap.tcl \
         $(SRCDIR)/EditPath.tcl \
         $(SRCDIR)/EditTransferFunc2.tcl \
         $(SRCDIR)/ErrorMetric.tcl \
@@ -105,7 +106,6 @@ SRCS := \
         $(SRCDIR)/GenClock.tcl \
         $(SRCDIR)/GenStandardColorMaps.tcl \
         $(SRCDIR)/GenTitle.tcl \
-        $(SRCDIR)/GenTransferFunc.tcl \
         $(SRCDIR)/ToolTipText.tcl \
         $(SRCDIR)/Isosurface.tcl \
         $(SRCDIR)/IsoClip.tcl \
