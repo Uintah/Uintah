@@ -1,7 +1,7 @@
 #ifndef __SIMPLE_BURN_H__
 #define __SIMPLE_BURN_H__
 
-#include <Packages/Uintah/CCA/Components/MPMICE/Combustion/Burn.h>
+#include <Packages/Uintah/CCA/Components/HETransformation/Burn.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <math.h>
