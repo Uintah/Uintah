@@ -26,26 +26,43 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-# *** NOTE ***
-#
-# Do not remove or modify the comment line:
-#
-# #[INSERT NEW ?????? HERE]
-#
-# It is required by the Component Wizard to properly edit this file.
-# if you want to edit this file by hand, see the "Create A New Component"
-# documentation on how to do it correctly.
 
-SRCDIR := Packages/Fusion/Dataflow/GUI
+# GUI for IsoValueController module
+# by Allen R. Sanderson
+# August 2004
 
-SRCS := \
-	$(SRCDIR)/IsoValueController.tcl \
-	$(SRCDIR)/NIMRODConverter.tcl \
-	$(SRCDIR)/VULCANConverter.tcl \
-	$(SRCDIR)/VULCANDataReader.tcl \
-#[INSERT NEW TCL FILE HERE]
+catch {rename Fusion_Fields_IsoValueController ""}
 
-include $(SCIRUN_SCRIPTS)/tclIndex.mk
+itcl_class Fusion_Fields_IsoValueController {
+    inherit Module
+    constructor {config} {
+        set name IsoValueController
+        set_defaults
+    }
 
+    method set_defaults {} {
 
+	global $this-isovalues
+	set $this-isovalues "0.0"
+    }
 
+    method ui {} {
+        set w .ui[modname]
+        if {[winfo exists $w]} {
+            raise $w
+            return
+        }
+
+	toplevel $w
+
+	frame $w.isolist
+	label $w.isolist.l -text "List of Isovals:"
+	entry $w.isolist.e -width 40 -text $this-isovalues
+	bind $w.isolist.e <Return> "$this-c needexecute"
+	pack $w.isolist.l $w.isolist.e -side left -fill both -expand 1
+	pack $w.isolist -fill x
+
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
+    }
+}
