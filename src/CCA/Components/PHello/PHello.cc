@@ -42,6 +42,7 @@
 #include <CCA/Components/PHello/PHello.h>
 #include <iostream>
 #include <Core/CCA/PIDL/PIDL.h>
+#include <Core/CCA/Comm/PRMI.h>
 #include <mpi.h>
 #include <unistd.h>
 using namespace std;
@@ -60,56 +61,46 @@ PHello::~PHello(){
 
 void PHello::setServices(const sci::cca::Services::pointer& svc){
   int mpi_size, mpi_rank;
-  MPI_Comm_size(MPI_COMM_COM,&mpi_size);
-  MPI_Comm_rank(MPI_COMM_COM,&mpi_rank);
+  PRMI::lock();
+  MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
+  MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
+  PRMI::unlock();
   services=svc;
 
   //create common property for collective port
+
   sci::cca::TypeMap::pointer cprops= svc->createTypeMap();
   cprops->putInt("rank", mpi_rank);
   cprops->putInt("size", mpi_size);
   cprops->setRankAndSize(mpi_rank, mpi_size);
-
-  /*******************************************
-  if we pass cprops to both addProvidesPorts(), it crashed sometimes.
-  adding a MPI_Barrier between two addProvidesPort does not solve this
-  problem.
-  **********************************************/
+  
   sci::cca::TypeMap::pointer cprops0= svc->createTypeMap();
   cprops0->putInt("rank", mpi_rank);
   cprops0->putInt("size", mpi_size);
-
-  //  cprops0->setRankAndSize(mpi_rank, mpi_size);
-
   //add UI Port
-  myUIPort::pointer uip=myUIPort::pointer(new myUIPort);
+  myUIPort::pointer uip(new myUIPort);
   svc->addProvidesPort(uip,"ui","sci.cca.ports.UIPort", cprops0);
-
-
+  
   //add Go Port
   myGoPort::pointer gop=myGoPort::pointer(new myGoPort(svc));
-  cerr<<"svc->addProvidesPort"<<endl;
   svc->addProvidesPort(gop,"go","sci.cca.ports.GoPort", cprops);
-  cerr<<"svc->addProvidesPort done"<<endl;
+  
   //register StringPort
   if(mpi_rank==0){
     sci::cca::TypeMap::pointer props(0); 
     svc->registerUsesPort("stringport","sci.cca.ports.StringPort", props);
   }
-  MPI_Barrier(MPI_COMM_COM);
 }
 
 void PHello::setCommunicator(int comm){
-  MPI_COMM_COM=*(MPI_Comm*)(comm);
+  //  MPI_COMM_COM=*(MPI_Comm*)(comm);
 }
 
 int myUIPort::ui(){
-  //int mpi_size, mpi_rank;
-  //  MPI_Comm_size(MPI_COMM_COM,&mpi_size);
-  //  MPI_Comm_rank(MPI_COMM_COM,&mpi_rank);
-  //  cout<<"UI button is clicked at rank="<<mpi_rank<<"!\n";
-  cout<<"UI button is clicked "<<endl;
-  //MPI_Barrier(MPI_COMM_COM);
+  int mpi_size, mpi_rank;
+  MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
+  MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
+  cout<<"UI button is clicked at rank="<<mpi_rank<<"!\n";
   return 0;
 }
 

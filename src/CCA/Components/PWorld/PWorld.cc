@@ -42,6 +42,7 @@
 #include<mpi.h>
 #include <CCA/Components/PWorld/PWorld.h>
 #include <Core/CCA/PIDL/PIDL.h>
+#include <Core/CCA/Comm/PRMI.h>
 #include <iostream>
 #include <sstream>
 
@@ -63,32 +64,24 @@ PWorld::~PWorld(){
 void PWorld::setServices(const sci::cca::Services::pointer& svc){
 
   int mpi_size, mpi_rank;
-  MPI_Comm_size(MPI_COMM_COM,&mpi_size);
-  MPI_Comm_rank(MPI_COMM_COM,&mpi_rank);
+  PRMI::lock();
+  MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
+  MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
+  PRMI::unlock();
   services=svc;
-
-  cerr<<"PWorld:: mpi_rank="<<mpi_rank<<endl;
-  cerr<<"PWorld:: mpi_size="<<mpi_size<<endl;
 
   //create common property for collective port
   sci::cca::TypeMap::pointer cprops= svc->createTypeMap();
   cprops->putInt("rank", mpi_rank);
   cprops->putInt("size", mpi_size);
 
-  //  cprops->setRankAndSize(mpi_rank, mpi_size);
-  cerr<<"PWorld:: addProvidesPort..."<<mpi_size<<endl;
-
-  /////////////////////////////////////////////////
   //add StringPort
   StringPort::pointer strport=StringPort::pointer(new StringPort);
-  svc->addProvidesPort(strport,"stringport","sci.cca.ports.StringPort",cprops); //sci::cca::TypeMap::pointer(0));
-  cerr<<"PWorld:: addProvidesPort done"<<mpi_size<<endl;
-  MPI_Barrier(MPI_COMM_COM);
-  cerr<<"PWorld:: Barrier done"<<mpi_size<<endl;
+  svc->addProvidesPort(strport,"stringport","sci.cca.ports.StringPort",cprops); 
 }
 
 void PWorld::setCommunicator(int comm){
-  MPI_COMM_COM=*(MPI_Comm*)(comm);
+  //  MPI_COMM_COM=*(MPI_Comm*)(comm);
 }
 
 std::string 
