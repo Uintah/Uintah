@@ -41,7 +41,6 @@ using std::endl;
 #include <tk.h>
 
 typedef void (Tcl_LockProc)();
-//typedef int (IsTclThreadProc)();
 
 #ifdef _WIN32
 #undef ASSERT
@@ -49,21 +48,19 @@ typedef void (Tcl_LockProc)();
 #define GLXContext HGLRC
 #ifdef __cplusplus
 extern "C" {
-#endif
+#endif // __cplusplus
 __declspec(dllimport) void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
-  //__declspec(dllimport) void Tcl_SetIsTclThread(IsTclThreadProc* proc);
 int tkMain(int argc, char** argv, void (*nwait_func)(void*), void* nwait_func_data);
 #ifdef __cplusplus
 }
-#endif
+#endif // __cplusplus
 
-#else
+#else // _WIN32
 
 extern "C" int tkMain(int argc, char** argv, void (*nwait_func)(void*), void* nwait_func_data);
 extern "C" void Tcl_SetLock(Tcl_LockProc*, Tcl_LockProc*);
-//extern "C" void Tcl_SetIsTclThread(IsTclThreadProc* proc);
 
-#endif
+#endif // _WIN32
 
 extern "C" Tcl_Interp* the_interp;
 
@@ -73,7 +70,6 @@ namespace SCIRun {
 static Mutex tlock("TCL task lock");
 static Thread* owner;
 static int lock_count;
-//static Thread* tcl_task_id;
 
 static void do_lock()
 {
@@ -98,11 +94,6 @@ static void do_unlock()
     }
 }
 
-// static int is_tcl_thread()
-// {
-//   return Thread::self() == tcl_task_id;
-// }
-
 static int x_error_handler(Display* dpy, XErrorEvent* error)
 {
 #ifndef _WIN32
@@ -116,7 +107,6 @@ static int x_error_handler(Display* dpy, XErrorEvent* error)
 
 static int exitproc(ClientData, Tcl_Interp*, int, char* [])
 {
-  //printf("exitproc() {%s,%d}\n",__FILE__,__LINE__);
   Thread::exitAll(0);
   return TCL_OK; // not reached
 }
@@ -132,7 +122,6 @@ TCLTask::TCLTask(int argc, char* argv[])
     XSetErrorHandler(x_error_handler);
 
     Tcl_SetLock(do_lock, do_unlock);
-    //    Tcl_SetIsTclThread(is_tcl_thread);
 }
 
 TCLTask::~TCLTask()
@@ -148,8 +137,6 @@ void wait_func(void* thatp)
 void
 TCLTask::run()
 {
-    //tcl_task_id=Thread::self();
-
     // Acquire the lock before we go into the Tcl/Tk main loop.
     // From now on, it will only get unlocked when the GUI blocks.
     do_lock();
