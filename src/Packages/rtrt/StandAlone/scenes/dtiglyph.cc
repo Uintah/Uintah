@@ -4,11 +4,11 @@
   Scene file for rendering DTI tensor data, via Gordon's glyph scheme.
 
   Authors:  James Bigler (bigler@cs.utah.edu)
-            Gordon Kindlmann (gk@cs.utah.edu)
+            Gordon Kindlmann (gk@cs.utah.edu)  (all use of macros)
   Date: July 10, 2002
 
 */
-        
+
 #include <Packages/rtrt/Core/Camera.h>
 //#include <Packages/rtrt/Core/CatmullRomSpline.h>
 //#include <Packages/rtrt/Core/GridSpheres.h>
@@ -45,7 +45,6 @@
 using namespace rtrt;
 using namespace std;
 
-
 int
 dtiParseNrrd(void *ptr, char *str, char err[AIR_STRLEN_HUGE]) {
   char me[] = "dtiParseNrrd", *nerr;
@@ -69,7 +68,6 @@ dtiParseNrrd(void *ptr, char *str, char err[AIR_STRLEN_HUGE]) {
     return 1;
   }
   if (!tenValidTensor(*nrrdP, nrrdTypeFloat, AIR_TRUE)) {
-    /* why not use the given err[] as a temp buffer */
     sprintf(err, "%s: \"%s\" isn't a valid tensor volume", me, str);
     biffAdd(TEN, err);
     airMopAdd(mop, nerr = biffGetDone(TEN), airFree, airMopOnError);
@@ -114,6 +112,18 @@ hestCB dtiAnisoHestCB = {
 char *dtiINFO = ("Generates an rtrt scene to do glyph-based "
 		 "visualization of a diffusiont-tensor field");
 
+void
+dtiRgbGen(Color &rgb, float evec[3], float an) {
+  float r, g, b;
+
+  r = AIR_ABS(evec[0]);
+  g = AIR_ABS(evec[1]);
+  b = AIR_ABS(evec[2]);
+  rgb = Color(AIR_AFFINE(0.0, an, 1.0, 0.5, r),
+	      AIR_AFFINE(0.0, an, 1.0, 0.5, g),
+	      AIR_AFFINE(0.0, an, 1.0, 0.5, b));
+}
+
 extern "C" 
 Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 {
@@ -121,9 +131,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   hestOpt *opt = NULL;
   int anisoType;
   char *me, *err;
-  float glyphScale;
+  float glyphScale, anisoThresh;
   Nrrd *nin;
-  
 
   hestOptAdd(&opt, NULL, "input", airTypeOther, 1, 1, &nin, NULL,
 	     "input tensor volume, in nrrd format, with 7 floats per voxel.",
@@ -143,11 +152,13 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 	     NULL, tenAniso);
   hestOptAdd(&opt, NULL, "scale", airTypeFloat, 1, 1, &glyphScale, NULL,
 	     "over-all glyph scaling");
+  hestOptAdd(&opt, NULL, "thresh", airTypeFloat, 1, 1, &anisoThresh, NULL,
+	     "anisotropy threshold for testing");
 	     
   mop = airMopInit();
   airMopAdd(mop, opt, (airMopper)hestOptFree, airMopAlways);
   me = argv[0];
-  if (argc != 4) {
+  if (argc != 5) {
     hestInfo(stderr, me, dtiINFO, NULL);
     hestUsage(stderr, opt, me, NULL);
     hestGlossary(stderr, opt, NULL);
@@ -168,21 +179,86 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 
   fprintf(stderr, "%s: glyphScale = %g\n", me, glyphScale);
   fprintf(stderr, "%s: anisoType = %d\n", me, anisoType);
-  fprintf(stderr, "%s: got dti volume %d x %d x %d\n", me,
+  fprintf(stderr, "%s: anisoThresh = %g\n", me, anisoThresh);
+  fprintf(stderr, "%s: got dti volume dimensions %d x %d x %d\n", me,
 	  nin->axis[1].size, nin->axis[2].size, nin->axis[3].size);
+  fprintf(stderr, "%s: dti volume spacings %g x %g x %g\n", me,
+	  nin->axis[1].spacing, nin->axis[2].spacing, nin->axis[3].spacing);
 
   //////////////////////////////////////////////////////
   // add geometry to this :)
   Group *all = new Group();
 
-  //  PhongMaterial *matl = new PhongMaterial(Color(1,0,0), 1);
-  Phong *matl = new Phong(Color(1,0,0), Color(1,1,1), 100);
-  Sphere *obj = new Sphere(matl, Point(0,0,0), glyphScale);
-  Transform *tr = new Transform();
-  double t[16];
-  ELL_4M_SET_IDENTITY(t);
-  tr->set(t);
-  all->add(new Instance(new InstanceWrapperObject(obj),tr));
+  int sx, sy, sz,        // sizes along x,y,z axes
+    xi, yi, zi,          // indices into x,y,z axes
+    numGlyphs;
+  float zs, ys, xs;      // spacings along x,y,z axes
+  sx = nin->axis[1].size;
+  sy = nin->axis[2].size;
+  sz = nin->axis[3].size;
+  xs = nin->axis[1].spacing;
+  ys = nin->axis[2].spacing;
+  zs = nin->axis[3].spacing;
+  float tmp,             // don't ask
+    *tdata,              // all tensor data; 7 floats per tensor
+    x, y, z,             // world-ish position (scaled by spacings)
+    eval[3], evec[9],    // eigen{values,vectors} of tensor
+    c[TEN_ANISO_MAX+1];  // all possible anisotropies
+  tdata = (float*)nin->data;
+  numGlyphs = 0;
+  for (zi = 0; zi < sz; zi++) {
+    z = zs * zi;
+    for (yi = 0; yi < sy; yi++) {
+      y = ys * yi;
+      for (xi = 0; xi < sx; xi++, tdata+=7) {
+	x = xs * xi;
+
+	// we always ignore data points with confidence < 0.5
+	if (!( tdata[0] > 0.5 ))
+	  continue;
+
+	// do eigensystem solve
+	tenEigensolve(eval, evec, tdata);
+	tenAnisoCalc(c, eval);
+	if (!( c[anisoType] > anisoThresh))
+	  continue;
+	
+	// so there will be a glyph generated for this sample
+	numGlyphs++;
+	Color rgb;
+	dtiRgbGen(rgb, evec, c[anisoType]);
+	//	Phong *matl = new Phong(rgb, Color(1,1,1), 100);
+	PhongMaterial *matl = new PhongMaterial(rgb, 1);
+	// all glyphs start at the origin
+
+	Sphere *obj = new Sphere(matl, Point(0,0,0), glyphScale);
+
+
+	double tmat[9], A[16], B[16], C[16];
+	// C = composition of tensor matrix and translation
+	TEN_LIST2MAT(tmat, tdata);
+	ELL_43M_INSET(A, tmat);
+	//	ELL_4M_SET_IDENTITY(A);
+	ELL_4M_SET_TRANSLATE(B, x, y, z);
+	ELL_4M_MUL(C, B, A);
+	ELL_4M_TRANSPOSE_IP(C, tmp);
+	printf("glyph at (%d,%d,%d) -> (%g,%g,%g) with transform:\n",
+	       xi, yi, zi, x, y, z);
+	ell4mPrint_d(stdout, C);
+	Transform *tr = new Transform();
+	tr->set(C);
+
+	//	Sphere *obj = new Sphere(matl, Point(x,y,z), glyphScale);
+	//	all->add(obj);
+
+#if 1
+	BBox b (Point(x-10,y-10,z-10), Point(x+10,y+10,z+10));
+	all->add(new Instance(new InstanceWrapperObject(obj),tr,b));
+#endif
+      }
+    }
+  }
+  printf("%s: created %d glyphs!\n", me, numGlyphs);
 
   //////////////////////////////////////////////////////
   // all the scene stuff
@@ -200,13 +276,15 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 			 bgcolor, cdown, cup, groundplane, 
 			 ambient_scale);
 
-  Light *scene_light = new Light(Point(500,-300,300), Color(.8,.8,.8), 0);
+  Light *scene_light = new Light(Point(500,-300,300), Color(1,1,1), 0);
   scene_light->name_ = "Glyph light";
   scene->add_light(scene_light);
   scene->select_shadow_mode( Hard_Shadows );
   
 
+  
   // clean up hest memory
   airMopOkay(mop);
   return scene;
 }
+
