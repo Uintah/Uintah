@@ -3,6 +3,7 @@
 #include <Packages/Uintah/CCA/Components/MPMICE/MPMICELabel.h>
 #include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/RigidMPM.h>
+#include <Packages/Uintah/CCA/Components/MPM/ShellMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
@@ -53,12 +54,36 @@ MPMICE::MPMICE(const ProcessorGroup* myworld)
 #ifdef RIGID_MPM
   d_mpm      = scinew RigidMPM(myworld);
 #else
-# ifdef SHELL_MPM
-    d_mpm      = scinew ShellMPM(myworld);
-# else
-    d_mpm      = scinew SerialMPM(myworld);
-# endif
+  d_mpm      = scinew SerialMPM(myworld);
 #endif
+  d_ice      = scinew ICE(myworld);
+  d_SMALL_NUM = d_ice->d_SMALL_NUM; 
+  d_TINY_RHO  = d_ice->d_TINY_RHO;
+  
+  // Turn off all the debuging switches
+  switchDebug_InterpolateNCToCC_0 = false;
+  switchDebug_InterpolateCCToNC   = false;
+  switchDebug_InterpolatePAndGradP= false;
+}
+
+MPMICE::MPMICE(const ProcessorGroup* myworld, MPMType mpmtype)
+  : UintahParallelComponent(myworld)
+{
+  Mlb  = scinew MPMLabel();
+  Ilb  = scinew ICELabel();
+  MIlb = scinew MPMICELabel();
+
+  switch(mpmtype) {
+    case RIGID_MPMICE:
+      //d_mpm = scinew RigidMPM(myworld);
+      break;
+    case SHELL_MPMICE:
+      d_mpm = scinew ShellMPM(myworld);
+      break;
+    default:
+      d_mpm = scinew SerialMPM(myworld);
+  }
+
   d_ice      = scinew ICE(myworld);
   d_SMALL_NUM = d_ice->d_SMALL_NUM; 
   d_TINY_RHO  = d_ice->d_TINY_RHO;
