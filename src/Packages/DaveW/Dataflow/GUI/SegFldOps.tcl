@@ -11,7 +11,9 @@
  # 
  ##
 
-itcl_class SegFldOps {
+catch {rename DaveW_EEG_SegFldOps ""}
+
+itcl_class DaveW_EEG_SegFldOps {
     inherit Module
     method modname {} {
 	set n $this

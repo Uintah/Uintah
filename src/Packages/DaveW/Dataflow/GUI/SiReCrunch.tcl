@@ -11,7 +11,9 @@
  #
  ##
 
-itcl_class SiReCrunch {
+catch {rename DaveW_SiRe_SiReCrunch ""}
+
+itcl_class DaveW_SiRe_SiReCrunch {
     inherit Module
     constructor {config} {
         set name SiReCrunch

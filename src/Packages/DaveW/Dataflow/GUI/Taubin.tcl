@@ -1,4 +1,6 @@
-itcl_class Taubin {
+catch {rename DaveW_EEG_Taubin ""}
+
+itcl_class DaveW_EEG_Taubin {
     inherit Module
     method modname {} {
 	set n $this

@@ -10,7 +10,9 @@
 #  Copyright (C) 1997 SCI Group
 #
 
-itcl_class XYZtoRGB {
+catch {rename DaveW_CS684_XYZtoRGB ""}
+
+itcl_class DaveW_CS684_XYZtoRGB {
     inherit Module
     method modname {} {
 	set n $this

@@ -11,7 +11,9 @@
  #
  ##
 
-itcl_class InvEEGSolve {
+catch {rename DaveW_EEG_InvEEGSolve ""}
+
+itcl_class DaveW_EEG_InvEEGSolve {
     inherit Module
     constructor {config} {
         set name InvEEGSolve

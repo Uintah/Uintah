@@ -11,7 +11,8 @@
  #
  ##
 
-itcl_class SelectSurfNodes {
+catch {rename DaveW_EEG_SelectSurfNodes ""}
+itcl_class DaveW_EEG_SelectSurfNodes {
     inherit Module
     method modname {} {
 	set n $this
