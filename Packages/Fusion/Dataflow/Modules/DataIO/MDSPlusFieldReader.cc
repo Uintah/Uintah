@@ -333,7 +333,7 @@ void MDSPlusFieldReader::execute(){
   // If reading the same tree no need to get the grid.
   if( readGrid ) {
 
-    int dims[3];
+    int *dims;
 
     for( int n=0; n<MAX_GRID; n++ ) {
       if( grid_data[n] ) delete grid_data[n];
@@ -343,10 +343,8 @@ void MDSPlusFieldReader::execute(){
     // Query the server for the cylindrical components of the grid.
     for( int n=0; n<MAX_GRID; n++ ) {
 
-      dims[0] = dims[1] = dims[2] = 0;
-
       remark( gridStr[n] );
-      grid_data[n] = mds.grid( gridStr[n].c_str(), dims );
+      grid_data[n] = mds.grid( gridStr[n].c_str(), &dims );
 
       if( grid_data[n] ) {
 
@@ -373,7 +371,7 @@ void MDSPlusFieldReader::execute(){
 	
 	case 3:
 	  nMode = dims[0];
-	  for( int i=0; i<3; i++ )
+	  for( int i=0; i<nMode; i++ )
 	    if( grid_data[n][i] != (double) i ) {
 
 	      ostringstream str;
@@ -408,7 +406,7 @@ void MDSPlusFieldReader::execute(){
 
     std::string buf;
 
-    int dims[3];
+    int *dims;
 
     std::string name;           // Used to hold the name of the slice 
     double time;                // Used to hold the time of the slice 
@@ -427,7 +425,7 @@ void MDSPlusFieldReader::execute(){
     vector< pair< int, double > > sliceList;
 
     for( int ic=0; ic<nSlices; ic++ ) {
-      name = mds.slice_name( nids, ic );
+      name = mds.slice_name( nids[ic] );
       time = mds.slice_time( name );
 
       sliceList.push_back( pair< int, double >(ic, time) );
@@ -478,7 +476,7 @@ void MDSPlusFieldReader::execute(){
 
       slice = sliceList[ic].first;
 
-      name = mds.slice_name( nids, slice );
+      name = mds.slice_name( nids[slice] );
       time = mds.slice_time( name );
 
       {
@@ -524,7 +522,7 @@ void MDSPlusFieldReader::execute(){
 	      remark( spaceStr[i] + "." + buf );
 
 	      scalar_data[n][i] =
-		mds.slice_data( name, spaceStr[i].c_str(), buf.c_str(), dims );
+		mds.slice_data( name, spaceStr[i].c_str(), buf.c_str(), &dims );
 
 	      if( scalar_data[n][i] == NULL ) {
 		error( "Error can not get Scalar data" );
@@ -580,7 +578,7 @@ void MDSPlusFieldReader::execute(){
 		remark( spaceStr[i] + "." + buf );
 
 		vector_data[n][i][j] =
-		  mds.slice_data( name, spaceStr[i].c_str(), buf.c_str(), dims );
+		  mds.slice_data( name, spaceStr[i].c_str(), buf.c_str(), &dims );
 
 		if( vector_data[n][i][j] == NULL ) {
 		  error( "Error can not get Vector data" );
