@@ -143,10 +143,10 @@
       <save label="rho_CC"/>
       <save label="sp_vol_CC"/>
       <save label="temp_CC"/>
-      <save label= "burnedMass"/>
-      <save label= "int_eng_comb"/>
-      <save label= "created_vol"/>
-      <save label="mom_comb_CC"/>
+      <save label="modelMass_src"/>
+      <save label="modelEng_src"/>
+      <save label="modelVol_src"/>
+      <save label="modelMom_src"/>
       
       <save label = "p.x"/>
       <save label = "p.mass+"/>
@@ -203,7 +203,7 @@
     <!--____________________________________________________________________-->                      
     <MaterialProperties>
        <MPM>
-         <material Rx = "reactant" >
+         <material name = "reactant" >
          <burn type = "simple" >
          <ThresholdTemp>         299                     </ThresholdTemp>
          <ThresholdPressure>     500                     </ThresholdPressure>
@@ -238,7 +238,7 @@
             </contact>
       </MPM>
        <ICE>
-           <material Rx = "product" >
+           <material name = "product" >
            <burn type = "null" />
            <EOS type = "ideal_gas">                     </EOS>
            <viscosity>          1e-2                    </viscosity>
@@ -274,6 +274,17 @@
         </exchange_properties>
     </MaterialProperties> 
     
+    <Models>
+      <Model type="Simple_Burn">
+        <fromMaterial> reactant     </fromMaterial>
+         <toMaterial>   product     </toMaterial>
+        <ThresholdTemp>     299     </ThresholdTemp>
+        <ThresholdPressure> 500     </ThresholdPressure>
+        <Enthalpy>         0.0      </Enthalpy>
+        <BurnCoeff>        1        </BurnCoeff>
+        <refPressure>      1        </refPressure>
+      </Model>
+    </Models>    
     <PhysicalBC>
        <MPM>
       </MPM>
