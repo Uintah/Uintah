@@ -82,7 +82,7 @@ int SCIRunLoader::createInstance(const string& componentName, const string& comp
   //TODO: assume type is always good?
   
   string lastname=componentType.substr(componentType.find('.')+1);  
-  string so_name("/lib/libCCA_Components_");
+  string so_name("lib/libCCA_Components_");
   so_name=so_name+lastname+".so";
   cerr<<"componentType="<<componentType<<" soname="<<so_name<<endl;
     
