@@ -173,19 +173,27 @@ SmoothCylGeomPiece::createEndCapPoints()
 
   // Calculate the radial and axial material point spacing
   double axisInc = axislen/(double) d_numAxial;
-  int numCapAxial = int(d_capThick/axisInc);
+  int numCapAxial = int(d_capThick/axisInc)-1;
   double radInc = d_radius/(double) d_numRadial;
 
   // Create particles for the bottom end cap
-  double currZ = d_bottom.z() - 0.5*axisInc;
+  double currZ = 0.5*axisInc;
   for (int kk = 0; kk < numCapAxial; ++kk) {
     Vector currCenter = d_bottom.asVector() - axis*currZ;
-    for (int ii = 1; ii < d_numRadial+1; ++ii) {
-      double prevRadius = (ii-1)*radInc;
-      double currRadius = ii*radInc;
+
+    // Put a point at the center
+    d_points.push_back(Point(currCenter));
+    double area = 0.25*M_PI*radInc*radInc;
+    d_volume.push_back(axisInc*area);
+    count++;
+    
+    for (int ii = 1; ii < d_numRadial; ++ii) {
+      double prevRadius = ii*radInc;
+      double currRadius = prevRadius + 0.5*radInc;
+      double nextRadius = (ii+1)*radInc;
       int numCircum = (int) (2.0*M_PI*currRadius/radInc);
       double phiInc = 2.0*M_PI/(double) numCircum;
-      double area = 0.5*phiInc*(currRadius*currRadius-prevRadius*prevRadius);
+      area = 0.5*phiInc*(nextRadius*nextRadius-prevRadius*prevRadius);
       for (int jj = 0; jj < numCircum; ++jj) {
 	double phi = jj*phiInc; 
 	double cosphi = cos(phi);
@@ -212,15 +220,23 @@ SmoothCylGeomPiece::createEndCapPoints()
   }
   
   // Create particles for the top end cap
-  currZ = d_top.z() + 0.5*axisInc;
+  currZ = 0.5*axisInc;
   for (int kk = 0; kk < numCapAxial; ++kk) {
     Vector currCenter = d_top.asVector() + axis*currZ;
-    for (int ii = 1; ii < d_numRadial+1; ++ii) {
-      double prevRadius = (ii-1)*radInc;
-      double currRadius = ii*radInc;
+
+    // Put a point at the center
+    d_points.push_back(Point(currCenter));
+    double area = 0.25*M_PI*radInc*radInc;
+    d_volume.push_back(axisInc*area);
+    count++;
+    
+    for (int ii = 1; ii < d_numRadial; ++ii) {
+      double prevRadius = ii*radInc;
+      double currRadius = prevRadius + 0.5*radInc;
+      double nextRadius = (ii+1)*radInc;
       int numCircum = (int) (2.0*M_PI*currRadius/radInc);
       double phiInc = 2.0*M_PI/(double) numCircum;
-      double area = 0.5*phiInc*(currRadius*currRadius-prevRadius*prevRadius);
+      double area = 0.5*phiInc*(nextRadius*nextRadius-prevRadius*prevRadius);
       for (int jj = 0; jj < numCircum; ++jj) {
 	double phi = jj*phiInc; 
 	double cosphi = cos(phi);
@@ -282,16 +298,25 @@ SmoothCylGeomPiece::createSolidCylPoints()
   double axisInc = length/(double) d_numAxial;
   double radInc = d_radius/(double) d_numRadial;
 
-  // Create particles for the bottom end cap
-  double currZ = d_bottom.z() + 0.5*axisInc;
-  for (int kk = 0; kk < d_numAxial; ++kk) {
+  // Create particles for the solid cylinder
+  double currZ = 0.5*axisInc;
+  for (int kk = 0; kk < d_numAxial-1; ++kk) {
+
     Vector currCenter = d_bottom.asVector() + axis*currZ;
-    for (int ii = 1; ii < d_numRadial+1; ++ii) {
-      double prevRadius = (ii-1)*radInc;
-      double currRadius = ii*radInc;
+
+    // Put a point at the center
+    d_points.push_back(Point(currCenter));
+    double area = 0.25*M_PI*radInc*radInc;
+    d_volume.push_back(axisInc*area);
+    count++;
+    
+    for (int ii = 1; ii < d_numRadial; ++ii) {
+      double prevRadius = ii*radInc;
+      double currRadius = prevRadius + 0.5*radInc;
+      double nextRadius = (ii+1)*radInc;
       int numCircum = (int) (2.0*M_PI*currRadius/radInc);
       double phiInc = 2.0*M_PI/(double) numCircum;
-      double area = 0.5*phiInc*(currRadius*currRadius-prevRadius*prevRadius);
+      area = 0.5*phiInc*(nextRadius*nextRadius-prevRadius*prevRadius);
       for (int jj = 0; jj < numCircum; ++jj) {
 	double phi = jj*phiInc; 
 	double cosphi = cos(phi);
@@ -354,8 +379,8 @@ SmoothCylGeomPiece::createHollowCylPoints()
   double innerRad = d_radius - d_thickness;
 
   // Create particles for the hollow cylinder
-  double currZ = d_bottom.z() + 0.5*axisInc;
-  for (int kk = 0; kk < d_numAxial; ++kk) {
+  double currZ = 0.5*axisInc;
+  for (int kk = 0; kk < d_numAxial-1; ++kk) {
     Vector currCenter = d_bottom.asVector() + axis*currZ;
     for (int ii = 1; ii < numThick+1; ++ii) {
       double prevRadius = innerRad + (ii-1)*radInc;
