@@ -1614,8 +1614,14 @@ itcl_class ViewWindow {
 	set $this-resx [winfo width .ui[modname].wframe.draw]
 	set $this-resy [winfo height .ui[modname].wframe.draw]
 	
-	toplevel .ui[modname]-lightSources
 	set w .ui[modname]-lightSources
+
+        if {[winfo exists $w]} {
+	    raise $w
+            return
+        }
+
+	toplevel $w
 	frame $w.tf -relief flat
 	pack $w.tf -side top
 	frame $w.bf -relief flat
