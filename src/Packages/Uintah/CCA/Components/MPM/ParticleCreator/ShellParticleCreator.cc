@@ -22,11 +22,9 @@ ShellParticleCreator::ShellParticleCreator(MPMMaterial* matl,
 					   MPMLabel* lb,
 					   int n8or27,
 					   bool haveLoadCurve,
-					   bool doErosion) 
-  : ParticleCreator(matl,lb,n8or27,haveLoadCurve, doErosion)
+					   bool doErosion)
+  : ParticleCreator(matl,lb,n8or27,haveLoadCurve, doErosion, true)
 {
-  registerPermanentParticleState(matl,lb);
-
   // Transfer to the lb's permanent particle state array of vectors
   lb->d_particleState.push_back(particle_state);
   lb->d_particleState_preReloc.push_back(particle_state_preReloc);
@@ -53,6 +51,10 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
 				      MPMLabel* lb,
 				      vector<GeometryObject*>& d_geom_objs)
 {
+  // Constants
+  Matrix3 One; One.Identity();
+  Matrix3 Zero(0.0);
+
   // Get datawarehouse index
   int dwi = matl->getDWIndex();
 
@@ -61,14 +63,24 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
 							      dwi, lb, patch,
 							      new_dw);
   // Create the variables that go with each shell particle
-  ParticleVariable<double> pThickTop0, pThickBot0, pThickTop, pThickBot;
-  ParticleVariable<Vector> pNormal0, pNormal; 
-  new_dw->allocateAndPut(pThickTop0, lb->pInitialThickTopLabel, subset);
-  new_dw->allocateAndPut(pThickBot0, lb->pInitialThickBotLabel, subset);
-  new_dw->allocateAndPut(pNormal0,   lb->pInitialNormalLabel,   subset);
-  new_dw->allocateAndPut(pThickTop,  lb->pThickTopLabel,        subset);
-  new_dw->allocateAndPut(pThickBot,  lb->pThickBotLabel,        subset);
-  new_dw->allocateAndPut(pNormal,    lb->pNormalLabel,          subset);
+  ParticleVariable<double>  pThickTop0, pThickBot0, pThickTop, pThickBot;
+  ParticleVariable<Vector>  pNormal0, pNormal, pRotRate; 
+  ParticleVariable<Matrix3> pRotation, pDefGradTop, pDefGradCen, pDefGradBot, 
+                            pStressTop, pStressCen, pStressBot;
+  new_dw->allocateAndPut(pThickTop0,  lb->pInitialThickTopLabel, subset);
+  new_dw->allocateAndPut(pThickBot0,  lb->pInitialThickBotLabel, subset);
+  new_dw->allocateAndPut(pNormal0,    lb->pInitialNormalLabel,   subset);
+  new_dw->allocateAndPut(pThickTop,   lb->pThickTopLabel,        subset);
+  new_dw->allocateAndPut(pThickBot,   lb->pThickBotLabel,        subset);
+  new_dw->allocateAndPut(pNormal,     lb->pNormalLabel,          subset);
+  new_dw->allocateAndPut(pRotRate,    lb->pNormalRotRateLabel,   subset);
+  new_dw->allocateAndPut(pRotation,   lb->pRotationLabel,        subset);
+  new_dw->allocateAndPut(pDefGradTop, lb->pDefGradTopLabel,      subset);
+  new_dw->allocateAndPut(pDefGradCen, lb->pDefGradCenLabel,      subset);
+  new_dw->allocateAndPut(pDefGradBot, lb->pDefGradBotLabel,      subset);
+  new_dw->allocateAndPut(pStressTop,  lb->pStressTopLabel,       subset);
+  new_dw->allocateAndPut(pStressCen,  lb->pStressCenLabel,       subset);
+  new_dw->allocateAndPut(pStressBot,  lb->pStressBotLabel,       subset);
 
   // Initialize the global particle index
   particleIndex start = 0;
@@ -108,28 +120,19 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
       // The position, volume and size variables are from the 
       // ParticleCreator class
       int numP = shell->createParticles(patch, position, pvolume,
-                                        pThickTop0, pThickBot0, pNormal0, 
+                                        pThickTop, pThickBot, pNormal, 
                                         psize, start);
 
       // Update the other variables that are attached to each particle
       // (declared in the ParticleCreator class)
       for (int idx = 0; idx < numP; idx++) {
-
         particleIndex pidx = start+idx;
-
-        // Copy the geometry information
-        pThickTop[pidx] = pThickTop0[pidx]; 
-        pThickBot[pidx] = pThickBot0[pidx]; 
-        pNormal[pidx] = pNormal0[pidx]; 
-
 	pvelocity[pidx]=(*obj)->getInitialVelocity();
 	ptemperature[pidx]=(*obj)->getInitialTemperature();
 	psp_vol[pidx]=1.0/matl->getInitialDensity();
-
 #ifdef FRACTURE
         pdisp[pidx] = Vector(0.,0.,0.);
 #endif
-
         // Calculate particle mass
 	double partMass = matl->getInitialDensity()*pvolume[pidx];
 	pmass[pidx] = partMass;
@@ -159,6 +162,20 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
 	} else {
 	  cerr << "cellID is not right" << endl;
 	}
+
+        // The shell specific variables
+        pThickTop0[pidx]  = pThickTop[pidx]; 
+        pThickBot0[pidx]  = pThickBot[pidx]; 
+        pNormal0[pidx]    = pNormal[pidx]; 
+        pRotRate[pidx]    = Vector(0.0,0.0,0.0);
+	pRotation[pidx]   = One;
+	pDefGradTop[pidx] = One;
+	pDefGradCen[pidx] = One;
+	pDefGradBot[pidx] = One;
+	pStressTop[pidx]  = Zero;
+	pStressCen[pidx]  = Zero;
+	pStressBot[pidx]  = Zero;
+
       } // End of loop thry particles per geom-object
 
     } else {
@@ -211,14 +228,6 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
 		ParticleCreator::applyForceBC(dxpp, p, partMass, pExtForce);
 		pexternalforce[pidx] = pExtForce;
 		
-                // Assign dummy values to shell-specific variables
-                pThickTop0[pidx] = 1.0;
-                pThickBot0[pidx] = 1.0;
-                pNormal0[pidx] = Vector(0,1,0);
-                pThickTop[pidx] = 1.0;
-                pThickBot[pidx] = 1.0;
-                pNormal[pidx] = Vector(0,1,0);
-
 		// Assign particle id
 		short int& myCellNAPID = cellNAPID[cell_idx];
 		pparticleID[pidx] = cellID | (long64)myCellNAPID;
@@ -227,6 +236,22 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
 		myCellNAPID++;
 		count++;
 		
+                // Assign dummy values to shell-specific variables
+                pThickTop0[pidx]  = 1.0;
+                pThickBot0[pidx]  = 1.0;
+                pNormal0[pidx]    = Vector(0,1,0);
+                pThickTop[pidx]   = 1.0;
+                pThickBot[pidx]   = 1.0;
+                pNormal[pidx]     = Vector(0,1,0);
+                pRotRate[pidx]    = Vector(0.0, 0.0, 0.0);
+	        pRotation[pidx]   = One;
+	        pDefGradTop[pidx] = One;
+	        pDefGradCen[pidx] = One;
+	        pDefGradBot[pidx] = One;
+	        pStressTop[pidx]  = Zero;
+	        pStressCen[pidx]  = Zero;
+	        pStressBot[pidx]  = Zero;
+
 	      }  // if inside
 	    }  // loop in z
 	  }  // loop in y
@@ -274,17 +299,4 @@ ShellParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
 						     MPMLabel* lb)
 
 {
-  //particle_state.push_back(lb->pInitialThickTopLabel);
-  //particle_state_preReloc.push_back(lb->pInitialThickTopLabel_preReloc);
-  //particle_state.push_back(lb->pInitialThickBotLabel);
-  //particle_state_preReloc.push_back(lb->pInitialThickBotLabel_preReloc);
-  particle_state.push_back(lb->pThickTopLabel);
-  particle_state_preReloc.push_back(lb->pThickTopLabel_preReloc);
-  particle_state.push_back(lb->pThickBotLabel);
-  particle_state_preReloc.push_back(lb->pThickBotLabel_preReloc);
-
-  //particle_state.push_back(lb->pInitialNormalLabel);
-  //particle_state_preReloc.push_back(lb->pInitialNormalLabel_preReloc);
-  particle_state.push_back(lb->pNormalLabel);
-  particle_state_preReloc.push_back(lb->pNormalLabel_preReloc);
 }
