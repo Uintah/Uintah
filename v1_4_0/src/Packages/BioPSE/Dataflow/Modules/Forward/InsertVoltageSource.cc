@@ -16,8 +16,10 @@
 
 #include <Core/Datatypes/TetVolField.h>
 #include <Core/Datatypes/TriSurfField.h>
+#include <Core/Datatypes/PointCloudField.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/GuiInterface/GuiVar.h>
+#include <Packages/BioPSE/Dataflow/Modules/Forward/InsertVoltageSource.h>
 #include <iostream>
 #include <sstream>
 
@@ -28,6 +30,7 @@ using namespace SCIRun;
 class InsertVoltageSource : public Module {
   GuiInt outside_;
   GuiInt averaging_;
+  GuiInt groundfirst_;
 public:
   InsertVoltageSource(const string& id);
   virtual ~InsertVoltageSource();
@@ -41,7 +44,8 @@ extern "C" Module* make_InsertVoltageSource(const string& id)
 
 InsertVoltageSource::InsertVoltageSource(const string& id)
   : Module("InsertVoltageSource", id, Filter, "Forward", "BioPSE"),
-    outside_("outside", id, this), averaging_("averaging", id, this)
+    outside_("outside", id, this), averaging_("averaging", id, this),
+    groundfirst_("groundfirst", id, this)
 {
 }
 
@@ -51,7 +55,7 @@ InsertVoltageSource::~InsertVoltageSource()
 
 void InsertVoltageSource::execute() {
   FieldIPort* imesh = (FieldIPort *) get_iport("TetMesh");
-  FieldIPort* isource = (FieldIPort *) get_iport("TriSurfFieldSource");
+  FieldIPort* isource = (FieldIPort *) get_iport("VoltageSource");
   FieldOPort* omesh = (FieldOPort *) get_oport("TetMesh");
   if (!imesh) {
     postMessage("Unable to initialize "+name+"'s imesh port\n");
@@ -65,7 +69,7 @@ void InsertVoltageSource::execute() {
     postMessage("Unable to initialize "+name+"'s omesh port\n");
     return;
   }
-  
+
   FieldHandle imeshH;
   if (!imesh->get(imeshH))
     return;
@@ -88,12 +92,56 @@ void InsertVoltageSource::execute() {
     cerr << "InsertVoltageSource: error - empty input source.\n";
     return;
   }
-  TriSurfField<double> *triSurf =dynamic_cast<TriSurfField<double>*>(isourceH.get_rep());
-  if (!triSurf) {
-    cerr << "InsertVoltageSource: error - input source wasn't a TtriSurf<double>\n";
-    return;
+
+  int groundfirst = groundfirst_.get();
+  vector<Point> sources;
+  vector<double> vals;
+  if (groundfirst) {
+    // just need to know the position of the first point of the mesh
+    const TypeDescription *meshtd = isourceH->mesh()->get_type_description();
+    CompileInfo *ci = InsertVoltageSourceGetPtBase::get_compile_info(meshtd);
+    DynamicAlgoHandle algo_handle;
+    if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
+    {
+      msgStream_ << "Could not compile algorithm." << endl;
+      return;
+    }
+    InsertVoltageSourceGetPtBase *algo =
+      dynamic_cast<InsertVoltageSourceGetPtBase *>(algo_handle.get_rep());
+    if (algo == 0)
+    {
+      msgStream_ << "Could not get algorithm." << endl;
+      return;
+    }
+    Point pt = algo->execute(isourceH->mesh());
+    sources.push_back(pt);
+    vals.push_back(0);
+  } else {
+    const TypeDescription *field_td = isourceH->get_type_description();
+    const TypeDescription *loc_td = isourceH->data_at_type_description();
+    CompileInfo *ci = 
+      InsertVoltageSourceGetPtsAndValsBase::get_compile_info(field_td, 
+							     loc_td);
+    DynamicAlgoHandle algo_handle;
+    if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
+    {
+      error("Could not compile algorithm.");
+      return;
+    }
+    
+    InsertVoltageSourceGetPtsAndValsBase *algo = 
+      dynamic_cast<InsertVoltageSourceGetPtsAndValsBase *>(algo_handle.get_rep());
+    if (algo == 0) 
+    {
+      error("Could not get algorithm.");
+      return;
+    }
+    algo->execute(isourceH, sources, vals);
   }
-  TriSurfMesh *tsm = triSurf->get_typed_mesh().get_rep();
+
+//  cerr << "Here are the source positions and values:\n";
+//  for (int i=0; i<(int)sources.size(); i++)
+//    cerr << "    " <<i<< " : "<< sources[i] <<" : "<<vals[i]<<"\n";
 
   vector<pair<int, double> > dirichlet;
   imeshH->get_property("dirichlet", dirichlet);
@@ -112,29 +160,15 @@ void InsertVoltageSource::execute() {
   tvm->size(tvm_nnodes);
   tvm->size(tvm_ncells);
 
-  TriSurfMesh::Node::iterator tsm_ni, tsm_ne;
-  TriSurfMesh::Face::iterator tsm_fi, tsm_fe;
-
   TetVolMesh::Node::array_type nbrs(4);
 
   Array1<Array1<pair<double, double> > > contrib(tvm_nnodes);
   Array1<TetVolMesh::Node::index_type> have_some;
-  tsm->begin(tsm_ni); tsm->end(tsm_ne);
-  tsm->begin(tsm_fi); tsm->end(tsm_fe);
 
   // for each surface data_at position/value...
-  while (tsm_fi != tsm_fe && tsm_ni != tsm_ne) {
-    Point pt;
-    double val;
-    if (triSurf->data_at() == Field::FACE) {
-      tsm->get_center(pt, *tsm_fi);
-      val = triSurf->fdata()[*tsm_fi];
-      ++tsm_fi;
-    } else {
-      tsm->get_center(pt, *tsm_ni);
-      val = triSurf->fdata()[*tsm_ni];
-      ++tsm_ni;
-    }
+  for (int i=0; i<(int)sources.size(); i++) {
+    Point pt=sources[i];
+    double val=vals[i];
 
     // find the tet nodes (nbrs) that it's closest to
     TetVolMesh::Cell::index_type tvm_cidx;
@@ -196,5 +230,46 @@ void InsertVoltageSource::execute() {
   imeshH->set_property("dirichlet", dirichlet, false);
   imeshH->set_property("conductivity_table", conds, false);
   omesh->send(imeshH);
+}
+
+CompileInfo *
+InsertVoltageSourceGetPtBase::get_compile_info(const TypeDescription *mesh_td)
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("InsertVoltageSourceGetPt");
+  static const string base_class_name("InsertVoltageSourceGetPtBase");
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       mesh_td->get_filename() + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       mesh_td->get_name());
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  mesh_td->fill_compile_info(rval);
+  return rval;
+}
+
+CompileInfo *
+InsertVoltageSourceGetPtsAndValsBase::get_compile_info(const TypeDescription *field_td, const TypeDescription *loc_td)
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("InsertVoltageSourceGetPtsAndVals");
+  static const string base_class_name("InsertVoltageSourceGetPtsAndValsBase");
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       field_td->get_filename() + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       field_td->get_name() + ", " + loc_td->get_name());
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  field_td->fill_compile_info(rval);
+  return rval;
 }
 } // End namespace BioPSE

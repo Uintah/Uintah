@@ -17,7 +17,7 @@
 	<datatype>SCIRun::Field</datatype>
       </port>
       <port>
-        <name>TriSurfFieldSource</name>
+        <name>VoltageSource</name>
 	<datatype>SCIRun::Field</datatype>
       </port>
     </inputs>
