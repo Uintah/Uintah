@@ -207,9 +207,55 @@ double CompMooneyRivlin::computeStrainEnergy(const Region* region,
   return se;
 }
 
+void CompMooneyRivlin::readParameters(ProblemSpecP ps, double *p_array)
+{
+  ps->require("he_constant_1",p_array[0]);
+  ps->require("he_constant_2",p_array[1]);
+  ps->require("he_constant_3",p_array[2]);
+  ps->require("he_constant_4",p_array[3]);
+ 
+}
+
+ConstitutiveModel* CompMooneyRivlin::readParametersAndCreate(ProblemSpecP ps)
+{
+
+  double p_array[4];
+  readParameters(ps, p_array);
+  return(create(p_array));
+  
+}
+
+ConstitutiveModel* CompMooneyRivlin::readRestartParametersAndCreate(
+                                             ProblemSpecP ps)
+{
+#if 0
+  Matrix3 st(0.0);
+  ConstitutiveModel *cm = readParametersAndCreate(ps);
+  
+  in >> st(1,1) >> st(1,2) >> st(1,3)
+     >> st(2,2) >> st(2,3) >> st(3,3);
+  st(2,1)=st(1,2);
+  st(3,1)=st(1,3);
+  st(3,2)=st(2,3);
+  cm->setStressTensor(st);
+  
+  return(cm);
+
+
+#endif
+}
+
+ConstitutiveModel* CompMooneyRivlin::create(double *p_array)
+{
+  return(new CompMooneyRivlin(p_array[0], p_array[1], p_array[2], p_array[3]));
+}
+
 #endif
 
 // $Log$
+// Revision 1.6  2000/04/14 17:34:41  jas
+// Added ProblemSpecP capabilities.
+//
 // Revision 1.5  2000/03/24 00:44:33  guilkey
 // Added MPMMaterial class, as well as a skeleton Material class, from
 // which MPMMaterial is inherited.  The Material class will be filled in
