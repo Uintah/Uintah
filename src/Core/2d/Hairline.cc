@@ -66,21 +66,18 @@ Hairline::select( double x, double y, int b )
 {
   cerr << "Hairline select\n";
   HairObj::select( x, y, b );
-  //  update();
 }
   
 void
 Hairline::move( double x, double y, int b)
 {
   HairObj::move( x, y, b );
-  //  update();
 }
   
 void
 Hairline::release( double x, double y, int b)
 {
   HairObj::release( x, y, b );
-  //  update();
 }
   
 
@@ -88,34 +85,39 @@ void
 Hairline::update()
 {
   parent_->get_active( poly_ );
-  double pos = parent_->x_get_at( at() );
 
-  // get and sort the values
-
-  int index[poly_.size()];
-  double value[poly_.size()];
-
-  // get value and insert them in acsending order (using insert sort)
-  for (int i=0; i<poly_.size(); i++) {
-    double v = poly_[i]->at(pos);
-    int j;
-    for (j=i; j>0; j--) {
-      if ( value[j-1] < v ) {
-	value[j] = value[j-1];
-	index[j] = index[j-1];
-      }
-      else 
-	break;
-    }
-    value[j] = v;
-    index[j] = i;
-  }
-  
-  // send the sorted list to the tcl side
   tcl_ << " values ";
-  for (int i=0; i<poly_.size(); i++) 
-    tcl_ << " { " << poly_[index[i]]->tcl_color()
-	 << " " << value[i] << " } ";
+
+  if ( poly_.size() > 0 ) {
+    
+    double pos = parent_->x_get_at( at() );
+    
+    // get and sort the values
+    
+    int index[poly_.size()];
+    double value[poly_.size()];
+    
+    // get value and insert them in acsending order (using insert sort)
+    for (int i=0; i<poly_.size(); i++) {
+      double v = poly_[i]->at(pos);
+      int j;
+      for (j=i; j>0; j--) {
+	if ( value[j-1] < v ) {
+	  value[j] = value[j-1];
+	  index[j] = index[j-1];
+	}
+	else 
+	  break;
+      }
+      value[j] = v;
+      index[j] = i;
+    }
+  
+    // send the sorted list to the tcl side
+    for (int i=0; i<poly_.size(); i++) 
+      tcl_ << " { " << poly_[index[i]]->tcl_color()
+	   << " " << value[i] << " } ";
+  }
 
   tcl_exec();
 }
