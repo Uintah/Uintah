@@ -1,5 +1,5 @@
 /*
- *  CastMLVtoHM.cc:
+ *  CastMLVtoHV.cc:
  *
  *  Written by:
  *   moulding
@@ -24,29 +24,29 @@ namespace SCIRun {
 
 using namespace std;
 
-class PSECORESHARE CastMLVtoHM : public Module {
+class PSECORESHARE CastMLVtoHV : public Module {
 private:
   int            last_gen_;
   FieldHandle    ofieldH_;
 public:
-  CastMLVtoHM(const string& id);
-  virtual ~CastMLVtoHM();
+  CastMLVtoHV(const string& id);
+  virtual ~CastMLVtoHV();
   virtual void execute();
 };
 
-extern "C" PSECORESHARE Module* make_CastMLVtoHM(const string& id) {
-  return scinew CastMLVtoHM(id);
+extern "C" PSECORESHARE Module* make_CastMLVtoHV(const string& id) {
+  return scinew CastMLVtoHV(id);
 }
 
-CastMLVtoHM::CastMLVtoHM(const string& id)
-  : Module("CastMLVtoHM", id, Source, "Fields", "SCIRun"), last_gen_(-1)
+CastMLVtoHV::CastMLVtoHV(const string& id)
+  : Module("CastMLVtoHV", id, Source, "Fields", "SCIRun"), last_gen_(-1)
 {
 }
 
-CastMLVtoHM::~CastMLVtoHM(){
+CastMLVtoHV::~CastMLVtoHV(){
 }
 
-void CastMLVtoHM::execute()
+void CastMLVtoHV::execute()
 {
   // must find ports and have valid data on inputs
   FieldIPort *iport_ = (FieldIPort*)get_iport("MaskedLatticeVol");
@@ -77,12 +77,12 @@ void CastMLVtoHM::execute()
   if (ifieldH->get_type_description()->get_name() !=
       get_type_description((MaskedLatticeVol<Vector> *)0)->get_name())
   {
-    postMessage("CastMLVtoHM: ERROR: input volume is not a MaskedLatticeVol<Vector>.  Exiting.");
+    postMessage("CastMLVtoHV: ERROR: input volume is not a MaskedLatticeVol<Vector>.  Exiting.");
     return;
   }                     
 
   if (ifieldH->data_at() != Field::NODE) {
-    postMessage("CastMLVtoHM: ERROR: input volume data isn't node-centered.  Existing.");
+    postMessage("CastMLVtoHV: ERROR: input volume data isn't node-centered.  Existing.");
     return;
   }                         
 
