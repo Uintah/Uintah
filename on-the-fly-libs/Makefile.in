@@ -50,10 +50,11 @@ else
 SONAMEFLAG = 
 endif
 
+# Avoid error message when no .d files by specifying nonexistant filename.
 ifneq ($(MAKECMDGOALS),)
-include $(MAKECMDGOALS:.$(SO_OR_A_FILE)=.d)
+-include dummyfile $(MAKECMDGOALS:.$(SO_OR_A_FILE)=.d)
 else
-include $(SRCS:.cc=.d)
+-include dummyfile $(SRCS:.cc=.d)
 endif
 .SECONDARY:
 
