@@ -27,6 +27,7 @@ SRCDIR := Packages/Teem/Dataflow/Modules
 SUBDIRS := \
 	$(SRCDIR)/DataIO\
 	$(SRCDIR)/NrrdData\
+	$(SRCDIR)/Segmentation\
 	$(SRCDIR)/Tend\
 	$(SRCDIR)/Unu\
 #[INSERT NEW CATEGORY DIR HERE]
