@@ -179,6 +179,7 @@ private:
   GuiInt                               gui_dump_frames_;
   GuiInt                               gui_time_markers_mode_;
   GuiInt                               gui_selected_marker_;
+  GuiInt                               gui_injury_offset_;
   GuiDouble			       gui_top_margin_;
   GuiDouble			       gui_left_margin_;
   GuiDouble			       gui_plot_spacing_;
@@ -235,7 +236,7 @@ private:
   double                                time_sf_;
   LabelTex 				*name_label;
   string 				name_text;
-  int 					injury_offset_;
+  //int 					injury_offset_;
   LabelTex				*time_label;
   string 				time_text;
   LabelTex 				*date_label;
@@ -384,6 +385,7 @@ ICUMonitor::ICUMonitor(GuiContext* ctx) :
   gui_dump_frames_(ctx->subVar("dump_frames")),
   gui_time_markers_mode_(ctx->subVar("time_markers_mode")),
   gui_selected_marker_(ctx->subVar("selected_marker")),
+  gui_injury_offset_(ctx->subVar("injury_offset")),
   gui_top_margin_(ctx->subVar("top_margin")),
   gui_left_margin_(ctx->subVar("left_margin")),
   gui_plot_spacing_(ctx->subVar("plot_spacing")),
@@ -414,7 +416,7 @@ ICUMonitor::ICUMonitor(GuiContext* ctx) :
   frame_count_(0),
   name_label(0),
   name_text(" "),
-  injury_offset_(0),
+  //injury_offset_(0),
   time_label(0),
   time_text("Time: 00:00:00"),
   date_label(0),
@@ -1102,7 +1104,8 @@ ICUMonitor::setTimeLabel()
     bool neg;
 
     int val = (int)(cur_idx_ / gui_sample_rate_.get());
-    val -= injury_offset_;
+    //val -= injury_offset_;
+    val -= gui_injury_offset_.get();
 
     hrs = val/(60*60);
     min = (val - hrs*60*60)/60;
@@ -1480,17 +1483,17 @@ ICUMonitor::setNameAndDateAndTime()
     plots_dirty_ = true;
   }
 
-  char *inj = nrrdKeyValueGet(data_->nrrd, "injury");
-  if (inj != NULL) {
-     string injoff(inj);
+  //char *inj = nrrdKeyValueGet(data_->nrrd, "injury");
+  //if (inj != NULL) {
+   //  string injoff(inj);
                                                                                 
-     stringstream ss(injoff);
-     ss >> injury_offset_;
+    // stringstream ss(injoff);
+     //ss >> injury_offset_;
                                                                                 
-     injury_offset_ /= (int)gui_sample_rate_.get();
+     //injury_offset_ /= (int)gui_sample_rate_.get();
                                                                                 
-     setTimeLabel();
-  }
+     //setTimeLabel();
+  //}
 }
 
 void

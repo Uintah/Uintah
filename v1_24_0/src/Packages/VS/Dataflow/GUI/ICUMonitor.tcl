@@ -50,6 +50,7 @@ itcl_class VS_Render_ICUMonitor {
 	global  $this-left_margin
 	global  $this-plot_spacing
 	global  $this-font_scale
+	global  $this-injury_offset
 	global  $this-show_name
 	global  $this-show_date
 	global  $this-show_time
@@ -74,6 +75,7 @@ itcl_class VS_Render_ICUMonitor {
 	set $this-left_margin 20
 	set $this-plot_spacing 20
 	set $this-font_scale 1.0
+	set $this-injury_offset 0
 	set $this-show_name 0
 	set $this-show_date 0
 	set $this-show_time 0
@@ -259,6 +261,25 @@ itcl_class VS_Render_ICUMonitor {
 	    pack $gen.fs.font -fill x
 
             pack $w.prefs.gen -fill x -expand yes -side top
+
+		iwidgets::labeledframe $w.prefs.time -labeltext "Timeline" \
+			-labelpos nw
+		set time [$w.prefs.time childsite]
+		
+		frame $time.f -borderwidth 2
+		pack $time.f -side top -fill both
+		
+		frame $time.f.offset
+		pack $time.f.offset -side top -fill x -pady 2
+		label $time.f.offset.l -text "Index Offset:"
+		entry $time.f.offset.val -textvariable $this-injury_offset \
+			-width 6
+		label $time.f.offset.u -text "s"
+		pack $time.f.offset.l -side left
+		pack $time.f.offset.val -side left
+		pack $time.f.offset.u -side left
+		
+		pack $w.prefs.time -fill x -expand yes -side top 
 
             iwidgets::labeledframe $w.prefs.plots -labeltext "Plots" \
 		-labelpos nw
