@@ -207,7 +207,7 @@ void HVolumeBrickColor::shade(Color& result, const Ray& ray,
 	    Color ambient(c*Ka);
 	    Color diffuse(c*Kd);
 	    Color specular(c*Ks);
-	    phongshade(result, ambient, diffuse, specular, specpow, refl,
+	    phongshade(result, diffuse, specular, specpow, refl,
 		       ray, hit, depth,  atten,
 		       accumcolor, cx);
 	}
@@ -255,7 +255,7 @@ void HVolumeBrickColor::shade(Color& result, const Ray& ray,
 	    Color ambient(c*Ka);
 	    Color diffuse(c*Kd);
 	    Color specular(c*Ks);
-	    phongshade(result, ambient, diffuse, specular, specpow, refl,
+	    phongshade(result, diffuse, specular, specpow, refl,
 		       ray, hit, depth, atten,
 		       accumcolor, cx);
 	}
