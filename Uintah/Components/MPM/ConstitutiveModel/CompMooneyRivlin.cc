@@ -375,6 +375,9 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
   // Create arrays for the particle data
   ParticleVariable<Point>  pX;
   ParticleVariable<int>    pIsBroken;
+  ParticleVariable<Vector> pCrackSurfaceNormal;
+  ParticleVariable<double> pMicrocrackSize;
+  ParticleVariable<double> pMicrocrackPosition;
   ParticleVariable<double> pVolume;
   ParticleVariable<CMData> cmdata;
 
@@ -383,6 +386,9 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
 
   old_dw->get(pX, lb->pXLabel, outsidePset);
   old_dw->get(pIsBroken, lb->pIsBrokenLabel, outsidePset);
+  old_dw->get(pCrackSurfaceNormal, lb->pCrackSurfaceNormalLabel, outsidePset);
+  old_dw->get(pMicrocrackSize, lb->pMicrocrackSizeLabel, outsidePset);
+  old_dw->get(pMicrocrackPosition, lb->pMicrocrackPositionLabel, outsidePset);
   old_dw->get(pVolume, lb->pVolumeLabel, outsidePset);
   old_dw->get(cmdata, p_cmdata_label, outsidePset);
 
@@ -392,7 +398,9 @@ void CompMooneyRivlin::computeCrackSurfaceContactForce(const Patch* patch,
      insidePset);
 
   Lattice lattice(pX);
-  ParticlesNeighbor particles;
+  ParticlesNeighbor particles(pX,pIsBroken,pCrackSurfaceNormal,pMicrocrackSize,
+	pMicrocrackPosition);
+
 
   for(ParticleSubset::iterator iter = insidePset->begin();
           iter != insidePset->end(); iter++)
@@ -499,6 +507,12 @@ void CompMooneyRivlin::addComputesAndRequiresForCrackSurfaceContact(
 			Ghost::AroundNodes, 1 );
   task->requires(old_dw, lb->pIsBrokenLabel, idx, patch,
 			Ghost::AroundNodes, 1 );
+  task->requires(old_dw, lb->pCrackSurfaceNormalLabel, idx, patch,
+			Ghost::AroundNodes, 1 );
+  task->requires(old_dw, lb->pMicrocrackSizeLabel, idx, patch,
+			Ghost::AroundNodes, 1 );
+  task->requires(old_dw, lb->pMicrocrackPositionLabel, idx, patch,
+			Ghost::AroundNodes, 1 );
 		  
   task->computes(new_dw, lb->pCrackSurfaceContactForceLabel, idx, patch );
 }
@@ -539,6 +553,9 @@ const TypeDescription* fun_getTypeDescription(CompMooneyRivlin::CMData*)
 }
 
 // $Log$
+// Revision 1.65  2000/09/12 17:18:21  tan
+// Modified ParticlesNeighbor initialize.
+//
 // Revision 1.64  2000/09/12 16:52:10  tan
 // Reorganized crack surface contact force algorithm.
 //
