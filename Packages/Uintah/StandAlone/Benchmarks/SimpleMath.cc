@@ -19,32 +19,44 @@
 using namespace SCIRun;
 using namespace std;
 
-const long SIZE_DEFAULT = 400;
+const int SIZE_DEFAULT = 80;
+const int LOOP_DEFAULT = 1;
 
 void usage ( void )
 {
-  cerr << "Usage: SimpleMath <size>" << endl;
+  cerr << "Usage: SimpleMath <size> [<loop>]" << endl;
   cerr << endl;
-  cerr << "  <size>    This must be a number greater than zero." << endl;
+  cerr << "  <size>  This benchmark will use four CCVariable<double>" << endl;
+  cerr << "          variables, each with a size*size*size resolution" << endl;
+  cerr << "          and perform the operation 'result = a * x + b'" << endl;
+  cerr << "          on each of their elements."<< endl;
   cerr << endl;
-  cerr << "  This program will perform the operation 'result = a*x+b'" << endl;
-  cerr << "  <size> cubed times using Uintah data structures and" << endl;
-  cerr << "  calculate the MFLOPS achieved." << endl;
+  cerr << "  <loop>  The above operation will be repeated <loop> times." << endl;
 }
 
 int main ( int argc, char** argv )
 {
-  long size = SIZE_DEFAULT;
+  int size = SIZE_DEFAULT;
+  int loop = LOOP_DEFAULT;
 
   /*
    * Parse arguments
    */
   if ( argc > 1 ) {
-     size = strtol( argv[1], (char**)NULL, 10 );
+     size = atoi( argv[1] );
 
      if (size <= 0) {
        usage();
        return EXIT_FAILURE;
+     }
+
+     if ( argc > 2 ) {
+       loop = atoi( argv[2] );
+
+       if (loop <= 0) {
+	 usage();
+	 return EXIT_FAILURE;
+       }
      }
   }
   else {
@@ -52,7 +64,9 @@ int main ( int argc, char** argv )
     return EXIT_FAILURE;
   }
 
-  cout << "Simple Math Benchmark: Using size of " << size << endl;
+  cout << "Simple Math Benchmark: " << endl;
+  cout << "Resolution (" << size << ", " << size << ", " << size << ")" << endl;
+  cout << "Repeating " << loop << " time(s)." << endl;
 
   IntVector low ( 0,0,0 );
   IntVector high( size,size,size );
@@ -70,11 +84,12 @@ int main ( int argc, char** argv )
 
   double startTime = Time::currentSeconds();
 
-  for ( CellIterator iter(low, high); !iter.done(); iter++ )
-    result[*iter] = a[*iter] * x[*iter] + b[*iter];
+  for ( int i = 0; i < loop; i++ )
+    for ( CellIterator iter(low, high); !iter.done(); iter++ )
+      result[*iter] = a[*iter] * x[*iter] + b[*iter];
 
   double deltaTime = Time::currentSeconds() - startTime;
-  double megaFlops = (size * size * size * 2.0) / 1000000.0 / deltaTime;
+  double megaFlops = (loop * size * size * size * 2.0) / 1000000.0 / deltaTime;
 
   cout << "Completed in " << deltaTime << " seconds.";
   cout << " (" << megaFlops << " MFLOPS)" << endl;
