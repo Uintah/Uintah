@@ -57,6 +57,8 @@ public:
 
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
+
+    int get_voxel( const Point& p, Point& ivoxel );
 };
 
 #endif

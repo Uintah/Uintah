@@ -147,6 +147,30 @@ void ScalarFieldRGBase::midLocate(const Point& p, int& ix, int& iy, int& iz)
     iz=(int)z;
 }
 
+int
+ScalarFieldRGBase::get_voxel( const Point& p, Point& ivoxel )
+{
+    Vector pn=p-bmin;
+    
+    ivoxel.x( int( pn.x()*(nx-1)/diagonal.x() ) );
+    ivoxel.y( int( pn.y()*(ny-1)/diagonal.y() ) );
+    ivoxel.z( int( pn.z()*(nz-1)/diagonal.z() ) );
+
+    if(ivoxel.x()<0 || ivoxel.x()>=nx)
+      cerr << "nx = " << nx << "  " << ivoxel << endl;
+    if(ivoxel.y()<0 || ivoxel.y()>=ny)
+      cerr << "ny = " << ny << "  " << ivoxel << endl;
+    if(ivoxel.z()<0 || ivoxel.z()>=nz)
+      cerr << "nz = " << nz << "  " << ivoxel << endl;
+
+    if(ivoxel.x()<0 || ivoxel.x()>=nx)return 0;
+    if(ivoxel.y()<0 || ivoxel.y()>=ny)return 0;
+    if(ivoxel.z()<0 || ivoxel.z()>=nz)return 0;
+ 
+   return 1;
+}
+
+
 #define ScalarFieldRGBase_VERSION 1
 
 void ScalarFieldRGBase::io(Piostream& stream)
