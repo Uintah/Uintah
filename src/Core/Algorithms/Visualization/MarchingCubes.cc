@@ -47,7 +47,7 @@ MarchingCubesAlg::get_compile_info(const TypeDescription *td) {
   string sname = td->get_name("", "");
   
   //Test for LatVolField inheritance...
-  if (sname.find("Lattice") != string::npos) {
+  if (sname.find("LatVolField") != string::npos) {
     // we are dealing with a lattice vol or inherited version
     subname.append("HexMC<" + td->get_name() + "> ");
     subinc.append(HexMCBase::get_h_file_path());
