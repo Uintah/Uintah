@@ -1700,8 +1700,8 @@ void
 OnDemandDataWarehouse::checkAccesses(const Task* currentTask,
 				     const Task::Dependency* dep,
 				     AccessType accessType,
-				     const PatchSubset* avail_patches,
-				     const MaterialSubset* avail_matls)
+				     const PatchSubset* comainPatches,
+				     const MaterialSubset* domainMatls)
 {
   if (currentTask->isReductionTask())
     return; // no need to check reduction tasks.
@@ -1712,10 +1712,8 @@ OnDemandDataWarehouse::checkAccesses(const Task* currentTask,
   MaterialSubset default_matls;
   default_patches.add(0);
   default_matls.add(-1);
-  if (avail_patches == 0)
-    avail_patches = &default_patches;
-  if (avail_matls == 0)
-    avail_matls = &default_matls;
+  default_patches.addReference();
+  default_matls.addReference();
   
   for (; dep != 0; dep = dep->next) {
     if ((isFinalized() && dep->dw == Task::NewDW) ||
@@ -1723,37 +1721,30 @@ OnDemandDataWarehouse::checkAccesses(const Task* currentTask,
       continue;
     
     const VarLabel* label = dep->var;
-    const PatchSubset* patches = dep->patches;
+
+    const PatchSubset* patches = dep->getPatchesUnderDomain(domainPatches);
+    const MaterialSubset* matls = dep->getMaterialsUnderDomain(domainMatls);
     if (label->typeDescription() &&
 	label->typeDescription()->isReductionVariable()) {
+      if(patches && patches->getReferenceCount() == 0)
+	delete patches;
       patches = &default_patches;
-    }     
+    }
     else if (patches == 0) {
-      if (currentTask->getPatchSet() != 0)
-	patches = currentTask->getPatchSet()->getUnion();
-      else
-	patches = &default_patches;
+      patches = &default_patches;
     }
-    const MaterialSubset* matls = dep->matls;
     if (matls == 0) {
-      if (currentTask->getMaterialSet() != 0)
-	matls = currentTask->getMaterialSet()->getUnion();
-      else
-	matls = &default_matls;
+      matls = &default_matls;
     }
-    
+ 
     if (string(currentTask->getName()) == "Relocate::relocateParticles")
       continue;
     
     for (int m = 0; m < matls->size(); m++) {
       int matl = matls->get(m);
-      if (!avail_matls->contains(matl))
-	continue;  // matl not handled by the running Detailed Task
       
       for (int p = 0; p < patches->size(); p++) {
 	const Patch* patch = patches->get(p);
-	if (!avail_patches->contains(patch))
-	  continue;  // patch not handled by the running Detailed Task
 	
 	SpecificVarLabel key(label, matl, patch);
 	map<SpecificVarLabel, AccessType>::iterator find_iter;
@@ -1781,7 +1772,14 @@ OnDemandDataWarehouse::checkAccesses(const Task* currentTask,
 	}
       }
     }
+    if(patches && patches->getReferenceCount() == 0)
+      delete patches;
+    if(matls && matls->getReferenceCount() == 0)
+      delete matls;     
   }
+
+  default_patches.removeReference();
+  default_matls.removeReference(); 
 }
 
 
