@@ -574,7 +574,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
     }
   }
 
-  if (scene_type != 6 || scene_type != 7) {
+  if (scene_type != 6 && scene_type != 7) {
     cerr << "Invalid scene_type.  Try using -type [nrrd,nrrd2,nrrdlist]\n";
     return 0;
   }
