@@ -23,18 +23,6 @@
 
 require 'find'
 
-# timestamp = nil
-# begin
-#   File.open("timestamp", "r") do |f|
-#     at = f.read.split(/ +|:|\n/)
-#     timestamp = Time.local(at[7].to_i, at[1], at[2].to_i, at[3].to_i,
-# 			   at[4].to_i, at[5].to_i)
-#   end 
-# rescue
-#   print("Couldn't read timestamp\n")
-#   exit(0)
-# end
-
 begin
   timestamp = File.mtime("html")
   sourceMatch = /\.(c|cc|h)$/
