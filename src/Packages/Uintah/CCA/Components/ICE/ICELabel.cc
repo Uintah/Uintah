@@ -168,14 +168,14 @@ ICELabel::ICELabel()
     VarLabel::create( "mom_exch_error",
                                       sumvec_vartype::getTypeDescription() );
   // Model variables
-  model_mass_source_CCLabel =
-    VarLabel::create( "model_mass_source",
+  modelMass_srcLabel =
+    VarLabel::create( "modelMass_src",
 		      CCVariable<double>::getTypeDescription());
-  model_momentum_source_CCLabel =
-    VarLabel::create( "model_momentum_source",
+  modelMom_srcLabel =
+    VarLabel::create( "modelMom_src",
 		      CCVariable<double>::getTypeDescription());
-  model_energy_source_CCLabel =
-    VarLabel::create( "model_energy_source",
+  modelEng_srcLabel =
+    VarLabel::create( "modelEng_src",
 		      CCVariable<double>::getTypeDescription());
 } 
 
@@ -263,7 +263,7 @@ ICELabel::~ICELabel()
     VarLabel::destroy(doMechLabel);
 
     // Model variables
-    VarLabel::destroy(model_mass_source_CCLabel);
-    VarLabel::destroy(model_momentum_source_CCLabel);
-    VarLabel::destroy(model_energy_source_CCLabel);
+    VarLabel::destroy(modelMass_srcLabel);
+    VarLabel::destroy(modelMom_srcLabel);
+    VarLabel::destroy(modelEng_srcLabel);
 }
