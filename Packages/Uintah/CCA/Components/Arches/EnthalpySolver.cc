@@ -682,7 +682,8 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 	  for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
 	    for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
 	      IntVector currCell(colX, colY, colZ);
-	      enthalpyVars.scalarNonlinearSrc[currCell] += enthalpyVars.src[currCell];
+              double vol=cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
+	      enthalpyVars.scalarNonlinearSrc[currCell] += vol*enthalpyVars.src[currCell];
 	    }
 	  }
 	}
