@@ -42,11 +42,10 @@
 #include <Core/2d/Point2d.h>
 #include <Core/2d/Vector2d.h>
 
-#define Colormap XColormap
 #include <Core/Geom/GeomOpenGL.h>
+#include <Core/Geom/TkOpenGLContext.h>
 #include <tcl.h>
 #include <tk.h>
-#undef Colormap
 
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
@@ -58,9 +57,6 @@ using std::sort;
 
 // tcl interpreter corresponding to this module
 extern Tcl_Interp* the_interp;
-
-// the OpenGL context structure
-extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
 
 namespace SCIRun {
 
@@ -94,16 +90,14 @@ private:
   int			winX[2],winY[2];  // integer size
   float			winDX, winDY; // scales (so it's square)
 
-  GLXContext		ctxs[2];    // OpenGL Contexts
-  Display		*dpy[2];
-  Window		win0;
-  Window		win1;
+  TkOpenGLContext *	ctxs_[2];    // OpenGL Contexts
 
-  ColorMapHandle	cmap;  // created once, first execute...
+  ColorMapHandle cmap;
   int cmap_generation;
   unsigned int textureid_;
   double cmap_min_;
   double cmap_max_;
+
 
   void loadTs( double Ax, double Ay, double ax, double ay, vector<double>& t);
 
@@ -147,7 +141,7 @@ public:
   virtual void execute();
   void tcl_command( GuiArgs&, void* );
 
-  int makeCurrent(void);
+  int makeCurrent(int);
 
   virtual void presave();
 
@@ -204,7 +198,7 @@ GenTransferFunc::GenTransferFunc( GuiContext* ctx)
   alphaT_.push_back(1.0);
   alphas_.push_back(0.8);
 
-  ctxs[0] = ctxs[1] = 0;
+  ctxs_[0] = ctxs_[1] = 0;
 }
 
 
@@ -347,19 +341,9 @@ drawBox(float x, float y, float dx, float dy)
 void
 GenTransferFunc::Resize(int win)
 {
-  // Do a make current.
-
-  if ( ! makeCurrent() )
+  // Do a make current.  Locks GUI on success
+  if (!makeCurrent(win))
     return;
-
-  switch (win) {
-  case 0:
-    glXMakeCurrent(dpy[win],win0,ctxs[win]);
-    break;
-  case 1:
-    glXMakeCurrent(dpy[win],win1,ctxs[win]);
-    break;
-  }
 
   if (win == 0)
   {  // DX DY only for first 1.
@@ -398,11 +382,8 @@ GenTransferFunc::DrawGraphs( int flush)
 {
   static float colors[] = { 1.,0.,0.,   0.,1.,0.,   0.,0.,1. };
 
-  if (!makeCurrent())
+  if (!makeCurrent(0))
     return; // don't care if you can't make current...
-
-  glXMakeCurrent(dpy[0],win0,ctxs[0]);
-  // other state should be fine...
 
   glDrawBuffer(GL_BACK);
   glClear(GL_COLOR_BUFFER_BIT);
@@ -448,7 +429,7 @@ GenTransferFunc::DrawGraphs( int flush)
     drawBox(alphaT_[i], alphas_[i], winDX, winDY);
   }
 
-  glXSwapBuffers(dpy[0],win0);
+  ctxs_[0]->swap();
 
   CHECK_OPENGL_ERROR("");
 
@@ -457,7 +438,9 @@ GenTransferFunc::DrawGraphs( int flush)
   cmap->Scale(cmap_min_, cmap_max_);
 
   // Go to the last window.
-  glXMakeCurrent(dpy[1],win1,ctxs[1]);
+  if (!makeCurrent(1))
+    return; // don't care if you can't make current...
+
   glDrawBuffer(GL_BACK);
   glClear(GL_COLOR_BUFFER_BIT);
 
@@ -536,11 +519,10 @@ GenTransferFunc::DrawGraphs( int flush)
   glPopMatrix(); // GL_TEXTURE
   glMatrixMode(GL_MODELVIEW);
 
-  glXSwapBuffers(dpy[1],win1);
-
+  ctxs_[1]->swap();
   CHECK_OPENGL_ERROR("");
+  ctxs_[1]->release();
 
-  glXMakeCurrent(dpy[0],None,NULL);
   gui->unlock();
 
   if ( flush )
@@ -592,7 +574,15 @@ GenTransferFunc::tcl_command( GuiArgs& args, void* userdata)
     Resize(whichwin); // just sets up OGL stuff...
     DrawGraphs(0);
   }else if(args[1] == "closewindow") {
-     ctxs[0] = ctxs[1] = 0;
+    for (int i = 0; i < 2; ++i)
+      if (ctxs_[i]) {
+	delete ctxs_[i];
+	ctxs_[i] = 0;
+      }
+  } else if(args[1] == "setgl") {
+    int win = 0;
+    string_to_int(args[2], win);
+    makeCurrent(win);
   }else if (args[1] == "unpickle") {
      tcl_unpickle();
   }else if (args[1] == "toggle-hsv") {
@@ -1058,74 +1048,49 @@ GenTransferFunc::execute()
 
 
 int
-GenTransferFunc::makeCurrent()
+GenTransferFunc::makeCurrent(int win)
 {
-  Tk_Window tkwin;
-
+  ASSERT(win == 0 || win == 1);
   // lock a mutex
   gui->lock();
 
-  if (!ctxs[0]) {
-    const string myname(".ui" + id + ".f.gl1.gl");
-    tkwin = Tk_NameToWindow(the_interp, ccast_unsafe(myname),
-			    Tk_MainWindow(the_interp));
-
-    if (!tkwin) {
-      warning("Unable to locate window!");
-
-      // unlock mutex
-      gui->unlock();
+  if (!ctxs_[win]) {
+    string myname; 
+    int height;
+    if (win == 0) {
+      myname = ".ui" + id + ".f.gl1.gl";
+      height = 256;
+    } else if (win == 1) {
+      myname = ".ui" + id + ".f.gl3.gl";
+      height = 64;
+    }
+	
+#if 0
+    if (!Tk_NameToWindow(the_interp, ccast_unsafe(myname),
+			 Tk_MainWindow(the_interp))) {
+      warning("Unable to locate window!");      
+      gui->unlock(); // unlock mutex
       return 0;
     }
-    winX[0] = Tk_Width(tkwin);
-    winY[0] = Tk_Height(tkwin);
+#endif
 
-    dpy[0] = Tk_Display(tkwin);
-    win0 = Tk_WindowId(tkwin);
-
-    ctxs[0] = OpenGLGetContext(the_interp, ccast_unsafe(myname));
-
-    // check if it was created
-    if(!ctxs[0])
-      {
-	error("Unable to create OpenGL Context!");
-	gui->unlock();
-	return 0;
-      }
+    ctxs_[win] = scinew TkOpenGLContext(myname, 0, 512, height);
+    winX[win] = 512;//ctxs_[win]->width();
+    winY[win] = height;//ctxs_[win]->height();
+    
   }	
 
-  if (!ctxs[1]) {
-    const string myname(".ui" + id + ".f.gl3.gl");
-    tkwin = Tk_NameToWindow(the_interp, ccast_unsafe(myname),
-			    Tk_MainWindow(the_interp));
+  if(!ctxs_[win])
+  {
+    error("Unable to create OpenGL Context!");
+    gui->unlock();
+    return 0;
+  }
+  
+  
+  ctxs_[win]->make_current();
 
-    if (!tkwin) {
-      error("Unable to locate window!");
-
-      // unlock mutex
-      gui->unlock();
-      return 0;
-    }
-    winX[1] = Tk_Width(tkwin);
-    winY[1] = Tk_Height(tkwin);
-
-    dpy[1] = Tk_Display(tkwin);
-    win1 = Tk_WindowId(tkwin);
-
-    ctxs[1] = OpenGLGetContext(the_interp, ccast_unsafe(myname));
-
-    // check if it was created
-    if(!ctxs[1])
-      {
-	error("Unable to create OpenGL Context!");
-	gui->unlock();
-	return 0;
-      }
-  }	
-
-  // ok, 3 contexts are created - now you only need to
-  // do the other crap...
-
+  // Context successfully created and made current
   return 1;
 }
 
