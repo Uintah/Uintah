@@ -25,19 +25,19 @@ PCAGridSpheres::PCAGridSpheres(float* spheres, size_t nspheres, int ndata,
 			       float radius,
 			       int *tex_indices,
 			       unsigned char* tex_data, int nbases,
-                               int tex_res, unsigned char* xform,
-                               unsigned char *mean, int nchannels,
+                               int tex_res, unsigned char* coeff,
+                               unsigned char *mean, int nvecs,
 			       float tex_min, float tex_max,
-                               float xform_min, float xform_max,
+                               float coeff_min, float coeff_max,
 			       int nsides, int depth, RegularColorMap* cmap,
 			       const Color& color) :
  TextureGridSpheres(spheres, nspheres, ndata, radius, tex_indices, tex_data,
 		    nbases, tex_res, nsides, depth, cmap, color),
- xform(xform), mean(mean), nbases(nbases), nchannels(nchannels),
- tex_min(tex_min), xform_min(xform_min)
+ coeff(coeff), mean(mean), nbases(nbases), nvecs(nvecs),
+ tex_min(tex_min), coeff_min(coeff_min)
 {
   tex_diff = (tex_max - tex_min)*one_over_255;
-  xform_diff = (xform_max - xform_min)*one_over_255;
+  coeff_diff = (coeff_max - coeff_min)*one_over_255;
   cout << "PCAGridSpheres::tex_diff = "<<tex_diff<<"\n";
 }
 
@@ -79,7 +79,7 @@ void PCAGridSpheres::shade(Color& result, const Ray& ray,
   if (tex_index==-1) {
     // Solid black texture
     result=Color(0, 0, 0);
-  } else if (tex_index >= nchannels) {
+  } else if (tex_index >= nvecs) {
     // Bad index
     result = Color(1,0,1);
     return;
@@ -121,20 +121,19 @@ void PCAGridSpheres::shade(Color& result, const Ray& ray,
 }
 
 // Given the pixel and texture index compute the pixel's luminance
-float PCAGridSpheres::getPixel(int x, int y, int channel_index) {
+float PCAGridSpheres::getPixel(int x, int y, int tex_index) {
   float outdata = 0;
-  unsigned char* btdata = tex_data + (y*tex_res+x)*nbases;
-  unsigned char* tdata = xform + (channel_index*nbases);
+  unsigned char* btdata = tex_data + (y*tex_res+x);
+  unsigned char* coeff_data = coeff + (tex_index*nbases);
 
-  // Compute the dot produce between the column vector of the tranform
-  // and the pixel of the basis texture.
-  for(int base = 0; base < nbases; base++)
-    outdata += (tdata[base]*xform_diff+xform_min) *
-               (btdata[base]*tex_diff+tex_min);
-    
-  // Add the mean
-  outdata += mean[channel_index];
-
+  // Multiply basis vectors by coefficients
+  for (int b=0; b<nbases; b++)
+    outdata+=(coeff_data[b]*coeff_diff+coeff_min) *
+      (btdata[b*tex_res*tex_res]*tex_diff+tex_min);
+  
+  // Add mean vector
+  outdata+=mean[y*tex_res+x];
+  
   return outdata;
 }
 
