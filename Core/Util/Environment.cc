@@ -137,10 +137,10 @@ SCIRun::sci_putenv( const string &key, const string &val )
 // get_existing_env() will fill up the SCIRun::existing_env string set
 // with all the currently set environment variable keys, but not their values
 void
-SCIRun::create_sci_environment(char **environ, char *execname)
+SCIRun::create_sci_environment(char **env, char *execname)
 {
-  if (environ) {
-    char **environment = environ;
+  if (env) {
+    char **environment = env;
     scirun_env.clear();
     while (*environment) {
       const string str(*environment);
