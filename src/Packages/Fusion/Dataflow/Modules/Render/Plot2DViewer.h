@@ -29,12 +29,17 @@
 
 #include <Core/Datatypes/DenseMatrix.h>
 
+#include <Core/Datatypes/ScanlineField.h>
+#include <Core/Datatypes/ImageField.h>
+#include <Core/Datatypes/LatVolField.h>
+
+#include <Core/Datatypes/StructCurveField.h>
+#include <Core/Datatypes/StructQuadSurfField.h>
+#include <Core/Datatypes/StructHexVolField.h>
+
 #include <Core/GuiInterface/GuiVar.h>
 
 #include <Packages/Fusion/share/share.h>
-
-#include <Core/Datatypes/ScanlineField.h>
-#include <Packages/Fusion/Core/Datatypes/StructHexVolField.h>
 
 namespace Fusion {
 
@@ -121,17 +126,18 @@ Plot2DViewerAlgoT<FIELD, TYPE>::execute(FieldHandle field_h,
 					int slice,
 					Plot2DViewer* p2Dv )
 {
-  if( field_h.get_rep()->get_type_description(0)->get_name() == "StructHexVolField" ) {
+  if( field_h.get_rep()->get_type_description(0)->get_name() == "LatVolField"  ||
+      field_h.get_rep()->get_type_description(0)->get_name() == "StructHexVolField" ) {
 
-    StructHexVolField<TYPE> *ifield =
-      (StructHexVolField<TYPE> *) field_h.get_rep();
+    //    GenericField<LatVolMesh, vector<TYPE> > *ifield =
+    //      (GenericField<LatVolMesh, vector<TYPE> > *) field_h.get_rep();
+    //    LatVolMesh *imesh = (LatVolMesh*) field_h->mesh().get_rep();
 
-    typename StructHexVolField<TYPE>::mesh_handle_type imesh =
-      ifield->get_typed_mesh();
+    StructHexVolField<TYPE> *ifield = (StructHexVolField<TYPE> *) field_h.get_rep();
 
+    typename StructHexVolField<TYPE>::mesh_handle_type imesh = ifield->get_typed_mesh();
     const unsigned int onx = imesh->get_nx();
     const unsigned int ony = imesh->get_ny();
-    const unsigned int onz = imesh->get_nz();
 
     p2Dv->dMat_x_ = scinew DenseMatrix( onx, ony );
     p2Dv->dMat_y_ = scinew DenseMatrix( onx, ony );
@@ -141,8 +147,8 @@ Plot2DViewerAlgoT<FIELD, TYPE>::execute(FieldHandle field_h,
     typename StructHexVolField<TYPE>::value_type v;
     Point p;
 
-    for (unsigned int i = 0; i < onx; i++) {
-      for (unsigned int j = 0; j < ony; j++) {
+    for (unsigned int i=0; i<onx; i++) {
+      for (unsigned int j=0; j<ony; j++) {
 	node.i_ = i;
 	node.j_ = j;
 	node.k_ = slice;
@@ -158,7 +164,41 @@ Plot2DViewerAlgoT<FIELD, TYPE>::execute(FieldHandle field_h,
     }
   } 
 
-  else if( field_h.get_rep()->get_type_description(0)->get_name() == "ScanlineField" ) {
+  else if( field_h.get_rep()->get_type_description(0)->get_name() == "ImageField" ||
+	   field_h.get_rep()->get_type_description(0)->get_name() == "StructQuadSurfField" ) {
+
+    StructQuadSurfField<TYPE> *ifield = (StructQuadSurfField<TYPE> *) field_h.get_rep();
+
+    typename StructQuadSurfField<TYPE>::mesh_handle_type imesh = ifield->get_typed_mesh();
+    const unsigned int onx = imesh->get_nx();
+    const unsigned int ony = imesh->get_ny();
+
+    p2Dv->dMat_x_ = scinew DenseMatrix( onx, ony );
+    p2Dv->dMat_y_ = scinew DenseMatrix( onx, ony );
+    p2Dv->dMat_v_ = scinew DenseMatrix( onx, ony );
+
+    typename StructQuadSurfField<TYPE>::mesh_type::Node::index_type node;
+    typename StructQuadSurfField<TYPE>::value_type v;
+    Point p;
+
+    for (unsigned int i=0; i<onx; i++) {
+      for (unsigned int j=0; j<ony; j++) {
+	node.i_ = i;
+	node.j_ = j;
+
+	ifield->value(v, node);
+	p2Dv->dMat_v_->put( i, j, v );
+
+	imesh->get_center(p, node);
+
+	p2Dv->dMat_x_->put( i, j, sqrt(p.x() * p.x() + p.y() * p.y() ) );
+	p2Dv->dMat_y_->put( i, j, p.z() );
+      }
+    }
+  }
+
+  else if( field_h.get_rep()->get_type_description(0)->get_name() == "ScanlineField" ||
+	   field_h.get_rep()->get_type_description(0)->get_name() == "StructCurveField" ) {
 
     ScanlineField<TYPE> *ifield = (ScanlineField<TYPE> *) field_h.get_rep();
 
