@@ -5,12 +5,9 @@ OBJS = main.o
 SRCS = main.cc
 TARGET = project
 
-/*
 SCI_LIBS = \
-	SCI_MallocLib \
+	SCI_MultitaskLib \
 	SCI_ClassLib
-*/
-SCI_LIBS =
 
 SCI_LDFLAGS = SCI_LM SCI_LTHREAD
 
