@@ -80,6 +80,7 @@ namespace Uintah {
     }
     const ComputeSubset<T>* getUnion() const;
     void createEmptySubsets(int size);
+    int totalsize() const;
   private:
     vector<ComputeSubset<T>*> set;
     mutable ComputeSubset<T>* un;
@@ -166,6 +167,16 @@ namespace Uintah {
       un->sort();
     }
     return un;
+  }
+
+  template<class T>
+  int ComputeSet<T>::totalsize() const {
+    if(un)
+      return un->size();
+    int total=0;
+    for(int i=0;i<(int)set.size();i++)
+      total+=set[i]->size();
+    return total;
   }
 }
 
