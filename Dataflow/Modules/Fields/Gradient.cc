@@ -30,32 +30,23 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/QuadraticTetVolField.h>
-#include <Core/Datatypes/TetVolField.h>
-#include <Core/Datatypes/LatVolField.h>
-#include <Core/Geometry/Point.h>
-#include <Core/GuiInterface/GuiVar.h>
-#include <iostream>
+
+#include <Dataflow/Modules/Fields/Gradient.h>
 
 namespace SCIRun {
 
 class Gradient : public Module
 {
-private:
-  FieldIPort *ifp;
-  FieldOPort *ofp;
-  GuiInt  interpolate_;
-
 public:
   Gradient(GuiContext* ctx);
   virtual ~Gradient();
 
   virtual void execute();
 
-  template <class F> void dispatch_quadratictetvol(F *f);
-  template <class F> void dispatch_tetvol(F *f);
-  template <class F> void dispatch_latticevol(F *f);
+protected:
+  FieldHandle fieldout_;
+
+  int fGeneration_;
 };
 
 
@@ -63,147 +54,100 @@ DECLARE_MAKER(Gradient)
 
 Gradient::Gradient(GuiContext* ctx)
   : Module("Gradient", ctx, Filter, "Fields", "SCIRun"),
-    interpolate_(ctx->subVar("interpolate"))
+    fGeneration_(-1)
 {
 }
-
-
 
 Gradient::~Gradient()
 {
 }
 
-template <class F>
-void
-Gradient::dispatch_quadratictetvol(F *f)
-{
-  QuadraticTetVolMeshHandle tvm = f->get_typed_mesh(); 
-  QuadraticTetVolField<Vector> *result = new QuadraticTetVolField<Vector>(tvm, Field::CELL);
-  typename F::mesh_type::Cell::iterator ci, cie;
-  tvm->begin(ci); tvm->end(cie);
-  while (ci != cie)
-  {
-    result->set_value(f->cell_gradient(*ci), *ci);
-    ++ci;
-  }
-
-  result->freeze();
-  FieldHandle fh(result);
-  ofp->send(fh);
-}
-
-template <class F>
-void
-Gradient::dispatch_tetvol(F *f)
-{
-  TetVolMeshHandle tvm = f->get_typed_mesh(); 
-  TetVolField<Vector> *result = new TetVolField<Vector>(tvm, Field::CELL);
-  typename F::mesh_type::Cell::iterator ci, cie;
-  tvm->begin(ci); tvm->end(cie);
-  while (ci != cie)
-  {
-    result->set_value(f->cell_gradient(*ci), *ci);
-    ++ci;
-  }
-
-  result->freeze();
-  FieldHandle fh(result);
-  ofp->send(fh);
-}
-
-template <class F>
-void
-Gradient::dispatch_latticevol(F *f)
-{
-  LatVolMeshHandle lvm = f->get_typed_mesh(); 
-  LatVolField<Vector> *result = new LatVolField<Vector>(lvm, Field::CELL);
-  typename F::mesh_type::Cell::iterator ci, cie;
-  lvm->begin(ci); lvm->end(cie);
-  while (ci != cie)
-  {
-    Point p;
-    lvm->get_center(p, *ci);
-    Vector v;
-    f->get_gradient(v, p);
-    result->set_value(v, *ci);
-    ++ci;
-  }
-
-  FieldOPort *ofp = (FieldOPort *)get_oport("Output Gradient");
-  if (!ofp) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
-    return;
-  }
-  result->freeze();
-  FieldHandle fh(result);
-  ofp->send(fh);
-}
-
-
 void
 Gradient::execute()
 {
-  ifp = (FieldIPort *)get_iport("Input Field");
-  FieldHandle fieldhandle;
+  FieldIPort* ifp = (FieldIPort *)get_iport("Input Field");
+
+  FieldHandle fieldin;
   Field *field;
+
   if (!ifp) {
-    postMessage("Unable to initialize "+name+"'s iport\n");
-    return;
-  }
-  if (!(ifp->get(fieldhandle) && (field = fieldhandle.get_rep())))
-  {
+    error( "Unable to initialize "+name+"'s iport" );
     return;
   }
 
-  ofp = (FieldOPort *)get_oport("Output Gradient");
-  if (!ofp) {
-    postMessage("Unable to initialize "+name+"'s oport\n");
+  if (!(ifp->get(fieldin) && (field = fieldin.get_rep())))
+  {
+    error( "No handle or representation" );
     return;
   }
 
-  const TypeDescription *ftd = fieldhandle->get_type_description();
-  if (ftd->get_name() == get_type_description((QuadraticTetVolField<double> *)0)->get_name())
-  {
-    dispatch_quadratictetvol((QuadraticTetVolField<double> *)field);
+  // If no data or a changed recalcute.
+  if( !fieldout_.get_rep() ||
+      fGeneration_ != fieldin->generation ) {
+    fGeneration_ = fieldin->generation;
+
+    const TypeDescription *srctd = fieldin->get_type_description(-1);
+    const TypeDescription *dsttd = fieldin->get_type_description(0);
+
+    CompileInfo *ci = GradientAlgo::get_compile_info(srctd, dsttd);
+    DynamicAlgoHandle algo_handle;
+    if (! DynamicLoader::scirun_loader().get(*ci, algo_handle)) {
+      error( "Could not compile algorithm." );
+      return;
+    }
+    GradientAlgo *algo =
+      dynamic_cast<GradientAlgo *>(algo_handle.get_rep());
+    if (algo == 0) {
+      error( "Could not get algorithm." );
+      return;
+    }
+
+    fieldout_ = algo->execute(fieldin);
+
+    if( fieldout_.get_rep() == NULL ) {
+      error( "Only availible for Scalar data." );
+      return;
+    }
   }
-  else if (ftd->get_name() == get_type_description((TetVolField<double> *)0)->get_name())
-  {
-    dispatch_tetvol((TetVolField<double> *)field);
-  }
-  else if (ftd->get_name() == get_type_description((TetVolField<int> *)0)->get_name())
-  {
-    dispatch_tetvol((TetVolField<int> *)field);
-  }
-  else if (ftd->get_name() == get_type_description((TetVolField<short> *)0)->get_name())
-  {
-    dispatch_tetvol((TetVolField<short> *)field);
-  }
-  else if (ftd->get_name() == get_type_description((TetVolField<unsigned char> *)0)->get_name())
-  {
-    dispatch_tetvol((TetVolField<unsigned char> *)field);
-  }
-  else if (ftd->get_name() == get_type_description((LatVolField<double> *)0)->get_name())
-  {
-    dispatch_latticevol((LatVolField<double> *)field);
-  }
-  else if (ftd->get_name() == get_type_description((LatVolField<int> *)0)->get_name())
-  {
-    dispatch_latticevol((LatVolField<int> *)field);
-  }
-  else if (ftd->get_name() == get_type_description((LatVolField<short> *)0)->get_name())
-  {
-    dispatch_latticevol((LatVolField<short> *)field);
-  }
-  else if (ftd->get_name() == get_type_description((LatVolField<unsigned char> *)0)->get_name())
-  {
-    dispatch_latticevol((LatVolField<unsigned char> *)field);
-  }
-  else
-  {
-    error("Unable to handle a field of type '" + ftd->get_name() + "'.");
+
+  // Get a handle to the output field port.
+  if( fieldout_.get_rep() ) {
+    FieldOPort* ofp = (FieldOPort *) get_oport("Output Gradient");
+
+    if (!ofp) {
+      error("Unable to initialize "+name+"'s oport\n");
+      return;
+    }
+
+    // Send the data downstream
+    ofp->send(fieldout_);
   }
 }
 
+CompileInfo *
+GradientAlgo::get_compile_info(const TypeDescription *srctd,
+			       const TypeDescription *dsttd)
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("GradientAlgoT");
+  static const string base_class_name("GradientAlgo");
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       srctd->get_filename() + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       srctd->get_name() + ", " +
+		       dsttd->get_name() + "<Vector> ");
+  
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  srctd->fill_compile_info(rval);
+  return rval;
+}
 
 } // End namespace SCIRun
+
+
 
