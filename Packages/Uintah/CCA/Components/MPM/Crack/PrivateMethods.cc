@@ -1187,10 +1187,11 @@ void Crack::CalculateCrackFrontNormals(const int& mm)
       // The node to the right of pt 
       int node1=-1;
       if(minNode==maxNode && (k==minIdx || k==maxIdx)) { 
-        // for the end of enclosed crack
+        // for the ends of enclosed crack
         node1=cfSegNodes[mm][maxIdx-2];
       }
-      else {
+      else { // for the nodes of non-enclosd cracks or
+	     //  non-end-nodes of enclosed cracks
         int k1=(k-2)<minIdx ? minIdx : k-2;
         node1=cfSegNodes[mm][k1];
       }
@@ -1199,10 +1200,11 @@ void Crack::CalculateCrackFrontNormals(const int& mm)
       // The node to the left of pt
       int node2=-1;
       if(minNode==maxNode && (k==minIdx || k==maxIdx)) {
-        // for the end of enclosed crack
+        // for the ends of enclosed crack
         node2=cfSegNodes[mm][minIdx+2];
       }
-      else {
+      else { // for the nodes of non-enclosd cracks or
+             // non-end-nodes of enclosed cracks
         int k2=(k+2)>maxIdx ? maxIdx : k+2;
         node2=cfSegNodes[mm][k2];
       }
@@ -1213,14 +1215,22 @@ void Crack::CalculateCrackFrontNormals(const int& mm)
       double l2=(pt-pt2).length();
       Vector v3T=(l1*TwoPtsDirCos(pt1,pt)+l2*TwoPtsDirCos(pt,pt2))/(l1+l2);
       cfSegV3[mm][k]=-v3T/v3T.length();
-      
-      //cfSegV3[mm][k]=-TwoPtsDirCos(pt1,pt2);
     }
-
     else { // calculated
       cfSegV3[mm][k]=cfSegV3[mm][preIdx];
     }
   } // End of loop over k
+
+  // Reset tangential vectors for edge nodes outside material
+  // to the values of the nodes next to them. 
+  // This way will eliminate the effect of edge nodes.
+  for(int k=0; k<cfNodeSize; k++) {
+    int node=cfSegNodes[mm][k];	  
+    int segs[2];
+    FindSegsFromNode(mm,node,segs);
+    if(segs[R]<0) cfSegV3[mm][k]=cfSegV3[mm][k+1];
+    if(segs[L]<0) cfSegV3[mm][k]=cfSegV3[mm][k-1];
+  }	  
 
   /* Task 2: Calculate normals of crack plane at crack-front nodes
   */
@@ -1228,8 +1238,18 @@ void Crack::CalculateCrackFrontNormals(const int& mm)
   cfSegV2[mm].resize(cfNodeSize);
   for(int k=0; k<cfNodeSize; k++) {
     int node=cfSegNodes[mm][k];
-    int preIdx=cfSegPreIdx[mm][k];
 
+    // Detect if it is an edge node 
+    int segs[2];
+    FindSegsFromNode(mm,node,segs);
+    short edgeNode=NO;
+    if(segs[L]<0 || segs[R]<0) edgeNode=YES;
+    
+    // End information of the sub crack
+    int minNode=cfSegNodes[mm][cfSegMinIdx[mm][k]];
+    int maxNode=cfSegNodes[mm][cfSegMaxIdx[mm][k]];
+       
+    int preIdx=cfSegPreIdx[mm][k];
     if(preIdx<0) {// Not operated
       Vector v2T=Vector(0.,0.,0.);
       double totalArea=0.;
@@ -1238,7 +1258,21 @@ void Crack::CalculateCrackFrontNormals(const int& mm)
         int n1=ce[mm][i].x();
         int n2=ce[mm][i].y();
         int n3=ce[mm][i].z();
-        if(node==n1 || node==n2 || node==n3) {
+	
+	// Detect if the elem is connected to the node
+	short elemRelatedToNode=NO;
+	if(node==n1 || node==n2 || node==n3) elemRelatedToNode=YES;
+	
+	// Detect if the elem is an inner elem
+	short innerElem=YES;
+	if(minNode!=maxNode &&
+	   (n1==minNode || n2==minNode || n3==minNode ||
+	    n1==maxNode || n2==maxNode || n3==maxNode)) innerElem=NO;	
+
+	// The elem will be used if it is connected to the node AND 
+	// 1. if it is an inner elem for non-edge nodes or
+	// 2. the node is an edge node.
+        if(elemRelatedToNode && (innerElem || edgeNode)) {
           // Three points of the triangle
           Point p1=cx[mm][n1];
           Point p2=cx[mm][n2];
@@ -1259,7 +1293,16 @@ void Crack::CalculateCrackFrontNormals(const int& mm)
           totalArea+=thisArea;
         }
       } // End of loop over crack elems
-      v2T/=totalArea;
+
+      if(totalArea!=0.) {
+	v2T/=totalArea;
+      }	
+      else {
+        cout << " ! Divided by zero in Crack::CalculateCrackFrontNormals()." 
+	     << " totalArea=" << totalArea << endl;
+	exit(1);
+      }
+      
       cfSegV2[mm][k]=v2T/v2T.length();
     }
     else { // Calculated
@@ -1267,6 +1310,17 @@ void Crack::CalculateCrackFrontNormals(const int& mm)
     }
   } // End of loop over crack-front nodes
 
+  // Reset normals for edge nodes outside material
+  // to the values of the nodes next to them. 
+  // This way will eliminate the effect of edge nodes.
+  for(int k=0; k<cfNodeSize; k++) {
+    int node=cfSegNodes[mm][k];
+    int segs[2];
+    FindSegsFromNode(mm,node,segs);
+    if(segs[R]<0) cfSegV2[mm][k]=cfSegV2[mm][k+1];
+    if(segs[L]<0) cfSegV2[mm][k]=cfSegV2[mm][k-1];
+  }
+  
   /* Task 3: Calculate bi-normals of crack plane at crack-front nodes
              and adjust crack-plane normals to make sure the three axes
              are perpendicular to each other.
