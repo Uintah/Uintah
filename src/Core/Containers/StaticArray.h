@@ -65,7 +65,7 @@ public:
   StaticArray(const StaticArray& array)
     : data_(new T[array.size_]), size_(array.size_)
   {
-    for (int i = 0; i < size_; i++)
+    for (unsigned int i = 0; i < size_; i++)
       data_[i] = array.data_[i];
   }
 
@@ -74,8 +74,10 @@ public:
     delete[] data_;
     data_ = new T[array.size_];
     size_ = array.size_;
-    for (int i = 0; i < size_; i++)
+    for (unsigned int i = 0; i < size_; i++)
       data_[i] = array.data_[i];
+
+    return *this;
   }
   
   ~StaticArray()
@@ -104,6 +106,17 @@ public:
     ASSERTL3(index < size_);
     return data_[index];
   }
+
+  int size() const
+  {
+     return (int) size_;
+  }
+
+  T* pointer() const
+  {
+     return data_;
+  }
+
 private:
   T* data_;
   unsigned int size_;
