@@ -452,8 +452,7 @@ WARNING
     // Insert Documentation Here:
     void modifies(const VarLabel*,
 		  const PatchSubset* patches, DomainSpec patches_domain, 
-		  const MaterialSubset* matls, DomainSpec matls_domain,
-		   Ghost::GhostType gtype, int numGhostCells = 0);
+		  const MaterialSubset* matls, DomainSpec matls_domain);
     
     //////////
     // Insert Documentation Here:
@@ -462,14 +461,12 @@ WARNING
     
     //////////
     // Insert Documentation Here:
-    void modifies(const VarLabel*, const MaterialSubset* matls,
-		  Ghost::GhostType gtype, int numGhostCells = 0);
+    void modifies(const VarLabel*, const MaterialSubset* matls);
     
     //////////
     // Insert Documentation Here:
     void modifies(const VarLabel*, const MaterialSubset* matls,
-		  DomainSpec matls_domain,
-		   Ghost::GhostType gtype, int numGhostCells = 0);
+		  DomainSpec matls_domain);
    
     //////////
     // Tells the task to actually execute the function assigned to it.

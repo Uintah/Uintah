@@ -223,8 +223,7 @@ Task::computes(const VarLabel* var, const MaterialSubset* matls,
 void
 Task::modifies(const VarLabel* var,
 	       const PatchSubset* patches, DomainSpec patches_dom,
-	       const MaterialSubset* matls, DomainSpec matls_dom,
-	       Ghost::GhostType gtype, int numGhostCells)
+	       const MaterialSubset* matls, DomainSpec matls_dom)
 {
   if (matls == 0 && var->typeDescription()->isReductionVariable()) {
     // default material for a reduction variable is the global material (-1)
@@ -233,8 +232,7 @@ Task::modifies(const VarLabel* var,
   }  
 
   Dependency* dep = scinew Dependency(this, NewDW, var, patches, matls,
-				      patches_dom, matls_dom,
-				      gtype, numGhostCells);
+				      patches_dom, matls_dom);
   dep->next=0;
   if (mod_tail)
     mod_tail->next=dep;
@@ -252,22 +250,20 @@ Task::modifies(const VarLabel* var, const PatchSubset* patches,
        || vartype == TypeDescription::ReductionVariable))
     throw InternalError("Modifies should specify ghost type for this variable");
   
-  modifies(var, patches, NormalDomain, matls, NormalDomain,
-	   Ghost::None, 0);
+  modifies(var, patches, NormalDomain, matls, NormalDomain);
+}
+
+void
+Task::modifies(const VarLabel* var, const MaterialSubset* matls)
+{
+  modifies(var, 0, NormalDomain, matls, NormalDomain);
 }
 
 void
 Task::modifies(const VarLabel* var, const MaterialSubset* matls,
-	       Ghost::GhostType gtype, int numGhostCells)
+	       DomainSpec matls_dom)
 {
-  modifies(var, 0, NormalDomain, matls, NormalDomain, gtype, numGhostCells);
-}
-
-void
-Task::modifies(const VarLabel* var, const MaterialSubset* matls,
-	       DomainSpec matls_dom, Ghost::GhostType gtype, int numGhostCells)
-{
-  modifies(var, 0, NormalDomain, matls, matls_dom, gtype, numGhostCells);
+  modifies(var, 0, NormalDomain, matls, matls_dom);
 }
 
 
