@@ -88,6 +88,11 @@ WARNING
 					    const PatchSet* patches,
 					    const bool recursion);
 
+	 virtual void addComputesAndRequiresImplicitOnly(Task* task,
+					    const MPMMaterial* matl,
+					    const PatchSet* patches,
+					    const bool recursion);
+
 	 virtual void addParticleState(std::vector<const VarLabel*>& from,
 				       std::vector<const VarLabel*>& to) = 0;
 

@@ -123,12 +123,6 @@ private:
 				     DataWarehouse* old_dw,
 				     DataWarehouse* new_dw);
 
-  void initializeForFirstIterationAfterConverged(const ProcessorGroup*,
-						   const PatchSubset* patches,
-						   const MaterialSubset* matls,
-						   DataWarehouse* old_dw,
-						   DataWarehouse* new_dw);
-
 
   //////////
   // Insert Documentation Here:
@@ -146,6 +140,7 @@ private:
 
   //////////
   // Insert Documentation Here:
+
   void computeStressTensor(const ProcessorGroup*,
 			   const PatchSubset* patches,
 			   const MaterialSubset* matls,
@@ -168,6 +163,7 @@ private:
 			   DataWarehouse* new_dw);
 
 
+
   //////////
   // Insert Documentation Here:
   void computeInternalForce(const ProcessorGroup*,
@@ -176,6 +172,7 @@ private:
 			    DataWarehouse* old_dw,
 			    DataWarehouse* new_dw,
 			    const bool recursion);
+
 
   void iterate(const ProcessorGroup* pg,
 	       const PatchSubset* patches,
@@ -206,6 +203,7 @@ private:
 			DataWarehouse* new_dw,
 			LevelP level, SchedulerP sched);
 
+
   //////////
   // Insert Documentation Here:
   void computeAcceleration(const ProcessorGroup*,
@@ -229,12 +227,6 @@ private:
 			       DataWarehouse* new_dw);
 
 
-
-  void scheduleInitializeForFirstIterationAfterConverged(SchedulerP&, 
-							 const PatchSet*,
-							 const MaterialSet*);
-
-
   void scheduleInterpolateParticlesToGrid(SchedulerP&, const PatchSet*,
 					  const MaterialSet*);
 
@@ -242,7 +234,11 @@ private:
   void scheduleApplySymmetryBoundaryConditions(SchedulerP&, const PatchSet*,
 					       const MaterialSet*);
 
-  void scheduleComputeStressTensor(SchedulerP&, const PatchSet*,
+  void scheduleComputeStressTensorI(SchedulerP&, const PatchSet*,
+				   const MaterialSet*,
+				   const bool recursion = false);
+
+  void scheduleComputeStressTensorR(SchedulerP&, const PatchSet*,
 				   const MaterialSet*,
 				   const bool recursion = false);
 
@@ -250,26 +246,50 @@ private:
 				       const MaterialSet*,
 				       const bool recursion = false);
 
-  void scheduleFormStiffnessMatrix(SchedulerP&, const PatchSet*,
+  void scheduleFormStiffnessMatrixI(SchedulerP&, const PatchSet*,
+				   const MaterialSet*);
+
+  void scheduleFormStiffnessMatrixR(SchedulerP&, const PatchSet*,
 				   const MaterialSet*);
 
 
-  void scheduleComputeInternalForce(SchedulerP&, const PatchSet*,
+  void scheduleComputeInternalForceI(SchedulerP&, const PatchSet*,
+				     const MaterialSet*,
+				     const bool recursion);
+
+  void scheduleComputeInternalForceII(SchedulerP&, const PatchSet*,
 				    const MaterialSet*,
-				   const bool recursion);
+				    const bool recursion);
+
+  void scheduleComputeInternalForceR(SchedulerP&, const PatchSet*,
+				    const MaterialSet*,
+				    const bool recursion);
 
   void scheduleIterate(SchedulerP&, const LevelP&,const PatchSet*, 
 		       const MaterialSet*);
 
-  void scheduleFormQ(SchedulerP&, const PatchSet*, const MaterialSet*);
+  void scheduleFormQI(SchedulerP&, const PatchSet*, const MaterialSet*);
 
-  void scheduleSolveForDuCG(SchedulerP&, const PatchSet*, const MaterialSet*);
+  void scheduleFormQR(SchedulerP&, const PatchSet*, const MaterialSet*);
 
-  void scheduleUpdateGridKinematics(SchedulerP&, const PatchSet*, 
+  void scheduleSolveForDuCGI(SchedulerP&, const PatchSet*, const MaterialSet*,
+			     const bool recursion);
+
+  void scheduleSolveForDuCGR(SchedulerP&, const PatchSet*, const MaterialSet*,
+			     const bool recursion);
+
+  void scheduleUpdateGridKinematicsI(SchedulerP&, const PatchSet*, 
 				    const MaterialSet*);
 
-  void scheduleCheckConvergence(SchedulerP&, const LevelP&, const PatchSet*,
-				const MaterialSet*);
+  void scheduleUpdateGridKinematicsR(SchedulerP&, const PatchSet*, 
+				    const MaterialSet*);
+
+  void scheduleCheckConvergenceI(SchedulerP&, const LevelP&, const PatchSet*,
+				const MaterialSet*, const bool recursion);
+
+
+  void scheduleCheckConvergenceR(SchedulerP&, const LevelP&, const PatchSet*,
+				const MaterialSet*, const bool recursion);
 
   void scheduleComputeAcceleration(SchedulerP&, const PatchSet*,
 				   const MaterialSet*);
