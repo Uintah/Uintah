@@ -1,6 +1,7 @@
 //----- PetscSolver.cc ----------------------------------------------
 
 #include <Packages/Uintah/CCA/Components/Arches/PetscSolver.h>
+#include <Core/Exceptions/InternalError.h>
 
 using namespace std;
 using namespace Uintah;
@@ -12,6 +13,7 @@ using namespace SCIRun;
 PetscSolver::PetscSolver(const ProcessorGroup* myworld)
    : d_myworld(myworld)
 {
+  throw InternalError("PetscSolver not configured");
 }
 
 // ****************************************************************************
@@ -27,6 +29,7 @@ PetscSolver::~PetscSolver()
 void 
 PetscSolver::problemSetup(const ProblemSpecP&)
 {
+  throw InternalError("PetscSolver not configured");
 }
 
 
@@ -40,6 +43,7 @@ PetscSolver::computePressResidual(const ProcessorGroup*,
 				 DataWarehouseP&,
 				 ArchesVariables*)
 {
+  throw InternalError("PetscSolver not configured");
 }
 
 
@@ -52,14 +56,13 @@ PetscSolver::computePressOrderOfMagnitude(const ProcessorGroup* ,
 				DataWarehouseP& ,
 				DataWarehouseP& , ArchesVariables* )
 {
-
-//&vars->truncPress
-
+  throw InternalError("PetscSolver not configured");
 }
 
 void 
 PetscSolver::matrixCreate(const LevelP&, LoadBalancer*)
 {
+  throw InternalError("PetscSolver not configured");
 }
 
 // ****************************************************************************
@@ -70,6 +73,7 @@ PetscSolver::computePressUnderrelax(const ProcessorGroup*,
 				  const Patch*,
 				  ArchesVariables*)
 {
+  throw InternalError("PetscSolver not configured");
 }
 
 // ****************************************************************************
@@ -81,12 +85,14 @@ PetscSolver::setPressMatrix(const ProcessorGroup* ,
 			    ArchesVariables*,
 			    const ArchesLabel*)
 {
+  throw InternalError("PetscSolver not configured");
 }
 
 
 bool
 PetscSolver::pressLinearSolve()
 {
+  throw InternalError("PetscSolver not configured");
   return false;
 }
 
@@ -94,11 +100,13 @@ PetscSolver::pressLinearSolve()
 void
 PetscSolver::copyPressSoln(const Patch*, ArchesVariables*)
 {
+  throw InternalError("PetscSolver not configured");
 }
   
 void
 PetscSolver::destroyMatrix() 
 {
+  throw InternalError("PetscSolver not configured");
 }
 
 // ****************************************************************************
@@ -112,12 +120,14 @@ PetscSolver::pressLisolve(const ProcessorGroup*,
 			 ArchesVariables*,
 			 const ArchesLabel*)
 {
+  throw InternalError("PetscSolver not configured");
 }
 
 
 // Shutdown PETSc
 void PetscSolver::finalizeSolver()
 {
+  throw InternalError("PetscSolver not configured");
 }
 
 //****************************************************************************
@@ -131,6 +141,7 @@ PetscSolver::computeVelResidual(const ProcessorGroup* ,
 				DataWarehouseP&, int,
 				ArchesVariables*)
 {
+  throw InternalError("PetscSolver not configured");
 }
 
 
@@ -143,6 +154,7 @@ PetscSolver::computeVelOrderOfMagnitude(const ProcessorGroup* ,
 				DataWarehouseP& ,
 				DataWarehouseP& , ArchesVariables* )
 {
+  throw InternalError("PetscSolver not configured");
 }
 
 
@@ -156,6 +168,7 @@ PetscSolver::computeVelUnderrelax(const ProcessorGroup* ,
 				  int,
 				  ArchesVariables*)
 {
+  throw InternalError("PetscSolver not configured");
 }
 
 
@@ -171,6 +184,7 @@ PetscSolver::velocityLisolve(const ProcessorGroup*,
 			     CellInformation*,
 			     const ArchesLabel*)
 {
+  throw InternalError("PetscSolver not configured");
 }
 
 //****************************************************************************
@@ -184,6 +198,7 @@ PetscSolver::computeScalarResidual(const ProcessorGroup* ,
 				  int,
 				  ArchesVariables*)
 {
+  throw InternalError("PetscSolver not configured");
 }
 
 
@@ -196,6 +211,7 @@ PetscSolver::computeScalarOrderOfMagnitude(const ProcessorGroup* ,
 				DataWarehouseP& ,
 				DataWarehouseP& , ArchesVariables* )
 {
+  throw InternalError("PetscSolver not configured");
 }
 
 //****************************************************************************
@@ -207,6 +223,7 @@ PetscSolver::computeScalarUnderrelax(const ProcessorGroup* ,
 				    int,
 				    ArchesVariables*)
 {
+  throw InternalError("PetscSolver not configured");
 }
 
 //****************************************************************************
@@ -220,4 +237,5 @@ PetscSolver::scalarLisolve(const ProcessorGroup*,
 			  CellInformation*,
 			  const ArchesLabel*)
 {
+  throw InternalError("PetscSolver not configured");
 }
