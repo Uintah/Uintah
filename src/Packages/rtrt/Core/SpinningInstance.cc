@@ -200,9 +200,10 @@ void SpinningInstance::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 	Point p = tray.origin() + thit.min_t*tray.direction();
 	i->normal = thit.hit_obj->normal(p,thit);
 	i->obj = thit.hit_obj;
+	UVMapping * theUV = thit.hit_obj->get_uvmapping();
+	theUV->uv(i->uv, p, thit );
       }
     }	      
-
 }
 
 void SpinningInstance::incMagnification()
