@@ -16,6 +16,7 @@ SRCS     += \
 	$(SRCDIR)/BuildInterpolant.cc\
 	$(SRCDIR)/CastField.cc\
 	$(SRCDIR)/FieldBoundary.cc\
+	$(SRCDIR)/Gradient.cc\
 	$(SRCDIR)/ManageFieldData.cc\
 	$(SRCDIR)/ManageFieldSet.cc\
 	$(SRCDIR)/ManipFields.cc\
@@ -23,7 +24,6 @@ SRCS     += \
 	$(SRCDIR)/TransformField.cc\
 #[INSERT NEW CODE FILE HERE]
 #	$(SRCDIR)/ChangeCellType.cc\
-#	$(SRCDIR)/Gradient.cc\
 
 
 CFLAGS   := $(CFLAGS) -DFM_COMP_PATH=\"$(SRCTOP_ABS)/Dataflow/Modules/Fields/Manip\"
