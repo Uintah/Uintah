@@ -1374,22 +1374,9 @@ OpenGL::redraw_frame()
 	encoding_mpeg_ = false;
 	EndMpeg();
       }
-      unsigned char movie[10];
-      int startDiv = 100;
-      int idx=0;
-      int fi = viewwindow->curFrame;
-      while (startDiv >= 1)
-      {
-	movie[idx] = '0' + fi/startDiv;
-	fi = fi - (startDiv)*(fi/startDiv);
-	startDiv /= 10;
-	idx++;
-      }
-      movie[idx] = 0;
-      fname = fname + ".raw";
-      string framenum((char *)movie);
-      framenum = framenum + ".";
-      string fullpath(pathname + framenum + fname);
+      char movie[100];
+      sprintf(movie, "%05d",viewwindow->curFrame);
+      string fullpath(pathname + string(movie) + "."+ fname + ".ppm");
       cerr << "Dumping "<<fullpath<<"....  ";
       dump_image(fullpath);
       cerr << " done!\n";
@@ -1622,21 +1609,23 @@ OpenGL::real_get_pick(Viewer*, ViewWindow* ViewWindow, int x, int y,
 }
 
 
-
+// dump a ppm image
 void
 OpenGL::dump_image(const string& name, const string& /* type */)
 {
   ofstream dumpfile(name.c_str());
   GLint vp[4];
   glGetIntegerv(GL_VIEWPORT,vp);
-  int n=3*vp[2]*vp[3];
-  cerr << "Dumping: " << vp[2] << "x" << vp[3] << "\n";
+  int pix_size = 3;  // for RGB
+  int n=pix_size*vp[2]*vp[3];
   unsigned char* pxl=scinew unsigned char[n];
   glPixelStorei(GL_PACK_ALIGNMENT,1);
   glReadBuffer(GL_FRONT);
   glReadPixels(0,0,vp[2],vp[3],GL_RGB,GL_UNSIGNED_BYTE,pxl);
-  dumpfile.write((const char *)pxl,n);
+
+
 #if defined(HAVE_PBUFFER)
+  // write the pbuffer image to the Viewer's draw buffer
   if( pbuffer.is_valid() && pbuffer.is_current()){
     glXMakeCurrent( dpy, win, cx );
     glDrawBuffer(GL_FRONT);
@@ -1645,7 +1634,28 @@ OpenGL::dump_image(const string& name, const string& /* type */)
     glDrawBuffer(GL_BACK);
   }
 #endif
-  delete[] pxl;
+
+  // Print out the ppm  header
+  dumpfile << "P6" << std::endl;
+  dumpfile << vp[2] << " " << vp[3] << std::endl;
+  dumpfile << 255 << std::endl;
+
+  // OpenGL renders upside-down to ppm_file writing
+  unsigned char *top_row, *bot_row;	
+  unsigned char *tmp_row = scinew unsigned char[ vp[2] * pix_size];
+  int top, bot;
+  for( top = vp[3] - 1, bot = 0; bot < vp[3]/2; top --, bot++){
+    top_row = pxl + vp[2] *top*pix_size;
+    bot_row = pxl + vp[2]*bot*pix_size;
+    memcpy(tmp_row, top_row, vp[2]*pix_size);
+    memcpy(top_row, bot_row, vp[2]*pix_size);
+    memcpy(bot_row, tmp_row, vp[2]*pix_size);
+  }
+  // now dump the file
+  dumpfile.write((const char *)pxl,n);
+  
+  delete [] pxl;
+  delete [] tmp_row;
 }
 
 
