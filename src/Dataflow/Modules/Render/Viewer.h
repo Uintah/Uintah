@@ -33,7 +33,6 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Comm/MessageBase.h>
-#include <Core/Containers/Array1.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/GeometryComm.h>
 #include <Core/Geom/GeomObj.h>
@@ -45,10 +44,11 @@
 #include <Core/Thread/CrowdMonitor.h>
 
 #include <map>
+#include <vector>
 
 namespace SCIRun {
 
-
+using std::vector;
 
 class Renderer;
 class ViewWindow;
@@ -82,9 +82,9 @@ public:
 #endif
 
 private:
-  Array1<ViewWindow*> viewwindow;
+  vector<ViewWindow*> viewwindow;
   int busy_bit;
-  Array1<ViewWindow*> topViewWindow;
+  vector<ViewWindow*> topViewWindow;
   virtual void do_execute();
 
   int max_portno;

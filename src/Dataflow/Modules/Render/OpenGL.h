@@ -43,6 +43,7 @@
 #include <string.h>
 
 #include <map>
+#include <vector>
 
 #include <Core/Geom/GeomObj.h>
 #include <Core/Util/Timer.h>
@@ -87,7 +88,7 @@ namespace SCIRun {
 
 using std::ostringstream;
 using std::ofstream;
-
+using std::vector;
 
 
 
@@ -136,7 +137,7 @@ protected:
     void pick_draw_obj(Viewer* viewer, ViewWindow* viewwindow, GeomObj* obj);
     //OpenGLHelper* helper;
     string my_openglname;
-    Array1<XVisualInfo*> visuals;
+    vector<XVisualInfo*> visuals;
 
    /* Call this each time an mpeg frame is generated. */
   void StartMpeg(const string& fname);

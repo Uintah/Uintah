@@ -326,7 +326,7 @@ GeomObj* GeomTexVolRender::clone()
 
 const int MAXSIZE = 1<<(2*9);
 
-void GeomTexVolRender::SetQuantStuff(Array1< Vector > &vecs, int *v, int sz)
+void GeomTexVolRender::SetQuantStuff(vector< Vector > &vecs, int *v, int sz)
 {
   quantsz = sz;
   if (quantnrms.size() == 0) { // init stuff...

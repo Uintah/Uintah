@@ -128,7 +128,7 @@ void ChangeCellType::fill_tet_vol(LatticeVol<Data> *lvol, TetVol<Data> *tvol)
 
   // tets are 4 indecies into the node vector.
   vector<int> *tets = new vector<int>(4 * nodes_size);
-  Array1<int> c(8); // each hex cell
+  vector<int> c(8); // each hex cell
   for (i=0; i<nx; i++) {
     for (int j=0; j<ny; j++) {
       for (int k=0; k<nz; k++) {

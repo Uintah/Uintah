@@ -36,7 +36,6 @@
 #include <Core/Geom/Material.h>
 #include <Core/Geom/GeomSave.h>
 #include <Core/Geometry/BBox.h>
-#include <Core/Containers/Array1.h>
 #include <Core/Persistent/Persistent.h>
 #include <Dataflow/Network/Module.h>
 

@@ -163,13 +163,13 @@ public:
   unsigned char *map1d; // use it if it is set...
   unsigned char *map2d; // if this is set, reload the volume and clear
 
-  void SetQuantStuff(Array1< Vector > &, int *, int sz);
+  void SetQuantStuff(vector< Vector > &, int *, int sz);
 
   int *quantnvol;       // quantized normal volume (if neccesary)
 
-  Array1< Vector >  quantnrms;   // quantized normals
+  vector< Vector >  quantnrms;   // quantized normals
 
-  Array1< float >   LUT;         // for specular part of lighting model
+  vector< float >   LUT;         // for specular part of lighting model
 
   unsigned char     *quantclrs;  // lit quantized normals...
 

@@ -1529,7 +1529,7 @@ void OpenGL::listvisuals(TCLArgs& args)
   int screen=Tk_ScreenNumber(topwin);
   vector<string> visualtags;
   vector<int> scores;
-  visuals.remove_all();
+  visuals.clear();
   int nvis;
   XVisualInfo* vinfo=XGetVisualInfo(dpy, 0, NULL, &nvis);
   if(!vinfo){
@@ -1605,7 +1605,7 @@ void OpenGL::listvisuals(TCLArgs& args)
     //cerr << score << ": " << tag << '\n';
     
     visualtags.push_back(tag);
-    visuals.add(&vinfo[i]);
+    visuals.push_back(&vinfo[i]);
     scores.push_back(score);
   }
   for(i=0;(unsigned int)i<scores.size()-1;i++){

@@ -284,8 +284,7 @@ void EditPath::execute()
 	    Vector u=Cross(tang, lookdir);
 	    double f=c_view.fov();
 	    Point center=eye+lookdir.normal()*proj;	   
-	    Array1<Point> pts;
-	    pts.resize(npts);
+	    vector<Point> pts(npts);
        
 	    u.normalize();
 	    double angle=0;

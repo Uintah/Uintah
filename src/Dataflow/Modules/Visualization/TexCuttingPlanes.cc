@@ -24,12 +24,10 @@
 
 #include "TexCuttingPlanes.h"
 
-#include <Core/Containers/Array1.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/ColorMap.h>
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
-//#include <Core/Datatypes/ScalarFieldRGBase.h>
 
 #include <Core/Geom/GeomTriangles.h>
 #include <Core/Geom/View.h>

@@ -2218,7 +2218,7 @@ void ViewWindow::do_for_visible(Renderer* r, ViewWindowVisPMF pmf)
     }
   }
 
-  Array1<GeomViewerItem*> transp_objs; // transparent objects - drawn last
+  vector<GeomViewerItem*> transp_objs; // transparent objects - drawn last
 
   GeomIndexedGroup::IterIntGeomObj iter = manager->ports.getIter();
   
@@ -2240,7 +2240,7 @@ void ViewWindow::do_for_visible(Renderer* r, ViewWindowVisPMF pmf)
 	vis = (*viter).second;
 	if (vis->visible->get()) {
 	  if (strstr(si->name.c_str(),"TransParent")) { // delay drawing
-	    transp_objs.add(si);
+	    transp_objs.push_back(si);
 	  }
 	  else {
 	    if(si->lock)
