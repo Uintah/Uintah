@@ -109,17 +109,17 @@ ScaleSimilarityModel::sched_reComputeTurbSubmodel(SchedulerP& sched,
 
       // Computes
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-    tsk->computes(d_lab->d_stressTensorCompLabel, d_lab->d_stressTensorMatl,
+    tsk->computes(d_lab->d_stressTensorCompLabel, d_lab->d_tensorMatl,
 		  Task::OutOfDomain);
 
-    tsk->computes(d_lab->d_scalarFluxCompLabel, d_lab->d_scalarFluxMatl,
+    tsk->computes(d_lab->d_scalarFluxCompLabel, d_lab->d_vectorMatl,
 		  Task::OutOfDomain);
   }
   else {
-    tsk->modifies(d_lab->d_stressTensorCompLabel, d_lab->d_stressTensorMatl,
+    tsk->modifies(d_lab->d_stressTensorCompLabel, d_lab->d_tensorMatl,
 		  Task::OutOfDomain);
 
-    tsk->modifies(d_lab->d_scalarFluxCompLabel, d_lab->d_scalarFluxMatl,
+    tsk->modifies(d_lab->d_scalarFluxCompLabel, d_lab->d_vectorMatl,
 		  Task::OutOfDomain);
   }
 
@@ -188,7 +188,7 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
     StencilMatrix<CCVariable<double> > stressTensorCoeff; //9 point tensor
 
   // allocate stress tensor coeffs
-    for (int ii = 0; ii < d_lab->d_stressTensorMatl->size(); ii++) {
+    for (int ii = 0; ii < d_lab->d_tensorMatl->size(); ii++) {
       if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
         new_dw->allocateAndPut(stressTensorCoeff[ii], 
 			       d_lab->d_stressTensorCompLabel, ii, patch);
@@ -209,7 +209,7 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
     StencilMatrix<CCVariable<double> > scalarFluxCoeff; //9 point tensor
 
     // allocate stress tensor coeffs
-    for (int ii = 0; ii < d_lab->d_scalarFluxMatl->size(); ii++) {
+    for (int ii = 0; ii < d_lab->d_vectorMatl->size(); ii++) {
       if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
         new_dw->allocateAndPut(scalarFluxCoeff[ii], 
 			       d_lab->d_scalarFluxCompLabel, ii, patch);
@@ -842,11 +842,11 @@ ScaleSimilarityModel::reComputeTurbSubmodel(const ProcessorGroup* pc,
     }
 #if 0
     // compute stress tensor
-    for (int ii = 0; ii < d_lab->d_stressTensorMatl->size(); ii++) 
+    for (int ii = 0; ii < d_lab->d_tensorMatl->size(); ii++) 
       new_dw->put(stressTensorCoeff[ii], 
 		  d_lab->d_stressTensorCompLabel, ii, patch);
 
-    for (int ii = 0; ii < d_lab->d_scalarFluxMatl->size(); ii++) 
+    for (int ii = 0; ii < d_lab->d_vectorMatl->size(); ii++) 
       new_dw->put(scalarFluxCoeff[ii], 
 		  d_lab->d_scalarFluxCompLabel, ii, patch);
 #endif
@@ -1002,14 +1002,14 @@ ScaleSimilarityModel::sched_computeScalarDissipation(SchedulerP& sched,
 
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
      tsk->requires(Task::OldDW, d_lab->d_scalarFluxCompLabel,
-		   d_lab->d_scalarFluxMatl,
+		   d_lab->d_vectorMatl,
 		   Task::OutOfDomain, Ghost::AroundCells, Arches::ONEGHOSTCELL);
   // Computes
      tsk->computes(d_lab->d_scalarDissSPLabel);
   }
   else {
      tsk->requires(Task::NewDW, d_lab->d_scalarFluxCompLabel,
-		   d_lab->d_scalarFluxMatl,
+		   d_lab->d_vectorMatl,
 		   Task::OutOfDomain, Ghost::AroundCells, Arches::ONEGHOSTCELL);
   // Computes
      tsk->modifies(d_lab->d_scalarDissSPLabel);
@@ -1045,7 +1045,7 @@ ScaleSimilarityModel::computeScalarDissipation(const ProcessorGroup*,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-      for (int ii = 0; ii < d_lab->d_scalarFluxMatl->size(); ii++) {
+      for (int ii = 0; ii < d_lab->d_vectorMatl->size(); ii++) {
         old_dw->get(scalarFlux[ii], 
 		    d_lab->d_scalarFluxCompLabel, ii, patch,
 		    Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -1054,7 +1054,7 @@ ScaleSimilarityModel::computeScalarDissipation(const ProcessorGroup*,
 			     matlIndex, patch);
     }
     else {
-      for (int ii = 0; ii < d_lab->d_scalarFluxMatl->size(); ii++) {
+      for (int ii = 0; ii < d_lab->d_vectorMatl->size(); ii++) {
         new_dw->get(scalarFlux[ii], 
 		    d_lab->d_scalarFluxCompLabel, ii, patch,
 		    Ghost::AroundCells, Arches::ONEGHOSTCELL);

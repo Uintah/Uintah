@@ -73,10 +73,7 @@ SmagorinskyModel::problemSetup(const ProblemSpecP& params)
   db->require("fac_mesh", d_factorMesh);
   db->require("filterl", d_filterl);
   db->require("var_const",d_CFVar); // const reqd by variance eqn
-  if (db->findBlock("turbulentPrandtlNumber")) 
-    db->require("turbulentPrandtlNumber",d_turbPrNo);
-  else
-    d_turbPrNo = 0.4;
+  db->getWithDefault("turbulentPrandtlNumber",d_turbPrNo,0.4);
 
 }
 

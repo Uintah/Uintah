@@ -462,7 +462,7 @@ Discretization::calculateScalarCoeff(const ProcessorGroup*,
 				     CellInformation* cellinfo,
 				     ArchesVariables* coeff_vars,
 				     ArchesConstVariables* constcoeff_vars,
-				     int conv_scheme)
+				     int conv_scheme, double prandtlno)
 {
   // Get the domain size and the patch indices
   IntVector idxLo = patch->getCellFORTLowIndex();
@@ -497,7 +497,7 @@ Discretization::calculateScalarCoeff(const ProcessorGroup*,
 		cellinfo->tfac, cellinfo->bfac,
 		cellinfo->dxpw, cellinfo->dxep, cellinfo->dyps,
 		cellinfo->dynp, cellinfo->dzpb, cellinfo->dztp,
-		conv_scheme);
+		conv_scheme, prandtlno);
 
 }
 
