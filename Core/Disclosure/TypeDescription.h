@@ -57,6 +57,7 @@ class Variable;
 	 double_type,
 	 bool_type,
 	 int_type,
+	 short_int_type,
          long_type,
 	 Unknown,
 	 Other
