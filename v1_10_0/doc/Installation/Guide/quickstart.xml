@@ -17,7 +17,7 @@
 -->
 
 <chapter id="ch.quick_start">
-<title>Quick Start SCIRun Installation</title>
+<title>Quick Start &sr; Installation</title>
 
 <section>
 <title>Introduction</title>
@@ -26,7 +26,7 @@ For complete installation instructions see <xref linkend="ch.inst"/>.
 </para>
 
 <para>
-SCIRun is officially compatible with two platforms, SGI and Linux.
+&sr; is officially compatible with two platforms, SGI and Linux.
 </para>
 
 <para>&sr; may be <link linkend="sec.rpm_inst_qs">installed from
@@ -44,26 +44,30 @@ and SGI).</para>
 
 <para>
 You must have root privileges to install &sr;.  Ask your system
-administrator to perform in installation if you don't have access to
+administrator to perform the installation if you don't have access to
 the superuser account.
 </para>
 
 <para>
 The following procedure installs &sr; in
-<filename>/usr/local/SCIRun/bin</filename>.
+<filename>/usr/local/&sr;/bin</filename>.
 </para>
 
 <para>
 RPM installation consists of the following steps:
 <orderedlist>
 <listitem>
-<para>Downloading the &sr; rpm distribution.</para>
+<para>Downloading the &sr; rpm distribution, sample data sets, and
+documentation.</para>
 </listitem>
 <listitem>
 <para>Installing  &sr; using the <command>rpm</command> command.</para>
 </listitem>
 <listitem>
 <para>Installing &sr;'s sample data sets.</para>
+</listitem>
+<listitem>
+<para>Installing &sr;'s documentation.</para>
 </listitem>
 </orderedlist>
 </para>
@@ -74,17 +78,34 @@ linkend="sec.preparing_qs"/> after installing but before starting
 </section>
 
 <section>
-<title>Downloading &sr;'s RPM</title>
+<title>What to Download</title>
 <para>
-Obtain the appropriate &sr; rpm, either
-<filename>SCIRun-<replaceable>x.x.x</replaceable>-mdk9.0.i586.rpm</filename>
-for Mandrake 9 systems or or
-<filename>SCIRun-<replaceable>x.x.x</replaceable>-rh8.0.i386.rpm</filename>
-for Redhad 8 systems.  Be sure to get
-<filename>DataSets.<replaceable>x.x.x</replaceable>.tar.gz</filename>
-too.  These files can be downloaded from SCI's <ulink
+From SCI's <ulink
 url="http://software.sci.utah.edu/archive_entry.html">software
-archive</ulink> page.
+archive</ulink> page download the following files:
+<itemizedlist>
+<listitem>
+<para>
+The &sr; rpm, either
+<filename>&sr;-<replaceable>x.x.x</replaceable>-mdk9.0.i586.rpm</filename>
+for Mandrake 9 systems or or
+<filename>&sr;-<replaceable>x.x.x</replaceable>-rh8.0.i386.rpm</filename>
+for Redhad 8 systems.
+</para>
+</listitem>
+<listitem>
+<para>
+&sr;'s sample data sets,
+<filename>DataSets.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+</para>
+</listitem>
+<listitem>
+<para>
+&sr;'s documention,
+<filename>docs.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+</para>
+</listitem>
+</itemizedlist>
 </para>
 </section>
 
@@ -95,11 +116,11 @@ archive</ulink> page.
 As superuser <command>cd</command> to the directory where &sr; was
 downloaded and type:
 <literallayout class="monospaced">
-rpm -ivh SCIRun-<replaceable>x.x.x</replaceable>-mdk9.0.i586.rpm
+rpm -ivh &sr;-<replaceable>x.x.x</replaceable>-mdk9.0.i586.rpm
 </literallayout>
 or
 <literallayout class="monospaced">
-rpm -ivh SCIRun-<replaceable>x.x.x</replaceable>-rh8.0.i386.rpm
+rpm -ivh &sr;-<replaceable>x.x.x</replaceable>-rh8.0.i386.rpm
 </literallayout>
 Type <command>exit</command> to leave the root account.
 </para>
@@ -113,16 +134,33 @@ linkend="sec.preparing_qs"/> before starting &sr;</para>
 <title>Installing &sr;'s Sample Data Sets</title>
 <para>
 Unpack &sr;'s sample data sets in
-<filename>/usr/local/SCIRun</filename>.  Become root and type
+<filename>/usr/local</filename>.  Become root and type
 <literallayout class="monospaced">
-gunzip -c DataSets.<replaceable>x.x.x</replaceable>.tar.gz | \
-  (cd /usr/local/SCIRun &amp;&amp; tar xf -)
+gunzip -c DataSets.<replaceable>x.x.x</replaceable>.tar.gz | (cd /usr/local &amp;&amp; tar xf -)
 </literallayout>
-This will create <filename>/usr/local/SCIRun/SCIRunData</filename>,
+This will create <filename>/usr/local/&sr;Data</filename>,
 the sample data sets directory.
 </para>
 </section>
 
+<section>
+<title>Installing &sr;'s Documentation</title>
+<para>
+
+Unpack &sr;'s documentation to
+<filename>/usr/local</filename>.  Become root and type
+<literallayout class="monospaced">
+gunzip -c docs.<replaceable>x.x.x</replaceable>.tar.gz | (cd /usr/local &amp;&amp; tar xf -)
+</literallayout>
+This will create <filename>/usr/local/&sr;Docs</filename>,
+&sr;'s documentation directory.
+</para>
+<para>
+Point your browser at
+<filename>/usr/local/&sr;Docs/doc/index.html</filename> to view &sr;'s
+online documentation.
+</para>
+</section>
 </section>
 
 <section id="sec.tarball_inst_qs">
@@ -184,15 +222,36 @@ for sh-type shells,
 <title>Downloading</title>
 
 <para>
-Obtain the source code for SCIRun and any desired packages.  Be sure
-to get the
-<filename>Thirdparty_install.<replaceable>x.x.x</replaceable>.tar.gz</filename>
-and
-<filename>DataSets.<replaceable>x.x.x</replaceable>.tar.gz</filename>
-files too.  The compressed tarballs for these sources can be
-downloaded from SCI's <ulink
+From SCI's <ulink
 url="http://software.sci.utah.edu/archive_entry.html">software
-archive</ulink> page.
+archive</ulink> page obtain the following:
+<itemizedlist>
+<listitem>
+<para>
+&sr; sources, <filename>&sr;.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+</para>
+</listitem>
+<listitem>
+<para>
+&sr; package sources, e.g. <filename>BioPSE.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+</para>
+</listitem>
+<listitem>
+<para>
+Third-party sources, <filename>Thirdparty_install.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+</para>
+</listitem>
+<listitem>
+<para>
+&sr; sample data sets, <filename>DataSets.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+</para>
+</listitem>
+<listitem>
+<para>
+&sr; documentation, <filename>docs.<replaceable>x.x.x</replaceable>.tar.gz</filename>
+</para>
+</listitem>
+</itemizedlist>
 </para>
 
 </section>
@@ -206,20 +265,20 @@ archive</ulink> page.
 
 <listitem>
 <para>
-Unpack the SCIRun tarball:
+Unpack the &sr; tarball:
 <literallayout class="monospaced">
-gunzip -c SCIRun.x.x.x.tar.gz | tar xf -
+gunzip -c &sr;.x.x.x.tar.gz | tar xf -
 </literallayout>
-This will create a directory called <filename>SCIRun</filename>.
+This will create a directory called <filename>&sr;</filename>.
 </para>
 </listitem>
 
 <listitem>
 <para>
 Unpack the compressed package tarballs into
-<filename>SCIRun/src/Packages</filename>, for example:
+<filename>&sr;/src/Packages</filename>, for example:
 <literallayout class="monospaced">
-gunzip -c BioPSE.PKG.x.x.x.tar.gz | (cd SCIRun/src/Packages &amp;&amp; tar xf -)
+gunzip -c BioPSE.PKG.x.x.x.tar.gz | (cd &sr;/src/Packages &amp;&amp; tar xf -)
 </literallayout>
 to unpack the BioPSE package.
 </para>
@@ -231,7 +290,21 @@ Unpack the tarball containing sample datasets:
 <literallayout class="monospaced">
 gunzip -c DataSets.x.x.x.tar.gz | tar xf -
 </literallayout>
-This will create the directory <filename>SCIRunData</filename>.
+This will create the directory <filename>&sr;Data</filename>.  You
+may wish to move this directory to a location accessible to all &sr;
+users. 
+</para>
+</listitem>
+
+<listitem>
+<para>
+Unpack the documentation tarball:
+<literallayout class="monospaced">
+gunzip -c docs.x.x.x.tar.gz | tar xf -
+</literallayout>
+This will create the directory <filename>&sr;Data</filename>.  You
+may wish to move this directory to a location accessible to all &sr;
+users. 
 </para>
 </listitem>
 
@@ -292,8 +365,8 @@ where <replaceable>dir</replaceable> is the directory under which the
 third-party software will be installed,
 <replaceable>bits</replaceable> is one of 32 or 64 and specifies
 either 32 bit or 64 bit binaries, and <replaceable>jobs</replaceable>
-is the number of process that make will use when building the
-software.  For example:
+is the number of process that <command>make</command> will use when
+building the software.  For example:
 <literallayout class="monospaced">
 python install /usr/local/&sr;/Third_Party 64 2
 </literallayout>
@@ -314,7 +387,7 @@ note of this value.
 </section>
 
 <section>
-<title>Building SCIRun</title>
+<title>Building &sr;</title>
 
 <para>
 
@@ -322,13 +395,13 @@ note of this value.
 
 <listitem>
 <para>
-Run SCIRun's configure script.  Do this from a sub-directory of
+Run &sr;'s configure script.  Do this from a sub-directory of
 <filename>&sr;</filename> (but <emphasis>not</emphasis>
 <filename>&sr;/src</filename>) as follows:
 
 <literallayout class="monospaced">
-mkdir SCIRun/<replaceable>dir</replaceable>
-cd SCIRun/<replaceable>dir</replaceable>
+mkdir &sr;/<replaceable>dir</replaceable>
+cd &sr;/<replaceable>dir</replaceable>
 ../src/configure --with-thirdparty=<replaceable>third-party-dir</replaceable> \ 
 --enable-package="<replaceable>package-name1 package-name2 &hellip;</replaceable>"
 </literallayout>
@@ -341,7 +414,7 @@ replaced by a list of (previously downloaded and unpacked) package
 names , e.g. "BioPSE MatlabInterface".  For example:
 <literallayout class="monospaced">
 ../src/configure \
-  --with-thirdparty=/usr/local/SCIRun_Third_Party/1.4.2/Irix/CC-32bit \
+  --with-thirdparty=/usr/local/&sr;_Third_Party/1.4.2/Irix/CC-32bit \
   --enable-package="BioPSE"
 </literallayout>
 </para>
@@ -409,24 +482,36 @@ SCIRUN_ON_THE_FLY_LIBS_DIR=<replaceable>/path/to/</replaceable>&sr;_otf
 </varlistentry>
 
 <varlistentry>
-<term><envar>SCIRUN_DATA</envar></term>
+<term><envar>SCIRUN_DATA</envar> and <envar>SCIRUN_DATASET</envar></term>
 <listitem>
+<para>The environment variables <envar>SCIRUN_DATA</envar> and
+<envar>SCIRUN_DATASET</envar> specify the complete path to a &sr;
+<firstterm>data set</firstterm>.
+</para>
 <para>
-It specifies the default data directory of &sr; data sets. If you will
-be working through the &sr; <ulink
-url="../../User/Tutorial/index.html">tutorial</ulink> then you will
-want to set it to point to the sample data sets directory:
+When working with &sr;'s <ulink
+url="../../User/Tutorial/index.html">tutorial</ulink> you must set the
+value of <envar>SCIRUN_DATA</envar> to point to the sample data sets
+directory, <filename>/usr/local/&sr;Data</filename> and
+<envar>SCIRUN_DATASET</envar> must point to one of the directories
+within <filename>&sr;Data</filename>,
+e.g. <filename>utahtorso</filename>.  Assuming you have installed the data
+sets in <filename>/usr/local</filename> and that you wish to use the
+<filename>utahtorso</filename> data set you would do this:
 <literallayout class="monospaced">
-export SCIRUN_DATA=<replaceable>/path/to/</replaceable>SCIRunData
+SCIRUN_DATA=/usr/local/&sr;Data
+SCIRUN_DATASET=utahtorso
+export SCIRUN_DATA SCIRUN_DATASET
 </literallayout>
-or
+for <quote>Bourne</quote>-type shells, and
 <literallayout class="monospaced">
-setenv SCIRUN_DATA <replaceable>/path/to/</replaceable>SCIRunData
+setenv SCIRUN_DATA /usr/local/&sr;Data
+setenv SCIRUN_DATASET utahtorso
 </literallayout>
+for <quote>C shell</quote>-type shells. 
 </para>
 </listitem>
 </varlistentry>
-
 </variablelist>
 </para>
 </section>
@@ -438,11 +523,11 @@ setenv SCIRUN_DATA <replaceable>/path/to/</replaceable>SCIRunData
 linkend="sec.preparing_qs"/></para>
 
 <para>
-If you installed &sr; from it's rpm you can test it's installation by
-typing <command>/usr/local/SCIRun/bin/scirun</command>.</para>
+If you installed &sr; from its rpm you can test its installation by
+typing <command>/usr/local/&sr;/bin/scirun</command>.</para>
 
-<para>If you built &sr; from it's source code tarballs then you
-can test it's installation by <command>cd</command>ing to it's build
+<para>If you built &sr; from its source code tarballs then you
+can test its installation by <command>cd</command>ing to its build
 directory and typing
 <command>./scirun</command>.
 </para>
