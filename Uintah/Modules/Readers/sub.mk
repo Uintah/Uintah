@@ -8,18 +8,22 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 SRCDIR   := Uintah/Modules/Readers
 
 SRCS     += $(SRCDIR)/MPReader.cc $(SRCDIR)/MPReaderMultiFile.cc \
-	$(SRCDIR)/TriangleReader.cc $(SRCDIR)/ParticleSetReader.cc
+	$(SRCDIR)/TriangleReader.cc $(SRCDIR)/ParticleSetReader.cc \
+	$(SRCDIR)/ArchiveReader.cc
 
-PSELIBS := Uintah/Datatypes/Particles PSECore/Datatypes PSECore/Dataflow \
-	SCICore/Containers SCICore/Persistent SCICore/Exceptions \
-	SCICore/TclInterface SCICore/Thread SCICore/Datatypes \
-	SCICore/Geom
-LIBS :=
+PSELIBS := Uintah/Datatypes Uintah/Interface PSECore/Datatypes \
+	PSECore/Dataflow SCICore/Containers SCICore/Persistent \
+	SCICore/Exceptions SCICore/TclInterface SCICore/Thread \
+	SCICore/Datatypes SCICore/Geom
+LIBS := $(XML_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3  2000/06/20 17:57:18  kuzimmer
+# Moved GridVisualizer to Uintah
+#
 # Revision 1.2  2000/03/20 19:38:43  sparker
 # Added VPATH support
 #
