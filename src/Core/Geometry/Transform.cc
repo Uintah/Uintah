@@ -27,6 +27,7 @@
  *  Copyright (C) 199? SCI Group
  */
 
+#include <Core/Disclosure/TypeDescription.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/Trig.h>
@@ -632,5 +633,16 @@ void SCICORESHARE Pio(Piostream& stream, Transform& trans){
   
   stream.end_cheap_delim();
 }
+
+const TypeDescription* get_type_description(Transform*)
+{
+  static TypeDescription* td = 0;
+  if(!td){
+    td = scinew TypeDescription("Transform", Transform::get_h_file_path(), 
+				"SCIRun");
+  }
+  return td;
+}
+
 
 } // End namespace SCIRun

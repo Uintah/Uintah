@@ -26,9 +26,8 @@ SRCS     += \
 
 
 
-PSELIBS := Core/Datatypes Core/Containers \
-	Core/Exceptions Core/Geom Core/Persistent Core/Disclosure \
-	Core/Geometry Core/Util
+PSELIBS := Core/Datatypes Core/Containers Core/Thread \
+	Core/Exceptions Core/Geom Core/Disclosure Core/Geometry
 
 LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm
 

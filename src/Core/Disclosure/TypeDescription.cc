@@ -74,20 +74,24 @@ void TypeDescription::register_type()
   typelist->push_back(this);
 }
 
-TypeDescription::TypeDescription(const string& name, const string& path) : 
+TypeDescription::TypeDescription(const string &name, const string &path,
+				 const string &namesp) : 
   subtype_(0), 
   name_(name),
-  h_file_path_(path)
+  h_file_path_(path),
+  namespace_(namesp)
 {
   register_type();
 }
 
-TypeDescription::TypeDescription(const string& name, 
+TypeDescription::TypeDescription(const string &name, 
 				 td_vec* sub, 
-				 const string& path) : 
+				 const string &path,
+				 const string &namesp) : 
   subtype_(sub),
   name_(name),
-  h_file_path_(path)
+  h_file_path_(path),
+  namespace_(namesp)
 {
   register_type();
 }
@@ -125,13 +129,14 @@ TypeDescription::get_name(string type_sep_start,
 }
 
 void 
-TypeDescription::fill_includes(CompileInfo *ci) const
+TypeDescription::fill_compile_info(CompileInfo *ci) const
 {
   ci->add_include(get_h_file_path());
+  ci->add_namespace(get_namespace());
   if(subtype_) {
     td_vec::iterator iter = subtype_->begin();
     while (iter != subtype_->end()) {
-      (*iter)->fill_includes(ci);
+      (*iter)->fill_compile_info(ci);
       ++iter;
     }
   }
@@ -162,10 +167,8 @@ TypeDescription::Register::~Register()
 const TypeDescription* get_type_description(double*)
 {
   static TypeDescription* td = 0;
-  static string nm("double");
-  static string path("builtin");
   if(!td){
-    td = scinew TypeDescription(nm, path);
+    td = scinew TypeDescription("double", "builtin", "builtin");
   }
   return td;
 }
@@ -173,10 +176,8 @@ const TypeDescription* get_type_description(double*)
 const TypeDescription* get_type_description(long*)
 {
   static TypeDescription* td = 0;
-  static string nm("long");
-  static string path("builtin");
   if(!td){
-    td = scinew TypeDescription(nm, path);
+    td = scinew TypeDescription("long", "builtin", "builtin");
   }
   return td;
 }
@@ -184,10 +185,8 @@ const TypeDescription* get_type_description(long*)
 const TypeDescription* get_type_description(float*)
 {
   static TypeDescription* td = 0;
-  static string nm("float");
-  static string path("builtin");
   if(!td){
-    td = scinew TypeDescription(nm, path);
+    td = scinew TypeDescription("float", "builtin", "builtin");
   }
   return td;
 }
@@ -195,10 +194,8 @@ const TypeDescription* get_type_description(float*)
 const TypeDescription* get_type_description(short*)
 {
   static TypeDescription* td = 0;
-  static string nm("short");
-  static string path("builtin");
   if(!td){
-    td = scinew TypeDescription(nm, path);
+    td = scinew TypeDescription("short", "builtin", "builtin");
   }
   return td;
 }
@@ -206,10 +203,8 @@ const TypeDescription* get_type_description(short*)
 const TypeDescription* get_type_description(int*)
 {
   static TypeDescription* td = 0;
-  static string nm("int");
-  static string path("builtin");
   if(!td){
-    td = scinew TypeDescription(nm, path);
+    td = scinew TypeDescription("int", "builtin", "builtin");
   }
   return td;
 }
@@ -217,42 +212,17 @@ const TypeDescription* get_type_description(int*)
 const TypeDescription* get_type_description(unsigned char*)
 {
   static TypeDescription* td = 0;
-  static string nm("unsigned char");
-  static string path("builtin");
   if(!td){
-    td = scinew TypeDescription(nm, path);
+    td = scinew TypeDescription("unsigned char", "builtin", "builtin");
   }
   return td;
-}
-const TypeDescription* get_type_description(Vector*)
-{
-  static TypeDescription* td = 0;
-  static string nm("Vector");
-  if(!td){
-    td = scinew TypeDescription(nm, Vector::get_h_file_path());
-  }
-  return td;
-}
-const TypeDescription* get_type_description(Tensor*)
-{
-  return 0;
-}
-const TypeDescription* get_type_description(Point*)
-{
-  return 0;
-}
-const TypeDescription* get_type_description(Transform*)
-{
-  return 0;
 }
 
 const TypeDescription* get_type_description(string*)
 {
   static TypeDescription* td = 0;
-  static string nm("string");
-  static string path("std::string");
   if(!td){
-    td = scinew TypeDescription(nm, path);
+    td = scinew TypeDescription("string", "std::string", "std");
   }
   return td;
 }

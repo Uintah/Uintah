@@ -27,6 +27,7 @@
  *  Copyright (C) 200  SCI Group
  */
 
+#include <Core/Disclosure/TypeDescription.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Util/Assert.h>
 #include <Core/Persistent/Persistent.h>
@@ -212,6 +213,16 @@ void SCICORESHARE Pio(Piostream& stream, Tensor& t){
   if (stream.reading() && t.valid_eigens_) t.build_eigens();
 
   stream.end_cheap_delim();
+}
+
+const TypeDescription* get_type_description(Tensor*)
+{
+  static TypeDescription* td = 0;
+  if(!td){
+    td = scinew TypeDescription("Tensor", Tensor::get_h_file_path(), 
+				"SCIRun");
+  }
+  return td;
 }
 
 } // End namespace SCIRun

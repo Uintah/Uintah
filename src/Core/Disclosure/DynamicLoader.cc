@@ -50,12 +50,16 @@ CompileInfo::CompileInfo(const string &fn, const string &bcn,
 			 const string &tcn, const string &tcdec) :
   filename_(fn),
   base_class_name_(bcn),
-
   template_class_name_(tcn),
   template_arg_(tcdec)
 {
 }
 
+DynamicAlgoBase::DynamicAlgoBase() :
+  ref_cnt(0),
+  lock("DynamicAlgoBase ref_cnt lock")
+{
+}
 
 DynamicLoader::DynamicLoader() :
   map_crowd_("DynamicLoader: One compilation at a time."),
@@ -75,6 +79,10 @@ DynamicLoader::~DynamicLoader()
   map_lock_.unlock();
 }
 
+
+//! DynamicLoader::scirun_loader
+//! 
+//! How to get at the global loader for scirun.
 DynamicLoader& 
 DynamicLoader::scirun_loader() {
   if (scirun_loader_ == 0) {
@@ -242,7 +250,6 @@ bool
 DynamicLoader::create_cc(const CompileInfo &info)
 {
   const string STD_STR("std::");
-  bool using_std = false;
 
   // Try to open the file for writing.
   string full = OTF_OBJ_DIR + "/" + info.filename_ + "cc";
@@ -255,23 +262,30 @@ DynamicLoader::create_cc(const CompileInfo &info)
   fstr << "// This is an autamatically generated file, do not edit!" << endl;
 
   // generate includes
-  vector<string>::const_iterator iter = info.includes_.begin();
-  while (iter != info.includes_.end()) {  
-    if ((*iter).substr(0, 5) == STD_STR) {
-      string std_include = (*iter).substr(5, (*iter).length() -1);
+  CompileInfo::ci_map_type::const_iterator iter = info.includes_.begin();
+  while (iter != info.includes_.end()) { 
+    const string &s = (*iter).first;
+    if (s.substr(0, 5) == STD_STR) {
+      string std_include = s.substr(5, s.length() -1);
       fstr << "#include <" << std_include << ">" << endl;
-      using_std = true;
-    } else if (*iter != "builtin")
-      fstr << "#include \"" << *iter << "\"" << endl;
+    } else if (s != "builtin")
+      fstr << "#include \"" << s << "\"" << endl;
     ++iter;
   }
 
-  fstr << endl;
-  if (using_std) {
-    fstr << "using namespace std;" << endl << endl;
+  // output namespaces
+  CompileInfo::ci_map_type::const_iterator nsiter = info.namespaces_.begin();
+  while (nsiter != info.namespaces_.end()) { 
+    const string &s = (*nsiter).first;
+    if (s != "builtin") {
+      fstr << "using namespace " << s << ";" << endl;
+    }
+    ++nsiter;
   }
 
-  fstr << "using namespace SCIRun;" << endl << endl;
+
+  fstr << endl;
+
   fstr << "extern \"C\" {"  << endl
        << info.base_class_name_ << "* maker() {" << endl
        << "  return scinew "<< info.template_class_name_ << "<" 

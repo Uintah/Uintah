@@ -83,7 +83,7 @@ SFInterface<F>::interpolate(double &result, const Point &p) const
       mesh->get_weights(p, locs, weights);
 
       result = 0;
-      for (int i = 0; i < locs.size(); i++)
+      for (unsigned int i = 0; i < locs.size(); i++)
       {
 	typename F::value_type tmp;
 	if (fld_->value(tmp, locs[i]))
@@ -101,7 +101,7 @@ SFInterface<F>::interpolate(double &result, const Point &p) const
       mesh->get_weights(p, locs, weights);
 
       result = 0;
-      for (int i = 0; i < locs.size(); i++)
+      for (unsigned int i = 0; i < locs.size(); i++)
       {
 	typename F::value_type tmp;
 	if (fld_->value(tmp, locs[i]))
@@ -119,7 +119,7 @@ SFInterface<F>::interpolate(double &result, const Point &p) const
       mesh->get_weights(p, locs, weights);
 
       result = 0;
-      for (int i = 0; i < locs.size(); i++)
+      for (unsigned int i = 0; i < locs.size(); i++)
       {
 	typename F::value_type tmp;
 	if (fld_->value(tmp, locs[i]))
@@ -137,7 +137,7 @@ SFInterface<F>::interpolate(double &result, const Point &p) const
       mesh->get_weights(p, locs, weights);
 
       result = 0;
-      for (int i = 0; i < locs.size(); i++)
+      for (unsigned int i = 0; i < locs.size(); i++)
       {
 	typename F::value_type tmp;
 	if (fld_->value(tmp, locs[i]))

@@ -28,6 +28,7 @@
  *  Copyright (C) 199? SCI Group
  */
 
+#include <Core/Disclosure/TypeDescription.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Util/Assert.h>
@@ -485,6 +486,16 @@ void Pio(Piostream& stream, Point& p)
     Pio(stream, p._y);
     Pio(stream, p._z);
     stream.end_cheap_delim();
+}
+
+const TypeDescription* get_type_description(Point*)
+{
+  static TypeDescription* td = 0;
+  if(!td){
+    td = scinew TypeDescription("Point", Point::get_h_file_path(), 
+				"SCIRun");
+  }
+  return td;
 }
 
 } // End namespace SCIRun
