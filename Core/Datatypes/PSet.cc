@@ -29,8 +29,8 @@ PSet::PSet()
 {
 }
 
-PSet::PSet( const vector <ParticleVariable<Point> >& positions,
-	    const vector <ParticleVariable<long> >& ids,
+PSet::PSet( const vector <ShareAssignParticleVariable<Point> >& positions,
+	    const vector <ShareAssignParticleVariable<long> >& ids,
 	    const vector <const Patch *> patches,
 	    void* callbackClass):
   positions(positions), particle_ids(ids),
@@ -69,7 +69,7 @@ void PSet::compute_bounds()
 
   Point min(1e30,1e30,1e30), max(-1e30,-1e30,-1e30);
 
-  vector<ParticleVariable<Point> >::iterator it;
+  vector<ShareAssignParticleVariable<Point> >::iterator it;
   for( it = positions.begin(); it != positions.end(); it++){
     
     ParticleSubset *ps = (*it).getParticleSubset();

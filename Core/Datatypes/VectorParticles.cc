@@ -33,7 +33,7 @@ VectorParticles::VectorParticles()
 }
 
 VectorParticles::VectorParticles(
-		 const vector <ParticleVariable<Vector> >& vectors,
+		 const vector<ShareAssignParticleVariable<Vector> >& vectors,
 		 PSet* pset) :
   have_minmax(false), psetH(pset), vectors(vectors)
 {
@@ -57,7 +57,7 @@ void VectorParticles::compute_minmax()
     return;
 
   double min = 1e30, max = -1e30;
-  vector<ParticleVariable<Vector> >::iterator it;
+  vector<ShareAssignParticleVariable<Vector> >::iterator it;
   for( it = vectors.begin(); it != vectors.end(); it++){
     ParticleSubset *ps = (*it).getParticleSubset();
     for(ParticleSubset::iterator iter = ps->begin();
