@@ -2094,7 +2094,7 @@ itcl_class EmbeddedViewWindow {
 	set "$this-$objid-cull" 0
 	set "$this-$objid-dl" 0
 
-	$this-c autoview
+	# $this-c autoview
     }
 
     method addObjectToFrame {objid name frame} {
@@ -2102,7 +2102,7 @@ itcl_class EmbeddedViewWindow {
     }
 
     method addObject2 {objid} {
-	$this-c autoview
+	# $this-c autoview
     }
     
     method addObjectToFrame_2 {objid frame} {
