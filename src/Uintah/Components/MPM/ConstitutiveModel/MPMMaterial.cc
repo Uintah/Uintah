@@ -156,7 +156,10 @@ void MPMMaterial::createParticles(particleIndex numParticles,
      particleIndex partclesNum = start;
 
      ParticleVariable<Vector> ptemperatureGradient;
+     new_dw->allocate(ptemperatureGradient, lb->pTemperatureGradientLabel, subset);
+
      ParticleVariable<double> pexternalHeatRate;
+     new_dw->allocate(pexternalHeatRate, lb->pExternalHeatRateLabel, subset);
 
      for(particleIndex pIdx=0;pIdx<partclesNum;++pIdx) {
        ptemperatureGradient[pIdx] = Vector(0.,0.,0.);
@@ -308,6 +311,9 @@ int MPMMaterial::checkForSurface(const GeometryPiece* piece, const Point p,
 }
 
 // $Log$
+// Revision 1.37  2000/06/23 22:09:36  tan
+// Added DatawareHouse allocation for ptemperatureGradient and pexternalHeatRate.
+//
 // Revision 1.36  2000/06/23 21:44:12  tan
 // Initialize particle data of ptemperatureGradient and pexternalHeatRate for
 // heat conduction.
