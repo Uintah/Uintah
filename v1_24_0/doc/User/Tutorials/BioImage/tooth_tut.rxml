@@ -123,11 +123,46 @@ DEALINGS IN THE SOFTWARE.
 
   <section>
     <title>Visualization</title>
-    <para></para>
-
+    <para>The viewer is composed of four main windows. The upper left
+    window is the 3D viewer window. By default the 3D viewer displays
+    slice planes of the axial, sagittal and coronal planes oriented 
+    relative to each other in 3-space.
+    </para>
+    <figure id="fig.3dview">
+      <title>3d Viewer Window</title>
+      <mediaobject>
+	<textobject>
+	  <phrase>3d Viewer Window showing tooth dataset.</phrase>
+	</textobject>
+	<imageobject>
+	  <imagedata fileref="Figures/3dview.jpg" format="JPG"/>
+	</imageobject>
+	<imageobject>
+	  <imagedata fileref="Figures/3dview.eps" format="EPS"/>
+	</imageobject>
+      </mediaobject>
+    </figure>
+    <para>The remaining viewer windows display 2D images of the individual
+    slice planes and can be used to change the location of the slice planes
+    inside of the dataset.
+    </para>
+    <figure id="fig.2dview">
+      <title>2d Viewer Window</title>
+      <mediaobject>
+	<textobject>
+	  <phrase>2d Viewer Window showing tooth dataset.</phrase>
+	</textobject>
+	<imageobject>
+	  <imagedata fileref="Figures/2dview.jpg" format="JPG"/>
+	</imageobject>
+	<imageobject>
+	  <imagedata fileref="Figures/2dview.eps" format="EPS"/>
+	</imageobject>
+      </mediaobject>
+    </figure>
     <section>
       <title>Planes</title>
-      <para></para>
+      <para>Each slice plane can be manipulated via sliders</para>
     </section>
 
     <section>
