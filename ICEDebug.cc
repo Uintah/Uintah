@@ -24,35 +24,44 @@ void    ICE::printData(const Patch* patch, int include_GC,
         char    message2[],             /* message to user              */
         const CCVariable<double>& q_CC)
 {
-  IntVector low, high; 
-  
-  fprintf(stderr,"______________________________________________\n");
-  fprintf(stderr,"$%s\n",message1);
-  fprintf(stderr,"$%s\n",message2);
-  
-  if (include_GC == 1)  { 
-    low   = patch->getCellLowIndex();
-    high  = patch->getCellHighIndex();
-  }
-  if (include_GC == 0) {
-    low   = patch->getInteriorCellLowIndex();
-    high  = patch->getInteriorCellHighIndex();
-  }
-  
-  for(int k = low.z(); k < high.z(); k++)  {
-    for(int j = low.y(); j < high.y(); j++) {
-      for(int i = low.x(); i < high.x(); i++) {
-	IntVector idx(i, j, k);
-	fprintf(stderr,"[%d,%d,%d]~ %16.15E  ",
-		i,j,k, q_CC[idx]);
-	
-	/*  fprintf(stderr,"\n"); */
+ //__________________________________
+ // Limit when we dump
+  d_dbgTime= dataArchiver->getCurrentTime();    
+  if ( d_dbgTime >= d_dbgStartTime && 
+       d_dbgTime <= d_dbgStopTime  &&
+       d_dbgTime >= d_dbgNextDumpTime) {
+    d_dbgOldTime = d_dbgTime;      
+    
+    IntVector low, high; 
+
+    fprintf(stderr,"______________________________________________\n");
+    fprintf(stderr,"$%s\n",message1);
+    fprintf(stderr,"$%s\n",message2);
+
+    if (include_GC == 1)  { 
+      low   = patch->getCellLowIndex();
+      high  = patch->getCellHighIndex();
+    }
+    if (include_GC == 0) {
+      low   = patch->getInteriorCellLowIndex();
+      high  = patch->getInteriorCellHighIndex();
+    }
+
+    for(int k = low.z(); k < high.z(); k++)  {
+      for(int j = low.y(); j < high.y(); j++) {
+        for(int i = low.x(); i < high.x(); i++) {
+	  IntVector idx(i, j, k);
+	  fprintf(stderr,"[%d,%d,%d]~ %16.15E  ",
+		  i,j,k, q_CC[idx]);
+
+	  /*  fprintf(stderr,"\n"); */
+        }
+        fprintf(stderr,"\n");
       }
       fprintf(stderr,"\n");
     }
-    fprintf(stderr,"\n");
+    fprintf(stderr," ______________________________________________\n");
   }
-  fprintf(stderr," ______________________________________________\n");
 }
 
 /* 
@@ -65,35 +74,43 @@ void    ICE::printData(const Patch* patch, int include_GC,
         char    message2[],             /* message to user              */
         const CCVariable<int>& q_CC)
 {
-  IntVector low, high; 
-  
-  fprintf(stderr,"______________________________________________\n");
-  fprintf(stderr,"$%s\n",message1);
-  fprintf(stderr,"$%s\n",message2);
-  
-  if (include_GC == 1)  { 
-    low   = patch->getCellLowIndex();
-    high  = patch->getCellHighIndex();
-  }
-  if (include_GC == 0) {
-    low   = patch->getInteriorCellLowIndex();
-    high  = patch->getInteriorCellHighIndex();
-  }
-  
-  for(int k = low.z(); k < high.z(); k++)  {
-    for(int j = low.y(); j < high.y(); j++) {
-      for(int i = low.x(); i < high.x(); i++) {
-	IntVector idx(i, j, k);
-	fprintf(stderr,"[%d,%d,%d]~ %i  ",
-		i,j,k, q_CC[idx]);
-	
-	/*  fprintf(stderr,"\n"); */
+ //__________________________________
+ // Limit when we dump
+  d_dbgTime= dataArchiver->getCurrentTime();
+  if ( d_dbgTime >= d_dbgStartTime && 
+       d_dbgTime <= d_dbgStopTime  &&
+       d_dbgTime >= d_dbgNextDumpTime) {
+    d_dbgOldTime = d_dbgTime;      
+    IntVector low, high; 
+
+    fprintf(stderr,"______________________________________________\n");
+    fprintf(stderr,"$%s\n",message1);
+    fprintf(stderr,"$%s\n",message2);
+
+    if (include_GC == 1)  { 
+      low   = patch->getCellLowIndex();
+      high  = patch->getCellHighIndex();
+    }
+    if (include_GC == 0) {
+      low   = patch->getInteriorCellLowIndex();
+      high  = patch->getInteriorCellHighIndex();
+    }
+
+    for(int k = low.z(); k < high.z(); k++)  {
+      for(int j = low.y(); j < high.y(); j++) {
+        for(int i = low.x(); i < high.x(); i++) {
+	  IntVector idx(i, j, k);
+	  fprintf(stderr,"[%d,%d,%d]~ %i  ",
+		  i,j,k, q_CC[idx]);
+
+	  /*  fprintf(stderr,"\n"); */
+        }
+        fprintf(stderr,"\n");
       }
       fprintf(stderr,"\n");
     }
-    fprintf(stderr,"\n");
+    fprintf(stderr," ______________________________________________\n");
   }
-  fprintf(stderr," ______________________________________________\n");
 }
 /* 
  ======================================================================*
@@ -106,35 +123,44 @@ void    ICE::printVector(const Patch* patch, int include_GC,
         int     component,              /*  x = 0,y = 1, z = 1          */
         const CCVariable<Vector>& q_CC)
 {
-  IntVector low, high; 
-  
-  fprintf(stderr,"______________________________________________\n");
-  fprintf(stderr,"$%s\n",message1);
-  fprintf(stderr,"$%s\n",message2);
-  
-  if (include_GC == 1)  { 
-    low   = patch->getCellLowIndex();
-    high  = patch->getCellHighIndex();
-  }
-  if (include_GC == 0) {
-    low   = patch->getInteriorCellLowIndex();
-    high  = patch->getInteriorCellHighIndex();
-  }
-  
-  for(int k = low.z(); k < high.z(); k++)  {
-    for(int j = low.y(); j < high.y(); j++) {
-      for(int i = low.x(); i < high.x(); i++) {
-	IntVector idx(i, j, k);
-	fprintf(stderr,"[%d,%d,%d]~ %16.15E  ",
-		i,j,k, q_CC[idx](component));
-	
-	/*  fprintf(stderr,"\n"); */
+
+ //__________________________________
+ // Limit when we dump
+  d_dbgTime= dataArchiver->getCurrentTime();
+  if ( d_dbgTime >= d_dbgStartTime && 
+       d_dbgTime <= d_dbgStopTime  &&
+       d_dbgTime >= d_dbgNextDumpTime) {
+    d_dbgOldTime = d_dbgTime;      
+    IntVector low, high; 
+
+    fprintf(stderr,"______________________________________________\n");
+    fprintf(stderr,"$%s\n",message1);
+    fprintf(stderr,"$%s\n",message2);
+
+    if (include_GC == 1)  { 
+      low   = patch->getCellLowIndex();
+      high  = patch->getCellHighIndex();
+    }
+    if (include_GC == 0) {
+      low   = patch->getInteriorCellLowIndex();
+      high  = patch->getInteriorCellHighIndex();
+    }
+
+    for(int k = low.z(); k < high.z(); k++)  {
+      for(int j = low.y(); j < high.y(); j++) {
+        for(int i = low.x(); i < high.x(); i++) {
+	  IntVector idx(i, j, k);
+	  fprintf(stderr,"[%d,%d,%d]~ %16.15E  ",
+		  i,j,k, q_CC[idx](component));
+
+	  /*  fprintf(stderr,"\n"); */
+        }
+        fprintf(stderr,"\n");
       }
       fprintf(stderr,"\n");
     }
-    fprintf(stderr,"\n");
+    fprintf(stderr," ______________________________________________\n");
   }
-  fprintf(stderr," ______________________________________________\n");
 }
 
 
@@ -148,35 +174,43 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
         char    message2[],             /* message to user              */
         const SFCXVariable<double>& q_FC)
 {
-  IntVector low, high; 
-  
-  fprintf(stderr,"______________________________________________\n");
-  fprintf(stderr,"$%s\n",message1);
-  fprintf(stderr,"$%s\n",message2);
-  
-  if (include_GC == 1)  { 
-    low   = patch->getSFCXLowIndex();
-    high  = patch->getSFCXHighIndex();
-  }
-  if (include_GC == 0) {
-    low   = patch->getInteriorCellLowIndex();
-    high  = patch->getInteriorCellHighIndex();
-  }
-  for(int k = low.z(); k < high.z(); k++)  {
-    for(int j = low.y(); j < high.y(); j++) {
-    //for(int j = high.y()-1; j >= low.y(); j--) {
-      for(int i = low.x(); i < high.x(); i++) {
-	IntVector idx(i, j, k);
-	fprintf(stderr,"[%d,%d,%d]~ %16.15E  ",
-		i,j,k, q_FC[idx]);
-	
-	/*  fprintf(stderr,"\n"); */
+ //__________________________________
+ // Limit when we dump
+  d_dbgTime= dataArchiver->getCurrentTime();
+  if ( d_dbgTime >= d_dbgStartTime && 
+       d_dbgTime <= d_dbgStopTime  &&
+       d_dbgTime >= d_dbgNextDumpTime) {
+    d_dbgOldTime = d_dbgTime;
+    IntVector low, high; 
+
+    fprintf(stderr,"______________________________________________\n");
+    fprintf(stderr,"$%s\n",message1);
+    fprintf(stderr,"$%s\n",message2);
+
+    if (include_GC == 1)  { 
+      low   = patch->getSFCXLowIndex();
+      high  = patch->getSFCXHighIndex();
+    }
+    if (include_GC == 0) {
+      low   = patch->getInteriorCellLowIndex();
+      high  = patch->getInteriorCellHighIndex();
+    }
+    for(int k = low.z(); k < high.z(); k++)  {
+      for(int j = low.y(); j < high.y(); j++) {
+      //for(int j = high.y()-1; j >= low.y(); j--) {
+        for(int i = low.x(); i < high.x(); i++) {
+	  IntVector idx(i, j, k);
+	  fprintf(stderr,"[%d,%d,%d]~ %16.15E  ",
+		  i,j,k, q_FC[idx]);
+
+	  /*  fprintf(stderr,"\n"); */
+        }
+        fprintf(stderr,"\n");
       }
       fprintf(stderr,"\n");
     }
-    fprintf(stderr,"\n");
+    fprintf(stderr," ______________________________________________\n");
   }
-  fprintf(stderr," ______________________________________________\n");
 }
 /* 
  ======================================================================*
@@ -188,36 +222,44 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
         char    message2[],             /* message to user              */
         const SFCYVariable<double>& q_FC)
 {
-  IntVector low, high; 
-  
-  fprintf(stderr,"______________________________________________\n");
-  fprintf(stderr,"$%s\n",message1);
-  fprintf(stderr,"$%s\n",message2);
-  
-  if (include_GC == 1)  { 
-    low   = patch->getSFCYLowIndex();
-    high  = patch->getSFCYHighIndex();
-  }
-  if (include_GC == 0) {
-    low   = patch->getInteriorCellLowIndex();
-    high  = patch->getInteriorCellHighIndex();
-  }
- 
-  for(int k = low.z(); k < high.z(); k++)  {
-    for(int j = low.y(); j < high.y(); j++) {
-    //for(int j = high.y()-1; j >= low.y(); j--) {
-      for(int i = low.x(); i < high.x(); i++) {
-	IntVector idx(i, j, k);
-	fprintf(stderr,"[%d,%d,%d]~ %16.15E  ",
-		i,j,k, q_FC[idx]);
-	
-	/*  fprintf(stderr,"\n"); */
+ //__________________________________
+ // Limit when we dump
+  d_dbgTime= dataArchiver->getCurrentTime();
+  if ( d_dbgTime >= d_dbgStartTime && 
+       d_dbgTime <= d_dbgStopTime  &&
+       d_dbgTime >= d_dbgNextDumpTime) {
+    d_dbgOldTime = d_dbgTime;      
+    IntVector low, high; 
+
+    fprintf(stderr,"______________________________________________\n");
+    fprintf(stderr,"$%s\n",message1);
+    fprintf(stderr,"$%s\n",message2);
+
+    if (include_GC == 1)  { 
+      low   = patch->getSFCYLowIndex();
+      high  = patch->getSFCYHighIndex();
+    }
+    if (include_GC == 0) {
+      low   = patch->getInteriorCellLowIndex();
+      high  = patch->getInteriorCellHighIndex();
+    }
+
+    for(int k = low.z(); k < high.z(); k++)  {
+      for(int j = low.y(); j < high.y(); j++) {
+      //for(int j = high.y()-1; j >= low.y(); j--) {
+        for(int i = low.x(); i < high.x(); i++) {
+	  IntVector idx(i, j, k);
+	  fprintf(stderr,"[%d,%d,%d]~ %16.15E  ",
+		  i,j,k, q_FC[idx]);
+
+	  /*  fprintf(stderr,"\n"); */
+        }
+        fprintf(stderr,"\n");
       }
       fprintf(stderr,"\n");
     }
-    fprintf(stderr,"\n");
+    fprintf(stderr," ______________________________________________\n");
   }
-  fprintf(stderr," ______________________________________________\n");
 }
 
 /* 
@@ -230,36 +272,45 @@ void    ICE::printData_FC(const Patch* patch, int include_GC,
         char    message2[],             /* message to user              */
         const SFCZVariable<double>& q_FC)
 {
-   IntVector low, high; 
-  
-  fprintf(stderr,"______________________________________________\n");
-  fprintf(stderr,"$%s\n",message1);
-  fprintf(stderr,"$%s\n",message2);
-  
-  if (include_GC == 1)  { 
-    low   = patch->getSFCZLowIndex();
-    high  = patch->getSFCZHighIndex();
-  }
-  if (include_GC == 0) {
-    low   = patch->getInteriorCellLowIndex();
-    high  = patch->getInteriorCellHighIndex();
-  }
 
-  for(int k = low.z(); k < high.z(); k++)  {
-    for(int j = low.y(); j < high.y(); j++) {
-    //for(int j = high.y()-1; j >= low.y(); j--) {
-      for(int i = low.x(); i < high.x(); i++) {
-	IntVector idx(i, j, k);
-	fprintf(stderr,"[%d,%d,%d]~ %16.15E  ",
-		i,j,k, q_FC[idx]);
-	
-	/*  fprintf(stderr,"\n"); */
+ //__________________________________
+ // Limit when we dump
+  d_dbgTime= dataArchiver->getCurrentTime();
+  if ( d_dbgTime >= d_dbgStartTime && 
+       d_dbgTime <= d_dbgStopTime  &&
+       d_dbgTime >= d_dbgNextDumpTime) {
+    d_dbgOldTime = d_dbgTime;      
+    IntVector low, high; 
+
+    fprintf(stderr,"______________________________________________\n");
+    fprintf(stderr,"$%s\n",message1);
+    fprintf(stderr,"$%s\n",message2);
+
+    if (include_GC == 1)  { 
+      low   = patch->getSFCZLowIndex();
+      high  = patch->getSFCZHighIndex();
+    }
+    if (include_GC == 0) {
+      low   = patch->getInteriorCellLowIndex();
+      high  = patch->getInteriorCellHighIndex();
+    }
+
+    for(int k = low.z(); k < high.z(); k++)  {
+      for(int j = low.y(); j < high.y(); j++) {
+      //for(int j = high.y()-1; j >= low.y(); j--) {
+        for(int i = low.x(); i < high.x(); i++) {
+	  IntVector idx(i, j, k);
+	  fprintf(stderr,"[%d,%d,%d]~ %16.15E  ",
+		  i,j,k, q_FC[idx]);
+
+	  /*  fprintf(stderr,"\n"); */
+        }
+        fprintf(stderr,"\n");
       }
       fprintf(stderr,"\n");
     }
-    fprintf(stderr,"\n");
+    fprintf(stderr," ______________________________________________\n");
   }
-  fprintf(stderr," ______________________________________________\n");
 }
 
 /* 
