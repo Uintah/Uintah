@@ -103,7 +103,7 @@ cd $RPM_BUILD_DIR/%{ftgl}/FTGL/unix
 ./configure --prefix=/usr/local/%{ftgl}
 make
 make install 
-cp $RPM_BUILD_DIR/%{ftgl}/FTGL/COPYING.txt /usr/local/%{ftgl
+cp $RPM_BUILD_DIR/%{ftgl}/FTGL/COPYING.txt /usr/local/%{ftgl}
 
 
 cd $RPM_BUILD_DIR/%{hdf5} 
