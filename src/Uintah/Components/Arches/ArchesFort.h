@@ -49,6 +49,8 @@ WARNING
 #define FORT_VVELCOEF vvelcoef_
 #define FORT_WVELCOEF wvelcoef_
 #define FORT_UVELSOURCE uvelsrc_
+#define FORT_VVELSOURCE vvelsrc_
+#define FORT_WVELSOURCE wvelsrc_
 #define FORT_BCUVEL bcuvel_
 #define FORT_BCVVEL bcvvel_
 #define FORT_BCWVEL bcwvel_
@@ -367,7 +369,7 @@ extern "C"
 
     ////////////////////////////////////////////////////////////////////////
     //
-    // Calculate the U-velocity coeffs and convection coeffs
+    // Calculate the U-velocity linear and non-linear source terms
     //
     void
     FORT_UVELSOURCE(const int* domLoU, const int* domHiU,
@@ -388,14 +390,66 @@ extern "C"
 		    const double* ctt, const double* cbt, const double* cbb,
 		    const double* sewu, const double* sew, const double* sns,
 		    const double* stb,
-		    const double* dxepu, const double* dxpwu,
-		    const double* dxpw, const double* dynp, const double* dyps,
-		    const double* dztp, const double* dzpb,
+		    const double* dxpw, 
 		    const double* fac1u, const double* fac2u,
 		    const double* fac3u, const double* fac4u,
-		    const int* iesdu, const int* iwsdu, 
-		    const double* nfac, const double* sfac,
-		    const double* tfac, const double* bfac);
+		    const int* iesdu, const int* iwsdu);
+
+    ////////////////////////////////////////////////////////////////////////
+    //
+    // Calculate the V-velocity linear and non-linear source terms
+    //
+    void
+    FORT_VVELSOURCE(const int* domLoV, const int* domHiV,
+		    const int* idxLoV, const int* idxHiV,
+		    const double* vVelocity,  const double* old_vVelocity,
+		    double* vvelnlinSrc, double* vvellinSrc,
+		    const int* domLoU, const int* domHiU,
+		    const double* uVelocity,
+		    const int* domLoW, const int* domHiW,
+		    const double* wVelocity,
+		    const int* domLo, const int* domHi,
+		    const double* density, const double* old_density,
+		    const double* viscosity,
+		    const double* gravity,
+		    const double* deltaT, const double* den_ref,
+		    const double* cee, const double* cwe, const double* cww,
+		    const double* cnnv, const double* csnv, const double* cssv,
+		    const double* ctt, const double* cbt, const double* cbb,
+		    const double* sew, const double* snsv, const double* sns,
+		    const double* stb,
+		    const double* dyps, 
+		    const double* fac1v, const double* fac2v,
+		    const double* fac3v, const double* fac4v,
+		    const int* jnsdv, const int* jssdv);
+
+    ////////////////////////////////////////////////////////////////////////
+    //
+    // Calculate the W-velocity linear and non-linear source terms
+    //
+    void
+    FORT_WVELSOURCE(const int* domLoW, const int* domHiW,
+		    const int* idxLoW, const int* idxHiW,
+		    const double* wVelocity,  const double* old_wVelocity,
+		    double* wvelnlinSrc, double* wvellinSrc,
+		    const int* domLoU, const int* domHiU,
+		    const double* uVelocity,
+		    const int* domLoV, const int* domHiV,
+		    const double* vVelocity,
+		    const int* domLo, const int* domHi,
+		    const double* density, const double* old_density,
+		    const double* viscosity,
+		    const double* gravity,
+		    const double* deltaT, const double* den_ref,
+		    const double* cee, const double* cwe, const double* cww,
+		    const double* cnn, const double* csn, const double* css,
+		    const double* cttw, const double* cbtw, const double* cbbw,
+		    const double* sew, const double* sns, const double* stbw,
+		    const double* stb,
+		    const double* dzpb, 
+		    const double* fac1w, const double* fac2w,
+		    const double* fac3w, const double* fac4w,
+		    const int* ktsdw, const int* kbsdw);
 
 
 }
@@ -404,6 +458,11 @@ extern "C"
 
 //
 // $Log$
+// Revision 1.14  2000/07/12 05:14:25  bbanerje
+// Added vvelsrc and wvelsrc .. some changes to uvelsrc.
+// Rawat :: Labels are getting hopelessly muddled unless we can do something
+// about the time stepping thing.
+//
 // Revision 1.13  2000/07/11 15:46:26  rawat
 // added setInitialGuess in PicardNonlinearSolver and also added uVelSrc
 //
