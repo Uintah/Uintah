@@ -229,10 +229,9 @@ FieldExtractor::execute()
   archiveH = handle;
   DataArchive& archive = *((*(archiveH.get_rep()))());
 
-  cerr<<"Gui say levels = "<<level_.get()<<"\n";
+//   cerr<<"Gui say levels = "<<level_.get()<<"\n";
   // get time, set timestep, set generation, update grid and update gui
   double time = field_update(); // yeah it does all that
-  cerr<<"Field updated; do we get here\n";
 
   if(type == 0){
     warning( "No variables found.");
@@ -252,8 +251,8 @@ FieldExtractor::execute()
     get_all_levels = true;
   }
 
-  cerr<<"grid->numLevels() = "<<grid->numLevels()<<" and get_all_levels = "<<
-    get_all_levels<<"\n";
+//   cerr<<"grid->numLevels() = "<<grid->numLevels()<<" and get_all_levels = "<<
+//     get_all_levels<<"\n";
   string var(sVar.get());
   int mat = sMatNum.get();
   if(var != ""){
@@ -274,8 +273,8 @@ FieldExtractor::execute()
 //      IntVector cellHi, cellLo;
 //      level->findCellIndexRange(cellLo, cellHi);
 
-    cerr<<"before anything data range is:  "<<range.x()<<"x"<<range.y()<<"x"<<
-      range.z()<<"  size:  "<<box.min()<<", "<<box.max()<<"\n";
+//     cerr<<"before anything data range is:  "<<range.x()<<"x"<<range.y()<<"x"<<
+//       range.z()<<"  size:  "<<box.min()<<", "<<box.max()<<"\n";
 
     switch( type->getType() ) {
 
@@ -445,32 +444,32 @@ FieldExtractor::execute()
 	{
 	  CCVariable<double> gridVar;
 	  if(get_all_levels){
-	    cerr<<"getting all levels\n";
+// 	    cerr<<"getting all levels\n";
 	    cerr.flush();
 	    GridP newGrid = build_minimal_patch_grid( grid );
 	    MRLatVolField<double>* mrfield =0;
-	    cerr<<"building multi-level field\n";
+// 	    cerr<<"building multi-level field\n";
 	    build_multi_level_field( archive, newGrid, var, gridVar,
 				     mat, generation, time, timestep,
 				     dt, 0,
 				     TypeDescription::CCVariable,
 				     TypeDescription::double_type, mrfield);
-	    cerr<<"multi-level field built\n";
+// 	    cerr<<"multi-level field built\n";
 	    fout->send(mrfield);
 	    return;
 	  } else {
-	    cerr<<"Before update_mesh_handled: type = "<<
-	      TypeDescription::CCVariable<<"\n";
+// 	    cerr<<"Before update_mesh_handled: type = "<<
+// 	      TypeDescription::CCVariable<<"\n";
 	    update_mesh_handle( level, hi, range, box,
 				TypeDescription::CCVariable, mesh_handle_);
 	    LatVolField<double> *sfd =
 	      scinew LatVolField<double>( mesh_handle_, 0 );
-	    cerr<<"setting scalar properties\n";
+// 	    cerr<<"setting scalar properties\n";
 	    set_scalar_properties( sfd, var, time, low, 
 				   TypeDescription::CCVariable);
-	    cerr<<"properties set...building field\n";
+// 	    cerr<<"properties set...building field\n";
 	    build_field( archive, level, low, var, mat, time, gridVar, sfd );
-	    cerr<<"field built\n";
+// 	    cerr<<"field built\n";
 	    fout->send(sfd);
 	    return;
 	  }
@@ -1149,7 +1148,7 @@ FieldExtractor::build_minimal_patch_grid( GridP oldGrid )
     LevelP newLevel =
       newGrid->addLevel(level->getAnchor(), level->dCell());
 
-    cerr<<"Level "<<i<<":\n";
+//     cerr<<"Level "<<i<<":\n";
     int count = 0;
     SuperPatchContainer::const_iterator superIter;
     for (superIter = superPatches->begin();
@@ -1159,7 +1158,7 @@ FieldExtractor::build_minimal_patch_grid( GridP oldGrid )
       IntVector inLow = high; // taking min values starting at high
       IntVector inHigh = low; // taking max values starting at low
 
-      cerr<<"\tcombined patch "<<count++<<" is "<<low<<", "<<high<<"\n";
+//       cerr<<"\tcombined patch "<<count++<<" is "<<low<<", "<<high<<"\n";
 
       for (unsigned int p = 0; p < (*superIter)->getBoxes().size(); p++) {
 	const Patch* patch = (*superIter)->getBoxes()[p];
@@ -1186,7 +1185,7 @@ void FieldExtractor::update_mesh_handle( LevelP& level,
 					 TypeDescription::Type type,
 					 LatVolMeshHandle& mesh_handle)
 {
-  cerr<<"In update_mesh_handled: type = "<<type<<"\n";
+//   cerr<<"In update_mesh_handled: type = "<<type<<"\n";
   
   switch ( type ){
   case TypeDescription::CCVariable:
@@ -1205,8 +1204,8 @@ void FieldExtractor::update_mesh_handle( LevelP& level,
 	  mesh_handle = scinew LatVolMesh(range.x(), range.y(),
 					   range.z(), box.min(),
 					   box.max());
-	  cerr<<"mesh built:  "<<range.x()<<"x"<<range.y()<<"x"<<
-	    range.z()<<"  size:  "<<box.min()<<", "<<box.max()<<"\n";
+// 	  cerr<<"mesh built:  "<<range.x()<<"x"<<range.y()<<"x"<<
+// 	    range.z()<<"  size:  "<<box.min()<<", "<<box.max()<<"\n";
 	}
       } else if(mesh_handle->get_ni() != (unsigned int) range.x() ||
 		mesh_handle->get_nj() != (unsigned int) range.y() ||
@@ -1221,8 +1220,8 @@ void FieldExtractor::update_mesh_handle( LevelP& level,
 	  mesh_handle = scinew LatVolMesh(range.x(), range.y(),
 					   range.z(), box.min(),
 					   box.max());
-	  cerr<<"mesh built:  "<<range.x()<<"x"<<range.y()<<"x"<<
-	    range.z()<<"  size:  "<<box.min()<<", "<<box.max()<<"\n";
+// 	  cerr<<"mesh built:  "<<range.x()<<"x"<<range.y()<<"x"<<
+// 	    range.z()<<"  size:  "<<box.min()<<", "<<box.max()<<"\n";
 	}
       }	
       return;
@@ -1233,16 +1232,16 @@ void FieldExtractor::update_mesh_handle( LevelP& level,
 	mesh_handle = scinew LatVolMesh(range.x(), range.y(),
 					 range.z(), box.min(),
 					 box.max());
-	cerr<<"mesh built:  "<<range.x()<<"x"<<range.y()<<"x"<<
-	  range.z()<<"  size:  "<<box.min()<<", "<<box.max()<<"\n";
+// 	cerr<<"mesh built:  "<<range.x()<<"x"<<range.y()<<"x"<<
+// 	  range.z()<<"  size:  "<<box.min()<<", "<<box.max()<<"\n";
       }else if(mesh_handle->get_ni() != (unsigned int) range.x() ||
 	       mesh_handle->get_nj() != (unsigned int) range.y() ||
 	       mesh_handle->get_nk() != (unsigned int) range.z() ){
 	mesh_handle = scinew LatVolMesh(range.x(), range.y(),
 					 range.z(), box.min(),
 					 box.max());
-	cerr<<"mesh built:  "<<range.x()<<"x"<<range.y()<<"x"<<
-	  range.z()<<"  size:  "<<box.min()<<", "<<box.max()<<"\n";
+// 	cerr<<"mesh built:  "<<range.x()<<"x"<<range.y()<<"x"<<
+// 	  range.z()<<"  size:  "<<box.min()<<", "<<box.max()<<"\n";
       }
       return;
     }
