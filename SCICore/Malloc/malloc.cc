@@ -14,6 +14,7 @@
 
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Malloc/AllocPriv.h>
+#include <sci_defs.h>
 
 // irix64 KCC stuff
 #include <strings.h>
@@ -84,6 +85,9 @@ void* valloc(size_t size)
 
 //
 // $Log$
+// Revision 1.8  2000/09/14 15:51:02  sparker
+// Include sci_defs.h for DISABLE_SCI_MALLOC
+//
 // Revision 1.7  2000/09/14 15:34:21  sparker
 // Use --disable-sci-malloc configure flag
 //
