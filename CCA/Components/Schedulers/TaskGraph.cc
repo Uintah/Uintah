@@ -25,6 +25,7 @@
 #include <map>
 #include <sstream>
 #include <unistd.h>
+#include <sci_hash_map.h>
 
 using namespace Uintah;
 
@@ -576,26 +577,10 @@ TaskGraph::createDetailedTasks( const ProcessorGroup* pg,
   return dt;
 }
 
-#if defined(__GNUG__) || defined(__digital__) || defined(_AIX)
-namespace std {
-  template<class T> class hash {
-  public:
-    hash() {}
-    unsigned int operator()(const T& str){
-      unsigned int h=0;
-      for(typename T::const_iterator iter = str.begin(); iter != str.end(); iter++){
-	h=(h>>1)^(h<<1);
-	h+=*iter;
-      }
-      return h;
-    }
-  };
-}
-#endif
-
 namespace Uintah {
   
 class CompTable {
+  typedef hash<const char*> CompTable_StringHash;
   struct Data {
     Data* next;
     DetailedTask* task;
@@ -608,9 +593,9 @@ class CompTable {
 	 const Patch* patch, int matl)
       : task(task), comp(comp), patch(patch), matl(matl)
     {
-      std::hash<string> h;
+      CompTable_StringHash h;
       hash=(unsigned int)(((unsigned int)comp->mapDataWarehouse()<<3)
-			  ^(h(comp->var->getName()))
+			  ^(h(comp->var->getName().c_str()))
 			  ^matl);
       if(patch)
 	hash ^= (unsigned int)(patch->getID()<<4);
