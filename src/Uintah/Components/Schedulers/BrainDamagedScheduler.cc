@@ -15,8 +15,10 @@ static char *id="@(#) $Id$";
 #include <SCICore/Thread/Time.h>
 #include <SCICore/Thread/ThreadPool.h>
 
-#include <iostream>
 #include <algorithm>
+#include <fstream>
+#include <iostream>
+#include <unistd.h>
 
 using namespace Uintah;
 
@@ -106,7 +108,7 @@ BrainDamagedScheduler::performTask(TaskRecord* task,
    for(vector<Task::Dependency*>::const_iterator iter = reqs.begin();
        iter != reqs.end(); iter++){
       Task::Dependency* dep = *iter;
-      OnDemandDataWarehouse* dw = dynamic_cast<OnDemandDataWarehouse*>(dep->d_dw.get_rep());;
+      OnDemandDataWarehouse* dw = dynamic_cast<OnDemandDataWarehouse*>(dep->d_dw.get_rep());
       if(!dw->isFinalized()){
 	 TaskProduct p(dep->d_region, dep->d_matlIndex, dep->d_var);
 	 map<TaskProduct, TaskRecord*>::const_iterator aciter = d_allcomps.find(p);
@@ -130,6 +132,8 @@ BrainDamagedScheduler::execute(const ProcessorContext * pc,
 	return;
     }
     setupTaskConnections();
+
+    dumpDependencies();
 
     vector<TaskRecord*>::iterator iter;
     for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
@@ -259,6 +263,55 @@ BrainDamagedScheduler::runThreadedTask(int threadNumber, TaskRecord* task,
     delete subpc;
 }
 
+void
+BrainDamagedScheduler::dumpDependencies()
+{
+    static int call_nr = 0;
+    
+    // the first call is just some initialization tasks. All subsequent calls
+    // will have the same dependency graph, modulo an output task. The first
+    // non-initialization call will have the output task, so we'll just output
+    // that one.
+    if (call_nr++ != 1)
+    	return;
+	
+    ofstream depfile("dependencies");
+    if (!depfile) {
+	cerr << "BrainDamagedScheduler::dumpDependencies: unable to open output file!\n";
+	return;	// dependency dump failure shouldn't be fatal to anything else
+    }
+
+    vector<TaskRecord*>::const_iterator iter;
+    for (iter = d_tasks.begin(); iter != d_tasks.end(); iter++) {
+    	const TaskRecord* taskrec = *iter;
+
+	const vector<Task::Dependency*>& deps = taskrec->task->getRequires();
+	vector<Task::Dependency*>::const_iterator dep_iter;
+	for (dep_iter = deps.begin(); dep_iter != deps.end(); dep_iter++) {
+	    const Task::Dependency* dep = *dep_iter;
+
+	    OnDemandDataWarehouse* dw =
+	    	dynamic_cast<OnDemandDataWarehouse*>(dep->d_dw.get_rep());
+	    if (!dw->isFinalized()) {
+
+		TaskProduct p(dep->d_region, dep->d_matlIndex, dep->d_var);
+		map<TaskProduct, TaskRecord*>::const_iterator deptask =
+	    	    d_allcomps.find(p);
+
+		const Task* task1 = taskrec->task;
+		const Task* task2 = deptask->second->task;
+
+		depfile << task1->getName() << "\\nRegion"
+	   		<< task1->getRegion()->getID() << " "
+			<< task2->getName() << "\\nRegion"
+			<< task2->getRegion()->getID() << endl;
+	    }
+	}
+    }
+
+    depfile.close();
+}
+
 BrainDamagedScheduler::
 TaskRecord::~TaskRecord()
 {
@@ -274,6 +327,10 @@ TaskRecord::TaskRecord(Task* t)
 
 //
 // $Log$
+// Revision 1.13  2000/05/19 18:35:09  jehall
+// - Added code to dump the task dependencies to a file, which can be made
+//   into a pretty dependency graph.
+//
 // Revision 1.12  2000/05/11 20:10:19  dav
 // adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
 //

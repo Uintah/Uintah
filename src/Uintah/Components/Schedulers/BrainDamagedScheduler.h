@@ -105,6 +105,10 @@ WARNING
       void runThreadedTask(int, TaskRecord*, const ProcessorContext*,
 			   SCICore::Thread::SimpleReducer*);
       
+      //////////
+      // Insert Documentation Here:
+      void dumpDependencies();
+
       SCICore::Thread::SimpleReducer* d_reducer;
 
       std::vector<TaskRecord*>        d_tasks;
@@ -119,6 +123,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.11  2000/05/19 18:35:10  jehall
+// - Added code to dump the task dependencies to a file, which can be made
+//   into a pretty dependency graph.
+//
 // Revision 1.10  2000/05/11 20:10:19  dav
 // adding MPI stuff.  The biggest change is that old_dws cannot be const and so a large number of declarations had to change.
 //
