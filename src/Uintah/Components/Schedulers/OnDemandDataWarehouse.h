@@ -11,6 +11,9 @@
 #include <map>
 #include <string>
 
+#include <iostream>
+#include <fstream>
+
 using std::string;
 
 namespace Uintah {
@@ -119,13 +122,21 @@ public:
    // Adds a variable to the save set
    virtual void pleaseSave(const VarLabel* label, int number);
        
+   // Adds a variable to the integrated quantities save set
+   virtual void pleaseSaveIntegrated(const VarLabel* label);
+
    //////////
    // Retrieves the saveset
    virtual void getSaveSet(std::vector<const VarLabel*>&,
 			   std::vector<int>&) const;
        
+   virtual void getIntegratedSaveSet(std::vector<const VarLabel*>&) const;
+       
    virtual void emit(OutputContext&, const VarLabel* label,
 		     int matlIndex, const Patch* patch) const;
+
+   virtual void emit(ofstream& intout, vector <const VarLabel*> label) const;
+
 private:
 
    void sendMpiDataRequest( const string & varName,
@@ -168,6 +179,7 @@ private:
    const VarLabel * d_positionLabel;
 
    std::vector<const VarLabel*> d_saveset;
+   std::vector<const VarLabel*> d_saveset_integrated;
    std::vector<int> d_savenumbers;
 };
 
@@ -175,6 +187,10 @@ private:
 
 //
 // $Log$
+// Revision 1.23  2000/06/01 23:14:04  guilkey
+// Added pleaseSaveIntegrated functionality to save ReductionVariables
+// to an archive.
+//
 // Revision 1.22  2000/05/30 20:19:23  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch
