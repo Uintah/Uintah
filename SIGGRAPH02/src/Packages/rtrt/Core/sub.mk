@@ -43,6 +43,7 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/Light.cc \
 	$(SRCDIR)/Group.cc \
 	$(SRCDIR)/Gui.cc \
+	$(SRCDIR)/Glyph.cc \
 	$(SRCDIR)/Rect.cc \
 	$(SRCDIR)/Checker.cc \
 	$(SRCDIR)/BBox.cc \
@@ -145,6 +146,8 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/DynamicInstance.cc \
 	$(SRCDIR)/SpinningInstance.cc \
 	$(SRCDIR)/plyfile.c \
+	$(SRCDIR)/PhongColorMapMaterial.cc \
+	$(SRCDIR)/ColorMapDpy.cc \
 	$(SRCDIR)/DynamicInstance.cc \
 	$(SRCDIR)/SolidNoise3.cc \
 	$(SRCDIR)/PerlinBumpMaterial.cc \
