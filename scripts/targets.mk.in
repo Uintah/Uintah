@@ -49,7 +49,9 @@ _cleanHere::
 _distcleanHere::
 	rm -f Makefile
 
-Makefile: $(SRCDIR)/Makefile.in
-	@( Here="`pwd`" ; cd $(OBJTOP) ; Top="`pwd`" ; CONFIG_FILES="`echo $${Here} | sed "s!^$${Top}/!!"`/Makefile" CONFIG_HEADERS="" ./config.status ) 1>&2
+.PRECIOUS: Makefile
+
+Makefile: $(SRCDIR)/Makefile.in ${OBJTOP}/config.status
+	@( Here="`pwd`" ; cd $(OBJTOP) ; Top="`pwd`" ; CONFIG_FILES="`echo $${Here} | sed -e "s!^$${Top}/!!" -e "s!^$${Top}!.!"`/Makefile" CONFIG_HEADERS="" ./config.status ) 1>&2
 
 endif
