@@ -190,6 +190,7 @@ void get_material(rtrt::Array1<Material*> &matls) {
   spline.add(Color(1,.4,.4));
 #else
   spline.add(Color(0,0,1));
+  spline.add(Color(0,0,1));
   spline.add(Color(0,0.4,1));
   spline.add(Color(0,0.8,1));
   spline.add(Color(0,1,0.8));
@@ -200,6 +201,7 @@ void get_material(rtrt::Array1<Material*> &matls) {
   spline.add(Color(1,0.9176,0));
   spline.add(Color(1,0.8,0));
   spline.add(Color(1,0.4,0));
+  spline.add(Color(1,0,0));
   spline.add(Color(1,0,0));
   //{ 0 0 255}   { 0 102 255}
   //{ 0 204 255}  { 0 255 204}
@@ -448,6 +450,7 @@ private:
 
   double time;
   vector<string> *vars;
+  vector<string> *var_include;
   vector<const Uintah::TypeDescription*> *types;
 
   bool do_PTvar_all, do_patch, do_material, do_verbose;
@@ -455,12 +458,13 @@ private:
 public:
   SphereMaker(Mutex *amutex, Semaphore *sema, Patch *patch, DataArchive *da,
 	      rtrt::Array1<SphereData> *sda,
-	      double time, vector<string> *vars,
+	      double time, vector<string> *vars, vector<string> *var_include,
 	      vector<const Uintah::TypeDescription*> *types,
 	      bool do_PTvar_all, bool do_patch, bool do_material,
 	      bool do_verbose, double radius, double radius_factor):
     amutex(amutex), sema(sema), patch(patch), da(da), sphere_data_all(sda),
-    time(time), vars(vars), types(types), do_PTvar_all(do_PTvar_all),
+    time(time), vars(vars), var_include(var_include), types(types),
+    do_PTvar_all(do_PTvar_all),
     do_patch(do_patch), do_material(do_material), do_verbose(do_verbose),
     radius(radius), radius_factor(radius_factor)
   {}
@@ -473,6 +477,17 @@ public:
     // for all vars in one timestep in one patch
     for(int v=0;v<vars->size();v++){
       std::string var = (*vars)[v];
+      if (var_include->size() > 0) {
+	// Only do this check if the size of var_include is > 0.
+	bool var_is_found = false;
+	for(int s=0; s<var_include->size(); s++)
+	  if ((*var_include)[s] == var) {
+	    var_is_found = true;
+	    break;
+	  }
+	// if the variable was not found in our little list
+	if (!var_is_found) continue;
+      }
       const Uintah::TypeDescription* td = (*types)[v];
       const Uintah::TypeDescription* subtype = td->getSubType();
       //---------int numMatls = da->queryNumMaterials(var, patch, time);
@@ -744,6 +759,8 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   string filebase;
   int non_empty_patches = -1;
   char *dpy_config = 0;
+  // Only use var_include if the size is greater than 0.
+  vector<std::string> var_include;
 
   //------------------------------
   // Parse arguments
@@ -790,9 +807,17 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     } else if (s == "-dpyconfig") {
       i++;
       dpy_config = argv[i];
-    } else if( (s == "-help") || (s == "-h") ) {
+    } else if( (s == "--help") || (s == "-h") ) {
       usage( "", argv[0] );
       return(0);
+    } else if (s == "-i" || (s == "--include")) {
+      if (var_include.size() == 0) {
+	// We are going to push back p.x right now, because we know we will
+	// always need it.
+	var_include.push_back("p.x");
+      }
+      i++;
+      var_include.push_back(argv[i]);
     } else {
       if(filebase!="") {
 	usage(s, argv[0]);
@@ -814,7 +839,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   try {
     XMLPlatformUtils::Initialize();
   } catch(const XMLException& toCatch) {
-    cerr << "Caught XML exception: " << toString(toCatch.getMessage()) 
+    cerr << "Caught XML exception: " << toCatch.getMessage() 
 	 << '\n';
     exit( 1 );
   }
@@ -840,18 +865,21 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     vector<double> times;
     da->queryTimesteps(index, times);
     ASSERTEQ(index.size(), times.size());
+    // This will make sure that when we cast to an int, we don't burn
+    // ourselves.
+    ASSERTL3(times.size() < INT_MAX);
     cout << "There are " << index.size() << " timesteps:\n";
     
     //------------------------------
     // figure out the lower and upper bounds on the timesteps
     if (time_step_lower <= -1)
-      time_step_lower =0;
+      time_step_lower = 0;
     else if (time_step_lower >= times.size()) {
       cerr << "timesteplow must be between 0 and " << times.size()-1 << endl;
       abort();
     }
     if (time_step_upper <= -1)
-      time_step_upper = times.size()-1;
+      time_step_upper = (int)(times.size()-1);
     else if (time_step_upper >= times.size()) {
       cerr << "timesteplow must be between 0 and " << times.size()-1 << endl;
       abort();
@@ -870,12 +898,12 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     // for all timesteps
     for(int t=time_step_lower;t<=time_step_upper;t+=time_step_inc){
       //      AuditDefaultAllocator();	  
-      if (debug) cerr << "Started timestep\n";
+      double time = times[t];
+      cerr << "Started timestep t["<<t<<"] = "<<time<<"\n";
 
       sphere_data.remove_all();
       int patch_count = non_empty_patches;
       
-      double time = times[t];
       GridP grid = da->queryGrid(time);
       if(do_verbose)
 	cout << "time = " << time << "\n";
@@ -903,6 +931,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 							  &sphere_data,
 							  time,
 							  &vars,
+							  &var_include,
 							  &types,
 							  do_PTvar_all,
 							  do_patch,
@@ -919,6 +948,17 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 	  // for all vars in one timestep in one patch
 	  for(int v=0;v<vars.size();v++){
 	    std::string var = vars[v];
+	    if (var_include.size > 0) {
+	      // Only do this check if the size of var_include is > 0.
+	      bool var_is_found = false;
+	      for(int s=0; s<var_include.size(); s++)
+		if (var_include[s] == var) {
+		  var_is_found = true;
+		  break;
+		}
+	      // if the variable was not found in our little list
+	      if (!var_is_found) continue;
+	    }
 	    const Uintah::TypeDescription* td = types[v];
 	    const Uintah::TypeDescription* subtype = td->getSubType();
 	    //---------int numMatls = da->queryNumMaterials(var, patch, time);
@@ -1176,13 +1216,14 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
       Thread *thrd = scinew Thread(scinew Preprocessor(obj,prepro_sema),
 				   "rtrt::uintahparticle:Preprocessor Thread");
       thrd->detach();
+      //      cerr << "Finished timestep t["<<t<<"]\n";
     } // end timestep
     if( thread_sema ) delete thread_sema;
     prepro_sema->down(rtrt::Min(nworkers,8));
     if (prepro_sema) delete prepro_sema;
     all->add(alltime);
-    AuditDefaultAllocator();	  
-    if (debug) cerr << "Finished timestep\n";
+    AuditDefaultAllocator();
+    if (debug) cerr << "Finished adding all timesteps.\n";
   } catch (SCIRun::Exception& e) {
     cerr << "Caught exception: " << e.message() << '\n';
     abort();

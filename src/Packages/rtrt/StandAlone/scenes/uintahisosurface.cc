@@ -123,7 +123,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   try {
     XMLPlatformUtils::Initialize();
   } catch(const XMLException& toCatch) {
-    cerr << "Caught XML exception: " << toString(toCatch.getMessage()) 
+    cerr << "Caught XML exception: " << toCatch.getMessage() 
 	 << '\n';
     exit( 1 );
   }
@@ -163,18 +163,21 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     vector<double> times;
     da->queryTimesteps(index, times);
     ASSERTEQ(index.size(), times.size());
+    // This will make sure that when we cast to an int, we don't burn
+    // ourselves.
+    ASSERTL3(times.size() < INT_MAX);
     cout << "There are " << index.size() << " timesteps:\n";
     
     //------------------------------
     // figure out the lower and upper bounds on the timesteps
     if (time_step_lower <= -1)
-      time_step_lower =0;
+      time_step_lower = 0;
     else if (time_step_lower >= times.size()) {
       cerr << "timesteplow must be between 0 and " << times.size()-1 << endl;
       abort();
     }
     if (time_step_upper <= -1)
-      time_step_upper = times.size()-1;
+      time_step_upper = (int)(times.size()-1);
     else if (time_step_upper >= times.size()) {
       cerr << "timesteplow must be between 0 and " << times.size()-1 << endl;
       abort();
