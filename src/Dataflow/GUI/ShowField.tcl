@@ -205,10 +205,15 @@ itcl_class SCIRun_Visualization_ShowField {
     }
 
     # Nodes Tab
-    method add_nodes_tab {dof} {
+    method add_nodes_tab {dof inserting} {
 	
-	set node [$dof.tabs add -label "Nodes" \
-		-command "$this set_active_tab \"Nodes\""]
+	if {$inserting} {
+	    set node [$dof.tabs insert 0 -label "Nodes" \
+			  -command "$this set_active_tab \"Nodes\""]
+	} else {
+	    set node [$dof.tabs add -label "Nodes" \
+			  -command "$this set_active_tab \"Nodes\""]
+	}
 	
 	checkbutton $node.show_nodes \
 		-text "Show Nodes" \
@@ -520,7 +525,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	if {[winfo exists $window]} {
 	    set dof [$window.options.disp.frame_title childsite]
 	    $dof.tabs delete "Nodes"
-	    add_nodes_tab $dof
+	    add_nodes_tab $dof 1
 	    $dof.tabs view [set $this-active_tab]
 	}
     }
@@ -596,7 +601,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	    -raiseselect true 
 	#label $window.options.disp.frame_title -text "Display Options"
 
-	add_nodes_tab $dof
+	add_nodes_tab $dof 0
 	add_edges_tab $dof
 	add_faces_tab $dof
 	add_text_tab $dof
