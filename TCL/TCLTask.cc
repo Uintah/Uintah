@@ -15,6 +15,7 @@
 #include <TCL/TCLTask.h>
 #include <TCL/TCL.h>
 
+#include <iostream.h>
 #include <tcl/tcl7.3/tcl.h>
 #include <tcl/tk3.6/tk.h>
 
@@ -44,9 +45,22 @@ static void do_unlock()
     }
 }
 
+static int x_error_handler(Display* dpy, XErrorEvent* error)
+{
+    char msg[200];
+    XGetErrorText(dpy, error->error_code, msg, 200);
+    cerr << "X Error: " << msg << endl;
+    abort();
+    return 0; // Never reached...
+}
+
 TCLTask::TCLTask(int argc, char* argv[])
 : Task("TCLTask", 1), argc(argc), argv(argv)
 {
+    // Setup the error handler to catch errors...
+    // The default one exits, and makes it very hard to 
+    // track down errors.  We need core dumps!
+    XSetErrorHandler(x_error_handler);
     if(!tlock)
 	tlock=new Mutex;
     Tcl_SetLock(do_lock, do_unlock);
