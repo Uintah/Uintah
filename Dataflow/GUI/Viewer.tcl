@@ -175,8 +175,8 @@ itcl_class ViewWindow {
 	menubutton $w.menu.edit -text "Edit" -underline 0 \
 		-menu $w.menu.edit.menu
 	menu $w.menu.edit.menu
-#	$w.menu.edit.menu add command -label "View/Camera..." -underline 0 \
-#		-command "$this makeViewPopup"
+	$w.menu.edit.menu add command -label "View/Camera..." -underline 0 \
+		-command "$this makeViewPopup"
 #	$w.menu.edit.menu add command -label "Renderer..." -underline 0
 #	$w.menu.edit.menu add command -label "Materials..." -underline 0
 #	$w.menu.edit.menu add command -label "Light Sources..." -underline 0
@@ -564,15 +564,8 @@ itcl_class ViewWindow {
 	    -offvalue 0 -onvalue 1 -command "$this resize; $this-c redraw"
         radiobutton $m.eframe.f.none -text "Stop Recording" \
             -variable $this-global-movie -value 0 -command "$this-c redraw"
-#        if { [$this-c have_libimage] } {
-	    radiobutton $m.eframe.f.raw -text "Raw Frames" \
+	radiobutton $m.eframe.f.raw -text "Raw Frames" \
             -variable $this-global-movie -value 1 -command "$this-c redraw"
-#	} else {
-#	    radiobutton $m.eframe.f.raw -text "Raw Frames" \
-#		    -variable $this-global-movie -value 1 \
-#		    -state disabled -disabledforeground "" \
-#		    -command "$this-c redraw"
-#	}
 	if { [$this-c have_mpeg] } {
 	    radiobutton $m.eframe.f.mpeg -text "Mpeg" -variable \
 		    $this-global-movie -value 2 -command "$this-c redraw"
