@@ -56,7 +56,7 @@ CFLAGS += $(MPEG_DEF_FLAG)
 
 INCLUDES += $(MPEG_INCLUDE)
 
-LIBS := $(TK_LIBRARY) $(GL_LIBS) $(IMAGE_LIBS) $(MPEG_LIBRARY) -lm
+LIBS := $(TK_LIBRARY) $(GL_LIBS) $(MPEG_LIBRARY) -lm
 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
