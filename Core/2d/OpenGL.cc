@@ -44,7 +44,7 @@
 
 #include <GL/gl.h>
 #include <GL/glu.h>
-#if !defined(__linux) && !defined(_WIN32)
+#if HAVE_GL_GLS_H
 #include <GL/gls.h>
 #endif
 
