@@ -2158,7 +2158,7 @@ void MPMICE::HEChemistry(const ProcessorGroup*,
 
          if ((MaxMass-MinMass)/MaxMass > 0.4            //--------------KNOB 1
           && (MaxMass-MinMass)/MaxMass < 1.0
-          &&  MaxMass > d_SMALL_NUM){
+          &&  MaxMass > d_TINY_RHO){
           
 
           //__________________________________
