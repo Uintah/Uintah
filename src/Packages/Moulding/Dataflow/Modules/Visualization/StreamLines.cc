@@ -11,12 +11,10 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/Field.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Dataflow/Ports/ColorMapPort.h>
-#include <Dataflow/Ports/GeometryPort.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Datatypes/LatticeGeom.h>
+#include <Core/Datatypes/LatticeVol.h>
 
 #include <iostream>
 #include <vector>
@@ -54,15 +52,10 @@ private:
 
   FieldIPort*       d_vfport;
   FieldIPort*       d_sfport;
-  ColorMapIPort*    d_cmport;
-  GeometryOPort*    d_gport;
 
   FieldHandle       d_vfhandle;
   FieldHandle       d_sfhandle;
-  ColorMapHandle    d_cmhandle;
 
-  VLInterpolate *vlinterpolate;
-  
   // member functions
 
   // Using Runge-Kutta-Fehlberg, find the points that should
@@ -84,18 +77,8 @@ StreamLines::StreamLines(const clString& id)
   d_vfport = scinew FieldIPort(this, "Flow field", FieldIPort::Atomic);
   add_iport(d_vfport);
 
-  d_sfport = scinew FieldIPort(this, "Colormap domain", FieldIPort::Atomic);
+  d_sfport = scinew FieldIPort(this, "Seed field", FieldIPort::Atomic);
   add_iport(d_sfport);
-  
-  d_cmport = scinew ColorMapIPort(this, "Colormap range",\
-				  ColorMapIPort::Atomic);
-  add_iport(d_cmport);
-
-  d_gport = scinew GeometryOPort(this, "Streamlines",\
-				 GeometryIPort::Atomic);
-  add_oport(d_gport);
-
-  vlinterpolate = 0;
 }
 
 StreamLines::~StreamLines()
@@ -108,6 +91,7 @@ StreamLines::ComputeRKFTerms(Array1<Vector>& v /* storage for terms */,
 			     float s           /* current step size */)
 {
   int check = 0;
+#if 0
   check |= vlinterpolate->vlinterpolate(p,
 					v[0]);
   check |= vlinterpolate->vlinterpolate(p+
@@ -138,7 +122,7 @@ StreamLines::ComputeRKFTerms(Array1<Vector>& v /* storage for terms */,
 
   for (int loop=0;loop<5;loop++)
     v[loop]*=s;
-
+#endif
   return check;
 }
   
@@ -196,21 +180,6 @@ void StreamLines::execute()
   if(!d_vfhandle.get_rep())
     return;
   
-  // is the input field a vector field?
-  Field* field = d_vfhandle->query_interface((Field*)0);
-  if(!field) {
-    error("Flow field is not a Field.");
-    return;
-  }
-
-  // is the input field capable of doing a vector linear interpolation?
-  vlinterpolate = d_vfhandle->query_interface((VLInterpolate*)0);
-  if(!vlinterpolate){
-    error("Flow field does not support vector linear "
-	  "interpolation, which is required.");
-    return;
-  }
-
   Array1<Point> support;
   FindStreamLineSupport(support,Point(32,32,32),.01,.05,100);
 }

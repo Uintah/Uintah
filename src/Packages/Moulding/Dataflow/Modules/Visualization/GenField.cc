@@ -11,7 +11,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/Field.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/LatticeGeom.h>
+#include <Core/Datatypes/LatticeVol.h>
 
 #include <Packages/Moulding/share/share.h>
 

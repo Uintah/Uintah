@@ -10,7 +10,8 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Dataflow/Ports/ScalarFieldPort.h>
+#include <Core/Datatypes/Field.h>
+#include <Dataflow/Ports/FieldPort.h>
 
 #include <Packages/Moulding/share/share.h>
 
@@ -28,7 +29,6 @@ public:
 
   virtual void tcl_command(TCLArgs&, void*);
 private:
-  ScalarFieldIPort* volume_port;
 };
 
 extern "C" MouldingSHARE Module* make_VolumeRender(const clString& id) {
@@ -48,13 +48,13 @@ VolumeRender::~VolumeRender()
 void VolumeRender::execute()
 {
   // use auto port facility to get ports.
-  ScalarFieldIPort* volume_port = (ScalarFieldIPort*)get_iport("Volume");
+  FieldIPort* volume_port = (FieldIPort*)get_iport(0);
   if (!volume_port) {
     std::cerr << "VolumeRender: unable to get port named \"Volume\"." << endl;
     return;
   }
 
-  ScalarFieldHandle volume;
+  FieldHandle volume;
   if (!volume_port->get(volume)) {
     std::cerr << "VolumeRender: no data for port named \"Volume\"." << endl;
     return;
