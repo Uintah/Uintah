@@ -13,7 +13,7 @@
 #include <fstream>
 #include <sys/stat.h>
 #include <sys/types.h>
-
+#include <dirent.h>
 using std::ifstream;
 using std::cerr;
 using namespace SCIRun;
@@ -78,6 +78,7 @@ void    ICE::printData( int matl,
       cerr <<" ______________________________________________\n";
       cerr.setf(ios::scientific ,ios::floatfield);
     }
+    
     //__________________________________
     //  spew to gnuPlot data files
     if (d_dbgGnuPlot) {
@@ -87,8 +88,10 @@ void    ICE::printData( int matl,
         
       string filename = path + "/" + message2;
       fp = fopen(filename.c_str(), "w");
+
       double x, dx;
-      find_gnuplot_origin_And_dx(patch, low, high, &dx, &x);     
+      find_gnuplot_origin_And_dx(patch, low, high, &dx, &x);   
+ 
       for(int k = low.z(); k < high.z(); k++)  {
         for(int j = low.y(); j < high.y(); j++) {
           for(int i = low.x(); i < high.x(); i++) {
@@ -759,6 +762,15 @@ void ICE::createDirs( const string& desc, string& path)
   string::size_type pos2 = desc.find ( "patch" );
   string dirName, matDir;
   string udaDir = dataArchiver->getOutputLocation();
+  // bullet proofing
+  DIR *check = opendir(udaDir.c_str());
+  if ( check == NULL){
+    ostringstream warn;
+    warn << "ICE:printData:Dumping GnuPlot Data:  The main uda directory does not exist. "
+         << " Make sure you're dumping out at least one timestep in the input file";
+    throw ProblemSetupException(warn.str());
+  }
+  
   ostringstream DW;
   DW << dataArchiver->getCurrentTimestep();
   
