@@ -52,19 +52,31 @@ DEALINGS IN THE SOFTWARE.
 
 	<simplelist>
 	  <member>
-	    <filename>SCIRun.PKG.<!--%= doc.version() %-->.tar.gz</filename>
+	    <filename>SCIRun.<!--%= doc.version() %-->.tar.gz</filename>
 	  </member>
 	  <member>
 	    <filename>BioPSE.PKG.<!--%= doc.version() %-->.tar.gz</filename>
 	  </member>
 	  <member>
-	    <filename>Insight.PKG.<!--%= doc.version() %-->.tar.gz</filename>
-	  </member>
-	  <member>
 	    <filename>MatlabInterface.PKG.<!--%= doc.version() %-->.tar.gz</filename>
 	  </member>
 	  <member>
-	    <filename>TEEM.PKG.<!--%= doc.version() %-->.tar.gz</filename>
+	    <filename>Teem.PKG.<!--%= doc.version() %-->.tar.gz</filename>
+	  </member>
+	</simplelist>
+      </para>
+
+      <para os="linux;osx">
+	To build the Insight <acronym>PSE</acronym>, download the following:
+	<simplelist>
+	  <member>
+	    <filename>SCIRun.<!--%= doc.version() %-->.tar.gz</filename>
+	  </member>
+	  <member>
+	    <filename>Teem.PKG.<!--%= doc.version() %-->.tar.gz</filename>
+	  </member>
+	  <member>
+	    <filename>Insight.PKG.<!--%= doc.version() %-->.tar.gz</filename>
 	  </member>
 	</simplelist>
       </para>
@@ -73,32 +85,16 @@ DEALINGS IN THE SOFTWARE.
 	To build the Fusion <acronym>PSE</acronym>, download the following:
 	<simplelist>
 	  <member>
-	    <filename>SCIRun.PKG.<!--%= doc.version() %-->.tar.gz</filename>
+	    <filename>SCIRun<!--%= doc.version() %-->.tar.gz</filename>
 	  </member>
 	  <member>
 	    <filename>Fusion.PKG.<!--%= doc.version() %-->.tar.gz</filename>
 	  </member>
 	  <member>
-	    <filename>TEEM.PKG.<!--%= doc.version() %-->.tar.gz</filename>
+	    <filename>Teem.PKG.<!--%= doc.version() %-->.tar.gz</filename>
 	  </member>
 	  <member>
 	    <filename>DataIO.PKG.<!--%= doc.version() %-->.tar.gz</filename>
-	  </member>
-	</simplelist>
-      </para>
-
-      <para os="linux;osx">
-	To build, for example, an Insight only <acronym>PSE</acronym>,
-	download the following:
-	<simplelist>
-	  <member>
-	    <filename>SCIRun.PKG.<!--%= doc.version() %-->.tar.gz</filename>
-	  </member>
-	  <member>
-	    <filename>Insight.PKG.<!--%= doc.version() %-->.tar.gz</filename>
-	  </member>
-	  <member>
-	    <filename>TEEM.PKG.<!--%= doc.version() %-->.tar.gz</filename>
 	  </member>
 	</simplelist>
       </para>
