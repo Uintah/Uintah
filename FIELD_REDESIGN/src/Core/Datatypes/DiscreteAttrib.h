@@ -14,6 +14,8 @@
 #ifndef SCI_project_DiscreteAttrib_h
 #define SCI_project_DiscreteAttrib_h 1
 
+#include <vector>
+
 #include <SCICore/Datatypes/Attrib.h>
 #include <SCICore/Datatypes/Datatype.h>
 #include <SCICore/Containers/LockingHandle.h>
@@ -78,6 +80,16 @@ public:
   // Persistent representation...
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
+
+  typedef T* iterator;
+
+  virtual T* begin() { return &defval; }
+  virtual T* end() { return (&defval)+1; }
+
+  virtual int xsize() const { return nx; }
+  virtual int ysize() const { return ny; }
+  virtual int zsize() const { return nz; }
+  virtual int dimension() const { return dim; }
 
 protected:
   /////////
