@@ -18,7 +18,6 @@
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/Containers/TrivialAllocator.h>
 #include <SCICore/Datatypes/SurfTree.h>
-#include <SCICore/Datatypes/TopoSurfTree.h>
 #include <SCICore/Geometry/BBox.h>
 #include <SCICore/Geometry/Grid.h>
 #include <SCICore/Math/Expon.h>
@@ -43,9 +42,19 @@ SurfTree::SurfTree(Representation r)
 }
 
 SurfTree::SurfTree(const SurfTree& copy, Representation)
-: Surface(copy), valid_bboxes(0)
+: Surface(copy)
 {
-    NOT_FINISHED("SurfTree::SurfTree");
+    faces=copy.faces;
+    edges=copy.edges;
+    nodes=copy.nodes;
+    surfI=copy.surfI;
+    faceI=copy.faceI;
+    edgeI=copy.edgeI;
+    nodeI=copy.nodeI;
+    typ=copy.typ;
+    data=copy.data;
+    idx=copy.idx;
+    valid_bboxes=copy.valid_bboxes;
 }
 
 SurfTree::~SurfTree() {
@@ -499,24 +508,6 @@ void SurfTree::get_surfnodes(Array1<NodeHandle>&n, clString name) {
     }
 }
 
-TopoSurfTree* SurfTree::toTopoSurfTree() {
-    TopoSurfTree* tst=new TopoSurfTree;
-    tst->nodes=nodes;
-    tst->faces=faces;
-    tst->edges=edges;
-    tst->edges=edges;
-    tst->surfI=surfI;
-    tst->faceI=faceI;
-    tst->edgeI=edgeI;
-    tst->nodeI=nodeI;
-    tst->typ=typ;
-    tst->data=data;
-    tst->idx=idx;
-    tst->valid_bboxes=valid_bboxes;
-    tst->BldTopoInfo();
-    return tst;
-}
-
 void SurfTree::set_surfnodes(const Array1<NodeHandle>&/*n*/, clString /*name*/)
 {
     NOT_FINISHED("SurfTree::set_surfnodes");
@@ -591,6 +582,9 @@ void Pio(Piostream& stream, NodeInfo& node)
 
 //
 // $Log$
+// Revision 1.5  1999/09/01 06:16:27  dmw
+// took out dependence of SurfTree on TopoSurfTree
+//
 // Revision 1.4  1999/08/25 03:48:41  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes
