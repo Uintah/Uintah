@@ -24,7 +24,7 @@ class Server : public Runnable {
 public:
   Server() {}
 
-  void run() { PIDL::PIDL::serveObjects(); CCA::semaphore_.up(); }
+  void run() { PIDL::serveObjects(); CCA::semaphore_.up(); }
 };
 
 
@@ -84,7 +84,7 @@ CCA::init( int &argc, char *argv[] )
 
   try {
 
-    PIDL::PIDL::initialize( argc, argv );
+    PIDL::initialize( argc, argv );
     
     if ( is_server_ ) {
       // start server
@@ -98,7 +98,7 @@ CCA::init( int &argc, char *argv[] )
     }
     else {
       // connect to server
-      framework_ = pidl_cast<Framework::pointer>(PIDL::PIDL::objectFrom(framework_url_));
+      framework_ = pidl_cast<Framework::pointer>(PIDL::objectFrom(framework_url_));
     }
   } catch (const Exception &e ) {
     cerr << "cca_init caught exception `" << e.message() << "'" << endl;

@@ -48,13 +48,13 @@ void server_mode()
   
   ConnectionEventService 
 }
-#endif
 
 static void fail(char* why)
 {
   cerr << "Failure: " << why << endl;
   Thread::exitAll(1);
 }
+#endif
 
 static void usage(char* progname)
 {
@@ -77,7 +77,6 @@ int main(int argc, char* argv[])
   bool server=false;
   bool consumer = false;
   string client_url;
-  int reps=1;
 
   for(int i=1;i<argc;i++){
     string arg(argv[i]);
@@ -92,10 +91,6 @@ int main(int argc, char* argv[])
 	usage(argv[0]);
       client_url=argv[i];
       client=true;
-    } else if(arg == "-reps"){
-      if(++i>=argc)
-	usage(argv[0]);
-      reps=atoi(argv[i]);
     } else if(arg == "-consumer"){
       consumer = true;
     } else {
@@ -106,7 +101,7 @@ int main(int argc, char* argv[])
     usage(argv[0]);
   Framework::pointer fw;
   try {
-    PIDL::PIDL::initialize(argc,argv);
+    PIDL::initialize(argc,argv);
     sleep( 1 ); // Give threads enough time to come up.
 
     if(server) {
@@ -145,7 +140,7 @@ int main(int argc, char* argv[])
     cerr << "Caught unexpected exception!" << endl;
     //Thread::exitAll(1);
   }
-  PIDL::PIDL::serveObjects();
+  PIDL::serveObjects();
   cerr << "done" << endl;
   return 0;
 }

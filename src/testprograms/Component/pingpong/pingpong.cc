@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
     using PingPong_ns::PingPong;
 
     try {
-	PIDL::PIDL::initialize(argc,argv);
+      PIDL::initialize(argc,argv);
 
 	bool client=false;
 	bool server=false;
@@ -126,7 +126,7 @@ int main(int argc, char* argv[])
 	cerr << "Caught unexpected exception!\n";
 	abort();
     }
-    PIDL::PIDL::serveObjects();
+    PIDL::serveObjects();
     return 0;
 }
 

@@ -122,7 +122,7 @@ int main(int argc, char* argv[])
     using std::string;
 
     try {
-	PIDL::PIDL::initialize(argc, argv);
+      PIDL::initialize(argc, argv);
 
 	bool client=false;
 	bool server=false;
@@ -159,9 +159,9 @@ int main(int argc, char* argv[])
 	  RingMaster::pointer rm=pidl_cast<RingMaster::pointer>(obj);
 	  Client_impl* me=new Client_impl;
 	  int myid=rm->registerClient(Client::pointer(me));
-	  cerr << "Test Successful!!\n";
+	  cerr << "Test Successful: myid=" << myid << '\n';
 	}
-	PIDL::PIDL::serveObjects();
+	PIDL::serveObjects();
     } catch(const Exception& e) {
 	cerr << "Caught exception:\n";
 	cerr << e.message() << '\n';

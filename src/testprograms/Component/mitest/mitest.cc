@@ -212,7 +212,7 @@ int main(int argc, char* argv[])
   using std::string;
 
   try {
-    PIDL::PIDL::initialize(argc,argv);
+    PIDL::initialize(argc,argv);
 
     bool client=false;
     bool server=false;
@@ -344,7 +344,7 @@ int main(int argc, char* argv[])
 	cout << "tests successful!\n";
       }
     }
-    PIDL::PIDL::serveObjects();
+    PIDL::serveObjects();
   } catch(const Exception& e) {
     cerr << "Caught exception:\n";
     cerr << e.message() << '\n';

@@ -73,7 +73,7 @@ PortInfo_impl::getName()
   return name_;
 }
 ::CIA::string 
-PortInfo_impl::getProperty(const ::CIA::string& name)
+PortInfo_impl::getProperty(const ::CIA::string& /*name*/)
 {
   cerr << "PortInfo_impl::getProperty(const ::CIA::string& name)" << endl;
 
@@ -96,14 +96,14 @@ Services_impl::~Services_impl()
 }
 
 Port::pointer
-Services_impl::getPort(const ::CIA::string& name)
+Services_impl::getPort(const ::CIA::string& /*name*/)
 {
   Port::pointer p;
   cerr << "Services_impl::getPort(const ::CIA::string& name)" << endl;
   return p;
 }
 Port::pointer
-Services_impl::getPortNonblocking(const ::CIA::string& name)
+Services_impl::getPortNonblocking(const ::CIA::string& /*name*/)
 {
   Port::pointer p;
   cerr << "Services_impl::getPortNonblocking(const ::CIA::string& name)" 
@@ -123,13 +123,13 @@ Services_impl::createPortInfo(const ::CIA::string& name,
   return PortInfo::pointer(pi);
 }
 void 
-Services_impl::registerUsesPort(const PortInfo::pointer &name_and_type)
+Services_impl::registerUsesPort(const PortInfo::pointer &/*name_and_type*/)
 {
   cerr << "Services_impl::registerUsesPort(const PortInfo &name_and_type)" 
        << endl;
 }
 void 
-Services_impl::unregisterUsesPort(const ::CIA::string&name)
+Services_impl::unregisterUsesPort(const ::CIA::string& /*name*/)
 {
   cerr << "Services_impl::unregisterUsesPort(const ::CIA::string&name)" 
        << endl;
@@ -161,7 +161,7 @@ Services_impl::removeProvidesPort(const ::CIA::string&name)
   }
 }
 void 
-Services_impl::releasePort(const ::CIA::string&name)
+Services_impl::releasePort(const ::CIA::string& /*name*/)
 {
   cerr << "Services_impl::releasePort(const ::CIA::string&name)" << endl;
 }
@@ -229,16 +229,16 @@ ConnectionEventService_impl::~ConnectionEventService_impl()
 
 void 
 ConnectionEventService_impl::
-addConnectionEventListener(int connectionEventType, 
-			   const ConnectionEventListener::pointer &l)
+addConnectionEventListener(int /*connectionEventType*/, 
+			   const ConnectionEventListener::pointer &/*l*/)
 {
   cerr << "addConnectionEventListener(int connectionEventType, " << endl;
 }
 
 void 
 ConnectionEventService_impl::
-removeConnectionEventListener(int connectionEventType, 
-			      const ConnectionEventListener::pointer &l)
+removeConnectionEventListener(int /*connectionEventType*/, 
+			      const ConnectionEventListener::pointer &/*l*/)
 {
   cerr << "removeConnectionEventListener(int connectionEventType, " << endl;
 }
@@ -254,7 +254,7 @@ ConnectionEventListener_impl::~ConnectionEventListener_impl()
 }
 
 void 
-ConnectionEventListener_impl::connectionActivity(const ConnectionEvent::pointer &evt)
+ConnectionEventListener_impl::connectionActivity(const ConnectionEvent::pointer &/*evt*/)
 {
   cerr << "ConnectionEventListener_impl::connectionActivity" << endl;
 }
@@ -335,7 +335,7 @@ RandomInt::go()
 {
   srand(69);
 
-  while(1) {
+  for(;;) {
 
     if (istr_->is_full()) {
       sleep(1);
@@ -368,7 +368,7 @@ ConsumerInt::~ConsumerInt()
 void
 ConsumerInt::go()
 {
-  while(1) {
+  for(;;) {
 
     if (istr_->is_empty()) {
       sleep(1);
