@@ -1,5 +1,6 @@
 /*
- *  SetFieldData: Store values from an input matrix as the data of a field
+ *  ManageFieldSet: Manage the members of a field set -- 
+ *                                  create, add, delete, extract
  *
  *  Written by:
  *   David Weinstein
@@ -30,7 +31,7 @@ using std::cerr;
 namespace SCIRun {
 
 
-class SetFieldData : public Module
+class ManageFieldSet : public Module
 {
   FieldIPort         *isurf_;
   MatrixIPort *imat_;
@@ -39,19 +40,19 @@ class SetFieldData : public Module
   FieldOPort      *osurf_;
 
 public:
-  SetFieldData(const clString& id);
-  virtual ~SetFieldData();
+  ManageFieldSet(const clString& id);
+  virtual ~ManageFieldSet();
   virtual void execute();
 };
 
 
-extern "C" Module* make_SetFieldData(const clString& id)
+extern "C" Module* make_ManageFieldSet(const clString& id)
 {
-  return new SetFieldData(id);
+  return new ManageFieldSet(id);
 }
 
-SetFieldData::SetFieldData(const clString& id)
-  : Module("SetFieldData", id, Filter), surfid_("surfid", id, this)
+ManageFieldSet::ManageFieldSet(const clString& id)
+  : Module("ManageFieldSet", id, Filter), surfid_("surfid", id, this)
 {
   isurf_ = new FieldIPort(this, "SurfIn", FieldIPort::Atomic);
   add_iport(isurf_);
@@ -63,12 +64,12 @@ SetFieldData::SetFieldData(const clString& id)
   add_oport(osurf_);
 }
 
-SetFieldData::~SetFieldData()
+ManageFieldSet::~ManageFieldSet()
 {
 }
 
 void
-SetFieldData::execute()
+ManageFieldSet::execute()
 {
   update_state(NeedData);
 
@@ -103,6 +104,4 @@ SetFieldData::execute()
   //osurf_->send(sh);  // TODO: fix this, send surface field
 }
 
-
 } // End namespace SCIRun
-

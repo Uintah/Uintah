@@ -1,14 +1,15 @@
-
 /*
- *  BuildInterpolant.cc:  Rescale a surface
+ *  BuildInterpolant.cc:  Build an interpolant field -- a field that says
+ *         how to project the data from one field onto the data of a second
+ *         field.
  *
  *  Written by:
  *   David Weinstein
  *   Department of Computer Science
  *   University of Utah
- *   February 1995
+ *   February 2001
  *
- *  Copyright (C) 1994 SCI Group
+ *  Copyright (C) 2001 SCI Institute
  */
 
 #include <Dataflow/Ports/MatrixPort.h>
