@@ -15,12 +15,11 @@
 #  University of Utah. All Rights Reserved.
 #
 
-# Build print and online versions of the documentum and module
-# specification reference.
-
 chunk_root := documentum.chunk
-parms_chunk=chunk.section.depth=1 use.id.as.filename=1 \
-  root.filename=${chunk_root}
+params_html=use.extensions=1 tablecolumns.extension=1
+params_nochunk=${params_html}
+params_chunk=chunk.section.depth=1 use.id.as.filename=1 \
+  ${params_html} root.filename=${chunk_root}
 stylesheet_chunk=${STYLESHEET_XSL_HTML}/srdocbook-chunk.xsl
 stylesheet_nochunk=${STYLESHEET_XSL_HTML}/srdocbook.xsl
 stylesheet_print=${STYLESHEET_DSSSL_PRINT}/docbook.dsl
@@ -53,6 +52,8 @@ edition := ../edition.xml
   documentum-print \
   mod-spec-ref-html \
   mod-spec-ref-print \
+  doc_inventory-html \
+  doc_inventory-print \
   clean \
   veryclean
 
@@ -62,7 +63,9 @@ all: \
   index.html \
   documentum-html \
   documentum-print \
-  mod-spec-ref-html
+  mod-spec-ref-html \
+  doc_inventory-html
+#  doc_inventory-print
 #  mod-spec-ref-print
 
 # Rule for building index.html
@@ -79,9 +82,9 @@ documentum-html : documentum.html
 documentum.html : documentum.rxml ${edition}
 	${call rxml_to_hxml,$<}
 	java com.icl.saxon.StyleSheet -w2 documentum.hxml \
-         ${stylesheet_chunk} ${parms_chunk} treetop=${treetop} 
+         ${stylesheet_chunk} ${params_chunk} treetop=${treetop} 
 	java com.icl.saxon.StyleSheet -w2 documentum.hxml \
-         ${stylesheet_nochunk} ${parms_nochunk} treetop=${treetop} >$@
+         ${stylesheet_nochunk} ${params_nochunk} treetop=${treetop} >$@
 
 documentum-print : documentum.pdf
 
@@ -103,9 +106,9 @@ mod-spec-ref.html : mod-spec-ref.rxml mod-spec-ref-partI.rxml mod-spec-ref-partI
 	${call rxml_to_hxml,mod-spec-ref-partI.rxml}
 	${call rxml_to_hxml,mod-spec-ref-partII.rxml}
 	java com.icl.saxon.StyleSheet -w2 mod-spec-ref.hxml \
-         ${stylesheet_chunk} ${parms_chunk} treetop=${treetop} 
+         ${stylesheet_chunk} ${params_chunk} treetop=${treetop} 
 	java com.icl.saxon.StyleSheet -w2 mod-spec-ref.hxml \
-         ${stylesheet_nochunk} ${parms_nochunk} treetop=${treetop} >$@
+         ${stylesheet_nochunk} ${params_nochunk} treetop=${treetop} >$@
 
 mod-spec-ref-print : mod-spec-ref.pdf
 
@@ -117,6 +120,28 @@ mod-spec-ref.pdf : mod-spec-ref.rxml ${edition}
 -d ${stylesheet_print}  ${params_print} ${XML_DCL} mod-spec-ref.pxml 
 	for i in 1 2 ; do jadetex mod-spec-ref.tex ; done
 	dvipdfm -p letter mod-spec-ref.dvi
+
+# Rules for building doc_inventory.
+
+doc_inventory : doc_inventory-html doc_inventory-print
+
+doc_inventory-html : doc_inventory.html
+
+doc_inventory.html : doc_inventory.rxml ${edition}
+	${call rxml_to_hxml,$<}
+	java com.icl.saxon.StyleSheet -w2 doc_inventory.hxml \
+         ${stylesheet_chunk} ${params_chunk} treetop=${treetop} 
+	java com.icl.saxon.StyleSheet -w2 doc_inventory.hxml \
+         ${stylesheet_nochunk} ${params_nochunk} treetop=${treetop} >$@
+
+doc_inventory-print : doc_inventory.pdf
+
+doc_inventory.pdf : doc_inventory.rxml ${edition}
+	${call rxml_to_pxml,$<}
+	openjade -t tex -V tex-backend -c ${CATALOG} -o doc_inventory.tex \
+-d ${stylesheet_print}  ${params_print} ${XML_DCL} doc_inventory.pxml 
+	for i in 1 2 ; do jadetex doc_inventory.tex ; done
+	dvipdfm -p letter doc_inventory.dvi
 
 # Cleanage
 
