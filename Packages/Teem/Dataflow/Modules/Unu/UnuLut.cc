@@ -132,7 +132,7 @@ void
   Nrrd *nin = nrrd_handle->nrrd;
   Nrrd *lut = lut_handle->nrrd;
   Nrrd *nout = nrrdNew();
-  NrrdRange *range;
+  NrrdRange *range = 0;
 
   int rescale = rescale_.get();
   if (!( airExists_d(lut->axis[lut->dim - 1].min) && 
