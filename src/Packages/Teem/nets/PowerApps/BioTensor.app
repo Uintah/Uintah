@@ -16,7 +16,6 @@
 
 puts "\nLoading BioTensor (this may take a minute)...\n"
 
-
 #######################################################################
 # Check environment variables.  Ask user for input if not set:
 # Attempt to get environment variables:
@@ -2252,6 +2251,13 @@ class BioTensorApp {
 	initialize_clip_info
 
         set initialized 1
+
+	global PowerAppSession
+	if {[info exists PowerAppSession] && [set PowerAppSession] != ""} { 
+	    set saveFile $PowerAppSession
+	    wm title .standalone "BioTensor - [getFileName $saveFile]"
+	    $this load_session
+	} 
     }
 
 
@@ -3460,7 +3466,9 @@ class BioTensorApp {
 	    {{Other} { * }}
 	}
 	
-	set saveFile [tk_getOpenFile -filetypes $types]
+	if {$saveFile == "" } {
+	    set saveFile [tk_getOpenFile -filetypes $types]
+	}
 
 	if {$saveFile != ""} {
 	    # configure title
