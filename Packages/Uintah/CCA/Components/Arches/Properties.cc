@@ -1204,11 +1204,15 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 				   sootFV[currCell]*temperature[currCell]*opl));
 	  }
 	  // check if the density is greater than air...implement a better way
-	  double cutoff_air_density = 1.1845;
-	  double cutoff_temperature = 298.0;
-	  if (local_den > cutoff_air_density) {
-	    local_den = cutoff_air_density;
-	    temperature[currCell] = cutoff_temperature;
+          if (d_DORadiationCalc) {
+	    double cutoff_air_density = 1.1845;
+	    double cutoff_temperature = 298.0;
+	    if ((scalar[0])[currCell] < 1.0e-8) {
+	      if (local_den > cutoff_air_density) {
+	        local_den = cutoff_air_density;
+	        temperature[currCell] = cutoff_temperature;
+	      }
+	    }
 	  }
 
 	  if (d_MAlab) {
