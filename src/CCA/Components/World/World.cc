@@ -26,7 +26,6 @@
  *
  */
 
-#include <mpi.h>
 #include <CCA/Components/World/World.h>
 #include <iostream>
 
