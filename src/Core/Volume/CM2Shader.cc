@@ -42,16 +42,20 @@ namespace SCIRun {
 #define CM2_TRIANGLE_BASE \
 "!!ARBfp1.0 \n" \
 "PARAM color = program.local[0]; \n" \
-"PARAM geom0 = program.local[1]; # {base, top_x, top_y, 0.0} \n" \
+"PARAM geom0 = program.local[1]; # {base, top_x, top_y, bottom_y} \n" \
 "PARAM geom1 = program.local[2]; # {width, bottom, 0.0, 0.0} \n" \
 "PARAM sz = program.local[3]; # {1/sx, 1/sy, 0.0, 0.0} \n" \
 "TEMP c, p, t;" \
-"MUL p.xy, fragment.position.xyyy, sz.xyyy; \n" \
-"MUL p.z, geom1.y, geom0.z; \n" \
-"SUB p.z, p.y, p.z; \n" \
+"MUL p.xy, fragment.position.xyyy, sz.xyyy;\n" \
+"MOV t.x, geom0.z; \n" \
+"SUB t.x, t.x, geom1.z; \n" \
+"MUL p.z, geom1.y, t.x; # p.z = bottom y cutoff \n" \
+"SUB p.z, p.y, p.z; # p.z = p.y - p.z \n" \
+"SUB p.z, p.z, geom1.z; \n" \
 "KIL p.z; \n" \
-"RCP t.z, geom0.z; \n" \
-"MUL t.x, p.y, t.z; \n" \
+"RCP t.z, t.x; \n" \
+"SUB p.y, p.y, geom1.z; \n" \
+"MUL t.x, p.y, t.z; # t.x = p.y / top_y \n" \
 "LRP c.x, t.x, geom0.y, geom0.x; \n" \
 "MUL c.y, t.x, geom1.x; \n" \
 "MUL c.y, c.y, 0.5; \n" \
