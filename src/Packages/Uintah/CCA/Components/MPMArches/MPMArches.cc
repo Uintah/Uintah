@@ -98,10 +98,18 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
    db->require("turbulentPrandtNo",prturb);
    db->require("fluidHeatCapacity",cpfluid);
    db->require("IfCutCell",d_useCutCell);
-   db->require("StationarySolid",d_stationarySolid);
+   db->getWithDefault("StationarySolid",d_stationarySolid,true);
    db->require("inviscid",d_inviscid);
    db->require("restart",d_restart);
    db->getWithDefault("fixedCellType",fixCellType,true);
+   db->getWithDefault("fixedTemp",d_fixTemp,false);
+   db->getWithDefault("TestCutCells",d_ifTestingCutCells,true);
+   db->getWithDefault("stairstep",d_stairstep,true);
+
+   calcVolFracMPM = (!d_useCutCell || (d_useCutCell && d_ifTestingCutCells));
+   bool dontCalcVel = d_stationarySolid || d_useCutCell;
+   // cut cells do not currently support moving geometries
+   calcVel = !dontCalcVel;
 
    //   cout << "Done with MPMArches problemsetup requires" << endl;
 
@@ -112,7 +120,10 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
    d_arches->setMPMArchesLabel(d_MAlb);
    d_Alab = d_arches->getArchesLabel();
    d_arches->problemSetup(prob_spec, grid, d_sharedState);
+
    d_arches->getBoundaryCondition()->setIfCalcEnergyExchange(d_calcEnergyExchange);
+   d_arches->getBoundaryCondition()->setIfFixTemp(d_fixTemp);
+
    if (d_arches->checkSolveEnthalpy()) {
      d_radiation = d_arches->getNonlinearSolver()->getEnthalpySolver()->checkRadiation();
      if (d_radiation) 
@@ -149,6 +160,8 @@ void MPMArches::scheduleInitialize(const LevelP& level,
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* arches_matls = d_sharedState->allArchesMaterials();
   scheduleInitializeKStability(sched, patches, arches_matls);
+  if (d_useCutCell) 
+    scheduleInitializeCutCells(sched, patches, arches_matls);
 
   d_arches->scheduleInitialize(      level, sched);
 
@@ -171,38 +184,8 @@ void MPMArches::scheduleInitializeKStability(SchedulerP& sched,
   t->computes(d_MAlb->KStabilityWLabel);
   t->computes(d_MAlb->KStabilityHLabel);
 
-  // temporarily using this function to initialize cut cells;
-  // need to put it in a separate function later;
-  // Seshadri Kumar, August 4, 2003
-
-  if (d_useCutCell) {
-
-    t->computes(d_MAlb->cutCellLabel);
-    t->computes(d_MAlb->d_normal1Label);
-    t->computes(d_MAlb->d_normal2Label);
-    t->computes(d_MAlb->d_normal3Label);
-    t->computes(d_MAlb->d_centroid1Label);
-    t->computes(d_MAlb->d_centroid2Label);
-    t->computes(d_MAlb->d_centroid3Label);
-    t->computes(d_MAlb->d_totAreaLabel);
-
-    t->computes(d_MAlb->d_pGasAreaFracXPLabel);
-    t->computes(d_MAlb->d_pGasAreaFracXELabel);
-    t->computes(d_MAlb->d_pGasAreaFracYPLabel);
-    t->computes(d_MAlb->d_pGasAreaFracYNLabel);
-    t->computes(d_MAlb->d_pGasAreaFracZPLabel);
-    t->computes(d_MAlb->d_pGasAreaFracZTLabel);
-    /*
-      Above stuff should be removed once
-      we get d_cutcell to work ...
-      normal1 to pGasAreaFracZT
-    */
-    t->computes(d_MAlb->d_nextCutCellILabel);
-    t->computes(d_MAlb->d_nextCutCellJLabel);
-    t->computes(d_MAlb->d_nextCutCellKLabel);
-
-  }
   t->computes(d_MAlb->void_frac_CCLabel);
+  t->computes(d_MAlb->solid_fraction_CCLabel);
 
   sched->addTask(t, patches, arches_matls);
 }
@@ -222,7 +205,25 @@ void MPMArches::initializeKStability(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     int archIndex = 0;
     int matlindex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    int numMPMMatls = d_sharedState->getNumMPMMatls();
+    StaticArray<CCVariable<double> > solid_fraction_cc(numMPMMatls);
     
+    for (int m = 0; m < numMPMMatls; m++) {
+	
+      Material* matl = d_sharedState->getMPMMaterial( m );
+      int dwindex = matl->getDWIndex();
+      new_dw->allocateAndPut(solid_fraction_cc[m], d_MAlb->solid_fraction_CCLabel,
+			     dwindex, patch);
+      solid_fraction_cc[m].initialize(1.0);
+
+    }
+
+    CCVariable<double> epsg;
+    new_dw->allocateAndPut(epsg, d_MAlb->void_frac_CCLabel,
+			   matlindex, patch);
+    epsg.initialize(1.0);
+
     CCVariable<double> KStabilityU;
     CCVariable<double> KStabilityV;
     CCVariable<double> KStabilityW;
@@ -239,203 +240,271 @@ void MPMArches::initializeKStability(const ProcessorGroup*,
     new_dw->allocateAndPut(KStabilityH, d_MAlb->KStabilityHLabel,
 			   matlindex, patch); 
     KStabilityH.initialize(0.);
+  }
+}
 
-    // Cutcell stuff ... need to move these into a different
-    // file (maybe directory?); but this is okay for now.
-    // Seshadri Kumar, August 30, 2003
+//______________________________________________________________________
+//
+
+void MPMArches::scheduleInitializeCutCells(SchedulerP& sched,
+					   const PatchSet* patches,
+					   const MaterialSet* arches_matls)
+{
+  Task* t = scinew Task("MPMArches::initializeCutCells",
+			this, &MPMArches::initializeCutCells);
+
+  t->computes(d_MAlb->cutCellLabel);
+  t->computes(d_MAlb->d_normal1Label);
+  t->computes(d_MAlb->d_normal2Label);
+  t->computes(d_MAlb->d_normal3Label);
+  t->computes(d_MAlb->d_normalLabel);
+  t->computes(d_MAlb->d_centroid1Label);
+  t->computes(d_MAlb->d_centroid2Label);
+  t->computes(d_MAlb->d_centroid3Label);
+  t->computes(d_MAlb->d_totAreaLabel);
+
+  t->computes(d_MAlb->d_pGasAreaFracXPLabel);
+  t->computes(d_MAlb->d_pGasAreaFracXELabel);
+  t->computes(d_MAlb->d_pGasAreaFracYPLabel);
+  t->computes(d_MAlb->d_pGasAreaFracYNLabel);
+  t->computes(d_MAlb->d_pGasAreaFracZPLabel);
+  t->computes(d_MAlb->d_pGasAreaFracZTLabel);
+
+  /*
+    Above stuff should be removed once
+    we get d_cutcell to work ...
+    normal1 to pGasAreaFracZT
+  */
+
+  t->computes(d_MAlb->d_nextCutCellILabel);
+  t->computes(d_MAlb->d_nextCutCellJLabel);
+  t->computes(d_MAlb->d_nextCutCellKLabel);
+
+  t->modifies(d_MAlb->void_frac_CCLabel);
+
+  sched->addTask(t, patches, arches_matls);
+}
+
+//______________________________________________________________________
+//
+
+void MPMArches::initializeCutCells(const ProcessorGroup*,
+				   const PatchSubset* patches,
+				   const MaterialSubset* arches_matls,
+				   DataWarehouse* /*old_dw*/,
+				   DataWarehouse* new_dw)
+
+{
+
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlindex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    CCVariable<cutcell> d_CCell;
+    new_dw->allocateAndPut(d_CCell, d_MAlb->cutCellLabel, 
+			   matlindex, patch);
+
+    PerPatch<CutCellInfoP> cutCellInfoP;
+    if (new_dw->exists(d_MAlb->d_cutCellInfoLabel, matlindex, patch)) 
+      new_dw->get(cutCellInfoP, d_MAlb->d_cutCellInfoLabel, matlindex, patch);
+    else {
+      cutCellInfoP.setData(scinew CutCellInfo());
+      new_dw->put(cutCellInfoP, d_MAlb->d_cutCellInfoLabel, matlindex, patch);
+    }
+    CutCellInfo* ccinfo = cutCellInfoP.get().get_rep();
+
+    // Initialize cutcell struct
+      
+    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+	
+      IntVector c = *iter;
+      for (int kk = CENX; kk <= AREAB; kk++) {
+	d_CCell[c].d_cutcell[kk] = 0.0;
+      }
+    }
+
+    ifstream file("patch_table.dat");
+    if (!file) {
+      cerr << "Failed to open patch_table\n" << endl;
+      exit(EXIT_FAILURE);
+    }
+
+    int numPatches = patches->size();
+
+    // Read patch table to determine patch index
+    // and total numbers of p, u, v, and w cells
+
+    int istart;
+    int jstart;
+    int kstart;
+    int iend;
+    int jend;
+    int kend;
+    
+    IntVector dimLo = patch->getCellFORTLowIndex();
+    IntVector dimHi = patch->getCellFORTHighIndex();
+
+    string s1,s2;
+    
+    int ierr = 0;
+    
+    file.seekg(0);
+    for (int ii=0; ii< numPatches; ii++) {
+
+      while (ierr == 0) {
+	  
+	file >> ccinfo->patchindex;
+	file >> istart >> jstart >> kstart;
+	file >> iend >> jend >> kend;
+	file >> ccinfo->tot_cutp >> ccinfo->tot_cutu >> ccinfo->tot_cutv >> ccinfo->tot_cutw >> ccinfo->tot_walls;
+	
+	IntVector start(istart,jstart,kstart);
+	IntVector end(iend,jend,kend);
+	if ((dimLo.x() >= istart) && (dimHi.x() <= iend) &&
+	    (dimLo.y() >= jstart) && (dimHi.y() <= jend) &&
+	    (dimLo.z() >= kstart) && (dimHi.z() <= kend)) {
+	  ierr = 1;
+	  // we have found the right patch
+	}
+      }
+    }
+
+    /*
+      stuff below should be removed if we wish to 
+      use the d_cutcell struct
+    */
 
     CCVariable<double> epsg;
-    new_dw->allocateAndPut(epsg, d_MAlb->void_frac_CCLabel,
+    new_dw->getModifiable(epsg, d_MAlb->void_frac_CCLabel,
+			  matlindex, patch); 
+
+    CCVariable<double> nbar1;
+    new_dw->allocateAndPut(nbar1, d_MAlb->d_normal1Label,
+			   matlindex, patch); 
+    nbar1.initialize(0.0);
+
+    if (patch->containsCell(IntVector(6,53,80))) {
+      cerr << "[6,53,80] x normal" << nbar1[IntVector(6,53,80)] << endl;
+    }
+    
+    CCVariable<double> nbar2;
+    new_dw->allocateAndPut(nbar2, d_MAlb->d_normal2Label,
+			   matlindex, patch); 
+    nbar2.initialize(0.0);
+
+    CCVariable<double> nbar3;
+    new_dw->allocateAndPut(nbar3, d_MAlb->d_normal3Label,
+			   matlindex, patch); 
+    nbar3.initialize(0.0);
+
+    CCVariable<Vector> normal;
+    new_dw->allocateAndPut(normal, d_MAlb->d_normalLabel,
+			   matlindex, patch); 
+    normal.initialize(Vector(0.0,0.0,0.0));
+
+    CCVariable<double> cbar1;
+    new_dw->allocateAndPut(cbar1, d_MAlb->d_centroid1Label,
+			   matlindex, patch); 
+    cbar1.initialize(0.0);
+
+    CCVariable<double> cbar2;
+    new_dw->allocateAndPut(cbar2, d_MAlb->d_centroid2Label,
+			   matlindex, patch); 
+    cbar2.initialize(0.0);
+
+    CCVariable<double> cbar3;
+    new_dw->allocateAndPut(cbar3, d_MAlb->d_centroid3Label,
+			   matlindex, patch);  
+    cbar3.initialize(0.0);
+    
+    CCVariable<double> totArea;
+    new_dw->allocateAndPut(totArea, d_MAlb->d_totAreaLabel,
 			   matlindex, patch);
-    epsg.initialize(1.0);
+    totArea.initialize(0.0);
 
-    if (d_useCutCell) {
+    CCVariable<double> gaf_x;
+    new_dw->allocateAndPut(gaf_x, d_MAlb->d_pGasAreaFracXPLabel,
+			   matlindex, patch);
+    gaf_x.initialize(1.0);
 
-      CCVariable<cutcell> d_CCell;
-      new_dw->allocateAndPut(d_CCell, d_MAlb->cutCellLabel, 
-			     matlindex, patch);
+    CCVariable<double> gaf_xe;
+    new_dw->allocateAndPut(gaf_xe, d_MAlb->d_pGasAreaFracXELabel,
+			   matlindex, patch);
+    gaf_xe.initialize(1.0);
 
-      PerPatch<CutCellInfoP> cutCellInfoP;
-      if (new_dw->exists(d_MAlb->d_cutCellInfoLabel, matlindex, patch)) 
-	new_dw->get(cutCellInfoP, d_MAlb->d_cutCellInfoLabel, matlindex, patch);
-      else {
-	cutCellInfoP.setData(scinew CutCellInfo());
-	new_dw->put(cutCellInfoP, d_MAlb->d_cutCellInfoLabel, matlindex, patch);
-      }
-      CutCellInfo* ccinfo = cutCellInfoP.get().get_rep();
+    CCVariable<double> gaf_y;
+    new_dw->allocateAndPut(gaf_y, d_MAlb->d_pGasAreaFracYPLabel,
+			   matlindex, patch);
+    gaf_y.initialize(1.0);
 
-      // Initialize cutcell struct
+    CCVariable<double> gaf_yn;
+    new_dw->allocateAndPut(gaf_yn, d_MAlb->d_pGasAreaFracYNLabel,
+			   matlindex, patch);
+    gaf_yn.initialize(1.0);
+
+    CCVariable<double> gaf_z;
+    new_dw->allocateAndPut(gaf_z, d_MAlb->d_pGasAreaFracZPLabel,
+			   matlindex, patch);
+    gaf_z.initialize(1.0);
+    
+    CCVariable<double> gaf_zt;
+    new_dw->allocateAndPut(gaf_zt, d_MAlb->d_pGasAreaFracZTLabel,
+			   matlindex, patch);
+    gaf_zt.initialize(1.0);
+
+    /*
+      Above stuff should be removed if we use d_cutcell instead;
+      for now we will use CCVariables for each of these attributes,
+      viz. centroids, normals, area fractions, total area
       
-      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+    */
+
+    CCVariable<int> inext;
+    new_dw->allocateAndPut(inext, d_MAlb->d_nextCutCellILabel,
+			   matlindex, patch);
+    inext.initialize(100000);
+      
+    CCVariable<int> jnext;
+    new_dw->allocateAndPut(jnext, d_MAlb->d_nextCutCellJLabel,
+			   matlindex, patch);
+    jnext.initialize(100000);
+      
+    CCVariable<int> knext;
+    new_dw->allocateAndPut(knext, d_MAlb->d_nextCutCellKLabel,
+			   matlindex, patch);
+    knext.initialize(100000);
+
+    if (patch->containsCell(IntVector(6,53,80))) {
+      cerr << "[6,53,80] x normal" << nbar1[IntVector(6,53,80)] << endl;
+    }
+
+    if (ccinfo->tot_cutp != 0) {
+
+      fort_read_complex_geometry(ccinfo->iccst, ccinfo->jccst, ccinfo->kccst,
+				 inext,
+				 jnext,
+				 knext,
+				 epsg,
+				 totArea,
+				 nbar1,
+				 nbar2,
+				 nbar3,
+				 cbar1,
+				 cbar2,
+				 cbar3,
+				 gaf_x,
+				 gaf_xe,
+				 gaf_y,
+				 gaf_yn,
+				 gaf_z,
+				 gaf_zt,
+				 ccinfo->patchindex,
+				 ccinfo->tot_cutp);
+
+      //	replace with stuff below when we use d_cutcell
 	
-	IntVector c = *iter;
-	for (int kk = CENX; kk <= AREAB; kk++) {
-	  d_CCell[c].d_cutcell[kk] = 0.0;
-	}
-      }
-
-      ifstream file("patch_table.dat");
-      if (!file) {
-	cerr << "Failed to open patch_table\n" << endl;
-	exit(EXIT_FAILURE);
-      }
-
-      int numPatches = patches->size();
-
-      // Read patch table to determine patch index
-      // and total numbers of p, u, v, and w cells
-
-      int istart;
-      int jstart;
-      int kstart;
-      int iend;
-      int jend;
-      int kend;
-
-      IntVector dimLo = patch->getCellFORTLowIndex();
-      IntVector dimHi = patch->getCellFORTHighIndex();
-
-      string s1,s2;
-
-      int ierr = 0;
-      
-      file.seekg(0);
-      for (int ii=0; ii< numPatches; ii++) {
-
-	while (ierr == 0) {
-	  
-	  file >> ccinfo->patchindex;
-	  file >> istart >> jstart >> kstart;
-	  file >> iend >> jend >> kend;
-	  file >> ccinfo->tot_cutp >> ccinfo->tot_cutu >> ccinfo->tot_cutv >> ccinfo->tot_cutw >> ccinfo->tot_walls;
-	  
-	  IntVector start(istart,jstart,kstart);
-	  IntVector end(iend,jend,kend);
-	  if ((dimLo.x() >= istart) && (dimHi.x() <= iend) &&
-	      (dimLo.y() >= jstart) && (dimHi.y() <= jend) &&
-	      (dimLo.z() >= kstart) && (dimHi.z() <= kend)) {
-	    ierr = 1;
-	    // we have found the right patch
-	  }
-	}
-      }
-
-      /*
-	stuff below should be removed if we wish to 
-	use the d_cutcell struct
-       */
-      CCVariable<double> nbar1;
-      new_dw->allocateAndPut(nbar1, d_MAlb->d_normal1Label,
-			     matlindex, patch); 
-      nbar1.initialize(1.0);
-
-      CCVariable<double> nbar2;
-      new_dw->allocateAndPut(nbar2, d_MAlb->d_normal2Label,
-			     matlindex, patch); 
-      nbar2.initialize(1.0);
-
-      CCVariable<double> nbar3;
-      new_dw->allocateAndPut(nbar3, d_MAlb->d_normal3Label,
-			     matlindex, patch); 
-      nbar3.initialize(1.0);
-
-      CCVariable<double> cbar1;
-      new_dw->allocateAndPut(cbar1, d_MAlb->d_centroid1Label,
-			     matlindex, patch); 
-      cbar1.initialize(1.0);
-
-      CCVariable<double> cbar2;
-      new_dw->allocateAndPut(cbar2, d_MAlb->d_centroid2Label,
-			     matlindex, patch); 
-      cbar2.initialize(1.0);
-
-      CCVariable<double> cbar3;
-      new_dw->allocateAndPut(cbar3, d_MAlb->d_centroid3Label,
-			     matlindex, patch);  
-      cbar3.initialize(1.0);
-
-      CCVariable<double> totArea;
-      new_dw->allocateAndPut(totArea, d_MAlb->d_totAreaLabel,
-			     matlindex, patch);
-      totArea.initialize(1.0);
-
-      CCVariable<double> gaf_x;
-      new_dw->allocateAndPut(gaf_x, d_MAlb->d_pGasAreaFracXPLabel,
-			     matlindex, patch);
-      gaf_x.initialize(1.0);
-
-      CCVariable<double> gaf_xe;
-      new_dw->allocateAndPut(gaf_xe, d_MAlb->d_pGasAreaFracXELabel,
-			     matlindex, patch);
-      gaf_xe.initialize(1.0);
-
-      CCVariable<double> gaf_y;
-      new_dw->allocateAndPut(gaf_y, d_MAlb->d_pGasAreaFracYPLabel,
-			     matlindex, patch);
-      gaf_y.initialize(1.0);
-
-      CCVariable<double> gaf_yn;
-      new_dw->allocateAndPut(gaf_yn, d_MAlb->d_pGasAreaFracYNLabel,
-			     matlindex, patch);
-      gaf_yn.initialize(1.0);
-
-      CCVariable<double> gaf_z;
-      new_dw->allocateAndPut(gaf_z, d_MAlb->d_pGasAreaFracZPLabel,
-			     matlindex, patch);
-      gaf_z.initialize(1.0);
-
-      CCVariable<double> gaf_zt;
-      new_dw->allocateAndPut(gaf_zt, d_MAlb->d_pGasAreaFracZTLabel,
-			     matlindex, patch);
-      gaf_zt.initialize(1.0);
-
-      /*
-	Above stuff should be removed if we use d_cutcell instead;
-	for now we will use CCVariables for each of these attributes,
-	viz. centroids, normals, area fractions, total area
-
-      */
-
-      CCVariable<int> inext;
-      new_dw->allocateAndPut(inext, d_MAlb->d_nextCutCellILabel,
-			     matlindex, patch);
-      inext.initialize(100000);
-      
-      CCVariable<int> jnext;
-      new_dw->allocateAndPut(jnext, d_MAlb->d_nextCutCellJLabel,
-			     matlindex, patch);
-      jnext.initialize(100000);
-      
-      CCVariable<int> knext;
-      new_dw->allocateAndPut(knext, d_MAlb->d_nextCutCellKLabel,
-			     matlindex, patch);
-      knext.initialize(100000);
-
-      if (ccinfo->tot_cutp != 0) {
-
-	fort_read_complex_geometry(ccinfo->iccst, ccinfo->jccst, ccinfo->kccst,
-				   inext,
-				   jnext,
-				   knext,
-				   epsg,
-				   totArea,
-				   nbar1,
-				   nbar2,
-				   nbar3,
-				   cbar1,
-				   cbar2,
-				   cbar3,
-				   gaf_x,
-      				   gaf_xe,
-      				   gaf_y,
-      				   gaf_yn,
-      				   gaf_z,
-      				   gaf_zt,
-				   ccinfo->patchindex,
-				   ccinfo->tot_cutp);
-	/*
-	  replace with stuff below when we use d_cutcell
-
+    /*
 	fort_read_complex_geometry(ccinfo->iccst, ccinfo->jccst, ccinfo->kccst,
 				   inext,
 				   jnext,
@@ -456,7 +525,125 @@ void MPMArches::initializeKStability(const ProcessorGroup*,
 				   d_CCell[dimLo].d_cutcell[AREAT],
 				   ccinfo->patchindex,
 				   ccinfo->tot_cutp);
-	*/
+
+    */
+
+      if (patch->containsCell(IntVector(6,53,80))) {
+	cerr << "[6,53,80] x normal" << nbar1[IntVector(6,53,80)] << endl;
+      }
+
+      // Apply Boundary Conditions to Cut Cell Data
+
+      IntVector idxLo = patch->getCellFORTLowIndex();
+      IntVector idxHi = patch->getCellFORTHighIndex();
+
+      bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+      bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+      bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+      bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+      bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+      bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
+
+      if (xminus) {
+	int colX = idxLo.x();
+	for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+	  for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+	    IntVector currCell(colX, colY, colZ);
+	    IntVector xminusCell(colX-1, colY, colZ);
+	    //	    nbar1[xminusCell] = nbar1[currCell];
+	    //	    nbar2[xminusCell] = nbar2[currCell];
+	    //	    nbar3[xminusCell] = nbar3[currCell];
+	    nbar1[xminusCell] = 0.0;
+	    nbar2[xminusCell] = 0.0;
+	    nbar3[xminusCell] = 0.0;
+
+	  }
+	}
+      }
+
+      if (xplus) {
+	int colX = idxHi.x();
+	for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+	  for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+	    IntVector currCell(colX, colY, colZ);
+	    IntVector xplusCell(colX+1, colY, colZ);
+	    //	    nbar1[xplusCell] = nbar1[currCell];
+	    //	    nbar2[xplusCell] = nbar2[currCell];
+	    //	    nbar3[xplusCell] = nbar3[currCell];
+	    nbar1[xplusCell] = 0.0;
+	    nbar2[xplusCell] = 0.0;
+	    nbar3[xplusCell] = 0.0;
+	  }
+	}
+      }
+
+      if (yminus) {
+	int colY = idxLo.y();
+	for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+	  for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	    IntVector currCell(colX, colY, colZ);
+	    IntVector yminusCell(colX, colY-1, colZ);
+	    //	    nbar1[yminusCell] = nbar1[currCell];
+	    //	    nbar2[yminusCell] = nbar2[currCell];
+	    //	    nbar3[yminusCell] = nbar3[currCell];
+	    nbar1[yminusCell] = 0.0;
+	    nbar2[yminusCell] = 0.0;
+	    nbar3[yminusCell] = 0.0;
+	  }
+	}
+      }
+
+      if (yplus) {
+	int colY = idxHi.y();
+	for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+	  for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	    IntVector currCell(colX, colY, colZ);
+	    IntVector yplusCell(colX, colY+1, colZ);
+	    //	    nbar1[yplusCell] = nbar1[currCell];
+	    //	    nbar2[yplusCell] = nbar2[currCell];
+	    //	    nbar3[yplusCell] = nbar3[currCell];
+	    nbar1[yplusCell] = 0.0;
+	    nbar2[yplusCell] = 0.0;
+	    nbar3[yplusCell] = 0.0;
+	  }
+	}
+      }
+
+      if (zminus) {
+	int colZ = idxLo.z();
+	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+	  for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	    IntVector currCell(colX, colY, colZ);
+	    IntVector zminusCell(colX, colY, colZ-1);
+	    //	    nbar1[zminusCell] = nbar1[currCell];
+	    //	    nbar2[zminusCell] = nbar2[currCell];
+	    //	    nbar3[zminusCell] = nbar3[currCell];
+	    nbar1[zminusCell] = 0.0;
+	    nbar2[zminusCell] = 0.0;
+	    nbar3[zminusCell] = 0.0;
+	  }
+	}
+      }
+      
+      if (zplus) {
+	int colZ = idxHi.z();
+	for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+	  for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	    IntVector currCell(colX, colY, colZ);
+	    IntVector zplusCell(colX, colY, colZ+1);
+	    //	    nbar1[zplusCell] = nbar1[currCell];
+	    //	    nbar2[zplusCell] = nbar2[currCell];
+	    //	    nbar3[zplusCell] = nbar3[currCell];
+	    nbar1[zplusCell] = 0.0;
+	    nbar2[zplusCell] = 0.0;
+	    nbar3[zplusCell] = 0.0;
+	  }
+	}
+      }
+
+      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+	IntVector c = *iter;
+	normal[c] = Vector(nbar1[c],nbar2[c],nbar3[c]);
       }
     }
   }
@@ -704,6 +891,9 @@ MPMArches::scheduleTimeAdvance( const LevelP & level,
 
   d_arches->getBoundaryCondition()->sched_mmWallCellTypeInit(sched, patches, arches_matls, fixCellType);
 
+  if (d_useCutCell)
+    scheduleCopyCutCells(sched,patches,arches_matls);
+
   // for explicit calculation, exchange will be at the beginning
 
   scheduleMomExchange(sched, patches, arches_matls, mpm_matls, all_matls);
@@ -757,11 +947,100 @@ MPMArches::scheduleTimeAdvance( const LevelP & level,
 //______________________________________________________________________
 //
 
+void MPMArches::scheduleCopyCutCells(SchedulerP& sched,
+				     const PatchSet* patches,
+				     const MaterialSet* arches_matls)
+
+{ 
+  // primitive variable initialization
+  Task* t=scinew Task("MPMArches::copyCutCells",
+		      this, &MPMArches::copyCutCells);
+  int numGhostCells = 0;
+
+  t->requires(Task::OldDW, d_MAlb->d_normal1Label,
+	      arches_matls->getUnion(),
+	      Ghost::None, numGhostCells);
+  t->requires(Task::OldDW, d_MAlb->d_normal2Label,
+	      arches_matls->getUnion(),
+	      Ghost::None, numGhostCells);
+  t->requires(Task::OldDW, d_MAlb->d_normal3Label,
+	      arches_matls->getUnion(),
+	      Ghost::None, numGhostCells);
+  t->requires(Task::OldDW, d_MAlb->d_normalLabel,
+	      arches_matls->getUnion(),
+	      Ghost::None, numGhostCells);
+
+  t->computes(d_MAlb->d_normal1Label, arches_matls->getUnion());
+  t->computes(d_MAlb->d_normal2Label, arches_matls->getUnion());
+  t->computes(d_MAlb->d_normal3Label, arches_matls->getUnion());
+  t->computes(d_MAlb->d_normalLabel, arches_matls->getUnion());
+
+  sched->addTask(t, patches, arches_matls);
+}
+
+//______________________________________________________________________
+//
+
+void MPMArches::copyCutCells(const ProcessorGroup*,
+			     const PatchSubset* patches,
+			     const MaterialSubset*,
+			     DataWarehouse* old_dw,
+			     DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    int archIndex = 0;
+    int matlIndex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    constCCVariable<Vector> oldNormal;
+    CCVariable<Vector> normal;
+    constCCVariable<double> oldNormal1;
+    CCVariable<double> normal1;
+    constCCVariable<double> oldNormal2;
+    CCVariable<double> normal2;
+    constCCVariable<double> oldNormal3;
+    CCVariable<double> normal3;
+    
+    old_dw->get(oldNormal, d_MAlb->d_normalLabel, matlIndex, 
+		patch, Ghost::None, 0);    
+    new_dw->allocateAndPut(normal, d_MAlb->d_normalLabel,
+			   matlIndex, patch);
+    normal.copyData(oldNormal);
+
+    old_dw->get(oldNormal1, d_MAlb->d_normal1Label, matlIndex, 
+		patch, Ghost::None, 0);    
+    new_dw->allocateAndPut(normal1, d_MAlb->d_normal1Label,
+			   matlIndex, patch);
+    normal1.initialize(0.0);
+    normal1.copyData(oldNormal1);
+
+    if (patch->containsCell(IntVector(6,53,80))) {
+      cerr << "[6,53,80] x normal" << normal1[IntVector(6,53,80)] << endl;
+    }
+
+    old_dw->get(oldNormal2, d_MAlb->d_normal2Label, matlIndex, 
+		patch, Ghost::None, 0);    
+    new_dw->allocateAndPut(normal2, d_MAlb->d_normal2Label,
+			   matlIndex, patch);
+    normal2.copyData(oldNormal2);
+
+    old_dw->get(oldNormal3, d_MAlb->d_normal3Label, matlIndex, 
+		patch, Ghost::None, 0);    
+    new_dw->allocateAndPut(normal3, d_MAlb->d_normal3Label,
+			   matlIndex, patch);
+    normal3.copyData(oldNormal3);
+
+  }
+}
+
+//______________________________________________________________________
+//
+
 void MPMArches::scheduleInterpolateNCToCC(SchedulerP& sched,
 					  const PatchSet* patches,
 					  const MaterialSet* matls)
 {
-   /* interpolateNCToCC */
+   /* interpolate variables from node centers to cell center */
 
   // primitive variable initialization
   Task* t=scinew Task("MPMArches::interpolateNCToCC",
@@ -770,25 +1049,21 @@ void MPMArches::scheduleInterpolateNCToCC(SchedulerP& sched,
 
   t->requires(Task::NewDW, Mlb->gMassLabel, 
 	      Ghost::AroundNodes, numGhostCells);
-  if (!d_useCutCell)
-    t->requires(Task::NewDW, Mlb->gVolumeLabel,
-		Ghost::AroundNodes, numGhostCells);
-  if (!d_stationarySolid && !d_useCutCell)
-    t->requires(Task::NewDW, Mlb->gVelocityLabel,
-		Ghost::AroundNodes, numGhostCells);
-  if (d_calcEnergyExchange)
-    t->requires(Task::NewDW, Mlb->gTemperatureLabel,
-		Ghost::AroundNodes, numGhostCells);
-
   t->computes(d_MAlb->cMassLabel);
 
-  if (!d_useCutCell)
-    t->computes(d_MAlb->cVolumeLabel);
-  if (!d_stationarySolid && !d_useCutCell)
-    t->computes(d_MAlb->vel_CCLabel);
+  t->requires(Task::NewDW, Mlb->gVolumeLabel,
+	      Ghost::AroundNodes, numGhostCells);
+  t->computes(d_MAlb->cVolumeLabel);
 
-  if (d_calcEnergyExchange) 
+  t->requires(Task::NewDW, Mlb->gVelocityLabel,
+	      Ghost::AroundNodes, numGhostCells);
+  t->computes(d_MAlb->vel_CCLabel);
+
+  if (d_calcEnergyExchange) {
+    t->requires(Task::NewDW, Mlb->gTemperatureLabel,
+		Ghost::AroundNodes, numGhostCells);
     t->computes(d_MAlb->tempSolid_CCLabel);
+  }
 
   sched->addTask(t, patches, matls);
 }
@@ -819,38 +1094,33 @@ void MPMArches::interpolateNCToCC(const ProcessorGroup*,
       CCVariable<double > cmass, cvolume, tempSolid_CC;
       CCVariable<Vector > vel_CC;
       
-      new_dw->allocateAndPut(cmass, d_MAlb->cMassLabel,         
-		       matlindex, patch);
-      if (!d_useCutCell)
-	new_dw->allocateAndPut(cvolume, d_MAlb->cVolumeLabel,       
-			       matlindex, patch);
-      if (!d_stationarySolid && !d_useCutCell)
-	new_dw->allocateAndPut(vel_CC, d_MAlb->vel_CCLabel,        
-			       matlindex, patch);
-      if (d_calcEnergyExchange)
-	new_dw->allocateAndPut(tempSolid_CC, d_MAlb->tempSolid_CCLabel, 
-			 matlindex, patch);
-       
-      cmass.initialize(0.);
-      if (!d_useCutCell)
-	cvolume.initialize(0.);
-      if (!d_stationarySolid && !d_useCutCell)
-	vel_CC.initialize(zero); 
-      if (d_calcEnergyExchange)
-	tempSolid_CC.initialize(0.);
-
       new_dw->get(gmass,     Mlb->gMassLabel,        matlindex, 
 		  patch, Ghost::AroundNodes, numGhostCells);
-      if (!d_useCutCell)
-	new_dw->get(gvolume,   Mlb->gVolumeLabel,      matlindex, 
-		    patch, Ghost::AroundNodes, numGhostCells);
-      if (!d_useCutCell && !d_stationarySolid) 
-	new_dw->get(gvelocity, Mlb->gVelocityLabel,    matlindex, 
-		    patch, Ghost::AroundNodes, numGhostCells);
-      if (d_calcEnergyExchange)
+      new_dw->allocateAndPut(cmass, d_MAlb->cMassLabel,         
+		       matlindex, patch);
+      cmass.initialize(0.);
+
+      new_dw->get(gvolume,   Mlb->gVolumeLabel,      matlindex, 
+		  patch, Ghost::AroundNodes, numGhostCells);
+      new_dw->allocateAndPut(cvolume, d_MAlb->cVolumeLabel,       
+			     matlindex, patch);
+      cvolume.initialize(0.);
+
+      new_dw->get(gvelocity, Mlb->gVelocityLabel,    matlindex, 
+		  patch, Ghost::AroundNodes, numGhostCells);
+      new_dw->allocateAndPut(vel_CC, d_MAlb->vel_CCLabel,        
+			       matlindex, patch);
+      vel_CC.initialize(zero); 
+
+      if (d_calcEnergyExchange) {
       	new_dw->get(gTemperature, Mlb->gTemperatureLabel, matlindex, 
       		    patch, Ghost::AroundNodes, numGhostCells);
-      
+      	new_dw->allocateAndPut(tempSolid_CC, d_MAlb->tempSolid_CCLabel, 
+			 matlindex, patch);
+	tempSolid_CC.initialize(0.);
+
+      }
+       
       IntVector nodeIdx[8];
 
       for (CellIterator iter =patch->getExtraCellIterator();
@@ -860,25 +1130,23 @@ void MPMArches::interpolateNCToCC(const ProcessorGroup*,
 	for (int in=0;in<8;in++){
 
 	  cmass[*iter]    += .125*gmass[nodeIdx[in]];
-	  if (!d_useCutCell) {
-	    cvolume[*iter]  += .125*gvolume[nodeIdx[in]];
-	  }
-	  if (!d_useCutCell && !d_stationarySolid) {
+	  cvolume[*iter]  += .125*gvolume[nodeIdx[in]];
+
+	  if (calcVel) 
 	    vel_CC[*iter]   += gvelocity[nodeIdx[in]]*.125*
 	      gmass[nodeIdx[in]];
-	  }
-	  if (d_calcEnergyExchange) {
+
+	  if (d_calcEnergyExchange)
 	    tempSolid_CC[*iter] += gTemperature[nodeIdx[in]]*.125*
 	      gmass[nodeIdx[in]];
-	  }
 	}
 
-	if (!d_useCutCell && !d_stationarySolid) {
+	if (calcVel)
 	  vel_CC[*iter]      /= (cmass[*iter]     + d_SMALL_NUM);
-	}
-	if (d_calcEnergyExchange) {
+
+	if (d_calcEnergyExchange)
 	  tempSolid_CC[*iter]   /= (cmass[*iter]     + d_SMALL_NUM);
-	}
+
       }
     }
   }
@@ -894,9 +1162,10 @@ void MPMArches::scheduleInterpolateCCToFC(SchedulerP& sched,
   Task* t=scinew Task("MPMArches::interpolateCCToFC",
 		      this, &MPMArches::interpolateCCToFC);
   int numGhostCells = 1;
+
   t->requires(Task::NewDW, d_MAlb->cMassLabel,
 	      Ghost::AroundCells, numGhostCells);
-  if (!d_useCutCell && !d_stationarySolid)
+  if (calcVel)
     t->requires(Task::NewDW, d_MAlb->vel_CCLabel,
 		Ghost::AroundCells, numGhostCells);
   if (d_calcEnergyExchange) 
@@ -974,7 +1243,7 @@ void MPMArches::interpolateCCToFC(const ProcessorGroup*,
       
       new_dw->get(cmass,    d_MAlb->cMassLabel,         matlindex, 
 		  patch, Ghost::AroundCells, numGhostCells);
-      if (!d_useCutCell && !d_stationarySolid)
+      if (calcVel)
 	new_dw->get(vel_CC,   d_MAlb->vel_CCLabel,        matlindex, 
 		    patch, Ghost::AroundCells, numGhostCells);
       if (d_calcEnergyExchange) 
@@ -1080,7 +1349,7 @@ void MPMArches::interpolateCCToFC(const ProcessorGroup*,
 	}
       }
 
-      if (!d_useCutCell && !d_stationarySolid) {
+      if (calcVel) {
 
 	for(CellIterator iter = patch->getExtraCellIterator();
 	    !iter.done(); iter++){
@@ -1160,27 +1429,27 @@ void MPMArches::scheduleComputeVoidFrac(SchedulerP& sched,
 
   int zeroGhostCells = 0;
 
-  int numMPMMatls = d_sharedState->getNumMPMMatls();
-
   t->requires(Task::OldDW, d_MAlb->void_frac_CCLabel, 
 	      arches_matls->getUnion(), Ghost::None, zeroGhostCells);
   double time = d_sharedState->getElapsedTime();
 
-  if (!d_useCutCell) {
-    t->requires(Task::NewDW, d_MAlb->cVolumeLabel,   
-		mpm_matls->getUnion(), Ghost::None, zeroGhostCells);
+  // Whether we get the void fraction from MPM or from cutcells,
+  // we need solid fractions.  So we need cvolume.
+
+  t->requires(Task::NewDW, d_MAlb->cVolumeLabel,   
+	      mpm_matls->getUnion(), Ghost::None, zeroGhostCells);
+  t->requires(Task::OldDW, d_MAlb->solid_fraction_CCLabel,   
+	      mpm_matls->getUnion(), Ghost::None, zeroGhostCells);
+
+  if (calcVolFracMPM) {
     //    if (nofTimeSteps < 3 && !d_restart)
     if (time < 1.0E-10)
       d_recompile = true;
   }
-  else {
-    if (numMPMMatls > 1)
-      t->requires(Task::NewDW, d_MAlb->cVolumeLabel,   
-		  mpm_matls->getUnion(), Ghost::None, zeroGhostCells);
-  }
-      
+
   t->computes(d_MAlb->solid_fraction_CCLabel, mpm_matls->getUnion());
   t->computes(d_MAlb->void_frac_CCLabel, arches_matls->getUnion());
+  t->computes(d_MAlb->solid_frac_sum_CCLabel, arches_matls->getUnion());
 
   sched->addTask(t, patches, all_matls);
 }
@@ -1201,131 +1470,146 @@ void MPMArches::computeVoidFrac(const ProcessorGroup*,
     int matlindex = d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     int numMPMMatls = d_sharedState->getNumMPMMatls();
     StaticArray<constCCVariable<double> > mat_vol(numMPMMatls);
+    StaticArray<constCCVariable<double> > solid_fraction_cc_old(numMPMMatls);
     StaticArray<CCVariable<double> > solid_fraction_cc(numMPMMatls);
     
     int zeroGhostCells = 0;
 
-  // get and allocate
+    // get and allocate
 
     constCCVariable<double> voidFracOld;
     old_dw->get(voidFracOld, d_MAlb->void_frac_CCLabel,
     		matlindex, patch, Ghost::None, zeroGhostCells);
+
     for (int m = 0; m < numMPMMatls; m++) {
 	
       Material* matl = d_sharedState->getMPMMaterial( m );
       int dwindex = matl->getDWIndex();
 
-      if (d_useCutCell) {
-	if (numMPMMatls > 1)
-	  new_dw->get(mat_vol[m], d_MAlb->cVolumeLabel,
-		      dwindex, patch, Ghost::None, zeroGhostCells);
-      }
-      else
-	new_dw->get(mat_vol[m], d_MAlb->cVolumeLabel,
-		    dwindex, patch, Ghost::None, zeroGhostCells);
-	
+      new_dw->get(mat_vol[m], d_MAlb->cVolumeLabel,
+		  dwindex, patch, Ghost::None, zeroGhostCells);
+      old_dw->get(solid_fraction_cc_old[m], d_MAlb->solid_fraction_CCLabel,
+		  dwindex, patch, Ghost::None, zeroGhostCells);
       new_dw->allocateAndPut(solid_fraction_cc[m], d_MAlb->solid_fraction_CCLabel,
 			     dwindex, patch);
       solid_fraction_cc[m].initialize(1.0);
+
     }
 
     CCVariable<double> void_frac;
     new_dw->allocateAndPut(void_frac, d_MAlb->void_frac_CCLabel, 
 		     matlindex, patch); 
+    CCVariable<double> solid_sum;
+    new_dw->allocateAndPut(solid_sum, d_MAlb->solid_frac_sum_CCLabel, 
+		     matlindex, patch); 
 
     // actual computation
 
-    bool recalculateVoidFrac = false;
+    bool recalculateVoidSolidFrac = false;
     double time = d_sharedState->getElapsedTime();
 
+    // At first actual time step, we have two ways of 
+    // getting the void fraction:
+    // 1. Copy it from old_dw, which we can do if we
+    //    read it in from cut cell information in 
+    //    scheduleInitialize.  We can change this if
+    //    we move the geometry, but right now, we have
+    //    no functionality for doing it, and I am not
+    //    going to bother with it until I first get the
+    //    fixed geometry cut cell method working well.
+    //    The momentum transfer for a fixed cut cell method
+    //    is not trivial.  SK, Sept. 9, 2004.
+    // 2. Calculate it from MPM information, which we
+    //    do at the very first actual time step.
+    //    If d_stationarySolid is true, recalculate
+    //    the solid and void fractions at every
+    //    time step; else keep the solid and void
+    //    fractions unchanged, and just copy them from
+    //    time step to time step.  Right now, we have
+    //    no plans of moving the geometry, but I am keeping
+    //    this functionality just for future use, if ever.
+    //    Why throw away something you already have?
+    //    SK, Sept. 9, 2004
+    //    The line below doesn't work now, but someday I
+    //    want to see if it will work...
     //    if (nofTimeSteps < 2 && !d_restart) 
+
     if (time < 1.0E-10)
-      recalculateVoidFrac = true;
+      recalculateVoidSolidFrac = true;
 
-    if (!d_useCutCell) {
+    // for cutcell, void and solid fractions are fixed
+    // for all time (see notes above)...for MPM, we allow
+    // geometry to move (in theory).
 
-      if (recalculateVoidFrac) {
+    if (!d_stationarySolid && calcVolFracMPM)
+      recalculateVoidSolidFrac = true;
+
+    if (recalculateVoidSolidFrac) {
+
+      // First calculate solid fractions and solid fraction sum
+      // alone.  We will use this later (below).
+
+      for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++) {
+
+	double total_vol = patch->dCell().x()*patch->dCell().y()*patch->dCell().z();
+	double solid_frac_sum = 0.0;
+	solid_sum[*iter] = 0.0;
+	for (int m = 0; m < numMPMMatls; m++) {
+	  solid_fraction_cc[m][*iter] = mat_vol[m][*iter]/total_vol;
+	  solid_frac_sum += solid_fraction_cc[m][*iter];
+	  solid_sum[*iter] += solid_fraction_cc[m][*iter];
+	}
+	if (solid_sum[*iter] > 1.0)
+	  solid_sum[*iter] = 1.0;
+
+	for (int m = 0; m < numMPMMatls; m++) {
+	  solid_fraction_cc[m][*iter] = solid_fraction_cc[m][*iter]/solid_frac_sum;
+	}
+      }
+
+      int m = numMPMMatls;
+      if (m < 1) {
+	for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++) {
+	  solid_fraction_cc[m][*iter] = 1.0;
+	  solid_sum[*iter] = 1.0;
+	}
+      }
+    }
+    else {
+      for (int m = 0; m < numMPMMatls; m++) {
+	solid_fraction_cc[m].copyData(solid_fraction_cc_old[m]);
+      }
+    }
+
+    if (calcVolFracMPM) {
+
+      if (recalculateVoidSolidFrac) {
 
 	void_frac.initialize(1.0);
 	for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++) {
 
-	  double total_vol = patch->dCell().x()*patch->dCell().y()*patch->dCell().z();
-	  double solid_frac_sum = 0.0;
-	  for (int m = 0; m < numMPMMatls; m++) {
-	    solid_fraction_cc[m][*iter] = mat_vol[m][*iter]/total_vol;
-	    solid_frac_sum += solid_fraction_cc[m][*iter];
+	  double solid_frac_sum = solid_sum[*iter];
+
+	  if (d_stairstep) {
+
+	    double mm_cutoff = 0.5;
+	    if (solid_sum[*iter] > mm_cutoff)
+	      solid_frac_sum = 1.0;
+	    else
+	      solid_frac_sum = 0.0;
 	  }
-	  if (solid_frac_sum > 1.0) 
-	    solid_frac_sum = 1.0;
-
-	  // for stairstep
-
-	  double mm_cutoff = 0.5;
-	  if (solid_frac_sum > mm_cutoff) {
-	    for (int m = 0; m < numMPMMatls; m++) {
-	      solid_fraction_cc[m][*iter] = solid_fraction_cc[m][*iter]/solid_frac_sum;
-	    }
-	    solid_frac_sum = 1.0;
-	  }
-	  else {
-	    for (int m = 0; m < numMPMMatls; m++) {
-	      solid_fraction_cc[m][*iter] = 0.0;
-	    }
-	    solid_frac_sum = 0.0;
-	  }
-
-	  // end stairstep
-
+	  
 	  void_frac[*iter] = 1.0 - solid_frac_sum;
 	  if (void_frac[*iter] < 0.0)
 	    void_frac[*iter] = 0.0;
 	}
-	// end CellIterator
       }
-
-      // else for no recalculateVoidFrac
-
-      else {
-	void_frac.copyData(voidFracOld);	
-      }
+      else
+	void_frac.copyData(voidFracOld);
     }
-
-    // else if d_useCutCell
-
-    else {
-      void_frac.copyData(voidFracOld);
-      if (numMPMMatls < 2) {
-	// if only one solid material, set relative solid fraction
-	// to 1.0
-
-	for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++) {
-	  for (int m = 0; m < numMPMMatls; m++)
-	    solid_fraction_cc[m][*iter] = 1.0;
-	}
-      }
-      else {
-      // if numMPMMatls > 1, calculate relative solid fractions
-	
-	void_frac.initialize(1.0);
-	for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++) {
-
-	  double solid_frac_sum = 0.0;
-	  double total_vol = patch->dCell().x()*patch->dCell().y()*patch->dCell().z();
-	  for (int m = 0; m < numMPMMatls; m++) {
-	    solid_fraction_cc[m][*iter] = mat_vol[m][*iter]/total_vol;
-	    solid_frac_sum += solid_fraction_cc[m][*iter];
-	  }
-	  for (int m = 0; m < numMPMMatls; m++) {
-	    solid_fraction_cc[m][*iter] = solid_fraction_cc[m][*iter]/solid_frac_sum;
-	  }
-	}
-	// end iter over CellIterator
-      }
-      // end if numMPMMatls < 2
-    }
-    // end if !d_useCutCell
+    else
+      void_frac.copyData(voidFracOld);	
   }
-  // end loop over patches
 }
   
 //______________________________________________________________________
@@ -1979,6 +2263,9 @@ void MPMArches::doMomExchange(const ProcessorGroup*,
     StaticArray<SFCZVariable<double> > pressForceZ(numMPMMatls);
     
     // Arches stuff
+
+    constCCVariable<Vector> oldNormal;
+    CCVariable<Vector> normal;
     
     constCCVariable<int> cellType;
     constCCVariable<double> pressure;
@@ -3801,7 +4088,9 @@ void MPMArches::putAllForcesOnNC(const ProcessorGroup*,
 			     matlindex, patch);
       htrate_nc.initialize(0.0);
 
-      if (!d_stationarySolid) {
+      if (d_stationarySolid)
+	acc_archesNC.initialize(zero);
+      else {
 
 	for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
 
@@ -3810,13 +4099,22 @@ void MPMArches::putAllForcesOnNC(const ProcessorGroup*,
 
 	    acc_archesNC[*iter]  += acc_archesCC[cIdx[in]]*.125;
 
-	    if (d_calcEnergyExchange) 
-	      htrate_nc[*iter] += htrate_cc[cIdx[in]]*.125;
 	  }
         }
       }
-      else
-	acc_archesNC.initialize(zero);
+
+      if (d_calcEnergyExchange) {
+
+	for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+	  
+	  patch->findCellsFromNode(*iter,cIdx);
+	  for (int in=0;in<8;in++){
+
+	    htrate_nc[*iter] += htrate_cc[cIdx[in]]*.125;
+
+	  }
+	}
+      }
     }
   }
 }

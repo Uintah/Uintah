@@ -196,12 +196,14 @@ MPMArchesLabel::MPMArchesLabel()
 
   // Labels for gas calculations
 
-  // Gas void fraction
+  // Gas void fraction and solid fraction sum
 
   void_frac_CCLabel  = VarLabel::create("void_frac_CC",
 					CCVariable<double>::getTypeDescription() );
   void_frac_old_CCLabel  = VarLabel::create("void_frac_CC_old",
 					CCVariable<double>::getTypeDescription() );
+  solid_frac_sum_CCLabel  = VarLabel::create("solid_frac_sum",
+					     CCVariable<double>::getTypeDescription() );
 
   // Stability Factor Labels
 
@@ -392,6 +394,9 @@ MPMArchesLabel::MPMArchesLabel()
 				    CCVariable<double>::getTypeDescription() );
   d_normal3Label = VarLabel::create("normal3",
 				    CCVariable<double>::getTypeDescription() );
+  d_normalLabel = VarLabel::create("normal",
+				   CCVariable<Vector>::getTypeDescription() );
+
   d_centroid1Label = VarLabel::create("centroid1",
 				      CCVariable<double>::getTypeDescription() );
   d_centroid2Label = VarLabel::create("centroid2",
@@ -510,6 +515,7 @@ MPMArchesLabel::~MPMArchesLabel()
 
   VarLabel::destroy(void_frac_CCLabel);
   VarLabel::destroy(void_frac_old_CCLabel);
+  VarLabel::destroy(solid_frac_sum_CCLabel);
 
   VarLabel::destroy(KStabilityULabel);
   VarLabel::destroy(KStabilityVLabel);
@@ -569,6 +575,7 @@ MPMArchesLabel::~MPMArchesLabel()
   VarLabel::destroy(d_normal1Label);
   VarLabel::destroy(d_normal2Label);
   VarLabel::destroy(d_normal3Label);
+  VarLabel::destroy(d_normalLabel);
   VarLabel::destroy(d_centroid1Label);
   VarLabel::destroy(d_centroid2Label);
   VarLabel::destroy(d_centroid3Label);
