@@ -275,7 +275,7 @@ GenericField<Mesh, FData>::GenericField(mesh_handle_type mesh, data_location dat
   : Field(data_at),
     mesh_(mesh)
 {
-  if (data_at != NONE)
+  if (data_at != NONE && mesh_.get_rep())
     resize_fdata();
 }
 
