@@ -51,6 +51,10 @@ public:
 
   void    io(Piostream &stream);
 
+  void initialize_mask(char masked) {
+    for (char *c = mask_.begin(); c != mask_.end(); ++c) *c=masked;
+  }
+
   void resize_fdata() {
     if (data_at() == NODE)
       mask_.resize(get_typed_mesh()->nodes_size());
@@ -62,8 +66,6 @@ public:
       ASSERTFAIL("data at unrecognized location")
     TetVol<T>::resize_fdata();
   }
-
-  void initialize_mask(int) {}
 
   static  PersistentTypeID type_id;
   static const string type_name(int n = -1);
