@@ -22,6 +22,7 @@ class TYPEReader : public Module {
     TYPEOPort* outport;
     TCLstring filename;
     TYPEHandle handle;
+    clString old_filename;
 public:
     TYPEReader(const clString& id);
     TYPEReader(const TYPEReader&, int deep=0);
@@ -62,8 +63,9 @@ Module* TYPEReader::clone(int deep)
 
 void TYPEReader::execute()
 {
-    if(!handle.get_rep()){
-	Piostream* stream=auto_istream(filename.get());
+    clString fn(filename.get());
+    if(!handle.get_rep() || fn != old_filename){
+	Piostream* stream=auto_istream(fn);
 	if(!stream){
 	    error(clString("Error reading file: ")+filename.get());
 	    return; // Can't open file...
