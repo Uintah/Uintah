@@ -149,6 +149,8 @@
 	<li>One Viewer module  
 	</ul>
 	<p>These should be hooked together as shown in <b>Figure 3.3</b>.
+	<b>Don't forget to a) set the Node scale in the ShowField UI to be at
+	least 2--4. and b) hit the Autoview button in the Viewer window!</B>
 
       </div>
 	<center>
@@ -201,31 +203,47 @@
 	generates samples from any type of input field and outputs the
 	samples as a PointCloud field.  
 
-	<p>The samples can be generated randomly or can be user selected 
-	via a 3D widget.  For streamline visualization, we use a 3D "rake"
-	widget to 
-	place our distribution of seed points.
+	<ol>
+	  <li VALUE="2."> Connect the output of the FieldReader to the
+	  second (right most) input
+	  of the SampleField module and then the field output of the
+	  SampleField to the right input of the StreamLines module.
+	</ol>
+
+	<p>The SampleField module can generate the samples randomly or we
+	can select this via a 3D widget.  For streamline visualization, we
+	use a 3D "rake" widget to place our distribution of seed points.
 	
 	<p>To interactively position the rake of seed points within
 	the volume:
 	<ol>
-	  <li value="2.">Connect the geometry output port (pink) of the
+	  <li value="3.">Connect the geometry output port (pink) of the
 	  SampleField] module to the Viewer module.  
-	  <li>Select the "rake" option from the SampleField UI and 
+	  <li>From the SampleField UI, select the "rake" option  and 
 	      set the number of samples to 30.
-	  <li>Connect the Field output port from this module to the
-	      second Field input port of the StreamLines module.
 	</ol>
 
 	<p>At this point, we have streamlines coming out of the
         StreamLines module, and we would like to render them.  Before
         we do, we attach scalar data values to the
         streamline nodes.  To accomplish this, we use the
-        DirectInterpolate module described above.  
+        DirectInterpolate module described above.  To create the
+	visualization:
+	<OL>
+	  <LI VALUE="4."> With the FieldReader, select the input file
+	  utahtorso-lowres-voltage.tvd.fld 
+	  <LI> Connect the FieldReader to a ShowField module.
+	  <LI> In this ShowField UI, display only Nodes, either as spheres
+	      or points, with NodeScale set to about 1--2.
+	  <LI> Connect a second ShowField module to the field output of the
+	      DirectInterpolate module and the color map output of the
+	      RescaleColorMap module.
+	  <LI> For this ShowField, use the UI to display only edges, either
+	      as cylinders or lines, with a Cylinder Scale of about 2.
+	</OL>
 
-	<p>We will again use the voltage data values from the
-        utahtorso-lowres-voltage.tvd.fld Field.  Attaching all of the
-        modules, we have the network shown in <b>Figure 3.5</b>.
+	<p>With everything attached, we should have a network like that in
+	<b>Figure 3.5</b>. 
 
       </div>
 	<center>
@@ -272,6 +290,8 @@
 	      position of just that widget.
 	  <LI> Shift-left-click on a <b>cylinder</b> in the widget and change,
 	      for example, the density of streamlines the widget emits.
+	  <LI> SCIRun will redraw the image in the Viewer window whenever
+	      you release the mouse button.
 	</ul>
 	
 	<p><b><A name="section 4">Network execution and data
@@ -301,10 +321,10 @@
 	<p>Now, back to the action!
 
 	<P> After executing the network, you should see an image like
-	<b>Figure 3.8</b> in the ViewWindow.  The rake widget appears
-	as a gray stick in this scene.  
-
-
+	<b>Figure 3.8</b> in the Viewer window.  The rake widget appears
+	as a gray stick in this scene.  You may not get quite the same
+	image as in the figure, but you should see the rake and colored
+	streamlines coming from it.
 
 	</div>
 	<center>
@@ -315,9 +335,6 @@
 	<p>
 	<br>
 
-	<P> If you move the widget around, each time you release the mouse
-	button, it will redraw the streamlines in the new region of the
-	field. 
 	
 	<b><H4>Summary</b></H4>
 	We have just constructed three nets, each describing a single
