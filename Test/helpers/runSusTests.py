@@ -198,7 +198,7 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
     if ALGO == "Examples":
       newalgo = testname
       NEWALGO = ALGO
-    elif algo == "performance" or "ucf":
+    elif algo == "performance" or algo == "ucf":
       newalgo = get_algo(test)
       NEWALGO = upper(newalgo)
     else:
