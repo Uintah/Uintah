@@ -117,12 +117,12 @@ GridSliceVis::tcl_command( SCIRun::GuiArgs& args, void* userdata)
       } else if (args[2] == "zminus"){
 	w-=Vector(0, 0, ddv.z());
       } else if (args[2] == "vplus"){
-	GeometryData* data = ogeom->getData( 0, 1);
+	GeometryData* data = ogeom->getData( 0, 0, 1);
 	Vector view = data->view->lookat() - data->view->eyep();
 	view.normalize();
 	w += view*ddview;
       } else if (args[2] == "vminus"){
-	GeometryData* data = ogeom->getData( 0, 1);
+	GeometryData* data = ogeom->getData( 0, 0, 1);
 	Vector view = data->view->lookat() - data->view->eyep();
 	view.normalize();
 	w -= view*ddview;
