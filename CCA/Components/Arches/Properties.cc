@@ -118,6 +118,14 @@ Properties::sched_computeProps(SchedulerP& sched, const PatchSet* patches,
 
   tsk->computes(d_lab->d_refDensity_label);
   tsk->computes(d_lab->d_densityCPLabel);
+
+  if (d_MAlab) 
+    tsk->requires(Task::NewDW, d_lab->d_mmcellTypeLabel, Ghost::None,
+		  numGhostCells);
+  else
+    tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, Ghost::None,
+		  numGhostCells);
+
   if (d_enthalpySolve)
     tsk->computes(d_lab->d_enthalpySPLabel);
   if (d_reactingFlow) {
@@ -132,8 +140,11 @@ Properties::sched_computeProps(SchedulerP& sched, const PatchSet* patches,
     tsk->computes(d_lab->d_absorpINLabel);
     tsk->computes(d_lab->d_sootFVINLabel);
   }
-  if (d_MAlab) 
+  if (d_MAlab) {
+    tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, Ghost::None,
+		  numGhostCells);
     tsk->computes(d_lab->d_densityMicroLabel);
+  }
 
   sched->addTask(tsk, patches, matls);
 }
@@ -234,10 +245,13 @@ Properties::computeProps(const ProcessorGroup*,
 			 DataWarehouse* new_dw)
 {
   for (int p = 0; p < patches->size(); p++) {
+
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
     // Get the cellType and density from the old datawarehouse
+
     int nofGhostCells = 0;
     constCCVariable<int> cellType;
     new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, 
@@ -257,6 +271,15 @@ Properties::computeProps(const ProcessorGroup*,
       //enthalpy.copyData(enthalpy_old);
     }
     
+    if (d_MAlab) {
+      new_dw->get(cellType, d_lab->d_mmcellTypeLabel, matlIndex, patch, 
+		  Ghost::None, nofGhostCells);
+    }
+    else {
+      new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch, 
+		Ghost::None, nofGhostCells);
+    }
+
     CCVariable<double> temperature;
     CCVariable<double> co2;
     CCVariable<double> enthalpyRXN;
@@ -298,13 +321,20 @@ Properties::computeProps(const ProcessorGroup*,
 		    matlIndex, patch, Ghost::None, nofGhostCells);
     }
 
-    // get multimaterial vars
-    CCVariable<double> denMicro;
     //CCVariable<double> new_density;
     //new_dw->allocate(new_density, d_densityCPLabel, matlIndex, patch);
-    if (d_MAlab) 
-    new_dw->allocate(denMicro, d_lab->d_densityMicroLabel,
-		     matlIndex, patch);
+
+    // get multimaterial vars
+
+    CCVariable<double> denMicro;
+    constCCVariable<double> voidFraction;
+
+    if (d_MAlab){
+      new_dw->get(voidFraction, d_lab->d_mmgasVolFracLabel, 
+      		  matlIndex, patch, Ghost::None, nofGhostCells);
+      new_dw->allocate(denMicro, d_lab->d_densityMicroLabel,
+		       matlIndex, patch);
+    }
     
     IntVector indexLow = patch->getCellLowIndex();
     IntVector indexHigh = patch->getCellHighIndex();
@@ -346,8 +376,6 @@ Properties::computeProps(const ProcessorGroup*,
 	      inStream.d_rxnVars[ii] = (reactScalar[ii])[currCell];
 	  }
 
-	  // currently not using any reaction progress variables
-
 	  if (!d_mixingModel->isAdiabatic())
 	    inStream.d_enthalpy = 0.0;
 	  Stream outStream;
@@ -364,9 +392,14 @@ Properties::computeProps(const ProcessorGroup*,
 	  }
 	  if (d_bc == 0)
 	    throw InvalidValue("BoundaryCondition pointer not assigned");
-	  if (d_MAlab)
-	    denMicro[currCell] = local_den;
 
+	  if (d_MAlab) {
+	    denMicro[currCell] = local_den;
+	    //	    if (voidFraction[currCell] > 0.01)
+	    local_den *= voidFraction[currCell];
+
+	  }
+	  
 	  if (cellType[currCell] != d_bc->wallCellType()) 
 	    //	    density[currCell] = d_denUnderrelax*local_den +
 	    //  (1.0-d_denUnderrelax)*density[currCell];
@@ -604,8 +637,8 @@ Properties::reComputeProps(const ProcessorGroup*,
 	    }
 	  if (d_MAlab) {
 	    denMicro[IntVector(colX, colY, colZ)] = local_den;
-	    if (voidFraction[currCell] > 0.01)
-	      local_den *= voidFraction[currCell];
+	    //	    if (voidFraction[currCell] > 0.01)
+	    local_den *= voidFraction[currCell];
 
 	  }
 	  
