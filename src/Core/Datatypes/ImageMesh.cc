@@ -90,6 +90,29 @@ ImageMesh::get_nodes(Node::array_type &array, Face::index_type idx) const
   array[3].i_ = idx.i_;   array[3].j_ = idx.j_+1;
 }
 
+
+void
+ImageMesh::get_nodes(Node::array_type &array, Edge::index_type idx) const
+{
+  array.resize(2);
+  const int yidx = idx - (nx_-1) * ny_;
+  if (yidx >= 0)
+  {
+    const int i = yidx / (ny_ - 1);
+    const int j = yidx % (ny_ - 1);
+    array[0] = Node::index_type(i, j);
+    array[1] = Node::index_type(i, j+1);
+  }
+  else
+  {
+    const int i = idx % (nx_ - 1);
+    const int j = idx / (nx_ - 1);
+    array[0] = Node::index_type(i, j);
+    array[1] = Node::index_type(i+1, j);
+  }
+}
+
+
 //! return all face_indecies that overlap the BBox in arr.
 void
 ImageMesh::get_faces(Face::array_type &arr, const BBox &bbox)
@@ -116,6 +139,19 @@ ImageMesh::get_center(Point &result, Node::index_type idx) const
 {
   Point p(idx.i_, idx.j_, 0.0);
   result = transform_.project(p);
+}
+
+
+void
+ImageMesh::get_center(Point &result, Edge::index_type idx) const
+{
+  Node::array_type arr;
+  get_nodes(arr, idx);
+  Point p0, p1;
+  get_center(p0, arr[0]);
+  get_center(p1, arr[1]);
+
+  result = (p0.asVector() + p1.asVector() * 0.5).asPoint();
 }
 
 
@@ -234,10 +270,10 @@ void ImageMesh::get_random_point(Point &p, const Face::index_type &ci,
   Node::array_type ra;
   get_nodes(ra,ci);
   Point p00, p10, p11, p01;
-  get_point(p00,ra[0]);
-  get_point(p10,ra[1]);
-  get_point(p11,ra[2]);
-  get_point(p01,ra[3]);
+  get_center(p00,ra[0]);
+  get_center(p10,ra[1]);
+  get_center(p11,ra[2]);
+  get_center(p01,ra[3]);
   Vector dx=p10-p00;
   Vector dy=p01-p00;
   // generate the barrycentric coordinates
@@ -257,41 +293,22 @@ void ImageMesh::get_random_point(Point &p, const Face::index_type &ci,
 }
 
 
-const TypeDescription* get_type_description(ImageMesh::NodeIndex *)
+const TypeDescription* get_type_description(ImageMesh::INodeIndex *)
 {
   static TypeDescription* td = 0;
   if(!td){
-    td = scinew TypeDescription("ImageMesh::NodeIndex",
+    td = scinew TypeDescription("ImageMesh::INodeIndex",
 				ImageMesh::get_h_file_path(),
 				"SCIRun");
   }
   return td;
 }
-const TypeDescription* get_type_description(ImageMesh::EdgeIndex *)
+
+const TypeDescription* get_type_description(ImageMesh::IFaceIndex *)
 {
   static TypeDescription* td = 0;
   if(!td){
-    td = scinew TypeDescription("ImageMesh::EdgeIndex",
-				ImageMesh::get_h_file_path(),
-				"SCIRun");
-}
-  return td;
-}
-const TypeDescription* get_type_description(ImageMesh::FaceIndex *)
-{
-  static TypeDescription* td = 0;
-  if(!td){
-    td = scinew TypeDescription("ImageMesh::FaceIndex",
-				ImageMesh::get_h_file_path(),
-				"SCIRun");
-  }
-  return td;
-}
-const TypeDescription* get_type_description(ImageMesh::CellIndex *)
-{
-  static TypeDescription* td = 0;
-  if(!td){
-    td = scinew TypeDescription("ImageMesh::CellIndex",
+    td = scinew TypeDescription("ImageMesh::IFaceIndex",
 				ImageMesh::get_h_file_path(),
 				"SCIRun");
   }
@@ -300,7 +317,7 @@ const TypeDescription* get_type_description(ImageMesh::CellIndex *)
 
 
 void
-Pio(Piostream& stream, ImageMesh::NodeIndex& n)
+Pio(Piostream& stream, ImageMesh::INodeIndex& n)
 {
     stream.begin_cheap_delim();
     Pio(stream, n.i_);
@@ -309,15 +326,7 @@ Pio(Piostream& stream, ImageMesh::NodeIndex& n)
 }
 
 void
-Pio(Piostream& stream, ImageMesh::EdgeIndex& n)
-{
-    stream.begin_cheap_delim();
-    Pio(stream, n.i_);
-    stream.end_cheap_delim();
-}
-
-void
-Pio(Piostream& stream, ImageMesh::FaceIndex& n)
+Pio(Piostream& stream, ImageMesh::IFaceIndex& n)
 {
     stream.begin_cheap_delim();
     Pio(stream, n.i_);
@@ -325,33 +334,16 @@ Pio(Piostream& stream, ImageMesh::FaceIndex& n)
     stream.end_cheap_delim();
 }
 
-void
-Pio(Piostream& stream, ImageMesh::CellIndex& n)
-{
-    stream.begin_cheap_delim();
-    Pio(stream, n.i_);
-    stream.end_cheap_delim();
-}
 
 
-const string find_type_name(ImageMesh::NodeIndex *)
+const string find_type_name(ImageMesh::INodeIndex *)
 {
-  static string name = "ImageMesh::NodeIndex";
+  static string name = "ImageMesh::INodeIndex";
   return name;
 }
-const string find_type_name(ImageMesh::EdgeIndex *)
+const string find_type_name(ImageMesh::IFaceIndex *)
 {
-  static string name = "ImageMesh::EdgeIndex";
-  return name;
-}
-const string find_type_name(ImageMesh::FaceIndex *)
-{
-  static string name = "ImageMesh::FaceIndex";
-  return name;
-}
-const string find_type_name(ImageMesh::CellIndex *)
-{
-  static string name = "ImageMesh::CellIndex";
+  static string name = "ImageMesh::IFaceIndex";
   return name;
 }
 
@@ -403,19 +395,19 @@ ImageMesh::size(ImageMesh::Node::size_type &s) const
 void
 ImageMesh::begin(ImageMesh::Edge::iterator &itr) const
 {
-  itr = Edge::iterator(this, 0);
+  itr = 0;
 }
 
 void
 ImageMesh::end(ImageMesh::Edge::iterator &itr) const
 {
-  itr = Edge::iterator(this, 0);
+  itr = (nx_-1) * (ny_) + (nx_) * (ny_ -1);
 }
 
 void
 ImageMesh::size(ImageMesh::Edge::size_type &s) const
 {
-  s = Edge::size_type(0);
+  s = (nx_-1) * (ny_) + (nx_) * (ny_ -1);
 }
 
 void
@@ -440,13 +432,13 @@ ImageMesh::size(ImageMesh::Face::size_type &s) const
 void
 ImageMesh::begin(ImageMesh::Cell::iterator &itr) const
 {
-  itr = Cell::iterator(this, 0);
+  itr = Cell::iterator(0);
 }
 
 void
 ImageMesh::end(ImageMesh::Cell::iterator &itr) const
 {
-  itr = Cell::iterator(this, 0);
+  itr = Cell::iterator(0);
 }
 
 void
