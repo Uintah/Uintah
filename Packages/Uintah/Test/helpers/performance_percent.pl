@@ -12,13 +12,13 @@ open(COMPAREFILE, $comparefilename);
 @test_text = <TESTFILE>;
 $test_text = join("", @test_text);
 if ($test_text =~ /real\s*(\w+\.\w+)/) {
-    $test_time += $1;
+    $test_time = $1;
 }
 
 @compare_text = <COMPAREFILE>;
 $compare_text = join("", @compare_text);
 if ($compare_text =~ /real\s*(\w+\.\w+)/) {
-    $compare_time += $1;
+    $compare_time = $1;
 }
 
 print STDERR "New test time " . $test_time . "\n";
@@ -47,5 +47,6 @@ elsif ($percent < 0) {
 else {
     print STDERR "Total time stayed the same.\n"
 }
+print $percent;
 exit 0
 
