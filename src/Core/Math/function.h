@@ -30,9 +30,9 @@
 #include <iostream>
 #include <vector>
 #include <map>
-using namespace std;
 
 namespace SCIRun {
+using namespace std;
 
 class Function;
 class FunctionSoLoader;
