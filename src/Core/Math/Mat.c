@@ -46,33 +46,29 @@
         m[r1][k] -= m[r2][k]*mul; \
     }
 
-void min_norm_least_sq_3(double *A[3], double *b, double *x, double *bprime, int size, int offset_by_first_row) {
+void min_norm_least_sq_3(double *A[3], double *b, double *x, double *bprime, int size) {
   int i,j;
   double AtA[3][3];
   double Ab[3];
-  double offset[3];
-  double b_offset;
   for (i=0; i<3; i++) {
     for (j=0; j<3; j++)
       AtA[i][j]=0;
     Ab[i]=0;
-    if (offset_by_first_row) offset[i]=A[0][i]; else offset[i]=0;
   }
-  if (offset_by_first_row) b_offset=b[0]; else b_offset=0;
   for (i=0; i<size; i++) {
-    AtA[0][0] += (A[0][i]-offset[0])*(A[0][i]-offset[0]);
-    AtA[0][1] += (A[0][i]-offset[0])*(A[1][i]-offset[1]);
-    AtA[0][2] += (A[0][i]-offset[0])*(A[2][i]-offset[2]);
-    AtA[1][1] += (A[1][i]-offset[1])*(A[1][i]-offset[1]);
-    AtA[1][2] += (A[1][i]-offset[1])*(A[2][i]-offset[2]);
-    AtA[2][2] += (A[2][i]-offset[2])*(A[2][i]-offset[2]);
+    AtA[0][0] += A[0][i]*A[0][i];
+    AtA[0][1] += A[0][i]*A[1][i];
+    AtA[0][2] += A[0][i]*A[2][i];
+    AtA[1][1] += A[1][i]*A[1][i];
+    AtA[1][2] += A[1][i]*A[2][i];
+    AtA[2][2] += A[2][i]*A[2][i];
   }
   AtA[1][0] = AtA[0][1];
   AtA[2][0] = AtA[0][2];
   AtA[2][1] = AtA[1][2];
   for (i=0; i<size; i++)
     for (j=0; j<3; j++)
-      Ab[j] += (A[j][i]-offset[j])*(b[i]-b_offset);
+      Ab[j] += A[j][i]*b[i];
 
   matsolve3by3(AtA, Ab);
 
@@ -81,7 +77,7 @@ void min_norm_least_sq_3(double *A[3], double *b, double *x, double *bprime, int
   for (i=0; i<size; i++) {
     bprime[i]=0;
     for (j=0; j<3; j++)
-      bprime[i] += x[j]*(A[j][i]-offset[j]);
+      bprime[i] += x[j]*A[j][i];
   }
 }
   
