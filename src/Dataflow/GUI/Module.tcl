@@ -2873,18 +2873,18 @@ proc moduleDestroy {maincanvas minicanvas modid} {
     set modules $templist
 
     #Remove me from the Currently Selected Module List
-	global CurrentlySelectedModules
-	set p $maincanvas.module[$modid modname].ff
-	
-	set tempList ""
+    global CurrentlySelectedModules
+    set p $maincanvas.module[$modid modname].ff
     
-	foreach item $CurrentlySelectedModules {
-	    if { $item != [$modid modname] } {
-		set tempList "$tempList $item"
-	    }
+    set tempList ""
+    
+    foreach item $CurrentlySelectedModules {
+	if { $item != [$modid modname] } {
+	    set tempList "$tempList $item"
 	}
-	
-	set CurrentlySelectedModules $tempList
+    }
+    
+    set CurrentlySelectedModules $tempList
     
     set modList [netedit getconnected $modid]  
     # go through list from end to start to work for
@@ -2912,19 +2912,31 @@ proc moduleDestroy {maincanvas minicanvas modid} {
 	
 	destroyConnection $rconnid $romodid $rimodid
     }
-    
+
+    # Hack, work around Viewer deletion bug by waiting a moment to destroy
+    # the module after it has been disconnected.
+    if {[string first Viewer $modid] != -1} {
+	after 100 "moduleDestroyAux $maincanvas $minicanvas $modid"
+    } else {
+	moduleDestroyAux $maincanvas $minicanvas $modid
+    }
+}
+
+
+proc moduleDestroyAux {maincanvas minicanvas modid} {
     $maincanvas delete $modid
     destroy ${maincanvas}.module$modid
     $minicanvas delete $modid
     destroy $minicanvas.module$modid
     netedit deletemodule $modid
     $modid delete
-   
+    
     if {[winfo exists .ui$modid]} {
 	destroy .ui$modid
     }
     computeModulesBbox
 }
+
 
 proc moduleDestroySelected {maincanvas minicanvas module} {
     global CurrentlySelectedModules 
