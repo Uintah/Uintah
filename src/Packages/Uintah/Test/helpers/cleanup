@@ -55,7 +55,7 @@ fi
 cat trash/need_removal | xargs ls -ld | awk '{ print $3 }' | sort -u > trash/usernames
 
 for username in `cat trash/usernames`; do
-    sendto=${username}@cs.utah.edu
+    sendto=${username}@sci.utah.edu
     cat > trash/userRemoval <<EOF
 Subject: Cleanup needed for regression tester
 To: $sendto
