@@ -942,8 +942,7 @@ RenderField<Fld, Loc>::render_text_data(FieldHandle field_handle,
   typename Fld::mesh_handle_type mesh = fld->get_typed_mesh();
 
   GeomTexts *texts = scinew GeomTexts();
-  GeomDL *display_list = scinew GeomDL(text);
-  GeomSwitch *text_switch = scinew GeomSwitch(display_list);
+  GeomSwitch *text_switch = scinew GeomSwitch(scinew GeomDL(texts));
   texts->set_font_index(fontsize);
 
   std::ostringstream buffer;
@@ -953,7 +952,6 @@ RenderField<Fld, Loc>::render_text_data(FieldHandle field_handle,
   mesh->begin(iter);
   mesh->end(end);
   Point p;
-  Vector n;
   while (iter != end) {
     typename Fld::value_type val;
     if (fld->value(val, *iter)) {
