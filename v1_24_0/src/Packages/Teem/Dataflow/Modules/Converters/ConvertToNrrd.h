@@ -287,14 +287,29 @@ ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, NrrdDataHandle &pointsH,
     minP = bbox.min();
     maxP = bbox.max();
     spc = maxP - minP;
-    spc.x(spc.x() / (ndims[0] - 1));
-    if (ndims.size() > 1)
+    if (f->basis_order() == 0)
     {
-      spc.y(spc.y() / (ndims[1] - 1));
+      spc.x(spc.x() / ndims[0]);
+      if (ndims.size() > 1)
+      {
+        spc.y(spc.y() / ndims[1]);
+      }
+      if (ndims.size() > 2)
+      {
+        spc.z(spc.z() / ndims[2]);
+      }
     }
-    if (ndims.size() > 2)
+    else
     {
-      spc.z(spc.z() / (ndims[2] - 1));
+      spc.x(spc.x() / (ndims[0] - 1));
+      if (ndims.size() > 1)
+      {
+        spc.y(spc.y() / (ndims[1] - 1));
+      }
+      if (ndims.size() > 2)
+      {
+        spc.z(spc.z() / (ndims[2] - 1));
+      }
     }
     ddims = ndims;
     if (f->basis_order() == 0)
