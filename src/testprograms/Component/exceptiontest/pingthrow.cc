@@ -72,62 +72,70 @@ void t1(PingThrow::pointer& pp, OtherThrow::pointer& ot, int rank)
     pp->pingthrow(1);
   } catch(PingThrow_ns::PPException* p) {
     cout << "SUCCESS\n";
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (rank==0) cout << "****************************************\n";
     t2(pp,ot,rank);
     return;
   }
-  cout << "FAILED\n";
+  cout << "FAILED1\n";
   exit(1);
 }
 
 //Regular impreciseness
 void t2(PingThrow::pointer& pp, OtherThrow::pointer& ot, int rank) 
 {
-  cout << "Test 1...  ";
+  cout << "Test 2...  ";
   try {
     pp->pingthrow(rank+1); //rank zero excepts
     while(1) pp->donone();
   } catch(PingThrow_ns::PPException* p) {
     cout << "SUCCESS\n";
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (rank==0) cout << "****************************************\n";
     t3(pp,ot,rank);
     return;
   }
-  cout << "FAILED\n";
+  cout << "FAILED1\n";
   exit(1);
 }
 
 //getException basic
 void t3(PingThrow::pointer& pp, OtherThrow::pointer& ot, int rank) 
 {
-  cout << "Test 1...  ";
+  cout << "Test 3...  ";
   try {
     pp->pingthrow(rank+1); //rank zero excepts
     pp->getException();
   } catch(PingThrow_ns::PPException* p) {
     cout << "SUCCESS\n";
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (rank==0) cout << "****************************************\n";
     t4(pp,ot,rank);
     return;
   }
-  cout << "FAILED\n";
+  cout << "FAILED1\n";
   exit(1);
 }
 
 //getException with multiple exceptions/multiple methods
 void t4(PingThrow::pointer& pp, OtherThrow::pointer& ot, int rank) 
 {
-  cout << "Test 2...  ";
+  cout << "Test 4...  ";
   try {
     pp->pingthrow(rank); //rank one excepts
     pp->pingthrow2(rank+1); //rank zero excepts
     pp->getException();
-  } catch(PingThrow_ns::PP2Exception* p) {
+  } catch(PingThrow_ns::PPException* p) {
     cout << "SUCCESS\n";
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (rank==0) cout << "****************************************\n";
     //t3(pp,ot);
     return;
   } catch(...) {
-    cout << "FAILED\n";
+    cout << "FAILED1\n";
     exit(1);
   }
-  cout << "FAILED\n";
+  cout << "FAILED2\n";
   exit(1);
 }
 

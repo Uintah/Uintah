@@ -67,16 +67,37 @@ DESCRIPTION
     ~XceptionRelay(); 
 
     ///////
-    // 
-    void relayException(int x_id, Message* message);
+    // Broadcast an exception to all cohorts. Before throwing
+    // the exception we run a synchronization (tournament 
+    // barrier) to make sure nobody else had an exception that
+    // superseeds this one. If there is a more important 
+    // exception, we will try to retreive it.
+    // This method does not throw the exception, this is done in SIDL.
+    void relayException(int* x_id, Message** message);
 
     ///////
-    // Checks whether a message for an exception has arrived. 
-    // Ignores all messages that are to come later than the 
-    // current lineID.
+    // Performs a check whether exceptions exist to be thrown
+    // at the current lineID.
+    // Ignores all exceptions that are to come later than the 
+    // current lineID. When an exception is about to be thrown, 
+    // a level of synchronization and comparisson is done to 
+    // make sure the right exception is being thrown.
     int checkException(Message** _xMsg);
 
+    
+    ///////
+    // Checks whether a message for an exception has arrived. 
+    int readException(Message** _xMsg, int* _xlineID);
 
+    /////
+    // Retreives the current lineID 
+    int getlineID();
+
+
+    ////
+    // Resets internal lineID counter
+    void resetlineID();
+    
   private:
 
     ////////

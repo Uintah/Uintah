@@ -52,6 +52,7 @@ PingThrow_impl::~PingThrow_impl()
 int PingThrow_impl::pingthrow(int arg)
 {
   if(arg==1) {
+    cout << "Throwing PP\n";
     PPException* ppe = new PPException();
     throw (ppe);
   }
@@ -61,6 +62,7 @@ int PingThrow_impl::pingthrow(int arg)
 int PingThrow_impl::pingthrow2(int arg)
 {
   if(arg==1) {
+    cout << "Throwing PP2\n";
     PP2Exception* ppe2 = new PP2Exception();
     throw (ppe2);
   }
@@ -87,6 +89,7 @@ OtherThrow_impl::~OtherThrow_impl()
 
 int OtherThrow_impl::otherthrow()
 {
+  cout << "Throwing OX\n";
   OtherX* ox = new OtherX();
   throw (ox);
   return 0;
