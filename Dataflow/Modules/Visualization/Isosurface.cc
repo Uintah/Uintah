@@ -550,13 +550,6 @@ Isosurface::execute()
     // Stop showing the previous geometry.
     bool geomflush = false;
 
-    // Output geometry.
-    GeometryOPort *ogeom_port = (GeometryOPort *)get_oport("Geometry");
-    if (!ogeom_port) {
-      error("Unable to initialize oport 'Geometry'.");
-      return;
-    }
-
     if ( geomID_ ) {
       ogeom_port->delObj( geomID_ );
       geomID_ = 0;
