@@ -88,7 +88,7 @@ using std::pair;
       //////////
       // Call this after all other tasks have been added to the scheduler
       virtual void finalizeTimestep(double t, double delt, const GridP&,
-				    SchedulerP&);
+				    SchedulerP&, bool recompile=false);
 
       //////////
       // Call this after the timestep has been executed.
