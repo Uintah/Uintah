@@ -118,6 +118,7 @@ proc labeledSlider { w text var from to res {width 13}} {
     pack $frame.entry -side right -expand 0 -fill x
     pack $frame.scale -side right -expand 1 -fill x
     pack $frame -side top -expand 0 -fill x
+    return $frame.scale
 }
 
 
@@ -131,6 +132,8 @@ itcl_class SCIRun_Visualization_GenAxes {
     method set_defaults {} {
 	setGlobal $this-precision  "3"
 	setGlobal $this-squash  "0.7"
+	setGlobal $this-valuerez  "0.25"
+	setGlobal $this-labelrez "0.5"
 	createDefaultPlaneAxisVariables $this-Plane-01-0-Axis
 	createDefaultPlaneAxisVariables $this-Plane-01-1-Axis
 	createDefaultPlaneAxisVariables $this-Plane-02-0-Axis
@@ -374,18 +377,41 @@ itcl_class SCIRun_Visualization_GenAxes {
  	iwidgets::tabnotebook $w.tabs -height 600 -raiseselect true -tabpos n \
 	    -backdrop gray -equaltabs 0 -bevelamount 5 -borderwidth 0
 	pack $w.tabs -expand 1 -fill both
-	set options [$w.tabs add -label "Options"]
+	set options [$w.tabs add -label "Fonts"]
 	pack $options -side top -expand 1 -fill both
 	$w.tabs view 0
 
-	set frame $options
-	labeledSlider $options "Value Precision:" $this-precision 1 12 1
-	labeledSlider $options "Value Squash:" $this-squash 0 2 .1
+	set valueframe $options.valuefont
+	frame $valueframe -borderwidth 2 -relief groove
+	pack $valueframe -side top -expand 0 -fill x
 
+	set frame2 $valueframe.valuefont
+	frame $frame2 -borderwidth 2
+	pack $frame2 -side top -expand 0 -fill x
 
-	set frame $options.labelfont
-	frame $frame
+	label $frame2.label -text "Value Font: " -anchor w
+	pack $frame2.label -side left -expand 0 -fill none
+	menubutton $frame2.menu -indicatoron 1 -menu $frame2.menu.m \
+	    -text "No Fonts in SCIRun/src/Fonts"
+	pack $frame2.menu -side right -expand 1 -fill x
+	menu $frame2.menu.m -tearoff 0
+	$frame2.menu config -takefocus 1 -highlightthickness 2 \
+	    -relief raised -bd 2 -anchor w
+
+	labeledSlider $valueframe "Value Precision:" $this-precision 1 12 1 14
+	labeledSlider $valueframe "Value Squash:" $this-squash 0 2 .1 14
+	set rez [labeledSlider $valueframe "Value Resolution:" $this-valuerez 0.1 2 .01 14]
+	bind $rez <ButtonRelease> "$this-c valueFontChanged"
+
+	
+	set labelframe $options.labelfont
+	frame $labelframe -borderwidth 2 -relief groove
+	pack $labelframe -side top -expand 0 -fill x
+	
+	set frame $labelframe.labelfont
+	frame $frame -borderwidth 2
 	pack $frame -side top -expand 0 -fill x
+
 	label $frame.label -text "Label Font: " -anchor w
 	pack $frame.label -side left -expand 0 -fill none
 	menubutton $frame.menu -indicatoron 1 -menu $frame.menu.m \
@@ -395,17 +421,8 @@ itcl_class SCIRun_Visualization_GenAxes {
 	$frame.menu config -takefocus 1 -highlightthickness 2 \
 	    -relief raised -bd 2 -anchor w
 
-	set frame2 $options.valuefont
-	frame $frame2
-	pack $frame2 -side top -expand 0 -fill x
-	label $frame2.label -text "Value Font: " -anchor w
-	pack $frame2.label -side left -expand 0 -fill none
-	menubutton $frame2.menu -indicatoron 1 -menu $frame2.menu.m \
-	    -text "No Fonts in SCIRun/src/Fonts"
-	pack $frame2.menu -side right -expand 1 -fill x
-	menu $frame2.menu.m -tearoff 0
-	$frame2.menu config -takefocus 1 -highlightthickness 2 \
-	    -relief raised -bd 2 -anchor w
+	set rez [labeledSlider $labelframe "Label Resolution:" $this-labelrez 0.1 2 .01 14]
+	bind $rez <Button> "$this-c labelFontChanged"
 
 	global SCIRUN_SRCDIR
 	set dir [file join $SCIRUN_SRCDIR Fonts]
@@ -420,15 +437,19 @@ itcl_class SCIRun_Visualization_GenAxes {
 	    set filename [join $filename .]
 	    if [string equal SCIRun $filename] { set def $i }
 	    $frame.menu.m add command -label $filename \
-		-command "$frame.menu configure -text \"$filename\";
-                          $this-c setLabelFont \"$font\""
+		-command "$frame.menu configure -text \"$filename\"; \
+			  setGlobal $this-labelfont \"$font\"; \
+                          $this-c labelFontChanged"
 
 	    $frame2.menu.m add command -label $filename \
-		-command "$frame2.menu configure -text \"$filename\";
-                          $this-c setValueFont \"$font\""
+		-command "$frame2.menu configure -text \"$filename\"; \
+		          setGlobal $this-valuefont \"$font\"; \
+                          $this-c valueFontChanged"
 
 	    incr i
 	}
+
+	
 
 	if $i {
 	    $frame.menu.m invoke $def
