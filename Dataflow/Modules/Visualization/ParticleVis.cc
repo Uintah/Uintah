@@ -28,6 +28,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Datatypes/ColorMap.h>
+#include <Core/Datatypes/PropertyManager.h>
 #include <Core/Math/MinMax.h>
 #include <Packages/Uintah/Dataflow/Modules/Selectors/ParticleFieldExtractor.h>
 #include <Dataflow/Network/Module.h>
@@ -42,7 +43,6 @@ using std::cerr;
 
 namespace Uintah {
 using namespace SCIRun;
-
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 // Turn off warnings about partially overridden virtual functions
@@ -228,6 +228,7 @@ void ParticleVis::execute()
               scalefactor = ((*scale_it)[*iter] - smin)/(smax - smin);
 	    if( scalefactor >= 1e-6 ){
 	      if(!hasTensors){
+		cout << "Particle ID for "<<*iter<<" = "<<(*id_it)[*iter]<<endl;
 		sp = scinew GeomSphere( (*p_it)[*iter],
 					scalefactor * radius.get(),
 					nu, nv, (*id_it)[*iter]);
@@ -243,6 +244,7 @@ void ParticleVis::execute()
 		matrix[4] = M(0,1); matrix[5] = M(1,1); matrix[6] = M(2,1);
 		matrix[8] = M(0,2); matrix[9] = M(1,2); matrix[10] = M(2,2);
 		
+		cout << "Particle ID for "<<*iter<<" = "<<(*id_it)[*iter]<<endl;
 		sp = scinew GeomEllipsoid((*p_it)[*iter],
 					  scalefactor * radius.get(),
 					  nu, nv, &(matrix[0]), 2,
@@ -251,6 +253,7 @@ void ParticleVis::execute()
 	    }
 	  } else {
 	    if(!hasTensors){
+		cout << "Particle ID for "<<*iter<<" = "<<(*id_it)[*iter]<<endl;
 	      sp = scinew GeomSphere( (*p_it)[*iter],
 				      radius.get(), nu, nv, (*id_it)[*iter]);
 	    } else {
@@ -270,6 +273,7 @@ void ParticleVis::execute()
 		matrix[8] = M(1,3)*norm; matrix[9] = M(2,3)*norm;
 		matrix[10] = M(3,3)*norm;
 		
+		cout << "Particle ID for "<<*iter<<" = "<<(*id_it)[*iter]<<endl;
 		sp = scinew GeomEllipsoid((*p_it)[*iter],
 					  radius.get(), nu, nv, &(matrix[0]),
 					  2, (*id_it)[*iter]);
@@ -277,8 +281,11 @@ void ParticleVis::execute()
 	    }
 	  }
 	  double value = (*s_it)[*iter];
-	  if( sp != 0)
+	  if( sp != 0) {
+	    sp->properties().freeze();
+	    sp->properties().store("id",LongLong((*id_it)[*iter]),true);
 	    obj->add( scinew GeomMaterial( sp,(cmap->lookup(value).get_rep())));
+	  }
 	  count = 0;
 	}
  	if( drawVectors.get() == 1 && hasVectors){
@@ -343,13 +350,14 @@ void ParticleVis::geom_pick(GeomPick* pick, void* userdata, GeomObj* picked_obj)
   cerr << "this = "<< this <<", pick = "<<pick<<endl;
   cerr << "User data = "<<userdata<<endl;
   //  cerr << "sphere index = "<<index<<endl<<endl;
-  int id = 0;
-  if ( picked_obj->getId( id ) )
-    cerr<<"Id = "<< id <<endl;
-  else
+  LongLong id(-1);
+  if ( picked_obj->properties().get("id",id) ) {
+    cerr<<"Id = "<< id.val_ <<endl;
+  } else {
     cerr<<"Not getting the correct data\n";
-  if( cbClass != 0 && id != -1 )
-    ((ParticleFieldExtractor *)cbClass)->callback( id );
+  }
+  if( cbClass != 0 && id.val_ != -1 )
+    ((ParticleFieldExtractor *)cbClass)->callback( id.val_ );
   // Now modify so that points and spheres store index.
 }
   
