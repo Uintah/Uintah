@@ -98,7 +98,6 @@ itcl_class SCIRun_Visualization_RescaleColorMap {
 	$w.f3.l2 configure -foreground $color
 	$w.f3.e2 configure -state disabled -foreground $color
 
-
 	$this-c needexecute
     }
 
@@ -110,6 +109,5 @@ itcl_class SCIRun_Visualization_RescaleColorMap {
 	$w.f3.e1 configure -state normal -foreground black
 	$w.f3.l2 configure -foreground black
 	$w.f3.e2 configure -state normal -foreground black
-	
     }
 }
