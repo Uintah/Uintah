@@ -8,9 +8,9 @@ a:hover {color:#660066}
 
 a:active {color:#AA00AA}
 
-p {margin-left:90px; margin-right:80px; font-family:"serif"}
+p {margin-left:90px; margin-right:80px; font-family:"serif";}
 
-beginpage {page-break-before:always}
+br {page-break-after:always}
 
 .toc {list-style-type:"upper-roman"; font-family:"serif"; margin-left:60px; margin-right:60px}
 
@@ -18,11 +18,11 @@ beginpage {page-break-before:always}
 
 .title {font-family: "times"; font-weight:bold; font-size:x-large; color:#660000; margin-bottom:0px; margin-top:0px; text-align:center}
 
-.ptitle {font-family: "times"; font-weight:bold; font-size:large; color:#660000; margin-bottom:0px; margin-top:0px; text-align:center}
+.ptitle {font-family: "times"; font-weight:bold; font-size:1.2em; color:#660000; margin-bottom:0px; margin-top:0px; text-align:center}
 
 .subtitle {font-family:times; text-align:center; font-weight:bold}
 
-.psubtitle {font-family:times; text-align:center; font-weight:bold; font-size:0.85em}
+.psubtitle {font-family:times; text-align:center; font-weight:bold; font-size:0.80em}
 
 .head {color:#000000; margin:0px; margin-top:25px; border:none; font-size:large; font-family:"arial", "helvetica", "sans-serif"}
 
@@ -36,7 +36,7 @@ beginpage {page-break-before:always}
 
 .firstpara {margin-left:20px; margin-right:10px; text-align:left; font-family:"serif"}
 
-.pfirstpara {margin-left:20px; margin-right:10px; text-align:left; font-family:"serif"; font-size:0.75em}
+.pfirstpara {margin-left:20px; margin-right:10px; text-align:left; font-family:"serif"; font-size:0.72em}
 
 .nextpara {margin-left:20px; margin-right:10px; text-align:left; text-indent:2em;  font-family:"serif"}
 

@@ -25,9 +25,6 @@
 <!-- ***************** web displayable templates **************** -->
 <!-- ************************************************************ -->
 
-<xsl:template match="beginpage" mode="web">
-</xsl:template>
-
 <xsl:template match="table" mode="web">
   <center>
     <table border="1"><xsl:apply-templates mode="web"/></table>
@@ -107,9 +104,10 @@
 </xsl:template>
 
 <xsl:template match="computeroutput" mode="web">
-  <div class="box"><br/>
+  <div class="box">
     <font color="blue">
-      <pre class="example"><xsl:apply-templates mode="web"/></pre>
+      <pre class="example">
+<xsl:apply-templates mode="web"/></pre>
     </font>
   </div>
 </xsl:template>
@@ -135,10 +133,6 @@
 <!-- ************************************************************ -->
 <!-- *********************** printable templates **************** -->
 <!-- ************************************************************ -->
-
-<xsl:template match="beginpage" mode="print">
-  <hr size="3" />
-</xsl:template>
 
 <xsl:template match="table" mode="print">
   <center>
@@ -213,9 +207,10 @@
 </xsl:template>
 
 <xsl:template match="computeroutput" mode="print">
-  <div class="box"><br/>
+  <div class="box">
     <font color="blue">
-      <pre class="pexample"><xsl:apply-templates mode="print"/></pre>
+      <pre class="pexample">
+<xsl:apply-templates mode="print"/></pre>
     </font>
   </div>
 </xsl:template>
@@ -410,6 +405,17 @@
 
 <hr size="1"/>
 
+<p class="firstpara">
+  Copyright (c)
+  <xsl:value-of select="./bookinfo/copyright/year"/>
+  <xsl:value-of select="concat(' ',' ')"/>
+  <xsl:value-of select="./bookinfo/copyright/holder"/>
+</p>
+
+<br/>
+
+<p class="ptitle">Table of Contents</p>
+
 <xsl:for-each select="./chapter">
   <xsl:variable name="chapnum"><xsl:number/></xsl:variable>
 
@@ -427,6 +433,8 @@
 
 <xsl:for-each select="./chapter">
   <xsl:variable name="chapnum"><xsl:number/></xsl:variable>
+
+  <br/>
 
   <p class="ptitle">Chapter <xsl:value-of select="$chapnum"/>: <xsl:value-of select="./title"/></p>
 
