@@ -3,13 +3,12 @@
 <!-- @version: Updated 7/31/00-->
 <Uintah_specification>
 
-  <!-- Copper Cylinder, Hyperelastic stress update, MTS Plasticity Model,
-     Johnson Cook Damage Model, Mie-Gruneisen equation of state
+  <!-- Copper Cylinder, Comp Neo Hookean Plastic stress update,
      The cylinder geometry is that from Camacho and Ortiz, CMAME 142 (1997)
      p. 284-->
 
   <Meta>
-    <title>Cylinder Impact - Case D </title>
+    <title>Cylinder Impact - Case C </title>
   </Meta>
 
   <Time>
@@ -21,7 +20,7 @@
   </Time>
 
   <DataArchiver>
-    <filebase>cylinderImpact_D_MTS.uda</filebase>
+    <filebase>cylinderImpact_CNHP.uda</filebase>
     <outputInterval>20.0e-6</outputInterval>
     <save label = "KineticEnergy"/>
     <save label = "TotalMass"/>
@@ -34,7 +33,6 @@
     <save label = "p.volume"/>
     <save label = "p.stress"/>
     <save label = "p.deformationMeasure"/>
-    <save label = "p.damage"/>
     <save label = "g.mass"/>
     <save label = "g.volume"/>
     <save label = "g.stressFS"/>
@@ -76,12 +74,11 @@
       <material>
         <burn type = "null" />
         <include href="inputs/MPM/MaterialData/MaterialConstAnnCopper.xml"/>
-        <constitutive_model type="hyperelastic_plastic">
-          <tolerance>5.0e-10</tolerance>
+        <constitutive_model type="comp_neo_hook_plastic">
           <include href="inputs/MPM/MaterialData/IsotropicElasticAnnCopper.xml"/>
-          <include href="inputs/MPM/MaterialData/MTSPlasticAnnCopper.xml"/>
-          <include href="inputs/MPM/MaterialData/JohnsonCookDamageAnnCopper.xml"/>
-          <include href="inputs/MPM/MaterialData/MieGruneisenEOSAnnCopper.xml"/>
+          <yield_stress>400.0e6</yield_stress>
+          <hardening_modulus>100.0e6</hardening_modulus>
+		    <alpha> 0.0 </alpha>
         </constitutive_model>
         <geom_object>
           <cylinder label = "Cylinder">
