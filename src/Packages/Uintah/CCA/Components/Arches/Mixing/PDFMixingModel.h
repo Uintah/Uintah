@@ -40,12 +40,11 @@ POSSIBLE REVISIONS
 #include <vector>
 
 namespace Uintah {
-  class ReactionModel;
-  class KD_Tree;
-  class MixRxnTableInfo;
-  class Integrator;
-  class InletStream;
-  
+class ReactionModel;
+class KD_Tree;
+class MixRxnTableInfo;
+class Integrator;
+
 class PDFMixingModel: public MixingModel, public DynamicTable {
 
 public:
@@ -89,7 +88,7 @@ public:
       // All variables are in SI units with pressure in Pascals.
       // Parameters:
       // [in] mixVar is an array of independent variables
-      virtual Stream speciesStateSpace(const std::vector<double>& mixVar);
+      Stream speciesStateSpace(const std::vector<double>& mixVar);
 
 
       // GROUP: Get Methods :
@@ -100,6 +99,7 @@ public:
       inline bool isAdiabatic() const{ 
 	return d_adiabatic; 
       }
+
       inline int getNumMixVars() const{ 
 	return d_numMixingVars; 
       }
@@ -118,7 +118,8 @@ public:
       }
       inline ReactionModel* getRxnModel() const {
 	return d_rxnModel;
-      }      
+      }
+      
       inline Integrator* getIntegrator() const {
 	return d_integrator;
       }
@@ -165,6 +166,8 @@ private:
       // variables as a function of independent variables.
       // This could be implemented either as a k-d or a binary tree data structure.
       KD_Tree* d_mixTable;
+      // Class that accesses data structure (k-d or binary tree) 
+      //DynamicTable* d_mixTableAccess;
       Integrator* d_integrator;
       ReactionModel* d_rxnModel;
       

@@ -33,16 +33,13 @@ POSSIBLE REVISIONS
     None
 ***************************************************************************/
 
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/InletStream.h>
 #include <Packages/Uintah/CCA/Components/Arches/Mixing/Stream.h>
-#include <Packages/Uintah/CCA/Components/Arches/Mixing/ReactionModel.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
 #include <vector>
 
 namespace Uintah {
-  class Integrator;
-
+  class InletStream;
 class MixingModel {
 
 public:
@@ -68,16 +65,17 @@ public:
       // Set up the problem specification database
       //
       virtual void problemSetup(const ProblemSpecP& params) = 0;
- 
+
+      // GROUP: Compute properties 
       // GROUP: Actual Action Methods :
       ///////////////////////////////////////////////////////////////////////
       //
       // Carry out actual computation of properties
       //
       virtual void computeProps(const InletStream& inStream,
-				Stream& outStream) = 0;
+			       Stream& outStream) = 0;
 
-      /////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////
       // speciesStateSpace returns the state space (dependent) variables,
       // including species composition, given a set of mixture fractions. The 
       // species composition of each stream must be known.
@@ -97,10 +95,7 @@ public:
       virtual bool isAdiabatic() const = 0;
       virtual int getNumMixStatVars() const = 0;
       virtual int getNumRxnVars() const = 0;
-      virtual int getTableDimension() const = 0;
-      virtual int getTotalVars() const = 0;
-      virtual ReactionModel* getRxnModel() const = 0;
-      virtual Integrator* getIntegrator() const = 0;
+
 
 
 protected :
