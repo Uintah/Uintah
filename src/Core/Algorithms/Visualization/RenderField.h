@@ -2187,6 +2187,7 @@ public:
 				 FieldHandle cfld_handle,
 				 ColorMapHandle cmap,
 				 MaterialHandle default_material,
+				 bool force_def_color,
 				 const string &data_display_mode,
 				 double scale,
 				 int resolution) = 0;
@@ -2216,6 +2217,7 @@ public:
 				 FieldHandle cfld_handle,
 				 ColorMapHandle cmap,
 				 MaterialHandle default_material,
+				 bool force_def_color,
 				 const string &data_display_mode,
 				 double scale,
 				 int resolution);
@@ -2228,6 +2230,7 @@ RenderTensorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 						FieldHandle cfld_handle,
 						ColorMapHandle cmap,
 						MaterialHandle def_mat,
+						bool force_def_color,
 						const string &display_mode,
 						double scale, 
 						int resolution)
@@ -2260,6 +2263,30 @@ RenderTensorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
   GeomHandle data_switch =
     scinew GeomSwitch(scinew GeomMaterial(scinew GeomDL(objs), def_mat));
 
+  int colorstyle = 0;
+  if (cmap.get_rep())
+  {
+    colorstyle = 1;
+  }
+  else if (cfld->query_vector_interface().get_rep())
+  {
+    colorstyle = 2;
+  }
+  if (force_def_color || cbox_p)
+  {
+    colorstyle = 3;
+  }
+
+  // Use a default color?
+  bool def_color = !(cmap.get_rep()) || force_def_color;
+  bool vec_color = false;
+  if (def_color && cfld->query_vector_interface().get_rep()
+      && !force_def_color)
+  {
+    def_color = false;
+    vec_color = true;
+  }
+
   typename VFld::mesh_handle_type mesh = vfld->get_typed_mesh();
 
   typename Loc::iterator iter, end;
@@ -2273,20 +2300,35 @@ RenderTensorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
       Point p;
       mesh->get_center(p, *iter);
 
-      typename CFld::value_type ctmp;
-      cfld->value(ctmp, *iter);
-
-      double ctmpd;
-      to_double(ctmp, ctmpd);
-
-      if (cmap.get_rep() && !cbox_p)
+      if (colorstyle == 0)
       {
+	add_item(glyph, p, tmp, scale, resolution, objs, true);
+      }
+      else if (colorstyle == 1)
+      {
+	typename CFld::value_type ctmp;
+	cfld->value(ctmp, *iter);
+	double ctmpd;
+	to_double(ctmp, ctmpd);
+
 	add_item(scinew GeomMaterial(glyph, cmap->lookup(ctmpd)),
+		 p, tmp, scale, resolution, objs, false);
+      }
+      else if (colorstyle == 2)
+      {
+	typename CFld::value_type ctmp;
+	cfld->value(ctmp, *iter);
+	Vector ctmpv;
+	to_vector(ctmp, ctmpv);
+
+	MaterialHandle vcol = scinew Material();
+	vcol->diffuse = Color(ctmpv.x(), ctmpv.y(), ctmpv.z());
+	add_item(scinew GeomMaterial(glyph, vcol),
 		 p, tmp, scale, resolution, objs, false);
       }
       else
       {
-	add_item(glyph, p, tmp, scale, resolution, objs, !cbox_p);
+	add_item(glyph, p, tmp, scale, resolution, objs, false);
       }
     }
     ++iter;
