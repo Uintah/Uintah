@@ -6,12 +6,11 @@
 
 
 <CENTER>
-<TABLE border="0" cellpadding="0" cellspacing="5" width="640" bgcolor="#cccccc">
+<TABLE border="0" cellpadding="20" cellspacing="5" width="640" bgcolor="#cccccc">
 <TR><TD>
 
-<IMG SRC="images/biot-banner-main.gif">
-
 <CENTER>
+<IMG SRC="images/biot-banner-main.gif">
 <FONT face="Arial,Helvetica,Geneva,Swiss,SunSans-Regular" color="Maroon">
 <H1> BioTensor Tutorial </H1>
 </FONT>
@@ -43,8 +42,8 @@
 
 <H3>Figures</H3>
 <UL>
-  <LI><A HREF="#figure_1">Figure 1: BioTenor Interface Window</A>
-  <LI><A HREF="#figure_2">Figure 2: BioTenor Interface Window (Detached Panes)</A>
+  <LI><A HREF="#figure_1">Figure 1: Biotensor Interface Window</A>
+  <LI><A HREF="#figure_2">Figure 2: Biotensor Interface Window (Detached Panes)</A>
   <LI><A HREF="#figure_3">Figure 3: File Menu</A>
   <LI><A HREF="#figure_4">Figure 4: Help Menu</A>
   <LI><A HREF="#figure_5">Figure 5: File Load Dialog</A>
@@ -53,9 +52,11 @@
   <LI><A HREF="#figure_8">Figure 8: Final Processing Stage</A>
   <LI><A HREF="#figure_9">Figure 9: Cutting Plane Visualization</A>
   <LI><A HREF="#figure_10">Figure 10: Iso-Surface Visualization</A>
-  <LI><A HREF="#figure_11">Figure 11:</A>
-  <LI><A HREF="#figure_12">Figure 12:</A>
-  <LI><A HREF="#figure_13">Figure 13:</A>
+  <LI><A HREF="#figure_11">Figure 11: Glyph Box Visualization</A>
+  <LI><A HREF="#figure_12">Figure 12: Superquadric Glyph Visualization</A>
+  <LI><A HREF="#figure_13">Figure 13: Fiber Visualization</A>
+  <LI><A HREF="#figure_14">Figure 14: Single Fiber</A>
+  <LI><A HREF="#figure_15">Figure 15: Planes and Fibers</A>
 </UL>
 
 <H2><A NAME="section_1"> Section 1 -- Introduction </H2>
@@ -134,7 +135,7 @@ in <A HREF="#figure_1">Figure 1</A>.
 <BR><BR>
 <CENTER>
 <P><A HREF="figures/biotensor-load.gif"><IMG BORDER=1 SRC="figures/biotensor-load-small.gif"></A><br>
-<B>Figure 1: BioTenor Interface Window (Initial State).</b>
+<B>Figure 1: Biotensor Interface Window (Initial State).</b>
 </CENTER>
 
 <BR><H3><A NAME="section_2_3"> 2.3 User Interface Organization </H3>
@@ -155,7 +156,7 @@ When separated, the panes appear as shown in <A HREF="#figure_2">Figure 2.</A>
 <BR><BR>
 <CENTER>
 <P><A HREF="figures/biotensor-panes.gif"><IMG BORDER=1 SRC="figures/biotensor-panes-small.gif"></A><br>
-<B>Figure 2: BioTenor Interface Window (Panels Detached From View Window).</b>
+<B>Figure 2: Biotensor Interface Window (Panels Detached From View Window).</b>
 </CENTER>
 
 <P>
@@ -163,7 +164,7 @@ At the top of the Processing Pane, there are two top-level menu
 options: File and Help, as shown in <A HREF="#figure_3">Figures 3</A>
 and <A HREF ="#figure_4">4</A>.  These menus contain options for loading and
 saving BioTensor settings, as well as options for controlling the
-appearcance of 'tooltips' within BioTensor.
+appearance of 'tooltips' within BioTensor.
 
 <A NAME="figure_3">
 <BR><BR>
@@ -191,13 +192,13 @@ stage.
 <BR><H2><A NAME="section_3"> Section 3: Loading Data </H2>
 
 BioTensor can be used to process raw DWI images, producing DTI data
-for visualization.  Alternativley, if you already have Tensor data
+for visualization.  Alternatively, if you already have Tensor data
 available, that data can be loaded into BioTensor for immediate
 investigation (bypassing the processing stages).  Both alternatives
 will be described in this section.
 <P>
 To process and visualize DWI data, use the Browse buttons (an example
-File Broswer window can be seen in <A HREF="#figure_5">Figure 5</A>.
+File Browser window can be seen in <A HREF="#figure_5">Figure 5</A>.
 The Browse buttons are located on the Load Data tab of the Processing
 Pane, and can be used to specify the DWI volumes and the B0 reference
 volume.  These datasets can be loaded either as Nrrd formatted data
@@ -220,16 +221,16 @@ the DWI channels.  For example, for an axial scan with 128x256 in-plane
 resolution, 90 slices, and 12 diffusion-weightings, the DWI volume
 would be stored as one contiguous 12x90x128x256 dataset (in terms of
 data-ordering, the 256 axis is changing "fastest", i.e. the data is
-stored as 12 volumes (each 90x128x256) concattenated together into one
-big array), and the B0 volume would have dimesions 90x128x256.  A
+stored as 12 volumes (each 90x128x256) concatenated together into one
+big array), and the B0 volume would have dimensions 90x128x256.  A
 similar format is expected for Analyze data.  For DICOM data the
 you must identify a collection of sequences (directories) which make
 up the DWI and reference volumes.
 <P>
-Note: if your already have diffusion tensr (DT) data (rather than
+Note: if your already have diffusion tensor (DT) data (rather than
 DWI data and reference volumes), you can bypss the registration and
 tensor  estimation stages by loading the data in this stage (as a Nrrd
-file), and then proceeding directly to Section 6 (data visulization).
+file), and then proceeding directly to Section 6 (data visualization).
 The radio button at the top of the Load Data tab can be used to
 indicate whether your input data is DWI/B0 or DTI.
 <P>
@@ -303,7 +304,7 @@ and the resulting distortion, allowing it to map the DWIs back to the
 coordinate space of the B=0 image without explicitly registering with it.
 <P>
 The registration method's estimate of the over-all shape of the brain
-cross-section is based on a simple segementation of the DWIs.  This
+cross-section is based on a simple segmentation of the DWIs.  This
 segmentation is performed as some amount of Gaussian smoothing along
 the X and Y directions, followed by a thresholding of the DWI value,
 followed by (optional) connected component analysis.  Each of these
@@ -316,9 +317,9 @@ the brain cortical outline; too much smoothing will distort the
 estimate of cortical shape due to anisotropy in the underlying white
 matter.  The preset defaults generally work well.
 <P>
-The "Background/DWI Treshold" area of the UI allows you to use
+The "Background/DWI Threshold" area of the UI allows you to use
 automatic determination of the threshold DWI value between background
-and brain tissue ("Automatically Determine Treshold"), or enter one
+and brain tissue ("Automatically Determine Threshold"), or enter one
 directly ("Specify Threshold").
 <P>
 The "Use Connected Components" check box determines whether connected
@@ -342,7 +343,7 @@ fitting, versus how many slices (with the poorest segmentation
 results) should be ignored.  The default setting generally
 works well.
 <P>
-The final paramter in the registration method is the kernel to use when
+The final parameter in the registration method is the kernel to use when
 applying the warp to the individual images.  In order of ascending quality
 (and decreasing speed), the choices are:
 <UL>
@@ -404,7 +405,7 @@ option, you may specify the mean DWI value used for thresholding
 ("Specify Threshold"), or you may allow BioTensor to attempt to
 automatically find this threshold by histogram analysis.  NOTE:
 tensors will be computed for all voxels; the DWI masking produces a
-seperate scalar field which BioTensor uses for controlling
+separate scalar field which BioTensor uses for controlling
 visualization, but which does not scale the tensors themselves.
 <P>
 B-Matrix: In order to estimate tensors from DWIs, the relationship
@@ -412,7 +413,7 @@ between each DWI and the diffusion tensor must be known.  The B-matrix
 is a matrix that captures the weighting that each diffusion tensor
 coefficient received in a given DWI.  BioTensor currently refers to
 the list of B-matrices for all the DWIs as the "B-Matrix".  There are
-two ways that the B-Matrix information can be communicatd to BioTensor.
+two ways that the B-Matrix information can be communicated to BioTensor.
 <P>
 "Compute B-Matrix Using Gradients Provided": Assuming that the
 diffusion weighting caused by the imaging gradients is negligible, the
@@ -420,12 +421,12 @@ B-Matrix can be computed directly from the list of gradient
 directions, which was used previously for EPI registration.  NOTE: in
 this case, the first image among the DWIs is assumed to be the
 reference T2 image, which exhibits no diffusion weighting, and for
-which the B-matrix is assuemd to be all zeros ("B=0").
+which the B-matrix is assumed to be all zeros ("B=0").
 <P>
 Alternatively, if for each DWI you have computed a B-matrices which
 more completely accounts for diffusion weighting, from both imaging
-gradients as well as diffusion-encoding gradidents, this may be
-provided as seperate a text file ("Load B-Matrix").
+gradients as well as diffusion-encoding gradients, this may be
+provided as separate a text file ("Load B-Matrix").
 <P>
 Some important notes on the formatting of the B-Matrix file:
 <UL>
@@ -521,6 +522,26 @@ HREF="#figure_10">Figure 10</A> you can:
 
 <BR><H3><A NAME="section_6_4"> 6.4 Glyph Visualization </H3>
 
+Under the Glyphs tab, you can select the type, placement, and coloring
+of tensor glyphs within the volume.  The default setting is to render
+box glyphs, seeded on the planes of the planes, colored based on the
+principle eigenvector direction (as above) as shown in <A
+HREF="#figure_11">Figure 11</A>.  A zoomed-in figure of the
+superquadric glyphs rendered on the cutting planes is shown in <A
+HREF="#figure_12">Figure 12</A>.  In addition to colored-box glyphs,
+the tensors can be rendered as RGB boxes, ellipsoids, or superquadric
+glyphs.  With the controls at the top of the panel, you can select the
+discretization level used for the round glyph shapes (which are
+approximated using triangular meshes), you can select whether or not
+to normalize the volume (to 1.0) of each tensor before rendering, as
+well as whether to scale the volume of each tensor, and whether to
+exaggerate the anisotropy of the tensor (and by how much).  Finally,
+using the options in the "Seed At" frame, you can choose where to
+place the glyphs: either at a single point (controlled by the position
+of a sphere widget in the Rendering window: use Shift-LeftMouse to
+select and move widgets), seeded along a line specified by a rake
+widget, seeded on the visible cutting planes, or seeded at the grid
+point located within the prescribed isovolume.
 
 <A NAME="figure_11">
 <BR><BR>
@@ -529,21 +550,70 @@ HREF="#figure_10">Figure 10</A> you can:
 <B>Figure 11: Glyph Box Visualization.</b>
 </CENTER>
 
-<BR><H3><A NAME="section_6_5"> 6.5 Fiber Visualization </H3>
-
 <A NAME="figure_12">
 <BR><BR>
 <CENTER>
-<P><IMG BORDER=1 SRC="figures/biotensor-vis-fibers.gif"><br>
-<B>Figure 12: Fiber Visualization.</b>
+<P><IMG BORDER=1 SRC="figures/biotensor-vis-sqg.gif" width=600><br>
+<B>Figure 12: Superquadric Glyph Visualization.</b>
 </CENTER>
 
-<IMG SRC="images/biot-banner-sub.gif">
+<BR><H3><A NAME="section_6_5"> 6.5 Fiber Visualization </H3>
+
+
+6.5 Fibers
+
+As with the tensor glyphs, you can select seed locations and
+colorization options for rendering fibers within the brain.  A variety
+of these options are shown in <A HREF="#figure_13">Figure 13</A>, <A
+HREF="#Figure_14"> Figure 14, and <A HREF="#figure_15">Figure 15</A>.
+Additionally, you can set a number of parameters that control the
+fiber tracing algorithm.  These parameters include:
+
+<UL>
+  <LI> Algorithm: trace along the major eigenvector or using the
+       tensorlines algorithm; choose a step size, as well as whether
+       to use Euler or RK4 (fourth-order Runge-Kutta) integration.
+
+  <LI> Sampling Kernel: when querying tensor values between discrete
+       sample locations, the interpolation kernel to be used (Tent,
+       Catmull-Rom, or B-Spline).
+
+  <LI> Stopping Criteria: choose a set of criteria which can be
+       evaluated to determine whether to terminate a fiber.  If any of
+       the criteria are true, the fiber will terminate.  These
+       criteria include: exceeding a specified maximum fiber length,
+       exceeding a maximum number of steps, and entering a region of
+       the volume which falls below a specified anisotropy threshold
+       (either Linear Anisotropy or Fractional Anisotropy).
+</UL>
+
+<A NAME="figure_13">
+<BR><BR>
+<CENTER>
+<P><IMG BORDER=1 SRC="figures/biotensor-vis-fibers.gif"><br>
+<B>Figure 13: Fiber Visualization.</b>
+</CENTER>
+
+<A NAME="figure_14">
+<BR><BR>
+<CENTER>
+<P><IMG BORDER=1 SRC="figures/biotensor-vis-single-fiber.gif" width=600><br>
+<B>Figure 14: Single Fiber.</b>
+</CENTER>
+
+<A NAME="figure_15">
+<BR><BR>
+<CENTER>
+<P><IMG BORDER=1 SRC="figures/biotensor-vis-planes-fibers.gif" width=600><br>
+<B>Figure 15: Planes and Fibers.</b>
+</CENTER>
+
+
+<P><IMG SRC="images/footer.gif"><br>
 
 </TD></TR>
 </TABLE>
 </CENTER>
-
 
 </BODY>
 </HTML>
