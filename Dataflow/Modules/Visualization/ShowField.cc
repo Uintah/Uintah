@@ -688,36 +688,41 @@ ShowField::execute()
   scalars_on_.reset();
   text_on_.reset();
   const int dim = fld_handle->mesh()->dimensionality();
-  bool do_nodes = nodes_on_.get() && nodes_dirty_;
-  bool do_edges = edges_on_.get() && edges_dirty_;
-  if (do_edges && dim < 1)
+  bool nodes_on = nodes_on_.get();
+  bool edges_on = edges_on_.get();
+  if (edges_on && dim < 1)
   {
     remark("Field type contains no edges, not drawing them.");
-    do_edges = false;
+    edges_on = false;
   }
-  bool do_faces = faces_on_.get() && faces_dirty_;
-  if (do_faces && dim < 2)
+  bool faces_on = faces_on_.get();
+  if (faces_on && dim < 2)
   {
     remark("Field type contains no faces, not drawing them.");
-    do_faces = false;
+    faces_on = false;
   }
+
+  bool do_nodes = nodes_on && nodes_dirty_;
+  bool do_edges = edges_on && edges_dirty_;
+  bool do_faces = faces_on && faces_dirty_;
+
   bool do_data  = (vectors_on_.get() || tensors_on_.get() || scalars_on_.get()) && data_dirty_;
   bool do_text  = text_on_.get() && text_dirty_;
 
-  if (render_state_[NODE] != do_nodes) {
+  if (render_state_[NODE] != nodes_on) {
     if (node_id_) ogeom_->delObj(node_id_);
     node_id_ = 0;
-    render_state_[NODE] = do_nodes;
+    render_state_[NODE] = nodes_on;
   }
-  if (render_state_[EDGE] != do_edges) {
+  if (render_state_[EDGE] != edges_on) {
     if (edge_id_) ogeom_->delObj(edge_id_);
     edge_id_ = 0;
-    render_state_[EDGE] = do_edges;
+    render_state_[EDGE] = edges_on;
   }
-  if (render_state_[FACE] != do_faces) {
+  if (render_state_[FACE] != faces_on) {
     if (face_id_) ogeom_->delObj(face_id_);
     face_id_ = 0;
-    render_state_[FACE] = do_faces;
+    render_state_[FACE] = faces_on;
   }
   if (render_state_[DATA] != (vectors_on_.get() ||
 			      tensors_on_.get() ||
@@ -758,7 +763,7 @@ ShowField::execute()
   // Cleanup.
   if (do_nodes || color_map_changed) {
     nodes_dirty_ = false;
-    if (renderer_.get_rep() && do_nodes) {
+    if (renderer_.get_rep() && nodes_on) {
       const char *name = nodes_transparency_.get()?"Transparent Nodes":"Nodes";
       if (node_id_) ogeom_->delObj(node_id_);
 
@@ -771,7 +776,7 @@ ShowField::execute()
   }
   if (do_edges || color_map_changed) {
     edges_dirty_ = false;
-    if (renderer_.get_rep() && do_edges) {
+    if (renderer_.get_rep() && edges_on) {
       const char *name = edges_transparency_.get()?"Transparent Edges":"Edges";
       if (edge_id_) ogeom_->delObj(edge_id_);
       GeomHandle gmat =
@@ -783,7 +788,7 @@ ShowField::execute()
   }
   if (do_faces || color_map_changed) {
     faces_dirty_ = false;
-    if (renderer_.get_rep() && do_faces)
+    if (renderer_.get_rep() && faces_on)
     {
       const char *name = faces_transparency_.get()?"Transparent Faces":"Faces";
       if (face_id_) ogeom_->delObj(face_id_);
