@@ -1,8 +1,8 @@
 
 #include <config/sci.cf>
 
-OBJS = LaceContours.o  TransformCS.o
-SRCS = LaceContours.cc TransformCS.cc
+OBJS = LaceContours.o  LaceContoursTemp.o  TransformCS.o
+SRCS = LaceContours.cc LaceContoursTemp.cc TransformCS.cc
 
 LIBNAME = Contours
 
