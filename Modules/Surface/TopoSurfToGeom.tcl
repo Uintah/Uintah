@@ -15,7 +15,7 @@ itcl_class TopoSurfToGeom {
 	set $this-wireMode wireTog
 	set $this-junctionMode junctionTog
 	set $this-nonjunctionMode nonjunctionTog
-	set $this-rad 0.05
+	set $this-rad 0
     }
 
     method ui {} {

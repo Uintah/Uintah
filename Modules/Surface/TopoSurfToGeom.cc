@@ -64,7 +64,7 @@ TopoSurfToGeom::TopoSurfToGeom(const clString& id)
     add_iport(isurface);
     ogeom=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
     add_oport(ogeom);
-    c.resize(7);
+    c.resize(14);
     c[0]=scinew Material(Color(.2,.2,.2),Color(.1,.7,.1),Color(.5,.5,.5),20);
     c[1]=scinew Material(Color(.2,.2,.2),Color(.7,.1,.1),Color(.5,.5,.5),20);
     c[2]=scinew Material(Color(.2,.2,.2),Color(.1,.1,.7),Color(.5,.5,.5),20);
@@ -72,6 +72,13 @@ TopoSurfToGeom::TopoSurfToGeom(const clString& id)
     c[4]=scinew Material(Color(.2,.2,.2),Color(.7,.1,.7),Color(.5,.5,.5),20);
     c[5]=scinew Material(Color(.2,.2,.2),Color(.1,.7,.7),Color(.5,.5,.5),20);
     c[6]=scinew Material(Color(.2,.2,.2),Color(.6,.6,.6),Color(.5,.5,.5),20);
+    c[7]=scinew Material(Color(.2,.2,.2),Color(.0,.3,.0),Color(.5,.5,.5),20);
+    c[8]=scinew Material(Color(.2,.2,.2),Color(.3,.0,.0),Color(.5,.5,.5),20);
+    c[9]=scinew Material(Color(.2,.2,.2),Color(.0,.0,.3),Color(.5,.5,.5),20);
+    c[10]=scinew Material(Color(.2,.2,.2),Color(.3,.3,.0),Color(.5,.5,.5),20);
+    c[11]=scinew Material(Color(.2,.2,.2),Color(.3,.0,.3),Color(.5,.5,.5),20);
+    c[12]=scinew Material(Color(.2,.2,.2),Color(.0,.3,.3),Color(.5,.5,.5),20);
+    c[13]=scinew Material(Color(.2,.2,.2),Color(.3,.3,.3),Color(.5,.5,.5),20);
 }
 
 TopoSurfToGeom::TopoSurfToGeom(const TopoSurfToGeom&copy, int deep)
@@ -203,13 +210,13 @@ void TopoSurfToGeom::execute()
 	if (patchMode.get() == "patchTog") {
 	    GeomGroup* gr=scinew GeomGroup;
 	    for (int i=0; i<Patches.size(); i++) {
-		gr->add(scinew GeomMaterial(Patches[i], c[i%7]));
+		gr->add(scinew GeomMaterial(Patches[i], c[i%14]));
 	    }
 	    ogeom->addObj(gr, clString("Topo Patches"));
 	} else {
 	    for (int i=0; i<Patches.size(); i++) {
 		clString name("Topo Patch "+to_string(i));
-		ogeom->addObj(scinew GeomMaterial(Patches[i], c[i%7]), name);
+		ogeom->addObj(scinew GeomMaterial(Patches[i], c[i%14]), name);
 	    }
 	}
     }	    
@@ -217,13 +224,13 @@ void TopoSurfToGeom::execute()
 	if (wireMode.get() == "wireTog") {
 	    GeomGroup* gr=scinew GeomGroup;
 	    for (int i=0; i<Wires.size(); i++) {
-		gr->add(scinew GeomMaterial(Wires[i], c[i%7]));
+		gr->add(scinew GeomMaterial(Wires[i], c[i%14]));
 	    }
 	    ogeom->addObj(gr, clString("Topo Wires"));
 	} else {
 	    for (int i=0; i<Wires.size(); i++) {
 		clString name("Topo Wire "+to_string(i));
-		ogeom->addObj(scinew GeomMaterial(Wires[i], c[i%7]), name);
+		ogeom->addObj(scinew GeomMaterial(Wires[i], c[i%14]), name);
 	    }
 	}
     }
@@ -231,12 +238,12 @@ void TopoSurfToGeom::execute()
 	if (junctionMode.get() == "junctionTog") {
 	    GeomGroup* gr=scinew GeomGroup;
 	    for (int i=0; i<Junctions.size(); i++)
-		gr->add(scinew GeomMaterial(Junctions[i], c[i%7]));
+		gr->add(scinew GeomMaterial(Junctions[i], c[i%14]));
 	    ogeom->addObj(gr, clString("Topo Junctions"));
 	} else {
 	    for (int i=0; i<Junctions.size(); i++) {
 		clString name("Topo Junction "+to_string(i));
-		ogeom->addObj(scinew GeomMaterial(Junctions[i], c[i%7]), name);
+		ogeom->addObj(scinew GeomMaterial(Junctions[i], c[i%14]), name);
 	    }
 	}
     }
@@ -244,12 +251,12 @@ void TopoSurfToGeom::execute()
 	if (nonjunctionMode.get() == "nonjunctionTog") {
 	    GeomGroup* gr=scinew GeomGroup;
 	    for (int i=0; i<NonJunctions.size(); i++)
-		gr->add(scinew GeomMaterial(NonJunctions[i], c[i%7]));
+		gr->add(scinew GeomMaterial(NonJunctions[i], c[i%14]));
 	    ogeom->addObj(gr, clString("Topo NonJunctions"));
 	} else {
 	    for (int i=0; i<NonJunctions.size(); i++) {
 		clString name("Topo NonJunction "+to_string(i));
-		ogeom->addObj(scinew GeomMaterial(NonJunctions[i], c[i%7]), name);
+		ogeom->addObj(scinew GeomMaterial(NonJunctions[i], c[i%14]), name);
 	    }
 	}
     }
