@@ -1287,8 +1287,8 @@ TetVolMesh::locate(Cell::index_type &cell, const Point &p)
   LatVolMeshHandle mesh = grid_->get_typed_mesh();
   LatVolMesh::Cell::index_type ci;
   if (!mesh->locate(ci, p)) { return false; }
-  vector<Cell::index_type> v = grid_->value(ci);
-  vector<Cell::index_type>::iterator iter = v.begin();
+  const vector<Cell::index_type> &v = grid_->value(ci);
+  vector<Cell::index_type>::const_iterator iter = v.begin();
   while (iter != v.end())
   {
     if (inside(*iter, p))

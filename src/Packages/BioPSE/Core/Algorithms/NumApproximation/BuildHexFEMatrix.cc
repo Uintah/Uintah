@@ -134,7 +134,7 @@ double BuildHexFEMatrix::getLocalMatrixEntry(HexVolMesh::Cell::index_type ci, in
   xb = p.x(); yb = p.y(); zb = p.z();
 
   typedef double onerow[3]; // This 'hack' is necessary to compile under IRIX CC
-  onerow *conductivity;
+  const onerow *conductivity;
 
   // get conductivity tensor for this cell
   if (index_based_) conductivity = tens_[hFieldInt_->value(ci)].second.mat_;

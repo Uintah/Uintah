@@ -224,7 +224,7 @@ BuildFEMatrix::build_local_matrix( double lcl_a[4][4],
   double vol = hMesh_->get_gradient_basis(c_ind, grad1, grad2, grad3, grad4);
  
   typedef double onerow[3]; // This 'hack' is necessary to compile under IRIX CC
-  onerow *el_cond;
+  const onerow *el_cond;
 
   if (index_based_) el_cond = tens_[hFieldInt_->value(c_ind)].second.mat_;
   else el_cond = hFieldTensor_->value(c_ind).mat_;
