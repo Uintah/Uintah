@@ -116,14 +116,15 @@ void TexCuttingPlanes::widget_moved(bool)
 void TexCuttingPlanes::execute(void)
 {
   intexture_ = (GLTexture3DIPort *)get_iport("GL Texture");
-  incolormap_ = (ColorMapIPort *)get_iport("Color Map");
+  icmap_ = (ColorMapIPort *)get_iport("ColorMap");
   ogeom_ = (GeometryOPort *)get_oport("Geometry");
+  ocmap_ = (ColorMapOPort *)get_oport("ColorMap");
 
   if (!intexture_) {
     error("Unable to initialize iport 'GL Texture'.");
     return;
   }
-  if (!incolormap_) {
+  if (!icmap_) {
     error("Unable to initialize iport 'Color Map'.");
     return;
   }
@@ -142,7 +143,7 @@ void TexCuttingPlanes::execute(void)
   }
   
   ColorMapHandle cmap;
-  if( !incolormap_->get(cmap)){
+  if( !icmap_->get(cmap)){
     return;
   }
 
@@ -246,6 +247,19 @@ void TexCuttingPlanes::execute(void)
 
   ogeom_->flushViews();				  
   //AuditAllocator(default_allocator);
+
+  if (!ocmap_) {
+    error("Unable to initialize oport 'Color Map'.");
+    return;
+  } else {
+    ColorMapHandle outcmap;
+    outcmap = new ColorMap(*cmap.get_rep()); 
+    double min, max;
+    tex_->getminmax(min, max);
+    outcmap->Scale(min, max);
+    ocmap_->send(outcmap);
+  }    
+
 }
 
 } // End namespace SCIRun
