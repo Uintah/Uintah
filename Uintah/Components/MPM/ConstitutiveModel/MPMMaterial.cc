@@ -6,10 +6,13 @@
 #include <SCICore/Geometry/IntVector.h>
 #include <Uintah/Grid/Region.h>
 #include <Uintah/Grid/CellIterator.h>
+#include <Uintah/Grid/VarLabel.h>
 #include <Uintah/Components/MPM/GeometrySpecification/GeometryPieceFactory.h>
 #include <Uintah/Components/MPM/GeometrySpecification/UnionGeometryPiece.h>
 #include <Uintah/Components/MPM/GeometrySpecification/GeometryObject.h>
 #include <Uintah/Exceptions/ParameterNotFound.h>
+#include <Uintah/Interface/DataWarehouse.h>
+#include <Uintah/Components/MPM/Util/Matrix3.h>
 #include <iostream>
 #include "ConstitutiveModelFactory.h"
 using namespace std;
@@ -21,6 +24,27 @@ using namespace SCICore::Geometry;
 MPMMaterial::MPMMaterial(ProblemSpecP& ps)
 {
    // Constructor
+   pDeformationMeasureLabel = 
+               new VarLabel("p.deformationMeasure",
+			    ParticleVariable<Matrix3>::getTypeDescription());
+   pStressLabel = 
+               new VarLabel( "p.stress",
+			     ParticleVariable<Matrix3>::getTypeDescription() );
+
+   pVolumeLabel = 
+               new VarLabel( "p.volume",
+			     ParticleVariable<double>::getTypeDescription());
+   pMassLabel = new VarLabel( "p.mass",
+			      ParticleVariable<double>::getTypeDescription() );
+   pVelocityLabel =
+               new VarLabel( "p.velocity", 
+			     ParticleVariable<Vector>::getTypeDescription() );
+   pExternalForceLabel =
+               new VarLabel( "p.externalforce",
+			     ParticleVariable<Vector>::getTypeDescription() );
+   pXLabel =   new VarLabel( "p.x",
+			     ParticleVariable<Point>::getTypeDescription(),
+			     VarLabel::PositionVariable);
 
   // Follow the layout of the input file
   // Steps:
@@ -69,10 +93,7 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps)
 
       piece_num++;
       cerr << "piece: " << piece_num << '\n';
-      IntVector res;
-      geom_obj_ps->require("res",res);
-      cerr << piece_num << ": res: " << res << '\n';
-      d_geom_objs.push_back(new GeometryObject(mainpiece, res));
+      d_geom_objs.push_back(new GeometryObject(mainpiece, geom_obj_ps));
 
       // Step 4 -- Assign the boundary conditions to the object
 
@@ -110,12 +131,20 @@ particleIndex MPMMaterial::countParticles(const Region* region) const
    return sum;
 }
 
-void MPMMaterial::createParticles(ParticleVariable<Point>& position,
-				  const Region* region)
+void MPMMaterial::createParticles(particleIndex numParticles,
+				  const Region* region,
+				  DataWarehouseP& new_dw)
 {
+   ParticleVariable<Point> position;
+   new_dw->allocate(numParticles, position, pXLabel,
+		    getDWIndex(), region);
+   ParticleVariable<Vector> velocity;
+   new_dw->allocate(velocity, pVelocityLabel, getDWIndex(), region);
+
    particleIndex start = 0;
    for(int i=0; i<d_geom_objs.size(); i++)
-      start += createParticles(d_geom_objs[i], start, position, region);
+      start += createParticles(d_geom_objs[i], start, position,
+			       velocity, region);
 }
 
 particleIndex MPMMaterial::countParticles(GeometryObject* obj,
@@ -154,6 +183,7 @@ particleIndex MPMMaterial::countParticles(GeometryObject* obj,
 particleIndex MPMMaterial::createParticles(GeometryObject* obj,
 					   particleIndex start,
 					   ParticleVariable<Point>& position,
+					   ParticleVariable<Vector>& velocity,
 					   const Region* region)
 {
    GeometryPiece* piece = obj->getPiece();
@@ -175,8 +205,11 @@ particleIndex MPMMaterial::createParticles(GeometryObject* obj,
 	    for(int iz=0;iz < ppc.z(); iz++){
 	       IntVector idx(ix, iy, iz);
 	       Point p = lower + dxpp*idx;
-	       if(piece->inside(p))
-		  position[start+count++]=p;
+	       if(piece->inside(p)){
+		  position[start+count]=p;
+		  velocity[start+count]=obj->getInitialVelocity();
+		  count++;
+	       }
 	    }
 	 }
       }

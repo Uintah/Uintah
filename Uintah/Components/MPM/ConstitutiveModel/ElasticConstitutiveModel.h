@@ -39,14 +39,14 @@ namespace Uintah {
 	 Matrix3 stressIncrement;
 	 // rotation increment (3 x 3 matrix)
 	 Matrix3 rotationIncrement;
-	 
-	 // ConstitutiveModel's properties
-	 // Young's Modulus
-	 double YngMod;
-	 // Poisson's Ratio
-	 double PoiRat;
-	 
-	 
+
+	 struct CMData {
+	    // ConstitutiveModel's properties
+	    // Young's Modulus
+	    double YngMod;
+	    // Poisson's Ratio
+	    double PoiRat;
+	 };
 	 
       public:
 	 // constructors
@@ -61,10 +61,6 @@ namespace Uintah {
 	 
 	 // assign the ElasticConstitutiveModel components 
 	 
-	 // set Young's Modulus
-	 void setYngMod(double ym);
-	 // set Poisson's Ratio
-	 void setPoiRat(double pr);
 	 // assign the Symmetric stress tensor
 	 virtual void setStressTensor(Matrix3 st);
 	 // assign the strain increment tensor
@@ -76,11 +72,6 @@ namespace Uintah {
 	 // assign the rotation increment tensor
 	 void  setRotationIncrement(Matrix3 ri);
 	 
-	 // access components of the ElasticConstitutiveModel
-	 // access Young's Modulus
-	 double getYngMod() const;
-	 // access Poisson's Ratio
-	 double getPoiRat() const;
 	 // access the Symmetric stress tensor
 	 virtual Matrix3 getStressTensor() const;
 	 // access the Symmetric strain tensor
@@ -164,6 +155,9 @@ namespace Uintah {
 	 ConstitutiveModel & operator=(const ElasticConstitutiveModel &cm);
 	 
 	 virtual int getSize() const;
+
+	 CMData d_initialData;
+	 const VarLabel* p_cmdata_label;
       };
       
       
@@ -174,6 +168,11 @@ namespace Uintah {
 #endif  // __ELASTIC_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.8  2000/05/01 16:18:12  sparker
+// Completed more of datawarehouse
+// Initial more of MPM data
+// Changed constitutive model for bar
+//
 // Revision 1.7  2000/04/26 06:48:16  sparker
 // Streamlined namespaces
 //

@@ -1,11 +1,15 @@
 
 #include "GeometryObject.h"
+#include <Uintah/Interface/ProblemSpec.h>
 
 using namespace Uintah::MPM;
 
-GeometryObject::GeometryObject(GeometryPiece* piece, const IntVector& num_par)
-   : d_piece(piece), d_resolution(num_par)
+GeometryObject::GeometryObject(GeometryPiece* piece,
+			       ProblemSpecP& ps)
+   : d_piece(piece)
 {
+   ps->require("res", d_resolution);
+   ps->require("velocity", d_initialVel);
 }
 
 GeometryObject::~GeometryObject()
@@ -16,70 +20,6 @@ IntVector GeometryObject::getNumParticlesPerCell()
 {
   return d_resolution;
 }
-
-#if 0
-void GeometryObject::addPieces(ProblemSpecP prob_spec)
-{
-  int pt,pn,mn,i,m,vf_num;
-  double gb[7];
-  string stuff;
-  Vector init_cond_vel;
-  Point origin;
-  double radius;
-  double length;
-  Point lo, up;
- 
-
-  std::string type;
-  prob_spec->require("type",type);
-
-  GeometryPiece *geom_piece;
-
-  // NOTE: In the original code, we set the initial conditions, but this
-  // hasn't been implemented yet.  Probably shouldn't be here either.
-
-  if (type == "box") {
-    Point min,max;
-    prob_spec->require("min",min);
-    prob_spec->require("max",max);
-  
-    geom_piece = new BoxGeometryPiece(min,max);
-
-  }
-
-  else if (type == "cylinder") {
-    std::string ax;
-    prob_spec->require("axis",ax);
-    prob_spec->require("origin",origin);
-    prob_spec->require("length",length);
-    prob_spec->require("radius",radius);
-    
-    if (ax == "X") axis = CylinderGeometryPiece::X;
-    if (ax == "Y") axis = CylinderGeometryPiece::Y;
-    if (ax == "Z") axis = CylinderGeometryPiece::Z;
-
-    geom_piece = new CylinderGeometryPiece(axis,origin,length,radius);
-
-  }
-
-  else if (type == "sphere") {
-    prob_spec->require("origin",origin);
-    prob_spec->require("radius",radius);
-
-    geom_piece = new SphereGeometryPiece(radius,origin);
-    
-  }
-
-  else if (type == "tri") {
-
-    geom_piece = new TriGeometryPiece;
-
-  }
-    
-  d_geom_pieces.push_back(geom_piece);
-  
-}
-#endif
 
 #ifdef FUTURE
 void GeometryObject::surface(Point part_pos,int surf[7], int &np)
@@ -377,6 +317,11 @@ void GeometryObject::fillWithParticles(vector<Material *> &materials,
 #endif
   
 // $Log$
+// Revision 1.12  2000/05/01 16:18:14  sparker
+// Completed more of datawarehouse
+// Initial more of MPM data
+// Changed constitutive model for bar
+//
 // Revision 1.11  2000/04/27 23:18:46  sparker
 // Added problem initialization for MPM
 //

@@ -33,10 +33,12 @@
 	<MPM>
 	    <material>
 		<density>10.0</density>
-		<elastic> 
-		  <youngs_modulus>1.e5</youngs_modulus>
-		  <poissons_ratio>0.33</poissons_ratio>
-	        </elastic>
+		<comp_mooney_rivlin> 
+		   <he_constant_1>100000.0</he_constant_1>
+		   <he_constant_2>20000.0</he_constant_2>
+		   <he_constant_3>70000.0</he_constant_3>
+		   <he_constant_4>1320000.0</he_constant_4>
+	        </comp_mooney_rivlin>
 		<toughness>10.e6</toughness>
 		<thermal_conductivity>1.0</thermal_conductivity>
 		<specific_heat>5</specific_heat>

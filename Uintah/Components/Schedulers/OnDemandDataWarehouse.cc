@@ -49,24 +49,31 @@ void OnDemandDataWarehouse::get(ReductionVariableBase&, const VarLabel*) const
 	throw TypeMismatchException("Type mismatch");
     dr->di->get(result);
 #endif
-   cerr << "OnDemandDataWarehouse::get not finished\n";
+   cerr << "OnDemandDataWarehouse::get(ReductionVariable) not finished\n";
 }
 
 void OnDemandDataWarehouse::allocate(ReductionVariableBase&,
 				     const VarLabel*)
 {
-   cerr << "OnDemend DataWarehouse::allocate not finished\n";
+   cerr << "OnDemend DataWarehouse::allocate(ReductionVariable) not finished\n";
 }
 
 void OnDemandDataWarehouse::put(const ReductionVariableBase&, const VarLabel*)
 {
-   cerr << "OnDemend DataWarehouse::put not finished\n";
+   cerr << "OnDemend DataWarehouse::put(ReductionVariable) not finished\n";
 }
 
-void OnDemandDataWarehouse::get(ParticleVariableBase&, const VarLabel*,
-				int, const Region*, int) const
+void OnDemandDataWarehouse::get(ParticleVariableBase& var,
+				const VarLabel* label,
+				int matlIndex,
+				const Region* region,
+				int numGhostCells) const
 {
-   cerr << "OnDemend DataWarehouse::get not finished\n";
+   if(numGhostCells != 0)
+      throw InternalError("Ghost cells don't work, go away");
+   if(!particledb.exists(label, matlIndex, region))
+      throw UnknownVariable(label->getName());
+   particledb.get(label, matlIndex, region, var);
 }
 
 void OnDemandDataWarehouse::allocate(int numParticles,
@@ -86,49 +93,74 @@ void OnDemandDataWarehouse::allocate(int numParticles,
    // Create the particle set and variable
    ParticleSet* pset = new ParticleSet(numParticles);
    ParticleSubset* psubset = new ParticleSubset(pset);
-   ParticleVariable<Point> positions(psubset);
+   var.allocate(psubset);
 
    // Put it in the database
-   particledb.put(label, matlIndex, region, positions);
-   particledb.put(position_label, matlIndex, region, positions);
-
-   // Copy the pointer for return
-   var.copyPointer(positions);
+   particledb.put(label, matlIndex, region, var, false);
+   particledb.put(position_label, matlIndex, region, var, false);
 }
 
-void OnDemandDataWarehouse::allocate(ParticleVariableBase&, const VarLabel*,
-				     int, const Region*)
+void OnDemandDataWarehouse::allocate(ParticleVariableBase& var,
+				     const VarLabel* label,
+				     int matlIndex,
+				     const Region* region)
 {
-   cerr << "OnDemend DataWarehouse::allocate not finished\n";
+   // Error checking
+   if(particledb.exists(label, matlIndex, region))
+      throw InternalError("Particle variable already exists: "+label->getName());
+
+   if(!particledb.exists(position_label, matlIndex, region))
+      throw InternalError("Position variable does not exist: "+position_label->getName());
+
+   ParticleVariable<Point> pos;
+   particledb.get(position_label, matlIndex, region, pos);
+
+   // Allocate the variable
+   var.allocate(pos.getParticleSubset());
+
+   // Put it in the database
+   particledb.put(label, matlIndex, region, var, false);
 }
 
-void OnDemandDataWarehouse::put(const ParticleVariableBase&, const VarLabel*,
-				int, const Region*)
+void OnDemandDataWarehouse::put(const ParticleVariableBase& var,
+				const VarLabel* label,
+				int matlIndex,
+				const Region* region)
 {
-   cerr << "OnDemend DataWarehouse::put not finished\n";
+   // Error checking
+   if(!particledb.exists(label, matlIndex, region))
+      throw InternalError("Position variable does not exist: "+position_label->getName());
+
+   // Put it in the database
+   particledb.put(label, matlIndex, region, var, true);
 }
 
 void OnDemandDataWarehouse::get(NCVariableBase&, const VarLabel*,
 				int, const Region*, int) const
 {
-   cerr << "OnDemend DataWarehouse::get not finished\n";
+   cerr << "OnDemend DataWarehouse::get(NCVariable) not finished\n";
 }
 
 void OnDemandDataWarehouse::allocate(NCVariableBase&, const VarLabel*,
 				     int, const Region*)
 {
-   cerr << "OnDemend DataWarehouse::allocate not finished\n";
+   cerr << "OnDemend DataWarehouse::allocate(NCVariable) not finished\n";
 }
 
 void OnDemandDataWarehouse::put(const NCVariableBase&, const VarLabel*,
 				int, const Region*)
 {
-   cerr << "OnDemend DataWarehouse::put not finished\n";
+   cerr << "OnDemend DataWarehouse::put(NCVariable) not finished\n";
 }
 
 
 //
 // $Log$
+// Revision 1.14  2000/05/01 16:18:16  sparker
+// Completed more of datawarehouse
+// Initial more of MPM data
+// Changed constitutive model for bar
+//
 // Revision 1.13  2000/04/28 07:35:34  sparker
 // Started implementation of DataWarehouse
 // MPM particle initialization now works

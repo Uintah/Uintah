@@ -3,6 +3,7 @@
 #define __GEOMETRY_OBJECT_H__
 
 #include <SCICore/Geometry/IntVector.h>
+#include <Uintah/Interface/ProblemSpecP.h>
 
 namespace Uintah {
    namespace MPM {
@@ -43,7 +44,7 @@ WARNING
       public:
 	//////////
 	// Insert Documentation Here:
-	 GeometryObject(GeometryPiece* piece, const IntVector&);
+	GeometryObject(GeometryPiece* piece, ProblemSpecP&);
 
 	//////////
 	// Insert Documentation Here:
@@ -59,9 +60,14 @@ WARNING
 	    return d_piece;
 	 }
 
+	 Vector getInitialVelocity() const {
+	    return d_initialVel;
+	 }
+
       private:
 	 GeometryPiece* d_piece;
 	 IntVector d_resolution;
+	 Vector d_initialVel;
       };
       
    } // end namespace MPM
@@ -71,6 +77,11 @@ WARNING
 
 
 // $Log$
+// Revision 1.17  2000/05/01 16:18:14  sparker
+// Completed more of datawarehouse
+// Initial more of MPM data
+// Changed constitutive model for bar
+//
 // Revision 1.16  2000/04/27 23:18:46  sparker
 // Added problem initialization for MPM
 //

@@ -75,6 +75,7 @@ WARNING
       }
       
       virtual void copyPointer(const ParticleVariableBase&);
+      virtual void allocate(ParticleSubset*);
    private:
       
       //////////
@@ -113,6 +114,20 @@ WARNING
       ParticleVariable<T>::ParticleVariable(ParticleSubset* pset)
       : d_pset(pset)
       {
+	 d_pset->addReference();
+	 d_pdata=new ParticleData<T>(pset->getParticleSet()->numParticles());
+	 d_pdata->addReference();
+      }
+   
+   template<class T>
+      void ParticleVariable<T>::allocate(ParticleSubset* pset)
+      {
+	 if(d_pdata && d_pdata->removeReference())
+	    delete d_pdata;
+	 if(d_pset && d_pset->removeReference())
+	    delete d_pset;
+
+	 d_pset=pset;
 	 d_pset->addReference();
 	 d_pdata=new ParticleData<T>(pset->getParticleSet()->numParticles());
 	 d_pdata->addReference();
@@ -167,6 +182,11 @@ WARNING
 
 //
 // $Log$
+// Revision 1.9  2000/05/01 16:18:17  sparker
+// Completed more of datawarehouse
+// Initial more of MPM data
+// Changed constitutive model for bar
+//
 // Revision 1.8  2000/04/28 20:24:44  jas
 // Moved some private copy constructors to public for linux.  Velocity
 // field is now set from the input file.  Simulation state now correctly
