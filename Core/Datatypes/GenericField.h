@@ -48,6 +48,18 @@ public:
     fdata_(fdata_type())
   {};
 
+  GenericField(mesh_handle_type mesh) : 
+    Field(),
+    mesh_(mesh),
+    fdata_(fdata_type())
+  {};
+
+  GenericField(mesh_handle_type mesh, data_location data_at) : 
+    Field(data_at),
+    mesh_(mesh),
+    fdata_(fdata_type())
+  {};
+
   virtual ~GenericField() {};
 
   //! Required virtual functions from field base.

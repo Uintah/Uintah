@@ -29,6 +29,11 @@ public:
     GenericField<TriSurfMesh, vector<T> >() {};
   TriSurf(Field::data_location data_at) : 
     GenericField<TriSurfMesh, vector<T> >(data_at) {};
+  TriSurf(TriSurfMeshHandle mesh) :
+    GenericField<TriSurfMesh, vector<T> >(mesh) {};
+  TriSurf(TriSurfMeshHandle mesh, Field::data_location data_at) : 
+    GenericField<TriSurfMesh, vector<T> >(mesh, data_at) {};
+  
   virtual ~TriSurf() {};
   
   void    io(Piostream &stream);
