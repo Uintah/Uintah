@@ -24,9 +24,6 @@ using namespace SCIRun;
 
 #include <Packages/Uintah/CCA/Components/Arches/fortran/scalsrc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mascal_scalar_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/uvelsrc_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/vvelsrc_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/wvelsrc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mascal_fort.h>
 //#include <Packages/Uintah/CCA/Components/Arches/fortran/uvelcoeffupdate_fort.h>
 #ifdef divergenceconstraint

@@ -45,6 +45,7 @@ namespace Uintah {
       ~ArchesConstVariables();
       constCCVariable<double> density;
       constCCVariable<double> new_density;
+      constCCVariable<double> density_guess;
       constCCVariable<double> denRefArray;
       constCCVariable<double> pressure;
       constCCVariable<double> viscosity;

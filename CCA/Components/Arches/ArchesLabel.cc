@@ -64,6 +64,8 @@ ArchesLabel::ArchesLabel()
   // Density Labels
   d_densityCPLabel = VarLabel::create("densityCP", 
 				  CCVariable<double>::getTypeDescription() );
+  d_densityGuessLabel = VarLabel::create("densityGuess", 
+				  CCVariable<double>::getTypeDescription() );
   d_densityTempLabel = VarLabel::create("densityTemp", 
 				  CCVariable<double>::getTypeDescription() );
   d_densityOldOldLabel = VarLabel::create("densityOldOld", 
@@ -506,6 +508,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_denAccumLabel);
   VarLabel::destroy(d_enthalpyRes);
   VarLabel::destroy(d_densityCPLabel);
+  VarLabel::destroy(d_densityGuessLabel);
   VarLabel::destroy(d_densityTempLabel);
   VarLabel::destroy(d_densityOldOldLabel);
   VarLabel::destroy(d_filterdrhodtLabel);
