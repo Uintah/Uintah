@@ -2386,8 +2386,8 @@ class BioTensorApp {
 	set detachedVFr $win.detachedV
 	set attachedVFr $win.attachedV
 	
-	init_Vframe $detachedVFr.f 0
-	init_Vframe $attachedVFr.f 1
+	init_Vframe $detachedVFr.f 1
+	init_Vframe $attachedVFr.f 2
 
 
 	### pack 3 frames
@@ -2419,7 +2419,7 @@ class BioTensorApp {
 	if {[info exists PowerAppSession] && [set PowerAppSession] != ""} { 
 	    set saveFile $PowerAppSession
 	    wm title .standalone "BioTensor - [getFileName $saveFile]"
-	    $this load_session
+	    $this load_session_data
 	} 
     }
 
@@ -3626,237 +3626,240 @@ class BioTensorApp {
 	    {{Other} { * }}
 	}
 	
-	if {$saveFile == "" } {
-	    set saveFile [tk_getOpenFile -filetypes $types]
-	}
+	set saveFile [tk_getOpenFile -filetypes $types]
 
 	if {$saveFile != ""} {
-	    # configure title
-	    wm title .standalone "BioTensor - [getFileName $saveFile]" 
-	    
-	    # Reset application 
-	    reset_app
-	    
-	    foreach g [info globals] {
-		global $g
-	    }
-
-	    source $saveFile
-	    
-
-	    if {$c_data_tab == "Analyze"} {
-		# This is a hack for the AnalyzeToNrrd module.
-		# The problem is that the filenames$i variables
-		# are created as data is selected and loaded.  For
-		# some reason when loading the setting for an app
-		# the filenames$i variables aren't seen.  This
-		# needs to be looked into more for 1.20.2
-		global mods
-		global data_mode
-
-		if {$data_mode == "DWIknownB0"} {
-		    # Check AnalyzeToNrrd-T2
-		    global $mods(AnalyzeToNrrd-T2)-num-files
-		    global $mods(AnalyzeToNrrd-T2)-file
-		    set num [set $mods(AnalyzeToNrrd-T2)-num-files]
-		    for {set i 0} {$i < $num} {incr i} {
-			if {[info exists $mods(AnalyzeToNrrd-T2)-filenames$i]} {
-			    set temp [set $mods(AnalyzeToNrrd-T2)-filenames$i]
-			    unset $mods(AnalyzeToNrrd-T2)-filenames$i
-			    set $mods(AnalyzeToNrrd-T2)-file $temp
-			    
-			    global $mods(AnalyzeToNrrd-T2)-filenames$i
-			    set $mods(AnalyzeToNrrd-T2)-filenames$i [set $mods(AnalyzeToNrrd-T2)-file]
-			    
-			    # Call the c++ function that adds this data to its data 
-			    # structure.
-#			    $mods(AnalyzeToNrrd-T2)-c add_data [set $mods(AnalyzeToNrrd-T2)-file]
-			}
-		    }
-		}
-		# Check AnalyzeToNrrd1
-		global $mods(AnalyzeToNrrd1)-num-files
-		global $mods(AnalyzeToNrrd1)-file
-		set num [set $mods(AnalyzeToNrrd1)-num-files]
-		for {set i 0} {$i < $num} {incr i} {
-		    if {[info exists $mods(AnalyzeToNrrd1)-filenames$i]} {
-			set temp [set $mods(AnalyzeToNrrd1)-filenames$i]
-			unset $mods(AnalyzeToNrrd1)-filenames$i
-			set $mods(AnalyzeToNrrd1)-file $temp
-			
-			global $mods(AnalyzeToNrrd1)-filenames$i
-			set $mods(AnalyzeToNrrd1)-filenames$i [set $mods(AnalyzeToNrrd1)-file]
-			
-			# Call the c++ function that adds this data to its data 
-			# structure.
-#			$mods(AnalyzeToNrrd1)-c add_data [set $mods(AnalyzeToNrrd1)-file]
-		    }
-		}
-	    } elseif {$c_data_tab == "Dicom"} {
-		# This is a hack for the DicomToNrrd module.
-		# The problem is that the entry-files$i variables
-		# are created as data is selected and loaded.  For
-		# some reason when loading the setting for an app
-		# the entry-files$i variables aren't seen.  This
-		# needs to be looked into more for 1.20.2
-		global mods
-		global data_mode
-		if {$data_mode == "DWIknownB0"} {
-		    # Check DicomToNrrd-T2
-		    global $mods(DicomToNrrd-T2)-num-entries
-		    set num [set $mods(DicomToNrrd-T2)-num-entries]
-		    for {set i 0} {$i < $num} {incr i} {
-			if {[info exists $mods(DicomToNrrd-T2)-entry-files$i]} {
-			    set temp1 [set $mods(DicomToNrrd-T2)-entry-files$i]
-			    unset $mods(DicomToNrrd-T2)-entry-files$i
-
-			    set temp2 [set $mods(DicomToNrrd-T2)-entry-dir$i]
-			    unset $mods(DicomToNrrd-T2)-entry-dir$i
-
-			    set temp3 [set $mods(DicomToNrrd-T2)-entry-suid$i]
-			    unset $mods(DicomToNrrd-T2)-entry-suid$i
-			    
-			    global $mods(DicomToNrrd-T2)-entry-files$i
-			    set $mods(DicomToNrrd-T2)-entry-files$i $temp1
-
-			    global $mods(DicomToNrrd-T2)-entry-dir$i
-			    set $mods(DicomToNrrd-T2)-entry-dir$i $temp2
-
-			    global $mods(DicomToNrrd-T2)-entry-suid$i
-			    set $mods(DicomToNrrd-T2)-entry-suid$i $temp3
-			    
-			    # Call the c++ function that adds this data to its data 
-			    # structure.
-# 			    $mods(DicomToNrrd-T2)-c add_data \
-# 				[set $mods(DicomToNrrd-T2)-entry-dir$i] \
-# 				[set $mods(DicomToNrrd-T2)-entry-suid$i] \
-# 				[set $mods(DicomToNrrd-T2)-entry-files$i] 
-			}
-		    }
-		}
-		# Check DicomToNrrd1
-		global $mods(DicomToNrrd1)-num-entries
-		set num [set $mods(DicomToNrrd1)-num-entries]
-		for {set i 0} {$i < $num} {incr i} {
-		    if {[info exists $mods(DicomToNrrd1)-entry-files$i]} {
-			set temp1 [set $mods(DicomToNrrd1)-entry-files$i]
-			unset $mods(DicomToNrrd1)-entry-files$i
-			
-			set temp2 [set $mods(DicomToNrrd1)-entry-dir$i]
-			unset $mods(DicomToNrrd1)-entry-dir$i
-			
-			set temp3 [set $mods(DicomToNrrd1)-entry-suid$i]
-			unset $mods(DicomToNrrd1)-entry-suid$i
-			
-			global $mods(DicomToNrrd1)-entry-files$i
-			set $mods(DicomToNrrd1)-entry-files$i $temp1
-
-			global $mods(DicomToNrrd1)-entry-dir$i
-			set $mods(DicomToNrrd1)-entry-dir$i $temp2
-			
-			global $mods(DicomToNrrd1)-entry-suid$i
-			set $mods(DicomToNrrd1)-entry-suid$i $temp3
-			
-			# Call the c++ function that adds this data to its data 
-			# structure.
-# 			$mods(DicomToNrrd1)-c add_data \
-# 			    [set $mods(DicomToNrrd1)-entry-dir$i] \
-# 			    [set $mods(DicomToNrrd1)-entry-suid$i] \
-# 			    [set $mods(DicomToNrrd1)-entry-files$i]
-		    }
-		}
-	    }
-
-	    if {$data_mode == "B0DWI"} {
-		global $mods(UnuPermute)-dim
-
-		if {[info exists $mods(UnuPermute)-axis0]} {
-		    set temp0 [set $mods(UnuPermute)-axis0]
-		    unset $mods(UnuPermute)-axis0
-
-		    global $mods(UnuPermute)-axis0
-		    set $mods(UnuPermute)-axis0 $temp0
-		}
-
-		if {[info exists $mods(UnuPermute)-axis1]} {
-		    set temp1 [set $mods(UnuPermute)-axis1]
-		    unset $mods(UnuPermute)-axis1
-		    global $mods(UnuPermute)-axis1
-		    set $mods(UnuPermute)-axis1 $temp1
-		}
-
-		if {[info exists $mods(UnuPermute)-axis2]} {
-		    set temp2 [set $mods(UnuPermute)-axis2]
-		    unset $mods(UnuPermute)-axis2
-		    global $mods(UnuPermute)-axis2
-		    set $mods(UnuPermute)-axis2 $temp2
-		}
-
-		if {[set $mods(UnuPermute)-dim] == 4} {
-		    set temp3 3
-		    if {[info exists $mods(UnuPermute)-axis3]} {
-			set temp3 [set $mods(UnuPermute)-axis3]
-			unset $mods(UnuPermute)-axis3
-			global $mods(UnuPermute)-axis3
-			set $mods(UnuPermute)-axis3 $temp3
-		    }
-		}
-	    }
-
-	    # set a few variables that need to be reset
-	    set indicate 0
-	    set cycle 0
-	    set IsPAttached 1
-	    set IsVAttached 1
-	    set executing_modules 0
-
-	    # configure each vis tab
-	    configure_variance_tabs
-	    configure_planes_tabs
-	    configure_isosurface_tabs
-	    configure_glyphs_tabs
-	    configure_fibers_tabs
-	    
-	    # bring tabs forward
-	    $proc_tab1 view $c_procedure_tab
-	    $proc_tab2 view $c_procedure_tab
-
-	    $data_tab1 view $c_data_tab
-	    $data_tab2 view $c_data_tab
-
-	    $vis_frame_tab1 view $c_left_tab
-	    $vis_frame_tab2 view $c_left_tab
-
-	    $vis_tab1 view $c_vis_tab
-	    $vis_tab2 view $c_vis_tab
-	    
-	    # activate proper step tabs
-	    configure_data_tab
-	    configure_registration_tab
-	    configure_dt_tab
-
-	    # because of the order of disables,
-	    # this module needs to be re-enabled and 
-	    # depending on the data_mode, the UnuCrop
-	    # needs to be disabled
-	    disableModule $mods(ChooseNrrd-B0) 0
-	    global data_mode
-	    if {$data_mode != "B0DWI"} {
-		disableModule $mods(UnuCrop-DWI) 1
-	    } else {
-		disableModule $mods(ChooseNrrd-preprocess) 0
-		disableModule $mods(UnuSlice-B0) 0
-	    }
-
-	    global do_registration
-	    if {!$do_registration || [string equal $data_mode "tensor"] == 1 } {
-		disableModule $mods(TendEpireg) 1
-	    }
-
-	    $indicatorL0 configure -text "Press Execute to run to save point..."
-	    $indicatorL1 configure -text "Press Execute to run to save point..."
-	}	
+	    load_session_data
+	}
     }
+
+    method load_session_data {} {
+	# configure title
+	wm title .standalone "BioTensor - [getFileName $saveFile]" 
+	
+	# Reset application 
+	reset_app
+	
+	foreach g [info globals] {
+	    global $g
+	}
+
+	source $saveFile
+	
+
+	if {$c_data_tab == "Analyze"} {
+	    # This is a hack for the AnalyzeToNrrd module.
+	    # The problem is that the filenames$i variables
+	    # are created as data is selected and loaded.  For
+	    # some reason when loading the setting for an app
+	    # the filenames$i variables aren't seen.  This
+	    # needs to be looked into more for 1.20.2
+	    global mods
+	    global data_mode
+
+	    if {$data_mode == "DWIknownB0"} {
+		# Check AnalyzeToNrrd-T2
+		global $mods(AnalyzeToNrrd-T2)-num-files
+		global $mods(AnalyzeToNrrd-T2)-file
+		set num [set $mods(AnalyzeToNrrd-T2)-num-files]
+		for {set i 0} {$i < $num} {incr i} {
+		    if {[info exists $mods(AnalyzeToNrrd-T2)-filenames$i]} {
+			set temp [set $mods(AnalyzeToNrrd-T2)-filenames$i]
+			unset $mods(AnalyzeToNrrd-T2)-filenames$i
+			set $mods(AnalyzeToNrrd-T2)-file $temp
+			
+			global $mods(AnalyzeToNrrd-T2)-filenames$i
+			set $mods(AnalyzeToNrrd-T2)-filenames$i [set $mods(AnalyzeToNrrd-T2)-file]
+			
+			# Call the c++ function that adds this data to its data 
+			# structure.
+			#			    $mods(AnalyzeToNrrd-T2)-c add_data [set $mods(AnalyzeToNrrd-T2)-file]
+		    }
+		}
+	    }
+	    # Check AnalyzeToNrrd1
+	    global $mods(AnalyzeToNrrd1)-num-files
+	    global $mods(AnalyzeToNrrd1)-file
+	    set num [set $mods(AnalyzeToNrrd1)-num-files]
+	    for {set i 0} {$i < $num} {incr i} {
+		if {[info exists $mods(AnalyzeToNrrd1)-filenames$i]} {
+		    set temp [set $mods(AnalyzeToNrrd1)-filenames$i]
+		    unset $mods(AnalyzeToNrrd1)-filenames$i
+		    set $mods(AnalyzeToNrrd1)-file $temp
+		    
+		    global $mods(AnalyzeToNrrd1)-filenames$i
+		    set $mods(AnalyzeToNrrd1)-filenames$i [set $mods(AnalyzeToNrrd1)-file]
+		    
+		    # Call the c++ function that adds this data to its data 
+		    # structure.
+		    #			$mods(AnalyzeToNrrd1)-c add_data [set $mods(AnalyzeToNrrd1)-file]
+		}
+	    }
+	} elseif {$c_data_tab == "Dicom"} {
+	    # This is a hack for the DicomToNrrd module.
+	    # The problem is that the entry-files$i variables
+	    # are created as data is selected and loaded.  For
+	    # some reason when loading the setting for an app
+	    # the entry-files$i variables aren't seen.  This
+	    # needs to be looked into more for 1.20.2
+	    global mods
+	    global data_mode
+	    if {$data_mode == "DWIknownB0"} {
+		# Check DicomToNrrd-T2
+		global $mods(DicomToNrrd-T2)-num-entries
+		set num [set $mods(DicomToNrrd-T2)-num-entries]
+		for {set i 0} {$i < $num} {incr i} {
+		    if {[info exists $mods(DicomToNrrd-T2)-entry-files$i]} {
+			set temp1 [set $mods(DicomToNrrd-T2)-entry-files$i]
+			unset $mods(DicomToNrrd-T2)-entry-files$i
+
+			set temp2 [set $mods(DicomToNrrd-T2)-entry-dir$i]
+			unset $mods(DicomToNrrd-T2)-entry-dir$i
+
+			set temp3 [set $mods(DicomToNrrd-T2)-entry-suid$i]
+			unset $mods(DicomToNrrd-T2)-entry-suid$i
+			
+			global $mods(DicomToNrrd-T2)-entry-files$i
+			set $mods(DicomToNrrd-T2)-entry-files$i $temp1
+
+			global $mods(DicomToNrrd-T2)-entry-dir$i
+			set $mods(DicomToNrrd-T2)-entry-dir$i $temp2
+
+			global $mods(DicomToNrrd-T2)-entry-suid$i
+			set $mods(DicomToNrrd-T2)-entry-suid$i $temp3
+			
+			# Call the c++ function that adds this data to its data 
+			# structure.
+			# 			    $mods(DicomToNrrd-T2)-c add_data \
+			    # 				[set $mods(DicomToNrrd-T2)-entry-dir$i] \
+			    # 				[set $mods(DicomToNrrd-T2)-entry-suid$i] \
+			    # 				[set $mods(DicomToNrrd-T2)-entry-files$i] 
+		    }
+		}
+	    }
+	    # Check DicomToNrrd1
+	    global $mods(DicomToNrrd1)-num-entries
+	    set num [set $mods(DicomToNrrd1)-num-entries]
+	    for {set i 0} {$i < $num} {incr i} {
+		if {[info exists $mods(DicomToNrrd1)-entry-files$i]} {
+		    set temp1 [set $mods(DicomToNrrd1)-entry-files$i]
+		    unset $mods(DicomToNrrd1)-entry-files$i
+		    
+		    set temp2 [set $mods(DicomToNrrd1)-entry-dir$i]
+		    unset $mods(DicomToNrrd1)-entry-dir$i
+		    
+		    set temp3 [set $mods(DicomToNrrd1)-entry-suid$i]
+		    unset $mods(DicomToNrrd1)-entry-suid$i
+		    
+		    global $mods(DicomToNrrd1)-entry-files$i
+		    set $mods(DicomToNrrd1)-entry-files$i $temp1
+
+		    global $mods(DicomToNrrd1)-entry-dir$i
+		    set $mods(DicomToNrrd1)-entry-dir$i $temp2
+		    
+		    global $mods(DicomToNrrd1)-entry-suid$i
+		    set $mods(DicomToNrrd1)-entry-suid$i $temp3
+		    
+		    # Call the c++ function that adds this data to its data 
+		    # structure.
+		    # 			$mods(DicomToNrrd1)-c add_data \
+			# 			    [set $mods(DicomToNrrd1)-entry-dir$i] \
+			# 			    [set $mods(DicomToNrrd1)-entry-suid$i] \
+			# 			    [set $mods(DicomToNrrd1)-entry-files$i]
+		}
+	    }
+	}
+
+	if {$data_mode == "B0DWI"} {
+	    global $mods(UnuPermute)-dim
+
+	    if {[info exists $mods(UnuPermute)-axis0]} {
+		set temp0 [set $mods(UnuPermute)-axis0]
+		unset $mods(UnuPermute)-axis0
+
+		global $mods(UnuPermute)-axis0
+		set $mods(UnuPermute)-axis0 $temp0
+	    }
+
+	    if {[info exists $mods(UnuPermute)-axis1]} {
+		set temp1 [set $mods(UnuPermute)-axis1]
+		unset $mods(UnuPermute)-axis1
+		global $mods(UnuPermute)-axis1
+		set $mods(UnuPermute)-axis1 $temp1
+	    }
+
+	    if {[info exists $mods(UnuPermute)-axis2]} {
+		set temp2 [set $mods(UnuPermute)-axis2]
+		unset $mods(UnuPermute)-axis2
+		global $mods(UnuPermute)-axis2
+		set $mods(UnuPermute)-axis2 $temp2
+	    }
+
+	    if {[set $mods(UnuPermute)-dim] == 4} {
+		set temp3 3
+		if {[info exists $mods(UnuPermute)-axis3]} {
+		    set temp3 [set $mods(UnuPermute)-axis3]
+		    unset $mods(UnuPermute)-axis3
+		    global $mods(UnuPermute)-axis3
+		    set $mods(UnuPermute)-axis3 $temp3
+		}
+	    }
+	}
+
+	# set a few variables that need to be reset
+	set indicate 0
+	set cycle 0
+	set IsPAttached 1
+	set IsVAttached 1
+	set executing_modules 0
+
+	# configure each vis tab
+	configure_variance_tabs
+	configure_planes_tabs
+	configure_isosurface_tabs
+	configure_glyphs_tabs
+	configure_fibers_tabs
+	
+	# bring tabs forward
+	$proc_tab1 view $c_procedure_tab
+	$proc_tab2 view $c_procedure_tab
+
+	$data_tab1 view $c_data_tab
+	$data_tab2 view $c_data_tab
+
+	$vis_frame_tab1 view $c_left_tab
+	$vis_frame_tab2 view $c_left_tab
+
+	$vis_tab1 view $c_vis_tab
+	$vis_tab2 view $c_vis_tab
+	
+	# activate proper step tabs
+	configure_data_tab
+	configure_registration_tab
+	configure_dt_tab
+
+	# because of the order of disables,
+	# this module needs to be re-enabled and 
+	# depending on the data_mode, the UnuCrop
+	# needs to be disabled
+	disableModule $mods(ChooseNrrd-B0) 0
+	global data_mode
+	if {$data_mode != "B0DWI"} {
+	    disableModule $mods(UnuCrop-DWI) 1
+	} else {
+	    disableModule $mods(ChooseNrrd-preprocess) 0
+	    disableModule $mods(UnuSlice-B0) 0
+	}
+
+	global do_registration
+	if {!$do_registration || [string equal $data_mode "tensor"] == 1 } {
+	    disableModule $mods(TendEpireg) 1
+	}
+
+	$indicatorL0 configure -text "Press Execute to run to save point..."
+	$indicatorL1 configure -text "Press Execute to run to save point..."
+    }	
+
 
     ##############################
     ### save_image
@@ -9705,55 +9708,55 @@ class BioTensorApp {
 
     # Procedures
     variable data_tab1
-    variable data_tab0
+    variable data_tab2
 
     variable reg_tab1
-    variable reg_tab0
+    variable reg_tab2
 
     variable dt_tab1
-    variable dt_tab0
+    variable dt_tab2
 
     # Data tabs
     variable nrrd_tab1
-    variable nrrd_tab0
+    variable nrrd_tab2
     variable dicom_tab1
-    variable dicom_tab0
+    variable dicom_tab2
     variable analyze_tab1
-    variable analyze_tab0
+    variable analyze_tab2
     variable data_next_button1
-    variable data_next_button0
+    variable data_next_button2
     variable data_ex_button1
-    variable data_ex_button0
+    variable data_ex_button2
 
     # Visualization frame tabnotebook
     variable vis_frame_tab1
-    variable vis_frame_tab0
+    variable vis_frame_tab2
 
     # Vis tabs notebook
     variable vis_tab1
-    variable vis_tab0
+    variable vis_tab2
 
     variable variance_tab1
-    variable variance_tab0
+    variable variance_tab2
 
     variable planes_tab1
-    variable planes_tab0
+    variable planes_tab2
 
     variable isosurface_tab1
     variable isosurface_tab0
 
     variable glyphs_tab1
-    variable glyphs_tab0
+    variable glyphs_tab2
 
     variable fibers_tab1
-    variable fibers_tab0
+    variable fibers_tab2
 
     # pointers to widgets
     variable ref_image1
-    variable ref_image0
+    variable ref_image2
 
     variable reg_thresh1
-    variable reg_thresh0
+    variable reg_thresh2
 
 
     # Application placing and size

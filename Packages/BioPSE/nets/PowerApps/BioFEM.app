@@ -347,8 +347,8 @@ class BioFEMApp {
 	set detachedVFr $win.detachedV
 	set attachedVFr $win.attachedV
 	
-	init_Vframe $detachedVFr.f 0
-	init_Vframe $attachedVFr.f 1
+	init_Vframe $detachedVFr.f 1
+	init_Vframe $attachedVFr.f 2
 
 	# call back to re-configure isosurface slider
 	global $mods(Isosurface)-isoval-max
@@ -379,9 +379,8 @@ class BioFEMApp {
 	if {[info exists PowerAppSession] && [set PowerAppSession] != ""} { 
 	    set saveFile $PowerAppSession
 	    wm title .standalone "BioFEM - [getFileName $saveFile]"
-	    $this load_session
-	} 
-
+	    $this load_session_data
+	}
     }
 
     method set_dataset { andexec } {
@@ -751,36 +750,38 @@ class BioFEMApp {
 	    {{Other} { * }}
 	}
 	
-	if {$saveFile == ""} {
-	    set saveFile [tk_getOpenFile -filetypes $types]
+	set saveFile [tk_getOpenFile -filetypes $types]
+
+	if {$saveFile != ""} {
+	    load_session_data
+	}
+    }
+
+    method load_session_data {} {
+	
+	# Reset application 
+	reset_app
+	
+	foreach g [info globals] {
+	    global $g
 	}
 	
-	if {$saveFile != ""} {
-	    
-	    # Reset application 
-	    reset_app
-	    
-	    foreach g [info globals] {
-		global $g
-	    }
-	    
-	    source $saveFile
-	    
+	source $saveFile
+	
 
-	    # set a few variables that need to be reset
-	    set indicate 0
-	    set cycle 0
-	    set IsVAttached 1
-	    set executing_modules 0
-	    
-	    # configure all tabs by calling all configure functions
-	    if {$c_left_tab != ""} {
-		$vis_frame_tab1 view $c_left_tab
-		$vis_frame_tab2 view $c_left_tab
-	    }
+	# set a few variables that need to be reset
+	set indicate 0
+	set cycle 0
+	set IsVAttached 1
+	set executing_modules 0
+	
+	# configure all tabs by calling all configure functions
+	if {$c_left_tab != ""} {
+	    $vis_frame_tab1 view $c_left_tab
+	    $vis_frame_tab2 view $c_left_tab
+	}
 
-	    change_indicator_labels "Press Execute to Load Data..."
-	}	
+	change_indicator_labels "Press Execute to Load Data..."
     }
 
     ##############################
@@ -1285,18 +1286,18 @@ class BioFEMApp {
     
     # Visualiztion frame tabnotebook
     variable vis_frame_tab1
-    variable vis_frame_tab0
+    variable vis_frame_tab2
     variable c_left_tab
 
     # Vis tabs notebook
     variable vis_tab1
-    variable vis_tab0
+    variable vis_tab2
 
     variable isosurface_tab1
-    variable isosurface_tab0
+    variable isosurface_tab2
 
     variable streamlines_tab1
-    variable streamlines_tab0
+    variable streamlines_tab2
 
     # Application placing and size
     variable notebook_width

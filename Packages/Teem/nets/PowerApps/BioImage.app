@@ -525,8 +525,8 @@ class BioImageApp {
 	set detachedVFr $win.detachedV
 	set attachedVFr $win.attachedV
 	
-	init_Vframe $detachedVFr.f 0
-	init_Vframe $attachedVFr.f 1
+	init_Vframe $detachedVFr.f 1
+	init_Vframe $attachedVFr.f 2
 
 
 	### pack 3 frames
@@ -553,7 +553,7 @@ class BioImageApp {
 	if {[info exists PowerAppSession] && [set PowerAppSession] != ""} { 
 	    set saveFile $PowerAppSession
 	    wm title .standalone "BioImage - [getFileName $saveFile]"
-	    $this load_session
+	    $this load_session_data
 	} 
     }
 
@@ -2865,73 +2865,75 @@ class BioImageApp {
 	    {{Other} { * }}
 	}
 	
-	if {$saveFile == "" } {
-	    set saveFile [tk_getOpenFile -filetypes $types]
-	}
+        set saveFile [tk_getOpenFile -filetypes $types]
 
 	if {$saveFile != ""} {
-	    # Clear all modules
+	    load_session_data
+	}
+   }
 
-	    ClearCanvas 0
+   method load_session_data {} {
+       # Clear all modules
+       ClearCanvas 0
 
-	    #destroy 2D viewer windows
-	    destroy $win.viewers.topbot
-	    destroy $win.viewers.cp
+       #destroy 2D viewer windows
+       destroy $win.viewers.topbot
+       destroy $win.viewers.cp
+       
+       puts "FIX ME: figure out how to wait until Network Changed"
+#      global NetworkChanged
+#      tkwait variable NetworkChanged
+       # This is a hack.  Unless I kill some time, the new modules
+       # try to instantiate before the old ones are done clearing.
+       for {set i 0} {$i < 900000} {incr i} {
+	   set b 5
+       }
+       
+       # configure title
+       wm title .standalone "BioImage - [getFileName $saveFile]" 
+       
+       # remove all UIs
+       for {set i 0} {$i < $num_filters} {incr i} {
+	   if {[info exists filters($i)]} {
+               set tmp_row [lindex $filters($i) $which_row]
+               if {$tmp_row != -1 } {
+		   destroy $history0.f$i
+		   destroy $history0.eye$i
+		   destroy $history1.f$i
+		   destroy $history1.eye$i
+	       }
+           }
+       }
 
-	    puts "FIX ME: figure out how to wait until Network Changed"
-#	    global NetworkChanged
-#	    tkwait variable NetworkChanged
-	    # This is a hack.  Unless I kill some time, the new modules
-            # try to instantiate before the old ones are done clearing.
-	    for {set i 0} {$i < 900000} {incr i} {
-                set b 5
-            }
+       # justify scroll region
+       $attachedPFr.f.p.sf justify top
+       $detachedPFr.f.p.sf justify top
 
-	    # configure title
-	    wm title .standalone "BioImage - [getFileName $saveFile]" 
+       # load new net
 
-	    # remove all UIs
-	    for {set i 0} {$i < $num_filters} {incr i} {
-		if {[info exists filters($i)]} {
-		    set tmp_row [lindex $filters($i) $which_row]
-		    if {$tmp_row != -1 } {
-			destroy $history0.f$i
-			destroy $history0.eye$i
-			destroy $history1.f$i
-			destroy $history1.eye$i
-		    }
-		}
-	    }
+       foreach g [info globals] {
+	   global $g
+       }
 
-	    # justify scroll region
-	    $attachedPFr.f.p.sf justify top
-	    $detachedPFr.f.p.sf justify top
-	    
-	    # load new net
+       global mods
 
-  	    foreach g [info globals] {
-  		global $g
-  	    }
+       update
 
-	    global mods
+       # source at the global level for module settings
+       set saveFile2 "$saveFile.net"
+       uplevel \#0 source \{$saveFile2\}
 
-            update
+       # source in class scope for class variables
+       source $saveFile
 
-            # source at the global level for module settings
-	    set saveFile2 "$saveFile.net"
-            uplevel \#0 source \{$saveFile2\}
+       puts "FIX ME: module settings not being set properly"
 
-            # source in class scope for class variables
-	    source $saveFile
+       $this build_viewers $mods(Viewer) $mods(ViewImage)
 
-	    puts "FIX ME: module settings not being set properly"
-
-	    $this build_viewers $mods(Viewer) $mods(ViewImage)
-
-            set loading_ui 1
-            set last_valid 0
+       set loading_ui 1
+       set last_valid 0
 		
-	    # iterate over filters array and create UIs
+       # iterate over filters array and create UIs
 	    for {set i 0} {$i < $num_filters} {incr i} {
 		# only build ui for those with a row
 		# value not -1
@@ -2960,28 +2962,27 @@ class BioImageApp {
 			puts "Error: Unknown filter type - $t"
 		    }
 		    $history0.$p configure -background grey75 -foreground black -borderwidth 2
-		    $history1.$p configure -background grey75 -foreground black -borderwidth 2
-		}
-	    }
+		$history1.$p configure -background grey75 -foreground black -borderwidth 2
+            }
+	}
 
-            set loading_ui 0
+        set loading_ui 0
 
 
-            $this change_current $current
-            global eye
-            $this change_eye $eye
+        $this change_current $current
+        global eye
+        $this change_eye $eye
 
- 	    # set a few variables that need to be reset
- 	    set indicate 0
- 	    set cycle 0
- 	    set IsPAttached 1
- 	    set IsVAttached 1
- 	    set executing_modules 0
+ 	# set a few variables that need to be reset
+ 	set indicate 0
+ 	set cycle 0
+ 	set IsPAttached 1
+ 	set IsVAttached 1
+ 	set executing_modules 0
 
- 	    $indicatorL0 configure -text "Press Execute to run to save point..."
- 	    $indicatorL1 configure -text "Press Execute to run to save point..."
-	}	
-    }
+ 	$indicatorL0 configure -text "Press Execute to run to save point..."
+ 	$indicatorL1 configure -text "Press Execute to run to save point..."
+    }	
 
     #########################
     ### toggle_show_plane_n
@@ -3063,15 +3064,15 @@ class BioImageApp {
 
 
     # Data Selection
-    variable vis_frame_tab0
     variable vis_frame_tab1
+    variable vis_frame_tab2
 
     variable filters
     variable num_filters
     variable loading_ui
 
-    variable history0
     variable history1
+    variable history2
 
     variable dimension
 
