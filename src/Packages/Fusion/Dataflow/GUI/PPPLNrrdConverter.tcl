@@ -77,7 +77,7 @@ itcl_class Fusion_Fields_PPPLNrrdConverter {
 	toplevel $w
 
 	frame $w.wrap
-	label $w.wrap.l -text "Wrap"   -width 4 -anchor w -just left
+	label $w.wrap.l -text "Wrap Axis" -width 9 -anchor w -just left
 
 	pack $w.wrap.l -side left
 
@@ -96,14 +96,9 @@ itcl_class Fusion_Fields_PPPLNrrdConverter {
 
 	    frame $w.wrap.$index
 
-	    label $w.wrap.$index.l -text " $index :" -width 3 -anchor w -just left
-
-#	    pack $w.$index.l -side left
-
+	    label $w.wrap.$index.l -text " $index :" -width 3 -anchor w
 
 	    checkbutton $w.wrap.$index.wrap -variable $this-$index-wrap 
-#		    -state $wrap -disabledforeground "" \
-#		    -command "$this wrap $index"
 
 	    pack $w.wrap.$index.l $w.wrap.$index.wrap -side left
 	}
