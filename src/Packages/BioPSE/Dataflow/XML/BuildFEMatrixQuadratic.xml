@@ -9,7 +9,7 @@
       <author>Mickey</author>
     </authors>
     <summary>The BuildFEMatrixQuadratic module sets up a mesh with
-conductivity tensors and Dirichlet boundary conditions specifically
+conductivity tensors and Dirichlet boundary conditions, specifically
 for bioelectric field problems that use quadratic elements.
     </summary>
     <description>
@@ -18,7 +18,7 @@ matrix with quadratic elements for bioelectric field problems
 (discretization of the Poisson equation for volume conductor problem).
 The input field should have properties with lookup names that
 correspond to the bioelectric field problem. The module conventions
-appear below:</p>
+appear below.</p>
 
       <p>The Field containing a mesh should be a TetVolField(char)
 type, which contains indices to the property 'table'; actual values of
