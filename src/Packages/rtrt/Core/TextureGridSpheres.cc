@@ -112,7 +112,7 @@ void TextureGridSpheres::shade(Color& result, const Ray& ray,
 
   float luminance = interp_luminance(texture, u, v);
   Color surface;
-  if (cmap) {
+  if (cmap && dpy->shade_method == 1) {
     surface = surface_color(hit);
   } else {
     surface = color;
