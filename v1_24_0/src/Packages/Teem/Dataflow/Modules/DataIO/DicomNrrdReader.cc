@@ -107,6 +107,7 @@ public:
 private:
 
   void split_string( string src, vector<string> &container );
+  void split_filenames( string src, vector<string> &container );
 
   //! GUI variables
   GuiInt have_insight_;
@@ -247,14 +248,142 @@ void DicomNrrdReader::execute(){
 // 
 void DicomNrrdReader::split_string( string src, vector<string> &container )
 {
-  std::istringstream str_data(src);
-  //cerr << "(DicomNrrdReader::split_string) src = " << src << endl;
-  string word;
-  while( str_data >> word )
-  {
-    //cerr << "(DicomNrrdReader::split_string) word = " << word << endl;
-    container.push_back( word );
+  // grab DIR string
+  if (src.substr(0,5) != "DIR: ") {
+    error("Error parsing entry for removal: no DIR tag");
+    return;
+  }
+  container.push_back("DIR:");
+  string temp = src.substr(5,src.length());
+
+  // grab directory encapsulated in quotes
+  int start = 0;
+  int end = 1;
+  start = temp.find("\"");
+  end = temp.find("\"", end);
+  container.push_back(temp.substr(start+1,end-1));
+
+  if (end+4 <= (int)temp.length()) {
+    temp = temp.substr(end+4, temp.length());
+  }
+  else {
+    error("Directory string formated incorrectly.");
+    return;
+  }
+
+  // grab SERIRES and UID
+  if (temp.substr(0, 12) != "SERIES UID: ") {
+    error("Error parsing entry for removal: no SERIES UID tag.");
+    return;
+  }
+
+  container.push_back("SERIES");
+  container.push_back("UID:");
+  temp = temp.substr(12, temp.length());
+
+  // grab series uid encapsulated in quotes
+  start = 0;
+  end = 1;
+  start = temp.find("\"");
+  end = temp.find("\"", end);
+  container.push_back(temp.substr(start+1,end-1));
+
+  if (end+4 <= (int)temp.length()) {
+    temp = temp.substr(end+4, temp.length());
+  }
+  else {
+    error("Series uid string formated incorrectly.");
+    return;
   } 
+
+  // grab START FILE:
+  if (temp.substr(0, 12) != "START FILE: ") {
+    error("Error parsing entry for removal: no START FILE tag");
+    return;
+  }
+  container.push_back("START");
+  container.push_back("FILE:");
+  temp = temp.substr(12, temp.length());
+  
+  // grab start file encapsulated in quotes
+  start = 0;
+  end = 1;
+  start = temp.find("\"");
+  end = temp.find("\"", end);
+  container.push_back(temp.substr(start+1,end-1));
+
+  if (end+4 <= (int)temp.length()) {
+    temp = temp.substr(end+4, temp.length());
+  }
+  else {
+    error("Start file string formated incorrectly.");
+    return;
+  } 
+
+  // grab END FILE:
+  if (temp.substr(0, 10) != "END FILE: ") {
+    error("Error parsing entry for removal: no END FILE tag");
+    return;
+  }
+  container.push_back("END");
+  container.push_back("FILE:");
+  temp = temp.substr(10, temp.length());
+  
+  // grab end file encapsulated in quotes
+  start = 0;
+  end = 1;
+  start = temp.find("\"");
+  end = temp.find("\"", end);
+  container.push_back(temp.substr(start+1,end-1));
+
+  if (end+4 <= (int)temp.length()) {
+    temp = temp.substr(end+4, temp.length());
+  }
+  else {
+    error("Start file string formated incorrectly.");
+    return;
+  } 
+
+  // grab NUMBER OF FILES:
+  if (temp.substr(0,17) != "NUMBER OF FILES: ") {
+    error("Error parsing entry for removal: no NUMBER OF FILEStag.");
+    return;
+  }
+  container.push_back("NUMBER");
+  container.push_back("OF");
+  container.push_back("FILES:");
+  temp = temp.substr(17, temp.length());
+
+  // grab actual number
+  container.push_back(temp.substr(0,temp.length()));
+}
+
+/*===========================================================================*/
+// 
+// split_filenames
+//
+// Description : Splits a string into vector of strings where each string is 
+//               encapsulated withing curly braces in the original string.
+//
+// Arguments   :
+//
+// string src - String to be split.
+// vector<string> &container - Vector of strings to contain result.
+// 
+void DicomNrrdReader::split_filenames( string src, vector<string> &container )
+{
+  int start = 0;
+  int end = 0;
+  string temp = src;
+  while (temp.length() > 0) {
+    start = src.find("{");
+    end = src.find("}");
+    container.push_back(temp.substr(start+1,end-1));
+    if (end+2 <= (int)temp.length()) 
+      temp = temp.substr(end+2, temp.length());
+    else
+      temp = "";
+  }
 }
 
 /*===========================================================================*/
@@ -308,7 +437,7 @@ void DicomNrrdReader::tcl_command(GuiArgs& args, void* userdata)
 
     for( int i = 0; i < num_suids; i++ )
     {
-      all_suids = string( all_suids + " " + suids[i] );  
+      all_suids = string( "{" + all_suids + "}" + " " + suids[i] );  
     }
 
     if( num_suids == 0 )
@@ -343,9 +472,8 @@ void DicomNrrdReader::tcl_command(GuiArgs& args, void* userdata)
       // re-ordered so that when selecting an entire series, 
       // it comes out the same as when using ImageJ
       //all_files = string( all_files + " " + files[i] );  
-      all_files = string( files[i] + " " + all_files);  
+      all_files = string( "{" + files[i] +"}" + " " + all_files);  
     }
-
     //cerr << "(DicomNrrdReader::tcl_command) all_files = " << all_files << endl;
     series_files_.set( all_files );
 #endif
@@ -365,7 +493,7 @@ void DicomNrrdReader::tcl_command(GuiArgs& args, void* userdata)
 
     // Convert string of file names to vector of file names
     vector<string> files;
-    split_string( series_files, files );
+    split_filenames( series_files, files );
 
     // First entry is always extra, chop it off
 
@@ -393,7 +521,6 @@ void DicomNrrdReader::tcl_command(GuiArgs& args, void* userdata)
 
     ostringstream str3;
     str3 << "entry-files" << all_series_.size() - 1;
-    //entry_files_.insert(entry_files_.end(), new GuiString(ctx->subVar(str3.str())));
     entry_files_.insert(entry_files_.end(), new GuiFilename(ctx->subVar(str3.str())));
 
 #endif
