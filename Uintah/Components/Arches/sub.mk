@@ -15,9 +15,12 @@ SRCS     += $(SRCDIR)/Arches.cc $(SRCDIR)/BoundaryCondition.cc \
 	$(SRCDIR)/LinearSolver.cc \
 	$(SRCDIR)/PressureSolver.cc $(SRCDIR)/MomentumSolver.cc \
 	$(SRCDIR)/ScalarSolver.cc $(SRCDIR)/RBGSSolver.cc \
-	$(SRCDIR)/PetscSolver.cc \
 	$(SRCDIR)/Source.cc $(SRCDIR)/CellInformation.cc \
 	$(SRCDIR)/ArchesLabel.cc $(SRCDIR)/ArchesVariables.cc
+
+ifneq ($(PETSC_DIR),)
+SRCS +=	$(SRCDIR)/PetscSolver.cc
+endif
 
 
 SUBDIRS := $(SRCDIR)/fortran
@@ -39,6 +42,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.28  2000/09/12 18:11:25  sparker
+# Do not compile petsc solver if petsc not present
+#
 # Revision 1.27  2000/09/12 15:47:38  sparker
 # Use petsc configuration
 #
