@@ -11,7 +11,7 @@
 #include <iostream>
 #include <dirent.h>
 static DebugStream cout_doing("NG_DOING_COUT", false);
-static DebugStream cout_dbg("NG_DBG_COUT", false);
+static DebugStream cout_dbg("NG_DBG_COUT",     false);
 /*______________________________________________________________________
 Our goal is to come up with reasonable values for the pressure
 temperature, density and velocity in the ghost cell (see fig 1).  The method
@@ -567,7 +567,8 @@ void addRequires_NGNozzle(Task* t,
                           ICELabel* lb,
                           const MaterialSubset* ice_matls)
 {
-  cout_doing<< "Doing addRequires_NGNozzle: \t\t" <<t->getName()<< endl;
+  cout_doing<< "Doing addRequires_NGNozzle: \t\t" <<t->getName()
+            << " " << where << endl;
   
   Ghost::GhostType  gn  = Ghost::None;
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
@@ -581,12 +582,20 @@ void addRequires_NGNozzle(Task* t,
     t->requires(Task::OldDW, lb->rho_CCLabel, ice_matls,  gn,0);
   }
   if(where == "velFC_Exchange"){
-    t->requires(Task::NewDW, lb->rho_CCLabel, ice_matls,   gn,0);        
+    t->requires(Task::OldDW, lb->rho_CCLabel, ice_matls,   gn,0);        
     t->requires(Task::OldDW, lb->vel_CCLabel, ice_matls,   gn,0);        
     t->requires(Task::NewDW, lb->press_equil_CCLabel, press_matl, oims, gn);
   }
+  if(where == "imp_velFC_Exchange"){
+    t->requires(Task::ParentOldDW, lb->rho_CCLabel, ice_matls,   gn,0);        
+    t->requires(Task::ParentOldDW, lb->vel_CCLabel, ice_matls,   gn,0);        
+    t->requires(Task::ParentNewDW, lb->press_equil_CCLabel, press_matl, oims, gn);
+  }
   if(where == "update_press_CC"){
     t->requires(Task::OldDW, lb->vel_CCLabel, ice_matls, gn,0);
+  }
+  if(where == "imp_update_press_CC"){
+    t->requires(Task::ParentOldDW, lb->vel_CCLabel, ice_matls, gn,0);
   }
   if(where == "CC_Exchange"){
     t->requires(Task::NewDW, lb->rho_CCLabel,   ice_matls,   gn,0);
