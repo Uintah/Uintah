@@ -75,7 +75,7 @@ type key \replaceable{key}
 }
 \end{htmlonly}
 
-All modules are similarly represented by a graphic within the NetEdit frame
+All modules \index{module} are similarly represented by a graphic within the NetEdit frame
 (see Figure~\ref{fig:modgraphic}). The graphical ``front end'' is the same
 for all modules and consists of the following elements:
 
@@ -241,6 +241,7 @@ for all modules and consists of the following elements:
 
 \section{Anatomy of a Connection}
 \label{sec:anatcon}
+\index{connections}
 
 A connection lets data flow from one module's output port to (usually) another
 module's input port.  Sometimes a connection will connect a module's
@@ -392,6 +393,7 @@ See also \secref{Disabling/Enabling Connections}{sec:disableconnect}.
 
 \section{Creating a Sub-Network}
 \label{sec:crsubnet}
+\index{sub-network}
 
 %begin{latexonly}
 \newcommand{\subnetgraphicfig}{%
@@ -533,6 +535,7 @@ network.
 
 \section{Editing and Displaying Module Notes}
 \label{sec:modnotes}
+\index{annotation of networks}
 
 Module notes allow the user to document the purpose of each module by
 attaching notes to each module in the NetEdit window.  Notes can be
@@ -576,6 +579,7 @@ pop-up menu.
 
 \section{Creating a Connection}
 \label{sec:connectmods}
+\index{connections}
 
 To connect the output (input) port of one module to the input (output)
 port of another module, use \keyboard{Button2}. Clicking
@@ -600,6 +604,7 @@ modules by repeating the procedure just described.
 
 \section{Editing and Displaying Connection Notes}
 \label{sec:displaynotes}
+\index{annotation of networks}
 
 Connection notes allow the user to document the purpose of
 each connection by attaching notes to each connection in the NetEdit window.
@@ -741,6 +746,7 @@ Examples of feedback modules are \module{DipoleSearch} and
 
 \section{Documenting a Network}
 \label{sec:docnetwork}
+\index{annotation of networks}
 
 It is useful to document the function of a network.  A network's note
 pad is used for this purpose.  To edit the network's note pad,
@@ -813,7 +819,8 @@ A complex network may not be entirely visible in the NetEdit frame.
 Use the NetEdit frame's scroll bars or the network view tool to view
 complex networks.
 
-The Global View Frame shows the entire ``network world.''  The small
+The Global View Frame \index{global view frame}shows the 
+entire ``network world.''  The small
 rectangular region (outlined in black) in the Global View Frame is the
 network view tool and a window on the network world. The position of
 the view tool determines the part of the network visible in the
