@@ -34,7 +34,7 @@
 #include <Core/Geometry/Vector.h>
 #include <float.h>  // for DBL_MAX
 #include <iostream>
-
+#include <sci_hash_map.h>
 
 namespace SCIRun {
 
@@ -287,6 +287,50 @@ ContourMesh::size(ContourMesh::Cell::size_type &s) const
 {
   s = 0;
 }
+
+
+MeshHandle
+ContourMesh::clip(Clipper &clipper)
+{
+  ContourMesh *clipped = scinew ContourMesh();
+
+  hash_map<under_type, under_type, hash<under_type>,
+    equal_to<under_type> > nodemap;
+
+  Elem::iterator bi, ei;
+  begin(bi); end(ei);
+  while (bi != ei)
+  {
+    Point p;
+    get_center(p, *bi);
+    if (clipper.inside_p(p))
+    {
+      // Add this element to the new mesh.
+      Node::array_type onodes;
+      get_nodes(onodes, *bi);
+      Node::array_type nnodes(onodes.size());
+
+      for (unsigned int i=0; i<onodes.size(); i++)
+      {
+	if (nodemap.find(onodes[i]) == nodemap.end())
+	{
+	  Point np;
+	  get_center(np, onodes[i]);
+	  nodemap[onodes[i]] = clipped->add_node(np);
+	}
+	nnodes[i] = nodemap[onodes[i]];
+      }
+
+      clipped->add_edge(nnodes[0], nnodes[1]);
+    }
+    
+    ++bi;
+  }
+
+  clipped->flush_changes();  // Really should copy normals
+  return clipped;
+}
+
 
 
 const TypeDescription*

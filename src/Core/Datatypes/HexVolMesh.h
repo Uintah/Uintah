@@ -198,7 +198,9 @@ public:
   // Extra functionality needed by this specific geometry.
 
   Node::index_type add_find_point(const Point &p, double err = 1.0e-3);
-  void add_hex(Node::index_type a, Node::index_type b, Node::index_type c, Node::index_type d, Node::index_type e, Node::index_type f, Node::index_type g, Node::index_type h);
+  void add_hex(Node::index_type a, Node::index_type b, Node::index_type c,
+	       Node::index_type d, Node::index_type e, Node::index_type f,
+	       Node::index_type g, Node::index_type h);
   void add_hex(const Point &p0, const Point &p1, const Point &p2,
 	       const Point &p3, const Point &p4, const Point &p5, 
 	       const Point &p6, const Point &p7);
@@ -218,6 +220,10 @@ public:
 
 
   const Point &point(Node::index_type i) { return points_[i]; }
+
+
+  virtual MeshHandle clip(Clipper &c);
+
 private:
 
   bool inside4_p(int, const Point &p) const;
