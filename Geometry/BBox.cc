@@ -1,4 +1,3 @@
-
 #include <Geometry/BBox.h>
 #include <Geometry/Vector.h>
 #include <Classlib/Assert.h>
@@ -181,7 +180,7 @@ BBox::SetupSides( )
 *******************************************************************/
 
 int
-BBox::Intersect( Point s, Vector v, Point& hitNear, Point& hitFar )
+BBox::Intersect2( Point s, Vector v, Point& hitNear, Point& hitFar )
 {
   int i;
   Point tmp;
@@ -213,6 +212,635 @@ BBox::Intersect( Point s, Vector v, Point& hitNear, Point& hitFar )
 
   return( flag );
 }
+
+
+void
+BBox::remap( const Point& eye )
+{
+  double d1 = Abs( eye.x() - cmin.x() );
+  double d2 = Abs( eye.x() - cmax.x() );
+
+  if( d1 > d2 )
+    {
+      bcmin.x( cmax.x() );
+      bcmax.x( cmin.x() );
+    }
+  else
+    {
+      bcmin.x( cmin.x() );
+      bcmax.x( cmax.x() );
+    }
+  
+ d1 = Abs( eye.y() - cmin.y() );
+ d2 = Abs( eye.y() - cmax.y() );
+
+  if( d1 > d2 )
+    {
+      bcmin.y( cmax.y() );
+      bcmax.y( cmin.y() );
+    }
+  else
+    {
+      bcmin.y( cmin.y() );
+      bcmax.y( cmax.y() );
+    }
+  
+ d1 = Abs( eye.z() - cmin.z() );
+ d2 = Abs( eye.z() - cmax.z() );
+
+  if( d1 > d2 )
+    {
+      bcmin.z( cmax.z() );
+      bcmax.z( cmin.z() );
+    }
+  else
+    {
+      bcmin.z( cmin.z() );
+      bcmax.z( cmax.z() );
+    }
+
+  extracmin = bcmin;
+  extracmax = bcmax;
+
+  cerr << "Extramin is " << extracmin << endl;
+  cerr << "extramax is " << extracmax << endl;
+
+  if ( eye.x() < bcmax.x() && eye.x() > bcmin.x() ||
+       eye.x() > bcmax.x() && eye.x() < bcmin.x()   )
+    inbx = 1;
+  else
+    inbx = 0;
+  
+  if ( eye.y() < bcmax.y() && eye.y() > bcmin.y() ||
+       eye.y() > bcmax.y() && eye.y() < bcmin.y()   )
+    inby = 1;
+  else
+    inby = 0;
+  
+  if ( eye.z() < bcmax.z() && eye.z() > bcmin.z() ||
+       eye.z() > bcmax.z() && eye.z() < bcmin.z()   )
+    inbz = 1;
+  else
+    inbz = 0;
+
+  if ( bcmin.x() < bcmax.x() )
+    {
+      bcmin.x( bcmin.x() - EEpsilon );
+      bcmax.x( bcmax.x() + EEpsilon );
+    }
+  else
+    {
+      bcmin.x( bcmin.x() + EEpsilon );
+      bcmax.x( bcmax.x() - EEpsilon );
+    }
+    
+  if ( bcmin.y() < bcmax.y() )
+    {
+      bcmin.y( bcmin.y() - EEpsilon );
+      bcmax.y( bcmax.y() + EEpsilon );
+    }
+  else
+    {
+      bcmin.y( bcmin.y() + EEpsilon );
+      bcmax.y( bcmax.y() - EEpsilon );
+    }
+    
+  if ( bcmin.z() < bcmax.z() )
+    {
+      bcmin.z( bcmin.z() - EEpsilon );
+      bcmax.z( bcmax.z() + EEpsilon );
+    }
+  else
+    {
+      bcmin.z( bcmin.z() + EEpsilon );
+      bcmax.z( bcmax.z() - EEpsilon );
+    }
+    
+  
+}
+
+int
+BBox::OnCube( const Point& p )
+{
+  double x = p.x();
+  double cx = cmin.x();
+  double dx = cmax.x();
+  double y = p.y();
+  double cy = cmin.y();
+  double dy = cmax.y();
+  double z = p.z();
+  double cz = cmin.z();
+  double dz = cmax.z();
+
+  cerr << "ONCUBE " << p <<endl;
+  cerr << cmin << cmax << endl;
+
+  if ( ( x < cx+EEpsilon && x > dx-EEpsilon  ||
+	x > cx-EEpsilon && x < dx+EEpsilon ) &&
+      ( y < cy+EEpsilon && y > dy-EEpsilon  ||
+	y > cy-EEpsilon && y < dy+EEpsilon ) &&
+      ( z < cz+EEpsilon && z > dz-EEpsilon  ||
+	z > cz-EEpsilon && z < dz+EEpsilon ) )
+    return 1;
+  else
+    return 0;
+}
+
+int
+BBox::Intersect( const Point& e, const Vector& v, Point& hitNear )
+{
+  double tx, ty, tz;
+  int worked = 0;
+
+  tx = ( extracmin.x() - e.x() ) / v.x();
+  ty = ( extracmin.y() - e.y() ) / v.y();
+  tz = ( extracmin.z() - e.z() ) / v.z();
+
+  if ( inbx && inby && inbz )
+    {
+      hitNear = e;
+      return 1;
+    }
+
+  // is it correct to assume that if tz < 0 then i should return 0?
+  if ( inbx && inby )
+    {
+      if ( tz > 0 )
+	return(  TestTz( e, v, tz, hitNear ) );
+      else
+	return 0;
+    }
+
+  if ( inbx && inbz )
+    {
+      if ( ty > 0 )
+	return( TestTy( e, v, ty, hitNear ));
+      else
+	return 0;
+    }
+
+  if ( inby && inbz )
+    {
+      if ( tx > 0 )
+	return( TestTx( e, v, tx, hitNear ));
+      else
+	return 0;
+    }
+
+
+  // NEXT BUNCH
+
+  if ( inbx )
+    if ( ty > 0 || tz > 0 )
+      if ( ty > tz )
+	{
+	  worked = TestTy( e, v, ty, hitNear );
+
+	  if ( worked )
+	    return 1;
+	  else if ( tz > 0 )
+	    return( TestTz( e, v, tz, hitNear ) );
+	  else
+	    return 0;
+	}
+      else
+	{
+	  worked = TestTz( e, v, tz, hitNear );
+	  
+	  if ( worked )
+	    return 1;
+	  else if ( ty > 0 )
+	    return( TestTy( e, v, ty, hitNear ) );
+	  else
+	    return 0;
+	}
+    else
+      return 0;
+
+  if ( inby )
+    if ( tx > 0 || tz > 0 )
+      if ( tx > tz )
+	{
+	  worked = TestTx( e, v, tx, hitNear );
+	  
+	  if ( worked )
+	    return 1;
+	  else if ( tz > 0 )
+	    return( TestTz( e, v, tz, hitNear ) );
+	  else
+	    return 0;
+	}
+      else
+	{
+	  worked = TestTz( e, v, tz, hitNear );
+	  
+	  if ( worked )
+	    return 1;
+	  else if ( tx > 0 )
+	    return( TestTx( e, v, tx, hitNear ) );
+	  else
+	    return 0;
+	}
+    else
+      return 0;
+
+  if ( inbz )
+    if ( ty > 0 || tx > 0 )
+      if ( ty > tx )
+	{
+	  worked = TestTy( e, v, ty, hitNear );
+	  
+	  if ( worked )
+	    return 1;
+	  else if ( tx > 0 )
+	    return( TestTx( e, v, tx, hitNear ) );
+	  else
+	    return 0;
+	}
+      else
+	{
+	  worked = TestTx( e, v, tx, hitNear );
+	  
+	  if ( worked )
+	    return 1;
+	  else if ( ty > 0 )
+	    return( TestTy( e, v, ty, hitNear ) );
+	  else
+	    return 0;
+	}
+    else
+      return 0;
+
+  // the case when inb{x,y,z} are all false
+  // TEMP  DO I NEED TO CHECK for tx > 0?
+
+  if (   tx >= ty   &&   tx >= tz   &&   tx > 0  )
+    { // tx greatest
+
+      worked = TestTx( e, v, tx, hitNear );
+      
+      if  ( worked )
+	return 1;
+      else
+	if ( ty >= tz )
+	  {
+	    if ( ! ty > 0 )
+	      return 0;
+	    
+	    worked = TestTy( e, v, ty, hitNear );
+	    
+	    if ( worked )
+	      return 1;
+	    else if ( tz > 0 )
+	      return( TestTz( e, v, tz, hitNear ) );
+	    else
+	      return 0;
+	  }
+	else
+	  {
+	    if ( ! tz > 0 )
+	      return 0;
+
+	    worked = TestTz( e, v, tz, hitNear );
+
+	    if ( worked )
+	      return 1;
+	    else if ( ty > 0 )
+	      return( TestTy( e, v, ty, hitNear ) );
+	    else
+	      return 0;
+	  }
+    }
+  
+
+  if (   ty >= tx   &&   ty >= tz   &&   ty > 0  )
+    { // ty greatest
+
+      worked = TestTy( e, v, ty, hitNear );
+      
+      if  ( worked )
+	return 1;
+      else
+	if ( tx >= tz )
+	  {
+	    if ( ! tx > 0 )
+	      return 0;
+	    
+	    worked = TestTx( e, v, tx, hitNear );
+	    
+	    if ( worked )
+	      return 1;
+	    else if ( tz > 0 )
+	      return( TestTz( e, v, tz, hitNear ) );
+	    else
+	      return 0;
+	  }
+	else
+	  {
+	    if ( ! tz > 0 )
+	      return 0;
+
+	    worked = TestTz( e, v, tz, hitNear );
+
+	    if ( worked )
+	      return 1;
+	    else if ( tx > 0 )
+	      return( TestTx( e, v, tx, hitNear ) );
+	    else
+	      return 0;
+	  }
+    }
+  
+
+  if (   tz >= ty   &&   tz >= tx   &&   tz > 0  )
+    { // tz greatest
+
+      worked = TestTz( e, v, tz, hitNear );
+      
+      if  ( worked )
+	return 1;
+      else
+	if ( ty >= tx )
+	  {
+	    if ( ! ty > 0 )
+	      return 0;
+	    
+	    worked = TestTy( e, v, ty, hitNear );
+	    
+	    if ( worked )
+	      return 1;
+	    else if ( tx > 0 )
+	      return( TestTx( e, v, tx, hitNear ) );
+	    else
+	      return 0;
+	  }
+	else
+	  {
+	    if ( ! tx > 0 )
+	      return 0;
+
+	    worked = TestTx( e, v, tx, hitNear );
+
+	    if ( worked )
+	      return 1;
+	    else if ( ty > 0 )
+	      return( TestTy( e, v, ty, hitNear ) );
+	    else
+	      return 0;
+	  }
+    }
+
+  cerr << "I SHOULD BE OUT OF THIS PROCEDURE!!!!\n\n\n\n\n\n\n\n";
+  return 0;
+  
+}
+
+int
+BBox::TestTx( const Point& e, const Vector& v, double tx, Point& hitNear )
+{
+  hitNear = e + v * tx;
+
+  if ( ( hitNear.z() >= bcmin.z() && hitNear.z() <= bcmax.z()  ||
+	hitNear.z() <= bcmin.z() && hitNear.z() >= bcmax.z() )  &&
+      ( hitNear.y() >= bcmin.y() && hitNear.y() <= bcmax.y()  ||
+       hitNear.y() <= bcmin.y() && hitNear.y() >= bcmax.y() )      )
+    return 1;
+
+  return 0;
+}
+
+int
+BBox::TestTy( const Point& e, const Vector& v, double ty, Point& hitNear )
+{
+  hitNear = e + v * ty;
+
+  if ( ( hitNear.x() >= bcmin.x() && hitNear.x() <= bcmax.x()  ||
+	hitNear.x() <= bcmin.x() && hitNear.x() >= bcmax.x() )    &&
+      ( hitNear.z() >= bcmin.z() && hitNear.z() <= bcmax.z()  ||
+       hitNear.z() <= bcmin.z() && hitNear.z() >= bcmax.z() )     )
+    return 1;
+  
+  return 0;
+}
+
+int
+BBox::TestTz( const Point& e, const Vector& v, double tz, Point& hitNear )
+{
+  hitNear = e + v * tz;
+
+  if ( ( hitNear.x() >= bcmin.x() && hitNear.x() <= bcmax.x()  ||
+	hitNear.x() <= bcmin.x() && hitNear.x() >= bcmax.x() )    &&
+      ( hitNear.y() >= bcmin.y() && hitNear.y() <= bcmax.y()  ||
+       hitNear.y() <= bcmin.y() && hitNear.y() >= bcmax.y() )     )
+    return 1;
+  
+  return 0;
+}
+
+#if 0
+int
+BBox::Intersect( const Point& e, const Vector& v, Point& hitNear,
+		Point& hitFar )
+{
+  double tmin, tmax;
+  double t[3];
+  int oncube[3], order[3];
+
+  cerr << " vvvvvvv " << v << endl;
+  
+  t[0] = ( cmin.x() - e.x() ) / v.x();
+  t[1] = ( cmin.y() - e.y() ) / v.y();
+  t[2] = ( cmin.z() - e.z() ) / v.z();
+
+  int i;
+  
+  for( i = 0; i < 3; i++ )
+    if ( t[i] < 0 )
+	oncube[i] = 0;
+    else
+	oncube[i] = OnCube( e+v*t[i] );
+
+  for( i = 0; i<3;i++)
+    cerr << " Oncube " << oncube[i];
+  cerr << endl;
+  
+
+  if ( t[0] > t[1] )
+    if ( t[1] > t[2] )
+      {
+	order[0] = 0;
+	order[1] = 1;
+	order[2] = 2;
+      }
+    else
+      {
+	if ( t[2] > t[0] )
+	  {
+	    order[0] = 2;
+	    order[1] = 0;
+	    order[2] = 1;
+	  }
+	else
+	  {
+	    order[0] = 0;
+	    order[1] = 2;
+	    order[2] = 1;
+	  }
+      }
+  else
+    {
+      if( t[2] > t[1] )
+	{
+	  order[0] = 2;
+	  order[1] = 1;
+	  order[2] = 0;
+	}
+      else
+	{
+	  order[0] = t[1];
+	  if ( t[2] > t[1] )
+	    {
+	      order[1] = 2;
+	      order[2] = 1;
+	    }
+	  else
+	    {
+	      order[1] = 1;
+	      order[2] = 2;
+	    }
+	}
+    }
+
+  if ( oncube[ order[0] ] )
+    tmin = t[order[0]];
+  else if ( oncube[ order[1] ] )
+    tmin = t[order[1]];
+  else if ( oncube[ order[2] ] )
+    tmin = t[order[2]];
+  else
+    {
+      cerr << "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n";
+      exit( -1 );
+    }
+	    
+  cerr << t[0] << "hello " << e+v*t[0] << endl;
+  cerr << t[1] << "hello " << e+v*t[1] << endl;
+  cerr << t[2] << "hello " << e+v*t[2] << endl;
+  
+  t[0] = ( cmax.x() - e.x() ) / v.x();
+  t[1] = ( cmax.y() - e.y() ) / v.y();
+  t[2] = ( cmax.z() - e.z() ) / v.z();
+
+  if ( t[0] < t[1] )
+    {
+      if ( t[0] < t[2] )
+	tmax = t[0];
+      else
+	tmax = t[2];
+    }
+  else
+    {
+      if ( t[1] < t[2] )
+	tmax = t[1];
+      else
+	tmax = t[2];
+    }
+
+  int joyous = Intersect2( e, v, hitNear, hitFar );
+  
+  Point ntmp( e + v * tmin );
+  Point xtmp( e + v * tmax );
+
+  int toreturn;
+  
+  if ( tmin > tmax )
+    toreturn = 0;
+  else
+    toreturn = 1;
+  
+  cerr << t[0] << "hello " << e+v*t[0] << endl;
+  cerr << t[1] << "hello " << e+v*t[1] << endl;
+  cerr << t[2] << "hello " << e+v*t[2] << endl;
+  
+  if ( ! ( joyous        &&       toreturn &&
+	  hitNear.InInterval( ntmp, 1e-5 ) &&
+	  hitFar.InInterval( xtmp, 1e-5 ) ) )
+    {
+      if ( joyous || toreturn )
+	{
+	  cerr << "PROBLEM WITH INTERSECTION\n";
+
+	  if ( ! hitNear.InInterval( ntmp, 1e-5 ) )
+	    cerr << "\n\nEXTRA ERROR\n\n\n";
+	  
+	  cerr << " hitNears are: " <<  hitNear << ntmp << endl;
+	  cerr << " hitFars are:  " << hitFar <<  xtmp << endl;
+	  cerr << "Intersect2 returned " << Intersect2( e, v,
+						       hitNear,
+						       hitFar ) << endl;
+	  cerr << "toreturn " << toreturn << endl;
+	  cerr << tmin << "  " << tmax << endl <<endl;
+	}
+    }
+
+  hitNear = ntmp;
+  hitFar = xtmp;
+  
+  return toreturn;
+}
+#endif
+
+
+#if 0
+int
+BBox::Intersect( const Point& e, const Vector& v, Point& hitNear,
+		Point& hitFar )
+{
+  double t[6];
+  int i,j;
+  double b;
+
+  t[0] = ( cmin.x() - e.x() ) / v.x();
+  t[1] = ( cmin.y() - e.y() ) / v.y();
+  t[2] = ( cmin.z() - e.z() ) / v.z();
+
+  t[3] = ( cmax.x() - e.x() ) / v.x();
+  t[4] = ( cmax.y() - e.y() ) / v.y();
+  t[5] = ( cmax.z() - e.z() ) / v.z();
+
+  // insertion sort...
+  
+  for( i = 1; i < 6; i++ )
+    {
+      b = t[i];
+      j = i;
+      while( j > 0 &&  t[j-1] > b )
+	{
+	  t[j] = t[j-1];
+	  j--;
+	}
+      t[j] = b;
+    }
+  
+  cerr << "The following is the sorted array:\n";
+  for( i = 0; i < 6; i++ )
+    cerr << " " << t[i] << " ";
+  cerr << endl << endl;
+
+  Point ntmp( e + v * t[2] );
+  Point xtmp( e + v * t[3] );
+
+  Intersect2( e, v, hitNear, hitFar );
+
+  cerr << " hitNears are: " <<  hitNear << ntmp << endl;
+  cerr << " hitFars are:  " << hitFar <<  xtmp << endl;
+
+  hitNear = ntmp;
+  hitFar = xtmp;
+
+  return 1;
+}
+#endif
 
 
 BBoxSide::BBoxSide( )

@@ -1,4 +1,3 @@
-
 #ifndef Geometry_BBox_h
 #define Geometry_BBox_h 1
 
@@ -9,6 +8,8 @@ class Piostream;
 
 class BBoxSide;
 class BBox;
+
+#define EEpsilon  1e-13
 
 class BBoxSide
 {
@@ -35,6 +36,9 @@ friend void Pio(Piostream &, BBox& );
     Point cmin;
     Point cmax;
     BBoxSide sides[6];
+    Point bcmin, bcmax;
+    Point extracmin, extracmax;
+    int inbx, inby, inbz;
 public:
     BBox();
     ~BBox();
@@ -60,7 +64,17 @@ public:
     
     // finds up to 2 points of intersection of a ray and a bbox
 
-    int Intersect( Point s, Vector v, Point& hitNear, Point& hitFar );
+    int Intersect( const Point& e, const Vector& v, Point& hitNear );
+    int Intersect2( Point s, Vector v, Point& hitNear, Point& hitFar );
+
+    int OnCube( const Point& p );
+
+    //
+    void remap( const Point& e );
+
+    int TestTx( const Point& e, const Vector& v, double tx, Point& hitNear );
+    int TestTy( const Point& e, const Vector& v, double ty, Point& hitNear );
+    int TestTz( const Point& e, const Vector& v, double tz, Point& hitNear );
 };
 
 #endif
