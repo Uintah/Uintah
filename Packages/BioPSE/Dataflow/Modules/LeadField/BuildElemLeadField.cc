@@ -127,6 +127,8 @@ void BuildElemLeadField::execute() {
 
   if (!interp) {
     cerr << "Error - Interp Field wasn't a PointCloud<vector<pair<TetVolMesh::Node::index_type,double>>>\n";
+
+    cout << "It's a '" + interp_in->get_type_description()->get_name() + "'\n";
     return;
   }
 
