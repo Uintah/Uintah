@@ -384,27 +384,9 @@ LevelField<Data>::type_name(int n)
 
 template <class T>
 const SCIRun::TypeDescription* 
-get_type_description(LevelField<T>*)
-{
-  static SCIRun::TypeDescription* td = 0;
-  static string name("LevelField");
-  static string namesp("Uintah");
-  static string path(__FILE__);
-  if(!td){
-    const SCIRun::TypeDescription *sub = SCIRun::get_type_description((T*)0);
-    SCIRun::TypeDescription::td_vec *subs =
-      scinew SCIRun::TypeDescription::td_vec(1);
-    (*subs)[0] = sub;
-    td = scinew SCIRun::TypeDescription(name, subs, path, namesp);
-  }
-  return td;
-}
-
-template <class T>
-const SCIRun::TypeDescription* 
 LevelField<T>::get_type_description() const 
 {
-  return Uintah::get_type_description((LevelField<T>*)0);
+  return SCIRun::get_type_description((LevelField<T>*)0);
 }
 
 
@@ -639,6 +621,25 @@ void Pio(Piostream& stream, Uintah::LevelData<T>& data)
   NOT_FINISHED("Uintah::LevelData::io");
 
   stream.end_class();
+}
+
+
+template <class T>
+const TypeDescription* 
+get_type_description(Uintah::LevelField<T>*)
+{
+  static TypeDescription* td = 0;
+  static string name("LevelField");
+  static string namesp("Uintah");
+  static string path(__FILE__);
+  if(!td){
+    const TypeDescription *sub = get_type_description((T*)0);
+    TypeDescription::td_vec *subs =
+      scinew TypeDescription::td_vec(1);
+    (*subs)[0] = sub;
+    td = scinew TypeDescription(name, subs, path, namesp);
+  }
+  return td;
 }
 
 } // end namespace SCIRun

@@ -55,6 +55,7 @@ public:
     const LevelMesh *mesh_;
     int i_, j_, k_;
     const Patch* patch_;
+    operator unsigned() const { return (unsigned)(i_*j_*k_); }
     protected:
     LevelIndex(){}   
   };
@@ -302,6 +303,10 @@ public:
   virtual LevelMesh *clone(){ return scinew LevelMesh(*this); }
   virtual ~LevelMesh() {}
 
+  template <class I> I tbegin(I*) const;
+  template <class I> I tend(I*) const;
+  template <class S> S tsize(S*) const;
+
   Node::index_type  node(int i, int j, int k) const
     { return Node::index_type(this, i, j, k); }
   Node::iterator node_begin() const { return Node::iterator(this, 0, 0, 0); }
@@ -408,6 +413,22 @@ private:
   // returns a LevelMesh
   static Persistent *maker() { return scinew LevelMesh(); }
 };
+
+template <> LevelMesh::Node::size_type LevelMesh::tsize(LevelMesh::Node::size_type *) const;
+template <> LevelMesh::Edge::size_type LevelMesh::tsize(LevelMesh::Edge::size_type *) const;
+template <> LevelMesh::Face::size_type LevelMesh::tsize(LevelMesh::Face::size_type *) const;
+template <> LevelMesh::Cell::size_type LevelMesh::tsize(LevelMesh::Cell::size_type *) const;
+				
+template <> LevelMesh::Node::iterator LevelMesh::tbegin(LevelMesh::Node::iterator *) const;
+template <> LevelMesh::Edge::iterator LevelMesh::tbegin(LevelMesh::Edge::iterator *) const;
+template <> LevelMesh::Face::iterator LevelMesh::tbegin(LevelMesh::Face::iterator *) const;
+template <> LevelMesh::Cell::iterator LevelMesh::tbegin(LevelMesh::Cell::iterator *) const;
+				
+template <> LevelMesh::Node::iterator LevelMesh::tend(LevelMesh::Node::iterator *) const;
+template <> LevelMesh::Edge::iterator LevelMesh::tend(LevelMesh::Edge::iterator *) const;
+template <> LevelMesh::Face::iterator LevelMesh::tend(LevelMesh::Face::iterator *) const;
+template <> LevelMesh::Cell::iterator LevelMesh::tend(LevelMesh::Cell::iterator *) const;
+
 
 }
 
