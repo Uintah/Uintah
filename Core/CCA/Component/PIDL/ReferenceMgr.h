@@ -136,13 +136,6 @@ DESCRIPTION
     // (parallel component case)
     IntraComm* intracomm;
     
-  protected:
-    ///////
-    // These class is involved in setting up ReferenceMgr
-    friend class Object_proxy;
-    friend class TypeInfo;
-
-  private:
     /////////
     // For parallel proxies, number of cohorts
     int localSize;
@@ -151,6 +144,14 @@ DESCRIPTION
     // For parallel proxies, my ordered number
     int localRank;
 
+
+  protected:
+    ///////
+    // These class is involved in setting up ReferenceMgr
+    friend class Object_proxy;
+    friend class TypeInfo;
+
+  private:
     ///////
     // Denote whether we have subsetted this object  
     bool isSubset;
