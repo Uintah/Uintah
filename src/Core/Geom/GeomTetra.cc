@@ -57,39 +57,6 @@ void GeomTetra::get_bounds(BBox& bb)
     bb.extend(p4);
 }
 
-void GeomTetra::get_bounds(BSphere&)
-{
-    NOT_FINISHED("GeomTetra::get_bounds");
-}
-
-void GeomTetra::make_prims(Array1<GeomObj*>& free,
-			   Array1<GeomObj*>&)
-{
-    GeomLine* l1=new GeomLine(p1, p2);
-//    l1->set_matl(matl);
-    free.add(l1);
-    GeomLine* l2=new GeomLine(p2, p3);
-//    l2->set_matl(matl);
-    free.add(l2);
-    GeomLine* l3=new GeomLine(p3, p4);
-//    l3->set_matl(matl);
-    free.add(l3);
-    GeomLine* l4=new GeomLine(p1, p4);
-//    l4->set_matl(matl);
-    free.add(l4);
-}
-
-void GeomTetra::preprocess()
-{
-    NOT_FINISHED("GeomTetra::preprocess");
-}
-
-void GeomTetra::intersect(const Ray&, Material*,
-			  Hit&)
-{
-    NOT_FINISHED("GeomTetra::intersect");
-}
-
 #define GEOMTETRA_VERSION 1
 
 void GeomTetra::io(Piostream& stream)
@@ -117,6 +84,10 @@ bool GeomTetra::saveobj(ostream&, const clString&, GeomSave*)
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:25  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:13  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

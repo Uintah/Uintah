@@ -15,7 +15,6 @@
 #include <SCICore/Geom/GeomVertexPrim.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Geometry/BBox.h>
-#include <SCICore/Geometry/BSphere.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Containers/TrivialAllocator.h>
 
@@ -141,12 +140,6 @@ void GeomVertexPrim::get_bounds(BBox& bb)
 {
     for(int i=0;i<verts.size();i++)
 	bb.extend(verts[i]->p);
-}
-
-void GeomVertexPrim::get_bounds(BSphere& bs)
-{
-    for(int i=0;i<verts.size();i++)
-	bs.extend(verts[i]->p);
 }
 
 void GeomVertexPrim::add(const Point& p)
@@ -368,6 +361,10 @@ void Pio(Piostream& stream, GeomVertex*& obj)
 
 //
 // $Log$
+// Revision 1.4  1999/08/17 23:50:30  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.3  1999/08/17 06:39:17  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -36,7 +36,6 @@ public:
     virtual GeomObj* clone();
 
     virtual void get_bounds(BBox&);
-    virtual void get_bounds(BSphere&);
 
     void scale(const Vector&);
     void translate(const Vector&);
@@ -46,14 +45,6 @@ public:
 #ifdef SCI_OPENGL
     virtual void draw(DrawInfoOpenGL*, Material*, double time);
 #endif
-
-    // For all Painter's algorithm based renderers
-    virtual void make_prims(Array1<GeomObj*>& free,
-			    Array1<GeomObj*>& dontfree);
-
-    // For Raytracing
-    virtual void intersect(const Ray& ray, Material* matl,
-			   Hit& hit);
 
     virtual void io(Piostream&);
     static PersistentTypeID type_id;

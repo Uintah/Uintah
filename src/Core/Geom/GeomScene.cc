@@ -19,9 +19,9 @@
 #include <SCICore/Geom/Lighting.h>
 #include <SCICore/Geom/GeomObj.h>
 #include <SCICore/Geom/GeomSave.h>
-#include <SCICore/Math/Trig.h>
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Geometry/Point.h>
+#include <SCICore/Math/Trig.h>
 
 #include <iostream.h>
 #include <fstream.h>
@@ -355,6 +355,10 @@ void GeomSave::rib_orient(ostream& out, const Point& center, const Vector& up,
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:25  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:12  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -66,8 +66,8 @@
 #include <SCICore/Geom/Sticky.h>
 #include <SCICore/Geom/Color.h>
 #include <SCICore/Math/MinMax.h>
-#include <SCICore/Math/TrigTable.h>
 #include <SCICore/Math/Trig.h>
+#include <SCICore/Math/TrigTable.h>
 #include <SCICore/Geometry/Plane.h>
 
 #include <GL/gl.h>
@@ -4150,6 +4150,10 @@ void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:22  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:09  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

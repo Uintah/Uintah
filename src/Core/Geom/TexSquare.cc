@@ -63,23 +63,6 @@ void TexSquare::get_bounds( BBox& bb ) {
   bb.extend( d );
 }
 
-void TexSquare::get_bounds(BSphere&) {
-  NOT_FINISHED("TexSquare::get_bounds");
-}
-
-void TexSquare::make_prims( Array1<GeomObj*>&, Array1<GeomObj*>&)
-{
-  NOT_FINISHED("TexSquare::make_prims");
-}
-
-void TexSquare::preprocess() {
-  NOT_FINISHED("TexSquare::preprocess");
-}
-
-void TexSquare::intersect(const Ray&, Material*, Hit&) {
-  NOT_FINISHED("TexSquare::intersect");
-}
-
 #define TEXSQUARE_VERSION 1
 
 void TexSquare::io(Piostream& stream) {
@@ -105,6 +88,10 @@ bool TexSquare::saveobj(ostream&, const clString&, GeomSave*) {
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:34  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:24  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

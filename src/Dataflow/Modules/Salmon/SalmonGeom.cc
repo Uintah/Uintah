@@ -81,28 +81,6 @@ void GeomSalmonItem::get_bounds(BBox& box)
     child->get_bounds(box);
 }
 
-void GeomSalmonItem::get_bounds(BSphere& sphere)
-{
-    child->get_bounds(sphere);
-}
-
-void GeomSalmonItem::make_prims(Array1<GeomObj *>& free ,
-				Array1<GeomObj *>& dontfree )
-{
-    child->make_prims(free,dontfree);
-}
-
-void GeomSalmonItem::preprocess()
-{
-    child->preprocess();
-}
-
-void GeomSalmonItem::intersect(const Ray& ray, Material* m,
-			       Hit& hit)
-{
-    child->intersect(ray,m,hit);
-}
-
 #define GEOMSALMONITEM_VERSION 1
 
 void GeomSalmonItem::io(Piostream& stream)
@@ -136,6 +114,10 @@ bool GeomSalmonItem::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:16  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:37:39  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

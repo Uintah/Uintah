@@ -53,23 +53,6 @@ void GeomSticky::get_bounds( BBox& bb ) {
   child->get_bounds( bb );
 }
 
-void GeomSticky::get_bounds(BSphere& sp) {
-  child->get_bounds( sp );
-}
-
-void GeomSticky::make_prims( Array1<GeomObj*>&, Array1<GeomObj*>&)
-{
-  NOT_FINISHED("GeomSticky::make_prims");
-}
-
-void GeomSticky::preprocess() {
-  NOT_FINISHED("GeomSticky::preprocess");
-}
-
-void GeomSticky::intersect(const Ray&, Material*, Hit&) {
-  NOT_FINISHED("GeomSticky::intersect");
-}
-
 #define GeomSticky_VERSION 1
 
 void GeomSticky::io(Piostream& stream) {
@@ -89,6 +72,10 @@ bool GeomSticky::saveobj(ostream&, const clString&, GeomSave*) {
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:33  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:22  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -18,7 +18,6 @@
 #include <SCICore/Geom/GeomLine.h>
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/Malloc/Allocator.h>
-#include <SCICore/Math/Trig.h>
 #include <SCICore/Math/TrigTable.h>
 
 namespace SCICore {
@@ -55,11 +54,6 @@ void  GeomTube::get_bounds(BBox& bb)
 {
     for(int i=0;i<verts.size();i++)
 	bb.extend_cyl(verts[i]->p, directions[i], radii[i]);
-}
-
-void GeomTube::get_bounds(BSphere&)
-{
-    NOT_FINISHED("GeomTube::get_bounds");
 }
 
 // the function to extend the length of the tube geometry
@@ -111,22 +105,6 @@ void GeomTube::make_circle(int which, Array1<Point>& circle_pts,
     }
 }
 
-void GeomTube::make_prims(Array1<GeomObj*>&,
-			  Array1<GeomObj*>&)
-{
-    NOT_FINISHED("GeomTube::make_prims");
-}
-
-void GeomTube::preprocess()
-{
-    NOT_FINISHED("GeomTube::preprocess");
-}
-
-void GeomTube::intersect(const Ray&, Material*, Hit&)
-{
-    NOT_FINISHED("GeomTube::intersect");
-}
-
 #define GEOMTUBE_VERSION 1
 
 void GeomTube::io(Piostream& stream)
@@ -153,6 +131,10 @@ bool GeomTube::saveobj(ostream&, const clString&, GeomSave*)
 
 //
 // $Log$
+// Revision 1.3  1999/08/17 23:50:29  sparker
+// Removed all traces of the old Raytracer and X11 renderers.
+// Also removed a .o and .d file
+//
 // Revision 1.2  1999/08/17 06:39:17  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
