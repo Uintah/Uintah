@@ -1333,146 +1333,47 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
     break;
       
   case 2: 
-    {
-      switch (sz_last_dim) {
-      case 3: // Vector data
-	nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, 3, 
-		 (unsigned int) count[0], (unsigned int) count[1], 3);
-	break;
-	  
-      case 6: // Tensor data
-	nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, 6, 
-		 (unsigned int) count[0], (unsigned int) count[1]);
-	break;
-	  
-      default: // treat the rest as Scalar data
-	nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 
-		 (unsigned int) count[0], (unsigned int) count[1]);
-	break;
-      };
-
-      nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-		      nrrdCenterNode);
-    }
+    nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 
+	     (unsigned int) count[0], (unsigned int) count[1]);
+    nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
+		    nrrdCenterNode);
     break;
       
   case 3: 
-    {
-      switch (sz_last_dim) {
-      case 3: // Vector data
-	nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, 3, 
-		 (unsigned int) count[0], (unsigned int) count[1], 
-		 (unsigned int) count[2]);
-	break;
-	  
-      case 6: // Tensor data
-	nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, 6, 
-		 (unsigned int) count[0], (unsigned int) count[1], 
-		 (unsigned int) count[2]);
-	break;
-	  
-      default: // treat the rest as Scalar data
-	nrrdWrap(nout->nrrd, data, nrrd_type, ndims,  
-		 (unsigned int) count[0], (unsigned int) count[1], 
-		 (unsigned int) count[2]);
-	break;
-      };
-
-      nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-		      nrrdCenterNode, nrrdCenterNode);
-
-    }
+    nrrdWrap(nout->nrrd, data, nrrd_type, ndims,  
+	     (unsigned int) count[0], (unsigned int) count[1], 
+	     (unsigned int) count[2]);
+    nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
+		    nrrdCenterNode, nrrdCenterNode);
     break;
       
   case 4: 
-    {
-      switch (sz_last_dim) {
-      case 3: // Vector data
-	nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, 3, 
-		 (unsigned int) count[0], (unsigned int) count[1], 
-		 (unsigned int) count[2], (unsigned int) count[3]);
-	break;
-	
-      case 6: // Tensor data
-	nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, 6, 
-		 (unsigned int) count[0], (unsigned int) count[1], 
-		 (unsigned int) count[2], (unsigned int) count[3]);
-	break;
-	  
-      default: // treat the rest as Scalar data
-	nrrdWrap(nout->nrrd, data, nrrd_type, ndims,  
-		 (unsigned int) count[0], (unsigned int) count[1], 
-		 (unsigned int) count[2], (unsigned int) count[3]);
-	break;
-      };
-
-      nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-		      nrrdCenterNode, nrrdCenterNode, nrrdCenterNode,
-		      nrrdCenterNode);
-    }
+    nrrdWrap(nout->nrrd, data, nrrd_type, ndims,  
+	     (unsigned int) count[0], (unsigned int) count[1], 
+	     (unsigned int) count[2], (unsigned int) count[3]);
+    nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
+		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode,
+		    nrrdCenterNode);
     break;
       
   case 5: 
-    {
-      switch (sz_last_dim) {
-      case 3: // Vector data
-	nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, 3, 
-		 (unsigned int) count[0], (unsigned int) count[1], 
-		 (unsigned int) count[2], (unsigned int) count[3], 
-		 (unsigned int) count[4]);
-	break;
-	  
-      case 6: // Tensor data
-	nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, 6, 
-		 (unsigned int) count[0], (unsigned int) count[1], 
-		 (unsigned int) count[2], (unsigned int) count[3], 
-		 (unsigned int) count[4]);
-	break;
-	  
-      default: // treat the rest as Scalar data
-	nrrdWrap(nout->nrrd, data, nrrd_type, ndims,  
-		 (unsigned int) count[0], (unsigned int) count[1], 
-		 (unsigned int) count[2], (unsigned int) count[3], 
-		 (unsigned int) count[4]);
-	break;
-      };
-
-      nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-		      nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
-		      nrrdCenterNode);
-    }
-      
+    nrrdWrap(nout->nrrd, data, nrrd_type, ndims,  
+	     (unsigned int) count[0], (unsigned int) count[1], 
+	     (unsigned int) count[2], (unsigned int) count[3], 
+	     (unsigned int) count[4]);
+    nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
+		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
+		    nrrdCenterNode);
     break;
       
   case 6: 
-    {
-      switch (sz_last_dim) {
-      case 3: // Vector data
-	nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, 3, 
-		 (unsigned int) count[0], (unsigned int) count[1], 
-		 (unsigned int) count[2], (unsigned int) count[3], 
-		 (unsigned int) count[4], count[5]);
-	break;
-	  
-      case 6: // Tensor data
-	nrrdWrap(nout->nrrd, data, nrrd_type, ndims+1, 6, 
-		 (unsigned int) count[0], (unsigned int) count[1], 
-		 (unsigned int) count[2], (unsigned int) count[3], 
-		 (unsigned int) count[4], count[5]);
-	break;
-	  
-      default: // treat the rest as Scalar data
-	nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 
-		 (unsigned int) count[0], (unsigned int) count[1], 
-		 (unsigned int) count[2], (unsigned int) count[3], 
-		 (unsigned int) count[4], count[5]);
-	break;
-      };
-
-      nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
-		      nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
-		      nrrdCenterNode, nrrdCenterNode);
-    }
+    nrrdWrap(nout->nrrd, data, nrrd_type, ndims, 
+	     (unsigned int) count[0], (unsigned int) count[1], 
+	     (unsigned int) count[2], (unsigned int) count[3], 
+	     (unsigned int) count[4], count[5]);
+    nrrdAxisInfoSet(nout->nrrd, nrrdAxisInfoCenter, nrrdCenterNode, 
+		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode, 
+		    nrrdCenterNode, nrrdCenterNode);
     break;
   }
    
