@@ -231,6 +231,8 @@ itcl_class Roe {
 	checkbutton $m.eframe.cull -text "Back Cull" -variable $this-global-cull \
 		-command "$this-c redraw"
 
+	pack  $m.eframe.light $m.eframe.fog $m.eframe.bbox \
+	    $m.eframe.clip -in $m.eframe -side top -anchor w
 
 # Dave's addition for dumping frames
 # 	checkbutton $m.eframe.movie -text "Save Movie" -variable $this-global-movie
@@ -253,18 +255,32 @@ itcl_class Roe {
 #  PPSloan's addition for dumping raw frames 
 #	checkbutton  $m.eframe.domovie -text Movie -variable \
 #	    $this-global-movie -onvalue 1 -offvalue 0 -command "$this-c redraw"
-#
+
 #	checkbutton $m.eframe.dompeg -text MPEG -variable \
 #	    $this-global-mpeg -onvalue 1 -offvalue 0 -command "$this-c redraw"
 #
 #	entry $m.eframe.moviebase -textvariable "$this-global-movieName" 
 #
-#	pack  $m.eframe.light $m.eframe.fog $m.eframe.bbox $m.eframe.clip -in $m.eframe \
-#		-side top -anchor w
 #
 #	pack $m.eframe.domovie $m.eframe.dompeg $m.eframe.moviebase -in $m.eframe \
 #		-side top -anchor w
 #  End PPSloan's addition
+
+# Combine Cameron's Mpeg encoder with PPSloans Raw option --Kurt
+	frame $m.eframe.f -relief groove -borderwidth 2
+	pack $m.eframe.f -side top -anchor w
+	label $m.eframe.f.l -text "Movie Control"
+	pack $m.eframe.f.l -side top 
+	radiobutton $m.eframe.f.none -text "None" \
+	    -variable $this-global-movie -value 0
+	radiobutton $m.eframe.f.raw -text "Raw Frames" \
+	    -variable $this-global-movie -value 1
+	radiobutton $m.eframe.f.mpeg -text "Mpeg" \
+	    -variable $this-global-movie -value 2
+	entry $m.eframe.f.moviebase -textvariable "$this-global-movieName" 
+	pack $m.eframe.f.none $m.eframe.f.raw $m.eframe.f.mpeg \
+	    -side top  -anchor w
+	pack $m.eframe.f.moviebase -side top -anchor w -padx 2 -pady 2
 
 	make_labeled_radio $m.shade "Shading:" $r top $this-global-type \
 		{Wire Flat Gouraud}
@@ -279,14 +295,14 @@ itcl_class Roe {
 	global "$this-global-cull"
 
 #PPSloan
-#	global "$this-global-movie"
-#	global "$this-global-movieName"
+	global "$this-global-movie"
+	global "$this-global-movieName"
 
 
 #Dave
-	global "$this-global-movie"
-	global "$this-global-movieName"
-	global "$this-global-movieFrame"
+#	global "$this-global-movie"
+#	global "$this-global-movieName"
+#	global "$this-global-movieFrame"
 #
 	set "$this-global-light" 1
 	set "$this-global-fog" 0
@@ -298,13 +314,13 @@ itcl_class Roe {
 
 
 #PPSloan
-#	set "$this-global-movie" 0
-#	set "$this-global-movieName" "/tmp/movie"
-	
-#Dave
 	set "$this-global-movie" 0
 	set "$this-global-movieName" "/tmp/movie"
-	set "$this-global-movieFrame" 0
+	
+#Dave
+#	set "$this-global-movie" 0
+#	set "$this-global-movieName" "/tmp/movie"
+#	set "$this-global-movieFrame" 0
 #
 	frame $m.objlist -relief groove -borderwidth 2
 	pack $m.objlist -side left -padx 2 -pady 2 -fill y

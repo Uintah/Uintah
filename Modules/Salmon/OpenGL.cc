@@ -1119,18 +1119,21 @@ void Roe::setState(DrawInfoOpenGL* drawinfo,clString tclID)
 	    //	    curFrameStr.get_int(curFrame);
 	    if (val == "0") {
 		doingMovie = 0;
+		makeMPEG = 0;
 	    } else {
-
-		if (!doingMovie) {
-		    doingMovie = 1;
-		    curFrame=0;
-		}
+	      if (!doingMovie) {
+		doingMovie = 1;
+		if ( val == "1" )
+		  makeMPEG = 0;
+		else
+		  makeMPEG = 1;
+	      }
 	    }
-	    get_tcl_stringvar(id,mpeg,val);
-	    if(val == "0") 
-	      makeMPEG = 0;
-	    else
-	      makeMPEG = 1;
+	    // get_tcl_stringvar(id,mpeg,val);
+	    //if(val == "0") 
+	    //  makeMPEG = 0;
+	    //else
+	    //  makeMPEG = 1;
 	}
 
 	drawinfo->init_clip(); // set clipping 

@@ -21,11 +21,11 @@ LOCALCFLAGS = -woff 835
         || defined(SCI_IRIX_BIN_64_mips3) || defined(SCI_IRIX_BIN_64_mips4)
 LOCALCFLAGS = -woff 1692,1498,1233,1209,1552
 #endif
-LOCALINCLUDES = -I../tcl -I../tk -I./Headers -DHAVE_STRTOK $(XINCLUDE)
+LOCALINCLUDES = -I.
 LIBNAME = mpeg
 
 SO_LIBS =
-SO_LDFLAGS = -L$(SCILIBDIR) $(XLIBDIR)
+SO_LDFLAGS =  -lm
 
 SCIDependTarget($(SRCS))
 SCIObjLibraryTarget($(LIBNAME),$(OBJS),$(SO_LIBS),$(SO_LDFLAGS))
