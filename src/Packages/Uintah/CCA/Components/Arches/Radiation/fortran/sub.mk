@@ -26,17 +26,13 @@ SRCS += \
 	$(SRCDIR)/rzibc.F
 
 PSELIBS := \
-	Packages/Uintah/Core/Parallel    \
 	Packages/Uintah/Core/ProblemSpec \
-	Packages/Uintah/CCA/Ports        \
 	Packages/Uintah/Core/Grid        \
 	Packages/Uintah/Core/Disclosure  \
 	Packages/Uintah/Core/Exceptions  \
-	Core/Thread 			 \
-	Core/Geometry                    \
 	Core/Exceptions
 
-LIBS := $(FLIBS) $(M_LIBRARY)
+LIBS := $(XML_LIBRARY) $(F_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
