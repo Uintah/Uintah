@@ -1,0 +1,406 @@
+% -*-latex-*-
+%
+%  The contents of this file are subject to the University of Utah Public
+%  License (the "License"); you may not use this file except in compliance
+%  with the License.
+%
+%  Software distributed under the License is distributed on an "AS IS"
+%  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+%  License for the specific language governing rights and limitations under
+%  the License.
+%
+%  The Original Source Code is SCIRun, released March 12, 2001.
+%
+%  The Original Source Code was developed by the University of Utah.
+%  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
+%  University of Utah. All Rights Reserved.
+%
+
+\section{Importing and Exporting \sr{} Data}
+\label{sec:import_export} 
+\index{importing}
+\index{exporting}
+\index{converter}
+
+\sr{} does not import or export ``foreign'' data directly. A set of
+command line utilities, called \dfn{converters}, import and export
+data.  The import utilities convert foriegn data to \sr{} data file
+objects.  The export utilities convert \sr{} data file objects to
+foreign data. The converters import/export the following \sr{} data
+types: \datatype{Field}, \datatype{Matrix}, and \datatype{ColorMap}.
+Foreign data is text based.  Its formats are described later in this
+section.
+
+The following sections discuss \sr{}'s data objects, import/export
+``theory'', text format of foreign data, and use of converters.
+
+
+\subsection{Persistent Data Objects}
+\label{sec:sr_data_object}
+
+\sr{} stores its data to disk as \dfn{Persistent Objects}.  A
+persistant data object is a data ``snapshot''---the data and its state
+are saved and the data object can be read at a later time.
+
+\sr{}'s persistent objects are built atop XDR, a library that
+abstracts away the architecture specific facets of data input and
+output (e.g. endianness, pointer size, etc).
+
+\note{\sr{}'s data files should not be manually edited.  Editing
+  these files manually may result in data corruption.}
+
+The converters can read and write \sr{}'s persistent data objects.
+
+\subsubsection{Fields}
+
+A \sr{} \datatype{Field} consists of a \datatype{Mesh} and a set of
+data values and data value locations.  Data values can be located at
+the nodes, edges, faces, or cells of the mesh.  A \datatype{Field} can
+also consist of a \datatype{Mesh} with no associated data.
+
+Note that the components of a field are exported separately.  Mesh
+node locations are exported to a file, mesh connectivity data are
+export to another file, and mesh data values are exported to a third
+file.
+
+
+\subsubsection{Meshes}
+
+A \sr{} mesh consists of 
+
+\sr{} meshes are \dfn{unstructured}, \dfn{structured}, or
+\dfn{regular}.  
+
+Node locations and connectivities for unstructured meshs are specified
+explicitly.  The unstructured mesh types are:
+\datatype{PointCloudMesh}, \datatype{CurveMesh},
+\datatype{TriSurfMesh}, \datatype{QuadSurfMesh},
+\datatype{TetVolMesh}, \datatype{HexVolMesh}.
+
+For structured meshes, node locations are specified explicitly and
+connectivities are known implicitly.  The structured meshes are
+\datatype{StructCurveMesh}, \datatype{StructQuadSurfMesh}, and
+\datatype{StructHexVolMesh}.
+
+Node locations and connectivities are known implicitly for regular
+meshes.  The regular mesh types are \datatype{ScanlineMesh},
+\datatype{ImageMesh}, \datatype{LatVolMesh}.
+
+
+\sr{} converters do not support fields containing regular meshes.
+Fields with regular meshes can be imported/exported using the
+\package{Teem} package.  
+See the \htmladdnormallinkfoot{\package{Teem} file format documentation}{http://www.cs.utah.edu/~gk/teem/nrrd/format.html} and
+the \htmladdnormallinkfoot{\package{Teem} module descriptions}{\htmlurl{\latexhtml{\scisoftware{}/doc}{../../..}/Developer/Modules/Teem.html}}
+for information.
+
+One other mesh type, \datatype{MaskedLatVolMesh} is used to mask out
+invalid regions (nodes or elements) of a mesh.
+
+See also \secref{Field Types}{sec:field-types}.
+
+\subsubsection{Data}
+
+\sr{} data types that can be associated with a Mesh are:
+scalar (e.g. \datatype{char}, \datatype{int}, \datatype{double}),
+\datatype{Vectors}, and \datatype{Tensors}.
+
+
+\subsubsection{Matrices}
+
+\sr{} supports three matrix types: \datatype{ColumnMatrix},
+\datatype{DenseMatrix}, and \datatype{SparseRowMatrix}.  
+
+\sr{}'s converters support all three types.
+
+Matrix types can also be transferred between \sr{} and Matlab using
+\sr{}'s \package{MatlabInterface} package. See the
+\package{MatlabInterface} package \htmladdnormallinkfoot{module
+  descriptions}{\htmlurl{\latexhtml{\scisoftware{}/src}{../../..}/Packages/MatlabInterface/Dataflow/TeX/Matlab/Matlab/Matlab.html}}.
+
+
+\subsubsection{Color Maps}
+
+Import and export of color-maps is supported by the converters.
+
+\subsection{Exporting a Field}
+\label{sec:export_field}
+
+Field data objects cannot be exported directly by the converters.  A
+field must be first split into a mesh part (still a field object
+though) and a data part (a matrix object).
+
+After a field is split, its mesh and data parts can be exported using
+converters.  The mesh converter produces two files, a node location
+data file and a node connectivity data file. The data converter
+produces a file containing node data.
+
+A field is split in \sr{} by constructing a simple network using
+modules \datatype{FieldReader}, \datatype{ManageFieldData},
+and \datatype{MatrixWriter}.  
+
+A \datatype{FieldReader} module reads the field to be split.
+\datatype{FieldReader}'s output port is connected to
+\datatype{ManageFieldData}'s input port (\datatype{ManageFieldData}'s
+matrix input port is unconnected).  \datatype{ManageFieldData}'s
+matrix output port is connected to \datatype{MatrixWriter}'s input
+port.  The network saves the field's data as a matrix object.
+
+Converters are used to export mesh data from the field object and the
+field's data from the matrix object.
+
+\subsection{Importing a Field}
+\label{sec:import_field}
+
+To import a field, two converters and a small \sr{} network are needed.
+
+The first converter produces an incomplete field object (mesh data
+only) from node location and node connectivity files.  The second
+converter produces a matrix data object from a node data file.
+
+A complete field (mesh and data) is assembled in \sr{} by
+constructing a simple network using modules \datatype{FieldReader},
+\datatype{MatrixReader},  \datatype{ManageFieldData}, and
+\datatype{FieldWriter}.
+
+A \datatype{FieldReader} module reads the incomplete field object.
+\datatype{FieldReader}'s output port is connected to
+\datatype{ManageFieldData}'s field input port.  A
+\datatype{MatrixReader} is used to read the matrix object.
+\datatype{MatrixReader}'s output port is connected to
+\datatype{ManageFieldData}'s matrix input port.
+\datatype{ManageFieldData}'s field output port is connected to
+\datatype{FieldWriter}'s input port (\datatype{ManageFieldData}'s
+matrix output port is unconnected).  \datatype{FieldWriter} will write
+the complete field object to a file.
+
+\subsection{Node Location File Format}
+\label{sec:node_loc_fmt}
+
+Text-based node location files are called ``pts'' files (the file
+extension is \filename{.pts}).  The format is as follows:
+
+\begin{verbatim}
+N
+x0 y0 z0
+x1 y1 z1
+.
+.
+.
+xN yN zN
+\end{verbatim}
+
+\verb|N| is the number of nodes in the file.  It can be ommitted.
+If it is, the \option{-noPtsHeader} option must be given to the
+converter command.  Node coordinates are given on the remaining
+lines. X, y, and z values are separated by white space.
+
+\subsection{Node Connectivity File Format}
+\label{sec:node_conn_fmt}
+
+Two types of text-based node connectivity files exist.  The first
+type, called ``tri'' files contain triangle data.  A ``tri'' file
+looks like this:
+
+\begin{verbatim}
+N
+i0 j0 k0
+i1 j1 k0
+.
+.
+.
+iN jN kN
+\end{verbatim}
+
+\verb|N| is optional.  It specifies the number of triangles in the
+file.  If \verb|N| is omitted, option \option{-noTrisCount} must
+be passed to the (import) converter command.  Each of the remaining lines
+specify node indicies of each triangle.
+
+``Tet'' connectivity files contain tetrahedral elements.  They look
+like this:
+
+\begin{verbatim}
+N
+i0 j0 k0 l0
+i1 j1 k0 l0
+.
+.
+.
+iN jN kN lN
+\end{verbatim}
+
+\verb|N| is optional.  It specifies the number of tetrahedral elements in the
+file.  If \verb|N| is omitted then option \option{-noTetsCount} must
+be passed to the (import) converter command.  Each of the remaining lines
+specifiy node indicies of each tetrahedron.
+
+Node indicies in ``tri'' and ``tet'' files can be ``zero'' or ``one
+based.''  Use the converter option \option{-oneBasedIndexing} if the
+smallest \verb|i|, \verb|j|, \verb|k|, or \verb|l| index is 1.
+
+
+\subsection{Edge File Format}
+
+
+
+
+\subsection{Matrix File Format}
+\label{sec:matrix_fmt}
+
+There are three text-based matrix file formats, one each for
+\datatype{ColumnMatrix}, \datatype{DenseMatrix}, and
+\datatype{SparseRowMatrix} data objects.
+
+
+\subsubsection{Column Matrix}
+
+The  column matrix file format is:
+
+\begin{verbatim}
+N
+v0 
+v1
+.
+.
+.
+vN
+\end{verbatim}
+
+The converters \command{ColumnMatrixToText} and \command{TextToColumnMatrix} 
+convert column matrices to and from text based forms.
+
+\verb|N| is optional.  It specifies the number of matrix rows.  If not
+specified the \option{-noHeader} option must be passed to
+\command{TextToColumnMatrix}.  Following \verb|N| is a white space
+separated list of data values.
+
+
+\subsubsection{Dense Matrix}
+
+The dense matrix file format is:
+
+\begin{verbatim}
+N M
+v0
+v1
+.
+.
+.
+vNxM
+\end{verbatim}
+
+The programs \command{DenseMatrixToText} and \command{TextToDenseMatrix} 
+convert dense matrices to and from text based forms.
+
+\verb|N| and \verb|M| are optional.  \verb|N|, \verb|M| are the number
+of matrix rows and columns respectively .  If \verb|N| and \verb|M|
+are not specified the \option{-noHeader nrows ncols} option must be
+passed to \command{TextToDenseMatrix}.  Following \verb|N| and
+\verb|M| is a list of data values given in row major order.
+
+
+\subsubsection{Sparse Row Matrix}
+
+The sparse row matrix file format is:
+
+\begin{verbatim}
+NR NC NE
+r0 c0 v0
+r1 c1 v1
+.
+.
+.
+rNE cNE vNE
+\end{verbatim}
+
+The programs \command{SparseRowMatrixToText} and
+\command{TextToSparseRowMatrix} convert sparse row matrices to and from
+text based forms.
+
+\verb|NR|, \verb|NC|, and \verb|NE| are optional.  If present, they
+specify the number of rows, number of columns, and number of matrix
+entries respectively.  If omitted, option \option{-noHeader nrows
+  ncols nentries} must be passed to \command{TextToSparseRowMatrix}.
+Matrix entries must have ascending row indices. Column indices must be
+in ascending order for rows with multiple entries.
+
+\subsection{Colormap File Format}
+\label{sec:colormap_fmt}
+
+The color map file format is:
+
+\begin{verbatim}
+N
+r1 g1 b1 a1
+r2 g2 b2 a2
+.
+.
+.
+rN gN bN aN
+\end{verbatim}
+
+The programs \command{ColorMapToText} and \command{TextToColorMap}
+convert color maps to/from their text format.
+
+\verb|N| is optional.  It specifies the number of color map entries in
+the file.  If not specified pass option \option{-noHeader} to
+\command{TextToColorMap}  Following \verb|N| is a list of color map
+entries, one per line.  Each entry consists of values for red, green,
+blue, and alpha.  All entries range from 0.0 to 1.0 and specify 
+evenly spaced entries in the color map table.
+
+
+\subsection{Field Converters}
+
+CurveFieldToText
+TextToCurveField
+
+HexVolFieldToText
+TextToHexVolField
+
+PointCloudFieldToText
+TextToPointCloudField
+
+QuadSurfFieldToText
+TextToQuadSurfField
+
+StructCurveFieldToText
+TextToStructCurveField
+
+StructHexVolFieldToText
+TextToStructHexVolField
+
+StructQuadSurfFieldToText
+TextToStructQuadSurfField
+
+TetVolFieldToText
+TextToTetVolField
+
+TriSurfFieldToText
+TextToTriSurfField
+
+\subsection{Matrix Converters}
+
+ColumnMatrixToText
+TextToColumnMatrix
+
+DenseMatrixToText
+TextToDenseMatrix
+
+SparseRowMatrixToText
+TextToSparseRowMatrix
+
+
+\subsection{ColorMap Converters}
+
+ColorMapToText
+TextToColorMap
+
+\subsection{Examples}
+\label{sec:converter_ex}
+
+The \directory{SCIRunData/convert-examples} directory
+contains examples of data that have been converted to/from text and
+\sr{} formats.  See the \filename{SCIRunData/convert-examples/README}
+for details.
