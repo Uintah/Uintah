@@ -1,13 +1,19 @@
 <?xml version="1.0"?>
 
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+<xsl:param name="dir" />
 
 <xsl:template match="/component">
 <xsl:processing-instruction name="cocoon-format">type="text/html"</xsl:processing-instruction>
+
 <html>
 <head>
-	<title><xsl:value-of select="@category" /> -&#62; <xsl:value-of select="@name" /></title>
-	<link rel="stylesheet" type="text/css" href="doc_styles.css" />
+<title><xsl:value-of select="@category" /> -&#62; <xsl:value-of select="@name" /></title>
+<link rel="stylesheet" type="text/css">
+<xsl:attribute name="href">
+<xsl:value-of select="concat($dir,'/doc/doc_styles.css')" />
+</xsl:attribute>
+</link>
 </head>
 <body>
 

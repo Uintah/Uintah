@@ -1,20 +1,26 @@
 <?xml version="1.0"?>
 
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+<xsl:param name="dir" />
 
 <xsl:template match="/component">
 <xsl:processing-instruction name="cocoon-format">type="text/html"</xsl:processing-instruction>
+
 <html>
 <head>
-	<title><xsl:value-of select="@category" /> -&#62; <xsl:value-of select="@name" /></title>
-	<link rel="stylesheet" type="text/css" href="../../../doc/doc_styles.css" />
+<title><xsl:value-of select="@category" /> -&#62; <xsl:value-of select="@name" /></title>
+<link rel="stylesheet" type="text/css">
+<xsl:attribute name="href">
+<xsl:value-of select="concat($dir,'/doc/doc_styles.css')" />
+</xsl:attribute>
+</link>
 </head>
 <body>
 
 <!-- *************************************************************** -->
 <!-- *************** STANDARD SCI RESEARCH HEADER ****************** -->
 <!-- *************************************************************** -->
-<center><img SRC="../../../doc/images/research_header_sm.gif" usemap="#head-links" height="46" width="600" border="0" /></center>
+<center><img SRC="http://www.sci.utah.edu/research/images/research_header_sm.gif" usemap="#head-links" height="46" width="600" border="0" /></center>
 <map name="head-links">
 	<area shape="rect" coords="491,15,567,32" href="http://www.sci.utah.edu/research/research.html" />
 	<area shape="rect" coords="31,9,95,36" href="http://www.sci.utah.edu" />
