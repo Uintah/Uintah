@@ -32,7 +32,6 @@ SRCS += $(SRCDIR)/Brick.cc		    \
         $(SRCDIR)/FieldSet.cc		    \
         $(SRCDIR)/GenFunction.cc	    \
         $(SRCDIR)/Geom.c          	    \
-        $(SRCDIR)/HexMesh.cc		    \
         $(SRCDIR)/Image.cc		    \
         $(SRCDIR)/ImageMesh.cc		    \
         $(SRCDIR)/Matrix.cc		    \

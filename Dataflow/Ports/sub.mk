@@ -27,7 +27,6 @@ SRCS     += $(SRCDIR)/ColorMapPort.cc             \
             $(SRCDIR)/GeomPort.cc                 \
             $(SRCDIR)/GeometryPort.cc             \
 	    $(SRCDIR)/GLTexture3DPort.cc          \
-            $(SRCDIR)/HexMeshPort.cc              \
 	    $(SRCDIR)/ImagePort.cc		  \
             $(SRCDIR)/MatrixPort.cc               \
             $(SRCDIR)/PathPort.cc                 \
