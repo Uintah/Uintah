@@ -117,8 +117,7 @@ void VolumeVisDpy::run() {
     //cerr << "VolumeVisDpy:run:eventloop\n";
 
     // Now we need to test to see if we should die
-    //    if (scene->get_rtrt_engine()->stop_execution()) {
-    if (on_death_row) {
+    if (should_close()) {
       close_display();
       return;
     }
