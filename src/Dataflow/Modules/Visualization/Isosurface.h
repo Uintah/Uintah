@@ -75,10 +75,13 @@ class Isosurface : public Module {
   GuiDouble  gui_iso_value;
   GuiDouble  gui_iso_value_min;
   GuiDouble  gui_iso_value_max;
+  GuiDouble  gui_iso_value_typed_;
+  GuiInt     gui_iso_value_quantity_;
   GuiInt     extract_from_new_field;
   GuiInt     use_algorithm;
   GuiInt     build_trisurf_;
   GuiInt     np_;          
+  GuiString  active_isoval_selection_tab_;
   GuiString  active_tab_; //! for saving nets state
   GuiString  update_type_; //! for saving nets state
   GuiDouble  color_r_;
@@ -87,7 +90,8 @@ class Isosurface : public Module {
 
   double iso_value;
   FieldHandle field_;
-  GeomObj *surface;
+  vector<GeomObj *> surface;
+  vector<double> isovals_;
   FieldHandle colorfield;
   ColorMapHandle cmap;
   FieldHandle trisurf_mesh_;

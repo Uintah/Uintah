@@ -31,6 +31,9 @@ itcl_class SCIRun_Visualization_Isosurface {
     method set_defaults {} {
 	global $this-isoval-min 
 	global $this-isoval-max 
+	global $this-isoval-typed
+	global $this-isoval-quantity
+	global $this-active-isoval-selection-tab
 	global $this-continuous
 	global $this-extract-from-new-field
 	global $this-algorithm
@@ -46,6 +49,9 @@ itcl_class SCIRun_Visualization_Isosurface {
 
 	set $this-isoval-min 0
 	set $this-isoval-max 4095
+	set $this-isoval-typed 0
+	set $this-isoval-quantity 1
+	set $this-active-isoval-selection-tab 0
 	set $this-continuous 0
 	set $this-extract-from-new-field 0
 	set $this-algorithm 0
@@ -156,8 +162,22 @@ itcl_class SCIRun_Visualization_Isosurface {
 	frame $w.f 
 	pack $w.f -padx 2 -pady 2 -expand 1 -fill x
 	set n "$this-c needexecute "
-	
-	scale $w.f.isoval -label "Iso Value:" \
+
+	set oldmeth [set $this-active-isoval-selection-tab]
+
+	# Iso Value Selection Methods
+	iwidgets::labeledframe $w.f.iso -labelpos nw -labeltext "Isovalue Selection Methods"
+	set isf [$w.f.iso childsite]
+
+	iwidgets::tabnotebook $isf.tabs -raiseselect true
+	pack $isf.tabs -side top -fill x -expand 1
+	pack $w.f.iso -side top -fill x -expand 1
+
+	# Iso Value using slider
+
+	set sel [$isf.tabs add -label "Slider" -command "set $this-active-isoval-selection-tab 0"]
+
+	scale $sel.isoval -label "Isovalue:" \
 		-variable $this-isoval \
 		-from [set $this-isoval-min] -to [set $this-isoval-max] \
 		-length 5c \
@@ -167,12 +187,44 @@ itcl_class SCIRun_Visualization_Isosurface {
 		-resolution 0.001 \
 	        -command "$this change-isoval"
 
-	bind $w.f.isoval <ButtonRelease> "$this set-isoval"
+	bind $sel.isoval <ButtonRelease> "$this set-isoval"
 	
-	button $w.f.extract -text "Extract" -command "$this-c needexecute"
+	button $sel.extract -text "Extract" -command "$this-c needexecute"
 
-	pack $w.f.isoval  -fill x
-	pack $w.f.extract
+	pack $sel.isoval  -fill x
+	pack $sel.extract -side top -expand 1
+
+	# Iso Value using text-entry
+	
+	set sel [$isf.tabs add -label "Text" -command "set $this-active-isoval-selection-tab 1"]
+	
+	frame $sel.f
+	label $sel.f.l -text "Type isovalue:"
+	entry $sel.f.e -width 20 -text $this-isoval-typed
+	bind $sel.f.e <Return> "$this-c needexecute"
+	pack $sel.f.l $sel.f.e -side left -fill x -expand 1
+	button $sel.extract -text "Extract" -command "$this-c needexecute"
+	pack $sel.f $sel.extract -side top -expand 1
+
+	# Iso Value using quantity
+	
+	set sel [$isf.tabs add -label "Quantity" -command "set $this-active-isoval-selection-tab 2"]
+	
+	frame $sel.f
+	label $sel.f.l -text "Number of evenly-spaced isovals:"
+	entry $sel.f.e -width 20 -text $this-isoval-quantity
+	bind $sel.f.e <Return> "$this-c needexecute"
+	pack $sel.f.l $sel.f.e -side left -fill x -expand 1
+	button $sel.extract -text "Extract" -command "$this-c needexecute"
+	pack $sel.f $sel.extract -side top -expand 1
+
+	# Pack the Iso Value Selection Tabs
+
+	$isf.tabs view $oldmeth
+	$isf.tabs configure -tabpos "n"
+
+	pack $isf.tabs -side top
+	pack $w.f.iso -side top
 
 	#  Info
 	
@@ -188,7 +240,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	label $info.gen -text [set $this-gen]
 
 	pack $info.type_label $info.type $info.gen_label $info.gen -side left
-	pack $w.f.info -side top -anchor w
+	pack $w.f.info -side top -fill x -expand 1
 
 	#  Options
 
@@ -211,14 +263,14 @@ itcl_class SCIRun_Visualization_Isosurface {
 		-relief flat -variable $this-extract-from-new-field 
 
 	pack $opt.update $opt.aefnf $opt.buildsurf -side top -anchor w
-	pack $w.f.opt -side top -anchor w
+	pack $w.f.opt -side top -fill x -expand 1
 
 	# Color
 
 	iwidgets::labeledframe $w.f.color -labelpos nw -labeltext "Default Color"
 	set color [$w.f.color childsite]
 	addColorSelection $color $this-color
-	pack $w.f.color -side top -anchor w
+	pack $w.f.color -side top -fill x -expand 1
 
 
 	#  Methods
@@ -247,8 +299,8 @@ itcl_class SCIRun_Visualization_Isosurface {
 	$mf.tabs configure -tabpos "n"
 
 	
-	pack $mf.tabs -side top
-	pack $w.f.meth -side top
+	pack $mf.tabs -side top -fill x -expand 1
+	pack $w.f.meth -side top -fill x -expand 1
     }
 
     method change-isoval { n } {
@@ -342,7 +394,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	set $this-isoval-min $min
 	set $this-isoval-max $max
 	if [ expr [winfo exists $w] ] {
-	    $w.f.isoval configure -from $min -to $max
+	    $w.f.iso.childsite.tabs.canvas.notebook.cs.page1.cs.isoval configure -from $min -to $max
 	}
     }
 }
