@@ -51,7 +51,7 @@ float radius = 1.0;
 int add_sphere(char *tex_name, const Point& center, Group *group) {
   ImageMaterial* matl = new ImageMaterial(tex_name, ImageMaterial::Clamp,
 					  ImageMaterial::Clamp, 1.0,
-					  Color(1.0, 1.0, 1.0), 0.0);
+					  Color(1.0, 1.0, 1.0), 0);
   if (!matl->valid())
   {
     cerr << "AddSphere::texture is bad :" << tex_name << endl;
