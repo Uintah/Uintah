@@ -154,9 +154,9 @@ QuadraticTetVol<T>::maker()
 
 template <class T>
 PersistentTypeID 
-QuadraticTetVol<T>::type_id(type_name(-1), 
-		   GenericField<QuadraticTetVolMesh, vector<T> >::type_name(-1),
-		   maker);
+QuadraticTetVol<T>::type_id(QuadraticTetVol<T>::type_name(-1), 
+			    GenericField<QuadraticTetVolMesh, vector<T> >::type_name(-1),
+			    maker);
 
 
 // Pio defs.

@@ -72,6 +72,14 @@ public:
 			    Vector& g0, Vector& g1, Vector& g2, Vector& g3, 
 			    Vector& g4, Vector& g5, Vector& g6, Vector& g7, 
 			    Vector& g8, Vector& g9) const;
+
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
+  static  const string type_name(int n = -1);
+  virtual const string get_type_name(int n = -1) const { return type_name(n); }
+  
+  virtual const TypeDescription *get_type_description() const;
+
     private:
   const Point& ave_point(const Point &p0, const Point &p1) const;
   double calc_jac_derivs(Vector &dxi, Vector &dnu, Vector &dgam, 
@@ -87,6 +95,7 @@ public:
 
 // Handle type for TetVolMesh mesh.
 typedef LockingHandle<QuadraticTetVolMesh> QuadraticTetVolMeshHandle;
+const TypeDescription* get_type_description(QuadraticTetVolMesh *);
 
 } // namespace SCIRun
 

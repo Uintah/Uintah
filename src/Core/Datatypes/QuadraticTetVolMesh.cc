@@ -25,6 +25,53 @@
 
 namespace SCIRun {
 
+
+Persistent* make_QuadraticTetVolMesh() {
+  return scinew QuadraticTetVolMesh;
+}
+
+PersistentTypeID QuadraticTetVolMesh::type_id("QuadraticTetVolMesh", 
+					      "TetVolMesh",
+					      make_QuadraticTetVolMesh);
+
+const string
+QuadraticTetVolMesh::type_name(int n)
+{
+  ASSERT(n >= -1 && n <= 0);
+  static const string name("QuadraticTetVolMesh");
+  return name;
+}
+
+const TypeDescription*
+QuadraticTetVolMesh::get_type_description() const
+{
+  return SCIRun::get_type_description((QuadraticTetVolMesh *)0);
+}
+
+const TypeDescription*
+get_type_description(QuadraticTetVolMesh *)
+{
+  static TypeDescription *td = 0;
+  if (!td)
+  {
+    td = scinew TypeDescription("QuadraticTetVolMesh",
+				TypeDescription::cc_to_h(__FILE__),
+				"SCIRun");
+  }
+  return td;
+}
+
+#define QUADRATICTETVOLMESH_VERSION 1
+
+void
+QuadraticTetVolMesh::io(Piostream &stream)
+{
+  stream.begin_class(type_name(-1), QUADRATICTETVOLMESH_VERSION);
+  TetVolMesh::io(stream);
+  stream.end_class();
+}
+
+
 QuadraticTetVolMesh::QuadraticTetVolMesh() :
   TetVolMesh()
 {
