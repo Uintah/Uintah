@@ -1898,6 +1898,7 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
 		 &area, &fi.d_cellTypeID, &fi.flowRate, 
 		 &fi.calcStream.d_density, &xminus, &xplus, &yminus, &yplus,
 		 &zminus, &zplus);
+
       FORT_PROFSCALAR(domLo.get_pointer(), domHi.get_pointer(),
 		      domLoCT.get_pointer(), domHiCT.get_pointer(),
 		      idxLo.get_pointer(), idxHi.get_pointer(),

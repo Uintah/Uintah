@@ -10,7 +10,8 @@ c*********************************************************************
      &     domLoV, domHiV, VV,
      &     domLoeg, domHieg, domLo, domHi, den, vis,
      $     domLong, domHing, old_den,
-     &     grav, deltat, den_ref,
+     &     grav, deltat, 
+     $     den_ref,
      &     CEE, CWE, CWW, 
      &     CNN, CSN, CSS,
      &     CTTW, CBTW, CBBW, 
@@ -33,34 +34,68 @@ c     Arguments :
 c*********************************************************************
       integer domLoW(3), domHiW(3), idxLoW(3), idxHiW(3)
       integer domLoWng(3), domHiWng(3)
-      double precision WW(domLoW(1):domHiW(1), domLoW(2):domHiW(2), 
+
+      double precision WW(
+     $     domLoW(1):domHiW(1), 
+     $     domLoW(2):domHiW(2), 
      &     domLoW(3):domHiW(3))
-      double precision old_WW(domLoWng(1):domHiWng(1), 
+
+      double precision old_WW(
+     $     domLoWng(1):domHiWng(1), 
      $     domLoWng(2):domHiWng(2), 
      &     domLoWng(3):domHiWng(3))
-      double precision SU(domLoWng(1):domHiWng(1), 
+
+      double precision SU(
+     $     domLoWng(1):domHiWng(1), 
      $     domLoWng(2):domHiWng(2), 
      &     domLoWng(3):domHiWng(3))
-      double precision SP(domLoWng(1):domHiWng(1),
+
+      double precision SP(
+     $     domLoWng(1):domHiWng(1),
      $     domLoWng(2):domHiWng(2), 
      &     domLoWng(3):domHiWng(3))
+
       integer domLoU(3), domHiU(3)
-      double precision UU(domLoU(1):domHiU(1), domLoU(2):domHiU(2), 
+
+      double precision UU(
+     $     domLoU(1):domHiU(1), 
+     $     domLoU(2):domHiU(2), 
      &     domLoU(3):domHiU(3))
+
       integer domLoV(3), domHiV(3)
-      double precision VV(domLoV(1):domHiV(1), domLoV(2):domHiV(2), 
+
+      double precision VV(
+     $     domLoV(1):domHiV(1), 
+     $     domLoV(2):domHiV(2), 
      &     domLoV(3):domHiV(3))
+
       integer domLoeg(3), domHieg(3)
       integer domLo(3), domHi(3)
-      double precision DEN(domLoeg(1):domHieg(1), domLoeg(2):domHieg(2), 
+
+      double precision DEN(
+     $     domLoeg(1):domHieg(1), 
+     $     domLoeg(2):domHieg(2), 
      &     domLoeg(3):domHieg(3))
-      double precision VIS(domLo(1):domHi(1), domLo(2):domHi(2), 
+
+      double precision VIS(
+     $     domLo(1):domHi(1), 
+     $     domLo(2):domHi(2), 
      &     domLo(3):domHi(3))
+
       integer domLong(3), domHing(3)
-      double precision old_DEN(domLong(1):domHing(1), 
+
+      double precision old_DEN(
+     $     domLong(1):domHing(1), 
      $     domLong(2):domHing(2), 
      &     domLong(3):domHing(3))
-      double precision DELTAT, GRAV, DEN_REF
+
+      double precision DELTAT, GRAV
+
+      double precision DEN_REF(
+     $     domLoeg(1):domHieg(1), 
+     $     domLoeg(2):domHieg(2), 
+     &     domLoeg(3):domHieg(3))
+
       double precision CEE(domLo(1):domHi(1))
       double precision CWE(domLo(1):domHi(1))
       double precision CWW(domLo(1):domHi(1))
@@ -145,10 +180,14 @@ c     viscous sources
                VISBI = CBBW(K)*VISB - CBTW(K)*VIST
                SU(I,J,K) = SU(I,J,K)+
      &              ((VISEI*DUDZE-VISWI*DUDZW)/SEW(I) +
-     &               (VISNI*DVDZN-VISSI*DVDZS)/SNS(J) +
-     &               (VISTI*DWDZT-VISBI*DWDZB)/STBW(K)+
-     &               (old_DEN(I,J,K)*(old_WW(I,J,K)-WW(I,J,K))/DELTAT +
-     &               (PT5*(DEN(I,J,K-1)+DEN(I,J,K))-DEN_REF)*GRAV))*VOL
+     &              (VISNI*DVDZN-VISSI*DVDZS)/SNS(J) +
+     &              (VISTI*DWDZT-VISBI*DWDZB)/STBW(K)+
+     &              old_DEN(I,J,K)*(old_WW(I,J,K)-WW(I,J,K))/
+     $              DELTAT 
+     &              + (PT5*(DEN(I,J,K-1)+DEN(I,J,K))-
+     $              pt5*(den_ref(i,j,k) + den_ref(i,j,k-1)))*
+     $              GRAV
+     $              )*VOL
  100        continue
  110     continue
  120  continue
