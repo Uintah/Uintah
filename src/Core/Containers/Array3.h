@@ -137,8 +137,8 @@ public:
 
   //////////
   //read/write from a separate raw file
-  int input( const clString& );
-  int output( const clString&);
+  int input( const string& );
+  int output( const string&);
 
   //////////
   //Rigorous Tests
@@ -338,14 +338,14 @@ void Pio(Piostream& stream, Array3<T>& data,
 
 template<class T>
 int
-Array3<T>::input( const clString &filename ) 
+Array3<T>::input( const string &filename ) 
 {
   std::cerr << "Array3: Split input\n";
 
   // get raw data
-  int file=open( filename(), O_RDONLY, 0666);
+  int file=open( filename.c_str(), O_RDONLY, 0666);
   if ( file == -1 ) {
-    printf("can not open file %s\n", filename());
+    printf("can not open file %s\n", filename.c_str());
     return 0;
   }
   
@@ -372,12 +372,12 @@ Array3<T>::input( const clString &filename )
 
 template<class T>
 int
-Array3<T>::output( const clString &filename ) 
+Array3<T>::output( const string &filename ) 
 {
   std::cerr << "Array3 output to " << filename << std::endl;
   // get raw data
-  //  printf("output [%s] [%s]\n", filename(), rawfile() );
-  int file=open( filename(), O_WRONLY|O_CREAT|O_TRUNC, 0666);
+  //  printf("output [%s] [%s]\n", filename.c_str(), rawfile() );
+  int file=open( filename.c_str(), O_WRONLY|O_CREAT|O_TRUNC, 0666);
   if ( file == -1 ) {
     perror("open file");
     return 0;
