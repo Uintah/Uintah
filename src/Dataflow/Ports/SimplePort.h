@@ -82,7 +82,7 @@ public:
 
   virtual void reset();
   virtual void finish();
-  virtual void detach(Connection *conn);
+  virtual void detach(Connection *conn, bool blocked);
 
   void send(const T&);
   void send_intermediate(const T&);
@@ -197,7 +197,7 @@ SimpleOPort<T>::finish()
 
 template<class T>
 void
-SimpleOPort<T>::detach(Connection *conn)
+SimpleOPort<T>::detach(Connection *conn, bool blocked)
 {
   if (!sent_something_)
   {
@@ -205,7 +205,7 @@ SimpleOPort<T>::detach(Connection *conn)
     ((SimpleIPort<T>*)conn->iport)->mailbox.send(msg);
   }
   //sent_something_ = true;  // Only sent something on the one port.
-  OPort::detach(conn);
+  OPort::detach(conn, blocked);
 }
 
 

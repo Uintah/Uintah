@@ -459,7 +459,7 @@ GeometryOPort::attach(Connection* c)
 
 
 void
-GeometryOPort::detach(Connection* c)
+GeometryOPort::detach(Connection* c, bool blocked)
 {
   // Determine which connection gets it.
   unsigned int i;
@@ -483,7 +483,7 @@ GeometryOPort::detach(Connection* c)
     portid_.erase(portid_.begin() + i);
   }
 
-  OPort::detach(c);
+  OPort::detach(c, blocked);
 }
 
 
