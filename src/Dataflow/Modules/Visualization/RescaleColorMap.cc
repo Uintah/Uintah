@@ -34,6 +34,7 @@
 #include <Core/Datatypes/FieldInterface.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Math/MiscMath.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
 
@@ -44,7 +45,8 @@ RescaleColorMap::RescaleColorMap(GuiContext* ctx)
   : Module("RescaleColorMap", ctx, Filter, "Visualization", "SCIRun"),
     isFixed(ctx->subVar("isFixed")),
     min(ctx->subVar("min")),
-    max(ctx->subVar("max"))
+    max(ctx->subVar("max")),
+    makeSymmetric(ctx->subVar("makeSymmetric"))
 {
 }
 
@@ -85,9 +87,6 @@ RescaleColorMap::execute()
       }
       FieldHandle field;
       if (ifield->get(field) && field.get_rep()) {
-
-	//ScalarFieldInterface *sfi = field->query_scalar_interface();
-	//VectorFieldInterface *vfi = field->query_vector_interface();
 	string units;
 	if (field->get_property("units", units))
 	  cmap->units=units;
@@ -99,6 +98,8 @@ RescaleColorMap::execute()
     if (range.first == range.second)
       return;
     port_map_type::iterator pi = range.first;
+    double minv, maxv;
+    int have_some=0;
     while (pi != range.second)
     {
       FieldIPort *ifield = (FieldIPort *)get_iport(pi->second);
@@ -110,36 +111,43 @@ RescaleColorMap::execute()
       if (ifield->get(field) && field.get_rep()) {
 
 	ScalarFieldInterface *sfi;
-	VectorFieldInterface *vfi;
 	string units;
 	if (field->get_property("units", units))
 	  cmap->units=units;
 	if ((sfi = field->query_scalar_interface(this)))
 	{
 	  sfi->compute_min_max(minmax_.first, minmax_.second);
-	}
-	else if ((vfi = field->query_vector_interface(this)))
-	{
-	  // get minmax of the vector field.
-	  static pair<Vector, Vector> minmax;
-	  if ( !field->get_property("minmax", minmax)) {
-	    vfi->compute_min_max(minmax.first, minmax.second);
-	    // cache this potentially expensive to compute value.
-	    field->set_property("minmax", minmax, true);
-	  }
-	  minmax_.first = 0.0;
-	  minmax_.second = minmax.second.length();
 	} else {
-          error("RescaleColorMap::Not a scalar or vector input field.");
+          error("RescaleColorMap::Not a scalar input field.");
           return;
 	}
-	cmap->Scale( minmax_.first, minmax_.second);
-	min.set( minmax_.first );
-	max.set( minmax_.second );
+	if (!have_some || (minmax_.first < minv)) {
+	  have_some=1;
+	  minv=minmax_.first;
+	}
+	if (!have_some || (minmax_.second > maxv)) {
+	  have_some=1;
+	  maxv=minmax_.second;
+	}
       }
       ++pi;
     }
+    if (!have_some) {
+      warning("All of the input fields were empty -- colormap not rescaled.");
+      omap->send(cmap);
+      return;
+    }
+    minmax_.first=minv;
+    minmax_.second=maxv;
+    if ( makeSymmetric.get() ) {
+      float biggest = Max(Abs(minmax_.first), Abs(minmax_.second));
+      minmax_.first=-biggest;
+      minmax_.second=biggest;
+    }
+    cmap->Scale( minmax_.first, minmax_.second);
+    min.set( minmax_.first );
+    max.set( minmax_.second );
+    omap->send(cmap);
   }
-  omap->send(cmap);
 }
 } // End namespace SCIRun
