@@ -125,6 +125,12 @@
 #   Name of data set in SCIRUN_DATA to default to.
 # SCIRUN_DATASET = sphere
 
+### SCIRUN_MYDATA_DIR = [path]
+#   Directory, or list of directories separated by colons, 
+#   that data 'Reader' and 'Writer' modules will list as
+#   optional paths in the directories drop down menu.
+# SCIRUN_MYDATA_DIR = $HOME/data:/scratch/data
+
 
 ### SCIRUN_ON_THE_FLY_LIBS_DIR = [path]
 #   User writable directory to build 'on-the-fly' .h, .cc, .o and .so files.
