@@ -39,6 +39,7 @@ SUBDIRS := \
 	$(SRCDIR)/Datatypes \
 	$(SRCDIR)/Exceptions \
 	$(SRCDIR)/GUI \
+	$(SRCDIR)/Comm \
 	$(SRCDIR)/Geom \
 	$(SRCDIR)/GeomInterface \
 	$(SRCDIR)/Geometry \
@@ -73,8 +74,8 @@ endif
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := 
-LIBS := $(PLPLOT_LIBRARY) $(BLT_LIBRARY) $(ITCL_LIBRARY) $(TCL_LIBRARY) $(TK_LIBRARY) \
-	$(ITK_LIBRARY) $(GL_LIBRARY) $(THREAD_LIBRARY) \
+LIBS := $(PLPLOT_LIBRARY) $(BLT_LIBRARY) $(ITCL_LIBRARY) $(TCL_LIBRARY) \
+	$(TK_LIBRARY) $(ITK_LIBRARY) $(GL_LIBRARY) $(THREAD_LIBRARY) \
 	$(Z_LIBRARY) $(M_LIBRARY) 
 
 include $(SCIRUN_SCRIPTS)/largeso_epilogue.mk
