@@ -38,15 +38,14 @@ TransIsoHyper::TransIsoHyper(ProblemSpecP& ps,  MPMLabel* Mlb, int n8or27)
 
 //______________________material properties
   ps->require("bulk_modulus", d_initialData.Bulk);
-  ps->require("mooney_rivlin_1", d_initialData.c1);
-  ps->require("mooney_rivlin_2", d_initialData.c2);
-  ps->require("scales_exp_stresses", d_initialData.c3);
-  ps->require("controls_uncrimping", d_initialData.c4);
-  ps->require("straightened_fibers", d_initialData.c5);
+  ps->require("c1", d_initialData.c1);//Mooney Rivlin constant 1
+  ps->require("c2", d_initialData.c2);//Mooney Rivlin constant 2
+  ps->require("c3", d_initialData.c3);//scales exponential stresses
+  ps->require("c4", d_initialData.c4);//controls uncrimping of fibers
+  ps->require("c5", d_initialData.c5);//straightened fibers modulus
   ps->require("fiber_stretch", d_initialData.lambda_star);
   ps->require("direction_of_symm", d_initialData.a0);
-  ps->get("useModifiedEOS",d_useModifiedEOS);
-  // use modified eq. of state, meaning no negative pressure
+  ps->get("useModifiedEOS",d_useModifiedEOS);//no negative pressure for solids
 
 //______________________interpolation
   d_8or27 = n8or27;
@@ -562,3 +561,4 @@ namespace Uintah {
   }
 #endif
 } // End namespace Uintah
+
