@@ -83,7 +83,7 @@
 	<description>
 	  <p>Outputs an interpolant from the input volume to the BoundaryField.</p>
 	</description>
-	<datatype>SCIRun::Field</datatype>
+	<datatype>SCIRun::Matrix</datatype>
 	<componentname>ShowField</componentname>
       </port>
     </outputs>

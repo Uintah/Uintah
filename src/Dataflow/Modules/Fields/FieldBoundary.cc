@@ -27,10 +27,9 @@
  *  Copyright (C) 1998 SCI Group
  */
 
-#include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Modules/Fields/FieldBoundary.h>
-#include <Core/Containers/Handle.h>
 
 #include <iostream>
 
@@ -53,20 +52,20 @@ private:
   FieldOPort*              osurf_;
   
   //! BoundaryField interpolant field output.
-  FieldOPort*              ointerp_;
+  MatrixOPort*              ointerp_;
   
   //! Handle on the generated surface.
   FieldHandle              tri_fh_;
 
   //! Handle on the interpolant surface.
-  FieldHandle              interp_fh_;
+  MatrixHandle              interp_mh_;
 };
 
 DECLARE_MAKER(FieldBoundary)
 FieldBoundary::FieldBoundary(GuiContext* ctx) : 
   Module("FieldBoundary", ctx, Filter, "FieldsCreate", "SCIRun"),
   infield_gen_(-1),
-  tri_fh_(0), interp_fh_(0)
+  tri_fh_(0), interp_mh_(0)
 {
 }
 
@@ -80,7 +79,7 @@ FieldBoundary::execute()
 {
   infield_ = (FieldIPort *)get_iport("Field");
   osurf_ = (FieldOPort *)get_oport("BoundaryField");
-  ointerp_ = (FieldOPort *)get_oport("Interpolant");
+  ointerp_ = (MatrixOPort *)get_oport("Interpolant");
   FieldHandle input;
   if (!infield_) {
     error("Unable to initialize iport 'Field'.");
@@ -107,10 +106,10 @@ FieldBoundary::execute()
     Handle<FieldBoundaryAlgo> algo;
     if (!module_dynamic_compile(ci, algo)) return;
 
-    algo->execute(this, mesh, tri_fh_, interp_fh_);
+    algo->execute(this, mesh, tri_fh_, interp_mh_);
   }
   osurf_->send(tri_fh_);
-  ointerp_->send(interp_fh_);
+  ointerp_->send(interp_mh_);
 }
 
 

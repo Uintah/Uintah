@@ -1,4 +1,4 @@
-# SCI Network v1.22
+# SCI Network 1.22.0
 
 #
 # The contents of this file are subject to the University of Utah Public
@@ -15,19 +15,6 @@
 # The Original Source Code was developed by the University of Utah.
 # Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
 # University of Utah. All Rights Reserved.
-
-set results [sourceSettingsFile]
-
-if { $results == "failed" } {
-    ::netedit scheduleok
-    return
-} else {
-    set DATADIR [lindex $results 0]
-    set DATASET [lindex $results 1]
-}
-
-source $DATADIR/$DATASET/$DATASET.settings
-
 global userName
 set userName ""
 
@@ -42,7 +29,7 @@ set notes ""
 
 global Subnet
 set Subnet(Subnet$Subnet(Loading)_Name) {Main}
-set bbox {16 14 558 522}
+set bbox {17 14 558 522}
 
 # Create a SCIRun->DataIO->FieldReader Module
 set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 47 14]
@@ -51,25 +38,25 @@ set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 47 14]
 set m2 [addModuleAtPosition "SCIRun" "Render" "Viewer" 82 478]
 
 # Create a SCIRun->Visualization->ShowField Module
-set m3 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 16 278]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 17 278]
 
 # Create a SCIRun->Visualization->Isosurface Module
-set m4 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 211 282]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 209 280]
 
 # Create a SCIRun->Visualization->ShowField Module
 set m5 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 296 389]
 
 # Create a SCIRun->Visualization->GenStandardColorMaps Module
-set m6 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 274 98]
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 282 114]
 
 # Create a SCIRun->Visualization->RescaleColorMap Module
-set m7 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 393 268]
+set m7 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 393 275]
 
 # Create a SCIRun->FieldsCreate->FieldBoundary Module
-set m8 [addModuleAtPosition "SCIRun" "FieldsCreate" "FieldBoundary" 86 99]
+set m8 [addModuleAtPosition "SCIRun" "FieldsCreate" "FieldBoundary" 72 99]
 
-# Create a SCIRun->FieldsData->ApplyInterpolant Module
-set m9 [addModuleAtPosition "SCIRun" "FieldsData" "ApplyInterpolant" 54 178]
+# Create a SCIRun->FieldsData->ApplyInterpMatrix Module
+set m9 [addModuleAtPosition "SCIRun" "FieldsData" "ApplyInterpMatrix" 46 184]
 
 # Create the Connections between Modules
 set c1 [addConnection $m1 0 $m8 0]
@@ -79,13 +66,14 @@ set c4 [addConnection $m9 0 $m3 0]
 set c5 [addConnection $m6 0 $m7 0]
 set c6 [addConnection $m4 0 $m5 0]
 set c7 [addConnection $m3 0 $m2 0]
-set c8 [addConnection $m8 1 $m9 1]
+set c8 [addConnection $m8 0 $m9 1]
 set c9 [addConnection $m9 0 $m7 1]
 set c10 [addConnection $m7 0 $m5 1]
 set c11 [addConnection $m5 0 $m2 1]
+set c12 [addConnection $m8 1 $m9 2]
 
 # Setup GUI for the SCIRun->DataIO->FieldReader Module
-setGlobal $m1-filename "$DATADIR/$DATASET/$DATASET-voltage.tvd.fld"
+setGlobal $m1-filename {/scratch/callahan/SCIRunData/sphere/sphere-voltage.tvd.fld}
 
 # Setup GUI for the SCIRun->Render->Viewer Module
 $m2 ui
@@ -223,6 +211,6 @@ setGlobal $m7-max {0.37080299999999999}
 
 # Setup GUI for the SCIRun->FieldsCreate->FieldBoundary Module
 
-# Setup GUI for the SCIRun->FieldsData->ApplyInterpolant Module
+# Setup GUI for the SCIRun->FieldsData->ApplyInterpMatrix Module
 
 ::netedit scheduleok
