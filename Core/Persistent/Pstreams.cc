@@ -63,6 +63,8 @@ using namespace std;
 #include <io.h>
 #else
 #include <sys/mman.h>
+#include <rpc/types.h>
+#include <rpc/xdr.h>
 #endif
 
 // According to (at least) one man page, xdr_hyper() is the same as
@@ -1057,7 +1059,7 @@ BinaryPiostream::~BinaryPiostream()
       if ((xdr)->x_ops->x_destroy)
 	(*(xdr)->x_ops->x_destroy)();
   delete xdr;
-#else
+#elif !defined(_WIN32)
   if(xdr){
     xdr_destroy(xdr);
     delete xdr;
@@ -1068,6 +1070,7 @@ BinaryPiostream::~BinaryPiostream()
 BinaryPiostream::BinaryPiostream(const string& filename, Direction dir)
   : Piostream(dir, -1, filename), have_peekname(0)
 {
+#ifndef _WIN32
   mmapped = false;
   if(dir==Read){
     fp = fopen (filename.c_str(), "r");
@@ -1105,11 +1108,13 @@ BinaryPiostream::BinaryPiostream(const string& filename, Direction dir)
       return;
     }
   }
+#endif
 }
 
 BinaryPiostream::BinaryPiostream(int fd, Direction dir)
   : Piostream(dir, -1), have_peekname(0)
 {
+#ifndef _WIN32
   mmapped = false;
   if(dir==Read){
     fp = fdopen (fd, "r");
@@ -1146,6 +1151,7 @@ BinaryPiostream::BinaryPiostream(int fd, Direction dir)
       return;
     }
   }
+#endif
 }
 
 string BinaryPiostream::peek_class()
@@ -1210,11 +1216,13 @@ void BinaryPiostream::io(bool& data)
 
 void BinaryPiostream::io(char& data)
 {
+#ifndef _WIN32
   if(err)return;
   if(!xdr_char(xdr, &data)){
     err=1;
     cerr << "xdr_char failed\n";
   }
+#endif
 }
 
 void BinaryPiostream::io(signed char& data)
@@ -1230,65 +1238,79 @@ void BinaryPiostream::io(signed char& data)
 
 void BinaryPiostream::io(unsigned char& data)
 {
+#ifndef _WIN32
   if(err)return;
   if(!xdr_u_char(xdr, &data)){
     err=1;
     cerr << "xdr_u_char failed\n";
   }
+#endif
 }
 
 void BinaryPiostream::io(short& data)
 {
+#ifndef _WIN32
   if(err)return;
   if(!xdr_short(xdr, &data)){
     err=1;
     cerr << "xdr_short failed\n";
   }
+#endif
 }
 
 void BinaryPiostream::io(unsigned short& data)
 {
+#ifndef _WIN32
   if(err)return;
   if(!xdr_u_short(xdr, &data)){
     err=1;
     cerr << "xdr_u_short failed\n";
   }
+#endif
 }
 
 void BinaryPiostream::io(int& data)
 {
+#ifndef _WIN32
   if(err)return;
   if(!xdr_int(xdr, &data)){
     err=1;
     cerr << "xdr_int failed\n";
   }
+#endif
 }
 
 void BinaryPiostream::io(unsigned int& data)
 {
+#ifndef _WIN32
   if(err)return;
   if(!xdr_u_int(xdr, &data)){
     err=1;
     cerr << "xdr_u_int failed\n";
   }
+#endif
 }
 
 void BinaryPiostream::io(long& data)
 {
+#ifndef _WIN32
   if(err)return;
   if(!xdr_long(xdr, &data)){
     err=1;
     cerr << "xdr_long failed\n";
   }
+#endif
 }
 
 void BinaryPiostream::io(unsigned long& data)
 {
+#ifndef _WIN32
   if(err)return;
   if(!xdr_u_long(xdr, &data)){
     err=1;
     cerr << "xdr_u_long failed\n";
   }
+#endif
 }
 
 void BinaryPiostream::io(long long& data)
@@ -1300,12 +1322,12 @@ void BinaryPiostream::io(long long& data)
     cerr << "xdr_longlong_t failed\n";
   }
 #else
-#  if !defined(__APPLE__) && !defined(__osf__)
+#  if !defined(__APPLE__) && !defined(__osf__) && !defined(_WIN32)
   if(!xdr_longlong_t(xdr, (int64_t*)(&data))){
     err=1;
     cerr << "xdr_longlong_t failed\n";
   }
-#  else
+#  elif !defined(_WIN32)
   cerr << "xdr_longlong_t is not implemented on Apple\n";
   err = 1;
 #  endif
@@ -1321,12 +1343,12 @@ void BinaryPiostream::io(unsigned long long& data)
     cerr << "xdr_u_longlong_t failed\n";
   }
 #else
-#  if !defined(__APPLE__) && !defined(__osf__) && !defined( _AIX )
+#  if !defined(__APPLE__) && !defined(__osf__) && !defined( _AIX ) && !defined(_WIN32)
   if(!xdr_u_longlong_t(xdr, (uint64_t*)(&data))){
     err=1;
     cerr << "xdr_u_longlong_t failed\n";
   }
-#  else
+#  elif !defined(_WIN32)
   cerr << "xdr_longlong_t is not implemented on Apple or on AIX\n";
   err = 1;
 #  endif
@@ -1335,24 +1357,29 @@ void BinaryPiostream::io(unsigned long long& data)
 
 void BinaryPiostream::io(double& data)
 {
+#ifndef _WIN32
   if(err)return;
   if(!xdr_double(xdr, &data)){
     err=1;
     cerr << "xdr_double failed\n";
   }
+#endif
 }
 
 void BinaryPiostream::io(float& data)
 {
+#ifndef _WIN32
   if(err)return;
   if(!xdr_float(xdr, &data)){
     err=1;
     cerr << "xdr_float failed\n";
   }
+#endif
 }
 
 void BinaryPiostream::io(string& data)
 {
+#ifndef _WIN32
   if(err)return;
   char* p=0;
   if(dir==Write) {
@@ -1366,10 +1393,12 @@ void BinaryPiostream::io(string& data)
     data=string(p);
     free(p);
   }
+#endif
 }
 
 void BinaryPiostream::emit_pointer(int& have_data, int& pointer_id)
 {
+#ifndef _WIN32
   if(!xdr_int(xdr, &have_data)){
     err=1;
     cerr << "xdr_int failed\n";
@@ -1380,6 +1409,7 @@ void BinaryPiostream::emit_pointer(int& have_data, int& pointer_id)
     cerr << "xdr_int failed\n";
     return;
   }
+#endif
 }
 
 GzipPiostream::GzipPiostream(const string& filename, Direction dir)

@@ -35,7 +35,6 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Dataflow/share/share.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 
@@ -52,7 +51,7 @@ using std::ostringstream;
 
 namespace SCIRun {
 
-class PSECORESHARE NrrdTextureBuilder : public Module
+class NrrdTextureBuilder : public Module
 {
 public:
   NrrdTextureBuilder(GuiContext*);

@@ -43,13 +43,6 @@
 #ifndef SCI_Geom_GeomOpenGL_h
 #define SCI_Geom_GeomOpenGL_h 1
 
-
-#ifdef _WIN32
-#define WINGDIAPI __declspec(dllimport)
-#define APIENTRY __stdcall
-#define CALLBACK APIENTRY
-#endif
-
 #include <sci_gl.h>
 #include <sci_glu.h>
 #include <sci_glx.h>

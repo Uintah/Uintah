@@ -47,6 +47,10 @@ using std::string;
 
 namespace SCIRun {
 
+#ifdef _WIN32
+#define GL_TEXTURE_3D 2
+#endif
+
 SliceRenderer::SliceRenderer(TextureHandle tex,
                              ColorMapHandle cmap1, ColorMap2Handle cmap2,
                              int tex_mem)

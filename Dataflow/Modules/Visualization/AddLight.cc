@@ -38,7 +38,6 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Core/share/share.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Core/Geom/PointLight.h>
@@ -59,7 +58,7 @@ namespace SCIRun {
 
 static string control_name("Control Widget");
 
-class SCICORESHARE AddLight : public Module {
+class AddLight : public Module {
 public:
   AddLight(GuiContext*);
 

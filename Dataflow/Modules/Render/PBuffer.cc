@@ -45,6 +45,13 @@
 #include <sci_gl.h>
 #include <sci_glx.h>
 
+#ifdef _WIN32
+// get X stuff from tk
+#include <tcl.h>
+#include <tk.h>
+#include <X11/Xlib.h>
+#endif
+
 #include <Dataflow/Modules/Render/PBuffer.h>
 #include <Core/Util/Assert.h>
 
@@ -62,7 +69,9 @@ PBuffer::PBuffer( int doubleBuffer /* = GL_FALSE */ ):
   doubleBuffer_(doubleBuffer),
   depthBits_(8),
   valid_(false),
+#ifndef _WIN32
   cx_(0),
+#endif
 #ifdef HAVE_PBUFFER
   fbc_(0),
   pbuffer_(0),
@@ -73,8 +82,13 @@ PBuffer::PBuffer( int doubleBuffer /* = GL_FALSE */ ):
 #ifdef HAVE_PBUFFER
 
 bool
+#ifndef _WIN32
 PBuffer::create(Display* dpy, int screen, GLXContext sharedcontext,
 		int width, int height, int colorBits, int depthBits)
+#else
+PBuffer::create(Display* dpy, int screen, /*GLXContext sharedcontext,*/
+		int width, int height, int colorBits, int depthBits)
+#endif
 {
   dpy_ = dpy;
   screen_ = screen;
@@ -151,6 +165,7 @@ PBuffer::create(Display* dpy, int screen, GLXContext sharedcontext,
       return false;
     }
 
+#ifndef _WIN32
     cx_ = glXCreateNewContext( dpy, *fbc_, GLX_RGBA_TYPE, sharedcontext, True);
     if( !cx_ ){
       //cerr<<"Cannot create Pbuffer context\n";
@@ -163,13 +178,17 @@ PBuffer::create(Display* dpy, int screen, GLXContext sharedcontext,
     cx_ = 0;
     return false;
   }
-
+#else
+    return false;
+  }
+#endif
   return true;
 } // end create()
 
 void
 PBuffer::destroy()
 {
+#ifndef _WIN32
   if( cx_ ) {
     glXDestroyContext( dpy_, cx_ );
     cx_ = 0;
@@ -180,26 +199,35 @@ PBuffer::destroy()
     pbuffer_ = 0;
   }
   valid_ = false;
+#endif
 }
 
 void
 PBuffer::makeCurrent()
 {
+#ifndef _WIN32
   if( valid_ ) {
     glXMakeCurrent( dpy_, pbuffer_, cx_ );
   }
+#endif
 }
 
 bool
 PBuffer::is_current()
 {
+#ifndef _WIN32
   return (cx_ == glXGetCurrentContext());
+#endif
 }
 
 #else // ifdef HAVE_PBUFFER
 
 bool
+#ifndef _WIN32
 PBuffer::create(Display* /*dpy*/, int /*screen*/, GLXContext /*shared*/,
+#else
+PBuffer::create(Display* /*dpy*/, int /*screen*/, //GLXContext /*shared*/,
+#endif
 		int /*width*/, int /*height*/,
 		int /*colorBits*/, int /*depthBits*/)
 {

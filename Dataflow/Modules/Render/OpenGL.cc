@@ -63,7 +63,15 @@ namespace C_Magick {
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 
-extern Tcl_Interp* the_interp;
+#ifdef _WIN32
+#undef near
+#undef far
+#define SHARE __declspec(dllimport)
+#else
+#define SHARE 
+#endif
+
+extern "C" SHARE Tcl_Interp* the_interp;
 
 namespace SCIRun {
 
@@ -87,8 +95,12 @@ bool
 OpenGL::query(GuiInterface* gui)
 {
   gui->lock();
+#ifndef _WIN32
   int have_opengl=glXQueryExtension
     (Tk_Display(Tk_MainWindow(the_interp)), NULL, NULL);
+#else
+  int have_opengl = 0;
+#endif
   gui->unlock();
   if (!have_opengl)
     cerr << "glXQueryExtension() returned NULL.\n"
@@ -564,7 +576,11 @@ OpenGL::render_and_save_image(int x, int y,
       // Read the data from OpenGL into our memory
       glReadBuffer(GL_FRONT);
       glReadPixels(0,0,read_width, read_height,
+#ifndef _WIN32
 		   (num_channels == 3) ? GL_RGB : GL_BGRA,
+#else
+		   (num_channels == 3) ? GL_RGB : GL_RGBA,
+#endif
 		   (channel_bytes == 1) ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT,
 		   pixels);
       gui_->unlock();

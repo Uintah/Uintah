@@ -63,9 +63,11 @@ private:
   Mutex *lock_;
 
   // OpenGL
+#ifndef _WIN32
   Window win;
   Display* dpy;
   GLXContext cx;
+#endif
   GLuint base;  
 
   int xres_, yres_;

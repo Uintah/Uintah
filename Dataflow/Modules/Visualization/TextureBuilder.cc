@@ -35,7 +35,6 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Dataflow/share/share.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 
@@ -56,7 +55,7 @@ namespace SCIRun {
 
 static SCIRun::DebugStream dbg("TextureBuilder", false);
 
-class PSECORESHARE TextureBuilder : public Module
+class TextureBuilder : public Module
 {
 public:
   TextureBuilder(GuiContext*);

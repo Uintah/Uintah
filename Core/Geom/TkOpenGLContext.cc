@@ -57,8 +57,10 @@ using namespace std;
   
 extern "C" Tcl_Interp* the_interp;
 
+#ifndef _WIN32
 static GLXContext first_context = NULL;
 vector<int> TkOpenGLContext::valid_visuals_ = vector<int>();
+#endif
 
 TkOpenGLContext::TkOpenGLContext(const string &id, int visualid, 
 				 int width, int height)
@@ -66,6 +68,7 @@ TkOpenGLContext::TkOpenGLContext(const string &id, int visualid,
     id_(id)
     
 {
+#ifndef _WIN32
   mainwin_ = Tk_MainWindow(the_interp);
   display_ = Tk_Display(mainwin_);
   release();
@@ -166,22 +169,26 @@ TkOpenGLContext::TkOpenGLContext(const string &id, int visualid,
   }
   context_ = glXCreateContext(display_, vi_, first_context, 1);
   if (!context_) throw scinew InternalError("Cannot create GLX Context");
+#endif
 }
 
 
 TkOpenGLContext::~TkOpenGLContext()
 {
+#ifndef _WIN32
   TCLTask::lock();
   release();
   glXDestroyContext(display_, context_);
   XSync(display_, False);
   TCLTask::unlock();
+#endif
 }
 
 
 bool
 TkOpenGLContext::make_current()
 {
+#ifndef _WIN32
   ASSERT(context_);
   const bool result = glXMakeCurrent(display_, x11_win_, context_);
 
@@ -191,13 +198,18 @@ TkOpenGLContext::make_current()
   }
 
   return result;
+#else
+  return false;
+#endif
 }
 
 
 void
 TkOpenGLContext::release()
 {
+#ifndef _WIN32
   glXMakeCurrent(display_, None, NULL);
+#endif
 }
 
 
@@ -218,7 +230,9 @@ TkOpenGLContext::height()
 void
 TkOpenGLContext::swap()
 {
+#ifndef _WIN32
   glXSwapBuffers(display_, x11_win_);
+#endif
 }
 
 
@@ -243,6 +257,7 @@ inline void SWAP(T& a, T& b) {
 string
 TkOpenGLContext::listvisuals()
 {
+#ifndef _WIN32
   TCLTask::lock();
   Tk_Window topwin=Tk_MainWindow(the_interp);
   if(!topwin)
@@ -358,4 +373,8 @@ TkOpenGLContext::listvisuals()
     ret_val = ret_val + "{" + visualtags[k] +"} ";
   TCLTask::unlock();
   return ret_val;
+#else
+  string val;
+  return val;
+#endif
 }

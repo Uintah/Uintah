@@ -59,22 +59,22 @@ using std::pair;
 
 // Persistent IO for maps
 template <class Key, class Data>
-SCICORESHARE void
+void
 Pio(Piostream& stream, map<Key, Data>& data );
 
 //////////
 // Persistent IO of vector containers
 template <class T>
-SCICORESHARE void Pio(Piostream& stream, vector<T>& data);
+void Pio(Piostream& stream, vector<T>& data);
 
 template<class T,class S>
-SCICORESHARE void 
+void 
 Pio( Piostream &stream, pair<T,S>& pair);
 
 //////////
 // Persistent io for maps
 template <class Key, class Data>
-SCICORESHARE inline void
+inline void
 Pio(Piostream& stream, map<Key, Data>& data) {
 
 #ifdef __GNUG__
@@ -128,10 +128,10 @@ Pio(Piostream& stream, map<Key, Data>& data) {
 #define STLVECTOR_VERSION 2
 
 template <> 
-SCICORESHARE void Pio(Piostream& stream, vector<bool>& data);
+void Pio(Piostream& stream, vector<bool>& data);
 
 template <class T> 
-SCICORESHARE void Pio(Piostream& stream, vector<T>& data)
+void Pio(Piostream& stream, vector<T>& data)
 { 
   if (stream.reading() && stream.peek_class() == "Array1")
   {
@@ -163,7 +163,7 @@ SCICORESHARE void Pio(Piostream& stream, vector<T>& data)
 #define STLLIST_VERSION 1
 
 template <class T> 
-SCICORESHARE void Pio(Piostream& stream, list<T>& data)
+void Pio(Piostream& stream, list<T>& data)
 { 
   stream.begin_cheap_delim();
   
@@ -187,7 +187,7 @@ SCICORESHARE void Pio(Piostream& stream, list<T>& data)
 #define STLPAIR_VERSION 1
 
 template <class T,class S> 
-SCICORESHARE void Pio(Piostream& stream, pair<T,S>& data)
+void Pio(Piostream& stream, pair<T,S>& data)
 { 
   
   stream.begin_class("STLPair", STLPAIR_VERSION);

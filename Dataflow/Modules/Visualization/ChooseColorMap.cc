@@ -48,7 +48,7 @@
 
 namespace SCIRun {
 
-class PSECORESHARE ChooseColorMap : public Module {
+class ChooseColorMap : public Module {
 private:
   GuiInt port_index_;
   GuiInt usefirstvalid_;

@@ -43,17 +43,16 @@
 #ifndef SCI_project_Pstream_h
 #define SCI_project_Pstream_h 1
 
-#include <Core/share/share.h>
-
 #include <Core/Persistent/Persistent.h>
 #include <stdio.h>
 #ifdef _WIN32
-#define ZEXPORT __stdcall
-#define ZEXTERN extern "C"
-#endif
-#include <zlib.h>
+struct XDR;
+#else
+// sgi is picky about forward declaring struct XDR
 #include <rpc/types.h>
 #include <rpc/xdr.h>
+#endif
+#include <zlib.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <iosfwd>
@@ -61,8 +60,7 @@
 
 namespace SCIRun {
 
-
-class SCICORESHARE BinaryPiostream : public Piostream {
+class BinaryPiostream : public Piostream {
   FILE* fp;
   void* addr;
   XDR* xdr;
@@ -99,7 +97,7 @@ public:
   virtual void io(string& str);
 };
 
-class SCICORESHARE TextPiostream : public Piostream {
+class TextPiostream : public Piostream {
   std::istream* istr;
   std::ostream* ostr;
   int have_peekname;
@@ -139,7 +137,7 @@ public:
 
 //! The Fast stream is binary, its results can only safely be used
 //! on the architecture where the file is generated.
-class SCICORESHARE FastPiostream : public Piostream {
+class FastPiostream : public Piostream {
 public:
   FastPiostream(const string& filename, Direction dir);
   FastPiostream(int fd, Direction dir);
@@ -185,7 +183,7 @@ private:
 
 };
 
-class SCICORESHARE GzipPiostream : public Piostream {
+class GzipPiostream : public Piostream {
   gzFile gzfile;
   int have_peekname;
   string peekname;
@@ -220,7 +218,7 @@ public:
   inline int fileOpen() { return (gzfile!=0); }
 };
 
-class SCICORESHARE GunzipPiostream : public Piostream {
+class GunzipPiostream : public Piostream {
   int unzipfile;	// file descriptor
   int have_peekname;
   string peekname;

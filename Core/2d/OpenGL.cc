@@ -59,9 +59,10 @@
 #include <GL/gls.h>
 #endif
 
-
+#ifndef _WIN32
 #include <X11/X.h>
 #include <X11/Xlib.h>
+#endif
 
 using namespace std;
 using namespace SCIRun;
