@@ -71,7 +71,7 @@ BaseWidget::BaseWidget( Module* module, CrowdMonitor* lock,
   NumModes(NumModes), NumSwitches(NumSwitches),
   modes(NumModes), mode_switches(NumSwitches), CurrentMode(0),
   widget_scale(widget_scale), id(make_id(name)), tclmat("material", id, this),
-  user_scale("scale", id, this), epsilon(1e-6)
+  epsilon(1e-6)
 {
 
    for (Index i=0; i<NumSwitches; i++)
@@ -248,7 +248,7 @@ BaseWidget::tcl_command(TCLArgs& args, void*)
 	 args.error("widget can't parse user scale `"+args[2]+"'");
 	 return;
       }
-      cout << "User scale now " << us << endl;
+      SetScale(GetScale()*us);
    }
 
    reset_vars();

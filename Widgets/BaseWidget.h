@@ -142,8 +142,6 @@ protected:
    // Used to pass a material to .tcl file.
    TCLMaterial tclmat;
 
-   TCLdouble user_scale;
-
    // These affect ALL widgets!!!
    static MaterialHandle DefaultPointMaterial;
    static MaterialHandle DefaultEdgeMaterial;

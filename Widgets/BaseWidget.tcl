@@ -21,8 +21,6 @@ itcl_class BaseWidget {
 	config
     }
     method config {config} {
-	global $this-scale
-	set $this-scale 1.0
 	global $this-material
 	initMaterial $this-material
     }
@@ -54,10 +52,12 @@ itcl_class BaseWidget {
 	
 	frame $wid.scale
 	label $wid.scale.l -text "Scale"
-	scale $wid.scale.s -from 0.1 -to 10.0 -length 6c \
-		-showvalue true -orient horizontal -resolution 0.001 \
-		-digits 5 -variable $this-scale -command "$this-c scale"
-	pack $wid.scale.l $wid.scale.s -in $wid.scale -side left -anchor w
+	button $wid.scale.incr -text "++" -command "$this-c scale 1.25"
+	button $wid.scale.incr2 -text "+" -command "$this-c scale 1.05"
+	button $wid.scale.decr -text "-" -command "$this-c scale [expr 1.0/1.05]"
+	button $wid.scale.decr2 -text "--" -command "$this-c scale [expr 1.0/1.25]"
+	pack $wid.scale.l $wid.scale.incr $wid.scale.incr2 $wid.scale.decr $wid.scale.decr2 \
+		-in $wid.scale -side left -anchor w
 
 	frame $wid.mats -relief ridge -borderwidth 4
 
@@ -117,41 +117,10 @@ itcl_class BaseWidget {
     }
 
     method help {wid} {
-#	exec netscape $sci_root/Widgets/help/$name.html
-
-	toplevel $wid.help
-	wm title $wid.help "Widget Help"
-	wm iconname $wid.help "WidgetHelp"
-	wm minsize $wid.help 100 100
-
-	frame $wid.help.f
-	frame $wid.help.f.win
-	text $wid.help.f.win.text -relief raised -bd 2 \
-		-yscrollcommand "$wid.help.f.win.texts set" -xscrollcommand "$wid.help.f.win.texts2 set"
-	$wid.help.f.win.text insert end [$this help_text $wid.help.f.win.text]
-	scrollbar $wid.help.f.win.texts -command "$wid.help.f.win.text yview"
-	scrollbar $wid.help.f.win.texts2 -command "$wid.help.f.win.text xview" -orient horizontal
-	pack $wid.help.f.win.texts2 -side bottom -fill x
-	pack $wid.help.f.win.text -side left -fill both -expand y
-	pack $wid.help.f.win.texts -side right -fill y
-	
-	button $wid.help.f.ok -text OK -command "destroy $wid.help"
-	pack $wid.help.f.win -side top -anchor n -fill both -expand y
-	pack $wid.help.f.ok -side bottom -anchor s
-	pack $wid.help.f -side top -anchor n -fill both -expand y
-    }
-
-    method help_text {w} {
-	puts "I am $name"
 	global sci_root
-	$w delete 1.0 end
-	set f [open $sci_root/Widgets/help/$name.html]
-	while {![eof $f]} {
-	    $w insert end [read $f 1000]
-	}
-	close $f
+	helpPage $sci_root/Widgets/help/$name.html
     }
-
+    
     method bwdefselect {y wid box obox} {
 	set ind [$box nearest $y]
 	$box selection set $ind
