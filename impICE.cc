@@ -522,7 +522,7 @@ void ICE::setupRHS(const ProcessorGroup*,
         
       //__________________________________
       // Advection preprocessing
-      bool bulletProof_test=false;
+      bool bulletProof_test=true;
       advector->inFluxOutFluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch,indx, 
                                     bulletProof_test, parent_new_dw); 
 
@@ -639,7 +639,7 @@ void ICE::updatePressure(const ProcessorGroup*,
       } 
     }
 
-/*`==========TESTING==========*/
+
     //__________________________________
     //  Set Boundary Conditions
     // if LODI are specified then set them.
@@ -670,8 +670,7 @@ void ICE::updatePressure(const ProcessorGroup*,
         computeLi( lv->Li, lv->rho_CC, press_CC,  lv->vel_CC, lv->speedSound, 
                    patch, new_dw, d_sharedState, d_Lodi_variable_basket, true);
       }
-    }  
-/*===========TESTING==========`*/
+    }
     
     setBC(press_CC, placeHolder, sp_vol_CC, d_surroundingMatl_indx,
           "sp_vol", "Pressure", patch ,d_sharedState, 0, new_dw, lv);
