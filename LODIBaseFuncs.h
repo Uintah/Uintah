@@ -45,6 +45,7 @@ double computeConvection(const double& nuFrt,     const double& nuMid,
    eminus = 0.5 * k_const * deltaX * (nuLast  + nuMid)/deltaT;
    dissipation = (eplus * qFrt - (eplus + eminus) * qMid 
               +  eminus * qLast)/deltaX; 
+             
    return  0.5 * (qConFrt - qConLast)/deltaX - dissipation;
 }
 
@@ -54,9 +55,7 @@ double computeConvection(const double& nuFrt,     const double& nuMid,
 ___________________________________________________________________*/
 void xFaceDensityLODI(const Patch::FaceType face,
                 CCVariable<double>& rho_CC,
-                const CCVariable<double>& d1_x, 
-                const CCVariable<double>& d1_y, 
-                const CCVariable<double>& d1_z, 
+                StaticArray<CCVariable<Vector> >& d,
                 const CCVariable<double>& nux,
                 const CCVariable<double>& nuy,
                 const CCVariable<double>& nuz,
@@ -101,9 +100,9 @@ void xFaceDensityLODI(const Patch::FaceType face,
                                  rho_tmp[f], rho_tmp[c], rho_tmp[bk], 
                                  qConFrt, qConLast, delT, dx.z());
 
-      rho_CC[c] = rho_tmp[c] - delT * (d1_x[c] + y_conv + z_conv);
+      rho_CC[c] = rho_tmp[c] - delT * (d[1][c].x() + y_conv + z_conv);
 
-     // rho_CC[c] = rho_tmp[c] - delT * d1_x[c] ;
+     // rho_CC[c] = rho_tmp[c] - delT * d[1][c].x() ;
     } // end of j loop
   } //end of k loop
 
@@ -112,7 +111,7 @@ void xFaceDensityLODI(const Patch::FaceType face,
   for(int k = low.z()+1; k < hi_z; k++) {
     IntVector c (xFaceCell,  low.y(), k);     
     IntVector f (xFaceCell,  low.y(), k+1);   
-    IntVector bk(xFaceCell, low.y(), k-1);    
+    IntVector bk(xFaceCell,  low.y(), k-1);    
     
     qConFrt  = rho_tmp[f]  * vel[f].z();
     qConLast = rho_tmp[bk] * vel[bk].z();
@@ -120,7 +119,7 @@ void xFaceDensityLODI(const Patch::FaceType face,
                                rho_tmp[f], rho_tmp[c], rho_tmp[bk], 
                                qConFrt, qConLast, delT, dx.z());
 
-    rho_CC[c] = rho_tmp[c] - delT * (d1_x[c] + d1_y[c] + z_conv);
+    rho_CC[c] = rho_tmp[c] - delT * (d[1][c].x() + d[1][c].y() + z_conv);
   }
 
   //__________________________________
@@ -128,14 +127,14 @@ void xFaceDensityLODI(const Patch::FaceType face,
   for(int k = low.z()+1; k < hi_z; k++) {
     IntVector c (xFaceCell,  hi_y, k);     
     IntVector f (xFaceCell,  hi_y, k+1);   
-    IntVector bk(xFaceCell, hi_y, k-1);    
+    IntVector bk(xFaceCell,  hi_y, k-1);    
 
     qConFrt  = rho_tmp[f]  * vel[f].z();
     qConLast = rho_tmp[bk] * vel[bk].z();
     z_conv   = computeConvection(nuz[f], nuz[c], nuz[bk],
                               rho_tmp[f], rho_tmp[c], rho_tmp[bk], 
                               qConFrt, qConLast, delT, dx.z());
-    rho_CC[c] = rho_tmp[c] - delT * (d1_x[c] + d1_y[c] + z_conv);
+    rho_CC[c] = rho_tmp[c] - delT * (d[1][c].x() + d[1][c].y() + z_conv);
   }
 
   //_____________________________________________________
@@ -149,7 +148,7 @@ void xFaceDensityLODI(const Patch::FaceType face,
     y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
                            rho_tmp[t], rho_tmp[c], rho_tmp[b], 
                            qConFrt, qConLast, delT, dx.y());
-    rho_CC[c] = rho_tmp[c] - delT * (d1_x[c] + d1_z[c] + y_conv);
+    rho_CC[c] = rho_tmp[c] - delT * (d[1][c].x() + d[1][c].z() + y_conv);
   } 
 
   //_________________________________________________
@@ -164,7 +163,7 @@ void xFaceDensityLODI(const Patch::FaceType face,
     y_conv   = computeConvection(nuy[t], nuy[c], nuy[b],
                               rho_tmp[t], rho_tmp[c], rho_tmp[b], 
                               qConFrt, qConLast, delT, dx.y());
-    rho_CC[c] = rho_tmp[c] - delT * (d1_x[c] + d1_z[c] + y_conv);
+    rho_CC[c] = rho_tmp[c] - delT * (d[1][c].x() + d[1][c].z() + y_conv);
   } 
 
   //________________________________________________________
@@ -177,7 +176,7 @@ void xFaceDensityLODI(const Patch::FaceType face,
 
   for(int corner = 0; corner <4; corner ++ ) {
     IntVector c = crn[corner];
-    rho_CC[c] = rho_tmp[c] - delT * (d1_x[c] + d1_y[c] + d1_z[c]);
+    rho_CC[c] = rho_tmp[c] - delT * (d[1][c].x() + d[1][c].y() + d[1][c].z());
   }                     
 } 
 
@@ -187,9 +186,7 @@ void xFaceDensityLODI(const Patch::FaceType face,
 ___________________________________________________________________*/
 void yFaceDensityLODI(const Patch::FaceType face,
                 CCVariable<double>& rho_CC,
-                const CCVariable<double>& d1_x, 
-                const CCVariable<double>& d1_y, 
-                const CCVariable<double>& d1_z, 
+                StaticArray<CCVariable<Vector> >& d, 
                 const CCVariable<double>& nux,
                 const CCVariable<double>& nuy,
                 const CCVariable<double>& nuz,
@@ -236,8 +233,8 @@ void yFaceDensityLODI(const Patch::FaceType face,
                                  rho_tmp[f], rho_tmp[c], rho_tmp[bk], 
                                  qConFrt, qConLast, delT, dx.z());
 
-      rho_CC[c] = rho_tmp[c] - delT * (d1_y[c] + x_conv + z_conv);
-     // rho_CC[c] = rho_tmp[c] - delT * d1_y[c] ;   
+      rho_CC[c] = rho_tmp[c] - delT * (d[1][c].y() + x_conv + z_conv);
+     // rho_CC[c] = rho_tmp[c] - delT * d[1][c].y() ;   
     } 
   } 
 
@@ -253,7 +250,7 @@ void yFaceDensityLODI(const Patch::FaceType face,
                                rho_tmp[f], rho_tmp[c], rho_tmp[bk], 
                                qConFrt, qConLast, delT, dx.z());
 
-    rho_CC[c] = rho_tmp[c] - delT * (d1_x[c] + d1_y[c] + z_conv);
+    rho_CC[c] = rho_tmp[c] - delT * (d[1][c].x() + d[1][c].y() + z_conv);
   }
   //_______________________________________________________
   //    E D G E    top/bottom-front
@@ -266,7 +263,7 @@ void yFaceDensityLODI(const Patch::FaceType face,
     x_conv   = computeConvection(nux[r], nux[c], nux[l],
                               rho_tmp[r], rho_tmp[c], rho_tmp[l], 
                               qConFrt, qConLast, delT, dx.x());
-    rho_CC[c] = rho_tmp[c] - delT * (d1_y[c] + d1_z[c] + x_conv);
+    rho_CC[c] = rho_tmp[c] - delT * (d[1][c].y() + d[1][c].z() + x_conv);
   }
          
   //_____________________________________________________
@@ -280,7 +277,7 @@ void yFaceDensityLODI(const Patch::FaceType face,
      z_conv   = computeConvection(nuz[f], nuz[c], nuz[bk],
                                rho_tmp[f], rho_tmp[c], rho_tmp[bk], 
                                qConFrt, qConLast, delT, dx.z());
-     rho_CC[c] = rho_tmp[c] - delT * (d1_x[c] + d1_y[c] + z_conv);
+     rho_CC[c] = rho_tmp[c] - delT * (d[1][c].x() + d[1][c].y() + z_conv);
    }
 
   //_________________________________________________
@@ -295,7 +292,7 @@ void yFaceDensityLODI(const Patch::FaceType face,
     x_conv   = computeConvection(nux[r], nux[c], nux[l],
                               rho_tmp[r], rho_tmp[c], rho_tmp[l], 
                               qConFrt, qConLast, delT, dx.x());
-    rho_CC[c] = rho_tmp[c] - delT * (d1_y[c] + d1_z[c] + x_conv);
+    rho_CC[c] = rho_tmp[c] - delT * (d[1][c].y() + d[1][c].z() + x_conv);
   }
   //________________________________________________________
   // C O R N E R S    
@@ -307,7 +304,7 @@ void yFaceDensityLODI(const Patch::FaceType face,
 
   for( int corner = 0; corner <4; corner ++ ) {
     IntVector c = crn[corner];
-    rho_CC[c] = rho_tmp[c] - delT * (d1_x[c] + d1_y[c] + d1_z[c]);
+    rho_CC[c] = rho_tmp[c] - delT * (d[1][c].x() + d[1][c].y() + d[1][c].z());
   }
 }
 /*_________________________________________________________________
@@ -316,9 +313,7 @@ void yFaceDensityLODI(const Patch::FaceType face,
 ___________________________________________________________________*/
 void zFaceDensityLODI( const Patch::FaceType face,
                 CCVariable<double>& rho_CC,
-                const CCVariable<double>& d1_x, 
-                const CCVariable<double>& d1_y, 
-                const CCVariable<double>& d1_z, 
+                StaticArray<CCVariable<Vector> >& d, 
                 const CCVariable<double>& nux,
                 const CCVariable<double>& nuy,
                 const CCVariable<double>& nuz,
@@ -366,8 +361,8 @@ void zFaceDensityLODI( const Patch::FaceType face,
                                  rho_tmp[t], rho_tmp[c], rho_tmp[b], 
                                  qConFrt, qConLast, delT, dx.y());
 
-      rho_CC[c] = rho_tmp[c] - delT * (d1_z[c] + x_conv + y_conv);
-     // rho_CC[c] = rho_tmp[c] - delT * d1_x[c] ; 
+      rho_CC[c] = rho_tmp[c] - delT * (d[1][c].z() + x_conv + y_conv);
+     // rho_CC[c] = rho_tmp[c] - delT * d[1][c].x() ; 
      } // end of j loop
   } //end of i loop
      
@@ -383,7 +378,7 @@ void zFaceDensityLODI( const Patch::FaceType face,
                                rho_tmp[t], rho_tmp[c], rho_tmp[b], 
                                qConFrt, qConLast, delT, dx.y());
 
-    rho_CC[c] = rho_tmp[c] - delT * (d1_x[c] + d1_z[c] + y_conv);
+    rho_CC[c] = rho_tmp[c] - delT * (d[1][c].x() + d[1][c].z() + y_conv);
   } 
   //__________________________________________________________
   //  E D G E      left-front/back
@@ -397,7 +392,7 @@ void zFaceDensityLODI( const Patch::FaceType face,
                                rho_tmp[t], rho_tmp[c], rho_tmp[b], 
                                qConFrt, qConLast, delT, dx.y());
 
-    rho_CC[c] = rho_tmp[c] - delT * (d1_x[c] + d1_z[c] + y_conv);
+    rho_CC[c] = rho_tmp[c] - delT * (d[1][c].x() + d[1][c].z() + y_conv);
 
   } //end of j loop
 
@@ -412,21 +407,21 @@ void zFaceDensityLODI( const Patch::FaceType face,
     x_conv = computeConvection(nux[r], nux[c], nux[l],
                            rho_tmp[r], rho_tmp[c], rho_tmp[l], 
                             qConFrt, qConLast, delT, dx.x());
-    rho_CC[c] = rho_tmp[c] - delT * (d1_y[c] + d1_z[c] + x_conv);
+    rho_CC[c] = rho_tmp[c] - delT * (d[1][c].y() + d[1][c].z() + x_conv);
   }   
   //_______________________________________________________
   //    E D G E    bottom-front/back
   for(int i = low.x()+1; i < hi_x; i++) {
     IntVector r (i+1, low.y(), zFaceCell);
     IntVector l (i-1, low.y(), zFaceCell);
-    IntVector b (i,   low.y(), zFaceCell);
+    IntVector c (i,   low.y(), zFaceCell);
 
     qConFrt  = rho_tmp[r] * vel[r].x();
     qConLast = rho_tmp[l] * vel[l].x();
-    x_conv = computeConvection(nux[r], nux[b], nux[l],
-                            rho_tmp[r], rho_tmp[b], rho_tmp[l], 
+    x_conv = computeConvection(nux[r], nux[c], nux[l],
+                            rho_tmp[r], rho_tmp[c], rho_tmp[l], 
                             qConFrt, qConLast, delT, dx.x());
-     rho_CC[b] = rho_tmp[b] - delT * (d1_y[b] + d1_z[b] + x_conv);
+     rho_CC[c] = rho_tmp[c] - delT * (d[1][c].y() + d[1][c].z() + x_conv);
    } 
 
    //________________________________________________________
@@ -439,7 +434,7 @@ void zFaceDensityLODI( const Patch::FaceType face,
 
    for( int corner = 0; corner < 4; corner ++ ) {
      IntVector c = crn[corner];
-     rho_CC[c] = rho_tmp[c] - delT * (d1_x[c] + d1_y[c] + d1_z[c]);
+     rho_CC[c] = rho_tmp[c] - delT * (d[1][c].x() + d[1][c].y() + d[1][c].z());
    }                
 }
 /*_________________________________________________________________
@@ -447,9 +442,7 @@ void zFaceDensityLODI( const Patch::FaceType face,
  Purpose~  
 ___________________________________________________________________*/
 void fillFaceDensityLODI(CCVariable<double>& rho_CC,
-                   const CCVariable<double>& d1_x, 
-                   const CCVariable<double>& d1_y, 
-                   const CCVariable<double>& d1_z, 
+                   StaticArray<CCVariable<Vector> >& di,
                    const CCVariable<double>& nux,
                    const CCVariable<double>& nuy,
                    const CCVariable<double>& nuz,
@@ -461,15 +454,15 @@ void fillFaceDensityLODI(CCVariable<double>& rho_CC,
 
 {   
   if (face == Patch::xplus || face == Patch::xminus ) {
-    xFaceDensityLODI(face,rho_CC,d1_x,d1_y,d1_z,nux,nuy,nuz,rho_tmp,vel,delT,dx);
+    xFaceDensityLODI(face,rho_CC,di,nux,nuy,nuz,rho_tmp,vel,delT,dx);
   } 
 
   if (face == Patch::yplus || face == Patch::yminus ) {
-    yFaceDensityLODI(face,rho_CC,d1_x,d1_y,d1_z,nux,nuy,nuz,rho_tmp,vel,delT,dx);
+    yFaceDensityLODI(face,rho_CC,di,nux,nuy,nuz,rho_tmp,vel,delT,dx);
   } 
 
   if (face == Patch::zplus || face == Patch::zminus ) { 
-    zFaceDensityLODI(face,rho_CC,d1_x,d1_y,d1_z,nux,nuy,nuz,rho_tmp,vel,delT,dx);
+    zFaceDensityLODI(face,rho_CC,di,nux,nuy,nuz,rho_tmp,vel,delT,dx);
   } 
 }
 
@@ -479,18 +472,7 @@ void fillFaceDensityLODI(CCVariable<double>& rho_CC,
 ___________________________________________________________________*/
 void xFaceVelLODI(Patch::FaceType face,
             CCVariable<Vector>& vel_CC,
-            const CCVariable<double>& d1_x,  
-            const CCVariable<double>& d3_x, 
-            const CCVariable<double>& d4_x, 
-            const CCVariable<double>& d5_x, 
-            const CCVariable<double>& d1_y,  
-            const CCVariable<double>& d3_y, 
-            const CCVariable<double>& d4_y, 
-            const CCVariable<double>& d5_y, 
-            const CCVariable<double>& d1_z,  
-            const CCVariable<double>& d3_z, 
-            const CCVariable<double>& d4_z,
-            const CCVariable<double>& d5_z,
+            StaticArray<CCVariable<Vector> >& d,
             const CCVariable<double>& nux,
             const CCVariable<double>& nuy,
             const CCVariable<double>& nuz,
@@ -546,8 +528,8 @@ void xFaceVelLODI(Patch::FaceType face,
        z_conv   = computeConvection(nuz[f], nuz[c], nuz[bk],
                                     qFrt, qMid, qLast, qConFrt, 
                                     qConLast, delT, dx.z());       
-       uVel     = (qMid - delT * (d1_x[c] * vel[c].x() 
-                +  rho_tmp[c] * d3_x[c] + y_conv + z_conv ))/rho_tmp[c];
+       uVel     = (qMid - delT * (d[1][c].x() * vel[c].x() 
+                +  rho_tmp[c] * d[3][c].x() + y_conv + z_conv ))/rho_tmp[c];
       //__________________________________
       //         Y   V E L O C I T Y     
       qConFrt  = rho_tmp[t] * vel[t].y() * vel[t].y() + p[t];
@@ -568,8 +550,8 @@ void xFaceVelLODI(Patch::FaceType face,
                                  qFrt, qMid, qLast, qConFrt, 
                              qConLast, delT, dx.z());        
 
-      vVel = (qMid- delT * (d1_x[c] * vel[c].y()
-           +  rho_tmp[c] * d4_x[c] + y_conv + z_conv))/rho_tmp[c];
+      vVel = (qMid- delT * (d[1][c].x() * vel[c].y()
+           +  rho_tmp[c] * d[4][c].x() + y_conv + z_conv))/rho_tmp[c];
       //__________________________________
       //         Z   V E L O C I T Y               
       qConFrt  = rho_tmp[t] * vel[t].y() * vel[t].z();
@@ -591,7 +573,7 @@ void xFaceVelLODI(Patch::FaceType face,
                              qConLast, delT, dx.z());        
 
 
-      wVel = (qMid - delT * (d1_x[c] * vel[c].z() + rho_tmp[c] * d5_x[c]
+      wVel = (qMid - delT * (d[1][c].x() * vel[c].z() + rho_tmp[c] * d[5][c].x()
                    + y_conv + z_conv))/rho_tmp[c];
 
       vel_CC[c] = Vector(uVel, vVel, wVel);
@@ -618,8 +600,8 @@ void xFaceVelLODI(Patch::FaceType face,
                                qFrt, qMid, qLast, 
                                qConFrt,qConLast, delT, dx.z());       
 
-    uVel = (qMid - delT * ((d1_x[c] + d1_y[c]) * vel[c].x() + 
-                        +  (d3_x[c] + d4_y[c]) * rho_tmp[c] 
+    uVel = (qMid - delT * ((d[1][c].x() + d[1][c].y()) * vel[c].x() + 
+                        +  (d[3][c].x() + d[4][c].y()) * rho_tmp[c] 
                         +   z_conv))/rho_tmp[c];
     //__________________________________
     //         Y   V E L O C I T Y
@@ -632,8 +614,8 @@ void xFaceVelLODI(Patch::FaceType face,
     z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
                  qFrt, qMid, qLast, qConFrt,qConLast, delT, dx.z()); 
 
-    vVel = (qMid - delT * ((d1_x[c] + d1_y[c]) * vel[c].y() 
-                        +  (d4_x[c] + d3_y[c]) * rho_tmp[c] + z_conv))
+    vVel = (qMid - delT * ((d[1][c].x() + d[1][c].y()) * vel[c].y() 
+                        +  (d[4][c].x() + d[3][c].y()) * rho_tmp[c] + z_conv))
                             /rho_tmp[c];
 
     //__________________________________
@@ -647,11 +629,10 @@ void xFaceVelLODI(Patch::FaceType face,
     z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
                     qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.z());
 
-    wVel = (qMid - delT * ((d1_x[c] + d1_y[c]) * vel[c].z() 
-                        +  (d5_x[c] + d5_y[c]) * rho_tmp[c]  
+    wVel = (qMid - delT * ((d[1][c].x() + d[1][c].y()) * vel[c].z() 
+                        +  (d[5][c].x() + d[5][c].y()) * rho_tmp[c]  
                         + z_conv))/rho_tmp[c];
     vel_CC[c] = Vector(uVel, vVel, wVel);
-
   } //end of k loop
 
   //_______________________________________________________
@@ -673,12 +654,9 @@ void xFaceVelLODI(Patch::FaceType face,
                                qFrt, qMid, qLast, 
                            qConFrt, qConLast, delT, dx.z());       
 
-    uVel = (qMid - delT * ((d1_x[c] + d1_y[c]) * vel[c].x() + 
-                        +  (d3_x[c] + d4_y[c]) * rho_tmp[c] 
+    uVel = (qMid - delT * ((d[1][c].x() + d[1][c].y()) * vel[c].x() + 
+                        +  (d[3][c].x() + d[4][c].y()) * rho_tmp[c] 
                         +   z_conv))/rho_tmp[c];
-      if (c == IntVector(-1,9,9)){
-        cout << " 3 " << uVel << endl;
-      }
     //__________________________________
     //         Y   V E L O C I T Y            
     qConFrt  = rho_tmp[f]  * vel[f].z()  * vel[f].y();
@@ -690,8 +668,8 @@ void xFaceVelLODI(Patch::FaceType face,
     z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
                    qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.z()); 
 
-    vVel = (qMid - delT * ((d1_x[c] + d1_y[c]) * vel[c].y() 
-                        +  (d4_x[c] + d3_y[c]) * rho_tmp[c] + z_conv))
+    vVel = (qMid - delT * ((d[1][c].x() + d[1][c].y()) * vel[c].y() 
+                        +  (d[4][c].x() + d[3][c].y()) * rho_tmp[c] + z_conv))
                              /rho_tmp[c];
 
     //__________________________________
@@ -705,8 +683,8 @@ void xFaceVelLODI(Patch::FaceType face,
     z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
                     qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.z());
 
-    wVel = (qMid - delT * ((d1_x[c] + d1_y[c]) * vel[c].z() 
-                        +  (d5_x[c] + d5_y[c]) * rho_tmp[c]  
+    wVel = (qMid - delT * ((d[1][c].x() + d[1][c].y()) * vel[c].z() 
+                        +  (d[5][c].x() + d[5][c].y()) * rho_tmp[c]  
                           + z_conv))/rho_tmp[c];
     vel_CC[c] = Vector(uVel, vVel, wVel);
   } //end of k loop
@@ -730,8 +708,8 @@ void xFaceVelLODI(Patch::FaceType face,
                                qFrt, qMid, qLast, 
                            qConFrt, qConLast, delT, dx.y());       
 
-    uVel = (qMid - delT * ((d1_x[c] + d1_z[c]) * vel[c].x() + 
-                        +  (d3_x[c] + d4_z[c]) * rho_tmp[c] 
+    uVel = (qMid - delT * ((d[1][c].x() + d[1][c].z()) * vel[c].x() + 
+                        +  (d[3][c].x() + d[4][c].z()) * rho_tmp[c] 
                         +   y_conv))/rho_tmp[c];
     //__________________________________
     //         Y   V E L O C I T Y ()
@@ -744,8 +722,8 @@ void xFaceVelLODI(Patch::FaceType face,
     y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
                  qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.y()); 
 
-    vVel = (qMid - delT * ((d1_x[c] + d1_z[c]) * vel[c].y() 
-                        +  (d4_x[c] + d5_z[c]) * rho_tmp[c] + y_conv))
+    vVel = (qMid - delT * ((d[1][c].x() + d[1][c].z()) * vel[c].y() 
+                        +  (d[4][c].x() + d[5][c].z()) * rho_tmp[c] + y_conv))
                              /rho_tmp[c];
     //__________________________________
     //         Z   V E L O C I T Y ()
@@ -758,8 +736,8 @@ void xFaceVelLODI(Patch::FaceType face,
     y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
                     qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.y());
 
-    wVel = (qMid - delT * ((d1_x[c] + d1_z[c]) * vel[c].z() 
-                        +  (d5_x[c] + d3_z[c]) * rho_tmp[c]  
+    wVel = (qMid - delT * ((d[1][c].x() + d[1][c].z()) * vel[c].z() 
+                        +  (d[5][c].x() + d[3][c].z()) * rho_tmp[c]  
                         + y_conv))/rho_tmp[c];
     vel_CC[c] = Vector(uVel, vVel, wVel);
   }
@@ -783,8 +761,8 @@ void xFaceVelLODI(Patch::FaceType face,
                                qFrt, qMid, qLast, 
                                qConFrt, qConLast, delT, dx.y());       
 
-    uVel = (qMid - delT * ((d1_x[c] + d1_z[c]) * vel[c].x() + 
-                        +  (d3_x[c] + d4_z[c]) * rho_tmp[c] 
+    uVel = (qMid - delT * ((d[1][c].x() + d[1][c].z()) * vel[c].x() + 
+                        +  (d[3][c].x() + d[4][c].z()) * rho_tmp[c] 
                         +   y_conv))/rho_tmp[c];
     //__________________________________
     //         Y   V E L O C I T Y ()
@@ -797,8 +775,8 @@ void xFaceVelLODI(Patch::FaceType face,
     y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
                    qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.y()); 
 
-    vVel = (qMid - delT * ((d1_x[c] + d1_z[c]) * vel[c].y() 
-                        +  (d4_x[c] + d5_z[c]) * rho_tmp[c] + y_conv))
+    vVel = (qMid - delT * ((d[1][c].x() + d[1][c].z()) * vel[c].y() 
+                        +  (d[4][c].x() + d[5][c].z()) * rho_tmp[c] + y_conv))
                              /rho_tmp[c];
     //__________________________________
     //         Z   V E L O C I T Y ()
@@ -811,10 +789,10 @@ void xFaceVelLODI(Patch::FaceType face,
     y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
                     qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.y());
 
-    wVel = (qMid - delT * ((d1_x[c] + d1_z[c]) * vel[c].z() 
-                        +  (d5_x[c] + d3_z[c]) * rho_tmp[c]  
+    wVel = (qMid - delT * ((d[1][c].x() + d[1][c].z()) * vel[c].z() 
+                        +  (d[5][c].x() + d[3][c].z()) * rho_tmp[c]  
                         + y_conv))/rho_tmp[c];
-    vel_CC[c] = Vector(uVel, vVel, wVel);        
+    vel_CC[c] = Vector(uVel, vVel, wVel);   
   } 
         
    //________________________________________________________
@@ -827,16 +805,16 @@ void xFaceVelLODI(Patch::FaceType face,
 
    for( int corner = 0; corner < 4; corner ++ ) {
      IntVector c = crn[corner];
-     uVel = vel[c].x() - delT * ((d1_x[c] + d1_y[c] + d1_z[c]) * vel[c].x()  
-                              +  (d3_x[c] + d4_y[c] + d4_z[c]) * rho_tmp[c]) 
+     uVel = vel[c].x() - delT * ((d[1][c].x() + d[1][c].y() + d[1][c].z()) * vel[c].x()  
+                              +  (d[3][c].x() + d[4][c].y() + d[4][c].z()) * rho_tmp[c]) 
                          / rho_tmp[c];
 
-     vVel = vel[c].y() - delT * ((d1_x[c] + d1_y[c] + d1_z[c]) * vel[c].y() 
-                              +  (d4_x[c] + d3_y[c] + d5_z[c]) * rho_tmp[c])
+     vVel = vel[c].y() - delT * ((d[1][c].x() + d[1][c].y() + d[1][c].z()) * vel[c].y() 
+                              +  (d[4][c].x() + d[3][c].y() + d[5][c].z()) * rho_tmp[c])
                          / rho_tmp[c];
 
-     wVel = vel[c].z() - delT * ((d1_x[c] + d1_y[c] + d1_z[c]) * vel[c].z() 
-                              +  (d5_x[c] + d5_y[c] + d3_z[c]) * rho_tmp[c])
+     wVel = vel[c].z() - delT * ((d[1][c].x() + d[1][c].y() + d[1][c].z()) * vel[c].z() 
+                              +  (d[5][c].x() + d[5][c].y() + d[3][c].z()) * rho_tmp[c])
                          / rho_tmp[c];
      vel_CC[c] = Vector(uVel, vVel, wVel);
    }
@@ -848,18 +826,7 @@ void xFaceVelLODI(Patch::FaceType face,
 ___________________________________________________________________*/
 void yFaceVelLODI(Patch::FaceType face,
              CCVariable<Vector>& vel_CC,
-             const CCVariable<double>& d1_x,  
-             const CCVariable<double>& d3_x, 
-             const CCVariable<double>& d4_x, 
-             const CCVariable<double>& d5_x, 
-             const CCVariable<double>& d1_y,  
-             const CCVariable<double>& d3_y, 
-             const CCVariable<double>& d4_y, 
-             const CCVariable<double>& d5_y, 
-             const CCVariable<double>& d1_z,  
-             const CCVariable<double>& d3_z, 
-             const CCVariable<double>& d4_z,
-             const CCVariable<double>& d5_z,
+             StaticArray<CCVariable<Vector> >& d,
              const CCVariable<double>& nux,
              const CCVariable<double>& nuy,
              const CCVariable<double>& nuz,
@@ -916,8 +883,8 @@ void yFaceVelLODI(Patch::FaceType face,
       z_conv = computeConvection(nuz[f], nuz[c], nuz[bk],
                                  qFrt, qMid, qLast, qConFrt, 
                                  qConLast, delT, dx.z());       
-      uVel = (qMid - delT * (d1_y[c] * vel[c].x() 
-           +  rho_tmp[c] * d4_y[c] + x_conv + z_conv ))/rho_tmp[c];
+      uVel = (qMid - delT * (d[1][c].y() * vel[c].x() 
+           +  rho_tmp[c] * d[4][c].y() + x_conv + z_conv ))/rho_tmp[c];
       //__________________________________
       //         Y   V E L O C I T Y        
       qConFrt  = rho_tmp[r] * vel[r].x() * vel[r].y();
@@ -938,8 +905,8 @@ void yFaceVelLODI(Patch::FaceType face,
                                  qFrt, qMid, qLast, qConFrt, 
                                  qConLast, delT, dx.z());        
 
-      vVel = (qMid- delT * (d1_y[c] * vel[c].y()
-           +  rho_tmp[c] * d3_y[c] + x_conv + z_conv))/rho_tmp[c];
+      vVel = (qMid- delT * (d[1][c].y() * vel[c].y()
+           +  rho_tmp[c] * d[3][c].y() + x_conv + z_conv))/rho_tmp[c];
       //__________________________________
       //         Z   V E L O C I T Y
       qConFrt  = rho_tmp[r] * vel[r].x() * vel[r].z();
@@ -960,8 +927,8 @@ void yFaceVelLODI(Patch::FaceType face,
                                   qFrt, qMid, qLast, qConFrt, 
                                   qConLast, delT, dx.z());        
 
-      wVel = (qMid - delT * (d1_y[c] * vel[c].z() 
-           + rho_tmp[c] * d5_y[c] + x_conv + z_conv))/rho_tmp[c];
+      wVel = (qMid - delT * (d[1][c].y() * vel[c].z() 
+           + rho_tmp[c] * d[5][c].y() + x_conv + z_conv))/rho_tmp[c];
 
       vel_CC[c] = Vector(uVel, vVel, wVel);
     } // end of i loop
@@ -986,8 +953,8 @@ void yFaceVelLODI(Patch::FaceType face,
                                qFrt, qMid, qLast, 
                                qConFrt,qConLast, delT, dx.z());       
 
-    uVel = (qMid - delT * ((d1_x[c] + d1_y[c]) * vel[c].x() + 
-                        +  (d3_x[c] + d4_y[c]) * rho_tmp[c] 
+    uVel = (qMid - delT * ((d[1][c].x() + d[1][c].y()) * vel[c].x() + 
+                        +  (d[3][c].x() + d[4][c].y()) * rho_tmp[c] 
                         +   z_conv))/rho_tmp[c];
 
     //__________________________________
@@ -1002,8 +969,8 @@ void yFaceVelLODI(Patch::FaceType face,
                                qFrt, qMid, qLast, 
                                qConFrt,qConLast, delT, dx.z()); 
 
-    vVel = (qMid - delT * ((d1_x[c] + d1_y[c]) * vel[c].y() 
-                        +  (d4_x[c] + d3_y[c]) * rho_tmp[c] + z_conv))
+    vVel = (qMid - delT * ((d[1][c].x() + d[1][c].y()) * vel[c].y() 
+                        +  (d[4][c].x() + d[3][c].y()) * rho_tmp[c] + z_conv))
                             /rho_tmp[c];
     //__________________________________
     //         Z   V E L O C I T Y 
@@ -1017,8 +984,8 @@ void yFaceVelLODI(Patch::FaceType face,
                                qFrt, qMid, qLast, 
                                qConFrt, qConLast, delT, dx.z());
 
-    wVel = (qMid - delT * ((d1_x[c] + d1_y[c]) * vel[c].z() 
-                        +  (d5_x[c] + d5_y[c]) * rho_tmp[c]  
+    wVel = (qMid - delT * ((d[1][c].x() + d[1][c].y()) * vel[c].z() 
+                        +  (d[5][c].x() + d[5][c].y()) * rho_tmp[c]  
                         + z_conv))/rho_tmp[c];
     vel_CC[c] = Vector(uVel, vVel, wVel);
   } //end of k loop
@@ -1043,8 +1010,8 @@ void yFaceVelLODI(Patch::FaceType face,
                                qFrt, qMid, qLast, 
                                qConFrt, qConLast, delT, dx.z());       
 
-    uVel = (qMid - delT * ((d1_x[c] + d1_y[c]) * vel[c].x() + 
-                         + (d3_x[c] + d4_y[c]) * rho_tmp[c] 
+    uVel = (qMid - delT * ((d[1][c].x() + d[1][c].y()) * vel[c].x() + 
+                         + (d[3][c].x() + d[4][c].y()) * rho_tmp[c] 
                          +  z_conv))/rho_tmp[c];
     //__________________________________
     //         Y   V E L O C I T Y 
@@ -1058,8 +1025,8 @@ void yFaceVelLODI(Patch::FaceType face,
                                   qFrt, qMid, qLast, 
                                   qConFrt, qConLast, delT, dx.z()); 
 
-    vVel = (qMid - delT * ((d1_x[c] + d1_y[c]) * vel[c].y() 
-                        +  (d4_x[c] + d3_y[c]) * rho_tmp[c] + z_conv))
+    vVel = (qMid - delT * ((d[1][c].x() + d[1][c].y()) * vel[c].y() 
+                        +  (d[4][c].x() + d[3][c].y()) * rho_tmp[c] + z_conv))
                            /rho_tmp[c];
     //__________________________________
     //         Z   V E L O C I T Y
@@ -1073,8 +1040,8 @@ void yFaceVelLODI(Patch::FaceType face,
                                qFrt, qMid, qLast, 
                                qConFrt, qConLast, delT, dx.z());
 
-    wVel = (qMid - delT * ((d1_x[c] + d1_y[c]) * vel[c].z() 
-                        +  (d5_x[c] + d5_y[c]) * rho_tmp[c]  
+    wVel = (qMid - delT * ((d[1][c].x() + d[1][c].y()) * vel[c].z() 
+                        +  (d[5][c].x() + d[5][c].y()) * rho_tmp[c]  
                         + z_conv))/rho_tmp[c];
     vel_CC[c] = Vector(uVel, vVel, wVel);
 
@@ -1098,8 +1065,8 @@ void yFaceVelLODI(Patch::FaceType face,
                                qFrt, qMid, qLast, 
                                qConFrt, qConLast, delT, dx.x());       
 
-    uVel = (qMid - delT * ((d1_y[c] + d1_z[c]) * vel[c].x() + 
-                        +  (d4_y[c] + d4_z[c]) * rho_tmp[c] 
+    uVel = (qMid - delT * ((d[1][c].y() + d[1][c].z()) * vel[c].x() + 
+                        +  (d[4][c].y() + d[4][c].z()) * rho_tmp[c] 
                         +   x_conv))/rho_tmp[c];
     //__________________________________
     //         Y   V E L O C I T Y 
@@ -1113,8 +1080,8 @@ void yFaceVelLODI(Patch::FaceType face,
                               qFrt, qMid, qLast, 
                               qConFrt, qConLast, delT, dx.x()); 
 
-    vVel = (qMid - delT * ((d1_y[c] + d1_z[c]) * vel[c].y() 
-                        +  (d3_y[c] + d5_z[c]) * rho_tmp[c] + x_conv))
+    vVel = (qMid - delT * ((d[1][c].y() + d[1][c].z()) * vel[c].y() 
+                        +  (d[3][c].y() + d[5][c].z()) * rho_tmp[c] + x_conv))
                            /rho_tmp[c];
     //__________________________________
     //         Z   V E L O C I T Y
@@ -1128,8 +1095,8 @@ void yFaceVelLODI(Patch::FaceType face,
                                qFrt, qMid, qLast, 
                                qConFrt, qConLast, delT, dx.x());
 
-    wVel = (qMid - delT * ((d1_y[c] + d1_z[c]) * vel[c].z() 
-                        +  (d5_y[c] + d3_z[c]) * rho_tmp[c]  
+    wVel = (qMid - delT * ((d[1][c].y() + d[1][c].z()) * vel[c].z() 
+                        +  (d[5][c].y() + d[3][c].z()) * rho_tmp[c]  
                         + x_conv))/rho_tmp[c];
     vel_CC[c] = Vector(uVel, vVel, wVel);
   } //end of i loop
@@ -1153,8 +1120,8 @@ void yFaceVelLODI(Patch::FaceType face,
                                qFrt, qMid, qLast, 
                                qConFrt, qConLast, delT, dx.x());       
 
-    uVel = (qMid - delT * ((d1_y[c] + d1_z[c]) * vel[c].x() + 
-                        +  (d4_y[c] + d4_z[c]) * rho_tmp[c] 
+    uVel = (qMid - delT * ((d[1][c].y() + d[1][c].z()) * vel[c].x() + 
+                        +  (d[4][c].y() + d[4][c].z()) * rho_tmp[c] 
                         +   x_conv))/rho_tmp[c];
 
     //__________________________________
@@ -1168,8 +1135,8 @@ void yFaceVelLODI(Patch::FaceType face,
     x_conv = computeConvection(nux[r], nux[c], nux[l],
                  qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.x()); 
 
-    vVel = (qMid - delT * ((d1_y[c] + d1_z[c]) * vel[c].y() 
-                        +  (d3_y[c] + d5_z[c]) * rho_tmp[c] + x_conv))
+    vVel = (qMid - delT * ((d[1][c].y() + d[1][c].z()) * vel[c].y() 
+                        +  (d[3][c].y() + d[5][c].z()) * rho_tmp[c] + x_conv))
                           /rho_tmp[c];
 
     //__________________________________
@@ -1183,8 +1150,8 @@ void yFaceVelLODI(Patch::FaceType face,
     x_conv = computeConvection(nux[r], nux[c], nux[l],
                     qFrt, qMid, qLast, qConFrt, qConLast, delT, dx.x());
 
-    wVel = (qMid - delT * ((d1_y[c] + d1_z[c]) * vel[c].z() 
-                        +  (d5_y[c] + d3_z[c]) * rho_tmp[c]  
+    wVel = (qMid - delT * ((d[1][c].y() + d[1][c].z()) * vel[c].z() 
+                        +  (d[5][c].y() + d[3][c].z()) * rho_tmp[c]  
                         + x_conv))/rho_tmp[c];
     vel_CC[c] = Vector(uVel, vVel, wVel);
   } 
@@ -1198,19 +1165,19 @@ void yFaceVelLODI(Patch::FaceType face,
 
   for( int corner = 0; corner < 4; corner ++ ) {
     IntVector c = crn[corner];
-    uVel = vel[c].x() - delT * ((d1_x[c] + d1_y[c] + d1_z[c]) * vel[c].x()  
-                             +  (d3_x[c] + d4_y[c] + d4_z[c]) * rho_tmp[c]) 
+    uVel = vel[c].x() - delT * ((d[1][c].x() + d[1][c].y() + d[1][c].z()) * vel[c].x()  
+                             +  (d[3][c].x() + d[4][c].y() + d[4][c].z()) * rho_tmp[c]) 
                              / rho_tmp[c];
 
-    vVel = vel[c].y() - delT * ((d1_x[c] + d1_y[c] + d1_z[c]) * vel[c].y() 
-                             +  (d4_x[c] + d3_y[c] + d5_z[c]) * rho_tmp[c])
+    vVel = vel[c].y() - delT * ((d[1][c].x() + d[1][c].y() + d[1][c].z()) * vel[c].y() 
+                             +  (d[4][c].x() + d[3][c].y() + d[5][c].z()) * rho_tmp[c])
                              / rho_tmp[c];
 
-    wVel = vel[c].z() - delT * ((d1_x[c] + d1_y[c] + d1_z[c]) * vel[c].z() 
-                             +  (d5_x[c] + d5_y[c] + d3_z[c]) * rho_tmp[c])
+    wVel = vel[c].z() - delT * ((d[1][c].x() + d[1][c].y() + d[1][c].z()) * vel[c].z() 
+                             +  (d[5][c].x() + d[5][c].y() + d[3][c].z()) * rho_tmp[c])
                              / rho_tmp[c];
     vel_CC[c] = Vector(uVel, vVel, wVel);
-  }                     
+  }                 
 } //end of the function yFaceVelLODI() 
 
 /*_________________________________________________________________
@@ -1219,18 +1186,7 @@ void yFaceVelLODI(Patch::FaceType face,
 ___________________________________________________________________*/
 void zFaceVelLODI(const Patch::FaceType face,
              CCVariable<Vector>& vel_CC,
-             const CCVariable<double>& d1_x,  
-             const CCVariable<double>& d3_x, 
-             const CCVariable<double>& d4_x, 
-             const CCVariable<double>& d5_x, 
-             const CCVariable<double>& d1_y,  
-             const CCVariable<double>& d3_y, 
-             const CCVariable<double>& d4_y, 
-             const CCVariable<double>& d5_y, 
-             const CCVariable<double>& d1_z,  
-             const CCVariable<double>& d3_z, 
-             const CCVariable<double>& d4_z,
-             const CCVariable<double>& d5_z,
+             StaticArray<CCVariable<Vector> >& d,
              const CCVariable<double>& nux,
              const CCVariable<double>& nuy,
              const CCVariable<double>& nuz,
@@ -1288,8 +1244,8 @@ void zFaceVelLODI(const Patch::FaceType face,
       y_conv = computeConvection(nuy[t], nuy[c], nuy[b],
                                  qFrt, qMid, qLast, qConFrt, 
                                  qConLast, delT, dx.y());       
-      uVel = (qMid - delT * (d1_z[c] * vel[c].x() 
-           +  rho_tmp[c] * d4_z[c] + x_conv + y_conv))/rho_tmp[c];
+      uVel = (qMid - delT * (d[1][c].z() * vel[c].x() 
+           +  rho_tmp[c] * d[4][c].z() + x_conv + y_conv))/rho_tmp[c];
       //__________________________________
       //         Y   V E L O C I T Y        
       qConFrt  = rho_tmp[r] * vel[r].x() * vel[r].y();
@@ -1310,8 +1266,8 @@ void zFaceVelLODI(const Patch::FaceType face,
                                    qFrt, qMid, qLast, qConFrt, 
                                    qConLast, delT, dx.y());
 
-      vVel = (qMid- delT * (d1_z[c] * vel[c].y()
-           +  rho_tmp[c] * d5_z[c] + x_conv + y_conv))/rho_tmp[c];
+      vVel = (qMid- delT * (d[1][c].z() * vel[c].y()
+           +  rho_tmp[c] * d[5][c].z() + x_conv + y_conv))/rho_tmp[c];
                         
       //__________________________________
       //         Z   V E L O C I T Y
@@ -1332,8 +1288,8 @@ void zFaceVelLODI(const Patch::FaceType face,
                                    qFrt, qMid, qLast, qConFrt, 
                                    qConLast, delT, dx.y());
 
-      wVel = (qMid - delT * (d1_z[c] * vel[c].z() 
-           + rho_tmp[c] * d3_z[c] + x_conv + y_conv))/rho_tmp[c];
+      wVel = (qMid - delT * (d[1][c].z() * vel[c].z() 
+           + rho_tmp[c] * d[3][c].z() + x_conv + y_conv))/rho_tmp[c];
            
       vel_CC[c] = Vector(uVel, vVel, wVel);
     } // end of j loop
@@ -1359,8 +1315,8 @@ void zFaceVelLODI(const Patch::FaceType face,
                                qFrt, qMid, qLast, 
                                qConFrt,qConLast, delT, dx.y());       
 
-    uVel = (qMid - delT * ((d1_x[c] + d1_z[c]) * vel[c].x() + 
-                        +  (d3_x[c] + d4_z[c]) * rho_tmp[c] 
+    uVel = (qMid - delT * ((d[1][c].x() + d[1][c].z()) * vel[c].x() + 
+                        +  (d[3][c].x() + d[4][c].z()) * rho_tmp[c] 
                         +   y_conv))/rho_tmp[c];
     //__________________________________
     //         Y   V E L O C I T Y 
@@ -1374,8 +1330,8 @@ void zFaceVelLODI(const Patch::FaceType face,
                                qFrt, qMid, qLast, 
                                qConFrt,qConLast, delT, dx.y()); 
 
-    vVel = (qMid - delT * ((d1_x[c] + d1_z[c]) * vel[c].y() 
-                        +  (d4_x[c] + d5_z[c]) * rho_tmp[c] + y_conv))
+    vVel = (qMid - delT * ((d[1][c].x() + d[1][c].z()) * vel[c].y() 
+                        +  (d[4][c].x() + d[5][c].z()) * rho_tmp[c] + y_conv))
                         /rho_tmp[c];
     //__________________________________
     //         Z   V E L O C I T Y
@@ -1389,8 +1345,8 @@ void zFaceVelLODI(const Patch::FaceType face,
                                qFrt, qMid, qLast, 
                                qConFrt, qConLast, delT, dx.y());
 
-    wVel = (qMid - delT * ((d1_x[c] + d1_z[c]) * vel[c].z() 
-                        +  (d5_x[c] + d3_z[c]) * rho_tmp[c]  
+    wVel = (qMid - delT * ((d[1][c].x() + d[1][c].z()) * vel[c].z() 
+                        +  (d[5][c].x() + d[3][c].z()) * rho_tmp[c]  
                         + y_conv))/rho_tmp[c];
 
     vel_CC[c] = Vector(uVel, vVel, wVel);
@@ -1416,8 +1372,8 @@ void zFaceVelLODI(const Patch::FaceType face,
                                qFrt, qMid, qLast, 
                                qConFrt,qConLast, delT, dx.y());       
 
-    uVel = (qMid - delT * ((d1_x[c] + d1_z[c]) * vel[c].x() + 
-                        +  (d3_x[c] + d4_z[c]) * rho_tmp[c] 
+    uVel = (qMid - delT * ((d[1][c].x() + d[1][c].z()) * vel[c].x() + 
+                        +  (d[3][c].x() + d[4][c].z()) * rho_tmp[c] 
                         +   y_conv))/rho_tmp[c];
     //__________________________________
     //         Y   V E L O C I T Y 
@@ -1431,8 +1387,8 @@ void zFaceVelLODI(const Patch::FaceType face,
                                qFrt, qMid, qLast, 
                                qConFrt,qConLast, delT, dx.y()); 
 
-    vVel = (qMid - delT * ((d1_x[c] + d1_z[c]) * vel[c].y() 
-                        +  (d4_x[c] + d5_z[c]) * rho_tmp[c] + y_conv))
+    vVel = (qMid - delT * ((d[1][c].x() + d[1][c].z()) * vel[c].y() 
+                        +  (d[4][c].x() + d[5][c].z()) * rho_tmp[c] + y_conv))
                               /rho_tmp[c];
     //__________________________________
     //         Z   V E L O C I T Y
@@ -1446,8 +1402,8 @@ void zFaceVelLODI(const Patch::FaceType face,
                                qFrt, qMid, qLast, 
                                qConFrt, qConLast, delT, dx.y());
 
-    wVel = (qMid - delT * ((d1_x[c] + d1_z[c]) * vel[c].z() 
-                        +  (d5_x[c] + d3_z[c]) * rho_tmp[c]  
+    wVel = (qMid - delT * ((d[1][c].x() + d[1][c].z()) * vel[c].z() 
+                        +  (d[5][c].x() + d[3][c].z()) * rho_tmp[c]  
                         + y_conv))/rho_tmp[c];
 
     vel_CC[c] = Vector(uVel, vVel, wVel);
@@ -1471,8 +1427,8 @@ void zFaceVelLODI(const Patch::FaceType face,
                                  qFrt, qMid, qLast, 
                                  qConFrt, qConLast, delT, dx.x());       
 
-    uVel = (qMid - delT * ((d1_y[c] + d1_z[c]) * vel[c].x() + 
-                        +  (d4_y[c] + d4_z[c]) * rho_tmp[c] 
+    uVel = (qMid - delT * ((d[1][c].y() + d[1][c].z()) * vel[c].x() + 
+                        +  (d[4][c].y() + d[4][c].z()) * rho_tmp[c] 
                         +   x_conv))/rho_tmp[c];
     //__________________________________
     //         Y   V E L O C I T Y
@@ -1486,8 +1442,8 @@ void zFaceVelLODI(const Patch::FaceType face,
                                qFrt, qMid, qLast, 
                                qConFrt, qConLast, delT, dx.x()); 
 
-    vVel = (qMid - delT * ((d1_y[c] + d1_z[c]) * vel[c].y() 
-                        +  (d3_y[c] + d5_z[c]) * rho_tmp[c] + x_conv))
+    vVel = (qMid - delT * ((d[1][c].y() + d[1][c].z()) * vel[c].y() 
+                        +  (d[3][c].y() + d[5][c].z()) * rho_tmp[c] + x_conv))
                                /rho_tmp[c];
     //__________________________________
     //         Z   V E L O C I T Y
@@ -1501,8 +1457,8 @@ void zFaceVelLODI(const Patch::FaceType face,
                                qFrt, qMid, qLast, 
                                qConFrt, qConLast, delT, dx.x());
 
-    wVel = (qMid - delT * ((d1_y[c] + d1_z[c]) * vel[c].z() 
-                        +  (d5_y[c] + d3_z[c]) * rho_tmp[c]  
+    wVel = (qMid - delT * ((d[1][c].y() + d[1][c].z()) * vel[c].z() 
+                        +  (d[5][c].y() + d[3][c].z()) * rho_tmp[c]  
                         + x_conv))/rho_tmp[c];
                         
     vel_CC[c] = Vector(uVel, vVel, wVel);
@@ -1527,8 +1483,8 @@ void zFaceVelLODI(const Patch::FaceType face,
                                  qFrt, qMid, qLast, 
                                  qConFrt, qConLast, delT, dx.x());       
 
-    uVel = (qMid - delT * ((d1_y[c] + d1_z[c]) * vel[c].x() + 
-                        +  (d4_y[c] + d4_z[c]) * rho_tmp[c] 
+    uVel = (qMid - delT * ((d[1][c].y() + d[1][c].z()) * vel[c].x() + 
+                        +  (d[4][c].y() + d[4][c].z()) * rho_tmp[c] 
                         +   x_conv))/rho_tmp[c];
         
     //__________________________________
@@ -1543,8 +1499,8 @@ void zFaceVelLODI(const Patch::FaceType face,
                                qFrt, qMid, qLast, 
                                qConFrt, qConLast, delT, dx.x()); 
 
-    vVel = (qMid - delT * ((d1_y[c] + d1_z[c]) * vel[c].y() 
-                        +  (d3_y[c] + d5_z[c]) * rho_tmp[c] + x_conv))
+    vVel = (qMid - delT * ((d[1][c].y() + d[1][c].z()) * vel[c].y() 
+                        +  (d[3][c].y() + d[5][c].z()) * rho_tmp[c] + x_conv))
                                /rho_tmp[c];
 
     //__________________________________
@@ -1559,8 +1515,8 @@ void zFaceVelLODI(const Patch::FaceType face,
                                qFrt, qMid, qLast,
                                qConFrt, qConLast, delT, dx.x());
 
-    wVel = (qMid - delT * ((d1_y[c] + d1_z[c]) * vel[c].z() 
-                        +  (d5_y[c] + d3_z[c]) * rho_tmp[c]  
+    wVel = (qMid - delT * ((d[1][c].y() + d[1][c].z()) * vel[c].z() 
+                        +  (d[5][c].y() + d[3][c].z()) * rho_tmp[c]  
                         + x_conv))/rho_tmp[c];
                         
     vel_CC[c] = Vector(uVel, vVel, wVel);
@@ -1575,19 +1531,19 @@ void zFaceVelLODI(const Patch::FaceType face,
 
   for( int corner = 0; corner < 4; corner ++ ) {
     IntVector c = crn[corner];
-    uVel = vel[c].x() - delT * ((d1_x[c] + d1_y[c] + d1_z[c]) * vel[c].x()  
-                             +  (d3_x[c] + d4_y[c] + d4_z[c]) * rho_tmp[c]) 
+    uVel = vel[c].x() - delT * ((d[1][c].x() + d[1][c].y() + d[1][c].z()) * vel[c].x()  
+                             +  (d[3][c].x() + d[4][c].y() + d[4][c].z()) * rho_tmp[c]) 
                         / rho_tmp[c];
 
-    vVel = vel[c].y() - delT * ((d1_x[c] + d1_y[c] + d1_z[c]) * vel[c].y() 
-                             +  (d4_x[c] + d3_y[c] + d5_z[c]) * rho_tmp[c])
+    vVel = vel[c].y() - delT * ((d[1][c].x() + d[1][c].y() + d[1][c].z()) * vel[c].y() 
+                             +  (d[4][c].x() + d[3][c].y() + d[5][c].z()) * rho_tmp[c])
                         / rho_tmp[c];
 
-    wVel = vel[c].z() - delT * ((d1_x[c] + d1_y[c] + d1_z[c]) * vel[c].z() 
-                             +  (d5_x[c] + d5_y[c] + d3_z[c]) * rho_tmp[c])
+    wVel = vel[c].z() - delT * ((d[1][c].x() + d[1][c].y() + d[1][c].z()) * vel[c].z() 
+                             +  (d[5][c].x() + d[5][c].y() + d[3][c].z()) * rho_tmp[c])
                         / rho_tmp[c];
     vel_CC[c] = Vector(uVel, vVel, wVel);
-  }                      
+  }                        
 } //end of the function zFaceVelLODI()
 
 /*_________________________________________________________________
@@ -1596,18 +1552,7 @@ void zFaceVelLODI(const Patch::FaceType face,
 ___________________________________________________________________*/
 
 void   fillFaceVelLODI(CCVariable<Vector>& vel_CC,
-                 const CCVariable<double>& d1_x,  
-                 const CCVariable<double>& d3_x, 
-                 const CCVariable<double>& d4_x,
-                 const CCVariable<double>& d5_x,
-                 const CCVariable<double>& d1_y,  
-                 const CCVariable<double>& d3_y, 
-                 const CCVariable<double>& d4_y, 
-                 const CCVariable<double>& d5_y, 
-                 const CCVariable<double>& d1_z,  
-                 const CCVariable<double>& d3_z, 
-                 const CCVariable<double>& d4_z,
-                 const CCVariable<double>& d5_z,
+                 StaticArray<CCVariable<Vector> >& di,
                  const CCVariable<double>& nux,
                  const CCVariable<double>& nuy,
                  const CCVariable<double>& nuz,
@@ -1620,26 +1565,17 @@ void   fillFaceVelLODI(CCVariable<Vector>& vel_CC,
 
 { 
   if(face ==  Patch::xplus || face ==  Patch::xminus) {
-    xFaceVelLODI( face, vel_CC, 
-                  d1_x, d3_x, d4_x, d5_x,
-                  d1_y, d3_y, d4_y, d5_y, 
-                  d1_z, d3_z, d4_z, d5_z, 
+    xFaceVelLODI( face, vel_CC, di, 
                   nux,nuy,nuz,
                   rho_tmp, p, vel, delT, dx);
   }
   if(face ==  Patch::yplus || face ==  Patch::yminus) {
-       yFaceVelLODI(face, vel_CC, 
-                    d1_x, d3_x, d4_x, d5_x,
-                    d1_y, d3_y, d4_y, d5_y,             
-                    d1_z, d3_z, d4_z, d5_z,             
+       yFaceVelLODI(face, vel_CC, di,             
                     nux,nuy,nuz,                        
                     rho_tmp, p, vel, delT, dx);         
   } 
   if(face ==  Patch::zplus || face ==  Patch::zminus) {  
-    zFaceVelLODI(face, vel_CC, 
-                 d1_x, d3_x, d4_x, d5_x,
-                 d1_y, d3_y, d4_y, d5_y,
-                 d1_z, d3_z, d4_z, d5_z,
+    zFaceVelLODI(face, vel_CC, di,
                  nux,nuy,nuz,
                  rho_tmp, p, vel, delT, dx);
   }
@@ -1651,21 +1587,7 @@ void   fillFaceVelLODI(CCVariable<Vector>& vel_CC,
 ___________________________________________________________________*/
 void xFaceTempLODI(const Patch::FaceType face,
              CCVariable<double>& temp_CC, 
-             const CCVariable<double>& d1_x, 
-             const CCVariable<double>& d2_x, 
-             const CCVariable<double>& d3_x, 
-             const CCVariable<double>& d4_x, 
-             const CCVariable<double>& d5_x,
-             const CCVariable<double>& d1_y, 
-             const CCVariable<double>& d2_y, 
-             const CCVariable<double>& d3_y, 
-             const CCVariable<double>& d4_y, 
-             const CCVariable<double>& d5_y,
-             const CCVariable<double>& d1_z, 
-             const CCVariable<double>& d2_z, 
-             const CCVariable<double>& d3_z, 
-             const CCVariable<double>& d4_z, 
-             const CCVariable<double>& d5_z,
+             StaticArray<CCVariable<Vector> >& d,
              const CCVariable<double>& e,
              const CCVariable<double>& rho_CC,
              const CCVariable<double>& nux,
@@ -1731,10 +1653,10 @@ void xFaceTempLODI(const Patch::FaceType face,
 
       double vel_sqr = vel[c].length2();
 
-      term1 = 0.5 * d1_x[c] * vel_sqr;
-      term2 = d2_x[c]/(gamma - 1.0) + rho_tmp[c] * vel[c].x() * d3_x[c];
-      term3 = rho_tmp[c] * vel[c].y() * d4_x[c] 
-            + rho_tmp[c] * vel[c].z() * d5_x[c];
+      term1 = 0.5 * d[1][c].x() * vel_sqr;
+      term2 = d[2][c].x()/(gamma - 1.0) + rho_tmp[c] * vel[c].x() * d[3][c].x();
+      term3 = rho_tmp[c] * vel[c].y() * d[4][c].x() 
+            + rho_tmp[c] * vel[c].z() * d[5][c].x();
       term4 = y_conv + z_conv;
       double e_tmp = e[c] - delT * (term1 + term2 + term3 + term4);
 
@@ -1759,11 +1681,11 @@ void xFaceTempLODI(const Patch::FaceType face,
 
      double vel_sqr = vel[c].length2();
 
-     term1 = 0.5 * (d1_x[c] + d1_y[c]) * vel_sqr;
-     term2 =  (d2_x[c] + d2_y[c])/(gamma - 1.0) 
-           +  rho_tmp[c] * vel[c].x() * (d3_x[c] + d4_y[c]);
-     term3 =  rho_tmp[c] * vel[c].y() * (d4_x[c] + d3_y[c]) 
-           +  rho_tmp[c] * vel[c].z() * (d5_x[c] + d5_y[c]);
+     term1 = 0.5 * (d[1][c].x() + d[1][c].y()) * vel_sqr;
+     term2 =  (d[2][c].x() + d[2][c].y())/(gamma - 1.0) 
+           +  rho_tmp[c] * vel[c].x() * (d[3][c].x() + d[4][c].y());
+     term3 =  rho_tmp[c] * vel[c].y() * (d[4][c].x() + d[3][c].y()) 
+           +  rho_tmp[c] * vel[c].z() * (d[5][c].x() + d[5][c].y());
 
      double e_tmp = e[c] - delT * ( term1 + term2 + term3 + z_conv);
 
@@ -1788,11 +1710,11 @@ void xFaceTempLODI(const Patch::FaceType face,
 
     double vel_sqr = vel[c].length2();
 
-    term1 = 0.5 * (d1_x[c] + d1_y[c]) * vel_sqr;
-    term2 =  (d2_x[c] + d2_y[c])/(gamma - 1.0) 
-          +  rho_tmp[c] * vel[c].x() * (d3_x[c] + d4_y[c]);
-    term3 =  rho_tmp[c] * vel[c].y() * (d4_x[c] + d3_y[c]) 
-          +  rho_tmp[c] * vel[c].z() * (d5_x[c] + d5_y[c]);
+    term1 = 0.5 * (d[1][c].x() + d[1][c].y()) * vel_sqr;
+    term2 =  (d[2][c].x() + d[2][c].y())/(gamma - 1.0) 
+          +  rho_tmp[c] * vel[c].x() * (d[3][c].x() + d[4][c].y());
+    term3 =  rho_tmp[c] * vel[c].y() * (d[4][c].x() + d[3][c].y()) 
+          +  rho_tmp[c] * vel[c].z() * (d[5][c].x() + d[5][c].y());
 
     double e_tmp = e[c] - delT * ( term1 + term2 + term3 + z_conv);
 
@@ -1816,11 +1738,11 @@ void xFaceTempLODI(const Patch::FaceType face,
 
     double vel_sqr = vel[c].length2();
 
-    term1 = 0.5 * (d1_x[c] + d1_z[c]) * vel_sqr;
-    term2 =  (d2_x[c] + d2_z[c])/(gamma - 1.0) 
-          +  rho_tmp[c] * vel[c].x() * (d3_x[c] + d4_z[c]);
-    term3 =  rho_tmp[c] * vel[c].y() * (d4_x[c] + d5_z[c]) 
-          +  rho_tmp[c] * vel[c].z() * (d5_x[c] + d3_z[c]);
+    term1 = 0.5 * (d[1][c].x() + d[1][c].z()) * vel_sqr;
+    term2 =  (d[2][c].x() + d[2][c].z())/(gamma - 1.0) 
+          +  rho_tmp[c] * vel[c].x() * (d[3][c].x() + d[4][c].z());
+    term3 =  rho_tmp[c] * vel[c].y() * (d[4][c].x() + d[5][c].z()) 
+          +  rho_tmp[c] * vel[c].z() * (d[5][c].x() + d[3][c].z());
 
     double  e_tmp = e[c] - delT * ( term1 + term2 + term3 + y_conv);
 
@@ -1844,11 +1766,11 @@ void xFaceTempLODI(const Patch::FaceType face,
 
     double vel_sqr = vel[c].length2();
 
-    term1 = 0.5 * (d1_x[c] + d1_z[c]) * vel_sqr;
-    term2 =  (d2_x[c] + d2_z[c])/(gamma - 1.0) 
-          +  rho_tmp[c] * vel[c].x() * (d3_x[c] + d4_z[c]);
-    term3 =  rho_tmp[c] * vel[c].y() * (d4_x[c] + d5_z[c]) 
-          +  rho_tmp[c] * vel[c].z() * (d5_x[c] + d3_z[c]);
+    term1 = 0.5 * (d[1][c].x() + d[1][c].z()) * vel_sqr;
+    term2 =  (d[2][c].x() + d[2][c].z())/(gamma - 1.0) 
+          +  rho_tmp[c] * vel[c].x() * (d[3][c].x() + d[4][c].z());
+    term3 =  rho_tmp[c] * vel[c].y() * (d[4][c].x() + d[5][c].z()) 
+          +  rho_tmp[c] * vel[c].z() * (d[5][c].x() + d[3][c].z());
 
     double e_tmp = e[c] - delT * ( term1 + term2 + term3 + y_conv);
 
@@ -1866,11 +1788,11 @@ void xFaceTempLODI(const Patch::FaceType face,
      IntVector c = crn[corner];
      double vel_sqr = vel[c].length2();
 
-     term1 = 0.5 * (d1_x[c] + d1_y[c] + d1_z[c]) * vel_sqr;
-     term2 =       (d2_x[c] + d2_y[c] + d2_z[c])/(gamma - 1.0) 
-           +  rho_tmp[c] * vel[c].x() * (d3_x[c] + d4_y[c] + d4_z[c]);
-     term3 =  rho_tmp[c] * vel[c].y() * (d4_x[c] + d3_y[c] + d5_z[c]) 
-           +  rho_tmp[c] * vel[c].z() * (d5_x[c] + d5_y[c] + d3_z[c]);
+     term1 = 0.5 * (d[1][c].x() + d[1][c].y() + d[1][c].z()) * vel_sqr;
+     term2 =       (d[2][c].x() + d[2][c].y() + d[2][c].z())/(gamma - 1.0) 
+           +  rho_tmp[c] * vel[c].x() * (d[3][c].x() + d[4][c].y() + d[4][c].z());
+     term3 =  rho_tmp[c] * vel[c].y() * (d[4][c].x() + d[3][c].y() + d[5][c].z()) 
+           +  rho_tmp[c] * vel[c].z() * (d[5][c].x() + d[5][c].y() + d[3][c].z());
 
      double e_tmp = e[c] - delT * ( term1 + term2 + term3);
 
@@ -1885,21 +1807,7 @@ void xFaceTempLODI(const Patch::FaceType face,
 ___________________________________________________________________*/
 void yFaceTempLODI(const Patch::FaceType face,
              CCVariable<double>& temp_CC, 
-             const CCVariable<double>& d1_x, 
-             const CCVariable<double>& d2_x, 
-             const CCVariable<double>& d3_x, 
-             const CCVariable<double>& d4_x, 
-             const CCVariable<double>& d5_x,
-             const CCVariable<double>& d1_y, 
-             const CCVariable<double>& d2_y, 
-             const CCVariable<double>& d3_y, 
-             const CCVariable<double>& d4_y, 
-             const CCVariable<double>& d5_y,
-             const CCVariable<double>& d1_z, 
-             const CCVariable<double>& d2_z, 
-             const CCVariable<double>& d3_z, 
-             const CCVariable<double>& d4_z, 
-             const CCVariable<double>& d5_z,
+             StaticArray<CCVariable<Vector> >& d,
              const CCVariable<double>& e,
              const CCVariable<double>& rho_CC,
              const CCVariable<double>& nux,
@@ -1966,10 +1874,10 @@ void yFaceTempLODI(const Patch::FaceType face,
 
       double vel_sqr = vel[c].length2();
 
-      term1 = 0.5 * d1_y[c] * vel_sqr;
-      term2 = d2_y[c]/(gamma - 1.0) + rho_tmp[c] * vel[c].x() * d4_y[c];
-      term3 = rho_tmp[c] * vel[c].y() * d3_y[c] 
-            + rho_tmp[c] * vel[c].z() * d5_y[c];
+      term1 = 0.5 * d[1][c].y() * vel_sqr;
+      term2 = d[2][c].y()/(gamma - 1.0) + rho_tmp[c] * vel[c].x() * d[4][c].y();
+      term3 = rho_tmp[c] * vel[c].y() * d[3][c].y() 
+            + rho_tmp[c] * vel[c].z() * d[5][c].y();
       term4 = x_conv + z_conv;
       double e_tmp = e[c] - delT * (term1 + term2 + term3 + term4);
 
@@ -1996,11 +1904,11 @@ void yFaceTempLODI(const Patch::FaceType face,
 
     double vel_sqr = vel[c].length2();
 
-    term1 = 0.5 * (d1_x[c] + d1_y[c]) * vel_sqr;
-    term2 =  (d2_x[c] + d2_y[c])/(gamma - 1.0) 
-          +  rho_tmp[c] * vel[c].x() * (d3_x[c] + d4_y[c]);
-    term3 =  rho_tmp[c] * vel[c].y() * (d4_x[c] + d3_y[c]) 
-          +  rho_tmp[c] * vel[c].z() * (d5_x[c] + d5_y[c]);
+    term1 = 0.5 * (d[1][c].x() + d[1][c].y()) * vel_sqr;
+    term2 =  (d[2][c].x() + d[2][c].y())/(gamma - 1.0) 
+          +  rho_tmp[c] * vel[c].x() * (d[3][c].x() + d[4][c].y());
+    term3 =  rho_tmp[c] * vel[c].y() * (d[4][c].x() + d[3][c].y()) 
+          +  rho_tmp[c] * vel[c].z() * (d[5][c].x() + d[5][c].y());
 
     double e_tmp = e[c] - delT * ( term1 + term2 + term3 + z_conv);
 
@@ -2025,11 +1933,11 @@ void yFaceTempLODI(const Patch::FaceType face,
 
     double vel_sqr = vel[c].length2();
 
-    term1 = 0.5 * (d1_x[c] + d1_y[c]) * vel_sqr;
-    term2 =  (d2_x[c] + d2_y[c])/(gamma - 1.0) 
-          +  rho_tmp[c] * vel[c].x() * (d3_x[c] + d4_y[c]);
-    term3 =  rho_tmp[c] * vel[c].y() * (d4_x[c] + d3_y[c]) 
-          +  rho_tmp[c] * vel[c].z() * (d5_x[c] + d5_y[c]);
+    term1 = 0.5 * (d[1][c].x() + d[1][c].y()) * vel_sqr;
+    term2 =  (d[2][c].x() + d[2][c].y())/(gamma - 1.0) 
+          +  rho_tmp[c] * vel[c].x() * (d[3][c].x() + d[4][c].y());
+    term3 =  rho_tmp[c] * vel[c].y() * (d[4][c].x() + d[3][c].y()) 
+          +  rho_tmp[c] * vel[c].z() * (d[5][c].x() + d[5][c].y());
 
     double e_tmp = e[c] - delT * ( term1 + term2 + term3 + z_conv);
 
@@ -2055,11 +1963,11 @@ void yFaceTempLODI(const Patch::FaceType face,
 
     double vel_sqr = vel[c].length2();
 
-    term1 = 0.5 * (d1_y[c] + d1_z[c]) * vel_sqr;
-    term2 =  (d2_y[c] + d2_z[c])/(gamma - 1.0) 
-          +  rho_tmp[c] * vel[c].x() * (d4_y[c] + d4_z[c]);
-    term3 =  rho_tmp[c] * vel[c].y() * (d3_y[c] + d5_z[c]) 
-          +  rho_tmp[c] * vel[c].z() * (d5_y[c] + d3_z[c]);
+    term1 = 0.5 * (d[1][c].y() + d[1][c].z()) * vel_sqr;
+    term2 =  (d[2][c].y() + d[2][c].z())/(gamma - 1.0) 
+          +  rho_tmp[c] * vel[c].x() * (d[4][c].y() + d[4][c].z());
+    term3 =  rho_tmp[c] * vel[c].y() * (d[3][c].y() + d[5][c].z()) 
+          +  rho_tmp[c] * vel[c].z() * (d[5][c].y() + d[3][c].z());
 
     double e_tmp = e[c] - delT * ( term1 + term2 + term3 + x_conv);
 
@@ -2084,11 +1992,11 @@ void yFaceTempLODI(const Patch::FaceType face,
 
     double vel_sqr = vel[c].length2();
 
-    term1 = 0.5 * (d1_y[c] + d1_z[c]) * vel_sqr;
-    term2 =  (d2_y[c] + d2_z[c])/(gamma - 1.0) 
-          +  rho_tmp[c] * vel[c].x() * (d4_y[c] + d4_z[c]);
-    term3 =  rho_tmp[c] * vel[c].y() * (d3_y[c] + d5_z[c]) 
-          +  rho_tmp[c] * vel[c].z() * (d5_y[c] + d3_z[c]);
+    term1 = 0.5 * (d[1][c].y() + d[1][c].z()) * vel_sqr;
+    term2 =  (d[2][c].y() + d[2][c].z())/(gamma - 1.0) 
+          +  rho_tmp[c] * vel[c].x() * (d[4][c].y() + d[4][c].z());
+    term3 =  rho_tmp[c] * vel[c].y() * (d[3][c].y() + d[5][c].z()) 
+          +  rho_tmp[c] * vel[c].z() * (d[5][c].y() + d[3][c].z());
 
     double e_tmp = e[c] - delT * ( term1 + term2 + term3 + x_conv);
 
@@ -2107,11 +2015,11 @@ void yFaceTempLODI(const Patch::FaceType face,
      IntVector c = crn[corner];
      double vel_sqr = vel[c].length2();
 
-     term1 = 0.5 * (d1_x[c] + d1_y[c] + d1_z[c]) * vel_sqr;
-     term2 =       (d2_x[c] + d2_y[c] + d2_z[c])/(gamma - 1.0) 
-           +  rho_tmp[c] * vel[c].x() * (d3_x[c] + d4_y[c] + d4_z[c]);
-     term3 =  rho_tmp[c] * vel[c].y() * (d4_x[c] + d3_y[c] + d5_z[c]) 
-           +  rho_tmp[c] * vel[c].z() * (d5_x[c] + d5_y[c] + d3_z[c]);
+     term1 = 0.5 * (d[1][c].x() + d[1][c].y() + d[1][c].z()) * vel_sqr;
+     term2 =       (d[2][c].x() + d[2][c].y() + d[2][c].z())/(gamma - 1.0) 
+           +  rho_tmp[c] * vel[c].x() * (d[3][c].x() + d[4][c].y() + d[4][c].z());
+     term3 =  rho_tmp[c] * vel[c].y() * (d[4][c].x() + d[3][c].y() + d[5][c].z()) 
+           +  rho_tmp[c] * vel[c].z() * (d[5][c].x() + d[5][c].y() + d[3][c].z());
 
      double e_tmp = e[c] - delT * ( term1 + term2 + term3);
 
@@ -2125,21 +2033,7 @@ void yFaceTempLODI(const Patch::FaceType face,
 ___________________________________________________________________*/
 void zFaceTempLODI(const Patch::FaceType face,
              CCVariable<double>& temp_CC, 
-             const CCVariable<double>& d1_x, 
-             const CCVariable<double>& d2_x, 
-             const CCVariable<double>& d3_x, 
-             const CCVariable<double>& d4_x, 
-             const CCVariable<double>& d5_x,
-             const CCVariable<double>& d1_y, 
-             const CCVariable<double>& d2_y, 
-             const CCVariable<double>& d3_y, 
-             const CCVariable<double>& d4_y, 
-             const CCVariable<double>& d5_y,
-             const CCVariable<double>& d1_z, 
-             const CCVariable<double>& d2_z, 
-             const CCVariable<double>& d3_z, 
-             const CCVariable<double>& d4_z, 
-             const CCVariable<double>& d5_z,
+             StaticArray<CCVariable<Vector> >& d,
              const CCVariable<double>& e,
              const CCVariable<double>& rho_CC,
              const CCVariable<double>& nux,
@@ -2206,11 +2100,11 @@ void zFaceTempLODI(const Patch::FaceType face,
 
       double vel_sqr = vel[c].length2();
 
-      term1 = 0.5 * d1_z[c] * vel_sqr;
-      term2 = d2_z[c] / (gamma - 1.0) 
-            + rho_tmp[c] * vel[c].x() * d4_z[c];
-      term3 = rho_tmp[c] * vel[c].y() * d5_z[c]  
-            + rho_tmp[c] * vel[c].z() * d3_z[c];
+      term1 = 0.5 * d[1][c].z() * vel_sqr;
+      term2 = d[2][c].z() / (gamma - 1.0) 
+            + rho_tmp[c] * vel[c].x() * d[4][c].z();
+      term3 = rho_tmp[c] * vel[c].y() * d[5][c].z()  
+            + rho_tmp[c] * vel[c].z() * d[3][c].z();
       term4 = x_conv + y_conv;
       double e_tmp = e[c] - delT * (term1 + term2 + term3 + term4);
 
@@ -2236,11 +2130,11 @@ void zFaceTempLODI(const Patch::FaceType face,
 
     double vel_sqr = vel[c].length2();
 
-    term1 = 0.5 * (d1_x[c] + d1_z[c]) * vel_sqr;
-    term2 =       (d2_x[c] + d2_z[c])/(gamma - 1.0) 
-          +  rho_tmp[c] * vel[c].x() * (d3_x[c] + d4_z[c]);
-    term3 =  rho_tmp[c] * vel[c].y() * (d4_x[c] + d5_z[c]) 
-          +  rho_tmp[c] * vel[c].z() * (d5_x[c] + d3_z[c]);
+    term1 = 0.5 * (d[1][c].x() + d[1][c].z()) * vel_sqr;
+    term2 =       (d[2][c].x() + d[2][c].z())/(gamma - 1.0) 
+          +  rho_tmp[c] * vel[c].x() * (d[3][c].x() + d[4][c].z());
+    term3 =  rho_tmp[c] * vel[c].y() * (d[4][c].x() + d[5][c].z()) 
+          +  rho_tmp[c] * vel[c].z() * (d[5][c].x() + d[3][c].z());
 
     double e_tmp = e[c] - delT * ( term1 + term2 + term3 + y_conv);
 
@@ -2264,11 +2158,11 @@ void zFaceTempLODI(const Patch::FaceType face,
 
     double vel_sqr = vel[c].length2();
 
-    term1 = 0.5 * (d1_x[c] + d1_z[c]) * vel_sqr;
-    term2 =       (d2_x[c] + d2_z[c])/(gamma - 1.0) 
-          +  rho_tmp[c] * vel[c].x() * (d3_x[c] + d4_z[c]);
-    term3 =  rho_tmp[c] * vel[c].y() * (d4_x[c] + d5_z[c]) 
-          +  rho_tmp[c] * vel[c].z() * (d5_x[c] + d3_z[c]);
+    term1 = 0.5 * (d[1][c].x() + d[1][c].z()) * vel_sqr;
+    term2 =       (d[2][c].x() + d[2][c].z())/(gamma - 1.0) 
+          +  rho_tmp[c] * vel[c].x() * (d[3][c].x() + d[4][c].z());
+    term3 =  rho_tmp[c] * vel[c].y() * (d[4][c].x() + d[5][c].z()) 
+          +  rho_tmp[c] * vel[c].z() * (d[5][c].x() + d[3][c].z());
 
     double e_tmp = e[c] - delT * ( term1 + term2 + term3 + y_conv);
 
@@ -2292,11 +2186,11 @@ void zFaceTempLODI(const Patch::FaceType face,
 
     double vel_sqr = vel[c].length2();
 
-    term1 = 0.5 * (d1_y[c] + d1_z[c]) * vel_sqr;
-    term2 =       (d2_y[c] + d2_z[c])/(gamma - 1.0) 
-          +  rho_tmp[c] * vel[c].x() * (d4_y[c] + d4_z[c]);
-    term3 =  rho_tmp[c] * vel[c].y() * (d3_y[c] + d5_z[c]) 
-          +  rho_tmp[c] * vel[c].z() * (d5_y[c] + d3_z[c]);
+    term1 = 0.5 * (d[1][c].y() + d[1][c].z()) * vel_sqr;
+    term2 =       (d[2][c].y() + d[2][c].z())/(gamma - 1.0) 
+          +  rho_tmp[c] * vel[c].x() * (d[4][c].y() + d[4][c].z());
+    term3 =  rho_tmp[c] * vel[c].y() * (d[3][c].y() + d[5][c].z()) 
+          +  rho_tmp[c] * vel[c].z() * (d[5][c].y() + d[3][c].z());
 
     double e_tmp = e[c] - delT * ( term1 + term2 + term3 + x_conv);
 
@@ -2320,11 +2214,11 @@ void zFaceTempLODI(const Patch::FaceType face,
 
     double vel_sqr = vel[c].length2();
 
-    term1 = 0.5 * (d1_y[c] + d1_z[c]) * vel_sqr;
-    term2 =       (d2_y[c] + d2_z[c])/(gamma - 1.0) 
-          +  rho_tmp[c] * vel[c].x() * (d4_y[c] + d4_z[c]);
-    term3 =  rho_tmp[c] * vel[c].y() * (d3_y[c] + d5_z[c]) 
-          +  rho_tmp[c] * vel[c].z() * (d5_y[c] + d3_z[c]);
+    term1 = 0.5 * (d[1][c].y() + d[1][c].z()) * vel_sqr;
+    term2 =       (d[2][c].y() + d[2][c].z())/(gamma - 1.0) 
+          +  rho_tmp[c] * vel[c].x() * (d[4][c].y() + d[4][c].z());
+    term3 =  rho_tmp[c] * vel[c].y() * (d[3][c].y() + d[5][c].z()) 
+          +  rho_tmp[c] * vel[c].z() * (d[5][c].y() + d[3][c].z());
 
     double e_tmp = e[c] - delT * ( term1 + term2 + term3 + x_conv);
 
@@ -2343,11 +2237,11 @@ void zFaceTempLODI(const Patch::FaceType face,
     IntVector c = crn[corner];
     double vel_sqr = vel[c].length2();
 
-    term1 = 0.5 * (d1_x[c] + d1_y[c] + d1_z[c]) * vel_sqr;
-    term2 =       (d2_x[c] + d2_y[c] + d2_z[c])/(gamma - 1.0) 
-          +  rho_tmp[c] * vel[c].x() * (d3_x[c] + d4_y[c] + d4_z[c]);
-    term3 =  rho_tmp[c] * vel[c].y() * (d4_x[c] + d3_y[c] + d5_z[c]) 
-          +  rho_tmp[c] * vel[c].z() * (d5_x[c] + d5_y[c] + d3_z[c]);
+    term1 = 0.5 * (d[1][c].x() + d[1][c].y() + d[1][c].z()) * vel_sqr;
+    term2 =       (d[2][c].x() + d[2][c].y() + d[2][c].z())/(gamma - 1.0) 
+          +  rho_tmp[c] * vel[c].x() * (d[3][c].x() + d[4][c].y() + d[4][c].z());
+    term3 =  rho_tmp[c] * vel[c].y() * (d[4][c].x() + d[3][c].y() + d[5][c].z()) 
+          +  rho_tmp[c] * vel[c].z() * (d[5][c].x() + d[5][c].y() + d[3][c].z());
 
     double e_tmp = e[c] - delT * ( term1 + term2 + term3);
 
@@ -2359,21 +2253,7 @@ void zFaceTempLODI(const Patch::FaceType face,
  Function~ fillFaceTempLODI--
 ___________________________________________________________________*/
 void fillFaceTempLODI(CCVariable<double>& temp_CC, 
-              const CCVariable<double>& d1_x, 
-              const CCVariable<double>& d2_x, 
-              const CCVariable<double>& d3_x, 
-              const CCVariable<double>& d4_x, 
-              const CCVariable<double>& d5_x,
-              const CCVariable<double>& d1_y, 
-              const CCVariable<double>& d2_y, 
-              const CCVariable<double>& d3_y, 
-              const CCVariable<double>& d4_y, 
-              const CCVariable<double>& d5_y,
-              const CCVariable<double>& d1_z, 
-              const CCVariable<double>& d2_z, 
-              const CCVariable<double>& d3_z, 
-              const CCVariable<double>& d4_z, 
-              const CCVariable<double>& d5_z,
+              StaticArray<CCVariable<Vector> >& di,
               const CCVariable<double>& e,
               const CCVariable<double>& rho_CC,
               const CCVariable<double>& nux,
@@ -2390,30 +2270,21 @@ void fillFaceTempLODI(CCVariable<double>& temp_CC,
 
 {
   if (face == Patch::xplus || face == Patch::xminus){
-    xFaceTempLODI(face, temp_CC,
-                  d1_x, d2_x, d3_x, d4_x, d5_x,
-                  d1_y, d2_y, d3_y, d4_y, d5_y,
-                  d1_z, d2_z, d3_z, d4_z, d5_z,
+    xFaceTempLODI(face, temp_CC, di,
                   e, rho_CC,
                   nux,nuy,nuz,
                   rho_tmp, p, vel, 
                   delT, cv, gamma, dx);
   }
   if (face == Patch::yplus || face == Patch::yminus){
-    yFaceTempLODI(face, temp_CC,
-                  d1_x, d2_x, d3_x, d4_x, d5_x,
-                  d1_y, d2_y, d3_y, d4_y, d5_y,
-                  d1_z, d2_z, d3_z, d4_z, d5_z,
+    yFaceTempLODI(face, temp_CC, di,
                   e, rho_CC,
                   nux,nuy,nuz,
                   rho_tmp, p, vel, 
                   delT, cv, gamma, dx);
   }
   if (face == Patch::zplus || face == Patch::zminus){
-    zFaceTempLODI(face, temp_CC,
-                  d1_x, d2_x, d3_x, d4_x, d5_x,
-                  d1_y, d2_y, d3_y, d4_y, d5_y,
-                  d1_z, d2_z, d3_z, d4_z, d5_z,
+    zFaceTempLODI(face, temp_CC, di,
                   e, rho_CC,
                   nux,nuy,nuz,
                   rho_tmp, p, vel, 
@@ -2431,7 +2302,8 @@ void fillFacePress_LODI(CCVariable<double>& press_CC,
                         const int numALLMatls,
                         SimulationStateP& sharedState, 
                         Patch::FaceType face)
-{ 
+{
+    cout_doing << " I am in fillFacePress_LODI on face " <<face<< endl;         
     IntVector low,hi;
     low = press_CC.getLowIndex();
     hi = press_CC.getHighIndex();
