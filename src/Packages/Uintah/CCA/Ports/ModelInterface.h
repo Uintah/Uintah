@@ -61,7 +61,9 @@ WARNING
 	      const VarLabel* velocity,
 	      const VarLabel* temperature, 
 	      const VarLabel* pressure,
-	      const VarLabel* specificVol)
+	      const VarLabel* specificVol,
+             const VarLabel* specific_heat,
+             const VarLabel* gamma)
       : delT_Label(delt), 
         mass_source_CCLabel(mass_source),
         momentum_source_CCLabel(momentum_source),
@@ -71,7 +73,9 @@ WARNING
         velocity_CCLabel(velocity),
         temperature_CCLabel(temperature), 
         pressure_CCLabel(pressure),
-        sp_vol_CCLabel(specificVol)
+        sp_vol_CCLabel(specificVol),
+        specific_heatLabel(specific_heat),
+        gammaLabel(gamma)
       {
       }
     const VarLabel* delT_Label;
@@ -80,12 +84,13 @@ WARNING
     const VarLabel* momentum_source_CCLabel;
     const VarLabel* energy_source_CCLabel;
     const VarLabel* sp_vol_source_CCLabel;
-
     const VarLabel* density_CCLabel;
     const VarLabel* velocity_CCLabel;
     const VarLabel* temperature_CCLabel;
     const VarLabel* pressure_CCLabel;
     const VarLabel* sp_vol_CCLabel;
+    const VarLabel* specific_heatLabel;
+    const VarLabel* gammaLabel;
   private:
     ModelInfo(const ModelInfo&);
     ModelInfo& operator=(const ModelInfo&);
