@@ -21,6 +21,8 @@
 #include <Datatypes/SurfacePort.h>
 #include <Geometry/Point.h>
 #include <Malloc/Allocator.h>
+#include <Multitask/ITC.h>
+#include <Multitask/Task.h>
 
 class BuildFEMatrix : public Module {
     MeshIPort* inmesh;
@@ -30,13 +32,48 @@ class BuildFEMatrix : public Module {
 			    const MeshHandle&);
     void add_lcl_gbl(Matrix&, double lcl[4][4],
 		     ColumnMatrix&, int, const MeshHandle&);
+    void add_lcl_gbl(Matrix&, double lcl[4][4],
+		     ColumnMatrix&, int, const MeshHandle&,
+		     int s, int e);
+    int np;
+    Barrier barrier;
+    Semaphore sema;
+    Mutex io;
+    int* rows;
+    Array1<int> colidx;
+    int* allcols;
+    Mesh* mesh;
+    SymSparseRowMatrix* gbl_matrix;
+    ColumnMatrix* rhs;
 public:
+    void parallel(int);
     BuildFEMatrix(const clString& id);
     BuildFEMatrix(const BuildFEMatrix&, int deep);
     virtual ~BuildFEMatrix();
     virtual Module* clone(int deep);
     virtual void execute();
 };
+
+class BuildFEMatrixHelper : public Task{
+    int proc;
+    BuildFEMatrix* module;
+public:
+    BuildFEMatrixHelper(BuildFEMatrix* module, int proc);
+    virtual int body(int);
+};
+
+BuildFEMatrixHelper::BuildFEMatrixHelper(BuildFEMatrix* module, int proc)
+: Task("BuildFEMatrixHelper", 1, DEFAULT_PRIORITY), module(module), proc(proc)
+{
+}
+
+int BuildFEMatrixHelper::body(int)
+{
+    while(1){
+	module->parallel(proc);
+    }
+}
+    
 
 extern "C" {
 Module* make_BuildFEMatrix(const clString& id)
@@ -45,8 +82,10 @@ Module* make_BuildFEMatrix(const clString& id)
 }
 };
 
+
+
 BuildFEMatrix::BuildFEMatrix(const clString& id)
-: Module("BuildFEMatrix", id, Filter)
+: Module("BuildFEMatrix", id, Filter), sema(0)
 {
     // Create the input port
     inmesh = scinew MeshIPort(this, "Mesh", MeshIPort::Atomic);
@@ -60,10 +99,18 @@ BuildFEMatrix::BuildFEMatrix(const clString& id)
 
     // Ask Dave about why this was different originally
     // i.e. it was add_iport(scinew MeshIPort(this,"Geometry",...));
+
+    // Start up parallel threads...
+    np=Task::nprocessors();
+    cerr << "BuildFEMatrix will use " << np << " processors\n";
+    for(int i=0;i<np;i++){
+	Task* t=new BuildFEMatrixHelper(this, i);
+	t->activate(0);
+    }
 }
 
 BuildFEMatrix::BuildFEMatrix(const BuildFEMatrix& copy, int deep)
-: Module(copy, deep)
+: Module(copy, deep), sema(0)
 {
     NOT_FINISHED("BuildFEMatrix::BuildFEMatrix");
 }
@@ -77,20 +124,109 @@ Module* BuildFEMatrix::clone(int deep)
     return scinew BuildFEMatrix(*this, deep);
 }
 
+void BuildFEMatrix::parallel(int proc)
+{
+    sema.down();
+    int nnodes=mesh->nodes.size();
+    int start_node=nnodes*proc/np;
+    int end_node=nnodes*(proc+1)/np;
+    int ndof=end_node-start_node;
+
+    int r=start_node;
+    int i;
+    Array1<int> mycols(0, 15*ndof);
+    for(i=start_node;i<end_node;i++){
+	rows[r++]=mycols.size();
+	if(mesh->nodes[i]->bc){
+	    mycols.add(i); // Just a diagonal term
+	} else {
+	    mesh->add_node_neighbors(i, mycols);
+	}
+    }
+    colidx[proc]=mycols.size();
+    barrier.wait(np+1);
+    // The main thread will make the array...
+    barrier.wait(np+1);
+    int s=colidx[proc];
+
+    int n=mycols.size();
+    for(i=0;i<n;i++){
+	allcols[i+s]=mycols[i];
+    }
+    for(i=start_node;i<end_node;i++){
+	rows[i]+=s;
+    }
+    barrier.wait(np+1);
+
+    // The main thread makes the matrix and rhs...
+    barrier.wait(np+1);
+//io.lock();
+    double* a=gbl_matrix->a;
+    for(i=start_node;i<end_node;i++){
+	(*rhs)[i]=0;
+    }
+    int ns=colidx[proc];
+    int ne=colidx[proc+1];
+    for(i=ns;i<ne;i++){
+	a[i]=0;
+    }
+    double lcl_matrix[4][4];
+
+    int nelems=mesh->elems.size();
+    for (i=0; i<nelems; i++){
+	Element* e=mesh->elems[i];
+	if((e->n[0] >= start_node && e->n[0] < end_node)
+	   || (e->n[1] >= start_node && e->n[1] < end_node)
+	   || (e->n[2] >= start_node && e->n[2] < end_node)
+	   || (e->n[3] >= start_node && e->n[3] < end_node)){
+	    build_local_matrix(mesh->elems[i],lcl_matrix,mesh);
+	    add_lcl_gbl(*gbl_matrix,lcl_matrix,*rhs,i,mesh, start_node, end_node);
+	}
+    }
+//io.lock();
+//    cerr << "done build, proc=" << proc << endl;
+//io.unlock();
+    for(i=start_node;i<end_node;i++){
+	if(mesh->nodes[i]->bc){
+	    // This is just a dummy entry...
+//	    (*gbl_matrix)[i][i]=1;
+	    int id=rows[i];
+//	    cerr << "id=" << id << endl;
+	    a[id]=1;
+	    (*rhs)[i]=mesh->nodes[i]->bc->value;
+	}
+    }
+//io.lock();
+//    cerr << "done bc, proc=" << proc << endl;
+//io.unlock();
+    barrier.wait(np+1);
+}
+
 void BuildFEMatrix::execute()
 {
      MeshHandle mesh;
      if(!inmesh->get(mesh))
 	  return;
+
+     this->mesh=mesh.get_rep();
+     cerr << "start...\n";
+     int nnodes=mesh->nodes.size();
+     int ndof=nnodes;
+     rows=scinew int[ndof+1];
+     colidx.resize(np+1);
+
+     for(int i=0;i<np;i++)
+	 sema.up();
+#ifdef SERIAL
      int nnodes=mesh->nodes.size();
 
      int ndof=nnodes;
-     Array1<int> rows(ndof+1);
-     Array1<int> cols;
+     rows.resize(ndof+1);
+     colidx.resize(nproc);
      int r=0;
      int i;
      for(i=0;i<nnodes;i++){
-	 if(i%500 == 0)
+	 if(i%2000 == 0)
 	     update_progress(i, 2*nnodes);
 	 rows[r++]=cols.size();
 	 if(mesh->nodes[i]->bc){
@@ -99,9 +235,36 @@ void BuildFEMatrix::execute()
 	     mesh->add_node_neighbors(i, cols);
 	 }
      }
-     rows[r]=cols.size();
-     cerr << "There are " << cols.size() << " non zeros" << endl;
-     Matrix* gbl_matrix=scinew SymSparseRowMatrix(ndof, ndof, rows, cols);
+#endif
+     update_progress(1,6);
+     barrier.wait(np+1);
+
+     cerr << "resize...\n";
+     update_progress(2,6);
+     int s=0;
+     for(i=0;i<np;i++){
+	 int ns=s+colidx[i];
+	 colidx[i]=s;
+	 s=ns;
+     }
+     colidx[np]=s;
+     cerr << "s=" << s << endl;
+     allcols=scinew int[s];
+
+     barrier.wait(np+1);
+     cerr << "collect...\n";
+     update_progress(3,6);
+     barrier.wait(np+1);
+     cerr << "done\n";
+
+     rows[nnodes]=s;
+     update_progress(3,6);
+     cerr << "There are " << s << " non zeros" << endl;
+     gbl_matrix=scinew SymSparseRowMatrix(ndof, ndof, rows, allcols, s);
+     rhs=scinew ColumnMatrix(ndof);
+
+     barrier.wait(np+1);
+#ifdef SERIAL
      gbl_matrix->zero();
      ColumnMatrix* rhs=scinew ColumnMatrix(ndof);
      rhs->zero();
@@ -109,7 +272,7 @@ void BuildFEMatrix::execute()
 
      int nelems=mesh->elems.size();
      for (i=0; i<nelems; i++){
-	 if(i%500 == 0)
+	 if(i%5000 == 0)
 	     update_progress(nelems+i, 2*nelems);
 	 build_local_matrix(mesh->elems[i],lcl_matrix,mesh);
 	 add_lcl_gbl(*gbl_matrix,lcl_matrix,*rhs,i,mesh);
@@ -124,9 +287,13 @@ void BuildFEMatrix::execute()
 	 }
      }
      cerr << "There are " << nbc << " nodes with boundary conditions" << endl;
+#endif
+     barrier.wait(np+1);
+     cerr << "all done\n";
 
      outmatrix->send(MatrixHandle(gbl_matrix));
      rhsoport->send(ColumnMatrixHandle(rhs));
+     this->mesh=0;
 }
 
 void BuildFEMatrix::build_local_matrix(Element *elem, 
@@ -136,6 +303,13 @@ void BuildFEMatrix::build_local_matrix(Element *elem,
     Point pt;
     Vector grad1,grad2,grad3,grad4;
     double vol = mesh->get_grad(elem,pt,grad1,grad2,grad3,grad4);
+    if(vol < 1.e-10){
+	cerr << "Skipping element..., volume=" << vol << endl;
+	for(int i=0;i<4;i++)
+	    for(int j=0;j<4;j++)
+		lcl_a[i][j]=0;
+	return;
+    }
     
 
     double el_coefs[4][3];
@@ -219,6 +393,36 @@ void BuildFEMatrix::add_lcl_gbl(Matrix& gbl_a, double lcl_a[4][4],
 		  } else {
 		      // Eventually look at nodetype...
 		      rhs[ii]-=n2->bc->value*lcl_a[i][j];
+		  }
+	      }
+	  }
+     }
+}
+
+void BuildFEMatrix::add_lcl_gbl(Matrix& gbl_a, double lcl_a[4][4],
+				ColumnMatrix& rhs,
+				int el, const MeshHandle& mesh,
+				int s, int e)
+{
+
+     for (int i=0; i<4; i++) // this four should eventually be a
+	  // variable ascociated with each element that indicates 
+	  // how many nodes are on that element. it will change with 
+	  // higher order elements
+     {	  
+	  int ii = mesh->elems[el]->n[i];
+	  if(ii >= s && ii < e){
+	      NodeHandle& n1=mesh->nodes[ii];
+	      if(!n1->bc){
+		  for (int j=0; j<4; j++) {
+		      int jj = mesh->elems[el]->n[j];
+		      NodeHandle& n2=mesh->nodes[jj];
+		      if(!n2->bc){
+			  gbl_a[ii][jj] += lcl_a[i][j];
+		      } else {
+			  // Eventually look at nodetype...
+			  rhs[ii]-=n2->bc->value*lcl_a[i][j];
+		      }
 		  }
 	      }
 	  }

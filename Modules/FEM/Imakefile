@@ -7,7 +7,7 @@ SRCS = ApplyBC.cc BuildFEMatrix.cc
 LIBNAME = FEM
 
 SO_LIBS =
-SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lClasslib \
+SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lGeom -lClasslib \
 	-lMultitask -lMalloc
 
 SCIDependTarget($(SRCS))
