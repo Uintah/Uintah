@@ -60,9 +60,9 @@ WARNING
       // Only affects grid variables
       void offsetGrid(const IntVector& /*offset*/);
  
-      virtual void emitNormal(ostream& out, const IntVector& l,
+      virtual void emitNormal(std::ostream& out, const IntVector& l,
 			      const IntVector& h, ProblemSpecP varnode, bool outputDoubleAsFloat );
-      virtual void readNormal(istream& in, bool swapbytes);      
+      virtual void readNormal(std::istream& in, bool swapbytes);      
       virtual void allocate(const Patch* patch, const IntVector& boundary);
 
    protected:

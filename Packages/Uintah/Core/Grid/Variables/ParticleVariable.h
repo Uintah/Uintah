@@ -22,13 +22,15 @@
 #include <Packages/Uintah/Core/IO/SpecializedRunLengthEncoder.h>
 
 #include <unistd.h>
+#include <sgi_stl_warnings_off.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 using std::cout;
 using std::endl;
 namespace Uintah {
 
-using namespace SCIRun;
+  using SCIRun::InternalError;
 
   class ProcessorGroup;
 class TypeDescription;
@@ -116,7 +118,7 @@ public:
   virtual void copyPointer(ParticleVariable<T>&);
   virtual void copyPointer(Variable&);
   virtual void allocate(ParticleSubset*);
-  virtual void allocate(const Patch*, const IntVector& boundary)
+  virtual void allocate(const Patch*, const IntVector& /*boundary*/)
   { SCI_THROW(InternalError("Should not call ParticleVariable<T>::allocate(const Patch*), use allocate(ParticleSubset*) instead.")); }
 
   // specialized for T=Point
@@ -154,9 +156,9 @@ public:
   virtual RefCounted* getRefCounted() {
     return d_pdata;
   }
-  virtual void getSizeInfo(string& elems, unsigned long& totsize,
+  virtual void getSizeInfo(std::string& elems, unsigned long& totsize,
 			   void*& ptr) const {
-    ostringstream str;
+    std::ostringstream str;
     str << getParticleSet()->numParticles();
     elems=str.str();
     totsize = getParticleSet()->numParticles()*sizeof(T);
@@ -514,7 +516,7 @@ template<class T>
     }
     else {
       // emit in runlength encoded format
-      RunLengthEncoder<T> rle;
+      SCIRun::RunLengthEncoder<T> rle;
       ParticleSubset::iterator iter = d_pset->begin();
       for ( ; iter != d_pset->end(); iter++)
 	rle.addItem((*this)[*iter]);
@@ -562,10 +564,10 @@ template<class T>
       SCI_THROW(InternalError("Cannot yet read non-flat objects!\n"));
     }
     else {
-      RunLengthEncoder<T> rle;
+      SCIRun::RunLengthEncoder<T> rle;
       rle.read(in, swapBytes, nByteMode);
       ParticleSubset::iterator iter = d_pset->begin();
-      typename RunLengthEncoder<T>::iterator rle_iter = rle.begin();
+      typename SCIRun::RunLengthEncoder<T>::iterator rle_iter = rle.begin();
       for ( ; iter != d_pset->end() && rle_iter != rle.end();
 	    iter++, rle_iter++)
 	(*this)[*iter] = *rle_iter;

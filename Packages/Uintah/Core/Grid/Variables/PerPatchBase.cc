@@ -4,6 +4,7 @@
 
 using namespace Uintah;
 using namespace SCIRun;
+using namespace std;
 
 PerPatchBase::~PerPatchBase()
 {
@@ -25,23 +26,23 @@ const Uintah::TypeDescription* PerPatchBase::virtualGetTypeDescription() const
   SCI_THROW(InternalError("virtualGetTypeDescription not implemented for PerPatch"));
 }
 
-void PerPatchBase::offsetGrid(const IntVector& /*offset*/)
+void PerPatchBase::offsetGrid(const IntVector&)
 {
 }
 
-void PerPatchBase::emitNormal(ostream& out, const IntVector& l,
-   			      const IntVector& h, ProblemSpecP varnode, bool outputDoubleAsFloat )
+void PerPatchBase::emitNormal(ostream&, const IntVector&,
+                              const IntVector&, ProblemSpecP, bool)
 {
   SCI_THROW(InternalError("emitNormal not implemented for PerPatch"));
 
 }
-void PerPatchBase::readNormal(istream& in, bool swapbytes)
+void PerPatchBase::readNormal(istream&, bool)
 {
   SCI_THROW(InternalError("readNormal not implemented for PerPatch"));
 
 }
 
-void PerPatchBase::allocate(const Patch* patch, const IntVector& boundary)
+void PerPatchBase::allocate(const Patch*, const IntVector&)
 {
   SCI_THROW(InternalError("Should not call allocate for PerPatch"));
 

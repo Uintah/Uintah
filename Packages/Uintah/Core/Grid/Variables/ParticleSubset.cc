@@ -6,10 +6,14 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/ProgressiveWarning.h>
+
+#include <sgi_stl_warnings_off.h>
 #include <algorithm>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
 
 using namespace Uintah;
+using namespace SCIRun;
 using namespace std;
 
 ParticleSubset::~ParticleSubset()
@@ -66,7 +70,7 @@ ParticleSubset::ParticleSubset(ParticleSet* pset, bool fill,
 ParticleSubset::ParticleSubset(ParticleSet* pset, bool fill,
                                int matlIndex, const Patch* patch,
                                Ghost::GhostType gt, int numgc,
-                               particleIndex sizeHint)
+                               particleIndex /*sizeHint*/)
   : d_pset(pset), d_matlIndex(matlIndex), d_patch(patch),
     d_gtype(gt), d_numGhostCells(numgc)
 {

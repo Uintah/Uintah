@@ -32,8 +32,6 @@ namespace SCIRun {
 
 namespace Uintah {
 
-using namespace std;
-
 /**************************************
 
 CLASS
@@ -79,18 +77,18 @@ WARNING
     virtual ReductionVariableBase* clone() const;
     virtual void copyPointer(Variable&);
     virtual void reduce(const ReductionVariableBase&);
-    virtual void print(ostream& out)
+    virtual void print(std::ostream& out)
     { out << value; }
-    virtual void emitNormal(ostream& out, const IntVector& /*l*/,
+    virtual void emitNormal(std::ostream& out, const IntVector& /*l*/,
 			    const IntVector& /*h*/, ProblemSpecP /*varnode*/, bool /*outputDoubleAsFloat*/)
     { out.write((char*)&value, sizeof(double)); }
-    virtual void readNormal(istream& in, bool swapBytes)
+    virtual void readNormal(std::istream& in, bool swapBytes)
     {
       in.read((char*)&value, sizeof(double));
-      if (swapBytes) swapbytes(value);
+      if (swapBytes) SCIRun::swapbytes(value);
     }
      
-    virtual void allocate(const Patch*, const IntVector& boundary)
+    virtual void allocate(const Patch*, const IntVector& /*boundary*/)
     {
       SCI_THROW(SCIRun::InternalError("Should not call ReductionVariable<T, Op>"
                                       "::allocate(const Patch*)")); 
@@ -98,8 +96,8 @@ WARNING
 
     virtual const TypeDescription* virtualGetTypeDescription() const;
     virtual void getMPIInfo(int& count, MPI_Datatype& datatype, MPI_Op& op);
-    virtual void getMPIData(vector<char>& buf, int& index);
-    virtual void putMPIData(vector<char>& buf, int& index);
+    virtual void getMPIData(std::vector<char>& buf, int& index);
+    virtual void putMPIData(std::vector<char>& buf, int& index);
     virtual void getSizeInfo(string& elems, unsigned long& totsize,
 			     void*& ptr) const {
       elems="1";

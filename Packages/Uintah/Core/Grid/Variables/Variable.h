@@ -14,8 +14,6 @@ namespace SCIRun {
 
 namespace Uintah {
 
-  using namespace std;
-
   class TypeDescription;
   class InputContext;
   class OutputContext;
@@ -68,17 +66,17 @@ public:
   void read(InputContext&, long end, bool swapbytes, int nByteMode,
 	    const string& compressionMode);
 
-  virtual void emitNormal(ostream& out, const IntVector& l,
+  virtual void emitNormal(std::ostream& out, const IntVector& l,
 			  const IntVector& h, ProblemSpecP varnode, bool outputDoubleAsFloat ) = 0;
-  virtual void readNormal(istream& in, bool swapbytes) = 0;
+  virtual void readNormal(std::istream& in, bool swapbytes) = 0;
 
-  virtual bool emitRLE(ostream& /*out*/, const IntVector& l,
+  virtual bool emitRLE(std::ostream& /*out*/, const IntVector& l,
 		       const IntVector& h, ProblemSpecP /*varnode*/);
-  virtual void readRLE(istream& /*in*/, bool swapbytes, int nByteMode);
+  virtual void readRLE(std::istream& /*in*/, bool swapbytes, int nByteMode);
   
   virtual void allocate(const Patch* patch, const IntVector& boundary) = 0;
 
-  virtual void getSizeInfo(string& elems, unsigned long& totsize, void*& ptr) const = 0;
+  virtual void getSizeInfo(std::string& elems, unsigned long& totsize, void*& ptr) const = 0;
 
   virtual void copyPointer(Variable&) = 0;
 
@@ -97,7 +95,7 @@ private:
   // resulting compressed data into the string pointed to by pBuffer.
   // Returns the pointer to whichever one is shortest and erases the
   // other one.
-  string* gzipCompress(string* pUncompressed, string* pBuffer);
+  std::string* gzipCompress(std::string* pUncompressed, std::string* pBuffer);
   bool d_foreign;
 };
 
