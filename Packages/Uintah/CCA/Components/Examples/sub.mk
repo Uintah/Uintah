@@ -17,6 +17,7 @@ SRCS     += \
 	$(SRCDIR)/Interpolator.cc \
 	$(SRCDIR)/ExamplesLabel.cc \
 	$(SRCDIR)/RegridderTest.cc \
+	$(SRCDIR)/SolverTest1.cc \
 	$(SRCDIR)/BoundaryConditions.cc \
 	$(SRCDIR)/RegionDB.cc
 
