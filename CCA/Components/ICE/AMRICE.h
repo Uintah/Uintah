@@ -3,6 +3,7 @@
 
 #include <Packages/Uintah/CCA/Components/ICE/ICE.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
+#include <Packages/Uintah/Core/Grid/PerPatch.h>
 
 namespace Uintah {
   class AMRICE : public ICE{
@@ -24,7 +25,11 @@ namespace Uintah {
                                          
     virtual void scheduleCoarsen(const LevelP& coarseLevel, 
                                  SchedulerP& sched);
-   
+
+
+    virtual void scheduleInitialErrorEstimate(const LevelP& coarseLevel,
+                                              SchedulerP& sched);
+                                               
     virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
                                        SchedulerP& sched);
   protected:
@@ -77,11 +82,35 @@ namespace Uintah {
                  DataWarehouse*, DataWarehouse* new_dw);
                  
     void errorEstimate(const ProcessorGroup*,
-                       const PatchSubset* patches,
-                       const MaterialSubset* matls,
-                       DataWarehouse*, DataWarehouse* new_dw);
+			  const PatchSubset* patches,
+			  const MaterialSubset* matls,
+			  DataWarehouse*,
+			  DataWarehouse* new_dw,
+                       bool initial);
+                       
+    void compute_q_CC_gradient( constCCVariable<double>& q_CC,
+                                CCVariable<Vector>& q_CC_grad,                   
+                                const Patch* patch);
+                               
+    void compute_q_CC_gradient( constCCVariable<Vector>& q_CC,
+                                CCVariable<Vector>& q_CC_grad,                   
+                                const Patch* patch);
+
+    void set_refineFlags( CCVariable<Vector>& q_CC_grad,
+                          double threshold,
+                          CCVariable<int>& refineFlag,
+                          PerPatch<int>& refinePatchFlag,
+                          const Patch* patch);                                                  
     AMRICE(const AMRICE&);
     AMRICE& operator=(const AMRICE&);
+    
+    //__________________________________
+    // refinement criteria threshold knobs
+    double d_rho_threshold;     
+    double d_temp_threshold;    
+    double d_press_threshold;   
+    double d_vol_frac_threshold;
+    double d_vel_threshold;     
   };
 }
 
