@@ -13,8 +13,8 @@
 #include <Packages/Uintah/Core/Exceptions/TypeMismatchException.h>
 #include <Packages/Uintah/Core/Grid/ParticleData.h>
 #include <Packages/Uintah/Core/Grid/ParticleSubset.h>
-#include <Packages/Uintah/Core/Grid/TypeDescription.h>
-#include <Packages/Uintah/Core/Grid/TypeUtils.h>
+#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 
 #include <unistd.h>

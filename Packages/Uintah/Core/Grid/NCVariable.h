@@ -3,11 +3,11 @@
 
 #include <Packages/Uintah/Core/Grid/Array3.h>
 #include <Packages/Uintah/Core/Grid/NCVariableBase.h>
-#include <Packages/Uintah/Core/Grid/TypeDescription.h>
-#include <Packages/Uintah/Core/Grid/TypeUtils.h>
+#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
 #include <Packages/Uintah/CCA/Ports/InputContext.h>
 #include <Packages/Uintah/CCA/Ports/OutputContext.h>
-#include <Packages/Uintah/Core/Grid/TypeUtils.h>
+#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
 #include <Core/Exceptions/ErrnoException.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Geometry/Vector.h>

@@ -4,7 +4,7 @@
 // RunLengthEncoder with speciailizations for basic types, Vector's,
 // and Point's. 
 #include <Core/Geometry/SpecializedRunLengthEncoder.h>
-#include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
+#include <Packages/Uintah/Core/Math/Matrix3.h>
 
 // Specializations of the DefaultRunLengthSequencer, to override the
 // EqualElementSequencer version with the EqualIntervalSequencer
