@@ -27,7 +27,9 @@ SRCS     += \
 	$(SRCDIR)/MeshInterpVals.cc\
 	$(SRCDIR)/MeshRender.cc\
 	$(SRCDIR)/MeshToGeom.cc\
+	$(SRCDIR)/SliceMeshToGeom.cc\
 	$(SRCDIR)/MeshView.cc\
+	$(SRCDIR)/SliceMeshToGeom.cc\
 #[INSERT NEW MODULE HERE]
 
 PSELIBS := PSECore/Dataflow PSECore/Datatypes PSECore/Widgets \
@@ -40,6 +42,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.5  2000/09/07 00:12:19  zyp
+# MakeScalarField.cc
+#
 # Revision 1.4  2000/06/08 22:46:36  moulding
 # Added a comment note about not messing with the module maker comment lines,
 # and how to edit this file by hand.
