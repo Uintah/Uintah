@@ -59,8 +59,8 @@ IsoHardeningPlastic::allocateCMDataAddRequires(Task* task,
 					       const PatchSet* patch,
 					       MPMLabel* lb) const
 {
-  //const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::NewDW,pAlphaLabel_preReloc, Ghost::None);
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->requires(Task::NewDW,pAlphaLabel_preReloc, matlset,Ghost::None);
 }
 
 void IsoHardeningPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
@@ -77,7 +77,7 @@ void IsoHardeningPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
 
   new_dw->allocateTemporary(pAlpha,addset);
 
-  old_dw->get(o_Alpha,pAlphaLabel_preReloc,delset);
+  new_dw->get(o_Alpha,pAlphaLabel_preReloc,delset);
 
   ParticleSubset::iterator o,n = addset->begin();
   for(o = delset->begin(); o != delset->end(); o++, n++) {
@@ -199,6 +199,7 @@ double
 IsoHardeningPlastic::evalDerivativeWRTPlasticStrain(const PlasticityState*,
 						    const particleIndex )
 {
+  return d_CM.K;
   ostringstream desc;
   desc << "IsoHardeningPlastic::evalDerivativeWRTPlasticStrain not yet "
        << "implemented. " << endl;
