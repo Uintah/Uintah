@@ -59,6 +59,7 @@ class Variable;
 	 int_type,
 	 short_int_type,
          long_type,
+         long64_type,
 	 Unknown,
 	 Other
       };
