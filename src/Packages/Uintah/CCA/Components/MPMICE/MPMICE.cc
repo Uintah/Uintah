@@ -25,9 +25,9 @@ using namespace std;
 
 //#define DOING
 #undef DOING
-#define EOSCM
+//#define EOSCM
 //#undef EOSCM
-//#define IDEAL_GAS
+#define IDEAL_GAS
 //#undef IDEAL_GAS
 
 MPMICE::MPMICE(const ProcessorGroup* myworld)
@@ -1354,7 +1354,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         Material* matl = d_sharedState->getMaterial( m );
         ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
         if(ice_matl){                // I C E
-	  rho_micro[m][*iter] = 1.0/sp_vol_CC[m][*iter];
+	   rho_micro[m][*iter] = 1.0/sp_vol_CC[m][*iter];
         }
       }
     }
@@ -1370,7 +1370,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         Material* matl = d_sharedState->getMaterial( m );
         ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
         if(ice_matl){                // I C E
-	  sp_vol_CC[m][*iter] = 1.0/rho_micro[m][*iter];
+	   sp_vol_CC[m][*iter] = 1.0/rho_micro[m][*iter];
         }
       }
     }
@@ -1385,45 +1385,47 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
 
         if(ice_matl){                // I C E
-	  rho_micro[m][*iter] = 1.0/sp_vol_CC[m][*iter];
-	  double gamma   = ice_matl->getGamma(); 
-	  ice_matl->getEOS()->computePressEOS(rho_micro[m][*iter],gamma,
-					      cv[m],Temp[m][*iter],
-					      press_eos[m],dp_drho[m],dp_de[m]);
+	   rho_micro[m][*iter] = 1.0/sp_vol_CC[m][*iter];
+	   double gamma   = ice_matl->getGamma(); 
+	   ice_matl->getEOS()->computePressEOS(rho_micro[m][*iter],gamma,
+					       cv[m],Temp[m][*iter],
+					       press_eos[m],dp_drho[m],dp_de[m]);
 
-	  mat_volume[m] = mass_CC[m][*iter] * sp_vol_CC[m][*iter];
+	   mat_volume[m] = mass_CC[m][*iter] * sp_vol_CC[m][*iter];
 
-	  tmp = dp_drho[m] + dp_de[m] * 
-	    (press_eos[m]/(rho_micro[m][*iter]*rho_micro[m][*iter]));
+	   tmp = dp_drho[m] + dp_de[m] * 
+	     (press_eos[m]/(rho_micro[m][*iter]*rho_micro[m][*iter]));
+
+          speedSound_new[m][*iter] = sqrt(tmp);
         } 
 
         if(mpm_matl){                //  M P M
   #ifdef EOSCM
-	  rho_micro[m][*iter] =  mpm_matl->getConstitutiveModel()->
-	    computeRhoMicroCM(press_new[*iter],mpm_matl);
+	   rho_micro[m][*iter] =  mpm_matl->getConstitutiveModel()->
+	     computeRhoMicroCM(press_new[*iter],mpm_matl);
 
-	  mpm_matl->getConstitutiveModel()->
-	    computePressEOSCM(rho_micro[m][*iter],press_eos[m],dp_drho[m],
+	   mpm_matl->getConstitutiveModel()->
+	     computePressEOSCM(rho_micro[m][*iter],press_eos[m],dp_drho[m],
 			      tmp,mpm_matl);
   #endif
-	  mat_volume[m] = mat_vol[m][*iter];
+	   mat_volume[m] = mat_vol[m][*iter];
 
   //    This is the IDEAL GAS stuff
   #ifdef IDEAL_GAS
-	  double gamma   = mpm_matl->getGamma(); 
-	  rho_micro[m][*iter] = mpm_matl->
-	    getConstitutiveModel()->computeRhoMicro(press_new[*iter],gamma,
-						    cv[m],Temp[m][*iter]); 
-	  mpm_matl->getConstitutiveModel()->
-	    computePressEOS(rho_micro[m][*iter],gamma,cv[m],Temp[m][*iter],
-			    press_eos[m],dp_drho[m], dp_de[m]);
+	   double gamma   = mpm_matl->getGamma();
+	   rho_micro[m][*iter] = mpm_matl->
+	     getConstitutiveModel()->computeRhoMicro(press_new[*iter],gamma,
+	                                        cv[m],Temp[m][*iter]);
+	   mpm_matl->getConstitutiveModel()->
+	     computePressEOS(rho_micro[m][*iter],gamma,cv[m],Temp[m][*iter],
+	                   press_eos[m],dp_drho[m], dp_de[m]);
 
-	  tmp = dp_drho[m] + dp_de[m] * 
-	    (press_eos[m]/(rho_micro[m][*iter]*rho_micro[m][*iter]));
+	   tmp = dp_drho[m] + dp_de[m] *
+	     (press_eos[m]/(rho_micro[m][*iter]*rho_micro[m][*iter]));
+            
+          speedSound_new[m][*iter] = sqrt(tmp);
   #endif
         }              
-        speedSound_new[m][*iter] = sqrt(tmp);
-
         total_mat_vol += mat_volume[m];
        }
 
@@ -1651,8 +1653,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 
     fprintf(stderr,"\tmax number of iterations in any cell %i\n",test_max_iter);
 
-
-  /*`==========TESTING==========*/ 
     //__________________________________
     // Now change how rho_CC is defined to 
     // rho_CC = mass_CC/cell_volume  NOT mass/mat_volume 
@@ -1662,7 +1662,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
          rho_CC[m][*iter]   = mat_mass[m]/cell_vol;
        }
     }
-   /*==========TESTING==========`*/
 
      for (int m = 0; m < numALLMatls; m++)   {
        Material* matl = d_sharedState->getMaterial( m );
