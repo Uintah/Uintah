@@ -31,6 +31,8 @@ itcl_class GenColormap {
 
 	global $this-material
 	initMaterial $this-material
+
+	$this-c setmap Rainbow
     }
 
     method setsize {w h config} {
