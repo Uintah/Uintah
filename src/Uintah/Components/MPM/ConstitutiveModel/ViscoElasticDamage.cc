@@ -44,6 +44,8 @@ using std::ofstream;
 using std::endl;
 using std::string;
 
+#ifdef WONT_COMPILE_YET
+
 ViscoElasticDamage::ViscoElasticDamage()
 {
   // Constructor
@@ -433,3 +435,4 @@ int ViscoElasticDamage::getSize() const
   return(s);
 }
 
+#endif

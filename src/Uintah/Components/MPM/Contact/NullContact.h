@@ -5,6 +5,8 @@
 
 #include "Contact.h"
 
+#ifdef WONT_COMPILE_YET
+
 class NullContact : public Contact {
  private:
 
@@ -31,9 +33,14 @@ class NullContact : public Contact {
 
 };
 
-#endif __NULL_CONTACT_H__
+#endif
+
+#endif /* __NULL_CONTACT_H__ */
 
 // $Log$
+// Revision 1.2  2000/03/20 17:17:12  sparker
+// Made it compile.  There are now several #idef WONT_COMPILE_YET statements.
+//
 // Revision 1.1  2000/03/16 01:05:13  guilkey
 // Initial commit for Contact base class, as well as a NullContact
 // class and SingleVel, a class which reclaims the single velocity

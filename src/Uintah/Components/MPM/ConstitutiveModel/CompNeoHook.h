@@ -20,6 +20,8 @@
 #include <math.h>
 #include "ConstitutiveModel.h"	
 
+#ifdef WONT_COMPILE_YET
+
 class CompNeoHook : public ConstitutiveModel {
  private:
   // data areas
@@ -117,9 +119,14 @@ class CompNeoHook : public ConstitutiveModel {
   virtual int getSize() const;
 };
 
+#endif
+
 #endif  // __NEOHOOK_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.2  2000/03/20 17:17:07  sparker
+// Made it compile.  There are now several #idef WONT_COMPILE_YET statements.
+//
 // Revision 1.1  2000/03/14 22:11:48  jas
 // Initial creation of the constitutive model directory with the legacy
 // constitutive model classes.

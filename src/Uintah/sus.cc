@@ -122,11 +122,15 @@ int main(int argc, char** argv)
 	// Connect a MPM module if applicable
 	if(do_mpm){
 	    MPMInterface* mpm;
+#ifdef WONT_COMPILE_YET
 	    if(numThreads == 0){
 		mpm = new SerialMPM();
 	    } else {
 		mpm = new ThreadedMPM();
 	    }
+#else
+	    mpm = 0;
+#endif
 	    sim->setPort("MPM", mpm);
 	}
 
@@ -168,6 +172,9 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.3  2000/03/20 17:17:03  sparker
+// Made it compile.  There are now several #idef WONT_COMPILE_YET statements.
+//
 // Revision 1.2  2000/03/17 21:01:02  dav
 // namespace mods
 //

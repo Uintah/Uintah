@@ -42,7 +42,7 @@ public:
   void FillWParticles(std::vector<Material *> materials,
 		      std::vector<BoundCond> BC,
 		      const Region* region,
-		      DataWarehouseP&);
+		      Uintah::Interface::DataWarehouseP&);
   int CheckShapes(double x[3], int &np);
   void Surface(double x[3], int surf[7], int &np);
   void Norm(SCICore::Geometry::Vector &norm,double x[3], int surf[7], int ptype, int &np);
@@ -51,6 +51,9 @@ public:
 
 #endif // __GEOMETRY_OBJECT_H__
 // $Log$
+// Revision 1.4  2000/03/20 17:17:14  sparker
+// Made it compile.  There are now several #idef WONT_COMPILE_YET statements.
+//
 // Revision 1.3  2000/03/15 22:13:08  jas
 // Added log and changed header file locations.
 //

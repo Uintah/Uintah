@@ -22,6 +22,8 @@ using std::ofstream;
 using std::endl;
 using std::string;
 
+#ifdef WONT_COMPILE_YET
+
 CompNeoHookPlas::CompNeoHookPlas()
 {
   // Constructor
@@ -353,8 +355,13 @@ int CompNeoHookPlas::getSize() const
   return(s);
 }
 
+#endif
+
 
 // $Log$
+// Revision 1.2  2000/03/20 17:17:07  sparker
+// Made it compile.  There are now several #idef WONT_COMPILE_YET statements.
+//
 // Revision 1.1  2000/03/14 22:11:48  jas
 // Initial creation of the constitutive model directory with the legacy
 // constitutive model classes.

@@ -1,4 +1,6 @@
+
 #include "Material.h"
+#ifdef WONT_COMPILE_YET
 #include "ConstitutiveModelFactory.h"
 #include <fstream>
 using std::ifstream;
@@ -27,7 +29,12 @@ void Material::getMatProps(double matprop[10]) const
 
 }
 
+#endif
+
 // $Log$
+// Revision 1.2  2000/03/20 17:17:15  sparker
+// Made it compile.  There are now several #idef WONT_COMPILE_YET statements.
+//
 // Revision 1.1  2000/03/14 22:36:05  jas
 // Readded geometry specification source files.
 //

@@ -5,7 +5,6 @@
 #include <Uintah/Grid/ParticleSet.h>
 #include <Uintah/Grid/ParticleVariable.h>
 #include <Uintah/Interface/DataWarehouse.h>
-#include "CompMooneyRivlin.h"
 #include <SCICore/Geometry/Vector.h>
 using SCICore::Geometry::Vector;
 #include <fstream>
@@ -721,6 +720,8 @@ void GeomObject::Norm(Vector &norm, double x[3], int sf[7], int inPiece, int &np
   return;
 }
 
+#ifdef WONT_COMPILE_YET
+
 void GeomObject::FillWParticles(vector<Material *> materials,
 				vector<BoundCond> BC,
 				const Region* region,
@@ -894,8 +895,13 @@ void GeomObject::FillWParticles(vector<Material *> materials,
     dw->put(pexternalforce, "p.externalforce", region, 0);
     dw->put(pconmod, "p.conmod", region, 0);
 }
+
+#endif
   
 // $Log$
+// Revision 1.2  2000/03/20 17:17:14  sparker
+// Made it compile.  There are now several #idef WONT_COMPILE_YET statements.
+//
 // Revision 1.1  2000/03/14 22:36:05  jas
 // Readded geometry specification source files.
 //

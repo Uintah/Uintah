@@ -16,6 +16,8 @@
 
 #include "ConstitutiveModelFactory.h"
 #include "ElasticConstitutiveModel.h"
+
+#ifdef WONT_COMPILE_YET
 #include "Matrix.cc" // for bounded array multiplier	
 #include <fstream>
 using std::endl;
@@ -451,7 +453,12 @@ int ElasticConstitutiveModel::getSize() const
   return(s);
 }
 
+#endif
+
 // $Log$
+// Revision 1.2  2000/03/20 17:17:08  sparker
+// Made it compile.  There are now several #idef WONT_COMPILE_YET statements.
+//
 // Revision 1.1  2000/03/14 22:11:48  jas
 // Initial creation of the constitutive model directory with the legacy
 // constitutive model classes.

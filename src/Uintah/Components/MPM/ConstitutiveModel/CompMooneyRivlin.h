@@ -8,8 +8,12 @@
 #include <math.h>
 #include "../Util/Matrix3.h"
 
+#include <Uintah/Interface/DataWarehouseP.h>
+
 namespace Uintah {
 namespace Components {
+
+    using Uintah::Interface::DataWarehouseP;
 
 class CompMooneyRivlin : public ConstitutiveModel {
  private:
@@ -61,6 +65,9 @@ class CompMooneyRivlin : public ConstitutiveModel {
 #endif  // __COMPMOONRIV_CONSTITUTIVE_MODEL_H__ 
 
 // $Log$
+// Revision 1.5  2000/03/20 17:17:07  sparker
+// Made it compile.  There are now several #idef WONT_COMPILE_YET statements.
+//
 // Revision 1.4  2000/03/17 09:29:34  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository

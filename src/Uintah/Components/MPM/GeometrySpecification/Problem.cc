@@ -1,6 +1,6 @@
 #include "Problem.h"
 #include "GeometryGrid.h"
-#include "BoundCond.h"
+#include <Uintah/Components/MPM/BoundCond.h>
 #include "Material.h"
 #include <iostream>
 #include <fstream>
@@ -10,6 +10,8 @@ using std::ifstream;
 using std::ofstream;
 using std::string;
 using std::vector;
+
+#ifdef WONT_COMPILE_YET
 
 Problem::Problem()
   : NumMaterial(0),
@@ -283,9 +285,13 @@ void Problem::writeSAMRAIGridFile(string gridname)
 
 }
 
+#endif
 
 
 // $Log$
+// Revision 1.2  2000/03/20 17:17:15  sparker
+// Made it compile.  There are now several #idef WONT_COMPILE_YET statements.
+//
 // Revision 1.1  2000/03/14 22:36:06  jas
 // Readded geometry specification source files.
 //

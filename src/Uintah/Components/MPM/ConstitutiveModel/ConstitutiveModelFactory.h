@@ -9,6 +9,8 @@
 #include "HyperElasticDamage.h"
 #include "ViscoElasticDamage.h"
 
+#ifdef WONT_COMPILE_YET
+
 class ConstitutiveModelFactory
 {
 public:
@@ -47,5 +49,6 @@ public:
   // and calls the proper class' unpackStream()
 };
 
+#endif
 
 #endif /* _CONSTITUTIVEMODELFACTORY_H_ */

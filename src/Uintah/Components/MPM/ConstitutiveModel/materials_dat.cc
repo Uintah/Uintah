@@ -8,6 +8,8 @@ template class BoundedArray<double>;
 template double operator*(BoundedArray<double> const &, BoundedArray<double> const &);
 #endif
 
+using std::string;
+
 int main(int argc, char **argv)
 {
   string filename = "materials.dat";
