@@ -2,7 +2,6 @@
 
 #include <Packages/Uintah/CCA/Components/MPMArches/MPMArches.h>
 #include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesFort.h>
-#include <Packages/Uintah/CCA/Components/MPM/MPMPhysicalModules.h>
 #include <Packages/Uintah/Core/Grid/PerPatch.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
