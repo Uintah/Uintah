@@ -31,23 +31,23 @@ static char *id="@(#) $Id$";
 using namespace Uintah::ArchesSpace;
 using namespace std;
 
-//****************************************************************************
+// ****************************************************************************
 // Default constructor for PetscSolver
-//****************************************************************************
+// ****************************************************************************
 PetscSolver::PetscSolver()
 {
 }
 
-//****************************************************************************
+// ****************************************************************************
 // Destructor
-//****************************************************************************
+// ****************************************************************************
 PetscSolver::~PetscSolver()
 {
 }
 
-//****************************************************************************
+// ****************************************************************************
 // Problem setup
-//****************************************************************************
+// ****************************************************************************
 void 
 PetscSolver::problemSetup(const ProblemSpecP& params)
 {
@@ -65,9 +65,9 @@ PetscSolver::problemSetup(const ProblemSpecP& params)
 }
 
 
-//****************************************************************************
+// ****************************************************************************
 // Actual compute of pressure residual
-//****************************************************************************
+// ****************************************************************************
 void 
 PetscSolver::computePressResidual(const ProcessorGroup*,
 				 const Patch* patch,
@@ -115,9 +115,9 @@ PetscSolver::computePressResidual(const ProcessorGroup*,
 }
 
 
-//****************************************************************************
+// ****************************************************************************
 // Actual calculation of order of magnitude term for pressure equation
-//****************************************************************************
+// ****************************************************************************
 void 
 PetscSolver::computePressOrderOfMagnitude(const ProcessorGroup* ,
 				const Patch* ,
@@ -129,9 +129,9 @@ PetscSolver::computePressOrderOfMagnitude(const ProcessorGroup* ,
 
 }
 
-//****************************************************************************
+// ****************************************************************************
 // Actual compute of pressure underrelaxation
-//****************************************************************************
+// ****************************************************************************
 void 
 PetscSolver::computePressUnderrelax(const ProcessorGroup*,
 				   const Patch* patch,
@@ -153,8 +153,10 @@ PetscSolver::computePressUnderrelax(const ProcessorGroup*,
 		 vars->pressNonlinearSrc.getPointer(), 
 		 &d_underrelax);
 
+#define ARCHES_PRES_DEBUG
 #ifdef ARCHES_PRES_DEBUG
   cerr << " After Pressure Underrelax : " << endl;
+  cerr << " Underrelaxation coefficient: " << d_underrelax << '\n';
   for (int ii = domLo.x(); ii <= domHi.x(); ii++) {
     cerr << "pressure for ii = " << ii << endl;
     for (int jj = domLo.y(); jj <= domHi.y(); jj++) {
@@ -188,11 +190,12 @@ PetscSolver::computePressUnderrelax(const ProcessorGroup*,
     }
   }
 #endif
+#undef ARCHES_PRES_DEBUG
 }
 
-//****************************************************************************
+// ****************************************************************************
 // Actual linear solve for pressure
-//****************************************************************************
+// ****************************************************************************
 void 
 PetscSolver::pressLisolve(const ProcessorGroup* pc,
 			 const Patch* patch,
@@ -427,10 +430,8 @@ PetscSolver::pressLisolve(const ProcessorGroup* pc,
     int jj = ((row - ii)%(nnx*nny))/nnx;
     int kk = (row-ii-nnx*jj)/(nnx*nny);
     // make it compatible with uintah's indices
-    ii++;
-    jj++;
-    kk++;
     vecvalueb = vars->pressNonlinearSrc[IntVector(ii,jj,kk)];
+    cerr << "vecvalueb=" << vecvalueb << '\n';
     vecvaluex = vars->pressure[IntVector(ii,jj,kk)];
     VecSetValue(b, row, vecvalueb, INSERT_VALUES);
     VecSetValue(x, row, vecvaluex, INSERT_VALUES);
@@ -468,7 +469,12 @@ PetscSolver::pressLisolve(const ProcessorGroup* pc,
                       Solve the linear system
      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
   int its;
-  ierr = SLESSolve(sles,b,u,&its);CHKERRA(ierr);
+  ierr = SLESSolve(sles,b,x,&its);CHKERRA(ierr);
+
+  ierr = VecNorm(x,NORM_1,&norm);CHKERRQ(ierr);
+  ierr = PetscPrintf(PETSC_COMM_WORLD,"AFTER SOLVE vector x norm = %g\n",norm);CHKERRQ(ierr);
+  ierr = VecView(x, VIEWER_STDOUT_WORLD); CHKERRQ(ierr);
+
   // check the error
   double neg_one = -1.0;
   ierr = MatMult(A, x, u);CHKERRA(ierr);
@@ -483,9 +489,6 @@ PetscSolver::pressLisolve(const ProcessorGroup* pc,
     int jj = ((row - ii)%(nnx*nny))/nnx;
     int kk = (row-ii-nnx*jj)/(nnx*nny);
     // make it compatible with uintah's indices
-    ii++;
-    jj++;
-    kk++;
     vars->pressure[IntVector(ii,jj,kk)] = xvec[row];
     cerr << "press" << IntVector(ii,jj,kk) << "=" << xvec[row] << '\n';
   }
@@ -1336,6 +1339,9 @@ PetscSolver::scalarLisolve(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.4  2000/09/12 18:12:12  sparker
+// Fixed bugs - petsc solver now works in serial
+//
 // Revision 1.3  2000/09/12 15:45:57  sparker
 // Changes to petsc solver almost work
 //
