@@ -7,6 +7,7 @@
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Core/Containers/StaticArray.h>
 #include <Packages/Uintah/Core/Grid/Array3.h>
+#include <Packages/Uintah/CCA/Components/MPM/Solver.h>
 
 #ifdef HAVE_PETSC
 extern "C" {
@@ -80,6 +81,7 @@ WARNING
 #ifdef HAVE_PETSC
 						  Mat &A,
 						  map<const Patch*, Array3<int> >& d_petscLocalToGlobal,
+						  Solver* solver,
 
 #endif
 						  const bool recursion);

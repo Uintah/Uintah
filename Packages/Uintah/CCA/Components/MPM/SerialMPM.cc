@@ -133,6 +133,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
      //register as an MPM material
      sharedState->registerMPMMaterial(mat);
    }
+
 }
 
 void SerialMPM::scheduleInitialize(const LevelP& level,

@@ -30,6 +30,7 @@ void ConstitutiveModel::computeStressTensorImplicit(const PatchSubset*,
 #ifdef HAVE_PETSC
 						    Mat&,
 						    map<const Patch*, Array3<int> >& d_petscLocalToGlobal,
+						    Solver*,
 #endif
 						    const bool)
 {
