@@ -79,11 +79,6 @@ namespace Uintah {
     FastMatrix& operator=(const FastMatrix&);
   };
 
-const int FastMatrix::smallSize = 16; // Make sure smallMat and smallMatPtr
-const int FastMatrix::smallRows = 4;  // are updated (above) if you change
-                                      // these.
-
-
 }
 
 #endif
