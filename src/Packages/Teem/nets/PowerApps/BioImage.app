@@ -1561,7 +1561,7 @@ class BioImageApp {
 		      -command "$this configure_readers Dicom"]
 	
 	button $page.load -text "Dicom Loader" \
-	    -command "$this check_crop; $this dicom_ui"
+	    -command "$this check_crop; $this enable_update 1 2 3; $this dicom_ui"
 	
 	pack $page.load -side top -anchor n \
 	    -padx 3 -pady 10 -ipadx 2 -ipady 2
@@ -1571,7 +1571,7 @@ class BioImageApp {
 		      -command "$this configure_readers Analyze"]
 	
 	button $page.load -text "Analyze Loader" \
-	    -command "$this check_crop; $this analyze_ui"
+	    -command "$this check_crop; $$this enable_update 1 2 3; this analyze_ui"
 	
 	pack $page.load -side top -anchor n \
 	    -padx 3 -pady 10 -ipadx 2 -ipady 2
@@ -1669,6 +1669,10 @@ class BioImageApp {
 	    # disable execute button 
 	    .ui$m.buttonPanel.btnBox.execute configure -state disabled
 	}
+
+	global $m-dir $m-num-files
+	trace variable $m-dir w "$this enable_update"
+	trace variable $m-num-files w "$this enable_update"
     }
 
     method analyze_ui { } {
@@ -1678,6 +1682,9 @@ class BioImageApp {
 	    # disable execute button 
 	    .ui$m.buttonPanel.btnBox.execute configure -state disabled
 	}
+	global $m-file $m-num-files
+	trace variable $m-file w "$this enable_update"
+	trace variable $m-num-files w "$this enable_update"
     }
 
 
