@@ -704,6 +704,7 @@ fi
 
 echo 
 IS_OSX="no"
+IS_WIN="no"
 unset NUM_CPUS
 case $host in
   *-irix*)
@@ -728,6 +729,14 @@ case $host in
   *-aix*)
     NUM_CPUS=4
     ;;
+  *-mingw*)
+    NUM_CPUS=2
+    IS_WIN="yes"
+    ;;
+  *-pc*)
+    echo
+    AC_MSG_ERROR(Currently Windows only handles mingw.  See install instructions)
+    ;;
   *)
     echo
     AC_MSG_WARN( !!!!!! This system is untested - You are on your own !!!!!!)
@@ -737,6 +746,7 @@ case $host in
 esac
 
 AC_SUBST(IS_OSX)
+AC_SUBST(IS_WIN)
 sci_defs_files="$sci_defs_files include/sci_defs/osx_testdefs.h"
 
 AC_MSG_CHECKING(physical processor count)
@@ -848,7 +858,11 @@ fi
 ##  DO NOT "hardcode" ANY libraries (i.e. no -l or -L or -I allowed).
 ##
 
-TIME_IMPL=Time_unix.cc
+if test "$IS_WIN" = "yes"; then
+  TIME_IMPL=Time_win32.cc
+else
+  TIME_IMPL=Time_unix.cc
+fi
 TEMPLATE_TAG=
 TEMPLATE_BOX="<>"
 case $host in
@@ -868,6 +882,9 @@ case $host in
         # later we will make .so's from them.
 	SO_OR_ARCHIVE_EXTENSION=a
 	;;
+     *-pc-mingw*)
+        SO_OR_ARCHIVE_EXTENSION=dll
+        ;;
      *)
 	SO_OR_ARCHIVE_EXTENSION=so 
         ;;
@@ -970,6 +987,10 @@ if test $sci_required_fortran = "yes"; then
     SCI_MSG_ERROR(Could not find the specified Fortran compiler ($F77))
   fi
 fi
+
+# This flag is for the windows compiler - so it can generate correct
+# SHARE flags.
+WIN_DLLFLAGS=""
 
 case $host in 
   *-irix*)
@@ -1132,6 +1153,46 @@ case $host in
     AC_SUBST(DEF_NEED_OSX_HACK)
     ;;
 
+  *-pc-mingw*)
+    ac_objext=o
+    CFLAGS=" -Wall"
+    CXXFLAGS=" -Wall"
+    WIN_DLLFLAGS=' -DBUILD_$(subst /,_,$(patsubst %/,%,$(dir $@)))'
+    SCI_CHECK_VERSION($CC,--version,2.95.3,,
+      echo configure: error: wrong $CC version.; exit)
+    if test $sci_required_fortran = "yes"; then
+      SCI_CHECK_VERSION($F77,--version,0.5.25,,
+        echo configure: error: wrong $F77 version.; exit)
+    fi
+    SCI_CHECK_VERSION($CXX,--version,2.95.3,,
+      echo configure: error: wrong $CXX version.; exit)
+    AC_PROG_CPP
+    AC_PROG_CXXCPP
+    AC_CHECK_PROG(AS,as,as)
+    AC_CHECK_PROG(LD,ld,ld)
+    WOFF=" -w"
+    CPPFLAGS="$CPPFLAGS $WOFF"
+    CFLAGS="$CFLAGS $extra_cflags"
+
+    case $F77 in
+      *g77*)
+         # extra_fflags has array checking if in debug mode.
+         FFLAGS="$FFLAGS $extra_cflags $extra_fflags"
+
+         # put '_' at end and two '_'s if there is a '_' in name.
+         # This flag is used by the genfspec.pl script in Uintah (generated
+         # from fspec.pl.in).
+         FORTRAN_UNDERSCORE=linux
+         ;;
+      *)
+         FFLAGS="$FFLAGS $extra_cflags"
+         ;;
+    esac
+
+    CXXFLAGS="$CXXFLAGS $extra_cflags"
+    SOFLAGS="-shared ${SOFLAGS}"
+    NEED_SONAME=yes
+    ;;
   *)
     # linux
     ac_objext=o
@@ -1187,6 +1248,8 @@ case $host in
     NEED_SONAME=yes
     ;;
 esac
+
+AC_SUBST(WIN_DLLFLAGS)
 
 AC_MSG_CHECKING($CC dependency regen switch)
 rm -f configure-test.*
@@ -1296,6 +1359,11 @@ fi
 if test "$MAKE" = "NOT_FOUND"; then
   SCI_MSG_ERROR(GNU make not found.)
 fi
+if test "$IS_WIN" = "yes"; then
+  # change the unix-style dir to a windows-style dir for windows runtime prompt
+  # change from /c/dir/dir to c:\\dir\\dir
+  MAKE=`echo "$MAKE" | sed 's,/,,' | sed 's,/,:/,' | sed 's,/,\\\\,g'`
+fi
 
 AC_SUBST(MAKE)
 sci_defs_files="$sci_defs_files include/sci_defs/compile_testdefs.h"
@@ -1304,6 +1372,11 @@ SCI_CHECK_VERSION($MAKE,--version,3.78.1,,
   echo configure: error: wrong GNU make version.; exit)
 
 AC_PROG_AWK
+
+## ignore some software tests on windows (for now at least)
+if test "$IS_WIN" = "yes"; then
+  echo "skipping bison, lex, etags, perl tests"
+else
 
 ## test for bison. yacc is not sufficient as it has no -o option.
 AC_CHECK_PROG(YACC, bison, bison, nobison, $PATH /usr/bin)
@@ -1339,6 +1412,8 @@ fi
 if test "$PERL" = "perl"; then
   PERL=`type perl | sed 's%^.* %%'`
 fi
+
+fi # end if IS_WIN = yes
 
 ##  Create the Packages/Uintah/tools dir for later use.
 if test "$sci_required_tools" = "yes" ; then
@@ -1589,6 +1664,9 @@ AC_SUBST(M_LIB_DIR_FLAG)
 
 ##  --  search for X  ----------------------------------------------------
 
+if test "$IS_WIN" = "yes"; then
+  echo "skipping X test"
+else
 _sci_optional=required
 if test "$with_X11_lib"; then
   _x_lib_dir="$with_X11_lib"
@@ -1611,10 +1689,14 @@ if test "$X_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
   AC_MSG_WARN("$X_LIB_DIR_FLAG")
 fi
 
+fi # end "$IS_WIN" = "yes"
+
 AC_SUBST(X_LIB_FLAG)
 AC_SUBST(X_LIB_DIR_FLAG)
 
 ##  --  check for the required thread library  ---------------------------
+
+SOCKET_LIBRARY=""
 
 case $host in
   *-irix*)
@@ -1623,6 +1705,10 @@ case $host in
     elif test "$threads" != "pthreads" -a "$threads" != "irix"; then
       SCI_MSG_ERROR(unknown thread type for host $host: $threads. exiting.)
     fi
+    ;;
+  *-pc-mingw*)
+    threads=win32
+    SOCKET_LIB_FLAG="-lws2_32"
     ;;
   *)
     if test "$threads" = "unknown"; then
@@ -1686,6 +1772,11 @@ case $threads in
       DEF_THREAD="#define SCI_NOTHREAD 1"
       AC_MSG_WARN(threads disabled - software may work incorrectly)
       ;;
+   win32)
+     # for time functions in windows
+     DEF_THREAD=
+     THREAD_LIB_FLAG=-lwinmm
+     ;;
    *)
       SCI_MSG_ERROR(unknown thread type for host $host: $threads. exiting.)
       ;;
@@ -1695,6 +1786,7 @@ THREAD_IMPL="Thread_$threads.cc"
 AC_SUBST(THREAD_IMPL)
 
 AC_SUBST(THREAD_LIB_FLAG)
+AC_SUBST(SOCKET_LIB_FLAG)
 AC_SUBST(DEF_THREAD)
 sci_defs_files="$sci_defs_files include/sci_defs/thread_testdefs.h"
 
@@ -1750,8 +1842,13 @@ esac
 
 AC_LANG(C++)
 
-SCI_TRY_LINK(GL,OpenGL libraries and headers,GL/gl.h GL/glu.h GL/glx.h,
-	     $_sci_inc,GLU GL $GLU_OTHERS,$_sci_lib,,,$_sci_optional)
+if test "$IS_WIN" = "yes"; then
+  SCI_TRY_LINK(GL,OpenGL libraries and headers,windows.h GL/gl.h GL/glu.h,
+               $_sci_inc,glu32 opengl32 $GLU_OTHERS,$_sci_lib,,,$_sci_optional)
+else
+  SCI_TRY_LINK(GL,OpenGL libraries and headers,GL/gl.h GL/glu.h GL/glx.h,
+	       $_sci_inc,GLU GL $GLU_OTHERS,$_sci_lib,,,$_sci_optional)
+fi
 
 if test "$GL_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
   AC_MSG_WARN("$GL_LIB_DIR_FLAG")
@@ -1854,6 +1951,11 @@ else
       dlopen("bogus", 0);
     ],required)
     ;;
+  *-pc-mingw*)
+    echo "Using Windows dynamic loader"
+    DL_LIB_FLAG=""
+    DL_LIB_DIR_FLAG=""
+    ;;
   *)
     SCI_TRY_LINK(DL,dlopen in libdl,dlfcn.h,,dl,,,[
       dlopen("bogus", 0);
@@ -1887,19 +1989,25 @@ AC_SUBST(DEF_STAT64)
 sci_defs_files="$sci_defs_files include/sci_defs/stat64_testdefs.h"  
 
 ##  --  required standard headers
-SCI_TRY_LINK(STD_HDRS,standard headers,stdio.h stdlib.h stddef.h stdarg.h string.h limits.h errno.h fcntl.h float.h memory.h unistd.h netdb.h ctype.h signal.h locale.h dirent.h assert.h sys/select.h sys/types.h sys/time.h sys/stat.h sys/socket.h sys/timeb.h sys/mman.h sys/param.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h,,,,,,required)
+SCI_TRY_LINK(STD_HDRS,standard headers,stdio.h stdlib.h stddef.h stdarg.h string.h limits.h errno.h fcntl.h float.h memory.h unistd.h ctype.h signal.h locale.h dirent.h assert.h sys/types.h sys/time.h sys/stat.h sys/timeb.h sys/param.h,,,,,,required)
 
 # don't test for malloc.h or values.h on darwin
+# don't test a bunch of then on win32
 case $host in
   *-darwin*)
+    SCI_TRY_LINK(STD_HDRS, standard headers-2,netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h,,,,,,required)
     ;;
   *-irix*)
     # test for required sqi headers as well
-    SCI_TRY_LINK(STD_HDRS,SGI standard headers,ieeefp.h ulocks.h values.h malloc.h,,,,,,required)
+    SCI_TRY_LINK(STD_HDRS,SGI standard headers,ieeefp.h ulocks.h values.h malloc.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h,,,,,,required)
     DEF_IEEEFP="#define HAVE_IEEEFP_H 1"
     ;;
+  *-pc-mingw*)
+    ;;
+
   *)
-    SCI_TRY_LINK(STD_HDRS,standard headers-2,values.h malloc.h,,,,,,required)
+    # default system headers that cannot be tested on all systems
+    SCI_TRY_LINK(STD_HDRS,standard headers-2,values.h malloc.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h,,,,,,required)
     ;;
 esac
 
@@ -1965,6 +2073,11 @@ fi
 SCI_TRY_LINK(TCL,tcl library and headers,tcl.h tclPort.h tclMath.h tclInt.h,
              $_sci_tcl_inc,tcl,$_sci_lib,,,$_sci_optional)
 
+if test "$IS_WIN" = "yes"; then
+  # change the unix-style dir to a windows-style dir for tclsh to read
+  LIB_DIR_TCL=`echo "$LIB_DIR_TCL" | sed 's,/,,' | sed 's,/,:/,'`
+fi
+
 SCI_SUBST_THIRDPARTY_DIR(LIB_DIR_TCL)
 SCI_SUBST_THIRDPARTY_DIR(TCL_LIB_DIR_FLAG)
 SCI_SUBST_THIRDPARTY_DIR(INC_TCL_H)
@@ -1995,6 +2108,11 @@ AC_SUBST(INC_TK_H)
 SCI_TRY_LINK(ITCL,itcl library and headers, itcl.h,
              $_sci_inc,itcl,$_sci_lib,$TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,required)
 
+if test "$IS_WIN" = "yes"; then
+  # change the unix-style dir to a windows-style dir for tclsh to read
+  LIB_DIR_ITCL=`echo "$LIB_DIR_ITCL" | sed 's,/,,' | sed 's,/,:/,'`
+fi
+
 SCI_SUBST_THIRDPARTY_DIR(LIB_DIR_ITCL)
 SCI_SUBST_THIRDPARTY_DIR(ITCL_LIB_DIR_FLAG_H)
 SCI_SUBST_THIRDPARTY_DIR(INC_ITCL_H)
@@ -2016,6 +2134,11 @@ AC_SUBST(INC_ITK_H)
 
 # -- blt --
 SCI_TRY_LINK(BLT,BLT library and headers, blt.h,$_sci_inc,BLT,$_sci_lib,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,required) 
+
+if test "$IS_WIN" = "yes"; then
+  # Windows BLT needs these other libs
+  BLT_LIB_FLAG="$BLT_LIB_FLAG -lgdi32 -lwinspool -lcomdlg32"
+fi
 
 SCI_SUBST_THIRDPARTY_DIR(BLT_LIB_DIR_FLAG)
 SCI_SUBST_THIRDPARTY_DIR(INC_BLT_H)
@@ -2088,7 +2211,7 @@ fi
 
 AC_SUBST(SSTREAM_COMPAT)
 
-##  --  search for SGI'S traceback library  ------------------------------ 
+##  --  search for SGI'S or Win32's traceback library  ------------------------------ 
 
 _sci_optional=optional
 if test "$with_exc"; then
@@ -2100,9 +2223,15 @@ else
   _sci_inc=
 fi
 
-SCI_TRY_LINK(EXC,traceback library and headers,libexc.h,$_sci_inc,exc,$_sci_lib,,,$_sci_optional)
+if test "$IS_WIN" = "yes"; then
+  # it's 'imagehlp' but call it EXC anyway so we don't have to change
+  # other config parameters
+  SCI_TRY_LINK(EXC,WIN32 traceback library and headers,windows.h imagehlp.h,$_sci_inc,imagehlp,$_sci_lib,,,required)
+else
+  SCI_TRY_LINK(EXC,traceback library and headers,libexc.h,$_sci_inc,exc,$_sci_lib,,,$_sci_optional)
+fi
 
-if test "$HAVE_EXC" = "yes"; then
+if test "$HAVE_EXC" = "yes" -a "$IS_WIN" != "yes"; then
   DEF_EXC="#define HAVE_EXC 1"
 fi
 
@@ -2165,11 +2294,12 @@ if test "$with_jpeg"; then
       _sci_optional=required
    else
       _sci_lib="$with_jpeg/lib"
+      _sci_inc="$with_jpeg/include"
       _sci_optional=specific
    fi
 fi
 
-SCI_TRY_LINK(JPEG,jpeg library,,,jpeg,$_sci_lib,,,$_sci_optional)
+SCI_TRY_LINK(JPEG,jpeg library,,$_sci_inc,jpeg,$_sci_lib,,,$_sci_optional)
 
 AC_SUBST(JPEG_LIB_FLAG)
 AC_SUBST(JPEG_LIB_DIR_FLAG)
@@ -2183,11 +2313,12 @@ if test "$with_tiff"; then
       _sci_optional=required
    else
       _sci_lib="$with_tiff/lib"
+      _sci_inc="$with_tiff/include"
       _sci_optional=specific
    fi
 fi
 
-SCI_TRY_LINK(TIFF,tiff library,,,tiff,$_sci_lib,$M_LIB_DIR_FLAG $M_LIB_FLAG,,$_sci_optional)
+SCI_TRY_LINK(TIFF,tiff library,tiff.h,$_sci_inc,tiff,$_sci_lib,$M_LIB_DIR_FLAG $M_LIB_FLAG,,$_sci_optional)
 
 AC_SUBST(TIFF_LIB_FLAG)
 AC_SUBST(TIFF_LIB_DIR_FLAG)
@@ -2465,6 +2596,10 @@ case $host in
     else
       SCI_TRY_LINK(F,fortran libraries,,$_sci_inc,g2c,$_sci_lib,,,$_sci_optional)
     fi
+    ;;
+  *-pc-mingw*)
+    # Mingw g77 and libg2c
+    SCI_TRY_LINK(F,fortran libraries,,,g2c,$_sci_lib,,,$_sci_optional)
     ;;
   *)
     SCI_TRY_LINK(F,fortran libraries,,,F77,$_sci_lib,,,$_sci_optional)
@@ -2889,6 +3024,9 @@ case $host in
     ;;
   *-darwin*)
     PETSC_ARCH=ppc
+    ;;
+  *-pc-mingw*)
+    PETSC_ARCH=win
     ;;
   *)
     PETSC_ARCH=""
@@ -4337,6 +4475,11 @@ SCI_ARG_VAR(CXXFLAGS,C++ compiler flags)
 
 scirun_obj_dir=`pwd`;
 scirun_src_dir=`(cd ${srcdir};pwd)`
+
+if test "$IS_WIN" = "yes"; then
+  scirun_obj_dir=`echo "$scirun_obj_dir" | sed 's,/,,' | sed 's,/,:/,'`
+  scirun_src_dir=`echo "$scirun_src_dir" | sed 's,/,,' | sed 's,/,:/,'`
+fi
 
 AC_SUBST(scirun_obj_dir)
 AC_SUBST(scirun_src_dir)
