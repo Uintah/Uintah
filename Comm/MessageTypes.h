@@ -50,7 +50,13 @@ public:
 	AttachDialbox,
 	DialMoved,
 
-	TrackerMoved
+	TrackerMoved,
+
+	ModuleGeneric1,
+	ModuleGeneric2,
+	ModuleGeneric3,
+	ModuleGeneric4
+	
     };
 };
 
