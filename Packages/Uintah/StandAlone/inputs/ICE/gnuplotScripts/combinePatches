@@ -74,7 +74,8 @@ foreach step ($steps[*]:q)
       echo "Files not associated with a matl:  "$no_matl_files
       echo "Patches:                           "$patches
       echo "matls:                             "$matls
-
+      
+      shift patches  # you already copied patch[1] to patch_combined
       #------------------------
       # loop over each patch and each matl
       # and combine the files
