@@ -42,11 +42,6 @@ set Color(IconFadeStart) $Color(NetworkEditor)
 set Color(Basecolor) gray
 #set Color(Basecolor) darkred
 
-global HelpText
-set HelpText(Module) "L - Select\nR - Menu"
-set HelpText(Connection) "L - Highlight\nCTRL-M - Delete\nR - Menu"
-set HelpText(Notes) "L - Edit\nM - Hide"
-
 global Subnet
 set Subnet(Loading) 0
 
