@@ -67,15 +67,22 @@ void RigidBodyContact::exMomInterpolated(const ProcessorGroup*,
 
   // Retrieve necessary data from DataWarehouse
   vector<NCVariable<double> > gmass(numMatls);
-  vector<NCVariable<Vector> > gvelocity(numMatls);
+  vector<NCVariable<Vector> > gvelocity(numMatls),gvelocityME(numMatls);
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
     int dwindex = mpm_matl->getDWIndex();
-    new_dw->get(gmass[m], lb->gMassLabel,dwindex , patch,
-		  Ghost::None, 0);
-    new_dw->get(gvelocity[m], lb->gVelocityLabel, dwindex, patch,
-		  Ghost::None, 0);
+    new_dw->get(gmass[m],     lb->gMassLabel,     dwindex, patch,Ghost::None,0);
+    new_dw->get(gvelocity[m], lb->gVelocityLabel, dwindex, patch,Ghost::None,0);
+
   }
+
+#if 0
+  if(d_sharedState->getElapsedTime() >= d_stop_time){
+    for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+	gvelocity[0][*iter]   = zero;
+    }
+  }
+#endif
 
   for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
     centerOfMassMom=zero;
@@ -90,7 +97,6 @@ void RigidBodyContact::exMomInterpolated(const ProcessorGroup*,
       for(int n = 1; n < numMatls; n++){
 	    gvelocity[n][*iter].z( gvelocity[0][*iter].z() );
 	}
-      
     }
   }
 
@@ -118,7 +124,9 @@ void RigidBodyContact::exMomIntegrated(const ProcessorGroup*,
   // Retrieve necessary data from DataWarehouse
   vector<NCVariable<double> > gmass(numMatls);
   vector<NCVariable<Vector> > gvelocity_star(numMatls);
+  vector<NCVariable<Vector> > gvelocity_starME(numMatls);
   vector<NCVariable<Vector> > gacceleration(numMatls);
+  vector<NCVariable<Vector> > gaccelerationME(numMatls);
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
     int dwindex = mpm_matl->getDWIndex();
@@ -132,6 +140,13 @@ void RigidBodyContact::exMomIntegrated(const ProcessorGroup*,
   delt_vartype delT;
   old_dw->get(delT, lb->delTLabel);
 
+  if(d_sharedState->getElapsedTime() >= d_stop_time){
+    for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+	gacceleration[0][*iter]    = (zero - gvelocity_star[0][*iter])/delT;
+	gvelocity_star[0][*iter]   = zero;
+    }
+  }
+
   for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
     centerOfMassMom=zero;
     centerOfMassMass=0.0; 
@@ -144,6 +159,7 @@ void RigidBodyContact::exMomIntegrated(const ProcessorGroup*,
     // and adjust the acceleration of each field to account for this
     if(!compare(gmass[0][*iter],0.0)){  // Non-rigid matl
       for(int  n = 1; n < numMatls; n++){
+	Dvdt = zero;
 	Dvdt.z( -(gvelocity_star[n][*iter].z() 
 		 - gvelocity_star[0][*iter].z())/delT);
 	gvelocity_star[n][*iter].z( gvelocity_star[0][*iter].z() );
@@ -157,8 +173,8 @@ void RigidBodyContact::exMomIntegrated(const ProcessorGroup*,
   for(int n = 0; n < numMatls; n++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( n );
     int dwindex = mpm_matl->getDWIndex();
-    new_dw->put(gvelocity_star[n], lb->gMomExedVelocityStarLabel,dwindex,patch);
-    new_dw->put(gacceleration[n],  lb->gMomExedAccelerationLabel,dwindex,patch);
+    new_dw->put(gvelocity_star[n],lb->gMomExedVelocityStarLabel,dwindex,patch);
+    new_dw->put(gacceleration[n], lb->gMomExedAccelerationLabel,dwindex,patch);
   }
 }
 
