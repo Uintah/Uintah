@@ -12,7 +12,8 @@ SRCS     = TriSurface.cc BasicSurfaces.cc Boolean.cc \
            SymSparseRowMatrix.cc TriDiagonalMatrix.cc VectorField.cc \
            VectorFieldHUG.cc VectorFieldOcean.cc VectorFieldRG.cc \
            VectorFieldUG.cc VectorFieldZone.cc VoidStar.cc cDMatrix.cc \
-           cMatrix.cc cSMatrix.cc cVector.cc SurfTree.cc
+           cMatrix.cc cSMatrix.cc cVector.cc SurfTree.cc \
+	   ScalarFieldRGCC.cc VectorFieldRGCC.cc
 
 INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
 
