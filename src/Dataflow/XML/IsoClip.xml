@@ -28,6 +28,23 @@
     </authors>
     <summary>Clip a scalar field to a specified isovalue.</summary>
     <description>
+
+    <p>The IsoClip module is used to clip a TetVol or TriSurf field
+    along a particular isovalue.  The isovalue is specified by the
+    entry in the GUI.  The new field can contain either the values
+    less than or greater than the isovalue, as selected by the user. </p>
+
+    <p> In order to compute where the cuts
+    are to be made, the input field must contain scalar values at the
+    nodes.  If the input field contains element centered data then either
+    just use ClipByFunction to determine which elements to keep or
+    interpolate the elements onto a node-centered field. </p>
+
+    <p> Only TetVol and TriSurf fields are supported by this general
+    clipping.  Other fields should be converted into these types if
+    they are to be clipped.  See HexToTet, QuadToTri, and Unstructure
+    for an idea of how to do this conversion. </p>
+
     </description>
   </overview>
   <io>
