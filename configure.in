@@ -135,6 +135,8 @@ case $host in
                echo "Using Assembler ${AS}"
              fi
            fi
+	   F77=f77
+	   FFLAGS="$BINARYFLAGS"
            CFLAGS="-fullwarn -xansi -LANG:std ${CFLAGS} $BINARYFLAGS $extra_cflags"
 	   ASFLAGS="$BINARYFLAGS ${ASFLAGS}"
            SOFLAGS="-shared $BINARYFLAGS -LANG:std -no_unresolved -J\$(MAKE_PARALLELISM) -update_registry \$(LIBDIR)so_locations $(TLINK) ${SOFLAGS}"
@@ -157,6 +159,7 @@ case $host in
   *-linux-gnu)
      AC_PROG_CC
      AC_PROG_CXX
+     AC_PROG_F77
      CFLAGS="-Wall ${CFLAGS}"
      TEMPLATE_TAG=
      TEMPLATE_BOX="<>"
@@ -177,6 +180,8 @@ case $host in
      AC_PROG_CXX
      ;;
 esac
+AC_SUBST(F77)
+AC_SUBST(FFLAGS)
 AC_SUBST(PLATFORM_LDFLAGS)
 AC_SUBST(NEED_SONAME)
 AC_SUBST(SSTREAM_COMPAT)
@@ -275,6 +280,8 @@ else
   echo $CC_DEPEND_REGEN
 fi
 AC_SUBST(CC_DEPEND_REGEN)
+F77_DEPEND_REGEN=$CC_DEPEND_REGEN
+AC_SUBST(F77_DEPEND_REGEN)
 
 ##-- How Many Processors -----------------------------------------------------
 
@@ -596,6 +603,9 @@ AC_OUTPUT(Makefile \
 
 #
 # $Log$
+# Revision 1.58  2000/06/12 18:39:00  sparker
+# Added F77 configuration
+#
 # Revision 1.57  2000/06/10 04:18:22  moulding
 # added a section to search for GL headers
 #
