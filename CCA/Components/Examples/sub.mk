@@ -6,6 +6,8 @@ SRCDIR   := Packages/Uintah/CCA/Components/Examples
 
 SRCS     += $(SRCDIR)/Poisson1.cc \
 	$(SRCDIR)/Poisson2.cc \
+	$(SRCDIR)/Poisson3.cc \
+	$(SRCDIR)/Interpolator.cc \
 	$(SRCDIR)/ExamplesLabel.cc
 
 PSELIBS := 
