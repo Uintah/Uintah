@@ -607,9 +607,18 @@ if test "$pkg_Fusion" = "yes"; then
   fi
 fi
 
+# Make sure the Package directories exist.
+#   Do an 'ls' of all files in the Packages directory and then grep for the
+#   package in this list.  (We used to just do a "test -d $package", but on
+#   a case-insensitive Mac file system, this fails.)
+
+packages_list=`ls $path_to_src/Packages`
 for i in $package; do
-   # Make sure the Package directories exist.
-   if test ! -d "$path_to_src/Packages/$i"; then
+   found_package=`echo $packages_list | grep $i`
+   if test -z "$found_package"; then
+      if test "$i" = "TEEM"; then
+         AC_MSG_WARN(Try using 'Teem' instead of 'TEEM')
+      fi
       AC_MSG_ERROR(Package '$i' does not exist (in $path_to_src/Packages/)!)
    fi
 done
