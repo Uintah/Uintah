@@ -31,7 +31,7 @@ namespace Uintah {
          friend const TypeDescription* fun_getTypeDescription(CMData*);
 
          CMData d_initialData;
-	 double d_se;
+	//double d_se;
          // Prevent copying of this class
          // copy constructor
          HypoElastic(const HypoElastic &cm);
