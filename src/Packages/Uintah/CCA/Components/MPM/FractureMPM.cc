@@ -136,6 +136,9 @@ void FractureMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
      if (integrator_type == "explicit") {
        d_integrator = Explicit;
      }
+     if (integrator_type == "fracture") {
+       d_integrator = Fracture;
+     }
    }
    
    MPMPhysicalBCFactory::create(prob_spec);
@@ -1177,7 +1180,7 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                                        gan, NGP, lb->pXLabel);
-      old_dw->get(px0,            lb->pX0Label,            pset);//for Fracture
+      old_dw->get(px0,            lb->pX0Label,            pset);
       old_dw->get(px,             lb->pXLabel,             pset);
       old_dw->get(pmass,          lb->pMassLabel,          pset);
       old_dw->get(pvolume,        lb->pVolumeLabel,        pset);
