@@ -59,6 +59,7 @@ MapDataToMeshCoordAlgoT<FIELD>::execute(FieldHandle field_h, int coord)
 
   typename FIELD::mesh_type *omesh = ofield->get_typed_mesh().get_rep();
 
+
   typename FIELD::mesh_type::Node::iterator bn, en;
   omesh->begin(bn);
   omesh->end(en);
@@ -82,7 +83,7 @@ MapDataToMeshCoordAlgoT<FIELD>::execute(FieldHandle field_h, int coord)
       omesh->get_normal(n, *bn);
       p += n*tmp;
     }
-    omesh->set_point(*bn, p);
+    omesh->set_point(p, *bn);
     ++bn;
     ++di;
   }
