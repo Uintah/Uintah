@@ -9,6 +9,7 @@
 
 #include <stdlib.h>
 #include <math.h>
+#include <vector>
 
 extern "C" {
   void dpotrf_( char &, int &, double *, int &, int &  ); 
@@ -72,6 +73,7 @@ Sampler::Sampler(const string& id)
   // install Likelihood and Prior parts
   prior_ = new PriorPart( interface_, "Prior");
   likelihood_ = new LikelihoodPart( interface_, "Likelihood" );
+  graph_ = 0;
 }
 
 Sampler::~Sampler() 
@@ -83,6 +85,11 @@ Sampler::go()
 {
   cerr << "Sampler exec\n";
   Module *module = dynamic_cast<Module*>(this);
+  if ( ! graph_ ) {
+    cerr << "new graph part\n";
+    graph_ = new GraphPart( interface_, "Graph");
+    graph_->set_num_lines(nparms);
+  }
   module->want_to_execute();
 }
 
@@ -212,9 +219,13 @@ void Sampler::metropolis()
     {
       results->k_.add(k) ;
 
+      vector<double> v;
       for (int i=0; i<nparms; i++) {
 	results->data_[i].add(theta[i]);
+	if ( graph_ )
+	  v.push_back(theta[i] );
       }
+      if ( graph_ ) graph_->add_values(v);
     }
   }
   
@@ -263,6 +274,7 @@ Sampler::tcl_command( TCLArgs &args, void *data)
     connect( gui->monitor, interface_, &SamplerInterface::monitor );
     connect( gui->thin, interface_, &SamplerInterface::thin );
     connect( gui->go, interface_, &SamplerInterface::go);
+    connect( interface_->has_child, (PartGui* )gui, &PartGui::add_child );
   }
   else Module::tcl_command( args, data );
 }

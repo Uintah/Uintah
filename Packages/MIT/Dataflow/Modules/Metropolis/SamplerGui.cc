@@ -51,6 +51,7 @@ SamplerGui::tcl_command( TCLArgs &args, void *data)
   int i;
   if ( args[1] == "burning") {
     string_to_int(args[2],i);
+    cerr << "burning " << i << endl;
     burning(i);
   }
   else if ( args[1] == "monitor" ) {

@@ -13,6 +13,7 @@ extern "C" {
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Parts/Part.h>
+#include <Core/Parts/GraphPart.h>
 #include <Dataflow/Network/Module.h>
 
 #include <Packages/MIT/Core/Datatypes/MetropolisData.h>
@@ -44,6 +45,7 @@ private:
 
   PriorPart *prior_;
   LikelihoodPart *likelihood_;
+  GraphPart *graph_;
 
   // control
   bool user_ready;

@@ -27,6 +27,7 @@ PSELIBS := Packages/MIT/Core/Datatypes \
 	Core/2d \
 	Core/Datatypes \
 	Core/Parts \
+	Core/PartsGui \
 	Core/Algorithms/DataIO \
         Core/Persistent Core/Containers Core/Util \
         Core/Exceptions 
