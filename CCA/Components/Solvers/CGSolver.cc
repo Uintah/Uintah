@@ -1,4 +1,9 @@
 
+// TODO
+//  - dynamic compilation tests
+//  - Bench on cluster
+//  - Can we do any better?  Tiling? ???
+
 #include <Packages/Uintah/CCA/Components/Solvers/CGSolver.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
@@ -22,42 +27,160 @@
 
 using namespace Uintah;
 
-static void Mult(Array3<double>& B, const Array3<Stencil7>& A,
-		 const Array3<double>& X, CellIterator iter,
-		 const IntVector& l, const IntVector& h1, long64& flops)
+void Mult(Array3<double>& B, const Array3<Stencil7>& A,
+	  const Array3<double>& X, CellIterator iter,
+	  const IntVector& l, const IntVector& h1, long64& flops, long64& memrefs)
 {
   // Center
-#if 0
-  ASSERT(B.getWindow()->getOffset() == IntVector(0,0,0));
-  ASSERT(A.getWindow()->getOffset() == IntVector(0,0,0));
-  ASSERT(X.getWindow()->getOffset() == IntVector(0,0,0));
+#if 1
   IntVector  ll(iter.begin());
   IntVector hh(iter.end());
-  double*** cb = B.get3DPointer();
-  Stencil7*** ca = A.get3DPointer();
-  double*** cx = X.get3DPointer();
-  for(int z=ll.z();z<hh.z();z++){
+  // Zlow
+  int z=ll.z();
+  if(z <= l.z()){
     for(int y=ll.y();y<hh.y();y++){
+      const Stencil7* caa = &A[IntVector(0,y,z)];
+      double* cbb = &B[IntVector(0,y,z)];
+      const double* cx0 = &X[IntVector(0,y,z)];
+      const double* cx1 = &X[IntVector(0,y-1,z)];
+      const double* cx2 = &X[IntVector(0,y+1,z)];
+      const double* cx4 = &X[IntVector(0,y,z+1)];
       for(int x=ll.x();x<hh.x();x++){
-	Stencil7* AA = &ca[z][y][x];
-	double result = AA->p*cx[z][y][x];
-	if(x > l.x())
-	  result += AA->w*cx[z][y][x-1];
-	if(x < h1.x())
-	  result += AA->e*cx[z][y][x+1];
-	if(y > l.y())
-	  result += AA->s*cx[z][y-1][x];
-	if(y < h1.y())
-	  result += AA->n*cx[z][y+1][x];
-	if(z > l.z())
-	  result += AA->b*cx[z-1][y][x];
-	if(z < h1.z())
-	  result += AA->t*cx[z+1][y][x];
-	cb[z][y][x] = result;
+        const Stencil7* AA = &caa[x];
+        double result = AA->p*cx0[x];
+        if(x > l.x())
+          result += AA->w*cx0[x-1];
+        if(x < h1.x())
+          result += AA->e*cx0[x+1];
+        if(y > l.y())
+          result += AA->s*cx1[x];
+        if(y < h1.y())
+          result += AA->n*cx2[x];
+	result += AA->t*cx4[x];
+        cbb[x] = result;
+      }
+    }
+    z++;
+  }
+  // Zmid
+  for(;z<h1.z();z++){
+    // Ylow
+    int y=ll.y();
+    if(y <= l.y()){
+      const Stencil7* caa = &A[IntVector(0,y,z)];
+      double* cbb = &B[IntVector(0,y,z)];
+      const double* cx0 = &X[IntVector(0,y,z)];
+      const double* cx2 = &X[IntVector(0,y+1,z)];
+      const double* cx3 = &X[IntVector(0,y,z-1)];
+      const double* cx4 = &X[IntVector(0,y,z+1)];
+      for(int x=ll.x();x<hh.x();x++){
+        const Stencil7* AA = &caa[x];
+        double result = AA->p*cx0[x];
+        if(x > l.x())
+          result += AA->w*cx0[x-1];
+        if(x < h1.x())
+          result += AA->e*cx0[x+1];
+	result += AA->n*cx2[x];
+	result += AA->b*cx3[x];
+	result += AA->t*cx4[x];
+        cbb[x] = result;
+      }
+      y++;
+    }
+    // Ymid
+    for(;y<h1.y();y++){
+      const Stencil7* caa = &A[IntVector(0,y,z)];
+      double* cbb = &B[IntVector(0,y,z)];
+      const double* cx0 = &X[IntVector(0,y,z)];
+      const double* cx1 = &X[IntVector(0,y-1,z)];
+      const double* cx2 = &X[IntVector(0,y+1,z)];
+      const double* cx3 = &X[IntVector(0,y,z-1)];
+      const double* cx4 = &X[IntVector(0,y,z+1)];
+
+      // Xlow
+      int x=ll.x();
+      if(x <= l.x()){
+        const Stencil7* AA = &caa[x];
+        double result = AA->p*cx0[x];
+	result += AA->e*cx0[x+1];
+	result += AA->s*cx1[x];
+	result += AA->n*cx2[x];
+	result += AA->b*cx3[x];
+	result += AA->t*cx4[x];
+        cbb[x] = result;
+	x++;
+      }
+      // Xmid
+      for(;x<h1.x();x++){
+        const Stencil7* AA = &caa[x];
+        double result = AA->p*cx0[x];
+	result += AA->w*cx0[x-1];
+	result += AA->e*cx0[x+1];
+	result += AA->s*cx1[x];
+	result += AA->n*cx2[x];
+	result += AA->b*cx3[x];
+	result += AA->t*cx4[x];
+        cbb[x] = result;
+      }
+      // Xhigh
+      if(x < hh.x()){
+        const Stencil7* AA = &caa[x];
+        double result = AA->p*cx0[x];
+	result += AA->w*cx0[x-1];
+	result += AA->s*cx1[x];
+	result += AA->n*cx2[x];
+	result += AA->b*cx3[x];
+	result += AA->t*cx4[x];
+        cbb[x] = result;
+      }
+    }
+    // Yhigh
+    if(y < hh.y()){
+      const Stencil7* caa = &A[IntVector(0,y,z)];
+      double* cbb = &B[IntVector(0,y,z)];
+      const double* cx0 = &X[IntVector(0,y,z)];
+      const double* cx1 = &X[IntVector(0,y-1,z)];
+      const double* cx3 = &X[IntVector(0,y,z-1)];
+      const double* cx4 = &X[IntVector(0,y,z+1)];
+      for(int x=ll.x();x<hh.x();x++){
+        const Stencil7* AA = &caa[x];
+        double result = AA->p*cx0[x];
+        if(x > l.x())
+          result += AA->w*cx0[x-1];
+        if(x < h1.x())
+          result += AA->e*cx0[x+1];
+	result += AA->s*cx1[x];
+	result += AA->b*cx3[x];
+	result += AA->t*cx4[x];
+        cbb[x] = result;
       }
     }
   }
-  //mult(cb, ca, cx, &cll, &chh, &cl, &ch1);
+  // Zhigh
+  if(z < hh.z()){
+    for(int y=ll.y();y<hh.y();y++){
+      const Stencil7* caa = &A[IntVector(0,y,z)];
+      double* cbb = &B[IntVector(0,y,z)];
+      const double* cx0 = &X[IntVector(0,y,z)];
+      const double* cx1 = &X[IntVector(0,y-1,z)];
+      const double* cx2 = &X[IntVector(0,y+1,z)];
+      const double* cx3 = &X[IntVector(0,y,z-1)];
+      for(int x=ll.x();x<hh.x();x++){
+        const Stencil7* AA = &caa[x];
+        double result = AA->p*cx0[x];
+        if(x > l.x())
+          result += AA->w*cx0[x-1];
+        if(x < h1.x())
+          result += AA->e*cx0[x+1];
+        if(y > l.y())
+          result += AA->s*cx1[x];
+        if(y < h1.y())
+          result += AA->n*cx2[x];
+	result += AA->b*cx3[x];
+        cbb[x] = result;
+      }
+    }
+  }
 #else
   for(; !iter.done(); ++iter){
     IntVector idx = *iter;
@@ -80,26 +203,221 @@ static void Mult(Array3<double>& B, const Array3<Stencil7>& A,
 #endif
   IntVector diff = iter.end()-iter.begin();
   flops += 13*diff.x()*diff.y()*diff.z();
+  memrefs += 15L*diff.x()*diff.y()*diff.z()*8L;
+}
+
+void Mult(Array3<double>& B, const Array3<Stencil7>& A,
+	  const Array3<double>& X, CellIterator iter,
+	  const IntVector& l, const IntVector& h1, long64& flops,
+	  long64& memrefs, double& dotresult)
+{
+  // Center
+#if 1
+  double dot=0;
+  IntVector  ll(iter.begin());
+  IntVector hh(iter.end());
+  // Zlow
+  int z=ll.z();
+  if(z <= l.z()){
+    for(int y=ll.y();y<hh.y();y++){
+      const Stencil7* caa = &A[IntVector(0,y,z)];
+      double* cbb = &B[IntVector(0,y,z)];
+      const double* cx0 = &X[IntVector(0,y,z)];
+      const double* cx1 = &X[IntVector(0,y-1,z)];
+      const double* cx2 = &X[IntVector(0,y+1,z)];
+      const double* cx4 = &X[IntVector(0,y,z+1)];
+      for(int x=ll.x();x<hh.x();x++){
+        const Stencil7* AA = &caa[x];
+        double result = AA->p*cx0[x];
+        if(x > l.x())
+          result += AA->w*cx0[x-1];
+        if(x < h1.x())
+          result += AA->e*cx0[x+1];
+        if(y > l.y())
+          result += AA->s*cx1[x];
+        if(y < h1.y())
+          result += AA->n*cx2[x];
+	result += AA->t*cx4[x];
+        cbb[x] = result;
+	dot += cx0[x]*result;
+      }
+    }
+    z++;
+  }
+  // Zmid
+  for(;z<h1.z();z++){
+    // Ylow
+    int y=ll.y();
+    if(y <= l.y()){
+      const Stencil7* caa = &A[IntVector(0,y,z)];
+      double* cbb = &B[IntVector(0,y,z)];
+      const double* cx0 = &X[IntVector(0,y,z)];
+      const double* cx2 = &X[IntVector(0,y+1,z)];
+      const double* cx3 = &X[IntVector(0,y,z-1)];
+      const double* cx4 = &X[IntVector(0,y,z+1)];
+      for(int x=ll.x();x<hh.x();x++){
+        const Stencil7* AA = &caa[x];
+        double result = AA->p*cx0[x];
+        if(x > l.x())
+          result += AA->w*cx0[x-1];
+        if(x < h1.x())
+          result += AA->e*cx0[x+1];
+	result += AA->n*cx2[x];
+	result += AA->b*cx3[x];
+	result += AA->t*cx4[x];
+        cbb[x] = result;
+	dot += cx0[x]*result;
+      }
+      y++;
+    }
+    // Ymid
+    for(;y<h1.y();y++){
+      const Stencil7* caa = &A[IntVector(0,y,z)];
+      double* cbb = &B[IntVector(0,y,z)];
+      const double* cx0 = &X[IntVector(0,y,z)];
+      const double* cx1 = &X[IntVector(0,y-1,z)];
+      const double* cx2 = &X[IntVector(0,y+1,z)];
+      const double* cx3 = &X[IntVector(0,y,z-1)];
+      const double* cx4 = &X[IntVector(0,y,z+1)];
+
+      // Xlow
+      int x=ll.x();
+      if(x <= l.x()){
+        const Stencil7* AA = &caa[x];
+        double result = AA->p*cx0[x];
+	result += AA->e*cx0[x+1];
+	result += AA->s*cx1[x];
+	result += AA->n*cx2[x];
+	result += AA->b*cx3[x];
+	result += AA->t*cx4[x];
+        cbb[x] = result;
+	dot += cx0[x]*result;
+	x++;
+      }
+      // Xmid
+      for(;x<h1.x();x++){
+        const Stencil7* AA = &caa[x];
+        double result = AA->p*cx0[x];
+	result += AA->w*cx0[x-1];
+	result += AA->e*cx0[x+1];
+	result += AA->s*cx1[x];
+	result += AA->n*cx2[x];
+	result += AA->b*cx3[x];
+	result += AA->t*cx4[x];
+        cbb[x] = result;
+	dot += cx0[x]*result;
+      }
+      // Xhigh
+      if(x < hh.x()){
+        const Stencil7* AA = &caa[x];
+        double result = AA->p*cx0[x];
+	result += AA->w*cx0[x-1];
+	result += AA->s*cx1[x];
+	result += AA->n*cx2[x];
+	result += AA->b*cx3[x];
+	result += AA->t*cx4[x];
+        cbb[x] = result;
+	dot += cx0[x]*result;
+      }
+    }
+    // Yhigh
+    if(y < hh.y()){
+      const Stencil7* caa = &A[IntVector(0,y,z)];
+      double* cbb = &B[IntVector(0,y,z)];
+      const double* cx0 = &X[IntVector(0,y,z)];
+      const double* cx1 = &X[IntVector(0,y-1,z)];
+      const double* cx3 = &X[IntVector(0,y,z-1)];
+      const double* cx4 = &X[IntVector(0,y,z+1)];
+      for(int x=ll.x();x<hh.x();x++){
+        const Stencil7* AA = &caa[x];
+        double result = AA->p*cx0[x];
+        if(x > l.x())
+          result += AA->w*cx0[x-1];
+        if(x < h1.x())
+          result += AA->e*cx0[x+1];
+	result += AA->s*cx1[x];
+	result += AA->b*cx3[x];
+	result += AA->t*cx4[x];
+        cbb[x] = result;
+	dot += cx0[x]*result;
+      }
+    }
+  }
+  // Zhigh
+  if(z < hh.z()){
+    for(int y=ll.y();y<hh.y();y++){
+      const Stencil7* caa = &A[IntVector(0,y,z)];
+      double* cbb = &B[IntVector(0,y,z)];
+      const double* cx0 = &X[IntVector(0,y,z)];
+      const double* cx1 = &X[IntVector(0,y-1,z)];
+      const double* cx2 = &X[IntVector(0,y+1,z)];
+      const double* cx3 = &X[IntVector(0,y,z-1)];
+      for(int x=ll.x();x<hh.x();x++){
+        const Stencil7* AA = &caa[x];
+        double result = AA->p*cx0[x];
+        if(x > l.x())
+          result += AA->w*cx0[x-1];
+        if(x < h1.x())
+          result += AA->e*cx0[x+1];
+        if(y > l.y())
+          result += AA->s*cx1[x];
+        if(y < h1.y())
+          result += AA->n*cx2[x];
+	result += AA->b*cx3[x];
+        cbb[x] = result;
+	dot += cx0[x]*result;
+      }
+    }
+  }
+
+#else
+  double dot=0;
+  for(; !iter.done(); ++iter){
+    IntVector idx = *iter;
+    const Stencil7& AA = A[idx];
+    double result = AA.p*X[idx];
+    if(idx.x() > l.x())
+      result += AA.w*X[idx+IntVector(-1,0,0)];
+    if(idx.x() < h1.x())
+      result += AA.e*X[idx+IntVector(1,0,0)];
+    if(idx.y() > l.y())
+      result += AA.s*X[idx+IntVector(0,-1,0)];
+    if(idx.y() < h1.y())
+      result += AA.n*X[idx+IntVector(0,1,0)];
+    if(idx.z() > l.z())
+      result += AA.b*X[idx+IntVector(0,0,-1)];
+    if(idx.z() < h1.z())
+      result += AA.t*X[idx+IntVector(0,0,1)];
+    B[idx] = result;
+    dot+=result*X[idx];
+  }
+#endif
+  dotresult=dot;
+  IntVector diff = iter.end()-iter.begin();
+  flops += 13*diff.x()*diff.y()*diff.z();
+  memrefs += 15L*diff.x()*diff.y()*diff.z()*8L;
 }
 
 static void Sub(Array3<double>& r, const Array3<double>& a,
 		const Array3<double>& b,
-		CellIterator iter, long64& flops)
+		CellIterator iter, long64& flops, long64& memrefs)
 {
   for(; !iter.done(); ++iter)
     r[*iter] = a[*iter]-b[*iter];
   IntVector diff = iter.end()-iter.begin();
   flops += diff.x()*diff.y()*diff.z();
+  memrefs += diff.x()*diff.y()*diff.z()*3L*8L;
 }
 
-static void Mult(Array3<double>& r, const Array3<double>& a,
-		const Array3<double>& b,
-		CellIterator iter, long64& flops)
+void Mult(Array3<double>& r, const Array3<double>& a,
+	  const Array3<double>& b,
+	  CellIterator iter, long64& flops, long64& memrefs)
 {
   for(; !iter.done(); ++iter)
     r[*iter] = a[*iter]*b[*iter];
   IntVector diff = iter.end()-iter.begin();
   flops += diff.x()*diff.y()*diff.z();
+  memrefs += diff.x()*diff.y()*diff.z()*3L*8L;
 }
 
 #if 0
@@ -115,53 +433,76 @@ static void DivDiagonal(Array3<double>& r, const Array3<double>& a,
 #endif
 
 static void InverseDiagonal(Array3<double>& r, const Array3<Stencil7>& A,
-			CellIterator iter, long64& flops)
+			    CellIterator iter, long64& flops, long64& memrefs)
 {
   for(; !iter.done(); ++iter)
     r[*iter] = 1./A[*iter].p;
   IntVector diff = iter.end()-iter.begin();
   flops += diff.x()*diff.y()*diff.z();
+  memrefs += 2L*diff.x()*diff.y()*diff.z()*8L;
 }
 
-static double L1(const Array3<double>& a, CellIterator iter, long64& flops)
+static double L1(const Array3<double>& a, CellIterator iter, long64& flops,
+		 long64& memrefs)
 {
   double sum=0;
   for(; !iter.done(); ++iter)
     sum += Abs(a[*iter]);
   IntVector diff = iter.end()-iter.begin();
   flops += 2*diff.x()*diff.y()*diff.z();
+  memrefs += diff.x()*diff.y()*diff.z()*8L;
   return sum;
 }
 
-static double LInf(const Array3<double>& a, CellIterator iter, long64& flops)
+double LInf(const Array3<double>& a, CellIterator iter, long64& flops,
+	    long64& memrefs)
 {
   double max=0;
   for(; !iter.done(); ++iter)
     max = Max(max, Abs(a[*iter]));
   IntVector diff = iter.end()-iter.begin();
   flops += 2*diff.x()*diff.y()*diff.z();
+  memrefs += diff.x()*diff.y()*diff.z()*8L;
   return max;
 }
 
-static double Dot(const Array3<double>& a, const Array3<double>& b,
-		  CellIterator iter, long64& flops)
+double Dot(const Array3<double>& a, const Array3<double>& b,
+	   CellIterator iter, long64& flops, long64& memrefs)
 {
   double sum=0;
   for(; !iter.done(); ++iter)
     sum += a[*iter]*b[*iter];
   IntVector diff = iter.end()-iter.begin();
   flops += 2*diff.x()*diff.y()*diff.z();
+  memrefs += diff.x()*diff.y()*diff.z()*2L*8L;
   return sum;
 }
 
-static void ScMult_Add(Array3<double>& r, double s,
-		       const Array3<double>& a, const Array3<double>& b,
-		       CellIterator iter, long64& flops)
+void ScMult_Add(Array3<double>& r, double s,
+		const Array3<double>& a, const Array3<double>& b,
+		CellIterator iter, long64& flops, long64& memrefs)
 {
+#if 1
+  IntVector ll(iter.begin());
+  IntVector hh(iter.end());
+  for(int z=ll.z();z<hh.z();z++){
+    for(int y=ll.y();y<hh.y();y++){
+      IntVector rowstart(0,y,z);
+      double* ppr = &r[rowstart];
+      const double* ppa = &a[rowstart];
+      const double* ppb = &b[rowstart];
+      for(int x=ll.x();x<hh.x();x++){
+	ppr[x]=s*ppa[x]+ppb[x];
+      }
+    }
+  }
+#else
   for(; !iter.done(); ++iter)
     r[*iter] = s*a[*iter]+b[*iter];
+#endif
   IntVector diff = iter.end()-iter.begin();
   flops += 2*diff.x()*diff.y()*diff.z();
+  memrefs += diff.x()*diff.y()*diff.z()*3L*8L;
 }
 
 namespace Uintah {
@@ -263,6 +604,9 @@ public:
     VarLabel* tmp_flop_label = VarLabel::create(A->getName()+" flops", sumlong_vartype::getTypeDescription());
     tmp_flop_label->allowMultipleComputes();
     flop_label = tmp_flop_label;
+    VarLabel* tmp_memref_label = VarLabel::create(A->getName()+" memrefs", sumlong_vartype::getTypeDescription());
+    tmp_memref_label->allowMultipleComputes();
+    memref_label = tmp_memref_label;
     switch(params->norm){
     case CGSolverParams::L1:
       err_label = VarLabel::create(A->getName()+" err", sum_vartype::getTypeDescription());
@@ -283,6 +627,7 @@ public:
     VarLabel::destroy(d_label);
     VarLabel::destroy(diag_label);
     VarLabel::destroy(flop_label);
+    VarLabel::destroy(memref_label);
     if(err_label != d_label)
       VarLabel::destroy(err_label);
     VarLabel::destroy(aden_label);
@@ -327,12 +672,14 @@ public:
 
 	// Q = A*D
 	long64 flops = 0;
+	long64 memrefs = 0;
 	// Must be qualified with :: for the IBM xlC compiler.
-	::Mult(Q, A, D, iter, ll, hh, flops);
-	double aden=::Dot(D, Q, iter, flops);
+	double aden;
+	::Mult(Q, A, D, iter, ll, hh, flops, memrefs, aden);
 	new_dw->put(sum_vartype(aden), aden_label);
 
 	new_dw->put(sumlong_vartype(flops), flop_label);
+	new_dw->put(sumlong_vartype(memrefs), memref_label);
       }
     }
   }
@@ -372,60 +719,32 @@ public:
 	old_dw->get(d, d_label);
 
 	long64 flops = 0;
+	long64 memrefs = 0;
 	double a=d/aden;
 
 #if 1
-	// X = a*D+X
-	ScMult_Add(Xnew, a, D, X, iter, flops);
-	// R = -a*Q+R
-	ScMult_Add(Rnew, -a, Q, R, iter, flops);
-
-	// Simple Preconditioning...
-	Mult(Q, Rnew, diagonal, iter, flops);
-
-	// Calculate coefficient bk and direction vectors p and pp
-	double dnew=Dot(Q, Rnew, iter, flops);
-
-	// Calculate error term
-	switch(params->norm){
-	case CGSolverParams::L1:
-	  {
-	    double err = L1(Q, iter, flops);
-	    new_dw->put(sum_vartype(err), err_label);
-	  }
-	  break;
-	case CGSolverParams::L2:
-	  // Nothing...
-	  break;
-	case CGSolverParams::LInfinity:
-	  {
-	    double err = LInf(Q, iter, flops);
-	    new_dw->put(max_vartype(err), err_label);
-	  }
-	  break;
-	}
-#else
-	double*** pXnew = Xnew.get3DPointer();
-	double*** pD = get3DPointer(D);
-	double*** pRnew = Rnew.get3DPointer();
-	double*** pR = get3DPointer(R);
-	double*** pQ = Q.get3DPointer();
-	double*** pX = get3DPointer(X);
-	double*** pdiagonal = get3DPointer(diagonal);
 	IntVector  ll(iter.begin());
 	IntVector hh(iter.end());
 	double dnew = 0;
 	double err = 0;
 	for(int z=ll.z();z<hh.z();z++){
 	  for(int y=ll.y();y<hh.y();y++){
+	    IntVector rowstart(0,y,z);
+	    double* ppXnew = &Xnew[rowstart];
+	    const double* ppD = &D[rowstart];
+	    double* ppRnew = &Rnew[rowstart];
+	    const double* ppR = &R[rowstart];
+	    double* ppQ = &Q[rowstart];
+	    const double* ppX = &X[rowstart];
+	    const double* ppdiagonal = &diagonal[rowstart];
 	    for(int x=ll.x();x<hh.x();x++){
 	      // X = a*D+X
-	      pXnew[z][y][x] = a*pD[z][y][x]+pX[z][y][x];
+	      ppXnew[x] = a*ppD[x]+ppX[x];
 	      // R = -a*Q+R
-	      double tmp1 = pRnew[z][y][x] = pR[z][y][x]-a*pQ[z][y][x];
+	      double tmp1 = ppRnew[x] = ppR[x]-a*ppQ[x];
 
 	      // Simple Preconditioning...
-	      double tmp2 = pQ[z][y][x] = tmp1*pdiagonal[z][y][x];
+	      double tmp2 = ppQ[x] = tmp1*ppdiagonal[x];
 
 	      // Calculate coefficient bk and direction vectors p and pp
 	      dnew += tmp1*tmp2;
@@ -437,9 +756,41 @@ public:
 	new_dw->put(max_vartype(err), err_label);
 	IntVector diff = iter.end()-iter.begin();
 	flops += 9*diff.x()*diff.y()*diff.z();
+	memrefs += 7L*diff.x()*diff.y()*diff.z()*8L;
+#else
+	// X = a*D+X
+	ScMult_Add(Xnew, a, D, X, iter, flops, memrefs);
+	// R = -a*Q+R
+	ScMult_Add(Rnew, -a, Q, R, iter, flops, memrefs);
+
+	// Simple Preconditioning...
+	Mult(Q, Rnew, diagonal, iter, flops, memrefs);
+
+	// Calculate coefficient bk and direction vectors p and pp
+	double dnew=Dot(Q, Rnew, iter, flops, memrefs);
+
+	// Calculate error term
+	switch(params->norm){
+	case CGSolverParams::L1:
+	  {
+	    double err = L1(Q, iter, flops, memrefs);
+	    new_dw->put(sum_vartype(err), err_label);
+	  }
+	  break;
+	case CGSolverParams::L2:
+	  // Nothing...
+	  break;
+	case CGSolverParams::LInfinity:
+	  {
+	    double err = LInf(Q, iter, flops, memrefs);
+	    new_dw->put(max_vartype(err), err_label);
+	  }
+	  break;
+	}
 #endif
 	new_dw->put(sum_vartype(dnew), d_label);
 	new_dw->put(sumlong_vartype(flops), flop_label);
+	new_dw->put(sumlong_vartype(memrefs), memref_label);
       }
     }
     new_dw->transferFrom(old_dw, diag_label, patches, matls);
@@ -475,8 +826,10 @@ public:
 	typename Types::sol_type Dnew;
 	new_dw->allocateAndPut(Dnew, D_label, matl, patch, Ghost::None, 0);
 	long64 flops = 0;
-	::ScMult_Add(Dnew, b, D, Q, iter, flops);
+	long64 memrefs = 0;
+	::ScMult_Add(Dnew, b, D, Q, iter, flops, memrefs);
 	new_dw->put(sumlong_vartype(flops), flop_label);
+	new_dw->put(sumlong_vartype(memrefs), memref_label);
       }
     }
   }
@@ -508,6 +861,7 @@ public:
 	parent_new_dw->get(A, A_label, matl, patch, Ghost::None, 0);
 
 	long64 flops = 0;
+	long64 memrefs = 0;
 	if(guess_label){
 	  typename Types::const_type X;
 	  if(guess_dw == Task::OldDW)
@@ -527,10 +881,10 @@ public:
 			  patch->getBCType(Patch::zplus) == Patch::Neighbor?1:0);
 	  hh -= IntVector(1,1,1);
 
-	  ::Mult(R, A, X, iter, ll, hh, flops);
+	  ::Mult(R, A, X, iter, ll, hh, flops, memrefs);
 
 	  // R = B-R
-	  ::Sub(R, B, R, iter, flops);
+	  ::Sub(R, B, R, iter, flops, memrefs);
 	  Xnew.copy(X, iter.begin(), iter.end());
 	} else {
 	  R.copy(B);
@@ -543,16 +897,16 @@ public:
 #if 0
 	::DivDiagonal(D, R, A, iter, flops);
 #else
-	::InverseDiagonal(diagonal, A, iter, flops);
-	::Mult(D, R, diagonal, iter, flops);
+	::InverseDiagonal(diagonal, A, iter, flops, memrefs);
+	::Mult(D, R, diagonal, iter, flops, memrefs);
 #endif
 
-	double dnew = ::Dot(R, D, iter, flops);
+	double dnew = ::Dot(R, D, iter, flops, memrefs);
 	new_dw->put(sum_vartype(dnew), d_label);
 	switch(params->norm){
 	case CGSolverParams::L1:
 	  {
-	    double err = ::L1(R, iter, flops);
+	    double err = ::L1(R, iter, flops, memrefs);
 	    new_dw->put(sum_vartype(err), err_label);
 	  }
 	  break;
@@ -561,12 +915,13 @@ public:
 	  break;
 	case CGSolverParams::LInfinity:
 	  {
-	    double err = ::LInf(R, iter, flops);
+	    double err = ::LInf(R, iter, flops, memrefs);
 	    new_dw->put(max_vartype(err), err_label);
 	  }
 	  break;
 	}
 	new_dw->put(sumlong_vartype(flops), flop_label);
+	new_dw->put(sumlong_vartype(memrefs), memref_label);
       }
     }
   }
@@ -646,6 +1001,8 @@ public:
     sumlong_vartype f;
     subsched->get_dw(3)->get(f, flop_label);
     long64 flops = f;
+    subsched->get_dw(3)->get(f, memref_label);
+    long64 memrefs = f;
     if(!(e < params->initial_tolerance)) {
       subsched->initialize(3, 1, old_dw, new_dw);
       subsched->clearMappings();
@@ -721,6 +1078,8 @@ public:
 	sumlong_vartype f;
 	subsched->get_dw(3)->get(f, flop_label);
 	flops += f;
+	subsched->get_dw(3)->get(f, memref_label);
+	memrefs += f;
       }
     }
 
@@ -753,13 +1112,14 @@ public:
 
     double dt=Time::currentSeconds()-tstart;
     double mflops = (double(flops)*1.e-6)/dt;
+    double memrate = (double(memrefs)*1.e-9)/dt;
     cerr << "Solve of " << X_label->getName() 
 	 << " on level " << level->getIndex();
     if(niter < toomany)
       cerr << " completed in ";
     else
       cerr << " FAILED in ";
-    cerr << niter << " iterations, " << dt << " seconds (" << mflops << " MFLOPS)\n";
+    cerr << niter << " iterations, " << dt << " seconds (" << mflops << " MFLOPS, " << memrate << " GB/sec)\n";
   }
     
 private:
@@ -780,6 +1140,7 @@ private:
   const VarLabel* aden_label;
   const VarLabel* guess_label;
   const VarLabel* flop_label;
+  const VarLabel* memref_label;
   Task::WhichDW guess_dw;
   const CGSolverParams* params;
   bool modifies_x;
