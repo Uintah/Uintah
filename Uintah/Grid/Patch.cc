@@ -32,6 +32,13 @@ Patch::Patch(const Level* level,
 {
    if(d_id == -1)
       d_id = ids++;
+
+   d_bcs = vector<vector<BoundCond* > >(numFaces);
+   for (int i = 0; i<numFaces; i++ ) {
+     vector<BoundCond* > a;
+     d_bcs[i] = a;
+   }
+
 }
 
 Patch::~Patch()
@@ -178,6 +185,19 @@ Patch::setBCType(Patch::FaceType face, BCType newbc)
    d_bctypes[face]=newbc;
 }
 
+void 
+Patch::setBCValues(Patch::FaceType face, vector<BoundCond*>& bc)
+{
+  d_bcs[face] = bc;
+}
+
+vector<BoundCond* >
+Patch::getBCValues(Patch::FaceType face) const
+{
+  return d_bcs[face];
+}
+
+
 void
 Patch::getFace(FaceType face, int offset, IntVector& l, IntVector& h) const
 {
@@ -271,6 +291,9 @@ IntVector Patch::getNodeHighIndex() const
 
 //
 // $Log$
+// Revision 1.14  2000/06/27 22:49:04  jas
+// Added grid boundary condition support.
+//
 // Revision 1.13  2000/06/26 17:09:01  bigler
 // Added getNodeIterator which takes a Box and returns the iterator
 // that will loop over the nodes that lie withing the Box.
