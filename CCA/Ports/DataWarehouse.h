@@ -315,6 +315,8 @@ public:
   virtual bool isFinalized() const = 0;
   virtual bool exists(const VarLabel*, const Patch*) const = 0;
   virtual void finalize() = 0;
+  virtual void unfinalize() = 0;
+  virtual void refinalize() = 0;
 
   // Returns the generation number (id) of this data warehouse.  Id's
   // start at 0. Each subsequent DW's id is one greater.  SetID should

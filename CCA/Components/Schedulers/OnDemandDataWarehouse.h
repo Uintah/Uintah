@@ -257,6 +257,9 @@ public:
    virtual bool exists(const VarLabel*, const Patch*) const;
    
    virtual void finalize();
+   virtual void unfinalize();
+   virtual void refinalize();
+
 
    virtual void emit(OutputContext&, const VarLabel* label,
 		     int matlIndex, const Patch* patch);

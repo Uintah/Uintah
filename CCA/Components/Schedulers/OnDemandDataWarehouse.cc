@@ -134,6 +134,18 @@ void OnDemandDataWarehouse::finalize()
   d_lock.writeUnlock();
 }
 
+void OnDemandDataWarehouse::unfinalize()
+{
+  // this is for processes that need to make small modifications to the DW
+  // after it has been finalized.
+  d_finalized=false;
+}
+
+void OnDemandDataWarehouse::refinalize()
+{
+  d_finalized=true;
+}
+
 void
 OnDemandDataWarehouse::put(Variable* var, const VarLabel* label,
 			   int matlIndex, const Patch* patch)
@@ -1928,10 +1940,11 @@ getGridVar(VariableBase& var, DWDatabase& db,
     for(int i=0;i<(int)neighbors.size();i++){
       const Patch* neighbor = neighbors[i];
       if(neighbor && (neighbor != patch)){
-	if(!db.exists(label, matlIndex, neighbor))
+	if(!db.exists(label, matlIndex, neighbor)) {
 	  SCI_THROW(UnknownVariable(label->getName(), getID(), neighbor,
 				    matlIndex, neighbor == patch?
 				    "on patch":"on neighbor"));
+        }
 	VariableBase* srcvar = var.cloneType();
 	db.get(label, matlIndex, neighbor, *srcvar);
 	if(neighbor->isVirtual())
