@@ -22,7 +22,7 @@
 #include <Packages/rtrt/Core/ScalarTransform1D.h>
 #include <Packages/rtrt/Core/Scene.h>
 #include <Packages/rtrt/Core/Sphere.h>
-#include <Packages/rtrt/Core/TimeObj.h>
+#include <Packages/rtrt/Core/SelectableGroup.h>
 #include <Packages/rtrt/Core/Array1.h>
 #if 0
 #undef Exception
@@ -895,7 +895,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   // the value of colordata will be checked later and the
   // program will abort if the value is too large.
   GridSpheresDpy* display = new GridSpheresDpy(colordata-1, dpy_config);
-  TimeObj* alltime = new TimeObj(rate);
+  SelectableGroup* alltime = new SelectableGroup(1/rate);
  
   try {
     DataArchive* da = new DataArchive(filebase);
@@ -1311,7 +1311,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   (new Thread(display, "GridSpheres display thread\n"))->detach();
 
   // Add objects of interest
-  scene->addObjectOfInterest(alltime, true);
+  scene->addGuiObject("Timesteps", alltime);
 
   scene->select_shadow_mode( No_Shadows );
   return scene;
