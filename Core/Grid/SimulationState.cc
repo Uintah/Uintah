@@ -113,6 +113,10 @@ SimulationState::~SimulationState()
 
   for (int i = 0; i < (int)matls.size(); i++)
     delete matls[i];
+
+  if(all_matls && all_matls->removeReference())
+    delete all_matls;
+  
   if(all_mpm_matls && all_mpm_matls->removeReference())
     delete all_mpm_matls;
 
@@ -121,6 +125,10 @@ SimulationState::~SimulationState()
 
   if(all_ice_matls && all_ice_matls->removeReference())
     delete all_ice_matls;
+
+  if (allInOneMatl && allInOneMatl->removeReference()) {
+    delete allInOneMatl;
+  }
 }
 
 const MaterialSet* SimulationState::allMPMMaterials() const
