@@ -99,8 +99,8 @@ void FieldExtractor::build_field(DataArchive& archive,
 				 Var& /*var*/,
                                   LatVolField<T>*& sfd)
 {
-  int max_workers = Min(Thread::numProcessors(), 8);
-  Semaphore* thread_sema = scinew Semaphore( "extractor semahpore",
+  int max_workers = Max(Thread::numProcessors()/2, 2);
+  Semaphore* thread_sema = scinew Semaphore( "extractor semaphore",
                                              max_workers);
   WallClockTimer my_timer;
   my_timer.start();
@@ -125,7 +125,7 @@ void FieldExtractor::build_field(DataArchive& archive,
     IntVector range = hi - low;
     int z_min = low.z();
     int z_max = low.z() + hi.z() - low.z();
-    int z_step, i, z, N;
+    int z_step, i, z, N = 0;
     if ((z_max - z_min) >= max_workers){
       // in case we have large patches we'll divide up the work 
       // for each patch, if the patches are small we'll divide the
@@ -133,9 +133,9 @@ void FieldExtractor::build_field(DataArchive& archive,
       int cs = 25000000;  
       int S = range.x() * range.y() * range.z() * sizeof(T);
       N = Min(Max(S/cs, 1), (max_workers-1));
-    } else {
-      N = 1;
     }
+    N = Max(N,1);
+    
     z_step = (z_max - z_min)/N;
     for(i = 0, z = z_min ; i < N; i++, z += z_step) {
 
