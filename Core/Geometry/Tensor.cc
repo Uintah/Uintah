@@ -74,13 +74,22 @@ Tensor::Tensor(const double *channels) {
   valid_eigens_=0;
 }
 
-Tensor::Tensor(int v) {
-  ASSERT(v==0); // doesn't make sense to initialize it with
-                // anything other than 0
+//! Initialize the diagonal to this value
+Tensor::Tensor(double v) {
   valid_eigens_=0;
   for (int i=0; i<3; i++) 
     for (int j=0; j<3; j++)
-      mat_[i][j]=v;
+      if (i==j) mat_[i][j]=v;
+      else mat_[i][j]=0;
+}
+
+//! Initialize the diagonal to this value
+Tensor::Tensor(int v) {
+  valid_eigens_=0;
+  for (int i=0; i<3; i++) 
+    for (int j=0; j<3; j++)
+      if (i==j) mat_[i][j]=v;
+      else mat_[i][j]=0;
 }
 
 Tensor::Tensor(const Vector &e1, const Vector &e2, const Vector &e3) :
