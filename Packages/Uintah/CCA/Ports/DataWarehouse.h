@@ -15,6 +15,7 @@
 #include <Packages/Uintah/Core/Variables/SoleVariableBase.h>
 #include <Packages/Uintah/Core/Variables/PerPatchBase.h>
 #include <Packages/Uintah/Core/Variables/ComputeSet.h>
+#include <Packages/Uintah/Core/Variables/VarLabelMatl.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouseP.h>
 #include <Packages/Uintah/CCA/Ports/SchedulerP.h>
@@ -82,7 +83,8 @@ public:
 		   const Patch*) = 0;
   virtual void allocateAndPutGridVar(Variable*, const VarLabel*, 
 				     int matlIndex, const Patch*) = 0;
- 
+
+
   // Reduction Variables
   virtual void get(ReductionVariableBase&, const VarLabel*,
 		   const Level* level = 0, int matlIndex = -1) = 0;
@@ -171,8 +173,8 @@ public:
   virtual void getModifiable(NCVariableBase&, const VarLabel*,
 			     int matlIndex, const Patch*) = 0;
   virtual void getRegion(constNCVariableBase&, const VarLabel*,
-			 int matlIndex, const Level* level,
-			 const IntVector& low, const IntVector& high) = 0;
+  			 int matlIndex, const Level* level,
+  			 const IntVector& low, const IntVector& high) = 0;
   void copyOut(NCVariableBase& var, const VarLabel* label, int matlIndex,
 	       const Patch* patch, Ghost::GhostType gtype = Ghost::None,
 	       int numGhostCells = 0)
@@ -198,8 +200,8 @@ public:
   virtual void getModifiable(CCVariableBase&, const VarLabel*,
 			     int matlIndex, const Patch*) = 0;
   virtual void getRegion(constCCVariableBase&, const VarLabel*,
-			 int matlIndex, const Level* level,
-			 const IntVector& low, const IntVector& high) = 0;
+  			 int matlIndex, const Level* level,
+  			 const IntVector& low, const IntVector& high) = 0;
   void copyOut(CCVariableBase& var, const VarLabel* label, int matlIndex,
 	       const Patch* patch, Ghost::GhostType gtype = Ghost::None,
 	       int numGhostCells = 0)
@@ -222,11 +224,11 @@ public:
 			      int numGhostCells = 0) = 0;
   virtual void get(constSFCXVariableBase&, const VarLabel*, int matlIndex,
 		   const Patch*, Ghost::GhostType, int numGhostCells) = 0;
-  virtual void getRegion(constSFCXVariableBase&, const VarLabel*,
-			 int matlIndex, const Level* level,
-			 const IntVector& low, const IntVector& high) = 0;
   virtual void getModifiable(SFCXVariableBase&, const VarLabel*,
 			     int matlIndex, const Patch*) = 0;
+  virtual void getRegion(constSFCXVariableBase&, const VarLabel*,
+  			 int matlIndex, const Level* level,
+  			 const IntVector& low, const IntVector& high) = 0;
   void copyOut(SFCXVariableBase& var, const VarLabel* label, int matlIndex,
 	       const Patch* patch, Ghost::GhostType gtype = Ghost::None,
 	       int numGhostCells = 0)
@@ -251,8 +253,8 @@ public:
   virtual void getModifiable(SFCYVariableBase&, const VarLabel*,
 			     int matlIndex, const Patch*) = 0;
   virtual void getRegion(constSFCYVariableBase&, const VarLabel*,
-			 int matlIndex, const Level* level,
-			 const IntVector& low, const IntVector& high) = 0;
+  			 int matlIndex, const Level* level,
+  			 const IntVector& low, const IntVector& high) = 0;
   void copyOut(SFCYVariableBase& var, const VarLabel* label, int matlIndex,
 	       const Patch* patch, Ghost::GhostType gtype = Ghost::None,
 	       int numGhostCells = 0)
@@ -277,8 +279,8 @@ public:
   virtual void getModifiable(SFCZVariableBase&, const VarLabel*,
 			     int matlIndex, const Patch*) = 0;
   virtual void getRegion(constSFCZVariableBase&, const VarLabel*,
-			 int matlIndex, const Level* level,
-			 const IntVector& low, const IntVector& high) = 0;
+  			 int matlIndex, const Level* level,
+  			 const IntVector& low, const IntVector& high) = 0;
   void copyOut(SFCZVariableBase& var, const VarLabel* label, int matlIndex,
 	       const Patch* patch, Ghost::GhostType gtype = Ghost::None,
 	       int numGhostCells = 0)
@@ -296,6 +298,9 @@ public:
   virtual void put(PerPatchBase&, const VarLabel*,
 		   int matlIndex, const Patch*, bool replace = false) = 0;
      
+  // this is so we can get reduction information for regridding
+  virtual void getVarLabelMatlLevelTriples(vector<VarLabelMatl<Level> >& vars ) const = 0;
+
   // Remove particles that are no longer relevant
   virtual void deleteParticles(ParticleSubset* delset) = 0;
 
@@ -324,7 +329,7 @@ public:
 
   // For the schedulers
   virtual bool isFinalized() const = 0;
-  virtual bool exists(const VarLabel*, const Patch*) const = 0;
+  //virtual bool exists(const VarLabel*, const Patch*) const = 0;
   virtual void finalize() = 0;
   virtual void unfinalize() = 0;
   virtual void refinalize() = 0;
