@@ -57,6 +57,8 @@ SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
   d_nextOutputTime=0.;
   d_fracture = false;
   d_SMALL_NUM_MPM=1e-200;
+  d_with_ice    = false;
+  d_with_arches = false;
 }
 
 SerialMPM::~SerialMPM()
@@ -404,10 +406,10 @@ void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
 
   t->requires(Task::NewDW,lb->gMassLabel,                  Ghost::None);
   t->requires(Task::NewDW,lb->pStressLabel_afterStrainRate,Ghost::AroundNodes,1);
-  t->requires(Task::NewDW,lb->pVolumeDeformedLabel,        Ghost::AroundNodes,1);
-  t->requires(Task::OldDW,lb->pMassLabel,                  Ghost::AroundNodes,1);
+  t->requires(Task::NewDW,lb->pVolumeDeformedLabel,       Ghost::AroundNodes,1);
+  t->requires(Task::OldDW,lb->pMassLabel,                 Ghost::AroundNodes,1);
 
-  if(d_sharedState->getNumMatls() != d_sharedState->getNumMPMMatls()){
+  if(d_with_ice){
     t->requires(Task::NewDW, lb->pPressureLabel,          Ghost::AroundNodes,1);
   }
 
@@ -577,8 +579,6 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   *   integrate these to get new particle velocity and position)
   * out(P.VELOCITY, P.X, P.NAT_X) */
 
-  int numMPMMatls = d_sharedState->getNumMPMMatls();
-  int numALLMatls = d_sharedState->getNumMatls();
   Task* t=scinew Task("SerialMPM::interpolateToParticlesAndUpdate",
 		    this, &SerialMPM::interpolateToParticlesAndUpdate);
 
@@ -601,7 +601,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
   t->requires(Task::NewDW, lb->pVolumeDeformedLabel,      Ghost::None);
 
   
-  if(numMPMMatls!=numALLMatls){
+  if(d_with_ice){
     t->requires(Task::NewDW, lb->dTdt_NCLabel,            Ghost::AroundCells,1);
     t->requires(Task::NewDW, lb->massBurnFractionLabel,   Ghost::AroundCells,1);
   }
@@ -1149,15 +1149,15 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       new_dw->allocate(internalforce, lb->gInternalForceLabel,
 						matlindex, patch);
 
-      if(numMPMMatls==numALLMatls){
+      if(d_with_ice){
+        new_dw->get(p_pressure,lb->pPressureLabel, pset);
+      }
+      else {
 	new_dw->allocate(p_pressure,lb->pPressureLabel, pset);
 	for(ParticleSubset::iterator iter = pset->begin();
                                      iter != pset->end(); iter++){
 	   p_pressure[*iter]=0.0;
 	}
-      }
-      else {
-        new_dw->get(p_pressure,lb->pPressureLabel, pset);
       }
 
       internalforce.initialize(Vector(0,0,0));
@@ -1660,7 +1660,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     double ke=0;
     double massLost=0;
     int numMPMMatls=d_sharedState->getNumMPMMatls();
-    int numALLMatls=d_sharedState->getNumMatls();
 
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -1704,7 +1703,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->get(gTemperatureNoBC, lb->gTemperatureNoBCLabel,
 			dwindex, patch, Ghost::AroundCells, 1);
 
-      if(numMPMMatls!=numALLMatls){
+      if(d_with_ice){
         new_dw->get(dTdt, lb->dTdt_NCLabel, dwindex,patch,Ghost::AroundCells,1);
         new_dw->get(massBurnFraction, lb->massBurnFractionLabel,
 					    dwindex,patch,Ghost::AroundCells,1);
