@@ -24,11 +24,14 @@ SRCS     += \
 	$(SRCDIR)/InsertDelaunay.cc\
 	$(SRCDIR)/MakeScalarField.cc\
 	$(SRCDIR)/MeshBoundary.cc\
+	$(SRCDIR)/MeshFindSurfNodes.cc\
 	$(SRCDIR)/MeshInterpVals.cc\
+	$(SRCDIR)/MeshNodeComponent.cc\
 	$(SRCDIR)/MeshRender.cc\
 	$(SRCDIR)/MeshToGeom.cc\
 	$(SRCDIR)/MeshView.cc\
-#[INSERT NEW CODE FILE HERE]
+	$(SRCDIR)/TransformMesh.cc
+#[INSERT NEW MODULE HERE]
 
 PSELIBS := PSECore/Dataflow PSECore/Datatypes PSECore/Widgets \
 	SCICore/Geom SCICore/Thread SCICore/Exceptions \
@@ -40,6 +43,11 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.10  2000/10/29 04:42:24  dmw
+# MeshInterpVals -- fixed a bug
+# MeshNodeComponent -- build a columnmatrix of the x/y/z position of the nodes
+# MeshFindSurfNodes -- the surface nodes in a mesh
+#
 # Revision 1.9  2000/10/24 05:57:53  moulding
 # new module maker Phase 2: new module maker goes online
 #

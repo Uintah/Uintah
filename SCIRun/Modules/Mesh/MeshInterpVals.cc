@@ -41,7 +41,8 @@ class MeshInterpVals : public Module {
     ColumnMatrixHandle mapH;
     MatrixOPort* omat;
     MatrixHandle matH;
-
+    SurfaceOPort *osurf;
+    SurfaceHandle osurfH;
     int meshGen;
     int surfGen;
 public:
@@ -68,6 +69,8 @@ MeshInterpVals::MeshInterpVals(const clString& id)
     add_oport(omat);
     omatrix=scinew ColumnMatrixOPort(this, "Map", ColumnMatrixIPort::Atomic);
     add_oport(omatrix);
+    osurf=scinew SurfaceOPort(this, "NearestNodes", SurfaceIPort::Atomic);
+    add_oport(osurf);
     meshGen=-1;
     surfGen=-1;
 }
@@ -90,6 +93,7 @@ void MeshInterpVals::execute()
 	mapH.get_rep()) {
 	omatrix->send(mapH);
 	omat->send(matH);
+	osurf->send(osurfH);
 	return;
     }
 
@@ -98,7 +102,9 @@ void MeshInterpVals::execute()
     clString m(method.get());
 
 //    cerr << "Everything's good in MeshInterpVals so far...\n";
-
+    
+    TriSurface *ots=new TriSurface;
+    osurfH=ots;
     if (m == "project") {	
 	TriSurface *ts=scinew TriSurface;
 	
@@ -190,6 +196,7 @@ void MeshInterpVals::execute()
 		    counter++;
 		}
 		vals[aa]=si;
+		ots->points.add(meshH->nodes[si]->p);
 	    }
 	}
     } else {
@@ -198,6 +205,7 @@ void MeshInterpVals::execute()
     }
     omatrix->send(mapH);
     omat->send(matH);
+    osurf->send(osurfH);
 }
 
 } // End namespace Modules
@@ -206,6 +214,11 @@ void MeshInterpVals::execute()
 
 //
 // $Log$
+// Revision 1.6  2000/10/29 04:42:23  dmw
+// MeshInterpVals -- fixed a bug
+// MeshNodeComponent -- build a columnmatrix of the x/y/z position of the nodes
+// MeshFindSurfNodes -- the surface nodes in a mesh
+//
 // Revision 1.5  2000/03/17 09:29:13  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository
