@@ -190,6 +190,8 @@ public:
   virtual ~PropertyManager();
 
   PropertyManager & operator=(const PropertyManager &pm);
+  void copy_properties(const PropertyManager *src);
+
   bool operator==(const PropertyManager &pm);
   bool operator!=(const PropertyManager &pm);
   
@@ -212,17 +214,14 @@ public:
   bool is_frozen() const { return frozen_; }
 
   void remove_property( const string & );
-  unsigned int nproperties() { return size_; }
+  unsigned int nproperties() const { return properties_.size(); }
 
   void    io(Piostream &stream);
   static  PersistentTypeID type_id;
 
 private:
-  //template<class T> bool get_scalar( const string &, T &);
 
   typedef map<string, PropertyBase *> map_type;
-
-  unsigned int size_;
   map_type properties_;
 
 protected:
@@ -245,10 +244,10 @@ PropertyManager::set_property(const string &name,  const T& obj,
   }
   lock.lock();
   map_type::iterator loc = properties_.find(name);
-  if (loc != properties_.end()) 
+  if (loc != properties_.end())
+  {
     delete loc->second;
-  else
-    size_++;
+  }
   properties_[name] = scinew Property<T>(obj, is_transient);
   lock.unlock();
 }
