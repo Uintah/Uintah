@@ -16,54 +16,34 @@
 */
 
 /*
- *  Viewer.h
+ *  MainWindow.h
  *
  *  Written by:
  *   Keming Zhang 
  *   Department of Computer Science
  *   University of Utah
- *   May 2002
+ *   June 2002
  *
  */
 
-#ifndef SCIRun_Viewer_h
-#define SCIRun_Viewer_h
+#ifndef SCIRun_Viewer_MainWindow_h
+#define SCIRun_Viewer_MainWindow_h
 
 #include <Core/CCA/spec/cca_sidl.h>
 
-//namespace SCIRun {
+#include <qwidget.h>
+#include <vector>
 
-#define myUIPort ViewerUIPort
-
-class Viewer;
-
-class myUIPort : public virtual gov::cca::ports::UIPort {
-public:
-   virtual ~myUIPort(){}
-   void setParent(Viewer *com){this->com=com;}
-   virtual int ui();
- private:
-   Viewer *com;
+class MainWindow: public QWidget{
+ public:
+  MainWindow(QWidget *parent, const char *name, 
+	     const CIA::array1<double> nodes1d, 
+	     const CIA::array1<int> triangles, 
+	     const CIA::array1<double> solution );
 };
 
 
-class Viewer : public gov::cca::Component{
-                
-  public:
-    Viewer();
-    virtual ~Viewer();
-    gov::cca::Services::pointer getServices(){return services;}
-    virtual void setServices(const gov::cca::Services::pointer& svc);
-  private:
-
-    Viewer(const Viewer&);
-    Viewer& operator=(const Viewer&);
-    myUIPort uiPort;
-    gov::cca::Services::pointer services;
-  };
-//}
-
-
-
-
 #endif
+
+
+

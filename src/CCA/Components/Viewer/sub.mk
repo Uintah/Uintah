@@ -22,7 +22,11 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := CCA/Components/Viewer
 
 SRCS     += \
-	$(SRCDIR)/Viewer.cc
+	$(SRCDIR)/Viewer.cc \
+	$(SRCDIR)/ViewerWindow.cc \
+	$(SRCDIR)/moc_ViewerWindow.cc \
+	$(SRCDIR)/MainWindow.cc \
+	$(SRCDIR)/Colormap.cc
 PSELIBS := Core/CCA/Component/CIA Core/CCA/Component/PIDL Core/CCA/Component/Comm\
 	Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
 QT_LIBDIR := /home/sparker/SCIRun/SCIRun_Thirdparty_32_linux/lib
@@ -33,3 +37,6 @@ include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 #include $(SCIRUN_SCRIPTS)/program.mk
 
 $(SRCDIR)/Viewer.o: Core/CCA/spec/cca_sidl.h
+$(SRCDIR)/ViewerWindow.o: Core/CCA/spec/cca_sidl.h
+$(SRCDIR)/MainWindow.o: Core/CCA/spec/cca_sidl.h
+$(SRCDIR)/Colormap.o: Core/CCA/spec/cca_sidl.h
