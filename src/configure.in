@@ -1516,6 +1516,11 @@ for flag in -MDupdate; do
   fi
 done
 
+# Because xlC ignores anything after the -M (ie: -Mgarbage or -Mupdate
+# is the same as -M) and creates a .u file anyway, to make the
+# following test work, we need to get rid of the .u file and carry on:
+rm -f configure-test-dir/configure-test.u
+
 # Try -MD or -M
 if test $CC_DEPEND_MODE = unknown; then
   for flag in -MD -M; do
@@ -2582,7 +2587,7 @@ AC_SUBST(BUILD_SCIRUN2)
 dirs="$with_zlib/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
 
 SCI_CHECK_LIB($dirs,z,main,,,not-optional)
-SCI_CHECK_HEADERS($LIBZ/../include,zlib.h,,,not-optional)
+SCI_CHECK_HEADERS($LIBZ/../include $dirs,zlib.h,,,not-optional)
 
 DEF_Z="#define HAVE_ZLIB 1"
 LIBZ_FLAG="$Z_LIBRARY -lz"
