@@ -348,7 +348,9 @@ void setBC(CCVariable<double>& variable, const string& kind,
         }
 /*`==========TESTING==========*/
 #ifdef JET_BC
-        double hardCodedDensity = 1.1792946927* (300.0/1000.0);
+        double hardCodedDensity = 13.937282;
+ //     double hardCodedDensity = 6.271777;
+ //     double hardCodedDensity = 1.1792946927* (300.0/1000.0);
         AddSourceBC<CCVariable<double>,double >(variable, patch, face,
                               hardCodedDensity, offset);  
  #endif 
@@ -439,7 +441,8 @@ void setBC(CCVariable<Vector>& variable, const string& kind,
 /*`==========TESTING==========*/
 #ifdef JET_BC
         BC_dbg << "ORG AddSourceBC VelocityBC "<< face <<endl;
-        Vector hardCodedVelocity(10,0,0);
+     //   Vector hardCodedVelocity(10,0,0);
+        Vector hardCodedVelocity(209,0,0);
         AddSourceBC<CCVariable<Vector>,Vector >(variable, patch, face, 
                                             hardCodedVelocity, offset);  
  #endif 
@@ -626,7 +629,8 @@ void setBC(SFCXVariable<double>& variable, const  string& kind,
     }
 /*`==========TESTING==========*/
 #ifdef JET_BC
-        double hardCodedVelocity = 10.0;
+      // double hardCodedVelocity = 10.0;
+        double hardCodedVelocity = 209.0;
         AddSourceBC<SFCXVariable<double>,double >(variable, patch, face, 
                                             hardCodedVelocity, offset);  
  #endif 
@@ -827,7 +831,62 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
 
 
 
+/* --------------------------------------------------------------------- 
+ Function~  are_We_Using_LODI_BC--                      L   O   D   I
+ Purpose~   returns if we are using LODI BC on any face, 
+ ---------------------------------------------------------------------  */
+bool are_We_Using_LODI_BC(const Patch* patch,
+                          vector<bool>& is_LODI_face,
+                          const int mat_id)
+{ 
+  BC_doing << "are_We_Using_LODI_BC on patch"<<patch->getID()<< endl;
+  
+  bool usingLODI = false;
+  
+  vector<string> kind(3);
+  kind[0] = "Density";
+  kind[1] = "Temperature";
+  kind[2] = "Pressure";
+      
+  is_LODI_face.reserve(6);
+  //__________________________________
+  // Iterate over the faces encompassing the domain
+  // not the faces between neighboring patches.
+  vector<Patch::FaceType>::const_iterator iter;
+  for (iter  = patch->getBoundaryFaces()->begin(); 
+       iter != patch->getBoundaryFaces()->end(); ++iter){
+    Patch::FaceType face = *iter;  
+    
+    is_LODI_face[face] = false;
+    //__________________________________
+    // check if temperature, pressure or density
+    //  is using LODI
+    for(int i = 0; i < 3; i++ ) {
+      const BoundCondBase *bcs;
+      const BoundCond<double>* new_bcs; 
+      bcs     = patch->getBCValues(mat_id,kind[i],face);
+      new_bcs = dynamic_cast<const BoundCond<double> *>(bcs);
+      if( new_bcs !=0 && new_bcs->getKind() == "LODI" ) {
+        usingLODI = true;
+        is_LODI_face[face] = true;
+      }
+    }
+    //__________________________________
+    //  check if velocity is using LODI
+    const BoundCondBase *bcs;
+    const BoundCond<Vector>* new_bcs;
 
+    bcs     = patch->getBCValues(mat_id,"Velocity",face);      
+    new_bcs = dynamic_cast<const BoundCond<Vector> *>(bcs);
+
+    if( new_bcs != 0 && new_bcs->getKind() == "LODI" ) {
+      usingLODI = true;
+      is_LODI_face[face] = true;
+    }
+    BC_dbg  <<" using LODI on face "<<  is_LODI_face[face]<<endl;
+  }
+  return usingLODI;
+}
 
 
 
@@ -1575,6 +1634,8 @@ void setBC(SFCZVariable<double>& variable, const  string& kind,
 ///______________________________________________________________________
 //
 #ifdef LODI_BCS
+
+
 /* --------------------------------------------------------------------- 
  Function~  setBCDensityLODI--                      L   O   D   I
  Purpose~   Takes care of Symmetry BC, Dirichelet BC, Characteristic BC
@@ -1649,7 +1710,9 @@ void setBCDensityLODI(CCVariable<double>& rho_CC,
     }    
 /*`==========TESTING==========*/
 #ifdef JET_BC
-    double hardCodedDensity = 1.1792946927* (300.0/1000.0);
+          double hardCodedDensity = 13.937282;
+    //      double hardCodedDensity = 6.271777;
+   //   double hardCodedDensity = 1.1792946927* (300.0/1000.0);
     AddSourceBC<CCVariable<double>,double >(rho_CC, patch, face,
                            hardCodedDensity, offset);  
 #endif 
@@ -1738,7 +1801,8 @@ void setBCVelLODI(CCVariable<Vector>& vel_CC,
       }
 /*`==========TESTING==========*/
 #ifdef JET_BC
-        Vector hardCodedVelocity(10.0,0.0,0);
+       // Vector hardCodedVelocity(10.0,0.0,0);
+        Vector hardCodedVelocity(209.0,0.0,0);
         AddSourceBC<CCVariable<Vector>,Vector >(vel_CC, patch, face, 
                                             hardCodedVelocity, offset);  
  #endif 
@@ -1840,6 +1904,7 @@ void setBCVelLODI(CCVariable<Vector>& vel_CC,
            differenceing scheme
 ____________________________________________________________________*/
 void computeDi(StaticArray<CCVariable<Vector> >& d,
+               const vector<bool>& d_is_LODI_face,
                constCCVariable<double>& rho,              
                const CCVariable<double>& press,                   
                constCCVariable<Vector>& vel,                  
@@ -1847,38 +1912,43 @@ void computeDi(StaticArray<CCVariable<Vector> >& d,
                const Patch* patch,                            
                const int mat_id)                              
 {
-    BC_doing << "LODI computeLODIFirstOrder "<< endl;
-    Vector dx = patch->dCell();
-    
-    vector<IntVector> R_Offset(6);
-    R_Offset[Patch::xminus] = IntVector(1,0,0);  // right cell offset
-    R_Offset[Patch::xplus]  = IntVector(0,0,0);
-    R_Offset[Patch::yminus] = IntVector(0,1,0);
-    R_Offset[Patch::yplus]  = IntVector(0,0,0);
-    R_Offset[Patch::zminus] = IntVector(0,0,1);
-    R_Offset[Patch::zplus]  = IntVector(0,0,0);
-    
-    vector<IntVector> L_Offset(6);
-    L_Offset[Patch::xminus] = IntVector(0, 0, 0);   // left cell offset
-    L_Offset[Patch::xplus]  = IntVector(-1,0, 0);
-    L_Offset[Patch::yminus] = IntVector(0, 0, 0);
-    L_Offset[Patch::yplus]  = IntVector(0,-1, 0);
-    L_Offset[Patch::zminus] = IntVector(0, 0, 0);
-    L_Offset[Patch::zplus]  = IntVector(0, 0, -1);
+  BC_doing << "LODI computeLODIFirstOrder "<< endl;
+  Vector dx = patch->dCell();
 
- /*`==========TESTING==========*/
- // TO DO: ONLY COMPUTE DI ON LODI FACES NOT ALL FACES
-/*==========TESTING==========`*/    
-    for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace;
-        face=Patch::nextFace(face)){
+  vector<IntVector> R_Offset(6);
+  R_Offset[Patch::xminus] = IntVector(1,0,0);  // right cell offset
+  R_Offset[Patch::xplus]  = IntVector(0,0,0);
+  R_Offset[Patch::yminus] = IntVector(0,1,0);
+  R_Offset[Patch::yplus]  = IntVector(0,0,0);
+  R_Offset[Patch::zminus] = IntVector(0,0,1);
+  R_Offset[Patch::zplus]  = IntVector(0,0,0);
 
+  vector<IntVector> L_Offset(6);
+  L_Offset[Patch::xminus] = IntVector(0, 0, 0);   // left cell offset
+  L_Offset[Patch::xplus]  = IntVector(-1,0, 0);
+  L_Offset[Patch::yminus] = IntVector(0, 0, 0);
+  L_Offset[Patch::yplus]  = IntVector(0,-1, 0);
+  L_Offset[Patch::zminus] = IntVector(0, 0, 0);
+  L_Offset[Patch::zplus]  = IntVector(0, 0, -1);
+
+  // Iterate over the faces encompassing the domain
+  // only set DI on Boundariesfaces that are LODI
+  vector<Patch::FaceType>::const_iterator iter;
+  
+  for (iter  = patch->getBoundaryFaces()->begin(); 
+       iter != patch->getBoundaryFaces()->end(); ++iter){
+    Patch::FaceType face = *iter;
+ 
+    if (d_is_LODI_face[face] ) {
+      BC_dbg << " computing DI on face " << face 
+             << " patch " << patch->getID()<<endl;
       //_____________________________________
       //Compute Di at
       IntVector axes = patch->faceAxes(face);
       int dir0 = axes[0]; // find the principal dir and other 2 directions
       int dir1 = axes[1]; 
       int dir2 = axes[2];    
-  
+
       double delta = dx[dir0];
 
       IntVector normal = patch->faceDirection(face);
@@ -1897,7 +1967,7 @@ void computeDi(StaticArray<CCVariable<Vector> >& d,
         double drho_dx = (rho[r] - rho[l])/delta;
         double dp_dx   = (press[r] - press[l])/delta;
         Vector dVel_dx = (vel[r] - vel[l])/(delta);
-        
+
         //Due to numerical noice , we filter them out by hard coding
         //    
         if(fabs(drho_dx) < 1.0e-10) drho_dx = 0.0;
@@ -1941,145 +2011,122 @@ void computeDi(StaticArray<CCVariable<Vector> >& d,
         d[3][c][dir0] = 0.5 * (L5 - L1)/(rho[c] * speedSound);
         d[4][c][dir0] = L3;
         d[5][c][dir0] = L4;
-     } 
+      }
+    } // if(onEdgeOfDomain) 
   } //end of for loop over faces
 }//end of function
 
-/*___________________________________________
+/*__________________________________________________________________
  Function~ computeNu--                    L   O   D   I
  Purpose~  compute dissipation coefficients 
- __________________________________________*/ 
+__________________________________________________________________*/ 
 void computeNu(CCVariable<Vector>& nu,
+               const vector<bool>& is_LODI_face,
                const CCVariable<double>& p, 
                const Patch* patch)
 {
   BC_doing << "LODI computeNu "<< endl;
-  IntVector low = patch->getLowIndex();
-  IntVector hi  = patch->getHighIndex();
-  int hi_x = hi.x() - 1;
-  int hi_y = hi.y() - 1;
-  int hi_z = hi.z() - 1;
   double d_SMALL_NUM = 1.0e-100;
     
-  for(Patch::FaceType face = Patch::startFace; face <= Patch::endFace; 
-                      face = Patch::nextFace(face)){ 
-    if(face == Patch::xplus || face == Patch::xminus) {      // X   F A C E S
-      int xFaceCell;
-      if(face == Patch::xplus ){
-       xFaceCell = hi_x;  
-      } else {
-       xFaceCell = low.x();
-      } 
-      
-      for(int j = low.y()+1; j < hi_y; j++) {
-          for (int k = low.z(); k <= hi_z; k++) {
-            IntVector t  =  IntVector(xFaceCell,  j+1, k);
-            IntVector b  =  IntVector(xFaceCell,  j-1, k);
-            IntVector r  =  IntVector(xFaceCell,  j,   k);
-            nu[r].y( fabs(p[t] - 2.0 * p[r] + p[b])/
-                    (fabs(p[t] - p[r]) + fabs(p[r] - p[b])  + d_SMALL_NUM) );
-          }
-        }
-         
-        for (int k = low.z(); k <= hi_z; k++) {
-         nu[IntVector(xFaceCell,hi_y,k)].y(    nu[IntVector(xFaceCell,hi_y-1,k)].y() );
-         nu[IntVector(xFaceCell,low.y(),k)].y( nu[IntVector(xFaceCell,low.y()+1,k)].y() );
-        }
+  // Iterate over the faces encompassing the domain
+  // only set DI on Boundariesfaces that are LODI
+  vector<Patch::FaceType>::const_iterator iter;
+  
+  for (iter = patch->getBoundaryFaces()->begin(); 
+                            iter != patch->getBoundaryFaces()->end(); ++iter){
+    Patch::FaceType face = *iter;
+    
+    if (is_LODI_face[face] ) {
+      BC_dbg << " computing Nu on face " << face 
+             << " patch " << patch->getID()<<endl;   
+              
+      vector<int> otherDir(2);
+      IntVector axes = patch->faceAxes(face);
+      int P_dir   = axes[0]; // principal direction
+      otherDir[0] = axes[1]; // other vector directions
+      otherDir[1] = axes[2];  
 
-        for(int j = low.y(); j <= hi_y; j++) {
-          for (int k = low.z()+1; k < hi_z; k++) {
-            IntVector r  =  IntVector(xFaceCell,  j,   k);
-            IntVector f  =  IntVector(xFaceCell,  j,   k+1);
-            IntVector bk =  IntVector(xFaceCell,  j,   k-1);
-            nu[r].z( fabs(p[f] - 2.0 * p[r] + p[bk])/
-                    (fabs(p[f] - p[r]) + fabs(p[r] - p[bk]) + d_SMALL_NUM) );
-          }
-        }
+      for(CellIterator iter=patch->getFaceCellIterator(face, "minusEdgeCells"); 
+                                                          !iter.done();iter++) {
+        IntVector c = *iter;
 
-        for(int j = low.y(); j <= hi_y; j++) {
-          nu[IntVector(xFaceCell,j,low.z())].z( nu[IntVector(xFaceCell,j,low.z()+1)].z() );
-          nu[IntVector(xFaceCell,j,hi_z)].z(    nu[IntVector(xFaceCell,j,hi_z-1)].z() );
+        for ( int i = 0; i < 2 ; i++ ) {  // set both orthogonal components
+          int dir = otherDir[i];
+          IntVector r = c;
+          IntVector l = c;
+          r[dir] += 1;  // tweak the r and l cell indices
+          l[dir] -= 1; 
+                        // 2nd order cell centered difference
+          nu[c][dir] = fabs(p[r] - 2.0 * p[c] + p[l])/
+                        (fabs(p[r] - p[c]) + fabs(p[c] - p[l])  + d_SMALL_NUM);
         }
       }
       //__________________________________
-      if(face == Patch::yplus || face == Patch::yminus) {      // Y   F A C E S
-     
-       int yFaceCell;
-       if(face == Patch::yplus ){
-        yFaceCell = hi_y;  
-       } else {
-        yFaceCell = low.y();
-       }
-         for(int i = low.x()+1; i < hi_x; i++) {
-          for (int k = low.z(); k <= hi_z; k++) {
-            IntVector r  =  IntVector(i+1, yFaceCell,   k);
-            IntVector l  =  IntVector(i-1, yFaceCell,   k);
-            IntVector c  =  IntVector(i,   yFaceCell,   k);
-            nu[c].x( fabs(p[r] - 2.0 * p[c] + p[l])/
-                    (fabs(p[r] - p[c]) + fabs(p[c] - p[l])  + d_SMALL_NUM) );
-          }
-        }
+      //    E D G E S
+      // use cell centered and one sided differencing
+      // only hit outside faces, not faces between 2 patches
+      vector<Patch::FaceType>::const_iterator iter;
+      
+      for (iter = patch->getBoundaryFaces()->begin(); 
+                                iter != patch->getBoundaryFaces()->end(); ++iter){
+      
+        Patch::FaceType face0 = *iter;
+        //__________________________________
+        //  Find the Vector components Edir1 and Edir2
+        //  for this particular edge
+        IntVector faceDir = patch->faceDirection(face0);
+        IntVector axes = patch->faceAxes(face0);
+        int Edir1 = axes[0];
+        int Edir2 = otherDirection(P_dir, Edir1);
 
-        for (int k = low.z(); k <= hi_z; k++) {
-          nu[IntVector(low.x(),yFaceCell,k)].x( nu[IntVector(low.x()+1, yFaceCell, k)].x() );
-          nu[IntVector(hi_x,   yFaceCell,k)].x( nu[IntVector(hi_x-1,    yFaceCell, k)].x() );
-        }
+        CellIterator iterLimits =  
+                      patch->getEdgeCellIterator(face,face0,"minusCornerCells");
 
+        for(CellIterator iter = iterLimits;!iter.done();iter++){ 
 
-        for(int i = low.x(); i <= hi_x; i++) {
-          for (int k = low.z()+1; k < hi_z; k++) {
-            IntVector c  =  IntVector(i,   yFaceCell,   k);
-            IntVector f  =  IntVector(i,   yFaceCell,   k+1);
-            IntVector bk =  IntVector(i,   yFaceCell,   k-1);
-            nu[c].z( fabs(p[f] - 2.0 * p[c] + p[bk])/
-                    (fabs(p[f] - p[c]) + fabs(p[c] - p[bk]) + d_SMALL_NUM) );
-          }
-        }
+          IntVector c = *iter;
+          IntVector r  = c;
+          IntVector rr = c;
+          r[Edir1]  -= faceDir[Edir1];      // tweak the r and l cell indices
+          rr[Edir1] -= 2 * faceDir[Edir1];  // One sided differencing
+          nu[c][Edir1] = fabs(p[c] - 2.0 * p[r] + p[rr])/
+                        (fabs(p[c] - p[r]) + fabs(p[r] - p[rr])  + d_SMALL_NUM);
 
-        for (int i = low.x(); i <= hi_x; i++) {
-          nu[IntVector(i,yFaceCell,low.z())].z( nu[IntVector(i,yFaceCell,low.z()+1)].z() );
-          nu[IntVector(i,yFaceCell,hi_z)].z(    nu[IntVector(i,yFaceCell,hi_z-1)].z() );
-        }
-      }  
-     //__________________________________
-     if(face == Patch::zplus || face == Patch::zminus) {      // Z   F A C E S
-
-      int zFaceCell;
-      if(face == Patch::zplus ){
-       zFaceCell = hi_z;  
-      } else {
-       zFaceCell = low.z();
-      }     
-      for(int i = low.x()+1; i < hi_x; i++) {
-         for (int j = low.y(); j <= hi_y; j++) {
-           IntVector r = IntVector(i+1, j,   zFaceCell); 
-           IntVector l = IntVector(i-1, j,   zFaceCell);  
-           IntVector c = IntVector(i,   j,   zFaceCell);  
-           nu[c].x( fabs(p[r] - 2.0 * p[c] + p[l])/
-                   (fabs(p[r] - p[c]) + fabs(p[c] - p[l])  + d_SMALL_NUM) );
-         }
-       }
-
-       for (int j = low.y(); j <= hi_y; j++) {
-         nu[IntVector(low.x(),j,zFaceCell)].x( nu[IntVector(low.x()+1, j, zFaceCell)].x() );
-         nu[IntVector(hi_x,   j,zFaceCell)].x( nu[IntVector(hi_x-1,    j, zFaceCell)].x() );
-       }
-
-       for(int i = low.x(); i <= hi_x; i++) {
-         for (int j = low.y()+1; j < hi_y; j++) {
-           IntVector t = IntVector(i, j+1, zFaceCell);    
-           IntVector b = IntVector(i, j-1, zFaceCell);    
-           IntVector c = IntVector(i, j,   zFaceCell);    
-           nu[c].y( fabs(p[t] - 2.0 * p[c] + p[b])/
-                   (fabs(p[t] - p[c]) + fabs(p[c] - p[b]) + d_SMALL_NUM) );
+          IntVector r2 = c;
+          IntVector l2 = c;
+          r2[Edir2] += 1;  // tweak the r and l cell indices
+          l2[Edir2] -= 1;  // cell centered differencing
+          nu[c][Edir2] = fabs(p[r2] - 2.0 * p[c] + p[l2])/
+                        (fabs(p[r2] - p[c]) + fabs(p[c] - p[l2])  + d_SMALL_NUM);
         }
       }
+      //________________________________________________________
+      // C O R N E R S   
+  /*`==========TESTING==========*/
+  // Need a clever way to figure out the r and rr indicies
+  //  for the two different directions
+  #if 0 
+      vector<IntVector> crn(4);
+      computeCornerCellIndices(patch, face, crn);
 
-      for (int i = low.x(); i <= hi_x; i++) {
-        nu[IntVector(i,low.y(),zFaceCell)].y( nu[IntVector(i,low.y()+1,zFaceCell)].y() );
-        nu[IntVector(i,hi_y,   zFaceCell)].y( nu[IntVector(i,hi_y-1,   zFaceCell)].y() );
-      }
-    }
+      for( int corner = 0; corner < 4; corner ++ ) {
+        IntVector c = crn[corner];
+
+
+
+        IntVector r  = c;
+        IntVector rr = c;
+        for ( dir.begin();
+          r[Edir2]  -= 1;  // tweak the r and l cell indices
+          rr[Edir2] -= 2;  // One sided differencing
+
+          IntVector adj = c - offset;
+          nu[c][Edir1] = fabs(p[c] - 2.0 * p[r] + p[rr])/
+                        (fabs(p[c] - p[r]) + fabs(p[r] - p[rr])  + d_SMALL_NUM);
+      } 
+  #endif     
+  /*==========TESTING==========`*/
+    }  // on the right face with LODI BCs
   }
 }
 /* --------------------------------------------------------------------- 
