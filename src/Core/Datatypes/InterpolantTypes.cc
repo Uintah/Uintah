@@ -1,4 +1,4 @@
-#include <Dataflow/Modules/Fields/InterpolantTypes.h>
+#include <Core/Datatypes/InterpolantTypes.h>
 
 namespace SCIRun {
 
