@@ -94,7 +94,7 @@ package under {\bf DataIO}. Matlab engine scripts, as well as test
 example nets (({\bf tst*.net} files) are located in SCIRun source tree: \\
 {\bf \$SCIRun/src/Packages/MatlabInterface/matlab/engine }\\
 
-\subsection*{Examples} \indent
+\subsection*{Examples: SCIRun and Matlab are on the same host} \indent
 
 Examples are the best way to learn how to work with MatlabInterface.
 Three example scripts, named {\bf tst1.net, tst2.net and tst3.net}
@@ -236,6 +236,48 @@ the \sr{} environment.
 To check if the example ran properly, open file {\bf rand3.mat}
 and see if it contains the same random numbers as files {\bf rand1.mat}
 and {\bf rand2.dat}.
+
+\subsection*{Examples: SCIRun and Matlab are on different hosts} \indent
+
+There is no sample script provided for the situation where SCIRun and
+Matlab packages are installed on the different hosts. But the example
+could be easily made out of script {\bf tst1.net}.  In our example
+below we use two hosts, {\bf burn.cs.utah.edu} and {\bf rapture.sci.utah.edu}.
+
+Suppose that Matlab is running on host {\bf burn}. The
+content of directory \\
+{\bf \$SCIRun/src/Packages/MatlabInterface/matlab/engine} \\
+should be available on that host. The rest of SCIRun source tree is
+not needed there; just copy one directory {\bf engine} and {\bf cd} to it. 
+Run Matlab, and then run {\bf mlabengine.m} script with argument
+pointing to {\bf rapture}: \\
+mlabengine(0,'rapture.sci.utah.edu:5515'); \\
+The Matlab side is now ready to accept commands.
+
+Now, suppose that SCIRun is running on a different host 
+{\bf rapture.sci.utah.edu}. 
+In SCIRun environment, download the script {\bf tst1.net} 
+and edit the host:port
+string in the Matlab module GUI, such that it points to 
+{\bf burn.cs.utah.edu:5517}. Now execute the script, it will
+run and save random matrix $5\times 5$, just like in a first
+example.
+
+To run the script, push the ``Execute'' button at the bottom of the
+Matlab dialog window. This will initiate the following
+sequence of events: \\
+1) on {\bf rapture} the Matlab module fires \\
+2) Matlab module on {\bf rapture} sends the command to the engine on
+{\bf burn} via the socket\\
+3) on {\bf burn}, the engine receives and executes command, creates variable {\bf o1} \\
+4) variable {\bf o1} is sent back from {\bf burn} to \sr{} on {\bf rapture} via the socket \\
+5) on {\bf rapture} \sr{} Matlab module receives matrix and sends it downstream
+   to MatrixWriter which saves it to disk as {\bf rand1.mat} file. \\
+
+On {\bf rapture}, quit SCIRun. On {\bf burn}, push {\bf control-C} 
+to terminate the {\bf mlabengine.m} script,
+and quit Matlab (doing so will shut down the socket connection).
+
 
 \fgr{tst1}{5.5in}
 {
