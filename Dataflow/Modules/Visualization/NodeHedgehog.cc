@@ -154,6 +154,8 @@ class NodeHedgehog : public Module {
 
   Mutex add_arrows;
 
+  Point iPoint_;
+  IntVector dim_;
 #ifdef USE_HOG_THREADS
   friend class NodeHedgehogWorker;
 #endif
@@ -333,7 +335,9 @@ NodeHedgehog::NodeHedgehog(GuiContext* ctx):
   max_vector_y(ctx->subVar("max_vector_y")),
   max_vector_z(ctx->subVar("max_vector_z")),
   max_vector_length(ctx->subVar("max_vector_length")),
-  add_arrows("NodeHedgehog add_arrows mutex")
+  add_arrows("NodeHedgehog add_arrows mutex"),
+  iPoint_(Point(0,0,0)),
+  dim_(IntVector(1,1,1))
 {
   init = 1;
   float INIT(.1);
@@ -485,6 +489,8 @@ void NodeHedgehog::execute()
   if(type.get() == "2D")
     do_3d=0;
 
+
+
   // turn on/off widgets
   widget2d->SetState(!do_3d);
   widget3d->SetState(do_3d);
@@ -494,6 +500,26 @@ void NodeHedgehog::execute()
 
   BBox mesh_boundary = vfield->mesh()->get_bounding_box();
   
+  // if field size or location change we need to update the widgets
+  Point min, max;
+  mesh_boundary = vfield->mesh()->get_bounding_box();
+  min = mesh_boundary.min(); max = mesh_boundary.max();
+  int nx, ny, nz;
+  // get the mesh for the geometry
+  LatVolMesh *mesh = fld->get_typed_mesh().get_rep();
+  nx = mesh->get_ni();
+  ny = mesh->get_nj();
+  nz = mesh->get_nk();
+  if( iPoint_ != min ){
+    iPoint_ = min;
+    need_find3d = 1;
+    need_find2d = 1;
+  } else if (   dim_ != IntVector(nx, ny, nz) ){
+    dim_ = IntVector(nx, ny, nz);
+    need_find3d = 1;
+    need_find2d = 1;
+  }
+ 
   // draws the widget based on the vfield's size and position
   if (do_3d){
     if(need_find3d != 0){
@@ -602,8 +628,6 @@ void NodeHedgehog::execute()
   //       2. If there is no scalar field, the value of cman.lookup(0)
   //    B. Without a color map, use a default color ( green ).
 
-  // get the mesh for the geometry
-  LatVolMesh *mesh = fld->get_typed_mesh().get_rep();
   // Access length_scale once, because accessing a tcl variable can be
   // expensive if inside of a loop.
   ArrowInfo info;
