@@ -346,71 +346,12 @@ void ICE::setupMatrix(const ProcessorGroup*,
       // Sum (<upwinded volfrac> * sp_vol on faces)
       // +x -x +y -y +z -z
       //  e, w, n, s, t, b
-      
-static int count = 0;
       for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) { 
         IntVector c = *iter;
         right  = c + IntVector(1,0,0);      left   = c;  
         top    = c + IntVector(0,1,0);      bottom = c;  
         front  = c + IntVector(0,0,1);      back   = c;  
 
-/*`==========TESTING==========*/
-if (d_dbgVar1 == 0 ) {
-        if (count == 0 ) {
-          cout << " OLD STYLE" <<endl;
-          count ++;
-        }       
-        R_CC = right;   L_CC  = c - IntVector(1,0,0);  // right, left
-        T_CC = top;     B_CC  = c - IntVector(0,1,0);  // top, bottom
-        F_CC = front;   BK_CC = c - IntVector(0,0,1);  // front, back
-             
-        //__________________________________
-        //  T H I S   I S   G O I N G   T O   B E   S L O W 
-        //   A N D   I T ' S   W R O N G    
-        //__________________________________
-
-        //  use the upwinded vol_frac
-        IntVector upwnd;                          
-        upwnd   = upwindCell_X(c, uvel_FC[right],  1.0);     
-        A[c].e += vol_frac[upwnd] * sp_volX_FC[right];
-              
-        upwnd   = upwindCell_X(c, uvel_FC[left],   0.0);
-        A[c].w += vol_frac[upwnd] * sp_volX_FC[left];               
-  
-        upwnd   = upwindCell_Y(c, vvel_FC[top],    1.0);     
-        A[c].n += vol_frac[upwnd] * sp_volY_FC[top];            
-                
-        upwnd   = upwindCell_Y(c, vvel_FC[bottom], 0.0);
-        A[c].s += vol_frac[upwnd] * sp_volY_FC[bottom];
-  
-        upwnd   = upwindCell_Z(c, wvel_FC[front],  1.0);
-        A[c].t += vol_frac[upwnd] * sp_volZ_FC[front];
-        
-        upwnd   = upwindCell_Z(c, wvel_FC[back],   0.0);
-        A[c].b += vol_frac[upwnd] * sp_volZ_FC[back];
-#if 0
-       
-        upwnd   = upwindCell_X(c, uvel_FC[right],  1.0);
-        vol_fracX_FC[right]  =  vol_frac[upwnd];                 
-        upwnd   = upwindCell_X(c, uvel_FC[left],   0.0);                   
-        vol_fracX_FC[left]   =  vol_frac[upwnd];     
-        upwnd   = upwindCell_Y(c, vvel_FC[top],    1.0);                   
-        vol_fracY_FC[top]    =  vol_frac[upwnd];     
-        upwnd   = upwindCell_Y(c, vvel_FC[bottom], 0.0);                   
-        vol_fracY_FC[bottom] = vol_frac[upwnd];      
-        upwnd   = upwindCell_Z(c, wvel_FC[front],  1.0);                   
-        vol_fracZ_FC[front]  = vol_frac[upwnd];     
-        upwnd   = upwindCell_Z(c, wvel_FC[back],   0.0);                   
-        vol_fracZ_FC[back]   = vol_frac[upwnd];       
-        
-#endif              
-}       
-
-if (d_dbgVar1 == 1 ) {
-        if (count == 0 ) {
-          cout << " NEW STYLE" <<endl;
-          count ++;
-        }
         //  use the upwinded vol_frac    
         A[c].e += vol_fracX_FC[right]  * sp_volX_FC[right];               
         A[c].w += vol_fracX_FC[left]   * sp_volX_FC[left];                   
@@ -418,29 +359,16 @@ if (d_dbgVar1 == 1 ) {
         A[c].s += vol_fracY_FC[bottom] * sp_volY_FC[bottom];
         A[c].t += vol_fracZ_FC[front]  * sp_volZ_FC[front];
         A[c].b += vol_fracZ_FC[back]   * sp_volZ_FC[back]; 
-#if 0
-        if (c == IntVector(4,4,2) || c== IntVector(4,4,3) ) {
-          cout << " vol_fracX_FC[right] "   << vol_fracX_FC[right] << endl;
-          cout << " vol_fracX_FC[left] "    << vol_fracX_FC[left]  << endl;         
-          cout << " vol_fracY_FC[top] "     << vol_fracY_FC[top]  << endl;          
-          cout << " vol_fracY_FC[bottom] "  << vol_fracY_FC[bottom] << endl;        
-          cout << " vol_fracZ_FC[front] "   << vol_fracZ_FC[front]  << endl;        
-          cout << " vol_fracZ_FC[back] "    <<vol_fracZ_FC[back] << endl;     
-        } 
-#endif
-}
-/*==========TESTING==========`*/
       }
-/*`==========TESTING==========*/
- //---- P R I N T   D A T A ------ 
+
+      //---- P R I N T   D A T A ------ 
       if (switchDebug_setupMatrix ) {
         ostringstream desc;
         desc << "setupMatrix_Mat_" << indx << "_patch_"<< patch->getID(); 
         printData_FC( indx, patch,1, desc.str(), "vol_fracX_FC", vol_fracX_FC);
         printData_FC( indx, patch,1, desc.str(), "vol_fracY_FC", vol_fracY_FC);
         printData_FC( indx, patch,1, desc.str(), "vol_fracZ_FC", vol_fracZ_FC);
-      }  
-/*==========TESTING==========`*/     
+      }    
     }  //matl loop
         
     //__________________________________
