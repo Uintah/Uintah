@@ -341,18 +341,18 @@
 	<dd>
 	  SCIRUN_DATA points to the sample data sets directory.  This tutorial
 	  assumes the SCIRun sample data directory is
-	  <tt>/usr/sci/data/SCIRunData/1.20.0</tt>.
+	  <tt>/usr/sci/data/SCIRunData/1.22.0</tt>.
 	  
 	  <p>For a csh-like shell:</p>
 
 	  <pre>
-  setenv SCIRUN_DATA /usr/sci/data/SCIRun/SCIRunData/1.20.0
+  setenv SCIRUN_DATA /usr/sci/data/SCIRun/SCIRunData/1.22.0
 	  </pre>
 
 	  <p>For a sh-like shell:</p>
 
 	  <pre>
-  export SCIRUN_DATA=/usr/sci/data/SCIRun/SCIRunData/1.20.0
+  export SCIRUN_DATA=/usr/sci/data/SCIRun/SCIRunData/1.22.0
 	  </pre>
 	</dd>
 	<dt>SCIRUN_DATASET</dt>
@@ -456,7 +456,7 @@
 	The panes may be "detached" from one another by clicking on the
 	pane detachment/attachment controls&mdash;these are the vertical dashed
 	lines separating the panes.  When separated, the panes appear as shown
-	in <a href="#figure_2">Figure 2.</a> <a name="figure_2"
+	in <a href="#figure_2">Figure 2</a> <a name="figure_2"
 	  id="figure_2"></a>.  Detaching the Rendering window allows it to
 	be viewed at maximum resolution.  Panes are re-attached by 
 	clicking on the pane detachment/attachment controls.
@@ -545,21 +545,22 @@
       </p>
 
       <p>
-	To load data for this tutorial:
+	Note: if your environment variables are set correctly, you can
+	skip steps 1-4. Otherwise, to load data for this tutorial:
       </p>
       <ol>
 	<li><p>Click on the Processing Pane's Load Data tab.</p></li>
 	<li><p>Click the radio button labeled: DWI with B0 Reference Data.</p></li>
 	<li><p>Click on the Load Data panel's Nrrd tab.</p></li> 
-	<li><p>Use the Nrrd panel's
-	    Browse buttons to select DWI data,
-	    <tt>/usr/sci/data/SCIRunData/1.20.0/demo-DWI.nrrd</tt>, and B0 data,
-	    <tt>/usr/sci/data/SCIRunData/1.20.0/demo-B0.nrrd.</tt></p></li>
+	<li><p>Use the Nrrd panel's Browse buttons to select DWI data, 
+	    <tt>/usr/sci/data/SCIRunData/1.22.0/demo-DWI.nrrd</tt>, and B0 data,
+	    <tt>/usr/sci/data/SCIRunData/1.22.0/demo-B0.nrrd.</tt></p></li>
       </ol>
 
       <p>
 	Each Browse button invokes a file selection dialog like the one shown
-	in <a href="#figure_5">Figure 5</a>.
+	in <a href="#figure_5">Figure 5</a>. After selecting the desired file,
+	click the Set button n the file selection dialog.  The UI will close.
       </p>
 
       <p>
@@ -757,7 +758,7 @@
       </p>
       <ul>
 	<li>
-	  <p>Tent (linear interpolation)</p>
+	  <p>Linear (linear interpolation)</p>
 	</li>
 	<li>
 	  <p>Catmull-Rom (cubic interpolation)</p>
@@ -1000,7 +1001,7 @@
 	anisotropy, and areas outside of the gray and white matter are
 	rendered black. The individual cutting planes can be turned on and off
 	and their positions can be controlled using the X, Y, Z check-buttons
-	and slides. Color-mapping of tensor values on planes can be controlled
+	and sliders. Color-mapping of tensor values on planes can be controlled
 	using the drop-down menu under "Principle Eigenvector" in the "Color
 	Planes Based On" frame. When coloring based on a scalar quantity
 	(e.g. Fractional Anisotropy), radio buttons next to the color-map
@@ -1084,7 +1085,7 @@
       <p>
 	The Glyphs panel allows selection of the type, placement, and coloring
 	of tensor glyphs within the volume. The default setting renders box
-	glyphs, seeded on the planes of the planes and colored based on the
+	glyphs, seeded on the planes and colored based on the
 	principle eigenvector direction as shown in <a
 	  href="#figure_12">Figure 12</a>. A zoomed-in figure of the
 	super-quadric glyphs rendered on the cutting planes is shown in <a
@@ -1131,13 +1132,13 @@
 	As with tensor glyphs, seed locations and colorization options for
 	rendering fibers within the brain can be selected. A variety of
 	options are shown in <a href="#figure_14">Figure 14</a>, <a
-	  href="#Figure_15">Figure 15, and</a> <a href="#figure_16">Figure
+	  href="#Figure_15">Figure 15</a>, and <a href="#figure_16">Figure
 	  16</a>. Additionally, a number of parameters can be set that control
 	the fiber tracing algorithm. These parameters include:
       </p>
       <ul>
 	<li>
-	  <p>Algorithm: trace along the major eigenvector or using the tensor-lines
+	  <p>Fiber Algorithm: trace along the major eigenvector or using the tensor-lines
 	    algorithm; choose a step size, and whether to use Euler or RK4
 	    (fourth-order Runge-Kutta) integration.
 	  </p>
@@ -1209,10 +1210,10 @@
 	dimensions as one of the DWI channels. For example, for an axial scan
 	with 128x256 in-plane resolution, 90 slices, and 12
 	diffusion-weightings, the DWI volume would be stored as one contiguous
-	12x90x128x256 dataset (in terms of data-ordering, the 256 axis is
+	12x128x256x90 dataset (in terms of data-ordering, the 90 axis is
 	changing "fastest", i.e. the data is stored as 12 volumes (each
-	90x128x256) concatenated together into one big array), and the B0
-	volume would have dimensions 90x128x256.
+	128x256x90) concatenated together into one big array), and the B0
+	volume would have dimensions 128x256x90.
       </p>
 
       <p>
