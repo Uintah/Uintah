@@ -32,11 +32,18 @@ latex:=latex -interaction=nonstopmode
 # Name of root doc sans extension.
 bn := usersguide
 
+# Macros used by latex and latex2html
+macrosfile := srugmacros.tex
+
+# Style file used by latex.   This file has the exact same content as
+# ${macrofile} and is automatically generated from it.
+styfile := srugmacros.sty
+
 # User created/edited sources (generated sources come into play further
 # down). 
-srcs:=srugmacros.tex title.tex intro.tex concepts.tex \
+srcs:=${styfile} title.tex intro.tex concepts.tex \
 running.tex network.tex viewer.tex import.tex \
-modules.tex
+modules.tex ../../Utilities/TeX/scirun-doc.tex
 
 # Latex2html options.  Change as needed.
 latex2htmloptions = -split 4 -no_white -link 1 -bottom_navigation \
@@ -88,6 +95,9 @@ ifeq (${strip ${SRGROUP}},)
 packages :=
 endif
 
+# Docs for a package have been made when then these targets are fulfilled.
+packagetargets := ${addsuffix _modules.tex,${packages}}
+
 # ########## Macros (Used with ${call ...} function)
 
 # Produce list of tex files that correspond to package
@@ -134,7 +144,6 @@ define imagetoeps
 -convert -geometry '490x634>' $< EPS:$@
 endef
 
-
 # ########## Targets for making various forms of the users guide.
 
 .PHONY: all latex html ps bib
@@ -150,10 +159,17 @@ ps: ${psfile}
 bib: ${bn}.bbl
 
 # Note: ${bn}.bbl must be the last dependency!
-${dvifile}: ${mainfile} ${srcs} ${packages} ${bn}.bbl 
+${dvifile}: ${mainfile} ${srcs} ${packagetargets} ${bn}.bbl 
 	-${latex}  ${bn}
 	-makeindex ${bn}.idx
 	-${latex} ${bn}
+
+${styfile}: ${macrosfile}
+	echo "%************************************************" > ${styfile}; \
+	echo "%* DON'T EDIT ME - I'M AUTOMATICALLY GENERATED! *" >> ${styfile}; \
+	echo "%* Edit srugmacros.tex instead.                 *" >> ${styfile}; \
+	echo "%************************************************" >> ${styfile}; \
+	cat ${macrosfile} >> ${styfile}
 
 ${bn}.bbl: ${mainfile}
 	-${latex} ${bn}
@@ -204,7 +220,7 @@ SCIRun_veryclean_eps_files:
 SCIRun_veryclean_xml_tex_files:
 	-rm ${SCIRun_xml_tex_files} SCIRun_modules.tex
 
-SCIRun_veryclean: clean SCIRun_veryclean_eps_files SCIRun_veryclean_xml_tex_files
+SCIRun_veryclean: SCIRun_clean SCIRun_veryclean_eps_files SCIRun_veryclean_xml_tex_files
 
 # ########## BioPSE
 BioPSE_xml_tex_files := ${call xmltexfiles,BioPSE}
@@ -236,7 +252,7 @@ BioPSE_veryclean_eps_files:
 BioPSE_veryclean_xml_tex_files:
 	-rm ${BioPSE_xml_tex_files} BioPSE_modules.tex
 
-BioPSE_veryclean: clean BioPSE_veryclean_eps_files BioPSE_veryclean_xml_tex_files
+BioPSE_veryclean: BioPSE_clean BioPSE_veryclean_eps_files BioPSE_veryclean_xml_tex_files
 
 
 # ########## Teem
@@ -270,7 +286,7 @@ Teem_veryclean_eps_files:
 Teem_veryclean_xml_tex_files:
 	-rm ${Teem_xml_tex_files} Teem_modules.tex
 
-Teem_veryclean: clean Teem_veryclean_eps_files Teem_veryclean_xml_tex_files
+Teem_veryclean: Teem_clean Teem_veryclean_eps_files Teem_veryclean_xml_tex_files
 
 # ########## Fusion
 Fusion_xml_tex_files := ${call xmltexfiles,Fusion}
@@ -302,7 +318,7 @@ Fusion_veryclean_eps_files:
 Fusion_veryclean_xml_tex_files:
 	-rm ${Fusion_xml_tex_files} Fusion_modules.tex
 
-Fusion_veryclean: clean Fusion_veryclean_eps_files Fusion_veryclean_xml_tex_files
+Fusion_veryclean: Fusion_clean Fusion_veryclean_eps_files Fusion_veryclean_xml_tex_files
 
 # ########## MatlabInterface
 MatlabInterface_xml_tex_files := ${call xmltexfiles,MatlabInterface}
@@ -335,7 +351,7 @@ MatlabInterface_veryclean_eps_files:
 MatlabInterface_veryclean_xml_tex_files:
 	-rm ${MatlabInterface_xml_tex_files} MatlabInterface_modules.tex
 
-MatlabInterface_veryclean: clean \
+MatlabInterface_veryclean: MatlabInterface_clean \
 MatlabInterface_veryclean_eps_files MatlabInterface_veryclean_xml_tex_files
 
 # ########## VDT
@@ -368,12 +384,13 @@ VDT_veryclean_eps_files:
 VDT_veryclean_xml_tex_files:
 	-rm ${VDT_xml_tex_files} VDT_modules.tex
 
-VDT_veryclean: clean VDT_veryclean_eps_files VDT_veryclean_xml_tex_files
+VDT_veryclean: VDT_clean VDT_veryclean_eps_files VDT_veryclean_xml_tex_files
 
 # ########## Cleanage
 clean: ${addsuffix _clean,${packages}}
 	-rm -f ${bn}.aux ${bn}.log ${bn}.toc ${bn}.lot \
-	${bn}.lof ${bn}.dvi 
+	${bn}.lof ${bn}.dvi ${bn}.blg ${bn}.idx ${bn}.ilg \
+	${bn}.ind
 
 veryclean_xml_tex_files: ${addsuffix _veryclean_xml_tex_files,${packages}}
 
@@ -381,4 +398,4 @@ veryclean_eps_files: ${addsuffix _veryclean_eps_files,${packages}}
 
 veryclean: clean ${addsuffix _veryclean,${packages}}
 	-rm -rf ${htmldir}
-	-rm ${psfile} ${psfile2} *.gz *.bbl
+	-rm ${psfile} ${psfile2} *.gz *.bbl ${styfile}
