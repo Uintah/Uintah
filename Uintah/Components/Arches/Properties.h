@@ -11,7 +11,7 @@
 #include <Uintah/Grid/Region.h>
 #include <Uintah/Parallel/ProcessorContext.h>
 namespace Uintah {
-namespace Arches {
+namespace ArchesSpace {
 
 class Properties {
 public:
@@ -45,7 +45,7 @@ private:
     Stream d_streams[MAX_MIXSTREAMS]; 
 };
 
-} // end namespace Arches
+} // end namespace ArchesSpace
 } // end namespace Uintah
 
 

@@ -36,7 +36,7 @@ WARNING
 #include <Uintah/Components/Arches/TurbulenceModel.h>
 
 namespace Uintah {
-  namespace Arches {
+  namespace ArchesSpace {
 
 class PhysicalConstants;
 

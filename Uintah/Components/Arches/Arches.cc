@@ -18,7 +18,7 @@ static char *id="@(#) $Id$";
 using std::cerr;
 using std::endl;
 
-using namespace Uintah::Arches;
+using namespace Uintah::ArchesSpace;
 
 Arches::Arches( int MpiRank, int MpiProcesses ) :
   UintahParallelComponent( MpiRank, MpiProcesses )
@@ -173,6 +173,9 @@ void Arches::paramInit(const ProcessorContext*,
 
 //
 // $Log$
+// Revision 1.25  2000/05/09 22:56:22  sparker
+// Changed name of namespace
+//
 // Revision 1.24  2000/04/28 07:35:23  sparker
 // Started implementation of DataWarehouse
 // MPM particle initialization now works

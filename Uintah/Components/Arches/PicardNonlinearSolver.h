@@ -37,7 +37,7 @@ WARNING
 
 
 namespace Uintah {
-    namespace Arches {
+    namespace ArchesSpace {
 
 class PressureSolver;
 class MomentumSolver;

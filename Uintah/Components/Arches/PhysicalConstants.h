@@ -13,7 +13,7 @@
 #include <SCICore/Geometry/Vector.h>
 
 namespace Uintah {
-namespace Arches {
+namespace ArchesSpace {
   using SCICore::Geometry::Vector;
 
 class PhysicalConstants {
@@ -49,7 +49,7 @@ private:
     
 };
 
-} // end namespace Arches
+} // end namespace ArchesSpace
 } // end namespace Uintah
 
 

@@ -18,7 +18,7 @@
 #include <Uintah/Exceptions/InvalidValue.h>
 #include <iostream>
 using namespace std;
-using namespace Uintah::Arches;
+using namespace Uintah::ArchesSpace;
 using SCICore::Geometry::Vector;
 
 BoundaryCondition::BoundaryCondition()

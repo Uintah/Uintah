@@ -39,7 +39,7 @@ WARNING
 #include <Uintah/Interface/DataWarehouseP.h>
 
 namespace Uintah {
-    namespace Arches {
+    namespace ArchesSpace {
 
 
 class TurbulenceModel;

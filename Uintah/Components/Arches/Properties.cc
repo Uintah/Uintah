@@ -5,7 +5,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Interface/DataWarehouse.h>
 
-using namespace Uintah::Arches;
+using namespace Uintah::ArchesSpace;
 
 Properties::Properties()
 {

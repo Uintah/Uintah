@@ -47,7 +47,7 @@ none
 #include <SCICore/Containers/Array1.h>
 
 namespace Uintah {
-namespace Arches {
+namespace ArchesSpace {
 class StencilMatrix;
   using namespace SCICore::Containers;
 
