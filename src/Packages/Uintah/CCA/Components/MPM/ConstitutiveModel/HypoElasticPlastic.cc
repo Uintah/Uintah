@@ -651,7 +651,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
         double C_p = matl->getSpecificHeat();
 
         // ** WARNING ** Special for steel (remove for other materials)
-        double T = pPlasticTemperature[idx];
+        double T = temperature;
         C_p = 0.09278 + 7.454e-4*T + 12404.0/(T*T);
 
         // Calculate Tdot
