@@ -10,9 +10,7 @@
 
 SRCDIR := Packages/Fusion/Dataflow/GUI
 
-ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
-
-$(SRCDIR)/tclIndex: \
+SRCS := \
 	$(SRCDIR)/FusionSlicePlot.tcl\
 	$(SRCDIR)/FusionFieldReader.tcl\
 	$(SRCDIR)/FusionFieldSetReader.tcl\
@@ -20,10 +18,10 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/NrrdFieldConverter.tcl\
 	$(SRCDIR)/MDSPlusFieldReader.tcl\
 	$(SRCDIR)/Plot2DViewer.tcl\
-	#$(SRCDIR)/ReactionDiffusion.tcl\
+#	$(SRCDIR)/ReactionDiffusion.tcl\
 #[INSERT NEW TCL FILE HERE]
-	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/Fusion/Dataflow/GUI
 
-CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
+include $(SCIRUN_SCRIPTS)/tclIndex.mk
+
 
 

@@ -10,13 +10,11 @@
 
 SRCDIR := Packages/NetSolve/Dataflow/GUI
 
-ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
-
-$(SRCDIR)/tclIndex: \
+SRCS := \
 	$(SRCDIR)/SparseSolve.tcl\
 #[INSERT NEW TCL FILE HERE]
-	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/NetSolve/Dataflow/GUI
 
-CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
+include $(SCIRUN_SCRIPTS)/tclIndex.mk
+
 
 

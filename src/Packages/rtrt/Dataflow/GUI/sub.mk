@@ -2,17 +2,13 @@
 
 SRCDIR := Packages/rtrt/Dataflow/GUI
 
-ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
-
-$(SRCDIR)/tclIndex: \
+SRCS := \
 	$(SRCDIR)/GeoProbeScene.tcl \
 	$(SRCDIR)/RTRTViewer.tcl \
 	$(SRCDIR)/SimpleScene.tcl \
 	$(SRCDIR)/VolumeVisScene.tcl \
 #[INSERT NEW TCL FILE HERE]
 
-	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/rtrt/Dataflow/GUI
+include $(SCIRUN_SCRIPTS)/tclIndex.mk
 
-
-CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 

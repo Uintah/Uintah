@@ -2,9 +2,7 @@
 
 SRCDIR := Packages/DaveW/Dataflow/GUI
 
-ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
-
-$(SRCDIR)/tclIndex: \
+SRCS := \
 	$(SRCDIR)/BldBRDF.tcl \
 	$(SRCDIR)/BldScene.tcl \
 	$(SRCDIR)/Bundles.tcl \
@@ -30,7 +28,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/TensorFieldWriter.tcl \
 #	$(SRCDIR)/XYZtoRGB.tcl\
 #[INSERT NEW TCL FILE HERE]
-	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/DaveW/Dataflow/GUI
 
-CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
+include $(SCIRUN_SCRIPTS)/tclIndex.mk
+
 

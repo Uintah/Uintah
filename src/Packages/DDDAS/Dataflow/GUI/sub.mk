@@ -10,14 +10,11 @@
 
 SRCDIR := Packages/DDDAS/Dataflow/GUI
 
-ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
-
-$(SRCDIR)/tclIndex: \
+SRCS := \
 	$(SRCDIR)/StreamReader.tcl\
-
 #[INSERT NEW TCL FILE HERE]
-	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/DDDAS/Dataflow/GUI
 
-CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
+include $(SCIRUN_SCRIPTS)/tclIndex.mk
+
 
 

@@ -27,14 +27,10 @@
 
 SRCDIR := Packages/MatlabInterface/Dataflow/GUI
 
-ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
-
-$(SRCDIR)/tclIndex: \
+SRCS := \
 	$(SRCDIR)/Matlab.tcl\
-
 #[INSERT NEW TCL FILE HERE]
-	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/MatlabInterface/Dataflow/GUI
 
-CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
+include $(SCIRUN_SCRIPTS)/tclIndex.mk
 
 

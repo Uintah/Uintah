@@ -2,9 +2,7 @@
 
 SRCDIR := Packages/Uintah/Dataflow/GUI
 
-ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
-
-$(SRCDIR)/tclIndex: \
+SRCS := \
 	$(SRCDIR)/application.tcl \
 	$(SRCDIR)/test.tcl \
 	$(SRCDIR)/ScalarFieldAverage.tcl \
@@ -29,6 +27,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/TensorOperator.tcl\
 	$(SRCDIR)/TensorFieldOperator.tcl\
 	$(SRCDIR)/TensorParticlesOperator.tcl\
+	$(SRCDIR)/VectorOperator.tcl\
 	$(SRCDIR)/VectorFieldOperator.tcl\
 	$(SRCDIR)/VectorParticlesOperator.tcl\
 	$(SRCDIR)/AnimatedStreams.tcl\
@@ -37,9 +36,6 @@ $(SRCDIR)/tclIndex: \
 #	$(SRCDIR)/EigenEvaluator.tcl\
 #	$(SRCDIR)/ParticleEigenEvaluator.tcl\
 
+include $(SCIRUN_SCRIPTS)/tclIndex.mk
 
-	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/Uintah/Dataflow/GUI
-
-
-CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 

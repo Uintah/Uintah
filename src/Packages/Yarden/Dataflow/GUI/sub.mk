@@ -2,9 +2,7 @@
 
 SRCDIR := Packages/Yarden/Dataflow/GUI
 
-ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
-
-$(SRCDIR)/tclIndex: \
+SRCS := \
 	$(SRCDIR)/Isosurface.tcl \
 	$(SRCDIR)/IsoSurfaceSAGE.tcl \
 	$(SRCDIR)/IsoSurfaceNOISE.tcl \
@@ -14,7 +12,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/TensorFieldWriter.tcl \
 	$(SRCDIR)/ViewTensors.tcl \
 #[INSERT NEW TCL FILE HERE]
-	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/Yarden/Dataflow/GUI
 
-CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
+include $(SCIRUN_SCRIPTS)/tclIndex.mk
+
 

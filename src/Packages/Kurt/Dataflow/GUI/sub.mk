@@ -2,15 +2,12 @@
 
 SRCDIR := Packages/Kurt/Dataflow/GUI
 
-ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
-
-$(SRCDIR)/tclIndex: \
+SRCS := \
 	$(SRCDIR)/GridVolVis.tcl \
 	$(SRCDIR)/GridSliceVis.tcl \
 	$(SRCDIR)/SCIRex.tcl \
 	$(SRCDIR)/HarvardVis.tcl \
 #[INSERT NEW TCL FILE HERE]
-	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/Kurt/Dataflow/GUI
 
-CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
+include $(SCIRUN_SCRIPTS)/tclIndex.mk
 
