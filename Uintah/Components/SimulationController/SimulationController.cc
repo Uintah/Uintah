@@ -21,6 +21,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Interface/MPMInterface.h>
 #include <Uintah/Interface/MDInterface.h>
 #include <Uintah/Interface/Output.h>
+#include <Uintah/Interface/Analyze.h>
 #include <Uintah/Interface/ProblemSpec.h>
 #include <Uintah/Interface/ProblemSpecInterface.h>
 #include <Uintah/Interface/ProblemSpecP.h>
@@ -73,7 +74,7 @@ void SimulationController::run()
    
    // Setup the initial grid
    GridP grid=scinew Grid();
-   
+
    problemSetup(ups, grid);
    
    if(grid->numLevels() == 0){
@@ -149,8 +150,10 @@ void SimulationController::run()
    if(output)
       output->finalizeTimestep(t, 0, level, scheduler, old_dw);
 
+   Analyze* analyze = dynamic_cast<Analyze*>(getPort("analyze"));
+
    scheduler->execute(d_myworld, old_dw);
-   
+
    while(t < timeinfo.maxTime) {
       double wallTime = Time::currentSeconds() - start_time;
 
@@ -189,6 +192,12 @@ void SimulationController::run()
       // Begin next time step...
       scheduleComputeStableTimestep(level, scheduler, new_dw, cfd, mpm, md);
       scheduler->execute(d_myworld, new_dw);
+      
+      //data analyze in each step
+      if(analyze) {
+        analyze->setup(*grid.get_rep(),*sharedState.get_rep(),new_dw);
+        analyze->performAnalyze();
+      }
       
       old_dw = new_dw;
    }
@@ -456,6 +465,10 @@ void SimulationController::scheduleTimeAdvance(double t, double delt,
 
 //
 // $Log$
+// Revision 1.38  2000/07/17 23:36:31  tan
+// Added Analyze interface that will be especially useful for debugging
+// on scitific results.
+//
 // Revision 1.37  2000/06/23 19:28:32  jas
 // Added the reading of grid bcs right after we finalize a level.
 //
