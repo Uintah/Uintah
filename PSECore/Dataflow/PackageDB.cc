@@ -186,7 +186,12 @@ Module* PackageDB::instantiateModule(const clString& packageName,
     moduleInfo->uiFile="";                       // Don't do it again
   }
 
-  return (moduleInfo->maker)(instanceName);
+  Module *module = (moduleInfo->maker)(instanceName);
+  module->packageName = packageName;
+  module->moduleName = moduleName;
+  module->categoryName = categoryName;
+
+  return module;
 }
 
 Array1<clString> PackageDB::packageNames(void) const {

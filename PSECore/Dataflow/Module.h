@@ -165,6 +165,9 @@ public:
     NetworkEditor* netedit;
     Network* network;
     clString name;
+    clString categoryName;   
+    clString packageName;    
+    clString moduleName;  
     int abort_flag;
 public:
     int niports();
@@ -194,6 +197,9 @@ typedef Module* (*ModuleMaker)(const clString& id);
 
 //
 // $Log$
+// Revision 1.7  1999/08/30 18:47:52  kuzimmer
+// Modified so that dataflow scripts can be read and written properly
+//
 // Revision 1.6  1999/08/28 17:54:29  sparker
 // Integrated new Thread library
 //

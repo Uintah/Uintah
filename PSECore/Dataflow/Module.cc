@@ -48,6 +48,10 @@ Module::Module(const clString& name, const clString& id,
   id(id), progress(0), handle(0), remote(0), skeleton(0),
   notes("notes", id, this)
 {
+  packageName="error: unset package name";
+  categoryName="error: unset category name";
+  moduleName="error: unset module name";
+
 }
 
 Module::~Module()
@@ -448,6 +452,9 @@ void Module::multisend(OPort* p1, OPort* p2)
 
 //
 // $Log$
+// Revision 1.6  1999/08/30 18:47:52  kuzimmer
+// Modified so that dataflow scripts can be read and written properly
+//
 // Revision 1.5  1999/08/28 17:54:28  sparker
 // Integrated new Thread library
 //
