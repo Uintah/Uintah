@@ -225,8 +225,8 @@ public:
   virtual void transform(Transform &t);
 
   //! set the mesh statistics
-  void set_min_x(unsigned i) {min_i_ = i; }
-  void set_min_y(unsigned j) {min_j_ = j; }
+  void set_min_i(unsigned i) {min_i_ = i; }
+  void set_min_j(unsigned j) {min_j_ = j; }
   void set_min(Array1<unsigned int> mins);
   void set_ni(unsigned i) { ni_ = i; }
   void set_nj(unsigned j) { nj_ = j; }

@@ -138,22 +138,22 @@ GLTexture3D::init(double& min, double &max, bool use_minmax)
   if( texfld_->data_at() == Field::CELL )
   {
     isCC_=true;
-    reuse_bricks = ( X_ == (int)(mesh->get_nx()-1) &&
-		     Y_ == (int)(mesh->get_ny()-1) &&
-		     Z_ == (int)(mesh->get_nz()-1));
-    X_ = mesh->get_nx()-1;
-    Y_ = mesh->get_ny()-1;
-    Z_ = mesh->get_nz()-1;
+    reuse_bricks = ( X_ == (int)(mesh->get_ni()-1) &&
+		     Y_ == (int)(mesh->get_nj()-1) &&
+		     Z_ == (int)(mesh->get_nk()-1));
+    X_ = mesh->get_ni()-1;
+    Y_ = mesh->get_nj()-1;
+    Z_ = mesh->get_nk()-1;
   }
   else
   {
     isCC_=false;
-    reuse_bricks = ( X_ == (int)(mesh->get_nx()) &&
-		     Y_ == (int)(mesh->get_ny()) &&
-		     Z_ == (int)(mesh->get_nz()));
-    X_ = mesh->get_nx();
-    Y_ = mesh->get_ny();
-    Z_ = mesh->get_nz();
+    reuse_bricks = ( X_ == (int)(mesh->get_ni()) &&
+		     Y_ == (int)(mesh->get_nj()) &&
+		     Z_ == (int)(mesh->get_nk()));
+    X_ = mesh->get_ni();
+    Y_ = mesh->get_nj();
+    Z_ = mesh->get_nk();
   }    
 
   // Check for simple scale/translate matrix.
@@ -164,15 +164,15 @@ GLTexture3D::init(double& min, double &max, bool use_minmax)
     cerr << "NOT A STRICTLY SCALE/TRANSLATE MATRIX, WILL NOT WORK.\n";
   }
   
-  minP_ = Point(mesh->get_min_x(), mesh->get_min_y(), mesh->get_min_z());
+  minP_ = Point(mesh->get_min_i(), mesh->get_min_k(), mesh->get_min_j());
   if( isCC_ ) {
-    maxP_ = Point(mesh->get_min_x() + mesh->get_nx() - 1, 
-		mesh->get_min_y() + mesh->get_ny() -1,
-		mesh->get_min_z() + mesh->get_nz()-1);
+    maxP_ = Point(mesh->get_min_i() + mesh->get_ni()- 1, 
+		  mesh->get_min_j() + mesh->get_nj()-1,
+		  mesh->get_min_k() + mesh->get_nk()-1);
   } else {
-    maxP_ = Point(mesh->get_min_x() + mesh->get_nx(), 
-		mesh->get_min_y() + mesh->get_ny(),
-		mesh->get_min_z() + mesh->get_nz());
+    maxP_ = Point(mesh->get_min_i() + mesh->get_ni(), 
+		  mesh->get_min_j() + mesh->get_nj(),
+		  mesh->get_min_k() + mesh->get_nk());
   }
   if (use_minmax)
   {
@@ -348,9 +348,9 @@ GLTexture3D::get_dimensions(int& nx, int& ny, int& nz)
     dynamic_cast<LatVolMesh *>(texfld_->mesh().get_rep());
   if (meshpointer)
   {
-    nx = meshpointer->get_nx();
-    ny = meshpointer->get_ny();
-    nz = meshpointer->get_nz();
+    nx = meshpointer->get_ni();
+    ny = meshpointer->get_nj();
+    nz = meshpointer->get_nk();
     return true;
   }
   else
