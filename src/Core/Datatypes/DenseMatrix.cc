@@ -896,9 +896,9 @@ Mult(DenseMatrix& out, const DenseMatrix& m1, const DenseMatrix& m2)
   double ALPHA = 1.0;
   double BETA = 0.0;
   cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, m1.nrows(),
-              m2.ncols(), m1.ncols(), ALPHA, m1.get_data_pointer(), m1.ncols(),
-              m2.get_data_pointer(), m2.ncols(), BETA,
-              out.get_data_pointer(), out.ncols());
+              m2.ncols(), m1.ncols(), ALPHA, m1.dataptr_, m1.ncols(),
+              m2.dataptr_, m2.ncols(), BETA,
+              out.dataptr_, out.ncols());
 #else
   int nr = out.nrows();
   int nc = out.ncols();

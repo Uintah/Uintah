@@ -143,11 +143,12 @@ public:
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
 
+  //! Friend functions
+  friend void Mult(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
 };
 
 
 //! Friend functions
-void Mult(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
 void Sub(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
 void Add(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
 void Add(DenseMatrix&, double, const DenseMatrix&, double, const DenseMatrix&);
