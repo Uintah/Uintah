@@ -54,7 +54,7 @@ fi
 echo "" >> "$BUILDROOT"/log
 
 /bin/chgrp -Rh csafe "$BUILDROOT"
-/bin/chmod g+s "$BUILDROOT"
+/bin/chmod g+ws "$BUILDROOT"
 
 if [ "$SEND_MAIL_TO" != "" ]; then
     if [ $failed == "0" ]; then

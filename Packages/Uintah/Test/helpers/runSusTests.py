@@ -142,7 +142,7 @@ def runSusTests(argv, TESTS, algo, callback = nullCallback):
     exit(1)
 
   if failcode == 0:
-    if solotest != 0:
+    if solotest != "":
       print ""
       print "%s-%s test %s passed successfully!" % (ALGO, mode, solotest)
     else:
