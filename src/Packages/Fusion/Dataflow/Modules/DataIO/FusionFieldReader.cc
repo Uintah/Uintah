@@ -354,7 +354,7 @@ void FusionFieldReader::execute(){
 	    if( ifs.eof() ) {
 	      error( string("Could not read grid ") + new_filename );
 
-	      //	      error( "FusionFieldReader " + i + "  " + j + "  " + k + "  " + index );
+//	      error( "FusionFieldReader " + i + "  " + j + "  " + k + "  " + index );
 
 	      return;
 	    }
@@ -420,7 +420,13 @@ void FusionFieldReader::execute(){
 	    yVal = data[index+1];
 	    zVal = data[index+2];
 
+	    if( xVal * xVal + yVal * yVal + zVal * zVal < 1.0e-24 ) {
+	      remark( "Replaced a zero length vector" );
+	      xVal = yVal = zVal = 1.0e-12;
+	    }
+
 	    bfield->set_value(Vector(xVal, yVal, zVal), node);
+
 	  }
 	  else if( readOrder[BFIELD_R_PHI_Z] > -1 ) {
 
@@ -433,6 +439,11 @@ void FusionFieldReader::execute(){
 	      yVal = -data[index  ] * sin(phi) -
 		data[index+1] * cos(phi );
 	      zVal =  data[index+2];
+
+	      if( xVal * xVal + yVal * yVal + zVal * zVal < 1.0e-24 ) {
+		remark( "Replaced a zero length vector" );
+		xVal = yVal = zVal = 1.0e-12;
+	      }
 
 	      bfield->set_value(Vector(xVal, yVal, zVal), node);
 	    }
@@ -450,6 +461,11 @@ void FusionFieldReader::execute(){
 		data[index+2] * cos(phi );
 	      zVal =  data[index+1];
 
+	      if( xVal * xVal + yVal * yVal + zVal * zVal < 1.0e-24 ) {
+		remark( "Replaced a zero length vector" );
+		xVal = yVal = zVal = 1.0e-12;
+	      }
+
 	      bfield->set_value(Vector(xVal, yVal, zVal), node);
 	    }
 	  }
@@ -462,6 +478,11 @@ void FusionFieldReader::execute(){
 	    xVal = data[index  ];
 	    yVal = data[index+1];
 	    zVal = data[index+2];
+
+	    if( xVal * xVal + yVal * yVal + zVal * zVal < 1.0e-24 ) {
+	      remark( "Replaced a zero length vector" );
+	      xVal = yVal = zVal = 1.0e-12;
+	    }
 
 	    vfield->set_value(Vector(xVal, yVal, zVal), node);
 
@@ -486,6 +507,11 @@ void FusionFieldReader::execute(){
 		data[index+1] * cos(phi);
 	      zVal =  data[index+2];
 
+	      if( xVal * xVal + yVal * yVal + zVal * zVal < 1.0e-24 ) {
+		remark( "Replaced a zero length vector" );
+		xVal = yVal = zVal = 1.0e-12;
+	      }
+
 	      vfield->set_value(Vector(xVal, yVal, zVal), node);
 
 	      vector< double > errors;
@@ -509,6 +535,11 @@ void FusionFieldReader::execute(){
 	      yVal = -data[index  ] * sin(phi) -
 		data[index+2] * cos(phi);
 	      zVal =  data[index+1];
+
+	      if( xVal * xVal + yVal * yVal + zVal * zVal < 1.0e-24 ) {
+		remark( "Replaced a zero length vector" );
+		xVal = yVal = zVal = 1.0e-12;
+	      }
 
 	      vfield->set_value(Vector(xVal, yVal, zVal), node);
 
@@ -560,6 +591,7 @@ void FusionFieldReader::execute(){
       // If needed repeat the radial values for this theta.
 /*      if( !repeated )
       {
+        StructHexVolMesh::Node::index_type node0;
 	Point pt;
 
 	node.j_ = jdim;
@@ -574,7 +606,7 @@ void FusionFieldReader::execute(){
 	  node0.i_ = i;
 
 	  hvm->get_center(pt, node0 );
-	  hvm->set_point( node, pt );
+	  hvm->set_point( pt, node );
 
 	  if( bfield )
 	    bfield->set_value(bfield->value( node0 ), node);
@@ -607,6 +639,7 @@ void FusionFieldReader::execute(){
     // If needed repeat the first phi slice.
   /*    if( !repeated )
     {
+      StructHexVolMesh::Node::index_type node0;
       Point pt;
 
       node.k_ = kdim;
@@ -623,7 +656,7 @@ void FusionFieldReader::execute(){
 	  node0.i_ = i;
 
 	  hvm->get_center(pt, node0 );
-	  hvm->set_point( node, pt );
+	  hvm->set_point( pt, node );
 
 	  if( bfield )
 	    bfield->set_value(bfield->value( node0 ), node);
