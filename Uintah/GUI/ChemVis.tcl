@@ -1,8 +1,7 @@
 
 catch {rename ChemVis ""}
 
-itcl_class Uintah_MPMViz_
-ChemVis {
+itcl_class Uintah_MPMViz_ChemVis {
     inherit Module
     constructor {config} {
 	set name ChemVis
