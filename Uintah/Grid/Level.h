@@ -77,8 +77,8 @@ WARNING
       int numPatches() const;
       long totalCells() const;
 
-      void getIndexRange(SCICore::Geometry::BBox& b);
-      void getSpatialRange(SCICore::Geometry::BBox& b);
+      void getIndexRange(SCICore::Geometry::BBox& b) const;
+      void getSpatialRange(SCICore::Geometry::BBox& b) const;
 
       // it is better that IndexRange expressed by IntVector
       // instead of BBox, and the function is const. --tan
@@ -116,6 +116,11 @@ WARNING
 
 //
 // $Log$
+// Revision 1.18  2000/07/11 15:53:45  tan
+// Changed the following to be const member function.
+//       void getIndexRange(SCICore::Geometry::BBox& b) const;
+//       void getSpatialRange(SCICore::Geometry::BBox& b) const;
+//
 // Revision 1.17  2000/07/07 03:08:14  tan
 // It is better that IndexRange expressed by IntVector instead of BBox,
 // and the function is const.

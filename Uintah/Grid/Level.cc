@@ -98,7 +98,7 @@ void Level::performConsistencyCheck() const
   // See if abutting boxes have consistent bounds
 }
 
-void Level::getIndexRange(BBox& b)
+void Level::getIndexRange(BBox& b) const
 {
   for(int i=0;i<d_patches.size();i++){
     Patch* r = d_patches[i];
@@ -128,7 +128,7 @@ void Level::getIndexRange(IntVector& lowIndex,IntVector& highIndex) const
   }
 }
 
-void Level::getSpatialRange(BBox& b)
+void Level::getSpatialRange(BBox& b) const
 {
   for(int i=0;i<d_patches.size();i++){
     Patch* r = d_patches[i];
@@ -267,6 +267,11 @@ void Level::assignBCS(const ProblemSpecP& grid_ps)
 
 //
 // $Log$
+// Revision 1.17  2000/07/11 15:53:56  tan
+// Changed the following to be const member function.
+//       void getIndexRange(SCICore::Geometry::BBox& b) const;
+//       void getSpatialRange(SCICore::Geometry::BBox& b) const;
+//
 // Revision 1.16  2000/07/10 20:20:13  tan
 // For IntVector i, i(0)=i.x(),i(1)=i.y(),i(2)=i.z()
 //
