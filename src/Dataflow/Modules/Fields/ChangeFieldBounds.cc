@@ -57,6 +57,13 @@ public:
   GuiInt		useoutputcenter_;   // center checkbox
   GuiInt		useoutputsize_;   // size checkbox
 
+  GuiString		inputcenterx_;
+  GuiString		inputcentery_;
+  GuiString		inputcenterz_;
+  GuiString		inputsizex_;
+  GuiString		inputsizey_;
+  GuiString		inputsizez_;
+
   CrowdMonitor		widget_lock_;
   BoxWidget *		box_;
   Transform		box_initial_transform_;
@@ -83,6 +90,12 @@ ChangeFieldBounds::ChangeFieldBounds(GuiContext* ctx)
     outputsizex_(ctx->subVar("outputsizex")),
     outputsizey_(ctx->subVar("outputsizey")),
     outputsizez_(ctx->subVar("outputsizez")),
+    inputcenterx_(ctx->subVar("inputcenterx", false)),
+    inputcentery_(ctx->subVar("inputcentery", false)),
+    inputcenterz_(ctx->subVar("inputcenterz", false)),
+    inputsizex_(ctx->subVar("inputsizex", false)),
+    inputsizey_(ctx->subVar("inputsizey", false)),
+    inputsizez_(ctx->subVar("inputsizez", false)),
     useoutputcenter_(ctx->subVar("useoutputcenter")),
     useoutputsize_(ctx->subVar("useoutputsize")),
     widget_lock_("ChangeFieldBounds widget lock"),
@@ -91,6 +104,13 @@ ChangeFieldBounds::ChangeFieldBounds(GuiContext* ctx)
 {
   box_ = scinew BoxWidget(this, &widget_lock_, 1.0, false, false);
   box_->Connect((GeometryOPort*)get_oport("Transformation Widget"));
+
+  inputcenterx_.set("---");
+  inputcentery_.set("---");
+  inputcenterz_.set("---");
+  inputsizex_.set("---");
+  inputsizey_.set("---");
+  inputsizez_.set("---");
 }
 
 ChangeFieldBounds::~ChangeFieldBounds()
@@ -103,12 +123,13 @@ ChangeFieldBounds::~ChangeFieldBounds()
 void
 ChangeFieldBounds::clear_vals() 
 {
-  gui->execute(string("set ")+id+"-inputcenterx \"---\"");
-  gui->execute(string("set ")+id+"-inputcentery \"---\"");
-  gui->execute(string("set ")+id+"-inputcenterz \"---\"");
-  gui->execute(string("set ")+id+"-inputsizex \"---\"");
-  gui->execute(string("set ")+id+"-inputsizey \"---\"");
-  gui->execute(string("set ")+id+"-inputsizez \"---\"");
+  inputcenterx_.set("---");
+  inputcentery_.set("---");
+  inputcenterz_.set("---");
+  inputsizex_.set("---");
+  inputsizey_.set("---");
+  inputsizez_.set("---");
+
   gui->execute(id+" update_multifields");
 }
 
@@ -129,12 +150,12 @@ ChangeFieldBounds::update_input_attributes(FieldHandle f)
   size = bbox.diagonal();
   center = bbox.center();
 
-  gui->execute(string("set ")+id+"-inputcenterx "+to_string(center.x()));
-  gui->execute(string("set ")+id+"-inputcentery "+to_string(center.y()));
-  gui->execute(string("set ")+id+"-inputcenterz "+to_string(center.z()));
-  gui->execute(string("set ")+id+"-inputsizex "+to_string(size.x()));
-  gui->execute(string("set ")+id+"-inputsizey "+to_string(size.y()));
-  gui->execute(string("set ")+id+"-inputsizez "+to_string(size.z()));
+  inputcenterx_.set(to_string(center.x()));
+  inputcentery_.set(to_string(center.y()));
+  inputcenterz_.set(to_string(center.z()));
+  inputsizex_.set(to_string(size.x()));
+  inputsizey_.set(to_string(size.y()));
+  inputsizez_.set(to_string(size.z()));
 
   gui->execute(id+" update_multifields");
 }

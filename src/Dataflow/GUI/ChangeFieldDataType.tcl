@@ -129,18 +129,6 @@ itcl_class SCIRun_Fields_ChangeFieldDataType {
 	}
     }
 
-    method copy_attributes {} {
-	set w .ui[modname]
-	if {![winfo exists $w]} {
-	    return
-	}
-	set edit [$w.edit childsite]
-
-	config_labelcombo $w.edit.l1 {Nodes Edges Faces Cells} \
-            [set $this-inputdatatype]
-    }
-
-
     method config_labelcombo { win arglist sel} {
 	if {![winfo exists $win]} {
 	    return
