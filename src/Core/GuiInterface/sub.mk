@@ -33,7 +33,7 @@ SRCS     += $(SRCDIR)/GuiCallback.cc \
 
 PSELIBS := Core/Exceptions Core/Util Core/Thread \
 		Core/Containers Core/TkExtensions
-LIBS := $(TCL_LIBRARY) $(ITK_LIBRARY) $(X11_LIBS)
+LIBS := $(TCL_LIBRARY) $(ITK_LIBRARY) $(X_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

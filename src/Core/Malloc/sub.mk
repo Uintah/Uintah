@@ -25,7 +25,7 @@ SRCS     += $(SRCDIR)/Allocator.cc $(SRCDIR)/AllocOS.cc \
 	$(SRCDIR)/malloc.cc $(SRCDIR)/new.cc 
 
 PSELIBS := 
-LIBS := $(THREAD_LIBS)
+LIBS := $(THREAD_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

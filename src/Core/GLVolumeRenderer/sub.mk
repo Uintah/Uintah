@@ -45,7 +45,7 @@ PSELIBS := Core/Persistent Core/Geometry Core/Exceptions \
 	Core/Math Core/Containers Core/Thread Core/Datatypes \
 	Core/GuiInterface Core/Geom Core/Util
 
-LIBS := $(GL_LIBS) -lm
+LIBS := $(GL_LIBRARY) -lm
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
