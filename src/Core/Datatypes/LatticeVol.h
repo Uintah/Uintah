@@ -110,6 +110,7 @@ public:
 
   virtual ScalarFieldInterface* query_scalar_interface() const;
   virtual VectorFieldInterface* query_vector_interface() const;
+  virtual TensorFieldInterface* query_tensor_interface() const;
 
   static const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const;
@@ -191,6 +192,17 @@ LatticeVol<Vector>::query_vector_interface() const;
 template <class T>
 VectorFieldInterface*
 LatticeVol<T>::query_vector_interface() const
+{
+  return 0;
+}
+
+template <>
+TensorFieldInterface*
+LatticeVol<Tensor>::query_tensor_interface() const;
+
+template <class T>
+TensorFieldInterface*
+LatticeVol<T>::query_tensor_interface() const
 {
   return 0;
 }

@@ -52,6 +52,7 @@ public:
   
   virtual ScalarFieldInterface* query_scalar_interface() const;
   virtual VectorFieldInterface* query_vector_interface() const;
+  virtual TensorFieldInterface* query_tensor_interface() const;
 
   void    io(Piostream &stream);
   static  PersistentTypeID type_id;
@@ -169,6 +170,17 @@ TriSurf<Vector>::query_vector_interface() const;
 template <class T>
 VectorFieldInterface*
 TriSurf<T>::query_vector_interface() const
+{
+  return 0;
+}
+
+template <>
+TensorFieldInterface*
+TriSurf<Tensor>::query_tensor_interface() const;
+
+template <class T>
+TensorFieldInterface*
+TriSurf<T>::query_tensor_interface() const
 {
   return 0;
 }

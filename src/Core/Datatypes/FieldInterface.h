@@ -35,6 +35,8 @@
 #define Datatypes_FieldInterface_h
 
 #include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Tensor.h>
 #include <Core/Datatypes/Field.h>
 
 namespace SCIRun {
@@ -554,11 +556,22 @@ VFInterface<F>::compute_min_max(Vector  &minout, Vector  &maxout) const
 
 
 
-
-
-
 class TensorFieldInterface {
 };
+
+
+//! Should only be instantiated for fields with scalar data.
+template <class F>
+class TFInterface : public TensorFieldInterface {
+public:
+  TFInterface(const F *fld) :
+    fld_(fld)
+  {}
+  
+private:
+  const F        *fld_;
+};
+
 
 } // end namespace SCIRun
 

@@ -308,6 +308,14 @@ TetVol<Vector>::query_vector_interface() const
   return scinew VFInterface<TetVol<Vector> >(this);
 }
 
+template <>
+TensorFieldInterface *
+TetVol<Tensor>::query_tensor_interface() const
+{
+  return scinew TFInterface<TetVol<Tensor> >(this);
+}
+
+
 // ---
 
 template <>
@@ -351,6 +359,14 @@ VectorFieldInterface *
 LatticeVol<Vector>::query_vector_interface() const
 {
   return scinew VFInterface<LatticeVol<Vector> >(this);
+}
+
+
+template <>
+TensorFieldInterface *
+LatticeVol<Tensor>::query_tensor_interface() const
+{
+  return scinew TFInterface<LatticeVol<Tensor> >(this);
 }
 
 // ---
@@ -398,6 +414,13 @@ TriSurf<Vector>::query_vector_interface() const
   return scinew VFInterface<TriSurf<Vector> >(this);
 }
 
+template <>
+TensorFieldInterface *
+TriSurf<Tensor>::query_tensor_interface() const
+{
+  return scinew TFInterface<TriSurf<Tensor> >(this);
+}
+
 // ---
 
 template <>
@@ -434,6 +457,14 @@ VectorFieldInterface *
 ImageField<Vector>::query_vector_interface() const
 {
   return scinew VFInterface<ImageField<Vector> >(this);
+}
+
+
+template <>
+TensorFieldInterface *
+ImageField<Tensor>::query_tensor_interface() const
+{
+  return scinew TFInterface<ImageField<Tensor> >(this);
 }
 
 // ---
@@ -474,6 +505,14 @@ ContourField<Vector>::query_vector_interface() const
   return scinew VFInterface<ContourField<Vector> >(this);
 }
 
+
+template <>
+TensorFieldInterface *
+ContourField<Tensor>::query_tensor_interface() const
+{
+  return scinew TFInterface<ContourField<Tensor> >(this);
+}
+
 // ---
 
 template <>
@@ -510,6 +549,14 @@ VectorFieldInterface *
 ScanlineField<Vector>::query_vector_interface() const
 {
   return scinew VFInterface<ScanlineField<Vector> >(this);
+}
+
+
+template <>
+TensorFieldInterface *
+ScanlineField<Tensor>::query_tensor_interface() const
+{
+  return scinew TFInterface<ScanlineField<Tensor> >(this);
 }
 
 // ---
@@ -550,6 +597,13 @@ PointCloud<Vector>::query_vector_interface() const
   return scinew VFInterface<PointCloud<Vector> >(this);
 }
 
+
+template <>
+TensorFieldInterface *
+PointCloud<Tensor>::query_tensor_interface() const
+{
+  return scinew TFInterface<PointCloud<Tensor> >(this);
+}
 
 
 //! Compute the gradient g in cell ci.

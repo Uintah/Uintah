@@ -110,6 +110,7 @@ public:
 
   virtual ScalarFieldInterface* query_scalar_interface() const;
   virtual VectorFieldInterface* query_vector_interface() const;
+  virtual TensorFieldInterface* query_tensor_interface() const;
 
   static const string type_name(int n = -1);
   virtual const string get_type_name(int n = -1) const;
@@ -185,6 +186,17 @@ ImageField<Vector>::query_vector_interface() const;
 template <class T>
 VectorFieldInterface*
 ImageField<T>::query_vector_interface() const
+{
+  return 0;
+}
+
+template <>
+TensorFieldInterface*
+ImageField<Tensor>::query_tensor_interface() const;
+
+template <class T>
+TensorFieldInterface*
+ImageField<T>::query_tensor_interface() const
 {
   return 0;
 }
