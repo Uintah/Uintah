@@ -53,9 +53,9 @@ StructCurveMesh::StructCurveMesh(unsigned int n)
 }
 
 StructCurveMesh::StructCurveMesh(const StructCurveMesh &copy)
-  : ScanlineMesh(copy)
+  : ScanlineMesh(copy),
+    points_(copy.points_)
 {
-  points_ = copy.points_;
 }
 
 bool
@@ -68,6 +68,7 @@ StructCurveMesh::get_dim(vector<unsigned int> &array) const
 
   return true;
 }
+
 BBox
 StructCurveMesh::get_bounding_box() const
 {
