@@ -10,6 +10,13 @@ model is used.
 disksplas.ups Same as disks.ups except the CompNeoHookPlas constitutive
 model is used.
 
+diskshypo.ups Same as disks.ups except the HypoElastic constitutive
+model is used.
+
+disksvs.ups Disks problem for ViscoScram.  This is a much more resolved
+calculation than the standard disks problems, and is actually a pretty big
+run (24 hr.s on 4 processors).
+
 disks_4patch.ups Same as disks.ups except that it uses 4 patches to solve
 the problem.  Should give identical answers to disks.ups.
 
@@ -29,7 +36,7 @@ This exercises the thermal contact algorithm.
 inclined_plane_sphere.ups  Sphere rolling down and inclined plane.
 This exercises the frictional contact algorithm.  X-position in
 CenterOfMassPosition.dat should compare well with the function
-17408.*(2.+2.525*x**2).
+17408.*(2.+2.525*t**2), where t is time.
 
 twomatburn.ups  Two adjacent materials, one burnable, the other inert.
 The first starts at 0 degrees, the latter at 100.  The second material
@@ -49,6 +56,10 @@ contact between grains.  Discretized into 64000 cells, 400000 particles.
 
 1000grains_svcontact.ups  Same as 1000grains, but uses single velocity
 field contact algorithm.
+
+1000grains_2m_svcontact.ups  Same geometry as 1000grains, but has all grains
+one material (velocity field) and the piston a second material.  Uses
+single velocity field contact algorithm
 
 What to Expect:
 
