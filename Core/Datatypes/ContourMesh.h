@@ -108,6 +108,7 @@ public:
   ContourMesh() {}
   ContourMesh(const ContourMesh &copy) 
     : nodes_(copy.nodes_), edges_(copy.edges_) {}
+  virtual MeshBase *clone() { return new ContourMesh(*this); }
   virtual ~ContourMesh() {}
 
   node_iterator node_begin() const { return 0; }

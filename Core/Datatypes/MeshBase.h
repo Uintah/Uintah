@@ -26,6 +26,8 @@ namespace SCIRun {
 
 class MeshBase : public PropertyManager {
 public:
+
+  virtual MeshBase *clone() = 0;
   virtual ~MeshBase();
   
   //! Required virtual functions

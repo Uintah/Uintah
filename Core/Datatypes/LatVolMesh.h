@@ -270,6 +270,7 @@ public:
   LatVolMesh(const LatVolMesh &copy)
     : nx_(copy.get_nx()),ny_(copy.get_ny()),nz_(copy.get_nz()),
       min_(copy.get_min()),max_(copy.get_max()) {}
+  virtual MeshBase *clone() { return new LatVolMesh(*this); }
   virtual ~LatVolMesh() {}
 
   node_iterator  node_begin() const { return node_iterator(this, 0, 0, 0); }
