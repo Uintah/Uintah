@@ -292,7 +292,10 @@ main( int argc, char *argv[] ) {
     RegressionKiller *kill = scinew RegressionKiller();
     Thread *tkill = scinew Thread(kill, "Kill a hung SCIRun");
     tkill->detach();
-    delete [] doing_regressions;
+    // doing_regressions is a single char so no delete[].
+    // FIX_ME  this should not be leaked but deleting with delete[] or delete
+    // causes a crash.
+    //delete doing_regressions;
   }
 
   // Now activate the TCL event loop
