@@ -42,8 +42,7 @@ Persistent* make_GeomDL()
   return scinew GeomDL(0);
 }
 
-PersistentTypeID GeomDL::type_id("GeomDL", "GeomObj",
-				 make_GeomDL);
+PersistentTypeID GeomDL::type_id("GeomDL", "GeomObj", make_GeomDL);
 
 
 GeomDL::GeomDL(GeomHandle obj)
