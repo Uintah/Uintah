@@ -166,6 +166,8 @@ private:
       int d_numMixStatVars;
       int d_numRxnVars;
       std::string d_pdfShape;
+      int d_CO2index;
+      int d_H2Oindex;
       std::string d_tableType;	 
       int d_depStateSpaceVars;
       bool d_adiabatic;

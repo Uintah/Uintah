@@ -167,8 +167,10 @@ private:
       int d_numRxnVars;
       int d_depStateSpaceVars;
       bool d_adiabatic;
-      std::string d_tableType;
+      int d_CO2index;
+      int d_H2Oindex;
       std::vector<Stream> d_streams; 
+      std::string d_tableType;
       int d_tableDimension;
       // Data structure class that stores the table entries for state-space
       // variables as a function of independent variables.
