@@ -401,6 +401,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
   d_mpm->scheduleApplyExternalLoads(              sched, patches, mpm_matls);
   d_ice->scheduleAdvectAndAdvanceInTime(          sched, patches, ice_matls_sub,
                                                                   mpm_matls_sub,
+                                                                  press_matl,
                                                                   all_matls);
                                                                   
   if(d_ice->switchTestConservation) {
