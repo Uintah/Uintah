@@ -44,6 +44,7 @@ public:
   virtual ~RingWidget();
 
   virtual void redraw();
+  virtual void geom_pick(GeomPick*, ViewWindow*, int, const BState& bs);
   virtual void geom_moved(GeomPick*, int, double, const Vector&, int,
 			  const BState&, const Vector &pick_offset);
 
@@ -76,6 +77,11 @@ protected:
    
 private:
   Vector oldrightaxis, olddownaxis;
+
+  Point pick_centervar_;
+  Point pick_pointrvar_;
+  Point pick_pointdvar_;
+  Point pick_slidervar_;
 };
 
 
