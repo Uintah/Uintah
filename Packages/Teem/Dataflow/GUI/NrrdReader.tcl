@@ -121,13 +121,14 @@ itcl_class Teem_DataIO_NrrdReader {
 
     method add_axis_info {id label center size spacing min max} {
 	set w .ui[modname]
-
 	if {[winfo exists $w]} {
 	    add_axis $w.rb "axis$id" "Axis $id\nLabel: $label\nCenter: $center\nSize $size\nSpacing: $spacing\nMin: $min\nMax: $max"
 	}
 	# set the saved axis...
 	if {[set $this-axis] == "axis$id"} {
-	    select_axis $w.rb "axis$id"
+	    if {[winfo exists $w.rb]} {
+		select_axis $w.rb "axis$id"
+	    }
 	    set $this-axis "axis$id"
 	}
     }
