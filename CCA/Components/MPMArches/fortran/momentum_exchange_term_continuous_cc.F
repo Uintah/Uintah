@@ -1,3 +1,7 @@
+#if 1
+#include <Packages/Uintah/CCA/Components/MPMArches/fortran/momentum_exchange_term_continuous_cc_fort.h>
+#include "../../Arches/fortran/param4.h"
+#else
       subroutine momentum_exchange_term_continuous_cc(
      $     su_dragx_fcy, 
      $     sp_dragx_fcy,
@@ -294,6 +298,7 @@ C-----------------------------------------------------------------------
       integer wall
       
       integer ffield
+#endif
 
 *     local variables
 
@@ -354,17 +359,35 @@ c     su_dragx_cc
 c     sp_dragx_cc
 c
 
-      call arrass(
-     $     dragforcex_fcy, zero,
-     $     dim_lo_dx_fcy, dim_hi_dx_fcy, valid_lo, valid_hi)
+#ifdef __GNUC__
+C The variable names are too long the use the PASS3 macros,
+C so we have to do this - Steve
+      call arrass(dragforcex_fcy_low_x, dragforcex_fcy_low_y,
+     $ dragforcex_fcy_low_z, dragforcex_fcy_high_x,
+     $ dragforcex_fcy_high_y, dragforcex_fcy_high_z,
+     $ dragforcex_fcy, zero, valid_lo, valid_hi)
 
-      call arrass(
-     $     dragforcex_fcz, zero,
-     $     dim_lo_dx_fcz, dim_hi_dx_fcz, valid_lo, valid_hi)
+      call arrass(dragforcex_fcz_low_x, dragforcex_fcz_low_y,
+     $ dragforcex_fcz_low_z, dragforcex_fcz_high_x,
+     $ dragforcex_fcz_high_y, dragforcex_fcz_high_z,
+     $ dragforcex_fcz, zero, valid_lo, valid_hi)
 
-      call arrass(
-     $     dragforcex_cc, zero,
-     $     dim_lo_dx_cc, dim_hi_dx_cc, valid_lo, valid_hi)
+      call arrass(dragforcex_cc_low_x, dragforcex_cc_low_y,
+     $ dragforcex_cc_low_z, dragforcex_cc_high_x,
+     $ dragforcex_cc_high_y, dragforcex_cc_high_z,
+     $ dragforcex_cc, zero, valid_lo, valid_hi)
+
+#else
+      call arrass(dragforcex_fcy_low, dragforcex_fcy_high,
+     $ dragforcex_fcy, zero, valid_lo, valid_hi)
+
+      call arrass(dragforcex_fcz_low, dragforcex_fcz_high,
+     $ dragforcex_fcz, zero, valid_lo, valid_hi)
+
+      call arrass(dragforcex_cc_low, dragforcex_cc_high,
+     $ dragforcex_cc, zero, valid_lo, valid_hi)
+
+#endif
 
 *     start computation
 c
@@ -455,6 +478,10 @@ c
 c     lower and upper faces of intrusion for transverse 
 c     direction 1 (i.e., south and north faces)
 
+#if 1
+      write(6,*)'walmom_cc broke - Steve'
+      stop
+#else
                   call walmom_cc(
      $                 su_dragx_fcy, sp_dragx_fcy, 
      $                 dragforcex_fcy, 
@@ -507,6 +534,7 @@ c     direction 2 (i.e., bottom and top faces)
      $                 valid_lo, valid_hi,
      $                 lmltm,
      $                 pcell, ffield)
+#endif
 
                endif
 

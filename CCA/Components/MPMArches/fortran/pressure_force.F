@@ -1,3 +1,7 @@
+#if 1
+#include <Packages/Uintah/CCA/Components/MPMArches/fortran/pressure_force_fort.h>
+#include "../../Arches/fortran/param4.h"
+#else
       subroutine pressure_force(
      $     pressforcex_fcx, pressforcey_fcy, pressforcez_fcz,
      $     epsg, 
@@ -140,6 +144,7 @@ C-----------------------------------------------------------------------
 
       integer wall
       integer ffield
+#endif
 
 *     local variables
 
@@ -157,17 +162,35 @@ c--------------------------------------------------------------------
 c     initialize arrays to zero
 c--------------------------------------------------------------------
 
-      call arrass(
-     $     pressforcex_fcx, zero,
-     $     dim_lo_fcx, dim_hi_fcx, valid_lo, valid_hi)
+#ifdef __GNUC__
+C The variable names are too long the use the PASS3 macros,
+C so we have to do this - Steve
+      call arrass(pressforcex_fcx_low_x, pressforcex_fcx_low_y,
+     $ pressforcex_fcx_low_z, pressforcex_fcx_high_x,
+     $ pressforcex_fcx_high_y, pressforcex_fcx_high_z,
+     $ pressforcex_fcx, zero, valid_lo, valid_hi)
 
-      call arrass(
-     $     pressforcey_fcy, zero,
-     $     dim_lo_fcy, dim_hi_fcy, valid_lo, valid_hi)
+      call arrass(pressforcey_fcy_low_x, pressforcey_fcy_low_y,
+     $ pressforcey_fcy_low_z, pressforcey_fcy_high_x,
+     $ pressforcey_fcy_high_y, pressforcey_fcy_high_z,
+     $ pressforcey_fcy, zero, valid_lo, valid_hi)
 
-      call arrass(
-     $     pressforcez_fcz, zero,
-     $     dim_lo_fcz, dim_hi_fcz, valid_lo, valid_hi)
+      call arrass(pressforcez_fcz_low_x, pressforcez_fcz_low_y,
+     $ pressforcez_fcz_low_z, pressforcez_fcz_high_x,
+     $ pressforcez_fcz_high_y, pressforcez_fcz_high_z,
+     $ pressforcez_fcz, zero, valid_lo, valid_hi)
+
+#else
+      call arrass(pressforcex_fcx_low, pressforcex_fcx_high,
+     $ pressforcex_fcx, zero, valid_lo, valid_hi)
+
+      call arrass(pressforcey_fcy_low, pressforcey_fcy_high,
+     $ pressforcey_fcy, zero, valid_lo, valid_hi)
+
+      call arrass(pressforcez_fcz_low, pressforcez_fcz_high,
+     $ pressforcez_fcz, zero, valid_lo, valid_hi)
+
+#endif
 
 c     debug, sk, April 14, 2001
       print*, 'printing pressure force values'
@@ -304,17 +327,34 @@ c     debug, sk, April 14, 2001
 
 c     debug: set pressure forces to zero
 
-      call arrass(
-     $     pressforcex_fcx, zero,
-     $     dim_lo_fcx, dim_hi_fcx, valid_lo, valid_hi)
+#ifdef __GNUC__
+C The variable names are too long the use the PASS3 macros,
+C so we have to do this - Steve
+      call arrass(pressforcex_fcx_low_x, pressforcex_fcx_low_y,
+     $ pressforcex_fcx_low_z, pressforcex_fcx_high_x,
+     $ pressforcex_fcx_high_y, pressforcex_fcx_high_z,
+     $ pressforcex_fcx, zero, valid_lo, valid_hi)
 
-      call arrass(
-     $     pressforcey_fcy, zero,
-     $     dim_lo_fcy, dim_hi_fcy, valid_lo, valid_hi)
+      call arrass(pressforcey_fcy_low_x, pressforcey_fcy_low_y,
+     $ pressforcey_fcy_low_z, pressforcey_fcy_high_x,
+     $ pressforcey_fcy_high_y, pressforcey_fcy_high_z,
+     $ pressforcey_fcy, zero, valid_lo, valid_hi)
 
-      call arrass(
-     $     pressforcez_fcz, zero,
-     $     dim_lo_fcz, dim_hi_fcz, valid_lo, valid_hi)
+      call arrass(pressforcez_fcz_low_x, pressforcez_fcz_low_y,
+     $ pressforcez_fcz_low_z, pressforcez_fcz_high_x,
+     $ pressforcez_fcz_high_y, pressforcez_fcz_high_z,
+     $ pressforcez_fcz, zero, valid_lo, valid_hi)
 
+#else
+      call arrass(pressforcex_fcx_low, pressforcex_fcx_high,
+     $ pressforcex_fcx, zero, valid_lo, valid_hi)
+
+      call arrass(pressforcey_fcy_low, pressforcey_fcy_high,
+     $ pressforcey_fcy, zero, valid_lo, valid_hi)
+
+      call arrass(pressforcez_fcz_low, pressforcez_fcz_high,
+     $ pressforcez_fcz, zero, valid_lo, valid_hi)
+
+#endif
       return
       end

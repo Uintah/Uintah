@@ -8,13 +8,8 @@ SRCS     += \
 	$(SRCDIR)/MPMArches.cc \
 	$(SRCDIR)/MPMArchesLabel.cc
 
-ifneq ($(CC_DEPEND_REGEN),-MD)
-# The fortran code doesn't work under g++ yet
 SUBDIRS := $(SRCDIR)/fortran 
-
 include $(SCIRUN_SCRIPTS)/recurse.mk
-FLIB := -lftn
-endif
 
 PSELIBS := \
 	Packages/Uintah/CCA/Ports          \
@@ -31,6 +26,11 @@ PSELIBS := \
 	Core/Geometry   \
 	Dataflow/XMLUtil
 
-LIBS := $(PETSC_LIBS) $(XML_LIBRARY) $(FLIB) $(MPI_LIBRARY) -lm
+LIBS := $(PETSC_LIBS) $(XML_LIBRARY) $(MPI_LIBRARY) -lm $(FLIBS)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
+
+$(SRCDIR)/MPMArches.o: $(SRCDIR)/fortran/collect_drag_cc_fort.h
+$(SRCDIR)/MPMArches.o: $(SRCDIR)/fortran/interp_centertoface_fort.h
+$(SRCDIR)/MPMArches.o: $(SRCDIR)/fortran/momentum_exchange_term_continuous_cc_fort.h
+$(SRCDIR)/MPMArches.o: $(SRCDIR)/fortran/pressure_force_fort.h
