@@ -810,6 +810,24 @@ case $host in
     ;;
 esac
 
+#########################################################################
+## Make sure number of bit build for Thirdparty and SCIRun compile match
+##
+
+if test "$is_64bit" = "yes"; then
+  case "$thirdparty" in 
+  *32*)
+	AC_MSG_ERROR(You specified 64 bit compile but have 32 bit Thirdparty?)
+  esac
+else
+  case "$thirdparty" in 
+  *64*)
+	AC_MSG_ERROR(You specified 32 bit compile but have 64 bit Thirdparty?)
+  esac
+fi
+
+#########################################################################
+
 AC_SUBST(ASSERTION_LEVEL)
 AC_SUBST(NOPRINTDIR)
 AC_SUBST(MALLOC_DEFINE)
@@ -1807,6 +1825,12 @@ for i in $petsc $thirdparty $SCI_LAB_TP_DEFAULT; do
 done
 
 if test "$FOUND_ALL_PETSC" != "yes"; then
+
+  ## Make it a fatal error if user uses --with-petsc and we don't find it.
+  if test "$petsc"; then
+      AC_MSG_ERROR( You wanted PETSc but I could not find it! )
+  fi
+
   LIBPETSC=""
   INCPETSC_H=""
   HAVE_LIBPETSC=''
