@@ -86,9 +86,6 @@ private:
 
   Field                         *vf_;  // vector field
   Field                         *sf_;  // seed point field
-  ContourField<double>          *cf_;
-
-  ContourMesh                   *cmesh_;
 
   GuiDouble                     stepsize_;
   GuiDouble                     tolerance_;
@@ -107,7 +104,7 @@ private:
 
   //! loop through the nodes in the seed field
   template <class VectorField, class SeedField>
-  void TemplatedExecute(VectorField *, SeedField *);
+  void TemplatedExecute(VectorField *, SeedField *, ContourMeshHandle);
 
   //! find the nodes that make up a single stream line.
   //! This particular implementation uses Runge-Kutta-Fehlberg
@@ -127,8 +124,6 @@ StreamLines::StreamLines(const string& id) :
   Module("StreamLines", id, Source, "Visualization", "SCIRun"),
   vf_(0),
   sf_(0),
-  cf_(0),
-  cmesh_(0),
   stepsize_("stepsize",id,this),
   tolerance_("tolerance",id,this),
   maxsteps_("maxsteps",id,this)  
@@ -253,7 +248,8 @@ StreamLines::FindStreamLineNodes(vector<Point> &v /* storage for points */,
 
 template <class VectorField, class SeedField>
 void 
-StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf)
+StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf,
+			      ContourMeshHandle cmesh)
 {
   typedef typename VectorField::mesh_type        vf_mesh_type;
   typedef typename SeedField::mesh_type          sf_mesh_type;
@@ -266,32 +262,33 @@ StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf)
   Vector test;
   vector<Point> nodes;
   vector<Point>::iterator node_iter;
-  node_index_type n1,n2;
-  double tolerance;
-  double stepsize;
-  int maxsteps;
-
-  int count;
-  float loop = 0;
+  node_index_type n1, n2;
 
   sf_mesh_type *smesh =
     dynamic_cast<sf_mesh_type*>(sf->get_typed_mesh().get_rep());
 
   vf_mesh_type *vmesh =
     dynamic_cast<vf_mesh_type*>(vf->get_typed_mesh().get_rep());
+  vmesh->finish_mesh();
 
   VectorFieldInterface *vfi = vf->query_vector_interface();
 
-  vmesh->finish_mesh();
-
-  // try to find the streamline for each seed point
-  sf_node_iterator seed_iter = smesh->node_begin();
-
-  count = smesh->nodes_size();
 
   TCL::execute(id + " set_state Executing 0");
+  const int node_count = smesh->nodes_size();
+  double loop = 0;
 
-  while (seed_iter != smesh->node_end())
+  double tolerance;
+  double stepsize;
+  int maxsteps;
+  get_gui_doublevar(id, "tolerance", tolerance);
+  get_gui_doublevar(id, "stepsize", stepsize);
+  get_gui_intvar(id, "maxsteps", maxsteps);
+
+  // Try to find the streamline for each seed point.
+  sf_node_iterator seed_iter = smesh->node_begin();
+  sf_node_iterator seed_iter_end = smesh->node_end();
+  while (seed_iter != seed_iter_end)
   {
     smesh->get_point(seed, *seed_iter);
 
@@ -300,59 +297,51 @@ StreamLines::TemplatedExecute(VectorField *vf, SeedField *sf)
     {
       if (!interpolate(vfi, seed, test))
       {
-	postMessage("StreamLines: WARNING: seed point "
-		    "was not inside the field.");
+	warning("StreamLines: WARNING: seed point was not inside the field.");
 	++seed_iter;
 	continue;
       }
     } 
 
-    get_gui_doublevar(id,"tolerance",tolerance);
-    get_gui_doublevar(id,"stepsize",stepsize);
-    get_gui_intvar(id,"maxsteps",maxsteps);
-
-    // find the positive streamlines
+    // Find the positive streamlines.
     nodes.clear();
     FindStreamLineNodes(nodes, seed, tolerance, stepsize, maxsteps, vfi);
 
     node_iter = nodes.begin();
-    if (node_iter!=nodes.end())
+    if (node_iter != nodes.end())
     {
-      n1 = cmesh_->add_node(*node_iter);
-    }
-    while (node_iter!=nodes.end())
-    {
+      n1 = cmesh->add_node(*node_iter);
       ++node_iter;
-      if (node_iter!=nodes.end())
+      while (node_iter != nodes.end())
       {
-	n2 = cmesh_->add_node(*node_iter);
-	cmesh_->add_edge(n1,n2);
+	n2 = cmesh->add_node(*node_iter);
+	cmesh->add_edge(n1, n2);
 	n1 = n2;
+	++node_iter;
       }
     }
 
-    // find the negative streamlines
+    // Find the negative streamlines.
     nodes.clear();
     FindStreamLineNodes(nodes, seed, tolerance, -stepsize, maxsteps, vfi);
 
-    node_iter = nodes.begin();
-    if (node_iter!=nodes.end())
-      n1 = cmesh_->add_node(*node_iter);
-    while (node_iter!=nodes.end())
+    if (node_iter != nodes.end())
     {
+      n1 = cmesh->add_node(*node_iter);
       ++node_iter;
-      if (node_iter!=nodes.end())
+      while (node_iter != nodes.end())
       {
-	n2 = cmesh_->add_node(*node_iter);
-	cmesh_->add_edge(n1,n2);
+	n2 = cmesh->add_node(*node_iter);
+	cmesh->add_edge(n1, n2);
 	n1 = n2;
+	++node_iter;
       }
     }
 
     ++seed_iter;
     ++loop;
     
-    TCL::execute(id + " set_progress " + to_string(loop/count) + " 0");
+    TCL::execute(id + " set_progress " + to_string(loop / node_count) + " 0");
   }
 }
 
@@ -400,34 +389,41 @@ void StreamLines::execute()
     return;
 
   // might have to get Field::NODE
-  cf_ = scinew ContourField<double>(Field::NODE);
-  cmesh_ = dynamic_cast<ContourMesh*>(cf_->get_typed_mesh().get_rep());
+  ContourField<double> *cf = scinew ContourField<double>(Field::NODE);
+  ContourMeshHandle cmesh = cf->get_typed_mesh();
 
   // this is a pain...
   // use Marty's dispatch here instead...
   if (vf_->get_type_name(0) == "LatticeVol") {
     if (vf_->get_type_name(1) == "Vector") {
       if (sf_->get_type_name(-1) == "ContourField<double>") {
-	TemplatedExecute((LatticeVol<Vector>*)vf_,(ContourField<double>*)sf_);
+	TemplatedExecute((LatticeVol<Vector>*)vf_,(ContourField<double>*)sf_,
+			 cmesh);
       } else if (sf_->get_type_name(-1) == "TriSurf<double>") {
-	TemplatedExecute((LatticeVol<Vector>*)vf_,(TriSurf<double>*)sf_);
+	TemplatedExecute((LatticeVol<Vector>*)vf_,(TriSurf<double>*)sf_,
+			 cmesh);
       } else if (sf_->get_type_name(-1) == "PointCloud<double>") {
-	TemplatedExecute((LatticeVol<Vector>*)vf_,(PointCloud<double>*)sf_);
+	TemplatedExecute((LatticeVol<Vector>*)vf_,(PointCloud<double>*)sf_,
+			 cmesh);
       }
     }
   } else if (vf_->get_type_name(0) =="TetVol") {
     if (vf_->get_type_name(1) == "Vector") {
       if (sf_->get_type_name(-1) == "ContourField<double>") {
-	TemplatedExecute((TetVol<Vector>*)vf_,(ContourField<double>*)sf_);
+	TemplatedExecute((TetVol<Vector>*)vf_,(ContourField<double>*)sf_,
+			 cmesh);
       } else if (sf_->get_type_name(-1) == "TriSurf<double>") {
-	TemplatedExecute((TetVol<Vector>*)vf_,(TriSurf<double>*)sf_);
+	TemplatedExecute((TetVol<Vector>*)vf_,(TriSurf<double>*)sf_,
+			 cmesh);
       } else if (sf_->get_type_name(-1) == "PointCloud<double>") {
-	TemplatedExecute((TetVol<Vector>*)vf_,(PointCloud<double>*)sf_);
+	TemplatedExecute((TetVol<Vector>*)vf_,(PointCloud<double>*)sf_,
+			 cmesh);
       }
     }
   }
-  cf_->resize_fdata();
-  oport_->send(cf_);
+
+  cf->resize_fdata();
+  oport_->send(cf);
 }
 
 void StreamLines::tcl_command(TCLArgs& args, void* userdata)
