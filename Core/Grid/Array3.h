@@ -285,12 +285,19 @@ WARNING
     inline T* getPointer() {
       return (d_window->getPointer());
     }
-      
+
     ///////////////////////////////////////////////////////////////////////
     // Return const pointer to the data 
     // (**WARNING**not complete implementation)
     inline const T* getPointer() const {
       return (d_window->getPointer());
+    }
+
+    inline T*** get3DPointer() {
+      return d_window->get3DPointer();
+    }
+    inline T*** get3DPointer() const {
+      return d_window->get3DPointer();
     }
 
     inline void write(ostream& out)
