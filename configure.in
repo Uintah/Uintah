@@ -91,7 +91,6 @@ case $host in
              CXX=/opt/MIPSpro/bin/CC
              AS=/opt/MIPSpro/bin/as
              LD=/opt/MIPSpro/bin/ld
-	     CXXCPP="/opt/MIPSpro/bin/CC -E"
            else
              AC_MSG_RESULT(no)
            fi
@@ -112,6 +111,7 @@ case $host in
 	   F77=f77
 	   FLIBS="-lftn"
 	   FFLAGS="$BINARYFLAGS $extra_cflags"
+	   CPPFLAGS="-LANG:std"
            CFLAGS="-fullwarn -xansi -LANG:std $BINARYFLAGS $extra_cflags"
 	   ASFLAGS="$BINARYFLAGS ${ASFLAGS}"
            SOFLAGS="-shared $BINARYFLAGS -LANG:std -no_unresolved -J\$(MAKE_PARALLELISM) -update_registry \$(LIBDIR)so_locations $(TLINK) ${SOFLAGS}"
