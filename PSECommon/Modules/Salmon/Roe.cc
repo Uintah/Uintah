@@ -1184,11 +1184,19 @@ void Roe::getData(int datamask, FutureValue<GeometryData*>* result)
     }
 }
 
+void Roe::setView(View newView) {
+    view.set(newView);
+    manager->mailbox.send(scinew SalmonMessage(id)); // Redraw
+}
+
 } // End namespace Modules
 } // End namespace PSECommon
 
 //
 // $Log$
+// Revision 1.12  1999/12/03 00:28:59  dmw
+// added setView message for Salmon/Roe
+//
 // Revision 1.11  1999/11/19 17:50:11  ikits
 // Put in __sgi to make it compile for linux. Replaced int errcode w/ GLenum errcode in OpenGL.cc.
 //

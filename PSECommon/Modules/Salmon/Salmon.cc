@@ -214,6 +214,13 @@ int Salmon::process_event(int block)
 	    cerr << "getDat done\n";
 	}
 	break;
+    case MessageTypes::GeometrySetView:
+	if(gmsg->which_roe < roe.size()){
+	    cerr << "Calling roe->setView\n";
+	    roe[gmsg->which_roe]->setView(gmsg->view);
+	    cerr << "setView done\n";
+	}
+	break;
 #if 0
     case MessageTypes::TrackerMoved:
 	{
@@ -489,6 +496,9 @@ void Salmon::emit_vars(ostream& out)
 
 //
 // $Log$
+// Revision 1.9  1999/12/03 00:28:59  dmw
+// added setView message for Salmon/Roe
+//
 // Revision 1.8  1999/10/07 02:06:57  sparker
 // use standard iostreams and complex type
 //
