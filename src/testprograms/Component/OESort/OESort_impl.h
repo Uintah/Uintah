@@ -39,14 +39,14 @@ namespace OESort_ns {
     public:
 	OESort_impl();
 	virtual ~OESort_impl();
-	virtual int sort(const SIDL::array1<int>&, SIDL::array1<int>&, SIDL::array1<int>&);
+	virtual int sort(const SSIDL::array1<int>&, SSIDL::array1<int>&, SSIDL::array1<int>&);
     };
 
     class OESplit_impl : public OESplit {
     public:
 	OESplit_impl();
 	virtual ~OESplit_impl();
-	virtual int split(const SIDL::array1<int>&, SIDL::array1<int>&);
+	virtual int split(const SSIDL::array1<int>&, SSIDL::array1<int>&);
 	OESort::pointer ss;
     };
 
