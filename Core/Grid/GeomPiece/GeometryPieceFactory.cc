@@ -31,7 +31,7 @@ void GeometryPieceFactory::create(const ProblemSpecP& ps,
       std::string go_type = child->getNodeName();
       
       if (go_type == "shell") 
-        ShellGeometryFactory::create(ps, objs);
+        ShellGeometryFactory::create(child, objs);
       
       else if (go_type == "box")
 	 objs.push_back(new BoxGeometryPiece(child));
