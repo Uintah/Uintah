@@ -114,6 +114,7 @@ WARNING
 
     class const_iterator : private iterator
     {
+    public:
       const_iterator(const Array3<T>* array3, IntVector index)
 	: iterator(const_cast<Array3<T>*>(array3), index) { }
       const_iterator(const const_iterator& iter)
@@ -133,10 +134,10 @@ WARNING
       { return ::operator*(); }
 
       inline const_iterator& operator++()
-      { ::operator++(); return *this }
+      { ::operator++(); return *this; }
 
       inline const_iterator& operator--()
-      { ::operator--(); return *this }
+      { ::operator--(); return *this; }
 
       inline const_iterator operator++(int)
       {
@@ -246,7 +247,7 @@ WARNING
       }
       else {
 	// will have to re-allocate and copy
-	//cerr << "RE-ALLOCATION NEEDED\n";
+	cerr << "RE-ALLOCATION NEEDED\n";
 	//cerr << relLowIndex << " to " << relHighIndex << " in " << size << endl;
 	//cerr << oldWindow->getData() << endl;
 	//ASSERT(false);
@@ -259,8 +260,10 @@ WARNING
 				   oldWindow->getLowIndex(),
 				   oldWindow->getHighIndex());
 	tempWindow.copy(oldWindow); // copies into newData
-	d_window=scinew Array3Window<T>(newData, encompassingLow,
-					lowIndex, highIndex);
+	
+	Array3Window<T>* new_window=
+	  scinew Array3Window<T>(newData, encompassingLow, lowIndex,highIndex);
+	d_window = new_window;
       }
       d_window->addReference();      
       if(oldWindow->removeReference())
@@ -371,7 +374,7 @@ WARNING
   protected:
     Array3& operator=(const Array3& copy);
 
-  private:   
+  private:
     Array3Window<T>* d_window;
   };
    
