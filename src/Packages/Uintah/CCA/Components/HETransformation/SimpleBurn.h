@@ -62,6 +62,7 @@ WARNING
 		       double &delT,
 		       double &surfaceArea);
 
+       double getThresholdTemperature();
 
     };
 } // End namespace Uintah

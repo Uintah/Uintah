@@ -19,6 +19,7 @@ using std::vector;
 					  const VarLabel* lp);
 
       const VarLabel* delTLabel;
+      const VarLabel* doMechLabel;
 
       const VarLabel* partCountLabel;
       

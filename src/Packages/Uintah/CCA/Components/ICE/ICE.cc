@@ -37,8 +37,6 @@ using std::istringstream;
 using namespace SCIRun;
 using namespace Uintah;
 
-static int iterNum = 0;
- 
 //#define DOING
 #undef DOING
 /*`==========TESTING==========*/ 
@@ -131,9 +129,12 @@ void  ICE::problemSetup(const ProblemSpecP& prob_spec,GridP& ,
   // Find the switches
   ProblemSpecP debug_ps = prob_spec->findBlock("Debug");
   if (debug_ps) {
-    debug_ps->require("dbg_timeStart",d_dbgStartTime);
-    debug_ps->require("dbg_timeStop",d_dbgStopTime);
-    debug_ps->require("dbg_outputInterval",d_dbgOutputInterval);
+    d_dbgStartTime = 0.;
+    d_dbgStartTime = 1.;
+    d_dbgStartTime = 1.;
+    debug_ps->get("dbg_timeStart",     d_dbgStartTime);
+    debug_ps->get("dbg_timeStop",      d_dbgStopTime);
+    debug_ps->get("dbg_outputInterval",d_dbgOutputInterval);
     d_dbgOldTime = 0.0;
     d_dbgNextDumpTime = 0.0;
 
@@ -283,6 +284,7 @@ void ICE::scheduleInitialize(const LevelP& level,
   t->computes(lb->vel_CCLabel);
   t->computes(lb->press_CCLabel);
   t->computes(lb->speedSound_CCLabel);
+  t->computes(lb->doMechLabel);
 
   sched->addTask(t, level->eachPatch(), d_sharedState->allICEMaterials());
 }
@@ -415,6 +417,8 @@ void ICE::scheduleComputeFaceCenteredVelocities(SchedulerP& sched,
                                                       Ghost::AroundCells,1);
   task->requires(Task::NewDW,lb->vel_CCLabel,         mpm_matls, 
                                                       Ghost::AroundCells,1);
+  task->requires(Task::OldDW, lb->doMechLabel);
+
 
   task->computes(lb->uvel_FCLabel);
   task->computes(lb->vvel_FCLabel);
@@ -555,6 +559,9 @@ void ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
   task->requires(Task::NewDW,lb->vol_frac_CCLabel, Ghost::None);
   task->requires(Task::OldDW,lb->vel_CCLabel,      ice_matls_sub,
                                                    Ghost::None);
+  task->requires(Task::OldDW, lb->doMechLabel);
+  task->computes(lb->doMechLabel);
+
   task->computes(lb->mom_source_CCLabel);
   sched->addTask(task, patches, matls);
 }
@@ -713,7 +720,7 @@ _____________________________________________________________________*/
 void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,  
 					 const PatchSubset* patches,
                                     const MaterialSubset* /*matls*/,
-					 DataWarehouse*, 
+					 DataWarehouse* old_dw, 
 					 DataWarehouse* new_dw)
 {
   for(int p=0;p<patches->size();p++){
@@ -727,15 +734,16 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
       double delt_CFL = 100000, fudge_factor = 1.;
       CCVariable<double> speedSound;
       CCVariable<Vector> vel;
-      double CFL,N_ITERATIONS_TO_STABILIZE = 1;
 
-      ::iterNum++;
-      if (iterNum < N_ITERATIONS_TO_STABILIZE) {
-        CFL = d_CFL * (double)(::iterNum)  *
-                        (1./(double)N_ITERATIONS_TO_STABILIZE);
-      } else {
-        CFL = d_CFL;
-      }
+//    This shit is ass.  I think this ::iterNum variable is essentially
+//    a common variable as in FORTRAN77.  
+//      double CFL,N_ITERATIONS_TO_STABILIZE = 1;
+//      if (iterNum < N_ITERATIONS_TO_STABILIZE) {
+//        CFL = d_CFL * (double)(::iterNum)  *
+//                        (1./(double)N_ITERATIONS_TO_STABILIZE);
+//      } else {
+//        CFL = d_CFL;
+//      }
 
       for (int m = 0; m < d_sharedState->getNumICEMatls(); m++) {
         ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
@@ -746,11 +754,11 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
         new_dw->get(vel, lb->vel_CCLabel, indx,patch,Ghost::None, 0);
 	
 	for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
-	  double A = fudge_factor*CFL*dx.x()/(speedSound[*iter] + 
+	  double A = fudge_factor*d_CFL*dx.x()/(speedSound[*iter] + 
 					     fabs(vel[*iter].x())+d_SMALL_NUM);
-	  double B = fudge_factor*CFL*dx.y()/(speedSound[*iter] + 
+	  double B = fudge_factor*d_CFL*dx.y()/(speedSound[*iter] + 
 					     fabs(vel[*iter].y())+d_SMALL_NUM);
-	  double C = fudge_factor*CFL*dx.z()/(speedSound[*iter] + 
+	  double C = fudge_factor*d_CFL*dx.z()/(speedSound[*iter] + 
 					     fabs(vel[*iter].z())+d_SMALL_NUM);
 
 	  delt_CFL = std::min(A, delt_CFL);
@@ -759,12 +767,16 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
 
         }
       }
-      //__________________________________
-      // First time through grab delT from input file
-      if (iterNum == 1) {
-        delt_CFL = d_initialDt;
+
+      delt_CFL = std::min(delt_CFL, d_initialDt);
+      d_initialDt = 10000.0;
+
+      delt_vartype doMech;
+      new_dw->get(doMech, lb->doMechLabel);
+      if(doMech >= 0.){
+        delt_CFL = .0625;
       }
-      
+
     new_dw->put(delt_vartype(delt_CFL), lb->delTLabel);
   }  // patch loop
 }
@@ -904,6 +916,10 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
        printData(   patch, 1, "Initialization", "press_CC", press_CC);
     }
     new_dw->put(press_CC,    lb->press_CCLabel,  0,patch);
+
+    double doMech = -999.9;
+    new_dw->put(delt_vartype(doMech), lb->doMechLabel);
+
   }  // patch loop 
 }
 
@@ -1242,6 +1258,8 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
 
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label());
+    delt_vartype doMechOld;
+    old_dw->get(doMechOld, lb->doMechLabel);
     Vector dx      = patch->dCell();
     Vector gravity = d_sharedState->getGravity();
 
@@ -1298,6 +1316,8 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
       wvel_FC.initialize(0.0, lowIndex,patch->getSFCZHighIndex());
 
       double term1, term2, term3, press_coeff, rho_micro_FC, rho_FC;
+
+      if(doMechOld < -1.5){
 
       for(CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++){
         IntVector curcell = *iter;
@@ -1381,6 +1401,7 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
 	  wvel_FC[curcell] = term1- term2 + term3;
         }
       }
+      }  // if doMech
 
       //__________________________________
       // (*)vel_FC BC are updated in 
@@ -1729,21 +1750,18 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     CCVariable<double> press_CC;
     CCVariable<double> burnedMass;
    
-    StaticArray<CCVariable<double>   > rho_micro_CC(numMatls);
-    StaticArray<CCVariable<double>   > vol_frac(numMatls);
-    StaticArray<CCVariable<Vector>   > vel_CC(numMatls);
-    StaticArray<CCVariable<double>   > rho_CC(numMatls);
-
     const IntVector gc(1,1,1);
 
     new_dw->get(pressure,       lb->press_equil_CCLabel,0,patch,Ghost::None,0);
-    new_dw->allocate(delPress,  lb->delPress_CCLabel,  0, patch);
-    new_dw->allocate(press_CC,  lb->press_CCLabel,     0, patch);
-    new_dw->allocate(q_CC,      lb->q_CCLabel,         0, patch,gc);
-    new_dw->allocate(q_advected,lb->q_advectedLabel,   0, patch);
-    new_dw->allocate(OFS,       OFS_CCLabel,           0, patch,gc);
-    new_dw->allocate(OFE,       OFE_CCLabel,           0, patch,gc);
-    new_dw->allocate(OFC,       OFC_CCLabel,           0, patch,gc);
+    new_dw->allocate(delPress,  lb->delPress_CCLabel,   0, patch);
+    new_dw->allocate(press_CC,  lb->press_CCLabel,      0, patch);
+    new_dw->allocate(q_CC,      lb->q_CCLabel,          0, patch,gc);
+    new_dw->allocate(q_advected,lb->q_advectedLabel,    0, patch);
+    new_dw->allocate(OFS,       OFS_CCLabel,            0, patch,gc);
+    new_dw->allocate(OFE,       OFE_CCLabel,            0, patch,gc);
+    new_dw->allocate(OFC,       OFC_CCLabel,            0, patch,gc);
+
+    StaticArray<CCVariable<double> > rho_micro(numMatls);
 
     CCVariable<double> term1, term2, term3;
     new_dw->allocate(term1, lb->term1Label, 0, patch);
@@ -1764,30 +1782,28 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       SFCXVariable<double> uvel_FC;
       SFCYVariable<double> vvel_FC;
       SFCZVariable<double> wvel_FC;
-      new_dw->get(uvel_FC, lb->uvel_FCMELabel, indx,  patch,
+      CCVariable<double> vol_frac;
+      CCVariable<Vector> vel_CC;
+      CCVariable<double> rho_CC;
+
+      new_dw->get(uvel_FC, lb->uvel_FCMELabel,   indx,  patch,
 		  Ghost::AroundCells, 2);
-      new_dw->get(vvel_FC, lb->vvel_FCMELabel, indx,  patch,
+      new_dw->get(vvel_FC, lb->vvel_FCMELabel,   indx,  patch,
 		  Ghost::AroundCells, 2);
-      new_dw->get(wvel_FC, lb->wvel_FCMELabel, indx,  patch,
+      new_dw->get(wvel_FC, lb->wvel_FCMELabel,   indx,  patch,
 		  Ghost::AroundCells, 2);
-      new_dw->get(rho_CC[m],lb->rho_CCLabel,   indx,  patch,
-		  Ghost::None,0);
-      new_dw->get(vol_frac[m],    lb->vol_frac_CCLabel,  indx,patch,
+      new_dw->get(vol_frac,lb->vol_frac_CCLabel, indx,  patch,
 		  Ghost::AroundCells,1);
-      new_dw->get(rho_micro_CC[m],lb->rho_micro_CCLabel, indx,patch,
-		  Ghost::None,0);
-      new_dw->get(speedSound,     lb->speedSound_CCLabel,indx,patch,
-		  Ghost::None,0);
+      new_dw->get(rho_CC,      lb->rho_CCLabel,       indx,patch,Ghost::None,0);
+      new_dw->get(rho_micro[m],lb->rho_micro_CCLabel, indx,patch,Ghost::None,0);
+      new_dw->get(speedSound,  lb->speedSound_CCLabel,indx,patch,Ghost::None,0);
+      new_dw->get(burnedMass,  lb->burnedMass_CCLabel,indx,patch,Ghost::None,0);
       if(ice_matl) {
-        old_dw->get(vel_CC[m],lb->vel_CCLabel,   indx,  patch,
-  		  Ghost::None,0);
+        old_dw->get(vel_CC,    lb->vel_CCLabel,       indx,patch,Ghost::None,0);
       }
       if(mpm_matl) {
-        new_dw->get(vel_CC[m],lb->vel_CCLabel,   indx,  patch,
-  		  Ghost::None,0);
+        new_dw->get(vel_CC,    lb->vel_CCLabel,       indx,patch,Ghost::None,0);
       }
-      new_dw->get(burnedMass,     lb->burnedMass_CCLabel,indx,patch,
-		  Ghost::None,0);
 
       //__________________________________
       // Advection preprocessing
@@ -1797,7 +1813,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
 
       for(CellIterator iter = patch->getCellIterator(gc); !iter.done();
 	  iter++) {
-        q_CC[*iter] = vol_frac[m][*iter] * invvol;
+        q_CC[*iter] = vol_frac[*iter] * invvol;
       }
       //__________________________________
       //   First order advection of q_CC
@@ -1817,7 +1833,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
         //__________________________________
         //   Contributions from reactions
         //   to be filled in Be very careful with units
-        term1[*iter] += (burnedMass[*iter]/delT)/(rho_micro_CC[m][*iter] * vol);
+        term1[*iter] += (burnedMass[*iter]/delT)/(rho_micro[m][*iter] * vol);
 
         //__________________________________
         //   Divergence of velocity * face area
@@ -1833,7 +1849,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
         //  190 of my Journal
         term2[*iter] -= q_advected[*iter];
 
-        term3[*iter] += vol_frac[m][*iter] /(rho_micro_CC[m][*iter] *
+        term3[*iter] += vol_frac[*iter] /(rho_micro[m][*iter] *
 				speedSound[*iter]*speedSound[*iter]);
       }  //iter loop
     }  //matl loop
@@ -1845,10 +1861,10 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     }
 /*`==========TESTING==========*/ 
   #if oldStyle_setBC
-    setBC(press_CC, rho_micro_CC[SURROUND_MAT], "Pressure",patch,0);
+    setBC(press_CC, rho_micro[SURROUND_MAT], "Pressure",patch,0);
   #endif
   #if newStyle_setBC
-    setBC(press_CC,     rho_micro_CC,   rho_CC,
+    setBC(press_CC,     rho_micro,      rho_CC,
           vol_frac,     vel_CC,         old_dw,
           "Pressure",   patch,0);
     #endif
@@ -2054,11 +2070,10 @@ void ICE::massExchange(const ProcessorGroup*,
         ICEMaterial* ice_matl = d_sharedState->getICEMaterial(prods);
 	if (ice_matl->getRxProduct() == Material::product) {
 	  for(int m = 0; m < numICEMatls; m++) {
-	    for(CellIterator iter=patch->getCellIterator();
-		!iter.done();iter++){
+	    for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){
 	      burnedMass[prods][*iter]  -= burnedMass[m][*iter];
               releasedHeat[prods][*iter] -=
-                                burnedMass[m][*iter]*cv[m]*Temp_CC[m][*iter];
+	                       burnedMass[m][*iter]*cv[m]*Temp_CC[m][*iter];
            // Commented out for now as I'm not sure that this is appropriate
 	   // for regular ICE - Jim 7/30/01
 //	      created_vol[prods][*iter]  -= created_vol[m][*iter];
@@ -2114,13 +2129,16 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
     int numMatls  = d_sharedState->getNumMatls();
 
     IntVector right, left, top, bottom, front, back;
-    delt_vartype delT; 
     Vector dx, gravity;
     double pressure_source, mass, vol;
     double viscous_source;
     double viscosity;
 
+    delt_vartype delT; 
     old_dw->get(delT, d_sharedState->get_delt_label());
+    delt_vartype doMechOld;
+    old_dw->get(doMechOld, lb->doMechLabel);
+ 
     dx      = patch->dCell();
     double delX = dx.x();
     double delY = dx.y();
@@ -2137,7 +2155,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
     new_dw->get(pressX_FC,lb->pressX_FCLabel, 0, patch,Ghost::AroundCells, 1);
     new_dw->get(pressY_FC,lb->pressY_FCLabel, 0, patch,Ghost::AroundCells, 1);
     new_dw->get(pressZ_FC,lb->pressZ_FCLabel, 0, patch,Ghost::AroundCells, 1);
- 
+
   //__________________________________
   //  Matl loop 
     for(int m = 0; m < numMatls; m++) {
@@ -2152,6 +2170,7 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
       new_dw->allocate(mom_source,  lb->mom_source_CCLabel,  indx, patch);
       mom_source.initialize(Vector(0.,0.,0.));
 
+      if(doMechOld < -1.5){
       //__________________________________
       // Compute Viscous Terms 
       SFCXVariable<Vector> tau_X_FC;
@@ -2221,7 +2240,9 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
                                mass * gravity.z()) * delT );
                                
       }
+      } // if doMechOld
       new_dw->put(mom_source, lb->mom_source_CCLabel, indx, patch);
+      new_dw->put(doMechOld,  lb->doMechLabel);
 
       //---- P R I N T   D A T A ------ 
       if (switchDebugSource_Sink) {

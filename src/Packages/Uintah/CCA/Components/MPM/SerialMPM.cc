@@ -72,7 +72,7 @@ SerialMPM::~SerialMPM()
   delete lb;
 }
 
-void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
+void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& /*grid*/,
 			     SimulationStateP& sharedState)
 {
    d_sharedState = sharedState;
@@ -163,6 +163,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pVelocityLabel);
   t->computes(lb->pExternalForceLabel);
   t->computes(lb->pParticleIDLabel);
+  t->computes(lb->doMechLabel);
   if(d_fracture){
     t->computes(lb->pIsBrokenLabel);
     t->computes(lb->pCrackNormalLabel);
@@ -467,6 +468,9 @@ void SerialMPM::scheduleSolveEquationsMotion(SchedulerP& sched,
       
   t->requires(Task::NewDW, lb->gInternalForceLabel, Ghost::None);
   t->requires(Task::NewDW, lb->gExternalForceLabel, Ghost::None);
+  t->requires(Task::OldDW, lb->doMechLabel);
+  t->computes(lb->doMechLabel);
+
   if(d_with_ice){
     t->requires(Task::NewDW, lb->gradPAccNCLabel,   Ghost::None);
   }
@@ -489,7 +493,7 @@ void SerialMPM::scheduleSolveHeatEquations(SchedulerP& sched,
   Task* t = scinew Task("SerialMPM::solveHeatEquations",
 			    this, &SerialMPM::solveHeatEquations);
 
-  t->requires(Task::NewDW, lb->gMassLabel,          Ghost::None);
+  t->requires(Task::NewDW, lb->gMassLabel,             Ghost::None);
   t->requires(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
   t->requires(Task::NewDW, lb->gInternalHeatRateLabel, Ghost::None);
   t->requires(Task::NewDW, lb->gExternalHeatRateLabel, Ghost::None);
@@ -811,8 +815,12 @@ void SerialMPM::actuallyInitialize(const ProcessorGroup*,
        contactModel->initializeContact(patch,dwindex,new_dw);
     }
     new_dw->put(cellNAPID, lb->pCellNAPIDLabel, 0, patch);
+
+    double doMech = -999.9;
+    new_dw->put(delt_vartype(doMech), lb->doMechLabel);
   }
   new_dw->put(sumlong_vartype(totalParticles), lb->partCountLabel);
+
 }
 
 
@@ -867,7 +875,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       int matlindex = mpm_matl->getDWIndex();
       // Create arrays for the particle data
       ParticleVariable<Point>  px;
-      ParticleVariable<double> pmass, pvolume, pTemperature;
+      ParticleVariable<double> pmass, pvolume, pTemperature,pexternalheatrate;
       ParticleVariable<Vector> pvelocity, pexternalforce;
 
       ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch,
@@ -880,6 +888,8 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       old_dw->get(pvelocity,      lb->pVelocityLabel,      pset);
       old_dw->get(pexternalforce, lb->pExternalForceLabel, pset);
       old_dw->get(pTemperature,   lb->pTemperatureLabel,   pset);
+
+      new_dw->allocate(pexternalheatrate, lb->pExternalHeatRateLabel, pset);
 
       // Create arrays for the grid data
       NCVariable<double> gmass;
@@ -917,6 +927,21 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       double totalmass = 0;
       Vector total_mom(0.0,0.0,0.0);
 
+#if 0
+      for(ParticleSubset::iterator iter = pset->begin();
+                iter != pset->end(); iter++){
+        particleIndex idx = *iter;
+
+        if(px[idx].z() < -0.0475 && fabs(px[idx].x()) < .03
+                                 && fabs(px[idx].y()) < .03){
+          pexternalheatrate[idx]=20.0;
+        }
+        else{
+          pexternalheatrate[idx]=0.0;
+        }
+      }
+#endif
+
       if(mpm_matl->getFractureModel()) {  // Do interpolation with fracture
 
         ParticleVariable<int> pConnectivity;
@@ -953,6 +978,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	        gmass[ni[k]]          += pmass[idx]          * S[k];
 	        gvolume[ni[k]]        += pvolume[idx]        * S[k];
 	        gTemperature[ni[k]]   += pTemperature[idx] * pmass[idx] * S[k];
+                gexternalheatrate[ni[k]] += pexternalheatrate[idx]      * S[k];
 
 	        totalmass += pmass[idx] * S[k];
 
@@ -990,6 +1016,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	       gexternalforce[ni[k]] += pexternalforce[idx] * S[k];
 	       gvelocity[ni[k]]      += pvelocity[idx]    * pmass[idx] * S[k];
 	       gTemperature[ni[k]]   += pTemperature[idx] * pmass[idx] * S[k];
+               gexternalheatrate[ni[k]] += pexternalheatrate[idx]      * S[k];
 
 	       totalmass += pmass[idx] * S[k];
 	    }
@@ -1394,6 +1421,8 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
     Vector gravity = d_sharedState->getGravity();
     delt_vartype delT;
     old_dw->get(delT, d_sharedState->get_delt_label() );
+    delt_vartype doMechOld;
+    old_dw->get(doMechOld, lb->doMechLabel);
 
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -1434,18 +1463,21 @@ void SerialMPM::solveEquationsMotion(const ProcessorGroup*,
       new_dw->allocate(acceleration, lb->gAccelerationLabel, matlindex, patch);
       acceleration.initialize(Vector(0.,0.,0.));
 
-      // Do the computation of a = F/m for nodes where m!=0.0
-      // You need if(mass>small_num) so you don't get pressure
-      // acceleration where there isn't any mass. 3.30.01 
-      for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+      if(doMechOld < -1.5){
+       // Do the computation of a = F/m for nodes where m!=0.0
+       // You need if(mass>small_num) so you don't get pressure
+       // acceleration where there isn't any mass. 3.30.01 
+       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
          acceleration[*iter] =
 		(internalforce[*iter] + externalforce[*iter])/mass[*iter] +
                  gravity + gradPAccNC[*iter] + AccArchesNC[*iter];
+       }
       }
    
       // Put the result in the datawarehouse
       new_dw->put(acceleration, lb->gAccelerationLabel, matlindex, patch);
     }
+    new_dw->put(doMechOld, lb->doMechLabel);
   }
 }
 
