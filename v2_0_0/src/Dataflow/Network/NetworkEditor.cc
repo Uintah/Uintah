@@ -170,7 +170,7 @@ void NetworkEditor::save_network(const string& filename,
 	gui->eval("modVarName {"+filename+"} "+module->id, midx);
 	if (midx.size()) {
 	  string result;
-	  gui->eval("winfo exists .ui" + module->id, result);
+	  gui->eval("winfo ismapped .ui" + module->id, result);
 	  int res;
 	  if(string_to_int(result, res) && (res == 1)) {
 	    out << midx << " initialize_ui\n";
