@@ -155,6 +155,7 @@ template<class T>
 Array3<T>::Array3()
 {
   objs=0;
+  dm1 = dm2 = dm3 = 0;
 }
 
 template<class T>
