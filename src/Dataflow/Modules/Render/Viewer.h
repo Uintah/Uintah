@@ -71,7 +71,7 @@ private:
   virtual void do_execute();
 
   int max_portno;
-  virtual void connection(Module::ConnectionMode, int, int);
+  //virtual void connection(Module::ConnectionMode, int, int);
 
   MapClStringVoid specific;
     

@@ -184,7 +184,6 @@ itcl_class Module {
     method make_icon {canvas minicanvas modx mody} {
 	global modules
 	set modules "$modules [modname]"
-
 	global mainCanvasWidth mainCanvasHeight
 	#set modx [expr int([expr (([lindex [$canvas xview] 0]*$mainCanvasWidth)+$modx)])]
 	#set mody [expr int([expr (([lindex [$canvas yview] 0]*$mainCanvasHeight)+$mody)])]
@@ -265,7 +264,7 @@ itcl_class Module {
 
 	while { $done == 0 } {
 
-	    set x1 $modx 
+	    set x1 $modx
 	    set y1 $mody
 	    set x2 [expr $modx+120]
 	    set y2 [expr $mody+50]
@@ -438,7 +437,7 @@ itcl_class Module {
 	    bind $modframe.iport$i <ButtonRelease-2> \
 		    "endPortConnection \"$portcolor\""
 	    incr i
-	}
+	} 
 	rebuildConnections [netedit getconnected [modname]] 0
     }
 
@@ -1076,7 +1075,6 @@ proc buildConnection {connid portcolor omodid owhich imodid iwhich} {
 	-fill \"$portcolor\" -tags $connid
 
     $netedit_mini_canvas lower $connid
-    
 }
 
 
@@ -1382,7 +1380,7 @@ proc destroyConnection {connid omodid imodid} {
 	
 proc rebuildConnection {connid omodid owhich imodid iwhich} {
     set path [routeConnection $omodid $owhich $imodid $iwhich]
-
+    
     global netedit_canvas netedit_mini_canvas
 
     eval $netedit_canvas coords $connid $path
@@ -1601,7 +1599,6 @@ proc endPortConnection {portcolor} {
     $netedit_canvas delete tempname
     destroy $netedit_canvas.frame
     global potential_connection
-    
     if { $potential_connection != "" } {
 	if { [string match [[lindex $potential_connection 0] mod_type]\
 		"macromodule"] == 1 } {
@@ -1789,7 +1786,6 @@ proc endPortConnection {portcolor} {
 proc routeConnection {omodid owhich imodid iwhich} {
     set outpos [computeOPortCoords $omodid $owhich]
     set inpos [computeIPortCoords $imodid $iwhich]
-    
     set ox [lindex $outpos 0]
     set oy [lindex $outpos 1]
     set ix [lindex $inpos 0]
@@ -1817,7 +1813,7 @@ proc computeIPortCoords {modid which} {
     global port_width
     set px [expr $which*$port_spacing+6+$port_width/2]
     set at [$netedit_canvas coords $modid]
-
+    
     set mx [lindex $at 0]
     set my [lindex $at 1]
         

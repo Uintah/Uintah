@@ -304,7 +304,9 @@ void Module::add_oport(OPort* port)
     reconfigure_oports();
 }
 
+
 void Module::remove_iport(int which)
+
 {
   // remove the indicated port, then
   // collapse the remaining ports together
@@ -381,8 +383,16 @@ OPort* Module::get_oport(char* portname)
   return 0;
 }
 
-void Module::connection(ConnectionMode mode, int which, int)
+void Module::connection(ConnectionMode mode, int which_port, int)
 {
+  if(lastportdynamic && dynamic_port_maker) {
+    if(mode == Disconnected) {
+      remove_iport(which_port);
+    } else {
+      add_iport(dynamic_port_maker(this,"dynamic"));
+    }
+  }
+  
   // do nothing by default
 }
 
