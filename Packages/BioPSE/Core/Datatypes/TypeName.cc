@@ -14,6 +14,10 @@
 
 #include <string>
 
+namespace BioPSE{
+class NeumannBC;
+}
+
 #include <Packages/BioPSE/Core/Datatypes/TypeName.h>
 
 namespace SCIRun {
