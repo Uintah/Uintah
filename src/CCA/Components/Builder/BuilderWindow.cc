@@ -125,6 +125,7 @@ BuilderWindow::BuilderWindow(const sci::cca::Services::pointer& services)
   exitAction->addTo(file);
 
   menuBar()->insertItem("&Clusters");
+  menuBar()->insertItem("&Performance");
 
   buildPackageMenus();
   menuBar()->insertSeparator();
@@ -132,10 +133,11 @@ BuilderWindow::BuilderWindow(const sci::cca::Services::pointer& services)
 
   help->insertTearOffHandle();
   menuBar()->insertItem( "&Help", help );
-  help->insertItem( "&About", this, SLOT(about()), Key_F1 );
-  help->insertSeparator();
+  help->insertItem( "&Demos", this, SLOT( demos() ), Key_F1 );
   help->insertItem( "What's &This", this, SLOT(whatsThis()),
-		    SHIFT+Key_F1 );
+		    SHIFT+Key_F2 );
+  help->insertSeparator();
+  help->insertItem( "&About", this, SLOT(about()), Key_F3 );
 
   QColor bgcolor(0, 51, 102);
   QSplitter* vsplit = new QSplitter(Qt::Vertical, this);
@@ -504,6 +506,11 @@ void BuilderWindow::exit()
   Thread::exitAll(0);
 }
 
+void BuilderWindow::demos()
+{
+  ( new QMessageBox())->about( this, "Demos", "CCA Demos\nComing Soon!" );
+}
+
 
 void BuilderWindow::about()
 {
@@ -513,9 +520,6 @@ void BuilderWindow::about()
 
 void BuilderWindow::instantiateComponent(const sci::cca::ComponentClassDescription::pointer& cd, const std::string &url)
 {
-  // TEK
-  cerr << "BuilderWindow::instantiateCompnent(): Entering..." << endl;
-  // TEK
   cerr << "Should wait for component to be committed...\n";
   sci::cca::ports::BuilderService::pointer builder = pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
   if(builder.isNull()){
@@ -545,9 +549,6 @@ void BuilderWindow::instantiateComponent(const sci::cca::ComponentClassDescripti
     big_canvas_view->addModule(cd->getComponentClassName(), x, y, usesPorts, providesPorts, cid, true); //reposition module
       cerr << "addModule done ..."<<endl;
   }
-  // TEK
-  cerr << "BuilderWindow::instantiateCompnent(): Leaving..." << endl;
-  // TEK
 }
 
 void BuilderWindow::componentActivity(const sci::cca::ports::ComponentEvent::pointer& e)
