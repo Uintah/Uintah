@@ -528,8 +528,6 @@ SmagorinskyModel::sched_computeScalarVariance(SchedulerP& sched,
   //           required. For multiple scalars this will be put in a loop
   tsk->requires(Task::NewDW, timelabels->scalar_out, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, d_lab->d_scalarVarINLabel, 
-		Ghost::None, Arches::ZEROGHOSTCELLS);
 
   // Computes
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
@@ -567,8 +565,7 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
     else
     	new_dw->getModifiable(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex,
 			       patch);
-    new_dw->copyOut(scalarVar, d_lab->d_scalarVarINLabel, matlIndex, patch,
-		    Ghost::None, Arches::ZEROGHOSTCELLS);
+    scalarVar.initialize(0.0);
     
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
@@ -595,9 +592,6 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
 			cellinfo->sns, cellinfo->stb, CFVar, d_factorMesh,
 			d_filterl);
 
-    // Put the calculated viscosityvalue into the new data warehouse
-    // allocateAndPut instead:
-    /* new_dw->put(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex, patch); */;
   }
 }
 

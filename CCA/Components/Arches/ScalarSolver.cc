@@ -145,6 +145,8 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
 			  timelabels, index);
 
 
+//  Task::WhichDW olddw_index = Task::OldDW;
+//  tsk->requires(olddw_index, d_lab->d_sharedState->get_delt_label());
   tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
   
   // This task requires scalar and density from old time step for transient
@@ -577,12 +579,12 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
     new_dw->get(constScalarVars.old_density, timelabels->density_in, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->get(constScalarVars.old_scalar, timelabels->scalar_in, 
-		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     // for explicit calculation
     new_dw->allocateAndPut(scalarVars.scalar, timelabels->scalar_out, 
-                matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
     new_dw->copyOut(scalarVars.scalar, timelabels->scalar_in, 
-		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+                matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
     new_dw->get(constScalarVars.uVelocity, timelabels->uvelocity_in, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);

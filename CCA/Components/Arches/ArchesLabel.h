@@ -257,18 +257,12 @@ namespace Uintah {
       const VarLabel* d_scalarCPBCLabel;
 
       // Scalar variance labels
-      // computed for old_dw in paramInit and for
-      // new_dw in setInitailGuess
-
-      const VarLabel* d_scalarVarINLabel;
 
       // computed for new_dw in Smagorinsky Model
 
       const VarLabel* d_scalarVarSPLabel;
-      // required for flamelet model
-      const VarLabel* d_scalarDissINLabel;
 
-      // computed for new_dw in Smagorinsky Model fir flamelet
+      // computed for new_dw in Smagorinsky Model for flamelet
 
       const VarLabel* d_scalarDissSPLabel;
 
