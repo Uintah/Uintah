@@ -33,14 +33,14 @@ Persistent* make_GeomSphere()
 
 PersistentTypeID GeomSphere::type_id("GeomSphere", "GeomObj", make_GeomSphere);
 
-GeomSphere::GeomSphere(int nu, int nv)
-: GeomObj(), cen(0,0,0), rad(1), nu(nu), nv(nv)
+GeomSphere::GeomSphere(int nu, int nv, int id)
+: GeomObj(id), cen(0,0,0), rad(1), nu(nu), nv(nv)
 {
     adjust();
 }
 
-GeomSphere::GeomSphere(const Point& cen, double rad, int nu, int nv)
-: GeomObj(), cen(cen), rad(rad), nu(nu), nv(nv)
+GeomSphere::GeomSphere(const Point& cen, double rad, int nu, int nv, int id)
+: GeomObj( id ), cen(cen), rad(rad), nu(nu), nv(nv)
 {
     adjust();
 }
@@ -71,6 +71,17 @@ void GeomSphere::adjust()
 GeomObj* GeomSphere::clone()
 {
     return scinew GeomSphere(*this);
+}
+
+bool
+GeomSphere::getId( int& id )
+{
+  if ( id == 0x1234567)
+    return false;
+  else {
+    id = this->id;
+    return true;
+  }
 }
 
 void GeomSphere::get_bounds(BBox& bb)
@@ -124,6 +135,9 @@ bool GeomSphere::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
+// Revision 1.7  2000/01/03 20:12:37  kuzimmer
+//  Forgot to check in these files for picking spheres
+//
 // Revision 1.6  1999/10/07 02:07:45  sparker
 // use standard iostreams and complex type
 //
