@@ -112,7 +112,6 @@ void MPMArches::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
    calcVel = !dontCalcVel;
 
    d_mpm->setMPMLabel(Mlb);
-   d_mpm->setWithArches();
    d_mpm->problemSetup(prob_spec, grid, d_sharedState);
    // set multimaterial label in Arches to access interface variables
    d_arches->setMPMArchesLabel(d_MAlb);
@@ -924,8 +923,8 @@ MPMArches::scheduleTimeAdvance( const LevelP & level,
 
   d_mpm->scheduleComputeInternalForce(sched, patches, mpm_matls);
   d_mpm->scheduleComputeInternalHeatRate(sched, patches, mpm_matls);
-  d_mpm->scheduleSolveEquationsMotion(sched, patches, mpm_matls);
-  d_mpm->scheduleSolveHeatEquations(sched, patches, mpm_matls);
+  scheduleSolveEquationsMotion(sched, patches, mpm_matls);
+  scheduleSolveHeatEquations(sched, patches, mpm_matls);
   d_mpm->scheduleIntegrateAcceleration(sched, patches, mpm_matls);
   d_mpm->scheduleIntegrateTemperatureRate(sched, patches, mpm_matls);
   d_mpm->scheduleExMomIntegrated(sched, patches, mpm_matls);
@@ -4117,6 +4116,96 @@ void MPMArches::putAllForcesOnNC(const ProcessorGroup*,
       }
     }
   }
+}
+
+void MPMArches::scheduleSolveEquationsMotion(SchedulerP& sched,
+                                             const PatchSet* patches,
+                                             const MaterialSet* matls)
+{
+  d_mpm->scheduleSolveEquationsMotion(sched,patches,matls);
+
+  Task* t = scinew Task("MPMArches::solveEquationsMotion",
+                        this, &MPMArches::solveEquationsMotion);
+  
+  t->requires(Task::NewDW, d_MAlb->AccArchesNCLabel,  Ghost::None);
+  t->modifies(Mlb->gAccelerationLabel);
+  sched->addTask(t,patches,matls);
+}
+
+void MPMArches::solveEquationsMotion(const ProcessorGroup* pg,
+                                     const PatchSubset* patches,
+                                     const MaterialSubset* ms,
+                                     DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+
+      constNCVariable<Vector> AccArchesNC; 
+      NCVariable<Vector> acceleration;
+
+      new_dw->getModifiable(acceleration,Mlb->gAccelerationLabel,dwi, patch);
+      new_dw->get(AccArchesNC,d_MAlb->AccArchesNCLabel,dwi,patch,Ghost::None,
+		  0);
+      
+      for(NodeIterator iter = patch->getNodeIterator(d_mpm->flags->d_8or27);
+	  !iter.done();iter++)
+	acceleration[*iter] += AccArchesNC[*iter];
+    }
+    
+  }
+  
+}
+
+
+void MPMArches::scheduleSolveHeatEquations(SchedulerP& sched,
+					   const PatchSet* patches,
+					   const MaterialSet* matls)
+{
+  d_mpm->scheduleSolveHeatEquations(sched,patches,matls);
+
+  Task* t = scinew Task("MPMArches::solveHeatEquations",
+                        this, &MPMArches::solveHeatEquations);
+  
+  t->requires(Task::NewDW, Mlb->heaTranSolid_NCLabel,  Ghost::None);
+  t->requires(Task::NewDW, Mlb->gMassLabel,Ghost::None);
+  t->modifies(Mlb->gTemperatureRateLabel);
+  sched->addTask(t,patches,matls);
+}
+
+void MPMArches::solveHeatEquations(const ProcessorGroup* pg,
+				   const PatchSubset* patches,
+				   const MaterialSubset* ms,
+				   DataWarehouse* old_dw,
+				   DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+      double Cv = mpm_matl->getSpecificHeat();
+
+      constNCVariable<double> htrate_gasNC,mass; 
+      NCVariable<double> tempRate;
+
+      new_dw->get(mass,    Mlb->gMassLabel,      dwi, patch, Ghost::None, 0);
+      new_dw->getModifiable(tempRate,Mlb->gTemperatureRateLabel,dwi, patch);
+      new_dw->get(htrate_gasNC,Mlb->heaTranSolid_NCLabel,dwi,patch,
+		  Ghost::None, 0);
+      
+      for(NodeIterator iter = patch->getNodeIterator(d_mpm->flags->d_8or27);
+	  !iter.done();iter++)
+	tempRate[*iter] += htrate_gasNC[*iter]/(mass[*iter]*Cv);
+    }
+    
+  }
+  
 }
 
 // ****************************************************************************
