@@ -53,6 +53,7 @@ namespace SCIRun {
 
 //! magnitudes
 inline double fdata_mag(double v) { return v; }
+inline double fdata_mag(int v) { return (double)v; }
 inline double fdata_mag(Vector v) { return v.length(); }
 
 template <class Field>
@@ -225,7 +226,8 @@ SeedField::build_weight_table(Field *field, DistTable<Field> &table)
   typedef typename mesh_type::Elem::iterator   elem_iterator;
   typedef typename mesh_type::Elem::index_type elem_index;
   
-  long double size = 2.e-300;
+//  long double size = 2.e-300;
+  long double size = 1;
 
   string dist = randDist_.get();
 
@@ -322,7 +324,9 @@ SeedField::generate_random_seeds(Field *field)
   if (!build_weight_table(field,table)) // unknown dist type or empty mesh
     return;
 
-  static MusilRNG rng(rngSeed_.get());
+  int rngSeed = rngSeed_.get();
+  MusilRNG rng(rngSeed);
+  rngSeed_.set(rngSeed+1);
 
   long double max = table[table.size()-1].first;
   mesh_type *mesh = field->get_typed_mesh().get_rep();
@@ -334,8 +338,9 @@ SeedField::generate_random_seeds(Field *field)
   for (loop=0;loop<ns;loop++) {
     Point p;
     table_entry e;
-    table.search(e,rng()*max);           // find random cell
-    mesh->get_random_point(p,e.second);  // find random point in that cell
+    table.search(e,rng()*max);             // find random cell
+    mesh->get_random_point(p, e.second,    // find random point in that cell
+			   rngSeed+loop);
     pcmesh->add_node(p);
   }
 
@@ -454,6 +459,8 @@ SeedField::execute()
        generate_random_seeds((TetVol<Vector>*)vf_);
      } else if (vf_->get_type_name(-1)=="TriSurf<Vector>") {
        generate_random_seeds((TriSurf<Vector>*)vf_);
+     } else if (vf_->get_type_name(-1)=="TetVol<int>") {
+       generate_random_seeds((TetVol<int>*)vf_);
     } else {
       // can't do this kind of field
       return;

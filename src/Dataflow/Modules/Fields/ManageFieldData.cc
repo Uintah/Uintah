@@ -40,6 +40,7 @@
 #include <Core/Datatypes/ImageField.h>
 #include <Core/Datatypes/ScanlineField.h>
 #include <Core/Datatypes/ColumnMatrix.h>
+#include <Core/Datatypes/DenseMatrix.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Datatypes/DispatchScalar1.h>
 #include <iostream>
@@ -53,6 +54,7 @@ public:
   ManageFieldData(const string& id);
   virtual ~ManageFieldData();
 
+  void callback_tetvolvector(TetVol<Vector> *ifield);
   template <class F> void callback_scalar(F *ifield);
   template <class IM, class OF> void callback_mesh(IM *m, OF *f);
   virtual void execute();
@@ -75,6 +77,93 @@ ManageFieldData::~ManageFieldData()
 {
 }
 
+void
+ManageFieldData::callback_tetvolvector(TetVol<Vector> *ifield)
+{
+  MatrixOPort *omatrix_port = (MatrixOPort *)get_oport("Output Matrix");
+  if (omatrix_port->nconnections() > 0)
+  {
+    TetVolMeshHandle mesh = ifield->get_typed_mesh();
+    DenseMatrix *omatrix;
+    switch (ifield->data_at())
+    {
+    case Field::NODE:
+      {
+	int index = 0;
+	omatrix = new DenseMatrix(mesh->nodes_size(), 3);
+	TetVolMesh::Node::iterator iter = mesh->node_begin();
+	while (iter != mesh->node_end())
+	{
+	  Vector val = ifield->value(*iter);
+	  (*omatrix)[index][0]=val.x();
+	  (*omatrix)[index][1]=val.y();
+	  (*omatrix)[index][2]=val.z();
+	  index++;
+	  ++iter;
+	}
+      }
+      break;
+
+    case Field::EDGE:
+      {
+	int index = 0;
+	omatrix = new DenseMatrix(mesh->edges_size(), 3);
+	TetVolMesh::Edge::iterator iter = mesh->edge_begin();
+	while (iter != mesh->edge_end())
+	{
+	  Vector val = ifield->value(*iter);
+	  (*omatrix)[index][0]=val.x();
+	  (*omatrix)[index][1]=val.y();
+	  (*omatrix)[index][2]=val.z();
+	  index++;
+	  ++iter;
+	}
+      }
+      break;
+
+    case Field::FACE:
+      {
+	int index = 0;
+	omatrix = new DenseMatrix(mesh->faces_size(), 3);
+	TetVolMesh::Face::iterator iter = mesh->face_begin();
+	while (iter != mesh->face_end())
+	{
+	  Vector val = ifield->value(*iter);
+	  (*omatrix)[index][0]=val.x();
+	  (*omatrix)[index][1]=val.y();
+	  (*omatrix)[index][2]=val.z();
+	  index++;
+	  ++iter;
+	}
+      }
+      break;
+
+    case Field::CELL:
+      {
+	int index = 0;
+	omatrix = new DenseMatrix(mesh->cells_size(), 3);
+	TetVolMesh::Cell::iterator iter = mesh->cell_begin();
+	while (iter != mesh->cell_end())
+	{
+	  Vector val = ifield->value(*iter);
+	  (*omatrix)[index][0]=val.x();
+	  (*omatrix)[index][1]=val.y();
+	  (*omatrix)[index][2]=val.z();
+	  index++;
+	  ++iter;
+	}
+      }
+      break;
+
+    case Field::NONE:
+      // No data to put in matrix.
+      return;
+    }
+    
+    MatrixHandle omatrix_handle(omatrix);
+    omatrix_port->send(omatrix_handle);
+  }
+}
 
 template <class F>
 void
@@ -274,7 +363,9 @@ ManageFieldData::execute()
   }
 
   dispatch_scalar1(ifieldhandle, callback_scalar);
+  if (ifieldhandle->get_type_name(-1) == "TetVol<Vector>") {
+    callback_tetvolvector(dynamic_cast<TetVol<Vector> *>(ifieldhandle.get_rep()));
+  }
 }
-
 } // End namespace SCIRun
 

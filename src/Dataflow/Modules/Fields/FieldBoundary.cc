@@ -35,6 +35,7 @@
 #include <Core/Datatypes/ContourMesh.h>
 #include <Core/Datatypes/PointCloudMesh.h>
 #include <Core/Datatypes/TriSurf.h>
+#include <Core/Datatypes/InterpolantTypes.h>
 #include <Core/Geom/GeomTriangles.h>
 #include <Core/Malloc/Allocator.h>
 
@@ -69,8 +70,14 @@ private:
   //! TriSurf field output.
   FieldOPort*              osurf_;
   
+  //! TriSurf interpolant field output.
+  FieldOPort*              ointerp_;
+  
   //! Handle on the generated surface.
-  FieldHandle             *tri_fh_;
+  FieldHandle              tri_fh_;
+
+  //! Handle on the interpolant surface.
+  FieldHandle              interp_fh_;
 };
 
 extern "C" Module* make_FieldBoundary(const string& id)
@@ -81,7 +88,7 @@ extern "C" Module* make_FieldBoundary(const string& id)
 FieldBoundary::FieldBoundary(const string& id) : 
   Module("FieldBoundary", id, Filter, "Fields", "SCIRun"),
   infield_gen_(-1),
-  tri_fh_(scinew FieldHandle(scinew TriSurf<double>))
+  tri_fh_(0), interp_fh_(0)
 {
 }
 void 
@@ -126,11 +133,15 @@ template <> void FieldBoundary::boundary(const PointCloudMesh *) {
   error("FieldBoundary::boundary can't extract a surface from a PointCloudMesh");
 }
 
+/*
+template <> void FieldBoundary::boundary(const LatVolMesh *) {
+  error("FieldBoundary::boundary can't take the boundary of a LatVolMesh today...");
+}
+*/
+
 template <> void FieldBoundary::boundary(const TriSurfMesh *mesh) {
   // Casting away const.  We need const correct handles.
-  if (tri_fh_) delete tri_fh_;
-  tri_fh_ = scinew FieldHandle(scinew TriSurf<double>(TriSurfMeshHandle((
-				        TriSurfMesh *)mesh), Field::NODE));
+  tri_fh_ = FieldHandle(scinew TriSurf<double>(TriSurfMeshHandle((TriSurfMesh *)mesh), Field::NODE));
 }
 
 template <class Msh>
@@ -139,6 +150,8 @@ FieldBoundary::boundary(const Msh *mesh)
 {
   map<typename Msh::Node::index_type, typename TriSurfMesh::Node::index_type> vertex_map_;
   map<typename Msh::Node::index_type, typename TriSurfMesh::Node::index_type>::iterator node_iter;
+  Array1<typename Msh::Node::index_type> reverse_map;
+
   TriSurfMesh::Node::index_type node_idx[3];
 
   TriSurfMeshHandle tmesh = scinew TriSurfMesh;
@@ -172,6 +185,7 @@ FieldBoundary::boundary(const Msh *mesh)
 	  if (node_iter == vertex_map_.end()) {
 	    node_idx[i] = tmesh->add_point(p[i]);
 	    vertex_map_[*niter] = node_idx[i];
+	    reverse_map.add(*niter);
 	  } else {
 	    node_idx[i] = (*node_iter).second;
 	  }
@@ -187,6 +201,7 @@ FieldBoundary::boundary(const Msh *mesh)
 	  if (node_iter == vertex_map_.end()) {
 	    node_idx[2] = tmesh->add_point(p[2]);
 	    vertex_map_[*niter] = node_idx[2];
+	    reverse_map.add(*niter);
 	  } else {
 	    node_idx[2] = (*node_iter).second;
 	  }
@@ -197,9 +212,12 @@ FieldBoundary::boundary(const Msh *mesh)
     }
   }
   TriSurf<double> *ts = scinew TriSurf<double>(tmesh, Field::NODE);
-
-  if (tri_fh_) delete tri_fh_;
-  tri_fh_ = scinew FieldHandle(ts);
+  TriSurf<vector<pair<typename Msh::Node::index_type, double> > >* interp =
+    scinew TriSurf<vector<pair<typename Msh::Node::index_type, double> > >(tmesh, Field::NODE);
+  for (int i=0; i<reverse_map.size(); i++)
+    interp->fdata()[i].push_back(pair<typename Msh::Node::index_type, double>(reverse_map[i], 1.0));
+  tri_fh_ = ts;
+  interp_fh_ = interp;
 }
 
 
@@ -209,6 +227,7 @@ FieldBoundary::execute()
 {
   infield_ = (FieldIPort *)get_iport("Field");
   osurf_ = (FieldOPort *)get_oport("TriSurf");
+  ointerp_ = (FieldOPort *)get_oport("Interpolant");
   FieldHandle input;
   if (!infield_->get(input)) return;
   if (!input.get_rep()) {
@@ -220,7 +239,8 @@ FieldBoundary::execute()
     mesh->finish_mesh();
     dispatch_mesh1(input->mesh(), boundary);
   }
-  osurf_->send(*tri_fh_);
+  osurf_->send(tri_fh_);
+  ointerp_->send(interp_fh_);
 }
 
 
