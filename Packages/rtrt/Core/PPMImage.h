@@ -55,7 +55,7 @@ class PPMImage
   unsigned get_size() { return max_; }
 
   void get_dimensions_and_data(Array2<rtrt::Color> &c, int &nu, int &nv) {
-    c.resize(u_,v_);
+    c.resize(u_+2,v_+2);  // image size + slop for interpolation
     for (int u=0; u<u_; u++)
       for (int v=0; v<v_; v++)
 	c(u,v)=image_[v*u_+u];
