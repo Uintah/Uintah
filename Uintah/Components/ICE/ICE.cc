@@ -57,6 +57,14 @@ ICE::ICE(const ProcessorGroup* myworld)
                                 CCVariable<eflux>::getTypeDescription());
   OFE_CCLabel = scinew VarLabel("OFE_CC",
                                 CCVariable<eflux>::getTypeDescription());
+  q_outLabel = scinew VarLabel("q_out",
+                                CCVariable<fflux>::getTypeDescription());
+  q_out_EFLabel = scinew VarLabel("q_out_EF",
+                                CCVariable<eflux>::getTypeDescription());
+  q_inLabel = scinew VarLabel("q_in",
+                                CCVariable<fflux>::getTypeDescription());
+  q_in_EFLabel = scinew VarLabel("q_in_EF",
+                                CCVariable<eflux>::getTypeDescription());
 
 }
 
@@ -66,6 +74,10 @@ ICE::~ICE()
   delete OFS_CCLabel;
   delete IFE_CCLabel;
   delete OFE_CCLabel;
+  delete q_outLabel;;
+  delete q_out_EFLabel;;
+  delete q_inLabel;;
+  delete q_in_EFLabel;;
 }
 
 void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
@@ -442,8 +454,11 @@ void ICE::scheduleTimeAdvance(double t, double dt,
 	    t->requires(old_dw,lb->cv_CCLabel,
 			matl->getDWIndex(),patch,Ghost::None);
 
-//	    t->computes(new_dw,lb->xmom_L_CCLabel,   matl->getDWIndex(), patch);
-
+	    t->computes(new_dw,lb->xmom_L_ME_CCLabel,matl->getDWIndex(), patch);
+	    t->computes(new_dw,lb->ymom_L_ME_CCLabel,matl->getDWIndex(), patch);
+	    t->computes(new_dw,lb->zmom_L_ME_CCLabel,matl->getDWIndex(), patch);
+	    t->computes(new_dw,lb->int_eng_L_ME_CCLabel,
+						     matl->getDWIndex(), patch);
           }
 	}
 	sched->addTask(t);
@@ -457,10 +472,18 @@ void ICE::scheduleTimeAdvance(double t, double dt,
 	  Material* matl = d_sharedState->getMaterial(m);
 	  ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
 	  if(ice_matl){
+	    t->requires(new_dw, lb->xmom_L_ME_CCLabel,
+				ice_matl->getDWIndex(),patch,Ghost::None,0);
+	    t->requires(new_dw, lb->ymom_L_ME_CCLabel,
+				ice_matl->getDWIndex(),patch,Ghost::None,0);
+	    t->requires(new_dw, lb->zmom_L_ME_CCLabel,
+				ice_matl->getDWIndex(),patch,Ghost::None,0);
+	    t->requires(new_dw, lb->int_eng_L_ME_CCLabel,
+				ice_matl->getDWIndex(),patch,Ghost::None,0);
+
 	    t->computes(new_dw, lb->temp_CCLabel,ice_matl->getDWIndex(),patch);
 	    t->computes(new_dw, lb->rho_CCLabel,ice_matl->getDWIndex(),patch);
 	    t->computes(new_dw, lb->cv_CCLabel,ice_matl->getDWIndex(),patch);
-
 	    t->computes(new_dw,lb->uvel_CCLabel,matl->getDWIndex(), patch);
 	    t->computes(new_dw,lb->vvel_CCLabel,matl->getDWIndex(), patch);
 	    t->computes(new_dw,lb->wvel_CCLabel,matl->getDWIndex(), patch);
@@ -1601,6 +1624,13 @@ void ICE::actuallyStep5b(const ProcessorGroup*,
 
   }
 
+  for(int m = 0; m < NVFs; m++){
+     new_dw->put(xmom_L_ME[m],   lb->xmom_L_ME_CCLabel,   m, patch);
+     new_dw->put(ymom_L_ME[m],   lb->ymom_L_ME_CCLabel,   m, patch);
+     new_dw->put(zmom_L_ME[m],   lb->zmom_L_ME_CCLabel,   m, patch);
+     new_dw->put(int_eng_L_ME[m],lb->int_eng_L_ME_CCLabel,m, patch);
+  }
+
 }
 
 void ICE::actuallyStep6and7(const ProcessorGroup*,
@@ -1620,13 +1650,14 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
   Vector dx = patch->dCell();
   double vol = dx.x()*dx.y()*dx.z();
 
-  CCVariable<double> temp, cv;
+  CCVariable<double> temp, cv, q_CC, q_advected;
   CCVariable<double> uvel_CC,vvel_CC,wvel_CC, rho_CC,visc_CC;
+  CCVariable<double> xmom_L_ME,ymom_L_ME,zmom_L_ME,int_eng_L_ME;
 
   FCVariable<double> uvel_FC, vvel_FC, wvel_FC;
 
-  CCVariable<fflux> IFS,OFS;
-  CCVariable<eflux> IFE,OFE;
+  CCVariable<fflux> IFS,OFS,q_out,q_in;
+  CCVariable<eflux> IFE,OFE,q_out_EF,q_in_EF;
 
   for (int m = 0; m < d_sharedState->getNumMatls(); m++ ) {
     Material* matl = d_sharedState->getMaterial(m);
@@ -1637,24 +1668,51 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
       new_dw->get(uvel_FC, lb->uvel_FCMELabel, vfindex, patch, Ghost::None, 0);
       new_dw->get(vvel_FC, lb->vvel_FCMELabel, vfindex, patch, Ghost::None, 0);
       new_dw->get(wvel_FC, lb->wvel_FCMELabel, vfindex, patch, Ghost::None, 0);
+      new_dw->get(xmom_L_ME,   lb->xmom_L_ME_CCLabel,
+					       vfindex, patch, Ghost::None, 0);
+      new_dw->get(ymom_L_ME,   lb->ymom_L_ME_CCLabel,
+					       vfindex, patch, Ghost::None, 0);
+      new_dw->get(zmom_L_ME,   lb->zmom_L_ME_CCLabel,  
+					       vfindex, patch, Ghost::None, 0);
+      new_dw->get(int_eng_L_ME,lb->int_eng_L_ME_CCLabel,
+					       vfindex, patch, Ghost::None, 0);
 
-      new_dw->allocate(rho_CC,lb->rho_CCLabel,vfindex,patch);
-      new_dw->allocate(temp,lb->temp_CCLabel,vfindex,patch);
-      new_dw->allocate(cv,lb->cv_CCLabel,vfindex,patch);
-      new_dw->allocate(uvel_CC,lb->uvel_CCLabel,vfindex,patch);
-      new_dw->allocate(vvel_CC,lb->vvel_CCLabel,vfindex,patch);
-      new_dw->allocate(wvel_CC,lb->wvel_CCLabel,vfindex,patch);
+      new_dw->allocate(rho_CC, lb->rho_CCLabel,      vfindex,patch);
+      new_dw->allocate(temp,   lb->temp_CCLabel,     vfindex,patch);
+      new_dw->allocate(cv,     lb->cv_CCLabel,       vfindex,patch);
+      new_dw->allocate(uvel_CC,lb->uvel_CCLabel,     vfindex,patch);
+      new_dw->allocate(vvel_CC,lb->vvel_CCLabel,     vfindex,patch);
+      new_dw->allocate(wvel_CC,lb->wvel_CCLabel,     vfindex,patch);
       new_dw->allocate(visc_CC,lb->viscosity_CCLabel,vfindex,patch);
+      new_dw->allocate(q_CC,   lb->q_CCLabel,        vfindex,patch);
+      new_dw->allocate(q_advected, lb->q_advectedLabel,vfindex,patch);
       new_dw->allocate(IFS,        IFS_CCLabel,      vfindex,patch);
       new_dw->allocate(OFS,        OFS_CCLabel,      vfindex,patch);
       new_dw->allocate(IFE,        IFE_CCLabel,      vfindex,patch);
       new_dw->allocate(OFE,        OFE_CCLabel,      vfindex,patch);
+      new_dw->allocate(q_out,      q_outLabel,       vfindex,patch);
+      new_dw->allocate(q_out_EF,   q_out_EFLabel,    vfindex,patch);
+      new_dw->allocate(q_in,       q_inLabel,        vfindex,patch);
+      new_dw->allocate(q_in_EF,    q_in_EFLabel,     vfindex,patch);
 
       //influx_outflux_volume
-      influxOutfluxVolume(uvel_FC,vvel_FC,wvel_FC,dx,delT,patch,
+      influxOutfluxVolume(uvel_FC,vvel_FC,wvel_FC,delT,patch,
 						OFS,OFE,IFS,IFE);
 
-      // outfluxVolCentroid goes here if doing second order
+      // outflowVolCentroid goes here if doing second order
+#if 0
+      outflowVolCentroid(uvel_FC,vvel_FC,wvel_FC,delT,dx,
+			 r_out_x, r_out_y, r_out_z,
+			 r_out_x_CF, r_out_y_CF, r_out_z_CF);
+#endif
+
+      advectQFirst(q_CC,patch,OFS,OFE,IFS,IFE,q_out,q_out_EF,q_in,q_in_EF,
+		   q_advected);
+
+      for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+	uvel_CC[*iter] = xmom_L_ME[*iter] + q_advected[*iter];
+      }
+
 
 /*    Sketch out how the advection is going to go.
 
@@ -1695,12 +1753,12 @@ void ICE::actuallyStep6and7(const ProcessorGroup*,
 void ICE::influxOutfluxVolume(const FCVariable<double>& uvel_CC,
 			      const FCVariable<double>& vvel_CC,
 			      const FCVariable<double>& wvel_CC,
-			      const Vector& dx, const double& delT,
-			      const Patch* patch,
+			      const double& delT, const Patch* patch,
 			      CCVariable<fflux>& OFS, CCVariable<eflux>& OFE,
 			      CCVariable<fflux>& IFS, CCVariable<eflux>& IFE)
 
 {
+  Vector dx = patch->dCell();
   double delY_top,delY_bottom,delX_right,delX_left,delZ_front,delZ_back;
   double delX_tmp,delY_tmp,delZ_tmp,totalfluxin;
 
@@ -1792,6 +1850,143 @@ void ICE::influxOutfluxVolume(const FCVariable<double>& uvel_CC,
 
 }
 
+void ICE::outflowVolCentroid(const FCVariable<double>& uvel_CC,
+			     const FCVariable<double>& vvel_CC,
+			     const FCVariable<double>& wvel_CC,
+			     const double& delT, const Vector& dx,
+			     CCVariable<fflux>& r_out_x,
+			     CCVariable<fflux>& r_out_y,
+			     CCVariable<fflux>& r_out_z,
+			     CCVariable<eflux>& r_out_x_CF,
+			     CCVariable<eflux>& r_out_y_CF,
+			     CCVariable<eflux>& r_out_z_CF)
+
+{
+
+}
+
+void ICE::advectQFirst(const CCVariable<double>& q_CC,
+		       const Patch* patch,
+		       const CCVariable<fflux>& OFS,
+		       const CCVariable<eflux>& OFE,
+		       const CCVariable<fflux>& IFS,
+		       const CCVariable<eflux>& IFE,
+		       CCVariable<fflux>& q_out,
+		       CCVariable<eflux>& q_out_EF,
+		       CCVariable<fflux>& q_in,
+		       CCVariable<eflux>& q_in_EF,
+		       CCVariable<double>& q_advected)
+
+{
+  qOutfluxFirst(q_CC, patch, q_out, q_out_EF);
+  qInflux(q_out,q_out_EF,patch,q_in,q_in_EF);
+
+  double sum_q_outflux,sum_q_outflux_EF,sum_q_influx,sum_q_influx_EF;
+
+  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+    sum_q_outflux       = 0.0;
+    sum_q_outflux_EF    = 0.0;
+    sum_q_influx        = 0.0;
+    sum_q_influx_EF     = 0.0;
+
+    for(int face = TOP; face <= BACK; face++ ) {
+       sum_q_outflux  += q_out[*iter].fflux[face] * OFS[*iter].fflux[face];
+    }
+
+    for(int edge = TR; edge <= bL; edge++ ) {
+       sum_q_outflux_EF += q_out_EF[*iter].eflux[edge] * OFE[*iter].eflux[edge];
+    }
+
+    for(int face = TOP; face <= BACK; face++ ) {
+       sum_q_influx  += q_in[*iter].fflux[face] * IFS[*iter].fflux[face];
+    }
+
+    for(int edge = TR; edge <= bL; edge++ ) {
+       sum_q_influx_EF += q_in_EF[*iter].eflux[edge] * IFE[*iter].eflux[edge];
+    }
+
+    q_advected[*iter] = - sum_q_outflux - sum_q_outflux_EF
+			+ sum_q_influx  + sum_q_influx_EF;
+  }
+
+}
+
+void ICE::qOutfluxFirst(const CCVariable<double>& q_CC,
+		        const Patch* patch,
+			CCVariable<fflux>& q_out,
+			CCVariable<eflux>& q_out_EF)
+{
+  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+    for(int face = TOP; face <= BACK; face++ ) {
+	q_out[*iter].fflux[face] = q_CC[*iter];
+    }
+
+    for(int edge = TR; edge <= bL; edge++ ) {
+       q_out_EF[*iter].eflux[edge] = q_CC[*iter];
+    }
+  }
+
+}
+
+void ICE::qInflux(const CCVariable<fflux>& q_out,
+		  const CCVariable<eflux>& q_out_EF,
+		  const Patch* patch,
+		  CCVariable<fflux>& q_in,
+		  CCVariable<eflux>& q_in_EF)
+
+{
+
+#if 0
+   // This can't be uncommented until ExtraCells are implemented
+  for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+    IntVector curcell = *iter,adjcell;
+
+    // SLABS
+    adjcell = IntVector(curcell.x(),curcell.y()+1,curcell.z());
+    q_in[*iter].fflux[TOP]    = q_out[adjcell].fflux[BOTTOM];
+    adjcell = IntVector(curcell.x(),curcell.y()-1,curcell.z());
+    q_in[*iter].fflux[BOTTOM] = q_out[adjcell].fflux[TOP];
+
+    adjcell = IntVector(curcell.x()+1,curcell.y(),curcell.z());
+    q_in[*iter].fflux[RIGHT]  = q_out[adjcell].fflux[LEFT];
+    adjcell = IntVector(curcell.x()-1,curcell.y(),curcell.z());
+    q_in[*iter].fflux[LEFT]   = q_out[adjcell].fflux[RIGHT];
+
+    adjcell = IntVector(curcell.x(),curcell.y(),curcell.z()+1);
+    q_in[*iter].fflux[FRONT]  = q_out[adjcell].fflux[BACK];
+    adjcell = IntVector(curcell.x(),curcell.y(),curcell.z()-1);
+    q_in[*iter].fflux[BACK]   = q_out[adjcell].fflux[FRONT];
+
+    //CORNERS
+    adjcell = IntVector(curcell.x()+1,curcell.y()+1,curcell.z());
+    q_in_EF[*iter].eflux[TR]  = q_out_EF[adjcell].eflux[BL];
+
+    adjcell = IntVector(curcell.x()+1,curcell.y()-1,curcell.z());
+    q_in_EF[*iter].eflux[BR]  = q_out_EF[adjcell].eflux[TL];
+
+    adjcell = IntVector(curcell.x()-1,curcell.y()+1,curcell.z());
+    q_in_EF[*iter].eflux[TL]  = q_out_EF[adjcell].eflux[BR];
+
+    adjcell = IntVector(curcell.x()-1,curcell.y()-1,curcell.z());
+    q_in_EF[*iter].eflux[BL]  = q_out_EF[adjcell].eflux[TR];
+  }
+#endif
+
+}
+
+void ICE::qOutfluxSecond(CCVariable<fflux>& OFS,
+			 CCVariable<fflux>& IFS,
+			 CCVariable<fflux>& r_out_x,
+			 CCVariable<fflux>& r_out_y,
+			 CCVariable<fflux>& r_out_z,
+			 CCVariable<eflux>& r_out_x_CF,
+			 CCVariable<eflux>& r_out_y_CF,
+			 CCVariable<eflux>& r_out_z_CF,
+			 const Vector& dx)
+{
+
+}
+
 #ifdef __sgi
 #define IRIX
 #pragma set woff 1209
@@ -1846,6 +2041,9 @@ const TypeDescription* fun_getTypeDescription(ICE::eflux*)
 
 //
 // $Log$
+// Revision 1.46  2000/10/24 23:07:21  guilkey
+// Added code for steps6and7.
+//
 // Revision 1.45  2000/10/20 23:58:55  guilkey
 // Added part of advection code.
 //
