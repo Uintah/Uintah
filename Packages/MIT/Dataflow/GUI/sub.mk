@@ -21,6 +21,8 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/DistributionReader.tcl\
 	$(SRCDIR)/MetropolisWriter.tcl\
 	$(SRCDIR)/MetropolisReader.tcl\
+	$(SRCDIR)/PPexample.tcl\
+        $(SRCDIR)/PPexampleGui.tcl\
 #[INSERT NEW TCL FILE HERE]
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/MIT/Dataflow/GUI
 
