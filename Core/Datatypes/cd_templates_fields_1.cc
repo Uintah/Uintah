@@ -5,6 +5,15 @@
 #include <Core/Datatypes/ImageField.h>
 #include <Core/Datatypes/QuadSurfField.h>
 
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+/*
+cc-1468 CC: REMARK File = ../src/Core/Datatypes/cd_templates_fields_0.cc, Line = 11
+  Inline function "SCIRun::FData3d<SCIRun::Tensor>::end" cannot be explicitly
+          instantiated.
+*/
+#pragma set woff 1468
+#endif
+
 using namespace SCIRun;
 
 template class FData2d<Tensor>;
@@ -233,4 +242,7 @@ QuadSurfField<unsigned char>::query_scalar_interface() const
   return scinew SFInterface<QuadSurfField<unsigned char> >(this);
 }
 
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 1468
+#endif
 
