@@ -87,7 +87,7 @@ void computeGridEigens(TensorField* tensorField,
   IntVector lowIndex, highIndex;
 
   tensorField->get_bounds(lb, ub);
-  tensorField->GetLevel()->getIndexRange(lowIndex, highIndex);
+  tensorField->GetLevel()->findIndexRange(lowIndex, highIndex);
 
   eValueField->resize(highIndex.x(), highIndex.y(), highIndex.z());
   eValueField->set_bounds(lb, ub);
