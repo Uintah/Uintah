@@ -165,7 +165,9 @@ public:
   int frameno;
   FILE* frametime_fp;
   double lasttime;
-  
+  bool followpath;  
+  FILE* path_fp;
+
   bool doHotSpots() {
     return hotspots;
   }
