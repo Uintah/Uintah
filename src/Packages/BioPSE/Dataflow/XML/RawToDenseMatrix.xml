@@ -8,6 +8,12 @@
     <authors>
       <author>Martin Cole</author>
     </authors>
+    <summary>Read CVRTI potentials, and output as a DenseMatrix</summary>
+    <description>
+      <p>Input data from CVRTI formatted .pots file.  The Output is a
+DenseMatrix arranged with each lead in the rows, each column is a time
+instance. The UI sets the start, end and units for the time steps.</p>
+    </description>
   </overview>
   <implementation>
   </implementation>
