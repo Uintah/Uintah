@@ -242,11 +242,54 @@ void after_each_step_wrapper(
   void influxOutfluxVolume(const FCVariable<double>& uvel_CC,
 			   const FCVariable<double>& vvel_CC,
 			   const FCVariable<double>& wvel_CC,
-			   const Vector& dx, const double& delT,
-			   const Patch* patch,
+			   const double& delT, const Patch* patch,
 			   CCVariable<fflux>& OFS, CCVariable<eflux>& OFE,
 			   CCVariable<fflux>& IFS, CCVariable<eflux>& IFE);
 
+  void outflowVolCentroid(const FCVariable<double>& uvel_CC,
+			  const FCVariable<double>& vvel_CC,
+			  const FCVariable<double>& wvel_CC,
+			  const double& delT, const Vector& dx,
+			  CCVariable<fflux>& r_out_x,
+			  CCVariable<fflux>& r_out_y,
+			  CCVariable<fflux>& r_out_z,
+			  CCVariable<eflux>& r_out_x_CF,
+			  CCVariable<eflux>& r_out_y_CF,
+			  CCVariable<eflux>& r_out_z_CF);
+
+  void advectQFirst(const CCVariable<double>& q_CC,
+		    const Patch* patch,
+		    const CCVariable<fflux>& OFS,
+		    const CCVariable<eflux>& OFE,
+		    const CCVariable<fflux>& IFS,
+		    const CCVariable<eflux>& IFE,
+		    CCVariable<fflux>& q_out,
+		    CCVariable<eflux>& q_out_EF,
+		    CCVariable<fflux>& q_in,
+		    CCVariable<eflux>& q_in_EF,
+		    CCVariable<double>& q_advected);
+
+  void qOutfluxFirst(const CCVariable<double>& q_CC,
+		     const Patch* patch,
+		     CCVariable<fflux>& q_out,
+		     CCVariable<eflux>& q_out_EF);
+
+
+  void qInflux(const CCVariable<fflux>& q_out,
+	       const CCVariable<eflux>& q_out_EF,
+	       const Patch* patch,
+	       CCVariable<fflux>& q_in,
+	       CCVariable<eflux>& q_in_EF);
+
+  void qOutfluxSecond(CCVariable<fflux>& OFS,
+		      CCVariable<fflux>& IFS,
+		      CCVariable<fflux>& r_out_x,
+		      CCVariable<fflux>& r_out_y,
+		      CCVariable<fflux>& r_out_z,
+		      CCVariable<eflux>& r_out_x_CF,
+		      CCVariable<eflux>& r_out_y_CF,
+		      CCVariable<eflux>& r_out_z_CF,
+		      const Vector& dx);
 
  ICELabel* lb; 
  SimulationStateP d_sharedState;
@@ -260,6 +303,10 @@ void after_each_step_wrapper(
  const VarLabel* OFS_CCLabel;
  const VarLabel* IFE_CCLabel;
  const VarLabel* OFE_CCLabel;
+ const VarLabel* q_outLabel;
+ const VarLabel* q_out_EFLabel;
+ const VarLabel* q_inLabel;
+ const VarLabel* q_in_EFLabel;
 
 };
 
@@ -290,6 +337,9 @@ void after_each_step_wrapper(
 #endif
 
 // $Log$
+// Revision 1.31  2000/10/24 23:07:21  guilkey
+// Added code for steps6and7.
+//
 // Revision 1.30  2000/10/20 23:58:55  guilkey
 // Added part of advection code.
 //
