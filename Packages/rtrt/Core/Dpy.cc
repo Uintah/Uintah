@@ -257,6 +257,12 @@ Dpy::run()
     {
       if (frameless) { renderFrameless(); }
       else           { renderFrame();     }
+
+      // Exit if you are supposed to.
+      if (scene->get_rtrt_engine()->stop_execution()) {
+	cout << "Dpy going down\n";
+	Thread::exit();
+      }
     }
 } // end run()
 
@@ -370,6 +376,13 @@ Dpy::renderFrame() {
 
   // Wait until the Gui (main) thread has displayed this image...
   priv->waitDisplay->lock();
+
+  if( displayedImage->get_xres() != priv->xres ||
+      displayedImage->get_yres() != priv->yres ) {
+    delete displayedImage;
+    displayedImage = new Image(priv->xres, priv->yres, stereo);
+    scene->set_image(showing_scene, displayedImage);
+  }
 
   // This is the last stat for the rendering scene (cyan)
   //drawstats[showing_scene]->add(SCIRun::Time::currentSeconds(),Color(0,1,1));
