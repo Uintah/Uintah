@@ -45,6 +45,8 @@
 #include "itkImageRegionIterator.h"
 #include <itkVector.h>
 
+#include <sci_defs.h>
+
 #ifdef HAVE_TEEM
 #include <Packages/Teem/Dataflow/Ports/NrrdPort.h>
 #endif
