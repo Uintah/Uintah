@@ -573,6 +573,7 @@ char* getSerializedChildren(DOM_Node& d)
       sprintf(string,"<%s%s>%s</%s>",n.getNodeName().transcode(),
 	      temp,temp2,n.getNodeName().transcode());
       delete[] temp;
+      delete[] temp2;
     } 
     
     int newlength = strlen(string) + strlen(fullstring);
@@ -601,17 +602,17 @@ char* removeWhiteSpace(char* string)
   newstring = new char[index2+2];
   newstring[0] = '\0';
 
-  while ((string[index1]==' '||
-	 string[index1]=='\t' ||
-	 string[index1]=='\n' ||
-	 string[index1]=='\r') &&
-	 index1<=index2) index1++;
+  while ((index1<=index2) &&
+	 (string[index1]==' '||
+	  string[index1]=='\t' ||
+	  string[index1]=='\n' ||
+	  string[index1]=='\r')) index1++;
 
-  while ((string[index2]==' '||
-	 string[index2]=='\t' ||
-	 string[index2]=='\n' ||
-	 string[index2]=='\r') &&
-	 index2>=index1) index2--;
+  while ((index2>=index1) &&
+	 (string[index2]==' '||
+	  string[index2]=='\t' ||
+	  string[index2]=='\n' ||
+	  string[index2]=='\r')) index2--;
 
   if (index1>index2) {
     delete [] string;
