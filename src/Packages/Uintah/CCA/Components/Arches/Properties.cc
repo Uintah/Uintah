@@ -36,6 +36,7 @@ Properties::Properties(const ArchesLabel* label, const MPMArchesLabel* MAlb,
   d_enthalpySolve(enthalpySolver)
 {
   d_bc = 0;
+  d_mixingModel = 0;
 }
 
 //****************************************************************************
@@ -43,6 +44,7 @@ Properties::Properties(const ArchesLabel* label, const MPMArchesLabel* MAlb,
 //****************************************************************************
 Properties::~Properties()
 {
+  delete d_mixingModel;
 }
 
 //****************************************************************************
