@@ -229,11 +229,11 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 
 	option add *TreeView.font { Courier 12 }
-	#option add *TreeView.Button.background grey95
-	#option add *TreeView.Button.activeBackground grey90
-	#option add *TreeView.Column.background grey90
+#	option add *TreeView.Button.background grey95
+#	option add *TreeView.Button.activeBackground grey90
+#	option add *TreeView.Column.background grey90
 	option add *TreeView.Column.titleShadow { grey70 1 }
-	#option add *TreeView.Column.titleFont { Helvetica 12 bold }
+#	option add *TreeView.Column.titleFont { Helvetica 12 bold }
 	option add *TreeView.Column.font { Courier 12 }
 
 #	iwidgets::scrolledframe $w.treeview
@@ -275,9 +275,6 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    $treeview column configure $column \
 		-command [list $this SortColumn $column]
 	}
-
-	pack $treeview -fill x -expand yes -side top
-
 
 	iwidgets::labeledframe $w.sel -labeltext "Search Selection"
 	set sel [$w.sel childsite]
@@ -1183,15 +1180,14 @@ itcl_class DataIO_Readers_HDF5DataReader {
 		  -xscrollcommand [list $f.xscroll set] \
 		  -yscrollcommand [list $f.yscroll set]}
 	eval {$f.tree configure} $args
-
 	scrollbar $f.xscroll -orient horizontal \
 	    -command [list $f.tree xview]
 	scrollbar $f.yscroll -orient vertical \
 	    -command [list $f.tree yview]
-#	grid $f.tree $f.yscroll -sticky news
-#	grid $f.xscroll -sticky news
-#	grid rowconfigure $f 0 -weight 1
-#	grid columnconfigure $f 0 -weight 1
+	grid $f.tree $f.yscroll -sticky news
+	grid $f.xscroll -sticky news
+	grid rowconfigure $f 0 -weight 1
+	grid columnconfigure $f 0 -weight 1
 	return $f.tree
     }
 
