@@ -1,6 +1,6 @@
 // RigidBodyContact.cc
 
-#include "RigidBodyContact.h"
+#include <Packages/Uintah/CCA/Components/MPM/Contact/RigidBodyContact.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
@@ -72,23 +72,25 @@ void RigidBodyContact::exMomInterpolated(const ProcessorGroup*,
 #if 0
     if(d_sharedState->getElapsedTime() >= d_stop_time){
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
-	gvelocity[0][*iter]   = zero;
+        IntVector c = *iter; 
+	gvelocity[0][c]   = zero;
       }
     }
 #endif
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+      IntVector c = *iter; 
       centerOfMassMom=Vector(0.,0.,0.);
       centerOfMassMass=0.0; 
       for(int n = 0; n < numMatls; n++){
-        centerOfMassMom+=gvelocity[n][*iter] * gmass[n][*iter];
-        centerOfMassMass+=gmass[n][*iter]; 
+        centerOfMassMom+=gvelocity[n][c] * gmass[n][c];
+        centerOfMassMass+=gmass[n][c]; 
       }
 
       // Set each field's velocity equal to the velocity of material 0
-      if(!compare(gmass[0][*iter],0.0)){
+      if(!compare(gmass[0][c],0.0)){
         for(int n = 1; n < numMatls; n++){
-	  gvelocity[n][*iter] = gvelocity[0][*iter];
+	  gvelocity[n][c] = gvelocity[0][c];
         }
       }
     }
@@ -114,18 +116,15 @@ void RigidBodyContact::exMomIntegrated(const ProcessorGroup*,
     StaticArray<constNCVariable<double> > gmass(numMatls);
     StaticArray<NCVariable<Vector> > gvelocity_star(numMatls);
     StaticArray<NCVariable<Vector> > gacceleration(numMatls);
-    StaticArray<NCVariable<double> > frictionalWork(numMatls);
+    StaticArray<NCVariable<double> > frictionWork(numMatls);
 
     for(int m=0;m<matls->size();m++){
-      int dwindex = matls->get(m);
-      new_dw->get(gmass[m], lb->gMassLabel,dwindex ,patch, Ghost::None, 0);
-      new_dw->getModifiable(gvelocity_star[m], lb->gVelocityStarLabel, dwindex,
-			    patch);
-      new_dw->getModifiable(gacceleration[m],  lb->gAccelerationLabel, dwindex,
-			    patch);
-      new_dw->allocate(frictionalWork[m], lb->frictionalWorkLabel,
-                                                            dwindex, patch);
-      frictionalWork[m].initialize(0.);
+     int dwi = matls->get(m);
+     new_dw->get(gmass[m], lb->gMassLabel,dwi ,patch, Ghost::None, 0);
+     new_dw->getModifiable(gvelocity_star[m],lb->gVelocityStarLabel, dwi,patch);
+     new_dw->getModifiable(gacceleration[m], lb->gAccelerationLabel, dwi,patch);
+     new_dw->allocateAndPut(frictionWork[m], lb->frictionalWorkLabel,dwi,patch);
+     frictionWork[m].initialize(0.);
     }
 
     delt_vartype delT;
@@ -134,33 +133,30 @@ void RigidBodyContact::exMomIntegrated(const ProcessorGroup*,
     if(d_sharedState->getElapsedTime() >= d_stop_time){
       Vector zero(0.,0.,0.);
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
-	  gacceleration[0][*iter]    = (zero - gvelocity_star[0][*iter])/delT;
-	  gvelocity_star[0][*iter]   = zero;
+          IntVector c = *iter; 
+	  gacceleration[0][c]    = (zero - gvelocity_star[0][c])/delT;
+	  gvelocity_star[0][c]   = zero;
       }
     }
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+      IntVector c = *iter; 
       centerOfMassMom=Vector(0.,0.,0.);
       centerOfMassMass=0.0; 
       for(int  n = 0; n < numMatls; n++){
-         centerOfMassMom+=gvelocity_star[n][*iter] * gmass[n][*iter];
-         centerOfMassMass+=gmass[n][*iter]; 
+         centerOfMassMom+=gvelocity_star[n][c] * gmass[n][c];
+         centerOfMassMass+=gmass[n][c]; 
       }
 
       // Set each field's velocity equal to the center of mass velocity
       // and adjust the acceleration of each field to account for this
-      if(!compare(gmass[0][*iter],0.0)){  // Non-rigid matl
+      if(!compare(gmass[0][c],0.0)){  // Non-rigid matl
         for(int  n = 1; n < numMatls; n++){
-	  Dvdt = -(gvelocity_star[n][*iter] - gvelocity_star[0][*iter])/delT;
-	  gvelocity_star[n][*iter] = gvelocity_star[0][*iter];
-	  gacceleration[n][*iter]+=Dvdt;
+	  Dvdt = -(gvelocity_star[n][c] - gvelocity_star[0][c])/delT;
+	  gvelocity_star[n][c] = gvelocity_star[0][c];
+	  gacceleration[n][c]+=Dvdt;
         }
       }
-    }
-
-    for(int m=0;m<matls->size();m++){
-      int dwi = matls->get(m);
-      new_dw->put(frictionalWork[m],   lb->frictionalWorkLabel,dwi,patch);
     }
   }
 }
