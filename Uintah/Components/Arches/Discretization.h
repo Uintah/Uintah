@@ -15,7 +15,7 @@ GENERAL INFORMATION
    
    C-SAFE 
    
-   Copyright U of U 1998
+   Copyright U of U 2000
 
 KEYWORDS
 
@@ -80,15 +80,27 @@ public:
 					   SchedulerP& sched,
 					   const DataWarehouseP& old_dw,
 					   DataWarehouseP& new_dw);
-   // Modify coefficients
-   virtual void modifyCoefficients(const LevelP& level,
-				   SchedulerP& sched,
-				   const DataWarehouseP& old_dw,
-				   DataWarehouseP& new_dw);
 
  private:
    
+   calculateVelocityCoeff(const int Index,
+			  const LevelP& level,
+			  const Region* region,
+			  const DataWarehouseP& old_dw,
+			  DataWarehouseP& new_dw);
+   calculatePressureCoeff(const LevelP& level,
+			 const Region* region,
+			 const DataWarehouseP& old_dw,
+			 DataWarehouseP& new_dw); 
 
+   calculateResidual(const LevelP& level,
+		     SchedulerP& sched,
+		     const DataWarehouseP& old_dw,
+		     DataWarehouseP& new_dw);
+   calculateOrderMagnitude(const LevelP& level,
+			   SchedulerP& sched,
+			   const DataWarehouseP& old_dw,
+			   DataWarehouseP& new_dw);
   // Stencil weights.
    // Array of size NDIM and of depth determined by stencil coefficients
 

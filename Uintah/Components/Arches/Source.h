@@ -14,7 +14,7 @@ GENERAL INFORMATION
    
    C-SAFE 
    
-   Copyright U of U 1998
+   Copyright U of U 2000
 
 KEYWORDS
 
@@ -54,44 +54,36 @@ public:
   ////////////////////////////////////////////////////////////////////////
   // Destructor
    ~Source();
-   // GROUP:  Access functions:
-   ////////////////////////////////////////////////////////////////////////
-   // Returns a pointer to the su and sp componenets of the source 
-   // index identifies the velocity component
-   CCVariable<vector>& getPressureLinearSource();
-   CCVariable<vector>& getPressureNonlinearSource();
-    
-   FCVariable<vector>& getMomentumLinearSource(int index);
-   FCVariable<vector>& getMomentumNonlinearSource(int index);
-   
-   CCVariable<vector>& getScalarLinearSource(int index);
-   CCVariable<vector>& getScalarNonlinearSource(int index);
-
-
-   
    // GROUP:  Methods
    ////////////////////////////////////////////////////////////////////////
    // Set source terms. Will need more parameters...like velocity and
    // scalars
    
-   void setPressureSource();
-   void setMomentumSource(int index);
-   void setScalarSource(int index);
-   // Modify source after underrelaxation
-   virtual void modifySource() = 0;
-
+   void sched_calculatePressureSource(const LevelP& level,
+				      SchedulerP& sched,
+				      const DataWarehouseP& old_dw,
+				      DataWarehouseP& new_dw);
+   void sched_calculateVelocitySource(int index,const LevelP& level,
+				      SchedulerP& sched,
+				      const DataWarehouseP& old_dw,
+				      DataWarehouseP& new_dw);
+   void sched_calculateScalarSource(int index,const LevelP& level,
+				    SchedulerP& sched,
+				    const DataWarehouseP& old_dw,
+				    DataWarehouseP& new_dw);
  private:
-   
-   //nonlinear components of the source term
-   CCVariable<vector>* d_press_su;
-   // 3D vector
-   FCVariable<vector>* d_mom_su; 
-   // n-d vector where n is the numner of scalars solved
-   CCVariable<vector>* d_scalar_su;
-   //linearized componenet of the source term
-   CCVariable<vector>* d_press_sp;
-   FCVariable<vector>* d_mom_sp;
-   CCVariable<vector>* d_scalar_sp;
+   void calculatePressureSource(const Region* region,
+				SchedulerP& sched,
+				const DataWarehouseP& old_dw,
+				DataWarehouseP& new_dw);
+   void calculateVelocitySource(int index,const Region* region,
+				SchedulerP& sched,
+				const DataWarehouseP& old_dw,
+				DataWarehouseP& new_dw);
+   void calculateScalarSource(int index,const Region* region,
+			      SchedulerP& sched,
+			      const DataWarehouseP& old_dw,
+			      DataWarehouseP& new_dw);
 
 };
 #endif  

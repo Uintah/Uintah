@@ -14,7 +14,7 @@ GENERAL INFORMATION
    
    C-SAFE 
    
-   Copyright U of U 1998
+   Copyright U of U 2000
 
 
 KEYWORDS
@@ -76,8 +76,20 @@ public:
 			     const DataWarehouseP& old_dw,
 			     DataWarehouseP& new_dw);
   
-  virtual void problemSetup(ProblemSpecP& input_db);
+  virtual void problemSetup(const ProblemSpecP& input_db);
+  void computeResidual(const LevelP&, SchedulerP& sched,
+		       const DataWarehouseP& old_dw,
+		       DataWarehouseP& new_dw);
+  void scheduler_initialize(const LevelP&, SchedulerP& sched,
+			    const DataWarehouseP& old_dw,
+			    DataWarehouseP& new_dw);
+  
+
 private:
+  void initialize(const ProcessorContext* pc,
+		  const Region* region,
+		  const DataWarehouseP& old_dw,
+		  DataWarehouseP& new_dw);
   // Total number of nonlinear iterates
   int d_nonlinear_its;
   // nonlinear residual
