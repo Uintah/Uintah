@@ -634,7 +634,7 @@ void OpenGL::redraw_frame()
 	    << " polygons/second\"" << " \"" << fps_whole << "."
 		<< fps_tenths << " frames/sec\""	<< '\0';
     if (roe->doingMovie) {
-//      cerr << "Saving a movie!\n";
+      cerr << "Saving a movie!\n";
       unsigned char movie[10];
       int startDiv = 100;
       int idx=0;
@@ -840,7 +840,12 @@ void OpenGL::dump_image(const clString& name) {
     glGetIntegerv(GL_VIEWPORT,vp);
     int n=3*vp[2]*vp[3];
     cerr << "Dumping: " << vp[2] << "x" << vp[3] << endl;
+    cerr << " viewport = "<< vp[0]<< ", "<< vp[1]<<endl;
     unsigned char* pxl=scinew unsigned char[n];
+
+    //    glPixelStorei(GL_UNPACK_ALIGNMENT,1);
+    glPixelStorei(GL_PACK_ALIGNMENT,1);
+
     glReadBuffer(GL_FRONT);
     glReadPixels(0,0,vp[2],vp[3],GL_RGB,GL_UNSIGNED_BYTE,pxl);
     dumpfile.write(pxl,n);
@@ -981,8 +986,8 @@ void Roe::setState(DrawInfoOpenGL* drawinfo,clString tclID)
 	    get_tcl_stringvar(id,movieName,curName);
 	    clString curFrameStr;
 	    get_tcl_stringvar(id,movieFrame,curFrameStr);
-//	    curFrameStr.get_int(curFrame);
-//	    cerr << "curFrameStr="<<curFrameStr<<"  curFrame="<<curFrame<<"\n";
+	    curFrameStr.get_int(curFrame);
+	    cerr << "curFrameStr="<<curFrameStr<<"  curFrame="<<curFrame<<"\n";
 	    if (val == "0") {
 		doingMovie = 0;
 	    } else {
