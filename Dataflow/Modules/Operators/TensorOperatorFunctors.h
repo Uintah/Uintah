@@ -114,8 +114,10 @@ struct NDotSigmaDotTOp
                   double tx, double ty, double tz)
   { 
     n = Vector(nx,ny,nz);
+    if(n.length() > 0.0) n/=n.length();
     t = Vector(tx,ty,tz);
-    std::cout << " n = " << n << " t = " << t << std::endl;
+    if(t.length() > 0.0) t/=t.length();
+//    std::cout << " n = " << n << " t = " << t << std::endl;
   }
 
   // This is the function which does the operation you want.
