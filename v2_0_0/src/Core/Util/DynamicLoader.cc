@@ -40,6 +40,10 @@ namespace SCIRun {
 using namespace std;
 
 #ifdef __APPLE__
+  // This mutex is used in Core/Persistent/Persistent.cc.  It is
+  // declared here because it is not initializing properly when declared
+  // in Persistent.cc.
+  Mutex persistentTypeIDMutex("Persistent Type ID Table Lock");
   const string ext("dylib");
 #else
   const string ext("so");
