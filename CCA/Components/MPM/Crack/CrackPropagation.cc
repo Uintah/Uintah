@@ -233,7 +233,15 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
             cfSegPtsT[m].push_back(prePt);
           }
         } // End of loop cfSegNodes
-
+	 
+        // Release dynamic arraies
+	delete [] cp;
+	delete [] da;
+	
+        /* Step 3: Correct crack-front points, moving the unreasonable points
+	*/
+        PruneCrackFrontAfterPropagation(m);	
+	
         /* Step 4: Apply symmetric BCs to new crack-front points
         */
         for(int i=0; i<(int)cfSegNodes[m].size();i++) {
@@ -241,9 +249,6 @@ void Crack::PropagateCrackFrontPoints(const ProcessorGroup*,
           ApplySymmetricBCsToCrackPoints(dx,pt,cfSegPtsT[m][i]);
         }
 
-        // Release dynamic arraies
-        delete [] cp;
-        delete [] da;
       } // End of if(doCrackPropagation)
     } // End of loop over matls
   } // End of loop over patches
