@@ -1,9 +1,6 @@
-
-/* REFERENCED */
-static char *id="$Id$";
-
 /*
  *  InternalError.h: Generic exception for internal errors
+ *  $Id$
  *
  *  Written by:
  *   Steven G. Parker
@@ -44,6 +41,9 @@ const char* InternalError::type() const
 
 //
 // $Log$
+// Revision 1.5  2000/09/25 19:46:41  sparker
+// Quiet warnings under g++
+//
 // Revision 1.4  2000/03/23 20:43:10  sparker
 // Added copy ctor to all exception classes (for Linux/g++)
 //

@@ -837,7 +837,7 @@ void Allocator::fill_bin(AllocBin* bin)
 	OSHunk* hunk;
 	void* p;
 	get_hunk(reqsize, hunk, p);
-	for(int i=0;i<nalloc;i++){
+	for(int i=0;i<(int)nalloc;i++){
 	    Tag* t=(Tag*)p;
 	    t->bin=bin;
 	    t->tag="never used";
@@ -1200,6 +1200,9 @@ void DumpAllocator(Allocator* a)
 
 //
 // $Log$
+// Revision 1.14  2000/09/25 19:47:33  sparker
+// Quiet warnings under g++
+//
 // Revision 1.13  2000/09/25 18:00:42  sparker
 // Added throw() to C declarations
 // Find bzero in string.h for linux
