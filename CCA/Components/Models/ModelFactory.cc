@@ -13,6 +13,7 @@
 #include <Packages/Uintah/CCA/Components/Models/test/TableTest.h>
 #include <Packages/Uintah/CCA/Components/Models/test/TestModel.h>
 #include <Packages/Uintah/CCA/Components/Models/test/flameSheet_rxn.h>
+#include <Packages/Uintah/CCA/Components/Models/test/VorticityConfinement.h>
 #include <Packages/Uintah/CCA/Components/Models/HEChem/Simple_Burn.h>
 #include <Packages/Uintah/CCA/Components/Models/HEChem/IandG.h>
 #include <Packages/Uintah/CCA/Components/Models/HEChem/JWLpp.h>
@@ -69,6 +70,8 @@ void ModelFactory::makeModels(const ProblemSpecP& params, GridP&,
       models.push_back(scinew PinTo300Test(d_myworld, model));
     else if(type == "PassiveScalar")
       models.push_back(scinew PassiveScalar(d_myworld, model));
+    else if(type == "VorticityConfinement")
+      models.push_back(scinew VorticityConfinement(d_myworld, model));
     else
       throw ProblemSetupException("Unknown model: "+type);
   }
