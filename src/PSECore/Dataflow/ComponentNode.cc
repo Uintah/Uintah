@@ -525,7 +525,6 @@ void ProcessIoNode(const DOM_Node& d, io_node* n)
 	DOM_Node attr = child.getAttributes().getNamedItem("lastportdynamic");
 	if (attr!=0) {
 	  DOMString attrstr = attr.getNodeValue();
-	  cout << "lastportdyn = " << attrstr.transcode() << endl;
 	  if (attrstr.equals("yes") ||
 	      attrstr.equals("y") ||
 	      attrstr.equals("YES") ||
