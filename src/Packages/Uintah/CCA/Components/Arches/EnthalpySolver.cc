@@ -470,13 +470,13 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
     {
-    old_dw->get(constEnthalpyVars.temperature, d_lab->d_tempINLabel, 
+    old_dw->getCopy(EnthalpyVars.temperature, d_lab->d_tempINLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     old_dw->get(constEnthalpyVars.cp, d_lab->d_cpINLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     }
     else {
-    new_dw->get(constEnthalpyVars.temperature, d_lab->d_tempINLabel, 
+    new_dw->getCopy(EnthalpyVars.temperature, d_lab->d_tempINLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
     new_dw->get(constEnthalpyVars.cp, d_lab->d_cpINLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -690,9 +690,9 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 	/*
 	if (d_MAlab) {
 	  new_dw->get(solidTemp, d_MAlab->integTemp_CCLabel, 
-		      matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+		      matlIndex, patch, Ghost::None, APackages/Uintah/CCA/Components/Arches/Arches.rches::ZEROGHOSTCELLS);
 	  new_dw->allocateAndPut(enthalpyVars.temperature, d_lab->tempOUTLabel,
-				 matlIndex, patch);
+				 matlIndex, patchPackages/Uintah/StandAlone/);
 	  d_boundaryCondition->mmWallTemperatureBC(pc, patch, constEnthalpyVars.cellType,
 						   solidTemp, constEnthalpyVars.temperature);
 	}
