@@ -19,6 +19,9 @@ source [netedit getenv SCIRUN_SRCDIR]/Dataflow/GUI/defaults.tcl
 source [netedit getenv SCIRUN_SRCDIR]/Dataflow/GUI/Module.tcl
 source [netedit getenv SCIRUN_SRCDIR]/Dataflow/GUI/Connection.tcl
 source [netedit getenv SCIRUN_SRCDIR]/Dataflow/GUI/Port.tcl
+source [netedit getenv SCIRUN_SRCDIR]/Dataflow/GUI/Subnet.tcl
+
+set smallIcon [image create photo -file "[netedit getenv SCIRUN_SRCDIR]/pixmaps/scirun-icon-small.ppm"]
 
 set modname_font "-Adobe-Helvetica-Bold-R-Normal-*-12-120-75-*"
 set ui_font "-Adobe-Helvetica-Medium-R-Normal-*-12-120-75-*"
@@ -39,10 +42,9 @@ set mouseX 0
 global mouseY
 set mouseY 0
 
-global maincanvas
-set maincanvas ".bot.neteditFrame.canvas"
-global minicanvas
-set minicanvas ".top.globalViewFrame.canvas"
+set maincanvas .topbot.pane1.childsite.frame.canvas
+set minicanvas .topbot.pane0.childsite.panes.pane0.childsite.pad.frame.canvas
+
 global Subnet
 set Subnet(Subnet0_minicanvas) $minicanvas
 set Subnet(num) 0
@@ -63,6 +65,24 @@ global NetworkChanged
 set NetworkChanged 0
 
 set CurrentlySelectedModules ""
+
+proc setIcons { { w . } { size small } } {
+    set srcdir [netedit getenv SCIRUN_SRCDIR]
+    if { [string length $srcdir] } {
+	set bitmap $srcdir/pixmaps/scirun-icon-$size.xbm
+	set inverted $srcdir/pixmaps/scirun-icon-$size-inverted.xbm
+	wm iconbitmap $w @$inverted
+	wm iconmask $w @$bitmap
+    }
+}
+
+
+rename toplevel __TCL_toplevel__
+proc toplevel { pathName args } {
+    set win [eval __TCL_toplevel__ $pathName $args]
+    setIcons $pathName
+    return $win
+}
 
 # envBool <variable name>
 #
@@ -112,6 +132,7 @@ proc makeNetworkEditor {} {
     wm geometry . $geomSpec
 
     wm title . "SCIRun"
+    setIcons . large
 
     loadToolTipText
 
@@ -194,80 +215,90 @@ proc makeNetworkEditor {} {
     
     tk_menuBar .main_menu .main_menu.file
 
-    frame .top -borderwidth 5
-    pack  .top -side top -fill x
-    frame .bot -borderwidth 5
-    pack  .bot -side bottom -expand yes -fill both
+    global leftFrame rightFrame botFrame topFrame Color
+    global maincanvas minicanvas mainCanvasHeight mainCanvasWidth
+    iwidgets::panedwindow .topbot -orient horizontal -thickness 0 -sashwidth 5000 -sashheight 10 -sashindent 0 -sashborderwidth 0 -sashcursor sb_v_double_arrow
+    pack .topbot -expand 1 -fill both -padx 0 -pady 0 -ipadx 0 -ipady 0
+    .topbot add topFrame -margin 0 -minimum 0
+    .topbot add botFrame -margin 5 -minimum 0
+    set topFrame [.topbot childsite topFrame]
+    set botFrame [.topbot childsite botFrame]
 
-    frame .top.globalViewFrame -relief sunken -borderwidth 3
-    frame .bot.neteditFrame -relief sunken -borderwidth 3
+    iwidgets::panedwindow $topFrame.panes -orient vertical -height 100 -thickness 0 -sashheight 5000 -sashwidth 10 -sashindent 0 -sashborderwidth 0 -sashcursor sb_h_double_arrow
+    pack $topFrame.panes -fill both -expand 1
+    $topFrame.panes add leftFrame -margin 0 -minimum 0
+    $topFrame.panes add rightFrame -margin 0 -minimum 0
+    set leftFrame [$topFrame.panes childsite leftFrame].pad
+    frame $leftFrame -borderwidth 5 -relief flat -bg $Color(Basecolor)
+    pack $leftFrame -side left -fill both -expand 1 
+    set rightFrame [$topFrame.panes childsite rightFrame].pad
+    frame $rightFrame -borderwidth 5 -relief flat -bg $Color(Basecolor)
+    pack $rightFrame -side left -fill both -expand 1 
 
-    global maincanvas minicanvas mainCanvasHeight mainCanvasWidth Color
+
+    frame $botFrame.frame -relief sunken -borderwidth 3 -bg $Color(Basecolor)
     canvas $maincanvas -bg "$Color(NetworkEditor)" \
         -scrollregion "0 0 $mainCanvasWidth $mainCanvasHeight"
+    pack $maincanvas -expand 1 -fill both
 	
     # bgRect is just a rectangle drawn on the neteditFrame Canvas
     # so that the Modules List Menu can be bound to it using mouse
     # button 3.  The Modules List Menu can't be bound to the canvas
     # itself because mouse events are sent to both the objects on the
     # canvas (such as the lines connection the modules) and the canvas.
-
     eval $maincanvas create rectangle [$maincanvas cget -scrollregion] \
-	-fill "$Color(NetworkEditor)" -tags bgRect
+	-fill "$Color(NetworkEditor)" -outline "$Color(NetworkEditor)" \
+	-tags bgRect 
 
-
-
-    scrollbar .bot.neteditFrame.hscroll -relief sunken -orient horizontal \
-	-command "$maincanvas xview"
-    scrollbar .bot.neteditFrame.vscroll -relief sunken \
-	-command "$maincanvas yview" 
-
-    pack .bot.neteditFrame -expand yes -fill both -padx 4
-
-    
-    grid $maincanvas .bot.neteditFrame.vscroll .bot.neteditFrame.hscroll
-    grid columnconfigure .bot.neteditFrame 0 -weight 1 
-    grid rowconfigure    .bot.neteditFrame 0 -weight 1 
-
-    grid config $maincanvas -column 0 -row 0 \
-	    -columnspan 1 -rowspan 1 -sticky "snew" 
-    grid config .bot.neteditFrame.hscroll -column 0 -row 1 \
-	    -columnspan 1 -rowspan 1 -sticky "ew" -pady 2
-    grid config .bot.neteditFrame.vscroll -column 1 -row 0 \
-	    -columnspan 1 -rowspan 1 -sticky "sn" -padx 2
-    # Create Error Message Window...
-    frame .top.errorFrame -borderwidth 3 
-    text .top.errorFrame.text -relief sunken -bd 3 \
-	-bg "$Color(ErrorFrameBG)" -fg "$Color(ErrorFrameFG)" \
-	-yscrollcommand ".top.errorFrame.s set" -height 10 -width 180 
-    .top.errorFrame.text insert end "Messages:\n"
-    .top.errorFrame.text insert end "--------------------------\n\n"
-    .top.errorFrame.text tag configure errtag -foreground red
-    .top.errorFrame.text tag configure warntag -foreground orange
-    .top.errorFrame.text tag configure infotag -foreground yellow
-
-
-    scrollbar .top.errorFrame.s -relief sunken \
-	    -command ".top.errorFrame.text yview"
-    pack .top.errorFrame.s -side right -fill y -padx 4
-    pack .top.errorFrame.text -expand yes -fill both
-    global netedit_errortext
-    set netedit_errortext .top.errorFrame.text
-
-    pack .top.globalViewFrame -side left -padx 4
-    pack .top.errorFrame -side right -fill both -expand yes
-
-    global miniCanvasWidth miniCanvasHeight
-    canvas $minicanvas -bg $Color(NetworkEditor) \
-	-width $miniCanvasWidth -height $miniCanvasHeight
-    pack $minicanvas 
-
-    $minicanvas create rectangle 0 0 1 1 -outline black -tag "viewAreaBox"
     $maincanvas configure \
 	-xscrollcommand "updateCanvasX" -yscrollcommand "updateCanvasY"
+
+    scrollbar $botFrame.hscroll -relief sunken -orient horizontal \
+	-command "$minicanvas xview"
+    scrollbar $botFrame.vscroll -relief sunken \
+	-command {/topbot.pane1.childsite.frame.canvas yview}
+
+
+    # Layout the scrollbars and canvas in the bottom pane
+    grid $botFrame.frame $botFrame.vscroll $botFrame.hscroll
+    grid columnconfigure $botFrame 0 -weight 1 
+    grid rowconfigure    $botFrame 0 -weight 1 
+    grid config $botFrame.frame -column 0 -row 0 \
+	    -columnspan 1 -rowspan 1 -sticky "snew" 
+    grid config $botFrame.hscroll -column 0 -row 1 \
+	    -columnspan 1 -rowspan 1 -sticky "ew" -pady 2
+    grid config $botFrame.vscroll -column 1 -row 0 \
+	    -columnspan 1 -rowspan 1 -sticky "sn" -padx 0
+
+    # Create Error Message Window...
+    text $rightFrame.text -relief sunken -bd 3 \
+	-bg "$Color(ErrorFrameBG)" -fg "$Color(ErrorFrameFG)" \
+	-yscrollcommand "$rightFrame.s set";# -height 10 -width 180 
+    $rightFrame.text insert end "SCIRun v[netedit getenv SCIRUN_VERSION]\n"
+    $rightFrame.text insert end "Messages:\n"
+    $rightFrame.text insert end "--------------------------\n\n"
+    $rightFrame.text tag configure errtag -foreground red
+    $rightFrame.text tag configure warntag -foreground orange
+    $rightFrame.text tag configure infotag -foreground yellow
+    scrollbar $rightFrame.s -relief sunken -command "$rightFrame.text yview"
+    pack $rightFrame.s -side right -fill y -padx 0 -ipadx 0
+    pack $rightFrame.text -expand yes -fill both
+
+    # Create Mini Network Editor
+    global miniCanvasWidth miniCanvasHeight
+    frame $leftFrame.frame -relief sunken -borderwidth 3 -bg "$Color(Basecolor)"
+    canvas $minicanvas -bg $Color(NetworkEditor) 
+    pack $minicanvas -expand 1 -fill both
+    pack $leftFrame.frame -expand 1 -fill both
+    $minicanvas create rectangle 0 0 1 1 -outline black -tag "viewAreaBox"
     initInfo
 
+    .topbot fraction 25 75
+    $topFrame.panes fraction 25 75
     wm withdraw .
+
+    loadSubnetScriptsFromDisk
+    
 }
 
 proc canvasScroll { canvas { dx 0.0 } { dy 0.0 } } {
@@ -277,8 +308,6 @@ proc canvasScroll { canvas { dx 0.0 } { dy 0.0 } } {
 
 # Activate the "File" menu items - called from C after all packages are loaded
 proc activate_file_submenus { } {
-    global smallIcon
-    set smallIcon [image create photo -file "[netedit getenv SCIRUN_SRCDIR]/pixmaps/scirun-icon-small.ppm"]
     .main_menu.file.menu entryconfig  0 -state active
     .main_menu.file.menu entryconfig  1 -state active
     .main_menu.file.menu entryconfig  2 -state active
@@ -347,7 +376,7 @@ proc handleResize { w h } {
 proc updateCanvasX { beg end } {
     global maincanvas minicanvas SCALEX SCALEY miniCanvasWidth miniCanvasHeight
     # Tell the scroll bar to update
-    .bot.neteditFrame.hscroll set $beg $end
+#    .bot.neteditFrame.hscroll set $beg $end
     # Update the view area box 
     set uly [lindex [$minicanvas coords viewAreaBox] 1]
     set lry [lindex [$minicanvas coords viewAreaBox] 3]
@@ -359,7 +388,7 @@ proc updateCanvasX { beg end } {
 proc updateCanvasY { beg end } {
     global maincanvas minicanvas SCALEX SCALEY miniCanvasWidth miniCanvasHeight
     # Tell the scroll bar to update
-    .bot.neteditFrame.vscroll set $beg $end
+ #   .bot.neteditFrame.vscroll set $beg $end
     # Update the view area box 
     set ulx [lindex [$minicanvas coords viewAreaBox] 0]
     set uly [expr $beg * $miniCanvasHeight ]
@@ -1019,7 +1048,7 @@ proc loadnet { netedit_loadfile } {
 
     # The '#' below is not a comment... This souces the network file globally
     uplevel \#0 {source $netedit_loadfile_global}
-    set Subnet(Subnet$Subnet(Loading)_filename) $netedit_loadfile
+    set Subnet(Subnet$Subnet(Loading)_Filename) $netedit_loadfile
     if { !$inserting } { set NetworkChanged 0 }
     resetSourceCommand
 }
@@ -1153,8 +1182,9 @@ proc displayErrorWarningOrInfo { msg status } {
        # Orange Message
        set status_tag "warntag" 
     }
-    .top.errorFrame.text insert end "$msg\n" "$status_tag"
-    .top.errorFrame.text see end
+    global rightFrame
+    $rightFrame.text insert end "$msg\n" "$status_tag"
+    $rightFrame.text see end
 }
 
 # if reset == "true" then remove the progress buttons so that
@@ -1468,9 +1498,51 @@ proc listFindAndRemove { name elem } {
 }
 
 
-proc initVar { var } {
+proc initVar { var save substitute } {
     if { [string first msgStream $var] != -1 } return
-    uplevel \#0 trace variable \"$var\" w networkHasChanged
+    global ModuleVars 
+    set ids [split $var -]
+    set module [lindex $ids 0]
+    set varname [join [lrange $ids 1 end] -]
+    if { ![string length $varname] || ![string length $module] } return
+    
+    lappend ModuleVars($module) $varname
+    setVarStates $var $save $substitute
+}
+
+proc setVarStates { var save substitute } {
+    global ModuleSavedVars ModuleSubstitutedVars
+    if { [string first msgStream $var] != -1 } return
+    set ids [split $var -]
+    set module [lindex $ids 0]
+    set varname [join [lrange $ids 1 end] -]
+    if { ![string length $varname] || ![string length $module] } return
+
+    if { ![info exists ModuleSavedVars($module)] } {
+	set saved 0
+    } else {
+	set saved [expr [lsearch $ModuleSavedVars($module) $varname] != -1]
+    }
+
+    if { $save && !$saved} {
+	lappend ModuleSavedVars($module) $varname
+	uplevel \#0 trace variable \"$var\" w networkHasChanged
+    } elseif { !$save && $saved } {
+	listFindAndRemove ModuleSavedVars($module) $varname
+	uplevel \#0 trace vdelete \"$var\" w networkHasChanged
+    }
+	
+    if { ![info exists ModuleSubstitutedVars($module)] } {
+	set substituted 0
+    } else {
+	set substituted [expr [lsearch $ModuleSubstitutedVars($module) $varname] != -1]
+    }
+
+    if { $substitute && !$substituted } {
+	lappend ModuleSubstitutedVars($module) $varname
+    } elseif { !$substitute && $substituted } {
+	listFindAndRemove ModuleSubstitutedVars($module) $varname
+    }
 }
 
 
@@ -1486,7 +1558,26 @@ proc setGlobal { var val } {
     uplevel \#0 set \"$var\" \{$val\}
 }
 
-proc emitTCLStyleCopyright { out } {
+
+proc maybeWrite_init_DATADIR_and_DATASET { out } {
+    global ModuleSubstitutedVars
+    if { ![envBool SCIRUN_NET_SUBSTITUTE_DATADIR] } return
+    foreach module [array names ModuleSubstitutedVars] {
+	foreach var $ModuleSubstitutedVars($module) {
+	    upvar $module-$var val
+	    if { [info exists val] && \
+		![string equal $val [subDATADIRandDATASET $module $var]] } {
+		puts $out "# Ask SCIRun to tell us where the data is"
+		puts $out "init_DATADIR_and_DATASET\n"
+		return
+	    }
+	}
+    }
+}
+
+
+proc maybeWriteTCLStyleCopyright { out } {
+    if { ![envBool SCIRUN_INSERT_NET_COPYRIGHT] } return 
     puts $out "\# The contents of this file are subject to the University of Utah Public"
     puts $out "\# License (the \"License\"); you may not use this file except in compliance"
     puts $out "\# with the License."
@@ -1500,7 +1591,7 @@ proc emitTCLStyleCopyright { out } {
     puts $out "\#"
     puts $out "\# The Original Source Code was developed by the University of Utah."
     puts $out "\# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 "
-    puts $out "\# University of Utah. All Rights Reserved."
+    puts $out "\# University of Utah. All Rights Reserved.\n"
 }
 
 
@@ -1516,28 +1607,10 @@ proc init_DATADIR_and_DATASET {} {
 proc writeNetwork { filename { subnet 0 } } {
     set out [open $filename {WRONLY CREAT TRUNC}]
     puts $out "\# SCIRun Network v[netedit getenv SCIRUN_VERSION]\n"
-    if {[envBool SCIRUN_INSERT_NET_COPYRIGHT]} {
-	emitTCLStyleCopyright $out
-    }
-    if {[envBool SCIRUN_NET_SUBSTITUTE_DATADIR]} {
-	puts $out "\n# Ask SCIRun to tell us where the data is"
-	puts $out "init_DATADIR_and_DATASET\n"
-    }
-
-    foreach var "userName runDate runTime notes" {
-	upvar \#0 $var val
-	if {[info exists val]} {
-	    puts $out "set $var \"$val\""
-	}
-    }
-    close $out
-
-    netedit net_read_lock    
-    writeSubnets $filename $subnet
-    netedit net_read_unlock
-
-    set out [open $filename {WRONLY APPEND}]
+    maybeWriteTCLStyleCopyright $out
+    maybeWrite_init_DATADIR_and_DATASET $out
+    writeSubnets $out $subnet
+    puts $out [genSubnetScript $subnet ""]
     puts $out "\n::netedit scheduleok"    
     close $out
 }
-
