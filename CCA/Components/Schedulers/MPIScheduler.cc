@@ -596,6 +596,7 @@ MPIScheduler::relocateParticles(const ProcessorGroup* pg,
 				DataWarehouse* old_dw,
 				DataWarehouse* new_dw)
 {
+  int total_reloc=0;
   UintahParallelPort* lbp = getPort("load balancer");
   LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
 
@@ -655,6 +656,7 @@ MPIScheduler::relocateParticles(const ProcessorGroup* pg,
       keepsets(p, m)=keepset;
 
       if(relocset->numParticles() > 0){
+	total_reloc+=relocset->numParticles();
 	// Figure out exactly where they went...
 	for(ParticleSubset::iterator iter = relocset->begin();
 	    iter != relocset->end(); iter++){
@@ -969,6 +971,16 @@ MPIScheduler::relocateParticles(const ProcessorGroup* pg,
       if(keepset->removeReference())
 	delete keepset;
     }
+  }
+
+  // Communicate the number of particles to processor zero, and
+  // print them out
+  int alltotal;
+  MPI_Reduce(&total_reloc, &alltotal, 1, MPI_INT, MPI_SUM, 0,
+	     pg->getComm());
+  if(pg->myrank() == 0){
+    if(total_reloc != 0)
+      cerr << "Particles crossing patch boundaries: " << total_reloc << '\n';
   }
 
   // Wait to make sure that all of the sends completed

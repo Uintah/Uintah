@@ -38,7 +38,7 @@ SimpleScheduler::~SimpleScheduler()
     delete reloc_matls;
 }
 
-void SimpleScheduler::compile(const ProcessorGroup* pc)
+void SimpleScheduler::compile(const ProcessorGroup*)
 {
   graph.topologicalSort(tasks);
 }
@@ -95,7 +95,7 @@ SimpleScheduler::scheduleParticleRelocation(const LevelP& level,
   reloc_matls = matls;
   reloc_matls->addReference();
   ASSERTEQ(reloc_old_labels.size(), reloc_new_labels.size());
-  int numMatls = reloc_old_labels.size();
+  int numMatls = (int)reloc_old_labels.size();
   ASSERTEQ(numMatls, matls->size());
   for (int m = 0; m< numMatls; m++)
     ASSERTEQ(reloc_old_labels[m].size(), reloc_new_labels[m].size());
@@ -152,7 +152,7 @@ SimpleScheduler::relocateParticles(const ProcessorGroup*,
     vector<ScatterRecord*> sr(neighbors.size());
     for(int i=0;i<(int)sr.size();i++)
       sr[i]=0;
-    int reloc_numMatls = reloc_new_labels.size();
+    int reloc_numMatls = (int)reloc_new_labels.size();
     for(int m = 0; m < reloc_numMatls; m++){
       ParticleSubset* pset = old_dw->getParticleSubset(m, patch);
       ParticleVariable<Point> px;
@@ -233,7 +233,7 @@ SimpleScheduler::relocateParticles(const ProcessorGroup*,
 	}
       }
     }
-    int reloc_numMatls = reloc_new_labels.size();
+    int reloc_numMatls = (int)reloc_new_labels.size();
     for(int m=0;m<reloc_numMatls;m++){
       // Compute the new particle subset
       vector<ParticleSubset*> subsets;
