@@ -71,7 +71,7 @@ WARNING
      // Insert Documentation Here:
      virtual void scheduleTimeAdvance(const LevelP& level, SchedulerP&,
 				      int step, int nsteps);
-     virtual void scheduleRefine(const LevelP& fineLevel, 
+     virtual void scheduleRefine(const PatchSet* patches, 
 				 SchedulerP& scheduler);
      virtual void scheduleRefineInterface(const LevelP& fineLevel, 
 				          SchedulerP& scheduler,
