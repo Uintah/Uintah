@@ -1982,7 +1982,7 @@ EOF
     #echo "$CC $INC_PNG_H conftest-png.c -o conftest-png"
     $CC $INC_PNG_H conftest-png.c -o conftest-png
     #ls -l conftest-png
-    png_error=`conftest-png`
+    png_error=`./conftest-png`
     rm -f conftest-png conftest-png.c
 
     if test "$png_error" != "0"; then
