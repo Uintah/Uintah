@@ -491,14 +491,14 @@ bool LevelField<Data>::interpolate(Data &g, const Point &p) const {
     double fx=x-ix0;
     double fy=y-iy0;
     double fz=z-iz0;
-    Data x00=Interpolate(value(mesh->node(ix0,iy0,iz0)),
-			 value(mesh->node(ix1,iy0,iz0)), fx);
-    Data x01=Interpolate(value(mesh->node(ix0,iy0,iz1)),
-			 value(mesh->node(ix1,iy0,iz1)), fx);
-    Data x10=Interpolate(value(mesh->node(ix0,iy1,iz0)),
-			 value(mesh->node(ix1,iy1,iz1)), fx);
-    Data x11=Interpolate(value(mesh->node(ix0,iy1,iz1)),
-			 value(mesh->node(ix1,iy1,iz1)), fx);
+    Data x00=Interpolate(value(typename mesh_type::Node(ix0,iy0,iz0)),
+			 value(typename mesh_type::Node(ix1,iy0,iz0)), fx);
+    Data x01=Interpolate(value(typename mesh_type::Node(ix0,iy0,iz1)),
+			 value(typename mesh_type::Node(ix1,iy0,iz1)), fx);
+    Data x10=Interpolate(value(typename mesh_type::Node(ix0,iy1,iz0)),
+			 value(typename mesh_type::Node(ix1,iy1,iz1)), fx);
+    Data x11=Interpolate(value(typename mesh_type::Node(ix0,iy1,iz1)),
+			 value(typename mesh_type::Node(ix1,iy1,iz1)), fx);
     Data y0=Interpolate(x00, x10, fy);
     Data y1=Interpolate(x01, x11, fy);
     g=Interpolate(y0, y1, fz);
