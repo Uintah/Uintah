@@ -445,7 +445,6 @@ Point Stealth::using_catmull_rom(vector<Point> &points, int i,  float t)
 void
 Stealth::getNextLocation( Camera* new_camera )
 {
-  
   if( !currentPath_ || currentPath_->size() < 2 ) {
     cerr << "Not enough path enformation!\n";
     return;
@@ -463,7 +462,7 @@ Stealth::getNextLocation( Camera* new_camera )
   int end_index = begin_index+1;
   float t_catmull = ( segment_percentage_ / 100.0f )-begin_index;
     
-  if( end_index == (int)currentPath_->size() )
+  if( end_index >= (int)currentPath_->size() )
     {
       cout << "got to the end of the path... restarting\n";
       segment_percentage_ = 1;
@@ -739,12 +738,12 @@ Stealth::getNextMarker( Camera * new_camera )
   if( currentPath_->size() == 0 )
     return -1;
 
-  int end_index  = (int)(segment_percentage_ / 100.0 + 1);
+  size_t end_index  = (size_t)(segment_percentage_ / 100.0 + 1);
 
   if( end_index >= currentPath_->size() )
     end_index = 0;
 
-  segment_percentage_ = end_index * 100;
+  segment_percentage_ = (double)(end_index * 100);
   *new_camera = (*currentPath_)[ end_index ];
 
   return end_index;
