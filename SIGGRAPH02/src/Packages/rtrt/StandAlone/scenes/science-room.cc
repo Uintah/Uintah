@@ -59,12 +59,12 @@ using namespace std;
 using SCIRun::Thread;
 
 #define ADD_BRICKBRACK
-#define ADD_VIS_FEM
-#define ADD_HEAD
+//#define ADD_VIS_FEM
+//#define ADD_HEAD
 //#define ADD_CSAFE_FIRE
 //#define ADD_GEO_DATA
 //#define ADD_SHEEP
-//#define ADD_DTIGLYPH
+#define ADD_DTIGLYPH
 
 #ifdef ADD_DTIGLYPH
 
@@ -158,7 +158,7 @@ namespace rtrt {
   extern float glyph_threshold;
 }
 
-void make_brain_glyphs(Group *g, const Array1<Light *> &pml, int argc, char *argv[]) {
+void make_brain_glyphs(Group *g, const Array1<Light *> &pml, int argc, char *argv[100]) {
   airArray *mop;
   hestOpt *opt = NULL;
   int anisoType;
@@ -315,7 +315,8 @@ void make_brain_glyphs(Group *g, const Array1<Light *> &pml, int argc, char *arg
 }
 #endif
 
-void make_walls_and_posters(Group *g, const Point &center) {
+void make_walls_and_posters(Group *g, const Point &center, 
+			    const Array1<Light *> &room_lights) {
   Vector north(0,1,0);
   Vector east(1,0,0);
   Vector up(0,0,1);
@@ -337,6 +338,9 @@ void make_walls_and_posters(Group *g, const Point &center) {
   ImageMaterial *stucco = new ImageMaterial("/usr/sci/data/Geometry/textures/science-room/stucco.ppm",
 		      ImageMaterial::Clamp, ImageMaterial::Clamp,
 		      1, Color(0,0,0), 0);
+  int l;
+  for (l=0; l<room_lights.size(); l++)
+    stucco->my_lights.add(room_lights[l]);
 
   Point north_wall_center(center+east_west_wall_length/2*north+
 			  wall_height/2*up);
@@ -406,6 +410,8 @@ void make_walls_and_posters(Group *g, const Point &center) {
 				    up*fc_thickness);
 
   Material *gray = new LambertianMaterial(Color(0.3,0.3,0.3));
+  for (l=0; l<room_lights.size(); l++)
+    gray->my_lights.add(room_lights[l]);
 
   double cable_radius=0.02;
   Point north_cable_1_base(north_floor_west_corner+
@@ -428,6 +434,8 @@ void make_walls_and_posters(Group *g, const Point &center) {
 		      1, Color(0,0,0), 0);
   north_wall->add(new Rect(dnaM, north_cable_1_base+up*2.4-
 			   north*(cable_radius+.005), east*.93, up*-1.2));
+  for (l=0; l<room_lights.size(); l++)
+    dnaM->my_lights.add(room_lights[l]);
 
   Material* hypatiaM =
     new ImageMaterial("/usr/sci/data/Geometry/models/science-room/posters2/Hypatia.ppm",
@@ -435,6 +443,8 @@ void make_walls_and_posters(Group *g, const Point &center) {
 		      1, Color(0,0,0), 0);
   north_wall->add(new Rect(hypatiaM, north_cable_2_base+up*3.0-
 			   north*(cable_radius+.005), east*.55, up*-.6));
+  for (l=0; l<room_lights.size(); l++)
+    hypatiaM->my_lights.add(room_lights[l]);
 
   Material* emilieM =
     new ImageMaterial("/usr/sci/data/Geometry/models/science-room/posters2/emilie_du_chatelet.ppm",
@@ -442,11 +452,16 @@ void make_walls_and_posters(Group *g, const Point &center) {
 		      1, Color(0,0,0), 0);
   north_wall->add(new Rect(emilieM, north_cable_2_base+up*1.6-
 			   north*(cable_radius+.005), east*.45, up*-.55));
+  for (l=0; l<room_lights.size(); l++)
+    emilieM->my_lights.add(room_lights[l]);
 
   Material* bluesunM =
     new ImageMaterial("/usr/sci/data/Geometry/models/science-room/posters2/bluesun.ppm",
 		      ImageMaterial::Clamp, ImageMaterial::Clamp,
 		      1, Color(0,0,0), 0);
+  for (l=0; l<room_lights.size(); l++)
+    bluesunM->my_lights.add(room_lights[l]);
+
   north_wall->add(new Rect(bluesunM, north_cable_3_base+up*2.5-
 			   north*(cable_radius+.005), east*1.1, up*-1.1));
 
@@ -474,13 +489,17 @@ void make_walls_and_posters(Group *g, const Point &center) {
 		      1, Color(0,0,0), 0);
   west_wall->add(new Rect(galileoM, west_cable_1_base+up*2.3+
 			  east*(cable_radius+.005), north*.95, up*-1.4));
-
+  for (l=0; l<room_lights.size(); l++)
+    galileoM->my_lights.add(room_lights[l]);
+  
   Material* brunoM =
     new ImageMaterial("/usr/sci/data/Geometry/models/science-room/posters2/bruno.ppm",
 		      ImageMaterial::Clamp, ImageMaterial::Clamp,
 		      1, Color(0,0,0), 0);
   west_wall->add(new Rect(brunoM, west_cable_2_base+up*2.95+
 			  east*(cable_radius+.005), north*.43, up*-0.55));
+  for (l=0; l<room_lights.size(); l++)
+    brunoM->my_lights.add(room_lights[l]);
 
   Material* maxwellM =
     new ImageMaterial("/usr/sci/data/Geometry/models/science-room/posters2/james_clerk_maxwell.ppm",
@@ -488,6 +507,8 @@ void make_walls_and_posters(Group *g, const Point &center) {
 		      1, Color(0,0,0), 0);
   west_wall->add(new Rect(maxwellM, west_cable_2_base+up*1.6+
 			  east*(cable_radius+.005), north*.4, up*-0.5));
+  for (l=0; l<room_lights.size(); l++)
+    maxwellM->my_lights.add(room_lights[l]);
 
   Material* joeM =
     new ImageMaterial("/usr/sci/data/Geometry/models/science-room/posters2/joe_head.ppm",
@@ -495,6 +516,8 @@ void make_walls_and_posters(Group *g, const Point &center) {
 		      1, Color(0,0,0), 0);
   west_wall->add(new Rect(joeM, west_cable_3_base+up*1.65+
 			  east*(cable_radius+.005), north*.7, up*-0.75));
+  for (l=0; l<room_lights.size(); l++)
+    joeM->my_lights.add(room_lights[l]);
 
   Material* australM =
     new ImageMaterial("/usr/sci/data/Geometry/models/science-room/posters2/australopithecus_boisei.ppm",
@@ -502,6 +525,8 @@ void make_walls_and_posters(Group *g, const Point &center) {
 		      1, Color(0,0,0), 0);
   west_wall->add(new Rect(australM, west_cable_4_base+up*1.65+
 			  east*(cable_radius+.005), north*.62, up*-0.75));
+  for (l=0; l<room_lights.size(); l++)
+    australM->my_lights.add(room_lights[l]);
 
   Material* apolloM =
     new ImageMaterial("/usr/sci/data/Geometry/models/science-room/posters2/Apollo16_lander.ppm",
@@ -509,6 +534,8 @@ void make_walls_and_posters(Group *g, const Point &center) {
 		      1, Color(0,0,0), 0);
   west_wall->add(new Rect(apolloM, west_cable_3_base+up*3.2+north*.75+
 			  east*(cable_radius+.005), north*1.5, up*-0.5));
+  for (l=0; l<room_lights.size(); l++)
+    apolloM->my_lights.add(room_lights[l]);
 
 // rectangle that goes across the whole wall, over the doorway
 //
@@ -669,7 +696,12 @@ void make_walls_and_posters(Group *g, const Point &center) {
   east_wall->add(tri);
 
   Material* white = new LambertianMaterial(Color(0.8,0.8,0.8));
+  for (l=0; l<room_lights.size(); l++)
+    white->my_lights.add(room_lights[l]);
   Material *bb_matl = new Phong(Color(0.45,0.45,0.45), Color(0.3,0.3,0.3), 20, 0);
+  for (l=0; l<room_lights.size(); l++)
+    bb_matl->my_lights.add(room_lights[l]);
+
   UVCylinderArc *uvc;
 
   uvc=new UVCylinderArc(bb_matl, north_floor_west_corner+north*.05,
@@ -712,6 +744,9 @@ void make_walls_and_posters(Group *g, const Point &center) {
   south_wall->add(uvc);
 
   Material *black = new Phong(Color(0.1,0.1,0.1), Color(0.3,0.3,0.3), 20, 0);
+  for (l=0; l<room_lights.size(); l++)
+    black->my_lights.add(room_lights[l]);
+
   south_wall->add(new Box(black,s3-north*wall_thickness-north*.1-east*.1,
 			  s7+north*.1+east*.1+up*.1));
   south_wall->add(new Box(black,s7-north*wall_thickness-north*.1-east*.1-up*.1,
@@ -751,6 +786,8 @@ void make_walls_and_posters(Group *g, const Point &center) {
     new ImageMaterial("/usr/sci/data/Geometry/textures/science-room/cement-floor.ppm",
 		      ImageMaterial::Clamp, ImageMaterial::Clamp, 0,
 		      Color(0,0,0), 0);
+  for (l=0; l<room_lights.size(); l++)
+    cement_floor->my_lights.add(room_lights[l]);
   Object* floor=new Rect(cement_floor, Point(-8, 8, 0),
 			 Vector(4, 0, 0), Vector(0, 4, 0));
   ceiling_floor->add(floor);
@@ -761,12 +798,24 @@ void make_walls_and_posters(Group *g, const Point &center) {
   g->add(east_wall);
 }
 
-SpinningInstance *make_dna(Group *g) {
+SpinningInstance *make_dna(Group *g, Group *s, 
+			   const Array1<Light *> &room_lights) { 
+  int l;
   Phong *red = new Phong(Color(0.8,0.2,0.2), Color(0.5,0.5,0.5), 40, 0.4);
+  for (l=0; l<room_lights.size(); l++)
+    red->my_lights.add(room_lights[l]);
   Phong *yellow = new Phong(Color(0.8,0.8,0.2), Color(0.5,0.5,0.5), 40, 0.4);
+  for (l=0; l<room_lights.size(); l++)
+    yellow->my_lights.add(room_lights[l]);
   Phong *green = new Phong(Color(0.2,0.8,0.2), Color(0.5,0.5,0.5), 40, 0.4);
+  for (l=0; l<room_lights.size(); l++)
+    green->my_lights.add(room_lights[l]);
   Phong *blue = new Phong(Color(0.2,0.2,0.8), Color(0.5,0.5,0.5), 40, 0.4);
+  for (l=0; l<room_lights.size(); l++)
+    blue->my_lights.add(room_lights[l]);
   Phong *white = new Phong(Color(0.3,0.3,0.3), Color(0.3,0.3,0.3), 20, 0);
+  for (l=0; l<room_lights.size(); l++)
+    white->my_lights.add(room_lights[l]);
   Point center_base(-8+3.7,8+3.7,0.63);
   Vector up(0,0,1);
   Vector left(1,0,0);
@@ -801,10 +850,12 @@ SpinningInstance *make_dna(Group *g) {
   InstanceWrapperObject *mw = new InstanceWrapperObject(g2);
   SpinningInstance *smw = new SpinningInstance(mw, mt, center_base, up, 0.2);
   g->add(smw);
+  s->add(smw);
   return smw;
 }
 
-void add_objects(Group *g, const Point &center) {
+void add_objects(Group *g, Group *s, const Point &center, 
+		 const Array1<Light *> &room_lights) {
   Transform room_trans;
   room_trans.pre_translate(center.vector());
 
@@ -878,8 +929,15 @@ void add_objects(Group *g, const Point &center) {
     cerr << "Reading: "<<names[i]<<"\n";
     string objname(pathname+names[i]+string(".obj"));
     string mtlname(pathname+names[i]+string(".mtl"));
-    if (!readObjFile(objname, mtlname, room_trans, g, sizes[i]))
+    Group *g1 = new Group;
+    if (!readObjFile(objname, mtlname, room_trans, matls, g1, sizes[i]))
       exit(0);
+    g->add(g1);
+    s->add(g1);
+    int m, l;
+    for (m=0; m<matls.size(); m++)
+      for (l=0; l<room_lights.size(); l++)
+	matls[m]->my_lights.add(room_lights[l]);
   }
 }
 
@@ -919,29 +977,56 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
   Point center(-8, 8, 0);
   Group *g=new Group;
+  Group *s=new Group;
+  int l;
 
   //PER MATERIAL LIGHTS FOR THE HOLOGRAMS
+  Array1<Light *> holo_lights;
 //  Light *holo_light1 = new Light(Point(-8, 10, 0.2), Color(0.5,0.3,0.3),0,1,true);
 //  Light *holo_light2 = new Light(Point(-9.41, 6.58, 2.2),Color(0.3,0.5,0.3),0,1,true);
 //  Light *holo_light3 = new Light(Point(-6.58, 6.58, 3.2),Color(0.3,0.3,0.5),0,1,true);
-  Light *holo_light1 = new Light(Point(-8, 10, 0.2), Color(0.9,0.9,0.9),0,1,true);
-  Light *holo_light2 = new Light(Point(-9.41, 6.58, 2.2),Color(0.9,0.9,0.9),0,1,true);
-  Light *holo_light3 = new Light(Point(-6.58, 6.58, 3.2),Color(0.9,0.9,0.9),0,1,true);
+  Light *holo_light1 = new Light(Point(-8, 11.5, 3.3), Color(0.9,0.9,0.9),0,1,true);
+  Light *holo_light2 = new Light(Point(-4.5, 6, 3.3), Color(0.9,0.9,0.9),0,1,true);
+  Light *holo_light3 = new Light(Point(-11.5, 6, 3.3),Color(0.9,0.9,0.9),0,1,true);
   holo_light1->name_ = "hololight1";
   holo_light2->name_ = "hololight2";
   holo_light3->name_ = "hololight3";
+  holo_lights.add(holo_light1);
+  holo_lights.add(holo_light2);
+  holo_lights.add(holo_light3);
+
+  Array1<Light *> room_lights;
+  Light *science_room_light0 = new Light(Point(-8, 8, 3.9), Color(.5,.5,.5), 0, .3);
+  science_room_light0->name_ = "science room overhead";
+  room_lights.add(science_room_light0);
+  Light *science_room_light1 = new Light(Point(-5, 8, 3), Color(.5,.5,.5), 0, .3);
+  science_room_light1->name_ = "science room corner1";
+  room_lights.add(science_room_light1);
+//  Light *science_room_light1 = new Light(Point(-5, 11, 3), Color(.5,.5,.5), 0);
+//  science_room_light1->name_ = "science room corner";
+  Light *science_room_light2 = new Light(Point(-8, 5, 3), Color(.5,.5,.5), 0, .3);
+  science_room_light2->name_ = "science room corner2";
+  room_lights.add(science_room_light2);
 
 #ifdef ADD_DTIGLYPH
-  Group *glyphg = new Group();
-  Array1<Light *> pml;
-  pml.add(holo_light1);
-  pml.add(holo_light2);
-  pml.add(holo_light3);
-  make_brain_glyphs(glyphg, pml, argc, argv);
+  Group *glyphs = new Group;
+  int ac=9;
+  char *av[100]= 
+    {"rtrt",
+     "/usr/sci/data/Geometry/volumes2/gk/gk2-rcc-b06-mask-s070.nhdr",
+     "fa",
+     "0.45",
+     "0.71",
+     "-gridcellsize",
+     "100",
+     "-nl",
+     "2" };
+  
+  make_brain_glyphs(glyphs, holo_lights, ac, av);
 #endif
 
 #ifdef ADD_BRICKBRACK
-  make_walls_and_posters(g, center);
+  make_walls_and_posters(g, center, room_lights);
 #endif
   Group* table=new Group();
 
@@ -949,19 +1034,20 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     new ImageMaterial("/usr/sci/data/Geometry/textures/science-room/cement-pedestal.ppm",
 		      ImageMaterial::Clamp, ImageMaterial::Clamp, 0,
 		      Color(0,0,0), 0);
+  
   table->add(new UVCylinder(cement_pedestal, center,
 			    center+Vector(0,0,0.5), 1.5));
   Material *silver = new MetalMaterial(Color(0.5,0.5,0.5), 12);
   table->add(new Disc(silver, center+Vector(0,0,0.5),
 		      Vector(0,0,1), 1.5));
   g->add(table);
-
+  s->add(table);
 #ifdef ADD_BRICKBRACK
-  add_objects(g, center);
+  add_objects(g, s, center, room_lights);
 #endif
 
 #ifdef ADD_BRICKBRACK
-  SpinningInstance *smw = make_dna(g);
+  SpinningInstance *smw = make_dna(g, s, room_lights);
 #endif
 
 
@@ -972,14 +1058,12 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
   ColorMap *vcmap = new ColorMap("/usr/sci/data/Geometry/volumes2/vfem",256);
   Material* vmat=new LambertianMaterial(Color(0.7,0.7,0.7));
-  vmat->my_lights.add(holo_light1);
-  vmat->my_lights.add(holo_light2);
-  vmat->my_lights.add(holo_light3);
+  for (l=0; l<holo_lights.size(); l++)
+    vmat->my_lights.add(holo_lights[l]);
 
-  Material *vcutmat = new CutMaterial(vmat, vcmap, vcpdpy);
-  vcutmat->my_lights.add(holo_light1);
-  vcutmat->my_lights.add(holo_light2);
-  vcutmat->my_lights.add(holo_light3);
+  Material *vcutmat = new CutMaterial(vmat, vcmap, cpdpy);
+  for (l=0; l<holo_lights.size(); l++)
+    vcutmat->my_lights.add(holo_lights[l]);
 
   CutVolumeDpy* vcvdpy = new CutVolumeDpy(1200.5, vcmap);
   
@@ -1044,14 +1128,12 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
   ColorMap *hcmap = new ColorMap("/usr/sci/data/Geometry/volumes2/head",256);
   Material *hmat=new LambertianMaterial(Color(0.7,0.7,0.7));
-  hmat->my_lights.add(holo_light1);
-  hmat->my_lights.add(holo_light2);
-  hmat->my_lights.add(holo_light3);
+  for (l=0; l<holo_lights.size(); l++)
+    hmat->my_lights.add(holo_lights[l]);
 
-  Material *hcutmat = new CutMaterial(hmat, hcmap, hcpdpy);
-  hcutmat->my_lights.add(holo_light1);
-  hcutmat->my_lights.add(holo_light2);
-  hcutmat->my_lights.add(holo_light3);
+  Material *hcutmat = new CutMaterial(hmat, hcmap, cpdpy);
+  for (l=0; l<holo_lights.size(); l++)
+    hcutmat->my_lights.add(holo_lights[l]);
 
   //82.5 for dave
   CutVolumeDpy* hcvdpy = new CutVolumeDpy(11000.0, hcmap);
@@ -1084,9 +1166,8 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   CutPlaneDpy* fcpdpy=new CutPlaneDpy(Vector(.707,-.707,0), Point(-8,8,1.56));
 
   Material* fmat=new LambertianMaterial(Color(0.7,0.7,0.7));
-  fmat->my_lights.add(holo_light1);
-  fmat->my_lights.add(holo_light2);
-  fmat->my_lights.add(holo_light3);
+  for (l=0; l<holo_lights.size(); l++)
+    fmat->my_lights.add(holo_lights[l]);
 
   VolumeDpy* firedpy = new VolumeDpy(1000);
 
@@ -1135,14 +1216,12 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
   ColorMap *gcmap = new ColorMap("/usr/sci/data/Geometry/volumes2/Seismic/geo",256);
   Material* gmat=new LambertianMaterial(Color(0.7,0.7,0.7));
-  gmat->my_lights.add(holo_light1);
-  gmat->my_lights.add(holo_light2);
-  gmat->my_lights.add(holo_light3);
+  for (l=0; l<holo_lights.size(); l++)
+    gmat->my_lights.add(holo_lights[l]);
 
-  Material *gcutmat = new CutMaterial(gmat, gcmap, gcpdpy);
-  gcutmat->my_lights.add(holo_light1);
-  gcutmat->my_lights.add(holo_light2);
-  gcutmat->my_lights.add(holo_light3);
+  Material *gcutmat = new CutMaterial(gmat, gcmap, cpdpy);
+  for (l=0; l<holo_lights.size(); l++)
+    gcutmat->my_lights.add(holo_lights[l]);
 
   CutVolumeDpy* gcvdpy = new CutVolumeDpy(16137.7, gcmap);
 
@@ -1178,14 +1257,12 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
   ColorMap *scmap = new ColorMap("/usr/sci/data/Geometry/volumes2/sheep",256);
   Material *smat=new LambertianMaterial(Color(0.7,0.7,0.7));
-  smat->my_lights.add(holo_light1);
-  smat->my_lights.add(holo_light2);
-  smat->my_lights.add(holo_light3);
+  for (l=0; l<holo_lights.size(); l++)
+    smat->my_lights.add(holo_lights[l]);
 
-  Material *scutmat = new CutMaterial(smat, scmap, scpdpy);
-  scutmat->my_lights.add(holo_light1);
-  scutmat->my_lights.add(holo_light2);
-  scutmat->my_lights.add(holo_light3);
+  Material *scutmat = new CutMaterial(smat, scmap, cpdpy);
+  for (l=0; l<holo_lights.size(); l++)
+    scutmat->my_lights.add(holo_lights[l]);
 
   CutVolumeDpy* scvdpy = new CutVolumeDpy(11000.0, scmap);
 
@@ -1211,7 +1288,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 #endif
 
   //PUT THE VOLUMES INTO A SWITCHING GROUP  
-  SelectableGroup *sg = new SelectableGroup(60);
+  SelectableGroup *sg = new SelectableGroup(10);
 
 #ifdef ADD_VIS_FEM
   sg->add(vcut);
@@ -1229,7 +1306,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   sg->add(scut);
 #endif
 #ifdef ADD_DTIGLYPH
-  sg->add(glyphg);
+  sg->add(glyphs);
 #endif
 
   sg->name_ = "VolVis Selection";
@@ -1241,8 +1318,10 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   rtrt::Plane groundplane(Point(0,0,-5), Vector(0,0,1));
   Color bgcolor(0.3, 0.3, 0.3);
 
-  Scene *scene = new Scene(new Grid(g, 100),
+  Scene *scene = new Scene(new Grid(g, 64),
 			   cam, bgcolor, cdown, cup, groundplane, 0.3);
+  scene->shadowobj = s;
+
 //  Scene *scene = new Scene(new HierarchicalGrid(g, 8, 8, 8, 20, 20, 5),
 //			   cam, bgcolor, cdown, cup, groundplane, 0.3);
 //  Scene *scene = new Scene(g,
@@ -1254,18 +1333,8 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
   scene->select_shadow_mode( Hard_Shadows );
   scene->maxdepth = 8;
-  Light *science_room_light0 = new Light(Point(-8, 8, 3.9), Color(.5,.5,.5), 0, .3);
-  science_room_light0->name_ = "science room overhead";
-  scene->add_light(science_room_light0);
-//  Light *science_room_light1 = new Light(Point(-5, 11, 3), Color(.5,.5,.5), 0);
-//  science_room_light1->name_ = "science room corner";
-//  scene->add_light(science_room_light1);
-  Light *science_room_light1 = new Light(Point(-5, 8, 3), Color(.5,.5,.5), 0, .3);
-  science_room_light1->name_ = "science room corner1";
-  scene->add_light(science_room_light1);
-  Light *science_room_light2 = new Light(Point(-8, 5, 3), Color(.5,.5,.5), 0, .3);
-  science_room_light2->name_ = "science room corner2";
-  scene->add_light(science_room_light2);
+//  for (l=0; l<room_lights.size(); l++)
+//    scene->add_light(room_lights[l]);
   scene->animate=true;
 
   scene->addObjectOfInterest( sg, true );
@@ -1339,16 +1408,17 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   (new Thread(scpdpy, "SHEEP CutPlane Dpy"))->detach();
 #endif
 
-  scene->add_per_matl_light(holo_light1);
-  scene->add_per_matl_light(holo_light2);
-  scene->add_per_matl_light(holo_light3);
+  for (l=0; l<holo_lights.size(); l++)
+    scene->add_per_matl_light(holo_lights[l]);
 
+  for (l=0; l<room_lights.size(); l++)
+    scene->add_per_matl_light(room_lights[l]);
+  
   return scene;
 }
 
 /*
 
-./rtrt -np 10 -scene scenes/science-room.mo /usr/sci/data/Geometry/volumes2/gk/gk2-rcc-b06-mask-s070.nhdr fa 1 0.7 -gridcellsize 50 -nl 5
+./rtrt -np 10 -scene scenes/science-room.mo /usr/sci/data/Geometry/volumes2/gk/gk2-rcc-b06-mask-s070.nhdr fa 0.45 0.55 -gridcellsize 100 -nl 2
 
 */
-
