@@ -7,6 +7,8 @@
 # a script that loads the command.
 
 set auto_index(MultiMeshReader) "source $dir/MultiMeshReader.tcl"
+set auto_index(MultiSFRGReader) "source $dir/MultiSFRGReader.tcl"
+set auto_index(DukeRawReader) "source $dir/DukeRawRead.tcl"
 set auto_index(GeomReader) "source $dir/GeomReader.tcl"
 set auto_index(MeshReader) "source $dir/MeshReader.tcl"
 set auto_index(TYPEReader) "source $dir/Reader.tcl"

@@ -2,14 +2,14 @@
 #include <config/sci.cf>
 
 OBJS = ColorMapReader.o   ColumnMatrixReader.o   ContourSetReader.o   \
-	GeomReader.o   MatrixReader.o   MeshReader.o   \
+	GeomReader.o   MatrixReader.o   MeshReader.o MultiSFRGReader.o  \
 	MultiMeshReader.o   ScalarFieldReader.o   SigmaSetReader.o   \
 	SurfaceReader.o   VectorFieldReader.o VectorFieldOceanReader.o  \
-	PointsReader.o   VoidStarReader.o
+	PointsReader.o   VoidStarReader.o DukeRawRead.o
 GENSRCS = ColorMapReader.cc ColumnMatrixReader.cc ContourSetReader.cc  \
-	MatrixReader.cc   MeshReader.cc  \
+	MatrixReader.cc   MeshReader.cc  MultiSFRGReader.cc \
 	MultiMeshReader.cc  ScalarFieldReader.cc  SigmaSetReader.cc  \
-	SurfaceReader.cc  VectorFieldReader.cc  VoidStarReader.cc
+	SurfaceReader.cc  VectorFieldReader.cc  VoidStarReader.cc DukeRawRead.cc
 SRCS = $(GENSRCS) GeomReader.cc PointsReader.cc VectorFieldOceanReader.cc
 
 GENTCLS = ColorMapReader.tcl ColumnMatrixReader.tcl ContourSetReader.tcl \
