@@ -59,25 +59,25 @@ proc makePlane {w title name command} {
     scale $w.x -orient horizontal -variable $name-x \
 	    -from -1 -to 1 -label "X:" \
 	    -showvalue true -tickinterval 5 \
-	    -resolution 0 -digits 3 \
+	    -resolution 0.01 -digits 3 \
 	    -command $command
     pack $w.x -side top -expand yes -fill x
     scale $w.y -orient horizontal -variable $name-y \
 	    -from -1 -to 1 -label "Y:" \
 	    -showvalue true -tickinterval 5 \
-	    -resolution 0 -digits 3 \
+	    -resolution 0.01 -digits 3 \
 	    -command $command
     pack $w.y -side top -expand yes -fill x
     scale $w.z -orient horizontal -variable $name-z \
 	    -from -1 -to 1 -label "Z:" \
 	    -showvalue true -tickinterval 5 \
-	    -resolution 0 -digits 3 \
+	    -resolution 0.01 -digits 3 \
 	    -command $command
     pack $w.z -side top -expand yes -fill x
     scale $w.d -orient horizontal -variable $name-d \
-	    -from -10 -to 10 -label "D:" \
-	    -showvalue true -tickinterval 10 \
-	    -resolution 0.001 -digits 5 \
+	    -from -1000 -to 1000 -label "D:" \
+	    -showvalue true -tickinterval 1000 \
+	    -resolution 0.01 -digits 3 \
 	    -command $command
     pack $w.d -side top -expand yes -fill x
 }
