@@ -37,6 +37,7 @@ using SCICore::Geometry::Point;
 using PSECommon::Modules::Roe;
 
 class GeomPick;
+class GeomObj;
 
 struct BState {
    unsigned int control:1;
@@ -51,15 +52,18 @@ public:
   virtual ~Pickable();
 
   virtual void geom_pick(GeomPick*, Roe*, int, const BState& bs) = 0;
-  virtual void geom_pick(GeomPick*, void*, int) = 0;
+  //virtual void geom_pick(GeomPick*, void*, int) = 0;
+  virtual void geom_pick(GeomPick*, void*, GeomObj*) = 0;
   virtual void geom_pick(GeomPick*, void*) = 0;
-
+  
   virtual void geom_release(GeomPick*, int, const BState& bs) = 0;
-  virtual void geom_release(GeomPick*, void*, int) = 0;
+  //  virtual void geom_release(GeomPick*, void*, int) = 0;
+  virtual void geom_release(GeomPick*, void*, GeomObj*) = 0;
   virtual void geom_release(GeomPick*, void*) = 0;
 
   virtual void geom_moved(GeomPick*, int, double, const Vector&, void*) = 0;
-  virtual void geom_moved(GeomPick*, int, double, const Vector&, void*, int) = 0;
+  //virtual void geom_moved(GeomPick*, int, double, const Vector&, void*, int) = 0;
+  virtual void geom_moved(GeomPick*, int, double, const Vector&, void*, GeomObj*) = 0;
   virtual void geom_moved(GeomPick*, int, double, const Vector&, int, const BState&) = 0;
   virtual void geom_moved(GeomPick*, int, double, const Vector&, const BState&, int) = 0;
 };
@@ -69,6 +73,9 @@ public:
 
 //
 // $Log$
+// Revision 1.3  2000/08/11 15:44:41  bigler
+// Changed geom_* functions that took an int index to take a GeomObj* picked_obj.
+//
 // Revision 1.2  1999/08/17 06:39:21  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
