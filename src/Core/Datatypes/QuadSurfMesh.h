@@ -184,9 +184,9 @@ public:
 
   // Extra functionality needed by this specific geometry.
   Node::index_type add_find_point(const Point &p, double err = 1.0e-3);
-  void add_quad(Node::index_type a, Node::index_type b,
+  Elem::index_type add_quad(Node::index_type a, Node::index_type b,
 		Node::index_type c, Node::index_type d);
-  void add_quad(const Point &p0, const Point &p1,
+  Elem::index_type add_quad(const Point &p0, const Point &p1,
 		const Point &p2, const Point &p3);
   Elem::index_type add_elem(Node::array_type a);
   virtual bool is_editable() const { return true; }
