@@ -484,8 +484,8 @@ ShowDipoles::draw_lines()
   if (showLinesGui_.get()) 
   {
     GeomLines *g = new GeomLines;
-    for (unsigned i = 0; i < new_positions_.size() - 2; i++) 
-      for (unsigned j = i+1; j < new_positions_.size() - 1; j++) 
+    for (unsigned i = 0; i < new_positions_.size() - 1; i++) 
+      for (unsigned j = i+1; j < new_positions_.size(); j++) 
 	g->add(new_positions_[i]->get(), new_positions_[j]->get());
     GeomMaterial *gm = new GeomMaterial(g, new Material(Color(.8,.8,.2)));
     gidx_ = ogeom_->addObj(gm, string("ShowDipole Lines"));
