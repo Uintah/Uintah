@@ -21,6 +21,7 @@ PSELIBS := \
 	Core/Exceptions \
         Core/Persistent \
 	Core/Datatypes \
+	Core/GeomInterface \
 	Packages/Uintah/Core/Grid \
 	Packages/Uintah/Core/Datatypes 
 

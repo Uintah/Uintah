@@ -367,5 +367,5 @@ void ParticleVis::geom_pick(GeomPick* pick, void* userdata, GeomObj* picked_obj)
   // Now modify so that points and spheres store index.
 }
   
-DECLARE_MAKER(ParticleVis);
+DECLARE_MAKER(ParticleVis)
 } // End namespace Uintah

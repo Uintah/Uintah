@@ -90,7 +90,7 @@ class CuttingPlane : public Module {
    int init;
    int widget_id;
    FrameWidget *widget;
-   virtual void widget_moved(int last);
+   virtual void widget_moved(bool last);
    GuiInt cutting_plane_type;
    GuiInt num_contours;   
    GuiDouble offset;
@@ -652,7 +652,7 @@ void CuttingPlane::execute()
 
 }
 
-void CuttingPlane::widget_moved(int last)
+void CuttingPlane::widget_moved(bool last)
 {
     if(last && !abort_flag)
     {
@@ -777,7 +777,7 @@ CuttingPlane::get_dimensions(FieldHandle texfld_,  int& nx, int& ny, int& nz)
 bool  
 CuttingPlane::get_gradient(FieldHandle texfld_, const Point& p, Vector& g)
 {
-  const string field_type = texfld_->get_type_name(0);
+  //const string field_type = texfld_->get_type_name(0);
   const string type = texfld_->get_type_name(1);
   if(texfld_->get_type_name(0) == "LatVolField"){
     if (type == "double") {
@@ -808,8 +808,8 @@ CuttingPlane::get_gradient(FieldHandle texfld_, const Point& p, Vector& g)
 bool  
 CuttingPlane::interpolate(FieldHandle texfld_, const Point& p, double& val)
 {
-  const string field_type = texfld_->get_type_name(0);
-  const string type = texfld_->get_type_name(1);
+  //const string field_type = texfld_->get_type_name(0);
+  //const string type = texfld_->get_type_name(1);
   if( texfld_->get_type_name(0) == "LatVolField" ){
     // use virtual field interpolation
     ScalarFieldInterface *sfi;

@@ -8,7 +8,7 @@
 
 namespace Uintah {
 
-  DECLARE_MAKER(EigenEvaluator);
+  DECLARE_MAKER(EigenEvaluator)
 
 template<class TensorField, class VectorField, class ScalarField>
 void computeGridEigens(TensorField* tensorField,

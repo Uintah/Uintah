@@ -69,7 +69,7 @@ using namespace SCIRun;
 
 Mutex ParticleFieldExtractor::module_lock("PFEMutex");
 
-  DECLARE_MAKER(ParticleFieldExtractor);
+  DECLARE_MAKER(ParticleFieldExtractor)
 
 //--------------------------------------------------------------- 
   ParticleFieldExtractor::ParticleFieldExtractor(GuiContext* ctx)
@@ -537,8 +537,8 @@ void PFEThread::run(){
     if( !have_subset )
       return;
     string elems;
-    unsigned long totsize;
-    void* mem_start;
+    //unsigned long totsize;
+    //void* mem_start;
     //        cerr<<"material "<< matl <<".\n";
 
 //     cerr<<"source_subset has "<<source_subset->numParticles() <<" particles\n";
