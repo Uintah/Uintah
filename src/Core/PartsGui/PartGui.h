@@ -36,10 +36,11 @@
 
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/TclObj.h>
+#include <Core/Util/Signals.h>
+#include <Core/Parts/PartInterface.h>
 
 namespace SCIRun {
   
-class PartInterface;
 class PartGui;
 class GuiCreatorBase;
 
@@ -65,6 +66,9 @@ class PartGui : public TclObj {
 public:
   static map<string,GuiCreatorBase*> table;
 
+  Signal3<int, const string &, vector<unsigned char> > set_property;
+  Signal3<int, const string &, vector<unsigned char> & > get_property;
+
 protected:
   string name_;
   int n_;
@@ -77,7 +81,11 @@ public:
   string name() { return name_; }
 
   virtual void add_child( PartInterface *child );
-  virtual void attach( PartInterface *interface ) = 0;
+  virtual void attach( PartInterface *interface ) 
+  { 
+    connect(set_property, interface, &PartInterface::set_property);  
+    connect(get_property, interface, &PartInterface::get_property);
+  }
 };
 
 } // namespace SCIRun

@@ -34,11 +34,11 @@
 #include <string>
 #include <vector>
 #include <Core/Util/Signals.h>
+#include <Core/Parts/Part.h>
 
 namespace SCIRun {
 using std::string;
   
-class Part;
 class SciEvent;
 
 class PartInterface {
@@ -69,6 +69,17 @@ public:
   void report_children( T *t, void (T::*fun)(Arg) );
 
   virtual void report_children( SlotBase1<PartInterface *> &slot );
+
+  void set_property(int id, const string &name, vector<unsigned char> data) 
+  { 
+    if (part_)
+      part_->set_property(id,name,data);
+  }
+  void get_property(int id, const string &name , vector<unsigned char> &data) 
+  { 
+    if (part_)
+      part_->get_property(id,name,data);
+  }
 
   // Slots
   Signal1<PartInterface *> has_child;

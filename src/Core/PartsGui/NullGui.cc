@@ -50,6 +50,7 @@ NullGui::~NullGui()
 void 
 NullGui::attach( PartInterface *interface )
 {
+  PartGui::attach(interface);
 }
 
 

@@ -44,7 +44,7 @@ public:
   NullGui( const string &name, const string &script = "NullGui"); 
   virtual ~NullGui();
 
-  void attach( PartInterface * );
+  virtual void attach( PartInterface * );
 };
 
 } // namespace SCIRun
