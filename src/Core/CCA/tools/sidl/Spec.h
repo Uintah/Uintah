@@ -123,10 +123,10 @@ public:
   std::string cppclassname() const;
   MethodList* getMethods() const;
   int exceptionID;
+  void emit_proxyclass(EmitState& e);
 protected:
   virtual void emit(EmitState& out);
   void emit_typeinfo(EmitState& e);
-  void emit_proxyclass(EmitState& e);
   void emit_handlers(EmitState& e);
   void emit_handler_table(EmitState& e);
   void emit_handler_table_body(EmitState& e, int&, bool top);

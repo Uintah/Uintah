@@ -281,6 +281,8 @@ void Symbol::emit(EmitState& e)
   case ClassType:
   case EnumType:
     if(definition->isImport) {
+      CI* importCI = dynamic_cast<CI* >(definition);
+      if(importCI) importCI->emit_proxyclass(e);
       return;
     }      
     definition->emit(e);
@@ -403,7 +405,8 @@ void CI::emit(EmitState& e)
   }
   
   emitted_declaration=true;
-  emit_proxyclass(e);
+  if(!isImport)
+    emit_proxyclass(e);
   if(!do_emit)
     return;
 
