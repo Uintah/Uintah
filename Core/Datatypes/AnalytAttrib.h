@@ -104,6 +104,7 @@ namespace SCIRun {
     // No function object is carried around while serializing
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
+    static string typeName();
   
   private:
     GenFunctionHandle func;
@@ -113,6 +114,32 @@ namespace SCIRun {
     // for every type T
     inline int ncomps();
   };
+
+//////////
+// PIO support
+template <class T>
+string AnalytAttrib<T>::typeName(){
+  static string typeName = string("AnalytAttrib<") + findTypeName((T*)0)+">";
+  return typeName;
+}
+
+template <class T> 
+PersistentTypeID AnalytAttrib<T>::type_id(AnalytAttrib<T>::typeName(), 
+					  "Attrib",
+					  0);
+
+#define ANALYTATTRIB_VERSION 1
+
+template <class T> void
+AnalytAttrib<T>::io(Piostream& stream)
+{
+  stream.begin_class(typeName().c_str(), ANALYTATTRIB_VERSION);
+  
+  // -- base class PIO
+  Attrib::io(stream);
+  
+  stream.end_class();
+}
 
   //////////
   // Specializations for setting the attribute
@@ -289,13 +316,6 @@ namespace SCIRun {
     vrs[1]=y;
     vrs[2]=z;
     return Vector(func->get_value(vrs, 3, 0), func->get_value(vrs, 3, 1), func->get_value(vrs, 3, 2));
-  }
-
-
-  template <class T>
-  void
-  AnalytAttrib<T>::io(Piostream &)
-  {
   }
 
 
