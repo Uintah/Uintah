@@ -12,14 +12,17 @@
 
 #include <Uintah/Components/ICE/ICE.h>
 #include <Uintah/Components/ICE/ICEMaterial.h>
+
 #include <Uintah/Grid/Task.h>
 #include <Uintah/Interface/Scheduler.h>
+#include <SCICore/Datatypes/DenseMatrix.h>
 
 using namespace Uintah;
 using namespace Uintah::MPM;
 using namespace Uintah::ICESpace;
 using namespace Uintah::MPMICESpace;
 
+using SCICore::Datatypes::DenseMatrix;
 using SCICore::Geometry::Vector;
 using SCICore::Geometry::Point;
 using SCICore::Geometry::Dot;
@@ -109,17 +112,6 @@ void MPMICE::scheduleTimeAdvance(double t, double dt,
     d_mpm->scheduleIntegrateTemperatureRate(patch,sched,old_dw,new_dw);
 
     scheduleInterpolateNCToCC(patch,sched,old_dw,new_dw);
-    scheduleCCMomExchange(patch,sched,old_dw,new_dw);
-
-//    d_mpm->scheduleExMomIntegrated(patch,sched,old_dw,new_dw);
-    d_mpm->scheduleInterpolateToParticlesAndUpdate(patch,sched,old_dw,new_dw);
-    d_mpm->scheduleComputeMassRate(patch,sched,old_dw,new_dw);
-    if(d_fracture) {
-      d_mpm->scheduleCrackGrow(patch,sched,old_dw,new_dw);
-      d_mpm->scheduleStressRelease(patch,sched,old_dw,new_dw);
-      d_mpm->scheduleComputeCrackSurfaceContactForce(patch,sched,old_dw,new_dw);
-    }
-    d_mpm->scheduleCarryForwardVariables(patch,sched,old_dw,new_dw);
 
     // Step 1a  computeSoundSpeed
     d_ice->scheduleStep1a(patch,sched,old_dw,new_dw);
@@ -139,8 +131,21 @@ void MPMICE::scheduleTimeAdvance(double t, double dt,
     d_ice->scheduleStep4b(patch,sched,old_dw,new_dw);
     // Step 5a compute lagrangian quantities
     d_ice->scheduleStep5a(patch,sched,old_dw,new_dw);
+
+    scheduleCCMomExchange(patch,sched,old_dw,new_dw);
+
+//    d_mpm->scheduleExMomIntegrated(patch,sched,old_dw,new_dw);
+    d_mpm->scheduleInterpolateToParticlesAndUpdate(patch,sched,old_dw,new_dw);
+    d_mpm->scheduleComputeMassRate(patch,sched,old_dw,new_dw);
+    if(d_fracture) {
+      d_mpm->scheduleCrackGrow(patch,sched,old_dw,new_dw);
+      d_mpm->scheduleStressRelease(patch,sched,old_dw,new_dw);
+      d_mpm->scheduleComputeCrackSurfaceContactForce(patch,sched,old_dw,new_dw);
+    }
+    d_mpm->scheduleCarryForwardVariables(patch,sched,old_dw,new_dw);
+
     // Step 5b cell centered momentum exchange
-    d_ice->scheduleStep5b(patch,sched,old_dw,new_dw);
+//    d_ice->scheduleStep5b(patch,sched,old_dw,new_dw);
     // Step 6and7 advect and advance in time
     d_ice->scheduleStep6and7(patch,sched,old_dw,new_dw);
 
@@ -209,20 +214,37 @@ void MPMICE::scheduleCCMomExchange(const Patch* patch,
                                    DataWarehouseP& old_dw,
                                    DataWarehouseP& new_dw)
 {
-   int numMPMMatls = d_sharedState->getNumMPMMatls();
    Task* t=scinew Task("MPMICE::doCCMomExchange",
 		        patch, old_dw, new_dw,
 		        this, &MPMICE::doCCMomExchange);
 
-   for(int m = 0; m < numMPMMatls; m++){
+   for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-     int idx = mpm_matl->getDWIndex();
-     t->requires(new_dw, MIlb->cVelocityLabel, idx, patch, Ghost::None, 0);
-     t->requires(new_dw, MIlb->cMassLabel,     idx, patch, Ghost::None, 0);
+     int mpmidx = mpm_matl->getDWIndex();
+     t->requires(new_dw, MIlb->cVelocityLabel, mpmidx, patch, Ghost::None, 0);
+     t->requires(new_dw, MIlb->cMassLabel,     mpmidx, patch, Ghost::None, 0);
 
-     t->computes(new_dw, Mlb->gMomExedVelocityStarLabel, idx, patch);
-     t->computes(new_dw, Mlb->gMomExedAccelerationLabel, idx, patch);
+     t->computes(new_dw, Mlb->gMomExedVelocityStarLabel, mpmidx, patch);
+     t->computes(new_dw, Mlb->gMomExedAccelerationLabel, mpmidx, patch);
    }
+
+  for (int m = 0; m < d_sharedState->getNumICEMatls(); m++) {
+    ICEMaterial* matl = d_sharedState->getICEMaterial(m);
+    int iceidx = matl->getDWIndex();
+    t->requires(old_dw,Ilb->rho_CCLabel,       iceidx,patch,Ghost::None);
+    t->requires(new_dw,Ilb->xmom_L_CCLabel,    iceidx,patch,Ghost::None);
+    t->requires(new_dw,Ilb->ymom_L_CCLabel,    iceidx,patch,Ghost::None);
+    t->requires(new_dw,Ilb->zmom_L_CCLabel,    iceidx,patch,Ghost::None);
+    t->requires(new_dw,Ilb->int_eng_L_CCLabel, iceidx,patch,Ghost::None);
+    t->requires(new_dw,Ilb->vol_frac_CCLabel,  iceidx,patch,Ghost::None);
+    t->requires(old_dw,Ilb->cv_CCLabel,        iceidx,patch,Ghost::None);
+    t->requires(new_dw,Ilb->rho_micro_equil_CCLabel, iceidx,patch,Ghost::None);
+
+    t->computes(new_dw,Ilb->xmom_L_ME_CCLabel,    iceidx, patch);
+    t->computes(new_dw,Ilb->ymom_L_ME_CCLabel,    iceidx, patch);
+    t->computes(new_dw,Ilb->zmom_L_ME_CCLabel,    iceidx, patch);
+    t->computes(new_dw,Ilb->int_eng_L_ME_CCLabel, iceidx, patch);
+  }
 
    sched->addTask(t);
 
@@ -230,7 +252,7 @@ void MPMICE::scheduleCCMomExchange(const Patch* patch,
 
 void MPMICE::doCCMomExchange(const ProcessorGroup*,
                              const Patch* patch,
-                             DataWarehouseP&,
+                             DataWarehouseP& old_dw,
                              DataWarehouseP& new_dw)
 {
   int numMatls = d_sharedState->getNumMPMMatls();
@@ -242,22 +264,96 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
     int matlindex = mpm_matl->getDWIndex();
 
-     new_dw->get(gvelocity,     Mlb->gVelocityStarLabel, matlindex, patch,
-							Ghost::AroundCells, 1);
-     new_dw->get(gacceleration, Mlb->gAccelerationLabel, matlindex, patch,
-							Ghost::AroundCells, 1);
+    new_dw->get(gvelocity,     Mlb->gVelocityStarLabel, matlindex, patch,
+							Ghost::None, 0);
+    new_dw->get(gacceleration, Mlb->gAccelerationLabel, matlindex, patch,
+							Ghost::None, 0);
 
-     new_dw->allocate(gMEvelocity,     Mlb->gMomExedVelocityStarLabel,
+    new_dw->allocate(gMEvelocity,     Mlb->gMomExedVelocityStarLabel,
 							 matlindex, patch);
-     new_dw->allocate(gMEacceleration, Mlb->gMomExedAccelerationLabel,
+    new_dw->allocate(gMEacceleration, Mlb->gMomExedAccelerationLabel,
 							 matlindex, patch);
 
     // Just carrying forward for now, real code needs to go here
- 
-     new_dw->put(gvelocity,     Mlb->gMomExedVelocityStarLabel,
-							 matlindex, patch);
-     new_dw->put(gacceleration, Mlb->gMomExedAccelerationLabel,
-							 matlindex, patch);
+
+    new_dw->put(gvelocity,     Mlb->gMomExedVelocityStarLabel,matlindex, patch);
+    new_dw->put(gacceleration, Mlb->gMomExedAccelerationLabel,matlindex, patch);
+  }
+
+  int numICEMatls = d_sharedState->getNumICEMatls();
+  delt_vartype delT;
+  old_dw->get(delT, d_sharedState->get_delt_label());
+  Vector dx = patch->dCell();
+  Vector gravity = d_sharedState->getGravity();
+
+  // Create variables for the required values
+  vector<CCVariable<double> > rho_CC(numICEMatls);
+  vector<CCVariable<double> > xmom_L(numICEMatls);
+  vector<CCVariable<double> > ymom_L(numICEMatls);
+  vector<CCVariable<double> > zmom_L(numICEMatls);
+  vector<CCVariable<double> > int_eng_L(numICEMatls);
+  vector<CCVariable<double> > vol_frac_CC(numICEMatls);
+  vector<CCVariable<double> > rho_micro_CC(numICEMatls);
+  vector<CCVariable<double> > cv_CC(numICEMatls);
+
+  // Create variables for the results
+  vector<CCVariable<double> > xmom_L_ME(numICEMatls);
+  vector<CCVariable<double> > ymom_L_ME(numICEMatls);
+  vector<CCVariable<double> > zmom_L_ME(numICEMatls);
+  vector<CCVariable<double> > int_eng_L_ME(numICEMatls);
+
+  vector<double> b(numICEMatls);
+  vector<double> mass(numICEMatls);
+//  DenseMatrix beta(numICEMatls,numICEMatls),acopy(numICEMatls,numICEMatls);
+//  DenseMatrix K(numICEMatls,numICEMatls),H(numICEMatls,numICEMatls);
+//  DenseMatrix a(numICEMatls,numICEMatls);
+
+//  for (int i = 0; i < numICEMatls; i++ ) {
+//      K[numICEMatls-1-i][i] = d_K_mom[i];
+//      H[numICEMatls-1-i][i] = d_K_heat[i];
+//  }
+
+  for(int m = 0; m < numICEMatls; m++){
+    ICEMaterial* matl = d_sharedState->getICEMaterial( m );
+    int dwindex = matl->getDWIndex();
+    old_dw->get(rho_CC[m],       Ilb->rho_CCLabel,
+                                dwindex, patch, Ghost::None, 0);
+    new_dw->get(xmom_L[m],       Ilb->xmom_L_CCLabel,
+                                dwindex, patch, Ghost::None, 0);
+    new_dw->get(ymom_L[m],       Ilb->ymom_L_CCLabel,
+                                dwindex, patch, Ghost::None, 0);
+    new_dw->get(zmom_L[m],       Ilb->zmom_L_CCLabel,
+                                dwindex, patch, Ghost::None, 0);
+    new_dw->get(int_eng_L[m],    Ilb->int_eng_L_CCLabel,
+                                dwindex, patch, Ghost::None, 0);
+    new_dw->get(vol_frac_CC[m],  Ilb->vol_frac_CCLabel,
+                                dwindex, patch, Ghost::None, 0);
+    new_dw->get(rho_micro_CC[m], Ilb->rho_micro_equil_CCLabel,
+                                dwindex, patch, Ghost::None, 0);
+    old_dw->get(cv_CC[m],        Ilb->cv_CCLabel,
+                                dwindex, patch, Ghost::None, 0);
+
+    new_dw->allocate(xmom_L_ME[m],   Ilb->xmom_L_ME_CCLabel,    dwindex, patch);
+    new_dw->allocate(ymom_L_ME[m],   Ilb->ymom_L_ME_CCLabel,    dwindex, patch);
+    new_dw->allocate(zmom_L_ME[m],   Ilb->zmom_L_ME_CCLabel,    dwindex, patch);
+    new_dw->allocate(int_eng_L_ME[m],Ilb->int_eng_L_ME_CCLabel, dwindex, patch);
+  }
+
+   
+  for (int m = 0; m < numICEMatls; m++) {
+    xmom_L_ME[m] = xmom_L[m];
+    ymom_L_ME[m] = ymom_L[m];
+    zmom_L_ME[m] = zmom_L[m];
+    int_eng_L_ME[m] = int_eng_L[m];
+  }
+
+  for(int m = 0; m < numICEMatls; m++){
+     ICEMaterial* matl = d_sharedState->getICEMaterial( m );
+     int dwindex = matl->getDWIndex();
+     new_dw->put(xmom_L_ME[m],   Ilb->xmom_L_ME_CCLabel,   dwindex, patch);
+     new_dw->put(ymom_L_ME[m],   Ilb->ymom_L_ME_CCLabel,   dwindex, patch);
+     new_dw->put(zmom_L_ME[m],   Ilb->zmom_L_ME_CCLabel,   dwindex, patch);
+     new_dw->put(int_eng_L_ME[m],Ilb->int_eng_L_ME_CCLabel,dwindex, patch);
   }
 
 }
@@ -310,6 +406,9 @@ void MPMICE::interpolateNCToCC(const ProcessorGroup*,
 }
 
 // $Log$
+// Revision 1.7  2000/12/29 00:32:03  guilkey
+// More.
+//
 // Revision 1.6  2000/12/28 21:20:10  guilkey
 // Adding beginnings of functions for coupling.
 //
