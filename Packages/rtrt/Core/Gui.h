@@ -70,7 +70,11 @@ public:
   static void handleSpaceballMotionCB( int sbm_x, int sbm_y, int sbm_z );
   static void handleSpaceballRotateCB( int sbr_x, int sbr_y, int sbr_z );
   static void handleSpaceballButtonCB( int button, int state );
-  static void createMenus( int winId, bool show_gui); // Call after glutInit(...)!
+
+  // This must be called after glutInit(...)!
+  //   If showGui is false, the gui window will not be displayed.  Use
+  //   'G' or right mouse menu to bring it up.
+  static void createMenus( int winId, bool showGui = true );
 
   static void idleFunc();
 private:
@@ -179,6 +183,8 @@ private:
 
   GLUI_Button  * toggleLightsOnOffBtn_;
   GLUI_Button  * toggleShowLightsBtn_;
+
+  GLUI_Spinner * numThreadsSpinner_;
 
   float lightBrightness_;
   float ambientBrightness_;
@@ -307,8 +313,8 @@ private:
 		   char *s, const Color& c);
   void displayShadowText(GLuint fontbase,
 			 double x, double y, char *s, const Color& c);
-  void drawrstats(int nworkers, Worker** workers, int showing_scene,
-		  GLuint fontbase, int xres, int yres,
+  void drawrstats(int nworkers, std::vector<Worker*> & workers,
+		  int showing_scene, GLuint fontbase, int xres, int yres,
 		  XFontStruct* font_struct, int left, int up, double dt);
   void draw_labels(XFontStruct* font_struct, GLuint fontbase,
 		   int& column, int dy, int top);
@@ -317,7 +323,7 @@ private:
 		   int x, int w2, int dy, int top,
 		   bool first=false, double dt=1, int nworkers=0,
 		   int npixels=0);
-  void drawpstats(Stats* mystats, int nworkers, Worker** workers,
+  void drawpstats(Stats* mystats, int nworkers, std::vector<Worker*> & workers,
 		  bool draw_framerate, int showing_scene,
 		  GLuint fontbase, double& lasttime,
 		  double& cum_ttime, double& cum_dt);
