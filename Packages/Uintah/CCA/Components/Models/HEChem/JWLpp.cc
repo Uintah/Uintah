@@ -17,9 +17,9 @@
 using namespace Uintah;
 using namespace std;
 //__________________________________
-//  setenv SCI_DEBUG "MPMICE_NORMAL_COUT:+,MPMICE_DOING_COUT:+"
-//  MPMICE_DOING_COUT:   dumps when tasks are scheduled and performed
-static DebugStream cout_doing("MPMICE_DOING_COUT", false);
+//  setenv SCI_DEBUG "MODELS_DOING_COUT:+"
+//  MODELS_DOING_COUT:   dumps when tasks are scheduled and performed
+static DebugStream cout_doing("MODELS_DOING_COUT", false);
 
 JWLpp::JWLpp(const ProcessorGroup* myworld, ProblemSpecP& params)
   : ModelInterface(myworld), params(params)
@@ -99,12 +99,13 @@ void JWLpp::scheduleComputeStableTimestep(SchedulerP&,
 
 //______________________________________________________________________
 //     
-void JWLpp::scheduleMassExchange(SchedulerP& sched,
-                                 const LevelP& level,
-                                 const ModelInfo* mi)
+void JWLpp::scheduleComputeModelSources(SchedulerP& sched,
+                                       const LevelP& level,
+                                       const ModelInfo* mi)
 {
-  Task* t = scinew Task("JWLpp::massExchange", this, &JWLpp::massExchange, mi);
-  cout_doing << "JWLpp::scheduleMassExchange "<<  endl;  
+  Task* t = scinew Task("JWLpp::computeModelSources", this, 
+                        &JWLpp::computeModelSources, mi);
+  cout_doing << "JWLpp::scheduleComputeModelSources "<<  endl;  
   t->requires( Task::OldDW, mi->delT_Label);
   Ghost::GhostType  gn  = Ghost::None;
   const MaterialSubset* react_matl = matl0->thisMaterial();
@@ -142,12 +143,12 @@ void JWLpp::scheduleMassExchange(SchedulerP& sched,
 
 //______________________________________________________________________
 //
-void JWLpp::massExchange(const ProcessorGroup*, 
-                         const PatchSubset* patches,
-                         const MaterialSubset*,
-                         DataWarehouse* old_dw,
-                         DataWarehouse* new_dw,
-                         const ModelInfo* mi)
+void JWLpp::computeModelSources(const ProcessorGroup*, 
+                                const PatchSubset* patches,
+                                const MaterialSubset*,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw,
+                                const ModelInfo* mi)
 {
   delt_vartype delT;
   old_dw->get(delT, mi->delT_Label);
@@ -158,7 +159,7 @@ void JWLpp::massExchange(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);  
     
-    cout_doing << "Doing massExchange on patch "<< patch->getID()
+    cout_doing << "Doing computeModelSources on patch "<< patch->getID()
                <<"\t\t\t\t  JWLpp" << endl;
     CCVariable<double> mass_src_0, mass_src_1, mass_0;
     CCVariable<Vector> momentum_src_0, momentum_src_1;
@@ -252,12 +253,6 @@ void JWLpp::massExchange(const ProcessorGroup*,
 }
 //______________________________________________________________________
 //
-void JWLpp::scheduleMomentumAndEnergyExchange(SchedulerP&,
-				       const LevelP&,
-				       const ModelInfo*)
-{
-  // None
-}
 void JWLpp::scheduleModifyThermoTransportProperties(SchedulerP&,
                                                     const LevelP&,
                                                     const MaterialSet*)

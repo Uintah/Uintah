@@ -73,12 +73,12 @@ void TestModel::scheduleComputeStableTimestep(SchedulerP&,
 }
 
 //__________________________________      
-void TestModel::scheduleMassExchange(SchedulerP& sched,
-				     const LevelP& level,
-				     const ModelInfo* mi)
+void TestModel::scheduleComputeModelSources(SchedulerP& sched,
+				                const LevelP& level,
+				                const ModelInfo* mi)
 {
-  Task* t = scinew Task("TestModel::massExchange",
-			this, &TestModel::massExchange, mi);
+  Task* t = scinew Task("TestModel::computeModelSources",this, 
+                        &TestModel::computeModelSources, mi);
   t->modifies(mi->mass_source_CCLabel);
   t->modifies(mi->momentum_source_CCLabel);
   t->modifies(mi->energy_source_CCLabel);
@@ -105,12 +105,12 @@ void TestModel::scheduleMassExchange(SchedulerP& sched,
 }
 
 //__________________________________
-void TestModel::massExchange(const ProcessorGroup*, 
-			     const PatchSubset* patches,
-			     const MaterialSubset* matls,
-			     DataWarehouse* old_dw,
-			     DataWarehouse* new_dw,
-			     const ModelInfo* mi)
+void TestModel::computeModelSources(const ProcessorGroup*, 
+			               const PatchSubset* patches,
+			               const MaterialSubset* matls,
+			               DataWarehouse* old_dw,
+			               DataWarehouse* new_dw,
+			               const ModelInfo* mi)
 {
   delt_vartype delT;
   old_dw->get(delT, mi->delT_Label);
@@ -205,12 +205,6 @@ void TestModel::massExchange(const ProcessorGroup*,
   }
 }
 //______________________________________________________________________  
-void TestModel::scheduleMomentumAndEnergyExchange(SchedulerP&,
-						  const LevelP&,
-						  const ModelInfo*)
-{
-  // None
-}
    
 void TestModel::scheduleModifyThermoTransportProperties(SchedulerP&,
                                                         const LevelP&,

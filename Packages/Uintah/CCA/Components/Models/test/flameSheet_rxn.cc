@@ -24,7 +24,7 @@
 
 using namespace Uintah;
 using namespace std;
-static DebugStream cout_doing("flameSheet_RXN_DOING_COUT", false);
+static DebugStream cout_doing("MODELS_DOING_COUT", false);
 
 //______________________________________________________________________
 // flame sheet approach for laminar diffusion flames.
@@ -248,21 +248,15 @@ void flameSheet_rxn::scheduleComputeStableTimestep(SchedulerP&,
 {
   // None necessary...
 }
+
 //__________________________________
-void flameSheet_rxn::scheduleMassExchange(SchedulerP&,
-				  const LevelP&,
-				  const ModelInfo*)
+void flameSheet_rxn::scheduleComputeModelSources(SchedulerP& sched,
+					              const LevelP& level,
+					              const ModelInfo* mi)
 {
-  // None required
-}
-//__________________________________
-void flameSheet_rxn::scheduleMomentumAndEnergyExchange(SchedulerP& sched,
-					       const LevelP& level,
-					       const ModelInfo* mi)
-{
-  cout_doing << "FLAMESHEET::scheduleMomentumAndEnergyExchange " << endl;
-  Task* t = scinew Task("flameSheet_rxn::react",
-			this, &flameSheet_rxn::react, mi);
+  cout_doing << "FLAMESHEET::scheduleComputeModelSources " << endl;
+  Task* t = scinew Task("flameSheet_rxn::computeModelSources",this, 
+                        &flameSheet_rxn::computeModelSources, mi);
                      
   Ghost::GhostType  gn = Ghost::None;  
   Ghost::GhostType  gac = Ghost::AroundCells; 
@@ -282,12 +276,12 @@ void flameSheet_rxn::scheduleMomentumAndEnergyExchange(SchedulerP& sched,
   sched->addTask(t, level->eachPatch(), mymatls);
 }
 //______________________________________________________________________
-void flameSheet_rxn::react(const ProcessorGroup*, 
-		   const PatchSubset* patches,
-		   const MaterialSubset* matls,
-		   DataWarehouse* old_dw,
-		   DataWarehouse* new_dw,
-		   const ModelInfo* mi)
+void flameSheet_rxn::computeModelSources(const ProcessorGroup*, 
+		                           const PatchSubset* patches,
+		                           const MaterialSubset* matls,
+		                           DataWarehouse* old_dw,
+		                           DataWarehouse* new_dw,
+		                           const ModelInfo* mi)
 {
   const Level* level = getLevel(patches);
   delt_vartype delT;
@@ -295,7 +289,8 @@ void flameSheet_rxn::react(const ProcessorGroup*,
  
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    cout_doing << "Doing react on patch "<<patch->getID()<< "\t\t\t\t\t FLAMESHEET" << endl;
+    cout_doing << "Doing computeModelSources on patch "<<patch->getID()
+               << "\t\t\t\t\t FLAMESHEET" << endl;
 
     Vector dx = patch->dCell();
     double volume = dx.x()*dx.y()*dx.z();

@@ -24,9 +24,9 @@
 using namespace Uintah;
 using namespace std;
 //__________________________________
-//  setenv SCI_DEBUG "MPMICE_NORMAL_COUT:+,MPMICE_DOING_COUT:+"
-//  MPMICE_DOING_COUT:   dumps when tasks are scheduled and performed
-static DebugStream cout_doing("MPMICE_DOING_COUT", false);
+//  setenv SCI_DEBUG "MPMICE_NORMAL_COUT:+,MODELS_DOING_COUT:+"
+//  MODELS_DOING_COUT:   dumps when tasks are scheduled and performed
+static DebugStream cout_doing("MODELS_DOING_COUT", false);
 
 Simple_Burn::Simple_Burn(const ProcessorGroup* myworld, ProblemSpecP& params)
   : ModelInterface(myworld), params(params)
@@ -111,13 +111,13 @@ void Simple_Burn::scheduleComputeStableTimestep(SchedulerP&,
 
 //______________________________________________________________________
 //     
-void Simple_Burn::scheduleMassExchange(SchedulerP& sched,
-				     const LevelP& level,
-				     const ModelInfo* mi)
+void Simple_Burn::scheduleComputeModelSources(SchedulerP& sched,
+				                  const LevelP& level,
+				                  const ModelInfo* mi)
 {
-  Task* t = scinew Task("Simple_Burn::massExchange",
-			this, &Simple_Burn::massExchange, mi);
-  cout_doing << "SIMPLE_BURN::scheduleMassExchange "<<  endl;  
+  Task* t = scinew Task("Simple_Burn::computeModelSources",this, 
+                        &Simple_Burn::computeModelSources, mi);
+  cout_doing << "SIMPLE_BURN::scheduleComputeModelSources "<<  endl;  
   t->requires( Task::OldDW, mi->delT_Label);
   Ghost::GhostType  gac = Ghost::AroundCells;  
   Ghost::GhostType  gn  = Ghost::None;
@@ -165,12 +165,12 @@ void Simple_Burn::scheduleMassExchange(SchedulerP& sched,
 
 //______________________________________________________________________
 //
-void Simple_Burn::massExchange(const ProcessorGroup*, 
-			     const PatchSubset* patches,
-			     const MaterialSubset*,
-			     DataWarehouse* old_dw,
-			     DataWarehouse* new_dw,
-			     const ModelInfo* mi)
+void Simple_Burn::computeModelSources(const ProcessorGroup*, 
+			                 const PatchSubset* patches,
+			                 const MaterialSubset*,
+			                 DataWarehouse* old_dw,
+			                 DataWarehouse* new_dw,
+			                 const ModelInfo* mi)
 {
 
   delt_vartype delT;
@@ -183,7 +183,7 @@ void Simple_Burn::massExchange(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);  
     
-    cout_doing << "Doing massExchange on patch "<< patch->getID()
+    cout_doing << "Doing computeModelSources on patch "<< patch->getID()
                <<"\t\t\t\t  Simple_Burn" << endl;
     CCVariable<double> mass_src_0, mass_src_1, mass_0;
     CCVariable<Vector> momentum_src_0, momentum_src_1;
@@ -380,12 +380,6 @@ void Simple_Burn::massExchange(const ProcessorGroup*,
 }
 //______________________________________________________________________
 //
-void Simple_Burn::scheduleMomentumAndEnergyExchange(SchedulerP&,
-				       const LevelP&,
-				       const ModelInfo*)
-{
-  // None
-}
 void Simple_Burn::scheduleModifyThermoTransportProperties(SchedulerP&,
                                                         const LevelP&,
                                                         const MaterialSet*)

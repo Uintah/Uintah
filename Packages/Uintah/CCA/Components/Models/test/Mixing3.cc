@@ -231,20 +231,13 @@ void Mixing3::scheduleComputeStableTimestep(SchedulerP&,
 {
   // None necessary...
 }
-      
-void Mixing3::scheduleMassExchange(SchedulerP& sched,
-				  const LevelP& level,
-				  const ModelInfo* mi)
-{
-  // None required
-}
 
-void Mixing3::scheduleMomentumAndEnergyExchange(SchedulerP& sched,
+void Mixing3::scheduleComputeModelSources(SchedulerP& sched,
 					       const LevelP& level,
 					       const ModelInfo* mi)
 {
-  Task* t = scinew Task("Mixing3::react",
-			this, &Mixing3::react, mi);
+  Task* t = scinew Task("Mixing3::computeModelSources", this, 
+                        &Mixing3::computeModelSources, mi);
   t->modifies(mi->energy_source_CCLabel);
   t->requires(Task::OldDW, mi->density_CCLabel, Ghost::None);
   t->requires(Task::OldDW, mi->pressure_CCLabel, Ghost::None);
@@ -360,12 +353,12 @@ double Mixing3::lookup(int nsp, int idt, int itemp, int ipress, int* imf,
   return r->dtemp;
 }
 
-void Mixing3::react(const ProcessorGroup*, 
-		   const PatchSubset* patches,
-		   const MaterialSubset* matls,
-		   DataWarehouse* old_dw,
-		   DataWarehouse* new_dw,
-		   const ModelInfo* mi)
+void Mixing3::computeModelSources(const ProcessorGroup*, 
+		                    const PatchSubset* patches,
+		                    const MaterialSubset* matls,
+		                    DataWarehouse* old_dw,
+		                    DataWarehouse* new_dw,
+		                    const ModelInfo* mi)
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
