@@ -7,7 +7,7 @@
 <Uintah_specification>
 
    <Meta>
-	<title>Arches Methane Plume Multi Patch Run</title>
+	<title>Arches Methane Plume Multi Patch Run with Radiation</title>
    </Meta>
 
    <Time>
@@ -15,12 +15,16 @@
 	<initTime>0.0</initTime>
 	<delt_min>0.00001</delt_min>
 	<delt_max>0.01</delt_max>
-	<timestep_multiplier>0.5</timestep_multiplier>
+	<timestep_multiplier>0.2</timestep_multiplier>
    </Time>
 
    <DataArchiver>
-        <filebase>meplumeexplicit.uda</filebase>
-	<outputInterval>0.05</outputInterval>
+        <filebase>methaneplumeexplicit.uda</filebase>
+	<outputInterval>0.1</outputInterval>
+	<save label="uvwout"/>
+	<save label="totalflowIN"/>
+	<save label="totalflowOUT"/>
+	<save label="denAccum"/>
 	<save label="pressurePS"/>
         <save label="newCCUVelocity"/>	
         <save label="newCCVVelocity"/>	
@@ -30,7 +34,11 @@
 	<save label="densityCP"/>
 	<save label="viscosityCTS"/>
 	<save label="tempIN"/>
-	<save label="co2IN"/>
+        <save label="co2IN"/>
+        <save label="enthalpyRXN"/>
+        <save label="enthalpySP"/>
+        <save label="absorpIN"/>
+        <save label="sootFVIN"/>
 	<save label="cellType"/>
 	<checkpoint interval="0.5" cycle="2"/>
    </DataArchiver>
@@ -46,9 +54,9 @@
 	    <Box label="1">
 	        <lower>[0,0,0]</lower>
 	        <upper>[3,3,3]</upper>
-	        <resolution>[80,80,80]</resolution>
+	        <resolution>[10,10,10]</resolution>
                 <extraCells>[1,1,1]</extraCells>
-		<patches>[2,2,2]</patches>
+		<patches>[1,1,1]</patches>
 	    </Box>
 	</Level>
     </Grid>
@@ -58,25 +66,27 @@
 	<!-- ARCHES specification -->
 
 	<ARCHES>
-	    <grow_dt>0.01</grow_dt>
+	    <grow_dt>0.05</grow_dt>
 	    <variable_dt>true</variable_dt>
    	    <nonlinear_solver>explicit</nonlinear_solver>
     	    <turbulence_model>smagorinsky</turbulence_model>
             <reacting_flow>true</reacting_flow>
-            <solve_enthalpy>false</solve_enthalpy>	
+            <solve_enthalpy>true</solve_enthalpy>	
+	    <solve_reactingscalar>false</solve_reactingscalar>
 	    <Turbulence>
 		<cf>0.001</cf>
 		<fac_mesh>1.0</fac_mesh>
 		<filterl>0.000001</filterl>
+	        <var_const>0.1</var_const>
 	    </Turbulence>
 
 	    <Properties>
 		<denUnderrelax>0.9</denUnderrelax>
 	        <ref_point>[3,3,3]</ref_point>
-	        <radiation>false</radiation>
+	        <radiation>true</radiation>
 	        <mixing_model>pdfMixingModel</mixing_model>
 	        <PDFMixingModel>
-		  <adiabatic>true</adiabatic>
+		  <adiabatic>false</adiabatic>
                   <mixstatvars>0</mixstatvars>
                   <rxnvars>0</rxnvars>
 		  <reaction_model>EquilibriumReactionModel</reaction_model>
@@ -105,12 +115,22 @@
                     </Species>
 		  </Stream>
 		  <MixRxnTableInfo>
-                    <MixtureFraction>
+                    <Enthalpy>
                        <NumDivs>20</NumDivs>
                        <MaxValue>1.0</MaxValue>
+                       <MinValue>-1.0</MinValue>
+                       <MidValue>0.0</MidValue>
+     		       <NumDivsBelow>10</NumDivsBelow>
+     		       <NumDivsAbove>10</NumDivsAbove>
+                    </Enthalpy>
+                    <MixtureFraction>
+                       <NumDivs>40</NumDivs>
+                       <MaxValue>1.0</MaxValue>
                        <MinValue>0.0</MinValue>
-                       <MidValue>0.5</MidValue>
-                    </MixtureFraction>
+                       <MidValue>0.1</MidValue>
+     		       <NumDivsBelow>20</NumDivsBelow>
+     		       <NumDivsAbove>20</NumDivsAbove>
+                     </MixtureFraction>
                   </MixRxnTableInfo>
 		  <Integrator>
 		     <favre>true</favre>
@@ -121,7 +141,7 @@
 
 	    <BoundaryConditions>
 		<FlowInlet>
-		    <Flow_rate>0.060475</Flow_rate>
+		    <Flow_rate>0.04527</Flow_rate>
 		    <MixtureFraction>
 			<Mixfrac>1.0</Mixfrac>
 	            </MixtureFraction>
@@ -138,8 +158,8 @@
 		<WallBC>
 		    <geom_object>
 		      <box label="botWall">
-			<min>[-5,-1,-1]</min>
-			<max>[0,6,6]</max>
+			<min>[-1,-1,-1]</min>
+			<max>[0,4,4]</max>
 		      </box>
 		    </geom_object>
 		</WallBC>
@@ -153,19 +173,19 @@
 		    <geom_object>
 		      <box label="posY_xzWall">
 			<min>[0,3,-1]</min>
-			<max>[3,6,6]</max>
+			<max>[3,4,4]</max>
 		      </box>
 		      <box label="zeroY_xzWall">
 			<min>[0,-1,-1]</min>
-			<max>[3,0,6]</max>
+			<max>[3,0,4]</max>
 		      </box>
 		      <box label="posZ_xyWall">
 			<min>[0,-1,3]</min>
-			<max>[3,6,6]</max>
+			<max>[3,4,4]</max>
 		      </box>
                       <box label="zeroZ_xyWall">	
 			<min>[0,-1,-1]</min>
-			<max>[3,6,0]</max>
+			<max>[3,4,0]</max>
 		      </box>
 		    </geom_object>
 		</PressureBC>
@@ -179,7 +199,7 @@
 		    <geom_object>
 		      <box label="topWall">
 			<min>[3,-1,-1]</min>
-			<max>[5,6,6]</max>
+			<max>[4,4,4]</max>
 		      </box>
 		    </geom_object>
 		</outletBC>
@@ -195,7 +215,13 @@
 	    <ExplicitSolver>
 		<max_iter>0</max_iter>	
 		<res_tol>2.0</res_tol>
-		<probe_data>false</probe_data>
+		<probe_data>true</probe_data>
+	        <ProbePoints>
+	           <probe_point>[5,5,5]</probe_point>
+		</ProbePoints>
+                <ProbePoints>
+	           <probe_point>[7,5,5]</probe_point>
+		</ProbePoints>
 	        <cal_pressure>true</cal_pressure>
 		<PressureSolver>
 		    <ref_point>[3,3,3]</ref_point>
@@ -203,6 +229,7 @@
 		    <linear_solver>petsc</linear_solver>
 		    <LinearSolver>
 			<pctype>jacobi</pctype>
+			<overlap>1</overlap>
 			<max_iter>75</max_iter>
 			<res_tol>0.0003</res_tol>
 		        <underrelax>0.97</underrelax>
@@ -230,7 +257,17 @@
 			<underrelax>0.9</underrelax>
 		    </LinearSolver>
 		</MixtureFractionSolver>
-		<cal_enthalpy>false</cal_enthalpy>
+		<cal_enthalpy>true</cal_enthalpy>
+		<EnthalpySolver>
+                    <radiation>true</radiation>
+		    <finite_difference>second</finite_difference>
+		    <linear_solver>linegs</linear_solver>
+		    <LinearSolver>
+			<max_iter>6</max_iter>
+			<res_tol>0.0003</res_tol>
+			<underrelax>0.9</underrelax>
+		    </LinearSolver>
+		</EnthalpySolver>
 	    </ExplicitSolver>
 
         </ARCHES>
