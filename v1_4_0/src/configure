@@ -3181,7 +3181,7 @@ echo "configure:3137: checking for $MAKE version 3.78.1" >&5
     fi
   
 
-for ac_prog in mawk gawk nawk awk
+for ac_prog in gawk mawk nawk awk
 do
 # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -3481,7 +3481,7 @@ else
 #line 3482 "configure"
 #include "confdefs.h"
 #ifdef __cplusplus
-extern "C" void exit(int);
+extern "C" void exit(int) throw ();
 #endif
 #include <stdio.h>
 main()
@@ -5433,7 +5433,7 @@ echo "configure:5423: checking for main in -lGLU" >&5
     }
 EOF
    rm -f conftest.out a.out 
-    ac_try="$ac_link $LIBRARY -lGLU -lGL >/dev/null 2>conftest.out"
+    ac_try="$ac_link $LIBRARY -lGLU -lGL -lpthread >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
     echo -----$i  GLU  >> allconftest.out
     cat conftest.out >> allconftest.out
@@ -9855,7 +9855,7 @@ echo "configure:9844: checking for main in -lpetsc" >&5
 EOF
    rm -f conftest.out a.out 
     ac_try="$ac_link $LIBRARY -lpetsc -lpetscsles -lpetscmat -lpetscvec \
-    -lpetscdm -lpetsccontrib $LAPACK_LIBRARY -llapack \
+    -lpetscdm -lpetsccontrib $LAPACK_LIBRARY $LAPACK \
     $BLAS_LIBRARY -lblas $X_LIBRARY -lX11 \
     -L$i/lib/$PETSC_SUB/$PETSC_ARCH -lmpiuni $FLIBS -lm >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
@@ -9940,7 +9940,7 @@ echo "configure:9929: checking for main in -lpetsc" >&5
 EOF
    rm -f conftest.out a.out 
     ac_try="$ac_link $LIBRARY -lpetsc -lpetscsles -lpetscmat -lpetscvec \
-      -lpetscdm -lpetsccontrib $LAPACK_LIBRARY -llapack \
+      -lpetscdm -lpetsccontrib $LAPACK_LIBRARY $LAPACK \
       $BLAS_LIBRARY -lblas $X_LIBRARY -lX11 -lmpiuni $FLIBS -lm >/dev/null 2>conftest.out"
     (eval $ac_try) 2>&5
     echo -----$i/lib  petsc  >> allconftest.out
@@ -10042,7 +10042,7 @@ EOF
       UNIPETSC_SUB=libO
     fi
     UNIPETSC_EXTRA_LIBS="-lpetscsles -lpetscmat -lpetscvec \
-      -lpetscdm -lpetsccontrib $LAPACK_LIBRARY -llapack \
+      -lpetscdm -lpetsccontrib $LAPACK_LIBRARY $LAPACK \
       $BLAS_LIBRARY -lblas $X_LIBRARY -lX11 -lmpiuni $FLIBS -lm"
     UNIPETSC_ARCH=`$i/bin/petscarch`
     if test "$is_64bit" != "yes" -a "$UNIPETSC_ARCH" = "IRIX64"; then
@@ -10050,6 +10050,7 @@ EOF
     fi
     HAVE_LIBUNIPETSC=yes
     LIBUNIPETSC=$LIBPETSC
+    INCMPIUNI_H=$i/src/sys/src/mpiuni/
     INCUNIPETSC_H=$INCPETSC_H
     UNI_PETSC_DEF="#define UNI_PETSC 1"
     break
@@ -10071,20 +10072,21 @@ fi
 
 
 
+
 ##  --  search for optional headers  ------------------------------------
 ac_safe=`echo "sstream" | sed 'y%./+-%__p_%'`
 echo $ac_n "checking for sstream""... $ac_c" 1>&6
-echo "configure:10078: checking for sstream" >&5
+echo "configure:10080: checking for sstream" >&5
 if eval "test \"`echo '$''{'ac_cv_header_$ac_safe'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 10083 "configure"
+#line 10085 "configure"
 #include "confdefs.h"
 #include <sstream>
 EOF
 ac_try="$ac_cpp conftest.$ac_ext >/dev/null 2>conftest.out"
-{ (eval echo configure:10088: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
+{ (eval echo configure:10090: \"$ac_try\") 1>&5; (eval $ac_try) 2>&5; }
 ac_err=`grep -v '^ *+' conftest.out | grep -v "^conftest.${ac_ext}\$"`
 if test -z "$ac_err"; then
   rm -rf conftest*
@@ -10444,6 +10446,7 @@ s%@UNIPETSC_SUB@%$UNIPETSC_SUB%g
 s%@UNIPETSC_ARCH@%$UNIPETSC_ARCH%g
 s%@LIBUNIPETSC@%$LIBUNIPETSC%g
 s%@INCUNIPETSC_H@%$INCUNIPETSC_H%g
+s%@INCMPIUNI_H@%$INCMPIUNI_H%g
 s%@SSTREAM_COMPAT@%$SSTREAM_COMPAT%g
 s%@abs_conftop_dir@%$abs_conftop_dir%g
 s%@abs_srcdir@%$abs_srcdir%g
