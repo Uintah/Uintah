@@ -362,7 +362,9 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
 
   d_ice->scheduleComputeLagrangianSpecificVolume( sched, patches, ice_matls_sub,
                                                                   mpm_matls_sub,
+                                                                  press_matl,
                                                                   all_matls);
+
   scheduleInterpolateCCToNC(                      sched, patches, mpm_matls);
   d_mpm->scheduleExMomIntegrated(                 sched, patches, mpm_matls);
   d_mpm->scheduleSetGridBoundaryConditions(       sched, patches, mpm_matls);
