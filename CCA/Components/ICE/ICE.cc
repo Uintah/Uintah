@@ -307,7 +307,7 @@ void ICE::scheduleTimeAdvance(double /*t*/, double /*dt*/,const LevelP& level,
   const MaterialSet* all_matls = d_sharedState->allMaterials();  
   MaterialSubset* press_matl    = scinew MaterialSubset();
   press_matl->add(0);
-  press_matl ->addReference();
+  press_matl->addReference();
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
   const MaterialSubset* mpm_matls_sub = mpm_matls->getUnion();
 
@@ -801,7 +801,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
     StaticArray<CCVariable<double>   > vol_frac_CC(numMatls);
     StaticArray<CCVariable<Vector>   > vel_CC(numMatls);
     CCVariable<double>    press_CC;  
-    StaticArray<double>        cv(numMatls);
+    StaticArray<double>   cv(numMatls);
     new_dw->allocate(press_CC,lb->press_CCLabel, 0,patch);
     press_CC.initialize(0.0);
 
@@ -1634,7 +1634,6 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
       #ifdef setBC_FC_John
-      cout << "Doing setBC_FC_John . . ." << endl;
       for(CellIterator iter = patch->getExtraCellIterator();!iter.done();
 	  iter++){  
 	IntVector cell = *iter; 
@@ -2589,6 +2588,10 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       new_dw->allocate(int_eng_L_ME[m],lb->int_eng_L_ME_CCLabel,indx, patch);
       new_dw->allocate( vel_CC[m],     lb->vel_CCLabel,         indx, patch);
       new_dw->allocate( Temp_CC[m],    lb->temp_CCLabel,        indx, patch);
+      mom_L_ME[m].initialize(Vector(0.0, 0.0, 0.0));
+      int_eng_L_ME[m].initialize(0.0);
+      vel_CC[m].initialize(Vector(0.0, 0.0, 0.0));
+      Temp_CC[m].initialize(0.0);
       cv[m] = matl->getSpecificHeat();
     }  
 
@@ -2813,7 +2816,11 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       new_dw->allocate(sp_vol_CC, lb->sp_vol_CCLabel,         indx,patch);
       new_dw->allocate(temp,      lb->temp_CCLabel,           indx,patch);
       new_dw->allocate(vel_CC,    lb->vel_CCLabel,            indx,patch);
-
+      rho_CC.initialize(0.0);
+      mass_CC.initialize(0.0);
+      sp_vol_CC.initialize(0.0);
+      temp.initialize(0.0);
+      vel_CC.initialize(Vector(0.0,0.0,0.0));
       double cv = ice_matl->getSpecificHeat();
       //__________________________________
       //   Advection preprocessing
