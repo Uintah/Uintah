@@ -241,6 +241,9 @@ private:
   Mutex				edge_neighbor_lock_;
   Mutex				normal_lock_;
   unsigned int			synchronized_;
+
+  // returns a QuadSurfMesh
+  static Persistent *maker() { return new QuadSurfMesh(); }
 };
 
 typedef LockingHandle<QuadSurfMesh> QuadSurfMeshHandle;
