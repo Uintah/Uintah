@@ -773,14 +773,11 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
   t->requires(Task::NewDW, lb->int_eng_L_CCLabel,Ghost::None);
   t->requires(Task::NewDW, lb->vol_frac_CCLabel, Ghost::None);
   t->requires(Task::NewDW, lb->sp_vol_CCLabel,   Ghost::None);
- 
+  t->requires(Task::OldDW, lb->temp_CCLabel,     Ghost::None);
+    
   t->computes(lb->mom_L_ME_CCLabel);
   t->computes(lb->int_eng_L_ME_CCLabel);
-  
-  if (d_RateForm) {   // RATE FORM
-   t->requires(Task::OldDW, lb->temp_CCLabel,     Ghost::None);
-   t->computes(lb->Tdot_CCLabel);
-  }
+  t->computes(lb->Tdot_CCLabel);
   
   sched->addTask(t, patches, matls);
 }
@@ -2780,8 +2777,11 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       new_dw->get(vol_frac_CC[m], lb->vol_frac_CCLabel,indx,patch, 
                 Ghost::None,0);   
       new_dw->get(sp_vol_CC[m],   lb->sp_vol_CCLabel,   indx,patch,
-                Ghost::None,0);    
-
+                Ghost::None,0);  
+      old_dw->get(old_temp[m],    lb->temp_CCLabel,     indx,patch, 
+                Ghost::None,0);
+  
+      new_dw->allocate( Tdot[m],       lb->Tdot_CCLabel,        indx,patch);
       new_dw->allocate( mom_L_ME[m],   lb->mom_L_ME_CCLabel,    indx, patch);
       new_dw->allocate(int_eng_L_ME[m],lb->int_eng_L_ME_CCLabel,indx, patch);
       new_dw->allocate( vel_CC[m],     lb->vel_CCLabel,         indx, patch);
@@ -2795,15 +2795,6 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       cv[m] = matl->getSpecificHeat();
     } 
         
-    if(d_RateForm) {    //  R A T E   F O R M
-      for(int m = 0; m < numMatls; m++)  {
-        ICEMaterial* matl = d_sharedState->getICEMaterial( m );
-        int indx = matl->getDWIndex(); 
-        old_dw->get(old_temp[m],   lb->temp_CCLabel,indx,patch, Ghost::None,0);
-        new_dw->allocate( Tdot[m], lb->Tdot_CCLabel,indx,patch);
-      }
-    }
-
     //__________________________________
     // Convert vars. flux -> primitive 
     for (int m = 0; m < numMatls; m++) {
@@ -2925,26 +2916,16 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
 	IntVector c = *iter;
         int_eng_L_ME[m][c] = Temp_CC[m][c] * cv[m] * mass_L[m][c];
         mom_L_ME[m][c]     = vel_CC[m][c] * mass_L[m][c];
+        Tdot[m][c]         = (Temp_CC[m][c] - old_temp[m][c])/delT;
       }  
     }
     
-    if (d_RateForm) {
-      for (int m = 0; m < numMatls; m++) {
-	for(CellIterator iter = patch->getCellIterator();!iter.done(); iter++){
-	  IntVector c = *iter;
-          Tdot[m][c]         = (Temp_CC[m][c] - old_temp[m][c])/delT;
-        }  
-      }
-    } 
-
     for(int m = 0; m < numMatls; m++) {
       ICEMaterial* matl = d_sharedState->getICEMaterial( m );
       int indx = matl->getDWIndex();
       new_dw->put(mom_L_ME[m],    lb->mom_L_ME_CCLabel,    indx, patch);
       new_dw->put(int_eng_L_ME[m],lb->int_eng_L_ME_CCLabel,indx, patch);
-      if(d_RateForm) {
-        new_dw->put(Tdot[m],      lb->Tdot_CCLabel,        indx, patch);
-      }
+      new_dw->put(Tdot[m],        lb->Tdot_CCLabel,        indx, patch);
     }
   }  // patch loop
 }
