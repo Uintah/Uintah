@@ -44,7 +44,7 @@ c     Set all flags except one to false (** WARNING ** need to change)
 c*********************************************************************
       L2UP = .FALSE.
       LSMPT = .FALSE.
-      LCEND = .FALSE.
+      LCEND = .TRUE.
 
 c*********************************************************************
 c     Go thru all the cells
