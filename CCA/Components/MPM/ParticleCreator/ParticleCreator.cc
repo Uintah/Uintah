@@ -9,6 +9,7 @@
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/GeomPiece/GeometryPiece.h>
 #include <Packages/Uintah/Core/Grid/GeomPiece/FileGeometryPiece.h>
+#include <Packages/Uintah/Core/Grid/GeomPiece/SmoothCylGeomPiece.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/ForceBC.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/PressureBC.h>
@@ -70,42 +71,52 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     }
 
     Vector dxpp = patch->dCell()/(*obj)->getNumParticlesPerCell();    
-    // Special case exception for FileGeometryPieces
-    FileGeometryPiece* fgp = dynamic_cast<FileGeometryPiece*>(piece);
-    vector<double>* volumes = 0;
-    if (fgp)
-      volumes = fgp->getVolume();
+
+    // If the object is a SmoothCylGeomPiece then use the particle
+    // creators in that class to do the creations, otherwise do the
+    // standard thing
+    SmoothCylGeomPiece *scgp = dynamic_cast<SmoothCylGeomPiece*>(piece);
+    if (scgp) {
+      int numP = scgp->createParticles(patch, position, pvolume,
+                                       psize, start);
+    } else {
+      // Special case exception for FileGeometryPieces
+      FileGeometryPiece* fgp = dynamic_cast<FileGeometryPiece*>(piece);
+      vector<double>* volumes = 0;
+      if (fgp)
+	volumes = fgp->getVolume();
     
-    int i = 0;
-    vector<Point>::const_iterator itr;
-    geompoints::key_type key(patch,*obj);
-    for (itr=d_object_points[key].begin();itr!=d_object_points[key].end(); 
-	 ++itr) {
+      int i = 0;
+      vector<Point>::const_iterator itr;
+      geompoints::key_type key(patch,*obj);
+      for (itr=d_object_points[key].begin();itr!=d_object_points[key].end(); 
+	   ++itr) {
       
-      IntVector cell_idx;
-      patch->findCell(*itr,cell_idx);
+	IntVector cell_idx;
+	patch->findCell(*itr,cell_idx);
       
-      particleIndex pidx = start+count;      
-      initializeParticle(patch,obj,matl,*itr,cell_idx,pidx,
-			 cellNAPID);
+	particleIndex pidx = start+count;      
+	initializeParticle(patch,obj,matl,*itr,cell_idx,pidx,
+			   cellNAPID);
       
-      if (volumes)
-	pvolume[pidx] = (*volumes)[i];
+	if (volumes)
+	  pvolume[pidx] = (*volumes)[i];
       
-      // If the particle is on the surface and if there is
-      // a physical BC attached to it then mark with the 
-      // physical BC pointer
-      if (d_useLoadCurves) {
-	if (checkForSurface(piece,*itr,dxpp)) {
-	  pLoadCurveID[pidx] = getLoadCurveID(*itr, dxpp);
-	} else {
-	  pLoadCurveID[pidx] = 0;
+	// If the particle is on the surface and if there is
+	// a physical BC attached to it then mark with the 
+	// physical BC pointer
+	if (d_useLoadCurves) {
+	  if (checkForSurface(piece,*itr,dxpp)) {
+	    pLoadCurveID[pidx] = getLoadCurveID(*itr, dxpp);
+	  } else {
+	    pLoadCurveID[pidx] = 0;
+	  }
 	}
+	count++;
+	i++;
       }
-      count++;
-      i++;
+      start += count;
     }
-    start += count;
   }
   return subset;
 }
@@ -146,10 +157,11 @@ ParticleCreator::printPhysicalBCs()
   }
 }
 
-void ParticleCreator::applyForceBC(const Vector& dxpp, 
-                                   const Point& pp,
-                                   const double& pMass, 
-				   Vector& pExtForce)
+void 
+ParticleCreator::applyForceBC(const Vector& dxpp, 
+			      const Point& pp,
+			      const double& pMass, 
+			      Vector& pExtForce)
 {
   for (int i = 0; i<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); i++){
     string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[i]->getType();
@@ -157,7 +169,7 @@ void ParticleCreator::applyForceBC(const Vector& dxpp,
     //cout << " BC Type = " << bcs_type << endl;
     if (bcs_type == "Force") {
       ForceBC* bc = dynamic_cast<ForceBC*>
-			(MPMPhysicalBCFactory::mpmPhysicalBCs[i]);
+	(MPMPhysicalBCFactory::mpmPhysicalBCs[i]);
 #ifdef FRACTURE
       const Box bcBox(bc->getLowerRange(), bc->getUpperRange());
 #else
@@ -472,7 +484,7 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
 }
 
 int ParticleCreator::checkForSurface(const GeometryPiece* piece, const Point p,
-		                     const Vector dxpp)
+				     const Vector dxpp)
 {
 
   //  Check the candidate points which surround the point just passed
