@@ -201,7 +201,7 @@ void GlyphGroup::preprocess(double maxradius, int& pp_offset,
 void GlyphGroup::compute_bounds(BBox& b, double offset) {
   for(int i =0; i < num_levels; i++)
     grids[i]->compute_bounds(b, offset);
-  cerr << "MY BOUNDING BOX IS: " << b.min() <<" -- "<< b.max() <<"\n";
+//  cerr << "MY BOUNDING BOX IS: " << b.min() <<" -- "<< b.max() <<"\n";
 }
 
 void GlyphGroup::print(ostream& out) {

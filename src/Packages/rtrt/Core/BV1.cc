@@ -55,6 +55,7 @@ BV1Tree::~BV1Tree()
 BV1::BV1(Object* obj)
     : Object(0), obj(obj)
 {
+  if (obj == 0) ASSERTFAIL("Trying to create a BV1 with no objects");
 }
 
 BV1::~BV1()

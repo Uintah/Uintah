@@ -27,10 +27,13 @@ SCIRun::PersistentTypeID Grid::type_id("Grid", "Object", grid_maker);
 Grid::Grid(Object* obj, int nsides)
     : Object(0), obj(obj), nsides(nsides)
 {
-    grid=0;
-    counts=0;
+  if (obj == 0) 
+    ASSERTFAIL("Trying to preprocess a Grid with no objects");
 
-    set_matl(new LambertianMaterial(Color(1,0,0)));
+  grid=0;
+  counts=0;
+  
+  set_matl(new LambertianMaterial(Color(1,0,0)));
 
 }
 
