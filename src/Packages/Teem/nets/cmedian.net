@@ -2,9 +2,6 @@
 
 ::netedit dontschedule
 
-global notes
-set notes ""
-
 set m0 [addModuleAtPosition "Teem" "Filters" "NrrdCmedian" 363 347]
 set m1 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 363 283]
 set m2 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 363 411]
@@ -36,9 +33,9 @@ addConnection $m2 0 $m11 0
 
 set $m0-notes {}
 set $m0-show_status {1}
-set $m0-radius {2}
-set $m0-weight {1.0}
-set $m0-bins {15}
+set $m0-radius {10}
+set $m0-weight {1}
+set $m0-bins {256}
 set $m0-pad {1}
 set $m1-notes {}
 set $m1-show_status {1}
@@ -60,8 +57,8 @@ set $m3-gamma {0.00}
 set $m4-notes {}
 set $m4-show_status {1}
 set $m4-isFixed {0}
-set $m4-min {1.2625943789297801e-05}
-set $m4-max {0.5}
+set $m4-min {-0.079129782741679533}
+set $m4-max {0.57209142321440154}
 set $m4-makeSymmetric {0}
 set $m5-notes {}
 set $m5-show_status {1}
@@ -183,7 +180,7 @@ set $m7-data-at {Nodes}
 set $m7-update_type {on release}
 set $m8-notes {}
 set $m8-show_status {1}
-set $m8-function {result = (x-.5)*(x-.5) + (y-.5)*(y-0.5);}
+set $m8-function {result = (x-.5)*(x-.5) + (y-.5)*(y-0.5) + sin(x*130)*sin(y*130)/12;}
 set $m8-outputdatatype {double}
 set $m9-notes {}
 set $m9-show_status {1}
@@ -264,6 +261,5 @@ set $m11-interactive_mode {Interactive}
 set $m11-node-resolution {6}
 set $m11-edge-resolution {6}
 set $m11-data-resolution {6}
-$m0 initialize_ui
 
 ::netedit scheduleok
