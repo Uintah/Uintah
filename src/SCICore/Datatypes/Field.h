@@ -103,7 +103,7 @@ public:
   // SInterpolate *inter = some_field.query_interface("sinterpolate");
   //
   // Returns NULL if the given interface is not available for the field.
-  template <class T> T* query_interface();
+  template <class T> T* query_interface(T *);
   
   /////////
   // The current status of the field

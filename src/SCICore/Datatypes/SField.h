@@ -17,7 +17,7 @@
 #include <SCICore/Containers/LockingHandle.h>
 #include <SCICore/Datatypes/Field.h>
 #include <SCICore/Datatypes/FieldInterface.h>
-#include <SCICore/Datatypes/FlatSAttrib.h>
+#include <SCICore/Datatypes/FlatAttrib.h>
 
 namespace SCICore{
 namespace Datatypes{

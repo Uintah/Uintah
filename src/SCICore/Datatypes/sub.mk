@@ -31,7 +31,7 @@ SRCS += $(GENSRCS) $(SRCDIR)/TriSurface.cc $(SRCDIR)/BasicSurfaces.cc \
 	$(SRCDIR)/cMatrix.cc $(SRCDIR)/cSMatrix.cc $(SRCDIR)/cVector.cc \
 	$(SRCDIR)/SurfTree.cc $(SRCDIR)/ScalarFieldRGCC.cc \
 	$(SRCDIR)/VectorFieldRGCC.cc $(SRCDIR)/templates.cc \
-	$(SRCDIR)/Geom.cc $(SRCDIR)/Attrib.cc $(SRCDIR)/SAttrib.cc \
+	$(SRCDIR)/Geom.cc $(SRCDIR)/Attrib.cc \
 	$(SRCDIR)/Field.cc $(SRCDIR)/SField.cc \
 	$(SRCDIR)/GenSField.cc \
 	$(SRCDIR)/FieldWrapper.cc $(SRCDIR)/Domain.cc \
@@ -98,6 +98,9 @@ clean::
 
 #
 # $Log$
+# Revision 1.3.2.3  2000/08/14 21:29:45  michaelc
+# Attributes as general acceleration class
+#
 # Revision 1.3.2.2  2000/08/03 16:52:52  kuehne
 # Initial commit
 #

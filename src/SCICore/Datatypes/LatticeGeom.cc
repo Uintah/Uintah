@@ -97,6 +97,7 @@ bool LatticeGeom::locate(const Point& p, int& ix, int& iy, int& iz){
   ix=(int)x;
   iy=(int)y;
   iz=(int)z;
+  return true;
 }
 
 void LatticeGeom::resize(int x, int y, int z){

@@ -105,10 +105,14 @@ int LatticeGeom::slinterpolate(A* att, elem_t elem_type, const Point& p, double&
     double fx =x-ix;
     double fy =y-iy;
     double fz =z-iz;
-    double x00=Interpolate(att->grid(ix, iy, iz), att->grid(ix1, iy, iz), fx);
-    double x01=Interpolate(att->grid(ix, iy, iz1), att->grid(ix1, iy, iz1), fx);
-    double x10=Interpolate(att->grid(ix, iy1, iz), att->grid(ix1, iy1, iz), fx);
-    double x11=Interpolate(att->grid(ix, iy1, iz1), att->grid(ix1, iy1, iz1), fx);
+    double x00=Interpolate(att->get3(ix, iy, iz),
+			   att->get3(ix1, iy, iz), fx);
+    double x01=Interpolate(att->get3(ix, iy, iz1),
+			   att->get3(ix1, iy, iz1), fx);
+    double x10=Interpolate(att->get3(ix, iy1, iz),
+			   att->get3(ix1, iy1, iz), fx);
+    double x11=Interpolate(att->get3(ix, iy1, iz1),
+			   att->get3(ix1, iy1, iz1), fx);
     double y0 =Interpolate(x00, x10, fy);
     double y1 =Interpolate(x01, x11, fy);
     outval=Interpolate(y0, y1, fz);
