@@ -55,6 +55,7 @@ template class TetVol<short>;
 template class TetVol<unsigned short>;
 template class TetVol<char>;
 template class TetVol<unsigned char>;
+template class TetVol<bool>;
 template class GenericField<TetVolMesh, vector<Tensor> >;
 template class GenericField<TetVolMesh, vector<Vector> >;
 template class GenericField<TetVolMesh, vector<double> >;
@@ -65,6 +66,7 @@ template class GenericField<TetVolMesh, vector<short> >;
 template class GenericField<TetVolMesh, vector<unsigned short> >;
 template class GenericField<TetVolMesh, vector<char> >;
 template class GenericField<TetVolMesh, vector<unsigned char> >;
+template class GenericField<TetVolMesh, vector<bool> >;
 
 
 #include <Core/Datatypes/LatticeVol.h>
@@ -78,6 +80,7 @@ template class LatticeVol<short>;
 template class LatticeVol<unsigned short>;
 template class LatticeVol<char>;
 template class LatticeVol<unsigned char>;
+template class LatticeVol<bool>;
 template class GenericField<LatVolMesh, FData3d<Tensor> >;
 template class GenericField<LatVolMesh, FData3d<Vector> >;
 template class GenericField<LatVolMesh, FData3d<double> >;
@@ -88,6 +91,7 @@ template class GenericField<LatVolMesh, FData3d<short> >;
 template class GenericField<LatVolMesh, FData3d<unsigned short> >;
 template class GenericField<LatVolMesh, FData3d<char> >;
 template class GenericField<LatVolMesh, FData3d<unsigned char> >;
+template class GenericField<LatVolMesh, FData3d<bool> >;
 
 #include <Core/Datatypes/TriSurf.h>
 template class TriSurf<Tensor>;
@@ -100,6 +104,7 @@ template class TriSurf<short>;
 template class TriSurf<unsigned short>;
 template class TriSurf<char>;
 template class TriSurf<unsigned char>;
+template class TriSurf<bool>;
 template class GenericField<TriSurfMesh, vector<Tensor> >;
 template class GenericField<TriSurfMesh, vector<Vector> >;
 template class GenericField<TriSurfMesh, vector<double> >;
@@ -110,6 +115,7 @@ template class GenericField<TriSurfMesh, vector<short> >;
 template class GenericField<TriSurfMesh, vector<unsigned short> >;
 template class GenericField<TriSurfMesh, vector<char> >;
 template class GenericField<TriSurfMesh, vector<unsigned char> >;
+template class GenericField<TriSurfMesh, vector<bool> >;
 
 #include <Core/Datatypes/ContourField.h>
 template class ContourField<double>;
