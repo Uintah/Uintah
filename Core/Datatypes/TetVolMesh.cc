@@ -850,21 +850,22 @@ TetVolMesh::get_center(Point &p, Node::index_type idx) const
 void
 TetVolMesh::get_center(Point &p, Edge::index_type idx) const
 {
-  const double s = 1./2.;
+  const double s = 1.0/2.0;
   Node::array_type arr(2);
   get_nodes(arr, idx);
   Point p1;
   get_point(p, arr[0]);
   get_point(p1, arr[1]);
 
-  p = ((Vector(p) + Vector(p1)) * s).asPoint();
+  p.asVector() += p1.asVector();
+  p.asVector() *= s;
 }
 
 
 void
 TetVolMesh::get_center(Point &p, Face::index_type idx) const
 {
-  const double s = 1./3.;
+  const double s = 1.0/3.0;
   Node::array_type arr(3);
   get_nodes(arr, idx);
   Point p1, p2;
@@ -872,7 +873,9 @@ TetVolMesh::get_center(Point &p, Face::index_type idx) const
   get_point(p1, arr[1]);
   get_point(p2, arr[2]);
 
-  p = ((Vector(p) + Vector(p1) + Vector(p2)) * s).asPoint();
+  p.asVector() += p1.asVector();
+  p.asVector() += p2.asVector();
+  p.asVector() *= s;
 }
 
 

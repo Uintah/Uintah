@@ -282,11 +282,12 @@ ImageMesh::get_center(Point &result, Edge::index_type idx) const
 {
   Node::array_type arr;
   get_nodes(arr, idx);
-  Point p0, p1;
-  get_center(p0, arr[0]);
+  Point p1;
+  get_center(result, arr[0]);
   get_center(p1, arr[1]);
-
-  result = ((p0.asVector() + p1.asVector()) * 0.5).asPoint();
+  
+  result.asVector() += p1.asVector();
+  result.asVector() *= 0.5;
 }
 
 

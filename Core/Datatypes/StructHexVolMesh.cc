@@ -122,21 +122,54 @@ StructHexVolMesh::get_center(Point &result, const Node::index_type &idx) const
 
 
 void
+StructHexVolMesh::get_center(Point &result, const Edge::index_type &idx) const
+{
+  Node::array_type arr;
+  get_nodes(arr, idx);
+  Point p1;
+  get_center(result, arr[0]);
+  get_center(p1, arr[1]);
+  
+  result.asVector() += p1.asVector();
+  result.asVector() *= 0.5;
+}
+
+
+void
+StructHexVolMesh::get_center(Point &result, const Face::index_type &idx) const
+{
+  Node::array_type nodes;
+  get_nodes(nodes, idx);
+  ASSERT(nodes.size() == 4);
+  Node::array_type::iterator nai = nodes.begin();
+  get_point(result, *nai);
+  ++nai;
+  while (nai != nodes.end())
+  {
+    Point pp;
+    result.asVector() += pp.asVector();
+    ++nai;
+  }
+  result.asVector() *= (1.0 / 4.0);
+}
+
+
+void
 StructHexVolMesh::get_center(Point &result, const Cell::index_type &idx) const
 {
   Node::array_type nodes;
   get_nodes(nodes, idx);
+  ASSERT(nodes.size() == 8);
   Node::array_type::iterator nai = nodes.begin();
-  Vector v(0.0, 0.0, 0.0);
+  get_point(result, *nai);
+  ++nai;
   while (nai != nodes.end())
   {
     Point pp;
-    get_point(pp, *nai);
-    v += pp.asVector();
+    result.asVector() += pp.asVector();
     ++nai;
   }
-  v *= 1.0 / nodes.size();
-  result = v.asPoint();
+  result.asVector() *= (1.0 / 8.0);
 }
 
 
