@@ -50,6 +50,13 @@ Persistent* make_GeomPoints()
 PersistentTypeID GeomPoints::type_id("GeomPoints", "GeomObj", make_GeomPoints);
 
 
+Persistent* make_GeomTranspPoints()
+{
+  return scinew GeomTranspPoints();
+}
+
+PersistentTypeID GeomTranspPoints::type_id("GeomTranspPoints", "GeomPoints", make_GeomTranspPoints);
+
 Persistent* make_GeomTimedParticles()
 {
   return scinew GeomTimedParticles(0);
@@ -134,6 +141,108 @@ bool
 GeomPoints::saveobj(ostream&, const string&, GeomSave*)
 {
   NOT_FINISHED("GeomPoints::saveobj");
+  return false;
+}
+
+
+GeomTranspPoints::GeomTranspPoints() : GeomPoints()
+{
+}
+
+GeomTranspPoints::GeomTranspPoints(const GeomTranspPoints &copy)
+  : GeomPoints(copy),
+    xindices_(copy.xindices_),
+    yindices_(copy.yindices_),
+    zindices_(copy.zindices_)
+{
+}
+
+
+GeomTranspPoints::~GeomTranspPoints()
+{
+}
+
+
+GeomObj*
+GeomTranspPoints::clone()
+{
+  return scinew GeomTranspPoints(*this);
+}
+
+
+static bool
+pair_less(const pair<float, unsigned int> &a,
+	  const pair<float, unsigned int> &b)
+{
+  return a.first < b.first;
+}
+
+
+void
+GeomTranspPoints::sort()
+{
+  const unsigned int vsize = points_.size() / 3;
+  if (xindices_.size() == vsize) return;
+
+  vector<pair<float, unsigned int> > tmp(vsize);
+  unsigned int i;
+
+  for (i = 0; i < vsize;i++)
+  {
+    tmp[i].first = points_[i*3+0];
+    tmp[i].second = i;
+  }
+  std::sort(tmp.begin(), tmp.end(), pair_less);
+
+  xindices_.resize(vsize);
+  for (i=0; i < vsize; i++)
+  {
+    xindices_[i] = tmp[i].second;
+  }
+
+  for (i = 0; i < vsize;i++)
+  {
+    tmp[i].first = points_[i*3+1];
+    tmp[i].second = i;
+  }
+  std::sort(tmp.begin(), tmp.end(), pair_less);
+
+  yindices_.resize(vsize);
+  for (i=0; i < vsize; i++)
+  {
+    yindices_[i] = tmp[i].second;
+  }
+
+  for (i = 0; i < vsize;i++)
+  {
+    tmp[i].first = points_[i*3+2];
+    tmp[i].second = i;
+  }
+  std::sort(tmp.begin(), tmp.end(), pair_less);
+
+  zindices_.resize(vsize);
+  for (i=0; i < vsize; i++)
+  {
+    zindices_[i] = tmp[i].second;
+  }
+}
+
+
+#define GEOMTRANSPPOINTS_VERSION 1
+
+void
+GeomTranspPoints::io(Piostream& stream)
+{
+  int version=stream.begin_class("GeomTranspPoints", GEOMTRANSPPOINTS_VERSION);
+  GeomPoints::io(stream);
+  stream.end_class();
+}
+
+
+bool
+GeomTranspPoints::saveobj(ostream&, const string&, GeomSave*)
+{
+  NOT_FINISHED("GeomTranspPoints::saveobj");
   return false;
 }
 

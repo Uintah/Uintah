@@ -2555,6 +2555,72 @@ void GeomPoints::draw(DrawInfoOpenGL* di, Material* matl, double)
 }
 
 
+void GeomTranspPoints::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+  if (!pre_draw(di, matl, 0)) { return; }
+
+  di->polycount+=points_.size()/3;
+
+  sort();
+
+  GLdouble matrix[16];
+  glGetDoublev(GL_MODELVIEW_MATRIX, matrix);
+  const double lvx = fabs(matrix[2]);
+  const double lvy = fabs(matrix[6]);
+  const double lvz = fabs(matrix[10]);
+  if (lvx >= lvy && lvx >= lvz)
+  {
+    di->axis = 0;
+    if (matrix[2] > 0) { di->dir = 1; }
+    else { di->dir = -1; }
+      
+  }
+  else if (lvy >= lvx && lvy >= lvz)
+  {
+    di->axis = 1;
+    if (matrix[6] > 0) { di->dir = 1; }
+    else { di->dir = -1; }
+  }
+  else if (lvz >= lvx && lvz >= lvy)
+  {
+    di->axis = 2;
+    if (matrix[10] > 0) { di->dir = 1; }
+    else { di->dir = -1; }
+  }
+
+  const vector<unsigned int> &clist =
+    (di->axis==0)?xindices_:((di->axis==1)?yindices_:zindices_);
+
+  glVertexPointer(3, GL_FLOAT, 0, &(points_[0]));
+  glEnableClientState(GL_VERTEX_ARRAY);
+
+  glColorPointer(4, GL_UNSIGNED_BYTE, 0, &(colors_[0]));
+  glEnableClientState(GL_COLOR_ARRAY);
+
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+  if (di->dir == 1)
+  {
+    glDrawElements(GL_POINTS, clist.size(), GL_UNSIGNED_INT, &(clist[0]));
+  }
+  else
+  {
+    glBegin(GL_POINTS);
+    for (int j=clist.size()-1; j >= 0; j--)
+    {
+      glArrayElement(clist[j]);
+    }
+    glEnd();
+  }
+
+  glDisable(GL_BLEND);
+
+  post_draw(di);
+}
+
+
+
 void GeomTexSlices::draw(DrawInfoOpenGL* di, Material* matl, double) {
     if(!pre_draw(di, matl, 0)) return;
     if (!have_drawn) {
