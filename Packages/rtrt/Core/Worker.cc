@@ -1,6 +1,7 @@
 
-#include <Packages/rtrt/Core/CutGroup.h>
 #include <Packages/rtrt/Core/Worker.h>
+
+#include <Packages/rtrt/Core/CutGroup.h>
 #include <Packages/rtrt/Core/Dpy.h>
 #include <Packages/rtrt/Core/Image.h>
 #include <Packages/rtrt/Core/Scene.h>
@@ -148,9 +149,7 @@ void Worker::run()
       }	
 
       counters->end_frame();
-#if 0
-      ssrt_caliper_point(0);
-#endif
+
       Stats* st=stats[rendering_scene];
       st->reset();
       barrier->wait(dpy->get_num_procs()+1);
@@ -813,9 +812,6 @@ void Worker::run()
 
 #if 1
 	      // do the full average all of the time...
-#if 0
-	      Color sc = lastCs[ci] + (*clrs[ji])[ci]*float(-0.5);
-#endif
 	      Color sc = (*clrs[oji])[ci]*0.5 + (result + resultb)*0.25;
 	      //lastCs[ci] = sc;
 	      (*clrs[ji])[ci] = (result + resultb)*0.5;
@@ -903,11 +899,12 @@ void Worker::run()
     }
   }
 #endif
-}
+} // end run()
 
-void Worker::traceRay(Color& result, const Ray& ray, int depth,
-		      double atten, const Color& accumcolor,
-		      Context* cx)
+void
+Worker::traceRay(Color& result, const Ray& ray, int depth,
+		 double atten, const Color& accumcolor,
+		 Context* cx)
 {
   HitInfo hit;
   Object* obj=scene->get_object();
@@ -994,97 +991,3 @@ void Worker::traceRay(Color& result, const Ray& ray,
   }
 }
 
-#if 0
-bool Worker::lit(const Point& hitpos, Light* light,
-		 const Vector& light_dir, double dist, Color& atten,
-		 int depth, Context* cx)
-{
-#if 1
-  if(scene->shadow_mode==0)
-    return true;
-#endif
-  HitInfo hit;
-  Ray lightray(hitpos, light_dir);
-  Object* obj=scene->get_shadow_object();
-#if 1
-  if(shadow_cache[depth]){
-    shadow_cache[depth]->light_intersect(light, lightray, hit, dist, atten,
-					 &cx->stats->ds[depth], ppc);
-    cx->stats->ds[depth].shadow_cache_try++;
-    if(hit.was_hit && hit.min_t < dist || atten.luminance() < 1.e-6){
-      return false;
-    }
-    shadow_cache[depth]=0;
-    cx->stats->ds[depth].shadow_cache_miss++;
-  }
-#endif
-#if 0
-  if(scene->shadow_mode==1){
-#endif
-    obj->light_intersect(light, lightray, hit, dist, atten,
-			 &cx->stats->ds[depth], ppc);
-#if 0
-  } else if(scene->shadow_mode==2){
-    obj->intersect(lightray, hit, &cx->stats->ds[depth], 0);
-  } else if(scene->shadow_mode==3){
-    int done=0;
-    Point start_origin(lightray.origin());
-    double t=0;
-    while (!done) {
-      obj->intersect(lightray, hit, &cx->stats->ds[depth], 0);
-      if (hit.was_hit && hit.min_t < dist) {
-	Material *m = hit.hit_obj->get_matl();
-	int see_through = 0;
-	if (dynamic_cast<PhongMaterial*>(m) && 
-	    dynamic_cast<PhongMaterial*>(m)->get_opacity() < .5) 
-	  see_through=1;
-	else if (dynamic_cast<InvisibleMaterial*>(m)) see_through=1;
-	else if (dynamic_cast<CycleMaterial*>(m) &&
-		 dynamic_cast<InvisibleMaterial*>(dynamic_cast<CycleMaterial*>(m)->curr())) see_through=1;
-	else if (dynamic_cast<CycleMaterial*>(m) &&
-		 dynamic_cast<PhongMaterial*>(dynamic_cast<CycleMaterial*>(m)->curr()) &&
-		 (dynamic_cast<PhongMaterial*>(dynamic_cast<CycleMaterial*>(m)->curr()))->get_opacity() < 0.5)
-		 see_through=1;
-	if (see_through) {
-	  lightray.set_origin(lightray.origin() + hit.min_t * lightray.direction());
-	  t += hit.min_t;
-	  hit.was_hit = false;
-	} else
-	  done=1;
-      } else done=1;
-    }
-    if (hit.was_hit) {
-      hit.min_t = t;
-    }
-    lightray.set_origin(start_origin);
-  } else {
-    Array1<Vector>& beamdirs=light->get_beamdirs();
-    int n=beamdirs.size();
-    for(int i=0;i<n;i++)
-      attens[i]=Color(1,1,1);
-    obj->multi_light_intersect(light, hitpos, beamdirs, attens,
-			       dist, &cx->stats->ds[depth], ppc);
-    atten = Color(0,0,0);
-    for(int i=0;i<n;i++)
-      atten+=attens[i];
-    atten = atten*(1.0/n);
-    return true;
-  }
-#endif
-
-  if(hit.was_hit){
-#if 1
-    shadow_cache[depth]=hit.hit_obj;
-    //if cut objects are present, disallow shadow_cache, can't trust the hit object
-    //otherwise we will get ztearing like artifacts if you use the obj instead of the cut
-    CutGroup* cutgrp = *((CutGroup **)(hit.scratchpad+CUTGROUPPTR)); 
-    if (cutgrp) shadow_cache[depth]=0; 
-#endif
-    return false;
-  }
-#if 1
-  shadow_cache[depth]=0;
-#endif
-  return true;
-}
-#endif
