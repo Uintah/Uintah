@@ -1,2 +1,2 @@
-#!/bin/csh
+#!/bin/csh -f
 itcl_wish -f sci_config.tcl

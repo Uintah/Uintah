@@ -12,6 +12,7 @@ ConfigChoice .compiler -choices {CFront Delta GNU} -text "Compiler: " \
 ConfigChoice .assertions -choices {0 1 2 3 4} -text "Assertion level: " \
 	-name "ASSERTION_LEVEL" -file ch
 ConfigBool .opengl -text "OpenGL? " -name OPENGL
+ConfigBool .normalize_prim -text "ogl normalizes primitives? " -name NORM_OGL
 ConfigBool .quarks -text "Quarks? " -name QUARKS
 ConfigBool .irix6 -text "Irix 6? " -name IRIX6
 ConfigBool .bit64 -text "64 Bit? " -name 64BIT
