@@ -79,6 +79,12 @@ namespace Uintah {
 	 d_window->copy(from.d_window);
       }
       
+      void copy(const Array3<T>& from, const IntVector& low, const IntVector& high) {
+	 ASSERT(d_window != 0);
+	 ASSERT(from.d_window != 0);
+	 d_window->copy(from.d_window, low, high);
+      }
+      
       void initialize(const T& value, const IntVector& s,
 		      const IntVector& e) {
 	 d_window->initialize(value, s, e);
@@ -176,6 +182,11 @@ namespace Uintah {
    
 //
 // $Log$
+// Revision 1.19  2000/10/11 17:39:38  sparker
+// Added copy with range
+// Fixed bug in Array3Data::copy
+// Fixed compiler warnings
+//
 // Revision 1.18  2000/09/26 19:58:23  sparker
 // Added print method to arrays
 //
