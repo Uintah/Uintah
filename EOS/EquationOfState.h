@@ -42,10 +42,10 @@ WARNING
 
       class EquationOfState {
       public:
-	 EquationOfState();
-	 virtual ~EquationOfState();
-	 
-	 // Per cell
+        EquationOfState();
+        virtual ~EquationOfState();
+        
+        // Per cell
 
          virtual double computeRhoMicro(double press,double gamma,
                                         double cv, double Temp) =0;
@@ -55,37 +55,37 @@ WARNING
                                       double& press, double& dp_drho, 
                                       double& dp_de) = 0;
 
-	 virtual void computeRhoMicro(const Patch* patch,
-				      CCVariable<double>& press,
-				      double gamma,double cv, 
-				      constCCVariable<double>& Temp,
-				      CCVariable<double>& rho_micro) =0;
+        virtual void computeRhoMicro(const Patch* patch,
+                                  CCVariable<double>& press,
+                                  double gamma,double cv, 
+                                  constCCVariable<double>& Temp,
+                                  CCVariable<double>& rho_micro) =0;
 
          virtual void computePressEOS(const Patch* patch,
-				      CCVariable<double>& rhoM,
-				      double gamma, double cv, 
-				      constCCVariable<double>& Temp,
+                                  CCVariable<double>& rhoM,
+                                  double gamma, double cv, 
+                                  constCCVariable<double>& Temp,
                                       CCVariable<double>& press,
-				      CCVariable<double>& dp_drho, 
+                                  CCVariable<double>& dp_drho, 
                                       CCVariable<double>& dp_de) = 0;
                                                                
         virtual void computeTempCC(const Patch* patch,
-				   const string& comp_domain,
-				   const CCVariable<double>& press, 
-				   const double& gamma,
-				   const double& cv,
-				   const CCVariable<double>& rho_micro, 
-				   CCVariable<double>& Temp,
-				   Patch::FaceType face=Patch::xplus) = 0;
-	
+                               const string& comp_domain,
+                               const CCVariable<double>& press, 
+                               const double& gamma,
+                               const double& cv,
+                               const CCVariable<double>& rho_micro, 
+                               CCVariable<double>& Temp,
+                               Patch::FaceType face=Patch::xplus) = 0;
+       
 
         virtual void hydrostaticTempAdjustment(Patch::FaceType face,
-					       const Patch* patch,
-					       Vector& gravity,
-					       const double& gamma,
-					       const double& cv,
-					       const Vector& dx,
-					       CCVariable<double>& Temp_CC)=0;
+                                          const Patch* patch,
+                                          Vector& gravity,
+                                          const double& gamma,
+                                          const double& cv,
+                                          const Vector& dx,
+                                          CCVariable<double>& Temp_CC)=0;
 
 
          virtual double getCompressibility(double press) =0;
