@@ -83,7 +83,7 @@ Source::Source()
 				  SFCYVariable<double>::getTypeDescription() );
   d_wVelCoefPBLMLabel = scinew VarLabel("wVelCoefPBLM",
 				  SFCZVariable<double>::getTypeDescription() );
-  d_pressureINLabel = scinew VarLabel("pressureIN",
+  d_pressureSPBCLabel = scinew VarLabel("pressureSPBC",
 				  CCVariable<double>::getTypeDescription() );
   d_presLinSrcPBLMLabel = scinew VarLabel("presLinSrcPBLM",
 				  CCVariable<double>::getTypeDescription() );
@@ -331,7 +331,7 @@ Source::calculatePressureSource(const ProcessorGroup*,
   StencilMatrix<SFCZVariable<double> > wVelCoeff;
   SFCZVariable<double> wNonlinearSrc;
 
-  old_dw->get(pressure, d_pressureINLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(pressure, d_pressureSPBCLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   old_dw->get(density, d_densityCPLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
@@ -607,6 +607,11 @@ Source::addPressureSource(const ProcessorGroup* ,
 
 //
 //$Log$
+//Revision 1.19  2000/07/08 08:03:35  bbanerje
+//Readjusted the labels upto uvelcoef, removed bugs in CellInformation,
+//made needed changes to uvelcoef.  Changed from StencilMatrix::AE etc
+//to Arches::AE .. doesn't like enums in templates apparently.
+//
 //Revision 1.18  2000/07/03 05:30:16  bbanerje
 //Minor changes for inlbcs dummy code to compile and work. densitySIVBC is no more.
 //

@@ -68,6 +68,8 @@ public:
       // Number of dimensions in the problem
       //
       static const int NDIM = 3;
+      enum velName {VEL, UVEL, VVEL, WVEL};
+      enum stencilName {AP, AE, AW, AN, AS, AT, AB};
 
       // GROUP: Constructors:
       ////////////////////////////////////////////////////////////////////////
@@ -201,6 +203,11 @@ private:
 
 //
 // $Log$
+// Revision 1.31  2000/07/08 08:03:32  bbanerje
+// Readjusted the labels upto uvelcoef, removed bugs in CellInformation,
+// made needed changes to uvelcoef.  Changed from StencilMatrix::AE etc
+// to Arches::AE .. doesn't like enums in templates apparently.
+//
 // Revision 1.30  2000/06/29 06:22:47  bbanerje
 // Updated FCVariable to SFCX, SFCY, SFCZVariables and made corresponding
 // changes to profv.  Code is broken until the changes are reflected

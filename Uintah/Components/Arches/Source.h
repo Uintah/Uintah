@@ -192,7 +192,7 @@ private:
       const VarLabel* d_uVelCoefPBLMLabel ;
       const VarLabel* d_vVelCoefPBLMLabel ;
       const VarLabel* d_wVelCoefPBLMLabel ;
-      const VarLabel* d_pressureINLabel ;
+      const VarLabel* d_pressureSPBCLabel ;
       const VarLabel* d_presLinSrcPBLMLabel ;
       const VarLabel* d_presNonLinSrcPBLMLabel ;
 
@@ -212,6 +212,11 @@ private:
   
 //
 // $Log$
+// Revision 1.17  2000/07/08 08:03:35  bbanerje
+// Readjusted the labels upto uvelcoef, removed bugs in CellInformation,
+// made needed changes to uvelcoef.  Changed from StencilMatrix::AE etc
+// to Arches::AE .. doesn't like enums in templates apparently.
+//
 // Revision 1.16  2000/07/03 05:30:17  bbanerje
 // Minor changes for inlbcs dummy code to compile and work. densitySIVBC is no more.
 //

@@ -52,7 +52,7 @@ public:
       //
       // Enumerate the names of the variables
       //
-      enum stencilName {AP, AE, AW, AN, AS, AT, AB};
+      //enum stencilName {AP, AE, AW, AN, AS, AT, AB};
 
       // GROUP: Constructors:
       ////////////////////////////////////////////////////////////////////////
@@ -131,6 +131,11 @@ template<class T>
   
 //
 // $Log$
+// Revision 1.2  2000/07/08 08:03:35  bbanerje
+// Readjusted the labels upto uvelcoef, removed bugs in CellInformation,
+// made needed changes to uvelcoef.  Changed from StencilMatrix::AE etc
+// to Arches::AE .. doesn't like enums in templates apparently.
+//
 // Revision 1.1  2000/06/12 21:30:00  bbanerje
 // Added first Fortran routines, added Stencil Matrix where needed,
 // removed unnecessary CCVariables (e.g., sources etc.)

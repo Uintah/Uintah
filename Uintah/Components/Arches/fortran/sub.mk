@@ -10,7 +10,7 @@ SRCDIR   := Uintah/Components/Arches/fortran
 SRCS     += $(SRCDIR)/init.F $(SRCDIR)/initScal.F $(SRCDIR)/celltypeInit.F \
 	$(SRCDIR)/cellg.F $(SRCDIR)/areain.F $(SRCDIR)/profv.F \
 	$(SRCDIR)/profscalar.F  $(SRCDIR)/smagmodel.F $(SRCDIR)/calpbc.F \
-	$(SRCDIR)/inlbcs.F
+	$(SRCDIR)/inlbcs.F $(SRCDIR)/uvelcoef.F
 # SRCS     += $(SRCDIR)/apcal.F $(SRCDIR)/areain.F $(SRCDIR)/arradd.F \
 #	$(SRCDIR)/arrass.F $(SRCDIR)/arrcop.F $(SRCDIR)/arrl1.F \
 #	$(SRCDIR)/arrmax.F $(SRCDIR)/assign.F $(SRCDIR)/bcp.F \
@@ -43,6 +43,11 @@ FFLAGS += -g -O3 -OPT:IEEE_arithmetic=3 -CG:if_conversion=false:reverse_if_conve
 
 #
 # $Log$
+# Revision 1.16  2000/07/08 08:03:37  bbanerje
+# Readjusted the labels upto uvelcoef, removed bugs in CellInformation,
+# made needed changes to uvelcoef.  Changed from StencilMatrix::AE etc
+# to Arches::AE .. doesn't like enums in templates apparently.
+#
 # Revision 1.15  2000/07/07 23:07:48  rawat
 # added inlet bc's
 #

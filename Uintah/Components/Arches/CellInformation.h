@@ -109,24 +109,24 @@ struct CellInformation {
   // factors for differencing u-cell
   Array1<double> fac1u;
   Array1<double> fac2u;
-  Array1<double> iesdu;
+  Array1<int> iesdu;
   Array1<double> fac3u;
   Array1<double> fac4u;
-  Array1<double> iwsdu;
+  Array1<int> iwsdu;
   // factors for differencing v-cell
   Array1<double> fac1v;
   Array1<double> fac2v;
-  Array1<double> jnsdv;
+  Array1<int> jnsdv;
   Array1<double> fac3v;
   Array1<double> fac4v;
-  Array1<double> jssdv;
+  Array1<int> jssdv;
   // factors for differencing w-cell
   Array1<double> fac1w;
   Array1<double> fac2w;
-  Array1<double> ktsdw;
+  Array1<int> ktsdw;
   Array1<double> fac3w;
   Array1<double> fac4w;
-  Array1<double> kbsdw;
+  Array1<int> kbsdw;
   // constructor computes the values
   CellInformation(const Patch*);
   ~CellInformation();
