@@ -890,6 +890,7 @@ case $host in
     ac_objext=o
     BASE_LIB_DIR=lib
     CFLAGS=" -Wall"
+    CXXFLAGS=" -Wall"
     if test "$CC" != "pgcc"; then
       SCI_CHECK_VERSION($CC,--version,2.95.3,,
         echo configure: error: wrong $CC version.; exit)

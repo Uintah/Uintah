@@ -4911,6 +4911,7 @@ echo "${ECHO_T}no" >&6
     ac_objext=o
     BASE_LIB_DIR=lib
     CFLAGS=" -Wall"
+    CXXFLAGS=" -Wall"
     if test "$CC" != "pgcc"; then
 
     ##  SCI_CHECK_VERSION
