@@ -110,7 +110,7 @@ WARNING
       VarLabelMaterialMap* makeVarLabelMaterialMap();
    private:
      typedef multimap<const VarLabel*, Task::Dependency*, VarLabel::Compare>
-     CompMap;
+       CompMap;
 
      // Helper function for proccessTasks, processing the dependencies
      // for the given task in the dependency list whose head is req.
@@ -123,6 +123,9 @@ WARNING
      // compute will be replaced by its modifying dependency on the CompMap.
      void addDependencyEdges(Task* task, Task::Dependency* req, CompMap& comps,
 			     bool modifies);
+
+     void remembercomps(DetailedTask* task, Task::Dependency* comp,
+			const ProcessorGroup* pg, CompTable& ct);
 
      // This is the "detailed" version of addDependencyEdges.  It does for
      // the public createDetailedDependencies member function essentially
