@@ -65,12 +65,15 @@ public:
   static const string type_name();
   static PersistentTypeID type_id;
   virtual void io(Piostream &stream);
+private:
+  static Persistent* maker();
 };
 
 #define LATTICEVOL_VERSION 1
 
 template <class Data>
-Persistent* make_LatticeVol()
+Persistent* 
+LatticeVol<Data>::maker()
 {
   return scinew LatticeVol<Data>;
 }
@@ -78,8 +81,8 @@ Persistent* make_LatticeVol()
 template <class Data>
 PersistentTypeID
 LatticeVol<Data>::type_id(type_name().c_str(),
-		   GenericField<LatVolMesh, FData3d<Data> >::type_name().c_str(),
-                   make_LatticeVol<Data>); 
+		GenericField<LatVolMesh, FData3d<Data> >::type_name().c_str(),
+                maker); 
 
 template <class Data>
 void
