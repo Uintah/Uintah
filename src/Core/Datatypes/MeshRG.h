@@ -168,6 +168,8 @@ public:
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
+  friend struct NodeIter;
+  friend struct CellIter;
 
 private:
   int nx_, ny_, nz_;
