@@ -67,7 +67,7 @@ private:
 
   GLVolumeRenderer* volren;
   Vector ddv;
-
+  double ddview;
 };
 
 

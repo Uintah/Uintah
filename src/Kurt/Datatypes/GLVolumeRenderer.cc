@@ -118,11 +118,6 @@ GLVolumeRenderer::setup()
   }
   glColor4f(1,1,1,1); // set to all white for modulation
 
-//   glMatrixMode(GL_TEXTURE);
-//   glPushMatrix();
-//   glRotated( 90, 0,1,0);
-//   glMatrixMode(GL_MODELVIEW);
-
 }
 
 
@@ -130,9 +125,6 @@ void
 GLVolumeRenderer::cleanup()
 {
 
-//   glMatrixMode(GL_TEXTURE);
-//   glPopMatrix();
-//   glMatrixMode(GL_MODELVIEW);
 
 #ifdef __sgi
   if( cmap )
