@@ -53,7 +53,7 @@ namespace Uintah {
 
     ParticleVariable<Point> position;
     ParticleVariable<Vector> pvelocity, pexternalforce, psize;
-    ParticleVariable<double> pmass, pvolume, ptemperature;
+    ParticleVariable<double> pmass, pvolume, ptemperature, psp_vol;
     ParticleVariable<long64> pparticleID;
 
     int d_8or27;
