@@ -3,7 +3,7 @@
 # $Id$
 #
 
-#include $(SRCTOP)/scripts/smallso_prologue.mk
+#include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Packages/Uintah/CCA/Components/Arches/Mixing/fortran
 
@@ -20,10 +20,13 @@ PSELIBS :=
 #FFLAGS += -g 
 FFLAGS +=
 
-#include $(SRCTOP)/scripts/smallso_epilogue.mk
+#include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.2  2001/04/24 19:46:10  mcole
+# prelim checking for package only compilation, scripts refferred to by SCIRUN_SCRIPTS variable
+#
 # Revision 1.1  2001/01/31 16:35:32  rawat
 # Implemented mixing and reaction models for fire.
 #
