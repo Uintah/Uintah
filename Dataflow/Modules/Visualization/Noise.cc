@@ -33,7 +33,6 @@
 #include <SCICore/TclInterface/TCL.h>
 
 #include <iostream>
-#include <strstream>
 
 #include <PSECore/Datatypes/SpanTree.h>
 #include <PSECommon/Modules/Visualization/Noise.h>
