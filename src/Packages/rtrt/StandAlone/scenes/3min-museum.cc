@@ -2,7 +2,7 @@
 
 ./rtrt -np 12 -scene scenes/multi-scene 5 -scene scenes/sphere-room2
 -scene scenes/living-room -scene scenes/science-room -scene
-scenes/min-museum -scene scenes/basic-sea 
+scenes/3min-museum -scene scenes/basic-sea 
 
 
 rtrt -np 8 -eye -18.9261 -22.7011 52.5255 -lookat -7.20746 -8.61347 -16.643 -up 0.490986 -0.866164 -0.0932288 -fov 40 -scene scenes/graphics-museum 
@@ -1687,20 +1687,24 @@ void build_david_room (Group* main_group, Scene *scene, Light *light1, Light *li
 
   Color bone(0.9608, 0.8706, 0.7020);
   Material* david_white=new Phong(bone*.6, bone*.6, 100, 0);
-  GridTris* davidg = new GridTris(david_white, cells, depth);
 
 #if INSERTHUGEMODELS
+  GridTris* davidg = new GridTris(david_white, cells, depth,
+                                  "/usr/sci/data/Geometry/Stanford_Sculptures/david_1mm-grid");
   Transform davidT (Point(0,0,0),
-		    Vector(0.001000,0.,0.),
+		    Vector(-0.001,0.,0.),
 		    Vector(0.,-0.001,0.), 
-		    Vector(0.,0.,-0.001000));
-  davidT.pre_translate (Vector(-14.743912,-20.951428,-0.719974));
+		    Vector(0.,0.,0.001000));
+//    davidT.pre_translate (Vector(-13.256088,-20.334214,5.427));
+  davidT.pre_translate (Vector(-13.256088,-20.334214,5.127));
   davidT.print();
   read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/david_1mm.ply",davidg,&davidT);
 #else
+  GridTris* davidg = new GridTris(david_white, cells, depth,
+                                  "/usr/sci/data/Geometry/Stanford_Sculptures/david_2mm-grid"); 
   Transform davidT (Point(0,0,0),
 		    Vector(0.001000,0.,0.),
-		    Vector(0.,0.,0.001000),
+		    Vector(0.,0.001,0.001000),
 		    Vector(0.,-0.001000,0.));
   davidT.pre_translate (Vector(-14.079300,-33.336876,3.586000));
   davidT.print();
@@ -2061,7 +2065,9 @@ void build_modern_room (Group *main_group, Group* no_shadow_group,
   //  dheadT.print();
 
   Material *dhead_white = new LambertianMaterial(Color(1,1,1));
-  GridTris* dheadg = new GridTris(dhead_white, dhead_cells, dhead_depth);
+  GridTris* dheadg = new GridTris(dhead_white, dhead_cells, dhead_depth,
+                                  "/usr/sci/data/Geometry/Stanford_Sculptures/david_head_1mm_color-grid");
+
   
   l1 = new Light(head_ped_top+Vector(-1,0,0.5),Color(1.,1.,1.),0,0.4);
   l2 = new Light(head_ped_top+Vector(-1,2,0.7),Color(1.,1.,1.),0,0.7);
@@ -2128,8 +2134,6 @@ void build_modern_room (Group *main_group, Group* no_shadow_group,
   Material* shiny_green = new Phong(dragon_green,
 				    Color(.2,.2,.2),
 				    60);
-  GridTris* dragong = new GridTris(shiny_green,dragon_cells,dragon_depth);
-
   l1 = new Light(dragon_ped_top+Vector(1,0,1),Color(1.,1.,1.),0,0.7);
   l2 = new Light(dragon_ped_top+Vector(-1,-1,1),Color(1.,1.,1.),0,0.7);
   l1->name_ = "Dragon 1";
@@ -2141,8 +2145,13 @@ void build_modern_room (Group *main_group, Group* no_shadow_group,
   shiny_green->local_ambient_mode=Arc_Ambient;
 
 #if INSERTHUGEMODELS
+  GridTris* dragong = new GridTris(shiny_green,dragon_cells,dragon_depth,
+                                   "/usr/sci/data/Geometry/Stanford_Sculptures/dragon_vrip-grid");
   read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/dragon_vrip.ply",dragong,&dragonT);
+
 #else
+  GridTris* dragong = new GridTris(shiny_green,dragon_cells,dragon_depth,
+                                   "/usr/sci/data/Geometry/Stanford_Sculptures/dragon_vrip_res2-grid");
   read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/dragon_vrip_res2.ply",dragong,&dragonT);
 #endif
   
@@ -2288,8 +2297,6 @@ void build_modern_room (Group *main_group, Group* no_shadow_group,
   Material* buddha_mat = new Phong(buddha_diff,
 				    buddha_spec,
 				    40);
-  GridTris* buddhag = new GridTris(buddha_mat,buddha_cells,buddha_depth);
-
   l1 = new Light(buddha_ped_top+Vector(1,-1,4),Color(1.,1.,1.),0,0.7);
   l2 = new Light(buddha_ped_top+Vector(1,1,2),Color(1.,1.,1.),0,0.7);
   l1->name_ = "Buddha 1";
@@ -2301,8 +2308,12 @@ void build_modern_room (Group *main_group, Group* no_shadow_group,
   buddha_mat->local_ambient_mode=Arc_Ambient;
   
 #if INSERTHUGEMODELS
+  GridTris* buddhag = new GridTris(buddha_mat,buddha_cells,buddha_depth,
+                                   "/usr/sci/data/Geometry/Stanford_Sculptures/happy_vrip-grid");
   read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/happy_vrip.ply",buddhag,&buddhaT);
 #else
+  GridTris* buddhag = new GridTris(buddha_mat,buddha_cells,buddha_depth,
+                                   "/usr/sci/data/Geometry/Stanford_Sculptures/happy_vrip_res2-grid");
   read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/happy_vrip_res2.ply",buddhag,&buddhaT);
 #endif
 
@@ -2403,8 +2414,8 @@ void build_modern_room (Group *main_group, Group* no_shadow_group,
   venusT.print();
 
   Material* flat_white = new LambertianMaterial(Color(.8,.8,.8));
-  GridTris* venusg = new GridTris(flat_white,venus_cells,venus_depth);
-
+  GridTris* venusg = new GridTris(flat_white,venus_cells,venus_depth,
+                                  "/usr/sci/data/Geometry/Stanford_Sculptures/venus-ply");
   l1 = new Light(venus_ped_top+Vector(1,-0.5,1.9),Color(1.,1.,1.),0,0.6);
   l2 = new Light(venus_ped_top+Vector(0.5,-1,3),Color(1.,1.,1.),0,0.7);
   l1->name_ = "Venus 1";
