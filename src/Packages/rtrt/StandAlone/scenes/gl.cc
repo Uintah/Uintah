@@ -42,6 +42,6 @@ Scene* make_scene(int /*argc*/, char* /*argv[]*/, int /*nworkers*/)
     Scene* scene=new Scene(empty, cam,
 			   bgcolor, groundcolor*averagelight, bgcolor, groundplane, 
 			   ambient_scale);
-    scene->select_shadow_mode("soft");
+    scene->select_shadow_mode("single");
     return scene;
 }

@@ -187,6 +187,6 @@ Scene* make_scene(int argc, char* argv[])
                                Vector(0,0,1)) );
 
 
-    scene->select_shadow_mode("soft");
+    scene->select_shadow_mode("single");
     return scene;
 }
