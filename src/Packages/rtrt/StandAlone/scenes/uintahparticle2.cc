@@ -421,6 +421,22 @@ GridSpheres* create_GridSpheres(rtrt::Array1<SphereData> data_group,
 
 #ifdef USE_UINTAHPARTICLE_THREADS
 
+class Preprocessor: public Runnable {
+  GridSpheres *grid;
+  Semaphore *sema;
+
+public:
+  Preprocessor(GridSpheres* grid, Semaphore *sema):
+    grid(grid), sema(sema)
+  {}
+  ~Preprocessor() {}
+  void run() {
+    int a,b;
+    grid->preprocess(0,a,b);
+    sema->up();
+  }
+};
+
 class SphereMaker: public Runnable {
 private:
   Mutex *amutex;
@@ -629,8 +645,10 @@ public:
 	    {
 	      if (!do_PTvar_all) break;
 	      VariableData vardata;
+	      VariableData vardata2;
 	      // can extract Determinant(), Trace(), Norm()
 	      vardata.name = string(var+" Norm");
+	      vardata2.name = string(var+" Equivalent stress");
 	      for(ConsecutiveRangeSet::iterator matlIter = matls.begin();
 		  matlIter != matls.end(); matlIter++){
 		int matl = *matlIter;
@@ -644,18 +662,24 @@ public:
 		  // extract the data
 		  MaterialData md(matl,numParticles);
 		  float *p = md.data;
+		  MaterialData md2(matl,numParticles);
+		  float *p2 = md2.data;
 		  for(ParticleSubset::iterator iter = pset->begin();
 		      iter != pset->end(); iter++) {
 		    float temp_value= (float)(value[*iter].Norm());
 		    *p++ = temp_value;
+		    temp_value= (float)(sqrt(1.5 * value[*iter].Norm()));
+		    *p2++ = temp_value;
 		  }
 		  // add the extracted data to the variable
 		  vardata.material_set.push_back(md);
+		  vardata2.material_set.push_back(md2);
 		}
 	      } // end material loop
 	      // now this variable for this patch is completely extracted
 	      // put it in patchdata
 	      patchdata.variables.push_back(vardata);
+	      patchdata.variables.push_back(vardata2);
 	    }
 	  break;
 	  default:
@@ -709,6 +733,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   bool do_verbose = false;
   int time_step_lower = -1;
   int time_step_upper = -1;
+  int time_step_inc = 1;
   int gridcellsize=6;
   int griddepth=2;
   int colordata=2;
@@ -738,6 +763,8 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
       time_step_lower = atoi(argv[++i]);
     } else if (s == "-timestephigh") {
       time_step_upper = atoi(argv[++i]);
+    } else if (s == "-timestepinc") {
+      time_step_inc = atoi(argv[++i]);
     } else if(s == "-gridcellsize") {
       i++;
       gridcellsize=atoi(argv[i]);
@@ -827,6 +854,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 
     Semaphore* thread_sema = scinew Semaphore("rtrt::uintahparticle semaphore",
 					      rtrt::Min(nworkers,5));
+    Semaphore* prepro_sema = scinew Semaphore("rtrt::uintahparticle preprocess semaphore", rtrt::Min(nworkers,8));
     Mutex *amutex = scinew Mutex("rtrt::Append spheres mutex");
     //------------------------------
     // start the data extraction
@@ -835,7 +863,7 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
     rtrt::Array1<SphereData> sphere_data;
     
     // for all timesteps
-    for(int t=time_step_lower;t<=time_step_upper;t++){
+    for(int t=time_step_lower;t<=time_step_upper;t+=time_step_inc){
       //      AuditDefaultAllocator();	  
       if (debug) cerr << "Started timestep\n";
 
@@ -1139,8 +1167,14 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
       thread_sema->up(rtrt::Min(nworkers,5));
       display->attach(obj);
       alltime->add((Object*)obj);
+      prepro_sema->down();
+      Thread *thrd = scinew Thread(scinew Preprocessor(obj,prepro_sema),
+				   "rtrt::uintahparticle:Preprocessor Thread");
+      thrd->detach();
     } // end timestep
     if( thread_sema ) delete thread_sema;
+    prepro_sema->down(rtrt::Min(nworkers,8));
+    if (prepro_sema) delete prepro_sema;
     all->add(alltime);
     AuditDefaultAllocator();	  
     if (debug) cerr << "Finished timestep\n";
