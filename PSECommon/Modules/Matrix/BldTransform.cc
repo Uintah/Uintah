@@ -40,7 +40,10 @@ class BldTransform : public Module {
     TCLdouble tx, ty, tz;
     TCLdouble scale, scalex, scaley, scalez;
     TCLdouble td, shu, shv;
-    TCLint flipx, flipy, flipz, pre;
+    TCLint xmapTCL;
+    TCLint ymapTCL;
+    TCLint zmapTCL;
+    TCLint pre;
     TCLint whichxform;
 public:
     BldTransform(const clString& id);
@@ -61,8 +64,8 @@ BldTransform::BldTransform(const clString& id)
   scalex("scalex", id, this), scaley("scaley", id, this), 
   scalez("scalez", id, this), 
   scale("scale", id, this), pre("pre", id, this),
-  flipx("flipx", id, this), flipy("flipy", id, this), 
-  flipz("flipz", id, this),
+  xmapTCL("xmapTCL", id, this), ymapTCL("ymapTCL", id, this), 
+  zmapTCL("zmapTCL", id, this),
   td("td", id, this), shu("shu", id, this), shv("shv", id, this),
   whichxform("whichxform", id, this)
 {
@@ -115,12 +118,6 @@ void BldTransform::execute()
 	double sy=pow(10.,new_scaley)*s;
 	double new_scalez=scalez.get();
 	double sz=pow(10.,new_scalez)*s;
-	int fx=flipx.get();
-	int fy=flipy.get();
-	int fz=flipz.get();
-	if (fx) sx*=-1;
-	if (fy) sy*=-1;
-	if (fz) sz*=-1;
 	Vector sc(sx, sy, sz);
 	locT.post_translate(t);	
 	cerr << "sc="<<sc<<"\n";
@@ -133,12 +130,17 @@ void BldTransform::execute()
 	locT.post_translate(t);
 	locT.post_rotate(th.get()*M_PI/180., axis);
 	locT.post_translate(-t);
-    } else { // (wh==3)     		       // SHEAR
+    } else if (wh==3) {      		       // SHEAR
 	double shD=td.get();
 	Vector shV(1,shu.get(),shv.get());
 	locT.post_shear(t, shV, shD);
 	printf("Here's the shear matrix:\n");
 	locT.print();
+    } else { // (wh==4)			       // PERMUTE
+	if (pre.get())
+	    locT.pre_permute(xmapTCL.get(), ymapTCL.get(), zmapTCL.get());
+	else
+	    locT.post_permute(xmapTCL.get(), ymapTCL.get(), zmapTCL.get());
     }
 
     DenseMatrix *dm=scinew DenseMatrix(4,4);
@@ -172,6 +174,9 @@ void BldTransform::execute()
 
 //
 // $Log$
+// Revision 1.3  2000/03/13 05:33:22  dmw
+// Transforms are done the same way for ScalarFields, Surfaces and Meshes now - build the transform with the BldTransform module, and then pipe the output matrix into a Transform{Field,Surface,Mesh} module
+//
 // Revision 1.2  1999/10/07 02:06:51  sparker
 // use standard iostreams and complex type
 //

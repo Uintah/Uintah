@@ -68,6 +68,7 @@ MP(SurfGen)
 MP(SurfNewVals)
 MP(SurfInterpVals)
 MP(SurfToGeom)
+MP(TransformSurface)
 
 // Visualization
 MP(AddWells2)
@@ -138,7 +139,7 @@ void initPackage(const clString& tcl) {
   RM("Fields",        "Trace Path",              make_TracePath,            tcl+"/TracePath.tcl");
   RM("Fields",        "Train Seg 2",             make_TrainSeg2,            tcl+"/TrainSeg2.tcl");
   RM("Fields",        "Train Segment",           make_TrainSegment,         tcl+"/TrainSegment.tcl");
-  RM("Fields",        "Transform Field",         make_TransformField,       tcl+"/TransformField.tcl");
+  RM("Fields",        "Transform Field",         make_TransformField,       "");
 
   // Iterators
   RM("Iterators",     "Mesh Iterator",           make_MeshIterator,         "");
@@ -178,6 +179,7 @@ void initPackage(const clString& tcl) {
   RM("Surface",       "Surf New Vals",           make_SurfNewVals,          tcl+"/SurfNewVals.tcl");
   RM("Surface",       "SurfToGeom",              make_SurfToGeom,           tcl+"/SurfToGeom.tcl");
   RM("Surface",       "SurfInterpVals",          make_SurfInterpVals,       tcl+"/SurfInterpVals.tcl");
+  RM("Surface",       "TransformSurface",        make_TransformSurface,     "");
 
   // Visualization
   RM("Visualization", "Add Wells 2",             make_AddWells2,            tcl+"/AddWells2.tcl");
