@@ -19,6 +19,7 @@ CVS Information:
 #include "globus_hashtable.h"
 #include <SCICore/Thread/ConditionVariable.h>
 #include <SCICore/Thread/Mutex.h>
+#include <SCICore/Thread/Runnable.h>
 #include <SCICore/Thread/Semaphore.h>
 #include <SCICore/Thread/Thread.h>
 #include <iostream>
