@@ -17,7 +17,7 @@
 
 
 /*
- *  SamplerGui.cc
+ *  RtPDSimGui.cc
  *
  *  Written by:
  *   Yarden Livnat
@@ -28,71 +28,58 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <Packages/MIT/Dataflow/Modules/Metropolis/SamplerGui.h>
 #include <iostream>
+#include <Packages/MIT/Dataflow/Modules/Metropolis/RtPDSimPartGui.h>
+#include <Packages/MIT/Dataflow/Modules/Metropolis/RtPDSimPart.h>
 
 namespace MIT {
 
-using namespace SCIRun;
 using namespace std;
+using namespace SCIRun;
 
-SamplerGui::SamplerGui( const string &name, const string &script)
+static GuiCreator<RtPDSimPartGui> Rt_creator("Rt");
+
+RtPDSimPartGui::RtPDSimPartGui( const string &name, const string &script)
   : PartGui( name, script )
 {
   set_id( name );
-  
 }
  
-SamplerGui::~SamplerGui()
+RtPDSimPartGui::~RtPDSimPartGui()
 {
-}
-
-void
-SamplerGui::set_iter( int i ) 
-{
-  tcl_ << "set-iter " << i;
-  tcl_exec();
-}
-
-void
-SamplerGui::set_kappa( double k ) 
-{
-  tcl_ << "set-kappa " << k;
-  tcl_exec();
 }
 
 void 
-SamplerGui::done()
+RtPDSimPartGui::set_df( float v )
 {
-  tcl_ << "done";
+  
+  tcl_ << "set-df " << v;
   tcl_exec();
 }
 
+
 void 
-SamplerGui::tcl_command( TCLArgs &args, void *data)
+RtPDSimPartGui::attach( PartInterface *interface)
 {
-  int i;
-  double d;
-  if ( args[1] == "iterations") {
-    string_to_int(args[2],i);
-    num_iter(i);
+  RtPDSimPart *pi = dynamic_cast<RtPDSimPart *>(interface);
+  if ( !pi ) {
+    cerr << "RtPDSimPartGui got wrong type of interface\n";
+    return;
   }
-  else if ( args[1] == "sub" ) {
-    string_to_int(args[2],i);
-    subsample(i);
-  }
-  else if ( args[1] == "k" ) {
-    string_to_double(args[2],d);
-    kappa(d);
-  }
-  else if ( args[1] == "run" ) {
-    go( 1 );
-  }
-  else if ( args[1] == "pause" ) {
-    go( 2 );
-  }
-  else if ( args[1] == "stop" ) {
-    go( 0 );
+
+  connect( pi->df_changed, this, &RtPDSimPartGui::set_df );
+  connect( df, pi, &RtPDSimPart::df );
+
+  set_df( pi->df() );
+}
+
+void 
+RtPDSimPartGui::tcl_command( TCLArgs &args, void *data)
+{
+  double v;
+  if ( args[1] == "df") {
+    string_to_double(args[2], v);
+    df(v);
   }
   else
     PartGui::tcl_command( args, data);
