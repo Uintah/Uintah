@@ -321,6 +321,7 @@ C-----------------------------------------------------------------------
       double precision dwdd
       double precision strainrate
 
+      double precision areafactor
 c--------------------------------------------------------------------
 *     executable statements
 c--------------------------------------------------------------------
@@ -398,7 +399,8 @@ c     That would require a model for partial cells
 c     as well.
 
                      qflux = rfluxE(i-1,j,k)*
-     $                    epss(i,j,k)
+     $                    epss(i,j,k) - sigma*
+     $                    ts_fcx(i,j,k)**4
 
                      hts_fcx(i,j,k) = hts_fcx(i,j,k) + 
      $                    qflux*areayz
@@ -486,7 +488,9 @@ c     That would require a model for partial cells
 c     as well.
 
                      qflux = rfluxW(i+1,j,k)*
-     $                    epss(i,j,k)
+     $                    epss(i,j,k) - 
+     $                    sigma*ts_fcx(i+1,j,k)**4
+
                      hts_fcx(i+1,j,k) = 
      $                    hts_fcx(i+1,j,k) + 
      $                    qflux*areayz
@@ -573,7 +577,8 @@ c     cell not all the intrusion is seen by the gas?
 c     That would require a model for partial cells
 c     as well.
 
-                     qflux = rfluxN(i,j-1,k)*epss(i,j,k)
+                     qflux = rfluxN(i,j-1,k)*epss(i,j,k) - 
+     $                    sigma*ts_fcy(i,j,k)**4
 
                      hts_fcy(i,j,k) = 
      $                    hts_fcy(i,j,k) +
@@ -660,7 +665,8 @@ c     cell not all the intrusion is seen by the gas?
 c     That would require a model for partial cells
 c     as well.
 
-                     qflux = rfluxS(i,j+1,k)*epss(i,j,k)
+                     qflux = rfluxS(i,j+1,k)*epss(i,j,k) -
+     $                    sigma*ts_fcy(i,j+1,k)**4
 
                      hts_fcy(i,j+1,k) = 
      $                    hts_fcy(i,j+1,k) +
@@ -745,7 +751,8 @@ c     cell not all the intrusion is seen by the gas?
 c     That would require a model for partial cells
 c     as well.
 
-                     qflux = rfluxT(i,j,k-1)*epss(i,j,k)
+                     qflux = rfluxT(i,j,k-1)*epss(i,j,k) -
+     $                    sigma*ts_fcz(i,j,k)**4
 
                      hts_fcz(i,j,k) = 
      $                    hts_fcz(i,j,k) +
@@ -832,7 +839,8 @@ c     cell not all the intrusion is seen by the gas?
 c     That would require a model for partial cells
 c     as well.
 
-                     qflux = rfluxB(i,j,k+1)*epss(i,j,k)
+                     qflux = rfluxB(i,j,k+1)*epss(i,j,k) -
+     $                    sigma*ts_fcz(i,j,k+1)**4
 
                      hts_fcz(i,j,k+1) =
      $                    hts_fcz(i,j,k+1) + qflux*areaxy
@@ -876,6 +884,8 @@ c     For now, this has only convective heat transfer.  When we
 c     do complex geometry treatment, then we will consider heat
 c     transfer to partial cells as well.
 
+#if 0
+
       do 720 i = valid_lo(1), valid_hi(1)
          do 710 j = valid_lo(2), valid_hi(2)
             do 700 k = valid_lo(3), valid_hi(3)
@@ -888,6 +898,7 @@ c     modif. for discrete fraction a la mom exch?
 
                   darea = ((one - eps_gas_cont)*
      $                 sew(i)*sns(j)*stb(k))**(1.0/3.0)
+                  areafactor = (one - eps_gas_cont)**(2.0/3.0)
                   area = darea*darea
 
                   drep = (eps_gas_cont*
@@ -920,7 +931,8 @@ c                  qmult = heat_trans_coeff*area*factor
 
                   qmult = effcond*factor/dist
 
-                  qflux = qmult*(tg(i,j,k) - ts_cc(i,j,k))
+                  qflux = qmult*(tg(i,j,k) - ts_cc(i,j,k))*
+     $                 areafactor
 
                   htflux_convCC(i,j,k) = htflux_convCC(i,j,k) +
      $                 qflux
@@ -947,6 +959,8 @@ c                  qmult = heat_trans_coeff*area*factor
  700        continue
  710     continue
  720  continue
+
+#endif
 
       return
       end
