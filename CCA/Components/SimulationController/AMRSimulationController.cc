@@ -281,7 +281,7 @@ void AMRSimulationController::run()
 
 	for ( unsigned int i = 0; i < reductionVariableInfo.size(); i++ ) {
 	  VarLabelMatlLevel currentReductionVar = reductionVariableInfo[i];
-	  cout << "REDUNCTION:  Label(" << setw(15) << currentReductionVar.label_->getName() << "): Patch(" << reinterpret_cast<int>(currentReductionVar.level_) << "): Material(" << currentReductionVar.matlIndex_ << ")" << endl; 
+	 // cout << "REDUNCTION:  Label(" << setw(15) << currentReductionVar.label_->getName() << "): Patch(" << reinterpret_cast<int>(currentReductionVar.level_) << "): Material(" << currentReductionVar.matlIndex_ << ")" << endl; 
 	  const Level* oldLevel = currentReductionVar.level_;
 	  const Level* newLevel = NULL;
 	  if (oldLevel) {
