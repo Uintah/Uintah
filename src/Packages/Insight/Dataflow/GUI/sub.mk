@@ -31,7 +31,7 @@ SRCDIR := Packages/Insight/Dataflow/GUI
 PATH_TO_SCIRUN := $(shell cd $(SRCTOP) ; pwd)
 PATH_TO_PACKAGE := $(PATH_TO_SCIRUN)/Packages/Insight
 
-CODEGEN := GenerateSCIRunCode
+CODEGEN := -classpath $(PATH_TO_SCIRUN)/tools/CodeGenerator/java:$(XALAN_PATH) SCIRun.GenerateSCIRunCode 
 
 XMLS :=  \
 	sci_DiscreteGaussianImageFilter.xml \
