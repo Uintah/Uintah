@@ -26,7 +26,7 @@
 \section{Working with Networks}
 \label{sec:workwithnets}
 
-This section describes how to create, save, open, execute, and edit
+This section describes how to create, save, load, execute, and edit
 networks.
 
 When started with no arguments the \command{scirun} command will create a
@@ -324,7 +324,7 @@ to write notes or otherwise document the purpose and use of the network.
 \subsection{Saving a Network}
 \label{sec:savenet}
 
-\sr\ can save networks to files.  Network files have an extension of
+\sr{} can save networks to files.  Network files have an extension of
 \filename{.net} (although in the past they have also had .sr and .uin
 extensions).  
 
@@ -335,17 +335,37 @@ name (and location) of the network file.
 Network files are actually \dfna{Tool Command Language}{TCL} scripts and
 are edit-able (although this topic is beyond the scope of this guide).
 
-\subsection{Opening a Network}
+\subsection{Loading a Network}
 \label{sec:opennet}
 
-To open a network file select the \menuitem{Open} item from the main
+To load a network file select the \menuitem{Load} item from the main
 window's \menu{File} menu.   A file browser dialog will prompt you for the
 name (and location) of the network file.
 
-Note that opening a network file merges the network in the file with the
-network in the NetEdit frame.  There is currently no way to ``close'' a
-network and then open a new one -- you must quit and restart \sr\ to do
-this.
+Note that loading a network file merges the network in the file with the
+network in the NetEdit frame.  
+
+\subsection{Inserting a Network}
+\label{sec:insertnetwork}
+
+In order to avoid merging networks, the user may select the
+\menuitem{Insert} item from the main window's \menu{File} menu. This
+option allows the user to place one \sr{} network next to another,
+avoiding overlap.  A file browser dialog prompts the user for the name (and
+location) of the network file.
+
+The new network will be inserted into the upper left corner of the NetEdit
+frame.  If a network of modules already exists in the NetEdit frame, the
+Insert option places a new network to the immediate right of that existing
+network. 
+
+\subsection{Clearing a Network}
+\label{sec:clearnetwork}
+
+Select the \menuitem{Clear} item from the main window's \menu{File} menu in
+order to remove all modules and connections from the entire NetEdit frame.
+A text box appears, confirming whether the user wishes to proceed or cancel
+the clearing operation.
 
 \subsection{Navigating a Network}
 \label{sec:navnetwork}
@@ -376,7 +396,7 @@ window called the \dfn{\sr{} shell}.  It displays the prompt
 It possible to type \tcl{} \sr{} commands at the prompt.  For
 instance, to load a network file you may type \keyboard{source
   \ptext{network file name}}.  This has the same effect as the \menu{File}
-menu's \menuitem{Open} command.
+menu's \menuitem{Load} command.
 
 %\incomplete{}
 
