@@ -51,6 +51,7 @@ tar: products
 		doc/Developer/CodeViews/codeviews \
 		doc/FAQBook/*.html \
                 doc/Utilities/HTML/doc_styles.css \
+                doc/Utilities/HTML/*.js \
 		doc/Utilities/Figures
 
 # Build all docs.
