@@ -3,15 +3,9 @@
 #include <Packages/rtrt/Core/Disc.h>
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/Phong.h>
-#include <Packages/rtrt/Core/LambertianMaterial.h>
 #include <Packages/rtrt/Core/Scene.h>
-#include <iostream>
-#include <math.h>
-#include <string.h>
 #include <Packages/rtrt/Core/Point4D.h>
 #include <Packages/rtrt/Core/CrowMarble.h>
-#include <Core/Geometry/Point.h>
-#include <Core/Geometry/Vector.h>
 #include <Packages/rtrt/Core/Mesh.h>
 #include <Packages/rtrt/Core/Bezier.h>
 #include <Packages/rtrt/Core/BV1.h>
@@ -19,139 +13,239 @@
 #include <Packages/rtrt/Core/Speckle.h>
 #include <Packages/rtrt/Core/Box.h>
 #include <Packages/rtrt/Core/CoupledMaterial.h>
+#include <Packages/rtrt/Core/LambertianMaterial.h>
 #include <Packages/rtrt/Core/DielectricMaterial.h>
 #include <Packages/rtrt/Core/MetalMaterial.h>
+#include <Packages/rtrt/Core/ImageMaterial.h>
 #include <Packages/rtrt/Core/Rect.h>
 #include <Packages/rtrt/Core/Sphere.h>
-#include <Core/Math/MinMax.h>
 #include <Packages/rtrt/Core/Tri.h>
-#include <Core/Geometry/Transform.h>
-#include <Packages/rtrt/Core/ImageMaterial.h>
 #include <Packages/rtrt/Core/Parallelogram.h>
+#include <Packages/rtrt/Core/ObjReader.h>
+#include <Packages/rtrt/Core/SpinningInstance.h>
+#if !defined(linux)
+#  include <Packages/rtrt/Sound/Sound.h>
+#endif
+
+#include <Core/Math/MinMax.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Transform.h>
+
+#include <iostream>
+#include <math.h>
+#include <string.h>
 
 using namespace rtrt;
-
-#define MAXBUFSIZE 256
-#define SCALE 950
 
 extern "C"
 Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 {
-  for(int i=1;i<argc;i++) {
-    cerr << "Unknown option: " << argv[i] << '\n';
-    cerr << "Valid options for scene: " << argv[0] << '\n';
-    return 0;
-  }
+  Point center(8, -8, 0);  
 
-  Point Eye(5.85, 6.2, 2.0);
-  Point Lookat(13.5, 13.5, 2.0);
-  Vector Up(0,0,1);
+  Point eye = center + Vector(0,0,60);
+  Point lookat = center + Vector(1,1,60);
+  Vector up(0,0,1);
+
   double fov=60;
 
-  Camera cam(Eye,Lookat,Up,fov);
+  Group * group = new Group();
 
-  Material* marble1=new CrowMarble(5.0,
-				   Vector(2,1,0),
-				   Color(0.5,0.6,0.6),
-				   Color(0.4,0.55,0.52),
-				   Color(0.35,0.45,0.42));
-  Material* marble2=new CrowMarble(7.5,
-				   Vector(-1,3,0),
-				   Color(0.4,0.3,0.2),
-				   Color(0.35,0.34,0.32),
-				   Color(0.20,0.24,0.24));
-  Material* marble=new Checker(marble1,
-			       marble2,
-			       Vector(3,0,0), Vector(0,3,0));
-  Object* check_floor=new Rect(marble, Point(8, 8, 0),
-			       Vector(4, 0, 0), Vector(0, 4, 0));
-  Group* north_wall=new Group();
-  Group* east_wall=new Group();
-  Group* south_wall=new Group();
-  Group* west_wall=new Group();
-  Group* ceiling_floor=new Group();
-  ceiling_floor->add(check_floor);
+  Transform room_trans;
+  room_trans.pre_translate( center.vector() );
+  room_trans.pre_scale( Vector(0.02,0.02,0.02) );
 
-  Material* whittedimg = 
-    new ImageMaterial(1, "/usr/sci/data/Geometry/textures/whitted",
-		      ImageMaterial::Clamp, ImageMaterial::Clamp,
-		      1, Color(0,0,0), 0);
-  
-  Object* pic1=
-    new Parallelogram(whittedimg, Point(7.35, 11.9, 2.5), 
-		      Vector(0,0,-1), Vector(1.3,0,0));
+  Camera cam(room_trans.project(eye),room_trans.project(lookat),up,fov);
 
-  Material* bumpimg = 
-    new ImageMaterial(1, "/usr/sci/data/Geometry/textures/bump",
-		      ImageMaterial::Clamp, ImageMaterial::Clamp,
-		      1, Color(0,0,0), 0);
+  string pathname("/usr/sci/data/Geometry/models/livingroom/livingroom-obj2_fullpaths/");
+  Array1<string> names;
 
-  Object* pic2=
-    new Parallelogram(bumpimg, Point(11.9, 8.65, 2.5), 
-		      Vector(0, 0, -1), Vector(0, -1.3, 0));
+  cout << "argc is " << argc << "\n";
+  if( argc < 2 ) {
+    cout << "Adding all furniture\n";
 
-  Material* white = new LambertianMaterial(Color(0.8,0.8,0.8));
+    names.add("coffee-table");
+    names.add("shelf_pictures");
+    names.add("fruit-bowl");
 
-  north_wall->add(new Rect(white, Point(8, 12, 2), 
-		       Vector(4, 0, 0), Vector(0, 0, 2)));
+    names.add("mirror1");
+    names.add("mirror2");
+    names.add("horse");
+    names.add("venus-demilo");
+    names.add("bookends");
+    names.add("books");
+    names.add("camera");
+    names.add("ceiling_light");
+    names.add("chair1");
+    names.add("chair2");
+    names.add("chess-set");
+    names.add("corella");
+    names.add("corella2");
+    names.add("couch");
+    names.add("door_jams");
+    names.add("end-table1");
+    names.add("end-table2");
+    names.add("fern");
+    names.add("glasses");
+    names.add("glasses_lenses");
+    names.add("grand_piano");
+    names.add("greek_bowl");
+    names.add("guitar");
+    names.add("horse_bookends");
+    names.add("orrey");
+    names.add("paintings");
+    names.add("phone");
+    names.add("pipe");
+    names.add("shell1");
+    names.add("shell2");
+    names.add("tea-set");
+    names.add("wall-sconce1");
+    names.add("wall-sconce2");
+    names.add("wine_table");
+    names.add("globe_base");
+  }
 
-  east_wall->add(new Rect(white, Point(12, 8, 2), 
-		       Vector(0, 4, 0), Vector(0, 0, 2)));
+  for (int i=0; i < names.size(); i++) {
+    cerr << "Reading: " << pathname + names[i] << "\n";
+    string objname( pathname + names[i]+ ".obj" );
+    string mtlname( pathname + names[i]+ ".mtl" );
+    if (!readObjFile(objname, mtlname, room_trans, group))
+      exit(0);
+  }
 
-//  south_wall->add(new Rect(white, Point(8, 4, 2), 
-//		       Vector(4, 0, 0), Vector(0, 0, 2)));
+  names.remove_all();
+  names.add("livingroom");
 
-  // doorway cut out of South wall for E. tube: attaches to Sphere scene
+  for (int i=0; i < names.size(); i++) {
+    cerr << "Reading: " << pathname + names[i] << "\n";
+    string objname( pathname + names[i]+ ".obj" );
+    string mtlname( pathname + names[i]+ ".mtl" );
+    if (!readObjFile(objname, mtlname, room_trans, group))
+      exit(0);
+  }
 
-  south_wall->add(new Rect(white, Point(11.5, 4, 2), 
-		       Vector(0.5, 0, 0), Vector(0, 0, 2)));
-  south_wall->add(new Rect(white, Point(7.5, 4, 3), 
-		       Vector(3.5, 0, 0), Vector(0, 0, 1)));
-  south_wall->add(new Rect(white, Point(6.5, 4, 1), 
-		       Vector(2.5, 0, 0), Vector(0, 0, 1)));
+  if( argc < 2 ) {
+    names.remove_all();
+    names.add("clock");
 
-//  west_wall->add(new Rect(white, Point(4, 8, 2), 
-//		       Vector(0, 4, 0), Vector(0, 0, 2)));
+    for (int i=0; i < names.size(); i++) {
+      cerr << "Reading: " << pathname + names[i] << "\n";
+      string objname( pathname + names[i]+ ".obj" );
+      string mtlname( pathname + names[i]+ ".mtl" );
+      if (!readObjFile(objname, mtlname, room_trans, group, 30))
+	exit(0);
+    }
 
-  // doorway cut out of West wall for N. tube -- attaches to Hologram scene
+    names.remove_all();
+    names.add("wine_glasses");
+    names.add("wine_bottle");
 
-  west_wall->add(new Rect(white, Point(4, 11.5, 2), 
-		       Vector(0, 0.5, 0), Vector(0, 0, 2)));
-  west_wall->add(new Rect(white, Point(4, 7.5, 3), 
-		       Vector(0, 3.5, 0), Vector(0, 0, 1)));
-  west_wall->add(new Rect(white, Point(4, 6.5, 1), 
-		       Vector(0, 2.5, 0), Vector(0, 0, 1)));
+    for (int i=0; i < names.size(); i++) {
+      cerr << "Reading: " << pathname + names[i] << "\n";
+      string objname( pathname + names[i]+ ".obj" );
+      string mtlname( pathname + names[i]+ ".mtl" );
+      if (!readObjFile(objname, mtlname, room_trans, group, 200))
+	exit(0);
+    }
+  }
 
-
-  ceiling_floor->add(new Rect(white, Point(8, 8, 4),
-		       Vector(4, 0, 0), Vector(0, 4, 0)));
-
-  Group *g = new Group();
-  east_wall->add(pic1);
-  north_wall->add(pic2);
-
-//  g->add(new BV1(north_wall));
-//  g->add(new BV1(east_wall));
-//  g->add(new BV1(south_wall));
-//  g->add(new BV1(south_wall));
-//  g->add(new BV1(west_wall));
-
-  g->add(ceiling_floor);
-  g->add(north_wall);
-  g->add(east_wall);
-  g->add(south_wall);
-  g->add(west_wall);
-  
   Color cdown(0.1, 0.1, 0.7);
   Color cup(0.5, 0.5, 0.0);
 
   rtrt::Plane groundplane(Point(0,0,-5), Vector(0,0,1));
-  Color bgcolor(0.3, 0.3, 0.3);
-  Scene *scene = new Scene(g, cam, bgcolor, cdown, cup, groundplane, 0.5);
+  Color bgcolor(.9, 0.9, 0.9);
+  Scene *scene = new Scene(group, cam, bgcolor, cdown, cup, groundplane, 0.3);
+
+  Transform globetrans;
+  Group * globegroup = new Group;
+  string name = pathname + "globe_sphere";
+  if( !readObjFile( name + ".obj", name + ".mtl", room_trans, globegroup ) )
+    {
+      cout << "Error reading: " << name << "\n";
+    }
+  Grid * globegrid = new Grid( globegroup, 30 );
+  SpinningInstance * si = 
+    new SpinningInstance(
+	    new InstanceWrapperObject(globegrid), &globetrans, 
+	    room_trans.project(Point(167.633,-8.34035,32.7797)),
+	    Vector(-1.32,-46.686,-100.118), -0.1 );
+
+  group->add( si );
+  scene->addObjectOfInterest( si, true );
+
+#if !defined(linux)
+  string path = "/home/sci/dav/sounds/";
+  vector<Point> loc; loc.push_back(Point(82,90,59)); // piano
+  Sound * sound = new Sound( path+"player-piano-cd026_73.wav", "piano", loc, 150, true );
+  scene->addSound( sound );
+  loc.clear();
+
+  loc.push_back(Point(0,0,0));  // harp back ground
+  sound = new Sound( path+"harp-melodic-cd027_59.wav", "harp", loc, 150, true, .5 );
+  scene->addSound( sound );
+  loc.clear();
+
+  loc.push_back(Point(-152,23,50));  // clock
+  sound = new Sound( path+"ticking-clock-cd058_07.wav", "ticking", loc, 150, true );
+  scene->addSound( sound );
+  loc.clear();
+
+  loc.push_back(Point(-162,23,50));  // clock
+  sound = new Sound( path+"clock-tower-bells-cd025_75.wav", "chime", loc, 150, true );
+  scene->addSound( sound );
+  loc.clear();
+
+  loc.push_back(Point(-8,-91,31)); // fruit
+  sound = new Sound( path+"music-box-cd074_96.wav", "music-box", loc, 150, true );
+  scene->addSound( sound );
+  loc.clear();
+
+  loc.push_back(Point(-121,453,62)); // outside
+  sound = new Sound( path+"waves-ocean-shoreline-cd039_27.wav", "under water", loc, 200, true );
+  scene->addSound( sound );
+  loc.clear();
+
+  loc.push_back(Point(154,-84,110)); // books
+  sound = new Sound( path+"cool_music.wav", "cool", loc, 150, true );
+  scene->addSound( sound );
+
+#endif
+
+  double lightBrightness = 0.5;
 
   scene->select_shadow_mode( Hard_Shadows );
-  scene->maxdepth = 8;
-  scene->add_light(new Light(Point(8, 8, 3.9), Color(.8,.8,.8), 0));
-  scene->animate=false;
+  scene->maxdepth = 4;
+  Light * light = new Light( Point(0.15,0.15,2.8), 
+			     Color(1.0,1.0,1.0), 0, lightBrightness );
+  light->name_ = "Overhead";
+  scene->add_light( light );
+  
+  light = new Light( Point(-1.48,-3.76,1.68),
+		     Color(1.0,1.0,1.0), 0, lightBrightness );
+  light->name_ = "Right Sconce";
+  scene->add_light( light );
+
+  light = new Light( Point(1.0,-3.69,1.78),
+		     Color(1.0,1.0,1.0), 0, lightBrightness );
+  light->name_ = "Left Sconce";
+  scene->add_light( light );
+
+  light = new Light( Point(3.498,-3.432,2.7),
+		     Color(1.0,1.0,1.0), 0, lightBrightness );
+  light->name_ = "Horse";
+  scene->add_light( light );
+
+  light = new Light( Point(-3.281,-3.66,2.7),
+		     Color(1.0,1.0,1.0), 0, lightBrightness );
+  light->name_ = "Venus";
+  scene->add_light( light );
+
+  light = new Light( Point(32.81,16,5.96),
+		     Color(1.0,1.0,1.0), 0, lightBrightness );
+  light->name_ = "Sun";
+  scene->add_light( light );
+
+  scene->animate=true;
+
   return scene;
 }
