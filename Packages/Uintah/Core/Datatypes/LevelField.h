@@ -122,6 +122,15 @@ value_type &operator[](typename LevelMesh::Node::index_type idx)
 { return parent::operator[](idx.patch_->getLevelIndex())
     [IntVector(idx.i_,idx.j_,idx.k_)]; }
 
+// These use a pointer to patch and the index to the node or cell to
+// get the data out.
+// 
+// These functions assume idx is the index to an Array3Window that has the
+// low index already accounted for.  In other words the index needs no
+// shifting.
+value_type &get_data_by_patch_and_index(Patch * patch, IntVector idx)
+{ return parent::operator[](patch->getLevelIndex())[idx]; }
+
 static const string type_name(int n = -1);
 virtual const string get_type_name(int n = -1) const { return type_name(n); }
 
