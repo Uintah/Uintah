@@ -47,6 +47,8 @@ itcl_class SCIRun_DataIO_FieldWriter {
 	    set $this-confirm 0
 	}
 
+	global $this-types
+	global $this-exporttype
     }
     method overwrite {} {
 	global $this-confirm $this-filetype
@@ -83,11 +85,9 @@ itcl_class SCIRun_DataIO_FieldWriter {
 	set defname "MyField"
 	set title "Save field file"
 
-	# file types to appers in filter box
-	set types {
-	    {{Field File}     {.fld}      }
-	    {{All Files}       {.*}   }
-	}
+	# Unwrap $this-types into a list.
+	set tmp1 [set $this-types]
+	set tmp2 [eval "set tmp3 $tmp1"]
 	
 	######################################################
 	
@@ -98,12 +98,13 @@ itcl_class SCIRun_DataIO_FieldWriter {
 		-command "$this-c needexecute; wm withdraw $w" \
 		-cancel "wm withdraw $w" \
 		-title $title \
-		-filetypes $types \
+		-filetypes $tmp2 \
 	        -initialfile $defname \
 		-initialdir $initdir \
 		-defaultextension $defext \
 	        -confirmvar $this-confirm \
-	        -formatvar $this-filetype
+	        -formatvar $this-filetype \
+	        -selectedfiletype $this-exporttype
 
 	moveToCursor $w	
     }

@@ -49,6 +49,8 @@ itcl_class SCIRun_DataIO_MatrixWriter {
 	    set $this-confirm 0
 	}
 
+	global $this-types
+	global $this-exporttype
     }
     method overwrite {} {
 	global $this-confirm $this-filetype
@@ -86,11 +88,9 @@ itcl_class SCIRun_DataIO_MatrixWriter {
 	set defname "MyMatrix"
 	set title "Save matrix file"
 
-	# file types to appers in filter box
-	set types {
-	    {{Matrix}        {.mat} }
-	    {{All Files}       {.*} }
-	}
+	# Unwrap $this-types into a list.
+	set tmp1 [set $this-types]
+	set tmp2 [eval "set tmp3 $tmp1"]
 	
 	######################################################
 	
@@ -101,13 +101,15 @@ itcl_class SCIRun_DataIO_MatrixWriter {
 		-command "$this-c needexecute; wm withdraw $w" \
 		-cancel "wm withdraw $w" \
 		-title $title \
-		-filetypes $types \
+		-filetypes $tmp2 \
 	        -initialfile $defname \
 		-initialdir $initdir \
 		-defaultextension $defext \
 		-formatvar $this-filetype \
 		-splitvar $this-split \
-	        -confirmvar $this-confirm
+	        -confirmvar $this-confirm \
+	        -selectedfiletype $this-exporttype
+
 	moveToCursor $w	
     }
 }

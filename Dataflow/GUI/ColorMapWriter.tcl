@@ -47,7 +47,9 @@ itcl_class SCIRun_DataIO_ColorMapWriter {
 	if { ![envBool SCIRUN_CONFIRM_OVERWRITE] } {
 	    set $this-confirm 0
 	}
-	# set $this-split 0
+
+	global $this-types
+	global $this-exporttype
     }
     method overwrite {} {
 	global $this-confirm $this-filetype
@@ -85,11 +87,9 @@ itcl_class SCIRun_DataIO_ColorMapWriter {
 	set defname "MyColorMap"
 	set title "Save colormap file"
 
-	# file types to appers in filter box
-	set types {
-	    {{Colormap}        {.cmap} }
-	    {{All Files}       {.*}    }
-	}
+	# Unwrap $this-types into a list.
+	set tmp1 [set $this-types]
+	set tmp2 [eval "set tmp3 $tmp1"]
 	
 	######################################################
 	
@@ -100,13 +100,13 @@ itcl_class SCIRun_DataIO_ColorMapWriter {
 		-command "$this-c needexecute; wm withdraw $w" \
 		-cancel "wm withdraw $w" \
 		-title $title \
-		-filetypes $types \
+		-filetypes $tmp2 \
 	        -initialfile $defname \
 		-initialdir $initdir \
 		-defaultextension $defext \
 		-formatvar $this-filetype \
-	        -confirmvar $this-confirm
-		#-splitvar $this-split
+	        -confirmvar $this-confirm \
+	        -selectedfiletype $this-exporttype
 
 	moveToCursor $w
     }
