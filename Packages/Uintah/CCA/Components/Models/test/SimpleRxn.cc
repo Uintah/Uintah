@@ -294,21 +294,20 @@ void SimpleRxn::initialize(const ProcessorGroup*,
     
     //__________________________________
     // compute thermo-transport-physical quantities
+    // This MUST be identical to what's in the task modifyThermoTransport....
     for(CellIterator iter = patch->getExtraCellIterator();!iter.done(); iter++){
       IntVector c = *iter;
-      if ( f[c] != 0) { 
-        double oneMinus_f = 1.0 - f[c];       
-        cv[c]          = f[c]*d_cv_fuel          + oneMinus_f*d_cv_air;           
-        viscosity[c]   = f[c]*d_viscosity_fuel   + oneMinus_f*d_viscosity_air;    
-        thermalCond[c] = f[c]*d_thermalCond_fuel + oneMinus_f*d_thermalCond_air; 
-        double R_mix   = f[c]*d_R_fuel           + oneMinus_f*d_R_air;           
-        gamma[c]       = R_mix/cv[c]  + 1.0;
+      double oneMinus_f = 1.0 - f[c];       
+      cv[c]          = f[c]*d_cv_fuel          + oneMinus_f*d_cv_air;           
+      viscosity[c]   = f[c]*d_viscosity_fuel   + oneMinus_f*d_viscosity_air;    
+      thermalCond[c] = f[c]*d_thermalCond_fuel + oneMinus_f*d_thermalCond_air; 
+      double R_mix   = f[c]*d_R_fuel           + oneMinus_f*d_R_air;           
+      gamma[c]       = R_mix/cv[c]  + 1.0;
 
-        rho_CC[c]      = d_rho_fuel * d_rho_air /
-                        ( f[c] * d_rho_air + oneMinus_f * d_rho_fuel);
-        rho_micro[c]   = rho_CC[c];
-        sp_vol[c]      = 1.0/rho_CC[c];
-      }
+      rho_CC[c]      = d_rho_fuel * d_rho_air /
+                      ( f[c] * d_rho_air + oneMinus_f * d_rho_fuel);
+      rho_micro[c]   = rho_CC[c];
+      sp_vol[c]      = 1.0/rho_CC[c];
     } // Over cells
 
     //__________________________________
