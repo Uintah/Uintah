@@ -34,28 +34,30 @@ class MatlabInterfaceSHARE Tikhonov : public Module
   MatrixOPort *oport2;
 
 public:
-  Tikhonov(const string& id);
+  Tikhonov(GuiContext *context);
   virtual ~Tikhonov();
   virtual void execute();
-  virtual void tcl_command(TCLArgs&, void*);
 };
 
-extern "C" MatlabInterfaceSHARE Module* make_Tikhonov(const string& id) {
-  return scinew Tikhonov(id);
-}
 
-Tikhonov::Tikhonov(const string& id)
-  : Module("Tikhonov", id, Filter, "Math", "MatlabInterface"), hpTCL("hpTCL",id,this)
-//  : Module("Tikhonov", id, Source, "Math", "MatlabInterface")
+DECLARE_MAKER(Tikhonov)
+
+
+Tikhonov::Tikhonov(GuiContext *context)
+  : Module("Tikhonov", context, Filter, "Math", "MatlabInterface"),
+    hpTCL(context->subVar("hpTCL"))
 {
 }
 
-Tikhonov::~Tikhonov(){
+
+Tikhonov::~Tikhonov()
+{
 }
 
-void Tikhonov::execute()
-{
 
+void
+Tikhonov::execute()
+{
 // DECLARATIONS
 
   const char *gui; double noise; float tmp1;
@@ -157,10 +159,6 @@ void Tikhonov::execute()
   oport2->send(mh4);
 }
 
-void Tikhonov::tcl_command(TCLArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 } // End namespace MatlabInterface
 

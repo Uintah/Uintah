@@ -37,19 +37,19 @@ class MatlabInterfaceSHARE Focusing : public Module
   MatrixOPort *oport2;
 
 public:
-  Focusing(const string& id);
+  Focusing(GuiContext *context);
   virtual ~Focusing();
   virtual void execute();
 };
 
-extern "C" MatlabInterfaceSHARE Module* make_Focusing(const string& id) {
-  return scinew Focusing(id);
-}
 
-Focusing::Focusing(const string& id)
-  : Module("Focusing", id, Filter, "Math", "MatlabInterface"), noiseGUI("noiseGUI",id,this),
-    fcsdgGUI("fcsdgGUI", id, this)
-  //  : Module("Focusing", id, Source, "Math", "MatlabInterface")
+DECLARE_MAKER(Focusing)
+
+
+Focusing::Focusing(GuiContext *context)
+  : Module("Focusing", context, Filter, "Math", "MatlabInterface"),
+    noiseGUI(context->subVar("noiseGUI")),
+    fcsdgGUI(context->subVar("fcsdgGUI"))
 {
 }
 
