@@ -33,7 +33,6 @@
 #include <Teem/Dataflow/Ports/NrrdPort.h>
 
 #include <iostream>
-using std::cerr;
 using std::endl;
 #include <stdio.h>
 
@@ -112,11 +111,12 @@ NrrdQuantize::execute()
   nin->min = minf;
   nin->max = maxf;
 
-  cerr << "Quantizing -- min="<<minf<<" max="<<maxf<<" nbits="<<nbits<<endl;
+  msgStream_ << "Quantizing -- min="<<minf<<
+    " max="<<maxf<<" nbits="<<nbits<<endl;
   NrrdData *nrrd = scinew NrrdData;
   if (nrrdQuantize(nrrd->nrrd = nrrdNew(), nin, nbits)) {
     char *err = biffGetDone(NRRD);
-    fprintf(stderr, "NrrdQuantize: trouble quantizing:\n%s\n", err);
+    error(string("Trouble quantizing: ") + err);
     free(err);
     return;
   }

@@ -33,7 +33,6 @@
 #include <Teem/Dataflow/Ports/NrrdPort.h>
 
 #include <iostream>
-using std::cerr;
 using std::endl;
 #include <stdio.h>
 
@@ -129,9 +128,9 @@ int NrrdCrop::valid_data(string *minS, string *maxS,
     const char *mins = minS[a].c_str();
     const char *maxs = maxS[a].c_str();
     min[a]=max[a]=nrrd->axis[a].size-1;
-    if (getint(mins, &(min[a]))) { cerr << errstr; return 0; }
-    if (getint(maxs, &(max[a]))) { cerr << errstr; return 0; }
-    if (min[a] >= max[a]) { cerr << errstr; return 0; }
+    if (getint(mins, &(min[a]))) { msgStream_ << errstr; return 0; }
+    if (getint(maxs, &(max[a]))) { msgStream_ << errstr; return 0; }
+    if (min[a] >= max[a]) { msgStream_ << errstr; return 0; }
   }
   return 1;
 }
@@ -191,13 +190,13 @@ NrrdCrop::execute()
 
   Nrrd *nin = nrrdH->nrrd;
   Nrrd *nout = nrrdNew();
-  cerr << "Crop: ("<<min[0]<<","<<min[1]<<","<<min[2]<<") -> (";
-  cerr << max[0]<<","<<max[1]<<","<<max[2]<<")"<<endl;
+  msgStream_ << "Crop: ("<<min[0]<<","<<min[1]<<","<<min[2]<<") -> (";
+  msgStream_ << max[0]<<","<<max[1]<<","<<max[2]<<")"<<endl;
 
   if (nrrdCrop(nout, nin, min, max)) {
     char *err = biffGetDone(NRRD);
-    fprintf(stderr, "NrrdResample: trouble resampling:\n%s\n", err);
-    cerr << "  input Nrrd: nin->dim="<<nin->dim<<"\n";
+    error(string("Trouble resampling: ") + err);
+    msgStream_ << "  input Nrrd: nin->dim="<<nin->dim<<"\n";
     free(err);
   }
   NrrdData *nrrd = scinew NrrdData;

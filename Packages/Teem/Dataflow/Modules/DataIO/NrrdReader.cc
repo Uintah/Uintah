@@ -101,7 +101,7 @@ void NrrdReader::execute()
     NrrdData *n = scinew NrrdData;
     if (nrrdLoad(n->nrrd=nrrdNew(), strdup(fn.c_str()))) {
       char *err = biffGetDone(NRRD);
-      cerr << "Error reading nrrd "<<fn<<": "<<err<<"\n";
+      error("Read error on '" + fn + "': " + err);
       free(err);
       return;
     }

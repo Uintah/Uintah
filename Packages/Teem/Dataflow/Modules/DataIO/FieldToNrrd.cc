@@ -38,7 +38,6 @@
 #include <iostream>
 #include <pair.h>
 
-using std::cerr;
 using std::endl;
 using std::pair;
 
@@ -111,7 +110,7 @@ void FieldToNrrd::execute()
   if (fieldH->mesh()->get_type_description()->get_name() !=
       get_type_description((LatVolMesh *)0)->get_name())
   {
-    cerr << "Error FieldToNrrd only works with LatVolField's" << endl;
+    error("FieldToNrrd only works with LatVolField's.");
     return;
   }
 
@@ -188,7 +187,7 @@ void FieldToNrrd::execute()
       nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterCell, 
 		  nrrdCenterCell, nrrdCenterCell, nrrdCenterCell);
   } else {
-    cerr << "Error - unknown LatVolField data type " << data << endl;
+    error("Unknown LatVolField data type '" + data + "'.");
     free(nout);
     return;
   }
@@ -199,7 +198,7 @@ void FieldToNrrd::execute()
     lvm->get_transform().get(td);
     if ((td[1] + td[2] + td[4] + td[6] + td[8] + td[9]) > 1.0e-3)
     {
-      cerr << "NOT A STRICTLY SCALE/TRANSLATE MATRIX, WILL NOT WORK.\n";
+      warning("Input Field must contain a strictly scale/translate matrix.");
     }
   }
 

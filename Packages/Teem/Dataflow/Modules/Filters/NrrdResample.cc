@@ -32,11 +32,12 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Teem/Dataflow/Ports/NrrdPort.h>
+#include <Core/Containers/StringUtil.h>
 
 #include <iostream>
-using std::cerr;
-using std::endl;
 #include <stdio.h>
+
+using std::endl;
 
 namespace SCITeem {
 
@@ -98,7 +99,7 @@ int NrrdResample::getint(const char *str, int *n, int *none) {
     if (sscanf(str, "%d", n) != 1) return 1;
   }
   if (*n < 2 && !none) {
-    cerr << "Error - invalid # of samples ("<<*n<<")\n";
+    error("Invalid # of samples (" + to_string(*n) + ").");
     return 1;
   }
   return 0;
@@ -106,21 +107,21 @@ int NrrdResample::getint(const char *str, int *n, int *none) {
 
 int NrrdResample::get_sizes(string *resampAxis, Nrrd *nrrd,
 			    nrrdResampleInfo *info) {
-  cerr << "NrrdResample sizes: ";
+  msgStream_ << "NrrdResample sizes: ";
   for (int a=0; a<3; a++) {
     info->samples[a]=nrrd->axis[a].size;
     const char *str = resampAxis[a].c_str();
     int none=0;
     if (getint(str, &(info->samples[a]), &none)) { 
-      cerr << "NrrdResample -- bad size.\n"; 
+      msgStream_ << "NrrdResample -- bad size.\n"; 
       return 0;
     }
     if (none) info->kernel[a]=0;
-    cerr << info->samples[a];
-    if (!info->kernel[a]) cerr << "=";
-    cerr << " ";
+    msgStream_ << info->samples[a];
+    if (!info->kernel[a]) msgStream_ << "=";
+    msgStream_ << " ";
   }
-  cerr << endl;
+  msgStream_ << endl;
   return 1;
 }
 
@@ -164,7 +165,7 @@ NrrdResample::execute()
   nrrdResampleInfo *info = nrrdResampleInfoNew();
 
   Nrrd *nin = nrrdH->nrrd;
-  cerr << "Resampling with a "<<ftype<<" filter."<<endl;
+  msgStream_ << "Resampling with a "<<ftype<<" filter."<<endl;
   nrrdKernel *kern;
   double p[NRRD_KERNEL_PARAMS_MAX];
   memset(p, 0, NRRD_KERNEL_PARAMS_MAX*sizeof(double));
@@ -197,10 +198,9 @@ NrrdResample::execute()
 
   NrrdData *nrrd = scinew NrrdData;
   if (nrrdSpatialResample(nrrd->nrrd=nrrdNew(), nin, info)) {
-//  if (nrrdSimpleResample(nrrd->nrrd=nrrdNew(), nin, info)) {
     char *err = biffGetDone(NRRD);
-    fprintf(stderr, "NrrdResample: trouble resampling:\n%s\n", err);
-    cerr << "  input Nrrd: nin->dim="<<nin->dim<<"\n";
+    error(string("Trouble resampling: ") +  err);
+    msgStream_ << "  input Nrrd: nin->dim="<<nin->dim<<"\n";
     free(err);
   }
   nrrdResampleInfoNix(info);  
