@@ -289,7 +289,7 @@ ShowField::check_for_svt_data(FieldHandle fld_handle)
   bool result = false;
   if (fld_handle->query_scalar_interface(this).get_rep() != 0)
   {
-    cout << "Scalar\n";
+//    cout << "Scalar\n";
     if (! has_scalar_data_.get())
     {
       has_scalar_data_.set(1);
@@ -298,7 +298,7 @@ ShowField::check_for_svt_data(FieldHandle fld_handle)
   }
   else if (fld_handle->query_vector_interface(this).get_rep() != 0)
   {
-    cout << "Vector\n";
+//    cout << "Vector\n";
     if (! has_vector_data_.get())
     { 
       has_vector_data_.set(1); 
@@ -311,7 +311,7 @@ ShowField::check_for_svt_data(FieldHandle fld_handle)
   }
   else if (fld_handle->query_tensor_interface(this).get_rep() != 0)
   {
-    cout << "Tensor\n";
+//    cout << "Tensor\n";
     if (! has_tensor_data_.get())
     {
       has_tensor_data_.set(1);
