@@ -53,6 +53,10 @@ NullScheduler::compile(const ProcessorGroup* pg, bool init_timestep)
 {
   if( dts_ )
     delete dts_;
+  if(graph.getNumTasks() == 0){
+    dts_=0;
+    return;
+  }
 
   UintahParallelPort* lbp = getPort("load balancer");
   LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
@@ -79,7 +83,10 @@ NullScheduler::compile(const ProcessorGroup* pg, bool init_timestep)
 void
 NullScheduler::execute(const ProcessorGroup *)
 {
-  ASSERT(dts_ != 0);
+  if(dts_ == 0){
+    cerr << "NullScheduler skipping execute, no tasks\n";
+    return;
+  }
   if(firstTime){
     firstTime=false;
     dws_[Task::NewDW]->put(delt_vartype(1.0), delt);
