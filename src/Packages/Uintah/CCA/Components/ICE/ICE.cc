@@ -568,20 +568,22 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
   cout_doing << "ICE::scheduleComputeDelPressAndUpdatePressCC" << endl;
   Task *task = scinew Task("ICE::computeDelPressAndUpdatePressCC",
                             this, &ICE::computeDelPressAndUpdatePressCC);
-  
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  Ghost::GhostType  gn = Ghost::None;  
   task->requires( Task::OldDW, lb->delTLabel);
   task->requires( Task::NewDW, lb->press_equil_CCLabel,
-                                          press_matl,  Ghost::None);
-  task->requires( Task::NewDW, lb->vol_frac_CCLabel,   Ghost::AroundCells,1);
-  task->requires( Task::NewDW, lb->uvel_FCMELabel,     Ghost::AroundCells,2);
-  task->requires( Task::NewDW, lb->vvel_FCMELabel,     Ghost::AroundCells,2);
-  task->requires( Task::NewDW, lb->wvel_FCMELabel,     Ghost::AroundCells,2);
-  task->requires( Task::NewDW, lb->sp_vol_CCLabel,     Ghost::None);
-  task->requires( Task::NewDW, lb->rho_CCLabel,        Ghost::None);    
-  task->requires( Task::NewDW, lb->burnedMass_CCLabel, Ghost::None);
-  task->requires( Task::NewDW, lb->speedSound_CCLabel, Ghost::None);
-  task->requires( Task::NewDW, lb->created_vol_CCLabel,Ghost::None);
-
+                                          press_matl,  gn);
+  task->requires( Task::NewDW, lb->vol_frac_CCLabel,   gac,1);
+  task->requires( Task::NewDW, lb->uvel_FCMELabel,     gac,2);
+  task->requires( Task::NewDW, lb->vvel_FCMELabel,     gac,2);
+  task->requires( Task::NewDW, lb->wvel_FCMELabel,     gac,2);
+  task->requires( Task::NewDW, lb->sp_vol_CCLabel,     gn);
+  task->requires( Task::NewDW, lb->rho_CCLabel,        gn);    
+  task->requires( Task::NewDW, lb->burnedMass_CCLabel, gn);
+  task->requires( Task::NewDW, lb->speedSound_CCLabel, gn);
+  task->requires( Task::NewDW, lb->created_vol_CCLabel,gn);
+  
+  task->computes(lb->volFrac_advectedLabel); 
   task->computes(lb->press_CCLabel,        press_matl);
   task->computes(lb->delP_DilatateLabel,   press_matl);
   task->computes(lb->delP_MassXLabel,      press_matl);
@@ -698,7 +700,7 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
     t->requires(Task::NewDW, lb->press_diffX_FCLabel,        gac,1);     
     t->requires(Task::NewDW, lb->press_diffY_FCLabel,        gac,1);     
     t->requires(Task::NewDW, lb->press_diffZ_FCLabel,        gac,1);
-    t->requires(Task::NewDW, lb->vol_frac_CCLabel,           gac,1);     
+    t->requires(Task::NewDW, lb->vol_frac_CCLabel,           gac,1);          
   }
 
 #ifdef ANNULUSICE
@@ -759,7 +761,6 @@ void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
                         this,&ICE::computeLagrangianSpecificVolume);
   }
   Ghost::GhostType  gn  = Ghost::None;         
-  Ghost::GhostType  gac = Ghost::AroundCells;  
   if (d_EqForm) {            // EQ FORM
     t->requires(Task::NewDW, lb->mass_L_CCLabel,      gn);     
     t->requires(Task::NewDW, lb->sp_vol_CCLabel,      gn);
@@ -768,19 +769,14 @@ void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
     t->computes(lb->spec_vol_L_CCLabel);
   } 
   else if (d_RateForm) {     // RATE FORM
+    t->requires(Task::NewDW, lb->volFrac_advectedLabel,      gn,0); 
     t->requires(Task::OldDW, lb->delTLabel);
     t->requires(Task::NewDW, lb->rho_CCLabel,         gn);
     t->requires(Task::NewDW, lb->sp_vol_CCLabel,      gn);
-    t->requires(Task::NewDW, lb->speedSound_CCLabel,  gn);
     t->requires(Task::NewDW, lb->vol_frac_CCLabel,    gn);
     t->requires(Task::OldDW, lb->temp_CCLabel,        gn);
     t->requires(Task::NewDW, lb->Tdot_CCLabel,        gn);
     t->requires(Task::NewDW, lb->f_theta_CCLabel,     gn);
-    t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,gn);
-    t->requires(Task::NewDW, lb->delP_DilatateLabel,press_matl,gn);
-    t->requires(Task::NewDW, lb->uvel_FCMELabel,      gac,1); 
-    t->requires(Task::NewDW, lb->vvel_FCMELabel,      gac,1); 
-    t->requires(Task::NewDW, lb->wvel_FCMELabel,      gac,1); 
     t->computes(lb->spec_vol_L_CCLabel);
     t->computes(lb->spec_vol_source_CCLabel);
   }
@@ -832,7 +828,7 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
   }
   t->computes(lb->Tdot_CCLabel);
   t->computes(lb->mom_L_ME_CCLabel);      
-  t->computes(lb->int_eng_L_ME_CCLabel); 
+  t->computes(lb->eng_L_ME_CCLabel); 
   sched->addTask(t, patches, all_matls);
 } 
 
@@ -854,7 +850,7 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
   task->requires(Task::NewDW, lb->wvel_FCMELabel,      Ghost::AroundCells,2);
   task->requires(Task::NewDW, lb->mom_L_ME_CCLabel,    Ghost::AroundCells,1);
   task->requires(Task::NewDW, lb->mass_L_CCLabel,      Ghost::AroundCells,1);
-  task->requires(Task::NewDW, lb->int_eng_L_ME_CCLabel,Ghost::AroundCells,1);
+  task->requires(Task::NewDW, lb->eng_L_ME_CCLabel,    Ghost::AroundCells,1);
   task->requires(Task::NewDW, lb->spec_vol_L_CCLabel,  Ghost::AroundCells,1);
  
   task->modifies(lb->rho_CCLabel);
@@ -1809,6 +1805,8 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     StaticArray<constCCVariable<double> > sp_vol_CC(numMatls);
    
     const IntVector gc(1,1,1);
+    Ghost::GhostType  gn  = Ghost::None;
+    Ghost::GhostType  gac = Ghost::AroundCells;
     new_dw->allocateAndPut(delP_Dilatate,lb->delP_DilatateLabel,0, patch);
     new_dw->allocateAndPut(delP_MassX,   lb->delP_MassXLabel,   0, patch);
     new_dw->allocateAndPut(press_CC,     lb->press_CCLabel,     0, patch);
@@ -1816,8 +1814,8 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     new_dw->allocateAndPut(term3,        lb->term3Label,        0, patch);
     new_dw->allocateTemporary(q_advected, patch);
     new_dw->allocateTemporary(term1,      patch);
-    new_dw->allocateTemporary(q_CC,       patch, Ghost::AroundCells,1);
-    new_dw->get(pressure,  lb->press_equil_CCLabel,0,patch,Ghost::None,0);
+    new_dw->allocateTemporary(q_CC,       patch, gac,1);
+    new_dw->get(pressure,  lb->press_equil_CCLabel,0,patch,gn,0);
 
     term1.initialize(0.);
     term2.initialize(0.);
@@ -1828,6 +1826,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     for(int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
+      CCVariable<double> volFrac_advected;
       constCCVariable<double> speedSound;
       constCCVariable<double> vol_frac;
       constCCVariable<double> rho_CC;
@@ -1835,20 +1834,18 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       constSFCXVariable<double> uvel_FC;
       constSFCYVariable<double> vvel_FC;
       constSFCZVariable<double> wvel_FC;
-      new_dw->get(uvel_FC, lb->uvel_FCMELabel,   indx,  patch,
-                Ghost::AroundCells, 2);
-      new_dw->get(vvel_FC, lb->vvel_FCMELabel,   indx,  patch,
-                Ghost::AroundCells, 2);
-      new_dw->get(wvel_FC, lb->wvel_FCMELabel,   indx,  patch,
-                Ghost::AroundCells, 2);
-      new_dw->get(vol_frac,lb->vol_frac_CCLabel, indx,  patch,
-                Ghost::AroundCells,1);
-      new_dw->get(rho_CC,      lb->rho_CCLabel,      indx,patch,Ghost::None,0);
-      new_dw->get(sp_vol_CC[m],lb->sp_vol_CCLabel,   indx,patch,Ghost::None,0);
-      new_dw->get(burnedMass,  lb->burnedMass_CCLabel,indx,patch,Ghost::None,0);
-      new_dw->get(speedSound,  lb->speedSound_CCLabel,indx,patch,Ghost::None,0);
-      new_dw->get(created_vol,lb->created_vol_CCLabel,indx,patch,Ghost::None,0);
-      
+            
+      new_dw->get(uvel_FC, lb->uvel_FCMELabel,         indx,patch,gac, 2);   
+      new_dw->get(vvel_FC, lb->vvel_FCMELabel,         indx,patch,gac, 2);   
+      new_dw->get(wvel_FC, lb->wvel_FCMELabel,         indx,patch,gac, 2);   
+      new_dw->get(vol_frac,lb->vol_frac_CCLabel,       indx,patch,gac, 1);   
+      new_dw->get(rho_CC,      lb->rho_CCLabel,        indx,patch,gn,0);
+      new_dw->get(sp_vol_CC[m],lb->sp_vol_CCLabel,     indx,patch,gn,0);
+      new_dw->get(burnedMass,  lb->burnedMass_CCLabel, indx,patch,gn,0);
+      new_dw->get(speedSound,  lb->speedSound_CCLabel, indx,patch,gn,0);
+      new_dw->get(created_vol, lb->created_vol_CCLabel,indx,patch,gn,0);
+      new_dw->allocateAndPut(volFrac_advected,lb->volFrac_advectedLabel,indx, patch);  
+    
       //---- P R I N T   D A T A ------  
       if (switchDebug_explicit_press ) {
         ostringstream desc;
@@ -1870,8 +1867,8 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
         q_CC[c] = vol_frac[c] * invvol;
       }
       //__________________________________
-      //   First order advection of q_CC
-      advector->advectQ(q_CC,patch,q_advected);    
+      //   First order advection of q_CC 
+      advector->advectQ(q_CC, patch, volFrac_advected); 
 
       for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
         IntVector c = *iter;
@@ -1879,7 +1876,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
         term1[c] += burnedMass[c] * (sp_vol_CC[m][c]/vol);
 
         //   Divergence of velocity * face area 
-        term2[c] -= q_advected[c];
+          term2[c] -= volFrac_advected[c]; 
 
 //        term3[c] += vol_frac[c] * sp_vol_CC[m][c]/
 //                            (speedSound[c]*speedSound[c]);
@@ -2766,10 +2763,9 @@ void ICE::addExchangeToMomentumAndEnergy(const ProcessorGroup*,
       new_dw->get(mom_L[m],         lb->mom_L_CCLabel,    indx, patch,gn, 0); 
       new_dw->get(int_eng_L[m],     lb->int_eng_L_CCLabel,indx, patch,gn, 0); 
       new_dw->get(vol_frac_CC[m],   lb->vol_frac_CCLabel, indx, patch,gn, 0); 
-      new_dw->allocateAndPut(Tdot[m],     lb->Tdot_CCLabel,        indx,patch);      
-      new_dw->allocateAndPut(mom_L_ME[m], lb->mom_L_ME_CCLabel,    indx,patch);     
-      new_dw->allocateAndPut(int_eng_L_ME[m], 
-                                          lb->int_eng_L_ME_CCLabel,indx,patch);
+      new_dw->allocateAndPut(Tdot[m],        lb->Tdot_CCLabel,    indx,patch);          
+      new_dw->allocateAndPut(mom_L_ME[m],    lb->mom_L_ME_CCLabel,indx,patch);         
+      new_dw->allocateAndPut(int_eng_L_ME[m],lb->eng_L_ME_CCLabel,indx,patch);       
     }
 
     // Convert momenta to velocities and internal energy to Temp
@@ -2961,7 +2957,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
 
       new_dw->get(mom_L_ME,    lb->mom_L_ME_CCLabel,      indx,patch,gac,1);
       new_dw->get(spec_vol_L,  lb->spec_vol_L_CCLabel,    indx,patch,gac,1);
-      new_dw->get(int_eng_L_ME,lb->int_eng_L_ME_CCLabel,  indx,patch,gac,1);
+      new_dw->get(int_eng_L_ME,lb->eng_L_ME_CCLabel,      indx,patch,gac,1);
       new_dw->getModifiable(sp_vol_CC, lb->sp_vol_CCLabel,indx,patch);
       new_dw->getModifiable(rho_CC,    lb->rho_CCLabel,   indx,patch);
       if(ice_matl){
