@@ -29,27 +29,24 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Ports/GeometryPort.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Containers/Handle.h>
-#include <Core/Geometry/BBox.h>
-
-#include <Dataflow/Ports/GeometryPort.h>
-#include <Core/Math/MiscMath.h>
-#include <Core/Geom/GeomGroup.h>
-#include <Core/Geom/GeomText.h>
+#include <Core/Geom/ColorMapTex.h>
 #include <Core/Geom/GeomCull.h>
+#include <Core/Geom/GeomDL.h>
+#include <Core/Geom/GeomGrid.h>
+#include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomLine.h>
 #include <Core/Geom/GeomQuads.h>
-#include <Core/Geom/GeomTriangles.h>
-#include <Core/Geom/ColorMapTex.h>
-#include <Core/Geom/GeomTransform.h>
-#include <Core/Geometry/Transform.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Geom/GeomSticky.h>
-#include <Core/Geom/GeomDL.h>
 #include <Core/Geom/GeomSwitch.h>
-#include <Core/Geom/GeomGrid.h>
 #include <Core/Geom/GeomText.h>
+#include <Core/Geom/GeomTransform.h>
+#include <Core/Geom/GeomTriangles.h>
+#include <Core/Geometry/BBox.h>
+#include <Core/Malloc/Allocator.h>
+#include <Core/Math/MiscMath.h>
 
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
@@ -302,8 +299,6 @@ GenAxes::tcl_command(GuiArgs& args, void* userdata) {
 GeomHandle
 GenAxes::generateAxisLines(int prim, int sec, int ter)
 {
-
-
   GeomGroup *group = scinew GeomGroup();
 
   const double scale = bbox_.diagonal().maxComponent();
