@@ -10,7 +10,7 @@
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 
 namespace Uintah {
-
+  class LoadBalancer;
   using namespace std;
 
 /**************************************
@@ -110,6 +110,7 @@ WARNING
      vector<double> times_;
      int timeIndex_;
      GridP oldGrid_;
+     LoadBalancer* lb;
      VarLabel* delt_label;
      vector<VarLabel*> labels_;
      SimulationStateP d_sharedState;

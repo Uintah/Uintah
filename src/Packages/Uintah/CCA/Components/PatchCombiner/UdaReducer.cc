@@ -4,6 +4,7 @@
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/MaterialSetP.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
@@ -32,9 +33,6 @@ void UdaReducer::problemSetup(const ProblemSpecP& /*params*/, GridP& grid,
   d_sharedState = state;
 
   
-  if (d_myworld->size() > 1) {
-    throw InternalError("reduce_uda not yet supported in parallel");
-  }  
   dataArchive_ = scinew DataArchive(udaDir_, d_myworld->myrank(), d_myworld->size());
   dataArchive_->queryTimesteps(timesteps_, times_);
   dataArchive_->turnOffXMLCaching();
@@ -53,6 +51,8 @@ void UdaReducer::scheduleInitialize(const LevelP& level, SchedulerP& sched)
   for (unsigned int i = 0; i < labels_.size(); i++)
     VarLabel::destroy(labels_[i]);
   labels_.clear();
+
+  lb = sched->getLoadBalancer();
 
   vector<string> names;
   vector< const TypeDescription *> typeDescriptions;
@@ -121,7 +121,7 @@ UdaReducer::scheduleTimeAdvance( const LevelP& level,
   MaterialSubsetP globalMatl = scinew MaterialSubset();
   globalMatl->add(-1);
   t->computes(delt_label, globalMatl.get_rep());
-  sched->addTask(t, level->allPatches(), allMatls.get_rep());
+  sched->addTask(t, lb->createPerProcessorPatchSet(level), allMatls.get_rep());
 } // end scheduleTimeAdvance()
 
 void UdaReducer::initialize(const ProcessorGroup*,
@@ -164,7 +164,7 @@ void UdaReducer::readAndSetDelT(const ProcessorGroup*,
 
   //cerr << "deleted and recreated dw\n";
   double delt;
-  dataArchive_->restartInitialize(timestep, oldGrid_, new_dw, NULL, &time, &delt);
+  dataArchive_->restartInitialize(timestep, oldGrid_, new_dw, lb, &time, &delt);
   //cerr << "restartInitialize done\n";
   
   // don't use that delt -- jump to the next output timestep
