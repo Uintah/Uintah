@@ -335,9 +335,9 @@ ChangeFieldBounds::execute()
     Point center, right, down, in;
     outputcenterx_.reset(); outputcentery_.reset(); outputcenterz_.reset();
     outputsizex_.reset(); outputsizey_.reset(); outputsizez_.reset();
-    if (outputsizex_.get() <= 0 || 
-	outputsizey_.get() <= 0 || 
-	outputsizez_.get() <= 0) {
+    if (outputsizex_.get() < 0 || 
+	outputsizey_.get() < 0 || 
+	outputsizez_.get() < 0) {
       error("Degenerate BBox requested.");
       return;                    // degenerate 
     }
