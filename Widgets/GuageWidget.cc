@@ -31,7 +31,8 @@ enum { GuageW_GeomPointL, GuageW_GeomPointR, GuageW_GeomShaft, GuageW_GeomSlider
 enum { GuageW_PickSphL, GuageW_PickSphR, GuageW_PickCyl, GuageW_PickSlider };
 
 GuageWidget::GuageWidget( Module* module, CrowdMonitor* lock, double widget_scale )
-: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale)
+: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale),
+  oldaxis(1, 0, 0)
 {
    Real INIT = 1.0*widget_scale;
    variables[GuageW_PointL] = new Variable("PntL", Scheme1, Point(0, 0, 0));

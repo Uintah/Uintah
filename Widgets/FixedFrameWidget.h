@@ -34,32 +34,34 @@ public:
    virtual void widget_execute();
    virtual void geom_moved(int, double, const Vector&, void*);
 
-   inline const Vector& GetAxis1() const;
-   inline const Vector& GetAxis2() const;
+   inline Vector GetAxis1();
+   inline Vector GetAxis2();
+
+private:
+   Vector oldaxis1;
+   Vector oldaxis2;
 };
 
 
-inline const Vector&
-FixedFrameWidget::GetAxis1() const
+inline Vector
+FixedFrameWidget::GetAxis1()
 {
-   static Vector oldaxis;
    Vector axis(variables[FFrameW_PointUR]->Get() - variables[FFrameW_PointUL]->Get());
    if (axis.length2() <= 1e-6)
-      return oldaxis;
+      return oldaxis1;
    else
-      return (oldaxis = axis.normal());
+      return (oldaxis1 = axis.normal());
 }
 
 
-inline const Vector&
-FixedFrameWidget::GetAxis2() const
+inline Vector
+FixedFrameWidget::GetAxis2()
 {
-   static Vector oldaxis;
    Vector axis(variables[FFrameW_PointDL]->Get() - variables[FFrameW_PointUL]->Get());
    if (axis.length2() <= 1e-6)
-      return oldaxis;
+      return oldaxis2;
    else
-      return (oldaxis = axis.normal());
+      return (oldaxis2 = axis.normal());
 }
 
 

@@ -35,7 +35,8 @@ enum { FrameW_PickSphUL, FrameW_PickSphUR, FrameW_PickSphDR, FrameW_PickSphDL, F
        FrameW_PickResizeU, FrameW_PickResizeR, FrameW_PickResizeD, FrameW_PickResizeL };
 
 FrameWidget::FrameWidget( Module* module, CrowdMonitor* lock, Real widget_scale )
-: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale*0.1)
+: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale*0.1),
+  oldaxis1(1, 0, 0), oldaxis2(1, 0, 0)
 {
    Real INIT = 1.0*widget_scale;
    // Scheme2/3 are used by the picks in GeomMoved!!
@@ -264,7 +265,7 @@ FrameWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
       axis1.normalize();
    } else {
       // Let's use the saved value from GetAxis.
-      axis1 = GetAxis1();
+      axis1 = oldaxis1;
    }
    ((DistanceConstraint*)constraints[FrameW_ConstULUR])->SetDefault(axis1);
    ((DistanceConstraint*)constraints[FrameW_ConstDRDL])->SetDefault(axis1);
@@ -278,7 +279,7 @@ FrameWidget::geom_moved( int /* axis */, double /* dist */, const Vector& delta,
       axis2.normalize();
    } else {
       // Let's use the saved value from GetAxis.
-      axis2 = GetAxis2();
+      axis2 = oldaxis2;
    }
    ((DistanceConstraint*)constraints[FrameW_ConstULDL])->SetDefault(axis2);
    ((DistanceConstraint*)constraints[FrameW_ConstDRUR])->SetDefault(axis2);

@@ -40,7 +40,8 @@ enum { RingW_PickSphUL, RingW_PickSphUR, RingW_PickSphDR, RingW_PickSphDL, RingW
        RingW_PickSlider };
 
 RingWidget::RingWidget( Module* module, CrowdMonitor* lock, Real widget_scale )
-: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale*0.1)
+: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale*0.1),
+  oldaxis(1, 0, 0)
 {
    Real INIT = 1.0*widget_scale;
    variables[RingW_PointUL] = new Variable("PntUL", Scheme1, Point(0, 0, 0));

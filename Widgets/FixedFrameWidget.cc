@@ -37,7 +37,8 @@ enum { FFrameW_PickSphUL, FFrameW_PickSphUR, FFrameW_PickSphDR, FFrameW_PickSphD
        FFrameW_PickResizeU, FFrameW_PickResizeD };
 
 FixedFrameWidget::FixedFrameWidget( Module* module, CrowdMonitor* lock, Real widget_scale )
-: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale*0.1)
+: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale*0.1),
+  oldaxis1(1, 0, 0), oldaxis2(1, 0, 0)
 {
    Real INIT = 1.0*widget_scale;
    // Scheme2/3 are used by the picks in GeomMoved!!
@@ -165,7 +166,7 @@ FixedFrameWidget::FixedFrameWidget( Module* module, CrowdMonitor* lock, Real wid
    picks[FFrameW_PickResizeU]->set_highlight(materials[FFrameW_HighMatl]);
    picks[FFrameW_PickResizeU]->set_cbdata((void*)FFrameW_PickResizeU);
    resizes->add(picks[FFrameW_PickResizeU]);
-   geometries[FFrameW_PickResizeD] = new GeomCappedCylinder;
+   geometries[FFrameW_GeomResizeD] = new GeomCappedCylinder;
    picks[FFrameW_PickResizeD] = new GeomPick(geometries[FFrameW_GeomResizeD], module);
    picks[FFrameW_PickResizeD]->set_highlight(materials[FFrameW_HighMatl]);
    picks[FFrameW_PickResizeD]->set_cbdata((void*)FFrameW_PickResizeD);

@@ -40,7 +40,8 @@ enum { SSquareW_PickSphUL, SSquareW_PickSphUR, SSquareW_PickSphDR, SSquareW_Pick
 
 ScaledSquareWidget::ScaledSquareWidget( Module* module, CrowdMonitor* lock,
 				       Real widget_scale )
-: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale*0.1)
+: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale*0.1),
+  oldaxis1(1, 0, 0), oldaxis2(1, 0, 0)
 {
    Real INIT = 1.0*widget_scale;
    variables[SSquareW_PointUL] = new Variable("PntUL", Scheme1, Point(0, 0, 0));

@@ -36,7 +36,10 @@ public:
    virtual void geom_moved(int, double, const Vector&, void*);
 
    inline Real GetRatio() const;
-   inline const Vector& GetAxis() const;
+   inline Vector GetAxis();
+
+private:
+   Vector oldaxis;
 };
 
 
@@ -47,10 +50,9 @@ RingWidget::GetRatio() const
 }
 
 
-inline const Vector&
-RingWidget::GetAxis() const
+inline Vector
+RingWidget::GetAxis()
 {
-   static Vector oldaxis;
    Vector axis(variables[RingW_PointDR]->Get() - variables[RingW_PointUL]->Get());
    if (axis.length2() <= 1e-6)
       return oldaxis;

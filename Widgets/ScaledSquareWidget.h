@@ -38,8 +38,11 @@ public:
 
    inline Real GetRatio1() const;
    inline Real GetRatio2() const;
-   inline const Vector& GetAxis1() const;
-   inline const Vector& GetAxis2() const;
+   inline Vector GetAxis1();
+   inline Vector GetAxis2();
+
+private:
+   Vector oldaxis1, oldaxis2;
 };
 
 
@@ -57,27 +60,25 @@ ScaledSquareWidget::GetRatio2() const
 }
 
 
-inline const Vector&
-ScaledSquareWidget::GetAxis1() const
+inline Vector
+ScaledSquareWidget::GetAxis1()
 {
-   static Vector oldaxis;
    Vector axis(variables[SSquareW_PointUR]->Get() - variables[SSquareW_PointUL]->Get());
    if (axis.length2() <= 1e-6)
-      return oldaxis;
+      return oldaxis1;
    else
-      return (oldaxis = axis.normal());
+      return (oldaxis1 = axis.normal());
 }
 
 
-inline const Vector&
-ScaledSquareWidget::GetAxis2() const
+inline Vector
+ScaledSquareWidget::GetAxis2()
 {
-   static Vector oldaxis;
    Vector axis(variables[SSquareW_PointDL]->Get() - variables[SSquareW_PointUL]->Get());
    if (axis.length2() <= 1e-6)
-      return oldaxis;
+      return oldaxis2;
    else
-      return (oldaxis = axis.normal());
+      return (oldaxis2 = axis.normal());
 }
 
 

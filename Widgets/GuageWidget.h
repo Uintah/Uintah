@@ -33,22 +33,24 @@ public:
    virtual void widget_execute();
    virtual void geom_moved(int, double, const Vector&, void*);
 
-   inline Real GetRatio() const;
-   inline const Vector& GetAxis() const;
+   inline Real GetRatio();
+   inline Vector GetAxis();
+
+private:
+   Vector oldaxis;
 };
 
 
 inline Real
-GuageWidget::GetRatio() const
+GuageWidget::GetRatio()
 {
    return (variables[GuageW_Ratio]->Get().x());
 }
 
 
-inline const Vector&
-GuageWidget::GetAxis() const
+inline Vector
+GuageWidget::GetAxis()
 {
-   static Vector oldaxis;
    Vector axis(variables[GuageW_PointR]->Get() - variables[GuageW_PointL]->Get());
    if (axis.length2() <= 1e-6)
       return oldaxis;

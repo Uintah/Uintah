@@ -42,7 +42,8 @@ enum { SFrameW_PickSphUL, SFrameW_PickSphUR, SFrameW_PickSphDR, SFrameW_PickSphD
 
 ScaledFrameWidget::ScaledFrameWidget( Module* module, CrowdMonitor* lock,
 				     Real widget_scale )
-: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale*0.1)
+: BaseWidget(module, lock, NumVars, NumCons, NumGeoms, NumMatls, NumPcks, widget_scale*0.1),
+  oldaxis1(1, 0, 0), oldaxis2(1, 0, 0)
 {
    Real INIT = 1.0*widget_scale;
    variables[SFrameW_PointUL] = new Variable("PntUL", Scheme1, Point(0, 0, 0));
