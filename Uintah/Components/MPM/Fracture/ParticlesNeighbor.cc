@@ -1,9 +1,57 @@
 #include "ParticlesNeighbor.h"
 
+#include "CellsNeighbor.h"
+#include "Lattice.h"
+#include "Cell.h"
+
 #include <Uintah/Grid/Patch.h>
 
 namespace Uintah {
 namespace MPM {
+
+void  ParticlesNeighbor::buildIncluding(const particleIndex& pIndex,
+                                        const Lattice& lattice)
+{
+  CellsNeighbor cellsNeighbor;
+  cellsNeighbor.buildIncluding(
+    lattice.getPatch()->findCell(lattice.getParticlesPosition()[pIndex]),
+    lattice);
+  
+  for(CellsNeighbor::const_iterator iter_cell = cellsNeighbor.begin();
+    iter_cell != cellsNeighbor.end();
+    ++iter_cell )
+  {
+    list<particleIndex>& pList = lattice[*iter_cell].particleList;
+    for( list<particleIndex>::const_iterator iter_p = pList.begin();
+         iter_p != pList.end();
+         ++iter_p )
+    {
+      push_back(*iter_p);
+    }
+  }
+}
+
+void  ParticlesNeighbor::buildExcluding(const particleIndex& pIndex,
+                                        const Lattice& lattice)
+{
+  CellsNeighbor cellsNeighbor;
+  cellsNeighbor.buildIncluding(
+    lattice.getPatch()->findCell(lattice.getParticlesPosition()[pIndex]),
+    lattice);
+  
+  for(CellsNeighbor::const_iterator iter_cell = cellsNeighbor.begin();
+    iter_cell != cellsNeighbor.end();
+    ++iter_cell )
+  {
+    list<particleIndex>& pList = lattice[*iter_cell].particleList;
+    for( list<particleIndex>::const_iterator iter_p = pList.begin();
+         iter_p != pList.end();
+         ++iter_p )
+    {
+      if( (*iter_p) != pIndex ) push_back(*iter_p);
+    }
+  }
+}
 
 void
 ParticlesNeighbor::
@@ -25,6 +73,10 @@ interpolatedouble(const ParticleVariable<double>& pdouble,
 } //namespace Uintah
 
 // $Log$
+// Revision 1.3  2000/06/06 01:58:25  tan
+// Finished functions build particles neighbor for a given particle
+// index.
+//
 // Revision 1.2  2000/06/05 22:30:11  tan
 // Added interpolateVector and interpolatedouble for least-square approximation.
 //
