@@ -1678,13 +1678,26 @@ void ImpMPM::checkConvergence(const ProcessorGroup*,
       dispIncQNorm0 = dispIncQNorm0_var;
       dispIncNormMax = dispIncNormMax_var;
 
+      bool first_iteration=false;
       if (compare(dispIncQNorm0,0.)){
+        first_iteration = true;
 	dispIncQNorm0 = dispIncQNorm;
       }
 
       if (dispIncNorm > dispIncNormMax){
 	dispIncNormMax = dispIncNorm;
       }
+
+      // The following is being done because the denominator in the
+      // convergence criteria is carried forward each iteration.  Since 
+      // every patch puts this into the sum_vartype, the value is multiplied
+      // by the number of patches.  Predividing by numPatches fixes this.
+      int numPatches = patch->getLevel()->numPatches();
+      if(!first_iteration){
+        dispIncQNorm0/=((double) numPatches);
+        dispIncNormMax/=((double) numPatches);
+      }
+
       new_dw->put(sum_vartype(dispIncNorm),   lb->dispIncNorm);
       new_dw->put(sum_vartype(dispIncQNorm),  lb->dispIncQNorm);
       new_dw->put(sum_vartype(dispIncNormMax),lb->dispIncNormMax);
