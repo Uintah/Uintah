@@ -309,6 +309,12 @@ public:
   int  getID() const { return d_generation; }
   void setID( int id ) { d_generation = id; }
 
+  // For timestep abort/restart
+  virtual bool timestepAborted() = 0;
+  virtual bool timestepRestarted() = 0;
+  virtual void abortTimestep() = 0;
+  virtual void restartTimestep() = 0;
+  
 protected:
   DataWarehouse( const ProcessorGroup* myworld,
 		 const Scheduler* scheduler, 

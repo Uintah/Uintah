@@ -94,6 +94,8 @@ WARNING
     // Insert Documentation Here:
     virtual void advanceDataWarehouse(const GridP& grid) = 0;
     virtual void fillDataWarehouses(const GridP& grid) = 0;
+    virtual void replaceDataWarehouse(int index, const GridP& grid) = 0;
+
     //    protected:
 
     //////////
