@@ -85,11 +85,10 @@ void printUsageInfo(char *progName) {
   cerr << "\n Usage: "<<progName<<" textfile ColumnMatix [-noHeader] [-binOutput] [-debugOn]\n\n";
   cerr << "\t This program will read in a .txt file specifying a matrix. \n";
   cerr << "\t The .txt file will have whitespace-separated matrix entries \n";
-  cerr << "\t and a one line header indicating the number of rows and \n";
-  cerr << "\t number of columns of the matrix (unless the user has \n";
-  cerr << "\t specified the -noHeader flag.  The SCIRun .mat file will be \n";
-  cerr << "\t saved as ASCII by default, unless the user specified the \n";
-  cerr << "\t -binOutput flag.\n\n";
+  cerr << "\t and a one line header indicating the number of rows in the \n";
+  cerr << "\t matrix (unless the user has specified the -noHeader flag.  \n";
+  cerr << "\t The SCIRun .mat file will be saved as ASCII by default, \n";
+  cerr << "\t unless the user specified the -binOutput flag.\n\n";
 }
 
 int
