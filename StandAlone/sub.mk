@@ -13,7 +13,7 @@ endif
 
 PROGRAM := Packages/Uintah/StandAlone/sus
 ifeq ($(LARGESOS),yes)
-  PSELIBS := Uintah
+  PSELIBS := Packages/Uintah
 else
 
   PSELIBS := \
@@ -41,7 +41,7 @@ include $(SRCTOP)/scripts/program.mk
 SRCS := $(SRCDIR)/puda.cc
 PROGRAM := Packages/Uintah/StandAlone/puda
 ifeq ($(LARGESOS),yes)
-PSELIBS := Uintah
+PSELIBS := Datflow Packages/Uintah
 else
 PSELIBS := \
 	Packages/Uintah/Core/Exceptions \

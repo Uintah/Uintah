@@ -19,15 +19,19 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 #PROGRAM	:= $(SRCDIR)/testing
 #SRCS	:= $(SRCDIR)/testing.cc
 #include $(SRCTOP)/scripts/program.mk
-PROGRAM	:= $(SRCDIR)/test2
-SRCS	:= $(SRCDIR)/test2.cc 
-PSELIBS := \
-	Packages/Uintah/CCA/Ports \
-	Packages/Uintah/Core/Grid \
-	Packages/Uintah/Core/ProblemSpec \
-	Packages/Uintah/CCA/Components/ProblemSpecification \
-	Dataflow/XMLUtil
-LIBS 	:= $(XML_LIBRARY)
-include $(SRCTOP)/scripts/program.mk
+#PROGRAM	:= $(SRCDIR)/test2
+#SRCS	:= $(SRCDIR)/test2.cc 
+#ifeq ($(LARGESOS),yes)
+#  PSELIBS := Packages/Uintah
+#else
+#  PSELIBS := \
+#	Packages/Uintah/CCA/Ports \
+#	Packages/Uintah/Core/Grid \
+#	Packages/Uintah/Core/ProblemSpec \
+#	Packages/Uintah/CCA/Components/ProblemSpecification \
+#	Dataflow/XMLUtil
+#endif
+#LIBS 	:= $(XML_LIBRARY)
+#include $(SRCTOP)/scripts/program.mk
 
 
