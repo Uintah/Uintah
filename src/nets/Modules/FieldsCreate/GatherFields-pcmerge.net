@@ -48,7 +48,7 @@ set Subnet(Subnet$Subnet(Loading)_Name) {Main}
 set bbox {64 41 441 447}
 
 # Create a SCIRun->FieldsCreate->GatherFields Module
-set m1 [addModuleAtPosition "SCIRun" "FieldsCreate" "GatherPoints" 142 183]
+set m1 [addModuleAtPosition "SCIRun" "FieldsCreate" "GatherFields" 142 183]
 
 # Create a SCIRun->Visualization->ShowField Module
 set m2 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 113 293]
@@ -68,7 +68,7 @@ set c2 [addConnection $m1 0 $m2 0]
 set c3 [addConnection $m2 0 $m5 0]
 set c4 [addConnection $m4 0 $m1 1]
 
-# Setup GUI for the SCIRun->FieldsCreate->GatherPoints Module
+# Setup GUI for the SCIRun->FieldsCreate->GatherFields Module
 
 # Setup GUI for the SCIRun->Visualization->ShowField Module
 setGlobal $m2-nodes-usedefcolor {1}
