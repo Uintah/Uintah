@@ -1540,10 +1540,9 @@ proc moduleDuplicate { module } {
     foreach oldvar [uplevel \#0 info vars $module-*] { 
 	set pos [expr [string length $module]-1]
 	set newvar [string replace $oldvar 0 $pos $newmodule]
-	upvar \#0 $oldvar oldval
-	catch "uplevel set \"$newvar\" \{$oldval\}"
+	upvar \#0 $oldvar oldval $newvar newval
+	catch "set newval \{$oldval\}"
     }
-
 }
 
 
