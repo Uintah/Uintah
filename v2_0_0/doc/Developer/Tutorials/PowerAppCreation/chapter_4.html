@@ -110,6 +110,7 @@
   <li><b>indicate_error {which msg_state}</b> - method to indicate an error or reset an error</li>
   <li><b>change_indicate_val {val}</b> - method to change the indicate val and change labels appropriately</li>
   <li><b>change_indicator_labels {msg}</b> - method to change indicator labels and handle changing labels when loading a session.</li>
+  <li><b>save_class_variables {fileid}</b> - method to save out all of the class variables. This method should look just the one in the BioTensorApp but it must be in the child class so that the child variables are saved.</li>
 </ul>
 
 
@@ -128,8 +129,8 @@
   <li><b>toggle_<i>option</i></b> - methods for each checkbutton or radiobutton that enables or disables gui widgets</li>
   <li><b>init_Pframe {f}</b> - method to build Processing Pane on a specified frame</li>
   <li><b>init_Vframe {f}</b> - method to build Visualization Pane on a specified frame</li>
-  <li><b>switch_P_frames</b> - method to handle the attaching and detaching of the Processing Panes</li>
-  <li><b>switch_V_frames</b> - method to handle the attaching and detaching of the Visualization Panes</li>
+  <li><b>switch_P_frames {}</b> - method to handle the attaching and detaching of the Processing Panes</li>
+  <li><b>switch_V_frames {}</b> - method to handle the attaching and detaching of the Visualization Panes</li>
 </ul>
 
 
