@@ -29,19 +29,28 @@
  */
 
 #include <CCA/Components/Builder/NetworkCanvasView.h>
+#include <CCA/Components/Builder/BuilderWindow.h>
 #include <qwmatrix.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <iostream>
+#include <qscrollview.h>
+#include <qevent.h>
+
 using namespace std;
 
 //using namespace SCIRun;
 
-NetworkCanvasView::NetworkCanvasView(QCanvas* canvas, QWidget* parent)
+
+
+NetworkCanvasView::NetworkCanvasView(BuilderWindow* p2BuilderWindow, QCanvas* canvas, QWidget* parent)
 				     
   : QCanvasView(canvas, parent)
 {
 	moving=connecting=0;
 	highlightedConnection=0;
+	this->p2BuilderWindow = p2BuilderWindow;
+	connect( horizontalScrollBar(),SIGNAL( sliderMoved(int) ), p2BuilderWindow, SLOT( updateMiniView() ) );
+	connect( verticalScrollBar(),SIGNAL( sliderMoved(int) ), p2BuilderWindow, SLOT( updateMiniView() ) );
 }
 
 NetworkCanvasView::~NetworkCanvasView()
@@ -197,6 +206,7 @@ void NetworkCanvasView::contentsMouseMoveEvent(QMouseEvent* e)
 
 		moving_start = p;
 		moveChild(moving, newX, newY);
+		p2BuilderWindow->updateMiniView();
 
 		if(dx || dy) scrollBy(dx*5,dy*5);
 
@@ -226,6 +236,8 @@ void NetworkCanvasView::addModule(const string& name,
 	  this, SLOT(removeModule(Module *)) );
   modules.push_back(module);
   module->show();		
+  // have to updateMiniView() after added to canvas
+  p2BuilderWindow->updateMiniView();
 }
 
 void NetworkCanvasView::removeModule(Module * module)
@@ -382,10 +394,13 @@ void NetworkCanvasView::highlightConnection(QCanvasItem *c)
 
 }
 
+std::vector<Module*> NetworkCanvasView::getModules()
+{
+  return modules;
+}
 
-
-
-
-
-
-
+void NetworkCanvasView::viewportResizeEvent( QResizeEvent* p2QResizeEvent )
+{
+  QScrollView::viewportResizeEvent( p2QResizeEvent );
+  p2BuilderWindow->updateMiniView();  
+}
