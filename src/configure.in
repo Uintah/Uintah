@@ -1419,9 +1419,9 @@ fi
 if test "$DEF_HASHMAP" = "None"; then
   AC_MSG_ERROR("Cannot find hash_map")
 fi
+AC_MSG_RESULT(found: $DEF_HASHMAP)
 DEF_HASHMAP="#define $DEF_HASHMAP"
 AC_SUBST(DEF_HASHMAP)
-AC_MSG_RESULT(found: $DEF_HASHMAP)
 
 ##  --  search for tcl stuff  ---------------------------------------------
 echo 
