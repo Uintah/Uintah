@@ -9,4 +9,10 @@ SRCS     += \
 #	$(SRCDIR)/TensorFieldPort.cc\
 #[INSERT NEW CODE FILE HERE]
 
+PSELIBS := Dataflow/Network Dataflow/Ports \
+        Core/Persistent Core/Containers Core/Util \
+        Core/Exceptions Core/Thread \
+        Core/Geom Core/Datatypes Core/Geometry 
+LIBS :=  -lm
+
 include $(SRCTOP)/scripts/smallso_epilogue.mk
