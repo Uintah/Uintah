@@ -689,6 +689,8 @@ void SerialMPM::scheduleComputeCrackExtension(SchedulerP& sched,
   Task* t = scinew Task( "SerialMPM::computeCrackExtension",
 			  this,&SerialMPM::computeCrackExtension);
 
+  t->requires(Task::OldDW, d_sharedState->get_delt_label() );
+
   t->requires(Task::OldDW, lb->pXLabel,                   Ghost::AroundCells,1);
   t->requires(Task::NewDW, lb->pIsBrokenLabel_preReloc,   Ghost::AroundCells,1);
   t->requires(Task::NewDW, lb->pCrackNormalLabel_preReloc,Ghost::AroundCells,1);
@@ -697,6 +699,7 @@ void SerialMPM::scheduleComputeCrackExtension(SchedulerP& sched,
 
   t->requires(Task::NewDW, lb->pXXLabel,                  Ghost::None);
   t->requires(Task::OldDW, lb->pTipNormalLabel,           Ghost::None);
+  t->requires(Task::NewDW, lb->pRotationRateLabel,        Ghost::None);
 
   t->computes(lb->pTipNormalLabel_preReloc);
   t->computes(lb->pExtensionDirectionLabel_preReloc);
