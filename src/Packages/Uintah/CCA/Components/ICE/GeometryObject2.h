@@ -68,12 +68,21 @@ WARNING
 	 double getInitialTemperature() const {
 	    return d_initialTemperature;
 	 }
+        
+        double getInitialDensity() const {
+	    return d_initialDensity;
+	 }
+        double getInitialPressure() const {
+	    return d_initialPressure;
+	 }
 
       private:
 	 GeometryPiece* d_piece;
 	 IntVector d_resolution;
 	 Vector d_initialVel;
-	 double d_initialTemperature;
+	 double d_initialTemperature,
+               d_initialPressure,
+               d_initialDensity;
       };
 } // End namespace Uintah
       

@@ -11,9 +11,11 @@ GeometryObject2::GeometryObject2(ICEMaterial* ice_matl,
 			       ProblemSpecP& ps)
    : d_piece(piece)
 {
-   ps->require("res", d_resolution);
-   ps->require("velocity", d_initialVel);
+   ps->require("res",         d_resolution);
+   ps->require("velocity",    d_initialVel);
    ps->require("temperature", d_initialTemperature);
+   ps->require("pressure",    d_initialPressure);
+   ps->require("density",     d_initialDensity);
 }
 
 GeometryObject2::~GeometryObject2()
