@@ -5,12 +5,12 @@
 
 class Primes {
 public:
-    static const int MaxFactors = 64; // Enough for any 64 bit number
-    typedef unsigned long FactorType[MaxFactors];
-    static int factorize(unsigned long n, FactorType);
+  static const int MaxFactors; 
+  typedef unsigned long FactorType[/*MaxFactors*/64];
+  static int factorize(unsigned long n, FactorType);
 
 private:
-    bool havePrimes;
+  bool havePrimes;
     
 };
 

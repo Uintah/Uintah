@@ -109,6 +109,7 @@ static unsigned long primes[] = {
 };
 
 static int numPrimes = sizeof(primes)/sizeof(unsigned long);
+const int Primes::MaxFactors = 64; // Enough for any 64 bit number
 
 int Primes::factorize(unsigned long n, FactorType result)
 {
