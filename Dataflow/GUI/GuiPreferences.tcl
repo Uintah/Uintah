@@ -21,8 +21,34 @@
 #
 
 #  This file holds procedures that are used to effect the users
-# preferences for the way certain aspects of the GUI behaves.
+#  preferences for the way certain aspects of the GUI behaves.
 
-proc setGuiMode { setting value } {
+#  Valid settings list:
+#
+#     UseGuiFetch -    If on, allows the user to 'fetch' a module's GUI from anywhere on 
+#                      the screen, and then return it to the pre-fetched location
+#
+#     MoveGuiToMouse - If on, automatically moves (most) Gui windows to a location 
+#                      near the mouse (when they are initially created.)
+#    
+
+proc initGuiPreferences { } {
+    global guiPreferences
+    set guiPreferences("UseGuiFetch") "off"
+    set guiPreferences("MoveGuiToMouse") "on"
+    
+}
+
+# Called from scirun_env.cc:
+proc setGuiPreference { setting value } {
+    global guiPreferences
     puts "Setting $setting to $value"
+    if { $setting == "UseGuiFetch" } {
+	set guiPreferences("UseGuiFetch") $value
+    } elseif { $setting == "MoveGuiToMouse" } {
+	set guiPreferences("MoveGuiToMouse") $value
+    } else {
+	createSciDialog -error -title "Bad Gui Preference" -button1 "Close" \
+	    -message "The Gui Preference ($setting) specified in your .scirunrc file is in valid.\nIt will be ignored."
+    }
 }
