@@ -58,16 +58,48 @@ SPRelocate::~SPRelocate()
 namespace Uintah {
   struct ScatterRecord {
     const Patch* fromPatch;
+    const Patch* toPatch;    
+    IntVector vectorToNeighbor;
+    int matl;    
     ParticleSubset* sendset;
-    ScatterRecord(const Patch* fromPatch)
-      : fromPatch(fromPatch), sendset(0)
+    
+    ScatterRecord(const Patch* fromPatch, const Patch* toPatch, int matl)
+      : fromPatch(fromPatch), toPatch(toPatch), matl(matl), sendset(0)
     {
+      ASSERT(fromPatch != 0);
+      ASSERT(toPatch != 0);
+      vectorToNeighbor = toPatch->getLowIndex() - fromPatch->getLowIndex();
+    }
+
+    // Note that when the ScatterRecord going from a real patch to
+    // a virtual patch has an equivalent representation going from
+    // a virtual patch to a real patch (wrap-around, periodic bound. cond.).
+    bool equivalent(const ScatterRecord& sr)
+    { return (toPatch->getRealPatch() == sr.toPatch->getRealPatch()) &&
+	(matl == sr.matl) && (vectorToNeighbor == sr.vectorToNeighbor);
     }
   };
+
+  struct CompareScatterRecord {
+    bool operator()(const ScatterRecord* sr1, const ScatterRecord* sr2) const
+    {
+      return
+	((sr1->toPatch->getRealPatch() != sr2->toPatch->getRealPatch()) ?
+	 (sr1->toPatch->getRealPatch() < sr2->toPatch->getRealPatch()) :
+	 ((sr1->matl != sr2->matl) ? (sr1->matl < sr2->matl) :
+	  compareIntVector(sr1->vectorToNeighbor, sr2->vectorToNeighbor)));
+    }
+    bool compareIntVector(const IntVector& v1, const IntVector& v2) const
+    {
+      return (v1.x() != v2.x()) ? (v1.x() < v2.x()) :
+	((v1.y() != v2.y()) ? (v1.y() < v2.y()) : (v1.z() < v2.z()));
+    }    
+  };
+
   class SPScatterRecords {
   public:
-    typedef map<pair<pair<const Patch*, const Patch*>, int>, ScatterRecord*> maptype;
-    maptype records;
+    typedef set<ScatterRecord*, CompareScatterRecord> settype;
+    settype records;
 
     ScatterRecord* findRecord(const Patch* from, const Patch* to, int matl,
 			      ParticleSubset* pset);
@@ -92,9 +124,10 @@ namespace Uintah {
   };
   class MPIScatterRecords {
   public:
+    // map the to patch and matl to the ScatterRecord
     typedef multimap<pair<const Patch*, int>, ScatterRecord*> maptype;
     maptype records;
-
+    
     typedef map<int, MPIScatterProcessorRecord*> procmaptype;
     procmaptype procs;
 
@@ -118,32 +151,34 @@ ScatterRecord* SPScatterRecords::findRecord(const Patch* from,
 					    const Patch* to, int matl,
 					    ParticleSubset* pset)
 {
-  maptype::iterator iter = records.find(make_pair(make_pair(from, to), matl));
+  ScatterRecord* rec = scinew ScatterRecord(from, to, matl);
+  settype::iterator iter = records.find(rec);
   if(iter == records.end()){
-    ScatterRecord* rec = scinew ScatterRecord(from);
     rec->sendset = scinew ParticleSubset(pset->getParticleSet(), false, -1, 0);
-    records.insert(maptype::value_type(make_pair(make_pair(from, to), matl), rec));
+    records.insert(rec);
     return rec;
   } else {
-    return iter->second;
+    delete rec;
+    return *iter;
   }
 }
 
 ScatterRecord* SPScatterRecords::findRecord(const Patch* from,
 					    const Patch* to, int matl)
 {
-  maptype::iterator iter = records.find(make_pair(make_pair(from, to), matl));
+  ScatterRecord rec(from, to, matl);  
+  settype::iterator iter = records.find(&rec);
   if(iter == records.end())
     return 0;
   else
-    return iter->second;
+    return *iter;
 }
 
 SPScatterRecords::~SPScatterRecords()
 {
-  for(maptype::iterator iter = records.begin(); iter != records.end(); iter++){
-    delete iter->second->sendset;
-    delete iter->second;
+  for(settype::iterator iter = records.begin(); iter != records.end(); iter++){
+    delete (*iter)->sendset;
+    delete *iter;
   }
 }
 
@@ -155,6 +190,7 @@ SPRelocate::relocateParticles(const ProcessorGroup*,
 			      DataWarehouse* new_dw)
 {
   int total_reloc=0;
+  int check_total_reloc=0;
 
   // First pass: For each of the patches we own, look for particles
   // that left the patch.  Create a scatter record for each one.
@@ -253,6 +289,7 @@ SPRelocate::relocateParticles(const ProcessorGroup*,
   // the local case
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
+    ASSERT(!patch->isVirtual());
     const Level* level = patch->getLevel();
 
     // Particles are only allowed to be one cell out
@@ -264,19 +301,19 @@ SPRelocate::relocateParticles(const ProcessorGroup*,
     for(int m = 0; m < matls->size(); m++){
       int matl = matls->get(m);
       int numVars = (int)reloc_old_labels[matl].size();
-      vector<ParticleSubset*> orig_psets;
+      vector<const Patch*> fromPatches;
       vector<ParticleSubset*> subsets;
       ParticleSubset* keepset = keepsets(p, m);
       ASSERT(keepset != 0);
-      orig_psets.push_back(old_dw->getParticleSubset(matl, patch));
+      fromPatches.push_back(patch);
       subsets.push_back(keepset);
       for(int i=0;i<(int)neighbors.size();i++){
 	const Patch* fromPatch=neighbors[i];
 	ScatterRecord* record = scatter_records.findRecord(fromPatch,
 							   patch, matl);
 	if(record){
-	  ParticleSubset* pset = old_dw->getParticleSubset(matl, record->fromPatch);
-	  orig_psets.push_back(pset);
+	  fromPatches.push_back(fromPatch);
+	  check_total_reloc += record->sendset->numParticles();
 	  subsets.push_back(record->sendset);
 	}
       }
@@ -301,19 +338,19 @@ SPRelocate::relocateParticles(const ProcessorGroup*,
 	// Merge local portion
 	vector<ParticleVariableBase*> invars(subsets.size());
 	for(int i=0;i<(int)subsets.size();i++)
-	  invars[i]=new_dw->getParticleVariable(reloc_old_posLabel,
-						orig_psets[i]);
+	  invars[i]=new_dw->getParticleVariable(reloc_old_posLabel, matl,
+						fromPatches[i]);
 	ParticleVariableBase* newpos = posvar->clone();
-	newpos->gather(newsubset, subsets, invars, 0);
+	newpos->gather(newsubset, subsets, invars, fromPatches, 0);
 
 	vector<ParticleVariableBase*> vars(numVars);
 	for(int v=0;v<numVars;v++){
 	  const VarLabel* label = reloc_old_labels[matl][v];
 	  ParticleVariableBase* var = new_dw->getParticleVariable(label, orig_pset);
 	  for(int i=0;i<(int)subsets.size();i++)
-	    invars[i]=new_dw->getParticleVariable(label, orig_psets[i]);
+	    invars[i]=new_dw->getParticleVariable(label, matl, fromPatches[i]);
 	  ParticleVariableBase* newvar = var->clone();
-	  newvar->gather(newsubset, subsets, invars, 0);
+	  newvar->gather(newsubset, subsets, invars, fromPatches, 0);
 	  vars[v]=newvar;
 	}
 	// Put the data back in the data warehouse
@@ -329,6 +366,7 @@ SPRelocate::relocateParticles(const ProcessorGroup*,
     }
   }
 
+  ASSERTEQ(total_reloc, check_total_reloc);
   if(total_reloc != 0)
     cerr << "Particles crossing patch boundaries: " << total_reloc << '\n';
 }
@@ -411,17 +449,23 @@ ScatterRecord* MPIScatterRecords::findRecord(const Patch* from,
 					     const Patch* to, int matl,
 					     ParticleSubset* pset)
 {
-  pair<maptype::iterator, maptype::iterator> pr = records.equal_range(make_pair(to, matl));
+  ASSERT(to != 0);
+  IntVector vectorToNeighbor = to->getLowIndex() - from->getLowIndex();
+  const Patch* realTo = to->getRealPatch();
+
+  pair<maptype::iterator, maptype::iterator> pr =
+    records.equal_range(make_pair(realTo, matl));
   for(;pr.first != pr.second;pr.first++){
-    if(pr.first->second->fromPatch == from)
+    if(pr.first->second->vectorToNeighbor == vectorToNeighbor)
       break;
   }
   if(pr.first == pr.second){
-    ScatterRecord* rec = scinew ScatterRecord(from);
+    ScatterRecord* rec = scinew ScatterRecord(from, to, matl);
     rec->sendset = scinew ParticleSubset(pset->getParticleSet(), false, -1, 0);
-    records.insert(maptype::value_type(make_pair(to, matl), rec));
+    records.insert(maptype::value_type(make_pair(realTo, matl), rec));
     return rec;
   } else {
+    ASSERT(pr.first->second->equivalent(ScatterRecord(from, to, matl)));
     return pr.first->second;
   }
 }
@@ -429,9 +473,14 @@ ScatterRecord* MPIScatterRecords::findRecord(const Patch* from,
 ScatterRecord* MPIScatterRecords::findRecord(const Patch* from,
 					     const Patch* to, int matl)
 {
-  pair<maptype::iterator, maptype::iterator> pr = records.equal_range(make_pair(to, matl));
+  ASSERT(to != 0);
+  IntVector vectorToNeighbor = to->getLowIndex() - from->getLowIndex();
+  const Patch* realTo = to->getRealPatch();
+
+  pair<maptype::iterator, maptype::iterator> pr =
+    records.equal_range(make_pair(realTo, matl));
   for(;pr.first != pr.second;pr.first++){
-    if(pr.first->second->fromPatch == from)
+    if(pr.first->second->vectorToNeighbor == vectorToNeighbor)
       break;
   }
   if(pr.first == pr.second){
@@ -454,6 +503,7 @@ void MPIScatterProcessorRecord::sortPatches()
 void MPIScatterRecords::addNeighbor(LoadBalancer* lb, const ProcessorGroup* pg,
 				    const Patch* neighbor)
 {
+  neighbor = neighbor->getRealPatch();
   int toProc = lb->getPatchwiseProcessorAssignment(neighbor, pg);
   procmaptype::iterator iter = procs.find(toProc);
   if(iter == procs.end()){
@@ -477,9 +527,10 @@ MPIScatterRecords::~MPIScatterRecords()
 {
   for(procmaptype::iterator iter = procs.begin(); iter != procs.end(); iter++)
     delete iter->second;
-  for(maptype::iterator iter = records.begin(); iter != records.end(); iter++){
-    delete iter->second->sendset;
-    delete iter->second;
+  for(maptype::iterator mapiter = records.begin(); mapiter != records.end();
+      mapiter++){
+    delete mapiter->second->sendset;    
+    delete mapiter->second;
   }
   for(recvmaptype::iterator iter = recvs.begin(); iter != recvs.end(); iter++){
     MPIRecvBuffer* p = iter->second;
@@ -686,7 +737,7 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
 	  ParticleSubset* pset = old_dw->getParticleSubset(matl, record->fromPatch);
 	  ParticleVariableBase* posvar = new_dw->getParticleVariable(reloc_old_posLabel, pset);
 	  ParticleSubset* sendset=record->sendset;
-	  posvar->packMPI(buf, sendsize, &position, pg, sendset);
+	  posvar->packMPI(buf, sendsize, &position, pg, sendset, record->toPatch);
 	  for(v=0;v<numVars;v++){
 	    ParticleVariableBase* var = new_dw->getParticleVariable(reloc_old_labels[matl][v], pset);
 	    var->packMPI(buf, sendsize, &position, pg, sendset);
@@ -707,6 +758,7 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
       }
     }
     ASSERT(position <= sendsize);
+    ASSERT(sendsize > 0);    
     // Send (isend) the message
     MPI_Request rid;
     int to=iter->first;
@@ -732,8 +784,12 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
     }
     MPI_Status status;
     MPI_Probe(iter->first, RELOCATE_TAG, pg->getComm(), &status);
+    //ASSERT(status.MPI_ERROR == 0);      
+    
     int size;
     MPI_Get_count(&status, MPI_PACKED, &size);
+    ASSERT(size != 0);
+    
     char* buf = scinew char[size];
     recvbuffers[idx]=buf;
     MPI_Recv(recvbuffers[idx], size, MPI_PACKED, iter->first,
@@ -784,21 +840,19 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
     for(int m = 0; m < matls->size(); m++){
       int matl = matls->get(m);
       int numVars = (int)reloc_old_labels[matl].size();
-      vector<ParticleSubset*> orig_psets;
+      vector<const Patch*> fromPatches;
       vector<ParticleSubset*> subsets;
       ParticleSubset* keepset = keepsets(p, m);
       ASSERT(keepset != 0);
-      orig_psets.push_back(old_dw->getParticleSubset(matl, patch));
+      fromPatches.push_back(patch);
       subsets.push_back(keepset);
       for(int i=0;i<(int)neighbors.size();i++){
 	const Patch* fromPatch=neighbors[i];
-	int from = lb->getPatchwiseProcessorAssignment(fromPatch, pg);
+	int from = lb->getPatchwiseProcessorAssignment(fromPatch->getRealPatch(), pg);
 	if(from == me){
-	  ScatterRecord* record = scatter_records.findRecord(fromPatch,
-							     patch, matl);
+	  ScatterRecord* record = scatter_records.findRecord(fromPatch, patch, matl);
 	  if(record){
-	    ParticleSubset* pset = old_dw->getParticleSubset(matl, record->fromPatch);
-	    orig_psets.push_back(pset);
+	    fromPatches.push_back(fromPatch);
 	    subsets.push_back(record->sendset);
 	  }
 	}
@@ -830,19 +884,19 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
 	// Merge local portion
 	vector<ParticleVariableBase*> invars(subsets.size());
 	for(int i=0;i<(int)subsets.size();i++)
-	  invars[i]=new_dw->getParticleVariable(reloc_old_posLabel,
-						orig_psets[i]);
+	  invars[i]=new_dw->getParticleVariable(reloc_old_posLabel, matl,
+						fromPatches[i]);
 	ParticleVariableBase* newpos = posvar->clone();
-	newpos->gather(newsubset, subsets, invars, numRemote);
+	newpos->gather(newsubset, subsets, invars, fromPatches, numRemote);
 
 	vector<ParticleVariableBase*> vars(numVars);
 	for(v=0;v<numVars;v++){
 	  const VarLabel* label = reloc_old_labels[matl][v];
 	  ParticleVariableBase* var = new_dw->getParticleVariable(label, orig_pset);
 	  for(int i=0;i<(int)subsets.size();i++)
-	    invars[i]=new_dw->getParticleVariable(label, orig_psets[i]);
+	    invars[i]=new_dw->getParticleVariable(label, matl, fromPatches[i]);
 	  ParticleVariableBase* newvar = var->clone();
-	  newvar->gather(newsubset, subsets, invars, numRemote);
+	  newvar->gather(newsubset, subsets, invars, fromPatches, numRemote);
 	  vars[v]=newvar;
 	}
 	// Unpack MPI portion
