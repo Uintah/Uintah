@@ -102,7 +102,7 @@ HexToTet::execute()
   const TypeDescription *src_td = ifieldhandle->get_type_description();
   CompileInfoHandle ci = HexToTetAlgo::get_compile_info(src_td);
   Handle<HexToTetAlgo> algo;
-  if (!module_dynamic_compile(ci, algo)) {
+  if (!module_maybe_dynamic_compile(ci, algo)) {
     error("HexToTet only supported for Hex types -- failed for "+
 	  src_td->get_name());
     return;
