@@ -2,7 +2,8 @@ SRCDIR := Packages/Uintah/testprograms
 
 SUBDIRS := $(SRCDIR)/TestSuite \
 	$(SRCDIR)/TestMatrix3 \
-	$(SRCDIR)/TestConsecutiveRangeSet
+	$(SRCDIR)/TestConsecutiveRangeSet \
+	$(SRCDIR)/TestRangeTree
 
 include $(SRCTOP)/scripts/recurse.mk
 
@@ -12,7 +13,8 @@ SRCS	= $(SRCDIR)/RunTests.cc
 
 PSELIBS := Packages/Uintah/testprograms/TestSuite \
 	Packages/Uintah/testprograms/TestMatrix3 \
-	Packages/Uintah/testprograms/TestConsecutiveRangeSet
+	Packages/Uintah/testprograms/TestConsecutiveRangeSet \
+	Packages/Uintah/testprograms/TestRangeTree
 
 LIBS := $(XML_LIBRARY) -lm
 
