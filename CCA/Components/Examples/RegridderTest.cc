@@ -66,6 +66,7 @@ namespace Uintah
     Task* task = scinew Task( "errorEstimate", this, &RegridderTest::errorEstimate, false );
     task->requires( Task::NewDW, d_examplesLabel->density, Ghost::None, 0 );
     task->modifies( d_sharedState->get_refineFlag_label(), d_sharedState->refineFlagMaterials() );
+    task->modifies( d_sharedState->get_oldRefineFlag_label(), d_sharedState->refineFlagMaterials() );
     task->modifies( d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials() );
     scheduler->addTask( task, level->eachPatch(), d_sharedState->allMaterials() );
   }
@@ -75,6 +76,7 @@ namespace Uintah
     Task* task = scinew Task( "initialErrorEstimate", this, &RegridderTest::errorEstimate, true );
     task->requires( Task::NewDW, d_examplesLabel->density, Ghost::None, 0 );
     task->modifies( d_sharedState->get_refineFlag_label(), d_sharedState->refineFlagMaterials() );
+    task->modifies( d_sharedState->get_oldRefineFlag_label(), d_sharedState->refineFlagMaterials() );
     task->modifies( d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials() );
     scheduler->addTask( task, level->eachPatch(), d_sharedState->allMaterials() );
   }
@@ -106,11 +108,17 @@ namespace Uintah
     new_dw->getGrid()->getSpatialRange( gridBoundingBox );
     Vector gridMax( gridBoundingBox.max() );
     Vector gridMin( gridBoundingBox.min() );
-    d_centerOfCylinder          = (( gridMax - gridMin ) / 2.0 ) + gridMin;
-    d_lengthOfCylinder          = 0.60 * gridMax.z();
-    d_innerRadiusOfCylinder     = 0.05 * gridMax.x();
-    d_outerRadiusOfCylinder     = 0.10 * gridMax.x();
-    d_rateOfExpansionOfCylinder = 0.01 * gridMax.x();
+
+    double pi = 3.141592653589;
+    d_centerOfDomain   = (( gridMax - gridMin ) / 2.0 ) + gridMin;
+    d_radiusOfBall     = 0.10 * gridMax.x();
+    d_radiusOfOrbit    = 0.25 * gridMax.x();
+    d_currentAngle     = 0;
+    d_angularVelocity  = 5;
+    d_centerOfBall     = d_centerOfDomain;
+    d_centerOfBall[0] += d_radiusOfOrbit * cos( ( pi * d_currentAngle ) / 180.0 );
+    d_centerOfBall[1] += d_radiusOfOrbit * sin( ( pi * d_currentAngle ) / 180.0 );
+    d_oldCenterOfBall  = d_centerOfBall;
 
     for(int p=0;p<patches->size();p++){
       const Patch* patch = patches->get(p);
@@ -121,7 +129,7 @@ namespace Uintah
 	for ( CellIterator iter(patch->getCellIterator()); !iter.done(); iter++) {
 	  IntVector idx(*iter);
 	  Vector whereThisCellIs( patch->cellPosition( idx ) );
-	  Vector distanceToCenterOfDomain = whereThisCellIs - d_centerOfCylinder;
+	  Vector distanceToCenterOfDomain = whereThisCellIs - d_centerOfBall;
 	  density[idx] = distanceToCenterOfDomain.length();
 	}
       }
@@ -146,9 +154,6 @@ namespace Uintah
     
     const Level* level = getLevel(patches);
     if ( level->getIndex() == 0 ) {
-      d_centerOfCylinder[0] += d_rateOfExpansionOfCylinder;
-      //    d_innerRadiusOfCylinder += d_rateOfExpansionOfCylinder;
-      //    d_outerRadiusOfCylinder += d_rateOfExpansionOfCylinder;
     }
 
     for(int p=0;p<patches->size();p++){
@@ -160,7 +165,7 @@ namespace Uintah
 	for ( CellIterator iter(patch->getCellIterator()); !iter.done(); iter++) {
 	  IntVector idx(*iter);
 	  Vector whereThisCellIs( patch->cellPosition( idx ) );
-	  Vector distanceToCenterOfDomain = whereThisCellIs - d_centerOfCylinder;
+	  Vector distanceToCenterOfDomain = whereThisCellIs - d_centerOfBall;
 	  density[idx] = distanceToCenterOfDomain.length();
 	}
       }
@@ -172,12 +177,26 @@ namespace Uintah
 				      const MaterialSubset* matls,
 				      DataWarehouse*, DataWarehouse* new_dw, bool initial )
   {
+    double pi = 3.141592653589;
+    if ( getLevel(patches)->getIndex() == 0 ) {
+      d_currentAngle += d_angularVelocity;
+      d_oldCenterOfBall = d_centerOfBall;
+      cerr << "RANDY: RegridderTest::scheduleErrorEstimate() center = " << d_centerOfBall << endl;
+      d_centerOfBall = d_centerOfDomain;
+      d_centerOfBall[0] += d_radiusOfOrbit * cos( ( pi * d_currentAngle ) / 180.0 );
+      d_centerOfBall[1] += d_radiusOfOrbit * sin( ( pi * d_currentAngle ) / 180.0 );
+      cerr << "RANDY: RegridderTest::scheduleErrorEstimate() after  = " << d_centerOfBall << endl;
+    }
+
     //    cerr << "RANDY: RegridderTest::errorEstimate()" << endl;
     for ( int p = 0; p < patches->size(); p++ ) {
       const Patch* patch = patches->get(p);
 
       CCVariable<int> refineFlag;
       new_dw->getModifiable(refineFlag, d_sharedState->get_refineFlag_label(), 0, patch);
+
+      CCVariable<int> oldRefineFlag;
+      new_dw->getModifiable(oldRefineFlag, d_sharedState->get_oldRefineFlag_label(), 0, patch);
 
       PerPatch<PatchFlagP> refinePatchFlag;
       new_dw->get(refinePatchFlag, d_sharedState->get_refinePatchFlag_label(), 0, patch);
@@ -193,23 +212,20 @@ namespace Uintah
 	for ( CellIterator iter(patch->getCellIterator()); !iter.done(); iter++) {
 	  IntVector idx(*iter);
 
-/*
 	  Vector whereThisCellIs( patch->cellPosition( idx ) );
-	  Vector vectorToCenterOfCylinder = whereThisCellIs - d_centerOfCylinder;
-	  double distanceToCenterOfCylinderInXYPlane = Sqrt( vectorToCenterOfCylinder.x() *
-							     vectorToCenterOfCylinder.x() +
-							     vectorToCenterOfCylinder.y() *
-							     vectorToCenterOfCylinder.y() );
-	//	  if ( ( distanceToCenterOfCylinderInXYPlane <= d_outerRadiusOfCylinder ) &&
-	//	       ( distanceToCenterOfCylinderInXYPlane >= d_innerRadiusOfCylinder ) &&
-	//	       ( fabs(vectorToCenterOfCylinder.z()) <= ( d_lengthOfCylinder / 2.0 ) ) ) {
-	//	if ( vectorToCenterOfCylinder.length() <= d_innerRadiusOfCylinder ) {
-*/
-	  if ( density[idx] <= d_innerRadiusOfCylinder ) {
+	  Vector vectorToCenterOfBall = whereThisCellIs - d_centerOfBall;
+	  Vector vectorToCenterOfBallOld = whereThisCellIs - d_oldCenterOfBall;
+
+	  if ( vectorToCenterOfBall.length() <= d_radiusOfBall ) {
 	    refineFlag[idx]=true;
 	    foundErrorOnPatch = true;
 	  } else {
 	    refineFlag[idx]=false;
+	  }
+	  if ( vectorToCenterOfBallOld.length() <= d_radiusOfBall ) {
+	    oldRefineFlag[idx]=true;
+	  } else {
+	    oldRefineFlag[idx]=false;
 	  }
 	}
       }
@@ -237,7 +253,7 @@ namespace Uintah
 	for ( CellIterator iter(patch->getCellIterator()); !iter.done(); iter++) {
 	  IntVector idx(*iter);
 	  Vector whereThisCellIs( patch->cellPosition( idx ) );
-	  Vector distanceToCenterOfDomain = whereThisCellIs - d_centerOfCylinder;
+	  Vector distanceToCenterOfDomain = whereThisCellIs - d_centerOfBall;
 	  density[idx] = distanceToCenterOfDomain.length();
 	}
       }
