@@ -354,6 +354,8 @@ using namespace SCIRun;
       bool d_massExchange;
       bool d_RateForm;
       bool d_EqForm;
+      int d_dbgVar1;
+      int d_dbgVar2;
       int d_max_iter_equilibration;
      
     private:
