@@ -65,6 +65,8 @@ private:
   int nmodes_;
   vector< int > modes_;
 
+  unsigned int conversion_;
+
   GuiInt allowUnrolling_;
   GuiInt unRolling_;
   int unrolling_;
@@ -86,6 +88,7 @@ NIMRODConverter::NIMRODConverter(GuiContext* context)
     datasetsStr_(context->subVar("datasets")),
     nModes_(context->subVar("nmodes")),
     nmodes_(0),
+    conversion_(NONE),
     allowUnrolling_(context->subVar("allowUnrolling")),
     unRolling_(context->subVar("unrolling")),
     unrolling_(0),
@@ -240,10 +243,12 @@ NIMRODConverter::execute(){
   }
 
   string property;
-  unsigned int conversion = NONE;
 
   // If data change, update the GUI the field if needed.
   if( generation ) {
+    conversion_ = NONE;
+
+    remark( "Found new data ... updating." );
 
     nGenerations_.resize( nHandles.size() );
     mesh_.resize(4);
@@ -274,18 +279,18 @@ NIMRODConverter::execute(){
 	      // Sort the components components.
 	      if( dataset[0].find( "R:Scalar" ) != string::npos &&
 		  nHandle->nrrd->dim == 3 ) {
-		conversion = MESH;
+		conversion_ = MESH;
 		mesh_[R] = ic;
 	      } else if( dataset[0].find( "Z:Scalar" ) != string::npos && 
 			 nHandle->nrrd->dim == 3 ) {
-		conversion = MESH;
+		conversion_ = MESH;
 		mesh_[Z] = ic; 
 	      } else if( dataset[0].find( "PHI:Scalar" ) != string::npos && 
 			 nHandle->nrrd->dim == 2 ) {
 		mesh_[PHI] = ic;
 	      } else if( dataset[0].find( "K:Scalar" ) != string::npos && 
 			 nHandle->nrrd->dim == 2 ) {
-		conversion = PERTURBED;
+		conversion_ = PERTURBED;
 		mesh_[K] = ic;
 	      } else {
 		error( dataset[0] + " is unknown NIMROD mesh data." );
@@ -314,19 +319,19 @@ NIMRODConverter::execute(){
 
 	  if( dataset[0].find( "R:Scalar" ) != string::npos &&
 	      nHandle->nrrd->dim == 4 ) {
-	    conversion = REALSPACE;
+	    conversion_ = REALSPACE;
 	    data_[0] = ic;
 	  } else if( dataset[0].find( "Z:Scalar" ) != string::npos && 
 		     nHandle->nrrd->dim == 4 ) {
-	    conversion = REALSPACE;
+	    conversion_ = REALSPACE;
 	    data_[1] = ic; 
 	  } else if( dataset[0].find( "PHI:Scalar" ) != string::npos && 
 		     nHandle->nrrd->dim == 4 ) {
-	    conversion = REALSPACE;
+	    conversion_ = REALSPACE;
 	    data_[2] = ic;
 	  } else if( dataset[0].find( ":Scalar" ) != string::npos && 
 		     nHandle->nrrd->dim == 4 ) {
-	    conversion = SCALAR;
+	    conversion_ = SCALAR;
 	    data_[0] = ic;
 	  } else {
 	    error( dataset[0] + " is unknown NIMROD node data." );
@@ -354,19 +359,19 @@ NIMRODConverter::execute(){
 	      int index = 0;
 	      if( dataset[0].find( "R:Scalar" ) != string::npos &&
 		  nHandle->nrrd->dim == 4 ) {
-		conversion = PERTURBED;
+		conversion_ = PERTURBED;
 		index = 0 + 3 * offset;
 	      } else if( dataset[0].find( "Z:Scalar" ) != string::npos && 
 			 nHandle->nrrd->dim == 4 ) {
-		conversion = PERTURBED;
+		conversion_ = PERTURBED;
 		index = 1 + 3 * offset;
 	      } else if( dataset[0].find( "PHI:Scalar" ) != string::npos && 
 			 nHandle->nrrd->dim == 4 ) {
 		index = 2 + 3 * offset;
-		conversion = PERTURBED;
+		conversion_ = PERTURBED;
 	      } else { // Scalar data
 		data_.resize(2);
-		conversion = PERTURBED;
+		conversion_ = PERTURBED;
 		index = 0 + 1 * offset;
 	      }
 
@@ -399,19 +404,19 @@ NIMRODConverter::execute(){
   while( i<data_.size() && data_[i] != -1 )
     i++;
   
-  if( conversion & MESH ) {
+  if( conversion_ & MESH ) {
     if( mesh_[0] == -1 || mesh_[1] == -1 || mesh_[2] == -1 ) {
       error( "Not enough mesh data for the mesh conversion." );
       error_ = true;
       return;
     }
-  } else if ( conversion & REALSPACE ) {
+  } else if ( conversion_ & REALSPACE ) {
     if( mesh_[2] == -1 || i != data_.size() ) {
       error( "Not enough data for the realspace conversion." );
       error_ = true;
       return;
     }
-  } else if ( conversion & PERTURBED ) {
+  } else if ( conversion_ & PERTURBED ) {
 
     if( mesh_[2] == -1 || mesh_[3] == -1 || i != data_.size() ) {
       error( "Not enough data for the perturbed conversion." );
@@ -420,22 +425,22 @@ NIMRODConverter::execute(){
     }
   }
 
-  if( (int) (conversion & MESH) != allowUnrolling_.get() )
+  if( (int) (conversion_ & MESH) != allowUnrolling_.get() )
   {
     ostringstream str;
-    str << id << " set_unrolling " << (conversion & MESH);
+    str << id << " set_unrolling " << (conversion_ & MESH);
     
     gui->execute(str.str().c_str());
 
-    if( conversion & MESH ) {
+    if( conversion_ & MESH ) {
       warning( "Select the mesh rolling for the calculation" );
       error_ = true; // Not really an error but it so it will execute.
       return;
     }
   }
 
-  if( (conversion & PERTURBED) &&
-      nHandles[mesh_[PHI]]->get_property( "Coordinate System", property ) &&
+  if( (conversion_ & PERTURBED) &&
+      nHandles[mesh_[K]]->get_property( "Coordinate System", property ) &&
       property.find("Cylindrical - NIMROD") != string::npos )
     nmodes_ = nHandles[mesh_[K]]->nrrd->axis[1].size; // Modes
   else
@@ -467,10 +472,10 @@ NIMRODConverter::execute(){
     // Update the modes in the GUI
     ostringstream str;
     str << id << " set_modes " << nmodes_ << " 1";
-    
+
     gui->execute(str.str().c_str());
     
-    if( conversion & PERTURBED ) {
+    if( conversion_ & PERTURBED ) {
       warning( "Select the mode for the calculation" );
       error_ = true; // Not really an error but it so it will execute.
       return;
@@ -511,7 +516,7 @@ NIMRODConverter::execute(){
     string convertStr;
     unsigned int ntype;
 
-    if( conversion & MESH ) {
+    if( conversion_ & MESH ) {
       ntype = nHandles[mesh_[PHI]]->nrrd->type;
 
       nHandles[mesh_[PHI]]->get_property( "Coordinate System", property );
@@ -536,7 +541,7 @@ NIMRODConverter::execute(){
 
       convertStr = "Mesh";
 
-    } else if( conversion & SCALAR ) {
+    } else if( conversion_ & SCALAR ) {
       ntype = nHandles[data_[0]]->nrrd->type;
 
       idim = nHandles[data_[0]]->nrrd->axis[1].size; // Phi
@@ -545,7 +550,7 @@ NIMRODConverter::execute(){
 
       convertStr = "Scalar";
 
-     } else if( conversion & REALSPACE ) {
+     } else if( conversion_ & REALSPACE ) {
       ntype = nHandles[mesh_[PHI]]->nrrd->type;
 
       nHandles[mesh_[PHI]]->get_property( "Coordinate System", property );
@@ -568,7 +573,7 @@ NIMRODConverter::execute(){
 
       convertStr = "RealSpace";
 
-    } else if( conversion & PERTURBED ) {
+    } else if( conversion_ & PERTURBED ) {
       ntype = nHandles[mesh_[PHI]]->nrrd->type;
 
       nHandles[mesh_[PHI]]->get_property( "Coordinate System", property );
@@ -593,7 +598,7 @@ NIMRODConverter::execute(){
       convertStr = "Perturbed";
     }
 
-    if( conversion ) {
+    if( conversion_ ) {
       remark( "Converting the " + convertStr );
     
       CompileInfoHandle ci_mesh =
@@ -615,7 +620,7 @@ NIMRODConverter::execute(){
       return;
     }
 
-    if( conversion & MESH )
+    if( conversion_ & MESH )
       modes_.clear();
   }
   
