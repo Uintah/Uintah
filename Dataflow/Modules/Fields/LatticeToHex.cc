@@ -9,8 +9,8 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Datatypes/HexVol.h>
-#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/HexVolField.h>
+#include <Core/Datatypes/LatVolField.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <math.h>
@@ -73,11 +73,11 @@ void LatticeToHex::execute()
   }
   last_gen_ = ifieldH->generation;
 
-  // we expect that the input field is a TetVol<Vector>
+  // we expect that the input field is a TetVolField<Vector>
   if (ifieldH->get_type_description()->get_name() !=
-      get_type_description((LatticeVol<int> *)0)->get_name())
+      get_type_description((LatVolField<int> *)0)->get_name())
   {
-    postMessage("LatticeToHex: ERROR: input volume is not a LatticeVol<int>.  Exiting.");
+    postMessage("LatticeToHex: ERROR: input volume is not a LatVolField<int>.  Exiting.");
     return;
   }                     
 
@@ -86,7 +86,7 @@ void LatticeToHex::execute()
     return;
   }                         
 
-  LatticeVol<int> *lv = dynamic_cast<LatticeVol<int> *>(ifieldH.get_rep());
+  LatVolField<int> *lv = dynamic_cast<LatVolField<int> *>(ifieldH.get_rep());
   LatVolMesh *lvm = lv->get_typed_mesh().get_rep();
   HexVolMesh *hvm = scinew HexVolMesh;
 
@@ -120,7 +120,7 @@ void LatticeToHex::execute()
 	hvm->add_hex(n000, n001, n011, n010, n100, n101, n111, n110);
       }
 
-  HexVol<int> *hv = scinew HexVol<int>(hvm, Field::NODE);
+  HexVolField<int> *hv = scinew HexVolField<int>(hvm, Field::NODE);
 
   int c=0;
   for (k=0; k<nz-1; k++)

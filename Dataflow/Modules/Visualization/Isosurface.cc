@@ -32,11 +32,11 @@ using std::ostringstream;
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/Material.h>
 #include <Core/GuiInterface/GuiVar.h>
-#include <Core/Datatypes/TetVol.h>
-#include <Core/Datatypes/MaskedTetVol.h>
-#include <Core/Datatypes/LatticeVol.h>
-#include <Core/Datatypes/MaskedLatticeVol.h>
-#include <Core/Datatypes/TriSurf.h>
+#include <Core/Datatypes/TetVolField.h>
+#include <Core/Datatypes/MaskedTetVolField.h>
+#include <Core/Datatypes/LatVolField.h>
+#include <Core/Datatypes/MaskedLatVolField.h>
+#include <Core/Datatypes/TriSurfField.h>
 
 #include <Core/Algorithms/Visualization/TetMC.h>
 #include <Core/Algorithms/Visualization/HexMC.h>
@@ -232,7 +232,7 @@ Isosurface::send_results()
 
   // output surface
   if (build_trisurf) {
-    TriSurf<double> *ts = new TriSurf<double>(trisurf_mesh_, Field::NODE);
+    TriSurfField<double> *ts = new TriSurfField<double>(trisurf_mesh_, Field::NODE);
     vector<double>::iterator iter = ts->fdata().begin();
     while (iter != ts->fdata().end()) { (*iter)=iso_value; ++iter; }
     FieldHandle fH(ts);

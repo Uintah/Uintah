@@ -31,8 +31,8 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/TetVol.h>
-#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/TetVolField.h>
+#include <Core/Datatypes/LatVolField.h>
 #include <Core/Geometry/Point.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
@@ -79,7 +79,7 @@ void
 Gradient::dispatch_tetvol(F *f)
 {
   TetVolMeshHandle tvm = f->get_typed_mesh(); 
-  TetVol<Vector> *result = new TetVol<Vector>(tvm, Field::CELL);
+  TetVolField<Vector> *result = new TetVolField<Vector>(tvm, Field::CELL);
   typename F::mesh_type::Cell::iterator ci, cie;
   tvm->begin(ci); tvm->end(cie);
   while (ci != cie)
@@ -98,7 +98,7 @@ void
 Gradient::dispatch_latticevol(F *f)
 {
   LatVolMeshHandle lvm = f->get_typed_mesh(); 
-  LatticeVol<Vector> *result = new LatticeVol<Vector>(lvm, Field::CELL);
+  LatVolField<Vector> *result = new LatVolField<Vector>(lvm, Field::CELL);
   typename F::mesh_type::Cell::iterator ci, cie;
   lvm->begin(ci); lvm->end(cie);
   while (ci != cie)
@@ -145,37 +145,37 @@ Gradient::execute()
 
   const TypeDescription *ftd = fieldhandle->get_type_description();
 
-  if (ftd->get_name() == get_type_description((TetVol<double> *)0)->get_name())
+  if (ftd->get_name() == get_type_description((TetVolField<double> *)0)->get_name())
   {
-    dispatch_tetvol((TetVol<double> *)field);
+    dispatch_tetvol((TetVolField<double> *)field);
   }
-  else if (ftd->get_name() == get_type_description((TetVol<int> *)0)->get_name())
+  else if (ftd->get_name() == get_type_description((TetVolField<int> *)0)->get_name())
   {
-    dispatch_tetvol((TetVol<int> *)field);
+    dispatch_tetvol((TetVolField<int> *)field);
   }
-  else if (ftd->get_name() == get_type_description((TetVol<short> *)0)->get_name())
+  else if (ftd->get_name() == get_type_description((TetVolField<short> *)0)->get_name())
   {
-    dispatch_tetvol((TetVol<short> *)field);
+    dispatch_tetvol((TetVolField<short> *)field);
   }
-  else if (ftd->get_name() == get_type_description((TetVol<unsigned char> *)0)->get_name())
+  else if (ftd->get_name() == get_type_description((TetVolField<unsigned char> *)0)->get_name())
   {
-    dispatch_tetvol((TetVol<unsigned char> *)field);
+    dispatch_tetvol((TetVolField<unsigned char> *)field);
   }
-  else if (ftd->get_name() == get_type_description((LatticeVol<double> *)0)->get_name())
+  else if (ftd->get_name() == get_type_description((LatVolField<double> *)0)->get_name())
   {
-    dispatch_latticevol((LatticeVol<double> *)field);
+    dispatch_latticevol((LatVolField<double> *)field);
   }
-  else if (ftd->get_name() == get_type_description((LatticeVol<int> *)0)->get_name())
+  else if (ftd->get_name() == get_type_description((LatVolField<int> *)0)->get_name())
   {
-    dispatch_latticevol((LatticeVol<int> *)field);
+    dispatch_latticevol((LatVolField<int> *)field);
   }
-  else if (ftd->get_name() == get_type_description((LatticeVol<short> *)0)->get_name())
+  else if (ftd->get_name() == get_type_description((LatVolField<short> *)0)->get_name())
   {
-    dispatch_latticevol((LatticeVol<short> *)field);
+    dispatch_latticevol((LatVolField<short> *)field);
   }
-  else if (ftd->get_name() == get_type_description((LatticeVol<unsigned char> *)0)->get_name())
+  else if (ftd->get_name() == get_type_description((LatVolField<unsigned char> *)0)->get_name())
   {
-    dispatch_latticevol((LatticeVol<unsigned char> *)field);
+    dispatch_latticevol((LatVolField<unsigned char> *)field);
   }
   else
   {

@@ -27,7 +27,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Core/Datatypes/PointCloud.h>
+#include <Core/Datatypes/PointCloudField.h>
 #include <Dataflow/Modules/Fields/GatherPoints.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
@@ -99,7 +99,7 @@ GatherPoints::execute()
     }
     ++pi;
   }
-  PointCloud<double> *pcH = scinew PointCloud<double>(pcmH, Field::NODE);
+  PointCloudField<double> *pcH = scinew PointCloudField<double>(pcmH, Field::NODE);
   ofld->send(FieldHandle(pcH));
 }
 

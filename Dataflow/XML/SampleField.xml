@@ -29,13 +29,13 @@
     <summary>
       <p>
         SampleField generates samples from any type of input field and
-        outputs the samples as a PointCloud field.
+        outputs the samples as a PointCloudField field.
       </p>
     </summary>
     <description>
       <p>
         SampleField generates samples from any type of input field and outputs
-        the samples as a PointCloud field.  The samples can be generated
+        the samples as a PointCloudField field.  The samples can be generated
         randomly or user selected via a 3D widget.  
       </p>
       <p>

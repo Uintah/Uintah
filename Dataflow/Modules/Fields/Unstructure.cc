@@ -96,15 +96,15 @@ Unstructure::execute()
     const TypeDescription *mtd = ifieldhandle->mesh()->get_type_description();
     if (mtd->get_name() == get_type_description((LatVolMesh *)0)->get_name())
     {
-      dstname = "HexVol";
+      dstname = "HexVolField";
     }
     if (mtd->get_name() == get_type_description((ImageMesh *)0)->get_name())
     {
-      dstname = "QuadSurf";
+      dstname = "QuadSurfField";
     }  
     if (mtd->get_name() == get_type_description((ScanlineMesh *)0)->get_name())
     {
-      dstname = "ContourField";
+      dstname = "CurveField";
     }
 
     if (dstname == "")

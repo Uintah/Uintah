@@ -30,7 +30,7 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/LatVolField.h>
 #include <Core/Geometry/Point.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
@@ -124,15 +124,15 @@ SampleLattice::execute()
   FieldHandle ofh;
   if (datatype == VECTOR)
   {
-    ofh = scinew LatticeVol<Vector>(mesh, Field::NODE);
+    ofh = scinew LatVolField<Vector>(mesh, Field::NODE);
   }				    
   else if (datatype == TENSOR)	    
   {				    
-    ofh = scinew LatticeVol<Tensor>(mesh, Field::NODE);
+    ofh = scinew LatVolField<Tensor>(mesh, Field::NODE);
   }				    
   else				    
   {				    
-    ofh = scinew LatticeVol<double>(mesh, Field::NODE);
+    ofh = scinew LatVolField<double>(mesh, Field::NODE);
   }
 
   FieldOPort *ofp = (FieldOPort *)get_oport("Output Sample Field");

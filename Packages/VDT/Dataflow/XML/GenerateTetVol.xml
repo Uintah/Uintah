@@ -3,7 +3,7 @@
 <?xml-stylesheet href="../../../../../doc/package-component.xsl" type="text/xsl"?>
 <?cocoon-process type="xslt"?>
 
-<component name="GenerateTetVol" category="Modeling">
+<component name="GenerateTetVolField" category="Modeling">
   <overview>
     <authors>
       <author>Martin Cole</author>
@@ -24,7 +24,7 @@
     </inputs>
     <outputs>
       <port>
-        <name>TetVol</name>
+        <name>TetVolField</name>
         <datatype>SCIRun::Field</datatype>
       </port>
     </outputs>

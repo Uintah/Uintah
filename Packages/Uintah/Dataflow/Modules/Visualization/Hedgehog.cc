@@ -26,7 +26,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
-#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/LatVolField.h>
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Dataflow/Widgets/BoxWidget.h>
 #include <Dataflow/Widgets/FrameWidget.h>
@@ -223,8 +223,8 @@ void Hedgehog::execute()
   }
   
   if(vfield->get_type_name(0) != "LevelField" &&
-     vfield->get_type_name(0) != "LatticeVol" ){
-    cerr<<"Not a LatticeVol or LevelField\n";
+     vfield->get_type_name(0) != "LatVolField" ){
+    cerr<<"Not a LatVolField or LevelField\n";
   }
 
 
@@ -514,14 +514,14 @@ void Hedgehog::tcl_command(TCLArgs& args, void* userdata)
 //       return false;
 //     }
 //     return get_dimensions( mesh_, nx, ny, nz );
-//   } else if(texfld_->get_type_name(0) == "LatticeVol"){
+//   } else if(texfld_->get_type_name(0) == "LatVolField"){
 //     LatVolMeshHandle mesh_;
 //     if (type == "Vector") {
-//       LatticeVol<Vector> *fld =
-// 	dynamic_cast<LatticeVol<Vector>*>(texfld_.get_rep());
+//       LatVolField<Vector> *fld =
+// 	dynamic_cast<LatVolField<Vector>*>(texfld_.get_rep());
 //       mesh_ = fld->get_typed_mesh();
 //     } else {
-//       cerr << "Hedgehog error - unknown LatticeVol type: " << type << endl;
+//       cerr << "Hedgehog error - unknown LatVolField type: " << type << endl;
 //       return false;
 //     }
 //     return get_dimensions( mesh_, nx, ny, nz );
@@ -548,7 +548,7 @@ Hedgehog::interpolate(FieldHandle vfld, const Point& p, Vector& val)
       return false;
     }
   } else {
-    if( field_type == "LatticeVol"){
+    if( field_type == "LatVolField"){
     // use virtual field interpolation
       VectorFieldInterface *vfi;
       if( (vfi = vfld->query_vector_interface())){
@@ -594,7 +594,7 @@ Hedgehog::interpolate(FieldHandle sfld, const Point& p, double& val)
       cerr << "Uintah::Hedgehog::interpolate:: error - unimplemented Field type: " << type << endl;
       return false;
     }
-  } else if( sfld->get_type_name(0) == "LatticeVol" ){
+  } else if( sfld->get_type_name(0) == "LatVolField" ){
     // use virtual field interpolation
     ScalarFieldInterface *sfi;
     if(( sfi = sfld->query_scalar_interface())){

@@ -31,8 +31,8 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
-#include <Core/Datatypes/TetVol.h>
-#include <Core/Datatypes/PointCloud.h>
+#include <Core/Datatypes/TetVolField.h>
+#include <Core/Datatypes/PointCloudField.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Malloc/Allocator.h>
@@ -110,14 +110,14 @@ void ApplyFEMVoltageSource::execute()
   }
 
   TetVolMeshHandle mesh;
-  TetVol<int> *field;
+  TetVolField<int> *field;
 
-  if (hField->get_type_name(0)!="TetVol" && hField->get_type_name(1)!="int"){
-    msgStream_ << "Supplied field is not of type TetVol<int>. Returning..." << endl;
+  if (hField->get_type_name(0)!="TetVolField" && hField->get_type_name(1)!="int"){
+    msgStream_ << "Supplied field is not of type TetVolField<int>. Returning..." << endl;
     return;
   }
   else {
-    field = dynamic_cast<TetVol<int>*> (hField.get_rep());
+    field = dynamic_cast<TetVolField<int>*> (hField.get_rep());
     mesh = field->get_typed_mesh();
   }
   

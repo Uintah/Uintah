@@ -32,7 +32,7 @@
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/FieldSet.h>
-#include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/TetVolField.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/Barrier.h>
 #include <Core/Thread/Parallel.h>
@@ -44,13 +44,13 @@ namespace BioPSE {
 using namespace SCIRun;
 
 class BuildFEMatrix;
-typedef LockingHandle<TetVol<int> >   TetVolIntHandle;
+typedef LockingHandle<TetVolField<int> >   TetVolFieldIntHandle;
 typedef LockingHandle<BuildFEMatrix>   BuildFEMatrixHandle;
 
 class BuildFEMatrix: public Datatype {
   
   //! Private data members
-  TetVolIntHandle                 hField_;
+  TetVolFieldIntHandle                 hField_;
   TetVolMeshHandle                hMesh_;
   MatrixHandle&                   hA_;
   SparseRowMatrix*                pA_;
@@ -72,11 +72,11 @@ class BuildFEMatrix: public Datatype {
  
 public:
    //! Constructor
-  BuildFEMatrix(TetVolIntHandle,
+  BuildFEMatrix(TetVolFieldIntHandle,
 		vector<pair<string, Tensor> >&,
 		MatrixHandle&, 
 		int, double);
-  static bool build_FEMatrix(TetVolIntHandle,
+  static bool build_FEMatrix(TetVolFieldIntHandle,
 			     vector<pair<string, Tensor> > &,
 			     MatrixHandle&, double);
   //! Destuctor

@@ -31,7 +31,7 @@ SRCDIR   := Packages/FieldConverters/Core/Datatypes
 
 SRCS     += \
 	$(SRCDIR)/Mesh.cc \
-	$(SRCDIR)/Surface.cc $(SRCDIR)/TriSurface.cc $(SRCDIR)/SurfTree.cc \
+	$(SRCDIR)/Surface.cc $(SRCDIR)/TriSurfFieldace.cc $(SRCDIR)/SurfTree.cc \
 	$(SRCDIR)/ScalarField.cc $(SRCDIR)/ScalarFieldRGBase.cc \
 	$(SRCDIR)/ScalarFieldRG.cc $(SRCDIR)/ScalarFieldUG.cc \
 	$(SRCDIR)/VectorField.cc $(SRCDIR)/VectorFieldRG.cc \

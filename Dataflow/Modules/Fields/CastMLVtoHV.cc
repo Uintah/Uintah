@@ -9,7 +9,7 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Datatypes/MaskedLatticeVol.h>
+#include <Core/Datatypes/MaskedLatVolField.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/Modules/Fields/CastMLVtoHV.h>
@@ -52,14 +52,14 @@ CastMLVtoHV::~CastMLVtoHV(){
 void CastMLVtoHV::execute()
 {
   // must find ports and have valid data on inputs
-  FieldIPort *iport_ = (FieldIPort*)get_iport("MaskedLatticeVol");
+  FieldIPort *iport_ = (FieldIPort*)get_iport("MaskedLatVolField");
 
   if (!iport_) {
     postMessage("Unable to initialize "+name+"'s iport\n");
     return;
   }
   
-  FieldOPort *oport_ = (FieldOPort*)get_oport("HexVol");
+  FieldOPort *oport_ = (FieldOPort*)get_oport("HexVolField");
   if (!oport_) {
     postMessage("Unable to initialize "+name+"'s oport\n");
     return;
@@ -76,11 +76,11 @@ void CastMLVtoHV::execute()
   }
   last_gen_ = ifieldH->generation;
 
-  // we expect that the input field is a TetVol<Vector>
+  // we expect that the input field is a TetVolField<Vector>
   if (ifieldH->get_type_description()->get_name().substr(0, 16)
-      != "MaskedLatticeVol")
+      != "MaskedLatVolField")
   {
-    postMessage("CastMLVtoHV: ERROR: input volume is not a MaskedLatticeVol.  Exiting.");
+    postMessage("CastMLVtoHV: ERROR: input volume is not a MaskedLatVolField.  Exiting.");
     return;
   }                     
 
@@ -145,7 +145,7 @@ CastMLVtoHVAlgo::get_compile_info(const TypeDescription *fsrc_td,
   static const string base_class_name("CastMLVtoHVAlgo");
 
   const string::size_type loc = fsrc_td->get_name().find_first_of('<');
-  const string fdst = "HexVol" + fsrc_td->get_name().substr(loc);
+  const string fdst = "HexVolField" + fsrc_td->get_name().substr(loc);
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +

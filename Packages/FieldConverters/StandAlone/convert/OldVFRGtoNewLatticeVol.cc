@@ -33,7 +33,7 @@
 */
 
 /*
- *  OldSFRGtoNewLatticeVol.cc: Converter
+ *  OldSFRGtoNewLatVolField.cc: Converter
  *
  *  Written by:
  *   David Weinstein
@@ -45,7 +45,7 @@
  */
 
 #include <FieldConverters/Core/Datatypes/VectorFieldRG.h>
-#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/LatVolField.h>
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Persistent/Pstreams.h>
 
@@ -64,7 +64,7 @@ int main(int argc, char **argv) {
   VectorFieldHandle handle;
   
   if (argc !=3) {
-    cerr << "Usage: "<<argv[0]<<" OldVFRG NewLatticeVol\n";
+    cerr << "Usage: "<<argv[0]<<" OldVFRG NewLatVolField\n";
     exit(0);
   }
   Piostream* stream=auto_istream(argv[1]);
@@ -87,7 +87,7 @@ int main(int argc, char **argv) {
   FieldHandle fH;
 
   // create a lattice Field and give it a handle
-  LatticeVol<Vector> *lf = new LatticeVol<Vector>(Field::NODE);
+  LatVolField<Vector> *lf = new LatVolField<Vector>(Field::NODE);
   fH = FieldHandle(lf);
 
   // create a mesh identical to the base mesh

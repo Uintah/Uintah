@@ -24,7 +24,7 @@
 
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Disclosure/DynamicLoader.h>
-#include <Core/Datatypes/PointCloud.h>
+#include <Core/Datatypes/PointCloudField.h>
 #include <sstream>
 
 namespace SCIRun {

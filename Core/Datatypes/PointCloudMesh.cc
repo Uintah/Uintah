@@ -16,7 +16,7 @@
 */
 
 /*
- *  PointCloudMesh.cc: PointCloud mesh
+ *  PointCloudMesh.cc: PointCloudField mesh
  *
  *  Written by:
  *   Chris Moulding
@@ -123,12 +123,12 @@ PointCloudMesh::add_point(const Point &p)
   return points_.size() - 1;
 }
 
-#define PointCloudMESH_VERSION 1
+#define PointCloudFieldMESH_VERSION 1
 
 void
 PointCloudMesh::io(Piostream& stream)
 {
-  stream.begin_class(type_name(-1), PointCloudMESH_VERSION);
+  stream.begin_class(type_name(-1), PointCloudFieldMESH_VERSION);
 
   Mesh::io(stream);
 

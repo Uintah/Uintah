@@ -34,7 +34,7 @@
 #include <Core/Algorithms/Geometry/CoregPts.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Datatypes/DenseMatrix.h>
-#include <Core/Datatypes/PointCloud.h>
+#include <Core/Datatypes/PointCloudField.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
 
@@ -66,11 +66,11 @@ Coregister::~Coregister()
 void
 Coregister::execute()
 {
-  FieldIPort *fixed = (FieldIPort *) get_iport("Fixed PointCloud");
-  FieldIPort *mobile = (FieldIPort *) get_iport("Mobile PointCloud");
+  FieldIPort *fixed = (FieldIPort *) get_iport("Fixed PointCloudField");
+  FieldIPort *mobile = (FieldIPort *) get_iport("Mobile PointCloudField");
 
   FieldHandle fixedH, mobileH;
-  PointCloud<double> *fixedPC, *mobilePC;
+  PointCloudField<double> *fixedPC, *mobilePC;
   PointCloudMeshHandle fixedM, mobileM;
   PointCloudMesh::Node::size_type nnodes;
   
@@ -84,25 +84,25 @@ Coregister::execute()
   }
 
   if (!fixed->get(fixedH)) return;
-  fixedPC = dynamic_cast<PointCloud<double> *>(fixedH.get_rep());
+  fixedPC = dynamic_cast<PointCloudField<double> *>(fixedH.get_rep());
   if (!fixedPC) return;
 
   fixedM = fixedPC->get_typed_mesh();
 
   if (!mobile->get(mobileH)) return;
-  mobilePC = dynamic_cast<PointCloud<double> *>(mobileH.get_rep());
+  mobilePC = dynamic_cast<PointCloudField<double> *>(mobileH.get_rep());
   if (!mobilePC) return;
 
   mobileM = mobilePC->get_typed_mesh();
 
   fixedM->size(nnodes);
   if (nnodes < 3) {
-    cerr << "Error: fixed PointCloud needs at least 3 input points.\n";
+    cerr << "Error: fixed PointCloudField needs at least 3 input points.\n";
     return;
   }
   mobileM->size(nnodes);
   if (nnodes < 3) {
-    cerr << "Error: mobile PointCloud needs at least 3 input points.\n";
+    cerr << "Error: mobile PointCloudField needs at least 3 input points.\n";
     return;
   }
 

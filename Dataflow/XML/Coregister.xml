@@ -26,18 +26,18 @@
     <authors>
       <author>David Weinstein</author>
     </authors>
-    <summary>Coregister the first three points of two PointClouds.</summary>
+    <summary>Coregister the first three points of two PointCloudFields.</summary>
     <description>
     </description>
   </overview>
   <io>
     <inputs lastportdynamic="no">
       <port>
-	<name>Fixed PointCloud</name>
+	<name>Fixed PointCloudField</name>
 	<datatype>SCIRun::Field</datatype>
       </port>
       <port>
-	<name>Mobile PointCloud</name>
+	<name>Mobile PointCloudField</name>
 	<datatype>SCIRun::Field</datatype>
       </port>
     </inputs>

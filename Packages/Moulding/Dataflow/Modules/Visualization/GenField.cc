@@ -11,7 +11,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/Field.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/LatVolField.h>
 #include <math.h>
 
 #include <Packages/Moulding/share/share.h>
@@ -50,10 +50,10 @@ GenField::~GenField(){
 
 void GenField::execute()
 {
-  LatticeVol<Vector> *vf = scinew LatticeVol<Vector>(Field::NODE);
+  LatVolField<Vector> *vf = scinew LatVolField<Vector>(Field::NODE);
   LatVolMesh* mesh = dynamic_cast<LatVolMesh*>(vf->get_typed_mesh().get_rep());
   LatVolMesh::Node::size_type size(64,64,64);
-  LatticeVol<Vector>::fdata_type &fdata = vf->fdata();
+  LatVolField<Vector>::fdata_type &fdata = vf->fdata();
   mesh->set_nx(64);
   mesh->set_ny(64);
   mesh->set_nz(64);

@@ -2,9 +2,9 @@
 #include <Core/Geometry/Tensor.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Datatypes/GenericField.h>
-#include <Core/Datatypes/TriSurf.h>
-#include <Core/Datatypes/ContourField.h>
-#include <Core/Datatypes/MaskedTriSurf.h>
+#include <Core/Datatypes/TriSurfField.h>
+#include <Core/Datatypes/CurveField.h>
+#include <Core/Datatypes/MaskedTriSurfField.h>
 
 
 using namespace SCIRun;
@@ -20,225 +20,225 @@ template class GenericField<TriSurfMesh, vector<unsigned int> >;
 template class GenericField<TriSurfMesh, vector<unsigned short> >;
 template class GenericField<TriSurfMesh, vector<unsigned char> >;
 
-template class GenericField<ContourMesh, vector<Tensor> >;
-template class GenericField<ContourMesh, vector<Vector> >;
-template class GenericField<ContourMesh, vector<double> >;
-template class GenericField<ContourMesh, vector<float> >;
-template class GenericField<ContourMesh, vector<int> >;
-template class GenericField<ContourMesh, vector<short> >;
-template class GenericField<ContourMesh, vector<char> >;
-template class GenericField<ContourMesh, vector<unsigned int> >;
-template class GenericField<ContourMesh, vector<unsigned short> >;
-template class GenericField<ContourMesh, vector<unsigned char> >;
+template class GenericField<CurveMesh, vector<Tensor> >;
+template class GenericField<CurveMesh, vector<Vector> >;
+template class GenericField<CurveMesh, vector<double> >;
+template class GenericField<CurveMesh, vector<float> >;
+template class GenericField<CurveMesh, vector<int> >;
+template class GenericField<CurveMesh, vector<short> >;
+template class GenericField<CurveMesh, vector<char> >;
+template class GenericField<CurveMesh, vector<unsigned int> >;
+template class GenericField<CurveMesh, vector<unsigned short> >;
+template class GenericField<CurveMesh, vector<unsigned char> >;
 
-template class TriSurf<Tensor>;
-template class TriSurf<Vector>;
-template class TriSurf<double>;
-template class TriSurf<float>;
-template class TriSurf<int>;
-template class TriSurf<short>;
-template class TriSurf<char>;
-template class TriSurf<unsigned int>;
-template class TriSurf<unsigned short>;
-template class TriSurf<unsigned char>;
+template class TriSurfField<Tensor>;
+template class TriSurfField<Vector>;
+template class TriSurfField<double>;
+template class TriSurfField<float>;
+template class TriSurfField<int>;
+template class TriSurfField<short>;
+template class TriSurfField<char>;
+template class TriSurfField<unsigned int>;
+template class TriSurfField<unsigned short>;
+template class TriSurfField<unsigned char>;
 
-const TypeDescription* get_type_description(TriSurf<Tensor> *);
-const TypeDescription* get_type_description(TriSurf<Vector> *);
-const TypeDescription* get_type_description(TriSurf<double> *);
-const TypeDescription* get_type_description(TriSurf<float> *);
-const TypeDescription* get_type_description(TriSurf<int> *);
-const TypeDescription* get_type_description(TriSurf<short> *);
-const TypeDescription* get_type_description(TriSurf<char> *);
-const TypeDescription* get_type_description(TriSurf<unsigned int> *);
-const TypeDescription* get_type_description(TriSurf<unsigned short> *);
-const TypeDescription* get_type_description(TriSurf<unsigned char> *);
+const TypeDescription* get_type_description(TriSurfField<Tensor> *);
+const TypeDescription* get_type_description(TriSurfField<Vector> *);
+const TypeDescription* get_type_description(TriSurfField<double> *);
+const TypeDescription* get_type_description(TriSurfField<float> *);
+const TypeDescription* get_type_description(TriSurfField<int> *);
+const TypeDescription* get_type_description(TriSurfField<short> *);
+const TypeDescription* get_type_description(TriSurfField<char> *);
+const TypeDescription* get_type_description(TriSurfField<unsigned int> *);
+const TypeDescription* get_type_description(TriSurfField<unsigned short> *);
+const TypeDescription* get_type_description(TriSurfField<unsigned char> *);
 
-template class ContourField<Tensor>;
-template class ContourField<Vector>;
-template class ContourField<double>;
-template class ContourField<float>;
-template class ContourField<int>;
-template class ContourField<short>;
-template class ContourField<char>;
-template class ContourField<unsigned int>;
-template class ContourField<unsigned short>;
-template class ContourField<unsigned char>;
+template class CurveField<Tensor>;
+template class CurveField<Vector>;
+template class CurveField<double>;
+template class CurveField<float>;
+template class CurveField<int>;
+template class CurveField<short>;
+template class CurveField<char>;
+template class CurveField<unsigned int>;
+template class CurveField<unsigned short>;
+template class CurveField<unsigned char>;
 
-const TypeDescription* get_type_description(ContourField<Tensor> *);
-const TypeDescription* get_type_description(ContourField<Vector> *);
-const TypeDescription* get_type_description(ContourField<double> *);
-const TypeDescription* get_type_description(ContourField<float> *);
-const TypeDescription* get_type_description(ContourField<int> *);
-const TypeDescription* get_type_description(ContourField<short> *);
-const TypeDescription* get_type_description(ContourField<char> *);
-const TypeDescription* get_type_description(ContourField<unsigned int> *);
-const TypeDescription* get_type_description(ContourField<unsigned short> *);
-const TypeDescription* get_type_description(ContourField<unsigned char> *);
+const TypeDescription* get_type_description(CurveField<Tensor> *);
+const TypeDescription* get_type_description(CurveField<Vector> *);
+const TypeDescription* get_type_description(CurveField<double> *);
+const TypeDescription* get_type_description(CurveField<float> *);
+const TypeDescription* get_type_description(CurveField<int> *);
+const TypeDescription* get_type_description(CurveField<short> *);
+const TypeDescription* get_type_description(CurveField<char> *);
+const TypeDescription* get_type_description(CurveField<unsigned int> *);
+const TypeDescription* get_type_description(CurveField<unsigned short> *);
+const TypeDescription* get_type_description(CurveField<unsigned char> *);
 
-template class MaskedTriSurf<Tensor>;
-template class MaskedTriSurf<Vector>;
-template class MaskedTriSurf<double>;
-template class MaskedTriSurf<float>;
-template class MaskedTriSurf<int>;
-template class MaskedTriSurf<short>;
-template class MaskedTriSurf<char>;
-template class MaskedTriSurf<unsigned int>;
-template class MaskedTriSurf<unsigned short>;
-template class MaskedTriSurf<unsigned char>;
+template class MaskedTriSurfField<Tensor>;
+template class MaskedTriSurfField<Vector>;
+template class MaskedTriSurfField<double>;
+template class MaskedTriSurfField<float>;
+template class MaskedTriSurfField<int>;
+template class MaskedTriSurfField<short>;
+template class MaskedTriSurfField<char>;
+template class MaskedTriSurfField<unsigned int>;
+template class MaskedTriSurfField<unsigned short>;
+template class MaskedTriSurfField<unsigned char>;
 
-const TypeDescription* get_type_description(MaskedTriSurf<Tensor> *);
-const TypeDescription* get_type_description(MaskedTriSurf<Vector> *);
-const TypeDescription* get_type_description(MaskedTriSurf<double> *);
-const TypeDescription* get_type_description(MaskedTriSurf<float> *);
-const TypeDescription* get_type_description(MaskedTriSurf<int> *);
-const TypeDescription* get_type_description(MaskedTriSurf<short> *);
-const TypeDescription* get_type_description(MaskedTriSurf<char> *);
-const TypeDescription* get_type_description(MaskedTriSurf<unsigned int> *);
-const TypeDescription* get_type_description(MaskedTriSurf<unsigned short> *);
-const TypeDescription* get_type_description(MaskedTriSurf<unsigned char> *);
+const TypeDescription* get_type_description(MaskedTriSurfField<Tensor> *);
+const TypeDescription* get_type_description(MaskedTriSurfField<Vector> *);
+const TypeDescription* get_type_description(MaskedTriSurfField<double> *);
+const TypeDescription* get_type_description(MaskedTriSurfField<float> *);
+const TypeDescription* get_type_description(MaskedTriSurfField<int> *);
+const TypeDescription* get_type_description(MaskedTriSurfField<short> *);
+const TypeDescription* get_type_description(MaskedTriSurfField<char> *);
+const TypeDescription* get_type_description(MaskedTriSurfField<unsigned int> *);
+const TypeDescription* get_type_description(MaskedTriSurfField<unsigned short> *);
+const TypeDescription* get_type_description(MaskedTriSurfField<unsigned char> *);
 
 
 template <>
 TensorFieldInterface *
-TriSurf<Tensor>::query_tensor_interface() const
+TriSurfField<Tensor>::query_tensor_interface() const
 {
-  return scinew TFInterface<TriSurf<Tensor> >(this);
+  return scinew TFInterface<TriSurfField<Tensor> >(this);
 }
 
 
 template <>
 VectorFieldInterface *
-TriSurf<Vector>::query_vector_interface() const
+TriSurfField<Vector>::query_vector_interface() const
 {
-  return scinew VFInterface<TriSurf<Vector> >(this);
+  return scinew VFInterface<TriSurfField<Vector> >(this);
 }
 
 
 template <>
 ScalarFieldInterface *
-TriSurf<double>::query_scalar_interface() const
+TriSurfField<double>::query_scalar_interface() const
 {
-  return scinew SFInterface<TriSurf<double> >(this);
+  return scinew SFInterface<TriSurfField<double> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-TriSurf<float>::query_scalar_interface() const
+TriSurfField<float>::query_scalar_interface() const
 {
-  return scinew SFInterface<TriSurf<float> >(this);
+  return scinew SFInterface<TriSurfField<float> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-TriSurf<int>::query_scalar_interface() const
+TriSurfField<int>::query_scalar_interface() const
 {
-  return scinew SFInterface<TriSurf<int> >(this);
+  return scinew SFInterface<TriSurfField<int> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-TriSurf<short>::query_scalar_interface() const
+TriSurfField<short>::query_scalar_interface() const
 {
-  return scinew SFInterface<TriSurf<short> >(this);
+  return scinew SFInterface<TriSurfField<short> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-TriSurf<char>::query_scalar_interface() const
+TriSurfField<char>::query_scalar_interface() const
 {
-  return scinew SFInterface<TriSurf<char> >(this);
+  return scinew SFInterface<TriSurfField<char> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-TriSurf<unsigned int>::query_scalar_interface() const
+TriSurfField<unsigned int>::query_scalar_interface() const
 {
-  return scinew SFInterface<TriSurf<unsigned int> >(this);
+  return scinew SFInterface<TriSurfField<unsigned int> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-TriSurf<unsigned short>::query_scalar_interface() const
+TriSurfField<unsigned short>::query_scalar_interface() const
 {
-  return scinew SFInterface<TriSurf<unsigned short> >(this);
+  return scinew SFInterface<TriSurfField<unsigned short> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-TriSurf<unsigned char>::query_scalar_interface() const
+TriSurfField<unsigned char>::query_scalar_interface() const
 {
-  return scinew SFInterface<TriSurf<unsigned char> >(this);
+  return scinew SFInterface<TriSurfField<unsigned char> >(this);
 }
 
 
 template <>
 TensorFieldInterface *
-ContourField<Tensor>::query_tensor_interface() const
+CurveField<Tensor>::query_tensor_interface() const
 {
-  return scinew TFInterface<ContourField<Tensor> >(this);
+  return scinew TFInterface<CurveField<Tensor> >(this);
 }
 
 
 template <>
 VectorFieldInterface *
-ContourField<Vector>::query_vector_interface() const
+CurveField<Vector>::query_vector_interface() const
 {
-  return scinew VFInterface<ContourField<Vector> >(this);
+  return scinew VFInterface<CurveField<Vector> >(this);
 }
 
 
 template <>
 ScalarFieldInterface *
-ContourField<double>::query_scalar_interface() const
+CurveField<double>::query_scalar_interface() const
 {
-  return scinew SFInterface<ContourField<double> >(this);
+  return scinew SFInterface<CurveField<double> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-ContourField<float>::query_scalar_interface() const
+CurveField<float>::query_scalar_interface() const
 {
-  return scinew SFInterface<ContourField<float> >(this);
+  return scinew SFInterface<CurveField<float> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-ContourField<int>::query_scalar_interface() const
+CurveField<int>::query_scalar_interface() const
 {
-  return scinew SFInterface<ContourField<int> >(this);
+  return scinew SFInterface<CurveField<int> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-ContourField<short>::query_scalar_interface() const
+CurveField<short>::query_scalar_interface() const
 {
-  return scinew SFInterface<ContourField<short> >(this);
+  return scinew SFInterface<CurveField<short> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-ContourField<char>::query_scalar_interface() const
+CurveField<char>::query_scalar_interface() const
 {
-  return scinew SFInterface<ContourField<char> >(this);
+  return scinew SFInterface<CurveField<char> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-ContourField<unsigned int>::query_scalar_interface() const
+CurveField<unsigned int>::query_scalar_interface() const
 {
-  return scinew SFInterface<ContourField<unsigned int> >(this);
+  return scinew SFInterface<CurveField<unsigned int> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-ContourField<unsigned short>::query_scalar_interface() const
+CurveField<unsigned short>::query_scalar_interface() const
 {
-  return scinew SFInterface<ContourField<unsigned short> >(this);
+  return scinew SFInterface<CurveField<unsigned short> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-ContourField<unsigned char>::query_scalar_interface() const
+CurveField<unsigned char>::query_scalar_interface() const
 {
-  return scinew SFInterface<ContourField<unsigned char> >(this);
+  return scinew SFInterface<CurveField<unsigned char> >(this);
 }

@@ -3,7 +3,7 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/ImageField.h>
-#include <Core/Datatypes/QuadSurf.h>
+#include <Core/Datatypes/QuadSurfField.h>
 
 using namespace SCIRun;
 
@@ -63,27 +63,27 @@ template class GenericField<QuadSurfMesh, vector<unsigned int> >;
 template class GenericField<QuadSurfMesh, vector<unsigned short> >;
 template class GenericField<QuadSurfMesh, vector<unsigned char> >;
 
-template class QuadSurf<Tensor>;
-template class QuadSurf<Vector>;
-template class QuadSurf<double>;
-template class QuadSurf<float>;
-template class QuadSurf<int>;
-template class QuadSurf<short>;
-template class QuadSurf<char>;
-template class QuadSurf<unsigned int>;
-template class QuadSurf<unsigned short>;
-template class QuadSurf<unsigned char>;
+template class QuadSurfField<Tensor>;
+template class QuadSurfField<Vector>;
+template class QuadSurfField<double>;
+template class QuadSurfField<float>;
+template class QuadSurfField<int>;
+template class QuadSurfField<short>;
+template class QuadSurfField<char>;
+template class QuadSurfField<unsigned int>;
+template class QuadSurfField<unsigned short>;
+template class QuadSurfField<unsigned char>;
 
-const TypeDescription* get_type_description(QuadSurf<Tensor> *);
-const TypeDescription* get_type_description(QuadSurf<Vector> *);
-const TypeDescription* get_type_description(QuadSurf<double> *);
-const TypeDescription* get_type_description(QuadSurf<float> *);
-const TypeDescription* get_type_description(QuadSurf<int> *);
-const TypeDescription* get_type_description(QuadSurf<short> *);
-const TypeDescription* get_type_description(QuadSurf<char> *);
-const TypeDescription* get_type_description(QuadSurf<unsigned int> *);
-const TypeDescription* get_type_description(QuadSurf<unsigned short> *);
-const TypeDescription* get_type_description(QuadSurf<unsigned char> *);
+const TypeDescription* get_type_description(QuadSurfField<Tensor> *);
+const TypeDescription* get_type_description(QuadSurfField<Vector> *);
+const TypeDescription* get_type_description(QuadSurfField<double> *);
+const TypeDescription* get_type_description(QuadSurfField<float> *);
+const TypeDescription* get_type_description(QuadSurfField<int> *);
+const TypeDescription* get_type_description(QuadSurfField<short> *);
+const TypeDescription* get_type_description(QuadSurfField<char> *);
+const TypeDescription* get_type_description(QuadSurfField<unsigned int> *);
+const TypeDescription* get_type_description(QuadSurfField<unsigned short> *);
+const TypeDescription* get_type_description(QuadSurfField<unsigned char> *);
 
 
 template <>
@@ -163,74 +163,74 @@ ImageField<unsigned char>::query_scalar_interface() const
 
 template <>
 TensorFieldInterface *
-QuadSurf<Tensor>::query_tensor_interface() const
+QuadSurfField<Tensor>::query_tensor_interface() const
 {
-  return scinew TFInterface<QuadSurf<Tensor> >(this);
+  return scinew TFInterface<QuadSurfField<Tensor> >(this);
 }
 
 
 template <>
 VectorFieldInterface *
-QuadSurf<Vector>::query_vector_interface() const
+QuadSurfField<Vector>::query_vector_interface() const
 {
-  return scinew VFInterface<QuadSurf<Vector> >(this);
+  return scinew VFInterface<QuadSurfField<Vector> >(this);
 }
 
 
 template <>
 ScalarFieldInterface *
-QuadSurf<double>::query_scalar_interface() const
+QuadSurfField<double>::query_scalar_interface() const
 {
-  return scinew SFInterface<QuadSurf<double> >(this);
+  return scinew SFInterface<QuadSurfField<double> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-QuadSurf<float>::query_scalar_interface() const
+QuadSurfField<float>::query_scalar_interface() const
 {
-  return scinew SFInterface<QuadSurf<float> >(this);
+  return scinew SFInterface<QuadSurfField<float> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-QuadSurf<int>::query_scalar_interface() const
+QuadSurfField<int>::query_scalar_interface() const
 {
-  return scinew SFInterface<QuadSurf<int> >(this);
+  return scinew SFInterface<QuadSurfField<int> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-QuadSurf<short>::query_scalar_interface() const
+QuadSurfField<short>::query_scalar_interface() const
 {
-  return scinew SFInterface<QuadSurf<short> >(this);
+  return scinew SFInterface<QuadSurfField<short> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-QuadSurf<char>::query_scalar_interface() const
+QuadSurfField<char>::query_scalar_interface() const
 {
-  return scinew SFInterface<QuadSurf<char> >(this);
+  return scinew SFInterface<QuadSurfField<char> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-QuadSurf<unsigned int>::query_scalar_interface() const
+QuadSurfField<unsigned int>::query_scalar_interface() const
 {
-  return scinew SFInterface<QuadSurf<unsigned int> >(this);
+  return scinew SFInterface<QuadSurfField<unsigned int> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-QuadSurf<unsigned short>::query_scalar_interface() const
+QuadSurfField<unsigned short>::query_scalar_interface() const
 {
-  return scinew SFInterface<QuadSurf<unsigned short> >(this);
+  return scinew SFInterface<QuadSurfField<unsigned short> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-QuadSurf<unsigned char>::query_scalar_interface() const
+QuadSurfField<unsigned char>::query_scalar_interface() const
 {
-  return scinew SFInterface<QuadSurf<unsigned char> >(this);
+  return scinew SFInterface<QuadSurfField<unsigned char> >(this);
 }
 
 

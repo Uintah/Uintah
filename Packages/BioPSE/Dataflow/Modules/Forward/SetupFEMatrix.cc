@@ -34,8 +34,8 @@
 
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/Matrix.h>
-#include <Core/Datatypes/PointCloud.h>
-#include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/PointCloudField.h>
+#include <Core/Datatypes/TetVolField.h>
 #include <Core/Datatypes/FieldAlgo.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Geometry/Point.h>
@@ -58,7 +58,7 @@ using std::endl;
 namespace BioPSE {
 
 using namespace SCIRun;
-typedef LockingHandle<TetVol<int> >    CondMeshHandle;
+typedef LockingHandle<TetVolField<int> >    CondMeshHandle;
 
 class SetupFEMatrix : public Module {
   
@@ -127,17 +127,17 @@ void SetupFEMatrix::execute(){
   
   gen_ = hField->generation;
   CondMeshHandle hCondMesh;
-  if (hField->get_type_name(0)=="TetVol" && hField->get_type_name(1)=="int"){
+  if (hField->get_type_name(0)=="TetVolField" && hField->get_type_name(1)=="int"){
     
-    hCondMesh = dynamic_cast<TetVol<int>* >(hField.get_rep());
+    hCondMesh = dynamic_cast<TetVolField<int>* >(hField.get_rep());
     
     if (!hCondMesh.get_rep()){
-      msgStream_ << "Error: Unable to cast to TetVol<int>*" << endl;
+      msgStream_ << "Error: Unable to cast to TetVolField<int>*" << endl;
       return;
     }
   }
   else {
-    msgStream_ << "Error: The mesh in conductivity tensor field is not of type TetVol<int>" << endl;
+    msgStream_ << "Error: The mesh in conductivity tensor field is not of type TetVolField<int>" << endl;
     return;
   }
   

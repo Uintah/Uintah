@@ -1,5 +1,5 @@
 /*
- *  TetVolCellToNode.cc:
+ *  TetVolFieldCellToNode.cc:
  *
  *  Written by:
  *   moulding
@@ -9,7 +9,7 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/TetVolField.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <math.h>
@@ -23,41 +23,41 @@ namespace SCIRun {
 
 using namespace std;
 
-class PSECORESHARE TetVolCellToNode : public Module {
+class PSECORESHARE TetVolFieldCellToNode : public Module {
 private:
   
   Field          *infield_;
   FieldHandle    inhandle_;
   FieldIPort     *inport_;
-  TetVol<Vector> *vf_;
+  TetVolField<Vector> *vf_;
 
   Field          *outfield_;
   FieldHandle    outhandle_;
   FieldOPort     *outport_;
 
 public:
-  TetVolCellToNode(const string& id);
+  TetVolFieldCellToNode(const string& id);
 
-  virtual ~TetVolCellToNode();
+  virtual ~TetVolFieldCellToNode();
 
   virtual void execute();
 
   virtual void tcl_command(TCLArgs&, void*);
 };
 
-extern "C" PSECORESHARE Module* make_TetVolCellToNode(const string& id) {
-  return scinew TetVolCellToNode(id);
+extern "C" PSECORESHARE Module* make_TetVolFieldCellToNode(const string& id) {
+  return scinew TetVolFieldCellToNode(id);
 }
 
-TetVolCellToNode::TetVolCellToNode(const string& id)
-  : Module("TetVolCellToNode", id, Source, "Fields", "SCIRun")
+TetVolFieldCellToNode::TetVolFieldCellToNode(const string& id)
+  : Module("TetVolFieldCellToNode", id, Source, "Fields", "SCIRun")
 {
 }
 
-TetVolCellToNode::~TetVolCellToNode(){
+TetVolFieldCellToNode::~TetVolFieldCellToNode(){
 }
 
-void TetVolCellToNode::execute()
+void TetVolFieldCellToNode::execute()
 {
   vector<Vector> vector_sums;
   vector<double> mag_sums;
@@ -80,22 +80,22 @@ void TetVolCellToNode::execute()
     return;
   }
 
-  // we expect that the input field is a TetVol<Vector>
+  // we expect that the input field is a TetVolField<Vector>
   if (infield_->get_type_description()->get_name() !=
-      get_type_description((TetVol<Vector> *)0)->get_name())
+      get_type_description((TetVolField<Vector> *)0)->get_name())
   {
-    postMessage("TetVolCellToNode: ERROR: Cell centered volume is not a "
-		"TetVol of Vectors.  Exiting.");
+    postMessage("TetVolFieldCellToNode: ERROR: Cell centered volume is not a "
+		"TetVolField of Vectors.  Exiting.");
     return;
   }                     
 
   if (infield_->data_at() != Field::CELL) {
-    postMessage("TetVolCellToNode: ERROR: Cell centered volume is not "
+    postMessage("TetVolFieldCellToNode: ERROR: Cell centered volume is not "
 		"cell centered.  Exiting.");
     return;
   }                         
 
-  vf_ = (TetVol<Vector>*)infield_;
+  vf_ = (TetVolField<Vector>*)infield_;
 
   TetVolMesh *mesh = 
     dynamic_cast<TetVolMesh*>(vf_->get_typed_mesh().get_rep());
@@ -138,9 +138,9 @@ void TetVolCellToNode::execute()
     TCL::execute(id + " set_progress " + to_string(count/cells_size) + " 0");
   }
 
-  TetVol<Vector> *newfield = scinew TetVol<Vector>(mesh,Field::NODE);
+  TetVolField<Vector> *newfield = scinew TetVolField<Vector>(mesh,Field::NODE);
 
-  TetVol<Vector>::fdata_type &fdata = newfield->fdata();
+  TetVolField<Vector>::fdata_type &fdata = newfield->fdata();
 
   Vector curvec;
   for (unsigned int loop=0;loop<nodes_size;++loop) {
@@ -152,7 +152,7 @@ void TetVolCellToNode::execute()
   outport_->send(newfield);
 }
 
-void TetVolCellToNode::tcl_command(TCLArgs& args, void* userdata)
+void TetVolFieldCellToNode::tcl_command(TCLArgs& args, void* userdata)
 {
   Module::tcl_command(args, userdata);
 }

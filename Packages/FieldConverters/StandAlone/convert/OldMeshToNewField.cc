@@ -28,7 +28,7 @@
  */
 
 #include <FieldConverters/Core/Datatypes/Mesh.h>
-#include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/TetVolField.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Persistent/Pstreams.h>
 
@@ -76,15 +76,15 @@ int main(int argc, char **argv) {
   mesh->compute_face_neighbors();
 
   if (!mesh->cond_tensors.size()) {
-    cerr << "Error - mesh didn't have any conductivity information or Dirichlet nodes... use OldMeshToNewTetVol instead.\n";
+    cerr << "Error - mesh didn't have any conductivity information or Dirichlet nodes... use OldMeshToNewTetVolField instead.\n";
     return 0;
   }
 
   // Build the new mesh and field
-  TetVol<int> *field;
+  TetVolField<int> *field;
   TetVolMeshHandle tvm = scinew TetVolMesh;
   load_mesh(mesh, tvm);
-  field = new TetVol<int>(tvm, Field::CELL);
+  field = new TetVolField<int>(tvm, Field::CELL);
 
   // Set the conductivities as indexed data
   vector<pair<string, Tensor> > conds;

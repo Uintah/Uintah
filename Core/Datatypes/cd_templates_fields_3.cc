@@ -2,9 +2,9 @@
 #include <Core/Geometry/Tensor.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Datatypes/GenericField.h>
-#include <Core/Datatypes/TetVol.h>
-#include <Core/Datatypes/MaskedTetVol.h>
-#include <Core/Datatypes/QuadraticTetVol.h>
+#include <Core/Datatypes/TetVolField.h>
+#include <Core/Datatypes/MaskedTetVolField.h>
+#include <Core/Datatypes/QuadraticTetVolField.h>
 
 using namespace SCIRun;
 
@@ -19,217 +19,217 @@ template class GenericField<TetVolMesh, vector<unsigned int> >;
 template class GenericField<TetVolMesh, vector<unsigned short> >;
 template class GenericField<TetVolMesh, vector<unsigned char> >;
 
-template class TetVol<Tensor>;
-template class TetVol<Vector>;
-template class TetVol<double>;
-template class TetVol<float>;
-template class TetVol<int>;
-template class TetVol<short>;
-template class TetVol<char>;
-template class TetVol<unsigned int>;
-template class TetVol<unsigned short>;
-template class TetVol<unsigned char>;
+template class TetVolField<Tensor>;
+template class TetVolField<Vector>;
+template class TetVolField<double>;
+template class TetVolField<float>;
+template class TetVolField<int>;
+template class TetVolField<short>;
+template class TetVolField<char>;
+template class TetVolField<unsigned int>;
+template class TetVolField<unsigned short>;
+template class TetVolField<unsigned char>;
 
-const TypeDescription* get_type_description(TetVol<Tensor> *);
-const TypeDescription* get_type_description(TetVol<Vector> *);
-const TypeDescription* get_type_description(TetVol<double> *);
-const TypeDescription* get_type_description(TetVol<float> *);
-const TypeDescription* get_type_description(TetVol<int> *);
-const TypeDescription* get_type_description(TetVol<short> *);
-const TypeDescription* get_type_description(TetVol<char> *);
-const TypeDescription* get_type_description(TetVol<unsigned int> *);
-const TypeDescription* get_type_description(TetVol<unsigned short> *);
-const TypeDescription* get_type_description(TetVol<unsigned char> *);
+const TypeDescription* get_type_description(TetVolField<Tensor> *);
+const TypeDescription* get_type_description(TetVolField<Vector> *);
+const TypeDescription* get_type_description(TetVolField<double> *);
+const TypeDescription* get_type_description(TetVolField<float> *);
+const TypeDescription* get_type_description(TetVolField<int> *);
+const TypeDescription* get_type_description(TetVolField<short> *);
+const TypeDescription* get_type_description(TetVolField<char> *);
+const TypeDescription* get_type_description(TetVolField<unsigned int> *);
+const TypeDescription* get_type_description(TetVolField<unsigned short> *);
+const TypeDescription* get_type_description(TetVolField<unsigned char> *);
 
-template class MaskedTetVol<Tensor>;
-template class MaskedTetVol<Vector>;
-template class MaskedTetVol<double>;
-template class MaskedTetVol<float>;
-template class MaskedTetVol<int>;
-template class MaskedTetVol<short>;
-template class MaskedTetVol<char>;
-template class MaskedTetVol<unsigned int>;
-template class MaskedTetVol<unsigned short>;
-template class MaskedTetVol<unsigned char>;
+template class MaskedTetVolField<Tensor>;
+template class MaskedTetVolField<Vector>;
+template class MaskedTetVolField<double>;
+template class MaskedTetVolField<float>;
+template class MaskedTetVolField<int>;
+template class MaskedTetVolField<short>;
+template class MaskedTetVolField<char>;
+template class MaskedTetVolField<unsigned int>;
+template class MaskedTetVolField<unsigned short>;
+template class MaskedTetVolField<unsigned char>;
 
-const TypeDescription* get_type_description(MaskedTetVol<Tensor> *);
-const TypeDescription* get_type_description(MaskedTetVol<Vector> *);
-const TypeDescription* get_type_description(MaskedTetVol<double> *);
-const TypeDescription* get_type_description(MaskedTetVol<float> *);
-const TypeDescription* get_type_description(MaskedTetVol<int> *);
-const TypeDescription* get_type_description(MaskedTetVol<short> *);
-const TypeDescription* get_type_description(MaskedTetVol<char> *);
-const TypeDescription* get_type_description(MaskedTetVol<unsigned int> *);
-const TypeDescription* get_type_description(MaskedTetVol<unsigned short> *);
-const TypeDescription* get_type_description(MaskedTetVol<unsigned char> *);
+const TypeDescription* get_type_description(MaskedTetVolField<Tensor> *);
+const TypeDescription* get_type_description(MaskedTetVolField<Vector> *);
+const TypeDescription* get_type_description(MaskedTetVolField<double> *);
+const TypeDescription* get_type_description(MaskedTetVolField<float> *);
+const TypeDescription* get_type_description(MaskedTetVolField<int> *);
+const TypeDescription* get_type_description(MaskedTetVolField<short> *);
+const TypeDescription* get_type_description(MaskedTetVolField<char> *);
+const TypeDescription* get_type_description(MaskedTetVolField<unsigned int> *);
+const TypeDescription* get_type_description(MaskedTetVolField<unsigned short> *);
+const TypeDescription* get_type_description(MaskedTetVolField<unsigned char> *);
 
-template class QuadraticTetVol<Tensor>;
-template class QuadraticTetVol<Vector>;
-template class QuadraticTetVol<double>;
-template class QuadraticTetVol<float>;
-template class QuadraticTetVol<int>;
-template class QuadraticTetVol<short>;
-template class QuadraticTetVol<char>;
-template class QuadraticTetVol<unsigned int>;
-template class QuadraticTetVol<unsigned short>;
-template class QuadraticTetVol<unsigned char>;
+template class QuadraticTetVolField<Tensor>;
+template class QuadraticTetVolField<Vector>;
+template class QuadraticTetVolField<double>;
+template class QuadraticTetVolField<float>;
+template class QuadraticTetVolField<int>;
+template class QuadraticTetVolField<short>;
+template class QuadraticTetVolField<char>;
+template class QuadraticTetVolField<unsigned int>;
+template class QuadraticTetVolField<unsigned short>;
+template class QuadraticTetVolField<unsigned char>;
 
-const TypeDescription* get_type_description(QuadraticTetVol<Tensor> *);
-const TypeDescription* get_type_description(QuadraticTetVol<Vector> *);
-const TypeDescription* get_type_description(QuadraticTetVol<double> *);
-const TypeDescription* get_type_description(QuadraticTetVol<float> *);
-const TypeDescription* get_type_description(QuadraticTetVol<int> *);
-const TypeDescription* get_type_description(QuadraticTetVol<short> *);
-const TypeDescription* get_type_description(QuadraticTetVol<char> *);
-const TypeDescription* get_type_description(QuadraticTetVol<unsigned int> *);
-const TypeDescription* get_type_description(QuadraticTetVol<unsigned short> *);
-const TypeDescription* get_type_description(QuadraticTetVol<unsigned char> *);
+const TypeDescription* get_type_description(QuadraticTetVolField<Tensor> *);
+const TypeDescription* get_type_description(QuadraticTetVolField<Vector> *);
+const TypeDescription* get_type_description(QuadraticTetVolField<double> *);
+const TypeDescription* get_type_description(QuadraticTetVolField<float> *);
+const TypeDescription* get_type_description(QuadraticTetVolField<int> *);
+const TypeDescription* get_type_description(QuadraticTetVolField<short> *);
+const TypeDescription* get_type_description(QuadraticTetVolField<char> *);
+const TypeDescription* get_type_description(QuadraticTetVolField<unsigned int> *);
+const TypeDescription* get_type_description(QuadraticTetVolField<unsigned short> *);
+const TypeDescription* get_type_description(QuadraticTetVolField<unsigned char> *);
 
 
 template <>
 TensorFieldInterface *
-TetVol<Tensor>::query_tensor_interface() const
+TetVolField<Tensor>::query_tensor_interface() const
 {
-  return scinew TFInterface<TetVol<Tensor> >(this);
+  return scinew TFInterface<TetVolField<Tensor> >(this);
 }
 
 
 template <>
 VectorFieldInterface *
-TetVol<Vector>::query_vector_interface() const
+TetVolField<Vector>::query_vector_interface() const
 {
-  return scinew VFInterface<TetVol<Vector> >(this);
+  return scinew VFInterface<TetVolField<Vector> >(this);
 }
 
 
 template <>
 ScalarFieldInterface *
-TetVol<double>::query_scalar_interface() const
+TetVolField<double>::query_scalar_interface() const
 {
-  return scinew SFInterface<TetVol<double> >(this);
+  return scinew SFInterface<TetVolField<double> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-TetVol<float>::query_scalar_interface() const
+TetVolField<float>::query_scalar_interface() const
 {
-  return scinew SFInterface<TetVol<float> >(this);
+  return scinew SFInterface<TetVolField<float> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-TetVol<int>::query_scalar_interface() const
+TetVolField<int>::query_scalar_interface() const
 {
-  return scinew SFInterface<TetVol<int> >(this);
+  return scinew SFInterface<TetVolField<int> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-TetVol<short>::query_scalar_interface() const
+TetVolField<short>::query_scalar_interface() const
 {
-  return scinew SFInterface<TetVol<short> >(this);
+  return scinew SFInterface<TetVolField<short> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-TetVol<char>::query_scalar_interface() const
+TetVolField<char>::query_scalar_interface() const
 {
-  return scinew SFInterface<TetVol<char> >(this);
+  return scinew SFInterface<TetVolField<char> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-TetVol<unsigned int>::query_scalar_interface() const
+TetVolField<unsigned int>::query_scalar_interface() const
 {
-  return scinew SFInterface<TetVol<unsigned int> >(this);
+  return scinew SFInterface<TetVolField<unsigned int> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-TetVol<unsigned short>::query_scalar_interface() const
+TetVolField<unsigned short>::query_scalar_interface() const
 {
-  return scinew SFInterface<TetVol<unsigned short> >(this);
+  return scinew SFInterface<TetVolField<unsigned short> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-TetVol<unsigned char>::query_scalar_interface() const
+TetVolField<unsigned char>::query_scalar_interface() const
 {
-  return scinew SFInterface<TetVol<unsigned char> >(this);
+  return scinew SFInterface<TetVolField<unsigned char> >(this);
 }
 
 //-------
 
 template <>
 TensorFieldInterface *
-QuadraticTetVol<Tensor>::query_tensor_interface() const
+QuadraticTetVolField<Tensor>::query_tensor_interface() const
 {
-  return scinew TFInterface<QuadraticTetVol<Tensor> >(this);
+  return scinew TFInterface<QuadraticTetVolField<Tensor> >(this);
 }
 
 
 template <>
 VectorFieldInterface *
-QuadraticTetVol<Vector>::query_vector_interface() const
+QuadraticTetVolField<Vector>::query_vector_interface() const
 {
-  return scinew VFInterface<QuadraticTetVol<Vector> >(this);
+  return scinew VFInterface<QuadraticTetVolField<Vector> >(this);
 }
 
 
 template <>
 ScalarFieldInterface *
-QuadraticTetVol<double>::query_scalar_interface() const
+QuadraticTetVolField<double>::query_scalar_interface() const
 {
-  return scinew SFInterface<QuadraticTetVol<double> >(this);
+  return scinew SFInterface<QuadraticTetVolField<double> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-QuadraticTetVol<float>::query_scalar_interface() const
+QuadraticTetVolField<float>::query_scalar_interface() const
 {
-  return scinew SFInterface<QuadraticTetVol<float> >(this);
+  return scinew SFInterface<QuadraticTetVolField<float> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-QuadraticTetVol<int>::query_scalar_interface() const
+QuadraticTetVolField<int>::query_scalar_interface() const
 {
-  return scinew SFInterface<QuadraticTetVol<int> >(this);
+  return scinew SFInterface<QuadraticTetVolField<int> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-QuadraticTetVol<short>::query_scalar_interface() const
+QuadraticTetVolField<short>::query_scalar_interface() const
 {
-  return scinew SFInterface<QuadraticTetVol<short> >(this);
+  return scinew SFInterface<QuadraticTetVolField<short> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-QuadraticTetVol<char>::query_scalar_interface() const
+QuadraticTetVolField<char>::query_scalar_interface() const
 {
-  return scinew SFInterface<QuadraticTetVol<char> >(this);
+  return scinew SFInterface<QuadraticTetVolField<char> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-QuadraticTetVol<unsigned int>::query_scalar_interface() const
+QuadraticTetVolField<unsigned int>::query_scalar_interface() const
 {
-  return scinew SFInterface<QuadraticTetVol<unsigned int> >(this);
+  return scinew SFInterface<QuadraticTetVolField<unsigned int> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-QuadraticTetVol<unsigned short>::query_scalar_interface() const
+QuadraticTetVolField<unsigned short>::query_scalar_interface() const
 {
-  return scinew SFInterface<QuadraticTetVol<unsigned short> >(this);
+  return scinew SFInterface<QuadraticTetVolField<unsigned short> >(this);
 }
 
 template <>
 ScalarFieldInterface *
-QuadraticTetVol<unsigned char>::query_scalar_interface() const
+QuadraticTetVolField<unsigned char>::query_scalar_interface() const
 {
-  return scinew SFInterface<QuadraticTetVol<unsigned char> >(this);
+  return scinew SFInterface<QuadraticTetVolField<unsigned char> >(this);
 }
 
 

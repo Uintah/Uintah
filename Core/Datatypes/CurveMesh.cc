@@ -16,7 +16,7 @@
 */
 
 /*
- *  ContourMesh.cc: contour mesh
+ *  CurveMesh.cc: contour mesh
  *
  *  Written by:
  *   Chris Moulding
@@ -28,7 +28,7 @@
  *
  */
 
-#include <Core/Datatypes/ContourMesh.h>
+#include <Core/Datatypes/CurveMesh.h>
 #include <Core/Datatypes/FieldAlgo.h>
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Geometry/Vector.h>
@@ -41,10 +41,10 @@ namespace SCIRun {
 using namespace std;
 
 
-PersistentTypeID ContourMesh::type_id("ContourMesh", "Mesh", maker);
+PersistentTypeID CurveMesh::type_id("CurveMesh", "Mesh", maker);
 
 BBox
-ContourMesh::get_bounding_box() const
+CurveMesh::get_bounding_box() const
 {
   BBox result;
   
@@ -63,7 +63,7 @@ ContourMesh::get_bounding_box() const
 
 
 void
-ContourMesh::transform(Transform &t)
+CurveMesh::transform(Transform &t)
 {
   vector<Point>::iterator itr = nodes_.begin();
   vector<Point>::iterator eitr = nodes_.end();
@@ -76,7 +76,7 @@ ContourMesh::transform(Transform &t)
 
 
 bool
-ContourMesh::locate(Node::index_type &idx, const Point &p) const
+CurveMesh::locate(Node::index_type &idx, const Point &p) const
 {
   Node::iterator ni, nie;
   begin(ni);
@@ -105,7 +105,7 @@ ContourMesh::locate(Node::index_type &idx, const Point &p) const
 }
 
 bool
-ContourMesh::locate(Edge::index_type &idx, const Point &p) const
+CurveMesh::locate(Edge::index_type &idx, const Point &p) const
 {
   Edge::iterator ei;
   Edge::iterator eie;
@@ -155,7 +155,7 @@ ContourMesh::locate(Edge::index_type &idx, const Point &p) const
 
 
 void
-ContourMesh::get_weights(const Point &p,
+CurveMesh::get_weights(const Point &p,
 			 Node::array_type &l, vector<double> &w)
 {
   Edge::index_type idx;
@@ -178,7 +178,7 @@ ContourMesh::get_weights(const Point &p,
 }
 
 void
-ContourMesh::get_weights(const Point &p,
+CurveMesh::get_weights(const Point &p,
 			 Edge::array_type &l, vector<double> &w)
 {
   Edge::index_type idx;
@@ -191,12 +191,12 @@ ContourMesh::get_weights(const Point &p,
 
 
 
-#define CONTOURMESH_VERSION 1
+#define CURVE_MESH_VERSION 1
 
 void
-ContourMesh::io(Piostream& stream)
+CurveMesh::io(Piostream& stream)
 {
-  stream.begin_class(type_name(), CONTOURMESH_VERSION);
+  /*int version=*/stream.begin_class(type_name(), CURVE_MESH_VERSION);
 
   Mesh::io(stream);
 
@@ -208,82 +208,82 @@ ContourMesh::io(Piostream& stream)
 }
 
 const string
-ContourMesh::type_name(int n)
+CurveMesh::type_name(int n)
 {
   ASSERT(n >= -1 && n <= 0);
-  static const string name = "ContourMesh";
+  static const string name = "CurveMesh";
   return name;
 }
 
 void
-ContourMesh::begin(ContourMesh::Node::iterator &itr) const
+CurveMesh::begin(CurveMesh::Node::iterator &itr) const
 {
   itr = 0;
 }
 
 void
-ContourMesh::end(ContourMesh::Node::iterator &itr) const
+CurveMesh::end(CurveMesh::Node::iterator &itr) const
 {
   itr = nodes_.size();
 }
 
 void
-ContourMesh::begin(ContourMesh::Edge::iterator &itr) const
+CurveMesh::begin(CurveMesh::Edge::iterator &itr) const
 {
   itr = 0;
 }
 
 
 void
-ContourMesh::end(ContourMesh::Edge::iterator &itr) const
+CurveMesh::end(CurveMesh::Edge::iterator &itr) const
 {
   itr = (unsigned)edges_.size();
 }
 
 void
-ContourMesh::begin(ContourMesh::Face::iterator &itr) const
+CurveMesh::begin(CurveMesh::Face::iterator &itr) const
 {
   itr = 0;
 }
 
 void
-ContourMesh::end(ContourMesh::Face::iterator &itr) const
+CurveMesh::end(CurveMesh::Face::iterator &itr) const
 {
   itr = 0;
 }
 
 void
-ContourMesh::begin(ContourMesh::Cell::iterator &itr) const
+CurveMesh::begin(CurveMesh::Cell::iterator &itr) const
 {
   itr = 0;
 }
 
 void
-ContourMesh::end(ContourMesh::Cell::iterator &itr) const
+CurveMesh::end(CurveMesh::Cell::iterator &itr) const
 {
   itr = 0;
 }
 
 void
-ContourMesh::size(ContourMesh::Node::size_type &s) const
+CurveMesh::size(CurveMesh::Node::size_type &s) const
 {
   s = (unsigned)nodes_.size();
 }
 
 void
-ContourMesh::size(ContourMesh::Edge::size_type &s) const
+CurveMesh::size(CurveMesh::Edge::size_type &s) const
 {
   s = (unsigned)edges_.size();
 }
 
 void
-ContourMesh::size(ContourMesh::Face::size_type &s) const
+CurveMesh::size(CurveMesh::Face::size_type &s) const
 {
   s = 0;
 }
 
 void
-ContourMesh::size(ContourMesh::Cell::size_type &s) const
+CurveMesh::size(CurveMesh::Cell::size_type &s) const
 {
   s = 0;
 }
@@ -291,18 +291,18 @@ ContourMesh::size(ContourMesh::Cell::size_type &s) const
 
 
 const TypeDescription*
-ContourMesh::get_type_description() const
+CurveMesh::get_type_description() const
 {
-  return SCIRun::get_type_description((ContourMesh *)0);
+  return SCIRun::get_type_description((CurveMesh *)0);
 }
 
 const TypeDescription*
-get_type_description(ContourMesh *)
+get_type_description(CurveMesh *)
 {
   static TypeDescription *td = 0;
   if (!td)
   {
-    td = scinew TypeDescription("ContourMesh",
+    td = scinew TypeDescription("CurveMesh",
 				TypeDescription::cc_to_h(__FILE__),
 				"SCIRun");
   }
@@ -310,12 +310,12 @@ get_type_description(ContourMesh *)
 }
 
 const TypeDescription*
-get_type_description(ContourMesh::Node *)
+get_type_description(CurveMesh::Node *)
 {
   static TypeDescription *td = 0;
   if (!td)
   {
-    td = scinew TypeDescription("ContourMesh::Node",
+    td = scinew TypeDescription("CurveMesh::Node",
 				TypeDescription::cc_to_h(__FILE__),
 				"SCIRun");
   }
@@ -323,12 +323,12 @@ get_type_description(ContourMesh::Node *)
 }
 
 const TypeDescription*
-get_type_description(ContourMesh::Edge *)
+get_type_description(CurveMesh::Edge *)
 {
   static TypeDescription *td = 0;
   if (!td)
   {
-    td = scinew TypeDescription("ContourMesh::Edge",
+    td = scinew TypeDescription("CurveMesh::Edge",
 				TypeDescription::cc_to_h(__FILE__),
 				"SCIRun");
   }
@@ -336,12 +336,12 @@ get_type_description(ContourMesh::Edge *)
 }
 
 const TypeDescription*
-get_type_description(ContourMesh::Face *)
+get_type_description(CurveMesh::Face *)
 {
   static TypeDescription *td = 0;
   if (!td)
   {
-    td = scinew TypeDescription("ContourMesh::Face",
+    td = scinew TypeDescription("CurveMesh::Face",
 				TypeDescription::cc_to_h(__FILE__),
 				"SCIRun");
   }
@@ -349,12 +349,12 @@ get_type_description(ContourMesh::Face *)
 }
 
 const TypeDescription*
-get_type_description(ContourMesh::Cell *)
+get_type_description(CurveMesh::Cell *)
 {
   static TypeDescription *td = 0;
   if (!td)
   {
-    td = scinew TypeDescription("ContourMesh::Cell",
+    td = scinew TypeDescription("CurveMesh::Cell",
 				TypeDescription::cc_to_h(__FILE__),
 				"SCIRun");
   }

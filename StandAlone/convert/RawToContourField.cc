@@ -16,7 +16,7 @@
 */
 
 /*
- *  RawToContourField.cc
+ *  RawToCurveField.cc
  *
  *  Written by:
  *   David Weinstein
@@ -27,7 +27,7 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <Core/Datatypes/ContourField.h>
+#include <Core/Datatypes/CurveField.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
 
@@ -103,9 +103,9 @@ int getNumNonEmptyLines(char *fname) {
 
 int
 main(int argc, char **argv) {
-  ContourMesh *cm = new ContourMesh();
+  CurveMesh *cm = new CurveMesh();
   if (argc < 4 || argc > 7) {
-    cerr << "Usage: "<<argv[0]<<" pts edges ContourMesh [-noPtsCount] [-noEdgesCount] [-oneBasedIndexing] [-binOutput] [-debug]\n";
+    cerr << "Usage: "<<argv[0]<<" pts edges CurveMesh [-noPtsCount] [-noEdgesCount] [-oneBasedIndexing] [-binOutput] [-debug]\n";
     return 0;
   }
   setDefaults();
@@ -156,7 +156,7 @@ main(int argc, char **argv) {
   cerr << "done adding elements.\n";
 
   cm->flush_changes();
-  ContourField<double> *cfd = scinew ContourField<double>(cm, Field::NODE);
+  CurveField<double> *cfd = scinew CurveField<double>(cm, Field::NODE);
   FieldHandle cfdH(cfd);
 
   if (binOutput) {

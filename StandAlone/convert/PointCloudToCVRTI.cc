@@ -16,7 +16,7 @@
 */
 
 /*
- *  PointCloudToCVRTI.cc
+ *  PointCloudFieldToCVRTI.cc
  *
  *  Written by:
  *   David Weinstein
@@ -27,7 +27,7 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <Core/Datatypes/PointCloud.h>
+#include <Core/Datatypes/PointCloudField.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Persistent/Pstreams.h>
 #include <iostream>
@@ -57,8 +57,8 @@ main(int argc, char **argv) {
     cerr << "Error reading surface from file "<<argv[1]<<".  Exiting...\n";
     exit(0);
   }
-  if (handle->get_type_name(0) != "PointCloud") {
-    cerr << "Error -- input field wasn't a PointCloud (type_name="<<handle->get_type_name(0)<<"\n";
+  if (handle->get_type_name(0) != "PointCloudField") {
+    cerr << "Error -- input field wasn't a PointCloudField (type_name="<<handle->get_type_name(0)<<"\n";
     exit(0);
   }
 
@@ -83,7 +83,7 @@ main(int argc, char **argv) {
   fclose(fpts);
 
   if (handle->get_type_name(1) == "Vector") {
-    PointCloud<Vector> *fld = dynamic_cast<PointCloud<Vector> *>(handle.get_rep());
+    PointCloudField<Vector> *fld = dynamic_cast<PointCloudField<Vector> *>(handle.get_rep());
     sprintf(fname, "%s.grad", argv[2]);
     FILE *fgrad = fopen(fname, "wt");
     cerr << "Writing "<<fld->fdata().size()<<" vectors to "<<fname<<"\n";
@@ -92,7 +92,7 @@ main(int argc, char **argv) {
       fprintf(fgrad, "%lf %lf %lf\n", v.x(), v.y(), v.z());
     }
   } else if (handle->get_type_name(1) == "double") {
-    PointCloud<double> *fld = dynamic_cast<PointCloud<double> *>(handle.get_rep());
+    PointCloudField<double> *fld = dynamic_cast<PointCloudField<double> *>(handle.get_rep());
     sprintf(fname, "%s.pot", argv[2]);
     FILE *fpot = fopen(fname, "wt");
     cerr << "Writing "<<fld->fdata().size()<<" scalars to "<<fname<<"\n";

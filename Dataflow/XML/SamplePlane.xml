@@ -32,7 +32,7 @@
     <description>
       <p>
         Make an ImageField that fits the source field.  The value type of
-        the LatticeVol is the same as that of the input field.  The data
+        the LatVolField is the same as that of the input field.  The data
         location is at the nodes.
       </p>
     </description>

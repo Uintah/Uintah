@@ -26,42 +26,42 @@ PSELIBS := Core/Datatypes Core/Containers Core/Persistent Core/Exceptions Core/T
 endif
 LIBS := -lm
 
-PROGRAM := $(SRCDIR)/OldSFRGtoNewLatticeVol
-SRCS := $(SRCDIR)/OldSFRGtoNewLatticeVol.cc
+PROGRAM := $(SRCDIR)/OldSFRGtoNewLatVolField
+SRCS := $(SRCDIR)/OldSFRGtoNewLatVolField.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/OldVFRGtoNewLatticeVol
-SRCS := $(SRCDIR)/OldVFRGtoNewLatticeVol.cc
+PROGRAM := $(SRCDIR)/OldVFRGtoNewLatVolField
+SRCS := $(SRCDIR)/OldVFRGtoNewLatVolField.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/NewLatticeVolToOldSFRG
-SRCS := $(SRCDIR)/NewLatticeVolToOldSFRG.cc
+PROGRAM := $(SRCDIR)/NewLatVolFieldToOldSFRG
+SRCS := $(SRCDIR)/NewLatVolFieldToOldSFRG.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/OldSFUGtoNewTetVol
-SRCS := $(SRCDIR)/OldSFUGtoNewTetVol.cc
+PROGRAM := $(SRCDIR)/OldSFUGtoNewTetVolField
+SRCS := $(SRCDIR)/OldSFUGtoNewTetVolField.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/NewTetVolToOldSFUG
-SRCS := $(SRCDIR)/NewTetVolToOldSFUG.cc
+PROGRAM := $(SRCDIR)/NewTetVolFieldToOldSFUG
+SRCS := $(SRCDIR)/NewTetVolFieldToOldSFUG.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/OldMeshToNewTetVol
-SRCS := $(SRCDIR)/OldMeshToNewTetVol.cc
+PROGRAM := $(SRCDIR)/OldMeshToNewTetVolField
+SRCS := $(SRCDIR)/OldMeshToNewTetVolField.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/OldMeshToNewField
 SRCS := $(SRCDIR)/OldMeshToNewField.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/NewTetVolToOldMesh
-SRCS := $(SRCDIR)/NewTetVolToOldMesh.cc
+PROGRAM := $(SRCDIR)/NewTetVolFieldToOldMesh
+SRCS := $(SRCDIR)/NewTetVolFieldToOldMesh.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/OldSurfaceToNewTriSurf
-SRCS := $(SRCDIR)/OldSurfaceToNewTriSurf.cc
+PROGRAM := $(SRCDIR)/OldSurfaceToNewTriSurfField
+SRCS := $(SRCDIR)/OldSurfaceToNewTriSurfField.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/NewTriSurfToOldSurface
-SRCS := $(SRCDIR)/NewTriSurfToOldSurface.cc
+PROGRAM := $(SRCDIR)/NewTriSurfFieldToOldSurface
+SRCS := $(SRCDIR)/NewTriSurfFieldToOldSurface.cc
 include $(SCIRUN_SCRIPTS)/program.mk

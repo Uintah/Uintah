@@ -26,7 +26,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/LatVolField.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/GuiInterface/TCL.h>

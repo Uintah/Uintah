@@ -25,7 +25,7 @@
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Disclosure/DynamicLoader.h>
 #include <Core/Math/MusilRNG.h>
-#include <Core/Datatypes/PointCloud.h>
+#include <Core/Datatypes/PointCloudField.h>
 
 namespace SCIRun {
 
@@ -358,8 +358,8 @@ SampleFieldAlgoT<Mesh>::execute(FieldHandle field,
     pcmesh->add_node(p);
   }
 
-  PointCloud<double> *seeds = scinew PointCloud<double>(pcmesh,Field::NODE);
-  PointCloud<double>::fdata_type &fdata = seeds->fdata();
+  PointCloudField<double> *seeds = scinew PointCloudField<double>(pcmesh,Field::NODE);
+  PointCloudField<double>::fdata_type &fdata = seeds->fdata();
   for (loop=0; loop<num_seeds; ++loop)
   {
     fdata[loop]=1;

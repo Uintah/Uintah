@@ -41,9 +41,9 @@
         The source field for BuildInterpolant and ApplyInterpolant
         must contain the same geometry and data locations.  However
         they do not have to contain the same data values or value
-        types.  For instance, a TetVol of doubles with data at the
+        types.  For instance, a TetVolField of doubles with data at the
         nodes can be passed into the Source port of BuildInterpolant,
-        and a TetVol of Vectors with data also at the nodes and with
+        and a TetVolField of Vectors with data also at the nodes and with
         the same mesh can be passed into the source port of
         ApplyInterpolant.
       </p>

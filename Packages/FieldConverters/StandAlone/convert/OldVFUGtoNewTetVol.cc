@@ -33,7 +33,7 @@
 */
 
 /*
- *  OldSFRGtoNewLatticeVol.cc: Converter
+ *  OldSFRGtoNewLatVolField.cc: Converter
  *
  *  Written by:
  *   David Weinstein
@@ -45,7 +45,7 @@
  */
 
 //#include <Packages/FieldConverters/Datatypes/ScalarFieldRG.h>
-//#include <Core/Datatypes/LatticeVol.h>
+//#include <Core/Datatypes/LatVolField.h>
 
 #include <iostream>
 #include <fstream>
@@ -64,7 +64,7 @@ main(int argc, char **argv) {
   ScalarFieldHandle handle;
   
   if (argc !=3) {
-    cerr << "Usage: "<<argv[0]<<" OldSFRG NewLatticeVol\n";
+    cerr << "Usage: "<<argv[0]<<" OldSFRG NewLatVolField\n";
     exit(0);
   }
   Piostream* stream=auto_istream(argv[1]);

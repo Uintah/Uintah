@@ -16,7 +16,7 @@
 */
 
 /*
- *  CVRTItoPointCloudPot.cc
+ *  CVRTItoPointCloudFieldPot.cc
  *
  *  Written by:
  *   David Weinstein
@@ -27,7 +27,7 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <Core/Datatypes/PointCloud.h>
+#include <Core/Datatypes/PointCloudField.h>
 #include <Core/Persistent/Pstreams.h>
 #include <iostream>
 #include <fstream>
@@ -60,7 +60,7 @@ main(int argc, char **argv) {
   }
 
   PointCloudMeshHandle pcmH(pcm);
-  PointCloud<double> *pc = scinew PointCloud<double>(pcmH, Field::NODE);
+  PointCloudField<double> *pc = scinew PointCloudField<double>(pcmH, Field::NODE);
 
   int ii;
   for (ii=0; ii<npts; ii++)

@@ -30,8 +30,8 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/ColumnMatrix.h>
-#include <Core/Datatypes/TetVol.h>
-#include <Core/Datatypes/PointCloud.h>
+#include <Core/Datatypes/TetVolField.h>
+#include <Core/Datatypes/PointCloudField.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Malloc/Allocator.h>
@@ -134,14 +134,14 @@ void ApplyFEMCurrentSource::execute()
   }
 
   TetVolMeshHandle hMesh;
-  LockingHandle<TetVol<int> > hCondField;
+  LockingHandle<TetVolField<int> > hCondField;
 
-  if (hField->get_type_name(0)!="TetVol" && hField->get_type_name(1)!="int"){
-    msgStream_ << "Supplied field is not of type TetVol<int>. Returning..." << endl;
+  if (hField->get_type_name(0)!="TetVolField" && hField->get_type_name(1)!="int"){
+    msgStream_ << "Supplied field is not of type TetVolField<int>. Returning..." << endl;
     return;
   }
   else {
-    hCondField = dynamic_cast<TetVol<int>*> (hField.get_rep());
+    hCondField = dynamic_cast<TetVolField<int>*> (hField.get_rep());
     hMesh = hCondField->get_typed_mesh();
   }
   
@@ -171,14 +171,14 @@ void ApplyFEMCurrentSource::execute()
       return;
     }
   
-    LockingHandle<PointCloud<Vector> > hDipField;
+    LockingHandle<PointCloudField<Vector> > hDipField;
     
-    if (hSource->get_type_name(0)!="PointCloud" || hSource->get_type_name(1)!="Vector"){
-      msgStream_ << "Supplied field is not of type PointCloud<Vector>. Returning..." << endl;
+    if (hSource->get_type_name(0)!="PointCloudField" || hSource->get_type_name(1)!="Vector"){
+      msgStream_ << "Supplied field is not of type PointCloudField<Vector>. Returning..." << endl;
       return;
     }
     else {
-      hDipField = dynamic_cast<PointCloud<Vector>*> (hSource.get_rep());
+      hDipField = dynamic_cast<PointCloudField<Vector>*> (hSource.get_rep());
     }
   
     //! Computing contributions of dipoles to RHS
@@ -238,9 +238,9 @@ void ApplyFEMCurrentSource::execute()
     unsigned int sinkNode = Max(sinkNodeTCL_.get(), 0);
       
     if (hInterp.get_rep()) {
-      PointCloud<vector<pair<TetVolMesh::Node::index_type, double> > >* interp = dynamic_cast<PointCloud<vector<pair<TetVolMesh::Node::index_type, double> > > *>(hInterp.get_rep());
+      PointCloudField<vector<pair<TetVolMesh::Node::index_type, double> > >* interp = dynamic_cast<PointCloudField<vector<pair<TetVolMesh::Node::index_type, double> > > *>(hInterp.get_rep());
       if (!interp) {
-	cerr << "Input interp field wasn't interp'ing PointCloud from a TetVolMesh::Node\n";
+	cerr << "Input interp field wasn't interp'ing PointCloudField from a TetVolMesh::Node\n";
 	return;
       } else if (sourceNode < interp->fdata().size() &&
 		 sinkNode < interp->fdata().size()) {

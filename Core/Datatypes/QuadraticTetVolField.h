@@ -13,12 +13,12 @@
 //  Portions created by UNIVERSITY are Copyright (C) 2001, 1994
 //  University of Utah. All Rights Reserved.
 //  
-//    File   : QuadraticTetVol.h
+//    File   : QuadraticTetVolField.h
 //    Author : Martin Cole
 //    Date   : Sun Feb 24 13:47:31 2002
 
-#ifndef Datatypes_QuadraticTetVol_h
-#define Datatypes_QuadraticTetVol_h
+#ifndef Datatypes_QuadraticTetVolField_h
+#define Datatypes_QuadraticTetVolField_h
 
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/QuadraticTetVolMesh.h>
@@ -32,14 +32,14 @@
 namespace SCIRun {
 
 template <class T> 
-class QuadraticTetVol : public GenericField<QuadraticTetVolMesh, vector<T> >
+class QuadraticTetVolField : public GenericField<QuadraticTetVolMesh, vector<T> >
 {
 public:
-  QuadraticTetVol();
-  QuadraticTetVol(Field::data_location data_at);
-  QuadraticTetVol(QuadraticTetVolMeshHandle mesh, Field::data_location data_at);
-  virtual QuadraticTetVol<T> *clone() const;
-  virtual ~QuadraticTetVol();
+  QuadraticTetVolField();
+  QuadraticTetVolField(Field::data_location data_at);
+  QuadraticTetVolField(QuadraticTetVolMeshHandle mesh, Field::data_location data_at);
+  virtual QuadraticTetVolField<T> *clone() const;
+  virtual ~QuadraticTetVolField();
 
   virtual ScalarFieldInterface* query_scalar_interface() const;
   virtual VectorFieldInterface* query_vector_interface() const;
@@ -52,7 +52,7 @@ public:
   virtual const string get_type_name(int n = -1) const;
   virtual const TypeDescription* get_type_description() const;
 
-  // QuadraticTetVol specific methods.
+  // QuadraticTetVolField specific methods.
   bool get_gradient(Vector &, Point &);
   Vector cell_gradient(QuadraticTetVolMesh::Cell::index_type);
 
@@ -61,84 +61,84 @@ private:
 };
 
 template <class T>
-QuadraticTetVol<T>::QuadraticTetVol()
+QuadraticTetVolField<T>::QuadraticTetVolField()
   : GenericField<QuadraticTetVolMesh, vector<T> >()
 {
 }
 
 template <class T>
-QuadraticTetVol<T>::QuadraticTetVol(Field::data_location data_at)
+QuadraticTetVolField<T>::QuadraticTetVolField(Field::data_location data_at)
   : GenericField<QuadraticTetVolMesh, vector<T> >(data_at)
 {
 }
 
 template <class T>
-QuadraticTetVol<T>::QuadraticTetVol(QuadraticTetVolMeshHandle mesh, Field::data_location data_at)
+QuadraticTetVolField<T>::QuadraticTetVolField(QuadraticTetVolMeshHandle mesh, Field::data_location data_at)
   : GenericField<QuadraticTetVolMesh, vector<T> >(mesh, data_at)
 {
 }
 
 template <class T>
-QuadraticTetVol<T> *
-QuadraticTetVol<T>::clone() const
+QuadraticTetVolField<T> *
+QuadraticTetVolField<T>::clone() const
 {
-  return new QuadraticTetVol(*this);
+  return new QuadraticTetVolField(*this);
 }
 
 template <class T>
-QuadraticTetVol<T>::~QuadraticTetVol()
+QuadraticTetVolField<T>::~QuadraticTetVolField()
 {
 }
 
 template <> ScalarFieldInterface *
-QuadraticTetVol<double>::query_scalar_interface() const;
+QuadraticTetVolField<double>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface *
-QuadraticTetVol<float>::query_scalar_interface() const;
+QuadraticTetVolField<float>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface *
-QuadraticTetVol<int>::query_scalar_interface() const;
+QuadraticTetVolField<int>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
-QuadraticTetVol<short>::query_scalar_interface() const;
+QuadraticTetVolField<short>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
-QuadraticTetVol<char>::query_scalar_interface() const;
+QuadraticTetVolField<char>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface *
-QuadraticTetVol<unsigned int>::query_scalar_interface() const;
+QuadraticTetVolField<unsigned int>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
-QuadraticTetVol<unsigned short>::query_scalar_interface() const;
+QuadraticTetVolField<unsigned short>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
-QuadraticTetVol<unsigned char>::query_scalar_interface() const;
+QuadraticTetVolField<unsigned char>::query_scalar_interface() const;
 
 template <class T>
 ScalarFieldInterface*
-QuadraticTetVol<T>::query_scalar_interface() const 
+QuadraticTetVolField<T>::query_scalar_interface() const 
 {
   return 0;
 }
 
 template <>
 VectorFieldInterface*
-QuadraticTetVol<Vector>::query_vector_interface() const;
+QuadraticTetVolField<Vector>::query_vector_interface() const;
 
 template <class T>
 VectorFieldInterface*
-QuadraticTetVol<T>::query_vector_interface() const
+QuadraticTetVolField<T>::query_vector_interface() const
 {
   return 0;
 }
 
 template <>
 TensorFieldInterface*
-QuadraticTetVol<Tensor>::query_tensor_interface() const;
+QuadraticTetVolField<Tensor>::query_tensor_interface() const;
 
 template <class T>
 TensorFieldInterface*
-QuadraticTetVol<T>::query_tensor_interface() const
+QuadraticTetVolField<T>::query_tensor_interface() const
 {
   return 0;
 }
@@ -146,27 +146,28 @@ QuadraticTetVol<T>::query_tensor_interface() const
 
 template <class T>
 Persistent*
-QuadraticTetVol<T>::maker()
+QuadraticTetVolField<T>::maker()
 {
-  return scinew QuadraticTetVol<T>;
+  return scinew QuadraticTetVolField<T>;
 }
 
 
 template <class T>
 PersistentTypeID 
-QuadraticTetVol<T>::type_id(QuadraticTetVol<T>::type_name(-1), 
+QuadraticTetVolField<T>::type_id(QuadraticTetVolField<T>::type_name(-1), 
 			    GenericField<QuadraticTetVolMesh, vector<T> >::type_name(-1),
 			    maker);
 
 
 // Pio defs.
-const int QUADRATIC_TET_VOL_VERSION = 1;
+const int QUADRATIC_TET_VOL_FIELD_VERSION = 1;
 
 template <class T>
 void 
-QuadraticTetVol<T>::io(Piostream& stream)
+QuadraticTetVolField<T>::io(Piostream& stream)
 {
-  stream.begin_class(type_name(-1), QUADRATIC_TET_VOL_VERSION);
+  /*int version=*/stream.begin_class(type_name(-1), 
+				     QUADRATIC_TET_VOL_FIELD_VERSION);
   GenericField<QuadraticTetVolMesh, vector<T> >::io(stream);
   stream.end_class();
 }
@@ -174,7 +175,7 @@ QuadraticTetVol<T>::io(Piostream& stream)
 
 template <class T> 
 const string 
-QuadraticTetVol<T>::type_name(int n)
+QuadraticTetVolField<T>::type_name(int n)
 {
   ASSERT((n >= -1) && n <= 1);
   if (n == -1)
@@ -185,7 +186,7 @@ QuadraticTetVol<T>::type_name(int n)
   }
   else if (n == 0)
   {
-    return "QuadraticTetVol";
+    return "QuadraticTetVolField";
   }
   else
   {
@@ -196,17 +197,17 @@ QuadraticTetVol<T>::type_name(int n)
 
 template <class T> 
 const string
-QuadraticTetVol<T>::get_type_name(int n) const
+QuadraticTetVolField<T>::get_type_name(int n) const
 {
   return type_name(n);
 }
 
 template <class T>
 const TypeDescription* 
-get_type_description(QuadraticTetVol<T>*)
+get_type_description(QuadraticTetVolField<T>*)
 {
   static TypeDescription* td = 0;
-  static string name("QuadraticTetVol");
+  static string name("QuadraticTetVolField");
   static string namesp("SCIRun");
   static string path(__FILE__);
   if(!td){
@@ -220,14 +221,14 @@ get_type_description(QuadraticTetVol<T>*)
 
 template <class T>
 const TypeDescription* 
-QuadraticTetVol<T>::get_type_description() const 
+QuadraticTetVolField<T>::get_type_description() const 
 {
-  return SCIRun::get_type_description((QuadraticTetVol<T>*)0);
+  return SCIRun::get_type_description((QuadraticTetVolField<T>*)0);
 }
 
 //! compute the gradient g, at point p
 template <class T>
-bool QuadraticTetVol<T>::get_gradient(Vector &g, Point &p) {
+bool QuadraticTetVolField<T>::get_gradient(Vector &g, Point &p) {
   QuadraticTetVolMesh::Cell::index_type ci;
   if (get_typed_mesh()->locate(ci, p)) {
     g = cell_gradient(ci);
@@ -239,13 +240,13 @@ bool QuadraticTetVol<T>::get_gradient(Vector &g, Point &p) {
 
 //! Compute the gradient g in cell ci.
 template <>
-Vector QuadraticTetVol<Vector>::cell_gradient(QuadraticTetVolMesh::Cell::index_type ci);
+Vector QuadraticTetVolField<Vector>::cell_gradient(QuadraticTetVolMesh::Cell::index_type ci);
 
 template <>
-Vector QuadraticTetVol<Tensor>::cell_gradient(QuadraticTetVolMesh::Cell::index_type ci);
+Vector QuadraticTetVolField<Tensor>::cell_gradient(QuadraticTetVolMesh::Cell::index_type ci);
 
 template <class T>
-Vector QuadraticTetVol<T>::cell_gradient(QuadraticTetVolMesh::Cell::index_type ci)
+Vector QuadraticTetVolField<T>::cell_gradient(QuadraticTetVolMesh::Cell::index_type ci)
 {
   // for now we only know how to do this for field with doubles at the nodes
   ASSERT(data_at() == Field::NODE);
@@ -273,4 +274,4 @@ Vector QuadraticTetVol<T>::cell_gradient(QuadraticTetVolMesh::Cell::index_type c
 
 } // end namespace SCIRun
 
-#endif // Datatypes_QuadraticTetVol_h
+#endif // Datatypes_QuadraticTetVolField_h

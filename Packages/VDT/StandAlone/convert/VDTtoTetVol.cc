@@ -16,7 +16,7 @@
 */
 
 /*
- *  FlatToTetVol.cc
+ *  FlatToTetVolField.cc
  *
  *  Written by:
  *   David Weinstein
@@ -27,7 +27,7 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/TetVolField.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Persistent/Pstreams.h>
 
@@ -108,11 +108,11 @@ main(int argc, char **argv) {
     tvm->add_tet(ptsMap[i1], ptsMap[i2], ptsMap[i3], ptsMap[i4]);
   }
   
-  TetVol<int> *tvi = scinew TetVol<int>(tvm, Field::CELL);
+  TetVolField<int> *tvi = scinew TetVolField<int>(tvm, Field::CELL);
   vector<pair<string, Tensor> > tens;
   tens.resize(1);
   tens[0] = pair<string, Tensor>("inside", Tensor(1.0));
-  tvi->store("conductivity_table", tens, false);
+  tvi->set_property("conductivity_table", tens, false);
   for (i=0; i<ntets; i++)
     tvi->fdata()[i] = 0;
 
@@ -120,7 +120,7 @@ main(int argc, char **argv) {
   TextPiostream out_stream(argv[2], Piostream::Write);
   Pio(out_stream, tvH);
 
-  TetVol<double> *tvd = scinew TetVol<double>(tvm, Field::NODE);
+  TetVolField<double> *tvd = scinew TetVolField<double>(tvm, Field::NODE);
   tvH=tvd;
   TextPiostream out_stream2(argv[3], Piostream::Write);
   Pio(out_stream2, tvH);

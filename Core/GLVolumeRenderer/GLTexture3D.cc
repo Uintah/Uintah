@@ -22,7 +22,7 @@
 #include <Core/Math/MiscMath.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Persistent/Persistent.h>
-#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/LatVolField.h>
 #include <Core/Datatypes/FieldAlgo.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Semaphore.h>
@@ -92,8 +92,8 @@ GLTexture3D::GLTexture3D(FieldHandle texfld, double &min, double &max,
   zmax_(0),
   isCC_(false)
 {
-  if (texfld_->get_type_name(0) != "LatticeVol") {
-    cerr << "GLTexture3D constructor error - can only make a GLTexture3D from a LatticeVol\n";
+  if (texfld_->get_type_name(0) != "LatVolField") {
+    cerr << "GLTexture3D constructor error - can only make a GLTexture3D from a LatVolField\n";
     return;
   }
 
@@ -101,27 +101,27 @@ GLTexture3D::GLTexture3D(FieldHandle texfld, double &min, double &max,
   LatVolMeshHandle mesh;
   const string type = texfld_->get_type_name(1);
   if (type == "double") {
-    LatticeVol<double> *fld =
-      dynamic_cast<LatticeVol<double>*>(texfld_.get_rep());
+    LatVolField<double> *fld =
+      dynamic_cast<LatVolField<double>*>(texfld_.get_rep());
     field_minmax(*fld, minmax);
     mesh = fld->get_typed_mesh();
   } else if (type == "int") {
-    LatticeVol<int> *fld =
-      dynamic_cast<LatticeVol<int>*>(texfld_.get_rep());
+    LatVolField<int> *fld =
+      dynamic_cast<LatVolField<int>*>(texfld_.get_rep());
     field_minmax(*fld, minmax);
     mesh = fld->get_typed_mesh();
   } else if (type == "short") {
-    LatticeVol<short> *fld =
-      dynamic_cast<LatticeVol<short>*>(texfld_.get_rep());
+    LatVolField<short> *fld =
+      dynamic_cast<LatVolField<short>*>(texfld_.get_rep());
     field_minmax(*fld, minmax);
     mesh = fld->get_typed_mesh();
   } else if (type == "unsigned_char") {
-    LatticeVol<unsigned char> *fld =
-      dynamic_cast<LatticeVol<unsigned char>*>(texfld_.get_rep());
+    LatVolField<unsigned char> *fld =
+      dynamic_cast<LatVolField<unsigned char>*>(texfld_.get_rep());
     field_minmax(*fld, minmax);
     mesh = fld->get_typed_mesh();
   } else {
-    cerr << "GLTexture3D constructor error - unknown LatticeVol type: " << type << endl;
+    cerr << "GLTexture3D constructor error - unknown LatVolField type: " << type << endl;
     return;
   }
   transform_ = mesh->get_transform();
@@ -207,19 +207,19 @@ void GLTexture3D::build_texture()
   
   if (type == "double") {
     bontree_ = build_bon_tree(minP_, maxP_, 0, 0, 0, X_, Y_, Z_, 0, 
-	       dynamic_cast<LatticeVol<double>*>(texfld_.get_rep()), 0, 
+	       dynamic_cast<LatVolField<double>*>(texfld_.get_rep()), 0, 
 			   thread_sema, tg);
   } else if (type == "int") {
     bontree_ = build_bon_tree(minP_, maxP_, 0, 0, 0, X_, Y_, Z_, 0, 
-	       dynamic_cast<LatticeVol<int>*>(texfld_.get_rep()), 0, 
+	       dynamic_cast<LatVolField<int>*>(texfld_.get_rep()), 0, 
 			   thread_sema, tg);
   } else if (type == "short") {
     bontree_ = build_bon_tree(minP_, maxP_, 0, 0, 0, X_, Y_, Z_, 0, 
-	       dynamic_cast<LatticeVol<short>*>(texfld_.get_rep()), 0, 
+	       dynamic_cast<LatVolField<short>*>(texfld_.get_rep()), 0, 
 			   thread_sema, tg);
   } else if (type == "unsigned_char") {
     bontree_ = build_bon_tree(minP_, maxP_, 0, 0, 0, X_, Y_, Z_, 0, 
-	       dynamic_cast<LatticeVol<unsigned char>*>(texfld_.get_rep()), 0, 
+	       dynamic_cast<LatVolField<unsigned char>*>(texfld_.get_rep()), 0, 
 			   thread_sema, tg);
   } else {
     cerr<<"Error: cast didn't work!\n";
@@ -289,8 +289,8 @@ GLTexture3D::set_brick_size(int bsize)
 void
 GLTexture3D::set_field( FieldHandle texfld )
 {
-  if (texfld_->get_type_name(0) != "LatticeVol") {
-    cerr << "GLTexture3D constructor error - can only make a GLTexture3D from a LatticeVol\n";
+  if (texfld_->get_type_name(0) != "LatVolField") {
+    cerr << "GLTexture3D constructor error - can only make a GLTexture3D from a LatVolField\n";
     return;
   }
   texfld_=texfld;

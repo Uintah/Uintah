@@ -33,7 +33,7 @@
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Widgets/BoxWidget.h>
-#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/LatVolField.h>
 #include <Dataflow/Modules/Fields/ClipLattice.h>
 #include <iostream>
 
@@ -150,7 +150,7 @@ ClipLattice::execute()
   if (ifieldhandle->mesh()->get_type_description()->get_name() !=
 	"LatVolMesh")
   {
-    error("Not a LatticeVol field type.");
+    error("Not a LatVolField field type.");
     return;
   }
 

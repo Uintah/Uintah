@@ -31,7 +31,7 @@ INCLUDES += $(VDT_INCLUDE)
 SRCDIR   := Packages/VDT/Dataflow/Modules/Modeling
 
 SRCS     += \
-	$(SRCDIR)/GenerateTetVol.cc\
+	$(SRCDIR)/GenerateTetVolField.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \

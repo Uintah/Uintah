@@ -16,8 +16,8 @@
 */
 
 
-#ifndef Datatypes_LatticeVol_h
-#define Datatypes_LatticeVol_h
+#ifndef Datatypes_LatVolField_h
+#define Datatypes_LatVolField_h
 
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/LatVolMesh.h>
@@ -115,14 +115,14 @@ FData3d<Data>::get_type_name(int n) const
 
 
 template <class Data>
-class LatticeVol : public GenericField< LatVolMesh, FData3d<Data> >
+class LatVolField : public GenericField< LatVolMesh, FData3d<Data> >
 {
 public:
-  LatticeVol();
-  LatticeVol(Field::data_location data_at);
-  LatticeVol(LatVolMeshHandle mesh, Field::data_location data_at);
-  virtual LatticeVol<Data> *clone() const;
-  virtual ~LatticeVol();
+  LatVolField();
+  LatVolField(Field::data_location data_at);
+  LatVolField(LatVolMeshHandle mesh, Field::data_location data_at);
+  virtual LatVolField<Data> *clone() const;
+  virtual ~LatVolField();
 
   virtual ScalarFieldInterface* query_scalar_interface() const;
   virtual VectorFieldInterface* query_vector_interface() const;
@@ -134,7 +134,7 @@ public:
   virtual void io(Piostream &stream);
   virtual const TypeDescription* get_type_description() const;
 
-  // LatticeVol Specific methods.
+  // LatVolField Specific methods.
   bool get_gradient(Vector &, const Point &);
 
 private:
@@ -144,21 +144,21 @@ private:
 
 
 template <class Data>
-LatticeVol<Data>::LatticeVol()
+LatVolField<Data>::LatVolField()
   : GenericField<LatVolMesh, FData3d<Data> >()
 {
 }
 
 
 template <class Data>
-LatticeVol<Data>::LatticeVol(Field::data_location data_at)
+LatVolField<Data>::LatVolField(Field::data_location data_at)
   : GenericField<LatVolMesh, FData3d<Data> >(data_at)
 {
 }
 
 
 template <class Data>
-LatticeVol<Data>::LatticeVol(LatVolMeshHandle mesh,
+LatVolField<Data>::LatVolField(LatVolMeshHandle mesh,
 			     Field::data_location data_at)
   : GenericField<LatVolMesh, FData3d<Data> >(mesh, data_at)
 {
@@ -166,68 +166,68 @@ LatticeVol<Data>::LatticeVol(LatVolMeshHandle mesh,
 
 
 template <class Data>
-LatticeVol<Data> *
-LatticeVol<Data>::clone() const
+LatVolField<Data> *
+LatVolField<Data>::clone() const
 {
-  return new LatticeVol<Data>(*this);
+  return new LatVolField<Data>(*this);
 }
   
 
 template <class Data>
-LatticeVol<Data>::~LatticeVol()
+LatVolField<Data>::~LatVolField()
 {
 }
 
 
 template <> ScalarFieldInterface *
-LatticeVol<double>::query_scalar_interface() const;
+LatVolField<double>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface *
-LatticeVol<float>::query_scalar_interface() const;
+LatVolField<float>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface *
-LatticeVol<int>::query_scalar_interface() const;
+LatVolField<int>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
-LatticeVol<short>::query_scalar_interface() const;
+LatVolField<short>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
-LatticeVol<char>::query_scalar_interface() const;
+LatVolField<char>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface *
-LatticeVol<unsigned int>::query_scalar_interface() const;
+LatVolField<unsigned int>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
-LatticeVol<unsigned short>::query_scalar_interface() const;
+LatVolField<unsigned short>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
-LatticeVol<unsigned char>::query_scalar_interface() const;
+LatVolField<unsigned char>::query_scalar_interface() const;
 
 template <class T>
 ScalarFieldInterface*
-LatticeVol<T>::query_scalar_interface() const 
+LatVolField<T>::query_scalar_interface() const 
 {
   return 0;
 }
 
 template <>
 VectorFieldInterface*
-LatticeVol<Vector>::query_vector_interface() const;
+LatVolField<Vector>::query_vector_interface() const;
 
 template <class T>
 VectorFieldInterface*
-LatticeVol<T>::query_vector_interface() const
+LatVolField<T>::query_vector_interface() const
 {
   return 0;
 }
 
 template <>
 TensorFieldInterface*
-LatticeVol<Tensor>::query_tensor_interface() const;
+LatVolField<Tensor>::query_tensor_interface() const;
 
 template <class T>
 TensorFieldInterface*
-LatticeVol<T>::query_tensor_interface() const
+LatVolField<T>::query_tensor_interface() const
 {
   return 0;
 }
@@ -235,17 +235,17 @@ LatticeVol<T>::query_tensor_interface() const
 
 template <class Data>
 const string
-LatticeVol<Data>::get_type_name(int n) const
+LatVolField<Data>::get_type_name(int n) const
 {
   return type_name(n);
 }
 
 template <class T>
 const TypeDescription* 
-get_type_description(LatticeVol<T>*)
+get_type_description(LatVolField<T>*)
 {
   static TypeDescription* td = 0;
-  static string name("LatticeVol");
+  static string name("LatVolField");
   static string namesp("SCIRun");
   static string path(__FILE__);
   if(!td){
@@ -259,31 +259,31 @@ get_type_description(LatticeVol<T>*)
 
 template <class T>
 const TypeDescription* 
-LatticeVol<T>::get_type_description() const 
+LatVolField<T>::get_type_description() const 
 {
-  return SCIRun::get_type_description((LatticeVol<T>*)0);
+  return SCIRun::get_type_description((LatVolField<T>*)0);
 }
 
-#define LATTICEVOL_VERSION 2
+#define LAT_VOL_FIELD_VERSION 3
 
 template <class Data>
 Persistent* 
-LatticeVol<Data>::maker()
+LatVolField<Data>::maker()
 {
-  return scinew LatticeVol<Data>;
+  return scinew LatVolField<Data>;
 }
 
 template <class Data>
 PersistentTypeID
-LatticeVol<Data>::type_id(type_name(-1),
+LatVolField<Data>::type_id(type_name(-1),
 		GenericField<LatVolMesh, FData3d<Data> >::type_name(-1),
                 maker); 
 
 template <class Data>
 void
-LatticeVol<Data>::io(Piostream &stream)
+LatVolField<Data>::io(Piostream &stream)
 {
-  int version = stream.begin_class(type_name(-1), LATTICEVOL_VERSION);
+  int version = stream.begin_class(type_name(-1), LAT_VOL_FIELD_VERSION);
   GenericField<LatVolMesh, FData3d<Data> >::io(stream);
   stream.end_class();                                                         
   if (version < 2) {
@@ -301,7 +301,7 @@ LatticeVol<Data>::io(Piostream &stream)
 
 template <class Data>
 const string
-LatticeVol<Data>::type_name(int n)
+LatVolField<Data>::type_name(int n)
 {
   ASSERT((n >= -1) && n <= 1);
   if (n == -1)
@@ -312,7 +312,7 @@ LatticeVol<Data>::type_name(int n)
   }
   else if (n == 0)
   {
-    return "LatticeVol";
+    return "LatVolField";
   }
   else
   {
@@ -324,12 +324,12 @@ LatticeVol<Data>::type_name(int n)
 
 
 //! compute the gradient g, at point p
-template <> bool LatticeVol<Tensor>::get_gradient(Vector &, const Point &p);
-template <> bool LatticeVol<Vector>::get_gradient(Vector &, const Point &p);
+template <> bool LatVolField<Tensor>::get_gradient(Vector &, const Point &p);
+template <> bool LatVolField<Vector>::get_gradient(Vector &, const Point &p);
 
 
 template <class Data>
-bool LatticeVol<Data>::get_gradient(Vector &g, const Point &p)
+bool LatVolField<Data>::get_gradient(Vector &g, const Point &p)
 {
   // for now we only know how to do this for fields with scalars at the nodes
   if (query_scalar_interface())
@@ -406,4 +406,4 @@ bool LatticeVol<Data>::get_gradient(Vector &g, const Point &p)
 
 } // end namespace SCIRun
 
-#endif // Datatypes_LatticeVol_h
+#endif // Datatypes_LatVolField_h

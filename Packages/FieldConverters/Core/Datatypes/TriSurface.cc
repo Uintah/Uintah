@@ -16,7 +16,7 @@
 */
 
 /*
- *  TriSurface.cc: Triangulated Surface Data type
+ *  TriSurfFieldace.cc: Triangulated Surface Data type
  *
  *  Written by:
  *   David Weinstein
@@ -31,7 +31,7 @@
 #pragma warning(disable:4291) // quiet the visual C++ compiler
 #endif
 
-#include <FieldConverters/Core/Datatypes/TriSurface.h>
+#include <FieldConverters/Core/Datatypes/TriSurfFieldace.h>
 
 #include <Core/Util/Assert.h>
 #include <Core/Util/NotFinished.h>
@@ -78,14 +78,14 @@ void TSEdge::operator delete(void* rp, size_t)
     TSEdge_alloc.free(rp);
 }
 
-static Persistent* make_TriSurface()
+static Persistent* make_TriSurfFieldace()
 {
-    return scinew TriSurface;
+    return scinew TriSurfFieldace;
 }
 
-PersistentTypeID TriSurface::type_id("TriSurface", "Surface", make_TriSurface);
+PersistentTypeID TriSurfFieldace::type_id("TriSurfFieldace", "Surface", make_TriSurfFieldace);
 
-TriSurface::TriSurface(Representation r)
+TriSurfFieldace::TriSurfFieldace(Representation r)
   : Surface(r, 0),
     valType(NodeType),
     normType(NrmlsNone),
@@ -95,7 +95,7 @@ TriSurface::TriSurface(Representation r)
 {
 }
 
-TriSurface::TriSurface(const TriSurface& copy, Representation)
+TriSurfFieldace::TriSurfFieldace(const TriSurfFieldace& copy, Representation)
   : Surface(copy)
 {
     points=copy.points;
@@ -112,7 +112,7 @@ TriSurface::TriSurface(const TriSurface& copy, Representation)
     normals=copy.normals;
 }
 
-TriSurface& TriSurface::operator=(const TriSurface& t)
+TriSurfFieldace& TriSurfFieldace::operator=(const TriSurfFieldace& t)
 {
     points=t.points;
     elements=Array1<TSElement*>(t.elements.size());
@@ -128,16 +128,16 @@ TriSurface& TriSurface::operator=(const TriSurface& t)
     return *this;
 }
 
-TriSurface::~TriSurface() {
+TriSurfFieldace::~TriSurfFieldace() {
 }
 
-int TriSurface::inside(const Point&)
+int TriSurfFieldace::inside(const Point&)
 {
-    NOT_FINISHED("TriSurface::inside");
+    NOT_FINISHED("TriSurfFieldace::inside");
     return 1;
 }
 
-void TriSurface::order_faces() {
+void TriSurfFieldace::order_faces() {
     if (elements.size() == 0) 
 	directed=1;
     else {
@@ -145,11 +145,11 @@ void TriSurface::order_faces() {
     }
 }
 
-void TriSurface::add_point(const Point& p) {
+void TriSurfFieldace::add_point(const Point& p) {
     points.add(p);
 }
 
-void TriSurface::buildNormals(NormalsType nt) {
+void TriSurfFieldace::buildNormals(NormalsType nt) {
 
   normals.resize(0);
   normType=NrmlsNone;
@@ -257,7 +257,7 @@ void TriSurface::buildNormals(NormalsType nt) {
     normType=nt;
 }
 
-void TriSurface::buildNodeInfo() {
+void TriSurfFieldace::buildNodeInfo() {
     if (haveNodeInfo) return;
     haveNodeInfo=1;
     nodeNbrs.resize(points.size());
@@ -327,10 +327,10 @@ void TriSurface::buildNodeInfo() {
     }
 }
 
-int TriSurface::get_closest_vertex_id(const Point &p1, const Point &p2,
+int TriSurfFieldace::get_closest_vertex_id(const Point &p1, const Point &p2,
 				      const Point &p3) {
     if (grid==0) {
-	ASSERTFAIL("Can't run TriSurface::get_closest_vertex_id() w/o a grid\n");
+	ASSERTFAIL("Can't run TriSurfFieldace::get_closest_vertex_id() w/o a grid\n");
     }
     int i[3], j[3], k[3];	// grid element indices containing these points
     int maxi, maxj, maxk, mini, minj, mink;
@@ -352,7 +352,7 @@ int TriSurface::get_closest_vertex_id(const Point &p1, const Point &p2,
     // so we can use the existing Surface->distance code to find the closest
     // vertex to this triangle.
 
-    TriSurface* surf=scinew TriSurface;
+    TriSurfFieldace* surf=scinew TriSurfFieldace;
     surf->construct_grid(grid->dim1(), grid->dim2(), grid->dim3(), 
 			 grid->get_min(), grid->get_spacing());
     surf->add_point(p1);
@@ -384,7 +384,7 @@ int TriSurface::get_closest_vertex_id(const Point &p1, const Point &p2,
     }
 }
 
-int TriSurface::find_or_add(const Point &p) {
+int TriSurfFieldace::find_or_add(const Point &p) {
   if (pntHash==0) {
     points.add(p);
     return(points.size()-1);
@@ -406,11 +406,11 @@ int TriSurface::find_or_add(const Point &p) {
   }
 }
 
-int TriSurface::cautious_add_triangle(const Point &p1, const Point &p2, 
+int TriSurfFieldace::cautious_add_triangle(const Point &p1, const Point &p2, 
 				       const Point &p3, int cw) {
     directed&=cw;
     if (grid==0) {
-	ASSERTFAIL("Can't run TriSurface::cautious_add_triangle w/o a grid\n");
+	ASSERTFAIL("Can't run TriSurfFieldace::cautious_add_triangle w/o a grid\n");
     }
     int i1=find_or_add(p1);
     int i2=find_or_add(p2);
@@ -418,7 +418,7 @@ int TriSurface::cautious_add_triangle(const Point &p1, const Point &p2,
     return (add_triangle(i1,i2,i3,cw));
 }
 
-int TriSurface::add_triangle(int i1, int i2, int i3, int cw) {
+int TriSurfFieldace::add_triangle(int i1, int i2, int i3, int cw) {
     directed&=cw;
     int temp;
     if (i1==i2 || i1==i3)	// don't even add degenerate triangles
@@ -440,7 +440,7 @@ int TriSurface::add_triangle(int i1, int i2, int i3, int cw) {
     return temp;
 }
 
-void TriSurface::separate(int idx, TriSurface* conn, TriSurface* d_conn, int updateConnIndices, int updateDConnIndices) {
+void TriSurfFieldace::separate(int idx, TriSurfFieldace* conn, TriSurfFieldace* d_conn, int updateConnIndices, int updateDConnIndices) {
     if (idx<0 || idx>points.size()) {
 	cerr << "Trisurface:separate() failed -- index out of range";
 	return;
@@ -541,14 +541,14 @@ void TriSurface::separate(int idx, TriSurface* conn, TriSurface* d_conn, int upd
 	}
 }		    
 
-void TriSurface::remove_empty_index() {
+void TriSurfFieldace::remove_empty_index() {
     if (empty_index!=-1) {
 	elements.remove(empty_index);
 	empty_index=-1;
     }
 }
 
-void TriSurface::construct_grid(int xdim, int ydim, int zdim, 
+void TriSurfFieldace::construct_grid(int xdim, int ydim, int zdim, 
 				const Point &min, double spacing) {
     remove_empty_index();
     if (grid) delete grid;
@@ -558,7 +558,7 @@ void TriSurface::construct_grid(int xdim, int ydim, int zdim,
 			   points[elements[i]->i2], points[elements[i]->i3]);
 }
 
-void TriSurface::construct_hash(int xdim, int ydim, const Point &p, double res) {
+void TriSurfFieldace::construct_hash(int xdim, int ydim, const Point &p, double res) {
     xdim=(int)(xdim/res);
     ydim=(int)(ydim/res);
     hash_x = xdim;
@@ -596,10 +596,10 @@ void TriSurface::construct_hash(int xdim, int ydim, const Point &p, double res) 
 //		  [1]=triangle[1] vertex #
 //		   ...
 
-double TriSurface::distance(const Point &p,Array1<int> &res, Point *pp) {
+double TriSurfFieldace::distance(const Point &p,Array1<int> &res, Point *pp) {
 
     if (grid==0) {
-	ASSERTFAIL("Can't run TriSurface::distance w/o a grid\n");
+	ASSERTFAIL("Can't run TriSurfFieldace::distance w/o a grid\n");
     }
     Array1<int>* elem;
     Array1<int> tri;
@@ -691,7 +691,7 @@ double TriSurface::distance(const Point &p,Array1<int> &res, Point *pp) {
 //	an edge,  then *type=1+vertex# (that we're furthest from)
 //      a vertex, then *type=4+vertex# (that we're closest to)
 
-double TriSurface::distance(const Point &p, int el, int *type, Point *pp) {
+double TriSurfFieldace::distance(const Point &p, int el, int *type, Point *pp) {
     Point a(points[elements[el]->i1]);	//load the vertices of this element...
     Point b(points[elements[el]->i2]);  //... into a, b and c
     Point c(points[elements[el]->i3]);
@@ -891,7 +891,7 @@ static void orderNormal(int i[], const Vector& v) {
     }
 }       
     
-int TriSurface::intersect(const Point& origin, const Vector& dir, double &d, int &v, int face)
+int TriSurfFieldace::intersect(const Point& origin, const Vector& dir, double &d, int &v, int face)
 {
     double P[3], t, alpha, beta;
     double u0,u1,u2,v0,v1,v2;
@@ -960,7 +960,7 @@ int TriSurface::intersect(const Point& origin, const Vector& dir, double &d, int
     return (1);
 }
 
-void TriSurface::remove_triangle(int i) {
+void TriSurfFieldace::remove_triangle(int i) {
     // if there hasn't been a triangle added since the last one was deleted
     // then we need to start deleting.  Otherwise, we're probably merging
     // contours, so just setting the empty_index is fine.
@@ -983,9 +983,9 @@ void TriSurface::remove_triangle(int i) {
 
 #define TRISURFACE_VERSION 5
 
-void TriSurface::io(Piostream& stream) {
+void TriSurfFieldace::io(Piostream& stream) {
     remove_empty_index();
-    int version=stream.begin_class("TriSurface", TRISURFACE_VERSION);
+    int version=stream.begin_class("TriSurfFieldace", TRISURFACE_VERSION);
     Surface::io(stream);
     if (version >= 2) {
       SCIRun::Pio(stream, bcIdx);
@@ -1016,7 +1016,7 @@ void TriSurface::io(Piostream& stream) {
     stream.end_class();
 }
 
-SurfTree* TriSurface::toSurfTree() {
+SurfTree* TriSurfFieldace::toSurfTree() {
     SurfTree* st=new SurfTree;
 
     st->surfI.resize(1);
@@ -1036,12 +1036,12 @@ SurfTree* TriSurface::toSurfTree() {
     return st;
 }
 
-Surface* TriSurface::clone()
+Surface* TriSurfFieldace::clone()
 {
-    return scinew TriSurface(*this);
+    return scinew TriSurfFieldace(*this);
 }
 
-void TriSurface::construct_grid()
+void TriSurfFieldace::construct_grid()
 {
     BBox bbox;
     for(int i=0;i<points.size();i++){
@@ -1059,17 +1059,17 @@ void TriSurface::construct_grid()
 }
 
 #if 0
-void TriSurface::get_surfnodes(Array1<NodeHandle> &n)
+void TriSurfFieldace::get_surfnodes(Array1<NodeHandle> &n)
 {
     for (int i=0; i<points.size(); i++) {
 	n.add(new Node(points[i]));
     }
 }
 
-void TriSurface::set_surfnodes(const Array1<NodeHandle> &n)
+void TriSurfFieldace::set_surfnodes(const Array1<NodeHandle> &n)
 {
     if (n.size() != points.size()) {
-	cerr << "TriSurface::set_surfnodes - wrong sized array!\n";
+	cerr << "TriSurfFieldace::set_surfnodes - wrong sized array!\n";
 	return;
     }
     for (int i=0; i<points.size(); i++)
@@ -1077,13 +1077,13 @@ void TriSurface::set_surfnodes(const Array1<NodeHandle> &n)
 }
 #endif
 
-GeomObj* TriSurface::get_obj(const ColorMapHandle&)
+GeomObj* TriSurfFieldace::get_obj(const ColorMapHandle&)
 {
-    NOT_FINISHED("TriSurface::get_obj");
+    NOT_FINISHED("TriSurfFieldace::get_obj");
     return 0;
 }
 
-void TriSurface::compute_samples(int nsamp)
+void TriSurfFieldace::compute_samples(int nsamp)
 {
     samples.remove_all();
     weights.remove_all();
@@ -1116,7 +1116,7 @@ Point RandomPoint(Point& p1, Point& p2, Point& p3)
 			     p3,alpha*beta);
 }
 
-void TriSurface::distribute_samples()
+void TriSurfFieldace::distribute_samples()
 {
   double total_importance =0.0;
   Array1<double> psum(weights.size());

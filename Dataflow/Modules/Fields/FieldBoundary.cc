@@ -48,10 +48,10 @@ private:
   FieldIPort*              infield_;
   int                      infield_gen_;
 
-  //! TriSurf field output.
+  //! TriSurfField field output.
   FieldOPort*              osurf_;
   
-  //! TriSurf interpolant field output.
+  //! TriSurfField interpolant field output.
   FieldOPort*              ointerp_;
   
   //! Handle on the generated surface.
@@ -82,7 +82,7 @@ void
 FieldBoundary::execute()
 {
   infield_ = (FieldIPort *)get_iport("Field");
-  osurf_ = (FieldOPort *)get_oport("TriSurf");
+  osurf_ = (FieldOPort *)get_oport("TriSurfField");
   ointerp_ = (FieldOPort *)get_oport("Interpolant");
   FieldHandle input;
   if (!infield_) {

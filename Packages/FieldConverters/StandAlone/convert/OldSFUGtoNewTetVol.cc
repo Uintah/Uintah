@@ -33,7 +33,7 @@
 */
 
 /*
- *  OldSFUGtoNewTetVol.cc: Converter
+ *  OldSFUGtoNewTetVolField.cc: Converter
  *
  *  Written by:
  *   Martin Cole
@@ -45,7 +45,7 @@
  */
 
 #include <FieldConverters/Core/Datatypes/ScalarFieldUG.h>
-#include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/TetVolField.h>
 #include <Core/Persistent/Pstreams.h>
 
 #include <iostream>
@@ -66,9 +66,9 @@ int
 main(int argc, char **argv) {
   
   if (argc !=3) {
-    cerr << "Usage: " << argv[0] << " Old ScalarFieldUG to New TetVol"<< endl;
+    cerr << "Usage: " << argv[0] << " Old ScalarFieldUG to New TetVolField"<< endl;
     cerr << "       " << "argv[1] Input File (Old calarFieldUG)" << endl;
-    cerr << "       " << "argv[2] Output File (TetVol)" << endl;
+    cerr << "       " << "argv[2] Output File (TetVolField)" << endl;
     exit(0);
   }
   typedef LockingHandle<ScalarFieldUG> ScalarFieldUGHandle;
@@ -100,12 +100,12 @@ main(int argc, char **argv) {
   mesh->compute_neighbors();
   mesh->compute_face_neighbors();
   
-  TetVol<double> *field = 0;
-  // A Mesh is Geometry only, so attach no data to the new TetVol.
+  TetVolField<double> *field = 0;
+  // A Mesh is Geometry only, so attach no data to the new TetVolField.
   if (sf->typ == ScalarFieldUG::NodalValues) {
-    field = new TetVol<double>(Field::NODE);
+    field = new TetVolField<double>(Field::NODE);
   } else {
-    field = new TetVol<double>(Field::CELL);
+    field = new TetVolField<double>(Field::CELL);
   }
   FieldHandle fH(field); 
   TetVolMeshHandle tvm = field->get_typed_mesh();
@@ -117,7 +117,7 @@ main(int argc, char **argv) {
   // create iterators for Array1 data
   double *begin = &sf->data[0];
   double *end = begin + sf->data.size();
-  TetVol<double>::fdata_type &fd = field->fdata();
+  TetVolField<double>::fdata_type &fd = field->fdata();
   fd.insert(fd.end(), begin, end);
 
   TextPiostream outstream(argv[2], Piostream::Write);

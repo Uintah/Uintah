@@ -16,7 +16,7 @@
 */
 
 /*
- *  FlatToTetVol.cc
+ *  FlatToTetVolField.cc
  *
  *  Written by:
  *   David Weinstein
@@ -27,7 +27,7 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/TetVolField.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Containers/HashTable.h>
 
@@ -165,7 +165,7 @@ main(int argc, char **argv) {
   cerr << "done adding elements.\n";
 
   tvm->flush_changes();
-  TetVol<Vector> *tv = scinew TetVol<Vector>(tvm, Field::NODE);
+  TetVolField<Vector> *tv = scinew TetVolField<Vector>(tvm, Field::NODE);
   FieldHandle tvH(tv);
 
   if (binOutput) {

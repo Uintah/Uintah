@@ -16,7 +16,7 @@
 */
 
 /*
- *  ContourMesh.h: countour mesh
+ *  CurveMesh.h: countour mesh
  *
  *  Written by:
  *   Chris Moulding
@@ -28,8 +28,8 @@
  *
  */
 
-#ifndef SCI_project_ContourMesh_h
-#define SCI_project_ContourMesh_h 1
+#ifndef SCI_project_CurveMesh_h
+#define SCI_project_CurveMesh_h 1
 
 #include <Core/Geometry/Point.h>
 #include <Core/Containers/LockingHandle.h>
@@ -45,7 +45,7 @@ using std::vector;
 using std::pair;
 
 
-class SCICORESHARE ContourMesh : public Mesh
+class SCICORESHARE CurveMesh : public Mesh
 {
 public:
   typedef unsigned int under_type;
@@ -83,11 +83,11 @@ public:
 
   typedef pair<Node::index_type, Node::index_type> index_pair_type;
 
-  ContourMesh() {}
-  ContourMesh(const ContourMesh &copy)
+  CurveMesh() {}
+  CurveMesh(const CurveMesh &copy)
     : nodes_(copy.nodes_), edges_(copy.edges_) {}
-  virtual ContourMesh *clone() { return new ContourMesh(*this); }
-  virtual ~ContourMesh() {}
+  virtual CurveMesh *clone() { return new CurveMesh(*this); }
+  virtual ~CurveMesh() {}
 
   void begin(Node::iterator &) const;
   void begin(Edge::iterator &) const;
@@ -146,8 +146,8 @@ public:
 
   void get_weights(const Point &p, Node::array_type &l, vector<double> &w);
   void get_weights(const Point &p, Edge::array_type &l, vector<double> &w);
-  void get_weights(const Point &, Face::array_type &, vector<double> &) {ASSERTFAIL("ContourMesh::get_weights for faces isn't supported");}
-  void get_weights(const Point &, Cell::array_type &, vector<double> &) {ASSERTFAIL("ContourMesh::get_weights for cells isn't supported");}
+  void get_weights(const Point &, Face::array_type &, vector<double> &) {ASSERTFAIL("CurveMesh::get_weights for faces isn't supported");}
+  void get_weights(const Point &, Cell::array_type &, vector<double> &) {ASSERTFAIL("CurveMesh::get_weights for cells isn't supported");}
 
   void get_point(Point &result, Node::index_type idx) const
     { get_center(result,idx); }
@@ -180,22 +180,22 @@ private:
   //! the edges
   vector<index_pair_type> edges_;
 
-  // returns a ContourMesh
-  static Persistent *maker() { return new ContourMesh(); }
+  // returns a CurveMesh
+  static Persistent *maker() { return new CurveMesh(); }
 };
 
-typedef LockingHandle<ContourMesh> ContourMeshHandle;
+typedef LockingHandle<CurveMesh> CurveMeshHandle;
 
-const TypeDescription* get_type_description(ContourMesh *);
-const TypeDescription* get_type_description(ContourMesh::Node *);
-const TypeDescription* get_type_description(ContourMesh::Edge *);
-const TypeDescription* get_type_description(ContourMesh::Face *);
-const TypeDescription* get_type_description(ContourMesh::Cell *);
+const TypeDescription* get_type_description(CurveMesh *);
+const TypeDescription* get_type_description(CurveMesh::Node *);
+const TypeDescription* get_type_description(CurveMesh::Edge *);
+const TypeDescription* get_type_description(CurveMesh::Face *);
+const TypeDescription* get_type_description(CurveMesh::Cell *);
 
 
 } // namespace SCIRun
 
-#endif // SCI_project_ContourMesh_h
+#endif // SCI_project_CurveMesh_h
 
 
 

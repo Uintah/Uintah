@@ -16,7 +16,7 @@
 */
 
 /*
- *  ChangeCellType: LatticeVol to TetVol - break hexes into tets
+ *  ChangeCellType: LatVolField to TetVolField - break hexes into tets
  *
  *  Written by:
  *   David Weinstein
@@ -30,7 +30,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Containers/Array3.h>
-#include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/TetVolField.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Tester/RigorousTest.h>
@@ -52,10 +52,10 @@ public:
   virtual void execute();
   
   template <class Data>
-  void fill_tet_vol(LatticeVol<Data> *lvol, TetVol<Data> *tvol);
+  void fill_tet_vol(LatVolField<Data> *lvol, TetVolField<Data> *tvol);
   
   template <class Iter, class Data>
-  void set_data(const LatticeVol<Data> &src, TetVol<Data> &dst, 
+  void set_data(const LatVolField<Data> &src, TetVolField<Data> &dst, 
 		Iter begin, Iter end);
 };
 
@@ -67,9 +67,9 @@ extern "C" Module* make_ChangeCellType(const string& id)
 ChangeCellType::ChangeCellType(const string& id)
   : Module("ChangeCellType", id, Filter)
 {
-  input_ = new FieldIPort(this, "LatticeVol-in", FieldIPort::Atomic);
+  input_ = new FieldIPort(this, "LatVolField-in", FieldIPort::Atomic);
   add_iport(input_);
-  output_ = new FieldOPort(this, "TetVol-out", FieldIPort::Atomic);
+  output_ = new FieldOPort(this, "TetVolField-out", FieldIPort::Atomic);
   add_oport(output_);
 }
 
@@ -85,7 +85,7 @@ ChangeCellType::~ChangeCellType() {
 // note: this is consistent with the SegFldToSurfTree and CStoSFRG modules
 
 template <class Data>
-void ChangeCellType::fill_tet_vol(LatticeVol<Data> *lvol, TetVol<Data> *tvol)
+void ChangeCellType::fill_tet_vol(LatVolField<Data> *lvol, TetVolField<Data> *tvol)
  {
   MeshHandle meshb = tet_vol_fh->get_mesh();
   
@@ -243,7 +243,7 @@ void ChangeCellType::fill_tet_vol(LatticeVol<Data> *lvol, TetVol<Data> *tvol)
 // The Iter begin and end belong to the mesh in dst.
 template <class Iter, class Data>
 void
-ChangeCellType::set_data(const LatticeVol<Data> &src, TetVol<Data> &dst, 
+ChangeCellType::set_data(const LatVolField<Data> &src, TetVolField<Data> &dst, 
 			 Iter begin, Iter end)
 {
   Point p;
@@ -274,44 +274,44 @@ ChangeCellType::execute()
     
 
   string type_string = input_handle->type_name(0);
-  if (type_string == "LatticeVol") {
+  if (type_string == "LatVolField") {
     update_state(JustStarted);
       
     // then we have proper input
     if (input_handle->type_name(1) == "double")
     {
-      TetVol<double> *tvol = new TetVol<double>();
-      LatticeVol<double> *lvol = 
-	dynamic_cast<LatticeVol<double>*>(input_handle.get_rep());
+      TetVolField<double> *tvol = new TetVolField<double>();
+      LatVolField<double> *lvol = 
+	dynamic_cast<LatVolField<double>*>(input_handle.get_rep());
       fill_tet_vol<double>(*lvol, *tvol);
       output_->send(FieldHandle(tvol));
     }
     else if (input_handle->type_name(1) == "int")
     {
-      TetVol<int> *tvol = new TetVol<int>();
-      LatticeVol<int> *lvol = 
-	dynamic_cast<LatticeVol<int>*>(input_handle.get_rep());
+      TetVolField<int> *tvol = new TetVolField<int>();
+      LatVolField<int> *lvol = 
+	dynamic_cast<LatVolField<int>*>(input_handle.get_rep());
       fill_tet_vol<int>(*lvol, *tvol);
       output_->send(FieldHandle(tvol));
     }
     else if (input_handle->type_name(1) == "short")
     {
-      TetVol<short> *tvol = new TetVol<short>();
-      LatticeVol<short> *lvol = 
-	dynamic_cast<LatticeVol<short>*>(input_handle.get_rep());
+      TetVolField<short> *tvol = new TetVolField<short>();
+      LatVolField<short> *lvol = 
+	dynamic_cast<LatVolField<short>*>(input_handle.get_rep());
       fill_tet_vol<short>(*lvol, *tvol);
       output_->send(FieldHandle(tvol));
     }
     else if (input_handle->type_name(1) == "unsigned char")
     {
-      TetVol<unsigned char> *tvol = new TetVol<unsigned char>();
-      LatticeVol<unsigned char> *lvol = 
-	dynamic_cast<LatticeVol<unsigned char>*>(input_handle.get_rep());
+      TetVolField<unsigned char> *tvol = new TetVolField<unsigned char>();
+      LatVolField<unsigned char> *lvol = 
+	dynamic_cast<LatVolField<unsigned char>*>(input_handle.get_rep());
       fill_tet_vol<unsigned char>(*lvol, *tvol);
       output_->send(FieldHandle(tvol));
     } 
   } else {
-    error("Field must be a LatticeVol.");
+    error("Field must be a LatVolField.");
     return;
   }
 }

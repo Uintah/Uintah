@@ -31,7 +31,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/TetVolField.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <iostream>
 #include <stdio.h>
@@ -106,7 +106,7 @@ AssignLeadFieldSources::execute()
   MeshHandle mbh = ifield->mesh();
   TetVolMesh *tvm = dynamic_cast<TetVolMesh *>(mbh.get_rep());
   if (!tvm) {
-    remark("Field was supposed to be a TetVol.");
+    remark("Field was supposed to be a TetVolField.");
     return;
   }
   TetVolMeshHandle tvmH(tvm);
@@ -131,8 +131,8 @@ AssignLeadFieldSources::execute()
 
   // data looks good
   // make a new vector field and copy the matrix data into it
-  TetVol<Vector> *ofield = scinew TetVol<Vector>(tvmH, Field::CELL);
-  TetVol<double> *ofield2 = scinew TetVol<double>(tvmH, Field::NODE);
+  TetVolField<Vector> *ofield = scinew TetVolField<Vector>(tvmH, Field::CELL);
+  TetVolField<double> *ofield2 = scinew TetVolField<double>(tvmH, Field::NODE);
 
   TetVolMesh::Node::size_type nsize;  tvm->size(nsize);
 

@@ -30,8 +30,8 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/FieldPort.h>
-#include <Core/Datatypes/PointCloud.h>
-#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/PointCloudField.h>
+#include <Core/Datatypes/LatVolField.h>
 #include <sci_hash_map.h>
 #include <iostream>
 
@@ -220,7 +220,7 @@ ModifyConductivities::hash_tensors(vector<pair<string, Tensor > > &tens)
 void
 ModifyConductivities::execute()
 {
-  // Read in the LatticeVol<double>, clone it.
+  // Read in the LatVolField<double>, clone it.
   FieldIPort *ifp = (FieldIPort *)get_iport("Input");
   if (!ifp) {
     postMessage("Unable to initialize " + name + "'s Input iport\n");

@@ -35,7 +35,7 @@
 #include <Core/Datatypes/Mesh.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/FieldIterator.h>
-#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/LatVolField.h>
 #include <vector>
 #include <Core/Persistent/PersistentSTL.h>
 #include <sci_hash_map.h>
@@ -392,7 +392,7 @@ protected:
   vector<vector<Node::index_type> > node_neighbors_;
   Mutex                       node_nbor_lock_;
 
-  typedef LockingHandle<LatticeVol<vector<Cell::index_type> > > grid_handle;
+  typedef LockingHandle<LatVolField<vector<Cell::index_type> > > grid_handle;
   grid_handle                 grid_;
   Mutex                       grid_lock_; // Bad traffic!
   

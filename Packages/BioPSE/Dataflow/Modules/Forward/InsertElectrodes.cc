@@ -11,8 +11,8 @@
  *  Copyright (C) 2002 SCI Group
  */
 
-#include <Core/Datatypes/ContourField.h>
-#include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/CurveField.h>
+#include <Core/Datatypes/TetVolField.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
@@ -242,8 +242,8 @@ void InsertElectrodes::execute() {
     cerr << "InsertElectrodes: error - empty input mesh.\n";
     return;
   }
-  if (!(dynamic_cast<TetVol<int>*>(imeshH.get_rep()))) {
-    cerr << "InsertElectrodes: error - input FEM wasn't a TetVol<int>\n";
+  if (!(dynamic_cast<TetVolField<int>*>(imeshH.get_rep()))) {
+    cerr << "InsertElectrodes: error - input FEM wasn't a TetVolField<int>\n";
     return;
   }
 
@@ -271,7 +271,7 @@ void InsertElectrodes::execute() {
 //    cerr << "Done cloning!\n";
 //    cerr << "Mesh pointer after = "<<imeshH->mesh().get_rep()<<"\n";
 
-    TetVol<int> *field = dynamic_cast<TetVol<int>*>(imeshH.get_rep());
+    TetVolField<int> *field = dynamic_cast<TetVolField<int>*>(imeshH.get_rep());
     TetVolMeshHandle mesh = field->get_typed_mesh();
     TetVolMeshHandle elecElemsH;
     port_map_type::iterator pi = range.first;
@@ -282,18 +282,18 @@ void InsertElectrodes::execute() {
 	continue;
       }
 
-      ContourField<double> *elecFld = 
-	dynamic_cast<ContourField<double>*>(ielecH.get_rep());
+      CurveField<double> *elecFld = 
+	dynamic_cast<CurveField<double>*>(ielecH.get_rep());
       if (!elecFld) {
-	cerr << "InsertElectrodes: error - input electrode wasn't a ContourField<double>\n";
+	cerr << "InsertElectrodes: error - input electrode wasn't a CurveField<double>\n";
 	++pi;
 	continue;
       }
       double voltage = elecFld->fdata()[0];
-      ContourMeshHandle elecMesh(elecFld->get_typed_mesh());
+      CurveMeshHandle elecMesh(elecFld->get_typed_mesh());
       Array1<Point> outer;
       Array1<Point> inner;
-      ContourMesh::Node::iterator ni, ne;
+      CurveMesh::Node::iterator ni, ne;
       elecMesh->begin(ni);
       elecMesh->end(ne);
       for (int i=0; i<6; i++) ++ni; // the first six nodes are the handle
@@ -322,7 +322,7 @@ void InsertElectrodes::execute() {
     if (have_units) imeshH->mesh()->set_property("units", units, false);
     omesh->send(imeshH);
     if (elecElemsH.get_rep()) {
-      TetVol<double>* elec = scinew TetVol<double>(elecElemsH, Field::NODE);
+      TetVolField<double>* elec = scinew TetVolField<double>(elecElemsH, Field::NODE);
       FieldHandle elecH(elec);
       oelec->send(elecH);
     }

@@ -16,7 +16,7 @@
 */
 
 /*
- *  TetVol.h
+ *  TetVolField.h
  *
  *  Written by:
  *   Martin Cole
@@ -26,8 +26,8 @@
  *  Copyright (C) 2001 SCI Institute
  */
 
-#ifndef Datatypes_TetVol_h
-#define Datatypes_TetVol_h
+#ifndef Datatypes_TetVolField_h
+#define Datatypes_TetVolField_h
 
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/TetVolMesh.h>
@@ -41,14 +41,14 @@
 namespace SCIRun {
 
 template <class T> 
-class TetVol : public GenericField<TetVolMesh, vector<T> >
+class TetVolField : public GenericField<TetVolMesh, vector<T> >
 {
 public:
-  TetVol();
-  TetVol(Field::data_location data_at);
-  TetVol(TetVolMeshHandle mesh, Field::data_location data_at);
-  virtual TetVol<T> *clone() const;
-  virtual ~TetVol();
+  TetVolField();
+  TetVolField(Field::data_location data_at);
+  TetVolField(TetVolMeshHandle mesh, Field::data_location data_at);
+  virtual TetVolField<T> *clone() const;
+  virtual ~TetVolField();
 
   virtual ScalarFieldInterface* query_scalar_interface() const;
   virtual VectorFieldInterface* query_vector_interface() const;
@@ -61,7 +61,7 @@ public:
   virtual const string get_type_name(int n = -1) const;
   virtual const TypeDescription* get_type_description() const;
 
-  // TetVol specific methods.
+  // TetVolField specific methods.
   bool get_gradient(Vector &, Point &);
   Vector cell_gradient(TetVolMesh::Cell::index_type);
 
@@ -70,84 +70,84 @@ private:
 };
 
 template <class T>
-TetVol<T>::TetVol()
+TetVolField<T>::TetVolField()
   : GenericField<TetVolMesh, vector<T> >()
 {
 }
 
 template <class T>
-TetVol<T>::TetVol(Field::data_location data_at)
+TetVolField<T>::TetVolField(Field::data_location data_at)
   : GenericField<TetVolMesh, vector<T> >(data_at)
 {
 }
 
 template <class T>
-TetVol<T>::TetVol(TetVolMeshHandle mesh, Field::data_location data_at)
+TetVolField<T>::TetVolField(TetVolMeshHandle mesh, Field::data_location data_at)
   : GenericField<TetVolMesh, vector<T> >(mesh, data_at)
 {
 }
 
 template <class T>
-TetVol<T> *
-TetVol<T>::clone() const
+TetVolField<T> *
+TetVolField<T>::clone() const
 {
-  return new TetVol(*this);
+  return new TetVolField(*this);
 }
 
 template <class T>
-TetVol<T>::~TetVol()
+TetVolField<T>::~TetVolField()
 {
 }
 
 template <> ScalarFieldInterface *
-TetVol<double>::query_scalar_interface() const;
+TetVolField<double>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface *
-TetVol<float>::query_scalar_interface() const;
+TetVolField<float>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface *
-TetVol<int>::query_scalar_interface() const;
+TetVolField<int>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
-TetVol<short>::query_scalar_interface() const;
+TetVolField<short>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
-TetVol<char>::query_scalar_interface() const;
+TetVolField<char>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface *
-TetVol<unsigned int>::query_scalar_interface() const;
+TetVolField<unsigned int>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
-TetVol<unsigned short>::query_scalar_interface() const;
+TetVolField<unsigned short>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
-TetVol<unsigned char>::query_scalar_interface() const;
+TetVolField<unsigned char>::query_scalar_interface() const;
 
 template <class T>
 ScalarFieldInterface*
-TetVol<T>::query_scalar_interface() const 
+TetVolField<T>::query_scalar_interface() const 
 {
   return 0;
 }
 
 template <>
 VectorFieldInterface*
-TetVol<Vector>::query_vector_interface() const;
+TetVolField<Vector>::query_vector_interface() const;
 
 template <class T>
 VectorFieldInterface*
-TetVol<T>::query_vector_interface() const
+TetVolField<T>::query_vector_interface() const
 {
   return 0;
 }
 
 template <>
 TensorFieldInterface*
-TetVol<Tensor>::query_tensor_interface() const;
+TetVolField<Tensor>::query_tensor_interface() const;
 
 template <class T>
 TensorFieldInterface*
-TetVol<T>::query_tensor_interface() const
+TetVolField<T>::query_tensor_interface() const
 {
   return 0;
 }
@@ -155,27 +155,27 @@ TetVol<T>::query_tensor_interface() const
 
 template <class T>
 Persistent*
-TetVol<T>::maker()
+TetVolField<T>::maker()
 {
-  return scinew TetVol<T>;
+  return scinew TetVolField<T>;
 }
 
 
 template <class T>
 PersistentTypeID 
-TetVol<T>::type_id(type_name(-1), 
+TetVolField<T>::type_id(type_name(-1), 
 		   GenericField<TetVolMesh, vector<T> >::type_name(-1),
 		   maker);
 
 
 // Pio defs.
-const int TET_VOL_VERSION = 1;
+const int TET_VOL_FIELD_VERSION = 1;
 
 template <class T>
 void 
-TetVol<T>::io(Piostream& stream)
+TetVolField<T>::io(Piostream& stream)
 {
-  stream.begin_class(type_name(-1), TET_VOL_VERSION);
+  /* int version=*/stream.begin_class(type_name(-1), TET_VOL_FIELD_VERSION);
   GenericField<TetVolMesh, vector<T> >::io(stream);
   stream.end_class();
 }
@@ -183,7 +183,7 @@ TetVol<T>::io(Piostream& stream)
 
 template <class T> 
 const string 
-TetVol<T>::type_name(int n)
+TetVolField<T>::type_name(int n)
 {
   ASSERT((n >= -1) && n <= 1);
   if (n == -1)
@@ -194,7 +194,7 @@ TetVol<T>::type_name(int n)
   }
   else if (n == 0)
   {
-    return "TetVol";
+    return "TetVolField";
   }
   else
   {
@@ -205,17 +205,17 @@ TetVol<T>::type_name(int n)
 
 template <class T> 
 const string
-TetVol<T>::get_type_name(int n) const
+TetVolField<T>::get_type_name(int n) const
 {
   return type_name(n);
 }
 
 template <class T>
 const TypeDescription* 
-get_type_description(TetVol<T>*)
+get_type_description(TetVolField<T>*)
 {
   static TypeDescription* tv_td = 0;
-  static string name("TetVol");
+  static string name("TetVolField");
   static string namesp("SCIRun");
   static string path(__FILE__);
   if(!tv_td){
@@ -229,14 +229,14 @@ get_type_description(TetVol<T>*)
 
 template <class T>
 const TypeDescription* 
-TetVol<T>::get_type_description() const 
+TetVolField<T>::get_type_description() const 
 {
-  return SCIRun::get_type_description((TetVol<T>*)0);
+  return SCIRun::get_type_description((TetVolField<T>*)0);
 }
 
 //! compute the gradient g, at point p
 template <class T>
-bool TetVol<T>::get_gradient(Vector &g, Point &p) {
+bool TetVolField<T>::get_gradient(Vector &g, Point &p) {
   TetVolMesh::Cell::index_type ci;
   if (get_typed_mesh()->locate(ci, p)) {
     g = cell_gradient(ci);
@@ -248,13 +248,13 @@ bool TetVol<T>::get_gradient(Vector &g, Point &p) {
 
 //! Compute the gradient g in cell ci.
 template <>
-Vector TetVol<Vector>::cell_gradient(TetVolMesh::Cell::index_type ci);
+Vector TetVolField<Vector>::cell_gradient(TetVolMesh::Cell::index_type ci);
 
 template <>
-Vector TetVol<Tensor>::cell_gradient(TetVolMesh::Cell::index_type ci);
+Vector TetVolField<Tensor>::cell_gradient(TetVolMesh::Cell::index_type ci);
 
 template <class T>
-Vector TetVol<T>::cell_gradient(TetVolMesh::Cell::index_type ci)
+Vector TetVolField<T>::cell_gradient(TetVolMesh::Cell::index_type ci)
 {
   // for now we only know how to do this for field with doubles at the nodes
   ASSERT(data_at() == Field::NODE);
@@ -274,4 +274,4 @@ Vector TetVol<T>::cell_gradient(TetVolMesh::Cell::index_type ci)
 
 } // end namespace SCIRun
 
-#endif // Datatypes_TetVol_h
+#endif // Datatypes_TetVolField_h

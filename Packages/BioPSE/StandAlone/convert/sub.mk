@@ -36,10 +36,10 @@ PROGRAM := $(SRCDIR)/EGItoMat
 SRCS := $(SRCDIR)/EGItoMat.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/ElectrodeToContour
-SRCS := $(SRCDIR)/ElectrodeToContour.cc
+PROGRAM := $(SRCDIR)/ElectrodeToCurve
+SRCS := $(SRCDIR)/ElectrodeToCurve.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/TextToContour
-SRCS := $(SRCDIR)/TextToContour.cc
+PROGRAM := $(SRCDIR)/TextToCurve
+SRCS := $(SRCDIR)/TextToCurve.cc
 include $(SCIRUN_SCRIPTS)/program.mk

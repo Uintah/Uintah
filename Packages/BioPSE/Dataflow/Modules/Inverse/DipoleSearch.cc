@@ -34,8 +34,8 @@
 #include <Core/Containers/Array2.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
-#include <Core/Datatypes/TetVol.h>
-#include <Core/Datatypes/PointCloud.h>
+#include <Core/Datatypes/TetVolField.h>
+#include <Core/Datatypes/PointCloudField.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/Mutex.h>
 #include <iostream>
@@ -186,14 +186,14 @@ void DipoleSearch::send_and_get_data(int which_dipole,
   PointCloudMeshHandle pcm = scinew PointCloudMesh;
   for (j=0; j<NSEEDS_; j++)
     pcm->add_point(Point(dipoles_(j,0), dipoles_(j,1), dipoles_(j,2)));
-  PointCloud<Vector> *pcv = scinew PointCloud<Vector>(pcm, Field::NODE);
+  PointCloudField<Vector> *pcv = scinew PointCloudField<Vector>(pcm, Field::NODE);
   for (j=0; j<NSEEDS_; j++)
     pcv->fdata()[j] = Vector(dipoles_(j,3), dipoles_(j,4), dipoles_(j,5));
 
   pcm = scinew PointCloudMesh;
   pcm->add_point(Point(dipoles_(which_dipole, 0), dipoles_(which_dipole, 1),
 		       dipoles_(which_dipole, 2)));
-  PointCloud<double> *pcd = scinew PointCloud<double>(pcm, Field::NODE);
+  PointCloudField<double> *pcd = scinew PointCloudField<double>(pcm, Field::NODE);
   
   // send out data
   leadfield_selectH_ = leadfield_select_out;
@@ -395,7 +395,7 @@ void DipoleSearch::read_field_ports(int &valid_data, int &new_data) {
   valid_data=1;
   new_data=0;
   if (mesh_iport_->get(mesh) && mesh.get_rep() &&
-      (mesh->get_type_name(0) == "TetVol")) {
+      (mesh->get_type_name(0) == "TetVolField")) {
     if (!meshH_.get_rep() || (meshH_->generation != mesh->generation)) {
       new_data=1;
       meshH_=mesh;
@@ -417,11 +417,11 @@ void DipoleSearch::read_field_ports(int &valid_data, int &new_data) {
   } else if (!seeds.get_rep()) {
     cerr << "Empty seeds handle.\n";
     valid_data=0;
-  } else if (seeds->get_type_name(-1) != "PointCloud<double>") {
-    cerr << "Seeds typename should have been PointCloud<double>, not "<<seeds->get_type_name(-1) <<"\n";
+  } else if (seeds->get_type_name(-1) != "PointCloudField<double>") {
+    cerr << "Seeds typename should have been PointCloudField<double>, not "<<seeds->get_type_name(-1) <<"\n";
     valid_data=0;
   } else {
-    PointCloud<double> *d=dynamic_cast<PointCloud<double> *>(seeds.get_rep());
+    PointCloudField<double> *d=dynamic_cast<PointCloudField<double> *>(seeds.get_rep());
     PointCloudMesh::Node::size_type nsize; d->get_typed_mesh()->size(nsize);
     if (nsize != (unsigned int)NSEEDS_){
       cerr << "Got "<< nsize <<" seeds, instead of "<<NSEEDS_<<"\n";
@@ -460,7 +460,7 @@ void DipoleSearch::organize_last_send() {
   leadfield_selectH_ = leadfield_select_out;
   PointCloudMeshHandle pcm = scinew PointCloudMesh;
   pcm->add_point(best_pt);
-  PointCloud<double> *pcd = scinew PointCloud<double>(pcm, Field::NODE);
+  PointCloudField<double> *pcd = scinew PointCloudField<double>(pcm, Field::NODE);
   dipoleH_ = pcd;
 }
 

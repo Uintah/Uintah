@@ -238,7 +238,7 @@ ImageField<Data>::get_type_name(int n) const
 }
 
 
-#define IMAGEFIELD_VERSION 2
+#define IMAGE_FIELD_VERSION 2
 
 template <class Data>
 Persistent* 
@@ -257,7 +257,7 @@ template <class Data>
 void
 ImageField<Data>::io(Piostream &stream)
 {
-  int version = stream.begin_class(type_name(-1), IMAGEFIELD_VERSION);
+  int version = stream.begin_class(type_name(-1), IMAGE_FIELD_VERSION);
   GenericField<ImageMesh, FData2d<Data> >::io(stream);
   stream.end_class();                                                         
   if (version < 2) {

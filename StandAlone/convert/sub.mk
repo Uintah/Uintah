@@ -79,8 +79,8 @@ PROGRAM := $(SRCDIR)/RawToDenseMatrix
 SRCS := $(SRCDIR)/RawToDenseMatrix.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/RawToLatticeVol
-SRCS := $(SRCDIR)/RawToLatticeVol.cc
+PROGRAM := $(SRCDIR)/RawToLatVol
+SRCS := $(SRCDIR)/RawToLatVol.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/RawToTetVol

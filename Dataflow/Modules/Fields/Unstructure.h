@@ -24,12 +24,12 @@
 
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Disclosure/DynamicLoader.h>
-#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/LatVolField.h>
 #include <Core/Datatypes/ImageField.h>
 #include <Core/Datatypes/ScanlineField.h>
-#include <Core/Datatypes/HexVol.h>
-#include <Core/Datatypes/QuadSurf.h>
-#include <Core/Datatypes/ContourField.h>
+#include <Core/Datatypes/HexVolField.h>
+#include <Core/Datatypes/QuadSurfField.h>
+#include <Core/Datatypes/CurveField.h>
 
 namespace SCIRun {
 

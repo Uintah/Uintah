@@ -172,8 +172,8 @@ void ScalarFieldExtractor::execute()
 	  LatVolMesh *lvm = scinew LatVolMesh(range.x(), range.y(),
 					     range.z(), box.min(),
 					     box.max());
-	  LatticeVol<double> *sfd =
-	    scinew LatticeVol<double>( lvm, Field::NODE );
+	  LatVolField<double> *sfd =
+	    scinew LatVolField<double>( lvm, Field::NODE );
 	  sfd->store( "variable", string(var), true );
 	  sfd->store( "time", double( time ), true);
 	  build_field2( archive, level, low, var, mat, time, gridVar,
@@ -187,8 +187,8 @@ void ScalarFieldExtractor::execute()
 	  LatVolMesh *lvm = scinew LatVolMesh(range.x(), range.y(),
 					     range.z(), box.min(),
 					     box.max());
-	  LatticeVol<int> *sfd =
-	    scinew LatticeVol<int>( lvm, Field::NODE );
+	  LatVolField<int> *sfd =
+	    scinew LatVolField<int>( lvm, Field::NODE );
 	  sfd->store( "variable", string(var), true );
 	  sfd->store( "time", double( time ), true);
 	  build_field2( archive, level, low, var, mat, time, gridVar,
@@ -203,8 +203,8 @@ void ScalarFieldExtractor::execute()
 	  LatVolMesh *lvm = scinew LatVolMesh(range.x(), range.y(),
 					     range.z(), box.min(),
 					     box.max());
-	  LatticeVol<long64> *sfd =
-	    scinew LatticeVol<long64>( lvm, Field::NODE );
+	  LatVolField<long64> *sfd =
+	    scinew LatVolField<long64>( lvm, Field::NODE );
 	  sfd->store( "variable", string(var), true );
 	  sfd->store( "time", double( time ), true);
 	  build_field2( archive, level, low, var, mat, time, gridVar,
@@ -226,8 +226,8 @@ void ScalarFieldExtractor::execute()
 	  LatVolMesh *lvm = scinew LatVolMesh(range.x(), range.y(),
 					     range.z(), box.min(),
 					     box.max());
-	  LatticeVol<double> *sfd =
-	    scinew LatticeVol<double>( lvm, Field::CELL );
+	  LatVolField<double> *sfd =
+	    scinew LatVolField<double>( lvm, Field::CELL );
 	  
 	  sfd->store( "variable", string(var), true );
 	  sfd->store( "time", double( time ), true);
@@ -246,8 +246,8 @@ void ScalarFieldExtractor::execute()
 	  LatVolMesh *lvm = scinew LatVolMesh(range.x(), range.y(),
 					     range.z(), box.min(),
 					     box.max());
-	  LatticeVol<int> *sfd =
-	    scinew LatticeVol<int>( lvm, Field::CELL );
+	  LatVolField<int> *sfd =
+	    scinew LatVolField<int>( lvm, Field::CELL );
 	  sfd->store( "variable", string(var), true );
 	  sfd->store( "time", double( time ), true);
 	  build_field2( archive, level, low, var, mat, time, gridVar,
@@ -262,8 +262,8 @@ void ScalarFieldExtractor::execute()
 	  LatVolMesh *lvm = scinew LatVolMesh(range.x(), range.y(),
 					     range.z(), box.min(),
 					     box.max());
-	  LatticeVol<long64> *sfd =
-	    scinew LatticeVol<long64>( lvm, Field::CELL );
+	  LatVolField<long64> *sfd =
+	    scinew LatVolField<long64>( lvm, Field::CELL );
 	  sfd->store( "variable", string(var), true );
 	  sfd->store( "time", double( time ), true);
 	  build_field2( archive, level, low, var, mat, time, gridVar,

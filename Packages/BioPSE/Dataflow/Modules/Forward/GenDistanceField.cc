@@ -68,7 +68,7 @@ GenDistanceField::~GenDistanceField()
 void
 GenDistanceField::execute()
 {
-  // Read in the LatticeVol<double>, clone it.
+  // Read in the LatVolField<double>, clone it.
   FieldIPort *dst_port = (FieldIPort *)get_iport("Destination");
   if (!dst_port) {
     postMessage("Unable to initialize "+name+"'s iport\n");

@@ -9,8 +9,8 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Datatypes/TetVol.h>
-#include <Core/Datatypes/PointCloud.h>
+#include <Core/Datatypes/TetVolField.h>
+#include <Core/Datatypes/PointCloudField.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <math.h>
@@ -46,7 +46,7 @@ Centroids::~Centroids(){
 void Centroids::execute()
 {
   // must find ports and have valid data on inputs
-  FieldIPort *ifieldPort = (FieldIPort*)get_iport("TetVol");
+  FieldIPort *ifieldPort = (FieldIPort*)get_iport("TetVolField");
 
   if (!ifieldPort) {
     postMessage("Unable to initialize "+name+"'s iport\n");
@@ -57,11 +57,11 @@ void Centroids::execute()
   MeshHandle ifieldMeshH = ifieldH->mesh();
   TetVolMesh *tvm = dynamic_cast<TetVolMesh*>(ifieldMeshH.get_rep());
   if (!tvm) {
-    cerr << "Ceontroids error: input data wasn't a TetVol\n";
+    cerr << "Ceontroids error: input data wasn't a TetVolField\n";
     return;
   }
 
-  FieldOPort *ofieldPort = (FieldOPort*)get_oport("PointCloud");
+  FieldOPort *ofieldPort = (FieldOPort*)get_oport("PointCloudField");
   if (!ofieldPort) {
     postMessage("Unable to initialize "+name+"'s oport\n");
     return;
@@ -77,7 +77,7 @@ void Centroids::execute()
     ++ci;
   }
   
-  FieldHandle ofieldH(scinew PointCloud<double>(pcm, Field::NODE));
+  FieldHandle ofieldH(scinew PointCloudField<double>(pcm, Field::NODE));
   ofieldPort->send(ofieldH);
 
 }

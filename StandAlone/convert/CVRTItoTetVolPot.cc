@@ -16,7 +16,7 @@
 */
 
 /*
- *  CVRTItoTetVolPot.cc
+ *  CVRTItoTetVolFieldPot.cc
  *
  *  Written by:
  *   David Weinstein
@@ -27,7 +27,7 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/TetVolField.h>
 #include <Core/Persistent/Pstreams.h>
 #include <iostream>
 #include <fstream>
@@ -97,7 +97,7 @@ main(int argc, char **argv) {
   }
 
   TetVolMeshHandle tvmH(tvm);
-  TetVol<double> *tv = scinew TetVol<double>(tvmH, Field::NODE);
+  TetVolField<double> *tv = scinew TetVolField<double>(tvmH, Field::NODE);
 
   for (ii=0; ii<npts; ii++)
     tv->fdata()[ii]=pots[channels[ii]];

@@ -16,7 +16,7 @@
 */
 
 /*
- *  HexVol.h
+ *  HexVolField.h
  *
  *  Written by:
  *   Martin Cole
@@ -26,8 +26,8 @@
  *  Copyright (C) 2001 SCI Institute
  */
 
-#ifndef Datatypes_HexVol_h
-#define Datatypes_HexVol_h
+#ifndef Datatypes_HexVolField_h
+#define Datatypes_HexVolField_h
 
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/HexVolMesh.h>
@@ -41,14 +41,14 @@
 namespace SCIRun {
 
 template <class T> 
-class HexVol : public GenericField<HexVolMesh, vector<T> >
+class HexVolField : public GenericField<HexVolMesh, vector<T> >
 {
 public:
-  HexVol();
-  HexVol(Field::data_location data_at);
-  HexVol(HexVolMeshHandle mesh, Field::data_location data_at);
-  virtual HexVol<T> *clone() const;
-  virtual ~HexVol();
+  HexVolField();
+  HexVolField(Field::data_location data_at);
+  HexVolField(HexVolMeshHandle mesh, Field::data_location data_at);
+  virtual HexVolField<T> *clone() const;
+  virtual ~HexVolField();
 
   virtual ScalarFieldInterface* query_scalar_interface() const;
   virtual VectorFieldInterface* query_vector_interface() const;
@@ -61,7 +61,7 @@ public:
   virtual const string get_type_name(int n = -1) const;
   virtual const TypeDescription* get_type_description() const;
 
-  // HexVol specific methods.
+  // HexVolField specific methods.
   bool get_gradient(Vector &, Point &);
   Vector cell_gradient(HexVolMesh::Cell::index_type);
 
@@ -70,84 +70,84 @@ private:
 };
 
 template <class T>
-HexVol<T>::HexVol()
+HexVolField<T>::HexVolField()
   : GenericField<HexVolMesh, vector<T> >()
 {
 }
 
 template <class T>
-HexVol<T>::HexVol(Field::data_location data_at)
+HexVolField<T>::HexVolField(Field::data_location data_at)
   : GenericField<HexVolMesh, vector<T> >(data_at)
 {
 }
 
 template <class T>
-HexVol<T>::HexVol(HexVolMeshHandle mesh, Field::data_location data_at)
+HexVolField<T>::HexVolField(HexVolMeshHandle mesh, Field::data_location data_at)
   : GenericField<HexVolMesh, vector<T> >(mesh, data_at)
 {
 }
 
 template <class T>
-HexVol<T> *
-HexVol<T>::clone() const
+HexVolField<T> *
+HexVolField<T>::clone() const
 {
-  return new HexVol(*this);
+  return new HexVolField(*this);
 }
 
 template <class T>
-HexVol<T>::~HexVol()
+HexVolField<T>::~HexVolField()
 {
 }
 
 template <> ScalarFieldInterface *
-HexVol<double>::query_scalar_interface() const;
+HexVolField<double>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface *
-HexVol<float>::query_scalar_interface() const;
+HexVolField<float>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface *
-HexVol<int>::query_scalar_interface() const;
+HexVolField<int>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
-HexVol<short>::query_scalar_interface() const;
+HexVolField<short>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
-HexVol<char>::query_scalar_interface() const;
+HexVolField<char>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface *
-HexVol<unsigned int>::query_scalar_interface() const;
+HexVolField<unsigned int>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
-HexVol<unsigned short>::query_scalar_interface() const;
+HexVolField<unsigned short>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
-HexVol<unsigned char>::query_scalar_interface() const;
+HexVolField<unsigned char>::query_scalar_interface() const;
 
 template <class T>
 ScalarFieldInterface*
-HexVol<T>::query_scalar_interface() const 
+HexVolField<T>::query_scalar_interface() const 
 {
   return 0;
 }
 
 template <>
 VectorFieldInterface*
-HexVol<Vector>::query_vector_interface() const;
+HexVolField<Vector>::query_vector_interface() const;
 
 template <class T>
 VectorFieldInterface*
-HexVol<T>::query_vector_interface() const
+HexVolField<T>::query_vector_interface() const
 {
   return 0;
 }
 
 template <>
 TensorFieldInterface*
-HexVol<Tensor>::query_tensor_interface() const;
+HexVolField<Tensor>::query_tensor_interface() const;
 
 template <class T>
 TensorFieldInterface*
-HexVol<T>::query_tensor_interface() const
+HexVolField<T>::query_tensor_interface() const
 {
   return 0;
 }
@@ -155,27 +155,27 @@ HexVol<T>::query_tensor_interface() const
 
 template <class T>
 Persistent*
-HexVol<T>::maker()
+HexVolField<T>::maker()
 {
-  return scinew HexVol<T>;
+  return scinew HexVolField<T>;
 }
 
 
 template <class T>
 PersistentTypeID 
-HexVol<T>::type_id(type_name(-1), 
+HexVolField<T>::type_id(type_name(-1), 
 		   GenericField<HexVolMesh, vector<T> >::type_name(-1),
 		   maker);
 
 
 // Pio defs.
-const int Hex_VOL_VERSION = 1;
+const int HEX_VOL_FIELD_VERSION = 1;
 
 template <class T>
 void 
-HexVol<T>::io(Piostream& stream)
+HexVolField<T>::io(Piostream& stream)
 {
-  stream.begin_class(type_name(-1), Hex_VOL_VERSION);
+  /*int version=*/stream.begin_class(type_name(-1), HEX_VOL_FIELD_VERSION);
   GenericField<HexVolMesh, vector<T> >::io(stream);
   stream.end_class();
 }
@@ -183,7 +183,7 @@ HexVol<T>::io(Piostream& stream)
 
 template <class T> 
 const string 
-HexVol<T>::type_name(int n)
+HexVolField<T>::type_name(int n)
 {
   ASSERT((n >= -1) && n <= 1);
   if (n == -1)
@@ -194,7 +194,7 @@ HexVol<T>::type_name(int n)
   }
   else if (n == 0)
   {
-    return "HexVol";
+    return "HexVolField";
   }
   else
   {
@@ -205,17 +205,17 @@ HexVol<T>::type_name(int n)
 
 template <class T> 
 const string
-HexVol<T>::get_type_name(int n) const
+HexVolField<T>::get_type_name(int n) const
 {
   return type_name(n);
 }
 
 template <class T>
 const TypeDescription* 
-get_type_description(HexVol<T>*)
+get_type_description(HexVolField<T>*)
 {
   static TypeDescription* td = 0;
-  static string name("HexVol");
+  static string name("HexVolField");
   static string namesp("SCIRun");
   static string path(__FILE__);
   if(!td){
@@ -229,14 +229,14 @@ get_type_description(HexVol<T>*)
 
 template <class T>
 const TypeDescription* 
-HexVol<T>::get_type_description() const 
+HexVolField<T>::get_type_description() const 
 {
-  return SCIRun::get_type_description((HexVol<T>*)0);
+  return SCIRun::get_type_description((HexVolField<T>*)0);
 }
 
 //! compute the gradient g, at point p
 template <class T>
-bool HexVol<T>::get_gradient(Vector &g, Point &p) {
+bool HexVolField<T>::get_gradient(Vector &g, Point &p) {
   HexVolMesh::Cell::index_type ci;
   if (get_typed_mesh()->locate(ci, p)) {
     g = cell_gradient(ci);
@@ -248,13 +248,13 @@ bool HexVol<T>::get_gradient(Vector &g, Point &p) {
 
 //! Compute the gradient g in cell ci.
 template <>
-Vector HexVol<Vector>::cell_gradient(HexVolMesh::Cell::index_type ci);
+Vector HexVolField<Vector>::cell_gradient(HexVolMesh::Cell::index_type ci);
 
 template <>
-Vector HexVol<Tensor>::cell_gradient(HexVolMesh::Cell::index_type ci);
+Vector HexVolField<Tensor>::cell_gradient(HexVolMesh::Cell::index_type ci);
 
 template <class T>
-Vector HexVol<T>::cell_gradient(HexVolMesh::Cell::index_type ci)
+Vector HexVolField<T>::cell_gradient(HexVolMesh::Cell::index_type ci)
 {
   // for now we only know how to do this for field with doubles at the nodes
   ASSERT(data_at() == Field::NODE);
@@ -276,4 +276,4 @@ Vector HexVol<T>::cell_gradient(HexVolMesh::Cell::index_type ci)
 
 } // end namespace SCIRun
 
-#endif // Datatypes_HexVol_h
+#endif // Datatypes_HexVolField_h

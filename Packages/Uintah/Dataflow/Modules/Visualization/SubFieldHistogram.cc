@@ -44,7 +44,7 @@
 #include <Core/Geom/Color.h>
 #include <Core/Geom/Material.h>
 #include <Core/Geom/HistogramTex.h>
-#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/LatVolField.h>
 
 #include <Dataflow/Widgets/PointWidget.h>
 #include <iostream>
@@ -64,7 +64,7 @@ namespace Uintah {
 
 using SCIRun::postMessage;
 using SCIRun::Field;
-using SCIRun::LatticeVol;
+using SCIRun::LatVolField;
 using SCIRun::HistogramTex;
 using SCIRun::GeomGroup;
 using SCIRun::GeomText;
@@ -174,10 +174,10 @@ void SubFieldHistogram::execute(void)
   cerr<<"made it to dynamic cast\n";
   cerr<<field->get_type_name(0)<<" "<<field->get_type_name(1)<<"\n";
   cerr<<sub_field->get_type_name(0)<<" "<<sub_field->get_type_name(1)<<"\n";
-  if(LatticeVol<double> *scalarField1 =
-     dynamic_cast<LatticeVol<double>*>(field.get_rep())){
-    if(LatticeVol<int> *scalarField2 =
-       dynamic_cast<LatticeVol<int>*>(sub_field.get_rep())){
+  if(LatVolField<double> *scalarField1 =
+     dynamic_cast<LatVolField<double>*>(field.get_rep())){
+    if(LatVolField<int> *scalarField2 =
+       dynamic_cast<LatVolField<int>*>(sub_field.get_rep())){
       cerr<<"made it inside  dynamic cast if \n";
       
       histo_good = fill_histogram( scalarField1, scalarField2 );

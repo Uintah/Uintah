@@ -17,12 +17,12 @@ PROGRAM := $(SRCDIR)/JAStoMesh
 SRCS := $(SRCDIR)/JAStoMesh.cc
 include $(SRCTOP)/scripts/program.mk
 
-PROGRAM := $(SRCDIR)/JAStoTetVolPot
-SRCS := $(SRCDIR)/JAStoTetVolPot.cc
+PROGRAM := $(SRCDIR)/JAStoTetVolFieldPot
+SRCS := $(SRCDIR)/JAStoTetVolFieldPot.cc
 include $(SRCTOP)/scripts/program.mk
 
-PROGRAM := $(SRCDIR)/JAStoQuadTetVolPot
-SRCS := $(SRCDIR)/JAStoQuadTetVolPot.cc
+PROGRAM := $(SRCDIR)/JAStoQuadTetVolFieldPot
+SRCS := $(SRCDIR)/JAStoQuadTetVolFieldPot.cc
 include $(SRCTOP)/scripts/program.mk
 
 PROGRAM := $(SRCDIR)/ExtractCC

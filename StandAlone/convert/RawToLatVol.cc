@@ -16,7 +16,7 @@
 */
 
 /*
- *  RawToLatticeVol.cc
+ *  RawToLatVolField.cc
  *
  *  Written by:
  *   David Weinstein
@@ -27,7 +27,7 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/LatVolField.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Geometry/Vector.h>
 
@@ -75,8 +75,8 @@ main(int argc, char **argv) {
   FILE *fin = fopen(argv[1], "rt");
 
   if (datatype == "d") {
-    LatticeVol<double> *lv = 
-      new LatticeVol<double>(lvm, Field::NODE);
+    LatVolField<double> *lv = 
+      new LatVolField<double>(lvm, Field::NODE);
     fH=lv;
     double *data=&(lv->fdata()(0,0,0));
     if (ascii_or_binary_input == "a") {
@@ -89,8 +89,8 @@ main(int argc, char **argv) {
       fread(data, sizeof(double), ni*nj*nk, fin);
     }
   } else if (datatype == "f") {
-    LatticeVol<float> *lv = 
-      new LatticeVol<float>(lvm, Field::NODE);
+    LatVolField<float> *lv = 
+      new LatVolField<float>(lvm, Field::NODE);
     fH=lv;
     float *data=&(lv->fdata()(0,0,0));
     if (ascii_or_binary_input == "a") {
@@ -103,8 +103,8 @@ main(int argc, char **argv) {
       fread(data, sizeof(float), ni*nj*nk, fin);
     }
   } else if (datatype == "ui") {
-    LatticeVol<unsigned int> *lv = 
-      new LatticeVol<unsigned int>(lvm, Field::NODE);
+    LatVolField<unsigned int> *lv = 
+      new LatVolField<unsigned int>(lvm, Field::NODE);
     fH=lv;
     unsigned int *data=&(lv->fdata()(0,0,0));
     if (ascii_or_binary_input == "a") {
@@ -117,8 +117,8 @@ main(int argc, char **argv) {
       fread(data, sizeof(unsigned int), ni*nj*nk, fin);
     }
   } else if (datatype == "i") {
-    LatticeVol<int> *lv = 
-      new LatticeVol<int>(lvm, Field::NODE);
+    LatVolField<int> *lv = 
+      new LatVolField<int>(lvm, Field::NODE);
     fH=lv;
     int *data=&(lv->fdata()(0,0,0));
     if (ascii_or_binary_input == "a") {
@@ -131,8 +131,8 @@ main(int argc, char **argv) {
       fread(data, sizeof(int), ni*nj*nk, fin);
     }
   } else if (datatype == "us") {
-    LatticeVol<unsigned short> *lv = 
-      new LatticeVol<unsigned short>(lvm, Field::NODE);
+    LatVolField<unsigned short> *lv = 
+      new LatVolField<unsigned short>(lvm, Field::NODE);
     fH=lv;
     unsigned short *data=&(lv->fdata()(0,0,0));
     if (ascii_or_binary_input == "a") {
@@ -145,8 +145,8 @@ main(int argc, char **argv) {
       fread(data, sizeof(unsigned short), ni*nj*nk, fin);
     }
   } else if (datatype == "s") {
-    LatticeVol<short> *lv = 
-      new LatticeVol<short>(lvm, Field::NODE);
+    LatVolField<short> *lv = 
+      new LatVolField<short>(lvm, Field::NODE);
     fH=lv;
     short *data=&(lv->fdata()(0,0,0));
     if (ascii_or_binary_input == "a") {
@@ -159,8 +159,8 @@ main(int argc, char **argv) {
       fread(data, sizeof(short), ni*nj*nk, fin);
     }
   } else if (datatype == "uc") {
-    LatticeVol<unsigned char> *lv = 
-      new LatticeVol<unsigned char>(lvm, Field::NODE);
+    LatVolField<unsigned char> *lv = 
+      new LatVolField<unsigned char>(lvm, Field::NODE);
     fH=lv;
     unsigned char *data=&(lv->fdata()(0,0,0));
     if (ascii_or_binary_input == "a") {
@@ -173,8 +173,8 @@ main(int argc, char **argv) {
       fread(data, sizeof(unsigned char), ni*nj*nk, fin);
     }
   } else if (datatype == "c") {
-    LatticeVol<char> *lv = 
-      new LatticeVol<char>(lvm, Field::NODE);
+    LatVolField<char> *lv = 
+      new LatVolField<char>(lvm, Field::NODE);
     fH=lv;
     char *data=&(lv->fdata()(0,0,0));
     if (ascii_or_binary_input == "a") {

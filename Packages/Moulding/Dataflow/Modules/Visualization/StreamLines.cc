@@ -13,10 +13,10 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/LatVolField.h>
 #include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Datatypes/ContourField.h>
-#include <Core/Datatypes/ContourMesh.h>
+#include <Core/Datatypes/CurveField.h>
+#include <Core/Datatypes/CurveMesh.h>
 #include <Dataflow/Network/NetworkEditor.h>
 
 #include <iostream>
@@ -65,7 +65,7 @@ private:
 
   Field                         *vf_;  // vector field
   Field                         *sf_;  // seed point field
-  ContourField<double>          *cf_;
+  CurveField<double>          *cf_;
 
   GenericInterpolate<Vector>    *interp_;
 
@@ -183,9 +183,9 @@ StreamLines::FindStreamLineNodes(vector<Point>& v /* storage for points */,
 
 void StreamLines::execute()
 {
-  ContourMesh *mesh;
+  CurveMesh *mesh;
   vector<Point> nodes;
-  ContourMesh::Node::index_type n1,n2; 
+  CurveMesh::Node::index_type n1,n2; 
 
   if (!vfport_->get(vfhandle_))
     return;
@@ -200,9 +200,9 @@ void StreamLines::execute()
     return;
   }
 
-  cf_ = scinew ContourField<double>(Field::NODE);
-  mesh = dynamic_cast<ContourMesh*>(cf_->get_typed_mesh().get_rep());
-  ContourField<double>::fdata_type &fdata = cf_->fdata();
+  cf_ = scinew CurveField<double>(Field::NODE);
+  mesh = dynamic_cast<CurveMesh*>(cf_->get_typed_mesh().get_rep());
+  CurveField<double>::fdata_type &fdata = cf_->fdata();
 
   interp_ = (GenericInterpolate<Vector>*)vf_->query_interpolate();
 

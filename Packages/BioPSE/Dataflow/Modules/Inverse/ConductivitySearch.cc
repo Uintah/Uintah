@@ -33,7 +33,7 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Containers/Array2.h>
 #include <Core/Datatypes/ColumnMatrix.h>
-#include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/TetVolField.h>
 #include <Core/Datatypes/FieldAlgo.h>
 #include <Core/Math/MusilRNG.h>
 #include <Core/GuiInterface/GuiVar.h>
@@ -129,8 +129,8 @@ ConductivitySearch::~ConductivitySearch(){}
 
 
 void ConductivitySearch::build_basis_matrices() {
-  TetVolIntHandle tvH;
-  tvH = dynamic_cast<TetVol<int> *>(mesh_in_.get_rep());
+  TetVolFieldIntHandle tvH;
+  tvH = dynamic_cast<TetVolField<int> *>(mesh_in_.get_rep());
   Tensor zero(0);
   Tensor identity(1);
 
@@ -444,7 +444,7 @@ void ConductivitySearch::read_mesh_and_cond_param_ports(int &valid_data,
   valid_data=1;
   new_data=0;
   if (mesh_iport_->get(mesh) && mesh.get_rep() &&
-      (mesh->get_type_name(0) == "TetVol") &&
+      (mesh->get_type_name(0) == "TetVolField") &&
       (mesh->get_type_name(1) == "int")) {
     if (!mesh_in_.get_rep() || (mesh_in_->generation != mesh->generation)) {
       new_data=1;
@@ -457,7 +457,7 @@ void ConductivitySearch::read_mesh_and_cond_param_ports(int &valid_data,
     cerr << "ConductivitySearch -- didn't get a valid VolumeMesh."<<endl;
   }
 
-  TetVol<int> *meshTV = dynamic_cast<TetVol<int> *>(mesh.get_rep());
+  TetVolField<int> *meshTV = dynamic_cast<TetVolField<int> *>(mesh.get_rep());
   Array1<Tensor> tens;
   pair<int,int> minmax;
   minmax.second=1;

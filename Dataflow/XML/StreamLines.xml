@@ -39,7 +39,7 @@
 	represented by the vectors in a field.  StreamLines takes two
 	arguments as input: a generic field of vectors (Flow Field)
 	and a field of scalars (Seeds).  Flow field and Seeds are both
-	required.  StreamLines outputs a ContourField (Streamlines)
+	required.  StreamLines outputs a CurveField (Streamlines)
 	that represents a collection of stream lines that interpolate
 	the Flow field.
       </p>
@@ -82,7 +82,7 @@
         <name>Streamlines</name>
         <description>
           <p>
-            Streamlines is a ContourField&lt;double&gt;
+            Streamlines is a CurveField&lt;double&gt;
           </p>
         </description>
         <datatype>SCIRun::Field</datatype>

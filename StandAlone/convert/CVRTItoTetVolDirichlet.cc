@@ -16,7 +16,7 @@
 */
 
 /*
- *  CVRTItoTetVolDirichlet.cc
+ *  CVRTItoTetVolFieldDirichlet.cc
  *
  *  Written by:
  *   David Weinstein
@@ -27,7 +27,7 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <Core/Datatypes/TetVol.h>
+#include <Core/Datatypes/TetVolField.h>
 #include <Core/Persistent/Pstreams.h>
 #include <iostream>
 #include <fstream>
@@ -97,7 +97,7 @@ main(int argc, char **argv) {
   }
 
   TetVolMeshHandle tvmH(tvm);
-  TetVol<double> *tv = scinew TetVol<double>(tvmH, Field::NODE);
+  TetVolField<double> *tv = scinew TetVolField<double>(tvmH, Field::NODE);
 
   vector<pair<int, double> > dirBC;  
   pair<TetVolMesh::Node::index_type, double> p;

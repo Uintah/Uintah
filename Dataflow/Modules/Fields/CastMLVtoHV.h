@@ -25,7 +25,7 @@
 #include <Core/Disclosure/TypeDescription.h>
 #include <Core/Disclosure/DynamicLoader.h>
 #include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/HexVol.h>
+#include <Core/Datatypes/HexVolField.h>
 
 namespace SCIRun {
 

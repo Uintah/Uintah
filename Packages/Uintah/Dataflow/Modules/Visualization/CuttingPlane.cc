@@ -30,7 +30,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
-#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/LatVolField.h>
 #include <Dataflow/Widgets/FrameWidget.h>
 #include <Packages/Uintah/Core/Datatypes/DispatchScalar1.h>
 #include <Packages/Uintah/Core/Datatypes/LevelField.h>
@@ -296,7 +296,7 @@ void CuttingPlane::execute()
 
     // advance or decrement along x, y, or z
     if (msg != "" &&
-	(field->get_type_name(0) == "LatticeVol" ||
+	(field->get_type_name(0) == "LatVolField" ||
 	 field->get_type_name(0) == "LevelField")) {
       int nx, ny, nz;
       get_dimensions(field, nx,ny,nz);
@@ -368,7 +368,7 @@ void CuttingPlane::execute()
 
     if (fullRezGUI.get()) {
       if(field->get_type_name(0) != "LevelField" &&
-	 field->get_type_name(0) != "LatticeVol"){
+	 field->get_type_name(0) != "LatVolField"){
 	cerr << "Error - not a regular grid... can't use Full Resolution!\n";
       }
       int nx, ny, nz;
@@ -779,26 +779,26 @@ CuttingPlane::get_dimensions(FieldHandle texfld_,  int& nx, int& ny, int& nz)
       return false;
     }
     return get_dimensions( mesh_, nx, ny, nz );
-  } else if(texfld_->get_type_name(0) == "LatticeVol"){
+  } else if(texfld_->get_type_name(0) == "LatVolField"){
     LatVolMeshHandle mesh_;
     if (type == "double") {
-      LatticeVol<double> *fld =
-	dynamic_cast<LatticeVol<double>*>(texfld_.get_rep());
+      LatVolField<double> *fld =
+	dynamic_cast<LatVolField<double>*>(texfld_.get_rep());
       mesh_ = fld->get_typed_mesh();
     } else if (type == "float") {
-      LatticeVol<float> *fld =
-	dynamic_cast<LatticeVol<float>*>(texfld_.get_rep());
+      LatVolField<float> *fld =
+	dynamic_cast<LatVolField<float>*>(texfld_.get_rep());
       mesh_ = fld->get_typed_mesh();
     } else if (type == "long") {
-      LatticeVol<long> *fld =
-	dynamic_cast<LatticeVol<long>*>(texfld_.get_rep());
+      LatVolField<long> *fld =
+	dynamic_cast<LatVolField<long>*>(texfld_.get_rep());
       mesh_ = fld->get_typed_mesh();
     } else if (type == "int") {
-      LatticeVol<int> *fld =
-	dynamic_cast<LatticeVol<int>*>(texfld_.get_rep());
+      LatVolField<int> *fld =
+	dynamic_cast<LatVolField<int>*>(texfld_.get_rep());
       mesh_ = fld->get_typed_mesh();
     } else {
-      cerr << "CuttingPlane error - unknown LatticeVol type: " << type << endl;
+      cerr << "CuttingPlane error - unknown LatVolField type: " << type << endl;
       return false;
     }
     return get_dimensions( mesh_, nx, ny, nz );
@@ -830,22 +830,22 @@ CuttingPlane::get_gradient(FieldHandle texfld_, const Point& p, Vector& g)
       cerr << "CuttingPlane::get_gradient:: error - unimplemented Field type: " << type << endl;
       return false;
     }
-  } else if(texfld_->get_type_name(0) == "LatticeVol"){
+  } else if(texfld_->get_type_name(0) == "LatVolField"){
     if (type == "double") {
-      LatticeVol<double> *fld =
-	dynamic_cast<LatticeVol<double>*>(texfld_.get_rep());
+      LatVolField<double> *fld =
+	dynamic_cast<LatVolField<double>*>(texfld_.get_rep());
       return fld->get_gradient(g,p);
     } else if (type == "float") {
-      LatticeVol<float> *fld =
-	dynamic_cast<LatticeVol<float>*>(texfld_.get_rep());
+      LatVolField<float> *fld =
+	dynamic_cast<LatVolField<float>*>(texfld_.get_rep());
       return fld->get_gradient(g,p);   
     } else if (type == "long") {
-      LatticeVol<long> *fld =
-	dynamic_cast<LatticeVol<long>*>(texfld_.get_rep());
+      LatVolField<long> *fld =
+	dynamic_cast<LatVolField<long>*>(texfld_.get_rep());
       return fld->get_gradient(g,p);    
     } else if (type == "int") {
-      LatticeVol<int> *fld =
-	dynamic_cast<LatticeVol<int>*>(texfld_.get_rep());
+      LatVolField<int> *fld =
+	dynamic_cast<LatVolField<int>*>(texfld_.get_rep());
       return fld->get_gradient(g,p);    
     } else {
       cerr << "CuttingPlane::get_gradient:: error - unimplemented Field type: " << type << endl;
@@ -886,7 +886,7 @@ CuttingPlane::interpolate(FieldHandle texfld_, const Point& p, double& val)
       cerr << "Uintah::CuttingPlane::interpolate:: error - unimplemented Field type: " << type << endl;
       return false;
     }
-  } else if( texfld_->get_type_name(0) == "LatticeVol" ){
+  } else if( texfld_->get_type_name(0) == "LatVolField" ){
     // use virtual field interpolation
     ScalarFieldInterface *sfi;
     if(( sfi = texfld_->query_scalar_interface())){

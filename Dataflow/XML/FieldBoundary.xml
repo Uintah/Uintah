@@ -28,7 +28,7 @@
     </authors>
     <summary>Extract boundary surface from volume field.</summary>
     <description>
-      <p>Builds a TriSurface of doubles (with no data) from the incoming 
+      <p>Builds a TriSurfFieldace of doubles (with no data) from the incoming 
          volume field boundary.  Does nothing if the input is not high 
          enough order to have faces.</p>
       <developer>
@@ -55,9 +55,9 @@
     <outputs>
       <!-- one of (device port file) -->
       <port>
-	<name>TriSurf</name>
+	<name>TriSurfField</name>
 	<description>
-	  <p>outputs a TriSurface of doubles.</p>
+	  <p>outputs a TriSurfFieldace of doubles.</p>
 	</description>
 	<datatype>SCIRun::Field</datatype>
 	<componentname>ShowField</componentname>
@@ -65,7 +65,7 @@
       <port>
 	<name>Interpolant</name>
 	<description>
-	  <p>outputs the interpolant for the TriSurface.</p>
+	  <p>outputs the interpolant for the TriSurfFieldace.</p>
 	</description>
 	<datatype>SCIRun::Field</datatype>
 	<componentname>ShowField</componentname>

@@ -10,7 +10,7 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/LatVolField.h>
 #include <Core/Math/Trig.h>
 #include <Core/Persistent/Pstreams.h>
 #include <iostream>
@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
   int nk = 30;
   LatVolMesh *lvm = scinew LatVolMesh(ni, nj, nk, Point(0,0,0), 
 				      Point(ni, nj, nk));
-  LatticeVol<double> *lv = scinew LatticeVol<double>(lvm, Field::NODE);
+  LatVolField<double> *lv = scinew LatVolField<double>(lvm, Field::NODE);
   FieldHandle fh = lv;
   
   LatVolMesh::Node::iterator niter, niter_end;

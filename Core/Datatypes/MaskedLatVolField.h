@@ -16,7 +16,7 @@
 */
 
 /*
- *  MaskedLatticeVol.h
+ *  MaskedLatVolField.h
  *
  *  Written by:
  *   Martin Cole
@@ -26,11 +26,11 @@
  *  Copyright (C) 2001 SCI Institute
  */
 
-#ifndef Datatypes_MaskedLatticeVol_h
-#define Datatypes_MaskedLatticeVol_h
+#ifndef Datatypes_MaskedLatVolField_h
+#define Datatypes_MaskedLatVolField_h
 
 #include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/LatVolField.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Persistent/PersistentSTL.h>
@@ -39,7 +39,7 @@
 namespace SCIRun {
 
 template <class T> 
-class MaskedLatticeVol : public LatticeVol<T> {
+class MaskedLatVolField : public LatVolField<T> {
 private:
   FData3d<char> mask_;  // since Pio isn't implemented for bool's
 public:
@@ -59,14 +59,14 @@ public:
     return true;
   }
 
-  MaskedLatticeVol() : LatticeVol<T>() {}
-  MaskedLatticeVol(LatVolMeshHandle mesh, Field::data_location data_at)
-    : LatticeVol<T>(mesh, data_at)
+  MaskedLatVolField() : LatVolField<T>() {}
+  MaskedLatVolField(LatVolMeshHandle mesh, Field::data_location data_at)
+    : LatVolField<T>(mesh, data_at)
   {
     resize_fdata();
   }
 
-  virtual ~MaskedLatticeVol() {};
+  virtual ~MaskedLatVolField() {};
 
   bool value(T &val, typename LatVolMesh::Node::index_type idx) const
   { if (!mask_[idx]) return false; val = fdata()[idx]; return true; }
@@ -86,25 +86,25 @@ public:
   void resize_fdata() {
     if (data_at() == NODE)
     {
-      typename LatticeVol<T>::mesh_type::Node::size_type ssize;
+      typename LatVolField<T>::mesh_type::Node::size_type ssize;
       get_typed_mesh()->size(ssize);
       mask_.resize(ssize);
     }
     else if (data_at() == EDGE)
     {
-      typename LatticeVol<T>::mesh_type::Edge::size_type ssize;
+      typename LatVolField<T>::mesh_type::Edge::size_type ssize;
       get_typed_mesh()->size(ssize);
       mask_.resize(ssize);
     }
     else if (data_at() == FACE)
     {
-      typename LatticeVol<T>::mesh_type::Face::size_type ssize;
+      typename LatVolField<T>::mesh_type::Face::size_type ssize;
       get_typed_mesh()->size(ssize);
       mask_.resize(ssize);
     }
     else if (data_at() == CELL)
     {
-      typename LatticeVol<T>::mesh_type::Cell::size_type ssize;
+      typename LatVolField<T>::mesh_type::Cell::size_type ssize;
       get_typed_mesh()->size(ssize);
       mask_.resize(ssize);
     }
@@ -112,7 +112,7 @@ public:
     {
       ASSERTFAIL("data at unrecognized location");
     }
-    LatticeVol<T>::resize_fdata();
+    LatVolField<T>::resize_fdata();
   }
 
   static  PersistentTypeID type_id;
@@ -125,35 +125,36 @@ private:
 };
 
 // Pio defs.
-const int MASKED_LATTICE_VOL_VERSION = 1;
+const int MASKED_LAT_VOL_FIELD_VERSION = 1;
 
 template <class T>
 Persistent*
-MaskedLatticeVol<T>::maker()
+MaskedLatVolField<T>::maker()
 {
-  return scinew MaskedLatticeVol<T>;
+  return scinew MaskedLatVolField<T>;
 }
 
 template <class T>
 PersistentTypeID 
-MaskedLatticeVol<T>::type_id(type_name(-1), 
-			 LatticeVol<T>::type_name(-1),
+MaskedLatVolField<T>::type_id(type_name(-1), 
+			 LatVolField<T>::type_name(-1),
 			 maker);
 
 
 template <class T>
 void 
-MaskedLatticeVol<T>::io(Piostream& stream)
+MaskedLatVolField<T>::io(Piostream& stream)
 {
-  stream.begin_class(type_name(-1), MASKED_LATTICE_VOL_VERSION);
-  LatticeVol<T>::io(stream);
+  /*int version=*/stream.begin_class(type_name(-1), 
+				     MASKED_LAT_VOL_FIELD_VERSION);
+  LatVolField<T>::io(stream);
   Pio(stream, mask_);
   stream.end_class();
 }
 
 template <class T> 
 const string 
-MaskedLatticeVol<T>::type_name(int n)
+MaskedLatVolField<T>::type_name(int n)
 {
   ASSERT((n >= -1) && n <= 1);
   if (n == -1)
@@ -164,7 +165,7 @@ MaskedLatticeVol<T>::type_name(int n)
   }
   else if (n == 0)
   {
-    return "MaskedLatticeVol";
+    return "MaskedLatVolField";
   }
   else
   {
@@ -174,10 +175,10 @@ MaskedLatticeVol<T>::type_name(int n)
 
 template <class T>
 const TypeDescription* 
-get_type_description(MaskedLatticeVol<T>*)
+get_type_description(MaskedLatVolField<T>*)
 {
   static TypeDescription* td = 0;
-  static string name("MaskedLatticeVol");
+  static string name("MaskedLatVolField");
   static string namesp("SCIRun");
   static string path(__FILE__);
   if(!td){
@@ -191,11 +192,11 @@ get_type_description(MaskedLatticeVol<T>*)
 
 template <class T>
 const TypeDescription* 
-MaskedLatticeVol<T>::get_type_description() const 
+MaskedLatVolField<T>::get_type_description() const 
 {
-  return SCIRun::get_type_description((MaskedLatticeVol<T>*)0);
+  return SCIRun::get_type_description((MaskedLatVolField<T>*)0);
 }
 
 } // end namespace SCIRun
 
-#endif // Datatypes_MaskedLatticeVol_h
+#endif // Datatypes_MaskedLatVolField_h
