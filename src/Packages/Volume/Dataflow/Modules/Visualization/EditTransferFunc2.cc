@@ -127,7 +127,7 @@ public:
   
   void resize_gui();
   void update_from_gui();
-  void update_to_gui();
+  void update_to_gui(bool init = false);
   void undo();
 
   void redraw();
@@ -155,6 +155,7 @@ EditTransferFunc2::EditTransferFunc2(GuiContext* ctx)
   widgets_.push_back(scinew TriangleCM2Widget());
   widgets_.push_back(scinew RectangleCM2Widget());
   resize_gui();
+  update_to_gui(true);
 }
 
 
@@ -307,7 +308,7 @@ EditTransferFunc2::resize_gui()
 
 
 void
-EditTransferFunc2::update_to_gui()
+EditTransferFunc2::update_to_gui(bool init)
 {
   // Update GUI
   resize_gui();
@@ -320,7 +321,7 @@ EditTransferFunc2::update_to_gui()
     gui_color_b_[i]->set(c.b());
     gui_color_a_[i]->set(widgets_[i]->alpha());
   }
-  gui->execute(id + " create_entries");
+  if (!init) { gui->execute(id + " create_entries"); }
 }
 
 
