@@ -570,6 +570,20 @@ http://www.cs.utah.edu/scirun_docs/doc</A>
 	  the software.
     </p>
 
+<p class="subhead">Building with 64 bit enabled on SGI</p>
+    <p class="firstpara">
+	  Unfortunately, most of the required third party software didn't have 64 bit SGI platforms
+	  in mind when they wrote their configure scripts and makefiles.  However, it is possible
+	  to build all the software in 64 bit with some effort.  In general, to get 64 bit versions
+	  of the third party software it is necessarty to edit Makefiles such that the CFLAGS and LFLAGS
+	  macros have "-64" listed instead of "-n32".  In the case of the tcl distributions, this
+	  means editing the makefiles (after configuring) by hand and replacing all instances of 
+	  "-n32" with "-64".  Getting xerces to build in 64 bits is a little more complicated: first
+	  start the runConfigure script as usual, then (before making) type the export commands
+	  indicated at the conclusion of the runConfigure script verbatim with the exception that you
+	  insert "-64" into the CFLAGS and LFLAGS environment variables.
+    </p>
+
 <p class="subhead">Building [incr Tcl/Tk]</p>
 	<p class="firstpara">
 	  The [incr Tcl/Tk] distribution listed in the system requirements has a bug in it:
@@ -591,6 +605,10 @@ chmod a+x install-sh mkinstalldirs</font></pre>
 	</p>
 
 	<pre class="example"><font color=blue>cd blt2.4u
+make 
+cd src/shared
+make 
+cd blt2.4u
 make -k install
 cd src/shared
 make -k install</font>
@@ -600,6 +618,18 @@ make -k install</font>
 	<p class="firstpara">
 	  The make system for Xerces-c is not standard and has many bugs.  The following all apply
 	  after configuring xerces.
+	</p>
+
+	<p class="firstpara">
+	  The configure scripts are bundled without execute permissions.  Before attempting
+	  to configure or make Xerces-C, type the following commands:
+	</p>
+
+	<pre class="example"><font color=blue>cd xerces-c-src1_3_0/src
+chmod a+x configure runConfigure</font></pre>
+
+	<p class="firstpara">
+	  Then, proceed normally with the configure and make.
 	</p>
 
 	<p class="firstpara">
