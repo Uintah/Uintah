@@ -570,7 +570,7 @@ Volvis2DDpy::addWidget( int x, int y ) {
 
 
 // cycle through widget types: tri -> rect(ellipse) -> rect(1d)
-//   -> rect("rainbow") -> tri...
+//   -> rect(colormap) -> tri...
 // template<class T>
 void
 Volvis2DDpy::cycleWidgets(void) {
@@ -590,9 +590,14 @@ Volvis2DDpy::cycleWidgets(void) {
     new_wid = new EllipWidget( old_wid );
     break;
   case Ellipse:
-    new_wid = new RBowWidget( old_wid );
+    {
+      ColorMapWidget *cmw = new ColorMapWidget( old_wid );
+      cmw->colors = cmap_colors;
+      cmw->genTransFunc();
+      new_wid = cmw;
+    }
     break;
-  case Rainbow:
+  case ColorMapType:
     new_wid = new TriWidget( old_wid );
     break;
   } // switch(type)
@@ -1344,7 +1349,7 @@ Volvis2DDpy::button_motion(MouseButton button, const int x, const int y) {
     }
 
     // if the user has selected a widget by its texture
-    else if( pickedIndex >= 0 && widgets[pickedIndex]->type != Rainbow ) {
+    else if( pickedIndex >= 0 && widgets[pickedIndex]->type != ColorMapType ) {
       boundSubTexture( widgets[pickedIndex] );
 
       // adjust widget texture's color
@@ -1738,9 +1743,16 @@ Volvis2DDpy::saveUIState( unsigned long key ) {
 	outfile << "TentWidget";
       else if( widgets[i]->type == Ellipse )
 	outfile << "EllipseWidget";
-      else if( widgets[i]->type == Rainbow )
-	outfile << "RainbowWidget";
-      else
+      else if( widgets[i]->type == ColorMapType ) {
+	outfile << "ColorMapWidget";
+	ColorMapWidget *cmw = dynamic_cast<ColorMapWidget *>(widgets[i]);
+	outfile << " " << cmw->colors.size();
+	for (int c = 0; c < cmw->colors.size(); c++) {
+	  outfile << " " << (cmw->colors[c])[0];
+	  outfile << " " << (cmw->colors[c])[1];
+	  outfile << " " << (cmw->colors[c])[2];
+	}
+      } else
 	outfile << "Unknown Widget";
 
       outfile << "\nUpperLeftCorner: "
@@ -1763,8 +1775,8 @@ Volvis2DDpy::saveUIState( unsigned long key ) {
 	outfile << "\n//TentWidget\n\n";
       else if( widgets[i]->type == Ellipse )
 	outfile << "\n//EllipseWidget\n\n";
-      else if( widgets[i]->type == Rainbow )
-	outfile << "\n//RainbowWidget\n\n";
+      else if( widgets[i]->type == ColorMapType )
+	outfile << "\n//ColorMapWidget\n\n";
       else
 	outfile << "\n//Unknown Widget\n\n";
     } // else()
@@ -1781,6 +1793,7 @@ Volvis2DDpy::saveUIState( unsigned long key ) {
 // template<class T>
 void
 Volvis2DDpy::loadUIState( unsigned long key ) {
+  Array1<Color> colors;
   char *file="uninitialized";
   int stateNum = -1;
   switch( key ) {
@@ -1865,7 +1878,7 @@ Volvis2DDpy::loadUIState( unsigned long key ) {
     infile >> token;
     while( token != "TriWidget" && token != "TentWidget" &&
 	   token != "EllipseWidget" && token != "RainbowWidget" &&
-	   !infile.eof() )
+	   token != "ColorMapWidget" && !infile.eof() )
       infile >> token;
     // if widget is a TriWidget...
     if( token == "TriWidget" ) {
@@ -1913,17 +1926,27 @@ Volvis2DDpy::loadUIState( unsigned long key ) {
     
     // ...otherwise, if widget is a RectWidget...
     else if( token == "TentWidget" || token == "EllipseWidget" ||
-	     token == "RainbowWidget" ) {
+	     token == "RainbowWidget" || token == "ColorMapWidget" ) {
       float left = 0.0f;      float top = 0.0f;
       float width = 0.0f;     float height = 0.0f;
       float focus_x = 0.0f;   float focus_y = 0.0f;
       int cmap_x = 0;         int cmap_y = 0;
       float opac_x = 0.0f;    int textAlign = 0;
       while( token != "//TentWidget" && token != "//EllipseWidget" &&
-	     token != "//RainbowWidget" ) {
+	     token != "//RainbowWidget" && token != "//ColorMapWidget" ) {
 	infile >> token;
 	if( token == "UpperLeftCorner:" ) {
 	  infile >> left >> top;
+	  infile >> token;
+	}
+	if( token == "Colors:" ) {
+	  int ncolors;
+	  infile >> ncolors;
+	  for ( int c = 0; c < ncolors; c++ ) {
+	    float r, g, b;
+	    infile >> r >> g >> b;
+	    colors.add(Color(r,g,b));
+	  }
 	  infile >> token;
 	}
 	if( token == "Width:" ) {
@@ -1961,9 +1984,19 @@ Volvis2DDpy::loadUIState( unsigned long key ) {
 					    focus_x, focus_y, cmap_x, cmap_y,
 					    (TextureAlign)textAlign ) );
       else if( token == "//RainbowWidget" )
-	widgets.push_back( new RBowWidget( left, top, width, height, opac_x,
-					   focus_x, focus_y, cmap_x, cmap_y,
-					   (TextureAlign)textAlign ) );
+	widgets.push_back( new ColorMapWidget(left, top, width, height, opac_x,
+					      focus_x, focus_y, cmap_x, cmap_y,
+					      (TextureAlign)textAlign ) );
+      else if( token == "//ColorMapWidget" ) {
+	ColorMapWidget *cm = new ColorMapWidget(left, top, width, height, 
+						opac_x, focus_x, focus_y, 
+						cmap_x, cmap_y,
+						(TextureAlign)textAlign );
+	cm->colors = colors;
+	cm->genTransFunc();
+	widgets.push_back(cm);
+	colors.resize(0);
+      }
     } // if a rectangular widget
   } // while not at the end of the file
   colorWidgetFrames();
@@ -1999,6 +2032,7 @@ Volvis2DDpy::loadWidgets( char* file )
     return;
   }
 
+  Array1<Color> colors;
   string token;
   infile >> token;
   if( token == "HistogramParameters:" ) {
@@ -2029,7 +2063,7 @@ Volvis2DDpy::loadWidgets( char* file )
     infile >> token;
     while( token != "TriWidget" && token != "TentWidget" &&
 	   token != "EllipseWidget" && token != "RainbowWidget" &&
-	   !infile.eof() )
+	   token != "ColorMapWidget" && !infile.eof() )
       infile >> token;
     // if widget is a TriWidget...
     if( token == "TriWidget" ) {
@@ -2077,17 +2111,27 @@ Volvis2DDpy::loadWidgets( char* file )
     
     // ...otherwise, if widget is a RectWidget...
     else if( token == "TentWidget" || token == "EllipseWidget" ||
-	     token == "RainbowWidget" ) {
+	     token == "RainbowWidget" || token == "ColorMapWidget" ) {
       float left = 0.0f;      float top = 0.0f;
       float width = 0.0f;     float height = 0.0f;
       float focus_x = 0.0f;   float focus_y = 0.0f;
       int cmap_x = 0;         int cmap_y = 0;
       float opac_x = 0.0f;    int textAlign = 0;
       while( token != "//TentWidget" && token != "//EllipseWidget" &&
-	     token != "//RainbowWidget" ) {
+	     token != "//RainbowWidget" && token != "//ColorMapWidget" ) {
 	infile >> token;
 	if( token == "UpperLeftCorner:" ) {
 	  infile >> left >> top;
+	  infile >> token;
+	}
+	if( token == "Colors:" ) {
+	  int ncolors;
+	  infile >> ncolors;
+	  for ( int c = 0; c < ncolors; c++ ) {
+	    float r, g, b;
+	    infile >> r >> g >> b;
+	    colors.add(Color(r,g,b));
+	  }
 	  infile >> token;
 	}
 	if( token == "Width:" ) {
@@ -2125,9 +2169,19 @@ Volvis2DDpy::loadWidgets( char* file )
 					    focus_x, focus_y, cmap_x, cmap_y,
 					    (TextureAlign)textAlign ) );
       else if( token == "//RainbowWidget" )
-	widgets.push_back( new RBowWidget( left, top, width, height, opac_x,
-					   focus_x, focus_y, cmap_x, cmap_y,
-					   (TextureAlign)textAlign ) );
+	widgets.push_back( new ColorMapWidget(left, top, width, height, opac_x,
+					      focus_x, focus_y, cmap_x, cmap_y,
+					      (TextureAlign)textAlign ) );
+      else if( token == "//ColorMapWidget" ) {
+	ColorMapWidget *cm = new ColorMapWidget(left, top, width, height, 
+						opac_x, focus_x, focus_y, 
+						cmap_x, cmap_y,
+						(TextureAlign)textAlign );
+	cm->colors = colors;
+	cm->genTransFunc();
+	widgets.push_back(cm);
+	colors.resize(0);
+      }
     } // if a rectangular widget
   } // while not at the end of the file
   

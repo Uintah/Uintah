@@ -64,6 +64,7 @@ namespace rtrt {
     virtual void button_released(MouseButton button, const int x, const int y);
     virtual void button_motion(MouseButton button, const int x, const int y);
     
+    Array1<Color> cmap_colors;
   
   public:
     struct voxel_valuepair {
@@ -129,6 +130,8 @@ namespace rtrt {
 		       Voxel2D<float> v3, Voxel2D<float> v4 );
     // Colors widget frames after they are loaded from a file
     void colorWidgetFrames( void );    
+    // Send in colors for the ColorMap widget (previously just raindow)
+    void setColorMapColors(const Array1<Color> &colors) { cmap_colors=colors; }
     // Called whenever the user interface is changed
     virtual void animate(bool &changed);
 

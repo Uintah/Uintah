@@ -472,6 +472,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 //    char *nrrd_alpha_map = 0;
   bool loadWidgetFile = false;
   char* widgetFile;
+  char* colormap_file = 0;
+
   Color bgcolor(1.,1.,1.);
   
   for(int i=1;i<argc;i++){
@@ -501,11 +503,12 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 	i++;
 	cout << "Reading nrrd file list from " << argv[i] << endl;
 	ifstream in(argv[i]);
+	string file;
+	in >> file;
 	while (in) {
-	  string file;
-	  in >> file;
 	  data_files.push_back(file);
 	  cout << "Nrrd file: "<<file<<"\n";
+	  in >> file;
 	}
 	cout << "Read "<<data_files.size()<<" nrrd files.\n";
       } else {
@@ -517,6 +520,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
       }
     } else if(strcmp(argv[i], "-cut")==0){
       cut=true;
+    } else if(strcmp(argv[i], "-colormap")==0){
+      colormap_file = argv[++i];
     } else if(strcmp(argv[i], "-ncolors")==0){
       i++;
       ncolors = atoi(argv[i]);
@@ -590,9 +595,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
       cerr << " -diffuse [float] - the diffuse factor\n";
       cerr << " -specular [float] - the specular factor\n";
       cerr << " -rate [float] - frame rate of the time steps\n";
-      cerr << " -colormap [string] - \"rainbow\" or \"inversebb\"\n";
-      cerr << " -colormap nrrd [filename.nrrd] - read in a nrrd for the colormap with alphas\n";
-      cerr << " -alpha [filename.nrrd] - read in a nrrd with just the alpha transfer function\n";
+      cerr << " -colormap [filename.nrrd] - read in a nrrd for the colormap\n";
       cerr << " -bgcolor [float] [float] [float] - the three floats are r, g, b\n";
       cerr << " -loadfile [filename.txt] - read in a widget configuration to load upon initialization\n";
       return 0;
@@ -611,12 +614,49 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   Camera cam(Point(0.5,0.5,3), Point(0.5,0.5,0.5),
 	     Vector(0,1,0), 40.0);
   
+  // Load the colormap
+  Nrrd *nrrdcmap = nrrdNew();
+  Array1<Color> colors;
+  char *errS;
+  if (colormap_file) {
+    if (nrrdLoad(nrrdcmap, colormap_file,0)) {
+      fprintf(stderr, "%s: problem with loading colormap file (%s):\n%s\n",
+	      argv[0], colormap_file, errS = biffGetDone(NRRD));
+      free(errS);
+      return 0;
+    }
+    // Do some double checking
+    if (nrrdcmap->dim != 2) {
+      fprintf(stderr, "%s: colormap is not of dim 2 (actual = %d)\n", argv[0],
+	      nrrdcmap->dim);
+      return 0;
+    }
+    if (nrrdcmap->axis[0].size != 3) {
+      fprintf(stderr, "%s: Only know how to deal with 3 component colors (actual = %d)\n", 
+	      argv[0], nrrdcmap->axis[0].size);
+      return 0;
+    }
+    if (nrrdcmap->type != nrrdTypeFloat) {
+      Nrrd *new_nrrd = nrrdNew();
+      nrrdConvert(new_nrrd, nrrdcmap, nrrdTypeFloat);
+      // since the data was copied blow away the memory for the old nrrd
+      nrrdNuke(nrrdcmap);
+      nrrdcmap = new_nrrd;
+    }
+    // Now that we have the colors load them into the colormap
+    float *data = (float*)(nrrdcmap->data);
+    for(int i = 0; i < nrrdcmap->axis[1].size; i++)
+      colors.add(Color(*data++, *data++, *data++));
+  }
+  cerr << "Colors.size()="<<colors.size()<<"\n";
   double ambient_scale=1.0;
   
   //  double bgscale=0.5;
   //  Color bgcolor(bgscale*108/255., bgscale*166/255., bgscale*205/255.);
   
   Volvis2DDpy *dpy = new Volvis2DDpy(t_inc, cut);
+  dpy->setColorMapColors(colors);
+
   if(loadWidgetFile)
     dpy->loadWidgets( widgetFile );
 
