@@ -11,3 +11,4 @@ stamp-h
 y.output
 *.sr
 lib
+configVars.mk
