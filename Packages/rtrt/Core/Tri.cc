@@ -228,6 +228,7 @@ void Tri::light_intersect(Light* light, const Ray& ray,
 
 void Tri::compute_bounds(BBox& bbox, double offset)
 {
+#if 0
     Vector e1(p3-p2);
     Vector e2(p1-p3);
     Vector e3(p2-p1);
@@ -247,4 +248,15 @@ void Tri::compute_bounds(BBox& bbox, double offset)
     bbox.extend(p2p-dz);
     bbox.extend(p1p+dz);
     bbox.extend(p1p-dz);
+    if(isnan(p1.z()) || isnan(p2.z()) || isnan(p3.z())
+       || isnan(p1p.z()) || isnan(p2p.z()) || isnan(p3p.z())){
+      cerr << "p1=" << p1 << ", p2=" << p2 << ", p3=" << p3 << '\n';
+      cerr << "p1p=" << p1p << ", p2p=" << p2p << ", p3p=" << p3p << '\n';
+      cerr << "bbox=" << bbox.min() << ", " << bbox.max() << '\n';
+    }
+#else
+    bbox.extend(p1);
+    bbox.extend(p2);
+    bbox.extend(p3);
+#endif
 }
