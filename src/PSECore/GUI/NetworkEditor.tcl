@@ -923,11 +923,8 @@ proc loadfile {netedit_loadfile} {
 		set command "set ::$m"
 		append command "$pram $value"
 
-		puts "command: $command"
-
 		# Execute the "real" command
 		eval $command
-
 	    } elseif { [string match $curr_line ""] } {
 		# do nothing
 	    } else {
@@ -981,10 +978,16 @@ proc saveMacroModules { netedit_file } {
 
 	set curr_line [gets $fchannel]
     }
-    
-    puts "var_list: $var_list"
-
 }
+
+
+
+
+
+
+
+
+
 
 
 
