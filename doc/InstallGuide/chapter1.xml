@@ -59,13 +59,26 @@
     <para>
       <orderedlist>
         <listitem>
-          Obtain the source trees for SCIRun and any desired packages.
+          <para>
+            Obtain the source trees for SCIRun and any desired
+            packages.
+          </para>
         </listitem>
         <listitem>
-          Unzip the SCIRun source tree into a directory of your choosing.
+          <para>
+            Unzip the SCIRun source tree into a directory of your
+            choosing.
+          </para>
+          <para>
+            The chosen directory will be referred to as 
+            <term>INSTALL_DIR</term> from now on.
+          </para>
         </listitem>
         <listitem>
-          Unzip the packages (if any) into /SCIRun/src/Packages.
+          <para>
+            Unzip the packages (if any) into 
+            <term>INSTALL_DIR</term>/SCIRun/src/Packages.
+          </para>
         </listitem>
       </orderedlist>
     </para>          
@@ -77,15 +90,24 @@
     <para>
       <orderedlist>
         <listitem>
-          Ensure that the target install machine matches the above 
-          system requirements.
+          <para>
+            Ensure that the target install machine matches the above 
+            system requirements.
+          </para>
         </listitem>
         <listitem>
-          Run configure from a directory of your choosing.  The chosen
-          directory will be referred to as <term>BUILD_DIR</term> from now on.
+          <para>
+            Run configure from a directory of your choosing.
+          </para>
+          <para>
+            The chosen directory will be referred to as
+            <term>BUILD_DIR</term> from now on.
+          </para>
         </listitem>
         <listitem>
-          Run GNU make in the <term>BUILD_DIR</term> directory.
+          <para>
+            Run GNU make in the <term>BUILD_DIR</term> directory.
+          </para>
         </listitem>
       </orderedlist>
     </para>

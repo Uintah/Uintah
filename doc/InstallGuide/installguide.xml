@@ -31,10 +31,11 @@
 -->
 
 <book>
+  <title>SCIRun Installation Guide</title>
+  <subtitle>(UNIX version - Updated June 22, 2001)</subtitle>
 
   <bookinfo>
-    <title>SCIRun Installation Guide</title>
-    <subtitle>(UNIX version - Updated June 22, 2001)</subtitle>
+    <title>installguide.xml</title>
     <authorgroup>
       <author>
         <firstname>Chris</firstname>
@@ -56,14 +57,14 @@
       The <citetitle>SCIRun Installation Guide</citetitle> contains
       instructions and information for installing and building SCIRun,
       it's packages and the thirdparty libraries that it requires.
-      See the technical FAQ for information on troubleshooting these
-      processes.
+      See the <citetitle>technical FAQ</citetitle> for information on
+      troubleshooting these processes. 
     </para>
   </preface>
 
   &chapter1;
-<!--
   &chapter2;
+<!--
   &chapter3;
 -->
 </book>
