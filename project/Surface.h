@@ -19,12 +19,14 @@
 #include <Classlib/LockingHandle.h>
 #include <Geom.h>
 #include <Geometry/Point.h>
+#include <Classlib/String.h>
 
 class Surface;
 typedef LockingHandle<Surface> SurfaceHandle;
 
 class Surface : public Datatype {
 public:
+    clString name;
     Surface();
     Surface(const Surface& copy);
     virtual ~Surface();

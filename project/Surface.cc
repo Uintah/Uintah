@@ -34,7 +34,7 @@ Surface::Surface(const Surface& copy) {
 
 void Surface::io(Piostream& stream) {
     int version=stream.begin_class("Surface", SURFACE_VERSION);
-    // Nothing to store...
+    Pio(stream, name);
     stream.end_class();
 }
 

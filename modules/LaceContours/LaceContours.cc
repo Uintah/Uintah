@@ -38,7 +38,7 @@ LaceContours::LaceContours()
     // Create the input port
     incontour=new ContourSetIPort(this, "ContourSet", ContourSetIPort::Atomic);
     add_iport(incontour);
-    osurface=new SurfaceOPort(this, "Surface", SurfaceOPort::Atomic);
+    osurface=new SurfaceOPort(this, "Surface", SurfaceIPort::Atomic);
     add_oport(osurface);
 }
 
@@ -63,6 +63,7 @@ void LaceContours::execute()
     if (!incontour->get(contours))
 	return;
     TriSurface* surf=new TriSurface;
+    surf->name="Scalp";
     lace_contours(contours, surf);
     osurface->send(surf);
 }

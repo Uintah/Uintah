@@ -37,7 +37,7 @@ SurfToGeom::SurfToGeom()
     // Create the input port
     isurface=new SurfaceIPort(this, "Surface", SurfaceIPort::Atomic);
     add_iport(isurface);
-    ogeom=new GeometryOPort(this, "Geometry", GeometryOPort::Atomic);
+    ogeom=new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
     add_oport(ogeom);
 }
 
@@ -62,5 +62,6 @@ void SurfToGeom::execute()
     if (!isurface->get(surf))
 	return;
     ObjGroup *group=surf->getGeomFromSurface();
-    ogeom->send(group);
+    ogeom->delAll();
+    ogeom->addObj(group, surf->name);
 }
