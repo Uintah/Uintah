@@ -16,7 +16,7 @@
 */
 
 /*
- *  SeedField.cc:  From a mesh, seed some number of dipoles
+ *  SampleField.cc:  From a mesh, seed some number of dipoles
  *
  *  Written by:
  *   David Weinstein
@@ -26,7 +26,7 @@
  *  Copyright (C) 2000 SCI Group
  */
  
-#include <Dataflow/Modules/Fields/SeedField.h>
+#include <Dataflow/Modules/Fields/SampleField.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/FieldPort.h>
@@ -46,7 +46,7 @@ using std::pair;
 
 namespace SCIRun {
 
-class SeedField : public Module
+class SampleField : public Module
 {
   FieldIPort     *ifport_;
   FieldOPort     *ofport_;  
@@ -74,21 +74,21 @@ class SeedField : public Module
 public:
   CrowdMonitor widget_lock_;
   GaugeWidget *rake_;
-  SeedField(const string& id);
-  virtual ~SeedField();
+  SampleField(const string& id);
+  virtual ~SampleField();
   virtual void execute();
   virtual void tcl_command(TCLArgs&, void*);
   virtual void widget_moved(int);
 };
 
 
-extern "C" Module* make_SeedField(const string& id) {
-  return new SeedField(id);
+extern "C" Module* make_SampleField(const string& id) {
+  return new SampleField(id);
 }
 
 
-SeedField::SeedField(const string& id)
-  : Module("SeedField", id, Filter, "Fields", "SCIRun"),
+SampleField::SampleField(const string& id)
+  : Module("SampleField", id, Filter, "Fields", "SCIRun"),
     maxSeeds_("maxseeds", id, this),
     numSeeds_("numseeds", id, this),
     rngSeed_("rngseed", id, this),
@@ -106,13 +106,13 @@ SeedField::SeedField(const string& id)
 }
 
 
-SeedField::~SeedField()
+SampleField::~SampleField()
 {
 }
 
 
 void
-SeedField::widget_moved(int i)
+SampleField::widget_moved(int i)
 {
   if (rake_) 
     rake_->GetEndpoints(endpoint0_,endpoint1_);
@@ -127,7 +127,7 @@ SeedField::widget_moved(int i)
 
 
 void
-SeedField::generate_widget_seeds(Field *field)
+SampleField::generate_widget_seeds(Field *field)
 {
   const BBox bbox = field->mesh()->get_bounding_box();
   Point min = bbox.min();
@@ -199,11 +199,11 @@ SeedField::generate_widget_seeds(Field *field)
 }
 
 void
-SeedField::execute()
+SampleField::execute()
 {
-  ifport_ = (FieldIPort *)get_iport("Field to Seed");
-  ofport_ = (FieldOPort *)get_oport("Seeds");
-  ogport_ = (GeometryOPort *)get_oport("Seeding Widget");
+  ifport_ = (FieldIPort *)get_iport("Field to Sample");
+  ofport_ = (FieldOPort *)get_oport("Samples");
+  ogport_ = (GeometryOPort *)get_oport("Sampling Widget");
 
   if (!ifport_) {
     postMessage("Unable to initialize "+name+"'s iport\n");
@@ -227,15 +227,15 @@ SeedField::execute()
   if (tab == "Random")
   {
     const TypeDescription *mtd = vfhandle_->mesh()->get_type_description();
-    CompileInfo *ci = SeedFieldAlgo::get_compile_info(mtd);
+    CompileInfo *ci = SampleFieldAlgo::get_compile_info(mtd);
     DynamicAlgoHandle algo_handle;
     if (! DynamicLoader::scirun_loader().get(*ci, algo_handle))
     {
       cout << "Could not compile algorithm." << std::endl;
       return;
     }
-    SeedFieldAlgo *algo =
-      dynamic_cast<SeedFieldAlgo *>(algo_handle.get_rep());
+    SampleFieldAlgo *algo =
+      dynamic_cast<SampleFieldAlgo *>(algo_handle.get_rep());
     if (algo == 0)
     {
       cout << "Could not get algorithm." << std::endl;
@@ -258,7 +258,7 @@ SeedField::execute()
 
 
 void
-SeedField::tcl_command(TCLArgs& args, void* userdata)
+SampleField::tcl_command(TCLArgs& args, void* userdata)
 {
   if(args.count() < 2)
   {
@@ -278,12 +278,12 @@ SeedField::tcl_command(TCLArgs& args, void* userdata)
 
 
 CompileInfo *
-SeedFieldAlgo::get_compile_info(const TypeDescription *mesh_td)
+SampleFieldAlgo::get_compile_info(const TypeDescription *mesh_td)
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  static const string template_class_name("SeedFieldAlgoT");
-  static const string base_class_name("SeedFieldAlgo");
+  static const string template_class_name("SampleFieldAlgoT");
+  static const string base_class_name("SampleFieldAlgo");
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +

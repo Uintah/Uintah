@@ -16,7 +16,7 @@ set m1 [addModuleAtPosition "SCIRun" "Render" "Viewer" 208 390]
 set m2 [addModuleAtPosition "SCIRun" "Fields" "FieldBoundary" 48 101]
 set m3 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 48 184]
 set m4 [addModuleAtPosition "SCIRun" "Visualization" "StreamLines" 244 199]
-set m5 [addModuleAtPosition "SCIRun" "Fields" "SeedField" 262 100]
+set m5 [addModuleAtPosition "SCIRun" "Fields" "SampleField" 262 100]
 set m6 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 244 300]
 
 addConnection $m0 0 $m2 0
