@@ -1,6 +1,7 @@
 #ifndef Packages_Uintah_CCA_Components_Ice_BoundaryCond_h
 #define Packages_Uintah_CCA_Components_Ice_BoundaryCond_h
 
+#include <Packages/Uintah/CCA/Components/ICE/NG_NozzleBCs.h>
 #include <Packages/Uintah/CCA/Components/ICE/LODI2.h>
 #include <Packages/Uintah/Core/Grid/BoundCond.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
@@ -88,7 +89,7 @@ static DebugStream BC_doing("ICE_BC_DOING", false);
 
 template<class T> 
   void setBC(T& variable, 
-             const  string& kind, 
+             const  string& kind,
              const string& comp,    
              const Patch* patch,    
              const int mat_id);
@@ -101,8 +102,8 @@ template<class T>
                             const string& bc_kind,
                             const T& value,
                             const Vector& cell_dx,
-			    const int mat_id,
-			    const int child);
+			       const int mat_id,
+			       const int child);
   
   void ImplicitMatrixBC(CCVariable<Stencil7>& var, const Patch* patch);
   
@@ -308,6 +309,7 @@ void getIteratorBCValueBCKind( const Patch* patch,
   } 
   return IveSetBC; 
 }
+
 /* --------------------------------------------------------------------- 
  Function~  setBC--      
  Purpose~   Takes care of face centered velocities
@@ -319,7 +321,8 @@ void getIteratorBCValueBCKind( const Patch* patch,
 void setBC(T& vel_FC, 
            const string& desc,
            const Patch* patch,    
-           const int mat_id)      
+           const int mat_id,
+           SimulationStateP& sharedState)      
 {
   BC_doing << "setBCFC (SFCVariable) "<< desc<< " mat_id = " << mat_id <<endl;
   Vector cell_dx = patch->dCell();
@@ -395,6 +398,15 @@ void setBC(T& vel_FC,
           IveSetBC= setNeumanDirichletBC_FC<T>( patch, face, vel_FC,
                               bound, bc_kind, value, cell_dx, P_dir, whichVel); 
         }
+        //__________________________________
+        // Custom BCs
+        if (whichVel == "X_vel_FC" && 
+            bc_kind == "Custom" &&  
+            face == Patch::xminus) {
+          setNGC_Nozzle_BC<T, double>(patch, face, vel_FC, "Vel_FC","FC", bound, 
+                                   bc_kind,mat_id, child, sharedState); 
+        }        
+        
         //__________________________________
         //  debugging
         if( BC_dbg.active() ) {
