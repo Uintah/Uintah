@@ -231,17 +231,38 @@ ClipByFunctionAlgoT<FIELD>::execute(ProgressReporter *mod,
 	   get_type_description((typename FIELD::mesh_type::Elem *)0)->get_name())
   {
     FIELD *field = dynamic_cast<FIELD *>(fieldh.get_rep());
+
+    const int nrows = elemmap.size();
+    const int ncols = field->fdata().size();
+    int *rr = scinew int[nrows+1];
+    int *cc = scinew int[nrows];
+    double *d = scinew double[nrows];
+
     for (unsigned int i=0; i < elemmap.size(); i++)
     {
       typename FIELD::value_type val;
       field->value(val,
 		   (typename FIELD::mesh_type::Elem::index_type)elemmap[i]);
       ofield->set_value(val, (typename FIELD::mesh_type::Elem::index_type)i);
+
+      cc[i] = elemmap[i];
     }
+
+    int j;
+    for (j = 0; j < nrows; j++)
+    {
+      rr[j] = j;
+      d[j] = 1.0;
+    }
+    rr[j] = j; // An extra entry goes on the end of rr.
+
+    interpolant = scinew SparseRowMatrix(nrows, ncols, rr, cc, nrows, d);
   }
   else
   {
     mod->warning("Unable to copy data at this field data location.");
+    mod->warning("No interpolant computed for field data location.");
+    interpolant = 0;
   }
 
   return ofield;
