@@ -129,22 +129,22 @@ int myUIPort::ui()
 }
 
 
-CIA::array1<double> myPDEDescriptionPort::getNodes() 
+SIDL::array1<double> myPDEDescriptionPort::getNodes() 
 {
   return com->nodes;
 }
 
-CIA::array1<int> myPDEDescriptionPort::getBoundaries() 
+SIDL::array1<int> myPDEDescriptionPort::getBoundaries() 
 {
   return com->boundaries;
 }
  
-CIA::array1<int> myPDEDescriptionPort::getDirichletNodes()
+SIDL::array1<int> myPDEDescriptionPort::getDirichletNodes()
 {
   return com->dirichletNodes;
 }
 
-CIA::array1<double> myPDEDescriptionPort::getDirichletValues()
+SIDL::array1<double> myPDEDescriptionPort::getDirichletValues()
 {
   return com->dirichletValues;
 }

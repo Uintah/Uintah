@@ -37,9 +37,9 @@
 class MainWindow: public QWidget{
  public:
   MainWindow(QWidget *parent, const char *name, 
-	     const CIA::array1<double> nodes1d, 
-	     const CIA::array1<int> triangles, 
-	     const CIA::array1<double> solution );
+	     const SIDL::array1<double> nodes1d, 
+	     const SIDL::array1<int> triangles, 
+	     const SIDL::array1<double> solution );
 };
 
 

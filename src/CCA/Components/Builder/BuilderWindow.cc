@@ -163,8 +163,9 @@ BuilderWindow::BuilderWindow(const gov::cca::Services::pointer& services)
     cerr << "Fatal Error: Cannot find builder service\n";
   }
   displayMsg("Framework URL: ");
-  displayMsg(builder->getFramework()->getURL().getString().c_str());
-  displayMsg("\n");  
+  //displayMsg(builder->getFramework()->getURL().getString().c_str());
+  displayMsg("Framework URL should be displaied here");
+  displayMsg("\n"); 
   services->releasePort("cca.BuilderService");
 
   big_canvas = new QCanvas(2000,2000);
@@ -295,7 +296,9 @@ void BuilderWindow::buildRemotePackageMenus(const  gov::cca::ports::ComponentRep
   map<string, MenuTree*> menus;
   for(vector<gov::cca::ComponentClassDescription::pointer>::iterator iter = list.begin();
       iter != list.end(); iter++){
-    string model = (*iter)->getModelName();
+    //model name could be obtained somehow locally.
+    //and we can assume that the remote component model is always "CCA"
+    string model = "CCA"; //(*iter)->getModelName();
     if(model!="CCA") continue;
     model=frameworkURL;
     if(menus.find(model) == menus.end())
@@ -329,7 +332,9 @@ void BuilderWindow::buildPackageMenus()
   map<string, MenuTree*> menus;
   for(vector<gov::cca::ComponentClassDescription::pointer>::iterator iter = list.begin();
     iter != list.end(); iter++){
-    string model = (*iter)->getModelName();
+    //model name could be obtained somehow locally.
+    //and we can assume that the remote component model is always "CCA"
+    string model = "CCA"; //(*iter)->getModelName();
     if(menus.find(model) == menus.end())
       menus[model]=new MenuTree(this,"");
     string name = (*iter)->getComponentClassName();
@@ -438,9 +443,9 @@ void BuilderWindow::load()
     is >> tmp_moduleName >> tmp_moduleName_x >> tmp_moduleName_y;
 
     gov::cca::ports::BuilderService::pointer builder = pidl_cast<gov::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
-    gov::cca::ComponentID::pointer cid=builder->createInstance(tmp_moduleName, tmp_moduleName, gov::cca::TypeMap::pointer(0), "" );
-    CIA::array1<std::string> usesPorts=builder->getUsedPortNames(cid);
-    CIA::array1<std::string> providesPorts=builder->getProvidedPortNames(cid);
+    gov::cca::ComponentID::pointer cid=builder->createInstance(tmp_moduleName, tmp_moduleName, gov::cca::TypeMap::pointer(0));
+    SIDL::array1<std::string> usesPorts=builder->getUsedPortNames(cid);
+    SIDL::array1<std::string> providesPorts=builder->getProvidedPortNames(cid);
     services->releasePort("cca.BuilderService");
 
     if( tmp_moduleName != "SCIRun.Builder" )
@@ -517,13 +522,13 @@ void BuilderWindow::instantiateComponent(const gov::cca::ComponentClassDescripti
   }
   cerr << "Should put properties on component before creating\n";
 
-  gov::cca::ComponentID::pointer cid=builder->createInstance(cd->getComponentClassName(), cd->getComponentClassName(), gov::cca::TypeMap::pointer(0),url);
+  gov::cca::ComponentID::pointer cid=builder->createInstance(cd->getComponentClassName(), cd->getComponentClassName(), gov::cca::TypeMap::pointer(0)) ;//,url);
   if(cid.isNull()){
     cerr << "instantiateFailed...\n";
     return;
   }
-  CIA::array1<std::string> usesPorts=builder->getUsedPortNames(cid);
-  CIA::array1<std::string> providesPorts=builder->getProvidedPortNames(cid);
+  SIDL::array1<std::string> usesPorts=builder->getUsedPortNames(cid);
+  SIDL::array1<std::string> providesPorts=builder->getProvidedPortNames(cid);
 
   services->releasePort("cca.BuilderService");
   if(cd->getComponentClassName()!="SCIRun.Builder"){

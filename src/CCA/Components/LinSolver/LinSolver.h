@@ -44,7 +44,7 @@ class myField2DPort : public virtual gov::cca::ports::Field2DPort {
 public:
    virtual ~myField2DPort(){}
    void setParent(LinSolver *com){this->com=com;}
-   CIA::array1<double>  getField();
+   SIDL::array1<double>  getField();
  private:
    LinSolver *com;
 };
@@ -66,8 +66,8 @@ class LinSolver: public gov::cca::Component{
     gov::cca::Services::pointer getServices(){return services;}
     virtual void setServices(const gov::cca::Services::pointer& svc);
     bool jacobi(const gov::cca::Matrix::pointer &A, 
-		const CIA::array1<double> &b);
-    CIA::array1<double> solution;
+		const SIDL::array1<double> &b);
+    SIDL::array1<double> solution;
  private:
 
     LinSolver(const LinSolver&);

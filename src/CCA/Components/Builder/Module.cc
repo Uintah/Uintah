@@ -37,7 +37,7 @@
 using namespace std;
 
 Module::Module(NetworkCanvasView *parent, const string& moduleName,
-	       CIA::array1<std::string> & up, CIA::array1<std::string> &pp,
+	       SIDL::array1<std::string> & up, SIDL::array1<std::string> &pp,
 	       const gov::cca::Services::pointer& services,
 	       const gov::cca::ComponentID::pointer& cid)
   :QFrame(parent, moduleName.c_str() ), moduleName(moduleName), up(up), services(services), cid(cid)
@@ -67,7 +67,7 @@ Module::Module(NetworkCanvasView *parent, const string& moduleName,
     cerr << "Fatal Error: Cannot find builder service\n";
   } 
   else {
-    CIA::array1<string> ports = builder->getProvidedPortNames(cid);
+    SIDL::array1<string> ports = builder->getProvidedPortNames(cid);
     for(unsigned int i=0; i < ports.size(); i++){
       if(ports[i]=="ui") hasUIPort=true;
       else if(ports[i]=="babel.ui") hasUIPort=true;

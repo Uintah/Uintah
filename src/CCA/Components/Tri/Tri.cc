@@ -94,8 +94,8 @@ int myGoPort::go()
   }  
   gov::cca::ports::PDEDescriptionPort::pointer pdePort=
     pidl_cast<gov::cca::ports::PDEDescriptionPort::pointer>(pp);
-  CIA::array1<double> nodes1d=pdePort->getNodes();
-  CIA::array1<int> boundaries1d=pdePort->getBoundaries();
+  SIDL::array1<double> nodes1d=pdePort->getNodes();
+  SIDL::array1<int> boundaries1d=pdePort->getBoundaries();
 
   com->getServices()->releasePort("pde");
 
@@ -108,9 +108,9 @@ int myGoPort::go()
   return 0;
 }
 
-CIA::array1<int> myMeshPort::getTriangles()
+SIDL::array1<int> myMeshPort::getTriangles()
 {
-  CIA::array1<int> vindex;
+  SIDL::array1<int> vindex;
   if(com->mesh!=0){
     std::vector<Triangle> tri=com->mesh->getTriangles();
 
@@ -123,7 +123,7 @@ CIA::array1<int> myMeshPort::getTriangles()
   return vindex;
 }
 
-CIA::array1<double> myMeshPort::getNodes()
+SIDL::array1<double> myMeshPort::getNodes()
 {
   gov::cca::Port::pointer pp=com->getServices()->getPort("pde");	
   if(pp.isNull()){
@@ -132,7 +132,7 @@ CIA::array1<double> myMeshPort::getNodes()
   }  
   gov::cca::ports::PDEDescriptionPort::pointer pdePort=
     pidl_cast<gov::cca::ports::PDEDescriptionPort::pointer>(pp);
-  CIA::array1<double> nodes1d=pdePort->getNodes();
+  SIDL::array1<double> nodes1d=pdePort->getNodes();
 
   com->getServices()->releasePort("pde");	
   

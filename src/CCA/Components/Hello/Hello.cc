@@ -30,9 +30,9 @@
 #include <iostream>
 #include <CCA/Components/Builder/QtUtils.h>
 
-#include <qapplication.h>
-#include <qpushbutton.h>
-#include <qmessagebox.h>
+//#include <qapplication.h>
+//#include <qpushbutton.h>
+//#include <qmessagebox.h>
 
 
 
@@ -72,14 +72,15 @@ void Hello::setServices(const gov::cca::Services::pointer& svc)
 
 int myUIPort::ui() 
 {
-  QMessageBox::warning(0, "Hello", "You have clicked the UI button!");
+//  QMessageBox::warning(0, "Hello", "You have clicked the UI button!");
   return 0;
 }
 
 
 int myGoPort::go() 
 {
-  QMessageBox::warning(0, "Hello", "Go ...");
+  //QMessageBox::warning(0, "Hello", "Go ...");
+  cout<<"Go Go Go!"<<endl;
   return 0;
 }
  

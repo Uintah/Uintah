@@ -45,8 +45,8 @@ Delaunay::Delaunay()
 }
 
 //this constructor is not used
-Delaunay::Delaunay(const CIA::array1<double> &nodes1d, 
-		   const CIA::array1<int> &boundaries1d)
+Delaunay::Delaunay(const SIDL::array1<double> &nodes1d, 
+		   const SIDL::array1<int> &boundaries1d)
 {
   std::vector<int> pts;
   for(unsigned int i=0; i<boundaries1d.size();i++){

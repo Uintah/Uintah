@@ -129,13 +129,13 @@ void FEM::localMatrices(double A[3][3], double f[3],
 
 
 //create the global matrices from the local matrices
-void FEM::globalMatrices(const CIA::array1<double> &nodes1d,
-			 const CIA::array1<int> &tmesh1d)
+void FEM::globalMatrices(const SIDL::array1<double> &nodes1d,
+			 const SIDL::array1<int> &tmesh1d)
 {
  int N=nodes1d.size()/2; 
 
  Ag=new Matrix(N,N);
- CIA::array1<double> fg;
+ SIDL::array1<double> fg;
 
  for(int i=0; i<N; i++){
    fg.push_back(0);
@@ -238,9 +238,9 @@ int myGoPort::go()
     pidl_cast<gov::cca::ports::PDEDescriptionPort::pointer>(pp2);
 
 
-  CIA::array1<int> tmesh1d=meshPort->getTriangles();
+  SIDL::array1<int> tmesh1d=meshPort->getTriangles();
   
-  CIA::array1<double> nodes1d=pdePort->getNodes();
+  SIDL::array1<double> nodes1d=pdePort->getNodes();
 
   com->dirichletNodes=pdePort->getDirichletNodes();
 
@@ -265,7 +265,7 @@ gov::cca::Matrix::pointer myPDEMatrixPort::getMatrix()
    return gov::cca::Matrix::pointer(com->Ag );
 }
 
-CIA::array1<double> myPDEMatrixPort::getVector()
+SIDL::array1<double> myPDEMatrixPort::getVector()
 {
   return com->fg;
 }

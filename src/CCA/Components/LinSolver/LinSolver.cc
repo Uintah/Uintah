@@ -71,13 +71,13 @@ void LinSolver::setServices(const gov::cca::Services::pointer& svc)
 }
 
 bool LinSolver::jacobi(const gov::cca::Matrix::pointer &A, 
-		       const CIA::array1<double> &b)
+		       const SIDL::array1<double> &b)
 {
   //we might set the accurracy by UI
   double eps=1e-6;
   int maxiter=1000;
   
-  CIA::array1<double> x;
+  SIDL::array1<double> x;
   int N=b.size();
   while(x.size()<b.size()) x.push_back(1.0);
 
@@ -96,7 +96,7 @@ bool LinSolver::jacobi(const gov::cca::Matrix::pointer &A,
     if(norm<eps*eps) break;
     //cerr<<"iter="<<iter<<"  norm2="<<norm<<endl;
     
-    CIA::array1<double> tempx=x;
+    SIDL::array1<double> tempx=x;
     for(int i=0; i<N; i++){
       tempx[i]=b[i];
       for(int k=0; k<N; k++){
@@ -113,7 +113,7 @@ bool LinSolver::jacobi(const gov::cca::Matrix::pointer &A,
   return iter!=maxiter;
 }  
 
-CIA::array1<double> myField2DPort::getField() 
+SIDL::array1<double> myField2DPort::getField() 
 {
   return com->solution;
 }
@@ -130,7 +130,7 @@ int myGoPort::go()
     pidl_cast<gov::cca::ports::PDEMatrixPort::pointer>(pp);
   
   gov::cca::Matrix::pointer A=matrixPort->getMatrix();
-  CIA::array1<double> b=matrixPort->getVector();
+  SIDL::array1<double> b=matrixPort->getVector();
   
   com->getServices()->releasePort("matrix");	
   

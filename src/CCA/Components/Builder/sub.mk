@@ -29,7 +29,7 @@ SRCS     += \
 	$(SRCDIR)/moc_Module.cc\
 	$(SRCDIR)/moc_BuilderWindow.cc $(SRCDIR)/moc_NetworkCanvasView.cc
 
-PSELIBS := Core/CCA/Component/CIA Core/CCA/Component/PIDL  Core/CCA/Component/Comm\
+PSELIBS := Core/CCA/Component/SIDL Core/CCA/Component/PIDL  Core/CCA/Component/Comm\
 	Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
 LIBS := $(QT_LIBRARY)
 
@@ -37,7 +37,7 @@ include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 PROGRAM := builder
 SRCS := $(SRCDIR)/builder.cc
-PSELIBS := CCA/Components/Builder Core/CCA/Component/CIA \
+PSELIBS := CCA/Components/Builder Core/CCA/Component/SIDL \
 	Core/CCA/Component/PIDL Core/Exceptions Core/CCA/spec
 LIBS := 
 

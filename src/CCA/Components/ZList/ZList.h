@@ -58,7 +58,7 @@ class ZList;
   public:
     ImZListPort(){};	
     virtual ~ImZListPort(){};
-    virtual CIA::array1<double> getList();
+    virtual SIDL::array1<double> getList();
     void setParent(ZList *com){this->com=com;}
   private:
     ZList *com;	   	

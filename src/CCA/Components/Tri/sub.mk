@@ -23,7 +23,7 @@ SRCDIR   := CCA/Components/Tri
 
 SRCS     += \
 	$(SRCDIR)/Tri.cc $(SRCDIR)/Delaunay.cc $(SRCDIR)/MeshWindow.cc
-PSELIBS := Core/CCA/Component/CIA Core/CCA/Component/PIDL Core/CCA/Component/Comm\
+PSELIBS := Core/CCA/Component/SIDL Core/CCA/Component/PIDL Core/CCA/Component/Comm\
 	Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
 QT_LIBDIR := /home/sparker/SCIRun/SCIRun_Thirdparty_32_linux/lib
 LIBS := $(QT_LIBRARY)

@@ -48,10 +48,10 @@ public:
 class myPDEDescriptionPort : public virtual gov::cca::ports::PDEDescriptionPort {
 public:
    virtual ~myPDEDescriptionPort(){}
-   virtual CIA::array1<double> getNodes();
-   virtual CIA::array1<int> getBoundaries();
-   virtual CIA::array1<int> getDirichletNodes();
-   virtual CIA::array1<double> getDirichletValues();
+   virtual SIDL::array1<double> getNodes();
+   virtual SIDL::array1<int> getBoundaries();
+   virtual SIDL::array1<int> getDirichletNodes();
+   virtual SIDL::array1<double> getDirichletValues();
    void setParent(FileReader *com){this->com=com;}
    FileReader *com;
 };
@@ -65,10 +65,10 @@ class FileReader : public gov::cca::Component{
 
     virtual void setServices(const gov::cca::Services::pointer& svc);
     
-    CIA::array1<double> nodes;
-    CIA::array1<int> boundaries;
-    CIA::array1<int> dirichletNodes;
-    CIA::array1<double> dirichletValues;
+    SIDL::array1<double> nodes;
+    SIDL::array1<int> boundaries;
+    SIDL::array1<int> dirichletNodes;
+    SIDL::array1<double> dirichletValues;
   private:
 
     FileReader(const FileReader&);
