@@ -37,7 +37,8 @@ void Arches::problemSetup(const ProblemSpecP& params, GridP&,
   else
     throw InvalidValue("Nonlinear solver not supported: "+nlSolver, db);
 
-  d_nlSolver->problemSetup(db, dw);
+  //d_nlSolver->problemSetup(db, dw); /* 2 params ? */
+  d_nlSolver->problemSetup(db);
 }
 
 void Arches::computeStableTimestep(const LevelP& level,
@@ -66,6 +67,11 @@ void Arches::timeStep(double time, double dt,
 
 //
 // $Log$
+// Revision 1.10  2000/03/31 17:35:05  moulding
+// A call to d_nlSolver->problemSetup() was attempted with 2 parameters, causing
+// a compile error (too many parameters).  I changed it to one parameter.
+// The change is at line 40.
+//
 // Revision 1.9  2000/03/29 21:18:16  rawat
 // modified boundaryconidtion.cc for inlet bcs
 //
