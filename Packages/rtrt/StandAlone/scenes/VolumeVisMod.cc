@@ -85,6 +85,15 @@ void get_material2(Array1<Color> &matls, Array1<AlphaPos> &alphas) {
   alphas.add(AlphaPos(1,        0));  // pos 192
 }
 
+#if 0
+template<DataType>
+VolumeVisBase *get_data() {
+  BrickArray3<DataType> data;
+  DataType data_min = TypeInfo<DataType>::get_min();
+  DataType data_max = TypeInfo<DataType>::get_max();
+}
+#endif
+
 int get_material_nrrd(char * filename,
 		       Array1<Color> &matls, Array1<AlphaPos> &alphas) {
   // Open the nrrd
@@ -274,7 +283,7 @@ VolumeVisBase *create_volume_from_nrrd(char *filename,
   cout << "total = " << nz * ny * nz << endl;
   cout << "spacing = " << n->axis[0].spacing << " x "<<n->axis[1].spacing<< " x "<<n->axis[2].spacing<< endl;
   for (int i = 0; i<n->dim; i++)
-    if (!(AIR_EXISTS(n->axis[i].spacing))) {
+    if (!(AIR_EXISTS_D(n->axis[i].spacing))) {
       cout <<"spacing for axis "<<i<<" does not exist.  Setting to 1.\n";
       n->axis[i].spacing = 1;
     }
