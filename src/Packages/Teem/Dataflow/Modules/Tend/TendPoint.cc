@@ -205,7 +205,7 @@ TendPoint::execute()
 	  eval[1], evec[3], evec[4], evec[5]);
   fprintf(stderr, "% 15.7f : % 15.7f % 15.7f % 15.7f\n",
 	  eval[2], evec[6], evec[7], evec[8]);
-  float axis[3], mat[0];
+  float axis[3], mat[9];
   float angle = ell_3m_to_aa_f(axis, evec);
   angle_.set(angle);
   axis1_.set(axis[0]);
