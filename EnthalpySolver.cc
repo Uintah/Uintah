@@ -1,17 +1,18 @@
 //----- EnthalpySolver.cc ----------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Arches/EnthalpySolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
 #include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
 #include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
 #include <Packages/Uintah/CCA/Components/Arches/Discretization.h>
+#include <Packages/Uintah/CCA/Components/Arches/EnthalpySolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/PetscSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
 #include <Packages/Uintah/CCA/Components/Arches/RBGSSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/Source.h>
 #include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
+#include <Packages/Uintah/CCA/Components/MPMArches/MPMArchesLabel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
@@ -154,6 +155,14 @@ EnthalpySolver::sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patch
   tsk->requires(Task::NewDW, d_lab->d_wVelocityOUTBCLabel,
 		Ghost::AroundFaces, numGhostCells);
 
+  if (d_MAlab) {
+    tsk->requires(Task::OldDW, d_MAlab->d_enth_mmLinSrc_CCLabel,
+		  Ghost::None, zeroGhostCells);
+
+    tsk->requires(Task::OldDW, d_MAlab->d_enth_mmNonLinSrc_CCLabel,
+		  Ghost::None, zeroGhostCells);
+  }
+  
       // added one more argument of index to specify enthalpy component
   tsk->computes(d_lab->d_enthCoefSBLMLabel, d_lab->d_stencilMatl,
 		Task::OutOfDomain);
@@ -188,7 +197,7 @@ EnthalpySolver::sched_enthalpyLinearSolve(SchedulerP& sched, const PatchSet* pat
   tsk->requires(Task::NewDW, d_lab->d_enthNonLinSrcSBLMLabel, 
 		Ghost::None, zeroGhostCells);
   tsk->computes(d_lab->d_enthalpySPLabel);
-  
+
   sched->addTask(tsk, patches, matls);
 }
       
@@ -261,6 +270,16 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     new_dw->allocate(enthalpyVars.scalarNonlinearSrc, 
 		     d_lab->d_enthNonLinSrcSBLMLabel, matlIndex, patch);
  
+    if (d_MAlab) {
+
+      new_dw->getCopy(enthalpyVars.mmEnthSu, d_MAlab->d_enth_mmNonLinSrc_CCLabel,
+		  matlIndex, patch, Ghost::None, zeroGhostCells);
+
+      new_dw->getCopy(enthalpyVars.mmEnthSp, d_MAlab->d_enth_mmLinSrc_CCLabel,
+		  matlIndex, patch, Ghost::None, zeroGhostCells);
+
+    }
+
   // compute ith component of enthalpy stencil coefficients
   // inputs : enthalpySP, [u,v,w]VelocityMS, densityCP, viscosityCTS
   // outputs: scalCoefSBLM
@@ -277,17 +296,23 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
 				    delta_t, cellinfo, 
 				    &enthalpyVars );
 
+    if (d_MAlab) {
+
+      d_source->addMMEnthalpySource(pc, patch, cellinfo,
+				    &enthalpyVars);
+    }
+
     // Calculate the enthalpy boundary conditions
     // inputs : enthalpySP, scalCoefSBLM
     // outputs: scalCoefSBLM
     d_boundaryCondition->enthalpyBC(pc, patch, cellinfo, 
 				  &enthalpyVars);
   // apply multimaterial intrusion wallbc
-#if 0
+
     if (d_MAlab)
-      d_boundaryCondition->mmenthalpyWallBC(pc, patch, cellinfo,
+      d_boundaryCondition->mmscalarWallBC(pc, patch, cellinfo,
 					  &enthalpyVars);
-#endif
+
     // similar to mascal
     // inputs :
     // outputs:
@@ -442,6 +467,15 @@ EnthalpySolver::sched_buildLinearMatrixPred(SchedulerP& sched,
     tsk->requires(Task::OldDW, d_lab->d_absorpINLabel,
 		  Ghost::None, zeroGhostCells);
   }      // added one more argument of index to specify enthalpy component
+
+  if (d_MAlab) {
+    tsk->requires(Task::NewDW, d_MAlab->d_enth_mmLinSrc_CCLabel,
+		  Ghost::None, zeroGhostCells);
+
+    tsk->requires(Task::NewDW, d_MAlab->d_enth_mmNonLinSrc_CCLabel,
+		  Ghost::None, zeroGhostCells);
+  }
+
   tsk->computes(d_lab->d_enthCoefPredLabel, d_lab->d_stencilMatl,
 		Task::OutOfDomain);
   tsk->computes(d_lab->d_enthNonLinSrcPredLabel);
@@ -511,7 +545,7 @@ void EnthalpySolver::buildLinearMatrixPred(const ProcessorGroup* pc,
     new_dw->getCopy(enthalpyVars.wVelocity, d_lab->d_wVelocityOUTBCLabel, 
 		matlIndex, patch, Ghost::AroundFaces, numGhostCells);
 
-  // allocate matrix coeffs
+    // allocate matrix coeffs
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++) {
       new_dw->allocate(enthalpyVars.scalarCoeff[ii], 
 		       d_lab->d_enthCoefPredLabel, ii, patch);
@@ -548,9 +582,20 @@ void EnthalpySolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 		  matlIndex, patch, Ghost::None, zeroGhostCells);
 
     }
-  // compute ith component of enthalpy stencil coefficients
-  // inputs : enthalpySP, [u,v,w]VelocityMS, densityCP, viscosityCTS
-  // outputs: scalCoefSBLM
+
+    if (d_MAlab) {
+
+      new_dw->getCopy(enthalpyVars.mmEnthSu, d_MAlab->d_enth_mmNonLinSrc_CCLabel,
+		  matlIndex, patch, Ghost::None, zeroGhostCells);
+
+      new_dw->getCopy(enthalpyVars.mmEnthSp, d_MAlab->d_enth_mmLinSrc_CCLabel,
+		  matlIndex, patch, Ghost::None, zeroGhostCells);
+
+    }
+
+    // compute ith component of enthalpy stencil coefficients
+    // inputs : enthalpySP, [u,v,w]VelocityMS, densityCP, viscosityCTS
+    // outputs: scalCoefSBLM
     int index = 0;
     d_discretize->calculateScalarCoeff(pc, patch,
 				       delta_t, index, cellinfo, 
@@ -563,17 +608,25 @@ void EnthalpySolver::buildLinearMatrixPred(const ProcessorGroup* pc,
 				    delta_t, cellinfo, 
 				    &enthalpyVars );
 
+    // Add enthalpy source terms due to multimaterial intrusions
+    if (d_MAlab) {
+
+      d_source->addMMEnthalpySource(pc, patch, cellinfo,
+      				    &enthalpyVars);
+
+    }
+
     // Calculate the enthalpy boundary conditions
     // inputs : enthalpySP, scalCoefSBLM
     // outputs: scalCoefSBLM
     d_boundaryCondition->enthalpyBC(pc, patch,  cellinfo, 
 				  &enthalpyVars);
-  // apply multimaterial intrusion wallbc
-#if 0
+
+    // apply multimaterial intrusion wallbc
     if (d_MAlab)
-      d_boundaryCondition->mmenthalpyWallBC(pc, patch, cellinfo,
+      d_boundaryCondition->mmscalarWallBC(pc, patch, cellinfo,
 					  &enthalpyVars);
-#endif
+
     if (d_radiationCalc) {
 #ifdef opticallythick
       d_source->computeEnthalpyRadFluxes(pc, patch,
@@ -929,12 +982,12 @@ void EnthalpySolver::buildLinearMatrixCorr(const ProcessorGroup* pc,
     d_boundaryCondition->enthalpyBC(pc, patch,  cellinfo, 
 				  &enthalpyVars);
   // apply multimaterial intrusion wallbc
-#if 0
+
     if (d_MAlab)
-      d_boundaryCondition->mmenthalpyWallBC(pc, patch, cellinfo,
+      d_boundaryCondition->mmscalarWallBC(pc, patch, cellinfo,
 					  &enthalpyVars);
 
-#endif
+
     if (d_radiationCalc) {
       d_source->computeEnthalpyRadThinSrc(pc, patch,
 					  cellinfo, &enthalpyVars);

@@ -74,10 +74,10 @@ $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/celltypeInit_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/denaccum_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/enthalpyradwallbc_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/inlbcs_fort.h
+$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/mm_computevel_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/mmbcvelocity_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/mmcelltypeinit_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/mmwallbc_fort.h
-$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/mm_computevel_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/outarea_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/outletbc_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/outletbcenth_fort.h
@@ -104,6 +104,7 @@ $(SRCDIR)/RBGSSolver.o: $(SRCDIR)/fortran/rescal_fort.h
 $(SRCDIR)/RBGSSolver.o: $(SRCDIR)/fortran/underelax_fort.h
 $(SRCDIR)/SmagorinskyModel.o: $(SRCDIR)/fortran/scalarvarmodel_fort.h
 $(SRCDIR)/SmagorinskyModel.o: $(SRCDIR)/fortran/smagmodel_fort.h
+$(SRCDIR)/Source.o: $(SRCDIR)/fortran/add_mm_enth_src_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/addpressgrad_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/addtranssrc_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/calcpressgrad_fort.h

@@ -1,13 +1,13 @@
 //----- MomentumSolver.cc ----------------------------------------------
 
-#include <Packages/Uintah/CCA/Components/Arches/debug.h>
-#include <Packages/Uintah/CCA/Components/Arches/MomentumSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesLabel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
 #include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
 #include <Packages/Uintah/CCA/Components/Arches/CellInformationP.h>
+#include <Packages/Uintah/CCA/Components/Arches/debug.h>
 #include <Packages/Uintah/CCA/Components/Arches/Discretization.h>
+#include <Packages/Uintah/CCA/Components/Arches/MomentumSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
 #include <Packages/Uintah/CCA/Components/Arches/RBGSSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/Source.h>
