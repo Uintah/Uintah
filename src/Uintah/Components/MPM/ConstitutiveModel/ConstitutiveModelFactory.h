@@ -9,7 +9,16 @@
 #include "HyperElasticDamage.h"
 #include "ViscoElasticDamage.h"
 
-#ifdef WONT_COMPILE_YET
+
+
+#include <Uintah/Interface/ProblemSpec.h>
+#include <Uintah/Interface/ProblemSpecP.h>
+#include <string>
+
+using Uintah::Interface::ProblemSpec;
+using Uintah::Interface::ProblemSpecP;
+
+class ConstitutiveModel;
 
 class ConstitutiveModelFactory
 {
@@ -26,29 +35,27 @@ public:
   // this function has a switch for all known mat_types
   // and calls the proper class' readParameters()
   // addMaterial() calls this
-  static void readParameters(std::ifstream& in, int mat_type, double *p_array);
+  static void readParameters(ProblemSpecP ps, std::string mat_type, 
+			     double *p_array);
 
-  // this function has a switch for all known mat_types
-  // and calls the proper class' writeParameters()
-  static void writeParameters(std::ofstream& out, int mat_type, double *p_array);
-
+  
   // this function has a switch for all known mat_types
   // and calls the proper class' readParametersAndCreate()
-  static ConstitutiveModel* readParametersAndCreate(std::ifstream& in);
+  static ConstitutiveModel* readParametersAndCreate(ProblemSpecP ps,
+						    std::string mat_type);
 
   // this function has a switch for all known mat_types
   // and calls the proper class' readRestartParametersAndCreate()
-  static ConstitutiveModel* readRestartParametersAndCreate(std::ifstream& in);
+  static ConstitutiveModel* readRestartParametersAndCreate(ProblemSpecP ps,
+							 std::string mat_type);
 
 
   // create the correct kind of model from the mat_type and p_array
-  static ConstitutiveModel* create(int mat_type,
-							     double *p_array);
+  static ConstitutiveModel* create(std::string mat_type, double *p_array);
   
-  // this function has a switch for all known mat_types
-  // and calls the proper class' unpackStream()
+  
 };
 
-#endif
+
 
 #endif /* _CONSTITUTIVEMODELFACTORY_H_ */
