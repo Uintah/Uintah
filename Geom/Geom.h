@@ -21,7 +21,7 @@
 
 class BBox;
 class BSphere;
-class DrawInfoOpenGL;
+struct DrawInfoOpenGL;
 class DrawInfoX11;
 class Hit;
 class Material;

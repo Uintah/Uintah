@@ -30,7 +30,7 @@ GeomGroup::GeomGroup(int del_children)
 }
 
 GeomGroup::GeomGroup(const GeomGroup& copy)
-: GeomObj(copy), bb(copy.bb), del_children(copy.del_children), treetop(0)
+: GeomObj(copy), del_children(copy.del_children), treetop(0)
 {
     objs.grow(copy.objs.size());
     for(int i=0;i<objs.size();i++){
@@ -76,12 +76,8 @@ GeomObj* GeomGroup::clone()
 
 void GeomGroup::get_bounds(BBox& in_bb)
 {
-    if(1 || !bb.valid()){
-	for(int i=0;i<objs.size();i++)
-	    objs[i]->get_bounds(bb);
-    }
-    if(bb.valid())
-	in_bb.extend(bb);
+    for(int i=0;i<objs.size();i++)
+	objs[i]->get_bounds(in_bb);
 }
 
 void GeomGroup::get_bounds(BSphere& in_sphere)
@@ -148,7 +144,6 @@ void GeomGroup::reset_bbox()
     }
     for(int i=0;i<objs.size();i++)
 	objs[i]->reset_bbox();
-    bb.reset();
 }
 
 void GeomGroup::preprocess()

@@ -51,6 +51,11 @@ void GeomTriangles::add(const Point& p1, const Point& p2, const Point& p3) {
     GeomVertexPrim::add(p3);
 }
 
+int GeomTriangles::size(void)
+{
+    return verts.size();
+}
+
 void GeomTriangles::add(const Point& p1, const Vector& v1,
 			const Point& p2, const Vector& v2,
 			const Point& p3, const Vector& v3) {

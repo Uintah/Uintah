@@ -66,3 +66,8 @@ void GeomTriStrip::io(Piostream& stream)
     GeomVertexPrim::io(stream);
     stream.end_class();
 }
+
+int GeomTriStrip::size(void)
+{
+    return verts.size();
+}

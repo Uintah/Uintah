@@ -14,6 +14,7 @@
 #include <Geom/GeomOpenGL.h>
 #include <Classlib/NotFinished.h>
 #include <Geom/Arrows.h>
+#include <Geom/BBoxCache.h>
 #include <Geom/Cone.h>
 #include <Geom/Cylinder.h>
 #include <Geom/Disc.h>
@@ -21,12 +22,14 @@
 #include <Geom/Grid.h>
 #include <Geom/Group.h>
 #include <Geom/HeadLight.h>
+#include <Geom/IndexedGroup.h>
 #include <Geom/Light.h>
 #include <Geom/Line.h>
 #include <Geom/Material.h>
 #include <Geom/Pick.h>
 #include <Geom/PointLight.h>
 #include <Geom/Polyline.h>
+#include <Geom/PortManager.h>
 #include <Geom/Pt.h>
 #include <Geom/RenderMode.h>
 #include <Geom/Sphere.h>
@@ -46,6 +49,8 @@
 
 #include <Geom/Color.h>
 
+#include <Modules/Salmon/Salmon.h>
+
 #include <stdio.h>
 
 #define MAX_MATL_STACK 100
@@ -55,10 +60,23 @@ void GeomObj::pre_draw(DrawInfoOpenGL* di, Material* matl, int lit)
     if(lit && di->lighting && !di->currently_lit){
 	di->currently_lit=1;
 	glEnable(GL_LIGHTING);
+	switch(di->get_drawtype()) {
+	case DrawInfoOpenGL::WireFrame:
+	    gluQuadricNormals(di->qobj, GLU_SMOOTH);
+	    break;
+	case DrawInfoOpenGL::Flat:
+	    gluQuadricNormals(di->qobj, GLU_FLAT);
+	    break;
+	case DrawInfoOpenGL::Gouraud:
+	    gluQuadricNormals(di->qobj, GLU_SMOOTH);
+	    break;
+	}
+	
     }
     if((!lit || !di->lighting) && di->currently_lit){
 	di->currently_lit=0;
 	glDisable(GL_LIGHTING);
+	gluQuadricNormals(di->qobj, GLU_NONE);
     }
     di->set_matl(matl);
 }
@@ -69,7 +87,7 @@ static void quad_error(GLenum code)
 }
 
 DrawInfoOpenGL::DrawInfoOpenGL()
-: current_matl(0)
+: current_matl(0),lighting(1),currently_lit(1),pickmode(1),fog(0)
 {
     qobj=gluNewQuadric();
     gluQuadricCallback(qobj, GLU_ERROR, (void (*)())quad_error);
@@ -80,6 +98,7 @@ void DrawInfoOpenGL::reset()
     polycount=0;
     current_matl=0;
     ignore_matl=0;
+    fog=0;
 }
 
 DrawInfoOpenGL::~DrawInfoOpenGL()
@@ -92,25 +111,44 @@ void DrawInfoOpenGL::set_drawtype(DrawType dt)
     drawtype=dt;
     switch(drawtype){
     case DrawInfoOpenGL::WireFrame:
-	gluQuadricNormals(qobj, GLU_NONE);
 	gluQuadricDrawStyle(qobj, GLU_LINE);
 	break;
     case DrawInfoOpenGL::Flat:
-	gluQuadricNormals(qobj, GLU_NONE);
-	gluQuadricDrawStyle(qobj, GLU_FILL);
-	break;
-    case DrawInfoOpenGL::Gouraud:
-	gluQuadricNormals(qobj, GLU_FLAT);
 	gluQuadricDrawStyle(qobj, GLU_FILL);
 	glShadeModel(GL_FLAT);
 	break;
-    case DrawInfoOpenGL::Phong:
-	gluQuadricNormals(qobj, GLU_SMOOTH);
+    case DrawInfoOpenGL::Gouraud:
 	gluQuadricDrawStyle(qobj, GLU_FILL);
 	glShadeModel(GL_SMOOTH);
 	break;
     }
     
+}
+
+void DrawInfoOpenGL::init_lighting(int use_light)
+{
+    if (use_light) {
+	glEnable(GL_LIGHTING);
+ 	switch(drawtype) {
+	case DrawInfoOpenGL::WireFrame:
+	    gluQuadricNormals(qobj, GLU_SMOOTH);
+	    break;
+	case DrawInfoOpenGL::Flat:
+	    gluQuadricNormals(qobj, GLU_FLAT);
+	    break;
+	case DrawInfoOpenGL::Gouraud:
+	    gluQuadricNormals(qobj, GLU_SMOOTH);
+	    break;
+	}
+    }
+    else {
+	glDisable(GL_LIGHTING);
+	gluQuadricNormals(qobj,GLU_NONE);
+    }
+    if (fog)
+	glEnable(GL_FOG);
+    else
+	glDisable(GL_FOG);
 }
 
 void DrawInfoOpenGL::set_matl(Material* matl)
@@ -149,10 +187,10 @@ void DrawInfoOpenGL::set_matl(Material* matl)
 	    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, matl->shininess);
         }
     }	
-
     current_matl=matl;
-
 }
+
+// WARNING - doesn''t respond to lighting correctly yet!
 
 void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
@@ -399,6 +437,11 @@ void GeomArrows::draw(DrawInfoOpenGL* di, Material* matl, double)
     }
 }
 
+void GeomBBoxCache::draw(DrawInfoOpenGL* di, Material *m, double time)
+{
+    child->draw(di,m,time);
+}
+
 void GeomCappedCylinder::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     if(height < 1.e-6 || rad < 1.e-6)return;
@@ -481,6 +524,8 @@ void GeomDisc::draw(DrawInfoOpenGL* di, Material* matl, double)
     gluDisk(di->qobj, 0, rad, nu, nv);
     glPopMatrix();
 }
+
+// WARNING doesn't respond to lighting correctly yet!
 
 void GeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
@@ -651,6 +696,8 @@ void GeomPts::draw(DrawInfoOpenGL* di, Material* matl, double)
     glEnd();
 }
 
+// WARNING not fixed for lighting yet!
+
 void GeomTube::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     pre_draw(di, matl, 1);
@@ -762,18 +809,38 @@ void GeomTetra::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     pre_draw(di, matl, 1);
     di->polycount+=4;
+
     switch(di->get_drawtype()){
     case DrawInfoOpenGL::WireFrame:
-	glBegin(GL_LINE_STRIP);
-	glVertex3d(p1.x(), p1.y(), p1.z());
-	glVertex3d(p2.x(), p2.y(), p2.z());
-	glVertex3d(p3.x(), p3.y(), p3.z());
-	glVertex3d(p1.x(), p1.y(), p1.z());
-	glVertex3d(p4.x(), p4.y(), p4.z());
-	glVertex3d(p2.x(), p2.y(), p2.z());
-	glVertex3d(p3.x(), p3.y(), p3.z());
-	glVertex3d(p4.x(), p4.y(), p4.z());
-	glEnd();
+	if (di->currently_lit) {
+	    Vector n1(Plane(p1, p2, p3).normal());
+	    Vector n2(Plane(p1, p2, p4).normal());
+	    Vector n3(Plane(p4, p2, p3).normal());
+	    Vector n4(Plane(p1, p4, p3).normal());
+	    glBegin(GL_LINE_STRIP);
+	    glNormal3d(n1.x(),n1.y(),n1.z());
+	    glVertex3d(p1.x(), p1.y(), p1.z());
+	    glVertex3d(p2.x(), p2.y(), p2.z());
+	    glVertex3d(p3.x(), p3.y(), p3.z());
+	    glVertex3d(p1.x(), p1.y(), p1.z());
+	    glVertex3d(p4.x(), p4.y(), p4.z());
+	    glVertex3d(p2.x(), p2.y(), p2.z());
+	    glVertex3d(p3.x(), p3.y(), p3.z());
+	    glVertex3d(p4.x(), p4.y(), p4.z());
+	    glEnd();
+	}
+	else {
+	    glBegin(GL_LINE_STRIP);
+	    glVertex3d(p1.x(), p1.y(), p1.z());
+	    glVertex3d(p2.x(), p2.y(), p2.z());
+	    glVertex3d(p3.x(), p3.y(), p3.z());
+	    glVertex3d(p1.x(), p1.y(), p1.z());
+	    glVertex3d(p4.x(), p4.y(), p4.z());
+	    glVertex3d(p2.x(), p2.y(), p2.z());
+	    glVertex3d(p3.x(), p3.y(), p3.z());
+	    glVertex3d(p4.x(), p4.y(), p4.z());
+	    glEnd();
+	}
 	break;
     case DrawInfoOpenGL::Flat:
 	// this should be made into a tri-strip, but I couldn;t remember how...
@@ -783,44 +850,6 @@ void GeomTetra::draw(DrawInfoOpenGL* di, Material* matl, double)
 	 * I am doing the fan now (ordering is wierd with a tri-strip), but
 	 * will switch to the tri-strip when I can test it, if it's faster
 	 */	
-	glBegin(GL_TRIANGLE_FAN);
-	glVertex3d(p1.x(), p1.y(), p1.z());
-	glVertex3d(p2.x(), p2.y(), p2.z());
-	glVertex3d(p3.x(), p3.y(), p3.z());
-	glVertex3d(p4.x(), p4.y(), p4.z());
-	glVertex3d(p2.x(), p2.y(), p2.z());
-	glEnd();
-	glBegin(GL_TRIANGLES);
-	glVertex3d(p4.x(), p4.y(), p4.z());
-	glVertex3d(p2.x(), p2.y(), p2.z());
-	glVertex3d(p3.x(), p3.y(), p3.z());
-	glEnd();
-#if 0
-	/*
-	 * This has inconsistant ordering....
-	 */ 
-	glBegin(GL_TRIANGLES);
-	glVertex3d(p1.x(), p1.y(), p1.z());
-	glVertex3d(p2.x(), p2.y(), p2.z());
-	glVertex3d(p3.x(), p3.y(), p3.z());
-	glEnd();
-	glBegin(GL_TRIANGLES);
-	glVertex3d(p1.x(), p1.y(), p1.z());
-	glVertex3d(p2.x(), p2.y(), p2.z());
-	glVertex3d(p4.x(), p4.y(), p4.z());
-	glEnd();
-	glBegin(GL_TRIANGLES);
-	glVertex3d(p4.x(), p4.y(), p4.z());
-	glVertex3d(p2.x(), p2.y(), p2.z());
-	glVertex3d(p3.x(), p3.y(), p3.z());
-	glEnd();
-	glBegin(GL_TRIANGLES);
-	glVertex3d(p1.x(), p1.y(), p1.z());
-	glVertex3d(p4.x(), p4.y(), p4.z());
-	glVertex3d(p3.x(), p3.y(), p3.z());
-	glEnd();
-#endif
-	break;
     case DrawInfoOpenGL::Gouraud:
     case DrawInfoOpenGL::Phong:
 	// this should be made into a tri-strip, but I couldn;t remember how...
@@ -831,7 +860,7 @@ void GeomTetra::draw(DrawInfoOpenGL* di, Material* matl, double)
 	 * a given vertex.  I don't think there is a faster way to do this
 	 * using flat shading.
 	 */
-	{
+	if (di->currently_lit) {
 	    Vector n1(Plane(p1, p2, p3).normal());
 	    Vector n2(Plane(p1, p2, p4).normal());
 	    Vector n3(Plane(p4, p2, p3).normal());
@@ -858,8 +887,47 @@ void GeomTetra::draw(DrawInfoOpenGL* di, Material* matl, double)
 	    glVertex3d(p4.x(), p4.y(), p4.z());
 	    glVertex3d(p3.x(), p3.y(), p3.z());
 	    glEnd();
-	    break;
 	}
+	else {
+	    glBegin(GL_TRIANGLE_FAN);
+	    glVertex3d(p1.x(), p1.y(), p1.z());
+	    glVertex3d(p2.x(), p2.y(), p2.z());
+	    glVertex3d(p3.x(), p3.y(), p3.z());
+	    glVertex3d(p4.x(), p4.y(), p4.z());
+	    glVertex3d(p2.x(), p2.y(), p2.z());
+	    glEnd();
+	    glBegin(GL_TRIANGLES);
+	    glVertex3d(p4.x(), p4.y(), p4.z());
+	    glVertex3d(p2.x(), p2.y(), p2.z());
+	    glVertex3d(p3.x(), p3.y(), p3.z());
+	    glEnd();
+	}
+#if 0
+	/*
+	 * This has inconsistant ordering....
+	 */ 
+	glBegin(GL_TRIANGLES);
+	glVertex3d(p1.x(), p1.y(), p1.z());
+	glVertex3d(p2.x(), p2.y(), p2.z());
+	glVertex3d(p3.x(), p3.y(), p3.z());
+	glEnd();
+	glBegin(GL_TRIANGLES);
+	glVertex3d(p1.x(), p1.y(), p1.z());
+	glVertex3d(p2.x(), p2.y(), p2.z());
+	glVertex3d(p4.x(), p4.y(), p4.z());
+	glEnd();
+	glBegin(GL_TRIANGLES);
+	glVertex3d(p4.x(), p4.y(), p4.z());
+	glVertex3d(p2.x(), p2.y(), p2.z());
+	glVertex3d(p3.x(), p3.y(), p3.z());
+	glEnd();
+	glBegin(GL_TRIANGLES);
+	glVertex3d(p1.x(), p1.y(), p1.z());
+	glVertex3d(p4.x(), p4.y(), p4.z());
+	glVertex3d(p3.x(), p3.y(), p3.z());
+	glEnd();
+#endif
+	break;
     }
 }
 
@@ -868,6 +936,8 @@ void GeomTimeSwitch::draw(DrawInfoOpenGL* di, Material* matl, double time)
     if(time >= tbeg && time < tend)
 	child->draw(di, matl, time);
 }
+
+// WARNING not fixed for lighting correctly yet!
 
 void GeomTorus::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
@@ -995,30 +1065,61 @@ void GeomTri::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     pre_draw(di, matl, 1);
     di->polycount++;
-    switch(di->get_drawtype()){
-    case DrawInfoOpenGL::WireFrame:
-	glBegin(GL_LINE_LOOP);
-	verts[0]->emit_point(di);
-	verts[1]->emit_point(di);
-	verts[2]->emit_point(di);
-	glEnd();
-	break;
-    case DrawInfoOpenGL::Flat:
-	glBegin(GL_TRIANGLES);
-	verts[0]->emit_point(di);
-	verts[1]->emit_point(di);
-	verts[2]->emit_point(di);
-	glEnd();
-	break;
-    case DrawInfoOpenGL::Gouraud:
-    case DrawInfoOpenGL::Phong:
-	glBegin(GL_TRIANGLES);
-	glNormal3d(-n.x(), -n.y(), -n.z());
-	verts[0]->emit_all(di);
-	verts[1]->emit_all(di);
-	verts[2]->emit_all(di);
-	glEnd();
-	break;
+    if (di->currently_lit) {
+	switch(di->get_drawtype()){
+	case DrawInfoOpenGL::WireFrame:
+	    glBegin(GL_LINE_LOOP);
+	    verts[0]->emit_all(di);
+	    verts[1]->emit_all(di);
+	    verts[2]->emit_all(di);
+	    glEnd();
+	    break;
+	case DrawInfoOpenGL::Flat:
+	    glBegin(GL_TRIANGLES);
+	    glNormal3d(-n.x(), -n.y(), -n.z());
+	    verts[0]->emit_point(di);
+	    verts[1]->emit_point(di);
+	    verts[2]->emit_all(di);
+	    glEnd();
+	    break;
+	case DrawInfoOpenGL::Gouraud:
+	case DrawInfoOpenGL::Phong:
+	    glBegin(GL_TRIANGLES);
+	    glNormal3d(-n.x(), -n.y(), -n.z());
+	    verts[0]->emit_all(di);
+	    verts[1]->emit_all(di);
+	    verts[2]->emit_all(di);
+	    glEnd();
+	    break;
+	}
+    }
+    else {
+	switch(di->get_drawtype()){
+	case DrawInfoOpenGL::WireFrame:
+	    glBegin(GL_LINE_LOOP);
+	    verts[0]->emit_point(di);
+	    verts[1]->emit_point(di);
+	    verts[2]->emit_point(di);
+	    glEnd();
+	    break;
+	case DrawInfoOpenGL::Flat:
+	    glBegin(GL_TRIANGLES);
+	    verts[0]->emit_point(di);
+	    verts[1]->emit_point(di);
+	    verts[2]->emit_matl(di);
+	    verts[2]->emit_point(di);
+	    glEnd();
+	    break;
+	case DrawInfoOpenGL::Gouraud:
+	case DrawInfoOpenGL::Phong:
+	    // posible change to just material and point...
+	    glBegin(GL_TRIANGLES);
+	    verts[0]->emit_all(di);
+	    verts[1]->emit_all(di);
+	    verts[2]->emit_all(di);
+	    glEnd();
+	    break;
+	}
     }
 }
 
@@ -1028,45 +1129,95 @@ void GeomTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
     if(verts.size() <= 2)
 	return;
     di->polycount+=verts.size()/3;
-    switch(di->get_drawtype()){
-    case DrawInfoOpenGL::WireFrame:
-	{
-	    for(int i=0;i<verts.size();i+=3){
-		glBegin(GL_LINE_LOOP);
-		verts[i]->emit_point(di);
-		verts[i+1]->emit_point(di);
-		verts[i+2]->emit_point(di);
+    if (di->currently_lit) {
+	glDisable(GL_NORMALIZE);
+	switch(di->get_drawtype()){
+	case DrawInfoOpenGL::WireFrame:
+	    {
+		for(int i=0;i<verts.size();i+=3){
+		    glBegin(GL_LINE_LOOP);
+		    glNormal3d(normals[i/3].x(), normals[i/3].y(), 
+			       normals[i/3].z());
+		    verts[i]->emit_all(di);
+		    verts[i+1]->emit_all(di);
+		    verts[i+2]->emit_all(di);
+		    glEnd();
+		}
+	    }
+	    break;
+	case DrawInfoOpenGL::Flat:
+	    {
+		glBegin(GL_TRIANGLES);
+		for(int i=0;i<verts.size();i+=3){
+		    glNormal3d(normals[i/3].x(), normals[i/3].y(), 
+			       normals[i/3].z());
+		    verts[i]->emit_point(di);
+		    verts[i+1]->emit_point(di);
+		    verts[i+2]->emit_all(di);
+		}
 		glEnd();
 	    }
-	}
-	break;
-    case DrawInfoOpenGL::Flat:
-	{
-	    glBegin(GL_TRIANGLES);
-	    for(int i=0;i<verts.size();i++){
-		verts[i]->emit_point(di);
+	    break;
+	case DrawInfoOpenGL::Gouraud:
+	case DrawInfoOpenGL::Phong:
+	    {
+		glBegin(GL_TRIANGLES);
+		for(int i=0;i<verts.size();i+=3){
+		    glNormal3d(normals[i/3].x(), normals[i/3].y(), 
+			       normals[i/3].z());
+		    verts[i]->emit_all(di);
+		    verts[i+1]->emit_all(di);
+		    verts[i+2]->emit_all(di);
+		}
+		glEnd();
 	    }
-	    glEnd();
+	    break;
 	}
-	break;
-    case DrawInfoOpenGL::Gouraud:
-    case DrawInfoOpenGL::Phong:
-	{
-	    glDisable(GL_NORMALIZE);
-	    glBegin(GL_TRIANGLES);
-	    for(int i=0;i<verts.size();i+=3){
-		glNormal3d(normals[i/3].x(), normals[i/3].y(), 
-			   normals[i/3].z());
-		verts[i]->emit_all(di);
-		verts[i+1]->emit_all(di);
-		verts[i+2]->emit_all(di);
+	glEnable(GL_NORMALIZE);
+    }
+    else {
+	switch(di->get_drawtype()){
+	case DrawInfoOpenGL::WireFrame:
+	    {
+		for(int i=0;i<verts.size();i+=3){
+		    glBegin(GL_LINE_LOOP);
+		    verts[i]->emit_all(di);
+		    verts[i+1]->emit_all(di);
+		    verts[i+2]->emit_all(di);
+		    glEnd();
+		}
 	    }
-	    glEnd();
-	    glEnable(GL_NORMALIZE);
+	    break;
+	case DrawInfoOpenGL::Flat:
+	    {
+		glBegin(GL_TRIANGLES);
+		for(int i=0;i<verts.size();i+=3){
+		    verts[i]->emit_point(di);
+		    verts[i+1]->emit_point(di);
+		    verts[i+2]->emit_all(di);
+		}
+		glEnd();
+	    }
+	    break;
+	case DrawInfoOpenGL::Gouraud:
+	case DrawInfoOpenGL::Phong:
+	    {
+		glDisable(GL_NORMALIZE);
+		glBegin(GL_TRIANGLES);
+		for(int i=0;i<verts.size();i+=3){
+		    verts[i]->emit_all(di);
+		    verts[i+1]->emit_all(di);
+		    verts[i+2]->emit_all(di);
+		}
+		glEnd();
+		glEnable(GL_NORMALIZE);
+	    }
+	    break;
 	}
-	break;
     }
 }
+
+// WARNING not fixed for lighting correctly yet!
 
 void GeomTorusArc::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
@@ -1236,39 +1387,86 @@ void GeomTriStrip::draw(DrawInfoOpenGL* di, Material* matl, double)
     if(verts.size() <= 2)
 	return;
     di->polycount+=verts.size()-2;
-    switch(di->get_drawtype()){
-    case DrawInfoOpenGL::WireFrame:
-	{
-	    verts[0]->emit_point(di);
-	    verts[1]->emit_point(di);
-	    for(int i=2;i<verts.size();i++){
-		glBegin(GL_LINE_LOOP);
-		verts[i-2]->emit_point(di);
-		verts[i-1]->emit_point(di);
-		verts[i]->emit_point(di);
+    if (di->currently_lit) {
+	glDisable(GL_NORMALIZE);
+	switch(di->get_drawtype()){
+	case DrawInfoOpenGL::WireFrame:
+	    {
+		verts[0]->emit_all(di);
+		verts[1]->emit_all(di);
+		for(int i=2;i<verts.size();i++){
+		    glBegin(GL_LINE_LOOP);
+		    verts[i-2]->emit_all(di);
+		    verts[i-1]->emit_all(di);
+		    verts[i]->emit_all(di);
+		    glEnd();
+		}
+	    }
+	    break;
+	case DrawInfoOpenGL::Flat:
+	    {
+		glBegin(GL_TRIANGLE_STRIP);
+		for(int i=0;i<verts.size();i++){
+		    verts[i]->emit_all(di);
+		}
 		glEnd();
 	    }
-	}
-	break;
-    case DrawInfoOpenGL::Flat:
-	{
-	    glBegin(GL_TRIANGLE_STRIP);
-	    for(int i=0;i<verts.size();i++){
-		verts[i]->emit_point(di);
+	    break;
+	case DrawInfoOpenGL::Gouraud:
+	case DrawInfoOpenGL::Phong:
+	    {
+		glBegin(GL_TRIANGLE_STRIP);
+		for(int i=0;i<verts.size();i++){
+		    verts[i]->emit_all(di);
+		}
+		glEnd();
 	    }
-	    glEnd();
+	    break;
 	}
-	break;
-    case DrawInfoOpenGL::Gouraud:
-    case DrawInfoOpenGL::Phong:
-	{
-	    glBegin(GL_TRIANGLE_STRIP);
-	    for(int i=0;i<verts.size();i++){
-		verts[i]->emit_all(di);
+	glEnable(GL_NORMALIZE);
+    }
+    else {
+	switch(di->get_drawtype()){
+	case DrawInfoOpenGL::WireFrame:
+	    {
+		verts[0]->emit_matl(di);
+		verts[0]->emit_point(di);
+		verts[1]->emit_matl(di);
+		verts[1]->emit_point(di);
+		for(int i=2;i<verts.size();i++){
+		    glBegin(GL_LINE_LOOP);
+		    verts[i-2]->emit_matl(di);
+		    verts[i-2]->emit_point(di);
+		    verts[i-1]->emit_matl(di);
+		    verts[i-1]->emit_point(di);
+		    verts[i]->emit_matl(di);
+		    verts[i]->emit_point(di);
+		    glEnd();
+		}
 	    }
-	    glEnd();
+	    break;
+	case DrawInfoOpenGL::Flat:
+	    {
+		glBegin(GL_TRIANGLE_STRIP);
+		for(int i=0;i<verts.size();i++){
+		    verts[i]->emit_matl(di);
+		    verts[i]->emit_point(di);
+		}
+		glEnd();
+	    }
+	    break;
+	case DrawInfoOpenGL::Gouraud:
+	case DrawInfoOpenGL::Phong:
+	    {
+		glBegin(GL_TRIANGLE_STRIP);
+		for(int i=0;i<verts.size();i++){
+		    verts[i]->emit_matl(di);
+		    verts[i]->emit_point(di);
+		}
+		glEnd();
+	    }
+	    break;
 	}
-	break;
     }
 }
 
@@ -1360,3 +1558,12 @@ void HeadLight::opengl_setup(const View& view, DrawInfoOpenGL*, int& idx)
     glLightfv(GL_LIGHT0+i, GL_SPECULAR, f);
 }
 
+void GeomIndexedGroup::draw(DrawInfoOpenGL* di, Material* m, double time)
+{
+    HashTableIter<int, GeomObj*> iter(&objs);
+    for(iter.first();iter.ok();++iter) {
+	GeomObj *obj = iter.get_data();
+	obj->draw(di,m,time);
+    }
+    
+}

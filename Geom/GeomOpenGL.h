@@ -16,6 +16,7 @@
 
 #include <GL/glu.h>
 class Material;
+class Roe;
 
 struct DrawInfoOpenGL {
     DrawInfoOpenGL();
@@ -34,9 +35,11 @@ public:
     void set_drawtype(DrawType dt);
     inline DrawType get_drawtype() {return drawtype;}
 
+    void init_lighting(int use_light);
     int lighting;
     int currently_lit;
     int pickmode;
+    int fog;
 
     Material* current_matl;
     void set_matl(Material*);
@@ -45,6 +48,8 @@ public:
 
     GLUquadricObj* qobj;
 
+    Roe* roe;
+    int debug;
     void reset();
 };
 

@@ -15,14 +15,13 @@
 #define SCI_Geom_Group_h 1
 
 #include <Geom/Geom.h>
-#include <Geometry/BBox.h>
 #include <Geometry/BSphere.h>
+#include <Geometry/BBox.h>
 
 struct ITree;
 
 class GeomGroup : public GeomObj {
     Array1<GeomObj*> objs;
-    BBox bb;
     BSphere bsphere;
     int del_children;
 

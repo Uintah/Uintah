@@ -78,6 +78,62 @@ Point View::eyespace_to_objspace(const Point& ep, double aspect)
     return p;
 }
 
+Point View::objspace_to_eyespace(const Point& ep, double aspect)
+{
+    // first compute basic cordiante frame
+
+    Vector lookdir(lookat()-eyep());
+    Vector z(lookdir);
+    z.normalize();
+    Vector x(Cross(z, up()));
+    x.normalize();
+    Vector y(Cross(x, z));
+    double xviewsize=Tan(DtoR(fov()/2.))*2.;
+    double yviewsize=xviewsize/aspect;
+    double xscale=xviewsize*0.5;
+    double yscale=yviewsize*0.5;
+
+    // the transform everything into eyespace
+    
+//    x*=xscale;
+//    y*=yscale;
+//    x.x(x.x()/xscale);
+//    y.y(y.y()/yscale);
+    Point p(Dot(x,ep-eyep_.vector())/xscale,
+	    Dot(y,ep-eyep_.vector())/yscale,
+	    Dot(z,ep-eyep_.vector()));
+    return p;
+}
+Point View::eyespace_to_objspace_ns(const Point& ep, double aspect)
+{
+    Vector lookdir(lookat()-eyep());
+    Vector z(lookdir);
+    z.normalize();
+    Vector x(Cross(z, up()));
+    x.normalize();
+    Vector y(Cross(x, z));
+    
+    Point p(eyep()+x*ep.x()+y*ep.y()+z*ep.z());
+    return p;
+}
+
+Point View::objspace_to_eyespace_ns(const Point& ep, double aspect)
+{
+    // first compute basic cordiante frame
+
+    Vector lookdir(lookat()-eyep());
+    Vector z(lookdir);
+    z.normalize();
+    Vector x(Cross(z, up()));
+    x.normalize();
+    Vector y(Cross(x, z));
+
+    Point p(Dot(x,ep-eyep_.vector()),
+	    Dot(y,ep-eyep_.vector()),
+	    Dot(z,ep-eyep_.vector()));
+    return p;
+}
+
 double View::depth(const Point& p)
 {
     Vector dir(lookat()-eyep());

@@ -30,6 +30,8 @@ public:
     GeomTriangles();
     GeomTriangles(const GeomTriangles&);
     virtual ~GeomTriangles();
+
+    int size(void);
     void add(const Point&, const Point&, const Point&);
     void add(const Point&, const Vector&,
 	     const Point&, const Vector&,

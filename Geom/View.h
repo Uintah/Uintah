@@ -33,6 +33,11 @@ public:
     void get_viewplane(double aspect, double zdist,
 		       Vector& u, Vector& v);
     Point eyespace_to_objspace(const Point& p, double aspect);
+    Point objspace_to_eyespace(const Point& p, double aspect);
+
+    Point eyespace_to_objspace_ns(const Point& p, double aspect);
+    Point objspace_to_eyespace_ns(const Point& p, double aspect);
+
     double depth(const Point& p);
 
     Point eyep() const;

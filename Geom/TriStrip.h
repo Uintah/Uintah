@@ -33,6 +33,7 @@ public:
     virtual void intersect(const Ray& ray, Material*,
 			   Hit& hit);
 
+    int size(void);
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
 };
