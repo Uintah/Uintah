@@ -27,6 +27,7 @@ class InsertElectrodes : public Module {
 				TetVolMeshHandle mesh,
 				Array1<Point> &inner,
 				Array1<Point> &outer,
+				int both_sides_active,
 				double voltage,
 				TetVolMesh* electrodeElements);
   bool point_in_loop(const Point &pt, 
@@ -86,6 +87,7 @@ void InsertElectrodes::insertContourIntoTetMesh(
 				TetVolMeshHandle tet_mesh,
 				Array1<Point> &inner,
 				Array1<Point> &outer,
+				int both_sides_active,
 				double voltage,
 				TetVolMesh* electrodeElements) {
 //  cerr << "entering insertCountourIntoTetMesh\n";
@@ -105,7 +107,7 @@ void InsertElectrodes::insertContourIntoTetMesh(
   tet_mesh->size(nnodes);
 
   TetVolMesh::Node::array_type tet_nodes;
-  Array1<int> is_electrode_node(nnodes); // -1:unknow, 0:no, 1:outer, 2:inner
+  Array1<int> is_electrode_node(nnodes); // -1:unknown, 0:no, 1:outer, 2:inner
   is_electrode_node.initialize(-1);
   Array1<TetVolMesh::Node::index_type> electrode_nodes;
   Array1<TetVolMesh::Node::index_type> electrode_node_split_idx(nnodes);
@@ -175,7 +177,8 @@ void InsertElectrodes::insertContourIntoTetMesh(
     if (is_electrode_node[electrode_nodes[i]] == 2) {
       dirichlet.push_back(pair<int,double>(electrode_node_split_idx[ni], 
 					   voltage));
-//      dirichlet.push_back(pair<int,double>(ni, voltage));
+      if (both_sides_active)
+	dirichlet.push_back(pair<int,double>(ni, voltage));
     }
   }
 
@@ -310,9 +313,13 @@ void InsertElectrodes::execute() {
       TetVolMesh* electrodeElements = 0;
       if (pi == range.first) electrodeElements = scinew TetVolMesh;
 
+      int both_sides_active=0;
+      elecFld->get_property("both-sides-active", both_sides_active);
+
       // modify mergedDirichletNodes, and mergedMesh to have new nodes
       insertContourIntoTetMesh(dirichlet_nodes, mesh,
-			       inner, outer, voltage, electrodeElements);
+			       inner, outer, both_sides_active,
+			       voltage, electrodeElements);
       
       if (pi == range.first) elecElemsH = electrodeElements;
       ++pi;
