@@ -243,6 +243,7 @@ protected:
   // Debugging switches
   bool switchDebug_InterpolateNCToCC_0;
   bool switchDebug_InterpolateCCToNC;
+  bool switchDebug_InterpolatePAndGradP;
 };
 
 } // End namespace Uintah
