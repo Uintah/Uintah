@@ -33,12 +33,15 @@ static void circle_points(int x, int y, int x_center, int y_center);
 
 VolumeVisDpy::VolumeVisDpy(Array1<Color> &matls, Array1<AlphaPos> &alphas,
 			   int ncolors, float t_inc, char *in_file):
-  DpyBase("VolumeVis GUI"), hist(0), in_file(in_file), data_min(MAXFLOAT),
+  DpyBase("VolumeVis GUI"), in_file(in_file), data_min(MAXFLOAT),
   data_max(-MAXFLOAT), original_t_inc(0.01), current_t_inc(t_inc), 
   t_inc(t_inc), colors_index(matls), alpha_list(alphas), ncolors(ncolors), 
   nalphas(ncolors)
 {
   set_resolution(500,500);
+  nhist = xres;
+  hist = new int[nhist];
+  for(int i = 0; i < nhist; i++) hist[i]=0;
   // need to allocate memory for alpha_transform and color_transform
   Array1<Color*> *c = new Array1<Color*>(ncolors);
   for(int i = 0; i < ncolors; i++)
@@ -61,13 +64,15 @@ VolumeVisDpy::~VolumeVisDpy()
     delete[] hist;
 }
 
-void VolumeVisDpy::attach(VolumeVis *volume) {
+void VolumeVisDpy::attach(VolumeVisBase *volume) {
   volumes.add(volume);
 
   // this needs to be done here, because we can't guarantee that setup_vars
   // will get called before VolumeVis starts cranking!
-  data_min = min(data_min, volume->data_min);
-  data_max = max(data_max, volume->data_max);
+  float vmin, vmax;
+  volume->get_minmax(vmin, vmax);
+  data_min = min(data_min, vmin);
+  data_max = max(data_max, vmax);
   scale = 1/(data_max - data_min);
 
   color_transform.scale(data_min,data_max);
@@ -96,7 +101,8 @@ void VolumeVisDpy::run() {
   }
 
   setup_vars();
-  bool need_hist=true;
+  // We only want to compute the histogram when the user requests
+  bool need_hist=false;
 
   int selected_point = -1;
   // these are used to keep the points from moving too much
@@ -136,7 +142,9 @@ void VolumeVisDpy::run() {
 	yres=e.xconfigure.height;
 	if(e.xconfigure.width != xres){
 	  xres=e.xconfigure.width;
-	  need_hist=true;
+	  // Again only compute the histogram when the user requests
+	  //	  need_hist=true;
+	  nhist=xres-10;
 	} else {
 	  redraw=true;
 	}
@@ -152,6 +160,10 @@ void VolumeVisDpy::run() {
 	case XK_Shift_R:
 	  //cerr << "Pressed shift\n";
 	  shift_pressed = true;
+	  break;
+	case XK_h:
+	case XK_H:
+	  need_hist = true;
 	  break;
 	case XK_Page_Up:
 	case XK_plus:
@@ -340,7 +352,6 @@ void VolumeVisDpy::compute_hist(GLuint fid) {
   printString(fid, .1, .5, "Recomputing histogram...\n", Color(1,1,1));
   glFlush();
 
-  int nhist=xres-10;
   //cerr << "VolumeVisDpy:compute_hist:xres = " << xres << "\n";
   // allocate and initialize the memory for the histogram
   if (hist)
@@ -351,21 +362,8 @@ void VolumeVisDpy::compute_hist(GLuint fid) {
   }
   // loop over all the data and compute histograms
   for (int v = 0; v < volumes.size() ; v++) {
-    VolumeVis* volume = volumes[v];
-    // must index the data using three dimesions rather than as one, because
-    // a BrickArray3 uses buffers on the ends to make the bricks all the same
-    // size.
-    for (int x = 0; x < volume->data.dim1(); x++) {
-      for (int y = 0; y < volume->data.dim2(); y++) {
-	for (int z = 0; z < volume->data.dim3(); z++) {
-	  int idx=(int)((volume->data(x,y,z)-data_min) * scale * (nhist-1));
-	  if (idx >= 0 && idx < nhist)
-	    hist[idx]++;
-	  //cerr << "data = " << volume->data(x,y,z) << ", data_min="<<data_min<<", data_max = "<<data_max<<", scale = "<<scale<<", idx=" << idx << '\n';
-	}
-      }
-    }
-  } // end loop for all volumes
+    volumes[v]->compute_hist(nhist, hist, data_min, data_max);
+  } 
   
   //cerr << "VolumeVisDpy:compute_hist:past compute histograms\n";
   // determine the maximum height for each histogram
