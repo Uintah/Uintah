@@ -91,80 +91,32 @@ main(int argc, char *argv[] )
     abort();
   }
 
-  //ifstream f("framework.url");
-  //std::string s;
-  //f>>s;
-  //f.close();
-
   std::string loaderName=argv[1];
   std::string frameworkURL=argv[2];
   try {
     sci::cca::Loader::pointer ploader;
     SCIRunLoader *sl=new SCIRunLoader(loaderName, frameworkURL);
     ploader=sci::cca::Loader::pointer(sl);
+    
+    //allowing the framework to access ploader by URL anytime
     ploader->addReference();
-    ploader->addReference();
-    ploader->addReference();
-    ploader->addReference();
-    std::cout << "ploader started!" << std::endl;
-    std::cout << "framwork url=" << frameworkURL << std::endl;
+
+    std::cout << "ploader started." << std::endl;
 
     MPI_Comm_size(MPI_COMM_WORLD,&(sl->mpi_size));
     MPI_Comm_rank(MPI_COMM_WORLD,&(sl->mpi_rank));
 
-    //save size, rank in DT, so DT does not have to make MPI calls to get size, rank
-    //...
-
-    DTAddress dtAddr=PIDL::getDT()->getAddress();
-
-    if(sl->mpi_rank==0){
-      PRMI::orderSvc_ep=PRMI::orderSvcEp.getEP();
-      PRMI::orderSvc_addr.ip=dtAddr.ip;
-      PRMI::orderSvc_addr.port=dtAddr.port;
-    }
-    //root broadcast order service ep and DT address
-    MPI_Bcast(&PRMI::orderSvc_ep, 1, MPI_INT,0,MPI_COMM_WORLD);
-    MPI_Bcast(&PRMI::orderSvc_addr.ip, 1, MPI_INT,0,MPI_COMM_WORLD);
-    MPI_Bcast(&PRMI::orderSvc_addr.port, 1, MPI_SHORT,0,MPI_COMM_WORLD);
-
-    int* int_buf;
-    short* short_buf;
-    if(sl->mpi_rank==0){
-      PRMI::lockSvc_ep_list=new DTPoint*[sl->mpi_size];
-      PRMI::lockSvc_addr_list=new DTAddress[sl->mpi_size];
-      int_buf=new int[sl->mpi_size];
-      short_buf=new short[sl->mpi_size];
-    }
-    //collect all lock service ep list and DT addresses
-    MPI_Gather(&dtAddr.ip, 1, MPI_INT, PRMI::lockSvc_ep_list, 1, MPI_INT,
-	       0, MPI_COMM_WORLD);
-    MPI_Gather(&dtAddr.ip, 1, MPI_INT, int_buf, 1, MPI_INT,
-	       0, MPI_COMM_WORLD);
-    MPI_Gather(&dtAddr.port, 1, MPI_SHORT, short_buf, 1, MPI_SHORT,
-	       0, MPI_COMM_WORLD);
-    if(sl->mpi_rank==0){
-      for(int i=0; i<sl->mpi_size; i++){
-	PRMI::lockSvc_addr_list[i].ip=int_buf[i];
-	PRMI::lockSvc_addr_list[i].port=short_buf[i];
-      }
-      delete []int_buf;
-      delete []short_buf;
-    }
-    
+    //start MPI lock manager
+    PRMI::init();
 
     //Inform everyone else of my distribution
     //(this is in correspondence with the instantiate() call)
-    
     Index* dr[1];
     dr[0] = new Index((sl->mpi_rank),(sl->mpi_rank)+1,1);  //first, last, stride
     MxNArrayRep* arrr = new MxNArrayRep(1,dr);
     sl->setCalleeDistribution("dURL",arrr);   //server is callee
    
-    std::vector<URL> vURL;
-    vURL.push_back(frameworkURL);
-    
-    Object::pointer obj=PIDL::objectFrom(vURL,1,0);
-    //Object::pointer obj=PIDL::objectFrom(frameworkURL,1,0);
+    Object::pointer obj=PIDL::objectFrom(frameworkURL);
     if(obj.isNull()){
       std::cerr << "Cannot get framework from url=" << frameworkURL << std::endl;
       return 0;
