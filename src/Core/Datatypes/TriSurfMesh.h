@@ -139,7 +139,11 @@ public:
   double get_area(const Face::index_type &fi) {
     Node::array_type ra; 
     get_nodes(ra,fi);
-    return (Cross(ra[1]-ra[0],ra[2]-ra[0])).length2()*0.5;
+    Point p0,p1,p2;
+    get_point(p0,ra[0]);
+    get_point(p1,ra[1]);
+    get_point(p2,ra[2]);
+    return (Cross(p0-p1,p2-p0)).length2()*0.5;
   }
 
   void get_random_point(Point &p, const Face::index_type &ei) const;

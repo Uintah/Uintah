@@ -142,7 +142,12 @@ public:
   double get_volume(const Cell::index_type &ci) {
     Node::array_type ra; 
     get_nodes(ra,ci);
-    return (Cross(Cross(ra[1]-ra[0],ra[2]-ra[0]),ra[3]-ra[0])).length2()*
+    Point p0,p1,p2,p3;
+    get_point(p0,ra[0]);
+    get_point(p1,ra[1]);
+    get_point(p2,ra[2]);
+    get_point(p3,ra[3]);
+    return (Cross(Cross(p1-p0,p2-p0),p3-p0)).length2()*
       0.1666666666666666;
   }
   double get_area(const Face::index_type &) { return 0; }
