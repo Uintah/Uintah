@@ -3532,6 +3532,79 @@ class BioTensorApp {
 			$mods(AnalyzeToNrrd1)-c add_data [set $mods(AnalyzeToNrrd1)-file]
 		    }
 		}
+	    } elseif {$c_data_tab == "Dicom"} {
+		# This is a hack for the DicomToNrrd module.
+		# The problem is that the entry-files$i variables
+		# are created as data is selected and loaded.  For
+		# some reason when loading the setting for an app
+		# the entry-files$i variables aren't seen.  This
+		# needs to be looked into more for 1.20.2
+		global mods
+		global data_mode
+		if {$data_mode == "DWIknownB0"} {
+		    # Check DicomToNrrd-T2
+		    global $mods(DicomToNrrd-T2)-num-entries
+		    set num [set $mods(DicomToNrrd-T2)-num-entries]
+		    for {set i 0} {$i < $num} {incr i} {
+			if {[info exists $mods(DicomToNrrd-T2)-entry-files$i]} {
+			    set temp1 [set $mods(DicomToNrrd-T2)-entry-files$i]
+			    unset $mods(DicomToNrrd-T2)-entry-files$i
+
+			    set temp2 [set $mods(DicomToNrrd-T2)-entry-dir$i]
+			    unset $mods(DicomToNrrd-T2)-entry-dir$i
+
+			    set temp3 [set $mods(DicomToNrrd-T2)-entry-suid$i]
+			    unset $mods(DicomToNrrd-T2)-entry-suid$i
+			    
+			    global $mods(DicomToNrrd-T2)-entry-files$i
+			    set $mods(DicomToNrrd-T2)-entry-files$i $temp1
+
+			    global $mods(DicomToNrrd-T2)-entry-dir$i
+			    set $mods(DicomToNrrd-T2)-entry-dir$i $temp2
+
+			    global $mods(DicomToNrrd-T2)-entry-suid$i
+			    set $mods(DicomToNrrd-T2)-entry-suid$i $temp3
+			    
+			    # Call the c++ function that adds this data to its data 
+			    # structure.
+			    $mods(DicomToNrrd-T2)-c add_data \
+				[set $mods(DicomToNrrd-T2)-entry-dir$i] \
+				[set $mods(DicomToNrrd-T2)-entry-suid$i] \
+				[set $mods(DicomToNrrd-T2)-entry-files$i] 
+			}
+		    }
+		}
+		# Check DicomToNrrd1
+		global $mods(DicomToNrrd1)-num-entries
+		set num [set $mods(DicomToNrrd1)-num-entries]
+		for {set i 0} {$i < $num} {incr i} {
+		    if {[info exists $mods(DicomToNrrd1)-entry-files$i]} {
+			set temp1 [set $mods(DicomToNrrd1)-entry-files$i]
+			unset $mods(DicomToNrrd1)-entry-files$i
+			
+			set temp2 [set $mods(DicomToNrrd1)-entry-dir$i]
+			unset $mods(DicomToNrrd1)-entry-dir$i
+			
+			set temp3 [set $mods(DicomToNrrd1)-entry-suid$i]
+			unset $mods(DicomToNrrd1)-entry-suid$i
+			
+			global $mods(DicomToNrrd1)-entry-files$i
+			set $mods(DicomToNrrd1)-entry-files$i $temp1
+
+			global $mods(DicomToNrrd1)-entry-dir$i
+			set $mods(DicomToNrrd1)-entry-dir$i $temp2
+			
+			global $mods(DicomToNrrd1)-entry-suid$i
+			set $mods(DicomToNrrd1)-entry-suid$i $temp3
+			
+			# Call the c++ function that adds this data to its data 
+			# structure.
+			$mods(DicomToNrrd1)-c add_data \
+			    [set $mods(DicomToNrrd1)-entry-dir$i] \
+			    [set $mods(DicomToNrrd1)-entry-suid$i] \
+			    [set $mods(DicomToNrrd1)-entry-files$i]
+		    }
+		}
 	    }
 
 
@@ -3938,24 +4011,41 @@ class BioTensorApp {
 		global $mods(NrrdReader1)-filename
 		if {![file exists [set $mods(NrrdReader1)-filename]]} {
 		    set answer [tk_messageBox -message \
-				    "Please specify an valid nrrd file\nwith DWI volumes before executing." -type ok -icon info -parent .standalone] 
+				    "Please specify a valid nrrd file\nwith DWI volumes before executing." -type ok -icon info -parent .standalone] 
 		    return
 		}
-		global $mods(NrrdReader-T2)-filename
-		if {![file exists [set $mods(NrrdReader-T2)-filename]]} {
-		    set answer [tk_messageBox -message \
-				    "Please specify an existing nrrd file\nwith a T2 reference image before\nexecuting." -type ok -icon info -parent .standalone] 
-		    return
-		}
-		
+
 		global $mods(NrrdReader1)-axis
 		set $mods(NrrdReader1)-axis axis0
 
-		global $mods(NrrdReader-T2)-axis
-		set $mods(NrrdReader-T2)-axis axis0
+		if {$data_mode == "DWIknownB0"} {
+		    global $mods(NrrdReader-T2)-filename
+		    if {![file exists [set $mods(NrrdReader-T2)-filename]]} {
+			set answer [tk_messageBox -message \
+					"Please specify an existing nrrd file\nwith a T2 reference image before\nexecuting." -type ok -icon info -parent .standalone] 
+			return
+		    }		
+		    
+		    global $mods(NrrdReader-T2)-axis
+		    set $mods(NrrdReader-T2)-axis axis0
+		}
 	    } elseif {[set $mods(ChooseNrrd1)-port-index] == 1} {
 		# Dicom 
+		global $mods(DicomToNrrd1)-num-entries
+		global $mods(DicomToNrrd-T2)-num-entries
 
+		if {[set $mods(DicomToNrrd1)-num-entries] == 0} {
+		    set answer [tk_messageBox -message \
+				    "Please specify existing Dicom files\nof DWI Volumes before\nexecuting." -type ok -icon info -parent .standalone] 
+		    return
+		}
+		if {$data_mode == "DWIknownB0"} {
+		    if {[set $mods(DicomToNrrd-T2)-num-entries] == 0} {
+			set answer [tk_messageBox -message \
+					"Please specify existing Dicom files\nof a T2 reference image before\nexecuting." -type ok -icon info -parent .standalone] 
+			return
+		    }
+		}
 	    } elseif {[set $mods(ChooseNrrd1)-port-index] == 2} {
 		# Analyze
 		global $mods(AnalyzeToNrrd1)-num-files
@@ -3963,13 +4053,15 @@ class BioTensorApp {
 
 		if {[set $mods(AnalyzeToNrrd1)-num-files] == 0} {
 		    set answer [tk_messageBox -message \
-				    "Please specify an existing analyze files\nof a DWI Volumes image before\nexecuting." -type ok -icon info -parent .standalone] 
+				    "Please specify existing analyze files\nof DWI Volumes before\nexecuting." -type ok -icon info -parent .standalone] 
 		    return
 		}
-		if {[set $mods(AnalyzeToNrrd-T2)-num-files] == 0} {
-		    set answer [tk_messageBox -message \
-				    "Please specify an existing analyze files\nof a T2 reference image before\nexecuting." -type ok -icon info -parent .standalone] 
-		    return
+		if {$data_mode == "DWIknownB0"} {
+		    if {[set $mods(AnalyzeToNrrd-T2)-num-files] == 0} {
+			set answer [tk_messageBox -message \
+					"Please specify an existing analyze file\nof a T2 reference image before\nexecuting." -type ok -icon info -parent .standalone] 
+			return
+		    }
 		}
 	    } else {
 		# shouldn't get here
@@ -3998,21 +4090,28 @@ class BioTensorApp {
 		global $mods(NrrdReader1)-filename
 		if {![file exists [set $mods(NrrdReader1)-filename]]} {
 		    set answer [tk_messageBox -message \
-				    "Please specify an valid nrrd file\nwith tensors before executing." -type ok -icon info -parent .standalone] 
+				    "Please specify a valid nrrd file\nwith Tensors before executing." -type ok -icon info -parent .standalone] 
 		    return
 		}
 		global $mods(NrrdReader1)-axis
 		set $mods(NrrdReader1)-axis axis0
 	    } elseif {[set $mods(ChooseNrrd1)-port-index] == 1} {
 		# Dicom 
+		global $mods(DicomToNrrd1)-num-entries
+		global $mods(DicomToNrrd-T2)-num-entries
 
+		if {[set $mods(DicomToNrrd1)-num-entries] == 0} {
+		    set answer [tk_messageBox -message \
+				    "Please specify existing Dicom files\nof Tensors before\nexecuting." -type ok -icon info -parent .standalone] 
+		    return
+		}
 	    } elseif {[set $mods(ChooseNrrd1)-port-index] == 2} {
 		# Analyze
 		global $mods(AnalyzeToNrrd1)-num-files
 
 		if {[set $mods(AnalyzeToNrrd1)-num-files] == 0} {
 		    set answer [tk_messageBox -message \
-				    "Please specify an existing analyze files\nof a DWI Volumes image before\nexecuting." -type ok -icon info -parent .standalone] 
+				    "Please specify existing analyze files\nof Tensors before\nexecuting." -type ok -icon info -parent .standalone] 
 		    return
 		}
 	    } else {
