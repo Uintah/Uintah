@@ -204,6 +204,7 @@ WARNING
      
      inline IntVector getNFaces() const {
        // not correct
+       return IntVector(0,0,0);
      }
      
      inline IntVector getNNodes() const {
@@ -331,6 +332,9 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Patch & r);
 
 //
 // $Log$
+// Revision 1.28  2001/01/04 00:12:09  jas
+// Return an IntVector(0,0,0) for NFaces().  This is only used in FaceIterator.
+//
 // Revision 1.27  2000/12/22 00:10:30  jas
 // Got rid of the X,Y,Z FCVariable and friends.
 //
