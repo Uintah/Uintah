@@ -187,13 +187,15 @@ public:
                                        const MaterialSubset* matls,
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw);
-  void printData(const Patch* patch, 
+  void printData( int indx,
+                  const Patch* patch, 
                   int   include_EC,
                   const string&    message1,        
                   const string&    message2,  
                   const NCVariable<double>& q_NC);
                   
-  void printNCVector(const Patch* patch, int include_EC,
+  void printNCVector(int indx,
+                      const Patch* patch, int include_EC,
                      const string&    message1,        
                      const string&    message2, 
                      int     component,
@@ -234,6 +236,7 @@ protected:
   double d_dbgOldTime;
   IntVector d_dbgBeginIndx;
   IntVector d_dbgEndIndx; 
+  vector<int> d_dbgMatls; 
   int d_dbgSigFigs;
 
   vector<MPMPhysicalBC*> d_physicalBCs;
