@@ -49,8 +49,11 @@ void    ICE::printData( int matl,
        d_dbgTime >= d_dbgStartTime && 
        d_dbgTime <= d_dbgStopTime  &&
        d_dbgTime >= d_dbgNextDumpTime) {
-    d_dbgOldTime = d_dbgTime;      
     
+    // only after 0 timestep
+    if (dataArchiver->getCurrentTime() > 0 ){ 
+      d_dbgOldTime = d_dbgTime;      
+    }
     IntVector low, high; 
 
     adjust_dbg_indices( include_EC, patch, d_dbgBeginIndx, d_dbgEndIndx, 
@@ -145,7 +148,12 @@ void    ICE::printData(int matl,
        d_dbgTime >= d_dbgStartTime && 
        d_dbgTime <= d_dbgStopTime  &&
        d_dbgTime >= d_dbgNextDumpTime) {
-    d_dbgOldTime = d_dbgTime;      
+
+    // only after 0 timestep
+    if (dataArchiver->getCurrentTime() > 0 ){ 
+      d_dbgOldTime = d_dbgTime;      
+    }
+         
     IntVector low, high; 
     
     adjust_dbg_indices( include_EC, patch, d_dbgBeginIndx, d_dbgEndIndx, 
@@ -238,7 +246,12 @@ void    ICE::printVector(int matl,
        d_dbgTime >= d_dbgStartTime && 
        d_dbgTime <= d_dbgStopTime  &&
        d_dbgTime >= d_dbgNextDumpTime) {
-    d_dbgOldTime = d_dbgTime;      
+
+    // only after 0 timestep
+    if (dataArchiver->getCurrentTime() > 0 ){ 
+      d_dbgOldTime = d_dbgTime;      
+    }
+        
     IntVector low, high; 
 
     adjust_dbg_indices( include_EC, patch, d_dbgBeginIndx, d_dbgEndIndx, 
@@ -346,7 +359,12 @@ void    ICE::printData_FC(int matl,
        d_dbgTime >= d_dbgStartTime && 
        d_dbgTime <= d_dbgStopTime  &&
        d_dbgTime >= d_dbgNextDumpTime) {
-    d_dbgOldTime = d_dbgTime;
+
+    // only after 0 timestep
+    if (dataArchiver->getCurrentTime() > 0 ){ 
+      d_dbgOldTime = d_dbgTime;      
+    }
+    
     IntVector low, high; 
 
     adjust_dbg_indices( include_EC, patch, d_dbgBeginIndx, d_dbgEndIndx, 
@@ -437,7 +455,12 @@ void    ICE::printData_FC(int matl,
        d_dbgTime >= d_dbgStartTime && 
        d_dbgTime <= d_dbgStopTime  &&
        d_dbgTime >= d_dbgNextDumpTime) {
-    d_dbgOldTime = d_dbgTime;      
+       
+    // only after 0 timestep
+    if (dataArchiver->getCurrentTime() > 0 ){ 
+      d_dbgOldTime = d_dbgTime;      
+    }
+          
     IntVector low, high; 
 
     adjust_dbg_indices( include_EC, patch, d_dbgBeginIndx, d_dbgEndIndx, 
@@ -529,7 +552,12 @@ void    ICE::printData_FC(int matl,
        d_dbgTime >= d_dbgStartTime && 
        d_dbgTime <= d_dbgStopTime  &&
        d_dbgTime >= d_dbgNextDumpTime) {
-    d_dbgOldTime = d_dbgTime;      
+
+    // only after 0 timestep
+    if (dataArchiver->getCurrentTime() > 0 ){ 
+      d_dbgOldTime = d_dbgTime;      
+    }
+         
     IntVector low, high; 
     
     adjust_dbg_indices( include_EC, patch, d_dbgBeginIndx, d_dbgEndIndx, 
@@ -609,7 +637,11 @@ void    ICE::printStencil( int /*matl*/,
        d_dbgTime >= d_dbgStartTime && 
        d_dbgTime <= d_dbgStopTime  &&
        d_dbgTime >= d_dbgNextDumpTime) {
-    d_dbgOldTime = d_dbgTime;      
+
+    // only after 0 timestep
+    if (dataArchiver->getCurrentTime() > 0 ){ 
+      d_dbgOldTime = d_dbgTime;      
+    }     
 
     IntVector low, high; 
     adjust_dbg_indices( include_EC, patch, d_dbgBeginIndx, d_dbgEndIndx, 
