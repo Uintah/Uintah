@@ -144,17 +144,6 @@ else
 endif  
 MPEG_DEF_FLAG	  := @MPEG_DEF_FLAG@
 
-ifneq (@INCIMAGE_H@,)
-  LIBIMAGE_INCLUDE  := -I@INCIMAGE_H@
-endif
-LIBIMAGE_LIB_DIR  := @LIBIMAGE@
-ifneq (@LIBIMAGE@,)
-  LIBIMAGE_LIBRARY  := -L$(LIBIMAGE_LIB_DIR) -limage
-else
-  LIBIMAGE_LIBRARY  :=
-endif
-LIBIMAGE_DEF_FLAG := 
-
 ifneq (@INCUNIPETSC_H@,)
 UNI_PETSC_INCLUDE := -I@INCUNIPETSC_H@
 endif
@@ -236,18 +225,6 @@ X11_LIBS := $(X_LIBRARY) -lXext -lX11 $(X_EXTRA_LIBS)
 PROGRAM_PSE   := @EXENAME@
 
 TRACEBACK_LIB := @TRACEBACK_LIB@
-
-ifneq (@IMAGE_LIBS@,)
-  ifneq (@LIBCL@,)
-    IMAGE_LIBS := -L@LIBCL@ @IMAGE_LIBS@
-  else 
-    IMAGE_LIBS := @IMAGE_LIBS@
-  endif
-
-  ifneq (@LIBIFL@,)
-    IMAGE_LIBS := -L@LIBIFL@ $(IMAGE_LIBS)
-  endif
-endif
 
 LEX := @LEX@
 YACC := @YACC@ -d -v
