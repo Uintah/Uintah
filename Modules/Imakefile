@@ -2,7 +2,7 @@
 #include <config/sci.cf>
 
 SUBDIRS = ASCI Contours CFD EEG FDM FEM Fields HP Image Iterators Matrix \
-	Mesh Readers \
+	Mesh Readers Remote  \
 	Salmon Surface Treat Visualization Writers
 
 
