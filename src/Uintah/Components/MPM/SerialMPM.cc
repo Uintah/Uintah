@@ -22,7 +22,6 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/SimulationState.h>
 #include <Uintah/Grid/SoleVariable.h>
 #include <Uintah/Grid/Task.h>
-#include <Uintah/Grid/VarLabel.h>
 #include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Interface/Scheduler.h>
 #include <Uintah/Exceptions/ParameterNotFound.h>
@@ -1297,6 +1296,9 @@ void SerialMPM::crackGrow(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.70  2000/05/30 18:17:26  dav
+// removed the include varLaberl
+//
 // Revision 1.69  2000/05/30 17:07:34  dav
 // Removed commented out labels.  Other MPI fixes.  Changed delt to delT so I would stop thinking of it as just delta.
 //
