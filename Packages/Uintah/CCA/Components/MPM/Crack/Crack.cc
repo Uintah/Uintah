@@ -490,7 +490,7 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
         new_dw->allocateTemporary(singlevfld, patch, gac, 2*NGN); 
         singlevfld.initialize(0);
 
-        // get crack extent on grid (gmin->gmax)
+        // get crack extent on grid (g_cmin->g_cmax)
         patch->findCell(cmin[m],cell_idx);
         Point ptmp=patch->nodePosition(cell_idx+IntVector(1,1,1));
         IntVector offset=CellOffset(cmin[m],ptmp,dx);
@@ -624,6 +624,7 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
               }
               else { 
                 short  cross=SAMESIDE; 
+                Vector norm=Vector(0.,0.,0.);
                 for(int i=0; i<numElems[m]; i++) {  //loop over crack elements
                   //three vertices of each element
                   Point n3,n4,n5;                
@@ -646,24 +647,36 @@ void Crack::ParticleVelocityField(const ProcessorGroup*,
                   // particle above crack
                   if(pPosition==ABOVE_CRACK && v3>=0. && v4<=0. && v5>=0.) {
                     if(cross==SAMESIDE || (cross!=SAMESIDE &&
-                                  (v3==0.||v4==0.||v5==0.) ) ) 
+                                  (v3==0.||v4==0.||v5==0.) ) ) {
                       cross=ABOVE_CRACK;
-                    else 
+                      norm+=cElemNorm[m][i];
+                    }
+                    else { 
                       cross=SAMESIDE;
+                      norm=Vector(0.,0.,0.);
+                    }
                   }
                   // particle below crack
                   if(pPosition==BELOW_CRACK && v3<=0. && v4>=0. && v5<=0.) {
                     if(cross==SAMESIDE || (cross!=SAMESIDE &&
-                                  (v3==0.||v4==0.||v5==0.) ) ) 
+                                  (v3==0.||v4==0.||v5==0.) ) ) {
                       cross=BELOW_CRACK;
-                    else  
+                      norm+=cElemNorm[m][i];
+                    } 
+                    else {  
                       cross=SAMESIDE;
+                      norm=Vector(0.,0.,0.);
+                    }
                   }
                 } // End of loop over crack elements
 
                 if(cross==SAMESIDE)    num0[ni[k]]++;
                 if(cross==ABOVE_CRACK) num1[ni[k]]++;
                 if(cross==BELOW_CRACK) num2[ni[k]]++;
+                if(patch->containsNode(ni[k]) && norm.length()>1.e-16) {
+                  norm/=norm.length();
+                  GCrackNorm[ni[k]]+=norm;
+                } 
               } // End of if(singlevfld)
             } // End of loop over k
           } // End of if(!handled)
