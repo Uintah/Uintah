@@ -71,6 +71,7 @@ namespace rtrt {
     void adjustOpacity( float x );
     // works with paintTransFunc() to "paint" onto another texture properly
     void blend( GLfloat dest[4], float r, float g, float b, float o, float m );
+    void blend( GLfloat dest[4], float rgb[3], float o, float m );
     // changes the alignment of the transfer function
     void changeTextureAlignment( void ) {
       if( textureAlign == Horizontal ) {textureAlign = Vertical;}
