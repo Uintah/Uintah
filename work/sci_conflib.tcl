@@ -82,11 +82,18 @@ itcl_class ConfigBase {
 	    if {![file exists Makefile]} {
 		exec xmkmf >@ stdout 2>@ stderr
 	    }
-	    exec make World &
+	    if {$rebuild_all_symlinks} {		
+		tk_dialog .makewin "Make Advice" "You need to do a \"make clean\" and a \"make World\"" \
+			"" 0 Ok
+	    } else {
+		tk_dialog .makewin "Make Advice" "You need to do a \"make World\"" \
+			"" 0 Ok
+	    }
 	} else {
 	    exec rm config_imake.h.tmp
 	    if {$need_make} {
-		exec make &
+		tk_dialog .makewin "Make Advice" "You need to do a \"make\"" \
+			"" 0 Ok
 	    }
 	}
     }
@@ -104,9 +111,13 @@ itcl_class ConfigBase {
         }
     }
 
-    proc vname {} {
+    proc vname {opt} {
 	set mach [.machine get]
-	set var [.variant get]
+	if {$opt} {
+	    set var optimized
+	} else {
+	    set var [.variant get]
+	}
 	set compiler [.compiler get]
 	return "[string tolower $mach]-[string tolower $var]-[string tolower $compiler]"
     }
@@ -241,9 +252,11 @@ itcl_class ConfigDir {
 	pack $this.l -side right
 	radiobutton $this.l.lib -value lib -variable $this-value \
 		-text "Library copy"
+	radiobutton $this.l.olib -value olib -variable $this-value \
+		-text "Optimized library copy"
 	radiobutton $this.l.co -value co -variable $this-value \
 		-text "Checked out"
-	pack $this.l.lib $this.l.co -side left
+	pack $this.l.lib $this.l.olib $this.l.co -side left
 
 	pack $this -side top -fill x
 
@@ -270,29 +283,31 @@ itcl_class ConfigDir {
 		exec cvs checkout $modname >@ stdout 2>@ stderr
 		cd $p
 	    } else {
-		# check the library back in
-		exec cvs update $dir >& cvs_output
-		set f [open cvs_output]
-		set l ""
-		while {[gets $f line] >= 0} {
-		    set c [string index $line 0]
-		    if {$c == "?" || $c == "M" || $c == "R" || $c == "A"} {
-			lappend l $line
+		if {$orig_value == "co"} {
+		    # check the library back in
+		    exec cvs update $dir >& cvs_output
+		    set f [open cvs_output]
+		    set l ""
+		    while {[gets $f line] >= 0} {
+			set c [string index $line 0]
+			if {$c == "?" || $c == "M" || $c == "R" || $c == "A"} {
+			    lappend l $line
+			}
 		    }
-		}
-		close $f
-		exec rm cvs_output
-		if {$l != ""} {
-		    set s "There was an error checking in module: $dir"
-		    foreach t $l {
-			append s "\n" $t
+		    close $f
+		    exec rm cvs_output
+		    if {$l != ""} {
+			set s "There was an error checking in module: $dir"
+			foreach t $l {
+			    append s "\n" $t
+			}
+			append s "\n\nFix this error and press Apply again"
+			tk_dialog .error "Error on checkin" $s \
+				"" 0 Ok
+			return
 		    }
-		    append s "\n\nFix this error and press Apply again"
-		    tk_dialog .error "Error on checkin" $s \
-			    "" 0 Ok
-		    return
+		    exec rm -r $dir
 		}
-		exec rm -r $dir
 		set rebuild_this_symlinks 1
 	    }
 	}
@@ -304,7 +319,11 @@ itcl_class ConfigDir {
 	    exec mkdir $dir
 
 	    # Get vname
-	    set vname [ConfigBase :: vname]
+	    set opt 0
+	    if {$value == olib} {
+		set opt 1
+	    }
+	    set vname [ConfigBase :: vname $opt]
 	    
 	    puts "vname is $vname"
 

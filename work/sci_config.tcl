@@ -18,7 +18,7 @@ pack .bottom -side bottom
 
 button .bottom.apply -text "Apply" -command "ConfigBase :: apply"
 button .bottom.reset -text "Reset" -command "ConfigBase :: reset"
-button .bottom.cancel -text "Cancel" -command exit
+button .bottom.cancel -text "Exit" -command exit
 pack .bottom.apply .bottom.reset .bottom.cancel -side left -padx 10 -pady 4 \
 	-ipadx 5 -ipady 5
 
@@ -29,8 +29,7 @@ frame .left -relief groove -borderwidth 2
 pack .left -side left -anchor nw -fill y -padx 2 -pady 2
 set i 0
 foreach t {Classlib Comm Constraints Dataflow Datatypes Devices Geom \
-	   Geometry Malloc Math Multitask TCL Widgets config convert \
-	   doc etc gnupt scirun scripts} {
+	   Geometry Malloc Math Multitask TCL Widgets} {
 	ConfigDir .left.$i -text "$t: " -name DIR_$t -dir $t -modname $t
 	incr i
 }
@@ -38,7 +37,7 @@ foreach t {Classlib Comm Constraints Dataflow Datatypes Devices Geom \
 frame .right -relief groove -borderwidth 2
 pack .right -side right -anchor nw -fill y -padx 2 -pady 2
 set i 0
-foreach t {Contours FEM Fields Gradient Matrix Mesh Readers \
+foreach t {Contours FEM Fields Matrix Mesh Readers \
 	   Salmon Sound Surface Visualization Writers} {
 	ConfigDir .right.$i -text "Modules/$t: " -name DIR_Modules_$t \
 		-dir Modules/$t -modname Module_$t
