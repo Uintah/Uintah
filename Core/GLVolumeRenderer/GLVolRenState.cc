@@ -68,7 +68,7 @@ using std::endl;
 
 
 GLVolRenState::GLVolRenState(const GLVolumeRenderer* glvr)
-  : volren( glvr ), texName(0), reload((unsigned char *)1), 
+  : volren( glvr ), texName(0), reload_(true), 
   newbricks_(false), newcmap_(true)
 {
   // Base Class, holds pointer to VolumeRenderer and 
@@ -288,7 +288,7 @@ GLVolRenState::loadTexture(Brick& brick)
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
   glEnable(GL_TEXTURE_3D);
 #endif
-  if( !brick.texName() || reload ) {
+  if( !brick.texName() || reload_ ) {
     if( !brick.texName() ){
       glGenTextures(1, brick.texNameP());
       textureNames.push_back( brick.texName() );
@@ -360,6 +360,7 @@ GLVolRenState::loadTexture(Brick& brick)
 		    GL_COLOR_INDEX, GL_UNSIGNED_BYTE,
 		    &(*(brick.texture()))(0,0,0));
 //      glCheckForError("After glTexImage3D Linux");
+    reload_ = false;
 #endif
   } else {
     glBindTexture(GL_TEXTURE_3D_EXT, brick.texName());
