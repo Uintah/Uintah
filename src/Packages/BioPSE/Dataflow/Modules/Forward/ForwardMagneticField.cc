@@ -75,19 +75,21 @@ void ForwardMagneticField::execute(){
   FieldHandle magnetic_field;
   FieldHandle magnitudes;
   // create algo.
-  
+  const string new_field_type =
+    detectors->get_type_description(0)->get_name() + "<double> ";  
   const TypeDescription *efld_td = efld->get_type_description();
   const TypeDescription *ctfld_td = ctfld->get_type_description();
   const TypeDescription *detfld_td = detectors->get_type_description();
   CompileInfoHandle ci = CalcFMFieldBase::get_compile_info(efld_td, ctfld_td, 
-							   detfld_td);
+							   detfld_td, 
+							   new_field_type);
   Handle<CalcFMFieldBase> algo;
   if (!DynamicCompilation::compile(ci, algo, this))
   {
     error("Unable to compile creation algorithm.");
     return;
   }
-
+  update_progress(0);
   int np = 5;
   //cerr << "Number of Processors Used: " << np <<endl;
   if (! algo->calc_forward_magnetic_field(efld, ctfld, dipoles, detectors, 
@@ -113,7 +115,7 @@ void ForwardMagneticField::execute(){
   
   magnitudeFieldP_ = (FieldOPort *)get_oport("Magnitudes");
   magnitudeFieldP_->send(magnitudes);
-
+  report_progress(ProgressReporter::Done);
 }
 
 void 
@@ -129,18 +131,21 @@ CalcFMFieldBase::~CalcFMFieldBase()
 CompileInfoHandle
 CalcFMFieldBase::get_compile_info(const TypeDescription *efldtd, 
 				  const TypeDescription *ctfldtd,
-				  const TypeDescription *detfldtd) {
+				  const TypeDescription *detfldtd,
+				  const string &mags) {
   static const string ns("BioPSE");
   static const string template_class("CalcFMField");
   CompileInfo *rval = scinew CompileInfo(template_class + "." +
 					 efldtd->get_filename() + "." +
 					 ctfldtd->get_filename() + "." +
-					 detfldtd->get_filename() + ".",
+					 detfldtd->get_filename() + "." +
+					 to_filename(mags) + ".",
 					 base_class_name(), 
 					 template_class, 
 					 efldtd->get_name() + "," + 
 					 ctfldtd->get_name() + "," + 
-					 detfldtd->get_name() + " ");
+					 detfldtd->get_name() + "," + 
+					 mags + " ");
   rval->add_include(get_h_file_path());
   rval->add_namespace(ns);
   efldtd->fill_compile_info(rval);
