@@ -74,7 +74,7 @@ using namespace::SCIRun;
 
 namespace Uintah {
 
-const double EPS = 1e-12;
+const double EPS = 1e-6;
 
 class FaceCuttingPlane : public Module {
 
@@ -84,10 +84,11 @@ public:
   virtual ~FaceCuttingPlane();
   virtual void widget_moved(bool last);    
   virtual void execute();
+  template <class MyField> void real_execute(MyField *lvf, ColorMapHandle cmh);
   void tcl_command( GuiArgs&, void* );
   void get_minmax(FieldHandle f);
-  bool get_dimensions(FieldHandle f, int& nx, int& ny, int& nz);
-  template <class Mesh>  bool get_dimensions(Mesh, int&, int&, int&);
+//   bool get_dimensions(FieldHandle f, int& nx, int& ny, int& nz);
+  template <class Mesh>  bool get_dimensions(Mesh*, int&, int&, int&);
 
 private:
   FieldIPort             *infield_;
@@ -225,9 +226,6 @@ void FaceCuttingPlane::widget_moved(bool last)
 
 void FaceCuttingPlane::execute(void)
 {
-  int old_grid_id = grid_id;
-  static int find = -1;
-  int cmapmin, cmapmax;
 
   infield_ = (FieldIPort *) get_iport("Scalar Field");
   icmap_ = (ColorMapIPort *)get_iport("ColorMap");
@@ -263,28 +261,51 @@ void FaceCuttingPlane::execute(void)
 
   
   if(!(mesh_ = dynamic_cast<LatVolMesh *>(field->mesh().get_rep()))){
-    error("Cannot grab mesh.");
-    return;
-  }
-  LatVolField<double> *lvf = 0;
-  if(!(lvf = dynamic_cast<LatVolField<double> *>(field.get_rep()))){
-    error("Unknown field type line 239.");
+    error("Mesh must be a LatVolMesh.");
     return;
   }
 
+
+  if(LatVolField<double> *lvf = 
+     dynamic_cast<LatVolField<double> *>(field.get_rep())){
+    real_execute( lvf, cmap );
+  } else if( LatVolField<int> *lvf =  
+	     dynamic_cast<LatVolField<int> *>(field.get_rep())){
+    real_execute( lvf, cmap );
+  } else if( LatVolField<float> *lvf =  
+	     dynamic_cast<LatVolField<float> *>(field.get_rep())){
+    real_execute( lvf, cmap );
+  } else if( LatVolField<long> *lvf =  
+	     dynamic_cast<LatVolField<long> *>(field.get_rep())){
+    real_execute( lvf, cmap );
+  } else {
+    error("Unknown field type line 239.");
+  }
+}  
+template<class MyField> 
+void 
+FaceCuttingPlane::real_execute(MyField *lvf, ColorMapHandle cmap)
+{
+
   int td;
-  field->get_property("vartype", td);
+  lvf->get_property("vartype", td);
   if( td != TypeDescription::SFCXVariable &&
       td != TypeDescription::SFCYVariable &&
       td != TypeDescription::SFCZVariable ){
     warning("Did not receive a Uintah FaceVariable, no action.");
     return;
   }
-  
+
+
+  int old_grid_id = grid_id;
+  static int find = -1;
+  int cmapmin, cmapmax;
+
   BBox b = mesh_->get_bounding_box();
   Vector diagv(b.diagonal());
   int nx, ny, nz, nf;
-  get_dimensions(field, nx, ny, nz);
+  get_dimensions(mesh_, nx, ny, nz);
+  cerr<<"nx, ny, nz = "<<nx<<", "<<ny<<", "<<nz<<endl;
   if(!control_widget_){
     control_widget_=scinew PointWidget(this, &control_lock_, 0.2);
     ddx_ = Vector(diagv.x()/(nx-1),0,0);
@@ -322,33 +343,34 @@ void FaceCuttingPlane::execute(void)
     
   int u_num, v_num;
   Point corner(b.min());
-  Vector diag(diagv);
   nf = need_find.get();
   Vector u,v;
   bool horiz = false; // false if vert, true if horiz.
+  cerr<<"entering type check\n";
+
   if(td == TypeDescription::SFCXVariable){
     u_num = nx;
     u = ddx_;
     if(nf == 1){ 
       v_num = ny;
       corner.z(control_.z());
-      v = ddy_;
+      v = ddy_ * ((ny-1.0)/ny);
     } else {
       v_num = nz;
       corner.y(control_.y());
-      v = ddz_;
+      v = ddz_ * ((ny-1.0)/nz);
     }
     face_name.set("X faces");
   } else if (td == TypeDescription::SFCYVariable){
     if( nf == 1 ){
       u_num = nx;
       v_num = ny;
-      u = ddx_; v = ddy_;
+      u = ddx_ * ((nx-1.0)/nx); v = ddy_;
       corner.z(control_.z());
     } else {
       u_num = ny;
       v_num = nz;
-      u = ddy_; v = ddz_;
+      u = ddy_; v = ddz_ * ((nz-1.0)/nz);
       corner.x(control_.x());
     }
     horiz = true;
@@ -359,12 +381,12 @@ void FaceCuttingPlane::execute(void)
     if( nf == 2 ){
       u_num = ny;
       corner.x(control_.x());
-      u = ddy_;
+      u = ddy_ * ((ny-1.0)/ny);
     } else {
       u_num = nx;
       horiz = true;
       corner.y(control_.y());
-      u = ddx_;
+      u = ddx_ * ((nx-1.0)/nx);
       }
     face_name.set("Z faces");
   }
@@ -379,45 +401,49 @@ void FaceCuttingPlane::execute(void)
   LatVolMesh::NodeIndex node;
   int i, j, u_, v_;
   u_ = u_num; v_ = v_num;
-  if(horiz) {u_ = u_num -1; v_ = v_num;}
-  else {u_ = u_num; v_ = v_num -1;}
+//   if(horiz) {u_ = u_num; v_ = v_num;}
+//   else {u_ = u_num; v_ = v_num;}
+  cerr<<"pre-line loop: u = "<<u_<<", v = "<<v_<<"\n";
+
   for (i = 0; i < u_; i++){
     for (j = 0; j < v_; j++) {
       Point p0, p1;
       if ( horiz ) {
-	    p0 = corner + u * i +
-	      v * j;
-	    p1 = corner + u * (i+1) +
-	      v * j;
+	p0 = corner + u * (i + EPS) +
+	  v * j;
+	p1 = corner + u * (i+1) +
+	  v * j;
       } else {
-	    p0 = corner + u * i + 
-	      v * j;
-	    p1 = corner + u * i +
-	      v * (j+1);
+	p0 = corner + u * i +
+	  v * (j + EPS);
+	p1 = corner + u * i +
+	  v * (j+1);
       }
       GeomLine *line = 0;
-      //      line->setLineWidth(line_size.get());
-      if( mesh_->locate(node, p0)){
-	sval = lvf->fdata()[node];
-	cerr<<"located: sval = "<<sval<<endl;
+      if( mesh_->locate(node, p0 + (p1 - p0) * 0.5)){
+// 	sval = lvf->fdata()[node];
+// 	cerr<<"located: sval = "<<sval<<" at index ["<<node.i_
+// 	    <<", "<<node.j_<<", "<<node.k_<<"]"<<endl;
       //      get the color from cmap for p 	    
 //       if( sfi->interpolate( sval, p0)){
  	matl = cmap->lookup( sval);
 	line = new GeomLine(p0,p1);
+	float linesz = line_size.get();
+	cerr<<"line size is "<<linesz<<endl;
+	line->setLineWidth((float)line_size.get());
 	faces->add( scinew GeomMaterial( line, matl));
-      }
-      else {
-	cerr<<"p0 = "<<p0<<" which is out of bounds\n";
+      } else {
+// 	cerr<<"p0 = "<<p0<<" which is out of bounds\n";
 	matl = outcolor;
 	sval = 0;
       }
     }
   }
-    
-  ogeom_->flushViews();				  
-
   
-    // delete the old grid/cutting plane
+  ogeom_->flushViews();				  
+  
+  
+  // delete the old grid/cutting plane
   if (old_grid_id != 0) {
     ogeom_->delObj( old_grid_id );
   }
@@ -426,19 +452,19 @@ void FaceCuttingPlane::execute(void)
   //     scinew GeomTransform( grid, t);
   //   grid_id = ogeom->addObj(gt, "Face Cutting Plane");
   grid_id = ogeom_->addObj(faces,  "Face Cutting Plane");
-//   grid_id = ogeom_->addObj(pts, "FaceCuttingPlane");
+  //   grid_id = ogeom_->addObj(pts, "FaceCuttingPlane");
   old_grid_id = grid_id;
 }
 
 template <class Mesh>
 bool 
-FaceCuttingPlane::get_dimensions(Mesh, int&, int&, int&)
+FaceCuttingPlane::get_dimensions(Mesh*, int&, int&, int&)
   {
     return false;
   }
 
 template<> 
-bool FaceCuttingPlane::get_dimensions(LatVolMeshHandle m,
+bool FaceCuttingPlane::get_dimensions(LatVolMesh* m,
 				 int& nx, int& ny, int& nz)
   {
     nx = m->get_ni();
@@ -447,37 +473,37 @@ bool FaceCuttingPlane::get_dimensions(LatVolMeshHandle m,
     return true;
   }
 
-bool
-FaceCuttingPlane::get_dimensions(FieldHandle texfld_,  int& nx, int& ny, int& nz)
-{
-  const string type = texfld_->get_type_name(1);
-  if(texfld_->get_type_name(0) == "LatVolField"){
-    LatVolMeshHandle mesh;
-    if (type == "double") {
-      LatVolField<double> *fld =
-	dynamic_cast<LatVolField<double>*>(texfld_.get_rep());
-      mesh = fld->get_typed_mesh();
-    } else if (type == "float") {
-      LatVolField<float> *fld =
-	dynamic_cast<LatVolField<float>*>(texfld_.get_rep());
-      mesh = fld->get_typed_mesh();
-    } else if (type == "long") {
-      LatVolField<long> *fld =
-	dynamic_cast<LatVolField<long>*>(texfld_.get_rep());
-      mesh = fld->get_typed_mesh();
-    } else if (type == "int") {
-      LatVolField<int> *fld =
-	dynamic_cast<LatVolField<int>*>(texfld_.get_rep());
-      mesh = fld->get_typed_mesh();
-    } else {
-      cerr << "FaceCuttingPlane error - unknown LatVolField type: " << type << endl;
-      return false;
-    }
-    return get_dimensions( mesh, nx, ny, nz );
-  } else {
-    return false;
-  }
-}
+// bool
+// FaceCuttingPlane::get_dimensions(FieldHandle texfld_,  int& nx, int& ny, int& nz)
+// {
+//   const string type = texfld_->get_type_name(1);
+//   if(texfld_->get_type_name(0) == "LatVolField"){
+//     LatVolMeshHandle mesh;
+//     if (type == "double") {
+//       LatVolField<double> *fld =
+// 	dynamic_cast<LatVolField<double>*>(texfld_.get_rep());
+//       mesh = fld->get_typed_mesh();
+//     } else if (type == "float") {
+//       LatVolField<float> *fld =
+// 	dynamic_cast<LatVolField<float>*>(texfld_.get_rep());
+//       mesh = fld->get_typed_mesh();
+//     } else if (type == "long") {
+//       LatVolField<long> *fld =
+// 	dynamic_cast<LatVolField<long>*>(texfld_.get_rep());
+//       mesh = fld->get_typed_mesh();
+//     } else if (type == "int") {
+//       LatVolField<int> *fld =
+// 	dynamic_cast<LatVolField<int>*>(texfld_.get_rep());
+//       mesh = fld->get_typed_mesh();
+//     } else {
+//       cerr << "FaceCuttingPlane error - unknown LatVolField type: " << type << endl;
+//       return false;
+//     }
+//     return get_dimensions( mesh, nx, ny, nz );
+//   } else {
+//     return false;
+//   }
+// }
 
 
 } // End namespace Uintah
