@@ -15,6 +15,7 @@
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Util/NotFinished.h>
 #include <fstream>
 #include <iostream>
 
@@ -64,7 +65,7 @@ ViscoScram::~ViscoScram()
 
 void ViscoScram::initializeCMData(const Patch* patch,
                                         const MPMMaterial* matl,
-                                        DataWarehouseP& new_dw)
+                                        DataWarehouse* new_dw)
 {
    // Put stuff in here to initialize each particle's
    // constitutive model parameters and deformationMeasure
@@ -115,7 +116,7 @@ void ViscoScram::addParticleState(std::vector<const VarLabel*>& from,
 
 void ViscoScram::computeStableTimestep(const Patch* patch,
                                            const MPMMaterial* matl,
-                                           DataWarehouseP& new_dw)
+                                           DataWarehouse* new_dw)
 {
    // This is only called for the initial timestep - all other timesteps
    // are computed as a side-effect of computeStressTensor
@@ -153,11 +154,13 @@ void ViscoScram::computeStableTimestep(const Patch* patch,
     new_dw->put(delt_vartype(delT_new), lb->delTLabel);
 }
 
-void ViscoScram::computeStressTensor(const Patch* patch,
+void ViscoScram::computeStressTensor(const PatchSubset* patches,
                                         const MPMMaterial* matl,
-                                        DataWarehouseP& old_dw,
-                                        DataWarehouseP& new_dw)
+                                        DataWarehouse* old_dw,
+                                        DataWarehouse* new_dw)
 {
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
   //
   //  FIX  To do:  Obtain and modify particle temperature (deg K)
   //
@@ -215,7 +218,8 @@ void ViscoScram::computeStressTensor(const Patch* patch,
   double cf = d_initialData.CrackFriction;
   double bulk = (2.*G*(1. + d_initialData.PR))/(3.*(1.-2.*d_initialData.PR));
 
-  double Cp0 = matl->getSpecificHeat();
+  // Unused variable - Steve
+  // double Cp0 = matl->getSpecificHeat();
   //  cout << "Cp0 = " << Cp0 << endl;
 
   for(ParticleSubset::iterator iter = pset->begin();
@@ -426,21 +430,24 @@ void ViscoScram::computeStressTensor(const Patch* patch,
 
       c = statedata[idx].CrackRadius;
       pCrackRadius[idx] = c;
-      double coa3   = (c*c*c)/(a*a*a);
-      double topc   = 3.*(coa3/c)*cdot;
+      // Unused variable - Steve
+      // double coa3   = (c*c*c)/(a*a*a);
+      // Unused variable - Steve
+      // double topc   = 3.*(coa3/c)*cdot;
       double odt    = 1./delT;
       Matrix3 SRate = DevStress*odt;
 
       // This is the cracking work rate
 
-      double scrdot =(DevStress.Norm()*DevStress.Norm()*topc
-                      + (DevStress(1,1)*SRate(1,1) + DevStress(2,2)*SRate(2,2) +
-		         DevStress(3,3)*SRate(3,3) + 
-			 2.*(DevStress(2,3)*SRate(2,3) +
-		             DevStress(1,2)*SRate(1,2) + 
-			     DevStress(1,3)*SRate(1,3))
-			) * coa3
-		     )/(2*G);
+      // Unused variable - Steve
+      //double scrdot =(DevStress.Norm()*DevStress.Norm()*topc
+      //                      + (DevStress(1,1)*SRate(1,1) + DevStress(2,2)*SRate(2,2) +
+      //		         DevStress(3,3)*SRate(3,3) + 
+      //			 2.*(DevStress(2,3)*SRate(2,3) +
+      //		             DevStress(1,2)*SRate(1,2) + 
+      //			     DevStress(1,3)*SRate(1,3))
+      //			) * coa3
+      //		     )/(2*G);
 
       double ekkdot = D.Trace();
       p = onethird*(pstress[idx].Trace()) + ekkdot*bulk*delT;
@@ -461,8 +468,10 @@ void ViscoScram::computeStressTensor(const Patch* patch,
 
       // FIX  Need to access particle temperature, thermal constants.
 
-      double cpnew = Cp0 + d_initialData.DCp_DTemperature*ptemperature[idx];
-      double Cv = cpnew/(1+d_initialData.Beta*ptemperature[idx]);
+      // Unused variable - Steve
+      // double cpnew = Cp0 + d_initialData.DCp_DTemperature*ptemperature[idx];
+      // Unused variable - Steve
+      //double Cv = cpnew/(1+d_initialData.Beta*ptemperature[idx]);
 
       // Compute the deformation gradient increment using the time_step
       // velocity gradient
@@ -532,11 +541,12 @@ void ViscoScram::computeStressTensor(const Patch* patch,
   new_dw->put(statedata, p_statedata_label_preReloc);
   // Store deformed volume
   new_dw->put(pvolume,lb->pVolumeDeformedLabel);
+  }
 }
 
 //double ViscoScram::computeStrainEnergy(const Patch* patch,
 //                                        const MPMMaterial* matl,
-//                                        DataWarehouseP& new_dw)
+//                                        DataWarehouse* new_dw)
 //{
 //  double se=0;
 //
@@ -544,11 +554,10 @@ void ViscoScram::computeStressTensor(const Patch* patch,
 //}
 
 void ViscoScram::addComputesAndRequires(Task* task,
-					 const MPMMaterial* matl,
-					 const Patch* patch,
-					 DataWarehouseP& old_dw,
-					 DataWarehouseP& new_dw) const
+					const MPMMaterial* matl,
+					const PatchSet* patches) const
 {
+#if 0
    task->requires(old_dw, lb->pXLabel, matl->getDWIndex(), patch,
                   Ghost::None);
    task->requires(old_dw, lb->pDeformationMeasureLabel, matl->getDWIndex(), patch,
@@ -570,6 +579,9 @@ void ViscoScram::addComputesAndRequires(Task* task,
    task->computes(new_dw, lb->pDeformationMeasureLabel_preReloc, matl->getDWIndex(), patch);
    task->computes(new_dw, p_statedata_label_preReloc, matl->getDWIndex(),  patch);
    task->computes(new_dw, lb->pVolumeDeformedLabel, matl->getDWIndex(), patch);
+#else
+   NOT_FINISHED("new task stuff");
+#endif
 }
 
 #ifdef __sgi

@@ -59,23 +59,21 @@ WARNING
       // Destructor
       ~SimpleHEBurn();
 
-      void computeMassRate(const Patch* patch,
+      void computeMassRate(const PatchSubset* patch,
 			   const MPMMaterial* matl,
-			   DataWarehouseP& old_dw,
-			   DataWarehouseP& new_dw);
+			   DataWarehouse* old_dw,
+			   DataWarehouse* new_dw);
 
       virtual bool getBurns() const;
 
       // initialize and allocate the burn model data
       void initializeBurnModelData(const Patch* patch,
                                    const MPMMaterial* matl,
-                                   DataWarehouseP& new_dw);
+                                   DataWarehouse* new_dw);
 
       virtual void addComputesAndRequires(Task* task,
-					 const MPMMaterial* matl,
-					 const Patch* patch,
-					 DataWarehouseP& old_dw,
-				         DataWarehouseP& new_dw) const;
+					  const MPMMaterial* matl,
+					  const PatchSet* patch) const;
     };
 } // End namespace Uintah
     

@@ -30,6 +30,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/CrackBC.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfState.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfStateFactory.h>
+#include <Core/Util/NotFinished.h>
 
 #include <iostream>
 
@@ -37,7 +38,8 @@ using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 
-MPMMaterial::MPMMaterial(ProblemSpecP& ps)
+MPMMaterial::MPMMaterial(ProblemSpecP& ps, MPMLabel* lb)
+  : lb(lb)
 {
    // Constructor
 
@@ -62,7 +64,12 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps)
    if (!d_he_burn)
 	throw ParameterNotFound("No HE burn model");
 
+#if 0
    d_burn = BurnFactory::create(ps);
+#else
+   d_burn = 0;
+   NOT_FINISHED("Burn busted - Steve");
+#endif
 	
    d_fracture = FractureFactory::create(ps);
 
@@ -77,7 +84,6 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps)
    ps->get("gamma",d_gamma);
 
    // Step 3 -- Loop through all of the pieces in this geometry object
-
    int piece_num = 0;
    for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");
 	geom_obj_ps != 0; 
@@ -98,8 +104,6 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps)
       piece_num++;
       d_geom_objs.push_back(scinew GeometryObject(this,mainpiece, geom_obj_ps));
    }
-
-   lb = scinew MPMLabel();
 }
 
 MPMMaterial::~MPMMaterial()
@@ -107,13 +111,11 @@ MPMMaterial::~MPMMaterial()
   // Destructor
 
   delete d_cm;
-  delete lb;
   delete d_he_burn;
   delete d_burn;
+  delete d_fracture;
 
   for (int i = 0; i<(int)d_geom_objs.size(); i++) {
-    GeometryObject* obj = d_geom_objs[i];
-    delete obj;
     delete d_geom_objs[i];
   }
 }
@@ -169,7 +171,7 @@ particleIndex MPMMaterial::countParticles(const Patch* patch) const
 void MPMMaterial::createParticles(particleIndex numParticles,
 				  PerPatch<long> NAPID,
 				  const Patch* patch,
-				  DataWarehouseP& new_dw)
+				  DataWarehouse* new_dw)
 {
   //   const MPMLabel* lb = MPMLabel::getLabels();
 

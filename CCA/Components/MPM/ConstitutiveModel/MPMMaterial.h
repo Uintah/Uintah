@@ -61,7 +61,7 @@ WARNING
 
       class MPMMaterial : public Material {
       public:
-	 MPMMaterial(ProblemSpecP&);
+	 MPMMaterial(ProblemSpecP&, MPMLabel* lb);
 	 
 	 ~MPMMaterial();
 	 
@@ -85,7 +85,7 @@ WARNING
 	 void createParticles(particleIndex numParticles,
 			      PerPatch<long> NAPID,
 			      const Patch*,
-			      DataWarehouseP& new_dw);
+			      DataWarehouse* new_dw);
 
 	 particleIndex createParticles(GeometryObject* obj,
 				       particleIndex start,

@@ -176,10 +176,10 @@ void HyperElasticDamage::addParticleState(std::vector<const VarLabel*>& from,
    throw InternalError("HyperElasticDamage won't work");
 }
 
-void HyperElasticDamage::computeStressTensor(const Patch* patch,
+void HyperElasticDamage::computeStressTensor(const PatchSubset* patches,
 					     const MPMMaterial* matl,
-					     DataWarehouseP& old_dw,
-					     DataWarehouseP& new_dw)
+					     DataWarehouse* old_dw,
+					     DataWarehouse* new_dw)
 {
 
 #ifdef WONT_COMPILE_YET
@@ -265,7 +265,7 @@ void HyperElasticDamage::computeStressTensor(const Patch* patch,
 
 double HyperElasticDamage::computeStrainEnergy(const Patch* patch,
 					       const MPMMaterial* matl,
-					       DataWarehouseP& new_dw)
+					       DataWarehouse* new_dw)
 {
 #ifdef WONT_COMPILE_YET
   double strainenergy = 1;
@@ -276,7 +276,7 @@ double HyperElasticDamage::computeStrainEnergy(const Patch* patch,
 
 void HyperElasticDamage::initializeCMData(const Patch* patch,
 					  const MPMMaterial* matl,
-					  DataWarehouseP& new_dw)
+					  DataWarehouse* new_dw)
 {
 
 }
@@ -285,8 +285,8 @@ void HyperElasticDamage::initializeCMData(const Patch* patch,
 void HyperElasticDamage::addComputesAndRequires(Task* task,
 						const MPMMaterial* matl,
 						const Patch* patch,
-						DataWarehouseP& old_dw,
-						DataWarehouseP& new_dw) const
+						DataWarehouse* old_dw,
+						DataWarehouse* new_dw) const
 {
    cerr << "HyperElasticDamage::addComputesAndRequires needs to be filled in\n";
 }

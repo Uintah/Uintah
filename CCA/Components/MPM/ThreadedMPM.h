@@ -42,47 +42,47 @@ public:
 
    virtual void scheduleInitialize(const LevelP& level,
 				   SchedulerP&,
-				   DataWarehouseP&);
+				   DataWarehouse*);
 	 
     virtual void scheduleComputeStableTimestep(const LevelP& level,
 					       SchedulerP&,
-					       DataWarehouseP&);
+					       DataWarehouse*);
     virtual void timeStep(double t, double dt,
 			  const LevelP& level, SchedulerP&,
-			  const DataWarehouseP&, DataWarehouseP&);
+			  const DataWarehouse*, DataWarehouse*);
 private:
     void actuallyComputeStableTimestep(const ProcessorGroup*,
 				       const Patch* patch,
-				       const DataWarehouseP&,
-				       DataWarehouseP&);
+				       const DataWarehouse*,
+				       DataWarehouse*);
     void findOwners(const ProcessorGroup*,
 		    const Patch* patch,
-		    const DataWarehouseP&,
-		    DataWarehouseP&);
+		    const DataWarehouse*,
+		    DataWarehouse*);
     void interpolateParticlesToGrid(const ProcessorGroup*,
 				    const Patch* patch,
-				    const DataWarehouseP&,
-				    DataWarehouseP&);
+				    const DataWarehouse*,
+				    DataWarehouse*);
     void computeStressTensor(const ProcessorGroup*,
 			     const Patch* patch,
-			     const DataWarehouseP&,
-			     DataWarehouseP&);
+			     const DataWarehouse*,
+			     DataWarehouse*);
     void computeInternalForce(const ProcessorGroup*,
 			      const Patch* patch,
-			      const DataWarehouseP&,
-			      DataWarehouseP&);
+			      const DataWarehouse*,
+			      DataWarehouse*);
     void solveEquationsMotion(const ProcessorGroup*,
 			      const Patch* patch,
-			      const DataWarehouseP&,
-			      DataWarehouseP&);
+			      const DataWarehouse*,
+			      DataWarehouse*);
     void integrateAcceleration(const ProcessorGroup*,
 			       const Patch* patch,
-			       const DataWarehouseP&,
-			       DataWarehouseP&);
+			       const DataWarehouse*,
+			       DataWarehouse*);
     void interpolateToParticlesAndUpdate(const ProcessorGroup*,
 					 const Patch* patch,
-					 const DataWarehouseP&,
-					 DataWarehouseP&);
+					 const DataWarehouse*,
+					 DataWarehouse*);
 
     ThreadedMPM(const ThreadedMPM&);
     ThreadedMPM& operator=(const ThreadedMPM&);

@@ -62,20 +62,17 @@ public:
 			    SimulationStateP&);
 	 
   virtual void scheduleInitialize(const LevelP& level,
-				  SchedulerP&,
-				  DataWarehouseP&);
+				  SchedulerP&);
 	 
   //////////
   // Insert Documentation Here:
   virtual void scheduleComputeStableTimestep(const LevelP& level,
-					     SchedulerP&,
-					     DataWarehouseP&);
+					     SchedulerP&);
 	 
   //////////
   // Insert Documentation Here:
   virtual void scheduleTimeAdvance(double t, double dt,
-				   const LevelP& level, SchedulerP&,
-				   DataWarehouseP&, DataWarehouseP&);
+				   const LevelP& level, SchedulerP&);
 
   void setSharedState(SimulationStateP& ssp)
   {
@@ -101,247 +98,226 @@ private:
   friend class MPMArches;
 
   void actuallyInitialize(const ProcessorGroup*,
-			  const Patch* patch,
-			  DataWarehouseP& old_dw,
-			  DataWarehouseP& new_dw);
+			  const PatchSubset* patches,
+			  const MaterialSubset* matls,
+			  DataWarehouse* old_dw,
+			  DataWarehouse* new_dw);
 
   void interpolateParticlesForSaving(const ProcessorGroup*,
-				     const Patch* patch,
-				     DataWarehouseP& old_dw,
-				     DataWarehouseP& new_dw);
+				     const PatchSubset* patches,
+				     const MaterialSubset* matls,
+				     DataWarehouse* old_dw,
+				     DataWarehouse* new_dw);
 
 
   //////////
   // Insert Documentation Here:
   void computeFracture(const ProcessorGroup*,
-			     const Patch* patch,
-			     DataWarehouseP& old_dw,
-			     DataWarehouseP& new_dw);
+		       const PatchSubset* patches,
+		       const MaterialSubset* matls,
+		       DataWarehouse* old_dw,
+		       DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:
   void stressRelease(const ProcessorGroup*,
-			     const Patch* patch,
-			     DataWarehouseP& old_dw,
-			     DataWarehouseP& new_dw);
+		     const PatchSubset* patches,
+		     const MaterialSubset* matls,
+		     DataWarehouse* old_dw,
+		     DataWarehouse* new_dw);
 
 
   //////////
   // Insert Documentation Here:
-
   void computeConnectivity(const ProcessorGroup*,
-			     const Patch* patch,
-			     DataWarehouseP& old_dw,
-			     DataWarehouseP& new_dw);
+			   const PatchSubset* patches,
+			   const MaterialSubset* matls,
+			   DataWarehouse* old_dw,
+			   DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:
-  void computeBoundaryContact(
-                   const ProcessorGroup*,
-		   const Patch* patch,
-		   DataWarehouseP& old_dw,
-		   DataWarehouseP& new_dw);
+  void computeBoundaryContact(const ProcessorGroup*,
+			      const PatchSubset* patches,
+			      const MaterialSubset* matls,
+			      DataWarehouse* old_dw,
+			      DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:
   void carryForwardVariables( const ProcessorGroup*,
-				    const Patch* patch,
-				    DataWarehouseP& old_dw,
-				    DataWarehouseP& new_dw);
+			      const PatchSubset* patches,
+			      const MaterialSubset* matls,
+			      DataWarehouse* old_dw,
+			      DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:
   void actuallyComputeStableTimestep(const ProcessorGroup*,
-				     const Patch* patch,
-				     DataWarehouseP& old_dw,
-				     DataWarehouseP& new_dw);
+				     const PatchSubset* patches,
+				     const MaterialSubset* matls,
+				     DataWarehouse* old_dw,
+				     DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:
   void interpolateParticlesToGrid(const ProcessorGroup*,
-				  const Patch* patch,
-				  DataWarehouseP& old_dw,
-				  DataWarehouseP& new_dw);
+				  const PatchSubset* patches,
+				  const MaterialSubset* matls,
+				  DataWarehouse* old_dw,
+				  DataWarehouse* new_dw);
   //////////
   // Insert Documentation Here:
   void computeStressTensor(const ProcessorGroup*,
-			   const Patch* patch,
-			   DataWarehouseP& old_dw,
-			   DataWarehouseP& new_dw);
+			   const PatchSubset* patches,
+			   const MaterialSubset* matls,
+			   DataWarehouse* old_dw,
+			   DataWarehouse* new_dw);
 
   //////////
   // Check to see if any particles are ready to burn
   void checkIfIgnited(const ProcessorGroup*,
-		      const Patch* patch,
-		      DataWarehouseP& old_dw,
-		      DataWarehouseP& new_dw);
+		      const PatchSubset* patches,
+		      const MaterialSubset* matls,
+		      DataWarehouse* old_dw,
+		      DataWarehouse* new_dw);
 
   //////////
   // Compute the amount of mass of each particle that burns
   // up in a given timestep
   void computeMassRate(const ProcessorGroup*,
-		       const Patch* patch,
-		       DataWarehouseP& old_dw,
-		       DataWarehouseP& new_dw);
+		       const PatchSubset* patches,
+		       const MaterialSubset* matls,
+		       DataWarehouse* old_dw,
+		       DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:
   void computeInternalForce(const ProcessorGroup*,
-			    const Patch* patch,
-			    DataWarehouseP& old_dw,
-			    DataWarehouseP& new_dw);
+			    const PatchSubset* patches,
+			    const MaterialSubset* matls,
+			    DataWarehouse* old_dw,
+			    DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:
-  void computeInternalHeatRate(
-			       const ProcessorGroup*,
-			       const Patch* patch,
-			       DataWarehouseP& old_dw,
-			       DataWarehouseP& new_dw);
+  void computeInternalHeatRate(const ProcessorGroup*,
+			       const PatchSubset* patches,
+			       const MaterialSubset* matls,
+			       DataWarehouse* old_dw,
+			       DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:
   void solveEquationsMotion(const ProcessorGroup*,
-			    const Patch* patch,
-			    DataWarehouseP& old_dw,
-			    DataWarehouseP& new_dw);
+			    const PatchSubset* patches,
+			    const MaterialSubset* matls,
+			    DataWarehouse* old_dw,
+			    DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:
   void solveHeatEquations(const ProcessorGroup*,
-			  const Patch* patch,
-			  DataWarehouseP& /*old_dw*/,
-			  DataWarehouseP& new_dw);
+			  const PatchSubset* patches,
+			  const MaterialSubset* matls,
+			  DataWarehouse* /*old_dw*/,
+			  DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:
   void integrateAcceleration(const ProcessorGroup*,
-			     const Patch* patch,
-			     DataWarehouseP& old_dw,
-			     DataWarehouseP& new_dw);
+			     const PatchSubset* patches,
+			     const MaterialSubset* matls,
+			     DataWarehouse* old_dw,
+			     DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:
   void integrateTemperatureRate(const ProcessorGroup*,
-				      const Patch* patch,
-				      DataWarehouseP& old_dw,
-				      DataWarehouseP& new_dw);
+				const PatchSubset* patches,
+				const MaterialSubset* matls,
+				DataWarehouse* old_dw,
+				DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:
   void interpolateToParticlesAndUpdate(const ProcessorGroup*,
-				       const Patch* patch,
-				       DataWarehouseP& old_dw,
-				       DataWarehouseP& new_dw);
+				       const PatchSubset* patches,
+				       const MaterialSubset* matls,
+				       DataWarehouse* old_dw,
+				       DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:
   void setPositions( const ProcessorGroup*,
-				    const Patch* patch,
-				    DataWarehouseP& old_dw,
-				    DataWarehouseP& new_dw);
+		     const PatchSubset* patches,
+		     const MaterialSubset* matls,
+		     DataWarehouse* old_dw,
+		     DataWarehouse* new_dw);
 
   //////////
   // Insert Documentation Here:
   void checkLeave(const ProcessorGroup*,
-		  const Patch* patch,
-		  DataWarehouseP& /*old_dw*/,
-		  DataWarehouseP& new_dw);
+		  const PatchSubset* patches,
+		  const MaterialSubset* matls,
+		  DataWarehouse* /*old_dw*/,
+		  DataWarehouse* new_dw);
 
-  void scheduleSetPositions(const Patch* patch,
-				     SchedulerP&,
-				     DataWarehouseP&,
-				     DataWarehouseP&);
+  void scheduleSetPositions(SchedulerP&, const PatchSet*, const MaterialSet*);
 
-  void scheduleComputeFracture(const Patch* patch,
-				     SchedulerP&,
-				     DataWarehouseP&,
-				     DataWarehouseP&);
+  void scheduleComputeFracture(SchedulerP&, const PatchSet*,
+			       const MaterialSet*);
 
-  void scheduleComputeConnectivity(const Patch* patch,
-				     SchedulerP&,
-				     DataWarehouseP&,
-				     DataWarehouseP&);
+  void scheduleComputeConnectivity(SchedulerP&, const PatchSet*,
+				   const MaterialSet*);
 
-  void scheduleComputeBoundaryContact(const Patch* patch,
-			              SchedulerP&,
-				      DataWarehouseP&,
-				      DataWarehouseP&);
+  void scheduleComputeBoundaryContact(SchedulerP&, const PatchSet*,
+				      const MaterialSet*);
 
-  void scheduleCarryForwardVariables(const Patch* patch,
-					       SchedulerP&,
-					       DataWarehouseP&,
-					       DataWarehouseP&);
+  void scheduleCarryForwardVariables(SchedulerP&, const PatchSet*,
+				     const MaterialSet*);
 
-  void scheduleInterpolateParticlesToGrid(const Patch* patch,
-					  SchedulerP&,
-					  DataWarehouseP&,
-					  DataWarehouseP&);
+  void scheduleInterpolateParticlesToGrid(SchedulerP&, const PatchSet*,
+					  const MaterialSet*);
 
-  void scheduleComputeHeatExchange(const Patch* patch,
-				   SchedulerP&,
-				   DataWarehouseP&,
-				   DataWarehouseP&);
+  void scheduleComputeHeatExchange(SchedulerP&, const PatchSet*,
+				   const MaterialSet*);
 
-  void scheduleExMomInterpolated(const Patch* patch,
-				 SchedulerP&,
-				 DataWarehouseP&,
-				 DataWarehouseP&);
+  void scheduleExMomInterpolated(SchedulerP&, const PatchSet*,
+				 const MaterialSet*);
 
-  void scheduleComputeStressTensor(const Patch* patch,
-				   SchedulerP&,
-				   DataWarehouseP&,
-				   DataWarehouseP&);
+  void scheduleComputeStressTensor(SchedulerP&, const PatchSet*,
+				   const MaterialSet*);
 
-  void scheduleComputeInternalForce(const Patch* patch,
-				    SchedulerP&,
-				    DataWarehouseP&,
-				    DataWarehouseP&);
+  void scheduleComputeInternalForce(SchedulerP&, const PatchSet*,
+				    const MaterialSet*);
 
-  void scheduleComputeInternalHeatRate(const Patch* patch,
-				       SchedulerP&,
-				       DataWarehouseP&,
-				       DataWarehouseP&);
+  void scheduleComputeInternalHeatRate(SchedulerP&, const PatchSet*,
+				       const MaterialSet*);
 
-  void scheduleSolveEquationsMotion(const Patch* patch,
-				    SchedulerP&,
-				    DataWarehouseP&,
-				    DataWarehouseP&);
+  void scheduleSolveEquationsMotion(SchedulerP&, const PatchSet*,
+				    const MaterialSet*);
 
-  void scheduleSolveHeatEquations(const Patch* patch,
-				  SchedulerP&,
-				  DataWarehouseP&,
-				  DataWarehouseP&);
+  void scheduleSolveHeatEquations(SchedulerP&, const PatchSet*,
+				  const MaterialSet*);
 
-  void scheduleIntegrateAcceleration(const Patch* patch,
-				     SchedulerP&,
-				     DataWarehouseP&,
-				     DataWarehouseP&);
+  void scheduleIntegrateAcceleration(SchedulerP&, const PatchSet*,
+				     const MaterialSet*);
 
-  void scheduleIntegrateTemperatureRate(const Patch* patch,
-				        SchedulerP&,
-				        DataWarehouseP&,
-				        DataWarehouseP&);
+  void scheduleIntegrateTemperatureRate(SchedulerP&, const PatchSet*,
+					const MaterialSet*);
 
-  void scheduleExMomIntegrated(const Patch* patch,
-			       SchedulerP&,
-			       DataWarehouseP&,
-			       DataWarehouseP&);
+  void scheduleExMomIntegrated(SchedulerP&, const PatchSet*,
+			       const MaterialSet*);
 
-  void scheduleInterpolateToParticlesAndUpdate(const Patch* patch,
-					       SchedulerP&,
-					       DataWarehouseP&,
-					       DataWarehouseP&);
+  void scheduleInterpolateToParticlesAndUpdate(SchedulerP&, const PatchSet*,
+					       const MaterialSet*);
 
-  void scheduleComputeMassRate(const Patch* patch,
-			       SchedulerP&,
-			       DataWarehouseP&,
-			       DataWarehouseP&);
+  void scheduleComputeMassRate(SchedulerP&, const PatchSet*,
+			       const MaterialSet*);
 
-  void scheduleInterpolateParticlesForSaving(const Patch* patch,
-					     SchedulerP&,
-					     DataWarehouseP&,
-					     DataWarehouseP&);
+  void scheduleInterpolateParticlesForSaving(SchedulerP&, const PatchSet*,
+					     const MaterialSet*);
 
   SerialMPM(const SerialMPM&);
   SerialMPM& operator=(const SerialMPM&);

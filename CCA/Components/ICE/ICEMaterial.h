@@ -79,7 +79,7 @@ WARNING
 			      CCVariable<double>& volf,  CCVariable<Vector>& vCC,
                            CCVariable<double>& press,
                            int numMatls,
-			      const Patch* patch, DataWarehouseP& new_dw);
+			      const Patch* patch, DataWarehouse* new_dw);
 
       private:
 

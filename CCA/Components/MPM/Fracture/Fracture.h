@@ -29,25 +29,25 @@ public:
 
   virtual void   initializeFractureModelData(const Patch* patch,
                             const MPMMaterial* matl,
-                            DataWarehouseP& new_dw) = 0;
+                            DataWarehouse* new_dw) = 0;
 
   virtual void   computeConnectivity(
-                  const Patch* patch,
+                  const PatchSubset* patch,
                   MPMMaterial* mpm_matl, 
-		  DataWarehouseP& old_dw, 
-		  DataWarehouseP& new_dw) = 0;
+		  DataWarehouse* old_dw, 
+		  DataWarehouse* new_dw) = 0;
 
   virtual void   computeFracture(
-                  const Patch* patch,
+                  const PatchSubset* patch,
                   MPMMaterial* mpm_matl, 
-		  DataWarehouseP& old_dw, 
-		  DataWarehouseP& new_dw) = 0;
+		  DataWarehouse* old_dw, 
+		  DataWarehouse* new_dw) = 0;
 
   virtual void   computeBoundaryContact(
-                  const Patch* patch,
+                  const PatchSubset* patch,
                   MPMMaterial* mpm_matl, 
-		  DataWarehouseP& old_dw, 
-		  DataWarehouseP& new_dw) = 0;
+		  DataWarehouse* old_dw, 
+		  DataWarehouse* new_dw) = 0;
 
   Fracture(ProblemSpecP& ps);
   virtual ~Fracture();

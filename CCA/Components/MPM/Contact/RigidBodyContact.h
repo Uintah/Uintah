@@ -72,29 +72,28 @@ WARNING
 	 // Initialiation function, empty for RigidBodyContact Velocity contact
 	 virtual void initializeContact(const Patch* patch,
 					int vfindex,
-					DataWarehouseP& new_dw);
+					DataWarehouse* new_dw);
 	 
 	 // Basic contact methods
 	 virtual void exMomInterpolated(const ProcessorGroup*,
-					const Patch* patch,
-					DataWarehouseP& old_dw,
-					DataWarehouseP& new_dw);
+					const PatchSubset* patches,
+					const MaterialSubset* matls,
+					DataWarehouse* old_dw,
+					DataWarehouse* new_dw);
 	 
 	 virtual void exMomIntegrated(const ProcessorGroup*,
-				      const Patch* patch,
-				      DataWarehouseP& old_dw,
-				      DataWarehouseP& new_dw);
+				      const PatchSubset* patches,
+				      const MaterialSubset* matls,
+				      DataWarehouse* old_dw,
+				      DataWarehouse* new_dw);
 
          virtual void addComputesAndRequiresInterpolated(Task* task,
-                                             const MPMMaterial* matl,
-                                             const Patch* patch,
-                                             DataWarehouseP& old_dw,
-                                             DataWarehouseP& new_dw) const;	 
+					     const PatchSet* patches,
+					     const MaterialSet* matls) const;
+
          virtual void addComputesAndRequiresIntegrated(Task* task,
-                                             const MPMMaterial* matl,
-                                             const Patch* patch,
-                                             DataWarehouseP& old_dw,
-                                             DataWarehouseP& new_dw) const;	 
+					     const PatchSet* patches,
+					     const MaterialSet* matls) const;
       };
       
 } // end namespace Uintah

@@ -15,6 +15,7 @@
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Util/NotFinished.h>
 #include <fstream>
 #include <iostream>
 
@@ -45,7 +46,7 @@ HypoElastic::~HypoElastic()
 
 void HypoElastic::initializeCMData(const Patch* patch,
                                         const MPMMaterial* matl,
-                                        DataWarehouseP& new_dw)
+                                        DataWarehouse* new_dw)
 {
    // Put stuff in here to initialize each particle's
    // constitutive model parameters and deformationMeasure
@@ -85,7 +86,7 @@ void HypoElastic::addParticleState(std::vector<const VarLabel*>& from,
 
 void HypoElastic::computeStableTimestep(const Patch* patch,
                                            const MPMMaterial* matl,
-                                           DataWarehouseP& new_dw)
+                                           DataWarehouse* new_dw)
 {
    // This is only called for the initial timestep - all other timesteps
    // are computed as a side-effect of computeStressTensor
@@ -122,81 +123,83 @@ void HypoElastic::computeStableTimestep(const Patch* patch,
     new_dw->put(delt_vartype(delT_new), lb->delTLabel);
 }
 
-void HypoElastic::computeStressTensor(const Patch* patch,
+void HypoElastic::computeStressTensor(const PatchSubset* patches,
                                         const MPMMaterial* matl,
-                                        DataWarehouseP& old_dw,
-                                        DataWarehouseP& new_dw)
+                                        DataWarehouse* old_dw,
+                                        DataWarehouse* new_dw)
 {
-  //
-  //  FIX  To do:  Read in table for vres
-  //               Obtain and modify particle temperature (deg K)
-  //
-  Matrix3 velGrad,deformationGradientInc,Identity,zero(0.),One(1.);
-  double c_dil=0.0,Jinc;
-  Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
-  double onethird = (1.0/3.0);
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+    //
+    //  FIX  To do:  Read in table for vres
+    //               Obtain and modify particle temperature (deg K)
+    //
+    Matrix3 velGrad,deformationGradientInc,Identity,zero(0.),One(1.);
+    double c_dil=0.0,Jinc;
+    Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
+    double onethird = (1.0/3.0);
 
-  Identity.Identity();
+    Identity.Identity();
 
-  Vector dx = patch->dCell();
-  double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
+    Vector dx = patch->dCell();
+    double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
-  int matlindex = matl->getDWIndex();
-  // Create array for the particle position
-  ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
-  ParticleVariable<Point> px;
-  old_dw->get(px, lb->pXLabel, pset);
+    int matlindex = matl->getDWIndex();
+    // Create array for the particle position
+    ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
+    ParticleVariable<Point> px;
+    old_dw->get(px, lb->pXLabel, pset);
 
-  // Create array for the particle deformation
-  ParticleVariable<Matrix3> deformationGradient;
-  old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
+    // Create array for the particle deformation
+    ParticleVariable<Matrix3> deformationGradient;
+    old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
 
-  // Create array for the particle stress
-  ParticleVariable<Matrix3> pstress;
-  old_dw->get(pstress, lb->pStressLabel, pset);
+    // Create array for the particle stress
+    ParticleVariable<Matrix3> pstress;
+    old_dw->get(pstress, lb->pStressLabel, pset);
 
-  // Retrieve the array of constitutive parameters
-  ParticleVariable<StateData> statedata;
-  old_dw->get(statedata, p_statedata_label, pset);
-  ParticleVariable<double> pmass;
-  old_dw->get(pmass, lb->pMassLabel, pset);
-  ParticleVariable<double> pvolume;
-  old_dw->get(pvolume, lb->pVolumeLabel, pset);
-  ParticleVariable<Vector> pvelocity;
-  old_dw->get(pvelocity, lb->pVelocityLabel, pset);
-  ParticleVariable<double> ptemperature;
-  old_dw->get(ptemperature, lb->pTemperatureLabel, pset);
+    // Retrieve the array of constitutive parameters
+    ParticleVariable<StateData> statedata;
+    old_dw->get(statedata, p_statedata_label, pset);
+    ParticleVariable<double> pmass;
+    old_dw->get(pmass, lb->pMassLabel, pset);
+    ParticleVariable<double> pvolume;
+    old_dw->get(pvolume, lb->pVolumeLabel, pset);
+    ParticleVariable<Vector> pvelocity;
+    old_dw->get(pvelocity, lb->pVelocityLabel, pset);
+    ParticleVariable<double> ptemperature;
+    old_dw->get(ptemperature, lb->pTemperatureLabel, pset);
 
-  NCVariable<Vector> gvelocity;
+    NCVariable<Vector> gvelocity;
 
-  new_dw->get(gvelocity, lb->gMomExedVelocityLabel, matlindex,patch,
-            Ghost::AroundCells, 1);
-  delt_vartype delT;
-  old_dw->get(delT, lb->delTLabel);
+    new_dw->get(gvelocity, lb->gMomExedVelocityLabel, matlindex,patch,
+		Ghost::AroundCells, 1);
+    delt_vartype delT;
+    old_dw->get(delT, lb->delTLabel);
 
-  double G = d_initialData.G;
-  double bulk = d_initialData.K;
+    double G = d_initialData.G;
+    double bulk = d_initialData.K;
+    // Unused variable - Steve
+    // double Cp0 = matl->getSpecificHeat();
+    //  cout << "Cp0 = " << Cp0 << endl;
 
-  double Cp0 = matl->getSpecificHeat();
-  //  cout << "Cp0 = " << Cp0 << endl;
+    for(ParticleSubset::iterator iter = pset->begin();
+	iter != pset->end(); iter++){
+      particleIndex idx = *iter;
 
-  for(ParticleSubset::iterator iter = pset->begin();
-     iter != pset->end(); iter++){
-     particleIndex idx = *iter;
-
-     velGrad.set(0.0);
-     // Get the node indices that surround the cell
-     IntVector ni[8];
-     Vector d_S[8];
-     patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
+      velGrad.set(0.0);
+      // Get the node indices that surround the cell
+      IntVector ni[8];
+      Vector d_S[8];
+      patch->findCellAndShapeDerivatives(px[idx], ni, d_S);
 
       for(int k = 0; k < 8; k++) {
-          Vector& gvel = gvelocity[ni[k]];
-          for (int j = 0; j<3; j++){
-            for (int i = 0; i<3; i++) {
-                velGrad(i+1,j+1)+=gvel(i) * d_S[k](j) * oodx[j];
-            }
-          }
+	Vector& gvel = gvelocity[ni[k]];
+	for (int j = 0; j<3; j++){
+	  for (int i = 0; i<3; i++) {
+	    velGrad(i+1,j+1)+=gvel(i) * d_S[k](j) * oodx[j];
+	  }
+	}
       }
 
       // Calculate rate of deformation D, and deviatoric rate DPrime
@@ -221,7 +224,8 @@ void HypoElastic::computeStressTensor(const Patch* patch,
                              deformationGradient[idx];
 
       // get the volumetric part of the deformation
-      double J = deformationGradient[idx].Determinant();
+      // unused variable - Steve
+      // double J = deformationGradient[idx].Determinant();
 
       pvolume[idx]=Jinc*pvolume[idx];
 
@@ -247,29 +251,29 @@ void HypoElastic::computeStressTensor(const Patch* patch,
       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
 		       Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
 		       Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
+    }
+
+    WaveSpeed = dx/WaveSpeed;
+    double delT_new = WaveSpeed.minComponent();
+    new_dw->put(delt_vartype(delT_new),lb->delTLabel);
+    new_dw->put(pstress, lb->pStressAfterStrainRateLabel);
+    new_dw->put(deformationGradient, lb->pDeformationMeasureLabel_preReloc);
+
+    // Put the strain energy in the data warehouse
+    new_dw->put(sum_vartype(d_se), lb->StrainEnergyLabel);
+
+    // This is updated
+    new_dw->put(statedata, p_statedata_label_preReloc);
+    // Store deformed volume
+    new_dw->put(pvolume,lb->pVolumeDeformedLabel);
   }
-
-  WaveSpeed = dx/WaveSpeed;
-  double delT_new = WaveSpeed.minComponent();
-  new_dw->put(delt_vartype(delT_new),lb->delTLabel);
-  new_dw->put(pstress, lb->pStressAfterStrainRateLabel);
-  new_dw->put(deformationGradient, lb->pDeformationMeasureLabel_preReloc);
-
-  // Put the strain energy in the data warehouse
-  new_dw->put(sum_vartype(d_se), lb->StrainEnergyLabel);
-
-  // This is updated
-  new_dw->put(statedata, p_statedata_label_preReloc);
-  // Store deformed volume
-  new_dw->put(pvolume,lb->pVolumeDeformedLabel);
 }
 
 void HypoElastic::addComputesAndRequires(Task* task,
 					 const MPMMaterial* matl,
-					 const Patch* patch,
-					 DataWarehouseP& old_dw,
-					 DataWarehouseP& new_dw) const
+					 const PatchSet* patches) const
 {
+#if 0
    task->requires(old_dw, lb->pXLabel, matl->getDWIndex(), patch,
                   Ghost::None);
    task->requires(old_dw, lb->pDeformationMeasureLabel, matl->getDWIndex(), patch,
@@ -290,6 +294,9 @@ void HypoElastic::addComputesAndRequires(Task* task,
    task->computes(new_dw, lb->pDeformationMeasureLabel_preReloc, matl->getDWIndex(), patch);
    task->computes(new_dw, p_statedata_label_preReloc, matl->getDWIndex(),  patch);
    task->computes(new_dw, lb->pVolumeDeformedLabel, matl->getDWIndex(), patch);
+#else
+   NOT_FINISHED("new task stuff");
+#endif
 }
 
 #ifdef __sgi

@@ -20,6 +20,7 @@
 #include <Packages/Uintah/Core/Grid/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
+#include <Core/Util/NotFinished.h>
 
 #include <math.h>
 
@@ -107,7 +108,7 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
 					  DataWarehouseP& new_dw,
 					  double time, double delta_t)
 {
-  
+#if 0  
   // for multimaterial, reset wall cell type
   if (d_MAlab)
     d_boundaryCondition->sched_mmWallCellTypeInit(level, sched, old_dw, new_dw);
@@ -206,6 +207,9 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   // print information at probes provided in input file
   if (d_probe_data)
     sched_probeData(level, sched, old_dw, new_dw);
+#else
+  NOT_FINISHED("new task stuff");
+#endif
 
   return(0);
 }
@@ -214,11 +218,10 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
 // Schedule initialize 
 // ****************************************************************************
 void 
-PicardNonlinearSolver::sched_setInitialGuess(const LevelP& level,
-					     SchedulerP& sched,
-					     DataWarehouseP& old_dw,
-					     DataWarehouseP& new_dw)
+PicardNonlinearSolver::sched_setInitialGuess(SchedulerP& sched, const PatchSet* patches,
+					     const MaterialSet* matls)
 {
+#if 0
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
@@ -268,17 +271,19 @@ PicardNonlinearSolver::sched_setInitialGuess(const LevelP& level,
       sched->addTask(tsk);
     }
   }
+#else
+  NOT_FINISHED("new task stuff");
+#endif
 }
 
 // ****************************************************************************
 // Schedule Interpolate from SFCX, SFCY, SFCZ to CC<Vector>
 // ****************************************************************************
 void 
-PicardNonlinearSolver::sched_interpolateFromFCToCC(const LevelP& level,
-						   SchedulerP& sched,
-						   DataWarehouseP& old_dw,
-						   DataWarehouseP& new_dw)
+PicardNonlinearSolver::sched_interpolateFromFCToCC(SchedulerP& sched, const PatchSet* patches,
+						   const MaterialSet* matls)
 {
+#if 0
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
     const Patch* patch=*iter;
@@ -314,10 +319,8 @@ PicardNonlinearSolver::sched_interpolateFromFCToCC(const LevelP& level,
 }
 
 void 
-PicardNonlinearSolver::sched_probeData(const LevelP& level,
-				       SchedulerP& sched,
-				       DataWarehouseP& old_dw,
-				       DataWarehouseP& new_dw)
+PicardNonlinearSolver::sched_probeData(SchedulerP& sched, const PatchSet* patches,
+				       const MaterialSet* matls)
 {
   for(Level::const_patchIterator iter=level->patchesBegin();
       iter != level->patchesEnd(); iter++){
@@ -347,6 +350,9 @@ PicardNonlinearSolver::sched_probeData(const LevelP& level,
       sched->addTask(tsk);
     }
   }
+#else
+  NOT_FINISHED("new task stuff");
+#endif
 }
 // ****************************************************************************
 // Actual initialize 

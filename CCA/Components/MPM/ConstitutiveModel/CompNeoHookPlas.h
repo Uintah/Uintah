@@ -72,24 +72,22 @@ WARNING
 	 // compute stable timestep for this patch
 	 virtual void computeStableTimestep(const Patch* patch,
 					    const MPMMaterial* matl,
-					    DataWarehouseP& new_dw);
+					    DataWarehouse* new_dw);
 
 	 // compute stress at each particle in the patch
-	 virtual void computeStressTensor(const Patch* patch,
+	 virtual void computeStressTensor(const PatchSubset* patches,
 					  const MPMMaterial* matl,
-					  DataWarehouseP& old_dw,
-					  DataWarehouseP& new_dw);
+					  DataWarehouse* old_dw,
+					  DataWarehouse* new_dw);
 
          // initialize  each particle's constitutive model data
          virtual void initializeCMData(const Patch* patch,
 				       const MPMMaterial* matl,
-				       DataWarehouseP& new_dw);
+				       DataWarehouse* new_dw);
 
 	 virtual void addComputesAndRequires(Task* task,
 					     const MPMMaterial* matl,
-					     const Patch* patch,
-					     DataWarehouseP& old_dw,
-					     DataWarehouseP& new_dw) const;
+					     const PatchSet* patches) const;
 
 	 virtual void addParticleState(std::vector<const VarLabel*>& from,
 				       std::vector<const VarLabel*>& to);

@@ -89,19 +89,15 @@ public:
    
       ///////////////////////////////////////////////////////////////////////
       // Schedule Build of linearized matrix
-      void sched_buildLinearMatrix(const LevelP& level,
-				   SchedulerP& sched,
-				   DataWarehouseP& old_dw,
-				   DataWarehouseP& new_dw,
+      void sched_buildLinearMatrix(SchedulerP&, const PatchSet* patches,
+				   const MaterialSet* matls,
 				   double delta_t, int index);
 
       ///////////////////////////////////////////////////////////////////////
       // Schedule Linear Solve for Scalar[index]
-      void sched_scalarLinearSolve(const LevelP& level,
-				   SchedulerP& sched,
-				   DataWarehouseP& new_dw,
-				   DataWarehouseP& matrix_dw, double delta_t,
-				   int index);
+      void sched_scalarLinearSolve(SchedulerP&, const PatchSet* patches,
+				   const MaterialSet* matls,
+				   double delta_t, int index);
 protected:
 
 private:

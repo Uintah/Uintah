@@ -44,11 +44,14 @@ WARNING
    public:
 
       //Physical Models:
+     // I don't like this - Steve
+     // They are basically glorified common blocks/global variables
       static HeatConduction*  heatConductionModel;
       static Contact*         contactModel;
       static ThermalContact*  thermalContactModel;
 
       static void build(const ProblemSpecP& prob_spec,SimulationStateP& sharedState);
+     static void kill();
    };
 
 } // End namespace Uintah

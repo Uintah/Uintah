@@ -65,67 +65,60 @@ public:
 			    SimulationStateP&);
 	 
   virtual void scheduleInitialize(const LevelP& level,
-				  SchedulerP&,
-				  DataWarehouseP&);
+				  SchedulerP&);
 
   //////////
   // Insert Documentation Here:
   virtual void scheduleComputeStableTimestep(const LevelP& level,
-					     SchedulerP&,
-					     DataWarehouseP&);
+					     SchedulerP&);
 	 
   //////////
   // Insert Documentation Here:
   virtual void scheduleTimeAdvance(double t, double dt,
-				   const LevelP& level, SchedulerP&,
-				   DataWarehouseP&, DataWarehouseP&);
+				   const LevelP& level, SchedulerP&);
 
 
-  void scheduleInterpolateNCToCC(const LevelP& level,
-				 SchedulerP&,
-				 DataWarehouseP&,
-				 DataWarehouseP&);
+  void scheduleInterpolateNCToCC(SchedulerP&, const PatchSet*,
+				 const MaterialSet*);
 
-  void scheduleInterpolateCCToFC(const LevelP& level,
-				 SchedulerP&,
-				 DataWarehouseP&,
-				 DataWarehouseP&);
+  void scheduleInterpolateCCToFC(SchedulerP&, const PatchSet*,
+				 const MaterialSet*);
 
 
-  void scheduleComputeVoidFrac(const LevelP& level,
-			       SchedulerP& sched,
-			       DataWarehouseP& old_dw,
-			       DataWarehouseP& new_dw);
+  void scheduleComputeVoidFrac(SchedulerP&, const PatchSet*,
+			       const MaterialSet*);
 
-  void scheduleMomExchange(const LevelP& level,
-			   SchedulerP&,
-			   DataWarehouseP&,
-			   DataWarehouseP&);
+  void scheduleMomExchange(SchedulerP&, const PatchSet*,
+			   const MaterialSet*);
 
 
 
 protected:
 
   void interpolateNCToCC(const ProcessorGroup*,
-			 const Patch* patch,
-			 DataWarehouseP& old_dw,
-			 DataWarehouseP& new_dw);
+			 const PatchSubset* patches,
+			 const MaterialSubset* matls,
+			 DataWarehouse* old_dw,
+			 DataWarehouse* new_dw);
 
   void interpolateCCToFC(const ProcessorGroup*,
-			 const Patch* patch,
-			 DataWarehouseP& old_dw,
-			 DataWarehouseP& new_dw);
+			 const PatchSubset* patches,
+			 const MaterialSubset* matls,
+			 DataWarehouse* old_dw,
+			 DataWarehouse* new_dw);
 
   void computeVoidFrac(const ProcessorGroup*,
-		       const Patch* patch,
-		       DataWarehouseP& old_dw,
-		       DataWarehouseP& new_dw) ;
+		       const PatchSubset* patches,
+		       const MaterialSubset* matls,
+		       DataWarehouse* old_dw,
+		       DataWarehouse* new_dw) ;
 
 
   void doMomExchange(const ProcessorGroup*,
-		     const Patch* patch,
-		     DataWarehouseP& old_dw,
-		     DataWarehouseP& new_dw);
+		     const PatchSubset* patches,
+		     const MaterialSubset* matls,
+		     DataWarehouse* old_dw,
+		     DataWarehouse* new_dw);
 
   double d_SMALL_NUM;
   // GROUP: Constructors (Private):

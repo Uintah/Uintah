@@ -65,120 +65,118 @@ public:
 			    SimulationStateP&);
 	 
   virtual void scheduleInitialize(const LevelP& level,
-				  SchedulerP&,
-				  DataWarehouseP&);
+				  SchedulerP&);
 
   //////////
   // Insert Documentation Here:
   virtual void scheduleComputeStableTimestep(const LevelP& level,
-					     SchedulerP&,
-					     DataWarehouseP&);
+					     SchedulerP&);
 	 
   //////////
   // Insert Documentation Here:
   virtual void scheduleTimeAdvance(double t, double dt,
-				   const LevelP& level, SchedulerP&,
-				   DataWarehouseP&, DataWarehouseP&);
+				   const LevelP& level, SchedulerP&);
 
                             
-  void scheduleInterpolateNCToCC_0(const Patch* patch,
-                                   SchedulerP&,
-                                   DataWarehouseP&,
-                                   DataWarehouseP&);
+  void scheduleInterpolateNCToCC_0(SchedulerP&, const PatchSet*,
+				   const MaterialSet*);
 
-  void scheduleInterpolateVelIncFCToNC(const Patch* patch,
-                                       SchedulerP&,
-                                       DataWarehouseP&,
-                                       DataWarehouseP&);
+  void scheduleInterpolateVelIncFCToNC(SchedulerP&, const PatchSet*,
+				       const MaterialSet*);
 
-  void scheduleInterpolateNCToCC(const Patch* patch,
-                                 SchedulerP&,
-                                 DataWarehouseP&,
-                                 DataWarehouseP&);
+  void scheduleInterpolateNCToCC(SchedulerP&, const PatchSet*,
+				 const MaterialSet*);
 
-  void scheduleCCMomExchange(const Patch* patch,
-                             SchedulerP&,
-                             DataWarehouseP&,
-                             DataWarehouseP&);
+  void scheduleCCMomExchange(SchedulerP&, const PatchSet*,
+			     const MaterialSet*);
 
-  void scheduleInterpolateCCToNC(const Patch* patch,
-				 SchedulerP&,
-				 DataWarehouseP&,
-				 DataWarehouseP&);
+  void scheduleInterpolateCCToNC(SchedulerP&, const PatchSet*,
+				 const MaterialSet*);
 
-  void scheduleComputeEquilibrationPressure(const Patch* patch,
-					    SchedulerP&,
-					    DataWarehouseP&,
-					    DataWarehouseP&);
+  void scheduleComputeEquilibrationPressure(SchedulerP&, const PatchSet*,
+					    const MaterialSet*);
 
 
-  void scheduleInterpolatePressCCToPressNC(const Patch* patch,
-					   SchedulerP&,
-					   DataWarehouseP&,
-					   DataWarehouseP&);
+  void scheduleInterpolatePressCCToPressNC(SchedulerP&, const PatchSet*,
+					   const MaterialSet*);
 
-  void scheduleInterpolatePAndGradP(const Patch* patch,
-				    SchedulerP&,
-				    DataWarehouseP&,
-				    DataWarehouseP&);
+  void scheduleInterpolatePAndGradP(SchedulerP&, const PatchSet*,
+				    const MaterialSet*);
+                                
+  void  scheduleMassExchange(SchedulerP&, const PatchSet*,
+			     const MaterialSet*);
 
-  void scheduleComputeMassBurnRate(const  Patch* patch,
-				   SchedulerP&,
-				   DataWarehouseP&,
-				   DataWarehouseP&);
+  void scheduleComputeMassBurnRate(SchedulerP&, const PatchSet*,
+				   const MaterialSet*);
   
 //______________________________________________________________________
 //       A C T U A L   S T E P S : 
   void actuallyInitialize(const ProcessorGroup*,
-			  const Patch* patch,
-			  DataWarehouseP&,
-			  DataWarehouseP& new_dw);
+			  const PatchSubset* patch,
+			  const MaterialSubset* matls,
+			  DataWarehouse*,
+			  DataWarehouse* new_dw);
                          
                                                     
   void interpolateNCToCC_0(const ProcessorGroup*,
-                           const Patch* patch,
-                           DataWarehouseP& old_dw,
-                           DataWarehouseP& new_dw);
+                           const PatchSubset* patch,
+			   const MaterialSubset* matls,
+                           DataWarehouse* old_dw,
+                           DataWarehouse* new_dw);
 
   void interpolateVelIncFCToNC(const ProcessorGroup*,
-                               const Patch* patch,
-                               DataWarehouseP& old_dw,
-                               DataWarehouseP& new_dw);
+                               const PatchSubset* patch,
+			       const MaterialSubset* matls,
+                               DataWarehouse* old_dw,
+                               DataWarehouse* new_dw);
 
   void interpolateNCToCC(const ProcessorGroup*,
-                         const Patch* patch,
-                         DataWarehouseP& old_dw,
-                         DataWarehouseP& new_dw);
+                         const PatchSubset* patch,
+			 const MaterialSubset* matls,
+                         DataWarehouse* old_dw,
+                         DataWarehouse* new_dw);
 
   void computeEquilibrationPressure(const ProcessorGroup*,
-				    const Patch* patch,
-				    DataWarehouseP&, 
-				    DataWarehouseP&);
+				    const PatchSubset* patch,
+				    const MaterialSubset* matls,
+				    DataWarehouse*, 
+				    DataWarehouse*);
 
   void doCCMomExchange(const ProcessorGroup*,
-                       const Patch* patch,
-                       DataWarehouseP& old_dw,
-                       DataWarehouseP& new_dw);
+                       const PatchSubset* patch,
+		       const MaterialSubset* matls,
+                       DataWarehouse* old_dw,
+                       DataWarehouse* new_dw);
 
   void interpolateCCToNC(const ProcessorGroup*,
-                         const Patch* patch,
-                         DataWarehouseP& old_dw,
-                         DataWarehouseP& new_dw);
+                         const PatchSubset* patch,
+			 const MaterialSubset* matls,
+                         DataWarehouse* old_dw,
+                         DataWarehouse* new_dw);
 
   void interpolatePressCCToPressNC(const ProcessorGroup*,
-				   const Patch* patch,
-				   DataWarehouseP& old_dw,
-				   DataWarehouseP& new_dw);
+				   const PatchSubset* patch,
+				   const MaterialSubset* matls,
+				   DataWarehouse* old_dw,
+				   DataWarehouse* new_dw);
 
   void interpolatePAndGradP(const ProcessorGroup*,
-                            const Patch* patch,
-                            DataWarehouseP& old_dw,
-                            DataWarehouseP& new_dw);
+                            const PatchSubset* patch,
+			    const MaterialSubset* matls,
+                            DataWarehouse* old_dw,
+                            DataWarehouse* new_dw);
+                            
+  void massExchange(const ProcessorGroup*,
+                    const PatchSubset* patch,   
+		    const MaterialSubset* matls,
+                    DataWarehouse* old_dw,
+                    DataWarehouse* new_dw);
 
   void computeMassBurnRate(const ProcessorGroup*,
-			   const Patch* patch,
-			   DataWarehouseP& old_dw,
-			   DataWarehouseP& new_dw);
+			   const PatchSubset* patch,
+			   const MaterialSubset* matls,
+			   DataWarehouse* old_dw,
+			   DataWarehouse* new_dw);
   
   enum bctype { NONE=0,
                 FIXED,

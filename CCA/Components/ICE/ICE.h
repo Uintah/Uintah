@@ -29,51 +29,48 @@ using namespace SCIRun;
       virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
 				SimulationStateP&);
       
-      virtual void scheduleInitialize(const LevelP& level, SchedulerP&,
-				      DataWarehouseP&);
+      virtual void scheduleInitialize(const LevelP& level, SchedulerP&);
       
-      virtual void scheduleComputeStableTimestep(const LevelP&,SchedulerP&,
-						 DataWarehouseP&);
+      virtual void scheduleComputeStableTimestep(const LevelP&,SchedulerP&);
       
       virtual void scheduleTimeAdvance(double t, double dt,const LevelP&,
-				       SchedulerP&, DataWarehouseP&,
-				       DataWarehouseP&);
+				       SchedulerP&);
                                                      
-      void scheduleComputeEquilibrationPressure(
-            const Patch* patch, SchedulerP&, DataWarehouseP&, DataWarehouseP&);
+      void scheduleComputeEquilibrationPressure(SchedulerP&, const PatchSet*,
+						const MaterialSet*);
       
-      void scheduleComputeFaceCenteredVelocities(
-            const Patch* patch, SchedulerP&, DataWarehouseP&, DataWarehouseP&);
+      void scheduleComputeFaceCenteredVelocities(SchedulerP&, const PatchSet*,
+						 const MaterialSet*);
       
-      void scheduleAddExchangeContributionToFCVel(
-            const Patch* patch, SchedulerP&,DataWarehouseP&,  DataWarehouseP&);
+      void scheduleAddExchangeContributionToFCVel(SchedulerP&, const PatchSet*,
+						  const MaterialSet*);
       
-      void scheduleComputeDelPressAndUpdatePressCC(
-            const Patch* patch, SchedulerP&, DataWarehouseP&, DataWarehouseP&);
+      void scheduleComputeDelPressAndUpdatePressCC(SchedulerP&, const PatchSet*,
+						   const MaterialSet*);
       
-      void scheduleComputePressFC(
-            const Patch* patch, SchedulerP&, DataWarehouseP&, DataWarehouseP&);
+      void scheduleComputePressFC(SchedulerP&, const PatchSet*,
+				  const MaterialSet*);
       
-      void scheduleAccumulateMomentumSourceSinks(
-            const Patch* patch, SchedulerP&, DataWarehouseP&, DataWarehouseP&);
+      void scheduleAccumulateMomentumSourceSinks(SchedulerP&, const PatchSet*,
+						 const MaterialSet*);
       
-      void scheduleAccumulateEnergySourceSinks(
-            const Patch* patch, SchedulerP&, DataWarehouseP&, DataWarehouseP&);
+      void scheduleAccumulateEnergySourceSinks(SchedulerP&, const PatchSet*,
+					       const MaterialSet*);
       
-      void  scheduleComputeLagrangianValues(
-            const Patch* patch, SchedulerP&, DataWarehouseP&, DataWarehouseP&);
+      void  scheduleComputeLagrangianValues(SchedulerP&, const PatchSet*,
+					    const MaterialSet*);
                  
-      void  scheduleAddExchangeToMomentumAndEnergy(
-            const Patch* patch, SchedulerP&, DataWarehouseP&, DataWarehouseP&);
+      void  scheduleAddExchangeToMomentumAndEnergy(SchedulerP&, const PatchSet*,
+						   const MaterialSet*);
       
-      void scheduleAdvectAndAdvanceInTime(
-            const Patch* patch, SchedulerP&, DataWarehouseP&, DataWarehouseP&);
+      void scheduleAdvectAndAdvanceInTime(SchedulerP&, const PatchSet*,
+					  const MaterialSet*);
 
-      void scheduleMassExchange(
-            const Patch* patch, SchedulerP&, DataWarehouseP&, DataWarehouseP&);
+      void scheduleMassExchange(SchedulerP&, const PatchSet*,
+				const MaterialSet*);
                              
-      void schedulePrintConservedQuantities(
-            const Patch* patch, SchedulerP&, DataWarehouseP&, DataWarehouseP&);
+      void schedulePrintConservedQuantities(SchedulerP&, const PatchSet*,
+					    const MaterialSet*);
             
       void setICELabel(ICELabel* Ilb) {
 	lb = Ilb;
@@ -82,55 +79,55 @@ using namespace SCIRun;
     public:
       
       void actuallyInitialize(const ProcessorGroup*, const Patch* patch,
-			      DataWarehouseP&  old_dw, DataWarehouseP& new_dw);
+			      DataWarehouse*  old_dw, DataWarehouse* new_dw);
       
       void actuallyComputeStableTimestep(const ProcessorGroup*,
-					 const Patch* patch, DataWarehouseP&,
-					 DataWarehouseP&);
+					 const Patch* patch, DataWarehouse*,
+					 DataWarehouse*);
 
       void computeEquilibrationPressure(
-            const ProcessorGroup*, const Patch* patch, DataWarehouseP&, 
-            DataWarehouseP&);
+            const ProcessorGroup*, const Patch* patch, DataWarehouse*, 
+            DataWarehouse*);
       
       void computeFaceCenteredVelocities(
-            const ProcessorGroup*, const Patch* patch, DataWarehouseP&, 
-            DataWarehouseP&);
+            const ProcessorGroup*, const Patch* patch, DataWarehouse*, 
+            DataWarehouse*);
 
       void addExchangeContributionToFCVel(
-            const ProcessorGroup*, const Patch* patch,  DataWarehouseP&, 
-            DataWarehouseP&);
+            const ProcessorGroup*, const Patch* patch,  DataWarehouse*, 
+            DataWarehouse*);
 
       void computeDelPressAndUpdatePressCC(
-            const ProcessorGroup*,const Patch* patch,   DataWarehouseP&, 
-            DataWarehouseP&);
+            const ProcessorGroup*,const Patch* patch,   DataWarehouse*, 
+            DataWarehouse*);
 
       void computePressFC(
-            const ProcessorGroup*, const Patch* patch,  DataWarehouseP&,
-            DataWarehouseP&);
+            const ProcessorGroup*, const Patch* patch,  DataWarehouse*,
+            DataWarehouse*);
                    
       void accumulateMomentumSourceSinks(
-            const ProcessorGroup*,const Patch* patch,   DataWarehouseP&,
-             DataWarehouseP&);
+            const ProcessorGroup*,const Patch* patch,   DataWarehouse*,
+             DataWarehouse*);
       
       void accumulateEnergySourceSinks(
-            const ProcessorGroup*,const Patch* patch,   DataWarehouseP&,
-            DataWarehouseP&);
+            const ProcessorGroup*,const Patch* patch,   DataWarehouse*,
+            DataWarehouse*);
       
       void computeLagrangianValues( 
-            const ProcessorGroup*, const Patch* patch,  DataWarehouseP&,
-            DataWarehouseP&);
+            const ProcessorGroup*, const Patch* patch,  DataWarehouse*,
+            DataWarehouse*);
       
       void addExchangeToMomentumAndEnergy(
-            const ProcessorGroup*,const Patch* patch,   DataWarehouseP&,
-            DataWarehouseP&);
+            const ProcessorGroup*,const Patch* patch,   DataWarehouse*,
+            DataWarehouse*);
       
       void advectAndAdvanceInTime(
-            const ProcessorGroup*,const Patch* patch,   DataWarehouseP&,
-            DataWarehouseP&);
+            const ProcessorGroup*,const Patch* patch,   DataWarehouse*,
+            DataWarehouse*);
 
       void printConservedQuantities(
-            const ProcessorGroup*,const Patch* patch,   DataWarehouseP&,
-            DataWarehouseP&);
+            const ProcessorGroup*,const Patch* patch,   DataWarehouse*,
+            DataWarehouse*);
             
       void setBC(CCVariable<double>& variable,const std::string& type, 
 		 const Patch* p);
@@ -171,8 +168,8 @@ using namespace SCIRun;
                       
       void massExchange(const ProcessorGroup*,
                     const Patch* patch,   
-                    DataWarehouseP& old_dw,
-                    DataWarehouseP& new_dw);      
+                    DataWarehouse* old_dw,
+                    DataWarehouse* new_dw);      
       
       // Debugging switches
       bool switchDebugInitialize;

@@ -90,7 +90,7 @@ bool Lattice::checkPossible(const Vector& N,
   double r = pow( pVolume[thisIdx],1./3.) / 2;
   double hRange = r * 2.2;
   
-  for(int i=0; i<particles.size(); i++) {
+  for(int i=0; i<(int)particles.size(); i++) {
     particleIndex idx = particles[i];
     if(idx == thisIdx ) continue;
     if( pIsBroken[idx] == 0 ) continue;
@@ -132,7 +132,7 @@ bool Lattice::checkPossible(
 
   const Vector& N = pNewCrackNormal[thisIdx];
   
-  for(int i=0; i<particles.size(); i++) {
+  for(int i=0; i<(int)particles.size(); i++) {
     particleIndex idx = particles[i];
     if(idx == thisIdx ) continue;
     

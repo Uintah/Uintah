@@ -301,8 +301,6 @@ MPMLabel::~MPMLabel()
   delete pStrainEnergyLabel;
   delete pRotationRateLabel;
   
-  delete pPressureLabel;
-
   //PermanentParticleState
   delete pStressLabel;
   delete pVolumeLabel;
@@ -325,6 +323,7 @@ MPMLabel::~MPMLabel()
   delete pParticleIDLabel;
   delete pIsIgnitedLabel;
   delete pMassRateLabel;
+  delete pPressureLabel;
   
   delete pDeformationMeasureLabel_preReloc;
   delete pStressLabel_preReloc;
@@ -367,8 +366,10 @@ MPMLabel::~MPMLabel()
   delete gInternalHeatRateLabel;
   delete gExternalHeatRateLabel;
   delete gThermalContactHeatExchangeRateLabel;
-  delete cBurnedMassLabel;
+  delete gStressForSavingLabel;
+  delete gVolumeLabel;
   delete gWeightLabel;
+  delete cBurnedMassLabel;
   delete gradPressNCLabel;
   delete dTdt_NCLabel;
 
@@ -381,15 +382,6 @@ MPMLabel::~MPMLabel()
   delete CenterOfMassPositionLabel;
   delete CenterOfMassVelocityLabel;
   delete ppNAPIDLabel;
-
-  for (int i = 0; i<(int)d_particleState.size(); i++)
-    for (int j = 0; j< (int)d_particleState[i].size(); j++)
-      delete d_particleState[i][j];
-
-  for (int i = 0; i<(int)d_particleState_preReloc.size(); i++)
-    for (int j = 0; j< (int)d_particleState_preReloc[i].size(); j++)
-      delete d_particleState_preReloc[i][j];
-
 }
 
 void MPMLabel::registerPermanentParticleState(int i,
