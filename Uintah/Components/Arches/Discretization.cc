@@ -115,6 +115,8 @@ Discretization::Discretization()
 				    SFCZVariable<double>::getTypeDescription() );
   d_scalCoefSBLMLabel = scinew VarLabel("scalCoefSBLM",
 				   CCVariable<double>::getTypeDescription() );
+  d_scalConvCoefSBLMLabel = scinew VarLabel("scalConvCoefSBLM",
+				   CCVariable<double>::getTypeDescription() );
 
   // calculateScalarDiagonal
   d_scalLinSrcSBLMLabel = scinew VarLabel("scalLinSrcSBLM",
@@ -596,15 +598,15 @@ Discretization::calculateScalarCoeff(const ProcessorGroup* pc,
   SFCZVariable<double> wVelocity;
   CCVariable<double> density;
   CCVariable<double> viscosity;
-  CCVariable<double> scalar;
+  //CCVariable<double> scalar;
 
   old_dw->get(density, d_densityCPLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   old_dw->get(viscosity, d_viscosityCTSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   // ithe componenet of scalar vector
-  old_dw->get(scalar, d_scalarSPLabel, index, patch, Ghost::None,
-	      numGhostCells);
+  //old_dw->get(scalar, d_scalarSPLabel, index, patch, Ghost::None,
+	//      numGhostCells);
   new_dw->get(uVelocity, d_uVelocityMSLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   new_dw->get(vVelocity, d_vVelocityMSLabel, matlIndex, patch, Ghost::None,
@@ -615,77 +617,68 @@ Discretization::calculateScalarCoeff(const ProcessorGroup* pc,
   // Get the PerPatch CellInformation data
   PerPatch<CellInformation*> cellInfoP;
   old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
-  //  if (old_dw->exists(d_cellInfoLabel, patch)) 
-  //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
-  //else {
-  //  cellInfoP.setData(scinew CellInformation(patch));
-  //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
-  //}
   CellInformation* cellinfo = cellInfoP;
   
   //7pt stencil declaration
   StencilMatrix<CCVariable<double> > scalarCoeff;
+  StencilMatrix<CCVariable<double> > scalarConvectCoeff;
 
   for (int ii = 0; ii < nofStencils; ii++) {
     new_dw->allocate(scalarCoeff[ii], d_scalCoefSBLMLabel, ii, patch);
+    new_dw->allocate(scalarConvectCoeff[ii], d_scalConvCoefSBLMLabel, ii, patch);
   }
 
   // Get the domain size and the patch indices
-  IntVector domLoU = uVelocity.getFortLowIndex();
-  IntVector domHiU = uVelocity.getFortHighIndex();
-  IntVector idxLoU = patch->getSFCXFORTLowIndex();
-  IntVector idxHiU = patch->getSFCXFORTHighIndex();
-  IntVector domLoV = vVelocity.getFortLowIndex();
-  IntVector domHiV = vVelocity.getFortHighIndex();
-  IntVector idxLoV = patch->getSFCYFORTLowIndex();
-  IntVector idxHiV = patch->getSFCYFORTHighIndex();
-  IntVector domLoW = wVelocity.getFortLowIndex();
-  IntVector domHiW = wVelocity.getFortHighIndex();
-  IntVector idxLoW = patch->getSFCZFORTLowIndex();
-  IntVector idxHiW = patch->getSFCZFORTHighIndex();
-  IntVector domLo = scalar.getFortLowIndex();
-  IntVector domHi = scalar.getFortHighIndex();
+  IntVector domLo = density.getFortLowIndex();
+  IntVector domHi = density.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector domLoU = uVelocity.getFortLowIndex();
+  IntVector domHiU = uVelocity.getFortHighIndex();
+  IntVector domLoV = vVelocity.getFortLowIndex();
+  IntVector domHiV = vVelocity.getFortHighIndex();
+  IntVector domLoW = wVelocity.getFortLowIndex();
+  IntVector domHiW = wVelocity.getFortHighIndex();
 
-#ifdef WONT_COMPILE_YET
-  // 3-d array for volume - fortran uses it for temporary storage
-  Array3<double> volume(patch->getLowIndex(), patch->getHighIndex());
-  FORT_SCALARCOEF(domLo.get_pointer(), domHi.get_pointer(),
-		  idxLo.get_pointer(), idxHi.get_pointer(),
-		  scalar.getPointer(),
-		  scalarCoeff[Arches::AP].getPointer(), 
-		  scalarCoeff[Arches::AE].getPointer(), 
-		  scalarCoeff[Arches::AW].getPointer(), 
-		  scalarCoeff[Arches::AN].getPointer(), 
-		  scalarCoeff[Arches::AS].getPointer(), 
-		  scalarCoeff[Arches::AT].getPointer(), 
-		  scalarCoeff[Arches::AB].getPointer(), 
-		  domLoU.get_pointer(), domHiU.get_pointer(),
-		  idxLoU.get_pointer(), idxHiU.get_pointer(),
-		  uVelocity.getPointer(),
-		  domLoV.get_pointer(), domHiV.get_pointer(),
-		  idxLoV.get_pointer(), idxHiV.get_pointer(),
-		  vVelocity.getPointer(),
-		  domLoW.get_pointer(), domHiW.get_pointer(),
-		  idxLoW.get_pointer(), idxHiW.get_pointer(),
-		  wVelocity.getPointer(),
-		  density.getPointer(),
-		  viscosity.getPointer(), 
-		  delta_t, 
-		  cellinfo->ceeu, cellinfo->cweu, cellinfo->cwwu,
-		  cellinfo->cnn, cellinfo->csn, cellinfo->css,
-		  cellinfo->ctt, cellinfo->cbt, cellinfo->cbb,
-		  cellinfo->sewu, cellinfo->sns, cellinfo->stb,
-		  cellinfo->dxepu, cellinfo->dynp, cellinfo->dztp,
-		  cellinfo->dxpw, cellinfo->fac1u, cellinfo->fac2u,
-		  cellinfo->fac3u, cellinfo->fac4u,cellinfo->iesdu,
-		  cellinfo->iwsdu, cellinfo->enfac, cellinfo->sfac,
-		  cellinfo->tfac, cellinfo->bfac, volume);
-#endif
+  FORT_SCALARCOEFF(domLo.get_pointer(), domHi.get_pointer(),
+		   idxLo.get_pointer(), idxHi.get_pointer(),
+		   density.getPointer(),
+		   viscosity.getPointer(), 
+		   scalarCoeff[Arches::AE].getPointer(), 
+		   scalarCoeff[Arches::AW].getPointer(), 
+		   scalarCoeff[Arches::AN].getPointer(), 
+		   scalarCoeff[Arches::AS].getPointer(), 
+		   scalarCoeff[Arches::AT].getPointer(), 
+		   scalarCoeff[Arches::AB].getPointer(), 
+		   scalarConvectCoeff[Arches::AE].getPointer(), 
+		   scalarConvectCoeff[Arches::AW].getPointer(), 
+		   scalarConvectCoeff[Arches::AN].getPointer(), 
+		   scalarConvectCoeff[Arches::AS].getPointer(), 
+		   scalarConvectCoeff[Arches::AT].getPointer(), 
+		   scalarConvectCoeff[Arches::AB].getPointer(), 
+		   domLoU.get_pointer(), domHiU.get_pointer(),
+		   uVelocity.getPointer(),
+		   domLoV.get_pointer(), domHiV.get_pointer(),
+		   vVelocity.getPointer(),
+		   domLoW.get_pointer(), domHiW.get_pointer(),
+		   wVelocity.getPointer(),
+		   cellinfo->sew.get_objs(), cellinfo->sns.get_objs(), 
+		   cellinfo->stb.get_objs(),
+		   cellinfo->cee.get_objs(), cellinfo->cwe.get_objs(), 
+		   cellinfo->cww.get_objs(),
+		   cellinfo->cnn.get_objs(), cellinfo->csn.get_objs(), 
+		   cellinfo->css.get_objs(),
+		   cellinfo->ctt.get_objs(), cellinfo->cbt.get_objs(), 
+		   cellinfo->cbb.get_objs(),
+		   cellinfo->efac.get_objs(), cellinfo->wfac.get_objs(),
+		   cellinfo->enfac.get_objs(), cellinfo->sfac.get_objs(),
+		   cellinfo->tfac.get_objs(), cellinfo->bfac.get_objs(),
+		   cellinfo->dxpw.get_objs(), cellinfo->dyps.get_objs(), 
+		   cellinfo->dzpb.get_objs());
 
   for (int ii = 0; ii < nofStencils; ii++) {
     new_dw->put(scalarCoeff[ii], d_scalCoefSBLMLabel, ii, patch);
+    new_dw->put(scalarConvectCoeff[ii], d_scalConvCoefSBLMLabel, ii, patch);
   }
 }
 
@@ -967,6 +960,10 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
 
 //
 // $Log$
+// Revision 1.32  2000/07/14 05:23:50  bbanerje
+// Added scalcoef.F and updated related stuff in C++. scalcoef ==> coefs.f
+// in Kumar's code.
+//
 // Revision 1.31  2000/07/14 03:45:45  rawat
 // completed velocity bc and fixed some bugs
 //

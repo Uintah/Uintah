@@ -48,9 +48,11 @@ WARNING
 #define FORT_UVELCOEF uvelcoef_
 #define FORT_VVELCOEF vvelcoef_
 #define FORT_WVELCOEF wvelcoef_
+#define FORT_VELCOEF velcoef_
 #define FORT_UVELSOURCE uvelsrc_
 #define FORT_VVELSOURCE vvelsrc_
 #define FORT_WVELSOURCE wvelsrc_
+#define FORT_VELSOURCE vsource_
 #define FORT_BCUVEL bcuvel_
 #define FORT_BCVVEL bcvvel_
 #define FORT_BCWVEL bcwvel_
@@ -59,9 +61,7 @@ WARNING
 #define FORT_PRESSCOEFF prescoef_
 #define FORT_PRESSOURCE pressrc_
 #define FORT_PRESSBC bcpress_
-#define FORT_VELCOEF velcoef_
-#define FORT_SCALARCOEF scalcof_
-#define FORT_VELSOURCE vsource_
+#define FORT_SCALARCOEFF scalcoef_
 #define FORT_SCALARSOURCE ssource_
 #define FORT_COLDPROPS cprops_
 #define FORT_UNDERRELAX urelax_
@@ -654,12 +654,53 @@ extern "C"
 		 int* cellType,
 		 int* wall_celltypeval, int* symmetry_celltypeval,
 		 int* flow_celltypeval);
+
+    ////////////////////////////////////////////////////////////////////////
+    //
+    // Calculate the Mixing Scalar coeffs and convection terms
+    //
+    void
+    FORT_SCALARCOEFF(const int* domLo, const int* domHi,
+		     const int* idxLo, const int* idxHi,
+		     const double* density,
+		     const double* viscosity,
+		     double* scalarCoeff_AE,
+		     double* scalarCoeff_AW,
+		     double* scalarCoeff_AN,
+		     double* scalarCoeff_AS,
+		     double* scalarCoeff_AT,
+		     double* scalarCoeff_AB,
+		     double* scalarConvectCoeff_AE, 
+		     double* scalarConvectCoeff_AW, 
+		     double* scalarConvectCoeff_AN, 
+		     double* scalarConvectCoeff_AS, 
+		     double* scalarConvectCoeff_AT, 
+		     double* scalarConvectCoeff_AB, 
+		     const int* domLoU, const int* domHiU,
+		     const double* uVelocity,
+		     const int* domLoV, const int* domHiV,
+		     const double* vVelocity,
+		     const int* domLoW, const int* domHiW,
+		     const double* wVelocity,
+		     const double* sew, const double* sns, const double* stb,
+		     const double* cee, const double* cwe, const double* cww,
+		     const double* cnn, const double* csn, const double* css,
+		     const double* ctt, const double* cbt, const double* cbb,
+		     const double* efac, const double* wfac,
+		     const double* nfac, const double* sfac,
+		     const double* tfac, const double* bfac,
+		     const double* dxpw, const double* dyps, const double* dzpb);
+
 }
 
 #endif
 
 //
 // $Log$
+// Revision 1.22  2000/07/14 05:23:49  bbanerje
+// Added scalcoef.F and updated related stuff in C++. scalcoef ==> coefs.f
+// in Kumar's code.
+//
 // Revision 1.21  2000/07/14 03:45:44  rawat
 // completed velocity bc and fixed some bugs
 //

@@ -17,7 +17,8 @@ SRCS     += $(SRCDIR)/init.F $(SRCDIR)/initScal.F $(SRCDIR)/celltypeInit.F \
 	$(SRCDIR)/bcuvel.F $(SRCDIR)/bcvvel.F $(SRCDIR)/bcwvel.F  \
 	$(SRCDIR)/bcpress.F $(SRCDIR)/symbcs.F \
 	$(SRCDIR)/prdbc1.F $(SRCDIR)/prdbc2.F $(SRCDIR)/wallbc.F \
-	$(SRCDIR)/fixval.F
+	$(SRCDIR)/fixval.F \
+	$(SRCDIR)/scalcoef.F $(SRCDIR)/coeffb.F $(SRCDIR)/rmean.F
 # SRCS     += $(SRCDIR)/apcal.F $(SRCDIR)/areain.F $(SRCDIR)/arradd.F \
 #	$(SRCDIR)/arrass.F $(SRCDIR)/arrcop.F $(SRCDIR)/arrl1.F \
 #	$(SRCDIR)/arrmax.F $(SRCDIR)/assign.F $(SRCDIR)/bcp.F \
@@ -52,6 +53,10 @@ FFLAGS += -g
 
 #
 # $Log$
+# Revision 1.27  2000/07/14 05:23:53  bbanerje
+# Added scalcoef.F and updated related stuff in C++. scalcoef ==> coefs.f
+# in Kumar's code.
+#
 # Revision 1.26  2000/07/14 03:45:48  rawat
 # completed velocity bc and fixed some bugs
 #
