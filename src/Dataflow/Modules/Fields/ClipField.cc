@@ -179,6 +179,7 @@ ClipField::execute()
       ogport->flushViews();
 
       last_bounds_ = obox;
+      clipper_ = 0; // Force clipper to sync with new widget.
     }
   }
 
