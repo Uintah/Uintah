@@ -185,8 +185,8 @@ public: // protected:
   ProgressReporter my_reporter_;
   template<class Reporter> void build_texture( Reporter *);
   template<class Reporter> void replace_texture( Reporter *);
-  void build_texture() { build_texture( &my_reporter_); }
-  void replace_texture() { replace_texture( &my_reporter_); }
+  void build_texture();
+  void replace_texture();
 #else
   void build_texture();
   void replace_texture();
