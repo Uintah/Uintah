@@ -356,22 +356,36 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                   int segs[2];
                   FindSegsFromNode(m,node,segs);
                   
+		  // Detect if this is a single segment crack, and the neighbor node
+		  short singleSeg=NO;
+		  int neighbor=-1,segsNeighbor[2]={-1,-1};
+		  if(segs[R]<0) {
+	            neighbor=cfSegNodes[m][2*segs[L]+1];
+		    FindSegsFromNode(m,neighbor,segsNeighbor);
+	            if(segsNeighbor[L]<0) singleSeg=YES;
+                  }
+                  if(segs[L]<0) {
+                    neighbor=cfSegNodes[m][2*segs[R]];
+                    FindSegsFromNode(m,neighbor,segsNeighbor);
+                    if(segsNeighbor[R]<0) singleSeg=YES;		    
+                  }		    
+		    
                   // Position where to calculate J & K
                   Point origin;
                   double x0,y0,z0;
-		  if((int)cfSegNodes[m].size()/2==1) { // only one segment
-		    Point pt1=cx[m][cfSegNodes[m][0]];
-		    Point pt2=cx[m][cfSegNodes[m][1]];
+		  if(singleSeg) {
+                    Point pt1=cx[m][node];
+		    Point pt2=cx[m][neighbor];
 		    origin=pt1+(pt2-pt1)/2.;
 		  }
 		  else { // multiple segments
                     if(segs[R]<0) { 
 		      // For the right edge node, shift the position to the neighbor
-	              origin=cx[m][cfSegNodes[m][2*segs[L]+1]];
+	              origin=cx[m][neighbor];
 	            }
                     else if(segs[L]<0) {
-		      // For the left edge node, shift the position to the neibor
-                      origin=cx[m][cfSegNodes[m][2*segs[R]]];
+		      // For the left edge node, shift the position to the neighbor
+                      origin=cx[m][neighbor];
 	            }
                     else { // middle nodes
 	              origin=cx[m][node];
