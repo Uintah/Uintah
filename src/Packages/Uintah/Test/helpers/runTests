@@ -160,8 +160,6 @@ EOF
     rm -f "$BUILDROOT"/mail.msg
 fi
 
-cat "$BUILDROOT"/log
-
 if [ $failed == "0" ]; then
     if [ -d "${BUILD_DIR}/last_successful.lock" ]; then
 	rm -r "${BUILD_DIR}/last_successful.lock" 
