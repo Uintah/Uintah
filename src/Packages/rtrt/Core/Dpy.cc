@@ -357,15 +357,17 @@ Dpy::checkGuiFlags()
 
   if(animate && scene->animate) {
     Array1<Object*> & objects = scene->animateObjects_;
+    BBox bbox1,bbox2;
     for( int num = 0; num < objects.size(); num++ ) {
+      bbox1.reset();
+      bbox2.reset();
+      objects[num]->compute_bounds(bbox1,1E-5);
       objects[num]->animate(SCIRun::Time::currentSeconds(), changed);
       Grid2 *anim_grid = objects[num]->get_anim_grid();
-      BBox bbox;
       if (anim_grid) {
-        objects[num]->compute_bounds(bbox, 1E-5);
-        anim_grid->remove(objects[num],bbox);
-        anim_grid->insert(objects[num],bbox);
-        bbox.reset();
+        objects[num]->compute_bounds(bbox2, 1E-5);
+        anim_grid->remove(objects[num],bbox1);
+        anim_grid->insert(objects[num],bbox2);
       }
     }
   }
