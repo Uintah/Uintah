@@ -158,7 +158,7 @@
 	<save label = "CenterOfMassVelocity"/>
 	<save label = "p.x"/>
 	<save label = "p.volume"/>
-	<save label = "p.stress_afterStrainRate"/>
+	<save label = "p.stress"/>
 	<save label = "p.pressure"/>
      <!--
 	<save label = "g.mass"/>

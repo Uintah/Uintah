@@ -23,7 +23,7 @@
         <save label = "StrainEnergy"/>
 	<save label = "p.x"/>
 	<save label = "p.mass"/>
-	<save label = "p.stress_afterStrainRate"/>
+	<save label = "p.stress"/>
         <save label = "g.mass"/>
         <save label = "g.stressFS"/>
 	<checkpoint cycle = "2" interval = "0.02"/>
