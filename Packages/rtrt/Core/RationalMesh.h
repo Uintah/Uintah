@@ -13,7 +13,7 @@
 #include <Packages/rtrt/Core/Assert.h>
 
 #define MAXITER 7
-#define ROOT_TOL 1E-3
+#define RATMESH_ROOT_TOL 1E-3
 
 namespace rtrt {
 
@@ -22,9 +22,6 @@ public:
     RationalMesh (int, int);
     ~RationalMesh();
     RationalMesh *Copy();
-    void Out(int, int);
-    void Print();
-    Point4D **getPts(Vector &, Vector &, Vector &);
 
     inline int get_scratchsize() {
       return (int)(msize*nsize*sizeof(Point4D));
@@ -114,7 +111,7 @@ public:
 	}
     }
     
-    inline void Eval(double u, double v, Point4D &S,
+    inline void Eval(double u, double v, Point &S,
 		     Vector &Su, Vector &Sv, PerProcessorContext *ppc)
     {
 	int i;
@@ -131,14 +128,14 @@ public:
 	Pi_1j_2 = &sub[msize*nsize-2];
 	Pi_2j_1 = &sub[(msize-1)*nsize-1];
 
-	S = *Pi_1j_1;
+	S = Pi_1j_1->e3();
 
-	w  = Pi_1j_1->coord[3];
-	wu = Pi_1j_2->coord[3];
-	wv = Pi_2j_1->coord[3];
+	w  = Pi_1j_1->w();
+	wu = Pi_1j_2->w();
+	wv = Pi_2j_1->w();
 
-	Su = (*Pi_1j_1 - *Pi_1j_2)*((nsize-1)*wu/(u*w));
-	Sv = (*Pi_1j_1 - *Pi_2j_1)*((msize-1)*wv/(v*w));
+	Su = (S - Pi_1j_2->e3())*((nsize-1)*wu/(u*w));
+	Sv = (S - Pi_2j_1->e3())*((msize-1)*wv/(v*w));
     }
     
     inline void compute_bounds(BBox &b) {
@@ -147,7 +144,7 @@ public:
       for (int i=0; i<msize; i++) {
 	for (int j=0; j<nsize; j++) {
 	  P = 
-	    Point(mesh[i][j].coord[0],mesh[i][j].coord[1],mesh[i][j].coord[2]);
+	    Point(mesh[i][j].x(),mesh[i][j].y(),mesh[i][j].z());
 	  b.extend(P);
 	}
       }
@@ -156,7 +153,7 @@ public:
     
   inline Vector getNormal(double u, double v, PerProcessorContext *ppc)
   {
-    Point4D S;
+    Point S;
     Vector Su,Sv;
     double *thetau, *thetav, *dthetau, *dthetav;
 
@@ -171,29 +168,29 @@ public:
     return N;
   }
     
-  inline void F(const Point4D &S, const Vector &p1, const double p1d,
+  inline void F(const Point &S, const Vector &p1, const double p1d,
 		const Vector &p2, const double p2d,
 		double &f1, double &f2)
   {
-    f1 = S.dot(p1)+p1d;
-    f2 = S.dot(p2)+p2d;
+    f1 = S.x()*p1.x() + S.y()*p1.y() + S.z()*p1.z() + p1d;
+    f2 = S.x()*p2.x() + S.y()*p2.y() + S.z()*p2.z() + p2d;
   }
     
   inline void Fu(const Vector &Su, const Vector &p1, const Vector &p2,
 		 double &d0, double &d1)
-  {
-    d0 = Dot(Su, p1);
-    d1 = Dot(Su, p2);
-  }
+    {
+      d0 = Dot(Su, p1);
+      d1 = Dot(Su, p2);
+    }
 
-    inline void Fv(const Vector &Sv, const Vector &p1, const Vector &p2,
-                   double &d0, double &d1)
+  inline void Fv(const Vector &Sv, const Vector &p1, const Vector &p2,
+		 double &d0, double &d1)
     {
       d0 = Dot(Sv, p1);
       d1 = Dot(Sv, p2);
     }
 
-    inline void ray_planes(const Ray &r, Vector &p1, double &p1d,
+  inline void ray_planes(const Ray &r, Vector &p1, double &p1d,
                            Vector &p2, double &p2d)
     {
         Point ro(r.origin());
@@ -221,14 +218,13 @@ public:
         p2d = -Dot(p2, ro);
     }
 
-    inline double calc_t(const Ray &r, Point4D &S)
+    inline double calc_t(const Ray &r, const Point &P)
     {
-      Point P(S.x(),S.y(),S.z());
 
       Vector d(r.direction());
-      Vector oS(P-r.origin());
+      Vector oP(P-r.origin());
 
-      return Dot(d, oS)/Dot(d, d);
+      return Dot(d, oP)/Dot(d, d);
     }
     
   inline void gentheta(double *theta, double t, int n) 
@@ -262,11 +258,9 @@ public:
     dtheta[0] = n * (- dtheta[0]);
   }
 
-  inline void EvalS(double u, double v, Point4D &S, PerProcessorContext *ppc)
+  inline void EvalS(double u, double v, Point &S, PerProcessorContext *ppc)
   {
     
-    double w=0;
-    double normfac=0.;
     double blend;
     Point4D P;
     double *thetau, *thetav, *dthetau, *dthetav;
@@ -278,26 +272,21 @@ public:
 
     for (int i=0; i<msize; i++) {
       for (int j=0; j<nsize; j++) {
-	w = mesh[i][j].coord[3];
-	normfac += blend = w*thetau[j]*thetav[i];
+	blend = thetau[j]*thetav[i];
 	P.addscaled(mesh[i][j],blend);
       }
     }
-    S.weighted_set(P,1./normfac);
+    S = P.e3();
   }
 
-  inline void EvalAll(double u, double v, Point4D &S, Vector &Su, Vector &Sv,
+  inline void EvalAll(double u, double v, Point &S, Vector &Su, Vector &Sv,
 		      PerProcessorContext *ppc) {
     
     double tu, dtu;
     double tv, dtv;
-    double w;
-    double normfac=0.;
-    double normfacu=0., normfacv=0.;
     double blend, blendu, blendv;
     Point4D Pu, Pv;
     Point4D P;
-    double invnormfac, invnormfac_2;
     double *thetau, *thetav, *dthetau, *dthetav;
 
     get_scratch(thetau,thetav,dthetau,dthetav,ppc);
@@ -313,21 +302,26 @@ public:
       for (int j=0; j<nsize; j++) {
 	dtu = dthetau[j];
 	tu = thetau[j];
-	w = mesh[i][j].coord[3];
-	normfac += blend = w*tu*tv;
-	normfacu += blendu = w*dtu*tv;
-	normfacv += blendv = w*tu*dtv;
+	blend = tu*tv;
+	blendu = dtu*tv;
+	blendv = tu*dtv;
 	P.addscaled(mesh[i][j],blend);
 	Pu.addscaled(mesh[i][j],blendu);
 	Pv.addscaled(mesh[i][j],blendv);
       }
     }
-    invnormfac = 1./normfac;
-    invnormfac_2 = invnormfac*invnormfac;
+    S = P.e3();
 
-    S.weighted_set(P,invnormfac);
-    weighted_diff(Pu,invnormfac,P,(normfacu*invnormfac_2),Su);
-    weighted_diff(Pv,invnormfac,P,(normfacv*invnormfac_2),Sv);
+    double invw = 1./P.w();
+
+    if (Pu.w()*invw < 1E-6)
+      Su.Set(Pu.x()*invw,Pu.y()*invw,Pu.z()*invw);
+    else
+      Su = Pu.w()*invw*(Pu.e3() - S);
+    if (Pv.w()*invw < 1E-6)
+      Sv.Set(Pv.x()*invw,Pv.y()*invw,Pv.z()*invw);
+    else
+      Sv = Pv.w()*invw*(Pv.e3() - S);
   }
 
     inline int Hit(const Ray &r, double &u, double &v, double &t,
@@ -339,7 +333,7 @@ public:
 	//double f,fold,g,gold;
 	double f,g;
 	double rootdist, oldrootdist;
-	double invdetJ;
+	double detJ, invdetJ;
 	//int tdiv=0;
         
         // Planes containing ray
@@ -348,7 +342,7 @@ public:
         
         ray_planes(r,p1,p1d,p2,p2d);
         
-	Point4D S;
+	Point S;
 	Vector Su, Sv;
 
 	Eval(u,v,S,Su,Sv,ppc);
@@ -359,8 +353,13 @@ public:
 	  {
 	      Fu(Su,p1,p2,j11,j21);
 	      Fv(Sv,p1,p2,j12,j22);
-	      invdetJ = 1./(j11*j22-j12*j21);
+
+	      detJ = j11*j22-j12*j21;
+	      if (detJ*detJ < 1E-9)
+		return 0;
 	      
+	      invdetJ = 1./detJ;
+
 	      u -= invdetJ*(j22*f-j12*g);
 	      v -= invdetJ*(j11*g-j21*f);
 	      
@@ -379,7 +378,7 @@ public:
 	      
 	      if (rootdist > oldrootdist)
 		return 0;
-	      if (rootdist < ROOT_TOL) {
+	      if (rootdist < RATMESH_ROOT_TOL) {
 		if ((u<ulow) || (u>uhigh) ||
 		    (v<vlow) || (v>vhigh)) {
 		  /*printf("ulow:%lf uhigh:%lf vlow:%lf vhigh:%lf u:%lf v:%lf\n",ulow,uhigh,vlow,vhigh,u,v);*/
@@ -394,60 +393,6 @@ public:
       }
 
 
-  inline Vector SuEval(double /*u*/, double /*v*/, PerProcessorContext *ppc) {
-    double tu, dtu, tv;
-    double w;
-    double normfac=0;
-    double blend, blendp;
-    double normfacprime=0;
-    Point4D Pprime;
-    Point4D P;
-    double *thetau, *thetav, *dthetau, *dthetav;
-
-    get_scratch(thetau,thetav,dthetau,dthetav,ppc);
-    
-    for (int i=0; i<msize; i++) {
-      tv = thetav[i];
-      for (int j=0; j<nsize; j++) {
-	dtu = dthetau[j];
-	tu = thetau[j];
-	w = mesh[i][j].coord[3];
-	normfac += blend = w*tu*tv;
-	normfacprime += blendp = w*dtu*tv; 
-	P += mesh[i][j]*blend;
-	Pprime += mesh[i][j]*blendp;
-      }
-    }
-    return (Pprime*normfac - P*normfacprime)*(1./(normfac*normfac));
-  }
-
-  inline Vector SvEval(double /*u*/, double /*v*/, PerProcessorContext *ppc) {
-    double tu, tv, dtv;
-    double w;
-    double normfac=0;
-    double normfacprime=0;
-    Point4D Pprime;
-    Point4D P;
-    double blend, blendp;
-    double *thetau, *thetav, *dthetau, *dthetav;
-
-    get_scratch(thetau,thetav,dthetau,dthetav,ppc);
-    
-    for (int i=0; i<msize; i++) {
-      tv = thetav[i];
-      dtv = dthetav[i];
-      for (int j=0; j<nsize; j++) {
-	tu = thetau[j];
-	w = mesh[i][j].coord[3];
-	normfac += blend = w*tu*tv;
-	normfacprime += blendp = w*tu*dtv;
-	P += mesh[i][j]*blend;
-	Pprime += mesh[i][j]*blendp;
-      }
-    }
-    return (Pprime*normfac - P*normfacprime)*(1./(normfac*normfac));
-  }
-
   //Uses Broyden's Method....
   inline int Hit_Broyden(const Ray &r, double &u, double &v, double &t,
 			 double ulow, double uhigh, double vlow, double vhigh,
@@ -457,7 +402,7 @@ public:
     double Bi_1[2][2], Bi[2][2];
     double f[2],f_1[2],df[2];
     double rootdist, rootdist_1;
-    double invdetJ;
+    double detJ,invdetJ;
     //int tdiv=0;
     double u_1, v_1;
     double dx[2];
@@ -469,7 +414,7 @@ public:
     
     ray_planes(r,p1,p1d,p2,p2d);
     
-    Point4D S;
+    Point S;
     Vector Su, Sv;
     
     // We start out with a single Newton iteration.
@@ -483,14 +428,18 @@ public:
     
     rootdist_1 = fabs(f_1[0]) + fabs(f_1[1]);
     
-    if (rootdist_1 > ROOT_TOL) {
+    if (rootdist_1 > RATMESH_ROOT_TOL) {
       
       // Calculate the Jacobian for the -1th iteration
       Fu(Su,p1,p2,Bi_1[0][0],Bi_1[1][0]);
       Fv(Sv,p1,p2,Bi_1[0][1],Bi_1[1][1]);
+
+      detJ = (Bi_1[0][0]*Bi_1[1][1]-Bi_1[0][1]*Bi_1[1][0]);
+
+      if (detJ*detJ < 1E-9)
+	return 0;
       
-      invdetJ =
-	1./(Bi_1[0][0]*Bi_1[1][1]-Bi_1[0][1]*Bi_1[1][0]);
+      invdetJ = 1./detJ;
       
       u -= invdetJ*(Bi_1[1][1]*f_1[0]-Bi_1[0][1]*f_1[1]);
       v -= invdetJ*(Bi_1[0][0]*f_1[1]-Bi_1[1][0]*f_1[0]);
@@ -509,7 +458,7 @@ public:
       return 0;*/
       
       // Continue condition
-      if (rootdist > ROOT_TOL) {
+      if (rootdist > RATMESH_ROOT_TOL) {
 	
 	// We move on to Broyden's method.
 	for (; i<MAXITER; i++) {
@@ -532,7 +481,12 @@ public:
 	  Bi[1][0] = Bi[1][0]*dx[0] + Bi_1[1][0];
 	  Bi[1][1] = Bi[1][1]*dx[1] + Bi_1[1][1];
 	  
-	  invdetJ = 1./(Bi[0][0]*Bi[1][1]-Bi[0][1]*Bi[1][0]);
+	  detJ = (Bi[0][0]*Bi[1][1]-Bi[0][1]*Bi[1][0]);
+
+	  if (detJ*detJ < 1E-9)
+	    return 0;
+
+	  invdetJ = 1./detJ;
 	  
 	  u_1 = u;
 	  v_1 = v;
@@ -557,7 +511,7 @@ public:
 	    return 0;*/
 	  
 	  // Success condition
-	  if (rootdist < ROOT_TOL)
+	  if (rootdist < RATMESH_ROOT_TOL)
 	    break;
 	  
 	  Bi_1[0][0] = Bi[0][0];

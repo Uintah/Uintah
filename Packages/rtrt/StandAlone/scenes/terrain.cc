@@ -6,6 +6,7 @@
 #include <Packages/rtrt/Core/Light.h>
 #include <Packages/rtrt/Core/PhongMaterial.h>
 #include <Packages/rtrt/Core/Phong.h>
+#include <Packages/rtrt/Core/PhongLight.h>
 #include <Packages/rtrt/Core/Group.h>
 #include <Packages/rtrt/Core/Sphere.h>
 #include <Packages/rtrt/Core/LambertianMaterial.h>
@@ -17,6 +18,7 @@
 #include <Packages/rtrt/Core/Heightfield.h>
 #include <Packages/rtrt/Core/ImageMaterial.h>
 #include <Packages/rtrt/Core/Grid.h>
+#include <Packages/rtrt/Core/BV1.h>
 #include <Packages/rtrt/Core/HierarchicalGrid.h>
 
 #include <iostream>
@@ -32,7 +34,7 @@
 #include <wctype.h>
 
 static bool realgeom;
-
+/*-eye 16.1085 707.505 2827.03 -lookat 608.224 892.191 2536.01 -up 0.424914 0.0608933 0.903183 -fov 22.0914 */
 using namespace rtrt;
 
 void
@@ -316,10 +318,16 @@ read_geom(Group *g, char *geomfile, char *locfile)
     tris->compute_bounds(tris_bbox,0);
 
     Grid *tri_grid;
+    //BV1 *tri_grid;
     InstanceWrapperObject *tri_wrap;
     if (!realgeom) {
 	tri_grid = new HierarchicalGrid(tris,
-					10,10,10,20,20,1);
+					10,10,10,10,10,1);
+//  	tri_grid = new HierarchicalGrid(tris,
+//  					15,10,10,5,10,1);
+//  	tri_grid = new HierarchicalGrid(tris,
+//  					4,8,16,16,32,1);
+      //tri_grid = new BV1(tris);
 	tri_wrap = new InstanceWrapperObject(tri_grid);
     }
     printf("Number of tris: %d\n",tris->objs.size());
@@ -373,7 +381,7 @@ read_geom(Group *g, char *geomfile, char *locfile)
 	g->add(new Grid(geomgrp,25));
     } else 
     {
-	g->add(new HierarchicalGrid(geomgrp,10,10,10,20,20,1));
+      g->add(new HierarchicalGrid(geomgrp,10,10,10,20,20,1));
 //  	g->add(geomgrp);
     }
 
@@ -388,6 +396,7 @@ Scene* make_scene(int argc, char* argv[])
     int depth=3;
     
     bool shownodes=false;
+    bool headlight=false;
     char *tfile=0;
     bool geom = false;
     realgeom = false;
@@ -402,6 +411,8 @@ Scene* make_scene(int argc, char* argv[])
 	    depth=atoi(argv[i]);
        } else if(strcmp(argv[i], "-shownodes")==0){
 	   shownodes=true;
+       } else if(strcmp(argv[i], "-headlight")==0){
+	   headlight=true;
        } else if(strcmp(argv[i], "-texture")==0){
 	   i++;
 	   tfile = argv[i];
@@ -435,9 +446,12 @@ Scene* make_scene(int argc, char* argv[])
 //  	       Point(965.286, 909.679, 3054.15),
 //  	       Vector(-0.203989, -0.140958, 0.968772),
 //  	       40.);
+    Vector Up(0,0,1);
+
     Camera cam(Point(197.09, 213.859, 2895.63),
 	       Point(944.551, 895.513, 3152.2),
-	       Vector(-0.203989, -0.140958, 0.968772),
+//  	       Vector(-0.203989, -0.140958, 0.968772),
+	       Up,
 	       40.);
 
     Color surf(1.00000, 0.0, 0.00);
@@ -502,17 +516,52 @@ Scene* make_scene(int argc, char* argv[])
     Color bgcolor(bgscale*205/255., bgscale*205/255., bgscale*205/255.);
 
     Plane groundplane ( Point(0, 0, 3500), Vector(-1, -1, 1) );
+
+
+
     Scene* scene=new Scene(grp, cam,
 			   bgcolor, cdown, cup,
 			   groundplane, 
-			   ambient_scale, Arc_Ambient);
-    scene->add_light(new Light(Point(-10000,-10000,10000), Color(.7,.7,.7), 0));
+			   ambient_scale, Sphere_Ambient);
+
+  EnvironmentMapBackground *emap = 
+    new EnvironmentMapBackground("/opt/SCIRun/data/Geometry/textures/terrain/sunset2.ppm",
+				 Vector(0,0,1));
+    scene->set_ambient_environment_map(emap);
+    if (headlight) {
+      
+      Light * rightHeadlight = new PhongLight(Color(0.5,0.5,0.5), Point(2,2,2), 
+					      3.0, Up, 40);
+      rightHeadlight->name_ = "right headlight";
+      rightHeadlight->fixed_to_eye = 1;
+      rightHeadlight->eye_offset_basis = Vector(-22, -1, 22);
+      
+      Light * leftHeadlight = new PhongLight(Color(0.5,0.5,0.5), Point(1,1,1), 
+					     3.0, Up, 40);
+      leftHeadlight->name_ = "left headlight";
+      leftHeadlight->fixed_to_eye = 1;
+      leftHeadlight->eye_offset_basis = Vector(22,-1,22);
+      
+      scene->add_light( rightHeadlight );
+      scene->add_light( leftHeadlight );
+    } else {
+      Light *ter_light = new Light(Point(-10000,-10000,10000), Color(.7,.7,.7), 0);
+      ter_light->name_ = "Sunlight";
+      scene->add_light(ter_light);
+      
+    }
+
     scene->select_shadow_mode( No_Shadows );
     scene->maxdepth=0;
-    scene->set_background_ptr( new LinearBackground(
-	Color(135/255., 206/255., 235/255.)*.8,
-	Color(135/255., 206/255., 235/255.)*.8,
-	Vector(0,0,1)));
+    scene->set_background_ptr(new EnvironmentMapBackground("/opt/SCIRun/data/Geometry/models/stadium/SKY3.ppm"));
+    
+
+//      scene->set_background_ptr( new LinearBackground(
+//  	Color(135/255., 206/255., 235/255.)*.8,
+//  	Color(135/255., 206/255., 235/255.)*.8,
+//  	Vector(0,0,1)));
 
     return scene;
 }
+
+

@@ -37,35 +37,6 @@ RationalBezier::RationalBezier(Material *mat, RationalMesh *g,
   bbox = 0;
 }
 
-void RationalBezier::Out(int i=0, int j=0)
-{
-  if (isleaf) {
-    control->Out(i,j);
-  }
-  else {
-    i*=4;
-    j*=4;
-    nw->Out(i,j);
-    ne->Out(i,j+1);
-    se->Out(i+1,j+1);
-    sw->Out(i+1,j);
-  }
-}
-
-inline void RationalBezier::Print()
-{
-  if (isleaf) {
-    local->Print();
-    printf("Ustart:%lf Ustop:%lf Vstart:%lf Vstop:%lf\n",
-	   ustart,ufinish,vstart,vfinish);
-  }
-  else {
-    nw->Print();
-    ne->Print();
-    se->Print();
-    sw->Print();
-  }
-}
 
 void RationalBezier::preprocess(double, int&, int& scratchsize)
 {

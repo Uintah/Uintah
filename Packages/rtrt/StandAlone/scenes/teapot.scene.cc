@@ -42,18 +42,21 @@ void rotate(double /*theta*/, double /*phi*/)
 extern "C"
 Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 {
+      bool headlight=false;
       for(int i=1;i<argc;i++) {
-	cerr << "Unknown option: " << argv[i] << '\n';
-	cerr << "Valid options for scene: " << argv[0] << '\n';
-	return 0;
+	if(strcmp(argv[i], "-headlight")==0){
+	   headlight=true;
+	} else {
+	  cerr << "Unknown option: " << argv[i] << '\n';
+	  cerr << "Valid options for scene: " << argv[0] << '\n';
+	  return 0;
+	}
       }
-
       //Point Eye(800,1590,360);
       Point Eye(700,1390,300);
       Point Lookat(0,0,150);
       Vector Up(0,0,1);
       double fov=45;
-
       Camera cam(Eye,Lookat,Up,fov);
 
       //double bgscale=0.5;
@@ -435,24 +438,25 @@ Material *brick = new Speckle(0.01, Color(0.5,0.5,0.5), Color(0.6, 0.62, 0.64) )
       scene->select_shadow_mode( Hard_Shadows );
       scene->maxdepth = 50;
       scene->shadowobj = new BV1(shadow);
-//      scene->add_light(new Light(Point(200,400,1300), Color(.8,.8,.8), 0));
       scene->animate=false;
 
-  Light * rightHeadlight = new PhongLight(Color(0.5,0.5,0.5), Point(2,2,2), 
-					  3.0, Up, 16);
-  rightHeadlight->name_ = "right headlight";
-  rightHeadlight->fixed_to_eye = 1;
-  rightHeadlight->eye_offset_basis = Vector(-22, -1, 22);
-
-  Light * leftHeadlight = new PhongLight(Color(0.5,0.5,0.5), Point(1,1,1), 
-					 3.0, Up, 16);
-  leftHeadlight->name_ = "left headlight";
-  leftHeadlight->fixed_to_eye = 1;
-  leftHeadlight->eye_offset_basis = Vector(22,-1,22);
-
-  scene->add_light( rightHeadlight );
-  scene->add_light( leftHeadlight );
-
-
+      if (headlight) {
+	Light * rightHeadlight = new PhongLight(Color(0.5,0.5,0.5), Point(2,2,2), 
+						3.0, Up, 16);
+	rightHeadlight->name_ = "right headlight";
+	rightHeadlight->fixed_to_eye = 1;
+	rightHeadlight->eye_offset_basis = Vector(-22, -1, 22);
+	
+	Light * leftHeadlight = new PhongLight(Color(0.5,0.5,0.5), Point(1,1,1), 
+					       3.0, Up, 16);
+	leftHeadlight->name_ = "left headlight";
+	leftHeadlight->fixed_to_eye = 1;
+	leftHeadlight->eye_offset_basis = Vector(22,-1,22);
+	
+	scene->add_light( rightHeadlight );
+	scene->add_light( leftHeadlight );
+      } else {
+	scene->add_light(new Light(Point(200,400,1300), Color(.8,.8,.8), 0));
+      }
       return scene;
 }

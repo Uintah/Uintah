@@ -32,7 +32,6 @@ class Array2 {
   int dm1;
   int dm2;
   void allocate();
-  Array2<T>& operator=(const Array2&);
 public:
   typedef T data_type;
 
@@ -43,6 +42,7 @@ public:
   {
     return objs[d1][d2];
   }
+  Array2<T>& operator=(const Array2&);
   inline int dim1() const {return dm1;}
   inline int dim2() const {return dm2;}
   void resize(int, int);

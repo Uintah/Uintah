@@ -1,12 +1,18 @@
 #ifndef POINT4D_H
 #define POINT4D_H
 
+#include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <stdio.h>
+
+#define POINT4D_EPS 1E-9
+#define APPROX_ZERO(a) (fabs(a) < POINT4D_EPS ? true : false)
+#define INV(w) (APPROX_ZERO(w) ? 1. : 1./w)
 
 namespace rtrt {
 
 using SCIRun::Vector;
+using SCIRun::Point;
 using SCIRun::Dot;
 using SCIRun::Cross;
 
@@ -14,360 +20,108 @@ class Point4D
 {
 
 public:
-    
-    inline Point4D(const double cx=0, const double cy=0, const double
-		 cz=0, const double ch=1)
+  double _x,_y,_z,_w;
+
+  inline Point4D()
     {
-	coord[0] = cx;
-	coord[1] = cy;
-	coord[2] = cz;
-	coord[3] = ch;
+      zero();
+    }
+    
+    inline Point4D(const double cx, const double cy, 
+		   const double cz, const double ch)
+    {
+	_x = cx;
+	_y = cy;
+	_z = cz;
+	_w = ch;
     }
 
     inline Point4D(const Point4D &p)
     {
-	coord[0] = p.coord[0];
-	coord[1] = p.coord[1];
-	coord[2] = p.coord[2];
-	coord[3] = p.coord[3];
+	_x = p._x;
+	_y = p._y;
+	_z = p._z;
+	_w = p._w;
     }
+    
+    inline void zero()
+      {
+	_x = _y = _z = _w = 0.;
+      }
+
+    inline void set(const double& x,
+		    const double& y,
+		    const double& z,
+		    const double& w)
+      {
+	_x = x;
+	_y = y;
+	_z = z;
+	_w = w;
+      }
+
     inline double x() const {
-        return coord[0];
+        return _x;
     }
     
     inline double y() const {
-        return coord[1];
+        return _y;
     }
     
     inline double z() const {
-        return coord[2];
+        return _z;
     }
 
-    inline Vector operator-(const Point4D &p) const
-    {
-	return Vector(coord[0]-p.coord[0],
-		      coord[1]-p.coord[1],
-		      coord[2]-p.coord[2]
-		      );
-    }
-
-    inline Vector operator-(const Vector &v) const
-    {
-	return Vector(coord[0]-v.x(),
-		      coord[1]-v.y(),
-		      coord[2]-v.z());
-    }
-
-    inline Point4D operator+(const Vector &v) const
-    {
-	return Point4D(coord[0]+v.x(),
-		     coord[1]+v.y(),
-		     coord[2]+v.z(),
-		     1.);
-    }
-
-    inline Point4D operator+(const Point4D &p) const
-    {
-	return Point4D(coord[0]+p.coord[0],
-		     coord[1]+p.coord[1],
-		     coord[2]+p.coord[2],
-		     1.);
-    }
-
-    inline Point4D &operator+=(const Point4D &p)
-    {
-	coord[0] += p.coord[0];
-	coord[1] += p.coord[1];
-	coord[2] += p.coord[2];
-	coord[3] = 1.;
-	
-	return (*this);
-    }
-
-    inline Point4D &operator+=(const Vector &v)
-    {
-	coord[0] += v.x();
-	coord[1] += v.y();
-	coord[2] += v.z();
-	coord[3] = 1.;
-
-	return (*this);
+    inline double w() const {
+        return _w;
     }
     
-    inline Point4D &operator-=(const Point4D &p)
-    {
-	coord[0] -= p.coord[0];
-	coord[1] -= p.coord[1];
-	coord[2] -= p.coord[2];
-	coord[3] = 1.;
+    inline Point e3() const {
 
-	return *this;
+/*        double invw = INV(_w); */
+
+      double invw = 1./_w;
+      
+      return Point(invw*_x,
+		   invw*_y,
+		   invw*_z);
     }
 
-    inline Point4D ToBasis(const Point4D &c, const Vector &u,
-			 const Vector &v, const Vector &w) const
-    {
-	Vector v1((*this)-c);
-
-	return Point4D(Dot(v1, u), Dot(v1, v), Dot(v1, w));
-    }
-
-    inline Point4D ToCanonical(const Point4D &c, const Vector &u,
-			     const Vector &v, const Vector &w) const
-    {
-	return Point4D(coord[0]*u.x()+
-                       coord[1]*v.x()+
-                       coord[2]*w.x(),
-                       coord[0]*u.y()+
-                       coord[1]*v.y()+
-                       coord[2]*w.y(),
-                       coord[0]*u.z()+
-                       coord[1]*v.z()+
-                       coord[2]*w.z()) + c;
-    }
-
-    inline Point4D &operator=(const Vector &v)
-    {
-	coord[0] = v.x();
-	coord[1] = v.y();
-	coord[2] = v.z();
-	coord[3] = 1.;
-	
-	return *this;
-    }
+    inline void addscaled(const Point4D &p, const double &c)
+      {
+	_x += p._x*c;
+	_y += p._y*c;
+	_z += p._z*c;
+	_w += p._w*c;
+      }
 
     inline Point4D &operator=(const Point4D &p)
     {
-	coord[0] = p.coord[0];
-	coord[1] = p.coord[1];
-	coord[2] = p.coord[2];
-	coord[3] = p.coord[3];
+	_x = p._x;
+	_y = p._y;
+	_z = p._z;
+	_w = p._w;
 
 	return *this;
     }
-
-    inline Vector operator*(const Vector &v2) const
-    {
-	Vector v1 = Vector(coord[0],coord[1],coord[2]);
-	return Cross(v1, v2);
-    }
-
-    inline Point4D operator*(const double c) const
-    {
-	return Point4D(coord[0]*c,coord[1]*c,coord[2]*c,coord[3]);
-    }
-
-    inline Point4D operator/(double c) const
-    {
-	double div = 1./c;
-
-	return Point4D(coord[0]*div,coord[1]*div,coord[2]*div);
-    }
-    
-    inline double dot(const Vector &v) const
-      {
-	return
-	    coord[0]*v.x() +
-	    coord[1]*v.y() +
-	    coord[2]*v.z();
-    }
-
-    inline double operator,(const Vector &v) const
-    {
-	return
-	    coord[0]*v.x() +
-	    coord[1]*v.y() +
-	    coord[2]*v.z();
-    }
-
-  inline void addscaled(const Point4D &p, const double scale) {
-    coord[0] += p.coord[0]*scale;
-    coord[1] += p.coord[1]*scale;
-    coord[2] += p.coord[2]*scale;
-  }
-
-  inline void weighted_set(const Point4D &p, const double w) {
-    coord[0] = p.coord[0]*w;
-    coord[1] = p.coord[1]*w;
-    coord[2] = p.coord[2]*w;
-  }
-
-    void Print() {
-	printf("%lf %lf %lf %lf\n",coord[0],coord[1],coord[2],coord[3]);
-    }
-
-    inline operator Vector() const
-    {
-	return (Vector(coord[0],coord[1],coord[2]));
-    }
-    
-    double coord[4];
-    
 };
 
+
 inline void blend(const Point4D &p1, const Point4D &p2,
-		  const double t, Point4D &pr)
+                  const double t, Point4D &pr)
 {
-    double w1,w2;
-    
-    w1 = p1.coord[3]*(1.-t);
-    w2 = p2.coord[3]*t;
 
-    pr.coord[3] = w1+w2;
-
-    w1 /= pr.coord[3];
-    w2 = 1.-w1;
-
-    pr.coord[0] = w1*p1.coord[0] + w2*p2.coord[0];
-    pr.coord[1] = w1*p1.coord[1] + w2*p2.coord[1];
-    pr.coord[2] = w1*p1.coord[2] + w2*p2.coord[2];
+  double t0 = 1.0-t;
+  double t1 = t;
+  pr.set(p1._x*t0 + p2._x*t1,
+	 p1._y*t0 + p2._y*t1,
+	 p1._z*t0 + p2._z*t1,
+	 p1._w*t0 + p2._w*t1);
 }
 
-inline Vector &Sub(Point4D &p1, Point4D &p2, Vector &vout)
-{
-    vout.x(p1.coord[0]-p2.coord[0]);
-    vout.y(p1.coord[1]-p2.coord[1]);
-    vout.z(p1.coord[2]-p2.coord[2]);
-
-    return vout;
-}
-
-inline Point4D &Sub(Point4D &p1, Point4D &p2, Point4D &pout)
-{
-    pout.coord[0] = p1.coord[0]-p2.coord[0];
-    pout.coord[1] = p1.coord[1]-p2.coord[1];
-    pout.coord[2] = p1.coord[2]-p2.coord[2];
-
-    return pout;
-}
-
-inline Vector &Sub(Point4D &p, Vector &v, Vector &vout)
-{
-    vout.x(p.coord[0]-v.x());
-    vout.y(p.coord[1]-v.y());
-    vout.z(p.coord[2]-v.z());
-
-    return vout;
-}
-
-inline double distance(const Point4D &p1, const Point4D &p2)
-{
-    return
-	sqrt((p1.coord[0]-p2.coord[0])*(p1.coord[0]-p2.coord[0]) +
-	     (p1.coord[1]-p2.coord[1])*(p1.coord[1]-p2.coord[1]) +
-	     (p1.coord[2]-p2.coord[2])*(p1.coord[2]-p2.coord[2]));
-}
-
-inline Point4D &Add(Point4D &p, Vector &v, Point4D &pout)
-{
-    pout.coord[0] = p.coord[0]+v.x();
-    pout.coord[1] = p.coord[1]+v.y();
-    pout.coord[2] = p.coord[2]+v.z();
-    pout.coord[3] = 1.;
-
-    return pout;
-}
-
-inline Point4D &Add(Point4D &p1, Point4D &p2, Point4D &pout)
-{
-    pout.coord[0] = p1.coord[0]+p2.coord[0];
-    pout.coord[1] = p1.coord[1]+p2.coord[1];
-    pout.coord[2] = p1.coord[2]+p2.coord[2];
-    pout.coord[3] = 1.;
-
-    return pout;
-}
-
-
-inline Point4D &ToBasis(Point4D &pin, Point4D &c,
-		      Vector &u, Vector &v, Vector &w,
-		      Point4D &pout)
-{
-    Vector tempv;
-
-    Sub(pin,c,tempv);
-
-    pout.coord[0] = Dot(tempv, u);
-    pout.coord[1] = Dot(tempv, v);
-    pout.coord[2] = Dot(tempv, w);
-    
-    return pout;
-}
-
-inline Point4D &ToCanonical(Point4D &pin, Point4D &c,
-			  Vector &u, Vector &v, Vector &w,
-			  Point4D &pout)
-{
-    pout.coord[0] =
-	pin.coord[0]*u.x()+
-	pin.coord[1]*v.x()+
-	pin.coord[2]*w.x();
-    pout.coord[1] = 
-	pin.coord[0]*u.y()+
-	pin.coord[1]*v.y()+
-	pin.coord[2]*w.y();
-    pout.coord[2] =
-	pin.coord[0]*u.z()+
-	pin.coord[1]*v.z()+
-	pin.coord[2]*w.z();
-    pout.coord[3] = 1.;
-    
-    pout += c;
-    
-    return pout;
-}
-
-inline Vector &Cross(Point4D &p, Vector &v, Vector &vout)
-{
-    vout.x(p.coord[1] * v.z() - v.y() * p.coord[2]);
-    vout.y(p.coord[2] * v.x() - v.z() * p.coord[0]);
-    vout.z(p.coord[0] * v.y() - v.x() * p.coord[1]);
-    
-    return vout;
-}
-
-inline Point4D &Mult(Point4D &p, double c, Point4D &pout)
-{
-    pout.coord[0] = p.coord[0]*c;
-    pout.coord[1] = p.coord[1]*c;
-    pout.coord[2] = p.coord[2]*c;
-    pout.coord[3] = 1.;
-    
-    return pout;
-}
-
-inline Point4D &Mult(Vector &v, double c, Point4D &pout)
-{
-    pout.coord[0] = v.x()*c;
-    pout.coord[1] = v.y()*c;
-    pout.coord[2] = v.z()*c;
-    pout.coord[3] = 1.;
-    
-    return pout;
-}
-
-inline Point4D &Div(Point4D &p, double c, Point4D &pout)
-{
-    double div = 1./c;
-    
-    pout.coord[0] = p.coord[0]*div;
-    pout.coord[1] = p.coord[1]*div;
-    pout.coord[2] = p.coord[2]*div;
-    pout.coord[3] = 1.;
-
-    return pout;
-}
-
-inline void weighted_diff(Point4D &p1, double w1,
-			  Point4D &p2, double w2,
-			  Vector &v) 
-{
-  v.x(p1.coord[0]*w1-p2.coord[0]*w2);
-  v.y(p1.coord[1]*w1-p2.coord[1]*w2);
-  v.z(p1.coord[2]*w1-p2.coord[2]*w2);
-}
 
 } // end namespace rtrt
 
 #endif
+
 

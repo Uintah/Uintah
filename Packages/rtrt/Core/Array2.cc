@@ -102,6 +102,22 @@ void Array2<T>::share(const Array2<T>& copy)
     (*refcnt)++;
 }
 
+template<class T>
+Array2<T>& Array2<T>::operator=(const Array2<T>& copy)
+{
+    resize(copy.dm1,copy.dm2);
+
+    for(int i=0; i<dm1; i++)
+    {
+        for (int j=0; j<dm2; j++)
+        {
+            objs[i][j] = copy.objs[i][j];
+        }
+    }
+    return *this;
+
+}
+
 
 #define Array2_VERSION 1
 

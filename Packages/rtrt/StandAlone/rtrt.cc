@@ -913,6 +913,10 @@ main(int argc, char* argv[])
   glutReshapeFunc( Gui::handleWindowResizeCB );
   glutDisplayFunc( Gui::redrawBackgroundCB );
 
+ 
+  /*  bigler */
+  (new Thread(dpy, "Display thread"))->detach();
+
   // Must do this after glut is initialized.
   Gui::createMenus( mainWindowId, startSoundThread, show_gui);  
 
@@ -927,13 +931,12 @@ main(int argc, char* argv[])
       light->name_ = light->name_ + " (pm)";
     gui->addLight( light );
   }
+
   printf("end glut inits\n");
 
   /* Register the idle callback with GLUI, *not* with GLUT */
   //GLUI_Master.set_glutIdleFunc( Gui::idleFunc );
 
-  /*  bigler */
-  (new Thread(dpy, "Display thread"))->detach();
   
   // Start up worker threads...
   for(int i=0;i<rtrt_engine->nworkers;i++){
