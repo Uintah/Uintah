@@ -4,8 +4,8 @@
 #include "Matrix.cc"
 #include "SymmetricMatrix.h"
 #include "SymmetricMatrix.cc"
-#include "../boundedarray/BoundedArray.h"
-#include "../boundedarray/BoundedArray.cc"
+#include "BoundedArray.h"
+#include "BoundedArray.cc"
 
 // Instantiate the Matrix class for doubles 
 
@@ -26,6 +26,10 @@ template Matrix<double> operator*(SymmetricMatrix<double> const &, SymmetricMatr
 #endif
 
 // $Log$
+// Revision 1.2  2000/04/28 21:08:26  jas
+// Added exception to the creation of Contact factory if contact is not
+// specified.
+//
 // Revision 1.1  2000/03/14 22:12:43  jas
 // Initial creation of the utility directory that has old matrix routines
 // that will eventually be replaced by the PSE library.

@@ -32,6 +32,8 @@ Contact* ContactFactory::create(const ProblemSpecP& ps, SimulationStateP &ss)
       cerr << "Unknown Contact Type R (" << con_type << ")" << std::endl;;
       //      exit(1);
     }
+    
+    return 0;
 }
 
 
@@ -39,6 +41,10 @@ Contact* ContactFactory::create(const ProblemSpecP& ps, SimulationStateP &ss)
 
 
 // $Log$
+// Revision 1.2  2000/04/28 21:08:25  jas
+// Added exception to the creation of Contact factory if contact is not
+// specified.
+//
 // Revision 1.1  2000/04/27 21:28:57  jas
 // Contact is now created using a factory.
 //

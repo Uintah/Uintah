@@ -22,6 +22,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/VarLabel.h>
 #include <Uintah/Interface/DataWarehouse.h>
 #include <Uintah/Interface/Scheduler.h>
+#include <Uintah/Exceptions/ParameterNotFound.h>
 
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Geometry/Point.h>
@@ -100,8 +101,11 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
    Problem prob_description;
    prob_description.preProcessor(prob_spec, grid, d_sharedState);
 
-   //   d_contactModel = new SingleVelContact(sharedState);
+   cerr << "Number of velocity fields = " << d_sharedState->getNumVelFields()
+	<< std::endl;
    d_contactModel = ContactFactory::create(prob_spec,sharedState);
+   if (!d_contactModel)
+     throw ParameterNotFound("No contact model");
    cerr << "SerialMPM::problemSetup not done\n";
 }
 
@@ -284,7 +288,7 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 
 	Task* t = new Task("Contact::exMomIntegrated",
 			   region, old_dw, new_dw,
-			   d_contactModel, Contact::exMomIntegrated);
+			   d_contactModel, &Contact::exMomIntegrated);
 	t->requires(new_dw, gMassLabel, region, 0);
 	t->requires(new_dw, gVelocityStarLabel, region, 0);
 	t->requires(new_dw, gAccelerationLabel, region, 0);
@@ -342,6 +346,7 @@ void SerialMPM::actuallyInitialize(const ProcessorContext*,
     }
   }
 }
+
 
 void SerialMPM::actuallyComputeStableTimestep(const ProcessorContext*,
 					      const Region*,
@@ -703,6 +708,10 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.34  2000/04/28 21:08:15  jas
+// Added exception to the creation of Contact factory if contact is not
+// specified.
+//
 // Revision 1.33  2000/04/28 08:11:29  sparker
 // ConstitutiveModelFactory should return null on failure
 // MPMMaterial checks for failed constitutive model creation
