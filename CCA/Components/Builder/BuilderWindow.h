@@ -96,7 +96,8 @@ namespace SCIRun {
     BuilderWindow(const sci::cca::Services::pointer& services);
     virtual ~BuilderWindow();
 
-    void instantiateComponent(const sci::cca::ComponentClassDescription::pointer&);
+    Module* instantiateComponent(const sci::cca::ComponentClassDescription::pointer&);
+    Module* instantiateComponent(const std::string& className, const std::string& type, const std::string& loaderName);
 
     // From sci::cca::ComponentEventListener
     void componentActivity(const sci::cca::ports::ComponentEvent::pointer& e);
