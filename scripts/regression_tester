@@ -14,11 +14,12 @@ fi
 
 did_mount=0
 
-hostname_test=`uname -n | grep inf`
+hostname_inf=`uname -n | grep inf`
 
-if test "$hostname" = "$hostname_test";
+if test "$hostname" = "$hostname_inf";
     then
     test_dir=/usr/sci/projects/Uintah/tester/Linux-TestData
+    lamboot;
 else
     if test ! -d $test_dir/dbg
     then 
@@ -489,7 +490,10 @@ if test $do_remove -eq 1; then
     REMOVE
 fi
 
-if test "$hostname" != "$hostname_test" && test $did_mount -eq 1; then
+if test "$hostname" != "$hostname_inf" && test $did_mount -eq 1; then
     /home/jas/bin/unmount_testdata
 fi
 
+if test "$hostname" = "$hostname_inf"; then
+	lamhalt
+fi
