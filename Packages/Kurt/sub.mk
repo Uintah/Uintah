@@ -6,7 +6,7 @@ SRCDIR := Packages/Kurt
 SUBDIRS := \
 	$(SRCDIR)/Core \
 	$(SRCDIR)/Dataflow \
-	$(SRCDIR)/StandAlone \
+#	$(SRCDIR)/StandAlone \
 #[INSERT NEW CODE FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
