@@ -45,15 +45,14 @@ using namespace SCIRun;
 
 int
 main(int argc, char **argv) {
-  if (argc != 4) {
+  if (argc != 3) {
     cerr << "Usage: "<<argv[0]<<" raw lattice\n";
     return 0;
   }
 
-  ifstream rawstream(argv[1]);
-
   cout << "What are the dimensions: nx ny nz? ";
   int ni, nj, nk;
+  double minx, miny, minz, maxx, maxy, maxz;
   cin >> ni >> nj >> nk;
   cout << "ASCII or Binary (a/b)? ";
   string ascii_or_binary;
@@ -61,17 +60,47 @@ main(int argc, char **argv) {
   cout << "Datatype (d/f/ui/i/us/s/uc/c)? ";
   string datatype;
   cin >> datatype;
+  cout << "Min x y z? ";
+  cin >> minx >> miny >> minz;
+  cout << "Max x y z? ";
+  cin >> maxx >> maxy >> maxz;
 
-  cerr << "\n\n ni="<<ni<<" nj="<<nj<<" nk="<<nk<<"\n";
-  cerr << "ascii_or_binary="<<ascii_or_binary<<"\n";
-  cerr << "Datatype="<<datatype<<"\n";
-
-  Point min(0,0,0), max(ni,nj,nk);
+  Point min(minx, miny, minz), max(maxx, maxy, maxz);
   LatVolMeshHandle lvm = new LatVolMesh(ni, nj, nk, min, max);
-  LatticeVol<double> *lv = new LatticeVol<double>(lvm, Field::NODE);
-  FieldHandle fH(lv);
+  FieldHandle fH;
 
-  TextPiostream out_stream(argv[3], Piostream::Write);
+  FILE *fin = fopen(argv[1], "rt");
+
+  if (datatype == "d") {
+    LatticeVol<double> *lv = 
+      new LatticeVol<double>(lvm, Field::NODE);
+    fH=lv;
+    double *data=&(lv->fdata()(0,0,0));
+    if (ascii_or_binary == "a") {
+      double f;
+      for (int i=0; i<ni*nj*nk; i++) {
+	fscanf(fin, "%lf", &f);
+	*data++ = f;
+      }
+    } else {
+      fread(data, sizeof(double), ni*nj*nk, fin);
+    }
+  } else if (datatype == "uc") {
+    LatticeVol<unsigned char> *lv = 
+      new LatticeVol<unsigned char>(lvm, Field::NODE);
+    fH=lv;
+    unsigned char *data=&(lv->fdata()(0,0,0));
+    if (ascii_or_binary == "a") {
+      unsigned char f;
+      for (int i=0; i<ni*nj*nk; i++) {
+	fscanf(fin, "%c", &f);
+	*data++ = f;
+      }
+    } else {
+      fread(data, sizeof(unsigned char), ni*nj*nk, fin);
+    }
+  }
+  TextPiostream out_stream(argv[2], Piostream::Write);
   Pio(out_stream, fH);
   return 0;  
 }    
