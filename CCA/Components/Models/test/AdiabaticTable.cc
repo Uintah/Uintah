@@ -223,6 +223,7 @@ void AdiabaticTable::scheduleInitialize(SchedulerP& sched,
   t->modifies(lb->specific_heatLabel);
   t->modifies(lb->gammaLabel);
   t->modifies(lb->thermalCondLabel);
+  t->modifies(lb->temp_CCLabel);
   t->modifies(lb->viscosityLabel);
   
   t->computes(d_scalar->scalar_CCLabel);
@@ -243,8 +244,7 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
     int indx = d_matl->getDWIndex();
     
     CCVariable<double>  f, cv, gamma, thermalCond, viscosity, rho_CC, sp_vol;
-    CCVariable<double> rho_micro;
-    constCCVariable<double> Temp;
+    CCVariable<double> rho_micro, temp;
     new_dw->allocateAndPut(f, d_scalar->scalar_CCLabel, indx, patch);
     new_dw->getModifiable(rho_CC,      lb->rho_CCLabel,       indx,patch);
     new_dw->getModifiable(sp_vol,      lb->sp_vol_CCLabel,    indx,patch);
@@ -253,6 +253,7 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
     new_dw->getModifiable(cv,          lb->specific_heatLabel,indx,patch);
     new_dw->getModifiable(thermalCond, lb->thermalCondLabel,  indx,patch);
     new_dw->getModifiable(viscosity,   lb->viscosityLabel,    indx,patch);
+    new_dw->getModifiable(temp, lb->temp_CCLabel, indx, patch);
     //__________________________________
     //  initialize the scalar field in a region
     f.initialize(0);
@@ -282,6 +283,7 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
     table->interpolate(d_gamma_index,     gamma,    extraCellIterator,ind_vars);
     table->interpolate(d_cv_index,        cv,       extraCellIterator,ind_vars);
     table->interpolate(d_viscosity_index, viscosity,extraCellIterator,ind_vars);
+    table->interpolate(d_temp_index, temp, extraCellIterator, ind_vars);
     
     for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       const IntVector& c = *iter;
@@ -501,12 +503,22 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
       double maxIncrease = 0;    //debugging
       double maxDecrease = 0;
       double totalEnergy = 0;
+      double maxFlameTemp=0;
       
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
         IntVector c = *iter;
         double mass      = rho_CC[c]*volume;
         double cp        = gamma[c] * cv[c];
         double press_ref = (gamma[c] -1) * cv[c] * flameTemp[c]/ sp_vol_ref[c];
+#if 0
+        if(press[c] > 101325*1.5){
+          cerr << "OOPS: " << c << ", press=" << press[c] << '\n';
+          cerr << "gamma=" << gamma[c] << ", cv=" << cv[c] << ", temp=" << flameTemp[c] << ", spvol=" << sp_vol_ref[c] << '\n';
+        }
+        if(f_old[c] > .01 && f_old[c] < .99){
+          cerr << c << ", f=" << f_old[c] << ", temp=" << flameTemp[c] << ", press_ref=" << press_ref << ", cp=" << cp << '\n';
+        }
+#endif
         
         double newTemp = flameTemp[c] * (press[c] * sp_vol_CC[c])/(press_ref*sp_vol_ref[c]);
         double energyx =( newTemp - oldTemp[c]) * cp * mass;
@@ -518,13 +530,15 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
         totalEnergy += energyx;
         if(newTemp > maxTemp)
           maxTemp = newTemp;
+        if(flameTemp[c] > maxFlameTemp)
+          maxFlameTemp = flameTemp[c];
         double dtemp = newTemp-oldTemp[c];
         if(dtemp > maxIncrease)
           maxIncrease = dtemp;
         if(dtemp < maxDecrease)
           maxDecrease = dtemp;
       }
-      cerr << "MaxTemp = " << maxTemp << ", maxIncrease=" << maxIncrease << ", maxDecrease=" << maxDecrease << ", totalEnergy=" << totalEnergy << '\n';
+      cerr << "MaxTemp = " << maxTemp << ", maxFlameTemp=" << maxFlameTemp << ", maxIncrease=" << maxIncrease << ", maxDecrease=" << maxDecrease << ", totalEnergy=" << totalEnergy << '\n';
 #if 0
       //__________________________________
       //  Tack on diffusion
