@@ -88,6 +88,12 @@ inline SCICORESHARE double Min(double d1, double d2, double d3)
     return m;
 }
 
+inline SCICORESHARE double Mid(double a, double b, double c)
+{
+  return ((a > b) ? ((a < c) ? a : ((b > c) ? b : c)) : \
+	            ((b < c) ? b : ((a > c) ? a : c)));
+}
+
 inline SCICORESHARE double Max(double d1, double d2, double d3)
 {
     double m=d1>d2?d1:d2;
@@ -101,6 +107,12 @@ inline SCICORESHARE int Min(int d1, int d2, int d3)
     int m=d1<d2?d1:d2;
     m=m<d3?m:d3;
     return m;
+}
+
+inline SCICORESHARE int Mid(int a, int b, int c)
+{
+  return ((a > b) ? ((a < c) ? a : ((b > c) ? b : c)) : \
+	            ((b < c) ? b : ((a > c) ? a : c)));
 }
 
 inline SCICORESHARE int Max(int d1, int d2, int d3)
@@ -117,6 +129,13 @@ inline SCICORESHARE long  Min(long  d1, long  d2, long  d3)
     m=m<d3?m:d3;
     return m;
 }
+
+inline SCICORESHARE long Mid(long a, long b, long c)
+{
+  return ((a > b) ? ((a < c) ? a : ((b > c) ? b : c)) : \
+	            ((b < c) ? b : ((a > c) ? a : c)));
+}
+
 
 inline SCICORESHARE long  Max(long  d1, long  d2, long  d3)
 {
