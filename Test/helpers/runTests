@@ -33,11 +33,9 @@ fi
 
 echo "" >> "$BUILDROOT"/log
 echo "Debug build log:" >> "$BUILDROOT"/log
-echo "" >> "$BUILDROOT"/log
 cat "$BUILDROOT"/dbg/log >> "$BUILDROOT"/log
 echo "" >> "$BUILDROOT"/log
 echo "Optimized build log:" >> "$BUILDROOT"/log
-echo "" >> "$BUILDROOT"/log
 cat "$BUILDROOT"/opt/log >> "$BUILDROOT"/log
 
 # build_and_run should write summare-log files
@@ -46,7 +44,7 @@ if [ -f "$BUILDROOT"/dbg/summary-log ]; then
     echo "" >> "$BUILDROOT"/log
     cat "$BUILDROOT"/dbg/summary-log >> "$BUILDROOT"/log
 fi
-if [ -f "$BUILDROOT"/dbg/summary-log ]; then
+if [ -f "$BUILDROOT"/opt/summary-log ]; then
     echo "Summary for opt mode tests:" >> "$BUILDROOT"/log
     echo "" >> "$BUILDROOT"/log
     cat "$BUILDROOT"/opt/summary-log >> "$BUILDROOT"/log
