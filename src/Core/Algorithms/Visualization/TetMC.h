@@ -217,12 +217,12 @@ void TetMC<Field>::extract_n( cell_index_type cell, double v )
   for (i=0; i<4; i++)
     mesh_->get_point( p[i], node[i] );
 
-  // fix the node[i] ordering so tet is orientationally consistent
-  if (Dot(Cross(p[0]-p[1],p[0]-p[2]),p[0]-p[3])>0) {
-    typename mesh_type::Node::index_type nd=node[0];
-    node[0]=node[1];
-    node[1]=nd;
-  }
+// fix the node[i] ordering so tet is orientationally consistent
+//  if (Dot(Cross(p[0]-p[1],p[0]-p[2]),p[0]-p[3])>0) {
+//    typename mesh_type::Node::index_type nd=node[0];
+//    node[0]=node[1];
+//    node[1]=nd;
+//  }
 
   int code = 0;
   for (int i=0; i<4; i++) {
