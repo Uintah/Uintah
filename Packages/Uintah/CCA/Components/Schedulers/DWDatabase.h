@@ -418,7 +418,7 @@ DWDatabase<VarType>::logMemoryUse(ostream& out, const std::string& tag,
     for(patchDBtype::iterator iter = nr->patches.begin();
 	iter != nr->patches.end(); iter++){
       PatchRecord* pr = iter->second;
-      for(int i=0;i<pr->vars.size();i++){
+      for(int i=0;i<(int)pr->vars.size();i++){
 	VarType* var = pr->vars[i];
 	if(var){
 	  const VarLabel* label = nr->label;
