@@ -37,88 +37,88 @@
     <Grid>
 		<BoundaryConditions>
 		 <Face side = "x-">
-                     <BCType label = "Pressure" var = "Dirichlet">
+                     <BCType id = "0" label = "Pressure" var = "Dirichlet">
                            <value> 101325.0   </value>
-                        </BCType>
-			<BCType label = "Velocity" var = "Neumann">
+                     </BCType>
+		     <BCType id = "all" label = "Velocity" var = "Neumann">
                            <value> [0.,0.,0.] </value>
-                        </BCType>
-			<BCType label = "Temperature" var = "Neumann">
+                     </BCType>
+		     <BCType id = "all" label = "Temperature" var = "Neumann">
                            <value> 0.0  </value>
-                        </BCType>
-			<BCType label = "Density" var = "Neumann">
+                     </BCType>
+		     <BCType id = "all" label = "Density" var = "Neumann">
                            <value> 0.0  </value>
-                        </BCType>
+                     </BCType>
                 </Face>
                 <Face side = "x+">
-			<BCType label = "Pressure" var = "Dirichlet">
+		     <BCType id = "0" label = "Pressure" var = "Dirichlet">
                            <value> 101325.0   </value>
-                        </BCType>
-			<BCType label = "Velocity" var = "Neumann">
+                     </BCType>
+		     <BCType id = "all" label = "Velocity" var = "Neumann">
                            <value> [0.,0.,0.] </value>
-                        </BCType>
-			<BCType label = "Temperature" var = "Neumann">
+                     </BCType>
+		     <BCType id = "all" label = "Temperature" var = "Neumann">
                            <value> 0.0  </value>
-                        </BCType>
-			<BCType label = "Density" var = "Neumann">
+                     </BCType>
+		     <BCType id = "all" label = "Density" var = "Neumann">
                            <value> 0.0  </value>
-                        </BCType>
+                     </BCType>
                 </Face>
                 <Face side = "y-">
-			<BCType label = "Pressure" var = "Dirichlet">
+		     <BCType id = "0" label = "Pressure" var = "Dirichlet">
                            <value> 101325.0   </value>
-                        </BCType>
-			<BCType label = "Velocity" var = "Neumann">
+                     </BCType>
+		     <BCType id = "all" label = "Velocity" var = "Neumann">
                            <value> [0.,0.,0.] </value>
-                        </BCType>
-			<BCType label = "Temperature" var = "Neumann">
+                     </BCType>
+		     <BCType id = "all" label = "Temperature" var = "Neumann">
                            <value> 0.0  </value>
-                        </BCType>
-			<BCType label = "Density" var = "Neumann">
+                     </BCType>
+		     <BCType id = "all" label = "Density" var = "Neumann">
                            <value> 0.0  </value>
-                        </BCType>
+                     </BCType>
                 </Face>                  
 		<Face side = "y+">
-			<BCType label = "Pressure" var = "Dirichlet">
+		     <BCType id = "0" label = "Pressure" var = "Dirichlet">
                            <value> 101325.0   </value>
-                        </BCType>
-			<BCType label = "Velocity" var = "Neumann">
+                     </BCType>
+		     <BCType id = "all" label = "Velocity" var = "Neumann">
                            <value> [0.,0.,0.] </value>
-                        </BCType>
-			<BCType label = "Temperature" var = "Neumann">
+                     </BCType>
+		     <BCType id = "all" label = "Temperature" var = "Neumann">
                            <value> 0.0  </value>
-                        </BCType>
-			<BCType label = "Density" var = "Neumann">
+                     </BCType>
+		     <BCType id = "all" label = "Density" var = "Neumann">
                            <value> 0.0  </value>
-                        </BCType>
+                     </BCType>
 		</Face>
                 <Face side = "z-">
-			<BCType label = "Pressure" var = "Dirichlet">
+		     <BCType id = "0" label = "Pressure" var = "Dirichlet">
                            <value> 101325.0   </value>
-                        </BCType>
-			<BCType label = "Velocity" var = "Neumann">
+                     </BCType>
+		     <BCType id = "all" label = "Velocity" var = "Neumann">
                            <value> [0.,0.,0.] </value>
-                        </BCType>
-			<BCType label = "Temperature" var = "Neumann">
+                     </BCType>
+		     <BCType id = "all" label = "Temperature" var = "Neumann">
                            <value> 0.0  </value>
-                        </BCType>
-			<BCType label = "Density" var = "Neumann">
+                     </BCType>
+		     <BCType id = "all" label = "Density" var = "Neumann">
                            <value> 0.0  </value>
-                        </BCType>
+                     </BCType>
                 </Face>                  
 		<Face side = "z+">
-			<BCType label = "Pressure" var = "Dirichlet">
+		     <BCType id = "0" label = "Pressure" var = "Dirichlet">
                            <value> 101325.0   </value>
-                        </BCType>
-			<BCType label = "Velocity" var = "Neumann">
+                     </BCType>
+		     <BCType id = "all" label = "Velocity" var = "Neumann">
                            <value> [0.,0.,0.] </value>
-                        </BCType>
-			<BCType label = "Temperature" var = "Neumann">
+                     </BCType>
+		     <BCType id = "all" label = "Temperature" var = "Neumann">
                            <value> 0.0  </value>
-                        </BCType>
-			<BCType label = "Density" var = "Neumann">
+                     </BCType>
+		     <BCType id = "all" label = "Density" var = "Neumann">
                            <value> 0.0  </value>
-                        </BCType>
+                     </BCType>
 		</Face>
 	</BoundaryConditions>
 	<Level>
@@ -155,6 +155,7 @@
         <save label="p.volume"/>
         <save label="p.velocity"/>
         <save label="p.temperature"/>
+        <save label="KineticEnergy"/>
    </DataArchiver>
 
    <Debug>
