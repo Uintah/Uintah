@@ -54,6 +54,7 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Util/sci_system.h>
+#include <string>
 #include <fstream>
 #include <iostream>
 #include <stdio.h>
@@ -73,85 +74,6 @@ NetworkEditor::NetworkEditor(Network* net, GuiInterface* gui)
 
 NetworkEditor::~NetworkEditor()
 {
-}
-
-
-static void
-emit_tclstyle_copyright(ostream &out)
-{
-  out <<
-    "#\n"
-    "# The contents of this file are subject to the University of Utah Public\n"
-    "# License (the \"License\"); you may not use this file except in compliance\n"
-    "# with the License.\n"
-    "# \n"
-    "# Software distributed under the License is distributed on an \"AS IS\"\n"
-    "# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the\n"
-    "# License for the specific language governing rights and limitations under\n"
-    "# the License.\n"
-    "# \n"
-    "# The Original Source Code is SCIRun, released March 12, 2001.\n"
-    "# \n"
-    "# The Original Source Code was developed by the University of Utah.\n"
-    "# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 \n"
-    "# University of Utah. All Rights Reserved.\n"
-    "\n"
-    "set results [sourceSettingsFile]\n"
-    "\n"
-"if { $results == \"failed\" } {\n"
-    "\n"
-    "    ::netedit scheduleok\n"
-    "    return \n"
-    "\n"
-"} else {\n"
-    "\n"
-    "    set DATADIR [lindex $results 0]\n"
-    "    set DATASET [lindex $results 1]\n"
-    "}\n"
-    "\n"
-    "source $DATADIR/$DATASET/$DATASET.settings\n";
-}
-
-void NetworkEditor::save_network(const string& filename, 
-				 const string &subnet_num)
-{
-    ofstream out(filename.c_str());
-
-    if(!out) return;
-    out << "# SCI Network 1.22\n";
-    if (getenv("SCI_INSERT_NET_COPYRIGHT")) { emit_tclstyle_copyright(out); }
-    out << "\n";
-    net->read_lock();
-
-    // Added by Mohamed Dekhil for saving extra information
-    gui->lock();
-    string myvalue;
-    if (!gui->get("userName", myvalue)){
-      out << "global userName\nset userName \"" << myvalue << "\"\n" ;
-      out << "\n" ;
-    }
-    if (!gui->get("runDate", myvalue)){
-      out << "global runDate\nset runDate \"" << myvalue << "\"\n" ;
-      out << "\n" ;
-    }
-    if (!gui->get("runTime", myvalue)){
-      out << "global runTime\nset runTime \"" << myvalue << "\"\n" ;
-      out << "\n" ;
-    }
-    if (!gui->get("notes", myvalue)){
-      out << "global notes\nset notes \"" << myvalue << "\"\n" ;
-      out << "\n" ;
-    }
-    gui->unlock();
-    out.close();
-    net->read_unlock();
-
-    gui->execute("writeSubnets {"+filename+"}");
-
-    net->read_lock();
-    out.open(filename.c_str(), ofstream::out | ofstream::app);
-    out << "\n::netedit scheduleok\n";
-    net->read_unlock();
 }
 
 
@@ -277,15 +199,6 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
 	    Module* m=net->module(i);
 	    m->need_execute=0;
 	}
-    } else if(args[1] == "savenetwork"){
-        if(args.count() < 3){
-	    args.error("savenetwork needs a filename");
-	    return;
-	}
-	string filename = args[2];
-	for (int i = 3; i < args.count() - 1; i++)
-	  filename = filename +" "+args[i];
-	save_network(filename,args[args.count()-1]);
     } else if(args[1] == "packageName"){
         if(args.count() != 3){
 	    args.error("packageName needs a module id");
@@ -401,6 +314,10 @@ void NetworkEditor::tcl_command(GuiArgs& args, void*)
       }
       sci_system(command.c_str());
       return;
+    } else if (args[1] == "net_read_lock" && args.count() == 2){
+      net->read_lock();
+    } else if (args[1] == "net_read_unlock" && args.count() == 2){
+      net->read_unlock();
     } else {
 	args.error("Unknown minor command for netedit");
     }

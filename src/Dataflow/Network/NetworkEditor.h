@@ -32,10 +32,8 @@
 #define SCI_project_NetworkEditor_h 1
 
 #include <Core/GuiInterface/GuiCallback.h>
-#include <string>
 
 namespace SCIRun {
-  using std::string;
   class GuiInterface;
   class Network;
 
@@ -44,7 +42,6 @@ namespace SCIRun {
     NetworkEditor(Network*, GuiInterface* gui);
     ~NetworkEditor();
   private:
-    void		save_network(const string&, const string&);
     virtual void	tcl_command(GuiArgs&, void*);
 
     Network *		net;

@@ -61,7 +61,7 @@ set NetworkChanged 0
 
 # Make sure version stays in sync with main/main.cc
 global SCIRun_version
-set SCIRun_version v1.20.1
+set SCIRun_version v1.22
 
 
 proc makeNetworkEditor {} {
@@ -548,7 +548,7 @@ proc popupSaveMenu {} {
     global netedit_savefile NetworkChanged
     if { $netedit_savefile != "" } {
 	# We know the name of the savefile, dont ask for name, just save it
-	netedit savenetwork $netedit_savefile 0
+	writeNetwork $netedit_savefile
 	set NetworkChanged 0
     } else { ;# Otherwise, ask the user for the name to save as
 	popupSaveAsMenu
@@ -566,7 +566,7 @@ proc popupSaveAsMenu {} {
     set netedit_savefile \
 	[tk_getSaveFile -defaultextension {.net} -filetypes $types ]
     if { $netedit_savefile != "" } {
-	netedit savenetwork $netedit_savefile 0
+	writeNetwork $netedit_savefile
 	set NetworkChanged 0
 	# Cut off the path from the net name and put in on the title bar:
 	wm title . "SCIRun ([lindex [split "$netedit_savefile" /] end])"
@@ -1372,3 +1372,71 @@ proc printvars { pattern } {
 	puts "set \"$name\" \{$var\}"
     }
 }
+
+proc setGlobal { var val } {
+    uplevel \#0 set \"$var\" \"$val\"
+}
+
+proc emitTCLStyleCopyright { out } {
+    puts $out "\#"
+    puts $out "\# The contents of this file are subject to the University of Utah Public"
+    puts $out "\# License (the \"License\"); you may not use this file except in compliance"
+    puts $out "\# with the License."
+    puts $out "\#"
+    puts $out "\# Software distributed under the License is distributed on an \"AS IS\""
+    puts $out "\# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the"
+    puts $out "\# License for the specific language governing rights and limitations under"
+    puts $out "\# the License."
+    puts $out "\#"
+    puts $out "\# The Original Source Code is SCIRun, released March 12, 2001."
+    puts $out "\#"
+    puts $out "\# The Original Source Code was developed by the University of Utah."
+    puts $out "\# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 "
+    puts $out "\# University of Utah. All Rights Reserved."
+    puts $out "\nset results \[sourceSettingsFile\]"
+    puts $out ""
+    puts $out "if \{ \$results == \"failed\" \} \{"
+    puts $out "    ::netedit scheduleok"
+    puts $out "    return"
+    puts $out "\} else \{"
+    puts $out "    set DATADIR \[lindex \$results 0\]"
+    puts $out "    set DATASET \[lindex \$results 1\]"
+    puts $out "\}"
+    puts $out "\nsource \$DATADIR\/\$DATASET\/\$DATASET.settings\n";
+}
+
+proc writeNetwork { filename { subnet 0 } } {
+    global env userName runDate runTime notes
+
+    set out [open $filename {WRONLY CREAT TRUNC}]
+    puts $out "\# SCI Network 1.22\n"
+    if [info exists env(SCI_INSERT_NET_COPYRIGHT)] {
+	emitTCLStyleCopyright $out
+    }
+    if [info exists userName] {
+	puts $out "global userName"
+	puts $out "set userName \"${userName}\"\n"
+    }
+    if [info exists runDate] {
+	puts $out "global runDate"
+	puts $out "set runDate \"${runDate}\"\n"
+    }
+    if [info exists runTime] {
+	puts $out "global runTime"
+	puts $out "set runTime \"${runTime}\"\n"
+    }
+    if [info exists notes] {
+	puts $out "global notes"
+	puts $out "set notes \"${notes}\"\n"
+    }
+    close $out
+
+    netedit net_read_lock    
+    writeSubnets $filename $subnet
+    netedit net_read_unlock
+
+    set out [open $filename {WRONLY APPEND}]
+    puts $out "\n::netedit scheduleok"    
+    close $out
+}
+
