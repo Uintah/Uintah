@@ -108,7 +108,7 @@ iterations of the simulation steps.
 We begin with an overview of the \viewer{} window and its controls, then
 describe in detail all the options and variations.
 
-\subsection{Anatomy of the \viewer{} window}
+\subsection{Anatomy of the \viewer{} Window}
 \label{sec:viewer-anatomy} 
 \index{Viewer@\viewer{}!anatomy}
 
@@ -145,28 +145,20 @@ The controls visible along the bottom of the \viewer{} window set some basic
 configurations as follows:
 %
 \begin{description}
-\item [\button{Autoview}]\mbox{}
+  \buttondesc{Autoview} Restores the display to a default
+  condition. Very useful when some combination of settings results in
+  the objects disappearing from the view window.
   
-  Restores the display to a default condition. Very useful when some
-  combination of settings results in the objects disappearing from the
-  view window.
+  \buttondesc{Set Home View} Captures the setting of the
+  current view so you can return to it later by clicking the Go home''
+  button.
 
-\item [\button{Set Home View}]\mbox{}
+  \buttondesc{Go home} Restore the current home view.
   
-  Captures the setting of the current view so you can return to it
-  later by clicking the Go home'' button.
-
-\item [\button{Go home}]\mbox{}
-
-  Restore the current home view.
-
-\item [\button{Views}]\mbox{}
-  
-  Lists a number of standard viewing angles and orientations.  The
-  view directions align with the Cartesian axes of the objects and the
-  ``Up vector'' choice sets the orientation of the objects when viewed
-  along the selected axis.
-
+  \buttondesc{Views} Lists a number of standard viewing angles
+  and orientations.  The view directions align with the Cartesian axes
+  of the objects and the ``Up vector'' choice sets the orientation of
+  the objects when viewed along the selected axis.
 \end{description}
 
 In the left corner of the control panel of the \viewer{} window are
@@ -186,25 +178,19 @@ the \viewer{} window.  The extended controls are described in
 At the top of the \viewer{} window are three pull-down menus.
 
 \begin{description}
-  \item [\menu{File}] \mbox{}
-
-    Current contains only the \menuitem{Save image file...} item which
-    allows you to save the contents of the \viewer{} window as an
-    image to a file.
-
-  \item [\menu{Edit}]\mbox{} 
-    
-    Provides access to controls for the background color for the
-    window, as well as the clipping planes (requires the ``Use Clip''
-    control to be selected in the extended controls described in
-    \secref{Extended control window}{sec:view-control}).
-
-  \item [\menu{Visual}]\mbox{}
-    
-    Allows you to select between different graphics hardware settings
-    that are available on your workstation.  The list is ordered
-    heuristically from most to least useful.
-
+  \menuitemdesc{File} Current contains only the \menuitem{Save
+    image file...} item which allows you to save the contents of the
+  \viewer{} window as an image to a file.
+  
+  \menuitemdesc{Edit} Provides access to controls for the
+  background color for the window, as well as the clipping planes
+  (requires the ``Use Clip'' control to be selected in the extended
+  controls described in \secref{Extended control
+    window}{sec:view-control}).
+  
+  \menuitemdesc{Visual} Allows you to select between different
+  graphics hardware settings that are available on your workstation.
+  The list is ordered heuristically from most to least useful.
 \end{description}
 
 \subsection{Mouse Control in the \viewer{} Window}
@@ -299,7 +285,7 @@ options available in the extended control window.
 \end{figure}
 
 
-\subsubsection{Object selector}
+\subsubsection{Object Selector}
 
 The lower portion of the extended \viewer{} window is divided into three
 columns. The middle column contains a list of all the objects in the
@@ -339,30 +325,35 @@ settings, as described in the previous section.  The lighting and shading
 options available are:
 %
 \begin{description}
-  \item [Lighting] Toggles whether or not the \viewer{} applies lighting
-        to the display.  Objects without lighting have a constant
-        color.
-  \item [Fog] Draws objects with variable intensity based on their
-        distance from the user, also known as ``depth cueing''.  Close
-        objects appear brighter while more remote objects fade gradually
-        into the background as a function of distance from the front.
-  \item [BBox] Toggles whether the \viewer{} draws the selected objects
-        in full detail or as a simple bounding box.
-  \item [Use Clip] Applies up to six clipping planes to the display.
-        To control the clipping plane locations, use the
-        ``Edit -\ra{} Clipping Planes'' menu at the top of the
-        \viewer{} window.
-  \item [Back Cull] Displays only the forward facing facets of any surface
-        objects in the display.
-  \item [Display List] Cache the list of objects to be displayed; this
-        option accelerates rendering when the content of the display does
-        not change. 
-  \item [Shading] Selects the type of shading for objects from the
+  \descitem{Lighting} Toggles whether or not the \viewer{} applies
+  lighting to the display.  Objects without lighting have a constant
+  color.
+        
+  \descitem{Fog} Draws objects with variable intensity based on their
+  distance from the user, also known as ``depth cueing''.  Close
+  objects appear brighter while more remote objects fade gradually
+  into the background as a function of distance from the front.
+  
+  \descitem{BBox} Toggles whether the \viewer{} draws the selected
+  objects in full detail or as a simple bounding box.
+  
+  \descitem{Use Clip} Applies up to six clipping planes to the
+  display.  To control the clipping plane locations, use the ``Edit
+  -\ra{} Clipping Planes'' menu at the top of the \viewer{} window.
+  
+  \descitem{Back Cull} Displays only the forward facing facets of any
+  surface objects in the display.
+  
+  \descitem{Display List} Cache the list of objects to be displayed;
+  this option accelerates rendering when the content of the display
+  does not change.
+
+  \descitem{Shading} Selects the type of shading for objects from the
         following options:
         \begin{description}
-          \item [Wire] Show only the wire mesh of objects.
-          \item [Flat] Draw each facet with a constant color.
-          \item [Gouraud] Linearly interpolate the color across facets. 
+          \descitem{Wire} Show only the wire mesh of objects.
+          \descitem{Flat} Draw each facet with a constant color.
+          \descitem{Gouraud} Linearly interpolate the color across facets. 
         \end{description}
 \end{description}
 
@@ -375,7 +366,7 @@ display of the appropriate view.  The ``Fusion Scale'' control provides a
 means of setting the eye separation and thus setting the view that is most
 suited to facial anatomy and distance from the screen.
 
-\subsubsection{Making movies}
+\subsubsection{Making Movies}
 \label{sec:view-movies} 
 \index{movies}
 
@@ -396,7 +387,7 @@ movies.
 There is also a button that forces the size of the graphical window to be
 352x240 pixels in size, which is a standard format well suited to MPEG.
 
-\subsection{Control widgets}
+\subsection{Control Widgets}
 \label{sec:view-widgets} 
 
 While the \hyperref{mouse controls}{mouse controls in

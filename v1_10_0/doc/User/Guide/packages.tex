@@ -35,21 +35,21 @@ field problems (See also \secref{\SR{} and its
 The \sr{} package contains these categories:
 
 \begin{description}
-\item[\category{DataIO}] Modules for reading and writing \sr{} data
+\descitem{\category{DataIO}} Modules for reading and writing \sr{} data
   types.  Use these to read \sr{} type data into a network and write
   data to disk from a network.  These only know about \sr{} type data.
   Non-\sr{} (foreign) data may be converted to \sr{} type data using
   \sr{}'s converter programs (see \secref{Importing data into
     \sr{}}{sec:import} for more information).
   
-\item[\category{Fields}] Modules for creating, manipulating, and
+\descitem{\category{Fields}} Modules for creating, manipulating, and
   processing field data.  See Section~\ref{sec:field-types} for an
   introduction to \sr{} field types.
   
-\item[\category{Math}] Modules providing matrix operations and
+\descitem{\category{Math}} Modules providing matrix operations and
   equation solving capabilities.
   
-\item[\category{Render}] Modules for visualizing data produced by
+\descitem{\category{Render}} Modules for visualizing data produced by
   other modules.  The main visualization tool at present
   is the Viewer, which is described in more detail in
   \secref{Visualization with the \viewer{}}{sec:viewer}.
@@ -66,17 +66,24 @@ center}{http://www.sci.utah.edu/ncrr} we have developed.
 
 
 \begin{description}
-\item[\category{DataIO}] Modules for reading and writing \sr{} data types.
-\item[\category{Forward Problems}] Modules for solving forward
+  \descitem{\category{DataIO}} Modules for reading and writing \sr{}
+  data types.
+  
+  \descitem{\category{Forward Problems}} Modules for solving forward
   problems in the bioelectric field domain.
-\item[\category{Inverse Problems}] Modules for solving inverse problems.
-\item[\category{LeadField Calculations}] Modules which support the
-  construction and analysis of fields derived from experimental or
+  
+  \descitem{\category{Inverse Problems}} Modules for solving inverse
+  problems.
+  
+  \descitem{\category{LeadField Calculations}} Modules which support
+  the construction and analysis of fields derived from experimental or
   computed data gathered or computed at electrode sensor locations.
-\item[\category{Modeling}] Modules which support the construction of
-  surface and volume bioelectric field models.
-\item[\category{Visualization}] Modules for visualizing bioelectric
-  field data.
+  
+  \descitem{\category{Modeling}} Modules which support the
+  construction of surface and volume bioelectric field models.
+  
+  \descitem{\category{Visualization}} Modules for visualizing
+  bioelectric field data.
 \end{description}
 
 %%% Local Variables: 
