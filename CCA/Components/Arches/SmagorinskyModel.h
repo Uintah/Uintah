@@ -107,6 +107,7 @@ public:
       double getSmagorinskyConst() const {
 	return d_CF;
       }
+      inline void set3dPeriodic(bool periodic) {}
 
 protected:
       PhysicalConstants* d_physicalConsts;
