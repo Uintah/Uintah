@@ -526,7 +526,7 @@ itcl_class VS_DataFlow_HotBox {
 
     checkbutton $w.controls.togFME -text "Connect to FME" -command "$this toggle_FME_on"
 
-    checkbutton $w.controls.enableDraw -text "Enable Output Geom" -command "$this toggle_enableDraw"
+    checkbutton $w.controls.enableDraw -text "Enable Viewer HotBox" -command "$this toggle_enableDraw"
 
     ######################################
     # Close the HotBox UI Window
