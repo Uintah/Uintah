@@ -207,7 +207,7 @@ LoadBalancerCommon::problemSetup(ProblemSpecP& pspec, SimulationStateP& state)
   ProblemSpecP p = pspec->findBlock("LoadBalancer");
   string dynamicAlgo;
   double interval = 0;
-  double cellFactor;
+  double cellFactor = .1;
   int timestepInterval = 0;
   d_outputNthProc = 1;
   double threshold = 0.0;
@@ -222,5 +222,6 @@ LoadBalancerCommon::problemSetup(ProblemSpecP& pspec, SimulationStateP& state)
     p->getWithDefault("cellFactor", cellFactor, .1);
     p->getWithDefault("gainThreshold", threshold, 0.0);
   }
+
   setDynamicAlgorithm(dynamicAlgo, interval, timestepInterval, cellFactor, threshold);
 }
