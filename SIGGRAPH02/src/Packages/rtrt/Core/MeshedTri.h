@@ -93,7 +93,7 @@ class MeshedNormedTri : public MeshedTri {
 class MeshedColoredTri : public MeshedTri, public Material {
 
  public:
-  MeshedColoredTri(Material* , TriMesh* tm, 
+  MeshedColoredTri(TriMesh* tm, 
 		   const int& p1, const int& p2, const int& p3,
 		   const int& n1);
   MeshedColoredTri() { tm = 0; } // for Pio

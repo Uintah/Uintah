@@ -46,7 +46,6 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/graphics-museum.mo \
 	$(SRCDIR)/min-museum.mo \
 	$(SRCDIR)/living-room.mo \
-	$(SRCDIR)/science-room.mo \
         $(SRCDIR)/seaworld-tubes2.mo \
 	$(SRCDIR)/sphere-room2.mo \
 	$(SRCDIR)/seaworld-tubes.mo \
@@ -60,16 +59,15 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/spinning_instance_demo.mo \
 	$(SRCDIR)/david.mo \
 	$(SRCDIR)/david_old.mo \
-#	$(SRCDIR)/dtiglyph.mo \
+ 	$(SRCDIR)/science-room.mo \
+	$(SRCDIR)/dtiglyph.mo 
 # 	$(SRCDIR)/cbox.mo \
 # 	$(SRCDIR)/david.mo \
 # 	$(SRCDIR)/davidhead.mo \
 # 	$(SRCDIR)/buddha.mo \
 # 	$(SRCDIR)/venus.mo \
 # 	$(SRCDIR)/crank.mo 
-# 	$(SRCDIR)/dtiglyph.mo
 # 	$(SRCDIR)/cbox.mo \
-# 	$(SRCDIR)/mus_barrier.mo \
 #	$(SRCDIR)/graphics-museum-works.mo \
 # 	$(SRCDIR)/buddha.mo \
 

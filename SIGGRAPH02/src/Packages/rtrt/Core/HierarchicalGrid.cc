@@ -46,6 +46,7 @@ HierarchicalGrid::HierarchicalGrid( Object* obj, int nsides,
     _level( 1 ),
     np(np)
 {
+  work=0;
 }
 
 HierarchicalGrid::HierarchicalGrid( Object* obj, int nsides,
@@ -100,7 +101,6 @@ HierarchicalGrid::preprocess( double maxradius, int& pp_offset,
                               << "\n==========================================================\n"
 					<< "* Building Hierarchical Grid for Object " << Names::getName(this)
                               << "\n==========================================================\n";
-
 
     obj->preprocess(maxradius, pp_offset, scratchsize);
 
@@ -270,7 +270,7 @@ HierarchicalGrid::preprocess( double maxradius, int& pp_offset,
     Array1<int> current(ngrid);
     Array1<int> whichCellPos( ngrid );
     current.initialize(0);
-    whichCellPos.initialize(0);
+    whichCellPos.initialize(-1);
 
     int pos = 0;
 
@@ -314,7 +314,7 @@ HierarchicalGrid::preprocess( double maxradius, int& pp_offset,
       pdata.whichCellPos = whichCellPos;
       pdata.objList = objList;
       Parallel<HierarchicalGrid> phelper(this, &HierarchicalGrid::gridit);
-      Thread::parallel(phelper, 4, true);
+      Thread::parallel(phelper, 1, true);
 //      Thread::parallel(phelper, np, true);
       delete work;
     } else {
