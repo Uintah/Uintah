@@ -31,7 +31,7 @@ if [ "$WEEKLY" == "1" ]; then
   do_dbg=0
 fi
 
-# if weekly tests, only run dbg when opt fail
+# if weekly tests, do not do dbg
 if [ $do_dbg == 1 ]; then
   if [ $VERBOSE == "yes" ]; then
     build_and_run "dbg" "$DBG_CONFIGURE"
