@@ -95,12 +95,12 @@ void SymSparseRowMatrix::put(int i, int j, const double& d)
     get(i,j)=d;
 }
 
-int SymSparseRowMatrix::nrows()
+int SymSparseRowMatrix::nrows() const
 {
     return nnrows;
 }
 
-int SymSparseRowMatrix::ncols()
+int SymSparseRowMatrix::ncols() const
 {
     return nncols;
 }
@@ -170,7 +170,7 @@ extern "C" void ssmult(int beg, int end, int* rows, int* columns,
 		       double* a, double* xp, double* bp);
 
 void SymSparseRowMatrix::mult(const ColumnMatrix& x, ColumnMatrix& b,
-			      int& flops, int& memrefs, int beg, int end)
+			      int& flops, int& memrefs, int beg, int end) const
 {
     // Compute A*x=b
     ASSERT(x.nrows() == nnrows);

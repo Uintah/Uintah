@@ -71,6 +71,17 @@ ColumnMatrix::~ColumnMatrix()
 	delete[] data;
 }
 
+void ColumnMatrix::resize(int new_rows)
+{
+    if(data)
+	delete[] data;
+    if(new_rows)
+	data=new double[new_rows];
+    else
+	data=0;
+    rows=new_rows;
+}
+
 int ColumnMatrix::nrows() const
 {
     return rows;
@@ -126,14 +137,16 @@ void ColumnMatrix::io(Piostream& stream)
 
 void Mult(ColumnMatrix& result, const ColumnMatrix& a, const ColumnMatrix& b)
 {
-    ASSERT(result.rows == a.rows && result.rows == b.rows);
+    ASSERTEQ(result.rows, a.rows);
+    ASSERTEQ(result.rows, b.rows);
     linalg_mult(result.rows, result.data, a.data, b.data);
 }
 
 void Mult(ColumnMatrix& result, const ColumnMatrix& a, const ColumnMatrix& b,
 	  int& flops, int& memrefs)
 {
-    ASSERT(result.rows == a.rows && result.rows == b.rows);
+    ASSERTEQ(result.rows, a.rows);
+    ASSERTEQ(result.rows, b.rows);
     linalg_mult(result.rows, result.data, a.data, b.data);
     flops+=result.rows;
     memrefs+=result.rows*3*sizeof(double);
@@ -141,14 +154,16 @@ void Mult(ColumnMatrix& result, const ColumnMatrix& a, const ColumnMatrix& b,
 
 void Sub(ColumnMatrix& result, const ColumnMatrix& a, const ColumnMatrix& b)
 {
-    ASSERT(result.rows == a.rows && result.rows == b.rows);
+    ASSERTEQ(result.rows, a.rows);
+    ASSERTEQ(result.rows, b.rows);
     linalg_sub(result.rows, result.data, a.data, b.data);
 }
 
 void Sub(ColumnMatrix& result, const ColumnMatrix& a, const ColumnMatrix& b,
 	  int& flops, int& memrefs)
 {
-    ASSERT(result.rows == a.rows && result.rows == b.rows);
+    ASSERTEQ(result.rows, a.rows);
+    ASSERTEQ(result.rows, b.rows);
     linalg_sub(result.rows, result.data, a.data, b.data);
     flops+=result.rows;
     memrefs+=result.rows*3*sizeof(double);
@@ -157,14 +172,16 @@ void Sub(ColumnMatrix& result, const ColumnMatrix& a, const ColumnMatrix& b,
 void ScMult_Add(ColumnMatrix& result, double s, const ColumnMatrix& a,
 		const ColumnMatrix& b)
 {
-    ASSERT(result.rows == a.rows && result.rows == b.rows);
+    ASSERTEQ(result.rows, a.rows);
+    ASSERTEQ(result.rows, b.rows);
     linalg_smadd(result.rows, result.data, s, a.data, b.data);
 }
 
 void ScMult_Add(ColumnMatrix& result, double s, const ColumnMatrix& a,
 		const ColumnMatrix& b, int& flops, int& memrefs)
 {
-    ASSERT(result.rows == a.rows && result.rows == b.rows);
+    ASSERTEQ(result.rows, a.rows);
+    ASSERTEQ(result.rows, b.rows);
     linalg_smadd(result.rows, result.data, s, a.data, b.data);
     flops+=result.rows*2;
     memrefs+=result.rows*3*sizeof(double);
@@ -172,17 +189,57 @@ void ScMult_Add(ColumnMatrix& result, double s, const ColumnMatrix& a,
 
 double Dot(const ColumnMatrix& a, const ColumnMatrix& b)
 {
-    ASSERT(a.rows == b.rows);
+    ASSERTEQ(a.rows, b.rows);
     return linalg_dot(a.rows, a.data, b.data);
 }
 
 double Dot(const ColumnMatrix& a, const ColumnMatrix& b,
 	   int& flops, int& memrefs)
 {
-    ASSERT(a.rows == b.rows);
+    ASSERTEQ(a.rows, b.rows);
     flops+=a.rows*2;
     memrefs+=2*sizeof(double)*a.rows;
     return linalg_dot(a.rows, a.data, b.data);
+}
+
+void Copy(ColumnMatrix& out, const ColumnMatrix& in)
+{
+    ASSERTEQ(out.rows, in.rows);
+    for(int i=0;i<out.rows;i++)
+	out.data[i]=in.data[i];
+}
+
+void AddScMult(ColumnMatrix& result, const ColumnMatrix& a,
+	       double s, const ColumnMatrix& b)
+{
+    ASSERTEQ(result.rows, a.rows);
+    ASSERTEQ(result.rows, b.rows);
+    linalg_smadd(result.rows, result.data, s, b.data, a.data);
+}
+
+void Add(ColumnMatrix& result, const ColumnMatrix& a, const ColumnMatrix& b)
+{
+    ASSERTEQ(result.rows, a.rows);
+    ASSERTEQ(result.rows, b.rows);
+    for(int i=0;i<result.rows;i++)
+	result.data[i]=a.data[i]+b.data[i];
+}
+
+void Add(ColumnMatrix& result, const ColumnMatrix& a, const ColumnMatrix& b,
+	 const ColumnMatrix& c)
+{
+    ASSERTEQ(result.rows, a.rows);
+    ASSERTEQ(result.rows, b.rows);
+    ASSERTEQ(result.rows, c.rows);
+    for(int i=0;i<result.rows;i++)
+	result.data[i]=a.data[i]+b.data[i]+c.data[i];
+}
+
+void Mult(ColumnMatrix& result, const ColumnMatrix& a, double s)
+{
+    ASSERTEQ(result.rows, a.rows);
+    for(int i=0;i<result.rows;i++)
+	result.data[i]=a.data[i]*s;
 }
 
 #ifdef __GNUG__

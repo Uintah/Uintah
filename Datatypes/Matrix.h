@@ -54,13 +54,13 @@ public:
     inline MatrixRow operator[](int r);
 
     virtual void zero()=0;
-    virtual int nrows()=0;
-    virtual int ncols()=0;
+    virtual int nrows() const=0;
+    virtual int ncols() const=0;
     virtual void getRowNonzeros(int r, Array1<int>& idx, Array1<double>& v)=0;
     virtual double minValue()=0;
     virtual double maxValue()=0;
     virtual void mult(const ColumnMatrix& x, ColumnMatrix& b,
-		      int& flops, int& memrefs, int beg=-1, int end=-1)=0;
+		      int& flops, int& memrefs, int beg=-1, int end=-1) const=0;
     virtual void mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
 				int& flops, int& memrefs, int beg=-1, int end=-1)=0;
 
@@ -83,5 +83,7 @@ inline MatrixRow Matrix::operator[](int row)
 {
     return MatrixRow(this, row);
 }
+
+void Mult(ColumnMatrix&, const Matrix&, const ColumnMatrix&);
 
 #endif

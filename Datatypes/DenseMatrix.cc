@@ -66,15 +66,15 @@ DenseMatrix& DenseMatrix::operator=(const DenseMatrix& m)
 
 double& DenseMatrix::get(int r, int c)
 {
-    ASSERT(r>=0 && r<nr);
-    ASSERT(c>=0 && c<nc);
+    ASSERTRANGE(r, 0, nr);
+    ASSERTRANGE(c, 0, nc);
     return data[r][c];
 }
 
 void DenseMatrix::put(int r, int c, const double& d)
 {
-    ASSERT(r>=0 && r<nr);
-    ASSERT(c>=0 && c<nc);
+    ASSERTRANGE(r, 0, nr);
+    ASSERTRANGE(c, 0, nc);
     extremaCurrent=0;
     data[r][c]=d;
 }
@@ -111,12 +111,12 @@ double DenseMatrix::maxValue() {
     return maxVal;
 }
 
-int DenseMatrix::nrows()
+int DenseMatrix::nrows() const
 {
     return nr;
 }
 
-int DenseMatrix::ncols()
+int DenseMatrix::ncols() const
 {
     return nc;
 }
@@ -211,12 +211,11 @@ void DenseMatrix::solve(ColumnMatrix& sol)
 }
 
 void DenseMatrix::mult(const ColumnMatrix& x, ColumnMatrix& b,
-		       int& flops, int& memrefs, int beg, int end)
+		       int& flops, int& memrefs, int beg, int end) const
 {
     // Compute A*x=b
-    ASSERT(nr == nc);
-    ASSERT(x.nrows() == nr);
-    ASSERT(b.nrows() == nr);
+    ASSERTEQ(x.nrows(), nc);
+    ASSERTEQ(b.nrows(), nr);
     if(beg==-1)beg=0;
     if(end==-1)end=nr;
     for(int i=beg;i<end;i++){
@@ -265,4 +264,159 @@ void DenseMatrix::print()
 MatrixRow DenseMatrix::operator[](int row)
 {
     return MatrixRow(this, row);
+}
+
+void DenseMatrix::invert()
+{
+    ASSERTEQ(nr, nc);
+    double** newdata=scinew double*[nr];
+    double* tmp=scinew double[nr*nc];
+    double* newdataptr=tmp;
+    for(int i=0;i<nr;i++){
+	newdata[i]=tmp;
+	for(int j=0;j<nr;j++){
+	    tmp[j]=0;
+	}
+	tmp[i]=1;
+	tmp+=nc;
+    }
+
+    // Gauss-Jordan with partial pivoting
+    for(i=0;i<nr;i++){
+	cerr << "row: " << i << " of " << nr << endl;
+        double max=Abs(data[i][i]);
+        int row=i;
+        for(int j=i+1;j<nr;j++){
+            if(Abs(data[j][i]) > max){
+                max=Abs(data[j][i]);
+                row=j;
+            }
+        }
+        ASSERT(Abs(max) > 1.e-12);
+        if(row != i){
+            // Switch rows (actually their pointers)
+            double* tmp=data[i];
+            data[i]=data[row];
+            data[row]=tmp;
+            double* ntmp=newdata[i];
+            newdata[i]=newdata[row];
+	    newdata[row]=ntmp;
+        }
+        double denom=1./data[i][i];
+        double* r1=data[i];
+        double* n1=newdata[i];
+        for(j=i+1;j<nr;j++){
+            double factor=data[j][i]*denom;
+            double* r2=data[j];
+	    double* n2=newdata[j];
+            for(int k=i;k<nr;k++){
+                r2[k]-=factor*r1[k];
+		n2[k]-=factor*n1[k];
+	    }
+        }
+    }
+
+    // Back-substitution
+    for(i=1;i<nr;i++){
+	cerr << "row: " << i << " of " << nr << endl;
+        ASSERT(Abs(data[i][i]) > 1.e-12);
+        double denom=1./data[i][i];
+        double* r1=data[i];
+        double* n1=newdata[i];
+        for(int j=0;j<i;j++){
+            double factor=data[j][i]*denom;
+            double* r2=data[j];
+	    double* n2=newdata[j];
+            for(int k=i;k<nr;k++){
+                r2[k]-=factor*r1[k];
+		n2[k]-=factor*n1[k];
+	    }
+        }
+    }
+
+    // Normalize
+    for(i=0;i<nr;i++){
+	cerr << "row: " << i << " of " << nr << endl;
+        ASSERT(Abs(data[i][i]) > 1.e-12);
+        double factor=1./data[i][i];
+        for(int j=0;j<nr;j++){
+            data[i][j]*=factor;
+	    newdata[i][j]*=factor;
+	}
+    }
+
+
+    delete[] dataptr;
+    delete[] data;    
+    dataptr=newdataptr;
+    data=newdata;
+}
+
+void Mult(DenseMatrix& out, const DenseMatrix& m1, const DenseMatrix& m2)
+{
+    ASSERTEQ(m1.ncols(), m2.nrows());
+    ASSERTEQ(out.nrows(), m1.nrows());
+    ASSERTEQ(out.ncols(), m2.ncols());
+    int nr=out.nrows();
+    int nc=out.ncols();
+    int ndot=m1.ncols();
+    for(int i=0;i<nr;i++){
+	double* row=m1.data[i];
+	for(int j=0;j<nc;j++){
+	    double d=0;
+	    for(int k=0;k<ndot;k++){
+		d+=row[k]*m2.data[k][j];
+	    }
+	    out[i][j]=d;
+	}
+    }
+}
+
+void Mult_trans_X(DenseMatrix& out, const DenseMatrix& m1, const DenseMatrix& m2)
+{
+    ASSERTEQ(m1.nrows(), m2.nrows());
+    ASSERTEQ(out.nrows(), m1.ncols());
+    ASSERTEQ(out.ncols(), m2.ncols());
+    int nr=out.nrows();
+    int nc=out.ncols();
+    int ndot=m1.nrows();
+    for(int i=0;i<nr;i++){
+	for(int j=0;j<nc;j++){
+	    double d=0;
+	    for(int k=0;k<ndot;k++){
+		d+=m1.data[k][i]*m2.data[k][j];
+	    }
+	    out[i][j]=d;
+	}
+    }
+}
+
+void Mult_X_trans(DenseMatrix& out, const DenseMatrix& m1, const DenseMatrix& m2)
+{
+    ASSERTEQ(m1.ncols(), m2.ncols());
+    ASSERTEQ(out.nrows(), m1.nrows());
+    ASSERTEQ(out.ncols(), m2.nrows());
+    int nr=out.nrows();
+    int nc=out.ncols();
+    int ndot=m1.ncols();
+    for(int i=0;i<nr;i++){
+	double* row=m1.data[i];
+	for(int j=0;j<nc;j++){
+	    double d=0;
+	    for(int k=0;k<ndot;k++){
+		d+=row[k]*m2.data[j][k];
+	    }
+	    out[i][j]=d;
+	}
+    }
+}
+
+void DenseMatrix::mult(double s)
+{
+    for(int i=0;i<nr;i++){
+	double* p=data[i];
+	for(int j=0;j<nc;j++){
+	    p[j]*=s;
+	}
+    }
 }

@@ -80,6 +80,12 @@ void Matrix::io(Piostream& stream)
     stream.end_class();
 }
 
+void Mult(ColumnMatrix& result, const Matrix& mat, const ColumnMatrix& v)
+{
+    int flops, memrefs;
+    mat.mult(v, result, flops, memrefs);
+}
+
 #ifdef __GNUG__
 
 #include <Classlib/LockingHandle.cc>

@@ -30,8 +30,8 @@ public:
     DenseMatrix& operator=(const DenseMatrix&);
     virtual double& get(int, int);
     virtual void put(int, int, const double&);
-    virtual int nrows();
-    virtual int ncols();
+    virtual int nrows() const;
+    virtual int ncols() const;
     virtual double minValue();
     virtual double maxValue();
     virtual void getRowNonzeros(int r, Array1<int>& idx, Array1<double>& val);
@@ -39,13 +39,21 @@ public:
     virtual void zero();
 
     virtual void mult(const ColumnMatrix& x, ColumnMatrix& b,
-		      int& flops, int& memrefs, int beg=-1, int end=-1);
+		      int& flops, int& memrefs, int beg=-1, int end=-1) const;
     virtual void mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
 				int& flops, int& memrefs,
 				int beg=-1, int end=-1);
     virtual void print();
 
     MatrixRow operator[](int r);
+
+    void invert();
+    void mult(double s);
+
+    friend void Mult(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+    friend void Mult_trans_X(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+    friend void Mult_X_trans(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+
 };
 
 #endif

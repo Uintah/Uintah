@@ -36,6 +36,7 @@ public:
     double vector_norm();
     double vector_norm(int& flops, int& memrefs);
 
+    friend void Mult(ColumnMatrix&, const ColumnMatrix&, double s);
     friend void Mult(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
     friend void Mult(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&,
 		     int& flops, int& memrefs);
@@ -50,8 +51,14 @@ public:
     friend void ScMult_Add(ColumnMatrix&, double s, const ColumnMatrix&,
 			   const ColumnMatrix&, int& flops, int& memrefs);
 
+    friend void Copy(ColumnMatrix&, const ColumnMatrix&);
+    friend void AddScMult(ColumnMatrix&, const ColumnMatrix&, double s, const ColumnMatrix&);
+    friend void Add(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
+    friend void Add(ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&, const ColumnMatrix&);
+
     void zero();
     void print(ostream&);
+    void resize(int);
 
     // Persistent representation...
     virtual void io(Piostream&);
