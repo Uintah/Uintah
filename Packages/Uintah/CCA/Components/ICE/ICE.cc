@@ -3224,7 +3224,7 @@ void ICE::computeTauX( const Patch* patch,
     double delZ = dx.z();
     IntVector left(i-1, j, k);
 
-    double rho_brack = (rho_CC[left] * rho_CC[cell])/
+    double rho_brack = (2.0 * rho_CC[left] * rho_CC[cell])/
                        (rho_CC[left] + rho_CC[cell]);
                        
     double vol_frac_FC = rho_brack * sp_vol_CC[cell]; 
@@ -3233,21 +3233,44 @@ void ICE::computeTauX( const Patch* patch,
     // - find indices of surrounding cells
     // - compute velocities at cell face edges see note above.
     double uvel_EC_top    = (vel_CC[IntVector(i-1,j+1,k  )].x()   + 
-                             vel_CC[IntVector(i  ,j+1,k  )].x() )/4.0;    
+                             vel_CC[IntVector(i  ,j+1,k  )].x()   +
+                             vel_CC[IntVector(i,  j  ,k  )].x()   +
+                             vel_CC[IntVector(i-1,j  ,k  )].x() )/4.0; 
+                                
     double uvel_EC_bottom = (vel_CC[IntVector(i-1,j-1,k  )].x()   + 
-                             vel_CC[IntVector(i  ,j-1,k  )].x() )/4.0;
+                             vel_CC[IntVector(i  ,j-1,k  )].x()   +      
+                             vel_CC[IntVector(i,  j  ,k  )].x()   +     
+                             vel_CC[IntVector(i-1,j  ,k  )].x() )/4.0; 
+                              
     double uvel_EC_front  = (vel_CC[IntVector(i-1,j  ,k+1)].x()   + 
-                             vel_CC[IntVector(i  ,j  ,k+1)].x() )/4.0;
+                             vel_CC[IntVector(i  ,j  ,k+1)].x()   +
+                             vel_CC[IntVector(i  ,j  ,k  )].x()   +
+                             vel_CC[IntVector(i-1,j  ,k  )].x() )/4.0;
+                             
     double uvel_EC_back   = (vel_CC[IntVector(i-1,j  ,k-1)].x()   + 
-                             vel_CC[IntVector(i  ,j  ,k-1)].x() )/4.0;
+                             vel_CC[IntVector(i  ,j  ,k-1)].x()   +
+                             vel_CC[IntVector(i  ,j  ,k  )].x()   +
+                             vel_CC[IntVector(i-1,j  ,k  )].x())/4.0;
+                             
     double vvel_EC_top    = (vel_CC[IntVector(i-1,j+1,k  )].y()   + 
-                             vel_CC[IntVector(i  ,j+1,k  )].y() )/4.0;
+                             vel_CC[IntVector(i  ,j+1,k  )].y()   +
+                             vel_CC[IntVector(i  ,j  ,k  )].y()   +
+                             vel_CC[IntVector(i-1,j  ,k  )].y())/4.0;
+                             
     double vvel_EC_bottom = (vel_CC[IntVector(i-1,j-1,k  )].y()   + 
-                             vel_CC[IntVector(i  ,j-1,k  )].y() )/4.0;
-    double wvel_EC_front  = (vel_CC[IntVector(i-1,j-1,k+1)].z()   + 
-                             vel_CC[IntVector(i  ,j  ,k+1)].z() )/4.0;
-    double wvel_EC_back   = (vel_CC[IntVector(i-1,j-1,k-1)].z()   + 
-                             vel_CC[IntVector(i  ,j  ,k-1)].z() )/4.0;
+                             vel_CC[IntVector(i  ,j-1,k  )].y()   +
+                             vel_CC[IntVector(i  ,j  ,k  )].y()   +
+                             vel_CC[IntVector(i-1,j  ,k  )].y())/4.0;
+                             
+    double wvel_EC_front  = (vel_CC[IntVector(i-1,j  ,k+1)].z()   + 
+                             vel_CC[IntVector(i  ,j  ,k+1)].z()   +
+                             vel_CC[IntVector(i  ,j  ,k  )].z()   +
+                             vel_CC[IntVector(i-1,j  ,k  )].z())/4.0;
+                             
+    double wvel_EC_back   = (vel_CC[IntVector(i-1,j  ,k-1)].z()   + 
+                             vel_CC[IntVector(i  ,j  ,k-1)].z()   +
+                             vel_CC[IntVector(i  ,j  ,k  )].z()   +
+                             vel_CC[IntVector(i-1,j  ,k  )].z())/4.0;
     //__________________________________
     //  tau_XX
     grad_uvel = (vel_CC[cell].x() - vel_CC[left].x())/delX;
@@ -3324,7 +3347,7 @@ void ICE::computeTauY( const Patch* patch,
     double delY = dx.y();
     double delZ = dx.z();
     IntVector bottom(i,j-1,k);
-    double rho_brack = (rho_CC[bottom] * rho_CC[cell])/
+    double rho_brack = (2.0 * rho_CC[bottom] * rho_CC[cell])/
                        (rho_CC[bottom] + rho_CC[cell]);
                        
     double vol_frac_FC = rho_brack * sp_vol_CC[cell]; 
@@ -3333,21 +3356,45 @@ void ICE::computeTauY( const Patch* patch,
     // - find indices of surrounding cells
     // - compute velocities at cell face edges see note above.
     double uvel_EC_right = (vel_CC[IntVector(i+1,j,  k  )].x()  + 
-                            vel_CC[IntVector(i+1,j-1,k  )].x() )/4.0;
+                            vel_CC[IntVector(i+1,j-1,k  )].x()  +
+                            vel_CC[IntVector(i  ,j-1,k  )].x()  +
+                            vel_CC[IntVector(i  ,j  ,k  )].x())/4.0;
+                             
     double uvel_EC_left  = (vel_CC[IntVector(i-1,j,  k  )].x()  +
-                            vel_CC[IntVector(i-1,j-1,k  )].x() )/4.0;
+                            vel_CC[IntVector(i-1,j-1,k  )].x()  +
+                            vel_CC[IntVector(i  ,j-1,k  )].x()  +
+                            vel_CC[IntVector(i  ,j  ,k  )].x())/4.0;
+                            
     double vvel_EC_right = (vel_CC[IntVector(i+1,j  ,k  )].y()  + 
-                            vel_CC[IntVector(i+1,j-1,k  )].y() )/4.0;
+                            vel_CC[IntVector(i+1,j-1,k  )].y()  +
+                            vel_CC[IntVector(i  ,j-1,k  )].y()  +
+                            vel_CC[IntVector(i  ,j  ,k  )].y())/4.0;
+                            
     double vvel_EC_left  = (vel_CC[IntVector(i-1,j  ,k  )].y()  + 
-                            vel_CC[IntVector(i-1,j-1,k  )].y() )/4.0; 
+                            vel_CC[IntVector(i-1,j-1,k  )].y()  +
+                            vel_CC[IntVector(i  ,j-1,k  )].y()  +
+                            vel_CC[IntVector(i  ,j  ,k  )].y())/4.0; 
+                            
     double vvel_EC_front = (vel_CC[IntVector(i  ,j  ,k+1)].y()  +
-                            vel_CC[IntVector(i  ,j-1,k+1)].y() )/4.0;
+                            vel_CC[IntVector(i  ,j-1,k+1)].y()  +
+                            vel_CC[IntVector(i  ,j-1,k  )].y()  +
+                            vel_CC[IntVector(i  ,j  ,k  )].y())/4.0;
+                            
     double vvel_EC_back  = (vel_CC[IntVector(i  ,j  ,k-1)].y()  +
-                            vel_CC[IntVector(i  ,j-1,k-1)].y() )/4.0;
+                            vel_CC[IntVector(i  ,j-1,k-1)].y()  +
+                            vel_CC[IntVector(i  ,j-1,k  )].y()  +
+                            vel_CC[IntVector(i  ,j  ,k  )].y())/4.0;
+                            
     double wvel_EC_front = (vel_CC[IntVector(i  ,j  ,k+1)].z()  +
-                            vel_CC[IntVector(i  ,j-1,k+1)].z() )/4.0;
+                            vel_CC[IntVector(i  ,j-1,k+1)].z()  +
+                            vel_CC[IntVector(i  ,j-1,k  )].z()  +
+                            vel_CC[IntVector(i  ,j  ,k  )].z())/4.0;
+                            
     double wvel_EC_back  = (vel_CC[IntVector(i  ,j  ,k-1)].z()  +
-                            vel_CC[IntVector(i  ,j-1,k-1)].z() )/4.0;
+                            vel_CC[IntVector(i  ,j-1,k-1)].z()  +
+                            vel_CC[IntVector(i  ,j-1,k  )].z()  +
+                            vel_CC[IntVector(i  ,j  ,k  )].z())/4.0;
+                            
     //__________________________________
     //  tau_YY
     grad_uvel = (uvel_EC_right    - uvel_EC_left)      /delX;
@@ -3425,7 +3472,7 @@ void ICE::computeTauZ( const Patch* patch,
     double delZ = dx.z();
     IntVector back(i, j, k-1);
 
-    double rho_brack = (rho_CC[back] * rho_CC[cell])/
+    double rho_brack = (2.0 * rho_CC[back] * rho_CC[cell])/
                        (rho_CC[back] + rho_CC[cell]);
                        
     double vol_frac_FC = rho_brack * sp_vol_CC[cell]; 
@@ -3434,21 +3481,44 @@ void ICE::computeTauZ( const Patch* patch,
     // - find indices of surrounding cells
     // - compute velocities at cell face edges see note above.
     double uvel_EC_right  = (vel_CC[IntVector(i+1,j,  k  )].x()  + 
-                             vel_CC[IntVector(i+1,j,  k-1)].x() )/4.0;
+                             vel_CC[IntVector(i+1,j,  k-1)].x()  +
+                             vel_CC[IntVector(i  ,j  ,k-1)].x()  +
+                             vel_CC[IntVector(i  ,j  ,k  )].x())/4.0;
+                             
     double uvel_EC_left   = (vel_CC[IntVector(i-1,j,  k  )].x()  +
-                             vel_CC[IntVector(i-1,j  ,k-1)].x() )/4.0;
-    double vvel_EC_top    = (vel_CC[IntVector(i  ,j+1,k  )].y()   + 
-                             vel_CC[IntVector(i  ,j+1,k-1)].y() )/4.0;
-    double vvel_EC_bottom = (vel_CC[IntVector(i  ,j-1,k  )].y()   + 
-                             vel_CC[IntVector(i  ,j-1,k-1)].y() )/4.0;
+                             vel_CC[IntVector(i-1,j  ,k-1)].x()  +
+                             vel_CC[IntVector(i  ,j  ,k-1)].x()  +
+                             vel_CC[IntVector(i  ,j  ,k  )].x())/4.0;
+                             
+    double vvel_EC_top    = (vel_CC[IntVector(i  ,j+1,k  )].y()  + 
+                             vel_CC[IntVector(i  ,j+1,k-1)].y()  +
+                             vel_CC[IntVector(i  ,j  ,k-1)].y()  +
+                             vel_CC[IntVector(i  ,j  ,k  )].y())/4.0;
+                             
+    double vvel_EC_bottom = (vel_CC[IntVector(i  ,j-1,k  )].y()  + 
+                             vel_CC[IntVector(i  ,j-1,k-1)].y()  +
+                             vel_CC[IntVector(i  ,j  ,k-1)].y()  +
+                             vel_CC[IntVector(i  ,j  ,k  )].y())/4.0;
+                             
     double wvel_EC_right  = (vel_CC[IntVector(i+1,j,  k  )].z()  + 
-                             vel_CC[IntVector(i+1,j  ,k-1)].z() )/4.0;
+                             vel_CC[IntVector(i+1,j  ,k-1)].z()  +
+                             vel_CC[IntVector(i  ,j  ,k-1)].z()  +
+                             vel_CC[IntVector(i  ,j  ,k  )].z())/4.0;
+                             
     double wvel_EC_left   = (vel_CC[IntVector(i-1,j,  k  )].z()  +
-                             vel_CC[IntVector(i-1,j  ,k-1)].z() )/4.0;
-    double wvel_EC_top    = (vel_CC[IntVector(i  ,j+1,k  )].z()   + 
-                             vel_CC[IntVector(i  ,j+1,k-1)].z() )/4.0;
-    double wvel_EC_bottom = (vel_CC[IntVector(i  ,j-1,k  )].z()   + 
-                             vel_CC[IntVector(i  ,j-1,k-1)].z() )/4.0;
+                             vel_CC[IntVector(i-1,j  ,k-1)].z()  +
+                             vel_CC[IntVector(i  ,j  ,k-1)].z()  +
+                             vel_CC[IntVector(i  ,j  ,k  )].z())/4.0;
+                             
+    double wvel_EC_top    = (vel_CC[IntVector(i  ,j+1,k  )].z()  + 
+                             vel_CC[IntVector(i  ,j+1,k-1)].z()  +
+                             vel_CC[IntVector(i  ,j  ,k-1)].z()  +
+                             vel_CC[IntVector(i  ,j  ,k  )].z())/4.0;
+                             
+    double wvel_EC_bottom = (vel_CC[IntVector(i  ,j-1,k  )].z()  + 
+                             vel_CC[IntVector(i  ,j-1,k-1)].z()  +
+                             vel_CC[IntVector(i  ,j  ,k-1)].z()  +
+                             vel_CC[IntVector(i  ,j  ,k  )].z())/4.0;
     //__________________________________
     //  tau_ZX
     grad_1 = (vel_CC[cell].x() - vel_CC[back].x()) /delZ;
