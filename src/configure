@@ -2262,8 +2262,8 @@ if test -z "$XML_LIB_DIR"; then
   case $host in
   *-irix*)
     if test "$is_64bit" = "yes"; then
-      if test -e /res/sci/data1/xerces-1.3.0/lib64/libxerces-c1_?.so; then
-        XML_LIB_DIR="/res/sci/data1/xerces-1.3.0/lib64"
+      if test -e /res/sci/data6/sparker/xerces-c/lib64/libxerces-c1_?.so; then
+        XML_LIB_DIR="/res/sci/data6/sparker/xerces-c/lib64"
       elif test -e /usr/lib64/libxerces-c1_?.so; then
 	XML_LIB_DIR="/usr/lib64"
       elif test -e /usr/local/lib64/libxerces-c1_?.so; then
@@ -2274,8 +2274,8 @@ if test -z "$XML_LIB_DIR"; then
 	XML_LIB_DIR="/usr/local/lib"
       fi
     else
-      if test -e /res/sci/data1/xerces-1.3.0/lib32/libxerces-c1_?.so; then
-        XML_LIB_DIR="/res/sci/data1/xerces-1.3.0/lib32"
+      if test -e /res/sci/data6/sparker/xerces-c/lib32/libxerces-c1_?.so; then
+        XML_LIB_DIR="/res/sci/data6/sparker/xerces-c/lib32"
       elif test -e /usr/lib32/libxerces-c1_?.so; then
 	XML_LIB_DIR="/usr/lib32"
       elif test -e /usr/local/lib32/libxerces-c1_?.so; then
@@ -2308,11 +2308,11 @@ if (test $xerces -a
     test -d "$xerces/include/dom" &&
     test -d "$xerces/include/parsers") ; then
   XML_INCLUDE_DIR="$xerces/include"
-elif (test -d "/res/sci/data1/xerces-1.3.0/include/util" &&
-      test -d "/res/sci/data1/xerces-1.3.0/include/sax" &&
-      test -d "/res/sci/data1/xerces-1.3.0/include/dom" &&
-      test -d "/res/sci/data1/xerces-1.3.0/include/parsers") ; then
-  XML_INCLUDE_DIR="/res/sci/data1/xerces-1.3.0/include"
+elif (test -d "/res/sci/data6/sparker/xerces-c/include/util" &&
+      test -d "/res/sci/data6/sparker/xerces-c/include/sax" &&
+      test -d "/res/sci/data6/sparker/xerces-c/include/dom" &&
+      test -d "/res/sci/data6/sparkerxerces-c/include/parsers") ; then
+  XML_INCLUDE_DIR="/res/sci/data6/sparker/xerces-c/include"
 elif (test -d "/usr/include/util" &&
       test -d "/usr/include/sax" &&
       test -d "/usr/include/dom" &&
