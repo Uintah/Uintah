@@ -13,6 +13,7 @@
 #include <Packages/rtrt/Core/ScalarTransform1D.h>
 #include <Packages/rtrt/Core/Array1.h>
 #include <Packages/rtrt/Core/Scene.h>
+#include <Packages/rtrt/Core/rtrt.h>
 #include <Packages/rtrt/Core/Point.h>
 #include <Packages/rtrt/Core/Vector.h>
 #include <float.h>
@@ -21,20 +22,31 @@
 using namespace std;
 using namespace rtrt;
 
+static float t_inc = 1;
+
 VolumeVis::VolumeVis(BrickArray3<float>& _data, float data_min, float data_max,
 		     int nx, int ny, int nz,
 		     Point min, Point max, const Array1<Color*> &matls,
 		     int nmatls, const Array1<float> &alphas, int nalphas,
 		     double spec_coeff, double ambient, double diffuse,
-		     double specular):
+		     double specular, float _t_inc):
   Object(this), diag(max - min),
   data_min(data_min), data_max(data_max),
-  data_diff_inv(1/(data_max - data_min)),
   nx(nx), ny(ny), nz(nz),
   min(min), max(max), matls(matls), nmatls(nmatls),
   alphas(alphas), nalphas(nalphas), spec_coeff(spec_coeff),
   ambient(ambient), diffuse(diffuse), specular(specular)
 {
+  if (data_max < data_min) {
+    float temp = data_max;
+    data_max = data_min;
+    data_min = temp;
+  }
+  if (data_min != data_max)
+    data_diff_inv = 1/(data_max - data_min);
+  else
+    data_diff_inv = 0;
+
   data.share(_data);
   delta_x2 = 2 * (max.x() - min.x())/nx;
   delta_y2 = 2 * (max.y() - min.y())/ny;
@@ -54,7 +66,20 @@ VolumeVis::VolumeVis(BrickArray3<float>& _data, float data_min, float data_max,
     inv_diag.z(0);
   else
     inv_diag.z(1.0/diag.z());
-  
+
+  t_inc = _t_inc;
+  // modify the alpha matrix by the t_inc
+  // we are assuming the base delta_t is 1 and that the new delta_t is t_inc
+  // the formula:
+  //    a_1 : original opacity
+  //    a_2 : resulting opacity
+  //    d_1 : original sampling distance
+  //    d_2 : new sampling distance
+  // a_2 = 1 - (1 - a_1)^(d_2/d_1)
+  for(unsigned int i = 0; i < alphas.size(); i++) {
+    alphas[i] = 1 - powf(1 - alphas[i], t_inc);
+    cout << "ALPHAS[i="<<i<<"] = "<<alphas[i]<<endl;
+  }
 }
 
 VolumeVis::~VolumeVis() {
@@ -203,6 +228,8 @@ int VolumeVis::bound(const int val, const int min, const int max) {
   return (val>min?(val<max?val:max):min);
 }
 
+#define RAY_TERMINATION_THRESHOLD 0.98
+
 void VolumeVis::shade(Color& result, const Ray& ray,
 		      const HitInfo& hit, int depth,
 		      double atten, const Color& accumcolor,
@@ -211,47 +238,46 @@ void VolumeVis::shade(Color& result, const Ray& ray,
   float* t_maxp = (float*)hit.scratchpad;
   float t_max = *t_maxp;
 
-  //cout << "result = " << result << ", atten = " << atten << ", accumcolor = " << accumcolor << endl;
-  float t_inc = 1;
-  //cout << "t_max = " << t_max << ", t_min = " << t_min << ", t_iterations = " << (t_max - t_min)/t_inc << endl;
-
-  float alpha = 1;
+  // alpha is the accumulating opacities
+  // alphas are in levels of opacity: 1 - completly opaque
+  //                                  0 - completly transparent
+  float alpha = 0;
   Color total(0,0,0);
-  //cout << "data.x = " << data.dim1() << ", data.y = " << data.dim2() << ", data.z = " << data.dim3() << endl;
   Vector p;
-  //  HitInfo new_hit = hit;
+
+  //  float t_inc = cx->scene->rtrt_engine->t_inc;
   for(float t = t_min; t < t_max; t += t_inc) {
     // opaque values are 0, so terminate the ray at alpha values close to zero
-    if (alpha > 0.02) {
+    if (alpha < RAY_TERMINATION_THRESHOLD) {
       // get the point to interpolate
       p = ray.origin() + ray.direction() * t - min;
-      //cout << "p = " << p << ", diag = " << diag << endl;
+
+      ////////////////////////////////////////////////////////////
       // interpolate the point
+
+      // get the indices and weights for the indicies
       float norm = p.x() * inv_diag.x();
       float step = norm * (nx - 1);
-      int x_low = bound((int)step, 0, data.dim1()-1);
-      //      float x_index_high = ceilf(step);
-      int x_high = bound(x_low+1, 0, data.dim1()-1);
+      int x_low = bound((int)step, 0, data.dim1()-2);
+      int x_high = x_low+1;
       float x_weight_low = x_high - step;
-      //cout << "norm = " << norm << ", step = " << step << ", x_low = " << x_low << ", x_high = " << x_high << ", x_weight_low = " << x_weight_low << ", x_weight_high = " << (1 - x_weight_low) << endl;
+
       norm = p.y() * inv_diag.y();
       step = norm * (ny - 1);
-      int y_low = bound((int)step, 0, data.dim2()-1);
-      //      float y_index_high = ceilf(step);
-      int y_high = bound(y_low+1, 0, data.dim2()-1);
+      int y_low = bound((int)step, 0, data.dim2()-2);
+      int y_high = y_low+1;
       float y_weight_low = y_high - step;
-      //cout << "norm = " << norm << ", step = " << step << ", y_low = " << y_low << ", y_high = " << y_high << ", y_weight_low = " << y_weight_low << ", y_weight_high = " << (1 - y_weight_low) << endl;
+
       norm = p.z() * inv_diag.z();
       step = norm * (nz - 1);
-      int z_low = bound((int)step, 0, data.dim3()-1);
-      //      float z_index_high = ceilf(step);
-      int z_high = bound(z_low+1, 0, data.dim3()-1);
+      int z_low = bound((int)step, 0, data.dim3()-2);
+      int z_high = z_low+1;
       float z_weight_low = z_high - step;
-      //cout << "norm = " << norm << ", step = " << step << ", z_low = " << z_low << ", z_high = " << z_high << ", z_weight_low = " << z_weight_low << ", z_weight_high = " << (1 - z_weight_low) << endl;
-      //cout << "data(0,0,0) = "; flush(cout); cout << data(0,0,0) << endl;
+
+      ////////////////////////////////////////////////////////////
+      // do the interpolation
 
       float a,b,c,d,e,f,g,h;
-      
       a = data(x_low,  y_low,  z_low);
       b = data(x_low,  y_low,  z_high);
       c = data(x_low,  y_high, z_low);
@@ -262,7 +288,6 @@ void VolumeVis::shade(Color& result, const Ray& ray,
       h = data(x_high, y_high, z_high);
 
       float lz1, lz2, lz3, lz4, ly1, ly2, value;
-
       lz1 = a * z_weight_low + b * (1 - z_weight_low);
       lz2 = c * z_weight_low + d * (1 - z_weight_low);
       lz3 = e * z_weight_low + f * (1 - z_weight_low);
@@ -276,11 +301,11 @@ void VolumeVis::shade(Color& result, const Ray& ray,
       //cout << "value = " << value << endl;
       float normalized = (value - data_min) * data_diff_inv;
       int alpha_idx = bound((int)(normalized*(nalphas -1 )), 0, nalphas - 1);
-      if ((alphas[alpha_idx] * alpha) > 0.001) {
+      if ((alphas[alpha_idx] * (1-alpha)) > 0.001) {
+      //      if (true) {
 	// the point is contributing, so compute the color
 
-	// compute the gradient and tuck it away for the normal function to get
-	//	Vector* p_vector = (Vector*)new_hit.scratchpad;
+	// compute the gradient
 	Vector gradient;
 	float dx = ly2 - ly1;
 	
@@ -299,21 +324,21 @@ void VolumeVis::shade(Color& result, const Ray& ray,
 	dz = dzly1 * x_weight_low + dzly2 * (1 - x_weight_low);
 	if (dx || dy || dz)
 	  gradient = (Vector(dx,dy,dz)).normal();
-	//	  *p_vector = (Vector(dx,dy,dz)).normal();
 	else
-	  //	  *p_vector = Vector(0,0,0);
 	  gradient = Vector(0,0,0);
 
 	int idx=bound((int)(normalized*(nmatls-1)), 0, nmatls - 1);
 	Light* light=cx->scene->light(0);
 	Vector light_dir;
 	light_dir = light->get_pos()-p;
+#if 1
 	Color temp = color(gradient, ray.direction(), light_dir.normal(), 
 			   *(matls[idx]), light->get_color());
-	//	new_hit.min_t = t;
-	//	matls[idx]->shade(temp, ray, new_hit, depth, atten, accumcolor, cx);
-	total += temp * (alphas[alpha_idx] * alpha);
-	alpha = alpha * (1 - alphas[alpha_idx]);
+#else
+	Color temp = *(matls[idx]);
+#endif
+	total += temp * (alphas[alpha_idx] * (1-alpha));
+	alpha += alphas[alpha_idx] * (1-alpha);
       }
       //cout << "total = " << total << ", temp = " << temp << ", alpha = " << alpha;
       //cout << ", new alpha = " << alpha << endl;
@@ -322,13 +347,13 @@ void VolumeVis::shade(Color& result, const Ray& ray,
       break;
     }
   }
-  if (alpha > 0.02) {
+  if (alpha < RAY_TERMINATION_THRESHOLD) {
     Color bgcolor;
     Point origin(p.x(),p.y(),p.z());
     cx->worker->traceRay(bgcolor, Ray(origin,ray.direction()), depth+1, atten,
 			 accumcolor, cx);
-    total += bgcolor * alpha;
-  }  
+    total += bgcolor * (1-alpha);
+  }
   result = total;
 }
 
