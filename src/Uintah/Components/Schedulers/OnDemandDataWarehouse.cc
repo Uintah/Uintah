@@ -148,7 +148,7 @@ void OnDemandDataWarehouse::sendParticleSubset(SendState& ss,
 	 sendset->addParticle(idx);
    }
    int toProc = dep->d_task->getAssignedResourceIndex();
-   ss.d_sendSubsets[pair<const Patch*, int>(dep->d_patch, toProc)]=sendset;
+   ss.d_sendSubsets[pair<pair<const Patch*, int>,int>(pair<const Patch*, int>(dep->d_patch, toProc), dep->d_matlIndex)]=sendset;
 
    int numParticles = sendset->numParticles();
    //cerr << world->myrank() << " Sending pset size of " << numParticles << " instead of " << pset->numParticles() << ", dw=" << getID() << '\n';
@@ -199,8 +199,8 @@ OnDemandDataWarehouse::sendMPI(SendState& ss,
    if(d_particleDB.exists(label, matlIndex, patch)){
       ParticleVariableBase* var = d_particleDB.get(label, matlIndex, patch);
 
-      map<pair<const Patch*, int>, ParticleSubset*>::iterator iter = 
-      	 ss.d_sendSubsets.find(pair<const Patch*, int>(patch, dest));
+      map<pair<pair<const Patch*, int>, int>, ParticleSubset*>::iterator iter = 
+      	 ss.d_sendSubsets.find(pair<pair<const Patch*, int>,int>(pair<const Patch*, int>(patch, dest), matlIndex));
       if(iter == ss.d_sendSubsets.end()){
 	 cerr << "patch=" << patch << '\n';
 	 cerr << world->myrank() << " From patch: " << patch->getID() << " to processor: " << dest << '\n';
@@ -1464,6 +1464,10 @@ OnDemandDataWarehouse::deleteParticles(ParticleSubset* delset)
 
 //
 // $Log$
+// Revision 1.52.4.3  2000/10/02 17:33:39  sparker
+// Fixed boundary particles code for multiple materials
+// Free ParticleSubsets used for boundary particle sends
+//
 // Revision 1.52.4.2  2000/10/02 15:02:45  sparker
 // Send only boundary particles
 //
