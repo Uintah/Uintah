@@ -1240,7 +1240,7 @@ void SerialMPM::carryForwardVariables( const ProcessorGroup*,
       new_dw->get(pStress, lb->pStressAfterStrainRateLabel, pset);
     }
 
-    //stress
+    //velocity
     ParticleVariable<Vector> pVelocity;
     if(mpm_matl->getFractureModel()) {
       new_dw->get(pVelocity, lb->pVelocityAfterFractureLabel, pset);
@@ -1848,14 +1848,11 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         }
 	else {        
    	  //for isolated particles in fracture
-	  /*
           pxnew[idx]      =  px[idx] + pvelocity[idx] * delT;
-          pvelocity[idx] +=
-		(pexternalForce[idx] + pCrackSurfaceContactForce[idx])
-	     /pmass[idx] * delT;
-	     */
+          pvelocitynew[idx] = pvelocity[idx] +
+	     (pexternalForce[idx] + pCrackSurfaceContactForce[idx]) /
+	     pmass[idx] * delT;
         }
-	
 	
         ke += .5*pmass[idx]*pvelocitynew[idx].length2();
 	CMX = CMX + (pxnew[idx]*pmass[idx]).asVector();
@@ -2076,6 +2073,9 @@ void SerialMPM::interpolateParticlesForSaving(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.174  2000/12/10 06:42:24  tan
+// Modifications on fracture contact computations.
+//
 // Revision 1.173  2000/12/08 00:27:58  guilkey
 // Uncommented some BC stuff for the Temperature.
 //
