@@ -8,7 +8,7 @@
    </Meta>
 
    <Time>
-	<maxTime>.5</maxTime>
+	<maxTime>.25</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>2.e-6</delt_min>
 	<delt_max>2.e-3</delt_max>
@@ -16,7 +16,7 @@
    </Time>
    <DataArchiver>
         <filebase>const_test_hypo.uda</filebase>
-	<outputInterval>.1</outputInterval>
+	<outputInterval>.05</outputInterval>
 <!--
         <save label = "NTractionZMinus"/>
 -->
