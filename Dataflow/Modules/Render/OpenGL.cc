@@ -801,7 +801,11 @@ void OpenGL::redraw_frame()
 #endif // __sgi
 	}
 	throttle.stop();
-	double fps=nframes/throttle.time();
+	double fps;
+	if (throttle.time()>0)
+	  fps=nframes/throttle.time();
+	else
+	  fps=nframes;
 	int fps_whole=(int)fps;
 	int fps_hund=(int)((fps-fps_whole)*100);
 	ostringstream str;
@@ -846,16 +850,25 @@ void OpenGL::redraw_frame()
 				// Report statistics
       timer.stop();
       fpstimer.stop();
-      double fps=nframes/fpstimer.time();
+      double fps;
+      if (fpstimer.time()>0)
+	fps=nframes/fpstimer.time();
+      else
+	fps=100;
       fps+=0.05;			// Round to nearest tenth
       int fps_whole=(int)fps;
       int fps_tenths=(int)((fps-fps_whole)*10);
       fpstimer.clear();
       fpstimer.start();		// Start it running for next time
       ostringstream str;
+      double pps;
+      if (timer.time()>0)
+	pps=drawinfo->polycount/timer.time();
+      else
+	pps=drawinfo->polycount;
       str << viewwindow->id << " updatePerf \"";
       str << drawinfo->polycount << " polygons in " << timer.time()
-	  << " seconds\" \"" << drawinfo->polycount/timer.time()
+	  << " seconds\" \"" << pps
 	  << " polygons/second\"" << " \"" << fps_whole << "."
 	  << fps_tenths << " frames/sec\"" << '\0';
       //    cerr <<"updatePerf: <" << str.str() << ">\n";	
