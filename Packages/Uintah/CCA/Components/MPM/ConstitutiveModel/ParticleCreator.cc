@@ -220,7 +220,7 @@ void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
   particle_state_preReloc.push_back(lb->pVelocityLabel_preReloc);
 
   particle_state.push_back(lb->pExternalForceLabel);
-  particle_state_preReloc.push_back(lb->pExternalForceLabel_preReloc);
+  particle_state_preReloc.push_back(lb->pExtForceLabel_preReloc);
 
   particle_state.push_back(lb->pMassLabel);
   particle_state_preReloc.push_back(lb->pMassLabel_preReloc);
