@@ -12,19 +12,17 @@ find . -name "*.ii" -print | xargs cat | sort | uniq -c | sort -nr | more
  */
 
 #include <SCICore/Containers/Array1.h>
-#include <SCICore/Containers/Array2.h>
+
+#include <SCICore/Geom/Color.h>
+
+using namespace SCICore::GeomSpace;
+using namespace SCICore::Containers;
 
 #ifdef __sgi
 #pragma set woff 1468
 #endif
 
-using namespace SCICore::Containers;
-template class Array1<int>;
-template class Array1<double>;
-
-template class Array2<int>;
-template class Array2<double>;
-
+template class Array1<Color>;
 
 #ifdef __sgi
 #pragma reset woff 1468

@@ -337,6 +337,7 @@ int SimpleIPort<T>::special_get(T& data)
     using SCICore::PersistentSpace::Pio;
 
     using PSECore::Comm::MessageTypes;
+    using PSECore::Comm::MessageBase;
     using PSECore::Dataflow::Demand_Message;
 
     if(nconnections()==0)
@@ -350,9 +351,9 @@ int SimpleIPort<T>::special_get(T& data)
 
     // Wait for the data...
     SimplePortComm<T>* comm;
-    while(!mailbox.try_receive(comm)){
+    while(!mailbox.tryReceive(comm)){
       MessageBase* msg;
-      if(module->mailbox.try_receive(msg)){
+      if(module->mailbox.tryReceive(msg)){
 	switch(msg->type){
 	case MessageTypes::ExecuteModule:
 	  cerr << "Dropping execute...\n";
@@ -433,6 +434,12 @@ SimplePortComm<T>::SimplePortComm(const T& data)
 
 //
 // $Log$
+// Revision 1.11  2000/03/21 03:01:24  sparker
+// Partially fixed special_get method in SimplePort
+// Pre-instantiated a few key template types, in an attempt to reduce
+//   initial compile time and reduce code bloat.
+// Manually instantiated templates are in */*/templates.cc
+//
 // Revision 1.10  1999/12/07 02:53:34  dmw
 // made show_status variable persistent with network maps
 //
