@@ -66,7 +66,7 @@ extern "C" Module* make_TensorFieldExtractor( const string& id ) {
 
 //--------------------------------------------------------------- 
 TensorFieldExtractor::TensorFieldExtractor(const string& id) 
-  : Module("TensorFieldExtractor", id, Filter, "Selectors", "Uintah"),
+  : FieldExtractor("TensorFieldExtractor", id, "Selectors", "Uintah"),
     tcl_status("tcl_status", id, this), sVar("sVar", id, this),
     sMatNum("sMatNum", id, this), type(0)
 { 
@@ -77,30 +77,19 @@ TensorFieldExtractor::~TensorFieldExtractor(){}
 
 //------------------------------------------------------------- 
 
-void TensorFieldExtractor::setVars()
+void TensorFieldExtractor::get_vars(vector< string >& names,
+				   vector< const TypeDescription *>& types)
 {
   string command;
   DataArchive& archive = *((*(archiveH.get_rep()))());
-
-  vector< string > names;
-  vector< const TypeDescription *> types;
-  archive.queryVariables(names, types);
-
-
-  vector< double > times;
-  vector< int > indices;
-  archive.queryTimesteps( indices, times );
-
+  // Set up data to build or rebuild GUI interface
   string sNames("");
   int index = -1;
   bool matches = false;
-
-
   // get all of the TensorField Variables
   for( int i = 0; i < (int)names.size(); i++ ){
     const TypeDescription *td = types[i];
     const TypeDescription *subtype = td->getSubType();
-    //cerr << "\tVariable: " << names[i] << ", type " << td->getName() << "\n";
     if( td->getType() ==  TypeDescription::NCVariable ||
 	td->getType() ==  TypeDescription::CCVariable ){
 
@@ -124,30 +113,9 @@ void TensorFieldExtractor::setVars()
     type = types[index];
   }
 
-  // get the number of materials for the TensorField Variables
-  GridP grid = archive.queryGrid(times[0]);
-  LevelP level = grid->getLevel( 0 );
-  Patch* r = *(level->patchesBegin());
-  ConsecutiveRangeSet matls = 
-    archive.queryMaterials(sVar.get(), r, times[0]);
-
-  string visible;
-  TCL::eval(id + " isVisible", visible);
-  if( visible == "1"){
-    TCL::execute(id + " destroyFrames");
-    TCL::execute(id + " build");
-    
-    TCL::execute(id + " buildMaterials " +  matls.expandedString().c_str());
-    archive.queryMaterials(sVar.get(), r, times[0]);
-
-
-    TCL::execute(id + " setTensors " + sNames.c_str());
-    TCL::execute(id + " buildVarList");
-
-    TCL::execute("update idletasks");
-    reset_vars();
-  }
-}
+  // inherited from FieldExtractor
+  update_GUI(sVar.get(), sNames);
+ }
 
 
 
@@ -164,124 +132,66 @@ void TensorFieldExtractor::execute()
      return;
    }
    
-   if (archiveH.get_rep()  == 0 ){
-     string visible;
-     TCL::eval(id + " isVisible", visible);
-     if( visible == "0" ){
-       TCL::execute(id + " buildTopLevel");
-     }
-   }
+  if (archiveH.get_rep() == 0 ){
+    // first time through a frame must be built
+    build_GUI_frame();
+  }
 
    archiveH = handle;
    DataArchive& archive = *((*(archiveH.get_rep()))());
-   cerr << "Calling setVars\n";
-   setVars();
-   cerr << "done with setVars\n";
 
+  // get time, set timestep, set generation, update grid and update gui
+  double time = update(); // yeah it does all that
 
-
-
-   // what time is it?
-   vector< double > times;
-   vector< int > indices;
-   archive.queryTimesteps( indices, times );
-   
-   // set the index for the correct timestep.
-   int idx = handle->timestep();
-
-  int max_workers = Max(Thread::numProcessors()/3, 4);
-  Semaphore* thread_sema = scinew Semaphore( "tensor extractor semahpore",
-					     max_workers); 
-
-  WallClockTimer my_timer;
-  GridP grid = archive.queryGrid(times[idx]);
   LevelP level = grid->getLevel( 0 );
   const TypeDescription* subtype = type->getSubType();
   string var(sVar.get());
   int mat = sMatNum.get();
-  double time = times[idx];
-  switch( type->getType() ) {
-  case TypeDescription::NCVariable:
-    switch ( subtype->getType() ) {
-    case TypeDescription::Matrix3:
-      {	
-	my_timer.start();
-	LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
-	LevelField<Matrix3> *vfd =
-	  scinew LevelField<Matrix3>( mesh, Field::NODE );
-	vector<ShareAssignArray3<Matrix3> >& data = vfd->fdata();
-	data.resize(level->numPatches());
-	double size = data.size();
-	int count = 0;
-	vector<ShareAssignArray3<Matrix3> >::iterator it = data.begin();
-	for(Level::const_patchIterator r = level->patchesBegin();
-	    r != level->patchesEnd(); r++, ++it ){
-	  update_progress(count++/size, my_timer);
-	  thread_sema->down();
-	    Thread *thrd =
-	      scinew Thread(scinew PatchDataThread<NCVariable<Matrix3>,
-			    vector<ShareAssignArray3<Matrix3> >::iterator>
-			    (archive, it, var, mat, *r, time, thread_sema),
-			    "patch_data_worker");
-	    thrd->detach();
+  if(var != ""){
+    switch( type->getType() ) {
+    case TypeDescription::NCVariable:
+      switch ( subtype->getType() ) {
+      case TypeDescription::Matrix3:
+	{	
+	  NCVariable<Matrix3> gridVar;
+	  LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
+	  LevelField<Matrix3> *tfd =
+	    scinew LevelField<Matrix3>( mesh, Field::NODE );
+	  build_field( archive, level, var, mat, time, gridVar, tfd);
+	  tfout->send(tfd);
+	  // 	DumpAllocator(default_allocator, "TensorDump.allocator");
+	  return;
 	}
-	thread_sema->down(max_workers);
-	if( thread_sema ) delete thread_sema;
-	timer.add( my_timer.time());
-	my_timer.stop();
-	tfout->send(vfd);
-	// 	DumpAllocator(default_allocator, "TensorDump.allocator");
+	break;
+      default:
+	cerr<<"NCVariable<?>  Unknown vector type\n";
+	return;
+      }
+      break;
+    case TypeDescription::CCVariable:
+      switch ( subtype->getType() ) {
+      case TypeDescription::Matrix3:
+	{
+	  CCVariable<Matrix3> gridVar;
+	  LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
+	  LevelField<Matrix3> *tfd =
+	    scinew LevelField<Matrix3>( mesh, Field::CELL );
+	  build_field( archive, level, var, mat, time, gridVar, tfd);
+	  tfout->send(tfd);
+	  // 	DumpAllocator(default_allocator, "TensorDump.allocator");
+	  return;
+	}
+	break;
+      default:
+	cerr<<"CCVariable<?> Unknown vector type\n";
 	return;
       }
       break;
     default:
-      cerr<<"NCVariable<?>  Unknown vector type\n";
+      cerr<<"Not a TensorField\n";
       return;
     }
-    break;
-  case TypeDescription::CCVariable:
-    switch ( subtype->getType() ) {
-    case TypeDescription::Matrix3:
-      {
-	my_timer.start();
-	LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
-	LevelField<Matrix3> *vfd =
-	  scinew LevelField<Matrix3>( mesh, Field::CELL );
-	vector<ShareAssignArray3<Matrix3> >& data = vfd->fdata();
-	data.resize(level->numPatches());
-	double size = data.size();
-	int count = 0;
-	vector<ShareAssignArray3<Matrix3> >::iterator it = data.begin();
-	for(Level::const_patchIterator r = level->patchesBegin();
-	    r != level->patchesEnd(); r++, ++it ){
-	  update_progress(count++/size, my_timer);
-	    thread_sema->down();
-	    Thread *thrd =
-	      scinew Thread(scinew PatchDataThread<CCVariable<Matrix3>,
-			    vector<ShareAssignArray3<Matrix3> >::iterator>
-			    (archive, it, var, mat, *r, time, thread_sema),
-			    "patch_data_worker");
-	    thrd->detach();
-	}
-	thread_sema->down(max_workers);
-	if( thread_sema ) delete thread_sema;
-	timer.add( my_timer.time() );
-	my_timer.stop();
-	tfout->send(vfd);
-	// 	DumpAllocator(default_allocator, "TensorDump.allocator");
-	return;
-      }
-      break;
-    default:
-      cerr<<"CCVariable<?> Unknown vector type\n";
-      return;
-    }
-    break;
-  default:
-    cerr<<"Not a TensorField\n";
-    return;
   }
-  return;
 }
 } // End namespace Uintah
 
