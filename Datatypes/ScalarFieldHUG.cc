@@ -63,13 +63,13 @@ static Persistent* make_ScalarFieldHUG()
 *******************************************************************************/
 
 ScalarFieldHUG::ScalarFieldHUG()
-: ScalarField(UnstructuredGrid)
+: ScalarField(HexGrid)
 {
   mesh = scinew HexMesh ();
 }
 
 ScalarFieldHUG::ScalarFieldHUG(HexMesh * m)
-: ScalarField(UnstructuredGrid), mesh (m)
+: ScalarField(HexGrid), mesh (m)
 {
 }
 
@@ -152,6 +152,11 @@ Vector ScalarFieldHUG::gradient(const Point& p)
     // Not implemented.
     
     return Vector (0, 0, 0);
+}
+
+void ScalarFieldHUG::get_boundary_lines(Array1<Point>& lines)
+{
+    mesh->get_boundary_lines(lines);
 }
 
 

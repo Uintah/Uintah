@@ -23,6 +23,7 @@
 *******************************************************************************/
 
 #include <Datatypes/HexMesh.h>
+#include <Classlib/NotFinished.h>
 #include <Classlib/String.h>
 #include <Malloc/Allocator.h>
 #include <iostream.h>
@@ -1024,6 +1025,7 @@ int HexMesh::locate (const Point& P, int & idx)
 
   return -1;
 
+#if 0
   HashTable<int, Hexahedron *> * hxhtp = & element_set;
   HashTableIter<int, Hexahedron *> hx (hxhtp);
   
@@ -1039,6 +1041,7 @@ int HexMesh::locate (const Point& P, int & idx)
   }
 
   return idx = -1;
+#endif
 }
 
 
@@ -1208,5 +1211,10 @@ void HexMesh::io (Piostream & p)
         hx.get_data()->finish_read (this);
     }
   }
+}
+
+void HexMesh::get_boundary_lines(Array1<Point>& lines)
+{
+    NOT_FINISHED("HexMesh::get_boundary_lines");
 }
 

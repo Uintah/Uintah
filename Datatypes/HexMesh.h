@@ -250,6 +250,7 @@ class HexMesh : public Datatype
     int    locate      (const Point & P, int & start);
     double interpolate (const Point & P, const Array1<double> & data, int & start);
     void   get_bounds  (Point & min, Point & max);
+    void get_boundary_lines(Array1<Point>& lines);
     
     // Io functions
         

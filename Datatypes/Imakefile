@@ -18,8 +18,8 @@ OBJS = BasicSurfaces.o  ColorMap.o  ColorMapPort.o  \
 	Surface.o  SurfacePort.o  SymSparseRowMatrix.o \
 	TriDiagonalMatrix.o  TriSurface.o  \
 	VectorField.o  VectorFieldOcean.o \
-	VectorFieldPort.o  VectorFieldRG.o  VectorFieldUG.o VectorFieldZone.o
 	VectorFieldPort.o  VectorFieldRG.o  VectorFieldUG.o \
+	VectorFieldZone.o \
         HexMesh.o ScalarFieldHUG.o \
 	VoidStar.o  VoidStarPort.o  \
 	ssmult.o
@@ -44,9 +44,10 @@ SRCS = $(GENSRCS) BasicSurfaces.cc  \
 	Surface.cc SurfacePort.cc SymSparseRowMatrix.cc \
 	TriDiagonalMatrix.cc TriSurface.cc \
 	VectorField.cc  VectorFieldOcean.cc \
-	VectorFieldPort.cc VectorFieldRG.cc VectorFieldUG.cc VectorFieldZone.cc
+	VectorFieldPort.cc VectorFieldRG.cc VectorFieldUG.cc \
+	VectorFieldZone.cc
 GENH = ScalarFieldRGchar.h  ScalarFieldRGint.h  ScalarFieldRGfloat.h \
-	ScalarFieldRGdouble.h ScalarFieldRG.h
+	ScalarFieldRGdouble.h ScalarFieldRG.h \
 	VectorFieldPort.cc VectorFieldRG.cc VectorFieldUG.cc \
 	HexMesh.cc ScalarFieldHUG.cc \
 	VoidStar.cc VoidStarPort.cc \

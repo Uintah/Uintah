@@ -23,6 +23,7 @@
 class ScalarFieldRGBase;
 class ScalarFieldRG;
 class ScalarFieldUG;
+class ScalarFieldHUG;
 class ScalarField;
 typedef LockingHandle<ScalarField> ScalarFieldHandle;
 
@@ -43,6 +44,7 @@ protected:
 	RegularGridBase,
 	UnstructuredGrid,
 	RegularGrid,
+	HexGrid,
 	Zones,
     };
     ScalarField(Representation);
@@ -55,6 +57,7 @@ public:
     ScalarFieldRG* getRG();
     ScalarFieldRGBase* getRGBase();
     ScalarFieldUG* getUG();
+    ScalarFieldHUG* getHUG();
     void get_minmax(double&, double&);
     void get_bounds(Point&, Point&);
     double longest_dimension();

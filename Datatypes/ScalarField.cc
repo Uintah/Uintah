@@ -46,6 +46,14 @@ ScalarFieldUG* ScalarField::getUG()
 	return 0;
 }
 
+ScalarFieldHUG* ScalarField::getHUG()
+{
+    if(rep==HexGrid)
+	return (ScalarFieldHUG*)this;
+    else
+	return 0;
+}
+
 ScalarFieldRGBase* ScalarField::getRGBase()
 {
 cerr << "rep="<<rep<<"\n";
