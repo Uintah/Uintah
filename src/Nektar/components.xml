@@ -2,31 +2,31 @@
 
 <!-- description of the Nektar package -->
 
-<package name="Yarden">
-#  <guiPath>GUI</guiPath>
-#  <scirun-library category="Visualization">
-#  <soNames>
-#    <soName>libNektar_Modules_Visualization.so</soName>
-#    <soName>libNektar.so</soName>
-#  </soNames>
-#
-#  <dataflow-component name="IsosurfaceSAGE">
-#    <meta>
-#      <authors>
-#        <author>Yarden Livnat</author>
-#      </authors>
-#      <version-date>Dec 1996</version-date>
-#      <version>1.0</version>
-#      <description>No description available</description>
-#    </meta>
-#    <inputs></inputs>
-#    <outputs></outputs>
-#    <parameters></parameters>
-#    <implementation>
-#      <creationFunction>make_IsosurfaceSAGE</creationFunction>
-#    </implementation>
-#  </dataflow-component>
-#  </scirun-library>
+<package name="Nektar">
+  <guiPath>GUI</guiPath>
+  <scirun-library category="Readers">
+  <soNames>
+    <soName>libNektar_Modules_Readers.so</soName>
+    <soName>libNektar.so</soName>
+  </soNames>
+
+  <dataflow-component name="ICReader">
+    <meta>
+      <authors>
+        <author>Yarden Livnat</author>
+      </authors>
+      <version-date>Aug 20006</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs></inputs>
+    <outputs></outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_ICNektarReader</creationFunction>
+    </implementation>
+  </dataflow-component>
+  </scirun-library>
 
 
 </package>
