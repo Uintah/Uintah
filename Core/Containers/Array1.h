@@ -163,6 +163,18 @@ public:
   void setsize(int newsize);
 
   //////////
+  // This will allocate an array which is equal to the number of
+  // elements in the array and copy the values over.
+  //
+  // _size is not changed.
+  //
+  // newsize is an optional parameter which indicates the desired
+  // size.  If newsize is greater than _size the new array will have
+  // newsize elements in it (nalloc = newsize).  If newsize is less
+  // than _size then _size elemets will be allocated (nalloc = _size).
+  void trim(int newsize=0);
+
+  //////////
   // Initialize all elements of the array
   void initialize(const T& val);
 
@@ -198,12 +210,11 @@ Array1<T>::Array1(const Array1<T>& a)
 template<class T>
 Array1<T>& Array1<T>::operator=(const Array1<T>& copy)
 {
-  if (objs)delete [] objs;
-  _size=copy._size;
-  nalloc=_size;
-  objs=new T[_size];
+  if (&copy == this)
+    // Doing A=A, so don't do anything
+    return (*this);
+  setsize(copy._size);
   for(int i=0;i<_size;i++)objs[i]=copy.objs[i];
-  nalloc=_size;
   default_grow_size=copy.default_grow_size;
   return(*this);
 }
@@ -353,7 +364,26 @@ void Array1<T>::setsize(int newsize)
   _size=newsize;
 }
 
-
+template<class T>
+void Array1<T>::trim(int newsize)
+{
+  if (newsize < _size || newsize <= 0)
+    newsize = _size;
+  if (newsize == nalloc)
+    // We already have the correct number allocated
+    return;
+  T* newobjs = new T[newsize];
+  if (objs) {
+    // Copy the data
+    for(int i=0;i<_size;i++){
+      newobjs[i]=objs[i];
+    }
+    // Delete the old bit of memory
+    delete[] objs;
+  }		
+  objs = newobjs;
+  nalloc = newsize;
+}
 
 template<class T>
 void Array1<T>::initialize(const T& val) {
