@@ -143,7 +143,7 @@ python install 32 12
         </para>
 
         <para>
-          The install script requires Python version 1.5 or greater
+          The install script requires Python version 1.5.2 or greater
         </para>
       </listitem>
     </orderedlist>
