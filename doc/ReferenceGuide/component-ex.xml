@@ -135,10 +135,10 @@
 	</p>
       </description>
       <step>
-        <p>Read step 2</P>
+        <p>Read step 2</p>
       </step>
       <step>
-        <p>Don't do what step 1 said to do</P>
+        <p>Don't do what step 1 said to do</p>
       </step>      
     </plan>
   </testing>
