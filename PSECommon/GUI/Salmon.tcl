@@ -22,9 +22,11 @@ itcl_class PSECommon_Salmon_Salmon {
     }
 
     method set_defaults {} {
+        global $this-pos
 	set make_progress_graph 0
 	set make_time 0
 	set roe ""
+        set $this-pos "nothing"
 	
     }
 
@@ -133,7 +135,7 @@ itcl_class Roe {
 	}
 	frame $w.wframe -borderwidth 3 -relief sunken
 	pack $w.wframe -expand yes -fill both -padx 4 -pady 4
-	
+
 	set width 640
 	set height 512
 	set wcommand [$this-c setrenderer [set $this-renderer] $w.wframe.draw $width $height]
@@ -241,14 +243,17 @@ itcl_class Roe {
 	pack $w.bframe.v.sethome -fill x -pady 2
 	button $w.bframe.v.gohome -text "Go home" -command "$this-c gohome"
 	pack $w.bframe.v.gohome -fill x -pady 2
+
 	frame $w.bframe.dolly
 	pack $w.bframe.dolly -side left -anchor nw 
+
 	frame $w.bframe.dolly.i
 	button $w.bframe.dolly.i.b -text "++" -command "$this-c dolly2 .8"
 	button $w.bframe.dolly.i.o -text "In" -command "$this-c dolly .95"
 	button $w.bframe.dolly.i.s -text "+" -command "$this-c dolly2 .96"
 	pack $w.bframe.dolly.i.b $w.bframe.dolly.i.o $w.bframe.dolly.i.s \
-		-fill x -padx 2 -pady 2 -side left -expand 1
+                                                		-fill x -padx 2 -pady 2 -side left -expand 1
+
 	frame $w.bframe.dolly.o
 	button $w.bframe.dolly.o.b -text "--" -command "$this-c dolly2 1.2"
 	button $w.bframe.dolly.o.o -text "Out" -command "$this-c dolly 1.05"
@@ -257,6 +262,88 @@ itcl_class Roe {
 		-fill x -padx 2 -pady 2 -side left -expand 1
 	pack $w.bframe.dolly.i $w.bframe.dolly.o -fill x -anchor nw
 	
+	frame $w.bframe.dolly.views             
+	pack $w.bframe.dolly.views -side left -anchor nw
+	
+	menubutton $w.bframe.dolly.views.def -text "     Views     " -menu $w.bframe.dolly.views.def.m -relief raised -padx 2 -pady 2 
+	
+	menu $w.bframe.dolly.views.def.m
+	$w.bframe.dolly.views.def.m add cascade -label "Look down +X Axis" \
+		-menu $w.bframe.dolly.views.def.m.posx
+	$w.bframe.dolly.views.def.m add cascade -label "Look down +Y Axis" \
+		-menu $w.bframe.dolly.views.def.m.posy
+        $w.bframe.dolly.views.def.m add cascade -label "Look down +Z Axis" \
+		-menu $w.bframe.dolly.views.def.m.posz
+	$w.bframe.dolly.views.def.m add separator
+	$w.bframe.dolly.views.def.m add cascade -label "Look down -X Axis" \
+		-menu $w.bframe.dolly.views.def.m.negx
+	$w.bframe.dolly.views.def.m add cascade -label "Look down -Y Axis" \
+		-menu $w.bframe.dolly.views.def.m.negy
+        $w.bframe.dolly.views.def.m add cascade -label "Look down -Z Axis" \
+		-menu $w.bframe.dolly.views.def.m.negz
+
+	pack $w.bframe.dolly.views.def -side left -pady 2 -padx 2 -fill x
+
+	menu $w.bframe.dolly.views.def.m.posx
+	$w.bframe.dolly.views.def.m.posx add radiobutton -label "Up vector +Y" \
+		-variable $this-pos -value x1_y1 -command "$this-c Views"
+	$w.bframe.dolly.views.def.m.posx add radiobutton -label "Up vector -Y" \
+		-variable $this-pos -value x1_y0 -command "$this-c Views"
+	$w.bframe.dolly.views.def.m.posx add radiobutton -label "Up vector +Z" \
+		-variable $this-pos -value x1_z1 -command "$this-c Views"
+	$w.bframe.dolly.views.def.m.posx add radiobutton -label "Up vector -Z" \
+		-variable $this-pos -value x1_z0 -command "$this-c Views"
+
+	menu $w.bframe.dolly.views.def.m.posy
+	$w.bframe.dolly.views.def.m.posy add radiobutton -label "Up vector +X" \
+		-variable $this-pos -value y1_x1 -command "$this-c Views" 
+	$w.bframe.dolly.views.def.m.posy add radiobutton -label "Up vector -X" \
+		-variable $this-pos -value y1_x0 -command "$this-c Views"
+	$w.bframe.dolly.views.def.m.posy add radiobutton -label "Up vector +Z" \
+		-variable $this-pos -value y1_z1 -command "$this-c Views"
+	$w.bframe.dolly.views.def.m.posy add radiobutton -label "Up vector -Z" \
+		-variable $this-pos -value y1_z0 -command "$this-c Views"
+
+	menu $w.bframe.dolly.views.def.m.posz
+	$w.bframe.dolly.views.def.m.posz add radiobutton -label "Up vector +X" \
+		-variable $this-pos -value z1_x1 -command "$this-c Views" 
+	$w.bframe.dolly.views.def.m.posz add radiobutton -label "Up vector -X" \
+		-variable $this-pos -value z1_x0 -command "$this-c Views"
+	$w.bframe.dolly.views.def.m.posz add radiobutton -label "Up vector +Y" \
+		-variable $this-pos -value z1_y1 -command "$this-c Views"
+	$w.bframe.dolly.views.def.m.posz add radiobutton -label "Up vector -Y" \
+		-variable $this-pos -value z1_y0 -command "$this-c Views"
+
+	menu $w.bframe.dolly.views.def.m.negx
+	$w.bframe.dolly.views.def.m.negx add radiobutton -label "Up vector +Y" \
+		-variable $this-pos -value x0_y1 -command "$this-c Views"
+	$w.bframe.dolly.views.def.m.negx add radiobutton -label "Up vector -Y" \
+		-variable $this-pos -value x0_y0 -command "$this-c Views"
+	$w.bframe.dolly.views.def.m.negx add radiobutton -label "Up vector +Z" \
+		-variable $this-pos -value x0_z1 -command "$this-c Views"
+	$w.bframe.dolly.views.def.m.negx add radiobutton -label "Up vector -Z" \
+		-variable $this-pos -value x0_z0 -command "$this-c Views"
+
+	menu $w.bframe.dolly.views.def.m.negy
+	$w.bframe.dolly.views.def.m.negy add radiobutton -label "Up vector +X" \
+		-variable $this-pos -value y0_x1 -command "$this-c Views" 
+	$w.bframe.dolly.views.def.m.negy add radiobutton -label "Up vector -X" \
+		-variable $this-pos -value y0_x0 -command "$this-c Views"
+	$w.bframe.dolly.views.def.m.negy add radiobutton -label "Up vector +Z" \
+		-variable $this-pos -value y0_z1 -command "$this-c Views"
+	$w.bframe.dolly.views.def.m.negy add radiobutton -label "Up vector -Z" \
+		-variable $this-pos -value y0_z0 -command "$this-c Views"
+
+	menu $w.bframe.dolly.views.def.m.negz
+	$w.bframe.dolly.views.def.m.negz add radiobutton -label "Up vector +X" \
+		-variable $this-pos -value z0_x1 -command "$this-c Views" 
+	$w.bframe.dolly.views.def.m.negz add radiobutton -label "Up vector -X" \
+		-variable $this-pos -value z0_x0 -command "$this-c Views"
+	$w.bframe.dolly.views.def.m.negz add radiobutton -label "Up vector +Y" \
+		-variable $this-pos -value z0_y1 -command "$this-c Views"
+	$w.bframe.dolly.views.def.m.negz add radiobutton -label "Up vector -Y" \
+		-variable $this-pos -value z0_y0 -command "$this-c Views"
+
 	button $w.bframe.more -text "+" -padx 3 \
 		-font "-Adobe-Helvetica-bold-R-Normal-*-12-75-*" \
 		-command "$this addMFrame $w"
@@ -718,6 +805,9 @@ itcl_class Roe {
 	set "$this-$objid-clip" 0
 	set "$this-$objid-cull" 0
 	set "$this-$objid-dl" 0
+
+
+
 
 	set menuvar  $m.objlist.canvas.frame.menu2_$objid
 	set menup [tk_optionMenu $menuvar $this-$objid-type Wire Flat Gouraud Default]
