@@ -57,6 +57,8 @@
 #include <Packages/Teem/Dataflow/Ports/NrrdPort.h>
 #include <Core/GuiInterface/GuiVar.h>
 
+#include <sci_defs.h>
+
 #ifdef HAVE_INSIGHT
 #include <Core/Algorithms/DataIO/DicomSeriesReader.h>
 #include <Core/Algorithms/DataIO/DicomImage.h>
@@ -546,7 +548,7 @@ int DicomNrrdReader::build_nrrds( vector<Nrrd*> & array )
     int dim = image.get_dimension();
     if( dim == 3 ) 
     {
-      if( nrrdWrap(nrrd, image.get_pixel_buffer(), nrrdTypeInt, 
+      if( nrrdWrap(nrrd, image.get_pixel_buffer(), image.get_nrrd_type(), 
                3, image.get_size(0), 
                image.get_size(1), image.get_size(2)) ) 
       {
@@ -577,7 +579,7 @@ int DicomNrrdReader::build_nrrds( vector<Nrrd*> & array )
     }
     else if( dim == 2 ) 
     {
-      if( nrrdWrap(nrrd, image.get_pixel_buffer(), nrrdTypeInt, 
+      if( nrrdWrap(nrrd, image.get_pixel_buffer(), image.get_nrrd_type(), 
                2, image.get_size(0), 
                image.get_size(1)) ) 
       {
