@@ -34,7 +34,8 @@ SRCS     += \
 	$(SRCDIR)/NrrdPad.cc\
 	$(SRCDIR)/NrrdPermute.cc\
 	$(SRCDIR)/NrrdQuantize.cc\
-	$(SRCDIR)/NrrdResample.cc
+	$(SRCDIR)/NrrdResample.cc\
+	$(SRCDIR)/NrrdSelectTime.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Packages/Teem/Core/Datatypes Core/Datatypes \
