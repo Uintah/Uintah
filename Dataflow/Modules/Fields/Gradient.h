@@ -36,6 +36,9 @@
 #include <Core/Datatypes/Mesh.h>
 
 #include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Tensor.h>
+
 
 namespace SCIRun {
 
@@ -46,12 +49,11 @@ public:
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *ftd,
-					    const TypeDescription *ttd);
+					    const TypeDescription *ttd,
+					    const TypeDescription *otd);
 };
 
 
-
-#ifdef __sgi
 template< class IFIELD, class OFIELD >
 class GradientAlgoT : public GradientAlgo
 {
@@ -77,17 +79,13 @@ GradientAlgoT<IFIELD, OFIELD>::execute(FieldHandle& field_h)
   imesh->begin( in );
   imesh->end( end );
 
-  ifield->get_typed_mesh()->begin( out );
+  ofield->get_typed_mesh()->begin( out );
 
-  Point pt;
-  Vector vec;
+  typename OFIELD::value_type gradient;
 
-  while (in != end)
-  {
-//    imesh->get_center(pt, *in);
-//    ifield->get_gradient(vec, pt);
-    vec=ifield->cell_gradient(*in);
-    ofield->set_value(vec, *out);
+  while (in != end) {
+    gradient = ifield->cell_gradient(*in);
+    ofield->set_value(gradient, *out);
     ++in; ++out;
   }
 
@@ -95,52 +93,6 @@ GradientAlgoT<IFIELD, OFIELD>::execute(FieldHandle& field_h)
 
   return FieldHandle( ofield );
 }
-
-#else
-template< template<class> class FIELD, class TYPE >
-class GradientAlgoT : public GradientAlgo
-{
-public:
-  //! virtual interface. 
-  virtual FieldHandle execute(FieldHandle& src);
-};
-
-
-template< template<class> class FIELD, class TYPE >
-FieldHandle
-GradientAlgoT<FIELD, TYPE>::execute(FieldHandle& field_h)
-{
-  FIELD<TYPE> *ifield = (FIELD<TYPE> *) field_h.get_rep();
-
-  typename FIELD<TYPE>::mesh_handle_type imesh = ifield->get_typed_mesh();
-    
-  FIELD<Vector> *ofield = scinew FIELD<Vector>(imesh, Field::CELL);
-
-  typename FIELD<TYPE>::mesh_type::Cell::iterator in, end;
-  typename FIELD<Vector>::mesh_type::Cell::iterator out;
-
-  imesh->begin( in );
-  imesh->end( end );
-
-  ifield->get_typed_mesh()->begin( out );
-
-  Point pt;
-  Vector vec;
-
-  while (in != end)
-  {
-//    imesh->get_center(pt, *in);
-//    ifield->get_gradient(vec, pt);
-    vec=ifield->cell_gradient(*in);
-    ofield->set_value(vec, *out);
-    ++in; ++out;
-  }
-
-  ofield->freeze();
-
-  return FieldHandle( ofield );
-}
-#endif
 
 } // end namespace SCIRun
 

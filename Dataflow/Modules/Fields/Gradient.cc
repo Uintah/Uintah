@@ -82,22 +82,29 @@ Gradient::execute()
     return;
   }
 
-  if (!fieldin->query_scalar_interface(this).get_rep())
-  {
-    error( "This module only works on fields of scalar data." );
+  TypeDescription *otd = 0;
+
+  if (fieldin->query_scalar_interface(this).get_rep() )
+    otd = (TypeDescription *) SCIRun::get_type_description( (Vector*) 0 );
+
+  else if (fieldin->query_vector_interface(this).get_rep())
+    otd = (TypeDescription *) SCIRun::get_type_description( (Tensor*) 0 );
+
+  else {
+    error( "This module only works on fields of scalar or vector data.");
     return;
   }
 
   // If no data or a changed recalcute.
   if( !fieldout_.get_rep() ||
-      fGeneration_ != fieldin->generation )
-  {
+      fGeneration_ != fieldin->generation ) {
     fGeneration_ = fieldin->generation;
 
-    const TypeDescription *ftd  = fieldin->get_type_description(0);
+    const TypeDescription *ftd = fieldin->get_type_description(0);
     const TypeDescription *ttd = fieldin->get_type_description(1);
 
-    CompileInfoHandle ci = GradientAlgo::get_compile_info(ftd,ttd);
+    CompileInfoHandle ci =
+      GradientAlgo::get_compile_info(ftd, ttd, otd);
     Handle<GradientAlgo> algo;
     if (!module_dynamic_compile(ci, algo)) return;
 
@@ -105,12 +112,10 @@ Gradient::execute()
   }
 
   // Get a handle to the output field port.
-  if ( fieldout_.get_rep() )
-  {
+  if ( fieldout_.get_rep() ) {
     FieldOPort* ofp = (FieldOPort *) get_oport("Output Gradient");
 
-    if (!ofp)
-    {
+    if (!ofp) {
       error("Unable to initialize oport 'Output Gradient'.");
       return;
     }
@@ -122,7 +127,8 @@ Gradient::execute()
 
 CompileInfoHandle
 GradientAlgo::get_compile_info(const TypeDescription *ftd,
-			       const TypeDescription *ttd)
+			       const TypeDescription *ttd,
+			       const TypeDescription *otd )
 {
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
@@ -131,18 +137,12 @@ GradientAlgo::get_compile_info(const TypeDescription *ftd,
 
   CompileInfo *rval = 
     scinew CompileInfo(template_class_name + "." +
-		       ftd->get_filename() +
+		       ftd->get_filename() + "." +
 		       ttd->get_filename() + ".",
                        base_class_name, 
                        template_class_name, 
-
-#ifdef __sgi
-                       ftd->get_name() + "<" + ttd->get_name()+ " >" + ", " +
-                       ftd->get_name() + "<Vector > ");
-#else
-                       ftd->get_name() + ", " +
-		       ttd->get_name());
-#endif
+                       ftd->get_name() + "<" + ttd->get_name() + " >" + ", " +
+                       ftd->get_name() + "<" + otd->get_name() + ">" );
   
   // Add in the include path to compile this obj
   rval->add_include(include_path);
@@ -151,6 +151,3 @@ GradientAlgo::get_compile_info(const TypeDescription *ftd,
 }
 
 } // End namespace SCIRun
-
-
-
