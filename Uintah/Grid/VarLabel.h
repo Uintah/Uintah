@@ -69,8 +69,7 @@ namespace Uintah {
 	 return d_td;
       }
 
-      void allowMultipleComputes()
-      { d_allowMultipleComputes = true; }
+      void allowMultipleComputes();
 
       bool allowsMultipleComputes() const
       { return d_allowMultipleComputes; }
@@ -107,6 +106,9 @@ ostream & operator<<( ostream & out, const Uintah::VarLabel & vl );
 
 //
 // $Log$
+// Revision 1.16  2001/01/05 20:09:29  witzel
+// Only let reduction VarLabel's allow multiple computes.
+//
 // Revision 1.15  2001/01/04 22:32:34  witzel
 // Added allowMultipleComputes flag to allow one to indicate that a
 // VarLabel may be computed multiple times in a taskgraph without conflict
