@@ -80,6 +80,7 @@
           <tolerance>5.0e-10</tolerance>
           <include href="../MaterialData/IsotropicElasticAnnCopper.xml"/>
           <include href="../MaterialData/VonMisesYield.xml"/>
+          <include href="../MaterialData/NoStabilityCheck.xml"/>
           <include href="../MaterialData/MTSPlasticAnnCopper.xml"/>
           <include href="../MaterialData/JohnsonCookDamageAnnCopper.xml"/>
           <include href="../MaterialData/DefaultHypoEOS.xml"/>
@@ -90,7 +91,7 @@
             <top>[0.0,3.24e-2,0.0]</top>
             <radius>0.32e-2</radius>
           </cylinder>
-          <res>[3,3,3]</res>
+          <res>[1,1,1]</res>
           <velocity>[0.0,-227.0,0.0]</velocity>
           <temperature>294</temperature>
         </geom_object>
@@ -110,8 +111,8 @@
       <Box label = "1">
         <lower>[0.0,-0.2e-2,0.0]</lower>
         <upper>[1.0e-2,3.5e-2,1.0e-2]</upper>
-        <resolution>[20,35,20]</resolution>
-        <patches>[1,2,1]</patches>
+        <resolution>[10,10,10]</resolution>
+        <patches>[1,1,1]</patches>
       </Box>
     </Level>
     <BoundaryConditions>

@@ -68,6 +68,7 @@
            <damage_cutoff>0.2</damage_cutoff>
            <include href="MaterialData/IsotropicElastic4340Steel.xml"/>
            <include href="MaterialData/VonMisesYield.xml"/>
+           <include href="MaterialData/NoStabilityCheck.xml"/>
            <include href="MaterialData/JohnsonCookPlastic4340Steel.xml"/>
            <include href="MaterialData/JohnsonCookDamage4340Steel.xml"/>
            <include href="MaterialData/MieGruneisenEOS4340Steel.xml"/>
