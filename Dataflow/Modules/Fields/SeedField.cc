@@ -12,7 +12,6 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/MeshPort.h>
-#include <Dataflow/Ports/SurfacePort.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MusilRNG.h>

@@ -288,7 +288,7 @@ TriSurf::add_find_point(const Point &p, double err)
   }
   else
   {
-    points_.push_back(p);
+    points_.add(p);
     return points_.size() - 1;
   }
 }
@@ -300,15 +300,15 @@ TriSurf::add_triangle(node_index a, node_index b, node_index c,
 {
   if (cw_p)
   {
-    faces_.push_back(a);
-    faces_.push_back(b);
-    faces_.push_back(c);
+    faces_.add(a);
+    faces_.add(b);
+    faces_.add(c);
   }
   else
   {
-    faces_.push_back(c);
-    faces_.push_back(b);
-    faces_.push_back(a);
+    faces_.add(c);
+    faces_.add(b);
+    faces_.add(a);
   }
 }
 

@@ -4,8 +4,7 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Core/Datatypes
 
-SRCS += $(SRCDIR)/BasicSurfaces.cc	    \
-	$(SRCDIR)/Brick.cc		    \
+SRCS += $(SRCDIR)/Brick.cc		    \
         $(SRCDIR)/ColorMap.cc		    \
         $(SRCDIR)/ColumnMatrix.cc	    \
         $(SRCDIR)/Datatype.cc		    \
@@ -29,12 +28,9 @@ SRCS += $(SRCDIR)/BasicSurfaces.cc	    \
         $(SRCDIR)/ScalarFieldUG.cc	    \
         $(SRCDIR)/ScalarFieldZone.cc	    \
         $(SRCDIR)/SparseRowMatrix.cc	    \
-        $(SRCDIR)/SurfTree.cc		    \
-        $(SRCDIR)/Surface.cc		    \
         $(SRCDIR)/SymSparseRowMatrix.cc	    \
         $(SRCDIR)/TriDiagonalMatrix.cc	    \
         $(SRCDIR)/TriSurf.cc		    \
-        $(SRCDIR)/TriSurface.cc		    \
 	$(SRCDIR)/TypeName.cc		    \
         $(SRCDIR)/VectorField.cc	    \
         $(SRCDIR)/VectorFieldHUG.cc	    \

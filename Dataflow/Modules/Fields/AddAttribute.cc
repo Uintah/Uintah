@@ -17,8 +17,8 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/Datatypes/ColumnMatrix.h>
-#include <Dataflow/Ports/SurfacePort.h>
-#include <Core/Datatypes/TriSurface.h>
+#include <Dataflow/Ports/FieldPort.h>
+#include <Core/Datatypes/TriSurf.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Math/Expon.h>
 
@@ -33,11 +33,11 @@ namespace SCIRun {
 
 class AddAttribute : public Module
 {
-  SurfaceIPort      *isurf_;
+  FieldIPort         *isurf_;
   MatrixIPort *imat_;
   GuiString          surfid_;
 
-  SurfaceOPort      *osurf_;
+  FieldOPort      *osurf_;
 
 public:
   AddAttribute(const clString& id);
@@ -54,13 +54,13 @@ extern "C" Module* make_AddAttribute(const clString& id)
 AddAttribute::AddAttribute(const clString& id)
   : Module("AddAttribute", id, Filter), surfid_("surfid", id, this)
 {
-  isurf_ = new SurfaceIPort(this, "SurfIn", SurfaceIPort::Atomic);
+  isurf_ = new FieldIPort(this, "SurfIn", FieldIPort::Atomic);
   add_iport(isurf_);
   imat_ = new MatrixIPort(this, "MatIn", MatrixIPort::Atomic);
   add_iport(imat_);
 
   // Create the output port
-  osurf_ = new SurfaceOPort(this, "SurfOut", SurfaceIPort::Atomic);
+  osurf_ = new FieldOPort(this, "SurfOut", FieldIPort::Atomic);
   add_oport(osurf_);
 }
 
@@ -73,15 +73,13 @@ AddAttribute::execute()
 {
   update_state(NeedData);
 
-  SurfaceHandle sh;
+  FieldHandle sh;
   if (!isurf_->get(sh))
-    return;
-  if (!sh.get_rep())
   {
-    cerr << "Error: empty surface\n";
     return;
   }
-  TriSurface *ts = sh->getTriSurface();
+  //TriSurf *ts = sh.get_rep();  // FIXME: extract surf from field
+  TriSurf *ts = 0;
   if (!ts)
   {
     cerr << "Error: surface isn't a trisurface\n";
@@ -103,7 +101,7 @@ AddAttribute::execute()
   // Make new field with same geometry, imat_ indexed data set.
 
 
-  osurf_->send(sh);
+  //osurf_->send(sh);  // TODO: fix this, send surface field
 }
 
 

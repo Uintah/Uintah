@@ -12,7 +12,6 @@ find . -name "*.ii" -print | xargs cat | sort | uniq -c | sort -nr | more
  */
 
 #include <Dataflow/Ports/SimplePort.h>
-#include <Core/Datatypes/Surface.h>
 #include <Core/Datatypes/ScalarField.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/ColorMap.h>
@@ -20,9 +19,6 @@ find . -name "*.ii" -print | xargs cat | sort | uniq -c | sort -nr | more
 #include <Core/Datatypes/Mesh.h>
 
 using namespace SCIRun;
-
-template class SimpleIPort<SurfaceHandle>;
-template class SimpleOPort<SurfaceHandle>;
 
 template class SimpleIPort<ScalarFieldHandle>;
 template class SimpleOPort<ScalarFieldHandle>;

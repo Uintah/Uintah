@@ -13,7 +13,6 @@
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/MeshPort.h>
-#include <Dataflow/Ports/SurfacePort.h>
 #include <Dataflow/Widgets/ArrowWidget.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Geom/GeomLine.h>
