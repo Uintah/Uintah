@@ -20,7 +20,8 @@
 
    <DataArchiver>
         <filebase>cyljp8.uda</filebase>
-	<outputTimestepInterval>2</outputTimestepInterval>
+	<outputInterval>0.1</outputInterval>
+	<compression>gzip</compression>
 
 	<save label="mmgasVolFrac"/>
 	<save label = "KineticEnergy"/>
