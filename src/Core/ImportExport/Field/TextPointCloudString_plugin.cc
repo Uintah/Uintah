@@ -91,11 +91,16 @@ TextPointCloudString_reader(ProgressReporter *pr, const char *filename)
     {
       break;
     }
-    pcm->add_point(Point(x, y, z));
+    const Point p(x, y, z);
+    pcm->add_point(p);
     
     ptsstream.get(c); // Eat up the one whitespace between z and the string.
     ptsstream.getline(buffer, 1024);
     strings.push_back(string(buffer));
+
+    pr->msgStream() << "Added point " << p <<
+      " with text '" << string(buffer) << "'" << endl;
+    pr->msgStream_flush();
   }
 
   PointCloudField<string> *pc = 
