@@ -216,10 +216,9 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
         } 
       }   
       if (numMatls > 1 ) {
-        if( count > 0)
-        {
+        if( count > 0)  {
            vol_frac_CC[*iter]= count/totalppc;       
-        }  //Bracket goes here for only -ice problems..cheese. 
+	}  //Bracket goes here for only -ice problems..cheese. 
            press_CC[*iter]   = d_geom_objs[obj]->getInitialPressure();
            vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();
            rho_micro[*iter]  = d_geom_objs[obj]->getInitialDensity();
@@ -229,7 +228,7 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
            speedSound[*iter] = d_speed_of_sound;
            visc_CC[*iter]    = d_viscosity;
            IveBeenHere[*iter]= obj; 
-       //} //Bracket goes here for MPMICE problems  this is cheese
+	   // } //Bracket goes here for MPMICE problems  this is cheese
            vel_CC[*iter]     = d_geom_objs[obj]->getInitialVelocity();  
            press_CC[*iter]   = d_geom_objs[obj]->getInitialPressure();
            rho_micro[*iter]  = d_geom_objs[obj]->getInitialDensity();

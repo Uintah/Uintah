@@ -96,13 +96,13 @@ WARNING
 				      double& dp_de);
                                   
        //per patch                          
-        virtual void computeTemp_CC(const Patch* patch,
-                                const CCVariable<double>& press, 
-                                const double& gamma,
-				    const double& cv,
-                                const CCVariable<double>& rho_micro, 
-                                CCVariable<double>& Temp);
-
+        virtual void computeTempCC(const Patch* patch,
+				   const CCVariable<double>& press, 
+				   const double& gamma,
+				   const double& cv,
+				   const CCVariable<double>& rho_micro, 
+				   CCVariable<double>& Temp);
+	
         protected:
 
 	 ICELabel* lb;

@@ -96,7 +96,7 @@ WARNING
 				      double& dp_de);
                                   
        //per patch                          
-        virtual void computeTemp_CC(const Patch* patch,
+        virtual void computeTempCC(const Patch* patch,
                                 const CCVariable<double>& press, 
                                 const double& gamma,
 				    const double& cv,
