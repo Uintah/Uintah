@@ -1376,7 +1376,7 @@ HypoElasticPlastic::addInitialComputesAndRequires(Task* task,
   task->computes(pLocalizedLabel, matlset);
   task->computes(pPlasticTempLabel, matlset);
   task->computes(pPlasticTempIncLabel, matlset);
- 
+
   // Add internal evolution variables computed by plasticity model
   d_plastic->addInitialComputesAndRequires(task, matl, patch);
 }
@@ -1699,7 +1699,7 @@ void HypoElasticPlastic::checkNeedAddMPMMaterial(const PatchSubset* patches,
     for( ; iter != pset->end(); iter++){
       particleIndex idx = *iter;
       if(pPlasticStrain[idx]>1.e-1){
-        need_add=1.;
+        need_add = -1.;
       }
     }
   }
