@@ -75,7 +75,6 @@ class Satellite : public UVSphere
   {
 #if 1
     if (parent_) {
-      parent_->compute_bounds(bbox,offset);
       Point center = parent_->get_center();
       bbox.extend(center);
       Point extent = 
@@ -96,7 +95,6 @@ class Satellite : public UVSphere
       extent = Point(center.x(),center.y(),
                      center.z()-(radius+offset));
       bbox.extend( extent );
-
     } else {
       bbox.extend(cen, orb_radius_+radius+offset);
     }
