@@ -93,7 +93,7 @@ itcl_class BioPSE_Visualization_ShowDipoles {
 
         pack $w.f -side top -fill x -expand yes
 
-	makeSciButtonPanel $w $w $this "Reset" "$this-c reset" "Reset to input."
+	makeSciButtonPanel $w $w $this "\"Reset\" \"$this-c reset\" \"Reset to input.\""
 	moveToCursor $w
     }
 }
