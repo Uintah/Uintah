@@ -263,6 +263,9 @@ MPMLabel::MPMLabel()
   StrainEnergyLabel = VarLabel::create( "StrainEnergy",
 			sum_vartype::getTypeDescription() );
 
+  AccStrainEnergyLabel = VarLabel::create( "AccStrainEnergy",
+			max_vartype::getTypeDescription() );
+
   KineticEnergyLabel = VarLabel::create( "KineticEnergy",
 			sum_vartype::getTypeDescription() );
 
@@ -324,6 +327,20 @@ MPMLabel::MPMLabel()
 
   pVolumeOldLabel_preReloc = VarLabel::create("pVolumeOld+",
 			       ParticleVariable<double>::getTypeDescription()); 
+
+  // MPM Physical BC labels (permanent particle state)
+  materialPointsPerLoadCurveLabel = VarLabel::create("pointsPerCurve", 
+                            sumlong_vartype::getTypeDescription());
+  pLoadCurveIDLabel = VarLabel::create("p.loadCurveID",
+                            ParticleVariable<int>::getTypeDescription());
+  pLoadCurveIDLabel_preReloc = VarLabel::create("p.loadCurveID+",
+                            ParticleVariable<int>::getTypeDescription());
+
+  // MPM Artificial Damping labels (updated after each time step)
+  pDampingRateLabel = VarLabel::create("dampingRate", 
+                      sum_vartype::getTypeDescription());
+  pDampingCoeffLabel = VarLabel::create("dampingCoeff", 
+                       max_vartype::getTypeDescription());
 } 
 
 MPMLabel::~MPMLabel()
@@ -412,6 +429,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(delTLabel);
   VarLabel::destroy(doMechLabel);
 
+  VarLabel::destroy(AccStrainEnergyLabel);
   VarLabel::destroy(StrainEnergyLabel);
   VarLabel::destroy(KineticEnergyLabel);
   VarLabel::destroy(TotalMassLabel);
@@ -434,6 +452,13 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(bElBarLabel_preReloc);
   VarLabel::destroy(pVolumeOldLabel_preReloc);
 
+  // Destroy the MPM Physical BC pointer labels
+  VarLabel::destroy(materialPointsPerLoadCurveLabel);
+  VarLabel::destroy(pLoadCurveIDLabel);
+  VarLabel::destroy(pLoadCurveIDLabel_preReloc);
+  // Destroy the MPM Damping rate labels
+  VarLabel::destroy(pDampingRateLabel);
+  VarLabel::destroy(pDampingCoeffLabel);
 }
 
 void MPMLabel::registerPermanentParticleState(int i,

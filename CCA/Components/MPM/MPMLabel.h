@@ -110,6 +110,7 @@ using std::vector;
       const VarLabel* heaTranSolid_NCLabel; //for interaction with Arches, Heat Transfer
 
       const VarLabel* StrainEnergyLabel;
+      const VarLabel* AccStrainEnergyLabel;
       const VarLabel* KineticEnergyLabel;
       const VarLabel* TotalMassLabel;
       const VarLabel* NTractionZMinusLabel;
@@ -137,6 +138,15 @@ using std::vector;
       const VarLabel* bElBarLabel_preReloc;
       const VarLabel* pAccelerationLabel_preReloc;
       const VarLabel* pVolumeOldLabel_preReloc;
+
+      // MPM Physical BC labels (permanent particle state)
+      const VarLabel* materialPointsPerLoadCurveLabel;
+      const VarLabel* pLoadCurveIDLabel;
+      const VarLabel* pLoadCurveIDLabel_preReloc;
+
+      // MPM artificial damping labels (updated after each time step)
+      const VarLabel* pDampingRateLabel; // Damping rate summed over particles
+      const VarLabel* pDampingCoeffLabel; // Calculated damping coefficient
     };
 } // End namespace Uintah
 
