@@ -37,6 +37,7 @@ enum WidgetTypes {Point, Arrow, Guage, Ring, Frame, SFrame, Square, SSquare, Box
 
 class WidgetTest : public Module {
     GeometryOPort* ogeom;
+    CrowdMonitor widget_lock;
 
 private:
     int init;
@@ -73,18 +74,18 @@ WidgetTest::WidgetTest(const clString& id)
     ogeom=new GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
     add_oport(ogeom);
 
-    widgets[Point]=new PointWidget(this, .1);
-    widgets[Arrow]=new ArrowWidget(this, .1);
-    widgets[Guage]=new GuageWidget(this, .1);
-    widgets[Ring]=new RingWidget(this, .1);
-    widgets[Frame]=new FrameWidget(this, .1);
-    widgets[SFrame]=new ScaledFrameWidget(this, .1);
-    widgets[Square]=new SquareWidget(this, .1);
-    widgets[SSquare]=new ScaledSquareWidget(this, .1);
-    widgets[Box]=new BoxWidget(this, .1);
-    widgets[SBox]=new ScaledBoxWidget(this, .1);
-    widgets[Cube]=new CubeWidget(this, .1);
-    widgets[SCube]=new ScaledCubeWidget(this, .1);
+    widgets[Point]=new PointWidget(this, &widget_lock, .1);
+    widgets[Arrow]=new ArrowWidget(this, &widget_lock, .1);
+    widgets[Guage]=new GuageWidget(this, &widget_lock, .1);
+    widgets[Ring]=new RingWidget(this, &widget_lock, .1);
+    widgets[Frame]=new FrameWidget(this, &widget_lock, .1);
+    widgets[SFrame]=new ScaledFrameWidget(this, &widget_lock, .1);
+    widgets[Square]=new SquareWidget(this, &widget_lock, .1);
+    widgets[SSquare]=new ScaledSquareWidget(this, &widget_lock, .1);
+    widgets[Box]=new BoxWidget(this, &widget_lock, .1);
+    widgets[SBox]=new ScaledBoxWidget(this, &widget_lock, .1);
+    widgets[Cube]=new CubeWidget(this, &widget_lock, .1);
+    widgets[SCube]=new ScaledCubeWidget(this, &widget_lock, .1);
 
     widget_scale.set(.1);
     init = 1;
@@ -116,14 +117,16 @@ void WidgetTest::execute()
 	GeomGroup* w = new GeomGroup;
 	for(int i=0;i<NumWidgetTypes;i++)
 	   w->add(widgets[i]->GetWidget());
-	widget_id = ogeom->addObj(w, module_name);
+	widget_id = ogeom->addObj(w, module_name, &widget_lock);
     }
 
+    widget_lock.write_lock();
     for(int i=0;i<NumWidgetTypes;i++)
        widgets[i]->SetState(0);
     
     widgets[widget_type.get()]->SetState(1);
     widgets[widget_type.get()]->SetScale(widget_scale.get());
+    widget_lock.write_unlock();
     widgets[widget_type.get()]->execute();
     ogeom->flushViews();
 }

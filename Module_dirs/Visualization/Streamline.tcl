@@ -16,7 +16,7 @@ proc uiStreamline {modid} {
     label $w.f.widgets.label -text "Source:"
     pack $w.f.widgets.label -padx 2 -side left
     global source,$modid
-    set source,$modid "Ring"
+    set source,$modid "Line"
     radiobutton $w.f.widgets.point -text Point -relief flat \
 	-variable source,$modid -value Point -command $n
     radiobutton $w.f.widgets.line -text Line -relief flat \
