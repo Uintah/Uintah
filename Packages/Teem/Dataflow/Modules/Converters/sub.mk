@@ -27,70 +27,43 @@
 #
 
 
-##
- #  NrrdToMatrix.tcl
- #  Written by:
- #   Darby Van Uitert
- #   April 2004
- ##
+# *** NOTE ***
+# Do not remove or modify the comment line:
+# #[INSERT NEW ?????? HERE]
+# It is required by the Core/CCA/Component Wizard to properly edit this file.
+# if you want to edit this file by hand, see the "Create A New Core/CCA/Component"
+# documentation on how to do it correctly.
 
-itcl_class Teem_Converters_NrrdToMatrix {
-    inherit Module
-    constructor {config} {
-        set name NrrdToMatrix
-        set_defaults
-    }
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-    method set_defaults {} {
-	global $this-cols
-	global $this-entry
-	global $this-which
-
-	set $this-cols {-1}
-	set $this-entry 3
-	set $this-which 0
-
-	trace variable $this-entry w "$this entry_changed"
-    }
-
-    method entry_changed {name1 name2 op} {
-	update_which
-    }
-
-    method update_which {} {
-	if {[set $this-which] == 1} {
-	    # user specifies columns
-	    set $this-cols [set $this-entry]
-	} else {
-	    # auto
-	    set $this-cols {-1}
-	}
-    }
-
-    method ui {} {
-        set w .ui[modname]
-        if {[winfo exists $w]} {
-            return
-        }
-
-        toplevel $w
-
-	frame $w.cols
-	pack $w.cols -side top -anchor nw -padx 3 -pady 3
-	radiobutton $w.cols.auto -text "Auto" \
-	    -variable $this-which \
-	    -value 0 \
-	    -command "$this update_which"
-	radiobutton $w.cols.spec -text "Columns (for Sparse Row Matrix): " \
-	    -variable $this-which \
-	    -value 1 \
-	    -command "$this update_which"
-	entry $w.cols.e -textvariable $this-entry 
-	pack $w.cols.auto $w.cols.spec $w.cols.e -side left -anchor nw -padx 3 -pady 3
-
-	makeSciButtonPanel $w $w $this
-	moveToCursor $w
-    }
-}
+INCLUDES += $(TEEM_INCLUDE)
 
 
+
+SRCDIR   := Packages/Teem/Dataflow/Modules/Converters
+
+
+SRCS     += \
+	$(SRCDIR)/ColorMapToNrrd.cc\
+	$(SRCDIR)/ConvertToNrrd.cc\
+	$(SRCDIR)/FieldToNrrd.cc\
+	$(SRCDIR)/NrrdToColorMap2.cc\
+	$(SRCDIR)/NrrdToField.cc\
+	$(SRCDIR)/NrrdToMatrix.cc\
+	$(SRCDIR)/MatrixToNrrd.cc\
+#[INSERT NEW CODE FILE HERE]
+
+PSELIBS := Core/Datatypes Core/Persistent Core/Containers \
+	Core/Util Core/Exceptions Core/Thread Core/GuiInterface \
+        Core/Geom Core/Geometry Core/GeomInterface \
+        Core/TkExtensions Core/Algorithms/DataIO \
+	Dataflow/Network Dataflow/Ports \
+
+LIBS := $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(MAGICK_LIBRARY)
+
+
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
+
+ifeq ($(LARGESOS),no)
+TEEM_MODULES := $(TEEM_MODULES) $(LIBNAME)
+endif

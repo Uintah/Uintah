@@ -98,7 +98,7 @@ public:
 
 DECLARE_MAKER(NrrdToMatrix)
 NrrdToMatrix::NrrdToMatrix(GuiContext* ctx)
-  : Module("NrrdToMatrix", ctx, Source, "DataIO", "Teem"),
+  : Module("NrrdToMatrix", ctx, Source, "Converters", "Teem"),
     ndata_(0), nrows_(0), ncols_(0), omat_(0),
     data_generation_(-1), rows_generation_(-1), 
     cols_generation_(-1), has_error_(false),

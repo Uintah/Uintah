@@ -56,7 +56,7 @@ private:
 DECLARE_MAKER(NrrdToColorMap2)
 
 NrrdToColorMap2::NrrdToColorMap2(GuiContext* ctx) : 
-  Module("NrrdToColorMap2", ctx, Filter, "Visualization", "SCIRun"),
+  Module("NrrdToColorMap2", ctx, Filter, "Converters", "Teem"),
   ocmap_h_(0),
   in_nrrd_gen_(-1)
 {

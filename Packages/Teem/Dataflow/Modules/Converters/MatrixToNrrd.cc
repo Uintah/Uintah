@@ -79,7 +79,7 @@ public:
 
 DECLARE_MAKER(MatrixToNrrd)
 MatrixToNrrd::MatrixToNrrd(GuiContext* ctx)
-  : Module("MatrixToNrrd", ctx, Source, "DataIO", "Teem"),
+  : Module("MatrixToNrrd", ctx, Source, "Converters", "Teem"),
     imat_(0), ndata_(0), nrows_(0), ncols_(0),
     matrix_generation_(-1)
 {

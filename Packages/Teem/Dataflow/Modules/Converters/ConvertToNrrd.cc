@@ -30,7 +30,7 @@
 //    Author : Martin Cole
 //    Date   : Tue Jan  7 10:24:59 2003
 
-#include <Teem/Dataflow/Modules/DataIO/ConvertToNrrd.h>
+#include <Teem/Dataflow/Modules/Converters/ConvertToNrrd.h>
 
 namespace SCIRun {
 

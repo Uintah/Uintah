@@ -31,7 +31,7 @@
 
 
 
-<component name="FieldToNrrd" category="DataIO">
+<component name="FieldToNrrd" category="Converters">
   <overview>
     <authors>
       <author>David Weinstein</author>

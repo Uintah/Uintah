@@ -30,7 +30,7 @@
 -->
 
 
-<component name="MatrixToNrrd" category="DataIO">
+<component name="MatrixToNrrd" category="Converters">
   <overview>
     <author>Darby Van Uitert
     </author>

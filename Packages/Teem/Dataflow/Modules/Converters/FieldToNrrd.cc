@@ -47,7 +47,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Datatypes/FieldInterface.h>
-#include <Teem/Dataflow/Modules/DataIO/ConvertToNrrd.h>
+#include <Teem/Dataflow/Modules/Converters/ConvertToNrrd.h>
 #include <iostream>
 #include <utility>
 
@@ -81,7 +81,7 @@ DECLARE_MAKER(FieldToNrrd)
 
 
 FieldToNrrd::FieldToNrrd(GuiContext *ctx):
-  Module("FieldToNrrd", ctx, Filter, "DataIO", "Teem"),
+  Module("FieldToNrrd", ctx, Filter, "Converters", "Teem"),
   label_(ctx->subVar("label")),
   ifield_generation_(-1),
   points_handle_(0),  connect_handle_(0),  data_handle_(0)
