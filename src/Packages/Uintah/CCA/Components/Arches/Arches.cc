@@ -423,10 +423,10 @@ Arches::computeStableTimeStep(const ProcessorGroup* ,
 		(1.0/(cellinfo->sew[colX]*cellinfo->sew[colX]) +
 		 1.0/(cellinfo->sns[colY]*cellinfo->sns[colY]) +
 		 1.0/(cellinfo->stb[colZ]*cellinfo->stb[colZ])) +
-		small_num;
 		//		2.0*KStabilityU[currCell] +
 		//		2.0*KStabilityV[currCell] +
 		//		2.0*KStabilityW[currCell] +
+		small_num;
 	    }
 	    else {
 	      tmp_time=Abs(uVelocity[currCell])/(cellinfo->sew[colX])+
