@@ -2042,10 +2042,17 @@ GeomCLines::draw(DrawInfoOpenGL* di, Material* matl, double)
   glLineWidth(line_width_);
 
   glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
-  glColorPointer(4, GL_UNSIGNED_BYTE, 0, &(colors_.front()));
-
   glEnableClientState(GL_VERTEX_ARRAY);
-  glEnableClientState(GL_COLOR_ARRAY);
+
+  if (colors_.size())
+  {
+    glColorPointer(4, GL_UNSIGNED_BYTE, 0, &(colors_.front()));
+    glEnableClientState(GL_COLOR_ARRAY);
+  }
+  else
+  {
+    glDisableClientState(GL_COLOR_ARRAY);
+  }
 
   glDrawArrays(GL_LINES, 0, points_.size()/3);
 
@@ -2125,10 +2132,17 @@ GeomTranspLines::draw(DrawInfoOpenGL* di, Material* matl, double)
   glLineWidth(line_width_);
 
   glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
-  glColorPointer(4, GL_UNSIGNED_BYTE, 0, &(colors_.front()));
-
   glEnableClientState(GL_VERTEX_ARRAY);
-  glEnableClientState(GL_COLOR_ARRAY);
+
+  if (colors_.size())
+  {
+    glColorPointer(4, GL_UNSIGNED_BYTE, 0, &(colors_.front()));
+    glEnableClientState(GL_COLOR_ARRAY);
+  }
+  else
+  {
+    glDisableClientState(GL_COLOR_ARRAY);
+  }
 
   if (di->dir == 1 && reverse ||
       di->dir == -1 && !reverse)
@@ -2589,8 +2603,15 @@ void GeomPoints::draw(DrawInfoOpenGL* di, Material* matl, double)
     glVertexPointer(3, GL_FLOAT, 0, &(points_[0]));
     glEnableClientState(GL_VERTEX_ARRAY);
 
-    glColorPointer(4, GL_UNSIGNED_BYTE, 0, &(colors_[0]));
-    glEnableClientState(GL_COLOR_ARRAY);
+    if (colors_.size())
+    {
+      glColorPointer(4, GL_UNSIGNED_BYTE, 0, &(colors_[0]));
+      glEnableClientState(GL_COLOR_ARRAY);
+    }
+    else
+    {
+      glDisableClientState(GL_COLOR_ARRAY);
+    }
 
     glDrawArrays(GL_POINTS, 0, points_.size()/3);
   }
@@ -2640,8 +2661,15 @@ void GeomTranspPoints::draw(DrawInfoOpenGL* di, Material* matl, double)
   glVertexPointer(3, GL_FLOAT, 0, &(points_[0]));
   glEnableClientState(GL_VERTEX_ARRAY);
 
-  glColorPointer(4, GL_UNSIGNED_BYTE, 0, &(colors_[0]));
-  glEnableClientState(GL_COLOR_ARRAY);
+  if (colors_.size())
+  {
+    glColorPointer(4, GL_UNSIGNED_BYTE, 0, &(colors_[0]));
+    glEnableClientState(GL_COLOR_ARRAY);
+  }
+  else
+  {
+    glDisableClientState(GL_COLOR_ARRAY);
+  }
 
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
