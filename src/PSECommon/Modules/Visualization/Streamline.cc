@@ -30,7 +30,6 @@ hook up user interface buttons
  */
 
 #include <SCICore/Tester/RigorousTest.h>
-#include <map.h>
 #include <SCICore/Math/Trig.h>
 #include <PSECore/Dataflow/Module.h>
 #include <PSECore/Datatypes/ColorMapPort.h>
@@ -65,6 +64,7 @@ hook up user interface buttons
 #include <PSECore/Widgets/RingWidget.h>
 #include <PSECore/Widgets/ScaledFrameWidget.h>
 
+#include <map.h>
 #include <iostream>
 using std::cerr;
 using std::endl;
@@ -247,7 +247,7 @@ class Streamline : public Module {
 
     int first_execute;
 
-    typedef map<int, SLSourceInfo*, less<int> > MapIntSLSourceInfo;
+    typedef map<int, SLSourceInfo*> MapIntSLSourceInfo;
     MapIntSLSourceInfo source_info;
 
     virtual void geom_moved(GeomPick*, int, double, const Vector&, void*);
@@ -2054,6 +2054,10 @@ void SLSourceInfo::pick_source(const clString& sname,
 
 //
 // $Log$
+// Revision 1.11  2000/03/17 18:47:06  dahart
+// Included STL map header files where I forgot them, and removed less<>
+// parameter from map declarations
+//
 // Revision 1.10  2000/03/17 09:27:35  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository
