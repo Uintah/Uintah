@@ -89,7 +89,6 @@ namespace Uintah {
 	intersectionAndMaybeDifferences<true>(A, B, AminusB, BminusA);
     }
 
-    static constHandle< ComputeSubset<T> > emptySubset;
   private:
     // May pass back Handles to same sets that came in.
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
@@ -232,10 +231,6 @@ namespace Uintah {
       total+=set[i]->size();
     return total;
   }
-
-  template <class T>
-  constHandle< ComputeSubset<T> > ComputeSubset<T>::emptySubset =
-  scinew ComputeSubset<T>(0);
   
   
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
@@ -253,7 +248,7 @@ namespace Uintah {
   {
     if (s1 == s2) {
       // for efficiency -- expedite when s1 and s2 point to the same thing 
-      setDifference1 = setDifference2 = ComputeSubset<T>::emptySubset;
+      setDifference1 = setDifference2 = scinew ComputeSubset<T>(0);
       return s1;
     }
     
