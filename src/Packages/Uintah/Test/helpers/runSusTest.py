@@ -16,7 +16,8 @@ def date ():
 def runSusTest(test, mode, susdir, algo, do_restart = "no"):
   datmode = mode
   ALGO = upper(algo)
-  testname = path.splitext(input(test))[0];
+  testname = path.splitext(input(test))[0]
+  putenv('OS', environ['OS'])
 
   if do_restart == "yes":
     print "%s-%s: Running restart test for %s on %s" % (ALGO, mode, testname, date())
