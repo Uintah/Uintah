@@ -22,10 +22,6 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Teem/Dataflow/Ports/NrrdPort.h>
 
-#include <sstream>
-#include <iostream>
-using std::endl;
-#include <stdio.h>
 
 namespace SCITeem {
 
@@ -41,14 +37,14 @@ private:
   NrrdIPort*      inrrd_;
   NrrdOPort*      onrrd_;
 
-  GuiString    axis_merge_list_;
+  GuiString       axes_;
 };
 
 DECLARE_MAKER(UnuAxmerge)
 
 UnuAxmerge::UnuAxmerge(SCIRun::GuiContext *ctx) : 
   Module("UnuAxmerge", ctx, Filter, "Unu", "Teem"), 
-  axis_merge_list_(ctx->subVar("axis_merge_list"))
+  axes_(ctx->subVar("axes"))
 {
 }
 
@@ -60,15 +56,15 @@ UnuAxmerge::execute()
 {
   NrrdDataHandle nrrd_handle;
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("nin");
-  onrrd_ = (NrrdOPort *)get_oport("nout");
+  inrrd_ = (NrrdIPort *)get_iport("InputNrrd");
+  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
   if (!inrrd_) {
-    error("Unable to initialize iport 'Nrrd'.");
+    error("Unable to initialize iport 'InputNrrd'.");
     return;
   }
   if (!onrrd_) {
-    error("Unable to initialize oport 'Nrrd'.");
+    error("Unable to initialize oport 'OutputNrrd'.");
     return;
   }
   if (!inrrd_->get(nrrd_handle))
@@ -80,10 +76,96 @@ UnuAxmerge::execute()
   }
 
   Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nout[2];
+  nout[0] = nrrdNew();
+  nout[1] = nrrdNew();
 
-  error("This module is a stub.  Implement me.");
+   // Determine the number of axes given
+  string axes = axes_.get();
+  int axesLen = 0;
+  char ch;
+  int i=0, start=0;
+  bool inword = false;
+  while (i < (int)axes.length()) {
+    ch = axes[i];
+    if(isspace(ch)) {
+      if (inword) {
+	axesLen++;
+	inword = false;
+      }
+    } else if (i == (int)axes.length()-1) {
+      axesLen++;
+      inword = false;
+    } else {
+      if(!inword) 
+	inword = true;
+    }
+    i++;
+  }
 
-  //onrrd_->send(NrrdDataHandle(nrrd_joined));
+  int *ax = new int[axesLen];
+  // Size/samples
+  i=0, start=0;
+  int which = 0, end=0, counter=0;
+  inword = false;
+  while (i < (int)axes.length()) {
+    ch = axes[i];
+    if(isspace(ch)) {
+      if (inword) {
+	end = i;
+	ax[counter] = (atoi(axes.substr(start,end-start).c_str()));
+	which++;
+	counter++;
+	inword = false;
+      }
+    } else if (i == (int)axes.length()-1) {
+      if (!inword) {
+	start = i;
+      }
+      end = i+1;
+      ax[counter] = (atoi(axes.substr(start,end-start).c_str()));
+      which++;
+      counter++;
+      inword = false;
+    } else {
+      if(!inword) {
+	start = i;
+	inword = true;
+      }
+    }
+    i++;
+  }
+
+  if (axesLen > 1) {
+    /* sort merge axes into ascending order */
+    qsort(ax, axesLen, sizeof(int), nrrdValCompare[nrrdTypeInt]);
+  }
+
+  int ni = 0, jj = 0, ii=0;
+  for (ii=0; ii<axesLen; ii++) {
+    if (nrrdAxesMerge(nout[ni], !ii ? nin : nout[1-ni], ax[ii])) {
+      char *err = biffGetDone(NRRD);
+      error(string("Error merging axes: ") + err);
+      free(err);
+    }
+    for (jj=ii+1; jj<axesLen; jj++) {
+      ax[jj] -= 1;
+    }
+    ni = 1-ni;
+  }
+
+  delete ax;
+
+  NrrdData *nrrd = scinew NrrdData;
+  nrrd->nrrd = nout[1-ni];
+
+  NrrdDataHandle out(nrrd);
+  // Copy the properties.
+  *((PropertyManager *) out.get_rep()) =
+    *((PropertyManager *) nrrd_handle.get_rep());
+
+  onrrd_->send(out);
 }
+
 
 } // End namespace SCITeem

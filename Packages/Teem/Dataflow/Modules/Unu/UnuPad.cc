@@ -31,6 +31,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Teem/Dataflow/Ports/NrrdPort.h>
+#include <Core/Containers/StringUtil.h>
 
 #include <iostream>
 #include <stdio.h>
@@ -174,6 +175,10 @@ UnuPad::execute()
     }
     min[a] = 0 - mins_[a]->get();
     max[a] = (nrrdH->nrrd->axis[a].size - 1) + maxs_[a]->get();  
+
+    if (nrrdKindSize(nrrdH->nrrd->axis[a].kind) > 1 && (min[a] !=0 || max[a] != 0)) {
+      warning("Trying to pad axis " + to_string(a) + " which does not have a kind of nrrdKindDomain or nrrdKindUnknown");
+    }
   }
 
   if (! changed) { 
@@ -197,7 +202,7 @@ UnuPad::execute()
 
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;
-  nrrd->copy_sci_data(*nrrdH.get_rep());
+  //nrrd->copy_sci_data(*nrrdH.get_rep());
   last_nrrdH_ = nrrd;
   onrrd_->send(last_nrrdH_);
 }

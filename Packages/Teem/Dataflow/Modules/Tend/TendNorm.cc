@@ -105,7 +105,7 @@ TendNorm::execute()
 
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;
-  nrrd->copy_sci_data(*nrrd_handle.get_rep());
+  //nrrd->copy_sci_data(*nrrd_handle.get_rep());
   onrrd_->send(NrrdDataHandle(nrrd));
 }
 

@@ -22,11 +22,6 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <Teem/Dataflow/Ports/NrrdPort.h>
 
-#include <sstream>
-#include <iostream>
-using std::endl;
-#include <stdio.h>
-
 namespace SCITeem {
 
 using namespace SCIRun;
@@ -39,12 +34,15 @@ public:
 
 private:
   NrrdIPort*      inrrd_;
+  NrrdIPort*      wnrrd_;
   NrrdOPort*      onrrd_;
 
   GuiInt       bins_;
   GuiDouble    min_;
   GuiDouble    max_;
   GuiString    type_;
+  
+  unsigned int get_type(string type);
 };
 
 DECLARE_MAKER(UnuHisto)
@@ -65,31 +63,83 @@ void
 UnuHisto::execute()
 {
   NrrdDataHandle nrrd_handle;
+  NrrdDataHandle weight_handle;
+
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("nin");
-  onrrd_ = (NrrdOPort *)get_oport("nout");
+
+  inrrd_ = (NrrdIPort *)get_iport("InputNrrd");
+  wnrrd_ = (NrrdIPort *)get_iport("WeightNrrd");
+  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
   if (!inrrd_) {
-    error("Unable to initialize iport 'Nrrd'.");
+    error("Unable to initialize iport 'InputNrrd'.");
+    return;
+  }
+  if (!wnrrd_) {
+    error("Unable to initialize iport 'WeightNrrd'.");
     return;
   }
   if (!onrrd_) {
-    error("Unable to initialize oport 'Nrrd'.");
+    error("Unable to initialize oport 'OutputNrrd'.");
     return;
   }
-  if (!inrrd_->get(nrrd_handle))
+  if (!inrrd_->get(nrrd_handle)) 
     return;
+
 
   if (!nrrd_handle.get_rep()) {
-    error("Empty input Nrrd.");
+    error("Empty InputNrrd.");
     return;
   }
 
+  reset_vars();
+
   Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *weight = 0;
+  if (wnrrd_->get(weight_handle)) {
+    weight = weight_handle->nrrd;    
+  }
+  Nrrd *nout = nrrdNew();
 
-  error("This module is a stub.  Implement me.");
+  NrrdRange *range = nrrdRangeNew(min_.get(), max_.get());
+  nrrdRangeSafeSet(range, nin, nrrdBlind8BitRangeState);
 
-  //onrrd_->send(NrrdDataHandle(nrrd_joined));
+  unsigned int type = get_type(type_.get());
+
+  if (nrrdHisto(nout, nin, range, weight, bins_.get(), type)) {
+    char *err = biffGetDone(NRRD);
+    error(string("Error creating Histogram nrrd: ") + err);
+    free(err);
+  }
+
+  NrrdData *nrrd = scinew NrrdData;
+  nrrd->nrrd = nout;
+
+  NrrdDataHandle out(nrrd);
+
+  onrrd_->send(out);
+}
+
+unsigned int
+UnuHisto::get_type(string type) {
+  if (type == "nrrdTypeChar") 
+    return nrrdTypeChar;
+  else if (type == "nrrdTypeUChar")  
+    return nrrdTypeUChar;
+  else if (type == "nrrdTypeShort")  
+    return nrrdTypeShort;
+  else if (type == "nrrdTypeUShort") 
+    return nrrdTypeUShort;
+  else if (type == "nrrdTypeInt")  
+    return nrrdTypeInt;
+  else if (type == "nrrdTypeUInt")   
+    return nrrdTypeUInt;
+  else if (type == "nrrdTypeFloat") 
+    return nrrdTypeFloat;
+  else if (type == "nrrdTypeDouble")  
+    return nrrdTypeDouble;
+  else    
+    return nrrdTypeUInt;
 }
 
 } // End namespace SCITeem

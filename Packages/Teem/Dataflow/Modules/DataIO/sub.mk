@@ -36,13 +36,13 @@ SRCS     += \
 	$(SRCDIR)/ConvertToNrrd.cc\
 	$(SRCDIR)/DicomToNrrd.cc\
 	$(SRCDIR)/FieldToNrrd.cc\
+	$(SRCDIR)/ImageExporter.cc\
+	$(SRCDIR)/ImageImporter.cc\
 	$(SRCDIR)/NrrdReader.cc\
 	$(SRCDIR)/NrrdWriter.cc\
 	$(SRCDIR)/NrrdToField.cc\
 	$(SRCDIR)/NrrdToMatrix.cc\
 	$(SRCDIR)/MatrixToNrrd.cc\
-#	$(SRCDIR)/ImageExporter.cc\
-#	$(SRCDIR)/ImageImporter.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Packages/Teem/Core/Datatypes Packages/Teem/Dataflow/Ports \
