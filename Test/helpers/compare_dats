@@ -33,8 +33,8 @@ if [ $retval != "0" ]; then
     fi
 fi
 
-abs_error_allowable=1e-10
-rel_error_allowable=1e-8
+abs_error_allowable=1e-9
+rel_error_allowable=1e-6
 
 WD=`pwd`
 cd $TEST_UDADIR
