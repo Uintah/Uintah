@@ -33,6 +33,7 @@
         <save label = "g.stressFS" material = "2"/>
 	<save label = "g.velocity"/>
 -->
+        <checkpoint cycle = "2" interval = "1.e-6"/>
    </DataArchiver>
 
     <MPM>
