@@ -88,8 +88,8 @@ void ForwardMagneticField::execute(){
     return;
   }
 
-  int np = 1;
-  cerr << "Number of Processors Used: " << np <<endl;
+  int np = 5;
+  //cerr << "Number of Processors Used: " << np <<endl;
   if (! algo->calc_forward_magnetic_field(efld, ctfld, dipoles, detectors, 
 					  magnetic_field, magnitudes, np, 
 					  this)) {
