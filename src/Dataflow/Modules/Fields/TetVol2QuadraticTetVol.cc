@@ -47,7 +47,7 @@ private:
 
 DECLARE_MAKER(TetVol2QuadraticTetVol)
 TetVol2QuadraticTetVol::TetVol2QuadraticTetVol(GuiContext* ctx)
-  : Module("TetVol2QuadraticTetVol", ctx, Source, "Fields", "SCIRun")
+  : Module("TetVol2QuadraticTetVol", ctx, Filter, "Fields", "SCIRun")
 {
 }
 

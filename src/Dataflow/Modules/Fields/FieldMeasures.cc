@@ -106,24 +106,6 @@ FieldMeasures::execute()
 
   m_ = fieldhandle->mesh();
 
-  const TypeDescription *meshtd = m_->get_type_description();
-  const TypeDescription *simptd = 
-    scinew TypeDescription(meshtd->get_name()+"::"+simplexString_.get(), 
-			   meshtd->get_h_file_path(),
-			   meshtd->get_namespace());
-  CompileInfoHandle ci = FieldMeasuresAlgo::get_compile_info(meshtd, simptd);
-  Handle<FieldMeasuresAlgo> algo;
-  if (!module_dynamic_compile(ci, algo)) 
-  {
-    const string err = (string("Unable to compile FieldMeasures for data at") +
-			simplexString_.get() + 
-			string(" in a ") +
-			meshtd->get_name());
-    error(err.c_str());
-    return;
-  }
-
-
   //! This is a hack for now, it is definitely not an optimal way
   int syncflag = 0;
   if (simplexString_.get() == "Node")
@@ -140,6 +122,25 @@ FieldMeasures::execute()
 		Mesh::NODE_NEIGHBORS_E | 
 		Mesh::EDGE_NEIGHBORS_E | 
 		Mesh::FACE_NEIGHBORS_E);
+
+  m_->synchronize(syncflag);
+
+  const TypeDescription *meshtd = m_->get_type_description();
+  const TypeDescription *simptd = 
+    scinew TypeDescription(meshtd->get_name()+"::"+simplexString_.get(), 
+			   meshtd->get_h_file_path(),
+			   meshtd->get_namespace());
+  CompileInfoHandle ci = FieldMeasuresAlgo::get_compile_info(meshtd, simptd);
+  Handle<FieldMeasuresAlgo> algo;
+  if (!module_dynamic_compile(ci, algo)) 
+  {
+    const string err = (string("Unable to compile FieldMeasures for data at") +
+			simplexString_.get() + 
+			string(" in a ") +
+			meshtd->get_name());
+    error(err.c_str());
+    return;
+  }
 
   // Execute and Send (ha, no extraneous local variables here!)
   omp->send(MatrixHandle(algo->execute(m_,

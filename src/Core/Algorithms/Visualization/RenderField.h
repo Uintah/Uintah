@@ -69,7 +69,8 @@ public:
 		      const string &ndt, const string &edt, 
 		      double ns, double es, double vs, bool normalize, 
 		      int sphere_resolution, int cylinder_resolution,
-		      bool use_normals, bool use_transparency,
+		      bool use_normals, bool edge_transparency,
+		      bool face_transparency,
 		      bool bidirectional, bool arrow_heads) = 0;
 
   virtual GeomSwitch *render_text(FieldHandle fld,
@@ -130,7 +131,8 @@ public:
 		      const string &ndt, const string &edt, 
 		      double ns, double es, double vs, bool normalize, 
 		      int sphere_resolution, int cylinder_resolution,
-		      bool use_normals, bool use_transparency,
+		      bool use_normals, bool edge_transparency,
+		      bool face_transparency,
 		      bool bidirectional, bool arrow_heads);
 
   virtual GeomSwitch *render_text(FieldHandle fld,
@@ -154,7 +156,8 @@ private:
   GeomSwitch *render_edges(const Fld *fld,
 			   const string &edge_display_mode,
 			   double edge_scale,
-			   int cylinder_resolution);
+			   int cylinder_resolution,
+			   bool transparent_p);
   GeomSwitch *render_faces(const Fld *fld, 
 			   bool use_normals,
 			   bool use_transparency);
@@ -223,28 +226,17 @@ template <class T>
 bool
 to_double(const T& tmp, double &val)
 {
-  return false;
+  val = (double)tmp;
+  return true;
 }
 
 template <>
 bool
-to_double(const double&, double &);
-
-template <>
-bool
-to_double(const int&, double &);
-
-template <>
-bool
-to_double(const short&, double &);
-
-template <>
-bool
-to_double(const unsigned char&, double &);
-
-template <>
-bool
 to_double(const Vector&, double &);
+
+template <>
+bool
+to_double(const Tensor&, double &);
 
 
 template <class Dat>
@@ -276,7 +268,8 @@ RenderField<Fld, Loc>::render(FieldHandle fh,  bool nodes,
 			      const string &ndt, const string &edt,
 			      double ns, double es, double vs, bool normalize, 
 			      int sphere_res, int cyl_res,
-			      bool use_normals, bool use_transp,
+			      bool use_normals, bool e_transp,
+			      bool f_transp,
 			      bool bidirectional, bool arrow_heads)
 {
   Fld *fld = dynamic_cast<Fld*>(fh.get_rep());
@@ -286,8 +279,8 @@ RenderField<Fld, Loc>::render(FieldHandle fh,  bool nodes,
 
   if (def_col) { render_materials(fld, ndt); }
   if (nodes) { node_switch_ = render_nodes(fld, ndt, ns, sphere_res); }
-  if (edges) { edge_switch_ = render_edges(fld, edt, es, cyl_res); }
-  if (faces) { face_switch_ = render_faces(fld, use_normals, use_transp); }
+  if (edges) { edge_switch_ = render_edges(fld, edt, es, cyl_res, e_transp); }
+  if (faces) { face_switch_ = render_faces(fld, use_normals, f_transp); }
   if (data)
   {
     data_switch_ = render_data(fld, ndt, vs, normalize, bidirectional,
@@ -620,7 +613,8 @@ GeomSwitch *
 RenderField<Fld, Loc>::render_edges(const Fld *sfld,
 				    const string &edge_display_mode,
 				    double edge_scale,
-				    int cylinder_resolution) 
+				    int cylinder_resolution,
+				    bool transparent_p) 
 {
   //cerr << "rendering edgess" << endl;
   typename Fld::mesh_handle_type mesh = sfld->get_typed_mesh();
@@ -640,7 +634,14 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
   }
   else
   {
-    lines= scinew GeomCLines;
+    if (transparent_p)
+    {
+      lines = scinew GeomTranspLines;
+    }
+    else
+    {
+      lines = scinew GeomCLines;
+    }
     lines->setLineWidth(edge_scale);
     GeomDL *display_list = scinew GeomDL(lines);
     edge_switch = scinew GeomSwitch(display_list);
@@ -721,7 +722,7 @@ RenderField<Fld, Loc>::render_faces(const Fld *sfld,
   const bool with_normals = (use_normals && mesh->has_normals());
 
   GeomSwitch *face_switch;
-  GeomTriangles* faces;
+  GeomFastTriangles* faces;
   if (use_transparency)
   {
     faces = scinew GeomTranspTriangles;
@@ -729,7 +730,7 @@ RenderField<Fld, Loc>::render_faces(const Fld *sfld,
   }
   else
   {
-    faces = scinew GeomTriangles;
+    faces = scinew GeomFastTriangles;
     GeomDL *display_list = scinew GeomDL(faces);
     face_switch = scinew GeomSwitch(display_list);
   }

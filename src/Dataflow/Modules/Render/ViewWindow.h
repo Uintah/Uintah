@@ -264,6 +264,7 @@ public:
 
   void itemAdded(GeomViewerItem*);
   void itemDeleted(GeomViewerItem*);
+  void itemRenamed(GeomViewerItem*, string newname);
   void rotate(double angle, Vector v, Point p);
   void rotate_obj(double angle, const Vector& v, const Point& p);
   void translate(Vector v);
@@ -404,6 +405,8 @@ public:
   GeomHandle createGenAxes();   
   void emit_vars(std::ostream& out, const std::string& midx);
 
+  bool ortho_view() { return gui_ortho_view_.get(); }
+
 private:
   // Cache off these so that they are saved in the nets.
   GuiInt gui_global_light_;
@@ -413,6 +416,7 @@ private:
   GuiInt gui_global_cull_;
   GuiInt gui_global_dl_;
   GuiString gui_global_type_;
+  GuiInt gui_ortho_view_;
 };
 
 class ViewWindowMouseMessage : public MessageBase {

@@ -781,46 +781,49 @@ LatVolMesh::get_weights(const Point &p,
 			Node::array_type &locs, vector<double> &w)
 {
   const Point r = transform_.unproject(p);
-  const double ii = r.x();
-  const double jj = r.y();
-  const double kk = r.z();
+  double ii = r.x();
+  double jj = r.y();
+  double kk = r.z();
+
+  if (ii>(ni_-1) && (ii-(1.e-10))<(ni_-1)) ii=ni_-1-(1.e-10);
+  if (jj>(nj_-1) && (jj-(1.e-10))<(nj_-1)) jj=nj_-1-(1.e-10);
+  if (kk>(nk_-1) && (kk-(1.e-10))<(nk_-1)) kk=nk_-1-(1.e-10);
+  if (ii<0 && ii>(-1.e-10)) ii=0;
+  if (jj<0 && jj>(-1.e-10)) jj=0;
+  if (kk<0 && kk>(-1.e-10)) kk=0;
 
   const unsigned int i = (unsigned int)floor(ii);
   const unsigned int j = (unsigned int)floor(jj);
   const unsigned int k = (unsigned int)floor(kk);
 
-  if (i >= (ni_-1) ||
-      j >= (nj_-1) ||
-      k >= (nk_-1))
+  if (i < (ni_-1) && i >= 0 &&
+      j < (nj_-1) && j >= 0 &&
+      k < (nk_-1) && k >= 0)
   {
-    locs.clear();
-    w.clear();
-    return;
+    locs.resize(8);
+    locs[0].i_ = i;   locs[0].j_ = j;   locs[0].k_ = k;   locs[0].mesh_=this;
+    locs[1].i_ = i+1; locs[1].j_ = j;   locs[1].k_ = k;   locs[1].mesh_=this;
+    locs[2].i_ = i+1; locs[2].j_ = j+1; locs[2].k_ = k;   locs[2].mesh_=this;
+    locs[3].i_ = i;   locs[3].j_ = j+1; locs[3].k_ = k;   locs[3].mesh_=this;
+    locs[4].i_ = i;   locs[4].j_ = j;   locs[4].k_ = k+1; locs[4].mesh_=this;
+    locs[5].i_ = i+1; locs[5].j_ = j;   locs[5].k_ = k+1; locs[5].mesh_=this;
+    locs[6].i_ = i+1; locs[6].j_ = j+1; locs[6].k_ = k+1; locs[6].mesh_=this;
+    locs[7].i_ = i;   locs[7].j_ = j+1; locs[7].k_ = k+1; locs[7].mesh_=this;
+    
+    const double di = ii - (double)i;
+    const double dj = jj - (double)j;
+    const double dk = kk - (double)k;
+    
+    w.resize(8);
+    w[0] = (1.0 - di) * (1.0 - dj) * (1.0 - dk);
+    w[1] = di         * (1.0 - dj) * (1.0 - dk);
+    w[2] = di         * dj         * (1.0 - dk);
+    w[3] = (1.0 - di) * dj         * (1.0 - dk);
+    w[4] = (1.0 - di) * (1.0 - dj) * dk;
+    w[5] = di         * (1.0 - dj) * dk;
+    w[6] = di         * dj         * dk;
+    w[7] = (1.0 - di) * dj         * dk;
   }
-
-  locs.resize(8);
-  locs[0].i_ = i;   locs[0].j_ = j;   locs[0].k_ = k;
-  locs[1].i_ = i+1; locs[1].j_ = j;   locs[1].k_ = k;
-  locs[2].i_ = i+1; locs[2].j_ = j+1; locs[2].k_ = k;
-  locs[3].i_ = i;   locs[3].j_ = j+1; locs[3].k_ = k;
-  locs[4].i_ = i;   locs[4].j_ = j;   locs[4].k_ = k+1;
-  locs[5].i_ = i+1; locs[5].j_ = j;   locs[5].k_ = k+1;
-  locs[6].i_ = i+1; locs[6].j_ = j+1; locs[6].k_ = k+1;
-  locs[7].i_ = i;   locs[7].j_ = j+1; locs[7].k_ = k+1;
-
-  const double di = ii - (double)i;
-  const double dj = jj - (double)j;
-  const double dk = kk - (double)k;
-
-  w.resize(8);
-  w[0] = (1.0 - di) * (1.0 - dj) * (1.0 - dk);
-  w[1] = di         * (1.0 - dj) * (1.0 - dk);
-  w[2] = di         * dj         * (1.0 - dk);
-  w[3] = (1.0 - di) * dj         * (1.0 - dk);
-  w[4] = (1.0 - di) * (1.0 - dj) * dk;
-  w[5] = di         * (1.0 - dj) * dk;
-  w[6] = di         * dj         * dk;
-  w[7] = (1.0 - di) * dj         * dk;
 }
 
 const TypeDescription* get_type_description(LatVolMesh::NodeIndex *)

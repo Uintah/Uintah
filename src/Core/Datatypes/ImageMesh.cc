@@ -184,7 +184,7 @@ ImageMesh::get_neighbor(Face::index_type &neighbor,
   const int j_idx = edge - (ni_-1) * nj_;
   if (j_idx >= 0)
   {
-    const int i = j_idx / (nj_ - 1);
+    const unsigned int i = j_idx / (nj_ - 1);
     if (i == 0 || i == ni_-1) 
       return false;
     neighbor.j_ = from.j_;
@@ -195,7 +195,7 @@ ImageMesh::get_neighbor(Face::index_type &neighbor,
   }
   else
   {
-    const int j = edge / (ni_ - 1);;
+    const unsigned int j = edge / (ni_ - 1);;
     if (j == 0 || j == nj_-1) 
       return false;
     neighbor.i_ = from.i_;
@@ -340,38 +340,44 @@ ImageMesh::get_weights(const Point &p,
 		       Node::array_type &locs, vector<double> &weights)
 {
   const Point r = transform_.unproject(p);
-  Node::index_type node0, node1, node2, node3;
+  double ii = r.x();
+  double jj = r.y();
+  if (ii>(ni_-1) && (ii-(1.e-10))<(ni_-1)) ii=ni_-1-(1.e-10);
+  if (jj>(nj_-1) && (jj-(1.e-10))<(nj_-1)) jj=nj_-1-(1.e-10);
+  if (ii<0 && ii>(-1.e-10)) ii=0;
+  if (jj<0 && jj>(-1.e-10)) jj=0;
 
+  Node::index_type node0, node1, node2, node3;
   node0.mesh_ = this;
   node1.mesh_ = this;
   node2.mesh_ = this;
   node3.mesh_ = this;
 
-  node0.i_ = (unsigned int)floor(r.x());
-  node0.j_ = (unsigned int)floor(r.y());
+  node0.i_ = (unsigned int)floor(ii);
+  node0.j_ = (unsigned int)floor(jj);
 
-  if (node0.i_ < (ni_-1) ||
-      node0.j_ < (nj_-1))
+  if (node0.i_ < (ni_-1) && node0.i_ >= 0 &&
+      node0.j_ < (nj_-1) && node0.j_ >= 0)
   {
-    const double dx1 = r.x() - node0.i_;
-    const double dy1 = r.y() - node0.j_;
+    const double dx1 = ii - node0.i_;
+    const double dy1 = jj - node0.j_;
     const double dx0 = 1.0 - dx1;
     const double dy0 = 1.0 - dy1;
-
+    
     node1.i_ = node0.i_ + 1;
     node1.j_ = node0.j_ + 0;
-
+    
     node2.i_ = node0.i_ + 1;
     node2.j_ = node0.j_ + 1;
-
+    
     node3.i_ = node0.i_ + 0;
     node3.j_ = node0.j_ + 1;
-
+    
     locs.push_back(node0);
     locs.push_back(node1);
     locs.push_back(node2);
     locs.push_back(node3);
-
+    
     weights.push_back(dx0 * dy0);
     weights.push_back(dx1 * dy0);
     weights.push_back(dx1 * dy1);

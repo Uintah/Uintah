@@ -40,7 +40,7 @@ public:
   DECLARE_MAKER(CastTVtoMLV)
 
 CastTVtoMLV::CastTVtoMLV(GuiContext* ctx)
-  : Module("CastTVtoMLV", ctx, Source, "Fields", "SCIRun"),
+  : Module("CastTVtoMLV", ctx, Filter, "Fields", "SCIRun"),
     nx_(ctx->subVar("nx")), ny_(ctx->subVar("ny")), nz_(ctx->subVar("nz"))
 {
 }

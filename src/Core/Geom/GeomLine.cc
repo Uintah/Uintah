@@ -38,6 +38,7 @@
 #include <Core/Geometry/BBox.h>
 #include <Core/Persistent/PersistentSTL.h>
 #include <iostream>
+#include <algorithm>
 
 #include <stdlib.h>
 
@@ -92,8 +93,8 @@ GeomObj* GeomLine::clone()
 
 void GeomLine::get_bounds(BBox& bb)
 {
-    bb.extend(p1);
-    bb.extend(p2);
+  bb.extend(p1);
+  bb.extend(p2);
 }
 
 void
@@ -107,26 +108,26 @@ GeomLine::setLineWidth(float val)
 void GeomLine::io(Piostream& stream)
 {
 
-    stream.begin_class("GeomLine", GEOMLINE_VERSION);
-    GeomObj::io(stream);
-    Pio(stream, p1);
-    Pio(stream, p2);
-    stream.end_class();
+  stream.begin_class("GeomLine", GEOMLINE_VERSION);
+  GeomObj::io(stream);
+  Pio(stream, p1);
+  Pio(stream, p2);
+  stream.end_class();
 }
 
 bool GeomLine::saveobj(ostream&, const string&, GeomSave*)
 {
 #if 0
-    NOT_FINISHED("GeomLine::saveobj");
-    return false;
+  NOT_FINISHED("GeomLine::saveobj");
+  return false;
 #else
-	return true;
+  return true;
 #endif
 }
 
 Persistent* make_GeomLines()
 {
-    return new GeomLines();
+  return new GeomLines();
 }
 
 PersistentTypeID GeomLines::type_id("GeomLines", "GeomObj", make_GeomLines);
@@ -136,7 +137,7 @@ GeomLines::GeomLines()
 }
 
 GeomLines::GeomLines(const GeomLines& copy)
-: pts(copy.pts)
+  : pts(copy.pts)
 {
 }
 
@@ -160,19 +161,19 @@ void GeomLines::get_bounds(BBox& bb)
 void GeomLines::io(Piostream& stream)
 {
 
-    stream.begin_class("GeomLines", GEOMLINES_VERSION);
-    GeomObj::io(stream);
-    Pio(stream, pts);
-    stream.end_class();
+  stream.begin_class("GeomLines", GEOMLINES_VERSION);
+  GeomObj::io(stream);
+  Pio(stream, pts);
+  stream.end_class();
 }
 
 bool GeomLines::saveobj(ostream&, const string&, GeomSave*)
 {
 #if 0
-    NOT_FINISHED("GeomLines::saveobj");
-    return false;
+  NOT_FINISHED("GeomLines::saveobj");
+  return false;
 #else
-    return true;
+  return true;
 #endif
 }
 
@@ -185,7 +186,7 @@ void GeomLines::add(const Point& p1, const Point& p2)
 
 Persistent* make_GeomCLines()
 {
-    return new GeomCLines();
+  return new GeomCLines();
 }
 
 PersistentTypeID GeomCLines::type_id("GeomCLines", "GeomObj", make_GeomCLines);
@@ -224,21 +225,21 @@ void GeomCLines::get_bounds(BBox& bb)
 void GeomCLines::io(Piostream& stream)
 {
 
-    stream.begin_class("GeomCLines", GEOMLINES_VERSION);
-    GeomObj::io(stream);
-    Pio(stream, line_width_);
-    Pio(stream, points_);
-    Pio(stream, colors_);
-    stream.end_class();
+  stream.begin_class("GeomCLines", GEOMLINES_VERSION);
+  GeomObj::io(stream);
+  Pio(stream, line_width_);
+  Pio(stream, points_);
+  Pio(stream, colors_);
+  stream.end_class();
 }
 
 bool GeomCLines::saveobj(ostream&, const string&, GeomSave*)
 {
 #if 0
-    NOT_FINISHED("GeomCLines::saveobj");
-    return false;
+  NOT_FINISHED("GeomCLines::saveobj");
+  return false;
 #else
-    return true;
+  return true;
 #endif
 }
 
@@ -285,10 +286,120 @@ GeomCLines::add(const Point& p1, MaterialHandle c1,
   colors_.push_back(a1);
 }
 
+
+
+Persistent* make_GeomTranspLines()
+{
+  return new GeomTranspLines();
+}
+
+PersistentTypeID GeomTranspLines::type_id("GeomTranspLines", "GeomCLines",
+					  make_GeomTranspLines);
+
+GeomTranspLines::GeomTranspLines()
+  : GeomCLines()
+{
+}
+
+GeomTranspLines::GeomTranspLines(const GeomTranspLines& copy)
+  : GeomCLines(copy)
+{
+}
+
+GeomTranspLines::~GeomTranspLines()
+{
+}
+
+GeomObj* GeomTranspLines::clone()
+{
+  return new GeomTranspLines(*this);
+}
+
+#define GEOMLINES_VERSION 1
+
+void GeomTranspLines::io(Piostream& stream)
+{
+  stream.begin_class("GeomTranspLines", GEOMLINES_VERSION);
+  GeomCLines::io(stream);
+  stream.end_class();
+}
+
+bool GeomTranspLines::saveobj(ostream&, const string&, GeomSave*)
+{
+#if 0
+  NOT_FINISHED("GeomTranspLines::saveobj");
+  return false;
+#else
+  return true;
+#endif
+}
+
+
+static bool
+pair_less(const pair<float, unsigned int> &a,
+	  const pair<float, unsigned int> &b)
+{
+  return a.first < b.first;
+}
+ 
+
+void
+GeomTranspLines::sort()
+{
+  const unsigned int vsize = points_.size() / 6;
+  if (xindices_.size() == vsize*2) return;
+
+  vector<pair<float, unsigned int> > tmp(vsize);
+  unsigned int i;
+
+  for (i = 0; i < vsize;i++)
+  {
+    tmp[i].first = points_[i*6+0] + points_[i*6+3];
+    tmp[i].second = i*6;
+  }
+  std::sort(tmp.begin(), tmp.end(), pair_less);
+
+  xindices_.resize(vsize*2);
+  for (i=0; i < vsize; i++)
+  {
+    xindices_[i*2+0] = tmp[i].second / 3;
+    xindices_[i*2+1] = tmp[i].second / 3 + 1;
+  }
+
+  for (i = 0; i < vsize;i++)
+  {
+    tmp[i].first = points_[i*6+1] + points_[i*6+4];
+    tmp[i].second = i*6;
+  }
+  std::sort(tmp.begin(), tmp.end(), pair_less);
+
+  yindices_.resize(vsize*2);
+  for (i=0; i < vsize; i++)
+  {
+    yindices_[i*2+0] = tmp[i].second / 3;
+    yindices_[i*2+1] = tmp[i].second / 3 + 1;
+  }
+
+  for (i = 0; i < vsize;i++)
+  {
+    tmp[i].first = points_[i*6+2] + points_[i*6+5];
+    tmp[i].second = i*6;
+  }
+  std::sort(tmp.begin(), tmp.end(), pair_less);
+
+  zindices_.resize(vsize*2);
+  for (i=0; i < vsize; i++)
+  {
+    zindices_[i*2+0] = tmp[i].second / 3;
+    zindices_[i*2+1] = tmp[i].second / 3 + 1;
+  }
+}
+
+
 // for lit streamlines
 Persistent* make_TexGeomLines()
 {
-    return new TexGeomLines();
+  return new TexGeomLines();
 }
 
 PersistentTypeID TexGeomLines::type_id("TexGeomLines", "GeomObj", make_TexGeomLines);
@@ -326,16 +437,16 @@ void TexGeomLines::get_bounds(BBox& bb)
 void TexGeomLines::io(Piostream& stream)
 {
 
-    stream.begin_class("TexGeomLines", TexGeomLines_VERSION);
-    GeomObj::io(stream);
-    Pio(stream, pts);
-    stream.end_class();
+  stream.begin_class("TexGeomLines", TexGeomLines_VERSION);
+  GeomObj::io(stream);
+  Pio(stream, pts);
+  stream.end_class();
 }
 
 bool TexGeomLines::saveobj(ostream&, const string&, GeomSave*)
 {
-    NOT_FINISHED("TexGeomLines::saveobj");
-    return false;
+  NOT_FINISHED("TexGeomLines::saveobj");
+  return false;
 }
 
 // this is used by the hedgehog...
@@ -349,13 +460,13 @@ void TexGeomLines::add(const Point& p1, const Point& p2,double scale)
 } 
 
 void TexGeomLines::add(const Point& p1, const Vector& dir, const Colorub& c) {
-    pts.add(p1);
-    pts.add(p1+dir);
+  pts.add(p1);
+  pts.add(p1+dir);
 
-    Vector v(dir);
-    v.normalize();
-    tangents.add(v);
-    colors.add(c);
+  Vector v(dir);
+  v.normalize();
+  tangents.add(v);
+  colors.add(c);
 }
 
 // this is used by the streamline module...
@@ -392,7 +503,7 @@ void TexGeomLines::batch_add(Array1<double>&, Array1<Point>& ps,
   int tstart = tangents.size();
   int cstart = colors.size();
 
-//  cerr << "Adding with colors...\n";
+  //  cerr << "Adding with colors...\n";
 
   pts.grow(2*(ps.size()-1));
   tangents.grow(2*(ps.size()-1));
@@ -495,7 +606,7 @@ void TexGeomLines::SortVecs()
   cerr << "Doing first Sort!\n";
 
   qsort(&help[0],help.size(),sizeof(SortHelper),CompX);
-//	int (*) (const void*,const void*)CompX);
+  //	int (*) (const void*,const void*)CompX);
 
   // now dump these ids..
 

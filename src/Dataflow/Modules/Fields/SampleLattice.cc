@@ -98,11 +98,11 @@ SampleLattice::execute()
   else
   {
     datatype = SCALAR;
-    if (ifieldhandle->query_vector_interface(this))
+    if (ifieldhandle->query_vector_interface(this).get_rep())
     {
       datatype = VECTOR;
     }
-    else if (ifieldhandle->query_tensor_interface(this))
+    else if (ifieldhandle->query_tensor_interface(this).get_rep())
     {
       datatype = TENSOR;
     }

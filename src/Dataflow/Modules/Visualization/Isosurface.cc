@@ -448,8 +448,8 @@ Isosurface::new_field( FieldHandle field )
 {
   const string type = field->get_type_description()->get_name();
 
-  ScalarFieldInterface *sfi = field->query_scalar_interface(this);
-  if (! sfi)
+  ScalarFieldInterfaceHandle sfi = field->query_scalar_interface(this);
+  if (!sfi.get_rep())
   {
     error("Input field does not contain scalar data.");
     return false;

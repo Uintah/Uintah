@@ -43,6 +43,7 @@ using namespace std;
   const string ext("so");
 #endif
 
+bool regression_testing_flag = false;
 env_map scirunrc;
 
 DynamicLoader *DynamicLoader::scirun_loader_ = 0;
@@ -214,9 +215,7 @@ DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p,
   LIBRARY_HANDLE so = 0;
   struct stat buf;
   if (stat(full_so.c_str(), &buf) == 0) {
-    if (compile_so(info, serr)) { // make sure
-      so = GetLibraryHandle(full_so.c_str());
-    }
+    so = GetLibraryHandle(full_so.c_str());
   } else {
     // the lib does not exist.  
     create_cc(info, false, serr);
@@ -323,6 +322,14 @@ DynamicLoader::compile_so(const CompileInfo &info, ostream &serr)
 	 << endl;
   }
   return result;
+}
+
+
+bool
+DynamicLoader::remove_cc(const CompileInfo &info, ostream &serr)
+{
+  string full = get_compile_dir() + "/" + info.filename_ + "cc";
+  unlink(full.c_str());
 }
 
 

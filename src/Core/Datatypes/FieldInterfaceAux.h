@@ -34,6 +34,8 @@
 #ifndef Datatypes_FieldInterfaceAux_h
 #define Datatypes_FieldInterfaceAux_h
 
+#include <Core/Datatypes/Field.h>
+#include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/FieldInterface.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
@@ -58,6 +60,8 @@ public:
   virtual bool interpolate_many(vector<double> &results,
 				const vector<Point> &points) const;
   virtual double find_closest(double &result, const Point &p) const;
+
+  virtual void io(Piostream&){};
 private:
 
   bool compute_min_max_aux(double &minout, double &maxout) const;
@@ -67,11 +71,10 @@ private:
 };
 
 
-
 class ScalarFieldInterfaceMaker : public DynamicAlgoBase
 {
 public:
-  virtual ScalarFieldInterface *make(FieldHandle field) = 0;
+  virtual ScalarFieldInterfaceHandle make(FieldHandle field) = 0;
   static CompileInfoHandle get_compile_info(const TypeDescription *ftd,
 					    const TypeDescription *ltd);
 };
@@ -83,11 +86,12 @@ class SFInterfaceMaker : public ScalarFieldInterfaceMaker
 {
 public:
 
-  virtual ScalarFieldInterface *make(FieldHandle field)
+  virtual ScalarFieldInterfaceHandle make(FieldHandle field)
   {
     F *tfield = dynamic_cast<F *>(field.get_rep());
     ASSERT(tfield);
-    return scinew SFInterface<F, L>(tfield);
+    
+    return ScalarFieldInterfaceHandle(scinew SFInterface<F, L>(tfield));
   }
 };
 
@@ -259,7 +263,7 @@ public:
   virtual bool interpolate_many(vector<Vector> &results,
 				const vector<Point> &points) const;
   virtual double find_closest(Vector &result, const Point &p) const;
-
+  virtual void io(Piostream&){};
 private:
   bool compute_min_max_aux(Vector &minout, Vector  &maxout) const;
   bool finterpolate(Vector &result, const Point &p) const;
@@ -272,7 +276,7 @@ private:
 class VectorFieldInterfaceMaker : public DynamicAlgoBase
 {
 public:
-  virtual VectorFieldInterface *make(FieldHandle field) = 0;
+  virtual VectorFieldInterfaceHandle make(FieldHandle field) = 0;
   static CompileInfoHandle get_compile_info(const TypeDescription *ftd,
 					    const TypeDescription *ltd);
 };
@@ -284,11 +288,11 @@ class VFInterfaceMaker : public VectorFieldInterfaceMaker
 {
 public:
 
-  virtual VectorFieldInterface *make(FieldHandle field)
+  virtual VectorFieldInterfaceHandle make(FieldHandle field)
   {
     F *tfield = dynamic_cast<F *>(field.get_rep());
     ASSERT(tfield);
-    return scinew VFInterface<F, L>(tfield);
+    return VectorFieldInterfaceHandle(scinew VFInterface<F, L>(tfield));
   }
 };
 
@@ -463,7 +467,7 @@ public:
   virtual bool interpolate_many(vector<Tensor> &results,
 				const vector<Point> &points) const;
   virtual double find_closest(Tensor &result, const Point &p) const;
-  
+    virtual void io(Piostream&){};
 private:
   bool finterpolate(Tensor &result, const Point &p) const;
 
@@ -475,7 +479,7 @@ private:
 class TensorFieldInterfaceMaker : public DynamicAlgoBase
 {
 public:
-  virtual TensorFieldInterface *make(FieldHandle field) = 0;
+  virtual TensorFieldInterfaceHandle make(FieldHandle field) = 0;
   static CompileInfoHandle get_compile_info(const TypeDescription *ftd,
 					    const TypeDescription *ltd);
 };
@@ -487,11 +491,11 @@ class TFInterfaceMaker : public TensorFieldInterfaceMaker
 {
 public:
 
-  virtual TensorFieldInterface *make(FieldHandle field)
+  virtual TensorFieldInterfaceHandle make(FieldHandle field)
   {
     F *tfield = dynamic_cast<F *>(field.get_rep());
     ASSERT(tfield);
-    return scinew TFInterface<F, L>(tfield);
+    return TensorFieldInterfaceHandle(scinew TFInterface<F, L>(tfield));
   }
 };
 

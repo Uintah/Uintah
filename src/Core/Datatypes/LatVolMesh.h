@@ -56,10 +56,8 @@ public:
 	     unsigned k) : i_(i), j_(j), k_(k), mesh_(m) {}
     
     operator unsigned() const { 
-      if (mesh_ == 0) 
-	return i_*j_*k_; 
-      else 
-	return i_ + ni()*j_ + ni()*nj()*k_;;
+      ASSERT(mesh_);
+      return i_ + ni()*j_ + ni()*nj()*k_;;
     }
     
     // Make sure mesh_ is valid before calling these convience accessors
@@ -80,10 +78,8 @@ public:
       : LatIndex(m, i,j,k) {}
 
     operator unsigned() const { 
-      if (mesh_ == 0) 
-	return i_*j_*k_; 
-      else 
-	return i_ + (ni()-1)*j_ + (ni()-1)*(nj()-1)*k_;;
+      ASSERT(mesh_);
+      return i_ + (ni()-1)*j_ + (ni()-1)*(nj()-1)*k_;;
     }
 
     friend void Pio(Piostream&, CellIndex&);
@@ -189,10 +185,8 @@ public:
     const CellIndex &operator *() const { return (const CellIndex&)(*this); }
 
     operator unsigned() const { 
-      if (mesh_ == 0) 
-	return i_*j_*k_; 
-      else 
-	return i_ + (ni()-1)*j_ + (ni()-1)*(nj()-1)*k_;;
+      ASSERT(mesh_);
+      return i_ + (ni()-1)*j_ + (ni()-1)*(nj()-1)*k_;;
     }
 
     CellIter &operator++()

@@ -110,9 +110,17 @@ main(int argc, char *argv[] )
     if(framework){
       sr = AbstractFramework::pointer(new SCIRunFramework());
       cerr << "URL to framework:\n" << sr->getURL().getString() << '\n';
+      //ofstream f("framework.url");
+      //std::string s;
+      //f<<sr->getURL().getString();
+      //f.close();
+
+
     } else {
       cerr << "Not finished: pass url to existing framework\n";
     }
+
+
 
     sci::cca::Services::pointer main_services = sr->getServices("SCIRun main", "main", sci::cca::TypeMap::pointer(0));
     sci::cca::ports::BuilderService::pointer builder = pidl_cast<sci::cca::ports::BuilderService::pointer>(main_services->getPort("cca.BuilderService"));
@@ -122,7 +130,9 @@ main(int argc, char *argv[] )
     }
 
     
-    if(!HAVE_QT) defaultBuilder="txt";
+#   if !defined(HAVE_QT)
+      defaultBuilder="txt";
+#   endif
 
     if(defaultBuilder=="qt"){
       ComponentID::pointer gui_id=builder->createInstance("QtBuilder", "cca:SCIRun.Builder", sci::cca::TypeMap::pointer(0));
@@ -146,7 +156,7 @@ main(int argc, char *argv[] )
 
     PIDL::serveObjects();
     cout << "serveObjects done!\n";
-
+    PIDL::finalize();
 
 
 

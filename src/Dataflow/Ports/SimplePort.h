@@ -89,7 +89,7 @@ private:
   void do_send(const T&);
   void do_send_intermediate(const T&);
 
-  int sent_something_;
+  bool sent_something_;
   T handle_;
 };
 
@@ -112,7 +112,9 @@ template<class T>
 SimpleOPort<T>::SimpleOPort(Module* module, 
 			    const string& portname)
   : OPort(module, SimpleIPort<T>::port_type_, portname,
-	  SimpleIPort<T>::port_color_)
+	  SimpleIPort<T>::port_color_),
+    sent_something_(false),
+    handle_(0)
 {
 }
 
@@ -141,8 +143,8 @@ void SimpleIPort<T>::finish()
 template<class T>
 void SimpleOPort<T>::reset()
 {
-  handle_=0;
-  sent_something_=0;
+  sent_something_ = false;
+  handle_ = 0;
 }
 
 template<class T>
@@ -176,21 +178,20 @@ void SimpleOPort<T>::send(const T& data)
 template<class T>
 void SimpleOPort<T>::do_send(const T& data)
 {
-
   handle_ = data;
   if (nconnections() == 0) { return; }
 
-  // change oport state and colors on screen
+  // Change oport state and colors on screen.
   if (module->showStats()) { turn_on(); }
 
   for (int i = 0; i < nconnections(); i++) {
+    // Add the new message.
     SimplePortComm<T>* msg = new SimplePortComm<T>(data);
     ((SimpleIPort<T>*)connections[i]->iport)->mailbox.send(msg);
   }
-  sent_something_ = 1;
+  sent_something_ = true;
 
-  if (module->showStats())
-    turn_off();
+  if (module->showStats()) { turn_off(); }
 }
 
 template<>
@@ -205,15 +206,20 @@ void SimpleOPort<T>::send_intermediate(const T& data)
 template<class T>
 void SimpleOPort<T>::do_send_intermediate(const T& data)
 {
-  handle_=data;
+  handle_ = data;
   if(nconnections() == 0) { return; }
+
   if (module->showStats()) { turn_on(); }
 
   module->request_multisend(this);
+
   for(int i=0;i<nconnections();i++){
+    // Add the new message.
     SimplePortComm<T>* msg=new SimplePortComm<T>(data);
     ((SimpleIPort<T>*)connections[i]->iport)->mailbox.send(msg);
   }
+  sent_something_ = true;
+
   if (module->showStats()) { turn_off(); }
 }
 

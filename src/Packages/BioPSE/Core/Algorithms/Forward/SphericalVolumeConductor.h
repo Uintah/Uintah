@@ -73,12 +73,14 @@ private:
   void destroy();
   void getSphericalElectrodePositions();
   bool getSphericalDipoleRepresentation();
+  bool getSphericalDipoleAndElectrodePositions();
   double getRadius(double x, double y, double z);
   double getPhi(double x, double y);
   double getTheta(double z, double r);
   void normalizeLengthScales();
   void precompSeriesTerms();
   double getRefPotential();
+  void getDipoleMoment(double dx, double dz);
 
   double g(int i);
 
@@ -117,10 +119,13 @@ private:
   // local copies
   double *dipole;
   double *moment;
+  double *momentcart;
   double **electrode;
+  double **eleccart;
   double *r;
   double *rc;
   double *tc;
+  double abs_moment;
 
   // series coefficients
   double *seriesCoeff;

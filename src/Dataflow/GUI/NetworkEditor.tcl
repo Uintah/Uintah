@@ -69,6 +69,8 @@ proc makeNetworkEditor {} {
     wm minsize . 100 100
     wm geometry . 800x800+0+0
 
+    wm title . "SCIRun"
+
     frame .main_menu -relief raised -borderwidth 3
     pack .main_menu -fill x
     
@@ -92,6 +94,8 @@ proc makeNetworkEditor {} {
 	-command "popupInsertMenu" -state disabled
     .main_menu.file.menu add command -label "Clear" -underline 0 \
 	-command "ClearCanvas" -state disabled
+    .main_menu.file.menu add command -label "Execute All" -underline 0 \
+	-command "ExecuteAll" -state disabled
     .main_menu.file.menu add cascade -label "New" -underline 0\
         -menu .main_menu.file.menu.new -state disabled
 
@@ -246,6 +250,7 @@ proc activate_file_submenus { } {
     .main_menu.file.menu entryconfig 3 -state active
     .main_menu.file.menu entryconfig 4 -state active
     .main_menu.file.menu entryconfig 5 -state active
+    .main_menu.file.menu entryconfig 6 -state active
 }
 
 proc handle_bad_startnet { netfile } {
@@ -586,30 +591,16 @@ proc itemDrag {c x y} {
 }
 
 proc popupSaveMenu {} {
-    set types {
-	{{SCIRun Net} {.net} }
-	{{Uintah Script} {.uin} }
-	{{Dataflow Script} {.sr} }
-	{{Other} { * } }
-    } 
+
     global netedit_savefile
     if { $netedit_savefile != "" } {
+	# If we already know the name of the save file, just save it...
+	# ...don't ask user for a name.
 	saveMacroModules
 	netedit savenetwork  $netedit_savefile
     } else {
-	global tcl_interactive
-	if { $tcl_interactive == 0 } {
-	    global argv0
-	    # filename specified
-	    set netedit_savefile $argv0
-	} else {
-	    set netedit_savefile [ tk_getSaveFile -defaultextension {.net} \
-		    -filetypes $types ]
-	}
-	if { $netedit_savefile != "" } {
-	    saveMacroModules
-	    netedit savenetwork  $netedit_savefile
-	}
+	# otherwise, get the user involved...
+	popupSaveAsMenu
     }
 }
 
@@ -626,6 +617,10 @@ proc popupSaveAsMenu {} {
     if { $netedit_savefile != "" } {
 	saveMacroModules
 	netedit savenetwork  $netedit_savefile
+
+	# Cut off the path from the net name and put in on the title bar:
+	set net_name [lrange [split "$netedit_savefile" / ] end end]
+	wm title . "SCIRun ($net_name)"
     }
 }
 
@@ -770,10 +765,6 @@ proc popupLoadMenu {} {
     } 
     
     set netedit_loadnet [tk_getOpenFile -filetypes $types ]
-    global netedit_savefile
-    if { [string compare $netedit_savefile ""] == 0 } {
-	set netedit_savefile $netedit_loadnet
-    }
     
     if { [file exists $netedit_loadnet] } {
 	loadnet $netedit_loadnet
@@ -795,6 +786,10 @@ proc ClearCanvas {} {
 			.top.globalViewFrame.canvas $m
 	    }
 	}    
+
+	# Reset title of main window:
+	wm title . "SCIRun"
+
 	# reset all the NetworkEditor globals to their initial values
 	set mainCanvasWidth    4500.0
 	set mainCanvasHeight   4500.0
@@ -871,6 +866,11 @@ proc NiceQuit {} {
 	set modules ""
 	netedit quit
     }   
+}
+
+
+proc ExecuteAll {} {
+    netedit scheduleall
 }
 
 
@@ -1010,11 +1010,25 @@ proc loadnet {netedit_loadfile} {
 proc sourcenet {netedit_loadfile} {
     # Check to see of the file exists; exit if it doesn't
     if { ! [file exists $netedit_loadfile] } {
-	puts "$netedit_loadfile: no such file"
+	handle_bad_startnet "$netedit_loadfile"
 	return
     }
+
+    # Cut off the path from the net name and put in on the title bar:
+    set net_name [lrange [split "$netedit_loadfile" / ] end end]
+    wm title . "SCIRun ($net_name)"
+
+    # Remember the name of this net for future "Saves".
+    global netedit_savefile
+    set netedit_savefile $netedit_loadfile
+
+    # I believe that we use this 'global' because the "file_to_load"
+    # variable is not seen in the "source" call below if it is a 
+    # local variable... I'm not sure why.
     global file_to_load
     set file_to_load $netedit_loadfile
+
+    # The '#' below is not a comment...
     uplevel #0 {source $file_to_load}
 }
     

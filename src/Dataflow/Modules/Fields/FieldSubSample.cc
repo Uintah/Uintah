@@ -59,9 +59,9 @@ private:
   GuiInt jStop_;
   GuiInt kStop_;
 
-  GuiInt iSkip_;
-  GuiInt jSkip_;
-  GuiInt kSkip_;
+  GuiInt iStride_;
+  GuiInt jStride_;
+  GuiInt kStride_;
 
   GuiInt iWrap_;
   GuiInt jWrap_;
@@ -79,9 +79,9 @@ private:
   int jstop_;
   int kstop_;
 
-  int iskip_;
-  int jskip_;
-  int kskip_;
+  int istride_;
+  int jstride_;
+  int kstride_;
 
   int iwrap_;
   int jwrap_;
@@ -98,7 +98,7 @@ DECLARE_MAKER(FieldSubSample)
 
 
 FieldSubSample::FieldSubSample(GuiContext *context)
-  : Module("FieldSubSample", context, Source, "Fields", "SCIRun"),
+  : Module("FieldSubSample", context, Filter, "Fields", "SCIRun"),
 
     Wrap_(context->subVar("wrap")),
     Dims_(context->subVar("dims")),
@@ -115,9 +115,9 @@ FieldSubSample::FieldSubSample(GuiContext *context)
     jStop_(context->subVar("j-stop")),
     kStop_(context->subVar("k-stop")),
 
-    iSkip_(context->subVar("i-skip")),
-    jSkip_(context->subVar("j-skip")),
-    kSkip_(context->subVar("k-skip")),
+    iStride_(context->subVar("i-stride")),
+    jStride_(context->subVar("j-stride")),
+    kStride_(context->subVar("k-stride")),
  
     iWrap_(context->subVar("i-wrap")),
     jWrap_(context->subVar("j-wrap")),
@@ -135,9 +135,9 @@ FieldSubSample::FieldSubSample(GuiContext *context)
     jstop_(-1),
     kstop_(-1),
 
-    iskip_(10),
-    jskip_(5),
-    kskip_(1),
+    istride_(10),
+    jstride_(5),
+    kstride_(1),
 
     iwrap_(0),
     jwrap_(0),
@@ -220,6 +220,13 @@ void FieldSubSample::execute(){
     return;
   }
 
+  if( fHandle->data_at() != Field::CELL &&
+      fHandle->data_at() != Field::NODE ) {
+    error( fHandle->get_type_description(0)->get_name() );
+    error( "Currently only availible for cell or node data." );
+    return;
+  }
+
   int wrap;
 
   if( fHandle->get_type_description(0)->get_name() == "StructHexVolField" ||
@@ -254,9 +261,9 @@ void FieldSubSample::execute(){
       jstop_ != jStop_.get() ||
       kstop_ != kStop_.get() ||
 
-      iskip_ != iSkip_.get() ||
-      jskip_ != jSkip_.get() ||
-      kskip_ != kSkip_.get() ||
+      istride_ != iStride_.get() ||
+      jstride_ != jStride_.get() ||
+      kstride_ != kStride_.get() ||
 
       iwrap_ != iWrap_.get() ||
       jwrap_ != jWrap_.get() ||
@@ -270,9 +277,9 @@ void FieldSubSample::execute(){
     jstop_ = jStop_.get();
     kstop_ = kStop_.get();
 
-    iskip_ = iSkip_.get();
-    jskip_ = jSkip_.get();
-    kskip_ = kSkip_.get();
+    istride_ = iStride_.get();
+    jstride_ = jStride_.get();
+    kstride_ = kStride_.get();
 
     iwrap_ = iWrap_.get();
     jwrap_ = jWrap_.get();
@@ -292,7 +299,7 @@ void FieldSubSample::execute(){
     fHandle_ = algo->execute(fHandle,
 			     istart_, jstart_, kstart_,
 			     istop_, jstop_, kstop_,
-			     iskip_, jskip_, kskip_,
+			     istride_, jstride_, kstride_,
 			     iwrap_, jwrap_, kwrap_);
   }
 

@@ -76,7 +76,7 @@ public:
   DECLARE_MAKER(ChangeFieldBounds)
 
 ChangeFieldBounds::ChangeFieldBounds(GuiContext* ctx)
-  : Module("ChangeFieldBounds", ctx, Source, "Fields", "SCIRun"),
+  : Module("ChangeFieldBounds", ctx, Filter, "Fields", "SCIRun"),
     outputcenterx_(ctx->subVar("outputcenterx")),
     outputcentery_(ctx->subVar("outputcentery")),
     outputcenterz_(ctx->subVar("outputcenterz")),

@@ -34,6 +34,7 @@
 #ifndef Datatypes_FieldInterface_h
 #define Datatypes_FieldInterface_h
 
+#include <Core/Datatypes/Datatype.h>
 #include <vector>
 
 namespace SCIRun {
@@ -42,7 +43,8 @@ namespace SCIRun {
   class Tensor;
   using std::vector;
 
-class ScalarFieldInterface {
+class ScalarFieldInterface: public Datatype 
+{
 public:
 
   ScalarFieldInterface() {}
@@ -59,7 +61,8 @@ public:
 };
 
 
-class VectorFieldInterface {
+class VectorFieldInterface: public Datatype 
+{
 public:
   VectorFieldInterface() {}
   VectorFieldInterface(const VectorFieldInterface&) {}
@@ -74,7 +77,7 @@ public:
 };
 
 
-class TensorFieldInterface
+class TensorFieldInterface: public Datatype
 {
 public:
   TensorFieldInterface() {}

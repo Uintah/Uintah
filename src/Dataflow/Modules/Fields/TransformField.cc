@@ -62,7 +62,7 @@ protected:
 DECLARE_MAKER(TransformField)
 
 TransformField::TransformField(GuiContext* ctx)
-  : Module("TransformField", ctx, Source, "Fields", "SCIRun"),
+  : Module("TransformField", ctx, Filter, "Fields", "SCIRun"),
     ifield_generation_(0),
     imatrix_generation_(0)
 {

@@ -31,7 +31,7 @@ SRCS += $(SRCDIR)/tclUnixNotify-$(TK_VERSION).c
 #	$(SRCDIR)/tkRange.c $(SRCDIR)/tkUnixRange.c \
 
 
-PSELIBS := 
+PSELIBS := Core/Thread
 LIBS := $(BLT_LIBRARY) \
 	$(PLPLOT_LIBRARY) \
 	$(ITK_LIBRARY) \

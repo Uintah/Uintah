@@ -75,6 +75,9 @@ public:
 private:
   
   void initPort(Mailbox<GeomReply>*);
+  void detachPort(int portno);
+  int  real_portno(int portid);
+  void delete_patch_portnos(int portid);
   void append_port_msg(GeometryComm*);
   void addObj(GeomViewerPort* port, GeomID serial, GeomHandle obj,
 	      const string&, CrowdMonitor* lock);
@@ -94,6 +97,8 @@ private:
   vector<ViewWindow*> view_window_;
   vector<ViewWindow*> top_view_window_;
   int                 max_portno_;
+  vector<int>         portno_map_;
+  vector<bool>        syncronized_map_;
 };
 
 

@@ -73,6 +73,7 @@ class ShowField : public Module
 
   //! Options for rendering edges.
   GuiInt                   edges_on_;
+  GuiInt                   edges_transparency_;
   bool                     edges_dirty_;
 
   //! Options for rendering faces.
@@ -185,6 +186,7 @@ ShowField::ShowField(GuiContext* ctx) :
   nodes_as_disks_(ctx->subVar("nodes-as-disks")),
   nodes_dirty_(true),
   edges_on_(ctx->subVar("edges-on")),
+  edges_transparency_(ctx->subVar("edges-transparency")),
   edges_dirty_(true),
   faces_on_(ctx->subVar("faces-on")),
   faces_normals_(ctx->subVar("use-normals")),
@@ -270,7 +272,7 @@ ShowField::check_for_vector_data(FieldHandle fld_handle) {
   has_vector_data_.reset();
   has_tensor_data_.reset();
   nodes_as_disks_.reset();
-  if (fld_handle->query_vector_interface(this) != 0)
+  if (fld_handle->query_vector_interface(this).get_rep() != 0)
   {
     if (! has_vector_data_.get())
     { 
@@ -282,7 +284,7 @@ ShowField::check_for_vector_data(FieldHandle fld_handle) {
     }
     return true;
   }
-  else if (fld_handle->query_tensor_interface(this) != 0)
+  else if (fld_handle->query_tensor_interface(this).get_rep() != 0)
   {
     if (! has_tensor_data_.get())
     {
@@ -320,7 +322,8 @@ ShowField::fetch_typed_algorithm(FieldHandle fld_handle,
     }
   }
 
-  if (vfld_handle.get_rep() && vfld_handle->query_vector_interface(this))
+  if (vfld_handle.get_rep() && 
+      vfld_handle->query_vector_interface(this).get_rep())
   {
     const TypeDescription *vftd = vfld_handle->get_type_description();
     CompileInfoHandle dci =
@@ -335,7 +338,8 @@ ShowField::fetch_typed_algorithm(FieldHandle fld_handle,
     }
   }
 
-  if (vfld_handle.get_rep() && vfld_handle->query_tensor_interface(this))
+  if (vfld_handle.get_rep() && 
+      vfld_handle->query_tensor_interface(this).get_rep())
   {
     const TypeDescription *vftd = vfld_handle->get_type_description();
     CompileInfoHandle dci =
@@ -418,6 +422,7 @@ ShowField::determine_dirty(FieldHandle fld_handle, FieldHandle vfld_handle)
     }
     data_at_dirty_ = true; //we need to rerender colors..
     edges_dirty_ = true; // Edges don't cache color.
+    faces_dirty_ = true; // Faces don't cache color.
     data_dirty_ = true; // Data doesn't cache color.
     text_dirty_ = true; // Text doesn't cache color.
   } //else both are the same as last time, nothing dirty.
@@ -472,8 +477,8 @@ ShowField::execute()
       return;
     }
   }
-  else if (fld_handle->query_vector_interface(this) ||
-	   fld_handle->query_tensor_interface(this))
+  else if (fld_handle->query_vector_interface(this).get_rep() ||
+	   fld_handle->query_tensor_interface(this).get_rep())
   {
     vfld_handle = fld_handle;
   }
@@ -499,6 +504,7 @@ ShowField::execute()
     if (colormap_generation_ != -1) {
       data_at_dirty_ = true;
       edges_dirty_ = true;
+      faces_dirty_ = true;
       text_dirty_ = true;
       data_dirty_ = true;
     }
@@ -507,6 +513,7 @@ ShowField::execute()
     colormap_generation_ = color_handle->generation;  
     data_at_dirty_ = true;
     edges_dirty_ = true;
+    faces_dirty_ = true;
     text_dirty_ = true;
     data_dirty_ = true;
   }
@@ -598,7 +605,8 @@ ShowField::execute()
 		      def_mat_handle_, data_at_dirty_, color_handle,
 		      ndt, edt, ns, es, vscale, normalize_vectors_.get(),
 		      node_resolution_, edge_resolution_,
-		      faces_normals_.get(), faces_transparency_.get(),
+		      faces_normals_.get(), edges_transparency_.get(),
+		      faces_transparency_.get(),
 		      bidirectional_.get(), arrow_heads_on_.get());
   }
 
@@ -613,8 +621,9 @@ ShowField::execute()
   if (do_edges) {
     edges_dirty_ = false;
     if (renderer_.get_rep() && edges_on_.get()) {
+      const char *name = faces_transparency_.get()?"TransParent Edges":"Edges";
       if (edge_id_) ogeom_->delObj(edge_id_);
-      edge_id_ = ogeom_->addObj(renderer_->edge_switch_, "Edges");
+      edge_id_ = ogeom_->addObj(renderer_->edge_switch_, name);
     }
   }
   if (do_faces) {
@@ -768,6 +777,7 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
     def_mat_handle_ = m;
     data_at_dirty_ = true;
     edges_dirty_ = true;
+    faces_dirty_ = true;
     maybe_execute(DATA_AT);
   } else if (args[1] == "text_color_change") {
     text_color_r_.reset();
@@ -824,6 +834,13 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
       ogeom_->flushViews();
       edge_id_ = 0;
     }
+  } else if (args[1] == "rerender_edges"){
+    edges_dirty_ = true;
+    if (now && edge_id_) {
+      ogeom_->delObj(edge_id_);
+      edge_id_ = 0;
+    }
+    maybe_execute(EDGE);
   } else if (args[1] == "rerender_faces"){
     faces_dirty_ = true;
     if (now && face_id_) {

@@ -31,6 +31,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Containers/StringUtil.h>
 #include <Dataflow/Ports/FieldPort.h>
+#include <Dataflow/Ports/MatrixPort.h>
 #include <Core/Datatypes/PointCloudField.h>
 #include <Core/Datatypes/LatVolField.h>
 #include <Core/Datatypes/FieldInterface.h>
@@ -236,12 +237,73 @@ ModifyConductivities::execute()
   // Get the tensors from the field.
   vector<pair<string, Tensor> > field_tensors;
   bool created_p = false;
-  if (!field->get_property("conductivity_table", field_tensors))
+
+  MatrixIPort *imp = (MatrixIPort *)get_iport("Tensor Matrix");
+  if (!imp) {
+    error("Unable ti initialize iport 'Tensor Matrix'.");
+    return;
+  }
+  MatrixHandle matrix;
+  if (imp->get(matrix) && matrix.get_rep())
+  {
+    ScalarFieldInterfaceHandle sfi = field->query_scalar_interface(this);
+    double minval, maxval;
+    sfi->compute_min_max(minval, maxval);
+    if (matrix->nrows() > maxval && matrix->ncols() == 9)
+    {
+      for (unsigned int i = 0; i < matrix->nrows(); i++)
+      {
+	Tensor t;
+	t.mat_[0][0] = matrix->get(i, 0);
+	t.mat_[0][1] = matrix->get(i, 1);
+	t.mat_[0][2] = matrix->get(i, 2);
+
+	t.mat_[1][0] = matrix->get(i, 3);
+	t.mat_[1][1] = matrix->get(i, 4);
+	t.mat_[1][2] = matrix->get(i, 5);
+
+	t.mat_[2][0] = matrix->get(i, 6);
+	t.mat_[2][1] = matrix->get(i, 7);
+	t.mat_[2][2] = matrix->get(i, 8);
+	const string s = "matrix-row-" + to_string(i+1);
+	field_tensors.push_back(pair<string, Tensor>(s, t));
+      }
+      created_p = true;
+    }
+    else if (matrix->nrows() == 9 && matrix->ncols() > maxval)
+    {
+      for (unsigned int i = 0; i < matrix->ncols(); i++)
+      {
+	Tensor t;
+	t.mat_[0][0] = matrix->get(0, i);
+	t.mat_[0][1] = matrix->get(1, i);
+	t.mat_[0][2] = matrix->get(2, i);
+
+	t.mat_[1][0] = matrix->get(3, i);
+	t.mat_[1][1] = matrix->get(4, i);
+	t.mat_[1][2] = matrix->get(5, i);
+
+	t.mat_[2][0] = matrix->get(6, i);
+	t.mat_[2][1] = matrix->get(7, i);
+	t.mat_[2][2] = matrix->get(8, i);
+	const string s = "matrix-column-" + to_string(i+1);
+	field_tensors.push_back(pair<string, Tensor>(s, t));
+      }
+      created_p = true;
+    }
+    else
+    {
+      warning("Bad input matrix.");
+      warning("It should be of size Nx9 or 9xN where N is greater than the field data range.");
+    }
+  }
+
+  if (!(created_p || field->get_property("conductivity_table", field_tensors)))
   {
     created_p = true;
-    ScalarFieldInterface *sfi = field->query_scalar_interface(this);
+    ScalarFieldInterfaceHandle sfi = field->query_scalar_interface(this);
     double minval, maxval;
-    if (sfi)
+    if (sfi.get_rep())
     {
       sfi->compute_min_max(minval, maxval);
     }

@@ -33,6 +33,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-tensors-on
 	global $this-text-on
 	global $this-use-normals
+	global $this-edges-transparency
 	global $this-use-transparency
 	global $this-normalize_vectors
 	global $this-node_display_type
@@ -96,6 +97,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-has_tensor_data 0
 	set $this-active_tab "Nodes"
 	set $this-use-normals 0
+	set $this-edges-transparency 0
 	set $this-use-transparency 0
 	set $this-interactive_mode "Interactive"
 	set $this-bidirectional 0
@@ -240,12 +242,16 @@ itcl_class SCIRun_Visualization_ShowField {
 		-text "Show Edges" \
 		-command "$this-c toggle_display_edges" \
 		-variable $this-edges-on
+	checkbutton $edge.edges_transparency \
+		-text "Enable Transparency (Lines Only)" \
+		-command "$this-c rerender_edges" \
+		-variable $this-edges-transparency
 
 	make_labeled_radio $edge.radio \
 		"Edge Display Type" "$this-c edge_display_type" top \
 		$this-edge_display_type {{Cylinders Cylinders} {Lines Lines}}
 
-	pack $edge.show_edges $edge.radio \
+	pack $edge.show_edges $edge.edges_transparency $edge.radio \
 		-side top -fill y -anchor w
 
 	expscale $edge.slide -label CylinderScale \

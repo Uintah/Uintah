@@ -61,10 +61,11 @@ BuildFEMatrix::~BuildFEMatrix(){}
 
 bool BuildFEMatrix::build_FEMatrix(TetVolFieldIntHandle hField,
 				   vector<pair<string, Tensor> >& tens,
-				   MatrixHandle& hA, double unitsScale)
+				   MatrixHandle& hA, double unitsScale,
+				   int num_procs)
   //------------------------------------------------
 {
-  int np=Thread::numProcessors();
+  int np = Thread::numProcessors();
 
   if ( np > 2 ) {
     np /= 2;
@@ -72,6 +73,8 @@ bool BuildFEMatrix::build_FEMatrix(TetVolFieldIntHandle hField,
       np=5;
     }
   }
+
+  if (num_procs > 0) { np = num_procs; }
 
   hA = 0;
 

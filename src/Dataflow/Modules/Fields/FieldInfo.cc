@@ -52,7 +52,7 @@ public:
   DECLARE_MAKER(FieldInfo)
 
 FieldInfo::FieldInfo(GuiContext* ctx)
-  : Module("FieldInfo", ctx, Source, "Fields", "SCIRun"),
+  : Module("FieldInfo", ctx, Sink, "Fields", "SCIRun"),
     generation_(-1),
     minmax_(1,0)
   
@@ -133,8 +133,8 @@ FieldInfo::update_input_attributes(FieldHandle f)
     gui->execute(string("set ")+id+"-sizez \"--- N/A ---\"");
   }
 
-  ScalarFieldInterface *sdi = f->query_scalar_interface(this);
-  if (sdi && f->data_at() != Field::NONE) {
+  ScalarFieldInterfaceHandle sdi = f->query_scalar_interface(this);
+  if (sdi.get_rep() && f->data_at() != Field::NONE) {
     sdi->compute_min_max(minmax_.first,minmax_.second);
     gui->execute(string("set ")+id+"-datamin "+to_string(minmax_.first));
     gui->execute(string("set ")+id+"-datamax "+to_string(minmax_.second));

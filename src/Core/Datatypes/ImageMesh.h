@@ -55,10 +55,8 @@ public:
       : i_(i), j_(j), mesh_(m) {}
 
     operator unsigned() const { 
-      if (mesh_ == 0) 
-        return i_*j_; 
-      else
-        return i_ + j_ * mesh_->ni_;
+      ASSERT(mesh_);
+      return i_ + j_*mesh_->ni_;
     }
 
     unsigned i_, j_;
@@ -73,10 +71,8 @@ public:
       : ImageIndex(m, i, j) {}
 
     operator unsigned() const { 
-      if (mesh_ == 0) 
-        return i_*j_; 
-      else
-        return i_ + j_ * (mesh_->ni_-1);
+      ASSERT(mesh_);
+      return i_ + j_ * (mesh_->ni_-1);
     }
 
     friend void Pio(Piostream&, IFaceIndex&);

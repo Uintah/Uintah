@@ -46,13 +46,13 @@ namespace SCIRun {
 class ScalarClipper : public Clipper
 {
 private:
-  ScalarFieldInterface *sfi_;
+  ScalarFieldInterfaceHandle sfi_;
   string function_;
   GuiInterface *gui_;
   string id_;
 
 public:
-  ScalarClipper(ScalarFieldInterface *sfi,
+  ScalarClipper(ScalarFieldInterfaceHandle sfi,
 		string function,
 		GuiInterface *gui,
 		string id) :
@@ -104,6 +104,7 @@ private:
   ClipperHandle clipper_;
   stack<ClipperHandle> undo_stack_;
   int widgetid_;
+  FieldHandle ofield_;
 
   bool bbox_similar_to(const BBox &a, const BBox &b);
 
@@ -119,7 +120,7 @@ public:
 DECLARE_MAKER(ClipField)
 
 ClipField::ClipField(GuiContext* ctx)
-  : Module("ClipField", ctx, Source, "Fields", "SCIRun"),
+  : Module("ClipField", ctx, Filter, "Fields", "SCIRun"),
     widget_lock_("ClipField widget lock"),
     clip_location_(ctx->subVar("clip-location")),
     clip_mode_(ctx->subVar("clipmode")),
@@ -130,7 +131,8 @@ ClipField::ClipField(GuiContext* ctx)
     clipfunction_(ctx->subVar("clipfunction")),
     last_input_generation_(0),
     last_clip_generation_(0),
-    widgetid_(0)
+    widgetid_(0),
+    ofield_(0)
 {
   box_ = scinew BoxWidget(this, &widget_lock_, 1.0, false, false);
   box_->Connect((GeometryOPort *)get_oport("Selection Widget"));
@@ -196,7 +198,7 @@ ClipField::execute()
   }
   if (!ifieldhandle->mesh()->is_editable())
   {
-    error("Not an editable mesh type.");
+    error("Not an editable mesh type (try passing Field through an Unstructure module first).");
     return;
   }
 
@@ -226,8 +228,9 @@ ClipField::execute()
   bool using_function_p = false;
   if (usefunction_.get())
   {
-    ScalarFieldInterface *sfi = ifieldhandle->query_scalar_interface();
-    if (sfi)
+    ifieldhandle->mesh()->synchronize(Mesh::LOCATE_E);
+    ScalarFieldInterfaceHandle sfi = ifieldhandle->query_scalar_interface();
+    if (sfi.get_rep())
     {
       clipper_ = scinew ScalarClipper(sfi, clipfunction_.get(), gui, id);
       do_clip_p = true;
@@ -360,27 +363,30 @@ ClipField::execute()
     }
 
     // Do the clip, dispatch based on which clip location test we are using.
-    FieldHandle ofield = 0;
+    ofield_ = 0;
     if (clip_location_.get() == "nodeone")
     {
-      ofield = algo->execute_node(this, ifieldhandle, clipper, true);
+      ofield_ = algo->execute_node(this, ifieldhandle, clipper, true);
     }
     else if (clip_location_.get() == "nodeall")
     {
-      ofield = algo->execute_node(this, ifieldhandle, clipper, false);
+      ofield_ = algo->execute_node(this, ifieldhandle, clipper, false);
     }
     else // 'cell' and default
     {
-      ofield = algo->execute_cell(this, ifieldhandle, clipper);
+      ofield_ = algo->execute_cell(this, ifieldhandle, clipper);
     }
+  }
 
+  if (ofield_.get_rep())
+  {
     FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
     if (!ofield_port) {
       error("Unable to initialize oport 'Output Field'.");
       return;
     }
     
-    ofield_port->send(ofield);
+    ofield_port->send(ofield_);
   }
 }
 

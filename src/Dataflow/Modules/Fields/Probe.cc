@@ -81,7 +81,7 @@ public:
 DECLARE_MAKER(Probe)
 
   Probe::Probe(GuiContext* ctx)
-    : Module("Probe", ctx, Source, "Fields", "SCIRun"),
+    : Module("Probe", ctx, Filter, "Fields", "SCIRun"),
       widget_lock_("Probe widget lock"),
       last_input_generation_(0),
       gui_locx_(ctx->subVar("locx")),
@@ -341,9 +341,9 @@ Probe::execute()
   }
 
   std::ostringstream valstr;
-  ScalarFieldInterface *sfi = 0;
-  VectorFieldInterface *vfi = 0;
-  TensorFieldInterface *tfi = 0;
+  ScalarFieldInterfaceHandle sfi = 0;
+  VectorFieldInterfaceHandle vfi = 0;
+  TensorFieldInterfaceHandle tfi = 0;
   if (!input_field_p || ifieldhandle->data_at() == Field::NONE)
   {
     valstr << 0;
@@ -352,7 +352,7 @@ Probe::execute()
     field->set_value(0.0, pcindex);
     ofield = field;
   }
-  else if ((sfi = ifieldhandle->query_scalar_interface(this)))
+  else if ((sfi = ifieldhandle->query_scalar_interface(this)).get_rep())
   {
     double result;
     if (!sfi->interpolate(result, location))
@@ -365,7 +365,7 @@ Probe::execute()
     field->set_value(result, pcindex);
     ofield = field;
   }
-  else if ((vfi = ifieldhandle->query_vector_interface(this)))
+  else if ((vfi = ifieldhandle->query_vector_interface(this)).get_rep())
   {
     Vector result;
     if (!vfi->interpolate(result, location))
@@ -378,7 +378,7 @@ Probe::execute()
     field->set_value(result, pcindex);
     ofield = field;
   }
-  else if ((tfi = ifieldhandle->query_tensor_interface(this)))
+  else if ((tfi = ifieldhandle->query_tensor_interface(this)).get_rep())
   {
     Tensor result;
     if (!tfi->interpolate(result, location))

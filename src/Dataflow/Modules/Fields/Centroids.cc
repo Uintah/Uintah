@@ -35,7 +35,7 @@ DECLARE_MAKER(Centroids)
 
 
 Centroids::Centroids(GuiContext* ctx)
-  : Module("Centroids", ctx, Source, "Fields", "SCIRun")
+  : Module("Centroids", ctx, Filter, "Fields", "SCIRun")
 {
 }
 

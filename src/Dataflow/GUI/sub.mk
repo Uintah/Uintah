@@ -35,6 +35,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ChangeFieldDataAt.tcl \
 	$(SRCDIR)/ChangeFieldDataType.tcl \
 	$(SRCDIR)/ChangeFieldBounds.tcl \
+	$(SRCDIR)/ClipByFunction.tcl \
 	$(SRCDIR)/ClipField.tcl \
 	$(SRCDIR)/ClipLattice.tcl \
 	$(SRCDIR)/ColorMapReader.tcl \

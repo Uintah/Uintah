@@ -184,18 +184,21 @@ ScanlineMesh::get_weights(const Point &p,
   const Point r = transform_.unproject(p);
   Node::index_type node0, node1;
 
-  node0 = (unsigned int)r.x();
+  double ii=r.x();
+  if (ii>(ni_-1) && (ii-(1.e-10))<(ni_-1)) ii=ni_-1-(1.e-10);
+  if (ii<0 && ii>(-1.e-10)) ii=0;
+  node0 = (unsigned int)floor(ii);
 
-  if (node0 < (ni_ - 1))
+  if (node0 < (ni_-1) && node0 >= 0) 
   {
-    const double dx1 = r.x() - node0;
+    const double dx1 = ii - node0;
     const double dx0 = 1.0 - dx1;
 
     node1 = node0 + 1;
-
+    
     locs.push_back(node0);
     locs.push_back(node1);
-
+    
     weights.push_back(dx0);
     weights.push_back(dx1);
   }

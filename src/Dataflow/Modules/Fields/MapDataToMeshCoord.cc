@@ -63,7 +63,7 @@ protected:
 DECLARE_MAKER(MapDataToMeshCoord)
 
 MapDataToMeshCoord::MapDataToMeshCoord(GuiContext* ctx)
-  : Module("MapDataToMeshCoord", ctx, Source, "Fields", "SCIRun"),
+  : Module("MapDataToMeshCoord", ctx, Filter, "Fields", "SCIRun"),
     gui_coord_(ctx->subVar("coord")), last_generation_(0)
 {
 }
@@ -88,7 +88,7 @@ MapDataToMeshCoord::execute()
     return;
   }
 
-  if (ifield->query_scalar_interface(this) == 0)
+  if (ifield->query_scalar_interface(this).get_rep() == 0)
   {
     error("This module only works on scalar fields.");
     return;

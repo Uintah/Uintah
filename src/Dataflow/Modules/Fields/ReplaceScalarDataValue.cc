@@ -77,7 +77,7 @@ ReplaceScalarDataValue::execute()
     return;
   }
   
-  if (ifieldhandle->query_scalar_interface(this) == 0)
+  if (ifieldhandle->query_scalar_interface(this).get_rep() == 0)
   {
     error("This module only works on scalar fields.");
     return;

@@ -53,11 +53,11 @@ private:
 
   typedef pair<long double, typename Mesh::Elem::index_type> weight_type;
 
-  bool build_weight_table(Mesh *mesh,
-			  ScalarFieldInterface *sfi,
-			  VectorFieldInterface *vfi,
-			  vector<weight_type> &table,
-			  const mode_e dist);
+  bool build_table(Mesh *mesh,
+		   ScalarFieldInterfaceHandle sfi,
+		   VectorFieldInterfaceHandle vfi,
+		   vector<weight_type> &table,
+		   const mode_e dist);
 
   static bool
   weight_less(const weight_type &a, const weight_type &b)
@@ -75,11 +75,11 @@ public:
 
 template <class Mesh>
 bool 
-SampleFieldRandomAlgoT<Mesh>::build_weight_table(Mesh *mesh,
-						 ScalarFieldInterface *sfi,
-						 VectorFieldInterface *vfi,
-						 vector<weight_type> &table,
-						 const mode_e dist)
+SampleFieldRandomAlgoT<Mesh>::build_table(Mesh *mesh,
+					  ScalarFieldInterfaceHandle sfi,
+					  VectorFieldInterfaceHandle vfi,
+					  vector<weight_type> &table,
+					  const mode_e dist)
 {
   typename Mesh::Elem::iterator ei, ei_end;
   mesh->begin(ei);
@@ -92,7 +92,7 @@ SampleFieldRandomAlgoT<Mesh>::build_weight_table(Mesh *mesh,
     { // Size of element * data at element.
       Point p;
       mesh->get_center(p, *ei);
-      if (vfi)
+      if (vfi.get_rep())
       {
 	Vector v;
 	if (vfi->interpolate(v, p))
@@ -100,7 +100,7 @@ SampleFieldRandomAlgoT<Mesh>::build_weight_table(Mesh *mesh,
 	  elemsize = v.length() * mesh->get_element_size(*ei);
 	}
       }
-      if (sfi)
+      if (sfi.get_rep())
       {
 	double d;
 	if (sfi->interpolate(d, p) && d > 0.0)
@@ -113,7 +113,7 @@ SampleFieldRandomAlgoT<Mesh>::build_weight_table(Mesh *mesh,
     { // data at element
       Point p;
       mesh->get_center(p, *ei);
-      if (vfi)
+      if (vfi.get_rep())
       {
 	Vector v;
 	if (vfi->interpolate(v, p))
@@ -121,7 +121,7 @@ SampleFieldRandomAlgoT<Mesh>::build_weight_table(Mesh *mesh,
 	  elemsize = v.length();
 	}
       }
-      if (sfi)
+      if (sfi.get_rep())
       {
 	double d;
 	if (sfi->interpolate(d, p) && d > 0.0)
@@ -171,8 +171,8 @@ SampleFieldRandomAlgoT<Mesh>::execute(ModuleReporter *mod,
     return 0;
   }
 
-  ScalarFieldInterface *sfi = 0;
-  VectorFieldInterface *vfi = 0;
+  ScalarFieldInterfaceHandle sfi = 0;
+  VectorFieldInterfaceHandle vfi = 0;
   mode_e distmode = IMPUNI;
   if (dist == "impscat")
   {
@@ -189,18 +189,18 @@ SampleFieldRandomAlgoT<Mesh>::execute(ModuleReporter *mod,
 
   if (distmode == UNIUNI || distmode == UNISCAT)
   {
-    if (!build_weight_table(mesh, 0, 0, table, distmode))
+    if (!build_table(mesh, 0, 0, table, distmode))
     {
       mod->error("Unable to build unweighted weight table for this mesh.");
       mod->error("Mesh is likely to be empty.");
       return 0;
     }
   }
-  else if ((sfi = field->query_scalar_interface(mod)) ||
-	   (vfi = field->query_vector_interface(mod)))
+  else if ((sfi = field->query_scalar_interface(mod)).get_rep() ||
+	   (vfi = field->query_vector_interface(mod)).get_rep())
   {
     mesh->synchronize(Mesh::LOCATE_E);
-    if (!build_weight_table(mesh, sfi, vfi, table, distmode))
+    if (!build_table(mesh, sfi, vfi, table, distmode))
     {
       mod->error("Invalid weights in mesh, probably all zero.");
       mod->error("Try using an unweighted option.");

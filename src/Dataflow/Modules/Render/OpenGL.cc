@@ -600,6 +600,12 @@ OpenGL::render_and_save_image(int x, int y,
     delete[] tmp_row;
     tmp_row = 0;
   }
+
+  extern bool regression_testing_flag;
+  if (regression_testing_flag)
+  {
+    Thread::exitAll(0);
+  }
 }
 
 
@@ -856,7 +862,17 @@ OpenGL::redraw_frame()
 	  // Setup view.
 	  glMatrixMode(GL_PROJECTION);
 	  glLoadIdentity();
-	  gluPerspective(fovy, aspect, znear, zfar);
+	  if (viewwindow->ortho_view())
+	  {
+	    const double len = (view.lookat() - view.eyep()).length();
+	    const double yval = tan(fovy * M_PI / 360.0) * len;
+	    const double xval = yval * aspect;
+	    glOrtho(-xval, xval, -yval, yval, znear, zfar);
+	  }
+	  else
+	  {
+	    gluPerspective(fovy, aspect, znear, zfar);
+	  }
 	  glMatrixMode(GL_MODELVIEW);
 	  glLoadIdentity();
 	  Point eyep(view.eyep());
@@ -2629,6 +2645,17 @@ OpenGL::render_rotation_axis(const View &view,
   for(;ii<maxlights;ii++)
     glDisable((GLenum)(GL_LIGHT0+ii));
 
+  // Disable clipping planes for the orientation icon.
+  vector<bool> cliplist(6, false);
+  for (ii = 0; ii < 6; ii++)
+  {
+    if (glIsEnabled((GLenum)(GL_CLIP_PLANE0+ii)))
+    {
+      glDisable((GLenum)(GL_CLIP_PLANE0+ii));
+      cliplist[ii] = true;
+    }
+  }
+
   drawinfo->viewwindow = viewwindow;
   
   // Use depthrange to force the icon to move forward.
@@ -2648,6 +2675,15 @@ OpenGL::render_rotation_axis(const View &view,
   glPopMatrix();
 
   glViewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+
+  // Reenable clipping planes.
+  for (ii = 0; ii < 6; ii++)
+  {
+    if (cliplist[ii])
+    {
+      glEnable((GLenum)(GL_CLIP_PLANE0+ii));
+    }
+  }
 }
 
 } // End namespace SCIRun

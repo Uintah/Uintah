@@ -178,6 +178,9 @@ itcl_class expscale {
     public command ""
 
     method upexp {} {
+	if {$exp > 16} {
+	    return;
+	}
 	incr exp
 	if { $exp > 2 } {
 	    set decimalplaces 0
@@ -190,7 +193,7 @@ itcl_class expscale {
     }
 
     method downexp {} {
-	if {$exp < -6} {
+	if {$exp < -16} {
 	    return;
 	}
 	incr exp -1
@@ -256,7 +259,7 @@ itcl_class expscale {
 	set exp 2
 	if {$value != 0} {
 	    while {([expr pow(10, [expr $exp-1])] > [expr abs($value)]) && \
-		       ($exp >= -6)} {
+		       ($exp >= -16)} {
 		
 		incr exp -1
 	    }

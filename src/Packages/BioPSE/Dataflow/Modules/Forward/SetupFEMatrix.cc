@@ -85,8 +85,11 @@ class SetupFEMatrix : public Module {
   int                meshGen_;
   Array1<Array1<double> > dataBasis_;
   MatrixHandle       AmatH_;  // shape information
+
+  GuiString          nprocessors_;
+
   void build_basis_matrices(FieldHandle fldH, unsigned int nconds, 
-			    double unitsScale);
+			    double unitsScale, int num_procs);
   MatrixHandle build_composite_matrix(const vector<pair<string,Tensor> >&tens);
 
   bool tet;
@@ -102,22 +105,32 @@ public:
 };
 
 
-DECLARE_MAKER(SetupFEMatrix)
+DECLARE_MAKER(SetupFEMatrix);
 
 
 SetupFEMatrix::SetupFEMatrix(GuiContext *context) : 
   Module("SetupFEMatrix", context, Filter, "Forward", "BioPSE"), 
-  uiUseCond_(context->subVar("UseCondTCL")), lastUseCond_(-1),
-  uiUseBasis_(context->subVar("UseBasisTCL")), lastUseBasis_(-1),
-  gen_(-1), meshGen_(-1)
+  uiUseCond_(context->subVar("UseCondTCL")),
+  lastUseCond_(-1),
+  uiUseBasis_(context->subVar("UseBasisTCL")),
+  lastUseBasis_(-1),
+  gen_(-1),
+  meshGen_(-1),
+  nprocessors_(context->subVar("nprocs"))
 {}
 
-SetupFEMatrix::~SetupFEMatrix(){}
 
-void SetupFEMatrix::build_basis_matrices(FieldHandle fldH, 
-					 unsigned int nconds,
-					 double unitsScale) {
+SetupFEMatrix::~SetupFEMatrix()
+{
+}
 
+
+void
+SetupFEMatrix::build_basis_matrices(FieldHandle fldH, 
+				    unsigned int nconds,
+				    double unitsScale,
+				    int num_procs)
+{
   TetVolFieldIntHandle tvH;
   tvH = dynamic_cast<TetVolField<int> *>(fldH.get_rep());
   Tensor zero(0);
@@ -125,7 +138,7 @@ void SetupFEMatrix::build_basis_matrices(FieldHandle fldH,
 
   MatrixHandle aH;
   vector<pair<string, Tensor> > tens(nconds, pair<string, Tensor>("", zero));
-  BuildFEMatrix::build_FEMatrix(tvH, tens, aH, unitsScale);
+  BuildFEMatrix::build_FEMatrix(tvH, tens, aH, unitsScale, num_procs);
   AmatH_ = aH;
   AmatH_.detach(); //! Store our matrix shape
 
@@ -133,32 +146,39 @@ void SetupFEMatrix::build_basis_matrices(FieldHandle fldH,
   for (unsigned int i=0; i<nconds; i++) {
     tens[i].first=to_string(i);
     tens[i].second=identity;
-    BuildFEMatrix::build_FEMatrix(tvH, tens, aH, unitsScale);
+    BuildFEMatrix::build_FEMatrix(tvH, tens, aH, unitsScale, num_procs);
     SparseRowMatrix *m = dynamic_cast<SparseRowMatrix*>(aH.get_rep());
     dataBasis_[i].resize(m->nnz);
     for (int j=0; j<m->nnz; j++)
       dataBasis_[i][j] = m->a[j];
     tens[i].second=zero;
   }
-
 }
 
 
 //! Scale the basis matrix data by the conductivities and sum
-MatrixHandle SetupFEMatrix::build_composite_matrix(const vector<pair<string, Tensor> > &tens) {
+MatrixHandle
+SetupFEMatrix::build_composite_matrix(const vector<pair<string, Tensor> > &tens)
+{
   MatrixHandle fem_mat = AmatH_;
   fem_mat.detach();
   SparseRowMatrix *m = dynamic_cast<SparseRowMatrix*>(fem_mat.get_rep());
   double *sum = m->a;
-  for (unsigned int i=0; i<tens.size(); i++) {
+  for (unsigned int i=0; i<tens.size(); i++)
+  {
     double weight = tens[i].second.mat_[0][0];
     for (int j=0; j<dataBasis_[i].size(); j++)
+    {
       sum[j] += weight*dataBasis_[i][j];
+    }
   }
   return fem_mat;
 }
 
-void SetupFEMatrix::execute(){
+
+void
+SetupFEMatrix::execute()
+{
   
   iportField_ = (FieldIPort *)get_iport("Mesh");
   oportMtrx_ = (MatrixOPort *)get_oport("Stiffness Matrix");
@@ -182,27 +202,27 @@ void SetupFEMatrix::execute(){
   if (hField->get_type_name(0) == "TetVolField" &&
       (hField->get_type_name(1) == "int")) {
     tet = true;
-	remark("Input is a 'TetVolField'");
+    remark("Input is a 'TetVolField'");
   }
   else {
-	if((hField->get_type_name(0) == "HexVolField") &&
-	   (hField->get_type_name(1) == "int")) {
-	  tet = false;
-	  remark("Input is a 'HexVolField'");
-	}
-	else {
-	  error("input field is not 'TetVolField' nor 'HexVolField'.");
-	  return;
-	}
+    if((hField->get_type_name(0) == "HexVolField") &&
+       (hField->get_type_name(1) == "int")) {
+      tet = false;
+      remark("Input is a 'HexVolField'");
+    }
+    else {
+      error("input field is not 'TetVolField' nor 'HexVolField'.");
+      return;
+    }
   }
 
   CondMeshHandleTet hCondMeshTet;
   LHHexVolField hLHHexVolField;
 
   if(tet)
-	hCondMeshTet = dynamic_cast<TetVolField<int>* >(hField.get_rep());
+    hCondMeshTet = dynamic_cast<TetVolField<int>* >(hField.get_rep());
   else
-	hLHHexVolField = dynamic_cast<HexVolField<int>* >(hField.get_rep());
+    hLHHexVolField = dynamic_cast<HexVolField<int>* >(hField.get_rep());
 
   if (hField->generation == gen_ 
       && hGblMtrx_.get_rep() 
@@ -216,42 +236,42 @@ void SetupFEMatrix::execute(){
   vector<pair<string, Tensor> > tens;
  
   if(tet) {
-	if (uiUseCond_.get()==1 &&
-		hCondMeshTet->get_property("conductivity_table", tens)){
-	  remark("Using supplied conductivity tensors.");
-	} else {
-	  remark("Using identity conductivity tensors.");
-	  pair<int,int> minmax;
-	  minmax.second=1;
-	  field_minmax(*(hCondMeshTet.get_rep()), minmax);
-	  tens.resize(minmax.second+1);
-	  vector<double> t(6);
-	  t[0] = t[3] = t[5] = 1;
-	  t[1] = t[2] = t[4] = 0;
-	  Tensor ten(t);
-	  for (unsigned int i = 0; i < tens.size(); i++) {
-		tens[i] = pair<string, Tensor>(to_string((int)i), ten);
-	  }
-	}
+    if (uiUseCond_.get()==1 &&
+	hCondMeshTet->get_property("conductivity_table", tens)){
+      remark("Using supplied conductivity tensors.");
+    } else {
+      remark("Using identity conductivity tensors.");
+      pair<int,int> minmax;
+      minmax.second=1;
+      field_minmax(*(hCondMeshTet.get_rep()), minmax);
+      tens.resize(minmax.second+1);
+      vector<double> t(6);
+      t[0] = t[3] = t[5] = 1;
+      t[1] = t[2] = t[4] = 0;
+      Tensor ten(t);
+      for (unsigned int i = 0; i < tens.size(); i++) {
+	tens[i] = pair<string, Tensor>(to_string((int)i), ten);
+      }
+    }
   }
   else {
-	if((uiUseCond_.get()==1) && (hLHHexVolField->get_property("conductivity_table", tens))) {
-	  remark("Using supplied conductivity tensors.");
-	} 
-	else {
-	  remark("Using identity conductivity tensors.");
-	  pair<int,int> minmax;
-	  minmax.second=1;
-	  field_minmax(*(hLHHexVolField.get_rep()), minmax);
-	  tens.resize(minmax.second+1);
-	  vector<double> t(6);
-	  t[0] = t[3] = t[5] = 1;
-	  t[1] = t[2] = t[4] = 0;
-	  Tensor ten(t);
-	  for (unsigned int i = 0; i < tens.size(); i++) {
-		tens[i] = pair<string, Tensor>(to_string((int)i), ten);
-	  }
-	}
+    if((uiUseCond_.get()==1) && (hLHHexVolField->get_property("conductivity_table", tens))) {
+      remark("Using supplied conductivity tensors.");
+    } 
+    else {
+      remark("Using identity conductivity tensors.");
+      pair<int,int> minmax;
+      minmax.second=1;
+      field_minmax(*(hLHHexVolField.get_rep()), minmax);
+      tens.resize(minmax.second+1);
+      vector<double> t(6);
+      t[0] = t[3] = t[5] = 1;
+      t[1] = t[2] = t[4] = 0;
+      Tensor ten(t);
+      for (unsigned int i = 0; i < tens.size(); i++) {
+	tens[i] = pair<string, Tensor>(to_string((int)i), ten);
+      }
+    }
   }
 
   //! Cache data values for comparison next time
@@ -264,57 +284,64 @@ void SetupFEMatrix::execute(){
   double unitsScale = 1.;
   string units;
   if (uiUseCond_.get()==1 /*&& hField->mesh()->get_property("units", units)*/) {
-	if(tet) {
-	  if(hCondMeshTet->mesh()->get_property("units", units)) {
-		msgStream_  << "units = "<< units <<"\n";
-		if (units == "mm") unitsScale = 1./1000;
-		else if (units == "cm") unitsScale = 1./100;
-		else if (units == "dm") unitsScale = 1./10;
-		else if (units == "m") unitsScale = 1./1;
-		else {
-		  warning("Did not recognize units of mesh '" + units + "'.");
-		}
-		msgStream_ << "unitsScale = "<< unitsScale <<"\n";
-	  }
-	}
+    if(tet) {
+      if(hCondMeshTet->mesh()->get_property("units", units)) {
+	msgStream_  << "units = "<< units <<"\n";
+	if (units == "mm") unitsScale = 1./1000;
+	else if (units == "cm") unitsScale = 1./100;
+	else if (units == "dm") unitsScale = 1./10;
+	else if (units == "m") unitsScale = 1./1;
 	else {
-	  if(hLHHexVolField->mesh()->get_property("units", units)) {
-		msgStream_  << "units = "<< units <<"\n";
-		if (units == "mm") unitsScale = 1./1000;
-		else if (units == "cm") unitsScale = 1./100;
-		else if (units == "dm") unitsScale = 1./10;
-		else if (units == "m") unitsScale = 1./1;
-		else {
-		  warning("Did not recognize units of mesh '" + units + "'.");
-		}
-		msgStream_ << "unitsScale = "<< unitsScale <<"\n";
-	  }
+	  warning("Did not recognize units of mesh '" + units + "'.");
 	}
+	msgStream_ << "unitsScale = "<< unitsScale <<"\n";
+      }
+    }
+    else {
+      if(hLHHexVolField->mesh()->get_property("units", units)) {
+	msgStream_  << "units = "<< units <<"\n";
+	if (units == "mm") unitsScale = 1./1000;
+	else if (units == "cm") unitsScale = 1./100;
+	else if (units == "dm") unitsScale = 1./10;
+	else if (units == "m") unitsScale = 1./1;
+	else {
+	  warning("Did not recognize units of mesh '" + units + "'.");
+	}
+	msgStream_ << "unitsScale = "<< unitsScale <<"\n";
+      }
+    }
+  }
+
+  int nprocs = atoi(nprocessors_.get().c_str());
+  if (nprocs > Thread::numProcessors() * 4)
+  {
+    nprocs = Thread::numProcessors() * 4;
   }
   
   if(!tet) {
-	BuildHexFEMatrix *hexmat = scinew BuildHexFEMatrix(hLHHexVolField, tens, unitsScale);
-	hGblMtrx_ = hexmat->buildMatrix();
+    BuildHexFEMatrix *hexmat = scinew BuildHexFEMatrix(hLHHexVolField, tens, unitsScale);
+    hGblMtrx_ = hexmat->buildMatrix();
   }
   else {
-	//! If the user wants to use basis matrices, 
-	//!    first check to see if we need to recompute them
-	if (lastUseBasis_) {
-	  if (hField->mesh()->generation != meshGen_ || 
-		  tens.size() != (unsigned int)(dataBasis_.size())) {
-		meshGen_ = hField->mesh()->generation;
-		//! Need to build basis matrices
-		build_basis_matrices(hField, tens.size(), unitsScale);
-	  }
-	  //! Have basis matrices, compute combined matrix
-	  hGblMtrx_ = build_composite_matrix(tens);
-	} else {
-	  BuildFEMatrix::build_FEMatrix(hCondMeshTet, tens, hGblMtrx_, unitsScale);
-	}
+    //! If the user wants to use basis matrices, 
+    //!    first check to see if we need to recompute them
+    if (lastUseBasis_) {
+      if (hField->mesh()->generation != meshGen_ || 
+	  tens.size() != (unsigned int)(dataBasis_.size())) {
+	meshGen_ = hField->mesh()->generation;
+	//! Need to build basis matrices
+	build_basis_matrices(hField, tens.size(), unitsScale, nprocs);
+      }
+      //! Have basis matrices, compute combined matrix
+      hGblMtrx_ = build_composite_matrix(tens);
+    } else {
+      BuildFEMatrix::build_FEMatrix(hCondMeshTet, tens, hGblMtrx_,
+				    unitsScale, nprocs);
+    }
   }
 
   oportMtrx_->send(hGblMtrx_);
-
 }
+
 
 } // End namespace BioPSE

@@ -145,7 +145,8 @@ AttractNormals::execute()
   }
 
   bool scale_p = false;
-  if (ifieldhandle->query_scalar_interface(this))
+  ScalarFieldInterfaceHandle sfi = ifieldhandle->query_scalar_interface(this);
+  if (sfi.get_rep())
   {
     scale_p = true;
   }

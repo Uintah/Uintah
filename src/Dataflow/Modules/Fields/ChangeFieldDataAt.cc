@@ -51,7 +51,7 @@ public:
   DECLARE_MAKER(ChangeFieldDataAt)
 
 ChangeFieldDataAt::ChangeFieldDataAt(GuiContext* ctx)
-  : Module("ChangeFieldDataAt", ctx, Source, "Fields", "SCIRun"),
+  : Module("ChangeFieldDataAt", ctx, Filter, "Fields", "SCIRun"),
     outputdataat_(ctx->subVar("outputdataat")),
     generation_(-1)
 {
