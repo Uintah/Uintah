@@ -694,7 +694,6 @@ proc biopseFDialog {argstring} {
     set y [expr {[winfo screenheight $w]/2 - [winfo reqheight $w]/2 \
 	    - [winfo vrooty [winfo parent $w]]}]
     wm geom $w [winfo reqwidth $w]x[winfo reqheight $w]+$x+$y
-    wm deiconify $w
     wm title $w $data(-title)
 
     # 7. Set a grab and claim the focus too.
@@ -704,6 +703,7 @@ proc biopseFDialog {argstring} {
     if {$oldGrab != ""} {
 	set grabStatus [grab status $oldGrab]
     }
+
     grab $w
     focus $data(ent)
     $data(ent) delete 0 end
