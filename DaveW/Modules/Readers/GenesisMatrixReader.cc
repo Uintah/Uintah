@@ -13,6 +13,7 @@
 #include <SCICore/Datatypes/DenseMatrix.h>
 #include <PSECommon/share/share.h>
 #include <fstream>
+#include <string>
 
 namespace PSECommon {
 namespace Modules {
@@ -48,7 +49,7 @@ public:
   {
     d_mat.clear();
     readVector();
-    fstream dipfs(dipoleFile);
+    ifstream dipfs(dipoleFile);
 
     if (!dipfs) { 
       cerr << "Error could not open file: " << dipoleFile << endl; 
@@ -68,7 +69,7 @@ public:
 	scaleVec.clear();
       }
     
-      for (int i = 0; i < d_mat.size(); i++) {
+      for (unsigned int i = 0; i < d_mat.size(); i++) {
 	dipfs >> d;
 	scaleVec.push_back(d * 1.0e10);
 	//	cout << "i: " << i << " val: " << d * 1.0e10;
@@ -97,7 +98,7 @@ public:
   }
 
   void readVector() {
-    fstream vecfs(vectorFile);
+    ifstream vecfs(vectorFile);
 
     if (!vecfs) { 
       cerr << "Error could not open file: " << vectorFile << endl; 
