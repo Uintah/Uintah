@@ -52,6 +52,11 @@ ExplicitSolver(const ArchesLabel* label,
 	       d_enthalpySolve(calc_enthalpy),
 	       d_physicalConsts(physConst)
 {
+  d_pressSolver = 0;
+  d_momSolver = 0;
+  d_scalarSolver = 0;
+  d_reactingScalarSolver = 0;
+  d_enthalpySolver = 0;
 }
 
 // ****************************************************************************
@@ -59,6 +64,11 @@ ExplicitSolver(const ArchesLabel* label,
 // ****************************************************************************
 ExplicitSolver::~ExplicitSolver()
 {
+  delete d_pressSolver;
+  delete d_momSolver;
+  delete d_scalarSolver;
+  delete d_reactingScalarSolver;
+  delete d_enthalpySolver;
 }
 
 // ****************************************************************************

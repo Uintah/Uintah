@@ -55,6 +55,9 @@ PressureSolver::PressureSolver(const ArchesLabel* label,
 				     d_myworld(myworld)
 {
   d_perproc_patches=0;
+  d_discretize = 0;
+  d_source = 0;
+  d_linearSolver = 0; 
 }
 
 // ****************************************************************************
@@ -64,6 +67,9 @@ PressureSolver::~PressureSolver()
 {
   if(d_perproc_patches && d_perproc_patches->removeReference())
     delete d_perproc_patches;
+  delete d_discretize;
+  delete d_source;
+  delete d_linearSolver;
 }
 
 // ****************************************************************************

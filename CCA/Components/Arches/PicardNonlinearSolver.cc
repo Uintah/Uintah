@@ -29,6 +29,9 @@
 
 #include <math.h>
 
+#include <iostream>
+using namespace std;
+
 using namespace Uintah;
 
 // ****************************************************************************
@@ -48,6 +51,10 @@ PicardNonlinearSolver(const ArchesLabel* label,
 		       d_enthalpySolve(calc_enthalpy),
 		       d_physicalConsts(physConst)
 {
+  d_pressSolver = 0;
+  d_momSolver = 0;
+  d_scalarSolver = 0;
+  d_enthalpySolver = 0;
 }
 
 // ****************************************************************************
@@ -55,6 +62,10 @@ PicardNonlinearSolver(const ArchesLabel* label,
 // ****************************************************************************
 PicardNonlinearSolver::~PicardNonlinearSolver()
 {
+  delete d_pressSolver;
+  delete d_momSolver;
+  delete d_scalarSolver;
+  delete d_enthalpySolver;
 }
 
 // ****************************************************************************
