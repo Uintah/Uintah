@@ -249,25 +249,17 @@ itcl_class SCIRun_Visualization_GenStandardColorMaps {
     }
     method change {} {
 	global $this-minRes
-	global $this-resolution
 	global $this-mapType
+
 	set w .ui[modname]
-	switch  [set $this-mapType] {
-	    0  -
-	    1  { set $this-minRes 2}
-	    2  -
-	    3  { set $this-minRes 12}
-	    4  -
-	    5  -
-	    6  { set $this-minRes 19}
-	    7  { set $this-minRes 13}
-	    8  { set $this-minRes 10}
-	    default {set $this-minRes 19}
-	}
-	$w.f3.s2 configure -from [set $this-minRes]
+
+	set mtype [set $this-mapType]
+	set mres [llength [lindex [lindex $colorMaps $mtype] 1]]
+	set $this-minRes $mres
+	$w.f3.s2 configure -from $mres
+
 	$this update
 	$this-c needexecute
-	
     }
 
     method selectNode { x y } {
