@@ -22,10 +22,10 @@ using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 
-ICEMaterial::ICEMaterial(ProblemSpecP& ps)
+ICEMaterial::ICEMaterial(ProblemSpecP& ps): Material(ps)
 {
-  d_react_prods = false;
-   // Constructor
+
+  // Constructor
 
   // Follow the layout of the input file
   // Steps:
@@ -48,12 +48,7 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps)
    ps->require("viscosity",d_viscosity);
    ps->require("speed_of_sound",d_speed_of_sound);
    ps->require("gamma",d_gamma);
-   
-  int trueOrFalse;  // This is really stupid, I tried it as a bool and it didn't work
-   ps->get("Is_RX_Products", trueOrFalse);
-  if (trueOrFalse==1) d_react_prods= true;
-   
-   cout<< "is products of reaction "<<d_react_prods<<endl;
+
    // Step 3 -- Loop through all of the pieces in this geometry object
    int piece_num = 0;
    for (ProblemSpecP geom_obj_ps = ps->findBlock("geom_object");
@@ -137,10 +132,6 @@ double ICEMaterial::getSpeedOfSound() const
   return d_speed_of_sound;
 }
 
-bool ICEMaterial::getIsProductOfReaction() const
-{
-  return d_react_prods;
-}
 /* --------------------------------------------------------------------- 
  Function~  ICEMaterial::initializeCells--
  Purpose~ Initialize material dependent variables 

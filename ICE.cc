@@ -34,10 +34,6 @@ using namespace SCIRun;
 using namespace Uintah;
 
 static int iterNum = 0;
-
-/*`==========TESTING==========  HACK: so we can get mass exchange off the ground*/
-#define HMX 1
- /*==========TESTING==========`*/
  
 //#define DOING
 #undef DOING
@@ -1867,9 +1863,16 @@ void ICE::massExchange(const ProcessorGroup*,
    vector<CCVariable<double> > burnedMass(numMatls);
    vector<CCVariable<double> > releasedHeat(numMatls);
    vector<CCVariable<double> > rho_CC(numMatls);
+   
+   int reactant_indx = -1;
 
     for(int m = 0; m < numMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
+
+      // Look for the reactant material
+      if (matl->getRxProduct() == Material::reactant)
+	reactant_indx = matl->getDWIndex();
+
       int indx = matl->getDWIndex();
       new_dw->get(rho_CC[m], lb->rho_CCLabel, indx,patch,Ghost::None, 0);
       new_dw->allocate(burnedMass[m],  lb->burnedMass_CCLabel,  indx,patch);
@@ -1878,17 +1881,17 @@ void ICE::massExchange(const ProcessorGroup*,
       releasedHeat[m].initialize(0.0); 
     }
     //__________________________________
-    // Do the exchange if there is HMX
+    // Do the exchange if there is a reactant (reactant_indx >= 0)
     // and the switch is on.
-    if(d_massExchange){        
+    if(d_massExchange && (reactant_indx >= 0)){       
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
 
-        double mass_hmx = rho_CC[HMX][*iter] * vol;
+        double mass_hmx = rho_CC[reactant_indx][*iter] * vol;
         if (mass_hmx > d_SMALL_NUM)  {
-           double burnedMass_tmp = (rho_CC[HMX][*iter] * vol);  
+           double burnedMass_tmp = (rho_CC[reactant_indx][*iter] * vol);  
            // hardwired wipes out all the mass in one 
           // timestep
-           burnedMass[HMX][*iter] =  -burnedMass_tmp;
+           burnedMass[reactant_indx][*iter] =  -burnedMass_tmp;
         }
       }
       //__________________________________
@@ -1896,15 +1899,15 @@ void ICE::massExchange(const ProcessorGroup*,
       // dump all the mass into that matl.
       for(int prods = 0; prods < numICEMatls; prods++) {
         ICEMaterial* ice_matl = d_sharedState->getICEMaterial(prods);
-         if (ice_matl->getIsProductOfReaction()) {
-           for(int m = 0; m < numICEMatls; m++) {
-             for(CellIterator iter=patch->getCellIterator();
-                                                      !iter.done();iter++){
-               burnedMass[prods][*iter]  -= burnedMass[m][*iter];
-             }
-           }
-         }
-       }    
+	if (ice_matl->getRxProduct() == Material::product) {
+	  for(int m = 0; m < numICEMatls; m++) {
+	    for(CellIterator iter=patch->getCellIterator();
+		!iter.done();iter++){
+	      burnedMass[prods][*iter]  -= burnedMass[m][*iter];
+	    }
+	  }
+	}
+      }    
     }
     //__________________________________
     // if there is no mass exchange carry forward
