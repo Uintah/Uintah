@@ -44,6 +44,9 @@ LOG
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Packages/Uintah/Core/Grid/ShareAssignArray3.h>
+#include <Packages/Uintah/Core/Grid/SFCXVariable.h>
+#include <Packages/Uintah/Core/Grid/SFCYVariable.h>
+#include <Packages/Uintah/Core/Grid/SFCZVariable.h>
 //#include <Packages/Uintah/Core/Grid/NodeIterator.h>
  
 #include <iostream> 
@@ -90,7 +93,11 @@ void ScalarFieldExtractor::get_vars(vector< string >& names,
     const TypeDescription *subtype = td->getSubType();
     //  only handle NC and CC Vars
     if( td->getType() ==  TypeDescription::NCVariable ||
-	td->getType() ==  TypeDescription::CCVariable ){
+	td->getType() ==  TypeDescription::CCVariable ||
+ 	td->getType() ==  TypeDescription::SFCXVariable ||
+	td->getType() ==  TypeDescription::SFCYVariable ||
+	td->getType() ==  TypeDescription::SFCZVariable )
+    {
       // supported scalars double, int, long64, long long, short, bool
       if( subtype->getType() == TypeDescription::double_type ||
 	  subtype->getType() == TypeDescription::int_type ||
@@ -173,6 +180,7 @@ void ScalarFieldExtractor::execute()
 	    scinew LatVolField<double>( mesh_handle_, Field::NODE );
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
+	  sfd->set_property( "vartype",int(TypeDescription::NCVariable),true);
 	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
 	  sfout->send(sfd);
 	  return;
@@ -184,6 +192,7 @@ void ScalarFieldExtractor::execute()
 	    scinew LatVolField<int>( mesh_handle_, Field::NODE );
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
+	  sfd->set_property( "vartype",int(TypeDescription::NCVariable),true);
 	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
 	  sfout->send(sfd);
 	  return;
@@ -195,6 +204,7 @@ void ScalarFieldExtractor::execute()
 	    scinew LatVolField<long64>( mesh_handle_, Field::NODE );
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
+	  sfd->set_property( "vartype",int(TypeDescription::NCVariable),true);
 	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
 	  sfout->send(sfd);
 	  return;
@@ -213,6 +223,7 @@ void ScalarFieldExtractor::execute()
 	  
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
+	  sfd->set_property( "vartype",int(TypeDescription::CCVariable),true);
 	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
 	  sfout->send(sfd);
 	  return;
@@ -224,6 +235,7 @@ void ScalarFieldExtractor::execute()
 	    scinew LatVolField<int>( mesh_handle_, Field::CELL );
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
+	  sfd->set_property( "vartype",int(TypeDescription::CCVariable),true);
 	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
 	  sfout->send(sfd);
 	  return;
@@ -236,12 +248,154 @@ void ScalarFieldExtractor::execute()
 	    scinew LatVolField<long64>( mesh_handle_, Field::CELL );
 	  sfd->set_property( "variable", string(var), true );
 	  sfd->set_property( "time", double( time ), true);
+	  sfd->set_property( "vartype",int(TypeDescription::CCVariable),true);
 	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
 	  sfout->send(sfd);
 	  return;
 	}
       default:
 	cerr<<"CCScalarField<?> Unknown scalar type\n";
+	return;
+      }
+    case TypeDescription::SFCXVariable:
+      switch ( subtype->getType() ) {
+      case TypeDescription::double_type:
+	{
+	  SFCXVariable<double> gridVar;
+	  LatVolField<double> *sfd =
+	    scinew LatVolField<double>( mesh_handle_, Field::NODE );
+	  
+	  sfd->set_property( "variable", string(var), true );
+	  sfd->set_property( "time", double( time ), true);
+	  sfd->set_property( "vartype",
+			     int(TypeDescription::SFCXVariable),true);
+	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
+	  sfout->send(sfd);
+	  return;
+	}
+      case TypeDescription::int_type:
+	{
+	  SFCXVariable<int> gridVar;
+	  LatVolField<int> *sfd =
+	    scinew LatVolField<int>( mesh_handle_, Field::NODE );
+	  sfd->set_property( "variable", string(var), true );
+	  sfd->set_property( "time", double( time ), true);
+	  sfd->set_property( "vartype",
+			     int(TypeDescription::SFCXVariable),true);
+	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
+	  sfout->send(sfd);
+	  return;
+	}
+      case TypeDescription::long64_type:
+      case TypeDescription::long_type:
+	{
+	  SFCXVariable<long64> gridVar;
+	  LatVolField<long64> *sfd =
+	    scinew LatVolField<long64>( mesh_handle_, Field::NODE );
+	  sfd->set_property( "variable", string(var), true );
+	  sfd->set_property( "time", double( time ), true);
+	  sfd->set_property( "vartype",
+			     int(TypeDescription::SFCXVariable),true);
+	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
+	  sfout->send(sfd);
+	  return;
+	}
+      default:
+	cerr<<"SFCXScalarField<?> Unknown scalar type\n";
+	return;
+      }
+    case TypeDescription::SFCYVariable:
+      switch ( subtype->getType() ) {
+      case TypeDescription::double_type:
+	{
+	  SFCYVariable<double> gridVar;
+	  LatVolField<double> *sfd =
+	    scinew LatVolField<double>( mesh_handle_, Field::NODE );
+	  
+	  sfd->set_property( "variable", string(var), true );
+	  sfd->set_property( "time", double( time ), true);
+	  sfd->set_property( "vartype",
+			     int(TypeDescription::SFCYVariable),true);
+	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
+	  sfout->send(sfd);
+	  return;
+	}
+      case TypeDescription::int_type:
+	{
+	  SFCYVariable<int> gridVar;
+	  LatVolField<int> *sfd =
+	    scinew LatVolField<int>( mesh_handle_, Field::NODE );
+	  sfd->set_property( "variable", string(var), true );
+	  sfd->set_property( "time", double( time ), true);
+	  sfd->set_property( "vartype",
+			     int(TypeDescription::SFCYVariable),true);
+	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
+	  sfout->send(sfd);
+	  return;
+	}
+      case TypeDescription::long64_type:
+      case TypeDescription::long_type:
+	{
+	  SFCYVariable<long64> gridVar;
+	  LatVolField<long64> *sfd =
+	    scinew LatVolField<long64>( mesh_handle_, Field::NODE );
+	  sfd->set_property( "variable", string(var), true );
+	  sfd->set_property( "time", double( time ), true);
+	  sfd->set_property( "vartype",
+			     int(TypeDescription::SFCYVariable),true);
+	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
+	  sfout->send(sfd);
+	  return;
+	}
+      default:
+	cerr<<"SFCYScalarField<?> Unknown scalar type\n";
+	return;
+      }
+    case TypeDescription::SFCZVariable:
+      switch ( subtype->getType() ) {
+      case TypeDescription::double_type:
+	{
+	  SFCZVariable<double> gridVar;
+	  LatVolField<double> *sfd =
+	    scinew LatVolField<double>( mesh_handle_, Field::NODE );
+	  
+	  sfd->set_property( "variable", string(var), true );
+	  sfd->set_property( "time", double( time ), true);
+	  sfd->set_property( "vartype",
+			     int(TypeDescription::SFCZVariable),true);
+	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
+	  sfout->send(sfd);
+	  return;
+	}
+      case TypeDescription::int_type:
+	{
+	  SFCZVariable<int> gridVar;
+	  LatVolField<int> *sfd =
+	    scinew LatVolField<int>( mesh_handle_, Field::NODE );
+	  sfd->set_property( "variable", string(var), true );
+	  sfd->set_property( "time", double( time ), true);
+	  sfd->set_property( "vartype",
+			     int(TypeDescription::SFCZVariable),true);
+	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
+	  sfout->send(sfd);
+	  return;
+	}
+      case TypeDescription::long64_type:
+      case TypeDescription::long_type:
+	{
+	  SFCZVariable<long64> gridVar;
+	  LatVolField<long64> *sfd =
+	    scinew LatVolField<long64>( mesh_handle_, Field::NODE );
+	  sfd->set_property( "variable", string(var), true );
+	  sfd->set_property( "time", double( time ), true);
+	  sfd->set_property( "vartype",
+			     int(TypeDescription::SFCZVariable),true);
+	  build_field( archive, level, low, var, mat, time, gridVar, sfd );
+	  sfout->send(sfd);
+	  return;
+	}
+      default:
+	cerr<<"SFCZScalarField<?> Unknown scalar type\n";
 	return;
       }
     default:
