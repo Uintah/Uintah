@@ -34,6 +34,9 @@ color:#003333}
 a.alt:link { 
 color:#FFCC33;}
 
+a.disclaimer:link { 
+color:#003300;}
+
 a:visited {
 color:#336666}
 
@@ -88,3 +91,9 @@ font-size:75%}
 a.heading {
 font-style: oblique;
 font-size: 100% }
+
+div.sciinfo {
+text-align: center;
+color: black;
+}
+
