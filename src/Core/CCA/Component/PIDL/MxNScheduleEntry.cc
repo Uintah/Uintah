@@ -66,13 +66,20 @@ void MxNScheduleEntry::addCallerRep(MxNArrayRep* arr_rep)
     int myrank = arr_rep->getRank();
     descriptorList::iterator iter = caller_rep.begin();
     for(unsigned int i=0; i < caller_rep.size(); i++, iter++) 
-      assert(myrank != (*iter)->getRank());
+      if(myrank == (*iter)->getRank()) delete (*iter);
   }
   caller_rep.push_back(arr_rep);
 }
 
 void MxNScheduleEntry::addCalleeRep(MxNArrayRep* arr_rep)
 {
+  if(scht == caller) {
+    //Check if a representation with the same rank exists
+    int myrank = arr_rep->getRank();
+    descriptorList::iterator iter = callee_rep.begin();
+    for(unsigned int i=0; i < callee_rep.size(); i++, iter++)
+      if(myrank == (*iter)->getRank()) delete (*iter);
+  }
   callee_rep.push_back(arr_rep);
 }
 
@@ -153,7 +160,7 @@ void MxNScheduleEntry::setArray(void** a_ptr)
     allowArraySet = false;
     //Raise getArrayWait's semaphore 
     arr_wait_sema.up((int) caller_rep.size());
-    ::std::cout << "setArray -- Raised sema +" << caller_rep.size() << "\n";
+    //::std::cout << "setArray -- Raised sema +" << caller_rep.size() << "\n";
   }
   else { 
     (*a_ptr) = arr_ptr;
@@ -214,15 +221,15 @@ void* MxNScheduleEntry::waitCompleteArray()
     bool recv_flag = (*iter)->received;
     recv_mutex.unlock();
     if (recv_flag == false) {
-      ::std::cout << "rank=" << i << " of " << rl.size() << " is not here yet\n";
+      //::std::cout << "rank=" << i << " of " << rl.size() << " is not here yet\n";
       recv_sema.down();
       i=-1; //Next loop iteration will increment it to 0
     }
     else {
-	::std::cout <<  "rank=" << i << " of " << rl.size() << " is here\n";
+	//::std::cout <<  "rank=" << i << " of " << rl.size() << " is here\n";
     }
   } 
-  ::std::cout << "All redistribution have arrived...\n";
+  //::std::cout << "All redistribution have arrived...\n";
   //Mark all of them as not received to get ready for next time
   iter = rl.begin();
   for(unsigned int i=0; i < rl.size(); iter++, i++) {
@@ -249,7 +256,7 @@ void MxNScheduleEntry::reportMetaRecvDone(int size)
     //to wait for the meta_sema so we raise it 
     //(also perpertually raise it in each redistribution)
     meta_sema.up((int) 4*caller_rep.size());
-    ::std::cout << "UP Meta semaphore\n";
+    //::std::cout << "UP Meta semaphore\n";
   }
 }
 
@@ -260,7 +267,7 @@ void MxNScheduleEntry::doReceive(int rank)
   //Find the proper arr. representation and mark it is received
   for(unsigned int i=0; i < caller_rep.size(); i++) {
     if (caller_rep[i]->getRank() == rank) {
-      ::std::cout << "received dist rank=" << i << "\n";
+      //::std::cout << "received dist rank=" << i << "\n";
       //If we have already received this, something is happening
       //out of order, so we yield until things sort out.
       while(caller_rep[i]->received) {
