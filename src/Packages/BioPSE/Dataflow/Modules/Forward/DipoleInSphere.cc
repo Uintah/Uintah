@@ -115,12 +115,12 @@ void DipoleInSphere::execute() {
   
   
   if (!iportGeom_->get(field_handle)){
-    msgStream_ << "Cann't get mesh data" << endl;
+    error("Can't get input mesh data.");
     return;
   }
   
   if (!field_handle.get_rep()) {
-    msgStream_ << "Error: empty mesh" << endl;
+    error("Empty input mesh.");
     return;
   }
  
@@ -172,12 +172,11 @@ void DipoleInSphere::execute() {
       oportPot_->send(FieldHandle(hNewSurf.get_rep()));
     }
     else {
-      msgStream_ << "No dipole info found in the mesh supplied or supplied field is not of type PointCloudField<Vector>" << endl;
+      warning("No dipole info found in the mesh supplied or supplied field is not of type PointCloudField<Vector>.");
     }
-   
   }
   else {
-    msgStream_ << "Error: the supplied field is not of type TriSurfField<double>" << endl;
+    error("The supplied field is not of type TriSurfField<double>.");
     return;
   }
 }
@@ -191,7 +190,7 @@ void DipoleInSphere::fillOneSpherePotentials(DenseMatrix& dips, TriSurfFieldHand
   BBox bbox = hMesh->get_bounding_box();
   
   if (!bbox.valid()){
-    msgStream_ << "No valid mesh" << endl;
+    error("No valid input mesh.");
     return;
   }
 

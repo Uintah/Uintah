@@ -151,12 +151,12 @@ void SetupBEMatrix::execute(){
   FieldHandle hFieldOut;
    
   if(!iportSurfInn_->get(hFieldInn)) { 
-    msgStream_ << "Couldn't get handle to the inner surface. Returning." << endl;
+    error("Couldn't get handle to the inner surface.");
     return;
   }
   
   if(!iportSurfOut_->get(hFieldOut)) { 
-    msgStream_ << "Couldn't get handle to the outer surface. Returning." << endl;
+    error("Couldn't get handle to the outer surface.");
     return;
   }
 
@@ -177,7 +177,7 @@ void SetupBEMatrix::execute(){
       hSurfInn = pIn->get_typed_mesh();
     }
     else {
-      msgStream_ << "Inner Surf is not of type TriSurfField<double>" << endl;
+      error("Inner Surf is not of type TriSurfField<double>.");
       return;
     }
     
@@ -186,14 +186,14 @@ void SetupBEMatrix::execute(){
       hSurfOut = pOut->get_typed_mesh();
     }
     else {
-      msgStream_ << "Outer Surf is not of type TriSurfField<double>" << endl;
+      error("Outer Surf is not of type TriSurfField<double>.");
       return;
     }
     
     BuildBEMatrix::build_BEMatrix(hSurfInn, hSurfOut, hZbh_, 2);
     
     if (!hZbh_.get_rep()){
-      msgStream_ << "Unable to construct BE matrix " << endl;
+      error("Unable to construct BE matrix.");
       return;
     }
     
@@ -215,7 +215,7 @@ void SetupBEMatrix::execute(){
     }
   }
   else {
-    msgStream_ << "Field inputs are old. Resending stored matrix..." << endl;
+    remark("Field inputs are old. Resending stored matrix.");
   }
 
   TriSurfField<double>* pOut2 = dynamic_cast<TriSurfField<double>*>(hFieldOut.get_rep());

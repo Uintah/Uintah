@@ -103,7 +103,7 @@ void ApplyFEMVoltageSource::execute()
   FieldHandle hField;
   
   if (!iportField_->get(hField) || !hField.get_rep()) {
-    msgStream_ << "Can't get handle to mesh. Returning..." << endl;
+    error("Can't get handle to mesh.");
     return;
   }
 
@@ -111,7 +111,7 @@ void ApplyFEMVoltageSource::execute()
   TetVolField<int> *field;
 
   if (hField->get_type_name(0)!="TetVolField" && hField->get_type_name(1)!="int"){
-    msgStream_ << "Supplied field is not of type TetVolField<int>. Returning..." << endl;
+    error("Supplied field is not of type TetVolField<int>.");
     return;
   }
   else {
@@ -128,7 +128,7 @@ void ApplyFEMVoltageSource::execute()
       dirBC.push_back(pair<int, double>(0,0.0));
     } else { // bcFlag == DirSub
       if (!hField->get_property("dirichlet", dirBC)){
-	msgStream_ << "The input field doesn't contain Dirichlet boundary conditions" << endl;
+	warning("The input field doesn't contain Dirichlet boundary conditions.");
 //	return;
       }
     }

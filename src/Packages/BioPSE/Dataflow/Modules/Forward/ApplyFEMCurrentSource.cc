@@ -127,7 +127,7 @@ void ApplyFEMCurrentSource::execute()
   FieldHandle hField;
   
   if (!iportField_->get(hField) || !hField.get_rep()) {
-    msgStream_ << "Can't get handle to mesh. Returning..." << endl;
+    error("Can't get handle to input mesh.");
     return;
   }
 
@@ -135,7 +135,7 @@ void ApplyFEMCurrentSource::execute()
   LockingHandle<TetVolField<int> > hCondField;
 
   if (hField->get_type_name(0)!="TetVolField" && hField->get_type_name(1)!="int"){
-    msgStream_ << "Supplied field is not of type TetVolField<int>. Returning..." << endl;
+    error("Supplied field is not of type TetVolField<int>.");
     return;
   }
   else {
@@ -170,14 +170,14 @@ void ApplyFEMCurrentSource::execute()
   if (modeTCL_.get() == "dipole") {
     FieldHandle hSource;
     if (!iportSource_->get(hSource) || !hSource.get_rep()) {
-      msgStream_ << "Can 't get handle to source field. Returning..." << endl;
+      error("Can't get handle to source field.");
       return;
     }
   
     LockingHandle<PointCloudField<Vector> > hDipField;
     
     if (hSource->get_type_name(0)!="PointCloudField" || hSource->get_type_name(1)!="Vector"){
-      msgStream_ << "Supplied field is not of type PointCloudField<Vector>. Returning..." << endl;
+      error("Supplied field is not of type PointCloudField<Vector>.");
       return;
     }
     else {
