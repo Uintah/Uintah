@@ -34,6 +34,10 @@
       <!-- one of (device port file) -->
     </inputs>
     <outputs>
+      <port>
+	<name>Output Data</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
     </outputs>
   </io>
   <testing>

@@ -32,7 +32,7 @@
   <io>
     <inputs lastportdynamic="no">
       <port>
-	<name>Input FieldSet</name>
+	<name>Input Data</name>
 	<datatype>SCIRun::FieldSet</datatype>>
       </port>
     </inputs>

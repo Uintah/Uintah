@@ -30,6 +30,12 @@
     </description>
   </overview>
   <io>
+    <inputs lastportdynamic="no">
+      <port>
+	<name>Input Data</name>
+	<datatype>SCIRun::Path</datatype>
+      </port>
+    </inputs>
   </io>
   <testing>
   </testing>
