@@ -1,13 +1,13 @@
 /* share.h written by Chris Moulding 11/98 */
 
-#undef PSECOMMONSHARE
+#undef PSECommonSHARE
 
 #ifdef _WIN32
   #if defined(BUILD_PSECOMMON)
-    #define PSECOMMONSHARE __declspec(dllexport)
+    #define PSECommonSHARE __declspec(dllexport)
   #else
-    #define PSECOMMONSHARE __declspec(dllimport)
+    #define PSECommonSHARE __declspec(dllimport)
   #endif 
 #else 
-  #define PSECOMMONSHARE 
+  #define PSECommonSHARE 
 #endif 

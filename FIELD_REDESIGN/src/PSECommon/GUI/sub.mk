@@ -50,18 +50,39 @@ $(SRCDIR)/tclIndex: $(SRCDIR)/AddWells.tcl $(SRCDIR)/AddWells2.tcl \
 	$(SRCDIR)/VoidStarReader.tcl $(SRCDIR)/VoidStarWriter.tcl \
 	$(SRCDIR)/VolRendTexSlices.tcl $(SRCDIR)/VolVis.tcl \
 	$(SRCDIR)/WidgetTest.tcl $(SRCDIR)/Writer.tcl \
-	$(SRCDIR)/cConjGrad.tcl $(SRCDIR)/cPhase.tcl
+	$(SRCDIR)/cConjGrad.tcl $(SRCDIR)/cPhase.tcl \
+	$(SRCDIR)/EditPath.tcl $(SRCDIR)/PathReader.tcl\
+	$(SRCDIR)/PathWriter.tcl\
+	$(SRCDIR)/IsoSurfaceSAGE.tcl $(SRCDIR)/IsoSurfaceNOISE.tcl\
+	$(SRCDIR)/SearchNOISE.tcl\
+	$(SRCDIR)/GenVectorField.tcl $(SRCDIR)/GenScalarField.tcl
 	$(SRCTOP)/scripts/createTclIndex $(SRCTOP)/PSECommon/GUI
 
 CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
+# Revision 1.2.2.3  2000/09/28 03:16:46  mcole
+# merge trunk into FIELD_REDESIGN branch
+#
 # Revision 1.2.2.2  2000/09/21 04:34:26  mcole
 # initial checkin of showGeometry module
 #
 # Revision 1.2.2.1  2000/06/07 17:30:32  kuehne
 # revised sub.mk to include Domain modules
+#
+# Revision 1.6  2000/07/28 21:18:03  yarden
+# add IsoSurfaceNOISE and SearchNOISE
+#
+# Revision 1.5  2000/07/23 18:28:45  dahart
+# Initial commit / GUI files for modules to generate scalar & vector
+# fields from symbolic functions
+#
+# Revision 1.4  2000/07/22 18:04:19  yarden
+# add GUI for IsoSurfaceSAGE module
+#
+# Revision 1.3  2000/07/18 23:08:06  samsonov
+# Support for PathReader, PathWriter and EditPath modules
 #
 # Revision 1.2  2000/03/20 19:36:50  sparker
 # Added VPATH support

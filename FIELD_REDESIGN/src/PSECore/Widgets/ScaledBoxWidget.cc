@@ -41,7 +41,7 @@ const Index NumVars = 16;
 const Index NumGeoms = 35;
 const Index NumPcks = 16;
 const Index NumMatls = 4;
-const Index NumMdes = 4;
+const Index NumMdes = 7;
 const Index NumSwtchs = 4;
 const Index NumSchemes = 7;
 
@@ -305,10 +305,17 @@ ScaledBoxWidget::ScaledBoxWidget( Module* module, CrowdMonitor* lock,
    materials[SliderMatl] = scinew GeomMaterial(sliders, DefaultSliderMaterial);
    CreateModeSwitch(3, materials[SliderMatl]);
 
+   // Switch0 are the bars
+   // Switch1 are the rotation points
+   // Switch2 are the resize cylinders
+   // Switch3 are the sliders
    SetMode(Mode0, Switch0|Switch1|Switch2|Switch3);
    SetMode(Mode1, Switch0|Switch1|Switch2);
    SetMode(Mode2, Switch0|Switch1);
    SetMode(Mode3, Switch0);
+   SetMode(Mode4, Switch0|Switch1|Switch3);
+   SetMode(Mode5, Switch0|Switch2|Switch3);
+   SetMode(Mode6, Switch0|Switch2);
 
    FinishWidget();
 }
@@ -357,6 +364,7 @@ ScaledBoxWidget::redraw()
    Point I(Center+In);
    Point O(Center-In);
    
+   // draw the edges
    if (mode_switches[0]->get_state()) {
       ((GeomCylinder*)geometries[CylIU])->move(IUL, IUR, cylinderrad);
       ((GeomCylinder*)geometries[CylIR])->move(IUR, IDR, cylinderrad);
@@ -380,6 +388,7 @@ ScaledBoxWidget::redraw()
       ((GeomSphere*)geometries[SmallSphereODL])->move(ODL, cylinderrad);
    }
 
+   // draw the rotating points
    if (mode_switches[1]->get_state()) {
       ((GeomSphere*)geometries[SphereR])->move(R, sphererad);
       ((GeomSphere*)geometries[SphereL])->move(L, sphererad);
@@ -389,6 +398,7 @@ ScaledBoxWidget::redraw()
       ((GeomSphere*)geometries[SphereO])->move(O, sphererad);
    }
 
+   // draw the resizing cylinders
    if (mode_switches[2]->get_state()) {
       Vector resizeR(GetRightAxis()*1.5*widget_scale),
 	 resizeD(GetDownAxis()*1.5*widget_scale),
@@ -402,6 +412,7 @@ ScaledBoxWidget::redraw()
       ((GeomCappedCylinder*)geometries[GeomResizeO])->move(O, O - resizeI, resizerad);
    }
 
+   // draw the sliders
    if (mode_switches[3]->get_state()) {
       Point SliderR(OUL+GetRightAxis()*variables[SDistRVar]->real()*2.0);
       Point SliderD(OUL+GetDownAxis()*variables[SDistDVar]->real()*2.0);
@@ -753,6 +764,18 @@ ScaledBoxWidget::AxisAligned( const Index yesno )
 
 //
 // $Log$
+// Revision 1.2.2.1  2000/09/28 03:14:24  mcole
+// merge trunk into FIELD_REDESIGN branch
+//
+// Revision 1.4  2000/06/26 21:54:18  bigler
+// Added new modes to allow for more control over which pieces
+// are rendered.
+//
+// Revision 1.3  2000/06/21 20:57:25  bigler
+// Added additional modes for widget grid.
+// One of the additional modes create a scaled widget frame that allows for resizing, but restricts movement to be axis alligned (no rotation).
+// The other mode allows for rotation without resizing.
+//
 // Revision 1.2  1999/08/17 06:38:32  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

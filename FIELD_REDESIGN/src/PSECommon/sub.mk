@@ -7,7 +7,10 @@ include $(SRCTOP)/scripts/largeso_prologue.mk
 
 SRCDIR := PSECommon
 
-SUBDIRS := $(SRCDIR)/ThirdParty $(SRCDIR)/Modules $(SRCDIR)/GUI
+SUBDIRS := $(SRCDIR)/ThirdParty \
+	$(SRCDIR)/Algorithms \
+	$(SRCDIR)/Modules \
+	$(SRCDIR)/GUI
 
 include $(SRCTOP)/scripts/recurse.mk
 
@@ -19,6 +22,12 @@ include $(SRCTOP)/scripts/largeso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.2.2.1  2000/09/28 03:16:44  mcole
+# merge trunk into FIELD_REDESIGN branch
+#
+# Revision 1.3  2000/07/22 18:02:40  yarden
+# add Algorithm subdir.
+#
 # Revision 1.2  2000/03/20 19:36:49  sparker
 # Added VPATH support
 #

@@ -33,7 +33,6 @@
 #include <SCICore/TclInterface/TCL.h>
 
 #include <iostream>
-#include <strstream>
 
 #include <PSECore/Datatypes/SpanTree.h>
 #include <PSECommon/Modules/Visualization/Noise.h>
@@ -135,7 +134,7 @@ Noise::execute()
     if ( triangles )
       delete triangles;
     triangles = scinew GeomTrianglesP*[nt];
-    printf("Noise: %d trees\n", np );
+    printf("Noise: %d trees\n", nt );
     forest_generation = forest->generation;
   }
   else {

@@ -44,14 +44,19 @@ public:
 	    { }
     inline Vector(const Vector&);
     inline Vector();
-    double length() const;
-    double length2() const;
+    inline double length() const;
+    inline double length2() const;
     friend SCICORESHARE inline double Dot(const Vector&, const Vector&);
     friend SCICORESHARE inline double Dot(const Point&, const Vector&);
     friend SCICORESHARE inline double Dot(const Vector&, const Point&);
-    Vector& operator=(const Vector&);
+    inline Vector& operator=(const Vector&);
 
     inline double& operator()(int idx) {
+	// Ugly, but works
+	return (&_x)[idx];
+    }
+
+    inline double operator()(int idx) const {
 	// Ugly, but works
 	return (&_x)[idx];
     }
@@ -59,36 +64,37 @@ public:
     // checks if one vector is exactly the same as another
     int operator==(const Vector&) const;
 
-    Vector operator*(const double) const;
-    Vector operator*(const Vector&) const;
-    Vector& operator*=(const double);
-    Vector operator/(const double) const;
-    Vector operator/(const Vector&) const;
-    Vector operator+(const Vector&) const;
-    Vector& operator+=(const Vector&);
-    Vector operator-() const;
-    Vector operator-(const Vector&) const;
-    Vector& operator-=(const Vector&);
+    inline Vector operator*(const double) const;
+    inline Vector operator*(const Vector&) const;
+    inline Vector& operator*=(const double);
+    inline Vector operator/(const double) const;
+    inline Vector operator/(const Vector&) const;
+    inline Vector& operator/=(const double);
+    inline Vector operator+(const Vector&) const;
+    inline Vector& operator+=(const Vector&);
+    inline Vector operator-() const;
+    inline Vector operator-(const Vector&) const;
+    inline Vector& operator-=(const Vector&);
     inline double normalize();
     Vector normal() const;
     friend SCICORESHARE inline Vector Cross(const Vector&, const Vector&);
     friend SCICORESHARE inline Vector Abs(const Vector&);
-    void x(double);
+    inline void x(double);
     inline double x() const;
-    void y(double);
+    inline void y(double);
     inline double y() const;
-    void z(double);
+    inline void z(double);
     inline double z() const;
 
-    void u(double);
+    inline void u(double);
     inline double u() const;
-    void v(double);
+    inline void v(double);
     inline double v() const;
-    void w(double);
+    inline void w(double);
     inline double w() const;
 
     void rotz90(const int);
-    Point point() const;
+    inline Point point() const;
     
     clString string() const;
     
@@ -261,6 +267,14 @@ inline Vector& Vector::operator*=(const double d)
     return *this;
 }
 
+inline Vector& Vector::operator/=(const double d)
+{
+    _x/=d;
+    _y/=d;
+    _z/=d;
+    return *this;
+}
+
 inline void Vector::x(double d)
 {
     _x=d;
@@ -359,6 +373,18 @@ inline Point Vector::asPoint() const {
 
 //
 // $Log$
+// Revision 1.6.2.1  2000/09/28 03:12:22  mcole
+// merge trunk into FIELD_REDESIGN branch
+//
+// Revision 1.9  2000/07/06 00:05:06  tan
+// Made const works for operator()
+//
+// Revision 1.8  2000/07/05 21:38:47  tan
+// Added /= operator.
+//
+// Revision 1.7  2000/06/15 20:43:19  sparker
+// Added "inline" statements in class file
+//
 // Revision 1.6  2000/04/12 22:56:00  sparker
 // Added IntVector (a vector of you-guess-what)
 // Added explicit ctors from point to vector and vice-versa

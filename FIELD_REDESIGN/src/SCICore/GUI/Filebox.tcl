@@ -28,12 +28,12 @@ proc setFileboxToHomeDir { w } {
 
 proc makeFileboxWithFilter { w var command cancel filter } {
 
-    global $w-filter $w-path $w-oldpath $w-oldsel
+    global $w-filter $w-path $w-oldpath $w-oldsel 
     global $var
+
 
     set $w-filter "$filter"
 
-    set $var ""
     set $w-oldsel ""
 
     global env
@@ -129,7 +129,7 @@ proc makeFileboxWithFilter { w var command cancel filter } {
     button $w.f.but.filt -text Filter -command "fbupdate $w $dirs $files"
     button $w.f.but.home -text Home -command "fbcd $w $env(PWD) $dirs $files"
     button $w.f.but.data -text Data -command "fbcd $w $w-path $dirs $files"
-    button $w.f.but.cancel -text Cancel -command $cancel
+    button $w.f.but.cancel -text Close -command $cancel
     pack $w.f.but.ok -in $w.f.but -side left -padx 2 -pady 2 -anchor w
     pack $w.f.but.cancel -in $w.f.but -side right -padx 2 -pady 2 \
 	    -anchor e

@@ -64,10 +64,11 @@ private:
   TCLint drawY;
   TCLint drawZ;
   TCLint drawView;
+  TCLint interp_mode;
 
   GLVolumeRenderer* volren;
   Vector ddv;
-
+  double ddview;
 };
 
 

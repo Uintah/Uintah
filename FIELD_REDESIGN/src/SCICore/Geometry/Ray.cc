@@ -64,5 +64,7 @@ void Ray::direction(const Vector& newdir)
     d=newdir;
 }
 
+
 }
 } 
+

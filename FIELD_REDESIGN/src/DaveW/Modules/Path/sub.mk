@@ -3,11 +3,23 @@
 # $Id$
 #
 
+# *** NOTE ***
+# 
+# Do not remove or modify the comment line:
+#
+# #[INSERT NEW ?????? HERE]
+#
+# It is required by the module maker to properly edit this file.
+# if you want to edit this file by hand, see the "Create A New Module"
+# documentation on how to do it correctly.
+
 include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := DaveW/Modules/Path
 
-SRCS     += $(SRCDIR)/EditPath.cc
+SRCS     += \
+
+#[INSERT NEW MODULE HERE]
 
 PSELIBS := DaveW/Datatypes/General PSECore/Dataflow PSECore/Datatypes \
 	SCICore/Persistent SCICore/Exceptions SCICore/Containers \
@@ -18,6 +30,19 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.2.2.1  2000/09/28 03:19:31  mcole
+# merge trunk into FIELD_REDESIGN branch
+#
+# Revision 1.5  2000/07/19 06:30:00  samsonov
+# EditPath is moved to PSECommon
+#
+# Revision 1.4  2000/06/08 22:46:18  moulding
+# Added a comment note about not messing with the module maker comment lines,
+# and how to edit this file by hand.
+#
+# Revision 1.3  2000/06/07 20:55:00  moulding
+# made changes to allow the module maker to add to and edit this file
+#
 # Revision 1.2  2000/03/20 19:36:15  sparker
 # Added VPATH support
 #

@@ -774,6 +774,9 @@ bool EditPath::Msg_Box(const clString& title, const clString& message){
 
 //
 // $Log$
+// Revision 1.6.2.1  2000/09/28 03:16:06  mcole
+// merge trunk into FIELD_REDESIGN branch
+//
 // Revision 1.6  2000/09/15 21:49:26  samsonov
 // added output switch and send_view() function
 //

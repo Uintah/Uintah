@@ -12,10 +12,10 @@
 #include <SCICore/Datatypes/ColorMap.h>
 #include <PSECore/Datatypes/ColorMapPort.h>
 #include <PSECore/Datatypes/GeometryPort.h>
-#include <SCICore/Datatypes/ScalarFieldRGuchar.h>
+#include <SCICore/Datatypes/ScalarFieldRGBase.h>
 
 #include <SCICore/Geom/GeomTriangles.h>
-
+#include <SCICore/Geom/View.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <SCICore/Thread/CrowdMonitor.h>
@@ -38,14 +38,14 @@ using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Geometry;
 using namespace SCICore::Math;
-using SCICore::Datatypes::ScalarFieldRGuchar;
+using SCICore::Datatypes::ScalarFieldRGBase;
 using std::cerr;
 
 
 static clString control_name("Control Widget");
 			 
 extern "C" Module* make_TexCuttingPlanes( const clString& id) {
-  return new TexCuttingPlanes(id);
+  return scinew TexCuttingPlanes(id);
 }
 
 
@@ -55,6 +55,7 @@ TexCuttingPlanes::TexCuttingPlanes(const clString& id)
   drawY("drawY", id, this),
   drawZ("drawZ", id, this),
   drawView("drawView", id, this),
+  interp_mode("interp_mode", id, this),
   control_lock("TexCuttingPlanes resolution lock"),
   control_widget(0), control_id(-1),
   volren(0), tex(0)
@@ -97,7 +98,17 @@ TexCuttingPlanes::tcl_command( TCLArgs& args, void* userdata)
 	w+=Vector(0, 0, ddv.z());
       } else if (args[2] == "zminus"){
 	w-=Vector(0, 0, ddv.z());
-      } //else if (args[2] == "vplus"){
+      } else if (args[2] == "vplus"){
+	GeometryData* data = ogeom->getData( 0, 1);
+	Vector view = data->view->lookat() - data->view->eyep();
+	view.normalize();
+	w += view*ddview;
+      } else if (args[2] == "vminus"){
+	GeometryData* data = ogeom->getData( 0, 1);
+	Vector view = data->view->lookat() - data->view->eyep();
+	view.normalize();
+	w -= view*ddview;
+      }
       control_widget->SetPosition(w);
       widget_moved(1);
       cerr<< "MoveWidgit " << w << endl;
@@ -116,6 +127,7 @@ void TexCuttingPlanes::widget_moved(int)
 
 void TexCuttingPlanes::execute(void)
 {
+  //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
   static GLTexture3DHandle oldtex = 0;
   if (!intexture->get(tex)) {
     return;
@@ -136,50 +148,73 @@ void TexCuttingPlanes::execute(void)
     Point Smin(tex->min());
     Point Smax(tex->max());
     Vector dv(Smax - Smin);
-    ScalarFieldRGuchar *sf = tex->getField();
-    ddv.x(dv.x()/(sf->nz - 1));
+    ScalarFieldRGBase *sf = tex->getField();
+    ddv.x(dv.x()/(sf->nx - 1));
     ddv.y(dv.y()/(sf->ny - 1));
-    ddv.z(dv.z()/(sf->nx - 1));
+    ddv.z(dv.z()/(sf->nz - 1));
+    ddview = (dv.length()/(std::max(sf->nx, std::max(sf->ny, sf->nz)) -1));
 
-    double max =  std::max(Smax.x() - Smin.x(), Smax.y() - Smin.y());
-    max = std::max( max, Smax.z() - Smin.z());
     control_widget->SetPosition(Interpolate(Smin,Smax,0.5));
-    control_widget->SetScale(max/80.0);
-    GeomObj *w=control_widget->GetWidget();
-    control_id = ogeom->addObj( w, control_name, &control_lock);
+    control_widget->SetScale(dv.length()/80.0);
   }
 
 
+  //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
   if( !volren ){
-    volren = new GLVolumeRenderer(0x12345676,
+    volren = scinew GLVolumeRenderer(0x12345676,
 				  tex,
 				  cmap);
 
-    ogeom->addObj( volren, "Volume Renderer");
+    if(tex->CC()){
+      volren->SetInterp(false);
+      interp_mode.set(0);
+    }
+
+    ogeom->addObj( volren, "Volume Slicer");
     volren->GLPlanes();
     volren->DrawPlanes();
-  } else {
+  } else {    
     if( tex.get_rep() != oldtex.get_rep() ){
       oldtex = tex;
       Point Smin(tex->min());
       Point Smax(tex->max());
       Vector dv(Smax - Smin);
-      ScalarFieldRGuchar *sf = tex->getField();
-      ddv.x(dv.x()/(sf->nz - 1));
+      ScalarFieldRGBase *sf = tex->getField();
+      ddv.x(dv.x()/(sf->nx - 1));
       ddv.y(dv.y()/(sf->ny - 1));
-      ddv.z(dv.z()/(sf->nx - 1));
+      ddv.z(dv.z()/(sf->nz - 1));
+      ddview = (dv.length()/(std::max(sf->nx, std::max(sf->ny, sf->nz)) -1));
       volren->SetVol( tex.get_rep() );
     }
+
+    volren->SetInterp( bool(interp_mode.get()));
     volren->SetColorMap( cmap.get_rep() );
   }
  
+  //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
+  if(drawX.get() || drawY.get() || drawZ.get()){
+    if( control_id == -1 ){
+      cerr<<"setting widget"<<endl;
+      GeomObj *w=control_widget->GetWidget();
+      control_id = ogeom->addObj( w, control_name, &control_lock);
+      cerr<<"control_id = "<<control_id<<endl;
+    }
+  } else {
+    if( control_id != -1){
+      cerr<<"destroying widget"<<endl;
+      ogeom->delObj( control_id, 0);
+      control_id = -1;
+    }
+  }  
+
   volren->SetX(drawX.get());
   volren->SetY(drawY.get());
   volren->SetZ(drawZ.get());
   volren->SetView(drawView.get());
-
+  //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
 
   ogeom->flushViews();				  
+  //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
 }
 
 } // End namespace Modules

@@ -27,18 +27,37 @@ SRCS     += $(SRCDIR)/Brick.cc \
 	 $(SRCDIR)/Octree.cc \
 	 $(SRCDIR)/Polygon.cc \
 	 $(SRCDIR)/SliceTable.cc \
-	 $(SRCDIR)/VolumeUtils.cc 
+	 $(SRCDIR)/VolumeUtils.cc \
+	 $(SRCDIR)/VisParticleSet.cc \
+	 $(SRCDIR)/VisParticleSetPort.cc \
+	 $(SRCDIR)/GLAnimatedStreams.cc
 
 PSELIBS := SCICore/Exceptions SCICore/Geometry \
 	SCICore/Persistent SCICore/Datatypes \
-	SCICore/Containers  SCICore/Geom SCICore/Thread
+	SCICore/Containers  SCICore/Geom SCICore/Thread \
+	Uintah/Grid Uintah/Datatypes Uintah/Exceptions \
+	Uintah/Modules/Visualization
 
-LIBS :=  $(LINK) $(GL_LIBS) -lm
+
+
+LIBS :=  $(LINK) $(XML_LIBRARY) $(GL_LIBS) -lm
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3.2.1  2000/09/28 03:18:03  mcole
+# merge trunk into FIELD_REDESIGN branch
+#
+# Revision 1.6  2000/09/27 16:23:18  kuzimmer
+# Moved these files from the now defunct DataArchive Directory
+#
+# Revision 1.5  2000/09/17 15:59:41  kuzimmer
+# updated texture planes for binary transparency
+#
+# Revision 1.4  2000/08/29 21:19:43  kuzimmer
+# Added some 3D texture mapping functionality
+#
 # Revision 1.3  2000/05/29 22:24:49  kuzimmer
 # A bunch of fixes, including making volumes work with udas, transforming volumes properly without copying data, and fixing coredumps when changing udas
 #
