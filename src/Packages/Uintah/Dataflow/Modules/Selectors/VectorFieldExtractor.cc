@@ -37,6 +37,7 @@ LOG
 #include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
 #include <Packages/Uintah/Core/Datatypes/LevelMesh.h>
 #include <Packages/Uintah/Core/Datatypes/LevelField.h>
+#include <Packages/Uintah/Core/Datatypes/PatchDataThread.h>
 #include <Packages/Uintah/CCA/Ports/DataArchive.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
@@ -193,6 +194,9 @@ void VectorFieldExtractor::execute()
    // set the index for the correct timestep.
    int idx = handle->timestep();
 
+  int max_workers = Max(Thread::numProcessors()/2, 8);
+  Semaphore* thread_sema = scinew Semaphore( "vector extractor semahpore",
+					     max_workers); 
 
   GridP grid = archive.queryGrid(times[idx]);
   LevelP level = grid->getLevel( 0 );
@@ -208,14 +212,20 @@ void VectorFieldExtractor::execute()
 	LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
 	LevelField<Vector> *vfd =
 	  scinew LevelField<Vector>( mesh, Field::NODE );
-	LevelField<Vector>::fdata_type &data = vfd->fdata();
-	  
+	vector<Array3<Vector> >& data = vfd->fdata();
+	data.resize(level->numPatches());
+	vector<Array3<Vector> >::iterator it = data.begin();
 	for(Level::const_patchIterator r = level->patchesBegin();
-	    r != level->patchesEnd(); r++ ){
-	  NCVariable< Vector > sv;
-	  archive.query(sv, var, mat, *r, time);
-	  data.push_back( sv );
+	    r != level->patchesEnd(); r++, ++it ){
+	    thread_sema->down();
+	    Thread *thrd =scinew Thread(new PatchDataThread<NCVariable<Vector>,
+			                 vector<Array3<Vector> >::iterator>
+			  (archive, it, var, mat, *r, time, thread_sema),
+					"patch_data_worker");
+	    thrd->detach();
 	}
+	thread_sema->down(max_workers);
+	if( thread_sema ) delete thread_sema;
 	vfout->send(vfd);
 	return;
       }
@@ -232,15 +242,20 @@ void VectorFieldExtractor::execute()
 	LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
 	LevelField<Vector> *vfd =
 	  scinew LevelField<Vector>( mesh, Field::CELL );
-	LevelField<Vector>::fdata_type &data = vfd->fdata();
-	  
+	vector<Array3<Vector> >& data = vfd->fdata();
+	data.resize(level->numPatches());
+	vector<Array3<Vector> >::iterator it = data.begin();
 	for(Level::const_patchIterator r = level->patchesBegin();
-	    r != level->patchesEnd(); r++ ){
-	  CCVariable< Vector > sv;
-	  archive.query(sv, var, mat, *r, time);
-	  data.push_back( sv );
+	    r != level->patchesEnd(); r++, ++it ){
+	    thread_sema->down();
+	    Thread *thrd =scinew Thread(new PatchDataThread<CCVariable<Vector>,
+			                 vector<Array3<Vector> >::iterator>
+			  (archive, it, var, mat, *r, time, thread_sema),
+					"patch_data_worker");
+	    thrd->detach();
 	}
-
+	thread_sema->down(max_workers);
+	if( thread_sema ) delete thread_sema;
 	vfout->send(vfd);
 	return;
       }
