@@ -99,6 +99,7 @@ namespace Uintah {
     double d_tol;
     double d_initialMaterialTemperature;
     bool   d_useModifiedEOS;
+    bool   d_removeParticles;
 
     YieldCondition*     d_yield;
     StabilityCheck*     d_stable;
