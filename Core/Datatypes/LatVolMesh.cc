@@ -92,26 +92,27 @@ LatVolMesh::get_center(Point &result, cell_index idx) const
 bool
 LatVolMesh::locate(cell_index &cell, const Point &p) const
 {
-  double xgap,ygap,zgap;
-  Point min,max;
+  double xa,xb;
+  double ya,yb;
+  double za,zb;
 
-  // compute the distance between slices
-  xgap = (max_.x()-min_.x())/(nx_-1);
-  ygap = (max_.y()-min_.y())/(ny_-1);
-  zgap = (max_.z()-min_.z())/(nz_-1);
+  // if point is not inside field, return false
+  if (p.x()<min_.x() || p.y()<min_.y() || p.z()<min_.z() ||
+      p.x()>max_.x() || p.y()>max_.y() || p.z()>max_.z())
+    return false;
 
-  // compute the cell_index (divide and truncate)
-  cell.i_ = (unsigned)(p.x()/xgap);
-  cell.j_ = (unsigned)(p.y()/ygap);
-  cell.k_ = (unsigned)(p.z()/zgap);
+  // compute linear mapping coefficients
+  xa = (nx_-1)/(max_.x()-min_.x());
+  xb = -(min_.x()*(nx_-1))/(max_.x()-min_.x());
+  ya = (ny_-1)/(max_.y()-min_.y());
+  yb = -(min_.y()*(ny_-1))/(max_.y()-min_.y());
+  za = (nz_-1)/(max_.z()-min_.z());
+  zb = -(min_.z()*(nz_-1))/(max_.z()-min_.z());
 
-  // compute the min and max Points of the cell
-  min.x(cell.i_*xgap);
-  min.y(cell.j_*ygap);
-  min.z(cell.k_*zgap);
-  max.x(min.x()+xgap);
-  max.y(min.y()+ygap);
-  max.z(min.z()+zgap);
+  // convert from object space to cell_index space
+  cell.i_ = (unsigned)(p.x()*xa+xb);
+  cell.j_ = (unsigned)(p.y()*ya+yb);
+  cell.k_ = (unsigned)(p.z()*za+zb);
 
   return true;
 }
