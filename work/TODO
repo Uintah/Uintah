@@ -24,36 +24,20 @@ Fix from SC94:
     BuildFEMatrix
 
 Finish and FIX:
+   Unify Readers, Writers and Batteries
    Icons
    Window Titles
    Delete modules
    Disconnect
    Salmon:
-DONE      Pick - default to cartesian axes for principal vectors
-DONE      Fix flushViews
-DONE      Fix salmon deadlock for James
-DONE      Fix update delay for James
-DONE      Shared objects - locks.  Use try lock.
-DONE      RWLocks
-DONE      Use RWLocks
-DONE      Use locks in Widget code
-      Torus
-      Chase down all bounding box accesses and add if(bb.valid())
       Valid initial states for all Geometry objects - default CTOR
-      Cylinder bounding boxes
-      Cone bounding boxes
-      Disc bounding boxes
       Use waiting queue in redraw loop to defer things that are locked
-      implement read_try_lock for CrowdMonitor
-	
-DONE      Make Geom keep track of parents
+      implement read_try_lock for CrowdMonitor	
       Reset bounding boxes when changed
       Resizable window
       Fix +/- button
       Better in/out buttons
       New node types:
-DONE         Material
-DONE         Pick
          Handle
          Rendermode
       Better triangles - vertex types - with normals, colors
@@ -69,38 +53,22 @@ DONE         Pick
       Orthographic projections
       Material Editor
       Fix bargraph on networkeditor icon
-DONE      Before reporting that a renderer is available, make sure \
-DONE               that it is supported (OpenGL) 
       Renderer properties popup
       Hookup dials - more control
       Mode widget
-DONE      Background editor
       Clipping plane editor
       More Light types
-DONE      Nix Material Stacks
-      Nix objdraw - pass lighting into objdraw
-      Nix lit member
-      Fix picking with new draw functions
-DONE      Finish Headlight for multiple bounces
-      Fix segfault when autoview on no objects
       Raytracer
-DONE	 Progressive refinement
-DONE	 Pass Material* instead of MaterialHandle
 	 Finish intersection routines
 	    Cone
 	    Cylinder
-DONE	    Disc
 	    Line
-DONE	    Sphere
 	    Tube
 	    Polyline
 	    Tetra
-DONE	    Tri
-DONE	    TriStrip
 	    VCTri
 	    VCTriStrip
 	 PointLight
-	 Fix transformations
 	 Bounding boxes
       Postscript renderer
       X11 renderer
@@ -110,6 +78,39 @@ DONE	    TriStrip
          Move bounding boxes only
          Handle overlapping polygons
 	 OPTIMIZE!!
+DONE      Pick - default to cartesian axes for principal vectors
+DONE      Fix flushViews
+DONE      Fix salmon deadlock for James
+DONE      Fix update delay for James
+DONE      Shared objects - locks.  Use try lock.
+DONE      RWLocks
+DONE      Use RWLocks
+DONE      Use locks in Widget code
+DONE      Torus
+DONE      Torus Bounding boxes
+DONE      Chase down all bounding box accesses and add if(bb.valid())
+DONE      Cylinder bounding boxes
+DONE      Cone bounding boxes
+DONE      Disc bounding boxes
+DONE      Make Geom keep track of parents
+DONE         Material
+DONE         Pick
+DONE      Before reporting that a renderer is available, make sure \
+DONE               that it is supported (OpenGL) 
+DONE      Background editor
+DONE      Nix Material Stacks
+DONE      Nix objdraw - pass lighting into objdraw
+DONE      Nix lit member
+DONE      Fix picking with new draw functions
+DONE      Finish Headlight for multiple bounces
+DONE      Fix segfault when autoview on no objects
+DONE	 Progressive refinement
+DONE	 Pass Material* instead of MaterialHandle
+DONE	    Disc
+DONE	    Sphere
+DONE	    Tri
+DONE	    TriStrip
+DONE	 Fix transformations
 
 Features/improvements:
    Make progress, time, etc run off of TCL variables
@@ -161,10 +162,10 @@ Datatypes:
    Boundary condition types/region types/node types
 
 Software Engineering Issues:
-   DONE Use NCC 
+DONE   Use NCC 
    Fix conflicts with NCC
    Make NCC work with multiple executables
-   Configuration interface
+DONE   Configuration interface
    System libraries
    Compile @checkin
    show diffs on checkin
