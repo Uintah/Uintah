@@ -20,23 +20,52 @@
 #include <unistd.h>
 #include <iostream>
 #include <iomanip>
-using namespace std;
 #ifdef __sgi
 #include <libexc.h>
+#include <sstream>
+#include <string.h>
 #endif
 
+using namespace std;
 using SCICore::Exceptions::Exception;
 
 Exception::Exception()
 {
+#ifdef __sgi
+   ostringstream stacktrace;
+   // Use -lexc to print out a stack trace
+   static const int MAXSTACK = 100;
+   static const int MAXNAMELEN = 1000;
+   __uint64_t addrs[MAXSTACK];
+   char* cnames_str = new char[MAXSTACK*MAXNAMELEN];
+   char* names[MAXSTACK];
+   for(int i=0;i<MAXSTACK;i++)
+      names[i]=cnames_str+i*MAXNAMELEN;
+   int nframes = trace_back_stack(0, addrs, names, MAXSTACK, MAXNAMELEN);
+   if(nframes == 0){
+      stacktrace << "Backtrace not available!\n";
+   } else {
+      stacktrace << "Backtrace:\n";
+      stacktrace.flags(ios::hex);
+      // Skip the first procedure (us)
+      for(int i=1;i<nframes;i++)
+	 stacktrace << "0x" << (void*)addrs[i] << ": " << names[i] << '\n';
+   }
+   d_stacktrace = strdup(stacktrace.str().c_str());
+#else
+   d_stacktrace = 0;
+#endif
 }
 
 Exception::~Exception()
 {
+   if(d_stacktrace)
+      free((char*)d_stacktrace);
 }
 
 // This is just to fool the compiler so that it will not complain about
-// "loop expressions are constant"  (SGI mipspro)  See Exception.h for use.
+// "loop expressions are constant"  (SGI mipspro)  See Exception.h for
+// use - Steve.
 bool Exception::alwaysFalse()
 {
     return false;
@@ -60,27 +89,9 @@ void Exception::sci_throw(const Exception& exc)
     // If the mode is not "throw", we print out a message
     if(strcasecmp(emode, "throw") != 0){
         cerr << "\n\nAn exception was thrown.  Msg: " << exc.message() << "\n";
-#ifdef __sgi
-	// Use -lexc to print out a stack trace
-	static const int MAXSTACK = 100;
-	static const int MAXNAMELEN = 1000;
-	__uint64_t addrs[MAXSTACK];
-	char* cnames_str = new char[MAXSTACK*MAXNAMELEN];
-	char* names[MAXSTACK];
-	for(int i=0;i<MAXSTACK;i++)
-	    names[i]=cnames_str+i*MAXNAMELEN;
-	int nframes = trace_back_stack(0, addrs, names, MAXSTACK, MAXNAMELEN);
-	if(nframes == 0){
-	    cerr << "Backtrace not available!\n";
-	} else {
-	    cerr << "Backtrace:\n";
-	    ios::fmtflags oldflags = cerr.flags(ios::hex);
-	    // Skip the first procedure (us)
-	    for(int i=1;i<nframes;i++)
-		cerr << "0x" << (void*)addrs[i] << ": " << names[i] << '\n';
-	    cerr.flags(oldflags);
+	if(exc.d_stacktrace){
+	   cerr << exc.d_stacktrace;
 	}
-#endif
 	// Print out the exception type (clasname) and the message
 	cerr << "\nException type: " << exc.type() << '\n';
 	cerr << "Exception message: " << exc.message() << '\n';
@@ -153,6 +164,9 @@ void Exception::sci_throw(const Exception& exc)
 
 //
 // $Log$
+// Revision 1.5  2000/07/27 07:40:46  sparker
+// Save the stack trace when an exception is thrown (SGI only)
+//
 // Revision 1.4  2000/06/08 21:08:43  dav
 // added more verbose error message
 //
