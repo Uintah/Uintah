@@ -157,7 +157,7 @@ PPPLNrrdConverter::execute(){
     generation = nHandles.size();
   else {
     // See if any of the input data has changed.
-    for( int ic=0; ic<nHandles.size() && ic<nGenerations_.size(); ic++ ) {
+    for( unsigned int ic=0; ic<nHandles.size() && ic<nGenerations_.size(); ic++ ) {
       if( nGenerations_[ic] != nHandles[ic]->generation )
 	++generation;
     }
@@ -168,7 +168,7 @@ PPPLNrrdConverter::execute(){
 
     nGenerations_.resize( nHandles.size() );
 
-    for( int ic=0; ic++; ic<nHandles.size() ) {
+    for( unsigned int ic=0; ic++; ic<nHandles.size() ) {
       nGenerations_[ic] = nHandles[ic]->generation;
     }
 
@@ -176,13 +176,20 @@ PPPLNrrdConverter::execute(){
     string datadimsStr;
 
     // Get each of the dataset names for the GUI.
-    for( int ic=0; ic<nHandles.size(); ic++ ) {
+    for( unsigned int ic=0; ic<nHandles.size(); ic++ ) {
 
       nHandle = nHandles[ic];
 
       vector< string > datasets;
 
       int tuples = nHandle->get_tuple_axis_size();
+
+      if( tuples != 1 ) {
+	error( "Too many tuples listed in the grid tuple axis." );
+	error_ = true;
+	return;
+      }
+
       nHandle->get_tuple_indecies(datasets);
 
       // Do not allow joined Nrrds
@@ -251,99 +258,83 @@ PPPLNrrdConverter::execute(){
     int kdim;
 
     vector<unsigned int> mdims;
+    int rank = 0;
 
     nHandle = nHandles[grid_];
 
-    if( nHandle->nrrd->axis[2].size != 3 ) {
-      error( "Grid dataset does not contain 3D points." );
+    // Do not allow joined Nrrds
+    vector< string > dataset;
+
+    nHandle->get_tuple_indecies(dataset);
+
+    if( dataset.size() != 1 ) {
+      error( "Too many sets listed in the tuple axis." );
       error_ = true;
       return;
     }
-    
+
+    for( int ic=1; ic<nHandle->nrrd->dim; ic++ ) {
+      if( nHandle->nrrd->axis[ic].size != 1 )
+	mdims.push_back( nHandle->nrrd->axis[ic].size );
+    }
+
+    if( dataset[0].find( ":Scalar" ) != std::string::npos ) {
+      rank = 1;
+
+      if( mdims[ mdims.size()-1] != 3 ) {
+	error( "Grid dataset does not contain 3D points." );
+	error( dataset[0] );
+	error_ = true;
+	return;
+      }
+
+      mdims.resize( mdims.size()-1 );
+    }
+    else if( dataset[0].find( ":Vector" ) != std::string::npos ) {
+      rank = 3;
+    }
+    else {
+      error( "Grid dataset does not contain 3D points." );
+      error( dataset[0] );
+      error_ = true;
+      return;
+    }
+
     // Create the mesh.
-    if( nHandle->nrrd->dim == 5 ) {
+    if( mdims.size() == 3 ) {
       // 3D StructHexVol
       idim = nHandle->nrrd->axis[1].size;
       jdim = nHandle->nrrd->axis[2].size;
       kdim = nHandle->nrrd->axis[3].size;
+
+      mHandle = scinew
+	StructHexVolMesh( idim+iwrap_, jdim+jwrap_, kdim+kwrap_ );
       
-    } else if( nHandle->nrrd->dim == 4 ) {
+    } else if( mdims.size() == 2 ) {
       // 2D StructQuadSurf
       idim = nHandle->nrrd->axis[1].size;
       jdim = nHandle->nrrd->axis[2].size;
       kdim = 1;
-    } else if( nHandle->nrrd->dim == 3 ) {
+      kwrap_ = 0;
+
+      mHandle = scinew StructQuadSurfMesh(idim+iwrap_, jdim+jwrap_ );
+
+    } else if( mdims.size() == 1 ) {
       // 1D StructCurve
       idim = nHandle->nrrd->axis[1].size;
       jdim = 1;
       kdim = 1;
-    } else {
-      error( "Grid dimensions do not make sense." );
-      error_ = true;
-      return;
-    }
-
-    // Create the mesh.
-    if( idim > 1 && jdim > 1 && kdim > 1 ) {
-      // 3D StructHexVol
-      mHandle = scinew
-	StructHexVolMesh( idim+iwrap_, jdim+jwrap_, kdim+kwrap_ );
- 
-      mdims.push_back( idim );
-      mdims.push_back( jdim );
-      mdims.push_back( kdim );
-
-    } else if( idim >  1 && jdim >  1 && kdim == 1 ) {
-      // 2D StructQuadSurf
-      mHandle = scinew StructQuadSurfMesh(idim+iwrap_, jdim+jwrap_ );
-
-      mdims.push_back( idim );
-      mdims.push_back( jdim );
+      jwrap_ = 0;
       kwrap_ = 0;
 
-    } else if( idim >  1 && jdim == 1 && kdim  > 1 ) {
-      // 2D StructQuadSurf
-      mHandle = scinew StructQuadSurfMesh(idim+iwrap_, kdim+kwrap_ );
-
-      mdims.push_back( idim );
-      mdims.push_back( kdim );
-      jwrap_ = 0;
-
-    } else if( idim == 1 && jdim >  1 && kdim  > 1 ) {
-      // 2D StructQuadSurf
-      mHandle = scinew StructQuadSurfMesh(jdim+jwrap_, kdim+kwrap_ );
-
-      mdims.push_back( jdim );
-      mdims.push_back( kdim );
-      iwrap_ = 0;
-
-    } else if( idim  > 1 && jdim == 1 && kdim == 1 ) {
-      // 1D StructCurveMesh
       mHandle = scinew StructCurveMesh( idim+iwrap_ );
-
-      mdims.push_back( idim );
-      jwrap_ = kwrap_ = 0;
-
-    } else if( idim == 1 && jdim  > 1 && kdim == 1 ) {
-      // 1D StructCurveMesh
-      mHandle = scinew StructCurveMesh( jdim+jwrap_ );
-
-      mdims.push_back( jdim );
-      iwrap_ = kwrap_ = 0;
-
-    } else if( idim == 1 && jdim == 1 && kdim  > 1 ) {
-      // 1D StructCurveMesh
-      mHandle = scinew StructCurveMesh( kdim+kwrap_ );
-
-      mdims.push_back( kdim );
-      iwrap_ = jwrap_ = 0;
 
     } else {
       error( "Grid dimensions do not make sense." );
       error_ = true;
       return;
     }
-  
+
     const TypeDescription *mtd = mHandle->get_type_description();
       
     CompileInfoHandle ci_mesh =
@@ -365,7 +356,6 @@ PPPLNrrdConverter::execute(){
     // size being the rank of the data.
 
     vector<unsigned int> ddims;
-    int rank = 0;
 
     if( data_ != -1 ) {
       nHandle = nHandles[data_];
@@ -373,7 +363,7 @@ PPPLNrrdConverter::execute(){
       int tuples = nHandle->get_tuple_axis_size();
 
       if( tuples != 1 ) {
-	error( "Too many tuples listed in the tuple axis." );
+	error( "Too many tuples listed in the data tuple axis." );
 	error_ = true;
 	return;
       }
@@ -398,7 +388,7 @@ PPPLNrrdConverter::execute(){
       if( ddims.size() == mdims.size() ||
 	  ddims.size() == mdims.size() + 1 ) {
 	
-	for( int ic=0; ic<mdims.size(); ic++ ) {
+	for( unsigned int ic=0; ic<mdims.size(); ic++ ) {
 	  if( ddims[ic] != mdims[ic] ) {
 	    error( "Data and grid sizes do not match." );
 	    error_ = true;
@@ -432,9 +422,10 @@ PPPLNrrdConverter::execute(){
 	  }
 	}
       } else {
-	error( "Can not determined data rank. Too many axii." );
+	error( "Can not determine the data rank. Too many axii." );
 	error( dataset[0] );
 	error_ = true;
+
 	return;
       }
     } else {
