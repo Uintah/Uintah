@@ -141,6 +141,9 @@ VH_MasterAnatomy::readFile(char *infilename)
   {
     cerr << "VH_MasterAnatomy::readFile(): premature EOF" << endl;
   }
+  // clear input buffer line
+    strcpy(inLine, "");
+
   // label 0 is "unknown"
   anatomyname[num_names] = strdup("unknown");
   labelindex[num_names] = 0;
@@ -229,6 +232,9 @@ VH_AdjacencyMapping::readFile(char *infilename)
   {
     cerr << "VH_AdjacencyMapping::readFile(): premature EOF" << endl;
   }
+  // clear input buffer line
+    strcpy(inLine, "");
+
   while(read_line(inLine, &buffsize, infile) != 0)
   {
     if(strlen(inLine) > 0)
@@ -320,6 +326,8 @@ VH_Anatomy_readBoundingBox_File(char *infilename)
     cerr << "VH_AnatomyBoundingBox::readFile(): premature EOF" << endl;
   }
   inLine_cnt++;
+  // clear input buffer line
+  strcpy(inLine, "");
 
   // allocate the first Anatomy Nama/BoundingBox node
   VH_AnatomyBoundingBox *listRoot = new VH_AnatomyBoundingBox();
@@ -329,13 +337,28 @@ VH_Anatomy_readBoundingBox_File(char *infilename)
     if(strlen(inLine) > 0)
     { // expect lines of the form:
       // Anatomy Name,minX,maxX,minY,maxY,minZ,maxZ,minSlice,maxSlice
-      if(sscanf(inLine, "%[^,],%d,%d,%d,%d,%d,%d,%d,%d",
-                     &(listPtr->anatomyname),
+      char *linePtr = inLine;
+      int charCnt = 0;
+      // read free-form, space-separated fields up to first comma
+      while(*linePtr++ != ',') charCnt++;
+      if(!(listPtr->anatomyname = (char *)malloc((charCnt+1) * sizeof(char))))
+      {
+        cerr << "VH_AnatomyBoundingBox::readFile(): cannot allocate" << endl;
+      }
+      strncpy(listPtr->anatomyname, inLine, charCnt);
+      // debugging...
+      // fprintf(stderr, "anatomyname[%d] = '%s'\n",
+      //                 inLine_cnt, listPtr->anatomyname);
+      fprintf(stderr, ".");
+
+      // linePtr is pointing to ','
+      linePtr++;
+      if(sscanf(linePtr, "%d,%d,%d,%d,%d,%d,%d,%d",
                      &(listPtr->minX), &(listPtr->maxX),
                      &(listPtr->minY), &(listPtr->maxY),
                      &(listPtr->minZ), &(listPtr->maxZ),
                      &(listPtr->minSlice), &(listPtr->maxSlice)
-               ) < 9)
+               ) < 8)
       {
         fprintf(stderr,
            "VH_AnatomyBoundingBox::readFile(%s): format error line %d\n",
@@ -345,6 +368,8 @@ VH_Anatomy_readBoundingBox_File(char *infilename)
       listPtr->flink = new VH_AnatomyBoundingBox();
       listPtr = listPtr->flink;
     } // end if(strlen(inLine) > 0)
+    // clear input buffer line
+    strcpy(inLine, "");
     inLine_cnt++;
   } // end while(read_line(inLine, &buffsize, infile) != 0)
 
