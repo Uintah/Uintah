@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE para SYSTEM "../docbook/docbookx.dtd">
+<?xml-stylesheet href="../docbook.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<para>
+  <itemizedlist>
+    <listitem>
+      SGI: 250 MHz R10K processor(s), 256MB main memory, texture mapping
+      hardware and memory.
+    </listitem>
+    <listitem>
+      Linux: 500 MHz Pentium III processor(s), 256MB main memory,
+      NVIDIA GeForce3 graphics card, XFree86 version 4.1.0, nvidia 
+      drivers version 1.0-1251.
+    </listitem>
+  </itemizedlist>
+</para>
+

@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE chapter SYSTEM "../docbook/docbookx.dtd">
+<?xml-stylesheet href="../docbook.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+  The contents of this file are subject to the University of Utah Public
+  License (the "License"); you may not use this file except in compliance
+  with the License.
+  
+  Software distributed under the License is distributed on an "AS IS"
+  basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+  License for the specific language governing rights and limitations under
+  the License.
+  
+  The Original Source Code is SCIRun, released March 12, 2001.
+  
+  The Original Source Code was developed by the University of Utah.
+  Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+  University of Utah. All Rights Reserved.
+-->
+
+<!ENTITY requirements SYSTEM "requirements.xml">
+<!ENTITY recommendations SYSTEM "recommendations.xml">
+
+<chapter>
+  <title>Quick Start SCIRun Installation</title>
+  <subtitle>(UNIX version - Updated June 22, 2001)</subtitle>
+
+  <sect1>
+    <para>
+      This document is a quick installation checklist.  See the next chapter 
+      <ulink url="installguide.xml?chapter=2"><citetitle>SCIRun Installation
+      and Build Instructions</citetitle></ulink> for more details.
+    </para>
+  </sect1>
+
+  <sect1>
+    <title>Minimum System Software Requirements</title>
+
+    <para>
+      SCIRun is officially compatible with two platforms: SGI and Linux.
+    </para>
+
+    <para>
+      Refer to the chapter <ulink url="installguide.xml?chapter=3">
+      <citetitle>Third Party Software Installation and Build Information
+      </citetitle> for information on installing the required software
+      listed below.
+    </para>
+
+    &requirements;
+
+  </sect1>
+
+  <sect1>
+    <title>Minimum System Recommendations</title>
+
+    &recommendations;
+
+  </sect1>
+
+  <sect1>
+    <title>Installing SCIRun and Packages</title>
+
+    <para>
+      <orderedlist>
+        <listitem>
+          Obtain the source trees for SCIRun and any desired packages.
+        </listitem>
+        <listitem>
+          Unzip the SCIRun source tree into a directory of your choosing.
+        </listitem>
+        <listitem>
+          Unzip the packages (if any) into /SCIRun/src/Packages.
+        </listitem>
+      </orderedlist>
+    </para>          
+  </sect1>
+
+  <sect1>
+    <title>Building SCIRun and Packages</title>
+
+    <para>
+      <orderedlist>
+        <listitem>
+          Ensure that the target install machine matches the above 
+          system requirements.
+        </listitem>
+        <listitem>
+          Run configure from a directory of your choosing.  The chosen
+          directory will be referred to as BUILD_DIR from now on.
+        </listitem>
+        <listitem>
+          Run GNU make in the BUILD_DIR directory.
+        </listitem>
+      </orderedlist>
+    </para>
+  </sect1>
+</chapter>
