@@ -16,12 +16,16 @@
 
 #include <Persistent.h>
 #include <Classlib/Array3.h>
+#include <Classlib/Handle.h>
 #include <Geometry/Vector.h>
 #include <Geometry/Point.h>
 
+class Field3D;
+typedef Handle<Field3D> Field3DHandle;
+
 class Field3D : public Persistent {
 protected:
-    friend class Field3DHandle;
+    friend class Handle<Field3D>;
     int ref_cnt;
 private:
     int nx, ny, nz;
@@ -70,19 +74,6 @@ public:
     void set_size(int, int, int);
     void set(int, int, int, const Vector&);
     void set(int, int, int, double);
-};
-
-class Field3DHandle {
-    Field3D* rep;
-public:
-    Field3DHandle();
-    Field3DHandle(Field3D*);
-    Field3DHandle(const Field3DHandle&);
-    Field3DHandle& operator=(const Field3DHandle&);
-    Field3DHandle& operator=(Field3D*);
-    ~Field3DHandle();
-    Field3D* operator->() const;
-    Field3D* get_rep() const;
 };
 
 #endif /* SCI_project_Field3DPort_h */

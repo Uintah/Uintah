@@ -19,15 +19,22 @@
 #include "myShell.h"
 
 #include <NetworkEditor.h>
+#include <MemStats.h>
 #include <MessageBase.h>
 #include <Module.h>
 #include <MotifCallbackBase.h>
+#include <MotifCallback.h>
 #include <CallbackCloners.h>
 #include <MtXEventLoop.h>
 #include <Network.h>
 #include <XQColor.h>
 #include <Mt/ApplicationShell.h>
+#include <Mt/CascadeButton.h>
 #include <Mt/DrawingArea.h>
+#include <Mt/MainWindow.h>
+#include <MenuBar.h>
+#include <Mt/PushButton.h>
+#include <Mt/RowColumn.h>
 #include <Mt/ScrolledWindow.h>
 
 extern MtXEventLoop* evl;
@@ -44,7 +51,8 @@ extern MtXEventLoop* evl;
 NetworkEditor::NetworkEditor(Network* net, Display* display,
 			     ColorManager* color_manager)
 : Task("Network Editor", 1), net(net), display(display),
-  color_manager(color_manager), mailbox(10)
+  color_manager(color_manager), mailbox(10), first_schedule(1),
+  memstats(0)
 {
 }
 
@@ -69,16 +77,26 @@ int NetworkEditor::body(int)
 	cerr << "Error loading font: " << MODULE_TIME_FONT << endl;
 	exit(-1);
     }
-    evl->unlock();
     
     // Allocate Colors...
     XQColor background(color_manager, NETEDIT_BACKGROUND_COLOR);
+
+    MainWindowC mainw;
+    mainw.Create(*window, "main_window");
+
+    MenuBarC menubar(mainw);
+    MenuC* stats=menubar.AddMenu("Statistics");
+    PushButtonC* membutton=stats->AddButton("Memory");
+    new MotifCallback<NetworkEditor>FIXCB(membutton, XmNactivateCallback,
+					  &mailbox, this,
+					  &NetworkEditor::popup_memstats,
+					  0, 0);
 
     ScrolledWindowC scroller;
     scroller.SetWidth(NETEDIT_WINDOW_WIDTH);
     scroller.SetHeight(NETEDIT_WINDOW_HEIGHT);
     scroller.SetScrollingPolicy(XmAUTOMATIC);
-    scroller.Create(*window, "scroller");
+    scroller.Create(mainw, "scroller");
 
     drawing_a=new DrawingAreaC;
     drawing_a->SetUnitType(XmPIXELS);
@@ -93,6 +111,7 @@ int NetworkEditor::body(int)
 
     // Initialize the network
     net->initialize(this);
+    evl->unlock();
 
     // Go into Main loop...
     do_scheduling();
@@ -139,7 +158,6 @@ void NetworkEditor::do_scheduling()
     // A module is considered 'Repeat' if any of it's downstream modules
     // are 'Repeat'
     //
-    cerr << "Scheduler started...\n";
     int changed=1;
     int nmodules=net->nmodules();
     int any_changed=0;
@@ -152,9 +170,8 @@ void NetworkEditor::do_scheduling()
 	}
 	any_changed|=changed;
     }
-    if(any_changed){
+    if(first_schedule || any_changed){
 	// Do the scheduling...
-	cerr << "Starting modules...\n";
 	for(int i=0;i<nmodules;i++){
 	    Module* module=net->module(i);
 
@@ -164,10 +181,19 @@ void NetworkEditor::do_scheduling()
 	    // Reset the state...
 	    module->sched_state=Module::SchedDormant;
 	}
+	first_schedule=0;
     }
 }
 
 Scheduler_Module_Message::Scheduler_Module_Message()
 : MessageBase(MessageTypes::ExecuteModule)
 {
+}
+
+void NetworkEditor::popup_memstats(CallbackData*, void*)
+{
+    if(!memstats)
+	memstats=new MemStats(this);
+    else
+	memstats->popup();
 }

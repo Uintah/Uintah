@@ -20,10 +20,12 @@
 #include <WrapperLite.h>
 #include <X11/Xlib.h>
 class ApplicationShellC;
+class CallbackData;
 class ColorManager;
 class Connection;
 class Datatype;
 class DrawingAreaC;
+class MemStats;
 class MessageBase;
 class Module;
 class Network;
@@ -31,7 +33,9 @@ class Network;
 class NetworkEditor : public Task {
     Network* net;
     void do_scheduling();
-
+    int first_schedule;
+    MemStats* memstats;
+    void popup_memstats(CallbackData*, void*);
 public:
     // The user interface..
     ApplicationShellC* window;

@@ -15,11 +15,18 @@
 #define SCI_project_Field3DPort_h 1
 
 #include <Port.h>
+#include <Field3D.h>
+#include <Multitask/ITC.h>
 
-class Field3D;
-class Field3DHandle;
+struct Field3DComm {
+    Field3DComm();
+    Field3DComm(const Field3DHandle&);
+    Field3DHandle field;
+    int has_field;
+};
 
 class Field3DIPort : public IPort {
+    int recvd;
 public:
     enum Protocol {
 	Atomic=0x01,
@@ -27,17 +34,19 @@ public:
 
 protected:
     friend class Field3DOPort;
+    Mailbox<Field3DComm*> mailbox;
 public:
     Field3DIPort(Module*, const clString& name, int protocol);
     virtual ~Field3DIPort();
     virtual void reset();
     virtual void finish();
 
-    Field3DHandle get_field();
+    int get_field(Field3DHandle&);
 };
 
 class Field3DOPort : public OPort {
     Field3DIPort* in;
+    int sent_something;
 public:
     Field3DOPort(Module*, const clString& name, int protocol);
     virtual ~Field3DOPort();

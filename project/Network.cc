@@ -116,4 +116,5 @@ void Network::initialize(NetworkEditor* _netedit)
     modules[2]->ypos=210;
     modules[2]->set_context(netedit, this);
     connect(modules[0], 0, modules[1], 0);
+    connect(modules[1], 0, modules[2], 0);
 }

@@ -24,6 +24,16 @@ MotifCallback<T>::MotifCallback(EncapsulatorC* enc, const char* cb_name,
 }
 
 template<class T>
+MotifCallback<T>::MotifCallback(int delay, int repeat,
+				Mailbox<MessageBase*>* mailbox, T* obj,
+				void (MotifCallbackBase::*method)(CallbackData*, void*),
+				void* userdata, CallbackData* (*cloner)(void*))
+: MotifCallbackBase(delay, repeat, mailbox, userdata, cloner),
+  obj(obj), method(method)
+{
+}
+
+template<class T>
 MotifCallback<T>::~MotifCallback()
 {
 }

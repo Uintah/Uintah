@@ -22,6 +22,7 @@ class Mutex;
 class Semaphore;
 
 class MtXEventLoop : public Task {
+    XtAppContext context;
     Display* display;
     Screen* screen;
     int started;
@@ -40,6 +41,7 @@ public:
     virtual ~MtXEventLoop();
     Display* get_display();
     Screen* get_screen();
+    XtAppContext get_app();
     void wait_start();
     void lock();
     void unlock();

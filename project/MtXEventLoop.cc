@@ -40,6 +40,11 @@ MtXEventLoop::~MtXEventLoop()
 {
 }
 
+XtAppContext MtXEventLoop::get_app()
+{
+    return context;
+}
+
 Display* MtXEventLoop::get_display()
 {
     return display;
@@ -67,7 +72,6 @@ int MtXEventLoop::body(int)
 {
     eventloop_taskid=Task::self();
     XtToolkitInitialize();
-    XtAppContext context;
     context=XtCreateApplicationContext();
     XtAppSetFallbackResources(context, fallback_resources);
     int x_argc;

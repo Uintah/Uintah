@@ -5,7 +5,7 @@ LOCALINCLUDES = -I. -I../modules -I../../wrapper -I../../wrapper/Mt -I../../wrap
 OBJS = CallbackCloners.o \
 	ColorManager.o  Connection.o  \
 	Field3D.o  Field3DPort.o  GeometryPort.o  \
-	HelpUI.o  \
+	HelpUI.o  MemStats.o  MenuBar.o  \
 	Module.o  Modules.o  ModuleList.o  MotifCallbackBase.o  \
 	MUI.o  \
 	MtXEventLoop.o \
@@ -16,7 +16,7 @@ OBJS = CallbackCloners.o \
 SRCS = CallbackCloners.cc \
 	ColorManager.cc Connection.cc \
 	Field3D.cc Field3DPort.cc GeometryPort.cc \
-	HelpUI.cc \
+	HelpUI.cc MemStats.cc MenuBar.cc \
 	Module.cc Modules.cc ModuleList.cc MotifCallbackBase.cc \
 	MUI.cc \
 	MtXEventLoop.cc \
@@ -30,10 +30,14 @@ SCI_LIBS = \
 	../modules/libmodules.a \
 	SCI_MultitaskLib \
 	SCI_ClassLib \
-	../../wrapper/libMInT/libMInT.a
+	../../wrapper/libMInT/libMInT.a \
+	../../templates/fast_templates.a \
+	SCI_MallocLib
 
-SCI_LDFLAGS = ../../templates/fast_templates.a \
-	-L../../audio -laudio SCI_LM SCI_LTHREAD SCI_LMOTIF \
+../../templates/fast_templates.a: $(OBJS)
+	make_templates ../../templates
+
+SCI_LDFLAGS = -laudio SCI_LM SCI_LTHREAD SCI_LMOTIF \
 	SCI_LX11 -lgen -lGLw -lGL -ptv
 
 depend:: XQColorDB.h

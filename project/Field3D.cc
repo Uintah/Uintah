@@ -41,24 +41,6 @@ Field3D::Representation Field3D::get_rep()
     return rep;
 }
 
-Field3DHandle::Field3DHandle(Field3D* rep)
-: rep(rep)
-{
-    if(rep)
-	rep->ref_cnt++;
-}
-
-Field3DHandle::~Field3DHandle()
-{
-    if(rep && --rep->ref_cnt==0)
-	delete rep;
-}
-
-Field3D* Field3DHandle::operator->() const
-{
-    return rep;
-}
-
 Field3D::Field3D()
 : rep(RegularGrid), fieldtype(ScalarField), nx(0), ny(0), nz(0), ntetra(0)
 {

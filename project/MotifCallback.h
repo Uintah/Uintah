@@ -33,7 +33,15 @@ public:
 		  Mailbox<MessageBase*>* mailbox, T* obj,
 		  void (MotifCallbackBase::*method)(CallbackData*, void*),
 		  void* userdata, CallbackData* (*cloner)(void*));
+    MotifCallback(int delay, int repeat,
+		  Mailbox<MessageBase*>* mailbox, T* obj,
+		  void (MotifCallbackBase::*method)(CallbackData*, void*),
+		  void* userdata, CallbackData* (*cloner)(void*));
 #if 0
+    MotifCallback(int delay, int repeat,
+		  Mailbox<MessageBase*>* mailbox, T* obj,
+		  void (T::*method)(CallbackData*, void*),
+		  void* userdata=0);
     MotifCallback(EncapsulatorC* enc, const char* cb_name,
 		  Mailbox<MessageBase*>* mailbox, T* obj,
 		  void (T::*method)(CallbackData*, void*),

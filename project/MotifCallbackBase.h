@@ -21,12 +21,17 @@ class CallbackData;
 class EncapsulatorC;
 
 class MotifCallbackBase {
+    int delay, repeat;
     EncapsulatorC* enc;
     Mailbox<MessageBase*>* mailbox;
     void* userdata;
     virtual void perform(CallbackData*, void*)=0;
     CallbackData* (*cloner)(void*);
+    static void handle_timeout(void*, void*);
 public:
+    MotifCallbackBase(int delay, int repeat,
+		      Mailbox<MessageBase*>* mailbox,
+		      void* userdata, CallbackData* (*cloner)(void*));
     MotifCallbackBase(EncapsulatorC* enc, const char* cb_name,
 		      Mailbox<MessageBase*>* mailbox,
 		      void* userdata, CallbackData* (*cloner)(void*));

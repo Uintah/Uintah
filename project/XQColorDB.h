@@ -39,7 +39,9 @@ XQColor_named_colors.insert("LavenderBlush", RGBColor(1,0.941176,0.960784));
 XQColor_named_colors.insert("misty rose", RGBColor(1,0.894118,0.882353));
 XQColor_named_colors.insert("MistyRose", RGBColor(1,0.894118,0.882353));
 XQColor_named_colors.insert("white", RGBColor(1,1,1));
+#endif
 XQColor_named_colors.insert("black", RGBColor(0,0,0));
+#if 0
 XQColor_named_colors.insert("dark slate", RGBColor(0.184314,0.309804,0.309804));
 XQColor_named_colors.insert("DarkSlateGray", RGBColor(0.184314,0.309804,0.309804));
 XQColor_named_colors.insert("dark slate", RGBColor(0.184314,0.309804,0.309804));
@@ -81,7 +83,9 @@ XQColor_named_colors.insert("medium blue", RGBColor(0,0,0.803922));
 XQColor_named_colors.insert("MediumBlue", RGBColor(0,0,0.803922));
 XQColor_named_colors.insert("royal blue", RGBColor(0.254902,0.411765,0.882353));
 XQColor_named_colors.insert("RoyalBlue", RGBColor(0.254902,0.411765,0.882353));
+#endif
 XQColor_named_colors.insert("blue", RGBColor(0,0,1));
+#if 0
 XQColor_named_colors.insert("dodger blue", RGBColor(0.117647,0.564706,1));
 XQColor_named_colors.insert("DodgerBlue", RGBColor(0.117647,0.564706,1));
 XQColor_named_colors.insert("deep sky", RGBColor(0,0.74902,1));

@@ -1,2 +1,2 @@
-set $mp_program=2
+set $mp_program=1
 set $promptonfork=2

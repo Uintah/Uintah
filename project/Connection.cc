@@ -20,18 +20,10 @@ Connection::Connection(Module* m1, int p1, Module* m2, int p2)
     oport=m1->oport(p1);
     iport=m2->iport(p2);
     local=1;
+    oport->attach(this);
+    iport->attach(this);
 }
 
 Connection::~Connection()
 {
-}
-
-void Connection::attach(OPort* op)
-{
-    oport=op;
-}
-
-void Connection::attach(IPort* ip)
-{
-    iport=ip;
 }

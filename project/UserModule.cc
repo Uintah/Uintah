@@ -503,7 +503,6 @@ void UserModule::do_execute()
 	port->reset();
     }
     // Call the User's execute function...
-    cerr << "Executing...\n";
     execute();
 
     // Call finish on all output ports...
