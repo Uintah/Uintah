@@ -39,8 +39,8 @@ namespace Uintah {
     
    class OutputContext {
    public:
-      OutputContext(int fd, long cur, ProblemSpecP varnode)
-	 : fd(fd), cur(cur), varnode(varnode)
+      OutputContext(int fd, long cur, ProblemSpecP varnode, bool outputDoubleAsFloat = false)
+	: fd(fd), cur(cur), varnode(varnode), outputDoubleAsFloat(outputDoubleAsFloat)
       {
       }
       ~OutputContext() {}
@@ -48,6 +48,7 @@ namespace Uintah {
       int fd;
       long cur;
       ProblemSpecP varnode;
+      bool outputDoubleAsFloat;
    private:
       OutputContext(const OutputContext&);
       OutputContext& operator=(const OutputContext&);

@@ -145,11 +145,11 @@ WARNING
     { return getHighIndex(); }
 
     virtual void emitNormal(ostream& out, const IntVector& l, const IntVector& h,
-			    ProblemSpecP /*varnode*/)
+			    ProblemSpecP /*varnode*/, bool outputDoubleAsFloat)
     {
       const TypeDescription* td = fun_getTypeDescription((T*)0);
       if(td->isFlat())
-	Array3<T>::write(out, l, h);
+	Array3<T>::write(out, l, h, outputDoubleAsFloat);
       else
 	SCI_THROW(InternalError("Cannot yet write non-flat objects!\n"));
     }
