@@ -29,16 +29,27 @@
 
 #include <string>
 #include <iostream>
+#include <Core/Math/function.h>
 
 using std::cerr;
 using std::cin;
 using std::cout;
 
+using namespace SCIRun;
+
 int
 main(int argc, char **argv) {
+  Function *f = new Function(1);
+  fnparsestring("x*3+4", &f);
+  double x=3;
+  double y=f->eval(&x);
+  cerr << "3*3+4 = "<<y<<"\n";
+
   double d;
   cout << "Please type a double: ";
   cin >> d;
   cerr << "This is the double you typed: "<<d<<"\n";
   return 0;  
+
+
 }    

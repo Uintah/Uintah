@@ -123,7 +123,7 @@ set $m4-method {Conjugate Gradient & Precond. (SCI)}
 set $m4-precond {jacobi}
 set $m4-iteration 176
 set $m4-maxiter 2000
-set $m4-use_previous_soln 1
+set $m4-use_previous_soln 0
 set $m4-emit_partial 0
 set $m4-np 16
 set $m5-notes {Store the lead-field.  The size is nr=(# of electrodes - 1) x nc=(# of elements x 3).  Each
