@@ -33,11 +33,14 @@ SRCS     += \
 	$(SRCDIR)/MTSPlastic.cc \
 	$(SRCDIR)/PlasticityModel.cc \
 	$(SRCDIR)/PlasticityModelFactory.cc \
+	$(SRCDIR)/YieldCondition.cc \
+	$(SRCDIR)/YieldConditionFactory.cc \
 	$(SRCDIR)/GursonYield.cc \
 	$(SRCDIR)/RousselierYield.cc \
 	$(SRCDIR)/VonMisesYield.cc \
-	$(SRCDIR)/YieldCondition.cc \
-	$(SRCDIR)/YieldConditionFactory.cc \
+	$(SRCDIR)/StabilityCheck.cc \
+	$(SRCDIR)/StabilityCheckFactory.cc \
+	$(SRCDIR)/AcousticTensorCheck.cc
 
 PSELIBS := Packages/Uintah/Core/Grid \
 	Packages/Uintah/CCA/Components/ICE \

@@ -10,84 +10,94 @@
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
+#include <Packages/Uintah/Core/Math/TangentModulusTensor.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 
 
 namespace Uintah {
 
-/**************************************
+  ///////////////////////////////////////////////////////////////////////////
+  /*!
+    \class  PlasticityModel
+    \brief  Abstract Base class for plasticity models (calculate yield stress)
+    \author Biswajit Banerjee, \n
+            C-SAFE and Department of Mechanical Engineering, \n
+            University of Utah,\n
+            Copyright (C) 2002 University of Utah\n
+    \warn   Assumes vonMises yield condition and the associated flow rule for 
+            all cases other than Gurson plasticity.
+  */
+  ///////////////////////////////////////////////////////////////////////////
 
-CLASS
-   PlasticityModel
-   
-   Short description...
+  class PlasticityModel {
 
-GENERAL INFORMATION
+  private:
 
-   PlasticityModel.h
-
-   Biswajit Banerjee
-   Department of Mechanical Enegineering
-   University of Utah
-
-   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
-  
-   Copyright (C) 2002 McMurtry Container Dynamics Group
-
-KEYWORDS
-   Plasticity_Model
-
-DESCRIPTION
-   Long description...
-  
-WARNING
-  
-****************************************/
-
-      class PlasticityModel {
-
-      private:
-
-      public:
+  public:
 	 
-	 PlasticityModel();
-	 virtual ~PlasticityModel();
+    PlasticityModel();
+    virtual ~PlasticityModel();
 	 
-         // Computes and requires for internal evolution variables
-	 virtual void addInitialComputesAndRequires(Task* task,
-                                                    const MPMMaterial* matl,
-                                                    const PatchSet* patches) const = 0;
+    // Computes and requires for internal evolution variables
+    virtual void addInitialComputesAndRequires(Task* task,
+					       const MPMMaterial* matl,
+					       const PatchSet* patches) 
+                                               const = 0;
 
-	 virtual void addComputesAndRequires(Task* task,
-					     const MPMMaterial* matl,
-					     const PatchSet* patches) const = 0;
+    virtual void addComputesAndRequires(Task* task,
+					const MPMMaterial* matl,
+					const PatchSet* patches) const = 0;
 
-	 virtual void addParticleState(std::vector<const VarLabel*>& from,
-				       std::vector<const VarLabel*>& to) = 0;
+    virtual void addParticleState(std::vector<const VarLabel*>& from,
+				  std::vector<const VarLabel*>& to) = 0;
 
-         virtual void initializeInternalVars(ParticleSubset* pset,
-				             DataWarehouse* new_dw) = 0;
+    virtual void initializeInternalVars(ParticleSubset* pset,
+					DataWarehouse* new_dw) = 0;
 
-         virtual void getInternalVars(ParticleSubset* pset,
-                                      DataWarehouse* old_dw) = 0;
+    virtual void getInternalVars(ParticleSubset* pset,
+				 DataWarehouse* old_dw) = 0;
 
-         virtual void allocateAndPutInternalVars(ParticleSubset* pset,
-                                                 DataWarehouse* new_dw) = 0; 
+    virtual void allocateAndPutInternalVars(ParticleSubset* pset,
+					    DataWarehouse* new_dw) = 0; 
 
-         virtual void updateElastic(const particleIndex idx) = 0;
+    virtual void updateElastic(const particleIndex idx) = 0;
 
-         virtual void updatePlastic(const particleIndex idx, const double& delGamma) = 0;
+    virtual void updatePlastic(const particleIndex idx, 
+                               const double& delGamma) = 0;
 
-	 //////////
-	 // Calculate the flow stress
-         virtual double computeFlowStress(const Matrix3& rateOfDeformation,
-                                          const Matrix3& stress,
-                                          const double& temperature,
-                                          const double& delT,
-                                          const double& tolerance,
-                                          const MPMMaterial* matl,
-                                          const particleIndex idx) = 0;
-      };
+    //////////
+    // Calculate the flow stress
+    virtual double computeFlowStress(const Matrix3& rateOfDeformation,
+				     const Matrix3& stress,
+				     const double& temperature,
+				     const double& delT,
+				     const double& tolerance,
+				     const MPMMaterial* matl,
+				     const particleIndex idx) = 0;
+ 
+    /*! Compute the elastic-plastic tangent modulus 
+      This is given by
+      \f[ 
+      C_{ep} = C_e - \frac{(C_e:r) (x) (f_s:C_e)}
+      {-f_q.h + f_s:C_e:r}
+      \f]
+      where \n
+      \f$ C_{ep} \f$ is the continuum elasto-plastic tangent modulus \n
+      \f$ C_{e} \f$ is the continuum elastic tangent modulus \n
+      \f$ r \f$ is the plastic flow direction \f$ d\phi/d\sigma = r \f$\n
+      \f$ h \f$ gives the evolution of \f$ q \f$ \n
+      \f$ f_s = \partial f /\partial \sigma \f$ \n
+      \f$ f_q = \partial f /\partial q \f$ 
+    */
+    virtual void computeTangentModulus(const Matrix3& stress,
+				       const Matrix3& rateOfDeform, 
+				       double temperature,
+				       double delT,
+                                       const particleIndex idx,
+                                       const MPMMaterial* matl,
+				       TangentModulusTensor& Ce,
+				       TangentModulusTensor& Cep) = 0;
+  };
 } // End namespace Uintah
       
 
