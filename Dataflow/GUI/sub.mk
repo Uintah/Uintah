@@ -15,6 +15,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/NodeHedgehog.tcl \
 	$(SRCDIR)/ArchiveReader.tcl \
 	$(SRCDIR)/GridVisualizer.tcl\
+	$(SRCDIR)/PatchVisualizer.tcl\
 	$(SRCDIR)/RescaleColorMap.tcl\
 	$(SRCDIR)/Isosurface.tcl\
 	$(SRCDIR)/GLTextureBuilder.tcl\
