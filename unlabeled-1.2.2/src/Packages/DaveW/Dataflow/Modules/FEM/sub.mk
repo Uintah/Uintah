@@ -40,8 +40,11 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
-# Revision 1.2.2.4  2000/10/31 02:14:47  dmw
-# merging DaveW HEAD changes into FIELD_BRANCH
+# Revision 1.2.2.5  2000/11/01 23:02:25  mcole
+# Fix for previous merge from trunk
+#
+# Revision 1.2.2.3  2000/10/26 14:02:08  moulding
+# merge HEAD into FIELD_REDESIGN
 #
 # Revision 1.6  2000/10/29 03:51:45  dmw
 # SeedDipoles will place dipoles randomly within a mesh

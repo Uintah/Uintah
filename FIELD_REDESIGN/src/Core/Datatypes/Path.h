@@ -209,8 +209,11 @@ inline void Path::set_arc_param(){
 
 //
 // $Log$
-// Revision 1.2.2.4  2000/10/31 02:36:23  dmw
-// Merging SCICore changes in HEAD into FIELD_REDESIGN branch
+// Revision 1.2.2.5  2000/11/01 23:03:19  mcole
+// Fix for previous merge from trunk
+//
+// Revision 1.2.2.3  2000/10/26 17:30:46  moulding
+// merge HEAD into FIELD_REDESIGN
 //
 // Revision 1.4  2000/09/29 08:42:34  samsonov
 // Added camera speed support

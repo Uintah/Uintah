@@ -37,8 +37,11 @@ CLEANPROGS := $(CLEANPROGS) $(SRCDIR)/tclIndex
 
 #
 # $Log$
-# Revision 1.2.2.3  2000/10/31 02:14:38  dmw
-# merging DaveW HEAD changes into FIELD_BRANCH
+# Revision 1.2.2.4  2000/11/01 23:02:19  mcole
+# Fix for previous merge from trunk
+#
+# Revision 1.2.2.2  2000/10/26 14:01:53  moulding
+# merge HEAD into FIELD_REDESIGN
 #
 # Revision 1.4  2000/10/29 03:47:58  dmw
 # new GUIs
