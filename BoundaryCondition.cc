@@ -3165,14 +3165,17 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
            vars->scalar[xplusCell]= vars->scalar[currCell];
 	   else
              if (d_enthalpySolve)
-	       vars->scalar[xplusCell]= -1.0;
+	       vars->scalar[xplusCell] = -1.0;
 	     else
-	       vars->scalar[xplusCell]= 0.0;
+	       vars->scalar[xplusCell] = 0.0;
 
-           if (vars->scalar[xplusCell] > 1.0)
-               vars->scalar[xplusCell] = 1.0;
-           else if (vars->scalar[xplusCell] < 0.0)
-               vars->scalar[xplusCell] = 0.0;
+// Don't clip the special case scalar = -1 used to reinitialize enthalpy
+// to adiabatic value	   
+	   if (!(vars->scalar[xplusCell] == -1.0))
+             if (vars->scalar[xplusCell] > 1.0)
+                 vars->scalar[xplusCell] = 1.0;
+             else if (vars->scalar[xplusCell] < 0.0)
+                 vars->scalar[xplusCell] = 0.0;
         } 
       }
     }
