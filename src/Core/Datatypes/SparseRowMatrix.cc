@@ -391,22 +391,6 @@ SparseRowMatrix::add(int i, int j, double d)
 
 
 void
-SparseRowMatrix::getRowNonzeros(int r, Array1<int>& idx, Array1<double>& val)
-{
-  int row_idx=rows[r];
-  int next_idx=rows[r+1];
-  idx.resize(next_idx-row_idx);
-  val.resize(next_idx-row_idx);
-  int i=0;
-  for (int c=row_idx; c<next_idx; c++, i++)
-  {
-    idx[i]=columns[c];
-    val[i]=a[c];
-  }
-}
-
-
-void
 SparseRowMatrix::getRowNonzerosNoCopy(int r, int &size, int &stride,
                                       int *&cols, double *&vals)
 {

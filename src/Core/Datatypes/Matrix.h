@@ -103,8 +103,6 @@ public:
   virtual void    put(int r, int c, double val) = 0;
   virtual void    add(int r, int c, double val) = 0;
 
-  // getRowNonzeros is deprecated.  Use getRowNonzerosNoCopy instead.
-  virtual void getRowNonzeros(int r, Array1<int>& idx, Array1<double>& v) = 0;
   // getRowNonzerosNocopy returns:
   //   vals = The values.  They are not guaranteed 
   //     to be nonzero, but some of the zeros may be missing.
