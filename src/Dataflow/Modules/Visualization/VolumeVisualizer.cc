@@ -178,7 +178,7 @@ VolumeVisualizer::execute()
 #else
     if (tex->nc() == 1)
     {
-      warning("ColorMap2 requires gradient magnitude in the texture.")
+      warning("ColorMap2 requires gradient magnitude in the texture.");
       cmap2 = 0;
       c2 = false;
     }

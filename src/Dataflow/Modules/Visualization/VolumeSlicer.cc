@@ -183,7 +183,7 @@ void VolumeSlicer::execute()
 #else
     if (tex_->nc() == 1)
     {
-      warning("ColorMap2 requires gradient magnitude in the texture.")
+      warning("ColorMap2 requires gradient magnitude in the texture.");
       cmap2 = 0;
       c2 = false;
     }
