@@ -48,7 +48,7 @@ set $m2-show_status 1
 set $m2-filename {/home/sci/data22/dmw/hep//HCG-250.sfrg}
 set $m3-notes {}
 set $m3-show_status 1
-$m3 ui $m3-ViewWindow_0
+$m3 ui
 set $m3-ViewWindow_0-pos {}
 set $m3-ViewWindow_0-caxes 1
 set $m3-ViewWindow_0-iaxes -2147483647
