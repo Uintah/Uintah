@@ -194,12 +194,12 @@ int main(int argc, char** argv)
 	// Scheduler
 	if(scheduler == "SingleProcessorScheduler"){
 	   SingleProcessorScheduler* sched = 
-	      scinew SingleProcessorScheduler(world);
+	      scinew SingleProcessorScheduler(world, output);
 	   sim->attachPort("scheduler", sched);
 	   sched->attachPort("load balancer", bal);
 	} else if(scheduler == "MPIScheduler"){
 	   MPIScheduler* sched =
-	      scinew MPIScheduler(world);
+	      scinew MPIScheduler(world, output);
 	   sim->attachPort("scheduler", sched);
 	   sched->attachPort("load balancer", bal);
 	} else {
@@ -227,6 +227,12 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.15  2000/07/26 20:14:14  jehall
+// Moved taskgraph/dependency output files to UDA directory
+// - Added output port parameter to schedulers
+// - Added getOutputLocation() to Uintah::Output interface
+// - Renamed output files to taskgraph[.xml]
+//
 // Revision 1.14  2000/06/17 07:06:21  sparker
 // Changed ProcessorContext to ProcessorGroup
 //
