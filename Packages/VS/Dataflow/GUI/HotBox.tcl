@@ -85,9 +85,9 @@ itcl_class VS_DataFlow_HotBox {
     set $this-boundingboxdatasource ""
     set $this-injurylistdatasource ""
     set $this-querytype "1"
-    set $this-gui_probeLocx "0.0"
-    set $this-gui_probeLocy "0.0"
-    set $this-gui_probeLocz "0.0"
+    set $this-gui_probeLocx "0"
+    set $this-gui_probeLocy "0"
+    set $this-gui_probeLocz "0"
     set $this-gui_probe_scale "1.0"
 
   }
@@ -178,6 +178,9 @@ itcl_class VS_DataFlow_HotBox {
       # toggle Files control off
       set $this-Files_on "no"
     } else {set $this-Files_on "yes"}
+    set w .ui[modname]
+    destroy $w
+    ui
   }
   # end method toggle_Files_on
 
