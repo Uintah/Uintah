@@ -966,6 +966,14 @@ void MPMICE::doCCMomExchange(const ProcessorGroup*,
   cout << "TOTAL Momentum AFTER = " << total_moma << endl;
 #endif
 
+  //HARDWIRING FOR NEUMANN TEMPERATURE BCS
+  for(int m = 0; m < numALLMatls; m++){
+    for(Patch::FaceType face = Patch::startFace;
+      face <= Patch::endFace; face=Patch::nextFace(face)){
+        dTdt_CC[m].fillFace(face,0);
+    }
+  }
+
   //__________________________________
   // This is where I interpolate the CC 
   // changes to NCs for the MPMMatls
