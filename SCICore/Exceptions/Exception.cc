@@ -59,7 +59,7 @@ void Exception::sci_throw(const Exception& exc)
 
     // If the mode is not "throw", we print out a message
     if(strcasecmp(emode, "throw") != 0){
-	cerr << "\n\nAn exception was thrown.\n";
+        cerr << "\n\nAn exception was thrown.  Msg: " << exc.message() << "\n";
 #ifdef __sgi
 	// Use -lexc to print out a stack trace
 	static const int MAXSTACK = 100;
@@ -153,6 +153,9 @@ void Exception::sci_throw(const Exception& exc)
 
 //
 // $Log$
+// Revision 1.4  2000/06/08 21:08:43  dav
+// added more verbose error message
+//
 // Revision 1.3  2000/03/24 00:06:29  yarden
 // replace stderr with cerr.
 // include <stdio,h> for sprintf
