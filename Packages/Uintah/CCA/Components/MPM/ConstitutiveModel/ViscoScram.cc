@@ -71,6 +71,11 @@ ViscoScram::ViscoScram(ProblemSpecP& ps, MPMLabel* Mlb,
   } else if(flag->d_8or27==27){
     NGN=2;
   }
+  // The following are precomputed once for use with ICE.
+  double G = d_initialData.G[0] + d_initialData.G[1] +
+ 	     d_initialData.G[2] + d_initialData.G[3] + d_initialData.G[4];
+  d_bulk = (2.*G*(1. + d_initialData.PR))/(3.*(1.-2.*d_initialData.PR));
+
 }
 
 ViscoScram::ViscoScram(const ViscoScram* cm)
@@ -813,20 +818,18 @@ double ViscoScram::computeRhoMicroCM(double pressure,
   double rho_orig = matl->getInitialDensity();
   double p_gauge = pressure - p_ref;
   double rho_cur;
-  double G = d_initialData.G[0] + d_initialData.G[1] +
- 	     d_initialData.G[2] + d_initialData.G[3] + d_initialData.G[4];
-  double bulk = (2.*G*(1. + d_initialData.PR))/(3.*(1.-2.*d_initialData.PR));
-  
+
   if(d_useModifiedEOS && p_gauge < 0.0) {
     double A = p_ref;       // Modified EOS
-    double n = p_ref/bulk;
+    double n = p_ref/d_bulk;
     rho_cur  = rho_orig*pow(pressure/A,n);
   }
   else {                      // STANDARD EOS
-    rho_cur = rho_orig*(p_gauge/bulk + sqrt((p_gauge/bulk)*(p_gauge/bulk) +1));
+    double p_g_over_bulk = p_gauge/d_bulk;
+    rho_cur=rho_orig*(p_g_over_bulk + sqrt(p_g_over_bulk*p_g_over_bulk +1.));
   }
 //  else{                    // Standard EOS
-//    rho_cur = rho_orig/(1-p_gauge/bulk);
+//    rho_cur = rho_orig/(1-p_g_over_bulk);
 //  }
   return rho_cur;
 
@@ -837,38 +840,34 @@ void ViscoScram::computePressEOSCM(double rho_cur,double& pressure,
                                    double& dp_drho, double& tmp,
                                    const MPMMaterial* matl)
 {
-  double G = d_initialData.G[0] + d_initialData.G[1] +
- 	     d_initialData.G[2] + d_initialData.G[3] + d_initialData.G[4];
-  double bulk = (2.*G*(1. + d_initialData.PR))/(3.*(1.-2.*d_initialData.PR));
   double rho_orig = matl->getInitialDensity();
+  double inv_rho_orig = 1./rho_orig;
 
   if(d_useModifiedEOS && rho_cur < rho_orig){
     double A = p_ref;         // MODIFIED EOS
-    double n = bulk/p_ref;
-    pressure = A*pow(rho_cur/rho_orig,n);
-    dp_drho  = (bulk/rho_orig)*pow(rho_cur/rho_orig,n-1);
+    double n = d_bulk/p_ref;
+    double rho_rat_to_the_n = pow(rho_cur/rho_orig,n);
+    pressure = A*rho_rat_to_the_n;
+    dp_drho  = (d_bulk/rho_cur)*rho_rat_to_the_n;
     tmp      = dp_drho;       // speed of sound squared
   }
   else {                      // STANDARD EOS            
-    double p_g = .5*bulk*(rho_cur/rho_orig - rho_orig/rho_cur);
+    double p_g = .5*d_bulk*(rho_cur*inv_rho_orig - rho_orig/rho_cur);
     pressure   = p_ref + p_g;
-    dp_drho    = .5*bulk*(rho_orig/(rho_cur*rho_cur) + 1./rho_orig);
-    tmp        = bulk/rho_cur;  // speed of sound squared
+    dp_drho    = .5*d_bulk*(rho_orig/(rho_cur*rho_cur) + inv_rho_orig);
+    tmp        = d_bulk/rho_cur;  // speed of sound squared
   }
 //  else{                       // STANDARD EOS
-//    double p_g = bulk*(1.0 - rho_orig/rho_cur);
+//    double p_g =d_ bulk*(1.0 - rho_orig/rho_cur);
 //    pressure   = p_ref + p_g;  
-//    dp_drho    = bulk*rho_orig/(rho_cur*rho_cur);
+//    dp_drho    = d_bulk*rho_orig/(rho_cur*rho_cur);
 //    tmp        = dp_drho;       // speed of sound squared
 //  }
 }
 
 double ViscoScram::getCompressibility()
 {
-  double G = d_initialData.G[0] + d_initialData.G[1] +
- 	     d_initialData.G[2] + d_initialData.G[3] + d_initialData.G[4];
-  double bulk = (2.*G*(1. + d_initialData.PR))/(3.*(1.-2.*d_initialData.PR));
-  return 1.0/bulk;
+  return 1.0/d_bulk;
 }
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
