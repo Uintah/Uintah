@@ -542,7 +542,8 @@ ShowField::execute()
 					       text_color_g_.get(),
 					       text_color_b_.get()));
       GeomSwitch *text =
-	renderer_->render_text(fld_handle, text_use_default_color_.get(), m);
+	renderer_->render_text(fld_handle, text_use_default_color_.get(), m,
+			       true, false, false, false, false);
       text_id_ = ogeom_->addObj(text, "Text Data");
     }
   }
