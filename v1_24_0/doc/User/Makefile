@@ -30,7 +30,7 @@
 # Makefile for User directory.
 .PHONY: products
 
-PRODUCTS = Guide Nets FAQ
+PRODUCTS = Guide FAQ Tutorials/BioImage
 
 default: index.html products
 
