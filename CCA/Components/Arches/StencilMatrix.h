@@ -31,7 +31,6 @@ WARNING
 *************************************************************************/
 
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
-#include <vector>
 #include <iostream>
 using std::vector;
 
@@ -68,7 +67,7 @@ public:
 
 private:
 
-      vector<T> d_data;
+      T d_data[7];
 
 }; // end Class Source
 
@@ -78,7 +77,7 @@ private:
 template<class T>
   StencilMatrix<T>::StencilMatrix()
   {
-    for (int ii = 0; ii < 7; ii++) d_data.push_back(T());
+    //for (int ii = 0; ii < 7; ii++) d_data.push_back(T());
   }
 
 //********************************************************************
@@ -87,7 +86,9 @@ template<class T>
 template<class T>
   StencilMatrix<T>::StencilMatrix(const StencilMatrix<T>& sm)
   {
-    for (int ii = 0; ii < 7; ii++) d_data.push_back(sm.d_data[ii]);
+    for (int ii = 0; ii < 7; ii++)
+      d_data[ii] = sm.d_data[ii];
+      //d_data.push_back(sm.d_data[ii]);
   }
 
 //********************************************************************
