@@ -33,6 +33,7 @@
 #include <iostream>
 
 #undef OREN_DEBUG
+#undef OREN_PRESS_EQ
 
 #ifdef OREN_DEBUG
 //----- BEGIN   Oren 28-Jul-2004: added timing of mom/energy exchange solution -----
@@ -1899,13 +1900,17 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
   //______________________________________________________________________
   // Done with preliminary calcs, now loop over every cell
     int count, test_max_iter = 0;
+#ifdef OREN_PRESS_EQ
     int num_bad_cells = 0;
     double root_search_derivative = 0.;
+#endif
     for (CellIterator iter=patch->getExtraCellIterator();!iter.done();iter++) {
       IntVector c = *iter;   
       double delPress = 0.;
       bool converged  = false;
       count           = 0;
+      double vol_frac_not_close_packed = 1.0;
+#ifdef OREN_PRESS_EQ
       //-------- Oren, better convergence criterion   10-AUG-2004 BEGIN --------
       double vol_frac_not_close_packed = 1.0;                    // 1.0 is replaced everywhere by this constant
       double sensitivity_criterion     = 10 * DBL_EPSILON;       // Threshold of root-search sensitivity
@@ -1918,6 +1923,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
                                                                   // enter it. Eliminates some potential
                                                                   // Round-off errors.
       //-------- Oren, better convergence criterion   10-AUG-2004 END   --------
+#endif
       while ( count < d_max_iter_equilibration && converged == false) {
         count++;
         double A = 0.;
@@ -1945,7 +1951,9 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
          C   +=  div_y;
        }
        delPress = (A - vol_frac_not_close_packed - B)/C;
+#ifdef OREN_PRESS_EQ
        root_search_derivative = C;
+#endif
        press_new[c] += delPress;
 
        //__________________________________
@@ -1979,11 +1987,16 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
        for (int m = 0; m < numMatls; m++)  {
          sum += vol_frac[m][c];
        }
+#ifdef OREN_PRESS_EQ
        if (fabs(sum-vol_frac_not_close_packed) < convergence_crit)
+#else
+       if (fabs(sum-1.0) < convergence_crit)
+#endif
          converged = true;
 
       }   // end of converged
 
+#ifdef OREN_PRESS_EQ
       //-------- Oren, better convergence criterion   10-AUG-2004 BEGIN --------
       if ((fabs(root_search_derivative) < sensitivity_criterion*fabs(press_new[c])) // If |f'|/|p| < threshold
 	  && (num_bad_cells < 10) && (count > 0)) {
@@ -1992,6 +2005,7 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 	num_bad_cells++;
       }
       //-------- Oren, better convergence criterion   10-AUG-2004 END   --------
+#endif
 
       test_max_iter = std::max(test_max_iter, count);
 
@@ -2026,12 +2040,14 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 
     cout_norm << "max. iterations in any cell " << test_max_iter << 
                  " on patch "<<patch->getID()<<endl; 
+#ifdef OREN_PRESS_EQ
     //-------- Oren, better convergence criterion   10-AUG-2004 BEGIN --------
     if (num_bad_cells > 0) {
       cout << "Warning: computeEquilibrationPressure() might give inaccurate " \
 	"pressure result for " << num_bad_cells << endl;
     }
     //-------- Oren, better convergence criterion   10-AUG-2004 END   --------
+#endif
 
     //__________________________________
     // compute sp_vol_CC
