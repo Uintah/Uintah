@@ -120,21 +120,23 @@ private:
    const particleIndex pIdx,
    const IntVector& cellIndex,
    const Lattice& lattice,
-   ParticleVariable<Vector>& pInterpolateValue);
+   double& interpolateValue,
+   Vector& gradientValue);
 
   void LeastrSquareInterpolateVector(const ParticleVariable<Point>& pX,
    const ParticleVariable<Vector>& pValue,
    const particleIndex pIdx,
    const IntVector& cellIndex,
    const Lattice& lattice,
-   ParticleVariable<Matrix3>& pInterpolateValue);
+   Vector& interpolateValue,
+   Matrix3& gradientValue);
 
   void LeastrSquareInterpolateInternalForce(const ParticleVariable<Point>& pX,
    const ParticleVariable<Matrix3>& pStress,
    const particleIndex pIdx,
    const IntVector& cellIndex,
    const Lattice& lattice,
-   ParticleVariable<Vector>& pInternalForce);
+   Vector& pInternalForce);
 
   double           d_averageMicrocrackLength;
   double           d_toughness;
@@ -147,6 +149,9 @@ private:
 #endif //__FRACTURE_H__
 
 // $Log$
+// Revision 1.20  2000/07/05 21:37:43  tan
+// Filled in the function of updateParticleInformationInContactCells.
+//
 // Revision 1.19  2000/06/23 16:49:23  tan
 // Added LeastSquare Approximation and Lattice for neighboring algorithm.
 //
