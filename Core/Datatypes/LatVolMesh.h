@@ -26,12 +26,96 @@ using std::string;
 class SCICORESHARE LatVolMesh : public MeshBase
 {
 public:
+
+  struct UnfinishedIndex
+  {
+  public:
+    UnfinishedIndex() : i_(0) {}
+    UnfinishedIndex(unsigned i) : i_(i) {}
+
+    operator const unsigned() const { return i_; }
+
+    unsigned i_;
+  };
+
+  struct EdgeIndex : public UnfinishedIndex
+  {
+    EdgeIndex() : UnfinishedIndex() {}
+    EdgeIndex(unsigned i) : UnfinishedIndex(i) {}
+  };
+
+  struct FaceIndex : public UnfinishedIndex
+  {
+    FaceIndex() : UnfinishedIndex() {}
+    FaceIndex(unsigned i) : UnfinishedIndex(i) {}
+  };
+
+  struct UnfinishedIter : public UnfinishedIndex
+  {
+    UnfinishedIter(const LatVolMesh *m, unsigned i) 
+      : UnfinishedIndex(i), mesh_(m) {}
+    
+    const UnfinishedIndex &operator *() { return *this; }
+    
+    bool operator ==(const UnfinishedIter &a) const
+    {
+      return i_ == a.i_ && mesh_ == a.mesh_;
+    }
+    
+    bool operator !=(const UnfinishedIter &a) const
+    {
+      return !(*this == a);
+    }
+    
+    const LatVolMesh *mesh_;
+  };
+
+  struct EdgeIter : public UnfinishedIter
+  {
+    EdgeIter(const LatVolMesh *m, unsigned i) 
+      : UnfinishedIter(m, i) {}
+    
+    const EdgeIndex &operator *() const { return (const EdgeIndex&)(*this); }
+
+    EdgeIter &operator++() { return *this; }
+
+  private:
+
+    EdgeIter operator++(int)
+    {
+      EdgeIter result(*this);
+      operator++();
+      return result;
+    }
+  };
+
+  struct FaceIter : public UnfinishedIter
+  {
+    FaceIter(const LatVolMesh *m, unsigned i) 
+      : UnfinishedIter(m, i) {}
+    
+    const FaceIndex &operator *() const { return (const FaceIndex&)(*this); }
+
+    FaceIter &operator++() { return *this; }
+
+  private:
+
+    FaceIter operator++(int)
+    {
+      FaceIter result(*this);
+      operator++();
+      return result;
+    }
+  };  
+
   struct LatIndex
   {
   public:
     LatIndex() : i_(0), j_(0), k_(0) {}
     LatIndex(unsigned i, unsigned j, unsigned k) : i_(i), j_(j), k_(k) {}
     
+    operator const unsigned() const { return i_*j_*k_; }
+
     unsigned i_, j_, k_;
   };
 
@@ -136,19 +220,19 @@ public:
   //! Index and Iterator types required for Mesh Concept.
   typedef NodeIndex       node_index;
   typedef NodeIter        node_iterator;
+  typedef NodeIndex       node_size_type;
  
-  //typedef EdgeIndex       edge_index;     
-  //typedef EdgeIterator    edge_iterator;
-  typedef int             edge_index;
-  typedef int             edge_iterator;
+  typedef EdgeIndex       edge_index;     
+  typedef EdgeIter        edge_iterator;
+  typedef EdgeIndex       edge_size_type;
  
-  //typedef FaceIndex       face_index;
-  //typedef FaceIterator    face_iterator;
-  typedef unsigned        face_index;
-  typedef unsigned        face_iterator;
+  typedef FaceIndex       face_index;
+  typedef FaceIter        face_iterator;
+  typedef FaceIndex       face_size_type;
  
   typedef CellIndex       cell_index;
   typedef CellIter        cell_iterator;
+  typedef CellIndex       cell_size_type;
 
   // storage types for get_* functions
   typedef vector<node_index>  node_array;
@@ -159,6 +243,8 @@ public:
 
   friend class NodeIter;
   friend class CellIter;
+  friend class EdgeIter;
+  friend class FaceIter;
 
   LatVolMesh()
     : nx_(1),ny_(1),nz_(1),min_(Point(0,0,0)),max_(Point(1,1,1)) {}
@@ -169,36 +255,22 @@ public:
       min_(copy.get_min()),max_(copy.get_max()) {}
   virtual ~LatVolMesh() {}
 
-  node_iterator node_begin() const { return node_iterator(this, 0, 0, 0); }
-  node_iterator node_end() const { return node_iterator(this, 0, 0, nz_); }
-  index_type    nodes_size() const { return LatIndex(nx_, ny_, nz_); }
+  node_iterator  node_begin() const { return node_iterator(this, 0, 0, 0); }
+  node_iterator  node_end() const { return node_iterator(this, 0, 0, nz_); }
+  node_size_type nodes_size() const { return node_size_type(nx_,ny_,nz_); }
 
-  edge_iterator edge_begin() const { return 0; }
-  edge_iterator edge_end() const { return 0; }
-  int edges_size() const { return nx_*ny_*nz_*3 -
-			     (nx_*ny_ + ny_*nz_ + nx_*nz_); }
+  edge_iterator  edge_begin() const { return edge_iterator(this,0); }
+  edge_iterator  edge_end() const { return edge_iterator(this,0); }
+  edge_size_type edges_size() const { return edge_size_type(0); }
 
-  cell_iterator cell_begin() const { return cell_iterator(this, 0, 0, 0); }
-  cell_iterator cell_end() const { return cell_iterator(this, 0, 0, nz_-1); }
-  index_type    cells_size() const { return LatIndex(nx_-1, ny_-1, nz_-1); }
+  face_iterator  face_begin() const { return face_iterator(this,0); }
+  face_iterator  face_end() const { return face_iterator(this,0); }
+  face_size_type faces_size() const { return face_size_type(0); }
 
-  face_iterator face_begin() const { return 0; }
-  face_iterator face_end() const { return 0; }
-  int           faces_size() const { return (nx_-1)*(ny_-1)*(nz_-1)*3 + 
-				       (nx_-1)*(ny_-1) +
-				       (ny_-1)*(nz_-1) + 
-				       (nx_-1)*(nz_-1); }
-
-
-  node_index nodes_size() { return node_index(nx_, ny_, nz_); }
-  edge_index edges_size()
-  { return nx_*ny_*nz_*3 - nx_*ny_ - ny_*nz_ -  nx_*nz_; } 
-  face_index faces_size()
-  {
-    return (nx_-1)*(ny_-1)*(nz_-1)*3 +
-      (nx_-1)*(ny_-1) + (ny_-1)*(nz_-1) + (nx_-1)*(nz_-1);
-  }
-  cell_index cells_size() { return cell_index(nx_-1, ny_-1, nz_-1); }
+  cell_iterator  cell_begin() const { return cell_iterator(this, 0, 0, 0); }
+  cell_iterator  cell_end() const { return cell_iterator(this, 0, 0, nz_-1); }
+  cell_size_type cells_size() const { return cell_size_type(nx_-1,
+							    ny_-1,nz_-1); }
 
   //! get the mesh statistics
   unsigned get_nx() const { return nx_; }
