@@ -85,6 +85,7 @@ void PackageDB::loadPackage(const clString& packPath)
   clString packageElt;
   component_node* node = 0;
   int mod_count = 0;
+  clString notset(NOT_SET);
 
   postMessage("Loading packages, please wait...\n", false);
 
@@ -133,6 +134,8 @@ void PackageDB::loadPackage(const clString& packPath)
       if (node) DestroyComponentNode(node);
       node = CreateComponentNode(3);
       ReadComponentNodeFromFile(node,(xmldir+"/"+(*i).second)());
+
+      if (notset==node->name||notset==node->category) continue;
 
       ci = new_package->categories.find(clString(node->category));
       if (ci==new_package->categories.end()) {
@@ -283,7 +286,7 @@ void PackageDB::loadPackage(const clString& packPath)
   }
 
   postMessage("\nFinished loading packages.\n",false);
-  TCL::execute(clString("destroy .loading"));
+  TCL::execute(clString("if [winfo exists .loading] {destroy .loading}"));
   TCL::eval("update idletasks",result);
 }
   
