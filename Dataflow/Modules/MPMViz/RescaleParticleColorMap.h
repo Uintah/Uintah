@@ -49,9 +49,7 @@ class RescaleParticleColorMap : public Module {
   ColorMapIPort* imap;
 public:
   RescaleParticleColorMap(const clString& id);
-  RescaleParticleColorMap(const RescaleParticleColorMap&, int deep);
   virtual ~RescaleParticleColorMap();
-  virtual Module* clone(int deep);
   virtual void execute();
 protected:
   TCLdouble minVal;
