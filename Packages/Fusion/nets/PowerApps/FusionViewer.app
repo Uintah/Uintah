@@ -967,8 +967,8 @@ class FusionViewerApp {
 	wm title .standalone "FusionViewer"	 
 	set win .standalone
 	
-	set viewer_width 925
-	set viewer_height 925
+	set viewer_width 775
+	set viewer_height 775
 	
 	set notebook_width 290
 	set notebook_height [expr $viewer_height - 160]
@@ -1016,9 +1016,8 @@ class FusionViewerApp {
 	# General
 	global tips
 
-	# Data Acquisition Tab
-        set tips(Execute-DataAcquisition) "Select to execute the\nData Acquisition step"
-	set tips(Next-DataAcquisition) "Select to proceed to\nthe Registration step"
+	# Visualization Tab
+        set tips(Execute) "Select to execute the changes"
 
 	global filename_points filename_connections 
 	global filename_scalar filename_vector
@@ -1196,8 +1195,8 @@ class FusionViewerApp {
 	$data_tab0 select "HDF5"
 	$data_tab1 select "HDF5"
 
-	$vis_tab0 select "Fields"
-	$vis_tab1 select "Fields"
+	$vis_tab0 select "Scalar"
+	$vis_tab1 select "Scalar"
 
 	$animate_tab0 select "Scalar"
 	$animate_tab1 select "Scalar"
@@ -1344,11 +1343,11 @@ class FusionViewerApp {
 
 	    set vis_tab$case $page.tnb
 
-################## Fields Tab
-	    set fields [$page.tnb add -label "Fields" \
+################## Scalar Fields Tab
+	    set fields [$page.tnb add -label "Scalar" \
 			    -command "$this change_option_tab 0"]
 
-	    set vis_field_tab$case $fields
+	    set vis_scalar_tab$case $fields
 
 
 ############### Scalar Slice
@@ -1377,6 +1376,13 @@ class FusionViewerApp {
 	    set isosurfaces_frame$case $iso
 	    
 
+################## Fields Tab
+	    set fields [$page.tnb add -label "Vector" \
+			    -command "$this change_option_tab 1"]
+
+	    set vis_vector_tab$case $fields
+
+
 ################## StreamLines
 	    iwidgets::labeledframe $fields.slframe -labelpos nw \
 		-labeltext "Field Lines"
@@ -1390,22 +1396,9 @@ class FusionViewerApp {
 	    set streamlines_frame$case $sl
 
 
-################## Synchronize
-	    iwidgets::labeledframe $fields.sync -labelpos nw \
-		-labeltext "Synchronize"
-
-	    set sync [$fields.sync childsite]
-
-	    global $mods(Synchronize)-enforce
-	    checkbutton $sync.enforce -text "Enforce" \
-		-variable $mods(Synchronize)-enforce
-	    pack $sync.enforce -side top -anchor nw -padx 3 -pady 3
-
-            pack $fields.sync -padx 4 -pady 4 -fill x
-
 ################## Probe Tab
 	    set probes [$page.tnb add -label "Probes" \
-			    -command "$this change_option_tab 1"]
+			    -command "$this change_option_tab 2"]
 
             if {$case == 0} {
 		set vis_probe_tab$case $probes
@@ -1463,7 +1456,7 @@ class FusionViewerApp {
 
 ################## Misc Page
 	    set misc [$page.tnb add -label "Misc" \
-			  -command "$this change_option_tab 2"]
+			  -command "$this change_option_tab 3"]
 
 	    set vis_misc_tab$case $misc
 
@@ -1479,6 +1472,19 @@ class FusionViewerApp {
             pack $misc.colorframe -padx 4 -pady 4 -fill x
 
 	    
+################## Synchronize
+	    iwidgets::labeledframe $misc.sync -labelpos nw \
+		-labeltext "Synchronize"
+
+	    set sync [$misc.sync childsite]
+
+	    global $mods(Synchronize)-enforce
+	    checkbutton $sync.enforce -text "Enforce" \
+		-variable $mods(Synchronize)-enforce
+	    pack $sync.enforce -side top -anchor nw -padx 3 -pady 3
+
+            pack $misc.sync -padx 4 -pady 4 -fill x
+
 ################## Renderer Options Tab
 	    create_viewer_tab $vis
 	    
@@ -1493,7 +1499,7 @@ class FusionViewerApp {
 		-activebackground $execute_color \
 		-width 8 \
 		-command "$this execute_Data"
-	    Tooltip $vis.last.ex $tips(Execute-DataAcquisition)
+	    Tooltip $vis.last.ex $tips(Execute)
 
             pack $vis.last.ex -side right -anchor ne \
 		-padx 2 -pady 0
@@ -2777,14 +2783,18 @@ class FusionViewerApp {
 
 	if {$initialized != 0} {
 	    if {$which == 0} {
-		$vis_tab0 view "Fields"
-		$vis_tab1 view "Fields"
+		$vis_tab0 view "Scalar"
+		$vis_tab1 view "Scalar"
 
 	    } elseif {$which == 1} {
+		$vis_tab0 view "Vector"
+		$vis_tab1 view "Vector"
+
+	    } elseif {$which == 2} {
 		$vis_tab0 view "Probes"
 		$vis_tab1 view "Probes"
 
-	    } elseif {$which == 2} {
+	    } elseif {$which == 3} {
 		$vis_tab0 view "Misc"
 		$vis_tab1 view "Misc"
 	    }
@@ -3985,7 +3995,7 @@ class FusionViewerApp {
 	}   
 	set $quantity $newquantity
 	$spinner delete 0 end
-	$spinner insert 0 [set $quantity]
+	$spinner insert 1 [set $quantity]
     }
 
     # Visualiztion frame tabnotebook
@@ -4024,8 +4034,11 @@ class FusionViewerApp {
     variable vis_tab0
     variable vis_tab1
 
-    variable vis_field_tab0
-    variable vis_field_tab1
+    variable vis_scalar_tab0
+    variable vis_scalar_tab1
+
+    variable vis_vector_tab0
+    variable vis_vector_tab1
 
     variable vis_probe_tab0
     variable vis_probe_tab1
