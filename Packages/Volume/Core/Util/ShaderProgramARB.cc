@@ -172,12 +172,12 @@ ShaderProgramARB::create()
       cerr << "program error at line " << l << ", character "
            << position-start << endl << endl << line << endl
            << underline << endl;
-      return false;
+      return true;
     }
-    return true;
+    return false;
   }
   
-  return false;
+  return true;
 }
 
 void
