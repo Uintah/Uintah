@@ -53,8 +53,6 @@ using std::endl;
 
 using namespace SCIRun;
 
-int global_argc;
-char** global_argv;
 
 namespace SCIRun {
 extern env_map scirunrc;             // contents of .scirunrc
@@ -89,40 +87,51 @@ usage()
 // Apparently some args are passed through to TCL where they are parsed...
 // Probably need to check to make sure they are at least valid here???
 
-void
+int
 parse_args( int argc, char *argv[] )
 {
+  int found = 0;
   for( int cnt = 1; cnt < argc; cnt++ )
+  {
+    string arg( argv[ cnt ] );
+    if( ( arg == "--version" ) || ( arg == "-version" )
+	|| ( arg == "-v" ) || ( arg == "--v" ) )
     {
-      string arg( argv[ cnt ] );
-      if( ( arg == "--version" ) || ( arg == "-version" )
-	  || ( arg == "-v" ) || ( arg == "--v" ) ){
-	cout << "Version: " << VERSION << "\n";
-	exit( 0 );
-      } else if ( ( arg == "--help" ) || ( arg == "-help" ) ||
-		  ( arg == "-h" ) ||  ( arg == "--h" ) ) {
-	usage();
-      } else {
-	  struct stat buf;
-	  if (stat(arg.c_str(),&buf) < 0) {
-	      cerr << "Couldn't find net file " << arg
-		   << ".\nNo such file or directory.  Exiting." << endl;
-	      exit(0);
-	  }
-      }
+      cout << "Version: " << VERSION << "\n";
+      exit( 0 );
     }
+    else if ( ( arg == "--help" ) || ( arg == "-help" ) ||
+	      ( arg == "-h" ) ||  ( arg == "--h" ) )
+    {
+      usage();
+    }
+    else
+    {
+      struct stat buf;
+      if (stat(arg.c_str(),&buf) < 0)
+      {
+	cerr << "Couldn't find net file " << arg
+	     << ".\nNo such file or directory.  Exiting." << endl;
+	exit(0);
+      }
+      if (found)
+      {
+	usage();
+      }
+      found = cnt;
+    }
+  }
+  return found;
 }
+
 
 int
 main(int argc, char *argv[] )
 {
-  parse_args( argc, argv );
-
-  global_argc=argc;
-  global_argv=argv;
+  const int startnetno = parse_args( argc, argv );
 
   // Start up TCL...
-  TCLTask* tcl_task = new TCLTask(argc, argv);
+  TCLTask* tcl_task = new TCLTask(1, argv);  // Discard argv on Tk side.
   Thread* t=new Thread(tcl_task, "TCL main event loop");
   t->detach();
   tcl_task->mainloop_waitstart();
@@ -204,6 +213,12 @@ main(int argc, char *argv[] )
 
   // Activate "File" menu sub-menus once packages are all loaded.
   gui->eval("activate_file_submenus",result);
+
+  if (startnetno)
+  {
+    string command = string("if {[catch {source ") + argv[startnetno] + "}]} { handle_bad_startnet " + argv[startnetno] + "}";
+    gui->eval(command.c_str(), result);
+  }
 
   // Now activate the TCL event loop
   tcl_task->release_mainloop();
