@@ -3,6 +3,7 @@
 #define TRI_H 1
 
 #include <Packages/rtrt/Core/Object.h>
+
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Geometry/Vector.h>
