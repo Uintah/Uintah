@@ -334,6 +334,12 @@ protected:
 				       DataWarehouse* old_dw,
 				       DataWarehouse* new_dw);
 
+  void refine(const ProcessorGroup*,
+              const PatchSubset* patches,
+              const MaterialSubset* matls,
+              DataWarehouse*,
+              DataWarehouse* new_dw);
+
   void errorEstimate(const ProcessorGroup*,
                      const PatchSubset* patches,
                      const MaterialSubset* matls,
