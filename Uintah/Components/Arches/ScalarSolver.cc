@@ -223,7 +223,8 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				     double delta_t, int index)
 {
   int matlIndex = 0;
-  int numGhostCells = 0;
+  int numGhostCells = 1;
+  int zeroGhostCells = 0;
   int nofStencils = 7;
 
   // get old_dw from getTop function
@@ -236,26 +237,26 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
   // from old_dw get PCELL, DENO, FO(index)
   old_dw->get(d_scalarVars->cellType, d_lab->d_cellTypeLabel, 
-	      matlIndex, patch, Ghost::None, numGhostCells);
+	      matlIndex, patch, Ghost::None, zeroGhostCells);
   old_dw->get(d_scalarVars->old_density, d_lab->d_densityCPLabel, 
-	      matlIndex, patch, Ghost::None, numGhostCells);
+	      matlIndex, patch, Ghost::None, zeroGhostCells);
   old_dw->get(d_scalarVars->old_scalar, d_lab->d_scalarSPLabel, 
-	      index, patch, Ghost::None, numGhostCells);
+	      index, patch, Ghost::None, zeroGhostCells);
 
   // from new_dw get DEN, VIS, F(index), U, V, W
   new_dw->get(d_scalarVars->density, d_lab->d_densityINLabel, 
-	      matlIndex, patch, Ghost::None, numGhostCells);
+	      matlIndex, patch, Ghost::AroundCells, numGhostCells);
   new_dw->get(d_scalarVars->viscosity, d_lab->d_viscosityINLabel, 
-	      matlIndex, patch, Ghost::None, numGhostCells);
+	      matlIndex, patch, Ghost::AroundCells, numGhostCells);
   new_dw->get(d_scalarVars->scalar, d_lab->d_scalarCPBCLabel, 
-	      index, patch, Ghost::None, numGhostCells);
+	      index, patch, Ghost::AroundCells, numGhostCells);
   // for explicit get old values
   new_dw->get(d_scalarVars->uVelocity, d_lab->d_uVelocityCPBCLabel, 
-	      matlIndex, patch, Ghost::None, numGhostCells);
+	      matlIndex, patch, Ghost::AroundCells, numGhostCells);
   new_dw->get(d_scalarVars->vVelocity, d_lab->d_vVelocityCPBCLabel, 
-	      matlIndex, patch, Ghost::None, numGhostCells);
+	      matlIndex, patch, Ghost::AroundCells, numGhostCells);
   new_dw->get(d_scalarVars->wVelocity, d_lab->d_wVelocityCPBCLabel, 
-	      matlIndex, patch, Ghost::None, numGhostCells);
+	      matlIndex, patch, Ghost::AroundCells, numGhostCells);
 
   // allocate matrix coeffs
   for (int ii = 0; ii < nofStencils; ii++) {
@@ -323,7 +324,8 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
 				int index)
 {
   int matlIndex = 0;
-  int numGhostCells = 0;
+  int numGhostCells = 1;
+  int zeroGhostCells = 0;
   int nofStencils = 7;
   DataWarehouseP old_dw = new_dw->getTop();
   // Get the PerPatch CellInformation data
@@ -339,16 +341,17 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
   //}
   CellInformation* cellinfo = cellInfoP;
   old_dw->get(d_scalarVars->old_density, d_lab->d_densityCPLabel, 
-	      matlIndex, patch, Ghost::None, numGhostCells);
-  old_dw->get(d_scalarVars->old_scalar, d_lab->d_scalarSPLabel, 
-	      matlIndex, patch, Ghost::None, numGhostCells);
+	      matlIndex, patch, Ghost::None, zeroGhostCells);
+  // for explicit calculation
+  new_dw->get(d_scalarVars->old_scalar, d_lab->d_scalarCPBCLabel, 
+	      matlIndex, patch, Ghost::AroundCells, numGhostCells);
   new_dw->get(d_scalarVars->scalar, d_lab->d_scalarCPBCLabel, 
-	      index, patch, Ghost::None, numGhostCells);
+	      index, patch, Ghost::AroundCells, numGhostCells);
   for (int ii = 0; ii < nofStencils; ii++)
     matrix_dw->get(d_scalarVars->scalarCoeff[ii], d_lab->d_scalCoefSBLMLabel, 
-		   ii, patch, Ghost::None, numGhostCells);
+		   ii, patch, Ghost::None, zeroGhostCells);
   matrix_dw->get(d_scalarVars->scalarNonlinearSrc, d_lab->d_scalNonLinSrcSBLMLabel,
-		 matlIndex, patch, Ghost::None, numGhostCells);
+		 matlIndex, patch, Ghost::None, zeroGhostCells);
   matrix_dw->allocate(d_scalarVars->residualScalar, d_lab->d_scalarRes,
 			  matlIndex, patch);
 
@@ -361,9 +364,11 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
   // apply underelax to eqn
   d_linearSolver->computeScalarUnderrelax(pc, patch, new_dw, matrix_dw, index, 
 					  d_scalarVars);
+#ifdef 0
   new_dw->allocate(d_scalarVars->old_scalar, d_lab->d_old_scalarGuess,
 		   index, patch);
   d_scalarVars->old_scalar = d_scalarVars->scalar;
+#endif
   // make it a separate task later
   d_linearSolver->scalarLisolve(pc, patch, new_dw, matrix_dw, index, delta_t, 
 				d_scalarVars, cellinfo, d_lab);
@@ -374,6 +379,9 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.26  2000/09/14 17:04:54  rawat
+// converting arches to multipatch
+//
 // Revision 1.25  2000/09/12 15:47:24  sparker
 // Use petsc solver if available
 //
