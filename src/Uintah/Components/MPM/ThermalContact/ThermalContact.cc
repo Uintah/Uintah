@@ -11,8 +11,28 @@
 
 using namespace Uintah::MPM;
 
-ThermalContact::ThermalContact()
+ThermalContact::ThermalContact(ProblemSpecP& ps,SimulationStateP& d_sS)
 {
+  d_sharedState = d_sS;
+  
+  ps->require("thermal_conductivity",d_thermalConductivity);
+  ps->require("specific_heat",d_specificHeat);
+  ps->require("heat_transfer_coefficient",d_heatTransferCoefficient);
+}
+
+double ThermalContact::getThermalConductivity() const
+{
+  return d_thermalConductivity;
+}
+
+double ThermalContact::getSpecificHeat() const
+{
+  return d_specificHeat;
+}
+
+double ThermalContact::getHeatTransferCoefficient() const
+{
+  return d_heatTransferCoefficient;
 }
 
 void ThermalContact::computeHeatExchange(const ProcessorGroup*,
@@ -105,6 +125,10 @@ void ThermalContact::addComputesAndRequires(Task* t,
 
 //
 // $Log$
+// Revision 1.6  2000/06/20 03:41:08  tan
+// Get thermal_conductivity, specific_heat and heat_transfer_coefficient
+// from ProblemSpecification input requires.
+//
 // Revision 1.5  2000/06/17 07:06:41  sparker
 // Changed ProcessorContext to ProcessorGroup
 //

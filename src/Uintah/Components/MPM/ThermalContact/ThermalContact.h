@@ -57,7 +57,7 @@ WARNING
 class ThermalContact {
 public:
   // Constructor
-  ThermalContact();
+  ThermalContact(ProblemSpecP& ps,SimulationStateP& d_sS);
 
   void computeHeatExchange(const ProcessorGroup*,
                            const Patch* patch,
@@ -73,14 +73,27 @@ public:
                               const Patch* patch,
                               DataWarehouseP& old_dw,
                               DataWarehouseP& new_dw) const;
+
+  double  getThermalConductivity() const;
+  double  getSpecificHeat() const;
+  double  getHeatTransferCoefficient() const;
+
 private:
   SimulationStateP d_sharedState;
+
+  double   d_thermalConductivity;
+  double   d_specificHeat;
+  double   d_heatTransferCoefficient;
 };
       
 } // end namespace MPM
 } // end namespace Uintah
    
 // $Log$
+// Revision 1.4  2000/06/20 03:40:51  tan
+// Get thermal_conductivity, specific_heat and heat_transfer_coefficient
+// from ProblemSpecification input requires.
+//
 // Revision 1.3  2000/06/17 07:06:41  sparker
 // Changed ProcessorContext to ProcessorGroup
 //
