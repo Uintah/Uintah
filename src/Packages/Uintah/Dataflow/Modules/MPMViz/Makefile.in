@@ -8,7 +8,7 @@ PARALLEL_SRCS = ParticleDB.cc ParticleDatabase.cc ParticleViz.cc \
 endif
 
 SRCS     = ParticleGridVisControl.cc PartToGeom.cc \
-           RescaleParticleColorMap.cc cfdGridLines.cc \
+           RescaleParticleColorMap.cc cfdGridLines.cc GridLines.cc \
 	   TecplotFileSelector.cc TecplotReader.cc VizControl.cc \
 	   $(PARALLEL_SRCS)
 
