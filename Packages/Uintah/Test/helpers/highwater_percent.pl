@@ -23,8 +23,8 @@ while ($compare_text =~ /highwater alloc:\s*(\w+)\s/) {
     $compare_text = $';
 }
 
-print "New total memory highwater " . $test_highwater . "\n";
-print "Old total memory highwater " . $compare_highwater . "\n";
+print STDERR "New total memory highwater " . $test_highwater . "\n";
+print STDERR "Old total memory highwater " . $compare_highwater . "\n";
 
 if ($compare_highwater == 0 && $test_highwater > 0) {
     $percent = 99999;
@@ -41,12 +41,14 @@ else {
 }
  
 if ($percent > 0) {
-    print "Memory usage increased (worsened) by %" . $percent . "\n";
+    print STDERR "Memory usage increased (worsened) by %" . $percent . "\n";
 }
 elsif ($percent < 0) {
-    print "Memory usage decreased (improved) by %" . -$percent . "\n";
+    print STDERR "Memory usage decreased (improved) by %" . -$percent . "\n";
 }
 else {
-    print "Memory usage stayed the same.\n"
+    print STDERR "Memory usage stayed the same.\n"
 }
-exit $percent;
+print $percent;
+exit 0
+
