@@ -63,12 +63,8 @@ WARNING
     virtual void scheduleComputeStableTimestep(SchedulerP&,
 					       const LevelP& level,
 					       const ModelInfo*);
-      
-    virtual void scheduleMassExchange(SchedulerP&,
-				      const LevelP& level,
-				      const ModelInfo*);
                                   
-    virtual void scheduleMomentumAndEnergyExchange(SchedulerP&,
+    virtual void scheduleComputeModelSources(SchedulerP&,
 						   const LevelP& level,
 						   const ModelInfo*);
                                             
@@ -94,20 +90,13 @@ WARNING
 		      const MaterialSubset* matls, 
                     DataWarehouse*, 
 		      DataWarehouse* new_dw);
-                     
-    void momentumAndEnergyExchange(const ProcessorGroup*, 
-                                   const PatchSubset* patches,
-	                            const MaterialSubset* matls, 
-                                   DataWarehouse*, 
-	                            DataWarehouse* new_dw, 
-                                   const ModelInfo*);
                                    
-    void massExchange(const ProcessorGroup*, 
-                      const PatchSubset* patches,
-                      const MaterialSubset*,
-                      DataWarehouse* old_dw,
-                      DataWarehouse* new_dw,
-                      const ModelInfo* mi);
+    void computeModelSources(const ProcessorGroup*, 
+                             const PatchSubset* patches,
+                             const MaterialSubset*,
+                             DataWarehouse* old_dw,
+                             DataWarehouse* new_dw,
+                             const ModelInfo* mi);
 
     AdiabaticTable(const AdiabaticTable&);
     AdiabaticTable& operator=(const AdiabaticTable&);
