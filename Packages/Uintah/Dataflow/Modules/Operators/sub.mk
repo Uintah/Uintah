@@ -14,21 +14,21 @@ SRCS     += \
 [INSERT NEW CODE FILE HERE]
 
 PSELIBS := \
-	Packages/Uintah/Core/Datatypes \
-	Packages/Uintah/CCA/Ports \
-	Packages/Uintah/Core/Grid        \
-	Packages/Uintah/Core/ProblemSpec \
-	Packages/Uintah/Core/Exceptions  \
-	Packages/Uintah/CCA/Components/MPM \
-	Dataflow/Network \
-	Dataflow/Ports \
-	Core/Containers \
-	Core/Persistent \
-	Core/Exceptions \
+	Packages/Uintah/Core/Datatypes     \
+	Packages/Uintah/CCA/Ports          \
+	Packages/Uintah/Core/Grid          \
+	Packages/Uintah/Core/Math          \
+	Packages/Uintah/Core/ProblemSpec   \
+	Packages/Uintah/Core/Exceptions    \
+	Dataflow/Network  \
+	Dataflow/Ports    \
+	Core/Containers   \
+	Core/Persistent   \
+	Core/Exceptions   \
 	Core/GuiInterface \
-	Core/Thread \
-	Core/Datatypes \
-	Core/Geom \
+	Core/Thread       \
+	Core/Datatypes    \
+	Core/Geom         \
 	Core/Geometry
 LIBS := $(XML_LIBRARY) -lm
 

@@ -7,7 +7,7 @@
  * Copyright 2000
  */
 
-#include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
+#include <Packages/Uintah/Core/Math/Matrix3.h>
 
 /* Functors used by TensorFieldOperator and TensorParticlesOperator */
 using Uintah::Matrix3;
