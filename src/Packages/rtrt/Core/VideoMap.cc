@@ -20,6 +20,7 @@
 
 using namespace rtrt;
 using namespace SCIRun;
+using namespace std;
 
 /********************************************************************/
 VideoMap::VideoMap () 

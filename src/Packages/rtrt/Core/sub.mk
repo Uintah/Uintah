@@ -112,7 +112,6 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/pcube.c \
 	$(SRCDIR)/fpcube.c \
 	$(SRCDIR)/templates.cc \
-       	$(SRCDIR)/ThinFilmMaterial.cc \
 	$(SRCDIR)/BumpMaterial.cc \
 	$(SRCDIR)/UVSphere.cc \
 	$(SRCDIR)/BumpObject.cc \
@@ -129,7 +128,6 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/ColorMap.cc \
 	$(SRCDIR)/plyfile.cc \
 	$(SRCDIR)/VideoMap.cc \
-	$(SRCDIR)/FastDielectric.cc \
 	$(SRCDIR)/SpinningInstance.cc  \
 	$(SRCDIR)/DynamicInstance.cc \
 	$(SRCDIR)/SpinningInstance.cc \
