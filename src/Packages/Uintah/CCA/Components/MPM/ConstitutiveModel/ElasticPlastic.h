@@ -73,6 +73,13 @@ namespace Uintah {
       std::string scalarDamageDist; /*< Initial damage distrinution */
     };
 
+    // Create a datatype for storing Cp calculation paramaters
+    struct CpData {
+      double A;
+      double B;
+      double C;
+    };
+
     const VarLabel* pRotationLabel;  // For Hypoelastic-plasticity
     const VarLabel* pStrainRateLabel;  
     const VarLabel* pPlasticStrainLabel;  
@@ -96,12 +103,14 @@ namespace Uintah {
     CMData           d_initialData;
     PorosityData     d_porosity;
     ScalarDamageData d_scalarDam;
+    CpData           d_Cp;
     
     double d_tol;
     double d_initialMaterialTemperature;
     bool   d_useModifiedEOS;
     bool   d_evolvePorosity;
     bool   d_evolveDamage;
+    bool   d_computeSpecificHeat;
     bool   d_checkTeplaFailureCriterion;
 
     // Erosion algorithms
@@ -347,7 +356,12 @@ namespace Uintah {
 
     void getInitialDamageData(ProblemSpecP& ps);
 
+    void getSpecificHeatData(ProblemSpecP& ps);
+
     void setErosionAlgorithm();
+
+    double computeSpecificHeat(double T);
+
   };
 
 } // End namespace Uintah
