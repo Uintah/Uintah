@@ -326,6 +326,10 @@ main(int argc, char *argv[], char **environment) {
       // need to make a BioImage splash screen
       gui->eval("set splashImageFile $bioFEMSplashImageFile");
       gui->eval("showProgress 1 310 1");
+    } else if(strstr(argv[startnetno], "FusionViewer")) {
+      // need to make a FusionViewer splash screen
+      gui->eval("set splashImageFile $bioFEMSplashImageFile");
+      gui->eval("showProgress 1 310 1");
     }
 
   }
