@@ -51,29 +51,73 @@
 
 using namespace SCIRun;
 
-class Connection:public QCanvasPolygon
+/**
+ * \class Connection
+ *
+ * \brief Represents a connection between components in the Builder GUI.
+ */
+
+class Connection : public QCanvasPolygon
 {
 public:
-  Connection(Module*, const std::string&, Module*, const std::string&, const sci::cca::ConnectionID::pointer &connID,  QCanvasView *cv);
-	void resetPoints();
-	bool isConnectedTo(Module *);
-  sci::cca::ConnectionID::pointer getConnectionID();
-	void highlight();
-	void setDefault();
-	Module * getUsesModule();
-	Module * getProvidesModule();
-	std::string getUsesPortName();
-	std::string getProvidesPortName();
-	// TEK 
-	sci::cca::ConnectionID::pointer connID;
-	// TEK
-        virtual std::string getConnectionType();
+    Connection(Module*, const std::string&,
+               Module*, const std::string&,
+               const sci::cca::ConnectionID::pointer &connID,
+               QCanvasView *cv);
+    void resetPoints();
+    bool isConnectedTo(Module *);
+    sci::cca::ConnectionID::pointer getConnectionID();
+    void highlight();
+    void setDefault();
+    Module* getUsesModule();
+    Module* getProvidesModule();
+    std::string getUsesPortName();
+    std::string getProvidesPortName();
+    // TEK 
+    sci::cca::ConnectionID::pointer connID;
+    // TEK
+    virtual std::string getConnectionType();
+
+    static void drawConnection(QPainter& p,
+                               const QPointArray& points,
+                               QPointArray& drawPoints);
+
+    static const unsigned int NUM_POINTS = 12;
+    static const unsigned int NUM_DRAW_POINTS = 6;
+
 protected:
-	void drawShape ( QPainter & );
-	QCanvasView *cv;
-	Module *pUse, *pProvide;
-	std::string portname1, portname2;
-	QColor color;
+    /** Override QCanvasPolygon::drawShape to draw a polyline not a polygon. */
+    virtual void drawShape(QPainter&);
+    QCanvasView *cv;
+    Module *pUse, *pProvide;
+    std::string portname1, portname2;
+    QColor color;
+};
+
+inline void Connection::drawConnection(QPainter& p,
+		    const QPointArray& points, QPointArray& drawPoints)
+{
+    for (unsigned int i = 0; i < NUM_DRAW_POINTS; i++) {
+	drawPoints[i] = ( points[i] + points[NUM_POINTS - 1 - i] ) / 2;
+    }
+}
+
+/**
+ * \class MiniConnection
+ *
+ * \brief Draw a connection on the BuilderWindow's miniCanvas.
+ */
+class MiniConnection : public QCanvasPolygon
+{
+public:
+    MiniConnection(QCanvasView *cv, QPointArray pa, double scaleX, double scaleY);
+
+protected:
+    /** Override QCanvasPolygon::drawShape to draw a polyline not a polygon. */
+    virtual void drawShape(QPainter&);
+
+private:
+    void scalePoints(QPointArray *pa, double scaleX, double scaleY);
 };
 
 #endif
