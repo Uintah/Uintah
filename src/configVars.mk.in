@@ -23,6 +23,9 @@
 TAU_MAKEFILE := @TAU_MAKEFILE@
 ifneq ($(TAU_MAKEFILE),)
   include $(TAU_MAKEFILE)
+PDTPARSE        = $(PDTDIR)/$(PDTARCHDIR)/bin/cxxparse
+TAUINSTR        = $(TAUROOT)/$(CONFIG_ARCH)/bin/tau_instrumentor
+
 endif
 
 # 'a' if archives, 'so' if shared libs.
@@ -316,7 +319,26 @@ endif
 .cc.o: $<
 	-rm -f $@
 ifeq ($(CC_DEPEND_MODE),normal)
-	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
+ifneq ($(TAU_MAKEFILE),)
+ifneq ($(PDTDIR),)
+	-echo "Building $*.o ..." ; \
+	$(PDTPARSE) $< $(TAU_INCLUDE) $(TAU_MPI_INCLUDE) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -DSCI_Hash_Map_h -DSCI_HASH_SET_H -DPDT_PARSER; \
+	pdbfile=`basename $< .cc`.pdb ; \
+	$(TAUINSTR) $$pdbfile $< -o $*.inst.cc -f $(SRCTOP)/tau/select.dat ; \
+        $(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $*.inst.cc -o $@ ; \
+	if [ -f $@ ] ; then  \
+	echo "Instrumented $*.o successfully  " ; \
+	else \
+	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ ; \
+	ls -l $@; \
+	fi ; \
+	rm -f $$pdbfile ; 
+else
+	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ ; 
+endif
+else
+	$(CXX) $(CFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@
+endif
 else
 ifeq ($(CC_DEPEND_MODE),modify)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $(CC_DEPEND_REGEN) $(call repository,$@) -c $< -o $@ && $(SED) -e 's,^$(notdir $@):,$@:,' $(basename $@).$(CC_DEPEND_EXT) > $(basename $@).$(CC_DEPEND_EXT).tmp && mv -f $(basename $@).$(CC_DEPEND_EXT).tmp $(basename $@).$(CC_DEPEND_EXT)
