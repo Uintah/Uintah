@@ -3160,10 +3160,15 @@ BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
 	       cellinfo->dxpw[colX+1] +
 	       constvars->old_old_density[xplusCell]*constvars->old_old_scalar[xplusCell])/
 	      constvars->density_guess[xplusCell];
+
 	   if (constvars->uVelocity[xplusCell] > 0.0)
            vars->scalar[xplusCell]= vars->scalar[currCell];
 	   else
-	   vars->scalar[xplusCell]= 0.0;
+             if (d_enthalpySolve)
+	       vars->scalar[xplusCell]= -1.0;
+	     else
+	       vars->scalar[xplusCell]= 0.0;
+
            if (vars->scalar[xplusCell] > 1.0)
                vars->scalar[xplusCell] = 1.0;
            else if (vars->scalar[xplusCell] < 0.0)
