@@ -6,6 +6,7 @@
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Core/Util/FancyAssert.h>
 #include <Core/Util/NotFinished.h>
 
 #include <iostream> // debug only
@@ -67,3 +68,21 @@ RoundRobinLoadBalancer::getPatchwiseProcessorAssignment(const Patch* patch,
 {
    return patch->getID()%group->size();
 }
+
+const PatchSet*
+RoundRobinLoadBalancer::createPerProcessorPatchSet(const LevelP& level,
+						   const ProcessorGroup* world)
+{
+  PatchSet* patches = scinew PatchSet();
+  patches->createEmptySubsets(world->size());
+  for(Level::const_patchIterator iter = level->patchesBegin();
+      iter != level->patchesEnd(); iter++){
+    const Patch* patch = *iter;
+    int proc = getPatchwiseProcessorAssignment(patch, world);
+    ASSERTRANGE(proc, 0, world->size());
+    PatchSubset* subset = patches->getSubset(proc);
+    subset->add(patch);
+  }
+  return patches;
+}
+
