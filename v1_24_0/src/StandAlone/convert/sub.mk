@@ -190,6 +190,10 @@ PROGRAM := $(SRCDIR)/GeoProbeToNhdr
 SRCS := $(SRCDIR)/GeoProbeToNhdr.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
+PROGRAM := $(SRCDIR)/VistaToNrrd
+SRCS := $(SRCDIR)/VistaToNrrd.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
 
 ####################################
 # added by C.Wolters, Nov.18 2004:
