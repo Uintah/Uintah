@@ -18,8 +18,8 @@ SRCS     += \
 	$(SRCDIR)/TensorFieldWriter.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := DaveW/Datatypes/General Core/Datatypes Dataflow/Network \
-	Core/Persistent Core/Exceptions Core/Containers \
+PSELIBS := Packages/DaveW/Core/Datatypes/General Dataflow/Ports \
+	Dataflow/Network Core/Persistent Core/Exceptions Core/Containers \
 	Core/TclInterface Core/Thread 
 LIBS := 
 

@@ -6,7 +6,7 @@
 #   Jan. 1995
 #  Copyright (C) 1995 SCI Group
 
-itcl_class Dataflow_Visualization_WidgetTest {
+itcl_class SCIRun_Visualization_WidgetTest {
     inherit Module
     constructor {config} {
 	set name WidgetTest

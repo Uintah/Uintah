@@ -1,5 +1,5 @@
 
-itcl_class Dataflow_Image_ImageGen {
+itcl_class SCIRun_Image_ImageGen {
     inherit Module
     constructor {config} {
 	set name ImageGen

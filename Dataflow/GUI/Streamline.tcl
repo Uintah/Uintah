@@ -1,7 +1,7 @@
 
 catch {rename Streamline ""}
 
-itcl_class Dataflow_Visualization_Streamline {
+itcl_class SCIRun_Visualization_Streamline {
     inherit Module
     constructor {config} {
 	set name Streamline

@@ -1,6 +1,6 @@
-catch {rename Packages/DaveW_EEG_Thermal ""}
+catch {rename DaveW_EEG_Thermal ""}
 
-itcl_class Packages/DaveW_EEG_Thermal {
+itcl_class DaveW_EEG_Thermal {
     inherit Module
     constructor {config} {
 	set name Thermal

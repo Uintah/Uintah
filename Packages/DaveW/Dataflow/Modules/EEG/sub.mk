@@ -26,7 +26,8 @@ SRCS     += \
 	$(SRCDIR)/SliceMaker.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := DaveW/Datatypes/General Dataflow/Ports Dataflow/Widgets \
+PSELIBS := Packages/DaveW/Core/Datatypes/General \
+	Dataflow/Ports Dataflow/Widgets \
 	Dataflow/Network Core/Persistent Core/Exceptions \
 	Core/Geom Core/Thread Core/Geometry Core/Math \
 	Core/TclInterface Core/Datatypes Core/Containers

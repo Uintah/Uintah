@@ -1,7 +1,7 @@
 
 catch {rename TextureVolVis ""}
 
-itcl_class Dataflow_Visualization_TextureVolVis {
+itcl_class SCIRun_Visualization_TextureVolVis {
     inherit Module
     constructor {config} {
 	set name TextureVolVis

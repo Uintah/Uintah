@@ -8,9 +8,9 @@
  #  Copyright (C) 1999 SCI Group
  ##
 
-catch {rename Packages/DaveW_FEM_CStoSFRG ""}
+catch {rename DaveW_FEM_CStoSFRG ""}
 
-itcl_class Packages/DaveW_FEM_CStoSFRG {
+itcl_class DaveW_FEM_CStoSFRG {
     inherit Module
     constructor {config} {
         set name CStoSFRG

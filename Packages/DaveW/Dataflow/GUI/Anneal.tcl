@@ -1,7 +1,7 @@
 
-catch {rename Packages/DaveW_EGI_Anneal ""}
+catch {rename DaveW_EGI_Anneal ""}
 
-itcl_class Packages/DaveW_EGI_Anneal {
+itcl_class DaveW_EGI_Anneal {
     inherit Module
     constructor {config} {
 	set name Anneal

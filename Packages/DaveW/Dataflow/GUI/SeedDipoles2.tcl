@@ -1,6 +1,6 @@
-catch {rename Packages/DaveW_FEM_SeedDipoles2 ""}
+catch {rename DaveW_FEM_SeedDipoles2 ""}
 
-itcl_class Packages/DaveW_FEM_SeedDipoles2 {
+itcl_class DaveW_FEM_SeedDipoles2 {
     inherit Module
     constructor {config} {
 	set name SeedDipoles2

@@ -12,8 +12,8 @@
  *
  */
 
-#include <Packages/DaveW/Core/ThirdParty/NumRec/amoeba.h>
-#include <Packages/DaveW/Core/ThirdParty/NumRec/nrutil.h>
+#include <Packages/DaveW/ThirdParty/NumRec/amoeba.h>
+#include <Packages/DaveW/ThirdParty/NumRec/nrutil.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/ColumnMatrixPort.h>
 #include <Dataflow/Ports/MatrixPort.h>

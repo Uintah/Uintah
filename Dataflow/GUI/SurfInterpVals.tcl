@@ -9,7 +9,7 @@
  #  Log Information:
  ##
 
-tcl_class Dataflow_Surface_SurfInterpVals {
+tcl_class SCIRun_Surface_SurfInterpVals {
     inherit Module
     constructor {config} {
         set name SurfInterpVals

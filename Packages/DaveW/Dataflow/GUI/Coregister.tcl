@@ -9,9 +9,9 @@
  #  Log Information:
  ##
 
-catch {rename Packages/DaveW_EEG_Coregister ""}
+catch {rename DaveW_EEG_Coregister ""}
 
-itcl_class Packages/DaveW_EEG_Coregister {
+itcl_class DaveW_EEG_Coregister {
     inherit Module
     constructor {config} {
         set name Coregister

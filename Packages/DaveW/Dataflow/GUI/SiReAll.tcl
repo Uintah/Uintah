@@ -8,9 +8,9 @@
  #  Copyright (C) 1998 SCI Group
  ##
 
-catch {rename Packages/DaveW_SiRe_SiReAll ""}
+catch {rename DaveW_SiRe_SiReAll ""}
 
-itcl_class Packages/DaveW_SiRe_SiReAll {
+itcl_class DaveW_SiRe_SiReAll {
     inherit Module
     constructor {config} {
         set name SiReAll

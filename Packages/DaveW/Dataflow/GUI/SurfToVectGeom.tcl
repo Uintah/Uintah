@@ -6,9 +6,9 @@
 #   July 1999
 #  Copyright (C) 1999 SCI Group
 
-catch {rename Packages/DaveW_MEG_SurfToVectGeom ""}
+catch {rename DaveW_MEG_SurfToVectGeom ""}
 
-itcl_class Packages/DaveW_MEG_SurfToVectGeom {
+itcl_class DaveW_MEG_SurfToVectGeom {
     inherit Module
     constructor {config} {
 	set name SurfToVectGeom

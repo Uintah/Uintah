@@ -7,8 +7,8 @@
 #   March 1997
 #  Copyright (C) 1997 SCI Group
 
-catch {rename Packages/DaveW_CS684_Radiosity}
-itcl_class Packages/DaveW_CS684_Radiosity {
+catch {rename DaveW_CS684_Radiosity}
+itcl_class DaveW_CS684_Radiosity {
     inherit Module
     constructor {config} {
 	set name Radiosity

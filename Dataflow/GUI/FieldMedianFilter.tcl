@@ -1,4 +1,4 @@
-itcl_class Dataflow_Fields_FieldMedianFilter {
+itcl_class SCIRun_Fields_FieldMedianFilter {
     inherit Module
     constructor {config} {
 	set name FieldMedianFilter

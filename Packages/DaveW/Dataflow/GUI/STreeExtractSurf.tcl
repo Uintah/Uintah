@@ -8,9 +8,9 @@
  #  Copyright (C) 1997 SCI Group
  #  Log Information:
  ##
-catch {rename Packages/DaveW_EEG_STreeExtractSurf ""}
+catch {rename DaveW_EEG_STreeExtractSurf ""}
 
-itcl_class Packages/DaveW_EEG_STreeExtractSurf {
+itcl_class DaveW_EEG_STreeExtractSurf {
     inherit Module
     constructor {config} {
         set name STreeExtractSurf

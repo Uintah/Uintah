@@ -19,9 +19,9 @@ SRCS     += \
 	$(SRCDIR)/TensorFieldReader.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := DaveW/Datatypes/General Dataflow/Network Core/Datatypes \
-	Core/Exceptions Core/Thread Core/Containers \
-	Core/TclInterface Core/Persistent
+PSELIBS := Packages/DaveW/Core/Datatypes/General Dataflow/Network \
+	Dataflow/Ports Core/Exceptions Core/Thread Core/Containers \
+	Core/TclInterface Core/Persistent Core/Datatypes
 LIBS := 
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk

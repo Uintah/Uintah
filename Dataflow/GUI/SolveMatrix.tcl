@@ -1,6 +1,6 @@
 catch {rename SolveMatrix ""}
 
-itcl_class Dataflow_Matrix_SolveMatrix {
+itcl_class SCIRun_Matrix_SolveMatrix {
     inherit Module
     constructor {config} {
 	set name SolveMatrix

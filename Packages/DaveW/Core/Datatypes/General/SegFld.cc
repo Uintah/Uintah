@@ -22,7 +22,7 @@ using std::cerr;
 #include <stdio.h>
 
 namespace DaveW {
-using namespace SCIRun;
+using SCIRun::Pio;
 
 static Persistent* make_SegFld()
 {
@@ -603,20 +603,23 @@ void SegFld::killSmallComponents(int min) {
     }
     compress();
 }
+} // End namespace DaveW
 
+namespace SCIRun {
+using namespace DaveW;
 void Pio(Piostream& stream, tripleInt& t) {
 
-    int i;
-    if (stream.reading()) {
-	Pio(stream, i);
-	t.x=i>>20;
-	t.y=(i>>10)&1023;
-	t.z=i & 1023;
-    } else {
-	i=(t.x<<20)+(t.y<<10)+t.z;
-	Pio(stream, i);
-    }
+  int i;
+  if (stream.reading()) {
+    Pio(stream, i);
+    t.x=i>>20;
+    t.y=(i>>10)&1023;
+    t.z=i & 1023;
+  } else {
+    i=(t.x<<20)+(t.y<<10)+t.z;
+    Pio(stream, i);
+  }
 }
-} // End namespace DaveW
+} // End namespace SCIRun
 
 

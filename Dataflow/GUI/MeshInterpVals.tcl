@@ -11,7 +11,7 @@
 
 catch {rename MeshInterpVals ""}
 
-itcl_class Dataflow_Mesh_MeshInterpVals {
+itcl_class SCIRun_Mesh_MeshInterpVals {
     inherit Module
     constructor {config} {
         set name MeshInterpVals

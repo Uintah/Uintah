@@ -1,7 +1,7 @@
 
 catch {rename Flood ""}
 
-itcl_class Packages/DaveW_Tensor_Flood {
+itcl_class DaveW_Tensor_Flood {
     inherit Module
     constructor {config} {
 	set name Flood

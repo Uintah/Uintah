@@ -1,11 +1,11 @@
 # Makefile fragment for this subdirectory
 
-SRCDIR := Packages/DaveW/convert
+SRCDIR := Packages/DaveW/Core/convert
 
 ifeq ($(LARGESOS),yes)
-PSELIBS := Core
+PSELIBS := Packages/DaveW/Core/convert
 else
-PSELIBS := Core/Datatypes DaveW/ThirdParty/NumRec Core/Datatypes Core/Containers Core/Persistent Core/Exceptions Core/Thread Core/Geometry
+PSELIBS := Core/Datatypes Packages/DaveW/ThirdParty/NumRec Core/Containers Core/Persistent Core/Exceptions Core/Thread Core/Geometry
 endif
 LIBS := -lm
 

@@ -16,9 +16,10 @@ SRCS     += \
 	$(SRCDIR)/BuildFDMatrix.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := DaveW/Datatypes/General Core/Datatypes Dataflow/Network \
+PSELIBS := Packages/DaveW/Core/Datatypes/General \
+	Core/Datatypes Dataflow/Network \
 	Core/TclInterface Core/Persistent Core/Exceptions \
-	Core/Datatypes Core/Thread Core/Containers
+	Dataflow/Ports Core/Thread Core/Containers
 LIBS := 
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk

@@ -8,9 +8,9 @@
  #  Copyright (C) 1996 SCI Group
  ##
 
-catch {rename Packages/DaveW_EEG_BldEEGMesh ""}
+catch {rename DaveW_EEG_BldEEGMesh ""}
 
-itcl_class Packages/DaveW_EEG_BldEEGMesh {
+itcl_class DaveW_EEG_BldEEGMesh {
     inherit Module
     constructor {config} {
         set name BldEEGMesh

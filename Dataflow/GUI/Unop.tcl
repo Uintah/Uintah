@@ -1,5 +1,5 @@
 
-itcl_class Dataflow_Image_Unop {
+itcl_class SCIRun_Image_Unop {
     inherit Module
     constructor {config} {
 	set name Unop

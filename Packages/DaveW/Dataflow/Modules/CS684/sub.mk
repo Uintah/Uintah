@@ -21,12 +21,15 @@ SRCS     += \
 	$(SRCDIR)/XYZtoRGB.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := DaveW/Datatypes/CS684 Dataflow/Widgets Dataflow/Network \
-	Core/Datatypes Core/Containers Core/Exceptions \
+PSELIBS := Packages/DaveW/Core/Datatypes/CS684 Dataflow/Widgets \
+	Dataflow/Network Dataflow/Ports Core/Containers Core/Exceptions \
 	Core/TclInterface Core/Thread Core/Persistent \
 	Core/Geom Core/Geometry Core/Datatypes Core/Util \
 	Core/TkExtensions
 LIBS := $(TK_LIBRARY) $(GL_LIBS)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
+
+
+
 

@@ -20,10 +20,11 @@ SRCS     += \
 	$(SRCDIR)/SGI_Solve.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Packages/DaveW/Core/ThirdParty/NumRec Packages/DaveW/Core/ThirdParty/OldLinAlg \
-	Core/Datatypes Dataflow/Network Core/Datatypes \
+PSELIBS := Packages/DaveW/ThirdParty/NumRec \
+	Packages/DaveW/ThirdParty/OldLinAlg \
+	Dataflow/Ports Dataflow/Network Core/Datatypes \
 	Core/Persistent Core/Exceptions Core/Math Core/Thread \
-	Core/Containers Core/TclInterface
+	Core/Containers Core/TclInterface Core/Geometry
 LIBS := -lm
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk

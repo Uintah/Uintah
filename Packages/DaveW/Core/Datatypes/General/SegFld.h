@@ -70,9 +70,9 @@ public:
 };
 typedef LockingHandle<SegFld> SegFldHandle;
 
-void Pio( Piostream &, tripleInt & );
 } // End namespace DaveW
 
-
-
+namespace SCIRun {
+void Pio(Piostream&, DaveW::tripleInt&);
+}
 #endif

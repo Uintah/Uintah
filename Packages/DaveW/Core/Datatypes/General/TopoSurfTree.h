@@ -98,15 +98,17 @@ public:
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
 };
-
-void Pio(Piostream&, TopoEntity&);
-void Pio(Piostream&, Patch&);
-void Pio(Piostream&, PatchInfo&);
-void Pio(Piostream&, Wire&);
-void Pio(Piostream&, WireInfo&);
-void Pio(Piostream&, JunctionInfo&);
-void Pio(Piostream&, Region&);
 } // End namespace DaveW
+
+namespace SCIRun {
+void Pio(Piostream&, DaveW::TopoEntity&);
+void Pio(Piostream&, DaveW::Patch&);
+void Pio(Piostream&, DaveW::PatchInfo&);
+void Pio(Piostream&, DaveW::Wire&);
+void Pio(Piostream&, DaveW::WireInfo&);
+void Pio(Piostream&, DaveW::JunctionInfo&);
+void Pio(Piostream&, DaveW::Region&);
+} // End namesace SCIRun
 
 
 

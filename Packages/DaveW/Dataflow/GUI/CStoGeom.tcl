@@ -8,9 +8,9 @@
  #  Copyright (C) 1999 SCI Group
  ##
 
-catch {rename Packages/DaveW_FEM_CStoGeom ""}
+catch {rename DaveW_FEM_CStoGeom ""}
 
-itcl_class Packages/DaveW_FEM_CStoGeom {
+itcl_class DaveW_FEM_CStoGeom {
     inherit Module
     constructor {config} {
         set name CStoGeom

@@ -182,7 +182,7 @@ void BldEEGMesh::genPtsAndTets(SegFldHandle sf, SurfTree *st, int num,
     double density = num_in/((maxaa-minaa+1)*(maxbb-minbb+1)*(maxcc-mincc+1));
     mesh->nodes.resize(0);
     sf->audit();
-    sf->printCore/CCA/Components();
+    sf->printComponents();
     Array1<Point> pts;
     Vector v(max-min);
     min = min+v*.001;

@@ -9,9 +9,9 @@
 
 # source $sci_root/TCL/MaterialEditor.tcl
 
-catch {rename Packages/DaveW_CS684_RTrace ""}
+catch {rename DaveW_CS684_RTrace ""}
 
-itcl_class Packages/DaveW_CS684_RTrace {
+itcl_class DaveW_CS684_RTrace {
     inherit Module
     constructor {config} {
 	set name RTrace

@@ -31,7 +31,7 @@
 #include <stdio.h>
 
 extern "C" {
-#include <Packages/DaveW/Core/ThirdParty/Nrrd/include/nrrd.h>
+#include <Packages/DaveW/ThirdParty/Nrrd/include/nrrd.h>
 }
 
 typedef enum {DOUBLE, FLOAT, INT, SHORT, UCHAR, CHAR} VTYPE; // voxel type

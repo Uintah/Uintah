@@ -6,7 +6,7 @@
 #   May. 1995
 #  Copyright (C) 1995 SCI Group
 
-itcl_class Dataflow_Visualization_Hedgehog {
+itcl_class SCIRun_Visualization_Hedgehog {
     inherit Module
     constructor {config} {
 	set name Hedgehog

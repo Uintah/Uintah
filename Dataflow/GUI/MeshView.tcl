@@ -1,7 +1,7 @@
 
 catch {rename MeshView ""}
 
-itcl_class Dataflow_Mesh_MeshView {
+itcl_class SCIRun_Mesh_MeshView {
     inherit Module
     public numNod 0
     public numTet 0

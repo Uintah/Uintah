@@ -1,4 +1,4 @@
-itcl_class Dataflow_Fields_ClipField {
+itcl_class SCIRun_Fields_ClipField {
     inherit Module
     constructor {config} {
 	set name ClipField

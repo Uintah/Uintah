@@ -8,9 +8,9 @@
  #  Copyright (C) 1996 SCI Group
  ##
 
-catch {rename Packages/DaveW_EEG_InvEEGSolve ""}
+catch {rename DaveW_EEG_InvEEGSolve ""}
 
-itcl_class Packages/DaveW_EEG_InvEEGSolve {
+itcl_class DaveW_EEG_InvEEGSolve {
     inherit Module
     constructor {config} {
         set name InvEEGSolve

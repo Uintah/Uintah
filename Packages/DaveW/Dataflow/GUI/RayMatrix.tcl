@@ -6,9 +6,9 @@
 #   March 1997
 #  Copyright (C) 1997 SCI Group
 
-catch {rename Packages/DaveW_CS684_RayMatrix ""}
+catch {rename DaveW_CS684_RayMatrix ""}
 
-itcl_class Packages/DaveW_CS684_RayMatrix {
+itcl_class DaveW_CS684_RayMatrix {
     inherit Module
     constructor {config} {
 	set name RayMatrix

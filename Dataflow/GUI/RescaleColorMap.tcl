@@ -1,4 +1,4 @@
-itcl_class Dataflow_Visualization_RescaleColorMap { 
+itcl_class SCIRun_Visualization_RescaleColorMap { 
     inherit Module 
 
     protected  bVar

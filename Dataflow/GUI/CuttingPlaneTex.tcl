@@ -6,7 +6,7 @@
 #   May. 1995
 #  Copyright (C) 1995 SCI Group
 
-itcl_class Dataflow_Visualization_CuttingPlaneTex {
+itcl_class SCIRun_Visualization_CuttingPlaneTex {
     inherit Module
     constructor {config} {
 	set name CuttingPlaneTex

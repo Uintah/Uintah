@@ -1,6 +1,6 @@
 catch {rename TopoSurfTreeToGeom ""}
 
-itcl_class Packages/DaveW_EEG_TopoSurfToGeom {
+itcl_class DaveW_EEG_TopoSurfToGeom {
     inherit Module
     constructor {config} {
         set name TopoSurfToGeom
