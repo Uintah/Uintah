@@ -28,7 +28,7 @@
 catch {rename SCIRun_EEG_ChangeCellType ""}
 
 itcl_class SCIRun_EEG_ChangeCellType {
-    inherit Module
+    inherit ModuleGui
     constructor {config} {
         set name ChangeCellType
         set_defaults

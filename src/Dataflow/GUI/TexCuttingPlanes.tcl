@@ -19,7 +19,7 @@
 catch {rename TexCuttingPlanes ""}
 
 itcl_class SCIRun_Visualization_TexCuttingPlanes {
-    inherit Module
+    inherit ModuleGui
 
     #protected inactivecolor "#010101"
     constructor {config} {

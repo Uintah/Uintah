@@ -16,7 +16,7 @@
 #
 
 itcl_class SCIRun_Fields_CastTVtoMLV {
-    inherit Module
+    inherit ModuleGui
     constructor {config} {
         set name CastTVtoMLV
 	global $this-nx

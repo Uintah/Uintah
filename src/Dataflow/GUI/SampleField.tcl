@@ -18,7 +18,7 @@
 package require Iwidgets 3.0
 
 itcl_class SCIRun_Fields_SampleField {
-    inherit Module
+    inherit ModuleGui
     constructor {config} {
         set name SampleField
 

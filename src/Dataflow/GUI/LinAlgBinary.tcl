@@ -16,7 +16,7 @@
 #
 
 itcl_class SCIRun_Math_LinAlgBinary {
-    inherit Module
+    inherit ModuleGui
     constructor {config} {
         set name LinAlgBinary
         set_defaults

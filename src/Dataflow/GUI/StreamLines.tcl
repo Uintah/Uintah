@@ -16,7 +16,7 @@
 #
 
 itcl_class SCIRun_Visualization_StreamLines {
-    inherit Module
+    inherit ModuleGui
     constructor {config} {
         set name StreamLines
 

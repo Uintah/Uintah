@@ -19,7 +19,7 @@
 catch {rename TextureVolVis ""}
 
 itcl_class SCIRun_Visualization_TextureVolVis {
-    inherit Module
+    inherit ModuleGui
     constructor {config} {
 	set name TextureVolVis
 	set_defaults

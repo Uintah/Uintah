@@ -16,7 +16,7 @@
 #
 
 itcl_class SCIRun_Fields_SamplePlane {
-    inherit Module
+    inherit ModuleGui
     constructor {config} {
         set name SamplePlane
         set_defaults

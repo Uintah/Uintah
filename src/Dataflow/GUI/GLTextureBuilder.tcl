@@ -19,7 +19,7 @@
 catch {rename GLTextureBuilder ""}
 
 itcl_class SCIRun_Visualization_GLTextureBuilder {
-    inherit Module
+    inherit ModuleGui
     constructor {config} {
 	set name GLTextureBuilder
 	set_defaults

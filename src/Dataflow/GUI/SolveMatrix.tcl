@@ -18,7 +18,7 @@
 catch {rename SolveMatrix ""}
 
 itcl_class SCIRun_Math_SolveMatrix {
-    inherit Module
+    inherit ModuleGui
     constructor {config} {
 	set name SolveMatrix
 	set_defaults

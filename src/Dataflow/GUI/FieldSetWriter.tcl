@@ -22,7 +22,7 @@
 catch {rename SCIRun_DataIO_FieldSetWriter ""}
 
 itcl_class SCIRun_DataIO_FieldSetWriter {
-    inherit Module
+    inherit ModuleGui
     constructor {config} {
 	set name FieldSetWriter
 	set_defaults

@@ -16,7 +16,7 @@
 #
 
 itcl_class SCIRun_Fields_ScalarFieldStats {
-    inherit Module
+    inherit ModuleGui
     protected draw_graph_needed 0
     constructor {config} {
         set name ScalarFieldStats

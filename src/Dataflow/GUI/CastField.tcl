@@ -16,7 +16,7 @@
 #
 
 itcl_class SCIRun_Fields_CastField {
-    inherit Module
+    inherit ModuleGui
     constructor {config} {
 	set name CastField
 	set_defaults

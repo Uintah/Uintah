@@ -16,7 +16,7 @@
 #
 
 itcl_class SCIRun_Math_LinAlgUnary {
-    inherit Module
+    inherit ModuleGui
     constructor {config} {
         set name LinAlgUnary
         set_defaults

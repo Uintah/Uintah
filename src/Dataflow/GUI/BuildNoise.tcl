@@ -16,7 +16,7 @@
 #
 
 itcl_class SCIRun_Math_BuildNoise {
-    inherit Module
+    inherit ModuleGui
     constructor {config} {
         set name Noise
         set_defaults

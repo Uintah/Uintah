@@ -23,7 +23,7 @@
 catch {rename SCIRun_DataIO_MatrixWriter ""}
 
 itcl_class SCIRun_DataIO_MatrixWriter {
-    inherit Module
+    inherit ModuleGui
     constructor {config} {
 	set name MatrixWriter
 	set_defaults

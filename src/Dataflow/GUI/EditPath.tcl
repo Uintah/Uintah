@@ -25,7 +25,7 @@
  #  Copyright (C) 1999, 2000  SCI Group
  ##
 itcl_class SCIRun_Render_EditPath {
-    inherit Module
+    inherit ModuleGui
    
     constructor {config} {
         set name EditPath

@@ -21,15 +21,14 @@
 
 catch {rename SCIRun_DataIO_FieldReader ""}
 
-itcl_class SCIRun_DataIO_FieldReader {
-    inherit Module
-    constructor {config} {
-	set name FieldReader
-	set_defaults
-    }
+itcl::class SCIRun_DataIO_FieldReader {
+    inherit ModuleGui
+    
+    public variable filetype
+    public variable filename "foo"
 
-    method set_defaults {} {
-	global $this-filetype
+    constructor {} {
+	set name FieldReader
     }
 
     method ui {} {
@@ -74,13 +73,13 @@ itcl_class SCIRun_DataIO_FieldReader {
 	######################################################
 	
 	makeOpenFilebox \
-		-parent $w \
-		-filevar $this-filename \
-		-command "$this-c needexecute; destroy $w" \
-		-cancel "destroy $w" \
-		-title $title \
-		-filetypes $types \
-		-initialdir $initdir \
-		-defaultextension $defext
+	    -parent $w \
+	    -filevar [scope filename] \
+	    -command "$this-c needexecute; destroy $w" \
+	    -cancel "destroy $w" \
+	    -title $title \
+	    -filetypes $types \
+	    -initialdir $initdir \
+	    -defaultextension $defext
     }
 }

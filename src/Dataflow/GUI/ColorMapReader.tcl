@@ -23,7 +23,7 @@
 catch {rename SCIRun_DataIO_ColorMapReader ""}
 
 itcl_class SCIRun_DataIO_ColorMapReader {
-    inherit Module
+    inherit ModuleGui
     constructor {config} {
 	set name ColorMapReader
 	set_defaults

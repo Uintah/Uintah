@@ -16,7 +16,7 @@
 #
 
 itcl_class SCIRun_Fields_SampleLattice {
-    inherit Module
+    inherit ModuleGui
     constructor {config} {
         set name SampleLattice
         set_defaults

@@ -28,7 +28,7 @@
 catch {rename SCIRun_Math_ErrorMetric ""}
 
 itcl_class SCIRun_Math_ErrorMetric {
-    inherit Module
+    inherit ModuleGui
     constructor {config} {
         set name ErrorMetric
         set_defaults
