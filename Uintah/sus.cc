@@ -142,7 +142,7 @@ int main(int argc, char** argv)
 	if(do_mpm){
 	    MPMInterface* mpm;
 	    if(numThreads == 0){
-		mpm = new SerialMPM();
+		mpm = new SerialMPM( MpiRank, MpiProcesses );
 	    } else {
 #ifdef WONT_COMPILE_YET
 		mpm = new ThreadedMPM();
@@ -193,6 +193,9 @@ int main(int argc, char** argv)
 
 //
 // $Log$
+// Revision 1.7  2000/04/19 22:43:51  dav
+// more mpi stuff
+//
 // Revision 1.6  2000/04/19 21:19:59  dav
 // more MPI stuff
 //
