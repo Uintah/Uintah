@@ -34,7 +34,7 @@
 #include <Core/Persistent/Persistent.h>
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Datatypes/Field.h>
-#include <Core/Containers/Handle.h>
+#include <Core/Containers/LockingHandle.h>
 
 
 namespace SCIRun {
@@ -69,7 +69,7 @@ class SpanSpace : public SpanSpaceBase
 {
 public:
   typedef SpanPoint<T,Index>  span_point_type;
-  typedef Handle<SpanSpace<T, Index> > handle_type;
+  typedef LockingHandle<SpanSpace<T, Index> > handle_type;
   vector<span_point_type> span;
     
   template<class Field> void init( Field *);
@@ -296,7 +296,7 @@ void SpanSpaceCell<T,Index>::init_cell(Field *field)
 
 
 template <class T,class Index> 
-const string find_type_name(Handle<SpanSpace<T,Index> > *)
+const string find_type_name(LockingHandle<SpanSpace<T,Index> > *)
 {
   static const string name = string("SpanSpace") + FTNS 
     + find_type_name((T*)0) + FTNM 
