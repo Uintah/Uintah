@@ -371,7 +371,6 @@ SPRelocate::relocateParticles(const ProcessorGroup*,
 	int totalParticles=0;
 	for(int i=0;i<(int)subsets.size();i++) {
 	  totalParticles+=subsets[i]->numParticles();
-	  cout << "totalParticles = " << totalParticles << endl;
 	}
 
 	ParticleVariableBase* posvar = 
