@@ -40,13 +40,11 @@
 #include <set>
 
 //#include "/tmp/timer.h"
-#define TIMER
+//#define TIMER
 
 namespace SCITeem {
 
 using namespace SCIRun;
-
-string extension;
 
 // FUNCTIONS used from VISPACK:
 // VISmin, VISmax: min/max functions templated over argument type
@@ -54,12 +52,6 @@ string extension;
 // opening, closing, dilate, erode: morphology functions
 // misc. linear algebra functions
 
-#define TRYKEYWORD(var, pref, keyword) 
-/*{ 
- * sprintf(scan_keyword, "%s%s", pref, keyword); 
- * VPF::set(var, pf[scan_keyword][0]); 
- * } 
-*/
 
 #define TINY (1.0e-12f)
 #define NBINMAX 500 // max number of bins to use in 1D histograms
@@ -347,10 +339,11 @@ MRITissueClassifier::execute()
     m_EyesVisible = gui_eyes_visible_.get();
     m_PixelDim = gui_pixel_dim_.get();
     m_SliceThickness = gui_slice_thickness_.get();
+    
+    NrrdDataHandle temp;
 
     update_state(Module::Executing);
     if (!m_Top) {
-      NrrdDataHandle temp;
       temp = create_nrrd_of_floats(m_width, m_height, m_depth);
       nrrdFlip(temp->nrrd, m_T1_Data->nrrd, 3);
       m_T1_Data = temp;
@@ -371,7 +364,6 @@ MRITissueClassifier::execute()
     update_state(Module::Executing);
 
     if (!m_Anterior) {
-      NrrdDataHandle temp;
       temp = create_nrrd_of_floats(m_width, m_height, m_depth);
       nrrdFlip(temp->nrrd, m_T1_Data->nrrd, 2);
       m_T1_Data = temp;
@@ -392,14 +384,16 @@ MRITissueClassifier::execute()
     update_state(Module::Executing);
   
     m_Label		= create_nrrd_of_ints(m_width, m_height, m_depth);
+    m_Label->copy_sci_data(*m_T1_Data.get_rep());
+    if (m_T1_Data->nrrd->axis[0].label)
+      m_Label->nrrd->axis[0].label = strdup(m_T1_Data->nrrd->axis[0].label);
     m_DistBG		= create_nrrd_of_floats(m_width, m_height, m_depth);
     m_Energy		= create_nrrd_of_floats(m_width, m_height, m_depth);
     m_CSF_Energy	= create_nrrd_of_floats(m_width, m_height, m_depth);
 
     memset(m_Label->nrrd->data, T_BACKGROUND, m_width*m_height*m_depth*sizeof(int));
-    
+
     update_state(Module::Executing);
-    TIMER;
     for (int x=0;x<m_width;x++)
       for (int y=0;y<m_height;y++)
 	for (int z=0;z<m_depth;z++)
@@ -415,29 +409,20 @@ MRITissueClassifier::execute()
       m_TopOfEyeSlice = -1;
       m_EyeSlice = -1;
     }
-    TIMER;
     update_state(Module::Executing);
     BackgroundDetection();
-    TIMER;
     update_state(Module::Executing);
     ComputeForegroundCenter();
-    TIMER;
     update_state(Module::Executing);
     FatDetection();
-    TIMER;
     update_state(Module::Executing);
     BrainDetection(4.0,10.0);
-    TIMER;
     update_state(Module::Executing);
     BoneDetection(10.0);
-    TIMER;
     update_state(Module::Executing);
     ScalpClassification();
-    TIMER;
     update_state(Module::Executing);
     BrainClassification();
-    TIMER;
-    
   }
   OutPort->send(m_Label);
 
@@ -985,7 +970,8 @@ MRITissueClassifier::EM1DWeighted (float *data, float *weight, int n,
   float *istd = (float*)calloc(c,sizeof(float));
   
   while (flag&&(it<m_MaxIteration))
-    {
+  {
+    update_state(Module::Executing);
     for (j=0;j<c;j++) meanp[j]=mean[j];
     for (j=0;j<c;j++) istd[j]=1.0f/sqrt(var[j]);
 
@@ -1093,10 +1079,9 @@ float *MRITissueClassifier::EM_CSF_GM_WM (ColumnMatrix &CSF_mean, DenseMatrix &C
 
   flag = 1;
   it = 0;
-  TIMER;
   while (flag&&(it<25))
   {
-    TIMER;
+    update_state(Module::Executing);
     CSF_meanp = CSF_mean;GM_meanp = GM_mean;WM_meanp = WM_mean;
 
     // evaluate probabilities
@@ -1247,7 +1232,7 @@ float *MRITissueClassifier::EM_CSF_GM_WM (ColumnMatrix &CSF_mean, DenseMatrix &C
       if (dist<m_MinChange) flag=0;
     }
     it++;
-    } // end while
+  } // end while
 
   std::cout<<it<<" iterations performed\n";
   std::cout<<"EM final\n";
@@ -1286,7 +1271,7 @@ MRITissueClassifier::EM_Muscle_Fat (ColumnMatrix &Muscle_mean, DenseMatrix &Musc
   it = 0;
   while (flag&&(it<25))
   {
-
+    update_state(Module::Executing);
     Muscle_meanp = Muscle_mean;Fat_meanp = Fat_mean;
 
     // evaluate probabilities
@@ -1921,7 +1906,6 @@ MRITissueClassifier::FatDetection_NOFATSAT (float maskr)
 	    set_nrrd_int2(tempI,0,x,y-ycenter);
 	}
 
-      extension = string("z")+to_string(z);
       // we need to clean up noise because T1 signal by itself is not very
       // reliable for fat detection
       tempI = closing(tempI, maskI); // close holes
@@ -3519,6 +3503,49 @@ MRITissueClassifier::BrainClassification ()
   //  write_flat_volume(m_Label, "/tmp/final.ppm");
 }
 
+NrrdDataHandle
+MRITissueClassifier::gaussian(const NrrdDataHandle &data, double sigma)
+{
+  NrrdResampleInfo *info = nrrdResampleInfoNew();  
+  NrrdKernel *kern;
+  double p[NRRD_KERNEL_PARMS_NUM];
+  memset(p, 0, NRRD_KERNEL_PARMS_NUM * sizeof(double));
+  p[0] = 1.0;
+  kern = nrrdKernelGaussian; 
+  p[1] = sigma; 
+  p[2] = 6.0; 
+  for (int a = 0; a < data->nrrd->dim; a++) {
+    info->kernel[a] = kern;
+    info->samples[a]=data->nrrd->axis[a].size;
+    if (a==0) {
+      info->kernel[0]=0;
+    } 
+    memcpy(info->parm[a], p, NRRD_KERNEL_PARMS_NUM * sizeof(double));
+    if (info->kernel[a] && 
+	(!(AIR_EXISTS(data->nrrd->axis[a].min) && AIR_EXISTS(data->nrrd->axis[a].max)))) {
+      nrrdAxisMinMaxSet(data->nrrd, a, data->nrrd->axis[a].center ? 
+			data->nrrd->axis[a].center : nrrdDefCenter);
+    }
+    info->min[a] = data->nrrd->axis[a].min;
+    info->max[a] = data->nrrd->axis[a].max;
+  }    
+  info->boundary = nrrdBoundaryBleed;
+  info->type = data->nrrd->type;
+  info->renormalize = AIR_TRUE;
+  NrrdData *nrrd = scinew NrrdData;
+  if (nrrdSpatialResample(nrrd->nrrd=nrrdNew(), data->nrrd, info)) {
+    char *err = biffGetDone(NRRD);
+    error(string("Trouble resampling: ") +  err);
+    msgStream_ << "  input Nrrd: data->nrrd->dim=" << data->nrrd->dim << "\n";
+    free(err);
+  }
+  nrrdResampleInfoNix(info); 
+  nrrd->copy_sci_data(*data.get_rep());
+  return nrrd;
+}
+
+
+
 float *MRITissueClassifier::SmoothProbabilities (float *prob, int c, int l, int n, float sigma)
 {
   int x, y, z, k, j, m;
@@ -3540,9 +3567,7 @@ float *MRITissueClassifier::SmoothProbabilities (float *prob, int c, int l, int 
           else 
 	    set_nrrd_float(p,0.0f,x,y,z);
     
-#ifdef MCKAY_TODO
-    p = p.gauss(sigma);
-#endif
+    p = gaussian(p,sigma);
     for (z=0;z<m_depth;z++)
       for (y=0;y<m_height;y++)
         for (x=0;x<m_width;x++)

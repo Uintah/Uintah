@@ -111,10 +111,13 @@ protected:
   NrrdDataHandle	erode(NrrdDataHandle, NrrdDataHandle);
   NrrdDataHandle	opening(NrrdDataHandle, NrrdDataHandle);
   NrrdDataHandle	closing(NrrdDataHandle, NrrdDataHandle);
+  NrrdDataHandle	gaussian(const NrrdDataHandle &data, double sigma);
   void	floodFill(NrrdDataHandle, 
 		  int, int, unsigned int, unsigned int, unsigned int);
   void	floodFill(NrrdDataHandle,
 		  int, int, unsigned int, unsigned int);
+
+
   // 3d nrrds
   NrrdDataHandle create_nrrd_of_ints(int, int, int);
   NrrdDataHandle create_nrrd_of_floats(int, int, int);  
