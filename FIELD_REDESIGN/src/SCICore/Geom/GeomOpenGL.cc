@@ -4276,11 +4276,8 @@ void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
 
 //
 // $Log$
-// Revision 1.19.2.2  2000/09/28 03:12:18  mcole
-// merge trunk into FIELD_REDESIGN branch
-//
-// Revision 1.19.2.1  2000/09/22 23:32:42  mcole
-// added support for local line width control
+// Revision 1.19.2.3  2000/10/26 17:18:36  moulding
+// merge HEAD into FIELD_REDESIGN
 //
 // Revision 1.24  2000/09/25 17:59:54  sparker
 // Changed ifdef _USING_GPP to __GNUG__
