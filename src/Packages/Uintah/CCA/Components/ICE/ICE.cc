@@ -2574,12 +2574,9 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*, const Patch* patch,
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
         sp_vol_CC[*iter] = (q_CC[*iter] + q_advected[*iter]/vol);
       }
-     // Divide by the new rho_CC.  This must be done in the extraCells
-     // for now, because I don't know how to set the BCs for sp_vol.
+     // Divide by the new rho_CC.
      for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){
-       if(rho_CC[*iter] > 100.*d_SMALL_NUM){
-                sp_vol_CC[*iter] /= rho_CC[*iter];
-        }
+	sp_vol_CC[*iter] /= rho_CC[*iter];
      }
     }
 
