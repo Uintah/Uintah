@@ -1,6 +1,3 @@
-<!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
-<!--% doc = Doc.create(Doc::DocBook) %-->
-
 <!--
    For more information, please see: http://software.sci.utah.edu
 
@@ -29,15 +26,24 @@
    DEALINGS IN THE SOFTWARE.
 -->
 
+<!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
 <section id="sec.starting">
 <title>Starting &sr;</title>
 
+<!--%= doc.ifP(Doc::Linux) {%Q{-->
 <para>
 If installed from its rpm, &sr;'s installation can be tested by
 changing the working directory (<command>cd</command>ing) to
 <filename>/usr/local/&sr;/bin/</filename> and typing:
 <command>./scirun</command>.
 </para>
+<!--}} %-->
+
+<!--%= doc.ifP(Doc::OSX) {%Q{-->
+<para></para>
+<!--}} %-->
 
 <para>
 If built from source code, &sr;'s installation can be

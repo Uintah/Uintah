@@ -69,8 +69,9 @@ DEALINGS IN THE SOFTWARE.
 	  <listitem>
 	    <para>
 	      <filename>DataIO.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
-	      to add support for reading HDF5 and MDSplus data
-	      formats.  DataIO requires package TEEM.
+	      to add support for reading HDF5
+	      <!--%= doc.ifNotP(Doc::Irix) {%Q{-->and MDSplus<!--}} %-->
+	      data.  DataIO requires package Teem.
 	    </para>
 	  </listitem>
 	  <listitem>
@@ -83,7 +84,7 @@ DEALINGS IN THE SOFTWARE.
 	  <listitem>
 	    <para><filename>Fusion.PKG.<replaceable>x.x.x</replaceable>.tar.gz</filename>
 	    to add support for converting NRRD data to &sr; fields.
-	    Fusion requires packages TEEM and DataIO.</para>
+	    Fusion requires packages Teem and DataIO.</para>
 	  </listitem>
 	  <listitem>
 	    <para>
@@ -118,7 +119,7 @@ DEALINGS IN THE SOFTWARE.
 	  gunzip -c &sr;.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
 	</literallayout>
 	This creates a directory called <filename>&sr;</filename>.
-	Below the term <filename>&sr;</filename> refers to this directory.
+	Below, the term <filename>&sr;</filename> refers to this directory.
       </para>
     </listitem>
 

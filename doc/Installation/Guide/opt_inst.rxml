@@ -106,6 +106,10 @@ DEALINGS IN THE SOFTWARE.
     </itemizedlist>
   </para>
 
+  <para>Optional thirdparty software must be installed before building
+  &sr;.  Proceed to <xref linkend="sec.build-sr"/> after installing
+  optional thirdparty software.</para>
+
   <!--%= doc.ifNotP(Doc::OSX) {%Q{-->
   <para><xref linkend="sec.blas_lapack_inst"/> provides installation
   instructions for <acronym>BLAS</acronym> and

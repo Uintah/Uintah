@@ -81,19 +81,21 @@ end
 	directory <filename>&sr;</filename> (but <emphasis>not</emphasis>
 	<filename>&sr;/src</filename>) as follows:
 	<literallayout class="monospaced">
-mkdir &sr;/<replaceable>dir</replaceable>
-cd &sr;/<replaceable>dir</replaceable>
+mkdir &sr;/<replaceable>build-dir</replaceable>
+cd &sr;/<replaceable>build-dir</replaceable>
 
 ../src/configure --with-thirdparty=<replaceable>third-party-dir</replaceable> \
 --enable-package="<replaceable>package-name1 package-name2 &hellip;</replaceable>"<!--%= extraOptions %-->
 	</literallayout>
 	in which case &sr; is built in the directory
-	<filename>&sr;/<replaceable>dir</replaceable></filename>.
-	<replaceable>Dir</replaceable> is often
+	<filename>&sr;/<replaceable>build-dir</replaceable></filename>.
+      </para>
+      <para>
+	<replaceable>Build-dir</replaceable> is often
 	<filename>bin</filename> or a name that reflects the machine
-	architecture, e.g. <filename>osx</filename>,
-	<filename>linux</filename>, <filename>irix</filename>,
-	etc.
+	architecture.
+      </para>
+      <para>
 	<!--%= doc.ifNotP(Doc::OSX) {%Q{-->
 	Above, replace <replaceable>third-party-dir</replaceable> by
 	the path provided by the third-party installation script.
@@ -102,6 +104,8 @@ cd &sr;/<replaceable>dir</replaceable>
 	Above, replace <replaceable>third-party-dir</replaceable> by  the path
 	given to the third-party installation script.
 	<!--}} %-->
+      </para>
+      <para>
 	Replace "<replaceable>package-name1 package-name2
 	&hellip;</replaceable>" by a list of package names ,
 	e.g. "BioPSE MatlabInterface".  An example configure command
@@ -161,12 +165,9 @@ cd &sr;/<replaceable>dir</replaceable>
 
     <listitem>
       <para>
-	Run GNU make from the same directory used when running
-	configure (e.g. <filename>&sr;/bin</filename>).  Note that the
-	<quote>configure</quote> directory is called
-	<replaceable>build_dir</replaceable> from this point on.
+	Run GNU make from <replaceable>build-dir</replaceable>.
 	<literallayout class="monospaced">
-cd <replaceable>build_dir</replaceable>
+cd <replaceable>build-dir</replaceable>
 make
 	</literallayout>
 	Be sure that <command>make</command> invokes GNU make.  GNU make is
@@ -193,16 +194,17 @@ make -j <replaceable>N</replaceable>
   </orderedlist>
 
   <para>
-    After a successful build, <replaceable>build_dir</replaceable>
-    will contain the <filename>scirun</filename> executable.
+    After a successful build, <replaceable>build-dir</replaceable>
+    will contain the <filename>scirun</filename>, and PowerApp
+    executables.
   </para>
 
   <tip>
     <para>
       It is possible to build &sr; for multiple machine architectures. For instance, 
       a Linux version and 32 bit and 64 bit Irix versions.  If the
-      <filename>&sr;</filename> directory resides on a volume shared by all
-      machines, do the following:
+      <filename>&sr;</filename> directory resides on a shared volume,
+      do the following:
       <literallayout class="monospaced">
 mkdir &sr;/linux
 mkdir &sr;/irix32
