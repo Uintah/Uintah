@@ -527,6 +527,7 @@ main( int argc, char** argv )
 	  bal = scinew NirvanaLoadBalancer(world, layout);
 	} else if( (loadbalancer == "ParticleLoadBalancer") ||
 		   (loadbalancer == "PLB") ) {
+	  bal = 0;
 	  //bal = scinew ParticleLoadBalancer(world);
 	} else {
 	   bal = 0;
