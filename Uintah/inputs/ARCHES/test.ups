@@ -11,11 +11,11 @@
    </Meta>
 
    <Time>
-	<maxTime>10.0</maxTime>
+	<maxTime>0.002</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.001</delt_min>
 	<delt_max>0.01</delt_max>
-	<timestep_multiplier>0.8</timestep_multiplier>
+	<timestep_multiplier>1.0</timestep_multiplier>
    </Time>
 
    <DataArchiver>
@@ -57,14 +57,14 @@
 	    </Turbulence>
 
 	    <Properties>
-		<denUnderrelax>0.9</denUnderrelax>
+		<denUnderrelax>1.0</denUnderrelax>
 		<Stream>
-		    <density>1.184344</density>
+		    <density>0.162059</density>
 		    <temperature>298</temperature>
 		    <enthalpyLoss>0</enthalpyLoss>
 		</Stream>
 		<Stream>
-		    <density>0.162059</density>
+		    <density>1.184344</density>
 		    <temperature>298</temperature>
 		    <enthalpyLoss>0</enthalpyLoss>
 		</Stream>
