@@ -1,5 +1,5 @@
-#ifndef UINTAH_HOMEBREW_RoundRobinLoadBalancer_H
-#define UINTAH_HOMEBREW_RoundRobinLoadBalancer_H
+#ifndef UINTAH_HOMEBREW_SimpleLoadBalancer_H
+#define UINTAH_HOMEBREW_SimpleLoadBalancer_H
 
 #include <Uintah/Interface/LoadBalancer.h>
 #include <Uintah/Parallel/UintahParallelComponent.h>
@@ -9,13 +9,13 @@ namespace Uintah {
    /**************************************
      
      CLASS
-       RoundRobinLoadBalancer
+       SimpleLoadBalancer
       
        Short Description...
       
      GENERAL INFORMATION
       
-       RoundRobinLoadBalancer.h
+       SimpleLoadBalancer.h
       
        Steven G. Parker
        Department of Computer Science
@@ -26,7 +26,7 @@ namespace Uintah {
        Copyright (C) 2000 SCI Group
       
      KEYWORDS
-       RoundRobinLoadBalancer
+       SimpleLoadBalancer
       
      DESCRIPTION
        Long description...
@@ -35,31 +35,26 @@ namespace Uintah {
       
      ****************************************/
     
-   class RoundRobinLoadBalancer : public LoadBalancer, public UintahParallelComponent {
+   class SimpleLoadBalancer : public LoadBalancer, public UintahParallelComponent {
    public:
-      RoundRobinLoadBalancer(const ProcessorGroup* myworld);
-      ~RoundRobinLoadBalancer();
+      SimpleLoadBalancer(const ProcessorGroup* myworld);
+      ~SimpleLoadBalancer();
       virtual void assignResources(TaskGraph& tg, const ProcessorGroup*);
       virtual int getPatchwiseProcessorAssignment(const Patch* patch,
 						  const ProcessorGroup* resources);
    private:
-      RoundRobinLoadBalancer(const RoundRobinLoadBalancer&);
-      RoundRobinLoadBalancer& operator=(const RoundRobinLoadBalancer&);
+      SimpleLoadBalancer(const SimpleLoadBalancer&);
+      SimpleLoadBalancer& operator=(const SimpleLoadBalancer&);
       
    };
 } // end namespace Uintah
 
 //
 // $Log$
-// Revision 1.2  2000/09/20 16:00:28  sparker
+// Revision 1.1  2000/09/20 16:00:28  sparker
 // Added external interface to LoadBalancer (for per-processor tasks)
 // Added message logging functionality. Put the tag <MessageLog/> in
 //    the ups file to enable
-//
-// Revision 1.1  2000/06/17 07:04:54  sparker
-// Implemented initial load balancer modules
-// Use ProcessorGroup
-// Implemented TaskGraph - to contain the common scheduling stuff
 //
 //
 

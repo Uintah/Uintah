@@ -40,6 +40,8 @@ namespace Uintah {
       SingleProcessorLoadBalancer(const ProcessorGroup* myworld);
       ~SingleProcessorLoadBalancer();
       virtual void assignResources(TaskGraph& tg, const ProcessorGroup*);
+      virtual int getPatchwiseProcessorAssignment(const Patch* patch,
+						  const ProcessorGroup* resources);
    private:
       SingleProcessorLoadBalancer(const SingleProcessorLoadBalancer&);
       SingleProcessorLoadBalancer& operator=(const SingleProcessorLoadBalancer&);
@@ -49,6 +51,11 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.2  2000/09/20 16:00:28  sparker
+// Added external interface to LoadBalancer (for per-processor tasks)
+// Added message logging functionality. Put the tag <MessageLog/> in
+//    the ups file to enable
+//
 // Revision 1.1  2000/06/17 07:04:55  sparker
 // Implemented initial load balancer modules
 // Use ProcessorGroup
