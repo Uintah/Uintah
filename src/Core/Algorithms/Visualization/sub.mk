@@ -22,12 +22,13 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Core/Algorithms/Visualization
 
 SRCS     += \
-        $(SRCDIR)/HexMC.cc	\
+        $(SRCDIR)/HexMC.cc		\
 	$(SRCDIR)/MarchingCubes.cc	\
 	$(SRCDIR)/Noise.cc		\
 	$(SRCDIR)/RenderField.cc	\
 	$(SRCDIR)/Sage.cc		\
-	$(SRCDIR)/TetMC.cc	\
+	$(SRCDIR)/TetMC.cc		\
+	$(SRCDIR)/UHexMC.cc		\
 
 
 
