@@ -27,6 +27,7 @@
  *
  *  Copyright (C) 1994 SCI Group
  */
+#include <sci_defs.h>
 
 #include <Dataflow/Modules/Render/Viewer.h>
 #include <Dataflow/Modules/Render/ViewWindow.h>
@@ -1649,11 +1650,11 @@ void ViewWindow::tcl_command(GuiArgs& args, void*)
     return;
   }
   if (args[1] == "have_mpeg") {
-#ifdef MPEG
+#ifdef HAVE_MPEG
     args.result("1");
 #else
     args.result("0");
-#endif // MPEG
+#endif // HAVE_MPEG
   } else if (args[1] == "dump_viewwindow") {
     if (args.count() != 6) {
       args.error("ViewWindow::dump_viewwindow needs an output file name and type");
