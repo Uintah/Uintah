@@ -51,9 +51,12 @@ for test in TESTS:
     mkdir(testname)
     chdir(testname)
 
+    datmode = mode
+
     print "MPM-%s: Running test %s on %s" % (mode, testname, date())
     if mode == "mpi":
     	rc = system("mpirun -np %s %s/sus -mpm %s/inputs/MPM/%s > sus.log 2>&1" % (num_processes(test), susdir, susdir, input(test)))
+    	datmode = "opt"
     else:
     	rc = system("%s/sus -mpm %s/inputs/MPM/%s > sus.log 2>&1" % (susdir, susdir, input(test)))
     if rc != 0:
@@ -64,7 +67,7 @@ for test in TESTS:
 	errors_to = environ['ERRORS_TO']
 	if environ['ERRORMAIL'] != "yes":
 	    errors_to = ""
-    	rc = system("dat_test %s %s/MPM-%s %s/Uintah_testdata/%s_%s '%s' > dat_test.log 2>&1" % (testname, environ['BUILDROOT'], mode, environ['BUILDROOT'], environ['OS'], mode, errors_to))
+    	rc = system("dat_test %s %s/MPM-%s %s/Uintah_testdata/%s_%s '%s' > dat_test.log 2>&1" % (testname, environ['BUILDROOT'], mode, environ['BUILDROOT'], environ['OS'], datmode, errors_to))
     	if rc != 0:
 	    if rc != 65280:
     	    	print "\tWarning, test %s failed dat comparision with error code %s" % (testname, rc)
