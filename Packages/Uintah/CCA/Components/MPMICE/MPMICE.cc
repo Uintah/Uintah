@@ -122,7 +122,7 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   d_mpm->setMPMLabel(Mlb);
   d_mpm->setWithICE();
   d_mpm->problemSetup(prob_spec, grid, d_sharedState);
-  d_8or27 = d_mpm->d_8or27; 
+  d_8or27 = d_mpm->flags->d_8or27; 
   if(d_8or27==8){
     NGN=1;
   } else if(d_8or27==MAX_BASIS){
@@ -368,6 +368,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
   d_mpm->scheduleExMomIntegrated(                 sched, patches, mpm_matls);
   d_mpm->scheduleSetGridBoundaryConditions(       sched, patches, mpm_matls);
   d_mpm->scheduleCalculateDampingRate(            sched, patches, mpm_matls);
+  d_mpm->scheduleConvertLocalizedParticles(       sched, patches, mpm_matls);
   d_mpm->scheduleInterpolateToParticlesAndUpdate( sched, patches, mpm_matls);
   d_mpm->scheduleApplyExternalLoads(              sched, patches, mpm_matls);
   d_ice->scheduleAdvectAndAdvanceInTime(          sched, patches, ice_matls_sub,
@@ -675,6 +676,7 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
     int numMPM_matls = d_sharedState->getNumMPMMatls();
     double p_ref = d_sharedState->getRefPress();
     for (int m = 0; m < numMPM_matls; m++ ) {
+      
       CCVariable<double> rho_micro, sp_vol_CC, rho_CC, Temp_CC, speedSound;
       CCVariable<Vector> vel_CC;
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
@@ -686,9 +688,22 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
       new_dw->allocateAndPut(Temp_CC,  MIlb->temp_CCLabel,      indx,patch);
       new_dw->allocateAndPut(vel_CC,   MIlb->vel_CCLabel,       indx,patch);
 
-      mpm_matl->initializeCCVariables(rho_micro,   rho_CC,
-                                      Temp_CC,     vel_CC,  
-                                      numALL_matls,patch);  
+      // Ignore the dummy materials that are used when particles are
+      // localized
+      if (d_mpm->flags->d_createNewParticles) {
+        if (m%2 == 0) // The actual materials
+          mpm_matl->initializeCCVariables(rho_micro,   rho_CC,
+                                          Temp_CC,     vel_CC,  
+                                          numALL_matls,patch);  
+        else // The dummy materials
+          mpm_matl->initializeDummyCCVariables(rho_micro,   rho_CC,
+                                               Temp_CC,     vel_CC,  
+                                               numALL_matls,patch);  
+      } else {
+        mpm_matl->initializeCCVariables(rho_micro,   rho_CC,
+                                        Temp_CC,     vel_CC,  
+                                        numALL_matls,patch);  
+      }
 
       setBC(rho_CC,    "Density",      patch, d_sharedState, indx);    
       setBC(rho_micro, "Density",      patch, d_sharedState, indx);    
