@@ -108,12 +108,19 @@ WARNING
       DOM_Node getNode() const {
 	 return d_node;
       }
+
+      void writeMessages(bool do_write) {
+        d_write = do_write;
+      }
+
+      bool doWriteMessages() const
+      { return d_write; }
    private:
       ProblemSpec(const ProblemSpec&);
       ProblemSpec& operator=(const ProblemSpec&);
       
       DOM_Node d_node;
-      
+      bool d_write;
    };
    
 
@@ -121,6 +128,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.16  2000/09/26 21:24:27  witzel
+// Added d_write flag and corresponding writeMessages(bool) method to
+// control whether or not to output error and warning messages.
+//
 // Revision 1.15  2000/06/23 19:24:57  jas
 // Added method to parse out the attributes for a given tag, i.e.
 // <sample label = "test" stuff = "extra" >.  A map is used with indices

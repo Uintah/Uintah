@@ -18,8 +18,10 @@ using namespace std;
 using namespace SCICore::Geometry;
 using namespace PSECore::XMLUtil;
 
+#define cerr if (d_write) cerr 
+
 ProblemSpec::ProblemSpec(const DOM_Node& node)
-   : d_node(node)
+  : d_node(node), d_write(true)
 {
 }
 ProblemSpec::~ProblemSpec()
@@ -451,6 +453,10 @@ const TypeDescription* ProblemSpec::getTypeDescription()
 
 //
 // $Log$
+// Revision 1.22  2000/09/26 21:24:27  witzel
+// Added d_write flag and corresponding writeMessages(bool) method to
+// control whether or not to output error and warning messages.
+//
 // Revision 1.21  2000/09/25 20:39:14  sparker
 // Quiet g++ compiler warnings
 //
