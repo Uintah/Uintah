@@ -40,3 +40,9 @@ LIBS := $(TCL_LIBRARY) $(XML_LIBRARY) $(GL_LIBRARY) $(TK_LIBRARY) \
 
 include $(SCIRUN_SCRIPTS)/largeso_epilogue.mk
 
+ifeq ($(LARGESOS),yes)
+SCIRUN_MODULES := $(SCIRUN_MODULES) $(LIBNAME)
+endif
+
+scimodules: prereqs $(SCIRUN_MODULES)
+

@@ -95,3 +95,7 @@ LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(LEX_LIBRARY) $(M_LIBRARY) $(XML_LIBRARY) $
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
+ifeq ($(LARGESOS),no)
+SCIRUN_MODULES := $(SCIRUN_MODULES) $(LIBNAME)
+endif
+
