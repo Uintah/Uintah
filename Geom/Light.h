@@ -15,19 +15,24 @@
 #define SCI_Geom_Light_h 1
 
 #include <variant.h>
+#include <Classlib/String.h>
 
 class Color;
 class DrawInfoOpenGL;
+class GeomObj;
 class Point;
 class Vector;
 class View;
 
 class Light {
+protected:
+    Light(const clString& name);
 public:
-    Light();
+    clString name;
     virtual ~Light();
     virtual void compute_lighting(const View& view, const Point& at,
 				  Color&, Vector&)=0;
+    virtual GeomObj* geom()=0;
 #ifdef SCI_OPENGL
     virtual void opengl_setup(const View& view, DrawInfoOpenGL*, int& idx)=0;
 #endif

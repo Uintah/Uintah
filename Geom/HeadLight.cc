@@ -14,8 +14,8 @@
 #include <Geom/HeadLight.h>
 #include <Geom/View.h>
 
-HeadLight::HeadLight(const Color& c)
-: c(c)
+HeadLight::HeadLight(const clString& name, const Color& c)
+: Light(name), c(c)
 {
 }
 
@@ -29,4 +29,9 @@ void HeadLight::compute_lighting(const View& view, const Point& at,
     to=at-view.eyep;
     to.normalize();
     color=c;
+}
+
+GeomObj* HeadLight::geom()
+{
+    return 0; // Never seen
 }

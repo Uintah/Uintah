@@ -22,10 +22,11 @@ class PointLight : public Light {
     Point p;
     Color c;
 public:
-    PointLight(const Point&, const Color&);
+    PointLight(const clString& name, const Point&, const Color&);
     virtual ~PointLight();
     virtual void compute_lighting(const View& view, const Point& at,
 				  Color&, Vector&);
+    virtual GeomObj* geom();
 #ifdef SCI_OPENGL
     virtual void opengl_setup(const View& view, DrawInfoOpenGL*, int& idx);
 #endif

@@ -13,7 +13,8 @@
 
 #include <Geom/Light.h>
 
-Light::Light()
+Light::Light(const clString& name)
+: name(name)
 {
 }
 
