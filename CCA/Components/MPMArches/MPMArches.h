@@ -255,6 +255,8 @@ public:
   bool d_DORad;
   int nofTimeSteps;
   bool d_recompile;
+  double prturb;
+  double cpfluid;
 
 };
       
