@@ -19,6 +19,7 @@
 #include <SCICore/Datatypes/Datatype.h>
 
 #include <SCICore/Containers/Array1.h>
+#include <SCICore/Containers/Array3.h>
 #include <SCICore/Containers/LockingHandle.h>
 #include <SCICore/Containers/Handle.h>
 
@@ -36,6 +37,7 @@ namespace GeomSpace {
 
 namespace Datatypes {
 
+using Containers::Array3;
 using Containers::LockingHandle;
 using Containers::Handle;
 using Geometry::Vector;
@@ -87,6 +89,12 @@ struct DirichletBC {
     DirichletBC(const SurfaceHandle&, double);
 };
 
+struct PotentialDifferenceBC {
+    int diffNode;
+    double diffVal;
+    PotentialDifferenceBC(int, double);
+};
+
 struct Node : public Persistent {
 //struct Node {
     Point p;
@@ -96,6 +104,7 @@ struct Node : public Persistent {
 
     DirichletBC* bc;
     int fluxBC;
+    PotentialDifferenceBC* pdBC;
 
     Node(const Node&);
     virtual ~Node();
@@ -139,6 +148,13 @@ struct Edge{
     int operator==(const Edge&) const;
 };
 
+struct MeshGrid {
+    Point min, max;
+    int nx, ny, nz;
+    Array3<Array1<int> > elems;
+    int locate(Mesh* mesh, const Point& p, double epsilon);
+};
+
 struct Octree{
   Point mid;
   Array1<int> elems;
@@ -153,8 +169,10 @@ class Mesh;
 typedef LockingHandle<Mesh> MeshHandle;
 
 class SCICORESHARE Mesh : public Datatype {
+    MeshGrid grid;
     Octree* octree;
 public:
+    int bld_grid;
     Array1<int> ids;
     Array1<NodeHandle> nodes;
     Array1<Element*> elems;
@@ -209,6 +227,9 @@ public:
     void make_octree(int level, Octree*& octree, const Point& min,
 		     const Point& max, const Array1<int>& elems);
 
+    void make_grid(int nx, int ny, int nz, const Point &min, const Point &max,
+		   double eps);
+
     // Persistent representation...
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
@@ -237,6 +258,9 @@ void Pio(Piostream& stream, ElementVersion1& node);
 
 //
 // $Log$
+// Revision 1.6  2000/03/04 00:18:29  dmw
+// added new Mesh BC and fixed sparserowmatrix bug
+//
 // Revision 1.5  2000/02/02 22:07:11  dmw
 // Handle - added detach and Pio
 // TrivialAllocator - fixed mis-allignment problem in alloc()

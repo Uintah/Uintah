@@ -47,6 +47,9 @@ using SCICore::Geometry::Min;
 using SCICore::Geometry::Max;
 using SCICore::GeomSpace::Material;
 using SCICore::GeomSpace::GeomPolyline;
+using SCICore::Math::Min;
+using SCICore::Math::Max;
+
 
 #define OCTREE_MAXDEPTH 2
 #define OCTREE_MAXELEMENTS 300
@@ -102,9 +105,10 @@ PersistentTypeID Mesh::type_id("Mesh", "Datatype", make_Mesh);
 PersistentTypeID Node::type_id("Node", "0", make_Node);
 
 Mesh::Mesh()
-: have_all_neighbors(0), current_generation(2)
+: have_all_neighbors(0), current_generation(2), bld_grid(0)
 {
     octree=0;
+    grid.nx=grid.ny=grid.nz=0;
     cond_tensors.grow(1);
     cond_tensors[0].grow(6);
     cond_tensors[0][0]=1;
@@ -116,9 +120,11 @@ Mesh::Mesh()
 }
 
 Mesh::Mesh(int nnodes, int nelems)
-: nodes(nnodes), elems(nelems), have_all_neighbors(0), current_generation(2)
+: nodes(nnodes), elems(nelems), have_all_neighbors(0), current_generation(2),
+  bld_grid(0)
 {
     octree=0;
+    grid.nx=grid.ny=grid.nz=0;
     cond_tensors.grow(1);
     cond_tensors[0].grow(6);
     cond_tensors[0][0]=1;
@@ -132,9 +138,10 @@ Mesh::Mesh(int nnodes, int nelems)
 Mesh::Mesh(const Mesh& copy)
 : nodes(copy.nodes), elems(copy.elems.size()),
   cond_tensors(copy.cond_tensors), have_all_neighbors(copy.have_all_neighbors),
-  current_generation(2)
+  current_generation(2), bld_grid(0)
 {
     octree=0;
+    grid.nx=grid.ny=grid.nz=0;
     int nelems=elems.size();
     for(int i=0;i<nelems;i++){
 	Element* e=new Element(*copy.elems[i], this);
@@ -162,11 +169,12 @@ Mesh* Mesh::clone()
     return scinew Mesh(*this);
 }
 
-#define MESH_VERSION 4
+#define MESH_VERSION 5
 
 void Mesh::io(Piostream& stream)
 {
     using SCICore::Containers::Pio;
+    using SCICore::PersistentSpace::Pio;
 
     int version=stream.begin_class("Mesh", MESH_VERSION);
     if(version == 1){
@@ -196,6 +204,8 @@ void Mesh::io(Piostream& stream)
 	Pio(stream, cond_tensors);
     }
 
+    if (version >= 5) Pio(stream, bld_grid);
+
     stream.end_class();
     if(stream.reading()){
 	for(int i=0;i<elems.size();i++){
@@ -204,10 +214,14 @@ void Mesh::io(Piostream& stream)
 	    elems[i]->compute_basis();
 	}
 	compute_neighbors();
+	if (bld_grid) {
+	    int idx=0;
+	    locate2(Point(0,0,0), idx, 0);
+	}
     }
 }
 
-#define NODE_VERSION 4
+#define NODE_VERSION 5
 
 void Node::io(Piostream& stream)
 {
@@ -232,6 +246,19 @@ void Node::io(Piostream& stream)
 	  SCICore::Containers::Pio(stream, bc->fromsurf);
 	  Pio(stream, bc->value);
       }
+    }
+    if (version >= 5) {
+	int flag;
+	if (!stream.reading()) {
+	    flag=pdBC?1:0;
+	}
+	Pio(stream, flag);
+	if (stream.reading() && flag)
+	    pdBC=new PotentialDifferenceBC(0,0);
+	if(flag) {
+	    Pio(stream, pdBC->diffNode);
+	    Pio(stream, pdBC->diffVal);
+	}
     }
     stream.end_class();
 }
@@ -331,13 +358,13 @@ Element::Element(const Element& copy, Mesh* mesh)
 }
 
 Node::Node(const Point& p)
-: p(p), elems(0, 4), bc(0), fluxBC(0), ref_cnt(0)
+: p(p), elems(0, 4), bc(0), fluxBC(0), ref_cnt(0), pdBC(0)
 {
 }
 
 Node::Node(const Node& copy)
 : p(copy.p), elems(copy.elems), bc(copy.bc?new DirichletBC(*copy.bc):0),
-  fluxBC(0), ref_cnt(0)
+  fluxBC(0), ref_cnt(0), pdBC(copy.pdBC?new PotentialDifferenceBC(*copy.pdBC):0)
 {
 }
 
@@ -804,7 +831,10 @@ int Mesh::locate(const Point& p, int& ix, double epsilon1, double epsilon2)
 		    cerr << "Boundary, min=" << min << endl;
 		}
 #endif
-		return min<-epsilon2?0:1;
+		if (min<-epsilon2)
+		    return locate2(p, ix, epsilon2);
+		else
+		    return 1;
 	    }
 	    i=ni;
 	    continue;
@@ -1002,8 +1032,81 @@ int Octree::locate(Mesh* mesh, const Point& p, double epsilon1)
     return -1;
 }
 
+void Mesh::make_grid(int nx, int ny, int nz, const Point &min, 
+		     const Point &max, double eps) {
+    long int count=0;
+    grid.nx=nx;
+    grid.ny=ny;
+    grid.nz=nz;
+    grid.min=min;
+    grid.max=max;
+    grid.elems.newsize(nx, ny, nz);
+    Vector d(max-min);
+    double dx=d.x()/nx;
+    double dy=d.y()/ny;
+    double dz=d.z()/nz;
+    for (int i=0; i<elems.size(); i++) {
+	int imin, imax, jmin, jmax, kmin, kmax;
+	for (int j=0; j<4; j++) {
+	    Vector v(nodes[elems[i]->n[j]]->p-min);
+	    int w;
+	    w=Max(0.,(v.x()-eps)/dx);
+	    if (!j || imin>w) imin=w;
+	    w=Max(0.,(v.y()-eps)/dy);
+	    if (!j || jmin>w) jmin=w;
+	    w=Max(0.,(v.z()-eps)/dz);
+	    if (!j || kmin>w) kmin=w;
+	    w=Min((nx-1.),(v.x()+eps)/dx);
+	    if (!j || imax<w) imax=w;
+	    w=Min((ny-1.),(v.y()+eps)/dy);
+	    if (!j || jmax<w) jmax=w;
+	    w=Min((nz-1.),(v.z()+eps)/dz);
+	    if (!j || kmax<w) kmax=w;
+	}
+	for (int ii=imin; ii<=imax; ii++) 
+	    for (int jj=jmin; jj<=jmax; jj++)
+		for (int kk=kmin; kk<=kmax; kk++) {
+		    grid.elems(ii,jj,kk).add(i); count++;
+		}
+    }
+    cerr << "Count="<<count<<" nelems="<<elems.size()<<" cells="<<nx*ny*nz<<"  cnt/ncells="<<count*1./(nx*ny*nz)<<" cnt/nelems="<<count*1./elems.size()<<"\n";
+}
+
+int MeshGrid::locate(Mesh* mesh, const Point& p, double)
+{
+    Vector d(max-min);
+    double dx=d.x()/nx;
+    double dy=d.y()/ny;
+    double dz=d.z()/nz;
+    Vector v(p-min);
+    int ii=Min(nx-1., Max(0., v.x()/dx));
+    int jj=Min(ny-1., Max(0., v.y()/dy));
+    int kk=Min(nz-1., Max(0., v.z()/dz));
+
+    for(int i=0;i<elems(ii,jj,kk).size();i++){
+	Element* elem=mesh->elems[elems(ii,jj,kk)[i]];
+	if(mesh->inside(p, elem)){
+	    return elems(ii,jj,kk)[i];
+	}
+    }
+    return -1;
+}
+
 int Mesh::locate2(const Point& p, int& ix, double epsilon1)
 {
+    if (grid.nx==0) {
+	cerr << "creating grid\n";
+	Point min, max;
+	get_bounds(min,max);
+	make_grid(20,20,20,min,max,epsilon1);
+    }
+    int idx=grid.locate(this, p, epsilon1);
+    if (idx==-1) return 0;
+    else {
+	ix=idx;
+	return 1;
+    }
+#if 0
   if(!octree){
     cerr << "creating topelems\n";
     Array1<int> topelems;
@@ -1024,6 +1127,7 @@ int Mesh::locate2(const Point& p, int& ix, double epsilon1)
     ix=idx;
     return 1;
   }
+#endif
 #if 0
     // Exhaustive search
     int nelems=elems.size();
@@ -1780,6 +1884,11 @@ DirichletBC::DirichletBC(const SurfaceHandle& fromsurf, double value)
 {
 }
 
+PotentialDifferenceBC::PotentialDifferenceBC(int diffNode, double diffVal) 
+: diffNode(diffNode), diffVal(diffVal)
+{
+}
+
 void Mesh::get_boundary_nodes(Array1<int> &pts)
 {
   pts.resize(0); // clear it out for now...
@@ -1865,6 +1974,9 @@ void Pio(Piostream& stream, SCICore::Datatypes::ElementVersion1& elem)
 
 //
 // $Log$
+// Revision 1.12  2000/03/04 00:18:29  dmw
+// added new Mesh BC and fixed sparserowmatrix bug
+//
 // Revision 1.11  2000/02/02 22:07:10  dmw
 // Handle - added detach and Pio
 // TrivialAllocator - fixed mis-allignment problem in alloc()

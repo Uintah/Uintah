@@ -39,6 +39,7 @@ public:
     SparseRowMatrix();
     SparseRowMatrix(int, int, Array1<int>&, Array1<int>&);
     SparseRowMatrix(int, int, int*, int*, int, double*);
+    SparseRowMatrix(int, int, int*, int*, int);
     virtual ~SparseRowMatrix();
     SparseRowMatrix(const SparseRowMatrix&);
     SparseRowMatrix& operator=(const SparseRowMatrix&);
@@ -76,6 +77,9 @@ public:
 
 //
 // $Log$
+// Revision 1.4  2000/03/04 00:18:30  dmw
+// added new Mesh BC and fixed sparserowmatrix bug
+//
 // Revision 1.3  1999/08/25 03:48:41  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes
