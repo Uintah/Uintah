@@ -12,6 +12,7 @@ ifeq ($(RF),true)
 SRCS     += \
 	$(SRCDIR)/MPMICERF.cc
 else
+SRCS     += \
 	$(SRCDIR)/MPMICE.cc
 endif
 SRCS     += \
