@@ -158,24 +158,25 @@
    </DataArchiver>
 
   <Debug>
-      <dbg_timeStart>       0.0    </dbg_timeStart>
-      <dbg_timeStop>        0.01   </dbg_timeStop>
-      <dbg_outputInterval>  1e-9   </dbg_outputInterval>
-
-      <d_dbgBeginIndx>      [-1,0,0] </d_dbgBeginIndx>
-      <d_dbgEndIndx>        [2,10,10] </d_dbgEndIndx>
-
-  <!--
-        <debug label = "switchDebugMomentumExchange_CC"/>
-       <debug label = "switchDebug_press"/>
-       <debug label = "switchDebug_vel_FC"/>
-       <debug label = "switchDebug_Exchange_FC"/>            
-       <debug label = "switchDebug_explicit_press"/>   
-       <debug label = "switchDebug_PressFC"/>         
-       <debug label = "switchDebugLagrangianValues"/>   
-       <debug label = "switchDebugSource_Sink"/>     
-       <debug label = "switchDebug_advance_advect"/> 
+     <dbg_timeStart>       0.0      </dbg_timeStart>
+     <dbg_timeStop>        0.01    </dbg_timeStop>
+     <dbg_outputInterval>  1e-9    </dbg_outputInterval>
+   <!--
+     <dbg_BeginIndex>      [0,0,0] </dbg_BeginIndex>
+     <dbg_EndIndex>        [2,2,2] </dbg_EndIndex>
+     <dbg_SigFigs>         10      </dbg_SigFigs>
     -->
+     <!--
+     <debug label = "switchDebugInitialize"/>
+     <debug label = "switchDebug_EQ_RF_press"/>
+     <debug label = "switchDebug_vel_FC"/>           
+     <debug label = "switchDebug_explicit_press"/>   
+     <debug label = "switchDebug_PressFC"/>          
+     <debug label = "switchDebugLagrangianValues"/> 
+     <debug label = "switchDebugMomentumExchange_CC"/> 
+     <debug label = "switchDebugSource_Sink"/>       
+     <debug label = "switchDebug_advance_advect"/>  
+     -->
     </Debug>
     
     <!--____________________________________________________________________-->
