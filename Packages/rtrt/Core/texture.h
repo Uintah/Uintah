@@ -69,7 +69,7 @@ namespace rtrt {
       const int ymin = 30;
       const int xmax = 400;
       const int ymax = 400;
-      int x = (int)(colormap_x_offset + dx + xmax)%xmax;
+      int x = (colormap_x_offset + dx + xmax)%xmax;
       int y = colormap_y_offset + dy;
       if( y > ymax )
 	y = ymax;
@@ -79,7 +79,7 @@ namespace rtrt {
       float hue_index;
       float hue_interpolant;
       float hue_size = (float)1/6;
-      int ymid = (ymax - ymin)*0.5f + ymin;
+      int ymid = (ymax - ymin)/2 + ymin;
 
       /* find the hue */
       hue_index = ((float)x-xmin)/(xmax-xmin);
