@@ -703,7 +703,7 @@ case $host in
     ;;
 esac
 
-if ! $NUM_CPUS="`expr $NUM_CPUS + 0 2> /dev/null`" ; then
+if ! test $NUM_CPUS="`expr $NUM_CPUS + 0 2> /dev/null`" ; then
   NUM_CPUS="1"
 fi
 AC_MSG_RESULT($NUM_CPUS)
