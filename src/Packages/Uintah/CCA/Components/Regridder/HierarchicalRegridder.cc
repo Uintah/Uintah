@@ -258,7 +258,7 @@ void HierarchicalRegridder::MarkPatches( const GridP& oldGrid, int levelIdx  )
       IntVector startCellSubPatch = startCell + idx * subPatchSize;
       IntVector endCellSubPatch = startCell + (idx + IntVector(1,1,1)) * subPatchSize - IntVector(1,1,1);
       IntVector latticeStartIdx = latticeIdx * d_latticeRefinementRatio[levelIdx] + idx;
-      IntVector latticeEndIdx = latticeStartIdx + IntVector(1,1,1);
+      IntVector latticeEndIdx = latticeStartIdx;
       
       rdbg << "MarkPatches() startCell         = " << startCell         << endl;
       rdbg << "MarkPatches() endCell           = " << endCell           << endl;
@@ -277,7 +277,7 @@ void HierarchicalRegridder::MarkPatches( const GridP& oldGrid, int levelIdx  )
         IntVector childLatticeStartIdx = latticeStartIdx;
         IntVector childLatticeEndIdx = latticeEndIdx;
         for (int childLevelIdx = levelIdx+1; childLevelIdx < oldGrid->numLevels(); childLevelIdx++) {
-          for (CellIterator inner_iter(childLatticeStartIdx, childLatticeEndIdx); !inner_iter.done(); inner_iter++) {
+          for (CellIterator inner_iter(childLatticeStartIdx, childLatticeEndIdx+IntVector(1,1,1)); !inner_iter.done(); inner_iter++) {
             IntVector inner_idx(*inner_iter);
             rdbg << "Deleting Active [ " << childLevelIdx << " ]: " << inner_idx << endl;
             (*d_patchActive[childLevelIdx])[inner_idx] = 0;
@@ -352,7 +352,8 @@ void HierarchicalRegridder::ExtendPatches( const GridP& oldGrid, int levelIdx  )
         // parentEndCell             = Min(parentEndCell, d_cellNum[parentLevelIdx]);
 
 	rdbg << "HierarchicalRegridder::ExtendPatches() Before Cell Iterator" << endl;
-        for (CellIterator parent_iter(parentStartCell, parentEndCell); !parent_iter.done(); parent_iter++) {
+        for (CellIterator parent_iter(parentStartCell, parentEndCell+IntVector(1,1,1)); !parent_iter.done(); parent_iter++) {
+	  rdbg << "Marking patchCells " << *parent_iter << " to 1" << endl;
           patchCells[*parent_iter] = 1;
         }
 	rdbg << "HierarchicalRegridder::ExtendPatches() After Cell Iterator" << endl;
