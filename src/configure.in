@@ -1115,8 +1115,8 @@ AC_SUBST(PERL)
 AC_LANG_CPLUSPLUS
 
 ##  ----------  See if this is a 64 bit machine --------------------------
-AC_CHECK_SIZEOF(void *,0)
-case $ac_cv_sizeof_void_p in
+AC_CHECK_SIZEOF(void*)
+case $ac_cv_sizeof_voidp in
  8)
   NBITS=64
   ;;
@@ -1285,7 +1285,7 @@ for i in /usr/lib /usr/X11R6/lib; do
   if test ! -d "$i"; then 
     continue
   fi
-  
+
   SCI_CHECK_LIB($i,GL,main,HAVE_LIBGL=yes,,)
   SCI_CHECK_LIB($i,GLU,main,HAVE_LIBGLU=yes,,-lGL)
   if test "$HAVE_LIBGL" &&
@@ -1869,7 +1869,7 @@ for i in $with_vdt $thirdparty $SCI_LAB_TP_DEFAULT; do
   # Testing the link also need by vdt to link is:
   VDT_LIB_PATH="-L$i/src/vdt/G3D/lib/$ad -L$i/src/vdt/Ckit/lib/$ad -L$i/src/vdt/LOBS/lib/$ad -L$i/src/vdt/PiRaT/lib/$ad -L$i/src/vdt/Meschach/$ad -L$i/src/vdt/lp_solve_2.2/$ad -L$i/src/vdt/Elixir/lib/$ad -L$i/src/vdt/VDT/lib/$ad $X_LIBRARY"
 
-  VDT_NEEDED_LIBRARIES='-lesi -lelixir -llpk -lpirat -llobs3d -llobs2d -llobs1d -lg3d -lckit -lmeschach -lX11 -lXext -lXaw -lXt'
+  VDT_NEEDED_LIBRARIES='-lesi -lelixir -llpk -lpirat -llobs3d -llobs2d -llobs1d -lg3d -lckit -lmeschach -lX11 -lXext -lXaw -lXt -lXmu -lm'
 
   SCI_CHECK_LIB($i/src/vdt/VDT/lib/$ad,vdt,VDT_triangulate,,continue,$VDT_LIB_PATH $VDT_NEEDED_LIBRARIES)
 
