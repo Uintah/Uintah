@@ -140,7 +140,7 @@
     <!--____________________________________________________________________-->
    <DataArchiver>
 	<filebase>symetry3D.uda</filebase>
-	<outputInterval>0.0</outputInterval>
+	<outputInterval>0.0001</outputInterval>
        <save label="vel_CC"/>
        <save label="temp_CC"/>
        <save label="press_CC"/>
@@ -148,8 +148,8 @@
    </DataArchiver>
    
    <Debug>
-       <!--<debug label = "switchDebugInitialize"/>         -->
-	<debug label = "switchDebug_equilibration_press"/>
+       <debug label = "switchDebugInitialize"/>        
+	<!--<debug label = "switchDebug_equilibration_press"/>   -->
        <!--<debug label = "switchDebug_vel_FC"/>            -->      
        <!--<debug label = "switchDebug_explicit_press"/>    -->    
        <!--<debug label = "switchDebug_PressFC"/>           -->    
@@ -164,7 +164,7 @@
     <!--    delt_based_on   = [??????]                                      -->
     <!--____________________________________________________________________-->
    <CFD>
-  	<cfl>0.1</cfl>
+  	<cfl>0.5</cfl>
 	<ICE>
 	    <time_integrator>explicit    </time_integrator>
 	    <max_iteration>  100         </max_iteration>
