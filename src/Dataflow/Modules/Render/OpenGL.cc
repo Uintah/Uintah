@@ -160,6 +160,10 @@ OpenGL::~OpenGL()
     EndMpeg();
   }
 
+  int r;
+  while (send_mb.tryReceive(r)) ;
+  while (recv_mb.tryReceive(r)) ;
+
   fpstimer.stop();
 }
 
@@ -196,6 +200,7 @@ void
 OpenGL::redraw(Viewer* s, ViewWindow* r, double _tbeg, double _tend,
 	       int _nframes, double _framerate)
 {
+  if (dead_) return;
   viewer_ = s;
   viewwindow=r;
   tbeg=_tbeg;
@@ -209,7 +214,6 @@ OpenGL::redraw(Viewer* s, ViewWindow* r, double _tbeg, double _tend,
     my_openglname= "OpenGL: " + myname_;
     helper=new OpenGLHelper(this);
     helper_thread_ = new Thread(helper, my_openglname.c_str());
-    helper_thread_->detach();
   }
 
   send_mb.send(DO_REDRAW);
@@ -226,7 +230,12 @@ OpenGL::kill_helper()
 {
   // kill the helper thread
   dead_ = true;
-  send_mb.send(86);
+  if (helper_thread_)
+  {
+    send_mb.send(86);
+    helper_thread_->join();
+    helper_thread_ = 0;
+  }
 }
 
 
@@ -277,7 +286,11 @@ OpenGL::redraw_loop()
 
       while (send_mb.tryReceive(r))
       {
-	if (r == DO_PICK)
+	if (r == 86)
+	{
+	  return;
+	}
+	else if (r == DO_PICK)
 	{
 	  real_get_pick(viewer_, viewwindow, send_pick_x, send_pick_y,
 			ret_pick_obj, ret_pick_pick, ret_pick_index);
@@ -344,10 +357,11 @@ OpenGL::redraw_loop()
     {
       for (;;)
       {
-	if (dead_) return;
 	int r=send_mb.receive();
 	if (r == 86)
+	{
 	  return;
+	}
 	else if (r == DO_PICK)
 	{
 	  real_get_pick(viewer_, viewwindow, send_pick_x, send_pick_y,
@@ -611,6 +625,7 @@ OpenGL::make_image()
 void
 OpenGL::redraw_frame()
 {
+  if (dead_) return;
   gui->lock();
   Tk_Window new_tkwin=Tk_NameToWindow(the_interp, ccast_unsafe(myname_),
 				      Tk_MainWindow(the_interp));
