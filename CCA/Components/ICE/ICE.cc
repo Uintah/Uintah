@@ -563,15 +563,16 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
   
   task->requires( Task::OldDW, lb->delTLabel);
   task->requires( Task::NewDW, lb->press_equil_CCLabel,
-                                          press_matl, Ghost::None);
-  task->requires( Task::NewDW, lb->vol_frac_CCLabel,  Ghost::AroundCells,1);
-  task->requires( Task::NewDW, lb->uvel_FCMELabel,    Ghost::AroundCells,2);
-  task->requires( Task::NewDW, lb->vvel_FCMELabel,    Ghost::AroundCells,2);
-  task->requires( Task::NewDW, lb->wvel_FCMELabel,    Ghost::AroundCells,2);
-  task->requires( Task::NewDW, lb->sp_vol_CCLabel,    Ghost::None);
-  task->requires( Task::NewDW, lb->rho_CCLabel,       Ghost::None);    
-  task->requires( Task::NewDW, lb->burnedMass_CCLabel,Ghost::None);
-  task->requires( Task::NewDW, lb->speedSound_CCLabel,Ghost::None);
+                                          press_matl,  Ghost::None);
+  task->requires( Task::NewDW, lb->vol_frac_CCLabel,   Ghost::AroundCells,1);
+  task->requires( Task::NewDW, lb->uvel_FCMELabel,     Ghost::AroundCells,2);
+  task->requires( Task::NewDW, lb->vvel_FCMELabel,     Ghost::AroundCells,2);
+  task->requires( Task::NewDW, lb->wvel_FCMELabel,     Ghost::AroundCells,2);
+  task->requires( Task::NewDW, lb->sp_vol_CCLabel,     Ghost::None);
+  task->requires( Task::NewDW, lb->rho_CCLabel,        Ghost::None);    
+  task->requires( Task::NewDW, lb->burnedMass_CCLabel, Ghost::None);
+  task->requires( Task::NewDW, lb->speedSound_CCLabel, Ghost::None);
+  task->requires( Task::NewDW, lb->created_vol_CCLabel,Ghost::None);
 
   task->computes(lb->press_CCLabel,        press_matl);
   task->computes(lb->delP_DilatateLabel,   press_matl);
@@ -728,7 +729,6 @@ void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
   if (d_EqForm) {     // EQ FORM
     t->requires(Task::NewDW, lb->mass_L_CCLabel,      Ghost::None);     
     t->requires(Task::NewDW, lb->sp_vol_CCLabel,      Ghost::None);
-// currently we aren't using these 
     t->requires(Task::NewDW, lb->rho_CCLabel,         Ghost::None);
     t->requires(Task::NewDW, lb->created_vol_CCLabel, Ghost::None); 
     t->computes(lb->spec_vol_L_CCLabel);
