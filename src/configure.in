@@ -93,7 +93,7 @@ case $host in
              echo "  Using MIPSpro compilers instead of gcc; they're better"
              CC=/opt/MIPSpro/bin/cc
              CXX=/opt/MIPSpro/bin/CC
-             AS="/opt/MIPSpro/bin/as $BINARYFLAGS"
+             AS=/opt/MIPSpro/bin/as
              LD=/opt/MIPSpro/bin/ld
            else
              echo "no"
@@ -108,11 +108,12 @@ case $host in
                echo "Using C compiler ${CC}"
              fi
              if which as > /dev/null 2>&1 ; then
-               CC=`which as`
-               echo "Using C compiler ${CC}"
+               AS=`which as`
+               echo "Using Assembler ${AS}"
              fi
            fi
            CFLAGS="-fullwarn -xansi -LANG:ansi-for-init-scope=ON ${CFLAGS} $BINARYFLAGS"
+	   ASFLAGS="$BINARYFLAGS ${ASFLAGS}"
            SOFLAGS="-shared $BINARYFLAGS -no_unresolved -J\$(MAKE_PARALLELISM) -update_registry \$(OBJTOP)/so_locations ${SOFLAGS}"
            LDFLAGS="$BINARYFLAGS -no_unresolved -J\$(MAKE_PARALLELISM)"
            LDRUN_PREFIX="-Wl,-rpath -Wl,"
