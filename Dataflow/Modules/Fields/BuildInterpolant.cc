@@ -82,8 +82,6 @@ public:
 			 Field::data_location mdstloc,
 			 FOUT *);
 
-  double point_distance(const Point &p1, const Point &p2);
-  double point_distance2(const Point &p1, const Point &p2);
   void normalize(vector<pair<int, double> > &v);
 
   template <class Mesh>
@@ -115,28 +113,6 @@ BuildInterpolant::~BuildInterpolant()
 {
 }
 
-double
-BuildInterpolant::point_distance(const Point &p1, const Point &p2)
-{
-  const double dx = p2.x() - p1.x();
-  const double dy = p2.y() - p1.y();
-  const double dz = p2.z() - p1.z();
-
-  return sqrt(dx * dx + dy * dy + dz * dz);
-}
-
-double
-BuildInterpolant::point_distance2(const Point &p1, const Point &p2)
-{
-  const double dx = p2.x() - p1.x();
-  const double dy = p2.y() - p1.y();
-  const double dz = p2.z() - p1.z();
-
-  return dx * dx + dy * dy + dz * dz;
-}
-
-
-
 template <class Mesh>
 void
 BuildInterpolant::find_closest_node(Mesh *mesh, typename Mesh::Node::index_type &idx,
@@ -151,7 +127,7 @@ BuildInterpolant::find_closest_node(Mesh *mesh, typename Mesh::Node::index_type 
 
     mesh->get_center(p2, *itr);
 
-    const double dist = point_distance2(p, p2);
+    const double dist = (p - p2).length2();
     if (dist < min_dist || first_p)
     {
       idx = *itr;
@@ -177,7 +153,7 @@ BuildInterpolant::find_closest_edge(Mesh *mesh, typename Mesh::Edge::index_type 
 
     mesh->get_center(p2, *itr);
 
-    const double dist = point_distance2(p, p2);
+    const double dist = (p - p2).length2();
     if (dist < min_dist || first_p)
     {
       idx = *itr;
@@ -203,7 +179,7 @@ BuildInterpolant::find_closest_face(Mesh *mesh, typename Mesh::Face::index_type 
 
     mesh->get_center(p2, *itr);
 
-    const double dist = point_distance2(p, p2);
+    const double dist = (p - p2).length2();
     if (dist < min_dist || first_p)
     {
       idx = *itr;
@@ -229,7 +205,7 @@ BuildInterpolant::find_closest_cell(Mesh *mesh, typename Mesh::Cell::index_type 
 
     mesh->get_center(p2, *itr);
 
-    const double dist = point_distance2(p, p2);
+    const double dist = (p - p2).length2();
     if (dist < min_dist || first_p)
     {
       idx = *itr;
@@ -284,6 +260,7 @@ BuildInterpolant::dispatch_src_node(MDST *mdst, MSRC *msrc,
     
 	vector<pair<typename MSRC::Node::index_type, double> > v;
 	typename MSRC::Cell::index_type idx;
+#if 0
 	if (msrc->locate(idx, p))
 	{
 	  typename MSRC::Node::array_type array;
@@ -296,16 +273,17 @@ BuildInterpolant::dispatch_src_node(MDST *mdst, MSRC *msrc,
 	    msrc->get_center(p2, *array_itr);
 	    
 	    v.push_back(pair<typename MSRC::Node::index_type, double>
-			(*array_itr, point_distance(p, p2)));
+			(*array_itr, (p - p2).length()));
 	    ++array_itr;
 	  }
 	}
 	else
 	{
+#endif
 	  typename MSRC::Node::index_type idx2;
 	  find_closest_node(msrc, idx2, p);
 	  v.push_back(pair<typename MSRC::Node::index_type, double>(idx2, 1.0));
-	}
+//	}
 	ofield->set_value(v, *itr);
 	++itr;
       }
@@ -334,7 +312,7 @@ BuildInterpolant::dispatch_src_node(MDST *mdst, MSRC *msrc,
 	    msrc->get_center(p2, *array_itr);
 	  
 	    v.push_back(pair<typename MSRC::Node::index_type, double>
-			(*array_itr, point_distance(p, p2)));
+			(*array_itr, (p - p2).length()));
 	    ++array_itr;
 	  }
 	}
@@ -372,7 +350,7 @@ BuildInterpolant::dispatch_src_node(MDST *mdst, MSRC *msrc,
 	    msrc->get_center(p2, *array_itr);
 	  
 	    v.push_back(pair<typename MSRC::Node::index_type, double>
-			(*array_itr, point_distance(p, p2)));
+			(*array_itr, (p - p2).length()));
 	    ++array_itr;
 	  }
 	}
@@ -410,7 +388,7 @@ BuildInterpolant::dispatch_src_node(MDST *mdst, MSRC *msrc,
 	    msrc->get_center(p2, *array_itr);
 	  
 	    v.push_back(pair<typename MSRC::Node::index_type, double>
-			(*array_itr, point_distance(p, p2)));
+			(*array_itr, (p - p2).length()));
 	    ++array_itr;
 	  }
 	}
@@ -468,7 +446,7 @@ BuildInterpolant::dispatch_src_edge(MDST *mdst, MSRC *msrc,
 	    msrc->get_center(p2, *array_itr);
 	  
 	    v.push_back(pair<typename MSRC::Edge::index_type, double>
-			(*array_itr, point_distance(p, p2)));
+			(*array_itr, (p - p2).length()));
 	    ++array_itr;
 	  }
 	}
@@ -506,7 +484,7 @@ BuildInterpolant::dispatch_src_edge(MDST *mdst, MSRC *msrc,
 	    msrc->get_center(p2, *array_itr);
 	  
 	    v.push_back(pair<typename MSRC::Edge::index_type, double>
-			(*array_itr, point_distance(p, p2)));
+			(*array_itr, (p - p2).length()));
 	    ++array_itr;
 	  }
 	}
@@ -544,7 +522,7 @@ BuildInterpolant::dispatch_src_edge(MDST *mdst, MSRC *msrc,
 	    msrc->get_center(p2, *array_itr);
 	  
 	    v.push_back(pair<typename MSRC::Edge::index_type, double>
-			(*array_itr, point_distance(p, p2)));
+			(*array_itr, (p - p2).length()));
 	    ++array_itr;
 	  }
 	}
@@ -582,7 +560,7 @@ BuildInterpolant::dispatch_src_edge(MDST *mdst, MSRC *msrc,
 	    msrc->get_center(p2, *array_itr);
 	  
 	    v.push_back(pair<typename MSRC::Edge::index_type, double>
-			(*array_itr, point_distance(p, p2)));
+			(*array_itr, (p - p2).length()));
 	    ++array_itr;
 	  }
 	}
@@ -640,7 +618,7 @@ BuildInterpolant::dispatch_src_face(MDST *mdst, MSRC *msrc,
 	    msrc->get_center(p2, *array_itr);
 	  
 	    v.push_back(pair<typename MSRC::Face::index_type, double>
-			(*array_itr, point_distance(p, p2)));
+			(*array_itr, (p - p2).length()));
 	    ++array_itr;
 	  }
 	}
@@ -678,7 +656,7 @@ BuildInterpolant::dispatch_src_face(MDST *mdst, MSRC *msrc,
 	    msrc->get_center(p2, *array_itr);
 	  
 	    v.push_back(pair<typename MSRC::Face::index_type, double>
-			(*array_itr, point_distance(p, p2)));
+			(*array_itr, (p - p2).length()));
 	    ++array_itr;
 	  }
 	}
@@ -716,7 +694,7 @@ BuildInterpolant::dispatch_src_face(MDST *mdst, MSRC *msrc,
 	    msrc->get_center(p2, *array_itr);
 	  
 	    v.push_back(pair<typename MSRC::Face::index_type, double>
-			(*array_itr, point_distance(p, p2)));
+			(*array_itr, (p - p2).length()));
 	    ++array_itr;
 	  }
 	}
@@ -754,7 +732,7 @@ BuildInterpolant::dispatch_src_face(MDST *mdst, MSRC *msrc,
 	    msrc->get_center(p2, *array_itr);
 	  
 	    v.push_back(pair<typename MSRC::Face::index_type, double>
-			(*array_itr, point_distance(p, p2)));
+			(*array_itr, (p - p2).length()));
 	    ++array_itr;
 	  }
 	}
