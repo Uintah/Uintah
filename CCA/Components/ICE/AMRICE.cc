@@ -260,6 +260,8 @@ template<class T>
     int j = Sign(dist.y());
     int k = Sign(dist.z());
     
+   // cout << " c_cell " << c_cell << " offset ["<<i<<","<<j<<","<<k<<endl;
+    
     dist = Abs(dist);  
     //__________________________________
     //  Find the weights      
@@ -411,7 +413,7 @@ template<class T>
                               CCVariable<T>& q_FineLevel)
 {
 
-#if 1
+#if 0
   //__________________________________
   //  Initialize test data
   cout.setf(ios::scientific,ios::floatfield);
@@ -438,7 +440,7 @@ template<class T>
       //tmp[c] = varType( X * X * Y * Y * Z * Z);
       //tmp[c] = varType( X * X * X * Y* Y * Y  * Z * Z *Z );
     }
-    testData = test;
+    testData = tmp;
   }
 #endif
   
