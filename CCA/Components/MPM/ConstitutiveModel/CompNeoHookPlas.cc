@@ -352,6 +352,15 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
   }
 }
 
+void CompNeoHookPlas::addInitialComputesAndRequires(Task* task,
+                                                    const MPMMaterial* matl,
+                                                    const PatchSet*) const
+{
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->computes(p_statedata_label, matlset);
+  task->computes(bElBarLabel,       matlset);
+}
+
 void CompNeoHookPlas::addComputesAndRequires(Task* task,
 					     const MPMMaterial* matl,
 					     const PatchSet*) const
@@ -371,7 +380,7 @@ void CompNeoHookPlas::addComputesAndRequires(Task* task,
     task->requires(Task::OldDW, lb->pSizeLabel,      matlset, Ghost::None);
   }
 
-  task->computes(lb->pStressLabel_preReloc,      matlset);
+  task->computes(lb->pStressLabel_preReloc,             matlset);
   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
   task->computes(bElBarLabel_preReloc,                  matlset);
   task->computes(p_statedata_label_preReloc,            matlset);

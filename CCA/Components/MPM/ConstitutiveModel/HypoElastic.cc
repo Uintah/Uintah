@@ -261,6 +261,13 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
   }
 }
 
+void HypoElastic::addInitialComputesAndRequires(Task* task,
+                                                const MPMMaterial* matl,
+                                                const PatchSet* ) const
+{
+
+}
+
 void HypoElastic::addComputesAndRequires(Task* task,
 					 const MPMMaterial* matl,
 					 const PatchSet* ) const

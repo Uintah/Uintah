@@ -455,6 +455,14 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
   }
 }
 
+void Membrane::addInitialComputesAndRequires(Task* task,
+                                             const MPMMaterial* matl,
+                                             const PatchSet*) const
+{
+   const MaterialSubset* matlset = matl->thisMaterial();
+   task->computes(defGradInPlaneLabel,matlset);
+}
+
 void Membrane::addComputesAndRequires(Task* task,
 					 const MPMMaterial* matl,
 					 const PatchSet*) const

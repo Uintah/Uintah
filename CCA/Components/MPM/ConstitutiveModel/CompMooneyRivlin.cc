@@ -268,6 +268,13 @@ void CompMooneyRivlin::addParticleState(std::vector<const VarLabel*>& from,
    to.push_back(lb->pStressLabel_preReloc);
 }
 
+void CompMooneyRivlin::addInitialComputesAndRequires(Task* task,
+                                                     const MPMMaterial* matl,
+                                                     const PatchSet* ) const
+{
+
+}
+
 void CompMooneyRivlin::addComputesAndRequires(Task* task,
 					      const MPMMaterial* matl,
 					      const PatchSet* ) const

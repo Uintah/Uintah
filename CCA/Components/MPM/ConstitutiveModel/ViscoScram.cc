@@ -594,6 +594,16 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
   }
 }
 
+void ViscoScram::addInitialComputesAndRequires(Task* task,
+                                               const MPMMaterial* matl,
+                                               const PatchSet*) const
+{
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->computes(p_statedata_label,    matlset);
+  task->computes(lb->pCrackRadiusLabel,matlset);
+  task->computes(pRandLabel,           matlset);
+}
+
 void ViscoScram::addComputesAndRequires(Task* task,
 					const MPMMaterial* matl,
 					const PatchSet*) const
