@@ -791,7 +791,6 @@ void ICE::actuallyInitialize(const ProcessorGroup*, const Patch* patch,
   vector<CCVariable<double>   > mass_CC(numMatls);
   vector<CCVariable<double>   > rho_top_cycle(numMatls);
   vector<CCVariable<double>   > Temp_CC(numMatls);
-  vector<CCVariable<double>   > cv(numMatls);
   vector<CCVariable<double>   > speedSound(numMatls);
   vector<CCVariable<double>   > visc_CC(numMatls);
   vector<CCVariable<double>   > vol_frac_CC(numMatls);
@@ -800,6 +799,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*, const Patch* patch,
   vector<SFCYVariable<double> > vvel_FC(numMatls);
   vector<SFCZVariable<double> > wvel_FC(numMatls);
   CCVariable<double>    press_CC;  
+  vector<double>        cv(numMatls);
   new_dw->allocate(press_CC,lb->press_CCLabel, 0,patch);
   
 //__________________________________
@@ -815,7 +815,6 @@ void ICE::actuallyInitialize(const ProcessorGroup*, const Patch* patch,
     new_dw->allocate(mass_CC[m],       lb->mass_CCLabel,          dwindex,patch);
     new_dw->allocate(rho_top_cycle[m], lb->rho_CC_top_cycleLabel, dwindex,patch);
     new_dw->allocate(Temp_CC[m],       lb->temp_CCLabel,          dwindex,patch);
-    new_dw->allocate(cv[m],            lb->cv_CCLabel,            dwindex,patch);
     new_dw->allocate(speedSound[m],    lb->speedSound_CCLabel,    dwindex,patch);
     new_dw->allocate(visc_CC[m],       lb->viscosity_CCLabel,     dwindex,patch);
     new_dw->allocate(vol_frac_CC[m],   lb->vol_frac_CCLabel,      dwindex,patch);
@@ -828,19 +827,27 @@ void ICE::actuallyInitialize(const ProcessorGroup*, const Patch* patch,
   for (int m = 0; m < numMatls; m++ ) {
     ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
     ice_matl->initializeCells(rho_micro[m], sp_vol_CC[m],   rho_top_cycle[m], 
-                              Temp_CC[m],   cv[m],          speedSound[m], 
+                              Temp_CC[m],   speedSound[m], 
                               visc_CC[m],   vol_frac_CC[m], vel_CC[m], 
                               press_CC,  numALLMatls,    patch, new_dw);
-    
+                              
+    cv[m] = ice_matl->getSpecificHeat();
+     
     uvel_FC[m].initialize(0.);
     vvel_FC[m].initialize(0.);
     wvel_FC[m].initialize(0.);
- 
+    
+    setBC(rho_top_cycle[m], "Density",      patch);
+    setBC(Temp_CC[m],       "Temperature",  patch);
+    setBC(vel_CC[m],        "Velocity",     patch); 
+   
     //__________________________________
     //  Adjust pressure and Temp field if g != 0
     //  so fields are thermodynamically consistent.
     if ((grav.x() !=0 || grav.y() != 0.0 || grav.z() != 0.0))  {
       hydrostaticPressureAdjustment(patch, rho_micro[SURROUND_MAT], press_CC);
+      
+      setBC(press_CC, rho_micro[SURROUND_MAT], "Pressure",patch);
       
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       double gamma = ice_matl->getGamma();
@@ -848,9 +855,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*, const Patch* patch,
                                           press_CC,   gamma,   cv[m],
                                           rho_micro[m],    Temp_CC[m]);
     }
-    setBC(rho_top_cycle[m], "Density",      patch);
-    setBC(Temp_CC[m],       "Temperature",  patch);
-    setBC(vel_CC[m],        "Velocity",     patch);
+
 //______________________________________________________
 // H A R D W I R E   F O R   M P M I C E   P R O B L E M
 //  Either read in the data or compute it.
@@ -1209,10 +1214,6 @@ void ICE::computeFaceCenteredVelocities(const ProcessorGroup*,
   Vector dx      = patch->dCell();
   Vector gravity = d_sharedState->getGravity();
 
-#if 0
-  CCVariable<double> rho_CC, rho_micro_CC;
-  CCVariable<Vector> vel_CC;
-#endif
   CCVariable<double> press_CC;
   new_dw->get(press_CC,lb->press_equil_CCLabel, 0, patch, 
 	      Ghost::AroundCells, 1);
@@ -2627,6 +2628,8 @@ void ICE::printConservedQuantities(const ProcessorGroup*,  const Patch* patch,
   double cell_vol = dx.x()*dx.y()*dx.z();
   int numICEmatls = d_sharedState->getNumICEMatls();
    
+  double SMALL_NUM = 1.0e-100; 
+   
   new_dw->get(delPress_CC,lb->delPress_CCLabel, 0, patch,Ghost::None, 0);
   for (int m = 0; m < numICEmatls; m++ ) {
     ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
@@ -2639,7 +2642,7 @@ void ICE::printConservedQuantities(const ProcessorGroup*,  const Patch* patch,
     mat_total_mom        = 0.0;
     mat_total_eng        = 0.0;
     mat_mass             = 0.0;
-      double cv = ice_matl->getSpecificHeat();
+    double cv = ice_matl->getSpecificHeat();
 
      //NEED TO LOOP OVER  ALL PATCHES  
     //__________________________________
@@ -2678,9 +2681,9 @@ void ICE::printConservedQuantities(const ProcessorGroup*,  const Patch* patch,
 
 
     double change_total_mom = 
-                100.0 * (total_momentum - initial_total_mom)/initial_total_mom;
+                100.0 * (total_momentum - initial_total_mom)/(initial_total_mom + SMALL_NUM);
     double change_total_eng = 
-                100.0 * (total_energy - initial_total_eng)/initial_total_eng;
+                100.0 * (total_energy - initial_total_eng)/(initial_total_eng + SMALL_NUM);
 
     fprintf(stderr, "Totals: \t mass %5.6g \t\tmomentum %5.6f \t\t energy %5.6g\n",
                     total_mass, total_momentum, total_energy);
@@ -4082,12 +4085,7 @@ void    ICE::Message(
   //______________________________
   // Now aborting program
   if(abort == 1) {
-    fprintf(stderr,"\n");
-    fprintf(stderr,"<c> = cvd  <d> = ddd\n");
-    scanf("%s",c);
     system("date");
-    if(strcmp(c, "c") == 0) system("cvd -P ice");
-    if(strcmp(c, "d") == 0) system("ddd ice");
     exit(1); 
   }
 }
