@@ -555,7 +555,7 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
   task->requires( Task::NewDW, lb->vvel_FCMELabel,    Ghost::AroundCells,2);
   task->requires( Task::NewDW, lb->wvel_FCMELabel,    Ghost::AroundCells,2);
 
-  task->requires( Task::NewDW, lb->speedSound_CCLabel,Ghost::None);
+//  task->requires( Task::NewDW, lb->speedSound_CCLabel,Ghost::None);
   task->requires( Task::NewDW, lb->rho_micro_CCLabel, Ghost::None);
   task->requires( Task::NewDW, lb->rho_CCLabel,       Ghost::None);
   task->requires( Task::OldDW, lb->vel_CCLabel,       ice_matls, 
@@ -2091,7 +2091,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       constSFCXVariable<double> uvel_FC;
       constSFCYVariable<double> vvel_FC;
       constSFCZVariable<double> wvel_FC;
-      constCCVariable<double> speedSound;
+//      constCCVariable<double> speedSound;
       constCCVariable<double> vol_frac;
       constCCVariable<double> rho_CC;
       constCCVariable<Vector> vel_CC;
@@ -2106,7 +2106,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
 		  Ghost::AroundCells,1);
       new_dw->get(rho_CC,      lb->rho_CCLabel,       indx,patch,Ghost::None,0);
       new_dw->get(rho_micro[m],lb->rho_micro_CCLabel, indx,patch,Ghost::None,0);
-      new_dw->get(speedSound,  lb->speedSound_CCLabel,indx,patch,Ghost::None,0);
+//      new_dw->get(speedSound,  lb->speedSound_CCLabel,indx,patch,Ghost::None,0);
       new_dw->get(burnedMass,  lb->burnedMass_CCLabel,indx,patch,Ghost::None,0);
       if(ice_matl) {
         old_dw->get(vel_CC,    lb->vel_CCLabel,       indx,patch,Ghost::None,0);
@@ -2169,8 +2169,6 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
 
         // New term3 comes from Kashiwa 4.11
         term3[*iter] += vol_frac[*iter]*compressibility;
-//          term3[*iter] += vol_frac[*iter] /(rho_micro[m][*iter] *
-//                                speedSound[*iter]*speedSound[*iter]);
 
       }  //iter loop
     }  //matl loop
