@@ -34,8 +34,6 @@ proc ComponentWizard { {window .componentWizard} } {
     set w $window 
     set d $window.data
 
-puts "psepath : [netedit getenv SCIRUN_SRCDIR]"
-
     if {[winfo exists $w]} {
         moveToCursor $w    
         SciRaise $w
@@ -130,9 +128,6 @@ proc make_io_gui_pane {p d} {
     frame $p.cbf  -border 1 -relief groove
 
     # Create the canvas
-
-puts "d is $d"   
-puts "p is $p"
 
     canvas $p.cf.c -relief sunken -borderwidth 3 -background #036
     pack $p.cf.c -expand y -fill both
@@ -509,13 +504,7 @@ proc configPorts {icon type d} {
     set i 0
     global $d
 
-    puts "ports is $ports"
-    puts "i am here: [set ${d}($ports)]"
-
     foreach t [set ${d}($ports)] {
-
-        puts "t is $t"
-
         placePort $icon $t $i $type $d
         incr i
     }
@@ -568,8 +557,6 @@ proc edit_port {portnum} {
         destroy $w
     }
 
-    puts "w is $w"
-
     toplevel $w
     wm withdraw $w; # immediately withdraw it to avoid flicker
 
@@ -593,8 +580,6 @@ proc edit_port {portnum} {
         set_prompted_entry $ename [set ${portnum}(name)]
     }
     grid $ename -column 1 -row 0 -sticky w -padx .1c -pady .1c
-
-    puts "name is $lname"
 
     TooltipMultiWidget "$lname $ename" \
         [join [concat {"The name of the port that will appear when the mouse"} \
