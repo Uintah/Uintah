@@ -164,7 +164,7 @@ BuilderWindow::BuilderWindow(const sci::cca::Services::pointer& services)
   }
   displayMsg("Framework URL: ");
   //displayMsg(builder->getFramework()->getURL().getString().c_str());
-  displayMsg("Framework URL should be displaied here");
+  displayMsg("Framework URL should be displayed here");
   displayMsg("\n"); 
   services->releasePort("cca.BuilderService");
 
