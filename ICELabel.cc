@@ -55,13 +55,13 @@ ICELabel::ICELabel()
   mom_L_CCLabel = 
     scinew VarLabel("mom_L_CC",     CCVariable<Vector>::getTypeDescription());
   int_eng_L_CCLabel = 
-    scinew VarLabel("intE_L_CC",    CCVariable<double>::getTypeDescription());
+    scinew VarLabel("int_eng_L_CC", CCVariable<double>::getTypeDescription());
   mass_L_CCLabel = 
     scinew VarLabel("mass_L_CC",    CCVariable<double>::getTypeDescription());
   mom_L_ME_CCLabel = 
     scinew VarLabel("mom_L_ME_CC",  CCVariable<Vector>::getTypeDescription());
   int_eng_L_ME_CCLabel = 
-    scinew VarLabel("intE_L_ME_CC", CCVariable<double>::getTypeDescription());
+    scinew VarLabel("int_eng_L_ME_CC",CCVariable<double>::getTypeDescription());
   q_CCLabel = 
     scinew VarLabel("q_CC",         CCVariable<double>::getTypeDescription());
   q_advectedLabel = 

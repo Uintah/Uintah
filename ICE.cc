@@ -1,8 +1,5 @@
 #include <Packages/Uintah/CCA/Components/ICE/ICE.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
-#include <Packages/Uintah/CCA/Components/MPMICE/MPMICELabel.h>
-#include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Ports/CFDInterface.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
@@ -51,7 +48,6 @@ ICE::ICE(const ProcessorGroup* myworld)
   : UintahParallelComponent(myworld)
 {
   lb   = scinew ICELabel();
-  MIlb = scinew MPMICELabel();
 
   IFS_CCLabel = scinew VarLabel("IFS_CC",
                                 CCVariable<fflux>::getTypeDescription());
@@ -96,7 +92,6 @@ ICE::ICE(const ProcessorGroup* myworld)
 ICE::~ICE()
 {
   delete lb;
-  delete MIlb;
   delete IFS_CCLabel;
   delete OFS_CCLabel;
   delete IFE_CCLabel;
@@ -399,12 +394,11 @@ void ICE::scheduleComputeFaceCenteredVelocities(
     Material* matl = d_sharedState->getMaterial( m );
     dwindex = matl->getDWIndex();
     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
     if(ice_matl){                    // I C E
       task->requires(new_dw,lb->rho_CCLabel,   dwindex,patch,Ghost::None);
       task->requires(old_dw,lb->vel_CCLabel,   dwindex,patch,Ghost::None);
     }
-    if(mpm_matl){                    // M P M
+    else{                    // M P M
       task->requires(new_dw,lb->rho_CCLabel,   dwindex,patch,Ghost::None);
       task->requires(new_dw,lb->vel_CCLabel,   dwindex,patch,Ghost::None);
     } 
@@ -525,8 +519,8 @@ void ICE::scheduleAccumulateMomentumSourceSinks(
     task->requires(new_dw,  lb->rho_CCLabel,        dwindex,patch,Ghost::None);
     task->requires(new_dw,  lb->vol_frac_CCLabel,   dwindex,patch,Ghost::None);
 // TURN ON WHEN WE HAVE VISCOUS TERMS
-//    task->requires(old_dw,  lb->vel_CCLabel,        dwindex,patch,Ghost::None);
-//    task->requires(old_dw,  lb->viscosity_CCLabel,  dwindex,patch,Ghost::None);
+//   task->requires(old_dw,  lb->vel_CCLabel,        dwindex,patch,Ghost::None);
+//   task->requires(old_dw,  lb->viscosity_CCLabel,  dwindex,patch,Ghost::None);
  
     task->computes(new_dw,  lb->mom_source_CCLabel, dwindex,patch);
     
@@ -579,32 +573,32 @@ void ICE:: scheduleComputeLagrangianValues(
   Task* task = scinew Task("ICE::computeLagrangianValues",
                             patch, old_dw, new_dw,this,
 			       &ICE::computeLagrangianValues);
+
   int numALLMatls=d_sharedState->getNumMatls();
   for (int m = 0; m < numALLMatls; m++)   {
     Material* matl = d_sharedState->getMaterial( m );
     int dwindex = matl->getDWIndex();
     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
     if(ice_matl) {                   // I C E
-      task->requires( new_dw, lb->rho_CCLabel,        dwindex,patch,Ghost::None);
-      task->requires( old_dw, lb->vel_CCLabel,        dwindex,patch,Ghost::None);
-      task->requires( old_dw, lb->cv_CCLabel,         dwindex,patch,Ghost::None);
-      task->requires( old_dw, lb->temp_CCLabel,       dwindex,patch,Ghost::None);
-      task->requires( new_dw, lb->mom_source_CCLabel, dwindex,patch,Ghost::None);
+      task->requires( new_dw, lb->rho_CCLabel,       dwindex,patch,Ghost::None);
+      task->requires( old_dw, lb->vel_CCLabel,       dwindex,patch,Ghost::None);
+      task->requires( old_dw, lb->cv_CCLabel,        dwindex,patch,Ghost::None);
+      task->requires( old_dw, lb->temp_CCLabel,      dwindex,patch,Ghost::None);
+      task->requires( new_dw, lb->mom_source_CCLabel,dwindex,patch,Ghost::None);
       task->requires( new_dw, lb->int_eng_source_CCLabel,
-		                                        dwindex,patch,Ghost::None);
+		                                     dwindex,patch,Ghost::None);
 
       task->computes( new_dw, lb->mom_L_CCLabel,      dwindex,patch);
       task->computes( new_dw, lb->int_eng_L_CCLabel,  dwindex,patch);
       task->computes( new_dw, lb->mass_L_CCLabel,     dwindex,patch);
     }
-    if(mpm_matl)  {                  // M P M
-      task->requires( new_dw, MIlb->mom_L_CCLabel,    dwindex,patch,Ghost::None);
-      task->requires( new_dw, MIlb->rho_CCLabel,      dwindex,patch,Ghost::None);
-      task->requires( new_dw, MIlb->temp_CCLabel,     dwindex,patch,Ghost::None);
-      task->requires( new_dw, MIlb->cv_CCLabel,       dwindex,patch,Ghost::None);
+    else  {                  // M P M
+      task->requires( new_dw, lb->mom_L_CCLabel,   dwindex,patch,Ghost::None);
+      task->requires( new_dw, lb->rho_CCLabel,     dwindex,patch,Ghost::None);
+      task->requires( new_dw, lb->temp_CCLabel,    dwindex,patch,Ghost::None);
+      task->requires( new_dw, lb->cv_CCLabel,      dwindex,patch,Ghost::None);
       
-      task->computes( new_dw, MIlb->int_eng_L_CCLabel,dwindex,patch);
+      task->computes( new_dw, lb->int_eng_L_CCLabel,dwindex,patch);
   }
  } 
   sched->addTask(task);
@@ -664,7 +658,7 @@ void ICE::scheduleAdvectAndAdvanceInTime(
     task->requires(new_dw, lb->mass_L_CCLabel,    dwindex,patch,Ghost::None,0);
     task->requires(new_dw, lb->sp_vol_equilLabel, dwindex,patch,Ghost::None,0);
     task->requires(new_dw, lb->int_eng_L_ME_CCLabel,dwindex,patch,
-		                                                  Ghost::None,0);    
+		                                                 Ghost::None,0);    
    
     task->computes(new_dw, lb->rho_CC_top_cycleLabel, dwindex,patch);
     task->computes(new_dw, lb->mass_CCLabel,          dwindex,patch);
@@ -1218,14 +1212,13 @@ void ICE::computeFaceCenteredVelocities(
     int dwindex = matl->getDWIndex();
 
     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
     if(ice_matl){
       new_dw->get(rho_CC, lb->rho_CCLabel, dwindex, patch, Ghost::None, 0);
       old_dw->get(vel_CC, lb->vel_CCLabel, dwindex, patch, Ghost::None, 0);
       new_dw->get(rho_micro_CC, lb->rho_micro_CCLabel,dwindex,patch,
                                                            Ghost::None, 0);
     }
-    if(mpm_matl){
+    else{
       new_dw->get(rho_CC, lb->rho_CCLabel, dwindex, patch, Ghost::None, 0);
       new_dw->get(vel_CC, lb->vel_CCLabel, dwindex, patch, Ghost::None, 0);
       new_dw->get(rho_micro_CC, lb->rho_micro_CCLabel,dwindex,patch,
@@ -2068,7 +2061,6 @@ void ICE::computeLagrangianValues(
     Material* matl = d_sharedState->getMaterial( m );
     int dwindex = matl->getDWIndex();
     ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
 
     CCVariable<double> rho_CC,cv_CC,temp_CC;
     CCVariable<Vector> vel_CC;
@@ -2089,11 +2081,11 @@ void ICE::computeLagrangianValues(
       new_dw->allocate(int_eng_L, lb->int_eng_L_CCLabel, dwindex,patch);
       new_dw->allocate(mass_L,    lb->mass_L_CCLabel,    dwindex,patch);
     }
-    if(mpm_matl)  {               //  M P M
-      new_dw->get(rho_CC,  MIlb->rho_CCLabel,   dwindex,patch,Ghost::None, 0);
-      new_dw->get(cv_CC,   MIlb->cv_CCLabel,    dwindex,patch,Ghost::None, 0);
-      new_dw->get(temp_CC, MIlb->temp_CCLabel,  dwindex,patch,Ghost::None, 0);
-      new_dw->allocate(int_eng_L, MIlb->int_eng_L_CCLabel, dwindex,patch);
+    else {               //  M P M
+      new_dw->get(rho_CC,  lb->rho_CCLabel,   dwindex,patch,Ghost::None, 0);
+      new_dw->get(cv_CC,   lb->cv_CCLabel,    dwindex,patch,Ghost::None, 0);
+      new_dw->get(temp_CC, lb->temp_CCLabel,  dwindex,patch,Ghost::None, 0);
+      new_dw->allocate(int_eng_L, lb->int_eng_L_CCLabel, dwindex,patch);
     }
     if(ice_matl)  {               //  I C E
       double vol = dx.x()*dx.y()*dx.z();
@@ -2115,14 +2107,14 @@ void ICE::computeLagrangianValues(
       new_dw->put(int_eng_L, lb->int_eng_L_CCLabel, dwindex,patch);
       new_dw->put(mass_L,    lb->mass_L_CCLabel,    dwindex,patch);
     }
-    if(mpm_matl)  {               //  M P M 
+    else  {               //  M P M 
       double vol = dx.x()*dx.y()*dx.z();
       for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
 	  iter++) {
         double mass = rho_CC[*iter] * vol;
         int_eng_L[*iter] = mass * cv_CC[*iter] * temp_CC[*iter];;
       }
-      new_dw->put(int_eng_L, MIlb->int_eng_L_CCLabel, dwindex,patch);
+      new_dw->put(int_eng_L, lb->int_eng_L_CCLabel, dwindex,patch);
     }
    }  // end of numALLMatl loop
    
@@ -2133,19 +2125,22 @@ void ICE::computeLagrangianValues(
     for(int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
-      MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
       CCVariable<Vector > mom_L;
       CCVariable<double > int_eng_L;
       int dwindex = matl->getDWIndex();
       if(ice_matl)  {
         gc = 1;
-        new_dw->get(int_eng_L, lb->int_eng_L_CCLabel,  dwindex,patch,Ghost::None,0);
-        new_dw->get(mom_L,     lb->mom_L_CCLabel,      dwindex,patch,Ghost::None,0);
+        new_dw->get(int_eng_L, lb->int_eng_L_CCLabel,  dwindex,patch,
+								Ghost::None,0);
+        new_dw->get(mom_L,     lb->mom_L_CCLabel,      dwindex,patch,
+								Ghost::None,0);
       }
-      if(mpm_matl)  {
+      else {
         gc = 0;
-        new_dw->get(int_eng_L, MIlb->int_eng_L_CCLabel,dwindex,patch,Ghost::None,0);
-        new_dw->get(mom_L,     MIlb->mom_L_CCLabel,    dwindex,patch,Ghost::None,0);
+        new_dw->get(int_eng_L, lb->int_eng_L_CCLabel,dwindex,patch,
+								Ghost::None,0);
+        new_dw->get(mom_L,     lb->mom_L_CCLabel,    dwindex,patch,
+								Ghost::None,0);
       }
       char description[50];
       sprintf(description, "Bot_Lagrangian_Values_Mat_%d ",dwindex);
