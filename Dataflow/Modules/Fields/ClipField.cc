@@ -186,11 +186,9 @@ ClipField::execute()
   }
 
   // Update the widget.
-  BBox obox = ifieldhandle->mesh()->get_bounding_box();
-  if (!bbox_similar_to(last_bounds_, obox))
+  const BBox bbox = ifieldhandle->mesh()->get_bounding_box();
+  if (!bbox_similar_to(last_bounds_, bbox))
   {
-    const BBox bbox = ifieldhandle->mesh()->get_bounding_box();
-      
     Point bmin = bbox.min();
     Point bmax = bbox.max();
 
@@ -235,7 +233,7 @@ ClipField::execute()
 		   &widget_lock_);
     ogport->flushViews();
 
-    last_bounds_ = obox;
+    last_bounds_ = bbox;
     // Force clipper to sync with new widget.
     if (clipper_.get_rep() && !clipper_->mesh_p()) { clipper_ = 0; }
   }
