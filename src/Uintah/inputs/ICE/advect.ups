@@ -39,7 +39,7 @@
 		<BoundaryConditions>
 		 <Face side = "x-">
                         <BCType label = "Pressure" var = "pressure">
-                           <pressure> 0. </pressure>
+                           <pressure> 101325. </pressure>
                         </BCType>
 			<BCType label = "Kinematic" var = "velocity">
                            <velocity> [1.,1.,0.] </velocity>
@@ -53,7 +53,7 @@
                 </Face>
                 <Face side = "x+">
 			<BCType label = "Pressure" var = "pressure">
-                           <pressure> 0. </pressure>
+                           <pressure> 101325. </pressure>
                         </BCType>
 			<BCType label = "Kinematic" var = "velocity">
                            <velocity> [1.,1.,0.] </velocity>
@@ -67,7 +67,7 @@
                 </Face>
                 <Face side = "y-">
 			<BCType label = "Pressure" var = "pressure">
-                           <pressure> 0. </pressure>
+                           <pressure> 101325. </pressure>
                         </BCType>
 			<BCType label = "Kinematic" var = "velocity">
                            <velocity> [1.,1.,0.] </velocity>
@@ -81,7 +81,7 @@
                 </Face>                  
 		<Face side = "y+">
 			<BCType label = "Pressure" var = "pressure">
-                           <pressure> 0. </pressure>
+                           <pressure> 101325. </pressure>
                         </BCType>
 			<BCType label = "Kinematic" var = "velocity">
                            <velocity> [1.,1.,0.] </velocity>
@@ -95,7 +95,7 @@
                 </Face>
                 <Face side = "z-">
 			 <BCType label = "Pressure" var = "pressure">
-                           <pressure> 0. </pressure>
+                           <pressure> 101325. </pressure>
                         </BCType>
 			<BCType label = "Kinematic" var = "velocity">
                            <velocity> [1.,1.,0.] </velocity>
@@ -109,7 +109,7 @@
                 </Face>
                 <Face side = "z+">
 			 <BCType label = "Pressure" var = "pressure">
-                           <pressure> 0. </pressure>
+                           <pressure> 101325. </pressure>
                         </BCType>
 			<BCType label = "Kinematic" var = "velocity">
                            <velocity> [1.,1.,0.] </velocity>
@@ -126,7 +126,7 @@
 	    <Box label="1">
 	    	<lower>       [1,1,1]     </lower>
 	    	<upper>       [2,2,2]   </upper>
-	       	<resolution>  [.75,.75,1]   </resolution>
+	       	<resolution>  [1,1,1]   </resolution>
                 <extraCells>  [1,1,1]	  </extraCells>
 		<patches>     [1,1,1]     </patches>
 	    </Box>
@@ -189,9 +189,8 @@
 	    <density> 1. </density>
 	    <viscosity>      0.0         </viscosity>
 	    <thermal_conductivity>0.0    </thermal_conductivity>
-	    <specific_heat>  1.0         </specific_heat>
+	    <specific_heat>  716.0         </specific_heat>
 	    <speed_of_sound> 376         </speed_of_sound>
-           <ideal_gas_constant>287.0     </ideal_gas_constant>
 	    <gamma>          1.4         </gamma>	    
 	    <velocity_field>0</velocity_field>
 	  </material>
@@ -259,9 +258,13 @@
     <!--____________________________________________________________________-->    
     <InitialConditions>
 	<ICE>
-	  <velocity>         [1,1,0]     </velocity>
-	  <density>          1.0         </density>
-	  <temperature>      300.0       </temperature>
+	 <pressure>	     101325.0    </pressure>
+	 <material>
+	  <volume_fraction>  1.0	</volume_fraction>
+	  <velocity>         [1,1,0]    </velocity>
+	  <micro_density>    1.10       </micro_density>
+	  <temperature>      300.0      </temperature>
+	 </material>
 	</ICE>
     </InitialConditions>
 
