@@ -1341,9 +1341,10 @@ void ImpMPM::formStiffnessMatrix(const ProcessorGroup*,
 	d_solver[m]->fillMatrix(dof[1],dof[1],v);
 	d_solver[m]->fillMatrix(dof[2],dof[2],v);
       }
-      d_solver[m]->finalizeMatrix();
     } 
   }
+  for (int m = 0; m < d_sharedState->getNumMPMMatls(); m++)
+    d_solver[m]->finalizeMatrix();
 }
 	    
 void ImpMPM::computeInternalForce(const ProcessorGroup*,
