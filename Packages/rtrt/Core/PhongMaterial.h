@@ -15,6 +15,7 @@ class PhongMaterial : public Material {
 public:
     PhongMaterial(const Color& Rd, double opacity, double Rphong = 0.0, double phong_exponent = 100, bool refl=false);
     virtual ~PhongMaterial();
+    inline double get_opacity() { return opacity; }
     virtual void shade(Color& result, const Ray& ray,
 		       const HitInfo& hit, int depth, 
 		       double atten, const Color& accumcolor,

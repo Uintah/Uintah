@@ -16,6 +16,7 @@ public:
   CycleMaterial();
   virtual ~CycleMaterial();
   void next();
+  inline Material *curr() { return members[current]; }
   void prev();
   virtual void shade(Color& result, const Ray& ray,
 		     const HitInfo& hit, int depth, 
