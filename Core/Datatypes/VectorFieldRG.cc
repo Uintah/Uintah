@@ -19,13 +19,13 @@ namespace SCIRun {
 
 static Persistent* maker()
 {
-    return scinew VectorFieldRG;
+    return scinew VectorFieldRG(0, 0, 0);
 }
 
 PersistentTypeID VectorFieldRG::type_id("VectorFieldRG", "VectorField", maker);
 
-VectorFieldRG::VectorFieldRG()
-: VectorField(RegularGrid), nx(0), ny(0), nz(0)
+VectorFieldRG::VectorFieldRG(int x, int y, int z)
+  : VectorField(RegularGrid), nx(x), ny(y), nz(z), grid(x, y, z)
 {
 }
 
@@ -127,14 +127,6 @@ int VectorFieldRG::interpolate(const Point& p, Vector& value)
     Vector y1=Interpolate(x01, x11, fy);
     value=Interpolate(y0, y1, fz);
     return 1;
-}
-
-void VectorFieldRG::resize(int _nx, int _ny, int _nz)
-{
-    nx=_nx;
-    ny=_ny;
-    nz=_nz;
-    grid.newsize(nx, ny, nz);
 }
 
 void VectorFieldRG::set_bounds(const Point& min,

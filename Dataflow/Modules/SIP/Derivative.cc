@@ -124,8 +124,7 @@ void Derivative::execute()
 	int nx=sfb->nx;
 	int ny=sfb->ny;
 	int nz=sfb->nz;
-	VectorFieldRG *vfrg=new VectorFieldRG();
-	vfrg->resize(nx, ny, nz);
+	VectorFieldRG *vfrg=new VectorFieldRG(nx, ny, nz);
 	Point min, max;
 	sfb->get_bounds(min, max);
 	vfrg->set_bounds(min, max);

@@ -25,7 +25,7 @@ static Persistent* maker()
 PersistentTypeID VectorFieldRGCC::type_id("VectorFieldRGCC", "VectorField", maker);
 
 VectorFieldRGCC::VectorFieldRGCC()
-: VectorFieldRG()
+: VectorFieldRG(0, 0, 0)
 {
 }
 
