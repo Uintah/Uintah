@@ -43,11 +43,11 @@
 #include <Dataflow/Network/Network.h>
 #include <Dataflow/Network/Port.h>
 #include <iostream>
-using namespace SCIRun;
-using namespace std;
+
+namespace SCIRun {
 
 SCIRunPortInstance::SCIRunPortInstance(SCIRunComponentInstance* component,
-				       Port* port, PortType porttype)
+                                       Port* port, PortType porttype)
   : component(component), port(port), porttype(porttype)
 {
 }
@@ -56,7 +56,7 @@ SCIRunPortInstance::~SCIRunPortInstance()
 {
 }
 
-string SCIRunPortInstance::getUniqueName()
+std::string SCIRunPortInstance::getUniqueName()
 {
   return (porttype==Input?"Input: ":"Output: ")+port->get_portname();
 }
@@ -76,19 +76,23 @@ bool SCIRunPortInstance::connect(PortInstance* to)
     return false;
   SCIRunPortInstance* p2 = dynamic_cast<SCIRunPortInstance*>(to);
   Network* net = port->get_module()->getNetwork();
-  if(porttype == Output){
+  if(porttype == Output)
+    {
     net->connect(port->get_module(), port->get_which_port(),
-		 p2->port->get_module(), p2->port->get_which_port());
-  } else {
+                 p2->port->get_module(), p2->port->get_which_port());
+    }
+  else
+    {
     net->connect(p2->port->get_module(), p2->port->get_which_port(),
-		 port->get_module(), port->get_which_port());
-  }
+                 port->get_module(), port->get_which_port());
+    }
   return true;
 }
 
 bool SCIRunPortInstance::disconnect(PortInstance*)
 {
-  cerr << "SCIRunPortInstance::disconnect() not finished\n";
+  std::cerr << "SCIRunPortInstance::disconnect() not finished"
+            << std::endl;
   return false;
 }
 
@@ -115,3 +119,5 @@ std::string SCIRunPortInstance::getType() {
 std::string SCIRunPortInstance::getModel() {
   return "dataflow";	
 }
+
+} // end namespace SCIRun

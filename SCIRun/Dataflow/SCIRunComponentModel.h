@@ -44,33 +44,58 @@
 #include <SCIRun/ComponentModel.h>
 
 namespace SCIRun {
-  class Network;
-  class SCIRunComponentDescription;
-  class SCIRunFramework;
-  class GuiInterface;
+class Network;
+class SCIRunComponentDescription;
+class SCIRunFramework;
+class GuiInterface;
 
-  class SCIRunComponentModel : public ComponentModel {
-  public:
-    SCIRunComponentModel(SCIRunFramework* framework);
-    virtual ~SCIRunComponentModel();
+/**
+ * \class SCIRunComponentModel
+ *
+ *
+ *
+ */
+class SCIRunComponentModel : public ComponentModel
+{
+public:
+  SCIRunComponentModel(SCIRunFramework* framework);
+  virtual ~SCIRunComponentModel();
 
-    virtual bool haveComponent(const std::string& type);
-    virtual ComponentInstance* createInstance(const std::string& name,
-					      const std::string& type);
-    virtual bool destroyInstance(ComponentInstance * ic);
-    virtual std::string getName() const;
-    virtual void listAllComponentTypes(std::vector<ComponentDescription*>&,
-				       bool);
-    static void initGuiInterface();
-    static GuiInterface* gui;
-    static Network* net;
+  /** Returns true if component type \em type has been registered with this
+      component model.  In other words, returns true if this ComponentModel
+      knows how to instantiate component \em type. */
+  virtual bool haveComponent(const std::string& type);
 
-  private:
-    SCIRunFramework* framework;
+  /** Allocates an instance of the component of type \em type.  The parameter
+      \em name is assigned as the unique name of the newly created instance.
+      Returns a smart pointer to the newly created instance, or a null pointer
+      on failure. */
+  virtual ComponentInstance* createInstance(const std::string& name,
+                                            const std::string& type);
 
-    SCIRunComponentModel(const SCIRunComponentModel&);
-    SCIRunComponentModel& operator=(const SCIRunComponentModel&);
-  };
-}
+  /** Deallocates the component instance \em ci.  Returns \code true on success and
+      \code false on failure. */
+  virtual bool destroyInstance(ComponentInstance * ic);
+ 
+  /**  Returns the name (as a string) of this component model. */ 
+  virtual std::string getName() const;
+  
+  /** Creates a list of all the available components (as ComponentDescriptions)
+      registered in this ComponentModel. */
+  virtual void listAllComponentTypes(std::vector<ComponentDescription*>&,
+                                     bool);
+  /** ? */
+  static void initGuiInterface();
+  static GuiInterface* gui;
+  static Network* net;
+  
+private:
+  SCIRunFramework* framework;
+  
+  SCIRunComponentModel(const SCIRunComponentModel&);
+  SCIRunComponentModel& operator=(const SCIRunComponentModel&);
+};
+
+} // end namespace SCIRun
 
 #endif

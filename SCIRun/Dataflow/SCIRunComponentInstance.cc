@@ -43,21 +43,21 @@
 #include <SCIRun/Dataflow/SCIRunUIPort.h>
 #include <SCIRun/CCA/CCAPortInstance.h>
 #include <Dataflow/Network/Module.h>
-using namespace std;
-using namespace SCIRun;
+
+namespace SCIRun {
 
 SCIRunComponentInstance::SCIRunComponentInstance(SCIRunFramework* framework,
-						 const string& instanceName,
-						 const string& className,
-						 Module* module)
+                                                 const std::string& instanceName,
+                                                 const std::string& className,
+                                                 Module* module)
   : ComponentInstance(framework, instanceName, className), module(module)
 {
   // See if we have a user-interface...
   if(module->haveUI()){
-    specialPorts.push_back(new CCAPortInstance("ui", "sci.cca.ports.UIPort",
-					       sci::cca::TypeMap::pointer(0),
-					       sci::cca::Port::pointer(new SCIRunUIPort(this)),
-					       CCAPortInstance::Provides));
+  specialPorts.push_back(new CCAPortInstance("ui", "sci.cca.ports.UIPort",
+                                         sci::cca::TypeMap::pointer(0),
+                              sci::cca::Port::pointer(new SCIRunUIPort(this)),
+                                             CCAPortInstance::Provides));
   }
 }
 
@@ -65,7 +65,7 @@ SCIRunComponentInstance::~SCIRunComponentInstance()
 {
 }
 
-PortInstance* SCIRunComponentInstance::getPortInstance(const string& name)
+PortInstance* SCIRunComponentInstance::getPortInstance(const std::string& name)
 {
   // SCIRun ports can potentially have the same name for both, so
   // SCIRunPortInstance tags them with a prefix of "Input: " or
@@ -132,3 +132,5 @@ PortInstance* SCIRunComponentInstance::Iterator::get()
   else
     return 0; // Illegal
 }
+
+} // end namespace SCIRun

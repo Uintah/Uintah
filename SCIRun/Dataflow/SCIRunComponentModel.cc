@@ -57,9 +57,7 @@
 #include <sci_defs/environment_defs.h>
 #include <iostream>
 
-using namespace std;
-using namespace SCIRun;
-
+namespace SCIRun {
 
 GuiInterface*
 SCIRunComponentModel::gui(0);
@@ -67,14 +65,14 @@ SCIRunComponentModel::gui(0);
 Network*
 SCIRunComponentModel::net(0);
 
-static bool split_name(const string& type, string& package,
-		       string& category, string& module)
+static bool split_name(const std::string& type, std::string& package,
+		       std::string& category, std::string& module)
 {
   unsigned int dot = type.find('.');
   if(dot >= type.size())
     return false;
   package = type.substr(0, dot);
-  string rest = type.substr(dot+1);
+  std::string rest = type.substr(dot+1);
   dot = rest.find('.');
   if(dot >= rest.size())
     return false;
@@ -99,7 +97,7 @@ SCIRunComponentModel::~SCIRunComponentModel()
 
 bool SCIRunComponentModel::haveComponent(const std::string& type)
 {
-  string package, category, module;
+  std::string package, category, module;
   if(!split_name(type, package, category, module))
     return false;
   return packageDB->haveModule(package, category, module);
@@ -109,7 +107,7 @@ ComponentInstance*
 SCIRunComponentModel::createInstance(const std::string& name,
 				     const std::string& type)
 {
-  string package, category, module;
+  std::string package, category, module;
   if(!split_name(type, package, category, module))
     return 0;
   if(!gui) {
@@ -136,8 +134,8 @@ void SCIRunComponentModel::initGuiInterface() {
   gui = new TCLInterface();
   
   // Set up the TCL environment to find core components
-  const string DataflowTCLpath = SCIRUN_SRCDIR+string("/Dataflow/GUI");
-  const string CoreTCLpath = SCIRUN_SRCDIR+string("/Core/GUI");
+  const std::string DataflowTCLpath = SCIRUN_SRCDIR+std::string("/Dataflow/GUI");
+  const std::string CoreTCLpath = SCIRUN_SRCDIR+std::string("/Core/GUI");
   gui->execute("global CoreTCL SCIRUN_SRCDIR SCIRUN_OBJDIR scirun2");
   gui->execute("set CoreTCL "+CoreTCLpath);
   gui->execute("set SCIRUN_SRCDIR "SCIRUN_SRCDIR);
@@ -146,7 +144,7 @@ void SCIRunComponentModel::initGuiInterface() {
   gui->execute("lappend auto_path "+CoreTCLpath);
   gui->execute("lappend auto_path "+DataflowTCLpath);
   gui->execute("lappend auto_path "ITCL_WIDGETS);
-  gui->source_once(DataflowTCLpath+string("/NetworkEditor.tcl"));
+  gui->source_once(DataflowTCLpath+std::string("/NetworkEditor.tcl"));
 
   
   tcl_task->release_mainloop();
@@ -166,31 +164,38 @@ void SCIRunComponentModel::initGuiInterface() {
 
 bool SCIRunComponentModel::destroyInstance(ComponentInstance * ic)
 {
-  cerr<<"Warning:I don't know how to destroy a SCIRun component instance\n";
+  std::cerr<<"Warning:I don't know how to destroy a SCIRun component instance"
+           << std::endl;
   return true; 
 }
 
-string SCIRunComponentModel::getName() const
+std::string SCIRunComponentModel::getName() const
 {
   return "Dataflow";
 }
 
-void SCIRunComponentModel::listAllComponentTypes(vector<ComponentDescription*>& list,
+void SCIRunComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>& list,
 						 bool /*listInternal*/)
 {
-  vector<string> packages = packageDB->packageNames();
-  typedef vector<string>::iterator striter;
-  for(striter iter = packages.begin(); iter != packages.end(); ++iter){
-    string package = *iter;
-    vector<string> categories = packageDB->categoryNames(package);
-    for(striter iter = categories.begin(); iter != categories.end(); ++iter){
-      string category = *iter;
-      vector<string> modules = packageDB->moduleNames(package, category);
-      for(striter iter = modules.begin(); iter != modules.end(); ++iter){
-	string module = *iter;
-	list.push_back(new SCIRunComponentDescription(this, package,
-						      category, module));
+  std::vector<std::string> packages = packageDB->packageNames();
+  typedef std::vector<std::string>::iterator striter;
+
+  for(striter iter = packages.begin(); iter != packages.end(); ++iter)
+    {
+    std::string package = *iter;
+    std::vector<std::string> categories = packageDB->categoryNames(package);
+    for(striter iter = categories.begin(); iter != categories.end(); ++iter)
+      {
+      std::string category = *iter;
+      std::vector<std::string> modules = packageDB->moduleNames(package, category);
+      for(striter iter = modules.begin(); iter != modules.end(); ++iter)
+        {
+        std::string module = *iter;
+        list.push_back(new SCIRunComponentDescription(this, package,
+                                                      category, module));
+        }
       }
     }
-  }
 }
+
+}// end namespace SCIRun

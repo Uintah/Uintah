@@ -45,27 +45,42 @@
 #include <string>
 
 namespace SCIRun {
-  class ComponentModel;
-  class SCIRunComponentModel;
-  class SCIRunComponentDescription : public ComponentDescription {
-  public:
-    SCIRunComponentDescription(SCIRunComponentModel* model,
-			       const std::string& package,
-			       const std::string& category,
-			       const std::string& module);
-    virtual ~SCIRunComponentDescription();
 
-    virtual std::string getType() const;
-    virtual const ComponentModel* getModel() const;
-  private:
-    SCIRunComponentModel* model;
-    std::string package;
-    std::string category;
-    std::string module;
+class ComponentModel;
+class SCIRunComponentModel;
 
-    SCIRunComponentDescription(const SCIRunComponentDescription&);
-    SCIRunComponentDescription& operator=(const SCIRunComponentDescription&);
-  };
-}
+/**
+ * \class SCIRunCompontDescription
+ * A refinement of ComponentDescription for the SCIRun dataflow component model.  See
+ * ComponentDescription for more information.
+ *
+ * \sa BabelComponentDescription ComponentDescription VtkComponentDescription
+ * \sa InternalComponentDescription CCAComponentDescription
+ *
+ */
+class SCIRunComponentDescription : public ComponentDescription
+{
+public:
+  SCIRunComponentDescription(SCIRunComponentModel* model,
+                             const std::string& package,
+                             const std::string& category,
+                             const std::string& module);
+  virtual ~SCIRunComponentDescription();
+  
+  /** Returns the component type name (a string). */
+  virtual std::string getType() const;
+  /** Returns a pointer to the component model type. */
+  virtual const ComponentModel* getModel() const;
+private:
+  SCIRunComponentModel* model;
+  std::string package;
+  std::string category;
+  std::string module;
+  
+  SCIRunComponentDescription(const SCIRunComponentDescription&);
+  SCIRunComponentDescription& operator=(const SCIRunComponentDescription&);
+};
+
+} // end namespace SCIRun
 
 #endif

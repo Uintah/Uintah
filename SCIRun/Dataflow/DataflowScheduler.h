@@ -48,19 +48,40 @@
 #include <SCIRun/Internal/InternalComponentInstance.h>
 
 namespace SCIRun {
-  class SCIRunFramework;
-  class DataflowScheduler : public ::sci::cca::ports::DataflowScheduler, public InternalComponentInstance {
-  public:
-    virtual ~DataflowScheduler();
-    static InternalComponentInstance* create(SCIRunFramework* fwk,
-					     const std::string& name);
-    sci::cca::Port::pointer getService(const std::string&);
-    bool toggleOnOffScheduling();
-    void do_scheduling();
-  private:
-    DataflowScheduler(SCIRunFramework* fwk, const std::string& name, Scheduler* _sched);
-    Scheduler* sched;
-  };
-}
+
+class SCIRunFramework;
+/**
+ * \class DataflowScheduler
+ *
+ * A scheduler service for the SCIRun Dataflow components.  An implementation
+ * of the sci::cca::ports::DataflowScheduler interface.  This class is a
+ * wrapper around the SCIRun(1) Scheduler object.
+ */
+class DataflowScheduler : public ::sci::cca::ports::DataflowScheduler,
+                          public InternalComponentInstance
+{
+public:
+  virtual ~DataflowScheduler();
+
+  /** Object factory method for allocating DataflowScheduler instances. Returns
+      a smart pointer to the newly allocated object. */
+  static InternalComponentInstance* create(SCIRunFramework* fwk,
+                                           const std::string& name);
+  /** Returns a pointer to this DataflowSchedular port. */
+  sci::cca::Port::pointer getService(const std::string&);
+
+  /** Turns the scheduler on and off.  Returns \code true is scheduler is on
+      and \code false if scheduler is now off. */
+  bool toggleOnOffScheduling();
+
+  /** Trigger analysis of a network to build the cue for module execution.*/
+  void do_scheduling();
+  
+private:
+  DataflowScheduler(SCIRunFramework* fwk, const std::string& name, Scheduler* _sched);
+  Scheduler* sched;
+};
+
+} // end namespace SCIRun
 
 #endif

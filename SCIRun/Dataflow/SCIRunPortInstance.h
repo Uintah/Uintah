@@ -48,34 +48,49 @@
 #include <vector>
 
 namespace SCIRun {
-  class Port;
-  class SCIRunComponentInstance;
-  class SCIRunPortInstance : public PortInstance {
-  public:
-    enum PortType {
-      Output, Input
-    };
-    SCIRunPortInstance(SCIRunComponentInstance*, Port* port, PortType type);
-    ~SCIRunPortInstance();
+class Port;
+class SCIRunComponentInstance;
 
-    virtual bool connect(PortInstance*);
-    virtual PortInstance::PortType portType();
-    virtual std::string getUniqueName();
-    virtual bool disconnect(PortInstance*);
-    virtual bool canConnectTo(PortInstance *);
-    virtual std::string getType();
-    virtual std::string getModel();
+/**
+ * \class SCIRunPortInstance
+ *
+ *
+ * \todo Method \em disconnect not implemented.
+ * \todo Method \em connect should follow inheritance somehow.
+ */
+class SCIRunPortInstance : public PortInstance
+{
+public:
+  enum PortType {    Output, Input  };
+  SCIRunPortInstance(SCIRunComponentInstance*, Port* port, PortType type);
+  ~SCIRunPortInstance();
 
-  private:
-    friend class BridgeComponentInstance;
-    
-    SCIRunPortInstance(const SCIRunPortInstance&);
-    SCIRunPortInstance& operator=(const SCIRunPortInstance&);
+  /** */
+  virtual bool connect(PortInstance*);
+  /** */
+  virtual PortInstance::PortType portType();
+  /** */
+  virtual std::string getUniqueName();
+  /** */
+  virtual bool disconnect(PortInstance*);
+  /** */
+  virtual bool canConnectTo(PortInstance *);
+  /** */
+  virtual std::string getType();
+  /** */
+  virtual std::string getModel();
+  
+private:
+  friend class BridgeComponentInstance;
+  
+  SCIRunPortInstance(const SCIRunPortInstance&);
+  SCIRunPortInstance& operator=(const SCIRunPortInstance&);
+  
+  SCIRunComponentInstance* component;
+  Port* port;
+  PortType porttype;
+};
 
-    SCIRunComponentInstance* component;
-    Port* port;
-    PortType porttype;
-  };
-}
+} // end namespace SCIRun
 
 #endif
