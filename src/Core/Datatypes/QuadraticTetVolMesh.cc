@@ -194,6 +194,17 @@ QuadraticTetVolMesh::get_nodes(Node::array_type &array,
   array.push_back(sz + edges[5]);
 }
 
+bool 
+QuadraticTetVolMesh::test_nodes_range(Cell::index_type ci, int sn, int en){
+  Node::array_type nodes;
+  
+  get_nodes(nodes,ci);
+  
+  for (int i=0; i<10; i++) 
+    if (nodes[i]>=sn && nodes[i]<en) return true;
+  return false;
+}
+
 void 
 QuadraticTetVolMesh::get_edges(Edge::array_type &array, 
 			       Face::index_type idx) const
