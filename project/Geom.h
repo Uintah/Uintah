@@ -49,6 +49,18 @@ public:
     virtual void draw();
 };
 
+class Tetra : public GeomObj {
+public:
+    Point p1;
+    Point p2;
+    Point p3;
+    Point p4;
+
+    Tetra(const Point&, const Point&, const Point&, const Point&);
+    virtual ~Tetra();
+    virtual void draw();
+};
+
 class GeomPt : public GeomObj {
 public:
     Point p1;

@@ -73,6 +73,29 @@ void Triangle::draw() {
     glEnd();
 }
 
+Tetra::Tetra(const Point& p1, const Point& p2, const Point& p3, const Point& p4)
+: p1(p1), p2(p2), p3(p3), p4(p4)
+{
+}
+
+Tetra::~Tetra()
+{
+}
+
+void Tetra::draw() {
+    glColor3f(1, 0, 0);
+    glBegin(GL_LINE_STRIP);
+    glVertex3d(p1.x(), p1.y(), p1.z());
+    glVertex3d(p2.x(), p2.y(), p2.z());
+    glVertex3d(p3.x(), p3.y(), p3.z());
+    glVertex3d(p1.x(), p1.y(), p1.z());
+    glVertex3d(p4.x(), p4.y(), p4.z());
+    glVertex3d(p2.x(), p2.y(), p2.z());
+    glVertex3d(p3.x(), p3.y(), p3.z());
+    glVertex3d(p4.x(), p4.y(), p4.z());
+    glEnd();
+}
+
 GeomPt::GeomPt(const Point& p)
 : p1(p)
 {
