@@ -11,10 +11,20 @@ SRCS     += $(SRCDIR)/Fracture.cc \
 	$(SRCDIR)/Cell.cc \
 	$(SRCDIR)/ParticlesNeighbor.cc \
 	$(SRCDIR)/CellsNeighbor.cc \
-	$(SRCDIR)/DamagedParticle.cc
-
+	$(SRCDIR)/DamagedParticle.cc \
+	$(SRCDIR)/Equation.cc \
+	$(SRCDIR)/LeastSquare.cc \
+	$(SRCDIR)/CubicSpline.cc \
+	$(SRCDIR)/QuarticSpline.cc \
+	$(SRCDIR)/ExponentialSpline.cc \
+	$(SRCDIR)/LeastSquare.cc
+	
 #
 # $Log$
+# Revision 1.10  2000/07/06 05:01:13  tan
+# Added Equation, LeastSquare, CubicSpline, QuarticSpline,ExponentialSpline,
+# and LeastSquare classes.
+#
 # Revision 1.9  2000/06/06 02:50:10  tan
 # Created class DamagedParticle to handle particle spliting when crack
 # pass through.
