@@ -77,10 +77,10 @@ WARNING
      enum VariableBasis {
 	NodeBased = Ghost::AroundNodes,
 	CellBased = Ghost::AroundCells,
-	XFaceBased = Ghost::AroundXFaces,
-	YFaceBased = Ghost::AroundYFaces,
-	ZFaceBased = Ghost::AroundZFaces,
-	AllFaceBased = Ghost::AroundAllFaces
+	XFaceBased = Ghost::AroundFacesX,
+	YFaceBased = Ghost::AroundFacesY,
+	ZFaceBased = Ghost::AroundFacesZ,
+	AllFaceBased = Ghost::AroundFaces
      };
 
      static VariableBasis translateTypeToBasis(TypeDescription::Type type,
