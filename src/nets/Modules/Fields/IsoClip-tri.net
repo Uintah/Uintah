@@ -2,60 +2,45 @@
 
 ::netedit dontschedule
 
-global userName
-set userName ""
+set m0 [addModuleAtPosition "SCIRun" "Fields" "SamplePlane" 56 8]
+set m1 [addModuleAtPosition "SCIRun" "Fields" "QuadToTri" 53 261]
+set m2 [addModuleAtPosition "SCIRun" "Fields" "TransformData" 50 345]
+set m3 [addModuleAtPosition "SCIRun" "Fields" "IsoClip" 50 427]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 50 510]
+set m5 [addModuleAtPosition "SCIRun" "Render" "Viewer" 50 591]
+set m6 [addModuleAtPosition "SCIRun" "Fields" "Unstructure" 53 176]
+set m7 [addModuleAtPosition "SCIRun" "Fields" "ChangeFieldBounds" 61 88]
 
-global runDate
-set runDate ""
-
-global runTime
-set runTime ""
-
-global notes
-set notes ""
-
-set m0 [addModuleAtPosition "SCIRun" "Fields" "SampleLattice" 53 12]
-set m1 [addModuleAtPosition "SCIRun" "Fields" "HexToTet" 53 92]
-set m2 [addModuleAtPosition "SCIRun" "Fields" "TransformData" 53 169]
-set m3 [addModuleAtPosition "SCIRun" "Fields" "IsoClip" 45 250]
-set m4 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 208 413]
-set m5 [addModuleAtPosition "SCIRun" "Render" "Viewer" 208 497]
-set m6 [addModuleAtPosition "SCIRun" "Fields" "ClipByFunction" 48 330]
-set m7 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 331 136]
-set m8 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 239 254]
-
-addConnection $m0 0 $m1 0
 addConnection $m1 0 $m2 0
-addConnection $m2 0 $m3 0
 addConnection $m4 0 $m5 0
-addConnection $m3 0 $m6 0
-addConnection $m6 0 $m4 0
-addConnection $m7 0 $m8 0
-addConnection $m8 0 $m4 1
-addConnection $m2 0 $m8 1
+addConnection $m6 0 $m1 0
+addConnection $m0 0 $m7 0
+addConnection $m7 0 $m6 0
+addConnection $m2 0 $m3 0
+addConnection $m3 0 $m4 0
 
 set $m0-notes {}
-set $m0-sizex {9}
-set $m0-sizey {9}
-set $m0-sizez {9}
+set $m0-sizex {20}
+set $m0-sizey {20}
+set $m0-axis {0}
 set $m0-padpercent {0}
+set $m0-pos {0}
 set $m0-data-at {Nodes}
+set $m0-update_type {on release}
 set $m1-notes {}
 set $m2-notes {}
-set $m2-function {result = x*x + y*y + z*z;
-
-
+set $m2-function {result = x*x + y*y +z*z;
 
 }
 set $m2-outputdatatype {input}
 set $m3-notes {}
-set $m3-isoval {1.2}
+set $m3-isoval {1.0}
 set $m3-lte {1}
 set $m4-notes {}
-set $m4-nodes-on {0}
+set $m4-nodes-on {1}
 set $m4-nodes-transparency {0}
 set $m4-nodes-as-disks {0}
-set $m4-edges-on {0}
+set $m4-edges-on {1}
 set $m4-edges-transparency {0}
 set $m4-faces-on {1}
 set $m4-use-normals {0}
@@ -78,8 +63,8 @@ set $m4-text-backface-cull {0}
 set $m4-text-fontsize {1}
 set $m4-text-precision {2}
 set $m4-text-render_locations {0}
-set $m4-text-show-data {0}
-set $m4-text-show-nodes {1}
+set $m4-text-show-data {1}
+set $m4-text-show-nodes {0}
 set $m4-text-show-edges {0}
 set $m4-text-show-faces {0}
 set $m4-text-show-cells {0}
@@ -88,16 +73,16 @@ set $m4-def-color-g {0.5}
 set $m4-def-color-b {0.5}
 set $m4-def-color-a {0.5}
 set $m4-node_display_type {Points}
-set $m4-edge_display_type {Cylinders}
+set $m4-edge_display_type {Lines}
 set $m4-data_display_type {Arrows}
 set $m4-tensor_display_type {Boxes}
 set $m4-scalar_display_type {Points}
 set $m4-active_tab {Nodes}
-set $m4-node_scale {0.0300}
-set $m4-edge_scale {0.00840}
+set $m4-node_scale {0.03}
+set $m4-edge_scale {0.015}
 set $m4-vectors_scale {0.30}
 set $m4-tensors_scale {0.30}
-set $m4-scalars_scale {0.300}
+set $m4-scalars_scale {0.30}
 set $m4-show_progress {}
 set $m4-interactive_mode {Interactive}
 set $m4-field-name {}
@@ -112,15 +97,15 @@ set $m5-ViewWindow_0-caxes {0}
 set $m5-ViewWindow_0-raxes {1}
 set $m5-ViewWindow_0-iaxes {}
 set $m5-ViewWindow_0-have_collab_vis {0}
-set $m5-ViewWindow_0-view-eyep-x {8.283797504592837}
-set $m5-ViewWindow_0-view-eyep-y {-1.460947605710198}
-set $m5-ViewWindow_0-view-eyep-z {-6.353311860776427}
-set $m5-ViewWindow_0-view-lookat-x {0}
-set $m5-ViewWindow_0-view-lookat-y {0}
-set $m5-ViewWindow_0-view-lookat-z {0}
-set $m5-ViewWindow_0-view-up-x {-0.1665308795602378}
-set $m5-ViewWindow_0-view-up-y {-0.9859895380134537}
-set $m5-ViewWindow_0-view-up-z {0.009596722404535093}
+set $m5-ViewWindow_0-view-eyep-x {-8.092981051625269}
+set $m5-ViewWindow_0-view-eyep-y {-0.1856721415481161}
+set $m5-ViewWindow_0-view-eyep-z {-1.764684952295918}
+set $m5-ViewWindow_0-view-lookat-x {}
+set $m5-ViewWindow_0-view-lookat-y {}
+set $m5-ViewWindow_0-view-lookat-z {}
+set $m5-ViewWindow_0-view-up-x {0.002014749472103514}
+set $m5-ViewWindow_0-view-up-y {0.9935048579532914}
+set $m5-ViewWindow_0-view-up-z {-0.1137718682617763}
 set $m5-ViewWindow_0-view-fov {20}
 set $m5-ViewWindow_0-view-eyep_offset-x {}
 set $m5-ViewWindow_0-view-eyep_offset-y {}
@@ -160,25 +145,31 @@ set $m5-ViewWindow_0-global-type {Gouraud}
 set $m5-ViewWindow_0-ortho-view {0}
 set $m5-ViewWindow_0-unused {1}
 set $m5-ViewWindow_0-unused {1}
+set $m5-ViewWindow_0-unused {1}
 set $m6-notes {}
-set $m6-clipmode {cell}
-set $m6-clipfunction {x < 0}
 set $m7-notes {}
-set $m7-tcl_status {Calling GenStandardColorMaps!}
-set $m7-positionList {}
-set $m7-nodeList {}
-set $m7-width {1}
-set $m7-height {1}
-set $m7-mapType {3}
-set $m7-minRes {12}
-set $m7-resolution {256}
-set $m7-realres {256}
-set $m7-gamma {0}
-set $m8-notes {}
-set $m8-isFixed {0}
-set $m8-min {0}
-set $m8-max {3}
-set $m8-makeSymmetric {0}
+set $m7-outputcenterx {0}
+set $m7-outputcentery {0}
+set $m7-outputcenterz {0}
+set $m7-outputsizex {2}
+set $m7-outputsizey {2}
+set $m7-outputsizez {2}
+set $m7-useoutputcenter {1}
+set $m7-useoutputsize {1}
+set $m7-box-scale {-1}
+set $m7-box-center-x {}
+set $m7-box-center-y {}
+set $m7-box-center-z {}
+set $m7-box-right-x {}
+set $m7-box-right-y {}
+set $m7-box-right-z {}
+set $m7-box-down-x {}
+set $m7-box-down-y {}
+set $m7-box-down-z {}
+set $m7-box-in-x {}
+set $m7-box-in-y {}
+set $m7-box-in-z {}
+set $m7-resetting {0}
 $m3 initialize_ui
 
 ::netedit scheduleok
