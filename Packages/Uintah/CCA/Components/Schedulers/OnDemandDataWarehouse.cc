@@ -1866,7 +1866,7 @@ void OnDemandDataWarehouse::popRunningTask()
  d_lock.writeLock();
   list<RunningTaskInfo>& runningTasks = d_runningTasks[Thread::self()];
   runningTasks.pop_back();
-  if (runningTasks.size() == 0) {
+  if (runningTasks.empty()) {
     d_runningTasks.erase(Thread::self());
   }
  d_lock.writeUnlock();
