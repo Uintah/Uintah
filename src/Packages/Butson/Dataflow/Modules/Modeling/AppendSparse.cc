@@ -61,7 +61,7 @@ AppendSparse::~AppendSparse()
 void
 AppendSparse::execute()
 {
-  const bool column_append = rows_or_columns_.get() == "columns";
+  bool column_append = rows_or_columns_.get() == "columns";
 
   MatrixIPort *imat1 = (MatrixIPort *)get_iport("A");
   MatrixIPort *imat2 = (MatrixIPort *)get_iport("B");
@@ -112,18 +112,18 @@ AppendSparse::execute()
 
   if (column_append)
   {
-    if (smat1->ncols() != smat2->ncols())
+    if (smat1->nrows() != smat2->nrows())
     {
-      error("Input matrices must contain same number of columns.");
+      error("Input matrices must contain same number of rows.");
       return;
     }      
     smat1 = smat1->transpose();
     smat2 = smat2->transpose();
   }
 
-  if (smat1->nrows() != smat2->nrows())
+  if (smat1->ncols() != smat2->ncols())
   {
-      error("Input matrices must contain same number of rows.");
+    error("Input matrices must contain same number of columns.");
     return;
   }
 
