@@ -100,19 +100,45 @@ QuadToTri::execute()
   last_generation_ = ifieldhandle->generation;
   
   const TypeDescription *src_td = ifieldhandle->get_type_description();
-  CompileInfoHandle ci = QuadToTriAlgo::get_compile_info(src_td);
-  Handle<QuadToTriAlgo> algo;
-  if (!module_dynamic_compile(ci, algo)) {
-    error("QuadToTri only supported for Quad types -- failed for "+
-	  src_td->get_name());
-    return;
+
+  const string iname =
+    ifieldhandle->mesh()->get_type_description()->get_name();
+  if (iname == "ImageMesh" || iname == "StructQuadSurfMesh")
+  {
+    CompileInfoHandle ici = ImgToTriAlgo::get_compile_info(src_td);
+    Handle<ImgToTriAlgo> ialgo;
+    if (DynamicCompilation::compile(ici, ialgo, true, this))
+    {
+      if (!ialgo->execute(ifieldhandle, ofieldhandle, this))
+      {
+	warning("ImgToTri conversion failed to copy data.");
+	return;
+      }
+    }
+    else
+    {
+      error("QuadToTri only supports Quad field types.");
+      return;
+    }
   }
-  std::ostream &msg = msgStream();
-  if (!algo->execute(ifieldhandle, ofieldhandle, msg)) {
-    error("QuadToTri conversion failed.");
-    return;
-  } 
-  msgStream_flush();
+  else
+  {
+    CompileInfoHandle qci = QuadToTriAlgo::get_compile_info(src_td);
+    Handle<QuadToTriAlgo> qalgo;
+    if (DynamicCompilation::compile(qci, qalgo, true, this))
+    {
+      if (!qalgo->execute(ifieldhandle, ofieldhandle, this))
+      {
+	warning("QuadToTri conversion failed to copy data.");
+	return;
+      }
+    }
+    else
+    {
+      error("QuadToTri only supports Quad field types.");
+      return;
+    }
+  }
   ofp->send(ofieldhandle);
 }
 
@@ -136,5 +162,28 @@ QuadToTriAlgo::get_compile_info(const TypeDescription *src_td)
   src_td->fill_compile_info(rval);
   return rval;
 }
+
+
+CompileInfoHandle
+ImgToTriAlgo::get_compile_info(const TypeDescription *src_td)
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("ImgToTriAlgoT");
+  static const string base_class_name("ImgToTriAlgo");
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       src_td->get_filename() + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       src_td->get_name());
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  src_td->fill_compile_info(rval);
+  return rval;
+}
+
 
 } // End namespace SCIRun
