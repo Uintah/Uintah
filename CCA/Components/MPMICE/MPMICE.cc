@@ -154,6 +154,8 @@ void MPMICE::scheduleInitialize(const LevelP& level,
 
   cout_doing << "Done with Initialization \t\t\t MPMICE" <<endl;
   cout_norm << "--------------------------------\n"<<endl;   
+  if (one_matl->removeReference())
+    delete one_matl; // shouln't happen, but...  
 }
 
 void MPMICE::restartInitialize()
