@@ -63,7 +63,9 @@ private:
   GLTexture3DHandle tex;
 
   TCLint max_brick_dim;
-  //  bool MakeContext(Display *dpy, GLXContext& cx);
+  TCLdouble min, max;
+  TCLint isFixed;
+//  bool MakeContext(Display *dpy, GLXContext& cx);
   // void DestroyContext(Display *dpy, GLXContext& cx);
 
 };

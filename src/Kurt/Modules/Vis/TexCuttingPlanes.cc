@@ -12,7 +12,7 @@
 #include <SCICore/Datatypes/ColorMap.h>
 #include <PSECore/Datatypes/ColorMapPort.h>
 #include <PSECore/Datatypes/GeometryPort.h>
-#include <SCICore/Datatypes/ScalarFieldRGuchar.h>
+#include <SCICore/Datatypes/ScalarFieldRGBase.h>
 
 #include <SCICore/Geom/GeomTriangles.h>
 
@@ -38,7 +38,7 @@ using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::Geometry;
 using namespace SCICore::Math;
-using SCICore::Datatypes::ScalarFieldRGuchar;
+using SCICore::Datatypes::ScalarFieldRGBase;
 using std::cerr;
 
 
@@ -136,7 +136,7 @@ void TexCuttingPlanes::execute(void)
     Point Smin(tex->min());
     Point Smax(tex->max());
     Vector dv(Smax - Smin);
-    ScalarFieldRGuchar *sf = tex->getField();
+    ScalarFieldRGBase *sf = tex->getField();
     ddv.x(dv.x()/(sf->nx - 1));
     ddv.y(dv.y()/(sf->ny - 1));
     ddv.z(dv.z()/(sf->nz - 1));
@@ -163,7 +163,7 @@ void TexCuttingPlanes::execute(void)
       Point Smin(tex->min());
       Point Smax(tex->max());
       Vector dv(Smax - Smin);
-      ScalarFieldRGuchar *sf = tex->getField();
+      ScalarFieldRGBase *sf = tex->getField();
       ddv.x(dv.x()/(sf->nx - 1));
       ddv.y(dv.y()/(sf->ny - 1));
       ddv.z(dv.z()/(sf->nz - 1));
