@@ -27,7 +27,7 @@ LOS::draw()
   Brick* brick;
   computeView(viewRay);
   
-  LOSIterator it( volren->tex, viewRay,  volren->controlPoint);
+  LOSIterator it( volren->tex.get_rep(), viewRay,  volren->controlPoint);
 
   SliceTable st(volren->tex->min(),
 		volren->tex->max(), 
@@ -73,7 +73,7 @@ LOS::drawWireFrame()
 
   computeView(viewRay);
   
-  LOSIterator it( volren->tex, viewRay,  volren->controlPoint);
+  LOSIterator it( volren->tex.get_rep(), viewRay,  volren->controlPoint);
 
   Brick* brick;
   for( brick = it.Start(); !it.isDone(); brick = it.Next()){

@@ -1,11 +1,12 @@
 #ifndef GLTEXRENSTATE_H
 #define GLTEXRENSTATE_H
 
+//#include "GLVolumeRenderer.h"
 
 namespace SCICore {
 namespace GeomSpace  {
 
-class GLVolumeRenderer;
+
 /**************************************
 
 CLASS
@@ -35,6 +36,7 @@ DESCRIPTION
 WARNING
   
 ****************************************/
+class GLVolumeRenderer;
 
 class GLTexRenState {
 public:
@@ -62,7 +64,7 @@ public:
   // 
 protected:
 
-  const GLVolumeRenderer*  volren;
+  const GLVolumeRenderer* volren;
 };
 
 } // end namespace Datatypes
