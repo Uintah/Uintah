@@ -26,6 +26,7 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/hvolumebrick16.mo \
 	$(SRCDIR)/hvolumebrickfloat.mo \
 	$(SRCDIR)/hvolume_uchar.mo \
+	$(SRCDIR)/hvolumevg.mo \
 	$(SRCDIR)/flux.mo \
 	$(SRCDIR)/i3d.mo \
 	$(SRCDIR)/miphvb16.mo \
@@ -37,8 +38,11 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/teapot.mo \
 	$(SRCDIR)/teapot.rational.mo \
 	$(SRCDIR)/teapot.scene.mo \
-	$(SRCDIR)/vfem.mo \
 	$(SRCDIR)/t0.mo \
+	$(SRCDIR)/uintahdata.mo \
+	$(SRCDIR)/vfem.mo \
+	$(SRCDIR)/volume_color.mo \
+	$(SRCDIR)/VolumeVisMod.mo \
 	$(SRCDIR)/ASE-RTRT.mo\
 	$(SRCDIR)/simple_tri.mo \
 	$(SRCDIR)/terrain.mo \
@@ -54,21 +58,18 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/multi-scene.mo \
 	$(SRCDIR)/cutdemo.mo  \
 	$(SRCDIR)/basic-sea.mo  \
-	$(SRCDIR)/volume_color.mo \
-	$(SRCDIR)/envmap-sphere.mo  \
 	$(SRCDIR)/single-sphere.mo  \
 	$(SRCDIR)/spinning_instance_demo.mo \
 	$(SRCDIR)/david.mo \
 	$(SRCDIR)/david_old.mo \
-	$(SRCDIR)/VolumeVisMod.mo \
 	$(SRCDIR)/davidhead.mo  \
 	$(SRCDIR)/science-room.mo \
 	$(SRCDIR)/science-room-full.mo \
 	$(SRCDIR)/stadium.mo \
+	$(SRCDIR)/envmap-sphere.mo  \
 #	$(SRCDIR)/dtiglyph.mo 
 #	$(SRCDIR)/ramsey.mo \
 # 	$(SRCDIR)/miptest.mo \
-	$(SRCDIR)/uintahdata.mo \
 # 	$(SRCDIR)/venus.mo \
 # 	$(SRCDIR)/crank.mo 
 # 	$(SRCDIR)/cbox.mo \
