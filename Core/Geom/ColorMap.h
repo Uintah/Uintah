@@ -96,7 +96,11 @@ public:
   { min_ = newmin; max_ = newmax; scaled_p_ = true;}
   void ResetScale() { min_ = -1; max_ = 1; scaled_p_ = false; }
 
+  // Lookup which color value would be associated with in the colormap.
   MaterialHandle& lookup(double value);
+
+  // Lookup a color in the colormap by a value that has already been fitted
+  // to the min/max of the colormap (value should be between 1 and ncolors).
   MaterialHandle& lookup2(double value);
 
   virtual ~ColorMap();

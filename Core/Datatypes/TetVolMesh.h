@@ -409,7 +409,7 @@ public:
   Elem::index_type	add_elem(Node::array_type a);
 
 
-  //! Subidiviosn methods
+  //! Subdivision methods
   bool			insert_node(const Point &p);
   void			insert_node_watson(const Point &p);
   void			bisect_element(const Cell::index_type c);
