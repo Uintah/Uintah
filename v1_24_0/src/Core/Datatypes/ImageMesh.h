@@ -246,6 +246,7 @@ public:
   virtual BBox get_bounding_box() const;
   virtual void transform(const Transform &t);
   virtual void get_canonical_transform(Transform &t);
+  virtual bool synchronize(unsigned int);
 
   //! set the mesh statistics
   void set_min_i(unsigned i) {min_i_ = i; }
@@ -336,8 +337,9 @@ public:
   
   void get_neighbors(Face::array_type &array, Face::index_type idx) const;
     
-  void get_normal(Vector &, const Node::index_type &) const
-  { ASSERTFAIL("not implemented") }
+  virtual bool has_normals() const { return true; }
+  void get_normal(Vector &n, const Node::index_type &) const
+  { n = normal_; }
 
   //! get the center point (in object space) of an element
   void get_center(Point &, const Node::index_type &) const;
@@ -384,6 +386,8 @@ protected:
 
   //! the object space extents of a ImageMesh
   Transform transform_;
+
+  Vector normal_;
 
   // returns a ImageMesh
   static Persistent *maker() { return new ImageMesh(); }
