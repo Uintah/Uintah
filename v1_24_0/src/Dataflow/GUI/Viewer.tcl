@@ -642,7 +642,7 @@ itcl_class ViewWindow {
     method create_view_menu { m } {
 	menu $m -postcommand \
 	    "$this create_other_viewers_view_menu $m.otherviewers"
-	$m add checkbutton -label "Track View Window 1" \
+	$m add checkbutton -label "Track Window 1" \
 	    -variable $this-trackViewWindow0
 	$m add cascade -menu $m.otherviewers -label "Other Viewers"
 
