@@ -201,6 +201,11 @@ public:
 				   CellInformation* cellinfo,
 				   ArchesVariables* vars);
   
+      void addMMEnthalpySource(const ProcessorGroup* pc,
+			    const Patch* patch,
+			    CellInformation* cellinfo,
+			    ArchesVariables* vars);
+  
 private:
 
       TurbulenceModel* d_turbModel;

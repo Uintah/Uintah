@@ -1,45 +1,45 @@
 //----- Source.cc ----------------------------------------------
 
+#include <Core/Geometry/Vector.h>
+#include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
 #include <Packages/Uintah/CCA/Components/Arches/debug.h>
 #include <Packages/Uintah/CCA/Components/Arches/Source.h>
 #include <Packages/Uintah/CCA/Components/Arches/Discretization.h>
+#include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
 #include <Packages/Uintah/CCA/Components/Arches/StencilMatrix.h>
 #include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
-#include <Packages/Uintah/CCA/Components/Arches/PhysicalConstants.h>
-#include <Packages/Uintah/CCA/Components/Arches/CellInformation.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
+#include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Packages/Uintah/Core/Grid/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/SoleVariable.h>
-#include <Core/Geometry/Vector.h>
 
 using namespace Uintah;
 using namespace SCIRun;
 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/scalsrc_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mascal_scalar_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/uvelsrc_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/vvelsrc_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/wvelsrc_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/mascal_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/pressrcpred_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/pressrccorr_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/computeVel_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/pressrc_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/enthalpyradflux_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/enthalpyradsrc_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/enthalpyradthinsrc_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/add_mm_enth_src_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/addpressgrad_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/addtranssrc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/calcpressgrad_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/enthalpyradflux_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/enthalpyradsrc_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/enthalpyradthinsrc_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/computeVel_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/mascal_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/mascal_scalar_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mmmomsrc_fort.h>
-
+#include <Packages/Uintah/CCA/Components/Arches/fortran/pressrc_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/pressrccorr_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/pressrcpred_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/scalsrc_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/uvelsrc_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/vvelsrc_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/wvelsrc_fort.h>
 
 //****************************************************************************
 // Constructor for Source
@@ -1150,9 +1150,10 @@ Source::computePressureSource(const ProcessorGroup* ,
   }
 }
 
+//****************************************************************************
+// Add the momentum source from continuous solid-gas momentum exchange
+//****************************************************************************
 
-////////////////////////////////////////////////////////////////////////
-// Add multimaterial source term
 void 
 Source::computemmMomentumSource(const ProcessorGroup*,
 				const Patch* patch,
@@ -1216,6 +1217,34 @@ Source::computemmMomentumSource(const ProcessorGroup*,
   // add in su and sp terms from multimaterial based on index
 }
 
+//****************************************************************************
+// Add the enthalpy source from continuous solid-gas energy exchange
+//****************************************************************************
+
+void 
+Source::addMMEnthalpySource(const ProcessorGroup* pc,
+			    const Patch* patch,
+			    CellInformation* cellinfo,
+			    ArchesVariables* vars)
+{
+
+  // Get the low and high index for the patch
+
+  IntVector valid_lo = patch->getCellFORTLowIndex();
+  IntVector valid_hi = patch->getCellFORTHighIndex();
+
+  fort_add_mm_enth_src(vars->scalarNonlinearSrc,
+		       vars->scalarLinearSrc,
+		       vars->mmEnthSu,
+		       vars->mmEnthSp,
+		       valid_lo,
+		       valid_hi);
+
+}
+
+//****************************************************************************
+// Explicit solve for velocity from projection on hatted velocity
+//****************************************************************************
 
 void 
 Source::calculateVelocityPred(const ProcessorGroup* ,

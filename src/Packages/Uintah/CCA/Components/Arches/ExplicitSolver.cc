@@ -434,10 +434,14 @@ ExplicitSolver::sched_probeData(SchedulerP& sched, const PatchSet* patches,
     		  Ghost::None, zeroGhostCells);
   }
 
+  if (d_enthalpySolve)
+    tsk->requires(Task::NewDW, d_lab->d_tempINLabel, 
+		  Ghost::None, zeroGhostCells);
+
   if (d_MAlab)
     tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
 		  Ghost::None, zeroGhostCells);
-      
+
   sched->addTask(tsk, patches, matls);
   
 }
@@ -769,6 +773,11 @@ ExplicitSolver::probeData(const ProcessorGroup* ,
       new_dw->get(gasfraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch, 
 		  Ghost::None, nofGhostCells);
 
+    constCCVariable<double> temperature;
+    if (d_enthalpySolve) 
+      new_dw->get(temperature, d_lab->d_tempINLabel, matlIndex, patch, 
+		  Ghost::None, nofGhostCells);
+
     for (vector<IntVector>::const_iterator iter = d_probePoints.begin();
 	 iter != d_probePoints.end(); iter++) {
 
@@ -779,6 +788,8 @@ ExplicitSolver::probeData(const ProcessorGroup* ,
 	cerr << "Viscosity: " << viscosity[*iter] << endl;
 	cerr << "Pressure: " << pressure[*iter] << endl;
 	cerr << "MixtureFraction: " << mixtureFraction[*iter] << endl;
+	if (d_enthalpySolve)
+	  cerr<<"Gas Temperature: " << temperature[*iter] << endl;
 	cerr << "UVelocity: " << newUVel[*iter] << endl;
 	cerr << "VVelocity: " << newVVel[*iter] << endl;
 	cerr << "WVelocity: " << newWVel[*iter] << endl;

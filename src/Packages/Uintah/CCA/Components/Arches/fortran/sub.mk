@@ -6,6 +6,7 @@ SRCDIR   := Packages/Uintah/CCA/Components/Arches/fortran
 
 SRCS += \
 	$(SRCDIR)/add_hydrostatic_term_topressure.F \
+	$(SRCDIR)/add_mm_enth_src.F \
 	$(SRCDIR)/addpressgrad.F \
 	$(SRCDIR)/addpressuregrad.F \
 	$(SRCDIR)/addtranssrc.F \
@@ -53,8 +54,8 @@ SRCS += \
 	$(SRCDIR)/outletbcenth.F \
 	$(SRCDIR)/prescoef.F \
 	$(SRCDIR)/pressrc.F \
-	$(SRCDIR)/pressrcpred.F \
 	$(SRCDIR)/pressrccorr.F \
+	$(SRCDIR)/pressrcpred.F \
 	$(SRCDIR)/profscalar.F \
 	$(SRCDIR)/profv.F \
 	$(SRCDIR)/rescal.F \
@@ -72,10 +73,11 @@ SRCS += \
 	$(SRCDIR)/wvelcoef.F \
 	$(SRCDIR)/wvelsrc.F
 
+$(SRCDIR)/add_hydrostatic_term_topressure.o: $(SRCDIR)/add_hydrostatic_term_topressure_fort.h
+$(SRCDIR)/add_mm_enth_src.o: $(SRCDIR)/add_mm_enth_src_fort.h
 $(SRCDIR)/addpressgrad.o: $(SRCDIR)/addpressgrad_fort.h
 $(SRCDIR)/addpressuregrad.o: $(SRCDIR)/addpressuregrad_fort.h
 $(SRCDIR)/addtranssrc.o: $(SRCDIR)/addtranssrc_fort.h
-$(SRCDIR)/add_hydrostatic_term_topressure.o: $(SRCDIR)/add_hydrostatic_term_topressure_fort.h
 $(SRCDIR)/apcal.o: $(SRCDIR)/apcal_fort.h
 $(SRCDIR)/apcal_vel.o: $(SRCDIR)/apcal_vel_fort.h
 $(SRCDIR)/areain.o: $(SRCDIR)/areain_fort.h
@@ -88,15 +90,15 @@ $(SRCDIR)/bcscalar.o: $(SRCDIR)/bcscalar_fort.h
 $(SRCDIR)/bcuvel.o: $(SRCDIR)/bcuvel_fort.h
 $(SRCDIR)/bcvvel.o: $(SRCDIR)/bcvvel_fort.h
 $(SRCDIR)/bcwvel.o: $(SRCDIR)/bcwvel_fort.h
-$(SRCDIR)/calpbc.o: $(SRCDIR)/calpbc_fort.h
 $(SRCDIR)/calcpressgrad.o: $(SRCDIR)/calcpressgrad_fort.h
+$(SRCDIR)/calpbc.o: $(SRCDIR)/calpbc_fort.h
 $(SRCDIR)/cellg.o: $(SRCDIR)/cellg_fort.h
 $(SRCDIR)/celltypeInit.o: $(SRCDIR)/celltypeInit_fort.h
 $(SRCDIR)/coeffb.o: $(SRCDIR)/coeffb_fort.h
 $(SRCDIR)/computeVel.o: $(SRCDIR)/computeVel_fort.h
 $(SRCDIR)/denaccum.o: $(SRCDIR)/denaccum_fort.h
-$(SRCDIR)/enthalpyradsrc.o: $(SRCDIR)/enthalpyradsrc_fort.h
 $(SRCDIR)/enthalpyradflux.o: $(SRCDIR)/enthalpyradflux_fort.h
+$(SRCDIR)/enthalpyradsrc.o: $(SRCDIR)/enthalpyradsrc_fort.h
 $(SRCDIR)/enthalpyradthinsrc.o: $(SRCDIR)/enthalpyradthinsrc_fort.h
 $(SRCDIR)/enthalpyradwallbc.o: $(SRCDIR)/enthalpyradwallbc_fort.h
 $(SRCDIR)/explicit.o: $(SRCDIR)/explicit_fort.h
@@ -108,12 +110,12 @@ $(SRCDIR)/inlbcs.o: $(SRCDIR)/inlbcs_fort.h
 $(SRCDIR)/linegs.o: $(SRCDIR)/linegs_fort.h
 $(SRCDIR)/mascal.o: $(SRCDIR)/mascal_fort.h
 $(SRCDIR)/mascal_scalar.o: $(SRCDIR)/mascal_scalar_fort.h
+$(SRCDIR)/mm_computevel.o: $(SRCDIR)/mm_computevel_fort.h
+$(SRCDIR)/mm_modify_prescoef.o: $(SRCDIR)/mm_modify_prescoef_fort.h
 $(SRCDIR)/mmbcvelocity.o: $(SRCDIR)/mmbcvelocity_fort.h
 $(SRCDIR)/mmcelltypeinit.o: $(SRCDIR)/mmcelltypeinit_fort.h
 $(SRCDIR)/mmmomsrc.o: $(SRCDIR)/mmmomsrc_fort.h
 $(SRCDIR)/mmwallbc.o: $(SRCDIR)/mmwallbc_fort.h
-$(SRCDIR)/mm_computevel.o: $(SRCDIR)/mm_computevel_fort.h
-$(SRCDIR)/mm_modify_prescoef.o: $(SRCDIR)/mm_modify_prescoef_fort.h
 $(SRCDIR)/normpress.o: $(SRCDIR)/normpress_fort.h
 $(SRCDIR)/outarea.o: $(SRCDIR)/outarea_fort.h
 $(SRCDIR)/outletbc.o: $(SRCDIR)/outletbc_fort.h
@@ -124,8 +126,8 @@ $(SRCDIR)/prescoef.o: $(SRCDIR)/prescoef_fort.h
 $(SRCDIR)/pressrc.o: $(SRCDIR)/pressrc_fort.h
 $(SRCDIR)/pressrccorr.o: $(SRCDIR)/pressrccorr_fort.h
 $(SRCDIR)/pressrcpred.o: $(SRCDIR)/pressrcpred_fort.h
-$(SRCDIR)/profv.o: $(SRCDIR)/profv_fort.h
 $(SRCDIR)/profscalar.o: $(SRCDIR)/profscalar_fort.h
+$(SRCDIR)/profv.o: $(SRCDIR)/profv_fort.h
 $(SRCDIR)/rescal.o: $(SRCDIR)/rescal_fort.h
 $(SRCDIR)/rmean.o: $(SRCDIR)/rmean_fort.h
 $(SRCDIR)/scalarvarmodel.o: $(SRCDIR)/scalarvarmodel_fort.h
