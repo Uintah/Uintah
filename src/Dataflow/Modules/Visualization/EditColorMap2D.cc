@@ -130,6 +130,7 @@ private:
 
   bool				just_resend_selection_;
   bool				force_execute_;
+  int				execute_count_;
   TkOpenGLContext *		ctx_;
   int				width_;
   int				height_;
@@ -201,6 +202,8 @@ EditColorMap2D::EditColorMap2D(GuiContext* ctx)
     hist_iport_((NrrdIPort*)get_iport("Histogram")),
     sent_cmap2_(0),
     just_resend_selection_(0),
+    force_execute_(false),
+    execute_count_(0),
     ctx_(0), 
     width_(0),
     height_(0),
@@ -932,9 +935,11 @@ EditColorMap2D::motion(int x, int y)
   cmap_dirty_ = true;
   redraw();
   updating_ = true;
-
-  force_execute_ = true;
-  want_to_execute();
+  if (execute_count_ == 0) {
+    execute_count_ = 1;
+    force_execute_ = true;
+    want_to_execute();
+  }
 }
 
 
@@ -972,7 +977,6 @@ EditColorMap2D::execute()
       !just_resend_selection_ && !force_execute_ &&
       !cmap_dirty_ && !histo_dirty_)
     return;
-
   force_execute_ = false;
 
   if (icmap.get_rep() && icmap->generation != icmap_generation_) {
@@ -1024,6 +1028,7 @@ EditColorMap2D::execute()
   sent_cmap2_->selected() = gui_selected_widget_.get();
   just_resend_selection_ = false;
   icmap_generation_ = sent_cmap2_->generation;
+  if (execute_count_ > 0) execute_count_--;
   cmap_oport_->send(sent_cmap2_);
 }
 
@@ -1083,20 +1088,18 @@ void EditColorMap2D::save_ppm(const string &filename,
 void
 EditColorMap2D::init_shader_factory() 
 {
+  if (!use_back_buffer_ || shader_factory_) return;
+
   if (sci_getenv_p("SCIRUN_SOFTWARE_CM2")) {
-    if (use_back_buffer_) 
-      remark("SCIRUN_SOFWARE_CM2 set. Rasterizing Colormap in software.");
+    remark("SCIRUN_SOFWARE_CM2 set. Rasterizing Colormap in software.");
     use_back_buffer_ = false;
-  } else if (use_back_buffer_ && !shader_factory_ && 
-	     ShaderProgramARB::shaders_supported()) {
+  } else if (!shader_factory_ && ShaderProgramARB::shaders_supported()) {
     shader_factory_ = new CM2ShaderFactory();
     remark ("ARB Shaders are supported.");
     remark ("Using hardware rasterization for widgets.");
   } else {
-    if (use_back_buffer_) {
-      remark ("Shaders not supported.");
-      remark ("Using software rasterization for widgets.");
-    }
+    remark ("Shaders not supported.");
+    remark ("Using software rasterization for widgets.");
     use_back_buffer_ = false;
   }
 }
