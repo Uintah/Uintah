@@ -102,15 +102,15 @@ int GeomObj::pre_draw(DrawInfoOpenGL* di, Material* matl, int lit)
 	glEnable(GL_LIGHTING);
 	switch(di->get_drawtype()) {
 	case DrawInfoOpenGL::WireFrame:
-	    gluQuadricNormals(di->qobj, GLU_SMOOTH);
+	    gluQuadricNormals(di->qobj, (GLenum)GLU_SMOOTH);
 	    glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
 	    break;
 	case DrawInfoOpenGL::Flat:
-	    gluQuadricNormals(di->qobj, GLU_FLAT);
+	    gluQuadricNormals(di->qobj, (GLenum)GLU_FLAT);
 	    glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
 	    break;
 	case DrawInfoOpenGL::Gouraud:
-	    gluQuadricNormals(di->qobj, GLU_SMOOTH);
+	    gluQuadricNormals(di->qobj, (GLenum)GLU_SMOOTH);
 	    glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
 	    break;
 	}
@@ -119,7 +119,7 @@ int GeomObj::pre_draw(DrawInfoOpenGL* di, Material* matl, int lit)
     if((!lit || !di->lighting) && di->currently_lit){
 	di->currently_lit=0;
 	glDisable(GL_LIGHTING);
-	gluQuadricNormals(di->qobj, GLU_NONE);
+	gluQuadricNormals(di->qobj, (GLenum)GLU_NONE);
 	switch(di->get_drawtype()) {
 	case DrawInfoOpenGL::WireFrame:
 	    glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
@@ -165,9 +165,9 @@ DrawInfoOpenGL::DrawInfoOpenGL()
 {
     qobj=gluNewQuadric();
 #ifdef _WIN32
-	gluQuadricCallback(qobj, GLU_ERROR, (void (__stdcall*)())quad_error);
+	gluQuadricCallback(qobj, (GLenum)GLU_ERROR, (void (__stdcall*)())quad_error);
 #else
-    gluQuadricCallback(qobj, GLU_ERROR, (gluQuadricCallbackType)quad_error);
+    gluQuadricCallback(qobj, (GLenum)GLU_ERROR, (gluQuadricCallbackType)quad_error);
 #endif
 }
 
@@ -194,18 +194,18 @@ void DrawInfoOpenGL::set_drawtype(DrawType dt)
     drawtype=dt;
     switch(drawtype){
     case DrawInfoOpenGL::WireFrame:
-	gluQuadricDrawStyle(qobj, GLU_LINE);
+	gluQuadricDrawStyle(qobj, (GLenum)GLU_LINE);
 	glPolygonMode(GL_FRONT_AND_BACK,GL_LINE);
 	break;
     case DrawInfoOpenGL::Flat:
-	gluQuadricDrawStyle(qobj, GLU_FILL);
+	gluQuadricDrawStyle(qobj, (GLenum)GLU_FILL);
 	glShadeModel(GL_FLAT);
-	glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+	glPolygonMode(GL_FRONT_AND_BACK,(GLenum)GL_FILL);
 	break;
     case DrawInfoOpenGL::Gouraud:
-	gluQuadricDrawStyle(qobj, GLU_FILL);
+	gluQuadricDrawStyle(qobj, (GLenum)GLU_FILL);
 	glShadeModel(GL_SMOOTH);
-	glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+	glPolygonMode(GL_FRONT_AND_BACK,(GLenum)GL_FILL);
 	break;
     }
     
@@ -217,19 +217,19 @@ void DrawInfoOpenGL::init_lighting(int use_light)
 	glEnable(GL_LIGHTING);
  	switch(drawtype) {
 	case DrawInfoOpenGL::WireFrame:
-	    gluQuadricNormals(qobj, GLU_SMOOTH);
+	    gluQuadricNormals(qobj, (GLenum)GLU_SMOOTH);
 	    break;
 	case DrawInfoOpenGL::Flat:
-	    gluQuadricNormals(qobj, GLU_FLAT);
+	    gluQuadricNormals(qobj, (GLenum)GLU_FLAT);
 	    break;
 	case DrawInfoOpenGL::Gouraud:
-	    gluQuadricNormals(qobj, GLU_SMOOTH);
+	    gluQuadricNormals(qobj, (GLenum)GLU_SMOOTH);
 	    break;
 	}
     }
     else {
 	glDisable(GL_LIGHTING);
-	gluQuadricNormals(qobj,GLU_NONE);
+	gluQuadricNormals(qobj,(GLenum)GLU_NONE);
     }
     if (fog)
 	glEnable(GL_FOG);
@@ -249,9 +249,9 @@ void DrawInfoOpenGL::init_clip(void)
     while (i < 6) {
 	if (clps&1) {
 	    if (check_clip)
-		glEnable(GL_CLIP_PLANE0+i);
+		glEnable((GLenum)(GL_CLIP_PLANE0+i));
 	    else	
-		glDisable(GL_CLIP_PLANE0+i);
+		glDisable((GLenum)(GL_CLIP_PLANE0+i));
 	}
 	i++;
 	clps >>= 1;
@@ -3998,10 +3998,10 @@ void PointLight::opengl_setup(const View&, DrawInfoOpenGL*, int& idx)
     int i=idx++;
     float f[4];
     f[0]=p.x(); f[1]=p.y(); f[2]=p.z(); f[3]=1.0;
-    glLightfv(GL_LIGHT0+i, GL_POSITION, f);
+    glLightfv((GLenum)(GL_LIGHT0+i), GL_POSITION, f);
     c.get_color(f);
-    glLightfv(GL_LIGHT0+i, GL_DIFFUSE, f);
-    glLightfv(GL_LIGHT0+i, GL_SPECULAR, f);
+    glLightfv((GLenum)(GL_LIGHT0+i), GL_DIFFUSE, f);
+    glLightfv((GLenum)(GL_LIGHT0+i), GL_SPECULAR, f);
 }
 
 void HeadLight::opengl_setup(const View& /*view*/, DrawInfoOpenGL*, int& idx)
@@ -4015,17 +4015,17 @@ void HeadLight::opengl_setup(const View& /*view*/, DrawInfoOpenGL*, int& idx)
 //    f[0]=p.x(); f[1]=p.y(); f[2]=p.z(); f[3]=0.0;
     f[0] = f[1] = f[3] = 0.0;
     f[2] = 1.0;
-    glLightfv(GL_LIGHT0+i, GL_POSITION, f);
-    c.get_color(f);
-    glLightfv(GL_LIGHT0+i, GL_DIFFUSE, f);
-    glLightfv(GL_LIGHT0+i, GL_SPECULAR, f);
+    glLightfv((GLenum)(GL_LIGHT0+i), GL_POSITION, f);
+    c.get_color(f);	   
+    glLightfv((GLenum)(GL_LIGHT0+i), GL_DIFFUSE, f);
+    glLightfv((GLenum)(GL_LIGHT0+i), GL_SPECULAR, f);
 
 #if 0
     i=idx++;
     f[2] = -1.0; 
-    glLightfv(GL_LIGHT0+i, GL_POSITION, f);
-    glLightfv(GL_LIGHT0+i, GL_DIFFUSE, f);
-    glLightfv(GL_LIGHT0+i, GL_SPECULAR, f);
+    glLightfv(GL_LIGHT0+i, (GLenum)GL_POSITION, f);
+    glLightfv(GL_LIGHT0+i, (GLenum)GL_DIFFUSE, f);
+    glLightfv(GL_LIGHT0+i, (GLenum)GL_SPECULAR, f);
 #endif
     glPopMatrix();
 }
@@ -4154,6 +4154,9 @@ void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
 
 //
 // $Log$
+// Revision 1.15  1999/11/12 21:05:23  dav
+// type casted GLenums to be GLenums so that linux compiler would not complain
+//
 // Revision 1.14  1999/10/26 21:48:11  moulding
 // added "return 1;" to the end of GeomObj::post_draw to quiet the visual C++ compiler
 //
