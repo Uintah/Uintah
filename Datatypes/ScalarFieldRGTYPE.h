@@ -40,6 +40,12 @@ public:
 
     Vector get_normal( const Point& ivoxel );
     Vector get_normal( int x, int y, int z );
+
+    Vector gradient(int x, int y, int z);
+
+    // this has to be called before augmented stuff (base class)
+    
+    virtual void fill_gradmags();
 };
 
 inline

@@ -15,7 +15,9 @@
 #define SCI_project_ScalarFieldRGBase_h 1
 
 #include <Datatypes/ScalarField.h>
-#include <Classlib/Array3.h>
+#include <Datatypes/LockArray3.h>
+
+typedef LockingHandle< LockArray3<Point> > Array3PointHandle;
 
 class ScalarFieldRGdouble;
 class ScalarFieldRGfloat;
@@ -36,6 +38,12 @@ public:
     int nx;
     int ny;
     int nz;
+
+    int is_augmented; // 0 if regular, 1 if "rectalinear"
+
+    Array3PointHandle aug_data; // shared (potentialy)
+
+    ScalarFieldRGBase *next; // so you can link them...
 
 private:
     Representation rep;
@@ -63,6 +71,13 @@ public:
     static PersistentTypeID type_id;
 
     int get_voxel( const Point& p, Point& ivoxel );
+
+    // this code is used for random distribution stuff...
+
+    void cell_pos(int index, int& x, int& y, int& z); // so you can iterate
+
+    virtual void compute_samples(int);  // for random distributions in fields
+    virtual void distribute_samples();
 };
 
 #endif

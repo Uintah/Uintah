@@ -19,12 +19,13 @@
 PersistentTypeID ScalarFieldRGBase::type_id("ScalarFieldRGBase", "ScalarField", 0);
 
 ScalarFieldRGBase::ScalarFieldRGBase()
-: ScalarField(RegularGridBase), nx(0), ny(0), nz(0), rep(Void)
+: ScalarField(RegularGridBase), nx(0), ny(0), nz(0), rep(Void),
+  is_augmented(0),next(0)
 {
 }
 
 ScalarFieldRGBase::ScalarFieldRGBase(clString r)
-: ScalarField(RegularGridBase), nx(0), ny(0), nz(0)
+: ScalarField(RegularGridBase), nx(0), ny(0), nz(0), is_augmented(0),next(0)
 {
     if (r=="float")
 	rep = Float;
@@ -41,7 +42,8 @@ ScalarFieldRGBase::ScalarFieldRGBase(clString r)
 }
 
 ScalarFieldRGBase::ScalarFieldRGBase(const ScalarFieldRGBase& copy)
-: ScalarField(copy), nx(copy.nx), ny(copy.ny), nz(copy.nz)
+: ScalarField(copy), nx(copy.nx), ny(copy.ny), nz(copy.nz), 
+  is_augmented(0),next(0)
 {
     clString r=copy.getType();
     if (r=="float")
@@ -60,6 +62,8 @@ ScalarFieldRGBase::ScalarFieldRGBase(const ScalarFieldRGBase& copy)
 
 ScalarFieldRGBase::~ScalarFieldRGBase()
 {
+  if (next)
+    delete next; // propogate down the links...
 }
 
 clString ScalarFieldRGBase::getType() const {
@@ -124,7 +128,9 @@ Point ScalarFieldRGBase::get_point(int i, int j, int k)
     double x=bmin.x()+diagonal.x()*double(i)/double(nx-1);
     double y=bmin.y()+diagonal.y()*double(j)/double(ny-1);
     double z=bmin.z()+diagonal.z()*double(k)/double(nz-1);
-    return Point(x,y,z);
+    if (!is_augmented)
+      return Point(x,y,z);
+    return (*aug_data.get_rep())(i,j,k); // just grab it...
 }
 
 void ScalarFieldRGBase::set_bounds(const Point &min, const Point &max) {
@@ -235,6 +241,101 @@ void ScalarFieldRGBase::get_boundary_lines(Array1<Point>& lines)
 	lines.add(Point(x, min.y(), z));
 	lines.add(Point(x, max.y(), z));
     }
+}
+
+
+inline Point RandomPoint(Vector& dv, Point& o) 
+{
+  return Point(o.x() + drand48()*dv.x(),
+	       o.y() + drand48()*dv.y(),
+	       o.z() + drand48()*dv.z());
+}
+
+
+void ScalarFieldRGBase::compute_samples(int nsamp)
+{
+  cerr << "Computing Samples RG\n";
+
+  Vector dv(diagonal.x()/(nx-1),
+	    diagonal.y()/(ny-1),
+	    diagonal.z()/(nz-1));
+  double celvol = dv.x()*dv.y()*dv.z();
+  
+  aug_elems.resize((nx-1)*(ny-1)*(nz-1));
+
+  for(int i=0;i<(nx-1)*(ny-1)*(nz-1);i++) {
+    aug_elems[i].importance = celvol;
+  }
+  samples.resize(nsamp);
+
+  cerr << "Volume: " << celvol*(nx-1)*(ny-1)*(nz-1) << "\n";
+
+}
+
+void ScalarFieldRGBase::cell_pos(int i, int& x, int& y, int& z)
+{
+  z = i/((ny-1)*(nx-1));
+  int delta = i-z*(ny-1)*(nx-1);
+  y = delta/(nx-1);
+  delta = delta - y*(nx-1);
+  x = delta;  // this is the coord to use...
+}
+
+void ScalarFieldRGBase::distribute_samples()
+{
+  // number is already assigned, but weights have changed
+  cerr << "Distributing Samples RG\n";
+
+  Vector dv(diagonal.x()/(nx-1),
+	    diagonal.y()/(ny-1),
+	    diagonal.z()/(nz-1));
+  double celvol = dv.x()*dv.y()*dv.z();
+
+  cerr << diagonal << " vol: " << celvol << "\n";
+
+  double total_importance =0.0;
+
+  Array1<double> psum(aug_elems.size());
+  
+  for(int i=0;i<aug_elems.size();i++) {
+    total_importance += aug_elems[i].importance;
+    psum[i] = total_importance;
+    aug_elems[i].pt_samples.remove_all();
+  }
+
+  // now just jump into the prefix sum table...
+  // this is a bit faster, especialy initialy...
+
+  int pi=0;
+  int nsamp = samples.size();
+  double factor = 1.0/(nsamp-1)*total_importance;
+
+  double jitter = 1.0; // can jitter half an interval in either direction
+
+  for(i=0;i<nsamp;i++) {
+    double ni = i + drand48()-0.5;
+    if (ni<0) ni = 0;
+    if (ni >= (nsamp-1)) ni = nsamp-1; // jittered comb...
+
+    double val = (ni*factor);
+    while ( (pi < aug_elems.size()) && 
+	   (psum[pi] < val))
+      pi++;
+    if (pi == aug_elems.size()) {
+      cerr << "Over flow!\n";
+    } else {
+      aug_elems[pi].pt_samples.add(i);
+      int x,y,z;
+
+      cell_pos(pi,x,y,z); // get coordinates for this cell...
+
+      Point nv(bmin.x()+x*dv.x(),
+	       bmin.y()+y*dv.y(),
+	       bmin.z()+z*dv.z());
+
+      samples[i].loc = RandomPoint(dv,nv);
+    }
+  }
 }
 
 

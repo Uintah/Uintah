@@ -208,9 +208,12 @@ static MaterialHandle white=scinew Material(Color(0,0,0), Color(.6, .6, .6),
 
 GeomObj* VectorFieldOcean::makesurf(int downsample)
 {
-  GeomGrid* grid=new GeomGrid(1280/downsample, 896/downsample,
+  GeomGrid* grid=0;
+#if 0
+new GeomGrid(1280/downsample, 896/downsample,
 			      Point(0,0,0), Vector(1280,0,0), Vector(0,896,0),
 			      GeomGrid::WithNormAndMatl);
+#endif
   for(int j=0;j<896;j+=downsample){
     for(int i=0;i<1280;i+=downsample){
       int deep=depth[j*nx+i];

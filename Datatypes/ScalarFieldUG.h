@@ -41,6 +41,22 @@ public:
     virtual int interpolate(const Point&, double&, int& ix, double epsilon1=1.e-6, double epsilon2=1.e-6);
     virtual void get_boundary_lines(Array1<Point>& lines);
 
+    virtual void compute_samples(int);  // for random distributions in fields
+    virtual void distribute_samples();
+
+    // this has to be called before 2 functions below...
+
+    virtual void fill_gradmags();
+
+    // diferent ways to augment a mesh...
+    // 1/grad, grad, histogram of gradients
+
+    // this is just special cased because of potential missing elements
+    // you might want to get rid of it and use the base class...
+
+    virtual void over_grad_augment(double vol_wt, double grad_wt, 
+				   double crit_scale);
+
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
 };

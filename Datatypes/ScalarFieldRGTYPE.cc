@@ -209,6 +209,98 @@ ScalarFieldRGTYPE::get_normal( int x, int y, int z )
   return normal;
 }
 
+Vector 
+ScalarFieldRGTYPE::gradient(int x, int y, int z)
+{
+  // this tries to use central differences...
+
+  Vector rval; // return value
+
+  Vector h(0.5*(nx-1)/diagonal.x(),
+	   0.5*(ny-1)/diagonal.y(),
+	   0.5*(nz-1)/diagonal.z());
+  // h is distances one over between nodes in each dimension...
+
+  if (!x || (x == nx-1)) { // boundary...
+    if (!x) {
+      rval.x(2*(grid(x+1,y,z)-grid(x,y,z))*h.x()); // end points are rare
+    } else {
+      rval.x(2*(grid(x,y,z)-grid(x-1,y,z))*h.x());
+    }
+  } else { // just use central diferences...
+    rval.x((grid(x+1,y,z)-grid(x-1,y,z))*h.x());
+  }
+
+  if (!y || (y == ny-1)) { // boundary...
+    if (!y) {
+      rval.y(2*(grid(x,y+1,z)-grid(x,y,z))*h.y()); // end points are rare
+    } else {
+      rval.y(2*(grid(x,y,z)-grid(x,y-1,z))*h.y());
+    }
+  } else { // just use central diferences...
+    rval.y((grid(x,y+1,z)-grid(x,y-1,z))*h.y());
+  }
+
+  if (!z || (z == nz-1)) { // boundary...
+    if (!z) {
+      rval.z(2*(grid(x,y,z+1)-grid(x,y,z))*h.z()); // end points are rare
+    } else {
+      rval.z(2*(grid(x,y,z)-grid(x,y,z-1))*h.z());
+    }
+  } else { // just use central diferences...
+    rval.z((grid(x,y,z+1)-grid(x,y,z-1))*h.z());
+  }
+
+  return rval;
+
+}
+
+// this stuff is for augmenting the random distributions...
+
+void ScalarFieldRGTYPE::fill_gradmags() // these guys ignor the vf
+{
+  cerr << " Filling Gradient Magnitudes...\n";
+  
+  total_gradmag = 0.0;
+  
+  int nelems = (nx-1)*(ny-1)*(nz-1); // must be 3d for now...
+
+  grad_mags.resize(nelems);
+
+  // MAKE PARALLEL
+
+  for(int i=0;i<nelems;i++) {
+    int x,y,z;
+
+    cell_pos(i,x,y,z); // x,y,z is lleft corner...
+
+    Vector vs[8]; // 8 points define a cell...
+
+    vs[0] = gradient(x,y,z);
+    vs[1] = gradient(x,y+1,z);
+    vs[2] = gradient(x,y,z+1);
+    vs[3] = gradient(x,y+1,z+1);
+
+    vs[4] = gradient(x+1,y,z);
+    vs[5] = gradient(x+1,y+1,z);
+    vs[6] = gradient(x+1,y,z+1);
+    vs[7] = gradient(x+1,y+1,z+1);
+
+    // should try different types of averages...
+    // average magnitudes and directions seperately???
+    // for this we just need magnitudes though.
+
+    double ml=0;
+    for(int j=0;j<8;j++) {
+      ml += vs[j].length();
+    }  
+
+    grad_mags[i] = ml/8.0;;
+    
+    total_gradmag += grad_mags[i];
+  }
+}
+
 #ifdef __GNUG__
 
 #include <Classlib/Array3.cc>

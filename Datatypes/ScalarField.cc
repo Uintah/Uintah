@@ -94,6 +94,152 @@ void ScalarField::get_bounds(Point& min, Point& max)
     min=bmin;
 }
 
+// stuff for random distributions
+
+void ScalarField::compute_samples(int nsamp)
+{
+  cerr << nsamp << "In quasi-virtual base class ScalarField::compute_samples\n";
+}
+
+void ScalarField::distribute_samples()
+{
+  cerr << "In quasi-virtual base class ScalarField::distribute_samples\n";
+}
+
+void ScalarField::fill_gradmags()
+{
+  cerr << "In quasi-virtual base class  ScalarField::fill_gradmags\n";
+}
+
+void ScalarField::over_grad_augment(double vol_wt, double grad_wt, 
+				      double crit_scale)
+{
+  // this is done in 2 passes, first just get gradients and compute totals
+  double vol_total=0.0;
+  double grad_total=0.0;
+  Array1<double> grads(grad_mags.size());
+  double max=-1;
+  Array1<int> zeros;
+  
+  for(int i=0;i<grad_mags.size();i++) {
+    grads[i] = grad_mags[i]; // already compute this...
+
+    if (grads[i] == 0.0) {
+      cerr << "Have a 0...\n";
+      zeros.add(i);
+    } else {
+      grads[i] = 1.0/grads[i];
+      if (grads[i] > max)
+	max = grads[i];
+    }
+    vol_total += aug_elems[i].importance;
+    grad_total += grad_mags[i];
+  }
+
+  // ok...  now handle zeros...
+  
+  for(i=0;i<zeros.size();i++) {
+    grad_total += max;
+    grads[zeros[i]] = max;
+  }
+  
+  // now do a second pass, normalizing the above...
+  
+  // normalization is done through recomputing the weights...
+  
+  vol_wt /= vol_total;
+  grad_wt /= grad_total;
+  
+  for(i=0;i<aug_elems.size();i++) {
+    aug_elems[i].importance =
+      vol_wt*aug_elems[i].importance + grads[i]*grad_wt;
+  }
+
+  cerr << vol_total << " Volume " << grad_total << " Gradient\n";
+}
+
+void ScalarField::grad_augment(double vol_wt, double grad_wt)
+{
+  // this is done in 2 passes, first just get gradients and compute totals
+  double vol_total=0.0;
+  double grad_total=total_gradmag;
+  
+  for(int i=0;i<aug_elems.size();i++) {
+    vol_total += aug_elems[i].importance;
+  }
+
+  // now do a second pass, normalizing the above...
+
+  // normalization is done through recomputing the weights...
+
+  vol_wt /= vol_total;
+  grad_wt /= grad_total;
+
+  for(i=0;i<aug_elems.size();i++) {
+      aug_elems[i].importance =
+	vol_wt*aug_elems[i].importance + grad_mags[i]*grad_wt;
+  }
+
+  cerr << vol_total << " Volume " << grad_total << " Gradient\n";
+}
+
+void ScalarField::hist_grad_augment(double vol_wt, double grad_wt,
+				      const int HSIZE)
+{
+  Array1<int> histogram;
+
+  histogram.resize(HSIZE);
+
+  for(int i=0;i<HSIZE;i++) {
+    histogram[i] = 0;
+  }
+
+  double vol_total=0.0;
+  double grad_total=0;
+  
+  double min=122434435, max=-1.0;
+
+
+  for(i=0;i<aug_elems.size();i++) {
+    if (grad_mags[i] < min) min = grad_mags[i];
+    if (grad_mags[i] > max) max = grad_mags[i];
+    
+    vol_total += aug_elems[i].importance;
+  }
+
+  double temp = 1.0/(max-min)*(HSIZE-1);
+
+  for(i=0;i<aug_elems.size();i++) {
+      histogram[(grad_mags[i]-min)*temp]++;
+  }
+  
+  Array1<double> S;
+  S.resize(HSIZE);
+
+  for( i=0;i<HSIZE;i++) {
+    double Number=0.0;
+    for (int j=0; j<=i; j++) Number+=histogram[j];
+    S[i] = Number/aug_elems.size();
+  }
+
+  Array1<double> grads(grad_mags.size());
+
+  for( i=0;i<aug_elems.size();i++) {
+    grads[i] = S[(grad_mags[i]-min)*temp];
+    grad_total += grads[i];
+  }
+
+  vol_wt /= vol_total;
+  grad_wt /= grad_total;
+
+  for(i=0;i<aug_elems.size();i++) {
+    aug_elems[i].importance =
+      vol_wt*aug_elems[i].importance + grads[i]*grad_wt;
+  }
+
+  cerr << vol_total << " Volume " << grad_total << " Gradient\n";
+}
+
 #define SCALARFIELD_VERSION 1
 
 void ScalarField::io(Piostream& stream)
