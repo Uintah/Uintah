@@ -827,7 +827,6 @@ proc NiceQuit {} {
     set result [tk_messageBox -type okcancel -parent . -message \
 		    "Exiting SCIRun\nDo you wish to proceed?"\
 		    -icon warning ]
-    set result "ok"
 
     if {[string compare "ok" $result] == 0} {
 	global modules
