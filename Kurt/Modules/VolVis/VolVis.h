@@ -70,6 +70,7 @@ private:
   Vector ddv;
 
   TCLint avail_tex;
+  TCLdouble influence;
   TCLint max_brick_dim;
   TCLint num_slices;
   TCLint draw_mode;

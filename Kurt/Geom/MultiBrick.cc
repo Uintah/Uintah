@@ -97,9 +97,9 @@ void
 MultiBrick::SetVol( const ScalarFieldRGuchar *tex )
 {
   this->tex = tex;
-  X = tex->nx;
+  X = tex->nz;
   Y = tex->ny;
-  Z = tex->nz;
+  Z = tex->nx;
   
   Vector diag = max - min;
   dx = diag.x()/(X-1);
@@ -485,9 +485,9 @@ void MultiBrick::makeLowResBrickData(int xmax, int ymax, int zmax,
   bd->newsize( zmax, ymax, xmax);
 
   if( level == 0 ){
-    dx = (double)(xsize-1)/(xmax-1);
-    dy = (double)(ysize-1)/(ymax-1);
-    dz = (double)(zsize-1)/(zmax-1);
+    dx = (double)(xsize-1)/(xmax-1.0);
+    dy = (double)(ysize-1)/(ymax-1.0);
+    dz = (double)(zsize-1)/(zmax-1.0);
 
     //  cerr<<"xsize x ysize x zsize ="<<xsize<<"x"<<ysize<<"x"<<zsize<<endl;
     //  cerr<<"xmax x ymax x zmax ="<<xmax<<"x"<<ymax<<"x"<<zmax<<endl;  
@@ -496,18 +496,18 @@ void MultiBrick::makeLowResBrickData(int xmax, int ymax, int zmax,
     double dk,dj,di, k00,k01,k10,k11,j00,j01;
 
     for(kk = 0, k = zoff; kk < zmax; kk++, k+=dz){
-      k1 = ((int)k + 1 >= zoff+zsize)?k:(int)k + 1 ;
+      k1 = ((int)k + 1 >= zoff+zsize-1)?k:(int)k + 1 ;
       if(k1 == (int)k ) { dk = 0; } else {dk = k1 - k;}
       for(jj = 0,j = yoff; jj < ymax; jj++, j+=dy){
-	j1 = ((int)j + 1 >= zoff+zsize)?j:(int)j + 1 ;
+	j1 = ((int)j + 1 >= yoff+ysize-1)?j:(int)j + 1 ;
 	if(j1 == (int)j) {dj = 0;} else { dj = j1 - j;} 
 	for(ii = 0, i = xoff; ii < xmax; ii++, i+=dx){
-	  i1 = ((int)i + 1 >= zoff+zsize)?i:(int)i + 1 ;
+	  i1 = ((int)i + 1 >= xoff+xsize-1)?i:(int)i + 1 ;
 	  if( i1 == (int)i){ di = 0;} else {di = i1 - i;}
-	  k00 = Interpolate(tex->grid(k,j,i),tex->grid(k1,j,i),dk);
-	  k01 = Interpolate(tex->grid(k,j,i1),tex->grid(k1,j,i1),dk);
-	  k10 = Interpolate(tex->grid(k,j1,i1),tex->grid(k1,j1,i),dk);
-	  k11 = Interpolate(tex->grid(k,j1,i1),tex->grid(k1,j,i1),dk);
+	  k00 = Interpolate(tex->grid(k,j,i),tex->grid(k,j,i1),dk);
+	  k01 = Interpolate(tex->grid(k1,j,i),tex->grid(k1,j,i1),dk);
+	  k10 = Interpolate(tex->grid(k,j1,i),tex->grid(k,j,i1),dk);
+	  k11 = Interpolate(tex->grid(k1,j1,i),tex->grid(k1,j1,i1),dk);
 	  j00 = Interpolate(k00,k10,dj);
 	  j01 = Interpolate(k01,k11,dj);
 	  (*bd)(kk,jj,ii) = Interpolate(j00,j01,di);
@@ -704,6 +704,7 @@ MultiBrick::drawSlices()
   glDisable(GL_TEXTURE_3D_EXT);
   glEnable(GL_DEPTH_TEST);  
 }
+
 void MultiBrick::drawBonTree( const VolumeOctree<Brick*>* node, 
 			     const Ray&  viewRay, const SliceTable& st)
 {
@@ -712,32 +713,62 @@ void MultiBrick::drawBonTree( const VolumeOctree<Brick*>* node,
   double tmin, tmax, dt;
 
   if ( node == NULL ) return;
-   
+
+  
   Brick* brick = (*node)(); // get the contents of the node
   ////cerr<<", level = "<<brick->getLevel()<<endl;
-  if( node->getType() == VolumeOctree<Brick*>::LEAF ){
-    st.getParameters( brick, tmin, tmax, dt );
-    if(debug)
-      cerr<<"drawing node "<< node->getId()<<" at level "<<brick->getLevel()<<endl;
-    if(!mode) {
+  BBox box;
+  box.extend( node->getMin() );
+  box.extend( node->getMax() );
+  BBox pointBox;
+  pointBox.extend( resPoint, influence);
+  const VolumeOctree<Brick*>* child;
+  child = node->child(0);
+
+/*    cerr<< "brick min = " << box.min()<<"brick  max = "<< box.max()<<endl; */
+/*    cerr<< "res min = " << pointBox.min()<<"res  max = "<< pointBox.max()<<endl; */
+   
+
+  if(node->getType() ==  VolumeOctree<Brick*>::LEAF){
+    if(!mode ) {
       brick->draw(viewRay, drawWireFrame, reload != 0,  widgetPoint );
     } else {
-      brick->draw( viewRay, alpha, drawWireFrame, reload != 0, tmin, tmax, dt);/*     for( i = 0; i < 8; i++) */
+      st.getParameters( brick, tmin, tmax, dt );
+      if(debug)
+	cerr<<"drawing node "<< node->getId()
+	  <<" at level "<<brick->getLevel()<<endl;
+      brick->draw( viewRay, alpha, drawWireFrame, reload != 0, tmin, tmax, dt);
+      if( reload !=0 )
+	reload = 0;
+/*     for( i = 0; i < 8; i++) */
     }
-    if( reload !=0 )
-      reload = 0;
 /*       ts[i] = intersectParam(-viewRay.direction(), */
 /* 			     brick->getCorner(i), viewRay); */
 /*     sortParameters(ts,8); */
 /*     brick->draw( viewRay, alpha, drawWireFrame, ts[7], ts[0], (ts[0]-ts[7])/slices ); */
-
+  } else if (!box.inside(resPoint) && mode && !overlap(box, pointBox)){ 
+    st.getParameters( brick, tmin, tmax, dt );
+    brick->draw( viewRay, alpha, drawWireFrame,
+		 reload != 0, tmin, tmax, dt);
+    if(debug)
+      cerr<<"drawing node "<< node->getId()
+	  <<" at level "<<brick->getLevel()<<endl;
+    if( reload !=0 )
+      reload = 0;
+  } else if (!box.inside(resPoint) && mode && overlap(box, pointBox) &&
+	     child->getType() == VolumeOctree<Brick*>::LEAF){ 
+    st.getParameters( brick, tmin, tmax, dt );
+    brick->draw( viewRay, alpha, drawWireFrame,
+		 reload != 0, tmin, tmax, dt);
+    if(debug)
+      cerr<<"drawing node "<< node->getId()
+	  <<" at level "<<brick->getLevel()<<endl;
+    if( reload !=0 )
+      reload = 0;
   } else {
     int *traversal;
     int traversalIndex, x, y, z;
     Point min, max, mid;
-    const VolumeOctree<Brick*>* child;
-    child = node->child(0);
-    
     mid = child->getMax();
     min = child->getMin();
     if(debug){
@@ -766,11 +797,12 @@ void MultiBrick::drawBonTree( const VolumeOctree<Brick*>* node,
     int n;
     for( i = 0; i < 8; i++){
       //cerr<<"Child = "<<traversal[i]<<endl;
-      n = traversal[i];
-      if(n == 0 ||  n==2 ||  n==4 || n==6)
-	drawTree( node->child( traversal[i]), true,  viewRay, st);
-      else
-	drawTree( node->child( traversal[i] ), false,  viewRay, st);	
+      drawBonTree( node->child( traversal[i]),  viewRay, st );
+/*       n = traversal[i]; */
+/*       if(n == 0 ||  n==2 ||  n==4 || n==6) */
+/* 	drawTree( node->child( traversal[i]), true,  viewRay, st); */
+/*       else */
+/* 	drawTree( node->child( traversal[i] ), false,  viewRay, st);	 */
     }
   }
 }
