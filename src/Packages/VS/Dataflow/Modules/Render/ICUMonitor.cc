@@ -227,6 +227,7 @@ private:
   double                                time_sf_;
   LabelTex 				*name_label;
   string 				name_text;
+  int 					injury_offset_;
   LabelTex 				*date_label;
   string 				date_text;
 
@@ -241,7 +242,7 @@ private:
   static unsigned int	pow2(const unsigned int);
   void 			setTimeLabel();
   void 			addMarkersToMenu();
-  void 			setNameAndDate();
+  void 			setNameAndDateAndTime();
   void                  save_image(int x, int y,const string& fname,
 				   const string &ftype);
 };
@@ -397,6 +398,7 @@ ICUMonitor::ICUMonitor(GuiContext* ctx) :
   frame_count_(0),
   name_label(0),
   name_text(" "),
+  injury_offset_(0),
   date_label(0),
   date_text(" ")
 {
@@ -1053,16 +1055,26 @@ void
 ICUMonitor::setTimeLabel()
 {
     int hrs, min, sec;
+    bool neg;
 
     int val = (int)(cur_idx_ / gui_sample_rate_.get());
+    val -= injury_offset_;
 
     hrs = val/(60*60);
     min = (val - hrs*60*60)/60;
     sec = val - hrs*60*60 - min*60;
 
+    neg = (hrs < 0 || min < 0 || sec < 0);
+
+    hrs = Abs(hrs);
+    min = Abs(min);
+    sec = Abs(sec);
+
     ostringstream timestr;
     timestr << setfill('0');
-    timestr << "Time ";
+    timestr << "Time: ";
+    if (neg)
+      timestr << "-";
     timestr << setw(2) << hrs << ":";
     timestr << setw(2) << min << ":";
     timestr << setw(2) << sec;
@@ -1073,12 +1085,17 @@ void
 ICUMonitor::addMarkersToMenu()
 {
   int value;
+  string val;
   hash_map<int, string> tmpmkrs;
   set<int> keys;
 
   for (unsigned int c = 0; c < data_->nproperties(); c++) {
      string name = data_->get_property_name(c);
-     data_->get_property(name, value);
+     //data_->get_property(name, value);
+     data_->get_property(name, val);
+ 
+     stringstream ss(val);
+     ss >> value;
 
      keys.insert(value);
      tmpmkrs[value] = name;
@@ -1095,7 +1112,7 @@ ICUMonitor::addMarkersToMenu()
 }
 
 void 
-ICUMonitor::setNameAndDate()
+ICUMonitor::setNameAndDateAndTime()
 {
   char *name = nrrdKeyValueGet(data_->nrrd, "name");
 
@@ -1122,6 +1139,18 @@ ICUMonitor::setNameAndDate()
     date_text.replace(0, date_text.length(), created);
 
     plots_dirty_ = true;
+  }
+
+  char *inj = nrrdKeyValueGet(data_->nrrd, "injury");
+  if (inj != NULL) {
+     string injoff(inj);
+                                                                                
+     stringstream ss(injoff);
+     ss >> injury_offset_;
+                                                                                
+     injury_offset_ /= gui_sample_rate_.get();
+                                                                                
+     setTimeLabel();
   }
 }
 
@@ -1150,7 +1179,7 @@ ICUMonitor::execute()
 
   addMarkersToMenu();
 
-  setNameAndDate();
+  setNameAndDateAndTime();
 
   NrrdIPort *nrrd2_port = (NrrdIPort*)get_iport("Nrrd2");
 
