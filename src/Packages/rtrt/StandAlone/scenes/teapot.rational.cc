@@ -78,7 +78,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
 	  for (int j=0; j<numumesh; j++) {
 	    for (int k=0; k<numvmesh; k++) {
 	      fscanf(fp,"%lf %lf %lf",&x,&y,&z);
-	      p = Point4D(x,y,z,1);
+	      p = Point4D(x,y,z,1.);
 	      m->mesh[j][k] = p;
 	    }
 	  }

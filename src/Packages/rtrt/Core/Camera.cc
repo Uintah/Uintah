@@ -278,7 +278,8 @@ Camera::updatePosition( Stealth & stealth,
     double time = hit.min_t;
 
     // I want to stay this far from the ground:
-    double height_off_ground = 50;
+    // specific to range-400
+    double height_off_ground = 5;
 
 
     if( time < MAXDOUBLE ) // Ie: ray hit the ground

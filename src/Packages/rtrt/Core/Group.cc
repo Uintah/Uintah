@@ -118,8 +118,8 @@ void Group::collect_prims(Array1<Object*>& prims)
 
 void Group::preprocess(double maxradius, int& pp_offset, int& scratchsize)
 {
-  if (objs.size() == 0)
-    ASSERTFAIL("Error - preprocess was called on a group with no objects!");
+//    if (objs.size() == 0)
+//      ASSERTFAIL("Error - preprocess was called on a group with no objects!");
   if (!was_processed) {
     all_children_are_groups=1;
     bbox.reset();

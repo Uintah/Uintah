@@ -131,7 +131,7 @@ public:
   inline void intersect(Ray &r, HitInfo &hit, DepthStats*,
 			PerProcessorContext *ppc) 
   {
-    
+
     double u,v;
     double t;
     
@@ -192,8 +192,6 @@ public:
       }
 
     virtual void preprocess(double maxradius, int& pp_offset, int& scratchsize);
-    void Out(int,int);
-    void Print();
   void puv() {
     FILE *fp;
     fp = fopen(FNAME,"a");

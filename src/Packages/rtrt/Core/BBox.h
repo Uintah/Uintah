@@ -81,6 +81,14 @@ public:
     }
   }
 
+  inline void extend(double radius)
+    {
+      if (have_some) {
+	cmin = cmin-Vector(radius,radius,radius);
+	cmax = cmax+Vector(radius,radius,radius);
+      }
+    }
+
   bool intersect_nontrivial(const Ray& ray, double &min_t);
 
   inline bool intersect(const Ray& ray, double &min_t) {

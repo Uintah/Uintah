@@ -6,7 +6,6 @@
 #include <iostream>
 #include <math.h>
 #include <string.h>
-#include <Packages/rtrt/Core/Point4D.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Packages/rtrt/Core/Mesh.h>
@@ -91,7 +90,7 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
       Color cup(0.82, 0.52, 0.22);
       Color cdown(0.03, 0.05, 0.35);
 
-      Plane groundplane ( Point(1000, 0, 0), Vector(0, 2, 1) );
+      rtrt::Plane groundplane ( Point(0,0,0), Vector(1, 1, 1) );
       Scene *scene = new Scene(g, cam, bgcolor, cdown, cup, groundplane,
 			       ambient_scale, Arc_Ambient);
       scene->set_background_ptr( new LinearBackground(

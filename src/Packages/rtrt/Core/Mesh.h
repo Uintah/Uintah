@@ -11,7 +11,7 @@
 #include <Packages/rtrt/Core/Util.h>
 
 #define MAXITER 7
-#define ROOT_TOL 1E-3
+#define MESH_ROOT_TOL 1E-3
 
 namespace rtrt {
 class Mesh;
@@ -339,7 +339,7 @@ public:
     //double fold, gold;
     double rootdist;
     //double oldrootdist;
-    double invdetJ;
+    double detJ, invdetJ;
     //int tdiv=0;
         
     // Planes containing ray
@@ -358,7 +358,13 @@ public:
     {
       Fu(Su,p1,p2,j11,j21);
       Fv(Sv,p1,p2,j12,j22);
-      invdetJ = 1./(j11*j22-j12*j21);
+
+      detJ = (j11*j22-j12*j21);
+
+      if (detJ*detJ < 1E-9)
+	return 0;
+
+      invdetJ = 1./detJ;
 	      
       u -= invdetJ*(j22*f-j12*g);
       v -= invdetJ*(j11*g-j21*f);
@@ -378,7 +384,7 @@ public:
 	      
       /*if (rootdist > oldrootdist)
 	return 0;*/
-      if (rootdist < ROOT_TOL) {
+      if (rootdist < MESH_ROOT_TOL) {
 	if ((u<=ulow) || (u>=uhigh) ||
 	    (v<=vlow) || (v>=vhigh))
 	  return 0;
@@ -399,7 +405,7 @@ public:
     double Bi_1[2][2], Bi[2][2];
     double f[2],f_1[2],df[2];
     double rootdist, rootdist_1;
-    double invdetJ;
+    double detJ, invdetJ;
     //int tdiv=0;
     double u_1, v_1;
     double dx[2];
@@ -425,15 +431,17 @@ public:
     
     rootdist_1 = fabs(f_1[0]) + fabs(f_1[1]);
     
-    if (rootdist_1 > ROOT_TOL) {
+    if (rootdist_1 > MESH_ROOT_TOL) {
       
       // Calculate the Jacobian for the -1th iteration
       Fu(Su,p1,p2,Bi_1[0][0],Bi_1[1][0]);
       Fv(Sv,p1,p2,Bi_1[0][1],Bi_1[1][1]);
 
-      double denom=(Bi_1[0][0]*Bi_1[1][1]-Bi_1[0][1]*Bi_1[1][0]);
-      if (denom*denom<0.0000001) return 0;
-      invdetJ =	1./denom;
+      detJ = (Bi_1[0][0]*Bi_1[1][1]-Bi_1[0][1]*Bi_1[1][0]);
+      if (detJ*detJ < 1E-16)
+	return 0;
+
+      invdetJ = 1./detJ;
       
       u -= invdetJ*(Bi_1[1][1]*f_1[0]-Bi_1[0][1]*f_1[1]);
       v -= invdetJ*(Bi_1[0][0]*f_1[1]-Bi_1[1][0]*f_1[0]);
@@ -451,12 +459,12 @@ public:
 	return 0;*/
       
       // Continue condition
-      if (rootdist > ROOT_TOL) {
+      if (rootdist > MESH_ROOT_TOL) {
 	
 	// We move on to Broyden's method.
 	for (; i<MAXITER; i++) {
-	  denom=((u-u_1)*(u-u_1)+(v-v_1)*(v-v_1));
-	  if (denom*denom<0.0000001) return 0;	  
+	  double denom=((u-u_1)*(u-u_1)+(v-v_1)*(v-v_1));
+	  if (denom == 0.) return 0;	  
 	  invdx2 = 1./denom;
 	  
 	  df[0] = f[0]-f_1[0];
@@ -476,9 +484,11 @@ public:
 	  Bi[1][0] = Bi[1][0]*dx[0] + Bi_1[1][0];
 	  Bi[1][1] = Bi[1][1]*dx[1] + Bi_1[1][1];
 
-	  denom=(Bi[0][0]*Bi[1][1]-Bi[0][1]*Bi[1][0]);
-	  if (denom*denom<0.0000001) return 0;
-	  invdetJ = 1./denom;
+	  detJ = (Bi[0][0]*Bi[1][1]-Bi[0][1]*Bi[1][0]);
+	  if (detJ * detJ < 1E-16)
+	    return 0;
+
+	  invdetJ = 1./detJ;
 	  
 	  u_1 = u;
 	  v_1 = v;
@@ -502,7 +512,7 @@ public:
 	    return 0;*/
 	  
 	  // Success condition
-	  if (rootdist < ROOT_TOL)
+	  if (rootdist < MESH_ROOT_TOL)
 	    break;
 	  
 	  Bi_1[0][0] = Bi[0][0];
