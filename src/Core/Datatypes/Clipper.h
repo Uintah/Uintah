@@ -36,6 +36,7 @@ public:
   virtual ~Clipper();
 
   virtual bool inside_p(const Point &p);
+  virtual bool mesh_p() { return false; }
 
   static  PersistentTypeID type_id;
   void    io(Piostream &stream);
@@ -123,6 +124,7 @@ public:
     typename MESH::Elem::index_type indx;
     return mesh_->locate(indx, p);
   }
+  virtual bool mesh_p() { return true; }
 
   void    io(Piostream &stream) {}
 };
