@@ -309,10 +309,22 @@ bool Task::hasComputes(const VarLabel* var, int matlIndex,
 }
 
 bool Task::hasRequires(const VarLabel* var, int matlIndex,
-		       const Patch* patch, WhichDW dw) const
+		       const Patch* patch, IntVector lowOffset,
+		       IntVector highOffset, WhichDW dw) const
 {
-  return isInDepMap((dw == OldDW) ? d_requiresOldDW : d_requires,
-		    var, matlIndex, patch);
+  Dependency* dep =
+    isInDepMap((dw == OldDW) ? d_requiresOldDW : d_requires,
+	       var, matlIndex, patch);
+  if (dep) {
+    // make sure we are within the allowed ghost cell limit
+    IntVector allowableLowOffset, allowableHighOffset;  
+    Patch::getGhostOffsets(var->typeDescription()->getType(), dep->gtype,
+			   dep->numGhostCells, allowableLowOffset,
+			   allowableHighOffset);
+    return ((Max(allowableLowOffset, lowOffset) == allowableLowOffset) &&
+	    (Max(allowableHighOffset, highOffset) == allowableHighOffset));
+  }
+  return false;
 }
 
 bool Task::hasModifies(const VarLabel* var, int matlIndex,
@@ -321,7 +333,7 @@ bool Task::hasModifies(const VarLabel* var, int matlIndex,
   return isInDepMap(d_modifies, var, matlIndex, patch);
 }
 
-bool Task::isInDepMap(const DepMap& depMap, const VarLabel* var,
+Task::Dependency* Task::isInDepMap(const DepMap& depMap, const VarLabel* var,
 		      int matlIndex, const Patch* patch) const
 {
   DepMap::const_iterator found_iter = depMap.find(var);
@@ -339,22 +351,22 @@ bool Task::isInDepMap(const DepMap& depMap, const VarLabel* var,
     if (matls == 0)
       matls = getMaterialSet() ? getMaterialSet()->getUnion() : 0;
     if (patches == 0 && matls == 0)
-      return true; // assume it is for any matl or patch
+      return dep; // assume it is for any matl or patch
     else if (patches == 0) {
       // assume it is for any patch
       if (matls->contains(matlIndex))
-	return true; 
+	return dep; 
     }
     else if (matls == 0) {
       // assume it is for any matl
       if (patches->contains(patch))
-	return true; 
+	return dep; 
     }
     else if (patches->contains(patch) && matls->contains(matlIndex))
-      return true;
+      return dep;
     found_iter++;
   }
-  return false;
+  return 0;
 }
 
 Task::Dependency::Dependency(Task* task, WhichDW dw, const VarLabel* var,

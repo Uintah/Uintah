@@ -230,7 +230,9 @@ private:
   // These will throw an exception if access is not allowed for the
   // curent task.
   inline void checkGetAccess(const VarLabel* label, int matlIndex,
-			     const Patch* patch);
+			     const Patch* patch,
+			     Ghost::GhostType gtype = Ghost::None,
+			     int numGhostCells = 0);
   inline void checkPutAccess(const VarLabel* label, int matlIndex,
 			     const Patch* patch, bool replace);
   inline void checkAllocation(const Variable& var, const VarLabel* label);
@@ -240,7 +242,8 @@ private:
   // These will return false if access is not allowed for
   // the current task.
   inline bool hasGetAccess(const Task* currentTask, const VarLabel* label,
-			   int matlIndex, const Patch* patch);
+			   int matlIndex, const Patch* patch,
+			   IntVector lowOffset, IntVector highOffset);
   inline bool hasPutAccess(const Task* currentTask, const VarLabel* label,
 			   int matlIndex, const Patch* patch, bool replace);
 
@@ -297,8 +300,21 @@ private:
      int matlIndex_;
      const Patch* patch_;    
    };  
+
+   struct AccessInfo {
+     AccessInfo()
+       : accessType(NoAccess), lowOffset(0, 0, 0), highOffset(0, 0, 0) {}
+     AccessInfo(AccessType type)
+       : accessType(type), lowOffset(0, 0, 0), highOffset(0, 0, 0) {}
+     void encompassOffsets(IntVector low, IntVector high)
+     { lowOffset = Max(low, lowOffset); highOffset = Max(high, highOffset); }
+     
+     AccessType accessType;
+     IntVector lowOffset; // ghost cell access
+     IntVector highOffset;
+   };
   
-   typedef map<SpecificVarLabel, AccessType> VarAccessMap;
+   typedef map<SpecificVarLabel, AccessInfo> VarAccessMap;
 
    struct CurrentTaskInfo {
      CurrentTaskInfo()
