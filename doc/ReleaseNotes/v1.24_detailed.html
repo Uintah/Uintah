@@ -70,6 +70,15 @@ DEALINGS IN THE SOFTWARE.
           provides many more features.</li>
       <li>CangeFieldBasis (Fields) module replaces ChangeFieldDataAt</li>
       <li>ViewSlices (Render) module for viewing 2D slices of 3D Nrrds.</li>
+      <li>The FieldToCanonicalTransform module was removed.</li>
+      <li>The ReplaceScalarDataValue and ScaleFieldData are deprecated and
+          will be replaced with an equivalent TransformData module function
+          in the future.  Use TransformData instead.</li>
+      <li>The BuildInterpolant, ApplyInterpolant, and InterpToTransferMatrix
+          modules will not dynamically compile with a GCC 3.4 compiler and are
+          being phased out.  Use the new BuildInterpMatrix and
+          ApplyInterpMatrix modules instead.</li>
+
     </ul>
 
     <h2> Teem Modules (Category in parentheses) </h2>
