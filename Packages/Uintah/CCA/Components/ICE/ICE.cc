@@ -2268,7 +2268,7 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
       
       //__________________________________
       //  compute sum_rho_CC used by press_FC
-      for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++) {
+      for(CellIterator iter=patch->getExtraCellIterator(); !iter.done();iter++){
         IntVector c = *iter;
         sum_rho_CC[c] += rho_CC[c];
       } 
@@ -2782,9 +2782,9 @@ void ICE::accumulateEnergySourceSinks(const ProcessorGroup*,
             top    = c + IntVector(0,1,0);    bottom = c ;    
             front  = c + IntVector(0,0,1);    back   = c ; 
             
-            int_eng_source[c]=-((q_X_FC[right] - q_X_FC[left])  *areaX +         
-                                (q_Y_FC[top]   - q_Y_FC[bottom])*areaY +         
-                                (q_Z_FC[front] - q_Z_FC[back])  *areaZ )*delT;  
+            int_eng_source[c]=-((q_X_FC[right] - q_X_FC[left])  *areaX + 
+                                (q_Y_FC[top]   - q_Y_FC[bottom])*areaY +
+                                (q_Z_FC[front] - q_Z_FC[back])  *areaZ )*delT;
           }
         } 
       }
@@ -3404,6 +3404,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       
       //__________________________________
       // Advect  momentum and backout vel_CC
+    if(ice_matl){
       for(CellIterator iter=iterPlusGhost; !iter.done(); iter++){
         IntVector c = *iter;
         qV_CC[c] = mom_L_ME[c] * invvol;
@@ -3417,6 +3418,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup*,
       }
       
       setBC(vel_CC, "Velocity", patch,indx);
+    }
 
       //__________________________________
       // Advect internal energy and backout Temp_CC
