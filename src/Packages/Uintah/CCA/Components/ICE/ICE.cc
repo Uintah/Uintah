@@ -4506,6 +4506,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
             }
 
             // Set boundary conditions on lagrangian values
+            string Labelname = tvar->var->getName();
             setBC(q_L_CC, Labelname,  patch, d_sharedState, indx, new_dw);
             
             // now advect
@@ -4516,7 +4517,6 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* pg,
                   mass_L, mass_new, mass_advected, PH, PH2, patch);
 
             //  Set Boundary Conditions again on the advected values
-            string Labelname = tvar->var->getName();
             setBC(q_CC, Labelname,  patch, d_sharedState, indx, new_dw);
           }
         }
