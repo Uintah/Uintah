@@ -1843,6 +1843,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       delt_vartype delT;
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwindex, patch);
+
+      ParticleSubset* delete_particles = scinew ParticleSubset
+	(pset->getParticleSet(),false,dwindex,patch);
     
       old_dw->get(px,                    lb->pXLabel,                    pset);
       old_dw->get(pmass,                 lb->pMassLabel,                 pset);
@@ -1870,14 +1873,14 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 			dwindex, patch, Ghost::AroundCells, 1);
 
       if(d_with_ice){
-        new_dw->get(dTdt, lb->dTdt_NCLabel, dwindex,patch,Ghost::AroundCells,1);
+        new_dw->get(dTdt, lb->dTdt_NCLabel,dwindex,patch,Ghost::AroundCells,1);
         new_dw->get(massBurnFraction, lb->massBurnFractionLabel,
-					    dwindex,patch,Ghost::AroundCells,1);
+		    dwindex,patch,Ghost::AroundCells,1);
       }
       else{
-        new_dw->allocate(dTdt, lb->dTdt_NCLabel,dwindex,patch,IntVector(1,1,1));
-        new_dw->allocate(massBurnFraction, lb->massBurnFractionLabel,
-						dwindex,patch,IntVector(1,1,1));
+        new_dw->allocate(dTdt,lb->dTdt_NCLabel,dwindex,patch,IntVector(1,1,1));
+        new_dw->allocate(massBurnFraction,lb->massBurnFractionLabel,
+			 dwindex,patch,IntVector(1,1,1));
         dTdt.initialize(0.);
         massBurnFraction.initialize(0.);
       }
@@ -1888,6 +1891,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       double rho_init=mpm_matl->getInitialDensity();
 
       IntVector ni[8];
+
     
       if(mpm_matl->getFractureModel()) {
         ParticleVariable<int> pConnectivity;
@@ -1896,10 +1900,12 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	ParticleVariable<Vector> pDisplacement;
 	ParticleVariable<Vector> pDisplacement_new;
 	old_dw->get(pDisplacement, lb->pDisplacementLabel,  pset);
-        new_dw->allocate(pDisplacement_new, lb->pDisplacementLabel_preReloc, pset);
+        new_dw->allocate(pDisplacement_new,lb->pDisplacementLabel_preReloc,
+			 pset);
 
-        for(ParticleSubset::iterator iter = pset->begin();
-						iter != pset->end(); iter++){
+
+        for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();
+	    iter++){
 	  particleIndex idx = *iter;
 
           double S[8];
@@ -1956,7 +1962,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       }
       else {  // Interpolate to particles if no fracture is involved
         for(ParticleSubset::iterator iter = pset->begin();
-						iter != pset->end(); iter++){
+	    iter != pset->end(); iter++){
 	  particleIndex idx = *iter;
 
           double S[8];
@@ -1995,8 +2001,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           pvolumeNew[idx]      = pmassNew[idx]/rho;
 #if 1
 	  if(pmassNew[idx] <= 3.e-15){
-		pvelocitynew[idx] = Vector(0.,0.,0);
-	        pxnew[idx] = px[idx];
+	    delete_particles->addParticle(idx);
+	    pvelocitynew[idx] = Vector(0.,0.,0);
+	    pxnew[idx] = px[idx];
 	  }
 #endif
 
@@ -2015,6 +2022,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->put(pmassNew,        lb->pMassLabel_preReloc);
       new_dw->put(pvolumeNew,      lb->pVolumeLabel_preReloc);
       new_dw->put(pTemperatureNew, lb->pTemperatureLabel_preReloc);
+      new_dw->deleteParticles(delete_particles);
 
       ParticleVariable<long64> pids;
       old_dw->get(pids, lb->pParticleIDLabel, pset);
