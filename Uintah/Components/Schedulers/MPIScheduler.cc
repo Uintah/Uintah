@@ -413,9 +413,9 @@ MPIScheduler::execute(const ProcessorGroup * pc,
 	    if(task->getPatch())
 	       dbg << " on patch " << task->getPatch()->getID() << '\n';
 	    double taskstart = Time::currentSeconds();
-	    SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
+	    //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
 	    task->doit(pc);
-	    SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
+	    //SCICore::Malloc::AuditAllocator(SCICore::Malloc::default_allocator);
 	    double sendstart = Time::currentSeconds();
 	    
 
@@ -893,6 +893,9 @@ MPIScheduler::releaseLoadBalancer()
 
 //
 // $Log$
+// Revision 1.30  2000/10/13 21:14:15  sparker
+// Commented out called to malloc audit
+//
 // Revision 1.29  2000/10/10 05:13:31  sparker
 // Repaired (a) memory leak in particle relcation
 //
