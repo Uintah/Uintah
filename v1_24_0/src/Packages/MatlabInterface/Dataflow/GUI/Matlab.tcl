@@ -172,11 +172,7 @@ itcl_class MatlabInterface_DataIO_Matlab {
     }
 
     method ui {} {
-		set w .ui[modname]
-		if {[winfo exists $w]} {
-			raise $w
-			return;
-		}
+
 
 		global $this-numport-matrix
 		global $this-numport-field
@@ -223,6 +219,16 @@ itcl_class MatlabInterface_DataIO_Matlab {
 		global $this-matlab-output
 		global $this-matlab-var
 		global $this-matlab-status
+
+		set $this-matlab-add-output "$this AddOutput"
+		set $this-matlab-update-status "$this UpdateStatus"
+		set $this-matlab-status "matlab engine not running"
+
+		set w .ui[modname]
+		if {[winfo exists $w]} {
+			raise $w
+			return;
+		}
 
 		# create a new gui window
 
