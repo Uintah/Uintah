@@ -17,7 +17,6 @@
 #include <string>
 #include <vector>
 
-//#define SELECT_GRID
 #define SELECT_RANGETREE
 
 #ifdef SELECT_RANGETREE
@@ -158,6 +157,11 @@ WARNING
 
 //
 // $Log$
+// Revision 1.25  2001/02/13 00:55:56  witzel
+// (Ignore the previous log message, this is what it should have said).
+// Changed the default selectPatches algorithm to the range tree version
+// instead of the grid version which has known problems.
+//
 // Revision 1.24  2001/02/13 00:35:44  witzel
 // PatchRangeTree.cc
 //
