@@ -119,8 +119,8 @@ void FieldExtractor::build_field(DataArchive& archive,
     int vartype;
     archive.query( v, varname, mat, *r, time);
     if( sfd->data_at() == Field::CELL){
-      low = (*r)->getCellLowIndex();
-      hi = (*r)->getCellHighIndex();
+      low = (*r)->getNodeLowIndex();
+      hi = (*r)->getNodeHighIndex() - IntVector(1,1,1);
     } else if(sfd->get_property("vartype", vartype)){
       low = (*r)->getNodeLowIndex();
       switch (vartype) {
@@ -160,19 +160,19 @@ void FieldExtractor::build_field(DataArchive& archive,
 //      update_progress((count++/double(N))/size, my_timer);
       
       thread_sema->down();
-/*       PatchToFieldThread<Var, T> *ptft = */
-/*        scinew PatchToFieldThread<Var, T>(sfd, v, lo, min_i, max_i,//low, hi, */
-/*  					  thread_sema, lock); */
-/*       ptft->run(); */
+       PatchToFieldThread<Var, T> *ptft = 
+        scinew PatchToFieldThread<Var, T>(sfd, v, lo, min_i, max_i,//low, hi, 
+  					  thread_sema, lock); 
+       ptft->run(); 
 
-/*       cerr<<"low = "<<low<<", hi = "<<hi<<", min_i = "<<min_i */
-/* 	  <<", max_i = "<<max_i<<endl; */
+//        cerr<<"low = "<<low<<", hi = "<<hi<<", min_i = "<<min_i 
+//  	  <<", max_i = "<<max_i<<endl; 
   
-      Thread *thrd = scinew Thread( 
-        (scinew PatchToFieldThread<Var, T>(sfd, v, lo, min_i, max_i,// low, hi,
-				      thread_sema, lock)),
-	"patch_to_field_worker");
-      thrd->detach();
+//       Thread *thrd = scinew Thread( 
+//         (scinew PatchToFieldThread<Var, T>(sfd, v, lo, min_i, max_i,// low, hi,
+// 				      thread_sema, lock)),
+// 	"patch_to_field_worker");
+//       thrd->detach();
     }
   }
   thread_sema->down(max_workers);
