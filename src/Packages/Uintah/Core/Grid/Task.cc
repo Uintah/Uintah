@@ -399,6 +399,9 @@ Task::Dependency::~Dependency()
     delete matls;
 }
 
+// for xlC:
+namespace Uintah {
+
 // MaterialSubset specialization
 constHandle< MaterialSubset > Task::Dependency::
 getOtherLevelComputeSubset(Task::DomainSpec,
@@ -441,6 +444,8 @@ getOtherLevelComputeSubset(Task::DomainSpec dom,
   return constHandle<PatchSubset>(scinew
 				  PatchSubset(patches.begin(), patches.end()));
 }
+
+} // end namespace Uintah
 
 void
 Task::doit(const ProcessorGroup* pc, const PatchSubset* patches,
