@@ -24,7 +24,7 @@ SR_SRCS = scirun.cc
 SR_OBJS = scirun.o
 
 SR_LDFLAGS = -L$(TOP)/lib -lDataflow -lDevices -lComm -lTCL \
-	-lMultitask -lMalloc $(OTHER_SOS)
+	-lClasslib -lTester -lMultitask -lMalloc $(OTHER_SOS)
 SCIProgramTarget($(SR_TARGET), $(SR_OBJS), $(SR_LIBS), $(SR_LDFLAGS))
 
 sr: lib/libDataflow.so lib/libTCL.so lib/libDevices.so \
