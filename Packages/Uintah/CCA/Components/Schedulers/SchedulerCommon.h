@@ -92,13 +92,16 @@ WARNING
 
     // Get the SuperPatch (set of connected patches making a larger rectangle)
     // for the given label and patch and find the largest extents encompassing
-    // the expected ghost cells and requested ghost cells for each of the
-    // patches.
+    // the expected ghost cells (requiredLow, requiredHigh) and the requested
+    // ghost cells as well (requestedLow, requestedHigh) for each of the
+    // patches.  Required and requested will besame if requestedNumGCells = 0.
     virtual const vector<const Patch*>*
-    getSuperPatchExtents(const VarLabel* label, const Patch* patch,
-			 Ghost::GhostType gtype, int numGhostCells,
-			 IntVector& lowIndex, IntVector& highIndex) const;
-
+    getSuperPatchExtents(const VarLabel* label, int matlIndex,
+			 const Patch* patch, Ghost::GhostType requestedGType,
+			 int requestedNumGCells, IntVector& requiredLow,
+			 IntVector& requiredHigh, IntVector& requestedLow,
+			 IntVector& requestedHigh) const;
+    
     // Makes and returns a map that maps strings to VarLabels of
     // that name and a list of material indices for which that
     // variable is valid (at least according to d_allcomps).
