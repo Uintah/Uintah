@@ -33,6 +33,9 @@
 #include <Core/Datatypes/StructQuadSurfField.h>
 #include <Core/Datatypes/StructCurveField.h>
 
+#include <Core/Geometry/Vector.h>
+#include <Core/Geometry/Tensor.h>
+
 #include <Teem/Core/Datatypes/NrrdData.h>
 
 namespace Fusion {
