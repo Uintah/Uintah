@@ -73,36 +73,33 @@ SparseRowMatrix::clone()
 }
 
 
-SparseRowMatrix::SparseRowMatrix()
-  : nrows_(0),
-    ncols_(0),
-    rows(0),
-    columns(0),
-    nnz(0),
-    a(0)
+SparseRowMatrix::SparseRowMatrix() :
+  rows(0),
+  columns(0),
+  nnz(0),
+  a(0)
 {
 }
 
 
 SparseRowMatrix::SparseRowMatrix(int nnrows, int nncols,
 				 int* rows, int* columns,
-				 int nnz, double* a_)
-  : nrows_(nnrows),
-    ncols_(nncols),
-    rows(rows),
-    columns(columns),
-    nnz(nnz),
-    a(a_)
+				 int nnz, double* a_) :
+  Matrix(nnrows, nncols),
+  rows(rows),
+  columns(columns),
+  nnz(nnz),
+  a(a_)
 {
   if (a == 0) { a = scinew double[nnz]; }
 }
 
 
 SparseRowMatrix::SparseRowMatrix(const SparseRowMatrix& copy)
-  : nrows_(copy.nrows_),
-    ncols_(copy.ncols_),
-    nnz(copy.nnz)
 {
+  nrows_ = copy.nrows_;
+  ncols_ = copy.ncols_;
+  nnz = copy.nnz;
   rows = scinew int[nrows_+1];
   columns = scinew int[nnz];
   a = scinew double[nnz];
@@ -350,20 +347,6 @@ SparseRowMatrix::add(int i, int j, double d)
       return;
     }
   }
-}
-
-
-int
-SparseRowMatrix::nrows() const
-{
-  return nrows_;
-}
-
-
-int
-SparseRowMatrix::ncols() const
-{
-  return ncols_;
 }
 
 

@@ -88,19 +88,14 @@ DenseMatrix* DenseMatrix::clone(){
 
 //! constructors
 DenseMatrix::DenseMatrix() :
-  nrows_(0), 
-  ncols_(0), 
   data(0),
   dataptr(0)
 {
 }
 
-DenseMatrix::DenseMatrix(int r, int c)
+DenseMatrix::DenseMatrix(int r, int c) :
+  Matrix(r, c)
 {
-  ASSERT(r>0);
-  ASSERT(c>0);
-  nrows_ = r;
-  ncols_ = c;
   data = scinew double*[nrows_];
   double* tmp = scinew double[nrows_ * ncols_];
   dataptr = tmp;
@@ -111,10 +106,10 @@ DenseMatrix::DenseMatrix(int r, int c)
   }
 }
 
-DenseMatrix::DenseMatrix(const DenseMatrix& m) :
-  nrows_(m.nrows_),
-  ncols_(m.ncols_)
+DenseMatrix::DenseMatrix(const DenseMatrix& m)
 {
+  nrows_ = m.nrows_;
+  ncols_ = m.ncols_;
   data = scinew double*[nrows_];
   double* tmp = scinew double[nrows_ * ncols_];
   dataptr = tmp;
@@ -130,8 +125,7 @@ DenseMatrix::DenseMatrix(const DenseMatrix& m) :
 }
 
 DenseMatrix::DenseMatrix(const Transform& t) :
-  nrows_(4),
-  ncols_(4)
+  Matrix(4, 4)
 {
   double dummy[16];
   t.get(dummy);
@@ -255,16 +249,6 @@ DenseMatrix::transpose()
     for (int r=0; r<nrows_; r++)
       *mptr++ = data[r][c];
   return m;
-}
-
-int DenseMatrix::nrows() const
-{
-  return nrows_;
-}
-
-int DenseMatrix::ncols() const
-{
-  return ncols_;
 }
 
 void DenseMatrix::getRowNonzeros(int r, Array1<int>& idx, Array1<double>& val)

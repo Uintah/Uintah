@@ -65,7 +65,8 @@ typedef LockingHandle<Matrix> MatrixHandle;
 class SCICORESHARE Matrix : public PropertyManager
 {
 public:
-  Matrix() : separate_raw_(false), raw_filename_("") {}
+  Matrix(int nrows = 0, int ncols = 0) :
+    nrows_(nrows), ncols_(ncols), separate_raw_(false), raw_filename_("") {}
   virtual ~Matrix();
 
   //! Make a duplicate, needed to support detach from LockingHandle
@@ -87,8 +88,8 @@ public:
   inline bool is_sparse() { return as_sparse() != NULL; }
   inline bool is_column() { return as_column() != NULL; }
 
-  virtual int nrows() const = 0;
-  virtual int ncols() const = 0;
+  inline int nrows() const { return nrows_; }
+  inline int ncols() const { return ncols_; }
 
   virtual double* get_val() { return 0; }
   virtual int* get_row()    { return 0; }
@@ -156,6 +157,8 @@ public:
   static PersistentTypeID type_id;
 
 protected:
+  int      nrows_;
+  int      ncols_;
   bool     separate_raw_;
   string   raw_filename_;
 };

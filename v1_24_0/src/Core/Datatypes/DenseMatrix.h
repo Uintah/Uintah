@@ -60,10 +60,6 @@ class ColumnMatrix;
 class SparseRowMatrix;
 
 class SCICORESHARE DenseMatrix : public Matrix {
-  //!private data
-  int nrows_;
-  int ncols_;
-
   double** data;
   double*  dataptr;
 
@@ -84,9 +80,6 @@ public:
   virtual SparseRowMatrix *sparse();
   virtual ColumnMatrix *column();
 
-  virtual int     nrows() const;
-  virtual int     ncols() const;
- 
   //! slow setters/getter for polymorphic operations
   virtual void    zero();
   virtual double& get(int r, int c) const;
