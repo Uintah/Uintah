@@ -11,7 +11,7 @@ using namespace SCIRun;
 using std::cerr;
 
 DataWarehouse::DataWarehouse(const ProcessorGroup* myworld,
-			     const Scheduler* scheduler,
+			     Scheduler* scheduler,
 			     int generation)
   : d_myworld(myworld), d_scheduler(scheduler), d_generation(generation)
 {

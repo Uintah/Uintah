@@ -37,6 +37,7 @@ namespace Uintah {
   class TypeDescription;
   class Patch;
   class ProcessorGroup;
+  class PSPatchMatlGhost;
   class SendState;
 
 /**************************************
@@ -71,7 +72,7 @@ namespace Uintah {
 class OnDemandDataWarehouse : public DataWarehouse {
 public:
    OnDemandDataWarehouse( const ProcessorGroup* myworld,
-			  const Scheduler* scheduler, int generation,
+			  Scheduler* scheduler, int generation,
 			  const GridP& grid,
 			  bool isInitializationDW = false);
    virtual ~OnDemandDataWarehouse();
@@ -101,12 +102,16 @@ public:
 
    // Particle Variables
    virtual ParticleSubset* createParticleSubset(particleIndex numParticles,
-						int matlIndex, const Patch*);
-   virtual void saveParticleSubset(ParticleSubset*,
-                                   int matlIndex, const Patch*);
-   virtual bool haveParticleSubset(int matlIndex, const Patch*);
-   virtual ParticleSubset* getParticleSubset(int matlIndex, const Patch*);
-   virtual ParticleSubset* getDeleteSubset(int matlIndex, const Patch*);
+						int matlIndex, const Patch*,
+                                                Ghost::GhostType=Ghost::None, int numgc=0);
+   virtual void saveParticleSubset(ParticleSubset*,int matlIndex, const Patch*,
+				   Ghost::GhostType=Ghost::None, int numgc=0);
+   virtual bool haveParticleSubset(int matlIndex, const Patch*, 
+                                   Ghost::GhostType=Ghost::None, int numgc=0);
+   virtual ParticleSubset* getParticleSubset(int matlIndex, const Patch*,
+                                             Ghost::GhostType=Ghost::None, int numgc=0);
+   virtual ParticleSubset* getDeleteSubset(int matlIndex, const Patch*,
+                                           Ghost::GhostType=Ghost::None, int numgc=0);
    virtual map<const VarLabel*, ParticleVariableBase*>* getNewParticleState(int matlIndex, const Patch*);
    virtual ParticleSubset* getParticleSubset(int matlIndex,
 					     const Patch*, Ghost::GhostType, 
@@ -127,6 +132,7 @@ public:
 						     ParticleSubset*);
    virtual ParticleVariableBase*
    getParticleVariable(const VarLabel*, int matlIndex, const Patch* patch);  
+   void printParticleSubsets();
 
    // NCVariables Variables
    virtual void allocateTemporary(NCVariableBase&, const Patch*,
@@ -382,7 +388,7 @@ private:
 
    typedef std::vector<dataLocation*> variableListType;
    typedef map<const VarLabel*, variableListType*, VarLabel::Compare> dataLocationDBtype;
-   typedef map<pair<int, const Patch*>, ParticleSubset*> psetDBType;
+   typedef map<PSPatchMatlGhost, ParticleSubset*> psetDBType;
    typedef map<pair<int, const Patch*>, map<const VarLabel*, ParticleVariableBase*>* > psetAddDBType;
 
    DWDatabase<NCVariableBase, Patch>        d_ncDB;
