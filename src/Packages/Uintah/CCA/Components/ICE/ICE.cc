@@ -76,10 +76,11 @@ ICE::ICE(const ProcessorGroup* myworld)
   switchDebug_advance_advect           = false; 
   switchTestConservation               = false;
 
-  d_RateForm          = false;
-  d_EqForm            = false; 
-  d_add_heat          = false;
-  d_impICE            = false;
+  d_RateForm            = false;
+  d_EqForm              = false; 
+  d_add_heat            = false;
+  d_impICE              = false;
+  d_useCompatibleFluxes = false;
   d_delT_knob         = 1.0;
   d_delT_scheme       = "aggressive";
   d_surroundingMatl_indx = -9;
@@ -177,15 +178,19 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec, GridP& grid,
   ProblemSpecP cfd_ice_ps = cfd_ps->findBlock("ICE"); 
   
   cfd_ice_ps->require("max_iteration_equilibration",d_max_iter_equilibration);
-  d_advector = AdvectionFactory::create(cfd_ice_ps, d_advect_type);
+  
+  d_advector = AdvectionFactory::create(cfd_ice_ps, d_useCompatibleFluxes);
+  cout_norm << " d_use_compatibleFluxes:  " << d_useCompatibleFluxes<<endl;
   
   // Grab the solution technique
   ProblemSpecP child = cfd_ice_ps->findBlock("solution");
-  if(!child)
+  if(!child){
     throw ProblemSetupException("Cannot find Solution Technique tag for ICE");
-  std::string solution_technique;
-  if(!child->getAttribute("technique",solution_technique))
-    throw ProblemSetupException("Nothing specified for solution technique"); 
+  }
+  string solution_technique;
+  if(!child->getAttribute("technique",solution_technique)){
+    throw ProblemSetupException("Nothing specified for solution technique");
+  }
   if (solution_technique == "RateForm") {
     d_RateForm = true;
     cout_norm << "Solution Technique = Rate Form " << endl;
@@ -4667,9 +4672,8 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
 
       //__________________________________
       // Advect  momentum and backout vel_CC
-      bool useCompatibleFluxes = false;
       bool is_Q_massSpecific   = true;
-      advector->advectQ(useCompatibleFluxes, is_Q_massSpecific,
+      advector->advectQ(d_useCompatibleFluxes, is_Q_massSpecific,
                         mom_L_ME,mass_L, patch,qV_advected, new_dw);
 
       update_q_CC<constCCVariable<Vector>, Vector>
@@ -4687,9 +4691,8 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
       //__________________________________
       // Advection of specific volume
       // Note sp_vol_L[m] is actually sp_vol[m] * mass
-      useCompatibleFluxes = false;
       is_Q_massSpecific   = true;
-      advector->advectQ(useCompatibleFluxes, is_Q_massSpecific,
+      advector->advectQ(d_useCompatibleFluxes, is_Q_massSpecific,
                         sp_vol_L,mass_L, patch,q_advected, new_dw); 
 
       update_q_CC<constCCVariable<double>, double>
@@ -4711,7 +4714,7 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
             new_dw->allocateAndPut(q_CC, tvar->var,     indx, patch);
             new_dw->get(q_L_CC,   tvar->var_Lagrangian, indx, patch, gac, 2); 
             
-            useCompatibleFluxes = true;
+            bool useCompatibleFluxes = true;
             is_Q_massSpecific   = true;
             advector->advectQ(useCompatibleFluxes, is_Q_massSpecific,
                               q_L_CC,mass_L, patch,q_advected, new_dw);  
@@ -4754,9 +4757,8 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
 
       //__________________________________
       // Advect internal energy and backout Temp_CC
-      useCompatibleFluxes = false;
       is_Q_massSpecific   = true;
-      advector->advectQ(useCompatibleFluxes, is_Q_massSpecific,
+      advector->advectQ(d_useCompatibleFluxes, is_Q_massSpecific,
                         int_eng_L_ME, mass_L, patch,q_advected, new_dw);
       
       update_q_CC<constCCVariable<double>, double>
