@@ -75,8 +75,8 @@
 		<denUnderrelax>1.0</denUnderrelax>
 	        <ref_point>[3,3,3]</ref_point>
 	        <radiation>false</radiation>
-	        <mixing_model>pdfMixingModel</mixing_model>
-	        <PDFMixingModel>
+	        <mixing_model>meanMixingModel</mixing_model>
+	        <MeanMixingModel>
 		  <adiabatic>true</adiabatic>
                   <mixstatvars>0</mixstatvars>
                   <rxnvars>0</rxnvars>
@@ -154,7 +154,7 @@
                     <TableType>dynamic</TableType>
                     <TableStorage>2DVector</TableStorage>
 	          </EquilibriumReactionModel>
-                </PDFMixingModel>
+                </MeanMixingModel>
 	    </Properties>
 
 	    <BoundaryConditions>
