@@ -122,7 +122,7 @@ GenStandardColorMaps::GenStandardColorMaps(const string& id)
     realres("realres", id, this),
     gamma("gamma", id, this)
 { 
- } 
+} 
 
 //---------------------------------------------------------- 
 GenStandardColorMaps::~GenStandardColorMaps(){} 
