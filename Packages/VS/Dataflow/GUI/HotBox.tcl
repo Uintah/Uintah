@@ -26,6 +26,8 @@ itcl_class VS_DataFlow_HotBox {
     global $this-gui_label7
     global $this-gui_label8
     global $this-gui_label9
+    global $this-FME_on
+    global $this-currentselection
     global $this-anatomydatasource
     global $this-adjacencydatasource
 
@@ -38,9 +40,94 @@ itcl_class VS_DataFlow_HotBox {
     set $this-gui_label7 "label7"
     set $this-gui_label8 "label8"
     set $this-gui_label9 "label9"
+    set $this-FME_on "yes"
+    set $this-currentselection ""
     set $this-anatomydatasource ""
     set $this-adjacencydatasource ""
   }
+  # end method set_defaults
+
+  method launch_filebrowser {} {
+    set initdir ""
+                                                                                
+    # place to put preferred data directory
+    # it's used if $this-filename is empty
+                                                                                
+    if {[info exists env(SCIRUN_DATA)]} {
+      set initdir $env(SCIRUN_DATA)
+    } elseif {[info exists env(SCI_DATA)]} {
+      set initdir $env(SCI_DATA)
+    } elseif {[info exists env(PSE_DATA)]} {
+      set initdir $env(PSE_DATA)
+    }
+
+    # extansion to append if no extension supplied by user
+    # set defext ".csv"
+    # set title "Open LabelMap file"
+
+    # file types to appers in filter box
+    set types {
+        {{Field File}     {.csv}      }
+        {{All Files} {.*}   }
+    }
+                                                                                
+    ######################################################
+                                                                                
+    makeOpenFilebox \
+        -parent $w \
+        -filevar $this-datasource \
+        -command "$this-c needexecute; wm withdraw $w" \
+        -cancel "wm withdraw $w" \
+        -title $title \
+        -filetypes $types \
+        -initialdir $initdir \
+        -defaultextension $defext
+  }
+  # end method launch_filebrowser
+
+  method set_selection { selection_id } {
+    puts "VS_DataFlow_HotBox::set_selection{$selection_id}"
+    switch $selection_id {
+	1 {
+            set selection [set $this-gui_label1]
+	}
+	2 {
+            set selection [set $this-gui_label2]
+	}
+	3 {
+            set selection [set $this-gui_label3]
+	}
+	4 {
+            set selection [set $this-gui_label4]
+	}
+	5 {
+            set selection [set $this-gui_label5]
+	}
+	6 {
+            set selection [set $this-gui_label6]
+	}
+	7 {
+            set selection [set $this-gui_label7]
+	}
+	8 {
+            set selection [set $this-gui_label8]
+	}
+	9 {
+            set selection [set $this-gui_label9]
+	}
+        default {
+          puts "VS_DataFlow_HotBox::set_selection: not found"
+          break
+	}
+    }
+    # end switch $selection_id
+    if {[set $this-FME_on] == "yes"} {
+      # focus on the selection in the FME
+      exec VSgetFME.p $selection
+    }
+    set $this-currentselection $selection
+  }
+  # end method set_selection
 
   method ui {} {
     set w .ui[modname]
@@ -51,54 +138,20 @@ itcl_class VS_DataFlow_HotBox {
 
     toplevel $w
 
-    # set initdir ""
-                                                                                
-    # place to put preferred data directory
-    # it's used if $this-filename is empty
-                                                                                
-    # if {[info exists env(SCIRUN_DATA)]} {
-    #   set initdir $env(SCIRUN_DATA)
-    # } elseif {[info exists env(SCI_DATA)]} {
-    #   set initdir $env(SCI_DATA)
-    # } elseif {[info exists env(PSE_DATA)]} {
-    #   set initdir $env(PSE_DATA)
-    # }
-
-    # extansion to append if no extension supplied by user
-    # set defext ".csv"
-    # set title "Open LabelMap file"
-
-    # file types to appers in filter box
-    # set types {
-    #     {{Field File}     {.csv}      }
-    #     {{All Files} {.*}   }
-    # }
-                                                                                
-    ######################################################
-                                                                                
-    # makeOpenFilebox \
-    #     -parent $w \
-    #     -filevar $this-datasource \
-    #     -command "$this-c needexecute; wm withdraw $w" \
-    #     -cancel "wm withdraw $w" \
-    #     -title $title \
-    #     -filetypes $types \
-    #     -initialdir $initdir \
-    #     -defaultextension $defext
-
     frame $w.f
+    # the UI buttons for selecting anatomical names (adjacencies)
     frame $w.f.row1
-    entry $w.f.row1.nw  -width 10 -textvariable $this-gui_label1
-    entry $w.f.row1.n   -width 10 -textvariable $this-gui_label2
-    entry $w.f.row1.ne  -width 10 -textvariable $this-gui_label3
+    button $w.f.row1.nw  -textvariable $this-gui_label1 -command "$this set_selection 1"
+    button $w.f.row1.n   -textvariable $this-gui_label2 -command "$this set_selection 2"
+    button $w.f.row1.ne  -textvariable $this-gui_label3 -command "$this set_selection 3"
     frame $w.f.row2
-    entry $w.f.row2.west -width 10 -textvariable $this-gui_label4
-    entry $w.f.row2.c   -width 10 -textvariable $this-gui_label5
-    entry $w.f.row2.e   -width 10 -textvariable $this-gui_label6
+    button $w.f.row2.west -textvariable $this-gui_label4 -command "$this set_selection 4"
+    button $w.f.row2.c    -textvariable $this-gui_label5 -command "$this set_selection 5"
+    button $w.f.row2.e   -textvariable $this-gui_label6 -command "$this set_selection 6"
     frame $w.f.row3
-    entry $w.f.row3.sw  -width 10 -textvariable $this-gui_label7
-    entry $w.f.row3.s   -width 10 -textvariable $this-gui_label8
-    entry $w.f.row3.se  -width 10 -textvariable $this-gui_label9
+    button $w.f.row3.sw  -textvariable $this-gui_label7 -command "$this set_selection 7"
+    button $w.f.row3.s   -textvariable $this-gui_label8 -command "$this set_selection 8"
+    button $w.f.row3.se  -textvariable $this-gui_label9 -command "$this set_selection 9"
 
     pack $w.f.row1 $w.f.row2 $w.f.row3 -side top -anchor w
     pack $w.f.row1.nw $w.f.row1.n $w.f.row1.ne\
@@ -109,12 +162,17 @@ itcl_class VS_DataFlow_HotBox {
         -side left -anchor n -expand yes -fill x
 
     frame $w.controls
-    button $w.controls.reset -text "Reset" -command ""
+    button $w.controls.adjds -text "Adjacency Data Source" -command ""
+
+    checkbutton $w.controls.togFME -text "Conenct to FME" -command ""
+    $w.controls.togFME select
 
     button $w.controls.close -text "Close" -command "destroy $w"
-    pack $w.controls.reset $w.controls.close -side left -expand yes -fill x
+    pack $w.controls.adjds $w.controls.togFME $w.controls.close -side left -expand yes -fill x
 
     pack $w.f $w.controls -side top -expand yes -fill both -padx 5 -pady 5
 # pack $w.title -side top
   }
+# end method ui
 }
+# end itcl_class VS_DataFlow_HotBox
