@@ -28,9 +28,9 @@ public:
     inline Vector();
     double length() const;
     double length2() const;
-    friend double Dot(const Vector&, const Vector&);
-//    friend double Dot(const Point&, const Vector&);
-    friend double Dot(const Vector&, const Point&);
+    friend inline double Dot(const Vector&, const Vector&);
+//    friend inline double Dot(const Point&, const Vector&);
+    friend inline double Dot(const Vector&, const Point&);
     Vector& operator=(const Vector&);
     Vector operator*(const double) const;
     Vector& operator*=(const double);
@@ -42,8 +42,8 @@ public:
     Vector& operator-=(const Vector&);
     double normalize();
     Vector normal() const;
-    friend Vector Cross(const Vector&, const Vector&);
-    friend Vector Abs(const Vector&);
+    friend inline Vector Cross(const Vector&, const Vector&);
+    friend inline Vector Abs(const Vector&);
     void x(double);
     inline double x() const;
     void y(double);
@@ -58,7 +58,7 @@ public:
     friend class Point;
     friend class Transform;
     
-    friend Vector Interpolate(const Vector&, const Vector&, double);
+    friend inline Vector Interpolate(const Vector&, const Vector&, double);
     
     void find_orthogonal(Vector&, Vector&);
     

@@ -12,6 +12,7 @@
  */
 
 #include <Geom/Group.h>
+#include <Malloc/New.h>
 
 GeomGroup::GeomGroup(int del_children)
 : GeomObj(0), objs(0, 100), del_children(del_children)
@@ -64,8 +65,10 @@ void GeomGroup::get_bounds(BBox& in_bb)
 void GeomGroup::make_prims(Array1<GeomObj*>& free,
 			 Array1<GeomObj*>& dontfree)
 {
-    for(int i=0;i<objs.size();i++)
+    for(int i=0;i<objs.size();i++){
+	MemoryManager::audit(objs[i]);
 	objs[i]->make_prims(free, dontfree);
+    }
 }
 
 void GeomGroup::reset_bbox()

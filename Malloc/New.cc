@@ -492,3 +492,11 @@ void MemoryManager::get_binstats(int bin, int& ssize, int& lsize,
     n_deld=bins[bin].n_deld;
     n_inlist=bins[bin].n_inlist;
 }
+
+void MemoryManager::audit(void* ptr)
+{
+    MemOverhead* ovr=(MemOverhead*)ptr;
+    ovr--;		// Go back to beginning of overhead
+    if(ovr->magic != MAGIC)error("Bad Magic number on audit");
+}
+

@@ -68,6 +68,7 @@ struct MemoryManager {
 				 long& ndelete_, long& sdelete_,
 				 long& nsbrk_, long& ssbrk_);
     static void set_locker(void (*)(), void (*)());
+    static void audit(void*);
 };
 
 #endif

@@ -27,8 +27,8 @@ class GeomPick : public GeomContainer {
     Array1<Vector> directions;
     MaterialHandle highlight;
     Mailbox<MessageBase*>* mailbox;
-    void* cbdata;
     Module* module;
+    void* cbdata;
     GeomPick(const GeomPick&);
 public:
     GeomPick(GeomObj*, Module*);

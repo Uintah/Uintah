@@ -107,7 +107,7 @@ lib:	objs
 #ifdef SCI_PrelinkCommand
 #define PreLink(objs)SCI_PrelinkCommand objs
 #else
-#define PreLink(objs)@XCOMM no prelink
+#define PreLink(objs)@ XCOMM no prelink
 #endif
 
 #define SCIObjLibraryTarget(libname,objlist)                            @@\

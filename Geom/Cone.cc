@@ -44,9 +44,8 @@ void GeomCone::move(const Point& _bottom, const Point& _top,
 }
 
 GeomCone::GeomCone(const GeomCone& copy)
-: GeomObj(1), bottom(copy.bottom), top(copy.top), top_rad(copy.top_rad),
-  bot_rad(copy.bot_rad), nu(copy.nu), nv(copy.nv),
-  v1(copy.v1), v2(copy.v2), axis(copy.axis)
+: GeomObj(1), v1(copy.v1), v2(copy.v2), bottom(copy.bottom), top(copy.top),
+  bot_rad(copy.bot_rad), top_rad(copy.top_rad), nu(copy.nu), nv(copy.nv)
 {
     adjust();
 }

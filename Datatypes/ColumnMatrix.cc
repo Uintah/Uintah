@@ -17,6 +17,8 @@
 #include <Math/Expon.h>
 #include <iostream.h>
 
+PersistentTypeID ColumnMatrix::type_id("ColumnMatrix", "Datatype", 0);
+
 ColumnMatrix::ColumnMatrix(int rows)
 : rows(rows)
 {

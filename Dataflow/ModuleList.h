@@ -22,7 +22,7 @@ typedef Module* (*makeModule)(const clString&);
 
 typedef AVLTree<clString, makeModule> ModuleCategory;
 typedef AVLTreeIter<clString, makeModule> ModuleCategoryIter;
-#ifdef __GNUG__
+#ifdef __GNUG_OLD__
 typedef AVLTree<clString, void*> ModuleDB;
 typedef AVLTreeIter<clString, void*> ModuleDBIter;
 #else

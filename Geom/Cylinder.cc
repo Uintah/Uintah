@@ -43,8 +43,8 @@ void GeomCylinder::move(const Point& _bottom, const Point& _top,
 }
 
 GeomCylinder::GeomCylinder(const GeomCylinder& copy)
-: GeomObj(1), bottom(copy.bottom), top(copy.top), rad(copy.rad), nu(copy.nu),
-  nv(copy.nv), axis(copy.axis), v1(copy.v1), v2(copy.v2)
+: GeomObj(1), v1(copy.v1), v2(copy.v2), bottom(copy.bottom), top(copy.top),
+  rad(copy.rad), nu(copy.nu), nv(copy.nv)
 {
     adjust();
 }
@@ -121,9 +121,8 @@ void GeomCylinder::make_prims(Array1<GeomObj*>& free,
 	}
     }
 }
-
 void GeomCylinder::intersect(const Ray&, Material*,
-			 Hit&)
+			     Hit&)
 {
     NOT_FINISHED("GeomCylinder::intersect");
 }

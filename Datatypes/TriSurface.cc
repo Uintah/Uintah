@@ -495,7 +495,7 @@ void TriSurface::remove_triangle(int i) {
 
 void TriSurface::io(Piostream& stream) {
     remove_empty_index();
-    int version=stream.begin_class("TriSurface", TRISURFACE_VERSION);
+    /*int version=*/stream.begin_class("TriSurface", TRISURFACE_VERSION);
     Surface::io(stream);
     Pio(stream, points);
     Pio(stream, elements);
@@ -539,4 +539,3 @@ void TriSurface::get_surfpoints(Array1<Point>&)
 {
     NOT_FINISHED("TriSurface::get_surfpoints");
 }
-

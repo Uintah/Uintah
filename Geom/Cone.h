@@ -37,7 +37,7 @@ public:
     void adjust();
     void move(const Point&, const Point&, double, double, int nu=20, int nv=4);
 
-    GeomCone(int nu=20, int nv=4);
+    GeomCone(int nu=20, int nv=10);
     GeomCone(const Point&, const Point&, double, double, int nu=20, int nv=4);
     GeomCone(const GeomCone&);
     virtual ~GeomCone();

@@ -42,8 +42,8 @@ void GeomDisc::move(const Point& _cen, const Vector& _normal,
 }
 
 GeomDisc::GeomDisc(const GeomDisc& copy)
-: GeomObj(1), cen(copy.cen), normal(copy.normal), rad(copy.rad), nu(copy.nu),
-  nv(copy.nv), v1(copy.v1), v2(copy.v2)
+: GeomObj(1), v1(copy.v1), v2(copy.v2), cen(copy.cen), normal(copy.normal),
+  rad(copy.rad), nu(copy.nu), nv(copy.nv)
 {
     adjust();
 }

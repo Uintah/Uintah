@@ -53,7 +53,7 @@ Material* Material::clone()
 
 void Material::io(Piostream& stream)
 {
-    int version=stream.begin_class("Material", MATERIAL_VERSION);
+    /* int version= */stream.begin_class("Material", MATERIAL_VERSION);
     Pio(stream, ambient);
     Pio(stream, diffuse);
     Pio(stream, specular);
@@ -78,11 +78,6 @@ GeomMaterial::~GeomMaterial()
 GeomObj* GeomMaterial::clone()
 {
     return new GeomMaterial(*this);
-}
-
-void GeomMaterial::objdraw(DrawInfoOpenGL* di, Material* /* old_matl */)
-{
-    child->draw(di, matl.get_rep());
 }
 
 void GeomMaterial::make_prims(Array1<GeomObj*>& free,

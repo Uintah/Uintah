@@ -40,8 +40,8 @@ public:
 #endif
     virtual void make_prims(Array1<GeomObj*>& free,
 			    Array1<GeomObj*>& dontfree);
-    virtual void intersect(const Ray& ray, Material*,
-			   Hit& hit);
+     virtual void intersect(const Ray& ray, Material*,
+			    Hit& hit);
     virtual Vector normal(const Point& p);
 };
 

@@ -118,6 +118,11 @@ void GeomCone::objdraw(DrawInfoOpenGL* di, Material* matl)
     glPopMatrix();
 }
 
+void GeomContainer::objdraw(DrawInfoOpenGL* di, Material* matl)
+{
+    child->draw(di, matl);
+}
+
 void GeomCylinder::objdraw(DrawInfoOpenGL* di, Material* matl)
 {
     di->set_matl(matl);
@@ -153,6 +158,11 @@ void GeomLine::objdraw(DrawInfoOpenGL* di, Material* matl) {
     glVertex3d(p1.x(), p1.y(), p1.z());
     glVertex3d(p2.x(), p2.y(), p2.z());
     glEnd();
+}
+
+void GeomMaterial::objdraw(DrawInfoOpenGL* di, Material* /* old_matl */)
+{
+    child->draw(di, matl.get_rep());
 }
 
 void GeomPolyline::objdraw(DrawInfoOpenGL* di, Material* matl) {

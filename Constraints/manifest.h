@@ -49,12 +49,12 @@ RealMax ( Real x1, Real x2 )
 }
 
 
-enum boolean { false=0, true=1 };
-inline boolean
-NOT ( boolean b )
-{
-   return ((b == true) ? false : true);
-}
+//enum boolean { false=0, true=1 };
+//inline boolean
+//NOT ( boolean b )
+//{
+//   return ((b == true) ? false : true);
+//}
 
 
 #define NOT_FINISHED(what) cerr << what << ": Not Finished " << __FILE__ << " (line " << __LINE__ << ") " << endl

@@ -3,6 +3,7 @@
 
 #include <Datatypes/SimplePort.cc>
 #include <Datatypes/Colormap.h>
+#include <Datatypes/ColumnMatrix.h>
 #include <Datatypes/ContourSet.h>
 #include <Datatypes/Matrix.h>
 #include <Datatypes/Mesh.h>
@@ -24,3 +25,5 @@ typedef SimpleIPort<MatrixHandle> _dummy11_;
 typedef SimpleOPort<MatrixHandle> _dummy12_;
 typedef SimpleIPort<ColormapHandle> _dummy13_;
 typedef SimpleOPort<ColormapHandle> _dummy14_;
+typedef SimpleIPort<ColumnMatrixHandle> _dummy15_;
+typedef SimpleOPort<ColumnMatrixHandle> _dummy16_;

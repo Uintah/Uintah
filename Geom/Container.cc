@@ -32,11 +32,6 @@ void GeomContainer::get_bounds(BBox& bbox)
     child->get_bounds(bbox);
 }
 
-void GeomContainer::objdraw(DrawInfoOpenGL* di, Material* matl)
-{
-    child->draw(di, matl);
-}
-
 void GeomContainer::make_prims(Array1<GeomObj*>& free,
 			       Array1<GeomObj*>& dontfree)
 {
