@@ -278,7 +278,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
                                                                   mpm_matls_sub,
                                                                   all_matls);
   }
-  d_ice->scheduleComputeFC_vel_Temp(              sched, patches, ice_matls_sub,
+  d_ice->scheduleComputeVel_FC(                   sched, patches, ice_matls_sub,
                                                                   mpm_matls_sub,
                                                                   press_matl,
                                                                   all_matls,
@@ -287,6 +287,10 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
   d_ice->scheduleAddExchangeContributionToFCVel(  sched, patches, all_matls,
                                                                   false);
 
+  d_ice->scheduleComputeTempFC(                   sched, patches, ice_matls_sub,  
+                                                                  mpm_matls_sub,  
+                                                                  all_matls);
+  
   scheduleHEChemistry(                            sched, patches, react_sub,
                                                                   prod_sub,
                                                                   press_matl,
@@ -569,6 +573,7 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
   t->computes(Ilb->vol_frac_CCLabel);
   t->computes(Ilb->rho_CCLabel);
   t->computes(Ilb->press_equil_CCLabel, press_matl);
+  t->computes(Ilb->press_CCLabel,       press_matl);  // needed by implicit ICE
   t->modifies(Ilb->sp_vol_CCLabel,      mpm_matls); 
   t->computes(Ilb->sp_vol_CCLabel,      ice_matls);
   sched->addTask(t, patches, all_matls);
@@ -1372,12 +1377,14 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     StaticArray<constCCVariable<double> > mass_CC(numALLMatls);
     StaticArray<constCCVariable<Vector> > vel_CC(numALLMatls);
     constCCVariable<double> press;    
-    CCVariable<double> press_new, delPress_tmp;    
+    CCVariable<double> press_new, delPress_tmp, press_copy;    
     Ghost::GhostType  gn = Ghost::None;
-    //  P R E S S 
+    //__________________________________
+    //  Implicit press calc. needs two copies of the pressure
+    old_dw->get(press,                Ilb->press_CCLabel, 0,patch,gn, 0); 
     new_dw->allocateAndPut(press_new, Ilb->press_equil_CCLabel, 0,patch);
+    new_dw->allocateAndPut(press_copy,Ilb->press_CCLabel,       0,patch);
     new_dw->allocateTemporary(delPress_tmp, patch); 
-    old_dw->get(press, Ilb->press_CCLabel, 0,patch,gn, 0); 
 
     for (int m = 0; m < numALLMatls; m++) {
       Material* matl = d_sharedState->getMaterial( m );
@@ -1840,10 +1847,14 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         }
       }
     }
-    
+
+    //__________________________________
+    // update Boundary conditions
+    // make copy of press for implicit calc.    
     setBC(press_new,rho_micro[SURROUND_MAT],
           "rho_micro", "Pressure", patch, d_sharedState, 0, new_dw);
-    
+    press_copy.copyData(press_new);   
+     
     //__________________________________
     // compute sp_vol_CC
     for (int m = 0; m < numALLMatls; m++)   {
