@@ -1,10 +1,13 @@
 # SCIRun Network v1.23.0
 
 
+# Ask SCIRun to tell us where the data is
+init_DATADIR_and_DATASET
+
 set name {Main}
 set bbox {32 17 470 997}
 set creationDate {Tue Aug 31 2004}
-set creationTime {09:15:21}
+set creationTime {12:07:09}
 set runDate {}
 set runTime {}
 set notes {}
@@ -71,9 +74,10 @@ set c17 [addConnection $m11 0 $m12 2]
 set $m1-coord {3}
 
 # Set GUI variables for the DataIO->Readers->HDF5DataReader Module
-set $m2-filename "/z/home/sci/allen/SCIRun/SCIRunData/fusion/NIMROD_10089_001.h5"
+set $m2-filename "$DATADIR/$DATASET/NIMROD_10089_001.h5"
 set $m2-datasets {{/ NIMROD OUTPUTS CODE GRID PHI} {/ NIMROD OUTPUTS CODE GRID R} {/ NIMROD OUTPUTS CODE GRID Z} {/ NIMROD OUTPUTS CODE SLICES T00139 REALSPACE PRESSURE Values}}
 set $m2-dumpname {/tmp/NIMROD_10089_001.h5.dump}
+set $m2-ports {   0   1   2   3}
 set $m2-mergeData {0}
 set $m2-0-dim {11}
 set $m2-0-count {11}
@@ -91,8 +95,6 @@ set $m4-nodes-on {0}
 set $m4-edges-on {0}
 set $m4-normalize-vectors {}
 set $m4-has_scalar_data {1}
-set $m4-node_scale {0.03}
-set $m4-edge_scale {0.015}
 set $m4-scalars_scale {0.3}
 set $m4-show_progress {}
 
@@ -108,11 +110,8 @@ set $m5-realres {255}
 set $m6-min {-9.14790721658e-06}
 set $m6-max {478705.275575}
 
-# Open the SCIRun->Visualization->RescaleColorMap UI
-$m6 initialize_ui
-
 $m7 addViewer
-set $m7-ViewWindow_0-geometry 654x647+668+320
+set $m7-ViewWindow_0-geometry 654x646+672+340
 
 # Set GUI variables for the SCIRun->Render->Viewer Module
 set $m7-ViewWindow_0-view-eyep-x {-1.323248019}
@@ -159,7 +158,6 @@ set $m7-ViewWindow_0-global-cull {0}
 set $m7-ViewWindow_0-global-dl {0}
 set $m7-ViewWindow_0-global-type {Gouraud}
 set "$m7-ViewWindow_0-Faces (1)" {1}
-set "$m7-ViewWindow_0-Nodes (1)" {1}
 
 # Set GUI variables for the Fusion->Fields->NIMRODConverter Module
 set $m10-datasets {{-NIMROD-OUTPUTS-CODE-GRID-PHI:Scalar} {-NIMROD-OUTPUTS-CODE-GRID-R:Scalar} {-NIMROD-OUTPUTS-CODE-GRID-Z:Scalar} }

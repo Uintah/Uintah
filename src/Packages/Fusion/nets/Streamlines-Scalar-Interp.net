@@ -1,10 +1,13 @@
 # SCIRun Network v1.23.0
 
 
+# Ask SCIRun to tell us where the data is
+init_DATADIR_and_DATASET
+
 set name {Main}
 set bbox {22 50 673 982}
 set creationDate {Tue Aug 31 2004}
-set creationTime {09:23:59}
+set creationTime {11:54:41}
 set runDate {}
 set runTime {}
 set notes {}
@@ -83,9 +86,10 @@ set c25 [addConnection $m14 0 $m15 2]
 set c26 [addConnection $m9 0 $m10 2]
 
 # Set GUI variables for the DataIO->Readers->HDF5DataReader Module
-set $m1-filename "/z/home/sci/allen/SCIRun/SCIRunData/fusion/NIMROD_10107.h5"
+set $m1-filename "$DATADIR/$DATASET/NIMROD_10107.h5"
 set $m1-datasets {{/ NIMROD OUTPUTS CODE GRID PHI} {/ NIMROD OUTPUTS CODE GRID R} {/ NIMROD OUTPUTS CODE GRID Z} {/ NIMROD OUTPUTS CODE SLICES T03861 REALSPACE BFIELD PHI} {/ NIMROD OUTPUTS CODE SLICES T03861 REALSPACE BFIELD R} {/ NIMROD OUTPUTS CODE SLICES T03861 REALSPACE BFIELD Z} {/ NIMROD OUTPUTS CODE SLICES T03861 REALSPACE PRESSURE Values}}
 set $m1-dumpname {/tmp/NIMROD_10107.h5.dump}
+set $m1-ports {   0   1   2   3   3   3   4}
 set $m1-0-dim {41}
 set $m1-0-count {41}
 
@@ -154,7 +158,7 @@ set $m9-vectors_scale {0.3}
 set $m9-show_progress {19551847}
 
 $m10 addViewer
-set $m10-ViewWindow_0-geometry 654x647+4+494
+set $m10-ViewWindow_0-geometry 654x646+8+514
 
 # Set GUI variables for the SCIRun->Render->Viewer Module
 set $m10-ViewWindow_0-view-eyep-x {10.6634385462}
@@ -203,7 +207,6 @@ set $m10-ViewWindow_0-global-type {Gouraud}
 set "$m10-ViewWindow_0-SampleField Rake (1)" {1}
 set "$m10-ViewWindow_0-Nodes (2)" {1}
 set "$m10-ViewWindow_0-Edges (2)" {1}
-set "$m10-ViewWindow_0-Edges (3)" {1}
 
 # Set GUI variables for the Fusion->Fields->NIMRODConverter Module
 set $m11-datasets {{-NIMROD-OUTPUTS-CODE-GRID-PHI:Scalar} {-NIMROD-OUTPUTS-CODE-GRID-R:Scalar} {-NIMROD-OUTPUTS-CODE-GRID-Z:Scalar} }
