@@ -29,15 +29,19 @@ itcl_class PSECommon_Matrix_BldTransform {
 	global $this-tx
 	global $this-ty
 	global $this-tz
-	global $this-td
-	global $this-shu
-	global $this-shv
+	global $this-sha
+	global $this-shb
+	global $this-shc
+	global $this-shd
 	global $this-pre
 	global $this-lastxform
 	global $this-whichxform
 	global $this-xmapTCL
 	global $this-ymapTCL
 	global $this-zmapTCL
+	global $this-widgetAutoUpdate
+	global $this-widgetIgnoreChanges
+	global $this-widgetScale
 	set $this-rx 0
 	set $this-ry 0
 	set $this-rz 1
@@ -49,15 +53,19 @@ itcl_class PSECommon_Matrix_BldTransform {
 	set $this-tx 0
 	set $this-ty 0
 	set $this-tz 0
-	set $this-td 0
-	set $this-pre 1
-	set $this-shu 0
-	set $this-shv 0
+	set $this-sha 0
+	set $this-shb 0
+	set $this-shc 1
+	set $this-sha 0
 	set $this-lastxform translate
 	set $this-whichxform 0
+	set $this-pre 1
 	set $this-xmapTCL 1
 	set $this-ymapTCL 2
 	set $this-zmapTCL 3
+	set $this-widgetAutoUpdate 0
+	set $this-widgetScale 1
+	set $this-widgetIgnoreChanges 1
     }
     method ui {} {
 	set w .ui[modname]
@@ -82,15 +90,6 @@ itcl_class PSECommon_Matrix_BldTransform {
 	global $this-pre
 	global $this-whichxform
 
-	frame $w.f.prepost
-	radiobutton $w.f.prepost.pre -variable $this-pre \
-		-text "Pre-multiply" -value 0
-	radiobutton $w.f.prepost.post -variable $this-pre \
-		-text "Post-multiply" -value 1
-	button $w.f.prepost.b -text "DoIt" -command "$this-c needexecute"
-	pack $w.f.prepost.pre $w.f.prepost.post $w.f.prepost.b -side left \
-		-fill x -expand 1
-
 	frame $w.f.which
 	radiobutton $w.f.which.trans -command "$this setxform $w translate" \
 		-text Translate -variable $this-whichxform -value 0
@@ -102,20 +101,41 @@ itcl_class PSECommon_Matrix_BldTransform {
 		-text Shear -variable $this-whichxform -value 3
 	radiobutton $w.f.which.permute -command "$this setxform $w permute" \
 		-text Permute -variable $this-whichxform -value 4
+	radiobutton $w.f.which.widget -command "$this setxform $w widget" \
+		-text Widget -variable $this-whichxform -value 5
 	pack $w.f.which.trans $w.f.which.scale $w.f.which.rot \
-		$w.f.which.shear $w.f.which.permute -side left \
+		$w.f.which.shear $w.f.which.permute $w.f.which.widget \
+		-side left -fill x -expand 1
+
+	frame $w.f.b 
+	button $w.f.b.doit -text "Apply Transform" -command \
+		"$this-c needexecute"
+	button $w.f.b.comp -text "Composite Transform" -command "$this-c composite; $this setxform $w translate; $this set_defaults"
+	pack $w.f.b.doit $w.f.b.comp -side left -fill x -padx 10 -pady 3
+
+	frame $w.f.prepost
+	radiobutton $w.f.prepost.pre -variable $this-pre \
+		-text "Pre-multiply" -value 0
+	radiobutton $w.f.prepost.post -variable $this-pre \
+		-text "Post-multiply" -value 1
+	pack $w.f.prepost.pre $w.f.prepost.post -side left \
 		-fill x -expand 1
-	pack $w.f.prepost $w.f.which -side top -fill x -expand 1
+
+	pack $w.f.which -side top -fill x -expand 1
+	pack $w.f.b -side top
+	pack $w.f.prepost -side top -fill x -expand 1
 
 	frame $w.f.t -relief groove -borderwidth 5
-	label $w.f.t.l -text "Translate"
-	expscale $w.f.t.x -orient horizontal -variable $this-tx \
+	label $w.f.t.l -text "Translate Vector"
+	frame $w.f.t.f
+	expscale $w.f.t.f.x -orient horizontal -variable $this-tx \
 		-label "X:"
-	expscale $w.f.t.y -orient horizontal -variable $this-ty \
+	expscale $w.f.t.f.y -orient horizontal -variable $this-ty \
 		-label "Y:"
-	expscale $w.f.t.z -orient horizontal -variable $this-tz \
+	expscale $w.f.t.f.z -orient horizontal -variable $this-tz \
 		-label "Z:"
-	pack $w.f.t.l $w.f.t.x $w.f.t.y $w.f.t.z -side top -fill x
+	pack $w.f.t.f.x $w.f.t.f.y $w.f.t.f.z -side top -fill x
+	pack $w.f.t.l $w.f.t.f -side top -fill both -expand 1
 	pack $w.f.t -side top -fill x -expand 1
 	
 	global $this-rx
@@ -141,7 +161,7 @@ itcl_class PSECommon_Matrix_BldTransform {
 	global $this-ystr
 	global $this-zstr
 	$this bldAllMapStr
-	frame $w.f.p
+	frame $w.f.p -relief groove -borderwidth 5
 	label $w.f.p.l -text "Field Map"
 	pack $w.f.p.l -side top -fill both -expand 1
 	frame $w.f.p.m -relief sunken -bd 2
@@ -202,44 +222,77 @@ itcl_class PSECommon_Matrix_BldTransform {
 	pack $w.f.s.sz.s -side left -expand 1 -fill x
 	pack $w.f.s.g $w.f.s.sx $w.f.s.sy $w.f.s.sz -side top -fill x -expand 1
 
-	global $this-shu
-	global $this-shv
-	global $this-td
+	global $this-sha
+	global $this-shb
+	global $this-shc
+	global $this-shd
 	frame $w.f.sh -relief groove -borderwidth 5
-	expscale $w.f.sh.d -orient horizontal -variable $this-td \
+	label $w.f.sh.l -text "Shear Fixed Plane"
+	scale $w.f.sh.a -orient horizontal -variable $this-sha \
+		-label "A:" -showvalue true -from -1.0 -to 1.0 \
+		-resolution .01
+	scale $w.f.sh.b -orient horizontal -variable $this-shb \
+		-label "B:" -showvalue true -from -1.0 -to 1.0 \
+		-resolution .01
+	scale $w.f.sh.c -orient horizontal -variable $this-shc \
+		-label "C:" -showvalue true -from -1.0 -to 1.0 \
+		-resolution .01
+	expscale $w.f.sh.d -orient horizontal -variable $this-shd \
 		-label "D:"
-	scale $w.f.sh.u -orient horizontal -variable $this-shu \
-		-label "Shear Vector U:" -showvalue true -from -1.0 -to 1.0 \
-		-resolution .01
-	scale $w.f.sh.v -orient horizontal -variable $this-shv \
-		-label "Shear Vector V:" -showvalue true -from -1.0 -to 1.0 \
-		-resolution .01
-	pack $w.f.sh.d $w.f.sh.u $w.f.sh.v -fill x -expand 1 \
-		-side top
+	pack $w.f.sh.l $w.f.sh.a $w.f.sh.b $w.f.sh.c -fill x \
+		-expand 1 -side top
+	pack $w.f.sh.d -fill x \
+		-expand 1 -side bottom
 	
+	global $this-widgetScale
+	global $this-widgetAutoUpdate
+	global $this-widgetIgnoreChanges
+	frame $w.f.w -relief groove -borderwidth 5
+	label $w.f.w.l -text "Widget"
+	pack $w.f.w.l -side top
+	expscale $w.f.w.d -orient horizontal -variable $this-widgetScale \
+		-label "Uniform Scale"
+	frame $w.f.w.b 
+        set $this-widgetAutoUpdate 0
+        set $this-widgetChangeIgnore 1
+
+	checkbutton $w.f.w.b.auto -text "Auto Update" \
+		-variable $this-widgetAutoUpdate \
+		-command "$this change_autoupdate"
+	checkbutton $w.f.w.b.ignore -text "Ignore Changes" \
+		-variable $this-widgetIgnoreChanges \
+		-command "$this change_ignore"
+	pack $w.f.w.b.auto $w.f.w.b.ignore -side left -fill x \
+		-expand 1
+	pack $w.f.w.d $w.f.w.b -side top -fill x -expand 1
+
 	pack $w.f -fill x -expand 1 -side top
 	if {[set $this-whichxform] == 0} {
 	    $this setxform $w translate
+	} elseif {[set $this-whichxform] == 1} {
+	    $this setxform $w scale
+	} elseif {[set $this-whichxform] == 2} {
+	    $this setxform $w rotate
+	} elseif {[set $this-whichxform] == 3} {
+	    $this setxform $w shear
+	} elseif {[set $this-whichxform] == 4} {
+	    $this setxform $w permute
+	} elseif {[set $this-whichxform] == 5} {
+	    $this setxform $w widget
 	} else {
-	    if {[set $this-whichxform] == 1} {
-		$this setxform $w scale
-	    } else {
-		if {[set $this-whichxform] == 2} {
-		    $this setxform $w rotate
-		} else {
-		    if {[set $this-whichxform] == 3} {
-			$this setxform $w shear
-		    } else {
-			if {[set $this-whichxform] == 4} {
-			    $this setxform $w permute
-			} else {
-			    puts "BldTransform.tcl::ui setxform [set $this-whichxform] not recognized"
-			}
-		    }
-		}
-	    }
+	    puts "BldTransform.tcl::ui setxform [set $this-whichxform] not recognized"
 	}
     }	
+
+    method change_ignore { } {
+	global $this-widgetIgnoreChanges
+	$this-c change_ignore [set $this-widgetIgnoreChanges]
+    }
+
+    method change_autoupdate { } {
+	global $this-widgetAutoUpdate
+	$this-c change_autoupdate [set $this-widgetAutoUpdate]
+    }
 
     method setxform {w t} {
 	global $this-lastxform
@@ -251,7 +304,11 @@ itcl_class PSECommon_Matrix_BldTransform {
 	    pack forget $w.f.p
 	    pack $w.f.t -side top -fill x -expand 1
 	}
-
+	if {[set $this-lastxform] == "widget"} {
+	    pack forget $w.f.w
+	    pack $w.f.t -side top -fill x -expand 1
+	    $this-c hide_widget
+	}
 	set $this-lastxform $t
 	
 	if {$t == "translate"} {
@@ -269,14 +326,20 @@ itcl_class PSECommon_Matrix_BldTransform {
 	    return
 	}
 	if {$t == "shear"} {
-	    $w.f.t.l configure -text "Shear Plane"
+	    $w.f.t.l configure -text "Shear Vector"
 	    pack $w.f.sh -side top -fill x -expand 1
 	    return
 	}
 	if {$t == "permute"} {
 	    pack forget $w.f.t
 	    pack $w.f.p -side top -fill x -expand 1
+	    $this-c show_widget
 	    return
+	}
+	if {$t == "widget"} {
+	    pack forget $w.f.t
+	    pack $w.f.w -side top -fill x -expand 1
+	    $this-c show_widget
 	}
     }
 
