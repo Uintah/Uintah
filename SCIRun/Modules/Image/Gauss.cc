@@ -10,7 +10,6 @@
  *  Copyright (C) 1997 SCI Group
  */
 
-#ifdef __sgi
 
 #include <SCICore/Containers/Array1.h>
 #include <PSECore/Dataflow/Module.h>
@@ -76,7 +75,9 @@ class Gauss : public Module {
 
   GLXContext		ctx;    // OpenGL Contexts
   Display		*dpy;
+#ifdef __sgi
   GLXPbufferSGIX        pbuf;
+#endif
   Window		win;
 
   int                   winX,winY; // size of window in pixels
@@ -115,10 +116,10 @@ public:
 
 };
 
-  extern "C" Module* make_Gauss(const clString& id)
-    {
-      return scinew Gauss(id);
-    }
+extern "C" Module* make_Gauss(const clString& id)
+{
+  return scinew Gauss(id);
+}
 
 //static clString module_name("Gauss");
 //static clString widget_name("Gauss Widget");
@@ -139,8 +140,9 @@ Gauss::Gauss(const clString& id)
   add_oport( outscalarfield);
 
   outgrid = new ScalarFieldRG;
-  
+#ifdef __sgi  
   pbuf = 0;
+#endif
   ctx = 0; // null for now - no window is bound yet
   bdown = -1;
   drawn = 0;  // glDrawpixels hasn't been called yet
@@ -177,7 +179,7 @@ void Gauss::do_parallel(int proc)
 
 void Gauss::execute()
 {
- 
+#ifdef __sgi
   // get the scalar field and colormap...if you can
   ScalarFieldHandle sfieldh;
   if (!inscalarfield->get( sfieldh ))
@@ -265,7 +267,7 @@ void Gauss::execute()
   }
 
   if (usehardware) {
-  
+
     glConvolutionFilter2DEXT(GL_CONVOLUTION_2D_EXT,  \
 			     GL_LUMINANCE, \
 			     siz,siz, \
@@ -314,7 +316,9 @@ void Gauss::execute()
   // Send out
 
   outscalarfield->send(outgrid);
-
+#else
+  std::cerr << "Gauss only works on SGI's" << endl;
+#endif
 }
 
 void Gauss::Refresh()
@@ -325,7 +329,6 @@ void Gauss::Refresh()
 
 void Gauss::Resize()
 {
-
   // do a make current...
 
   if ( ! makeCurrent() )
@@ -431,6 +434,7 @@ void Gauss::DoRelease(int, int, int)
 
 int Gauss::makeCurrent(void)
 {
+#ifdef __sgi
   Tk_Window tkwin;
 
   // lock a mutex
@@ -486,7 +490,7 @@ int Gauss::makeCurrent(void)
       return 0;
     }
   } 
-
+#endif
   return 1;
   
 }
@@ -494,10 +498,12 @@ int Gauss::makeCurrent(void)
 } // End namespace Modules
 } // End namespace SCIRun
 
-#endif /* __sgi */
 
 //
 // $Log$
+// Revision 1.9  2000/12/01 01:35:13  moulding
+// added #if for __sgi.  As is, Gauss only works on SGI's.
+//
 // Revision 1.8  2000/03/17 09:29:03  sparker
 // New makefile scheme: sub.mk instead of Makefile.in
 // Use XML-based files for module repository
