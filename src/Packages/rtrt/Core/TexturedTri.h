@@ -9,7 +9,10 @@
 
 namespace rtrt {
 
+class Rect;
+
 class TexturedTri : public Object, public UVMapping {
+
     Vector ngu,ngv;   // the normalized 2D basis for this triangle's
                       // object space
     Vector ngungv;    // ngu cross ngv
@@ -37,15 +40,18 @@ public:
     virtual ~TexturedTri();
     virtual void intersect(const Ray& ray, HitInfo& hit, DepthStats* st,
 			   PerProcessorContext*);
-  virtual void light_intersect(const Ray& ray, HitInfo& hit, Color& atten,
+    virtual void light_intersect(const Ray& ray, HitInfo& hit, Color& atten,
 			       DepthStats* st, PerProcessorContext* ppc);
-  virtual void softshadow_intersect(Light* light, const Ray& ray,
+    virtual void softshadow_intersect(Light* light, const Ray& ray,
 				    HitInfo& hit, double dist, Color& atten,
 				    DepthStats* st, PerProcessorContext* ppc);
     virtual Vector normal(const Point&, const HitInfo& hit);
     virtual void compute_bounds(BBox&, double offset);
     virtual void uv(UV& uv, const Point&, const HitInfo& hit);
     virtual void set_texcoords(const Point&, const Point&, const Point&);
+
+    // returns a new rect that combines me and tri if we form a rect, else NULL
+    Rect * pairMeUp( TexturedTri * tri );
 };
 
 } // end namespace rtrt

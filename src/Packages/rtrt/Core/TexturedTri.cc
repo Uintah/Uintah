@@ -4,15 +4,20 @@
 #include <Packages/rtrt/Core/HitInfo.h>
 #include <Packages/rtrt/Core/BBox.h>
 #include <Packages/rtrt/Core/Light.h>
+#include <Packages/rtrt/Core/Rect.h>
+#include <Packages/rtrt/Core/Stats.h>
+
 #include <Core/Math/MiscMath.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Thread.h>
-#include <Packages/rtrt/Core/Stats.h>
+
 #include <iostream>
+#include <vector>
 
 using namespace rtrt;
 using namespace SCIRun;
 using std::cerr;
+using std::vector;
 
 TexturedTri::TexturedTri(Material* matl, const Point& p1, const Point& p2,
 	 const Point& p3)
@@ -147,6 +152,92 @@ TexturedTri::set_texcoords(const Point& tx1,
     lntu = sqrt(lntu);
     lntv = sqrt(lntv);
   }
+}
+
+Rect *
+TexturedTri::pairMeUp( TexturedTri * tri )
+{
+  if( tri == NULL ) return NULL;
+
+  //cout << "norms are: " << tri->n << ", " << n << "\n";
+
+  double dotVal = Dot( tri->n, n );
+  if( dotVal > 0.999 || dotVal < -.999 ) { // we are coplanar
+
+    double s1_t1 = (p1 - p2).length2();
+    double s2_t1 = (p1 - p3).length2();
+    double s3_t1 = (p2 - p3).length2();
+
+    double s1_t2 = (tri->p1 - tri->p2).length2();
+    double s2_t2 = (tri->p1 - tri->p3).length2();
+    double s3_t2 = (tri->p2 - tri->p3).length2();
+
+    vector<Point *> notDiagT1;
+    vector<Point *> notDiagT2;
+    double lenT1Hyp = 0;
+    double lenT1Others = 0;
+    double lenT2Hyp = 0;
+
+    Point centerHypT1; // Center of Hypotenuse
+    Point centerSaT1;  // Center of Side A
+    Point centerSbT1;  // Center of Side B
+
+    if( s1_t1 > s2_t1 || s1_t1 > s3_t1 ) {
+      notDiagT1.push_back( &p3 );
+      lenT1Hyp = s1_t1;
+      lenT1Others = s2_t1 + s3_t1;
+      centerHypT1 = p1 + (p2 - p1)/2;
+      centerSaT1  = p3 + (p1 - p3)/2;
+      centerSbT1  = p3 + (p2 - p3)/2;
+    } else if( s2_t1 < s3_t1 ) {
+      notDiagT1.push_back( &p2 );
+      lenT1Hyp = s2_t1;
+      lenT1Others = s1_t1 + s3_t1;
+      centerHypT1 = p1 + (p3 - p1)/2;
+      centerSaT1  = p2 + (p1 - p2)/2;
+      centerSbT1  = p2 + (p3 - p2)/2;
+    } else {
+      notDiagT1.push_back( &p1 );
+      lenT1Hyp = s3_t1;
+      lenT1Others = s1_t1 + s2_t1;
+      centerHypT1 = p2 + (p3 - p2)/2;
+      centerSaT1  = p1 + (p2 - p1)/2;
+      centerSbT1  = p1 + (p3 - p1)/2;
+    }
+
+    if( s1_t2 > s2_t2 || s1_t2 > s3_t2 ) {
+      notDiagT2.push_back( &p3 );
+      lenT2Hyp = s1_t2;
+    } else if( s2_t2 < s3_t2 ) {
+      notDiagT2.push_back( &p2 );
+      lenT2Hyp = s2_t2;
+    } else {
+      notDiagT2.push_back( &p1 );
+      lenT2Hyp = s3_t2;
+    }
+
+#if 0
+    cout << "lengths t1: " << s1_t1 << ", " 
+	 << s2_t1 << ", " << s3_t1 << "\n";
+    cout << "lengths t2: " << s1_t2 << ", " 
+	 << s2_t2 << ", " << s3_t2 << "\n";
+    cout << "hyps: " << lenT1Hyp << ", " << lenT2Hyp << "\n";
+    cout << "len others: " << lenT1Others << "\n";
+#endif
+
+    // If Hypotenuses are the same length 
+    if( fabs( lenT1Hyp - lenT2Hyp ) < 0.000001 ) {
+//    cout << "same\n";
+      // And if triangle(s) is a right triangle (ie: H^2 = A^2 + B^2).
+      if( fabs( lenT1Others - lenT1Hyp ) < 0.00001 ) {
+	Vector ht = centerHypT1 - centerSaT1;
+	Vector wd = centerHypT1 - centerSbT1;
+
+	return new Rect( get_matl(), centerHypT1, ht, wd );
+      }
+    }
+  }
+  return NULL;
 }
 
 void 
