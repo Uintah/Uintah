@@ -23,7 +23,7 @@ public:
    virtual ~ICE();
    
    virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
-			     const SimulationStateP&);
+			     SimulationStateP&);
    virtual void scheduleInitialize(const LevelP& level,
 				   SchedulerP&,
 				   DataWarehouseP&);

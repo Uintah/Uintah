@@ -1,37 +1,106 @@
-#ifndef __BOX_GEOMETRY_PIECE_H__
-#define __BOX_GEOMETRY_PIECE_H__
+#ifndef __BOX_GEOMETRY_OBJECT_H__
+#define __BOX_GEOMETRY_OBJECT_H__
 
 #include "GeometryPiece.h"
+#include <SCICore/Geometry/Point.h>
+#include <Uintah/Grid/Box.h>
+
+using SCICore::Geometry::Point;
+using Uintah::Grid::Box;
+
+namespace Uintah {
+namespace Components {
+
+/**************************************
+	
+CLASS
+   BoxGeometryPiece
+	
+   Creates a box from the xml input file description.
+	
+GENERAL INFORMATION
+	
+   BoxGeometryPiece.h
+	
+   John A. Schmidt
+   Department of Mechanical Engineering
+   University of Utah
+	
+   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+	
+ 
+	
+KEYWORDS
+   BoxGeometryPiece BoundingBox inside
+	
+DESCRIPTION
+   Creates a box from the xml input file description.
+   Requires two inputs: lower left point and upper right point.  
+   There are methods for checking if a point is inside the box
+   and also for determining the bounding box for the box (which
+   just returns the box itself).
+   The input form looks like this:
+       <box>
+         <min>[0.,0.,0.]</min>
+	 <max>[1.,1.,1.]</max>
+       </box>
+	
+	
+WARNING
+	
+****************************************/
 
 
 class BoxGeometryPiece : public GeometryPiece {
 
  public:
+  //////////
+  // Constructor that takes a ProblemSpecP argument.   It reads the xml 
+  // input specification and builds a generalized box.
+  BoxGeometryPiece(ProblemSpecP&);
 
-  BoxGeometryPiece();
-  BoxGeometryPiece(Point lower, Point upper);
+  //////////
+  // Destructor
   virtual ~BoxGeometryPiece();
 
+  //////////
+  // Determines whether a point is inside the box.
+  virtual bool inside(const Point &p) const;
 
-  virtual int checkShapesPositive(Point check_point, int &np, int piece_num,
-			  Vector part_spacing,int ppold);
-  virtual int checkShapesNegative(Point check_point, int &np, int piece_num,
-			  Vector part_spacing,int ppold);
-
-  virtual void computeNorm(Vector &norm,Point part_pos, int surf[7], 
-			   int ptype, int &np);
+  //////////
+  //  Returns the bounding box surrounding the cylinder.
+  virtual Box getBoundingBox() const;
 
  private:
-  Point d_lower;
-  Point d_upper;
+  Box d_box;
 
 };
 
-#endif // __BOX_GEOMTRY_PIECE_H__
+} // end namespace Components
+} // end namespace Uintah
+
+#endif // __BOX_GEOMTRY_Piece_H__
 
 // $Log$
-// Revision 1.1  2000/04/14 02:05:45  jas
-// Subclassed out the GeometryPiece into 4 types: Box,Cylinder,Sphere, and
-// Tri.  This made the GeometryObject class simpler since many of the
-// methods are now relegated to the GeometryPiece subclasses.
+// Revision 1.2  2000/04/24 21:04:28  sparker
+// Working on MPM problem setup and object creation
+//
+// Revision 1.5  2000/04/22 18:19:10  jas
+// Filled in comments.
+//
+// Revision 1.4  2000/04/22 16:55:11  jas
+// Added logging of changes.
+//
+// Revision 1.3  2000/04/20 18:56:20  sparker
+// Updates to MPM
+//
+// Revision 1.2  2000/04/20 15:09:25  jas
+// Added factory methods for GeometryObjects.
+//
+// Revision 1.1  2000/04/19 21:31:07  jas
+// Revamping of the way objects are defined.  The different geometry object
+// subtypes only do a few simple things such as testing whether a point
+// falls inside the object and also gets the bounding box for the object.
+// The constructive solid geometry objects:union,difference, and intersection
+// have the same simple operations.
 //

@@ -1,7 +1,7 @@
 #ifndef __PROBLEM_H__
 #define __PROBLEM_H__
 
-#include <Uintah/Components/MPM/GeometrySpecification/GeometryObject.h>
+#include <Uintah/Components/MPM/GeometrySpecification/GeometryPiece.h>
 #include <Uintah/Components/MPM/BoundCond.h>
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Geometry/Point.h>
@@ -21,6 +21,7 @@ namespace Uintah {
 
 namespace Uintah {
 namespace Components {
+class GeometryObject;
 using SCICore::Geometry::Vector;
 using SCICore::Geometry::Point;
 using Uintah::Interface::ProblemSpec;
@@ -36,7 +37,7 @@ class Problem {
   
     
   void preProcessor(const ProblemSpecP& prob_spec, GridP& grid,
-		    const SimulationStateP& sharedState);
+		    SimulationStateP& sharedState);
   void createParticles(const Uintah::Grid::Region* region, 
 		       Uintah::Interface::DataWarehouseP&);
    
@@ -56,6 +57,9 @@ class Problem {
 #endif // __PROBLEM_H__
 
 // $Log$
+// Revision 1.8  2000/04/24 21:04:32  sparker
+// Working on MPM problem setup and object creation
+//
 // Revision 1.7  2000/04/20 18:56:22  sparker
 // Updates to MPM
 //

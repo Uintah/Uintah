@@ -39,7 +39,7 @@ public:
     virtual ~Arches();
 
     virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
-			      const SimulationStateP&);
+			      SimulationStateP&);
 
     virtual void problemInit(const LevelP& level,
 			     SchedulerP& sched, DataWarehouseP& dw,
@@ -80,6 +80,9 @@ private:
 
 //
 // $Log$
+// Revision 1.16  2000/04/24 21:04:20  sparker
+// Working on MPM problem setup and object creation
+//
 // Revision 1.15  2000/04/20 18:56:10  sparker
 // Updates to MPM
 //

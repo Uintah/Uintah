@@ -97,7 +97,7 @@ ICE::~ICE()
 }
 
 void ICE::problemSetup(const ProblemSpecP& params, GridP& grid,
-		       const SimulationStateP&)
+		       SimulationStateP&)
 {
 #if 0
 audit();

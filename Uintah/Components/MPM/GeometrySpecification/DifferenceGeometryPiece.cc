@@ -1,6 +1,6 @@
-#include "DifferenceGeometryObject.h"
+#include "DifferenceGeometryPiece.h"
 #include <SCICore/Geometry/Point.h>
-#include "GeometryObjectFactory.h"
+#include "GeometryPieceFactory.h"
 #include <vector>
 
 using SCICore::Geometry::Point;
@@ -10,18 +10,18 @@ using SCICore::Geometry::Max;
 using namespace Uintah::Components;
 
 
-DifferenceGeometryObject::DifferenceGeometryObject(ProblemSpecP &ps) 
+DifferenceGeometryPiece::DifferenceGeometryPiece(ProblemSpecP &ps) 
 {
-  std::vector<GeometryObject *> objs(2);
+  std::vector<GeometryPiece *> objs(2);
 
-  GeometryObjectFactory::create(ps,objs);
+  GeometryPieceFactory::create(ps,objs);
 
   left = objs[0];
   right = objs[1];
 
 }
 
-DifferenceGeometryObject::~DifferenceGeometryObject()
+DifferenceGeometryPiece::~DifferenceGeometryPiece()
 {
   
   delete left;
@@ -29,12 +29,12 @@ DifferenceGeometryObject::~DifferenceGeometryObject()
  
 }
 
-bool DifferenceGeometryObject::inside(const Point &p) const 
+bool DifferenceGeometryPiece::inside(const Point &p) const 
 {
   return (left->inside(p) && !right->inside(p));
 }
 
-Box DifferenceGeometryObject::getBoundingBox() const
+Box DifferenceGeometryPiece::getBoundingBox() const
 {
 
    // Initialize the lo and hi points to the left element

@@ -1,31 +1,108 @@
-#ifndef __TRI_GEOMETRY_PIECE_H__
-#define __TRI_GEOMETRY_PIECE_H__
+#ifndef __TRI_GEOMETRY_OBJECT_H__
+#define __TRI_GEOMETRY_OBJECT_H__
 
 #include "GeometryPiece.h"
+#include <SCICore/Geometry/Point.h>
+#include <Uintah/Grid/Box.h>
+#include <string>
+
+using SCICore::Geometry::Point;
+using Uintah::Grid::Box;
+
+namespace Uintah {
+namespace Components {
+
+/**************************************
+	
+CLASS
+   TriGeometryPiece
+	
+   Creates a triangulated surface piece from the xml input file description.
+	
+GENERAL INFORMATION
+	
+   TriGeometryPiece.h
+	
+   John A. Schmidt
+   Department of Mechanical Engineering
+   University of Utah
+	
+   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+	
+ 
+	
+KEYWORDS
+   TriGeometryPiece BoundingBox inside
+	
+DESCRIPTION
+   Creates a triangulated surface piece from the xml input file description.
+   Requires one input: file name (convetion use suffix .dat).  
+   There are methods for checking if a point is inside the surface
+   and also for determining the bounding box for the surface.
+   The input form looks like this:
+       <tri>
+         <file>surface.dat</file>
+       </tri>
+	
+	
+WARNING
+	
+****************************************/
 
 class TriGeometryPiece : public GeometryPiece {
  public:
+  //////////
+  //  Constructor that takes a ProblemSpecP argument.   It reads the xml 
+  // input specification and builds the triangulated surface piece.
+  TriGeometryPiece(ProblemSpecP &);
+  //////////
 
-  TriGeometryPiece();
+  // Destructor
   virtual ~TriGeometryPiece();
 
- 
-  virtual int checkShapesPositive(Point check_point, int &np, int piece_num,
-			  Vector part_spacing, int ppold);
-  virtual int checkShapesNegative(Point check_point, int &np, int piece_num,
-			  Vector part_spacing, int ppold);
+  //////////
+  // Determins whether a point is inside the triangulated surface.
+  virtual bool inside(const Point &p) const;
 
-  virtual void computeNorm(Vector &norm, Point part_pos, int sf[7], 
-			   int inPiece, int &np);
+  //////////
+  // Returns the bounding box surrounding the triangulated surface.
+  virtual Box getBoundingBox() const;
 
+ private:
+  
 
 };
+
+} // end namespace Components
+} // end namespace Uintah
 
 #endif // __TRI_GEOMETRY_PIECE_H__
 
 // $Log$
-// Revision 1.1  2000/04/14 02:06:54  jas
-// Subclassed out the GeometryPiece into 4 types: Box,Cylinder,Sphere, and
-// Tri.  This made the GeometryObject class simpler since many of the
-// methods are now relegated to the GeometryPiece subclasses.
+// Revision 1.2  2000/04/24 21:04:33  sparker
+// Working on MPM problem setup and object creation
+//
+// Revision 1.6  2000/04/22 18:19:11  jas
+// Filled in comments.
+//
+// Revision 1.5  2000/04/22 16:55:12  jas
+// Added logging of changes.
+//
+// Revision 1.4  2000/04/22 16:51:04  jas
+// Put in a skeleton framework for documentation (coccoon comment form).
+// Comments still need to be filled in.
+//
+// Revision 1.3  2000/04/20 22:37:14  jas
+// Fixed up the GeometryObjectFactory.  Added findBlock() and findNextBlock()
+// to ProblemSpec stuff.  This will iterate through all of the nodes (hopefully).
+//
+// Revision 1.2  2000/04/20 15:09:26  jas
+// Added factory methods for GeometryObjects.
+//
+// Revision 1.1  2000/04/19 21:31:09  jas
+// Revamping of the way objects are defined.  The different geometry object
+// subtypes only do a few simple things such as testing whether a point
+// falls inside the object and also gets the bounding box for the object.
+// The constructive solid geometry objects:union,difference, and intersection
+// have the same simple operations.
 //

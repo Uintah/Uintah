@@ -1,29 +1,13 @@
+
 #ifndef __GEOMETRY_OBJECT_H__
 #define __GEOMETRY_OBJECT_H__
 
 #include <SCICore/Geometry/IntVector.h>
-#include <Uintah/Interface/ProblemSpecP.h>
-
-namespace SCICore {
-    namespace Geometry {
-	class Point;
-	class Vector;
-    }
-}
 
 namespace Uintah {
-   namespace Grid {
-      class Box;
-   }
    namespace Components {
-      
-      using Uintah::Interface::ProblemSpecP;
-      using Uintah::Interface::ProblemSpec;
-      using SCICore::Geometry::Point;
-      using SCICore::Geometry::Vector;
-      using SCICore::Geometry::IntVector;
-      using Uintah::Grid::Box;
-
+      class GeometryPiece;
+      using namespace SCICore::Geometry;
 /**************************************
 	
 CLASS
@@ -59,31 +43,18 @@ WARNING
       public:
 	//////////
 	// Insert Documentation Here:
-	 GeometryObject();
+	 GeometryObject(GeometryPiece* piece, const IntVector&);
+
+	//////////
+	// Insert Documentation Here:
+	 ~GeometryObject();
 
 	 //////////
 	 // Insert Documentation Here:
-	 virtual ~GeometryObject();
-	
-	 //////////
-	 // Insert Documentation Here:
 	 IntVector getObjInfoNumParticlesPerCell();
-#ifdef FUTURE
-	 //////////
-	 // Insert Documentation Here:
-	 void surface(Point part_pos, int surf[7], int &np);
-	 //////////
-	 // Insert Documentation Here:
-	 void norm(Vector &norm,Point part_pos, int surf[7], int ptype, int &np);
-#endif
-	 //////////
-	 // Insert Documentation Here:
-	 virtual Box getBoundingBox() const = 0;
-	 //////////
-	 // Insert Documentation Here:
-	 virtual bool inside(const Point &p) const = 0;
-	 
+
       private:
+	 GeometryPiece* d_piece;
 	 IntVector d_num_par_per_cell;
       };
       
@@ -94,6 +65,9 @@ WARNING
 
 
 // $Log$
+// Revision 1.13  2000/04/24 21:04:30  sparker
+// Working on MPM problem setup and object creation
+//
 // Revision 1.12  2000/04/22 16:51:04  jas
 // Put in a skeleton framework for documentation (coccoon comment form).
 // Comments still need to be filled in.

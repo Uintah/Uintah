@@ -44,6 +44,8 @@ namespace Uintah {
        const VarLabel* get_delt_label() const {
 	  return delt_label;
        }
+
+       void registerMaterial(Material*);
        int getNumMatls() const {
 	  return (int)matls.size();
        }
@@ -64,6 +66,9 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.2  2000/04/24 21:04:38  sparker
+// Working on MPM problem setup and object creation
+//
 // Revision 1.1  2000/04/20 18:56:30  sparker
 // Updates to MPM
 //

@@ -2,30 +2,30 @@
 #define __INTERSECTION_GEOMETRY_OBJECT_H__      
 
 
-#include "GeometryObject.h"
+#include "GeometryPiece.h"
 #include <Uintah/Grid/Box.h>
 #include <vector>
 #include <SCICore/Geometry/Point.h>
 
 
+namespace Uintah {
+namespace Components {
 using Uintah::Grid::Box;
 using SCICore::Geometry::Point;
 
-namespace Uintah {
-namespace Components {
 
 /**************************************
 	
 CLASS
-   IntersectionGeometryObject
+   IntersectionGeometryPiece
 	
-   Creates the intersection of geometry objects from the xml input 
+   Creates the intersection of geometry pieces from the xml input 
    file description. 
 
 	
 GENERAL INFORMATION
 	
-   IntersectionGeometryObject.h
+   IntersectionGeometryPiece.h
 	
    John A. Schmidt
    Department of Mechanical Engineering
@@ -36,14 +36,14 @@ GENERAL INFORMATION
  
 	
 KEYWORDS
-   IntersectionGeometryObject
+   IntersectionGeometryPiece
 	
 DESCRIPTION
-   Creates a intersection of different geometry objects from the xml input 
+   Creates a intersection of different geometry pieces from the xml input 
    file description.
-   Requires multiple inputs: specify multiple geometry objects.  
+   Requires multiple inputs: specify multiple geometry pieces.  
    There are methods for checking if a point is inside the intersection of 
-   objects and also for determining the bounding box for the collection.
+   pieces and also for determining the bounding box for the collection.
    The input form looks like this:
        <intersection>
          <box>
@@ -60,37 +60,40 @@ WARNING
 	
 ****************************************/
 
-class IntersectionGeometryObject : public GeometryObject {
+class IntersectionGeometryPiece : public GeometryPiece {
 
  public:
   //////////
   // Constructor that takes a ProblemSpecP argument.   It reads the xml 
-  // input specification and builds the intersection of geometry objects.
-  IntersectionGeometryObject(ProblemSpecP &);
+  // input specification and builds the intersection of geometry pieces.
+  IntersectionGeometryPiece(ProblemSpecP &);
 
   //////////
   // Destructor
-  virtual ~IntersectionGeometryObject();
+  virtual ~IntersectionGeometryPiece();
 
   //////////
-  // Determines whether a point is inside the intersection object.  
+  // Determines whether a point is inside the intersection piece.  
   virtual bool inside(const Point &p) const;
 
   //////////
-  // Returns the bounding box surrounding the intersection object.
+  // Returns the bounding box surrounding the intersection piece.
   virtual Box getBoundingBox() const;
 
  private:
-  std::vector<GeometryObject* > child;
+  std::vector<GeometryPiece* > child;
 
 };
 
 } // end namespace Components
 } // end namespace Uintah
 
-#endif // __INTERSECTION_GEOMETRY_OBJECT_H__
+#endif // __INTERSECTION_GEOMETRY_PIECE_H__
 
 // $Log$
+// Revision 1.1  2000/04/24 21:04:31  sparker
+// Working on MPM problem setup and object creation
+//
 // Revision 1.5  2000/04/22 18:19:11  jas
 // Filled in comments.
 //
