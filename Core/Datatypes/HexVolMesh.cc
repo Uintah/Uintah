@@ -757,8 +757,8 @@ HexVolMesh::get_weights(const Point &p,
       Cross(Cross(v[4], v[6]), v[7]).length();
 
     vol[6] =
+      Cross(Cross(v[0], v[1]), v[2]).length() +
       Cross(Cross(v[0], v[1]), v[5]).length() +
-      Cross(Cross(v[0], v[2]), v[1]).length() +
       Cross(Cross(v[0], v[2]), v[3]).length() +
       Cross(Cross(v[0], v[3]), v[4]).length() +
       Cross(Cross(v[0], v[4]), v[5]).length() +
