@@ -311,8 +311,8 @@ itcl_class Roe {
 	pack $m.objlist -side left -padx 2 -pady 2 -fill y
 	label $m.objlist.title -text "Objects:"
 	pack $m.objlist.title -side top
-	canvas $m.objlist.canvas -width 390 -height 100 \
-	        -scrollregion "0 0 390 100" \
+	canvas $m.objlist.canvas -width 400 -height 100 \
+	        -scrollregion "0 0 400 100" \
 		-yscrollcommand "$m.objlist.scroll set" -borderwidth 0 -yscrollincrement 10
 	pack $m.objlist.canvas -side right -padx 2 -pady 2 -fill y
 	
@@ -554,7 +554,7 @@ itcl_class Roe {
 	#set height [winfo height $m.objlist.canvas.frame]
 	set height [lindex [$m.objlist.canvas cget -scrollregion] end]
 
-	incr height $newframeheight
+	incr height [expr $newframeheight+20]
 
 	$m.objlist.canvas configure -scrollregion "0 0 $width $height"
 
