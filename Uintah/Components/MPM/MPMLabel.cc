@@ -62,6 +62,9 @@ MPMLabel::MPMLabel()
   pSurfaceNormalLabel = scinew VarLabel( "p.surfaceNormal",
 			ParticleVariable<Vector>::getTypeDescription() );
 
+  pCrackSurfaceNormalLabel = scinew VarLabel( "p.crackSurfaceNormal",
+			ParticleVariable<Vector>::getTypeDescription() );
+
   pParticleIDLabel = scinew VarLabel("p.particleID",
 			ParticleVariable<long>::getTypeDescription() );
 
@@ -115,6 +118,9 @@ MPMLabel::MPMLabel()
 			ParticleVariable<int>::getTypeDescription() );
 
   pSurfaceNormalLabel_preReloc = scinew VarLabel( "p.surfaceNormal+",
+			ParticleVariable<Vector>::getTypeDescription() );
+
+  pCrackSurfaceNormalLabel_preReloc = scinew VarLabel( "p.crackSurfaceNormal+",
 			ParticleVariable<Vector>::getTypeDescription() );
 
   pParticleIDLabel_preReloc = scinew VarLabel("p.particleID+",
@@ -299,6 +305,9 @@ void MPMLabel::registerPermanentParticleState(int i,
 }
 
 // $Log$
+// Revision 1.24  2000/08/08 20:00:32  tan
+// Added cCrackedCellLabel and pCrackSurfaceNormalLabel for fracture.
+//
 // Revision 1.23  2000/08/08 01:32:41  jas
 // Changed new to scinew and eliminated some(minor) memory leaks in the scheduler
 // stuff.
