@@ -218,8 +218,8 @@ void ScalarFieldExtractor::execute()
 	  LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
 	  LevelField<double> *sfd =
 	    scinew LevelField<double>( mesh, Field::NODE );
-	  sfd->store( "variable", string(var) );
-	  sfd->store( "time", double( time ));
+	  sfd->store( "variable", string(var), true);
+	  sfd->store( "time", double( time ), true);
 	  vector<ShareAssignArray3<double> > &data = sfd->fdata();
 	  data.resize(level->numPatches());
 	double size = data.size();
@@ -249,8 +249,8 @@ void ScalarFieldExtractor::execute()
 	  LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
 	  LevelField<int> *sfd =
 	    scinew LevelField<int>( mesh, Field::NODE );
-	  sfd->store( "variable", string(var) );
-	  sfd->store( "time", double( time ));
+	  sfd->store( "variable", string(var), true );
+	  sfd->store( "time", double( time ), true);
 	  vector<ShareAssignArray3<int> > &data = sfd->fdata();
 	  data.resize(level->numPatches());
 	double size = data.size();
@@ -280,8 +280,8 @@ void ScalarFieldExtractor::execute()
 	  LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
 	  LevelField<long> *sfd =
 	    scinew LevelField<long>( mesh, Field::NODE );
-	  sfd->store( "variable", string(var) );
-	  sfd->store( "time", double( time ));
+	  sfd->store( "variable", string(var), true );
+	  sfd->store( "time", double( time ), true);
 	  vector<ShareAssignArray3<long> > &data = sfd->fdata();
 	  data.resize(level->numPatches());
 	double size = data.size();
@@ -317,8 +317,8 @@ void ScalarFieldExtractor::execute()
 	  LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
 	  LevelField<double> *sfd =
 	    scinew LevelField<double>( mesh, Field::CELL );
-	  sfd->store( "variable", string(var) );
-	  sfd->store( "time", double( time ));
+	  sfd->store( "variable", string(var), true );
+	  sfd->store( "time", double( time ), true);
 	  vector<ShareAssignArray3<double> >& data = sfd->fdata();
 	  data.resize(level->numPatches());
 	double size = data.size();
@@ -348,8 +348,8 @@ void ScalarFieldExtractor::execute()
 	  LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
 	  LevelField<int> *sfd =
 	    scinew LevelField<int>( mesh, Field::CELL );
-	  sfd->store( "variable", string(var) );
-	  sfd->store( "time", double( time ));
+	  sfd->store( "variable", string(var), true );
+	  sfd->store( "time", double( time ), true);
 	  vector<ShareAssignArray3<int> >& data = sfd->fdata();
 	  data.resize(level->numPatches());
 	double size = data.size();
@@ -379,8 +379,8 @@ void ScalarFieldExtractor::execute()
 	  LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
 	  LevelField<long> *sfd =
 	    scinew LevelField<long>( mesh, Field::CELL );
-	  sfd->store( "variable", string( var ) );
-	  sfd->store( "time", double( time ));
+	  sfd->store( "variable", string( var ), true );
+	  sfd->store( "time", double( time ), true);
 	  vector<ShareAssignArray3<long> >& data = sfd->fdata();
 	  data.resize(level->numPatches());
 	double size = data.size();
