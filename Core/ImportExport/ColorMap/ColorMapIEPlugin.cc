@@ -53,23 +53,8 @@ using namespace std;
 
 namespace SCIRun {
 
-
-#ifdef __APPLE__
-// On the Mac, this comes from Core/Util/DynamicLoader.cc because
-// the constructor will actually fire from there.  When it is declared
-// in this file, it does not "construct" and thus causes seg faults.
-// (Yes, this is a hack.  Perhaps this problem will go away in later
-// OSX releases, but probably not as it has something to do with the
-// Mac philosophy on when to load dynamic libraries.)
-extern map<string, ColorMapIEPlugin *> *colormap_plugin_table;
-extern Mutex colormapIEPluginMutex;
-#else
-// Same problem on Linux really.  We need control of the static
-// initializer order.
 static map<string, ColorMapIEPlugin *> *colormap_plugin_table = 0;
-extern Mutex colormapIEPluginMutex;
-#endif
-
+extern Mutex colormapIEPluginMutex; // From Core/Util/DynamicLoader.cc
 
 //----------------------------------------------------------------------
 ColorMapIEPlugin::ColorMapIEPlugin(const string& pname,
