@@ -13,31 +13,38 @@ using namespace SCIRun;
 
 Disc::Disc(Material* matl, const Point& cen, const Vector& n,
 	   double radius)
-    : Object(matl), cen(cen), n(n), radius(radius)
+  : Object(matl), cen(cen), n(n), radius(radius), tex_scale(Vector(1,1,1))
 {
-    this->n.normalize();
-    d=Dot(this->n, cen);
+  this->n.normalize();
 }
 
 Disc::~Disc()
 {
 }
 
+void Disc::preprocess(double, int&, int&)
+{
+  // Set up unit transformation
+  xform.rotate(Vector(0,0,1), n);
+  xform.pre_translate(cen.asVector());
+  xform.print();
+}
+
 void Disc::intersect(const Ray& ray, HitInfo& hit, DepthStats*,
 		     PerProcessorContext*)
 {
-    Vector dir(ray.direction());
-    Point orig(ray.origin());
-    double dt=Dot(dir, n);
-    if(dt < 1.e-6 && dt > -1.e-6)
-	return;
-    double t=(d-Dot(n, orig))/dt;
-    if(hit.was_hit && t>hit.min_t)
-	return;
-    Point p(orig+dir*t);
-    double l=(p-cen).length2();
-    if(l < radius*radius)
-	hit.hit(this, t);
+  Vector xdir(xform.unproject(ray.direction()));
+  Point xorig(xform.unproject(ray.origin()));
+  double dt=xdir.z();
+  if(dt < 1.e-6 && dt > -1.e-6)
+    return;
+  double t=-xorig.z()/dt;
+  if(hit.was_hit && t>hit.min_t)
+    return;
+  Point xp(xorig+xdir*t);
+  double l=xp.y()*xp.y()+xp.x()*xp.x();
+  if(l < radius*radius)
+    hit.hit(this, t);
 }
 
 Vector Disc::normal(const Point&, const HitInfo&)
@@ -48,23 +55,47 @@ Vector Disc::normal(const Point&, const HitInfo&)
 void Disc::light_intersect(const Ray& ray, HitInfo& hit, Color&,
 			   DepthStats*, PerProcessorContext*)
 {
-  Vector dir(ray.direction());
-  Point orig(ray.origin());
-  double dt=Dot(dir, n);
+  Vector xdir(xform.unproject(ray.direction()));
+  Point xorig(xform.unproject(ray.origin()));
+  double dt=xdir.z();
   if(dt < 1.e-6 && dt > -1.e-6)
     return;
-  double t=(d-Dot(n, orig))/dt;
-  if(t>hit.min_t)
+  double t=-xorig.z()/dt;
+  if(hit.was_hit && t>hit.min_t)
     return;
-  Point p(orig+dir*t);
-  double l=(p-cen).length2();
+  Point xp(xorig+xdir*t);
+  double l=xp.y()*xp.y()+xp.x()*xp.x();
   if(l < radius*radius)
     hit.shadowHit(this, t);
 }
 
 void Disc::compute_bounds(BBox& bbox, double offset)
 {
-    bbox.extend(cen-Vector(1,1,1)*(offset+radius));
-    bbox.extend(cen+Vector(1,1,1)*(offset+radius));
+#if 0
+  Vector v(1,0,0);
+  Vector v2, v3;
+  v2=Cross(n,v);
+  if (v2.length2()<1.e-8) {
+    v=Vector(0,1,0);
+    v2=Cross(n,v);
+  }
+  v2.normalize();
+  v3=Cross(n,v2);
+  v3.normalize();
+  bbox.extend(cen-v2*(2*radius+offset));
+  bbox.extend(cen+v2*(2*radius+offset));
+  bbox.extend(cen+n*offset);
+  bbox.extend(cen-n*offset);
+  bbox.extend(cen-v3*(2*radius+offset));
+  bbox.extend(cen+v3*(2*radius+offset));
+#else
+  bbox.extend(cen+Vector(1,1,1)*(radius+offset));
+  bbox.extend(cen-Vector(1,1,1)*(radius+offset));
+#endif
 }
 
+void Disc::uv(UV &uv, const Point &p, const HitInfo &hit)
+{
+    Point xp = xform.project(p);
+    uv.set(xp.x()/tex_scale.x(),xp.y()/tex_scale.y());
+}
