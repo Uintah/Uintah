@@ -17,7 +17,11 @@
 #include <Core/Datatypes/TetVol.h>
 #include <Core/Datatypes/TriSurf.h>
 
+#include <map>
+
 namespace SCIRun {
+
+using std::pair;
 
 class PSECORESHARE EditField : public Module {
 public:
@@ -141,6 +145,38 @@ void EditField::execute(){
   } else if (tname=="TirSurf<Vector>") {
     set_nums((TriSurf<Vector>*)f);
   }
+
+  const BBox bbox = f->mesh()->get_bounding_box();
+  Point min = bbox.min();
+  Point max = bbox.max();
+
+  string bbmin("( ");
+  string bbmax("( ");
+  bbmin += to_string(min.x())+", "+
+           to_string(min.y())+", "+
+           to_string(min.z())+" ) ";
+  bbmax += to_string(max.x())+", "+
+           to_string(max.y())+", "+
+           to_string(max.z())+" ) ";
+
+  bboxmin_.set(bbmin);
+  bboxmax_.set(bbmax);
+
+  pair<double,double> minmax(1,0);
+  if (f->get("minmax",minmax)) {
+    datamin_.set(to_string(minmax.first));
+    datamax_.set(to_string(minmax.second));
+  } else {
+    datamin_.set("<Not Applicable>");
+    datamax_.set("<Not Applicable>");
+  }
+      
+  string fldname;
+  if (f->get("name",fldname))
+    name_.set(fldname);
+  else
+    name_.set("<No Name Assigned>");
+
 
   TCL::execute(id + " update_attributes");    
 }

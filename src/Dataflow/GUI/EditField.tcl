@@ -56,9 +56,10 @@ itcl_class SCIRun_Fields_EditField {
     method labelpair { win text1 text2 } {
 	frame $win 
 	pack $win -side top -padx 5
-	label $win.l1 -text $text1 -width 15 -anchor w -just left
+	label $win.l1 -text $text1 -width 10 -anchor w -just left
 	label $win.colon  -text ":" -width 2 -anchor w -just left 
-	label $win.l2 -text $text2 -width 30 -anchor w -just left
+	label $win.l2 -text $text2 -width 40 -anchor w -just left \
+		-fore darkblue
 	pack $win.l1 $win.colon $win.l2 -side left
     } 
 
