@@ -1014,7 +1014,7 @@ void Heightfield<A,B>::io(SCIRun::Piostream &str)
 }
 
 namespace SCIRun {
-template<class T> Pio(Piostream&str, rtrt::HMCell<T>&o)
+template<class T> void Pio(Piostream&str, rtrt::HMCell<T>&o)
 {
   str.begin_cheap_delim();
   SCIRun::Pio(str, o.min);
