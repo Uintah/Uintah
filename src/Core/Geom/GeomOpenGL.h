@@ -137,6 +137,8 @@ public:
 
     int    fontstatus[GEOM_FONT_COUNT];
     GLuint fontbase[GEOM_FONT_COUNT];
+
+    GLuint cmtexture_;  // GeomColorMap texture, 1D
 };
 
 } // End namespace SCIRun

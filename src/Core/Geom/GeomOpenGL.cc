@@ -43,6 +43,7 @@
 #include <Core/Geom/DirectionalLight.h>
 #include <Core/Geom/GeomBillboard.h>
 #include <Core/Geom/GeomBox.h>
+#include <Core/Geom/GeomColorMap.h>
 #include <Core/Geom/GeomCone.h>
 #include <Core/Geom/GeomCylinder.h>
 #include <Core/Geom/GeomDisc.h>
@@ -204,7 +205,8 @@ DrawInfoOpenGL::DrawInfoOpenGL() :
   pickchild(0),
   fog(0),
   cull(0),
-  current_matl(0)
+  current_matl(0),
+  cmtexture_(0)
 {
   for (int i=0; i < GEOM_FONT_COUNT; i++) {
     fontstatus[i] = 0;
@@ -906,6 +908,52 @@ void GeomDL::draw(DrawInfoOpenGL* di, Material *m, double time)
 
   post_draw(di);
 }
+
+
+void
+GeomColorMap::draw(DrawInfoOpenGL* di, Material *m, double time)
+{
+  if (!cmap_.get_rep()) return;
+
+  if ( !pre_draw(di, m, 0) ) return;
+
+  // Set up and draw 1d texture.
+  if (di->cmtexture_ == 0)
+  {
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glGenTextures(1, &(di->cmtexture_));
+    glBindTexture(GL_TEXTURE_1D, di->cmtexture_);
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
+  }
+
+  glMatrixMode(GL_TEXTURE);
+  glPushMatrix();
+
+  glScaled(1.0 / (cmap_->getMax() - cmap_->getMin()), 1.0, 1.0);
+  glTranslated(-cmap_->getMin(), 0.0, 0.0);
+
+  glMatrixMode(GL_MODELVIEW);
+
+  // Send Cmap
+  glTexImage1D(GL_TEXTURE_1D, 0, 4, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+	       cmap_->raw1d);
+  glBindTexture(GL_TEXTURE_1D, di->cmtexture_);
+
+  // Draw child
+  child_->draw(di,m,time);
+
+  glMatrixMode(GL_TEXTURE);
+  glPopMatrix();
+  glMatrixMode(GL_MODELVIEW);
+
+  post_draw(di);
+}
+
 
 void GeomBillboard::draw(DrawInfoOpenGL* di, Material* m, double time)
 {
@@ -2613,13 +2661,33 @@ void GeomPoints::draw(DrawInfoOpenGL* di, Material* matl, double)
       glDisableClientState(GL_COLOR_ARRAY);
     }
 
+    if (indices_.size() == points_.size() / 3)
+    {
+      glTexCoordPointer(1, GL_FLOAT, 0, &(indices_[0]));
+      glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+      glColor4d(1.0, 1.0, 1.0, 1.0);
+
+      glEnable(GL_TEXTURE_1D);
+      glDisable(GL_TEXTURE_2D);
+      glBindTexture(GL_TEXTURE_1D, di->cmtexture_);
+    }
+    else
+    {
+      glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+    }
+
     glDrawArrays(GL_POINTS, 0, points_.size()/3);
   }
+
+  glDisable(GL_TEXTURE_1D);
+
   post_draw(di);
 }
 
 
-void GeomTranspPoints::draw(DrawInfoOpenGL* di, Material* matl, double)
+void
+GeomTranspPoints::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
   if (!pre_draw(di, matl, 0)) { return; }
 
@@ -2671,6 +2739,22 @@ void GeomTranspPoints::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisableClientState(GL_COLOR_ARRAY);
   }
 
+  if (indices_.size() == points_.size() / 3)
+  {
+    glTexCoordPointer(1, GL_FLOAT, 0, &(indices_[0]));
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+    glColor4d(1.0, 1.0, 1.0, 1.0);
+
+    glEnable(GL_TEXTURE_1D);
+    glDisable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_1D, di->cmtexture_);
+  }
+  else
+  {
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+  }
+
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -2684,6 +2768,7 @@ void GeomTranspPoints::draw(DrawInfoOpenGL* di, Material* matl, double)
   glDrawElements(GL_POINTS, clist.size(), GL_UNSIGNED_INT, &(clist[0]));
 
   glDisable(GL_BLEND);
+  glDisable(GL_TEXTURE_1D);
 
   post_draw(di);
 }

@@ -129,6 +129,8 @@ GeomPoints::io(Piostream& stream)
   int version=stream.begin_class("GeomPoints", GEOMPOINTS_VERSION);
   GeomObj::io(stream);
   Pio(stream, points_);
+  Pio(stream, colors_);
+  Pio(stream, indices_);
   if (version == 2)
   {
     int have_normal;
