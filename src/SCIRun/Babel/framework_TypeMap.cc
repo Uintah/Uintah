@@ -2,13 +2,16 @@
 // File:          framework_TypeMap.cc
 // Symbol:        framework.TypeMap-v1.0
 // Symbol Type:   class
-// Babel Version: 0.7.0
-// SIDL Created:  20020813 11:07:11 CDT
-// Generated:     20020813 11:07:12 CDT
+// Babel Version: 0.7.4
+// SIDL Created:  20021108 00:42:48 EST
+// Generated:     20021108 00:42:50 EST
 // Description:   Client-side glue code for framework.TypeMap
 // 
 // WARNING: Automatically generated; changes will be lost
 // 
+// babel-version = 0.7.4
+// source-line   = 17
+// source-url    = file:/.automount/linbox1/root/home/user2/sparker/SCIRun/cca/../src/SCIRun/Babel/framework.sidl
 // 
 
 #ifndef included_framework_TypeMap_hh
@@ -36,26 +39,26 @@
 
 
 /**
- * <p>
+ * &amp;lt;p&amp;gt;
  * Add one to the intrinsic reference count in the underlying object.
- * Object in <code>SIDL</code> have an intrinsic reference count.
+ * Object in &amp;lt;code&amp;gt;SIDL&amp;lt;/code&amp;gt; have an intrinsic reference count.
  * Objects continue to exist as long as the reference count is
  * positive. Clients should call this method whenever they
  * create another ongoing reference to an object or interface.
- * </p>
- * <p>
+ * &amp;lt;/p&amp;gt;
+ * &amp;lt;p&amp;gt;
  * This does not have a return value because there is no language
  * independent type that can refer to an interface or a
  * class.
- * </p>
+ * &amp;lt;/p&amp;gt;
  */
 void
 framework::TypeMap::addReference(  )
-throw ( SIDL::NullIORException ) 
+throw ( ::SIDL::NullIORException ) 
 
 {
   if ( d_self == 0 ) {
-    throw SIDL::NullIORException( std::string (
+    throw ::SIDL::NullIORException( ::std::string (
       "Null IOR Pointer in \"framework::TypeMap::addReference()\""
     ));
   }
@@ -75,17 +78,17 @@ throw ( SIDL::NullIORException )
 /**
  * Decrease by one the intrinsic reference count in the underlying
  * object, and delete the object if the reference is non-positive.
- * Objects in <code>SIDL</code> have an intrinsic reference count.
+ * Objects in &amp;lt;code&amp;gt;SIDL&amp;lt;/code&amp;gt; have an intrinsic reference count.
  * Clients should call this method whenever they remove a
  * reference to an object or interface.
  */
 void
 framework::TypeMap::deleteReference(  )
-throw ( SIDL::NullIORException ) 
+throw ( ::SIDL::NullIORException ) 
 
 {
   if ( d_self == 0 ) {
-    throw SIDL::NullIORException( std::string (
+    throw ::SIDL::NullIORException( ::std::string (
       "Null IOR Pointer in \"framework::TypeMap::deleteReference()\""
     ));
   }
@@ -104,16 +107,16 @@ throw ( SIDL::NullIORException )
 
 
 /**
- * Return true if and only if <code>obj</code> refers to the same
+ * Return true if and only if &amp;lt;code&amp;gt;obj&amp;lt;/code&amp;gt; refers to the same
  * object as this object.
  */
 bool
-framework::TypeMap::isSame( /*in*/ SIDL::BaseInterface iobj )
-throw ( SIDL::NullIORException ) 
+framework::TypeMap::isSame( /*in*/ ::SIDL::BaseInterface iobj )
+throw ( ::SIDL::NullIORException ) 
 
 {
   if ( d_self == 0 ) {
-    throw SIDL::NullIORException( std::string (
+    throw ::SIDL::NullIORException( ::std::string (
       "Null IOR Pointer in \"framework::TypeMap::isSame()\""
     ));
   }
@@ -132,29 +135,29 @@ throw ( SIDL::NullIORException )
 
 /**
  * Check whether the object can support the specified interface or
- * class.  If the <code>SIDL</code> type name in <code>name</code>
+ * class.  If the &amp;lt;code&amp;gt;SIDL&amp;lt;/code&amp;gt; type name in &amp;lt;code&amp;gt;name&amp;lt;/code&amp;gt;
  * is supported, then a reference to that object is returned with the
  * reference count incremented.  The callee will be responsible for
- * calling <code>deleteReference</code> on the returned object.  If
+ * calling &amp;lt;code&amp;gt;deleteReference&amp;lt;/code&amp;gt; on the returned object.  If
  * the specified type is not supported, then a null reference is
  * returned.
  */
-SIDL::BaseInterface
-framework::TypeMap::queryInterface( /*in*/ std::string name )
-throw ( SIDL::NullIORException ) 
+::SIDL::BaseInterface
+framework::TypeMap::queryInterface( /*in*/ const ::std::string& name )
+throw ( ::SIDL::NullIORException ) 
 
 {
   if ( d_self == 0 ) {
-    throw SIDL::NullIORException( std::string (
+    throw ::SIDL::NullIORException( ::std::string (
       "Null IOR Pointer in \"framework::TypeMap::queryInterface()\""
     ));
   }
-  SIDL::BaseInterface _result;
+  ::SIDL::BaseInterface _result;
   // pack args to dispatch to ior
-  char * _local_name = SIDL_String_strdup( name.c_str() );
+
   // dispatch to ior
-  _result = SIDL::BaseInterface( (*(d_self->d_epv->f_queryInterface))(d_self,
-    /* in */ _local_name ));
+  _result = ::SIDL::BaseInterface( (*(d_self->d_epv->f_queryInterface))(d_self,
+    /* in */ name.c_str() ));
   // unpack results and cleanup
   if (_result._not_nil()) {
     // IOR return and constructor both increment, only need one
@@ -162,7 +165,6 @@ throw ( SIDL::NullIORException )
     (*(_result._get_ior()->d_epv->f_deleteReference))(_result._get_ior(
     )->d_object);
   }
-  SIDL_String_free( _local_name );
   return _result;
 }
 
@@ -170,30 +172,28 @@ throw ( SIDL::NullIORException )
 
 /**
  * Return whether this object is an instance of the specified type.
- * The string name must be the <code>SIDL</code> type name.  This
- * routine will return <code>true</code> if and only if a cast to
+ * The string name must be the &amp;lt;code&amp;gt;SIDL&amp;lt;/code&amp;gt; type name.  This
+ * routine will return &amp;lt;code&amp;gt;true&amp;lt;/code&amp;gt; if and only if a cast to
  * the string type name would succeed.
  */
 bool
-framework::TypeMap::isInstanceOf( /*in*/ std::string name )
-throw ( SIDL::NullIORException ) 
+framework::TypeMap::isInstanceOf( /*in*/ const ::std::string& name )
+throw ( ::SIDL::NullIORException ) 
 
 {
   if ( d_self == 0 ) {
-    throw SIDL::NullIORException( std::string (
+    throw ::SIDL::NullIORException( ::std::string (
       "Null IOR Pointer in \"framework::TypeMap::isInstanceOf()\""
     ));
   }
   bool _result;
   // pack args to dispatch to ior
   SIDL_bool _local_result;
-  char * _local_name = SIDL_String_strdup( name.c_str() );
   // dispatch to ior
   _local_result = (*(d_self->d_epv->f_isInstanceOf))(d_self,
-    /* in */ _local_name );
+    /* in */ name.c_str() );
   // unpack results and cleanup
   _result = (_local_result == TRUE);
-  SIDL_String_free( _local_name );
   return _result;
 }
 
@@ -203,11 +203,11 @@ throw ( SIDL::NullIORException )
  */
 void
 framework::TypeMap::temp(  )
-throw ( SIDL::NullIORException ) 
+throw ( ::SIDL::NullIORException ) 
 
 {
   if ( d_self == 0 ) {
-    throw SIDL::NullIORException( std::string (
+    throw ::SIDL::NullIORException( ::std::string (
       "Null IOR Pointer in \"framework::TypeMap::temp()\""
     ));
   }
@@ -230,9 +230,9 @@ throw ( SIDL::NullIORException )
 // 
 
 // static constructor
-framework::TypeMap
+::framework::TypeMap
 framework::TypeMap::_create() {
-  framework::TypeMap self( (*_get_ext()->createObject)() );
+  ::framework::TypeMap self( (*_get_ext()->createObject)() );
   // NOTE: reference count == 2. 
   //   (1 from createObject, 1 from IOR->C++)
   // Decrement this count back down to one.
@@ -248,8 +248,8 @@ framework::TypeMap::~TypeMap () {
 }
 
 // copy constructor
-framework::TypeMap::TypeMap ( const framework::TypeMap& original ) {
-  d_self = const_cast<ior_t*>(original.d_self);
+framework::TypeMap::TypeMap ( const ::framework::TypeMap& original ) {
+  d_self = const_cast< ior_t*>(original.d_self);
   d_weak_reference = original.d_weak_reference;
   if (d_self != 0 ) {
     addReference();
@@ -257,13 +257,13 @@ framework::TypeMap::TypeMap ( const framework::TypeMap& original ) {
 }
 
 // assignment operator
-framework::TypeMap&
-framework::TypeMap::operator=( const framework::TypeMap& rhs ) {
+::framework::TypeMap&
+framework::TypeMap::operator=( const ::framework::TypeMap& rhs ) {
   if ( d_self != rhs.d_self ) {
     if ( d_self != 0 ) {
       deleteReference();
     }
-    d_self = const_cast<ior_t*>(rhs.d_self);
+    d_self = const_cast< ior_t*>(rhs.d_self);
     d_weak_reference = rhs.d_weak_reference;
     if ( d_self != 0 ) {
       addReference();
@@ -273,7 +273,7 @@ framework::TypeMap::operator=( const framework::TypeMap& rhs ) {
 }
 
 // conversion from ior to C++ class
-framework::TypeMap::TypeMap ( framework::TypeMap::ior_t* ior ) 
+framework::TypeMap::TypeMap ( ::framework::TypeMap::ior_t* ior ) 
     : d_self( ior ), d_weak_reference(false) {
   if ( d_self != 0 ) {
     addReference();
@@ -283,14 +283,14 @@ framework::TypeMap::TypeMap ( framework::TypeMap::ior_t* ior )
 // Alternate constructor: does not call addReference()
 // (sets d_weak_reference=isWeak)
 // For internal use by Impls (fixes bug#275)
-framework::TypeMap::TypeMap ( framework::TypeMap::ior_t* ior, bool isWeak ) 
+framework::TypeMap::TypeMap ( ::framework::TypeMap::ior_t* ior, bool isWeak ) 
     : d_self( ior ), d_weak_reference(isWeak) { 
 }
 
 // conversion from a StubBase
-framework::TypeMap::TypeMap ( const SIDL::StubBase& base )
+framework::TypeMap::TypeMap ( const ::SIDL::StubBase& base )
 {
-  d_self = reinterpret_cast<ior_t*>(base._cast("framework.TypeMap"));
+  d_self = reinterpret_cast< ior_t*>(base._cast("framework.TypeMap"));
   d_weak_reference = false;
   if (d_self != 0) {
     addReference();
@@ -302,29 +302,29 @@ void* framework::TypeMap::_cast(const char* type) const
 {
   void* ptr = 0;
   if ( d_self != 0 ) {
-    ptr = reinterpret_cast<void*>((*d_self->d_epv->f__cast)(d_self, type));
+    ptr = reinterpret_cast< void*>((*d_self->d_epv->f__cast)(d_self, type));
   }
   return ptr;
 }
 
 // Static data type
-const framework::TypeMap::ext_t * framework::TypeMap::s_ext;
+const ::framework::TypeMap::ext_t * framework::TypeMap::s_ext;
 
 // private static method to get static data type
-const framework::TypeMap::ext_t *
+const ::framework::TypeMap::ext_t *
 framework::TypeMap::_get_ext()
-  throw (SIDL::NullIORException)
+  throw (::SIDL::NullIORException)
 {
   if (! s_ext ) {
 #ifdef SIDL_STATIC_LIBRARY
     s_ext = framework_TypeMap__externals();
 #else
     const ext_t *(*dll_f)(void) =
-      (const ext_t *(*)(void)) SIDL::Loader::lookupSymbol(
+      (const ext_t *(*)(void)) ::SIDL::Loader::lookupSymbol(
         "framework_TypeMap__externals");
     s_ext = (dll_f ? (*dll_f)() : NULL);
     if (!s_ext) {
-      throw SIDL::NullIORException( std::string (
+      throw ::SIDL::NullIORException( ::std::string (
         "cannot find implementation for framework.TypeMap; please set SIDL_DLL_PATH"
       ));
     }

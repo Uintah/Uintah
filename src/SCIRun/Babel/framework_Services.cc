@@ -2,13 +2,16 @@
 // File:          framework_Services.cc
 // Symbol:        framework.Services-v1.0
 // Symbol Type:   class
-// Babel Version: 0.7.0
-// SIDL Created:  20020813 11:07:10 CDT
-// Generated:     20020813 11:07:12 CDT
+// Babel Version: 0.7.4
+// SIDL Created:  20021108 00:42:45 EST
+// Generated:     20021108 00:42:50 EST
 // Description:   Client-side glue code for framework.Services
 // 
 // WARNING: Automatically generated; changes will be lost
 // 
+// babel-version = 0.7.4
+// source-line   = 7
+// source-url    = file:/.automount/linbox1/root/home/user2/sparker/SCIRun/cca/../src/SCIRun/Babel/framework.sidl
 // 
 
 #ifndef included_framework_Services_hh
@@ -36,26 +39,26 @@
 
 
 /**
- * <p>
+ * &amp;lt;p&amp;gt;
  * Add one to the intrinsic reference count in the underlying object.
- * Object in <code>SIDL</code> have an intrinsic reference count.
+ * Object in &amp;lt;code&amp;gt;SIDL&amp;lt;/code&amp;gt; have an intrinsic reference count.
  * Objects continue to exist as long as the reference count is
  * positive. Clients should call this method whenever they
  * create another ongoing reference to an object or interface.
- * </p>
- * <p>
+ * &amp;lt;/p&amp;gt;
+ * &amp;lt;p&amp;gt;
  * This does not have a return value because there is no language
  * independent type that can refer to an interface or a
  * class.
- * </p>
+ * &amp;lt;/p&amp;gt;
  */
 void
 framework::Services::addReference(  )
-throw ( SIDL::NullIORException ) 
+throw ( ::SIDL::NullIORException ) 
 
 {
   if ( d_self == 0 ) {
-    throw SIDL::NullIORException( std::string (
+    throw ::SIDL::NullIORException( ::std::string (
       "Null IOR Pointer in \"framework::Services::addReference()\""
     ));
   }
@@ -75,17 +78,17 @@ throw ( SIDL::NullIORException )
 /**
  * Decrease by one the intrinsic reference count in the underlying
  * object, and delete the object if the reference is non-positive.
- * Objects in <code>SIDL</code> have an intrinsic reference count.
+ * Objects in &amp;lt;code&amp;gt;SIDL&amp;lt;/code&amp;gt; have an intrinsic reference count.
  * Clients should call this method whenever they remove a
  * reference to an object or interface.
  */
 void
 framework::Services::deleteReference(  )
-throw ( SIDL::NullIORException ) 
+throw ( ::SIDL::NullIORException ) 
 
 {
   if ( d_self == 0 ) {
-    throw SIDL::NullIORException( std::string (
+    throw ::SIDL::NullIORException( ::std::string (
       "Null IOR Pointer in \"framework::Services::deleteReference()\""
     ));
   }
@@ -104,16 +107,16 @@ throw ( SIDL::NullIORException )
 
 
 /**
- * Return true if and only if <code>obj</code> refers to the same
+ * Return true if and only if &amp;lt;code&amp;gt;obj&amp;lt;/code&amp;gt; refers to the same
  * object as this object.
  */
 bool
-framework::Services::isSame( /*in*/ SIDL::BaseInterface iobj )
-throw ( SIDL::NullIORException ) 
+framework::Services::isSame( /*in*/ ::SIDL::BaseInterface iobj )
+throw ( ::SIDL::NullIORException ) 
 
 {
   if ( d_self == 0 ) {
-    throw SIDL::NullIORException( std::string (
+    throw ::SIDL::NullIORException( ::std::string (
       "Null IOR Pointer in \"framework::Services::isSame()\""
     ));
   }
@@ -132,29 +135,29 @@ throw ( SIDL::NullIORException )
 
 /**
  * Check whether the object can support the specified interface or
- * class.  If the <code>SIDL</code> type name in <code>name</code>
+ * class.  If the &amp;lt;code&amp;gt;SIDL&amp;lt;/code&amp;gt; type name in &amp;lt;code&amp;gt;name&amp;lt;/code&amp;gt;
  * is supported, then a reference to that object is returned with the
  * reference count incremented.  The callee will be responsible for
- * calling <code>deleteReference</code> on the returned object.  If
+ * calling &amp;lt;code&amp;gt;deleteReference&amp;lt;/code&amp;gt; on the returned object.  If
  * the specified type is not supported, then a null reference is
  * returned.
  */
-SIDL::BaseInterface
-framework::Services::queryInterface( /*in*/ std::string name )
-throw ( SIDL::NullIORException ) 
+::SIDL::BaseInterface
+framework::Services::queryInterface( /*in*/ const ::std::string& name )
+throw ( ::SIDL::NullIORException ) 
 
 {
   if ( d_self == 0 ) {
-    throw SIDL::NullIORException( std::string (
+    throw ::SIDL::NullIORException( ::std::string (
       "Null IOR Pointer in \"framework::Services::queryInterface()\""
     ));
   }
-  SIDL::BaseInterface _result;
+  ::SIDL::BaseInterface _result;
   // pack args to dispatch to ior
-  char * _local_name = SIDL_String_strdup( name.c_str() );
+
   // dispatch to ior
-  _result = SIDL::BaseInterface( (*(d_self->d_epv->f_queryInterface))(d_self,
-    /* in */ _local_name ));
+  _result = ::SIDL::BaseInterface( (*(d_self->d_epv->f_queryInterface))(d_self,
+    /* in */ name.c_str() ));
   // unpack results and cleanup
   if (_result._not_nil()) {
     // IOR return and constructor both increment, only need one
@@ -162,7 +165,6 @@ throw ( SIDL::NullIORException )
     (*(_result._get_ior()->d_epv->f_deleteReference))(_result._get_ior(
     )->d_object);
   }
-  SIDL_String_free( _local_name );
   return _result;
 }
 
@@ -170,30 +172,28 @@ throw ( SIDL::NullIORException )
 
 /**
  * Return whether this object is an instance of the specified type.
- * The string name must be the <code>SIDL</code> type name.  This
- * routine will return <code>true</code> if and only if a cast to
+ * The string name must be the &amp;lt;code&amp;gt;SIDL&amp;lt;/code&amp;gt; type name.  This
+ * routine will return &amp;lt;code&amp;gt;true&amp;lt;/code&amp;gt; if and only if a cast to
  * the string type name would succeed.
  */
 bool
-framework::Services::isInstanceOf( /*in*/ std::string name )
-throw ( SIDL::NullIORException ) 
+framework::Services::isInstanceOf( /*in*/ const ::std::string& name )
+throw ( ::SIDL::NullIORException ) 
 
 {
   if ( d_self == 0 ) {
-    throw SIDL::NullIORException( std::string (
+    throw ::SIDL::NullIORException( ::std::string (
       "Null IOR Pointer in \"framework::Services::isInstanceOf()\""
     ));
   }
   bool _result;
   // pack args to dispatch to ior
   SIDL_bool _local_result;
-  char * _local_name = SIDL_String_strdup( name.c_str() );
   // dispatch to ior
   _local_result = (*(d_self->d_epv->f_isInstanceOf))(d_self,
-    /* in */ _local_name );
+    /* in */ name.c_str() );
   // unpack results and cleanup
   _result = (_local_result == TRUE);
-  SIDL_String_free( _local_name );
   return _result;
 }
 
@@ -203,11 +203,11 @@ throw ( SIDL::NullIORException )
  */
 void*
 framework::Services::getData(  )
-throw ( SIDL::NullIORException ) 
+throw ( ::SIDL::NullIORException ) 
 
 {
   if ( d_self == 0 ) {
-    throw SIDL::NullIORException( std::string (
+    throw ::SIDL::NullIORException( ::std::string (
       "Null IOR Pointer in \"framework::Services::getData()\""
     ));
   }
@@ -226,22 +226,22 @@ throw ( SIDL::NullIORException )
 /**
  * Ask for a previously registered Port; will return a Port or generate an error. 
  */
-govcca::Port
-framework::Services::getPort( /*in*/ std::string name )
-throw ( SIDL::NullIORException ) 
+::govcca::Port
+framework::Services::getPort( /*in*/ const ::std::string& name )
+throw ( ::SIDL::NullIORException ) 
 
 {
   if ( d_self == 0 ) {
-    throw SIDL::NullIORException( std::string (
+    throw ::SIDL::NullIORException( ::std::string (
       "Null IOR Pointer in \"framework::Services::getPort()\""
     ));
   }
-  govcca::Port _result;
+  ::govcca::Port _result;
   // pack args to dispatch to ior
-  char * _local_name = SIDL_String_strdup( name.c_str() );
+
   // dispatch to ior
-  _result = govcca::Port( (*(d_self->d_epv->f_getPort))(d_self,
-    /* in */ _local_name ));
+  _result = ::govcca::Port( (*(d_self->d_epv->f_getPort))(d_self,
+    /* in */ name.c_str() ));
   // unpack results and cleanup
   if (_result._not_nil()) {
     // IOR return and constructor both increment, only need one
@@ -249,7 +249,6 @@ throw ( SIDL::NullIORException )
     (*(_result._get_ior()->d_epv->f_deleteReference))(_result._get_ior(
     )->d_object);
   }
-  SIDL_String_free( _local_name );
   return _result;
 }
 
@@ -259,22 +258,22 @@ throw ( SIDL::NullIORException )
  * Ask for a previously registered Port and return that Port if it is
  * available or return null otherwise. 
  */
-govcca::Port
-framework::Services::getPortNonblocking( /*in*/ std::string name )
-throw ( SIDL::NullIORException ) 
+::govcca::Port
+framework::Services::getPortNonblocking( /*in*/ const ::std::string& name )
+throw ( ::SIDL::NullIORException ) 
 
 {
   if ( d_self == 0 ) {
-    throw SIDL::NullIORException( std::string (
+    throw ::SIDL::NullIORException( ::std::string (
       "Null IOR Pointer in \"framework::Services::getPortNonblocking()\""
     ));
   }
-  govcca::Port _result;
+  ::govcca::Port _result;
   // pack args to dispatch to ior
-  char * _local_name = SIDL_String_strdup( name.c_str() );
+
   // dispatch to ior
-  _result = govcca::Port( (*(d_self->d_epv->f_getPortNonblocking))(d_self,
-    /* in */ _local_name ));
+  _result = ::govcca::Port( (*(d_self->d_epv->f_getPortNonblocking))(d_self,
+    /* in */ name.c_str() ));
   // unpack results and cleanup
   if (_result._not_nil()) {
     // IOR return and constructor both increment, only need one
@@ -282,7 +281,6 @@ throw ( SIDL::NullIORException )
     (*(_result._get_ior()->d_epv->f_deleteReference))(_result._get_ior(
     )->d_object);
   }
-  SIDL_String_free( _local_name );
   return _result;
 }
 
@@ -292,26 +290,24 @@ throw ( SIDL::NullIORException )
  * Modified according to Motion 31 
  */
 void
-framework::Services::registerUsesPort( /*in*/ std::string name,
-  /*in*/ std::string type, /*in*/ govcca::TypeMap properties )
-throw ( SIDL::NullIORException ) 
+framework::Services::registerUsesPort( /*in*/ const ::std::string& name,
+  /*in*/ const ::std::string& type, /*in*/ ::govcca::TypeMap properties )
+throw ( ::SIDL::NullIORException ) 
 
 {
   if ( d_self == 0 ) {
-    throw SIDL::NullIORException( std::string (
+    throw ::SIDL::NullIORException( ::std::string (
       "Null IOR Pointer in \"framework::Services::registerUsesPort()\""
     ));
   }
 
   // pack args to dispatch to ior
-  char * _local_name = SIDL_String_strdup( name.c_str() );
-  char * _local_type = SIDL_String_strdup( type.c_str() );
+
   // dispatch to ior
-  (*(d_self->d_epv->f_registerUsesPort))(d_self, /* in */ _local_name,
-    /* in */ _local_type, /* in */ properties._get_ior() );
+  (*(d_self->d_epv->f_registerUsesPort))(d_self, /* in */ name.c_str(),
+    /* in */ type.c_str(), /* in */ properties._get_ior() );
   // unpack results and cleanup
-  SIDL_String_free( _local_name );
-  SIDL_String_free( _local_type );
+
 }
 
 
@@ -321,22 +317,22 @@ throw ( SIDL::NullIORException )
  * is no longer needed. 
  */
 void
-framework::Services::unregisterUsesPort( /*in*/ std::string name )
-throw ( SIDL::NullIORException ) 
+framework::Services::unregisterUsesPort( /*in*/ const ::std::string& name )
+throw ( ::SIDL::NullIORException ) 
 
 {
   if ( d_self == 0 ) {
-    throw SIDL::NullIORException( std::string (
+    throw ::SIDL::NullIORException( ::std::string (
       "Null IOR Pointer in \"framework::Services::unregisterUsesPort()\""
     ));
   }
 
   // pack args to dispatch to ior
-  char * _local_name = SIDL_String_strdup( name.c_str() );
+
   // dispatch to ior
-  (*(d_self->d_epv->f_unregisterUsesPort))(d_self, /* in */ _local_name );
+  (*(d_self->d_epv->f_unregisterUsesPort))(d_self, /* in */ name.c_str() );
   // unpack results and cleanup
-  SIDL_String_free( _local_name );
+
 }
 
 
@@ -347,28 +343,26 @@ throw ( SIDL::NullIORException )
  * Modified according to Motion 31 
  */
 void
-framework::Services::addProvidesPort( /*in*/ govcca::Port inPort,
-  /*in*/ std::string name, /*in*/ std::string type,
-  /*in*/ govcca::TypeMap properties )
-throw ( SIDL::NullIORException ) 
+framework::Services::addProvidesPort( /*in*/ ::govcca::Port inPort,
+  /*in*/ const ::std::string& name, /*in*/ const ::std::string& type,
+  /*in*/ ::govcca::TypeMap properties )
+throw ( ::SIDL::NullIORException ) 
 
 {
   if ( d_self == 0 ) {
-    throw SIDL::NullIORException( std::string (
+    throw ::SIDL::NullIORException( ::std::string (
       "Null IOR Pointer in \"framework::Services::addProvidesPort()\""
     ));
   }
 
   // pack args to dispatch to ior
-  char * _local_name = SIDL_String_strdup( name.c_str() );
-  char * _local_type = SIDL_String_strdup( type.c_str() );
+
   // dispatch to ior
   (*(d_self->d_epv->f_addProvidesPort))(d_self, /* in */ inPort._get_ior(),
-    /* in */ _local_name, /* in */ _local_type,
+    /* in */ name.c_str(), /* in */ type.c_str(),
     /* in */ properties._get_ior() );
   // unpack results and cleanup
-  SIDL_String_free( _local_name );
-  SIDL_String_free( _local_type );
+
 }
 
 
@@ -378,22 +372,22 @@ throw ( SIDL::NullIORException )
  * available for use.
  */
 void
-framework::Services::removeProvidesPort( /*in*/ std::string name )
-throw ( SIDL::NullIORException ) 
+framework::Services::removeProvidesPort( /*in*/ const ::std::string& name )
+throw ( ::SIDL::NullIORException ) 
 
 {
   if ( d_self == 0 ) {
-    throw SIDL::NullIORException( std::string (
+    throw ::SIDL::NullIORException( ::std::string (
       "Null IOR Pointer in \"framework::Services::removeProvidesPort()\""
     ));
   }
 
   // pack args to dispatch to ior
-  char * _local_name = SIDL_String_strdup( name.c_str() );
+
   // dispatch to ior
-  (*(d_self->d_epv->f_removeProvidesPort))(d_self, /* in */ _local_name );
+  (*(d_self->d_epv->f_removeProvidesPort))(d_self, /* in */ name.c_str() );
   // unpack results and cleanup
-  SIDL_String_free( _local_name );
+
 }
 
 
@@ -404,43 +398,43 @@ throw ( SIDL::NullIORException )
  * releasePort() is invoked all references to the released Port become invalid. 
  */
 void
-framework::Services::releasePort( /*in*/ std::string name )
-throw ( SIDL::NullIORException ) 
+framework::Services::releasePort( /*in*/ const ::std::string& name )
+throw ( ::SIDL::NullIORException ) 
 
 {
   if ( d_self == 0 ) {
-    throw SIDL::NullIORException( std::string (
+    throw ::SIDL::NullIORException( ::std::string (
       "Null IOR Pointer in \"framework::Services::releasePort()\""
     ));
   }
 
   // pack args to dispatch to ior
-  char * _local_name = SIDL_String_strdup( name.c_str() );
+
   // dispatch to ior
-  (*(d_self->d_epv->f_releasePort))(d_self, /* in */ _local_name );
+  (*(d_self->d_epv->f_releasePort))(d_self, /* in */ name.c_str() );
   // unpack results and cleanup
-  SIDL_String_free( _local_name );
+
 }
 
 
 /**
  * user defined non-static method.
  */
-govcca::TypeMap
+::govcca::TypeMap
 framework::Services::createTypeMap(  )
-throw ( SIDL::NullIORException ) 
+throw ( ::SIDL::NullIORException ) 
 
 {
   if ( d_self == 0 ) {
-    throw SIDL::NullIORException( std::string (
+    throw ::SIDL::NullIORException( ::std::string (
       "Null IOR Pointer in \"framework::Services::createTypeMap()\""
     ));
   }
-  govcca::TypeMap _result;
+  ::govcca::TypeMap _result;
   // pack args to dispatch to ior
 
   // dispatch to ior
-  _result = govcca::TypeMap( (*(d_self->d_epv->f_createTypeMap))(d_self ));
+  _result = ::govcca::TypeMap( (*(d_self->d_epv->f_createTypeMap))(d_self ));
   // unpack results and cleanup
   if (_result._not_nil()) {
     // IOR return and constructor both increment, only need one
@@ -455,22 +449,22 @@ throw ( SIDL::NullIORException )
 /**
  * user defined non-static method.
  */
-govcca::TypeMap
-framework::Services::getPortProperties( /*in*/ std::string portName )
-throw ( SIDL::NullIORException ) 
+::govcca::TypeMap
+framework::Services::getPortProperties( /*in*/ const ::std::string& portName )
+throw ( ::SIDL::NullIORException ) 
 
 {
   if ( d_self == 0 ) {
-    throw SIDL::NullIORException( std::string (
+    throw ::SIDL::NullIORException( ::std::string (
       "Null IOR Pointer in \"framework::Services::getPortProperties()\""
     ));
   }
-  govcca::TypeMap _result;
+  ::govcca::TypeMap _result;
   // pack args to dispatch to ior
-  char * _local_portName = SIDL_String_strdup( portName.c_str() );
+
   // dispatch to ior
-  _result = govcca::TypeMap( (*(d_self->d_epv->f_getPortProperties))(d_self,
-    /* in */ _local_portName ));
+  _result = ::govcca::TypeMap( (*(d_self->d_epv->f_getPortProperties))(d_self,
+    /* in */ portName.c_str() ));
   // unpack results and cleanup
   if (_result._not_nil()) {
     // IOR return and constructor both increment, only need one
@@ -478,7 +472,6 @@ throw ( SIDL::NullIORException )
     (*(_result._get_ior()->d_epv->f_deleteReference))(_result._get_ior(
     )->d_object);
   }
-  SIDL_String_free( _local_portName );
   return _result;
 }
 
@@ -487,21 +480,22 @@ throw ( SIDL::NullIORException )
 /**
  * Get a reference to the component to which this Services object belongs. 
  */
-govcca::ComponentID
+::govcca::ComponentID
 framework::Services::getComponentID(  )
-throw ( SIDL::NullIORException ) 
+throw ( ::SIDL::NullIORException ) 
 
 {
   if ( d_self == 0 ) {
-    throw SIDL::NullIORException( std::string (
+    throw ::SIDL::NullIORException( ::std::string (
       "Null IOR Pointer in \"framework::Services::getComponentID()\""
     ));
   }
-  govcca::ComponentID _result;
+  ::govcca::ComponentID _result;
   // pack args to dispatch to ior
 
   // dispatch to ior
-  _result = govcca::ComponentID( (*(d_self->d_epv->f_getComponentID))(d_self ));
+  _result = ::govcca::ComponentID( (*(d_self->d_epv->f_getComponentID))(d_self 
+    ));
   // unpack results and cleanup
   if (_result._not_nil()) {
     // IOR return and constructor both increment, only need one
@@ -522,9 +516,9 @@ throw ( SIDL::NullIORException )
 // 
 
 // static constructor
-framework::Services
+::framework::Services
 framework::Services::_create() {
-  framework::Services self( (*_get_ext()->createObject)() );
+  ::framework::Services self( (*_get_ext()->createObject)() );
   // NOTE: reference count == 2. 
   //   (1 from createObject, 1 from IOR->C++)
   // Decrement this count back down to one.
@@ -540,8 +534,8 @@ framework::Services::~Services () {
 }
 
 // copy constructor
-framework::Services::Services ( const framework::Services& original ) {
-  d_self = const_cast<ior_t*>(original.d_self);
+framework::Services::Services ( const ::framework::Services& original ) {
+  d_self = const_cast< ior_t*>(original.d_self);
   d_weak_reference = original.d_weak_reference;
   if (d_self != 0 ) {
     addReference();
@@ -549,13 +543,13 @@ framework::Services::Services ( const framework::Services& original ) {
 }
 
 // assignment operator
-framework::Services&
-framework::Services::operator=( const framework::Services& rhs ) {
+::framework::Services&
+framework::Services::operator=( const ::framework::Services& rhs ) {
   if ( d_self != rhs.d_self ) {
     if ( d_self != 0 ) {
       deleteReference();
     }
-    d_self = const_cast<ior_t*>(rhs.d_self);
+    d_self = const_cast< ior_t*>(rhs.d_self);
     d_weak_reference = rhs.d_weak_reference;
     if ( d_self != 0 ) {
       addReference();
@@ -565,7 +559,7 @@ framework::Services::operator=( const framework::Services& rhs ) {
 }
 
 // conversion from ior to C++ class
-framework::Services::Services ( framework::Services::ior_t* ior ) 
+framework::Services::Services ( ::framework::Services::ior_t* ior ) 
     : d_self( ior ), d_weak_reference(false) {
   if ( d_self != 0 ) {
     addReference();
@@ -575,14 +569,15 @@ framework::Services::Services ( framework::Services::ior_t* ior )
 // Alternate constructor: does not call addReference()
 // (sets d_weak_reference=isWeak)
 // For internal use by Impls (fixes bug#275)
-framework::Services::Services ( framework::Services::ior_t* ior, bool isWeak ) 
+framework::Services::Services ( ::framework::Services::ior_t* ior,
+  bool isWeak ) 
     : d_self( ior ), d_weak_reference(isWeak) { 
 }
 
 // conversion from a StubBase
-framework::Services::Services ( const SIDL::StubBase& base )
+framework::Services::Services ( const ::SIDL::StubBase& base )
 {
-  d_self = reinterpret_cast<ior_t*>(base._cast("framework.Services"));
+  d_self = reinterpret_cast< ior_t*>(base._cast("framework.Services"));
   d_weak_reference = false;
   if (d_self != 0) {
     addReference();
@@ -594,29 +589,29 @@ void* framework::Services::_cast(const char* type) const
 {
   void* ptr = 0;
   if ( d_self != 0 ) {
-    ptr = reinterpret_cast<void*>((*d_self->d_epv->f__cast)(d_self, type));
+    ptr = reinterpret_cast< void*>((*d_self->d_epv->f__cast)(d_self, type));
   }
   return ptr;
 }
 
 // Static data type
-const framework::Services::ext_t * framework::Services::s_ext;
+const ::framework::Services::ext_t * framework::Services::s_ext;
 
 // private static method to get static data type
-const framework::Services::ext_t *
+const ::framework::Services::ext_t *
 framework::Services::_get_ext()
-  throw (SIDL::NullIORException)
+  throw (::SIDL::NullIORException)
 {
   if (! s_ext ) {
 #ifdef SIDL_STATIC_LIBRARY
     s_ext = framework_Services__externals();
 #else
     const ext_t *(*dll_f)(void) =
-      (const ext_t *(*)(void)) SIDL::Loader::lookupSymbol(
+      (const ext_t *(*)(void)) ::SIDL::Loader::lookupSymbol(
         "framework_Services__externals");
     s_ext = (dll_f ? (*dll_f)() : NULL);
     if (!s_ext) {
-      throw SIDL::NullIORException( std::string (
+      throw ::SIDL::NullIORException( ::std::string (
         "cannot find implementation for framework.Services; please set SIDL_DLL_PATH"
       ));
     }

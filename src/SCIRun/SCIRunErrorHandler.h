@@ -33,7 +33,7 @@
 #define IRIX
 #pragma set woff 1375
 #endif
-#include <sax/ErrorHandler.hpp>
+#include <xercesc/sax/ErrorHandler.hpp>
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1375
 #endif

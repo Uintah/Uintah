@@ -2,13 +2,16 @@
 // File:          framework_Services_Impl.hh
 // Symbol:        framework.Services-v1.0
 // Symbol Type:   class
-// Babel Version: 0.7.0
-// SIDL Created:  20020813 11:07:10 CDT
-// Generated:     20020813 11:07:13 CDT
+// Babel Version: 0.7.4
+// SIDL Created:  20021108 00:42:45 EST
+// Generated:     20021108 00:42:50 EST
 // Description:   Server-side implementation for framework.Services
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
+// babel-version = 0.7.4
+// source-line   = 7
+// source-url    = file:/.automount/linbox1/root/home/user2/sparker/SCIRun/cca/../src/SCIRun/Babel/framework.sidl
 // 
 
 #ifndef included_framework_Services_Impl_hh
@@ -99,9 +102,9 @@ namespace framework {
     /**
      * Ask for a previously registered Port; will return a Port or generate an error. 
      */
-    govcca::Port
+    ::govcca::Port
     getPort (
-      /*in*/ std::string name
+      /*in*/ const ::std::string& name
     )
     throw () 
     ;
@@ -111,9 +114,9 @@ namespace framework {
      * Ask for a previously registered Port and return that Port if it is
      * available or return null otherwise. 
      */
-    govcca::Port
+    ::govcca::Port
     getPortNonblocking (
-      /*in*/ std::string name
+      /*in*/ const ::std::string& name
     )
     throw () 
     ;
@@ -124,9 +127,9 @@ namespace framework {
      */
     void
     registerUsesPort (
-      /*in*/ std::string name,
-      /*in*/ std::string type,
-      /*in*/ govcca::TypeMap properties
+      /*in*/ const ::std::string& name,
+      /*in*/ const ::std::string& type,
+      /*in*/ ::govcca::TypeMap properties
     )
     throw () 
     ;
@@ -138,7 +141,7 @@ namespace framework {
      */
     void
     unregisterUsesPort (
-      /*in*/ std::string name
+      /*in*/ const ::std::string& name
     )
     throw () 
     ;
@@ -151,10 +154,10 @@ namespace framework {
      */
     void
     addProvidesPort (
-      /*in*/ govcca::Port inPort,
-      /*in*/ std::string name,
-      /*in*/ std::string type,
-      /*in*/ govcca::TypeMap properties
+      /*in*/ ::govcca::Port inPort,
+      /*in*/ const ::std::string& name,
+      /*in*/ const ::std::string& type,
+      /*in*/ ::govcca::TypeMap properties
     )
     throw () 
     ;
@@ -166,7 +169,7 @@ namespace framework {
      */
     void
     removeProvidesPort (
-      /*in*/ std::string name
+      /*in*/ const ::std::string& name
     )
     throw () 
     ;
@@ -179,7 +182,7 @@ namespace framework {
      */
     void
     releasePort (
-      /*in*/ std::string name
+      /*in*/ const ::std::string& name
     )
     throw () 
     ;
@@ -187,15 +190,15 @@ namespace framework {
     /**
      * user defined non-static method.
      */
-    govcca::TypeMap
+    ::govcca::TypeMap
     createTypeMap() throw () 
     ;
     /**
      * user defined non-static method.
      */
-    govcca::TypeMap
+    ::govcca::TypeMap
     getPortProperties (
-      /*in*/ std::string portName
+      /*in*/ const ::std::string& portName
     )
     throw () 
     ;
@@ -204,7 +207,7 @@ namespace framework {
     /**
      * Get a reference to the component to which this Services object belongs. 
      */
-    govcca::ComponentID
+    ::govcca::ComponentID
     getComponentID() throw () 
     ;
   };  // end class Services_impl

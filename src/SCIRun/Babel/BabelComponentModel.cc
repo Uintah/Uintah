@@ -44,11 +44,12 @@
 #define IRIX
 #pragma set woff 1375
 #endif
-#include <util/PlatformUtils.hpp>
-#include <sax/SAXException.hpp>
-#include <sax/SAXParseException.hpp>
-#include <parsers/DOMParser.hpp>
-#include <dom/DOM_NamedNodeMap.hpp>
+#include <xercesc/util/PlatformUtils.hpp>
+#include <xercesc/sax/SAXException.hpp>
+#include <xercesc/sax/SAXParseException.hpp>
+#include <xercesc/parsers/XercesDOMParser.hpp>
+#include <xercesc/dom/DOMNamedNodeMap.hpp>
+#include <xercesc/dom/DOMNodeList.hpp>
 #ifdef __sgi
 #pragma reset woff 1375
 #endif
@@ -116,7 +117,7 @@ void BabelComponentModel::readComponentDescription(const std::string& file)
 {
   cerr << "Reading file " << file << '\n';
   // Instantiate the DOM parser.
-  DOMParser parser;
+  XercesDOMParser parser;
   parser.setDoValidation(false);
   
   SCIRunErrorHandler handler;
@@ -132,21 +133,21 @@ void BabelComponentModel::readComponentDescription(const std::string& file)
     return;
   }
   
-  DOM_Document doc = parser.getDocument();
-  DOM_NodeList list = doc.getElementsByTagName("component");
-  int nlist = list.getLength();
+  DOMDocument* doc = parser.getDocument();
+  DOMNodeList* list = doc->getElementsByTagName(to_xml_ch_ptr("component"));
+  int nlist = list->getLength();
   if(nlist == 0){
     cerr << "WARNING: file " << file << " has no components!\n";
   }
   for (int i=0;i<nlist;i++){
-    DOM_Node d = list.item(i);
+    DOMNode* d = list->item(i);
     BabelComponentDescription* cd = new BabelComponentDescription(this);
-    DOM_Node name = d.getAttributes().getNamedItem("name");
+    DOMNode* name = d->getAttributes()->getNamedItem(to_xml_ch_ptr("name"));
     if (name==0) {
       cout << "ERROR: Component has no name." << endl;
       cd->type = "unknown type";
     } else {
-      cd->type = name.getNodeValue().transcode();
+      cd->type = to_char_ptr(name->getNodeValue());
     }
   
     componentDB_type::iterator iter = components.find(cd->type);

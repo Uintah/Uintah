@@ -145,7 +145,7 @@ SCIRunComponentModel::createInstance(const std::string& name,
 
 bool SCIRunComponentModel::destroyInstance(ComponentInstance * ic)
 {
-  cerr<<"Warning:I don't know how to destroy a SCIRun compoent instance"<<endl;
+  cerr<<"Warning:I don't know how to destroy a SCIRun component instance\n";
   return true; 
 }
 

@@ -41,7 +41,7 @@ PSELIBS := Core/OS Core/Containers Core/Util Dataflow/XMLUtil \
 	Core/CCA/Component/PIDL Core/CCA/Component/CIA \
 	Core/Exceptions Core/TkExtensions Core/Thread
 
-LIBS := $(XML_LIBRARY) -L${BABELDIR}/lib -lsidl
+LIBS := $(XML_LIBRARY) -L${BABELDIR}/lib -Wl,-rpath -Wl,${BABELDIR}/lib -lsidl
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
