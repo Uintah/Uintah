@@ -256,7 +256,7 @@ TextureRenderer::compute_view()
 void
 TextureRenderer::load_brick(Brick* brick)
 {
-#ifdef CORRECT_OGLEXT_HDRS
+#ifdef HAVE_AVR_SUPPORT
   int nc = brick->nc();
   int idx[2];
   for(int c=0; c<nc; c++) {
@@ -386,7 +386,7 @@ void
 TextureRenderer::draw_polygons(Array1<float>& vertex, Array1<float>& texcoord,
                                Array1<int>& poly, bool normal, bool fog, Pbuffer* buffer)
 {
-#ifdef CORRECT_OGLEXT_HDRS
+#ifdef HAVE_AVR_SUPPORT
   di_->polycount += poly.size();
   float mvmat[16];
   if(fog) {
@@ -515,7 +515,7 @@ TextureRenderer::build_colormap1()
 void
 TextureRenderer::build_colormap2()
 {
-#ifdef CORRECT_OGLEXT_HDRS
+#ifdef HAVE_AVR_SUPPORT
   if(cmap2_dirty_ || alpha_dirty_) {
 
     if(!sw_raster_ && use_pbuffer_ && !raster_buffer_) {
@@ -715,7 +715,7 @@ TextureRenderer::build_colormap2()
 void
 TextureRenderer::bind_colormap1()
 {
-#ifdef CORRECT_OGLEXT_HDRS
+#ifdef HAVE_AVR_SUPPORT
   // bind texture to unit 2
   glActiveTexture(GL_TEXTURE2_ARB);
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
@@ -732,7 +732,7 @@ TextureRenderer::bind_colormap1()
 void
 TextureRenderer::bind_colormap2()
 {
-#ifdef CORRECT_OGLEXT_HDRS
+#ifdef HAVE_AVR_SUPPORT
   // bind texture to unit 2
   glActiveTexture(GL_TEXTURE2_ARB);
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
@@ -753,7 +753,7 @@ TextureRenderer::bind_colormap2()
 void
 TextureRenderer::release_colormap1()
 {
-#ifdef CORRECT_OGLEXT_HDRS
+#ifdef HAVE_AVR_SUPPORT
   glActiveTexture(GL_TEXTURE2_ARB);
   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
   glDisable(GL_TEXTURE_1D);
@@ -769,7 +769,7 @@ TextureRenderer::release_colormap1()
 void
 TextureRenderer::release_colormap2()
 {
-#ifdef CORRECT_OGLEXT_HDRS
+#ifdef HAVE_AVR_SUPPORT
   glActiveTexture(GL_TEXTURE2_ARB);
   if(!sw_raster_ && use_pbuffer_) {
     cmap2_buffer_->release(GL_FRONT);

@@ -43,9 +43,9 @@ void GLOverOp::preDraw()
   // comment out blending, done in render algorithm
 //   glEnable(GL_BLEND);
   // This is the default, but just make sure
-#ifdef CORRECT_OGLEXT_HDRS
+
   glBlendEquation(GL_FUNC_ADD_EXT);
-#endif
+
 
   // Use the following if not premultiplying alpha
 //    glBlendFunc( GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);

@@ -111,7 +111,7 @@ SliceRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
 void
 SliceRenderer::draw()
 {
-#ifdef CORRECT_OGLEXT_HDRS
+#ifdef HAVE_AVR_SUPPORT
   tex_->lock_bricks();
   
   Ray view_ray = compute_view();

@@ -37,6 +37,7 @@
 @DEF_GLEW@
 @DEF_FTGL@
 @DEF_OGL_EXT_HDRS@
+@DEF_HAVE_AVR@
 
 #endif
 
