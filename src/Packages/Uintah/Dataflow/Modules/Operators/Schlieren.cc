@@ -6,9 +6,6 @@
 #include <Core/Datatypes/LatVolField.h>
 #include <Core/Geometry/BBox.h>
 
-//#include <SCICore/Math/Mat.h>
-
-
 using namespace SCIRun;
 
 namespace Uintah {
@@ -20,15 +17,16 @@ Schlieren::Schlieren(GuiContext* ctx)
     guiOperation(ctx->subVar("operation"))
 {
 }
-  
+
+
+//__________________________________  
 void Schlieren::execute(void) 
 {
-  //  tcl_status.set("Calling InPlaneEigenEvaluator!"); 
   in    = (FieldIPort *) get_iport("Scalar Field");
   sfout = (FieldOPort *) get_oport("Scalar Field");
-
   FieldHandle hTF;
   
+  // bullet proofing
   if(!in->get(hTF)){
     std::cerr<<"Schlieren::execute(void) Didn't get a handle\n";
     return;
@@ -38,15 +36,18 @@ void Schlieren::execute(void)
   }
 
   FieldHandle fh = 0;
+  
+  
   if( LatVolField<double> *scalarField1 =
       dynamic_cast<LatVolField<double>*>(hTF.get_rep())) {
-    LatVolField<double>  *scalarField2 = 0;  
-
-    scalarField2 = scinew LatVolField<double>(hTF->basis_order());
-
-    computeSchlierenImage(scalarField1); 
     
-    fh = scalarField1;
+    LatVolField<double>  *output = 0;  
+    output = scinew LatVolField<double>(hTF->basis_order());
+    
+    // compute the image
+    computeSchlierenImage(scalarField1,output); 
+    
+    fh = output;
   }
   if( fh.get_rep() != 0 )
     sfout->send(fh);
