@@ -2467,7 +2467,12 @@ ViewSlices::execute()
   vector<NrrdIPort *> nrrd_iports;
   NrrdIPort *nrrd_iport;
   do {
-    nrrd_iport = (NrrdIPort*)get_iport("Nrrd"+to_string(n));
+    try {
+      nrrd_iport = (NrrdIPort*)get_iport("Nrrd"+to_string(n));
+    } catch (const string err) {
+      nrrd_iport = 0;
+    }
+      
     if (nrrd_iport) {
       nrrd_iports.push_back(nrrd_iport);
     }
