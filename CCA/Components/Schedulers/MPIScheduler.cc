@@ -371,7 +371,6 @@ MPIScheduler::postMPISends( DetailedTask         * task )
       MPI_Request requestid;
       MPI_Isend(buf, count, datatype, to, batch->messageTag,
 		pg_->getComm(), &requestid);
-      //MPI_Request_free(&requestid);
       int bytes = count;
 #ifdef USE_PACKING
       MPI_Pack_size(count, datatype, pg_->getComm(), &bytes);
