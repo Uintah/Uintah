@@ -291,11 +291,11 @@ public:
     image_->SetSpacing( spacing );
   }
 
-  unsigned int size() { return (dim1() * dim2() * dim3()); }
+  unsigned int size() const { return (dim1() * dim2() * dim3()); }
 
-  unsigned int dim1();
-  unsigned int dim2();
-  unsigned int dim3();
+  unsigned int dim1() const;
+  unsigned int dim2() const;
+  unsigned int dim3() const;
 
   static const string type_name(int n = -1);
 
@@ -374,7 +374,7 @@ ITKFData3d<Data>::type_name(int n)
 }
 
 template <class Data>
-unsigned int ITKFData3d<Data>::dim1()
+unsigned int ITKFData3d<Data>::dim1() const
 {
   if(image_set_)
     return image_->GetLargestPossibleRegion().GetSize()[0];
@@ -385,7 +385,7 @@ unsigned int ITKFData3d<Data>::dim1()
 }
 
 template <class Data>
-unsigned int ITKFData3d<Data>::dim2()
+unsigned int ITKFData3d<Data>::dim2() const
 {
   if(image_set_)
     return image_->GetLargestPossibleRegion().GetSize()[1];
@@ -396,7 +396,7 @@ unsigned int ITKFData3d<Data>::dim2()
 }
 
 template <class Data>
-unsigned int ITKFData3d<Data>::dim3()
+unsigned int ITKFData3d<Data>::dim3() const
 {
   if(image_set_)
     return image_->GetLargestPossibleRegion().GetSize()[2];
