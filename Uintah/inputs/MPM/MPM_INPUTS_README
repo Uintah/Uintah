@@ -33,3 +33,42 @@ The first starts at 0 degrees, the latter at 100.  The second material
 is next to a 300 degree wall, as heat conducts through it, and into
 the first material, via the thermal contact algorithm, the first material
 ignites and burns away.
+
+What to Expect:
+
+There is a bit of a problem in that correctness is only somewhat
+rigorous.  The dat files are generally the most useful, but all the
+plotting routines I've used require you to strip out the brackets in
+CenterOfMassPosition.dat and
+CenterOfMassVelocity.dat, where each row of data is 
+time [Vector.x() Vector.y() Vector.z()].
+
+As I'm sure you're familar, the disks problem is a collision problem. 
+For those one would expect the momemta of the individual disks to change
+sign and have the same or reduced in magnitude after the collision.  The
+default output (CenterOfMassVelocity.dat) is the sum for both disks, so
+that should be approximately zero.  During the collision the kinetic
+energy should drop as the
+disks come to rest and then increase again.  The strain energy should
+spike during collision.  Total Mass should be conserved.  All the
+different disks inputs will give somewhat different results except for
+disks and disks_4patch which should be identical to machine precision.
+
+The heat conduction problems pretty much require firing up the pse and
+looking at temperature contours.  For these one side is hot, the other
+cold, and over time the temperatures should become more uniform.  It's
+not useful to look at the dat files for these, as far as I know (expect
+possibly for TotalMass, which
+should be constant).
+
+The inclined_plane_sphere problem is a sphere rolling down an inclined
+plane.  The CenterOfMassPostion.dat should be parabolic, see the readme
+file in inputs/MPM.  TotalMass should be constant. 
+
+For twomatburn, I think you want to fire up the pse and look at particle
+masses.  For this case TotalMass should be decreasing.
+
+10grains and 1000grains run, at least as submitted, but I can't tell you
+what to expect.  They are much bigger runs, that can be submitted for
+MPI runs.  They have both run serially.
+
