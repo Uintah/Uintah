@@ -71,7 +71,7 @@ MatrixReader::MatrixReader(GuiContext* ctx)
   mgr.get_importer_list(importers);
   
   string importtypes = "{";
-  importtypes += "{{SCIRun Matrix File} {.fld} } ";
+  importtypes += "{{SCIRun Matrix File} {.mat} } ";
   importtypes += "{{SCIRun Matrix Any} {.*} } ";
 
   for (unsigned int i = 0; i < importers.size(); i++)

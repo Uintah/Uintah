@@ -72,7 +72,7 @@ ColorMapReader::ColorMapReader(GuiContext* ctx)
   mgr.get_importer_list(importers);
   
   string importtypes = "{";
-  importtypes += "{{SCIRun Colormap File} {.fld} } ";
+  importtypes += "{{SCIRun Colormap File} {.cmap} } ";
   importtypes += "{{SCIRun Colormap Any} {.*} } ";
 
   for (unsigned int i = 0; i < importers.size(); i++)

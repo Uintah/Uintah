@@ -73,7 +73,7 @@ ColorMapWriter::ColorMapWriter(GuiContext* ctx)
   mgr.get_exporter_list(exporters);
   
   string exporttypes = "{";
-  exporttypes += "{{SCIRun ColorMap File} {.fld} } ";
+  exporttypes += "{{SCIRun ColorMap File} {.cmap} } ";
   exporttypes += "{{SCIRun ColorMap Any} {.*} } ";
 
   for (unsigned int i = 0; i < exporters.size(); i++)
