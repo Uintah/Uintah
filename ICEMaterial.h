@@ -5,7 +5,6 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Grid/Material.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
-#include <Packages/Uintah/Core/Grid/PerPatch.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICELabel.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfState.h>
 #include <Packages/Uintah/CCA/Components/ICE/GeometryObject2.h>
