@@ -523,7 +523,9 @@ public:
       if(final_res_norm > params->tolerance || finite(final_res_norm) == 0){
 	if(params->restart){
 	  if(pg->myrank() == 0)
-	    cerr << "HypreSolver not converging, requesting smaller timestep\n";
+	    cerr << "HypreSolver not converged in " << num_iterations 
+                << "iterations, final residual= " << final_res_norm 
+                << ", requesting smaller timestep\n";
 	  new_dw->abortTimestep();
 	  new_dw->restartTimestep();
 	} else {
