@@ -8,11 +8,12 @@ using namespace SCIRun;
 using namespace std;
 
 
-OutFluxVolume::OutFluxVolume(IntVector c,double fluxout,double vol)
+OutFluxVolume::OutFluxVolume(IntVector c,double fluxout,double vol, int indx)
 {
   ostringstream s;
   s << " cell["<<c.x()<<"]["<<c.y()<<"]["<<c.z()
-    << "], total_outflux (" << fluxout << ") > vol (" << vol << ")";
+    << "], total_outflux (" << fluxout << ") > vol (" << vol << ")"
+    << " matl indx "<< indx;
 
   d_msg =  "inFluxOutFluxVolume" + s.str();
   
