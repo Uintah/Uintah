@@ -31,7 +31,6 @@
 	<save label = "p.volume"/>
 	<save label = "p.stress"/>
 	<save label = "p.deformationMeasure"/>
-	<save label = "p.plasticStrain"/>
 	<save label = "p.damage"/>
 	<save label = "g.mass"/>
 	<save label = "g.volume"/>
