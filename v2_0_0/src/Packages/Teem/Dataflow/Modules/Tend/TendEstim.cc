@@ -141,7 +141,7 @@ TendEstim::execute()
   NrrdData *output = scinew NrrdData;
   output->nrrd = nout;
   output->copy_sci_data(*dwi_handle.get_rep());
-  output->nrrd->axis[0].label = "Unknown:Tensor";
+  output->nrrd->axis[0].label = strdup("Unknown:Tensor");
   otens_->send(NrrdDataHandle(output));
 }
 
