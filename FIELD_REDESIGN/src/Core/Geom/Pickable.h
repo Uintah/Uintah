@@ -73,8 +73,8 @@ public:
 
 //
 // $Log$
-// Revision 1.2.2.1  2000/09/28 03:12:19  mcole
-// merge trunk into FIELD_REDESIGN branch
+// Revision 1.2.2.2  2000/10/26 17:18:38  moulding
+// merge HEAD into FIELD_REDESIGN
 //
 // Revision 1.3  2000/08/11 15:44:41  bigler
 // Changed geom_* functions that took an int index to take a GeomObj* picked_obj.
