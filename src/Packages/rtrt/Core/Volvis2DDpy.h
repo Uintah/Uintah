@@ -19,27 +19,27 @@ namespace rtrt {
   //  template<class T>
     class Volvis2DDpy : public DpyBase {
     // creates the background texture
-    virtual void createBGText(float vmin, float vmax, float gmin, float gmax);
+    void createBGText(float vmin, float vmax, float gmin, float gmax);
     // restores visible background texture to the clean original
-    virtual void loadCleanTexture();
+    void loadCleanTexture();
     // draws the background texture
-    virtual void drawBackground();
+    void drawBackground();
     // adds a new widget to the end of the vector
-    virtual void addWidget( int x, int y );
+    void addWidget( int x, int y );
     // cycles through widget types: tri->rect(ell)->rect(1d)->rect(deft)->tri..
-    virtual void cycleWidgets( void );
+    void cycleWidgets( void );
     // draws all widgets in widgets vector without their textures
-    virtual void drawWidgets( GLenum mode );
+    void drawWidgets( GLenum mode );
     // paints widget textures onto the background
-    virtual void bindWidgetTextures();
+    void bindWidgetTextures();
     // determines whether a pixel is inside of a widget
-    virtual bool insideAnyWidget( int x, int y );
+    bool insideAnyWidget( int x, int y );
     // moves user-selected widget to end of widgets vector to be drawn last
-    virtual void prioritizeWidgets();
+    void prioritizeWidgets();
     // retrieves picked widget(s) info, determines which widget was picked
-    virtual void processHits( GLint hits, GLuint buffer[] );
+    void processHits( GLint hits, GLuint buffer[] );
     // determines which widget the user picked
-    virtual void pickShape( int x, int y );
+    void pickShape( int x, int y );
 
 
     // Called at the start of run.
@@ -75,7 +75,6 @@ namespace rtrt {
     int subT_top;
     int subT_right;
     int subT_bottom;
-
     bool waiting_for_redraw;
 
     // calculates the borders of a widget's texture (for texture acceleration)
