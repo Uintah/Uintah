@@ -468,6 +468,71 @@ void ImpMPM::scheduleIterate(SchedulerP& sched,const LevelP& level,
 
   task->hasSubScheduler();
 
+  // This is from my test copy of things.
+#if 0
+ // Required in computeStressTensor
+  // From ParentOldDW
+  task->requires(Task::OldDW,lb->pXLabel,Ghost::AroundNodes,1);
+  task->requires(Task::OldDW,lb->pVolumeLabel,Ghost::None,0);
+  task->requires(Task::OldDW,lb->pVolumeOldLabel,Ghost::None,0);
+  task->requires(Task::OldDW,lb->pDeformationMeasureLabel,Ghost::None,0);
+  task->requires(Task::OldDW,lb->bElBarLabel,Ghost::None,0);
+  // From NewDW
+#if 1
+  task->requires(Task::NewDW,lb->dispNewLabel,Ghost::AroundCells,1);
+  // Computes
+  task->modifies(lb->pStressLabel_preReloc);
+  task->modifies(lb->pVolumeDeformedLabel);
+#endif
+  // FormStiffnessMatrix
+  // Requires
+  task->requires(Task::NewDW,lb->gMassLabel,Ghost::None,0);
+  task->requires(Task::OldDW,d_sharedState->get_delt_label());
+
+  // ComputeInternalForce
+  // Requires
+#if 0
+  task->requires(Task::NewDW,lb->pStressLabel_preReloc,Ghost::AroundNodes,1);
+  task->requires(Task::NewDW,lb->pVolumeDeformedLabel,Ghost::AroundNodes,1);
+#endif
+  task->modifies(lb->gInternalForceLabel);
+
+  // FormQ
+  task->requires(Task::NewDW,lb->gInternalForceLabel,Ghost::None,0);
+  task->requires(Task::OldDW,lb->dispNewLabel,Ghost::None,0);
+  task->requires(Task::NewDW,lb->gExternalForceLabel,Ghost::None,0);
+  task->requires(Task::NewDW,lb->gVelocityOldLabel,Ghost::None,0);
+  task->requires(Task::NewDW,lb->gAccelerationLabel,Ghost::None,0);
+  task->requires(Task::NewDW,lb->gMassLabel,Ghost::None,0);
+
+  // RemoveFixedDOF
+  task->requires(Task::NewDW,lb->gMassLabel,Ghost::None,0);
+
+  // Solvefor DUCG
+  task->modifies(lb->dispIncLabel);
+
+  // UpdateGridKinematics
+  task->requires(Task::OldDW,lb->dispNewLabel,Ghost::None,0);
+  task->requires(Task::NewDW,lb->dispIncLabel,Ghost::None,0);
+  task->requires(Task::NewDW,lb->gVelocityOldLabel,Ghost::None,0);
+  // At the end of the iterate must copy these out to scheduler's new_dw
+  task->modifies(lb->dispNewLabel);
+  task->modifies(lb->gVelocityLabel);
+
+
+  // CheckConvergence
+  task->requires(Task::NewDW,lb->dispIncQNorm0);
+  task->requires(Task::NewDW,lb->dispIncNormMax);
+  task->requires(Task::NewDW,lb->dispIncQNorm);
+  task->requires(Task::NewDW,lb->dispIncNorm);
+#if 0
+  task->modifies(lb->dispIncNormMax);
+  task->modifies(lb->dispIncQNorm0);
+#endif
+
+
+#endif
+
   // Required in computeStressTensor
   //task->requires(Task::NewDW,lb->dispNewLabel,Ghost::None,0);
   task->requires(Task::NewDW,lb->pStressLabel_preReloc,Ghost::None,0);
