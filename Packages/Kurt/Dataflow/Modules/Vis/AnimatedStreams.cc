@@ -18,7 +18,7 @@
 #include <Core/Geom/GeomTriangles.h>
 
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 
 #include <iostream>
 #include <ios>

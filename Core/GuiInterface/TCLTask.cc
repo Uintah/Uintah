@@ -11,8 +11,8 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Core/TclInterface/TCLTask.h>
-#include <Core/TclInterface/TCL.h>
+#include <Core/GuiInterface/TCLTask.h>
+#include <Core/GuiInterface/TCL.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Thread.h>
 

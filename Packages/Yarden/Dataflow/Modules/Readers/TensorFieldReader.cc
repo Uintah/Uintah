@@ -13,15 +13,15 @@
 #include <Packages/Yarden/Dataflow/Ports/TensorFieldPort.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/TCLTask.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/TCLTask.h>
+#include <Core/GuiInterface/GuiVar.h>
 
 namespace Yarden {
 using namespace SCIRun;
 
     class TensorFieldReader : public Module {
       TensorFieldOPort* outport;
-      TCLstring filename;
+      GuiString filename;
       TensorFieldHandle handle;
       clString old_filename;
     public:

@@ -14,7 +14,7 @@
 #include <Dataflow/Ports/ScalarFieldPort.h>
 #include <Core/Geom/GeomTriangles.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Widgets/PointWidget.h>
 
@@ -62,14 +62,14 @@ private:
   Point Smin,Smax;
   Vector ddv;
 
-  TCLint avail_tex;
-  TCLdouble influence;
-  TCLint max_brick_dim;
-  TCLint num_slices;
-  TCLint draw_mode;
-  TCLint debug;
-  TCLint level;
-  TCLdouble alpha;
+  GuiInt avail_tex;
+  GuiDouble influence;
+  GuiInt max_brick_dim;
+  GuiInt num_slices;
+  GuiInt draw_mode;
+  GuiInt debug;
+  GuiInt level;
+  GuiDouble alpha;
   int mode;
 
   MultiBrick *brick;

@@ -28,7 +28,7 @@ CFLAGS   := $(CFLAGS)
 
 PSELIBS := Dataflow/Network Dataflow/Ports Dataflow/XMLUtil \
 	Core/Datatypes Dataflow/Widgets Core/Persistent Core/Exceptions \
-	Core/Thread Core/Containers Core/TclInterface Core/Geom \
+	Core/Thread Core/Containers Core/GuiInterface Core/Geom \
 	Core/Datatypes Core/Geometry Core/TkExtensions \
 	Core/Math Core/Util
 LIBS := $(TK_LIBRARY) $(GL_LIBS) $(FLEX_LIBS) -lm $(XML_LIBRARY) $(THREAD_LIBS)

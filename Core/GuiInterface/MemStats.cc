@@ -11,7 +11,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Core/TclInterface/MemStats.h>
+#include <Core/GuiInterface/MemStats.h>
 #include <Core/Malloc/Allocator.h>
 #include <stdio.h>
 

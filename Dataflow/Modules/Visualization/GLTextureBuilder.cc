@@ -14,9 +14,9 @@
 #include <Core/Datatypes/ScalarFieldRGBase.h>
 #include <Core/Datatypes/ScalarField.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/TCLvar.h>
-#include <Core/TclInterface/TCL.h>
-#include <Core/TclInterface/TCLTask.h>
+#include <Core/GuiInterface/GuiVar.h>
+#include <Core/GuiInterface/TCL.h>
+#include <Core/GuiInterface/TCLTask.h>
 #include <Core/Datatypes/VolumeUtils.h>
 #include <Core/Datatypes/GLTexture3D.h>
 #include <Dataflow/Network/Module.h>

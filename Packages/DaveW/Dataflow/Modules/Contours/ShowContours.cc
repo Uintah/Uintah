@@ -22,7 +22,7 @@
 #include <Core/Geom/Material.h>
 #include <Core/Geom/Pt.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
 
 namespace DaveW {
@@ -35,8 +35,8 @@ class CStoGeom : public Module {
     GeometryOPort* ogeom;
 
     void cs_to_geom(const ContourSetHandle&, GeomGroup*);
-    TCLint showLines;
-    TCLint showPoints;
+    GuiInt showLines;
+    GuiInt showPoints;
 public:
     CStoGeom(const clString& id);
     virtual ~CStoGeom();

@@ -21,7 +21,7 @@
 #include <Dataflow/Ports/SurfacePort.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/Barrier.h>
 #include <Core/Thread/Parallel.h>
 #include <Core/Thread/Thread.h>
@@ -55,11 +55,11 @@ class BuildFEMatrix : public Module {
     Mesh* mesh;
     SparseRowMatrix* gbl_matrix;
     ColumnMatrix* rhs;
-    TCLstring BCFlag; // do we want Dirichlet conditions applied or PinZero
+    GuiString BCFlag; // do we want Dirichlet conditions applied or PinZero
     int DirSub;	//  matrix decomposition and local regularization later
     int AverageGround; // make the last row in the matrix all 1's
-    TCLint UseCondTCL;
-  TCLstring refnodeTCL;
+    GuiInt UseCondTCL;
+  GuiString refnodeTCL;
     int UseCond;
     int PinZero;
     MatrixHandle gbl_matrixH;

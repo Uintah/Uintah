@@ -227,7 +227,7 @@ char category_submk_skeleton[] = \
 "\n"
 "PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \\\n"
 "        Core/Persistent Core/Containers Core/Util \\\n"
-"        Core/Exceptions Core/Thread Core/TclInterface \\\n"
+"        Core/Exceptions Core/Thread Core/GuiInterface \\\n"
 "        Core/Geom Core/Datatypes Core/Geometry \\\n"
 "        Core/TkExtensions\n"
 "LIBS := $(TK_LIBRARY) $(GL_LIBS) -lm\n"

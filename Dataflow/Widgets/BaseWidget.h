@@ -24,9 +24,9 @@
 #include <Core/Geom/Pickable.h>
 #include <Core/Geom/GeomPick.h>
 #include <Core/Geom/Switch.h>
-#include <Core/Geom/TCLGeom.h>
-#include <Core/TclInterface/TCL.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/Geom/GuiGeom.h>
+#include <Core/GuiInterface/TCL.h>
+#include <Core/GuiInterface/GuiVar.h>
 
 namespace SCIRun {
   class CrowdMonitor;
@@ -181,7 +181,7 @@ protected:
    void FinishWidget();
 
    // Used to pass a material to .tcl file.
-   TCLMaterial tclmat;
+   GuiMaterial tclmat;
 
    // These affect ALL widgets!!!
    static MaterialHandle DefaultPointMaterial;

@@ -16,7 +16,7 @@
 
 #ifndef _WIN32
 
-#include <Core/TclInterface/GuiManager.h>
+#include <Core/GuiInterface/GuiManager.h>
 #include <Core/Containers/Array1.h>
 
 #include <string.h>

@@ -20,7 +20,7 @@
 #include <Core/Datatypes/ScalarFieldRGchar.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
 
 namespace DaveW {
@@ -267,8 +267,8 @@ Scanline::Scanline(Array2<char> &pixels, Array1<Array1<Point> > polys) {
 class CStoSFRG : public Module {
     ContourSetIPort* incontour;
     ScalarFieldOPort* ofield;
-    TCLstring nxTCL;
-    TCLstring nyTCL;
+    GuiString nxTCL;
+    GuiString nyTCL;
     clString execMsg;
     int gen;
     int nx;

@@ -14,7 +14,7 @@
 #ifndef SCI_project_MemStats_h
 #define SCI_project_MemStats_h 1
 
-#include <Core/TclInterface/TCL.h>
+#include <Core/GuiInterface/TCL.h>
 #ifndef _WIN32
 #include <unistd.h>
 #endif

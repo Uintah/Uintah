@@ -1,5 +1,5 @@
 /*
- *  TCLView.cc  Structure that provides for easy access of view information.
+ *  GuiView.cc  Structure that provides for easy access of view information.
  *              The view information is interactively provided by the user.
  *
  *  Written by:
@@ -15,29 +15,29 @@
 
 #include <tcl.h>
 
-#include <Core/TclInterface/TCL.h>
-#include <Core/TclInterface/TCLTask.h>
+#include <Core/GuiInterface/TCL.h>
+#include <Core/GuiInterface/TCLTask.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Geom/TCLView.h>
+#include <Core/Geom/GuiView.h>
 #include <iostream>
 using std::ostream;
 
 namespace SCIRun {
 
-TCLView::TCLView(const clString& name, const clString& id, TCL* tcl)
-: TCLvar(name, id, tcl), eyep("eyep", str(), tcl),
+GuiView::GuiView(const clString& name, const clString& id, TCL* tcl)
+: GuiVar(name, id, tcl), eyep("eyep", str(), tcl),
   lookat("lookat", str(), tcl), up("up", str(), tcl),
   fov("fov", str(), tcl), eyep_offset("eyep_offset", str(), tcl)
 {
 }
 
-TCLView::~TCLView()
+GuiView::~GuiView()
 {
 }
 
 View
-TCLView::get()
+GuiView::get()
 {
     TCLTask::lock();
     View v(eyep.get(), lookat.get(), up.get(), fov.get());
@@ -46,7 +46,7 @@ TCLView::get()
 }
 
 void
-TCLView::set(const View& view)
+GuiView::set(const View& view)
 {
     TCLTask::lock();
     eyep.set(view.eyep());
@@ -58,7 +58,7 @@ TCLView::set(const View& view)
 
 
 void
-TCLView::emit(ostream& out)
+GuiView::emit(ostream& out)
 {
     eyep.emit(out);
     lookat.emit(out);
@@ -70,7 +70,7 @@ TCLView::emit(ostream& out)
 
 TCLExtendedView::TCLExtendedView( const clString& name, const clString& id,
 				 TCL* tcl )
-: TCLvar(name, id, tcl), eyep("eyep", str(), tcl),
+: GuiVar(name, id, tcl), eyep("eyep", str(), tcl),
   lookat("lookat", str(), tcl), up("up", str(), tcl),
   fov("fov", str(), tcl), eyep_offset("eyep_offset", str(), tcl),
   bg("bg", str(), tcl), xres("xres", str(), tcl), yres("yres", str(), tcl)

@@ -24,7 +24,7 @@ DESCRIPTION
 
 ****************************************/ 
 
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Network/Module.h>
 #include <Packages/Kurt/Core/Datatypes/VisParticleSetPort.h>
@@ -42,9 +42,9 @@ public:
   virtual ~RescaleColorMapForParticles();
   virtual void execute();
 protected:
-  TCLdouble minVal;
-  TCLdouble maxVal;
-  TCLstring scaleMode;
+  GuiDouble minVal;
+  GuiDouble maxVal;
+  GuiString scaleMode;
 };
 } // End namespace Kurt
 

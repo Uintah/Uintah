@@ -24,7 +24,7 @@
 #include <Core/Geom/Lighting.h>
 #include <Core/Geom/IndexedGroup.h>
 #include <Dataflow/Modules/Render/ViewGeom.h>
-#include <Core/TclInterface/TCL.h>
+#include <Core/GuiInterface/TCL.h>
 #include <Core/Thread/CrowdMonitor.h>
 
 #include <map.h>

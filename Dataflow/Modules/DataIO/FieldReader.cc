@@ -16,8 +16,8 @@
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/TCLTask.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/TCLTask.h>
+#include <Core/GuiInterface/GuiVar.h>
 
 namespace SCIRun {
 
@@ -27,7 +27,7 @@ class FieldReader : public Module {
   //////////
   // 
   FieldOPort*       d_oport;
-  TCLstring         d_filename;
+  GuiString         d_filename;
   FieldHandle       d_hField;
   clString            d_oldFilename;
 

@@ -21,7 +21,7 @@
 #include <Core/Math/Expon.h>
 #include <Core/Math/MusilRNG.h>
 #include <Core/Math/Trig.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Widgets/ScaledBoxWidget.h>
 #include <iostream>
@@ -35,17 +35,17 @@ class BldTransform : public Module {
     MatrixIPort* imatrix;
     MatrixOPort* omatrix;
     MatrixHandle omh;
-    TCLdouble rx, ry, rz, th;
-    TCLdouble tx, ty, tz;
-    TCLdouble scale, scalex, scaley, scalez;
-    TCLdouble sha, shb, shc, shd;
-    TCLint xmapTCL;
-    TCLint ymapTCL;
-    TCLint zmapTCL;
-    TCLint pre;
-    TCLint whichxform;
-    TCLint widgetShowResizeHandles;
-    TCLdouble widgetScale;
+    GuiDouble rx, ry, rz, th;
+    GuiDouble tx, ty, tz;
+    GuiDouble scale, scalex, scaley, scalez;
+    GuiDouble sha, shb, shc, shd;
+    GuiInt xmapTCL;
+    GuiInt ymapTCL;
+    GuiInt zmapTCL;
+    GuiInt pre;
+    GuiInt whichxform;
+    GuiInt widgetShowResizeHandles;
+    GuiDouble widgetScale;
     ScaledBoxWidget *boxWidget;
     GeomSwitch *widget_switch;
     CrowdMonitor widget_lock;

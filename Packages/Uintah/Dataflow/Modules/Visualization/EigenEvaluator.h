@@ -19,8 +19,8 @@ using namespace SCIRun;
     virtual void execute(void);
     
   private:
-    //    TCLstring tcl_status;
-    TCLint tclEigenSelect;
+    //    GuiString tcl_status;
+    GuiInt tclEigenSelect;
     TensorFieldIPort *in;
 
     ScalarFieldOPort *sfout; // for eigen values

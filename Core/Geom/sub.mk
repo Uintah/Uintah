@@ -26,12 +26,12 @@ SRCS     += $(SRCDIR)/GeomObj.cc $(SRCDIR)/GeomOpenGL.cc \
 	$(SRCDIR)/GeomTexSlices.cc $(SRCDIR)/View.cc \
 	$(SRCDIR)/GeomPolyline.cc $(SRCDIR)/TexSquare.cc \
 	$(SRCDIR)/tGrid.cc $(SRCDIR)/GeomPick.cc $(SRCDIR)/Pickable.cc \
-	$(SRCDIR)/TCLGeom.cc $(SRCDIR)/TCLView.cc \
+	$(SRCDIR)/GuiGeom.cc $(SRCDIR)/GuiView.cc \
 	$(SRCDIR)/templates.cc 	$(SRCDIR)/GeomDL.cc
 
 PSELIBS := Core/Persistent Core/Geometry Core/Exceptions \
 	Core/Math Core/Containers Core/Thread \
-	Core/TclInterface
+	Core/GuiInterface
 LIBS := $(GL_LIBS) -lm
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk

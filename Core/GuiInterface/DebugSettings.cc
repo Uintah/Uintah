@@ -11,11 +11,11 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Core/TclInterface/DebugSettings.h>
+#include <Core/GuiInterface/DebugSettings.h>
 
 #include <Core/Util/Debug.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 
 namespace SCIRun {
 
@@ -59,7 +59,7 @@ void DebugSettings::tcl_command(TCLArgs& args, void*)
 	    DebugSwitch* sw=debug_vars[j];
 	    vars[j]=sw->get_var();
 	    if(makevars)
-		variables.add(scinew TCLvarintp(sw->get_flagpointer(),
+		variables.add(scinew GuiVarintp(sw->get_flagpointer(),
 					     sw->get_module(), sw->get_var(),
 					     0));
 	}

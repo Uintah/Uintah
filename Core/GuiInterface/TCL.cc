@@ -14,11 +14,11 @@
 #include <Core/Containers/String.h>
 //#include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/GuiManager.h>
-#include <Core/TclInterface/Remote.h>
-#include <Core/TclInterface/TCL.h>
-#include <Core/TclInterface/TCLTask.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiManager.h>
+#include <Core/GuiInterface/Remote.h>
+#include <Core/GuiInterface/TCL.h>
+#include <Core/GuiInterface/TCLTask.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
 using std::cerr;
 using std::endl;
@@ -348,12 +348,12 @@ void TCL::reset_vars()
 	vars[i]->reset();
 }
 
-void TCL::register_var(TCLvar* v)
+void TCL::register_var(GuiVar* v)
 {
     vars.add(v);
 }
 
-void TCL::unregister_var(TCLvar* v)
+void TCL::unregister_var(GuiVar* v)
 {
     for(int i=0;i<vars.size();i++){
 	if(vars[i]==v){
@@ -363,7 +363,7 @@ void TCL::unregister_var(TCLvar* v)
     }
 }
 
-int TCL::get_tcl_stringvar(const clString& base, const clString& name,
+int TCL::get_gui_stringvar(const clString& base, const clString& name,
 			   clString& value)
 {
     clString n(base+"-"+name);
@@ -378,7 +378,7 @@ int TCL::get_tcl_stringvar(const clString& base, const clString& name,
     return 1;
 }
 
-int TCL::get_tcl_boolvar(const clString& base, const clString& name,
+int TCL::get_gui_boolvar(const clString& base, const clString& name,
 			 int& value)
 {
     clString n(base+"-"+name);
@@ -400,7 +400,7 @@ int TCL::get_tcl_boolvar(const clString& base, const clString& name,
     return 1;
 }
 
-int TCL::get_tcl_doublevar(const clString& base, const clString& name,
+int TCL::get_gui_doublevar(const clString& base, const clString& name,
 			   double& value)
 {
     clString n(base+"-"+name);
@@ -422,7 +422,7 @@ int TCL::get_tcl_doublevar(const clString& base, const clString& name,
     }
 }
 
-int TCL::get_tcl_intvar(const clString& base, const clString& name,
+int TCL::get_gui_intvar(const clString& base, const clString& name,
 			 int& value)
 {
     clString n(base+"-"+name);
@@ -445,7 +445,7 @@ int TCL::get_tcl_intvar(const clString& base, const clString& name,
     }
 }
 
-void TCL::set_tclvar(const clString& base, const clString& name,
+void TCL::set_guivar(const clString& base, const clString& name,
 		     const clString& value)
 {
     clString n(base+"-"+name);

@@ -9,7 +9,7 @@
 */
 
 #include <Core/Util/NotFinished.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <Core/Geom/Pt.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomSphere.h>
@@ -31,13 +31,13 @@ public:
 
 protected:
 private:
-  TCLint gridtype;
-  TCLint representation;
-  TCLdouble radius;
-  TCLstring geomfilename;
-  TCLint numzones;
-  TCLint showzone1, showzone2, showzone3, showzone4;
-  TCLstring nx1, ny1, nz1, nx2, ny2, nz2, nx3, ny3, nz3, nx4, ny4, nz4;
+  GuiInt gridtype;
+  GuiInt representation;
+  GuiDouble radius;
+  GuiString geomfilename;
+  GuiInt numzones;
+  GuiInt showzone1, showzone2, showzone3, showzone4;
+  GuiString nx1, ny1, nz1, nx2, ny2, nz2, nx3, ny3, nz3, nx4, ny4, nz4;
 
   GeometryOPort* geomout;
   ColorMapIPort* colorin;

@@ -16,7 +16,7 @@
 #include <Dataflow/Ports/SurfacePort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/Trig.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
 using std::cerr;
 
@@ -32,9 +32,9 @@ class ApplyFEMCurrentSource : public Module {
   ColumnMatrixIPort* imap;
   ColumnMatrixOPort* orhs;
   ColumnMatrixOPort* oidx;
-  TCLstring sourceNodeTCL;
-  TCLstring sinkNodeTCL;
-  TCLstring modeTCL;
+  GuiString sourceNodeTCL;
+  GuiString sinkNodeTCL;
+  GuiString modeTCL;
   int loc;
   int gen;
 public:

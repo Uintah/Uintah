@@ -22,7 +22,7 @@ SRCS     += \
 PSELIBS := \
 	Dataflow/Network Dataflow/Ports Core/Datatypes \
         Core/Thread Core/Persistent Core/Exceptions \
-        Core/TclInterface Core/Containers Core/Datatypes \
+        Core/GuiInterface Core/Containers Core/Datatypes \
         Core/Geom \
 	Core/Geometry Dataflow/Widgets Dataflow/XMLUtil \
 	Core/Util \

@@ -1154,7 +1154,7 @@ void OpenGL::redraw_frame()
     clString movieFrame(tclID+"-"+"movieFrame");
     clString use_clip(tclID+"-"+"clip");
 
-    if (!get_tcl_stringvar(id,type,val)) {
+    if (!get_gui_stringvar(id,type,val)) {
       cerr << "Error illegal name!\n";
       return;
     }
@@ -1183,7 +1183,7 @@ void OpenGL::redraw_frame()
 
       // now see if they want a bounding box...
 
-      if (get_tcl_stringvar(id,debug,val)) {
+      if (get_gui_stringvar(id,debug,val)) {
 	if (val == "0")
 	  drawinfo->debug = 0;
 	else
@@ -1194,11 +1194,11 @@ void OpenGL::redraw_frame()
 	drawinfo->debug = 0;
       }
 
-      if (get_tcl_doublevar(id,psize,dval)) {
+      if (get_gui_doublevar(id,psize,dval)) {
 	drawinfo->point_size = dval;
       }
 
-      if (get_tcl_stringvar(id,use_clip,val)) {
+      if (get_gui_stringvar(id,use_clip,val)) {
 	if (val == "0")
 	  drawinfo->check_clip = 0;
 	else
@@ -1209,10 +1209,10 @@ void OpenGL::redraw_frame()
 	drawinfo->check_clip = 0;
       }
       // only set with globals...
-      if (get_tcl_stringvar(id,movie,val)) {
-	get_tcl_stringvar(id,movieName,curName);
+      if (get_gui_stringvar(id,movie,val)) {
+	get_gui_stringvar(id,movieName,curName);
 	clString curFrameStr;
-	get_tcl_stringvar(id,movieFrame,curFrameStr);
+	get_gui_stringvar(id,movieFrame,curFrameStr);
 	//	    curFrameStr.get_int(curFrame);
 	//	    cerr << "curFrameStr="<<curFrameStr<<"  curFrame="<<curFrame<<"\n";
 	if (val == "0") {
@@ -1232,7 +1232,7 @@ void OpenGL::redraw_frame()
 
       drawinfo->init_clip(); // set clipping 
 
-      if (get_tcl_stringvar(id,cull,val)) {
+      if (get_gui_stringvar(id,cull,val)) {
 	if (val == "0")
 	  drawinfo->cull = 0;
 	else
@@ -1242,7 +1242,7 @@ void OpenGL::redraw_frame()
 	cerr << "Error, no culling info\n";
 	drawinfo->cull = 0;
       }
-      if (get_tcl_stringvar(id,dl,val)) {
+      if (get_gui_stringvar(id,dl,val)) {
 	if (val == "0")
 	  drawinfo->dl = 0;
 	else
@@ -1252,7 +1252,7 @@ void OpenGL::redraw_frame()
 	cerr << "Error, no display list info\n";
 	drawinfo->dl = 0;
       }
-      if (!get_tcl_stringvar(id,lighting,val))
+      if (!get_gui_stringvar(id,lighting,val))
 	cerr << "Error, no lighting!\n";
       else {
 	if (val == "0"){
@@ -1265,7 +1265,7 @@ void OpenGL::redraw_frame()
 	  cerr << "Unknown lighting setting(" << val << "\n";
 	}
 
-	if (get_tcl_stringvar(id,fog,val)) {
+	if (get_gui_stringvar(id,fog,val)) {
 	  if (val=="0"){
 	    drawinfo->fog=0;
 	  }
@@ -1307,8 +1307,8 @@ void OpenGL::redraw_frame()
     drawinfo->clip_planes = 0; // set them all of for default
     clString num_clip("clip-num");
 
-    if (get_tcl_stringvar(id,"clip-visible",val) && 
-	get_tcl_intvar(id,num_clip,i)) {
+    if (get_gui_stringvar(id,"clip-visible",val) && 
+	get_gui_intvar(id,num_clip,i)) {
 
       int cur_flag = CLIP_P5;
       if ( (i>0 && i<7) ) {
@@ -1317,7 +1317,7 @@ void OpenGL::redraw_frame()
 	  clString vis("clip-visible-"+to_string(i+1));
 
 
-	  if (get_tcl_stringvar(id,vis,val)) {
+	  if (get_gui_stringvar(id,vis,val)) {
 	    if (val == "1") {
 	      double plane[4];
 	      clString nx("clip-normal-x-"+to_string(i+1));
@@ -1327,10 +1327,10 @@ void OpenGL::redraw_frame()
 			
 	      int rval=0;
 
-	      rval = get_tcl_doublevar(id,nx,plane[0]);
-	      rval = get_tcl_doublevar(id,ny,plane[1]);
-	      rval = get_tcl_doublevar(id,nz,plane[2]);
-	      rval = get_tcl_doublevar(id,nd,plane[3]);
+	      rval = get_gui_doublevar(id,nx,plane[0]);
+	      rval = get_gui_doublevar(id,ny,plane[1]);
+	      rval = get_gui_doublevar(id,nz,plane[2]);
+	      rval = get_gui_doublevar(id,nd,plane[3]);
 			
 	      double mag = sqrt(plane[0]*plane[0] +
 				plane[1]*plane[1] +

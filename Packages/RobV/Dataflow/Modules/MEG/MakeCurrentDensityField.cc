@@ -22,13 +22,13 @@
 #include <Core/Datatypes/VectorFieldUG.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Math/Trig.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 
 namespace RobV {
 using namespace SCIRun;
 
 class MakeCurrentDensityField : public Module {
-  TCLint interpolate;
+  GuiInt interpolate;
   VectorFieldHandle vfh;
   VectorFieldIPort* electricFieldP;
   MatrixIPort* sourceLocationsP;

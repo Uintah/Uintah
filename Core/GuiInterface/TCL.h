@@ -20,7 +20,7 @@
 namespace SCIRun {
 
 
-class TCLvar;
+class GuiVar;
 
 class SCICORESHARE TCLArgs {
     Array1<clString> args;
@@ -45,10 +45,10 @@ public:
 };
 
 class SCICORESHARE TCL {
-    Array1<TCLvar*> vars;
-    friend class TCLvar;
-    void register_var(TCLvar*);
-    void unregister_var(TCLvar*);
+    Array1<GuiVar*> vars;
+    friend class GuiVar;
+    void register_var(GuiVar*);
+    void unregister_var(GuiVar*);
 public:
     virtual void emit_vars(std::ostream& out);
     static void initialize();
@@ -67,16 +67,16 @@ public:
     void reset_vars();
 
     // To get at tcl variables
-    int get_tcl_stringvar(const clString& base, const clString& name,
+    int get_gui_stringvar(const clString& base, const clString& name,
 			  clString& value);
-    int get_tcl_boolvar(const clString& base, const clString& name,
+    int get_gui_boolvar(const clString& base, const clString& name,
 			int& value);
-    int get_tcl_doublevar(const clString& base, const clString& name,
+    int get_gui_doublevar(const clString& base, const clString& name,
 			  double& value);
-    int get_tcl_intvar(const clString& base, const clString& name,
+    int get_gui_intvar(const clString& base, const clString& name,
 		       int& value);
 
-    void set_tclvar(const clString& base, const clString& name,
+    void set_guivar(const clString& base, const clString& name,
 		    const clString& value);
 
 };

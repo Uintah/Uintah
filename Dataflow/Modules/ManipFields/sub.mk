@@ -10,7 +10,7 @@ SRCS := \
 
 VOLATILE_LIB := ManipFields
 
-PSELIBS := Dataflow/Network Core/TclInterface Core/Containers
+PSELIBS := Dataflow/Network Core/GuiInterface Core/Containers
 
 LIBS 	:= 
 

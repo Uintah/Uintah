@@ -29,7 +29,7 @@
 #include <Core/Geom/Pt.h>
 #include <Core/Geom/GeomSphere.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <Core/Datatypes/ColorMap.h>
 
 #include <Dataflow/Network/Module.h>

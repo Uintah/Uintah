@@ -2,8 +2,8 @@
 #include <Dataflow/Ports/ScalarFieldPort.h>
 #include <Core/Datatypes/ScalarField.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/TCLTask.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/TCLTask.h>
+#include <Core/GuiInterface/GuiVar.h>
 
 namespace Kurt {
 using namespace SCIRun;
@@ -14,12 +14,12 @@ class Packages/KurtScalarFieldReader : public Module {
   ScalarFieldHandle handle;
   clString old_filebase;
 
-  TCLstring tcl_status;
-  TCLstring filebase; 
-  TCLint animate;
-  TCLint startFrame;
-  TCLint endFrame;
-  TCLint increment;
+  GuiString tcl_status;
+  GuiString filebase; 
+  GuiInt animate;
+  GuiInt startFrame;
+  GuiInt endFrame;
+  GuiInt increment;
 
   bool read(const clString& fn);
   bool doAnimation();

@@ -10,7 +10,7 @@ SRCS += $(SRCDIR)/Packages/NektarScalarField.cc \
 	$(SRCDIR)/Packages/NektarVectorFieldPort.cc  
 
 PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
-	Core/Thread Core/Geometry Core/Geom Core/TclInterface \
+	Core/Thread Core/Geometry Core/Geom Core/GuiInterface \
 	Core/Math
 LIBS := $(NEKTAR_LIBRARY) -lm
 

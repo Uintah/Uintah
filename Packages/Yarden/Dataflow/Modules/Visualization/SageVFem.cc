@@ -33,7 +33,7 @@
 #include <Multitask/ITC.h>
 #include <Multitask/Task.h>
 #include <TCL/TCLTask.h>
-#include <TCL/TCLvar.h>
+#include <TCL/GuiVar.h>
 #include <TCL/TCL.h>
 #include <tcl/tcl/tcl.h>
 #include <tcl/tk/tk.h>
@@ -53,7 +53,7 @@
 #include <Geom/BBoxCache.h>
 #include <Malloc/Allocator.h>
 #include <Geometry/Vector.h>
-#include <TCL/TCLvar.h>
+#include <TCL/GuiVar.h>
 #include <Math/Trig.h>
 #include <math.h>
 #include <iostream>
@@ -544,11 +544,11 @@ class SageVFem : public Module
 
   //float* data;
   GLubyte *data;
-  TCLdouble isoval;
-  TCLdouble isoval_min, isoval_max;
-  TCLint tcl_value, tcl_bbox, tcl_visibility;
-  TCLint tcl_scan, tcl_depth, tcl_reduce, tcl_cover, tcl_init;
-  TCLint tcl_projection;
+  GuiDouble isoval;
+  GuiDouble isoval_min, isoval_max;
+  GuiInt tcl_value, tcl_bbox, tcl_visibility;
+  GuiInt tcl_scan, tcl_depth, tcl_reduce, tcl_cover, tcl_init;
+  GuiInt tcl_projection;
   
   int value, bbox_visibility, visibility, cutoff_depth;
   int scan, count_values, extract_all, projection;

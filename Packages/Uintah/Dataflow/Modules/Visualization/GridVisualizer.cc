@@ -35,7 +35,7 @@
 #include <Core/Geom/Material.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Packages/Uintah/CCA/Components/MPM/Util/Matrix3.h>
 #include <Packages/Uintah/Core/Datatypes/ArchivePort.h>
@@ -107,29 +107,29 @@ private:
   MaterialHandle level_color[6];
   MaterialHandle node_color[6];
 
-  TCLstring level1_grid_color;
-  TCLstring level2_grid_color;
-  TCLstring level3_grid_color;
-  TCLstring level4_grid_color;
-  TCLstring level5_grid_color;
-  TCLstring level6_grid_color;
-  TCLstring level1_node_color;
-  TCLstring level2_node_color;
-  TCLstring level3_node_color;
-  TCLstring level4_node_color;
-  TCLstring level5_node_color;
-  TCLstring level6_node_color;
-  TCLint plane_on; // the selection plane
-  TCLint node_select_on; // the nodes
-  TCLint var_orientation; // whether node center or cell centered
-  TCLdouble radius;
-  TCLint polygons;
-  TCLint nl;
-  TCLint index_x;
-  TCLint index_y;
-  TCLint index_z;
-  TCLint index_l;
-  TCLstring curr_var;
+  GuiString level1_grid_color;
+  GuiString level2_grid_color;
+  GuiString level3_grid_color;
+  GuiString level4_grid_color;
+  GuiString level5_grid_color;
+  GuiString level6_grid_color;
+  GuiString level1_node_color;
+  GuiString level2_node_color;
+  GuiString level3_node_color;
+  GuiString level4_node_color;
+  GuiString level5_node_color;
+  GuiString level6_node_color;
+  GuiInt plane_on; // the selection plane
+  GuiInt node_select_on; // the nodes
+  GuiInt var_orientation; // whether node center or cell centered
+  GuiDouble radius;
+  GuiInt polygons;
+  GuiInt nl;
+  GuiInt index_x;
+  GuiInt index_y;
+  GuiInt index_z;
+  GuiInt index_l;
+  GuiString curr_var;
   
   CrowdMonitor widget_lock;
   FrameWidget *widget2d;

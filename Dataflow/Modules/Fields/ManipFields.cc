@@ -51,7 +51,7 @@ class PSECORESHARE ManipFields : public Module {
   clString lib_error;
   clString cur_frame;
   manip_func manip;
-  TCLstring manips;
+  GuiString manips;
 public:
   ManipFields(const clString& id);
 

@@ -10,8 +10,8 @@
  *   Copyright (C) 2000 SCI Group
  */
 
-#include <Core/TclInterface/TCLstrbuff.h>
-#include <Core/TclInterface/TCLTask.h>
+#include <Core/GuiInterface/TCLstrbuff.h>
+#include <Core/GuiInterface/TCLTask.h>
 #include <string.h>
 #include <tcl.h>
 
@@ -27,7 +27,7 @@ using namespace std;
 //////////
 // Constructor/Destructor
 TCLstrbuff::TCLstrbuff(const clString& name, const clString& id, TCL* tcl):
-  TCLvar(name, id, tcl),
+  GuiVar(name, id, tcl),
   ostringstream()
 {
   TCLTask::lock();

@@ -9,7 +9,7 @@ ifeq ($(LARGESOS),yes)
     PSELIBS := $(PSELIBS) Core/CCA/Component
   endif
 else
-  PSELIBS := Dataflow/Network Core/Containers Core/TclInterface \
+  PSELIBS := Dataflow/Network Core/Containers Core/GuiInterface \
 	Core/Thread Core/Exceptions
   ifeq ($(BUILD_PARALLEL),yes)
    PSELIBS := $(PSELIBS) Component/PIDL Core/globus_threads

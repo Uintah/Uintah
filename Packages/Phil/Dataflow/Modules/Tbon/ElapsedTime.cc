@@ -9,7 +9,7 @@
 */
 
 #include <Core/Util/NotFinished.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <Dataflow/Network/Module.h>
 
 #include <unistd.h>
@@ -29,8 +29,8 @@ public:
   virtual void tcl_command(TCLArgs& args, void* userdata);
 protected:
 private:
-  TCLint min, sec, hsec;
-  TCLint stop;
+  GuiInt min, sec, hsec;
+  GuiInt stop;
   int _min, _sec, _hsec;
 
 }; // class ElapsedTime

@@ -26,7 +26,7 @@
 #include <Core/Datatypes/VectorFieldUG.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Math/Trig.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Parallel.h>
 #include <Core/Thread/Thread.h>

@@ -16,7 +16,7 @@ SRCS     += \
 PSELIBS := Dataflow/Network Core/Datatypes Dataflow/Comm \
 	Core/Persistent Core/Exceptions Core/Geometry \
 	Core/Geom Core/Thread Core/Containers \
-	Core/TclInterface Core/TkExtensions Core/Util \
+	Core/GuiInterface Core/TkExtensions Core/Util \
 	Core/TkExtensions Core/Datatypes \
 	Dataflow/Modules/Salmon SCICore/OS Remote/Tools
 

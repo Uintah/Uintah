@@ -32,9 +32,9 @@
 #include <Dataflow/XMLUtil/XMLUtil.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
-#include <Core/TclInterface/Remote.h>
-#include <Core/TclInterface/TCL.h>
-#include <Core/TclInterface/TCLTask.h>
+#include <Core/GuiInterface/Remote.h>
+#include <Core/GuiInterface/TCL.h>
+#include <Core/GuiInterface/TCLTask.h>
 #include <Core/Thread/Thread.h>
 #include <time.h>
 #include <stdio.h>

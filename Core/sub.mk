@@ -11,12 +11,12 @@ SUBDIRS := \
 	$(SRCDIR)/GUI \
 	$(SRCDIR)/Geom \
 	$(SRCDIR)/Geometry \
+	$(SRCDIR)/GuiInterface \
 	$(SRCDIR)/Malloc \
 	$(SRCDIR)/Math \
 	$(SRCDIR)/OS \
 	$(SRCDIR)/Persistent \
 	$(SRCDIR)/Process \
-	$(SRCDIR)/TclInterface \
 	$(SRCDIR)/Tester \
 	$(SRCDIR)/Thread \
 	$(SRCDIR)/TkExtensions \

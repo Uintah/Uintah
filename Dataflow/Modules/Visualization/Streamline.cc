@@ -367,7 +367,7 @@ void Streamline::execute()
 
 	si->source=0;
 	clString sname;
-	if(!get_tcl_stringvar(sidstr, "source", sname)){
+	if(!get_gui_stringvar(sidstr, "source", sname)){
 	    error("Error reading source variable");
 	    return;
 	}
@@ -376,20 +376,20 @@ void Streamline::execute()
 	si->source->update_position(sidstr, "position");
 
 	// Calculate Streamlines
-	if(!get_tcl_doublevar(sidstr, "stepsize", stepsize)){
+	if(!get_gui_doublevar(sidstr, "stepsize", stepsize)){
 	    error("Error reading stepsize variable");
 	    return;
 	}
-	if(!get_tcl_intvar(sidstr, "maxsteps", maxsteps)){
+	if(!get_gui_intvar(sidstr, "maxsteps", maxsteps)){
 	    error("Error reading maxsteps variable");
 	    return;
 	}
-	if(!get_tcl_intvar(sidstr, "skip", skip)){
+	if(!get_gui_intvar(sidstr, "skip", skip)){
 	    error("Error reading skip variable");
 	    return;
 	}
 	clString dir;
-	if(!get_tcl_stringvar(sidstr, "direction", dir)){
+	if(!get_gui_stringvar(sidstr, "direction", dir)){
 	    error("Error reading direction variable");
 	    return;
 	}
@@ -409,12 +409,12 @@ void Streamline::execute()
 
 	// Set up animations
 	clString animation;
-	if(!get_tcl_stringvar(sidstr, "animation", animation)){
+	if(!get_gui_stringvar(sidstr, "animation", animation)){
 	    error("Error reading animation variable");
 	    return;
 	}
 	int anim_timesteps;
-	if(!get_tcl_intvar(sidstr, "anim_timesteps", anim_timesteps)){
+	if(!get_gui_intvar(sidstr, "anim_timesteps", anim_timesteps)){
 	    error("Error reading anim_timesteps variable");
 	    return;
 	}
@@ -423,14 +423,14 @@ void Streamline::execute()
 			     anim_timesteps);
 
 	clString markertype;
-	if(!get_tcl_stringvar(sidstr, "markertype", markertype)){
+	if(!get_gui_stringvar(sidstr, "markertype", markertype)){
 	    error("Error reading markertype variable");
 	    return;
 	}
 
 	// Figure out which algorithm to use
 	clString alg;
-	if(!get_tcl_stringvar(sidstr, "algorithm", alg)){
+	if(!get_gui_stringvar(sidstr, "algorithm", alg)){
 	    error("Error reading algorithm variable");
 	    return;
 	}
@@ -447,20 +447,20 @@ void Streamline::execute()
 
 	// Do it...
 	if(markertype == "LumLine") {
-	  if(!get_tcl_intvar(sidstr, "drawmode", drawmode)){
+	  if(!get_gui_intvar(sidstr, "drawmode", drawmode)){
 	    error("Error reading drawmode variable");
 	    return;
 	  }
-	  if(!get_tcl_doublevar(sidstr, "drawdist", drawdist)){
+	  if(!get_gui_doublevar(sidstr, "drawdist", drawdist)){
 	    error("Error reading drawdist variable");
 	    return;
 	  }
 	  double alphaval=1.0;
-	  if(!get_tcl_doublevar(sidstr,"alphaval",alphaval)) {
+	  if(!get_gui_doublevar(sidstr,"alphaval",alphaval)) {
 	    error("Error reading alphaval variable");
 	  }
 	  int doseed=0;
-	  if (!get_tcl_intvar(sidstr,"doseed",doseed)) {
+	  if (!get_gui_intvar(sidstr,"doseed",doseed)) {
 	    error("Error reading doseed");
 	  }
 	  line_batch = scinew TexGeomLines; // create this guy...
@@ -469,31 +469,31 @@ void Streamline::execute()
 	  group->add(line_batch);
 	  
 	} else if(markertype == "Line"){
-	  if(!get_tcl_intvar(sidstr, "drawmode", drawmode)){
+	  if(!get_gui_intvar(sidstr, "drawmode", drawmode)){
 	    error("Error reading drawmode variable");
 	    return;
 	  }
-	  if(!get_tcl_doublevar(sidstr, "drawdist", drawdist)){
+	  if(!get_gui_doublevar(sidstr, "drawdist", drawdist)){
 	    error("Error reading drawdist variable");
 	    return;
 	  }
 	  do_streamline(si);
 	} else if(markertype == "Tube"){
-	    if(!get_tcl_doublevar(sidstr, "tubesize", tubesize)){
+	    if(!get_gui_doublevar(sidstr, "tubesize", tubesize)){
 		error("Error reading tubesize variable");
 		return;
 	    }
 	    do_streamtube(si);
 	} else if(markertype == "Ribbon"){
 	    double ribbonsize;
-	    if(!get_tcl_doublevar(sidstr, "ribbonsize", ribbonsize)){
+	    if(!get_gui_doublevar(sidstr, "ribbonsize", ribbonsize)){
 		error("Error reading ribbonsize variable");
 		return;
 	    }
 	    do_streamribbon(si, ribbonsize);
 	} else if(markertype == "Surface"){
 	    double maxbend;
-	    if(!get_tcl_doublevar(sidstr, "maxbend", maxbend)){
+	    if(!get_gui_doublevar(sidstr, "maxbend", maxbend)){
 		error("Error reading ribbonsize variable");
 		return;
 	    }
@@ -1365,7 +1365,7 @@ void SLPointSource::update_position(const clString& base, const clString& varnam
 {
   ostringstream out;
   out << pw->GetPosition();
-  sl->set_tclvar(base, varname, out.str().c_str());
+  sl->set_guivar(base, varname, out.str().c_str());
 }
 
 void SLPointSource::reposition(const clString& pos)
@@ -1445,7 +1445,7 @@ void SLLineSource::update_position(const clString& base, const clString& varname
   gw->GetEndpoints(p1, p2);
   double ratio=gw->GetRatio();
   out << p1 << " " << p2 << " " << ratio;
-  sl->set_tclvar(base, varname, out.str().c_str());
+  sl->set_guivar(base, varname, out.str().c_str());
 }
 
 
@@ -1528,7 +1528,7 @@ void SLRingSource::update_position(const clString& base, const clString& varname
   rw->GetPosition(cen, normal, rad);
   double ratio=rw->GetRatio();
   out << cen << " " << normal << " " << rad << " " << ratio;
-  sl->set_tclvar(base, varname, out.str().c_str());
+  sl->set_guivar(base, varname, out.str().c_str());
 }
 
 
@@ -1616,7 +1616,7 @@ void SLSquareSource::update_position(const clString& base, const clString& varna
   double ratioR=fw->GetRatioR();
   double ratioD=fw->GetRatioD();
   out << center << " " << R << " " << D << " " << ratioR << " " << ratioD;
-  sl->set_tclvar(base, varname, out.str().c_str());
+  sl->set_guivar(base, varname, out.str().c_str());
 }
 
 void SLSquareSource::get_n(int& ns, int& nt)
@@ -1962,7 +1962,7 @@ void Streamline::tcl_command(TCLArgs& args, void* userdata)
 	si = (*iter).second;
 	clString pos;
 	clString sidstr(id+"-"+to_string(si->sid));
-	if(!get_tcl_stringvar(sidstr, "position", pos)){
+	if(!get_gui_stringvar(sidstr, "position", pos)){
 	  args.error("Error reading position");
 	  return;
 	}

@@ -15,7 +15,7 @@
 #pragma warning(disable:4355) // quit complaining about 'this' in initializers
 #endif
 
-#include <Core/TclInterface/Histogram.h>
+#include <Core/GuiInterface/Histogram.h>
 #include <Core/Thread/Mutex.h>
 
 #include <string.h>

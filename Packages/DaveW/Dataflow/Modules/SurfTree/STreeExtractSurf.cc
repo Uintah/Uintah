@@ -18,7 +18,7 @@
 #include <Core/Datatypes/SurfTree.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Persistent/Pstreams.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 
 #include <iostream>
 using std::cerr;
@@ -30,8 +30,8 @@ using namespace SCIRun;
 class STreeExtractSurf : public Module {
     SurfaceIPort* istree;
     SurfaceOPort* osurf;
-    TCLstring surfid;
-    TCLint remapTCL;
+    GuiString surfid;
+    GuiInt remapTCL;
 public:
     STreeExtractSurf(const clString& id);
     virtual ~STreeExtractSurf();

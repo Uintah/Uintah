@@ -15,7 +15,7 @@
 #include <Core/Datatypes/VectorField.h>
 #include <Dataflow/Ports/VectorFieldPort.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 
 #include <Packages/Kurt/Core/Datatypes/GLAnimatedStreams.h>
 
@@ -44,10 +44,10 @@ private:
   int cmap_id;  // id associated with color map...
   
 
-  TCLint pause;
-  TCLint normals;
-  TCLint linewidth;
-  TCLdouble stepsize;
+  GuiInt pause;
+  GuiInt normals;
+  GuiInt linewidth;
+  GuiDouble stepsize;
 
   GLAnimatedStreams  *anistreams;
 

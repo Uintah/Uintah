@@ -15,7 +15,7 @@
 #include <Dataflow/Ports/ScalarFieldPort.h>
 #include <Core/Datatypes/ScalarField.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
 using std::cerr;
 using std::endl;

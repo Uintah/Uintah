@@ -79,6 +79,7 @@ typedef struct {
 
 typedef struct {
   char* widget;
+  char* datatype;
   char* label;
   char* description;
 } parameter_node;

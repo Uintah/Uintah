@@ -15,8 +15,8 @@
 #include <Packages/DaveW/Core/Datatypes/General/ContourSet.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/TCLTask.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/TCLTask.h>
+#include <Core/GuiInterface/GuiVar.h>
 
 namespace DaveW {
 using namespace DaveW;
@@ -24,7 +24,7 @@ using namespace SCIRun;
 
 class ContourSetReader : public Module {
     ContourSetOPort* outport;
-    TCLstring filename;
+    GuiString filename;
     ContourSetHandle handle;
     clString old_filename;
 public:

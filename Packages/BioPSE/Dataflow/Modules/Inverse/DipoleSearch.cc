@@ -24,7 +24,7 @@
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Datatypes/SymSparseRowMatrix.h>
 #include <Core/Math/MusilRNG.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Parallel.h>
 #include <Core/Thread/Semaphore.h>
@@ -82,9 +82,9 @@ class Downhill_Simplex3 : public Module {
     double* y; //holds initial errors for p configuration
 public:
     Mutex mylock;
-    TCLstring tcl_status;
-    TCLstring methodTCL;
-    TCLint useCacheTCL;
+    GuiString tcl_status;
+    GuiString methodTCL;
+    GuiInt useCacheTCL;
     Downhill_Simplex3(const clString& id);
     virtual ~Downhill_Simplex3();
     virtual void execute();

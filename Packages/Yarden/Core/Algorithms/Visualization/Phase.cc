@@ -29,9 +29,9 @@
 #include <Core/Geom/Color.h>
 #include <Core/Geom/GeomOpenGL.h>
 
-#include <Core/TclInterface/TCLTask.h>
-#include <Core/TclInterface/TCLvar.h>
-#include <Core/TclInterface/TCL.h>
+#include <Core/GuiInterface/TCLTask.h>
+#include <Core/GuiInterface/GuiVar.h>
+#include <Core/GuiInterface/TCL.h>
 #include <tcl.h>
 #include <tk.h>
 

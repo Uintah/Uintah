@@ -14,7 +14,7 @@
 #ifndef SCI_project_ThreadStats_h
 #define SCI_project_ThreadStats_h 1
 
-#include <Core/TclInterface/TCL.h>
+#include <Core/GuiInterface/TCL.h>
 
 namespace SCIRun {
 

@@ -10,7 +10,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/ScalarFieldPort.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 
 namespace Kurt {
 using namespace SCIRun;
@@ -31,10 +31,10 @@ private:
   ScalarFieldOPort *outscalarfield;
 
 
-  TCLint pad_mode;
-  TCLint xpad;
-  TCLint ypad;
-  TCLint zpad;
+  GuiInt pad_mode;
+  GuiInt xpad;
+  GuiInt ypad;
+  GuiInt zpad;
 };
 } // End namespace Kurt
 

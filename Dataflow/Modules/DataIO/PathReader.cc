@@ -15,15 +15,15 @@
 #include <Core/Datatypes/Path.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/TCLTask.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/TCLTask.h>
+#include <Core/GuiInterface/GuiVar.h>
 
 namespace SCIRun {
 
 
 class PathReader : public Module {
     PathOPort* outport;
-    TCLstring filename;
+    GuiString filename;
     PathHandle handle;
     clString old_filename;
 public:

@@ -15,8 +15,8 @@
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Core/Datatypes/ColorMap.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/TclInterface/TCLTask.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/TCLTask.h>
+#include <Core/GuiInterface/GuiVar.h>
 
 namespace SCIRun {
 
@@ -24,7 +24,7 @@ namespace SCIRun {
 
 class ColorMapReader : public Module {
     ColorMapOPort* outport;
-    TCLstring filename;
+    GuiString filename;
     ColorMapHandle handle;
     clString old_filename;
 public:

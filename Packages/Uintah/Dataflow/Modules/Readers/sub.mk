@@ -16,7 +16,7 @@ PSELIBS := \
 	Core/Containers \
 	Core/Persistent \
 	Core/Exceptions \
-	Core/TclInterface \
+	Core/GuiInterface \
 	Core/Thread \
 	Core/Datatypes \
 	Core/Geom

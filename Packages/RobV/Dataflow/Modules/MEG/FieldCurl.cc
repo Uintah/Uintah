@@ -14,13 +14,13 @@
 #include <Dataflow/Ports/VectorFieldPort.h>
 #include <Core/Datatypes/VectorFieldRG.h>
 #include <Core/Datatypes/VectorFieldUG.h>
-#include <Core/TclInterface/TCLvar.h>
+#include <Core/GuiInterface/GuiVar.h>
 
 namespace RobV {
 using namespace SCIRun;
 
 class FieldCurl : public Module {
-  TCLint interpolate;
+  GuiInt interpolate;
   VectorFieldIPort* infield;
   VectorFieldOPort* outfield;
 public:   

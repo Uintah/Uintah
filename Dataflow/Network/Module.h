@@ -23,9 +23,9 @@
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/String.h>
 #include <Core/Util/Timer.h>
-#include <Core/TclInterface/TCL.h>
-#include <Core/TclInterface/TCLvar.h>
-#include <Core/TclInterface/TCLstrbuff.h>
+#include <Core/GuiInterface/TCL.h>
+#include <Core/GuiInterface/GuiVar.h>
+#include <Core/GuiInterface/TCLstrbuff.h>
 #include <Core/Thread/Mailbox.h>
 #include <Core/Geom/Pickable.h>
 #include <map>
@@ -71,8 +71,8 @@ class PSECORESHARE Module : public TCL, public Pickable {
   Module(const Module&);
   
   // Added by Mohamed Dekhil for the CSAFE project
-  TCLstring  notes ;
-  TCLint show_status;
+  GuiString  notes ;
+  GuiInt show_status;
   unsigned long stacksize;
 
 protected:
