@@ -411,7 +411,19 @@ SCI_ARG_WITH(ftgl,
    sci_required_ftgl=yes
    sci_required_freetype=yes],
   [with_ftgl=""])
+SCI_ARG_WITH(uuid,
+  AC_HELP_STRING([--with-uuid],
+                 Use UUID tools on IRIX or from ext2fs development tools on GNU/linux (SCIRun2 only, default).  Installing the ext2fs package on GNU/Linux is recommended.),
+  [sci_required_uuid=yes],
+  [with_uuid=""])
 
+
+
+SCI_ARG_ENABLE(advanced-volume-rendering,
+  AC_HELP_STRING(--enable-advanced-volume-rendering,
+                 Override default tests for this capability),
+  [avr="$enableval"],
+  [avr="test"])
 
 
 SCI_ARG_ENABLE(advanced-volume-rendering,
@@ -1517,7 +1529,7 @@ esac
 
 # Each of the HAVE_??? statements for these header files is found
 # in include/sci_defs/config_testedefs.h
-AC_CHECK_HEADERS(limits.h sys/select.h unistd.h sys/time.h sys/uuid.h uuid/uuid.h ext/algorithm stdint.h inttypes.h)
+AC_CHECK_HEADERS(limits.h sys/select.h unistd.h sys/time.h ext/algorithm stdint.h inttypes.h)
 
 AC_CONFIG_HEADER(include/sci_defs/config_testdefs.h)
 sci_defs_files="$sci_defs_files include/sci_defs/config_testdefs.h"
@@ -3958,6 +3970,7 @@ esac
 ##  --  search for uuid functions, either uuid_create or uuid_generate ----
 
 if test "$sci_required_uuid" = "yes"; then
+  AC_CHECK_HEADERS(sys/uuid.h uuid/uuid.h)
   # This is typical on SGI and ??
   AC_MSG_CHECKING(for uuid_create in sys/uuid.h)
   AC_TRY_COMPILE([#include <sys/types.h>
@@ -4007,8 +4020,6 @@ if test "$sci_required_uuid" = "yes"; then
   #include <uuid/uuid.h>
   }
   #define UUID_GENERATE
-  #else
-  #error We need either sys/uuid.h or uuid/uuid.h
   #endif
   #endif
   	], [
@@ -4036,15 +4047,17 @@ if test "$sci_required_uuid" = "yes"; then
       else
         AC_MSG_RESULT(none required)
       fi
+      HAVE_UUID="yes"
     else
       AC_MSG_RESULT(not found)
       have_uuid=no
+      HAVE_UUID="no"
     fi
     LIBS="$old_LIBS"
   fi
-
 fi # end sci_required_uuid
 
+AC_SUBST(HAVE_UUID)
 AC_SUBST(UUID_LIB_FLAG)
 
 ##  --  See if we have everything needed for SCIRun2 ----------------------
@@ -4053,17 +4066,16 @@ if test "$enable_scirun2" = "yes"; then
   if test "$have_uuid" != "yes"; then
     case $host in
       *linux*)
-        SCI_MSG_ERROR(uuid_generate function and libuuid not found, must install ext2fs development tools)
+        AC_MSG_WARN([uuid_generate function and libuuid not found.  Will use custom uuid generation instead.])
         ;;
       ## For now, don't check for uuid if on macintosh.
       *-darwin*)
-        AC_MSG_WARN(Skipping uuid check on MAC, they are required for SCIRun2)
+        AC_MSG_WARN([Skipping uuid check on MAC. Will use custom uuid generation instead.])
         ;;
       *)
-        SCI_MSG_ERROR(Cannot find uuid_generate or uuid_create, required for SCIRun2)
+        AC_MSG_WARN([cannot find uuid_generate or uuid_create.  Will use custom uuid generation instead.])
         ;;
     esac
-    exit 1
   fi
   BUILD_SCIRUN2="yes"
 else
