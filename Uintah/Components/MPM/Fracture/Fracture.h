@@ -26,6 +26,24 @@ public:
            const DataWarehouseP& old_dw,
            DataWarehouseP& new_dw);
   
+  void   labelSelfContactCells (
+           const ProcessorContext*,
+           const Region* region,
+           const DataWarehouseP& old_dw,
+           DataWarehouseP& new_dw);
+
+  void   updateParticleInformationInContactCells (
+           const ProcessorContext*,
+           const Region* region,
+           const DataWarehouseP& old_dw,
+           DataWarehouseP& new_dw);
+
+  void   updateNodeInformationInContactCells (
+           const ProcessorContext*,
+           const Region* region,
+           const DataWarehouseP& old_dw,
+           DataWarehouseP& new_dw);
+
   void   crackGrow(
            const ProcessorContext*,
            const Region* region,
@@ -41,9 +59,11 @@ private:
 
   VarLabel*        pSurfaceNormalLabel; 
   VarLabel*        pStressLabel; 
+  VarLabel*        pExternalForceLabel; 
   VarLabel*        pDeformationMeasureLabel;
   VarLabel*        pXLabel; 
   VarLabel*        cSelfContactLabel;
+  VarLabel*        cSurfaceNormalLabel;
 
   SimulationStateP d_sharedState;
 };
@@ -54,6 +74,9 @@ private:
 #endif //__FRACTURE_H__
 
 // $Log$
+// Revision 1.5  2000/05/10 18:32:22  tan
+// Added member funtion to label self-contact cells.
+//
 // Revision 1.4  2000/05/10 05:04:39  tan
 // Basic structure of fracture class.
 //
