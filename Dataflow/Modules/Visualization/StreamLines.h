@@ -99,6 +99,7 @@ StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle seed_mesh_h,
   typename SLOC::iterator seed_iter, seed_iter_end;
   smesh->begin(seed_iter);
   smesh->end(seed_iter_end);
+  int cfsize = 0;
   while (seed_iter != seed_iter_end)
   {
     smesh->get_point(seed, *seed_iter);
@@ -127,12 +128,14 @@ StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle seed_mesh_h,
       n1 = cmesh->add_node(*node_iter);
       cf->resize_fdata();
       cf->set_value((double)(*seed_iter), n1);
+      cfsize++;
       ++node_iter;
       while (node_iter != nodes.end())
       {
 	n2 = cmesh->add_node(*node_iter);
 	cf->resize_fdata();
 	cf->set_value((double)(*seed_iter), n2);
+	cfsize++;
 	cmesh->add_edge(n1, n2);
 	n1 = n2;
 	++node_iter;
@@ -143,7 +146,16 @@ StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle seed_mesh_h,
   }
 
   cf->freeze();
-  return cf;
+
+  if (cfsize == 0)
+  {
+    delete cf;
+    return 0;
+  }
+  else
+  {
+    return cf;
+  }
 }
 
 
