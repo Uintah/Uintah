@@ -1642,8 +1642,7 @@ if test "$with_opengl"; then
   _sci_inc="$with_opengl/include"
   _sci_optional=specific
 else
-  _sci_lib_dir="/usr/X11R6"
-  BASE_LIB_PATH(_sci_lib_dir,$_sci_lib_dir)
+  BASE_LIB_PATH(_sci_lib,"/usr/X11R6")
   _sci_inc="/usr/X11R6/include"
 fi
 
@@ -1681,6 +1680,8 @@ esac
 #####   #define GLAPI
 ##### #endif
 
+AC_LANG(C++)
+
 SCI_TRY_LINK(GL,OpenGL libraries and headers,GL/gl.h GL/glu.h GL/glx.h,
 	     $_sci_inc,GLU GL $GLU_OTHERS,$_sci_lib,,,$_sci_optional)
 
@@ -1694,7 +1695,6 @@ AC_SUBST(GL_LIB_FLAG)
 AC_SUBST(GL_LIB_DIR_FLAG)
 AC_SUBST(INC_GL_H)
 
-AC_LANG(C++)
 # Test for advanced volume rendering capability
 
 
