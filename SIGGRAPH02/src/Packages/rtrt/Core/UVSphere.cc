@@ -69,7 +69,7 @@ void UVSphere::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
     double t2hc=rad2-l2oc+tca*tca;
     double thc=sqrt(t2hc);
     double t=tca+thc;
-    hit.hit(this, t);
+    hit.hit(this, t/dist_scale);
     st->sphere_hit++;
     return;
   } else {
@@ -91,7 +91,7 @@ void UVSphere::intersect(Ray& ray, HitInfo& hit, DepthStats* st,
     }
   }	
 }
-#if 0
+#if 1
 // Maybe this could be improved - steve
 void UVSphere::light_intersect(Ray& ray, HitInfo& hit, Color&,
                                DepthStats* st, PerProcessorContext*)
@@ -109,7 +109,7 @@ void UVSphere::light_intersect(Ray& ray, HitInfo& hit, Color&,
     double t2hc=rad2-l2oc+tca*tca;
     double thc=sqrt(t2hc);
     double t=tca+thc;
-    hit.shadowHit(this, t);
+    hit.shadowHit(this, t/dist_scale);
     st->sphere_light_hit++;
     return;
   } else {
@@ -123,8 +123,8 @@ void UVSphere::light_intersect(Ray& ray, HitInfo& hit, Color&,
 	return;
       } else {
 	double thc=sqrt(t2hc);
-	hit.shadowHit(this, tca-thc);
-	hit.shadowHit(this, tca+thc);
+	hit.shadowHit(this, (tca-thc)/dist_scale);
+	hit.shadowHit(this, (tca+thc)/dist_scale);
 	st->sphere_light_hit++;
 	return;
       }
