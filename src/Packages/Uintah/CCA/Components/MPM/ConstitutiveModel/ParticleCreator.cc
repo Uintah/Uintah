@@ -11,12 +11,17 @@
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/ForceBC.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/CrackBC.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <Packages/Uintah/Core/Grid/VarLabel.h>
 
 using namespace Uintah;
 using std::vector;
 
-ParticleCreator::ParticleCreator()
+
+ParticleCreator::ParticleCreator(MPMMaterial* matl, MPMLabel* lb,int n8or27) 
+  : d_8or27(n8or27)
 {
+  registerPermanentParticleState(matl,lb);
 }
 
 ParticleCreator::~ParticleCreator()
@@ -24,12 +29,13 @@ ParticleCreator::~ParticleCreator()
 }
 
 
-ParticleSubset* ParticleCreator::createParticles(MPMMaterial* matl,
-				      particleIndex numParticles,
-				      CCVariable<short int>& cellNAPID,
-				      const Patch* patch,DataWarehouse* new_dw,
-				      MPMLabel* lb,
-				      vector<GeometryObject*>& d_geom_objs)
+ParticleSubset* 
+ParticleCreator::createParticles(MPMMaterial* matl,
+				 particleIndex numParticles,
+				 CCVariable<short int>& cellNAPID,
+				 const Patch* patch,DataWarehouse* new_dw,
+				 MPMLabel* lb,
+				 vector<GeometryObject*>& d_geom_objs)
 {
   
   int dwi = matl->getDWIndex();
@@ -101,10 +107,11 @@ ParticleSubset* ParticleCreator::createParticles(MPMMaterial* matl,
   return subset;
 }
 
-ParticleSubset* ParticleCreator::allocateVariables(particleIndex numParticles, 
-						   int dwi,MPMLabel* lb, 
-						   const Patch* patch,
-						   DataWarehouse* new_dw)
+ParticleSubset* 
+ParticleCreator::allocateVariables(particleIndex numParticles, 
+				   int dwi,MPMLabel* lb, 
+				   const Patch* patch,
+				   DataWarehouse* new_dw)
 {
 
   ParticleSubset* subset = new_dw->createParticleSubset(numParticles,dwi,
@@ -136,9 +143,8 @@ ParticleCreator::countParticles(const Patch* patch,
 }
 
 
-particleIndex ParticleCreator::countParticles(GeometryObject* obj,
-					      const Patch* patch) const
-
+particleIndex 
+ParticleCreator::countParticles(GeometryObject* obj, const Patch* patch) const
 {
    GeometryPiece* piece = obj->getPiece();
    Box b1 = piece->getBoundingBox();
@@ -174,10 +180,11 @@ particleIndex ParticleCreator::countParticles(GeometryObject* obj,
 
 }
 
-void ParticleCreator::applyForceBC(particleIndex particlesNum, 
-				   ParticleVariable<Vector>& pextforce,
-				   ParticleVariable<double>& pmass,
-				   ParticleVariable<Point>& position)
+void 
+ParticleCreator::applyForceBC(particleIndex particlesNum, 
+			      ParticleVariable<Vector>& pextforce,
+			      ParticleVariable<double>& pmass,
+			      ParticleVariable<Point>& position)
 {
 
   for(particleIndex pIdx=0;pIdx<particlesNum;++pIdx) {
@@ -207,3 +214,42 @@ void ParticleCreator::applyForceBC(particleIndex particlesNum,
 
 }
 
+void ParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
+						     MPMLabel* lb)
+{
+  particle_state.push_back(lb->pVelocityLabel);
+  particle_state_preReloc.push_back(lb->pVelocityLabel_preReloc);
+
+  particle_state.push_back(lb->pExternalForceLabel);
+  particle_state_preReloc.push_back(lb->pExternalForceLabel_preReloc);
+
+  particle_state.push_back(lb->pMassLabel);
+  particle_state_preReloc.push_back(lb->pMassLabel_preReloc);
+
+  particle_state.push_back(lb->pVolumeLabel);
+  particle_state_preReloc.push_back(lb->pVolumeLabel_preReloc);
+
+  particle_state.push_back(lb->pTemperatureLabel);
+  particle_state_preReloc.push_back(lb->pTemperatureLabel_preReloc);
+
+  particle_state.push_back(lb->pParticleIDLabel);
+  particle_state_preReloc.push_back(lb->pParticleIDLabel_preReloc);
+
+  if (d_8or27 == 27) {
+    particle_state.push_back(lb->pSizeLabel);
+    particle_state_preReloc.push_back(lb->pSizeLabel_preReloc);
+  }
+
+  matl->getConstitutiveModel()->addParticleState(particle_state,
+						 particle_state_preReloc);
+
+}
+
+void 
+ParticleCreator::getPermanentParticleState(vector<const VarLabel* >& pstate,
+					   vector<const VarLabel* >& pstate_rel)
+{
+  pstate = particle_state;
+  pstate_rel = particle_state_preReloc;
+
+}

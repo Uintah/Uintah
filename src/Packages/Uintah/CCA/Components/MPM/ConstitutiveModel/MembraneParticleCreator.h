@@ -8,7 +8,7 @@ namespace Uintah {
   class MembraneParticleCreator : public ParticleCreator {
   public:
     
-    MembraneParticleCreator();
+    MembraneParticleCreator(MPMMaterial* matl, MPMLabel* lb,int n8or27);
     virtual ~MembraneParticleCreator();
     
     virtual ParticleSubset* createParticles(MPMMaterial* matl, 
@@ -23,7 +23,10 @@ namespace Uintah {
 					 std::vector<GeometryObject*>&) const;
     virtual particleIndex countParticles(GeometryObject* obj,
 					 const Patch*) const;
-    
+
+    virtual void registerPermanentParticleState(MPMMaterial* matl,
+						MPMLabel* lb);
+
         
   };
 
