@@ -207,7 +207,7 @@ AC_DEFUN(SCI_CHECK_LIB,
        _SCI_CALL_=""
        EXTERN_BEGIN=""
        EXTERN_END=""
-       AC_MSG_CHECKING(for file lib$2.so and lib$2.a)
+       AC_MSG_CHECKING(for both lib$2.so and lib$2.a)
     else
       if test "$3" = "main"; then
          _SCI_DECL_=""
@@ -240,23 +240,64 @@ AC_DEFUN(SCI_CHECK_LIB,
       _SCI_CHECK_PATHS_="$1 /usr/lib /lib"
 
     # Test for just the existance of the library in the paths.
+
+      echo ""
+      ## Look for the lib.a file:
+      _FOUND_LIB_A_FILE_="false"
       for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
+        if test "$debugging" = "yes"; then
+          echo "Checking for lib$2.a in path: $_CHECK_PATH_"
+        fi
+
+        if test -e "$_CHECK_PATH_/lib$2.a"; then
+            AC_MSG_RESULT(Found lib$2.a in $_CHECK_PATH_)
+            _FOUND_LIB_A_FILE_="true"
+          if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
+            "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
+            _CHECK_PATH_=""
+          fi
+
+          eval $_SCI_VAR_DIR_=$_CHECK_PATH_
+          eval $_SCI_VAR_HAVE_=yes
+
+          tmp="$LDRUN_PREFIX$_CHECK_PATH_ -L$_CHECK_PATH_"
+          eval $_SCI_VAR_LIB_DIR_FLAG_='"$tmp"'
+	  AC_MSG_RESULT(Found lib$2.so in $_CHECK_PATH_)
+
+	  eval $_SCI_VAR_LIB_FLAG_=-l$2
+
+          if test "$debugging" = "yes"; then
+            echo "FOUND IT (lib$2.a)"
+  	    eval echo "$_SCI_VAR_DIR_    is $"$_SCI_VAR_DIR_""
+	    eval echo "$_SCI_VAR_HAVE_    is $"$_SCI_VAR_HAVE_""
+	    eval echo "$_SCI_VAR_LIB_DIR_FLAG_ is $"$_SCI_VAR_LIB_DIR_FLAG_""
+	    eval echo "$_SCI_VAR_LIB_FLAG_ is $"$_SCI_VAR_LIB_FLAG_""
+	    echo
+	    break;
+  	  fi
+	fi
+      done
+      if test "$_FOUND_LIB_A_FILE_" = "false"; then
+         AC_MSG_RESULT(Did not find lib$2.a)
+      fi
+
+      ## Now look for the the lib.so file. 
+      ## If lib.so is found, the location of the lib.a file will be
+      ## overwritten... ie: THE .SO FILE TAKES PRECEDENCE!
+      for _CHECK_PATH_ in $_SCI_CHECK_PATHS_; do
+
+        if test "$debugging" = "yes"; then
+            echo "Checking for lib$2.so in $_CHECK_PATH_!"
+        fi
 
         if test ! -d "$_CHECK_PATH_"; then 
           if test "$debugging" = "yes"; then
-            echo "$_CHECK_PATH_  No such path!"
+            echo "$_CHECK_PATH_: No such path!"
           fi
           continue
         fi
 
-        if test "$debugging" = "yes"; then
-          echo "Checking in path: $_CHECK_PATH_"
-        fi
-
         if test -e "$_CHECK_PATH_/lib$2.so"; then
-	  if test ! -e "$_CHECK_PATH_/lib$2.a"; then
-            AC_MSG_WARN(Could not find lib$2.a)
-	  fi
 
           if test "$_CHECK_PATH_" = "/usr/lib" -o "$_CHECK_PATH_" = "/lib" -o \
             "$_CHECK_PATH_" = "/usr/lib/" -o "$_CHECK_PATH_" = "/lib/"; then
@@ -265,16 +306,15 @@ AC_DEFUN(SCI_CHECK_LIB,
 
           eval $_SCI_VAR_DIR_=$_CHECK_PATH_
           eval $_SCI_VAR_HAVE_=yes
-          if test "$_CHECK_PATH_" != ""; then
-	      tmp="$LDRUN_PREFIX$_CHECK_PATH_ -L$_CHECK_PATH_"
-              eval $_SCI_VAR_LIB_DIR_FLAG_='"$tmp"'
-          fi
+
+          tmp="$LDRUN_PREFIX$_CHECK_PATH_ -L$_CHECK_PATH_"
+          eval $_SCI_VAR_LIB_DIR_FLAG_='"$tmp"'
+	  AC_MSG_RESULT(Found lib$2.so in $_CHECK_PATH_)
+
 	  eval $_SCI_VAR_LIB_FLAG_=-l$2
 
-	  AC_MSG_RESULT(yes)
-
           if test "$debugging" = "yes"; then
-            echo "FOUND IT"
+            echo "FOUND IT (lib$2.so)"
   	    eval echo "$_SCI_VAR_DIR_    is $"$_SCI_VAR_DIR_""
 	    eval echo "$_SCI_VAR_HAVE_    is $"$_SCI_VAR_HAVE_""
 	    eval echo "$_SCI_VAR_LIB_DIR_FLAG_ is $"$_SCI_VAR_LIB_DIR_FLAG_""
@@ -2888,12 +2928,15 @@ fi
 MISC_LIB_FLAG="$SSL_LIB_DIR_FLAG $SSL_LIB_FLAG $CRYPTO_LIB_DIR_FLAG $CRYPTO_LIB_FLAG"
 
 SCI_CHECK_LIB($dirs,globus_dc,main,,,optional)
-SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_common,main,,,optional)
-SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_nexus,main,,,optional)
+SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_common,,,,optional)
+SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_nexus,,,,optional)
 
 SCI_CHECK_HEADERS($LIB_DIR_GLOBUS_DC/../include,globus_nexus.h,,,optional)
 
-if test "$HAVE_LIB_GLOBUS_DC" && test "$INC_GLOBUS_NEXUS_H"; then
+if test "$HAVE_LIB_GLOBUS_DC" && 
+   test "$HAVE_LIB_GLOBUS_COMMON" && 
+   test "$HAVE_LIB_GLOBUS_NEXUS" && 
+   test "$INC_GLOBUS_NEXUS_H"; then
   DEF_GLOBUS="#define HAVE_GLOBUS 1"
   HAVE_GLOBUS="$HAVE_LIB_GLOBUS_DC"
   GLOBUS_LIB_FLAG="$GLOBUS_NEXUS_LIB_FLAG $GLOBUS_DC_LIB_FLAG $GLOBUS_COMMON_LIB_FLAG"
@@ -2908,20 +2951,14 @@ if test "$with_globus" && test ! "$DEF_GLOBUS"; then
   echo
 fi
 
-  SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_io,        main,,,optional)
+  SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_io,        ,,,optional)
 
 if test "$is_linux" = "linux"; then
-  SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_utp,       main,,,optional)
-  SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_mp,        main,,,optional)
-  SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_gss_assist,main,,,optional)
-  SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_gss,       main,,,optional)
-  SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_gaa,       main,,,optional)
-
-  SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_utp,       main,$GLOBUS_LIB_DIR_FLAG $GLOBUS_LIB_FLAG $MISC_LIB_FLAG,,optional)
-  SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_mp,        main,$GLOBUS_LIB_DIR_FLAG $GLOBUS_LIB_FLAG $GLOBUS_UTP_LIB_FLAG $MISC_LIB_FLAG,,optional)
-  SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_gss_assist,main,$GLOBUS_LIB_DIR_FLAG $GLOBUS_LIB_FLAG $GLOBUS_MP_LIB_FLAG $GLOBUS_UTP_LIB_FLAG $MISC_LIB_FLAG,,optional)
-  SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_gss,       main,$GLOBUS_LIB_DIR_FLAG $GLOBUS_LIB_FLAG $GLOBUS_GSS_ASSIST_LIB_FLAG $GLOBUS_MP_LIB_FLAG $GLOBUS_UTP_LIB_FLAG $MISC_LIB_FLAG,,optional)
-  SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_gaa,       main,$GLOBUS_LIB_DIR_FLAG $GLOBUS_LIB_FLAG $GLOBUS_GSS_LIB_FLAG $GLOBUS_GSS_ASSIST_LIB_FLAG $GLOBUS_MP_LIB_FLAG $GLOBUS_UTP_LIB_FLAG $MISC_LIB_FLAG,,optional)
+  SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_utp,       ,,,optional)
+  SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_mp,        ,,,optional)
+  SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_gss_assist,,,,optional)
+  SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_gss,       ,,,optional)
+  SCI_CHECK_LIB($LIB_DIR_GLOBUS_DC,globus_gaa,       ,,,optional)
 
   GLOBUS_EXTRA_LIB_FLAG="$GLOBUS_GAA_LIB_FLAG $GLOBUS_GSS_LIB_FLAG $GLOBUS_GSS_ASSIST_LIB_FLAG $GLOBUS_MP_LIB_FLAG $GLOBUS_UTP_LIB_FLAG $MISC_LIB_FLAG"
 fi
