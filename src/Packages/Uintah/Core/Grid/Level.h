@@ -20,6 +20,7 @@
 
 #include <sgi_stl_warnings_off.h>
 #include <vector>
+#include <map>
 #include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
@@ -225,6 +226,31 @@ WARNING
       vector<Patch*> d_gridPatches;
 
       // vars for select_rangetree
+
+      // IntVector < isn't good enough - equals of any members constitute equality
+      class IntVectorCompare {
+      public:
+        bool operator() (const IntVector &a, const IntVector& b) const
+        {
+          // we want to sort IntVectors by x first then y then z
+          if (a.x() < b.x())
+            return true;
+          if (a.x() > b.x())
+            return false;
+          if (a.y() < b.y())
+            return true;
+          if (a.y() > b.y())
+            return false;
+          return a.z() < b.z();
+        }
+        bool operator() (const std::pair<IntVector, IntVector>&a, const std::pair<IntVector, IntVector>&b) const 
+        {
+          return (*this)(a.first, b.first) || (!(*this)(b.first, a.first) && (*this)(a.second, b.second));
+        }
+      };
+
+      typedef std::map<std::pair<IntVector, IntVector>, vector<const Patch*>, IntVectorCompare> selectCache;
+      mutable selectCache d_selectCache; // we like const Levels in most places :) 
       PatchRangeTree* d_rangeTree;
    };
 
