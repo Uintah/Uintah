@@ -181,7 +181,7 @@ FieldInfo::update_input_attributes(FieldHandle f)
   }
   else
   {
-    warning("Input ield is empty.");
+    warning("Input Field is empty.");
     gui_cx_.set("--- N/A ---");
     gui_cy_.set("--- N/A ---");
     gui_cz_.set("--- N/A ---");
