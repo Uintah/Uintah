@@ -451,7 +451,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
       // Look at connections nrrd's 2nd dimension
       // account for vector/scalar data
       if (connect->dim != 2) {
-	error("Connections Nrrd must be two dimensional (number of points in each connection by the number of connections)");
+	error("Connections Nrrd must be two dimensional (number of points in each connection by the number of elements)");
 	has_error_ = true;
 	return 0;
       }
@@ -459,7 +459,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
       // check if connect array is p x n or n x p
       int which = 0; // which index contains p
       if (connect->axis[1].size <= 8 && connect->axis[0].size <= 8) {
-	warning("Connections nrrd might be in the wrong order.  Assuming p x n where p is the number of points in each connection and n is the number of connections.");
+	warning("Connections nrrd might be in the wrong order.  Assuming p x n where p is the number of points in each connection and n is the number of elements.");
       }
       if (connect->axis[1].size <= 8) {
 	// p x n
