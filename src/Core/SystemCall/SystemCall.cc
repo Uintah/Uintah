@@ -115,25 +115,62 @@ namespace SCIRun {
     bool done = false;
 	
     while(!done)
-      {
-        FD_ZERO(&selectset);
-        if (dostderr) FD_SET(fd_stderr,&selectset);	// Read from the stderr channel
-        if (dostdout) FD_SET(fd_stdout,&selectset);	// Read from the stdout channel
-        if (doexit)   FD_SET(fd_exit,&selectset);	// Read from the stdout channel
+	{
+        bool timeout = false;
+        struct timeval tv;
+        tv.tv_sec = 0;
+        tv.tv_usec = 300000;
+    
+		FD_ZERO(&selectset);
+		if (dostderr) FD_SET(fd_stderr,&selectset);	// Read from the stderr channel
+		if (dostdout) FD_SET(fd_stdout,&selectset);	// Read from the stdout channel
+		if (doexit)   FD_SET(fd_exit,&selectset);	// Read from the stdout channel
 
-        if ((!dostdout)&&(!dostderr)) break;
+		if ((!dostdout)&&(!dostderr)) break;
 		
-        while( ::select(maxfd,&selectset,0,0,0) < 0)
-          {
-            if (errno == EINTR) continue;
-            if (errno == EAGAIN) continue;
-			
-			// std::cerr << "SystemCall: Detected an error during select" << std::endl;
-			
-            syscall_->signal_exit();
-            syscall_->signal_eof();
-            return;
-          }
+        if (syscall_->use_timeout_)
+        {
+            int ret;
+            while((ret = ::select(maxfd,&selectset,0,0,&tv)) < 0)
+            {
+                if (errno == EINTR) continue;
+                if (errno == EAGAIN) continue;
+                
+                std::cerr << "SystemCall: Detected an error during select" << std::endl;
+                
+                syscall_->signal_exit();
+                syscall_->signal_eof();
+                return;
+            }      
+            if (ret == 0) timeout = true;  
+        }
+        else
+        {
+            while( ::select(maxfd,&selectset,0,0,0) < 0)
+            {
+                if (errno == EINTR) continue;
+                if (errno == EAGAIN) continue;
+                
+                std::cerr << "SystemCall: Detected an error during select" << std::endl;
+                
+                syscall_->signal_exit();
+                syscall_->signal_eof();
+                return;
+            }
+        }
+        
+        if ((timeout == true)&&(stdout_buffer.size()))
+        {
+            // For some applications you want to have feedback quicker
+            // So if there is data pending and there hasn't been new data
+         
+            linestart = 0;
+            buffersize = stdout_buffer.size();
+			while((linestart < buffersize)&&((stdout_buffer[linestart]=='\n')||(stdout_buffer[linestart]=='\r')||(stdout_buffer[linestart]=='\0'))) linestart++;			
+            std::string newline = stdout_buffer.substr(linestart);
+            stdout_buffer = "";
+            syscall_->insert_stdout_line(newline);                            
+        }
 
         if (FD_ISSET(fd_exit,&selectset))
           {
@@ -188,7 +225,7 @@ namespace SCIRun {
                       }
                     else
                       {	// split of the latest line read
-                        newline = stdout_buffer.substr(linestart,lineend) + std::string("\n");
+                        newline = stdout_buffer.substr(linestart,(lineend-linestart)) + std::string("\n");
                         stdout_buffer = stdout_buffer.substr(lineend+1);
                         need_new_read = false;
                         syscall_->insert_stdout_line(newline);
@@ -246,7 +283,7 @@ namespace SCIRun {
                       }
                     else
                       {	// split of the latest line read
-                        newline = stderr_buffer.substr(linestart,lineend) + std::string("\n");
+                        newline = stderr_buffer.substr(linestart,(lineend-linestart)) + std::string("\n");
                         stderr_buffer = stderr_buffer.substr(lineend+1);
                         need_new_read = false;
                       }
