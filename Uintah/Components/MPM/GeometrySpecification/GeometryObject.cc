@@ -4,7 +4,7 @@
 using namespace Uintah::Components;
 
 GeometryObject::GeometryObject(GeometryPiece* piece, const IntVector& num_par)
-   : d_piece(piece), d_num_par_per_cell(num_par)
+   : d_piece(piece), d_resolution(num_par)
 {
 }
 
@@ -14,7 +14,7 @@ GeometryObject::~GeometryObject()
 
 IntVector GeometryObject::getObjInfoNumParticlesPerCell()
 {
-  return d_num_par_per_cell;
+  return d_resolution;
 }
 
 #if 0
@@ -28,7 +28,7 @@ void GeometryObject::addPieces(ProblemSpecP prob_spec)
   double radius;
   double length;
   Point lo, up;
-  CylinderGeometryPiece::AXIS axis;
+ 
 
   std::string type;
   prob_spec->require("type",type);
@@ -377,6 +377,9 @@ void GeometryObject::fillWithParticles(vector<Material *> &materials,
 #endif
   
 // $Log$
+// Revision 1.9  2000/04/25 18:43:30  jas
+// Changed variable name of d_num_par_per_cell to d_resolution.
+//
 // Revision 1.8  2000/04/24 21:04:30  sparker
 // Working on MPM problem setup and object creation
 //
