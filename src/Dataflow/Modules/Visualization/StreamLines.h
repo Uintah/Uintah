@@ -39,6 +39,7 @@ public:
 			      double stepsize,
 			      int maxsteps,
 			      int direction,
+			      int color,
 			      bool remove_colinear_p) = 0;
 
 
@@ -70,6 +71,7 @@ public:
 			      double stepsize,
 			      int maxsteps,
 			      int direction,
+			      int color,
 			      bool remove_colinear_p);
 };
 
@@ -83,6 +85,7 @@ StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle seed_mesh_h,
 				       double stepsize,
 				       int maxsteps,
 				       int direction,
+				       int color,
 				       bool rcp)
 {
   SMESH *smesh = dynamic_cast<SMESH *>(seed_mesh_h.get_rep());
@@ -118,11 +121,17 @@ StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle seed_mesh_h,
     nodes.clear();
     nodes.push_back(seed);
 
+    int cc = 0;
+
     // Find the negative streamlines.
     if( direction <= 1 ) {
       FindStreamLineNodes(nodes, seed, tolerance2, -stepsize,
 			  maxsteps, vfi, rcp);
-      std::reverse(nodes.begin(), nodes.end());
+      if( direction == 1 ) {
+	std::reverse(nodes.begin(), nodes.end());
+	cc = nodes.size();
+	cc = -(cc - 1);
+      }
     }
     // Append the positive streamlines.
     if( direction >= 1 )
@@ -130,22 +139,38 @@ StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle seed_mesh_h,
 			  maxsteps, vfi, rcp);
 
     node_iter = nodes.begin();
+
     if (node_iter != nodes.end())
     {
       n1 = cmesh->add_node(*node_iter);
       cf->resize_fdata();
-      cf->set_value((double)(*seed_iter), n1);
+      if( color )
+	cf->set_value((double)abs(cc), n1);
+      else
+	cf->set_value((double)(*seed_iter), n1);
+
       cfsize++;
       ++node_iter;
+
+      cc++;
+
       while (node_iter != nodes.end())
       {
 	n2 = cmesh->add_node(*node_iter);
 	cf->resize_fdata();
-	cf->set_value((double)(*seed_iter), n2);
-	cfsize++;
+
+	if( color )
+	  cf->set_value((double)abs(cc), n2);
+	else
+	  cf->set_value((double)(*seed_iter), n2);
+
 	cmesh->add_edge(n1, n2);
+
 	n1 = n2;
+	cfsize++;
 	++node_iter;
+
+	cc++;
       }
     }
 
