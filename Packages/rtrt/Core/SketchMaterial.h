@@ -18,6 +18,8 @@
 extern "C"
 int _gageLocationSet (gageContext *ctx, gage_t x, gage_t y, gage_t z);
 
+//#define COMPUTE_K1_K2 1
+
 namespace rtrt {
 
 template<class ArrayType, class DataType>  
@@ -134,8 +136,13 @@ SketchMaterial<ArrayType, DataType>::SketchMaterial
   
   // Set up what you are querying for
   unsigned int query = 0;
+#ifdef COMPUTE_K1_K2
   query = (1<<gageSclK1) | (1<<gageSclK2) | (1<<gageSclGradVec) |
     (1<<gageSclGeomTens);
+#else
+  query = (1<<gageSclGradVec) | (1<<gageSclGeomTens);
+#endif
+  
   gageQuerySet(main_ctx, pvl, query);
   
   // Set up the convolution kernels
@@ -230,7 +237,7 @@ SketchMaterial<ArrayType, DataType>::shade(Color& result, const Ray& ray,
 					Context* cx) {
   Point hit_pos(ray.origin()+ray.direction()*(hit.min_t));
   if (normal_method == 0) {
-    Color surface(1, 0.3, 0.2);
+    Color surface(0.9, 0.9, 0.9);
     // Compute whether we are in shadow
     Color shadowfactor(1,1,1);
     Light* light=cx->scene->light(0);
@@ -271,8 +278,10 @@ SketchMaterial<ArrayType, DataType>::shade(Color& result, const Ray& ray,
       double samplez = norm * (nz - 1);
       
       if (rtrtGageProbe(gctx, samplex, sampley, samplez) == 0) {
+#ifdef COMPUTE_K1_K2
 	gage_t *k1 = gageAnswerPointer(gctx, gctx->pvl[0], gageSclK1);
 	gage_t *k2 = gageAnswerPointer(gctx, gctx->pvl[0], gageSclK2);
+#endif
 	gage_t *norm = gageAnswerPointer(gctx, gctx->pvl[0], gageSclGradVec);
 	gage_t *geomt = gageAnswerPointer(gctx, gctx->pvl[0], gageSclGeomTens);
 	
@@ -290,7 +299,7 @@ SketchMaterial<ArrayType, DataType>::shade(Color& result, const Ray& ray,
 	
 	Light* light=cx->scene->light(0);
 
-	Color surface(1, 0.3, 0.2);
+	Color surface(0.9, 0.9, 0.9);
 	// Compute whether we are in shadow
 	Color shadowfactor(1,1,1);
 	Vector light_dir;
@@ -312,8 +321,9 @@ SketchMaterial<ArrayType, DataType>::shade(Color& result, const Ray& ray,
 	    if (dot >= 0)
 	      surface = cool2warm->lookup_bound(dot);
 	    else
-	      // This is regions facing the light
-	      surface = cool2warm->lookup_bound(dot+1);
+	      // This is regions facing the light.
+	      surface = cool2warm->lookup_bound(dot*0.25);
+	      //	      surface = cool2warm->lookup_bound(-dot);
 	  } else {
 	    surface = light->get_color() * surface * ambient;
 	  }
