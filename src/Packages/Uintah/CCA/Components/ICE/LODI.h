@@ -28,7 +28,7 @@ namespace Uintah {
     CCVariable<double> rho_CC;      // rho *after* BC has been applied
     CCVariable<Vector> vel_CC;      // vel *after* BC has been applied  
     CCVariable<double> press_tmp;        
-    CCVariable<double> e;                
+    CCVariable<double> E;          // total energy
     CCVariable<Vector> nu;               
     StaticArray<CCVariable<Vector> > di; 
     double cv;
@@ -43,37 +43,43 @@ namespace Uintah {
     Lodi_vars_pressBC(int numMatls): Temp_CC(numMatls), f_theta(numMatls) {}
     StaticArray<constCCVariable<double> > Temp_CC;
     StaticArray<constCCVariable<double> > f_theta;
-    bool setLodiBcs;                      
+    bool usingLODI;
+    bool setLodiBcs;                  
   };
 
   void lodi_bc_preprocess( const Patch* patch,
                             Lodi_vars* lv,
                             ICELabel* lb,            
                             const int indx,
-                            const vector<bool>& is_LODI_face,
                             DataWarehouse* old_dw,
-                            DataWarehouse* new_dw);
+                            DataWarehouse* new_dw,
+                            SimulationStateP& sharedState);
                             
   void lodi_getVars_pressBC( const Patch* patch,
                              Lodi_vars_pressBC* lodi_vars,
                              ICELabel* lb,
                              SimulationStateP sharedState,
                              DataWarehouse* old_dw,
-                             DataWarehouse* new_dw);                   
+                             DataWarehouse* new_dw);
+
+  bool using_LODI_BC(const ProblemSpecP& prob_spec);                                                
+  
+  bool is_LODI_face(const Patch* patch,
+                  Patch::FaceType face,
+                  SimulationStateP& sharedState);                            
                             
-                            
-  void computeNu(CCVariable<Vector>& nu, 
-                 const vector<bool>& is_LODI_face,
+  void computeNu(CCVariable<Vector>& nu,
                  const CCVariable<double>& p, 
-                 const Patch* patch);  
+                 const Patch* patch,
+                 SimulationStateP& sharedState);  
 
   void computeDi(StaticArray<CCVariable<Vector> >& d,
-                 const vector<bool>& is_LODI_face,
                  constCCVariable<double>& rho_old,  
                  const CCVariable<double>& press_tmp, 
                  constCCVariable<Vector>& vel_old, 
                  constCCVariable<double>& speedSound, 
-                 const Patch* patch);
+                 const Patch* patch,
+                 SimulationStateP& sharedState);
                  
   double computeConvection(const double& nuFrt,     const double& nuMid, 
                            const double& nuLast,    const double& qFrt, 
@@ -88,6 +94,12 @@ namespace Uintah {
                         const Patch::FaceType face,
                         vector<Patch::FaceType>& face0);
                         
+
+  CellIterator PatchEdgeIterator(const Patch* patch,
+                                 const Patch::FaceType face,
+                                 const Patch::FaceType face0,
+                                 IntVector offset);
+                                 
   int otherDirection(int dir1, int dir2);
   
   void FaceDensity_LODI(const Patch* patch,
