@@ -30,7 +30,7 @@ AutoReqProv: yes
 ExclusiveOS:	linux
 
 source0:	Thirdparty_install.%{thirdpartyversion}.%{thirdpartydotver}.tar.gz
-source1:	%{name}.%{version}.tar.gz
+source1:	%{defname}.%{version}.tar.gz
 source2:	Teem.PKG.%{version}.tar.gz
 source3:	Fusion.PKG.%{version}.tar.gz
 source4:	DataIO.PKG.%{version}.tar.gz
