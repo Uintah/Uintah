@@ -158,13 +158,15 @@ TextPointCloudString_writer(ProgressReporter *pr,
   return true;
 }
 
-
-
+#ifndef __APPLE__
+// On the Mac, this is done in FieldIEPlugin.cc, in the
+// macFieldIEInit() function to force the loading of this (and other)
+// plugins.
 static FieldIEPlugin
 TextPointCloudString_plugin("TextPointCloudString",
 			    ".pcs.txt", "",
 			    TextPointCloudString_reader,
 			    TextPointCloudString_writer);
-
+#endif
 
 } // namespace SCIRun
