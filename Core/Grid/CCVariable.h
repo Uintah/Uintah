@@ -64,11 +64,11 @@ WARNING
     //////////
     // Insert Documentation Here:
     static const TypeDescription* getTypeDescription();
-      
-
-    virtual void rewindow(const IntVector& low, const IntVector& high);
+    
     virtual void copyPointer(const CCVariableBase&);
 
+    virtual void rewindow(const IntVector& low, const IntVector& high)
+    { Array3<T>::rewindow(low, high); }
     //////////
     // Insert Documentation Here:
     virtual CCVariableBase* clone() const;
@@ -83,11 +83,12 @@ WARNING
 
     //////////
     // Insert Documentation Here:
-    void copyPatch(CCVariableBase* src,
+    void copyPatch(const CCVariableBase* src,
 		   const IntVector& lowIndex,
 		   const IntVector& highIndex);
-
-    CCVariable<T>& operator=(const CCVariable<T>&);
+    void copyPatch(const CCVariable<T>& src)
+    { copyPatch(&src, src.getLowIndex(), src.getHighIndex()); }
+    
     virtual void* getBasePointer();
     virtual const TypeDescription* virtualGetTypeDescription() const;
     virtual void getSizes(IntVector& low, IntVector& high,
@@ -424,6 +425,8 @@ WARNING
       return getWindow();
     }
   private:
+    CCVariable<T>& operator=(const CCVariable<T>&);
+   
     static Variable* maker();
   };
 
@@ -477,20 +480,10 @@ WARNING
     const CCVariable<T>* c = dynamic_cast<const CCVariable<T>* >(&copy);
     if(!c)
       throw TypeMismatchException("Type mismatch in CC variable");
-    *this = *c;
+    Array3<T>::copyPointer(*c);
   }
 
  
-  template<class T>
-  CCVariable<T>&
-  CCVariable<T>::operator=(const CCVariable<T>& copy)
-  {
-    if(this != &copy){
-      Array3<T>::operator=(copy);
-    }
-    return *this;
-  }
-   
   template<class T>
   CCVariable<T>::CCVariable()
   {
@@ -513,7 +506,7 @@ WARNING
 			  "is apparently already allocated!");
     resize(lowIndex, highIndex);
   }
-
+/*
   template<class T>
   void CCVariable<T>::rewindow(const IntVector& low,
 			       const IntVector& high) {
@@ -523,9 +516,11 @@ WARNING
     resize(low, high);
     Array3<T>::operator=(newdata);
   }
+*/
+  
   template<class T>
   void
-  CCVariable<T>::copyPatch(CCVariableBase* srcptr,
+  CCVariable<T>::copyPatch(const CCVariableBase* srcptr,
 			   const IntVector& lowIndex,
 			   const IntVector& highIndex)
   {

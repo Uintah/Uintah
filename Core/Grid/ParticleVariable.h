@@ -64,8 +64,6 @@ public:
   ParticleVariable(ParticleData<T>*, ParticleSubset* pset);
   ParticleVariable(const ParticleVariable<T>&);
       
-  ParticleVariable<T>& operator=(const ParticleVariable<T>&);
-
     //////////
     // Insert Documentation Here:
   static const TypeDescription* getTypeDescription();
@@ -95,6 +93,7 @@ public:
     return d_pdata->data[idx];
   }
       
+  virtual void copyPointer(const ParticleVariable<T>&);
   virtual void copyPointer(const ParticleVariableBase&);
   virtual void allocate(ParticleSubset*);
   virtual void allocate(const Patch*)
@@ -123,6 +122,7 @@ public:
     return d_pdata;
   }
 private:
+  ParticleVariable<T>& operator=(const ParticleVariable<T>&);
       
     //////////
     // Insert Documentation Here:
@@ -222,8 +222,8 @@ private:
   }
    
   template<class T>
-  ParticleVariable<T>&
-  ParticleVariable<T>::operator=(const ParticleVariable<T>& copy)
+  void
+  ParticleVariable<T>::copyPointer(const ParticleVariable<T>& copy)
   {
     if(this != &copy){
       ParticleVariableBase::operator=(copy);
@@ -233,7 +233,6 @@ private:
       if(d_pdata)
 	d_pdata->addReference();
     }
-    return *this;
   }
    
   template<class T>
@@ -243,7 +242,7 @@ private:
     const ParticleVariable<T>* c = dynamic_cast<const ParticleVariable<T>* >(&copy);
     if(!c)
       throw TypeMismatchException("Type mismatch in particle variable");
-    *this = *c;
+    copyPointer(*c);
   }
   
   template<class T>
