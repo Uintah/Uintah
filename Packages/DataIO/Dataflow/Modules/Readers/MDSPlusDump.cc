@@ -43,10 +43,10 @@ namespace DataIO {
 
 using namespace std;
 
-MDSPlusDump::MDSPlusDump( ostream *io) :
+MDSPlusDump::MDSPlusDump( ostream *iostr ) :
   indent_(0)
 {
-  iostr_ = io;
+  iostr_ = iostr;
 }
 
 
