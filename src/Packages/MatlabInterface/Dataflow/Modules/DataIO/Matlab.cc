@@ -26,7 +26,6 @@ class MatlabInterfaceSHARE Matlab : public Module
   MatrixIPort *ip[5];
   MatrixOPort *op[5];
 
-  char *cmd; /* Container for GUI string with command */
 
 public:
   Matlab(const string& id);
@@ -44,7 +43,6 @@ Matlab::Matlab(const string& id) :
   hpTCL("hpTCL",id,this),
   cmdTCL("cmdTCL",id,this)
 {
- cmd=NULL;
 }
 
 Matlab::~Matlab(){
@@ -64,7 +62,7 @@ void Matlab::execute()
  for(int k=0;k<5;k++)
  {
   char chr[128];
-  sprintf(chr,"i%1i\0",k+1);
+  sprintf(chr,"i%1i%c",k+1,'\0');
   ip[k] = (MatrixIPort *)get_iport(chr);
   if (!ip[k]) { postMessage("Unable to initialize "+name+"'s iport\n"); return; }
 
@@ -76,8 +74,8 @@ void Matlab::execute()
 /* OBTAIN GUI STRING - COMMAND */
 
  cmdTCL.reset();
- // string s1=cmdTCL.get();
- // char *cmd=(char *)s1.c_str(); // Command is taken from interface
+ string s1=cmdTCL.get();
+ char *cmd=(char *)s1.c_str(); // Command is taken from interface
 
  /* OBTAIN GUI STRING - HOST:PORT */
  hpTCL.reset();
@@ -146,20 +144,7 @@ void Matlab::execute()
 
 void Matlab::tcl_command(TCLArgs& args, void* userdata)
 {
-  if (args[1] == "mat-command") 
-  {
-    // args[2] contains the entire string including newlines.
-    // cerr << "command is: " << args[2] << endl;
-    string s1=args[2];
-    if(cmd!=NULL) delete cmd;
-    cmd=(char*)s1.c_str(); 
-    cmd=scinew char[strlen(cmd)+1];
-    strcpy(cmd,(char*)s1.c_str());
-    
-    fprintf(stderr,"Command taken, length %i, command:\n%s\n",strlen(cmd),cmd);
-  } 
-  else 
-    Module::tcl_command(args, userdata);
+  Module::tcl_command(args, userdata);
 }
 
 // Convert matrix handle to double
@@ -206,7 +191,7 @@ void cmdparse(int *ioflags,char *cmd)
  if(strstr(cmd,"o4")!=NULL) ioflags[8]=1;
  if(strstr(cmd,"o5")!=NULL) ioflags[9]=1;
 
- for(int k=0;k<strlen(cmd);k++) if(cmd[k]=='\n') cmd[k]=' ';
+ for(unsigned int k=0;k<strlen(cmd);k++) if(cmd[k]=='\n') cmd[k]=' ';
 
 }
 

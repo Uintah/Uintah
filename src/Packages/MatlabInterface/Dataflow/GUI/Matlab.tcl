@@ -43,7 +43,9 @@ itcl_class MatlabInterface_DataIO_Matlab {
     method send_text {tw} {
 	set chars [$tw get 1.0 end]
 	#puts stdout $chars
-	$this-c "mat-command" $chars
+	#$this-c "mat-command" $chars
+	set $this-cmdTCL $chars
+	$this-c needexecute
     }
 
     method ui {} {
@@ -76,7 +78,10 @@ itcl_class MatlabInterface_DataIO_Matlab {
 	iwidgets::scrolledtext $w.f.cmd.st -vscrollmode dynamic \
 		-labeltext "Matlab Commands" 
 	set cmmd "$this send_text $w.f.cmd.st" 
-	button $w.f.cmd.execute -text "Send Commands" -command $cmmd
+	
+	$w.f.cmd.st insert end [set $this-cmdTCL]
+
+	button $w.f.cmd.execute -text "Execute" -command $cmmd
 	pack $w.f.cmd.st -padx 10 -pady 10 -fill both -expand yes
 	pack $w.f.cmd.execute -side top
     }
