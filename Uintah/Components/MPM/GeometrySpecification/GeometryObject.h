@@ -64,10 +64,15 @@ WARNING
 	    return d_initialVel;
 	 }
 
+	 double getInitialTemperature() const {
+	    return d_initialTemperature;
+	 }
+
       private:
 	 GeometryPiece* d_piece;
 	 IntVector d_resolution;
 	 Vector d_initialVel;
+	 double d_initialTemperature;
       };
       
    } // end namespace MPM
@@ -77,6 +82,9 @@ WARNING
 
 
 // $Log$
+// Revision 1.18  2000/05/31 17:17:22  guilkey
+// Added getInitialTemperature to GeometryObject.
+//
 // Revision 1.17  2000/05/01 16:18:14  sparker
 // Completed more of datawarehouse
 // Initial more of MPM data
