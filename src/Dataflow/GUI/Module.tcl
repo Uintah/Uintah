@@ -36,7 +36,7 @@ itcl_class Module {
     }
 			
     constructor {config} {
-	set msgLogStream "[TclStream msgLogStream#auto]"
+	set msgLogStream "[SciTclStream msgLogStream#auto]"
 	# these live in parallel temporarily
 	global $this-notes Notes
 	if ![info exists $this-notes] { set $this-notes "" }
@@ -432,35 +432,50 @@ itcl_class Module {
 	if [$this is_subnet] return
 	set w .mLogWnd[modname]
 	
-	# does the window exist?
-	if [winfo exists $w] {
-	    raise $w
+	if {[winfo exists $w]} {
+	    if { [winfo ismapped $w] == 1} {
+		raise $w
+	    } else {
+		wm deiconify $w
+	    }
 	    return
 	}
 	
 	# create the window
 	toplevel $w
+	moveToCursor $w "leave_up"
 	append t "Log for " [modname]
 	set t "$t -- pid=[$this-c getpid]"
 	wm title $w $t
 	
 	frame $w.log
-	text $w.log.txt -relief sunken -bd 2 -yscrollcommand "$w.log.sb set"
+	# Create the txt in the "disabled" state so that a user cannot type into the text field.
+	# Also, must give it a width and a height so that it will be allowed to automatically
+	# change the width and height (go figure?).
+	text $w.log.txt -relief sunken -bd 2 -yscrollcommand "$w.log.sb set" -state disabled \
+	    -height 2 -width 10
 	scrollbar $w.log.sb -relief sunken -command "$w.log.txt yview"
-	pack $w.log.txt -side left -padx 5 -pady 5 -expand 1 -fill both
-	pack $w.log.sb -side left -padx 0 -pady 5 -fill y
+	pack $w.log.txt -side left -padx 5 -pady 2 -expand 1 -fill both
+	pack $w.log.sb -side left -padx 0 -pady 2 -fill y
 
 	frame $w.fbuttons 
 	# TODO: unregister only for streams with the supplied output
-	button $w.fbuttons.clear -text "Clear" \
-	    -command "$this clearStreamOutput"
-	button $w.fbuttons.ok -text "OK" \
-	    -command "$this destroyStreamOutput $w"
+	button $w.fbuttons.clear -text "Clear" -command "$this clearStreamOutput"
+	button $w.fbuttons.ok    -text "Close" -command "wm withdraw $w"
 	
-	pack $w.fbuttons.clear $w.fbuttons.ok -side left \
+	Tooltip $w.fbuttons.ok "Close this window.  The log is not effected."
+	TooltipMultiline $w.fbuttons.clear \
+            "If the log indicates anything but an error, the Clear button\n" \
+            "will clear the message text from the log and reset the warning\n" \
+            "indicator to No Message.  Error messages cannot be cleared -- you\n" \
+	    "must fix the problem and re-execute the module."
+
+	pack $w.fbuttons.clear $w.fbuttons.ok -side left -expand yes -fill both \
 	    -padx 5 -pady 5 -ipadx 3 -ipady 3
-	pack $w.log -side top -padx 5 -pady 5 -fill both -expand 1
-	pack $w.fbuttons -side bottom -padx 5 -pady 5 -fill none -expand 0
+	pack $w.log      -side top -padx 5 -pady 2 -fill both -expand 1
+	pack $w.fbuttons -side top -padx 5 -pady 2 -fill x
+
+	wm minsize $w 450 150
 
 	$msgLogStream registerOutput $w.log.txt
     }
