@@ -44,7 +44,7 @@ void ThreadStats::tcl_command(TCLArgs& args, void*)
 	    delete oldinfo;
 	}
 	oldinfo=info;
-	info=TaskManager::get_taskinfo();
+	info=Task::get_taskinfo();
 	args.result(to_string(info->ntasks));
     } else if(args[1] == "dbx"){
 	int which;
@@ -52,7 +52,7 @@ void ThreadStats::tcl_command(TCLArgs& args, void*)
 	    args.error("Bad argument for threadstats dbx");
 	    return;
 	}
-	TaskManager::debug(info->tinfo[which].taskid);
+	Task::debug(info->tinfo[which].taskid);
     } else if(args[1] == "changed"){
 	if(oldinfo){
 	    for(int i=0;i<info->ntasks;i++){
