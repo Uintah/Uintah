@@ -36,6 +36,7 @@
 #include <Dataflow/Modules/Render/ViewGeom.h>
 #include <Dataflow/Modules/Render/OpenGL.h>
 #include <Core/Geom/HeadLight.h>
+#include <Core/Geom/DirectionalLight.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/FutureValue.h>
 #include <Core/Containers/StringUtil.h>
@@ -63,7 +64,14 @@ Viewer::Viewer(GuiContext* ctx)
 {
 				// Add a headlight
   lighting_.lights.add(scinew HeadLight("Headlight", Color(1,1,1)));
-    
+
+  for(int i = 1; i < 8; i++){
+    char l[8];
+    sprintf( l, "Light%d", i );
+    lighting_.lights.add(scinew DirectionalLight(string(l), Vector(0,0,1),
+					   Color(1,1,1), false));
+  }
+  
   default_material_ = scinew Material(Color(.1,.1,.1),
 				      Color(.6,0,0),
 				      Color(.7,.7,.7),
@@ -169,7 +177,27 @@ int Viewer::process_event()
       }
     }
     break;
-
+ 
+  case MessageTypes::ViewWindowEditLight:
+    {
+      ViewerMessage* rmsg=(ViewerMessage*)msg;
+      for(unsigned int i=0;i<view_window_.size();i++)
+      {
+	ViewWindow* r=view_window_[i];
+	if(r->id == rmsg->rid)
+	{
+	  ((lighting_.lights)[rmsg->lightNo])->on = rmsg->on;
+	  if( rmsg->on ){
+	    if(DirectionalLight *dl = dynamic_cast<DirectionalLight *>
+		((lighting_.lights)[rmsg->lightNo]))
+	      dl->move( rmsg->lightDir );
+	  }
+	  r->need_redraw = 1;
+	  break;
+	}
+      }
+    }
+    break;
   case MessageTypes::ViewWindowDumpImage:
     {
       ViewerMessage* rmsg=(ViewerMessage*)msg;
@@ -486,6 +514,13 @@ ViewerMessage::ViewerMessage(MessageTypes::MessageType type,
   resx = atoi(resx_string.c_str());
   resy = atoi(resy_string.c_str());
 }
+
+ViewerMessage::ViewerMessage(MessageTypes::MessageType type,
+			     const string& rid, int lightNo, 
+			     bool on, const Vector& dir)
+  : MessageBase(type), rid(rid), lightNo(lightNo), on(on), lightDir(dir)
+{}
+
 
 //----------------------------------------------------------------------
 ViewerMessage::~ViewerMessage()
