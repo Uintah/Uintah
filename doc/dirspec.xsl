@@ -171,12 +171,16 @@
 </xsl:for-each>
 
 
-
-
+<!-- ******************************************************************* -->
+<!-- *********************** STANDARD SCI FOOTER *********************** -->
+<!-- ******************************************************************* -->
 <center>
-<hr />
-<font face="arial, helvetica, sans-serif" size="-2">&#169; 2001, Scientific Computing and Imaging Institute &#149; <a href="http://www.utah.edu">University of Utah</a></font>
+<hr size="1" width="600" />
+<font size="-1"><a href="http://www.sci.utah.edu">Scientific Computing and Imaging Institute</a> &#149; <a href="http://www.utah.edu">University of Utah</a> &#149; 
+(801) 585-1867</font>
 </center>
+<!-- ********************* END STANDARD SCI FOOTER ********************* -->
+<!-- ******************************************************************* -->
 
 </body>
 </html>
