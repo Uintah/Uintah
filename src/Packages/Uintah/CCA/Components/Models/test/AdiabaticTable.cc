@@ -445,7 +445,13 @@ void AdiabaticTable::scheduleMomentumAndEnergyExchange(SchedulerP& sched,
   t->requires(Task::OldDW, d_scalar->scalar_CCLabel,     gac,1); 
   t->requires(Task::OldDW, mi->density_CCLabel,          gn);
   t->requires(Task::OldDW, mi->temperature_CCLabel,      gn);
-  t->requires(Task::OldDW, lb->press_CCLabel,            gn);
+
+  Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
+  
+  MaterialSubset* press_matl = scinew MaterialSubset();
+  press_matl->add(0);
+  press_matl->addReference();
+  t->requires(Task::NewDW, lb->press_equil_CCLabel, press_matl, oims, gn );
   //t->requires(Task::NewDW, lb->specific_heatLabel,       gn);
   //t->requires(Task::NewDW, lb->gammaLabel, gn);
   //t->requires(Task::OldDW, mi->delT_Label); turn off for AMR
@@ -512,7 +518,7 @@ void AdiabaticTable::momentumAndEnergyExchange(const ProcessorGroup*,
       constCCVariable<double> oldTemp;
       old_dw->get(oldTemp,     mi->temperature_CCLabel, matl, patch, gn, 0);
       constCCVariable<double> press;
-      old_dw->get(press,     lb->press_CCLabel, matl, patch, gn, 0);
+      new_dw->get(press,     lb->press_equil_CCLabel, 0, patch, gn, 0);
       CCVariable<double> energySource;
       new_dw->getModifiable(energySource,   
                             mi->energy_source_CCLabel,  matl, patch);
@@ -530,7 +536,7 @@ void AdiabaticTable::momentumAndEnergyExchange(const ProcessorGroup*,
         double newTemp = flameTemp[c]*press[c]/101325;
         //double newTemp = flameTemp[c];
         double energyx =( newTemp - oldTemp[c]) * cp * mass;
-        //energySource[c] += energyx;
+        energySource[c] += energyx;
         //        cerr << c << ", f=" << f_old[c] << ", flameTemp=" << flameTemp[c] << ", press=" << press[c] << ", newTemp=" << newTemp << ", oldTemp=" << oldTemp[c] << ", dtemp=" << newTemp-oldTemp[c] << '\n';
         totalEnergy += energyx;
         if(newTemp > maxTemp)
