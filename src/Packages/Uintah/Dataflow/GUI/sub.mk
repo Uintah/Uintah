@@ -18,7 +18,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/PatchVisualizer.tcl\
 	$(SRCDIR)/RescaleColorMap.tcl\
 	$(SRCDIR)/Isosurface.tcl\
-	$(SRCDIR)/GLTextureBuilder.tcl\
+	$(SRCDIR)/GLTextureBuilder.tcl \
 	$(SRCDIR)/CuttingPlane.tcl\
 	$(SRCDIR)/Hedgehog.tcl\
 	$(SRCDIR)/TensorOperator.tcl\
@@ -27,6 +27,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/VectorFieldOperator.tcl\
 	$(SRCDIR)/VectorParticlesOperator.tcl\
 	$(SRCDIR)/AnimatedStreams.tcl\
+	$(SRCDIR)/VariablePlotter.tcl\
 #[INSERT NEW TCL FILE HERE]
 #	$(SRCDIR)/EigenEvaluator.tcl\
 #	$(SRCDIR)/ParticleEigenEvaluator.tcl\

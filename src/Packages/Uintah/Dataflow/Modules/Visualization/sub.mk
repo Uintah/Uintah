@@ -15,6 +15,7 @@ SRCS     += \
 	$(SRCDIR)/CuttingPlane.cc\
 	$(SRCDIR)/Hedgehog.cc\
 	$(SRCDIR)/AnimatedStreams.cc\
+	$(SRCDIR)/VariablePlotter.cc \
 [INSERT NEW CODE FILE HERE]
 #	$(SRCDIR)/NodeHedgehog.cc \
 
