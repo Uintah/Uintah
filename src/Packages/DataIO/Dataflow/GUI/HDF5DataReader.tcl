@@ -123,7 +123,9 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set w [format "%s-filebox" .ui[modname]]
 
 	if {[winfo exists $w]} {
-	    return
+	    moveToCursor $w
+	    wm deiconify $w
+	    return;
 	}
 
 	toplevel $w -class TkFDialog
@@ -158,8 +160,8 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	makeOpenFilebox \
 	    -parent $w \
 	    -filevar $this-filename \
-	    -command "$this-c update_file; wm withdrawn $w" \
-	    -cancel "wm withdrawn $w" \
+	    -command "$this-c update_file; wm withdraw $w" \
+	    -cancel "wm withdraw $w" \
 	    -title $title \
 	    -filetypes $types \
 	    -initialdir $initdir \
