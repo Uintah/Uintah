@@ -42,5 +42,37 @@
       <creationFunction>make_PadField</creationFunction>
     </implementation>
   </dataflow-component>
+  <dataflow-component name="GLTextureBuilder">
+    <meta>
+      <authors>
+        <author>Unknown</author>
+      </authors>
+      <version-date>unknown</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs> ScalarField </inputs>
+    <outputs> GLTexture3D </outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_GLTextureBuilder</creationFunction>
+    </implementation>
+  </dataflow-component>
+  <dataflow-component name="TextureVolVis">
+    <meta>
+      <authors>
+        <author>Unknown</author>
+      </authors>
+      <version-date>unknown</version-date>
+      <version>1.0</version>
+      <description>No description available</description>
+    </meta>
+    <inputs> GLTexture3D, ColorMap </inputs>
+    <outputs> GeomObj </outputs>
+    <parameters></parameters>
+    <implementation>
+      <creationFunction>make_TextureVolVis</creationFunction>
+    </implementation>
+  </dataflow-component>
   </scirun-library>
 </package>
