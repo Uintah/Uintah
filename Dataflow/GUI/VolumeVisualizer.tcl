@@ -278,10 +278,14 @@ itcl_class SCIRun_Visualization_VolumeVisualizer {
         }
     }
     method activate { w } {
-	$w configure -state normal -foreground black
+	if {[winfo exists $w]} {
+	    $w configure -state normal -foreground black
+	}
     }
     method deactivate { w } {
-	$w configure -state disabled -foreground darkgrey
+	if {[winfo exists $w]} {
+	    $w configure -state disabled -foreground darkgrey
+	}
     }
 
 
