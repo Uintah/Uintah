@@ -162,7 +162,15 @@ namespace Uintah {
     StencilMatrix<SFCXVariable<double> > filteredRhoUjU; //SFCX 3 element vector
     StencilMatrix<SFCYVariable<double> > filteredRhoUjV; //SFCY 3 element vector
     StencilMatrix<SFCZVariable<double> > filteredRhoUjW; //SFCZ 3 element vector
+
+// Variables for Thermal NOx
+      CCVariable<double> thermalnox;
+      // NOx source term
+      CCVariable<double> thermalnoxSRC;
+      CCVariable<double> residualthermalnox;      
+
     }; // End class ArchesVariables
+   
 } // End namespace Uintah
 
 #endif
