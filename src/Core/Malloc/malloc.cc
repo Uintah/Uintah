@@ -37,7 +37,7 @@
 #if defined(__sun)
 #include <string.h>
 #define bzero(p,sz)  memset(p,0, sz);
-#elif defined(__linux) || defined(__sgi) || defined(__digital__)
+#elif defined(__linux) || defined(__sgi) || defined(__digital__) || defined(_AIX)
 #else
 #error "Need bcopy define for this architecture"
 #endif
