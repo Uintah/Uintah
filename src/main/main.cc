@@ -228,10 +228,9 @@ public:
 void
 show_license_and_copy_scirunrc(GuiInterface *gui) {
   const string tclresult = gui->eval("licenseDialog 1");
-  if (tclresult == "cancel")
-    {
-      Thread::exitAll(1);
-    }
+  if (tclresult == "cancel") {
+    Thread::exitAll(1);
+  }
   // check to make sure home directory is there
   const char* HOME = sci_getenv("HOME");
   const char* srcdir = sci_getenv("SCIRUN_SRCDIR");
@@ -442,11 +441,13 @@ main(int argc, char *argv[], char **environment) {
   // If the user doesnt have a .scirunrc file, provide them with a default one
   if (!find_and_parse_scirunrc()) 
     show_license_and_copy_scirunrc(gui);
-  else { 
+  else if (!doing_regressions) { 
     const char *rcversion = sci_getenv("SCIRUN_RCFILE_VERSION");
-    const string ver =string(SCIRUN_VERSION)+"."+string(SCIRUN_RCFILE_SUBVERSION);
+    const string ver = string(SCIRUN_VERSION)+"."+
+      string(SCIRUN_RCFILE_SUBVERSION);
     // If the .scirunrc is an old version
-    if (!doing_regressions && (!rcversion || string(rcversion) != ver)) {
+    if (!rcversion || 
+	gui->eval("compareVersions "+string(rcversion)+" "+ver) == "-1") {
       // Ask them if they want to copy over a new one
       if (gui->eval("promptUserToCopySCIRunrc") == "1") {
         show_license_and_copy_scirunrc(gui);
