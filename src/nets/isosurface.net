@@ -81,7 +81,7 @@ set $m3-isoval 0.747
 set $m3-extract-from-new-field 1
 set $m3-algorithm 0
 set $m3-build_trisurf 0
-$m4 ui
+$m4 initialize_ui
 set $m4-ViewWindow_0-view-eyep-x ${view-eyep-x}
 set $m4-ViewWindow_0-view-eyep-y ${view-eyep-y}
 set $m4-ViewWindow_0-view-eyep-z ${view-eyep-z}
@@ -92,6 +92,6 @@ set $m4-ViewWindow_0-view-up-x ${view-up-x}
 set $m4-ViewWindow_0-view-up-y ${view-up-y}
 set $m4-ViewWindow_0-view-up-z ${view-up-z}
 set $m4-ViewWindow_0-view-fov ${view-fov}
-$m3 ui
+$m3 initialize_ui
 
 ::netedit scheduleok

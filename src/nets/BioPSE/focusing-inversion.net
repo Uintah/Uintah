@@ -119,7 +119,7 @@ set $m8-node_display_type {Spheres}
 set $m8-edge_display_type {Lines}
 set $m8-edge_scale 1
 set $m8-resolution 4
-$m9 ui
+$m9 initialize_ui
 set $m9-ViewWindow_0-view-eyep-x ${view-eyep-x}
 set $m9-ViewWindow_0-view-eyep-y ${view-eyep-y}
 set $m9-ViewWindow_0-view-eyep-z ${view-eyep-z}
@@ -145,8 +145,8 @@ set $m14-emit_partial 0
 set $m14-np 4
 set $m15-interp_op_gui {}
 set $m17-filename $DATADIR/$DATASET/$DATASET-voltage.tvd.fld
-$m1 ui
-$m6 ui
-$m14 ui
+$m1 initialize_ui
+$m6 initialize_ui
+$m14 initialize_ui
 
 ::netedit scheduleok

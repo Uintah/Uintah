@@ -179,7 +179,7 @@ set $m21-node_display_type {Spheres}
 set $m21-edge_display_type {Lines}
 set $m21-node_scale [expr 0.035 * ${global-scale}]
 set $m21-resolution 10
-$m22 ui
+$m22 initialize_ui
 set $m22-ViewWindow_0-view-eyep-x ${view-eyep-x}
 set $m22-ViewWindow_0-view-eyep-y ${view-eyep-y}
 set $m22-ViewWindow_0-view-eyep-z ${view-eyep-z}
@@ -191,10 +191,10 @@ set $m22-ViewWindow_0-view-up-y ${view-up-y}
 set $m22-ViewWindow_0-view-up-z ${view-up-z}
 set $m22-ViewWindow_0-view-fov ${view-fov}
 set $m23-interp_op_gui {}
-$m1 ui
-$m3 ui
-$m4 ui
-$m9 ui
-$m14 ui
+$m1 initialize_initialize_ui
+$m3 initialize_ui
+$m4 initialize_ui
+$m9 initialize_ui
+$m14 initialize_ui
 
 ::netedit scheduleok

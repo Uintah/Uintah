@@ -77,7 +77,7 @@ set $m0-max_brick_dim 128
 set $m0-min 0
 set $m0-max 181
 set $m1-filename $DATADIR/aneurysm/aneurysm-mra-lowres.lvs.fld
-$m2 ui
+$m2 initialize_ui
 set $m2-ViewWindow_0-view-eyep-x ${view-eyep-x}
 set $m2-ViewWindow_0-view-eyep-y ${view-eyep-y}
 set $m2-ViewWindow_0-view-eyep-z ${view-eyep-z}
@@ -145,11 +145,11 @@ set $m11-isoval 95.56
 set $m11-extract-from-new-field 1
 set $m11-algorithm 1
 set $m11-build_trisurf 0
-$m3 ui
-$m4 ui
-$m7 ui
-$m8 ui
-$m9 ui
-$m11 ui
+$m3 initialize_ui
+$m4 initialize_ui
+$m7 initialize_ui
+$m8 initialize_ui
+$m9 initialize_ui
+$m11 initialize_ui
 
 ::netedit scheduleok
