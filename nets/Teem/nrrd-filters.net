@@ -47,21 +47,20 @@ set m0 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 304 10]
 set m1 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 92 114]
 set m2 [addModuleAtPosition "SCIRun" "Render" "Viewer" 110 493]
 set m3 [addModuleAtPosition "Teem" "Filters" "NrrdConvert" 8 216]
-set m4 [addModuleAtPosition "Teem" "Filters" "NrrdPermute" 156 215]
-set m5 [addModuleAtPosition "Teem" "Filters" "NrrdQuantize" 304 216]
-set m6 [addModuleAtPosition "Teem" "Filters" "NrrdResample" 451 216]
-set m7 [addModuleAtPosition "Teem" "Filters" "NrrdSubvolume" 599 216]
-set m8 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 304 111]
-set m9 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 304 312]
-set m10 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 304 399]
+set m4 [addModuleAtPosition "Teem" "Filters" "NrrdSubvolume" 180 216]
+set m5 [addModuleAtPosition "Teem" "Filters" "NrrdQuantize" 368 218]
+set m6 [addModuleAtPosition "Teem" "Filters" "NrrdResample" 545 218]
+set m7 [addModuleAtPosition "Teem" "DataIO" "FieldToNrrd" 304 111]
+set m8 [addModuleAtPosition "Teem" "DataIO" "NrrdToField" 304 312]
+set m9 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 304 399]
 
 addConnection $m1 1 $m2 0
-addConnection $m0 0 $m8 0
-addConnection $m9 0 $m10 0
-addConnection $m10 1 $m2 1
+addConnection $m0 0 $m7 0
+addConnection $m8 0 $m9 0
+addConnection $m9 1 $m2 1
 addConnection $m0 0 $m1 0
-addConnection $m8 0 $m6 0
-addConnection $m6 0 $m9 0
+addConnection $m7 0 $m6 0
+addConnection $m6 0 $m8 0
 
 set $m0-filename $DATADIR/brain-dmw/brain-dmw-mri-16.lvd.fld
 set $m1-isoval 28.35
@@ -81,9 +80,12 @@ set $m2-ViewWindow_0-view-up-y ${view-up-y}
 set $m2-ViewWindow_0-view-up-z ${view-up-z}
 set $m2-ViewWindow_0-view-fov ${view-fov}
 set $m3-type 10
-set $m4-axis0 0
-set $m4-axis1 1
-set $m4-axis2 2
+set $m4-minAxis0 {0}
+set $m4-maxAxis0 {20}
+set $m4-minAxis1 {0}
+set $m4-maxAxis1 {20}
+set $m4-minAxis2 {0}
+set $m4-maxAxis2 {20}
 set $m5-minf 0
 set $m5-maxf 255
 set $m5-nbits 16
@@ -91,17 +93,13 @@ set $m6-filtertype {tent}
 set $m6-resampAxis0 {20}
 set $m6-resampAxis1 {20}
 set $m6-resampAxis2 {20}
-set $m7-minAxis0 {0}
-set $m7-maxAxis0 {20}
-set $m7-minAxis1 {0}
-set $m7-maxAxis1 {20}
-set $m7-minAxis2 {0}
-set $m7-maxAxis2 {20}
-set $m10-isoval 27.5
-set $m10-extract-from-new-field 1
-set $m10-algorithm 0
-set $m10-build_trisurf 0
-set $m10-np 1
+set $m9-isoval 27.5
+set $m9-extract-from-new-field 1
+set $m9-algorithm 0
+set $m9-build_trisurf 0
+set $m9-np 1
+set $m9-active_tab {MC}
+set $m9-update_type {on release}
 $m6 ui
 
 ::netedit scheduleok
