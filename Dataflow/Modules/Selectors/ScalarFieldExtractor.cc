@@ -35,6 +35,7 @@ LOG
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/BBox.h>
+#include <Core/Util/Timer.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Datatypes/LevelMesh.h>
 #include <Packages/Uintah/Core/Datatypes/LevelField.h>
@@ -45,6 +46,7 @@ LOG
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Core/Containers/ConsecutiveRangeSet.h>
+#include <Core/Geometry/Transform.h>
 #include <Packages/Uintah/Core/Grid/ShareAssignArray3.h>
 //#include <Packages/Uintah/Core/Grid/NodeIterator.h>
  
@@ -92,6 +94,7 @@ void ScalarFieldExtractor::setVars()
   archive.queryVariables(names, types);
 
 
+
   vector< double > times;
   vector< int > indices;
   archive.queryTimesteps( indices, times );
@@ -99,7 +102,6 @@ void ScalarFieldExtractor::setVars()
   string sNames("");
   int index = -1;
   bool matches = false;
-
 
   // get all of the ScalarField Variables
   for( int i = 0; i < (int)names.size(); i++ ){
@@ -186,8 +188,6 @@ void ScalarFieldExtractor::execute()
   cerr << "done with setVars\n";
 
 
-
-
   // what time is it?
   vector< double > times;
   vector< int > indices;
@@ -201,6 +201,7 @@ void ScalarFieldExtractor::execute()
   Semaphore* thread_sema = scinew Semaphore( "scalar extractor semahpore",
 					     max_workers); 
 
+  WallClockTimer my_timer;
   GridP grid = archive.queryGrid(times[idx]);
   LevelP level = grid->getLevel( 0 );
   const TypeDescription* subtype = type->getSubType();
@@ -212,18 +213,24 @@ void ScalarFieldExtractor::execute()
     case TypeDescription::NCVariable:
       switch ( subtype->getType() ) {
       case TypeDescription::double_type:
-	{	
+	{
+	my_timer.start();
 	  LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
 	  LevelField<double> *sfd =
 	    scinew LevelField<double>( mesh, Field::NODE );
+	  sfd->store( "variable", string(var) );
+	  sfd->store( "time", double( time ));
 	  vector<ShareAssignArray3<double> > &data = sfd->fdata();
 	  data.resize(level->numPatches());
+	double size = data.size();
+	int count = 0;
 	  vector<ShareAssignArray3<double> >::iterator it = data.begin();
 	  for(Level::const_patchIterator r = level->patchesBegin();
 	      r != level->patchesEnd(); r++, ++it){
+	  update_progress(count++/size, my_timer);
 	    thread_sema->down();
 	    Thread *thrd =
-	      scinew Thread(new PatchDataThread<NCVariable<double>,
+	      scinew Thread(scinew PatchDataThread<NCVariable<double>,
 			    vector<ShareAssignArray3<double> >::iterator>
 			    (archive, it, var, mat, *r, time, thread_sema),
 			    "patch_data_worker");
@@ -231,22 +238,30 @@ void ScalarFieldExtractor::execute()
 	  }
 	  thread_sema->down(max_workers);
 	  if( thread_sema ) delete thread_sema;
+	timer.add( my_timer.time());
+	my_timer.stop();
 	  sfout->send(sfd);
 	  return;
 	}
       case TypeDescription::int_type:
 	{
+	my_timer.start();
 	  LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
 	  LevelField<int> *sfd =
 	    scinew LevelField<int>( mesh, Field::NODE );
+	  sfd->store( "variable", string(var) );
+	  sfd->store( "time", double( time ));
 	  vector<ShareAssignArray3<int> > &data = sfd->fdata();
 	  data.resize(level->numPatches());
+	double size = data.size();
+	int count = 0;
 	  vector<ShareAssignArray3<int> >::iterator it = data.begin();
 	  for(Level::const_patchIterator r = level->patchesBegin();
 	      r != level->patchesEnd(); r++, ++it){
+	  update_progress(count++/size, my_timer);
 	    thread_sema->down();
 	    Thread *thrd =
-	      scinew Thread(new PatchDataThread<NCVariable<int>,
+	      scinew Thread(scinew PatchDataThread<NCVariable<int>,
 			    vector<ShareAssignArray3<int> >::iterator>
 			    (archive, it, var, mat, *r, time, thread_sema),
 			    "patch_data_worker");
@@ -254,21 +269,29 @@ void ScalarFieldExtractor::execute()
 	  }
 	  thread_sema->down(max_workers);
 	  if( thread_sema ) delete thread_sema;
+	timer.add( my_timer.time());
+	my_timer.stop();
 	  sfout->send(sfd);
 	  return;
 	}
      case TypeDescription::long_type:
 	{
+	my_timer.start();
 	  LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
 	  LevelField<long> *sfd =
 	    scinew LevelField<long>( mesh, Field::NODE );
+	  sfd->store( "variable", string(var) );
+	  sfd->store( "time", double( time ));
 	  vector<ShareAssignArray3<long> > &data = sfd->fdata();
 	  data.resize(level->numPatches());
+	double size = data.size();
+	int count = 0;
 	  vector<ShareAssignArray3<long> >::iterator it = data.begin();
 	  for(Level::const_patchIterator r = level->patchesBegin();
 	      r != level->patchesEnd(); r++, ++it){
+	  update_progress(count++/size, my_timer);
 	    thread_sema->down();
-	    Thread *thrd =scinew Thread(new PatchDataThread<NCVariable<long>,
+	    Thread *thrd =scinew Thread(scinew PatchDataThread<NCVariable<long>,
 			                 vector<ShareAssignArray3<long> >::iterator>
 			  (archive, it, var, mat, *r, time, thread_sema),
 					"patch_data_worker");
@@ -276,6 +299,8 @@ void ScalarFieldExtractor::execute()
 	  }
 	  thread_sema->down(max_workers);
 	  if( thread_sema ) delete thread_sema;
+	timer.add( my_timer.time());
+	my_timer.stop();
 	  sfout->send(sfd);
 	  return;
 	}
@@ -288,16 +313,22 @@ void ScalarFieldExtractor::execute()
       switch ( subtype->getType() ) {
       case TypeDescription::double_type:
 	{
+	my_timer.start();
 	  LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
 	  LevelField<double> *sfd =
 	    scinew LevelField<double>( mesh, Field::CELL );
+	  sfd->store( "variable", string(var) );
+	  sfd->store( "time", double( time ));
 	  vector<ShareAssignArray3<double> >& data = sfd->fdata();
 	  data.resize(level->numPatches());
+	double size = data.size();
+	int count = 0;
 	  vector<ShareAssignArray3<double> >::iterator it = data.begin();
 	  for(Level::const_patchIterator r = level->patchesBegin();
 	      r != level->patchesEnd(); r++, ++it ){
+	  update_progress(count++/size, my_timer);
 	    thread_sema->down();
-	    Thread *thrd =scinew Thread(new PatchDataThread<CCVariable<double>,
+	    Thread *thrd =scinew Thread(scinew PatchDataThread<CCVariable<double>,
 			                 vector<ShareAssignArray3<double> >::iterator>
 			  (archive, it, var, mat, *r, time, thread_sema),
 			  "patch_data_worker");
@@ -306,21 +337,29 @@ void ScalarFieldExtractor::execute()
 
 	  thread_sema->down(max_workers);
 	  if( thread_sema ) delete thread_sema;
+	timer.add( my_timer.time());
+	my_timer.stop();
 	  sfout->send(sfd);
 	  return;
 	}
       case TypeDescription::int_type:
 	{
+	my_timer.start();
 	  LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
 	  LevelField<int> *sfd =
 	    scinew LevelField<int>( mesh, Field::CELL );
+	  sfd->store( "variable", string(var) );
+	  sfd->store( "time", double( time ));
 	  vector<ShareAssignArray3<int> >& data = sfd->fdata();
 	  data.resize(level->numPatches());
+	double size = data.size();
+	int count = 0;
 	  vector<ShareAssignArray3<int> >::iterator it = data.begin();
 	  for(Level::const_patchIterator r = level->patchesBegin();
 	      r != level->patchesEnd(); r++, ++it ){
+	  update_progress(count++/size, my_timer);
 	    thread_sema->down();
-	    Thread *thrd =scinew Thread(new PatchDataThread<CCVariable<int>,
+	    Thread *thrd =scinew Thread(scinew PatchDataThread<CCVariable<int>,
 			                 vector<ShareAssignArray3<int> >::iterator>
 			  (archive, it, var, mat, *r, time, thread_sema),
 			  "patch_data_worker");
@@ -329,21 +368,29 @@ void ScalarFieldExtractor::execute()
 
 	  thread_sema->down(max_workers);
 	  if( thread_sema ) delete thread_sema;
+	timer.add( my_timer.time());
+	my_timer.stop();
 	  sfout->send(sfd);
 	  return;
 	}
       case TypeDescription::long_type:
 	{
+	my_timer.start();
 	  LevelMeshHandle mesh = scinew LevelMesh( grid, 0 );
 	  LevelField<long> *sfd =
 	    scinew LevelField<long>( mesh, Field::CELL );
+	  sfd->store( "variable", string( var ) );
+	  sfd->store( "time", double( time ));
 	  vector<ShareAssignArray3<long> >& data = sfd->fdata();
 	  data.resize(level->numPatches());
+	double size = data.size();
+	int count = 0;
 	  vector<ShareAssignArray3<long> >::iterator it = data.begin();
 	  for(Level::const_patchIterator r = level->patchesBegin();
 	      r != level->patchesEnd(); r++, ++it ){
+	  update_progress(count++/size, my_timer);
 	    thread_sema->down();
-	    Thread *thrd =scinew Thread(new PatchDataThread<CCVariable<long>,
+	    Thread *thrd =scinew Thread(scinew PatchDataThread<CCVariable<long>,
 			                 vector<ShareAssignArray3<long> >::iterator>
 			  (archive, it, var, mat, *r, time, thread_sema),
 			  "patch_data_worker");
@@ -352,6 +399,8 @@ void ScalarFieldExtractor::execute()
 
 	  thread_sema->down(max_workers);
 	  if( thread_sema ) delete thread_sema;
+	timer.add( my_timer.time());
+	my_timer.stop();
 	  sfout->send(sfd);
 	  return;
 	}
