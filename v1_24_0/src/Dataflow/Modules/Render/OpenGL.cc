@@ -47,7 +47,6 @@
 #include <sci_defs/bits_defs.h>
 #include <Dataflow/Modules/Render/OpenGL.h>
 #include <Dataflow/Modules/Render/PBuffer.h> // #defines HAVE_PBUFFER
-#include <Dataflow/Modules/Render/logo.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Util/Environment.h>
 #include <Core/GuiInterface/TCLTask.h>
