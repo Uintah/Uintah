@@ -2,6 +2,6 @@ SRCTOP  = @top_srcdir@
 SRCDIR  = @srcdir@
 OBJTOP  = ../../..
 
-SUBDIRS = 
+SUBDIRS = Leonid
 
 include $(SRCTOP)/scripts/recurse.mk
