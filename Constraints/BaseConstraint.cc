@@ -141,6 +141,7 @@ Variable::Assign( const Point& newValue, const Scheme scheme )
 	 }
 
 	 levellevel = level = -1234;
+
 	 cerr << "Maximum level reached for all constraints!" << endl;
 	 cout << "Accepting current approximation." << endl;
 	 cout << "Recursion level = " << recursion << endl;
