@@ -231,6 +231,13 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
       }
     }
     else{
+      int extraFlushesLeft = flag->d_extraSolverFlushes;
+      int flushSpacing = 0;
+
+      if ( extraFlushesLeft > 0 ) {
+	flushSpacing = pset->numParticles() / flag->d_extraSolverFlushes;
+      }
+
       for(ParticleSubset::iterator iter = pset->begin();
                                    iter != pset->end(); iter++){
         particleIndex idx = *iter;
@@ -418,7 +425,21 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
         }
         solver->fillMatrix(24,dof,24,dof,v);
 
+	flushSpacing--;
+
+	if ( ( flushSpacing <= 0 ) && ( extraFlushesLeft > 0 ) ) {
+	  flushSpacing = pset->numParticles() / flag->d_extraSolverFlushes;
+	  extraFlushesLeft--;
+	  solver->flushMatrix();
+	}
+
       }  // end of loop over particles
+      
+      while ( extraFlushesLeft ) {
+	extraFlushesLeft--;
+	solver->flushMatrix();
+      }
+
     }
     delete interpolator;
   }
