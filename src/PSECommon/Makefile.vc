@@ -25,4 +25,4 @@ LIBS =
 
 ###################################################################
 
-!include <$(TOP)\src\Makefile.vc.master>
+!include <$(TOP)\src\scripts\Makefile.vc.master>
