@@ -128,6 +128,10 @@ SHLambertianMaterial::shade( Color& result, const Ray& ray,
 	  light=cx->scene->light(i);
 	else 
 	  light=my_lights[i-ngloblights];
+
+	if( !light->isOn() )
+	  continue;
+
 	Vector light_dir=light->get_pos()-hitpos;
 	double dist=light_dir.normalize();
 	Color shadowfactor(1,1,1);

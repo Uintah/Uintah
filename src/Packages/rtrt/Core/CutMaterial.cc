@@ -83,6 +83,9 @@ void CutMaterial::shade(Color& result, const Ray& ray,
 	    else 
 	      light=my_lights[i-ngloblights];
 	    
+	    if( !light->isOn() )
+	      continue;
+
 	    difflight+=light->get_color()*cmapcol*0.6;
 	  }
 	  result = 
