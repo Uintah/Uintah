@@ -28,7 +28,6 @@ namespace Uintah {
   public:
     struct CMData {   //_________________________________________modified here
       double Bulk;
-      //double Shear;
       Vector a0;
       double c1;
       double c2;
@@ -37,6 +36,9 @@ namespace Uintah {
       double c5;
       double lambda_star;
     };
+
+    const VarLabel* pStretchLabel;  // For diagnostic
+
   private:
     CMData d_initialData;
 
