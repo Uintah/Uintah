@@ -74,13 +74,27 @@ Patch::Patch(const Patch* realPatch, const IntVector& virtualOffset)
       d_inLowIndex(realPatch->d_inLowIndex + virtualOffset),
       d_inHighIndex(realPatch->d_inHighIndex + virtualOffset),
       d_nodeHighIndex(realPatch->d_nodeHighIndex + virtualOffset),
-      d_id(-1000 - realPatch->getID()),
       d_bcs(realPatch->d_bcs),
-      in_database(false),      
       have_layout(realPatch->have_layout),
       layouthint(realPatch->layouthint)
 {
-
+  // make the id be -1000 * realPatch id - some first come, first serve index
+  if(!ids){
+    d_id = -1000 * realPatch->d_id; // temporary
+   ids_init.lock();    
+    int index = 1;
+    while (patches.find(d_id - index) == patches.end()){
+      if (++index >= 27) {
+	throw InternalError("A real patch shouldn't have more than 26 (3*3*3 - 1) virtual patches");
+      }
+    }
+    d_id -= index; 
+    patches[d_id]=this;
+    ASSERT(patches.find(d_id) == patches.end());
+    in_database = true;
+   ids_init.unlock();    
+  }      
+  
   for (int i = 0; i < numFaces; i++)
     d_bctypes[i] = realPatch->d_bctypes[i];
 

@@ -44,6 +44,7 @@ SRCS     += \
 	$(SRCDIR)/SimpleMaterial.cc \
 	$(SRCDIR)/ParticleVariable_special.cc \
 	$(SRCDIR)/fillFace_special.cc \
+	$(SRCDIR)/ComputeSet_special.cc \
 	$(SRCDIR)/ucg_templates.cc
 
 

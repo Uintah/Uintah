@@ -54,6 +54,8 @@ namespace Uintah {
       }
       return false;
     }
+    // Note: sort is specialized in ComputeSet_special for const Patch*'s
+    // to use Patch::Compare.
     void sort() {
       std::sort(items.begin(), items.end());
     }
