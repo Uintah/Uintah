@@ -403,6 +403,11 @@ SCI_ARG_ENABLE(scirun2,
    [SCI_SET_PACKAGE_CHECKS(SCIRun2)]
   ],
   [enable_scirun2=${enable_scirun2='no'}])
+SCI_ARG_ENABLE(rath,
+  AC_HELP_STRING(--enable-rpath,
+                 Use the default runtime library search path),
+  [enable_rpath="$enableval"],
+  [enable_rpath=${enable_rpath='yes'}])
 SCI_ARG_WITH(ftgl,
   AC_HELP_STRING(--with-ftgl=DIR,
                  Use the Freetype GL installation in DIR),
@@ -410,6 +415,12 @@ SCI_ARG_WITH(ftgl,
    sci_check_ftgl=yes],
   [with_ftgl=""])
 
+
+if test "$enable_rpath" = "no"; then
+   AC_MSG_WARN("You have removed the rpath flag from some libraries.")
+   AC_MSG_WARN("This may have unpredictable affects.")
+   AC_MSG_WARN("Do not do this unless you really know what you are doing.")
+fi
 
 
 ##  --------------------------------------------------------------------
@@ -1264,6 +1275,8 @@ if test -z "$thirdparty"; then
   AC_MSG_RESULT(Using default thirdparty directory $sci_thirdparty_dir)
 fi
 
+first=true
+
 for i in $sci_thirdparty_dir; do
   if test ! -d "$i"; then
     continue
@@ -1284,7 +1297,18 @@ for i in $sci_thirdparty_dir; do
   else
     sci_thirdparty_includes="$sci_thirdparty_includes $i/include"
   fi
+
+  if test $first="true"; then
+    SCI_THIRDPARTY_LIB_DIR="$sci_thirdparty_libs"
+    SCI_THIRDPARTY_LIB_DIR_FLAG="$LDRUN_PREFIX$sci_thirdparty_libs -L$sci_thirdparty_libs"
+    first=false
+  fi
 done
+
+AC_MSG_RESULT(Thirdparty library directory $SCI_THIRDPARTY_LIB_DIR)
+
+AC_SUBST(SCI_THIRDPARTY_LIB_DIR)
+AC_SUBST(SCI_THIRDPARTY_LIB_DIR_FLAG)
 
 #########################################################################
 ##  Set the no_optimize_flag 
@@ -1495,6 +1519,12 @@ SCI_TRY_LINK(GL,OpenGL libraries and headers,[
 
 ],$_sci_inc,GLU GL $GLU_OTHERS,$_sci_lib,,,not-optional)
 
+if test "$GL_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
+  AC_MSG_WARN("$GL_LIB_DIR_FLAG")
+  AC_MSG_WARN("flag for OpenGL has been removed.")
+  GL_LIB_DIR_FLAG=""
+fi
+
 AC_SUBST(GL_LIB_FLAG)
 AC_SUBST(GL_LIB_DIR_FLAG)
 AC_SUBST(INC_GL_H)
@@ -1679,6 +1709,7 @@ SCI_TRY_LINK(TK,tk library and headers,[
 #include <tkPort.h>
 ],$_x_inc_dir $_sci_tk_inc,tk,$_sci_lib,$TK_DEFS $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,not-optional)
 
+
 AC_SUBST(TK_LIB_FLAG)
 AC_SUBST(TK_LIB_DIR_FLAG)
 AC_SUBST(INC_TK_H)
@@ -1798,10 +1829,6 @@ AC_SUBST(TK_VERSION)
 AC_SUBST(ITCL_WIDGETS)
 
 ##  --  search for xerces-c++ --
-echo
-AS_MESSAGE(checking for required Xerces-C++ components......)
-echo
-
 if test "$with_xercesc"; then
   _xer_lib_path="$with_xercesc/lib"
   _xer_inc="$with_xercesc/include"
@@ -2341,7 +2368,6 @@ if test "$with_mpiuni" && test ! "$DEF_MPIUNI"; then
   echo
 fi
 
-
 AC_SUBST(MPIUNI_LIB_FLAG)
 AC_SUBST(MPIUNI_LIB_DIR_FLAG)
 AC_SUBST(INC_MPIUNI_H)
@@ -2575,14 +2601,16 @@ if test "$sci_check_babel" = "yes"; then
     echo
   fi
 fi # end sci_check_babel
-AC_SUBST(HAVE_BABEL)
+
 AC_SUBST(SIDL_LIB_FLAG)
 AC_SUBST(SIDL_LIB_DIR_FLAG)
 AC_SUBST(INC_SIDL_H)
+
+AC_SUBST(HAVE_BABEL)
 AC_SUBST(DEF_BABEL)
 AC_SUBST(BABEL_BIN)
 
-##  --  search for tiff and jpeg -----------------------------------------
+##  --  search for jpeg and tiff -----------------------------------------
 
 if test "$sci_check_jpeg" = "yes"; then
 
@@ -2650,6 +2678,13 @@ if test "$sci_check_glut" = "yes"; then
    ],$_sci_inc,glut,$_sci_lib,$libs,,not-optional)
 fi #end sci_check_glut
 
+if test "$GLUT_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
+  AC_MSG_WARN("$GLUT_LIB_DIR_FLAG")
+  AC_MSG_WARN("flag for GLUT has been removed.")
+  GLUT_LIB_DIR_FLAG=""
+fi
+
+
 AC_SUBST(INC_GLUT_H)
 AC_SUBST(GLUT_LIB_FLAG)
 AC_SUBST(GLUT_LIB_DIR_FLAG)
@@ -2669,6 +2704,13 @@ if test "$sci_check_glui" = "yes"; then
    ],$_sci_inc,glui,$_sci_lib,$libs $GLUT_LIB_DIR_FLAG $GLUT_LIB_FLAG,,not-optional)
 
 fi # end sci_check_glui
+
+if test "$GLUI_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
+  AC_MSG_WARN("$GLUI_LIB_DIR_FLAG")
+  AC_MSG_WARN("flag for GLUI has been removed.")
+  GLUI_LIB_DIR_FLAG=""
+fi
+
 AC_SUBST(INC_GLUI_H)
 AC_SUBST(GLUI_LIB_FLAG)
 AC_SUBST(GLUI_LIB_DIR_FLAG)
@@ -2705,6 +2747,12 @@ fi # end sci_check_oogl
 
 if test "$HAVE_OOGL" = "yes"; then
   DEF_OOGL="#define HAVE_OOGL 1"
+fi
+
+if test "$OOGL_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
+  AC_MSG_WARN("$OOGL_LIB_DIR_FLAG")
+  AC_MSG_WARN("flag for OOGL has been removed.")
+  OOGL_LIB_DIR_FLAG=""
 fi
 
 AC_SUBST(INC_OOGL_H)
