@@ -170,26 +170,7 @@ DEALINGS IN THE SOFTWARE.
         slice planes of the axial, sagittal and coronal planes oriented 
         relative to each other in 3-space.
       </para>
-    </section><!-- end:Viewer Layout -->
-    
-
-    <section><title>The 3D Viewer</title>
-      <figure id="fig.3dview">
-        <title>3d Viewer Window</title>
-        <mediaobject>
-	  <textobject>
-	    <phrase>3d Viewer Window showing tooth dataset.</phrase>
-	  </textobject>
-	  <imageobject>
-	  <imagedata fileref="Figures/3dview.eps" align="center" format="EPS"/>
-	  </imageobject>
-	  <imageobject>
-	  <imagedata fileref="Figures/3dview.jpg" align="center" format="JPG"/>
-	  </imageobject>
-        </mediaobject>
-      </figure>
-    </section><!-- end:3D Viewer -->
-
+    </section><!-- end:Viewer Layout -->    
     <section><title>The 2D Viewers</title>
       <para>
         The remaining viewer windows display 2D images of the individual
@@ -379,34 +360,66 @@ DEALINGS IN THE SOFTWARE.
 	</section>
       </section><!-- Slice Planes -->
     </section><!-- The 2D Viewers -->
-    <section><title>Using the 3D viewer</title>
+    <section><title>The 3D Viewer</title>
       <para>
-	The 3D viewer is located in the upper left window and can be
-	controlled by the mouse.
-	<simplelist type="vert" columns="1">
-	  <member>Left Mouse Button: translate up/down, side-to-side</member>
-	  <member>Right Mouse Button: zoom in and out</member>
-	  <member>Center Mouse Button: rotate the object</member>
-	</simplelist>
+        The 3D Viewer is displayed in the upper left portion of the Visualization Pane.
+	The 3D Viewer by default displays the saggital, axial and coronal planes. 
       </para>
-      <para>
-        The Volume Rendering Window is manipulated using the mouse. Please see the SCIRun Userguide for
-        more detailed information on navigating inside of the Viewer Window.
-        <ulink url="../../Guide/usersguide/srug6_3.html"><citetitle>Section 6.3 of the SCIRun Userguide:
-        "Mouse Control in the Viewer Window"</citetitle></ulink>.
-         http://software.sci.utah.edu/doc/Guide/usersguide/srug6_3.html
-      </para>
-      <para>
-	If the object is no longer in view, you can go to the "Viewer
-	Options" tab in the left control panel and click "Autoview"
-	and a reasonable default view will be set.
-      </para>
-    </section><!-- end:Using the 3D viewer -->
-    <section><title>Volume Rendering</title>
-      <para>
-	(Talk about the paintbrush interface, link to transfer
-	function stuff in the advanced techniques section)
-      </para>
-    </section><!-- end:Volume Rendering -->
+      <figure id="fig.3dview">
+        <title>3d Viewer Window</title>
+        <mediaobject>
+	  <textobject>
+	    <phrase>3d Viewer Window showing tooth dataset.</phrase>
+	  </textobject>
+	  <imageobject>
+	  <imagedata fileref="Figures/3dview.eps" align="center" format="EPS"/>
+	  </imageobject>
+	  <imageobject>
+	  <imagedata fileref="Figures/3dview.jpg" align="center" format="JPG"/>
+	  </imageobject>
+        </mediaobject>
+      </figure>
+      <section><title>Mouse controls for the 3D viewer</title>
+	<para>
+	  The 3D Viewer can be manipulated using the mouse. Please see the SCIRun Userguide for
+	  more detailed information on navigating inside of the Viewer Window.
+	  <ulink url="../../Guide/usersguide/srug6_3.html"><citetitle>Section 6.3 of the SCIRun Userguide:
+	  "Mouse Control in the Viewer Window"</citetitle></ulink>.
+	  http://software.sci.utah.edu/doc/Guide/usersguide/srug6_3.html
+	</para>
+        <para>
+	  A quick list of the most commonly used mouse commands:
+	  <simplelist type="vert" columns="1">
+	    <member>Left Mouse Button: translate up/down, side-to-side</member>
+	    <member>Right Mouse Button: zoom in and out</member>
+	    <member>Center Mouse Button: rotate the object</member>
+	  </simplelist>
+	</para>
+      </section><!-- end:Mouse Controls for the 3D Viewer -->
+      <section><title>Using AutoView</title>
+        <para>
+	  If the object is no longer in view, you can go to the "Viewer
+	  Options" tab in the left control panel and click "Autoview"
+	  and a reasonable default view will be set.	  
+	</para>
+      </section><!-- end:Using AutoView -->
+      <section><title>Turning on MIP Views</title>
+        <para>
+	  Under the Planes tab of the Visualization Control Panel (left panel) there are
+	  options for turning on a Maximum Intensity Projection or MIP.
+	</para>
+      </section><!-- end:Turning on MIP Views -->
+      <section><title>Volume Rendering</title>
+        <para>
+	  In addition to viewing 2D slices of the data, it is also possible to
+	  view full 3D Volume rendering of the data.
+	</para>
+	
+        <para>
+	  (Talk about the paintbrush interface, link to transfer
+	  function stuff in the advanced techniques section)
+	</para>
+      </section><!-- end:Volume Rendering -->
+    </section><!-- end:3D Viewer -->
   </section><!-- Visualization -->
 </chapter>
