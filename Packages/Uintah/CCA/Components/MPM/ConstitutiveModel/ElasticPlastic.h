@@ -54,6 +54,7 @@ namespace Uintah {
     struct CMData {
       double Bulk;    /*< Bulk modulus */
       double Shear;   /*< Shear Modulus */
+      double Chi;     /*< Taylor-Quinney coefficient */
     };	 
 
     // Create datatype for storing porosity parameters
@@ -87,8 +88,6 @@ namespace Uintah {
     const VarLabel* pPlasticStrainLabel;  
     const VarLabel* pDamageLabel;  
     const VarLabel* pPorosityLabel;  
-    const VarLabel* pPlasticTempLabel;  
-    const VarLabel* pPlasticTempIncLabel;  
     const VarLabel* pLocalizedLabel;  
 
     const VarLabel* pRotationLabel_preReloc;  // For Hypoelastic-plasticity
@@ -96,8 +95,6 @@ namespace Uintah {
     const VarLabel* pPlasticStrainLabel_preReloc;  
     const VarLabel* pDamageLabel_preReloc;  
     const VarLabel* pPorosityLabel_preReloc;  
-    const VarLabel* pPlasticTempLabel_preReloc;  
-    const VarLabel* pPlasticTempIncLabel_preReloc;  
     const VarLabel* pLocalizedLabel_preReloc;  
 
   private:
@@ -258,13 +255,6 @@ namespace Uintah {
 				    ParticleVariable<int>& damage, int dwi,
 				    DataWarehouse* old_dw,
 				    DataWarehouse* new_dw);
-
-    ////////////////////////////////////////////////////////////////////////
-    /*! \brief Get the increment in plastic temperature. */
-    ////////////////////////////////////////////////////////////////////////
-    void getPlasticTemperatureIncrement(ParticleSubset* pset,
-				        DataWarehouse* new_dw,
-                                        ParticleVariable<double>& T) ;
 
     ////////////////////////////////////////////////////////////////////////
     /*! \brief Sockets for MPM-ICE */

@@ -93,6 +93,10 @@ WARNING
 
    double getInitialDensity() const;
 
+   // Get the specific heats at room temperature
+   double getInitialCp() const;
+   double getInitialCv() const;
+
    // for temperature dependent plasticity models
    double getRoomTemperature() const;
    double getMeltTemperature() const;
@@ -126,6 +130,10 @@ WARNING
    ParticleCreator* d_particle_creator;
 
    double d_density;
+
+   // Specific heats at constant pressure and constant volume
+   // (values at room temperature - [273.15 + 20] K)
+   double d_Cp, d_Cv;
 
    // for temperature dependent plasticity models
    double d_troom;

@@ -77,6 +77,10 @@ void Membrane::initializeCMData(const Patch* patch,
                                         const MPMMaterial* matl,
                                         DataWarehouse* new_dw)
 {
+  // Initialize the variables shared by all constitutive models
+  // This method is defined in the ConstitutiveModel base class.
+  initSharedDataForExplicit(patch, matl, new_dw);
+
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
   Matrix3 Identity, zero(0.);
@@ -85,15 +89,11 @@ void Membrane::initializeCMData(const Patch* patch,
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
   ParticleVariable<Matrix3> deformationGradient, pstress, defGradIP;
 
-  new_dw->allocateAndPut(deformationGradient,lb->pDeformationMeasureLabel,pset);
   new_dw->allocateAndPut(defGradIP,          defGradInPlaneLabel,         pset);
-  new_dw->allocateAndPut(pstress,            lb->pStressLabel,            pset);
 
   for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++) {
-          deformationGradient[*iter] = Identity;
           defGradIP[*iter] = Identity;
-          pstress[*iter] = zero;
   }
   computeStableTimestep(patch, matl, new_dw);
 }
@@ -101,63 +101,60 @@ void Membrane::initializeCMData(const Patch* patch,
 
 void Membrane::allocateCMDataAddRequires(Task* task,
 					 const MPMMaterial* matl,
-					 const PatchSet* ,
+					 const PatchSet* patches,
 					 MPMLabel* lb) const
 {
-  const MaterialSubset* matlset = matl->thisMaterial(); 
-  task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc, 
-                 matlset, Ghost::None);
-  task->requires(Task::NewDW,lb->pStressLabel_preReloc, 
-                 matlset, Ghost::None);
-  task->requires(Task::NewDW,defGradInPlaneLabel_preReloc, 
-                 matlset, Ghost::None);
+  const MaterialSubset* matlset = matl->thisMaterial();
+
+  // Allocate the variables shared by all constitutive models
+  // for the particle convert operation
+  // This method is defined in the ConstitutiveModel base class.
+  addSharedRForConvertExplicit(task, matlset, patches);
+
+  // Add requires local to this model
+  Ghost::GhostType  gnone = Ghost::None;
+  task->requires(Task::NewDW,defGradInPlaneLabel_preReloc, matlset, gnone);
 }
 
 
 void Membrane::allocateCMDataAdd(DataWarehouse* new_dw,
 				 ParticleSubset* addset,
-				 map<const VarLabel*, ParticleVariableBase*>* newState,
+  map<const VarLabel*, ParticleVariableBase*>* newState,
 				 ParticleSubset* delset,
 				 DataWarehouse* )
 {
-  // Put stuff in here to initialize each particle's
-  // constitutive model parameters and deformationMeasure
+  // Copy the data common to all constitutive models from the particle to be 
+  // deleted to the particle to be added. 
+  // This method is defined in the ConstitutiveModel base class.
+  copyDelToAddSetForConvertExplicit(new_dw, delset, addset, newState);
+  
+  // Copy the data local to this constitutive model from the particles to 
+  // be deleted to the particles to be added
+  ParticleVariable<Matrix3> defGradIP;
+  constParticleVariable<Matrix3> o_defGradIP;
 
-  ParticleVariable<Matrix3> deformationGradient, pstress, defGradIP;
-  constParticleVariable<Matrix3> o_deformationGradient, o_stress, o_defGradIP;
-
-  new_dw->allocateTemporary(deformationGradient,addset);
   new_dw->allocateTemporary(defGradIP,addset);
-  new_dw->allocateTemporary(pstress,addset);
-
-  new_dw->get(o_deformationGradient,lb->pDeformationMeasureLabel_preReloc,
-              delset);
   new_dw->get(o_defGradIP,defGradInPlaneLabel_preReloc,delset);
-  new_dw->get(o_stress,lb->pStressLabel_preReloc,delset);
 
   ParticleSubset::iterator o,n=addset->begin();
   for (o=delset->begin(); o != delset->end(); o++, n++) {
-    deformationGradient[*n] = o_deformationGradient[*o];
     defGradIP[*n] = o_defGradIP[*o];
-    pstress[*n] = o_stress[*o];
   }
 
-  (*newState)[lb->pDeformationMeasureLabel]=deformationGradient.clone();
   (*newState)[defGradInPlaneLabel]=defGradIP.clone();
-  (*newState)[lb->pStressLabel]=pstress.clone();
 }
 
 
 void Membrane::addParticleState(std::vector<const VarLabel*>& from,
 				   std::vector<const VarLabel*>& to)
 {
-   from.push_back(lb->pDeformationMeasureLabel);
-   from.push_back(lb->pStressLabel);
-   from.push_back(defGradInPlaneLabel);
+  // Add the particle state data common to all constitutive models.
+  // This method is defined in the ConstitutiveModel base class.
+  addSharedParticleState(from, to);
 
-   to.push_back(lb->pDeformationMeasureLabel_preReloc);
-   to.push_back(lb->pStressLabel_preReloc);
-   to.push_back(defGradInPlaneLabel_preReloc);
+  // Add the local particle state data for this constitutive model.
+  from.push_back(defGradInPlaneLabel);
+  to.push_back(defGradInPlaneLabel_preReloc);
 }
 
 void Membrane::computeStableTimestep(const Patch* patch,
@@ -270,6 +267,11 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
       new_dw->get(Gvelocity,lb->GVelocityLabel, dwi, patch, gac, NGN);
     }
 
+    // Allocate variable to store internal heating rate
+    ParticleVariable<double> pIntHeatRate;
+    new_dw->allocateAndPut(pIntHeatRate, lb->pInternalHeatRateLabel_preReloc, 
+                           pset);
+
     double shear = d_initialData.Shear;
     double bulk  = d_initialData.Bulk;
 
@@ -278,6 +280,9 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
     for(ParticleSubset::iterator iter = pset->begin();
 	iter != pset->end(); iter++){
        particleIndex idx = *iter;
+
+      // Assign zero internal heating by default - modify if necessary.
+      pIntHeatRate[idx] = 0.0;
 
        // Get the node indices that surround the cell
        IntVector ni[MAX_BASIS];
@@ -535,37 +540,26 @@ void Membrane::addInitialComputesAndRequires(Task* task,
 
 void Membrane::addComputesAndRequires(Task* task,
 					 const MPMMaterial* matl,
-					 const PatchSet*) const
+					 const PatchSet* patches) const
 {
-   Ghost::GhostType  gac   = Ghost::AroundCells;
-   const MaterialSubset* matlset = matl->thisMaterial();
-   task->requires(Task::OldDW,lb->pXLabel,                 matlset,Ghost::None);
-   task->requires(Task::OldDW,lb->pMassLabel,              matlset,Ghost::None);
-   task->requires(Task::OldDW,lb->pVelocityLabel,          matlset,Ghost::None);
-   task->requires(Task::OldDW,lb->pDeformationMeasureLabel,matlset,Ghost::None);
-   task->requires(Task::OldDW,defGradInPlaneLabel,         matlset,Ghost::None);
-   task->requires(Task::OldDW,lb->pStressLabel,            matlset,Ghost::None);
-   task->requires(Task::OldDW,lb->pTang1Label,             matlset,Ghost::None);
-   task->requires(Task::OldDW,lb->pTang2Label,             matlset,Ghost::None);
-   task->requires(Task::OldDW,lb->pNormLabel,              matlset,Ghost::None);
-   if(flag->d_8or27==27){
-     task->requires(Task::OldDW, lb->pSizeLabel,           matlset,Ghost::None);
-   }
-   task->requires(Task::NewDW, lb->gVelocityLabel,         matlset,gac, NGN);
-   task->requires(Task::OldDW, lb->delTLabel);
+  // Add the computes and requires that are common to all explicit 
+  // constitutive models.  The method is defined in the ConstitutiveModel
+  // base class.
+  const MaterialSubset* matlset = matl->thisMaterial();
+  addSharedCRForExplicit(task, matlset, patches);
 
-   if (flag->d_fracture) {
-     task->requires(Task::NewDW, lb->pgCodeLabel,       matlset,Ghost::None); 
-     task->requires(Task::NewDW, lb->GVelocityLabel,    matlset, gac, NGN);
-   }
+  // Other constitutive model and input dependent computes and requires
+  Ghost::GhostType  gnone = Ghost::None;
 
-   task->computes(lb->pStressLabel_preReloc,             matlset);
-   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
-   task->computes(defGradInPlaneLabel_preReloc,          matlset);
-   task->computes(lb->pVolumeDeformedLabel,              matlset);
-   task->computes(lb->pTang1Label_preReloc,              matlset);
-   task->computes(lb->pTang2Label_preReloc,              matlset);
-   task->computes(lb->pNormLabel_preReloc,               matlset);
+  task->requires(Task::OldDW,defGradInPlaneLabel,   matlset, gnone);
+  task->requires(Task::OldDW,lb->pTang1Label,       matlset, gnone);
+  task->requires(Task::OldDW,lb->pTang2Label,       matlset, gnone);
+  task->requires(Task::OldDW,lb->pNormLabel,        matlset, gnone);
+
+  task->computes(defGradInPlaneLabel_preReloc,      matlset);
+  task->computes(lb->pTang1Label_preReloc,          matlset);
+  task->computes(lb->pTang2Label_preReloc,          matlset);
+  task->computes(lb->pNormLabel_preReloc,           matlset);
 }
 
 void 

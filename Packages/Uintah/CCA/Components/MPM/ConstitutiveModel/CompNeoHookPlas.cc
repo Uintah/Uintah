@@ -46,9 +46,9 @@ CompNeoHookPlas::CompNeoHookPlas(ProblemSpecP& ps, MPMLabel* Mlb,
                              ParticleVariable<StateData>::getTypeDescription());
  
   bElBarLabel = VarLabel::create("p.bElBar",
-		ParticleVariable<Matrix3>::getTypeDescription());
+                ParticleVariable<Matrix3>::getTypeDescription());
   bElBarLabel_preReloc = VarLabel::create("p.bElBar+",
-		ParticleVariable<Matrix3>::getTypeDescription());
+                ParticleVariable<Matrix3>::getTypeDescription());
   if(flag->d_8or27==8){
     NGN=1;
   } else if(flag->d_8or27==27){
@@ -76,23 +76,24 @@ CompNeoHookPlas::CompNeoHookPlas(const CompNeoHookPlas* cm)
                              ParticleVariable<StateData>::getTypeDescription());
  
   bElBarLabel = VarLabel::create("p.bElBar",
-		ParticleVariable<Matrix3>::getTypeDescription());
+                ParticleVariable<Matrix3>::getTypeDescription());
   bElBarLabel_preReloc = VarLabel::create("p.bElBar+",
-		ParticleVariable<Matrix3>::getTypeDescription());
+                ParticleVariable<Matrix3>::getTypeDescription());
 }
 
 void CompNeoHookPlas::addParticleState(std::vector<const VarLabel*>& from,
-				       std::vector<const VarLabel*>& to)
+                                       std::vector<const VarLabel*>& to)
 {
-   from.push_back(p_statedata_label);
-   from.push_back(bElBarLabel);
-   from.push_back(lb->pDeformationMeasureLabel);
-   from.push_back(lb->pStressLabel);
+  // Add the particle state data common to all constitutive models.
+  // This method is defined in the ConstitutiveModel base class.
+  addSharedParticleState(from, to);
 
-   to.push_back(p_statedata_label_preReloc);
-   to.push_back(bElBarLabel_preReloc);
-   to.push_back(lb->pDeformationMeasureLabel_preReloc);
-   to.push_back(lb->pStressLabel_preReloc);
+  // Add the local particle state data for this constitutive model.
+  from.push_back(p_statedata_label);
+  from.push_back(bElBarLabel);
+
+  to.push_back(p_statedata_label_preReloc);
+  to.push_back(bElBarLabel_preReloc);
 }
 
 CompNeoHookPlas::~CompNeoHookPlas()
@@ -109,6 +110,10 @@ void CompNeoHookPlas::initializeCMData(const Patch* patch,
                                         const MPMMaterial* matl,
                                         DataWarehouse* new_dw)
 {
+  // Initialize the variables shared by all constitutive models
+  // This method is defined in the ConstitutiveModel base class.
+  initSharedDataForExplicit(patch, matl, new_dw);
+
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
   Matrix3 Identity, zero(0.);
@@ -116,34 +121,34 @@ void CompNeoHookPlas::initializeCMData(const Patch* patch,
 
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
   ParticleVariable<StateData> statedata;
-  ParticleVariable<Matrix3> deformationGradient, pstress, bElBar;
+  ParticleVariable<Matrix3> bElBar;
 
-  new_dw->allocateAndPut(statedata, p_statedata_label,            pset);
-  new_dw->allocateAndPut(deformationGradient,lb->pDeformationMeasureLabel,pset);
-  new_dw->allocateAndPut(pstress, lb->pStressLabel,            pset);
-  new_dw->allocateAndPut(bElBar,  bElBarLabel,                 pset);
+  new_dw->allocateAndPut(statedata, p_statedata_label,  pset);
+  new_dw->allocateAndPut(bElBar,    bElBarLabel,        pset);
 
-  for(ParticleSubset::iterator iter =pset->begin();iter != pset->end(); iter++){
-         statedata[*iter].Alpha = d_initialData.Alpha;
-         deformationGradient[*iter] = Identity;
-         bElBar[*iter] = Identity;
-         pstress[*iter] = zero;
+  ParticleSubset::iterator iter = pset->begin();
+  for(;iter != pset->end(); iter++){
+    statedata[*iter].Alpha = d_initialData.Alpha;
+    bElBar[*iter] = Identity;
   }
 
   computeStableTimestep(patch, matl, new_dw);
 }
 
 void CompNeoHookPlas::allocateCMDataAddRequires(Task* task,
-						const MPMMaterial* matl,
-						const PatchSet* ,
-						MPMLabel* lb) const
+                                                const MPMMaterial* matl,
+                                                const PatchSet* patches,
+                                                MPMLabel* lb) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
+
+  // Allocate the variables shared by all constitutive models
+  // for the particle convert operation
+  // This method is defined in the ConstitutiveModel base class.
+  addSharedRForConvertExplicit(task, matlset, patches);
+
+  // Add requires local to this model
   task->requires(Task::NewDW,p_statedata_label_preReloc, 
-                 matlset, Ghost::None);
-  task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc, 
-                 matlset, Ghost::None);
-  task->requires(Task::NewDW,lb->pStressLabel_preReloc, 
                  matlset, Ghost::None);
   task->requires(Task::NewDW,bElBarLabel_preReloc, 
                  matlset, Ghost::None);
@@ -151,48 +156,43 @@ void CompNeoHookPlas::allocateCMDataAddRequires(Task* task,
 
 
 void CompNeoHookPlas::allocateCMDataAdd(DataWarehouse* new_dw,
-					ParticleSubset* addset,
-					map<const VarLabel*, ParticleVariableBase*>* newState,
-					ParticleSubset* delset,
-					DataWarehouse* )
+                                        ParticleSubset* addset,
+         map<const VarLabel*, ParticleVariableBase*>* newState,
+                                        ParticleSubset* delset,
+                                        DataWarehouse* )
 {
-  // Put stuff in here to initialize each particle's
-  // constitutive model parameters and deformationMeasure
-
+  // Copy the data common to all constitutive models from the particle to be 
+  // deleted to the particle to be added. 
+  // This method is defined in the ConstitutiveModel base class.
+  copyDelToAddSetForConvertExplicit(new_dw, delset, addset, newState);
+  
+  // Copy the data local to this constitutive model from the particles to 
+  // be deleted to the particles to be added
   ParticleVariable<StateData> statedata;
-  ParticleVariable<Matrix3> deformationGradient, pstress, bElBar;
+  ParticleVariable<Matrix3>   bElBar;
 
   constParticleVariable<StateData> o_statedata;
-  constParticleVariable<Matrix3> o_deformationGradient, o_stress, o_bElBar;
+  constParticleVariable<Matrix3>   o_bElBar;
 
   new_dw->allocateTemporary(statedata,addset);
-  new_dw->allocateTemporary(deformationGradient,addset);
-  new_dw->allocateTemporary(pstress,addset);
   new_dw->allocateTemporary(bElBar,addset);
 
   new_dw->get(o_statedata,p_statedata_label_preReloc,delset);
-  new_dw->get(o_deformationGradient,lb->pDeformationMeasureLabel_preReloc,
-              delset);
-  new_dw->get(o_stress,lb->pStressLabel_preReloc,delset);
   new_dw->get(o_bElBar,bElBarLabel_preReloc,delset);
 
   ParticleSubset::iterator o,n = addset->begin();
   for (o=delset->begin(); o != delset->end(); o++, n++) {
     statedata[*n].Alpha = o_statedata[*o].Alpha;
-    deformationGradient[*n] = o_deformationGradient[*o];
     bElBar[*n] = o_bElBar[*o];
-    pstress[*n] = o_stress[*o];
   }
 
   (*newState)[p_statedata_label]=statedata.clone();
-  (*newState)[lb->pDeformationMeasureLabel]=deformationGradient.clone();
-  (*newState)[lb->pStressLabel]=pstress.clone();
   (*newState)[ bElBarLabel]=bElBar.clone();
 }
 
 void CompNeoHookPlas::computeStableTimestep(const Patch* patch,
-					     const MPMMaterial* matl,
-					     DataWarehouse* new_dw)
+                                             const MPMMaterial* matl,
+                                             DataWarehouse* new_dw)
 {
    // This is only called for the initial timestep - all other timesteps
    // are computed as a side-effect of computeStressTensor
@@ -228,8 +228,8 @@ void CompNeoHookPlas::computeStableTimestep(const Patch* patch,
        pvelocity_idx = Vector(0.0,0.0,0.0);
      }
      WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
-		      Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
-		      Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
+                      Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
+                      Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
   }
 
   WaveSpeed = dx/WaveSpeed;
@@ -239,9 +239,9 @@ void CompNeoHookPlas::computeStableTimestep(const Patch* patch,
 }
 
 void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
-					  const MPMMaterial* matl,
-					  DataWarehouse* old_dw,
-					  DataWarehouse* new_dw)
+                                          const MPMMaterial* matl,
+                                          DataWarehouse* old_dw,
+                                          DataWarehouse* new_dw)
 {
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
@@ -306,6 +306,11 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Vector> pRotationRate;
     ParticleVariable<double> pStrainEnergy;
 
+    // Allocate variable to store internal heating rate
+    ParticleVariable<double> pIntHeatRate;
+    new_dw->allocateAndPut(pIntHeatRate, lb->pInternalHeatRateLabel_preReloc, 
+                           pset);
+
     double shear = d_initialData.Shear;
     double bulk  = d_initialData.Bulk;
     double flow  = d_initialData.FlowStress;
@@ -314,8 +319,11 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
     double rho_orig = matl->getInitialDensity();
 
     for(ParticleSubset::iterator iter = pset->begin();
-	iter != pset->end(); iter++){
+        iter != pset->end(); iter++){
        particleIndex idx = *iter;
+
+      // Assign zero internal heating by default - modify if necessary.
+      pIntHeatRate[idx] = 0.0;
 
        // Get the node indices that surround the cell
        IntVector ni[MAX_BASIS];
@@ -331,17 +339,17 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
        Vector gvel;
        velGrad.set(0.0);
        for(int k = 0; k < flag->d_8or27; k++) {
-	 if (flag->d_fracture) {
-	   if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]];
-	   if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
-	 } else
-	   gvel = gvelocity[ni[k]];
-	 for (int j = 0; j<3; j++){
-	   double d_SXoodx = d_S[k][j] * oodx[j];
-	   for (int i = 0; i<3; i++) {
-	     velGrad(i,j) += gvel[i] * d_SXoodx;
-	   }
-	 }
+         if (flag->d_fracture) {
+           if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]];
+           if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
+         } else
+           gvel = gvelocity[ni[k]];
+         for (int j = 0; j<3; j++){
+           double d_SXoodx = d_S[k][j] * oodx[j];
+           for (int i = 0; i<3; i++) {
+             velGrad(i,j) += gvel[i] * d_SXoodx;
+           }
+         }
        }
        
       // Calculate the stress Tensor (symmetric 3 x 3 Matrix) given the
@@ -401,24 +409,24 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
       fTrial = sTnorm - sqtwthds*(K*alpha + flow);
 
       if(fTrial > 0.0){
-	// plastic
+        // plastic
 
-	delgamma = (fTrial/(2.0*muBar)) / (1.0 + (K/(3.0*muBar)));
+        delgamma = (fTrial/(2.0*muBar)) / (1.0 + (K/(3.0*muBar)));
 
-	normal = shearTrial/sTnorm;
+        normal = shearTrial/sTnorm;
 
         // The actual elastic shear stress
-	Shear = shearTrial - normal*2.0*muBar*delgamma;
+        Shear = shearTrial - normal*2.0*muBar*delgamma;
 
-	// Deal with history variables
-	statedata[idx].Alpha = alpha + sqtwthds*delgamma;
-	bElBar_new[idx] = Shear/shear + Identity*IEl;
+        // Deal with history variables
+        statedata[idx].Alpha = alpha + sqtwthds*delgamma;
+        bElBar_new[idx] = Shear/shear + Identity*IEl;
       }
       else {
-	// not plastic
+        // not plastic
 
-	bElBar_new[idx] = bElBarTrial;
-	Shear = shearTrial;
+        bElBar_new[idx] = bElBarTrial;
+        Shear = shearTrial;
       }
 
       // compute the total stress (volumetric + deviatoric)
@@ -434,8 +442,8 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
 
       Vector pvelocity_idx = pvelocity[idx];
       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
-		       Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
-		       Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
+                       Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
+                       Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
 
     }
 
@@ -456,34 +464,28 @@ void CompNeoHookPlas::carryForward(const PatchSubset* patches,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     int dwi = matl->getDWIndex();
-    ParticleVariable<Matrix3> pdefm_new,pstress_new,bElBar_new;
-    constParticleVariable<Matrix3> pdefm,bElBar;
+    ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
+
+    // Carry forward the data common to all constitutive models 
+    // when using RigidMPM.
+    // This method is defined in the ConstitutiveModel base class.
+    carryForwardSharedData(pset, old_dw, new_dw, matl);
+
+    // Carry forward the data local to this constitutive model 
+    ParticleVariable<Matrix3> bElBar_new;
+    constParticleVariable<Matrix3> bElBar;
     ParticleVariable<StateData> statedata;
     constParticleVariable<StateData> statedata_old;
-    constParticleVariable<double> pmass;
-    ParticleVariable<double> pvolume_deformed;
-    ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-    old_dw->get(pdefm,         lb->pDeformationMeasureLabel,           pset);
     old_dw->get(statedata_old,         p_statedata_label,              pset);
     old_dw->get(bElBar,                bElBarLabel,                    pset);
-    old_dw->get(pmass,                 lb->pMassLabel,                 pset);
-    new_dw->allocateAndPut(pdefm_new,lb->pDeformationMeasureLabel_preReloc,
-                                                                       pset);
-    new_dw->allocateAndPut(pstress_new,lb->pStressLabel_preReloc,      pset);
     new_dw->allocateAndPut(statedata,  p_statedata_label_preReloc,     pset);
     new_dw->allocateAndPut(bElBar_new, bElBarLabel_preReloc,           pset);
-    new_dw->allocateAndPut(pvolume_deformed, lb->pVolumeDeformedLabel, pset);
     statedata.copyData(statedata_old);
-
-    double rho_orig = matl->getInitialDensity();
 
     for(ParticleSubset::iterator iter = pset->begin();
                                  iter != pset->end(); iter++){
       particleIndex idx = *iter;
-      pdefm_new[idx] = pdefm[idx];
       bElBar_new[idx] = bElBar[idx];
-      pstress_new[idx] = Matrix3(0.0);
-      pvolume_deformed[idx]=(pmass[idx]/rho_orig);
     }
     new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(1.e10)), 
                 lb->delTLabel);
@@ -501,46 +503,36 @@ void CompNeoHookPlas::addInitialComputesAndRequires(Task* task,
 }
 
 void CompNeoHookPlas::addComputesAndRequires(Task* task,
-					     const MPMMaterial* matl,
-					     const PatchSet*) const
+                                             const MPMMaterial* matl,
+                                             const PatchSet* patches) const
 {
-  Ghost::GhostType  gac   = Ghost::AroundCells;
+  // Add the computes and requires that are common to all explicit 
+  // constitutive models.  The method is defined in the ConstitutiveModel
+  // base class.
   const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::OldDW, lb->pXLabel,                 matlset,Ghost::None);
-  task->requires(Task::OldDW, p_statedata_label,           matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pMassLabel,              matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pVelocityLabel,          matlset,Ghost::None);
-  task->requires(Task::OldDW, lb->pDeformationMeasureLabel,matlset,Ghost::None);
-  task->requires(Task::OldDW, bElBarLabel,                 matlset,Ghost::None);
-  if(flag->d_8or27==27){
-    task->requires(Task::OldDW, lb->pSizeLabel,            matlset,Ghost::None);
-  }
-  task->requires(Task::NewDW, lb->gVelocityLabel,          matlset,gac, NGN);
-  task->requires(Task::OldDW, lb->delTLabel);
+  addSharedCRForExplicit(task, matlset, patches);
 
-  if (flag->d_fracture) {
-    task->requires(Task::NewDW, lb->pgCodeLabel, matlset, Ghost::None);
-    task->requires(Task::NewDW, lb->GVelocityLabel, matlset, gac, NGN);
-  }
+  // Other constitutive model and input dependent computes and requires
+  Ghost::GhostType  gnone = Ghost::None;
 
-  task->computes(lb->pStressLabel_preReloc,             matlset);
-  task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
-  task->computes(bElBarLabel_preReloc,                  matlset);
-  task->computes(p_statedata_label_preReloc,            matlset);
-  task->computes(lb->pVolumeDeformedLabel,              matlset);
+  task->requires(Task::OldDW, p_statedata_label, matlset,gnone);
+  task->requires(Task::OldDW, bElBarLabel,       matlset,gnone);
+
+  task->computes(bElBarLabel_preReloc,       matlset);
+  task->computes(p_statedata_label_preReloc, matlset);
 }
 
 void 
 CompNeoHookPlas::addComputesAndRequires(Task* ,
-				   const MPMMaterial* ,
-				   const PatchSet* ,
-				   const bool ) const
+                                   const MPMMaterial* ,
+                                   const PatchSet* ,
+                                   const bool ) const
 {
 }
 
 double CompNeoHookPlas::computeRhoMicroCM(double pressure,
                                      const double p_ref,
-					  const MPMMaterial* matl)
+                                          const MPMMaterial* matl)
 {
   double rho_orig = matl->getInitialDensity();
   double bulk = d_initialData.Bulk;
@@ -607,7 +599,7 @@ const TypeDescription* fun_getTypeDescription(CompNeoHookPlas::StateData*)
    static TypeDescription* td = 0;
    if(!td){
       td = scinew TypeDescription(TypeDescription::Other,
-			  "CompNeoHookPlas::StateData", true, &makeMPI_CMData);
+                          "CompNeoHookPlas::StateData", true, &makeMPI_CMData);
    }
    return td;   
 }
