@@ -19,12 +19,12 @@ itcl_class SCIRun_Visualization_ShowColorMap {
     inherit Module
     constructor {config} {
         set name ShowColorMap
-
 	global $this-length       # One of three lengths to use.
 	global $this-side         # Which side to put the map on.
 	global $this-numlabels    # How many labels to use on the map.
+	global $this-scale
+	global $this-units
 	global $this-text_color
-
         set_defaults
     }
 
@@ -32,6 +32,8 @@ itcl_class SCIRun_Visualization_ShowColorMap {
 	set $this-length half2
 	set $this-side left
 	set $this-numlabels 5
+	set $this-scale 1.0
+	set $this-units ""
 	set $this-text_color 1
     }
 
@@ -45,9 +47,10 @@ itcl_class SCIRun_Visualization_ShowColorMap {
 
 	frame $w.side -relief groove -borderwidth 2
 	frame $w.length -relief groove -borderwidth 2
+	frame $w.units -borderwidth 2
 	frame $w.nlabs -borderwidth 2
-
-
+	frame $w.scale -borderwidth 2
+	
 	label $w.side.label -text "Display Side"
 	radiobutton $w.side.left -text "Left" -variable $this-side -value left -command "$this-c needexecute"
 	radiobutton $w.side.bottom -text "Bottom" -variable $this-side -value bottom -command "$this-c needexecute"
@@ -73,17 +76,27 @@ itcl_class SCIRun_Visualization_ShowColorMap {
 	pack $w.cf.tcolor $w.cf.white $w.cf.black -side top -anchor w
 
 	label $w.nlabs.label -text "Labels"
-	entry $w.nlabs.entry -width 5 -textvariable $this-numlabels
+	entry $w.nlabs.entry -width 10 -textvariable $this-numlabels
 	bind $w.nlabs.entry <KeyPress-Return> "$this-c needexecute"
 
 	pack $w.nlabs.label $w.nlabs.entry -side left -anchor n
-
-	pack $w.side $w.length $w.cf $w.nlabs -side top -e y \
-	    -f both -padx 5 -pady 5
-
-
 	
+	label $w.units.label -text "Units"
+	entry $w.units.entry -width 10 -textvariable $this-units
+	bind $w.units.entry <KeyPress-Return> "$this-c needexecute"
+
+	pack $w.units.label $w.units.entry -side left -anchor n
+	
+	label $w.scale.label -text "Scale"
+	entry $w.scale.entry -width 10 -textvariable $this-scale
+	bind $w.scale.entry <KeyPress-Return> "$this-c needexecute"
+
+	pack $w.scale.label $w.scale.entry -side left -anchor n
+	
+	pack $w.side $w.length $w.cf $w.nlabs $w.units $w.scale -side top \
+	    -e y -f both -padx 5 -pady 5
     }
 }
+
 
 
