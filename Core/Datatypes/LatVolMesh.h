@@ -14,7 +14,6 @@
 #ifndef SCI_project_LatVolMesh_h
 #define SCI_project_LatVolMesh_h 1
 
-#include <Core/Datatypes/FieldIterator.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/MeshBase.h>
@@ -151,9 +150,7 @@ public:
   typedef CellIndex       cell_index;
   typedef CellIter        cell_iterator;
 
-  //! Storage types for the arguments passed to the 
-  //  get_*() functions.  For lattice meshes, these all have
-  //  known maximum sizes, so we use them.
+  // storage types for get_* functions
   typedef vector<node_index>  node_array;
   typedef vector<edge_index>  edge_array;
   typedef vector<face_index>  face_array;
@@ -164,13 +161,13 @@ public:
   friend class CellIter;
 
   LatVolMesh()
-    : nx_(1),ny_(1),nz_(1),min_(Point(0,0,0)),max_(Point(1,1,1)) {};
+    : nx_(1),ny_(1),nz_(1),min_(Point(0,0,0)),max_(Point(1,1,1)) {}
   LatVolMesh(unsigned x, unsigned y, unsigned z, Point &min, Point &max) 
-    : nx_(x),ny_(y),nz_(z),min_(min),max_(max) {};
+    : nx_(x),ny_(y),nz_(z),min_(min),max_(max) {}
   LatVolMesh(const LatVolMesh &copy)
     : nx_(copy.get_nx()),ny_(copy.get_ny()),nz_(copy.get_nz()),
-      min_(copy.get_min()),max_(copy.get_max()) {};
-  virtual ~LatVolMesh();
+      min_(copy.get_min()),max_(copy.get_max()) {}
+  virtual ~LatVolMesh() {}
 
   node_iterator node_begin() const { return node_iterator(this, 0, 0, 0); }
   node_iterator node_end() const { return node_iterator(this, 0, 0, nz_); }
@@ -196,43 +193,40 @@ public:
   void set_min(Point p) { min_ = p; }
   void set_max(Point p) { max_ = p; }
 
-
   //! get the child elements of the given index
-  void get_nodes(node_array &array, edge_index idx) const;
-  void get_nodes(node_array &array, face_index idx) const;
+  void get_nodes(node_array &, edge_index) const {}
+  void get_nodes(node_array &, face_index) const {}
   void get_nodes(node_array &array, cell_index idx) const;
-  void get_edges(edge_array &array, face_index idx) const;
-  void get_edges(edge_array &array, cell_index idx) const;
-  void get_faces(face_array &array, cell_index idx) const;
+  void get_edges(edge_array &, face_index) const {}
+  void get_edges(edge_array &, cell_index) const {}
+  void get_faces(face_array &, cell_index) const {}
 
   //! get the parent element(s) of the given index
-  unsigned get_edges(edge_array &array, node_index idx) const;
-  unsigned get_faces(face_array &array, node_index idx) const;
-  unsigned get_faces(face_array &array, edge_index idx) const;
-  unsigned get_cells(cell_array &array, node_index idx) const;
-  unsigned get_cells(cell_array &array, edge_index idx) const;
-  unsigned get_cells(cell_array &array, face_index idx) const;
+  unsigned get_edges(edge_array &, node_index) const { return 0; }
+  unsigned get_faces(face_array &, node_index) const { return 0; }
+  unsigned get_faces(face_array &, edge_index) const { return 0; }
+  unsigned get_cells(cell_array &, node_index) const { return 0; }
+  unsigned get_cells(cell_array &, edge_index) const { return 0; }
+  unsigned get_cells(cell_array &, face_index) const { return 0; }
 
   //! similar to get_cells() with face_index argument, but
   //  returns the "other" cell if it exists, not all that exist
-  void get_neighbor(cell_index &neighbor, face_index idx) const;
+  void get_neighbor(cell_index &, face_index) const {}
 
   //! get the center point (in object space) of an element
   void get_center(Point &result, node_index idx) const;
-  void get_center(Point &result, edge_index idx) const;
-  void get_center(Point &result, face_index idx) const;
+  void get_center(Point &, edge_index) const {}
+  void get_center(Point &, face_index) const {}
   void get_center(Point &result, cell_index idx) const;
 
   bool locate(node_index &node, const Point &p) const;
-  bool locate(edge_index &edge, const Point &p) const;
-  bool locate(face_index &face, const Point &p) const;
+  bool locate(edge_index &, const Point &) const { return false; }
+  bool locate(face_index &, const Point &) const { return false; }
   bool locate(cell_index &cell, const Point &p) const;
 
+  void unlocate(Point &result, const Point &p) const { result =  p; };
 
-  void unlocate(Point &result, const Point &p) const;
-
-  void get_point(Point &result, node_index index) const 
-    { get_center(result,index); }
+  void get_point(Point &result, node_index index) const;
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
