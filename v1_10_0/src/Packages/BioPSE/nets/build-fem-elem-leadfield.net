@@ -17,18 +17,12 @@
 
 # SCI Network 1.0
 
+#######################################################################
+# Check environment variables.  Ask user for input if not set:
 set results [sourceSettingsFile]
-
-if { $results == "failed" } {
-
-    ::netedit scheduleok
-    return 
-
-} else {
-
-    set DATADIR [lindex $results 0]
-    set DATASET [lindex $results 1]
-}
+set DATADIR [lindex $results 0]
+set DATASET [lindex $results 1]
+#######################################################################
 
 source $DATADIR/$DATASET/$DATASET.settings
 
