@@ -34,19 +34,18 @@
 #ifdef __linux__
 
 #include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xproto.h>
 #include <X11/Xlibint.h>
+#include <X11/Xproto.h>
+#include <X11/Xos.h>
+#include <X11/Xutil.h>
 #include <X11/extensions/XTest.h>
 #include <X11/extensions/sync.h>
-#include <X11/Xproto.h>
 #include <X11/extensions/Xdbe.h>
 #include <X11/extensions/record.h>
 #include <X11/extensions/shape.h>
 #include <X11/extensions/xf86misc.h>
 #include <X11/extensions/xf86mscstr.h>
 #include <X11/extensions/XInput.h>
-#include <X11/Xos.h>
 
 /*
  * We need to keep a list of open displays since the Xlib display list isn't
@@ -279,7 +278,7 @@ typedef struct {
 } xFGLGetDriverDataReply;       // = 72
 // 72 bytes 
 
-int video_card_memory_size()
+int video_card_memory_size_ATI()
 {
   XExtDisplayInfo* info;
   Display* dpy;
@@ -332,6 +331,104 @@ int video_card_memory_size()
     return 0;
   }
   return size;
+}
+
+#define NV_CONTROL_NAME "NV-CONTROL"
+#define NV_CONTROL_EVENTS 1
+#define X_nvCtrlQueryAttribute 2
+#define NV_CTRL_VIDEO_RAM 6
+
+static XExtensionInfo _nvctrl_ext_info_data;
+static XExtensionInfo *nvctrl_ext_info = &_nvctrl_ext_info_data;
+static /* const */ char *nvctrl_extension_name = NV_CONTROL_NAME;
+static XEXT_GENERATE_CLOSE_DISPLAY (close_display, nvctrl_ext_info)
+static /* const */ XExtensionHooks nvctrl_extension_hooks = {
+    NULL,                               /* create_gc */
+    NULL,                               /* copy_gc */
+    NULL,                               /* flush_gc */
+    NULL,                               /* free_gc */
+    NULL,                               /* create_font */
+    NULL,                               /* free_font */
+    close_display,                      /* close_display */
+    NULL,                               /* wire_to_event */
+    NULL,                               /* event_to_wire */
+    NULL,                               /* error */
+    NULL,                               /* error_string */
+};
+static XEXT_GENERATE_FIND_DISPLAY (find_display, nvctrl_ext_info,
+                                   nvctrl_extension_name, 
+                                   &nvctrl_extension_hooks,
+                                   NV_CONTROL_EVENTS, NULL)
+
+typedef struct {
+    CARD8 reqType;
+    CARD8 nvReqType;
+    CARD16 length B16;
+    CARD32 screen B32;
+    CARD32 display_mask B32;
+    CARD32 attribute B32;
+} xnvCtrlQueryAttributeReq;
+#define sz_xnvCtrlQueryAttributeReq 16
+
+typedef struct {
+    BYTE type;
+    BYTE pad0;
+    CARD16 sequenceNumber B16;
+    CARD32 length B32;
+    CARD32 flags B32;
+    INT32  value B32;
+    CARD32 pad4 B32;
+    CARD32 pad5 B32;
+    CARD32 pad6 B32;
+    CARD32 pad7 B32;
+} xnvCtrlQueryAttributeReply;
+#define sz_xnvCtrlQueryAttributeReply 32
+
+int video_card_memory_size_NV()
+{
+  XExtDisplayInfo* info;
+  Display* dpy;
+  Bool exists = False;
+  int size;
+
+  dpy = XOpenDisplay(NULL); //glXGetCurrentDisplay();
+  info = find_display(dpy);
+
+  if (XextHasExtension(info))
+  {
+    xnvCtrlQueryAttributeReply rep;
+    xnvCtrlQueryAttributeReq *req;
+
+    LockDisplay(dpy);
+    GetReq(nvCtrlQueryAttribute, req);
+    req->reqType = info->codes->major_opcode;
+    req->nvReqType = X_nvCtrlQueryAttribute;
+    req->screen = DefaultScreen(dpy);
+    req->display_mask = 0;
+    req->attribute = NV_CTRL_VIDEO_RAM;
+    if (!_XReply (dpy, (xReply *)&rep, 0, xTrue)) {
+      UnlockDisplay(dpy);
+      SyncHandle();
+      return 0;
+    }
+    size = rep.value/1024;
+    exists = rep.flags;
+    UnlockDisplay (dpy);
+    SyncHandle ();
+  }
+  else
+  {
+    return 0;
+  }
+  return exists == True ? size : 0;
+}
+
+int video_card_memory_size()
+{
+  int size;
+  size = video_card_memory_size_ATI();
+  if(size) return size;
+  return video_card_memory_size_NV();
 }
 
 #elif __APPLE__

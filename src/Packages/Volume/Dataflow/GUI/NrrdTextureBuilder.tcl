@@ -43,10 +43,10 @@ itcl_class Volume_Visualization_NrrdTextureBuilder {
 	set s "$this state"
 
 	frame $w.f.memframe -relief groove -border 2
-	label $w.f.memframe.l -text "Graphics Card Memory (Mb)"
+	label $w.f.memframe.l -text "Graphics Card Memory (MB)"
 	pack $w.f.memframe -side top -padx 2 -pady 2 -fill both
 	pack $w.f.memframe.l -side top -fill x
-	checkbutton $w.f.memframe.auto -text "Auto" -relief flat \
+	checkbutton $w.f.memframe.auto -text "Autodetect" -relief flat \
             -variable $this-card_mem_auto -onvalue 1 -offvalue 0 \
             -anchor w -command "$s; $n"
 	pack $w.f.memframe.auto -side top -fill x
