@@ -106,6 +106,12 @@ itcl_class Kurt_Vis_VisControl {
 	$this makeFrames $w.f
     }
 
+    method build {} {
+	set w .ui[modname]
+
+	$this makeFrames $w.f
+    }
+
     method makeFrames { parent } {
 	global $this-gsVar;
 	global $this-gvVar;
@@ -134,11 +140,14 @@ itcl_class Kurt_Vis_VisControl {
 	set w .ui[modname] 
 	if { [winfo exists $w.b] } {
 	    destroy $w.b
+	}
+	if { [winfo exists $w.time] } {
 	    destroy $w.time
 	}
 	
 	scale $w.time -orient horizontal -from 0 -to 1.0 \
-	    -variable $this-time -resolution 0.01 -bd 2 -text "Time"
+	    -variable $this-time -resolution 0.01 -bd 2 -command "$this-c needexecute"
+	#-text "Time"
 	
 	button $w.b -text "Close" -command "wm withdraw $w"
 	pack $w.time $w.b -side top -fill x -padx 2 -pady 2
@@ -184,7 +193,6 @@ itcl_class Kurt_Vis_VisControl {
 	set gvVarList ""
 	set gf ""
 	set pf ""
-
 #	button $w.b -text "Make Frames" -command "$this makeFrames $w.f"
 #	pack $w.b -side top -fill x -padx 2 -pady 2
 
@@ -194,7 +202,7 @@ itcl_class Kurt_Vis_VisControl {
 	set w .ui[modname] 
 	if { [winfo exists $w.time] } {
 	    
-	    set r [expr ([eval $max] - [eval $min])/double([eval timesteps])]
+	    set r [expr ($max - $min)/double($timesteps)]
 	    set res "$r"
 
 	    $w.time configure -from $min
@@ -211,9 +219,11 @@ itcl_class Kurt_Vis_VisControl {
     }
     method setParticleScalars { args } {
 	set psVarList $args;
+	puts "psVarList is now $psVarList";
     }
     method setParticleVectors { args } {
-	set pvVarList $args
+	set pvVarList $args;
+	puts "pvVarList is now $pvVarList";
     }    
     
     method buildVarList { type } {
@@ -224,14 +234,17 @@ itcl_class Kurt_Vis_VisControl {
 	set vv ""
 	set c "$this-c needexecute"
 	if { $type == "particleSet"} {
+	    puts "... buildControlFrame $pf.1"
 	    buildControlFrame $pf.1
 	    #set varlist [split $psVarList]
-	    for {set i 0} { $i < [llength $psVarlist] } { incr i } {
-		set newvar [lindex $psVarlist $i]
+	    for {set i 0} { $i < [llength $psVarList] } { incr i } {
+		set newvar [lindex $psVarList $i]
 		if { $i == 0 && [set $this-psVar] == ""} {
 		    set $this-psVar $newvar
 		}
 		set lvar [string tolower $newvar]
+		regsub \\. $lvar _ lvar
+		puts "button $pf.1.1.$lvar"
 		radiobutton $pf.1.1.$lvar -text $newvar \
 		    -variable $this-psVar -command $c -value $newvar
 		pack $pf.1.1.$lvar -side top -anchor w
@@ -241,12 +254,13 @@ itcl_class Kurt_Vis_VisControl {
 	    }
 	    ## set the Particle Vector Variables
 	    #set varlist [split $pvVarList]
-	    for {set i 0} { $i < [llength $pvVarlist] } { incr i } {
-		set newvar [lindex $pvVarlist $i]
+	    for {set i 0} { $i < [llength $pvVarList] } { incr i } {
+		set newvar [lindex $pvVarList $i]
 		if { $i == 0 && [set $this-pvVar] == ""} {
 		    set $this-pvVar $newvar
 		}
 		set lvar [string tolower $newvar]
+		regsub \\. $lvar _ lvar
 		radiobutton $pf.1.2.$lvar -text $newvar \
 		    -variable $this-pvVar -command $c -value $newvar
 		pack $pf.1.2.$lvar -side top -anchor w
@@ -258,12 +272,13 @@ itcl_class Kurt_Vis_VisControl {
 
 	    buildControlFrame $gf.1
 	    #set varlist [split $gsVarList]
-	    for {set i 0} { $i < [llength $gsVarlist] } { incr i } {
-		set newvar [lindex $gsVarlist $i]
+	    for {set i 0} { $i < [llength $gsVarList] } { incr i } {
+		set newvar [lindex $gsVarList $i]
 		if { $i == 0 && [set $this-gsVar] == ""} {
 		    set $this-gsVar $newvar
 		}
 		set lvar [string tolower $newvar]
+		regsub \\. $lvar _ lvar
 		radiobutton $gf.1.1.$lvar -text $newvar \
 		    -variable $this-gsVar -command $c -value $newvar
 		pack $gf.1.1.$lvar -side top -anchor w
@@ -273,12 +288,13 @@ itcl_class Kurt_Vis_VisControl {
 	    }
 	    ## set the Particle Vector Variables
 	    #set varlist [split $gvVarList]
-	    for {set i 0} { $i < [llength $gvVarlist] } { incr i } {
-		set newvar [lindex $gvVarlist $i]
+	    for {set i 0} { $i < [llength $gvVarList] } { incr i } {
+		set newvar [lindex $gvVarList $i]
 		if { $i == 0 && [set $this-gvVar] == ""} {
 		    set $this-gvVar $newvar
 		}
 		set lvar [string tolower $newvar]
+		regsub \\. $lvar _ lvar
 		radiobutton $gf.1.2.$lvar -text $newvar \
 		    -variable $this-gvVar -command $c -value $newvar
 		pack $gf.1.2.$lvar -side top -anchor w
