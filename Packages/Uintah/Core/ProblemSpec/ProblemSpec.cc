@@ -124,7 +124,47 @@ std::string ProblemSpec::getNodeName() const
 
   return name;
 }
-
+//______________________________________________________________________
+//
+void checkForInputError(const std::string& stringValue, 
+                        const std::string& Int_or_float)
+{
+  //__________________________________
+  //  Make sure stringValue only contains valid characters
+  if ("Int_or_float" != "int") {
+    string validChars(" -.0123456789eE");
+    std::string::size_type  pos = stringValue.find_first_not_of(validChars);
+    if (pos != string::npos){
+      ostringstream warn;
+      warn << "Input file error: I found ("<< stringValue[pos]
+           << ") inside of "<< stringValue<< " at position "<< pos
+           << "\nIf this is a valid number tell me --Todd "<<endl;
+      throw ProblemSetupException(warn.str());
+    }
+    //__________________________________
+    // check for two or more "."
+    std::string::size_type p1 = stringValue.find_first_of(".");    
+    std::string::size_type p2 = stringValue.find_last_of(".");     
+    if (p1 != p2){
+      ostringstream warn;
+      warn << "Input file error: I found two (..) "
+           << "inside of "<< stringValue
+           << "\nIf this is a valid number tell me --Todd "<<endl;
+      throw ProblemSetupException(warn.str());
+    }
+  }  
+  if (Int_or_float == "int")  {
+    string validChars(" -0123456789");
+    std::string::size_type  pos = stringValue.find_first_not_of(validChars);
+    if (pos != string::npos){
+      ostringstream warn;
+      warn << "Input file error Integer Number: I found ("<< stringValue[pos]
+           << ") inside of "<< stringValue<< " at position "<< pos
+           << "\nIf this is a valid number tell me --Todd "<<endl;
+      throw ProblemSetupException(warn.str());
+    }
+  }
+} 
 
 ProblemSpecP ProblemSpec::get(const std::string& name, double &value)
 {
@@ -137,11 +177,13 @@ ProblemSpecP ProblemSpec::get(const std::string& name, double &value)
   }
   else {
     for (DOMNode* child = found_node->getFirstChild(); child != 0;
-	 child = child->getNextSibling()) {
+        child = child->getNextSibling()) {
       if (child->getNodeType() == DOMNode::TEXT_NODE) {
-	//DOMString val = child->getNodeValue();
-	const char* s = to_char_ptr(child->getNodeValue());
-	value = atof(s);
+        //DOMString val = child->getNodeValue();
+        const char* s = to_char_ptr(child->getNodeValue());
+        string stringValue(s);
+        checkForInputError(stringValue,"double"); 
+        value = atof(s);
       }
     }
   }
@@ -159,10 +201,12 @@ ProblemSpecP ProblemSpec::get(const std::string& name, int &value)
   }
   else {
     for (DOMNode* child = found_node->getFirstChild(); child != 0;
-	 child = child->getNextSibling()) {
+        child = child->getNextSibling()) {
       if (child->getNodeType() == DOMNode::TEXT_NODE) {
 	//DOMString val = child->getNodeValue();
 	const char* s = to_char_ptr(child->getNodeValue());
+       string stringValue(s);
+       checkForInputError(stringValue,"int");
 	value = atoi(s);
       }
     }
@@ -182,7 +226,7 @@ ProblemSpecP ProblemSpec::get(const std::string& name, bool &value)
   }
   else {
     for (DOMNode* child = found_node->getFirstChild(); child != 0;
-	 child = child->getNextSibling()) {
+        child = child->getNextSibling()) {
       if (child->getNodeType() == DOMNode::TEXT_NODE) {
 	//DOMString val = child->getNodeValue();
 	const char *s = to_char_ptr(child->getNodeValue());
@@ -192,13 +236,13 @@ ProblemSpecP ProblemSpec::get(const std::string& name, bool &value)
         string nospace_cmp;
         result_stream >> nospace_cmp;
 	if (nospace_cmp == "false") {
-	   value = false;
+         value = false;
 	}
 	else if  (nospace_cmp == "true") {
-	  value = true;
+         value = true;
 	} else {
-	  string error = name + "Must be either true or false";
-	  throw ProblemSetupException(error);
+         string error = name + "Must be either true or false";
+         throw ProblemSetupException(error);
 	}
       }
     }
@@ -218,14 +262,14 @@ ProblemSpecP ProblemSpec::get(const std::string& name, std::string &value)
   }
   else {
     for (DOMNode* child = found_node->getFirstChild(); child != 0;
-	 child = child->getNextSibling()) {
+        child = child->getNextSibling()) {
       if (child->getNodeType() == DOMNode::TEXT_NODE) {
         //DOMString val = child->getNodeValue();
-	 const char *s = to_char_ptr(child->getNodeValue());
+        const char *s = to_char_ptr(child->getNodeValue());
         //__________________________________
         // This little bit of magic removes all spaces
-	 std::string tmp(s);
-	 istringstream value_tmp(tmp);
+        std::string tmp(s);
+        istringstream value_tmp(tmp);
         value_tmp >> value; 
       }
     }
@@ -236,7 +280,7 @@ ProblemSpecP ProblemSpec::get(const std::string& name, std::string &value)
 }
 
 ProblemSpecP ProblemSpec::get(const std::string& name, 
-			      Point &value)
+                          Point &value)
 {
     Vector v;
     ProblemSpecP ps = get(name, v);
@@ -245,7 +289,7 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
 }
 
 ProblemSpecP ProblemSpec::get(const std::string& name, 
-			      Vector &value)
+                          Vector &value)
 {
 
   std::string string_value;
@@ -257,7 +301,7 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
   }
   else {
     for (DOMNode* child = found_node->getFirstChild(); child != 0;
-	 child = child->getNextSibling()) {
+        child = child->getNextSibling()) {
       if (child->getNodeType() == DOMNode::TEXT_NODE) {
 	//DOMString val = child->getNodeValue();
 	const char *s = to_char_ptr(child->getNodeValue());
@@ -272,6 +316,10 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
 	std::string x_val(string_value,i1+1,i2-i1-1);
 	std::string y_val(string_value,i2+1,i3-i2-1);
 	std::string z_val(string_value,i3+1,i4-i3-1);
+       
+	checkForInputError(x_val, "double"); 
+       checkForInputError(y_val, "double");
+       checkForInputError(z_val, "double");
 
 	value.x(atof(x_val.c_str()));
 	value.y(atof(y_val.c_str()));
@@ -285,7 +333,7 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
 }
 
 ProblemSpecP ProblemSpec::get(const std::string& name, 
-			      vector<double>& value)
+                           vector<double>& value)
 {
 
   std::string string_value;
@@ -297,7 +345,7 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
   }
   else {
     for (DOMNode* child = found_node->getFirstChild(); child != 0;
-	 child = child->getNextSibling()) {
+        child = child->getNextSibling()) {
       if (child->getNodeType() == DOMNode::TEXT_NODE) {
 	//DOMString val = child->getNodeValue();
 	const char *s = to_char_ptr(child->getNodeValue());
@@ -307,17 +355,19 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
 	char c,next;
 	string result;
 	while (!in.eof()) {
-	  in >> c;
-	  if (c == '[' || c == ',' || c == ' ' || c == ']')
-	    continue;
-	  next = in.peek();
-	  result += c;
-	  if (next == ',' ||  next == ' ' || next == ']') {
-	    // turn the result into a number
-	    double val = atof(result.c_str());
-	    value.push_back(val);
-	    result.erase();
-	  }
+         in >> c;
+         if (c == '[' || c == ',' || c == ' ' || c == ']')
+           continue;
+         next = in.peek();
+         result += c;
+         if (next == ',' ||  next == ' ' || next == ']') {
+           // turn the result into a number
+           checkForInputError(result, "double"); 
+           
+           double val = atof(result.c_str());
+           value.push_back(val);
+           result.erase();
+         }
 	}
       }
     }
@@ -329,7 +379,7 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
 
 
 ProblemSpecP ProblemSpec::get(const std::string& name, 
-			      vector<int>& value)
+                           vector<int>& value)
 {
 
   std::string string_value;
@@ -341,7 +391,7 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
   }
   else {
     for (DOMNode* child = found_node->getFirstChild(); child != 0;
-	 child = child->getNextSibling()) {
+        child = child->getNextSibling()) {
       if (child->getNodeType() == DOMNode::TEXT_NODE) {
 	//DOMString val = child->getNodeValue();
 	const char *s = to_char_ptr(child->getNodeValue());
@@ -351,17 +401,19 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
 	char c,next;
 	string result;
 	while (!in.eof()) {
-	  in >> c;
-	  if (c == '[' || c == ',' || c == ' ' || c == ']')
-	    continue;
-	  next = in.peek();
-	  result += c;
-	  if (next == ',' ||  next == ' ' || next == ']') {
-	    // turn the result into a number
-	    int val = atoi(result.c_str());
-	    value.push_back(val);
-	    result.erase();
-	  }
+         in >> c;
+         if (c == '[' || c == ',' || c == ' ' || c == ']')
+           continue;
+         next = in.peek();
+         result += c;
+         if (next == ',' ||  next == ' ' || next == ']') {
+           // turn the result into a number
+
+           checkForInputError(result, "int"); 
+           int val = atoi(result.c_str());
+           value.push_back(val);
+           result.erase();
+         }
 	}
       }
     }
@@ -372,7 +424,7 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
 } 
 
 ProblemSpecP ProblemSpec::get(const std::string& name, 
-			      IntVector &value)
+                           IntVector &value)
 {
 
   std::string string_value;
@@ -384,7 +436,7 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
   }
   else {
     for (DOMNode* child = found_node->getFirstChild(); child != 0;
-	 child = child->getNextSibling()) {
+        child = child->getNextSibling()) {
       if (child->getNodeType() == DOMNode::TEXT_NODE) {
 	//DOMString val = child->getNodeValue();
 	const char *s = to_char_ptr(child->getNodeValue());
@@ -399,7 +451,11 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
 	std::string x_val(string_value,i1+1,i2-i1-1);
 	std::string y_val(string_value,i2+1,i3-i2-1);
 	std::string z_val(string_value,i3+1,i4-i3-1);
-			
+
+       checkForInputError(x_val, "int");     
+       checkForInputError(y_val, "int");     
+       checkForInputError(z_val, "int");     
+                
 	value.x(atoi(x_val.c_str()));
 	value.y(atoi(y_val.c_str()));
 	value.z(atoi(z_val.c_str()));	
@@ -451,7 +507,7 @@ void ProblemSpec::require(const std::string& name, std::string& value)
 }
 
 void ProblemSpec::require(const std::string& name, 
-			  Vector  &value)
+                       Vector  &value)
 {
 
   // Check if the prob_spec is NULL
@@ -462,7 +518,7 @@ void ProblemSpec::require(const std::string& name,
 }
 
 void ProblemSpec::require(const std::string& name, 
-			  vector<double>& value)
+                       vector<double>& value)
 {
 
   // Check if the prob_spec is NULL
@@ -473,7 +529,7 @@ void ProblemSpec::require(const std::string& name,
 }
 
 void ProblemSpec::require(const std::string& name, 
-			  vector<int>& value)
+                       vector<int>& value)
 {
 
   // Check if the prob_spec is NULL
@@ -484,7 +540,7 @@ void ProblemSpec::require(const std::string& name,
 } 
 
 void ProblemSpec::require(const std::string& name, 
-			  IntVector  &value)
+                       IntVector  &value)
 {
 
   // Check if the prob_spec is NULL
@@ -495,7 +551,7 @@ void ProblemSpec::require(const std::string& name,
 }
 
 void ProblemSpec::require(const std::string& name, 
-			  Point  &value)
+                       Point  &value)
 {
 
   // Check if the prob_spec is NULL
@@ -507,7 +563,7 @@ void ProblemSpec::require(const std::string& name,
 
 
 ProblemSpecP ProblemSpec::getOptional(const std::string& name, 
-				      std::string &value)
+                                 std::string &value)
 {
   ProblemSpecP ps = this;
   DOMNode* attr_node;
