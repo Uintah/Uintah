@@ -58,7 +58,6 @@ public:
   GenericField() : 
     Field(),
     mesh_(mesh_handle_type(new mesh_type())),
-    fdata_(fdata_type())
   {}
 
   GenericField(data_location data_at) : 
