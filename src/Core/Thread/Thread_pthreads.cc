@@ -942,7 +942,7 @@ void Semaphore::up(int count)
     }
 }
 
-#else
+#elif
 
 Semaphore::Semaphore(const char* name, int value)
     : name_(name)
