@@ -115,7 +115,7 @@ using std::endl;
 
 
 GLVolRenState::GLVolRenState(const GLVolumeRenderer* glvr)
-  : volren( glvr ), texName(0), reload_(true), 
+  : volren( glvr ),texName(0), reload_(true), 
     newbricks_(false), newcmap_(true)
 {
   // Base Class, holds pointer to VolumeRenderer and 
@@ -333,23 +333,22 @@ GLVolRenState::loadTexture(Brick& brick)
 //   glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
   glEnable(GL_TEXTURE_3D);
 #endif
-  if(volren->interp()){
-    glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    //        glCheckForError("glTexParameteri GL_LINEAR");
-  } else {
-    glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    //        glCheckForError("glTexParameteri GL_NEAREST");
-  }
   if( !brick.texName() || reload_ ) {
     if( !brick.texName() ){
       glGenTextures(1, brick.texNameP());
       textureNames.push_back( brick.texName() );
      }
-    
     glBindTexture(GL_TEXTURE_3D_EXT, brick.texName());
 //      glCheckForError("After glBindTexture");
+    if(volren->interp()){
+      glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      //        glCheckForError("glTexParameteri GL_LINEAR");
+    } else {
+      glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+      glTexParameteri(GL_TEXTURE_3D_EXT, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+      //        glCheckForError("glTexParameteri GL_NEAREST");
+    }
 
 
 #if defined( GL_ARB_fragment_program )  && defined(GL_ARB_multitexture)  && defined(__APPLE__)
