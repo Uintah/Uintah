@@ -53,7 +53,7 @@ public:
   static  PersistentTypeID type_id;
   virtual PropertyBase* copy() const {return 0;}
 
-  bool transient() { return transient_; }
+  bool transient() const { return transient_; }
   void set_transient(bool t) { transient_ = t; }
 private:
   //! Transient properties are deleted when the PropertyManager that this
@@ -69,9 +69,9 @@ public:
   Property(T &o, bool trans = true) :
     PropertyBase(trans)
   { obj_ = &o; } 
-  
+
   virtual PropertyBase * copy() const 
-  { return scinew Property(*static_cast<T *>(obj_)); }
+  { return scinew Property(*static_cast<T *>(obj_), transient()); }
   static const string type_name(int n = -1);
   virtual void io(Piostream &stream);
   static  PersistentTypeID type_id;
