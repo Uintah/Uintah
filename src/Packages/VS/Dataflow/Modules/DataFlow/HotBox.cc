@@ -17,6 +17,7 @@
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Core/Datatypes/FieldInterface.h>
+#include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/PointCloudField.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
@@ -498,6 +499,23 @@ void
   outGeomPort->flushViews();
 
   // set output matrix port -- bounding box of selection
+  MatrixOPort *outMatrixPort = (MatrixOPort *)get_oport("Bounding Box");
+  if(!outMatrixPort) {
+    error("Unable to initialize output matrix port.");
+    return;
+  }
+
+  MatrixHandle cm = scinew ColumnMatrix(6);
+  if(selectBox)
+  {
+    cm->get(0, 0) = (double)selectBox->minX;
+    cm->get(1, 0) = (double)selectBox->minY;
+    cm->get(2, 0) = (double)selectBox->minZ;
+    cm->get(3, 0) = (double)selectBox->maxX;
+    cm->get(4, 0) = (double)selectBox->maxY;
+    cm->get(5, 0) = (double)selectBox->maxZ;
+  }
+  outMatrixPort->send(cm);
 
 
 } // end HotBox::execute()
