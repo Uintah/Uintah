@@ -35,6 +35,7 @@ protected:
     enum Representation {
 	symsparse,
 	dense,
+	tridiagonal,
     };
 
     Sym sym;

@@ -11,7 +11,7 @@ OBJS = BasicSurfaces.o  Colormap.o  ColormapPort.o  \
 	ScalarFieldRGchar.o  ScalarFieldRGint.o  ScalarFieldRGfloat.o  \
 	ScalarFieldRGdouble.o  ScalarFieldUG.o  SigmaSet.o  SigmaSetPort.o  \
 	SoundPort.o  Surface.o  SurfacePort.o  SymSparseRowMatrix.o \
-	TriSurface.o  \
+	TriDiagonalMatrix.o  TriSurface.o  \
 	VectorField.o  \
 	VectorFieldPort.o  VectorFieldRG.o  VectorFieldUG.o \
 	ssmult.o
@@ -27,7 +27,7 @@ SRCS = $(GENSRCS) BasicSurfaces.cc Colormap.cc ColormapPort.cc \
 	ScalarFieldRGchar.cc ScalarFieldRGint.cc ScalarFieldRGfloat.cc \
 	ScalarFieldRGdouble.cc ScalarFieldUG.cc SigmaSet.cc SigmaSetPort.cc \
 	SoundPort.cc Surface.cc SurfacePort.cc SymSparseRowMatrix.cc \
-	TriSurface.cc \
+	TriDiagonalMatrix.cc TriSurface.cc \
 	VectorField.cc  \
 	VectorFieldPort.cc VectorFieldRG.cc VectorFieldUG.cc \
 	ssmult.c

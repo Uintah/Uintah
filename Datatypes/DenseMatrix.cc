@@ -154,6 +154,7 @@ void DenseMatrix::solve(ColumnMatrix& sol)
     // Gauss-Jordan with partial pivoting
     int i;
     for(i=0;i<nr;i++){
+	cout << "Solve: " << i << " of " << nr << endl;
 	double max=Abs(data[i][i]);
 	int row=i;
 	int j;
@@ -187,6 +188,7 @@ void DenseMatrix::solve(ColumnMatrix& sol)
 
     // Back-substitution
     for(i=1;i<nr;i++){
+	cout << "Solve: " << i << " of " << nr << endl;
 	ASSERT(Abs(data[i][i]) > 1.e-12);
 	double denom=1./data[i][i];
 	double* r1=data[i];
@@ -202,6 +204,7 @@ void DenseMatrix::solve(ColumnMatrix& sol)
 
     // Normalize
     for(i=0;i<nr;i++){
+	cout << "Solve: " << i << " of " << nr << endl;
 	ASSERT(Abs(data[i][i]) > 1.e-12);
 	double factor=1./data[i][i];
 	for(int j=0;j<nr;j++)
@@ -234,9 +237,8 @@ void DenseMatrix::mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
 				 int& flops, int& memrefs, int beg, int end)
 {
     // Compute At*x=b
-    ASSERT(nr == nc);
     ASSERT(x.nrows() == nr);
-    ASSERT(b.nrows() == nr);
+    ASSERT(b.nrows() == nc);
     if(beg==-1)beg=0;
     if(end==-1)end=nc;
     for(int i=beg;i<end;i++){

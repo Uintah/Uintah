@@ -69,6 +69,7 @@ public:
 
 inline double& ColumnMatrix::operator[](int i) const
 {
+    ASSERTRANGE(i, 0, rows);
     return data[i];
 }
 
