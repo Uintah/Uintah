@@ -32,7 +32,7 @@ proc ComponentWizard { {window .componentWizard} } {
     array set $tmpd [array get $d]
 
     if {[winfo exists $w]} {
-	    destroy $w
+	destroy $w
     }
 
     set MAIN_WIDTH 5
@@ -47,17 +47,18 @@ proc ComponentWizard { {window .componentWizard} } {
     global modname_font
     global time_font
     
-    toplevel $w -width [concat $MAIN_WIDTH i] -height [concat $MAIN_HEIGHT i]
+    toplevel $w
+    # -width [concat $MAIN_WIDTH i] -height [concat $MAIN_HEIGHT i]
     #wm geometry $w 505x642+228+102
     wm title $w "Component Wizard"
     #wm resizable $w 0 0
 
-    iwidgets::tabnotebook $w.tabs -width [concat $WIDTH i]\
-	                  -height [concat $HEIGHT i] -backdrop [$w cget -background]
+    iwidgets::tabnotebook $w.tabs -backdrop [$w cget -background]
+    # -width [concat $WIDTH i] -height [concat $HEIGHT i]
     pack $w.tabs -padx $PADi -pady $PADi -fill both -expand yes -side top
 
     frame $w.buttons
-    pack $w.buttons -ipadx $PADi -ipady $PADi -fill both -expand yes -side top
+    pack $w.buttons -ipadx $PADi -ipady $PADi
 
 #    button $w.buttons.open -text "Open" 
 #    pack $w.buttons.open -padx $PADi -ipadx $PADi -ipady $PADi -expand no -side left
@@ -67,22 +68,22 @@ proc ComponentWizard { {window .componentWizard} } {
 
     button $w.buttons.create -text "Create"  \
         -command "array set $d \[array get $tmpd\]; generateXML $d"
-    pack $w.buttons.create -padx $PADi -ipadx $PADi -ipady $PADi -expand no -side left
-
     button $w.buttons.cancel -text "Cancel" -command "destroy $w"  
-    pack $w.buttons.cancel -padx $PADi -ipadx $PADi -ipady $PADi -expand no -side left
+
+    pack $w.buttons.create $w.buttons.cancel -padx $PADi -ipadx $PADi -ipady $PADi \
+	-expand no -side left
 
     set io_gui [$w.tabs add -label "I/O and GUI"]
-    make_io_gui_pane $io_gui $tmpd
+#    make_io_gui_pane $io_gui $tmpd
 
     set overview [$w.tabs add -label "Overview"]
-    make_overview_pane $overview $tmpd
+#    make_overview_pane $overview $tmpd
 
     set implementation [$w.tabs add -label "Implementation"]
-    make_implementation_pane $implementation $tmpd
+#    make_implementation_pane $implementation $tmpd
     
     set testing [$w.tabs add -label "Testing"]
-    make_testing_pane $testing $tmpd
+#    make_testing_pane $testing $tmpd
     
     $w.tabs view "I/O and GUI"
 }
@@ -858,13 +859,4 @@ proc yesnodialog {title message command} {
     grab set $w
     tkwait window $w
 }
-
-
-
-
-
-
-
-
-
 
