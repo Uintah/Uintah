@@ -69,22 +69,26 @@ public:
   virtual void draw() = 0;
   virtual void rasterize() = 0;
   virtual void rasterize(Array3<float>& array) = 0;
-  // behavior
-//   virtual void pick (int x, int y) = 0;
-//   virtual void move (int x, int y) = 0;
-//   virtual void release (int x, int y) = 0;
 
-  // actions
-  //virtual void rasterize () = 0;
+  // behavior
+  virtual int pick (int x, int y, int w, int h) = 0;
+  virtual void move (int obj, int x, int y, int w, int h) = 0;
+  virtual void release (int obj, int x, int y, int w, int h) = 0;
+
+  void select(int obj) { selected_ = obj; }
+  void unselect_all() { selected_ = 0; }
   
 protected:
   Color line_color_;
   float line_alpha_;
+  Color selected_color_;
+  float selected_alpha_;
   float thin_line_width_;
   float thick_line_width_;
   float point_size_;
   Color color_;
   float alpha_;
+  int selected_;
 };
 
 class TriangleWidget : public Widget
@@ -100,6 +104,11 @@ public:
   void rasterize();
   void rasterize(Array3<float>& array);
   
+  // behavior
+  virtual int pick (int x, int y, int w, int h);
+  virtual void move (int obj, int x, int y, int w, int h);
+  virtual void release (int obj, int x, int y, int w, int h);
+
   static bool Init();
   static void Exit();
   
@@ -129,10 +138,18 @@ public:
   void rasterize();
   void rasterize(Array3<float>& array);
   
+  // behavior
+  virtual int pick (int x, int y, int w, int h);
+  virtual void move (int obj, int x, int y, int w, int h);
+  virtual void release (int obj, int x, int y, int w, int h);
+
   static bool Init();
   static void Exit();
   
 protected:
+
+  void selectcolor(int obj);
+
   RectangleType type_;
   float left_x_, left_y_;
   float width_, height_, offset_;
@@ -192,8 +209,16 @@ const char* RectangleWidgetShader1D =
 "END";
 
 Widget::Widget()
-  : line_color_(0.75, 0.75, 0.75), line_alpha_(1.0), thin_line_width_(0.75),
-    thick_line_width_(2.0), point_size_(7.0), color_(0.5, 0.5, 1.0), alpha_(0.7)
+  : line_color_(0.75, 0.75, 0.75),
+    line_alpha_(1.0),
+    selected_color_(1.0, 0.0, 0.0),
+    selected_alpha_(1.0),
+    thin_line_width_(0.75),
+    thick_line_width_(2.0),
+    point_size_(7.0),
+    color_(0.5, 0.5, 1.0),
+    alpha_(0.7),
+    selected_(0)
 {}
 
 Widget::~Widget()
@@ -296,8 +321,16 @@ TriangleWidget::draw()
 {
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  
-  glColor4f(line_color_.r(), line_color_.g(), line_color_.b(), line_alpha_);
+
+  if (selected_)
+  {
+    glColor4f(selected_color_.r(), selected_color_.g(),
+	      selected_color_.b(), selected_alpha_);
+  }
+  else
+  {
+    glColor4f(line_color_.r(), line_color_.g(), line_color_.b(), line_alpha_);
+  }
   glEnable(GL_LINE_SMOOTH);
   glLineWidth(thin_line_width_);
   glBegin(GL_LINES);
@@ -332,6 +365,26 @@ TriangleWidget::draw()
   glEnd();
   glDisable(GL_POINT_SMOOTH);
   glDisable(GL_BLEND);
+}
+
+
+int
+TriangleWidget::pick (int ix, int iy, int w, int h)
+{
+  return 0;
+}
+
+
+void
+TriangleWidget::move (int obj, int x, int y, int w, int h)
+{
+}
+
+
+void
+TriangleWidget::release (int obj, int x, int y, int w, int h)
+{
+  move(obj, x, y, w, h);
 }
 
 
@@ -459,13 +512,29 @@ RectangleWidget::rasterize(Array3<float>& array)
   }
 }
 
+
+void
+RectangleWidget::selectcolor(int obj)
+{
+  if (selected_ == obj)
+  {
+    glColor4f(selected_color_.r(), selected_color_.g(),
+	      selected_color_.b(), selected_alpha_);
+  }
+  else
+  {
+    glColor4f(line_color_.r(), line_color_.g(), line_color_.b(), line_alpha_);
+  }
+}
+
+
 void
 RectangleWidget::draw()
 {
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   
-  glColor4f(line_color_.r(), line_color_.g(), line_color_.b(), line_alpha_);
+
   glEnable(GL_LINE_SMOOTH);
   glLineWidth(thin_line_width_);
   glBegin(GL_LINES);
@@ -491,18 +560,77 @@ RectangleWidget::draw()
   glPointSize(point_size_);
   glBegin(GL_POINTS);
   {
+    selectcolor(2);
     glVertex2f(left_x_, left_y_);
+    selectcolor(3);
     glVertex2f(left_x_+width_, left_y_);
-    glVertex2f(left_x_+width_, left_y_);
+    selectcolor(4);
     glVertex2f(left_x_+width_, left_y_+height_);
-    glVertex2f(left_x_, left_y_);
+    selectcolor(5);
     glVertex2f(left_x_, left_y_+height_);
-    glVertex2f(left_x_+offset_*width_, left_y_+height_/2);
+    selectcolor(6);
+    glVertex2f(left_x_+offset_*width_, left_y_+height_*0.5);
   }
   glEnd();
   glDisable(GL_POINT_SMOOTH);
   glDisable(GL_BLEND);
 }
+
+
+int
+RectangleWidget::pick (int ix, int iy, int w, int h)
+{
+  const double x = ix / (double)w;
+  const double y = iy / (double)h;
+  const double xeps = point_size_ / w * 0.5;
+  const double yeps = point_size_ / h * 0.5;
+
+  if (fabs(x - left_x_) < xeps &&
+      fabs(y - left_y_) < yeps)
+  {
+    return 2;
+  }
+
+  if (fabs(x - left_x_ - width_) < xeps &&
+      fabs(y - left_y_) < yeps)
+  {
+    return 3;
+  }
+
+  if (fabs(x - left_x_ - width_) < xeps &&
+      fabs(y - left_y_ - height_) < yeps)
+  {
+    return 4;
+  }
+
+  if (fabs(x - left_x_) < xeps &&
+      fabs(y - left_y_ - height_) < yeps)
+  {
+    return 5;
+  }
+
+  if (fabs(x - left_x_ - offset_ * width_) < xeps &&
+      fabs(y - left_y_ - height_ * 0.5) < yeps)
+  {
+    return 6;
+  }
+
+  return 0;
+}
+
+
+void
+RectangleWidget::move (int obj, int x, int y, int w, int h)
+{
+}
+
+
+void
+RectangleWidget::release (int obj, int x, int y, int w, int h)
+{
+  move(obj, x, y, w, h);
+}
+
 
 
 class EditTransferFunc2 : public Module {
@@ -511,7 +639,7 @@ class EditTransferFunc2 : public Module {
   Display* dpy_;
   Window win_;
   int width_, height_;
-  int button_;
+  bool button_;
   vector<Widget*> widget_;
   Pbuffer* pbuffer_;
   bool use_pbuffer_;
@@ -526,6 +654,9 @@ class EditTransferFunc2 : public Module {
   bool cmap_out_dirty_;
   GLuint cmap_tex_;
   
+  int pick_widget_; // Which widget is selected.
+  int pick_object_; // The part of the widget that is selected.
+
 public:
   EditTransferFunc2(GuiContext* ctx);
   virtual ~EditTransferFunc2();
@@ -553,7 +684,8 @@ EditTransferFunc2::EditTransferFunc2(GuiContext* ctx)
     ctx_(0), dpy_(0), win_(0), button_(0), pbuffer_(0), use_pbuffer_(true),
     histo_(0), histo_dirty_(false), histo_tex_(0),
     cmap_(new Colormap2),
-    cmap_dirty_(true), cmap_size_dirty_(true), cmap_out_dirty_(true), cmap_tex_(0)
+    cmap_dirty_(true), cmap_size_dirty_(true), cmap_out_dirty_(true), cmap_tex_(0),
+    pick_widget_(-1), pick_object_(0)
 {
   widget_.push_back(scinew TriangleWidget());
   widget_.push_back(scinew RectangleWidget());
@@ -619,9 +751,32 @@ EditTransferFunc2::tcl_command(GuiArgs& args, void* userdata)
 
 
 void
-EditTransferFunc2::motion(int x, int y)
+EditTransferFunc2::push(int x, int y, int button)
 {
-  cerr << "motion: " << x << " " << y << endl;
+  cerr << "push: " << x << " " << y << " " << button << endl;
+
+  unsigned int i;
+
+  button_ = button;
+
+  for (i = 0; i < widget_.size(); i++)
+  {
+    widget_[i]->unselect_all();
+  }
+
+  pick_widget_ = -1;
+  pick_object_ = 0;
+  for (unsigned int i = 0; i < widget_.size(); i++)
+  {
+    const int tmp = widget_[i]->pick(x, 255-y, 512, 256);
+    if (tmp)
+    {
+      pick_widget_ = i;
+      pick_object_ = tmp;
+      widget_[i]->select(tmp);
+      break;
+    }
+  }
   update();
   redraw();
 }
@@ -629,10 +784,14 @@ EditTransferFunc2::motion(int x, int y)
 
 
 void
-EditTransferFunc2::push(int x, int y, int button)
+EditTransferFunc2::motion(int x, int y)
 {
-  cerr << "push: " << x << " " << y << " " << button << endl;
-  button_ = button;
+  cerr << "motion: " << x << " " << y << endl;
+
+  if (pick_widget_ != -1)
+  {
+    widget_[pick_widget_]->move(pick_object_, x, 255-y, 512, 256);
+  }
   update();
   redraw();
 }
@@ -643,7 +802,13 @@ void
 EditTransferFunc2::release(int x, int y, int button)
 {
   cerr << "release: " << x << " " << y << " " << button << endl;
+
   button_ = 0;
+  if (pick_widget_ != -1)
+  {
+    widget_[pick_widget_]->release(pick_object_, x, 255-y, 512, 256);
+  }
+
   update();
   redraw();
 }
