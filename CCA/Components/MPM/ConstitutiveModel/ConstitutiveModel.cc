@@ -18,9 +18,6 @@ using namespace Uintah;
 # define M_PI           3.14159265358979323846  /* pi */
 #endif
 
-#define FRACTURE
-#undef FRACTURE
-
 ConstitutiveModel::ConstitutiveModel()
 {
 }
@@ -265,36 +262,13 @@ ConstitutiveModel::computeVelocityGradient(const Patch* patch,
   return velGrad;
 }
 
-#ifdef FRACTURE
-void ConstitutiveModel::addComputesAndRequiresConvertJToK(Task*,
-                                               const MPMMaterial*,
-                                               const PatchSet*) const
+// Convert J-integral into stress intensity factors
+void 
+ConstitutiveModel::ConvertJToK(const MPMMaterial*,
+     const Vector&,const Vector&,const Vector&,Vector& SIF)
 {
+  SIF=Vector(-9999.,-9999.,-9999.);
 }
-
-void ConstitutiveModel::ConvertJToK(const PatchSubset*,
-                                            const MPMMaterial*,
-                                            DataWarehouse*,
-                                            DataWarehouse*)
-
-{
-}
-
-void ConstitutiveModel::addComputesAndRequiresConvertJToKWithErosion(Task*,
-                                               const MPMMaterial*,
-                                               const PatchSet*) const
-{
-}
-
-void ConstitutiveModel::ConvertJToKWithErosion(const PatchSubset*,
-                                            const MPMMaterial*,
-                                            DataWarehouse*,
-                                            DataWarehouse*)
-
-{
-}
-
-#endif
 
 // Calculate polar decomposition using Simo page 244
 void 
