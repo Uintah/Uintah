@@ -30,6 +30,8 @@
 #include <Core/Geom/GeomDL.h>
 #include <Core/Malloc/Allocator.h>
 #include <iostream>
+#include <algorithm>
+
 using std::cerr;
 using std::ostream;
 
