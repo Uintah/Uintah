@@ -102,6 +102,16 @@ const TypeDescription* fun_getTypeDescription(bool*)
    return td;
 }
 
+const TypeDescription* fun_getTypeDescription(unsigned char*)
+{
+   static TypeDescription* td;
+   if(!td){
+      td = scinew TypeDescription(TypeDescription::bool_type,
+				  "uchar", true, MPI_UB);
+   }
+   return td;
+}
+
 static MPI_Datatype makeMPI_Point()
 {
    ASSERTEQ(sizeof(Point), sizeof(double)*3);
