@@ -44,8 +44,8 @@ class ArchiveReader : public Module {
   
 public: 
   
-  GuiString tcl_status;
   GuiString filebase; 
+  GuiString tcl_status;
   ////////// Constructors
   ArchiveReader(GuiContext* ctx);
   virtual ~ArchiveReader(); 
@@ -56,6 +56,10 @@ private:
   ArchiveOPort *out;
   ArchiveHandle archiveH;
   DataArchive *reader;
+
+  // Used to remember the last thing we loaded
+  string aName;
+  long aName_size;
   
 }; //class ParticleGrid
 } // End namespace Uintah
