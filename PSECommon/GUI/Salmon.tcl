@@ -366,6 +366,7 @@ itcl_class Roe {
 	global "$this-global-debug"
 	global "$this-global-clip"
 	global "$this-global-cull"
+	global "$this-global-dl"
 	global "$this-global-movie"
 	global "$this-global-movieName"
 	global "$this-global-movieFrame"
@@ -381,6 +382,7 @@ itcl_class Roe {
 	set "$this-global-debug" 0
 	set "$this-global-clip" 0
 	set "$this-global-cull" 0
+	set "$this-global-dl" 0
 	set "$this-global-movie" 0
 	set "$this-global-movieName" "movie"
 	set "$this-global-movieFrame" 0
@@ -408,6 +410,8 @@ itcl_class Roe {
 	    -command "$this-c redraw"
 	checkbutton $m.eframe.cull -text "Back Cull" -variable $this-global-cull \
 	    -command "$this-c redraw"
+	checkbutton $m.eframe.dl -text "Display List" \
+	    -variable $this-global-dl -command "$this-c redraw"
 	
 # 	checkbutton $m.eframe.movie -text "Save Movie" -variable $this-global-movie
 # 	frame $m.eframe.mf
@@ -422,12 +426,12 @@ itcl_class Roe {
 	
 # 	pack $m.eframe -anchor w -padx 2 -side left
 # 	pack  $m.eframe.light $m.eframe.fog $m.eframe.bbox $m.eframe.clip \
-# 		$m.eframe.cull $m.eframe.movie $m.eframe.mf $m.eframe.mn \
-# 		-in $m.eframe -side top -anchor w
+# 		$m.eframe.cull $m.eframe.dl $m.eframe.movie $m.eframe.mf \
+#	         $m.eframe.mn -in $m.eframe -side top -anchor w
 	
 	pack $m.eframe -anchor w -padx 2 -side left
 	pack  $m.eframe.light $m.eframe.fog $m.eframe.bbox $m.eframe.clip \
-		$m.eframe.cull -in $m.eframe -side top -anchor w
+		$m.eframe.cull $m.eframe.dl -in $m.eframe -side top -anchor w
 
         frame $m.eframe.f -relief groove -borderwidth 2
         pack $m.eframe.f -side top -anchor w
@@ -680,6 +684,8 @@ itcl_class Roe {
 		-command "$this-c redraw"
 	$menun add checkbutton -label "Back Cull" -variable $this-$objid-cull \
 		-command "$this-c redraw"
+	$menun add checkbutton -label "Display List" -variable $this-$objid-dl\
+		-command "$this-c redraw"
 
 	global "$this-$objid-light"
 	global "$this-$objid-fog"
@@ -687,6 +693,7 @@ itcl_class Roe {
 	global "$this-$objid-debug"
 	global "$this-$objid-clip"
 	global "$this-$objid-cull"
+	global "$this-$objid-dl"
 
 	set "$this-$objid-type" Default
 	set "$this-$objid-light" 1
@@ -694,6 +701,7 @@ itcl_class Roe {
 	set "$this-$objid-debug" 0
 	set "$this-$objid-clip" 0
 	set "$this-$objid-cull" 0
+	set "$this-$objid-dl" 0
 
 	set menuvar  $m.objlist.canvas.frame.menu2_$objid
 	set menup [tk_optionMenu $menuvar $this-$objid-type Wire Flat Gouraud Default]
