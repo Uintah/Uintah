@@ -33,12 +33,12 @@ void ICE::scheduleInitialize(
 			    this, &ICE::actuallyInitialize);
       t->computes(dw, vel_CCLabel,      0,patch);
       t->computes(dw, press_CCLabel,    0,patch);
-      t->computes(dw, press_CCLabel_1,    0,patch);
+
       t->computes(dw, rho_CCLabel,      0,patch);
       t->computes(dw, temp_CCLabel,     0,patch);
       t->computes(dw, cv_CCLabel,       0,patch);
 
-      t->computes(dw, vel_FCLabel,      0,patch);
+      //      t->computes(dw, vel_FCLabel,      0,patch);
       t->computes(dw, press_FCLabel,    0,patch);
       t->computes(dw, tau_FCLabel,      0,patch);
 
@@ -135,12 +135,11 @@ void ICE::scheduleTimeAdvance(
                     patch,      old_dw,         new_dw,
 		      this,       &ICE::actuallyStep1);
 	t->requires( old_dw, press_CCLabel,   0,patch, Ghost::None);
-//     t->requires( old_dw, press_CCLabel_1, 0,patch, Ghost::None);
-       t->requires( old_dw, rho_CCLabel,     0,patch, Ghost::None);
+	t->requires( old_dw, rho_CCLabel,     0,patch, Ghost::None);
 	t->requires( old_dw, temp_CCLabel,    0,patch, Ghost::None);
 	t->requires( old_dw, cv_CCLabel,      0,patch, Ghost::None);
 //  	t->requires( old_dw, "params", ProblemSpec::getTypeDescription());
-//	t->computes( old_dw, press_CCLabel_1, 0,patch);
+	t->computes(new_dw, press_CCLabel_1,    0,patch);
 	t->usesMPI(false);
 	t->usesThreads(false);
 //     t->whatis the cost model?();
@@ -154,8 +153,10 @@ void ICE::scheduleTimeAdvance(
                     patch,      old_dw,         new_dw,
 		      this,       &ICE::actuallyStep2);
 	t->requires( old_dw, vel_CCLabel,     0,patch, Ghost::None);
+	t->requires(new_dw, press_CCLabel_1, 0, patch, Ghost::None);
 //  	t->requires( old_dw, "params", ProblemSpec::getTypeDescription());
-//	t->computes( new_dw, vel_CCLabel,     0,patch);
+	
+	t->computes( new_dw, vel_FCLabel,     0,patch);
 	t->usesMPI(false);
 	t->usesThreads(false);
 //     t->whatis the cost model?();

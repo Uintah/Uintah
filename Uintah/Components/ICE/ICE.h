@@ -5,6 +5,7 @@
 #include <Uintah/Interface/CFDInterface.h>
 #include <Uintah/Grid/VarLabel.h>
 #include <Uintah/Grid/CCVariable.h>
+#include <Uintah/Grid/FCVariable.h>
 #include <SCICore/Geometry/Vector.h>
 
 using SCICore::Geometry::Vector;
@@ -109,7 +110,7 @@ public:
 			   double ****uvel_CC,
 			   double ****vvel_CC,
 			   double ****wvel_CC,
-                        int include_ghostcells,
+                        bool  include_ghostcells,
 			   int xLoLimit,
 			   int xHiLimit,
 			   int yLoLimit,
@@ -121,7 +122,7 @@ public:
                         const Patch*, 
                         CCVariable<double>& scalar_ucf, 
 			   double ****scalar_CC,
-                        int include_ghostcells,
+			bool include_ghostcells,
 			   int xLoLimit,
 			   int xHiLimit,
 			   int yLoLimit,
@@ -136,7 +137,7 @@ public:
 			   double ****uvel_CC,
 			   double ****vvel_CC,
 			   double ****wvel_CC,
-                        int include_ghostcells,
+			bool include_ghostcells,
 			   int xLoLimit,
 			   int xHiLimit,
 			   int yLoLimit,
@@ -149,7 +150,7 @@ public:
                         const Patch*, 
                         CCVariable<double>& scalar_ucf, 
 			   double ****scalar_CC,
-                        int include_ghostcells,
+			bool include_ghostcells,
 			   int xLoLimit,
 			   int xHiLimit,
 			   int yLoLimit,
@@ -158,7 +159,20 @@ public:
 			   int zHiLimit,
 			   int nMaterials);
 
-
+ void convertNR_4dToUCF(
+                        const Patch*, 
+                        FCVariable<Vector>& vel_ucf, 
+			   double ****uvel_FC,
+			   double ****vvel_FC,
+			   double ****wvel_FC,
+			bool include_ghostcells,
+			   int xLoLimit,
+			   int xHiLimit,
+			   int yLoLimit,
+			   int yHiLimit,
+			   int zLoLimit,
+			   int zHiLimit,
+			   int nMaterials);
 			  
    
 private:
@@ -173,6 +187,7 @@ private:
     const VarLabel* rho_CCLabel;
     const VarLabel* temp_CCLabel;
     const VarLabel* cv_CCLabel;
+    const VarLabel* div_velfc_CCLabel;
 
 // Face centered variables
     const VarLabel* vel_FCLabel;

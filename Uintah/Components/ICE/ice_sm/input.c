@@ -270,6 +270,7 @@
                      thermalCond_CC[m][i][j][k] = thermalCond_CC[m][*xLoLimit][*yLoLimit][*zLoLimit]; 
                      cv_CC[m][i][j][k]          = cv_CC[m][*xLoLimit][*yLoLimit][*zLoLimit]; 
                      speedSound[m][i][j][k]     = speedSound[m][*xLoLimit][*yLoLimit][*zLoLimit]; 
+
                  }
              }
          }
