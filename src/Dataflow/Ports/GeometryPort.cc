@@ -156,7 +156,7 @@ GeometryOPort::direct_forward(GeometryComm* msg)
   for (unsigned int i = 0; i < outbox_.size(); i++)
   {
     GeometryComm *cpy = scinew GeometryComm(*msg);
-    cpy->portno = portid_[i];
+//    cpy->portno = portid_[i];
     outbox_[i]->send(cpy);
   }
   return outbox_.size() > 0;
