@@ -189,12 +189,27 @@ ConvertASEFileToRTRTObject(ASEFile &infile, Group *scene)
           token->GetDiffuse(diffuse);
           token->GetSpecular(specular);
           if (token->GetTMapFilename()=="" && !token->GetTransparency()) {
-            ase_matls[token->GetIndex()] = 
-              new Phong(Color(ambient),
-                        Color(diffuse),
-                        Color(specular),
-                        token->GetShine()*1000,
-                        0);
+            if (token->GetIndex()==5) {
+            // switch the roof texture with a cycle texture (material 5)
+            CycleMaterial *cm = new CycleMaterial();
+            cm->members.add(new Phong(Color(ambient),
+                                      Color(diffuse),
+                                      Color(specular),
+                                      token->GetShine()*1000,
+                                      0));
+            cm->members.add(new InvisibleMaterial);
+            cm->members.add(new PhongMaterial(Color(diffuse),
+                                              .3,
+                                              .3,token->GetShine()*1000,true));
+            ase_matls[5]=cm;
+            } else {
+              ase_matls[token->GetIndex()] = 
+                new Phong(Color(ambient),
+                          Color(diffuse),
+                          Color(specular),
+                          token->GetShine()*1000,
+                          0);
+            }
           } else if (token->GetTMapFilename()=="") {
             ase_matls[token->GetIndex()] = 
 #if 1
@@ -245,16 +260,8 @@ extern "C" Scene *make_scene(int argc, char** argv, int)
   Group *all = new Group();
   ConvertASEFileToRTRTObject(infile,all);
 
-  // switch the roof texture with a cycle texture (material 5)
-  CycleMaterial *cm = new CycleMaterial();
-  cm->members.add(ase_matls[5]);            
-  cm->members.add(new InvisibleMaterial);
-  cm->members.add(new PhongMaterial(Color(.5,.5,.5),.3,
-                                    .3,400,true));
-  ase_matls[5] = cm;
-
   // polish the entrance marble floors
-  for (unsigned loop=53; loop<62; ++loop)
+  for (unsigned loop=56; loop<62; loop+=2)
     ((ImageMaterial*)ase_matls[loop])->set_refl(.8);
                   
   Camera cam(Point(1,0,0), Point(0,0,0),
