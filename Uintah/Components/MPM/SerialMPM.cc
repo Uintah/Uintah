@@ -200,8 +200,6 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
 				    DataWarehouseP& old_dw, 
 				    DataWarehouseP& new_dw)
 {
-   int numMatls = d_sharedState->getNumMPMMatls();
-
    for(Level::const_patchIterator iter=level->patchesBegin();
        iter != level->patchesEnd(); iter++){
 
@@ -211,663 +209,34 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
       if(d_analyze) d_analyze->performAnalyze(patch, sched, old_dw, new_dw);
 
       if(d_fracture) {
-	 /*
-	  * computeNodeVisibility
-	  *   in(P.X, P.VOLUME, P.ISBROKEN, P.CRACKSURFACENORMAL)
-	  *   operation(compute the visibility information of particles to the
-	  *             related nodes)
-	  * out(P.VISIBILITY)
-	  */
-	 Task* t = scinew Task(
-	    "SerialMPM::computeNodeVisibility",
-	    patch, old_dw, new_dw,
-	    this,&SerialMPM::computeNodeVisibility);
-	 for(int m = 0; m < numMatls; m++){
-	    MPMMaterial* matl = d_sharedState->getMPMMaterial(m);
-	    int idx = matl->getDWIndex();
-  	    t->requires(old_dw, lb->pXLabel, idx, patch,
-			Ghost::AroundNodes, 1 );
-	    t->requires(old_dw, lb->pVolumeLabel, idx, patch,
-			Ghost::AroundNodes, 1 );
-	    t->requires(old_dw, lb->pIsBrokenLabel, idx, patch,
-			Ghost::AroundNodes, 1 );
-   	    t->requires(old_dw, lb->pCrackSurfaceNormalLabel, idx, patch,
-			Ghost::AroundNodes, 1 );
-	    t->computes(new_dw, lb->pVisibilityLabel, idx, patch );
-	 }
-	 sched->addTask(t);
+         scheduleComputeNodeVisibility(patch,sched,old_dw,new_dw);
       }
+      scheduleInterpolateParticlesToGrid(patch,sched,old_dw,new_dw);
       
-      {
-	 /*
-	  * interpolateParticlesToGrid
-	  *   in(P.MASS, P.VELOCITY, P.NAT_X)
-	  *   operation(interpolate the P.MASS and P.VEL to the grid
-	  *             using P.NAT_X and some shape function evaluations)
-	  * out(G.MASS, G.VELOCITY)
-	  */
-	 Task* t = scinew Task("SerialMPM::interpolateParticlesToGrid",
-			    patch, old_dw, new_dw,
-			    this,&SerialMPM::interpolateParticlesToGrid);
-	 for(int m = 0; m < numMatls; m++){
-	    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-	    int idx = mpm_matl->getDWIndex();
-	    t->requires(old_dw, lb->pMassLabel, idx, patch,
-			Ghost::AroundNodes, 1 );
-	    t->requires(old_dw, lb->pVelocityLabel, idx, patch,
-			Ghost::AroundNodes, 1 );
-	    t->requires(old_dw, lb->pXLabel, idx, patch,
-			Ghost::AroundNodes, 1 );
-	    t->requires(old_dw, lb->pExternalForceLabel, idx, patch,
-			Ghost::AroundNodes, 1 );
-
-            t->requires(old_dw, lb->pTemperatureLabel, idx, patch,
-			Ghost::AroundNodes, 1 );
-            /*
-            t->requires(old_dw, lb->pExternalHeatRateLabel, idx, patch,
-			Ghost::AroundNodes, 1 );
-             */
-
-	    if(mpm_matl->getFractureModel()) {
-	       t->requires(old_dw,lb->pCrackSurfaceContactForceLabel,idx, patch,
-			Ghost::AroundNodes, 1 );
-	       t->requires(new_dw, lb->pVisibilityLabel, idx, patch,
-			Ghost::AroundNodes, 1 );
-   	    }
-
-	    t->computes(new_dw, lb->gMassLabel, idx, patch );
-	    t->computes(new_dw, lb->gVelocityLabel, idx, patch );
-	    t->computes(new_dw, lb->gExternalForceLabel, idx, patch );
-
-            t->computes(new_dw, lb->gTemperatureLabel, idx, patch );
-            //t->computes(new_dw, lb->gExternalHeatRateLabel, idx, patch );
-	 }
-		     
-	 t->computes(new_dw, lb->TotalMassLabel);
-	 sched->addTask(t);
-      }
-
       if (MPMPhysicalModules::thermalContactModel) {
-	 /* computeHeatExchange
-	  *   in(G.MASS, G.TEMPERATURE, G.EXTERNAL_HEAT_RATE)
-	  *   operation(peform heat exchange which will cause each of
-	  *		velocity fields to exchange heat according to 
-	  *             the temperature differences)
-	  *   out(G.EXTERNAL_HEAT_RATE)
-	  */
-
-	 Task* t = scinew Task("ThermalContact::computeHeatExchange",
-			    patch, old_dw, new_dw,
-			    MPMPhysicalModules::thermalContactModel,
-			    &ThermalContact::computeHeatExchange);
-
-	 for(int m = 0; m < numMatls; m++){
-	    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-            MPMPhysicalModules::thermalContactModel->addComputesAndRequires(
-		 t, mpm_matl, patch, old_dw, new_dw);
-	 }
-
-	 sched->addTask(t);
+         scheduleComputeHeatExchange(patch,sched,old_dw,new_dw);
       }
-      
-      {
-	 /* exMomInterpolated
-	  *   in(G.MASS, G.VELOCITY)
-	  *   operation(peform operations which will cause each of
-	  *		  velocity fields to feel the influence of the
-	  *		  the others according to specific rules)
-	  *   out(G.VELOCITY)
-	  */
-
-	 Task* t = scinew Task("Contact::exMomInterpolated",
-			    patch, old_dw, new_dw,
-			    MPMPhysicalModules::contactModel,
-			    &Contact::exMomInterpolated);
-
-	 for(int m = 0; m < numMatls; m++){
-	    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-            MPMPhysicalModules::contactModel->
-				addComputesAndRequiresInterpolated(
-					t, mpm_matl, patch, old_dw, new_dw);
-	 }
-
-	 sched->addTask(t);
-      }
-      
-      {
-	 /*
-	  * computeStressTensor
-	  *   in(G.VELOCITY, P.X, P.DEFORMATIONMEASURE)
-	  *   operation(evaluate the gradient of G.VELOCITY at P.X, feed
-	  *             this into a constitutive model, which will
-	  *	           evaluate the stress and store it in the
-	  *             DataWarehouse.  Each CM also computes the maximum
-	  *             elastic wave speed for that material in the
-	  *             patch.  This is used in calculating delt.)
-	  * out(P.DEFORMATIONMEASURE,P.STRESS)
-	  */
-	 Task* t = scinew Task("SerialMPM::computeStressTensor",
-			    patch, old_dw, new_dw,
-			    this, &SerialMPM::computeStressTensor);
-	 for(int m = 0; m < numMatls; m++){
-	    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-	       ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
-	       cm->addComputesAndRequires(t, mpm_matl, patch, old_dw, new_dw);
-	 }
-	 
-         t->computes(new_dw, lb->delTAfterConstitutiveModelLabel);
-	   
-         t->computes(new_dw, lb->StrainEnergyLabel);
-
-	 sched->addTask(t);
-      }
-
-      {
-	 /*
-	  * computeInternalForce
-	  *   in(P.CONMOD, P.NAT_X, P.VOLUME)
-	  *   operation(evaluate the divergence of the stress (stored in
-	  *	       P.CONMOD) using P.NAT_X and the gradients of the
-	  *             shape functions)
-	  * out(G.F_INTERNAL)
-	  */
-	 Task* t = scinew Task("SerialMPM::computeInternalForce",
-			    patch, old_dw, new_dw,
-			    this, &SerialMPM::computeInternalForce);
-	 for(int m = 0; m < numMatls; m++){
-	    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-	    int idx = mpm_matl->getDWIndex();
-	    
-	    t->requires( new_dw, lb->pStressAfterStrainRateLabel, idx, patch,
-			 Ghost::AroundNodes, 1);
-	    
-	    t->requires( new_dw, lb->pVolumeDeformedLabel, idx, patch,
-			 Ghost::AroundNodes, 1);
-
-	    t->requires( old_dw, lb->pMassLabel, idx, patch,
-			 Ghost::AroundNodes, 1);
-
-            t->requires( new_dw, lb->gMassLabel, idx, patch,
-                         Ghost::None);
-
-	    if(mpm_matl->getFractureModel()) {
-	       t->requires(new_dw, lb->pVisibilityLabel, idx, patch,
-			Ghost::AroundNodes, 1 );
-   	    }
-
-	    t->computes( new_dw, lb->gInternalForceLabel, idx, patch );
-            t->computes(new_dw, lb->gStressForSavingLabel, idx, patch );
-	 }
-
-	 sched->addTask( t );
-      }
-      
-      {
-	 /*
-	  * computeInternalHeatRate
-	  *   in(P.X, P.VOLUME, P.TEMPERATUREGRADIENT)
-	  *   operation(evaluate the grid internal heat rate using 
-	  *   P.TEMPERATUREGRADIENT and the gradients of the
-	  *   shape functions)
-	  * out(G.INTERNALHEATRATE)
-	  */
-
-	 Task* t = scinew Task("SerialMPM::computeInternalHeatRate",
-			    patch, old_dw, new_dw,
-			    this, &SerialMPM::computeInternalHeatRate);
-
-	 for(int m = 0; m < numMatls; m++){
-	    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-	    int idx = mpm_matl->getDWIndex();
-
-	    t->requires(old_dw, lb->pXLabel, idx, patch,
-			Ghost::AroundNodes, 1 );
-	    t->requires(new_dw, lb->pVolumeDeformedLabel, idx, patch,
-			Ghost::AroundNodes, 1 );
-	    t->requires(old_dw, lb->pTemperatureGradientLabel, idx, patch,
-			Ghost::AroundNodes, 1);
-
-	    if(mpm_matl->getFractureModel()) {
-	       t->requires(new_dw, lb->pVisibilityLabel, idx, patch,
-			Ghost::AroundNodes, 1 );
-   	    }
-
-	    t->computes( new_dw, lb->gInternalHeatRateLabel, idx, patch );
-	 }
-
-	 sched->addTask( t );
-      }
-      
-      {
-	 /*
-	  * solveEquationsMotion
-	  *   in(G.MASS, G.F_INTERNAL)
-	  *   operation(acceleration = f/m)
-	  *   out(G.ACCELERATION)
-	  * 
-	  */
-	 Task* t = scinew Task("SerialMPM::solveEquationsMotion",
-			    patch, old_dw, new_dw,
-			    this, &SerialMPM::solveEquationsMotion);
-	 for(int m = 0; m < numMatls; m++){
-	    MPMMaterial* matl = d_sharedState->getMPMMaterial(m);
-	    int idx = matl->getDWIndex();
-	    t->requires( new_dw, lb->gMassLabel, idx, patch,
-			 Ghost::None);
-	    t->requires( new_dw, lb->gInternalForceLabel, idx, patch,
-			 Ghost::None);
-	    t->requires( new_dw, lb->gExternalForceLabel, idx, patch,
-			 Ghost::None);
-
-	    t->computes( new_dw, lb->gAccelerationLabel, idx, patch);
-	 }
-
-	 sched->addTask(t);
-      }
-
-      {
-	 /*
-	  * solveHeatEquations
-	  *   in(G.MASS, G.INTERNALHEATRATE, G.EXTERNALHEATRATE)
-	  *   out(G.TEMPERATURERATE)
-	  * 
-	  */
-	 Task* t = scinew Task("SerialMPM::solveHeatEquations",
-			    patch, old_dw, new_dw,
-			    this, &SerialMPM::solveHeatEquations);
-	 for(int m = 0; m < numMatls; m++){
-	    MPMMaterial* matl = d_sharedState->getMPMMaterial(m);
-	    int idx = matl->getDWIndex();
-	    t->requires( new_dw, lb->gMassLabel, idx, patch,
-			 Ghost::None);
-	    t->requires( new_dw, lb->gInternalHeatRateLabel, idx, patch,
-			 Ghost::None);
-	    /*
-	    t->requires( new_dw, lb->gExternalHeatRateLabel, idx, patch,
-			 Ghost::None);
-		*/
-
-	    if(MPMPhysicalModules::thermalContactModel) {
-              t->requires( new_dw,
-			lb->gThermalContactHeatExchangeRateLabel, idx, 
-	                 patch, Ghost::None);
-	    }
-		
-	    t->computes( new_dw, lb->gTemperatureRateLabel, idx, patch);
-	 }
-
-	 sched->addTask(t);
-      }
-
-      {
-	 /*
-	  * integrateAcceleration
-	  *   in(G.ACCELERATION, G.VELOCITY)
-	  *   operation(v* = v + a*dt)
-	  *   out(G.VELOCITY_STAR)
-	  * 
-	  */
-	 Task* t = scinew Task("SerialMPM::integrateAcceleration",
-			    patch, old_dw, new_dw,
-			    this, &SerialMPM::integrateAcceleration);
-	 for(int m = 0; m < numMatls; m++){
-	    MPMMaterial* matl = d_sharedState->getMPMMaterial(m);
-	    int idx = matl->getDWIndex();
-	    t->requires(new_dw, lb->gAccelerationLabel, idx, patch,
-			Ghost::None);
-	    t->requires(new_dw, lb->gMomExedVelocityLabel, idx, patch,
-			Ghost::None);
-	    t->requires(old_dw, d_sharedState->get_delt_label() );
-
-	    t->computes(new_dw, lb->gVelocityStarLabel, idx, patch );
-	 }
-		     
-	 sched->addTask(t);
-      }
-
-      {
-	 /*
-	  * integrateTemperatureRate
-	  *   in(G.TEMPERATURE, G.TEMPERATURERATE)
-	  *   operation(t* = t + t_rate * dt)
-	  *   out(G.TEMPERATURE_STAR)
-	  * 
-	  */
-	 Task* t = scinew Task("SerialMPM::integrateTemperatureRate",
-			    patch, old_dw, new_dw,
-			    this, &SerialMPM::integrateTemperatureRate);
-	 for(int m = 0; m < numMatls; m++) {
-	    MPMMaterial* matl = d_sharedState->getMPMMaterial(m);
-	    int idx = matl->getDWIndex();
-
-            t->requires( new_dw, lb->gTemperatureLabel, idx, 
-	                 patch, Ghost::None);
-            t->requires( new_dw, lb->gTemperatureRateLabel, idx, 
-	                 patch, Ghost::None);
-	    t->requires( old_dw, d_sharedState->get_delt_label() );
-		     
-            t->computes( new_dw, lb->gTemperatureStarLabel, idx, patch );
-	 }
-		     
-	 sched->addTask(t);
-      }
-      
-      {
-	 /* exMomIntegrated
-	  *   in(G.MASS, G.VELOCITY_STAR, G.ACCELERATION)
-	  *   operation(peform operations which will cause each of
-	  *		  velocity fields to feel the influence of the
-	  *		  the others according to specific rules)
-	  *   out(G.VELOCITY_STAR, G.ACCELERATION)
-	  */
-
-	Task* t = scinew Task("Contact::exMomIntegrated",
-			   patch, old_dw, new_dw,
-			   MPMPhysicalModules::contactModel,
-			   &Contact::exMomIntegrated);
-	 for(int m = 0; m < numMatls; m++){
-	    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-            MPMPhysicalModules::contactModel->
-				addComputesAndRequiresIntegrated(
-				t, mpm_matl, patch, old_dw, new_dw);
-	}
-
-	sched->addTask(t);
-      }
-
-      {
-	 /*
-	  * interpolateToParticlesAndUpdate
-	  *   in(G.ACCELERATION, G.VELOCITY_STAR, P.NAT_X)
-	  *   operation(interpolate acceleration and v* to particles and
-	  *             integrate these to get new particle velocity and
-	  *             position)
-	  * out(P.VELOCITY, P.X, P.NAT_X)
-	  */
-	 Task* t=scinew Task("SerialMPM::interpolateToParticlesAndUpdate",
-		    patch, old_dw, new_dw,
-		    this, &SerialMPM::interpolateToParticlesAndUpdate);
-
-	 for(int m = 0; m < numMatls; m++){
-	    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-	    int idx = mpm_matl->getDWIndex();
-	    t->requires(new_dw, lb->gMomExedAccelerationLabel, idx, patch,
-			Ghost::AroundCells, 1);
-	    t->requires(new_dw, lb->gMomExedVelocityStarLabel, idx, patch,
-			Ghost::AroundCells, 1);
-	    t->requires(old_dw, lb->pXLabel, idx, patch,
-			Ghost::None);
-	    t->requires(old_dw, lb->pExternalForceLabel, idx, patch,
-			Ghost::None);
-
-	    if(mpm_matl->getFractureModel()) {
-	       t->requires(new_dw, lb->pVisibilityLabel, idx, patch,
-			Ghost::None);
-	       t->requires(old_dw, lb->pCrackSurfaceContactForceLabel,
-						idx, patch, Ghost::None);
-	       t->requires(old_dw, lb->pImageVelocityLabel, idx, patch,
-			Ghost::None);
-   	    }
-
-	    t->requires(old_dw, d_sharedState->get_delt_label() );
-						
-	    t->requires(old_dw, lb->pMassLabel, idx, patch, Ghost::None);
-	    t->computes(new_dw, lb->pVelocityAfterUpdateLabel, idx, patch );
-	    t->computes(new_dw, lb->pXLabel_preReloc, idx, patch );
-	    t->computes(new_dw, lb->pExternalForceLabel_preReloc,
-							idx, patch);
-
-	    t->requires(old_dw, lb->pParticleIDLabel, idx, patch,
-							Ghost::None);
-	    t->computes(new_dw, lb->pParticleIDLabel_preReloc,idx, patch);
-
-            t->requires(old_dw, lb->pTemperatureLabel, idx, patch,
-			Ghost::None);
-            t->requires(new_dw, lb->gTemperatureRateLabel, idx, patch,
-			Ghost::AroundCells, 1);
-            t->requires(new_dw, lb->gTemperatureLabel, idx, patch,
-			Ghost::AroundCells, 1);
-
-            t->requires(new_dw, lb->gTemperatureStarLabel, idx, patch,
-			Ghost::AroundCells, 1);
-            t->computes(new_dw, lb->pTemperatureRateLabel_preReloc,
-							idx, patch);
-            t->computes(new_dw, lb->pTemperatureLabel_preReloc,
-							idx, patch);
-            t->computes(new_dw, lb->pTemperatureGradientLabel_preReloc,
-							idx, patch);
-	 }
-
-	 t->computes(new_dw, lb->KineticEnergyLabel);
-	 t->computes(new_dw, lb->CenterOfMassPositionLabel);
-	 t->computes(new_dw, lb->CenterOfMassVelocityLabel);
-	 sched->addTask(t);
-      }
-
-      {
-	 /*
-	  * computeMassRate
-	  * in(P.TEMPERATURE_RATE)
-	  * operation(based on the heat flux history, determine if
-	  * each of the particles has ignited, adjust the mass of those
-	  * particles which are burning)
-	  * out(P.IGNITED)
-	  *
-	  */
-	 Task *t = scinew Task("SerialMPM::computeMassRate",
-                            patch, old_dw, new_dw,
-                            this, &SerialMPM::computeMassRate);
-         for(int m = 0; m < numMatls; m++){
-            MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-            HEBurn* heb = mpm_matl->getBurnModel();
-            heb->addComputesAndRequires
-				(t, mpm_matl, patch, old_dw, new_dw);
-	    d_burns=heb->getBurns();
-         }
-         sched->addTask(t);
-
-      }
-
+      scheduleExMomInterpolated(patch,sched,old_dw,new_dw);
+      scheduleComputeStressTensor(patch,sched,old_dw,new_dw);
+      scheduleComputeInternalForce(patch,sched,old_dw,new_dw);
+      scheduleComputeInternalHeatRate(patch,sched,old_dw,new_dw);
+      scheduleSolveEquationsMotion(patch,sched,old_dw,new_dw);
+      scheduleSolveHeatEquations(patch,sched,old_dw,new_dw);
+      scheduleIntegrateAcceleration(patch,sched,old_dw,new_dw);
+      scheduleIntegrateTemperatureRate(patch,sched,old_dw,new_dw);
+      scheduleExMomIntegrated(patch,sched,old_dw,new_dw);
+      scheduleInterpolateToParticlesAndUpdate(patch,sched,old_dw,new_dw);
+      scheduleComputeMassRate(patch,sched,old_dw,new_dw);
       if(d_fracture) {
-	 /*
-	  * crackGrow
-	  *   in(p.stress,p.isBroken,p.crackSurfaceNormal)
-	  *   operation(check the stress on each particle to see
-	  *   if the microcrack will initiate and/or grow)
-	  * out(p.isBroken,p.crackSurfaceNormal)
-	  */
-	 Task* t = scinew Task("SerialMPM::crackGrow",
-			    patch, old_dw, new_dw,
-			    this,&SerialMPM::crackGrow);
-
-	 for(int m = 0; m < numMatls; m++) {
-	    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-	    int idx = mpm_matl->getDWIndex();
-	    if(mpm_matl->getFractureModel()) {
-	      t->requires( new_dw, lb->pStressAfterStrainRateLabel,
-			idx, patch, Ghost::None);
-	      t->requires( old_dw, lb->pIsBrokenLabel, idx, patch,
-			 Ghost::None);
-	      t->requires( old_dw, lb->pTensileStrengthLabel, idx, patch,
-			 Ghost::None);
-			 
-	      t->computes( new_dw, lb->pIsNewlyBrokenLabel, idx, patch );
-	      t->computes( new_dw, lb->pNewlyBrokenSurfaceNormalLabel,
-			idx, patch );
-	      t->computes( new_dw, lb->pTensileStrengthLabel_preReloc,
-			idx, patch );
-	    }
-	 }
-
-	 sched->addTask(t);
+	scheduleCrackGrow(patch,sched,old_dw,new_dw);
+	scheduleStressRelease(patch,sched,old_dw,new_dw);
+	scheduleComputeCrackSurfaceContactForce(patch,sched,old_dw,new_dw);
       }
-
-      if(d_fracture) {
-	 /*
-	  * stressRelease
-	  *   in(p.x,p.stressBeforeFractureRelease,p.isNewlyBroken,
-	  *   p.crackSurfaceNormal)
-	  *   operation(check the stress on each particle to see
-	  *   if the microcrack will initiate and/or grow)
-	  * out(p.stress)
-	  */
-	 Task* t = scinew Task("SerialMPM::stressRelease",
-			    patch, old_dw, new_dw,
-			    this,&SerialMPM::stressRelease);
-
-	 for(int m = 0; m < numMatls; m++) {
-	    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-	    int idx = mpm_matl->getDWIndex();
-	    if(mpm_matl->getFractureModel()) {
-	      t->requires( old_dw, lb->pXLabel, 
-			idx, patch, Ghost::AroundNodes, 1 );
-	      t->requires( new_dw, lb->pIsNewlyBrokenLabel,
-			idx, patch, Ghost::AroundNodes, 1 );
-	      t->requires( new_dw, lb->pNewlyBrokenSurfaceNormalLabel,
-			idx, patch, Ghost::AroundNodes, 1 );
-	      t->requires( new_dw, lb->pStressAfterStrainRateLabel,
-			idx, patch, Ghost::AroundNodes, 1 );
-
-	      t->requires(old_dw, d_sharedState->get_delt_label() );
-
-	      //explosive fracture type
-	      t->requires( old_dw, lb->pImageVelocityLabel,
-			idx, patch, Ghost::None);
-
-	      //normal fracture type
-	      t->requires( old_dw, lb->pIsBrokenLabel, idx, patch,
-			 Ghost::None);
-	      t->requires( old_dw, lb->pCrackSurfaceNormalLabel,
-			idx, patch, Ghost::None);
-	      t->requires( new_dw, lb->pRotationRateLabel, idx, patch,
-			 Ghost::None);
-			 
-	      t->requires( old_dw, lb->pMassLabel,
-			idx, patch, Ghost::None);
-	      t->requires( new_dw, lb->pStrainEnergyLabel,
-			idx, patch, Ghost::None);
-	      t->requires( new_dw, lb->pVelocityAfterUpdateLabel,
-			idx, patch, Ghost::None);
-			 
-
- 	      t->requires(new_dw, lb->delTAfterConstitutiveModelLabel );
-
-	      t->computes( new_dw, lb->pStressReleasedLabel,
-			idx, patch );
-	      t->computes( new_dw, lb->pStressAfterFractureReleaseLabel,
-			idx, patch );
-	      t->computes( new_dw, lb->pImageVelocityLabel_preReloc,
-			idx, patch );
-	      t->computes( new_dw, lb->pVelocityAfterFractureLabel,
-			idx, patch );
-	      t->computes( new_dw, lb->pIsBrokenLabel_preReloc,
-			 idx, patch);
-	      t->computes( new_dw, lb->pCrackSurfaceNormalLabel_preReloc,
-			 idx, patch);
-	    }
-	 }
-         t->computes(new_dw, lb->delTAfterFractureLabel);
-	 sched->addTask(t);
-      }
-
-      if(d_fracture) {
-	 /*
-	  * computeCrackSurfaceContactForce
-	  *   in(P.X, P.VOLUME, P.ISBROKEN, P.CRACKSURFACENORMAL)
-	  *   operation(compute the surface contact force)
-	  * out(P.SURFACECONTACTFORCE)
-	  */
-	 Task* t = scinew Task(
-	    "SerialMPM::computeCrackSurfaceContactForce",
-	    patch, old_dw, new_dw,
-	    this,&SerialMPM::computeCrackSurfaceContactForce);
-	 for(int m = 0; m < numMatls; m++){
-	    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-	    if(mpm_matl->getFractureModel()) {
-  	       mpm_matl->getConstitutiveModel()->
-	         addComputesAndRequiresForCrackSurfaceContact(t,mpm_matl,
-		    patch,old_dw,new_dw);
-   	    }
-	 }
-         t->computes(new_dw, lb->delTAfterCrackSurfaceContactLabel);
-	 sched->addTask(t);
-      }
-      
-      {
-	 /*
-	  * carryForwardVariables
-	  *   in(p.x,p.stressBeforeFractureRelease,p.isNewlyBroken,
-	  *   p.crackSurfaceNormal)
-	  *   operation(check the stress on each particle to see
-	  *   if the microcrack will initiate and/or grow)
-	  * out(p.stress)
-	  */
-	 Task* t = scinew Task("SerialMPM::carryForwardVariables",
-			    patch, old_dw, new_dw,
-			    this,&SerialMPM::carryForwardVariables);
-
-	 for(int m = 0; m < numMatls; m++) {
-	    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-	    int idx = mpm_matl->getDWIndex();
-	    
-	    //stress
-            if(d_fracture) {
-	    //if(mpm_matl->getFractureModel()) {
-	      t->requires( new_dw, lb->pStressAfterFractureReleaseLabel,
-			idx, patch, Ghost::None);
-	      t->requires( new_dw, lb->delTAfterCrackSurfaceContactLabel);
-	    }
-	    else {
-	      t->requires( new_dw, lb->pStressAfterStrainRateLabel,
-			idx, patch, Ghost::None);			 
-	      t->requires( new_dw, lb->delTAfterConstitutiveModelLabel);
-            }
-
-	    //velocity
-            if(d_fracture) {
-	    //if(mpm_matl->getFractureModel()) {
-	      t->requires( new_dw, lb->pVelocityAfterFractureLabel,
-			idx, patch, Ghost::None);
-	    }
-	    else {
-	      t->requires( new_dw, lb->pVelocityAfterUpdateLabel,
-			idx, patch, Ghost::None);			 
-            }
-	    t->computes(new_dw, lb->pStressLabel_preReloc, idx, patch);
-	    t->computes(new_dw, lb->pVelocityLabel_preReloc, idx, patch);
-	 }
-	 //t->computes(new_dw, d_sharedState->get_delt_label() );
-	 t->computes(new_dw, lb->delTLabel );
-	 sched->addTask(t);
-      }
+      scheduleCarryForwardVariables(patch,sched,old_dw,new_dw);
 
 #if 0
-      if(t + dt >= d_nextOutputTime)
-      {
-	 Task *t = scinew Task("SerialMPM::interpolateParticlesForSaving",
-                         patch, old_dw, new_dw,
-                         this, &SerialMPM::interpolateParticlesForSaving);
-         for(int m = 0; m < numMatls; m++){
-            MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
-//            MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-            if(mpm_matl){
-	      Material* matl = d_sharedState->getMaterial(m);
-	      int idx = matl->getDWIndex();
-              // Add "requires" for each of the particle variables
-              // to be interpolated, as well as the weighting variables.
-	      // Add "computes" for the resulting grid variables.
-	      t->requires(new_dw, lb->pStressLabel_preReloc, idx, patch,
-			Ghost::AroundNodes, 1 );
-	      t->requires(new_dw, lb->pMassLabel_preReloc, idx, patch,
-			Ghost::AroundNodes, 1 );
-	      t->requires(old_dw, lb->pXLabel, idx, patch,
-			Ghost::AroundNodes, 1 );
-
-	      t->computes(new_dw, lb->gStressForSavingLabel, idx, patch );
-            }
-         }
-         sched->addTask(t);
-
+      if(t + dt >= d_nextOutputTime) {
+	scheduleInterpolateParticlesForSaving(patch,sched,old_dw,new_dw);
       }
 #endif
     }
@@ -876,6 +245,8 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
     {
 	d_nextOutputTime += d_outputInterval;
     }
+
+   int numMatls = d_sharedState->getNumMPMMatls();
 
    sched->scheduleParticleRelocation(level, old_dw, new_dw,
 				     lb->pXLabel_preReloc, 
@@ -915,150 +286,652 @@ void SerialMPM::scheduleTimeAdvance(double t, double dt,
    new_dw->pleaseSaveIntegrated(lb->CenterOfMassVelocityLabel);
 }
 
-void SerialMPM::interpolateParticlesForSaving(const ProcessorGroup*,
-				    	      const Patch* patch,
+void SerialMPM::scheduleComputeNodeVisibility(const Patch* patch,
+					      SchedulerP& sched,
 					      DataWarehouseP& old_dw,
 					      DataWarehouseP& new_dw)
 {
-   int numMatls = d_sharedState->getNumMatls();
+ /*
+  * computeNodeVisibility
+  *   in(P.X, P.VOLUME, P.ISBROKEN, P.CRACKSURFACENORMAL)
+  *   operation(compute the visibility information of particles to the
+  *   related nodes)
+  * out(P.VISIBILITY) */
 
-   vector<const VarLabel* > vars;
-   vector<const VarLabel* > varweights;
-   vector<const VarLabel* > gvars;
+  int numMatls = d_sharedState->getNumMPMMatls();
+  Task* t = scinew Task( "SerialMPM::computeNodeVisibility",
+			  patch, old_dw, new_dw,
+			  this,&SerialMPM::computeNodeVisibility);
+  for(int m = 0; m < numMatls; m++){
+    MPMMaterial* matl = d_sharedState->getMPMMaterial(m);
+    int idx = matl->getDWIndex();
+    t->requires(old_dw, lb->pXLabel,        idx, patch, Ghost::AroundNodes, 1);
+    t->requires(old_dw, lb->pVolumeLabel,   idx, patch, Ghost::AroundNodes, 1);
+    t->requires(old_dw, lb->pIsBrokenLabel, idx, patch, Ghost::AroundNodes, 1);
+    t->requires(old_dw, lb->pCrackSurfaceNormalLabel,
+					    idx, patch, Ghost::AroundNodes, 1);
 
-   // Add items to each of the three vectors here.
-   // vars is the particle data to be interpolated
-   // varweights is the particle data by which to weight
-   // the interpolation, and gvars is the resulting
-   // interpolated version of that variable.
-   vars.push_back(lb->pStressLabel_preReloc);
-   varweights.push_back(lb->pMassLabel_preReloc);
-   gvars.push_back(lb->gStressForSavingLabel);
+    t->computes(new_dw, lb->pVisibilityLabel, idx, patch);
+  }
+  sched->addTask(t);
+}
 
-   for(int i=0;i<(int)vars.size();i++){
-     for(int m = 0; m < numMatls; m++){
-        Material* matl = d_sharedState->getMaterial( m );
-        MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
-        if(mpm_matl){
-          int matlindex = matl->getDWIndex();
-          int vfindex = matl->getVFIndex();
-          ParticleSubset* pset = old_dw->getParticleSubset(matlindex,
-			patch, Ghost::AroundNodes, 1, lb->pXLabel);
+void SerialMPM::scheduleInterpolateParticlesToGrid(const Patch* patch,
+						   SchedulerP& sched,
+						   DataWarehouseP& old_dw,
+						   DataWarehouseP& new_dw)
+{
+  /* interpolateParticlesToGrid
+   *   in(P.MASS, P.VELOCITY, P.NAT_X)
+   *   operation(interpolate the P.MASS and P.VEL to the grid
+   *             using P.NAT_X and some shape function evaluations)
+   *   out(G.MASS, G.VELOCITY) */
 
-          // Allocate storage & retrieve particle weighting and position
-          ParticleVariable<double> weighting;
-          new_dw->get(weighting, varweights[i], pset);
-          NCVariable<double> gweight;
-          new_dw->allocate(gweight, lb->gWeightLabel, vfindex, patch);
-          ParticleVariable<Point> px;
-          old_dw->get(px, lb->pXLabel, pset);
+  int numMatls = d_sharedState->getNumMPMMatls();
+  Task* t = scinew Task("SerialMPM::interpolateParticlesToGrid",
+		    patch, old_dw, new_dw,
+		    this,&SerialMPM::interpolateParticlesToGrid);
+  for(int m = 0; m < numMatls; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    int idx = mpm_matl->getDWIndex();
+    t->requires(old_dw, lb->pMassLabel,         idx,patch,Ghost::AroundNodes,1);
+    t->requires(old_dw, lb->pVelocityLabel,     idx,patch,Ghost::AroundNodes,1);
+    t->requires(old_dw, lb->pXLabel,            idx,patch,Ghost::AroundNodes,1);
+    t->requires(old_dw, lb->pExternalForceLabel,idx,patch,Ghost::AroundNodes,1);
+    t->requires(old_dw, lb->pTemperatureLabel,  idx,patch,Ghost::AroundNodes,1);
+    /*
+    t->requires(old_dw, lb->pExternalHeatRateLabel, idx, patch,
+			Ghost::AroundNodes, 1 );
+    */
 
+    if(mpm_matl->getFractureModel()) {
+       t->requires(old_dw,lb->pCrackSurfaceContactForceLabel,idx, patch,
+		Ghost::AroundNodes, 1 );
+       t->requires(new_dw, lb->pVisibilityLabel, idx, patch,
+		Ghost::AroundNodes, 1 );
+    }
 
-          if (vars[i]->typeDescription()->getSubType()->getType()
-			 == TypeDescription::Vector) {
-              NCVariable<Vector> gdata;
-              ParticleVariable<Vector> pdata;
-              new_dw->allocate(gdata, gvars[i], vfindex, patch);
-              new_dw->get(pdata, vars[i], pset);
-              gdata.initialize(Vector(0,0,0));
-              // Do interpolation
-	      for(ParticleSubset::iterator iter = pset->begin();
-		  iter != pset->end(); iter++){
-		 particleIndex idx = *iter;
+    t->computes(new_dw, lb->gMassLabel,            idx, patch);
+    t->computes(new_dw, lb->gVelocityLabel,        idx, patch);
+    t->computes(new_dw, lb->gExternalForceLabel,   idx, patch);
+    t->computes(new_dw, lb->gTemperatureLabel,     idx, patch);
+    //t->computes(new_dw, lb->gExternalHeatRateLabel,idx, patch);
+  }
+     
+  t->computes(new_dw, lb->TotalMassLabel);
+  sched->addTask(t);
+}
 
-		 // Get the node indices that surround the cell
-		 IntVector ni[8];  double S[8];
+void SerialMPM::scheduleComputeHeatExchange(const Patch* patch,
+					    SchedulerP& sched,
+					    DataWarehouseP& old_dw,
+					    DataWarehouseP& new_dw)
+{
+ /* computeHeatExchange
+  *   in(G.MASS, G.TEMPERATURE, G.EXTERNAL_HEAT_RATE)
+  *   operation(peform heat exchange which will cause each of
+  *   velocity fields to exchange heat according to 
+  *   the temperature differences)
+  *   out(G.EXTERNAL_HEAT_RATE) */
+
+  int numMatls = d_sharedState->getNumMPMMatls();
+  Task* t = scinew Task("ThermalContact::computeHeatExchange",
+		        patch, old_dw, new_dw,
+		        MPMPhysicalModules::thermalContactModel,
+		        &ThermalContact::computeHeatExchange);
+
+  for(int m = 0; m < numMatls; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    MPMPhysicalModules::thermalContactModel->addComputesAndRequires(
+					 t, mpm_matl, patch, old_dw, new_dw);
+  }
+  sched->addTask(t);
+}
+
+void SerialMPM::scheduleExMomInterpolated(const Patch* patch,
+					  SchedulerP& sched,
+					  DataWarehouseP& old_dw,
+					  DataWarehouseP& new_dw)
+{
+  Task* t = scinew Task("Contact::exMomInterpolated",
+		    patch, old_dw, new_dw,
+		    MPMPhysicalModules::contactModel,
+		    &Contact::exMomInterpolated);
+
+  int numMatls = d_sharedState->getNumMPMMatls();
+  for(int m = 0; m < numMatls; m++){
+	MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+	MPMPhysicalModules::contactModel->
+	addComputesAndRequiresInterpolated(t, mpm_matl, patch, old_dw, new_dw);
+  }
+  sched->addTask(t);
+}
+
+void SerialMPM::scheduleComputeStressTensor(const Patch* patch,
+					    SchedulerP& sched,
+					    DataWarehouseP& old_dw,
+					    DataWarehouseP& new_dw)
+{
+  int numMatls = d_sharedState->getNumMPMMatls();
+  Task* t = scinew Task("SerialMPM::computeStressTensor",
+		    patch, old_dw, new_dw,
+		    this, &SerialMPM::computeStressTensor);
+  for(int m = 0; m < numMatls; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
+    cm->addComputesAndRequires(t, mpm_matl, patch, old_dw, new_dw);
+  }
 	 
-		 patch->findCellAndWeights(px[idx], ni, S);
+  t->computes(new_dw, lb->delTAfterConstitutiveModelLabel);
+  t->computes(new_dw, lb->StrainEnergyLabel);
 
-		 // Add each particles contribution
-		 for(int k = 0; k < 8; k++) {
-		    if(patch->containsNode(ni[k])){
-		       gdata[ni[k]]  += pdata[idx] * weighting[idx] *S[k];
-		       gweight[ni[k]]+= weighting[idx] *S[k];
-		    }
-		 }
-	      }
-	      for(NodeIterator iter = patch->getNodeIterator();
-					  !iter.done(); iter++){
-		 if(gweight[*iter] >= 1.e-10){
-		    gdata[*iter] *= 1./gweight[*iter];
-		 }
-	      }
-              new_dw->put(gdata, gvars[i], vfindex, patch);
-          }
-          else if (vars[i]->typeDescription()->getSubType()->getType()
-			== TypeDescription::Matrix3) {
-              NCVariable<Matrix3> gdata;
-              ParticleVariable<Matrix3> pdata;
-	      new_dw->allocate(gdata, gvars[i], vfindex, patch);
-	      new_dw->get(pdata, vars[i], pset);
-              gdata.initialize(Matrix3(0.));
-              // Do interpolation
-	      for(ParticleSubset::iterator iter = pset->begin();
-		  iter != pset->end(); iter++){
-		 particleIndex idx = *iter;
+  sched->addTask(t);
+}
 
-		 // Get the node indices that surround the cell
-		 IntVector ni[8];  double S[8];
-	 
-		 patch->findCellAndWeights(px[idx], ni, S);
-		    throw InternalError("Particle not in patch");
+void SerialMPM::scheduleComputeInternalForce(const Patch* patch,
+					     SchedulerP& sched,
+					     DataWarehouseP& old_dw,
+					     DataWarehouseP& new_dw)
+{
+ /*
+  * computeInternalForce
+  *   in(P.CONMOD, P.NAT_X, P.VOLUME)
+  *   operation(evaluate the divergence of the stress (stored in
+  *   P.CONMOD) using P.NAT_X and the gradients of the
+  *   shape functions)
+  * out(G.F_INTERNAL) */
 
-		 // Add each particles contribution
-		 for(int k = 0; k < 8; k++) {
-		    if(patch->containsNode(ni[k])){
-		       gdata[ni[k]]   += pdata[idx] * weighting[idx]*S[k];
-		       gweight[ni[k]] += weighting[idx] * S[k];
-		    }
-		 }
-	      }
-	      for(NodeIterator iter = patch->getNodeIterator();
-					  !iter.done(); iter++){
-		 if(gweight[*iter] >= 1.e-10){
-		    gdata[*iter] *= 1./gweight[*iter];
-		 }
-	      }
+  int numMatls = d_sharedState->getNumMPMMatls();
+  Task* t = scinew Task("SerialMPM::computeInternalForce",
+		    patch, old_dw, new_dw,
+		    this, &SerialMPM::computeInternalForce);
+  for(int m = 0; m < numMatls; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    int idx = mpm_matl->getDWIndex();
+	    
+    t->requires( new_dw, lb->pStressAfterStrainRateLabel, idx, patch,
+			 Ghost::AroundNodes, 1);
+    t->requires( new_dw, lb->pVolumeDeformedLabel, idx, patch,
+			 Ghost::AroundNodes, 1);
+    t->requires( old_dw, lb->pMassLabel, idx, patch, Ghost::AroundNodes, 1);
+    t->requires( new_dw, lb->gMassLabel, idx, patch, Ghost::None);
 
-              new_dw->put(gdata, gvars[i], vfindex, patch);
-          }
-          else if (vars[i]->typeDescription()->getSubType()->getType()
-			== TypeDescription::double_type) {
-              NCVariable<double> gdata;
-              ParticleVariable<double> pdata;
-	      new_dw->allocate(gdata, gvars[i], vfindex, patch);
-	      new_dw->get(pdata, vars[i], pset);
-              gdata.initialize(0.);
-              // Do interpolation
-	      for(ParticleSubset::iterator iter = pset->begin();
-		  iter != pset->end(); iter++){
-		 particleIndex idx = *iter;
+    if(mpm_matl->getFractureModel()) {
+       t->requires(new_dw, lb->pVisibilityLabel, idx, patch,
+			Ghost::AroundNodes, 1 );
+    }
 
-		 // Get the node indices that surround the cell
-		 IntVector ni[8];  double S[8];
-	 
-		 patch->findCellAndWeights(px[idx], ni, S);
+    t->computes(new_dw, lb->gInternalForceLabel,   idx, patch);
+    t->computes(new_dw, lb->gStressForSavingLabel, idx, patch);
+  }
 
-		 // Add each particles contribution
-		 for(int k = 0; k < 8; k++) {
-		    if(patch->containsNode(ni[k])){
-		       gdata[ni[k]]   += pdata[idx] * weighting[idx]*S[k];
-		       gweight[ni[k]] += weighting[idx] * S[k];
-		    }
-		 }
-	      }
-	      for(NodeIterator iter = patch->getNodeIterator();
-					  !iter.done(); iter++){
-		 if(gweight[*iter] >= 1.e-10){
-		    gdata[*iter] *= 1./gweight[*iter];
-		 }
-	      }
+  sched->addTask(t);
+}
 
-              new_dw->put(gdata, gvars[i], vfindex, patch);
-          }
-        } // if mpm_matl
-     }  // for matl's
-   }
+void SerialMPM::scheduleComputeInternalHeatRate(const Patch* patch,
+					        SchedulerP& sched,
+					        DataWarehouseP& old_dw,
+					        DataWarehouseP& new_dw)
+{
+  /*
+   * computeInternalHeatRate
+   * in(P.X, P.VOLUME, P.TEMPERATUREGRADIENT)
+   * operation(evaluate the grid internal heat rate using 
+   *   P.TEMPERATUREGRADIENT and the gradients of the shape functions)
+   * out(G.INTERNALHEATRATE) */
+
+  int numMatls = d_sharedState->getNumMPMMatls();
+  Task* t = scinew Task("SerialMPM::computeInternalHeatRate",
+		    patch, old_dw, new_dw,
+		    this, &SerialMPM::computeInternalHeatRate);
+
+  for(int m = 0; m < numMatls; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    int idx = mpm_matl->getDWIndex();
+
+    t->requires(old_dw, lb->pXLabel, idx, patch, Ghost::AroundNodes, 1 );
+    t->requires(new_dw, lb->pVolumeDeformedLabel,
+				     idx, patch, Ghost::AroundNodes, 1 );
+    t->requires(old_dw, lb->pTemperatureGradientLabel,
+				     idx, patch, Ghost::AroundNodes, 1);
+
+    if(mpm_matl->getFractureModel()) {
+      t->requires(new_dw, lb->pVisibilityLabel, idx,patch,Ghost::AroundNodes,1);
+    }
+
+    t->computes( new_dw, lb->gInternalHeatRateLabel, idx, patch );
+  }
+
+  sched->addTask(t);
+}
+
+void SerialMPM::scheduleSolveEquationsMotion(const Patch* patch,
+					     SchedulerP& sched,
+					     DataWarehouseP& old_dw,
+					     DataWarehouseP& new_dw)
+{
+  /* solveEquationsMotion
+   *   in(G.MASS, G.F_INTERNAL)
+   *   operation(acceleration = f/m)
+   *   out(G.ACCELERATION) */
+
+  int numMatls = d_sharedState->getNumMPMMatls();
+  Task* t = scinew Task("SerialMPM::solveEquationsMotion",
+		    patch, old_dw, new_dw,
+		    this, &SerialMPM::solveEquationsMotion);
+
+  for(int m = 0; m < numMatls; m++){
+    MPMMaterial* matl = d_sharedState->getMPMMaterial(m);
+    int idx = matl->getDWIndex();
+    t->requires( new_dw, lb->gMassLabel,          idx, patch, Ghost::None);
+    t->requires( new_dw, lb->gInternalForceLabel, idx, patch, Ghost::None);
+    t->requires( new_dw, lb->gExternalForceLabel, idx, patch, Ghost::None);
+
+    t->computes( new_dw, lb->gAccelerationLabel,  idx, patch);
+  }
+
+  sched->addTask(t);
+}
+
+void SerialMPM::scheduleSolveHeatEquations(const Patch* patch,
+					   SchedulerP& sched,
+					   DataWarehouseP& old_dw,
+					   DataWarehouseP& new_dw)
+{
+  /* solveHeatEquations
+   *   in(G.MASS, G.INTERNALHEATRATE, G.EXTERNALHEATRATE)
+   *   out(G.TEMPERATURERATE) */
+
+  int numMatls = d_sharedState->getNumMPMMatls();
+  Task* t = scinew Task("SerialMPM::solveHeatEquations",
+			    patch, old_dw, new_dw,
+			    this, &SerialMPM::solveHeatEquations);
+
+  for(int m = 0; m < numMatls; m++){
+    MPMMaterial* matl = d_sharedState->getMPMMaterial(m);
+    int idx = matl->getDWIndex();
+    t->requires( new_dw, lb->gMassLabel,             idx, patch, Ghost::None);
+    t->requires( new_dw, lb->gInternalHeatRateLabel, idx, patch, Ghost::None);
+    /*
+    t->requires( new_dw, lb->gExternalHeatRateLabel, idx, patch, Ghost::None);
+    */
+
+    if(MPMPhysicalModules::thermalContactModel) {
+       t->requires(new_dw, lb->gThermalContactHeatExchangeRateLabel,
+						     idx, patch, Ghost::None);
+    }
+		
+    t->computes( new_dw, lb->gTemperatureRateLabel, idx, patch);
+  }
+
+  sched->addTask(t);
+}
+
+void SerialMPM::scheduleIntegrateAcceleration(const Patch* patch,
+					      SchedulerP& sched,
+					      DataWarehouseP& old_dw,
+					      DataWarehouseP& new_dw)
+{
+  /* integrateAcceleration
+   *   in(G.ACCELERATION, G.VELOCITY)
+   *   operation(v* = v + a*dt)
+   *   out(G.VELOCITY_STAR) */
+
+  int numMatls = d_sharedState->getNumMPMMatls();
+  Task* t = scinew Task("SerialMPM::integrateAcceleration",
+			    patch, old_dw, new_dw,
+			    this, &SerialMPM::integrateAcceleration);
+
+  t->requires(old_dw, d_sharedState->get_delt_label() );
+
+  for(int m = 0; m < numMatls; m++){
+    MPMMaterial* matl = d_sharedState->getMPMMaterial(m);
+    int idx = matl->getDWIndex();
+    t->requires(new_dw, lb->gAccelerationLabel,    idx, patch, Ghost::None);
+    t->requires(new_dw, lb->gMomExedVelocityLabel, idx, patch, Ghost::None);
+
+    t->computes(new_dw, lb->gVelocityStarLabel, idx, patch );
+  }
+		     
+  sched->addTask(t);
+}
+
+void SerialMPM::scheduleIntegrateTemperatureRate(const Patch* patch,
+					         SchedulerP& sched,
+					         DataWarehouseP& old_dw,
+					         DataWarehouseP& new_dw)
+{
+  /* integrateTemperatureRate
+   *   in(G.TEMPERATURE, G.TEMPERATURERATE)
+   *   operation(t* = t + t_rate * dt)
+   *   out(G.TEMPERATURE_STAR) */
+
+  int numMatls = d_sharedState->getNumMPMMatls();
+  Task* t = scinew Task("SerialMPM::integrateTemperatureRate",
+		    patch, old_dw, new_dw,
+		    this, &SerialMPM::integrateTemperatureRate);
+
+  t->requires( old_dw, d_sharedState->get_delt_label() );
+
+  for(int m = 0; m < numMatls; m++) {
+    MPMMaterial* matl = d_sharedState->getMPMMaterial(m);
+    int idx = matl->getDWIndex();
+
+    t->requires( new_dw, lb->gTemperatureLabel,     idx, patch, Ghost::None);
+    t->requires( new_dw, lb->gTemperatureRateLabel, idx, patch, Ghost::None);
+		     
+    t->computes( new_dw, lb->gTemperatureStarLabel, idx, patch );
+  }
+		     
+  sched->addTask(t);
+}
+
+void SerialMPM::scheduleExMomIntegrated(const Patch* patch,
+				        SchedulerP& sched,
+				        DataWarehouseP& old_dw,
+				        DataWarehouseP& new_dw)
+{
+  /* exMomIntegrated
+   *   in(G.MASS, G.VELOCITY_STAR, G.ACCELERATION)
+   *   operation(peform operations which will cause each of
+   *		  velocity fields to feel the influence of the
+   *		  the others according to specific rules)
+   *   out(G.VELOCITY_STAR, G.ACCELERATION) */
+
+  int numMatls = d_sharedState->getNumMPMMatls();
+  Task* t = scinew Task("Contact::exMomIntegrated",
+		   patch, old_dw, new_dw,
+		   MPMPhysicalModules::contactModel,
+		   &Contact::exMomIntegrated);
+  for(int m = 0; m < numMatls; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    MPMPhysicalModules::contactModel->addComputesAndRequiresIntegrated(
+					t, mpm_matl, patch, old_dw, new_dw);
+  }
+
+  sched->addTask(t);
+}
+
+void SerialMPM::scheduleInterpolateToParticlesAndUpdate(const Patch* patch,
+						        SchedulerP& sched,
+						        DataWarehouseP& old_dw,
+						        DataWarehouseP& new_dw)
+{
+ /* interpolateToParticlesAndUpdate
+  *   in(G.ACCELERATION, G.VELOCITY_STAR, P.NAT_X)
+  *   operation(interpolate acceleration and v* to particles and
+  *             integrate these to get new particle velocity and
+  *             position)
+  * out(P.VELOCITY, P.X, P.NAT_X) */
+
+  int numMatls = d_sharedState->getNumMPMMatls();
+  Task* t=scinew Task("SerialMPM::interpolateToParticlesAndUpdate",
+		    patch, old_dw, new_dw,
+		    this, &SerialMPM::interpolateToParticlesAndUpdate);
+
+  t->requires(old_dw, d_sharedState->get_delt_label() );
+
+  for(int m = 0; m < numMatls; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    int idx = mpm_matl->getDWIndex();
+    t->requires(old_dw, lb->pXLabel,              idx, patch, Ghost::None);
+    t->requires(old_dw, lb->pExternalForceLabel,  idx, patch, Ghost::None);
+    t->requires(old_dw, lb->pMassLabel,           idx, patch, Ghost::None);
+    t->requires(old_dw, lb->pParticleIDLabel ,    idx, patch, Ghost::None);
+    t->requires(old_dw, lb->pTemperatureLabel,    idx, patch, Ghost::None);
+    t->requires(new_dw, lb->gTemperatureRateLabel,idx, patch,
+			Ghost::AroundCells, 1);
+    t->requires(new_dw, lb->gTemperatureLabel,        idx, patch,
+			Ghost::AroundCells, 1);
+    t->requires(new_dw, lb->gTemperatureStarLabel,    idx, patch,
+			Ghost::AroundCells, 1);
+    t->requires(new_dw, lb->gMomExedAccelerationLabel,idx, patch,
+			Ghost::AroundCells, 1);
+    t->requires(new_dw, lb->gMomExedVelocityStarLabel,idx, patch,
+			Ghost::AroundCells, 1);
+
+    if(mpm_matl->getFractureModel()) {
+       t->requires(new_dw, lb->pVisibilityLabel,    idx, patch, Ghost::None);
+       t->requires(old_dw, lb->pCrackSurfaceContactForceLabel,
+						    idx, patch, Ghost::None);
+       t->requires(old_dw, lb->pImageVelocityLabel, idx, patch, Ghost::None);
+    }
+
+    t->computes(new_dw, lb->pVelocityAfterUpdateLabel,          idx, patch);
+    t->computes(new_dw, lb->pXLabel_preReloc,                   idx, patch);
+    t->computes(new_dw, lb->pExternalForceLabel_preReloc,       idx, patch);
+    t->computes(new_dw, lb->pParticleIDLabel_preReloc,          idx, patch);
+    t->computes(new_dw, lb->pTemperatureRateLabel_preReloc,     idx, patch);
+    t->computes(new_dw, lb->pTemperatureLabel_preReloc,         idx, patch);
+    t->computes(new_dw, lb->pTemperatureGradientLabel_preReloc, idx, patch);
+  }
+
+  t->computes(new_dw, lb->KineticEnergyLabel);
+  t->computes(new_dw, lb->CenterOfMassPositionLabel);
+  t->computes(new_dw, lb->CenterOfMassVelocityLabel);
+  sched->addTask(t);
+}
+
+void SerialMPM::scheduleComputeMassRate(const Patch* patch,
+				        SchedulerP& sched,
+				        DataWarehouseP& old_dw,
+				        DataWarehouseP& new_dw)
+{
+ /* computeMassRate
+  * in(P.TEMPERATURE_RATE)
+  * operation(based on the heat flux history, determine if
+  * each of the particles has ignited, adjust the mass of those
+  * particles which are burning)
+  * out(P.IGNITED) */
+
+  int numMatls = d_sharedState->getNumMPMMatls();
+  Task *t = scinew Task("SerialMPM::computeMassRate",
+                         patch, old_dw, new_dw,
+                         this, &SerialMPM::computeMassRate);
+  for(int m = 0; m < numMatls; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    HEBurn* heb = mpm_matl->getBurnModel();
+    heb->addComputesAndRequires(t, mpm_matl, patch, old_dw, new_dw);
+    if(!d_burns){
+      d_burns=heb->getBurns();
+    }
+  }
+  sched->addTask(t);
+}
+
+void SerialMPM::scheduleCrackGrow(const Patch* patch,
+				  SchedulerP& sched,
+				  DataWarehouseP& old_dw,
+				  DataWarehouseP& new_dw)
+{
+ /* crackGrow
+  *   in(p.stress,p.isBroken,p.crackSurfaceNormal)
+  *   operation(check the stress on each particle to see
+  *   if the microcrack will initiate and/or grow)
+  * out(p.isBroken,p.crackSurfaceNormal) */
+
+  int numMatls = d_sharedState->getNumMPMMatls();
+  Task* t = scinew Task("SerialMPM::crackGrow",
+			 patch, old_dw, new_dw,
+			 this,&SerialMPM::crackGrow);
+
+  for(int m = 0; m < numMatls; m++) {
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    int idx = mpm_matl->getDWIndex();
+    if(mpm_matl->getFractureModel()) {
+      t->requires( new_dw, lb->pStressAfterStrainRateLabel,
+		idx, patch, Ghost::None);
+      t->requires( old_dw, lb->pIsBrokenLabel,        idx, patch, Ghost::None);
+      t->requires( old_dw, lb->pTensileStrengthLabel, idx, patch, Ghost::None);
+		 
+      t->computes( new_dw, lb->pIsNewlyBrokenLabel,            idx, patch);
+      t->computes( new_dw, lb->pNewlyBrokenSurfaceNormalLabel, idx, patch);
+      t->computes( new_dw, lb->pTensileStrengthLabel_preReloc, idx, patch);
+    }
+  }
+
+  sched->addTask(t);
+}
+
+void SerialMPM::scheduleStressRelease(const Patch* patch,
+				      SchedulerP& sched,
+				      DataWarehouseP& old_dw,
+				      DataWarehouseP& new_dw)
+{
+ /* stressRelease
+  *   in(p.x,p.stressBeforeFractureRelease,p.isNewlyBroken,
+  *   p.crackSurfaceNormal)
+  *   operation(check the stress on each particle to see
+  *   if the microcrack will initiate and/or grow)
+  * out(p.stress) */
+
+  int numMatls = d_sharedState->getNumMPMMatls();
+  Task* t = scinew Task("SerialMPM::stressRelease",
+			    patch, old_dw, new_dw,
+			    this,&SerialMPM::stressRelease);
+
+  t->requires(new_dw, lb->delTAfterConstitutiveModelLabel);
+  t->requires(old_dw, d_sharedState->get_delt_label() );
+
+  for(int m = 0; m < numMatls; m++) {
+	    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    int idx = mpm_matl->getDWIndex();
+
+    if(mpm_matl->getFractureModel()) {
+      t->requires( old_dw, lb->pXLabel, 
+			idx, patch, Ghost::AroundNodes, 1 );
+      t->requires( new_dw, lb->pIsNewlyBrokenLabel,
+			idx, patch, Ghost::AroundNodes, 1 );
+      t->requires( new_dw, lb->pNewlyBrokenSurfaceNormalLabel,
+			idx, patch, Ghost::AroundNodes, 1 );
+      t->requires( new_dw, lb->pStressAfterStrainRateLabel,
+			idx, patch, Ghost::AroundNodes, 1 );
+
+      //explosive fracture type
+      t->requires( old_dw, lb->pImageVelocityLabel, idx, patch, Ghost::None);
+
+      //normal fracture type
+      t->requires( old_dw, lb->pIsBrokenLabel,     idx, patch, Ghost::None);
+      t->requires( old_dw, lb->pCrackSurfaceNormalLabel,
+						   idx, patch, Ghost::None);
+      t->requires( new_dw, lb->pRotationRateLabel, idx, patch, Ghost::None);
+      t->requires( old_dw, lb->pMassLabel,         idx, patch, Ghost::None);
+      t->requires( new_dw, lb->pStrainEnergyLabel, idx, patch, Ghost::None);
+      t->requires( new_dw, lb->pVelocityAfterUpdateLabel,
+						   idx, patch, Ghost::None);
+			 
+      t->computes( new_dw, lb->pStressReleasedLabel,              idx, patch);
+      t->computes( new_dw, lb->pStressAfterFractureReleaseLabel,  idx, patch);
+      t->computes( new_dw, lb->pImageVelocityLabel_preReloc,      idx, patch);
+      t->computes( new_dw, lb->pVelocityAfterFractureLabel,       idx, patch);
+      t->computes( new_dw, lb->pIsBrokenLabel_preReloc,           idx, patch);
+      t->computes( new_dw, lb->pCrackSurfaceNormalLabel_preReloc, idx, patch);
+    }
+  }
+  t->computes(new_dw, lb->delTAfterFractureLabel);
+  sched->addTask(t);
+}
+
+void SerialMPM::scheduleComputeCrackSurfaceContactForce(const Patch* patch,
+						        SchedulerP& sched,
+						        DataWarehouseP& old_dw,
+						        DataWarehouseP& new_dw)
+{
+ /* computeCrackSurfaceContactForce
+  *   in(P.X, P.VOLUME, P.ISBROKEN, P.CRACKSURFACENORMAL)
+  *   operation(compute the surface contact force)
+  * out(P.SURFACECONTACTFORCE) */
+
+  int numMatls = d_sharedState->getNumMPMMatls();
+  Task* t = scinew Task(
+	    "SerialMPM::computeCrackSurfaceContactForce",
+	    patch, old_dw, new_dw,
+	    this,&SerialMPM::computeCrackSurfaceContactForce);
+  for(int m = 0; m < numMatls; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    if(mpm_matl->getFractureModel()) {
+       mpm_matl->getConstitutiveModel()->
+       addComputesAndRequiresForCrackSurfaceContact
+					(t,mpm_matl, patch,old_dw,new_dw);
+    }
+  }
+  t->computes(new_dw, lb->delTAfterCrackSurfaceContactLabel);
+  sched->addTask(t);
+}
+
+void SerialMPM::scheduleCarryForwardVariables(const Patch* patch,
+					      SchedulerP& sched,
+					      DataWarehouseP& old_dw,
+					      DataWarehouseP& new_dw)
+{
+  /* carryForwardVariables
+   * in(p.x,p.stressBeforeFractureRelease,p.isNewlyBroken,
+   *   p.crackSurfaceNormal)
+   *   operation(check the stress on each particle to see
+   *   if the microcrack will initiate and/or grow)
+   * out(p.stress) */
+
+  int numMatls = d_sharedState->getNumMPMMatls();
+  Task* t = scinew Task("SerialMPM::carryForwardVariables",
+		         patch, old_dw, new_dw,
+		         this,&SerialMPM::carryForwardVariables);
+
+  if(d_fracture) {
+    t->requires( new_dw, lb->delTAfterCrackSurfaceContactLabel);
+  }
+  else {
+    t->requires( new_dw, lb->delTAfterConstitutiveModelLabel);
+  }
+  for(int m = 0; m < numMatls; m++) {
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    int idx = mpm_matl->getDWIndex();
+
+    if(d_fracture) {
+      t->requires( new_dw, lb->pStressAfterFractureReleaseLabel,
+		idx, patch, Ghost::None);
+      t->requires( new_dw, lb->pVelocityAfterFractureLabel,
+		idx, patch, Ghost::None);
+    }
+    else {
+      t->requires( new_dw, lb->pStressAfterStrainRateLabel,
+		idx, patch, Ghost::None);			 
+      t->requires( new_dw, lb->pVelocityAfterUpdateLabel,
+		idx, patch, Ghost::None);			 
+    }
+
+    t->computes(new_dw, lb->pStressLabel_preReloc,   idx, patch);
+    t->computes(new_dw, lb->pVelocityLabel_preReloc, idx, patch);
+  }
+  t->computes(new_dw, lb->delTLabel );
+  sched->addTask(t);
+}
+
+void SerialMPM::scheduleInterpolateParticlesForSaving(const Patch* patch,
+					 	      SchedulerP& sched,
+						      DataWarehouseP& old_dw,
+						      DataWarehouseP& new_dw)
+{
+  int numMatls = d_sharedState->getNumMPMMatls();
+  Task *t = scinew Task("SerialMPM::interpolateParticlesForSaving",
+                         patch, old_dw, new_dw,
+                         this, &SerialMPM::interpolateParticlesForSaving);
+  for(int m = 0; m < numMatls; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    Material* matl = d_sharedState->getMaterial(m);
+    int idx = matl->getDWIndex();
+    // Add "requires" for each of the particle variables
+    // to be interpolated, as well as the weighting variables.
+    // Add "computes" for the resulting grid variables.
+    t->requires(new_dw, lb->pStressLabel_preReloc, idx, patch,
+			Ghost::AroundNodes, 1 );
+    t->requires(new_dw, lb->pMassLabel_preReloc, idx, patch,
+			Ghost::AroundNodes, 1 );
+    t->requires(old_dw, lb->pXLabel, idx, patch,
+			Ghost::AroundNodes, 1 );
+
+    t->computes(new_dw, lb->gStressForSavingLabel, idx, patch );
+  }
+  sched->addTask(t);
 }
 
 void SerialMPM::actuallyInitialize(const ProcessorGroup*,
@@ -2051,8 +1924,159 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 }
 
+void SerialMPM::interpolateParticlesForSaving(const ProcessorGroup*,
+				    	      const Patch* patch,
+					      DataWarehouseP& old_dw,
+					      DataWarehouseP& new_dw)
+{
+   int numMatls = d_sharedState->getNumMatls();
+
+   vector<const VarLabel* > vars;
+   vector<const VarLabel* > varweights;
+   vector<const VarLabel* > gvars;
+
+   // Add items to each of the three vectors here.
+   // vars is the particle data to be interpolated
+   // varweights is the particle data by which to weight
+   // the interpolation, and gvars is the resulting
+   // interpolated version of that variable.
+   vars.push_back(lb->pStressLabel_preReloc);
+   varweights.push_back(lb->pMassLabel_preReloc);
+   gvars.push_back(lb->gStressForSavingLabel);
+
+   for(int i=0;i<(int)vars.size();i++){
+     for(int m = 0; m < numMatls; m++){
+        Material* matl = d_sharedState->getMaterial( m );
+        MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+        if(mpm_matl){
+          int matlindex = matl->getDWIndex();
+          int vfindex = matl->getVFIndex();
+          ParticleSubset* pset = old_dw->getParticleSubset(matlindex,
+			patch, Ghost::AroundNodes, 1, lb->pXLabel);
+
+          // Allocate storage & retrieve particle weighting and position
+          ParticleVariable<double> weighting;
+          new_dw->get(weighting, varweights[i], pset);
+          NCVariable<double> gweight;
+          new_dw->allocate(gweight, lb->gWeightLabel, vfindex, patch);
+          ParticleVariable<Point> px;
+          old_dw->get(px, lb->pXLabel, pset);
+
+
+          if (vars[i]->typeDescription()->getSubType()->getType()
+			 == TypeDescription::Vector) {
+              NCVariable<Vector> gdata;
+              ParticleVariable<Vector> pdata;
+              new_dw->allocate(gdata, gvars[i], vfindex, patch);
+              new_dw->get(pdata, vars[i], pset);
+              gdata.initialize(Vector(0,0,0));
+              // Do interpolation
+	      for(ParticleSubset::iterator iter = pset->begin();
+		  iter != pset->end(); iter++){
+		 particleIndex idx = *iter;
+
+		 // Get the node indices that surround the cell
+		 IntVector ni[8];  double S[8];
+	 
+		 patch->findCellAndWeights(px[idx], ni, S);
+
+		 // Add each particles contribution
+		 for(int k = 0; k < 8; k++) {
+		    if(patch->containsNode(ni[k])){
+		       gdata[ni[k]]  += pdata[idx] * weighting[idx] *S[k];
+		       gweight[ni[k]]+= weighting[idx] *S[k];
+		    }
+		 }
+	      }
+	      for(NodeIterator iter = patch->getNodeIterator();
+					  !iter.done(); iter++){
+		 if(gweight[*iter] >= 1.e-10){
+		    gdata[*iter] *= 1./gweight[*iter];
+		 }
+	      }
+              new_dw->put(gdata, gvars[i], vfindex, patch);
+          }
+          else if (vars[i]->typeDescription()->getSubType()->getType()
+			== TypeDescription::Matrix3) {
+              NCVariable<Matrix3> gdata;
+              ParticleVariable<Matrix3> pdata;
+	      new_dw->allocate(gdata, gvars[i], vfindex, patch);
+	      new_dw->get(pdata, vars[i], pset);
+              gdata.initialize(Matrix3(0.));
+              // Do interpolation
+	      for(ParticleSubset::iterator iter = pset->begin();
+		  iter != pset->end(); iter++){
+		 particleIndex idx = *iter;
+
+		 // Get the node indices that surround the cell
+		 IntVector ni[8];  double S[8];
+	 
+		 patch->findCellAndWeights(px[idx], ni, S);
+		    throw InternalError("Particle not in patch");
+
+		 // Add each particles contribution
+		 for(int k = 0; k < 8; k++) {
+		    if(patch->containsNode(ni[k])){
+		       gdata[ni[k]]   += pdata[idx] * weighting[idx]*S[k];
+		       gweight[ni[k]] += weighting[idx] * S[k];
+		    }
+		 }
+	      }
+	      for(NodeIterator iter = patch->getNodeIterator();
+					  !iter.done(); iter++){
+		 if(gweight[*iter] >= 1.e-10){
+		    gdata[*iter] *= 1./gweight[*iter];
+		 }
+	      }
+
+              new_dw->put(gdata, gvars[i], vfindex, patch);
+          }
+          else if (vars[i]->typeDescription()->getSubType()->getType()
+			== TypeDescription::double_type) {
+              NCVariable<double> gdata;
+              ParticleVariable<double> pdata;
+	      new_dw->allocate(gdata, gvars[i], vfindex, patch);
+	      new_dw->get(pdata, vars[i], pset);
+              gdata.initialize(0.);
+              // Do interpolation
+	      for(ParticleSubset::iterator iter = pset->begin();
+		  iter != pset->end(); iter++){
+		 particleIndex idx = *iter;
+
+		 // Get the node indices that surround the cell
+		 IntVector ni[8];  double S[8];
+	 
+		 patch->findCellAndWeights(px[idx], ni, S);
+
+		 // Add each particles contribution
+		 for(int k = 0; k < 8; k++) {
+		    if(patch->containsNode(ni[k])){
+		       gdata[ni[k]]   += pdata[idx] * weighting[idx]*S[k];
+		       gweight[ni[k]] += weighting[idx] * S[k];
+		    }
+		 }
+	      }
+	      for(NodeIterator iter = patch->getNodeIterator();
+					  !iter.done(); iter++){
+		 if(gweight[*iter] >= 1.e-10){
+		    gdata[*iter] *= 1./gweight[*iter];
+		 }
+	      }
+
+              new_dw->put(gdata, gvars[i], vfindex, patch);
+          }
+        } // if mpm_matl
+     }  // for matl's
+   }
+}
+
 
 // $Log$
+// Revision 1.169  2000/12/01 22:02:47  guilkey
+// Made the scheduling of each task a function.  This was done to make
+// scheduleTimeAdvance managable, as well as to make it easier to create
+// an integrated MPM and CFD code.
+//
 // Revision 1.168  2000/11/30 22:59:18  guilkey
 // Got rid of the if(! in front of all of the patch->findCellAnd...
 // since this is no longer needed.
