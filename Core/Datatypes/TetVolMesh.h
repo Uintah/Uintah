@@ -31,6 +31,7 @@
 #ifndef SCI_project_TetVolMesh_h
 #define SCI_project_TetVolMesh_h 1
 
+#include <Core/Thread/Mutex.h>
 #include <Core/Datatypes/MeshBase.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/FieldIterator.h>
@@ -165,11 +166,14 @@ private:
 
   //! all the nodes.
   vector<Point>        points_;
+  Mutex                points_lock_;
+
   //! each 4 indecies make up a tet
   vector<index_type>   cells_;
+  Mutex                cells_lock_;
   //! face neighbors index to tet opposite the corresponding node in cells_
   vector<index_type>   neighbors_;
-
+  Mutex                nbors_lock_;
   //! Face information.
   struct Face {
     node_index         nodes_[3];   //! 3 nodes makes a face.
@@ -286,11 +290,14 @@ private:
     nodes or cells change. */
   vector<Face>             faces_;
   hash_set<Face, FaceHash> face_table_;
-
+  Mutex                    face_table_lock_;
   /*! container for edge storage. Must be computed each time 
     nodes or cells change. */
   vector<Edge>             edges_; 
   hash_set<Edge, EdgeHash> edge_table_;
+  Mutex                    edge_table_lock_;
+
+
 
   inline
   void hash_edge(node_index n1, node_index n2, 
@@ -318,6 +325,7 @@ private:
     node_array                   nodes_;
   };
   vector<vector<node_index> > node_neighbors_;
+  Mutex                       node_nbor_lock_;
 };
 
 // Handle type for TetVolMesh mesh.
@@ -328,6 +336,7 @@ typedef LockingHandle<TetVolMesh> TetVolMeshHandle;
 template <class Iter, class Functor>
 void
 TetVolMesh::fill_points(Iter begin, Iter end, Functor fill_ftor) {
+  points_lock_.lock();
   Iter iter = begin;
   points_.resize(end - begin); // resize to the new size
   vector<Point>::iterator piter = points_.begin();
@@ -335,11 +344,13 @@ TetVolMesh::fill_points(Iter begin, Iter end, Functor fill_ftor) {
     *piter = fill_ftor(*iter);
     ++piter; ++iter;
   } 
+  points_lock_.unlock();
 }
 
 template <class Iter, class Functor>
 void
 TetVolMesh::fill_cells(Iter begin, Iter end, Functor fill_ftor) {
+  cells_lock_.lock();
   Iter iter = begin;
   cells_.resize((end - begin) * 4); // resize to the new size
   vector<index_type>::iterator citer = cells_.begin();
@@ -354,11 +365,13 @@ TetVolMesh::fill_cells(Iter begin, Iter end, Functor fill_ftor) {
     *citer = nodes[3];
     ++citer; ++iter;
   } 
+  cells_lock_.unlock();
 }
 
 template <class Iter, class Functor>
 void
 TetVolMesh::fill_neighbors(Iter begin, Iter end, Functor fill_ftor) {
+  nbors_lock_.lock();
   Iter iter = begin;
   neighbors_.resize((end - begin) * 4); // resize to the new size
   vector<index_type>::iterator citer = neighbors_.begin();
@@ -373,6 +386,7 @@ TetVolMesh::fill_neighbors(Iter begin, Iter end, Functor fill_ftor) {
     *citer = face_nbors[3];
     ++citer; ++iter;
   } 
+  nbors_lock_.unlock();
 }
 
 } // namespace SCIRun

@@ -51,14 +51,26 @@ TetVolMesh::type_name(int n)
 }
 
 
-TetVolMesh::TetVolMesh()
+TetVolMesh::TetVolMesh() :
+  points_lock_("TetVolMesh points_ fill lock"),
+  cells_lock_("TetVolMesh cells_ fill lock"),
+  nbors_lock_("TetVolMesh neighbors_ fill lock"),
+  face_table_lock_("TetVolMesh faces_ fill lock"),
+  edge_table_lock_("TetVolMesh edge_ fill lock"),
+  node_nbor_lock_("TetVolMesh node_neighbors__ fill lock")
 {
 }
 
-TetVolMesh::TetVolMesh(const TetVolMesh &copy)
-  : points_(copy.points_),
-    cells_(copy.cells_),
-    neighbors_(copy.neighbors_)
+TetVolMesh::TetVolMesh(const TetVolMesh &copy): 
+  points_(copy.points_),
+  points_lock_("TetVolMesh points_ fill lock"),
+  cells_(copy.cells_),
+  cells_lock_("TetVolMesh cells_ fill lock"),
+  neighbors_(copy.neighbors_),
+  nbors_lock_("TetVolMesh neighbors_ fill lock"),
+  face_table_lock_("TetVolMesh faces_ fill lock"),
+  edge_table_lock_("TetVolMesh edge_ fill lock"),
+  node_nbor_lock_("TetVolMesh node_neighbors__ fill lock")
 {
 }
 
@@ -107,6 +119,7 @@ TetVolMesh::compute_faces()
 {
   if (faces_.size() > 0) return;
 
+  face_table_lock_.lock();
   cell_iterator ci = cell_begin();
   while (ci != cell_end()) {
     node_array arr;
@@ -125,6 +138,7 @@ TetVolMesh::compute_faces()
     *f_iter = *ht_iter;
     ++f_iter; ++ht_iter;
   }
+  face_table_lock_.unlock();
 }
 
 void 
@@ -149,6 +163,7 @@ TetVolMesh::compute_edges()
 {
   if (edges_.size() > 0) return;
 
+  edge_table_lock_.lock();
   cell_iterator ci = cell_begin();
   while (ci != cell_end()) {
     node_array arr;
@@ -169,7 +184,7 @@ TetVolMesh::compute_edges()
     *e_iter = *ht_iter;
     ++e_iter; ++ht_iter;
   }
-  
+  edge_table_lock_.unlock();
 }
 
 void 
@@ -329,9 +344,11 @@ TetVolMesh::get_neighbors(node_array &array, node_index idx) const
 void 
 TetVolMesh::compute_node_neighbors()
 {
+  node_nbor_lock_.lock();
   node_neighbors_.resize(points_.size());
   for_each(edge_begin(), edge_end(), FillNodeNeighbors(node_neighbors_, 
 						       *this));
+  node_nbor_lock_.unlock();
 }
 
 void 
@@ -446,7 +463,6 @@ TetVolMesh::locate(cell_index &cell, const Point &p) const
   cell = *ci;
   return found_p;
 }
-
 
 bool
 TetVolMesh::inside4_p(int i, const Point &p) const
