@@ -358,8 +358,7 @@ TextureBuilderAlgo<FieldType>::build_bricks(vector<TextureBrickHandle>& bricks,
           BBox(Point(bmin[0], bmin[1], bmin[2]),
                Point(bmax[0], bmax[1], bmax[2])),
           BBox(Point(tmin[0], tmin[1], tmin[2]),
-               Point(tmax[0], tmax[1], tmax[2])),
-          true);
+               Point(tmax[0], tmax[1], tmax[2])));
 //         cerr << "Adding brick: " << b->nx() << " " << b->ny() << " " << b->nz() << " | "
 //              << b->ox() << " " << b->oy() << " " << b->oz() << " -> "
 //              << b->mx() << " " << b->my() << " " << b->mz() << endl;

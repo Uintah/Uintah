@@ -113,7 +113,7 @@ class TextureBrickT : public TextureBrick
 public:
   TextureBrickT(int nx, int ny, int nz, int nc, int* nb,
 		int ox, int oy, int oz,	int mx, int my, int mz,
-		const BBox& bbox, const BBox& tbox, bool alloc);
+		const BBox& bbox, const BBox& tbox);
   virtual ~TextureBrickT();
   
   virtual GLenum tex_type() { return GLinfo<T>::type; }
@@ -123,29 +123,28 @@ public:
   
 protected:
   T* data_[2];
-  bool alloc_;
 };
 
 template <typename T>
 TextureBrickT<T>::TextureBrickT(int nx, int ny, int nz, int nc, int* nb,
 				int ox, int oy, int oz,
 				int mx, int my, int mz,
-				const BBox& bbox, const BBox& tbox, bool alloc)
+				const BBox& bbox, const BBox& tbox)
   : TextureBrick(nx, ny, nz, nc, nb, ox, oy, oz, mx, my, mz, bbox, tbox)
 {
   data_[0] = 0;
   data_[1] = 0;
-  if(alloc) {
-    for(int c=0; c<nc; c++) {
-      data_[c] = scinew T[nx_*ny_*nz_*nb_[c]];
-    }
+  for (int c=0; c<nc; c++)
+  {
+    data_[c] = scinew T[nx_*ny_*nz_*nb_[c]];
   }
 }
 
 template <typename T>
 TextureBrickT<T>::~TextureBrickT()
 {
-  for(int c=0; c<nc_; c++) {
+  for (int c=0; c<nc_; c++)
+  {
     delete[] data_[c];
   }
 }
