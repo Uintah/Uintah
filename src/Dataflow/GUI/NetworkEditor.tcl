@@ -543,23 +543,24 @@ proc GetPathAndPackage { compaddr compname catname } {
     wm title $w "Specify new component location"
 
     frame $w.row1
+    frame $w.row12
     frame $w.row2
     frame $w.row3
     frame $w.row4
-    pack $w.row1 $w.row2 $w.row3 $w.row4 -pady 5 -padx 5
+    pack $w.row1 $w.row12 -padx 5 -side top
+    pack $w.row2 $w.row3 $w.row4 -pady 5 -padx 5 -side top
 
-    label $w.row1.compname -text "Component name: $compname"
-    label $w.row1.catname -text "Category name: $catname"
-    pack $w.row1.compname $w.row1.catname -side top -f both -e y
+    label $w.row1.compname_label -text "Component name: "
+    label $w.row12.catname_label -text "Category name: "
+    label $w.row1.compname -text $compname -foreground darkred
+    label $w.row12.catname -text $catname -foreground darkred
+    pack $w.row1.compname_label $w.row1.compname\
+         $w.row12.catname_label  $w.row12.catname\
+         -side left -f both -e y 
 
-    label $w.row2.psepath_l -text "PSE to insert into:"
+    label $w.row2.psepath_l -text "root of PSE src tree to insert into:"
     entry $w.row2.psepath 
-    button $w.row2.browse -text "Browse"\
-	   -command "$w.row2.psepath delete 0 end;\
-	   $w.row2.psepath insert 0 \[tk_getOpenFile -filetypes\
-	                   {{ {PSE executables} {pse} }
-		            { {Other} { * } }}\]"
-    pack $w.row2.psepath_l $w.row2.psepath $w.row2.browse \
+    pack $w.row2.psepath_l $w.row2.psepath\
 	 -side left -f both -e y \
 
     label $w.row3.packname_l -text "Package to insert into:"

@@ -678,18 +678,26 @@ void NetworkEditor::tcl_command(TCLArgs& args, void*)
 	}
 	save_network(args[2]);
     } else if (args[1] == "load_component_spec"){
+      int check=0;
+      char string[100]="\0";
       if (args.count()!=3) {
 	args.error("load_component_spec needs 1 argument");
 	return;
       }
       component_node* n = CreateComponentNode(1);
-      ReadComponentNodeFromFile(n,args[2]());
-      if (n->name==NOT_SET) {
+      check = ReadComponentNodeFromFile(n,args[2]());
+      if (check!=1) {
 	args.error(clString("NetworkEditor: XML file did not pass"
-			    " validation: ")+args[2]);
+			    " validation: ")+args[2]+".  Please see the"
+                            " messages window for details.");
 	return;
       }
-      char string[100]="\0";
+      if (n->name==NOT_SET||n->category==NOT_SET) {
+	args.error(clString("NetworkEditor: XML file does not define"
+                            " a component name and/or does not define a"
+                            "  category: ")+args[2]);
+	return;
+      }
       sprintf(string,"%d",(long)n);
       TCL::execute(clString("GetPathAndPackage {")+string+"} {"+
 		   n->name+"} {"+n->category+"}");
@@ -762,6 +770,13 @@ void postMessage(const clString& errmsg, bool err)
 
 //
 // $Log$
+// Revision 1.21  2000/11/13 19:45:17  moulding
+// - improve error reporting for XML stuff in module maker
+// - edit module maker dialog:
+//   remove browse button
+//   clarify PSE path label
+// - add support for newer versions of xerces
+//
 // Revision 1.20  2000/11/11 04:20:35  moulding
 // try to handle failure of XML validation more gracefully.
 //
