@@ -342,15 +342,16 @@ void TaskGraph::addDependencyEdges(Task* task, Task::Dependency* req,
 		const_cast<Task::Dependency*>(otherEdge->req);
 	      if (priorReq != req) {
 		ASSERT(priorReq->var->equals(req->var));
-		ASSERT(priorReq->task != task);		
-		Task::Edge* edge = scinew Task::Edge(priorReq, req);
-		edges.push_back(edge);
-		req->addComp(edge);
-		priorReq->addReq(edge);
-		if(dbg.active()){
-		  dbg << "Creating edge from task: " << *priorReq->task << " to task: " << *req->task << '\n';
-		  dbg << "Prior Req=" << *priorReq << '\n';
-		  dbg << "Modify=" << *req << '\n';
+		if (priorReq->task != task) {		
+		  Task::Edge* edge = scinew Task::Edge(priorReq, req);
+		  edges.push_back(edge);
+		  req->addComp(edge);
+		  priorReq->addReq(edge);
+		  if(dbg.active()){
+		    dbg << "Creating edge from task: " << *priorReq->task << " to task: " << *req->task << '\n';
+		    dbg << "Prior Req=" << *priorReq << '\n';
+		    dbg << "Modify=" << *req << '\n';
+		  }
 		}
 	      }
 	    }
