@@ -31,7 +31,7 @@ using namespace std;
 #define INSCILAB               0
 #define SYSTEM_SIZE_SCALE      1.438848E-4/*1.438848E-6*/
 #define SYSTEM_DISTANCE_SCALE  6.76E-8/*3.382080E-9*/
-#define SYSTEM_TIME_SCALE1     1
+#define SYSTEM_TIME_SCALE1     .5
 #define SYSTEM_TIME_SCALE2     .5
 #if 1
 #define IMAGEDIR      "/home/moulding/images/"
@@ -55,14 +55,18 @@ typedef struct {
 
 } satellite_data;
 
+// this table comes from the "views of the solar system" web site
+// www.scienceviews.com
 satellite_data table[] = {
     
-    // solar satellites
   { 695000, 0, 25.38, 0, 0, 0, 0, 
     0, 0, 0, "sunmap.ppm" },
   
   { 6378, 1.496E8, .99727, 365.26, .0167, 23.45, 0,
     0, 0, 0, "earth.ppm" },
+  
+  { 1737.4, 384400*100, 27.32166, 27.32166, .0549, 1.5424, 5.1454,
+    1, 0, 0, "luna.ppm" },
   
   { 2439.7, 5.791E7, 58.65, 87.97, .2056, 0, 7.004, 
     0, 0, 0, "mercury.ppm" },
@@ -87,11 +91,8 @@ satellite_data table[] = {
   
   { 1137, 5.91352E9, -6.3872, 90779, .2482, 122.52, 17.148,
     0, 1, 0, "pluto.ppm" },
+
 #if 0
-  // planetary satellites
-  { 1737.4, 384400, 27.32166, 27.32166, .0549, 1.5424, 5.1454,
-    1, 0, 0, "luna.ppm" },
-  
   { 1815, 421600, 1.769, 1.769, .004, 0, .04,
     5, 0, 0, "io.ppm" },
 
@@ -159,20 +160,23 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
   sol->set_orb_speed(0);
   sol->set_rev_speed(1./table[0].rot_speed_*SYSTEM_TIME_SCALE1);
   table[0].self_ = sol;
+  cerr << "sol = " << sol << endl;
   earth->set_orb_speed(1./table[1].orb_speed_*SYSTEM_TIME_SCALE2);
   earth->set_rev_speed(1./table[1].rot_speed_*SYSTEM_TIME_SCALE1);
   earth->set_up(Vector(sin(table[1].tilt_),0,cos(table[1].tilt_)));
+  earth->set_parent(sol);
   table[1].self_ = earth;
+  cerr << "earth = " << earth << endl;
 
-  //solar_system->add( sol );
+  solar_system->add( sol );
   solar_system->add( corona );
   solar_system->add( earth );
 
-  //scene->addObjectOfInterest(sol,true);
+  scene->addObjectOfInterest(sol,true);
   scene->addObjectOfInterest(earth,true);
 
   // build the other satellites
-  for (unsigned loop=2; loop<5/*table[loop].radius_!=0*/; ++loop) {
+  for (unsigned loop=2; loop<6/*table[loop].radius_!=0*/; ++loop) {
 
     Material *newmat = 
         new TileImageMaterial(string(IMAGEDIR)+table[loop].tmap_filename_,
@@ -190,6 +194,8 @@ Scene *make_scene(int /*argc*/, char* /*argv*/[], int /*nworkers*/)
     table[loop].self_ = newsat;
     
     newsat->set_parent(table[table[loop].parent_].self_);
+    cerr << "satellite " << newsat->get_name() << " parent = " 
+         << table[table[loop].parent_].self_ << endl;
     newsat->set_rev_speed(1./table[loop].rot_speed_*SYSTEM_TIME_SCALE1);
     newsat->set_orb_speed(1./table[loop].orb_speed_*SYSTEM_TIME_SCALE2);
     newsat->set_up(Vector(sin(table[loop].tilt_),0,cos(table[loop].tilt_)));
