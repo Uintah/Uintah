@@ -9,7 +9,7 @@ Persistent* ring_satellite_maker() {
 }
 
 // initialize the static member type_id
-PersistentTypeID RingSatellite::type_id("RingSatellite", "Material", ring_satellite_maker);
+PersistentTypeID RingSatellite::type_id("RingSatellite", "Object", ring_satellite_maker);
 
 void RingSatellite::animate(double /*t*/, bool& changed)
 {

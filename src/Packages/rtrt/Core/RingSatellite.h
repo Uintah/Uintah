@@ -57,6 +57,7 @@ class RingSatellite : public Ring
   virtual void compute_bounds(BBox& bbox, double offset)
   {
     if (parent_) {
+#if 0
       Point center = parent_->get_center();
       bbox.extend(center);
       Point extent = 
@@ -77,6 +78,9 @@ class RingSatellite : public Ring
       extent = Point(center.x(),center.y(),
                      center.z()-(parent_->get_radius()+offset));
       bbox.extend( extent );
+#else
+      bbox.extend(cen,radius+offset);
+#endif
     } else {
       bbox.extend(cen, radius+thickness+offset);
     }
