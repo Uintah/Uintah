@@ -15,6 +15,10 @@
 #ifndef LABELMAPS_H
 #define LABELMAPS_H
 
+#include <vector>
+
+using namespace std;
+
 #define VH_LM_NUM_NAMES 512
 
 /* misc string manip functions */
@@ -74,20 +78,40 @@ private:
 /******************************************************************************
  * class VH_AnatomyBoundingBox
  *
- * description: A singly-linked list of nodes consisting of an ASCII
+ * description: A doubly-linked list of nodes consisting of an ASCII
  *		char *name -- matching a tissue in the MasterAnatomy
  *              and the X-Y-Z extrema of the segmentation of that
  *              tissue.  Note: dimensions are integer Voxel addresses
  *		referring to the original segmented volume.
  ******************************************************************************/
 class VH_AnatomyBoundingBox {
-public:
-        VH_AnatomyBoundingBox() { flink = (VH_AnatomyBoundingBox *)0; };
-        void readFile(FILE *infileptr);
-	char *anatomyname;
-	int minX, maxX, minY, maxY, minZ, maxZ, minSlice, maxSlice;
-	VH_AnatomyBoundingBox *flink;
 private:
+	char *anatomyname_;
+	int minX_, maxX_, minY_, maxY_, minZ_, maxZ_, minSlice_, maxSlice_;
+	VH_AnatomyBoundingBox *blink, *flink;
+public:
+        VH_AnatomyBoundingBox() { flink = blink = this; };
+	void append(VH_AnatomyBoundingBox *newNode);
+        VH_AnatomyBoundingBox * next() { return flink; };
+        void readFile(FILE *infileptr);
+	char *get_anatomyname() { return(anatomyname_); };
+	void set_anatomyname(char *newName) { anatomyname_ = newName; };
+	int get_minX() { return minX_; };
+        void set_minX(int new_minX) { minX_ = new_minX; };
+        int get_maxX() { return maxX_; };
+        void set_maxX(int new_maxX) { maxX_ = new_maxX; };
+        int get_minY() { return minY_; };
+        void set_minY(int new_minY) { minY_ = new_minY; };
+        int get_maxY() { return maxY_; };
+        void set_maxY(int new_maxY) { maxY_ = new_maxY; };
+        int get_minZ() { return minZ_; };
+        void set_minZ(int new_minZ) { minZ_ = new_minZ; };
+        int get_maxZ() { return maxZ_; };
+        void set_maxZ(int new_maxZ) { maxZ_ = new_maxZ; };
+        int get_minSlice() { return minSlice_; };
+        void set_minSlice(int newMinSlice) { minSlice_ = newMinSlice; };
+        int get_maxSlice() { return maxSlice_; };
+        void set_maxSlice(int newMaxSlice) { maxSlice_ = newMaxSlice; };
 };
 
 /******************************************************************************
@@ -103,13 +127,33 @@ VH_AnatomyBoundingBox *
 VH_Anatomy_findBoundingBox(VH_AnatomyBoundingBox *list, char *anatomyname);
 
 /******************************************************************************
+ * Find the largest bounding volume of the segmentation
+ ******************************************************************************/
+VH_AnatomyBoundingBox *
+VH_Anatomy_findMaxBoundingBox(VH_AnatomyBoundingBox *list);
+
+/******************************************************************************
  * class VH_injuryList
  *
- * description: Contains the name of an injured tissue and
- *		iconic geometry to display to indicate the injury extent
+ * description: A doubly-linked list of nodes consisting of nodes containing
+ *              the name of an injured tissue and iconic geometry to display
+ *              to indicate the extent of the injury.
  ******************************************************************************/
 
+class VH_injury
+{
+  public:
+  string anatomyname;
+  int geom_type; // sphere, cylinder, hollow cylinder
+  float axisX0, axisY0, axisZ0; // center axis endpoint 0
+  float axisX1, axisY1, axisZ1; // center axis endpoint 1
+  float rad0, rad1;
+
+  VH_injury() { };
+  VH_injury(char *newName) { anatomyname = string(newName); };
+};
+
 bool
-is_injured(char *targetName, char **injured_tissue_list, int size_injList);
+is_injured(char *targetName, vector<VH_injury> &injured_tissue_list);
 
 #endif
