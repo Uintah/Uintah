@@ -86,6 +86,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 
 	trace variable $this-active_tab w "$this switch_to_active_tab"
 	trace variable $this-update_type w "$this update_type_callback"
+	trace variable $this-isoval-max w "$this update_minmax_callback"
 
 	# SAGE vars
 	global $this-visibility $this-value $this-scan
@@ -207,13 +208,16 @@ itcl_class SCIRun_Visualization_Isosurface {
 	set sel [$isf.tabs add -label "Quantity" \
 		     -command "set $this-active-isoval-selection-tab 1"]
 	
-	iwidgets::spinner $sel.f -labeltext "Number of evenly-spaced isovals: " \
-		-width 5 -fixed 5 \
-		-validate "$this set-quantity %P $this-isoval-quantity]" \
-		-decrement "$this spin-quantity -1 $sel.f $this-isoval-quantity" \
-		-increment "$this spin-quantity  1 $sel.f $this-isoval-quantity" 
-
-	$sel.f insert 1 [set $this-isoval-quantity]
+	# Save the isoval-quantity since the iwidget resets it
+	global $this-isoval-quantity
+	set quantity [set $this-isoval-quantity]
+	iwidgets::spinint $sel.f -labeltext "Number of evenly-spaced isovals: " \
+	    -range {0 100} -step 1 \
+	    -textvariable $this-isoval-quantity \
+	    -width 10 -fixed 10 -justify right
+	
+	$sel.f delete 0 end
+	$sel.f insert 0 $quantity
 
 	frame $sel.m
 	radiobutton $sel.m.c -text "ColorMap MinMax" \
@@ -321,28 +325,6 @@ itcl_class SCIRun_Visualization_Isosurface {
 	moveToCursor $w
     }
 
-    method set-quantity {new quantity} {
-	if {! [regexp "\\A\\d*\\.*\\d+\\Z" $quantity]} {
-	    return 0
-	} elseif {$quantity < 1.0} {
-	    return 0
-	} 
-	set $quantity $new
-	$this-c needexecute
-	return 1
-    }
-
-    method spin-quantity {step spinner quantity} {
-	set newquantity [expr [set $quantity] + $step]
-
-	if {$newquantity < 1.0} {
-	    set newquantity 0
-	}   
-	set $quantity $newquantity
-	$spinner delete 0 end
-	$spinner insert 0 [set $quantity]
-    }
-
     method set-isoval {} {
 	global $this-update
 
@@ -384,6 +366,13 @@ itcl_class SCIRun_Visualization_Isosurface {
 	} else {
 	    set $this-continuous 0
 	}
+    }
+
+    method update_minmax_callback { name1 name2 op } {
+	global $this-isoval-min
+	global $this-isoval-max
+
+	set_min_max [set $this-isoval-min] [set $this-isoval-max]
     }
 
     method set_min_max { min max } {
