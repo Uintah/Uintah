@@ -26,7 +26,6 @@ ResourcesParser::startElement( const XMLCh * const uri,
 			       const Attributes&   attrs )
 {
   string tag ( XMLString::transcode(localname) );
-
   if ( tag == "packages" )
     mode_.push(PackagesMode);
   else if ( tag == "package" ) {
@@ -45,7 +44,6 @@ ResourcesParser::endElement (const XMLCh* const uri,
 			     const XMLCh* const qname)
 {
   string tag ( XMLString::transcode(localname) );
-
   switch ( mode_.top() ) {
   case PackageMode:
     if ( tag == "name" ) {
@@ -80,7 +78,7 @@ ResourcesParser::endElement (const XMLCh* const uri,
       resources.data_path_ = data_;
     break;
   default:
-    cerr << "known mode in ResourcesParser\n";
+    cerr << "unknown mode in ResourcesParser\n";
     break;
   }
 }
