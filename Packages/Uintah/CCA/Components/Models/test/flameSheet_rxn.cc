@@ -269,6 +269,8 @@ void flameSheet_rxn::scheduleMomentumAndEnergyExchange(SchedulerP& sched,
   t->modifies(mi->energy_source_CCLabel);
   t->requires(Task::OldDW, mi->density_CCLabel,     gn);
   t->requires(Task::OldDW, mi->temperature_CCLabel, gn);
+  t->requires(Task::NewDW, mi->specific_heatLabel,  gn);
+  t->requires(Task::NewDW, mi->gammaLabel,          gn);
   t->requires(Task::OldDW, mi->delT_Label);
   
   for(vector<Scalar*>::iterator iter = scalars.begin();
@@ -302,7 +304,7 @@ void flameSheet_rxn::react(const ProcessorGroup*,
     
     for(int m=0;m<matls->size();m++){
       int matl = matls->get(m);
-      constCCVariable<double> rho_CC, Temp_CC,f_old;
+      constCCVariable<double> rho_CC, Temp_CC,f_old, cv, gamma;
       CCVariable<double> energySource, f_src;
       
       double new_f, newTemp;
@@ -310,6 +312,8 @@ void flameSheet_rxn::react(const ProcessorGroup*,
             
       old_dw->get(rho_CC,      mi->density_CCLabel,     matl, patch, gn, 0);
       old_dw->get(Temp_CC,     mi->temperature_CCLabel, matl, patch, gn, 0);
+      new_dw->get(cv,          mi->specific_heatLabel,  matl, patch, gn, 0);
+      new_dw->get(gamma,       mi->gammaLabel,          matl, patch, gn, 0);
       new_dw->getModifiable(energySource,   
                                mi->energy_source_CCLabel,matl,patch);
       // transported scalar.                        
@@ -326,7 +330,9 @@ void flameSheet_rxn::react(const ProcessorGroup*,
       //   G R O S S N E S S
       double nu             = (1.0/d_f_stoic) - 1.0;
     //double d_del_h_comb   = 1000.0* 74831.0;    // Enthalpy of combustion J/kg
-      double del_h_comb = d_del_h_comb * d_cp/d_f_stoic;     
+/*`==========TESTING==========*/        // for variable cp this should be changed
+      double del_h_comb = d_del_h_comb * d_cp/d_f_stoic;   
+/*==========TESTING==========`*/   
       double fuzzyOne = 1.0 + 1e-10;
       double fuzzyZero = 0.0 - 1e10;
       int     numCells = 0, sum = 0;
@@ -334,6 +340,7 @@ void flameSheet_rxn::react(const ProcessorGroup*,
       //__________________________________   
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
 	 IntVector c = *iter;
+        double cp = gamma[c] * cv[c];
 	 double mass = rho_CC[c]*volume;
 	 double f = f_old[c];
 	 double oldTemp  = Temp_CC[c];
@@ -350,7 +357,7 @@ void flameSheet_rxn::react(const ProcessorGroup*,
           Y_fuel     = (f - d_f_stoic)/(1.0 - d_f_stoic); 
           Y_products = (1 - f)/(1-d_f_stoic);         // eqs 9.43a,b,c & 9.51a
           
-          double tmp = d_f_stoic * del_h_comb/((1.0 - d_f_stoic) * d_cp);
+          double tmp = d_f_stoic * del_h_comb/((1.0 - d_f_stoic) * cp);
           double A   = f * ( (d_T_fuel_init - d_T_oxidizer_inf) - tmp ); 
           newTemp    =  A + d_T_oxidizer_inf + tmp;
           
@@ -362,7 +369,7 @@ void flameSheet_rxn::react(const ProcessorGroup*,
           Y_fuel     = 0.0;                            // eqs 9.45a,b,c & 9.51a
           Y_products = 1.0;
           
-          double A = d_f_stoic *( del_h_comb/d_cp + d_T_fuel_init 
+          double A = d_f_stoic *( del_h_comb/cp + d_T_fuel_init 
                                   - d_T_oxidizer_inf);
           newTemp = A + d_T_oxidizer_inf;
         }
@@ -373,12 +380,12 @@ void flameSheet_rxn::react(const ProcessorGroup*,
           Y_fuel     = 0.0;                            // eqs 9.46a,b,c & 9.51c
           Y_products = f/d_f_stoic;
           
-          double A = f *( (del_h_comb/d_cp) + d_T_fuel_init - d_T_oxidizer_inf);
+          double A = f *( (del_h_comb/cp) + d_T_fuel_init - d_T_oxidizer_inf);
           newTemp  = A + d_T_oxidizer_inf;
         }  
         
         new_f =Y_fuel + Y_products/(1.0 + nu);        // eqs 7.54         
-	 double energyx =( newTemp - oldTemp) * d_cp * mass;
+	 double energyx =( newTemp - oldTemp) * cp * mass;
         energySource[c] += energyx;
         f_src[c] += new_f - f;
       }  //iter

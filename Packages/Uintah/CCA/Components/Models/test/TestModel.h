@@ -88,9 +88,9 @@ WARNING
     const Material* matl1;
     MPMICELabel* MIlb;
     MaterialSet* mymatls;
+    Material* d_matl;
     double rate;
     bool d_is_mpm_matl;  // Is matl 0 a mpm_matl?
-    double d_cv_0;      //specific heat
   };
 }
 

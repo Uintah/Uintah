@@ -28,7 +28,7 @@ TestModel::~TestModel()
   if(mymatls && mymatls->removeReference())
     delete mymatls;
 }
-
+//______________________________________________________________________
 void TestModel::problemSetup(GridP&, SimulationStateP& sharedState,
 			     ModelSetup* )
 {
@@ -43,17 +43,17 @@ void TestModel::problemSetup(GridP&, SimulationStateP& sharedState,
   mymatls->addAll(m);
   mymatls->addReference();
  
-  // determine the specific heat of that matl.
+  // What flavor of matl it is.
   Material* matl = sharedState->getMaterial( m[0] );
   ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
   MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
   if (mpm_matl){
     d_is_mpm_matl = true;
-    d_cv_0 = mpm_matl->getSpecificHeat();
+    d_matl = mpm_matl;
   }
   if (ice_matl){
     d_is_mpm_matl = false;
-    d_cv_0 = ice_matl->getSpecificHeat();
+    d_matl = ice_matl;
   }   
 }
       
@@ -84,18 +84,20 @@ void TestModel::scheduleMassExchange(SchedulerP& sched,
   t->modifies(mi->sp_vol_source_CCLabel);
   Ghost::GhostType  gn  = Ghost::None;
   
-  Task::WhichDW DW;  
+  Task::WhichDW DW;
+  Task::WhichDW NDW =Task::NewDW;   
   if(d_is_mpm_matl){              // MPM (pull data from newDW)
     DW = Task::NewDW;
     t->requires( DW, MIlb->cMassLabel,     matl0->thisMaterial(), gn);
   } else { 
     DW = Task::OldDW;             // ICE (pull data from old DW)
-    t->requires( DW, mi->density_CCLabel,  matl0->thisMaterial(), gn);
+    t->requires( DW, mi->density_CCLabel,    matl0->thisMaterial(), gn);
+    t->requires( NDW,mi->specific_heatLabel, matl0->thisMaterial(), gn);
   } 
                                   // All matls
-  t->requires( DW,          mi->velocity_CCLabel,   matl0->thisMaterial(), gn);
-  t->requires( DW,          mi->temperature_CCLabel,matl0->thisMaterial(), gn); 
-  t->requires( Task::NewDW, mi->sp_vol_CCLabel,     matl0->thisMaterial(), gn);
+  t->requires( DW,  mi->velocity_CCLabel,   matl0->thisMaterial(), gn);
+  t->requires( DW,  mi->temperature_CCLabel,matl0->thisMaterial(), gn); 
+  t->requires( NDW, mi->sp_vol_CCLabel,     matl0->thisMaterial(), gn);
   
   t->requires( Task::OldDW, mi->delT_Label);
   sched->addTask(t, level->eachPatch(), mymatls);
@@ -119,47 +121,47 @@ void TestModel::massExchange(const ProcessorGroup*,
  
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);  
-    CCVariable<double> mass_source_0, mass_source_1, mass_0;
-    CCVariable<Vector> momentum_source_0, momentum_source_1;
-    CCVariable<double> energy_source_0, energy_source_1;
-    CCVariable<double> sp_vol_source_0, sp_vol_source_1;
+    CCVariable<double> mass_src_0, mass_src_1, mass_0, cv;
+    CCVariable<Vector> mom_src_0, mom_src_1;
+    CCVariable<double> eng_src_0, eng_src_1;
+    CCVariable<double> sp_vol_src_0, sp_vol_src_1;
     
-    new_dw->getModifiable(mass_source_0,     mi->mass_source_CCLabel, 
-                       m0, patch);
-    new_dw->getModifiable(momentum_source_0, mi->momentum_source_CCLabel,
-			  m0, patch);
-    new_dw->getModifiable(energy_source_0,   mi->energy_source_CCLabel,
-			  m0, patch);
-    new_dw->getModifiable(sp_vol_source_0,   mi->sp_vol_source_CCLabel,
-			  m0, patch);
+    new_dw->allocateTemporary(cv, patch);
+    new_dw->getModifiable(mass_src_0,   mi->mass_source_CCLabel,    m0, patch);
+    new_dw->getModifiable(mom_src_0,    mi->momentum_source_CCLabel,m0, patch);
+    new_dw->getModifiable(eng_src_0,    mi->energy_source_CCLabel,  m0, patch);
+    new_dw->getModifiable(sp_vol_src_0, mi->sp_vol_source_CCLabel,  m0, patch);
 
-    new_dw->getModifiable(mass_source_1,     mi->mass_source_CCLabel, 
-                      m1, patch);
-    new_dw->getModifiable(momentum_source_1, mi->momentum_source_CCLabel,
-			  m1, patch);
-    new_dw->getModifiable(energy_source_1,   mi->energy_source_CCLabel,
-			  m1, patch);
-    new_dw->getModifiable(sp_vol_source_1,   mi->sp_vol_source_CCLabel,
-			  m1, patch);
+    new_dw->getModifiable(mass_src_1,   mi->mass_source_CCLabel,    m1, patch);
+    new_dw->getModifiable(mom_src_1,    mi->momentum_source_CCLabel,m1, patch);
+    new_dw->getModifiable(eng_src_1,    mi->energy_source_CCLabel,  m1, patch);
+    new_dw->getModifiable(sp_vol_src_1, mi->sp_vol_source_CCLabel,  m1, patch);
                        
     //__________________________________
-    //  Compute the mass of matl 0
+    //  Compute the mass and specific heat of matl 0
     new_dw->allocateTemporary(mass_0, patch);
     Vector dx = patch->dCell();
     double volume = dx.x()*dx.y()*dx.z();                    
     DataWarehouse* dw;
-    
+    Ghost::GhostType  gn = Ghost::None;
+   
     if(d_is_mpm_matl){
       dw = new_dw;            // MPM  (Just grab it)
-      constCCVariable<double> cmass;
-      dw->get(cmass,   MIlb->cMassLabel,    m0, patch, Ghost::None, 0); 
+      constCCVariable<double> cmass;  
+      dw->get(cmass,   MIlb->cMassLabel,    m0, patch, gn, 0); 
       mass_0.copyData(cmass);
+   
+      cv.initialize(d_matl->getSpecificHeat());
     } else {
       dw = old_dw;            // ICE   (compute it from the density)
-      constCCVariable<double> rho_tmp;
-      dw->get(rho_tmp, mi->density_CCLabel, m0, patch, Ghost::None, 0);
+      constCCVariable<double> rho_tmp, cv_ice;
+      old_dw->get(rho_tmp, mi->density_CCLabel,    m0, patch, gn, 0);
+      new_dw->get(cv_ice,  mi->specific_heatLabel, m0, patch, gn, 0);
       
-      for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
+      cv.copyData(cv_ice);    
+      
+      for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); 
+                                                                iter++){
         mass_0[*iter] = rho_tmp[*iter] * volume;
       }
     }
@@ -167,9 +169,9 @@ void TestModel::massExchange(const ProcessorGroup*,
     constCCVariable<Vector> vel_0;    // MPM  pull from new_dw
     constCCVariable<double> temp_0;   // ICE  pull from old_dw
     constCCVariable<double> sp_vol_0;
-    dw  ->  get(vel_0,    mi->velocity_CCLabel,    m0, patch, Ghost::None, 0);    
-    dw  ->  get(temp_0,   mi->temperature_CCLabel, m0, patch, Ghost::None, 0);    
-    new_dw->get(sp_vol_0, mi->sp_vol_CCLabel,      m0, patch, Ghost::None, 0);
+    dw  ->  get(vel_0,    mi->velocity_CCLabel,    m0, patch, gn, 0);    
+    dw  ->  get(temp_0,   mi->temperature_CCLabel, m0, patch, gn, 0);    
+    new_dw->get(sp_vol_0, mi->sp_vol_CCLabel,      m0, patch, gn, 0);
         
     double tm = 0;
     double trate = rate*dt;
@@ -179,22 +181,22 @@ void TestModel::massExchange(const ProcessorGroup*,
     //__________________________________
     //  Do some work
     for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
+      IntVector c = *iter;
+      double massx = mass_0[c]*trate;
+      mass_src_0[c] -= massx;
+      mass_src_1[c] += massx;
 
-      double massx = mass_0[*iter]*trate;
-      mass_source_0[*iter] -= massx;
-      mass_source_1[*iter] += massx;
-
-      Vector momx = vel_0[*iter]*massx;
-      momentum_source_0[*iter] -= momx;
-      momentum_source_1[*iter] += momx;
+      Vector momx = vel_0[c]*massx;
+      mom_src_0[c] -= momx;
+      mom_src_1[c] += momx;
       
-      double energyx = temp_0[*iter] * massx * d_cv_0;
-      energy_source_0[*iter] -= energyx;
-      energy_source_1[*iter] += energyx;
+      double energyx = temp_0[c] * massx * cv[c];
+      eng_src_0[c] -= energyx;
+      eng_src_1[c] += energyx;
     
-      double vol_sourcex  = massx * sp_vol_0[*iter];
-      sp_vol_source_0[*iter] -= vol_sourcex;
-      sp_vol_source_1[*iter] += vol_sourcex;
+      double vol_sourcex  = massx * sp_vol_0[c];
+      sp_vol_src_0[c] -= vol_sourcex;
+      sp_vol_src_1[c] += vol_sourcex;
             
       tm += massx;
     }
