@@ -144,22 +144,13 @@ FieldInfo::update_input_attributes(FieldHandle f)
 
   gui_typename_.set(tname);
 
-  switch(f->data_at())
+  switch(f->basis_order())
   {
-  case Field::NODE:
+  case 1:
     gui_dataat_.set("Nodes");
     break;
-  case Field::EDGE:
-    gui_dataat_.set("Edges");
-    break;
-  case Field::FACE:
-    gui_dataat_.set("Faces");
-    break;
-  case Field::CELL:
+  case 0:
     gui_dataat_.set("Cells");
-    break;
-  case Field::NONE:
-    gui_dataat_.set("None");
     break;
   }
 
@@ -191,7 +182,7 @@ FieldInfo::update_input_attributes(FieldHandle f)
   }
 
   ScalarFieldInterfaceHandle sdi = f->query_scalar_interface(this);
-  if (sdi.get_rep() && f->data_at() != Field::NONE)
+  if (sdi.get_rep())
   {
     pair<double, double> minmax;
     sdi->compute_min_max(minmax.first,minmax.second);

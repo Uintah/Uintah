@@ -206,29 +206,15 @@ ConvertToField<Fld>::convert_to_field(SCIRun::FieldHandle fld,
     // Unstructured fields fall into this category, for them we create nrrds
     // of dimension 1 (2 if vector or scalar data).
     uns = true;
-    switch (fld->data_at()) {
-    case Field::NODE :
+    switch (fld->basis_order()) {
+    case 1:
       {
 	typename Fld::mesh_type::Node::size_type sz;
 	mesh->size(sz);
 	dims.push_back(sz);
       }
     break;
-    case Field::EDGE :
-      {
-	typename Fld::mesh_type::Edge::size_type sz;
-	mesh->size(sz);
-	dims.push_back(sz);
-      }
-    break;
-    case Field::FACE :
-      {
-	typename Fld::mesh_type::Face::size_type sz;
-	mesh->size(sz);
-	dims.push_back(sz);
-      }
-    break;
-    case Field::CELL :
+    case 0:
       {
 	typename Fld::mesh_type::Cell::size_type sz;
 	mesh->size(sz);
@@ -243,7 +229,7 @@ ConvertToField<Fld>::convert_to_field(SCIRun::FieldHandle fld,
     if (a0_size > 1) 
       dims.push_back(a0_size);
   }
-  if ((!uns) && fld->data_at() == Field::CELL) {
+  if ((!uns) && fld->basis_order() == 0) {
     off = 1;
   }
 
@@ -310,14 +296,14 @@ ConvertToField<Fld>::convert_to_field(SCIRun::FieldHandle fld,
   }
 
   // Things match up, create the new output field.
-  out = new Fld(typename Fld::mesh_handle_type(mesh), fld->data_at());
+  out = new Fld(typename Fld::mesh_handle_type(mesh), fld->basis_order());
   
   // Copy all of the non-transient properties from the original field.
   *((PropertyManager *)(out.get_rep()))=*((PropertyManager *)(fld.get_rep()));
 
   // Copy the data into the field.
-  switch (fld->data_at()) {
-  case Field::NODE :
+  switch (fld->basis_order()) {
+  case 1:
     {
       typename Fld::mesh_type::Node::iterator iter, end;
       mesh->begin(iter);
@@ -325,23 +311,7 @@ ConvertToField<Fld>::convert_to_field(SCIRun::FieldHandle fld,
       fill_data((Fld*)out.get_rep(), inrrd, iter, end);
     }
   break;
-  case Field::EDGE :
-    {
-      typename Fld::mesh_type::Edge::iterator iter, end;
-      mesh->begin(iter);
-      mesh->end(end);
-      fill_data((Fld*)out.get_rep(), inrrd, iter, end);
-    }
-  break;
-  case Field::FACE :
-    {
-      typename Fld::mesh_type::Face::iterator iter, end;
-      mesh->begin(iter);
-      mesh->end(end);
-      fill_data((Fld*)out.get_rep(), inrrd, iter, end);
-    }
-  break;
-  case Field::CELL :
+  case 0:
     {
       typename Fld::mesh_type::Cell::iterator iter, end;
       mesh->begin(iter);
@@ -376,29 +346,15 @@ ConvertToFieldEigen<Fld>::convert_to_field(SCIRun::FieldHandle fld,
     // Unstructured fields fall into this category, for them we create nrrds
     // of dimension 1 (2 with the tuple axis).
     uns = true;
-    switch (fld->data_at()) {
-    case Field::NODE :
+    switch (fld->basis_order()) {
+    case 1:
       {
 	typename Fld::mesh_type::Node::size_type sz;
 	mesh->size(sz);
 	dims.push_back(sz);
       }
     break;
-    case Field::EDGE :
-      {
-	typename Fld::mesh_type::Edge::size_type sz;
-	mesh->size(sz);
-	dims.push_back(sz);
-      }
-    break;
-    case Field::FACE :
-      {
-	typename Fld::mesh_type::Face::size_type sz;
-	mesh->size(sz);
-	dims.push_back(sz);
-      }
-    break;
-    case Field::CELL :
+    case 0:
       {
 	typename Fld::mesh_type::Cell::size_type sz;
 	mesh->size(sz);
@@ -412,7 +368,7 @@ ConvertToFieldEigen<Fld>::convert_to_field(SCIRun::FieldHandle fld,
     if (a0_size > 1) 
       dims.push_back(a0_size);
   }
-  if ((!uns) && fld->data_at() == Field::CELL) {
+  if ((!uns) && fld->basis_order() == 0) {
     off = 1;
   }
 
@@ -461,14 +417,14 @@ ConvertToFieldEigen<Fld>::convert_to_field(SCIRun::FieldHandle fld,
   }
 
   // Things match up, create the new output field.
-  out = new Fld(typename Fld::mesh_handle_type(mesh), fld->data_at());
+  out = new Fld(typename Fld::mesh_handle_type(mesh), fld->basis_order());
   
   // Copy all of the non-transient properties from the original field.
   *((PropertyManager *)(out.get_rep()))=*((PropertyManager *)(fld.get_rep()));
 
   // Copy the data into the field.
-  switch (fld->data_at()) {
-  case Field::NODE :
+  switch (fld->basis_order()) {
+  case 1:
     {
       typename Fld::mesh_type::Node::iterator iter, end;
       mesh->begin(iter);
@@ -476,23 +432,7 @@ ConvertToFieldEigen<Fld>::convert_to_field(SCIRun::FieldHandle fld,
       fill_eigen_data((Fld*)out.get_rep(), inrrd, iter, end);
     }
   break;
-  case Field::EDGE :
-    {
-      typename Fld::mesh_type::Edge::iterator iter, end;
-      mesh->begin(iter);
-      mesh->end(end);
-      fill_eigen_data((Fld*)out.get_rep(), inrrd, iter, end);
-    }
-  break;
-  case Field::FACE :
-    {
-      typename Fld::mesh_type::Face::iterator iter, end;
-      mesh->begin(iter);
-      mesh->end(end);
-      fill_eigen_data((Fld*)out.get_rep(), inrrd, iter, end);
-    }
-  break;
-  case Field::CELL :
+  case 0:
     {
       typename Fld::mesh_type::Cell::iterator iter, end;
       mesh->begin(iter);

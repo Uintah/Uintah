@@ -948,7 +948,7 @@ GLTexture3DBuilder<TexField>::run_make_brick_data::run()
   int i,j,k,ii,jj,kk;
   typename TexField::mesh_type *m = tex_->get_typed_mesh().get_rep();
 
-  if( tex_->data_at() == Field::CELL){
+  if( tex_->basis_order() == 0){
     typename TexField::mesh_type mesh(m, xoff_, yoff_, zoff_, 
 			       xsize_+1, ysize_+1, zsize_+1);
     typename TexField::mesh_type::Cell::iterator it; mesh.begin(it);

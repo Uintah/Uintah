@@ -125,10 +125,10 @@ ClipLatticeAlgoT<FIELD>::execute(FieldHandle fieldh,
   mesh->get_transform().load_identity();
   mesh->transform(trans);
 
-  FIELD *fld = scinew FIELD(mesh, lv->data_at());
+  FIELD *fld = scinew FIELD(mesh, lv->basis_order());
   fld->copy_properties(lv);
 
-  if (lv->data_at() == Field::NODE)
+  if (lv->basis_order() == 1)
   {
     LatVolMesh::Node::iterator si, ei;
     mesh->begin(si); mesh->end(ei);
@@ -147,7 +147,7 @@ ClipLatticeAlgoT<FIELD>::execute(FieldHandle fieldh,
       ++si;
     }
   }
-  else if (lv->data_at() == Field::CELL)
+  else if (lv->basis_order() == 0)
   {
     LatVolMesh::Cell::iterator si, ei;
     mesh->begin(si); mesh->end(ei);

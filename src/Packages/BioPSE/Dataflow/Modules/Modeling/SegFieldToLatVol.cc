@@ -103,7 +103,7 @@ SegFieldToLatVol::execute()
   }
 
   // send a LatVolField with the user's chosen data as output
-  LatVolField<int> *lvf = new LatVolField<int>(slvf->get_typed_mesh(), Field::CELL);
+  LatVolField<int> *lvf = new LatVolField<int>(slvf->get_typed_mesh(), 0);
   if (latVolData_.get() == "componentMatl") {
     for (int i=0; i<lvf->fdata().dim1(); i++)
       for (int j=0; j<lvf->fdata().dim2(); j++)

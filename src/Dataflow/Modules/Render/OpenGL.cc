@@ -1240,7 +1240,7 @@ OpenGL::real_get_pick(int x, int y,
     GLuint hit_pick=0;
     //GLuint hit_pick_index = 0x12345678;  // need for object indexing
 #endif
-    //cerr << "hits=" << hits << "\n";
+    cerr << "hits=" << hits << "\n";
     if(hits >= 1)
     {
       int idx=0;
@@ -1250,7 +1250,7 @@ OpenGL::real_get_pick(int x, int y,
       {
 	int nnames=pick_buffer[idx++];
 	GLuint z=pick_buffer[idx++];
-	//cerr << "h=" << h << ", nnames=" << nnames << ", z=" << z << "\n";
+	cerr << "h=" << h << ", nnames=" << nnames << ", z=" << z << "\n";
 	if (nnames > 1 && (!have_one || z < min_z))
 	{
 	  min_z=z;
@@ -1277,9 +1277,9 @@ OpenGL::real_get_pick(int x, int y,
 	  idx++;
 	  //hit_pick_index=pick_buffer[idx++];
 #endif
-	  //cerr << "new min... (obj=" << hit_obj
-	  //     << ", pick="          << hit_pick
-	  //     << ", index = "       << hit_pick_index << ")\n";
+	  cerr << "new min... (obj=" << hit_obj
+	       << ", pick="          << hit_pick << std::endl;
+	    //   << ", index = "       << hit_pick_index << ")\n";
 	}
 	else
 	{

@@ -122,11 +122,11 @@ ComputeCurrent::execute()
   }
   if (sigmasTensor) index_based = false;
 
-  if (sigmasH->data_at() != Field::CELL) {
+  if (sigmasH->basis_order() != 0) {
     error("Need sigmas at Cells");
     return;
   }
-  if (efieldH->data_at() != Field::CELL) {
+  if (efieldH->basis_order() != 0) {
     error("Need efield at Cells");
     return;
   }
@@ -145,14 +145,14 @@ ComputeCurrent::execute()
   // with data at cells.
 
   // Create output mesh
-  //  OFIELD *ofield = scinew OFIELD(imesh, Field::CELL);
+  //  OFIELD *ofield = scinew OFIELD(imesh, 0);
   
   TetVolMeshHandle mesh = efield->get_typed_mesh();
   TetVolMesh::Cell::iterator fi, fe;
   mesh->begin(fi);
   mesh->end(fe);
 
-  TetVolField<Vector> *ofield = new TetVolField<Vector>(mesh, Field::CELL);
+  TetVolField<Vector> *ofield = new TetVolField<Vector>(mesh, 0);
 
   while (fi != fe) {
     Vector vec;

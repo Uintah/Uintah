@@ -165,8 +165,7 @@ void ConfigureWireElectrode::execute() {
     }
     quadMesh->add_quad(pts[i][u], pts[i][0], pts[i+1][0], pts[i+1][u]);
   }
-  QuadSurfField<double>* quadFld = new QuadSurfField<double>(quadMesh, 
-							     Field::NODE);
+  QuadSurfField<double>* quadFld = new QuadSurfField<double>(quadMesh, 1);
   QuadSurfMesh::Node::iterator qni, qne;
   quadMesh->begin(qni);
   quadMesh->end(qne);

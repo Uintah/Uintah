@@ -119,7 +119,7 @@ SelectField::execute()
     Handle<SelectFieldCreateAlgo> algo;
     if (!module_dynamic_compile(ci, algo)) return;    
     output_field_ =
-      algo->execute(ifieldhandle->mesh(), ifieldhandle->data_at());
+      algo->execute(ifieldhandle->mesh(), ifieldhandle->basis_order());
 
     // Copy the properties.
     output_field_->copy_properties(ifieldhandle.get_rep());
@@ -173,7 +173,7 @@ SelectField::execute()
   {
     output_field_.detach();
     const TypeDescription *oftd = output_field_->get_type_description();
-    const TypeDescription *oltd = output_field_->data_at_type_description();
+    const TypeDescription *oltd = output_field_->order_type_description();
     CompileInfoHandle ci = SelectFieldFillAlgo::get_compile_info(oftd, oltd);
     Handle<SelectFieldFillAlgo> algo;
     if (!module_dynamic_compile(ci, algo)) return;    

@@ -122,7 +122,7 @@ StreamLinesAlgoT<SMESH, SLOC>::parallel_generate( int proc, SLData *d)
   const double tolerance2 = d->tolerance * d->tolerance;
 
   //CurveMeshHandle cmesh = scinew CurveMesh();
-  //CurveField<double> *cf = scinew CurveField<double>(cmesh, Field::NODE);
+  //CurveField<double> *cf = scinew CurveField<double>(cmesh, 1);
 
   Point seed;
   Vector test;
@@ -249,7 +249,7 @@ StreamLinesAlgoT<SMESH, SLOC>::execute(MeshHandle seed_mesh_h,
   d.np=np;
 
   CurveMeshHandle cmesh = scinew CurveMesh();
-  CurveField<double> *cf = scinew CurveField<double>(cmesh, Field::NODE);
+  CurveField<double> *cf = scinew CurveField<double>(cmesh, 1);
   
   d.cf = cf;
 
@@ -412,7 +412,7 @@ StreamLinesAccAlgoT<SMESH, SLOC, VFLD>::execute(MeshHandle seed_mesh_h,
   vfield->mesh()->synchronize(Mesh::FACE_NEIGHBORS_E);
 
   CurveMeshHandle cmesh = scinew CurveMesh();
-  CurveField<double> *cf = scinew CurveField<double>(cmesh, Field::NODE);
+  CurveField<double> *cf = scinew CurveField<double>(cmesh, 1);
 
   Point seed;
   typename VFLD::mesh_type::Elem::index_type elem;

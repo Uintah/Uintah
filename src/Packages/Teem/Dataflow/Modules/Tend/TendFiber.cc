@@ -393,7 +393,7 @@ TendFiber::execute()
     }
   }
   
-  CurveField<double> *cf = scinew CurveField<double>(cm, Field::NODE);
+  CurveField<double> *cf = scinew CurveField<double>(cm, 1);
   ofibers_->send(cf);
 }
 

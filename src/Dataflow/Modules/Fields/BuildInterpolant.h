@@ -47,7 +47,7 @@ class BuildInterpAlgo : public DynamicAlgoBase
 {
 public:
   virtual FieldHandle execute(MeshHandle src, MeshHandle dst,
-			      Field::data_location loc,
+			      int basis_order,
 			      const string &basis, bool source_to_single_dest,
 			      bool exhaustive_search, double dist, int np) = 0;
 
@@ -81,7 +81,7 @@ typedef map<unsigned int,
 typedef struct _BIData {
   MeshHandle src_meshH;
   MeshHandle dst_meshH;
-  Field::data_location loc;
+  int basis_order;
   string basis;
   bool source_to_single_dest;
   bool exhaustive_search;
@@ -98,7 +98,7 @@ typedef struct _BIData {
 public:
   //! virtual interface. 
   virtual FieldHandle execute(MeshHandle src, MeshHandle dst,
-			      Field::data_location loc,
+			      int basis_order,
 			      const string &basis, bool source_to_single_dest,
 			      bool exhaustive_search, double dist, int np);
 
@@ -162,19 +162,27 @@ BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::find_closest_dst_loc(typename LD
 
 template <class MSRC, class LSRC, class MDST, class LDST, class FOUT>
 FieldHandle
-BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::execute(MeshHandle src_meshH, MeshHandle dst_meshH, Field::data_location loc, const string &basis, bool source_to_single_dest, bool exhaustive_search, double dist, int np)
+BuildInterpAlgoT<MSRC, LSRC, MDST, 
+		 LDST, FOUT>::execute(MeshHandle src_meshH, 
+				      MeshHandle dst_meshH, 
+				      int basis_order, 
+				      const string &basis, 
+				      bool source_to_single_dest, 
+				      bool exhaustive_search, 
+				      double dist, 
+				      int np)
 {
   BIData d;
   d.src_meshH=src_meshH;
   d.dst_meshH=dst_meshH;
-  d.loc=loc;
+  d.basis_order=basis_order;
   d.basis=basis;
   d.source_to_single_dest=source_to_single_dest;
   d.exhaustive_search=exhaustive_search;
   d.dist=dist;
   d.np=np;
   MDST *dst_mesh = dynamic_cast<MDST *>(dst_meshH.get_rep());
-  FOUT *out_field = scinew FOUT(dst_mesh, loc);  
+  FOUT *out_field = scinew FOUT(dst_mesh, basis_order);  
   d.out_fieldH = out_field;
 
   if (np==1)
@@ -205,7 +213,7 @@ BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::parallel_execute(int proc,
 								 BIData *d) {
   MeshHandle src_meshH = d->src_meshH;
   MeshHandle dst_meshH = d->dst_meshH;
-  Field::data_location loc = d->loc;
+  int basis_order = d->basis_order;
   const string& basis = d->basis;
   bool source_to_single_dest = d->source_to_single_dest;
   bool exhaustive_search = d->exhaustive_search;
@@ -218,10 +226,8 @@ BuildInterpAlgoT<MSRC, LSRC, MDST, LDST, FOUT>::parallel_execute(int proc,
   FOUT *out_field = dynamic_cast<FOUT *>(out_fieldH.get_rep());
 
   if (proc == 0) {
-    if (loc == Field::NODE) src_mesh->synchronize(Mesh::NODES_E);
-    else if (loc == Field::CELL) src_mesh->synchronize(Mesh::CELLS_E);
-    else if (loc == Field::FACE) src_mesh->synchronize(Mesh::FACES_E);
-    else if (loc == Field::EDGE) src_mesh->synchronize(Mesh::EDGES_E);
+    if (basis_order == 0) src_mesh->synchronize(Mesh::CELLS_E);
+    else src_mesh->synchronize(Mesh::NODES_E);
   }
   d->barrier.wait(np);
   int count=0;

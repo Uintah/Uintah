@@ -77,7 +77,7 @@ ScalarMinMaxAlgoCountT<FIELD>::execute(FieldHandle field,
     fld->get_property( "offset", offset);
       
 
-    if( field->data_at() == Field::CELL ){
+    if( field->basis_order() == 0 ){
       typename FIELD::mesh_type::CellIter iter; m->begin( iter );
       typename FIELD::mesh_type::CellIter iter_end; m->end( iter_end );
 

@@ -363,9 +363,9 @@ execute(MeshHandle& mHandle,
 	data_center = dataH->nrrd->axis[a].center;
     }
     if (data_center == nrrdCenterCell)
-      ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::FACE);
+      ifield = (FIELD *) scinew FIELD((MESH *) imesh, 0);
     else
-      ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
+      ifield = (FIELD *) scinew FIELD((MESH *) imesh, 1);
 
     typename FIELD::mesh_type::Node::iterator inodeItr;
     
@@ -392,7 +392,7 @@ execute(MeshHandle& mHandle,
       }
     }
   } else {
-    ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
+    ifield = (FIELD *) scinew FIELD((MESH *) imesh, 1);
   }
   
   return FieldHandle( ifield );
@@ -419,9 +419,9 @@ execute(MeshHandle& mHandle,
 	data_center = dataH->nrrd->axis[a].center;
     }
     if (data_center == nrrdCenterCell)
-      ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::FACE);
+      ifield = (FIELD *) scinew FIELD((MESH *) imesh, 0);
     else
-      ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
+      ifield = (FIELD *) scinew FIELD((MESH *) imesh, 1);
 
     typename FIELD::mesh_type::Node::iterator inodeItr, end;
     
@@ -437,7 +437,7 @@ execute(MeshHandle& mHandle,
       i++;
     }
   } else {
-    ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
+    ifield = (FIELD *) scinew FIELD((MESH *) imesh, 1);
   }
   
   return FieldHandle( ifield );
@@ -481,9 +481,9 @@ execute(MeshHandle& mHandle,
 	data_center = dataH->nrrd->axis[a].center;
     }
     if (data_center == nrrdCenterCell)
-      ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::FACE);
+      ifield = (FIELD *) scinew FIELD((MESH *) imesh, 0);
     else
-      ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
+      ifield = (FIELD *) scinew FIELD((MESH *) imesh, 1);
 
     typename FIELD::mesh_type::Node::iterator inodeItr;
 
@@ -511,7 +511,7 @@ execute(MeshHandle& mHandle,
       }
     }
   } else {
-    ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
+    ifield = (FIELD *) scinew FIELD((MESH *) imesh, 1);
   }
 
   return FieldHandle( ifield );
@@ -538,9 +538,9 @@ execute(MeshHandle& mHandle,
 	data_center = dataH->nrrd->axis[a].center;
     }
     if (data_center == nrrdCenterCell)
-      ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::FACE);
+      ifield = (FIELD *) scinew FIELD((MESH *) imesh, 0);
     else
-      ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
+      ifield = (FIELD *) scinew FIELD((MESH *) imesh, 1);
 
     typename FIELD::mesh_type::Node::iterator inodeItr, end;
     
@@ -562,7 +562,7 @@ execute(MeshHandle& mHandle,
       i++;
     }
   } else {
-    ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
+    ifield = (FIELD *) scinew FIELD((MESH *) imesh, 1);
   }
 
   return FieldHandle( ifield );
@@ -606,9 +606,9 @@ execute(MeshHandle& mHandle,
 	data_center = dataH->nrrd->axis[a].center;
     }
     if (data_center == nrrdCenterCell)
-      ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::FACE);
+      ifield = (FIELD *) scinew FIELD((MESH *) imesh, 0);
     else
-      ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
+      ifield = (FIELD *) scinew FIELD((MESH *) imesh, 1);
     
     typename FIELD::mesh_type::Node::iterator iter, end;
     
@@ -807,7 +807,7 @@ execute(MeshHandle& mHandle,
       }
     }
   } else {
-    ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
+    ifield = (FIELD *) scinew FIELD((MESH *) imesh, 1);
   }
   return FieldHandle( ifield );
 }
@@ -830,9 +830,9 @@ execute(MeshHandle& mHandle,
 	data_center = dataH->nrrd->axis[a].center;
     }
     if (data_center == nrrdCenterCell)
-      ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::FACE);
+      ifield = (FIELD *) scinew FIELD((MESH *) imesh, 0);
     else
-      ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
+      ifield = (FIELD *) scinew FIELD((MESH *) imesh, 1);
 
     typename FIELD::mesh_type::Node::iterator iter, end;
     
@@ -1005,7 +1005,7 @@ execute(MeshHandle& mHandle,
       i++;
     }    
   } else {
-    ifield = (FIELD *) scinew FIELD((MESH *) imesh, Field::NODE);
+    ifield = (FIELD *) scinew FIELD((MESH *) imesh, 1);
   }
   return FieldHandle( ifield );
 }
@@ -1070,29 +1070,15 @@ NrrdToFieldTestMesh<Fld>::execute(SCIRun::FieldHandle fld,
     // Unstructured fields fall into this category, for them we create nrrds
     // of dimension 1 (2 if vector or scalar data).
     uns = true;
-    switch (fld->data_at()) {
-    case Field::NODE :
+    switch (fld->basis_order()) {
+    case 1:
       {
 	typename Fld::mesh_type::Node::size_type sz;
 	mesh->size(sz);
 	dims.push_back(sz);
       }
     break;
-    case Field::EDGE :
-      {
-	typename Fld::mesh_type::Edge::size_type sz;
-	mesh->size(sz);
-	dims.push_back(sz);
-      }
-    break;
-    case Field::FACE :
-      {
-	typename Fld::mesh_type::Face::size_type sz;
-	mesh->size(sz);
-	dims.push_back(sz);
-      }
-    break;
-    case Field::CELL :
+    case 0:
       {
 	typename Fld::mesh_type::Cell::size_type sz;
 	mesh->size(sz);
@@ -1111,7 +1097,7 @@ NrrdToFieldTestMesh<Fld>::execute(SCIRun::FieldHandle fld,
   if (a0_size > 1) 
     dims.push_back(a0_size);
   
-  if ((!uns) && fld->data_at() == Field::CELL) {
+  if ((!uns) && fld->basis_order() == 0) {
     off = 1;
   }
 

@@ -221,7 +221,7 @@ public:
     int skip = hog->skip_node.get();
     if (skip < 1)
       skip = 1;
-    if( field->data_at() == Field::NODE) {
+    if( field->basis_order() == 1) {
       //------------------------------------
       // for each node in the patch
       for(NodeIterator iter = patch->getNodeIterator(boundaryRegion); !iter.done(); iter+=skip){
@@ -230,7 +230,7 @@ public:
 	Vector vv = field->fdata().get_data_by_patch_and_index(patch, idx);
 	add_arrow(vv, p, hog->length_scale.get());
       } // end for loop
-    } else if( field->data_at() == Field::CELL) {
+    } else if( field->basis_order() == 0) {
       for(CellIterator iter = patch->getCellIterator(boundaryRegion); !iter.done(); iter+=skip){
 	IntVector idx = *iter;
 	Point p = patch->cellPosition(idx);
@@ -663,7 +663,7 @@ void NodeHedgehog::execute()
   // break up the volume into smaller pieces and then loop over each piece
 #else
   // Make a switch based on the data location
-  if( fld->data_at() == Field::CELL) {
+  if( fld->basis_order() == 0) {
     // Create the sub-mesh that represents where the widget is
     LatVolMesh::Cell::index_type min_index, max_index;
     mesh->get_cells(min_index, max_index, BBox(lower, upper));
@@ -698,7 +698,7 @@ void NodeHedgehog::execute()
          }
        }
      }
-  } else if( fld->data_at() == Field::NODE) {
+  } else if( fld->basis_order() == 1) {
     LatVolMesh::Node::index_type min_index, max_index;
     mesh->get_nodes(min_index, max_index, BBox(lower, upper));
     

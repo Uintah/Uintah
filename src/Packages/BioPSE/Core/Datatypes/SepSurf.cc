@@ -183,7 +183,7 @@ QuadSurfField<int> *SepSurf::extractSingleComponent(int comp,
 		    map[nodeArray[2]], map[nodeArray[3]]);
   }
 
-  QuadSurfField<int> *qsf = new QuadSurfField<int>(qsm, Field::FACE);
+  QuadSurfField<int> *qsf = new QuadSurfField<int>(qsm, 0);
 
   if (dataVals == "material") {
     for (i=0; i<nfaces; i++) qsf->fdata()[i]=surfI[comp].matl;

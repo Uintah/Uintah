@@ -130,8 +130,8 @@ class ImageField : public GenericField< ImageMesh, FData2d<Data> >
 {
 public:
   ImageField();
-  ImageField(Field::data_location data_at);
-  ImageField(ImageMeshHandle mesh, Field::data_location data_at);
+  ImageField(int order);
+  ImageField(ImageMeshHandle mesh, int order);
   virtual ImageField<Data> *clone() const;
   virtual ~ImageField();
 
@@ -156,16 +156,15 @@ ImageField<Data>::ImageField()
 
 
 template <class Data>
-ImageField<Data>::ImageField(Field::data_location data_at)
-  : GenericField<ImageMesh, FData2d<Data> >(data_at)
+ImageField<Data>::ImageField(int order)
+  : GenericField<ImageMesh, FData2d<Data> >(order)
 {
 }
 
 
 template <class Data>
-ImageField<Data>::ImageField(ImageMeshHandle mesh,
-			     Field::data_location data_at)
-  : GenericField<ImageMesh, FData2d<Data> >(mesh, data_at)
+ImageField<Data>::ImageField(ImageMeshHandle mesh, int order)
+  : GenericField<ImageMesh, FData2d<Data> >(mesh, order)
 {
 }
 

@@ -61,17 +61,17 @@ public:
 
   MaskedTetVolField() :
     TetVolField<T>() {};
-  MaskedTetVolField(Field::data_location data_at) : 
-    TetVolField<T>(data_at) {};
-  MaskedTetVolField(TetVolMeshHandle mesh, Field::data_location data_at) : 
-    TetVolField<T>(mesh, data_at) 
+  MaskedTetVolField(int order) : 
+    TetVolField<T>(order) {};
+  MaskedTetVolField(TetVolMeshHandle mesh, int order) : 
+    TetVolField<T>(mesh, order) 
   {
     resize_fdata();
   };
 
   bool get_valid_nodes_and_data(vector<pair<TetVolMesh::Node::index_type, T> > &data) {
     data.erase(data.begin(), data.end());
-    if (data_at() != NODE) return false;
+    if (basis_order() != 1) return false;
     TetVolMesh::Node::iterator ni, nie;
     mesh_->begin(ni);
     mesh_->end(nie);
@@ -107,25 +107,7 @@ public:
   typedef GenericField<TetVolMesh,vector<T> > GF;
 
   void resize_fdata() {
-    if (data_at() == NODE)
-    {
-      typename GF::mesh_type::Node::size_type ssize;
-      mesh_->size(ssize);
-      mask_.resize(ssize);
-    }
-    else if (data_at() == EDGE)
-    {
-      typename GF::mesh_type::Edge::size_type ssize;
-      mesh_->size(ssize);
-      mask_.resize(ssize);
-    }
-    else if (data_at() == FACE)
-    {
-      typename GF::mesh_type::Face::size_type ssize;
-      mesh_->size(ssize);
-      mask_.resize(ssize);
-    }
-    else if (data_at() == CELL)
+    if (basis_order() == 0)
     {
       typename GF::mesh_type::Cell::size_type ssize;
       mesh_->size(ssize);
@@ -133,7 +115,9 @@ public:
     }
     else
     {
-      ASSERTFAIL("data at unrecognized location");
+      typename GF::mesh_type::Node::size_type ssize;
+      mesh_->size(ssize);
+      mask_.resize(ssize);
     }
     TetVolField<T>::resize_fdata();
   }

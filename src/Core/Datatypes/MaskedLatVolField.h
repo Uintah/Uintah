@@ -136,8 +136,8 @@ public:
   // deprecated, please see the documentation for details
   typedef typename GenericField<MaskedLatVolMesh, MFData3d<Data> >::mesh_handle_type mesh_handle_type;
   MaskedLatVolField();
-  MaskedLatVolField(Field::data_location data_at);
-  MaskedLatVolField(MaskedLatVolMeshHandle mesh, Field::data_location data_at);
+  MaskedLatVolField(int order);
+  MaskedLatVolField(MaskedLatVolMeshHandle mesh, int order);
   virtual MaskedLatVolField<Data> *clone() const;
   virtual ~MaskedLatVolField();
 
@@ -162,16 +162,16 @@ MaskedLatVolField<Data>::MaskedLatVolField()
 
 
 template <class Data>
-MaskedLatVolField<Data>::MaskedLatVolField(Field::data_location data_at)
-  : GenericField<MaskedLatVolMesh, MFData3d<Data> >(data_at)
+MaskedLatVolField<Data>::MaskedLatVolField(int order)
+  : GenericField<MaskedLatVolMesh, MFData3d<Data> >(order)
 {
 }
 
 
 template <class Data>
 MaskedLatVolField<Data>::MaskedLatVolField(MaskedLatVolMeshHandle mesh,
-			     Field::data_location data_at)
-  : GenericField<MaskedLatVolMesh, MFData3d<Data> >(mesh, data_at)
+					   int order)
+  : GenericField<MaskedLatVolMesh, MFData3d<Data> >(mesh, order)
 {
 }
 

@@ -261,12 +261,12 @@ CalcFMField<ElecField, CondField, PointField, MagField>::calc_forward_magnetic_f
 
   // create the output fields
   PointField *fout = scinew PointField(detfld->get_typed_mesh(), 
-				       detfld->data_at());
+				       detfld->basis_order());
   magnetic_field = fout;
 
 
   MagField *fscalarout = scinew MagField(detfld->get_typed_mesh(), 
-					 detfld->data_at());
+					 detfld->basis_order());
 
   magnitudes = fscalarout;
   

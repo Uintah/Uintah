@@ -35,7 +35,7 @@ public:
   typename Array3<Data>::iterator it_end(data_.end());
   IntVector min(data_.getLowIndex() - offset_);
   IntVector size(data_.getHighIndex() - min - offset_);
-  if( sf_->data_at() == Field::CELL ) {
+  if( sf_->basis_order() == 0) {
     typename ScalarField::mesh_type mesh(m, min.x(), min.y(), min.z(),
 					 size.x()+1, size.y()+1, size.z()+1);
     typename ScalarField::mesh_type::Cell::iterator s_it; mesh.begin(s_it);
@@ -90,7 +90,7 @@ public:
   IntVector size(data_.getHighIndex() - min - offset_);
   double ave = 0;
   int counter = 0;
-  if( sf_->data_at() == Field::CELL ) {
+  if( sf_->basis_order() == 0 ) {
     typename ScalarField::mesh_type mesh(m, min.x(), min.y(), min.z(),
 					 size.x()+1, size.y()+1, size.z()+1);
     typename ScalarField::mesh_type::Cell::iterator s_it; mesh.begin(s_it);

@@ -94,12 +94,6 @@ TransformData::execute()
     return;
   }
 
-  if (ifieldhandle->data_at() == Field::NONE)
-  {
-    warning("Field contains no data to transform.");
-    return;
-  }
-
   string outputdatatype = outputdatatype_.get();
   if (outputdatatype == "input")
   {
@@ -107,7 +101,7 @@ TransformData::execute()
   }
 
   const TypeDescription *ftd = ifieldhandle->get_type_description();
-  const TypeDescription *ltd = ifieldhandle->data_at_type_description();
+  const TypeDescription *ltd = ifieldhandle->order_type_description();
   const string oftn = ifieldhandle->get_type_description(0)->get_name() +
     "<" + outputdatatype + "> ";
   int hoffset = 0;

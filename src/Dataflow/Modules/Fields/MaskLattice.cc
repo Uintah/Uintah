@@ -100,7 +100,7 @@ MaskLattice::execute()
     error("This module only works on fields containing scalar data.");
     return;
   }
-  if (ifieldhandle->data_at() != Field::CELL)
+  if (ifieldhandle->basis_order() != 0)
   {
     error("This module currently only works on fields containing data at cells.");
     return;
@@ -117,7 +117,7 @@ MaskLattice::execute()
   while (1)
   {
     const TypeDescription *ftd = ifieldhandle->get_type_description();
-    const TypeDescription *ltd = ifieldhandle->data_at_type_description();
+    const TypeDescription *ltd = ifieldhandle->order_type_description();
     CompileInfoHandle ci =
       MaskLatticeAlgo::get_compile_info(ftd, ltd, maskfunc, hoff);
     if (!DynamicCompilation::compile(ci, algo, false, this))

@@ -59,8 +59,8 @@ class TetVolField : public GenericField<TetVolMesh, vector<T> >
 {
 public:
   TetVolField();
-  TetVolField(Field::data_location data_at);
-  TetVolField(TetVolMeshHandle mesh, Field::data_location data_at);
+  TetVolField(int order);
+  TetVolField(TetVolMeshHandle mesh, int order);
   virtual TetVolField<T> *clone() const;
   virtual ~TetVolField();
 
@@ -87,24 +87,15 @@ TetVolField<T>::TetVolField()
 }
 
 template <class T>
-TetVolField<T>::TetVolField(Field::data_location data_at)
-  : GenericField<TetVolMesh, vector<T> >(data_at)
+TetVolField<T>::TetVolField(int order)
+  : GenericField<TetVolMesh, vector<T> >(order)
 {
-  ASSERTMSG(data_at != Field::EDGE, 
-	    "TetVolField does NOT currently support data at edges."); 
-  ASSERTMSG(data_at != Field::FACE, 
-	    "TetVolField does NOT currently support data at faces."); 
-
 }
 
 template <class T>
-TetVolField<T>::TetVolField(TetVolMeshHandle mesh, Field::data_location data_at)
-  : GenericField<TetVolMesh, vector<T> >(mesh, data_at)
+TetVolField<T>::TetVolField(TetVolMeshHandle mesh, int order)
+  : GenericField<TetVolMesh, vector<T> >(mesh, order)
 {
-  ASSERTMSG(data_at != Field::EDGE, 
-	    "TetVolField does NOT currently support data at edges."); 
-  ASSERTMSG(data_at != Field::FACE, 
-	    "TetVolField does NOT currently support data at faces."); 
 }
 
 template <class T>
@@ -228,7 +219,7 @@ template <class T>
 Vector TetVolField<T>::cell_gradient(TetVolMesh::Cell::index_type ci)
 {
   // for now we only know how to do this for field with doubles at the nodes
-  ASSERT(data_at() == Field::NODE);
+  ASSERT(basis_order() == 1);
 
   // load up the indices of the nodes for this cell
   TetVolMesh::Node::array_type nodes;
@@ -255,7 +246,7 @@ TetVolField<T>::insert_node_watson(Point &p)
 {
   TetVolMesh::Node::index_type ret_val;
 
-  if (data_at() == CELL) {  
+  if (basis_order() == 0) {  
     TetVolMesh::Cell::array_type new_cells, mod_cells;
     ret_val = mesh_->insert_node_watson(p,&new_cells,&mod_cells);
     resize_fdata();
@@ -270,7 +261,7 @@ TetVolField<T>::insert_node_watson(Point &p)
     for (unsigned int c = 0; c < new_cells.size(); ++c)
       set_value(tot,new_cells[c]);
 
-  } else if (data_at() == NODE) {
+  } else if (basis_order() == 1) {
 
     ret_val = mesh_->insert_node_watson(p);
     resize_fdata();

@@ -44,7 +44,7 @@ namespace SCIRun {
 class SelectFieldCreateAlgo : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(MeshHandle src, Field::data_location at) = 0;
+  virtual FieldHandle execute(MeshHandle src, int basis_order) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *msrc,
@@ -57,17 +57,17 @@ class SelectFieldCreateAlgoT : public SelectFieldCreateAlgo
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(MeshHandle src, Field::data_location at);
+  virtual FieldHandle execute(MeshHandle src, int basis_order);
 };
 
 
 template <class MESH, class FIELD>
 FieldHandle
 SelectFieldCreateAlgoT<MESH, FIELD>::execute(MeshHandle mesh_h,
-					     Field::data_location loc)
+					     int basis_order)
 {
   MESH *msrc = dynamic_cast<MESH *>(mesh_h.get_rep());
-  FieldHandle ofield = scinew FIELD(msrc, loc);
+  FieldHandle ofield = scinew FIELD(msrc, basis_order);
   return ofield;
 }
 

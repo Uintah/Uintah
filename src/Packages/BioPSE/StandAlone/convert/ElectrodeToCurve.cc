@@ -104,7 +104,7 @@ main(int argc, char **argv) {
   }
   cm->add_edge(i-1,(ninner+6));
 
-  CurveField<double> *cf = scinew CurveField<double>(cm, Field::NODE);
+  CurveField<double> *cf = scinew CurveField<double>(cm, 1);
   for (i=0; i<(nnodes+6); i++) {
     if (i<6) {
       cf->fdata()[i]=1;

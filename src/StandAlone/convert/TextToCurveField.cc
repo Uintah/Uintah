@@ -189,7 +189,7 @@ main(int argc, char **argv) {
   }
   cerr << "done adding edges.\n";
 
-  CurveField<double> *cf = scinew CurveField<double>(cm, Field::NONE);
+  CurveField<double> *cf = scinew CurveField<double>(cm, 0);
   FieldHandle cfH(cf);
   
   if (binOutput) {

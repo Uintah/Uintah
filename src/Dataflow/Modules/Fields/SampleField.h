@@ -261,7 +261,7 @@ SampleFieldRandomAlgoT<Mesh>::execute(ProgressReporter *mod,
   }
 
   PointCloudField<double> *seeds =
-    scinew PointCloudField<double>(pcmesh,Field::NODE);
+    scinew PointCloudField<double>(pcmesh,1);
 
   return seeds;
 }

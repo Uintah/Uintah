@@ -117,16 +117,16 @@ ApplyInterpMatrix::execute()
 
   CompileInfoHandle ci =
     ApplyInterpMatrixAlgo::get_compile_info(sfield->get_type_description(),
-					    sfield->data_at_type_description(),
+					    sfield->order_type_description(),
 					    dfield->get_type_description(),
-					    dfield->data_at_type_description(),
+					    dfield->order_type_description(),
 					    accumtype, true);
   Handle<ApplyInterpMatrixAlgo> algo;
   if (!module_dynamic_compile(ci, algo)) return;
 
   FieldHandle result_field =
     algo->execute(sfield, dfield->mesh(),
-		  imatrixhandle, dfield->data_at());
+		  imatrixhandle, dfield->basis_order());
 
   if (result_field.get_rep())
   {

@@ -133,7 +133,7 @@ void SepSurfToQuadSurf::execute() {
     delete qsf;
     total_nnodes+=nnodes;
   }
-  qsf = new QuadSurfField<int>(mesh, Field::FACE);
+  qsf = new QuadSurfField<int>(mesh, 0);
   QuadSurfMesh::Face::iterator fb, fe;
   int count=0;
   mesh->begin(fb);

@@ -66,8 +66,8 @@ class StructCurveField: public GenericField< StructCurveMesh, vector<T> >
 public:
 
   StructCurveField();
-  StructCurveField(Field::data_location data_at);
-  StructCurveField(StructCurveMeshHandle mesh, Field::data_location data_at);
+  StructCurveField(int order);
+  StructCurveField(StructCurveMeshHandle mesh, int order);
   virtual StructCurveField<T> *clone() const;
   virtual ~StructCurveField();
 
@@ -116,16 +116,16 @@ StructCurveField<T>::StructCurveField()
 
 
 template <class T>
-StructCurveField<T>::StructCurveField(Field::data_location data_at)
-  : GenericField<StructCurveMesh, vector<T> >(data_at)
+StructCurveField<T>::StructCurveField(int order)
+  : GenericField<StructCurveMesh, vector<T> >(order)
 {
 }
 
 
 template <class T>
 StructCurveField<T>::StructCurveField(StructCurveMeshHandle mesh,
-				 Field::data_location data_at)
-  : GenericField<StructCurveMesh, vector<T> >(mesh, data_at)
+				      int order)
+  : GenericField<StructCurveMesh, vector<T> >(mesh, order)
 {
 }
 

@@ -218,7 +218,7 @@ void AnisoSphereModel::execute() {
 	electrodeMesh->add_point(p);
   }
   PointCloudMeshHandle hElectrodeMesh(electrodeMesh);
-  PointCloudField<int> *newElectrodePositions = scinew PointCloudField<int>(hElectrodeMesh, Field::NODE);
+  PointCloudField<int> *newElectrodePositions = scinew PointCloudField<int>(hElectrodeMesh, 1);
   // enumerate the nodes
   electrodeMesh->begin(nii);
   electrodeMesh->end(nie);

@@ -61,8 +61,8 @@ class StructHexVolField : public GenericField<StructHexVolMesh, FData3d<T> >
 {
 public:
   StructHexVolField();
-  StructHexVolField(Field::data_location data_at);
-  StructHexVolField(StructHexVolMeshHandle mesh, Field::data_location data_at);
+  StructHexVolField(int order);
+  StructHexVolField(StructHexVolMeshHandle mesh, int order);
   virtual StructHexVolField<T> *clone() const;
   virtual ~StructHexVolField();
 
@@ -89,14 +89,14 @@ StructHexVolField<T>::StructHexVolField()
 }
 
 template <class T>
-StructHexVolField<T>::StructHexVolField(Field::data_location data_at)
-  : GenericField<StructHexVolMesh, FData3d<T> >(data_at)
+StructHexVolField<T>::StructHexVolField(int order)
+  : GenericField<StructHexVolMesh, FData3d<T> >(order)
 {
 }
 
 template <class T>
-StructHexVolField<T>::StructHexVolField(StructHexVolMeshHandle mesh, Field::data_location data_at)
-  : GenericField<StructHexVolMesh, FData3d<T> >(mesh, data_at)
+StructHexVolField<T>::StructHexVolField(StructHexVolMeshHandle mesh, int order)
+  : GenericField<StructHexVolMesh, FData3d<T> >(mesh, order)
 {
 }
 
@@ -222,7 +222,7 @@ template <class T>
 Vector StructHexVolField<T>::cell_gradient(StructHexVolMesh::Cell::index_type ci)
 {
   // for now we only know how to do this for field with doubles at the nodes
-  ASSERT(data_at() == Field::NODE);
+  ASSERT(basis_order() == 1);
 
   // load up the indices of the nodes for this cell
   StructHexVolMesh::Node::array_type nodes;

@@ -190,7 +190,7 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle& field_h,
   omesh->set_dim( dim );
 
   // Now after the mesh has been created, create the field.
-  FIELD *ofield = scinew FIELD(omesh, ifield->data_at());
+  FIELD *ofield = scinew FIELD(omesh, ifield->basis_order());
 
   ofield->copy_properties(ifield);
 
@@ -340,12 +340,12 @@ FieldSubSampleAlgoT<FIELD>::execute(FieldHandle& field_h,
 
 	//	cout << knode << "  " << jnode << "  " << inode << endl;
 
-	switch( ifield->data_at() ) {
-	case Field::NODE:
+	switch( ifield->basis_order() ) {
+	case 1:
 	  ifield->value(value, *inodeItr);
 	  ofield->set_value(value, *onodeItr);
 	  break;
-	case Field::CELL:
+	case 0:
 
 	  if( i+istride<istop_stride &&
 	      j+jstride<jstop_stride &&

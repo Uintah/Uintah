@@ -154,7 +154,7 @@ void TriMC<Field>::reset( int n, bool build_field, bool build_geom )
   mesh_->size(nsize);
   nnodes_ = nsize;
 
-  if (field_->data_at() == Field::FACE)
+  if (field_->basis_order() == 0)
   {
     mesh_->synchronize(Mesh::EDGES_E);
     mesh_->synchronize(Mesh::EDGE_NEIGHBORS_E);
@@ -303,7 +303,7 @@ void TriMC<Field>::extract_f( cell_index_type cell, double iso )
 template<class Field>
 void TriMC<Field>::extract( cell_index_type cell, double v )
 {
-  if (field_->data_at() == Field::NODE)
+  if (field_->basis_order() == 1)
     extract_n(cell, v);
   else
     extract_f(cell, v);
@@ -318,7 +318,7 @@ TriMC<Field>::get_field(double value)
   CurveField<double> *fld = 0;
   if (out_mesh_.get_rep())
   {
-    fld = scinew CurveField<double>(out_mesh_, Field::NODE);
+    fld = scinew CurveField<double>(out_mesh_, 1);
     vector<double>::iterator iter = fld->fdata().begin();
     while (iter != fld->fdata().end()) { (*iter)=value; ++iter; }
   }
@@ -330,7 +330,7 @@ template<class Field>
 MatrixHandle
 TriMC<Field>::get_interpolant()
 {
-  if (field_->data_at() == Field::NODE)
+  if (field_->basis_order() == 1)
   {
     const int nrows = edge_map_.size();
     const int ncols = nnodes_;

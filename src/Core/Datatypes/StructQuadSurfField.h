@@ -61,8 +61,8 @@ class StructQuadSurfField : public GenericField< StructQuadSurfMesh, FData2d<Dat
 {
 public:
   StructQuadSurfField();
-  StructQuadSurfField(Field::data_location data_at);
-  StructQuadSurfField(StructQuadSurfMeshHandle mesh, Field::data_location data_at);
+  StructQuadSurfField(int order);
+  StructQuadSurfField(StructQuadSurfMeshHandle mesh, int order);
   virtual StructQuadSurfField<Data> *clone() const;
   virtual ~StructQuadSurfField();
 
@@ -88,16 +88,16 @@ StructQuadSurfField<Data>::StructQuadSurfField()
 
 
 template <class Data>
-StructQuadSurfField<Data>::StructQuadSurfField(Field::data_location data_at)
-  : GenericField<StructQuadSurfMesh, FData2d<Data> >(data_at)
+StructQuadSurfField<Data>::StructQuadSurfField(int order)
+  : GenericField<StructQuadSurfMesh, FData2d<Data> >(order)
 {
 }
 
 
 template <class Data>
 StructQuadSurfField<Data>::StructQuadSurfField(StructQuadSurfMeshHandle mesh,
-			     Field::data_location data_at)
-  : GenericField<StructQuadSurfMesh, FData2d<Data> >(mesh, data_at)
+					       int order)
+  : GenericField<StructQuadSurfMesh, FData2d<Data> >(mesh, order)
 {
 }
 

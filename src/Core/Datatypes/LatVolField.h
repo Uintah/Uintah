@@ -137,8 +137,8 @@ public:
   // deprecated, please see the documentation for details
   typedef typename GenericField<LatVolMesh, FData3d<Data> >::mesh_handle_type mesh_handle_type;
   LatVolField();
-  LatVolField(Field::data_location data_at);
-  LatVolField(LatVolMeshHandle mesh, Field::data_location data_at);
+  LatVolField(int order);
+  LatVolField(LatVolMeshHandle mesh, int order);
   virtual LatVolField<Data> *clone() const;
   virtual ~LatVolField();
 
@@ -167,16 +167,15 @@ LatVolField<Data>::LatVolField()
 
 
 template <class Data>
-LatVolField<Data>::LatVolField(Field::data_location data_at)
-  : GenericField<LatVolMesh, FData3d<Data> >(data_at)
+LatVolField<Data>::LatVolField(int order)
+  : GenericField<LatVolMesh, FData3d<Data> >(order)
 {
 }
 
 
 template <class Data>
-LatVolField<Data>::LatVolField(LatVolMeshHandle mesh,
-			     Field::data_location data_at)
-  : GenericField<LatVolMesh, FData3d<Data> >(mesh, data_at)
+LatVolField<Data>::LatVolField(LatVolMeshHandle mesh, int order)
+  : GenericField<LatVolMesh, FData3d<Data> >(mesh, order)
 {
 }
 
@@ -300,7 +299,7 @@ bool LatVolField<Data>::get_gradient(Vector &g, const Point &p)
   // for now we only know how to do this for fields with scalars at the nodes
   if (query_scalar_interface().get_rep())
   {
-    if( data_at() == Field::NODE)
+    if( basis_order() == 1)
     {
       const Point r = mesh_->get_transform().unproject(p);
       double x = r.x();
@@ -383,7 +382,7 @@ template <class T>
 Vector
 LatVolField<T>::cell_gradient(const LatVolMesh::Cell::index_type &ci) const
 {
-  ASSERT(data_at() == Field::NODE);
+  ASSERT(basis_order() == 1);
 
   const unsigned int ix0 = ci.i_;
   const unsigned int iy0 = ci.j_;

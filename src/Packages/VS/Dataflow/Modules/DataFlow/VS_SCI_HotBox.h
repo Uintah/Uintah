@@ -36,6 +36,12 @@
 //         Oak Ridge National Laboratory
 //         http://www.csm.ornl.gov/~dickson
 
+#include <Core/Geom/GeomLine.h>
+
+namespace VS {
+
+using namespace SCIRun;
+
 #ifndef VS_SCI_HOTBOX_DOT_H
 #define VS_SCI_HOTBOX_DOT_H 1
 
@@ -53,6 +59,8 @@
 #define VS_HB_EAST      6
 #define VS_HB_SE        7
 #define VS_HB_NUM_BOXES 8
+
+
 
 class VS_box2D {
   public:
@@ -138,4 +146,5 @@ class VS_SCI_Hotbox {
     static void testCB(void *data);
 }; // end class VS_SCI_Hotbox
 
+} // End namespace VS
 #endif // VS_SCI_HOTBOX_DOT_H

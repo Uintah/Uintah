@@ -161,7 +161,7 @@ void PrismMC<Field>::reset( int n, bool build_field, bool build_geom )
   typename Field::mesh_type::Node::size_type nsize;
   mesh_->size(nsize);
   nnodes_ = nsize;
-  if (field_->data_at() == Field::CELL)
+  if (field_->basis_order() == 0)
   {
     mesh_->synchronize(Mesh::FACES_E);
     mesh_->synchronize(Mesh::FACE_NEIGHBORS_E);
@@ -222,7 +222,7 @@ PrismMC<Field>::find_or_add_nodepoint(node_index_type &tet_node_idx) {
 template<class Field>
 void PrismMC<Field>::extract( cell_index_type cell, double v )
 {
-  if (field_->data_at() == Field::NODE)
+  if (field_->basis_order() == 1)
     extract_n(cell, v);
   else
     extract_c(cell, v);
@@ -360,7 +360,7 @@ PrismMC<Field>::get_field(double value)
   TriSurfField<double> *fld = 0;
   if (trisurf_.get_rep())
   {
-    fld = scinew TriSurfField<double>(trisurf_, Field::NODE);
+    fld = scinew TriSurfField<double>(trisurf_, 1);
     vector<double>::iterator iter = fld->fdata().begin();
     while (iter != fld->fdata().end()) { (*iter)=value; ++iter; }
   }
@@ -372,7 +372,7 @@ template<class Field>
 MatrixHandle
 PrismMC<Field>::get_interpolant()
 {
-  if (field_->data_at() == Field::NODE)
+  if (field_->basis_order() == 1)
   {
     const int nrows = edge_map_.size();
     const int ncols = nnodes_;

@@ -83,7 +83,7 @@ GradientAlgoT<IFIELD, OFIELD>::execute(FieldHandle& field_h)
 
   typename IFIELD::mesh_handle_type imesh = ifield->get_typed_mesh();
     
-  OFIELD *ofield = scinew OFIELD(imesh, Field::CELL);
+  OFIELD *ofield = scinew OFIELD(imesh, 0);
 
   typename IFIELD::mesh_type::Cell::iterator in, end;
   typename OFIELD::mesh_type::Cell::iterator out;

@@ -586,7 +586,7 @@ IsoClipAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
     ++bi;
   }
 
-  FIELD *ofield = scinew FIELD(clipped, fieldh->data_at());
+  FIELD *ofield = scinew FIELD(clipped, fieldh->basis_order());
   ofield->copy_properties(fieldh.get_rep());
 
   // Add the data values from the old field to the new field.
@@ -961,7 +961,7 @@ IsoClipAlgoTri<FIELD>::execute(ProgressReporter *mod, FieldHandle fieldh,
     ++bi;
   }
 
-  FIELD *ofield = scinew FIELD(clipped, fieldh->data_at());
+  FIELD *ofield = scinew FIELD(clipped, fieldh->basis_order());
   ofield->copy_properties(fieldh.get_rep());
 
   // Add the data values from the old field to the new field.

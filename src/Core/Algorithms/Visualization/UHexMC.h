@@ -163,7 +163,7 @@ void UHexMC<Field>::reset( int n, bool build_field, bool build_geom )
   mesh_->size(nsize);
   nnodes_ = nsize;
 
-  if (field_->data_at() == Field::CELL)
+  if (field_->basis_order() == 0)
   {
     mesh_->synchronize(Mesh::FACES_E);
     mesh_->synchronize(Mesh::FACE_NEIGHBORS_E);
@@ -180,7 +180,7 @@ void UHexMC<Field>::reset( int n, bool build_field, bool build_geom )
   quadsurf_ = 0;
   if (build_field_)
   {
-    if (field_->data_at() == Field::CELL)
+    if (field_->basis_order() == 0)
     {
       quadsurf_ = scinew QuadSurfMesh;
     }
@@ -231,7 +231,7 @@ UHexMC<Field>::find_or_add_nodepoint(node_index_type &tet_node_idx) {
 template<class Field>
 void UHexMC<Field>::extract( const cell_index_type& cell, double iso )
 {
-  if (field_->data_at() == Field::NODE)
+  if (field_->basis_order() == 1)
     extract_n(cell, iso);
   else
     extract_c(cell, iso);
@@ -342,12 +342,12 @@ template<class Field>
 FieldHandle
 UHexMC<Field>::get_field(double value)
 {
-  if (field_->data_at() == Field::CELL)
+  if (field_->basis_order() == 0)
   {
     QuadSurfField<double> *fld = 0;
     if (quadsurf_.get_rep())
     {
-      fld = scinew QuadSurfField<double>(quadsurf_, Field::NODE);
+      fld = scinew QuadSurfField<double>(quadsurf_, 1);
       vector<double>::iterator iter = fld->fdata().begin();
       while (iter != fld->fdata().end()) { (*iter)=value; ++iter; }
     }
@@ -358,7 +358,7 @@ UHexMC<Field>::get_field(double value)
     TriSurfField<double> *fld = 0;
     if (trisurf_.get_rep())
     {
-      fld = scinew TriSurfField<double>(trisurf_, Field::NODE);
+      fld = scinew TriSurfField<double>(trisurf_, 1);
       vector<double>::iterator iter = fld->fdata().begin();
       while (iter != fld->fdata().end()) { (*iter)=value; ++iter; }
     }
@@ -371,7 +371,7 @@ template<class Field>
 MatrixHandle
 UHexMC<Field>::get_interpolant()
 {
-  if (field_->data_at() == Field::NODE)
+  if (field_->basis_order() == 1)
   {
     const int nrows = edge_map_.size();
     const int ncols = nnodes_;

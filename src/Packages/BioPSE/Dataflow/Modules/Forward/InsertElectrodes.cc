@@ -486,7 +486,7 @@ InsertElectrodes::execute()
     error("Input FEM wasn't a TetVolField<int>.");
     return;
   }
-  if (imeshH->data_at() != Field::CELL) {
+  if (imeshH->basis_order() != 0) {
     error("Input FEM didn't have data at CELL\n");
     return;
   }
@@ -589,7 +589,7 @@ InsertElectrodes::execute()
     omesh->send(imeshH);
     if (elecElemsH.get_rep())
     {
-      TetVolField<double>* elec = scinew TetVolField<double>(elecElemsH, Field::NODE);
+      TetVolField<double>* elec = scinew TetVolField<double>(elecElemsH, 1);
       FieldHandle elecH(elec);
       oelec->send(elecH);
     }

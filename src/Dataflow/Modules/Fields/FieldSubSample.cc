@@ -232,8 +232,8 @@ void FieldSubSample::execute(){
     return;
   }
 
-  if( fHandle->data_at() != Field::CELL &&
-      fHandle->data_at() != Field::NODE ) {
+  if( fHandle->basis_order() != 0 &&
+      fHandle->basis_order() != 1 ) {
     error( fHandle->get_type_description(0)->get_name() );
     error( "Currently only availible for cell or node data." );
     return;

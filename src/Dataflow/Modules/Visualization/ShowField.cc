@@ -106,7 +106,7 @@ class ShowField : public Module
   GuiInt                   vectors_usedefcolor_;
   bool                     data_dirty_;
   string                   cur_field_data_type_;
-  Field::data_location     cur_field_data_at_;
+  int                      cur_field_basis_order_;
 
   GuiInt                   tensors_on_;
   GuiInt                   has_tensor_data_;
@@ -231,7 +231,7 @@ ShowField::ShowField(GuiContext* ctx) :
   vectors_usedefcolor_(ctx->subVar("vectors-usedefcolor")),
   data_dirty_(true),
   cur_field_data_type_("none"),
-  cur_field_data_at_(Field::NONE),
+  cur_field_basis_order_(0),
   tensors_on_(ctx->subVar("tensors-on")),
   has_tensor_data_(ctx->subVar("has_tensor_data")),
   tensors_usedefcolor_(ctx->subVar("tensors-usedefcolor")),
@@ -333,7 +333,7 @@ ShowField::check_for_svt_data(FieldHandle fld_handle)
   else if (fld_handle->query_vector_interface(this).get_rep() != 0)
   {
     hvd = true;
-    if (fld_handle->data_at() == Field::NODE)
+    if (fld_handle->basis_order() == 1)
     {
       disks = true;
     }
@@ -363,10 +363,10 @@ ShowField::fetch_typed_algorithm(FieldHandle fld_handle,
 				 bool recompile_nonvector)
 {
   const TypeDescription *ftd = fld_handle->get_type_description();
-  const TypeDescription *ltd = fld_handle->data_at_type_description();
+  const TypeDescription *ltd = fld_handle->order_type_description();
   // description for just the data in the field
   cur_field_data_type_ = fld_handle->get_type_description(1)->get_name();
-  cur_field_data_at_ = fld_handle->data_at();
+  cur_field_basis_order_ = fld_handle->basis_order();
 
   if (recompile_nonvector)
   {
@@ -473,11 +473,11 @@ ShowField::determine_dirty(FieldHandle fld_handle, FieldHandle vfld_handle)
     const TypeDescription *data_type_description =
       fld_handle->get_type_description(1);
     const string fdt = data_type_description->get_name();
-    Field::data_location at = fld_handle->data_at();
+    int basis_order = fld_handle->basis_order();
     if (!fetch_typed_algorithm(fld_handle, vfld_handle,
 			       mesh_new ||
 			       (cur_field_data_type_ != fdt) ||
-			       (cur_field_data_at_ != at)))
+			       (cur_field_basis_order_ != basis_order)))
     {
       return false;
     }
@@ -581,7 +581,7 @@ ShowField::execute()
       error("Color and Orientation fields must share the same mesh.");
       return;
     }
-    if (vfld_handle->data_at() != fld_handle->data_at())
+    if (vfld_handle->basis_order() != fld_handle->basis_order())
     {
       warning("Color and Orientation fields must have data at the same location.");
       return;

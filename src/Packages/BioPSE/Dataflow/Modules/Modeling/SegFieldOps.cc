@@ -156,7 +156,7 @@ SegFieldOps::execute()
       error("SegFieldOps requires either a SegLatVolField or a LatVolField<int> (data at cells) as input.");
       return;
     }
-    if (lvf->data_at() != Field::CELL) {
+    if (lvf->basis_order() != 0) {
       error("Please move data_at to cells before invoking SegFieldOps");
       return;
     }

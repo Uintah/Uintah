@@ -130,8 +130,8 @@ void BinaryFieldOperator::computeScalars(FieldLeft* left_field,
 					 ScalarOp op) {
 
   // so far only node and cell centered data
-  ASSERT( left_field->data_at() == FieldLeft::CELL ||
-	  left_field->data_at() == FieldRight::NODE );
+  ASSERT( left_field->basis_order() == 0 ||
+	  left_field->basis_order() == 1 );
 
 
   typename FieldLeft::mesh_handle_type mhl = left_field->get_typed_mesh();
@@ -139,7 +139,7 @@ void BinaryFieldOperator::computeScalars(FieldLeft* left_field,
   typename ScalarField::mesh_handle_type smh =
     scalarField->get_typed_mesh();
  
-  if( left_field->data_at() == Field::CELL){
+  if( left_field->basis_order() == 0){
     typename FieldLeft::mesh_type::Cell::iterator it; mhl->begin(it);
     typename FieldLeft::mesh_type::Cell::iterator end; mhl->end(end);
     typename FieldRight::mesh_type::Cell::iterator it_r; mhr->begin(it_r);

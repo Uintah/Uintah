@@ -59,8 +59,8 @@ class QuadSurfField : public GenericField<QuadSurfMesh, vector<T> >
 {
 public:
   QuadSurfField();
-  QuadSurfField(Field::data_location data_at);
-  QuadSurfField(QuadSurfMeshHandle mesh, Field::data_location data_at);
+  QuadSurfField(int order);
+  QuadSurfField(QuadSurfMeshHandle mesh, int order);
   virtual QuadSurfField<T> *clone() const;
   virtual ~QuadSurfField();
   
@@ -107,14 +107,14 @@ QuadSurfField<T>::QuadSurfField()
 }
 
 template <class T>
-QuadSurfField<T>::QuadSurfField(Field::data_location data_at) :
-  GenericField<QuadSurfMesh, vector<T> >(data_at)
+QuadSurfField<T>::QuadSurfField(int order) :
+  GenericField<QuadSurfMesh, vector<T> >(order)
 {
 }
 
 template <class T>
-QuadSurfField<T>::QuadSurfField(QuadSurfMeshHandle mesh, Field::data_location data_at)
-  : GenericField<QuadSurfMesh, vector<T> >(mesh, data_at)
+QuadSurfField<T>::QuadSurfField(QuadSurfMeshHandle mesh, int order)
+  : GenericField<QuadSurfMesh, vector<T> >(mesh, order)
 {
 } 
 

@@ -33,14 +33,13 @@
 #include <sys/stat.h>
 #include <string.h>
 #include <iostream>
-
+#include "VS_SCI_HotBox.h"
 #include "labelmaps.h"
 
 namespace VS {
 
 using namespace SCIRun;
 
-#include "VS_SCI_HotBox.h"
 
 class PSECORESHARE HotBox : public Module {
 private:
@@ -86,6 +85,7 @@ public:
  */
 
 DECLARE_MAKER(HotBox)
+
 HotBox::HotBox(GuiContext* ctx)
   : Module("HotBox", ctx, Filter, "DataFlow", "VS"),
   gui_label1_(ctx->subVar("gui_label1")),
@@ -151,7 +151,7 @@ void
       // get the field value at this node.
       // It should be the LabelMap Index that HotBox needs.
       float inputVal = dpcf->value((PointCloudMesh::Node::index_type)0); 
-      labelIndexVal = inputVal;
+      labelIndexVal = (int)inputVal;
       cout << "VS/Hotbox::Label value<double>: " << labelIndexVal << endl;
     }
     else
@@ -188,7 +188,7 @@ void
   }
 
   // get the matrix data
-  Matrix *matrixPtr = inputMatrixHandle.get_rep();
+  //  Matrix *matrixPtr = inputMatrixHandle.get_rep();
 
   const string anatomyDataSrc(anatomydatasource_.get());
   const string adjacencyDataSrc(adjacencydatasource_.get());

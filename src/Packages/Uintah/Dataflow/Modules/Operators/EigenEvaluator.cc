@@ -64,8 +64,8 @@ void computeGridEigens(TensorField* tensorField,
 		       ScalarField* eValueField, VectorField* eVectorField,
 		       int chosenEValue)
 {
-  ASSERT( tensorField->data_at() == Field::CELL ||
-	  tensorField->data_at() == Field::NODE );
+  ASSERT( tensorField->basis_order() == 0 ||
+	  tensorField->basis_order() == 1 );
   typename TensorField::mesh_handle_type tmh = tensorField->get_typed_mesh();
   typename ScalarField::mesh_handle_type smh = eValueField->get_typed_mesh();
   typename VectorField::mesh_handle_type vmh = eVectorField->get_typed_mesh();
@@ -92,7 +92,7 @@ void computeGridEigens(TensorField* tensorField,
   double e[3];
   std::vector<Vector> eigenVectors;
   
-  if( tensorField->data_at() == Field::CELL){
+  if( tensorField->basis_order() == 0){
     typename TensorField::mesh_type::Cell::iterator t_it; tmh->begin(t_it);
     typename ScalarField::mesh_type::Cell::iterator s_it; smh->begin(s_it);
     typename VectorField::mesh_type::Cell::iterator v_it; vmh->begin(v_it);

@@ -60,8 +60,8 @@ class TriSurfField : public GenericField<TriSurfMesh, vector<T> >
 {
 public:
   TriSurfField();
-  TriSurfField(Field::data_location data_at);
-  TriSurfField(TriSurfMeshHandle mesh, Field::data_location data_at);
+  TriSurfField(int order);
+  TriSurfField(TriSurfMeshHandle mesh, int order);
   virtual TriSurfField<T> *clone() const;
   virtual ~TriSurfField();
   
@@ -166,14 +166,14 @@ TriSurfField<T>::TriSurfField()
 }
 
 template <class T>
-TriSurfField<T>::TriSurfField(Field::data_location data_at) :
-  GenericField<TriSurfMesh, vector<T> >(data_at)
+TriSurfField<T>::TriSurfField(int order) :
+  GenericField<TriSurfMesh, vector<T> >(order)
 {
 }
 
 template <class T>
-TriSurfField<T>::TriSurfField(TriSurfMeshHandle mesh, Field::data_location data_at)
-  : GenericField<TriSurfMesh, vector<T> >(mesh, data_at)
+TriSurfField<T>::TriSurfField(TriSurfMeshHandle mesh, int order)
+  : GenericField<TriSurfMesh, vector<T> >(mesh, order)
 {
 } 
 

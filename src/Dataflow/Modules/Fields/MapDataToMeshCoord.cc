@@ -105,7 +105,7 @@ MapDataToMeshCoord::execute()
     error("This module only works on scalar fields.");
     return;
   }
-  if (ifield->data_at() != Field::NODE) {
+  if (ifield->basis_order() != 1) {
     error("This module only works for fields with data at nodes.");
     return;
   }

@@ -274,7 +274,7 @@ SetupFEMatrix::execute()
       error("Input TetVolField is not of type 'int' or 'Tensor'.");
       return;
     }
-    if (hField->data_at() != Field::CELL)
+    if (hField->basis_order() != 0)
     {
       error("Input TetVolField field must contain cell centered data.");
       return;
@@ -292,7 +292,7 @@ SetupFEMatrix::execute()
       error("Input HexVolField is not of type 'int' or 'Tensor'.");
       return;
     }
-    if (hField->data_at() != Field::CELL)
+    if (hField->basis_order() != 0)
     {
       error("Input HexVolField field must contain cell centered data.");
       return;
@@ -310,9 +310,9 @@ SetupFEMatrix::execute()
       error("Input TriSurfField is not of type 'int' or 'Tensor'.");
       return;
     }
-    if (hField->data_at() != Field::FACE)
+    if (hField->basis_order() != 0)
     {
-      error("Input TriSurfField field must contain face centered data.");
+      error("Input TriSurfField field must have constant basis.");
       return;
     }
   }

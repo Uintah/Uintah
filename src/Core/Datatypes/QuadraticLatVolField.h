@@ -59,8 +59,8 @@ public:
   typedef typename GenericField<QuadraticLatVolMesh, vector<Data> >::mesh_handle_type mesh_handle_type;
 
   QuadraticLatVolField();
-  QuadraticLatVolField(Field::data_location data_at);
-  QuadraticLatVolField(QuadraticLatVolMeshHandle mesh, Field::data_location data_at);
+  QuadraticLatVolField(int order);
+  QuadraticLatVolField(QuadraticLatVolMeshHandle mesh, int order);
   virtual QuadraticLatVolField<Data> *clone() const;
   virtual ~QuadraticLatVolField();
 
@@ -88,16 +88,16 @@ QuadraticLatVolField<Data>::QuadraticLatVolField()
 
 
 template <class Data>
-QuadraticLatVolField<Data>::QuadraticLatVolField(Field::data_location data_at)
-  : GenericField<QuadraticLatVolMesh, vector<Data> >(data_at)
+QuadraticLatVolField<Data>::QuadraticLatVolField(int order)
+  : GenericField<QuadraticLatVolMesh, vector<Data> >(order)
 {
 }
 
 
 template <class Data>
-QuadraticLatVolField<Data>::QuadraticLatVolField(QuadraticLatVolMeshHandle mesh,
-			     Field::data_location data_at)
-  : GenericField<QuadraticLatVolMesh, vector<Data> >(mesh, data_at)
+QuadraticLatVolField<Data>::QuadraticLatVolField(QuadraticLatVolMeshHandle msh,
+						 int order)
+  : GenericField<QuadraticLatVolMesh, vector<Data> >(msh, order)
 {
 }
 
@@ -211,7 +211,7 @@ bool QuadraticLatVolField<Data>::get_gradient(Vector &g, const Point &p)
   // for now we only know how to do this for fields with scalars at the nodes
   if (query_scalar_interface().get_rep())
   {
-    if( data_at() == Field::NODE)
+    if( basis_order() == 1)
     {
       const Point r = mesh_->get_transform().unproject(p);
       double x = r.x();

@@ -100,7 +100,7 @@ NodeGradient::execute()
     return;
   }
 
-  if (fieldin->data_at() != Field::NODE)
+  if (fieldin->basis_order() != 1)
   {
     error("This module only works on fields containing data at nodes.");
     return;

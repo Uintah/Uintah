@@ -205,7 +205,7 @@ main(int argc, char **argv) {
   }
   cerr << "done adding elements.\n";
 
-  TetVolField<double> *tv = scinew TetVolField<double>(tvm, Field::NONE);
+  TetVolField<double> *tv = scinew TetVolField<double>(tvm, 0);
   FieldHandle tvH(tv);
   
   if (binOutput) {

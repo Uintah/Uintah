@@ -67,7 +67,7 @@ ApplyInterpAlgoT<FSRC, FITP, LITP, FOUT>::execute(FieldHandle fsrc_h,
 {
   FSRC *fsrc = (FSRC *)(fsrc_h.get_rep()); // dynamic cast fails on sgi
   FITP *fitp = (FITP *)(fitp_h.get_rep());
-  FOUT *fout = scinew FOUT(fitp->get_typed_mesh(), fitp->data_at());
+  FOUT *fout = scinew FOUT(fitp->get_typed_mesh(), fitp->basis_order());
   FieldHandle fhout(fout);
 
   typename LITP::iterator iter, eiter;

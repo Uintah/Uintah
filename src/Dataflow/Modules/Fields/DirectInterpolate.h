@@ -47,7 +47,7 @@ class DirectInterpAlgo : public DynamicAlgoBase
 {
 public:
   virtual FieldHandle execute(FieldHandle src, MeshHandle dst,
-			      Field::data_location loc,
+			      int basis_order,
 			      const string &basis, bool source_to_single_dest,
 			      bool exhaustive_search, double dist, int np) = 0;
 
@@ -78,7 +78,7 @@ class DirectInterpAlgoT : public DirectInterpAlgo
   typedef struct _DIData {
     FieldHandle src_fieldH;
     MeshHandle dst_meshH;
-    Field::data_location loc;
+    int basis_order;
     string basis;
     bool source_to_single_dest;
     bool exhaustive_search;
@@ -95,7 +95,7 @@ class DirectInterpAlgoT : public DirectInterpAlgo
 public:
   //! virtual interface. 
   virtual FieldHandle execute(FieldHandle src, MeshHandle dst,
-			      Field::data_location loc,
+			      int basis_order,
 			      const string &basis, bool source_to_single_dest,
 			      bool exhaustive_search, double dist, int np);
 
@@ -111,7 +111,10 @@ private:
 
 template <class FSRC, class LSRC, class FOUT, class LDST>
 double
-DirectInterpAlgoT<FSRC, LSRC, FOUT, LDST>::find_closest_src_loc(typename LSRC::index_type &index, typename FSRC::mesh_type *mesh, const Point &p) const
+DirectInterpAlgoT<FSRC, LSRC, FOUT, 
+		  LDST>::find_closest_src_loc(typename LSRC::index_type &index,
+					      typename FSRC::mesh_type *mesh, 
+					      const Point &p) const
 {
   double mindist = DBL_MAX;
 
@@ -159,12 +162,20 @@ DirectInterpAlgoT<FSRC, LSRC, FOUT, LDST>::find_closest_dst_loc(typename LDST::i
 
 template <class FSRC, class LSRC, class FOUT, class LDST>
 FieldHandle
-DirectInterpAlgoT<FSRC, LSRC, FOUT, LDST>::execute(FieldHandle src_fieldH, MeshHandle dst_meshH, Field::data_location loc, const string &basis, bool source_to_single_dest, bool exhaustive_search, double dist, int np)
+DirectInterpAlgoT<FSRC, LSRC, 
+		  FOUT, LDST>::execute(FieldHandle src_fieldH, 
+				       MeshHandle dst_meshH, 
+				       int basis_order, 
+				       const string &basis, 
+				       bool source_to_single_dest, 
+				       bool exhaustive_search, 
+				       double dist, 
+				       int np)
 {
   DIData d;
   d.src_fieldH=src_fieldH;
   d.dst_meshH=dst_meshH;
-  d.loc=loc;
+  d.basis_order=basis_order;
   d.basis=basis;
   d.source_to_single_dest=source_to_single_dest;
   d.exhaustive_search=exhaustive_search;
@@ -172,7 +183,7 @@ DirectInterpAlgoT<FSRC, LSRC, FOUT, LDST>::execute(FieldHandle src_fieldH, MeshH
   d.np=np;
   typename FOUT::mesh_type *dst_mesh = 
     dynamic_cast<typename FOUT::mesh_type *>(dst_meshH.get_rep());
-  FOUT *out_field = scinew FOUT(dst_mesh, loc);  
+  FOUT *out_field = scinew FOUT(dst_mesh, basis_order);  
   d.out_fieldH = out_field;
 
   if (np==1)
@@ -190,7 +201,7 @@ DirectInterpAlgoT<FSRC, LSRC, FOUT, LDST>::parallel_execute(int proc,
 							    DIData *d) {
   FieldHandle src_fieldH = d->src_fieldH;
   MeshHandle dst_meshH = d->dst_meshH;
-  Field::data_location loc = d->loc;
+  int basis_order = d->basis_order;
   const string& basis = d->basis;
   bool source_to_single_dest = d->source_to_single_dest;
   bool exhaustive_search = d->exhaustive_search;
@@ -205,10 +216,8 @@ DirectInterpAlgoT<FSRC, LSRC, FOUT, LDST>::parallel_execute(int proc,
   FOUT *out_field = dynamic_cast<FOUT *>(out_fieldH.get_rep());
 
   if (proc == 0) {
-    if (loc == Field::NODE) src_mesh->synchronize(Mesh::NODES_E);
-    else if (loc == Field::CELL) src_mesh->synchronize(Mesh::CELLS_E);
-    else if (loc == Field::FACE) src_mesh->synchronize(Mesh::FACES_E);
-    else if (loc == Field::EDGE) src_mesh->synchronize(Mesh::EDGES_E);
+    if (basis_order == 0) src_mesh->synchronize(Mesh::CELLS_E);
+    else src_mesh->synchronize(Mesh::NODES_E);
   }
   d->barrier.wait(np);
   int count=0;

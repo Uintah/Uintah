@@ -71,7 +71,7 @@ ChangeFieldDataTypeAlgoCreateT<FSRC, FOUT>::execute(FieldHandle fsrc_h)
   FSRC *fsrc = dynamic_cast<FSRC *>(fsrc_h.get_rep());
 
   // Create the field with the new mesh and data location.
-  FOUT *fout = scinew FOUT(fsrc->get_typed_mesh(), fsrc_h->data_at());
+  FOUT *fout = scinew FOUT(fsrc->get_typed_mesh(), fsrc_h->basis_order());
 
   // Copy the properties from old field to new field.
   fout->copy_properties(fsrc);
@@ -112,7 +112,7 @@ ChangeFieldDataTypeAlgoCopyT<FSRC, FOUT>::execute(FieldHandle fsrc_h,
   typename FSRC::fdata_type::iterator in = fsrc->fdata().begin();
   typename FOUT::fdata_type::iterator out = fout->fdata().begin();
   typename FSRC::fdata_type::iterator end = fsrc->fdata().end();
-  if (fout->data_at() == fsrc->data_at())
+  if (fout->basis_order() == fsrc->basis_order())
   {
     while (in != end)
     {

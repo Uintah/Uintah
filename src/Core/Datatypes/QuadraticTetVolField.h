@@ -59,9 +59,9 @@ public:
   typedef typename GenericField<QuadraticTetVolMesh, vector<T> >::mesh_handle_type mesh_handle_type;
 
   QuadraticTetVolField();
-  QuadraticTetVolField(Field::data_location data_at);
+  QuadraticTetVolField(int order);
   QuadraticTetVolField(QuadraticTetVolMeshHandle mesh, 
-		       Field::data_location data_at);
+		       int order);
 
   static QuadraticTetVolField<T>* create_from(const TetVolField<T> &);
   virtual QuadraticTetVolField<T> *clone() const;
@@ -88,15 +88,15 @@ QuadraticTetVolField<T>::QuadraticTetVolField() :
 }
 
 template <class T>
-QuadraticTetVolField<T>::QuadraticTetVolField(Field::data_location data_at) : 
-  GenericField<QuadraticTetVolMesh, vector<T> >(data_at)
+QuadraticTetVolField<T>::QuadraticTetVolField(int order) : 
+  GenericField<QuadraticTetVolMesh, vector<T> >(order)
 {
 }
 
 template <class T>
 QuadraticTetVolField<T>::QuadraticTetVolField(QuadraticTetVolMeshHandle mesh, 
-					      Field::data_location data_at) : 
-  GenericField<QuadraticTetVolMesh, vector<T> >(mesh, data_at)
+					      int order) : 
+  GenericField<QuadraticTetVolMesh, vector<T> >(mesh, order)
 {
 }
 
@@ -110,7 +110,7 @@ QuadraticTetVolField<T>::create_from(const TetVolField<T> &tv)
 
   mesh_handle_type mh(m);
   QuadraticTetVolField<T> *rval = scinew QuadraticTetVolField(mh, 
-							      tv.data_at());
+							      tv.basis_order());
   rval->fdata()=tv.fdata();
   rval->copy_properties(&tv);
   rval->freeze();
@@ -240,7 +240,7 @@ template <class T>
 Vector QuadraticTetVolField<T>::cell_gradient(QuadraticTetVolMesh::Cell::index_type ci)
 {
   // for now we only know how to do this for field with doubles at the nodes
-  ASSERT(data_at() == Field::NODE);
+  ASSERT(basis_order() == 1);
 
   // load up the indices of the nodes for this cell
   QuadraticTetVolMesh::Node::array_type nodes;

@@ -199,7 +199,7 @@ main(int argc, char **argv) {
   }
   cerr << "done adding elements.\n";
 
-  QuadSurfField<double> *qs = scinew QuadSurfField<double>(qsm, Field::NONE);
+  QuadSurfField<double> *qs = scinew QuadSurfField<double>(qsm, 0);
   FieldHandle qsH(qs);
   
   if (binOutput) {

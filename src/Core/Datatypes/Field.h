@@ -47,23 +47,14 @@ typedef LockingHandle<TensorFieldInterface> TensorFieldInterfaceHandle;
 class  SCICORESHARE Field: public PropertyManager
 {
 public:
-  //! Possible data associations.
-  enum data_location{
-    NODE,
-    EDGE,
-    FACE,
-    CELL,
-    NONE
-  };
 
-
-  Field(data_location at = NONE);
+  Field(int);
   virtual ~Field();
   virtual Field *clone() const = 0;
   
  
-  data_location data_at() const { return data_at_; }
-  virtual const TypeDescription *data_at_type_description() const = 0;
+  int basis_order() const { return order_; }
+  virtual const TypeDescription *order_type_description() const = 0;
 
   //! Required virtual functions
   virtual MeshHandle mesh() const = 0;
@@ -86,7 +77,7 @@ public:
 
 protected:
   //! Where data is associated.
-  data_location           data_at_;
+  int           order_;
 };
 
 typedef LockingHandle<Field> FieldHandle;

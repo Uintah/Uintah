@@ -200,7 +200,9 @@ void CreateDisAnisoSpheres::processHexField() {
   LockingHandle<HexVolField<int> > hexField = dynamic_cast<HexVolField<int>* >(field_.get_rep());
   HexVolMeshHandle mesh_ = hexField->get_typed_mesh();
   HexVolMesh *newMesh_   = scinew HexVolMesh(*mesh_->clone()); 
-  newHexField = scinew HexVolField<int>(newMesh_, Field::CELL);  // cell-wise conductivity tensors -> set data location to cells
+  newHexField = scinew HexVolField<int>(newMesh_, 0); /* cell-wise conductivity
+							 tensors -> set data 
+							 location to cells */
   newMesh_->synchronize(HexVolMesh::FACES_E);
   HexVolMesh::Face::iterator fii;
   newMesh_->begin(fii);
@@ -247,7 +249,7 @@ void CreateDisAnisoSpheres::processTetField() {
   LockingHandle<TetVolField<int> > tetField = dynamic_cast<TetVolField<int>* >(field_.get_rep());
   TetVolMeshHandle mesh_ = tetField->get_typed_mesh();
   TetVolMesh *newMesh_   = scinew TetVolMesh(*mesh_->clone());
-  newTetField = scinew TetVolField<int>(newMesh_, Field::CELL);
+  newTetField = scinew TetVolField<int>(newMesh_, 0);
   // set positions of the nodes and enumerate them
   TetVolMesh::Node::iterator nii, nie;
   newMesh_->begin(nii);

@@ -209,7 +209,7 @@ void build_field(QueryInfo &qinfo,
     Var v;
     // This gets the data
     qinfo.archive->query( v, qinfo.varname, qinfo.mat, *r, qinfo.time);
-    if( sfd->data_at() == Field::CELL){
+    if( sfd->basis_order() == 0){
       low = (*r)->getCellLowIndex();
       hi = (*r)->getCellHighIndex();
     } else {
@@ -426,10 +426,10 @@ Nrrd* wrap_nrrd(LatVolField<Matrix3> *source, bool &delete_data) {
 template<class Var, class T>
 void getData(QueryInfo &qinfo, IntVector &low,
 	     LatVolMeshHandle mesh_handle_,
-	     SCIRun::Field::data_location data_at,
+	     int basis_order,
 	     string &filename) {
   Var gridVar;
-  LatVolField<T>* source_field = new LatVolField<T>( mesh_handle_, data_at );
+  LatVolField<T>* source_field = new LatVolField<T>( mesh_handle_, basis_order );
   if (!source_field) {
     cerr << "Cannot allocate memory for field\n";
     return;
@@ -504,35 +504,35 @@ void getVariable(QueryInfo &qinfo, IntVector &low,
     mesh_handle_ = scinew LatVolMesh(range.x(), range.y(),
 				     range.z(), box.min(),
 				     box.max());
-    getData<CCVariable<T>, T>(qinfo, low, mesh_handle_, Field::CELL,
+    getData<CCVariable<T>, T>(qinfo, low, mesh_handle_, 0,
 			      filename);
     break;
   case Uintah::TypeDescription::NCVariable:
     mesh_handle_ = scinew LatVolMesh(range.x(), range.y(),
 				     range.z(), box.min(),
 				     box.max());
-    getData<NCVariable<T>, T>(qinfo, low, mesh_handle_, Field::NODE,
+    getData<NCVariable<T>, T>(qinfo, low, mesh_handle_, 1,
 			      filename);
     break;
   case Uintah::TypeDescription::SFCXVariable:
     mesh_handle_ = scinew LatVolMesh(range.x(), range.y()-1,
 				     range.z()-1, box.min(),
 				     box.max());
-    getData<SFCXVariable<T>, T>(qinfo, low, mesh_handle_, Field::NODE,
+    getData<SFCXVariable<T>, T>(qinfo, low, mesh_handle_, 1,
 				filename);
     break;
   case Uintah::TypeDescription::SFCYVariable:
     mesh_handle_ = scinew LatVolMesh(range.x()-1, range.y(),
 				     range.z()-1, box.min(),
 				     box.max());
-    getData<SFCYVariable<T>, T>(qinfo, low, mesh_handle_, Field::NODE,
+    getData<SFCYVariable<T>, T>(qinfo, low, mesh_handle_, 1,
 				filename);
     break;
   case Uintah::TypeDescription::SFCZVariable:
     mesh_handle_ = scinew LatVolMesh(range.x()-1, range.y()-1,
 				     range.z(), box.min(),
 				     box.max());
-    getData<SFCZVariable<T>, T>(qinfo, low, mesh_handle_, Field::NODE,
+    getData<SFCZVariable<T>, T>(qinfo, low, mesh_handle_, 1,
 				filename);
     break;
   default:

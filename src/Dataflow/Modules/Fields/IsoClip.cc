@@ -182,7 +182,7 @@ IsoClip::execute()
     return;
   }
   
-  if (ifieldhandle->data_at() != Field::NODE)
+  if (ifieldhandle->basis_order() != 1)
   {
     error("Isoclipping can only done for fields with data at nodes.");
     return;
