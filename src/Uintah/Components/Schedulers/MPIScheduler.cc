@@ -878,8 +878,8 @@ MPIScheduler::gatherParticles(const ProcessorGroup* pc,
    vector<MPIScatterRecord*> sr;
    vector<int> recvsize(neighbors.size());
    int me = d_myworld->myrank();
-   ASSERTEQ(sgargs.dest.size(), neighbors.size());
-   ASSERTEQ(sgargs.tags.size(), neighbors.size());
+   ASSERTEQ((int)sgargs.dest.size(), (int)neighbors.size());
+   ASSERTEQ((int)sgargs.tags.size(), (int)neighbors.size());
    vector<char*> recvbuf(neighbors.size());
    vector<int> recvpos(neighbors.size());
    for(int i=0;i<(int)neighbors.size();i++){
@@ -1046,6 +1046,9 @@ MPIScheduler::emitTime(char* label, double dt)
 
 //
 // $Log$
+// Revision 1.33  2000/12/22 00:13:52  jas
+// Got rid of X,Y,Z FCVariable stuff.  Changes to get rid of g++ warnings.
+//
 // Revision 1.32  2000/12/10 09:06:10  sparker
 // Merge from csafe_risky1
 //
