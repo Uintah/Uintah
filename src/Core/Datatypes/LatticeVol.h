@@ -17,13 +17,13 @@ public:
   FData3d():Array3<Data>(){}
   virtual ~FData3d(){}
 
-  value_type operator[](typename LatVolMesh::cell_index idx) const
+  value_type &operator[](typename LatVolMesh::cell_index idx) const
     { return operator()(idx.i_,idx.j_,idx.k_); } 
-  value_type operator[](typename LatVolMesh::face_index idx) const
+  value_type &operator[](typename LatVolMesh::face_index idx) const
     { return (Data)0; }
-  value_type operator[](typename LatVolMesh::edge_index idx) const
+  value_type &operator[](typename LatVolMesh::edge_index idx) const
     { return (Data)0; }
-  value_type operator[](typename LatVolMesh::node_index idx) const
+  value_type &operator[](typename LatVolMesh::node_index idx) const
     { return operator()(idx.i_,idx.j_,idx.k_); }
 
   static const string type_name(int);
