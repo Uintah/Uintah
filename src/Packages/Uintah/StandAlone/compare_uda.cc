@@ -61,6 +61,7 @@ void usage(const std::string& badarg, const std::string& progname)
     cerr << "  -h[elp]\n";
     cerr << "  -abs_tolerance [double] (allowable absolute difference of any numbers)\n";
     cerr << "  -rel_tolerance [double] (allowable relative difference of any numbers)\n";
+    cerr << "  -as_warnings (treat tolerance errors as warnings and continue)";
     cerr << "\nNote: The absolute and relative tolerance tests must both fail\n      for a comparison to fail.\n";
     exit(1);
 }
@@ -232,7 +233,11 @@ int main(int argc, char** argv)
 	usage("-rel_tolerance, no value given", argv[0]);
       else
 	rel_tolerance = atof(argv[i]);
-    } else {
+    }
+    else if(s == "-as_warnings") {
+      tolerance_as_warnings = true;
+    }
+    else {
       if (filebase1 != "") {
 	if (filebase2 != "")
 	  usage(s, argv[0]);
@@ -313,23 +318,15 @@ int main(int argc, char** argv)
     da2->queryTimesteps(index2, times2);
     ASSERTEQ(index2.size(), times2.size());
 
-    if (times.size() != times2.size()) {
-      cerr << filebase1 << " has " << times.size() << " timesteps\n";
-      cerr << filebase2 << " has " << times2.size() << " timesteps\n";
-      abort_uncomparable();
-    }
-
-    for (int i = 0; i < times.size(); i++) {
-      if (!compare(times[i], times2[i], abs_tolerance, rel_tolerance)) {
-	cerr << "Timestep at time " << times[i] << " in " << filebase1
+    for(unsigned long t = 0; t < times.size() && t < times2.size(); t++){
+      if (!compare(times[t], times2[t], abs_tolerance, rel_tolerance)) {
+	cerr << "Timestep at time " << times[t] << " in " << filebase1
 	     << " does not match\n";
-	cerr << "timestep at time " << times2[i] << " in " << filebase2
+	cerr << "timestep at time " << times2[t] << " in " << filebase2
 	     << " within the allowable tolerance.\n";
-	tolerance_failure();
+	abort_uncomparable();
       }
-    }
-
-    for(unsigned long t = 0; t < times.size(); t++){
+      
       double time = times[t];
       double time2 = times2[t];
       cout << "time = " << time << "\n";
@@ -499,6 +496,11 @@ int main(int argc, char** argv)
 	}
       }
     }
+    if (times.size() != times2.size()) {
+      cerr << filebase1 << " has " << times.size() << " timesteps\n";
+      cerr << filebase2 << " has " << times2.size() << " timesteps\n";
+      abort_uncomparable();
+    }    
   } catch (Exception& e) {
     cerr << "Caught exception: " << e.message() << '\n';
     abort();
