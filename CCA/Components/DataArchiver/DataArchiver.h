@@ -130,15 +130,15 @@ using std::pair;
 
       class SaveItem {
       public:
-	void setMaterials(const ConsecutiveRangeSet& matls);
+	void setMaterials(const ConsecutiveRangeSet& matls,
+			  ConsecutiveRangeSet& prevMatls,
+			  MaterialSetP& prevMatlSet);
 
 	const MaterialSet* getMaterialSet() const
 	{ return matlSet_.get_rep(); }
 	  
 	const VarLabel* label_;
       private:
-	static ConsecutiveRangeSet prevMatls_;
-	static MaterialSetP prevMatlSet_;
 	MaterialSetP matlSet_;
       };
 
@@ -154,8 +154,8 @@ using std::pair;
 
       void scheduleOutputTimestep(Dir& dir, vector<SaveItem>& saveLabels,
 				  const LevelP& level, SchedulerP& sched);
-     void beginOutputTimestep(double time, double delt,
-			      const LevelP& level);
+      void beginOutputTimestep(double time, double delt,
+			       const LevelP& level);
 
       // helper for problemSetup
       void createIndexXML(Dir& dir);
@@ -194,6 +194,10 @@ using std::pair;
       vector< SaveItem > d_saveLabels;
       vector< SaveItem > d_saveReductionLabels;
 
+      // for efficiency of SaveItem's
+      ConsecutiveRangeSet prevMatls_;
+      MaterialSetP prevMatlSet_;     
+     
       // d_checkpointLabelNames is a temporary list containing
       // the names of labels to save when checkpointing
       vector< SaveItem > d_checkpointLabels;
@@ -204,7 +208,7 @@ using std::pair;
       Dir d_checkpointsDir;
       list<string> d_checkpointTimestepDirs;
       double d_nextCheckpointTime;
-
+     
       Mutex d_outputLock;
       Mutex d_outputReductionLock;
 
