@@ -69,6 +69,8 @@ namespace Uintah {
 
     void readPoints(int pid);
 
+    int createPoints();
+
     string d_file_name,d_var_name;
   private:
 

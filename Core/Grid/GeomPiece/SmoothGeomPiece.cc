@@ -12,6 +12,7 @@ using namespace std;
 
 SmoothGeomPiece::SmoothGeomPiece()
 {
+  d_dx = 1.0;
 }
 
 SmoothGeomPiece::~SmoothGeomPiece()
@@ -65,4 +66,10 @@ int
 SmoothGeomPiece::returnPointCount() const
 {
   return d_points.size();
+}
+
+void 
+SmoothGeomPiece::setParticleSpacing(double dx)
+{
+  d_dx = dx;
 }
