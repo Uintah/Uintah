@@ -329,14 +329,14 @@ the directory
 The location of dynamically generated code can be changed (and doing
 so provides a number of benefits&mdash;see below) by setting
 the value of the environment variable
-<envar>SCI_ON_THE_FLY_LIBS_DIR</envar> to the desired directory, for
+<envar>SCIRUN_ON_THE_FLY_LIBS_DIR</envar> to the desired directory, for
 example:
 <literallayout class="monospaced">
-SCI_ON_THE_FLY_LIBS_DIR=$HOME/on-the-fly-libs; export SCI_ON_THE_FLY_LIBS_DIR
+SCIRUN_ON_THE_FLY_LIBS_DIR=$HOME/on-the-fly-libs; export SCIRUN_ON_THE_FLY_LIBS_DIR
 </literallayout>
 for Bourne-like shells (sh, ksh, bash, etc.) or
 <literallayout class="monospaced">
-setenv SCI_ON_THE_FLY_LIBS_DIR $HOME/on-the-fly-libs
+setenv SCIRUN_ON_THE_FLY_LIBS_DIR $HOME/on-the-fly-libs
 </literallayout>
 for csh-like shells.
 </para> 
@@ -345,7 +345,7 @@ for csh-like shells.
 your <filename>.scirunrc</filename>
 file. Your <filename>.scirunrc</filename> file would contain, for example:
 <literallayout class="monospaced">
-SCI_ON_THE_FLY_LIBS_DIR=/home/me/on-the-fly-libs
+SCIRUN_ON_THE_FLY_LIBS_DIR=/home/me/on-the-fly-libs
 </literallayout>
 Your <filename>.scirunrc</filename> file is read by &sr; at startup.
 </para>
