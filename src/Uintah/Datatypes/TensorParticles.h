@@ -9,13 +9,15 @@
 #include <SCICore/Persistent/Persistent.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Geometry/Vector.h>
+#include <Uintah/Grid/GridP.h>
+#include <Uintah/Grid/LevelP.h>
+#include <Uintah/Grid/Patch.h>
 #include <iostream>
 
 namespace Uintah {
 namespace Datatypes {
 
-using Uintah::DataArchive;
-using Uintah::ParticleVariable;
+using namespace Uintah;
 using SCICore::Datatypes::Datatype;
 using SCICore::Containers::LockingHandle;
 using SCICore::PersistentSpace::Piostream;
@@ -63,8 +65,8 @@ public:
   TensorParticles();
   //////////
   // Constructor
-  TensorParticles(const ParticleVariable<Point>& positions,
-		 const ParticleVariable<Matrix3>& tensors,
+  TensorParticles(const vector <ParticleVariable<Point> >& positions,
+		 const vector <ParticleVariable<Matrix3> >& tensors,
 		 void* callbackClass);
 
   // GROUP: Destructors
@@ -75,24 +77,32 @@ public:
   // GROUP: Access
   //////////
   // return the Points
-  ParticleVariable<Point>&  getPositions(){ return positions;}
+  vector <ParticleVariable<Point> >&  getPositions(){ return positions;}
   //////////
   // return the Tensors
-  ParticleVariable<Matrix3>& get(){ return tensors; }
+  vector <ParticleVariable<Matrix3> >& get(){ return tensors; }
   //////////
   // return the callback
   void* getCallbackClass(){ return cbClass; }
   // GROUP: Modify
   //////////  
   // Set the Tensors
-  void Set(const ParticleVariable<Matrix3>& s){ tensors = s; }
+  void Set(const vector<ParticleVariable<Matrix3> >& s){ tensors = s; }
   //////////
   // Set the particle Positions
-  void SetPositions(const ParticleVariable<Point>& p){ positions = p; }
+  void SetPositions(const vector<ParticleVariable<Point> >& p){ positions = p; }
   //////////
   // Set callback class
   void SetCallbackClass( void* cbc){ cbClass = cbc; }
 
+  void AddVar( const ParticleVariable<Point> locs,
+	       const ParticleVariable<Matrix3> tens,
+	       const Patch* p);
+
+  void SetGrid( GridP g ){ _grid = g; }
+  void SetLevel( LevelP l){ _level = l; }
+  void SetName( string vname ) { _varname = vname; }
+  void SetMaterial( int index) { _matIndex = index; }
   // Persistant representation
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
@@ -116,9 +126,13 @@ private:
 
 
   void* cbClass;
+  GridP  _grid;
+  LevelP _level;
+  string _varname;
+  int _matIndex;
 
-  ParticleVariable<Point> positions;
-  ParticleVariable<Matrix3> tensors;
+  vector<ParticleVariable<Point> >positions;
+  vector<ParticleVariable<Matrix3> > tensors;
 };
 
 } // end namespace Datatypes
