@@ -361,7 +361,7 @@ HypreSolver::setPressMatrix(const ProcessorGroup* pc,
 			    ArchesConstVariables* constvars,
 			    const ArchesLabel*)
 { 
-  double start_time = TimecurrentSeconds();
+  double start_time = Time::currentSeconds();
   gridSetup(pc, patch);
   /*-----------------------------------------------------------
    * Set up the matrix structure
