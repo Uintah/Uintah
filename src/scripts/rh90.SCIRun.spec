@@ -28,7 +28,7 @@
 
 %define defname SCIRun
 %define defver	1.24
-%define dotver  0
+%define dotver  1
 %define gccver  3.2.2
 %define plat	rh9.0
 %define distro  Red Hat 9.0
@@ -41,7 +41,7 @@
 
 Name:		%{defname}BioPSE
 Version:	%{defver}.%{dotver}
-Serial:		7
+Serial:		8
 Release:	%{plat}
 Summary:	Problem Solving Environment Software
 Copyright:	University of Utah Limited
