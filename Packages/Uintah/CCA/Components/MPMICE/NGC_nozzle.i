@@ -14,33 +14,16 @@
   //______________________________________________________________________
   //          M P M
   //__________________________________
-  #ifdef rigidBody_1
-     // additional variables need for the hardwired velocity
-     t->requires(Task::OldDW, lb->pColorLabel,  Ghost::None);           
-     t->requires(Task::OldDW, lb->pXLabel,      Ghost::None);        
-  #endif
-  
-  
-  
-  //  Inside RidgidBodyContact.cc: exMomIntegrated()
-  #ifdef rigidBody_2 
+ #ifdef RigidMPM_1
+ 
       //__________________________________
       //  Hardwiring for Northrup Grumman nozzle
       //  Loop over all the particles and set the velocity
       //  of the 2nd stage = to the hard coded velocity
       //  Note that the pcolor of the 2nd stage has been 
       //  initialized to a non zero value
-
-      int dwi = 0;
-      NCVariable<Vector> gvelocity_star_org;
-      new_dw->getCopy(gvelocity_star_org, lb->gVelocityStarLabel,dwi,patch);
-      
-      ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
-
       constParticleVariable<double> pcolor;
-      constParticleVariable<Point> px;
       old_dw->get(pcolor, lb->pColorLabel, pset);
-      old_dw->get(px,     lb->pXLabel,     pset);
 
       double time = d_sharedState->getElapsedTime();
       //double time = t + d_sharedState->getTimeOffset();
@@ -53,32 +36,19 @@
       double vel_x = c[3]*pow(time,3) + c[2]*pow(time,2) + c[1]*time + c[0];
       Vector hardWired_velocity = Vector(vel_x,0,0);
 
-#if 0
-      if (patch->getID() ){
+      if (patch->getID() == 0){
         cout << " hardWired_velocity " << hardWired_velocity << endl;
       }
-#endif
 
       for (ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); 
                                                                           iter++){
         particleIndex idx = *iter;
 
-        if (pcolor[idx]> 0) {          // for the second stage only
-
-          // Get the node indices that surround the cell
-          IntVector ni[8];
-          double S[8];
-          patch->findCellAndWeights(px[idx], ni, S);
-
-          for(int k = 0; k < 8; k++) {
-            if(patch->containsNode(ni[k])) {
-              gacceleration[0][ni[k]] = (hardWired_velocity - gvelocity_star_org[ni[k]])/delT;
-	      gvelocity_star[0][ni[k]]= hardWired_velocity; 
-            }
-          }
+        if (pcolor[idx]> 0) {   
+          pvelocitynew[idx] = hardWired_velocity;
         }  // second stage only
       } // End of particle loop
-  #endif
+ #endif
 
 
   //__________________________________
