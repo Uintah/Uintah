@@ -60,7 +60,6 @@ public:
   virtual void rasterize(CM2ShaderFactory& factory, bool faux, Pbuffer* pbuffer) = 0;
   virtual void rasterize(Array3<float>& array, bool faux) = 0;
   virtual CM2Widget* clone() = 0;
-
   virtual int  get_shadeType();
   virtual void set_shadeType(int type);
   virtual int  get_onState();
@@ -82,6 +81,7 @@ public:
   void set_color(const Color &c) { color_ = c; }
   float alpha() const { return alpha_; }
   void set_alpha(float a);
+  virtual void set_value_range(double, double) {};
 
   virtual void io(Piostream &stream) = 0;
   static PersistentTypeID type_id;
@@ -102,6 +102,10 @@ protected:
   int shadeType_;
   int onState_;
   HSVColor last_hsv_;
+  double value_min_;
+  double value_scale_;
+  double pan_x_;
+  double pan_y_;
 };
 
 typedef LockingHandle<CM2Widget> CM2WidgetHandle;
@@ -128,6 +132,8 @@ public:
   virtual int pick2 (int x, int y, int w, int h, int m);
   virtual void move (int obj, int x, int y, int w, int h);
   virtual void release (int obj, int x, int y, int w, int h);
+
+  virtual void set_value_range(double min, double scale);
 
   virtual std::string tcl_pickle();
   virtual void tcl_unpickle(const std::string &p);
@@ -173,6 +179,8 @@ public:
   virtual int pick2 (int x, int y, int w, int h, int m);
   virtual void move (int obj, int x, int y, int w, int h);
   virtual void release (int obj, int x, int y, int w, int h);
+
+  virtual void set_value_range(double min, double scale);
   
   virtual std::string tcl_pickle();
   virtual void tcl_unpickle(const std::string &p);
@@ -233,12 +241,9 @@ class PaintCM2Widget : public CM2Widget
 public:
   typedef pair<double, double>		Coordinate;
   typedef pair<Coordinate, Coordinate>	Segment;
-  typedef pair<Color, Segment>		ColoredSegment;
-  typedef vector<ColoredSegment>	ColoredSegments;
-  
+  typedef vector<Segment>		Segments;
 
   PaintCM2Widget();
-  PaintCM2Widget(NrrdDataHandle p);
   ~PaintCM2Widget();
   PaintCM2Widget(PaintCM2Widget& copy);
 
@@ -249,7 +254,7 @@ public:
   void rasterize(CM2ShaderFactory& factory, bool faux, Pbuffer* pbuffer);
   void rasterize(Array3<float>& array, bool faux);
   
-  bool is_empty();
+  bool is_empty() { return segments_.empty(); }
   // behavior
   virtual int pick1 (int x, int y, int w, int h) { return 0;}
   virtual int pick2 (int x, int y, int w, int h, int m) { return 0;}
@@ -262,10 +267,17 @@ public:
   virtual void io(Piostream &stream);
   static PersistentTypeID type_id;
 
-  ColoredSegments &	get_segments() { return segments_; }
+  Segments &	get_segments() { return segments_; }
+  void		set_dirty(bool dirty);
 
 protected:
-  ColoredSegments		segments_;
+  // nrrdSpatialResample ...
+  void				line(Array3<float> &, int, int, int, int);
+  void				draw_point(Array3<float> &, int, int);
+  void				splat(Array3<float> &, int, int);
+  Segments			segments_;
+  Array3<float>			pixels_;
+  bool				dirty_;
 };
 
 
