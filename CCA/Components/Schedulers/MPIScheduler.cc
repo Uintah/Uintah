@@ -74,6 +74,15 @@ MPIScheduler::~MPIScheduler()
 {
 }
 
+SchedulerP
+MPIScheduler::createSubScheduler()
+{
+  MPIScheduler* newsched = new MPIScheduler(d_myworld, m_outPort);
+  UintahParallelPort* lbp = getPort("load balancer");
+  newsched->attachPort("load balancer", lbp);
+  return newsched;
+}
+
 void
 MPIScheduler::verifyChecksum()
 {
@@ -159,8 +168,9 @@ MPIScheduler::initiateTask( const ProcessorGroup  * pg,
 			    const VarLabel        * reloc_label )
 {
   long long communication_flops = 0;
-  long long execution_flops = 0, dummy;
+  long long execution_flops = 0;
 #ifdef USE_PERFEX_COUNTERS
+  long long dummy;
   start_counters(0, 19);
 #endif
   

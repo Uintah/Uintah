@@ -110,12 +110,12 @@ WARNING
     OnDemandDataWarehouse * dws_[2];
     DetailedTasks         * dts_;
 
+    Output* m_outPort;
   private:
 
     SchedulerCommon(const SchedulerCommon&);
     SchedulerCommon& operator=(const SchedulerCommon&);
 
-    Output* m_outPort;
     DOM_Document* m_graphDoc;
     DOM_Element* m_nodes;
     ofstream* memlogfile;
