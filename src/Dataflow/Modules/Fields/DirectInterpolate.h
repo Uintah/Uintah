@@ -135,6 +135,57 @@ DirectInterpVectorAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
 }
 
 
+class DirectInterpTensorAlgoBase : public DynamicAlgoBase
+{
+public:
+  virtual FieldHandle execute(FieldHandle f, TensorFieldInterface *sfi) = 0;
+
+  //! support the dynamically compiled algorithm concept
+  static CompileInfo *get_compile_info(const TypeDescription *field,
+				       const TypeDescription *element);
+};
+
+
+template <class Fld, class Loc>
+class DirectInterpTensorAlgo : public DirectInterpTensorAlgoBase
+{
+public:
+  //! virtual interface. 
+  virtual FieldHandle execute(FieldHandle f, TensorFieldInterface *sfi);
+};
+
+
+template <class Fld, class Loc>
+FieldHandle
+DirectInterpTensorAlgo<Fld, Loc>::execute(FieldHandle fldhandle,
+					  TensorFieldInterface *sfi)
+{
+  Fld *fld2 = dynamic_cast<Fld *>(fldhandle.get_rep());
+  if (!fld2->is_scalar()) { return 0; }
+  Fld *fld = fld2->clone();
+  typename Fld::mesh_handle_type mesh = fld->get_typed_mesh();
+
+  typename Loc::iterator itr, itr_end;
+  mesh->begin(itr);
+  mesh->end(itr_end);
+  while (itr != itr_end)
+  {
+    Point p;
+    mesh->get_center(p, *itr);
+
+    Tensor val;
+    if (sfi->interpolate(val, p))
+    {
+      fld->set_value(val, *itr);
+    }
+
+    ++itr;
+  }
+
+  FieldHandle ofh(fld);
+  return ofh;
+}
+
 
 } // end namespace SCIRun
 
