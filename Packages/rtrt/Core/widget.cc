@@ -344,7 +344,6 @@ TriWidget::adjustOpacity( float dx, float dy )
 void 
 TriWidget::manipulate( float x, float dx, float y, float dy )
 {
-  printf( "x = %g, y = %g\n", x, y );
   // printf( "In TriWidget::manipulate\n" );
   // the following block of if statements allow for continuous manipulation
   //  without conducting parameter checks every time (quicker)
