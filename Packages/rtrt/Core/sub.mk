@@ -93,7 +93,9 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/input_ppm.c \
 	$(SRCDIR)/write_ppm.c \
 	$(SRCDIR)/rgbe.c \
-	$(SRCDIR)/SunSky.cc
+	$(SRCDIR)/SunSky.cc \
+	$(SRCDIR)/SHLambertianMaterial.cc \
+	$(SRCDIR)/prefilter.cc
 	
 
 PSELIBS :=  \
