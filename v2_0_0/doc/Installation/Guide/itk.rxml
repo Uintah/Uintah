@@ -38,6 +38,9 @@ stylesheets.  Users may encapsulate additional filters by writing
 url="../../User/Guide/usersguide/srug8.html">&sr; Users Guide</ulink>
 for more information.</para>
 
+<para>&sr;'s <acronym>ITK</acronym> support depends on the
+presence of Java JDK 1.2.2 or later.</para>
+
 <note>
 <para>The &sr; <acronym>RPM</acronym> distribution does
 <emphasis>not</emphasis> include support for <acronym>ITK</acronym>.
@@ -57,18 +60,31 @@ site</ulink>.  <acronym>ITK</acronym> installation requires CMake, an
 open-source, cross-platform build tool.  CMake can be obtained from
 the <ulink url="http://www.cmake.org">CMake web site</ulink>.</para>
 
-<note>
+</section>
+
+<section>
 <title>CMake Special Instructions</title>
 
-<para>The values of CMake variables
-<varname>BUILD_SHARED_LIBS</varname> and
-<varname>ITK_USE_SYSTEM_PNG</varname> must be set to
-<userinput>ON</userinput>.  Command <command>ccmake</command> is used
-to set CMake variables.  <command>Ccmake</command>must be in
- advanced mode to change the value of
-<varname>ITK_USE_SYSTEM_PNG</varname>.</para>
+<para>CMake is a program that generates Makefiles that build ITK.
+CMake must be "configured" before it is run.  CMake's configuration
+variables determine how ITK will be built.  Command
+<command>ccmake</command> is used to configure variables that
+determine the type of ITK build.  In particular, the values of CMake
+variables <varname>ITK_USE_SYSTEM_PNG</varname> and
+<varname>BUILD_SHARED_LIBS</varname> must be explicitly set.  Note
+that <command>ccmake</command> must be run in "advanced" mode to set
+the value of <varname>ITK_USE_SYSTEM_PNG</varname>.</para>
 
-</note>
+
+<para>On all platforms the value of CMake variable
+<varname>ITK_USE_SYSTEM_PNG</varname> must be set 
+<userinput>ON</userinput>.</para>
+
+<para>On SGI and Linux, CMake variable
+<varname>BUILD_SHARED_LIBS</varname> must be set
+<userinput>ON</userinput>.  On OSX <varname>BUILD_SHARED_LIBS</varname>
+must be set <userinput>OFF</userinput></para>
+
 </section>
 
 <section>
