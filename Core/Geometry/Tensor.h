@@ -48,6 +48,7 @@ public:
   Tensor(int);
   Tensor(double);
   Tensor(const Array1<double> &);
+  Tensor(const vector<double> &);
   Tensor(const double *);
   Tensor(const double **);
   Tensor(const Vector&, const Vector&, const Vector&);
