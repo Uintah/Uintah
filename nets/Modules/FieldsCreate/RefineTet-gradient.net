@@ -247,8 +247,8 @@ $m9 initialize_ui
 
 # Set GUI variables for the SCIRun->FieldsData->TransformData Module
 set $m11-function {const double tmp = v.length();
-if (fabs(tmp) > 15.0) result = 2.0;
-else result = 0.0;
+if (fabs(tmp) > 15.0) result = 2;
+else result = 0;
 }
 set $m11-outputdatatype {char}
 

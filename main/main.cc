@@ -1,29 +1,29 @@
 /*
-   For more information, please see: http://software.sci.utah.edu
+  For more information, please see: http://software.sci.utah.edu
 
-   The MIT License
+  The MIT License
 
-   Copyright (c) 2004 Scientific Computing and Imaging Institute,
-   University of Utah.
+  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+  University of Utah.
 
-   License for the specific language governing rights and limitations under
-   Permission is hereby granted, free of charge, to any person obtaining a
-   copy of this software and associated documentation files (the "Software"),
-   to deal in the Software without restriction, including without limitation
-   the rights to use, copy, modify, merge, publish, distribute, sublicense,
-   and/or sell copies of the Software, and to permit persons to whom the
-   Software is furnished to do so, subject to the following conditions:
+  License for the specific language governing rights and limitations under
+  Permission is hereby granted, free of charge, to any person obtaining a
+  copy of this software and associated documentation files (the "Software"),
+  to deal in the Software without restriction, including without limitation
+  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+  and/or sell copies of the Software, and to permit persons to whom the
+  Software is furnished to do so, subject to the following conditions:
 
-   The above copyright notice and this permission notice shall be included
-   in all copies or substantial portions of the Software.
+  The above copyright notice and this permission notice shall be included
+  in all copies or substantial portions of the Software.
 
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-   DEALINGS IN THE SOFTWARE.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+  DEALINGS IN THE SOFTWARE.
 */
 
 
@@ -68,7 +68,7 @@
 #if defined(__APPLE__)
 #  include <Core/Datatypes/MacForceLoad.h>
    namespace SCIRun {
-      extern void macImportExportForceLoad();
+     extern void macImportExportForceLoad();
    }
 #endif
 
@@ -81,8 +81,8 @@ using std::cout;
 #endif
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma set woff 1209
-#pragma set woff 1424
+#  pragma set woff 1209
+#  pragma set woff 1424
 #endif
 
 
@@ -115,94 +115,94 @@ parse_args( int argc, char *argv[] )
   bool powerapp = false;
   int cnt = 1;
   while (cnt < argc)
-  {
-    string arg( argv[ cnt ] );
-    if( ( arg == "--version" ) || ( arg == "-version" )
-	|| ( arg == "-v" ) || ( arg == "--v" ) )
     {
-      cout << "Version: " << SCIRUN_VERSION << "\n";
-      exit( 0 );
-    }
-    else if ( ( arg == "--help" ) || ( arg == "-help" ) ||
-	      ( arg == "-h" ) ||  ( arg == "--h" ) )
-    {
-      usage();
-    }
-    else if ( ( arg == "--execute" ) || ( arg == "-execute" ) ||
-	      ( arg == "-e" ) ||  ( arg == "--e" ) )
-    {
-      sci_putenv("SCIRUN_EXECUTE_ON_STARTUP","1");
-    }
-    else if ( ( arg == "--eai" ) || ( arg == "-eai" ))
-    {
-      sci_putenv("SCIRUN_EXTERNAL_APPLICATION_INTERFACE","1");
-    }
-    else if ( ( arg == "--regression" ) || ( arg == "-regression" ) ||
-	      ( arg == "-r" ) ||  ( arg == "--r" ) )
-    {
-      sci_putenv("SCI_REGRESSION_TESTING","1");
-    }
-    else if ( arg == "--nosplash" )
-    {
-      sci_putenv("SCIRUN_NOSPLASH", "1");
-    }
-    else if ( ( arg == "--server" ) || ( arg == "-server" ) ||
-	      ( arg == "-s" ) ||  ( arg == "--s" ) )
-    {
-      int port;
-      if ((cnt+1 < argc) && string_to_int(argv[cnt+1], port)) {
-	if (port < 1024 || port > 65535) {
-	  cerr << "Server port must be in range 1024-65535\n";
-	  exit(0);
-	}
-	cnt++;
-      } else {
-	port = 0;
-      }
-		sci_putenv("SCIRUN_SERVER_PORT",to_string(port));
-    }    
-	else if ( ( arg == "--port" ) || ( arg == "-port" ) ||
-	      ( arg == "-p" ) ||  ( arg == "--p" ) )
-    {
-      int port;
-      if ((cnt+1 < argc) && string_to_int(argv[cnt+1], port)) {
-	if (port < 1024 || port > 65535) {
-	  cerr << "Server port must be in range 1024-65535\n";
-	  exit(0);
-	}
-	cnt++;
-      } else {
-	port = 0;
-      }
-      sci_putenv("SCIRUN_SERVICE_PORT",to_string(port));
-      sci_putenv("SCIRUN_EXTERNAL_APPLICATION_INTERFACE","1");
-    }   
-	else
-    {
-      struct stat buf;
-      if (stat(arg.c_str(),&buf) < 0)
-      {
-	std::cerr << "Couldn't find net file " << arg
-		  << ".\nNo such file or directory.  Exiting." << std::endl;
-	//exit(0);
-      }
+      string arg( argv[ cnt ] );
+      if( ( arg == "--version" ) || ( arg == "-version" )
+          || ( arg == "-v" ) || ( arg == "--v" ) )
+        {
+          cout << "Version: " << SCIRUN_VERSION << "\n";
+          exit( 0 );
+        }
+      else if ( ( arg == "--help" ) || ( arg == "-help" ) ||
+                ( arg == "-h" ) ||  ( arg == "--h" ) )
+        {
+          usage();
+        }
+      else if ( ( arg == "--execute" ) || ( arg == "-execute" ) ||
+                ( arg == "-e" ) ||  ( arg == "--e" ) )
+        {
+          sci_putenv("SCIRUN_EXECUTE_ON_STARTUP","1");
+        }
+      else if ( ( arg == "--eai" ) || ( arg == "-eai" ))
+        {
+          sci_putenv("SCIRUN_EXTERNAL_APPLICATION_INTERFACE","1");
+        }
+      else if ( ( arg == "--regression" ) || ( arg == "-regression" ) ||
+                ( arg == "-r" ) ||  ( arg == "--r" ) )
+        {
+          sci_putenv("SCI_REGRESSION_TESTING","1");
+        }
+      else if ( arg == "--nosplash" )
+        {
+          sci_putenv("SCIRUN_NOSPLASH", "1");
+        }
+      else if ( ( arg == "--server" ) || ( arg == "-server" ) ||
+                ( arg == "-s" ) ||  ( arg == "--s" ) )
+        {
+          int port;
+          if ((cnt+1 < argc) && string_to_int(argv[cnt+1], port)) {
+            if (port < 1024 || port > 65535) {
+              cerr << "Server port must be in range 1024-65535\n";
+              exit(0);
+            }
+            cnt++;
+          } else {
+            port = 0;
+          }
+          sci_putenv("SCIRUN_SERVER_PORT",to_string(port));
+        }    
+      else if ( ( arg == "--port" ) || ( arg == "-port" ) ||
+                ( arg == "-p" ) ||  ( arg == "--p" ) )
+        {
+          int port;
+          if ((cnt+1 < argc) && string_to_int(argv[cnt+1], port)) {
+            if (port < 1024 || port > 65535) {
+              cerr << "Server port must be in range 1024-65535\n";
+              exit(0);
+            }
+            cnt++;
+          } else {
+            port = 0;
+          }
+          sci_putenv("SCIRUN_SERVICE_PORT",to_string(port));
+          sci_putenv("SCIRUN_EXTERNAL_APPLICATION_INTERFACE","1");
+        }   
+      else
+        {
+          struct stat buf;
+          if (stat(arg.c_str(),&buf) < 0)
+            {
+              std::cerr << "Couldn't find net file " << arg
+                        << ".\nNo such file or directory.  Exiting." << std::endl;
+              exit(0);
+            }
 
-      if (found && !powerapp)
-      {
-	usage();
-      }
+          if (found && !powerapp)
+            {
+              usage();
+            }
 
-      // determine if it is a PowerApp
-      if(strstr(arg.c_str(),".app")) {
-	powerapp = true;
-	found = cnt;
-      }
-      else if(!powerapp) {
-	found = cnt;
-      }
+          // determine if it is a PowerApp
+          if(strstr(arg.c_str(),".app")) {
+            powerapp = true;
+            found = cnt;
+          }
+          else if(!powerapp) {
+            found = cnt;
+          }
+        }
+      cnt++;
     }
-    cnt++;
-  }
   return found;
 }
 
@@ -227,6 +227,56 @@ public:
 
 
 
+// show_licence_and_copy_sciunrc is not in Core/Util/Environment.h because it
+// depends on GuiInterface to present the user with the license dialog.
+void
+show_license_and_copy_scirunrc(GuiInterface *gui) {
+  const string tclresult = gui->eval("licenseDialog 1");
+  if (tclresult == "cancel") {
+    Thread::exitAll(1);
+  }
+  // check to make sure home directory is there
+  const char* HOME = sci_getenv("HOME");
+  const char* srcdir = sci_getenv("SCIRUN_SRCDIR");
+  const char* temp_rcfile_version = sci_getenv("SCIRUN_RCFILE_VERSION");
+  string SCIRUN_RCFILE_VERSION;
+
+  // If the .scirunrc file does not have a SCIRUN_RCFILE_VERSION variable...
+  if( temp_rcfile_version == NULL ) {
+    SCIRUN_RCFILE_VERSION = "bak";
+  } else {
+    SCIRUN_RCFILE_VERSION = temp_rcfile_version;
+  }
+
+  ASSERT(HOME);
+  ASSERT(srcdir);
+  if (!HOME) return;
+  // If the user accepted the license then create a .scirunrc for them
+  if (tclresult == "accept") {
+    string homerc = string(HOME)+"/.scirunrc";
+    string cmd;
+    if (gui->eval("validFile "+homerc) == "1") {
+      string backuprc = homerc + "." + SCIRUN_RCFILE_VERSION;
+      cmd = string("cp -f ")+homerc+" "+backuprc;
+      std::cout << "Backing up " << homerc << " to " << backuprc << std::endl;
+      if (sci_system(cmd.c_str())) {
+        std::cerr << "Error executing: " << cmd << std::endl;
+      }
+    }
+
+    cmd = string("cp -f ")+srcdir+string("/scirunrc ")+homerc;
+    std::cout << "Copying " << srcdir << "/scirunrc to " <<
+      homerc << "...\n";
+    if (sci_system(cmd.c_str())) {
+      std::cerr << "Error executing: " << cmd << std::endl;
+    } else { 
+      // if the scirunrc file was copied, then parse it
+      parse_scirunrc(homerc);
+    }
+  }
+}
+
+
 class TCLSocketRunner : public Runnable
 {
 private:
@@ -241,12 +291,12 @@ public:
     while (1) {
       buffer.append(transmitter_->getMessage());
       if (gui_->complete_command(buffer)) {
-	buffer = gui_->eval(buffer);
-	if (!buffer.empty()) buffer.append("\n");
-	transmitter_->putMessage(buffer+"scirun> ");
-	buffer.clear();
+        buffer = gui_->eval(buffer);
+        if (!buffer.empty()) buffer.append("\n");
+        transmitter_->putMessage(buffer+"scirun> ");
+        buffer.clear();
       } else {
-	transmitter_->putMessage("scirun>> ");
+        transmitter_->putMessage("scirun>> ");
       }
     }
   }
@@ -276,10 +326,10 @@ main(int argc, char *argv[], char **environment) {
   // Now split of a process for running external processes
   
   if (use_eai)
-  {
-    systemcallmanager_ = scinew SystemCallManager();
-    systemcallmanager_->create();
-  }
+    {
+      systemcallmanager_ = scinew SystemCallManager();
+      systemcallmanager_->create();
+    }
 
 #if defined(__APPLE__)  
   macImportExportForceLoad(); // Attempting to force load (and thus
@@ -289,7 +339,7 @@ main(int argc, char *argv[], char **environment) {
 
 
   if (use_eai)
-  {
+    {
       // Services start up... 
 
       // Create a database of all available services. The next piece of code
@@ -301,10 +351,10 @@ main(int argc, char *argv[], char **environment) {
       // and running the service on a different machine 
      
 
-      ServiceDBHandle servicedb = scinew ServiceDB;	
+      ServiceDBHandle servicedb = scinew ServiceDB;     
 
-      servicedb->loadpackages();	// load all services and find all makers
-      servicedb->activateall();		// activate all services
+      servicedb->loadpackages();        // load all services and find all makers
+      servicedb->activateall();         // activate all services
 
       
       // Services are started and created by the ServiceManager, which will be launched here
@@ -335,28 +385,28 @@ main(int argc, char *argv[], char **environment) {
       const char *serviceport_protocol = sci_getenv("SCIRUN_SERVICE_IPV6");
       std::string ipstr("");
       if (serviceport_protocol)
-      {
-        std::string protocol(serviceport_protocol);
-        if ((protocol=="YES")||(protocol== "Y")||(protocol=="yes")||(protocol=="y")||(protocol=="1")||(protocol=="true")) ipstr = "ipv6";
-      }
+        {
+          std::string protocol(serviceport_protocol);
+          if ((protocol=="YES")||(protocol== "Y")||(protocol=="yes")||(protocol=="y")||(protocol=="1")||(protocol=="true")) ipstr = "ipv6";
+        }
       
       if (serviceport_str)
-      {
-        // The protocol for conencting has been called "scirun"
-        // In the near future this should be replaced with "sciruns" for
-        // a secure version which will run over ssl. 
+        {
+          // The protocol for conencting has been called "scirun"
+          // In the near future this should be replaced with "sciruns" for
+          // a secure version which will run over ssl. 
         
-        // A log file is not necessary but handy for debugging purposes
-        ServiceLogHandle externallogfile = scinew ServiceLog("scirun_external_servicemanager.log"); 
+          // A log file is not necessary but handy for debugging purposes
+          ServiceLogHandle externallogfile = scinew ServiceLog("scirun_external_servicemanager.log"); 
         
-        IComAddress externaladdress("scirun","",serviceport_str,ipstr);
-        ServiceManager* external_service_manager = scinew ServiceManager(servicedb,externaladdress,externallogfile); 
-        Thread* t_ext = scinew Thread(external_service_manager,"external service manager",0,Thread::NotActivated);
-        t_ext->setStackSize(1024*20);
-        t_ext->activate(false);
-        t_ext->detach();
-      }
-  }
+          IComAddress externaladdress("scirun","",serviceport_str,ipstr);
+          ServiceManager* external_service_manager = scinew ServiceManager(servicedb,externaladdress,externallogfile); 
+          Thread* t_ext = scinew Thread(external_service_manager,"external service manager",0,Thread::NotActivated);
+          t_ext->setStackSize(1024*20);
+          t_ext->activate(false);
+          t_ext->detach();
+        }
+    }
   
   // Start up TCL...
   Network* net=new Network();
@@ -386,17 +436,35 @@ main(int argc, char *argv[], char **environment) {
     (new Thread(socket_runner, "TCL Socket"))->detach();
   }
 
+  // Determine if SCIRun is in regression testing mode
+  const bool doing_regressions = sci_getenv_p("SCI_REGRESSION_TESTING");
+
   // Create initial network
   Scheduler* sched_task=new Scheduler(net);
+  new NetworkEditor(net, gui);
+
+  // If the user doesnt have a .scirunrc file, provide them with a default one
+  if (!find_and_parse_scirunrc()) 
+    show_license_and_copy_scirunrc(gui);
+  else if (!doing_regressions) { 
+    const char *rcversion = sci_getenv("SCIRUN_RCFILE_VERSION");
+    const string ver = string(SCIRUN_VERSION)+"."+
+      string(SCIRUN_RCFILE_SUBVERSION);
+    // If the .scirunrc is an old version
+    if (!rcversion || 
+	gui->eval("compareVersions "+string(rcversion)+" "+ver) == "-1") {
+      // Ask them if they want to copy over a new one
+      if (gui->eval("promptUserToCopySCIRunrc") == "1") {
+        show_license_and_copy_scirunrc(gui);
+      }
+    }
+  }
 
   // Activate the scheduler.  Arguments and return values are meaningless
   Thread* t2=new Thread(sched_task, "Scheduler");
   t2->setDaemon(true);
   t2->detach();
   
-  // Determine if SCIRun is in regression testing mode
-  const bool doing_regressions = sci_getenv_p("SCI_REGRESSION_TESTING");
-
   // Test for shaders.
   SCIRun::ShaderProgramARB::init_shaders_supported();
 
@@ -420,7 +488,7 @@ main(int argc, char *argv[], char **environment) {
   Semaphore wait("main wait", 0);
   wait.down();
 #endif
-	
+        
   return 0;
 }
 
