@@ -72,6 +72,19 @@ WARNING
 	 //  Returns the bounding box surrounding the cylinder.
 	 virtual Box getBoundingBox() const;
 	 
+	 //////////
+	 //  Returns the volume of the box
+	 double volume() const;
+
+	 //////////
+	 //  Returns the length pf the smallest side
+	 double smallestSide() const;
+
+	 //////////
+	 //  Returns the thickness direction (direction
+	 //  of smallest side)
+	 unsigned int thicknessDirection() const;
+
       private:
 	 Box d_box;
 	 

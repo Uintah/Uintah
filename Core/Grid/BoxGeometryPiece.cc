@@ -7,6 +7,10 @@
 
 #include <string>
 
+#ifndef DMIN
+#define DMIN(a,b) (a < b ? a : b)
+#endif
+
 using namespace Uintah;
 using namespace SCIRun;
 
@@ -55,4 +59,34 @@ bool BoxGeometryPiece::inside(const Point& p) const
 Box BoxGeometryPiece::getBoundingBox() const
 {
   return d_box;
+}
+
+double 
+BoxGeometryPiece::volume() const
+{
+  double dx = (d_box.upper()).x() - (d_box.lower()).x();
+  double dy = (d_box.upper()).y() - (d_box.lower()).y();
+  double dz = (d_box.upper()).z() - (d_box.lower()).z();
+  return (dx*dy*dz);
+}
+
+double 
+BoxGeometryPiece::smallestSide() const
+{
+  double dx = (d_box.upper()).x() - (d_box.lower()).x();
+  double dy = (d_box.upper()).y() - (d_box.lower()).y();
+  double dz = (d_box.upper()).z() - (d_box.lower()).z();
+  return DMIN(DMIN(dx,dy),dz);
+}
+
+unsigned int 
+BoxGeometryPiece::thicknessDirection() const
+{
+  double dx = (d_box.upper()).x() - (d_box.lower()).x();
+  double dy = (d_box.upper()).y() - (d_box.lower()).y();
+  double dz = (d_box.upper()).z() - (d_box.lower()).z();
+  double min = DMIN(DMIN(dx,dy),dz);
+  if (dx == min) return 1;
+  else if (dy == min) return 2;
+  return 3;
 }
