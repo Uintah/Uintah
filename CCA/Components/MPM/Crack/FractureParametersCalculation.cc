@@ -355,26 +355,26 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                   int segs[2];
                   FindSegsFromNode(m,node,segs);
                   
-                  // Position at which to calculate J & K
+                  // Position where to calculate J & K
                   Point origin;
                   double x0,y0,z0;
-                  if(segs[L]>=0 && segs[R]>=0) { // for middle nodes
-                    origin=cx[m][node];
-                  } 
-                  else { // for edge nodes
-                    int nd1=-1,nd2=-1;
-                    if(segs[R]<0) { // for right-edge nodes
-                      nd1=cfSegNodes[m][2*segs[L]];
-                      nd2=cfSegNodes[m][2*segs[L]+1];
-                    }
-                    if(segs[L]<0) { // for left-edge nodes
-                      nd1=cfSegNodes[m][2*segs[R]];
-                      nd2=cfSegNodes[m][2*segs[R]+1];
-                    }
-                    Point pt1=cx[m][nd1];
-                    Point pt2=cx[m][nd2];
-                    origin=pt1+(pt2-pt1)/2.;
-                  }
+		  if((int)cfSegNodes[m].size()/2==1) { // only one segment
+		    Point pt1=cx[m][cfSegNodes[m][0]];
+		    Point pt2=cx[m][cfSegNodes[m][1]];
+		    origin=pt1+(pt2-pt1)/2.;
+		  }
+		  else { // multiple segments
+                    if(segs[R]<0) { // right edge node
+	              origin=cx[m][cfSegNodes[m][2*segs[L]+1]];
+	            }
+                    else if(segs[L]<0) { // left edge node
+                      origin=cx[m][cfSegNodes[m][2*segs[R]]];
+	            }
+                    else { // middle nodes
+	              origin=cx[m][node];
+	            }		    
+		  }	  
+		  // Coordinates of origin
                   x0=origin.x();  y0=origin.y();  z0=origin.z();
 
                   // Direction-cosines of local coordinates at the node
