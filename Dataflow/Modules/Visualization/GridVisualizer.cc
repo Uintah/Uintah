@@ -53,19 +53,17 @@
 #include <iostream>
 //#include <string>
 
-namespace Uintah {
-
 using namespace SCIRun;
 using namespace std;
+
+
+namespace Uintah {
 
 #define GRID_COLOR 1
 #define NODE_COLOR 2
   // should match the values in the tcl code
 #define NC_VAR 0
 #define CC_VAR 1
-#define XFC_VAR 2
-#define YFC_VAR 3
-#define ZFC_VAR 4
 
 struct ID {
   IntVector id;
@@ -80,6 +78,9 @@ public:
   virtual void widget_moved(int last);
   void tcl_command(TCLArgs& args, void* userdata);
   virtual void geom_pick(GeomPick* pick, void* userdata, GeomObj* picked);
+  virtual void geom_pick(GeomPick* pick, void* userdata);
+  virtual void geom_pick(GeomPick* pick, ViewWindow* window,
+			 int data, const BState& bs);
 
 private:
   void addBoxGeometry(GeomLines* edges, const Box& box);
@@ -89,8 +90,9 @@ private:
   void add_type(string &type_list,const TypeDescription *subtype);
   void setVars(GridP grid);
   void getnunv(int* nu, int* nv);
-  void graph(string varname, vector<string> mat_list,
-	     vector<string> type_list,string index);
+  void extract_data(string display_mode, string varname,
+		    vector<string> mat_list, vector<string> type_list,
+		    string index);
   bool is_cached(string name, string& data);
   void cache_value(string where, vector<double>& values, string &data);
   void cache_value(string where, vector<Vector>& values);
@@ -324,9 +326,11 @@ void GridVisualizer::setVars(GridP grid) {
   archive->queryVariables(names, types);
 
   string varNames("");
-  string matls("");
   string type_list("");
   const Patch* patch = *(grid->getLevel(0)->patchesBegin());
+
+  cerr << "Calling clearMat_list\n";
+  TCL::execute(id + " clearMat_list ");
   
   for(int i = 0; i< (int)names.size(); i++) {
     switch (types[i]->getType()) {
@@ -334,9 +338,8 @@ void GridVisualizer::setVars(GridP grid) {
       if (var_orientation.get() == NC_VAR) {
 	varNames += " ";
 	varNames += names[i];
-	ostringstream mat;
-	mat << " " << archive->queryMaterials(names[i], patch, time);
-	matls += mat.str();
+	cerr << "Calling appendMat_list\n";
+	TCL::execute(id + " appendMat_list " + archive->queryMaterials(names[i], patch, time).expandedString().c_str());
 	add_type(type_list,types[i]->getSubType());
       }
       break;
@@ -344,18 +347,18 @@ void GridVisualizer::setVars(GridP grid) {
       if (var_orientation.get() == CC_VAR) {
 	varNames += " ";
 	varNames += names[i];
-	ostringstream mat;
-	mat << " " << archive->queryMaterials(names[i], patch, time);
-	matls += mat.str();
+	cerr << "Calling appendMat_list\n";
+	TCL::execute(id + " appendMat_list " + archive->queryMaterials(names[i], patch, time).expandedString().c_str());
 	add_type(type_list,types[i]->getSubType());
       }
       break;
     }
+
+    
   }
 
   cerr << "varNames = " << varNames << endl;
   TCL::execute(id + " setVar_list " + varNames.c_str());
-  TCL::execute(id + " setMat_list " + matls.c_str());  
   TCL::execute(id + " setType_list " + type_list.c_str());  
 }
 
@@ -615,24 +618,26 @@ void GridVisualizer::tcl_command(TCLArgs& args, void* userdata)
     need_2d=3;
     want_to_execute();
   }
-  else if(args[1] == "graph") {
-    string varname(args[2]);
-    string index(args[3]);
+  else if(args[1] == "extract_data") {
+    int i = 2;
+    string displaymode(args[i++]);
+    string varname(args[i++]);
+    string index(args[i++]);
     int num_mat;
-    string_to_int(args[4], num_mat);
+    string_to_int(args[i++], num_mat);
     cerr << "Extracting " << num_mat << " materals:";
     vector< string > mat_list;
     vector< string > type_list;
-    for (int i = 5; i < 5+(num_mat*2); i++) {
-      string mat(args[i]);
+    for (int j = i; j < i+(num_mat*2); j++) {
+      string mat(args[j]);
       mat_list.push_back(mat);
-      i++;
-      string type(args[i]);
+      j++;
+      string type(args[j]);
       type_list.push_back(type);
     }
     cerr << endl;
     cerr << "Graphing " << varname << " with materials: " << vector_to_string(mat_list) << endl;
-    graph(varname,mat_list,type_list,index);
+    extract_data(displaymode,varname,mat_list,type_list,index);
   }
   else {
     Module::tcl_command(args, userdata);
@@ -751,15 +756,16 @@ string GridVisualizer::vector_to_string(vector< Matrix3 > data, string type) {
 
 string GridVisualizer::currentNode_str() {
   ostringstream ostr;
-  ostr << currentNode.level << "_";
-  ostr << currentNode.id.x()  << "_";
-  ostr << currentNode.id.y()  << "_";
-  ostr << currentNode.id.z();
+  ostr << "Level-" << currentNode.level << "-(";
+  ostr << currentNode.id.x()  << ",";
+  ostr << currentNode.id.y()  << ",";
+  ostr << currentNode.id.z() << ")";
   return ostr.str();
 }
 
-void GridVisualizer::graph(string varname, vector <string> mat_list,
-			   vector <string> type_list, string index) {
+void GridVisualizer::extract_data(string display_mode, string varname,
+				  vector <string> mat_list,
+				  vector <string> type_list, string index) {
 
   /*
     template<class T>
@@ -850,15 +856,17 @@ void GridVisualizer::graph(string varname, vector <string> mat_list,
   default:
     cerr<<"Unknown var type\n";
     }// else { Tensor,Other}
-  TCL::execute(id+" graph_data "+index.c_str()+" "+varname.c_str()+" "+
-	       name_list.c_str());
+  TCL::execute(id+" "+display_mode.c_str()+"_data "+index.c_str()+" "
+	       +varname.c_str()+" "+currentNode_str().c_str()+" "
+	       +name_list.c_str());
   
 }
 
 
 
 // if a pick event was received extract the id from the picked
-void GridVisualizer::geom_pick(GeomPick* pick, void* userdata, GeomObj* picked) {
+void GridVisualizer::geom_pick(GeomPick* /*pick*/, void* /*userdata*/,
+			       GeomObj* picked) {
 #if DEBUG
   cerr << "Caught pick event in GridVisualizer!\n";
   cerr << "this = " << this << ", pick = " << pick << endl;
@@ -867,7 +875,6 @@ void GridVisualizer::geom_pick(GeomPick* pick, void* userdata, GeomObj* picked) 
   IntVector id;
   int level;
   if ( picked->getId( id ) && picked->getId(level)) {
-
     cerr<<"Id = "<< id << " Level = " << level << endl;
     currentNode.id = id;
     index_l.set(level);
@@ -900,6 +907,15 @@ void GridVisualizer::geom_pick(GeomPick* pick, void* userdata, GeomObj* picked) 
   }
   else
     cerr<<"Not getting the correct data\n";
+}
+
+// this doesn't do anything.  They are only here to eliminate compiler warnings
+void GridVisualizer::geom_pick(GeomPick* /*pick*/, void* /*userdata*/) {
+}
+
+// this doesn't do anything.  They are only here to eliminate compiler warnings
+void GridVisualizer::geom_pick(GeomPick* /*pick*/, ViewWindow* /*window*/,
+			       int /*data*/, const BState& /*bs*/) {
 }
 
 } // End namespace Uintah
