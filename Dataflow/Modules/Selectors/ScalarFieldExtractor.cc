@@ -160,11 +160,8 @@ void ScalarFieldExtractor::execute()
   BBox box;
   level->getSpatialRange(box);
 
-  if( mesh_handle_.get_rep() == 0 ){
-    mesh_handle_ = scinew LatVolMesh(range.x(), range.y(),
-				    range.z(), box.min(),
-				    box.max());
-  }
+
+  cerr <<"Mesh size = "<<range<<endl;
 
   const TypeDescription* subtype = type->getSubType();
   string var(sVar.get());
@@ -172,6 +169,11 @@ void ScalarFieldExtractor::execute()
   if(var != ""){
     switch( type->getType() ) {
     case TypeDescription::NCVariable:
+      if( mesh_handle_.get_rep() == 0 ){
+	mesh_handle_ = scinew LatVolMesh(range.x(), range.y(),
+					 range.z(), box.min(),
+					 box.max());
+      }
       switch ( subtype->getType() ) {
       case TypeDescription::double_type:
 	{
@@ -214,6 +216,11 @@ void ScalarFieldExtractor::execute()
 	return;
       }
     case TypeDescription::CCVariable:
+      if( mesh_handle_.get_rep() == 0 ){
+	mesh_handle_ = scinew LatVolMesh(range.x(), range.y(),
+					 range.z(), box.min(),
+					 box.max());
+      }
       switch ( subtype->getType() ) {
       case TypeDescription::double_type:
 	{
@@ -258,6 +265,11 @@ void ScalarFieldExtractor::execute()
 	return;
       }
     case TypeDescription::SFCXVariable:
+      if( mesh_handle_.get_rep() == 0 ){
+	mesh_handle_ = scinew LatVolMesh(range.x(), range.y() - 1,
+					 range.z() - 1, box.min(),
+					 box.max());
+      }
       switch ( subtype->getType() ) {
       case TypeDescription::double_type:
 	{
@@ -305,6 +317,11 @@ void ScalarFieldExtractor::execute()
 	return;
       }
     case TypeDescription::SFCYVariable:
+	  if( mesh_handle_.get_rep() == 0 ){
+	    mesh_handle_ = scinew LatVolMesh(range.x()-1, range.y(),
+					     range.z()-1, box.min(),
+					     box.max());
+	  }
       switch ( subtype->getType() ) {
       case TypeDescription::double_type:
 	{
@@ -352,6 +369,11 @@ void ScalarFieldExtractor::execute()
 	return;
       }
     case TypeDescription::SFCZVariable:
+	  if( mesh_handle_.get_rep() == 0 ){
+	    mesh_handle_ = scinew LatVolMesh(range.x()-1, range.y()-1,
+					     range.z(), box.min(),
+					     box.max());
+	  }
       switch ( subtype->getType() ) {
       case TypeDescription::double_type:
 	{
