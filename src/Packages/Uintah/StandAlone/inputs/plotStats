@@ -36,7 +36,7 @@ grep delT $out | cut -d"=" -f5 | cut -d" " -f4 | cut -d"/" -f1 > .memUse3
 grep delT $out | cut -d"=" -f5 | cut -d" " -f4 | cut -d"/" -f2 > .memUse4
 paste -d "  " .elapsedTime .meanTime .physicalTime .delT .memUse1 .memUse2 .memUse3 .memUse4>& .data
 
-rm -f .elapsedTime .meanTime .physicalTime .delT .memUse
+rm -f .elapsedTime .meanTime .physicalTime .delT .memUse1 .memUse2 .memUse3  .memUse4 
 #__________________________________
 # generate the  plot script
 cat > gp << fin
