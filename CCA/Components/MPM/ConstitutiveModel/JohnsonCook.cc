@@ -60,13 +60,25 @@ JohnsonCook::~JohnsonCook()
 void JohnsonCook::addParticleState(std::vector<const VarLabel*>& from,
 				   std::vector<const VarLabel*>& to)
 {
+  // Instead of using the deformation gradient and a direct polar
+  // decomposition to get the left stretch and rotation, store 
+  // these in the data warehouse and update them before updating the
+  // stress (BB 11/14/02)
+  from.push_back(lb->pLeftStretchLabel);
+  from.push_back(lb->pRotationLabel);
   from.push_back(lb->pDeformationMeasureLabel);
+
   from.push_back(lb->pStressLabel);
+
   from.push_back(lb->pDeformRatePlasticLabel);
   from.push_back(lb->pPlasticStrainLabel);
 
+  to.push_back(lb->pLeftStretchLabel_preReloc);
+  to.push_back(lb->pRotationLabel_preReloc);
   to.push_back(lb->pDeformationMeasureLabel_preReloc);
+
   to.push_back(lb->pStressLabel_preReloc);
+
   to.push_back(lb->pDeformRatePlasticLabel_preReloc);
   to.push_back(lb->pPlasticStrainLabel_preReloc);
 }
@@ -81,17 +93,30 @@ void JohnsonCook::initializeCMData(const Patch* patch,
 
   ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
   ParticleVariable<Matrix3> pDeformGrad, pStress, pDeformRatePlastic;
+  ParticleVariable<Matrix3> pLeftStretch, pRotation;
   ParticleVariable<double> pPlasticStrain;
 
+  new_dw->allocateAndPut(pLeftStretch, lb->pLeftStretchLabel, pset);
+  new_dw->allocateAndPut(pRotation, lb->pRotationLabel, pset);
   new_dw->allocateAndPut(pDeformGrad, lb->pDeformationMeasureLabel, pset);
+
   new_dw->allocateAndPut(pStress, lb->pStressLabel, pset);
+
   new_dw->allocateAndPut(pDeformRatePlastic, lb->pDeformRatePlasticLabel, pset);
   new_dw->allocateAndPut(pPlasticStrain, lb->pPlasticStrainLabel, pset);
 
   for(ParticleSubset::iterator iter = pset->begin();iter != pset->end(); iter++){
+
+    // To fix : For a material that is initially stressed we need to
+    // modify the leftStretch and the stress tensors to comply with the
+    // initial stress state
+    pLeftStretch[*iter] = one;
+    pRotation[*iter] = one;
     pDeformGrad[*iter] = one;
+
     pStress[*iter] = zero;
-    pDeformRatePlastic[*iter] = one;
+
+    pDeformRatePlastic[*iter] = zero;
     pPlasticStrain[*iter] = 0.0;
   }
 
@@ -151,42 +176,34 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
 				 DataWarehouse* new_dw)
 {
   // General stuff
-  Matrix3 one;   one.Identity();
-  Matrix3 tensorF; // Deformation gradient
-  Matrix3 tensorB; // Left Cauchy-Green deformation
-  Matrix3 tensorV; // Left Cauchy-Green stretch
-  Matrix3 tensorR; // Rotation 
+  Matrix3 one;   one.Identity(); Matrix3 zero(0.0);
   Matrix3 tensorL; // Velocity gradient
   Matrix3 tensorD; // Rate of deformation
   Matrix3 tensorW; // Spin 
-  Matrix3 tensorOmega; // Rate of rotation
-  Matrix3 oneMinusOmega;
-  Matrix3 oneMinusOmegaInv;
-  Matrix3 onePlusOmega;
-  Matrix3 tensorV_new; // Updated Cauchy-Green stretch
-  Matrix3 tensorR_new; // Updated rotation 
-  Matrix3 tensorF_new; // Updated deformation gradient 
-  Matrix3 tensorE_new;
-  Matrix3 tensorFInv;
-  Matrix3 tensorD_new;
-  Matrix3 tensorEta_new;
-  Matrix3 tensorDp;
-  Matrix3 tensorEtap;
+  Matrix3 tensorF; // Deformation gradient
+  Matrix3 tensorV; // Left Cauchy-Green stretch
+  Matrix3 tensorR; // Rotation 
   Matrix3 tensorSig; // The Cauchy stress
-  Matrix3 trialS;
-  Matrix3 tensorSig_new;
-  Matrix3 tensorDe_new;
-  Matrix3 tensorEtae_new;
+  Matrix3 tensorDp; // Rate of plastic deformation
+  Matrix3 tensorDe; // Rate of elastic deformation
+  Matrix3 tensorEta; // Deviatoric part of tensor D
+  Matrix3 tensorEtap; // Deviatoric part of tensor Dp
+  Matrix3 tensorS; // Devaitoric part of tensor Sig
+  Matrix3 tensorF_new; // Deformation gradient
   double equivStress = 0.0;
   double plasticStrainRate = 0.0;
   double plasticStrain = 0.0;
   double temperature = 0.0;
   double flowStress = 0.0;
-  double bulk = 0.0;
-  double shear = 0.0;
-  Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
   double totalStrainEnergy = 0.0;
   double tolerance = 1.0e-8;
+  Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
+
+  double bulk  = d_initialData.Bulk;
+  double shear = d_initialData.Shear;
+  double lambda = bulk - (2.0/3.0)*shear;
+  double sqrtTwo = sqrt(2.0);
+  double sqrtThree = sqrt(3.0);
 
   // Loop thru patches
   for(int p=0;p<patches->size();p++){
@@ -200,40 +217,43 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
     int dwi = matl->getDWIndex();
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
-    // Get the deformation gradient (F) for all particles
-    constParticleVariable<Matrix3> pDeformGrad;
+    // Get the deformation gradient (F), left stretch (V) and rotation (R)
+    // Note : The deformation gradient from the old datawarehouse is no
+    // longer used, but it is updated for possible use elsewhere
+    constParticleVariable<Matrix3> pLeftStretch, pRotation, pDeformGrad;
+    old_dw->get(pLeftStretch, lb->pLeftStretchLabel, pset);
+    old_dw->get(pRotation, lb->pRotationLabel, pset);
     old_dw->get(pDeformGrad, lb->pDeformationMeasureLabel, pset);
 
     // Get the particle location, particle size, particle mass, particle volume
     constParticleVariable<Point> px;
-    old_dw->get(px, lb->pXLabel, pset);
     constParticleVariable<Vector> psize;
+    constParticleVariable<double> pMass, pVolume;
+
+    old_dw->get(px, lb->pXLabel, pset);
     if(d_8or27==27) old_dw->get(psize, lb->pSizeLabel, pset);
-    constParticleVariable<double> pMass;
     old_dw->get(pMass, lb->pMassLabel, pset);
-    constParticleVariable<double> pVolume;
     old_dw->get(pVolume, lb->pVolumeLabel, pset);
 
     // Get the velocity from the grid and particle velocity
-    constNCVariable<Vector> gVelocity;
-    new_dw->get(gVelocity, lb->gVelocityLabel, dwi, patch, Ghost::AroundCells, NGN);
     constParticleVariable<Vector> pVelocity;
+    constNCVariable<Vector> gVelocity;
+
     old_dw->get(pVelocity, lb->pVelocityLabel, pset);
+    new_dw->get(gVelocity, lb->gVelocityLabel, dwi, patch, Ghost::AroundCells, NGN);
 
     // Get the particle stress
-    constParticleVariable<Matrix3> pStress;
-    old_dw->get(pStress, lb->pStressLabel, pset);
-
     // Get the plastic part of rate of deformation
-    constParticleVariable<Matrix3> pDeformRatePlastic;
-    old_dw->get(pDeformRatePlastic, lb->pDeformRatePlasticLabel, pset);
-
     // Get the plastic strain
-    constParticleVariable<double> pPlasticStrain;
-    old_dw->get(pPlasticStrain, lb->pPlasticStrainLabel, pset);
-
     // Get the particle temperature
+    constParticleVariable<Matrix3> pStress;
+    constParticleVariable<Matrix3> pDeformRatePlastic;
+    constParticleVariable<double> pPlasticStrain;
     constParticleVariable<double> pTemperature;
+
+    old_dw->get(pStress, lb->pStressLabel, pset);
+    old_dw->get(pDeformRatePlastic, lb->pDeformRatePlasticLabel, pset);
+    old_dw->get(pPlasticStrain, lb->pPlasticStrainLabel, pset);
     old_dw->get(pTemperature, lb->pTemperatureLabel, pset);
     
     // Get the time increment (delT)
@@ -241,184 +261,186 @@ JohnsonCook::computeStressTensor(const PatchSubset* patches,
     old_dw->get(delT, lb->delTLabel);
 
     // Create and allocate arrays for storing the updated information
-    ParticleVariable<Matrix3> pDeformGrad_new;
-    new_dw->allocateAndPut(pDeformGrad_new, 
-                           lb->pDeformationMeasureLabel_preReloc, pset);
+    ParticleVariable<Matrix3> pLeftStretch_new, pRotation_new, pDeformGrad_new;
+
     ParticleVariable<Matrix3> pStress_new;
-    new_dw->allocateAndPut(pStress_new, 
-                           lb->pStressLabel_preReloc, pset);
+
     ParticleVariable<Matrix3> pDeformRatePlastic_new;
-    new_dw->allocateAndPut(pDeformRatePlastic_new, 
-                           lb->pDeformRatePlasticLabel_preReloc, pset);
     ParticleVariable<double> pPlasticStrain_new;
-    new_dw->allocateAndPut(pPlasticStrain_new, 
-                           lb->pPlasticStrainLabel_preReloc, pset);
     ParticleVariable<double> pVolume_deformed;
-    new_dw->allocateAndPut(pVolume_deformed, 
-                           lb->pVolumeDeformedLabel, pset);
+
+    new_dw->allocateAndPut(pLeftStretch_new, lb->pLeftStretchLabel_preReloc, pset);
+    new_dw->allocateAndPut(pRotation_new, lb->pRotationLabel_preReloc, pset);
+    new_dw->allocateAndPut(pDeformGrad_new, lb->pDeformationMeasureLabel_preReloc, pset);
+    new_dw->allocateAndPut(pStress_new, lb->pStressLabel_preReloc, pset);
+    new_dw->allocateAndPut(pDeformRatePlastic_new, lb->pDeformRatePlasticLabel_preReloc, pset);
+    new_dw->allocateAndPut(pPlasticStrain_new, lb->pPlasticStrainLabel_preReloc, pset);
+    new_dw->allocateAndPut(pVolume_deformed, lb->pVolumeDeformedLabel, pset);
 
     // Loop thru particles
     for(ParticleSubset::iterator iter = pset->begin(); iter != pset->end(); iter++){
       particleIndex idx = *iter;
 
-      // Calculate the polar decomposition of F into the left stretch (V)
-      // and the rotation (R)
-      tensorF = pDeformGrad[idx]; 
-      polarDecomposition(tensorF, tensorB, tensorV, tensorR, tolerance, LEFT_POLAR);
-      
       // Calculate the velocity gradient (L) from the grid velocity
-      if(d_8or27==27) 
-        tensorL = computeVelocityGradient(patch, oodx, 
-                                                px[idx], psize[idx], gVelocity);
-      else
-        tensorL = computeVelocityGradient(patch, oodx, 
-                                                px[idx], 0, gVelocity);
+      if(d_8or27==27) tensorL = computeVelocityGradient(patch, oodx, px[idx], psize[idx], gVelocity);
+      else tensorL = computeVelocityGradient(patch, oodx, px[idx], gVelocity);
 
       // Calculate rate of deformation tensor (D) and spin tensor (W)
       tensorD = (tensorL + tensorL.Transpose())*0.5;
       tensorW = (tensorL - tensorL.Transpose())*0.5;
 
-      // Calculate rate of rotation tensor (Omega)
-      tensorOmega = computeRateofRotation(tensorV, tensorD, tensorW);
+      // Calculate the incremental update of the left stretch (V) and the rotation (R)
+      tensorV = pLeftStretch[idx];
+      tensorR = pRotation[idx];
+      computeUpdatedVR(delT, tensorD, tensorW, tensorV, tensorR);
+      tensorF_new = tensorV*tensorR;
 
-      // Update the rotation tensor (R)
-      oneMinusOmega = one - tensorOmega*(0.5*delT);
-      oneMinusOmegaInv = oneMinusOmega.Inverse();
-      onePlusOmega = one + tensorOmega*(0.5*delT);
-      tensorR_new = (oneMinusOmegaInv*onePlusOmega)*tensorR;
-
-      // Check the ortogonality of R
-      if (!tensorR_new.Orthogonal()) {
-         // Do something here that restores orthogonality
-      }
-
-      // Update the left Cauchy-Green stretch tensor (V)
-      tensorV_new = tensorV + (tensorL*tensorV - tensorV*tensorOmega)*delT;
-
-      // Update the deformation gradient
-      tensorF_new = tensorV_new*tensorR_new; 
+      // Update the kinematic variables
+      pLeftStretch_new[idx] = tensorV;
+      pRotation_new[idx] = tensorR;
       pDeformGrad_new[idx] = tensorF_new;
+      cout << "JC : R = \n" << tensorR << "\n";
 
-      // Calculate the Green-Lagrange strain tensor (E)
-      tensorE_new = ((tensorF_new.Transpose())*tensorF_new - one)*0.5;
+      // Compute the deformation gradient increment 
+      // get the volumetric part of the deformation
+      Matrix3 deformationGradientInc = tensorF_new - tensorF;
+      double Jinc = deformationGradientInc.Determinant();
+      pVolume_deformed[idx]=Jinc*pVolume[idx];
 
-      // Calculate the new rate of deformation tensor
-      // and Rotate the rate of deformation tensor to the material configuration
-      tensorFInv = tensorF_new.Inverse();
-      tensorD_new = ((tensorFInv.Transpose())*tensorE_new)*tensorFInv;
-      tensorD_new = (tensorR*tensorD_new)*tensorR.Transpose();
-      tensorEta_new = tensorD_new - one*(1.0/3.0*tensorD_new.Trace());
+      // Rotate the total rate of deformation tensor,
+      // the plastic rate of deformation tensor, and the Cauchy stress
+      // back to the material configuration and calculate their
+      // deviatoric parts
+      tensorD = (tensorR.Transpose())*(tensorD*tensorR);
+      tensorEta = tensorD - one*(1.0/3.0*tensorD.Trace());
 
-      // Get the plastic part of the rate of deformation tensor (Dp)
-      // and Rotate to material frame
       tensorDp = pDeformRatePlastic[idx];
-      tensorDp = (tensorR*tensorDp)*(tensorR.Transpose());
+      tensorDp = (tensorR.Transpose())*(tensorDp*tensorR);
       tensorEtap = tensorDp - one*(1.0/3.0*tensorDp.Trace());
 
-      // Rotate the particle Cauchy stress to the material configuration
-      // and calculate the deviatoric stress
       tensorSig = pStress[idx];
-      tensorSig = (tensorR*tensorSig)*tensorR.Transpose();
+      tensorSig = (tensorR.Transpose())*(tensorSig*tensorR);
+      tensorS = tensorSig - one*(1.0/3.0*tensorSig.Trace());
+      Matrix3 tensorHy = tensorSig - tensorS;
 
-      // Calculate the trial elastic stress
-      bulk  = d_initialData.Bulk;
-      shear = d_initialData.Shear;
-      trialS = (tensorEta_new - tensorEtap)*2.0*shear;
+      // Calculate the elastic part of the rate of deformation
+      tensorDe = tensorD - tensorDp;
 
-      // Now that the stress and rate of deformation are available, find if
-      // the yield stress has been exceeded
-      // (** WARNING ** For now just uses the von Mises J2 yield condition)
+      // Integrate the stress rate equation to get a elastic trial stress
+      Matrix3 trialS = tensorSig + (one*(tensorDe.Trace()*lambda) + tensorDe*(2.0*shear))*delT;
 
-      // Calculate the J2 equivalent stress
-      equivStress = sqrt(1.5*trialS.NormSquared());
+      // To determine if the stress is above or below yield used a von Mises yield
+      // criterion 
+      // Assumption: Material yields, on average, like a von Mises solid
 
-      // Calculate the flow stress
+      // Calculate the square of the flow stress
       // from the plastic strain rate, the plastic strain and  
       // the particle temperature
       plasticStrainRate = sqrt(2.0/3.0*tensorEtap.NormSquared());
       plasticStrain = pPlasticStrain[idx];
       temperature = pTemperature[idx];
-      flowStress = evaluateFlowStress(plasticStrain, plasticStrainRate,
-                                             temperature);
+      flowStress = evaluateFlowStress(plasticStrain, plasticStrainRate, temperature);
+      flowStress *= flowStress;
 
-      cout << "Equivalent Stress = " << equivStress 
-           << " Flow Stress = " << flowStress << "\n";
+      // Calculate the J2 equivalent stress (assuming isotropic yield surface)
+      equivStress = (trialS.NormSquared())*1.5;
+
+      cout << "Equivalent Stress = " << sqrt(equivStress) 
+           << " Flow Stress = " << sqrt(flowStress) << "\n";
       if (flowStress > equivStress) {
 
-        // For the elastic region just do a forward Euler integration
-        // of the Hypoelastic constitutive equation to get the updated stress
-        tensorDe_new = tensorD_new - tensorDp;
-        tensorEtae_new = tensorDe_new - one*(1.0/3.0*tensorDe_new.Trace());
-        tensorSig_new = tensorSig + (tensorEtae_new*(2.0*shear) + 
-                              one*(bulk*tensorDe_new.Trace()))*delT;
+        // For the elastic region : the updated stress is the trial stress
+        tensorSig = trialS;
 
-        // Rotate the stress and deformation rate back to the undeformed coordinates
-        tensorDp = tensorR.Transpose()*(tensorDp*tensorR.Transpose());
-        tensorSig_new = tensorR.Transpose()*(tensorSig_new*tensorR.Transpose());
+        // Compute the strain energy for the particles
+        double pStrainEnergy = (tensorD(1,1)*tensorSig(1,1) +
+	   tensorD(2,2)*tensorSig(2,2) + tensorD(3,3)*tensorSig(3,3) +
+	   2.0*(tensorD(1,2)*tensorSig(1,2) + 
+           tensorD(1,3)*tensorSig(1,3) + tensorD(2,3)*tensorSig(2,3)))*
+           pVolume_deformed[idx]*delT;
+        totalStrainEnergy += pStrainEnergy;		   
+
+        // Rotate the stress rate back to the laboratory coordinates
+        // to get the "true" Cauchy stress
+        tensorSig = (tensorR*tensorSig)*(tensorR.Transpose());
 
         // Save the updated data
-        pDeformRatePlastic_new[idx] = tensorDp;
-        pStress_new[idx] = tensorSig_new;
+        pDeformRatePlastic_new[idx] = zero;
+        pStress_new[idx] = tensorSig;
         pPlasticStrain_new[idx] = plasticStrain;
 
       } else {
 
-        // Calculate the tensor u
-        double scalarSijxSij = trialS.NormSquared();
-        Matrix3 tensorU;
-        tensorU = trialS*(sqrt(3.0/scalarSijxSij));
+        // Using the algorithm from Zocher, Maudlin, Chen, Flower-Maudlin
+        // European Congress on Computational Methods in Applied Sciences and Engineering
+        // September 11-14, 2000.
+ 
+        // Basic assumption is that all strain rate is plastic strain rate
 
-        // Do the double contractions of the second order tensors
-        double scalarSijxEtaij = 0.0;
-        double scalarSijxUij = 0.0;
-        for (int ii = 1; ii < 4; ++ii) {
-          for (int jj = 1; jj < 4; ++jj) {
-	    scalarSijxEtaij += (trialS(ii,jj)*tensorEtap(ii,jj));
-	    scalarSijxUij += (trialS(ii,jj)*tensorU(ii,jj));
-          }
-        }
+        // Calculate the tensor u (at start of time interval)
+        double sqrtSxS = tensorS.Norm();
+        Matrix3 tensorU = tensorS*(sqrtThree/sqrtSxS);
 
-        // Calculate the flow rate scalar (gammaDot)
-        double gammaDot = scalarSijxEtaij/scalarSijxUij;
-        double delGamma = gammaDot*delT;
-         
-        // Update the plastic rate of deformation
-        Matrix3 tensorDp_new = tensorDp + tensorU*delGamma;
+        // Calculate cplus and initial values of dstar, gammadot and theta
+        double cplus = tensorU.NormSquared(); double sqrtcplus = sqrt(cplus);
+        double dstar = tensorU.Contract(tensorEta);
+        double gammadotplus = dstar/cplus;
+        double theta = (dstar - cplus*gammadotplus)/dstar;
+
+        // Calculate u_eta and u_q
+        double sqrtEtaxEta = tensorEta.Norm();
+        Matrix3 tensorU_eta = tensorEta/sqrtEtaxEta;
+        Matrix3 tensorU_q = tensorS/sqrtSxS;
+
+        // Calculate new dstar
+	double dstar_old = 0.0; 
+	double theta_old = 0.0; 
+        do {
+	  dstar_old = dstar; 
+	  theta_old = theta; 
+	  Matrix3 temp = (tensorU_q+tensorU_eta)*(0.5*theta) + tensorU_eta*(1.0-theta);
+	  dstar = (tensorU_eta.Contract(temp))*sqrtcplus;
+	  theta = (dstar - cplus*gammadotplus)/dstar;
+        } while (fabs(theta - theta_old) > tolerance || fabs(dstar - dstar_old) > tolerance);
+
+        // Calculate sig(T+delT)
+        plasticStrainRate = (sqrtTwo*sqrtEtaxEta)/sqrtThree;
+        plasticStrain += plasticStrainRate*delT;
+        double sig = evaluateFlowStress(plasticStrain, plasticStrainRate, temperature);
+
+        // Calculate delGammaEr
+        double delGammaEr =  (sqrtTwo*sig - sqrtThree*sqrtSxS)/(2.0*shear*cplus);
+
+        // Calculate delGamma
+        double delGamma = dstar/cplus*delT - delGammaEr;
+
+        // Calculate Stilde
+        double denom = 1.0 + (3.0*sqrtTwo*shear*delGamma)/sig;
+        Matrix3 Stilde = (tensorS + tensorEta*(2.0*shear*delT))/denom;
         
-        // Update the plastic strain rate
-        double plasticStrainRate_new = sqrt(2.0/3.0*tensorDp_new.NormSquared());
+        // Do radial return adjustment
+        tensorS = Stilde*(sig*sqrtTwo/(sqrtThree*sqrtSxS));
 
-        // Update the plastic strain
-        double plasticStrain_new = plasticStrain + plasticStrainRate_new*delT;
+        // Update the total stress tensor
+        tensorSig = tensorS + tensorHy;
 
-        // Update the stress (explicit)
-        tensorSig_new = one*bulk*tensorD_new.Trace() + trialS -
-				tensorU*2.0*shear*delGamma;
+        // Compute the strain energy for the particles
+        double pStrainEnergy = (tensorD(1,1)*tensorSig(1,1) +
+	   tensorD(2,2)*tensorSig(2,2) + tensorD(3,3)*tensorSig(3,3) +
+	   2.0*(tensorD(1,2)*tensorSig(1,2) + 
+           tensorD(1,3)*tensorSig(1,3) + tensorD(2,3)*tensorSig(2,3)))*
+           pVolume_deformed[idx]*delT;
+        totalStrainEnergy += pStrainEnergy;		   
 
-        // Rotate the stress and deformation rate back to the undeformed coordinates
-        tensorDp_new = tensorR.Transpose()*(tensorDp_new*tensorR.Transpose());
-        tensorSig_new = tensorR.Transpose()*(tensorSig_new*tensorR.Transpose());
+        // Rotate the stress and deformation rate back to the laboratory coordinates
+        tensorEta = (tensorR*tensorEta)*(tensorR.Transpose());
+        tensorSig = (tensorR*tensorSig)*(tensorR.Transpose());
 
         // Save the new data
-        pDeformRatePlastic_new[idx] = tensorDp_new;
-        pStress_new[idx] = tensorSig_new;
-        pPlasticStrain_new[idx] = plasticStrain_new;
+        pDeformRatePlastic_new[idx] = tensorEta;
+        pStress_new[idx] = tensorSig;
+        pPlasticStrain_new[idx] = plasticStrain;
       }
-
-      // Compute the deformation gradient increment 
-      Matrix3 deformationGradientInc = tensorF_new - tensorF;
-      double Jinc = deformationGradientInc.Determinant();
-
-      // get the volumetric part of the deformation
-      pVolume_deformed[idx]=Jinc*pVolume[idx];
-
-      // Compute the strain energy for the particles
-      double pStrainEnergy = (tensorD_new(1,1)*tensorSig_new(1,1) +
-	 tensorD_new(2,2)*tensorSig_new(2,2) + tensorD_new(3,3)*tensorSig_new(3,3) +
-	 2.0*(tensorD_new(1,2)*tensorSig_new(1,2) + 
-         tensorD_new(1,3)*tensorSig_new(1,3) + tensorD_new(2,3)*tensorSig_new(2,3)))*
-         pVolume_deformed[idx]*delT;
-      totalStrainEnergy += pStrainEnergy;		   
 
       // Compute wave speed at each particle, store the maximum
       Vector pVel = pVelocity[idx];
@@ -483,12 +505,7 @@ JohnsonCook::computeVelocityGradient(const Patch* patch,
   IntVector ni[MAX_BASIS];
   Vector d_S[MAX_BASIS];
 
-  if(d_8or27==8){
-    patch->findCellAndShapeDerivatives(px, ni, d_S);
-  }
-  else if(d_8or27==27){
-    patch->findCellAndShapeDerivatives27(px, ni, d_S,psize);
-  }
+  patch->findCellAndShapeDerivatives27(px, ni, d_S,psize);
 
   for(int k = 0; k < d_8or27; k++) {
     const Vector& gvel = gVelocity[ni[k]];
@@ -499,6 +516,64 @@ JohnsonCook::computeVelocityGradient(const Patch* patch,
     }
   }
   return velGrad;
+}
+
+Matrix3
+JohnsonCook::computeVelocityGradient(const Patch* patch,
+                                     const double* oodx, 
+                                     const Point& px, 
+                                     constNCVariable<Vector>& gVelocity) 
+{
+  // Initialize
+  Matrix3 velGrad(0.0);
+
+  // Get the node indices that surround the cell
+  IntVector ni[MAX_BASIS];
+  Vector d_S[MAX_BASIS];
+
+  patch->findCellAndShapeDerivatives(px, ni, d_S);
+
+  for(int k = 0; k < d_8or27; k++) {
+    const Vector& gvel = gVelocity[ni[k]];
+    for (int j = 0; j<3; j++){
+      for (int i = 0; i<3; i++) {
+	velGrad(i+1,j+1) += gvel[i] * d_S[k][j] * oodx[j];
+      }
+    }
+  }
+  return velGrad;
+}
+
+void
+JohnsonCook::computeUpdatedVR(const double& delT,
+                              const Matrix3& DD, 
+                              const Matrix3& WW,
+                              Matrix3& VV, 
+                              Matrix3& RR)  
+{
+  // Note:  The incremental polar decomposition algorithm is from
+  // Flanagan and Taylor, 1987, Computer Methods in Applied Mechanics and Engineering,
+  // v. 62, p.315.
+
+  // Set up identity matrix
+  Matrix3 one; one.Identity();
+
+  // Calculate rate of rotation tensor (Omega)
+  Matrix3 Omega = computeRateofRotation(VV, DD, WW);
+
+  // Update the rotation tensor (R)
+  Matrix3 oneMinusOmega = one - Omega*(0.5*delT);
+  Matrix3 oneMinusOmegaInv = oneMinusOmega.Inverse();
+  Matrix3 onePlusOmega = one + Omega*(0.5*delT);
+  RR = RR*(oneMinusOmegaInv*onePlusOmega);
+
+  // Check the ortogonality of R
+  if (!RR.Orthogonal()) {
+    // Do something here that restores orthogonality
+  }
+
+  // Update the left Cauchy-Green stretch tensor (V)
+  VV += ((DD+WW)*VV - VV*Omega)*delT;
 }
 
 Matrix3 
@@ -560,16 +635,14 @@ JohnsonCook::evaluateFlowStress(double& ep,
                                 double& epdot,
                                 double& T)
 {
-  double A  = d_initialData.A;
-  double B  = d_initialData.B;
-  double C  = d_initialData.C;
-  double n  = d_initialData.n;
-  double m  = d_initialData.m;
-  double Tr  = d_initialData.TRoom;
-  double Tm  = d_initialData.TMelt;
-  double strainPart = A + B*pow(ep,n);
-  double strainRatePart = 1 + C*log(epdot);
-  double tempPart = 1 - pow((T-Tr)/(Tm-Tr),m);
+  double strainPart = d_initialData.A + d_initialData.B*pow(ep,d_initialData.n);
+  double strainRatePart = 1.0;
+  if (epdot < 1.0) 
+    strainRatePart = pow((1.0 + epdot),d_initialData.C);
+  else
+    strainRatePart = 1 + d_initialData.C*log(epdot);
+  double tempPart = 1 - pow((T-d_initialData.TRoom)/
+                   (d_initialData.TMelt-d_initialData.TRoom),d_initialData.m);
   return (strainPart*strainRatePart*tempPart);
 }
 
