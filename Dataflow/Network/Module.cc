@@ -298,9 +298,46 @@ void Module::add_oport(OPort* port)
     reconfigure_oports();
 }
 
-void Module::remove_iport(int)
+void Module::remove_iport(int which)
 {
-    NOT_FINISHED("Module::remove_iport");
+  // remove the indicated port, then
+  // collapse the remaining ports together
+  int loop1,loop2;
+  clString omod,imod,ip,op;
+  Connection *conn = 0;
+
+  // remove (and collapse)
+  iports.remove(which);  
+
+  // rename the collapsed ports and their connections
+  // to reflect the positions they collapsed to.
+  for (loop1=which;loop1<iports.size();loop1++) {
+    iports[loop1]->set_which_port(iports[loop1]->get_which_port()-1);
+    clString newname = to_string(iports[loop1]->get_which_port());
+    iports[loop1]->set_portname(newname);
+    for (loop2=0;loop2<iports[loop1]->nconnections();loop2++) {
+      conn = iports[loop1]->connection(loop2);
+      omod = conn->oport->get_module()->id;
+      op = to_string(conn->oport->get_which_port());
+      imod = conn->iport->get_module()->id;
+      ip = to_string(conn->iport->get_which_port());
+      iports[loop1]->connection(loop2)->id = omod+"_p"+op+"_to_"+imod+"_p"+ip;
+      clString bob(clString("global netedit_canvas;"
+			    "$netedit_canvas itemconfigure ")+
+		   omod+"_p"+op+"_to_"+imod+"_p"+to_string(loop1+1)+
+		   " -tags "+iports[loop1]->connection(loop2)->id);
+      TCL::execute(bob);
+      bob = clString("global netedit_canvas;"
+		     "$netedit_canvas bind "+
+		     iports[loop1]->connection(loop2)->id+
+		     " <ButtonPress-3> "
+		     "\"destroyConnection "+
+		     iports[loop1]->connection(loop2)->id+
+		     " "+omod+" "+imod+"\"");
+    }
+  }
+
+  reconfigure_iports();
 }
 
 void Module::remove_oport(int)

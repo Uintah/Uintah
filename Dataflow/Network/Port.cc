@@ -173,6 +173,11 @@ clString Port::get_typename()
     return type_name;
 }
 
+void Port::set_portname(clString& newname)
+{
+  portname = newname;
+}
+
 clString Port::get_portname()
 {
     return portname;
