@@ -3153,15 +3153,12 @@ ViewSlices::do_paint(SliceWindow &window) {
     xyz[i] = Floor(cursor_(i)/scale_[i]);
     if (xyz[i] < 0 || xyz[i] > max_slice_[i]) return;
   }
-  const int gradient = 
-    int(get_value(gradient_->nrrd, xyz[0], xyz[1], xyz[2]));
-  if (gradient < Round(gradient_threshold_*255.0)) return;
-
-  const double offset = clut_wl_ - clut_ww_/2.0;
-  const double scale = 1.0 / clut_ww_;
+  const double gradient = 
+    get_value(gradient_->nrrd, xyz[0], xyz[1], xyz[2])/255.0;
+  if (gradient < gradient_threshold_) return;
   const double value = 
-    scale*(get_value(volumes_[0]->nrrd_->nrrd,xyz[0],xyz[1],xyz[2])-offset);
-  paint_widget_->add_coordinate(make_pair(value, gradient/255.0));
+    get_value(volumes_[0]->nrrd_->nrrd,xyz[0],xyz[1],xyz[2]);
+  paint_widget_->add_coordinate(make_pair(value, gradient));
 
   rasterize_widgets_to_cm2(cm2_->selected(), cm2_->selected(), cm2_buffer_);
   for_each(&ViewSlices::extract_current_paint);
