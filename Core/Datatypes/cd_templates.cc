@@ -63,7 +63,6 @@ template class MaskedTetVol<double>;
 template class MaskedTetVol<int>;
 template class MaskedTetVol<short>;
 template class MaskedTetVol<unsigned char>;
-template class MaskedTetVol<bool>;
 
 template class TetVol<Tensor>;
 template class TetVol<Vector>;
@@ -71,14 +70,12 @@ template class TetVol<double>;
 template class TetVol<int>;
 template class TetVol<short>;
 template class TetVol<unsigned char>;
-template class TetVol<bool>;
 template class GenericField<TetVolMesh, vector<Tensor> >;
 template class GenericField<TetVolMesh, vector<Vector> >;
 template class GenericField<TetVolMesh, vector<double> >;
 template class GenericField<TetVolMesh, vector<int> >;
 template class GenericField<TetVolMesh, vector<short> >;
 template class GenericField<TetVolMesh, vector<unsigned char> >;
-template class GenericField<TetVolMesh, vector<bool> >;
 
 template class MaskedLatticeVol<Tensor>;
 template class MaskedLatticeVol<Vector>;
@@ -86,7 +83,6 @@ template class MaskedLatticeVol<double>;
 template class MaskedLatticeVol<int>;
 template class MaskedLatticeVol<short>;
 template class MaskedLatticeVol<unsigned char>;
-template class MaskedLatticeVol<bool>;
 
 template class LatticeVol<Tensor>;
 template class LatticeVol<Vector>;
@@ -94,14 +90,12 @@ template class LatticeVol<double>;
 template class LatticeVol<int>;
 template class LatticeVol<short>;
 template class LatticeVol<unsigned char>;
-template class LatticeVol<bool>;
 template class GenericField<LatVolMesh, FData3d<Tensor> >;
 template class GenericField<LatVolMesh, FData3d<Vector> >;
 template class GenericField<LatVolMesh, FData3d<double> >;
 template class GenericField<LatVolMesh, FData3d<int> >;
 template class GenericField<LatVolMesh, FData3d<short> >;
 template class GenericField<LatVolMesh, FData3d<unsigned char> >;
-template class GenericField<LatVolMesh, FData3d<bool> >;
 
 
 
@@ -111,14 +105,12 @@ template class TriSurf<double>;
 template class TriSurf<int>;
 template class TriSurf<short>;
 template class TriSurf<unsigned char>;
-template class TriSurf<bool>;
 template class GenericField<TriSurfMesh, vector<Tensor> >;
 template class GenericField<TriSurfMesh, vector<Vector> >;
 template class GenericField<TriSurfMesh, vector<double> >;
 template class GenericField<TriSurfMesh, vector<int> >;
 template class GenericField<TriSurfMesh, vector<short> >;
 template class GenericField<TriSurfMesh, vector<unsigned char> >;
-template class GenericField<TriSurfMesh, vector<bool> >;
 
 template class ContourField<Tensor>;
 template class ContourField<Vector>;
@@ -126,14 +118,12 @@ template class ContourField<double>;
 template class ContourField<int>;
 template class ContourField<short>;
 template class ContourField<unsigned char>;
-template class ContourField<bool>;
 template class GenericField<ContourMesh, vector<Tensor> >;
 template class GenericField<ContourMesh, vector<Vector> >;
 template class GenericField<ContourMesh, vector<double> >;
 template class GenericField<ContourMesh, vector<int> >;
 template class GenericField<ContourMesh, vector<short> >;
 template class GenericField<ContourMesh, vector<unsigned char> >;
-template class GenericField<ContourMesh, vector<bool> >;
 
 template class PointCloud<Tensor>;
 template class PointCloud<Vector>;
@@ -141,14 +131,12 @@ template class PointCloud<double>;
 template class PointCloud<int>;
 template class PointCloud<short>;
 template class PointCloud<unsigned char>;
-template class PointCloud<bool>;
 template class GenericField<PointCloudMesh, vector<Tensor> >;
 template class GenericField<PointCloudMesh, vector<Vector> >;
 template class GenericField<PointCloudMesh, vector<double> >;
 template class GenericField<PointCloudMesh, vector<int> >;
 template class GenericField<PointCloudMesh, vector<short> >;
 template class GenericField<PointCloudMesh, vector<unsigned char> >;
-template class GenericField<PointCloudMesh, vector<bool> >;
 
 template class Property<string>;
 template class Property<Array1<double> >;
