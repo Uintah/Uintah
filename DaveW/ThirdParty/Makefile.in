@@ -2,6 +2,6 @@ SRCTOP  = @top_srcdir@
 SRCDIR  = @srcdir@
 OBJTOP  = ../..
 
-SUBDIRS = NumRec OldLinAlg Quaternions RegTools
+SUBDIRS = NumRec OldLinAlg Quaternions RegTools SparseLib
 
 include $(SRCTOP)/scripts/recurse.mk

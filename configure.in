@@ -96,6 +96,7 @@ if test "$davew" = "yes"; then
                   DaveW/ThirdParty/Quaternions/Makefile \
                   DaveW/ThirdParty/RegTools/Makefile \
                   DaveW/ThirdParty/SparseLib/Makefile \
+                    DaveW/ThirdParty/SparseLib/Leonid/Makefile \
                 DaveW/convert/Makefile \
 		"
 fi

@@ -760,6 +760,8 @@ void InvEEGSolve::solveDense(int nr, int nc, double **A, double *x,
     MatrixDense<double> AA(nr, nc, matrix);
     ZVector<double> bb(nr, &(b[1]));
     ZVector<double> xx(nc, &(x[1]));
+    cerr << xx <<"\n";
+
 //    LinearSystem<double> L1(AA,bb,"copy");
 //    L1.solve();
 //    L1.info();
@@ -956,6 +958,9 @@ void InvEEGSolve::execute() {
 
 //
 // $Log$
+// Revision 1.5  1999/09/03 06:07:19  dmw
+// added a Makefile.in for Leonid's files
+//
 // Revision 1.4  1999/09/02 05:21:44  dmw
 // trying to figure out a linking problem
 //

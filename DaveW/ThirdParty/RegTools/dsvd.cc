@@ -26,7 +26,6 @@ void dsvd(MatrixDense<double>* A, ZVector<double>* b, ZVector<double> *x,
       for (i=0;i<ncols;i++)
       	  (*x)(i) = (*x)(i) + (*VT)(k,i)*tmp/((*s)(k)+lambda);
   }
-  
 }
  
 
