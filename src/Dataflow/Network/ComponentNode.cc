@@ -1002,7 +1002,8 @@ void WriteComponentNodeToFile(component_node* n, const char* filename)
   std::ofstream o(filename);
 
   o << "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" << endl;
-  o << "<!DOCTYPE component SYSTEM \"component.dtd\">" << endl << endl;
+  o << "<!DOCTYPE component SYSTEM \""
+       "../../../doc/ReferenceGuide/component.dtd\">" << endl << endl;
 
   o << "<component name=\"";
   if (n->name && n->name!=NOT_SET)
