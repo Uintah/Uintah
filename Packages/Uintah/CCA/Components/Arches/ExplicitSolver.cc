@@ -649,9 +649,16 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     CCVariable<double> newCCVVel;
     CCVariable<double> newCCWVel;
     CCVariable<double> kineticEnergy;
+
+    bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
+    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
+    bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
+    bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
+    bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
+    bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
     
-    IntVector idxLo = patch->getCellLowIndex();
-    IntVector idxHi = patch->getCellHighIndex();
+    IntVector idxLo = patch->getCellFORTLowIndex();
+    IntVector idxHi = patch->getCellFORTHighIndex();
 
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
     old_dw->get(oldUVel, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
@@ -674,9 +681,13 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 			   matlIndex, patch);
     new_dw->allocateAndPut(wHatVel_CC, d_lab->d_wVelRhoHat_CCLabel,
 			   matlIndex, patch);
-    for (int kk = idxLo.z(); kk < idxHi.z(); ++kk) {
-      for (int jj = idxLo.y(); jj < idxHi.y(); ++jj) {
-	for (int ii = idxLo.x(); ii < idxHi.x(); ++ii) {
+    oldCCVel.initialize(Vector(0.0,0.0,0.0));
+    uHatVel_CC.initialize(0.0);
+    vHatVel_CC.initialize(0.0);
+    wHatVel_CC.initialize(0.0);
+    for (int kk = idxLo.z(); kk <= idxHi.z(); ++kk) {
+      for (int jj = idxLo.y(); jj <= idxHi.y(); ++jj) {
+	for (int ii = idxLo.x(); ii <= idxHi.x(); ++ii) {
 	  
 	  IntVector idx(ii,jj,kk);
 	  IntVector idxU(ii+1,jj,kk);
@@ -695,6 +706,181 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 			      oldWVel[idxW]);
 	  double what = 0.5*(wHatVel_FCZ[idx] +
 			     wHatVel_FCZ[idxW]);
+	  
+	  oldCCVel[idx] = Vector(old_u,old_v,old_w);
+	  uHatVel_CC[idx] = uhat;
+	  vHatVel_CC[idx] = vhat;
+	  wHatVel_CC[idx] = what;
+	}
+      }
+    }
+    // boundary conditions not to compute erroneous values in the case of ramping
+    if (xminus) {
+      int ii = idxLo.x()-1;
+      for (int kk = idxLo.z(); kk <=  idxHi.z(); kk ++) {
+	for (int jj = idxLo.y(); jj <=  idxHi.y(); jj ++) {
+	  IntVector idx(ii,jj,kk);
+	  IntVector idxU(ii+1,jj,kk);
+	  IntVector idxV(ii,jj+1,kk);
+	  IntVector idxW(ii,jj,kk+1);
+	  
+	  double old_u = 0.5*(oldUVel[idxU] + 
+			      oldUVel[idxU]);
+	  double uhat = 0.5*(uHatVel_FCX[idxU] +
+			     uHatVel_FCX[idxU]);
+	  double old_v = 0.5*(oldVVel[idx] +
+			      oldVVel[idxV]);
+	  double vhat = 0.5*(vHatVel_FCY[idx] +
+			     vHatVel_FCY[idxV]);
+	  double old_w = 0.5*(oldWVel[idx] +
+			      oldWVel[idxW]);
+	  double what = 0.5*(wHatVel_FCZ[idx] +
+			     wHatVel_FCZ[idxW]);
+	  
+	  oldCCVel[idx] = Vector(old_u,old_v,old_w);
+	  uHatVel_CC[idx] = uhat;
+	  vHatVel_CC[idx] = vhat;
+	  wHatVel_CC[idx] = what;
+	}
+      }
+    }
+    if (xplus) {
+      int ii =  idxHi.x()+1;
+      for (int kk = idxLo.z(); kk <=  idxHi.z(); kk ++) {
+	for (int jj = idxLo.y(); jj <=  idxHi.y(); jj ++) {
+	  IntVector idx(ii,jj,kk);
+	  IntVector idxU(ii+1,jj,kk);
+	  IntVector idxV(ii,jj+1,kk);
+	  IntVector idxW(ii,jj,kk+1);
+	  
+	  double old_u = 0.5*(oldUVel[idx] + 
+			      oldUVel[idx]);
+	  double uhat = 0.5*(uHatVel_FCX[idx] +
+			     uHatVel_FCX[idx]);
+	  double old_v = 0.5*(oldVVel[idx] +
+			      oldVVel[idxV]);
+	  double vhat = 0.5*(vHatVel_FCY[idx] +
+			     vHatVel_FCY[idxV]);
+	  double old_w = 0.5*(oldWVel[idx] +
+			      oldWVel[idxW]);
+	  double what = 0.5*(wHatVel_FCZ[idx] +
+			     wHatVel_FCZ[idxW]);
+	  
+	  oldCCVel[idx] = Vector(old_u,old_v,old_w);
+	  uHatVel_CC[idx] = uhat;
+	  vHatVel_CC[idx] = vhat;
+	  wHatVel_CC[idx] = what;
+	}
+      }
+    }
+    if (yminus) {
+      int jj = idxLo.y()-1;
+      for (int kk = idxLo.z(); kk <=  idxHi.z(); kk ++) {
+	for (int ii = idxLo.x(); ii <=  idxHi.x(); ii ++) {
+	  IntVector idx(ii,jj,kk);
+	  IntVector idxU(ii+1,jj,kk);
+	  IntVector idxV(ii,jj+1,kk);
+	  IntVector idxW(ii,jj,kk+1);
+	  
+	  double old_u = 0.5*(oldUVel[idx] + 
+			      oldUVel[idxU]);
+	  double uhat = 0.5*(uHatVel_FCX[idx] +
+			     uHatVel_FCX[idxU]);
+	  double old_v = 0.5*(oldVVel[idxV] +
+			      oldVVel[idxV]);
+	  double vhat = 0.5*(vHatVel_FCY[idxV] +
+			     vHatVel_FCY[idxV]);
+	  double old_w = 0.5*(oldWVel[idx] +
+			      oldWVel[idxW]);
+	  double what = 0.5*(wHatVel_FCZ[idx] +
+			     wHatVel_FCZ[idxW]);
+	  
+	  oldCCVel[idx] = Vector(old_u,old_v,old_w);
+	  uHatVel_CC[idx] = uhat;
+	  vHatVel_CC[idx] = vhat;
+	  wHatVel_CC[idx] = what;
+	}
+      }
+    }
+    if (yplus) {
+      int jj =  idxHi.y()+1;
+      for (int kk = idxLo.z(); kk <=  idxHi.z(); kk ++) {
+	for (int ii = idxLo.x(); ii <=  idxHi.x(); ii ++) {
+	  IntVector idx(ii,jj,kk);
+	  IntVector idxU(ii+1,jj,kk);
+	  IntVector idxV(ii,jj+1,kk);
+	  IntVector idxW(ii,jj,kk+1);
+	  
+	  double old_u = 0.5*(oldUVel[idx] + 
+			      oldUVel[idxU]);
+	  double uhat = 0.5*(uHatVel_FCX[idx] +
+			     uHatVel_FCX[idxU]);
+	  double old_v = 0.5*(oldVVel[idx] +
+			      oldVVel[idx]);
+	  double vhat = 0.5*(vHatVel_FCY[idx] +
+			     vHatVel_FCY[idx]);
+	  double old_w = 0.5*(oldWVel[idx] +
+			      oldWVel[idxW]);
+	  double what = 0.5*(wHatVel_FCZ[idx] +
+			     wHatVel_FCZ[idxW]);
+	  
+	  oldCCVel[idx] = Vector(old_u,old_v,old_w);
+	  uHatVel_CC[idx] = uhat;
+	  vHatVel_CC[idx] = vhat;
+	  wHatVel_CC[idx] = what;
+	}
+      }
+    }
+    if (zminus) {
+      int kk = idxLo.z()-1;
+      for (int jj = idxLo.y(); jj <=  idxHi.y(); jj ++) {
+	for (int ii = idxLo.x(); ii <=  idxHi.x(); ii ++) {
+	  IntVector idx(ii,jj,kk);
+	  IntVector idxU(ii+1,jj,kk);
+	  IntVector idxV(ii,jj+1,kk);
+	  IntVector idxW(ii,jj,kk+1);
+	  
+	  double old_u = 0.5*(oldUVel[idx] + 
+			      oldUVel[idxU]);
+	  double uhat = 0.5*(uHatVel_FCX[idx] +
+			     uHatVel_FCX[idxU]);
+	  double old_v = 0.5*(oldVVel[idx] +
+			      oldVVel[idxV]);
+	  double vhat = 0.5*(vHatVel_FCY[idx] +
+			     vHatVel_FCY[idxV]);
+	  double old_w = 0.5*(oldWVel[idxW] +
+			      oldWVel[idxW]);
+	  double what = 0.5*(wHatVel_FCZ[idxW] +
+			     wHatVel_FCZ[idxW]);
+	  
+	  oldCCVel[idx] = Vector(old_u,old_v,old_w);
+	  uHatVel_CC[idx] = uhat;
+	  vHatVel_CC[idx] = vhat;
+	  wHatVel_CC[idx] = what;
+	}
+      }
+    }
+    if (zplus) {
+      int kk =  idxHi.z()+1;
+      for (int jj = idxLo.y(); jj <=  idxHi.y(); jj ++) {
+	for (int ii = idxLo.x(); ii <=  idxHi.x(); ii ++) {
+	  IntVector idx(ii,jj,kk);
+	  IntVector idxU(ii+1,jj,kk);
+	  IntVector idxV(ii,jj+1,kk);
+	  IntVector idxW(ii,jj,kk+1);
+	  
+	  double old_u = 0.5*(oldUVel[idx] + 
+			      oldUVel[idxU]);
+	  double uhat = 0.5*(uHatVel_FCX[idx] +
+			     uHatVel_FCX[idxU]);
+	  double old_v = 0.5*(oldVVel[idx] +
+			      oldVVel[idxV]);
+	  double vhat = 0.5*(vHatVel_FCY[idx] +
+			     vHatVel_FCY[idxV]);
+	  double old_w = 0.5*(oldWVel[idx] +
+			      oldWVel[idx]);
+	  double what = 0.5*(wHatVel_FCZ[idx] +
+			     wHatVel_FCZ[idx]);
 	  
 	  oldCCVel[idx] = Vector(old_u,old_v,old_w);
 	  uHatVel_CC[idx] = uhat;
@@ -763,6 +949,7 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     new_dw->getModifiable(residual, d_lab->d_continuityResidualLabel,
 			   matlIndex, patch);
     }
+    newCCVel.initialize(Vector(0.0,0.0,0.0));
     newCCUVel.initialize(0.0);
     newCCVVel.initialize(0.0);
     newCCWVel.initialize(0.0);
@@ -773,9 +960,9 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 
     double total_kin_energy = 0.0;
 
-    for (int kk = idxLo.z(); kk < idxHi.z(); ++kk) {
-      for (int jj = idxLo.y(); jj < idxHi.y(); ++jj) {
-	for (int ii = idxLo.x(); ii < idxHi.x(); ++ii) {
+    for (int kk = idxLo.z(); kk <= idxHi.z(); ++kk) {
+      for (int jj = idxLo.y(); jj <= idxHi.y(); ++jj) {
+	for (int ii = idxLo.x(); ii <= idxHi.x(); ++ii) {
 	  
 	  IntVector idx(ii,jj,kk);
 	  IntVector idxU(ii+1,jj,kk);
@@ -799,8 +986,164 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	}
       }
     }
-    idxLo = patch->getCellFORTLowIndex();
-    idxHi = patch->getCellFORTHighIndex();
+    // boundary conditions not to compute erroneous values in the case of ramping
+    if (xminus) {
+      int ii = idxLo.x()-1;
+      for (int kk = idxLo.z(); kk <=  idxHi.z(); kk ++) {
+	for (int jj = idxLo.y(); jj <=  idxHi.y(); jj ++) {
+	  IntVector idx(ii,jj,kk);
+	  IntVector idxU(ii+1,jj,kk);
+	  IntVector idxV(ii,jj+1,kk);
+	  IntVector idxW(ii,jj,kk+1);
+	  
+	  double new_u = 0.5*(newUVel[idxU] +
+			      newUVel[idxU]);
+	  double new_v = 0.5*(newVVel[idx] +
+			      newVVel[idxV]);
+	  double new_w = 0.5*(newWVel[idx] +
+			      newWVel[idxW]);
+	  
+	  newCCVel[idx] = Vector(new_u,new_v,new_w);
+	  newCCUVel[idx] = new_u;
+	  newCCVVel[idx] = new_v;
+	  newCCWVel[idx] = new_w;
+          newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
+          kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+	  total_kin_energy += kineticEnergy[idx];
+	}
+      }
+    }
+    if (xplus) {
+      int ii =  idxHi.x()+1;
+      for (int kk = idxLo.z(); kk <=  idxHi.z(); kk ++) {
+	for (int jj = idxLo.y(); jj <=  idxHi.y(); jj ++) {
+	  IntVector idx(ii,jj,kk);
+	  IntVector idxU(ii+1,jj,kk);
+	  IntVector idxV(ii,jj+1,kk);
+	  IntVector idxW(ii,jj,kk+1);
+	  
+	  double new_u = 0.5*(newUVel[idx] +
+			      newUVel[idx]);
+	  double new_v = 0.5*(newVVel[idx] +
+			      newVVel[idxV]);
+	  double new_w = 0.5*(newWVel[idx] +
+			      newWVel[idxW]);
+	  
+	  newCCVel[idx] = Vector(new_u,new_v,new_w);
+	  newCCUVel[idx] = new_u;
+	  newCCVVel[idx] = new_v;
+	  newCCWVel[idx] = new_w;
+          newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
+          kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+	  total_kin_energy += kineticEnergy[idx];
+	}
+      }
+    }
+    if (yminus) {
+      int jj = idxLo.y()-1;
+      for (int kk = idxLo.z(); kk <=  idxHi.z(); kk ++) {
+	for (int ii = idxLo.x(); ii <=  idxHi.x(); ii ++) {
+	  IntVector idx(ii,jj,kk);
+	  IntVector idxU(ii+1,jj,kk);
+	  IntVector idxV(ii,jj+1,kk);
+	  IntVector idxW(ii,jj,kk+1);
+	  
+	  double new_u = 0.5*(newUVel[idx] +
+			      newUVel[idxU]);
+	  double new_v = 0.5*(newVVel[idxV] +
+			      newVVel[idxV]);
+	  double new_w = 0.5*(newWVel[idx] +
+			      newWVel[idxW]);
+	  
+	  newCCVel[idx] = Vector(new_u,new_v,new_w);
+	  newCCUVel[idx] = new_u;
+	  newCCVVel[idx] = new_v;
+	  newCCWVel[idx] = new_w;
+          newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
+          kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+	  total_kin_energy += kineticEnergy[idx];
+	}
+      }
+    }
+    if (yplus) {
+      int jj =  idxHi.y()+1;
+      for (int kk = idxLo.z(); kk <=  idxHi.z(); kk ++) {
+	for (int ii = idxLo.x(); ii <=  idxHi.x(); ii ++) {
+	  IntVector idx(ii,jj,kk);
+	  IntVector idxU(ii+1,jj,kk);
+	  IntVector idxV(ii,jj+1,kk);
+	  IntVector idxW(ii,jj,kk+1);
+	  
+	  double new_u = 0.5*(newUVel[idx] +
+			      newUVel[idxU]);
+	  double new_v = 0.5*(newVVel[idx] +
+			      newVVel[idx]);
+	  double new_w = 0.5*(newWVel[idx] +
+			      newWVel[idxW]);
+	  
+	  newCCVel[idx] = Vector(new_u,new_v,new_w);
+	  newCCUVel[idx] = new_u;
+	  newCCVVel[idx] = new_v;
+	  newCCWVel[idx] = new_w;
+          newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
+          kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+	  total_kin_energy += kineticEnergy[idx];
+	}
+      }
+    }
+    if (zminus) {
+      int kk = idxLo.z()-1;
+      for (int jj = idxLo.y(); jj <=  idxHi.y(); jj ++) {
+	for (int ii = idxLo.x(); ii <=  idxHi.x(); ii ++) {
+	  IntVector idx(ii,jj,kk);
+	  IntVector idxU(ii+1,jj,kk);
+	  IntVector idxV(ii,jj+1,kk);
+	  IntVector idxW(ii,jj,kk+1);
+	  
+	  double new_u = 0.5*(newUVel[idx] +
+			      newUVel[idxU]);
+	  double new_v = 0.5*(newVVel[idx] +
+			      newVVel[idxV]);
+	  double new_w = 0.5*(newWVel[idxW] +
+			      newWVel[idxW]);
+	  
+	  newCCVel[idx] = Vector(new_u,new_v,new_w);
+	  newCCUVel[idx] = new_u;
+	  newCCVVel[idx] = new_v;
+	  newCCWVel[idx] = new_w;
+          newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
+          kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+	  total_kin_energy += kineticEnergy[idx];
+	}
+      }
+    }
+    if (zplus) {
+      int kk =  idxHi.z()+1;
+      for (int jj = idxLo.y(); jj <=  idxHi.y(); jj ++) {
+	for (int ii = idxLo.x(); ii <=  idxHi.x(); ii ++) {
+	  IntVector idx(ii,jj,kk);
+	  IntVector idxU(ii+1,jj,kk);
+	  IntVector idxV(ii,jj+1,kk);
+	  IntVector idxW(ii,jj,kk+1);
+	  
+	  double new_u = 0.5*(newUVel[idx] +
+			      newUVel[idxU]);
+	  double new_v = 0.5*(newVVel[idx] +
+			      newVVel[idxV]);
+	  double new_w = 0.5*(newWVel[idx] +
+			      newWVel[idx]);
+	  
+	  newCCVel[idx] = Vector(new_u,new_v,new_w);
+	  newCCUVel[idx] = new_u;
+	  newCCVVel[idx] = new_v;
+	  newCCWVel[idx] = new_w;
+          newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
+          kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+	  total_kin_energy += kineticEnergy[idx];
+	}
+      }
+    }
+
     for (int kk = idxLo.z(); kk <= idxHi.z(); ++kk) {
       for (int jj = idxLo.y(); jj <= idxHi.y(); ++jj) {
 	for (int ii = idxLo.x(); ii <= idxHi.x(); ++ii) {
