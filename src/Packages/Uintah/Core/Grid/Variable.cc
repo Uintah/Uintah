@@ -228,7 +228,10 @@ void Variable::read(InputContext& ic, long end, const string& compressionMode)
   else
     readNormal(instream);
   ASSERT(instream.fail() == 0);
+
+#ifdef __sgi // should be removed when we get gcc-3.0+ working
   ASSERT((unsigned long)instream.tellg() == uncompressedData->size());
+#endif
 }
 
 bool Variable::emitRLE(ostream& /*out*/, DOM_Element /*varnode*/)
