@@ -55,6 +55,6 @@ PSELIBS := Core/Persistent Core/Containers Core/Util \
         Core/TkExtensions Dataflow/Network Dataflow/Ports \
 	Packages/DataIO/Core/ThirdParty
 
-LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(HDF5_LIBRARY) $(MDSPLUS_LIBRARY)
+LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(HDF5_LIBRARY) $(MDSPLUS_LIBRARY) $(TEEM_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

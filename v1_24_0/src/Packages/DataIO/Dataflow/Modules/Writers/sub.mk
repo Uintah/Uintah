@@ -45,12 +45,14 @@ SRCDIR   := Packages/DataIO/Dataflow/Modules/Writers
 SRCS     += \
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
-        Core/Persistent Core/Containers Core/Util \
+PSELIBS := Core/Persistent Core/Containers Core/Util \
         Core/Exceptions Core/Thread Core/GuiInterface \
-        Core/Geom Core/Datatypes Core/Geometry \
-        Core/TkExtensions
-LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(HDF5_LIBRARY) $(MDSPLUS_LIBRARY)
+        Core/Geom Core/Datatypes Core/Geometry Core/GeomInterface \
+        Core/TkExtensions Dataflow/Network Dataflow/Ports \
+	Packages/DataIO/Core/ThirdParty
+
+
+LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(HDF5_LIBRARY) $(MDSPLUS_LIBRARY) $(TEEM_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

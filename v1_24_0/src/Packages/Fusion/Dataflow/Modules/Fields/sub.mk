@@ -48,9 +48,9 @@ SRCS     += \
 
 PSELIBS := Core/Persistent Core/Containers Core/Util \
         Core/Exceptions Core/Thread Core/GuiInterface \
-        Core/Geom Core/GeomInterface Core/Datatypes Core/Geometry \
+        Core/Geom Core/Datatypes Core/Geometry \
         Core/TkExtensions Dataflow/Network Dataflow/Ports
 
-LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(TEEM_LIBRARY) $(M_LIBRARY)
+LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(TEEM_LIBRARY) 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

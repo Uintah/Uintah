@@ -48,12 +48,11 @@ SRCS     += \
 
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
-        Core/Persistent Core/Containers Core/Util \
+PSELIBS := Core/Persistent Core/Containers Core/Util \
         Core/Exceptions Core/Thread Core/GuiInterface \
-        Core/Geom Core/Datatypes Core/Geometry \
-        Core/TkExtensions
+        Core/Geom Core/Datatypes Core/Geometry Core/GeomInterface \
+        Core/TkExtensions Dataflow/Network Dataflow/Ports
 
-LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(MDSPLUS_LIBRARY) $(M_LIBRARY)
+LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(HDF5_LIBRARY) $(MDSPLUS_LIBRARY) 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
