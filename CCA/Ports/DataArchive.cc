@@ -223,6 +223,8 @@ DataArchive::queryGrid( double time )
   XMLURL url;
   d_lock.lock();
   DOMNode* top = getTimestep(time, url);
+  if (top == 0)
+    throw InternalError("Cannot find Grid in timestep");
   const DOMNode* gridnode = findNode("Grid", top);
   if(gridnode == 0)
     throw InternalError("Cannot find Grid in timestep");
@@ -799,18 +801,18 @@ void DataArchive::PatchHashMaps::parse()
 {
   for (list<XMLURL>::iterator urlIt = d_xmlUrls.begin();
        urlIt != d_xmlUrls.end(); urlIt++) {
-    XercesDOMParser parser;
-    parser.setDoValidation(false);
+    XercesDOMParser *parser = new XercesDOMParser;
+    parser->setDoValidation(false);
     
     SimpleErrorHandler handler;
-    parser.setErrorHandler(&handler);
+    parser->setErrorHandler(&handler);
     
     //cerr << "reading: " << XMLString::transcode(urlIt->getURLText()) << '\n';
-    parser.parse((*urlIt).getURLText());
+    parser->parse((*urlIt).getURLText());
     if(handler.foundError)
       throw InternalError("Cannot read timestep file");
     
-    DOMNode* top = parser.getDocument()->getDocumentElement();
+    DOMNode* top = parser->getDocument()->getDocumentElement();
     for(DOMNode* r = top->getFirstChild(); r != 0; r=r->getNextSibling()){
       if(strcmp(XMLString::transcode(r->getNodeName()),"Variable") == 0){
 	string varname;
