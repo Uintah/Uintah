@@ -45,6 +45,7 @@ static int iterNum = 0;
 #define oldStyle_setBC 1
 #define newStyle_setBC 0
 #define setBC_FC 1
+#define setBC_FC_John 1
  /*==========TESTING==========`*/
 //#define ANNULUSICE
 #undef ANNULUSICE
@@ -1618,14 +1619,14 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
 
 /*`==========TESTING==========*/ 
 #if setBC_FC
-    #if 0
+    #if setBC_FC_John
     SFCXVariable<Vector> vel_FC;
     new_dw->allocate(vel_FC,lb->scratch_FCVectorLabel,0,patch);
     #endif
     for (int m = 0; m < numMatls; m++)  {
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
-      #if 0
+      #if setBC_FC_John
       for(CellIterator iter = patch->getExtraCellIterator();!iter.done();
 	  iter++){  
 	IntVector cell = *iter; 
@@ -1641,7 +1642,8 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
 	wvel_FCME[m][cell] = vel_FC[cell].z();
       }
       #endif
-      #if 1
+      // Turn off the old way if setBC_FC_John is turned on.
+      #if 0
       setBC(uvel_FCME[m],"Velocity","x",patch,indx);
       setBC(vvel_FCME[m],"Velocity","y",patch,indx);
       setBC(wvel_FCME[m],"Velocity","z",patch,indx);
