@@ -152,3 +152,4 @@ $(SRCDIR)/Source.o: $(SRCDIR)/fortran/uvelsrc_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/vvelsrc_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/wvelsrc_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/uvelcoeffupdate_fort.h
+$(SRCDIR)/MomentumSolver.o: $(SRCDIR)/fortran/computeVel_fort.h
