@@ -198,7 +198,7 @@ GatherFields::execute()
 	    algo->execute(fHandles[i]->mesh(), pc);
 	}
 	
-	fHandle_ = scinew PointCloudField<double>(pc, 1);
+	fHandle_ = scinew PointCloudField<double>(pc, 0);
       }
     }
   }

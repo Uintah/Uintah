@@ -224,7 +224,7 @@ FieldSlicerAlgoT<FIELD, TYPE>::execute(FieldHandle& ifield_h, int axis)
     omesh->copy_properties(imesh.get_rep());
 
     PointCloudField<TYPE> *ofield =
-      scinew PointCloudField<TYPE>(omesh, ifield->basis_order());
+      scinew PointCloudField<TYPE>(omesh, 0);
     ofield->copy_properties(ifield);
 
     ofield_h = ofield;

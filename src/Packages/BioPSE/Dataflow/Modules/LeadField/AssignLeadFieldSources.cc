@@ -206,11 +206,11 @@ AssignLeadFieldSources::execute()
   }
   msgStream_ << "End of focusing spikes.\n";
   PointCloudMeshHandle pcmH(pcm);
-  PointCloudField<Vector> *pc = scinew PointCloudField<Vector>(pcmH, 1);
+  PointCloudField<Vector> *pc = scinew PointCloudField<Vector>(pcmH, 0);
   pc->fdata()=vecs;
 
   PointCloudMeshHandle pcm2H(pcm2);
-  PointCloudField<Vector> *pc2 = scinew PointCloudField<Vector>(pcm2H, 1);
+  PointCloudField<Vector> *pc2 = scinew PointCloudField<Vector>(pcm2H, 0);
   pc2->fdata()=vecs2;
 
   for (unsigned int ui=0; ui<nsize; ui++) 
