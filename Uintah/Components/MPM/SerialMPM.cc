@@ -1038,7 +1038,7 @@ void SerialMPM::integrateAcceleration(const ProcessorContext*,
       new_dw->get(velocity, lb->gMomExedVelocityLabel, vfindex, patch,
 		  Ghost::None, 0);
 
-      old_dw->get((ReductionVariableBase&)delT, lb->deltLabel);
+      old_dw->get((ReductionVariableBase&)delT, lb->delTLabel);
 
       // Create variables for the results
       NCVariable<Vector> velocity_star;
@@ -1154,7 +1154,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorContext*,
       }
 #endif
 
-      old_dw->get(delT, lb->deltLabel);
+      old_dw->get(delT, lb->delTLabel);
 
       ParticleSubset* pset = px.getParticleSubset();
       ASSERT(pset == pvelocity.getParticleSubset());
@@ -1296,6 +1296,9 @@ void SerialMPM::crackGrow(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.72  2000/05/30 21:03:22  dav
+// delt to delT
+//
 // Revision 1.71  2000/05/30 20:18:58  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch

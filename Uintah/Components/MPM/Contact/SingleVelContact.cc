@@ -149,7 +149,7 @@ void SingleVelContact::exMomIntegrated(const ProcessorContext*,
     }
   }
   delt_vartype delT;
-  old_dw->get(delT, lb->deltLabel);
+  old_dw->get(delT, lb->delTLabel);
 
   for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
     centerOfMassMom=zero;
@@ -214,6 +214,9 @@ void SingleVelContact::addComputesAndRequiresIntegrated( Task* t,
 }
 
 // $Log$
+// Revision 1.21  2000/05/30 21:07:37  dav
+// delt to delT
+//
 // Revision 1.20  2000/05/30 20:19:10  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch
