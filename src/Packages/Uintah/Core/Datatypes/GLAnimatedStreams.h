@@ -44,6 +44,12 @@ struct streamerNode {
   
 };
 
+
+#define STREAM_LIGHT_WIRE 0
+#define STREAM_LIGHT_CURVE 1
+#define STREAM_USE_STEP_SIZE 0
+#define STREAM_USE_ITER_PER_SEC 1
+  
 class GLAnimatedStreams : public GeomObj
 {
 public:
@@ -66,10 +72,16 @@ public:
   
   void Pause( bool p){ _pause = p; }
   void Normals( bool n) {_normalsOn = n; }
+  void Lighting( bool l) {_lighting = l; }
   void SetLineWidth( int w){ _linewidth = w; }
   void SetStepSize( double step){ _stepsize = step; }
   void SetWidgetLocation(Point p){ widgetLocation = p; }
   void IncrementFlow();
+  void SetIterationMethod( int method ) { _iter_method = method; }
+  void SetIterations( double iter) { if (iter > 0) _iterations = iter; }
+  void SetIterationsPerStep( double iter)
+  { if (iter > 0) _inv_iter_per_step = 1 / iter;}
+  void SetNormalMethod( int method );
   //void UseWidget(bool b){ _usesWidget = b; }
   GLAnimatedStreams(const GLAnimatedStreams&);
   ~GLAnimatedStreams();
@@ -112,9 +124,14 @@ private:
 
   bool _pause;
   bool _normalsOn;
+  bool _lighting;
   double _stepsize;
   int _linewidth;
   int flow;
+  double _iterations;
+  double _inv_iter_per_step;
+  int _normal_method;
+  int _iter_method;
   
   streamerNode** head;		// array of pointers to head node in
 				// each solution
@@ -126,6 +143,7 @@ private:
   void init();
   void initColorMap();
   void DecrementFlow();
+  void AdvanceStreams(int start, int end);
   static const double FADE;
   static const int MAXN;
 
@@ -135,6 +153,10 @@ private:
   double maxwidth;
   double maxspeed;
   double minspeed;
+
+
+  // opengl states
+  bool gl_lighting_disabled;
 };
  
 } // namespace Uintah
