@@ -75,7 +75,7 @@ HairObj::recompute()
   glPopMatrix();
 }
 void
-HairObj::select( double x, double y, int  )
+HairObj::select( double , double , int  )
 {
   recompute();
 }

@@ -49,6 +49,15 @@ void GuiVar::reset()
   ctx->reset();
 }
 
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+/*
+cc-1468 CC: REMARK File = ../src/Core/Datatypes/cd_templates_fields_0.cc, Line = 11
+  Inline function "SCIRun::FData3d<SCIRun::Tensor>::end" cannot be explicitly
+          instantiated.
+*/
+#pragma set woff 1468
+#endif
+
 template class GuiSingle<string>;
 template class GuiSingle<double>;
 template class GuiSingle<int>;
@@ -56,3 +65,6 @@ template class GuiTriple<Point>;
 template class GuiTriple<Vector>;
 
 
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 1468
+#endif

@@ -77,7 +77,7 @@ Graph::set_window( const string &window )
 }
 
 void
-Graph::add( const string &name, DrawGui *d )
+Graph::add( const string &, DrawGui *d )
 {
   if ( obj_ ) delete obj_;
 
@@ -112,7 +112,7 @@ Graph::update()
 }
 
 void
-Graph::tcl_command(GuiArgs& args, void* userdata)
+Graph::tcl_command(GuiArgs& args, void*)
 {
   if ( args[1] == "redraw" ) 
     update();

@@ -108,9 +108,9 @@ to_vector(const Vector &in, Vector &out)
 
 template <>
 bool 
-add_data(const Point &p, const Tensor &d, GeomArrows *arrows, 
-	 GeomSwitch *dat_sw,
-	 MaterialHandle &mat, const string &s, double sf, bool normalize)
+add_data(const Point &, const Tensor &, GeomArrows *, 
+	 GeomSwitch *,
+	 MaterialHandle &, const string &, double, bool)
 {
   return false;
 }
@@ -118,8 +118,8 @@ add_data(const Point &p, const Tensor &d, GeomArrows *arrows,
 template <>
 bool 
 add_data(const Point &p, const Vector &d, GeomArrows *arrows, 
-	 GeomSwitch *dat_sw,
-	 MaterialHandle &mat, const string &s, double sf, bool normalize)
+	 GeomSwitch *,
+	 MaterialHandle &mat, const string &, double sf, bool normalize)
 {
   Vector v(d);
   if (normalize) { v.safe_normalize(); }

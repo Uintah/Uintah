@@ -106,6 +106,7 @@ bool GuiContext::getSub(const std::string& subname, double& value)
   if(!gui->get(name+"-"+subname, result))
     return false;
   istringstream s(result);
+  s >> value;
   if(!s)
     return false;
   return true;

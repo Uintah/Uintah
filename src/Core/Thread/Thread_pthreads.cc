@@ -28,7 +28,9 @@
  *  Copyright (C) 1997 SCI Group
  */
 
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
 #define __USE_UNIX98
 #include <pthread.h>
 #ifndef PTHREAD_MUTEX_RECURSIVE
@@ -498,7 +500,7 @@ Thread::print_threads()
  */
 static
 void
-handle_quit(int sig, struct sigcontext ctx)
+handle_quit(int sig, struct sigcontext /*ctx*/)
 {
     // Try to acquire a lock.  If we can't, then assume that somebody
     // else already caught the signal...
@@ -670,7 +672,7 @@ Thread::yield()
 }
 
 void
-Thread::migrate(int proc)
+Thread::migrate(int /*proc*/)
 {
     // Nothing for now...
 }

@@ -177,7 +177,7 @@ void GLTexture3D::init(double& min, double &max, bool use_minmax)
     }
   }
   
-  BBox bbox = mesh->get_bounding_box();
+  //BBox bbox = mesh->get_bounding_box();
   minP_ = Point(0,0,0); //bbox.min();
   maxP_ = Point(mesh->get_nx(), mesh->get_ny(), mesh->get_nz()); //bbox.max();
   cerr <<"X_, Y_, Z_ = "<<X_<<", "<<Y_<<", "<<Z_<<endl;

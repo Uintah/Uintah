@@ -51,7 +51,7 @@ Persistent* make_Zoom()
 
 PersistentTypeID Zoom::type_id("Zoom", "BoxObj", make_Zoom);
 
- Zoom::Zoom(GuiInterface* gui, Diagram *p, const string &name)
+ Zoom::Zoom(GuiInterface* gui, Diagram *, const string &name)
   : TclObj(gui, "Zoom" ), BoxObj(name)
 {
 }

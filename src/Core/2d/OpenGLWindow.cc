@@ -43,7 +43,7 @@ OpenGLWindow::clear()
 }
 
 void
-OpenGLWindow::tcl_command(GuiArgs& args, void* userdata)
+OpenGLWindow::tcl_command(GuiArgs& args, void*)
 {
   if ( args[1] == "map" ) {
     if ( !initialized_ ) 
@@ -190,7 +190,7 @@ OpenGLWindow::resize( int h, int w )
 }
 
 OpenGLWindow *
-OpenGLWindow::sub_window( int l, int r, int t, int b )
+OpenGLWindow::sub_window( int , int , int , int  )
 {
   return 0; // scinew OpenGLSubWindow( *this, l, r, t, b );
 }

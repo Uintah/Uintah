@@ -70,7 +70,7 @@ XAxisObj::recompute()
 }
 
 void
-XAxisObj::select( double x, double y, int  )
+XAxisObj::select( double , double , int  )
 {
   recompute();
 }
@@ -132,7 +132,7 @@ YAxisObj::recompute()
 }
 
 void
-YAxisObj::select( double x, double y, int  )
+YAxisObj::select( double , double , int  )
 {
   recompute();
 }

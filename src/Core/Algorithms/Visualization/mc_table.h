@@ -30,9 +30,11 @@
 #ifndef MCUBE3_H
 #define MCUBE3_H
 
+#if 0
 static int edge_table[12][2] = {{0,1}, {1,2}, {3,2}, {0,3},
 				{4,5}, {5,6}, {7,6}, {4,7},
 				{0,4}, {1,5}, {3,7}, {2,6}};
+#endif
 
 struct TriangleCase {
   int n;
@@ -40,6 +42,7 @@ struct TriangleCase {
 };
 
 
+#if 0
 static TriangleCase tri_case[] = {
   /* 00000000 */
   { 0, { -1  -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}},
@@ -554,5 +557,6 @@ static TriangleCase tri_case[] = {
   /* 11111111 */
   { 0, { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}}
 };
+#endif
 
 #endif // MCUBE3_H
