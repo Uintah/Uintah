@@ -27,7 +27,6 @@ using std::vector;
       const VarLabel* pTemperatureGradientLabel; //for heat conduction
       const VarLabel* pPressureLabel;
       const VarLabel* pVolumeDeformedLabel;
-      const VarLabel* pKeepDeleteLabel;
       
       //PermanentParticleState
       const VarLabel* pDeformationMeasureLabel;

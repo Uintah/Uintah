@@ -61,7 +61,6 @@ WARNING
       // Insert Documentation Here:
       virtual void scheduleParticleRelocation(const LevelP& level,
 					      const VarLabel* old_posLabel,
-					      const VarLabel* keepDeleteLabel,
 					      const vector<vector<const VarLabel*> >& old_labels,
 					      const VarLabel* new_posLabel,
 					      const vector<vector<const VarLabel*> >& new_labels,

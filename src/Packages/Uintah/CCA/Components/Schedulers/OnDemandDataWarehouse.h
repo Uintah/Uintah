@@ -95,6 +95,8 @@ public:
    virtual bool haveParticleSubset(int matlIndex, const Patch*);
    virtual ParticleSubset* getParticleSubset(int matlIndex,
 					     const Patch*);
+   virtual ParticleSubset* getDeleteSubset(int matlIndex,
+					     const Patch*);
    virtual ParticleSubset* getParticleSubset(int matlIndex,
 			 const Patch*, Ghost::GhostType, int numGhostCells,
 			 const VarLabel* posvar);
@@ -353,6 +355,7 @@ private:
    DWDatabase<ReductionVariableBase> d_reductionDB;
    DWDatabase<PerPatchBase>          d_perpatchDB;
    psetDBType                        d_psetDB;
+   psetDBType                        d_delsetDB;
 
    // Record of which DataWarehouse has the data for each variable...
    //  Allows us to look up the DW to which we will send a data request.
