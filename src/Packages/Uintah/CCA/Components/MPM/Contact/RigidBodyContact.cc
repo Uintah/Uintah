@@ -17,6 +17,7 @@
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMLabel.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Core/Containers/StaticArray.h>
 #include <Core/Util/NotFinished.h>
 
 #include <vector>
@@ -69,8 +70,8 @@ void RigidBodyContact::exMomInterpolated(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     // Retrieve necessary data from DataWarehouse
-    vector<NCVariable<double> > gmass(numMatls);
-    vector<NCVariable<Vector> > gvelocity(numMatls),gvelocityME(numMatls);
+    StaticArray<NCVariable<double> > gmass(numMatls);
+    StaticArray<NCVariable<Vector> > gvelocity(numMatls),gvelocityME(numMatls);
     for(int m=0;m<matls->size();m++){
       int dwi = matls->get(m);
       new_dw->get(gmass[m],    lb->gMassLabel,     dwi, patch,Ghost::None,0);
@@ -124,11 +125,11 @@ void RigidBodyContact::exMomIntegrated(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     // Retrieve necessary data from DataWarehouse
-    vector<NCVariable<double> > gmass(numMatls);
-    vector<NCVariable<Vector> > gvelocity_star(numMatls);
-    vector<NCVariable<Vector> > gvelocity_starME(numMatls);
-    vector<NCVariable<Vector> > gacceleration(numMatls);
-    vector<NCVariable<Vector> > gaccelerationME(numMatls);
+    StaticArray<NCVariable<double> > gmass(numMatls);
+    StaticArray<NCVariable<Vector> > gvelocity_star(numMatls);
+    StaticArray<NCVariable<Vector> > gvelocity_starME(numMatls);
+    StaticArray<NCVariable<Vector> > gacceleration(numMatls);
+    StaticArray<NCVariable<Vector> > gaccelerationME(numMatls);
     for(int m=0;m<matls->size();m++){
       int dwindex = matls->get(m);
       new_dw->get(gmass[m], lb->gMassLabel,dwindex ,patch, Ghost::None, 0);

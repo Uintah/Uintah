@@ -15,6 +15,7 @@
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Core/Containers/StaticArray.h>
 #include <Core/Util/NotFinished.h>
 #include <vector>
 #include <iostream>
@@ -77,10 +78,10 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
     Vector dx = patch->dCell();
 
     // Need access to all velocity fields at once
-    vector<NCVariable<double> > gmass(numMatls);
-    vector<NCVariable<Vector> > gvelocity(numMatls);
-    vector<NCVariable<double> > normtraction(numMatls);
-    vector<NCVariable<Vector> > surfnorm(numMatls);
+    StaticArray<NCVariable<double> > gmass(numMatls);
+    StaticArray<NCVariable<Vector> > gvelocity(numMatls);
+    StaticArray<NCVariable<double> > normtraction(numMatls);
+    StaticArray<NCVariable<Vector> > surfnorm(numMatls);
   
     // Retrieve necessary data from DataWarehouse
     for(int m=0;m<matls->size();m++){
@@ -194,11 +195,11 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
 
     // Need access to all velocity fields at once, so store in
     // vectors of NCVariables
-    vector<NCVariable<double> > gmass(numMatls);
-    vector<NCVariable<Vector> > gvelocity_star(numMatls);
-    vector<NCVariable<Vector> > gacceleration(numMatls);
-    vector<NCVariable<double> > normtraction(numMatls);
-    vector<NCVariable<Vector> > gsurfnorm(numMatls);
+    StaticArray<NCVariable<double> > gmass(numMatls);
+    StaticArray<NCVariable<Vector> > gvelocity_star(numMatls);
+    StaticArray<NCVariable<Vector> > gacceleration(numMatls);
+    StaticArray<NCVariable<double> > normtraction(numMatls);
+    StaticArray<NCVariable<Vector> > gsurfnorm(numMatls);
 
     Vector surnor;
 
