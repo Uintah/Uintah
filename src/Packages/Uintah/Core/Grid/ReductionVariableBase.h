@@ -4,7 +4,6 @@
 
 #include <Packages/Uintah/Core/Grid/Variable.h>
 #include <iosfwd>
-#include <mpi.h>
 
 namespace Uintah {
 
