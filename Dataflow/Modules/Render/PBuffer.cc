@@ -180,9 +180,9 @@ bool
 PBuffer::is_current()
 {
 #ifndef HAVE_CHROMIUM
-  cx_ == glXGetCurrentContext();
+  return false;
 #endif
-  return (cx_ ? true : false);
+  return (cx_ == glXGetCurrentContext());
 }
 
 } // end namespace SCIRun
