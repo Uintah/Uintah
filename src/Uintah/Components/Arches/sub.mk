@@ -36,12 +36,16 @@ endif
 #CFLAGS += -g -DARCHES_VEL_DEBUG
 #CFLAGS += -g -DARCHES_DEBUG -DARCHES_GEOM_DEBUG -DARCHES_BC_DEBUG -DARCHES_COEF_DEBUG 
 CFLAGS += -DARCHES_SRC_DEBUG -DARCHES_PRES_DEBUG -DARCHES_VEL_DEBUG
+# -DHAVE_PETSC
 #LIBS += -lblas
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.32  2000/09/25 14:40:20  rawat
+# modified requires for multi-patch
+#
 # Revision 1.31  2000/09/20 20:08:31  sparker
 # Do not use petsc by default
 #
