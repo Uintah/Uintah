@@ -1,6 +1,7 @@
 config.status
 config.cache
 Makefile
+PackMakefile
 sci_config.h
 sci_defs.h
 config.log
