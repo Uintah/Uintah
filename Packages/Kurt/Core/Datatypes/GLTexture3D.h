@@ -98,7 +98,9 @@ public:
   /////////
   // Get the brick
   int getBrickSize(){ return xmax; }
-  
+  /////////
+  // Get field size
+  ScalarFieldRGuchar* getField(){ return tex; }
 
   // GROUP: io
   /////////
