@@ -114,6 +114,7 @@ public:
   GLfloat surfaceMatrix[16], invSurfaceMatrix[16];
   GLfloat rotCenter[3], rotAxis[3];
   GLfloat surfaceAngle;
+  bool haveSurfaceMatrix;
 
 /* SURFACE_SPACE <-> CAMERA_SPACE */
   GLfloat eyeOffset[3][3]; /* left, middle, right */

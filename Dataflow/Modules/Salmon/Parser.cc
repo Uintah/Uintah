@@ -46,6 +46,7 @@ const int SURFACE_ROTCENTER            = 41;
 const int SURFACE_ROTAXIS              = 42;
 const int SURFACE_SIZE                 = 43;
 const int SURFACE_UPVECTOR             = 44;
+const int SURFACE_MATRIX               = 45;
 
 const int CONTROLLER_TYPE              = 50;
 const int CONTROLLER_SHARED_ARENA      = 51;
@@ -163,6 +164,23 @@ int BaWGL :: parseData( ifstream& f, char* fname, int& l, int t, int cnum, int r
     case SURFACE_UPVECTOR:
       f >> upVector[0] >> upVector[1] >> upVector[2];
       break;
+    case SURFACE_MATRIX:
+      for( i=0; i<4; i++ )
+	{
+	  for( j=0; j<4; j++ )
+	    {
+	      f >> surfaceMatrix[i+4*j];
+	      if( f.fail() )
+		{
+		  daterr(fname, l);
+		  return(-1);
+		}
+	    }
+	  l++;
+	}
+      l--;
+      haveSurfaceMatrix = true;
+      break;
 
     case CONTROLLER_TYPE:
       f >> token;
@@ -227,6 +245,8 @@ int BaWGL :: parse( char* fname )
   char token1[TOKENSIZE], token2[TOKENSIZE];
   int l = 0, cnum, rnum;
   
+  haveSurfaceMatrix = false;
+
   ifstream f(fname, ios::in);
 
   if( !f )
@@ -303,6 +323,8 @@ int BaWGL :: parse( char* fname )
 		    { if( parseData(f, fname, l, SURFACE_SIZE) < 0 ) return(-1); }
 		  else if( !strcmp(token2, "UPVECTOR") )
 		    { if( parseData(f, fname, l, SURFACE_UPVECTOR) < 0 ) return(-1); }
+		  else if( !strcmp(token2, "MATRIX") )
+		    { if( parseData(f, fname, l, SURFACE_MATRIX) < 0 ) return(-1); }
 		  else
 		    {
 		      tokerr(fname, token2, l);

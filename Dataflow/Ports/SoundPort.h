@@ -15,6 +15,7 @@
 #define SCI_project_SoundPort_h 1
 
 #include <PSECore/share/share.h>
+#include <PSECore/Dataflow/Module.h>
 #include <PSECore/Dataflow/Port.h>
 #include <SCICore/Thread/Mailbox.h>
 
@@ -137,6 +138,11 @@ inline int SoundIPort::end_of_stream()
 
 //
 // $Log$
+// Revision 1.6  1999/11/12 01:38:31  ikits
+// Added ANL AVTC site visit modifications to make the demos work.
+// Fixed bugs in PSECore/Datatypes/SoundPort.[h,cc] and PSECore/Dataflow/NetworkEditor.cc
+// Put in temporary scale_changed fix into PSECore/Widgets/BaseWidget.cc
+//
 // Revision 1.5  1999/08/28 17:54:32  sparker
 // Integrated new Thread library
 //
