@@ -33,11 +33,6 @@
       <call>GetOutput</call>
       <name>OutputImage</name>
     </output>
-    <output num="2">
-      <value>FeatureImageType</value>
-      <call const="yes">GetSpeedImage</call>
-      <name>SpeedImage</name>
-    </output>
   </outputs>
 
   <parameters>
@@ -69,7 +64,7 @@
     <param>
       <name>negative_features</name>
       <type>bool</type>
-      <call>SetUseNegativeFeatures</call>
+      <call>SetReverseExpansionDirection</call>
     </param>
     <param>
       <name>isovalue</name>
