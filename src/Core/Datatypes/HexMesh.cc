@@ -29,7 +29,8 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
 
-#include <Core/Persistent/PersistentMap.h>
+#include <Core/Persistent/PersistentSTL.h>
+
 //#include <iostream>
 //#include <fstream>
 
