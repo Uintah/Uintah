@@ -924,10 +924,14 @@ GeomColoredCylinders::draw(DrawInfoOpenGL* di, Material* matl, double)
       for (int k=0; k<nu_+1; k++)
       {
 	glNormal3f(tabx[k%nu_], taby[k%nu_], 0.0);
-	glColor3d(colors_[i].r(), colors_[i].g(), colors_[i].b());
+	glColor3d(colors_[i]->diffuse.r(),
+		  colors_[i]->diffuse.g(),
+		  colors_[i]->diffuse.b());
 	glVertex3f(tabx[k%nu_], taby[k%nu_], 0.0);
 
-	glColor3d(colors_[i+1].r(), colors_[i+1].g(), colors_[i+1].b());
+	glColor3d(colors_[i+1]->diffuse.r(),
+		  colors_[i+1]->diffuse.g(),
+		  colors_[i+1]->diffuse.b());
 	glVertex3f(tabx[k%nu_], taby[k%nu_], 1.0);
       }
       glEnd();
@@ -1872,7 +1876,9 @@ void GeomCLines::draw(DrawInfoOpenGL* di, Material* matl, double)
     glBegin(GL_LINES);
     for (unsigned int i=0; i < points_.size(); i++)
     {
-      glColor3d(colors_[i].r(), colors_[i].g(), colors_[i].b());
+      glColor3d(colors_[i]->diffuse.r(),
+		colors_[i]->diffuse.g(),
+		colors_[i]->diffuse.b());
       glVertex3d(points_[i].x(), points_[i].y(), points_[i].z());
     }
     glEnd();

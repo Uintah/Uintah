@@ -34,6 +34,7 @@
 #include <Core/Geom/GeomObj.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geom/Color.h>
+#include <Core/Geom/Material.h>
 #include <Core/Thread/Mutex.h>
 
 #include <stdlib.h>	// For size_t
@@ -90,13 +91,14 @@ class SCICORESHARE GeomCLines : public GeomObj {
 protected:
   double line_width_;
   vector<Point> points_;
-  vector<Color> colors_;
+  vector<MaterialHandle> colors_;
 
 public:
   GeomCLines();
   GeomCLines(const GeomCLines&);
 
-  void add(const Point &p0, const Color &c0, const Point &p1, const Color &c1);
+  void add(const Point &p0, MaterialHandle c0,
+	   const Point &p1, MaterialHandle c1);
   void setLineWidth(float val) { line_width_ = val; }
 
   virtual ~GeomCLines();

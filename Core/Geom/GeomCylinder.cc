@@ -241,8 +241,8 @@ bool GeomColoredCylinders::saveobj(ostream&, const string&, GeomSave*)
 #endif
 }
 
-void GeomColoredCylinders::add(const Point& p1, const Color &c1,
-			       const Point& p2, const Color &c2)
+void GeomColoredCylinders::add(const Point& p1, MaterialHandle c1,
+			       const Point& p2, MaterialHandle c2)
 {
   points_.push_back(p1);
   points_.push_back(p2);
