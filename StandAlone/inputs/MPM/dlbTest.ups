@@ -14,7 +14,7 @@
   </Meta>
 
   <Time>
-    <maxTime>8.0e-4</maxTime>
+    <maxTime>1.0e-4</maxTime>
     <initTime>0.0</initTime>
     <delt_min>1.0e-16</delt_min>
     <delt_max>1.0e-6</delt_max>
@@ -44,11 +44,11 @@
     <save label = "g.mass"/>
     <save label = "g.volume"/>
     <save label = "g.stressFS"/>
-    <checkpoint cycle = "2" timestepInterval = "10"/>
+    <checkpoint cycle = "2" timestepInterval = "50"/>
   </DataArchiver>
 
    <LoadBalancer>
-        <timestepInterval>500</timestepInterval>
+        <timestepInterval>100</timestepInterval>
         <dynamicAlgorithm>particle3</dynamicAlgorithm>
         <cellFactor>.7</cellFactor>
    </LoadBalancer>
