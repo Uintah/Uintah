@@ -60,18 +60,24 @@ class PPMImage
 
   void get_dimensions_and_data(Array2<rtrt::Color> &c, int &nu, int &nv, 
                                bool flipped=false) {
-    c.resize(u_+2,v_+2);  // image size + slop for interpolation
-    nu=u_;
-    nv=v_;
-    flipped_ = flipped;
-    if (!flipped_) {
-      for (unsigned u=0; u<u_; ++u)
-        for (unsigned v=0; v<v_; ++v)
-          c(u,v)=image_[v*u_+u];
+    if (valid_) {
+      c.resize(u_+2,v_+2);  // image size + slop for interpolation
+      nu=u_;
+      nv=v_;
+      flipped_ = flipped;
+      if (!flipped_) {
+        for (unsigned u=0; u<u_; ++u)
+          for (unsigned v=0; v<v_; ++v)
+            c(u,v)=image_[v*u_+u];
+      } else {
+        for (unsigned u=0; u<u_; ++u)
+          for (unsigned v=0; v<v_; ++v)
+            c(u,v_-v-1)=image_[v*u_+u];
+      }
     } else {
-      for (unsigned u=0; u<u_; ++u)
-        for (unsigned v=0; v<v_; ++v)
-          c(u,v_-v-1)=image_[v*u_+u];
+      c.resize(0,0);
+      nu=0;
+      nv=0;
     }
   }
 
