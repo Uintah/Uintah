@@ -6,6 +6,7 @@
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/CCA/Ports/SchedulerP.h>
 #include <Packages/Uintah/Core/Grid/GridP.h>
+#include <Packages/Uintah/Core/Grid/ComputeSet.h>
 
 namespace Uintah {
 /**************************************

@@ -54,7 +54,6 @@ SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
   lb = scinew MPMLabel();
   d_nextOutputTime=0.;
   d_fracture = false;
-  d_analyze = NULL;
   d_SMALL_NUM_MPM=1e-200;
 }
 
@@ -1551,12 +1550,6 @@ void SerialMPM::integrateTemperatureRate(const ProcessorGroup*,
       new_dw->put( temperatureStar, lb->gTemperatureStarLabel, dwindex, patch );
     }
   }
-}
-
-
-void SerialMPM::setAnalyze(PatchDataAnalyze* analyze)
-{
-  d_analyze = analyze;
 }
 
 void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
