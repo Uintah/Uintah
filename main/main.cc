@@ -39,6 +39,7 @@
  *  Copyright (C) 1999 U of U
  */
 
+#include <main/sci_version.h>
 #include <Dataflow/Network/Network.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/Network/PackageDB.h>
@@ -68,9 +69,6 @@ using std::cout;
 #  include <afxwin.h>
 #endif
 
-// This needs to be synced with the contents of
-// SCIRun/doc/edition.xml
-#define SCIRUN_VERSION "1.23.0"
 
 using namespace SCIRun;
 
