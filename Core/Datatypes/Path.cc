@@ -258,7 +258,7 @@ bool Path::set_acc_t(int t){
   return false;
 }
 
-int Path::get_acc_t(int n) const{
+int Path::get_acc_t(int) const{
   return acc_t;
 }
 
