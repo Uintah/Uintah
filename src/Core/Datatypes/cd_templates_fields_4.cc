@@ -29,9 +29,9 @@
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Datatypes/GenericField.h>
-#include <Core/Datatypes/TriSurfField.h>
+#include <Core/Datatypes/TriSurfMesh.h>
 #include <Core/Datatypes/CurveField.h>
+#include <Core/Datatypes/TriSurfField.h>
 #include <Core/Datatypes/MaskedTriSurfField.h>
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)

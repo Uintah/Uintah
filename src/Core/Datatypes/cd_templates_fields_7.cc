@@ -29,7 +29,7 @@
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Geometry/Tensor.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Datatypes/GenericField.h>
+#include <Core/Datatypes/QuadraticLatVolMesh.h>
 #include <Core/Datatypes/QuadraticTetVolField.h>
 #include <Core/Datatypes/QuadraticLatVolField.h>
 
