@@ -20,7 +20,7 @@
 
    <DataArchiver>
       <filebase>test_plane_shell_punch.uda</filebase>
-      <outputTimestepInterval> 10 </outputTimestepInterval>
+      <outputTimestepInterval> 5 </outputTimestepInterval>
       <save label = "p.x"/>
       <save label = "p.volume"/>
       <save label = "p.mass"/>
