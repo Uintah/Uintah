@@ -122,8 +122,8 @@ template <class T> void DynamicModel::applyFilter(const Patch* patch,
   Purpose~ Calculate the filtered values
   -----------------------------------------------------------------------  */
 void DynamicModel::applyFilter(const Patch* patch, 
-                               StaticArray<CCVariable<double> >& var,
-                               StaticArray<CCVariable<double> >& var_hat)
+                               SCIRun::StaticArray<CCVariable<double> >& var,
+                               SCIRun::StaticArray<CCVariable<double> >& var_hat)
 { 
 
   CellIterator iter = patch->getCellIterator();

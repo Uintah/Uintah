@@ -32,13 +32,17 @@
 #include <Packages/Uintah/Core/Exceptions/MaxIteration.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Math/FastMatrix.h>
-#include <vector>
 #include <Core/Geometry/Vector.h>
 #include <Core/Containers/StaticArray.h>
 #include <Core/Util/DebugStream.h>
+
+#include <sgi_stl_warnings_off.h>
+#include <vector>
 #include <sstream>
-#include <float.h>
 #include <iostream>
+#include <sgi_stl_warnings_on.h>
+
+#include <float.h>
 
 using std::vector;
 using std::max;
@@ -1540,7 +1544,7 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
                                     const PatchSet* patch_set,
                                     const MaterialSubset* ice_matlsub,
                                     const MaterialSubset* /*mpm_matls*/,
-                                    const MaterialSubset* press_matl,
+                                    const MaterialSubset* /*press_matl*/,
                                     const MaterialSet* ice_matls)
 {
   Ghost::GhostType  gac  = Ghost::AroundCells; 
