@@ -18,15 +18,19 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 #SRCS	:= $(SRCDIR)/testing.cc
 #include $(SRCTOP)/scripts/program.mk
 #
-#PROGRAM	:= $(SRCDIR)/test2
-#SRCS	:= $(SRCDIR)/test2.cc 
-#PSELIBS := Uintah/Interface Uintah/Components/ProblemSpecification
-#LIBS 	:= $(XML_LIBRARY)
-#include $(SRCTOP)/scripts/program.mk
+PROGRAM	:= $(SRCDIR)/test2
+SRCS	:= $(SRCDIR)/test2.cc 
+PSELIBS := Uintah/Interface Uintah/Components/ProblemSpecification \
+	Uintah/Grid
+LIBS 	:= $(XML_LIBRARY)
+include $(SRCTOP)/scripts/program.mk
 
 
 #
 # $Log$
+# Revision 1.6  2000/04/06 18:10:31  jas
+# Added Uintah/Grid to the PSELIB for test2 to compile.
+#
 # Revision 1.5  2000/03/30 20:23:39  sparker
 # Fixed compile on SGI
 #
