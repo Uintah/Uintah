@@ -185,7 +185,6 @@ SRCS += $(SRCDIR)/Worker.cc \
 #	$(SRCDIR)/LumiCamera.cc \
 
 SUBDIRS := $(SRCDIR)/Shadows \
-	$(SRCDIR)/PathTracer \
 #	   $(SRCDIR)/LightField \
 
 include $(SRCTOP)/scripts/recurse.mk
@@ -196,3 +195,7 @@ PSELIBS :=  \
 LIBS := $(GLUI_LIBRARY) $(GLUT_LIBRARY) $(GL_LIBRARY) $(FASTM_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(PERFEX_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
+
+SUBDIRS := $(SRCDIR)/PathTracer
+
+include $(SRCTOP)/scripts/recurse.mk
