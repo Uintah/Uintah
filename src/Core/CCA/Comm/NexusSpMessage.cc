@@ -222,8 +222,23 @@ void NexusSpMessage::destroyMessage() {
   delete this;
 }
 
+int NexusSpMessage::getRecvBufferCopy(void* buf) 
+{
+}
 
+int NexusSpMessage::getSendBufferCopy(void* buf)
+{
+}
 
+void NexusSpMessage::setRecvBuffer(void* buf, int len)
+{
+}
+
+void NexusSpMessage::setSendBuffer(void* buf, int len)
+{
+}
+
+  
 
 
 

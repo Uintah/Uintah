@@ -41,6 +41,10 @@ namespace SCIRun {
   public:
     virtual ~Message();
     virtual void* getLocalObj() = 0;
+    virtual int getRecvBufferCopy(void* buf) = 0;
+    virtual int getSendBufferCopy(void* buf) = 0;
+    virtual void setRecvBuffer(void* buf, int len) = 0;
+    virtual void setSendBuffer(void* buf, int len) = 0;
     virtual void createMessage() = 0;
     virtual void marshalInt(const int *i, int size = 1) = 0;
     virtual void marshalSpChannel(SpChannel* channel) = 0;

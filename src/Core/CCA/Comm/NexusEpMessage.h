@@ -48,6 +48,12 @@ namespace SCIRun {
     NexusEpMessage(globus_nexus_endpoint_t , globus_nexus_buffer_t msgbuff);
     virtual ~NexusEpMessage();
     void* getLocalObj();
+
+    int getRecvBufferCopy(void* buf);
+    int getSendBufferCopy(void* buf);
+    void setRecvBuffer(void* buf, int len);
+    void setSendBuffer(void* buf, int len);
+
     void createMessage();
     void marshalInt(const int *i, int size = 1);
     void marshalByte(const char *b, int size = 1);

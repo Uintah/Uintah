@@ -21,6 +21,9 @@
 
 #include <Core/CCA/Comm/Intra/IntraComm.h>
 
+#include <sci_config.h> // For MPIPP_H on SGI
+#include <mpi.h>
+
 namespace SCIRun {
   /**************************************
   CLASS
@@ -42,6 +45,9 @@ namespace SCIRun {
     int send(int rank, char* bytestream, int length);
     int receive(int rank, char* bytestream, int length);
     int broadcast(int root, char* bytestream, int length);
+    int async_send(int rank, char* bytestream, int length);
+    int async_receive(int rank, char* bytestream, int length);
+  private:
   };
 }
 
