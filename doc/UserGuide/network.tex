@@ -114,7 +114,7 @@ end'' consists of the following components:
 \subsection{Making a Connection}
 \label{sec:connectmods}
 
-Button 2 is used to connect the input port of one module to
+Mouse button 2 is used to connect the input port of one module to
 the output port of another module (or vice-versa).  
 
 Position the mouse pointer over a module's input (output) port.  Then press
@@ -123,8 +123,8 @@ port.
 
 When button 2 is first pressed the program shows all valid connections as
 black lines.  It also draws one red colored connection which is the
-connection that will be made if you stop the drag by releasing the mouse
-button.
+connection that will be made if you stop the drag by releasing 
+button 2.
 
 Make the final connection by releasing button 2 when the pointer is over
 the desired destination port or when the red colored connection is the
@@ -136,14 +136,45 @@ The connection will be drawn using an appropriate data type color.
 \label{sec:deleteconnections}
 
 A connection may be deleted by pressing button 3 while the pointer is
-over a connection.
+over a connection.in the group 
 
-\subsection{Moving a  Module}
+\subsection{Selecting Modules}
+\label{sec:selectmods}
+
+A few operations (see \secref{Moving Module(s)}{sec:movemod} and
+\secref{Destroying Module(s)}{sec:destroymod}) act on a group of
+modules.  There are 2 ways to select module groups.
+
+\begin{description}
+\item[Method 1] Press mouse button 2 while the pointer is in the network
+  pane but not over a module.  Then drag the mouse.  This will draw the
+  outline of a box.  Modules intersecting the box will be part of the
+  group.  Release button 2 to complete your selection.
+\item[Method 2] Select the first module by clicking mouse
+  button 2 while the pointer is over a module.  Then add modules to the
+  group by pressing (and holding down) the control key while you click on
+  modules with button 2.
+\end{description}
+
+You may mix selection methods.  For both methods pressing the control key
+while making selections will add modules to the group.  If you don't press
+the control key then previous selections will be forgotton and a new group
+will be started.
+
+Selected modules will be drawn in a slightly darker shade of grey.
+
+\subsection{Moving Module(s)}
 \label{sec:movemod}
 
 Modules may be moved around in the network pane.  To move a module simply
 press button 1 while the pointer is over a module and drag the module to
 its new location.
+
+Multiple modules may be moved at one time.  To do this first
+\hyperref{select}{select (see Section~}{)}{sec:selectmods} 1 or more
+modules. Then press button 1 while the pointer is over any one of the
+modules in the selected group and then drag the modules to their new location.
+
 
 \subsection{Changing a Module's Properties}
 \label{sec:setmodprops}
@@ -154,14 +185,22 @@ module's properties.  Each module's reference documentation explains the
 use of its control dialog.
 
 
-\subsection{Deleting (Destroying) a Module}
-\label{sec:deletemod}
+\subsection{Destroying Module(s)}
+\label{sec:destroymod}
 
 Delete a module by selecting the \menuitem{Destroy} menu item from the
 module's popup menu.
 
+Multiple modules may be deleted at one time.  To do this first
+\hyperref{select}{select (see Section~}{)}{sec:selectmods} 1 or more
+modules. Then choose, from the popup menu of any one of the modules in the
+selected group, the \menuitem{Destroy Selected} item.
+
+
 \subsection{Executing a Network}
 \label{sec:executenet}
+
+\ytbd
 
 
 \subsection{Documenting a Module}
@@ -194,16 +233,25 @@ to write notes or otherwise document the purpose and use of the network.
 \subsection{Saving a Network}
 \label{sec:savenet}
 
+\sr can save networks to files.  These network files have an extension of
+\filename{.net}.  
+
 To save a network select the \menuitem{Save} item from the main window's
-\menu{File} menu.
+\menu{File} menu.  \sr\ will prompt you, via a file browser dialog, for the
+name (and location) of the network file.
 
 
 \subsection{Opening a Network}
 \label{sec:opennet}
 
 To open a network select the \menuitem{Open} item from the main window's
-\menu{File} menu.
+\menu{File} menu.  \sr\ will present you with a file browser dialog.
+Use this dialog to choose a \filename{.net} file.
 
+Note that opening a network file merges the network from the file with the
+network in the network pane.  There is currently no way to ``close'' a
+network and then open a new one -- you must quit and restart \sr\ to do
+this.
 
 \subsection{Navigating a Network}
 \label{sec:navnetwork}
@@ -215,10 +263,10 @@ view.  Or you may use the navigation tool to view complex networks.
 The navigation pane shows the entire ``network world.''  The small
 rectangular region (outlined in black) within the navigation pane is the
 network navigation tool and it is a window on the network world.  The
-position of the navigation tool determines which part of the network is
+position of the navigation tool determines the part of the network that is
 visible in the network pane.  To view other parts of the network, press
-button 1 while the pointer is anywhere in the navigation pane (this will
-move the tool to the location of the pointer) and then drag the tool to the
+button 1 while the pointer is anywhere in the navigation pane -- this will
+move the tool to the location of the pointer --  then drag the tool to the
 new location.
 
 
