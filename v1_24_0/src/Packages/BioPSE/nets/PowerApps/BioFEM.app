@@ -880,9 +880,7 @@ class BioFEMApp {
 	global $mods(ShowDipole)-force-field-reset
 	set $mods(ShowDipole)-force-field-reset 1
 
-	$mods(FieldReader-conductivities)-c needexecute
-	$mods(FieldReader-electrodes)-c needexecute
-	$mods(FieldReader-probe)-c needexecute
+	netedit scheduleall
     }
     
 
