@@ -21,6 +21,8 @@
 #include <Uintah/Components/MPM/MPMLabel.h>
 
 #include <Uintah/Components/MPM/MPMPhysicalModules.h>
+#include <Uintah/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
+#include <Uintah/Components/MPM/PhysicalBC/ForceBC.h>
 
 using namespace std;
 using namespace Uintah::MPM;
@@ -181,6 +183,31 @@ void MPMMaterial::createParticles(particleIndex numParticles,
    for(particleIndex pIdx=0;pIdx<partclesNum;++pIdx) {
      ptemperatureGradient[pIdx] = Vector(0.,0.,0.);
      pexternalHeatRate[pIdx] = 0.;
+
+     //applyPhysicalBCToParticles
+     for (int i = 0; i<MPMPhysicalBCFactory::mpmPhysicalBCs.size(); i++ )
+     {
+       string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[i]->getType();
+        
+       if (bcs_type == "Force")
+       {
+         ForceBC* bc = dynamic_cast<ForceBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[i]);
+
+         const Point& lower( bc->getLowerRange() );
+         const Point& upper( bc->getUpperRange() );
+          
+         if( lower.x() <= position[pIdx].x() && position[pIdx].x() <= upper.x() &&
+             lower.y() <= position[pIdx].y() && position[pIdx].y() <= upper.y() &&
+             lower.z() <= position[pIdx].z() && position[pIdx].z() <= upper.z() )
+         {
+             pexternalforce[pIdx] = bc->getForceDensity() * pvolume[pIdx];
+             cout << pexternalforce[pIdx] << endl;
+         }
+         else {
+           pexternalforce[pIdx] = Vector(0.0,0.0,0.0);
+         }
+       }
+     }
    }
 
    new_dw->put(ptemperatureGradient, lb->pTemperatureGradientLabel);
@@ -354,6 +381,9 @@ double MPMMaterial::getHeatTransferCoefficient() const
 
 
 // $Log$
+// Revision 1.45  2000/08/18 20:30:52  tan
+// Fixed some bugs in SerialMPM, mainly in applyPhysicalBC.
+//
 // Revision 1.44  2000/08/09 03:18:00  jas
 // Changed new to scinew and added deletes to some of the destructors.
 //

@@ -6,19 +6,23 @@
 using namespace std;
 using namespace Uintah::MPM;
 
-void MPMPhysicalBCFactory::create(const ProblemSpecP& ps,
-                              std::vector<MPMPhysicalBC*>& bcs)
+std::vector<MPMPhysicalBC*> MPMPhysicalBCFactory::mpmPhysicalBCs;
+
+void MPMPhysicalBCFactory::create(const ProblemSpecP& ps)
 {
    ProblemSpecP current_ps = ps->findBlock("PhysicalBC")->findBlock("MPM");
    
    for(ProblemSpecP child = current_ps->findBlock("force"); child != 0;
        child = child->findNextBlock("force") )
    {
-      bcs.push_back(new ForceBC(child));
+      mpmPhysicalBCs.push_back(new ForceBC(child));
    }
 }
 
 // $Log$
+// Revision 1.2  2000/08/18 20:30:14  tan
+// Fixed some bugs in SerialMPM, mainly in applyPhysicalBC.
+//
 // Revision 1.1  2000/08/07 00:43:45  tan
 // Added MPMPhysicalBC class to handle all kinds of physical boundary conditions
 // in MPM.  Currently implemented force boundary conditions.
