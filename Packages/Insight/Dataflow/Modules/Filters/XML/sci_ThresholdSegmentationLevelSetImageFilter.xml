@@ -46,6 +46,10 @@
      </instance>
   </instantiations>
 
+  <outputs>
+    <output name="OutputImage" send_intermediate="yes"/>
+  </outputs>
+
   <includes>
   </includes>
 
