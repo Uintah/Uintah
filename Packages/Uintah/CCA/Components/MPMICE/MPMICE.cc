@@ -184,7 +184,7 @@ void MPMICE::scheduleInterpolatePAndGradP(const Patch* patch,
      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
      int idx = mpm_matl->getDWIndex();
      t->requires(old_dw, Mlb->pXLabel,            idx, patch, Ghost::None);
-     t->requires(new_dw, MIlb->mom_source_CCLabel,idx, patch,
+     t->requires(new_dw, Ilb->mom_source_CCLabel,idx, patch,
 							Ghost::AroundCells, 1);
 
      t->computes(new_dw, Mlb->pPressureLabel,   idx, patch);
@@ -209,12 +209,12 @@ void MPMICE::scheduleInterpolateVelIncFCToNC(const Patch* patch,
    for(int m = 0; m < numMPMMatls; m++){
      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
      int idx = mpm_matl->getDWIndex();
-     t->requires(new_dw,MIlb->uvel_FCLabel,     idx, patch,Ghost::None);
-     t->requires(new_dw,MIlb->vvel_FCLabel,     idx, patch,Ghost::None);
-     t->requires(new_dw,MIlb->wvel_FCLabel,     idx, patch,Ghost::None);
-     t->requires(new_dw,MIlb->uvel_FCMELabel,   idx, patch,Ghost::None);
-     t->requires(new_dw,MIlb->vvel_FCMELabel,   idx, patch,Ghost::None);
-     t->requires(new_dw,MIlb->wvel_FCMELabel,   idx, patch,Ghost::None);
+     t->requires(new_dw, Ilb->uvel_FCLabel,     idx, patch,Ghost::None);
+     t->requires(new_dw, Ilb->vvel_FCLabel,     idx, patch,Ghost::None);
+     t->requires(new_dw, Ilb->wvel_FCLabel,     idx, patch,Ghost::None);
+     t->requires(new_dw, Ilb->uvel_FCMELabel,   idx, patch,Ghost::None);
+     t->requires(new_dw, Ilb->vvel_FCMELabel,   idx, patch,Ghost::None);
+     t->requires(new_dw, Ilb->wvel_FCMELabel,   idx, patch,Ghost::None);
 
      t->requires(new_dw,Mlb->gVelocityLabel,    idx, patch, Ghost::None);
 
@@ -281,8 +281,8 @@ void MPMICE::scheduleInterpolateNCToCC(const Patch* patch,
      t->requires(new_dw, Mlb->gMassLabel,         idx, patch,
 		Ghost::AroundCells, 1);
 
-     t->computes(new_dw, MIlb->mom_L_CCLabel,     idx, patch);
-     t->computes(new_dw, MIlb->int_eng_L_CCLabel, idx, patch);
+     t->computes(new_dw, Ilb->mom_L_CCLabel,     idx, patch);
+     t->computes(new_dw, Ilb->int_eng_L_CCLabel, idx, patch);
    }
 
    sched->addTask(t);
@@ -317,9 +317,9 @@ void MPMICE::scheduleCCMomExchange(const Patch* patch,
      t->computes(new_dw, Mlb->dTdt_NCLabel,              idx, patch);
     }
     t->requires(new_dw,  Ilb->rho_CCLabel,         idx,patch,Ghost::None);
-    t->requires(new_dw, MIlb->mom_L_CCLabel,       idx,patch,Ghost::None,0);
-    t->requires(new_dw, MIlb->int_eng_L_CCLabel,   idx,patch,Ghost::None,0);
-    t->requires(new_dw, MIlb->rho_micro_CCLabel,   idx,patch,Ghost::None,0);
+    t->requires(new_dw,  Ilb->mom_L_CCLabel,       idx,patch,Ghost::None,0);
+    t->requires(new_dw,  Ilb->int_eng_L_CCLabel,   idx,patch,Ghost::None,0);
+    t->requires(new_dw,  Ilb->rho_micro_CCLabel,   idx,patch,Ghost::None,0);
     t->requires(new_dw,  Ilb->vol_frac_CCLabel,    idx,patch,Ghost::None);
   }
    sched->addTask(t);
@@ -362,10 +362,10 @@ void MPMICE::scheduleComputeEquilibrationPressure(const Patch* patch,
       task->requires(new_dw,MIlb->cVolumeLabel,      dwindex,patch,Ghost::None);
     }
     // For all materials
-    task->computes(new_dw,MIlb->speedSound_CCLabel,dwindex,patch);
-    task->computes(new_dw,MIlb->rho_micro_CCLabel, dwindex,patch);
-    task->computes(new_dw,MIlb->vol_frac_CCLabel,  dwindex,patch);
-    task->computes(new_dw,MIlb->rho_CCLabel,       dwindex,patch);
+    task->computes(new_dw, Ilb->speedSound_CCLabel,dwindex,patch);
+    task->computes(new_dw, Ilb->rho_micro_CCLabel, dwindex,patch);
+    task->computes(new_dw, Ilb->vol_frac_CCLabel,  dwindex,patch);
+    task->computes(new_dw, Ilb->rho_CCLabel,       dwindex,patch);
  } 
 
   task->computes(new_dw,Ilb->press_equil_CCLabel,0, patch);
@@ -455,7 +455,7 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
 
     CCVariable<Vector> mom_source;
     NCVariable<Vector> gradPressNC;
-    new_dw->get(mom_source,      MIlb->mom_source_CCLabel, dwindex, patch,
+    new_dw->get(mom_source,       Ilb->mom_source_CCLabel, dwindex, patch,
 							Ghost::AroundCells, 1);
     new_dw->allocate(gradPressNC, Mlb->gradPressNCLabel,   dwindex, patch);
 
@@ -491,12 +491,12 @@ void MPMICE::interpolateVelIncFCToNC(const ProcessorGroup*,
   for(int m = 0; m < numMatls; m++) {
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
     int dwindex = mpm_matl->getDWIndex();
-    new_dw->get(uvel_FC,   MIlb->uvel_FCLabel,   dwindex, patch, Ghost::None,0);
-    new_dw->get(vvel_FC,   MIlb->vvel_FCLabel,   dwindex, patch, Ghost::None,0);
-    new_dw->get(wvel_FC,   MIlb->wvel_FCLabel,   dwindex, patch, Ghost::None,0);
-    new_dw->get(uvel_FCME, MIlb->uvel_FCMELabel, dwindex, patch, Ghost::None,0);
-    new_dw->get(vvel_FCME, MIlb->vvel_FCMELabel, dwindex, patch, Ghost::None,0);
-    new_dw->get(wvel_FCME, MIlb->wvel_FCMELabel, dwindex, patch, Ghost::None,0);
+    new_dw->get(uvel_FC,   Ilb->uvel_FCLabel,   dwindex, patch, Ghost::None,0);
+    new_dw->get(vvel_FC,   Ilb->vvel_FCLabel,   dwindex, patch, Ghost::None,0);
+    new_dw->get(wvel_FC,   Ilb->wvel_FCLabel,   dwindex, patch, Ghost::None,0);
+    new_dw->get(uvel_FCME, Ilb->uvel_FCMELabel, dwindex, patch, Ghost::None,0);
+    new_dw->get(vvel_FCME, Ilb->vvel_FCMELabel, dwindex, patch, Ghost::None,0);
+    new_dw->get(wvel_FCME, Ilb->wvel_FCMELabel, dwindex, patch, Ghost::None,0);
 
     new_dw->get(gvelocity,Mlb->gVelocityLabel,   dwindex, patch, Ghost::None,0);
 
@@ -641,8 +641,8 @@ void MPMICE::interpolateNCToCC(const ProcessorGroup*,
      new_dw->get(gtempstar, Mlb->gTemperatureStarLabel,matlindex, patch,
 							Ghost::AroundCells, 1);
 
-     new_dw->allocate(cmomentum, MIlb->mom_L_CCLabel,      matlindex, patch);
-     new_dw->allocate(int_eng,   MIlb->int_eng_L_CCLabel,  matlindex, patch);
+     new_dw->allocate(cmomentum,  Ilb->mom_L_CCLabel,      matlindex, patch);
+     new_dw->allocate(int_eng,    Ilb->int_eng_L_CCLabel,  matlindex, patch);
  
      cmomentum.initialize(zero);
      int_eng.initialize(0.); 
@@ -672,8 +672,8 @@ void MPMICE::interpolateNCToCC(const ProcessorGroup*,
      }
 //     cout << "Solid matl CC momentum (wpg) = " << cell_momwpg << endl;
 
-     new_dw->put(cmomentum,    MIlb->mom_L_CCLabel, matlindex, patch);
-     new_dw->put(int_eng,      MIlb->int_eng_L_CCLabel,  matlindex, patch);
+     new_dw->put(cmomentum,     Ilb->mom_L_CCLabel, matlindex, patch);
+     new_dw->put(int_eng,       Ilb->int_eng_L_CCLabel,  matlindex, patch);
   }
 }
 
