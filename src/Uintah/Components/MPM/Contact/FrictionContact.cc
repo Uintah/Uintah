@@ -5,6 +5,7 @@ static char *id="@(#) $Id$";
 //
 
 #include "FrictionContact.h"
+#include <Uintah/Components/MPM/Util/Matrix3.h>
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Geometry/IntVector.h>
 #include <Uintah/Grid/Array3Index.h>
@@ -37,6 +38,23 @@ FrictionContact::FrictionContact(ProblemSpecP& ps,
   ps->require("mu",mu);
 
   d_sharedState = d_sS;
+
+  gTractionLabel = new VarLabel( "g.traction",
+                   NCVariable<double>::getTypeDescription() );
+
+  gSurfNormLabel = new VarLabel( "g.surfnorm",
+                   NCVariable<Vector>::getTypeDescription() );
+
+//  gStressLabel   = new VarLabel( "g.stress",
+//                   NCVariable<Matrix3>::getTypeDescription() );
+
+  pStressLabel   = new VarLabel( "p.stress",
+                   ParticleVariable<Matrix3>::getTypeDescription() );
+
+  pXLabel        = new VarLabel( "p.x",
+	           ParticleVariable<Point>::getTypeDescription(),
+                   VarLabel::PositionVariable);
+
 }
 
 FrictionContact::~FrictionContact()
@@ -58,9 +76,12 @@ void FrictionContact::exMomInterpolated(const ProcessorContext*,
   int numMatls = d_sharedState->getNumMatls();
   int NVFs = d_sharedState->getNumVelFields();
 
-  // Retrieve necessary data from DataWarehouse
+  // Need access to all velocity fields at once, so store in
+  // vectors of NCVariables
   vector<NCVariable<double> > gmass(NVFs);
   vector<NCVariable<Vector> > gvelocity(NVFs);
+
+  // Retrieve necessary data from DataWarehouse
   for(int m = 0; m < numMatls; m++){
     Material* matl = d_sharedState->getMaterial( m );
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
@@ -104,22 +125,123 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
   Vector centerOfMassMom(0.0,0.0,0.0);
   Vector Dvdt;
   double centerOfMassMass;
+  IntVector onex(1,0,0), oney(0,1,0), onez(0,0,1);
 
   int numMatls = d_sharedState->getNumMatls();
   int NVFs = d_sharedState->getNumVelFields();
 
-  // Retrieve necessary data from DataWarehouse
+  // This model requires getting the normal component of the
+  // surface traction.  The first step is to calculate the
+  // surface normals of each object.  Next, interpolate the
+  // stress to the grid.  The quantity we want is n^T*stress*n
+  // at each node.
+
+  // Need access to all velocity fields at once, so store in
+  // vectors of NCVariables
   vector<NCVariable<double> > gmass(NVFs);
   vector<NCVariable<Vector> > gvelocity_star(NVFs);
   vector<NCVariable<Vector> > gacceleration(NVFs);
+
+#if 0
+  // First, calculate the gradient of the mass everywhere
+  // normalize it, and stick it in surfNorm
+  NCVariable<Vector> gsurfnorm;
   for(int m = 0; m < numMatls; m++){
     Material* matl = d_sharedState->getMaterial( m );
     MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
     if(mpm_matl){
       int vfindex = matl->getVFIndex();
       new_dw->get(gmass[vfindex], gMassLabel,vfindex , region, 0);
-      new_dw->get(gvelocity_star[vfindex], gVelocityStarLabel, vfindex, region, 0);
-      new_dw->get(gacceleration[vfindex], gAccelerationLabel, vfindex, region, 0);
+      new_dw->allocate(gsurfnorm, gSurfNormLabel, vfindex, region);
+
+      for(NodeIterator iter = region->getNodeIterator(); !iter.done(); iter++){
+	// Stick calculation of gsurfnorm here
+        // WARNING  This assumes dx=dy=dz.  This will be fixed eventually.
+	gsurfnorm[*iter] = Vector(
+		gmass[vfindex][*iter+onex] - gmass[vfindex][*iter-onex], 
+		gmass[vfindex][*iter+oney] - gmass[vfindex][*iter-oney], 
+		gmass[vfindex][*iter+onez] - gmass[vfindex][*iter-onez]);
+      }
+      new_dw->put(gsurfnorm, gSurfNormLabel, vfindex, region);
+
+    }
+  }
+
+  // Next, interpolate the stress to the grid
+  for(int m = 0; m < numMatls; m++){
+    Material* matl = d_sharedState->getMaterial( m );
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    if(mpm_matl){
+      int matlindex = matl->getDWIndex();
+      int vfindex = matl->getVFIndex();
+      // Create arrays for the particle stress and grid stress
+      ParticleVariable<Matrix3> pstress;
+      NCVariable<Matrix3>       gstress;
+      new_dw->get(pstress, pStressLabel, matlindex, region, 0);
+      new_dw->allocate(gstress, gStressLabel, vfindex, region);
+      gstress.initialize(Matrix3(0.0));
+
+      ParticleVariable<Point> px;
+      old_dw->get(px, pXLabel, matlindex, region, 0);
+
+
+      ParticleSubset* pset = pstress.getParticleSubset();
+      for(ParticleSubset::iterator iter = pset->begin();
+         iter != pset->end(); iter++){
+         particleIndex idx = *iter;
+
+         // Get the node indices that surround the cell
+         IntVector ni[8];
+	 double S[8];
+         if(!region->findCellAndWeights(px[idx], ni, S))
+            continue;
+         // Add each particles contribution to the local mass & velocity
+         // Must use the node indices
+         for(int k = 0; k < 8; k++) {
+             gstress[ni[k]] += pstress[idx] * S[k];
+         }
+      }
+//      new_dw->put(gstress, gStressLabel, vfindex, region);
+
+    }
+  }
+
+  // Finally, compute the normal component of the traction
+  for(int m = 0; m < numMatls; m++){
+    Material* matl = d_sharedState->getMaterial( m );
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    if(mpm_matl){
+      int vfindex = matl->getVFIndex();
+      NCVariable<Matrix3>      gstress;
+      NCVariable<Vector>       gtraction;
+      NCVariable<Vector>       gsurfnorm;
+      new_dw->get(gstress, gStressLabel, vfindex, region,0);
+      new_dw->get(gsurfnorm, gSurfNormLabel, vfindex, region,0);
+      new_dw->allocate(gtraction, gTractionLabel, vfindex, region);
+
+      //Compute traction here.  In the morning, when I'm not
+      //about to pass out from hunger.
+
+      new_dw->put(gtraction, gTractionLabel, vfindex, region);
+
+    }
+  }
+#endif
+
+
+  // FINALLY, we have all the pieces in place, compute the proper
+  // interaction
+
+  // Retrieve necessary data from DataWarehouse
+  for(int m = 0; m < numMatls; m++){
+    Material* matl = d_sharedState->getMaterial( m );
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    if(mpm_matl){
+      int vfindex = matl->getVFIndex();
+      new_dw->get(gmass[vfindex], gMassLabel,vfindex , region, 0);
+      new_dw->get(gvelocity_star[vfindex], gVelocityStarLabel,
+						 vfindex, region, 0);
+      new_dw->get(gacceleration[vfindex],gAccelerationLabel,vfindex,region,0);
     }
   }
   delt_vartype delt;
@@ -153,6 +275,10 @@ void FrictionContact::exMomIntegrated(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.7  2000/05/05 02:24:35  guilkey
+// Added more stuff to FrictionContact, most of which is currently
+// commented out until a compilation issue is resolved.
+//
 // Revision 1.6  2000/05/02 18:41:18  guilkey
 // Added VarLabels to the MPM algorithm to comply with the
 // immutable nature of the DataWarehouse. :)

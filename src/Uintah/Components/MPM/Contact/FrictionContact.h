@@ -57,6 +57,13 @@ WARNING
 	 FrictionContact& operator=(const FrictionContact &con);
 	 
 	 SimulationStateP d_sharedState;
+
+         // VarLabels specific to Frictional contact
+	 const VarLabel* gTractionLabel;
+	 const VarLabel* gSurfNormLabel; 
+	 const VarLabel* gStressLabel; 
+	 const VarLabel* pStressLabel; 
+	 const VarLabel* pXLabel; 
 	 
       public:
 	 // Constructor
@@ -84,6 +91,10 @@ WARNING
 #endif /* __FRICTION_H__ */
 
 // $Log$
+// Revision 1.3  2000/05/05 02:24:35  guilkey
+// Added more stuff to FrictionContact, most of which is currently
+// commented out until a compilation issue is resolved.
+//
 // Revision 1.2  2000/04/27 21:28:58  jas
 // Contact is now created using a factory.
 //
