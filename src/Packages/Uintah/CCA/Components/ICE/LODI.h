@@ -2,12 +2,10 @@
 #define Packages_Uintah_CCA_Components_Ice_LODI_h
 
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
+#include <Packages/Uintah/Core/Labels/ICELabel.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
-
+#include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
@@ -15,16 +13,19 @@
 #include <typeinfo>
 using namespace Uintah;
 namespace Uintah {
-  //__________________________________
-  // This struct contains user inputs that are needed
-  struct Lodi_user_inputs{
-    double press_infinity;
+
+  //_____________________________________________________________
+  // This struct contains misc. variables that are carried around
+  // press_infinity:  user input
+  // sigma:           user input constant
+  struct Lodi_variable_basket{
+    double press_infinity;  
     double sigma;
   };
     
-  //__________________________________
-  // This struct contains the additional variables
-  // required to apply the Lodi Temperature, density and velocity BC.
+  //____________________________________________________________
+  // This struct contains the additional variables required to 
+  // apply the Lodi Temperature, density and velocity BC.
   struct Lodi_vars{                
     Lodi_vars() : di(6) {}
     constCCVariable<double> rho_old;     
@@ -41,11 +42,11 @@ namespace Uintah {
     StaticArray<CCVariable<Vector> > di; 
     double delT;
     bool setLodiBcs; 
-    Lodi_user_inputs* user_inputs;           
+    Lodi_variable_basket* var_basket;           
   };
-  //__________________________________
-  // This struct contains the additional variables
-  // required to apply the Lodi pressure bcs.
+  //_____________________________________________________________
+  // This struct contains the additional variables required to 
+  // apply the Lodi pressure bcs.
   struct Lodi_vars_pressBC{
     Lodi_vars_pressBC(int numMatls): Temp_CC(numMatls), f_theta(numMatls), cv(numMatls),gamma(numMatls) {}
     StaticArray<constCCVariable<double> > Temp_CC;
@@ -71,9 +72,15 @@ namespace Uintah {
                              DataWarehouse* old_dw,
                              DataWarehouse* new_dw);
 
-  bool read_LODI_BC_inputs(const ProblemSpecP& prob_spec,
-                           Lodi_user_inputs* Lodi_user_inputs);                                                
-  
+  bool read_LODI_BC_inputs(const ProblemSpecP&,
+                           Lodi_variable_basket*);
+                                               
+  VarLabel* getMaxMach_face_VarLabel( Patch::FaceType face);                                           
+                                                             
+  void Lodi_maxMach_patchSubset(const LevelP& level,
+                                 SimulationStateP& sharedState,
+                                 vector<PatchSubset*> &);
+                                  
   bool is_LODI_face(const Patch* patch,
                   Patch::FaceType face,
                   SimulationStateP& sharedState);                            
@@ -89,6 +96,7 @@ namespace Uintah {
                  constCCVariable<Vector>& vel_old, 
                  constCCVariable<double>& speedSound, 
                  const Patch* patch,
+                 DataWarehouse*,
                  SimulationStateP& sharedState);
                  
   double computeConvection(const double& nuFrt,     const double& nuMid, 
