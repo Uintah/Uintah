@@ -453,6 +453,10 @@ void SerialMPM::scheduleSolveHeatEquations(SchedulerP& sched,
   t->requires(Task::NewDW, lb->gInternalHeatRateLabel,               gnone);
   t->requires(Task::NewDW, lb->gThermalContactHeatExchangeRateLabel, gnone);
 		
+  if(d_with_arches){
+    t->requires(Task::NewDW, lb->heaTranSolid_NCLabel, gnone);
+  }
+		
   t->computes(lb->gTemperatureRateLabel);
 
   sched->addTask(t, patches, matls);
@@ -1232,7 +1236,8 @@ void SerialMPM::solveHeatEquations(const ProcessorGroup*,
       constNCVariable<double> mass,externalHeatRate,gvolume;
       constNCVariable<double> thermalContactHeatExchangeRate;
       NCVariable<double> internalHeatRate;
-      
+      constNCVariable<double> htrate_gasNC; // for MPMArches
+            
       new_dw->get(mass,    lb->gMassLabel,      dwi, patch, Ghost::None, 0);
       new_dw->get(gvolume, lb->gVolumeLabel,    dwi, patch, Ghost::None, 0);
       new_dw->getCopy(internalHeatRate, lb->gInternalHeatRateLabel,
@@ -1243,6 +1248,18 @@ void SerialMPM::solveHeatEquations(const ProcessorGroup*,
       new_dw->get(thermalContactHeatExchangeRate,
                   lb->gThermalContactHeatExchangeRateLabel,
                                                 dwi, patch, Ghost::None, 0);
+
+      if (d_with_arches) {
+	new_dw->get(htrate_gasNC,lb->heaTranSolid_NCLabel,    
+		    dwi, patch, Ghost::None, 0);
+      }
+      else{
+	NCVariable<double> htrate_gasNC_create;
+	new_dw->allocateTemporary(htrate_gasNC_create, patch);				  
+
+	htrate_gasNC_create.initialize(0.0);
+	htrate_gasNC = htrate_gasNC_create; // reference created data
+      }
 
       Vector dx = patch->dCell();
       for(Patch::FaceType face = Patch::startFace;
@@ -1307,8 +1324,10 @@ void SerialMPM::solveHeatEquations(const ProcessorGroup*,
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
           IntVector c = *iter;
 	  tempRate[c] = (internalHeatRate[c]
-		          +  externalHeatRate[c])/(mass[c] * specificHeat) + 
-                             thermalContactHeatExchangeRate[c];
+		      +  externalHeatRate[c]
+	              +  htrate_gasNC[c]) /
+   		        (mass[c] * specificHeat) + 
+                         thermalContactHeatExchangeRate[c];
       }
     }
   }
