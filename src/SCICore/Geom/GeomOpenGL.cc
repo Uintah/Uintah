@@ -150,7 +150,12 @@ int GeomObj::pre_draw(DrawInfoOpenGL* di, Material* matl, int lit)
 int GeomObj::post_draw(DrawInfoOpenGL* di)
 {
     if(di->pickmode && di->pickchild){
+#if (_MIPS_SZPTR == 64)
+	glPopName();
+	glPopName();
+#else
 	glPopName();//pops the face index once the obj is rendered
+#endif
 	glPopName();
     }
 
@@ -1998,10 +2003,8 @@ void GeomPick::draw(DrawInfoOpenGL* di, Material* matl, double time)
 	unsigned int o2=o&0xffffffff;
 	glPushName(o1);
 	glPushName(o2);
-	
 #else
 	glPushName((GLuint)this);
-	
 #endif
 	di->pickchild =1;
     }
@@ -4162,6 +4165,9 @@ void GeomSticky::draw(DrawInfoOpenGL* di, Material* matl, double t) {
 
 //
 // $Log$
+// Revision 1.17  2000/02/04 00:40:26  dmw
+// cleaning up leftover pushes on the name stack
+//
 // Revision 1.16  2000/02/01 05:02:39  sparker
 // Fixed 64 bit compile - untested
 //
