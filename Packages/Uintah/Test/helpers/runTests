@@ -22,19 +22,8 @@ do_dbg=1
 
 #if VERBOSE is on, then have all output go to sdtout instead of log
 
-if [ $VERBOSE == "yes" ]; then
-  build_and_run "opt" "$OPT_CONFIGURE"
-else
-  build_and_run "opt" "$OPT_CONFIGURE" > "$BUILDROOT"/opt/log 2>&1
-fi
-
-retval=$?
-if [ $retval != 0 ]; then
-  failed=1
-  opt_failed=1
-
-#if weekly tests are active AND opt tests failed, do debug tests
-elif [ "$WEEKLY" == "1" ]; then
+#if weekly tests are active, don't do debug tests
+if [ "$WEEKLY" == "1" ]; then
   do_dbg=0
 fi
 
@@ -50,6 +39,20 @@ if [ $do_dbg == 1 ]; then
     dbg_failed=1
   fi
 fi
+
+
+if [ $VERBOSE == "yes" ]; then
+  build_and_run "opt" "$OPT_CONFIGURE"
+else
+  build_and_run "opt" "$OPT_CONFIGURE" > "$BUILDROOT"/opt/log 2>&1
+fi
+
+retval=$?
+if [ $retval != 0 ]; then
+  failed=1
+  opt_failed=1
+fi
+
 
 if [ $failed == "0" ]; then
   echo "All tests passed!" >> "$BUILDROOT"/log
