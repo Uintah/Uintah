@@ -151,7 +151,10 @@
                     <ulink url="http://xml.apache.org/xerces-c/index.html">
                     Xerces-C++</ulink> 
                   </entry>
-                  <entry>1.4.0</entry>
+                  <entry>
+                    <ulink url="http://xml.apache.org/dist/xerces-c/stable/xerces-c-src1_5_1.tar.gz">
+                    1.5.1</ulink>
+                  </entry>
                 </row>
               </tbody>
             </entrytbl>
