@@ -93,7 +93,7 @@ GLTexture3D::GLTexture3D(FieldHandle texfld, double &min, double &max,
       dynamic_cast<LatticeVol<float>*>(texfld_.get_rep());
     field_minmax(*fld, minmax);
     mesh_ = fld->get_typed_mesh();
-  } else if (type == "unsigned int") {
+  } else if (type == "unsigned_int") {
     LatticeVol<unsigned int> *fld =
       dynamic_cast<LatticeVol<unsigned int>*>(texfld_.get_rep());
     field_minmax(*fld, minmax);
@@ -103,7 +103,7 @@ GLTexture3D::GLTexture3D(FieldHandle texfld, double &min, double &max,
       dynamic_cast<LatticeVol<int>*>(texfld_.get_rep());
     field_minmax(*fld, minmax);
     mesh_ = fld->get_typed_mesh();
-  } else if (type == "unsigned short") {
+  } else if (type == "unsigned_short") {
     LatticeVol<unsigned short> *fld =
       dynamic_cast<LatticeVol<unsigned short>*>(texfld_.get_rep());
     field_minmax(*fld, minmax);
@@ -113,7 +113,7 @@ GLTexture3D::GLTexture3D(FieldHandle texfld, double &min, double &max,
       dynamic_cast<LatticeVol<short>*>(texfld_.get_rep());
     field_minmax(*fld, minmax);
     mesh_ = fld->get_typed_mesh();
-  } else if (type == "unsigned char") {
+  } else if (type == "unsigned_char") {
     LatticeVol<unsigned char> *fld =
       dynamic_cast<LatticeVol<unsigned char>*>(texfld_.get_rep());
     field_minmax(*fld, minmax);
@@ -177,19 +177,19 @@ void GLTexture3D::build_texture()
   } else if (type == "float") {
     bontree_ = build_bon_tree(minP_, maxP_, 0, 0, 0, X_, Y_, Z_, 0, 
 	       dynamic_cast<LatticeVol<float>*>(texfld_.get_rep()), 0);
-  } else if (type == "unsigned int") {
+  } else if (type == "unsigned_int") {
     bontree_ = build_bon_tree(minP_, maxP_, 0, 0, 0, X_, Y_, Z_, 0, 
 	       dynamic_cast<LatticeVol<unsigned int>*>(texfld_.get_rep()), 0);
   } else if (type == "int") {
     bontree_ = build_bon_tree(minP_, maxP_, 0, 0, 0, X_, Y_, Z_, 0, 
 	       dynamic_cast<LatticeVol<int>*>(texfld_.get_rep()), 0);
-  } else if (type == "unsigned short") {
+  } else if (type == "unsigned_short") {
     bontree_ = build_bon_tree(minP_, maxP_, 0, 0, 0, X_, Y_, Z_, 0, 
 	       dynamic_cast<LatticeVol<unsigned short>*>(texfld_.get_rep()),0);
   } else if (type == "short") {
     bontree_ = build_bon_tree(minP_, maxP_, 0, 0, 0, X_, Y_, Z_, 0, 
 	       dynamic_cast<LatticeVol<short>*>(texfld_.get_rep()), 0);
-  } else if (type == "unsigned char") {
+  } else if (type == "unsigned_char") {
     bontree_ = build_bon_tree(minP_, maxP_, 0, 0, 0, X_, Y_, Z_, 0, 
 	       dynamic_cast<LatticeVol<unsigned char>*>(texfld_.get_rep()), 0);
   } else if (type == "char") {
