@@ -44,6 +44,39 @@ MTSPlastic::MTSPlastic(ProblemSpecP& ps)
 	ParticleVariable<double>::getTypeDescription());
 }
 	 
+MTSPlastic::MTSPlastic(const MTSPlastic* cm)
+{
+  d_CM.sigma_a = cm->d_CM.sigma_a;
+  d_CM.mu_0 = cm->d_CM.mu_0;
+  d_CM.D = cm->d_CM.D;
+  d_CM.T_0 = cm->d_CM.T_0;
+  d_CM.koverbcubed = cm->d_CM.koverbcubed;
+  d_CM.g_0i = cm->d_CM.g_0i;
+  d_CM.g_0e = cm->d_CM.g_0e;
+  d_CM.edot_0i = cm->d_CM.edot_0i;
+  d_CM.edot_0e = cm->d_CM.edot_0e;
+  d_CM.p_i = cm->d_CM.p_i;
+  d_CM.q_i = cm->d_CM.q_i;
+  d_CM.p_e = cm->d_CM.p_e;
+  d_CM.q_e = cm->d_CM.q_e;
+  d_CM.sigma_i = cm->d_CM.sigma_i;
+  d_CM.a_0 = cm->d_CM.a_0;
+  d_CM.a_1 = cm->d_CM.a_1;
+  d_CM.a_2 = cm->d_CM.a_2;
+  d_CM.a_3 = cm->d_CM.a_3;
+  d_CM.theta_IV = cm->d_CM.theta_IV;
+  d_CM.alpha = cm->d_CM.alpha;
+  d_CM.edot_es0 = cm->d_CM.edot_es0;
+  d_CM.g_0es = cm->d_CM.g_0es;
+  d_CM.sigma_es0 = cm->d_CM.sigma_es0;
+
+  // Initialize internal variable labels for evolution
+  pMTSLabel = VarLabel::create("p.mtStress",
+	ParticleVariable<double>::getTypeDescription());
+  pMTSLabel_preReloc = VarLabel::create("p.mtStress+",
+	ParticleVariable<double>::getTypeDescription());
+}
+	 
 MTSPlastic::~MTSPlastic()
 {
   VarLabel::destroy(pMTSLabel);
@@ -83,8 +116,9 @@ MTSPlastic::allocateCMDataAddRequires(Task* task,
 				      const PatchSet* patch,
 				      MPMLabel* lb) const
 {
-  //const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::NewDW,pMTSLabel_preReloc, Ghost::None);
+  const MaterialSubset* matlset = matl->thisMaterial();
+  task->requires(Task::NewDW, pMTSLabel_preReloc, matlset, Ghost::None);
+  //task->requires(Task::OldDW, pMTSLabel, matlset, Ghost::None);
 }
 
 void 
@@ -103,7 +137,8 @@ MTSPlastic::allocateCMDataAdd(DataWarehouse* new_dw,
 
   new_dw->allocateTemporary(pMTS,addset);
 
-  old_dw->get(o_MTS,pMTSLabel_preReloc,delset);
+  new_dw->get(o_MTS,pMTSLabel_preReloc,delset);
+  //old_dw->get(o_MTS,pMTSLabel,delset);
 
   ParticleSubset::iterator o,n = addset->begin();
   for(o = delset->begin(); o != delset->end(); o++, n++) {
@@ -173,6 +208,7 @@ MTSPlastic::computeFlowStress(const PlasticityState* state,
 {
   // Calculate strain rate and incremental strain
   double edot = state->plasticStrainRate;
+  ASSERT(edot > 0.0);
   double delEps = edot*delT;
 
   // Check if temperature is correct
@@ -185,71 +221,41 @@ MTSPlastic::computeFlowStress(const PlasticityState* state,
 
   // Calculate S_i
   double CC = d_CM.koverbcubed*T/mu;
-  //cout << "CC = " << CC << endl;
   double S_i = 0.0;
   if (d_CM.p_i > 0.0) {
     double CCi = CC/d_CM.g_0i;
     double logei = log(d_CM.edot_0i/edot);
     double logei_q = 1.0 - pow((CCi*logei),(1.0/d_CM.q_i));
-    if (!(logei_q > 0.0)) {
-      ostringstream desc;
-      desc << "**MTS ERROR** 1 - [Gi log(edoti/edot)]^q <= 0." << endl;
-      desc << "T = " << T << " mu = " << mu << " CCi = " << CCi
-           << " edot = " << edot << " logei = " << logei 
-           << " logei_q = " << endl;
-      throw InvalidValue(desc.str());
-    }
-    S_i = pow(logei_q,(1.0/d_CM.p_i));
-    //S_i = pow((1.0-pow((CCi*logei),(1.0/d_CM.q_i))),(1.0/d_CM.p_i));
-    //cout << "CC_i = " << CCi << " loge_i = " << logei << endl;
+    if (logei_q > 0.0) S_i = pow(logei_q,(1.0/d_CM.p_i));
   }
-  //cout << "S_i = " << S_i << endl;
 
   // Calculate S_e
   double CCe = CC/d_CM.g_0e;
   double logee = log(d_CM.edot_0e/edot);
   double logee_q = 1.0 - pow((CCe*logee),(1.0/d_CM.q_e));
-  if (!(logee_q > 0.0)) {
-    ostringstream desc;
-    desc << "**MTS ERROR** 1 - [Ge log(edote/edot)]^q <= 0." << endl;
-    desc << "T = " << T << " mu = " << mu << " CCe = " << CCe
-	 << " edot = " << edot << " logee = " << logee 
-	 << " logee_q = " << endl;
-    throw InvalidValue(desc.str());
-  }
-  double S_e = pow(logee_q,(1.0/d_CM.p_e));
-  //double S_e = pow((1.0-pow((CCe*logee),(1.0/d_CM.q_e))),(1.0/d_CM.p_e));
-  //cout << "CC_e = " << CCe << " loge_e = " << logee << endl;
-  //cout << "S_e = " << S_e << endl;
+  double S_e = 0.0;
+  if (logee_q > 0.0) S_e = pow(logee_q,(1.0/d_CM.p_e));
 
   // Calculate theta_0
   double theta_0 = d_CM.a_0 + d_CM.a_1*log(edot) + d_CM.a_2*sqrt(edot)
     - d_CM.a_3*T;
-  //cout << "theta_0 = " << theta_0 << endl;
 
   // Calculate sigma_es
   double CCes = CC/d_CM.g_0es;
   double powees = pow(edot/d_CM.edot_es0, CCes);
   double sigma_es = d_CM.sigma_es0*powees;
-  //cout << "CC_es = " << CCes << " (e/es)^CC = " << powees << endl;
-  //cout << "sigma_es = " << sigma_es << endl;
 
   // Calculate X and FX
   double X = pMTS[idx]/sigma_es;
   double FX = tanh(d_CM.alpha*X);
-  //cout << "X = " << X << " FX = " << FX << endl;
 
   // Calculate theta
   double theta = theta_0*(1.0 - FX) + d_CM.theta_IV*FX;
-  //cout << "theta = " << theta << endl;
 
   // Calculate the flow stress
   double sigma_e = pMTS[idx] + delEps*theta; 
   pMTS_new[idx] = sigma_e;
-  //cout << "sigma_e = " << sigma_e << endl;
   double sigma = d_CM.sigma_a + S_i*d_CM.sigma_i + S_e*sigma_e;
-  //cout << "MTS::edot = " << edot << " delEps = " << delEps 
-  //     << " sigma_Y = " << sigma << endl;
   return sigma;
 }
 
@@ -313,7 +319,9 @@ MTSPlastic::computeTangentModulus(const Matrix3& stress,
   // Calculate f_q (h = theta, therefore f_q.h = f_q.theta)
   double CCe = CC/d_CM.g_0e;
   double logee = log(d_CM.edot_0e/edot);
-  double S_e = pow((1.0-pow((CCe*logee),(1.0/d_CM.q_e))),(1.0/d_CM.p_e));
+  double logee_q = 1.0 - pow((CCe*logee),(1.0/d_CM.q_e));
+  double S_e = 0.0;
+  if (logee_q > 0.0) S_e = pow(logee_q,(1.0/d_CM.p_e));
   double f_q0 = mu_mu_0*S_e;
 
   // Get f_q1 = dsigma/dep (h = 1, therefore f_q.h = f_q)
@@ -588,7 +596,9 @@ MTSPlastic::evalDerivativeWRTSigmaE(const PlasticityState* state,
   double CC = d_CM.koverbcubed*T/mu;
   double CCe = CC/d_CM.g_0e;
   double logee = log(d_CM.edot_0e/edot);
-  double S_e = pow((1.0-pow((CCe*logee),(1.0/d_CM.q_e))),(1.0/d_CM.p_e));
+  double logee_q = 1.0 - pow((CCe*logee),(1.0/d_CM.q_e));
+  double S_e = 0.0;
+  if (logee_q > 0.0) S_e = pow(logee_q,(1.0/d_CM.p_e));
   S_e = mu_mu_0*S_e;
   return S_e;
 }

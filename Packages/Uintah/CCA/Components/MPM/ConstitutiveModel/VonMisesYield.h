@@ -35,7 +35,7 @@ namespace Uintah {
 
     // Prevent copying of this class
     // copy constructor
-    VonMisesYield(const VonMisesYield &);
+    //VonMisesYield(const VonMisesYield &);
     VonMisesYield& operator=(const VonMisesYield &);
 
   public:
@@ -43,6 +43,7 @@ namespace Uintah {
     //! Constructor
     /*! Creates a VonMisesYield function object */
     VonMisesYield(ProblemSpecP& ps);
+    VonMisesYield(const VonMisesYield* cm);
 	 
     //! Destructor 
     ~VonMisesYield();

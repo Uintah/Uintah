@@ -44,6 +44,17 @@ CompMooneyRivlin::CompMooneyRivlin(ProblemSpecP& ps, MPMLabel* Mlb, int n8or27)
   }
 }
 
+CompMooneyRivlin::CompMooneyRivlin(const CompMooneyRivlin* cm)
+{
+  lb = cm->lb;
+  d_8or27 = cm->d_8or27;
+  NGN = cm->NGN;
+
+  d_initialData.C1 = cm->d_initialData.C1;
+  d_initialData.C2 = cm->d_initialData.C2;
+  d_initialData.PR = cm->d_initialData.PR;
+}
+
 CompMooneyRivlin::~CompMooneyRivlin()
 {
   // Destructor
@@ -87,7 +98,7 @@ void CompMooneyRivlin::allocateCMDataAddRequires(Task* task,
 						   const PatchSet* patch,
 						   MPMLabel* lb) const
 {
-  const MaterialSubset* matlset = matl->thisMaterial();
+  //const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW,lb->pDeformationMeasureLabel, Ghost::None);
   task->requires(Task::OldDW,lb->pStressLabel, Ghost::None);
 #ifdef FRACTURE

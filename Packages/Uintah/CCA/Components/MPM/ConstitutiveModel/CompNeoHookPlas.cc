@@ -54,6 +54,30 @@ CompNeoHookPlas::CompNeoHookPlas(ProblemSpecP& ps, MPMLabel* Mlb, int n8or27)
   }
 }
 
+CompNeoHookPlas::CompNeoHookPlas(const CompNeoHookPlas* cm)
+{
+  lb = cm->lb;
+  d_8or27 = cm->d_8or27;
+  NGN = cm->NGN;
+
+  d_useModifiedEOS = cm->d_useModifiedEOS ;
+  d_initialData.Bulk = cm->d_initialData.Bulk;
+  d_initialData.Shear = cm->d_initialData.Shear;
+  d_initialData.FlowStress = cm->d_initialData.FlowStress;
+  d_initialData.K = cm->d_initialData.K;
+  d_initialData.Alpha = cm->d_initialData.Alpha;
+  
+  p_statedata_label = VarLabel::create("p.statedata_cnhp",
+                             ParticleVariable<StateData>::getTypeDescription());
+  p_statedata_label_preReloc = VarLabel::create("p.statedata_cnhp+",
+                             ParticleVariable<StateData>::getTypeDescription());
+ 
+  bElBarLabel = VarLabel::create("p.bElBar",
+		ParticleVariable<Matrix3>::getTypeDescription());
+  bElBarLabel_preReloc = VarLabel::create("p.bElBar+",
+		ParticleVariable<Matrix3>::getTypeDescription());
+}
+
 void CompNeoHookPlas::addParticleState(std::vector<const VarLabel*>& from,
 				       std::vector<const VarLabel*>& to)
 {
@@ -111,7 +135,7 @@ void CompNeoHookPlas::allocateCMDataAddRequires(Task* task,
 						const PatchSet* patch,
 						MPMLabel* lb) const
 {
-  const MaterialSubset* matlset = matl->thisMaterial();
+  //const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW,p_statedata_label, Ghost::None);
   task->requires(Task::OldDW,lb->pDeformationMeasureLabel, Ghost::None);
   task->requires(Task::OldDW,lb->pStressLabel, Ghost::None);

@@ -18,6 +18,17 @@ JohnsonCookDamage::JohnsonCookDamage(ProblemSpecP& ps)
   ps->get("Dc",d_initialData.Dc);
 } 
 	 
+JohnsonCookDamage::JohnsonCookDamage(const JohnsonCookDamage* cm)
+{
+  d_initialData.D1 = cm->d_initialData.D1;
+  d_initialData.D2 = cm->d_initialData.D2;
+  d_initialData.D3 = cm->d_initialData.D3;
+  d_initialData.D4 = cm->d_initialData.D4;
+  d_initialData.D5 = cm->d_initialData.D5;
+  d_initialData.D0 = cm->d_initialData.D0;
+  d_initialData.Dc = cm->d_initialData.Dc;
+} 
+	 
 JohnsonCookDamage::~JohnsonCookDamage()
 {
 }

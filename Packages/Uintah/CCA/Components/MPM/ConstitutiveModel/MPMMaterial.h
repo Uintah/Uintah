@@ -8,6 +8,7 @@
 #include <Packages/Uintah/Core/Grid/ParticleVariable.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/GeomPiece/GeometryPiece.h>
+#include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
 #include <sgi_stl_warnings_off.h>
@@ -64,11 +65,16 @@ WARNING
  class MPMMaterial : public Material {
  public:
 
+   // Default Constructor
+   MPMMaterial();
+
    // Standard MPM Material Constructor
-   MPMMaterial(ProblemSpecP&, MPMLabel* lb, int n8or27,string integrat,
-	       bool haveLoadCurve, bool doErosion);
+   MPMMaterial(ProblemSpecP&, MPMLabel* lb, MPMFlags* flags);
 	 
    ~MPMMaterial();
+
+   /*!  Create a copy of the material without the associated geometry */
+   void copyWithoutGeom(const MPMMaterial* mat, MPMFlags* flags);
 	 
    //////////
    // Return correct constitutive model pointer for this material
@@ -103,6 +109,13 @@ WARNING
 			      CCVariable<Vector>& vCC,
 			      int numMatls,
 			      const Patch* patch);
+
+   void initializeDummyCCVariables(CCVariable<double>& rhom,
+			           CCVariable<double>& rhC,
+			           CCVariable<double>& temp,   
+			           CCVariable<Vector>& vCC,
+			           int numMatls,
+			           const Patch* patch);
  private:
 
    MPMLabel* lb;
@@ -131,9 +144,8 @@ WARNING
    //
    // The standard set of initialization actions except particlecreator
    //
-   void standardInitialization(ProblemSpecP& ps, MPMLabel* lb, int n8or27,
-			       string integrator, bool haveLoadCurve,
-			       bool doErosion);
+   void standardInitialization(ProblemSpecP& ps, MPMLabel* lb, 
+                               MPMFlags* flags);
 
  };
 

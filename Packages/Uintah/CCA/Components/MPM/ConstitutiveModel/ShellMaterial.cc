@@ -86,6 +86,56 @@ ShellMaterial::ShellMaterial(ProblemSpecP& ps,  MPMLabel* Mlb, int n8or27)
                      ParticleVariable<Vector>::getTypeDescription());
 }
 
+ShellMaterial::ShellMaterial(const ShellMaterial* cm)
+{
+  d_initialData.Bulk = cm->d_initialData.Bulk;
+  d_initialData.Shear = cm->d_initialData.Shear;
+
+  lb = cm->lb;
+  d_8or27 = cm->d_8or27;
+  NGN = cm->NGN;
+
+  // Allocate local VarLabels
+  pNormalRotRateLabel = VarLabel::create("p.normalRotRate",
+                     ParticleVariable<Vector>::getTypeDescription());
+  pDefGradTopLabel = VarLabel::create("p.defGradTop",
+                     ParticleVariable<Matrix3>::getTypeDescription());
+  pDefGradCenLabel = VarLabel::create("p.defGradCen",
+                     ParticleVariable<Matrix3>::getTypeDescription());
+  pDefGradBotLabel = VarLabel::create("p.defGradBot",
+                     ParticleVariable<Matrix3>::getTypeDescription());
+  pStressTopLabel = VarLabel::create("p.stressTop",
+                     ParticleVariable<Matrix3>::getTypeDescription());
+  pStressCenLabel = VarLabel::create("p.stressCen",
+                     ParticleVariable<Matrix3>::getTypeDescription());
+  pStressBotLabel = VarLabel::create("p.stressBot",
+                     ParticleVariable<Matrix3>::getTypeDescription());
+
+  pNormalRotRateLabel_preReloc = VarLabel::create("p.normalRotRate+",
+                     ParticleVariable<Vector>::getTypeDescription());
+  pDefGradTopLabel_preReloc = VarLabel::create("p.defGradTop+",
+                     ParticleVariable<Matrix3>::getTypeDescription());
+  pDefGradCenLabel_preReloc = VarLabel::create("p.defGradCen+",
+                     ParticleVariable<Matrix3>::getTypeDescription());
+  pDefGradBotLabel_preReloc = VarLabel::create("p.defGradBot+",
+                     ParticleVariable<Matrix3>::getTypeDescription());
+  pStressTopLabel_preReloc = VarLabel::create("p.stressTop+",
+                     ParticleVariable<Matrix3>::getTypeDescription());
+  pStressCenLabel_preReloc = VarLabel::create("p.stressCen+",
+                     ParticleVariable<Matrix3>::getTypeDescription());
+  pStressBotLabel_preReloc = VarLabel::create("p.stressBot+",
+                     ParticleVariable<Matrix3>::getTypeDescription());
+
+  pAverageMomentLabel = VarLabel::create("p.averageMoment",
+                     ParticleVariable<Matrix3>::getTypeDescription());
+  pNormalDotAvStressLabel = VarLabel::create("p.normalDotAvStress",
+                     ParticleVariable<Vector>::getTypeDescription());
+  pRotMassLabel = VarLabel::create("p.rotMass",
+                     ParticleVariable<double>::getTypeDescription());
+  pNormalRotAccLabel = VarLabel::create("p.rotAcc",
+                     ParticleVariable<Vector>::getTypeDescription());
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 // Destructor

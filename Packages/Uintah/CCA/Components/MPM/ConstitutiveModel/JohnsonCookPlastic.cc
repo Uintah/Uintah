@@ -12,14 +12,30 @@ JohnsonCookPlastic::JohnsonCookPlastic(ProblemSpecP& ps)
   ps->require("C",d_CM.C);
   ps->require("n",d_CM.n);
   ps->require("m",d_CM.m);
+  d_CM.epdot_0 = 1.0;
+  ps->get("epdot_0", d_CM.epdot_0);
   d_CM.TRoom = 294;
+  ps->get("T_r",d_CM.TRoom);
   d_CM.TMelt = 1594;
+  ps->get("T_m",d_CM.TMelt);
 }
-	 
+         
+JohnsonCookPlastic::JohnsonCookPlastic(const JohnsonCookPlastic* cm)
+{
+  d_CM.A = cm->d_CM.A;
+  d_CM.B = cm->d_CM.B;
+  d_CM.C = cm->d_CM.C;
+  d_CM.n = cm->d_CM.n;
+  d_CM.m = cm->d_CM.m;
+  d_CM.epdot_0 = cm->d_CM.epdot_0;
+  d_CM.TRoom = cm->d_CM.TRoom;
+  d_CM.TMelt = cm->d_CM.TMelt;
+}
+         
 JohnsonCookPlastic::~JohnsonCookPlastic()
 {
 }
-	 
+         
 void 
 JohnsonCookPlastic::addInitialComputesAndRequires(Task* ,
                                            const MPMMaterial* ,
@@ -29,38 +45,38 @@ JohnsonCookPlastic::addInitialComputesAndRequires(Task* ,
 
 void 
 JohnsonCookPlastic::addComputesAndRequires(Task* ,
-				    const MPMMaterial* ,
-				    const PatchSet*) const
+                                    const MPMMaterial* ,
+                                    const PatchSet*) const
 {
 }
 
 void 
 JohnsonCookPlastic::addParticleState(std::vector<const VarLabel*>& ,
-				     std::vector<const VarLabel*>& )
+                                     std::vector<const VarLabel*>& )
 {
 }
 
 void 
 JohnsonCookPlastic::allocateCMDataAddRequires(Task* ,
-					      const MPMMaterial* ,
-					      const PatchSet* ,
-					      MPMLabel* ) const
+                                              const MPMMaterial* ,
+                                              const PatchSet* ,
+                                              MPMLabel* ) const
 {
 }
 
 void JohnsonCookPlastic::allocateCMDataAdd(DataWarehouse* ,
-					   ParticleSubset* ,
-					   map<const VarLabel*, 
+                                           ParticleSubset* ,
+                                           map<const VarLabel*, 
                                            ParticleVariableBase*>* ,
-					   ParticleSubset* ,
-					   DataWarehouse* )
+                                           ParticleSubset* ,
+                                           DataWarehouse* )
 {
 }
 
 
 void 
 JohnsonCookPlastic::initializeInternalVars(ParticleSubset* ,
-				           DataWarehouse* )
+                                           DataWarehouse* )
 {
 }
 
@@ -94,12 +110,12 @@ JohnsonCookPlastic::updatePlastic(const particleIndex , const double& )
 
 double 
 JohnsonCookPlastic::computeFlowStress(const PlasticityState* state,
-				      const double& delT,
-				      const double& tolerance,
-				      const MPMMaterial* matl,
-				      const particleIndex idx)
+                                      const double& delT,
+                                      const double& tolerance,
+                                      const MPMMaterial* matl,
+                                      const particleIndex idx)
 {
-  double epdot = state->plasticStrainRate;
+  double epdot = state->plasticStrainRate/d_CM.epdot_0;
   double ep = state->plasticStrain;
   double T = state->temperature;
   double Tr = matl->getRoomTemperature();
@@ -126,11 +142,11 @@ JohnsonCookPlastic::computeFlowStress(const PlasticityState* state,
 void 
 JohnsonCookPlastic::computeTangentModulus(const Matrix3& stress,
                                           const PlasticityState* state,
-				          const double& ,
+                                          const double& ,
                                           const MPMMaterial* matl,
                                           const particleIndex idx,
-				          TangentModulusTensor& Ce,
-				          TangentModulusTensor& Cep)
+                                          TangentModulusTensor& Ce,
+                                          TangentModulusTensor& Cep)
 {
   // Calculate the deviatoric stress and rate of deformation
   Matrix3 one; one.Identity();
@@ -153,7 +169,7 @@ JohnsonCookPlastic::computeTangentModulus(const Matrix3& stress,
       Cr(ii,jj) = 0.0;
       rC(ii,jj) = 0.0;
       for (int kk = 0; kk < 3; ++kk) {
-	for (int ll = 0; ll < 3; ++ll) {
+        for (int ll = 0; ll < 3; ++ll) {
           Cr(ii,jj) += Ce(ii,jj,kk,ll)*rr(kk,ll);
           rC(ii,jj) += rr(kk,ll)*Ce(kk,ll,ii,jj);
         }
@@ -164,10 +180,10 @@ JohnsonCookPlastic::computeTangentModulus(const Matrix3& stress,
   for (int ii = 0; ii < 3; ++ii) {
     for (int jj = 0; jj < 3; ++jj) {
       for (int kk = 0; kk < 3; ++kk) {
-	for (int ll = 0; ll < 3; ++ll) {
+        for (int ll = 0; ll < 3; ++ll) {
           Cep(ii,jj,kk,ll) = Ce(ii,jj,kk,ll) - 
                              Cr(ii,jj)*rC(kk,ll)/(-f_q + rCr);
-	}  
+        }  
       }  
     }  
   }  
@@ -175,8 +191,8 @@ JohnsonCookPlastic::computeTangentModulus(const Matrix3& stress,
 
 void
 JohnsonCookPlastic::evalDerivativeWRTScalarVars(const PlasticityState* state,
-						const particleIndex idx,
-						Vector& derivs)
+                                                const particleIndex idx,
+                                                Vector& derivs)
 {
   derivs[0] = evalDerivativeWRTStrainRate(state, idx);
   derivs[1] = evalDerivativeWRTTemperature(state, idx);
@@ -190,7 +206,7 @@ JohnsonCookPlastic::evalDerivativeWRTPlasticStrain(const PlasticityState* state,
 {
   // Get the state data
   double ep = state->plasticStrain;
-  double epdot = state->plasticStrainRate;
+  double epdot = state->plasticStrainRate/d_CM.epdot_0;
   double T = state->temperature;
   double Tm = state->meltingTemp;
 
@@ -234,7 +250,7 @@ JohnsonCookPlastic::evalDerivativeWRTTemperature(const PlasticityState* state,
 {
   // Get the state data
   double ep = state->plasticStrain;
-  double epdot = state->plasticStrainRate;
+  double epdot = state->plasticStrainRate/d_CM.epdot_0;
   double T = state->temperature;
   double Tm = state->meltingTemp;
 
@@ -261,7 +277,7 @@ JohnsonCookPlastic::evalDerivativeWRTStrainRate(const PlasticityState* state,
 {
   // Get the state data
   double ep = state->plasticStrain;
-  double epdot = state->plasticStrainRate;
+  double epdot = state->plasticStrainRate/d_CM.epdot_0;
   double T = state->temperature;
   double Tm = state->meltingTemp;
 

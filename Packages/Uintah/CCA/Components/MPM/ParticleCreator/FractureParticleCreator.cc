@@ -1,4 +1,5 @@
 #include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/FractureParticleCreator.h>
+#include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 
@@ -7,10 +8,8 @@ using std::vector;
 
 FractureParticleCreator::FractureParticleCreator(MPMMaterial* matl,
 						 MPMLabel* lb,
-                                                 int n8or27,
-                                                 bool haveLoadCurve,
-						 bool doErosion) 
-  :  ParticleCreator(matl,lb,n8or27,haveLoadCurve, doErosion)
+						 MPMFlags* flags)
+  :  ParticleCreator(matl,lb,flags)
 {
   registerPermanentParticleState(matl,lb);
 

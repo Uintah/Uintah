@@ -17,6 +17,15 @@ GursonYield::GursonYield(ProblemSpecP& ps)
   ps->require("f_c",d_CM.f_c);
 }
 	 
+GursonYield::GursonYield(const GursonYield* cm)
+{
+  d_CM.q1 = cm->d_CM.q1;
+  d_CM.q2 = cm->d_CM.q2;
+  d_CM.q3 = cm->d_CM.q3;
+  d_CM.k = cm->d_CM.k;
+  d_CM.f_c = cm->d_CM.f_c;
+}
+	 
 GursonYield::~GursonYield()
 {
 }

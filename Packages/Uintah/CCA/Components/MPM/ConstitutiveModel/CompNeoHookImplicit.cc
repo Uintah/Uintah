@@ -42,6 +42,17 @@ CompNeoHookImplicit::CompNeoHookImplicit(ProblemSpecP& ps,  MPMLabel* Mlb, int n
 
 }
 
+CompNeoHookImplicit::CompNeoHookImplicit(const CompNeoHookImplicit* cm)
+{
+  lb = cm->lb;
+  d_8or27 = cm->d_8or27;
+  NGN = cm->NGN;
+
+  d_useModifiedEOS = cm->d_useModifiedEOS;
+  d_initialData.Bulk = cm->d_initialData.Bulk;
+  d_initialData.Shear = cm->d_initialData.Shear;
+}
+
 CompNeoHookImplicit::~CompNeoHookImplicit()
 {
 }
@@ -79,7 +90,7 @@ void CompNeoHookImplicit::allocateCMDataAddRequires(Task* task,
 						    MPMLabel* lb) const
 {
 
-  const MaterialSubset* matlset = matl->thisMaterial();
+  //const MaterialSubset* matlset = matl->thisMaterial();
   task->requires(Task::OldDW,lb->pDeformationMeasureLabel, Ghost::None);
   task->requires(Task::OldDW,lb->pStressLabel, Ghost::None);
   task->requires(Task::OldDW,bElBarLabel, Ghost::None);

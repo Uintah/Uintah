@@ -46,6 +46,21 @@ MWViscoElastic::MWViscoElastic(ProblemSpecP& ps, MPMLabel* Mlb, int n8or27)
   }
 }
 
+MWViscoElastic::MWViscoElastic(const MWViscoElastic* cm)
+{
+  lb = cm->lb;
+  d_8or27 = cm->d_8or27;
+  NGN = cm->NGN;
+  
+  d_initialData.E_Shear = cm->d_initialData.E_Shear;
+  d_initialData.E_Bulk = cm->d_initialData.E_Bulk;
+  d_initialData.VE_Shear = cm->d_initialData.VE_Shear;
+  d_initialData.VE_Bulk = cm->d_initialData.VE_Bulk;
+  d_initialData.V_Viscosity = cm->d_initialData.V_Viscosity;
+  d_initialData.D_Viscosity = cm->d_initialData.D_Viscosity;
+  
+}
+
 MWViscoElastic::~MWViscoElastic()
 {
   // Destructor

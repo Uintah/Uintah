@@ -52,12 +52,13 @@ WARNING
 	 
     // Prevent copying of this class
     // copy constructor
-    CompMooneyRivlin(const CompMooneyRivlin &cm);
+    //CompMooneyRivlin(const CompMooneyRivlin &cm);
     CompMooneyRivlin& operator=(const CompMooneyRivlin &cm);
 
   public:
     // constructor
     CompMooneyRivlin(ProblemSpecP& ps, MPMLabel* lb, int n8or27);
+    CompMooneyRivlin(const CompMooneyRivlin* cm);
 	 
     // destructor 
     virtual ~CompMooneyRivlin();

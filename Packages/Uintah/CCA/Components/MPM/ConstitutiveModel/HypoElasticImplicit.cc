@@ -34,6 +34,14 @@ HypoElasticImplicit::HypoElasticImplicit(ProblemSpecP& ps,  MPMLabel* Mlb, int /
   NGN=1;
 }
 
+HypoElasticImplicit::HypoElasticImplicit(const HypoElasticImplicit* cm)
+{
+  lb = cm->lb;
+  NGN = cm->NGN;
+  d_initialData.G = cm->d_initialData.G;
+  d_initialData.K = cm->d_initialData.K;
+}
+
 HypoElasticImplicit::~HypoElasticImplicit()
 {
 }

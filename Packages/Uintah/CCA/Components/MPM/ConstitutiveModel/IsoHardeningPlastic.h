@@ -56,12 +56,13 @@ namespace Uintah {
          
     // Prevent copying of this class
     // copy constructor
-    IsoHardeningPlastic(const IsoHardeningPlastic &cm);
+    //IsoHardeningPlastic(const IsoHardeningPlastic &cm);
     IsoHardeningPlastic& operator=(const IsoHardeningPlastic &cm);
 
   public:
     // constructors
     IsoHardeningPlastic(ProblemSpecP& ps);
+    IsoHardeningPlastic(const IsoHardeningPlastic* cm);
 	 
     // destructor 
     virtual ~IsoHardeningPlastic();

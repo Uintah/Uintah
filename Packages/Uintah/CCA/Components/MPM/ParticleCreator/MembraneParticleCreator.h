@@ -10,9 +10,7 @@ namespace Uintah {
     
     MembraneParticleCreator(MPMMaterial* matl, 
 			    MPMLabel* lb,
-			    int n8or27,
-			    bool haveLoadCurve,
-			    bool doErosion);
+			    MPMFlags* flags);
     virtual ~MembraneParticleCreator();
     
     virtual ParticleSubset* createParticles(MPMMaterial* matl, 

@@ -26,6 +26,21 @@ SCGPlastic::SCGPlastic(ProblemSpecP& ps)
   ps->require("Gamma_0",d_CM.Gamma_0); 
 }
 	 
+SCGPlastic::SCGPlastic(const SCGPlastic* cm)
+{
+  d_CM.mu_0 = cm->d_CM.mu_0;
+  d_CM.A = cm->d_CM.A;
+  d_CM.B = cm->d_CM.B;
+  d_CM.sigma_0 = cm->d_CM.sigma_0;
+  d_CM.beta = cm->d_CM.beta;
+  d_CM.n = cm->d_CM.n;
+  d_CM.epsilon_p0 = cm->d_CM.epsilon_p0;
+  d_CM.Y_max = cm->d_CM.Y_max;
+  d_CM.T_m0 = cm->d_CM.T_m0;
+  d_CM.a = cm->d_CM.a;
+  d_CM.Gamma_0 = cm->d_CM.Gamma_0;
+}
+	 
 SCGPlastic::~SCGPlastic()
 {
 }
@@ -243,7 +258,7 @@ SCGPlastic::computeMeltingTemp(const PlasticityState* state)
 {
   double eta = state->density/state->initialDensity;
   double power = 2.0*(d_CM.Gamma_0 - d_CM.a - 1.0/3.0);
-  double Tm = state->initialMeltTemp*exp(2.0*d_CM.a*(1.0 - 1.0/eta))*
+  double Tm = d_CM.T_m0*exp(2.0*d_CM.a*(1.0 - 1.0/eta))*
               pow(eta,power);
   return Tm;
 }

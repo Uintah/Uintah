@@ -57,12 +57,13 @@ namespace Uintah {
 	 
     // Prevent copying of this class
     // copy constructor
-    JohnsonCookDamage(const JohnsonCookDamage &cm);
+    //JohnsonCookDamage(const JohnsonCookDamage &cm);
     JohnsonCookDamage& operator=(const JohnsonCookDamage &cm);
 
   public:
     // constructors
     JohnsonCookDamage(ProblemSpecP& ps); 
+    JohnsonCookDamage(const JohnsonCookDamage* cm);
 	 
     // destructor 
     virtual ~JohnsonCookDamage();

@@ -27,6 +27,7 @@ namespace Uintah {
 	 
     //! Construct an object that can be used to check stability
     DruckerCheck(ProblemSpecP& ps);
+    DruckerCheck(const DruckerCheck* cm);
 
     //! Destructor of stability check
     ~DruckerCheck();
@@ -45,7 +46,7 @@ namespace Uintah {
 
 
     // Prevent copying of this class and copy constructor
-    DruckerCheck(const DruckerCheck &);
+    //DruckerCheck(const DruckerCheck &);
     DruckerCheck& operator=(const DruckerCheck &);
   };
 } // End namespace Uintah

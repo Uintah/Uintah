@@ -93,12 +93,13 @@ namespace Uintah {
 	 
     // Prevent copying of this class
     // copy constructor
-    SCGPlastic(const SCGPlastic &cm);
+    //SCGPlastic(const SCGPlastic &cm);
     SCGPlastic& operator=(const SCGPlastic &cm);
 
   public:
     // constructors
     SCGPlastic(ProblemSpecP& ps);
+    SCGPlastic(const SCGPlastic* cm);
 	 
     // destructor 
     virtual ~SCGPlastic();

@@ -40,12 +40,13 @@ namespace Uintah {
     double d_se;
     // Prevent copying of this class
     // copy constructor
-    MWViscoElastic(const MWViscoElastic &cm);
+    //MWViscoElastic(const MWViscoElastic &cm);
     MWViscoElastic& operator=(const MWViscoElastic &cm);
 
   public:
     // constructors
     MWViscoElastic(ProblemSpecP& ps, MPMLabel* lb, int n8or27);
+    MWViscoElastic(const MWViscoElastic* cm);
        
     // destructor
     virtual ~MWViscoElastic();

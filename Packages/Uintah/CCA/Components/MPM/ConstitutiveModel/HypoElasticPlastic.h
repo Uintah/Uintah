@@ -109,7 +109,7 @@ namespace Uintah {
 	 
     // Prevent copying of this class
     // copy constructor
-    HypoElasticPlastic(const HypoElasticPlastic &cm);
+    //HypoElasticPlastic(const HypoElasticPlastic &cm);
     HypoElasticPlastic& operator=(const HypoElasticPlastic &cm);
 
   public:
@@ -118,6 +118,7 @@ namespace Uintah {
     /*! \brief constructors */
     ////////////////////////////////////////////////////////////////////////
     HypoElasticPlastic(ProblemSpecP& ps, MPMLabel* lb,int n8or27);
+    HypoElasticPlastic(const HypoElasticPlastic* cm);
 	 
     ////////////////////////////////////////////////////////////////////////
     /*! \brief destructor  */
