@@ -9,6 +9,7 @@ SRCS     += \
 	$(SRCDIR)/MPMMaterial.cc              	\
 	$(SRCDIR)/CompNeoHook.cc              	\
 	$(SRCDIR)/CompNeoHookImplicit.cc 	\
+	$(SRCDIR)/TransIsoHyper.cc              	\
 	$(SRCDIR)/CompNeoHookPlas.cc          	\
 	$(SRCDIR)/ViscoScram.cc               	\
 	$(SRCDIR)/ViscoScramForBinder.cc      	\
