@@ -590,7 +590,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
      cout << "In NCToCC_0" << endl;
 #endif
 
-     for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
+     for(CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
        patch->findNodesFromCell(*iter,nodeIdx);
        for (int in=0;in<8;in++){
 	 cmass[*iter]    += .125*gmass[nodeIdx[in]];
