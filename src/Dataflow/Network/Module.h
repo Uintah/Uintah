@@ -198,6 +198,8 @@ public:
 
     // Used by Module subclasses
     void error(const string&);
+    void warning(const string&);
+    void remark(const string&);
     void update_state(State);
     void update_progress(double);
     void update_progress(double, Timer &);
