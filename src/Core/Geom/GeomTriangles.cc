@@ -441,46 +441,46 @@ GeomTranspTriangles::SortPolys()
   for (i = 0; i < vsize;i++)
   {
     tmp[i].first = points_[i*9+0] + points_[i*9+3] + points_[i*9+6];
-    tmp[i].second = i*9;
+    tmp[i].second = i*3;
   }
   std::sort(tmp.begin(), tmp.end(), pair_less);
 
   xlist_.resize(vsize*3);
   for (i=0; i < vsize; i++)
   {
-    xlist_[i*3+0] = tmp[i].second / 3 + 0;
-    xlist_[i*3+1] = tmp[i].second / 3 + 1;
-    xlist_[i*3+2] = tmp[i].second / 3 + 2;
+    xlist_[i*3+0] = tmp[i].second + 0;
+    xlist_[i*3+1] = tmp[i].second + 1;
+    xlist_[i*3+2] = tmp[i].second + 2;
   }
 
   for (i = 0; i < vsize;i++)
   {
     tmp[i].first = points_[i*9+1] + points_[i*9+4] + points_[i*9+7];
-    tmp[i].second = i*9;
+    tmp[i].second = i*3;
   }
   std::sort(tmp.begin(), tmp.end(), pair_less);
 
   ylist_.resize(vsize*3);
   for (i=0; i < vsize; i++)
   {
-    ylist_[i*3+0] = tmp[i].second / 3 + 0;
-    ylist_[i*3+1] = tmp[i].second / 3 + 1;
-    ylist_[i*3+2] = tmp[i].second / 3 + 2;
+    ylist_[i*3+0] = tmp[i].second + 0;
+    ylist_[i*3+1] = tmp[i].second + 1;
+    ylist_[i*3+2] = tmp[i].second + 2;
   }
 
   for (i = 0; i < vsize;i++)
   {
     tmp[i].first = points_[i*9+2] + points_[i*9+5] + points_[i*9+8];
-    tmp[i].second = i*9;
+    tmp[i].second = i*3;
   }
   std::sort(tmp.begin(), tmp.end(), pair_less);
 
   zlist_.resize(vsize*3);
   for (i=0; i < vsize; i++)
   {
-    zlist_[i*3+0] = tmp[i].second / 3 + 0;
-    zlist_[i*3+1] = tmp[i].second / 3 + 1;
-    zlist_[i*3+2] = tmp[i].second / 3 + 2;
+    zlist_[i*3+0] = tmp[i].second + 0;
+    zlist_[i*3+1] = tmp[i].second + 1;
+    zlist_[i*3+2] = tmp[i].second + 2;
   }
 }
 
