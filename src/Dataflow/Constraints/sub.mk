@@ -35,3 +35,7 @@ LIBS := $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
+ifeq ($(LARGESOS),no)
+SCIRUN_MODULES := $(SCIRUN_MODULES) $(LIBNAME)
+endif
+

@@ -120,3 +120,4 @@ SRCS := \
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk
 
+SCIRUN_MODULES := $(SCIRUN_MODULES) $(TCLINDEX)
