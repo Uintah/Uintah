@@ -126,18 +126,25 @@ void Scene::add_per_matl_light(Light* light)
 
 void Scene::preprocess(double bvscale, int& pp_offset, int& scratchsize)
 {
-  for(int i=0;i<lights.size();i++)
+  int i=0;
+  for(;i<lights.size();i++)
     lights[i]->setIndex(i);
+  for(;i<lights.size()+per_matl_lights.size(); i++)
+    per_matl_lights[i-lights.size()]->setIndex(i);
   lightbits = 0;
-  int i=lights.size();
+  i=lights.size()+per_matl_lights.size();
   while(i){
     lightbits++;
     i>>=1;
   }
   double maxradius=0;
-  for(int i=0;i<lights.size();i++)
+
+  for(i=0;i<lights.size();i++)
     if(lights[i]->radius > maxradius)
       maxradius=lights[i]->radius;
+  for(;i<lights.size()+per_matl_lights.size(); i++)
+    if(per_matl_lights[i-lights.size()] > maxradius)
+      maxreadus=per_matl_lights[i-lights.size()]->radius;
   maxradius*=bvscale;
   double time=SCIRun::Time::currentSeconds();
   obj->preprocess(maxradius, pp_offset, scratchsize);
@@ -145,7 +152,7 @@ void Scene::preprocess(double bvscale, int& pp_offset, int& scratchsize)
     shadowobj->preprocess(maxradius, pp_offset, scratchsize);
   else
     shadowobj=obj;
-  for(int i=0;i<shadows.size();i++)
+  for(i=0;i<shadows.size();i++)
     shadows[i]->preprocess(this, pp_offset, scratchsize);
   cerr << "Preprocess took " << SCIRun::Time::currentSeconds()-time << " seconds\n";
 }
