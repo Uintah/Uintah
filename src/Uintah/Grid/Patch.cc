@@ -41,6 +41,7 @@ Patch::Patch(const Level* level,
      vector<BoundCondBase*> a;
      d_bcs[i] = a;
    }
+
    d_nodeHighIndex = d_highIndex+
 	       IntVector(getBCType(xplus) == Neighbor?0:1,
 			 getBCType(yplus) == Neighbor?0:1,
@@ -370,7 +371,14 @@ Box Patch::getGhostBox(const IntVector& lowOffset,
 
 NodeIterator Patch::getNodeIterator() const
 {
-   return NodeIterator(getNodeLowIndex(), getNodeHighIndex());
+  IntVector low = d_inLowIndex;
+  IntVector hi = d_inHighIndex + 
+    IntVector(getBCType(xplus) == Neighbor?0:1,
+	      getBCType(yplus) == Neighbor?0:1,
+	      getBCType(zplus) == Neighbor?0:1);
+  //   return NodeIterator(getNodeLowIndex(), getNodeHighIndex());
+
+  return NodeIterator(low, hi);
 }
 
 NodeIterator
@@ -792,6 +800,11 @@ void Patch::computeVariableExtents(TypeDescription::Type basis,
 
 //
 // $Log$
+// Revision 1.34  2001/01/18 16:46:37  jas
+// Changed NodeIterator so it will iterator over the interior nodes
+// when extraCells are present.  When there are no extraCells, NodeIterator
+// is unchanged.
+//
 // Revision 1.33  2001/01/15 22:14:56  tan
 // Added a function to findClosestNode for a given point.
 //

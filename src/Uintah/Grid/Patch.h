@@ -148,7 +148,7 @@ WARNING
        return d_lowIndex;
      }
       IntVector getNodeHighIndex() const {
-	 return d_nodeHighIndex;
+	return d_nodeHighIndex;
       }
 
      IntVector getSFCXLowIndex() const {
@@ -336,6 +336,11 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Patch & r);
 
 //
 // $Log$
+// Revision 1.30  2001/01/18 16:46:37  jas
+// Changed NodeIterator so it will iterator over the interior nodes
+// when extraCells are present.  When there are no extraCells, NodeIterator
+// is unchanged.
+//
 // Revision 1.29  2001/01/15 22:14:36  tan
 // Added a function to findClosestNode for a given point.
 //
