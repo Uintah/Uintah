@@ -2986,13 +2986,20 @@ if test "$HAVE_LIB_F" && test "$HAVE_LIB_BLAS"; then
     dirs="$LIB_DIR_BLAS $thirdparty/lib $SCI_LAB_TP_LIBS"
   fi
 
-  SCI_CHECK_LIB($dirs,lapack,main,,,optional)
-  SCI_CHECK_LIB($LIB_DIR_LAPACK,complib.sgimath,main,,,optional)
-  SCI_CHECK_LIB($LIB_DIR_LAPACK,complib.sgimath_mp,main,,,optional)
+  SCI_CHECK_LIB($dirs,lapack,main,$F_LIB_DIR_FLAG $F_LIB_FLAG,,optional)
 
-  if test "$HAVE_LIB_LAPACK" &&
-     test "$HAVE_LIB_COMPLIB.SGIMATH" &&
-     test "$HAVE_LIB_COMPLIB.SGIMATH_MP"; then
+  if test ! "$HAVE_LIB_LAPACK"; then
+    SCI_CHECK_LIB($LIB_DIR_LAPACK,complib.sgimath,main,,,optional)
+    SCI_CHECK_LIB($LIB_DIR_LAPACK,complib.sgimath_mp,main,,,optional)
+    if test "$HAVE_LIB_COMPLIB_SGIMATH_MP"; then
+       AC_MSG_WARN(Using complib for lapack)
+       HAVE_LIB_LAPACK="yes"
+       LAPACK_LIB_FLAG="$COMPLIB_SGIMATH_LIB_FLAG $COMPLIB_SGIMATH_MP_LIB_FLAG"
+       LAPACK_LIB_DIR_FLAG="$COMPLIB_SGIMATH_LIB_DIR_FLAG"
+    fi
+  fi
+
+  if test "$HAVE_LIB_LAPACK"; then
     DEF_LAPACK="#define HAVE_LAPACK 1"
   fi
 fi
@@ -3011,7 +3018,7 @@ AC_SUBST(LAPACK_LIB_DIR_FLAG)
 if test "$pkg_uintah" = "yes"; then
 
   if test "$with_hypre"; then
-    dirs="$with_hypre/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
+    dirs="$with_hypre/lib $with_hypre/src/hypre/lib $thirdparty/lib $SCI_LAB_TP_LIBS"
   else
     dirs="$thirdparty/lib $SCI_LAB_TP_LIBS"
   fi
@@ -3113,13 +3120,23 @@ if test "$HAVE_LIB_MPI" &&
   SCI_CHECK_HEADERS($LIB_DIR_PETSC/../../../include,petsc.h, \
                     $INC_MPI_H -I$LIB_DIR_PETSC/../../../bmake/$PETSC_ARCH,,optional)
 
-  SCI_CHECK_LIB($LIB_DIR_PETSC,petsccontrib,main,,,optional)
-  SCI_CHECK_LIB($LIB_DIR_PETSC,petscdm,main,,,optional)
-  SCI_CHECK_LIB($LIB_DIR_PETSC,petscmat,main,,,optional)
-  SCI_CHECK_LIB($LIB_DIR_PETSC,petscsles,main,,,optional)
-  SCI_CHECK_LIB($LIB_DIR_PETSC,petscsnes,main,,,optional)
-  SCI_CHECK_LIB($LIB_DIR_PETSC,petscts,main,,,optional)
-  SCI_CHECK_LIB($LIB_DIR_PETSC,petscvec,main,,,optional)
+  SCI_CHECK_LIB($LIB_DIR_PETSC,petscvec,main,$PETSC_LIB_FLAG,,optional)
+  SCI_CHECK_LIB($LIB_DIR_PETSC,petscmat,main,
+     $PETSCVEC_LIB_FLAG $PETSC_LIB_FLAG,,optional)
+  SCI_CHECK_LIB($LIB_DIR_PETSC,petscdm,main,
+     $PETSCMAT_LIB_FLAG $PETSCVEC_LIB_FLAG $PETSC_LIB_FLAG,,optional)
+  SCI_CHECK_LIB($LIB_DIR_PETSC,petsccontrib,main,
+     $PETSCDM_LIB_FLAG $PETSCMAT_LIB_FLAG $PETSCVEC_LIB_FLAG $PETSC_LIB_FLAG,,
+     optional)
+  SCI_CHECK_LIB($LIB_DIR_PETSC,petscsles,main,
+     $PETSCDM_LIB_FLAG $PETSCMAT_LIB_FLAG $PETSCVEC_LIB_FLAG $PETSC_LIB_FLAG,,
+     optional)
+  SCI_CHECK_LIB($LIB_DIR_PETSC,petscsnes,main,                       \
+     $PETSCSLES_LIB_FLAG $PETSCDM_LIB_FLAG $PETSCMAT_LIB_FLAG        \
+     $PETSCVEC_LIB_FLAG $PETSC_LIB_FLAG,,optional)
+  SCI_CHECK_LIB($LIB_DIR_PETSC,petscts,main,                         \
+     $PETSCSNES_LIB_FLAG $PETSCSLES_LIB_FLAG $PETSCDM_LIB_FLAG       \
+     $PETSCMAT_LIB_FLAG $PETSCVEC_LIB_FLAG $PETSC_LIB_FLAG,,optional)
 
   if test "$HAVE_LIB_PETSC"        && test "$HAVE_PETSC_H" &&
      test "$HAVE_LIB_PETSCCONTRIB" && test "$HAVE_LIB_PETSCDM" && 
@@ -3133,11 +3150,14 @@ if test "$HAVE_LIB_MPI" &&
        $PETSCDM_LIB_FLAG $PETSCMAT_LIB_FLAG $PETSCSLES_LIB_FLAG \
        $PETSCSNE_LIB_FLAGS $PETSCTS_LIB_FLAG $PETSCVEC_LIB_FLAG"
   fi 
+else
+  AC_MSG_WARN(One or more of MPI or BLAS or LAPACK is missing.)
+  AC_MSG_WARN(Not configuring PETSc.)
 fi
 
 if test "$with_petsc" && test ! "$DEF_PETSC"; then
   echo
-AC_MSG_ERROR(One or more of the PETSC components is missing.)
+  AC_MSG_ERROR(One or more of the PETSC components is missing.)
   echo
 fi
 
