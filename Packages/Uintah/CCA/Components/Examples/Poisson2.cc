@@ -14,7 +14,6 @@
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/Util/NotFinished.h>
 
 using namespace Uintah;
 
@@ -97,8 +96,6 @@ void Poisson2::initialize(const ProcessorGroup*,
 	for(NodeIterator iter(l,h); !iter.done(); iter++)
 	  phi[*iter]=1;
       }
-      // allocateAndPut instead:
-      /* new_dw->put(phi, lb_->phi, matl, patch); */;
     }
   }
 }
@@ -109,7 +106,6 @@ void Poisson2::timeAdvance(const ProcessorGroup* pg,
 			   DataWarehouse* old_dw, DataWarehouse* new_dw,
 			   LevelP level, Scheduler* sched)
 {
-  cerr << "Poisson2 time advance!\n";
   SchedulerP subsched = sched->createSubScheduler();
   subsched->initialize();
   GridP grid = level->getGrid();
@@ -123,41 +119,28 @@ void Poisson2::timeAdvance(const ProcessorGroup* pg,
   subsched->addTask(task, level->eachPatch(), sharedState_->allMaterials());
 
   // Compile the scheduler
-  subsched->compile(d_myworld, false);
-    
-  // Iterate
+  subsched->compile(d_myworld);
+
   int count = 0;
   double residual;
-
-  // Initialize the subscheduler simply by pointing it to its parent's old_dw.
-  subsched->set_new_dw(old_dw);
-  
+  subsched->advanceDataWarehouse(grid);
+  subsched->get_dw(1)->transferFrom(old_dw, lb_->phi, patches, matls);
+  // Iterate
   do {
-    subsched->advanceDataWarehouse(grid);    
+    subsched->advanceDataWarehouse(grid);
+    subsched->get_dw(0)->setScrubbing(DataWarehouse::ScrubComplete);
+    subsched->get_dw(1)->setScrubbing(DataWarehouse::ScrubNonPermanent);
     subsched->execute(d_myworld);    
 
     sum_vartype residual_var;
-    subsched->get_new_dw()->get(residual_var, lb_->residual);
+    subsched->get_dw(1)->get(residual_var, lb_->residual);
     residual = residual_var;
 
     if(pg->myrank() == 0)
       cerr << "Iteration " << count++ << ", residual=" << residual << '\n';
   } while(residual > maxresidual_);
 
-  // Get the final data
-  for(int p=0;p<patches->size();p++){
-    const Patch* patch = patches->get(p);
-    for(int m = 0;m<matls->size();m++){
-      int matl = matls->get(m);
-      NCVariable<double> phi;
-      // DW has been advanced, so it is old now
-      subsched->get_new_dw()->getModifiable(phi, lb_->phi, matl, patch);
-      NCVariable<double> newphi;
-      newphi.copyPointer(phi);
-      new_dw->put(newphi, lb_->phi, matl, patch);
-    }
-  }
-  cerr << "Poisson2 time advance done!\n";
+  new_dw->transferFrom(subsched->get_dw(1), lb_->phi, patches, matls);
 }
 
 
@@ -166,7 +149,6 @@ void Poisson2::iterate(const ProcessorGroup*,
 		       const MaterialSubset* matls,
 		       DataWarehouse* old_dw, DataWarehouse* new_dw)
 {
-  cerr << "Poisson iterate!\n";
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     for(int m = 0;m<matls->size();m++){
@@ -208,8 +190,6 @@ void Poisson2::iterate(const ProcessorGroup*,
       ASSERT(numFaceBoundaries == patch->getNumBoundaryFaces());
 #endif
       new_dw->put(sum_vartype(residual), lb_->residual);
-      // allocateAndPut instead:
-      /* new_dw->put(newphi, lb_->phi, matl, patch); */;
     }
   }
 }
