@@ -23,7 +23,9 @@ namespace rtrt {
       nworkers(1),
       worker_run_gl_test(false),
       display_run_gl_test(false),
-      exit_everybody(false)
+      exit_scene(false),
+      exit_engine(false),
+      exit_scene_with_engine(true)
     {}
     // semephores
     SCIRun::Mutex cameralock; // to synchronize camera...
@@ -50,15 +52,34 @@ namespace rtrt {
     bool worker_run_gl_test;
     bool display_run_gl_test;
 
-    // exit stuff
-    bool exit_everybody;
-    int exit_status;
-    void exit_clean(int status = 0) {
-      exit_everybody = true;
-      exit_status = status;
+    //////////////////////////////////////////////////////
+    // Exit stuff
+    bool exit_scene;
+    bool exit_engine;
+    // This will also exit the scene when the engine stops.
+    bool exit_scene_with_engine;
+    
+    // This will stop all the scene relative windows and threads.
+    // Caution should be made to make sure that stopping this won't
+    // cause weird things to happen with the engine.
+    void stop_scene() {
+      exit_scene = true;
     }
-    bool stop_execution() { return exit_everybody; }
-       
+    
+    // This should cause the workers, Dpy thread, and other
+    // rtrt_engine threads to exit gracefully.  If the flag
+    // exit_scene_with_engine is true, then the scene stuff will also
+    // be terminated.
+    void stop_engine() {
+      exit_engine = true;
+      if (exit_scene_with_engine) stop_scene();
+    }
+    
+    // This stops the world gracefully.
+    void stop_all() {
+      stop_scene();
+      stop_engine();
+    }
   };
   
 } // end namespace rtrt
