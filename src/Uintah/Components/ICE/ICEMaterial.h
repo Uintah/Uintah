@@ -62,7 +62,7 @@ WARNING
 	 
 	 //////////
 	 // Return correct EOS model pointer for this material
-	 EquationOfState * getEOS() const;
+	 EquationOfState* getEOS() const;
 
          //for HeatConductionModel
          double getThermalConductivity() const;
@@ -108,6 +108,9 @@ WARNING
 #endif // __ICE_MATERIAL_H__
 
 // $Log$
+// Revision 1.7  2001/01/03 19:32:18  jas
+// Remove unneeded files.
+//
 // Revision 1.6  2000/11/22 01:28:05  guilkey
 // Changed the way initial conditions are set.  GeometryObjects are created
 // to fill the volume of the domain.  Each object has appropriate initial
