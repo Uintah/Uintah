@@ -956,11 +956,11 @@ void
 HexVolMesh::get_weights(const Point &p,
 			Node::array_type &nodes, vector<double> &w)
 {
-  cerr << "get_weights";
+//  cerr << "get_weights";
   Cell::index_type cell;
   if (locate(cell, p))
   {
-    cerr << "indside";
+//    cerr << "inside";
     get_nodes(nodes,cell);
     Face::array_type faces;
     get_faces(faces, cell);
