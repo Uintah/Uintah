@@ -135,7 +135,7 @@
         </p>
       </description>
     </parameter>
-    <img>../Modules/Fields/SeedFieldGUI.jpg</img>
+    <img>../Modules/Fields/doc/SeedFieldGUI.jpg</img>
   </gui>
   <testing>
   </testing>
