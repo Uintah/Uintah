@@ -51,10 +51,18 @@ Task::~Task()
     delete dep;
     dep=next;
   }
+  
   if(matl_set && matl_set->removeReference())
     delete matl_set;
+
   if(patch_set && patch_set->removeReference())
     delete patch_set;
+
+  // easier to periodically delete this than to force a call to a cleanup
+  // function, and probably not very expensive.
+  if (globalMatlSubset && globalMatlSubset->removeReference())
+    delete globalMatlSubset;
+  globalMatlSubset = 0;
 }
 
 void Task::setSets(const PatchSet* ps, const MaterialSet* ms)
@@ -72,7 +80,7 @@ void Task::setSets(const PatchSet* ps, const MaterialSet* ms)
 const MaterialSubset* Task::getGlobalMatlSubset()
 {
   if (globalMatlSubset == 0) {
-    globalMatlSubset = new MaterialSubset();
+    globalMatlSubset = scinew MaterialSubset();
     globalMatlSubset->add(-1);
     globalMatlSubset->addReference();
   }
