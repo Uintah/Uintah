@@ -234,21 +234,6 @@ LevelMesh::io(Piostream& stream)
   stream.end_class();
 }
 
-template <> LevelMesh::Node::size_type LevelMesh::tsize(LevelMesh::Node::size_type *) const { return nodes_size(); }
-template <> LevelMesh::Edge::size_type LevelMesh::tsize(LevelMesh::Edge::size_type *) const { return edges_size(); }
-template <> LevelMesh::Face::size_type LevelMesh::tsize(LevelMesh::Face::size_type *) const { return faces_size(); }
-template <> LevelMesh::Cell::size_type LevelMesh::tsize(LevelMesh::Cell::size_type *) const { return cells_size(); }
-				
-template <> LevelMesh::Node::iterator LevelMesh::tbegin(LevelMesh::Node::iterator *) const { return node_begin(); }
-template <> LevelMesh::Edge::iterator LevelMesh::tbegin(LevelMesh::Edge::iterator *) const { return edge_begin(); }
-template <> LevelMesh::Face::iterator LevelMesh::tbegin(LevelMesh::Face::iterator *) const { return face_begin(); }
-template <> LevelMesh::Cell::iterator LevelMesh::tbegin(LevelMesh::Cell::iterator *) const { return cell_begin(); }
-				
-template <> LevelMesh::Node::iterator LevelMesh::tend(LevelMesh::Node::iterator *) const { return node_end(); }
-template <> LevelMesh::Edge::iterator LevelMesh::tend(LevelMesh::Edge::iterator *) const { return edge_end(); }
-template <> LevelMesh::Face::iterator LevelMesh::tend(LevelMesh::Face::iterator *) const { return face_end(); }
-template <> LevelMesh::Cell::iterator LevelMesh::tend(LevelMesh::Cell::iterator *) const { return cell_end(); }
-
 
 const string 
 LevelMesh::type_name(int n)

@@ -98,10 +98,10 @@ void computeGridEigens(TensorField* tensorField,
   std::vector<Vector> eigenVectors;
   
   if( tensorField->data_at() == Field::CELL){
-    typename TensorField::mesh_type::Cell::iterator t_it = tmh->cell_begin();
-    typename ScalarField::mesh_type::Cell::iterator s_it = smh->cell_begin();
-    typename VectorField::mesh_type::Cell::iterator v_it = vmh->cell_begin();
-    typename TensorField::mesh_type::Cell::iterator t_end = tmh->cell_end();
+    typename TensorField::mesh_type::Cell::iterator t_it; tmh->begin(t_it);
+    typename ScalarField::mesh_type::Cell::iterator s_it; smh->begin(s_it);
+    typename VectorField::mesh_type::Cell::iterator v_it; vmh->begin(v_it);
+    typename TensorField::mesh_type::Cell::iterator t_end; tmh->end(t_end);
     
     for( ; t_it != t_end; ++t_it, ++s_it, ++v_it){
       M = tensorField->fdata()[*t_it];
@@ -120,10 +120,10 @@ void computeGridEigens(TensorField* tensorField,
       }
     }
   } else {
-    typename TensorField::mesh_type::Node::iterator t_it = tmh->node_begin();
-    typename ScalarField::mesh_type::Node::iterator s_it = smh->node_begin();
-    typename VectorField::mesh_type::Node::iterator v_it = vmh->node_begin();
-    typename TensorField::mesh_type::Node::iterator t_end = tmh->node_end();
+    typename TensorField::mesh_type::Node::iterator t_it; tmh->begin(t_it);
+    typename ScalarField::mesh_type::Node::iterator s_it; smh->begin(s_it);
+    typename VectorField::mesh_type::Node::iterator v_it; vmh->begin(v_it);
+    typename TensorField::mesh_type::Node::iterator t_end; tmh->end(t_end);
     
     for( ; t_it != t_end; ++t_it, ++s_it, ++v_it){
       M = tensorField->fdata()[*t_it];

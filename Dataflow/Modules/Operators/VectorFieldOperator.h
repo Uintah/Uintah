@@ -108,9 +108,9 @@ void VectorFieldOperator::computeScalars(VectorField* vectorField,
   typename ScalarField::mesh_handle_type smh = scalarField->get_typed_mesh();
   if( vectorField->get_type_name(0) != "LevelField"){
     if( vectorField->data_at() == Field::CELL){
-      typename VectorField::mesh_type::Cell::iterator v_it = vmh->cell_begin();
-      typename VectorField::mesh_type::Cell::iterator v_end = vmh->cell_end();
-      typename ScalarField::mesh_type::Cell::iterator s_it = smh->cell_begin();
+      typename VectorField::mesh_type::Cell::iterator v_it; vmh->begin(v_it);
+      typename VectorField::mesh_type::Cell::iterator v_end; vmh->end(v_end);
+      typename ScalarField::mesh_type::Cell::iterator s_it; smh->begin(s_it);
     
       /*     cerr<<"v_it = ("<<(*v_it).i_<<","<<(*v_it).j_<<","<<(*v_it).k_<< */
       /*       "), v_end = ("<<(*v_end).i_<<","<<(*v_end).j_<<","<<(*v_end).k_<<")\n"; */
@@ -118,9 +118,9 @@ void VectorFieldOperator::computeScalars(VectorField* vectorField,
 	scalarField->fdata()[*s_it] = op(vectorField->fdata()[*v_it]);
       }
     } else {
-      typename VectorField::mesh_type::Node::iterator v_it = vmh->node_begin();
-      typename VectorField::mesh_type::Node::iterator v_end = vmh->node_end();
-      typename ScalarField::mesh_type::Node::iterator s_it = smh->node_begin();
+      typename VectorField::mesh_type::Node::iterator v_it; vmh->begin(v_it);
+      typename VectorField::mesh_type::Node::iterator v_end; vmh->end(v_end);
+      typename ScalarField::mesh_type::Node::iterator s_it; smh->begin(s_it);
   
       for( ; v_it != v_end; ++v_it, ++s_it){
 	scalarField->fdata()[*s_it] = op(vectorField->fdata()[*v_it]);
