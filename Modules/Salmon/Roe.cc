@@ -903,3 +903,26 @@ void Roe::head_moved(const TrackerPosition& pos)
     view.set(tview);
     need_redraw=1;
 }
+
+#ifdef __GNUG__
+
+#include <Classlib/HashTable.cc>
+
+template class HashTable<int, SceneItem*>;
+template class HashTableIter<int, SceneItem*>;
+template class HashKey<int, SceneItem*>;
+
+template class HashTable<clString, Renderer*>;
+template class HashKey<clString, Renderer*>;
+
+template class HashTable<clString, ObjTag*>;
+template class HashKey<clString, ObjTag*>;
+
+template class HashTableIter<int, PortInfo*>;
+template class HashTable<int, PortInfo*>;
+template class HashKey<int, PortInfo*>;
+
+template class HashTable<clString, int>;
+template class HashKey<clString, int>;
+
+#endif

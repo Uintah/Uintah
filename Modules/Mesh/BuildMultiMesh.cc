@@ -462,3 +462,13 @@ void BuildMultiMesh::tcl_command(TCLArgs& args, void* userdata)
        Module::tcl_command(args, userdata);
    }
 }
+
+#ifdef __GNUG__
+
+#include <Classlib/Array1.cc>
+
+template class Array1<TCLint*>;
+template class Array1<TCLdouble*>;
+template class Array1<PointWidget*>;
+
+#endif

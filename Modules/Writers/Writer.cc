@@ -89,3 +89,11 @@ void TYPEWriter::execute()
     Pio(*stream, handle);
     delete stream;
 }
+
+#ifdef __GNUG__
+
+#include <Classlib/LockingHandle.cc>
+
+template void Pio(Piostream&, TYPEHandle&);
+
+#endif

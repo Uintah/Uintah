@@ -1219,4 +1219,9 @@ template class Array1<GeomPolyline*>;
 template class Array1<GeomTube*>;
 template class Array1<GeomTriStrip*>;
 
+#include <Classlib/HashTable.cc>
+template class HashTable<int, SLSourceInfo*>;
+template class HashTableIter<int, SLSourceInfo*>;
+template class HashKey<int, SLSourceInfo*>;
+
 #endif

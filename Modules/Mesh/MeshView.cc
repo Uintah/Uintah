@@ -1648,3 +1648,17 @@ void MeshView::geom_moved(GeomPick*, int, double, const Vector&, void*)
 {
 }
 
+#ifdef __GNUG__
+
+#include <Classlib/HashTable.cc>
+
+template class HashTable<Edge, int>;
+template class HashTableIter<Edge, int>;
+template class HashKey<Edge, int>;
+template int Hash(Edge&, int);
+
+#include <Classlib/Array1.cc>
+template class Array1<GeomGroup*>;
+template class Array1<Array1<int> >;
+
+#endif

@@ -320,3 +320,11 @@ void ContoursToSurf::contours_to_surf(const Array1<ContourSetHandle> &contours,
     }
     surf->destroy_grid();
 }
+
+#ifdef __GNUG__
+
+#include <Classlib/Array1.cc>
+template class Array1<ContourSetIPort*>;
+template class Array1<ContourSetHandle>;
+
+#endif

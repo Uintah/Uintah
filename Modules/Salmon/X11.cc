@@ -287,3 +287,13 @@ void X11::put_scanline(int y, int width, Color* scanline, int repeat)
 	}
     }
 }
+
+#ifdef __GNUG__
+
+#include <Classlib/AVLTree.cc>
+
+template class AVLTree<double, GeomObj*>;
+template class AVLTreeIter<double, GeomObj*>;
+template class TreeLink<double, GeomObj*>;
+
+#endif

@@ -202,3 +202,11 @@ void SoundMixer::connection(ConnectionMode mode, int which_port,
 #endif
     }
 }
+
+#ifdef __GNUG__
+
+#include <Classlib/Array1.cc>
+
+template class Array1<SoundMixer_PortInfo*>;
+
+#endif

@@ -102,3 +102,11 @@ void TYPEReader::execute()
     }
     outport->send(handle);
 }
+
+#ifdef __GNUG__
+
+#include <Classlib/LockingHandle.cc>
+
+template void Pio(Piostream&, TYPEHandle&);
+
+#endif

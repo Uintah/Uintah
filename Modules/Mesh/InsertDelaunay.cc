@@ -141,3 +141,11 @@ void InsertDelaunay::connection(ConnectionMode mode, int which_port, int)
     }
 }
 
+#ifdef __GNUG__
+
+#include <Classlib/Array1.cc>
+
+template class Array1<SurfaceIPort*>;
+template class Array1<SurfaceHandle>;
+
+#endif

@@ -17,7 +17,6 @@
 #include <Classlib/BitArray1.h>
 #include <Classlib/HashTable.h>
 #include <Classlib/NotFinished.h>
-#include <Classlib/Queue.h>
 #include <Dataflow/Module.h>
 #include <Datatypes/GeometryPort.h>
 #include <Datatypes/Mesh.h>

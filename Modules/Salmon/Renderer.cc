@@ -131,3 +131,13 @@ void Renderer::redraw(Salmon* salmon, Roe* roe,
     cerr << "Warning: using old redraw\n";
     redraw(salmon, roe);
 }
+
+#ifdef __GNUG__
+
+#include <Classlib/AVLTree.cc>
+
+template class AVLTree<clString, RegisterRenderer*>;
+template class AVLTreeIter<clString, RegisterRenderer*>;
+template class TreeLink<clString, RegisterRenderer*>;
+
+#endif
