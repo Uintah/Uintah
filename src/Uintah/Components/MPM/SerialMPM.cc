@@ -248,18 +248,9 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	    t->requires(old_dw, pXLabel, idx, region,
 			Ghost::AroundNodes, 1 );
 			
-	    if(d_heatConductionInvolved) {
-              t->requires(old_dw, pTemperatureGradientLabel, idx, region,
-			Ghost::AroundNodes, 1 );
-	    }
-
 	    t->computes(new_dw, gMassLabel, idx, region );
 	    t->computes(new_dw, gVelocityLabel, idx, region );
 	    t->computes(new_dw, gExternalForceLabel, idx, region );
-
-	    if(d_heatConductionInvolved) {
-              t->computes(new_dw, gTemperatureLabel, idx, region );
-	    }
 	 }
 		     
 	 sched->addTask(t);
@@ -848,7 +839,7 @@ void SerialMPM::computeInternalForce(const ProcessorContext*,
   }
 }
 
-void SerialMPM::computeHeatRateGeneratedByInternalHeatFlux(
+void SerialMPM::computeInternalHeatRate(
                                      const ProcessorContext*,
 				     const Region* region,
 				     DataWarehouseP& old_dw,
@@ -964,6 +955,52 @@ void SerialMPM::solveEquationsMotion(const ProcessorContext*,
 
       // Put the result in the datawarehouse
       new_dw->put(acceleration, gAccelerationLabel, vfindex, region);
+
+    }
+  }
+}
+
+void SerialMPM::solveHeatEquations(const ProcessorContext*,
+				     const Region* region,
+				     DataWarehouseP& /*old_dw*/,
+				     DataWarehouseP& new_dw)
+{
+  int numMatls = d_sharedState->getNumMatls();
+
+  for(int m = 0; m < numMatls; m++){
+    Material* matl = d_sharedState->getMaterial( m );
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    if(mpm_matl){
+      int vfindex = matl->getVFIndex();
+      
+      double specificHeat = mpm_matl->getSpecificHeat();
+      
+      // Get required variables for this region
+      NCVariable<double> mass,internalHeatRateLabel,externalHeatRateLabel;
+
+      new_dw->get(mass, gMassLabel, vfindex, region, Ghost::None, 0);
+      new_dw->get(internalHeatRateLabel, gInternalHeatRateLabel, 
+                  vfindex, region, Ghost::None, 0);
+      new_dw->get(externalHeatRateLabel, gExternalHeatRateLabel, 
+                  vfindex, region, Ghost::None, 0);
+
+      // Create variables for the results
+      NCVariable<double> temperatureRate;
+      new_dw->allocate(temperatureRate, gTemperatureRateLabel, vfindex, region);
+
+      for(NodeIterator iter = region->getNodeIterator(); !iter.done(); iter++){
+	if(mass[*iter]>0.0){
+	  temperatureRate[*iter] =
+		 (internalHeatRateLabel[*iter] + externalHeatRateLabel[*iter])
+		 /mass[*iter] /specificHeat;
+	}
+	else{
+	  temperatureRate[*iter] = 0;
+	}
+      }
+
+      // Put the result in the datawarehouse
+      new_dw->put(temperatureRate, gTemperatureRateLabel, vfindex, region);
 
     }
   }
@@ -1225,6 +1262,9 @@ void SerialMPM::crackGrow(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.65  2000/05/26 17:14:56  tan
+// Added solveHeatEquations on grid.
+//
 // Revision 1.64  2000/05/26 02:27:48  tan
 // Added computeHeatRateGeneratedByInternalHeatFlux() for thermal field
 // computation.
