@@ -119,6 +119,7 @@ class ShowField : public Module
   //! holds options for how to visualize nodes.
   GuiString                node_display_type_;
   GuiString                edge_display_type_;
+  GuiString                data_display_type_;
   GuiString                active_tab_; //! for saving nets state
   GuiDouble                node_scale_;
   GuiDouble                edge_scale_;
@@ -204,6 +205,7 @@ ShowField::ShowField(GuiContext* ctx) :
   data_at_dirty_(true),
   node_display_type_(ctx->subVar("node_display_type")),
   edge_display_type_(ctx->subVar("edge_display_type")),
+  data_display_type_(ctx->subVar("data_display_type")),
   active_tab_(ctx->subVar("active_tab")),
   node_scale_(ctx->subVar("node_scale")),
   edge_scale_(ctx->subVar("edge_scale")),
@@ -499,6 +501,7 @@ ShowField::execute()
   string edt = edge_display_type_.get();
   edge_scale_.reset();
   double es = edge_scale_.get();
+  string vdt = data_display_type_.get();
   vectors_scale_.reset();
   double vs = vectors_scale_.get();
 
@@ -590,10 +593,11 @@ ShowField::execute()
 						    fld_handle,
 						    color_handle,
 						    def_mat_handle_,
-						    ndt, vs,
+						    vdt, vs,
 						    normalize_vectors_.get(),
 						    bidirectional_.get(),
-						    arrow_heads_on_.get());
+						    arrow_heads_on_.get(),
+						    node_resolution_);
       data_id_ = ogeom_->addObj(data, "Vectors");
     }
   }
@@ -719,6 +723,13 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
       edge_id_ = 0;
     }
     maybe_execute(EDGE);
+  } else if (args[1] == "data_display_type") {
+    data_dirty_ = true;
+    if (now && data_id_) {
+      ogeom_->delObj(data_id_);
+      data_id_ = 0;
+    }
+    maybe_execute(DATA_AT);
   } else if (args[1] == "toggle_display_nodes"){
     // Toggle the GeomSwitches.
     nodes_on_.reset();
