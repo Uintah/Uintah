@@ -40,7 +40,7 @@ static clString prefix()
 	    pf=clString(p);
 	} else {
 	    cerr << "Error: SCI_WORK variable not set!\n";
-	    TaskManager::exit_all(-1);
+	    Task::exit_all(-1);
 	}
     }
     return pf;

@@ -1,10 +1,17 @@
 
 #include <config/sci.cf>
 
+<<<<<<< Imakefile
+OBJS = Delaunay.o  ExtractMeshSF.o  GenerateMesh.o  MakeScalarField.o  \
+	MeshView.o
+SRCS = Delaunay.cc ExtractMeshSF.cc GenerateMesh.cc MakeScalarField.cc \
+	MeshView.cc
+=======
 OBJS = ExtractMeshSF.o  GenerateMesh.o  MakeScalarField.o  \
 	MeshView.o  MorphMesher3d.o
 SRCS = ExtractMeshSF.cc GenerateMesh.cc MakeScalarField.cc \
 	MeshView.cc MorphMesher3d.cc
+>>>>>>> 1.2
 
 LIBNAME = Mesh
 
