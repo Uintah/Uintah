@@ -1665,7 +1665,7 @@ ViewWindow::update_mode_string(GeomHandle pick_obj)
   string ms="pick: ";
   GeomViewerItem* si=dynamic_cast<GeomViewerItem*>(pick_obj.get_rep());
   if(!si){
-    ms+="not a GeomViewerItem?";
+    ms += "GeomObj";
   } else {
     ms+=si->name_;
   }
