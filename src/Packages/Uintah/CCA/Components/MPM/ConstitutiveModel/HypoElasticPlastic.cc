@@ -1696,7 +1696,7 @@ void HypoElasticPlastic::checkNeedAddMPMMaterial(const PatchSubset* patches,
     ParticleSubset::iterator iter = pset->begin(); 
     for( ; iter != pset->end(); iter++){
       particleIndex idx = *iter;
-      if(pPlasticStrain[idx]>1.e-1){
+      if(pPlasticStrain[idx]>5.e-2){
         need_add = -1.;
       }
     }
