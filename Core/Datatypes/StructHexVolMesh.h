@@ -46,12 +46,10 @@
 #ifndef SCI_project_StructHexVolMesh_h
 #define SCI_project_StructHexVolMesh_h 1
 
-#include <Core/Geometry/Point.h>
-#include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/LatVolField.h>
-#include <Core/share/share.h>
-#include <string>
-#include <iostream>
+#include <Core/Containers/Array3.h>
+#include <Core/Geometry/Point.h>
+
 
 namespace SCIRun {
 

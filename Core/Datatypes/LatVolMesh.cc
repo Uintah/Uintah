@@ -30,10 +30,10 @@
  */
 
 #include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Datatypes/FieldAlgo.h>
+#include <Core/Containers/Array1.h>
 #include <Core/Geometry/BBox.h>
-#include <iostream>
-
+#include <Core/Geometry/Point.h>
+#include <Core/Math/MusilRNG.h>
 
 namespace SCIRun {
 
@@ -45,8 +45,8 @@ PersistentTypeID LatVolMesh::type_id("LatVolMesh", "Mesh", maker);
 
 LatVolMesh::LatVolMesh(unsigned x, unsigned y, unsigned z,
 		       const Point &min, const Point &max)
-  : min_x_(0), min_y_(0), min_z_(0),
-    nx_(x), ny_(y), nz_(z)
+  : min_i_(0), min_j_(0), min_k_(0),
+    ni_(x), nj_(y), nk_(z)
 {
   transform_.pre_scale(Vector(1.0 / (x-1.0), 1.0 / (y-1.0), 1.0 / (z-1.0)));
   transform_.pre_scale(max - min);
@@ -92,14 +92,14 @@ LatVolMesh::get_random_point(Point &p, const Elem::index_type &ei,
 BBox
 LatVolMesh::get_bounding_box() const
 {
-  Point p0(min_x_,         min_y_,         min_z_);
-  Point p1(min_x_ + nx_-1, min_y_,         min_z_);
-  Point p2(min_x_ + nx_-1, min_y_ + ny_-1, min_z_);
-  Point p3(min_x_,         min_y_ + ny_-1, min_z_);
-  Point p4(min_x_,         min_y_,         min_z_ + nz_-1);
-  Point p5(min_x_ + nx_-1, min_y_,         min_z_ + nz_-1);
-  Point p6(min_x_ + nx_-1, min_y_ + ny_-1, min_z_ + nz_-1);
-  Point p7(min_x_,         min_y_ + ny_-1, min_z_ + nz_-1);
+  Point p0(min_i_,         min_j_,         min_k_);
+  Point p1(min_i_ + ni_-1, min_j_,         min_k_);
+  Point p2(min_i_ + ni_-1, min_j_ + nj_-1, min_k_);
+  Point p3(min_i_,         min_j_ + nj_-1, min_k_);
+  Point p4(min_i_,         min_j_,         min_k_ + nk_-1);
+  Point p5(min_i_ + ni_-1, min_j_,         min_k_ + nk_-1);
+  Point p6(min_i_ + ni_-1, min_j_ + nj_-1, min_k_ + nk_-1);
+  Point p7(min_i_,         min_j_ + nj_-1, min_k_ + nk_-1);
   
   BBox result;
   result.extend(transform_.project(p0));
@@ -113,6 +113,10 @@ LatVolMesh::get_bounding_box() const
   return result;
 }
 
+Vector LatVolMesh::diagonal() const
+{
+  return get_bounding_box().diagonal();
+}
 
 void
 LatVolMesh::transform(Transform &t)
@@ -120,42 +124,81 @@ LatVolMesh::transform(Transform &t)
   transform_.pre_trans(t);
 }
 
+Array1<unsigned int>
+LatVolMesh::get_min() const
+{
+  Array1<unsigned int> array(3);
+
+  array[0] = min_i_;
+  array[1] = min_j_;
+  array[2] = min_k_;
+
+  return array;
+}
+
+Array1<unsigned int>
+LatVolMesh::get_dim() const
+{
+  Array1<unsigned int> array(3);
+
+  array[0] = ni_;
+  array[1] = nj_;
+  array[2] = nk_;
+
+  return array;
+}
+
+void
+LatVolMesh::set_min(Array1<unsigned int> min)
+{
+  min_i_ = min[0];
+  min_j_ = min[1];
+  min_k_ = min[2];
+}
+
+void
+LatVolMesh::set_dim(Array1<unsigned int> dim)
+{
+  ni_ = dim[0];
+  nj_ = dim[1];
+  nk_ = dim[2];
+}
 
 void
 LatVolMesh::get_nodes(Node::array_type &array, Edge::index_type idx) const
 {
   array.resize(2);
   const unsigned int xidx = idx;
-  if (xidx < (nx_ - 1) * ny_ * nz_)
+  if (xidx < (ni_ - 1) * nj_ * nk_)
   {
-    const int i = xidx % (nx_ - 1);
-    const int jk = xidx / (nx_ - 1);
-    const int j = jk % ny_;
-    const int k = jk / ny_;
+    const int i = xidx % (ni_ - 1);
+    const int jk = xidx / (ni_ - 1);
+    const int j = jk % nj_;
+    const int k = jk / nj_;
 
     array[0] = Node::index_type(this, i+0, j, k);
     array[1] = Node::index_type(this, i+1, j, k);
   }
   else
   {
-    const unsigned int yidx = idx - (nx_ - 1) * ny_ * nz_;
-    if (yidx < (nx_ * (ny_ - 1) * nz_))
+    const unsigned int yidx = idx - (ni_ - 1) * nj_ * nk_;
+    if (yidx < (ni_ * (nj_ - 1) * nk_))
     {
-      const int j = yidx % (ny_ - 1);
-      const int ik = yidx / (ny_ - 1);
-      const int i = ik / nz_;
-      const int k = ik % nz_;
+      const int j = yidx % (nj_ - 1);
+      const int ik = yidx / (nj_ - 1);
+      const int i = ik / nk_;
+      const int k = ik % nk_;
 
       array[0] = Node::index_type(this, i, j+0, k);
       array[1] = Node::index_type(this, i, j+1, k);
     }
     else
     {
-      const unsigned int zidx = yidx - (nx_ * (ny_ - 1) * nz_);
-      const int k = zidx % (nz_ - 1);
-      const int ij = zidx / (nz_ - 1);
-      const int i = ij % nx_;
-      const int j = ij / nx_;
+      const unsigned int zidx = yidx - (ni_ * (nj_ - 1) * nk_);
+      const int k = zidx % (nk_ - 1);
+      const int ij = zidx / (nk_ - 1);
+      const int i = ij % ni_;
+      const int j = ij / ni_;
 
       array[0] = Node::index_type(this, i, j, k+0);
       array[1] = Node::index_type(this, i, j, k+1);
@@ -169,12 +212,12 @@ LatVolMesh::get_nodes(Node::array_type &array, Face::index_type idx) const
 {
   array.resize(4);
   const unsigned int xidx = idx;
-  if (xidx < (nx_ - 1) * (ny_ - 1) * nz_)
+  if (xidx < (ni_ - 1) * (nj_ - 1) * nk_)
   {
-    const int i = xidx % (nx_ - 1);
-    const int jk = xidx / (nx_ - 1);
-    const int j = jk % (ny_ - 1);
-    const int k = jk / (ny_ - 1);
+    const int i = xidx % (ni_ - 1);
+    const int jk = xidx / (ni_ - 1);
+    const int j = jk % (nj_ - 1);
+    const int k = jk / (nj_ - 1);
     array[0] = Node::index_type(this, i+0, j+0, k);
     array[1] = Node::index_type(this, i+1, j+0, k);
     array[2] = Node::index_type(this, i+1, j+1, k);
@@ -182,13 +225,13 @@ LatVolMesh::get_nodes(Node::array_type &array, Face::index_type idx) const
   }
   else
   {
-    const unsigned int yidx = idx - (nx_ - 1) * (ny_ - 1) * nz_;
-    if (yidx < nx_ * (ny_ - 1) * (nz_ - 1))
+    const unsigned int yidx = idx - (ni_ - 1) * (nj_ - 1) * nk_;
+    if (yidx < ni_ * (nj_ - 1) * (nk_ - 1))
     {
-      const int j = yidx % (ny_ - 1);
-      const int ik = yidx / (ny_ - 1);
-      const int k = ik % (nz_ - 1);
-      const int i = ik / (nz_ - 1);
+      const int j = yidx % (nj_ - 1);
+      const int ik = yidx / (nj_ - 1);
+      const int k = ik % (nk_ - 1);
+      const int i = ik / (nk_ - 1);
       array[0] = Node::index_type(this, i, j+0, k+0);
       array[1] = Node::index_type(this, i, j+1, k+0);
       array[2] = Node::index_type(this, i, j+1, k+1);
@@ -196,11 +239,11 @@ LatVolMesh::get_nodes(Node::array_type &array, Face::index_type idx) const
     }
     else
     {
-      const unsigned int zidx = yidx - nx_ * (ny_ - 1) * (nz_ - 1);
-      const int k = zidx % (nz_ - 1);
-      const int ij = zidx / (nz_ - 1);
-      const int i = ij % (nx_ - 1);
-      const int j = ij / (nx_ - 1);
+      const unsigned int zidx = yidx - ni_ * (nj_ - 1) * (nk_ - 1);
+      const int k = zidx % (nk_ - 1);
+      const int ij = zidx / (nk_ - 1);
+      const int i = ij % (ni_ - 1);
+      const int j = ij / (ni_ - 1);
       array[0] = Node::index_type(this, i+0, j, k+0);
       array[1] = Node::index_type(this, i+0, j, k+1);
       array[2] = Node::index_type(this, i+1, j, k+1);
@@ -234,17 +277,17 @@ LatVolMesh::get_faces(Face::array_type &array, Cell::index_type idx) const
   const unsigned int j = idx.j_;
   const unsigned int k = idx.k_;
 
-  const unsigned int offset1 = (nx_ - 1) * (ny_ - 1) * nz_;
-  const unsigned int offset2 = offset1 + nx_ * (ny_ - 1) * (nz_ - 1);
+  const unsigned int offset1 = (ni_ - 1) * (nj_ - 1) * nk_;
+  const unsigned int offset2 = offset1 + ni_ * (nj_ - 1) * (nk_ - 1);
 
-  array[0] = i + (j + k * (ny_-1)) * (nx_-1);
-  array[1] = i + (j + (k+1) * (ny_-1)) * (nx_-1);
+  array[0] = i + (j + k * (nj_-1)) * (ni_-1);
+  array[1] = i + (j + (k+1) * (nj_-1)) * (ni_-1);
 
-  array[2] = offset1 + j + (k + i * (nz_-1)) * (ny_-1);
-  array[3] = offset1 + j + (k + (i+1) * (nz_-1)) * (ny_-1);
+  array[2] = offset1 + j + (k + i * (nk_-1)) * (nj_-1);
+  array[3] = offset1 + j + (k + (i+1) * (nk_-1)) * (nj_-1);
 
-  array[4] = offset2 + k + (i + j * (nx_-1)) * (nz_-1);
-  array[5] = offset2 + k + (i + (j+1) * (nx_-1)) * (nz_-1);
+  array[4] = offset2 + k + (i + j * (ni_-1)) * (nk_-1);
+  array[5] = offset2 + k + (i + (j+1) * (ni_-1)) * (nk_-1);
 }
 
 
@@ -259,9 +302,9 @@ LatVolMesh::get_cells(Cell::array_type &arr, const BBox &bbox)
   Cell::index_type max;
   locate(max, bbox.max());
 
-  if (max.i_ >= nx_ - 1) max.i_ = Max(((int)nx_) - 2, 0);
-  if (max.j_ >= ny_ - 1) max.j_ = Max(((int)ny_) - 2, 0);
-  if (max.k_ >= nz_ - 1) max.k_ = Max(((int)nz_) - 2, 0);
+  if (max.i_ >= ni_ - 1) max.i_ = Max(((int)ni_) - 2, 0);
+  if (max.j_ >= nj_ - 1) max.j_ = Max(((int)nj_) - 2, 0);
+  if (max.k_ >= nk_ - 1) max.k_ = Max(((int)nk_) - 2, 0);
 
   for (unsigned i = min.i_; i <= max.i_; i++) {
     for (unsigned j = min.j_; j <= max.j_; j++) {
@@ -279,12 +322,12 @@ LatVolMesh::get_neighbor(Cell::index_type &neighbor,
 			 const Face::index_type &face) const
 {
   const unsigned int xidx = face;
-  if (xidx < (nx_ - 1) * (ny_ - 1) * nz_)
+  if (xidx < (ni_ - 1) * (nj_ - 1) * nk_)
   {
-    //const unsigned int i = xidx % (nx_ - 1);
-    const unsigned int jk = xidx / (nx_ - 1);
-    //const unsigned int j = jk % (ny_ - 1);
-    const unsigned int k = jk / (ny_ - 1);
+    //const unsigned int i = xidx % (ni_ - 1);
+    const unsigned int jk = xidx / (ni_ - 1);
+    //const unsigned int j = jk % (nj_ - 1);
+    const unsigned int k = jk / (nj_ - 1);
 
     if (k == from.k_ && k > 0)
     {
@@ -293,7 +336,7 @@ LatVolMesh::get_neighbor(Cell::index_type &neighbor,
       neighbor.k_ = k-1;
       return true;
     }
-    else if (k == (from.k_+1) && k < (nz_-1))
+    else if (k == (from.k_+1) && k < (nk_-1))
     {
       neighbor.i_ = from.i_;
       neighbor.j_ = from.j_;
@@ -303,13 +346,13 @@ LatVolMesh::get_neighbor(Cell::index_type &neighbor,
   }
   else
   {
-    const unsigned int yidx = xidx - (nx_ - 1) * (ny_ - 1) * nz_;
-    if (yidx < nx_ * (ny_ - 1) * (nz_ - 1))
+    const unsigned int yidx = xidx - (ni_ - 1) * (nj_ - 1) * nk_;
+    if (yidx < ni_ * (nj_ - 1) * (nk_ - 1))
     {
-      //const unsigned int j = yidx % (ny_ - 1);
-      const unsigned int ik = yidx / (ny_ - 1);
-      //const unsigned int k = ik % (nz_ - 1);
-      const unsigned int i = ik / (nz_ - 1);
+      //const unsigned int j = yidx % (nj_ - 1);
+      const unsigned int ik = yidx / (nj_ - 1);
+      //const unsigned int k = ik % (nk_ - 1);
+      const unsigned int i = ik / (nk_ - 1);
 
       if (i == from.i_ && i > 0)
       {
@@ -318,7 +361,7 @@ LatVolMesh::get_neighbor(Cell::index_type &neighbor,
 	neighbor.k_ = from.k_;
 	return true;
       }
-      else if (i == (from.i_+1) && i < (nx_-1))
+      else if (i == (from.i_+1) && i < (ni_-1))
       {
 	neighbor.i_ = i;
 	neighbor.j_ = from.j_;
@@ -328,11 +371,11 @@ LatVolMesh::get_neighbor(Cell::index_type &neighbor,
     }
     else
     {
-      const unsigned int zidx = yidx - nx_ * (ny_ - 1) * (nz_ - 1);
-      //const unsigned int k = zidx % (nz_ - 1);
-      const unsigned int ij = zidx / (nz_ - 1);
-      //const unsigned int i = ij % (nx_ - 1);
-      const unsigned int j = ij / (nx_ - 1);
+      const unsigned int zidx = yidx - ni_ * (nj_ - 1) * (nk_ - 1);
+      //const unsigned int k = zidx % (nk_ - 1);
+      const unsigned int ij = zidx / (nk_ - 1);
+      //const unsigned int i = ij % (ni_ - 1);
+      const unsigned int j = ij / (ni_ - 1);
 
       if (j == from.j_ && j > 0)
       {
@@ -341,7 +384,7 @@ LatVolMesh::get_neighbor(Cell::index_type &neighbor,
 	neighbor.k_ = from.k_;
 	return true;
       }
-      else if (j == (from.j_+1) && j < (ny_-1))
+      else if (j == (from.j_+1) && j < (nj_-1))
       {
 	neighbor.i_ = from.i_;
 	neighbor.j_ = j;
@@ -378,16 +421,16 @@ LatVolMesh::get_cell_range(Cell::range_iter &iter, Cell::iterator &end_iter,
   min = Min(min, mesh_boundary.max());
   max = Min(max, mesh_boundary.max());
   
-  Cell::index_type min_index, max_index;
+  Cell::index_type min_index, mai_index;
 
   // If one of the locates return true, then we have a valid iteration
   bool min_located = locate(min_index, min);
-  bool max_located = locate(max_index, max);
-  if (min_located || max_located) {
+  bool mai_located = locate(mai_index, max);
+  if (min_located || mai_located) {
     // Initialize the range iterator
     iter = Cell::range_iter(this,
 			    min_index.i_, min_index.j_, min_index.k_,
-			    max_index.i_, max_index.j_, max_index.k_);
+			    mai_index.i_, mai_index.j_, mai_index.k_);
   } else {
     // If both of these are false then we are outside the boundary.
     // Set the min and max extents of the range iterator to be the same thing.
@@ -413,16 +456,16 @@ LatVolMesh::get_node_range(Node::range_iter &iter, Node::iterator &end_iter,
   min = Min(min, mesh_boundary.max());
   max = Min(max, mesh_boundary.max());
   
-  Node::index_type min_index, max_index;
+  Node::index_type min_index, mai_index;
 
   // If one of the locates return true, then we have a valid iteration
   bool min_located = locate(min_index, min);
-  bool max_located = locate(max_index, max);
-  if (min_located || max_located) {
+  bool mai_located = locate(mai_index, max);
+  if (min_located || mai_located) {
     // Initialize the range iterator
     iter = Node::range_iter(this,
 			    min_index.i_, min_index.j_, min_index.k_,
-			    max_index.i_, max_index.j_, max_index.k_);
+			    mai_index.i_, mai_index.j_, mai_index.k_);
   } else {
     // If both of these are false then we are outside the boundary.
     // Set the min and max extents of the range iterator to be the same thing.
@@ -516,9 +559,9 @@ LatVolMesh::locate(Cell::index_type &cell, const Point &p)
   cell.j_ = (unsigned int)r.y();
   cell.k_ = (unsigned int)r.z();
 
-  if (cell.i_ >= (nx_-1) ||
-      cell.j_ >= (ny_-1) ||
-      cell.k_ >= (nz_-1))
+  if (cell.i_ >= (ni_-1) ||
+      cell.j_ >= (nj_-1) ||
+      cell.k_ >= (nk_-1))
   {
     return false;
   }
@@ -540,9 +583,9 @@ LatVolMesh::locate(Node::index_type &node, const Point &p)
   node.j_ = (unsigned int)(r.y() + 0.5);
   node.k_ = (unsigned int)(r.z() + 0.5);
 
-  if (node.i_ >= nx_ ||
-      node.j_ >= ny_ ||
-      node.k_ >= nz_)
+  if (node.i_ >= ni_ ||
+      node.j_ >= nj_ ||
+      node.k_ >= nk_)
   {
     return false;
   }
@@ -658,18 +701,18 @@ LatVolMesh::io(Piostream& stream)
   Mesh::io(stream);
 
   // IO data members, in order
-  Pio(stream, nx_);
-  Pio(stream, ny_);
-  Pio(stream, nz_);
+  Pio(stream, ni_);
+  Pio(stream, nj_);
+  Pio(stream, nk_);
 
   if (version < 2 && stream.reading())
   {
     Point min, max;
     Pio(stream, min);
     Pio(stream, max);
-    transform_.pre_scale(Vector(1.0 / (nx_ - 1.0),
-				1.0 / (ny_ - 1.0),
-				1.0 / (nz_ - 1.0)));
+    transform_.pre_scale(Vector(1.0 / (ni_ - 1.0),
+				1.0 / (nj_ - 1.0),
+				1.0 / (nk_ - 1.0)));
     transform_.pre_scale(max - min);
     transform_.pre_translate(Vector(min));
     transform_.compute_imat();
@@ -696,19 +739,19 @@ LatVolMesh::type_name(int n)
 void
 LatVolMesh::begin(LatVolMesh::Node::iterator &itr) const
 {
-  itr = Node::iterator(this, min_x_, min_y_, min_z_);
+  itr = Node::iterator(this, min_i_, min_j_, min_k_);
 }
 
 void
 LatVolMesh::end(LatVolMesh::Node::iterator &itr) const
 {
-  itr = Node::iterator(this, min_x_, min_y_, min_z_ + nz_);
+  itr = Node::iterator(this, min_i_, min_j_, min_k_ + nk_);
 }
 
 void
 LatVolMesh::size(LatVolMesh::Node::size_type &s) const
 {
-  s = Node::size_type(nx_,ny_,nz_);
+  s = Node::size_type(ni_,nj_,nk_);
 }
 
 void
@@ -720,13 +763,13 @@ LatVolMesh::begin(LatVolMesh::Edge::iterator &itr) const
 void
 LatVolMesh::end(LatVolMesh::Edge::iterator &itr) const
 {
-  itr = ((nx_-1) * ny_ * nz_) + (nx_ * (ny_-1) * nz_) + (nx_ * ny_ * (nz_-1));
+  itr = ((ni_-1) * nj_ * nk_) + (ni_ * (nj_-1) * nk_) + (ni_ * nj_ * (nk_-1));
 }
 
 void
 LatVolMesh::size(LatVolMesh::Edge::size_type &s) const
 {
-  s = ((nx_-1) * ny_ * nz_) + (nx_ * (ny_-1) * nz_) + (nx_ * ny_ * (nz_-1));
+  s = ((ni_-1) * nj_ * nk_) + (ni_ * (nj_-1) * nk_) + (ni_ * nj_ * (nk_-1));
 }
 
 void
@@ -738,35 +781,35 @@ LatVolMesh::begin(LatVolMesh::Face::iterator &itr) const
 void
 LatVolMesh::end(LatVolMesh::Face::iterator &itr) const
 {
-  itr = (nx_-1) * (ny_-1) * nz_ +
-    nx_ * (ny_ - 1 ) * (nz_ - 1) +
-    (nx_ - 1) * ny_ * (nz_ - 1);
+  itr = (ni_-1) * (nj_-1) * nk_ +
+    ni_ * (nj_ - 1 ) * (nk_ - 1) +
+    (ni_ - 1) * nj_ * (nk_ - 1);
 }
 
 void
 LatVolMesh::size(LatVolMesh::Face::size_type &s) const
 {
-  s =  (nx_-1) * (ny_-1) * nz_ +
-    nx_ * (ny_ - 1 ) * (nz_ - 1) +
-    (nx_ - 1) * ny_ * (nz_ - 1);
+  s =  (ni_-1) * (nj_-1) * nk_ +
+    ni_ * (nj_ - 1 ) * (nk_ - 1) +
+    (ni_ - 1) * nj_ * (nk_ - 1);
 }
 
 void
 LatVolMesh::begin(LatVolMesh::Cell::iterator &itr) const
 {
-  itr = Cell::iterator(this,  min_x_, min_y_, min_z_);
+  itr = Cell::iterator(this,  min_i_, min_j_, min_k_);
 }
 
 void
 LatVolMesh::end(LatVolMesh::Cell::iterator &itr) const
 {
-  itr = Cell::iterator(this, min_x_, min_y_, min_z_ + nz_-1);
+  itr = Cell::iterator(this, min_i_, min_j_, min_k_ + nk_-1);
 }
 
 void
 LatVolMesh::size(LatVolMesh::Cell::size_type &s) const
 {
-  s = Cell::size_type(nx_-1, ny_-1,nz_-1);
+  s = Cell::size_type(ni_-1, nj_-1,nk_-1);
 }
 
 

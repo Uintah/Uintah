@@ -31,14 +31,9 @@
 #ifndef SCI_project_ScanlineMesh_h
 #define SCI_project_ScanlineMesh_h 1
 
-#include <Core/Geometry/Point.h>
-#include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/Mesh.h>
 #include <Core/Datatypes/FieldIterator.h>
 #include <Core/Geometry/Transform.h>
-#include <Core/share/share.h>
-#include <string>
-#include <iostream>
 
 namespace SCIRun {
 
@@ -81,25 +76,30 @@ public:
 
   typedef Edge Elem;
 
-  ScanlineMesh() : offset_(0), nx_(0) {}
+  ScanlineMesh() : min_i_(0), ni_(0) {}
   ScanlineMesh(unsigned int nx, const Point &min, const Point &max);
   ScanlineMesh(ScanlineMesh* mh, unsigned int offset, unsigned int nx)
-    : offset_(offset), nx_(nx), transform_(mh->transform_) {}
+    : min_i_(offset), ni_(nx), transform_(mh->transform_) {}
   ScanlineMesh(const ScanlineMesh &copy)
-    : offset_(copy.offset_), nx_(copy.get_nx()),
+    : min_i_(copy.get_min_i()), ni_(copy.get_ni()),
       transform_(copy.transform_) {}
   virtual ScanlineMesh *clone() { return new ScanlineMesh(*this); }
   virtual ~ScanlineMesh() {}
 
   //! get the mesh statistics
-  unsigned get_nx() const { return nx_; }
-  unsigned get_ny() const { return 1; }
-  unsigned get_nz() const { return 1; }
-  //Point get_min() const { return min_; }
-  //Point get_max() const { return max_; }
+  unsigned get_min_i() const { return min_i_; }
+  Array1<unsigned int> get_min() const;
+  unsigned get_ni() const { return ni_; }
+  Array1<unsigned int> get_dim() const;
   Vector diagonal() const;
   virtual BBox get_bounding_box() const;
   virtual void transform(Transform &t);
+
+  //! set the mesh statistics
+  void set_min_i(unsigned i) {min_i_ = i; }
+  void set_min(Array1<unsigned int> mins);
+  void set_ni(unsigned i) { ni_ = i; }
+  void set_dim(Array1<unsigned int> dims);
 
   void begin(Node::iterator &) const;
   void begin(Edge::iterator &) const;
@@ -115,13 +115,6 @@ public:
   void size(Edge::size_type &) const;
   void size(Face::size_type &) const;
   void size(Cell::size_type &) const;
-
-  //! set the mesh statistics
-  //void set_offset(unsigned int x) { offset_ = x; }
-  //void set_nx(unsigned int x) { nx_ = x; }
-  //void set_min(Point p) { min_ = p; }
-  //void set_max(Point p) { max_ = p; }
-
 
   //! get the child elements of the given index
   void get_nodes(Node::array_type &, Edge::index_type) const;
@@ -179,11 +172,11 @@ public:
 protected:
 
   //! the min Node::index_type ( incase this is a subLattice )
-  unsigned int offset_;
+  unsigned int min_i_;
 
   //! the Node::index_type space extents of a ScanlineMesh
   //! (min=min_Node::index_type, max=min+extents-1)
-  unsigned int nx_;
+  unsigned int ni_;
 
   //! the object space extents of a ScanlineMesh
   Transform transform_;

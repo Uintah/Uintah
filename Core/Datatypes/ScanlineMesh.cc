@@ -30,7 +30,7 @@
  */
 
 #include <Core/Datatypes/ScanlineMesh.h>
-#include <Core/Datatypes/FieldAlgo.h>
+#include <Core/Containers/Array1.h>
 #include <Core/Geometry/BBox.h>
 #include <iostream>
 
@@ -39,26 +39,24 @@ namespace SCIRun {
 
 using namespace std;
 
-
 PersistentTypeID ScanlineMesh::type_id("ScanlineMesh", "Mesh", maker);
 
 
-ScanlineMesh::ScanlineMesh(unsigned int nx,
+ScanlineMesh::ScanlineMesh(unsigned int ni,
 			   const Point &min, const Point &max)
-  : offset_(0), nx_(nx)
+  : min_i_(0), ni_(ni)
 {
-  transform_.pre_scale(Vector(1.0 / (nx_ - 1.0), 1.0, 1.0));
+  transform_.pre_scale(Vector(1.0 / (ni_ - 1.0), 1.0, 1.0));
   transform_.pre_scale(max - min);
   transform_.pre_translate(Vector(min));
   transform_.compute_imat();
 }
 
-
 BBox
 ScanlineMesh::get_bounding_box() const
 {
   Point p0(0.0, 0.0, 0.0);
-  Point p1(nx_ - 1, 0.0, 0.0);
+  Point p1(ni_ - 1, 0.0, 0.0);
   
   BBox result;
   result.extend(transform_.project(p0));
@@ -66,6 +64,10 @@ ScanlineMesh::get_bounding_box() const
   return result;
 }
 
+Vector ScanlineMesh::diagonal() const
+{
+  return get_bounding_box().diagonal();
+}
 
 void
 ScanlineMesh::transform(Transform &t)
@@ -73,6 +75,38 @@ ScanlineMesh::transform(Transform &t)
   transform_.pre_trans(t);
 }
 
+
+Array1<unsigned int>
+ScanlineMesh::get_min() const
+{
+  Array1<unsigned int> array(2);
+
+  array[0] = min_i_;
+
+  return array;
+}
+
+Array1<unsigned int>
+ScanlineMesh::get_dim() const
+{
+  Array1<unsigned int> array(2);
+
+  array[0] = ni_;
+
+  return array;
+}
+
+void
+ScanlineMesh::set_min(Array1<unsigned int> min)
+{
+  min_i_ = min[0];
+}
+
+void
+ScanlineMesh::set_dim(Array1<unsigned int> dim)
+{
+  ni_ = dim[0];
+}
 
 void
 ScanlineMesh::get_nodes(Node::array_type &array, Edge::index_type idx) const
@@ -112,7 +146,7 @@ ScanlineMesh::locate(Edge::index_type &elem, const Point &p)
   const Point r = transform_.unproject(p);
   elem = (unsigned int)(r.x());
 
-  if (elem >= (nx_ - 1))
+  if (elem >= (ni_ - 1))
   {
     return false;
   }
@@ -130,7 +164,7 @@ ScanlineMesh::locate(Node::index_type &node, const Point &p)
   const Point r = transform_.unproject(p);
   node = (unsigned int)(r.x() + 0.5);
 
-  if (node >= nx_)
+  if (node >= ni_)
   {
     return false;
   }
@@ -150,7 +184,7 @@ ScanlineMesh::get_weights(const Point &p,
 
   node0 = (unsigned int)r.x();
 
-  if (node0 < (nx_ - 1))
+  if (node0 < (ni_ - 1))
   {
     const double dx1 = r.x() - node0;
     const double dx0 = 1.0 - dx1;
@@ -178,12 +212,6 @@ ScanlineMesh::get_weights(const Point &p,
   }
 }
 
-
-Vector ScanlineMesh::diagonal() const
-{
-  return get_bounding_box().diagonal();
-}
-
 #define SCANLINEMESH_VERSION 2
 
 void
@@ -194,7 +222,7 @@ ScanlineMesh::io(Piostream& stream)
   Mesh::io(stream);
 
   // IO data members, in order
-  Pio(stream, nx_);
+  Pio(stream, ni_);
   if (version < 2 && stream.reading() ) {
     Pio_old(stream, transform_);
   } else {
@@ -215,37 +243,37 @@ ScanlineMesh::type_name(int n)
 void
 ScanlineMesh::begin(ScanlineMesh::Node::iterator &itr) const
 {
-  itr = Node::iterator(offset_);
+  itr = Node::iterator(min_i_);
 }
 
 void
 ScanlineMesh::end(ScanlineMesh::Node::iterator &itr) const
 {
-  itr = Node::iterator(offset_ + nx_);
+  itr = Node::iterator(min_i_ + ni_);
 }
 
 void
 ScanlineMesh::size(ScanlineMesh::Node::size_type &s) const
 {
-  s = Node::size_type(nx_);
+  s = Node::size_type(ni_);
 }
 
 void
 ScanlineMesh::begin(ScanlineMesh::Edge::iterator &itr) const
 {
-  itr = Edge::iterator(offset_);
+  itr = Edge::iterator(min_i_);
 }
 
 void
 ScanlineMesh::end(ScanlineMesh::Edge::iterator &itr) const
 {
-  itr = Edge::iterator(offset_+nx_-1);
+  itr = Edge::iterator(min_i_+ni_-1);
 }
 
 void
 ScanlineMesh::size(ScanlineMesh::Edge::size_type &s) const
 {
-  s = Edge::size_type(nx_ - 1);
+  s = Edge::size_type(ni_ - 1);
 }
 
 void

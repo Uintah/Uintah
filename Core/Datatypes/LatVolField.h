@@ -284,29 +284,29 @@ bool LatVolField<Data>::get_gradient(Vector &g, const Point &p)
 #if 0
       Vector pn=p-mesh->get_min();
       Vector diagonal = mesh->diagonal();
-      int nx=mesh->get_nx();
-      int ny=mesh->get_ny();
-      int nz=mesh->get_nz();
+      int ni=mesh->get_ni();
+      int nj=mesh->get_nj();
+      int nk=mesh->get_nk();
       double diagx=diagonal.x();
       double diagy=diagonal.y();
       double diagz=diagonal.z();
-      double x=pn.x()*(nx-1)/diagx;
-      double y=pn.y()*(ny-1)/diagy;
-      double z=pn.z()*(nz-1)/diagz;
+      double x=pn.x()*(ni-1)/diagx;
+      double y=pn.y()*(nj-1)/diagy;
+      double z=pn.z()*(nk-1)/diagz;
 #endif
 
-      int nx=mesh->get_nx();
-      int ny=mesh->get_ny();
-      int nz=mesh->get_nz();
+      int ni=mesh->get_ni();
+      int nj=mesh->get_nj();
+      int nk=mesh->get_nk();
       int ix0 = (int)x;
       int iy0 = (int)y;
       int iz0 = (int)z;
       int ix1 = ix0+1;
       int iy1 = iy0+1;
       int iz1 = iz0+1;
-      if(ix0<0 || ix1>=nx)return false;
-      if(iy0<0 || iy1>=ny)return false;
-      if(iz0<0 || iz1>=nz)return false;
+      if(ix0<0 || ix1>=ni)return false;
+      if(iy0<0 || iy1>=nj)return false;
+      if(iz0<0 || iz1>=nk)return false;
       double fx = x-ix0;
       double fy = y-iy0;
       double fz = z-iz0;
