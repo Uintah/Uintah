@@ -46,18 +46,18 @@ using namespace SCIRun;
 int
 main(int argc, char **argv) {
   TriSurfMesh *tsm = new TriSurfMesh();
-  if (argc != 4) {
-    cerr << "Usage: "<<argv[0]<<" pts tris TriSurf\n";
+  if (argc != 4 && argc != 5) {
+    cerr << "Usage: "<<argv[0]<<" pts tris [vals] TriSurf\n";
     return 0;
   }
 
   ifstream ptsstream(argv[1]);
   ifstream tristream(argv[2]);
 
-  int i;
-  ptsstream >> i;
-  cerr << "number of points = "<<i<<"\n";
-  for (; i>0; i--) {
+  int i, npts;
+  ptsstream >> npts;
+  cerr << "number of points = "<<npts<<"\n";
+  for (i=0; i<npts; i++) {
     double x, y, z;
     ptsstream >> x >> y >> z;
     tsm->add_point(Point(x,y,z));
@@ -76,7 +76,23 @@ main(int argc, char **argv) {
   TriSurf<double> *tsd = scinew TriSurf<double>(tsm, Field::NODE);
   FieldHandle fh(tsd);
 
-  TextPiostream out_stream(argv[3], Piostream::Write);
-  Pio(out_stream, fh);
+  if (argc == 5) {
+    ifstream valstream(argv[3]);
+    for (i=0; i<npts; i++) {
+      double val;
+      valstream >> val;
+      tsd->fdata()[i]=val;
+    }
+    cerr << "done adding values.\n";
+  }
+
+  if (argc == 4) {
+    TextPiostream out_stream(argv[3], Piostream::Write);
+    Pio(out_stream, fh);
+  } else {
+    TextPiostream out_stream(argv[4], Piostream::Write);
+    Pio(out_stream, fh);
+  }
+
   return 0;  
 }    

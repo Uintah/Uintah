@@ -44,7 +44,7 @@ public:
   Data *end() { return &((*this)(dim1()-1,dim2()-1))+1; }
     
   FData2d():Array2<Data>() {}
-  FData2d(const FData2d& data) : Array2<Data>(data) {} 
+  FData2d(const FData2d& data) {copy(data);} 
   virtual ~FData2d(){}
   
   const value_type &operator[](typename ImageMesh::cell_index idx) const 
@@ -187,7 +187,7 @@ ImageField<Data>::io(Piostream &stream)
   stream.end_class();                                                         
   if (version < 2) {
     FData2d<Data> temp;
-    temp=fdata();
+    temp.copy(fdata());
     resize_fdata();
     int i, j;
     for (i=0; i<fdata().dim1(); i++)

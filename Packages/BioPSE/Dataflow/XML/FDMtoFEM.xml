@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE component SYSTEM "../../../doc/component.dtd">
-<?xml-stylesheet href="../../../doc/component.xsl" type="text/xsl"?>
-<?cocoon-process type="xslt"?>
+<!DOCTYPE component SYSTEM "../../../../../doc/ReferenceGuide/component.dtd">
 
 <!--
   The contents of this file are subject to the University of Utah Public
@@ -21,18 +19,25 @@
 -->
 
 
-<component name="ChangeCellType" category="Fields">
+<component name="FDMtoFEM" category="Forward">
   <overview>
+    
     <authors>
       <author>David Weinstein</author>
     </authors>
-    <summary>Summary not available yet.</summary>
+
+    <summary>Change a finite difference model into a finite element
+    model</summary>
+
     <description>
-      <p>Version Date: January 2000</p><p>Version: 1.0</p>
+      <p>Version Date: April 2001</p>
+      <p>Version: 1.1</p>
+      <p>Given a finite difference model as input (conductivity
+      tensors at cell centers on a LatticeVol), build a finite
+      element model that represents the same system.  The finite
+      element model is a TetVol of ints, where the ints are indices
+      into a lookup table of conductivity tensors stored in the
+      PropertManager.</p>
     </description>
   </overview>
-  <io>
-  </io>
-  <testing>
-  </testing>
 </component>

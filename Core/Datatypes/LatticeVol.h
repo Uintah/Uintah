@@ -44,7 +44,7 @@ public:
   Data *end() { return &((*this)(dim1()-1,dim2()-1,dim3()-1))+1; }
     
   FData3d():Array3<Data>() {}
-  FData3d(const FData3d& data) : Array3<Data>(data) {} 
+  FData3d(const FData3d& data) {copy(data);}
   virtual ~FData3d(){}
   
   const value_type &operator[](typename LatVolMesh::cell_index idx) const 
@@ -187,7 +187,7 @@ LatticeVol<Data>::io(Piostream &stream)
   stream.end_class();                                                         
   if (version < 2) {
     FData3d<Data> temp;
-    temp=fdata();
+    temp.copy(fdata());
     resize_fdata();
     int i, j, k;
     for (i=0; i<fdata().dim1(); i++)

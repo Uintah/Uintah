@@ -44,6 +44,12 @@ VectorFieldRG::VectorFieldRG(int x, int y, int z)
 {
 }
 
+VectorFieldRG::VectorFieldRG(const VectorFieldRG& copy)
+  : VectorField(RegularGrid), nx(copy.nx), ny(copy.ny), nz(copy.nz)
+{
+  grid.copy(copy.grid);
+}
+
 VectorFieldRG::~VectorFieldRG()
 {
 }

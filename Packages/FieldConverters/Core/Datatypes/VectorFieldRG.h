@@ -49,6 +49,7 @@ public:
 
     void set_bounds(const Point&, const Point&);
 
+    VectorFieldRG(const VectorFieldRG& copy);
     VectorFieldRG(int x, int y, int z);
     virtual ~VectorFieldRG();
     virtual VectorField* clone();

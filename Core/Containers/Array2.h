@@ -75,21 +75,25 @@ class Array2 {
   int dm1;
   int dm2;
   void allocate();
+
+  // The copy constructor and the assignment operator have been
+  // privatized on purpose -- no one should use these.  Instead,
+  // use the default constructor and the copy method.
+  //////////
+  //Array2 Copy Constructor
+  Array2(const Array2&);
+  //////////
+  //Assignment Operator
+  Array2<T>& operator=(const Array2&);
 public:
   //////////
   //Create a 0X0 Array
   Array2();
     
   //////////
-  //Array2 Copy Constructor
-  Array2(const Array2&);
-    
-  //////////
   //Create an n by n array
   Array2(int, int);
 
-  Array2<T>& operator=(const Array2&);
-    
   //////////
   //Class Destructor
   virtual ~Array2();
@@ -102,6 +106,10 @@ public:
     ASSERTL3(d2>=0 && d2<dm2);
     return objs[d1][d2];
   }
+    
+  //////////
+  //Array2 Copy Method
+  void copy(const Array2&);
     
   //////////
   //Returns number of rows
@@ -201,16 +209,12 @@ void Array2<T>::initialize(const T& t)
 }
 
 template<class T>
-Array2<T>& Array2<T>::operator=(const Array2<T> &copy)
+void Array2<T>::copy(const Array2<T> &copy)
 {
-  // ok, i did this, but i'm not quite sure it will work...
-  
   newsize( copy.dim1(), copy.dim2() );
-
   for(int i=0;i<dm1;i++)
     for(int j=0;j<dm2;j++)
       objs[i][j] = copy.objs[i][j];
-  return( *this );
 }
 
 #define Array2_VERSION 1
