@@ -26,7 +26,8 @@ running.tex network.tex viewer.tex import.tex
 
 # Latex2html options.  Change as needed.
 LATEX2HTMLOPTIONS = -split 4 -no_white -link 1 -bottom_navigation \
--html_version 3.2,math -show_section_numbers -local_icons
+-html_version 3.2,math -show_section_numbers -local_icons 
+#-local_icons
 
 # Change to reflect installation locations.
 HTMLINSTDIR = 
