@@ -48,6 +48,10 @@
 
 #include <Core/Datatypes/MRLatVolField.h>
 
+#include <sgi_stl_warnings_off.h>
+#include <limits>
+#include <sgi_stl_warnings_on.h>
+
 namespace SCIRun {
 
 static SCIRun::DebugStream dbg("TextureBuilder", false);
