@@ -73,7 +73,4 @@ include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 INCLUDES += $(BLAS_INCLUDE)
 
-clean::
-	rm -f $(GENSRCS)
-	rm -f $(patsubst %.cc,%.h,$(GENSRCS))
 
