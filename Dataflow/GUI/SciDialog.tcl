@@ -85,7 +85,25 @@ proc createSciDialog { args } {
 
   set outside_pad 4
 
+  if [winfo exists .sci_dialog] {
+      # The SciDialog is modal... so this case really should never
+      # happen.  However, it appears that you can still press the
+      # "destroy" window decoration button which causes a SciDialog
+      # (ie: the "quit" dialog) to come up.  By adding this if block,
+      # the current SciDialog will be raised and moved to the mouse
+      # and the user must deal with it before the quit is allowed.
+      moveToCursor .sci_dialog
+      raise .sci_dialog
+      return -1
+  }
+
   toplevel .sci_dialog
+
+  wm protocol .sci_dialog WM_DELETE_WINDOW ";"
+  # Would like to turn off iconify too, but "WM_INCONIFY_WINDOW"
+  # does not actually exist.
+  #
+  # wm protocol .sci_dialog WM_INCONIFY_WINDOW ";"
 
   frame .sci_dialog.msgBox
   frame .sci_dialog.btnBox
