@@ -41,6 +41,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Containers/StaticArray.h>
 #include <iostream>
+#include <Core/Math/MiscMath.h>
 
 using namespace std;
 using namespace Uintah;
@@ -2447,11 +2448,6 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
       }
     }
     
-    // Put the calculated data into the new DW
-    //new_dw->put(density, d_lab->d_densitySPLabel, matlIndex, patch);
-    new_dw->put(uVelocity, d_lab->d_uVelocitySPLabel, matlIndex, patch);
-    new_dw->put(vVelocity, d_lab->d_vVelocitySPLabel, matlIndex, patch);
-    new_dw->put(wVelocity, d_lab->d_wVelocitySPLabel, matlIndex, patch);
 
   #ifdef Scalar_ENO
     double maxAbsU = 0.0;
@@ -2470,7 +2466,7 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
 
               IntVector currCell(colX, colY, colZ);
 
-	      temp_absU = Abs(velocityVars.uVelRhoHat[currCell]);
+	      temp_absU = Abs(uVelocity[currCell]);
 	      if (temp_absU > maxAbsU) maxAbsU = temp_absU;
           }
         }
@@ -2486,7 +2482,7 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
 
               IntVector currCell(colX, colY, colZ);
 
-	      temp_absV = Abs(velocityVars.vVelRhoHat[currCell]);
+	      temp_absV = Abs(vVelocity[currCell]);
 	      if (temp_absV > maxAbsV) maxAbsV = temp_absV;
           }
         }
@@ -2502,7 +2498,7 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
 
               IntVector currCell(colX, colY, colZ);
 
-	      temp_absW = Abs(velocityVars.wVelRhoHat[currCell]);
+	      temp_absW = Abs(wVelocity[currCell]);
 	      if (temp_absW > maxAbsW) maxAbsW = temp_absW;
           }
         }
@@ -2511,6 +2507,11 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
 
   #endif
 
+    // Put the calculated data into the new DW
+    //new_dw->put(density, d_lab->d_densitySPLabel, matlIndex, patch);
+    new_dw->put(uVelocity, d_lab->d_uVelocitySPLabel, matlIndex, patch);
+    new_dw->put(vVelocity, d_lab->d_vVelocitySPLabel, matlIndex, patch);
+    new_dw->put(wVelocity, d_lab->d_wVelocitySPLabel, matlIndex, patch);
     for (int ii =0; ii < d_nofScalars; ii++) {
       new_dw->put(scalar[ii], d_lab->d_scalarSPLabel, matlIndex, patch);
     }

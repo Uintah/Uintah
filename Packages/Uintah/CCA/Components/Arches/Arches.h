@@ -64,6 +64,15 @@ WARNING
 // Divergence constraint instead of drhodt in pressure equation
 //#define divergenceconstraint
 
+// Choices of scheme for convection of scalar
+
+//#define Scalar_ENO
+
+//#define Scalar_WENO
+#ifdef Scalar_WENO
+  #define Scalar_ENO
+#endif
+
 namespace Uintah {
 
   class VarLabel;
