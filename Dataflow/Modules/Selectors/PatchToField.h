@@ -35,16 +35,17 @@ public:
                      IntVector offset,
                      IntVector min_i,
                      IntVector max_i,
-                     Semaphore* sema,
-                     Mutex& lock):
+                     Semaphore* sema = 0):
     fld_(fld),
     offset_(offset),
     min_(min_i),
     max_(max_i),
-    sema_(sema),
-    lock_(lock)
+    sema_(sema)
   {
     var_.copyPointer(patchData);
+
+    cerr << "PatchToFieldThread::PatchToFieldThread\n";
+    cerr << "offset = "<<offset<<", min_ = "<<min_<<", max_ = "<<max_<<"\n";
   }
   void run()
     {
@@ -53,6 +54,7 @@ public:
       if( fld_->basis_order() == 0){
         IntVector lo(min_ - offset_);
         IntVector hi(max_ - offset_);
+        cerr << "\nPatchToFieldThread::run::bases(0): lo = "<<lo<<", hi = "<<hi<<"\n";
 #if 1
         // Get an iterator over a subgrid of the mesh
         LatVolMesh::Cell::range_iter it(mesh,
@@ -84,6 +86,7 @@ public:
 
         IntVector lo(min_ - offset_);
         IntVector hi(max_ - offset_);
+        cerr << "\nPatchToFieldThread::run::bases(1): lo = "<<lo<<", hi = "<<hi<<"\n";
         // Get an iterator over a subgrid of the mesh
         LatVolMesh::Node::range_iter it(mesh,
 					lo.x(), lo.y(), lo.z(),
@@ -96,7 +99,7 @@ public:
 	  ++vit;
 	}
       }
-      sema_->up();
+      if (sema_) sema_->up();
     }
 private:
   PatchToFieldThread(){}
@@ -107,7 +110,6 @@ private:
   IntVector min_;
   IntVector max_;
   Semaphore* sema_;
-  Mutex& lock_;
 };
 
 
