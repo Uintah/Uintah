@@ -43,6 +43,7 @@ else
         Packages/Uintah/Core/Grid \
         Packages/Uintah/Core/Parallel \
         Packages/Uintah/Core/Labels \
+        Packages/Uintah/Core/Util \
         Packages/Uintah/Core/Math \
         Packages/Uintah/Core/Disclosure \
         Packages/Uintah/Core/Exceptions \
