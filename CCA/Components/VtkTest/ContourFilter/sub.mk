@@ -24,14 +24,9 @@ SRCDIR   := CCA/Components/VtkTest/ContourFilter
 SRCS     += $(SRCDIR)/ContourFilter.cc
 PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm\
 	Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
-QT_LIBDIR := /home/sparker/SCIRun/SCIRun_Thirdparty_32_linux/lib
-LIBS := $(QT_LIBRARY)
-
-Vtk_LIBRARY:=  \
-	 -lvtkFiltering -lvtkGraphics -lvtkImaging -lvtkCommon -lvtkRendering -lvtkIO
-
-LIBS += $(Vtk_LIBRARY)
-
+QT_LIBDIR := $(QT_LIBRARY)
+LIBS := $(VTK_LIBRARY) $(QT_LIBRARY) $(LIBS)
+INCLUDES := $(VTK_INCLUDE) $(QT_INCLUDE) $(INCLUDES)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
