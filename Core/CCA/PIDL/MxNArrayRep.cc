@@ -285,7 +285,7 @@ Index* MxNArrayRep::Intersect(MxNArrayRep* arep, int dimno)
 
 MxNArrayRep* MxNArrayRep::Intersect(MxNArrayRep* arep)
 {
-  Index** intersectionArr = new Index* [mydimno];
+  Index* intersectionArr[mydimno];
   for(int i=1; i<=mydimno; i++) {
     intersectionArr[i-1] = Intersect(arep, i);
   }

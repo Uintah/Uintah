@@ -123,7 +123,7 @@ namespace SCIRun {
     // (Caller Method) 
     // It acquires all of the array descriptions that this object
     // needs to send part of its array to
-    descriptorList getRedistributionReps(std::string distname);
+    descriptorList* getRedistributionReps(std::string distname);
  
     //////////
     // (Callee Method)

@@ -59,8 +59,8 @@ ProxyBase::ProxyBase(Reference *ref)
 }
 
 ProxyBase::ProxyBase(const ReferenceMgr& refM)
-: proxy_uuid("NONENONENONENONENONENONENONENONENONE"),
-  rm(refM)
+: rm(refM),
+  proxy_uuid("NONENONENONENONENONENONENONENONENONE")
 { 
   xr = new XceptionRelay(this);
 }
