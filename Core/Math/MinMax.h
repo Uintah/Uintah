@@ -59,6 +59,17 @@ inline SCICORESHARE int Max(int d1, int d2)
     return d1>d2?d1:d2;
 }
 
+// 2 Unsigned Integers
+inline SCICORESHARE unsigned int Min(unsigned int d1, unsigned int d2)
+{
+    return d1<d2?d1:d2;
+}
+
+inline SCICORESHARE unsigned int Max(unsigned int d1, unsigned int d2)
+{
+    return d1>d2?d1:d2;
+}
+
 // 2 Long Integers
 inline SCICORESHARE long Min(long d1, long d2)
 {
@@ -130,6 +141,33 @@ inline SCICORESHARE int Mid(int a, int b, int c)
 inline SCICORESHARE int Max(int d1, int d2, int d3)
 {
     int m=d1>d2?d1:d2;
+    m=m>d3?m:d3;
+    return m;
+}
+
+// 3 unsigned integers
+inline SCICORESHARE unsigned int Min(unsigned int d1,
+				     unsigned int d2,
+				     unsigned int d3)
+{
+    unsigned int m=d1<d2?d1:d2;
+    m=m<d3?m:d3;
+    return m;
+}
+
+inline SCICORESHARE unsigned int Mid(unsigned int a,
+				     unsigned int b,
+				     unsigned int c)
+{
+  return ((a > b) ? ((a < c) ? a : ((b > c) ? b : c)) : \
+	            ((b < c) ? b : ((a > c) ? a : c)));
+}
+
+inline SCICORESHARE unsigned int Max(unsigned int d1,
+				     unsigned int d2,
+				     unsigned int d3)
+{
+    unsigned int m=d1>d2?d1:d2;
     m=m>d3?m:d3;
     return m;
 }
