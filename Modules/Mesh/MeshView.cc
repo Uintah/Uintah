@@ -186,10 +186,10 @@ void MeshView::execute()
 	if (((allLevels == 0) && (levels[i] == numLevels)) ||
 	    ((allLevels == 1) && (levels[i] <= numLevels))) {
 	    Element* e=mesh->elems[i];
-	    Point p1(mesh->nodes[e->n1]->p);
-	    Point p2(mesh->nodes[e->n2]->p);
-	    Point p3(mesh->nodes[e->n3]->p);
-	    Point p4(mesh->nodes[e->n4]->p);
+	    Point p1(mesh->nodes[e->n[0]]->p);
+	    Point p2(mesh->nodes[e->n[1]]->p);
+	    Point p3(mesh->nodes[e->n[2]]->p);
+	    Point p4(mesh->nodes[e->n[3]]->p);
 
 	    if (((p1.x() >= clipX) && (p2.x() >= clipX) && (p3.x() >= clipX) &&
 		 (p4.x() >= clipX)) &&
