@@ -89,7 +89,8 @@ Isosurface::~Isosurface()
 
 
 template <class FIELD>
-FieldHandle append_fields(vector<FIELD *> fields)
+static FieldHandle
+append_fields(vector<FIELD *> fields)
 {
   typename FIELD::mesh_type *omesh = scinew typename FIELD::mesh_type();
 
@@ -155,6 +156,54 @@ FieldHandle append_fields(vector<FIELD *> fields)
 
   return ofield;
 }
+
+
+static
+MatrixHandle
+append_sparse(vector<MatrixHandle> &matrices)
+{
+  unsigned int i;
+  int j;
+
+  int ncols = matrices[0]->ncols();
+  int nrows = 0;
+  int nnz = 0;
+  for (i = 0; i < matrices.size(); i++)
+  {
+    SparseRowMatrix *sparse = matrices[i]->sparse();
+    nrows += sparse->nrows();
+    nnz += sparse->nnz;
+  }
+
+  int *rr = scinew int[nrows+1];
+  int *cc = scinew int[nnz];
+  double *dd = scinew double[nnz];
+
+  int offset = 0;
+  int nnzcounter = 0;
+  int rowcounter = 0;
+  for (i = 0; i < matrices.size(); i++)
+  {
+    SparseRowMatrix *sparse = matrices[i]->sparse();
+    for (j = 0; j < sparse->nnz; j++)
+    {
+      cc[nnzcounter] = sparse->columns[j];
+      dd[nnzcounter] = sparse->a[j];
+      nnzcounter++;
+    }
+    const int snrows = sparse->nrows();
+    for (j = 0; j <= snrows; j++)
+    {
+      rr[rowcounter] = sparse->rows[j] + offset;
+      if (j < snrows) { rowcounter++; }
+      else { offset += sparse->rows[j]; }
+    }
+  }
+
+  return scinew SparseRowMatrix(nrows, ncols, rr, cc, nnz, dd);
+}
+
+
 
 
 
@@ -519,9 +568,7 @@ Isosurface::execute()
 	}
 	else
 	{
-	  // TODO: Package them up via diagonal append.
-	  warning("Interpolant doesn't append multi-surface output yet.\n");
-	  ointerp->send(0);
+	  ointerp->send(append_sparse(interpolants));
 	}
       }
       else
