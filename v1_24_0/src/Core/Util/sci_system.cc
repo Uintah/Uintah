@@ -365,13 +365,15 @@ sci_system(const char *line)
   {
     char *buf = scinew char[n];
     confstr(_CS_GNU_LIBPTHREAD_VERSION, buf, n);
-    const bool nptl = strncmp(buf, "nptl", 4) == 0;
+    const bool nptl = strncmp(buf, "NPTL", 4) == 0;
     delete buf;
     if (nptl)
     {
+      fprintf(stderr, "SYSTEM\n");
       return system(line);
     }
   }
+  fprintf(stderr, "SCI_SYSTEM\n");
   return sci_system_linuxthreads(line);
 }
 
