@@ -148,7 +148,7 @@ void NrrdToField::execute()
   
   for (i=0; i<3; i++)
     if (!(AIR_EXISTS(n->axis[i].min) && AIR_EXISTS(n->axis[i].max)))
-      nrrdAxisSetMinMax(n, i);
+      nrrdAxisMinMaxSet(n, i);
 
   Point minP(n->axis[0].min, n->axis[1].min, n->axis[2].min);
   Point maxP(n->axis[0].max, n->axis[1].max, n->axis[2].max);
