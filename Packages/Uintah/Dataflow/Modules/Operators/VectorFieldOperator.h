@@ -61,6 +61,7 @@ void VectorFieldOperator::performOperation(VectorField* vectorField,
   case 2: // extract element 3
     computeScalars(vectorField, scalarField,
 		   VectorElementExtractionOp(guiOperation.get()));
+    break;
   case 3: // Vector length
     computeScalars(vectorField, scalarField, LengthOp());
     break;
@@ -128,11 +129,40 @@ void VectorFieldOperator::computeScalars(VectorField* vectorField,
     }  
   } else {
     int max_workers = Max(Thread::numProcessors()/3, 4);
-    Semaphore* thread_sema = scinew Semaphore( "tensor operator semaphore",
+    Semaphore* thread_sema = scinew Semaphore( "vector operator semaphore",
 					       max_workers); 
     vector<ShareAssignArray3<Vector> > tdata = vectorField->fdata();
     vector<ShareAssignArray3<Vector> >::iterator vit = tdata.begin();
     vector<ShareAssignArray3<Vector> >::iterator vit_end = tdata.end();
+
+#if 0
+    float minx,maxx,miny,maxy,minz,maxz,minl,maxl;
+    Array3<Vector>::iterator it((*vit).begin());
+    Array3<Vector>::iterator it_end((*vit).end());
+    minx = maxx = (*it)[0];
+    miny = maxy = (*it)[1];
+    minz = maxz = (*it)[2];
+    minl = maxl = (*it).length();
+    for(;vit != vit_end; ++vit) {
+      it = (*vit).begin();
+      it_end = (*vit).end();
+      for(;it != it_end; ++it) {
+	minx = Min(minx,(*it)[0]);
+	maxx = Max(maxx,(*it)[0]);
+	miny = Min(miny,(*it)[1]);
+	maxy = Max(maxy,(*it)[1]);
+	minz = Min(minz,(*it)[2]);
+	maxz = Max(maxz,(*it)[2]);
+	minl = Min(minl,(*it).length());
+	maxl = Max(maxl,(*it).length());
+      }
+    }
+    cout << "minx = " << minx << ", maxx = " << maxx << endl;
+    cout << "miny = " << miny << ", maxy = " << maxy << endl;
+    cout << "minz = " << minz << ", maxz = " << maxz << endl;
+    cout << "minl = " << minl << ", maxl = " << maxl << endl;
+    vit = tdata.begin();
+#endif
     IntVector offset( (*vit).getLowIndex() );
     for(;vit != vit_end; ++vit) {
       thread_sema->down();
