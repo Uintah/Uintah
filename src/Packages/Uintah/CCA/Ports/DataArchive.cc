@@ -33,6 +33,8 @@ using namespace SCIRun;
 
 DebugStream DataArchive::dbg("DataArchive", false);
 
+bool DataArchive::cacheOnlyCurrentTimestep = false;
+
 DataArchive::DataArchive(const std::string& filebase,
 			 int processor /* =0 */, int numProcessors /* =1 */)
   : d_filebase(filebase), d_varHashMaps(NULL),
@@ -583,6 +585,11 @@ DataArchive::TimeHashMaps::findTimeData(double time)
   map<double, PatchHashMaps>::iterator foundIt =
     d_patchHashMaps.find(time);
   if (foundIt != d_patchHashMaps.end()) {
+    if (DataArchive::cacheOnlyCurrentTimestep) {
+      // Only caching the current timestep.
+      // purge the last accessed timestep, since this timestep is differen.t
+      (*d_lastFoundIt).second.purgeCache();
+    }
     d_lastFoundIt = foundIt;
     return &(*foundIt).second;
   }
@@ -597,8 +604,6 @@ void DataArchive::TimeHashMaps::purgeTimeData(double time)
     timeData->purgeCache();
   }
 }
-
-
 
 DataArchive::PatchHashMaps::PatchHashMaps()
   : d_matHashMaps(),
