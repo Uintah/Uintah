@@ -114,7 +114,7 @@ int Salmon::process_event(int block)
 	break;
     case MessageTypes::RoeRedraw:
 	{
-	    RedrawMessage* rmsg=(RedrawMessage*)msg;
+	    SalmonMessage* rmsg=(SalmonMessage*)msg;
 	    for(int i=0;i<roe.size();i++){
 		Roe* r=roe[i];
 		if(r->id == rmsg->rid){
