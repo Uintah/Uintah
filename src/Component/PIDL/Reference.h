@@ -19,14 +19,48 @@
 
 namespace Component {
     namespace PIDL {
+/**************************************
+ 
+CLASS
+   Reference
+   
+KEYWORDS
+   Reference, PIDL
+   
+DESCRIPTION
+   A remote reference.  This class is internal to PIDL and should not
+   be used outside of PIDL or sidl generated code.  It contains a nexus
+   startpoint and the vtable base offset.
+****************************************/
 	struct Reference {
+	    //////////
+	    // Empty constructor.  Initalizes the startpoint to nil
 	    Reference();
+
+	    //////////
+	    // Copy the reference.  Does NOT copy the startpoint through
+	    // globus_nexus_startpoint_copy
 	    Reference(const Reference&);
+
+	    //////////
+	    // Copy the reference.  Does NOT copy the startpoint through
+	    // globus_nexus_startpoint_copy
 	    Reference& operator=(const Reference&);
+
+	    //////////
+	    // Destructor.  Does not destroy the startpoint.
 	    ~Reference();
+
+	    //////////
+	    // Return the vtable base
 	    int getVtableBase() const;
 
+	    //////////
+	    // The startpoint
 	    globus_nexus_startpoint_t d_sp;
+
+	    //////////
+	    // The vtable base offset
 	    int d_vtable_base;
 	};
     }
@@ -36,6 +70,9 @@ namespace Component {
 
 //
 // $Log$
+// Revision 1.3  1999/09/24 20:03:36  sparker
+// Added cocoon documentation
+//
 // Revision 1.2  1999/09/17 05:08:09  sparker
 // Implemented component model to work with sidl code generator
 //
