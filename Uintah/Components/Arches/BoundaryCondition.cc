@@ -53,6 +53,10 @@ BoundaryCondition::BoundaryCondition(TurbulenceModel* turb_model,
 				     Properties* props) :
                                      d_turbModel(turb_model), d_props(props)
 {
+  //** WARNING ** Velocity is a FC Variable : change all velocity related stuff
+  // to FCVariable type and delete this comment.
+
+  // The input labels first
   d_cellTypeLabel = scinew VarLabel("CellType", 
 				    CCVariable<int>::getTypeDescription() );
   d_pressureLabel = scinew VarLabel("pressure", 
@@ -61,22 +65,30 @@ BoundaryCondition::BoundaryCondition(TurbulenceModel* turb_model,
 				   CCVariable<double>::getTypeDescription() );
   d_viscosityLabel = scinew VarLabel("viscosity", 
 				   CCVariable<double>::getTypeDescription() );
-  //** WARNING ** Velocity is a FC Variable
   d_uVelocityLabel = scinew VarLabel("uVelocity", 
 				    CCVariable<double>::getTypeDescription() );
-  //** WARNING ** Velocity is a FC Variable
   d_vVelocityLabel = scinew VarLabel("vVelocity", 
 				    CCVariable<double>::getTypeDescription() );
-  //** WARNING ** Velocity is a FC Variable
   d_wVelocityLabel = scinew VarLabel("wVelocity", 
 				    CCVariable<double>::getTypeDescription() );
-  //** WARNING ** Velocity is a FC Variable
+
+  // The internal labels for computations
+  // 1) The labels computed by setProfile (SP)
+  d_densitySPLabel = scinew VarLabel("densitySP", 
+				   CCVariable<double>::getTypeDescription() );
+  d_uVelocitySPLabel = scinew VarLabel("uVelocitySP", 
+				    CCVariable<double>::getTypeDescription() );
+  d_vVelocitySPLabel = scinew VarLabel("vVelocitySP", 
+				    CCVariable<double>::getTypeDescription() );
+  d_wVelocitySPLabel = scinew VarLabel("wVelocitySP", 
+				    CCVariable<double>::getTypeDescription() );
+
+
+
   d_uVelCoefLabel = scinew VarLabel("uVelCoef", 
 				    CCVariable<double>::getTypeDescription() );
-  //** WARNING ** Velocity is a FC Variable
   d_vVelCoefLabel = scinew VarLabel("vVelCoef", 
 				    CCVariable<double>::getTypeDescription() );
-  //** WARNING ** Velocity is a FC Variable
   d_wVelCoefLabel = scinew VarLabel("wVelCoef", 
 				    CCVariable<double>::getTypeDescription() );
   //** WARNING ** Velocity is a FC Variable
@@ -626,10 +638,10 @@ BoundaryCondition::sched_setProfile(const LevelP& level,
 		    numGhostCells);
 
       // This task computes new density, uVelocity, vVelocity and wVelocity
-      tsk->computes(new_dw, d_densityLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_uVelocityLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_vVelocityLabel, matlIndex, patch);
-      tsk->computes(new_dw, d_wVelocityLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_densitySPLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_uVelocitySPLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_vVelocitySPLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_wVelocitySPLabel, matlIndex, patch);
 
       sched->addTask(tsk);
     }
@@ -1150,10 +1162,10 @@ BoundaryCondition::setFlatProfile(const ProcessorContext* pc,
 #endif
 
     // Put the calculated data into the new DW
-    new_dw->put(density, d_densityLabel, matlIndex, patch);
-    new_dw->put(uVelocity, d_uVelocityLabel, matlIndex, patch);
-    new_dw->put(vVelocity, d_vVelocityLabel, matlIndex, patch);
-    new_dw->put(wVelocity, d_wVelocityLabel, matlIndex, patch);
+    new_dw->put(density, d_densitySPLabel, matlIndex, patch);
+    new_dw->put(uVelocity, d_uVelocitySPLabel, matlIndex, patch);
+    new_dw->put(vVelocity, d_vVelocitySPLabel, matlIndex, patch);
+    new_dw->put(wVelocity, d_wVelocitySPLabel, matlIndex, patch);
   }
 }
 
@@ -1327,6 +1339,10 @@ BoundaryCondition::FlowOutlet::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.21  2000/06/16 21:50:47  bbanerje
+// Changed the Varlabels so that sequence in understood in init stage.
+// First cycle detected in task graph.
+//
 // Revision 1.20  2000/06/16 07:06:16  bbanerje
 // Added init of props, pressure bcs and turbulence model in Arches.cc
 // Changed duplicate task names (setProfile) in BoundaryCondition.cc

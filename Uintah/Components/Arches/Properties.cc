@@ -20,7 +20,9 @@ using namespace Uintah::ArchesSpace;
 //****************************************************************************
 Properties::Properties()
 {
-  d_densityLabel = scinew VarLabel("density",
+  d_densitySPLabel = scinew VarLabel("densitySP",
+				   CCVariable<double>::getTypeDescription() );
+  d_densityCPLabel = scinew VarLabel("densityCP",
 				   CCVariable<double>::getTypeDescription() );
 }
 
@@ -72,9 +74,9 @@ Properties::sched_computeProps(const LevelP& level,
       int numGhostCells = 0;
       int matlIndex = 0;
       // requires scalars
-      tsk->requires(old_dw, d_densityLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_densitySPLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->computes(new_dw, d_densityLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_densityCPLabel, matlIndex, patch);
       sched->addTask(tsk);
     }
   }
@@ -93,12 +95,12 @@ Properties::computeProps(const ProcessorContext*,
   CCVariable<double> density;
   int matlIndex = 0;
   int nofGhostCells = 0;
-  old_dw->get(density, d_densityLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(density, d_densitySPLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
 
   // Create the CCVariable for storing the computed density
   CCVariable<double> new_density;
-  new_dw->allocate(new_density, d_densityLabel, matlIndex, patch);
+  new_dw->allocate(new_density, d_densityCPLabel, matlIndex, patch);
 
 #ifdef WONT_COMPILE_YET
   // Get the low and high index for the patch
@@ -114,7 +116,7 @@ Properties::computeProps(const ProcessorContext*,
 #endif
 
   // Write the computed density to the new data warehouse
-  new_dw->put(new_density, d_densityLabel, matlIndex, patch);
+  new_dw->put(new_density, d_densityCPLabel, matlIndex, patch);
 }
 
 //****************************************************************************
@@ -136,6 +138,10 @@ Properties::Stream::problemSetup(ProblemSpecP& params)
 
 //
 // $Log$
+// Revision 1.14  2000/06/16 21:50:48  bbanerje
+// Changed the Varlabels so that sequence in understood in init stage.
+// First cycle detected in task graph.
+//
 // Revision 1.13  2000/06/15 21:56:58  sparker
 // Added multi-patch support (bugzilla #107)
 // Changed interface to datawarehouse for particle data

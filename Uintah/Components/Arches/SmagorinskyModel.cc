@@ -42,6 +42,9 @@ SmagorinskyModel::SmagorinskyModel(PhysicalConstants* phyConsts):
                                                  d_physicalConsts(phyConsts)
 {
   // BB : (**WARNING**) velocity is set as CCVariable (should be FCVariable)
+  // Changed all vel related vars to FCVariable and then delete this comment.
+
+  // Inputs that need to be changed later
   d_uVelocityLabel = scinew VarLabel("uVelocity",
 				    CCVariable<double>::getTypeDescription() );
   d_vVelocityLabel = scinew VarLabel("vVelocity",
@@ -50,26 +53,34 @@ SmagorinskyModel::SmagorinskyModel(PhysicalConstants* phyConsts):
 				    CCVariable<double>::getTypeDescription() );
   d_densityLabel = scinew VarLabel("density",
 				   CCVariable<double>::getTypeDescription() );
+  // Inputs
+  d_uVelocitySPLabel = scinew VarLabel("uVelocitySP",
+				    CCVariable<double>::getTypeDescription() );
+  d_vVelocitySPLabel = scinew VarLabel("vVelocitySP",
+				    CCVariable<double>::getTypeDescription() );
+  d_wVelocitySPLabel = scinew VarLabel("wVelocitySP",
+				    CCVariable<double>::getTypeDescription() );
+  d_densityCPLabel = scinew VarLabel("densityCP",
+				   CCVariable<double>::getTypeDescription() );
   d_viscosityLabel = scinew VarLabel("viscosity",
 				   CCVariable<double>::getTypeDescription() );
   d_cellTypeLabel = scinew VarLabel("celltype",
 				   CCVariable<int>::getTypeDescription() );
-  // BB : (**WARNING**) velocity src is set as CCVariable (should be FCVariable)
+
+  // Outputs
+  d_viscosityCTSLabel = scinew VarLabel("viscosityCTS",
+				   CCVariable<double>::getTypeDescription() );
+
   d_uLinSrcLabel = scinew VarLabel("uLinearSrc",
 				    CCVariable<double>::getTypeDescription() );
-  // BB : (**WARNING**) velocity src is set as CCVariable (should be FCVariable)
   d_vLinSrcLabel = scinew VarLabel("vLinearSrc",
 				    CCVariable<double>::getTypeDescription() );
-  // BB : (**WARNING**) velocity src is set as CCVariable (should be FCVariable)
   d_wLinSrcLabel = scinew VarLabel("wLinearSrc",
 				    CCVariable<double>::getTypeDescription() );
-  // BB : (**WARNING**) velocity src is set as CCVariable (should be FCVariable)
   d_uNonLinSrcLabel = scinew VarLabel("uNonLinearSrc",
 				    CCVariable<double>::getTypeDescription() );
-  // BB : (**WARNING**) velocity src is set as CCVariable (should be FCVariable)
   d_vNonLinSrcLabel = scinew VarLabel("vNonLinearSrc",
 				    CCVariable<double>::getTypeDescription() );
-  // BB : (**WARNING**) velocity src is set as CCVariable (should be FCVariable)
   d_wNonLinSrcLabel = scinew VarLabel("wNonLinearSrc",
 				    CCVariable<double>::getTypeDescription() );
 }
@@ -112,18 +123,18 @@ SmagorinskyModel::sched_computeTurbSubmodel(const LevelP& level,
 
       int numGhostCells = 0;
       int matlIndex = 0;
-      tsk->requires(old_dw, d_uVelocityLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_uVelocitySPLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_vVelocityLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_vVelocitySPLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->requires(old_dw, d_wVelocityLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_wVelocitySPLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
       numGhostCells = 0;
-      tsk->requires(old_dw, d_densityLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_densityCPLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
       tsk->requires(old_dw, d_viscosityLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
-      tsk->computes(new_dw, d_viscosityLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_viscosityCTSLabel, matlIndex, patch);
       sched->addTask(tsk);
     }
   }
@@ -145,17 +156,17 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorContext* pc,
   int matlIndex = 0;
   int numGhostCells = 0;
   CCVariable<double> uVelocity;
-  old_dw->get(uVelocity, d_uVelocityLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(uVelocity, d_uVelocitySPLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   CCVariable<double> vVelocity;
-  old_dw->get(vVelocity, d_vVelocityLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(vVelocity, d_vVelocitySPLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
   CCVariable<double> wVelocity;
-  old_dw->get(wVelocity, d_wVelocityLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(wVelocity, d_wVelocitySPLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
 
   CCVariable<double> density;
-  old_dw->get(density, d_densityLabel, matlIndex, patch, Ghost::None,
+  old_dw->get(density, d_densityCPLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
 
   CCVariable<double> viscosity;
@@ -186,7 +197,7 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorContext* pc,
   // Create the new viscosity variable to write the result to 
   // and allocate space in the new data warehouse for this variable
   CCVariable<double> new_viscosity;
-  new_dw->allocate(new_viscosity, d_viscosityLabel, matlIndex, patch);
+  new_dw->allocate(new_viscosity, d_viscosityCTSLabel, matlIndex, patch);
 
 #ifdef WONT_COMPILE_YET
   FORT_SMAGMODEL(new_viscosity, velocity, viscosity, density, mol_viscos,
@@ -203,7 +214,7 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorContext* pc,
 #endif
 
   // Put the calculated viscosityvalue into the new data warehouse
-  new_dw->put(new_viscosity, d_viscosityLabel, matlIndex, patch);
+  new_dw->put(new_viscosity, d_viscosityCTSLabel, matlIndex, patch);
 }
 
 //****************************************************************************
@@ -382,6 +393,10 @@ void SmagorinskyModel::calcVelocitySource(const ProcessorContext* pc,
 
 //
 // $Log$
+// Revision 1.13  2000/06/16 21:50:48  bbanerje
+// Changed the Varlabels so that sequence in understood in init stage.
+// First cycle detected in task graph.
+//
 // Revision 1.12  2000/06/14 20:40:49  rawat
 // modified boundarycondition for physical boundaries and
 // added CellInformation class

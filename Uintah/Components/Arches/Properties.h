@@ -133,7 +133,8 @@ private:
       std::vector<Stream> d_streams; 
 
       // Variable labels used by simulation controller
-      const VarLabel* d_densityLabel;
+      const VarLabel* d_densitySPLabel;   // Input density
+      const VarLabel* d_densityCPLabel;   // Output density
 
 }; // end class Properties
 
@@ -144,6 +145,10 @@ private:
 
 //
 // $Log$
+// Revision 1.9  2000/06/16 21:50:48  bbanerje
+// Changed the Varlabels so that sequence in understood in init stage.
+// First cycle detected in task graph.
+//
 // Revision 1.8  2000/05/31 08:12:45  bbanerje
 // Added Cocoon stuff to Properties, added VarLabels, changed task, requires,
 // computes, get etc.in Properties, changed fixed size Mixing Var array to
