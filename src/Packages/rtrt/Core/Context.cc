@@ -3,7 +3,9 @@
 
 using namespace rtrt;
 
-Context::Context(Worker* worker, Scene* scene, Stats* stats)
-  : worker(worker), scene(scene), stats(stats), ppc(0)
+Context::Context(Scene* scene, Stats* stats, PerProcessorContext* ppc,
+                 int rendering_scene, int worker_num)
+  : scene(scene), stats(stats), ppc(ppc), rendering_scene(rendering_scene),
+    worker_num(worker_num)
 {
 }

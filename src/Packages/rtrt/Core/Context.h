@@ -10,11 +10,13 @@ class Scene;
 class PerProcessorContext;
   
 struct Context {
-  Stats* stats;
-  Worker* worker;
   Scene* scene;
+  Stats* stats;
   PerProcessorContext* ppc;
-  Context(Worker*, Scene* scene, Stats*);
+  int rendering_scene;
+  int worker_num;
+  Context(Scene*, Stats*, PerProcessorContext*, int rendering_scene,
+          int worker_num);
 };
 
 } // end namespace rtrt
