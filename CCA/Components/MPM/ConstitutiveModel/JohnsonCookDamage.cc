@@ -34,6 +34,11 @@ JohnsonCookDamage::computeScalarDamage(const Matrix3& rateOfDeformation,
 
   // Calculate the updated scalar damage parameter
   double epsFrac = calcStrainAtFracture(stress, plasticStrainRate, temperature, matl, tolerance);
+  //cout << "Plastic Strain rate = " << plasticStrainRate 
+  //     << "Plastic Strain Increment = " << epsInc
+  //     << "Strain At fracture = " << epsFrac
+  //     << "Damage_old = " << damage_old << endl;
+
   if (epsFrac == 0) return damage_old;
   return (damage_old  + epsInc/epsFrac);
 }

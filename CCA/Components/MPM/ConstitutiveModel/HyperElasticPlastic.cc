@@ -316,26 +316,32 @@ HyperElasticPlastic::computeStressTensor(const PatchSubset* patches,
       // Update the deformation gradient tensor to its time n+1 value.
       pDeformGrad_new[idx] = tensorFinc*pDeformGrad[idx];
       double J = pDeformGrad_new[idx].Determinant();
+      //cout << "J = " << J << "\n Updated deformation gradient =\n " << pDeformGrad_new[idx] << endl;
 
       // get the volume preserving part of the deformation gradient increment
       tensorFbar = tensorFinc*pow(Jinc,-oneThird);
+      //cout << "fbar = \n" << tensorFbar << endl;
 
       // predict the elastic part of the volume preserving part of the left
       // Cauchy-Green deformation tensor
       trialBbarElastic = tensorFbar*(pBbarElastic[idx]*tensorFbar.Transpose());
       double traceBbarElastic = oneThird*trialBbarElastic.Trace();
+      //cout << "Tr(bbar^el) = " << traceBbarElastic 
+      //     << "\n bbar^el_trial = " << trialBbarElastic << endl;
 
       // Compute the trial deviatoric stress
       // trialS is equal to the shear modulus times dev(bElBar)
+      // and calculate the norm of the deviatoric stress (assuming isotropic yield surface)
       trialS = (trialBbarElastic - one*traceBbarElastic)*shear;
-
-      // Calculate the norm of the deviatoric stress (assuming isotropic yield surface)
       trialSNorm = trialS.Norm();
+      //cout << "Norm(s_trial) = " << trialSNorm 
+      //     << "\n s_trial = " << trialS << endl;
 
       // Calculate the flow stress
       flowStress = d_plasticity->computeFlowStress(tensorEta, tensorS, pTemperature[idx],
                                                    delT, d_tol, matl, idx);
       flowStress *= sqrtTwoThird;
+      //cout << "Flow Stress = " << flowStress << endl;
 
       // Check for plastic loading
       if(trialSNorm > flowStress){
@@ -344,10 +350,12 @@ HyperElasticPlastic::computeStressTensor(const PatchSubset* patches,
         // Calculate delGamma
         double Ielastic = oneThird*traceBbarElastic;
         double muBar = shear*Ielastic;
-	double delGamma = (trialSNorm - flowStress)*0.5*muBar;
+	double delGamma = (trialSNorm - flowStress)/(2.0*muBar);
+        //cout << "Ie = " << Ielastic << " mubar = " << muBar << " delgamma = " << delGamma << endl;
 
         // Calculate normal
 	normal = trialS/trialSNorm;
+        //cout << " Normal = \n" << normal << endl;
 
         // The actual deviatoric stress
 	tensorS = trialS - normal*2.0*muBar*delGamma;
@@ -387,8 +395,10 @@ HyperElasticPlastic::computeStressTensor(const PatchSubset* patches,
       Matrix3 tensorHy = d_eos->computePressure(matl, bulk, shear, tensorF_new, tensorEta, 
                                                tensorS, pTemperature[idx], rho_cur, delT);
 
+      //cout << "tensorS = \n" << tensorS << endl << "tensorHy = \n" << tensorHy << endl;
       // compute the total Cauchy stress = (Kirchhoff stress/J) (volumetric + deviatoric)
       pStress_new[idx] = tensorHy + tensorS/J;
+      //cout << "Updated stress =\n " << pStress_new[idx] << endl;
 
       // Update the volume
       pVolume_new[idx]=pMass[idx]/rho_cur;
