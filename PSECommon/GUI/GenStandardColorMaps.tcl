@@ -151,7 +151,7 @@ itcl_class PSECommon_Visualization_GenStandardColorMaps {
 
 	label $w.l0 -text "Left click to adjust alpha."
 	label $w.l1 -text "Right click to remove node."
-	label $w.l2 -text "Alpha defaults to 1.0."
+	label $w.l2 -text "Alpha defaults to 0.5."
 	pack $w.l0 $w.l1 $w.l2 -side top -anchor c
 	
 	frame $w.f2 -relief groove -borderwidth 2
@@ -249,7 +249,7 @@ itcl_class PSECommon_Visualization_GenStandardColorMaps {
 	set cw [winfo width $canvas]
 	set ch [winfo height $canvas]
 	set x 0
-	set y 0
+	set y [expr $ch/2]
 	for { set i 0 } { $i < [llength [set $this-nodeList]]} {incr i} {
 	    set p [lindex [set $this-positionList] $i]
 	    $canvas create line $x $y [lindex $p 0] [lindex $p 1] \
@@ -257,7 +257,7 @@ itcl_class PSECommon_Visualization_GenStandardColorMaps {
 	    set x [lindex $p 0]
 	    set y [lindex $p 1]
 	}
-	$canvas create line $x $y $cw 0  -tags line -fill red
+	$canvas create line $x $y $cw [expr $ch/2]  -tags line -fill red
 	$canvas raise node line
     }
 
@@ -266,9 +266,22 @@ itcl_class PSECommon_Visualization_GenStandardColorMaps {
 	global $this-positionList
 	set w .ui[modname]
 	set c $w.f.f1.canvas
+	set cw [winfo width $c]
+	set ch [winfo height $c]
 	for {set i 0} { $i < [llength [set $this-nodeList]] } {incr i} {
 	    set x [lindex [lindex [set $this-positionList] $i] 0 ]
 	    set y [lindex [lindex [set $this-positionList] $i] 1 ]
+	    if { $x < 0 } {
+		set x 0
+	    } elseif { $x > $cw } {
+		set x $cw 
+	    }
+
+	    if { $y < 0 } {
+		set y 0
+	    } elseif { $y > $ch } {
+		set y $ch 
+	    }
 	    set new [$c create oval [expr $x - 5] [expr $y - 5] \
 		     [expr $x+5] [expr $y+5] -outline white \
 		     -fill black -tags node]
@@ -298,10 +311,10 @@ itcl_class PSECommon_Visualization_GenStandardColorMaps {
 	set c $w.f.f1.canvas
 	set cw [winfo width $c]
 	set ch [winfo height $c]
-	if { $x < 0 } { set x 0 }
-	if { $x > $cw } { set x $cw }
-	if { $y < 0 } { set y 0 }
-	if { $y > $ch } { set y $ch }
+	if { $curX + $x-$curX < 0 } { set x 0 }
+	if { $curX + $x-$curX > $cw } { set x $cw}
+	if { $curY + $y-$curY < 0 } { set y 0 }
+	if { $curY + $y-$curY > $ch } { set y $ch }
 	set i [lsearch  [set $this-nodeList] $selected]
 	if { $i != -1 } {
 	    set l [lindex [set $this-nodeList] $i]
@@ -444,16 +457,16 @@ itcl_class PSECommon_Visualization_GenStandardColorMaps {
 	set dx [expr $cw/double([set $this-resolution])] 
 	set xpos [expr int($index*$dx) + 0.5 * $dx]
 	set x 0.0
-	set y 0.0
+	set y $ch/2.0
 	set i 0
 	for {set i 0} {$i <= $m} {incr i 1} {
 	    set newx 0
-	    set newy 0
+	    set newy $ch/2.0
 	    if { $i != $m } {
 		set newx [lindex [lindex [set $this-positionList] $i] 0]
 		set newy [lindex [lindex [set $this-positionList] $i] 1]
 	    } else {
-		set newy 0
+		set newy $ch/2.0
 		set newx $cw
 	    }
 
