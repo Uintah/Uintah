@@ -80,7 +80,7 @@ private:
            DataWarehouseP& old_dw,
            DataWarehouseP& new_dw);
 
-  static bool isSelfContactNode(const IntVector& nodeIndex,Patch* patch,
+  static bool isSelfContactNode(const IntVector& nodeIndex,const Patch* patch,
     const CCVariable<Vector>& cSurfaceNormal);
 
   static Fracture::CellStatus  cellStatus(
@@ -104,6 +104,10 @@ private:
 #endif //__FRACTURE_H__
 
 // $Log$
+// Revision 1.14  2000/06/02 21:54:12  tan
+// Finished function labelSelfContactNodes(...) to label the gSalfContact
+// according to the cSurfaceNormal information.
+//
 // Revision 1.13  2000/06/02 21:12:07  tan
 // Added function isSelfContactNode(...) to determine if a node is a
 // self-contact node.
