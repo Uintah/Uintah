@@ -2,14 +2,26 @@
 
 ::netedit dontschedule
 
-set m0 [addModuleAtPosition "SCIRun" "Fields" "MoveElemToNode" 243 263]
-set m1 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 264 371]
-set m2 [addModuleAtPosition "SCIRun" "Render" "Viewer" 174 468]
-set m3 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 17 366]
-set m4 [addModuleAtPosition "SCIRun" "Fields" "ChangeFieldBounds" 64 175]
+global userName
+set userName ""
+
+global runDate
+set runDate ""
+
+global runTime
+set runTime ""
+
+global notes
+set notes ""
+
+set m0 [addModuleAtPosition "SCIRun" "Fields" "MoveElemToNode" 196 260]
+set m1 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 354 382]
+set m2 [addModuleAtPosition "SCIRun" "Render" "Viewer" 206 502]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 40 413]
+set m4 [addModuleAtPosition "SCIRun" "Fields" "ChangeFieldBounds" 52 176]
 set m5 [addModuleAtPosition "SCIRun" "Fields" "TransformData" 71 96]
-set m6 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 423 248]
-set m7 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 426 128]
+set m6 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 339 185]
+set m7 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 335 63]
 set m8 [addModuleAtPosition "SCIRun" "Fields" "SamplePlane" 88 10]
 
 addConnection $m0 0 $m1 0
@@ -133,10 +145,6 @@ set $m2-ViewWindow_0-global-cull {0}
 set $m2-ViewWindow_0-global-dl {0}
 set $m2-ViewWindow_0-global-type {Gouraud}
 set $m2-ViewWindow_0-ortho-view {0}
-set $m2-ViewWindow_0-unused {1}
-set $m2-ViewWindow_0-unused {1}
-set $m2-ViewWindow_0-unused {1}
-set $m2-ViewWindow_0-unused {1}
 set $m3-notes {}
 set $m3-nodes-on {0}
 set $m3-nodes-transparency {0}

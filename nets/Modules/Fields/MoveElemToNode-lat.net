@@ -2,15 +2,27 @@
 
 ::netedit dontschedule
 
+global userName
+set userName ""
+
+global runDate
+set runDate ""
+
+global runTime
+set runTime ""
+
+global notes
+set notes ""
+
 set m0 [addModuleAtPosition "SCIRun" "Fields" "SampleLattice" 89 12]
-set m1 [addModuleAtPosition "SCIRun" "Fields" "MoveElemToNode" 243 263]
-set m2 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 264 371]
-set m3 [addModuleAtPosition "SCIRun" "Render" "Viewer" 174 468]
-set m4 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 17 366]
-set m5 [addModuleAtPosition "SCIRun" "Fields" "ChangeFieldBounds" 64 175]
+set m1 [addModuleAtPosition "SCIRun" "Fields" "MoveElemToNode" 223 267]
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 353 386]
+set m3 [addModuleAtPosition "SCIRun" "Render" "Viewer" 232 513]
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 59 424]
+set m5 [addModuleAtPosition "SCIRun" "Fields" "ChangeFieldBounds" 60 188]
 set m6 [addModuleAtPosition "SCIRun" "Fields" "TransformData" 71 96]
-set m7 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 423 248]
-set m8 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 426 128]
+set m7 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 417 183]
+set m8 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 359 73]
 
 addConnection $m1 0 $m2 0
 addConnection $m4 0 $m3 0
