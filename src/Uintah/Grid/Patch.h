@@ -257,6 +257,7 @@ WARNING
      enum VariableBasis {
 	CellBased,
 	NodeBased,
+	CellFaceBased,
 	XFaceBased,
 	YFaceBased,
 	ZFaceBased,
@@ -314,6 +315,9 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Patch & r);
 
 //
 // $Log$
+// Revision 1.19.4.4  2000/10/20 02:06:37  rawat
+// modified cell centered and staggered variables to optimize communication
+//
 // Revision 1.19.4.3  2000/10/10 05:28:08  sparker
 // Added support for NullScheduler (used for profiling taskgraph overhead)
 //

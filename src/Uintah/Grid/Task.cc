@@ -58,18 +58,79 @@ Task::requires(const DataWarehouseP& ds, const VarLabel* var, int matlIndex,
    IntVector lowIndex, highIndex;
    patch->computeVariableExtents(td->getType(), gtype, numGhostCells,
 				 neighbors, lowIndex, highIndex);
-   for(int i=0;i<(int)neighbors.size();i++){
+   switch ( td->getType()) {
+   case TypeDescription::CCVariable:
+     for(int i=0;i<(int)neighbors.size();i++){
       const Patch* neighbor = neighbors[i];
       using SCICore::Geometry::Max;
       using SCICore::Geometry::Min;
+      IntVector low = Max(lowIndex, neighbor->getCellLowIndex());
+      IntVector high= Min(highIndex, neighbor->getCellHighIndex());
+      d_reqs.push_back(Dependency(ds.get_rep(), var, matlIndex,
+				  neighbor, this, low, high));
+   }
+     break;
+   case TypeDescription::SFCXVariable:
+     for(int i=0;i<(int)neighbors.size();i++){
+      const Patch* neighbor = neighbors[i];
+      using SCICore::Geometry::Max;
+      using SCICore::Geometry::Min;
+      IntVector low = Max(lowIndex, neighbor->getSFCXLowIndex());
+      IntVector high= Min(highIndex, neighbor->getSFCXHighIndex());
+      d_reqs.push_back(Dependency(ds.get_rep(), var, matlIndex,
+				  neighbor, this, low, high));
+   }
+     break;
+   case TypeDescription::SFCYVariable:
+     for(int i=0;i<(int)neighbors.size();i++){
+      const Patch* neighbor = neighbors[i];
+      using SCICore::Geometry::Max;
+      using SCICore::Geometry::Min;
+      IntVector low = Max(lowIndex, neighbor->getSFCYLowIndex());
+      IntVector high= Min(highIndex, neighbor->getSFCYHighIndex());
+      d_reqs.push_back(Dependency(ds.get_rep(), var, matlIndex,
+				  neighbor, this, low, high));
+   }
+     break;
+   case TypeDescription::SFCZVariable:
+     for(int i=0;i<(int)neighbors.size();i++){
+      const Patch* neighbor = neighbors[i];
+      using SCICore::Geometry::Max;
+      using SCICore::Geometry::Min;
+      IntVector low = Max(lowIndex, neighbor->getSFCZLowIndex());
+      IntVector high= Min(highIndex, neighbor->getSFCZHighIndex());
 
+      d_reqs.push_back(Dependency(ds.get_rep(), var, matlIndex,
+				  neighbor, this, low, high));
+     }
+     break;
+   case TypeDescription::NCVariable:
+     for(int i=0;i<(int)neighbors.size();i++){
+      const Patch* neighbor = neighbors[i];
+      using SCICore::Geometry::Max;
+      using SCICore::Geometry::Min;
       IntVector low = Max(lowIndex, neighbor->getNodeLowIndex());
       IntVector high= Min(highIndex, neighbor->getNodeHighIndex());
 
       d_reqs.push_back(Dependency(ds.get_rep(), var, matlIndex,
 				  neighbor, this, low, high));
+     }
+     break;
+   default:
+     for(int i=0;i<(int)neighbors.size();i++){
+      const Patch* neighbor = neighbors[i];
+      using SCICore::Geometry::Max;
+      using SCICore::Geometry::Min;
+      IntVector low = Max(lowIndex, neighbor->getNodeLowIndex());
+      IntVector high= Min(highIndex, neighbor->getNodeHighIndex());
+
+      d_reqs.push_back(Dependency(ds.get_rep(), var, matlIndex,
+				  neighbor, this, low, high));
+     }
+   break;
    }
 }
+
 
 void
 Task::computes(const DataWarehouseP& ds, const VarLabel* var)
@@ -171,6 +232,9 @@ operator << (ostream &out, const Task::TaskType & tt)
 
 //
 // $Log$
+// Revision 1.24.2.3  2000/10/20 02:06:37  rawat
+// modified cell centered and staggered variables to optimize communication
+//
 // Revision 1.24.2.2  2000/10/10 05:28:08  sparker
 // Added support for NullScheduler (used for profiling taskgraph overhead)
 //
