@@ -37,7 +37,7 @@ SRCS := $(SRCDIR)/test-ppm.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PSELIBS := Core/Exceptions Core/Thread
-LIBS := $(TEEM_LIBRARY) $(FASTM_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(PERFEX_LIBRARY)
+LIBS := $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(FASTM_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(PERFEX_LIBRARY)
 
 PROGRAM := $(SRCDIR)/vq
 SRCS := $(SRCDIR)/vq.cc
@@ -75,14 +75,17 @@ SRCS := $(SRCDIR)/dilate.cc
 # Does need teem
 include $(SCIRUN_SCRIPTS)/program.mk
 
-ifeq ($(HAVE_LAPACK),yes)
+ifeq ($(HAVE_LAPACKMP),yes)
 PROGRAM := $(SRCDIR)/pca-image
 SRCS := $(SRCDIR)/pca-image.cc
 # Does need teem
-LIBS += $(LAPACK_LIBRARY) $(F_LIBRARY)
+LIBS += $(LAPACKMP_LIBRARY) $(F_LIBRARY)
 include $(SCIRUN_SCRIPTS)/program.mk
 endif
 
 PROGRAM := $(SRCDIR)/tex-compress
 SRCS := $(SRCDIR)/tex-compress.cc
 include $(SCIRUN_SCRIPTS)/program.mk
+
+# Reset the library to make sure we get rid of LAPACK
+LIBS :=
