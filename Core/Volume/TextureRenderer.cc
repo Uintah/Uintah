@@ -242,7 +242,7 @@ TextureRenderer::saveobj(std::ostream&, const string&, GeomSave*)
 Ray
 TextureRenderer::compute_view()
 {
-  Transform field_trans = tex_->transform();
+  const Transform &field_trans = tex_->transform();
   double mvmat[16];
   glGetDoublev(GL_MODELVIEW_MATRIX, mvmat);
   // index space view direction
