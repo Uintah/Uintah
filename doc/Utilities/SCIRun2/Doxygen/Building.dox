@@ -76,8 +76,7 @@ SCIRun classes build automatically.
 This package consists of all the bundled
       third-party libraries for SCIRun.  It is freely available <a
       href="http://software.sci.utah.edu/scirun-biopse_1_20.html">here</a>. Look
-      for the tarball called "Thirdparty_install.1.20.2.tar.gz", which will
-      (inexplicably) untar into a directory Thirdparty_install.1.20.1.
+      for the tarball called "Thirdparty_install.1.22.0.tar.gz".
 
 Estimated time to build: 1 hour
 
