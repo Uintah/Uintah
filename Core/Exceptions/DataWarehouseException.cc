@@ -11,6 +11,11 @@ DataWarehouseException::DataWarehouseException(const std::string& msg)
 {
 }
 
+DataWarehouseException::DataWarehouseException(const DataWarehouseException& copy)
+    : msg(copy.msg)
+{
+}
+
 const char* DataWarehouseException::message() const
 {
     return msg.c_str();
@@ -26,6 +31,10 @@ const char* DataWarehouseException::type() const
 
 //
 // $Log$
+// Revision 1.5  2000/03/23 20:42:19  sparker
+// Added copy ctor to exception classes (for Linux/g++)
+// Helped clean up move of ProblemSpec from Interface to Grid
+//
 // Revision 1.4  2000/03/23 10:30:29  sparker
 // Update to use new Exception base class
 //
