@@ -111,7 +111,7 @@ itcl_class Kurt_Vis_GLTextureBuilder {
 	set $this-max_brick_dim $val
 	set w .ui[modname]
 
-	set vals  [format "%i %i %i" [expr $val/4] [expr $val/2] $val] 
+	set vals  [format "%i %i %i %i" [expr $val/8] [expr $val/4] [expr $val/2] $val] 
 	set vals [split $vals]
 	if {![winfo exists $w]} {
 	    return
@@ -123,7 +123,7 @@ itcl_class Kurt_Vis_GLTextureBuilder {
 	frame $w.f.dimframe.f -relief flat
 	pack $w.f.dimframe.f -side top -fill x
 	set f $w.f.dimframe.f
-	for {set i 0} {$i < 3} { incr i} {
+	for {set i 0} {$i < 4} { incr i} {
 	    set v [lindex $vals $i]
 	    radiobutton $f.brickdim$v -text $v -relief flat \
 		-variable $this-max_brick_dim -value $v \
