@@ -549,8 +549,6 @@ void MPMICE::scheduleInterpolateCCToNC(SchedulerP& sched,
   
   t->modifies(Mlb->gVelocityStarLabel, mss);             
   t->modifies(Mlb->gAccelerationLabel, mss);             
-  t->computes(Mlb->gSp_vol_srcLabel);
-  t->computes(Mlb->GSp_vol_srcLabel);
   t->computes(Mlb->dTdt_NCLabel);
 
   sched->addTask(t, patches, mpm_matls);
@@ -1213,9 +1211,9 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int indx = mpm_matl->getDWIndex();
       NCVariable<Vector> gacceleration, gvelocity;
-      NCVariable<double> dTdt_NC, gSp_vol_src,GSp_vol_src;
+      NCVariable<double> dTdt_NC;
 
-      constCCVariable<double> mass_L_CC, sp_vol_src;
+      constCCVariable<double> mass_L_CC;
       constCCVariable<Vector> mom_L_ME_CC, old_mom_L_CC;
       constCCVariable<double> eng_L_ME_CC, old_int_eng_L_CC; 
       
@@ -1228,31 +1226,17 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
       new_dw->get(mass_L_CC,       Ilb->mass_L_CCLabel,      indx,patch,gac,1);
       new_dw->get(mom_L_ME_CC,     Ilb->mom_L_ME_CCLabel,    indx,patch,gac,1);
       new_dw->get(eng_L_ME_CC,     Ilb->eng_L_ME_CCLabel,    indx,patch,gac,1);
-      new_dw->get(sp_vol_src,      Ilb->sp_vol_src_CCLabel,  indx,patch,gac,1);
-                                                             
+
       double cv = mpm_matl->getSpecificHeat();     
 
       new_dw->allocateAndPut(dTdt_NC,     Mlb->dTdt_NCLabel,    indx, patch);
-      new_dw->allocateAndPut(gSp_vol_src, Mlb->gSp_vol_srcLabel,indx, patch);
-      new_dw->allocateAndPut(GSp_vol_src, Mlb->GSp_vol_srcLabel,indx, patch);
       dTdt_NC.initialize(0.0);
-      gSp_vol_src.initialize(0.0);
-      GSp_vol_src.initialize(0.0);
       IntVector cIdx[8];
       Vector dvdt_tmp;
       double dTdt_tmp;
       //__________________________________
       //  Take care of momentum and specific volume source
-     if(d_rigidMPM){
-      for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
-        patch->findCellsFromNode(*iter,cIdx);
-        for(int in=0;in<8;in++){
-          gSp_vol_src[*iter]   +=  (sp_vol_src[cIdx[in]]/delT) * 0.125;
-          GSp_vol_src[*iter]   +=  (sp_vol_src[cIdx[in]]/delT) * 0.125;
-        }
-      }
-     }
-     else{
+     if(!d_rigidMPM){
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
         patch->findCellsFromNode(*iter,cIdx);
         for(int in=0;in<8;in++){
@@ -1260,8 +1244,6 @@ void MPMICE::interpolateCCToNC(const ProcessorGroup*,
                     / (mass_L_CC[cIdx[in]] * delT); 
           gvelocity[*iter]     +=  dvdt_tmp*.125*delT;
           gacceleration[*iter] +=  dvdt_tmp*.125;
-          gSp_vol_src[*iter]   +=  (sp_vol_src[cIdx[in]]/delT) * 0.125;
-          GSp_vol_src[*iter]   +=  (sp_vol_src[cIdx[in]]/delT) * 0.125;
         }
       }
      }    
