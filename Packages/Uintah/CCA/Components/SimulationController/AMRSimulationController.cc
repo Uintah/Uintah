@@ -27,7 +27,6 @@
 #include <Packages/Uintah/CCA/Ports/ProblemSpecInterface.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
 #include <Packages/Uintah/CCA/Components/PatchCombiner/PatchCombiner.h>
 #include <Packages/Uintah/CCA/Components/PatchCombiner/UdaReducer.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
@@ -421,7 +420,7 @@ void AMRSimulationController::doRegridding(GridP& currentGrid)
     OnDemandDataWarehouse* oldDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(d_scheduler->get_dw(0));
     OnDemandDataWarehouse* newDataWarehouse = dynamic_cast<OnDemandDataWarehouse*>(d_scheduler->getLastDW());
 
-    dynamic_cast<SchedulerCommon*>(d_scheduler.get_rep())->scheduleDataCopy(currentGrid, d_sharedState);
+    d_scheduler->scheduleDataCopy(currentGrid, d_sharedState);
     for ( int levelIndex = 1; levelIndex < currentGrid->numLevels(); levelIndex++ ) {
       d_sim->scheduleRefine(currentGrid->getLevel(levelIndex), d_scheduler);
     }
