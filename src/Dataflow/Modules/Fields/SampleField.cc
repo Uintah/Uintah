@@ -70,6 +70,8 @@ class SampleField : public Module
   GuiDouble endpoint1y_;
   GuiDouble endpoint1z_;
   GuiDouble widgetscale_;
+  GuiString ringstate_;
+  GuiString framestate_;
 
   GuiInt maxSeeds_;
   GuiInt numSeeds_;
@@ -114,7 +116,9 @@ SampleField::SampleField(GuiContext* ctx)
     endpoint1x_(ctx->subVar("endpoint1x")),
     endpoint1y_(ctx->subVar("endpoint1y")),
     endpoint1z_(ctx->subVar("endpoint1z")),
-    widgetscale_ (ctx->subVar("widgetscale")),
+    widgetscale_(ctx->subVar("widgetscale")),
+    ringstate_(ctx->subVar("ringstate")),
+    framestate_(ctx->subVar("framestate")),
     maxSeeds_(ctx->subVar("maxseeds")),
     numSeeds_(ctx->subVar("numseeds")),
     rngSeed_(ctx->subVar("rngseed")),
@@ -309,14 +313,22 @@ SampleField::execute_ring(FieldHandle ifield)
 {
   if (!ring_)
   {
-    Vector xaxis0(0.0, 0.0, 0.2);
-    Vector yaxis0(0.2, 0.0, 0.0);
-    Point center0(0.5, 0.0, 0.0);
-    Vector normal0(Cross(xaxis0, yaxis0));
-    double radius0 = 0.2;
     ring_ = scinew RingWidget(this, &widget_lock_, widgetscale_.get());
     ring_->Connect(ogport_);
-    ring_->SetPosition(center0, normal0, radius0);
+
+    if (ringstate_.get() == "")
+    {
+      Vector xaxis0(0.0, 0.0, 0.2);
+      Vector yaxis0(0.2, 0.0, 0.0);
+      Point center0(0.5, 0.0, 0.0);
+      Vector normal0(Cross(xaxis0, yaxis0));
+      double radius0 = 0.2;
+      ring_->SetPosition(center0, normal0, radius0);
+    }
+    else
+    {
+      ring_->SetStateString(ringstate_.get());
+    }
   }
 
   if (wtype_ != 2)
@@ -327,7 +339,7 @@ SampleField::execute_ring(FieldHandle ifield)
     ogport_->flushViews();
     wtype_ = 2;
   }
-
+  
   int num_seeds = Max(0, maxSeeds_.get());
   if (num_seeds <= 0)
   {
@@ -370,12 +382,20 @@ SampleField::execute_frame(FieldHandle ifield)
 {
   if (!frame_)
   {
-    Vector xaxis0(0.0, 0.0, 0.2);
-    Vector yaxis0(0.2, 0.0, 0.0);
-    Point center0(0.5, 0.0, 0.0);
     frame_ = scinew FrameWidget(this, &widget_lock_, widgetscale_.get());
     frame_->Connect(ogport_);
-    frame_->SetPosition(center0, center0 + xaxis0, center0 + yaxis0);
+
+    if (framestate_.get() == "")
+    {
+      Vector xaxis0(0.0, 0.0, 0.2);
+      Vector yaxis0(0.2, 0.0, 0.0);
+      Point center0(0.5, 0.0, 0.0);
+      frame_->SetPosition(center0, center0 + xaxis0, center0 + yaxis0);
+    }
+    else
+    {
+      frame_->SetStateString(framestate_.get());
+    }
   }
 
   if (wtype_ != 3)
@@ -492,6 +512,9 @@ SampleField::execute()
     error("Required input field is empty.");
     return;
   }
+
+  if (ring_) { ringstate_.set(ring_->GetStateString()); }
+  if (frame_) { framestate_.set(frame_->GetStateString()); }
 
   const string &tab = whichTab_.get();
   const string &wtype = gui_wtype_.get();
