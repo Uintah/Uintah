@@ -37,10 +37,15 @@ ${SRCTOP}/configure: ${SRCTOP}/configure.in
 	cd ${SRCTOP} && autoconf
 
 sci_config.h: stamp-h
-stamp-h: ${SRCTOP}/sci_config.h.in ${SRCTOP}/sci_defs.h.in \
-		${OBJTOP}/config.status
-	CONFIGFILE= CONFIG_HEADERS="sci_defs.h sci_config.h " ./config.status
+stamp-h: ${SRCTOP}/sci_config.h.in ${OBJTOP}/config.status
+	CONFIGFILE= CONFIG_HEADERS="sci_config.h " ./config.status
 	echo timestamp > stamp-h
+
+sci_defs.h: stamp-defs
+stamp-defs: ${SRCTOP}/sci_testdefs.h.in ${OBJTOP}/config.status
+	@( Here="`pwd`" ; cd ${OBJTOP} ; Top="`pwd`" ; CONFIG_FILES="`echo $${Here} | sed -e "s!^$${Top}/!!" -e "s!^$${Top}!.!"`/sci_testdefs.h" CONFIG_HEADERS="" ./config.status ) 1>&2
+	@if cmp -s sci_defs.h sci_testdefs.h 2>/dev/null; then echo "sci_defs.h is unchanged"; rm -f sci_testdefs.h; else  mv sci_testdefs.h sci_defs.h; echo "sci_defs.h is changed"; fi
+	echo timestamp > stamp-defs
 
 config.status: ${SRCTOP}/configure
 	./config.status --recheck
@@ -147,7 +152,7 @@ distclean:: clean
 	rm -f config.status config.log config.cache
 	rm -f $(CREATETCLINDEX) scripts/CC scripts/cc
 	rm -f $(patsubst %,%/Makefile, $(ALLOBJSUBDIRS))
-	rm -f sci_config.h sci_defs.h stamp-
+	rm -f sci_config.h sci_defs.h sci_testdefs.h stamp-h
 
 cleanall:: cleanai cleanAI cleanjs cleanJS cleantz cleanTZ cleanrest
 

@@ -1241,6 +1241,13 @@ AC_OUTPUT(	configVars.mk \
 		disjointPackageMakefile \
                 Dataflow/Modules/Fields/Manip/Makefile\
 		Dataflow/Modules/Math/Manip/Makefile\
-		sci_defs.h \
+		sci_testdefs.h \
 		, echo timestamp > stamp-h)
 
+if cmp -s sci_defs.h sci_testdefs.h 2>/dev/null; then
+  echo "sci_defs.h is unchanged"
+  rm -f sci_testdefs.h
+else
+  mv sci_testdefs.h sci_defs.h
+  echo "sci_defs.h is changed"
+fi
