@@ -102,6 +102,7 @@ itcl_class Teem_DataIO_NrrdReader {
 	set $this-type [$om get]
     }
 
+    # set the saved axis... set $this-axis [get_selection $w]
     # set the axis variable
     method set_axis {w} {
 	set $this-axis [get_selection $w]
@@ -191,5 +192,10 @@ itcl_class Teem_DataIO_NrrdReader {
 	    -command "$this-c needexecute"
 
 	pack $w.add $w.f1 $w.send -fill x -expand yes -side top
+
+	if {[set $this-filename] != ""} {
+	    $this-c read_nrrd
+	}
+
     }
 }

@@ -93,8 +93,9 @@ NrrdToField::create_scanline_field(NrrdDataHandle &nrd)
     max = Point((n->axis[1].size - 1) * spc, 
 		0.0, 0.0);
   }
-
-  ScanlineMesh *m = new ScanlineMesh(n->axis[1].size, min, max);
+  int off = 0;
+  if (n->axis[1].center == nrrdCenterCell) { off = 1; }
+  ScanlineMesh *m = new ScanlineMesh(n->axis[1].size + off, min, max);
   ScanlineMeshHandle mh(m);
   FieldHandle fh;
 
@@ -320,8 +321,9 @@ NrrdToField::create_image_field(NrrdDataHandle &nrd)
 		(n->axis[2].size - 1) * spc[1],
 		0.0);
   }
-
-  ImageMesh *m = new ImageMesh(n->axis[1].size, n->axis[2].size,
+  int off = 0;
+  if (n->axis[1].center == nrrdCenterCell) { off = 1; }
+  ImageMesh *m = new ImageMesh(n->axis[1].size + off, n->axis[2].size + off,
 			       min, max);
   ImageMeshHandle mh(m);
   FieldHandle fh;
@@ -529,12 +531,11 @@ NrrdToField::create_latvol_field(NrrdDataHandle &nrd)
 		(n->axis[3].size - 1) * spc[2]);
   }
 
-  LatVolMesh *m = new LatVolMesh(n->axis[1].size, n->axis[2].size, 
-				 n->axis[3].size, min, max);
+  int off = 0;
+  if (n->axis[1].center == nrrdCenterCell) { off = 1; }
+  LatVolMesh *m = new LatVolMesh(n->axis[1].size + off, n->axis[2].size + off, 
+				 n->axis[3].size + off, min, max);
 
-  cout << "makeing a lat vol with" << n->axis[1].size << " "
-       << n->axis[2].size << " " <<n->axis[3].size << " "
-       << min << " " << max << endl;
   LatVolMeshHandle mh(m);
   FieldHandle fh;
   
