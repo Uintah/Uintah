@@ -63,7 +63,7 @@ main(int argc, char **argv) {
   double x, y, z;
   int i1, i2, i3, i4, c;
 
-  Array1<int> newConds;
+  vector<int> newConds;
   FILE *f=fopen(argv[1], "rt");
   if (!f) {
     cerr << "Error - failed to open "<<argv[1]<<".t3d\n";
@@ -78,9 +78,8 @@ main(int argc, char **argv) {
   sscanf(buf, "%d %d %d %d", &npts, &dum1, &dum2, &ntets);
   cerr << "File has "<<npts<<" points and "<<ntets<<" tets.\n";
   
-  Array1<Point> allPts;
-  Array1<int> ptsMap(npts*4);
-  ptsMap.initialize(-1);
+  vector<Point> allPts;
+  vector<int> ptsMap(npts*4, -1);
 
   // etype edegree
   readLine(&f, buf);
@@ -93,7 +92,7 @@ main(int argc, char **argv) {
     readLine(&f, buf);
     sscanf(buf, "%d %lf %lf %lf", &dum1, &x, &y, &z);
     ptsMap[dum1] = allPts.size();
-    allPts.add(Point(x,y,z));
+    allPts.push_back(Point(x,y,z));
     tvm->add_point(Point(x,y,z));
   }
   
