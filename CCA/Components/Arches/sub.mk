@@ -13,7 +13,6 @@ SRCS     += $(SRCDIR)/Arches.cc \
 	$(SRCDIR)/Discretization.cc \
 	$(SRCDIR)/EnthalpySolver.cc \
 	$(SRCDIR)/ExplicitSolver.cc \
-	$(SRCDIR)/Filter.cc \
 	$(SRCDIR)/LinearSolver.cc \
 	$(SRCDIR)/MomentumSolver.cc \
 	$(SRCDIR)/NonlinearSolver.cc \
@@ -31,7 +30,8 @@ SRCS     += $(SRCDIR)/Arches.cc \
 	$(SRCDIR)/TurbulenceModel.cc
 
 ifneq ($(PETSC_DIR),)
-SRCS +=	$(SRCDIR)/PetscSolver.cc
+SRCS +=	$(SRCDIR)/PetscSolver.cc \
+	$(SRCDIR)/Filter.cc
 else
 SRCS +=	$(SRCDIR)/FakePetscSolver.cc
 endif
