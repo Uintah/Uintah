@@ -300,8 +300,28 @@ void FastMatrix::big_destructiveSolve(double* b)
 {
   ASSERTEQ(rows, cols);
 
-  // Gauss-Jordan with no pivoting
+  // Gauss-Jordan with partial pivoting
   for(int i=0;i<rows;i++){
+    double max=Abs(mat[i][i]);
+    int row=i;
+    for(int j=i+1;j<rows;j++){
+      if(Abs(mat[j][i]) > max){
+	max=Abs(mat[j][i]);
+	row=j;
+      }
+    }
+    ASSERT(max > 1.e-12);
+    if(row != i){
+      // Switch rows
+      for(int j=i;j<rows;j++){
+	double tmp = mat[i][j];
+	mat[i][j] = mat[row][j];
+	mat[row][j] = tmp;
+      }
+      double tmp2 = b[i];
+      b[i] = b[row];
+      b[row] = tmp2;
+    }
     double scale=1./mat[i][i];
     b[i]*=scale;
     for(int j=i;j<rows;j++){
@@ -327,8 +347,28 @@ void FastMatrix::big_destructiveSolve(double* b)
 
 template<int size> void med_destructiveSolve(double mat[FastMatrix::MaxSize][FastMatrix::MaxSize], double* b)
 {
-  // Gauss-Jordan with no pivoting
+  // Gauss-Jordan with partial pivoting
   for(int i=0;i<size;i++){
+    double max=Abs(mat[i][i]);
+    int row=i;
+    for(int j=i+1;j<size;j++){
+      if(Abs(mat[j][i]) > max){
+	max=Abs(mat[j][i]);
+	row=j;
+      }
+    }
+    ASSERT(max > 1.e-12);
+    if(row != i){
+      // Switch rows
+      for(int j=i;j<size;j++){
+	double tmp = mat[i][j];
+	mat[i][j] = mat[row][j];
+	mat[row][j] = tmp;
+      }
+      double tmp2 = b[i];
+      b[i] = b[row];
+      b[row] = tmp2;
+    }
     double scale=1./mat[i][i];
     b[i]*=scale;
     for(int j=i;j<size;j++){
@@ -433,8 +473,31 @@ void FastMatrix::big_destructiveSolve(double* b1, double* b2)
 {
   ASSERTEQ(rows, cols);
 
-  // Gauss-Jordan with no pivoting
+  // Gauss-Jordan with partial pivoting
   for(int i=0;i<rows;i++){
+    double max=Abs(mat[i][i]);
+    int row=i;
+    for(int j=i+1;j<rows;j++){
+      if(Abs(mat[j][i]) > max){
+	max=Abs(mat[j][i]);
+	row=j;
+      }
+    }
+    ASSERT(max > 1.e-12);
+    if(row != i){
+      // Switch rows
+      for(int j=i;j<rows;j++){
+	double tmp = mat[i][j];
+	mat[i][j] = mat[row][j];
+	mat[row][j] = tmp;
+      }
+      double tmp2 = b1[i];
+      b1[i] = b1[row];
+      b1[row] = tmp2;
+      double tmp3 = b2[i];
+      b2[i] = b2[row];
+      b2[row] = tmp3;
+    }
     double scale=1./mat[i][i];
     b1[i]*=scale;
     b2[i]*=scale;
@@ -464,8 +527,31 @@ void FastMatrix::big_destructiveSolve(double* b1, double* b2)
 template<int size> void med_destructiveSolve(double mat[FastMatrix::MaxSize][FastMatrix::MaxSize],
                                              double* b1, double* b2)
 {
-  // Gauss-Jordan with no pivoting
+  // Gauss-Jordan with partial pivoting
   for(int i=0;i<size;i++){
+    double max=Abs(mat[i][i]);
+    int row=i;
+    for(int j=i+1;j<size;j++){
+      if(Abs(mat[j][i]) > max){
+	max=Abs(mat[j][i]);
+	row=j;
+      }
+    }
+    ASSERT(max > 1.e-12);
+    if(row != i){
+      // Switch rows
+      for(int j=i;j<size;j++){
+	double tmp = mat[i][j];
+	mat[i][j] = mat[row][j];
+	mat[row][j] = tmp;
+      }
+      double tmp2 = b1[i];
+      b1[i] = b1[row];
+      b1[row] = tmp2;
+      double tmp3 = b2[i];
+      b2[i] = b2[row];
+      b2[row] = tmp3;
+    }
     double scale=1./mat[i][i];
     b1[i]*=scale;
     b2[i]*=scale;
@@ -587,8 +673,29 @@ void FastMatrix::big_destructiveSolve(Vector* b)
 {
   ASSERTEQ(rows, cols);
 
-  // Gauss-Jordan with no pivoting
+  // Gauss-Jordan with partial pivoting
   for(int i=0;i<rows;i++){
+    double max=Abs(mat[i][i]);
+    int row=i;
+    for(int j=i+1;j<rows;j++){
+      if(Abs(mat[j][i]) > max){
+	max=Abs(mat[j][i]);
+	row=j;
+      }
+    }
+    ASSERT(max > 1.e-12);
+    if(row != i){
+      // Switch rows
+      for(int j=i;j<rows;j++){
+	double tmp = mat[i][j];
+	mat[i][j] = mat[row][j];
+	mat[row][j] = tmp;
+      }
+      Vector tmp2 = b[i];
+      b[i] = b[row];
+      b[row] = tmp2;
+    }
+
     double scale=1./mat[i][i];
     b[i]*=scale;
     for(int j=i;j<rows;j++){
@@ -614,8 +721,29 @@ void FastMatrix::big_destructiveSolve(Vector* b)
 template<int size> void med_destructiveSolve(double mat[FastMatrix::MaxSize][FastMatrix::MaxSize],
                                              Vector* b)
 {
-  // Gauss-Jordan with no pivoting
+  // Gauss-Jordan with partial pivoting
   for(int i=0;i<size;i++){
+    double max=Abs(mat[i][i]);
+    int row=i;
+    for(int j=i+1;j<size;j++){
+      if(Abs(mat[j][i]) > max){
+	max=Abs(mat[j][i]);
+	row=j;
+      }
+    }
+    ASSERT(max > 1.e-12);
+    if(row != i){
+      // Switch rows
+      for(int j=i;j<size;j++){
+	double tmp = mat[i][j];
+	mat[i][j] = mat[row][j];
+	mat[row][j] = tmp;
+      }
+      Vector tmp2 = b[i];
+      b[i] = b[row];
+      b[row] = tmp2;
+    }
+
     double scale=1./mat[i][i];
     b[i]*=scale;
     for(int j=i;j<size;j++){
