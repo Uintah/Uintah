@@ -115,7 +115,7 @@ namespace SCIRun {
 
     ConditionVariable *sendQ_cond;
 
-    const static int PACKET_SIZE=100; //1024*32;
+    const static int PACKET_SIZE=1024*32;
 
     bool quit;
   };

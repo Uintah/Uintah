@@ -248,6 +248,12 @@ DataTransmitter::runSendingThread(){
 	//cerr<<"send_msgQ is empty()"<<endl;
 	if(quit){
 	  sendQ_mutex->unlock();
+	  //sending sockets and recving sockets are different, so we can close the 
+	  //sending sockets before the sending thread quits.
+	  for(SocketMap::iterator iter=send_sockmap.begin(); iter!=send_sockmap.end(); iter++){
+	    close(iter->second);
+	  }
+	  sendQ_mutex->unlock();
 	  return;
 	}
 	sendQ_cond->wait(*sendQ_mutex);
@@ -277,6 +283,7 @@ DataTransmitter::runSendingThread(){
       }
     }
   }
+
 }
 
 void 
@@ -414,16 +421,11 @@ DataTransmitter::runRecvingThread(){
 
   close(sockfd);
   sockfd=-1;
-  //TODO: need a neat way to close the sockets
-  //using the internal messages: 
-  //if recved the close-connection request, send ACK and close
-  //if send the close-connection request, wait until ACK 
-  //  or peer's close-connection request.
 
+  //sending sockets and recving sockets are different, so we can close the 
+  //recving sockets before the recving thread quits.
   for(SocketMap::iterator iter=recv_sockmap.begin(); iter!=recv_sockmap.end(); iter++){
-    //should wait sending and receving threads to finish
-    //close(iter->second);
-    //shutdown(iter->second, SHUT_RDWR);
+    close(iter->second);
   }
 }
 
