@@ -38,7 +38,8 @@ using sci::Edge;
 using sci::DirichletBC;
 using sci::Octree;
 
-#define OCTREE_MAXDEPTH 2
+#define OCTREE_MAXDEPTH 3
+#define OCTREE_MAXELEMENTS 300
 
 static TrivialAllocator Element_alloc(sizeof(Element));
 static TrivialAllocator Node_alloc(sizeof(Node));
@@ -499,7 +500,6 @@ void Mesh::compute_neighbors()
 
 int Mesh::inside(const Point& p, Element* elem)
 {
-    cerr << "inside called...\n";
 #ifndef STORE_ELEMENT_BASIS
     Point p1(nodes[elem->n[0]]->p);
     Point p2(nodes[elem->n[1]]->p);
@@ -830,59 +830,6 @@ int Mesh::locate(const Point& p, int& ix, double epsilon1, double epsilon2)
     return locate2(p, ix, epsilon1);
 }
 
-bool Mesh::vertex_in_tetra(const Point&  v, const Point& p0,
-			   const Point& p1, const Point& p2,
-			   const Point& p3)
-{
-
-  double x1=p0.x();
-  double y1=p0.y();
-  double z1=p0.z();
-  double x2=p1.x();
-  double y2=p1.y();
-  double z2=p1.z();
-  double x3=p2.x();
-  double y3=p2.y();
-  double z3=p2.z();
-  double x4=p3.x();
-  double y4=p3.y();
-  double z4=p3.z();
-  double a1=+x2*(y3*z4-y4*z3)+x3*(y4*z2-y2*z4)+x4*(y2*z3-y3*z2);
-  double a2=-x3*(y4*z1-y1*z4)-x4*(y1*z3-y3*z1)-x1*(y3*z4-y4*z3);
-  double a3=+x4*(y1*z2-y2*z1)+x1*(y2*z4-y4*z2)+x2*(y4*z1-y1*z4);
-  double a4=-x1*(y2*z3-y3*z2)-x2*(y3*z1-y1*z3)-x3*(y1*z2-y2*z1);
-  double iV6=1./(a1+a2+a3+a4);
-  if(iV6 < 0) iV6=-iV6;
-
-  double b1=-(y3*z4-y4*z3)-(y4*z2-y2*z4)-(y2*z3-y3*z2);
-  double c1=+(x3*z4-x4*z3)+(x4*z2-x2*z4)+(x2*z3-x3*z2);
-  double d1=-(x3*y4-x4*y3)-(x4*y2-x2*y4)-(x2*y3-x3*y2);
-  Vector g1(b1*iV6, c1*iV6, d1*iV6);
-  double b2=+(y4*z1-y1*z4)+(y1*z3-y3*z1)+(y3*z4-y4*z3);
-  double c2=-(x4*z1-x1*z4)-(x1*z3-x3*z1)-(x3*z4-x4*z3);
-  double d2=+(x4*y1-x1*y4)+(x1*y3-x3*y1)+(x3*y4-x4*y3);
-  Vector g2(b2*iV6, c2*iV6, d2*iV6);
-  double b3=-(y1*z2-y2*z1)-(y2*z4-y4*z2)-(y4*z1-y1*z4);
-  double c3=+(x1*z2-x2*z1)+(x2*z4-x4*z2)+(x4*z1-x1*z4);
-  double d3=-(x1*y2-x2*y1)-(x2*y4-x4*y2)-(x4*y1-x1*y4);
-  Vector g3(b3*iV6, c3*iV6, d3*iV6);
-  double b4=+(y2*z3-y3*z2)+(y3*z1-y1*z3)+(y1*z2-y2*z1);
-  double c4=-(x2*z3-x3*z2)-(x3*z1-x1*z3)-(x1*z2-x2*z1);
-  double d4=+(x2*y3-x3*y2)+(x3*y1-x1*y3)+(x1*y2-x2*y1);
-  Vector g4(b4*iV6, c4*iV6, d4*iV6);
-  a1*=iV6;
-  a2*=iV6;
-  a3*=iV6;
-  a4*=iV6;
-
-  if (Dot(v, g1) + a1 >= -1e-3 &&
-      Dot(v, g2) + a2 >= -1e-3 &&
-      Dot(v, g3) + a3 >= -1e-3 &&
-      Dot(v, g4) + a4 >= -1e-3) return true;
-
-  return false;
-}
-
 bool Mesh::tetra_edge_in_box(const Point&  min, const Point&  max,
 			     const Point& orig, const Vector& dir)
 {
@@ -942,21 +889,21 @@ bool Mesh::overlaps(Element* e, const Point& v0, const Point& v1)
   Point& p1(e->mesh->nodes[e->n[1]]->p);
   Point& p2(e->mesh->nodes[e->n[2]]->p);
   Point& p3(e->mesh->nodes[e->n[3]]->p);
-  if(vertex_in_tetra(Point(v0.x(),v0.y(),v0.z()), p0, p1, p2, p3))
+  if(inside(Point(v0.x(),v0.y(),v0.z()), e))
     return true;
-  if(vertex_in_tetra(Point(v0.x(),v0.y(),v1.z()), p0, p1, p2, p3))
+  if(inside(Point(v0.x(),v0.y(),v1.z()), e))
     return true;
-  if(vertex_in_tetra(Point(v0.x(),v1.y(),v0.z()), p0, p1, p2, p3))
+  if(inside(Point(v0.x(),v1.y(),v0.z()), e))
     return true;
-  if(vertex_in_tetra(Point(v0.x(),v1.y(),v1.z()), p0, p1, p2, p3))
+  if(inside(Point(v0.x(),v1.y(),v1.z()), e))
     return true;
-  if(vertex_in_tetra(Point(v1.x(),v0.y(),v0.z()), p0, p1, p2, p3))
+  if(inside(Point(v1.x(),v0.y(),v0.z()), e))
     return true;
-  if(vertex_in_tetra(Point(v1.x(),v0.y(),v1.z()), p0, p1, p2, p3))
+  if(inside(Point(v1.x(),v0.y(),v1.z()), e))
     return true;
-  if(vertex_in_tetra(Point(v1.x(),v1.y(),v0.z()), p0, p1, p2, p3))
+  if(inside(Point(v1.x(),v1.y(),v0.z()), e))
     return true;
-  if(vertex_in_tetra(Point(v1.x(),v1.y(),v1.z()), p0, p1, p2, p3))
+  if(inside(Point(v1.x(),v1.y(),v1.z()), e))
     return true;
   if(tetra_edge_in_box(v0, v1, p0, p1-p0)) return true;
   if(tetra_edge_in_box(v0, v1, p0, p2-p0)) return true;
@@ -972,10 +919,10 @@ void Mesh::make_octree(int level, Octree*& octree,
 		       const Point& min, const Point& max,
 		       const Array1<int>& inelems)
 {
-  cerr << "building octree at level " << level << '\n';
+  //cerr << "building octree at level " << level << '\n';
 
   octree=new Octree();
-  if(level>OCTREE_MAXDEPTH){
+  if(level>OCTREE_MAXDEPTH || inelems.size() < OCTREE_MAXELEMENTS){
     for(int i=0;i<inelems.size();i++){
       octree->elems.add(inelems[i]);
     }
@@ -1008,7 +955,7 @@ void Mesh::make_octree(int level, Octree*& octree,
 	}
       }
     }
-    if(count > 6){
+    if(count > 4){
       octree->elems.add(inelems[i]);
     } else {
       for(int j=0;j<8;j++){
@@ -1018,7 +965,9 @@ void Mesh::make_octree(int level, Octree*& octree,
       }
     }
   }
-  cerr << "keeping " << octree->elems.size() << " elements at level " << level << '\n';
+  if(octree->elems.size() > 20){
+    cerr << "keeping " << octree->elems.size() << " elements at level " << level << '\n';
+  }
   for(int j=0;j<8;j++){
     int iz=j&4;
     int iy=j&2;
@@ -1031,77 +980,19 @@ void Mesh::make_octree(int level, Octree*& octree,
     double hx=ix==0?mid.x():max.x();
     
     if(passdown[j].size()>0){
-      cerr << "child " << j << ", " << passdown[j].size() << " elements\n";
+      //cerr << "child " << j << ", " << passdown[j].size() << " elements\n";
       make_octree(level+1, octree->child[j], Point(lx, ly, lz),
 		  Point(hx, hy, hz), passdown[j]);
     }
   }
-  cerr << "done building octree at level " << level << '\n';
+  //cerr << "done building octree at level " << level << '\n';
 }
 
 int Octree::locate(Mesh* mesh, const Point& p, double epsilon1)
 {
   for(int i=0;i<elems.size();i++){
     Element* elem=mesh->elems[elems[i]];
-#ifndef STORE_ELEMENT_BASIS
-    Point p1(nodes[elem->n[0]]->p);
-    Point p2(nodes[elem->n[1]]->p);
-    Point p3(nodes[elem->n[2]]->p);
-    Point p4(nodes[elem->n[3]]->p);
-    double x1=p1.x();
-    double y1=p1.y();
-    double z1=p1.z();
-    double x2=p2.x();
-    double y2=p2.y();
-    double z2=p2.z();
-    double x3=p3.x();
-    double y3=p3.y();
-    double z3=p3.z();
-    double x4=p4.x();
-    double y4=p4.y();
-    double z4=p4.z();
-    double a1=+x2*(y3*z4-y4*z3)+x3*(y4*z2-y2*z4)+x4*(y2*z3-y3*z2);
-    double a2=-x3*(y4*z1-y1*z4)-x4*(y1*z3-y3*z1)-x1*(y3*z4-y4*z3);
-    double a3=+x4*(y1*z2-y2*z1)+x1*(y2*z4-y4*z2)+x2*(y4*z1-y1*z4);
-    double a4=-x1*(y2*z3-y3*z2)-x2*(y3*z1-y1*z3)-x3*(y1*z2-y2*z1);
-    double iV6=1./(a1+a2+a3+a4);
-
-    double b1=-(y3*z4-y4*z3)-(y4*z2-y2*z4)-(y2*z3-y3*z2);
-    double c1=+(x3*z4-x4*z3)+(x4*z2-x2*z4)+(x2*z3-x3*z2);
-    double d1=-(x3*y4-x4*y3)-(x4*y2-x2*y4)-(x2*y3-x3*y2);
-    double s0=iV6*(a1+b1*p.x()+c1*p.y()+d1*p.z());
-
-    double b2=+(y4*z1-y1*z4)+(y1*z3-y3*z1)+(y3*z4-y4*z3);
-    double c2=-(x4*z1-x1*z4)-(x1*z3-x3*z1)-(x3*z4-x4*z3);
-    double d2=+(x4*y1-x1*y4)+(x1*y3-x3*y1)+(x3*y4-x4*y3);
-    double s1=iV6*(a2+b2*p.x()+c2*p.y()+d2*p.z());
-
-    double b3=-(y1*z2-y2*z1)-(y2*z4-y4*z2)-(y4*z1-y1*z4);
-    double c3=+(x1*z2-x2*z1)+(x2*z4-x4*z2)+(x4*z1-x1*z4);
-    double d3=-(x1*y2-x2*y1)-(x2*y4-x4*y2)-(x4*y1-x1*y4);
-    double s2=iV6*(a3+b3*p.x()+c3*p.y()+d3*p.z());
-
-    double b4=+(y2*z3-y3*z2)+(y3*z1-y1*z3)+(y1*z2-y2*z1);
-    double c4=-(x2*z3-x3*z2)-(x3*z1-x1*z3)-(x1*z2-x2*z1);
-    double d4=+(x2*y3-x3*y2)+(x3*y1-x1*y3)+(x1*y2-x2*y1);
-    double s3=iV6*(a4+b4*p.x()+c4*p.y()+d4*p.z());
-#else
-    double s0=elem->a[0]+Dot(elem->g[0], p);
-    double s1=elem->a[1]+Dot(elem->g[1], p);
-    double s2=elem->a[2]+Dot(elem->g[2], p);
-    double s3=elem->a[3]+Dot(elem->g[3], p);
-#endif
-    double min=s0;
-    if(s1<min){
-      min=s1;
-    }
-    if(s2<min){
-      min=s2;
-    }
-    if(s3<min){
-      min=s3;
-    }
-    if(min>-epsilon1){
+    if(mesh->inside(p, elem)){
       return elems[i];
     }
   }
@@ -1109,22 +1000,9 @@ int Octree::locate(Mesh* mesh, const Point& p, double epsilon1)
   int yi=(p.y()>mid.y())?2:0;
   int zi=(p.z()>mid.z())?4:0;
   int idx=xi+yi+zi;
-  if(child[idx]){
-    int s=child[idx]->locate(mesh, p, epsilon1);
-#if 0
-    if(s==-1){
-      int oidx=idx;
-      for(int idx=0;idx<8;idx++){
-	int t=child[idx]->locate(mesh, p, epsilon1);
-	if(t != -1){
-	  cerr << "point " << p << " found in " << idx << " instead of " << oidx << "\n";
-	}
-	return t;
-      }
-    }
-#endif
-    return s;
-   } else
+  if(child[idx])
+    return child[idx]->locate(mesh, p, epsilon1);
+  else
     return -1;
 }
 
