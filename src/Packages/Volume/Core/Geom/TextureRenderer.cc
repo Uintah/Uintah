@@ -865,6 +865,14 @@ TextureRenderer::build_colormap2()
           widget[i]->rasterize(raster_array_);
         }
         cmap2_->unlock_widgets();
+        for(int i=0; i<raster_array_.dim1(); i++) {
+          for(int j=0; j<raster_array_.dim2(); j++) {
+            raster_array_(i,j,0) = CLAMP(raster_array_(i,j,0), 0.0f, 1.0f);
+            raster_array_(i,j,1) = CLAMP(raster_array_(i,j,1), 0.0f, 1.0f);
+            raster_array_(i,j,2) = CLAMP(raster_array_(i,j,2), 0.0f, 1.0f);
+            raster_array_(i,j,3) = CLAMP(raster_array_(i,j,3), 0.0f, 1.0f);
+          }
+        }
       }
       //--------------------------------------------------------------
       // opacity correction

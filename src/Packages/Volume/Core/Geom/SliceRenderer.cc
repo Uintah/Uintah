@@ -253,9 +253,12 @@ SliceRenderer::draw()
   int nc = (*bricks.begin())->data()->nc();
   int nb0 = (*bricks.begin())->data()->nb(0);
   bool use_cmap2 = cmap2_.get_rep() && nc == 2;
+  bool use_cmap1 = cmap1_.get_rep();
   GLboolean use_fog;
   glGetBooleanv(GL_FOG, &use_fog);
 
+  if(!use_cmap1 && !use_cmap2) return;
+  
   //--------------------------------------------------------------------------
   // load colormap texture
   if(use_cmap2) {

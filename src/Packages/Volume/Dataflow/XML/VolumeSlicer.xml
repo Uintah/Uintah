@@ -54,6 +54,10 @@
         <name>ColorMap</name>
 	<datatype>SCIRun::ColorMap</datatype>
       </port>
+      <port>
+        <name>ColorMap2</name>
+	<datatype>Volume::Colormap2</datatype>
+      </port>
     </inputs>
     <outputs>
       <port>

@@ -32,6 +32,7 @@
 #include <sci_gl.h>
 #include <Packages/Volume/Core/Util/ShaderProgramARB.h>
 #include <Packages/Volume/Core/Datatypes/CM2Widget.h>
+#include <Packages/Volume/Core/Util/Utils.h>
 #include <Core/Math/MinMax.h>
 
 #include <iostream>
@@ -40,15 +41,6 @@ using namespace std;
 using namespace SCIRun;
 
 namespace Volume {
-
-template <typename T>
-inline T
-CLAMP(T x, T l, T u)
-{
-  if (x < l) return l;
-  if (x > u) return u;
-  return x;
-}
 
 const string CM2ShaderString[CM2_LAST] =
   {
