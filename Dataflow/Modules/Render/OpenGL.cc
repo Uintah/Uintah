@@ -1799,7 +1799,7 @@ void OpenGL::AddMpegFrame()
 
   // set up the ImVfb used to store the image 
   if( !image ){
-    image=MPEGe_ImVfbAlloc( width,height, IMVFBRGB, 1 );
+    image=MPEGe_ImVfbAlloc( width, height, IMVFBRGB, true );
     if( !image ){
       cerr<<"Couldn't allocate memory for frame buffer\n";
       exit(2);
@@ -1840,7 +1840,8 @@ void OpenGL::EndMpeg()
     cerr<<"Had a bit of difficulty closing the file:"<<options.error;
   }
   
-  fclose(output);
+//  fclose(output);  -- MPEGe_close closes the file for us
+
   cerr<<"Ending Mpeg\n";
 #endif // MPEG
 }
