@@ -11,7 +11,7 @@
 using rtrt::Array1;
 using rtrt::Array2;
 using rtrt::Heightfield;
-using rtrt::HMCell;
+using rtrt::HMCell; 
 using rtrt::BrickArray2;
 namespace rtrt {
   class Light;
@@ -23,9 +23,9 @@ namespace rtrt {
 }
 
 template struct HMCell<float>;
-template class BrickArray2<float>;
+template class rtrt::BrickArray2<float>;
 template class Array2 < HMCell<float> >;
-template class rtrt::Heightfield<BrickArray2<float>,Array2<HMCell<float > > >;
+template class Heightfield<BrickArray2<float>,Array2<HMCell<float > > >;
 
 template class Array1<Light*>;
 

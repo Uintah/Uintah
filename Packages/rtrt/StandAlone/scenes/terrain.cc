@@ -24,7 +24,11 @@
 
 #include <math.h>
 #include <ctype.h>
-#include <widec.h>
+
+#if defined(__sgi)  // breaks linux build
+  #include <widec.h>
+#endif
+
 #include <wctype.h>
 
 static bool realgeom;
@@ -213,9 +217,11 @@ parseobj(FILE *f, Group *tris) {
 	   Get2d(&buf[2],P);
 	   break;
 	 case 'n': // normal
-	   Get3d(&buf[2],P);
-	   Vector v(P.x(),P.y(),P.z());
-	   vn.add(v);
+	   {
+	     Get3d(&buf[2],P);
+	     Vector v(P.x(),P.y(),P.z());
+	     vn.add(v);
+	   }
 	   break;
 	 case ' ': // normal vertex...
 	 default:

@@ -57,12 +57,12 @@ public:
   {
     HashTableEntry<Key, Data>** oldtab=table;
     table=new HashTableEntry<Key, Data>*[newsize];
-    for(int ii=0;ii<newsize;ii++){
+    for(unsigned int ii=0;ii<newsize;ii++){
       table[ii]=0;
     }
     unsigned int oldsize=hash_size;
     hash_size=newsize;
-    for(int i=0;i<oldsize;i++){
+    for(unsigned int i=0;i<oldsize;i++){
       HashTableEntry<Key, Data>* p=oldtab[i];
       while(p){
 	HashTableEntry<Key, Data>* next=p->next;
@@ -87,7 +87,7 @@ public:
   HashTable<Key, Data>::~HashTable()
   {
     if(table){
-      for(int i=0;i<hash_size;i++){
+      for(unsigned int i=0;i<hash_size;i++){
 	HashTableEntry<Key,Data>* p=table[i];
 	while(p){
 	  HashTableEntry<Key, Data>* prev=p;
@@ -175,7 +175,7 @@ public:
   void HashTable<Key, Data>::remove_all()
   {
     if(table){
-      for(int i=0;i<hash_size;i++){
+      for(unsigned int i=0;i<hash_size;i++){
 	HashTableEntry<Key, Data>* p=table[i];
 	while(p){
 	  HashTableEntry<Key, Data>* next=p->next;

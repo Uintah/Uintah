@@ -77,8 +77,8 @@ public:
     // Get the array information
     T* get_objs();
 
-    friend void Pio(Piostream&, Array1<T>&);
-    friend void Pio(Piostream&, Array1<T>*&);
+    void Pio(Piostream&, Array1<T>&);
+    void Pio(Piostream&, Array1<T>*&);
 };
 
 template<class T> void Pio(Piostream&, Array1<T>&);

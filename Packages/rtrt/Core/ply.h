@@ -149,7 +149,7 @@ extern PlyProperty **ply_get_element_description(PlyFile *, char *, int*, int*);
 extern void ply_get_element_setup( PlyFile *, char *, int, PlyProperty *);
 extern void ply_get_property(PlyFile *, char *, PlyProperty *);
 extern PlyOtherProp *ply_get_other_properties(PlyFile *, char *, int);
-extern ply_get_element(PlyFile *, void *);
+extern void ply_get_element(PlyFile *, void *);
 extern char **ply_get_comments(PlyFile *, int *);
 extern char **ply_get_obj_info(PlyFile *, int *);
 extern void ply_close(PlyFile *);
