@@ -161,7 +161,7 @@ void ImageToNrrd::create_nrrd(ITKDatatypeHandle &img) {
   
   img_iter.GoToBegin();
   while(!img_iter.IsAtEnd()) {
-    PixelType *&i = (PixelType*&)p;
+    //PixelType *&i = (PixelType*&)p;
     *i = img_iter.Get();
     
     // increment pointers
@@ -239,9 +239,9 @@ void ImageToNrrd::create_nrrd2(ITKDatatypeHandle &img) {
   ValueType *&i = (ValueType*&)p;
 
   img_iter.GoToBegin();
-  int count = 0;
+  //int count = 0;
   while(!img_iter.IsAtEnd()) {
-    ValueType *&i = (ValueType*&)p;
+    //ValueType *&i = (ValueType*&)p;
     *i = img_iter.Get()[0];
     ++i;
     *i = img_iter.Get()[1];
