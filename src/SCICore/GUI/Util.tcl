@@ -198,14 +198,6 @@ itcl_class expscale {
     }
     method setscales {} {
 	global $variable
-
-
-## DAVE HACK
-
-#	set exp 1
-
-
-
 	set value [set $variable]
 	set mag [expr pow(10, $exp)]
 	# Round the value down to get from...
@@ -222,4 +214,37 @@ itcl_class expscale {
 	$w.e.exp delete 0 end
 	$w.e.exp insert 0 $exp
     }
+    method newvalue {value} {
+	global $variable
+	if {$value != 0} {
+	    while {([expr pow(10, [expr $exp-2])] > [expr abs($value)]) && \
+		    ($exp >= -5)} {
+		incr exp -1
+		if { $exp > 2 } {
+		    set decimalplaces 0
+		} else {
+		    incr decimalplaces
+		}
+	    }
+	}
+	set mag [expr pow(10, $exp)]
+	# Round the value down to get from...
+	if {$value < 0} {
+	    set from [expr int($value/$mag-1)*$mag]
+	} else {
+	    set from [expr int($value/$mag)*$mag]
+	}
+
+	set to [expr $from+$mag*$sign]
+	set ti [expr $mag/5]
+	
+	set resolution [getResolution ]
+
+	$w.scale configure -from $from -to $to \
+	    -tickinterval $mag -resolution $resolution
+	set $variable $value
+
+	$w.e.exp delete 0 end
+	$w.e.exp insert 0 $exp
+    }	
 }
