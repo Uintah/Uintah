@@ -71,21 +71,22 @@ void ICE::actuallyComputeStableTimestepRF(const ProcessorGroup*,
     IntVector numCells(patch->getHighIndex() - patch->getLowIndex());
     //__________________________________
     // which dimensions are relevant
+
     int mat_id = 0;
     if ( patch->getBCValues(mat_id,"Symmetric",Patch::xminus) || 
          patch->getBCValues(mat_id,"Symmetric",Patch::xplus)  || 
          numCells(0) >3 ) {
-     include_delT(0) = 1.0;
+     include_delT[0] = 1.0;
     }
     if ( patch->getBCValues(mat_id,"Symmetric",Patch::yminus) || 
          patch->getBCValues(mat_id,"Symmetric",Patch::yplus)  || 
          numCells(1) >3 ) {
-     include_delT(1) = 1.0;
+     include_delT[1] = 1.0;
     }
     if ( patch->getBCValues(mat_id,"Symmetric",Patch::zminus) || 
          patch->getBCValues(mat_id,"Symmetric",Patch::zplus)  || 
          numCells(2) >3 ) {
-     include_delT(2) = 1.0;
+     include_delT[2] = 1.0;
     }   
       
     for (int m = 0; m < d_sharedState->getNumMatls(); m++) {
@@ -97,10 +98,11 @@ void ICE::actuallyComputeStableTimestepRF(const ProcessorGroup*,
       new_dw->get(sp_vol_CC,  lb->sp_vol_CCLabel,     indx,patch,gac, 1);
       
       for (int dir = 0; dir <3; dir++) {  //loop over all three directions
-        delt(dir) = 1000.0;  
+        delt[dir] = 1000.0; 
         for(CellIterator iter=patch->getCellIterator(); !iter.done(); iter++){
           IntVector R = *iter;
           IntVector L = R + adj_offset[dir];
+
           double ave_vel= 0.5 * fabs( vel_CC[R].length() + 
                                       vel_CC[L].length() );           
 
@@ -111,15 +113,15 @@ void ICE::actuallyComputeStableTimestepRF(const ProcessorGroup*,
           double cstar  = sqrt(tmp) + fabs(vel_CC[R].length() -
                                            vel_CC[L].length());  
 
-          double delt_tmp = d_CFL * dx(dir)/(cstar + ave_vel);
-          delt(dir)       = std::min(delt(dir), delt_tmp);
+          double delt_tmp = d_CFL * dx[dir]/(cstar + ave_vel);
+          delt[dir]       = std::min(delt[dir], delt_tmp);
         }
       }  //  dir loop
       
       // see page 30 and 46 of MF document
-      double matl_delt = 1.0/(include_delT(0)/delt(0) + 
-                              include_delT(1)/delt(1) + 
-                              include_delT(2)/delt(2) );
+      double matl_delt = 1.0/(include_delT[0]/delt[0] + 
+                              include_delT[1]/delt[1] + 
+                              include_delT[2]/delt[2] );
            
       delt_CFL = std::min(delt_CFL, matl_delt);
     }  //  matl loop
@@ -338,8 +340,8 @@ void ICE::computeDivThetaVel_CC(const ProcessorGroup*,
           IntVector c  = *iter;
           IntVector RR = c - adj_offset[dir];
           IntVector L  = c + adj_offset[dir];
-          D[c](dir) = (vol_frac[RR] * vel_CC[RR](dir) 
-                    -  vol_frac[L]  * vel_CC[L](dir))/(2.*dx(dir));
+          D[c][dir] = (vol_frac[RR] * vel_CC[RR][dir] 
+                    -  vol_frac[L]  * vel_CC[L][dir])/(2.*dx[dir]);
         }
       }
       
@@ -377,10 +379,10 @@ template<class T> void ICE::vel_PressDiff_FC
    
     //__________________________________
     // compute local timestep
-    double divu = (vol_frac[R]*vel_CC[R](dir) - vol_frac[L]*vel_CC[L](dir))/dx;
+    double divu = (vol_frac[R]*vel_CC[R][dir] - vol_frac[L]*vel_CC[L][dir])/dx;
     
-    double rminus   = 2.*D[R](dir)/(divu + d_SMALL_NUM) - 1.;    // 4.16b-c
-    double rplus    = 2.*D[L](dir)/(divu + d_SMALL_NUM) - 1.;    // 4.16b-c
+    double rminus   = 2.*D[R][dir]/(divu + d_SMALL_NUM) - 1.;    // 4.16b-c
+    double rplus    = 2.*D[L][dir]/(divu + d_SMALL_NUM) - 1.;    // 4.16b-c
 
     double rr       = min(1.0,2.0 * rplus);
     double rl       = min(1.0,2.0 * rminus);
@@ -402,8 +404,8 @@ template<class T> void ICE::vel_PressDiff_FC
 
     //__________________________________
     // interpolation to the face
-    term1 = (vel_CC[L](dir) * sp_vol_CC[R] +
-             vel_CC[R](dir) * sp_vol_CC[L])/
+    term1 = (vel_CC[L][dir] * sp_vol_CC[R] +
+             vel_CC[R][dir] * sp_vol_CC[L])/
              (sp_vol_CC[R] + sp_vol_CC[L]);
 
     //__________________________________
@@ -436,6 +438,7 @@ template<class T> void ICE::vel_PressDiff_FC
    
     //__________________________________
     // compute pressDiff  //4.13c
+
     delP_FC = rho_brack * phi * cstar * (vel_CC[R].length() -
                                          vel_CC[L].length() );                
               
@@ -529,21 +532,21 @@ void ICE::computeFaceCenteredVelocitiesRF(const ProcessorGroup*,
       //  Compute vel_FC for each face
       vel_PressDiff_FC<SFCXVariable<double> >(
                                        0,patch->getSFCXIterator(offset),
-                                       adj_offset[0], dx(0), delT, gravity(0),
+                                       adj_offset[0], dx[0], delT, gravity[0],
                                        sp_vol_CC, vel_CC, vol_frac, rho_CC, D,
                                        speedSound, matl_press_CC, press_CC,
                                        uvel_FC, pressDiffX_FC);
 
       vel_PressDiff_FC<SFCYVariable<double> >(
                                        1,patch->getSFCYIterator(offset),
-                                       adj_offset[1], dx(1), delT, gravity(1),
+                                       adj_offset[1], dx[1], delT, gravity[1],
                                        sp_vol_CC, vel_CC, vol_frac, rho_CC, D,
                                        speedSound, matl_press_CC, press_CC,
                                        vvel_FC, pressDiffY_FC);
 
       vel_PressDiff_FC<SFCZVariable<double> >(
                                        2,patch->getSFCZIterator(offset),
-                                       adj_offset[2], dx(2), delT, gravity(2),
+                                       adj_offset[2], dx[2], delT, gravity[2],
                                        sp_vol_CC, vel_CC, vol_frac, rho_CC, D,
                                        speedSound, matl_press_CC, press_CC,
                                        wvel_FC, pressDiffZ_FC);
@@ -703,7 +706,7 @@ void ICE::accumulateEnergySourceSinks_RF(const ProcessorGroup*,
         Vector U = Vector(0,0,0);
         for (int dir = 0; dir <3; dir++) {  //loop over all three directons
           for(int mat = 0; mat < numMatls; mat++) {
-            U(dir) = vol_frac_CC * vel_CC[mat][c](dir);
+            U[dir] = vol_frac_CC * vel_CC[mat][c][dir];
           }
         }
 
@@ -969,14 +972,14 @@ void ICE::addExchangeToMomentumAndEnergyRF(const ProcessorGroup*,
         for(int m = 0; m < numALLMatls; m++) {
           b[m] = 0.0;
           for(int n = 0; n < numALLMatls; n++) {
-           b[m] += beta(m,n) * (vel_CC[n][c](dir) - vel_CC[m][c](dir));
+           b[m] += beta(m,n) * (vel_CC[n][c][dir] - vel_CC[m][c][dir]);
           }
         }
         
         a_inverse.multiply(b,X);
         
         for(int m = 0; m < numALLMatls; m++) {
-          vel_CC[m][c](dir) =  vel_CC[m][c](dir) + X[m];
+          vel_CC[m][c][dir] =  vel_CC[m][c][dir] + X[m];
         }
       }
     }   // cell iterator

@@ -222,7 +222,7 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
 	const Vector& gvel = gvelocity[ni[k]];
 	 for (int j = 0; j<3; j++){
 	    for (int i = 0; i<3; i++) {
-	      velGrad(i+1,j+1) += gvel(i) * d_S[k](j) * oodx[j];
+	      velGrad(i+1,j+1) += gvel[i] * d_S[k][j] * oodx[j];
 	    }
 	 }
        }

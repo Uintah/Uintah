@@ -209,7 +209,7 @@ void CompNeoHook::computeStressTensor(const PatchSubset* patches,
 	    const Vector& gvel = gvelocity[ni[k]];
 	    for (int j = 0; j<3; j++){
 	       for (int i = 0; i<3; i++) {
-	          velGrad(i+1,j+1) += gvel(i) * d_S[k](j) * oodx[j];
+	          velGrad(i+1,j+1) += gvel[i] * d_S[k][j] * oodx[j];
 	       }
 	    }
         }
@@ -366,7 +366,7 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
 	
 	for (int j = 0; j<3; j++){
 	  for (int i = 0; i<3; i++) {
-	    dispGrad(i+1,j+1) += disp(i) * d_S[k](j)* oodx[j];
+	    dispGrad(i+1,j+1) += disp[i] * d_S[k][j]* oodx[j];
 	  }
 	}
 #if 0
@@ -377,36 +377,36 @@ void CompNeoHook::computeStressTensorImplicit(const PatchSubset* patches,
 	     << "\t" << d_S[k](2)*oodx[2] << endl;
 #endif
 	
-	B(0,3*k) = d_S[k](0)*oodx[0];
-	B(3,3*k) = d_S[k](1)*oodx[1];
-	B(5,3*k) = d_S[k](2)*oodx[2];
+	B(0,3*k) = d_S[k][0]*oodx[0];
+	B(3,3*k) = d_S[k][1]*oodx[1];
+	B(5,3*k) = d_S[k][2]*oodx[2];
 	B(1,3*k) = 0.;
 	B(2,3*k) = 0.;
 	B(4,3*k) = 0.;
 	
-	B(1,3*k+1) = d_S[k](1)*oodx[1];
-	B(3,3*k+1) = d_S[k](0)*oodx[0];
-	B(4,3*k+1) = d_S[k](2)*oodx[2];
+	B(1,3*k+1) = d_S[k][1]*oodx[1];
+	B(3,3*k+1) = d_S[k][0]*oodx[0];
+	B(4,3*k+1) = d_S[k][2]*oodx[2];
 	B(0,3*k+1) = 0.;
 	B(2,3*k+1) = 0.;
 	B(5,3*k+1) = 0.;
 	
-	B(2,3*k+2) = d_S[k](2)*oodx[2];
-	B(4,3*k+2) = d_S[k](1)*oodx[1];
-	B(5,3*k+2) = d_S[k](0)*oodx[0];
+	B(2,3*k+2) = d_S[k][2]*oodx[2];
+	B(4,3*k+2) = d_S[k][1]*oodx[1];
+	B(5,3*k+2) = d_S[k][0]*oodx[0];
 	B(0,3*k+2) = 0.;
 	B(1,3*k+2) = 0.;
 	B(3,3*k+2) = 0.;
 	
-	Bnl(0,3*k) = d_S[k](0)*oodx[0];
+	Bnl(0,3*k) = d_S[k][0]*oodx[0];
 	Bnl(1,3*k) = 0.;
 	Bnl(2,3*k) = 0.;
 	Bnl(0,3*k+1) = 0.;
-	Bnl(1,3*k+1) = d_S[k](1)*oodx[1];
+	Bnl(1,3*k+1) = d_S[k][1]*oodx[1];
 	Bnl(2,3*k+1) = 0.;
 	Bnl(0,3*k+2) = 0.;
 	Bnl(1,3*k+2) = 0.;
-	Bnl(2,3*k+2) = d_S[k](2)*oodx[2];
+	Bnl(2,3*k+2) = d_S[k][2]*oodx[2];
       }
       
       // Find the stressTensor using the displacement gradient
@@ -688,7 +688,7 @@ void CompNeoHook::computeStressTensorImplicitOnly(const PatchSubset* patches,
 	  const Vector& disp = dispNew[ni[k]];
 	  for (int j = 0; j<3; j++){
 	    for (int i = 0; i<3; i++) {
-	      dispGrad(i+1,j+1) += disp(i) * d_S[k](j)* oodx[j];
+	      dispGrad(i+1,j+1) += disp[i] * d_S[k][j]* oodx[j];
 	    }
 	  }
 	}

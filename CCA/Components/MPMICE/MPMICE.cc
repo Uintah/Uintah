@@ -804,11 +804,9 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
           IntVector c = cIdx[in];
           double mass_CC = mass[c];      
                                     // force /mass
-          gradPAccNC[*iter](0) += (press_force[c](0)/mass_CC) * .125;
-                                
-          gradPAccNC[*iter](1) += (press_force[c](1)/mass_CC) * .125;
-                                
-          gradPAccNC[*iter](2) += (press_force[c](2)/mass_CC) * .125;      
+          gradPAccNC[*iter][0] += (press_force[c][0]/mass_CC) * .125;
+          gradPAccNC[*iter][1] += (press_force[c][1]/mass_CC) * .125;
+          gradPAccNC[*iter][2] += (press_force[c][2]/mass_CC) * .125;      
         }
       }
       //---- P R I N T   D A T A ------ 
@@ -1109,8 +1107,8 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
               
           //  must have a minimum momentum 
           for (int dir = 0; dir <3; dir++) {  //loop over all three directons
-            double min_mom_L = min_mass * cmomentum[c](dir) * inv_cmass;
-            double mom_L_tmp = cmomentum[c](dir) + mom_comb[c](dir);
+            double min_mom_L = min_mass * cmomentum[c][dir] * inv_cmass;
+            double mom_L_tmp = cmomentum[c][dir] + mom_comb[c][dir];
 
             // Preserve the original sign on momemtum     
             // Use d_SMALL_NUMs to avoid nans when mom_L_temp = 0.0
@@ -1120,7 +1118,7 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
             mom_L_tmp = (mom_L_tmp/mass_L[c] ) *
                         (cmass[c] + burnedMassCC[c] );
                                 
-            cmomentum[c](dir) = plus_minus_one *
+            cmomentum[c][dir] = plus_minus_one *
                                 std::max( fabs(mom_L_tmp), fabs(min_mom_L) );
           }
           // must have a minimum int_eng   

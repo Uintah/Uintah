@@ -277,7 +277,7 @@ void    ICE::printVector(int matl,
             for(int i = low.x(); i < high.x(); i++) {
              IntVector idx(i, j, k);
              cerr << "[" << i << "," << j << "," << k << "]~ " 
-                  <<  q_CC[idx](dir) << "  ";
+                  <<  q_CC[idx][dir] << "  ";
 
              /*  cerr << "\n"; */
             }
@@ -305,7 +305,7 @@ void    ICE::printVector(int matl,
           for(int j = low.y(); j < high.y(); j++) {
             for(int i = low.x(); i < high.x(); i++) {
               IntVector idx(i, j, k);
-              fprintf(fp, "%16.15E %16.15E\n", x+=dx, q_CC[idx](dir));
+              fprintf(fp, "%16.15E %16.15E\n", x+=dx, q_CC[idx][dir]);
             }
           }
         }

@@ -179,9 +179,9 @@ void Matrix3::triangularReduce(Matrix3& A, Vector* rhs, int& num_zero_rows,
       
       if (rhs != NULL) {
 	// swap and normalize rhs in the same manner
-	tmp = (*rhs)(pivot);
-	(*rhs)(pivot) = (*rhs)(pivoting_row);
-	(*rhs)(pivoting_row) = tmp * norm_multiplier; // normalizing
+	tmp = (*rhs)[pivot];
+	(*rhs)[pivot] = (*rhs)[pivoting_row];
+	(*rhs)[pivoting_row] = tmp * norm_multiplier; // normalizing
       }
     }
     else {
@@ -190,7 +190,7 @@ void Matrix3::triangularReduce(Matrix3& A, Vector* rhs, int& num_zero_rows,
       for (j = i+1 /* zeroes don't need to be normalized */; j < 3; j++)
 	A.mat3[pivoting_row][j] *= norm_multiplier;
       if (rhs != NULL)
-	(*rhs)(pivoting_row) *= norm_multiplier; // normalizing
+	(*rhs)[pivoting_row] *= norm_multiplier; // normalizing
     }
 
     // eliminate ith column from other rows via row reduction
@@ -202,7 +202,7 @@ void Matrix3::triangularReduce(Matrix3& A, Vector* rhs, int& num_zero_rows,
       for (j = i + 1; j < 3; j++)
 	A.mat3[k][j] -= mult * A.mat3[pivoting_row][j]; 
       if (rhs != NULL)
-	(*rhs)(k) -= mult * (*rhs)(pivoting_row);
+	(*rhs)[k] -= mult * (*rhs)[pivoting_row];
       A.mat3[k][i] = 0;
     }
 
@@ -211,8 +211,8 @@ void Matrix3::triangularReduce(Matrix3& A, Vector* rhs, int& num_zero_rows,
 
   if (rhs != NULL) {
     for (i = 0; i < 3; i++)
-      if (fabs((*rhs)(i)) <= relNearZero)
-	(*rhs)(i) = 0; // set near zero's to zero to compensate for round-off
+      if (fabs((*rhs)[i]) <= relNearZero)
+	(*rhs)[i] = 0; // set near zero's to zero to compensate for round-off
   }
   
   num_zero_rows = 3 - pivoting_row;
@@ -234,38 +234,38 @@ bool Matrix3::solveParticularReduced(const Vector& rhs, Vector& xp,
   double x, y, z;
   switch (num_zero_rows) {
   case 0:
-    // x = rhs(0), y = rhs(1), z = rhs(2)
+    // x = rhs[0], y = rhs[1], z = rhs[2]
     xp = rhs;
     return true; // has solution
     
   case 1:
     // {{a, b, c} {0, d, e} {0, 0, 0}}, line solution
-    if (rhs(2) != 0) // 0*x + 0*y + 0*z = rhs.z
+    if (rhs[2] != 0) // 0*x + 0*y + 0*z = rhs.z
       return false;
     
     if (mat3[1][1] == 0) {
       // {{1, b, 0} {0, 0, 1} {0, 0, 0}} or {{0, 1, 0} {0, 0, 1} {0, 0, 0}}
 
-      // z = rhs(1)
-      z = rhs(1);
+      // z = rhs[1]
+      z = rhs[1];
 
       if (mat3[0][0] == 0) {
 	// {{0, 1, 0} {0, 0, 1} {0, 0, 0}}
-	y = rhs(0); // y = rhs(0)
+	y = rhs[0]; // y = rhs[0]
 	x = 0; // arbitrary choice -- for simplicity
       }
       else {
 	// {{1, b, 0} {0, 0, 1} {0, 0, 0}}
 	y = 0; // arbitrary choice -- for simplicity
-	x = rhs(0); // x + b*(y=0) = rhs(0) -> x = rhs(0)
+	x = rhs[0]; // x + b*(y=0) = rhs[0] -> x = rhs[0]
       }
     }
     else {
       // {{1, 0, c} {0, 1, e} {0, 0, 0}}, a,d nonzero -> line solution
 
       z = 0;  // since z can be anything, use z = 0 for simplicity
-      y = rhs(1); // y + e*(z=0) = rhs(1) -> y = rhs(1)
-      x = rhs(0); // x + c*(z=0) = rhs(0) -> x = rhs(0)
+      y = rhs[1]; // y + e*(z=0) = rhs[1] -> y = rhs[1]
+      x = rhs[0]; // x + c*(z=0) = rhs[0] -> x = rhs[0]
     }
 
     xp = Vector(x, y, z);
@@ -275,7 +275,7 @@ bool Matrix3::solveParticularReduced(const Vector& rhs, Vector& xp,
     // {{1, b, c} {0, 0, 0} {0, 0, 0}} or
     // {{0, 1, c} {0, 0, 0} {0, 0, 0}} or
     // {{0, 0, 1} {0, 0, 0} {0, 0, 0}} or
-    if ( rhs(1) != 0 || rhs(2) != 0) 
+    if ( rhs[1] != 0 || rhs[2] != 0) 
       return false; // 0*x + 0*y + 0*z = rhs.y = rhs.z
     
     // find the first non-zero element in row 0
@@ -287,7 +287,7 @@ bool Matrix3::solveParticularReduced(const Vector& rhs, Vector& xp,
     // the other two 0 because that is perfectly valid and
     // for simplicity.
     xp = Vector(0, 0, 0);
-    xp(i) = rhs(0);
+    xp[i] = rhs[0];
 
     return true;
   case 3:
@@ -327,29 +327,29 @@ std::vector<Vector> Matrix3::solveHomogenousReduced(int num_zero_rows) const
     Vector v;
     if (mat3[1][1] == 0) {
       // A = {{a, b, c} {0, 0, 1} {0, 0, 0}
-      v(2) = 0; // e*z = 0, e != 0 -> z = 0
+      v[2] = 0; // e*z = 0, e != 0 -> z = 0
       if (mat3[0][0] == 0) {
 	// A = {{0, 1, c} {0, 0, 1} {0, 0, 0}
 	// y + c*z = 0 -> y = 0
-	v(1) = 0; // y = 0;
-	v(0) = 1; // x is arbitrary (non-zero)
+	v[1] = 0; // y = 0;
+	v[0] = 1; // x is arbitrary (non-zero)
       }
       else {
 	// A = {{1, b, c} {0, 0, 1} {0, 0, 0}
-	v(1) = 1; // y is arbitrary (non-zer0)
+	v[1] = 1; // y is arbitrary (non-zer0)
 	// x + b*y + c*0 = 0 -> x + b*y = 0 -> x = -b*y = -b
-	v(0) = -mat3[0][1];
+	v[0] = -mat3[0][1];
       }
     }
     else {
       // A = {{1, b, c} {0, 1, e} {0, 0, 0}
-      v(2) = 1; // z is arbitrary (non-zero)
+      v[2] = 1; // z is arbitrary (non-zero)
 
       // y + e*z = 0 -> y = -e*z = -e
-      v(1) = -mat3[1][2];
+      v[1] = -mat3[1][2];
 
       //  x + b*y + c*z -> x = -(b*y + c*z) = -(b*y + c) 
-      v(0) = -(mat3[0][1] * v(1) + mat3[0][2]);
+      v[0] = -(mat3[0][1] * v[1] + mat3[0][2]);
     }
     basis_vectors[0] = v;
     break;

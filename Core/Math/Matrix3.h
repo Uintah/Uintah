@@ -423,9 +423,9 @@ inline Matrix3 Matrix3::operator * (const Matrix3 &m3) const
 
 inline Vector Matrix3::operator * (const Vector& V) const
 {
-  return Vector(mat3[0][0] * V(0) + mat3[0][1] * V(1) + mat3[0][2] * V(2),
-		mat3[1][0] * V(0) + mat3[1][1] * V(1) + mat3[1][2] * V(2),
-		mat3[2][0] * V(0) + mat3[2][1] * V(1) + mat3[2][2] * V(2));
+  return Vector(mat3[0][0] * V[0] + mat3[0][1] * V[1] + mat3[0][2] * V[2],
+		mat3[1][0] * V[0] + mat3[1][1] * V[1] + mat3[1][2] * V[2],
+		mat3[2][0] * V[0] + mat3[2][1] * V[1] + mat3[2][2] * V[2]);
 }
 
 

@@ -1101,8 +1101,8 @@ void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
 	 pTemperatureGradient[idx] = Vector(0.0,0.0,0.0);
          for (int k = 0; k < d_8or27; k++){
              for (int j = 0; j<3; j++) {
-               pTemperatureGradient[idx](j) += 
-                    gTemperature[ni[k]] * d_S[k](j) * oodx[j];
+               pTemperatureGradient[idx][j] += 
+                    gTemperature[ni[k]] * d_S[k][j] * oodx[j];
              }
          }
       }
