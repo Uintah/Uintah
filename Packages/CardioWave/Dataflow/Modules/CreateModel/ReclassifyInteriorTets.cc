@@ -49,7 +49,6 @@ ReclassifyInteriorTets::~ReclassifyInteriorTets(){
 
 void ReclassifyInteriorTets::execute(){
   double threshold = atof(threshold_.get().c_str());
-  cerr << "threshold = "<<threshold<<"\n";
 
   // must find ports and have valid data on inputs
   FieldIPort *imesh = (FieldIPort*)get_iport("TetsIn");
@@ -71,12 +70,12 @@ void ReclassifyInteriorTets::execute(){
 
   TetVolField<Vector> *tv_old = dynamic_cast<TetVolField<Vector> *>(meshH.get_rep());
   if (!tv_old) {
-    cerr << "Error -- input field wasn't a TetVolField<Vector>\n";
+    error("Input field wasn't a TetVolField<Vector>.");
     return;
   }
   
   if (tv_old->data_at() != Field::CELL) {
-    cerr << "Error -- data must be at the cells for reclassification.\n";
+    error("Data must be at the cells for reclassification.");
     return;
   }
 
@@ -90,7 +89,6 @@ void ReclassifyInteriorTets::execute(){
   mesh->size(ncells);
 
   int tag = atoi(tag_.get().c_str());
-  cerr << "tag = "<<tag<<"\n";
 
   // copy the fdata for valid nodes
   TetVolField<Vector> *tv_new = scinew TetVolField<Vector>(mesh, Field::CELL);

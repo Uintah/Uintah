@@ -39,9 +39,6 @@
 
 namespace CardioWave {
 
-using std::cerr;
-using std::endl;
-
 using namespace SCIRun;
 
 class HexToTet : public Module {

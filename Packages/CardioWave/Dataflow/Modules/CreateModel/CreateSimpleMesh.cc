@@ -66,10 +66,9 @@ CreateSimpleMesh::~CreateSimpleMesh(){
 }
 
 
-void CreateSimpleMesh::execute(){
-
-
-
+void
+CreateSimpleMesh::execute()
+{
   int xdim = xdim_.get();
   int ydim = xdim_.get();
   int zdim = xdim_.get();
@@ -89,23 +88,23 @@ void CreateSimpleMesh::execute(){
   LatVolField<int> *fld = scinew LatVolField<int>(mesh, Field::NODE);
   Vector v1(fib1x, fib1y, fib1z);
   if (!v1.length()) {
-    cerr << "Error -- fib1 was zero length\n";
+    error("fib1 was zero length.");
     return;
   }
   v1.normalize();
   Vector v2(fib2x, fib2y, fib2z);
   if (!v2.length()) {
-    cerr << "Error -- fib2 was zero length\n";
+    error("fib2 was zero length.");
     return;
   }
   v2.normalize();
   Vector v3 = Cross(v1,v2);
   if (!v3.length()) {
-    cerr << "Error -- fib1 and fib2 need to be in different directions!\n";
+    error("fib1 and fib2 need to be in different directions!");
     return;
   }
   if (v3.length() < .99 || v3.length() > 1.01) {
-    cerr << "Corrected fib2 to make it orthogonal to fib1.\n";
+    remark("Corrected fib2 to make it orthogonal to fib1.");
   }
 
   v3.normalize();
