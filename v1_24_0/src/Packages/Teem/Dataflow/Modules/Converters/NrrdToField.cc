@@ -98,7 +98,7 @@ public:
 
   // connectH is a handle to the nrrd of connections. The connections
   // nrrd should be a 2D array of pxn where n is the number of connections
-  // and p is the number of points per cell type.
+  // and p is the number of points per element type.
 
   // build_eigens should be set to 1 if the for a field of vectors,
   // the eigendecomposition should be computed.  if data is scalar
@@ -106,7 +106,7 @@ public:
 
   // permute should be 1 if the data is in k x j x i format (FORTRAN)
 
-  // For unstructured data with 4 points per cell, there is ambiguity
+  // For unstructured data with 4 points per element, there is ambiguity
   // whether or not it is a tet or quad.  Set to "Auto" to try to 
   // determine based on Nrrd properties or "Tet" or "Quad".  If it
   // in unclear and "Auto" has been selected, it will default to "Tet".
@@ -504,85 +504,85 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
       }
     }
 
-    // If there is a cell type property make sure it matches what is 
+    // If there is an elem type property make sure it matches what is 
     // found automatically.
-    string cell_type = "Auto";
+    string elem_type = "Auto";
     int nconnections = 0;
 
-    if ( connectH->get_property( "Cell Type",property )) {
+    if ( connectH->get_property( "Elem Type",property )) {
       if( property.find( "Curve" ) != string::npos ) {
-	cell_type = "Curve";
+	elem_type = "Curve";
 	nconnections = 2;
       } else if( property.find( "Tri" ) != string::npos ) {
-	cell_type = "Tri";
+	elem_type = "Tri";
 	nconnections = 3;
       } else if( property.find( "Tet" ) != string::npos ) {
-	cell_type = "Tet";
+	elem_type = "Tet";
 	nconnections = 4;
       } else if( property.find( "Quad" ) != string::npos ) {
-	cell_type = "Quad";
+	elem_type = "Quad";
 	nconnections = 4;
       } else if( property.find( "Prism" ) != string::npos ) {
-	cell_type = "Prism";
+	elem_type = "Prism";
 	nconnections = 6;
       } else if( property.find( "Hex" ) != string::npos ) {
-	cell_type = "Hex";
+	elem_type = "Hex";
 	nconnections = 8;
       }
     }
 
     if( nconnections == 0 ) {
-      if (pointsH->get_property( "Cell Type",property )) {
-	warning("Cell Type defined in Points nrrd instead of Connectivity nrrd.");
+      if (pointsH->get_property( "Elem Type",property )) {
+	warning("Elem Type defined in Points nrrd instead of Connectivity nrrd.");
 	if( property.find( "Curve" ) != string::npos ) {
-	  cell_type = "Curve";
+	  elem_type = "Curve";
 	  nconnections = 2;
 	} else if( property.find( "Tri" ) != string::npos ) {
-	  cell_type = "Tri";
+	  elem_type = "Tri";
 	  nconnections = 3;
 	} else if( property.find( "Tet" ) != string::npos ) {
-	  cell_type = "Tet";
+	  elem_type = "Tet";
 	  nconnections = 4;
 	} else if( property.find( "Quad" ) != string::npos ) {
-	  cell_type = "Quad";
+	  elem_type = "Quad";
 	  nconnections = 4;
 	} else if( property.find( "Prism" ) != string::npos ) {
-	  cell_type = "Prism";
+	  elem_type = "Prism";
 	  nconnections = 6;
 	} else if( property.find( "Hex" ) != string::npos ) {
-	  cell_type = "Hex";
+	  elem_type = "Hex";
 	  nconnections = 8;
 	}
       }
     }
 
     if( nconnections == 0 && has_data_ ) {
-      if (dataH->get_property( "Cell Type",property )) {
-	warning("Cell Type defined in Data nrrd instead of Connectivity nrrd.");
+      if (dataH->get_property( "Elem Type",property )) {
+	warning("Elem Type defined in Data nrrd instead of Connectivity nrrd.");
 	if( property.find( "Curve" ) != string::npos ) {
-	  cell_type = "Curve";
+	  elem_type = "Curve";
 	  nconnections = 2;
 	} else if( property.find( "Tri" ) != string::npos ) {
-	  cell_type = "Tri";
+	  elem_type = "Tri";
 	  nconnections = 3;
 	} else if( property.find( "Tet" ) != string::npos ) {
-	  cell_type = "Tet";
+	  elem_type = "Tet";
 	  nconnections = 4;
 	} else if( property.find( "Quad" ) != string::npos ) {
-	  cell_type = "Quad";
+	  elem_type = "Quad";
 	  nconnections = 4;
 	} else if( property.find( "Prism" ) != string::npos ) {
-	  cell_type = "Prism";
+	  elem_type = "Prism";
 	  nconnections = 6;
 	} else if( property.find( "Hex" ) != string::npos ) {
-	  cell_type = "Hex";
+	  elem_type = "Hex";
 	  nconnections = 8;
 	}
       }
     }
 
     if( nconnections && nconnections != pts ) {
-      warning("The cell type properties and the number of connections found do not match.");
+      warning("The elem type properties and the number of connections found do not match.");
     }
 
     int connectivity = 0;
@@ -608,14 +608,14 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
       } else  if (quad_or_tet == "Tet") {
 	mHandle = scinew TetVolMesh();
 	connectivity = 4;
-      } else if (cell_type == "Tet") {
+      } else if (elem_type == "Tet") {
 	mHandle = scinew TetVolMesh();
 	connectivity = 4;	    
-      } else if (cell_type == "Quad") {
+      } else if (elem_type == "Quad") {
 	mHandle = scinew QuadSurfMesh();
 	connectivity = 4;
       } else {
-	error("Auto detection of Cell Type using properties failed.");
+	error("Auto detection of Elem Type using properties failed.");
 	error("Connections Nrrd indicates 4 points per connection. Please indicate whether a Tet or Quad in UI.");
 	has_error_ = true;
 	return 0;
@@ -693,7 +693,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
 	}
 	
 	if( topology_ == UNKNOWN ) {
-	  if (pointsH->get_property( "Cell Type", property)) { 
+	  if (pointsH->get_property( "Elem Type", property)) { 
 	    if ( property.find( "Curve") != string::npos ) {
 	      topology_ = UNSTRUCTURED;
 	      mHandle = scinew PointCloudMesh();
@@ -719,7 +719,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
 	  }
 	
 	  if( topology_ == UNKNOWN ) {
-	    if (dataH->get_property( "Cell Type", property)) { 
+	    if (dataH->get_property( "Elem Type", property)) { 
 	      if ( property.find( "Curve") != string::npos ) {
 		topology_ = UNSTRUCTURED;
 		mHandle = scinew PointCloudMesh();
