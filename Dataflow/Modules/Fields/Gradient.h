@@ -84,8 +84,9 @@ GradientAlgoT<IFIELD, OFIELD>::execute(FieldHandle field_h)
 
   while (in != end)
   {
-    imesh->get_center(pt, *in);
-    ifield->get_gradient(vec, pt);
+//    imesh->get_center(pt, *in);
+//    ifield->get_gradient(vec, pt);
+    vec=ifield->cell_gradient(*in);
     ofield->set_value(vec, *out);
     ++in; ++out;
   }
@@ -128,8 +129,9 @@ GradientAlgoT<FIELD, TYPE>::execute(FieldHandle field_h)
 
   while (in != end)
   {
-    imesh->get_center(pt, *in);
-    ifield->get_gradient(vec, pt);
+//    imesh->get_center(pt, *in);
+//    ifield->get_gradient(vec, pt);
+    vec=ifield->cell_gradient(*in);
     ofield->set_value(vec, *out);
     ++in; ++out;
   }
