@@ -50,13 +50,14 @@ DONE      Background editor
       Clipping plane editor
       More Light types
 DONE      Nix Material Stacks
-	NNix objdraw - pass lighting innnto objdraw
-	Nit lit member
+      NNix objdraw - pass lighting innnto objdraw
+      Nit lit member
+      Fix picking with new draw functions
       Finish Headlight for multiple bounces
       Fix segfault when autoview on no objects
       Raytracer
 DONE	 Progressive refinement
-	 Pass Material* instead of MaterialHandle
+DONE	 Pass Material* instead of MaterialHandle
 	 Finish intersection routines
 	    Cone
 	    Cylinder
