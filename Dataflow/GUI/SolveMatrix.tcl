@@ -13,7 +13,7 @@ itcl_class PSECommon_Matrix_SolveMatrix {
 	global $this-use_previous_so
 	global $this-np
 	
-        set $this-target_error 1.e-3
+        set $this-target_error 1.0
 	set $this-method conjugate_gradient_sci
         set $this-precond Diag_P
 	set $this-orig_error 0
@@ -107,13 +107,13 @@ itcl_class PSECommon_Matrix_SolveMatrix {
 	pack $w.precond -side top -fill x -pady 2
 	
 	global $this-target_error
-	set $this-target_error 0.001
 	expscale $w.target_error -orient horizontal -label "Target error:" \
 		-variable $this-target_error -command ""
+
 	pack $w.target_error -side top -fill x -pady 2
 
 	scale $w.maxiter -orient horizontal -label "Maximum Iterations:" \
-		-variable $this-maxiter -from 0 -to 400
+		-variable $this-maxiter -from 0 -to 1000
 	pack $w.maxiter -side top -fill x -pady 2
 	
 	checkbutton $w.use_prev -variable $this-use_previous_soln \
