@@ -14,6 +14,7 @@ using namespace Uintah::ICESpace;
 IdealGas::IdealGas(ProblemSpecP& ps)
 {
    // Constructor
+  ps->require("gas_constant",d_gas_constant);
   lb = scinew ICELabel();
 
 }
@@ -21,6 +22,12 @@ IdealGas::IdealGas(ProblemSpecP& ps)
 IdealGas::~IdealGas()
 {
   delete lb;
+}
+
+
+double IdealGas::getGasConstant() const
+{
+  return d_gas_constant;
 }
 
 void IdealGas::initializeEOSData(const Patch* patch, const ICEMaterial* matl,
@@ -183,6 +190,9 @@ void IdealGas::computePressEOS(const Patch* patch,
 
 
 //$Log$
+//Revision 1.6  2000/10/27 23:39:54  jas
+//Added gas constant to lookup.
+//
 //Revision 1.5  2000/10/14 02:49:50  jas
 //Added implementation of compute equilibration pressure.  Still need to do
 //the update of BCS and hydrostatic pressure.  Still some issues with
