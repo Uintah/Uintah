@@ -202,6 +202,7 @@
       <creationFunction>make_BldEEGMesh</creationFunction>
     </implementation>
   </dataflow-component>
+  <!-- INSERT NEW EEG COMPONENT HERE -->
   </scirun-library>
   <scirun-library category="EGI">
   <soNames>
@@ -241,6 +242,7 @@
       <creationFunction>make_Anneal</creationFunction>
     </implementation>
   </dataflow-component>
+  <!-- INSERT NEW EGI COMPONENT HERE -->
   </scirun-library>
   <scirun-library category="FDM">
   <soNames>
@@ -280,6 +282,7 @@
       <creationFunction>make_BuildFDMatrix</creationFunction>
     </implementation>
   </dataflow-component>
+  <!-- INSERT NEW FDM COMPONENT HERE -->
   </scirun-library>
   <scirun-library category="FEM">
   <soNames>
@@ -431,6 +434,7 @@
       <creationFunction>make_ErrorMetric</creationFunction>
     </implementation>
   </dataflow-component>
+  <!-- INSERT NEW FEM COMPONENT HERE -->
   </scirun-library>
   <scirun-library category="ISL">
   <soNames>
@@ -518,6 +522,7 @@
       <creationFunction>make_OptDip</creationFunction>
     </implementation>
   </dataflow-component>
+  <!-- INSERT NEW ISL COMPONENT HERE -->
   </scirun-library>
   <scirun-library category="MEG">
   <soNames>
@@ -637,6 +642,7 @@
       <creationFunction>make_FieldCurl</creationFunction>
     </implementation>
   </dataflow-component>
+  <!-- INSERT NEW MEG COMPONENT HERE -->
   </scirun-library>
   <scirun-library category="Path">
   <soNames>
@@ -660,6 +666,7 @@
       <creationFunction>make_EditPath</creationFunction>
     </implementation>
   </dataflow-component>
+  <!-- INSERT NEW Path COMPONENT HERE -->
   </scirun-library>
   <scirun-library category="SiRe">
   <soNames>
@@ -731,6 +738,7 @@
       <creationFunction>make_SiReCrunch</creationFunction>
     </implementation>
   </dataflow-component>
+  <!-- INSERT NEW SiRe COMPONENT HERE -->
   </scirun-library>
   <scirun-library category="Readers">
   <soNames>
@@ -818,6 +826,7 @@
       <creationFunction>make_SigmaSetReader</creationFunction>
     </implementation>
   </dataflow-component>
+  <!-- INSERT NEW Readers COMPONENT HERE -->
   </scirun-library>
   <scirun-library category="CS684">
   <soNames>
@@ -937,6 +946,7 @@
       <creationFunction>make_XYZtoRGB</creationFunction>
     </implementation>
   </dataflow-component>
+  <!-- INSERT NEW CS684 COMPONENT HERE -->
   </scirun-library>
   <scirun-library category="Tensor">
   <soNames>
@@ -1008,6 +1018,7 @@
       <creationFunction>make_Flood</creationFunction>
     </implementation>
   </dataflow-component>
+  <!-- INSERT NEW Tensor COMPONENT HERE -->
   </scirun-library>
   <scirun-library category="Writers">
   <soNames>
@@ -1095,5 +1106,7 @@
       <creationFunction>make_SigmaSetWriter</creationFunction>
     </implementation>
   </dataflow-component>
+  <!-- INSERT NEW Writers COMPONENT HERE -->
   </scirun-library>
+  <!-- INSERT NEW CATEGORY HERE -->
 </package>
