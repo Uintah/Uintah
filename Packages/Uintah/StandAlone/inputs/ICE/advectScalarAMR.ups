@@ -18,6 +18,7 @@
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-5      </delt_init>
+       <max_iterations>     100         </max_iterations>
        <timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
    
@@ -137,20 +138,31 @@
               <extraCells>   [1,1,1]    </extraCells>
               <patches>      [1,1,1]    </patches>
            </Box>
-           <spacing>         [0.2,0.2,0.2]    </spacing>
+           <spacing>         [0.25,0.25,0.25]    </spacing>
        </Level>
-<!-- 
+
        <Level>
            <Box label="2">
-              <lower>        [2,2,2]    </lower>
-              <upper>        [4,4,4]    </upper>
+              <lower>        [.75,0.25,0.25]    </lower>
+              <upper>        [1.25,4.75,4.75]    </upper>
               <extraCells>   [1,1,1]    </extraCells>
               <patches>      [1,1,1]    </patches>
            </Box>
-           <spacing>         [0.1,0.1,0.1]    </spacing>
+           <spacing>         [0.125,0.125,0.125]    </spacing>
        </Level>
- -->
-    </Grid>    
+  
+    </Grid> 
+    <!--____________________________________________________________________-->
+    <!--    A M R   G R I D                                                 -->
+    <!--____________________________________________________________________-->   
+    <Regridder>
+      <max_levels>4</max_levels>
+      <cell_refinement_ratio>    [[2,2,2]]  </cell_refinement_ratio>
+      <lattice_refinement_ratio> [[2,2,2],[2,2,2],[2,2,2]]   </lattice_refinement_ratio>
+      <cell_creation_dilation>   [2,2,2]   </cell_creation_dilation>   
+      <cell_deletion_dilation>   [2,2,2]   </cell_deletion_dilation>   
+      <min_boundary_cells>       [3,3,3]   </min_boundary_cells>
+    </Regridder>   
     <!--____________________________________________________________________-->
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
@@ -163,7 +175,8 @@
       <save label="mom_L_ME_CC"/>
       <save label="rho_CC"/>
       <save label="vel_CC"/> 
-      <save label="scalar-f"/>     
+      <save label="scalar-f"/>
+      <save label="refineFlag"/> 
       <checkpoint interval="0.005" cycle="2"/>"
    </DataArchiver>
 
@@ -171,8 +184,8 @@
       <dbg_timeStart>       0.00        </dbg_timeStart>
       <dbg_timeStop>        0.01        </dbg_timeStop>
       <dbg_outputInterval>  1e-9        </dbg_outputInterval>
-      <dbg_BeginIndex>      [-1,-1,-1]  </dbg_BeginIndex>
-      <dbg_EndIndex>        [9,9,9]     </dbg_EndIndex>
+      <dbg_BeginIndex>      [-1,-1,9]  </dbg_BeginIndex>
+      <dbg_EndIndex>        [3,3,10]     </dbg_EndIndex>
       <dbg_Matls>           [0]         </dbg_Matls>
       <dbg_Level>           1         </dbg_Level>
   <!--
@@ -196,6 +209,14 @@
         <max_iteration_equilibration> 50 </max_iteration_equilibration>
         <advection type = "FirstOrder" />
         <solution technique = "EqForm" />
+        <!--if gradient is > knob then refine -->
+        <AMR_Refinement_Criteria_Thresholds>
+          <Density>     1e100    </Density>
+          <Temperature> 1e100    </Temperature>
+          <Pressure>    1e100    </Pressure>
+          <VolumeFrac>  1e100    </VolumeFrac>
+          <Velocity>    1e100    </Velocity>
+        </AMR_Refinement_Criteria_Thresholds>
       </ICE>        
     </CFD>
 
