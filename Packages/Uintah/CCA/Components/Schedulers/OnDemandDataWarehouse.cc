@@ -52,7 +52,6 @@ using namespace Uintah;
 extern Mutex cerrLock;
 extern DebugStream mixedDebug;
 
-Mutex getMPIBuffLock( "getMPIBuffLock" );
 Mutex ssLock( "send state lock" );
 
 #define PARTICLESET_TAG		0x1000000
@@ -283,9 +282,7 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, DependencyBatch* batch,
       mixedDebug << "sendset has " << numParticles << " particles\n";
 
       if( numParticles > 0){
-	getMPIBuffLock.lock(); // Dd: ??
 	 var->getMPIBuffer(buffer, sendset);
-	getMPIBuffLock.unlock(); // Dd: ??
 	 buffer.addSendlist(var->getRefCounted());
 	 buffer.addSendlist(var->getParticleSubset());
       }
@@ -297,9 +294,7 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, DependencyBatch* batch,
 	throw UnknownVariable(label->getName(), patch, matlIndex,
 			      "in sendMPI");
       NCVariableBase* var = d_ncDB.get(label, matlIndex, patch);
-	getMPIBuffLock.lock(); // Dd: ??
       var->getMPIBuffer(buffer, dep->low, dep->high);
-	getMPIBuffLock.unlock(); // Dd: ??
       buffer.addSendlist(var->getRefCounted());
     }
     break;
@@ -309,9 +304,7 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, DependencyBatch* batch,
 	throw UnknownVariable(label->getName(), patch, matlIndex,
 			      "in sendMPI");
       CCVariableBase* var = d_ccDB.get(label, matlIndex, patch);
-	getMPIBuffLock.lock(); // Dd: ??
       var->getMPIBuffer(buffer, dep->low, dep->high);
-	getMPIBuffLock.unlock(); // Dd: ??
       buffer.addSendlist(var->getRefCounted());
     }
     break;
@@ -321,9 +314,7 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, DependencyBatch* batch,
 	throw UnknownVariable(label->getName(), patch, matlIndex,
 			      "in sendMPI");
       SFCXVariableBase* var = d_sfcxDB.get(label, matlIndex, patch);
-	getMPIBuffLock.lock(); // Dd: ??
       var->getMPIBuffer(buffer, dep->low, dep->high);
-	getMPIBuffLock.unlock(); // Dd: ??
       buffer.addSendlist(var->getRefCounted());
     }
     break;
@@ -333,9 +324,7 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, DependencyBatch* batch,
 	throw UnknownVariable(label->getName(), patch, matlIndex,
 			      "in sendMPI");
       SFCYVariableBase* var = d_sfcyDB.get(label, matlIndex, patch);
-	getMPIBuffLock.lock(); // Dd: ??
       var->getMPIBuffer(buffer, dep->low, dep->high);
-	getMPIBuffLock.unlock(); // Dd: ??
       buffer.addSendlist(var->getRefCounted());
     }
     break;
@@ -345,10 +334,8 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, DependencyBatch* batch,
 	throw UnknownVariable(label->getName(), patch, matlIndex,
 			      "in sendMPI");
       SFCZVariableBase* var = d_sfczDB.get(label, matlIndex, patch);
-	getMPIBuffLock.lock(); // Dd: ??
       var->getMPIBuffer(buffer, dep->low, dep->high);
       buffer.addSendlist(var->getRefCounted());
-	getMPIBuffLock.unlock(); // Dd: ??
     }
     break;
   default:
@@ -397,8 +384,6 @@ OnDemandDataWarehouse::recvMPI(BufferInfo& buffer,
       }
       ParticleSubset* pset = old_dw->getParticleSubset(matlIndex, patch);
 
-      getMPIBuffLock.lock(); // Dd: ??
-
       Variable* v = label->typeDescription()->createInstance();
       ParticleVariableBase* var = dynamic_cast<ParticleVariableBase*>(v);
       ASSERT(var != 0);
@@ -407,8 +392,6 @@ OnDemandDataWarehouse::recvMPI(BufferInfo& buffer,
       if(pset->numParticles() > 0){
 	var->getMPIBuffer(buffer, pset);
       }
-
-      getMPIBuffLock.unlock(); // Dd: ??
 
       d_lock.writeLock();
       d_particleDB.put(label, matlIndex, patch, var, true);
@@ -473,9 +456,7 @@ OnDemandDataWarehouse::recvMPIGridVar(DWDatabase& db, BufferInfo& buffer,
   ASSERTEQ(Min(var->getLow(), dep->low), var->getLow());
   ASSERTEQ(Max(var->getHigh(), dep->high), var->getHigh());
   
-  getMPIBuffLock.lock(); // Dd: ??
   var->getMPIBuffer(buffer, dep->low, dep->high);
-  getMPIBuffLock.unlock(); // Dd: ??
 }
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
@@ -509,17 +490,13 @@ OnDemandDataWarehouse::reduceMPI(const VarLabel* label,
   int sendcount;
   MPI_Datatype senddatatype;
   MPI_Op sendop;
-	getMPIBuffLock.lock(); // Dd: ??
   var->getMPIBuffer(sendbuf, sendcount, senddatatype, sendop);
-	getMPIBuffLock.unlock(); // Dd: ??
   ReductionVariableBase* tmp = var->clone();
   void* recvbuf;
   int recvcount;
   MPI_Datatype recvdatatype;
   MPI_Op recvop;
-	getMPIBuffLock.lock(); // Dd: ??
   tmp->getMPIBuffer(recvbuf, recvcount, recvdatatype, recvop);
-	getMPIBuffLock.unlock(); // Dd: ??
   ASSERTEQ(recvcount, sendcount);
   ASSERTEQ(senddatatype, recvdatatype);
   ASSERTEQ(recvop, sendop);
