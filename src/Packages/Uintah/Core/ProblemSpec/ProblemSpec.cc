@@ -415,52 +415,45 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
 ProblemSpecP ProblemSpec::get(const std::string& name, 
                            vector<double>& value)
 {
-
-  std::string string_value;
-  ProblemSpecP ps = this;
-  ProblemSpecP node = findBlock(name);
-  if (node == 0) {
-    ps = 0;
-    return ps;
+  std::vector<std::string> string_values;
+  if(!this->get(name, string_values)) {
+    return 0;
   }
-  else {
-    DOMNode* found_node = node->d_node;
-    for (DOMNode* child = found_node->getFirstChild(); child != 0;
-        child = child->getNextSibling()) {
-      if (child->getNodeType() == DOMNode::TEXT_NODE) {
-	const char *s = XMLString::transcode(child->getNodeValue());
-	string_value = std::string(s);
-	delete [] s;
-
-	istringstream in(string_value);
-	char c,next;
-	string result;
-	while (!in.eof()) {
-         in >> c;
-         if (c == '[' || c == ',' || c == ' ' || c == ']')
-           continue;
-         next = in.peek();
-         result += c;
-         if (next == ',' ||  next == ' ' || next == ']') {
-           // turn the result into a number
-           checkForInputError(result, "double"); 
-           
-           double val = atof(result.c_str());
-           value.push_back(val);
-           result.erase();
-         }
-	}
-      }
-    }
+  
+  for(std::vector<std::string>::const_iterator vit(string_values.begin());
+      vit!=string_values.end();vit++) {
+    const std::string v(*vit);
+    
+    checkForInputError(v, "double"); 
+    value.push_back( atof(v.c_str()) );
   }
-          
-  return ps;
-
+  
+  return this;
 }
 
 // value should probably be empty before calling this...
 ProblemSpecP ProblemSpec::get(const std::string& name, 
                            vector<int>& value)
+{
+  std::vector<std::string> string_values;
+  if(!this->get(name, string_values)) {
+    return 0;
+  }
+  
+  for(std::vector<std::string>::const_iterator vit(string_values.begin());
+      vit!=string_values.end();vit++) {
+    const std::string v(*vit);
+    
+    checkForInputError(v, "int"); 
+    value.push_back( atoi(v.c_str()) );
+  }
+  
+  return this;
+} 
+
+// value should probably be empty before calling this...
+ProblemSpecP ProblemSpec::get(const std::string& name, 
+                              vector<std::string>& value)
 {
 
   std::string string_value;
@@ -478,7 +471,7 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
 	const char *s = XMLString::transcode(child->getNodeValue());
 	string_value = std::string(s);
 	delete [] s;
-
+        
 	istringstream in(string_value);
 	char c,next;
 	string result;
@@ -489,20 +482,16 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
          next = in.peek();
          result += c;
          if (next == ',' ||  next == ' ' || next == ']') {
-           // turn the result into a number
-
-           checkForInputError(result, "int"); 
-           int val = atoi(result.c_str());
-           value.push_back(val);
+           // push next string onto stack
+           value.push_back(result);
            result.erase();
          }
 	}
       }
     }
   }
-          
+  
   return ps;
-
 } 
 
 ProblemSpecP ProblemSpec::get(const std::string& name, 
