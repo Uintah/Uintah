@@ -101,9 +101,23 @@ protected:
 
   int increment(int which, int lower, int upper);
 
+  bool is_mergeable(NrrdDataHandle h1, NrrdDataHandle h2) const;
+
 protected:
   GuiInt         power_app_;
   GuiString      power_app_cmd_;
+
+  GuiFilename filename_;
+  GuiString datasets_;
+  GuiString dumpname_;
+  GuiString ports_;
+
+  GuiInt nDims_;
+
+  GuiInt mergeData_;
+  GuiInt assumeSVT_;
+  GuiInt animate_;
+
   GuiString      animate_frame_;
   GuiString	 animate_tab_;
   GuiString	 basic_tab_;
@@ -120,23 +134,11 @@ protected:
   GuiString      execmode_;
   GuiInt         delay_;
   GuiInt         inc_amount_;
+  //update_type_ must be declared after selectable_max_ which is
+  //traced in the tcl code. If update_type_ is set to Auto having it
+  //last will prevent the net from executing when it is instantiated.
+  GuiString      update_type_;
   int            inc_;
-  int            last_input_;
-  NrrdDataHandle last_output_;
-
-  bool is_mergeable(NrrdDataHandle h1, NrrdDataHandle h2) const;
-
-  GuiFilename filename_;
-  GuiString datasets_;
-  GuiString dumpname_;
-  GuiString ports_;
-
-  GuiInt nDims_;
-
-  GuiInt mergeData_;
-  GuiInt assumeSVT_;
-
-  GuiInt animate_;
 
   vector< GuiInt* > gDims_;
   vector< GuiInt* > gStarts_;

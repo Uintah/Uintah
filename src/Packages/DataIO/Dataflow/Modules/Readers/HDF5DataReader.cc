@@ -66,6 +66,18 @@ HDF5DataReader::HDF5DataReader(GuiContext *context)
   : Module("HDF5DataReader", context, Source, "Readers", "DataIO"),
     power_app_(context->subVar("power_app")),
     power_app_cmd_(context->subVar("power_app_commmand")),
+
+    filename_(context->subVar("filename")),
+    datasets_(context->subVar("datasets")),
+    dumpname_(context->subVar("dumpname")),
+    ports_(context->subVar("ports")),
+
+    nDims_(context->subVar("ndims")),
+
+    mergeData_(context->subVar("mergeData")),
+    assumeSVT_(context->subVar("assumeSVT")),
+    animate_(context->subVar("animate")),
+
     animate_frame_(ctx->subVar("animate_frame")),
     animate_tab_(ctx->subVar("animate_tab")),
     basic_tab_(ctx->subVar("basic_tab")),
@@ -82,21 +94,8 @@ HDF5DataReader::HDF5DataReader(GuiContext *context)
     execmode_(ctx->subVar("execmode")),
     delay_(ctx->subVar("delay")),
     inc_amount_(ctx->subVar("inc-amount")),
+    update_type_(ctx->subVar("update_type")),
     inc_(1),
-    last_input_(-1),
-    last_output_(0),
-
-    filename_(context->subVar("filename")),
-    datasets_(context->subVar("datasets")),
-    dumpname_(context->subVar("dumpname")),
-    ports_(context->subVar("ports")),
-
-    nDims_(context->subVar("ndims")),
-
-    mergeData_(context->subVar("mergeData")),
-    assumeSVT_(context->subVar("assumeSVT")),
-
-    animate_(context->subVar("animate")),
 
     mergedata_(-1),
     assumesvt_(-1),
@@ -338,7 +337,6 @@ void HDF5DataReader::execute() {
 	return;
       }
     } else {
-
       if( nframes-1 != selectable_max_.get() ) {
 	selectable_max_.set(nframes-1);
 	selectable_max_.reset();
