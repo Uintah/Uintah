@@ -99,17 +99,14 @@ void ViscoScram::initializeCMData(const Patch* patch,
 
   ParticleVariable<StateData> statedata;
   ParticleVariable<Matrix3> deformationGradient, pstress;
-  ParticleVariable<double> pCrackRadius;
-  ParticleVariable<double> pRand;
-  new_dw->allocateAndPut(statedata,p_statedata_label, pset);
-  new_dw->allocateAndPut(deformationGradient,lb->pDeformationMeasureLabel,
-			 pset);
-  new_dw->allocateAndPut(pstress,lb->pStressLabel,pset);
-  new_dw->allocateAndPut(pCrackRadius,lb->pCrackRadiusLabel,pset);
-  new_dw->allocateAndPut(pRand,pRandLabel,pset);
+  ParticleVariable<double> pCrackRadius,pRand;
+  new_dw->allocateAndPut(statedata,          p_statedata_label,           pset);
+  new_dw->allocateAndPut(deformationGradient,lb->pDeformationMeasureLabel,pset);
+  new_dw->allocateAndPut(pstress,            lb->pStressLabel,            pset);
+  new_dw->allocateAndPut(pCrackRadius,       lb->pCrackRadiusLabel,       pset);
+  new_dw->allocateAndPut(pRand,              pRandLabel,                  pset);
 
-  for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();
-      iter++){
+  for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
      statedata[*iter].VolumeChangeHeating = 0.0;
      statedata[*iter].ViscousHeating = 0.0;
      statedata[*iter].CrackHeating = 0.0;
@@ -133,18 +130,18 @@ void ViscoScram::allocateCMDataAddRequires(Task* task,
 					   const PatchSet* patch,
 					   MPMLabel* lb) const
 {
-  const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::OldDW,p_statedata_label, Ghost::None);
-  task->requires(Task::OldDW,lb->pDeformationMeasureLabel, Ghost::None);
-  task->requires(Task::OldDW,lb->pStressLabel, Ghost::None);
-  task->requires(Task::OldDW,lb->pCrackRadiusLabel, Ghost::None);
-  task->requires(Task::OldDW,pRandLabel, Ghost::None);
+  task->requires(Task::OldDW, p_statedata_label,            Ghost::None);
+  task->requires(Task::OldDW, lb->pDeformationMeasureLabel, Ghost::None);
+  task->requires(Task::OldDW, lb->pStressLabel,             Ghost::None);
+  task->requires(Task::OldDW, lb->pCrackRadiusLabel,        Ghost::None);
+  task->requires(Task::OldDW, pRandLabel,                   Ghost::None);
 }
 
 
 void ViscoScram::allocateCMDataAdd(DataWarehouse* new_dw,
 				   ParticleSubset* addset,
-				   map<const VarLabel*, ParticleVariableBase*>* newState,
+				   map<const VarLabel*,
+                                   ParticleVariableBase*>* newState,
 				   ParticleSubset* delset,
 				   DataWarehouse* old_dw)
 {
@@ -251,6 +248,8 @@ void ViscoScram::computeStableTimestep(const Patch* patch,
     WaveSpeed = dx/WaveSpeed;
 
     double delT_new = WaveSpeed.minComponent();
+    //Timesteps larger than 1 microsecond cause VS to be unstable
+    delT_new = min(1.e-6, delT_new);
     new_dw->put(delt_vartype(delT_new), lb->delTLabel);
 }
 
@@ -660,6 +659,8 @@ void ViscoScram::computeStressTensor(const PatchSubset* patches,
 
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
+    //Timesteps larger than 1 microsecond cause VS to be unstable
+    delT_new = min(1.e-6, delT_new);
 
     new_dw->put(delt_vartype(delT_new),lb->delTLabel);
     new_dw->put(sum_vartype(se),     lb->StrainEnergyLabel);
