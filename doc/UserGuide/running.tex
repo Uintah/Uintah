@@ -20,8 +20,8 @@
 \label{sec:sciruncmd}
 
 Start \sr{} by typing \keyboard{scirun} in a terminal (\eg \command{xterm})
-window.  Don't start \sr{} in the background, \ie don't type
-\keyboard{scirun \&}.
+window.  \note{Don't start \sr{} in the background, \ie don't type
+\keyboard{scirun \&}}.
 
 The \command{scirun} command is located in the
 \directory{src} directory of the \directory{\sr} install directory.  The
@@ -48,8 +48,10 @@ defined \sr{} networks.  \sr{} will load the specified network.  Network
 files will be discussed in a later section.
 
 \sr{} may encounter errors during start up.  These will be displayed in \sr{}'s
-error message pane (see Figure~\ref{fig:srwindow}).  \AuthorNote{Need to
-  add refs to bug reporting here.}
+error message pane (see Figure~\ref{fig:srwindow}) (These errors should be
+reported the \sr{} development team.  See \secref{Reporting Bugs}{sec:bugs} these
+  errors.
+this window shou
 
 \subsubsection{Anatomy of the Main Window}
 \label{sec:windowanatomy}
@@ -112,7 +114,8 @@ Figure~\ref{fig:srwindow}):
   Pane.  It is located in the upper right corner of the main window(see
   Figure~\ref{fig:srwindow}).  Errors on startup may mean that \sr{} has
   been installed incorrectly or has been installed from a buggy
-  distribution.
+  distribution.  Please \hyperref{report}{(see Section~}{)}{sec:bugs} these
+  errors.
   
 \item[Network Pane] The Network Pane occupies the bottom of the main
   window(see Figure~\ref{fig:srwindow}).  It is used to build and execute
@@ -121,14 +124,15 @@ Figure~\ref{fig:srwindow}):
 
 \end{description}
 
-\subsection{The Terminal Window App}
+\subsection{The Terminal Window}
 \label{sec:termwinapp}
 
-After starting, \sr{} will also run a shell-like application in the terminal
-window.  It will display the prompt \screen{scirun\ra}.  This program is
-actually a modified \dfna{Tool Command Language}{TCL} shell program and it
-is possible to type in \acronym{TCL}'ish \sr{} commands at the prompt. The
-use of this program will be described in a later section.
+After starting, \sr{} will also run a shell-like application in the
+terminal window called the \dfn{\sr{} shell}.  The \sr{} shell displays the
+prompt \screen{scirun\ra}.  This program is actually a modified \dfna{Tool
+  Command Language}{TCL} shell program and it is possible to type in
+\acronym{TCL}'ish \sr{} commands at the prompt. The use of this program
+will be described in \hyperref{a later section}{Section~}{}{sec:termapp}.
 
 
 \subsection{\envvar{SCIRUN\_DATA}}
@@ -146,8 +150,8 @@ directory (of course you may have the dialog look elsewhere).
 
 Quit \sr{} by selecting the \menuitem{Quit} item from the \menu{File} menu
 
-Don't press \keyboard{control-c} to exit \sr.  Doing this will drop you into
-a debugger which is probably not what you want to do.
+\warning{Don't press \keyboard{control-c} to exit \sr.  Doing this will drop you into
+a debugger which is probably not what you want to do}.
 
 
 %%% Local Variables: 

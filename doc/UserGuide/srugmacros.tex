@@ -20,6 +20,11 @@
 \newcommand{\version}{1.0}
 \newcommand{\rob}{Rob MacLeod (macleod@cvrti.utah.edu)}
 \newcommand{\ted}{Ted Dustman (dustman@cvrti.utah.edu)}
+\newcommand{\srug}{BioPSE User's Guide}
+\newcommand{\srdg}{BioPSE Developer's Guide}
+\newcommand{\srig}{BioPSE Installation Guide}
+\newcommand{\viewer}{\emph{Viewer}}
+
 
 % Literal ~ character
 \newcommand{\ltilde}{\symbol{'176}}
@@ -65,6 +70,8 @@
 % Markup text typed at the keyboard.
 \newcommand{\keyboard}[1]{\texttt{#1}} 
 
+\newcommand{\ptext}[1]{\textit{\ab{#1}}}
+
 % Markup text the user might see on his screen.
 \newcommand{\screen}[1]{\texttt{#1}}
 
@@ -93,19 +100,19 @@
 \newcommand{\sciurl}{http://www.sci.utah.edu}
 
 % Call attention to some useful bit of information.
-\newcommand{\Note}[1]{\emph{Note: #1}} 
+\newcommand{\note}[1]{\emph{Note: #1}} 
 
 % Call attention to a warning.
-\newcommand{\Warning}[1]{\emph{Warning: #1}} 
+\newcommand{\warning}[1]{\emph{Warning: #1}} 
 
 % Call attention to a tip.
-\newcommand{\Tip}[1]{\emph{Tip: #1}} 
+\newcommand{\tip}[1]{\emph{Tip: #1}} 
 
 % Env variable markup.
 \newcommand{\envvar}[1]{\texttt{#1}}
 
-% Note to author
-\newcommand{\AuthorNote}[1]{\textbf{Author Notes:[}\emph{#1} \textbf{]}}
+% Markup for the title of a book or article or whatever.
+\newcommand{\etitle}[1]{\texttt{#1}}
 
 % Section command.  This command should be
 % used in place to reference sections (subsections etc.).
@@ -113,8 +120,11 @@
 % page) and the second argument is the section's label
 \newcommand{\secref}[2]{\hyperref[ref]{\emph{#1}}{Section~}{}{#2}}
 
-% Use this in place of missing content
-\newcommand{\ytbd}{\emph{Coming Soon}}
+% Use these in place of missing content.
+\newcommand{\missing}[1]{\emph{#1 - Coming Soon.}}
+
+% Use this to make note of incomplete content.
+\newcommand{\incomplete}{\emph{More Comming Soon.}}
 
 %%% Local Variables: 
 %%% mode: latex

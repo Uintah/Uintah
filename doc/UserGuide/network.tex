@@ -3,12 +3,12 @@
 
 %begin{latexonly}
   \newcommand{\modgraphic}%
-  {\centerline{\epsfig{file=figures/modgraphic.eps,width=2in}}}
+  {\centerline{\epsfig{file=figures/modgraphic-1.eps,width=4in}}}
 %end{latexonly}
 \begin{htmlonly}
   \newcommand{\srwindow}{%
   \htmladdimg[align=top,width="90%",alt="SCIRun Module Graphic"]
-  {../figures/modgraphic.gif}}
+  {../figures/modgraphic-1.gif}}
 \end{htmlonly}
 
 %begin{latexonly}
@@ -71,7 +71,7 @@ for all modules and consists of the following components:
   control dialog. Some modules have no such dialog. Some have very simple
   dialogs.  Some have very complex dialogs which allow elaborate control
   over the module.  Figure~\ref{fig:moddialog} shows the control dialog for
-  \module{Show Fields} module.
+  \module{Show Field} module.
 \item[Progress bar] Shows the module's progress.
 \item[Timer] Displays the amount of CPU time the module has consumed.
   Located to the left of the progress bar.
@@ -169,7 +169,7 @@ To change a module's properties click its \button{UI} button.  This will
 display the module's control dialog.  Use this dialog to change the
 module's properties.  Each module's reference documentation explains the
 use of its control dialog.  Figure~\ref{fig:moddialog} shows the control
-dialog for the ????? module.
+dialog for the \module{Show Field}.
 
 \subsection{Executing a Network}
 \label{sec:executenet}
@@ -322,7 +322,7 @@ to write notes or otherwise document the purpose and use of the network.
 \subsection{Saving a Network}
 \label{sec:savenet}
 
-\sr\ can save networks to files.  These network files have an extension of
+\sr\ can save networks to files.  Network files have an extension of
 \filename{.net} (although in the past they have also had .sr and .uin
 extensions).  
 
@@ -331,7 +331,7 @@ To save a network select the \menuitem{Save} item from the main window's
 name (and location) of the network file.
 
 Network files are actually \dfna{Tool Command Language}{TCL} scripts and
-are editable.
+are editable (although this topic is beyond the scope of this guide).
 
 \subsection{Opening a Network}
 \label{sec:opennet}
@@ -362,6 +362,21 @@ move the tool to the location of the pointer --  then drag the tool to the
 new location.
 
 
+\subsection{The \sr{} Shell}
+\label{sec:termapp}
+
+After starting, \sr{} will run a shell-like application in the terminal
+window called the \dfn{\sr{} shell}.  It displays the prompt
+\screen{scirun\ra} in the terminal window.  This program is a
+\dfna{Tool Command Language}{TCL} shell program that has been extended with
+\sr{} specific commands.
+
+It possible to type \tcl{} \sr{} commands at the prompt.  For
+instance, to load a network file you may type \keyboard{source
+  \ptext{network file name}}.  This has the same effect as the \menu{File}
+menu's \menuitem{Open} command.
+
+\incomplete{}
 
 %%% Local Variables: 
 %%% mode: latex
