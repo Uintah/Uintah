@@ -1582,11 +1582,14 @@ OnDemandDataWarehouse::addParticles(const Patch* patch, int matlIndex,
 {
  d_lock.writeLock();
   psetDBType::key_type key(matlIndex, patch);
-  if(d_addsetDB.find(key) != d_addsetDB.end())
-    SCI_THROW(InternalError("addParticles called twice for patch"));
-
-  d_addsetDB[key]=addedState;
-  //  addedset->addReference();
+  psetAddDBType::iterator iter = d_addsetDB.find(key);
+  if(iter  != d_addsetDB.end()) 
+    // SCI_THROW(InternalError("addParticles called twice for patch"));
+    cerr << "addParticles called twice for patch" << endl;
+  
+  else
+    d_addsetDB[key]=addedState;
+  
  d_lock.writeUnlock();
 }
 
