@@ -115,7 +115,6 @@ void BldTransform::execute()
     if (!init) {
 	Point C, R, D, I;
 	boxWidget->GetPosition(C,R,D,I);
-	cerr << "C="<<C<<"  R="<<R<<"  D="<<D<<"  I="<<I<<"\n";
 	C=Point(0,0,0); R=Point(1,0,0); D=Point(0,1,0), I=Point(0,0,1);
 	widget_pose_center=C;
 	boxWidget->SetPosition(C,R,D,I);
@@ -147,6 +146,7 @@ void BldTransform::execute()
     double tyy=ty.get();
     double tzz=tz.get();
     Vector t(txx, tyy, tzz);
+
     // switch on the message and build the local matrix accordingly
     if (wh==0) {			       // TRANSLATE
 	locT.post_translate(t);
@@ -161,7 +161,6 @@ void BldTransform::execute()
 	double sz=pow(10.,new_scalez)*s;
 	Vector sc(sx, sy, sz);
 	locT.post_translate(t);	
-	cerr << "sc="<<sc<<"\n";
 	locT.post_scale(sc);
 	locT.post_translate(-t);
     } else if (wh==2) {			       // ROTATE
@@ -172,9 +171,7 @@ void BldTransform::execute()
 	locT.post_rotate(th.get()*M_PI/180., axis);
 	locT.post_translate(-t);
     } else if (wh==3) {      		       // SHEAR
-	locT.post_shear(t, Plane(sha.get(),shb.get(),shc.get(),shd.get()));
-	printf("Here's the shear matrix:\n");
-	locT.print();
+	locT.post_shear(t, Plane(sha.get(), shb.get(), shc.get(), shd.get()));
     } else if (wh==4) {			       // PERMUTE
 	locT.post_permute(xmapTCL.get(), ymapTCL.get(), zmapTCL.get());
     } else { // (wh==5)			       // WIDGET
@@ -191,54 +188,20 @@ void BldTransform::execute()
 	// find the difference between widget_pose(_inv) and the current pose
 	if (!ignorechanges) {
 	    locT.load_frame(C,R-C,D-C,I-C);
-//	    cerr << "C,R-C,D-C,I-C\n";
-//	    locT.print();
-//	    cerr << "widget_pose_inv\n";
-//	    widget_pose_inv.print();
 	    locT.post_trans(widget_pose_inv);
-//	    cerr << "rotated and scaled\n";
-//	    locT.print();
-//	    cerr << "pre-translated\n";
 	    locT.post_translate(-widget_pose_center.vector());
-//	    locT.print();
-//	    cerr << "post-translated\n";
 	    locT.pre_translate(C.vector());
-//	    locT.print();
-//	    cerr << "widget_pose_center="<<widget_pose_center<<" C="<<C<<"\n";
-//	    locT.print();
 	}
-	// multiply that by widget_trans
-	cerr << "local trans=\n";
-	locT.print();
-	cerr << "latest trans=\n";
-	latestWidgetT.print();
-
-//	latestWidgetT=locT;
-	latestWidgetT.pre_trans(locT);
-
-//	locT.pre_trans(latestWidgetT);
-	cerr << "composite trans=\n";
-	locT=latestWidgetT;
-	locT.print();
+	locT.post_trans(latestWidgetT);
 	latestWidgetT=locT;
 	widget_pose_center=C;
 	widget_pose_inv.load_frame(C,R-C,D-C,I-C);
-//	cerr << "WIDGET POSE :\n";	
-//	widget_pose_inv.print();
 	widget_pose_inv.invert();
-//	cerr << "WIDGDET POSE INV:\n";
-//	widget_pose_inv.print();
-//	if (ignorechanges) return;
     }
     DenseMatrix *dm=scinew DenseMatrix(4,4);
     omh=dm;
     
     // now either pre- or post-multiply the transforms and store in matrix
-
-    cerr << "ORIG=\n";
-    inT.print();
-    cerr << "OURS=\n";
-    locT.print();
     if (pre.get()) {
 	locT.post_trans(composite);
 	latestT=locT;
@@ -248,8 +211,6 @@ void BldTransform::execute()
 	latestT=locT;
 	locT.pre_trans(inT);
     }
-    cerr << "TOTAL=\n";
-    locT.print();
     double finalP[16];
     locT.get(finalP);
     double *p=&(finalP[0]);
@@ -258,14 +219,12 @@ void BldTransform::execute()
 	for (j=0; j<4; j++, cnt++)
 	    (*dm)[i][j]=*p++;
 
-    dm->print();
-
-    // send it and we're done
     omatrix->send(omh);
 }
 
 void BldTransform::widget_moved(int last)
 {
+    // only re-execute if this was a widget-release event
     if (last) {
 	want_to_execute();
     }
@@ -286,22 +245,22 @@ void BldTransform::tcl_command(TCLArgs& args, void* userdata) {
 	    composite=latestT;
 	latestT.load_identity();
 	latestWidgetT.load_identity();
-        boxWidget->SetPosition(Point(0,0,0), Point(1,0,0), Point(0,1,0), Point(0,0,1));
+        boxWidget->SetPosition(Point(0,0,0), 
+			       Point(1,0,0), Point(0,1,0), Point(0,0,1));
 	widget_pose_center=Point(0,0,0);
 	widget_pose_inv.load_identity();
-//	ignorechanges=1;
 	want_to_execute();
     } else if (args[1] == "change_ignore") {
-	if (args[2] == "1") {	// start ignoring
+	if (args[2] == "1") {	// start ignoring widget changes
 	    ignorechanges=1;
-	} else {		// stop ignoring
+	} else {		// stop ignoring widget changes
 	    ignorechanges=0;
 	}
     } else if (args[1] == "change_handles") {
-	if (args[2] == "1") {	// start showing
+	if (args[2] == "1") {	// start showing resize handles
 	    boxWidget->SetCurrentMode(1);
 	    ogeom->flushViews();
-	} else {		// stop showing
+	} else {		// stop showing resize handles
 	    boxWidget->SetCurrentMode(2);
 	    ogeom->flushViews();
 	}
@@ -316,6 +275,9 @@ void BldTransform::tcl_command(TCLArgs& args, void* userdata) {
 
 //
 // $Log$
+// Revision 1.7  2000/08/13 05:14:18  dmw
+// cleaning up code
+//
 // Revision 1.6  2000/08/13 04:45:02  dmw
 // Fixed widget-based transform
 //
