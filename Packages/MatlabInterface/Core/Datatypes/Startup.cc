@@ -43,6 +43,7 @@
 #include <string>
 #include <iostream>
 #include <Core/ImportExport/Matrix/MatrixIEPlugin.h>
+#include <Core/ImportExport/Nrrd/NrrdIEPlugin.h>
 #include <Core/ImportExport/Field/FieldIEPlugin.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabfile.h>
 #include <Packages/MatlabInterface/Core/Datatypes/matlabarray.h>
@@ -55,6 +56,8 @@ extern MatrixHandle MatlabMatrix_reader(ProgressReporter *pr, const char *filena
 extern bool MatlabMatrix_writer(ProgressReporter *pr, MatrixHandle mh, const char *filename);
 extern FieldHandle MatlabField_reader(ProgressReporter *pr, const char *filename);
 extern bool MatlabField_writer(ProgressReporter *pr, FieldHandle mh, const char *filename);
+extern NrrdDataHandle MatlabNrrd_reader(ProgressReporter *pr, const char *filename);
+extern bool MatlabNrrd_writer(ProgressReporter *pr, NrrdDataHandle mh, const char *filename);
 
 namespace MatlabIO 
 {
@@ -69,6 +72,7 @@ extern "C" void * MatlabInterfaceInit(void *param)
 
 static MatrixIEPlugin MatlabMatrix_plugin("Matlab Matrix",".mat", "*.mat", MatlabMatrix_reader, MatlabMatrix_writer);
 static FieldIEPlugin MatlabField_plugin("Matlab Field",".mat", "*.mat",MatlabField_reader,MatlabField_writer);   
+static NrrdIEPlugin MatlabNrrd_plugin("Matlab Matrix",".mat", "*.mat",MatlabNrrd_reader,MatlabNrrd_writer);
 
 }
 

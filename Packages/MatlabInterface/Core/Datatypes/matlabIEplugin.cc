@@ -162,15 +162,6 @@ MatlabNrrd_writer(ProgressReporter *pr,
   return(true);
 }
 
-/*
-#ifndef __APPLE__
-static NrrdIEPlugin
-MatlabNrrd_plugin("Matlab Matrix",
-			   ".mat", "*.mat",
-			   MatlabNrrd_reader,
-			   MatlabNrrd_writer);
-#endif        
-*/ 
          
 FieldHandle
 MatlabField_reader(ProgressReporter *pr, const char *filename)
