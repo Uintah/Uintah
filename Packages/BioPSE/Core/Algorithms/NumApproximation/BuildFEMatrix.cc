@@ -77,7 +77,7 @@ bool BuildFEMatrix::build_FEMatrix(TetVolFieldIntHandle hField,
 
   BuildFEMatrixHandle hMaker =
     new BuildFEMatrix(hField, tens, hA, np, unitsScale);
-  cerr << "SetupFEMatrix: number of threads being used = " << np << endl;
+//  cerr << "SetupFEMatrix: number of threads being used = " << np << endl;
 
   Thread::parallel(Parallel<BuildFEMatrix>(hMaker.get_rep(), 
 					   &BuildFEMatrix::parallel),
