@@ -102,14 +102,15 @@ sci::cca::Component::pointer resourceReference::createInstance(const std::string
   
 
 
-  Index* dr[1]; 
-  cerr<<"URLs.size="<< URLs.size() <<endl;
-  dr[0] = new Index(0, URLs.size(), 1);  //first, last, stride
-  MxNArrayRep* arrr = new MxNArrayRep(1,dr);
-  cerr<<"ploader->setCallerDistribution...";
   if(ploader.isNull()){
+    Index* dr[1]; 
+    //cerr<<"URLs.size="<< URLs.size() <<endl;
+    dr[0] = new Index(0, URLs.size(), 1);  //first, last, stride
+    MxNArrayRep* arrr = new MxNArrayRep(1,dr);
+    //cerr<<"ploader->setCallerDistribution...";
     ploader=resourceReference::getPtrToAll();
     ploader->setCallerDistribution("dURL",arrr);   //client is caller
+    delete dr[0];
   }
   cerr<<"Done\n";
 
@@ -124,7 +125,7 @@ sci::cca::Component::pointer resourceReference::createInstance(const std::string
 
 
   vector<URL> comURLs;
-  for(int i=0; i<comURLs1.size(); i++){
+  for(unsigned int i=0; i<comURLs1.size(); i++){
     cerr<<"comURLs["<<i<<"]="<<comURLs1[i]<<endl;
     comURLs.push_back(comURLs1[i]);
   }
