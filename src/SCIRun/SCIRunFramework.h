@@ -40,6 +40,7 @@ namespace SCIRun {
   class ComponentInstance;
   class InternalComponentModel;
   class CCAComponentModel;
+  class BabelComponentModel;
   class SCIRunFramework : public gov::cca::AbstractFramework {
   public:
     SCIRunFramework();
@@ -82,6 +83,7 @@ namespace SCIRun {
     std::map<std::string, ComponentInstance*> activeInstances;
     InternalComponentModel* internalServices;
     CCAComponentModel* cca;
+    BabelComponentModel* babel;
     
   };
 }

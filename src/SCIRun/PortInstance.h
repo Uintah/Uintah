@@ -44,9 +44,13 @@ namespace SCIRun {
 
     virtual bool connect(PortInstance*) = 0;
     virtual PortType portType() = 0;
+    virtual std::string getType();
+    virtual std::string getModel();
     virtual std::string getUniqueName() = 0;
     virtual bool disconnect(PortInstance*) =0;
     virtual bool canConnectTo(PortInstance *)=0;
+    virtual bool available();
+    virtual PortInstance* getPeer();
   private:
     PortInstance(const PortInstance&);
     PortInstance& operator=(const PortInstance&);

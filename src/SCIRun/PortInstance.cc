@@ -27,7 +27,29 @@
  */
 
 #include <SCIRun/PortInstance.h>
+#include <iostream.h>
 using namespace SCIRun;
+std::string PortInstance::getType()
+{
+  return "default type";
+}
+
+std::string PortInstance::getModel()
+{
+  return "default model";
+}
+
+bool PortInstance::available()
+{
+  cerr<<"default available() is called!";
+  return true;
+}
+
+PortInstance* PortInstance::getPeer()
+{
+  cerr<<"default available() is called!";
+  return 0;
+}
 
 PortInstance::PortInstance()
 {
