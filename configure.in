@@ -659,6 +659,8 @@ if test ! -d "$TCL_SRC_DIR/generic" ||
   AC_MSG_ERROR(The full Tcl source is required.  exiting.)
 fi
 
+AC_SUBST(TCL_PREFIX)
+AC_SUBST(TCL_VERSION)
 AC_SUBST(TCL_INCLUDE_DIR)
 AC_SUBST(TCL_SRC_DIR)
 AC_SUBST(TCL_LIB_DIR)
