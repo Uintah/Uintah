@@ -1,6 +1,9 @@
 #include <Packages/Uintah/Core/Grid/PatchRangeTree.h>
+#include <list>
 
 using namespace Uintah;
+using namespace SCIRun;
+using namespace std;
 
 PatchRangeTree::PatchRangeTree(const std::vector<Patch*>& patches)
   :  d_maxPatchDimensions(0, 0, 0),
@@ -20,7 +23,6 @@ PatchRangeTree::PatchRangeTree(const std::vector<Patch*>& patches)
     for (int j = 0; j < 3; j++) {
       if (dimensions[j] > d_maxPatchDimensions[j]) {
 	d_maxPatchDimensions[j] = dimensions[j];
-	break;
       }
     }
   }
