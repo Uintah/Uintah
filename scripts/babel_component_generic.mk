@@ -17,32 +17,32 @@ ${OUTDIR}/${COMPONENT}_stub.make: ${OUTDIR}/${COMPONENT}.sidl Core/Babel/timesta
 	$(BABEL) -cC++ -o$(dir $@) -R${BABEL_REPOSITORY} $<	
 	mv  $(dir $@)babel.make $@
 
-${OUTDIR}/cca.make: ${CCASIDL} 
-	$(BABEL) -c$($(COMPONENT)_LANGUAGE) -o/${dir $@} $<
-	mv $(dir $@)babel.make $@
+#${OUTDIR}/cca.make: ${CCASIDL} 
+#	$(BABEL) -c$($(COMPONENT)_LANGUAGE) -o/${dir $@} $<
+#	mv $(dir $@)babel.make $@
 
-${OUTDIR}/cca_stub.make: ${CCASIDL} 
-	$(BABEL) -cC++ -o/${dir $@} $<
-	mv $(dir $@)babel.make $@
-
-IORSRCS :=
-STUBSRCS :=
-IMPLSRCS :=
-SKELSRCS :=
-include ${OUTDIR}/cca.make
+#${OUTDIR}/cca_stub.make: ${CCASIDL} 
+#	$(BABEL) -cC++ -o/${dir $@} $<
+#	mv $(dir $@)babel.make $@
 
 IORSRCS :=
 STUBSRCS :=
 IMPLSRCS :=
 SKELSRCS :=
-SRCS := $(SRCS) $(patsubst %,$(SRCDIR)/%,$(IORSRCS) $(STUBSRCS) $(IMPLSRCS) $(SKELSRCS))
+#include ${OUTDIR}/cca.make
 
 IORSRCS :=
 STUBSRCS :=
 IMPLSRCS :=
 SKELSRCS :=
-include ${OUTDIR}/cca_stub.make
-SRCS := $(SRCS) $(patsubst %,$(SRCDIR)/%,$(IORSRCS) $(STUBSRCS) $(IMPLSRCS) $(SKELSRCS))
+#SRCS := $(SRCS) $(patsubst %,$(SRCDIR)/%,$(IORSRCS) $(STUBSRCS) $(IMPLSRCS) $(SKELSRCS))
+
+IORSRCS :=
+STUBSRCS :=
+IMPLSRCS :=
+SKELSRCS :=
+#include ${OUTDIR}/cca_stub.make
+#SRCS := $(SRCS) $(patsubst %,$(SRCDIR)/%,$(IORSRCS) $(STUBSRCS) $(IMPLSRCS) $(SKELSRCS))
 
 IORSRCS :=
 STUBSRCS :=
@@ -55,10 +55,10 @@ IORSRCS :=
 STUBSRCS :=
 IMPLSRCS :=
 SKELSRCS :=
-include ${OUTDIR}/${COMPONENT}_stub.make
-SRCS := $(SRCS) $(patsubst %,$(SRCDIR)/%,$(IORSRCS) $(STUBSRCS) $(IMPLSRCS) $(SKELSRCS))
+#include ${OUTDIR}/${COMPONENT}_stub.make
+#SRCS := $(SRCS) $(patsubst %,$(SRCDIR)/%,$(IORSRCS) $(STUBSRCS) $(IMPLSRCS) $(SKELSRCS))
 
-PSELIBS := Core/CCA/Component/SIDL Core/CCA/Component/PIDL \
+PSELIBS := Core/CCA/Component/SSIDL Core/CCA/Component/PIDL \
 	Core/CCA/Component/Comm Core/CCA/spec Core/Thread \
 	Core/Containers Core/Exceptions
 
