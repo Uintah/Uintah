@@ -239,7 +239,7 @@ CrosshairWidget::GetAxes( Vector& v1, Vector& v2, Vector& v3 ) const
 string
 CrosshairWidget::GetMaterialName( const Index mindex ) const
 {
-   ASSERT(mindex<NumMaterials);
+   ASSERT(mindex<materials.size());
    
    switch(mindex){
    case 0:

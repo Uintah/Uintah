@@ -364,12 +364,12 @@ void
 CriticalPointWidget::NextMode()
 {
    Index s;
-   for (s=0; s<NumSwitches; s++)
+   for (s=0; s<mode_switches.size(); s++)
       if (modes[CurrentMode]&(1<<s))
 	 mode_switches[s]->set_state(0);
-   CurrentMode = (CurrentMode+1) % NumModes;
+   CurrentMode = (CurrentMode+1) % modes.size();
    crittype = (CriticalType)((crittype+1) % NumCriticalTypes);
-   for (s=0; s<NumSwitches; s++)
+   for (s=0; s<mode_switches.size(); s++)
       if (modes[CurrentMode]&(1<<s))
 	 mode_switches[s]->set_state(1);
 
@@ -460,7 +460,7 @@ CriticalPointWidget::GetDirection() const
 string
 CriticalPointWidget::GetMaterialName( const Index mindex ) const
 {
-   ASSERT(mindex<NumMaterials);
+   ASSERT(mindex<materials.size());
    
    switch(mindex){
    case 0:

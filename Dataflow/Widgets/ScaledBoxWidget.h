@@ -77,10 +77,11 @@ public:
    // Variable indexs
    enum { CenterVar, PointRVar, PointDVar, PointIVar,
 	  DistRVar, DistDVar, DistIVar, HypoRDVar, HypoDIVar, HypoIRVar,
-	  SDistRVar, RatioRVar, SDistDVar, RatioDVar, SDistIVar, RatioIVar };
+	  SDistRVar, RatioRVar, SDistDVar, RatioDVar, SDistIVar, RatioIVar,
+	  NumVars };
 
    // Material indexs
-   enum { PointMatl, EdgeMatl, ResizeMatl, SliderMatl };
+   enum { PointMatl, EdgeMatl, ResizeMatl, SliderMatl, NumMatls };
 
   ClipperHandle get_clipper();
 

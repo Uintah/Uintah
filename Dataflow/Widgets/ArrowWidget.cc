@@ -284,7 +284,7 @@ double ArrowWidget::GetLength() {
 string
 ArrowWidget::GetMaterialName( const Index mindex ) const
 {
-   ASSERT(mindex<NumMaterials);
+   ASSERT(mindex<materials.size());
    
    switch(mindex){
    case 0:
