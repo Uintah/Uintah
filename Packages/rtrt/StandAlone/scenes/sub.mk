@@ -38,6 +38,11 @@ SCENES := $(SRCDIR)/0.mo \
 	$(SRCDIR)/simple_tri.mo \
 	$(SRCDIR)/terrain.mo \
 	$(SRCDIR)/heightfield.mo \
+	$(SRCDIR)/graphics-museum.mo \
+	$(SRCDIR)/living-room.mo \
+	$(SRCDIR)/hologram-room.mo \
+	$(SRCDIR)/sphere-room.mo \
+	$(SRCDIR)/seaworld-tubes.mo \
 	$(SRCDIR)/multi-scene.mo
 
 
