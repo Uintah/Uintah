@@ -7,7 +7,6 @@
 
 #include <Core/Geometry/Vector.h>
 #include <Core/Util/Assert.h>
-#include <Core/share/share.h>
 
 #include <math.h>
 #include <sgi_stl_warnings_off.h>
