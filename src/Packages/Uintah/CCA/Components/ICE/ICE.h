@@ -29,6 +29,8 @@
 #include <sgi_stl_warnings_on.h>
 
 
+#define MAX_MATLS 16
+
 namespace Uintah { 
   using namespace SCIRun;
   class ModelInfo; 
