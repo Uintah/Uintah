@@ -70,7 +70,11 @@ WARNING
                                     const int);
                                     
    virtual void scheduleErrorEstimate(const LevelP& coarseLevel,
-                                  SchedulerP& sched);
+                                      SchedulerP& sched);
+                                  
+   virtual void scheduleTestConservation(SchedulerP&,
+                                         const PatchSet* patches,
+                                         const ModelInfo* mi);
 
   private:
     void initialize(const ProcessorGroup*, 
