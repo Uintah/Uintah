@@ -76,8 +76,10 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     SmoothGeomPiece *sgp = dynamic_cast<SmoothGeomPiece*>(piece);
     vector<double>* volumes = 0;
     vector<Vector>* pforces = 0;
+    vector<Vector>* pfiberdirs = 0;
     if (sgp) volumes = sgp->getVolume();
     if (sgp) pforces = sgp->getForces();
+    if (sgp) pfiberdirs = sgp->getFiberDirs();
 
     // For getting particle volumes (if they exist)
     vector<double>::const_iterator voliter;
@@ -91,6 +93,13 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     geomvecs::key_type pforcekey(patch,*obj);
     if (pforces) {
       if (!pforces->empty()) forceiter = d_object_forces[pforcekey].begin();
+    }
+
+    // For getting particle fiber directions (if they exist)
+    vector<Vector>::const_iterator fiberiter;
+    geomvecs::key_type pfiberkey(patch,*obj);
+    if (pfiberdirs) {
+      if (!pfiberdirs->empty()) fiberiter = d_object_fibers[pfiberkey].begin();
     }
 
     vector<Point>::const_iterator itr;
@@ -116,6 +125,13 @@ ParticleCreator::createParticles(MPMMaterial* matl,
         if (!pforces->empty()) {
     	  pexternalforce[pidx] = *forceiter;
           ++forceiter;
+        }
+      }
+
+      if (pfiberdirs) {
+        if (!pfiberdirs->empty()) {
+    	  pfiberdir[pidx] = *fiberiter;
+          ++fiberiter;
         }
       }
 
@@ -218,6 +234,7 @@ ParticleCreator::allocateVariables(particleIndex numParticles,
   new_dw->allocateAndPut(pparticleID,    lb->pParticleIDLabel,    subset);
   new_dw->allocateAndPut(psize,          lb->pSizeLabel,          subset);
   new_dw->allocateAndPut(psp_vol,        lb->pSp_volLabel,        subset); 
+  new_dw->allocateAndPut(pfiberdir,      lb->pFiberDirLabel,      subset); 
   if (d_useLoadCurves) {
     new_dw->allocateAndPut(pLoadCurveID,   lb->pLoadCurveIDLabel,   subset); 
   }
@@ -397,6 +414,7 @@ ParticleCreator::initializeParticle(const Patch* patch,
   Vector pExtForce(0,0,0);
   ParticleCreator::applyForceBC(dxpp, p, pmass[i], pExtForce);
   pexternalforce[i] = pExtForce;
+  pfiberdir[i] = matl->getConstitutiveModel()->getInitialFiberDir();
 
   ASSERT(cell_idx.x() <= 0xffff && cell_idx.y() <= 0xffff
 	 && cell_idx.z() <= 0xffff);
@@ -428,6 +446,7 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
   geompoints::key_type key(patch,obj);
   geomvols::key_type volkey(patch,obj);
   geomvecs::key_type forcekey(patch,obj);
+  geomvecs::key_type fiberkey(patch,obj);
   GeometryPiece* piece = obj->getPiece();
   Box b1 = piece->getBoundingBox();
   Box b2 = patch->getBox();
@@ -453,6 +472,7 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
     vector<Point>* points = sgp->getPoints();
     vector<double>* vols = sgp->getVolume();
     vector<Vector>* pforces = sgp->getForces();
+    vector<Vector>* pfiberdirs = sgp->getFiberDirs();
     Point p;
     IntVector cell_idx;
     for (int ii = 0; ii < numPts; ++ii) {
@@ -466,6 +486,10 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
         if (!pforces->empty()) {
           Vector pforce = pforces->at(ii); 
           d_object_forces[forcekey].push_back(pforce);
+        }
+        if (!pfiberdirs->empty()) {
+          Vector pfiber = pfiberdirs->at(ii); 
+          d_object_fibers[fiberkey].push_back(pfiber);
         }
       }
     }
