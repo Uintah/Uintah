@@ -428,6 +428,12 @@ RenderField<Fld, Loc>::render_materials(const Fld *sfld,
     cerr << "Unknown data location." << endl;
     break;
   }
+
+  // Update these when the data changes. 
+  if (node_switch_) { node_switch_->reset_bbox(); }
+  if (edge_switch_) { edge_switch_->reset_bbox(); }
+  if (face_switch_) { face_switch_->reset_bbox(); }
+  if (data_switch_) { data_switch_->reset_bbox(); }
 }
 
 
@@ -526,21 +532,21 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
 
   const bool cyl = edge_display_type == "Cylinders";
 
-  GeomCLines* cedges = NULL;
-  GeomColoredCylinders* edges = NULL;
-  if (!cyl && sfld->data_at() == Field::NODE)
+  GeomCLines* lines = NULL;
+  GeomColoredCylinders* cylinders = NULL;
+  if (cyl)
   {
-    cedges = scinew GeomCLines;
-    cedges->setLineWidth(edge_scale);
-    GeomDL *display_list = scinew GeomDL(cedges);
+    cylinders = scinew GeomColoredCylinders;
+    cylinders->set_radius(edge_scale);
+    cylinders->set_nu_nv(2*res_, 1);
+    GeomDL *display_list = scinew GeomDL(cylinders);
     edge_switch_ = scinew GeomSwitch(display_list);
   }
   else
   {
-    edges = scinew GeomColoredCylinders;
-    edges->set_radius(edge_scale);
-    edges->set_nu_nv(2*res_, 1);
-    GeomDL *display_list = scinew GeomDL(edges);
+    lines= scinew GeomCLines;
+    lines->setLineWidth(edge_scale);
+    GeomDL *display_list = scinew GeomDL(lines);
     edge_switch_ = scinew GeomSwitch(display_list);
   }
 
@@ -562,11 +568,11 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
 	MaterialHandle m2 = choose_mat(false, nodes[1]);
 	if (cyl)
 	{
-	  edges->add(p1, m1, p2, m2);
+	  cylinders->add(p1, m1, p2, m2);
 	}
 	else
 	{
-	  cedges->add(p1, m1, p2, m2);
+	  lines->add(p1, m1, p2, m2);
 	}
       }
       break;
@@ -575,11 +581,11 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
 	MaterialHandle m1 = choose_mat(false, *eiter);
 	if (cyl)
 	{
-	  edges->add(p1, m1, p2, m1);
+	  cylinders->add(p1, m1, p2, m1);
 	}
 	else
 	{
-	  cedges->add(p1, m1, p2, m1);
+	  lines->add(p1, m1, p2, m1);
 	}
       }
       break;
@@ -590,11 +596,11 @@ RenderField<Fld, Loc>::render_edges(const Fld *sfld,
 	MaterialHandle m1 = choose_mat(true, 0);
 	if (cyl)
 	{
-	  edges->add(p1, m1, p2, m1);
+	  cylinders->add(p1, m1, p2, m1);
 	}
 	else
 	{
-	  cedges->add(p1, m1, p2, m1);
+	  lines->add(p1, m1, p2, m1);
 	}
       }
       break;
