@@ -11,9 +11,9 @@ if test "$1" = "" -o "$2" = "" -o "$3" = ""; then
   echo "THREADLIBS is either -lpthread or -lfetchop"
 fi
 
-set globuspath = $1
-set psepath = $2
-set threadlibs = $3
+globuspath=$1
+psepath=$2
+threadlibs=$3
 
 echo "Building globus in $globuspath"
 
@@ -60,6 +60,7 @@ rm ../libcrypto.a
 rm so_locations
 cd ..
 rmdir tmp
+cd ..
 
 echo "patching globus"
 cd globus
@@ -94,7 +95,7 @@ make libraries
 
 echo "Installing globus libraries"
 echo "You will get errors here because the globus makefiles are broken"
-make install
+make -k install
 
 echo "Renaming globus libaries because the globus makefiles are broken"
 cd ../lib
@@ -103,7 +104,7 @@ for t in globus*.so; do
 done
 
 cd ../include
-cp $2/SCICore/globus_threads/globus_external_threads.h .
+cp $psepath/SCICore/globus_threads/globus_external_threads.h .
 
 cd ..
 
