@@ -72,15 +72,39 @@ template <> const string find_type_name(vector<pair<LatVolMesh::face_index, doub
 template <> const string find_type_name(vector<pair<LatVolMesh::cell_index, double> > *)
 { return "vector<pair<LatVolMesh::cell_index"; }
 
-void Pio(Piostream &, TetVolMesh::node_index) {}
-void Pio(Piostream &, TetVolMesh::edge_index) {}
-void Pio(Piostream &, TetVolMesh::face_index) {}
-void Pio(Piostream &, TetVolMesh::cell_index) {}
+void Pio(Piostream &s, TetVolMesh::node_index i) { Pio(s, (unsigned int)i); }
+void Pio(Piostream &s, TetVolMesh::edge_index i) { Pio(s, (unsigned int)i); }
+void Pio(Piostream &s, TetVolMesh::face_index i) { Pio(s, (unsigned int)i); }
+void Pio(Piostream &s, TetVolMesh::cell_index i) { Pio(s, (unsigned int)i); }
 
-void Pio(Piostream &, LatVolMesh::node_index) {}
-void Pio(Piostream &, LatVolMesh::edge_index) {}
-void Pio(Piostream &, LatVolMesh::face_index) {}
-void Pio(Piostream &, LatVolMesh::cell_index) {}
+void Pio(Piostream &s, LatVolMesh::node_index i)
+{
+  s.begin_cheap_delim();
+  Pio(s, i.i_);
+  Pio(s, i.j_);
+  Pio(s, i.k_);
+  s.end_cheap_delim();
+}
+void Pio(Piostream &s, LatVolMesh::edge_index i)
+{
+  s.begin_cheap_delim();
+  Pio(s, i.i_);
+  s.end_cheap_delim();
+}
+void Pio(Piostream &s, LatVolMesh::face_index i)
+{
+  s.begin_cheap_delim();
+  Pio(s, i.i_);
+  s.end_cheap_delim();
+}
+void Pio(Piostream &s, LatVolMesh::cell_index i)
+{
+  s.begin_cheap_delim();
+  Pio(s, i.i_);
+  Pio(s, i.j_);
+  Pio(s, i.k_);
+  s.end_cheap_delim();
+}
 
 
 // TetVol
@@ -977,7 +1001,7 @@ BuildInterpolant::execute()
   }
   
   const string dst_mesh_name = dst_field->get_type_name(0);
-  const string src_mesh_name = src_field->get_type_name(1);
+  const string src_mesh_name = src_field->get_type_name(0);
 
   if (dst_mesh_name == "TetVol" &&
       src_mesh_name == "TetVol")
