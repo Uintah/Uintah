@@ -7,53 +7,18 @@
 DLLNAME = PSECommon
 EXENAME = 
 
-OBJS = Comm\MessageBase.o\
-       CommonDatatypes\BooleanPort.o CommonDatatypes\ColorMapPort.o\
-	   CommonDatatypes\ColumnMatrixPort.o CommonDatatypes\ContourSetPort.o\
-	   CommonDatatypes\GeometryPort.o CommonDatatypes\HexMeshPort.o\
-	   CommonDatatypes\IntervalPort.o CommonDatatypes\MatrixPort.o\
-	   CommonDatatypes\MeshPort.o CommonDatatypes\ScalarFieldPort.o\
-	   CommonDatatypes\ScaledBoxWidgetData.o CommonDatatypes\ScaledBoxWidgetDataPort.o\
-	   CommonDatatypes\SoundPort.o CommonDatatypes\SurfacePort.o\
-	   CommonDatatypes\VectorFieldPort.o CommonDatatypes\VoidStarPort.o\
-	   CommonDatatypes\cMatrixPort.o CommonDatatypes\cVectorPort.o\
-	   Constraints\AngleConstraint.o Constraints\BaseConstraint.o\
-	   Constraints\CenterConstraint.o Constraints\ConstraintSolver.o\
-	   Constraints\DistanceConstraint.o Constraints\LineConstraint.o\
-	   Constraints\PlaneConstraint.o Constraints\ProjectConstraint.o\
-	   Constraints\PythagorasConstraint.o Constraints\RatioConstraint.o\
-	   Constraints\SegmentConstraint.o Constraints\VarCore.o\
-	   Constraints\BaseVariable.o\
-	   Dataflow\Connection.o Dataflow\ModuleHelper.o Dataflow\Network.o\
-	   Dataflow\Port.o Dataflow\Module.o Dataflow\ModuleList.o\
-	   Dataflow\NetworkEditor.o\
-#      Distributed\
+OBJS = share\PSECommonDLLEntry.odll\
 #      Modules\
-	   Widgets\ArrowWidget.o Widgets\BaseWidget.o Widgets\BoxWidget.o\
-	   Widgets\CriticalPointWidget.o Widgets\CrosshairWidget.o\
-	   Widgets\FrameWidget.o Widgets\GaugeWidget.o Widgets\LightWidget.o\
-	   Widgets\PathWidget.o Widgets\PointWidget.o Widgets\RingWidget.o\
-	   Widgets\ScaledBoxWidget.o Widgets\ScaledFrameWidget.o\
-	   Widgets\ViewWidget.o\
-	   share\PSECommonDLLEntry.o
+	
+
 
 CF   = -DBUILD_PSECOMMON
 LF   = 
 
-INCS = -I$(TOP)\src\3rdParty\tcl\tcl8.0.5\generic\
-       -I$(TOP)\src\3rdParty\tcl\tk8.0.5\generic\
-       -I$(TOP)\src\3rdParty\tcl\tk8.0.5\xlib\
-	   -I$(TOP)\src\3rdParty\tcl\tk8.0.5\win\
-	   -I$(TOP)\src\3rdParty\tcl\itcl3.0.1\itcl\generic\
-	   -I$(TOP)\src\3rdParty\tcl\itcl3.0.1\itk\generic\
-	   -I$(TOP)\src\3rdParty\zlib\include\
-	   -I$(TOP)\src\3rdParty\oncrpc\
-       -I$(TOP)\src\SCICore\Winfix\include\
+INCS = 
          
-LIBS = zlib.lib oncrpc.lib tcl80$(APPENDIX).lib tk80$(APPENDIX).lib\
-       itcl30$(APPENDIX).lib itk30$(APPENDIX).lib blt24.lib OpenGL32.lib Glu32.lib\
-	   SCICore$(APPENDIX).lib
+LIBS = 
 
 ###################################################################
 
-!include <$(TOP)\Makefile.vc.master>
+!include <$(TOP)\src\Makefile.vc.master>
