@@ -7,7 +7,7 @@
    types which can be given literally as a variable type in a source file.
    Thus, if there is not a type available on the architecture which matches
    the description in enum nrrdType in nrrd.h, define it to something which
-   does exist, and the library will detect the deficiency.  
+   does exist, and the library will detect the deficiency (ha ha maybe someday)
    /usr/include/inttypes.h may be useful, if it exists.
    >>---> THIS MUST BE IN SYNC WITH THE ENUMS IN nrrd.h <---<<
 */
@@ -27,8 +27,8 @@
 				   used to hold number of items in array 
 				   (MUST be a signed type, even though as a 
 				   store for # of things, could be unsigned)
-				   using "int" will give a maximum array size
-				   of 1024x1024x1024 
+				   using "int" will give a maximum power-of-2
+				   array size of 1024x1024x1024 
 				   (really 1024x1024x2048-1) */
 #define NRRD_BIG_INT_PRINTF "%lld"
 

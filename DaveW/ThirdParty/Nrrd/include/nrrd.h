@@ -4,8 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <nrrdDefines.h>
-#include <nrrdMacros.h>   /* tested in macrotest.c */
+#include "nrrdDefines.h"
+#include "nrrdMacros.h"   /* tested in macrotest.c */
 
 /*
 ******** Nrrd struct
@@ -45,12 +45,19 @@ typedef struct {
 
   /* 
   ** Information of dubious standing- descriptive of whole array, but
-  ** not necessary, meaningful for only some uses of a nrrd, but basic
+  ** not necessary (meaningful only for some uses of a nrrd), but basic
   ** enough to be part of the basic nrrd type
   */
-  char content[NRRD_MED_STRLEN]; /* briefly, what the hell is this data */
+  char content[NRRD_MED_STRLEN]; /* briefly, just what the hell is this data */
   int blockSize;                 /* for nrrdTypeBlock array, block byte size */
   double min, max;               /* if non-NaN, extremal values for array */
+  FILE *dataFile;                /* if non-NULL, where the data is to be 
+				    read from.  If NULL, data will be read
+				    from current file */
+  int dataSkip;                  /* if dataFile non-NULL, the number of lines
+				    in dataFile that should be skipped over
+				    (so as to bypass another form of ASCII
+				    header preceeding raw data) */
 
   /* 
   ** Comments.  Dynamically allocated.  Read from and written to header
@@ -166,16 +173,16 @@ typedef enum {
 */
 extern char nrrdEncoding2Str[][NRRD_SMALL_STRLEN];
 
-extern int nrrdReadDataRaw(FILE *, Nrrd *);
-extern int nrrdReadDataZlib(FILE *, Nrrd *);
-extern int nrrdReadDataAscii(FILE *, Nrrd *);
-extern int nrrdReadDataHex(FILE *, Nrrd *);
-extern int nrrdReadDataBase85(FILE *, Nrrd *);
-extern int nrrdWriteDataRaw(FILE *, Nrrd *);
-extern int nrrdWriteDataZlib(FILE *, Nrrd *);
-extern int nrrdWriteDataAscii(FILE *, Nrrd *);
-extern int nrrdWriteDataHex(FILE *, Nrrd *);
-extern int nrrdWriteDataBase85(FILE *, Nrrd *);
+extern nrrdReadDataRaw(FILE *, Nrrd *);
+extern nrrdReadDataZlib(FILE *, Nrrd *);
+extern nrrdReadDataAscii(FILE *, Nrrd *);
+extern nrrdReadDataHex(FILE *, Nrrd *);
+extern nrrdReadDataBase85(FILE *, Nrrd *);
+extern nrrdWriteDataRaw(FILE *, Nrrd *);
+extern nrrdWriteDataZlib(FILE *, Nrrd *);
+extern nrrdWriteDataAscii(FILE *, Nrrd *);
+extern nrrdWriteDataHex(FILE *, Nrrd *);
+extern nrrdWriteDataBase85(FILE *, Nrrd *);
 
 /*
 ******** nrrdReadDataFptr[]
@@ -209,7 +216,7 @@ typedef enum {
   /* 
   ** these nrrdMeasrHisto* measures interpret the array as a histogram
   ** of some implied value distribution, and the measure uses the index
-  ** space of the array for its domain 
+  ** space of the array for its range
   */
   nrrdMeasrHistoMin,         /* 7 */
   nrrdMeasrHistoMax,         /* 8 */
@@ -257,6 +264,7 @@ extern void nrrdAddComment(Nrrd *nrrd, char *cmt);
 extern void nrrdClearComments(Nrrd *nrrd);
 extern void nrrdDescribe(FILE *file, Nrrd *nrrd);
 extern int nrrdCheck(Nrrd *nrrd);
+extern void nrrdRange(Nrrd *nrrd);
 
 /******** getting information to and from files */
 /* io.c */
@@ -290,7 +298,20 @@ extern Nrrd *nrrdNewCrop(Nrrd *nrrdIn, int *minIdx, int *maxIdx);
 extern int nrrdPermuteAxes(Nrrd *nrrdIn, Nrrd *nrrdOut, int *axes);
 extern Nrrd *nrrdNewPermuteAxes(Nrrd *nrrdIn, int *axes);
 extern int nrrdSample(Nrrd *nrrdIn, int *coord, void *val);
+extern int (*nrrdIValue[13])(void *v);
+extern float (*nrrdFValue[13])(void *v);
+extern double (*nrrdDValue[13])(void *v);
+extern int (*nrrdILookup[13])(void *v, int i);
+extern float (*nrrdFLookup[13])(void *v, int i);
+extern double (*nrrdDLookup[13])(void *v, int i);
+extern void nrrdInitValue();
 
+/********* HISTOGRAMS!!! */
+/* histogram.c */
+extern int nrrdHisto(Nrrd *nin, Nrrd *nout, int bins);
+extern Nrrd *nrrdNewHisto(Nrrd *nin, int bins);
+extern int nrrdDrawHisto(Nrrd *nin, Nrrd *nout, int sy);
+extern Nrrd *nrrdNewDrawHisto(Nrrd *nin, int sy);
 
 #endif /* NRRD_HAS_BEEN_INCLUDED */
 

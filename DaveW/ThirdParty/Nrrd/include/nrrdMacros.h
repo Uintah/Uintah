@@ -35,6 +35,7 @@
 */
 /* #define NRRD_EXISTS(x) (!((x) - (x))) */
 #define NRRD_EXISTS(x) (!nrrdIsNand((x)))
+/* #define NRRD_EXISTS(x) ((x) <= 2 || (x) > 1) */
 
 /*
 ******** NRRD_INSIDE(a,b,c)
