@@ -10,6 +10,8 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
+INCLUDES += $(TEEM_INCLUDE)
+
 SRCDIR   := Packages/Fusion/Dataflow/Modules/Fields
 
 SRCS     += \
@@ -31,5 +33,3 @@ PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
-
-
