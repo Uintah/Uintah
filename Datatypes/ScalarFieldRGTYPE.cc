@@ -42,16 +42,34 @@ void ScalarFieldRGTYPE::resize(int x, int y, int z) {
     grid.newsize(x,y,z);
 }
 
-#define ScalarFieldRGTYPE_VERSION 1
+#define ScalarFieldRGTYPE_VERSION 2
 
 void ScalarFieldRGTYPE::io(Piostream& stream)
 {
-    /*int version=*/stream.begin_class("ScalarFieldRGTYPE", ScalarFieldRGTYPE_VERSION);
-    // Do the TYPE class first...
-    ScalarFieldRGBase::io(stream);
+    int version=stream.begin_class("ScalarFieldRGTYPE", ScalarFieldRGTYPE_VERSION);
+    if(version == 1){
+	// From before, when the ScalarFieldRGBase didn't exist...
+	ScalarField::io(stream);
+
+	// Save these since the ScalarField doesn't
+	Pio(stream, bmin);
+	Pio(stream, bmax);
+	if(stream.reading()){
+	    have_bounds=1;
+	    diagonal=bmax-bmin;
+	}
+
+	// Save the rest..
+	Pio(stream, nx);
+	Pio(stream, ny);
+	Pio(stream, nz);
+    } else {
+	// Do the TYPE class first...
+	ScalarFieldRGBase::io(stream);
+    }
     Pio(stream, grid);
     stream.end_class();
-}	
+}
 
 void ScalarFieldRGTYPE::compute_minmax()
 {
