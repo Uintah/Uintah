@@ -16,9 +16,9 @@
 
 #include <UserModule.h>
 #include <Geometry/Point.h>
-#include <Field3D.h>
+#include <ScalarField.h>
+#include <ScalarFieldPort.h>
 class ColormapPort;
-class Field3DIPort;
 class GeomCone;
 class GeomCylinder;
 class GeomDisc;
@@ -30,9 +30,9 @@ class ObjGroup;
 
 
 class IsoSurface : public UserModule {
-    Field3DIPort* infield;
+    ScalarFieldIPort* infield;
     ColormapPort* incolormap;
-    Field3DIPort* incolorfield;
+    ScalarFieldIPort* incolorfield;
     GeometryOPort* ogeom;
     int abort_flag;
 
@@ -60,15 +60,15 @@ class IsoSurface : public UserModule {
     MaterialProp* widget_matl;
     MaterialProp* widget_highlight_matl;
 
-    int iso_cube(int, int, int, double, ObjGroup*, const Field3DHandle&);
-    void iso_tetra(int, double, ObjGroup*, const Field3DHandle&);
+    int iso_cube(int, int, int, double, ObjGroup*, ScalarFieldRG*);
+    void iso_tetra(int, double, ObjGroup*, ScalarFieldUG*);
 
-    void iso_reg_grid(const Field3DHandle&, const Point&, ObjGroup*);
-    void iso_reg_grid(const Field3DHandle&, double, ObjGroup*);
-    void iso_tetrahedra(const Field3DHandle&, const Point&, ObjGroup*);
-    void iso_tetrahedra(const Field3DHandle&, double, ObjGroup*);
+    void iso_reg_grid(ScalarFieldRG*, const Point&, ObjGroup*);
+    void iso_reg_grid(ScalarFieldRG*, double, ObjGroup*);
+    void iso_tetrahedra(ScalarFieldUG*, const Point&, ObjGroup*);
+    void iso_tetrahedra(ScalarFieldUG*, double, ObjGroup*);
 
-    void find_seed_from_value(const Field3DHandle&);
+    void find_seed_from_value(const ScalarFieldHandle&);
 
     virtual void geom_moved(int, double, const Vector&, void*);
     Point ov[9];

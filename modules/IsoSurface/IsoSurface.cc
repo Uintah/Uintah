@@ -12,8 +12,8 @@
  */
 
 #include <IsoSurface/IsoSurface.h>
-#include <Field3D.h>
-#include <Field3DPort.h>
+#include <ScalarFieldRG.h>
+#include <ScalarFieldUG.h>
 #include <Geom.h>
 #include <GeometryPort.h>
 #include <ModuleList.h>
@@ -46,11 +46,11 @@ IsoSurface::IsoSurface()
 : UserModule("IsoSurface", Filter)
 {
     // Create the input ports
-    infield=new Field3DIPort(this, "Field", Field3DIPort::Atomic);
+    infield=new ScalarFieldIPort(this, "Field", ScalarFieldIPort::Atomic);
     add_iport(infield);
     //incolormap=new ColormapIPort(this, "Colormap");
     //add_iport(incolormap);
-    incolorfield=new Field3DIPort(this, "Color Field", Field3DIPort::Atomic);
+    incolorfield=new ScalarFieldIPort(this, "Color Field", ScalarFieldIPort::Atomic);
     add_iport(incolorfield);
 
     // Create the output port
@@ -110,13 +110,9 @@ void IsoSurface::execute()
     if(isosurface_id){
 	ogeom->delObj(isosurface_id);
     }
-    Field3DHandle field;
-    if(!infield->get_field(field))
+    ScalarFieldHandle field;
+    if(!infield->get(field))
 	return;
-    if(field->get_type() != Field3D::ScalarField){
-	error("Field is not a scalar field!\n");
-	return;
-    }
     double min, max;
     field->get_minmax(min, max);
     if(min != old_min || max != old_max){
@@ -193,22 +189,23 @@ void IsoSurface::execute()
 	widget_disc->adjust();
     }
     ObjGroup* group=new ObjGroup;
-    switch(field->get_rep()){
-    case Field3D::RegularGrid:
+    ScalarFieldRG* regular_grid=field->getRG();
+    ScalarFieldUG* unstructured_grid=field->getUG();
+    if(regular_grid){
 	if(have_seedpoint){
-	    iso_reg_grid(field, seed_point, group);
+	    iso_reg_grid(regular_grid, seed_point, group);
 	} else {
-	    iso_reg_grid(field, isoval, group);
+	    iso_reg_grid(regular_grid, isoval, group);
 	}
-	break;
-    case Field3D::TetraHedra:
+    } else if(unstructured_grid){
 	if(have_seedpoint){
-	    iso_tetrahedra(field, seed_point, group);
+	    iso_tetrahedra(unstructured_grid, seed_point, group);
 	} else {
-	    iso_tetrahedra(field, isoval, group);
+	    iso_tetrahedra(unstructured_grid, isoval, group);
 	}
-	break;
-    };
+    } else {
+	error("I can't IsoSurface this type of field...");
+    }
     cerr << "Finished isosurfacing!  Got " << group->size() << " objects\n";
 
     if(group->size() == 0){
@@ -220,17 +217,17 @@ void IsoSurface::execute()
 }
 
 int IsoSurface::iso_cube(int i, int j, int k, double isoval,
-			  ObjGroup* group, const Field3DHandle& field)
+			 ObjGroup* group, ScalarFieldRG* field)
 {
     double oval[9];
-    oval[1]=field->get(i, j, k)-isoval;
-    oval[2]=field->get(i+1, j, k)-isoval;
-    oval[3]=field->get(i+1, j+1, k)-isoval;
-    oval[4]=field->get(i, j+1, k)-isoval;
-    oval[5]=field->get(i, j, k+1)-isoval;
-    oval[6]=field->get(i+1, j, k+1)-isoval;
-    oval[7]=field->get(i+1, j+1, k+1)-isoval;
-    oval[8]=field->get(i, j+1, k+1)-isoval;
+    oval[1]=field->grid(i, j, k)-isoval;
+    oval[2]=field->grid(i+1, j, k)-isoval;
+    oval[3]=field->grid(i+1, j+1, k)-isoval;
+    oval[4]=field->grid(i, j+1, k)-isoval;
+    oval[5]=field->grid(i, j, k+1)-isoval;
+    oval[6]=field->grid(i+1, j, k+1)-isoval;
+    oval[7]=field->grid(i+1, j+1, k+1)-isoval;
+    oval[8]=field->grid(i, j+1, k+1)-isoval;
     ov[1]=field->get_point(i,j,k);
     ov[2]=field->get_point(i+1, j, k);
     ov[3]=field->get_point(i+1, j+1, k);
@@ -449,12 +446,12 @@ int IsoSurface::iso_cube(int i, int j, int k, double isoval,
     return(tab->nbrs);
 }
 
-void IsoSurface::iso_reg_grid(const Field3DHandle& field, double isoval,
+void IsoSurface::iso_reg_grid(ScalarFieldRG* field, double isoval,
 			      ObjGroup* group)
 {
-    int nx=field->get_nx();
-    int ny=field->get_ny();
-    int nz=field->get_nz();
+    int nx=field->nx;
+    int ny=field->ny;
+    int nz=field->nz;
     for(int i=0;i<nx-1;i++){
 	update_progress(i, nx);
 	for(int j=0;j<ny-1;j++){
@@ -467,12 +464,13 @@ void IsoSurface::iso_reg_grid(const Field3DHandle& field, double isoval,
     }
 }
 
-void IsoSurface::iso_reg_grid(const Field3DHandle& field, const Point& p,
+void IsoSurface::iso_reg_grid(ScalarFieldRG* field, const Point& p,
 			      ObjGroup* group)
 {
-    int nx=field->get_nx();
-    int ny=field->get_ny();
-    int nz=field->get_nz();
+    int nx=field->nx;
+    int ny=field->ny;
+    int nz=field->nz;
+    NOT_FINISHED("iso_reg_grid from seedpoint");
     if(!field->interpolate(p, isoval)){
 	error("Seed point not in field boundary");
 	return;
@@ -564,20 +562,22 @@ void IsoSurface::iso_reg_grid(const Field3DHandle& field, const Point& p,
 }
 
 
-void IsoSurface::iso_tetrahedra(const Field3DHandle&, const Point&,
+void IsoSurface::iso_tetrahedra(ScalarFieldUG*, const Point&,
 				ObjGroup*)
 {
     NOT_FINISHED("IsoSurface::iso_tetrahedra");
 }
 
-void IsoSurface::iso_tetrahedra(const Field3DHandle&, double,
+void IsoSurface::iso_tetrahedra(ScalarFieldUG*, double,
 				ObjGroup*)
 {
     NOT_FINISHED("IsoSurface::iso_tetrahedra");
 }
 
-void IsoSurface::find_seed_from_value(const Field3DHandle& field)
+void IsoSurface::find_seed_from_value(const ScalarFieldHandle& field)
 {
+    NOT_FINISHED("IsoSurface::find_seed_from_value");
+#if 0
     int nx=field->get_nx();
     int ny=field->get_ny();
     int nz=field->get_nz();
@@ -593,6 +593,7 @@ void IsoSurface::find_seed_from_value(const Field3DHandle& field)
 	    }
 	}
     }
+#endif
 }
 
 void IsoSurface::mui_callback(void*, int which)
