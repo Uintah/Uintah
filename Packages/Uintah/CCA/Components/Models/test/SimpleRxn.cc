@@ -586,3 +586,10 @@ void SimpleRxn::scheduleComputeStableTimestep(SchedulerP&,
 {
   // None necessary...
 }
+//______________________________________________________________________
+//
+void SimpleRxn::scheduleErrorEstimate(const LevelP&,
+                                       SchedulerP&)
+{
+  // Not implemented yet
+}

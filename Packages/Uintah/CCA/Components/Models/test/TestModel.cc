@@ -219,3 +219,10 @@ void TestModel::computeSpecificHeat(CCVariable<double>&,
 {
   //do nothing
 }
+//______________________________________________________________________
+//
+void TestModel::scheduleErrorEstimate(const LevelP&,
+                                      SchedulerP&)
+{
+  // Not implemented yet
+}
