@@ -326,11 +326,15 @@ itcl_class ViewWindow {
     }
 
     constructor {config} {
+
+	set width 640
+	set height 512
+
 	$viewer-c addviewwindow $this
 	set w .ui[modname]
-	toplevel $w
 
-#	wm protocol $w WM_DELETE_WINDOW "wm withdraw $w"
+	# create the window (immediately withdraw it so that on the Mac it will size correctly.)
+	toplevel $w; wm withdraw $w
 
 	bind $w <Destroy> "$this killWindow %W" 
 	wm title $w "View Window [number]"
@@ -356,9 +360,6 @@ itcl_class ViewWindow {
 	
 	frame $w.wframe -borderwidth 3 -relief sunken
 	pack $w.wframe -side bottom -expand yes -fill both -padx 4 -pady 4
-
-	set width 640
-	set height 512
 
 	menubutton $w.menu.edit -text "Edit" -underline 0 \
 		-menu $w.menu.edit.menu
@@ -449,11 +450,11 @@ itcl_class ViewWindow {
 
 	frame $bsframe.pf
 	pack $bsframe.pf -side left -anchor n
-	label $bsframe.pf.perf1 -width 32 -text "100000 polygons in 12.33 seconds"
+	label $bsframe.pf.perf1 -width 32 -text "? polygons in ? seconds"
 	pack $bsframe.pf.perf1 -side top -anchor n
-	label $bsframe.pf.perf2 -width 32 -text "Hello"
+	label $bsframe.pf.perf2 -width 32 -text "? polygons/second"
 	pack $bsframe.pf.perf2 -side top -anchor n
-	label $bsframe.pf.perf3 -width 32 -text "Hello"
+	label $bsframe.pf.perf3 -width 32 -text "? frames/sec"
 	pack $bsframe.pf.perf3 -side top -anchor n
 
 	canvas $bsframe.mousemode -width 175 -height 60 \
@@ -552,7 +553,20 @@ itcl_class ViewWindow {
 	
 #	puts [pack slaves $w]
 	pack slaves $w
+
+        # To avoid Mac bizarro behavior of not sizing the window correctly
+        # this hack is necessary when loading from a script.
+	if [string length [info script]] {
+           # The added benefit of this is that I can make the Viewer Window
+           # appear after all the other windows and thus on systems without
+           # pbuffers, we don't get the drawing window obscured.  Three seconds
+           # seems to be enough time.
+           after 3000 "SciRaise $w"
+        } else {
+           SciRaise $w
+        }
     }
+    # end constructor()
 
     method bindEvents {w} {
 	bind $w <Expose> "$this-c redraw"
@@ -692,7 +706,7 @@ itcl_class ViewWindow {
 	if { $IsAttached!=0} {
 	    pack $attachedFr -anchor w -side bottom -before $w.bsframe -fill x
 	    append geom [expr [winfo width $w]>[winfo width $w.msframe] ?[winfo width $w]:[winfo width $w.msframe]] x [expr [winfo height $w]+[winfo reqheight $w.msframe]]
-	    wm geometry $w $geom 
+	    wm geometry $w $geom
 	    update
 	} else {
 	    wm deiconify $detachedFr
@@ -1045,7 +1059,7 @@ itcl_class ViewWindow {
 
 	if {[winfo exists $w]} {
 	    SciRaise $w
-	    return;
+	    return
 	}
 
 	toplevel $w
@@ -1079,7 +1093,7 @@ itcl_class ViewWindow {
 
 	if {[winfo exists $w]} {
 	    SciRaise $w
-	    return;
+	    return
 	}
 
 	toplevel $w
