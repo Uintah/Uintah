@@ -183,13 +183,13 @@ Probe::execute()
 
     // If the current location looks reasonable, use that instead
     // of the center.
-    Point location(gui_locx_.get(), gui_locy_.get(), gui_locz_.get());
+    Point curloc(gui_locx_.get(), gui_locy_.get(), gui_locz_.get());
     
-    if (location.x() >= bmin.x() && location.x() <= bmax.x() && 
-	location.y() >= bmin.y() && location.y() <= bmax.y() && 
-	location.z() >= bmin.z() && location.z() <= bmax.z())
+    if (curloc.x() >= bmin.x() && curloc.x() <= bmax.x() && 
+	curloc.y() >= bmin.y() && curloc.y() <= bmax.y() && 
+	curloc.z() >= bmin.z() && curloc.z() <= bmax.z())
     {
-      center = location;
+      center = curloc;
     }
 
     widget_->SetScale(l2norm * 0.015);
