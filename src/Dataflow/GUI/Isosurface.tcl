@@ -77,6 +77,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 
 	trace variable $this-active_tab w "$this switch_to_active_tab"
 	trace variable $this-update_type w "$this set_update_type"
+	trace variable $this-isoval-max w "$this set_minmax_callback"
 
 	# SAGE vars
 	global $this-visibility $this-value $this-scan
@@ -424,11 +425,11 @@ itcl_class SCIRun_Visualization_Isosurface {
 	}
     }
 
-    method set_minmax {min max} {
+    method set_minmax_callback {varname varele varop} {
 	set w .ui[modname]
 	global $this-isoval-min $this-isoval-max
-	set $this-isoval-min $min
-	set $this-isoval-max $max
+	set min [set $this-isoval-min]
+	set max [set $this-isoval-max]
 	if [ expr [winfo exists $w] ] {
           $w.f.iso.childsite.tabs.canvas.notebook.cs.page1.cs.isoval.l.s \
 		  configure -from $min -to $max
