@@ -95,7 +95,7 @@ set m18 [addModuleAtPosition "SCIRun" "FieldsCreate" "FieldBoundary" 447 543]
 set m19 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 447 607]
 set m20 [addModuleAtPosition "SCIRun" "FieldsCreate" "SampleField" 411 86]
 set m21 [addModuleAtPosition "SCIRun" "FieldsData" "TransformData" 411 148]
-set m22 [addModuleAtPosition "SCIRun" "Visialization" "ShowField" 0 0]
+set m22 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 0 0]
 
 addConnection $m0 0 $m1 0
 addConnection $m0 0 $m2 0
@@ -170,6 +170,7 @@ set $m8-realres {128}
 
 set $m10-extract-from-new-field {1}
 set $m10-update_type {on release}
+set $m10-active_tab {NOISE}
 
 set $m11-filename $DATADIR/$DATASET/$DATASET-electrodes.pcd.fld
 
@@ -194,18 +195,21 @@ set $m15-resolution {8}
 set $m16-stepsize [expr 0.004 * ${global-scale}]
 set $m16-tolerance [expr 0.004 * ${global-scale}]
 set $m16-maxsteps {250}
+set $m16-method {5}
 
 set $m19-def-color-r {0.3}
 set $m19-def-color-g {0.3}
 set $m19-def-color-b {0.3}
+set $m19-def-color-a {0.85}
 set $m19-nodes-on {0}
 set $m19-edges-on {1}
 set $m19-faces-on {0}
-set $m19-node_display_type {Spheres}
-set $m19-edge_display_type {Cylinders}
-set $m19-node_scale [expr 0.005 * ${global-scale}]
-set $m19-edge_scale [expr 0.005 * ${global-scale}]
-set $m19-resolution {4}
+set $m19-edges-transparency {1}
+set $m19-edge_display_type {Lines}
+set $m19-edge_scale {1.0}
+#set $m19-edge_display_type {Cylinders}
+#set $m19-edge_scale [expr 0.0025 * ${global-scale}]
+#set $m19-resolution {6}
 
 set $m20-numseeds {3}
 set $m20-autoexecute {1}
@@ -273,7 +277,6 @@ global mods
 # set mods(RescaleColorMap-ColorPlanes) $m30
 # 
 # ### Isosurface
-# set mods(DirectInterpolate-Isosurface) $m18
 # set mods(ShowField-Isosurface) $m13
 # set mods(ChooseField-Isoval) $m23
 # set mods(ChooseField-Isosurface) $m24
@@ -289,10 +292,6 @@ global mods
 # set mods(QuadToTri-X) $m73
 # set mods(QuadToTri-Y) $m74
 # set mods(QuadToTri-Z) $m75
-# 
-# set mods(IsoClip-X) $m77
-# set mods(IsoClip-Y) $m80
-# set mods(IsoClip-Z) $m81
 # 
 # set mods(ChooseField-X) $m33
 # set mods(ChooseField-Y) $m82
@@ -1740,199 +1739,6 @@ class ForwardFEMApp {
     }
     
     
-    method build_planes_tab {f} {
-	global mods
-	global show_planes
-	global show_plane_x show_plane_y show_plane_z
-	global plane_x plane_y plane_z
-
-	if {![winfo exists $f.show]} {
-	    checkbutton $f.show -text "Show Planes:" -variable show_planes \
-		-command "$this toggle_show_planes"
-	    pack $f.show -side top -anchor nw -padx 3 -pady 3
-	    
-	    frame $f.axis -relief groove -borderwidth 2
-	    pack $f.axis -side top -anchor n -padx 3 -pady 3
-	    
-	    frame $f.axis.x
-	    pack $f.axis.x -side top -anchor nw 
-	    
-	    checkbutton $f.axis.x.check -text "X" \
-		-variable show_plane_x \
-		-command "$this toggle_plane X"
-	    scale $f.axis.x.slider -from 0 -to $size_x \
-		-variable plane_x \
-		-showvalue false \
-		-length 200  -width 15 \
-		-sliderlength 15 \
-		-orient horizontal  
-	    bind $f.axis.x.slider <ButtonRelease> "app update_plane_x"
-	    label $f.axis.x.label -textvariable plane_x
-	    pack $f.axis.x.check $f.axis.x.slider $f.axis.x.label -side left -anchor nw \
-		-padx 2 -pady 3
-	    
-	    frame $f.axis.y
-	    pack $f.axis.y -side top -anchor nw 
-	    checkbutton $f.axis.y.check -text "Y" \
-		-variable show_plane_y \
-		-command "$this toggle_plane Y"
-	    scale $f.axis.y.slider -from 0 -to $size_y \
-		-variable plane_y \
-		-showvalue false \
-		-length 200  -width 15 \
-		-sliderlength 15 \
-		-orient horizontal 
-	    bind $f.axis.y.slider <ButtonRelease> "app update_plane_y"
-	    label $f.axis.y.label -textvariable plane_y
-	    pack $f.axis.y.check $f.axis.y.slider $f.axis.y.label -side left -anchor nw \
-		-padx 2 -pady 3
-	    
-	    frame $f.axis.z
-	    pack $f.axis.z -side top -anchor nw 
-	    checkbutton $f.axis.z.check -text "Z" \
-		-variable show_plane_z \
-		-command "$this toggle_plane Z"
-	    scale $f.axis.z.slider -from 0 -to $size_z \
-		-variable plane_z \
-		-showvalue false \
-		-length 200  -width 15 \
-		-sliderlength 15 \
-		-orient horizontal 
-	    bind $f.axis.z.slider <ButtonRelease> "app update_plane_z"
-	    label $f.axis.z.label -textvariable plane_z
-	    pack $f.axis.z.check $f.axis.z.slider $f.axis.z.label -side left -anchor nw \
-		-padx 2 -pady 3
-	    
-	    iwidgets::labeledframe $f.color \
-		-labelpos nw -labeltext "Color Planes Based On"
-	    pack $f.color -side top -anchor nw -padx 3 -pady 3
-	    
-	    set fr [$f.color childsite]
-	    frame $fr.select
-	    pack $fr.select -side top -anchor nw -padx 3 -pady 3
-	    
-	    iwidgets::optionmenu $fr.select.color -labeltext "" \
-		-labelpos w \
-		-command "$this select_color_planes_color $fr.select"
-	    pack $fr.select.color -side left -anchor n -padx 3 -pady 3
-	    
-	    addColorSelection $fr.select "Color" clip_to_isosurface_color "clip_color_change"
-	    
-	    $fr.select.color insert end "Principle Eigenvector" "Fractional Anisotropy" "Linear Anisotropy" "Planar Anisotropy" "Constant"
-	    
-	    $fr.select.color select "Principle Eigenvector"
-	    
-	    iwidgets::labeledframe $fr.maps \
-		-labelpos nw -labeltext "Color Maps"
-	    pack $fr.maps -side top -anchor n -padx 3 -pady 3
-	    
-	    set maps [$fr.maps childsite]
-	    
-	    global $mods(GenStandardColorMaps-ColorPlanes)-mapType
-	    
-	    
-	    # Gray
-	    frame $maps.gray
-	    pack $maps.gray -side top -anchor nw -padx 3 -pady 1 \
-		-fill x -expand 1
-	    radiobutton $maps.gray.b -text "Gray" \
-		-variable $mods(GenStandardColorMaps-ColorPlanes)-mapType \
-		-value 0 \
-		-command "$mods(GenStandardColorMaps-ColorPlanes)-c needexecute"
-	    pack $maps.gray.b -side left -anchor nw -padx 3 -pady 0
-	    
-	    frame $maps.gray.f -relief sunken -borderwidth 2
-	    pack $maps.gray.f -padx 2 -pady 0 -side right -anchor e
-	    canvas $maps.gray.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	    pack $maps.gray.f.canvas -anchor e \
-		-fill both -expand 1
-	    
-	    draw_colormap Gray $maps.gray.f.canvas
-	    
-	    # Rainbow
-	    frame $maps.rainbow
-	    pack $maps.rainbow -side top -anchor nw -padx 3 -pady 1 \
-		-fill x -expand 1
-	    radiobutton $maps.rainbow.b -text "Rainbow" \
-		-variable $mods(GenStandardColorMaps-ColorPlanes)-mapType \
-		-value 2 \
-		-command "$mods(GenStandardColorMaps-ColorPlanes)-c needexecute"
-	    pack $maps.rainbow.b -side left -anchor nw -padx 3 -pady 0
-	    
-	    frame $maps.rainbow.f -relief sunken -borderwidth 2
-	    pack $maps.rainbow.f -padx 2 -pady 0 -side right -anchor e
-	    canvas $maps.rainbow.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	    pack $maps.rainbow.f.canvas -anchor e
-	    
-	    draw_colormap Rainbow $maps.rainbow.f.canvas
-	    
-	    # Darkhue
-	    frame $maps.darkhue
-	    pack $maps.darkhue -side top -anchor nw -padx 3 -pady 1 \
-		-fill x -expand 1
-	    radiobutton $maps.darkhue.b -text "Darkhue" \
-		-variable $mods(GenStandardColorMaps-ColorPlanes)-mapType \
-		-value 5 \
-		-command "$mods(GenStandardColorMaps-ColorPlanes)-c needexecute"
-	    pack $maps.darkhue.b -side left -anchor nw -padx 3 -pady 0
-	    
-	    frame $maps.darkhue.f -relief sunken -borderwidth 2
-	    pack $maps.darkhue.f -padx 2 -pady 0 -side right -anchor e
-	    canvas $maps.darkhue.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	    pack $maps.darkhue.f.canvas -anchor e
-	    
-	    draw_colormap Darkhue $maps.darkhue.f.canvas
-	    
-	    
-	    # Blackbody
-	    frame $maps.blackbody
-	    pack $maps.blackbody -side top -anchor nw -padx 3 -pady 1 \
-		-fill x -expand 1
-	    radiobutton $maps.blackbody.b -text "Blackbody" \
-		-variable $mods(GenStandardColorMaps-ColorPlanes)-mapType \
-		-value 7 \
-		-command "$mods(GenStandardColorMaps-ColorPlanes)-c needexecute"
-	    pack $maps.blackbody.b -side left -anchor nw -padx 3 -pady 0
-	    
-	    frame $maps.blackbody.f -relief sunken -borderwidth 2 
-	    pack $maps.blackbody.f -padx 2 -pady 0 -side right -anchor e
-	    canvas $maps.blackbody.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	    pack $maps.blackbody.f.canvas -anchor e
-	    
-	    draw_colormap Blackbody $maps.blackbody.f.canvas
-	    
-	    
-	    # BP Seismic
-	    frame $maps.bpseismic
-	    pack $maps.bpseismic -side top -anchor nw -padx 3 -pady 1 \
-		-fill x -expand 1
-	    radiobutton $maps.bpseismic.b -text "BP Seismic" \
-		-variable $mods(GenStandardColorMaps-ColorPlanes)-mapType \
-		-value 17 \
-		-command "$mods(GenStandardColorMaps-ColorPlanes)-c needexecute"
-	    pack $maps.bpseismic.b -side left -anchor nw -padx 3 -pady 0
-	    
-	    frame $maps.bpseismic.f -relief sunken -borderwidth 2
-	    pack $maps.bpseismic.f -padx 2 -pady 0 -side left -anchor e
-	    canvas $maps.bpseismic.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	    pack $maps.bpseismic.f.canvas -anchor e
-	    
-	    draw_colormap "BP Seismic" $maps.bpseismic.f.canvas
-	    
-	    global clip_to_isosurface
-	    global clip_to_isosurface_color
-	    checkbutton $f.clipiso -text "Clip to Isosurface" \
-		-variable clip_to_isosurface \
-		-command "$this toggle_clip_to_isosurface"
-	    pack $f.clipiso -side top -anchor nw -padx 5 -pady 5
-
-	} else {
-	    puts "FIX ME: Configure values of planes tab?? (like fill_in_data_pages)"
-	}
-
-    }
-
-
     method build_streamlines_tab { f } {
 	global mods
 	global $mods(ShowField-Streamlines)-edges-on
@@ -1940,7 +1746,7 @@ class ForwardFEMApp {
 	if {![winfo exists $f.show]} {
 	    checkbutton $f.show -text "Show StreamLines" \
 		-variable $mods(ShowField-Streamlines)-edges-on \
-		-command "$this toggle_show_streamlines"
+		-command "$mods(ShowField-Streamlines)-c toggle_display_edges"
 	    pack $f.show -side top -anchor nw -padx 3 -pady 3
 	    
 	    # Isoval
@@ -1948,25 +1754,31 @@ class ForwardFEMApp {
 	    pack $f.isoval -side top -anchor nw -padx 3 -pady 3
 	    
 	    label $f.isoval.l -text "Seeds:"
-	    scale $f.isoval.s -from 1 -to 99 \
+	    scale $f.isoval.s -from 1 -to 200 \
 		-length 100 -width 15 \
 		-sliderlength 15 \
 		-resolution 1 \
 		-variable $mods(Streamlines-rake)-maxseeds \
 		-showvalue false \
-		-orient horizontal \
-		-command "$this update_seedcount"
+		-orient horizontal
 	    
-	    bind $f.isoval.s <ButtonRelease> "$this execute_seedcount_change"
+	    bind $f.isoval.s <ButtonRelease> \
+		"$mods(Streamlines-rake)-c needexecute"
+	    
+	    entry $f.isoval.val -width 3 -relief flat \
+		-textvariable $mods(Streamlines-rake)-maxseeds
+	    
+	    bind $f.isoval.val <Return> "$mods(Streamlines-rake)-c needexecute"
 
-	    label $f.isoval.val -textvariable $mods(Streamlines-rake)-maxseeds -width 2
-	    
-	    pack $f.isoval.l $f.isoval.s $f.isoval.val -side left -anchor n -padx 3      
+	    pack $f.isoval.l $f.isoval.s $f.isoval.val \
+		-side left -anchor n -padx 3      
 	    
 	    radiobutton $f.fast -text "Fast" \
-		-variable $mods(Streamlines)-method -value 5
+		-variable $mods(Streamlines)-method -value 5 \
+		-command "$mods(Streamlines-rake)-c needexecute"
 	    radiobutton $f.adapt -text "Adaptive" \
-		-variable $mods(Streamlines)-method -value 4
+		-variable $mods(Streamlines)-method -value 4 \
+		-command "$mods(Streamlines-rake)-c needexecute"
 
 	    pack $f.fast $f.adapt -side top -anchor w -padx 20
 	}
@@ -1980,7 +1792,7 @@ class ForwardFEMApp {
 	if {![winfo exists $f.show]} {
 	    checkbutton $f.show -text "Show Electrodes" \
 		-variable $mods(ShowField-Electrodes)-nodes-on \
-		-command "$this toggle_show_electrodes"
+		-command "$mods(ShowField-Electrodes)-c toggle_display_nodes"
 	    pack $f.show -side top -anchor nw -padx 3 -pady 3
 	}
     }
@@ -1993,7 +1805,7 @@ class ForwardFEMApp {
 	if {![winfo exists $f.show]} {
 	    checkbutton $f.show -text "Show IsoSurface" \
 		-variable $mods(ShowField-Isosurface)-faces-on \
-		-command "$this toggle_show_isosurface"
+		-command "$mods(ShowField-Isosurface)-c toggle_display_faces"
 	    pack $f.show -side top -anchor nw -padx 3 -pady 3
 	    
 	    # Isoval
@@ -2001,20 +1813,24 @@ class ForwardFEMApp {
 	    pack $f.isoval -side top -anchor nw -padx 3 -pady 3
 	    
 	    label $f.isoval.l -text "Isoval:"
-	    scale $f.isoval.s -from 0.0 -to 1.0 \
+	    scale $f.isoval.s -from -2.0 -to 2.0 \
 		-length 100 -width 15 \
 		-sliderlength 15 \
 		-resolution 0.0001 \
 		-variable $mods(Isosurface)-isoval \
 		-showvalue false \
-		-orient horizontal \
-		-command "$this update_isovals"
+		-orient horizontal
+
+	    bind $f.isoval.s <ButtonRelease> \
+		"$mods(Isosurface)-c needexecute"
 	    
-	    bind $f.isoval.s <ButtonRelease> "$this execute_isoval_change"
-	    
-	    label $f.isoval.val -textvariable $mods(Isosurface)-isoval -width 5
-	    
-	    pack $f.isoval.l $f.isoval.s $f.isoval.val -side left -anchor nw -padx 3      
+	    entry $f.isoval.val -width 5 -relief flat \
+		-textvariable $mods(Isosurface)-isoval
+
+	    bind $f.isoval.val <Return> "$mods(Isosurface)-c needexecute"
+
+	    pack $f.isoval.l $f.isoval.s $f.isoval.val \
+		-side left -anchor nw -padx 3      
 	}
     }	    
 
@@ -2048,22 +1864,41 @@ class ForwardFEMApp {
 	    
 	    draw_colormap Gray $maps.gray.f.canvas
 	    
-	    # Rainbow
-	    frame $maps.rainbow
-	    pack $maps.rainbow -side top -anchor nw -padx 3 -pady 1 \
+	    # Reverse Rainbow
+	    frame $maps.rainbow1
+	    pack $maps.rainbow1 -side top -anchor nw -padx 3 -pady 1 \
 		-fill x -expand 1
-	    radiobutton $maps.rainbow.b -text "Rainbow" \
+	    radiobutton $maps.rainbow1.b -text "Rainbow1" \
+		-variable $mods(GenStandardColorMaps)-mapType \
+		-value 3 \
+		-command "$mods(GenStandardColorMaps)-c needexecute"
+	    pack $maps.rainbow1.b -side left -anchor nw -padx 3 -pady 0
+	    
+	    frame $maps.rainbow1.f -relief sunken -borderwidth 2
+	    pack $maps.rainbow1.f -padx 2 -pady 0 -side right -anchor e
+	    canvas $maps.rainbow1.f.canvas -bg "#ffffff" \
+		-height $colormap_height -width $colormap_width
+	    pack $maps.rainbow1.f.canvas -anchor e
+	    
+	    draw_colormap Rainbow1 $maps.rainbow1.f.canvas
+
+	    # Rainbow
+	    frame $maps.rainbow2
+	    pack $maps.rainbow2 -side top -anchor nw -padx 3 -pady 1 \
+		-fill x -expand 1
+	    radiobutton $maps.rainbow2.b -text "Rainbow2" \
 		-variable $mods(GenStandardColorMaps)-mapType \
 		-value 2 \
 		-command "$mods(GenStandardColorMaps)-c needexecute"
-	    pack $maps.rainbow.b -side left -anchor nw -padx 3 -pady 0
+	    pack $maps.rainbow2.b -side left -anchor nw -padx 3 -pady 0
 	    
-	    frame $maps.rainbow.f -relief sunken -borderwidth 2
-	    pack $maps.rainbow.f -padx 2 -pady 0 -side right -anchor e
-	    canvas $maps.rainbow.f.canvas -bg "#ffffff" -height $colormap_height -width $colormap_width
-	    pack $maps.rainbow.f.canvas -anchor e
+	    frame $maps.rainbow2.f -relief sunken -borderwidth 2
+	    pack $maps.rainbow2.f -padx 2 -pady 0 -side right -anchor e
+	    canvas $maps.rainbow2.f.canvas -bg "#ffffff" \
+		-height $colormap_height -width $colormap_width
+	    pack $maps.rainbow2.f.canvas -anchor e
 	    
-	    draw_colormap Rainbow $maps.rainbow.f.canvas
+	    draw_colormap Rainbow2 $maps.rainbow2.f.canvas
 	    
 	    # Darkhue
 	    frame $maps.darkhue
@@ -2120,19 +1955,6 @@ class ForwardFEMApp {
     }
     
     
-    method update_isovals { val } {
-	# update all of the IsoClip modules
-        global mods
-        global $mods(IsoClip-X)-isoval
-        global $mods(IsoClip-Y)-isoval
-        global $mods(IsoClip-Z)-isoval
-	
-        set $mods(IsoClip-X)-isoval $val
-        set $mods(IsoClip-Y)-isoval $val
-        set $mods(IsoClip-Z)-isoval $val
-    }
-    
-
     method select_isosurface_color { w } {
 	global mods
        	global $mods(ChooseField-Isosurface)-port-index
@@ -2174,45 +1996,20 @@ class ForwardFEMApp {
     }
     
 
-    method select_isoval_based_on { w } {
-	global mods
-       	global $mods(ChooseField-Isoval)-port-index
-	
-	set which [$w.isovalcolor get]
-	
-        if {$which == "Fractional Anisotropy"} {
-	    set $mods(ChooseField-Isoval)-port-index 0
-        } elseif {$which == "Linear Anisotropy"} {
-	    set $mods(ChooseField-Isoval)-port-index 1
-        } else {
-	    # Planar Anisotropy
-	    set $mods(ChooseField-Isoval)-port-index 2
-        } 
-
-	$isosurface_tab1.isovalcolor select $which
-	$isosurface_tab2.isovalcolor select $which
-	
-        # execute 
-        $mods(ChooseField-Isoval)-c needexecute
-    }
-    
-
-    method execute_isoval_change {} {
-	global mods
-	
-	$mods(Isosurface)-c needexecute
-	$mods(IsoClip-X)-c needexecute
-	$mods(IsoClip-Y)-c needexecute
-	$mods(IsoClip-Z)-c needexecute
-    }
-    
-    
     method draw_colormap { which canvas } {
 	set color ""
 	if {$which == "Gray"} {
 	    set color { "Gray" { { 0 0 0 } { 255 255 255 } } }
-	} elseif {$which == "Rainbow"} {
-	    set color { "Rainbow" {	
+	} elseif {$which == "Rainbow1"} {
+	    set color { "Rainbow1" {	
+		{ 0 0 255} { 0 102 255}
+		{ 0 204 255} { 0 255 204}
+		{ 0 255 102} { 0 255 0}
+		{ 102 255 0} { 204 255 0}
+		{ 255 234 0} { 255 204 0}
+		{ 255 102 0} { 255 0 0}}}
+	} elseif {$which == "Rainbow2"} {
+	    set color { "Rainbow2" {	
 		{ 255 0 0}  { 255 102 0}
 		{ 255 204 0}  { 255 234 0}
 		{ 204 255 0}  { 102 255 0}
@@ -2985,7 +2782,6 @@ class ForwardFEMApp {
        global $mods(ShowField-Isosurface)-faces-on
  
 	if {[set $mods(ShowField-Isosurface)-faces-on] == 1} {
-	    disableModule $mods(DirectInterpolate-Isosurface) 0
 	    foreach w [winfo children $isosurface_tab1] {
 		activate_widget $w
 	    }
@@ -2993,7 +2789,6 @@ class ForwardFEMApp {
 		activate_widget $w
 	    }
 	} else {
-	    disableModule $mods(DirectInterpolate-Isosurface) 1
 	    foreach w [winfo children $isosurface_tab1] {
 		disable_widget $w
 	    }
@@ -3006,8 +2801,6 @@ class ForwardFEMApp {
 	    $isosurface_tab1.clip.check configure -state normal -foreground black
 	    $isosurface_tab2.clip.check configure -state normal -foreground black
 	}
-	
-	configure_isosurface_tabs
 	
 	$mods(ShowField-Isosurface)-c toggle_display_faces
     }
