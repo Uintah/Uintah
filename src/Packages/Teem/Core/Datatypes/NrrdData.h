@@ -29,6 +29,7 @@
 #define SCI_Teem_NrrdData_h
 
 #include <Core/Datatypes/Datatype.h>
+#include <Core/Datatypes/Mesh.h>
 #include <Core/Containers/LockingHandle.h>
 #include <nrrd.h>
 
@@ -50,10 +51,17 @@ public:
   NrrdData(const NrrdData&);
   ~NrrdData();
 
+  void set_orig_mesh(MeshHandle mh) { originating_mesh_ = mh; }
+
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
 private:
-  bool     data_owned_;
+  //! did we wrap some existing memory, or was this allocated
+  //! for this object to delete.
+  bool                 data_owned_;
+  //! a handle to the mesh this data originally belonged with. 
+  //! has a rep == 0 if there was no such mesh.
+  MeshHandle           originating_mesh_; 
 };
 
 typedef LockingHandle<NrrdData> NrrdDataHandle;

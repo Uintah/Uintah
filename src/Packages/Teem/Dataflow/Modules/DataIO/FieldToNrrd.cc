@@ -47,12 +47,15 @@ namespace SCITeem {
 using namespace SCIRun;
 
 class FieldToNrrd : public Module {
-  FieldIPort* ifield;
-  NrrdOPort* onrrd;
 public:
   FieldToNrrd(GuiContext *ctx);
   virtual ~FieldToNrrd();
   virtual void execute();
+private:
+  FieldIPort  *ifield_;
+  NrrdOPort   *onrrd_;
+  
+  GuiString    label_;
 };
 
 } // end namespace SCITeem
@@ -62,7 +65,8 @@ DECLARE_MAKER(FieldToNrrd)
 
 
 FieldToNrrd::FieldToNrrd(GuiContext *ctx):
-  Module("FieldToNrrd", ctx, Filter, "DataIO", "Teem")
+  Module("FieldToNrrd", ctx, Filter, "DataIO", "Teem"),
+  label_(ctx->subVar("label"))
 {
 }
 
@@ -70,52 +74,36 @@ FieldToNrrd::~FieldToNrrd()
 {
 }
 
-#define COPY_INTO_NRRD_FROM_FIELD(type, Type) \
-    LatVolField<type> *f = \
-      dynamic_cast<LatVolField<type>*>(field); \
-    lvm = f->get_typed_mesh(); \
-    nx = f->fdata().dim3(); \
-    ny = f->fdata().dim2(); \
-    nz = f->fdata().dim1(); \
-    type *data=new type[nx*ny*nz]; \
-    type *p=&(data[0]); \
-    for (int k=0; k<nz; k++) \
-      for (int j=0; j<ny; j++) \
-	for (int i=0; i<nx; i++) \
-	  *p++=f->fdata()(k,j,i); \
-    nrrdWrap(nout->nrrd, data, nrrdType##Type, 3, nx, ny, nz); \
-    if (f->data_at() == Field::NODE) \
-      nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, \
-                  nrrdCenterNode, nrrdCenterNode, nrrdCenterNode); \
-    else \
-      nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, \
-                  nrrdCenterCell, nrrdCenterCell, nrrdCenterCell)
-
 void FieldToNrrd::execute()
 {
-  ifield = (FieldIPort *)get_iport("Field");
-  onrrd = (NrrdOPort *)get_oport("Nrrd");
+  ifield_ = (FieldIPort *)get_iport("Field");
+  onrrd_ = (NrrdOPort *)get_oport("Nrrd");
 
-  if (!ifield) {
+  if (!ifield_) {
     error("Unable to initialize iport 'Field'.");
     return;
   }
-  if (!onrrd) {
+
+  if (!onrrd_) {
     error("Unable to initialize oport 'Nrrd'.");
     return;
   }
 
   FieldHandle field_handle;
-  if (!ifield->get(field_handle))
+  if (!ifield_->get(field_handle))
     return;
 
   const TypeDescription *td = field_handle->get_type_description();
   CompileInfoHandle ci = ConvertToNrrdBase::get_compile_info(td);
   Handle<ConvertToNrrdBase> algo;
   if (!module_dynamic_compile(ci, algo)) return;  
+  
+  label_.reset();
+  string lab = label_.get();
+  NrrdDataHandle onrrd_handle = algo->convert_to_nrrd(field_handle, lab);
 
-  NrrdDataHandle onrrd_handle = algo->convert_to_nrrd(field_handle);
+  onrrd_handle->set_orig_mesh(field_handle->mesh());
 
-  onrrd->send(onrrd_handle);
+  onrrd_->send(onrrd_handle);
 }
 

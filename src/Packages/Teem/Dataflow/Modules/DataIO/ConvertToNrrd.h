@@ -41,7 +41,7 @@ using namespace std;
 class ConvertToNrrdBase : public DynamicAlgoBase
 {
 public:
-  virtual NrrdDataHandle convert_to_nrrd(SCIRun::FieldHandle in) = 0;
+  virtual NrrdDataHandle convert_to_nrrd(SCIRun::FieldHandle, string &) = 0;
   virtual ~ConvertToNrrdBase();
 
   static const string& get_h_file_path();
@@ -69,7 +69,7 @@ class ConvertToNrrd : public ConvertToNrrdBase
 {
 public:
   //! virtual interface.
-  virtual NrrdDataHandle convert_to_nrrd(SCIRun::FieldHandle in);
+  virtual NrrdDataHandle convert_to_nrrd(SCIRun::FieldHandle, string &);
 };
 
 
@@ -242,13 +242,15 @@ void* get_raw_data_ptr(Fdata &data, int pad) {
   return &(data[0]); // no copy just wrap this pointer
 }
 
+
+
 template <class Fld>
 NrrdDataHandle
-convert(FieldHandle ifld) 
+ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh, string &label)
 {
   typedef typename Fld::value_type val_t;
   Fld *f = dynamic_cast<Fld*>(ifld.get_rep());
-  if (!f) { return 0; }
+  ASSERT(f != 0);
 
   typename Fld::mesh_handle_type m = f->get_typed_mesh(); 
 
@@ -258,10 +260,16 @@ convert(FieldHandle ifld)
 
   NrrdData *nout = 0;
   int pad_data = 0; // if 0 then no copy is made 
+  int sink_size = 1;
+  string sink_label = label + string(":Scalar");
   if (data_name == ten) {
     pad_data = 6; // copy the data, and pad for tensor values
+    sink_size = 6;
+    sink_label = label + string(":Tensor");
   } else if (data_name== vec) {
     pad_data = 3; // copy the data and pad for vector values
+    sink_size = 3;
+    sink_label = label + string(":Vector");
   }
 
   nout = scinew NrrdData(pad_data);
@@ -323,99 +331,109 @@ convert(FieldHandle ifld)
     with_spacing = false;
   }
 
+  // we always have an extra dimension that has the tuple of data
+  // initially it is a tuple with 1 value, i.e. that axis has length 1
+  // It grows via the NrrdJoin mechanism.
   int dim = dims.size();
+  
+
 
   switch(dim) {
   case 1: 
     {
       nrrdWrap(nout->nrrd, get_raw_data_ptr(f->fdata(), pad_data), 
-	       get_nrrd_type<val_t>(), 1, dims[0]);
+	       get_nrrd_type<val_t>(), 2, sink_size, dims[0]);
       if (f->data_at() == Field::NODE) {
-	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode);
+	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterNode, 
+		    nrrdCenterNode);
       } else if (f->data_at() == Field::CELL) {
-	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterCell);
+	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterCell,
+		    nrrdCenterCell);
       } else  {
-	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterUnknown);
+	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter, nrrdCenterUnknown,
+		    nrrdCenterUnknown);
+      }
+      nout->nrrd->axis[0].label = strdup(sink_label);
+      nout->nrrd->axis[1].label = strdup("x");
+
+      if (with_spacing) {
+	nout->nrrd->axis[1].min=minP.x();
+	nout->nrrd->axis[1].max=maxP.x();
+	nout->nrrd->axis[1].spacing=spc.x();
       }
     }
     break;
   case 2:
     {
       nrrdWrap(nout->nrrd, get_raw_data_ptr(f->fdata(), pad_data), 
-	       get_nrrd_type<val_t>(), 2, dims[0], dims[1]);
+	       get_nrrd_type<val_t>(), 3, sink_size, dims[0], dims[1]);
 
       if (f->data_at() == Field::NODE) {
 	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter,
-		    nrrdCenterNode, nrrdCenterNode);
+		    nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
       } else if (f->data_at() == Field::CELL) {
 	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter,
-		    nrrdCenterCell, nrrdCenterCell);
+		    nrrdCenterCell, nrrdCenterCell, nrrdCenterCell);
       } else  {
 	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter,
-		    nrrdCenterUnknown, nrrdCenterUnknown);
+		    nrrdCenterUnknown, nrrdCenterUnknown, nrrdCenterUnknown);
+      }
+
+      nout->nrrd->axis[0].label = strdup(sink_label);
+      nout->nrrd->axis[1].label = strdup("x");
+      nout->nrrd->axis[2].label = strdup("y");
+
+      if (with_spacing) {
+	nout->nrrd->axis[1].min=minP.x();
+	nout->nrrd->axis[1].max=maxP.x();
+	nout->nrrd->axis[1].spacing=spc.x();
+	nout->nrrd->axis[2].min=minP.y();
+	nout->nrrd->axis[2].max=maxP.y();
+	nout->nrrd->axis[2].spacing=spc.y();
       }
     }
     break;
   case 3:
   default:
-    nrrdWrap(nout->nrrd, get_raw_data_ptr(f->fdata(), pad_data), 
-	     get_nrrd_type<val_t>(), 3, dims[0], dims[1], dims[2]);
-    if (f->data_at() == Field::NODE) {
-      nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter,
-		  nrrdCenterNode, nrrdCenterNode, nrrdCenterNode);
-    } else if (f->data_at() == Field::CELL) {
-      nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter,
-		  nrrdCenterCell, nrrdCenterCell, nrrdCenterCell);
-    } else  {
-      nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter,
-		  nrrdCenterUnknown, nrrdCenterUnknown, nrrdCenterUnknown);
+    {
+      nrrdWrap(nout->nrrd, get_raw_data_ptr(f->fdata(), pad_data), 
+	       get_nrrd_type<val_t>(), 4, 
+	       sink_size, dims[0], dims[1], dims[2]);
+
+      if (f->data_at() == Field::NODE) {
+	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter,
+		    nrrdCenterNode, nrrdCenterNode, 
+		    nrrdCenterNode, nrrdCenterNode);
+      } else if (f->data_at() == Field::CELL) {
+	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter,
+		    nrrdCenterCell, nrrdCenterCell, 
+		    nrrdCenterCell, nrrdCenterCell);
+      } else  {
+	nrrdAxesSet(nout->nrrd, nrrdAxesInfoCenter,
+		    nrrdCenterUnknown, nrrdCenterUnknown, 
+		    nrrdCenterUnknown, nrrdCenterUnknown);
+      }
+      nout->nrrd->axis[0].label = strdup(sink_label);
+      nout->nrrd->axis[1].label = strdup("x");
+      nout->nrrd->axis[2].label = strdup("y");
+      nout->nrrd->axis[3].label = strdup("z");
+
+      if (with_spacing) {
+	nout->nrrd->axis[1].min=minP.x();
+	nout->nrrd->axis[1].max=maxP.x();
+	nout->nrrd->axis[1].spacing=spc.x();
+	nout->nrrd->axis[2].min=minP.y();
+	nout->nrrd->axis[2].max=maxP.y();
+	nout->nrrd->axis[2].spacing=spc.y();
+	nout->nrrd->axis[3].min=minP.z();
+	nout->nrrd->axis[3].max=maxP.z();
+	nout->nrrd->axis[3].spacing=spc.z();
+      }
     }
-  }
-
-  int offset=0;
-  if (data_name == vec || data_name == ten) offset=1;
-
-  nout->nrrd->axis[0+offset].label = strdup("x");
-  if (with_spacing) {
-    nout->nrrd->axis[0+offset].min=minP.x();
-    nout->nrrd->axis[0+offset].max=maxP.x();
-    nout->nrrd->axis[0+offset].spacing=spc.x();
-  }
-
-  if (dim > 1) {
-    nout->nrrd->axis[1+offset].min=minP.y();
-    nout->nrrd->axis[1+offset].max=maxP.y();
-    nout->nrrd->axis[1+offset].spacing=spc.y();
-    nout->nrrd->axis[1+offset].label = strdup("y");
-  }
-  if (dim > 2) {
-    nout->nrrd->axis[2+offset].min=minP.z();
-    nout->nrrd->axis[2+offset].max=maxP.z();
-    nout->nrrd->axis[2+offset].spacing=spc.z();
-    nout->nrrd->axis[2+offset].label = strdup("z");
-  }
-
-  if (data_name == vec) {
-    nout->nrrd->axis[0].label = strdup("v");
-  } else if (data_name == ten) {
-    nout->nrrd->axis[0].label = strdup("t");
   }
 
   return NrrdDataHandle(nout);
 }
-
-template <class Fld>
-NrrdDataHandle
-ConvertToNrrd<Fld>::convert_to_nrrd(FieldHandle ifh)
-{
-  Fld *fld = dynamic_cast<Fld*>(ifh.get_rep());
-  ASSERT(fld != 0);
-  //  typname FLD::mesh_handle_type mh = fld->get_typed_mesh();
-  return convert<Fld>(ifh);
-}
-
-
-
 
 } // end namespace SCIRun
 
