@@ -19,7 +19,7 @@
 
 static DebugSwitch bc_debug("BaseConstraint", "Print");
 
-static Index recursion=0;
+static int recursion=0;
 
 /******* Variables *******/
 
@@ -72,6 +72,7 @@ Variable::Resolve()
 void
 Variable::Set( const Point& newValue )
 {
+   level=levellevel=0;
    Assign(newValue, scheme);
 }
 
@@ -97,6 +98,7 @@ const Index MaxDepth = 25;
 void
 Variable::Assign( const Point& newValue, const Scheme scheme )
 {
+   if(level==-1)return; // Backing out
    Index index, index2;
    int reallynew = !(epsilonequal(Epsilon, value, newValue));
 
@@ -128,7 +130,7 @@ Variable::Assign( const Point& newValue, const Scheme scheme )
 	 }
       }
       else {
-	 levellevel = level = 0;
+	 levellevel = level = -1;
 	 cerr << "Maximum level reached for all constraints!" << endl;
 	 cout << "Accepting current approximation." << endl;
 	 cout << "Recursion level = " << --recursion << endl;

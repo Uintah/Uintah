@@ -66,7 +66,7 @@ private:
    Point value;
    Real Epsilon;
 
-   Index levellevel, level;
+   int levellevel, level;
 
    Index numconstraints;
    Array1<BaseConstraint*> constraints;

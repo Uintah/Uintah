@@ -43,7 +43,6 @@ PythagorasConstraint::Satisfy( const Index index, const Scheme scheme )
    Variable& v0 = *vars[0];
    Variable& v1 = *vars[1];
    Variable& v2 = *vars[2];
-   Point temp;
 
    if (pc_debug) {
       ChooseChange(index, scheme);
@@ -53,16 +52,19 @@ PythagorasConstraint::Satisfy( const Index index, const Scheme scheme )
    /* A^2 + B^2 = C^2 */
    switch (ChooseChange(index, scheme)) {
    case 0:
-      temp.x(sqrt(v2.Get().x() * v2.Get().x() - v1.Get().x() * v1.Get().x()));
-      v0.Assign(temp, scheme);
+      v0.Assign(Point(sqrt(v2.Get().x() * v2.Get().x() - v1.Get().x() * v1.Get().x()),
+		      0, 0),
+		scheme);
       break;
    case 1:
-      temp.x(sqrt(v2.Get().x() * v2.Get().x() - v0.Get().x() * v0.Get().x()));
-      v1.Assign(temp, scheme);
+      v1.Assign(Point(sqrt(v2.Get().x() * v2.Get().x() - v0.Get().x() * v0.Get().x()),
+		      0, 0),
+		scheme);
       break;
    case 2:
-      temp.x(sqrt(v0.Get().x() * v0.Get().x() + v1.Get().x() * v1.Get().x()));
-      v2.Assign(temp, scheme);
+      v2.Assign(Point(sqrt(v0.Get().x() * v0.Get().x() + v1.Get().x() * v1.Get().x()),
+		      0, 0),
+		scheme);
       break;
    default:
       cerr << "Unknown variable in Pythagoras Constraint!" << endl;

@@ -21,9 +21,9 @@
 class PlaneConstraint : public BaseConstraint {
 public:
    PlaneConstraint( const clString& name,
-		    const Index numSchemes,
-		    Variable* p,
-		    Variable* norm, Variable* offsetInX );
+		     const Index numSchemes,
+		     Variable* p1, Variable* p2,
+		     Variable* p3, Variable* p4);
    virtual ~PlaneConstraint();
 
 protected:

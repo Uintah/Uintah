@@ -5,17 +5,19 @@
 
 OBJS = BaseConstraint.o \
 	DistanceConstraint.o \
-	HypotenousConstraint.o  \
+	HypotenuseConstraint.o  \
 	LineConstraint.o \
 	PlaneConstraint.o \
 	PythagorasConstraint.o \
+	RatioConstraint.o \
 	SegmentConstraint.o
 SRCS = BaseConstraint.cc \
 	DistanceConstraint.cc \
-	HypotenousConstraint.cc  \
+	HypotenuseConstraint.cc  \
 	LineConstraint.cc \
 	PlaneConstraint.cc \
 	PythagorasConstraint.cc \
+	RatioConstraint.cc \
 	SegmentConstraint.cc
 
 

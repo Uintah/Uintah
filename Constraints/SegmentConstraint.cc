@@ -44,9 +44,6 @@ SegmentConstraint::Satisfy( const Index index, const Scheme scheme )
    Variable& v0 = *vars[0];
    Variable& v1 = *vars[1];
    Variable& v2 = *vars[2];
-   Vector norm;
-   double t;
-   Point p;
 
    if (sc_debug) {
       ChooseChange(index, scheme);
@@ -61,18 +58,15 @@ SegmentConstraint::Satisfy( const Index index, const Scheme scheme )
       NOT_FINISHED("Segment Constraint:  segment_p2");
       break;
    case 2:
-      norm = (v1.Get() - v0.Get());
-      t = -((Dot(v0.Get(), norm) - Dot(v2.Get(), norm))
-	    / Dot(v1.Get(), norm));
-      p = v0.Get() + (v1.Get().vector() * t);
+      Vector norm(v1.Get() - v0.Get());
+      Real length = norm.normalize();
+      Real t = Dot(v2.Get() - v0.Get(), norm);
       // Check if new point is outside segment.
-      t = ((v0.Get().vector() - p.vector()).length()
-	   / ((v0.Get().vector() + v1.Get().vector())
-	      - p.vector()).length());
-      if (t < 0.0)
-	 p = v0.Get();
-      else if (t > 1.0)
-	 p = v1.Get();
+      if(t < 0)
+         t = 0;
+      else if (t > length)
+	 t = length;
+      Point p = v0.Get() + (norm * t);
       v2.Assign(p, scheme);
       break;
    default:
