@@ -4,6 +4,7 @@
 static char *id="@(#) $Id$";
 
 #include <Uintah/Components/Arches/ScalarSolver.h>
+#include <Uintah/Components/Arches/PetscSolver.h>
 #include <Uintah/Components/Arches/RBGSSolver.h>
 #include <Uintah/Components/Arches/Discretization.h>
 #include <Uintah/Components/Arches/Source.h>
@@ -72,6 +73,8 @@ ScalarSolver::problemSetup(const ProblemSpecP& params)
   db->require("linear_solver", linear_sol);
   if (linear_sol == "linegs")
     d_linearSolver = scinew RBGSSolver();
+  else if (linear_sol == "petsc")
+    d_linearSolver = scinew PetscSolver();
   else {
     throw InvalidValue("linear solver option"
 		       " not supported" + linear_sol);
@@ -371,6 +374,9 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.25  2000/09/12 15:47:24  sparker
+// Use petsc solver if available
+//
 // Revision 1.24  2000/09/07 23:07:17  rawat
 // fixed some bugs in bc and added pressure solver using petsc
 //
