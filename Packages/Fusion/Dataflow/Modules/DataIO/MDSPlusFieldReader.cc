@@ -46,13 +46,11 @@ using namespace SCIRun;
 
 class FusionSHARE MDSPlusFieldReader : public Module {
 public:
-  MDSPlusFieldReader(const string& id);
+  MDSPlusFieldReader(GuiContext *context);
 
   virtual ~MDSPlusFieldReader();
 
   virtual void execute();
-
-  virtual void tcl_command(TCLArgs&, void*);
 
 protected:
   GuiString sServerName_;
@@ -78,20 +76,19 @@ protected:
   FieldHandle pHandle_;
 };
 
-extern "C" FusionSHARE Module* make_MDSPlusFieldReader(const string& id) {
-  return scinew MDSPlusFieldReader(id);
-}
 
-MDSPlusFieldReader::MDSPlusFieldReader(const string& id)
-  : Module("MDSPlusFieldReader", id, Source, "DataIO", "Fusion"),
-    sServerName_("serverName", id, this),
-    sTreeName_("treeName", id, this),
-    sShotNumber_("shotNumber", id, this),
-    sSliceNumber_("sliceNumber", id, this),
+DECLARE_MAKER(MDSPlusFieldReader)
 
-    bPressure_("bPressure", id, this),
-    bBField_("bBField", id, this),
-    bVField_("bVField", id, this),
+
+MDSPlusFieldReader::MDSPlusFieldReader(GuiContext *context)
+  : Module("MDSPlusFieldReader", context, Source, "DataIO", "Fusion"),
+    sServerName_(context->subVar("serverName")),
+    sTreeName_(context->subVar("treeName")),
+    sShotNumber_(context->subVar("shotNumber")),
+    sSliceNumber_(context->subVar("sliceNumber")),
+    bPressure_(context->subVar("bPressure")),
+    bBField_(context->subVar("bBField")),
+    bVField_(context->subVar("bVField")),
     pressure_(-1),
     bField_(-1),
     vField_(-1)
@@ -380,9 +377,5 @@ void MDSPlusFieldReader::execute(){
 #endif
 }
 
-void MDSPlusFieldReader::tcl_command(TCLArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 } // End namespace Fusion

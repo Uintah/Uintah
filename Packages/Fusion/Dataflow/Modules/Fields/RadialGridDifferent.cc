@@ -45,13 +45,11 @@ using namespace SCIRun;
 
 class FusionSHARE RadialGridDifferent : public Module {
 public:
-  RadialGridDifferent(const string& id);
+  RadialGridDifferent(GuiContext *context);
 
   virtual ~RadialGridDifferent();
 
   virtual void execute();
-
-  virtual void tcl_command(TCLArgs&, void*);
 
 protected:
   FieldHandle fHandle_;
@@ -63,12 +61,12 @@ protected:
   int kdim_;
 };
 
-extern "C" FusionSHARE Module* make_RadialGridDifferent(const string& id) {
-  return scinew RadialGridDifferent(id);
-}
 
-RadialGridDifferent::RadialGridDifferent(const string& id)
-  : Module("RadialGridDifferent", id, Source, "Fields", "Fusion"),
+DECLARE_MAKER(RadialGridDifferent)
+
+
+RadialGridDifferent::RadialGridDifferent(GuiContext *context)
+  : Module("RadialGridDifferent", context, Source, "Fields", "Fusion"),
 
     fGeneration_( -1 ),
 
@@ -176,9 +174,5 @@ void RadialGridDifferent::execute(){
   }
 }
 
-void RadialGridDifferent::tcl_command(TCLArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 } // End namespace Fusion
