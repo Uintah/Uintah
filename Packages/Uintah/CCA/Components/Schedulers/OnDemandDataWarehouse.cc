@@ -1365,7 +1365,7 @@ OnDemandDataWarehouse::scrub(const VarLabel* var)
   d_lock.writeUnlock();
 }
 
-#ifdef __sgi
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma set woff 1424
 #endif  
 
@@ -1498,7 +1498,7 @@ allocateGridVar(VariableBase& var, DWDatabase& db,
   d_lock.writeUnlock();
 }
 
-#ifdef __sgi
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1424
 #endif  
   
