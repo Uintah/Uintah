@@ -80,7 +80,7 @@ public:
 
   // compute world space point under cursor (x,y).  If successful,
   // set 'p' to that value & return true.  Otherwise, return false.
-  virtual int    pick_scene(int, int, Point *p) { return 0; }
+  virtual int    pick_scene(int, int, Point *) { return 0; }
 };
 
 class RegisterRenderer {
