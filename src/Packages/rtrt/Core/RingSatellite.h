@@ -65,21 +65,15 @@ class RingSatellite : public Ring
       Point extent = 
         Point(center.x()+parent_->get_orb_radius()+radius+thickness+offset,
               center.y()+parent_->get_orb_radius()+radius+thickness+offset,
-              center.z());
+              center.z()+radius+offset);
       bbox.extend( extent );
       extent = 
         Point(center.x()-(parent_->get_orb_radius()+radius+thickness+offset),
               center.y()-(parent_->get_orb_radius()+radius+thickness+offset),
-              center.z());
+              center.z()-(radius+offset));
       bbox.extend( extent );
-
-      extent = Point(center.x(),center.y(),
-                     center.z()+parent_->get_radius()+offset);
-      bbox.extend( extent );
-
-      extent = Point(center.x(),center.y(),
-                     center.z()-(parent_->get_radius()+offset));
-      bbox.extend( extent );
+      bbox.extend( Point(0,0,0) );
+      bbox.extend( Point(50,50,50) );
     } else {
       bbox.extend(cen, radius+thickness+offset);
     }
