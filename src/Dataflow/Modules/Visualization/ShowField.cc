@@ -355,7 +355,7 @@ ShowField::fetch_typed_algorithm(FieldHandle fld_handle,
     }
   }
 
-  if (vfld_handle.get_rep() && vfld_handle->query_vector_interface())
+  if (vfld_handle.get_rep() && vfld_handle->query_vector_interface(this))
   {
     const TypeDescription *vftd = vfld_handle->get_type_description();
     CompileInfoHandle dci =
@@ -370,7 +370,7 @@ ShowField::fetch_typed_algorithm(FieldHandle fld_handle,
     }
   }
 
-  if (vfld_handle.get_rep() && vfld_handle->query_tensor_interface())
+  if (vfld_handle.get_rep() && vfld_handle->query_tensor_interface(this))
   {
     const TypeDescription *vftd = vfld_handle->get_type_description();
     CompileInfoHandle dci =
@@ -507,8 +507,8 @@ ShowField::execute()
       return;
     }
   }
-  else if (fld_handle->query_vector_interface() ||
-	   fld_handle->query_tensor_interface())
+  else if (fld_handle->query_vector_interface(this) ||
+	   fld_handle->query_tensor_interface(this))
   {
     vfld_handle = fld_handle;
   }
