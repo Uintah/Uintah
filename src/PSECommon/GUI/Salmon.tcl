@@ -25,7 +25,7 @@ itcl_class PSECommon_Salmon_Salmon {
 	set make_progress_graph 0
 	set make_time 0
 	set roe ""
-    
+	
     }
 
     method makeRoeID {} {
@@ -51,13 +51,21 @@ catch {rename Roe ""}
 
 itcl_class Roe {
     public salmon
-	method modname {} {
-	   set n $this
-	   if {[string first "::" "$n"] == 0} {
-	       set n "[string range $n 2 end]"
-	   }
-	   return $n
+    
+    # parameters to hold current state of detachable part
+    protected IsAttached 
+    protected IsDisplayed
+    # hold names of detached and attached windows
+    protected detachedFr
+    protected attachedFr
+
+    method modname {} {
+	set n $this
+	if {[string first "::" "$n"] == 0} {
+	    set n "[string range $n 2 end]"
 	}
+	return $n
+    }
 
     destructor {
     }
@@ -69,6 +77,7 @@ itcl_class Roe {
 	wm title $w "Roe"
 	wm iconname $w "Roe"
 	wm minsize $w 100 100
+	
 	global $this-saveFile
 	global $this-saveType
 	set $this-saveFile "out.raw"
@@ -203,12 +212,8 @@ itcl_class Roe {
 	$w.dialbox2 wrapped_dial 2 "Tilt" 0.0 0.0 360.0 1.0 "$this tilt"
 	$w.dialbox2 bounded_dial 3 "FOV" 0.0 0.0 180.0 1.0 "$this fov"
 
-	frame $w.mframe
-	frame $w.mframe.f
-	pack $w.mframe -side bottom -fill x
-	
 	frame $w.bframe
-	pack $w.bframe -side bottom -fill x
+	pack $w.bframe -side top -fill x
 	frame $w.bframe.pf
 	pack $w.bframe.pf -side left -anchor n
 	label $w.bframe.pf.perf1 -width 32 -text "100000 polygons in 12.33 seconds"
@@ -257,20 +262,153 @@ itcl_class Roe {
 		-command "$this addMFrame $w"
 	pack $w.bframe.more -pady 2 -padx 2 -anchor se -side right
 
-	set m $w.mframe.f
+# AS: initialization of attachment
+	toplevel $w.detached
+	frame $w.detached.f
+	pack $w.detached.f -side top -anchor w -fill x
+	
+	wm title $w.detached "ROE settings"
+	update
+
+	wm sizefrom  $w.detached user
+	wm positionfrom  $w.detached user
+
+	wm protocol $w.detached WM_DELETE_WINDOW "$this removeMFrame $w"
+	wm withdraw $w.detached
+	
+	frame $w.mframe
+	frame $w.mframe.f
+	pack $w.mframe.f -side top -fill x
+
+	set IsAttached 1
+	set IsDisplayed 0
+	
+	set att_msg "Double-click here to detach - - - - - - - - - - - - - - - - - - - - -"
+	set det_msg "Double-click here to attach - - - - - - - - - - - - - - - - - - - - -"
+	set detachedFr $w.detached
+	set attachedFr $w.mframe
+	init_frame $detachedFr.f $det_msg
+	init_frame $attachedFr.f $att_msg
+
+# AS: end initialization of attachment
+
+	switchvisual 0
+	$this-c startup
+    }
+    method bindEvents {w} {
+	bind $w <Expose> "$this-c redraw"
+	bind $w <Configure> "$this-c redraw"
+	bind $w <ButtonPress-1> "$this-c mtranslate start %x %y"
+	bind $w <Button1-Motion> "$this-c mtranslate move %x %y"
+	bind $w <ButtonRelease-1> "$this-c mtranslate end %x %y"
+	bind $w <ButtonPress-2> "$this-c mrotate start %x %y %t"
+	bind $w <Button2-Motion> "$this-c mrotate move %x %y %t"
+	bind $w <ButtonRelease-2> "$this-c mrotate end %x %y %t"
+	bind $w <ButtonPress-3> "$this-c mscale start %x %y"
+	bind $w <Button3-Motion> "$this-c mscale move %x %y"
+	bind $w <ButtonRelease-3> "$this-c mscale end %x %y"
+	bind $w <Shift-ButtonPress-1> "$this-c mpick start %x %y %s %b"
+	bind $w <Shift-ButtonPress-2> "$this-c mpick start %x %y %s %b"
+	bind $w <Shift-ButtonPress-3> "$this-c mpick start %x %y %s %b"
+	bind $w <Shift-Button1-Motion> "$this-c mpick move %x %y %s 1"
+	bind $w <Shift-Button2-Motion> "$this-c mpick move %x %y %s 2"
+	bind $w <Shift-Button3-Motion> "$this-c mpick move %x %y %s 3"
+	bind $w <Shift-ButtonRelease-1> "$this-c mpick end %x %y %s %b"
+	bind $w <Shift-ButtonRelease-2> "$this-c mpick end %x %y %s %b"
+	bind $w <Shift-ButtonRelease-3> "$this-c mpick end %x %y %s %b"
+	bind $w <Lock-ButtonPress-1> "$this-c mpick start %x %y %s %b"
+	bind $w <Lock-ButtonPress-2> "$this-c mpick start %x %y %s %b"
+	bind $w <Lock-ButtonPress-3> "$this-c mpick start %x %y %s %b"
+	bind $w <Lock-Button1-Motion> "$this-c mpick move %x %y %s 1"
+	bind $w <Lock-Button2-Motion> "$this-c mpick move %x %y %s 2"
+	bind $w <Lock-Button3-Motion> "$this-c mpick move %x %y %s 3"
+	bind $w <Lock-ButtonRelease-1> "$this-c mpick end %x %y %s %b"
+	bind $w <Lock-ButtonRelease-2> "$this-c mpick end %x %y %s %b"
+	bind $w <Lock-ButtonRelease-3> "$this-c mpick end %x %y %s %b"
+    }
+
+    method removeMFrame {w} {
+
+	if { $IsAttached!=0 } {
+	    pack forget $attachedFr
+	    append geom [winfo width $w] x [expr [winfo height $w]-[winfo height $w.mframe]]
+	    wm geometry $w $geom
+	    update
+	} else { 
+	    wm withdraw $detachedFr
+	}
+	
+	$w.bframe.more configure -command "$this addMFrame $w" -text "+"
+	set IsDisplayed 0
+    }
+    
+    method addMFrame {w} {
+
+	if { $IsAttached!=0} {
+	    pack $attachedFr -anchor w -side top -after $w.bframe
+	    append geom [expr [winfo width $w]>[winfo width $w.mframe] ?[winfo width $w]:[winfo width $w.mframe]] x [expr [winfo height $w]+[winfo reqheight $w.mframe]]
+	    wm geometry $w $geom
+	    update
+	} else {
+	    wm deiconify $detachedFr
+	}
+	$w.bframe.more configure -command "$this removeMFrame $w" -text "-"
+	set IsDisplayed 1
+    }
+
+    method init_frame {m msg} {
+	if { [winfo exists $m] } {
+	puts "Initializing frame ... "
+	global "$this-global-light"
+	global "$this-global-fog"
+	global "$this-global-psize"
+	global "$this-global-type"
+	global "$this-global-debug"
+	global "$this-global-clip"
+	global "$this-global-cull"
+	global "$this-global-movie"
+	global "$this-global-movieName"
+	global "$this-global-movieFrame"
+	
+	global $this-do_stereo
+	global $this-do_bawgl
+	global $this-tracker_state
+	
+	set "$this-global-light" 1
+	set "$this-global-fog" 0
+	set "$this-global-psize" 1
+	set "$this-global-type" Gouraud
+	set "$this-global-debug" 0
+	set "$this-global-clip" 0
+	set "$this-global-cull" 0
+	set "$this-global-movie" 0
+	set "$this-global-movieName" "movie"
+	set "$this-global-movieFrame" 0
+	    
+	set $this-do_stereo 0
+	set $this-do_bawgl 0
+	set $this-tracker_state 0
+	
 	set r "$this-c redraw"
+	bind $m <Double-ButtonPress-1> "$this switch_frames"
+
+	label $m.cut -anchor w -text $msg -font "-Adobe-Helvetica-bold-R-Normal-*-12-75-*"
+	pack $m.cut -side top -anchor w -pady 5 -padx 5
+	bind $m.cut <Double-ButtonPress-1> "$this switch_frames"
 	
 	frame $m.eframe
+	
 	checkbutton $m.eframe.light -text Lighting -variable $this-global-light \
-		-command "$this-c redraw"
+	    -command "$this-c redraw"
 	checkbutton $m.eframe.fog -text Fog -variable $this-global-fog \
-		-command "$this-c redraw"
+	    -command "$this-c redraw"
 	checkbutton $m.eframe.bbox -text BBox -variable $this-global-debug \
-		-command "$this-c redraw"
+	    -command "$this-c redraw"
 	checkbutton $m.eframe.clip -text "Use Clip" -variable $this-global-clip \
-		-command "$this-c redraw"
+	    -command "$this-c redraw"
 	checkbutton $m.eframe.cull -text "Back Cull" -variable $this-global-cull \
-		-command "$this-c redraw"
+	    -command "$this-c redraw"
+	
 # 	checkbutton $m.eframe.movie -text "Save Movie" -variable $this-global-movie
 # 	frame $m.eframe.mf
 # 	label $m.eframe.mf.lf -text "  Frame: "
@@ -320,28 +458,6 @@ itcl_class Roe {
 		{Wire Flat Gouraud}
 	pack $m.shade -in $m.eframe -side top -anchor w
 
-	global "$this-global-light"
-	global "$this-global-fog"
-	global "$this-global-psize"
-	global "$this-global-type"
-	global "$this-global-debug"
-	global "$this-global-clip"
-	global "$this-global-cull"
-	global "$this-global-movie"
-	global "$this-global-movieName"
-	global "$this-global-movieFrame"
-
-	set "$this-global-light" 1
-	set "$this-global-fog" 0
-	set "$this-global-psize" 1
-	set "$this-global-type" Gouraud
-	set "$this-global-debug" 0
-	set "$this-global-clip" 0
-	set "$this-global-cull" 0
-	set "$this-global-movie" 0
-	set "$this-global-movieName" "movie"
-	set "$this-global-movieFrame" 0
-
 	frame $m.objlist -relief groove -borderwidth 2
 	pack $m.objlist -side left -padx 2 -pady 2 -fill y
 	label $m.objlist.title -text "Objects:"
@@ -360,20 +476,17 @@ itcl_class Roe {
 		-command "$m.objlist.canvas yview"
 	pack $m.objlist.scroll -fill y -side right -padx 2 -pady 2
 	
-	global $this-do_stereo
-	set $this-do_stereo 0
 	checkbutton $m.stereo -text "Stereo" -variable $this-do_stereo \
 		-command "$this-c redraw"
 	pack $m.stereo -side top
 
-	global $this-tracker_state
-	set $this-tracker_state 0
+	# the stuff below doesn't have corresponding c-functions
+	
 	checkbutton $m.tracker -text "Tracker" -variable $this-tracker_state \
 		-command "$this-c tracker"
 	pack $m.tracker -side top
 
-	global $this-do_bawgl 
-        set $this-do_bawgl 0
+	
 	checkbutton $m.bench -text "SCIBench" -variable $this-do_bawgl \
                 -command "$this bench $this-do_bawgl"
         pack $m.bench -side top
@@ -381,50 +494,52 @@ itcl_class Roe {
 	button $m.tracker_reset -text " Reset\nTracker" \
 		-command "$this-c reset_tracker"
 	pack $m.tracker_reset -side top
-	
-	switchvisual 0
-	$this-c startup
-    }
-    method bindEvents {w} {
-	bind $w <Expose> "$this-c redraw"
-	bind $w <Configure> "$this-c redraw"
-	bind $w <ButtonPress-1> "$this-c mtranslate start %x %y"
-	bind $w <Button1-Motion> "$this-c mtranslate move %x %y"
-	bind $w <ButtonRelease-1> "$this-c mtranslate end %x %y"
-	bind $w <ButtonPress-2> "$this-c mrotate start %x %y %t"
-	bind $w <Button2-Motion> "$this-c mrotate move %x %y %t"
-	bind $w <ButtonRelease-2> "$this-c mrotate end %x %y %t"
-	bind $w <ButtonPress-3> "$this-c mscale start %x %y"
-	bind $w <Button3-Motion> "$this-c mscale move %x %y"
-	bind $w <ButtonRelease-3> "$this-c mscale end %x %y"
-	bind $w <Shift-ButtonPress-1> "$this-c mpick start %x %y %s %b"
-	bind $w <Shift-ButtonPress-2> "$this-c mpick start %x %y %s %b"
-	bind $w <Shift-ButtonPress-3> "$this-c mpick start %x %y %s %b"
-	bind $w <Shift-Button1-Motion> "$this-c mpick move %x %y %s 1"
-	bind $w <Shift-Button2-Motion> "$this-c mpick move %x %y %s 2"
-	bind $w <Shift-Button3-Motion> "$this-c mpick move %x %y %s 3"
-	bind $w <Shift-ButtonRelease-1> "$this-c mpick end %x %y %s %b"
-	bind $w <Shift-ButtonRelease-2> "$this-c mpick end %x %y %s %b"
-	bind $w <Shift-ButtonRelease-3> "$this-c mpick end %x %y %s %b"
-	bind $w <Lock-ButtonPress-1> "$this-c mpick start %x %y %s %b"
-	bind $w <Lock-ButtonPress-2> "$this-c mpick start %x %y %s %b"
-	bind $w <Lock-ButtonPress-3> "$this-c mpick start %x %y %s %b"
-	bind $w <Lock-Button1-Motion> "$this-c mpick move %x %y %s 1"
-	bind $w <Lock-Button2-Motion> "$this-c mpick move %x %y %s 2"
-	bind $w <Lock-Button3-Motion> "$this-c mpick move %x %y %s 3"
-	bind $w <Lock-ButtonRelease-1> "$this-c mpick end %x %y %s %b"
-	bind $w <Lock-ButtonRelease-2> "$this-c mpick end %x %y %s %b"
-	bind $w <Lock-ButtonRelease-3> "$this-c mpick end %x %y %s %b"
-    }
-    method removeMFrame {w} {
-	pack forget $w.mframe.f
-	$w.mframe config -height 1
-	$w.bframe.more configure -command "$this addMFrame $w" -text "+"
+        } else {
+	    puts "Non-existing frame to initialize!"
+	}
     }
 
-    method addMFrame {w} {
-	pack $w.mframe.f -anchor w
-	$w.bframe.more configure -command "$this removeMFrame $w" -text "-"
+    method switch_frames {} {
+	set w .ui[modname]
+	if {$IsDisplayed!=0} {
+#	    update
+# getting current window position
+#	    set geom [wm geometry $w]
+#	    set f [string first "+" $geom]
+#	    set s [string first "-" $geom]
+#	    if { [expr $f >= 0 && $s>=0] } {    
+#		set ind [expr $f>$s ? $s:$f]
+#	    } else {
+#		set ind [expr $f>$s ? $f:$s]
+#	    }
+		
+#	    if {$ind >=0} {
+#		set pos [string range $geom $ind [expr [string length $geom]-1]]
+#	    } else {
+#		set pos ""
+#	    }
+
+#	    set geom ""
+
+	    # handling main window resizing by hand
+  	    
+	    if { $IsAttached!=0} {
+		pack forget $attachedFr
+		
+		append geom [winfo width $w] x [expr [winfo height $w]-[winfo reqheight $w.mframe]]
+		wm geometry $w $geom
+		wm deiconify $detachedFr
+		set IsAttached 0
+	    } else {
+		wm withdraw $detachedFr
+		
+		pack $attachedFr -anchor w -side top -after $w.bframe
+		append geom [winfo width $w] x [expr [winfo height $w]+[winfo reqheight $w.mframe]]
+		wm geometry $w $geom
+		set IsAttached 1
+	    }
+	    update
+	}
     }
 
     method switchRenderer {renderer} {
@@ -537,8 +652,13 @@ itcl_class Roe {
     }   
 
     method addObject {objid name} {
+	addObjectToFrame $objid $name $detachedFr
+	addObjectToFrame $objid $name $attachedFr
+    }
+
+    method addObjectToFrame {objid name frame} {
 	set w .ui[modname]
-	set m $w.mframe.f
+	set m $frame.f
 	frame  $m.objlist.canvas.frame.objt$objid
 	checkbutton $m.objlist.canvas.frame.obj$objid -text $name \
 		-relief flat -variable "$this-$name" -command "$this-c redraw"
@@ -597,17 +717,28 @@ itcl_class Roe {
 	set view [$m.objlist.canvas yview]
 	$m.objlist.scroll set [lindex $view 0] [lindex $view 1]
     }
-    
+
     method addObject2 {objid} {
+	addObjectToFrame_2 $objid $detachedFr
+	addObjectToFrame_2 $objid $attachedFr
+    }
+    
+    method addObjectToFrame_2 {objid frame} {
 	set w .ui[modname]
-	set m $w.mframe.f
+	set m $frame.f
 	pack $m.objlist.canvas.frame.objt$objid -side top -anchor w
 	pack $m.objlist.canvas.frame.obj$objid  $m.objlist.canvas.frame.menu$objid $m.objlist.canvas.frame.menu2_$objid -in $m.objlist.canvas.frame.objt$objid -side left -anchor w
     }
     
+
     method removeObject {objid} {
+	removeObjectFromFrame $objid $detachedFr
+	removeObjectFromFrame $objid $attachedFr
+    }
+
+    method removeObjectFromFrame {objid frame} {
 	set w .ui[modname]
-	set m $w.mframe.f
+	set m $frame.f
 	pack forget $m.objlist.canvas.frame.objt$objid
     }
 
