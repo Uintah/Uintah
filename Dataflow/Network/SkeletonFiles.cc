@@ -44,13 +44,11 @@ char component_skeleton[] = \
 "#include <Dataflow/Network/Module.h>\n"
 "#include <Core/Malloc/Allocator.h>\n"
 "\n"
-"#include <Dataflow/share/share.h>\n"
-"\n"
 "namespace %s {\n" /* package name */
 "\n"
 "using namespace SCIRun;\n"
 "\n"
-"class PSECORESHARE %s : public Module {\n" /* component name */
+"class %s : public Module {\n" /* component name */
 "" 
 "public:\n"
 "  %s(GuiContext*);\n" /* component name */
@@ -118,7 +116,7 @@ char dllentry_skeleton[] = \
 "\n"
 "#ifdef _WIN32\n"
 "\n"
-"#include <afxwin.h>\n"
+"#include <windows.h>\n"
 "#include <stdio.h>\n"
 "\n"
 "BOOL APIENTRY DllMain(HANDLE hModule, \n"
@@ -140,23 +138,6 @@ char dllentry_skeleton[] = \
 "  return TRUE;\n"
 "}\n"
 "\n"
-"#endif\n"
-"\n"
-"\n";
-
-char share_skeleton[] = \
-"/* share.h */\n"
-"\n"
-"#undef %sSHARE\n" /* package name */
-"\n"
-"#ifdef _WIN32\n"
-"  #if defined(BUILD_%s)\n" /* package name */
-"    #define %sSHARE __declspec(dllexport)\n" /* package name */
-"  #else\n"
-"    #define %sSHARE __declspec(dllimport)\n" /* package name */
-"  #endif\n" 
-"#else\n" 
-"  #define %sSHARE\n" /* package name */
 "#endif\n"
 "\n"
 "\n";
