@@ -70,6 +70,7 @@ public:
     void setNode(const DOM_Node& node);
 
     ProblemSpecP findBlock(const std::string& name) const;
+    ProblemSpecP findNextBlock(const std::string& name) const;
     DOM_Node findNode(const std::string &name, DOM_Node node) const;
 
     void require(const std::string& name, double& value);
@@ -97,6 +98,10 @@ private:
 
 //
 // $Log$
+// Revision 1.7  2000/04/06 02:33:33  jas
+// Added findNextBlock which will find all of the tags named name within a
+// given block.
+//
 // Revision 1.6  2000/03/30 20:23:43  sparker
 // Fixed compile on SGI
 //
