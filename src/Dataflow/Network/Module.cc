@@ -381,7 +381,7 @@ void Module::remove_iport(int which)
   // remove the indicated port, then
   // collapse the remaining ports together
   iports.remove(which);  
-  gui->execute("removePort \{"+id+" "+to_string(which)+" i\}");
+  gui->execute("removePort {"+id+" "+to_string(which)+" i}");
   // rename the collapsed ports and their connections
   // to reflect the positions they collapsed to.
   for (int port=which;port<iports.size();port++) {
@@ -602,30 +602,57 @@ void Module::tcl_command(GuiArgs& args, void*)
     args.error("netedit needs a minor command");
     return;
   }
-  if(args[1] == "iportinfo"){
-    vector<string> info(iports.size());
-    for(int i=0;i<iports.size();i++){
-      IPort* port=iports[i];
-      vector<string> pi;
-      pi.push_back(port->get_colorname());
-      pi.push_back(to_string(port->nconnections()>0));
-      pi.push_back(port->get_typename());
-      pi.push_back(port->get_portname());
-      info[i]=args.make_list(pi);
-    }
-    args.result(args.make_list(info));
-  } else if(args[1] == "oportinfo"){
-    vector<string> info(oports.size());
-    for(int i=0;i<oports.size();i++){
-      OPort* port=oports[i];
-      vector<string> pi;
-      pi.push_back(port->get_colorname());
-      pi.push_back(to_string(port->nconnections()>0));
-      pi.push_back(port->get_typename());
-      pi.push_back(port->get_portname());
-      info[i]=args.make_list(pi);
-    }
-    args.result(args.make_list(info));
+  if(args[1] == "oportcolor") {
+    if (args.count() != 3)
+      args.error(args[0]+" "+args[1]+" takes a port #");
+    int pnum;
+    if (!string_to_int(args[2], pnum))
+      args.error(args[0]+" "+args[1]+" cant parse port #"+args[2]);
+    if (pnum >= oports.size() || pnum < 0)
+      args.error(args[0]+" "+args[1]+" port #"+args[2]+" invalid");
+
+    args.result(oports[pnum]->get_colorname());
+
+  } else if(args[1] == "iportcolor") {
+    if (args.count() != 3)
+      args.error(args[0]+" "+args[1]+" takes a port #");
+    int pnum;
+    if (!string_to_int(args[2], pnum))
+      args.error(args[0]+" "+args[1]+" cant parse port #"+args[2]);
+    if (pnum >= iports.size() || pnum < 0)
+      args.error(args[0]+" "+args[1]+" port #"+args[2]+" invalid");
+
+    args.result(iports[pnum]->get_colorname());
+
+  } else if(args[1] == "oportname") {
+    if (args.count() != 3)
+      args.error(args[0]+" "+args[1]+" takes a port #");
+    int pnum;
+    if (!string_to_int(args[2], pnum))
+      args.error(args[0]+" "+args[1]+" cant parse port #"+args[2]);
+    if (pnum >= oports.size() || pnum < 0)
+      args.error(args[0]+" "+args[1]+" port #"+args[2]+" invalid");
+
+    args.result(oports[pnum]->get_typename()+" "+oports[pnum]->get_portname());
+
+  } else if(args[1] == "iportname") {
+    if (args.count() != 3)
+      args.error(args[0]+" "+args[1]+" takes a port #");
+    int pnum;
+    if (!string_to_int(args[2], pnum))
+      args.error(args[0]+" "+args[1]+" cant parse port #"+args[2]);
+    if (pnum >= iports.size() || pnum < 0)
+      args.error(args[0]+" "+args[1]+" port #"+args[2]+" invalid");
+
+    args.result(iports[pnum]->get_typename()+" "+iports[pnum]->get_portname());
+  } else if(args[1] == "oportcount") {
+    if (args.count() != 2)
+      args.error(args[0]+" "+args[1]+" takes no arguments");
+    args.result(to_string(oports.size()));
+  } else if(args[1] == "iportcount") {
+    if (args.count() != 2)
+      args.error(args[0]+" "+args[1]+" takes no arguments");
+    args.result(to_string(iports.size()));
   } else if(args[1] == "needexecute"){
     if(!abort_flag){
       abort_flag=1;
