@@ -262,8 +262,9 @@ void Module::update_state(State st)
 	s="Completed";
 	break;
     }
-    double time=timer.time();
-    TCL::execute(id+" set_state "+s+" "+to_string(time));
+    double time = timer.time();
+    time = Min(fabs(time), 1.0e10); // Clamp NaN
+    TCL::execute(id+" set_state " + s + " " + to_string(time));
 }
 
 void Module::update_progress(double p)
