@@ -365,6 +365,8 @@ int ExplicitSolver::noSolve(const LevelP& level,
 
   sched_dummySolve(sched, patches, matls);
 
+  sched_interpolateFromFCToCC(sched, patches, matls, nosolve_timelabels);
+  
   d_turbModel->sched_reComputeTurbSubmodel(sched, patches, matls,
 					   nosolve_timelabels);
   
@@ -373,8 +375,6 @@ int ExplicitSolver::noSolve(const LevelP& level,
   // Schedule an interpolation of the face centered velocity data 
   // to a cell centered vector for used by the viz tools
 
-  sched_interpolateFromFCToCC(sched, patches, matls, nosolve_timelabels);
-  
   // print information at probes provided in input file
 
   if (d_probe_data)
