@@ -56,6 +56,7 @@ private:
   NrrdDataHandle  handle_;
   string          old_filename_;
   time_t          old_filemodification_;
+  bool            added_tuple_axis_;
 };
 
 } // end namespace SCITeem
@@ -70,7 +71,8 @@ NrrdReader::NrrdReader(SCIRun::GuiContext* ctx) :
   type_(ctx->subVar("type")),
   axis_(ctx->subVar("axis")),
   filename_(ctx->subVar("filename")),
-  old_filemodification_(0)
+  old_filemodification_(0),
+  added_tuple_axis_(false)
 {
 }
 
@@ -228,8 +230,8 @@ NrrdReader::execute()
     cout << "axis = " << axis << "\n";
   }
 
-  bool added_tuple_axis = false;
-  if (ax == "axisCreateNewTuple")
+  //bool added_tuple_axis = false;
+  if (ax == "axisCreateNewTuple" && !added_tuple_axis_)
   {
     // do add permute work here.
     Nrrd *pn = nrrdNew();
@@ -253,7 +255,7 @@ NrrdReader::execute()
     newnrrd->nrrd = pn;
     newnrrd->copy_sci_data(*handle_.get_rep());
     handle_ = newnrrd;
-    added_tuple_axis = true;
+    added_tuple_axis_ = true;
   }
   else if (axis != 0)
   {
@@ -287,7 +289,7 @@ NrrdReader::execute()
   // If the tuple label is valid use it. If not use the string provided
   // in the gui.
   vector<string> elems;
-  if (added_tuple_axis || (! handle_->get_tuple_indecies(elems)))
+  if (added_tuple_axis_ || (! handle_->get_tuple_indecies(elems)))
   {
     int axis_size = handle_->nrrd->axis[0].size;
 
