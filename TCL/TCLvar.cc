@@ -19,6 +19,7 @@
 
 #include <tcl/tcl/tcl.h>
 #include <iostream.h>
+#include <values.h>
 
 extern Tcl_Interp* the_interp;
 
@@ -49,6 +50,7 @@ clString TCLvar::str()
 TCLdouble::TCLdouble(const clString& name, const clString& id, TCL* tcl)
 : TCLvar(name, id, tcl)
 {
+  value=-MAXDOUBLE;
 }
 
 TCLdouble::~TCLdouble()
@@ -91,6 +93,7 @@ void TCLdouble::emit(ostream& out)
 TCLint::TCLint(const clString& name, const clString& id, TCL* tcl)
 : TCLvar(name, id, tcl)
 {
+  value=-MAXINT;
 }
 
 TCLint::~TCLint()
