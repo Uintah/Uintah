@@ -177,6 +177,10 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
 		  this, &SerialMPM::printParticleCount);
   t->requires(Task::NewDW, lb->partCountLabel);
   sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
+
+  // The task will have a reference to zeroth_matl
+  if (zeroth_matl->removeReference())
+    delete zeroth_matl; // shouln't happen, but...
 }
 
 void SerialMPM::scheduleComputeStableTimestep(const LevelP&,
