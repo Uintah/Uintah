@@ -293,7 +293,7 @@ void IsoSurface::execute()
 	widget_cone->top_rad=0;
 	widget_cone->adjust();
 	widget_disc->cen=cyl_top;
-	widget_disc->normal=-grad;
+	widget_disc->n=-grad;
 	widget_disc->rad=0.75*widget_scale;
 	widget_disc->adjust();
 	widget->reset_bbox();
