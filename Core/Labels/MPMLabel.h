@@ -196,6 +196,7 @@ using std::vector;
       const VarLabel* GMassLabel;
       const VarLabel* GVolumeLabel;
       const VarLabel* GVelocityLabel;
+      const VarLabel* GVelocityInterpLabel;
       const VarLabel* GTemperatureLabel;
       const VarLabel* GTemperatureNoBCLabel;
       const VarLabel* GExternalForceLabel;
