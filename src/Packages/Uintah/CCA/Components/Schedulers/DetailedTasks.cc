@@ -68,7 +68,7 @@ DetailedTasks::assignMessageTags(vector<Task*>& tasks)
   int taskbits = 0;
   while(1<<taskbits < ntasks)
     taskbits++;
-  if(taskbits*2 >= sizeof(int)*8)
+  if(taskbits*2 >= (int)sizeof(int)*8)
     throw InternalError("assignMessageTags needs more bits to handle this number of tasks!");
   for(int i=0;i<(int)tasks.size();i++)
     tasks[i]->setTaskNumber(i);
@@ -706,7 +706,7 @@ void DetailedTasks::logMemoryUse(ostream& out, unsigned long& total,
 
 void DetailedTasks::emitEdges(DOM_Element edgesElement, int rank)
 {
-  for (int i = 0; i < tasks.size(); i++) {
+  for (int i = 0; i < (int)tasks.size(); i++) {
     if (tasks[i]->getAssignedResourceIndex() == rank) {
       tasks[i]->emitEdges(edgesElement);
     }
