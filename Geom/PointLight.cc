@@ -22,8 +22,8 @@ PointLight::~PointLight()
 {
 }
 
-void PointLight::compute_lighting(const Point& at, Color& color,
-				  Vector& to)
+void PointLight::compute_lighting(const View&, const Point& at,
+				  Color& color, Vector& to)
 {
     to=at-p;
     to.normalize();
