@@ -80,6 +80,7 @@
         <constitutive_model type="hypoelastic_plastic">
           <tolerance>5.0e-10</tolerance>
           <include href="../MaterialData/IsotropicElasticAnnCopper.xml"/>
+          <include href="../MaterialData/VonMisesYield.xml"/>
           <include href="../MaterialData/JohnsonCookPlasticAnnCopper.xml"/>
           <include href="../MaterialData/JohnsonCookDamageAnnCopper.xml"/>
           <include href="../MaterialData/MieGruneisenEOSAnnCopper.xml"/>
