@@ -28,6 +28,7 @@
 #include <Core/Containers/Handle.h>
 #include <Core/Datatypes/TriSurfField.h>
 #include <Core/Datatypes/QuadSurfField.h>
+#include <Core/Datatypes/CurveField.h>
 
 namespace SCIRun {
 
@@ -37,16 +38,13 @@ namespace SCIRun {
 class FieldBoundaryAlgoAux : public DynamicAlgoBase
 {
 public:
-  virtual void execute_trisurf(const MeshHandle mesh,
-			       FieldHandle &bndry,
-			       FieldHandle &intrp) = 0;
-
-  virtual void execute_quadsurf(const MeshHandle mesh,
-				FieldHandle &bndry,
-				FieldHandle &intrp) = 0;
+  virtual void execute(const MeshHandle mesh,
+		       FieldHandle &bndry,
+		       FieldHandle &intrp) = 0;
 
   //! support the dynamically compiled algorithm concept
-  static CompileInfoHandle get_compile_info(const TypeDescription *mesh);
+  static CompileInfoHandle get_compile_info(const TypeDescription *mesh,
+					    const string &algo);
 
 protected:
   static bool determine_tri_order(const Point &p0, const Point &p1,
@@ -55,27 +53,23 @@ protected:
 
 
 template <class Msh>
-class FieldBoundaryAlgoAuxT : public FieldBoundaryAlgoAux
+class FieldBoundaryAlgoTriT : public FieldBoundaryAlgoAux
 {
 public:
 
   //! virtual interface. 
-  virtual void execute_trisurf(const MeshHandle mesh,
-			       FieldHandle &boundary,
-			       FieldHandle &interp);
+  virtual void execute(const MeshHandle mesh,
+		       FieldHandle &boundary,
+		       FieldHandle &interp);
 
-  virtual void execute_quadsurf(const MeshHandle mesh,
-				FieldHandle &boundary,
-				FieldHandle &interp);
 };
-
 
 
 template <class Msh>
 void 
-FieldBoundaryAlgoAuxT<Msh>::execute_trisurf(const MeshHandle mesh_untyped,
-					    FieldHandle &boundary_fh,
-					    FieldHandle &interp_fh)
+FieldBoundaryAlgoTriT<Msh>::execute(const MeshHandle mesh_untyped,
+				    FieldHandle &boundary_fh,
+				    FieldHandle &interp_fh)
 {
   Msh *mesh = dynamic_cast<Msh *>(mesh_untyped.get_rep());
   map<typename Msh::Node::index_type, typename TriSurfMesh::Node::index_type> vertex_map;
@@ -165,10 +159,24 @@ FieldBoundaryAlgoAuxT<Msh>::execute_trisurf(const MeshHandle mesh_untyped,
 
 
 template <class Msh>
+class FieldBoundaryAlgoQuadT : public FieldBoundaryAlgoAux
+{
+public:
+
+  //! virtual interface. 
+  virtual void execute(const MeshHandle mesh,
+		       FieldHandle &boundary,
+		       FieldHandle &interp);
+
+};
+
+
+
+template <class Msh>
 void 
-FieldBoundaryAlgoAuxT<Msh>::execute_quadsurf(const MeshHandle mesh_untyped,
-					     FieldHandle &boundary_fh,
-					     FieldHandle &interp_fh)
+FieldBoundaryAlgoQuadT<Msh>::execute(const MeshHandle mesh_untyped,
+				     FieldHandle &boundary_fh,
+				     FieldHandle &interp_fh)
 {
   Msh *mesh = dynamic_cast<Msh *>(mesh_untyped.get_rep());
   map<typename Msh::Node::index_type, typename QuadSurfMesh::Node::index_type> vertex_map;
@@ -256,6 +264,110 @@ FieldBoundaryAlgoAuxT<Msh>::execute_quadsurf(const MeshHandle mesh_untyped,
 
 
 
+template <class Msh>
+class FieldBoundaryAlgoCurveT : public FieldBoundaryAlgoAux
+{
+public:
+
+  //! virtual interface. 
+  virtual void execute(const MeshHandle mesh,
+		       FieldHandle &boundary,
+		       FieldHandle &interp);
+
+};
+
+
+template <class Msh>
+void 
+FieldBoundaryAlgoCurveT<Msh>::execute(const MeshHandle mesh_untyped,
+				      FieldHandle &boundary_fh,
+				      FieldHandle &interp_fh)
+{
+  Msh *mesh = dynamic_cast<Msh *>(mesh_untyped.get_rep());
+  map<typename Msh::Node::index_type, typename CurveMesh::Node::index_type> vertex_map;
+  typename map<typename Msh::Node::index_type, typename CurveMesh::Node::index_type>::iterator node_iter;
+  vector<typename Msh::Node::index_type> reverse_map;
+
+  CurveMeshHandle tmesh = scinew CurveMesh;
+
+  mesh->synchronize(Mesh::EDGE_NEIGHBORS_E | Mesh::EDGES_E);
+
+  // Walk all the faces in the mesh.
+  Point center;
+  typename Msh::Face::iterator citer; mesh->begin(citer);
+  typename Msh::Face::iterator citere; mesh->end(citere);
+
+  while (citer != citere)
+  {
+    typename Msh::Face::index_type ci = *citer;
+    ++citer;
+  
+    mesh->get_center(center, ci);
+
+    // Get all the edges in the face.
+    typename Msh::Edge::array_type edges;
+    mesh->get_edges(edges, ci);
+
+    // Check each edge for neighbors.
+    typename Msh::Edge::array_type::iterator fiter = edges.begin();
+
+    while (fiter != edges.end())
+    {
+      typename Msh::Face::index_type nci;
+      typename Msh::Edge::index_type fi = *fiter;
+      ++fiter;
+
+      if (! mesh->get_neighbor(nci , ci, fi))
+      {
+	// Edges with no neighbors are on the boundary, build a tri.
+	typename Msh::Node::array_type nodes;
+	mesh->get_nodes(nodes, fi);
+	// Creating triangles, so fan if more than 3 nodes.
+	vector<Point> p(nodes.size()); // cache points off
+	CurveMesh::Node::array_type node_idx(nodes.size());
+
+	typename Msh::Node::array_type::iterator niter = nodes.begin();
+
+	for (unsigned int i=0; i<nodes.size(); i++)
+	{
+	  node_iter = vertex_map.find(*niter);
+	  mesh->get_point(p[i], *niter);
+	  if (node_iter == vertex_map.end())
+	  {
+	    node_idx[i] = tmesh->add_point(p[i]);
+	    vertex_map[*niter] = node_idx[i];
+	    reverse_map.push_back(*niter);
+	  }
+	  else
+	  {
+	    node_idx[i] = (*node_iter).second;
+	  }
+	  ++niter;
+	}
+
+	if (determine_tri_order(p[0], p[1], p[2], center))
+	{
+	  tmesh->add_elem(node_idx);
+	}
+	else
+	{
+	  std::reverse(node_idx.begin(), node_idx.end());
+	  tmesh->add_elem(node_idx);
+	}
+      }
+    }
+  }
+  CurveField<double> *ts = scinew CurveField<double>(tmesh, Field::NODE);
+  CurveField<vector<pair<typename Msh::Node::index_type, double> > >* interp =
+    scinew CurveField<vector<pair<typename Msh::Node::index_type, double> > >(tmesh, Field::NODE);
+  for (unsigned int i=0; i<reverse_map.size(); i++)
+    interp->fdata()[i].push_back(pair<typename Msh::Node::index_type, double>(reverse_map[i], 1.0));
+
+  boundary_fh = ts;
+  interp_fh = interp;
+}
+
+
 //! DirectInterpBaseBase supports the dynamically loadable algorithm concept.
 //! when dynamically loaded the user will dynamically cast to a 
 //! DirectInterpBaseBase from the DynamicAlgoBase they will have a pointer to.
@@ -288,32 +400,51 @@ FieldBoundaryAlgoT<Msh>::execute(ModuleReporter *mod, const MeshHandle mesh,
   if (get_type_description((typename Msh::Elem *)0)->get_name() ==
       get_type_description((typename Msh::Cell *)0)->get_name())
   {
+    string algoname = "Tri";
+
+    mesh->synchronize(Mesh::FACE_NEIGHBORS_E | Mesh::FACES_E);
+    Msh *typedmesh = dynamic_cast<Msh *>(mesh.get_rep());
+    typename Msh::Face::iterator face_iter, face_iter_end;
+    typedmesh->begin(face_iter);
+    typedmesh->end(face_iter_end);
+    if (face_iter != face_iter_end)
+    {
+      // Note that we only test the face size of the first element
+      // in the field.  This assumes that all of the elements have
+      // a consistent size of 4, and may break on irregular polyhedral
+      // meshes (unsupported at this time).
+      typename Msh::Node::array_type nodes;
+      typedmesh->get_nodes(nodes, *face_iter);
+      if (nodes.size() == 4)
+      {
+	algoname = "Quad";
+      }
+    }
+
     const TypeDescription *mtd = get_type_description((Msh *)0);
-    CompileInfoHandle ci = FieldBoundaryAlgoAux::get_compile_info(mtd);
+    CompileInfoHandle ci =
+      FieldBoundaryAlgoAux::get_compile_info(mtd, algoname);
     Handle<FieldBoundaryAlgoAux> algo;
     if (mod->module_dynamic_compile(ci, algo))
     {
-      mesh->synchronize(Mesh::FACE_NEIGHBORS_E | Mesh::FACES_E);
-
-      Msh *typedmesh = dynamic_cast<Msh *>(mesh.get_rep());
-      typename Msh::Face::iterator face_iter, face_iter_end;
-      typedmesh->begin(face_iter);
-      typedmesh->end(face_iter_end);
-      if (face_iter != face_iter_end)
-      {
-	// Note that we only test the face size of the first element
-	// in the field.  This assumes that all of the elements have
-	// a consistent size of 4, and may break on irregular polyhedral
-	// meshes (unsupported at this time).
-	typename Msh::Node::array_type nodes;
-	typedmesh->get_nodes(nodes, *face_iter);
-	if (nodes.size() == 4)
-	{
-	  algo->execute_quadsurf(mesh, boundary, interp);
-	  return;
-	}
-      }
-      algo->execute_trisurf(mesh, boundary, interp);
+      algo->execute(mesh, boundary, interp);
+    }
+  }
+  else if (get_type_description((typename Msh::Elem *)0)->get_name() ==
+	   get_type_description((typename Msh::Face *)0)->get_name())
+  {
+    const TypeDescription *mtd = get_type_description((Msh *)0);
+    CompileInfoHandle ci =
+      FieldBoundaryAlgoAux::get_compile_info(mtd, "Curve");
+    Handle<FieldBoundaryAlgoAux> algo;
+    if (mod->module_maybe_dynamic_compile(ci, algo))
+    {
+      algo->execute(mesh, boundary, interp);
+    }
+    else
+    {
+      mod->error("Fields of '" + mtd->get_name() + 
+		 "' type are not currently supported.");
     }
   }
   else
