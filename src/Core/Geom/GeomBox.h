@@ -59,6 +59,48 @@ public:
   virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
 };
 
+
+class SCICORESHARE GeomSimpleBox : public GeomObj {
+protected:
+  Point min, max;
+
+public:
+
+  GeomSimpleBox( const Point& p, const Point& q);
+  GeomSimpleBox(const GeomSimpleBox&);
+  virtual ~GeomSimpleBox();
+
+  virtual GeomObj* clone();
+  virtual void get_bounds(BBox&);
+  
+#ifdef SCI_OPENGL
+  virtual void draw(DrawInfoOpenGL*, Material*, double time);
+#endif
+  
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
+  virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
+};
+
+
+class SCICORESHARE GeomCBox : public GeomSimpleBox {
+public:
+  GeomCBox( const Point& p, const Point& q);
+  GeomCBox(const GeomCBox&);
+  virtual ~GeomCBox();
+
+  virtual GeomObj* clone();
+  
+#ifdef SCI_OPENGL
+  virtual void draw(DrawInfoOpenGL*, Material*, double time);
+#endif
+  
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
+  virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
+};
+
+
 } // End namespace SCIRun
 
 

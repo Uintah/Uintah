@@ -20,7 +20,8 @@
 #include <Core/Algorithms/Visualization/RenderField.h>
 #include <Core/Geom/GeomArrows.h>
 #include <Core/Geom/GeomCone.h>
-
+#include <Core/Geom/GeomBox.h>
+#include <Core/Geom/GeomTransform.h>
 
 namespace SCIRun {
 
@@ -59,20 +60,81 @@ RenderFieldBase::get_compile_info(const TypeDescription *ftd,
 }
 
 
-RenderFieldDataBase::RenderFieldDataBase()
+void 
+RenderFieldBase::add_sphere(const Point &p0, double scale,
+			    int resolution,
+			    GeomGroup *g, MaterialHandle mh)
+{
+  GeomSphere *s = scinew GeomSphere(p0, scale, resolution, resolution);
+  g->add(scinew GeomMaterial(s, mh));
+}
+
+
+
+void 
+RenderFieldBase::add_disk(const Point &p, const Vector &vin,
+			  double scale, int resolution,
+			  GeomGroup *g, MaterialHandle mh)
+{
+  Vector v = vin;
+  if (v.length2() * scale > 1.0e-10)
+  {
+    v.safe_normalize();
+    v*=scale/6;
+    GeomCappedCylinder *d = scinew GeomCappedCylinder(p + v, p - v, scale, 
+						      resolution, 1, 1);
+    g->add(scinew GeomMaterial(d, mh));
+  }
+  else
+  {
+    GeomSphere *s = scinew GeomSphere(p, scale, resolution, resolution);
+    g->add(scinew GeomMaterial(s, mh));
+  }
+}
+
+
+
+void 
+RenderFieldBase::add_axis(const Point &p0, double scale, 
+			  GeomGroup *g, MaterialHandle mh) 
+{
+  static const Vector x(1., 0., 0.);
+  static const Vector y(0., 1., 0.);
+  static const Vector z(0., 0., 1.);
+
+  Point p1 = p0 + x * scale;
+  Point p2 = p0 - x * scale;
+  GeomLine *l = new GeomLine(p1, p2);
+  l->setLineWidth(3.0);
+  g->add(scinew GeomMaterial(l, mh));
+  p1 = p0 + y * scale;
+  p2 = p0 - y * scale;
+  l = new GeomLine(p1, p2);
+  l->setLineWidth(3.0);
+  g->add(scinew GeomMaterial(l, mh));
+  p1 = p0 + z * scale;
+  p2 = p0 - z * scale;
+  l = new GeomLine(p1, p2);
+  l->setLineWidth(3.0);
+  g->add(scinew GeomMaterial(l, mh));
+}
+
+
+
+RenderVectorFieldBase::RenderVectorFieldBase()
 {}
 
-RenderFieldDataBase::~RenderFieldDataBase()
+RenderVectorFieldBase::~RenderVectorFieldBase()
 {}
 
 CompileInfoHandle
-RenderFieldDataBase::get_compile_info(const TypeDescription *vftd,
-				      const TypeDescription *cftd,
-				      const TypeDescription *ltd)
+RenderVectorFieldBase::get_compile_info(const TypeDescription *vftd,
+					const TypeDescription *cftd,
+					const TypeDescription *ltd)
 {
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  static const string template_class_name("RenderFieldData");
-  static const string base_class_name("RenderFieldDataBase");
+  static const string template_class_name("RenderVectorField");
+  static const string base_class_name("RenderVectorFieldBase");
 
   CompileInfo *rval = scinew CompileInfo(template_class_name + "." +
 					 vftd->get_filename() + "." +
@@ -90,6 +152,37 @@ RenderFieldDataBase::get_compile_info(const TypeDescription *vftd,
   return rval;
 }
 
+
+RenderTensorFieldBase::RenderTensorFieldBase()
+{}
+
+RenderTensorFieldBase::~RenderTensorFieldBase()
+{}
+
+CompileInfoHandle
+RenderTensorFieldBase::get_compile_info(const TypeDescription *vftd,
+					const TypeDescription *cftd,
+					const TypeDescription *ltd)
+{
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("RenderTensorField");
+  static const string base_class_name("RenderTensorFieldBase");
+
+  CompileInfo *rval = scinew CompileInfo(template_class_name + "." +
+					 vftd->get_filename() + "." +
+					 cftd->get_filename() + "." +
+					 ltd->get_filename() + ".",
+					 base_class_name, 
+					 template_class_name, 
+					 vftd->get_name() + ", " +
+					 cftd->get_name() + ", " +
+					 ltd->get_name());
+
+  rval->add_include(include_path);
+  vftd->fill_compile_info(rval);
+  cftd->fill_compile_info(rval);
+  return rval;
+}
 
 template <>
 bool
@@ -165,10 +258,10 @@ add_data(const Point &p, const Vector &d, GeomArrows *arrows,
 }
 
 void 
-RenderFieldDataBase::add_disk(const Point &p, const Vector &vin,
-			      double scale, int resolution,
-			      GeomGroup *g, MaterialHandle mh,
-			      bool normalize)
+RenderVectorFieldBase::add_disk(const Point &p, const Vector &vin,
+				double scale, int resolution,
+				GeomGroup *g, MaterialHandle mh,
+				bool normalize)
 {
   Vector v = vin;
   if (v.length2() * scale > 1.0e-10)
@@ -189,10 +282,10 @@ RenderFieldDataBase::add_disk(const Point &p, const Vector &vin,
 
 
 void 
-RenderFieldDataBase::add_cone(const Point &p, const Vector &vin,
-			      double scale, int resolution,
-			      GeomGroup *g, MaterialHandle mh,
-			      bool normalize)
+RenderVectorFieldBase::add_cone(const Point &p, const Vector &vin,
+				double scale, int resolution,
+				GeomGroup *g, MaterialHandle mh,
+				bool normalize)
 {
   Vector v = vin;
   if (v.length2() * scale > 1.0e-10)
@@ -210,5 +303,25 @@ RenderFieldDataBase::add_cone(const Point &p, const Vector &vin,
     g->add(scinew GeomMaterial(s, mh));
   }
 }
+
+
+void 
+RenderTensorFieldBase::add_item(GeomHandle glyph,
+				const Point &p, Tensor &t,
+				double scale, int resolution,
+				GeomGroup *g)
+{
+  t.build_mat_from_eigens();
+  Vector v0(t.mat_[0][0] * scale, t.mat_[0][1] * scale, t.mat_[0][2] * scale);
+  Vector v1(t.mat_[1][0] * scale, t.mat_[1][1] * scale, t.mat_[1][2] * scale);
+  Vector v2(t.mat_[2][0] * scale, t.mat_[2][1] * scale, t.mat_[2][2] * scale);
+
+  static const Point origin(0.0, 0.0, 0.0);
+  Transform trans(origin, v0, v1, v2);
+  trans.pre_translate(p.asVector());
+  GeomTransform *gt = scinew GeomTransform(glyph, trans);
+  g->add(gt);
+}
+
 
 } // end namespace SCIRun

@@ -30,6 +30,7 @@
 #include <Core/Geom/GeomLine.h>
 #include <Core/Geom/GeomCylinder.h>
 #include <Core/Geom/GeomTriangles.h>
+#include <Core/Geom/GeomBox.h>
 #include <Core/Geom/GeomText.h>
 #include <Core/Geom/GeomDL.h>
 #include <Core/Geom/Pt.h>
@@ -100,6 +101,20 @@ protected:
   MaterialHandle           def_mat_handle_;
   ColorMapHandle           color_handle_;
   ind_mat_t               *mats_;
+
+  void add_sphere(const Point &p, double scale, 
+		  int resolution, GeomGroup *g, 
+		  MaterialHandle m0);
+  void add_disk(const Point &p, const Vector& v, double scale, 
+		int resolution, GeomGroup *g, MaterialHandle m0);
+  void add_axis(const Point &p, double scale, GeomGroup *g, 
+		MaterialHandle m0);
+
+  inline  MaterialHandle choose_mat(bool def, int idx) {  
+    if (def) return def_mat_handle_;
+    ASSERT(mats_ != 0); 
+    return (*mats_)[idx];
+  }
 };
 
 
@@ -188,20 +203,6 @@ private:
 			  bool arrow_heads);
 
   void render_materials(const Fld *fld, const string &data_display_mode);
-
-  inline void add_sphere(const Point &p, double scale, 
-			 int resolution, GeomGroup *g, 
-			 MaterialHandle m0);
-  inline void add_disk(const Point &p, const Vector& v, double scale, 
-		       int resolution, GeomGroup *g, MaterialHandle m0);
-  inline void add_axis(const Point &p, double scale, GeomGroup *g, 
-		       MaterialHandle m0);
-
-  inline  MaterialHandle choose_mat(bool def, int idx) {  
-    if (def) return def_mat_handle_;
-    ASSERT(mats_ != 0); 
-    return (*mats_)[idx];
-  }
 };
 
 
@@ -263,69 +264,6 @@ template <>
 bool 
 add_data(const Point &, const Tensor &, GeomArrows *, 
 	 MaterialHandle &, const string &, double, bool, bool);
-
-
-template <class Fld, class Loc>
-void 
-RenderField<Fld, Loc>::add_sphere(const Point &p0, double scale,
-				  int resolution,
-				  GeomGroup *g, MaterialHandle mh)
-{
-  GeomSphere *s = scinew GeomSphere(p0, scale, resolution, resolution);
-  g->add(scinew GeomMaterial(s, mh));
-}
-
-
-
-template <class Fld, class Loc>
-void 
-RenderField<Fld, Loc>::add_disk(const Point &p, const Vector &vin,
-				double scale, int resolution,
-				GeomGroup *g, MaterialHandle mh)
-{
-  Vector v = vin;
-  if (v.length2() * scale > 1.0e-10)
-  {
-    v.safe_normalize();
-    v*=scale/6;
-    GeomCappedCylinder *d = scinew GeomCappedCylinder(p + v, p - v, scale, 
-						      resolution, 1, 1);
-    g->add(scinew GeomMaterial(d, mh));
-  }
-  else
-  {
-    GeomSphere *s = scinew GeomSphere(p, scale, resolution, resolution);
-    g->add(scinew GeomMaterial(s, mh));
-  }
-}
-
-
-
-template <class Fld, class Loc>
-void 
-RenderField<Fld, Loc>::add_axis(const Point &p0, double scale, 
-				GeomGroup *g, MaterialHandle mh) 
-{
-  static const Vector x(1., 0., 0.);
-  static const Vector y(0., 1., 0.);
-  static const Vector z(0., 0., 1.);
-
-  Point p1 = p0 + x * scale;
-  Point p2 = p0 - x * scale;
-  GeomLine *l = new GeomLine(p1, p2);
-  l->setLineWidth(3.0);
-  g->add(scinew GeomMaterial(l, mh));
-  p1 = p0 + y * scale;
-  p2 = p0 - y * scale;
-  l = new GeomLine(p1, p2);
-  l->setLineWidth(3.0);
-  g->add(scinew GeomMaterial(l, mh));
-  p1 = p0 + z * scale;
-  p2 = p0 - z * scale;
-  l = new GeomLine(p1, p2);
-  l->setLineWidth(3.0);
-  g->add(scinew GeomMaterial(l, mh));
-}
 
 
 
@@ -1302,10 +1240,10 @@ RenderField<Fld, Loc>::render_text_cells(FieldHandle field_handle,
 }
 
 
-//! RenderFieldBase supports the dynamically loadable algorithm concept.
+//! RenderVectorFieldBase supports the dynamically loadable algorithm concept.
 //! when dynamically loaded the user will dynamically cast to a 
-//! RenderFieldBase from the DynamicAlgoBase they will have a pointer to.
-class RenderFieldDataBase : public DynamicAlgoBase
+//! RenderVectorFieldBase from the DynamicAlgoBase they will have a pointer to.
+class RenderVectorFieldBase : public DynamicAlgoBase
 {
 public:
 
@@ -1321,8 +1259,8 @@ public:
 
 
 
-  RenderFieldDataBase();
-  virtual ~RenderFieldDataBase();
+  RenderVectorFieldBase();
+  virtual ~RenderVectorFieldBase();
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *vftd,
@@ -1344,7 +1282,7 @@ protected:
 
 
 template <class VFld, class CFld, class Loc>
-class RenderFieldData : public RenderFieldDataBase
+class RenderVectorField : public RenderVectorFieldBase
 {
 public:
   virtual GeomSwitch *render_data(FieldHandle vfld_handle,
@@ -1362,16 +1300,16 @@ public:
 
 template <class VFld, class CFld, class Loc>
 GeomSwitch *
-RenderFieldData<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
-					      FieldHandle cfld_handle,
-					      ColorMapHandle cmap,
-					      MaterialHandle default_material,
-					      const string &display_mode,
-					      double scale, 
-					      bool normalize,
-					      bool bidirectional,
-					      bool arrow_heads,
-					      int resolution)
+RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
+						FieldHandle cfld_handle,
+						ColorMapHandle cmap,
+						MaterialHandle default_material,
+						const string &display_mode,
+						double scale, 
+						bool normalize,
+						bool bidirectional,
+						bool arrow_heads,
+						int resolution)
 {
   VFld *vfld = dynamic_cast<VFld*>(vfld_handle.get_rep());
   CFld *cfld = dynamic_cast<CFld*>(cfld_handle.get_rep());
@@ -1428,6 +1366,129 @@ RenderFieldData<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 	add_data(p, tmp, vec_node,
 		 (cmap.get_rep())?(cmap->lookup(ctmpd)):default_material,
 		 display_mode, scale, normalize, bidirectional);
+      }
+    }
+    ++iter;
+  }
+  return data_switch;
+}
+
+
+
+//! RenderTensorFieldBase supports the dynamically loadable algorithm concept.
+//! when dynamically loaded the user will dynamically cast to a 
+//! RenderTensorFieldBase from the DynamicAlgoBase they will have a pointer to.
+class RenderTensorFieldBase : public DynamicAlgoBase
+{
+public:
+
+  virtual GeomSwitch *render_data(FieldHandle vfld_handle,
+				  FieldHandle cfld_handle,
+				  ColorMapHandle cmap,
+				  MaterialHandle default_material,
+				  const string &data_display_mode,
+				  double scale,
+				  int resolution) = 0;
+
+
+
+  RenderTensorFieldBase();
+  virtual ~RenderTensorFieldBase();
+
+  //! support the dynamically compiled algorithm concept
+  static CompileInfoHandle get_compile_info(const TypeDescription *vftd,
+					    const TypeDescription *cftd,
+					    const TypeDescription *ltd);
+
+protected:
+
+  void add_item(GeomHandle glyph, const Point &p, Tensor &t,
+		double scale, int resolution, GeomGroup *g);
+};
+
+
+template <class VFld, class CFld, class Loc>
+class RenderTensorField : public RenderTensorFieldBase
+{
+public:
+  virtual GeomSwitch *render_data(FieldHandle vfld_handle,
+				  FieldHandle cfld_handle,
+				  ColorMapHandle cmap,
+				  MaterialHandle default_material,
+				  const string &data_display_mode,
+				  double scale,
+				  int resolution);
+};
+
+
+template <class VFld, class CFld, class Loc>
+GeomSwitch *
+RenderTensorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
+						FieldHandle cfld_handle,
+						ColorMapHandle cmap,
+						MaterialHandle def_mat,
+						const string &display_mode,
+						double scale, 
+						int resolution)
+{
+  VFld *vfld = dynamic_cast<VFld*>(vfld_handle.get_rep());
+  CFld *cfld = dynamic_cast<CFld*>(cfld_handle.get_rep()); 
+
+  const bool box_p = (display_mode == "Boxes");
+  const bool sphere_p = (display_mode == "Ellipsoids");
+  const bool cbox_p = (display_mode == "Colored Boxes");
+
+  GeomHandle glyph;
+  if (box_p)
+  {
+    glyph = scinew GeomSimpleBox(Point(-1.0, -1.0, -1.0),
+				 Point(1.0, 1.0, 1.0));
+  }
+  else if (sphere_p)
+  {
+    glyph = scinew GeomSphere(Point(0.0, 0.0, 0.0), 1.0,
+			      resolution, resolution);
+  }
+  else // cbox_p, default
+  {
+    glyph = scinew GeomCBox(Point(-1.0, -1.0, -1.0),
+			    Point(1.0, 1.0, 1.0));
+  }
+  if (!cmap.get_rep() && !cbox_p)
+  {
+    glyph = scinew GeomMaterial(glyph, def_mat);
+  }
+
+  GeomGroup *objs = scinew GeomGroup(); 
+  GeomSwitch *data_switch = scinew GeomSwitch(scinew GeomDL(objs));
+
+  typename VFld::mesh_handle_type mesh = vfld->get_typed_mesh();
+
+  typename Loc::iterator iter, end;
+  mesh->begin(iter);
+  mesh->end(end);
+  while (iter != end)
+  {
+    typename VFld::value_type tmp;
+    if (vfld->value(tmp, *iter))
+    {
+      Point p;
+      mesh->get_center(p, *iter);
+
+      typename CFld::value_type ctmp;
+      cfld->value(ctmp, *iter);
+
+      double ctmpd;
+      to_double(ctmp, ctmpd);
+
+      if (cmap.get_rep())
+      {
+	add_item(scinew GeomMaterial(glyph, cmap->lookup(ctmpd)),
+		 p, tmp, scale, resolution, objs);
+      }
+      else
+      {
+	add_item(glyph, p, tmp, scale, resolution, objs);
       }
     }
     ++iter;

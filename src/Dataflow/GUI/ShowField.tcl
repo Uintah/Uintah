@@ -30,6 +30,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-edges-on
 	global $this-faces-on
 	global $this-vectors-on
+	global $this-tensors-on
 	global $this-text-on
 	global $this-use-normals
 	global $this-use-transparency
@@ -37,6 +38,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-node_display_type
 	global $this-edge_display_type
 	global $this-data_display_type
+	global $this-tensor_display_type
 	global $this-def-color-r
 	global $this-def-color-g
 	global $this-def-color-b
@@ -44,11 +46,13 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-node_scale
 	global $this-edge_scale
 	global $this-vectors_scale
+	global $this-tensors_scale
 	global $this-node-resolution
 	global $this-edge-resolution
 	global $this-data-resolution
 	global $this-active_tab
-	global $this-has_vec_data
+	global $this-has_vector_data
+	global $this-has_tensor_data
 	global $this-interactive_mode
 	global $this-bidirectional
 	global $this-arrow-heads-on
@@ -68,9 +72,11 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-node_display_type Spheres
 	set $this-edge_display_type Lines
 	set $this-data_display_type Arrows
+	set $this-tensor_display_type Boxes
 	set $this-node_scale 0.03
 	set $this-edge_scale 0.015
 	set $this-vectors_scale 0.30
+	set $this-tensors_scale 0.30
 	set $this-def-color-r 0.5
 	set $this-def-color-g 0.5
 	set $this-def-color-b 0.5
@@ -81,11 +87,13 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-faces-on 1
 	set $this-text-on 0
 	set $this-vectors-on 0
+	set $this-tensors-on 0
 	set $this-normalize_vectors 0
 	set $this-node-resolution 6
 	set $this-edge-resolution 6
 	set $this-data-resolution 6
-	set $this-has_vec_data 0
+	set $this-has_vector_data 0
+	set $this-has_tensor_data 0
 	set $this-active_tab "Nodes"
 	set $this-use-normals 0
 	set $this-use-transparency 0
@@ -106,7 +114,8 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-text-show-faces 0
 	set $this-text-show-cells 0
 	trace variable $this-active_tab w "$this switch_to_active_tab"
-	trace variable $this-has_vec_data w "$this vec_tab_changed"
+	trace variable $this-has_vector_data w "$this vector_tab_changed"
+	trace variable $this-has_tensor_data w "$this tensor_tab_changed"
 	trace variable $this-nodes-as-disks w "$this disk_render_status_changed"
     }
 
@@ -330,6 +339,33 @@ itcl_class SCIRun_Visualization_ShowField {
 	pack $res.scale -side top -fill both -expand 1
     }
 
+
+    # Vector Tab
+    method add_tensor_tab {dof} {
+
+	set tensor [$dof.tabs add -label "Tensors" \
+		-command "$this set_active_tab \"Tensors\""]
+	checkbutton $tensor.show_tensors \
+		-text "Show Tensors" \
+		-command "$this-c toggle_display_tensors" \
+		-variable $this-tensors-on
+
+	make_labeled_radio $tensor.radio \
+	    "Tensor Display Type" "$this-c data_display_type" top \
+	    $this-tensor_display_type \
+	    {{Boxes Boxes} {Ellipsoids Ellipsoids} \
+		 {"Colored Boxes" "Colored Boxes"}}
+	
+	pack $tensor.show_tensors $tensor.radio \
+		-side top -fill y -anchor w
+
+	expscale $tensor.slide -label "Tensor Scale" \
+		-orient horizontal \
+		-variable $this-tensors_scale
+
+	bind $tensor.slide.scale <ButtonRelease> "$this-c data_scale"
+    }
+
     # Text Tab
     method add_text_tab {dof} {
 	set text [$dof.tabs add -label "Text" \
@@ -415,8 +451,8 @@ itcl_class SCIRun_Visualization_ShowField {
 	}
     }
 
-    method vec_tab_changed {name1 name2 op} {
-	global $this-has_vec_data
+    method vector_tab_changed {name1 name2 op} {
+	global $this-has_vector_data
 
 	set window .ui[modname]
 	if {[winfo exists $window]} {
@@ -429,6 +465,22 @@ itcl_class SCIRun_Visualization_ShowField {
 	    }
 	}
     }
+
+    method tensor_tab_changed {name1 name2 op} {
+	global $this-has_tensor_data
+
+	set window .ui[modname]
+	if {[winfo exists $window]} {
+	    set dof [$window.options.disp.frame_title childsite]	
+	    if {[set $name1] == 1} { 
+		add_tensor_tab $dof
+		$dof.tabs view [set $this-active_tab]
+	    } else {
+		$dof.tabs delete "Tensors"
+	    }
+	}
+    }
+
     method ui {} {
 	set window .ui[modname]
 	if {[winfo exists $window]} {
@@ -451,7 +503,7 @@ itcl_class SCIRun_Visualization_ShowField {
 		-labelpos nw -labeltext "Display Options"
 	set dof [$window.options.disp.frame_title childsite]
 
-	iwidgets::tabnotebook  $dof.tabs -height 350 -width 325 \
+	iwidgets::tabnotebook  $dof.tabs -height 350 -width 330 \
 	    -raiseselect true 
 	#label $window.options.disp.frame_title -text "Display Options"
 
@@ -459,8 +511,11 @@ itcl_class SCIRun_Visualization_ShowField {
 	add_edges_tab $dof
 	add_faces_tab $dof
 	add_text_tab $dof
-	if {[set $this-has_vec_data] == 1} {
+	if {[set $this-has_vector_data] == 1} {
 	    add_vector_tab $dof
+	}
+	if {[set $this-has_tensor_data] == 1} {
+	    add_tensor_tab $dof
 	}
 
 	global $this-active_tab

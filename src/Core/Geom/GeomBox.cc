@@ -100,6 +100,110 @@ bool GeomBox::saveobj(ostream&, const string&, GeomSave*)
     return false;
 }
 
+
+Persistent* make_GeomSimpleBox()
+{
+    return scinew GeomSimpleBox(Point(0,0,0), Point(1,1,1));
+}
+
+PersistentTypeID GeomSimpleBox::type_id("GeomSimpleBox", "GeomObj", make_GeomSimpleBox);
+
+
+GeomSimpleBox::GeomSimpleBox(const Point& p, const Point& q) : GeomObj()
+{
+  min = Min( p, q );
+  max = Max( p, q );
+}
+
+
+GeomSimpleBox::GeomSimpleBox(const GeomSimpleBox& copy)
+  : GeomObj(copy), min(copy.min), max(copy.max)
+{
+}
+
+GeomSimpleBox::~GeomSimpleBox()
+{
+}
+
+GeomObj* GeomSimpleBox::clone()
+{
+    return scinew GeomSimpleBox(*this);
+}
+
+void
+GeomSimpleBox::get_bounds(BBox& bb)
+{
+  bb.extend(min);
+  bb.extend(max);
+}
+
+#define GEOMSIMPLEBOX_VERSION 1
+
+void
+GeomSimpleBox::io(Piostream& stream)
+{
+
+    stream.begin_class("GeomSimpleBox", GEOMSIMPLEBOX_VERSION);
+    GeomObj::io(stream);
+    Pio(stream, min);
+    Pio(stream, max);
+    stream.end_class();
+}
+
+bool
+GeomSimpleBox::saveobj(ostream&, const string&, GeomSave*)
+{
+    NOT_FINISHED("GeomSimpleBox::saveobj");
+    return false;
+}
+
+
+Persistent* make_GeomCBox()
+{
+    return scinew GeomCBox(Point(0,0,0), Point(1,1,1));
+}
+
+PersistentTypeID GeomCBox::type_id("GeomCBox", "GeomObj", make_GeomCBox);
+
+
+GeomCBox::GeomCBox(const Point& p, const Point& q) : GeomSimpleBox(p, q)
+{
+}
+
+
+GeomCBox::GeomCBox(const GeomCBox& copy)
+  : GeomSimpleBox(copy)
+{
+}
+
+GeomCBox::~GeomCBox()
+{
+}
+
+GeomObj* GeomCBox::clone()
+{
+    return scinew GeomCBox(*this);
+}
+
+#define GEOMCBOX_VERSION 1
+
+void
+GeomCBox::io(Piostream& stream)
+{
+
+    stream.begin_class("GeomCBox", GEOMCBOX_VERSION);
+    GeomSimpleBox::io(stream);
+    stream.end_class();
+}
+
+bool
+GeomCBox::saveobj(ostream&, const string&, GeomSave*)
+{
+    NOT_FINISHED("GeomCBox::saveobj");
+    return false;
+}
+
+
 } // End namespace SCIRun
 
 

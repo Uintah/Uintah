@@ -3882,6 +3882,144 @@ void GeomBox::draw(DrawInfoOpenGL* di, Material* matl, double)
     post_draw(di);
 }
 
+
+void
+GeomSimpleBox::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+  if(!pre_draw(di,matl,1)) return;
+  
+  di->polycount += 6;
+
+#ifdef SCI_NORM_OGL
+  glEnable(GL_NORMALIZE);
+#else
+  glDisable(GL_NORMALIZE);
+#endif
+
+  glBegin(GL_QUADS);
+
+  // top
+  glNormal3f(0,0,1);
+  glVertex3d(min.x(),min.y(),max.z());
+  glVertex3d(max.x(),min.y(),max.z());
+  glVertex3d(max.x(),max.y(),max.z());
+  glVertex3d(min.x(),max.y(),max.z());
+
+  // bottom
+  glNormal3f(0,0,-1);
+  glVertex3d(min.x(),min.y(),min.z());
+  glVertex3d(min.x(),max.y(),min.z());
+  glVertex3d(max.x(),max.y(),min.z());
+  glVertex3d(max.x(),min.y(),min.z());
+	      
+  // left
+  glNormal3f(-1.0,0,0);
+  glVertex3d(min.x(),min.y(),min.z());
+  glVertex3d(min.x(),min.y(),max.z());
+  glVertex3d(min.x(),max.y(),max.z());
+  glVertex3d(min.x(),max.y(),min.z());
+
+  // right
+  glNormal3f(1,0,0);
+  glVertex3d(max.x(),min.y(),min.z());
+  glVertex3d(max.x(),max.y(),min.z());
+  glVertex3d(max.x(),max.y(),max.z());
+  glVertex3d(max.x(),min.y(),max.z());
+	      	      
+  // top
+  glNormal3f(0,1.0,0);
+  glVertex3d(min.x(),max.y(),min.z());
+  glVertex3d(min.x(),max.y(),max.z());
+  glVertex3d(max.x(),max.y(),max.z());
+  glVertex3d(max.x(),max.y(),min.z());
+
+  // back
+  glNormal3f(0,-1,0);
+  glVertex3d(min.x(),min.y(),min.z());
+  glVertex3d(max.x(),min.y(),min.z());
+  glVertex3d(max.x(),min.y(),max.z());
+  glVertex3d(min.x(),min.y(),max.z());
+  
+  glEnd();
+
+  glEnable(GL_NORMALIZE);
+
+  post_draw(di);
+}
+
+
+void
+GeomCBox::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+  if(!pre_draw(di,matl,1)) return;
+  
+  di->polycount += 6;
+
+#ifdef SCI_NORM_OGL
+  glEnable(GL_NORMALIZE);
+#else
+  glDisable(GL_NORMALIZE);
+#endif
+
+  glBegin(GL_QUADS);
+
+  // top
+  glNormal3f(0,0,1);
+  glColor4f(0.0, 0.0, 1.0, 0.0);
+  glVertex3d(min.x(),min.y(),max.z());
+  glVertex3d(max.x(),min.y(),max.z());
+  glVertex3d(max.x(),max.y(),max.z());
+  glVertex3d(min.x(),max.y(),max.z());
+
+  // bottom
+  glNormal3f(0,0,-1);
+  glColor4f(0.0, 0.0, 0.5, 0.0);
+  glVertex3d(min.x(),min.y(),min.z());
+  glVertex3d(min.x(),max.y(),min.z());
+  glVertex3d(max.x(),max.y(),min.z());
+  glVertex3d(max.x(),min.y(),min.z());
+	      
+  // left
+  glNormal3f(-1.0,0,0);
+  glColor4f(0.5, 0.0, 0.0, 0.0);
+  glVertex3d(min.x(),min.y(),min.z());
+  glVertex3d(min.x(),min.y(),max.z());
+  glVertex3d(min.x(),max.y(),max.z());
+  glVertex3d(min.x(),max.y(),min.z());
+
+  // right
+  glNormal3f(1,0,0);
+  glColor4f(1.0, 0.0, 0.0, 0.0);
+  glVertex3d(max.x(),min.y(),min.z());
+  glVertex3d(max.x(),max.y(),min.z());
+  glVertex3d(max.x(),max.y(),max.z());
+  glVertex3d(max.x(),min.y(),max.z());
+	      	      
+  // top
+  glNormal3f(0,1.0,0);
+  glColor4f(0.0, 1.0, 0.0, 0.0);
+  glVertex3d(min.x(),max.y(),min.z());
+  glVertex3d(min.x(),max.y(),max.z());
+  glVertex3d(max.x(),max.y(),max.z());
+  glVertex3d(max.x(),max.y(),min.z());
+
+  // back
+  glNormal3f(0,-1,0);
+  glColor4f(0.0, 0.5, 0.0, 0.0);
+  glVertex3d(min.x(),min.y(),min.z());
+  glVertex3d(max.x(),min.y(),min.z());
+  glVertex3d(max.x(),min.y(),max.z());
+  glVertex3d(min.x(),min.y(),max.z());
+  
+  glEnd();
+
+  glEnable(GL_NORMALIZE);
+
+  post_draw(di);
+}
+
+
+
 void GeomTrianglesPC::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
     if(points.size() == 0)
