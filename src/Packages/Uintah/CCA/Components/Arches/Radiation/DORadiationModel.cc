@@ -1,9 +1,13 @@
 //----- DORadiationModel.cc --------------------------------------------------
 
+#include <sci_defs/hypre_defs.h>
+
 #include <Packages/Uintah/CCA/Components/Arches/Radiation/RadiationSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/Radiation/DORadiationModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/Radiation/RadLinearSolver.h>
+#ifdef HAVE_HYPRE
 #include <Packages/Uintah/CCA/Components/Arches/Radiation/RadHypreSolver.h>
+#endif
 //#include <Packages/Uintah/CCA/Components/Arches/Mixing/Common.h>
 #include <Packages/Uintah/CCA/Components/Arches/BoundaryCondition.h>
 #include <Core/Containers/OffsetArray1.h>
@@ -125,9 +129,9 @@ DORadiationModel::problemSetup(const ProblemSpecP& params)
   db->getWithDefault("linear_solver",linear_sol,"petsc");
 
   if (linear_sol == "petsc") d_linearSolver = scinew RadLinearSolver(d_myworld);
-  //#ifdef HAVE_HYPRE
+#ifdef HAVE_HYPRE
   else if (linear_sol == "hypre") d_linearSolver = scinew RadHypreSolver(d_myworld);
-  //#endif
+#endif
   
 
 //  d_linearSolver = scinew RadLinearSolver(d_myworld);
