@@ -88,8 +88,8 @@ class CuttingPlane : public Module {
    ColorMapIPort *inColorMap;
    GeometryOPort* ogeom;
    CrowdMonitor widget_lock;
-   int init;
    int widget_id;
+   int init;
    FrameWidget *widget;
    virtual void widget_moved(bool last);
    GuiInt cutting_plane_type;
@@ -160,6 +160,7 @@ CuttingPlane::CuttingPlane(GuiContext* ctx) :
   Module("CuttingPlane", ctx, Filter, "Visualization", "Uintah"),
   widget_lock("Cutting plane widget lock"),
   widget_id(0),
+  init(1),
   cutting_plane_type(ctx->subVar("cutting_plane_type")),
   num_contours(ctx->subVar("num_contours")), 
   offset(ctx->subVar("offset")), scale(ctx->subVar("scale")), 
@@ -192,7 +193,7 @@ CuttingPlane::~CuttingPlane()
 void CuttingPlane::get_minmax(FieldHandle f)
 {
   double mn, mx;
-  ScalarFieldInterface* sfi = f->query_scalar_interface();
+  ScalarFieldInterfaceHandle sfi(f->query_scalar_interface());
   sfi->compute_min_max(mn, mx);
   minmax_ = pair<double, double>(mn, mx);
 }
@@ -209,7 +210,6 @@ void CuttingPlane::execute()
   inColorMap = (ColorMapIPort *) get_iport("ColorMap");
   // Create the output port
   ogeom = (GeometryOPort *) get_oport("Geometry");
-  init = 1;
 
   // get the scalar field and ColorMap...if you can
   FieldHandle field;
@@ -378,7 +378,7 @@ void CuttingPlane::execute()
   //int exhaustive=exhaustiveGUI.get();
 
 
-  ScalarFieldInterface *sfi = 0;
+  ScalarFieldInterfaceHandle sfi = 0;
   if( field->get_type_name(0) == "LatVolField")
     sfi = field->query_scalar_interface();
   
