@@ -41,6 +41,7 @@
 
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Modules/DataIO/GenericReader.h>
+#include <Core/ImportExport/Field/FieldIEPlugin.h>
 
 namespace SCIRun {
 
@@ -49,12 +50,32 @@ template class GenericReader<FieldHandle>;
 class FieldReader : public GenericReader<FieldHandle> {
 public:
   FieldReader(GuiContext* ctx);
+
+  virtual bool call_importer(const string &filename);
 };
 
 DECLARE_MAKER(FieldReader)
+
+
 FieldReader::FieldReader(GuiContext* ctx)
   : GenericReader<FieldHandle>("FieldReader", ctx, "DataIO", "SCIRun")
 {
+  //importing_ = true;  // Turn this on to test TextPointCloudString plugin.
 }
+
+
+bool
+FieldReader::call_importer(const string &filename)
+{
+  FieldIEPluginManager mgr;
+  FieldIEPlugin *pl = mgr.get_plugin("TextPointCloudString");
+  if (pl)
+  {
+    handle_ = pl->filereader(this, filename.c_str());
+    return handle_.get_rep();
+  }
+  return false;
+}
+
 
 } // End namespace SCIRun

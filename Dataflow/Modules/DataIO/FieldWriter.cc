@@ -41,6 +41,7 @@
 
 #include <Dataflow/Ports/FieldPort.h>
 #include <Dataflow/Modules/DataIO/GenericWriter.h>
+#include <Core/ImportExport/Field/FieldIEPlugin.h>
 
 namespace SCIRun {
 
@@ -49,14 +50,31 @@ template class GenericWriter<FieldHandle>;
 class FieldWriter : public GenericWriter<FieldHandle> {
 public:
   FieldWriter(GuiContext* ctx);
+
+  virtual bool call_exporter(const string &filename);
 };
 
 
 DECLARE_MAKER(FieldWriter)
 
+
 FieldWriter::FieldWriter(GuiContext* ctx)
   : GenericWriter<FieldHandle>("FieldWriter", ctx, "DataIO", "SCIRun")
 {
+  //exporting_ = true;  // Turn this on to test TextPointCloudString plugin.
+}
+
+
+bool
+FieldWriter::call_exporter(const string &filename)
+{
+  FieldIEPluginManager mgr;
+  FieldIEPlugin *pl = mgr.get_plugin("TextPointCloudString");
+  if (pl)
+  {
+    return pl->filewriter(this, handle_, filename.c_str());
+  }
+  return false;
 }
 
 } // End namespace SCIRun

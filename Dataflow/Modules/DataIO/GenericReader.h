@@ -56,10 +56,14 @@ namespace SCIRun {
 template <class HType> 
 class GenericReader : public Module
 {
+protected:
   GuiFilename filename_;
   HType     handle_;
   string    old_filename_;
   time_t    old_filemodification_;
+
+  bool importing_;
+  virtual bool call_importer(const string &filename);
 
 public:
   GenericReader(const string &name, GuiContext* ctx,
@@ -75,13 +79,22 @@ GenericReader<HType>::GenericReader(const string &name, GuiContext* ctx,
 				    const string &cat, const string &pack)
   : Module(name, ctx, Source, cat, pack),
     filename_(ctx->subVar("filename")),
-    old_filemodification_(0)
+    old_filemodification_(0),
+    importing_(false)
 {
 }
 
 template <class HType>
 GenericReader<HType>::~GenericReader()
 {
+}
+
+
+template <class HType>
+bool
+GenericReader<HType>::call_importer(const string &filename)
+{
+  return false;
 }
 
 
@@ -114,22 +127,34 @@ GenericReader<HType>::execute()
   {
     old_filemodification_ = new_filemodification;
     old_filename_ = fn;
-    Piostream *stream = auto_istream(fn);
-    if (!stream)
+
+    if (importing_)
     {
-      error("Error reading file '" + fn + "'.");
-      return;
+      if (!call_importer(fn))
+      {
+	error("Import failed.");
+	return;
+      }
     }
+    else
+    {
+      Piostream *stream = auto_istream(fn);
+      if (!stream)
+      {
+	error("Error reading file '" + fn + "'.");
+	return;
+      }
     
-    // Read the file
-    Pio(*stream, handle_);
-    if (!handle_.get_rep() || stream->error())
-    {
-      error("Error reading data from file '" + fn +"'.");
+      // Read the file
+      Pio(*stream, handle_);
+      if (!handle_.get_rep() || stream->error())
+      {
+	error("Error reading data from file '" + fn +"'.");
+	delete stream;
+	return;
+      }
       delete stream;
-      return;
     }
-    delete stream;
   }
 
   // Send the data downstream.
