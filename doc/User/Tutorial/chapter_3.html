@@ -202,35 +202,8 @@ You should save this net as <i>3B.net</i>, which you'll use in Chapter 4 of this
 	      or points, with NodeScale set to approximately 1--2.</p>
 	   <li> For the second ShowField module lower-left in <b>Figure 3.5</b>, set the UI to display Edges only as cylinders with a Cylinder Scale of 2.</p> 
 	</ul>
-You should save this net as <i>3B.net</i>, which you'll use in Chapter 4 of this tutorial, <b><A href="chapter_4.html#section-2">Putting the nets together</b></A>.</p>
-        <p><b><A name="section-3">3C: StreamLines</b><br></A>
-
-        <p>Streamline advection is the last visualization technique we will
-	explore in this 
-        chapter. The StreamLines module visualizes vector fields by generating curves that interpolate the flow of vectors in a field.</p>
-
-	<p>We will generate the input vector field by using the
-	Gradient module (SCIRun/Fields/Gradient) in order to compute the
-	gradient of the utahtorso-lowres-voltage.tvd.fld.</p> 
-
-<p>The SampleField module will generate a sample distribution of StreamLine seed
-	points.  SampleField
-	generates samples from any type of field input and outputs the
-	samples as a PointCloudMesh Field.    
-	In order to run the StreamLines net, we will need:</p>
-	<ul>
-	<li>One FieldReader module 
-	<li>One Gradient module 
-	<li>One SampleField module
-	<li>Two ShowField modules 
-	<li>One DirectInterpolate module
-	<li>One GenStandardColorMaps module
-	<li>One RescaleColorMap module 
-	<li>One Viewer module
-<li>One StreamLines module  
-	</ul>
-	<p>These should be hooked together as shown in <b>Figure 3.5</b>.</p> 
-	
+You should save this net as <i>3C.net</i>, which you'll use in Chapter 4 of this tutorial, <b><A href="chapter_4.html#section-2">Putting the nets together</b></A>.</p>
+        
       </div>
 	<center>
 	<p><img height="461" width="450" src="images/figures/3_5.gif"><br>
@@ -257,8 +230,7 @@ You should save this net as <i>3B.net</i>, which you'll use in Chapter 4 of this
 	   <li> For the second ShowField module lower-left in <b>Figure 3.5</b>, set the UI to display Edges only as cylinders with a Cylinder Scale of 2.</p>
  </ul>
 
-You should save this net as <i>3C.net</i>, which you'll use in Chapter 4 of this tutorial, <b><A href="chapter_4.html#section-3">Putting the nets together</b></A>.</p>
-	<p>The StreamLines module works by integrating the seed points
+<p>The StreamLines module works by integrating the seed points
 	through the vector Field.  We use a fifth order
 	integration method; the Runge-Kutta-Fehlberg algorithm.  We must set three parameters in order to run this algorithm: Error Tolerance,
 	Step Size, and a Maximum Number of Steps.  Set these three
