@@ -530,6 +530,7 @@ proc createSubnetMenu { menu { subnet 0 } } {
 
 proc networkHasChanged {args} {
     upvar \#0 NetworkChanged changed
+#    puts "$changed networkHasChanged [info level [expr [info level]-1]]"
     set changed 1
 }
 
@@ -858,18 +859,21 @@ proc popupLoadMenu {} {
     loadnet $netedit_loadnet
 }
 
-proc ClearCanvas { {confirm 1} {subnet 0} } {
+proc ClearCanvas { { confirm 1 } { subnet 0 } } {
     # destroy all modules
     global NetworkChanged
     if { !$NetworkChanged } { set confirm 0 }
-    set result "ok"    
+    set do_clear yes
     if { $confirm } {
-	set result \
-	    [tk_messageBox -title "Warning" -type yesno -parent . -icon warning -message \
-		 "Your network has not been saved.\n\nAll modules and connections will be deleted.\n\nReally clear?"]	
+	set message [list "Your network has not been saved." \
+			 "All Moduels and connections will be deleted." \
+			 "Really clear?"]
+	set do_clear [tk_messageBox -title "Warning" -type yesno -parent . \
+			  -icon warning -message [join $message "\n\n"] ]
     }
-    if {!$confirm || [string compare "yes" $result] == 0} {
-	global Subnet netedit_savefile CurrentlySelectedModules
+
+    if { $do_clear == "yes" } {
+	global Subnet
 	foreach module $Subnet(Subnet${subnet}_Modules) {
 	    if { [string first Render_Viewer $module] != -1 } {
 		moduleDestroy $module
@@ -880,9 +884,9 @@ proc ClearCanvas { {confirm 1} {subnet 0} } {
 	}
 
 	wm title . "SCIRun" ;# Reset Main Window Title
-	set netedit_savefile ""
-	set CurrentlySelectedModules ""
-	set NetworkChanged 0
+	setGlobal netedit_savefile ""
+	setGlobal CurrentlySelectedModules ""
+	setGlobal NetworkChanged 0
     }   
 }
 
