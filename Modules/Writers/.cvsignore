@@ -1,6 +1,6 @@
 Makefile Makefile.bak
 .~*
-so_locations ii_files
+ii_files
 ColumnMatrixWriter.cc ColumnMatrixWriter.tcl
 ContourSetWriter.cc ContourSetWriter.tcl
 MatrixWriter.cc MatrixWriter.tcl

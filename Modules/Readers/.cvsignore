@@ -1,6 +1,6 @@
 Makefile Makefile.bak
 .~*
-so_locations ii_files
+ii_files
 ColumnMatrixReader.cc ColumnMatrixReader.tcl
 ContourSetReader.cc ContourSetReader.tcl
 GeomReader.tcl
