@@ -128,13 +128,16 @@ public:
   //! return false if not invertable.
   bool invert();
 
+  //! throws an assertion if not square
+  double determinant();
+
   void mult(double s);
   virtual DenseMatrix* clone();
   
-  //! Friend function
+  //! Friend functions
   friend SCICORESHARE void Mult(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
-  friend SCICORESHARE void Add(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
   friend SCICORESHARE void Sub(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
+  friend SCICORESHARE void Add(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);
   friend SCICORESHARE void Add(DenseMatrix&, double, const DenseMatrix&, double, const DenseMatrix&);
   friend SCICORESHARE void Add(double, DenseMatrix&, double, const DenseMatrix&);
   friend SCICORESHARE void Mult_trans_X(DenseMatrix&, const DenseMatrix&, const DenseMatrix&);

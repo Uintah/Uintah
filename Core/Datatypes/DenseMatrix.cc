@@ -843,4 +843,23 @@ double DenseMatrix::sumOfRow(int n){
   return sum;
 }
 
+
+double
+DenseMatrix::determinant() 
+{
+  double a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p;
+  ASSERTMSG(((nr==4)&&(nc==4)), "Number of Rows and Colums for Determinant must equal 4! (Code not completed)");
+  a=data[0][0]; b=data[0][1]; c=data[0][2]; d=data[0][3];
+  e=data[1][0]; f=data[1][1]; g=data[1][2]; h=data[1][3];
+  i=data[2][0]; j=data[2][1]; k=data[2][2]; l=data[2][3];
+  m=data[3][0]; n=data[3][1]; o=data[3][2]; p=data[3][3];
+
+  double q=a*f*k*p - a*f*l*o - a*j*g*p + a*j*h*o + a*n*g*l - a*n*h*k
+    - e*b*k*p + e*b*l*o + e*j*c*p - e*j*d*o - e*n*c*l + e*n*d*k
+    + i*b*g*p - i*b*h*o - i*f*c*p + i*f*d*o + i*n*c*h - i*n*d*g
+    - m*b*g*l + m*b*h*k + m*f*c*l - m*f*d*k - m*j*c*h + m*j*d*g;
+
+  return q;
+}
+
 } // End namespace SCIRun
