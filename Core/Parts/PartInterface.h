@@ -54,13 +54,41 @@ public:
   virtual void init();
   Part *part() { return part_; }
   
+  string name();
+
+  void set_parent( PartInterface * );
   void add_child( PartInterface *);
   void rem_child( PartInterface *);
   string type() { return type_; }
 
+  template<class T, class Arg>
+  void report_children( T &t, void (T::*fun)(Arg) );
+
+  template<class T, class Arg>
+  void report_children( T *t, void (T::*fun)(Arg) );
+
+  virtual void report_children( SlotBase1<PartInterface *> &slot );
+
+  // Slots
   Signal1<PartInterface *> has_child;
   Signal1<SciEvent *> report;
 };
+
+
+template<class T, class Arg>
+void PartInterface::report_children( T *t, void (T::*fun)(Arg) )
+{
+  Slot1<T,Arg> slot(t, fun);
+  return report_children( slot );
+}
+
+
+template<class T, class Arg>
+void PartInterface::report_children( T &t, void (T::*fun)(Arg) )
+{
+  Slot1<T,Arg> slot(&t, fun);
+  return report_children( slot );
+}
 
 } // namespace SCIRun
 
