@@ -2186,6 +2186,12 @@ esac
 
 done
 
+# Set the subdir name in the bin tree for matlab engine.
+if test $pkg_MatlabInterface == yes; then
+  MATLAB_ENG=matlab
+
+fi
+
 # Take care of package dependencies
 if test $pkg_Fusion == yes; then
   # Fusion depends upon Teem Package.
@@ -3409,7 +3415,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:3412:" \
+echo "$as_me:3418:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -20026,6 +20032,7 @@ s,@F77@,$F77,;t t
 s,@FFLAGS@,$FFLAGS,;t t
 s,@CPP@,$CPP,;t t
 s,@CXXCPP@,$CXXCPP,;t t
+s,@MATLAB_ENG@,$MATLAB_ENG,;t t
 s,@ac_ct_CC@,$ac_ct_CC,;t t
 s,@EXEEXT@,$EXEEXT,;t t
 s,@OBJEXT@,$OBJEXT,;t t

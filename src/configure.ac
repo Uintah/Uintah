@@ -430,6 +430,12 @@ for i in $package; do
    SCI_SET_PACKAGE_CHECKS($i)
 done
 
+# Set the subdir name in the bin tree for matlab engine.
+if test $pkg_MatlabInterface == yes; then
+  MATLAB_ENG=matlab
+  AC_SUBST(MATLAB_ENG)
+fi
+
 # Take care of package dependencies
 if test $pkg_Fusion == yes; then
   # Fusion depends upon Teem Package.  
