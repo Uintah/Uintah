@@ -44,11 +44,12 @@
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/Network/PackageDB.h>
 #include <Dataflow/Network/Scheduler.h>
+#include <Core/Containers/StringUtil.h>
 #include <Core/GuiInterface/TCLTask.h>
 #include <Core/GuiInterface/TCLInterface.h>
 #include <Core/Util/Environment.h>
-#include <Core/Thread/Thread.h>
 #include <Core/Util/sci_system.h>
+#include <Core/Thread/Thread.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 
@@ -61,7 +62,7 @@
 using std::cout;
 
 #ifdef _WIN32
-#include <afxwin.h>
+#  include <afxwin.h>
 #endif
 
 // This needs to be synced with the contents of
@@ -127,7 +128,7 @@ parse_args( int argc, char *argv[] )
     }
     else if ( arg == "--nosplash" )
     {
-      sci_putenv("SCI_NOSPLASH", "1");
+      sci_putenv("SCIRUN_NOSPLASH", "1");
     }
     else
     {
@@ -163,7 +164,12 @@ class RegressionKiller : public Runnable
 public:
   void run()
   {
-    sleep(300);
+    int tmp, seconds = 300;
+    const char *timeout = sci_getenv("SCIRUN_REGRESSION_TESTING_TIMEOUT");
+    if (timeout && string_to_int(timeout, tmp)) {
+      seconds = tmp;
+    }
+    sleep(seconds);
     cout << "Regression test timeout, killing SCIRun.\n";
     Thread::exitAll(1);
   }
@@ -204,8 +210,6 @@ int
 main(int argc, char *argv[], char **environment) {
   // Setup the SCIRun key/value environment
   create_sci_environment(environment);
-  sci_putenv("SCIRUN_SRCDIR", SCIRUN_SRCDIR);
-  sci_putenv("SCIRUN_OBJDIR", SCIRUN_OBJDIR);
   sci_putenv("SCIRUN_VERSION", SCIRUN_VERSION);
 
   // Parse the command line arguments to find a network to execute
@@ -232,9 +236,9 @@ main(int argc, char *argv[], char **environment) {
   // Create user interface link
   GuiInterface* gui = new TCLInterface();
   // setup TCL auto_path to find core components
-  gui->execute("lappend auto_path "SCIRUN_SRCDIR"/Core/GUI "
-	       SCIRUN_SRCDIR"/Dataflow/GUI "ITCL_WIDGETS);
-  gui->execute("set scirun2 0");
+  gui->eval("lappend auto_path "SCIRUN_SRCDIR"/Core/GUI "
+	    SCIRUN_SRCDIR"/Dataflow/GUI "ITCL_WIDGETS);
+  gui->eval("set scirun2 0");
 
   // Create initial network
   packageDB = new PackageDB(gui);
@@ -245,58 +249,60 @@ main(int argc, char *argv[], char **environment) {
   // If the user doesnt have a .scirunrc file, provide them with a default one
   if (!find_and_parse_scirunrc()) show_license_and_copy_scirunrc(gui);
 
-  // Activate the scheduler.  Arguments and return
-  // values are meaningless
+  // Activate the scheduler.  Arguments and return values are meaningless
   Thread* t2=new Thread(sched_task, "Scheduler");
   t2->setDaemon(true);
   t2->detach();
 
-  // set splash to be main one unless later changed due to a standalone
-  packageDB->setSplashPath("main/scisplash.ppm");
-
   // determine if we are loading an app
-  if(!strstr(argv[startnetno],".app")) {
+  const bool loading_app_p = strstr(argv[startnetno],".app");
+  if (!loading_app_p) {
+    gui->eval("set PowerApp 0");
     // wait for the main window to display before continuing the startup.
-    // if loading an app, don't wait    
-    gui->execute("wm deiconify .");
-    gui->execute("tkwait visibility $minicanvas");
-  } else {
-    // set that we are loading an app and set the session file if provided
-    if((startnetno + 1) < argc) {
-      packageDB->setLoadingApp(true, argv[startnetno+1]);
+    gui->eval("wm deiconify .");
+    gui->eval("tkwait visibility $minicanvas");
+    gui->eval("showProgress 1 0 1");
+  } else { // if loading an app, don't wait
+    gui->eval("set PowerApp 1");
+    if (argv[startnetno+1]) {
+      gui->eval("set PowerAppSession {"+string(argv[startnetno+1])+"}");
     }
-    else {
-      packageDB->setLoadingApp(true);
-    }
-
     // determine which standalone and set splash
     if(strstr(argv[startnetno], "BioTensor")) {
-      packageDB->setSplashPath("Packages/Teem/Dataflow/GUI/splash-tensor.ppm");
-    }   
+      gui->eval("set splashImageFile $bioTensorSplashImageFile");
+      gui->eval("showProgress 1 5700 1");
+    } else if(strstr(argv[startnetno], "BioFEM")) {
+      gui->eval("set splashImageFile $bioFEMSplashImageFile");
+      gui->eval("showProgress 1 1005 1");
+    }
+
   }
 
-  // load the packages
-  packageDB->loadPackage();
+  packageDB->loadPackage();  // load the packages
+
+  if (!loading_app_p) {
+    gui->eval("hideProgress");
+  }
   
   // Check the dynamic compilation directory for validity
   sci_putenv("SCIRUN_ON_THE_FLY_LIBS_DIR",gui->eval("getOnTheFlyLibsDir"));
 
   // Activate "File" menu sub-menus once packages are all loaded.
-  gui->execute("activate_file_submenus");
-
+  gui->eval("activate_file_submenus");
+  
+  // Determine if SCIRun is in regression testing mode
   const bool doing_regressions = sci_getenv_p("SCI_REGRESSION_TESTING");
 
-  if (startnetno)
-  {
-    gui->execute("loadnet {"+string(argv[startnetno])+"}");
-    if (execute_flag || doing_regressions )
-    {
-      gui->execute("netedit scheduleall");
+  // Load the Network file specified from the command line
+  if (startnetno) {
+    gui->eval("loadnet {"+string(argv[startnetno])+"}");
+    if (execute_flag || doing_regressions) {
+      gui->eval("netedit scheduleall");
     }
   }
 
-  if( doing_regressions )
-  {
+  // When doing regressions, make thread to kill ourselves after timeout
+  if (doing_regressions) {
     RegressionKiller *kill = scinew RegressionKiller();
     Thread *tkill = scinew Thread(kill, "Kill a hung SCIRun");
     tkill->detach();
