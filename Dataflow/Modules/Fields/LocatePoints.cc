@@ -14,7 +14,7 @@
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/FieldPort.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
-#include <Core/Datatypes/TriSurf.h>
+#include <Core/Datatypes/TriSurfMesh.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
@@ -94,18 +94,18 @@ void LocatePoints::execute()
   mesh_gen_ = meshH->generation;
   surf_gen_ = surfH->generation;
 
-  //TriSurf *ts = surfH.get_rep();  // FIXME
-  TriSurf *ts = 0;
+  //TriSurfMesh *ts = surfH.get_rep();  // FIXME
+  TriSurfMesh *ts = 0;
   if (!ts) {
-    cerr << "Error - need a TriSurface.\n";
+    cerr << "Error - need a TriSurfMesh.\n";
     return;
   }
 
-  int *rows=new int[ts->point_count()+1];
-  int *cols=new int[ts->point_count()*4];
-  double *a=new double[ts->point_count()*4];
 // FIX_ME
 #if 0 
+  //int *rows=new int[ts->point_count()+1];
+  //int *cols=new int[ts->point_count()*4];
+  //double *a=new double[ts->point_count()*4];
   SparseRowMatrix *mm=scinew SparseRowMatrix(ts->point_count(),
 					     meshH->nodesize(),
 					     rows, cols,

@@ -1,5 +1,5 @@
 /*
- *  TriSurf.cc: Tetrahedral mesh with new design.
+ *  TriSurfMesh.cc: Tetrahedral mesh with new design.
  *
  *  Written by:
  *   Michael Callahan
@@ -11,32 +11,32 @@
  *
  */
 
-#include <Core/Datatypes/TriSurf.h>
+#include <Core/Datatypes/TriSurfMesh.h>
 
 
 namespace SCIRun {
 
-PersistentTypeID TriSurf::type_id("TriSurf", "Datatype", NULL);
+PersistentTypeID TriSurfMesh::type_id("TriSurfMesh", "Datatype", NULL);
 
 
-TriSurf::TriSurf()
+TriSurfMesh::TriSurfMesh()
 {
 }
 
-TriSurf::TriSurf(const TriSurf &copy)
+TriSurfMesh::TriSurfMesh(const TriSurfMesh &copy)
   : points_(copy.points_),
     faces_(copy.faces_),
     neighbors_(copy.neighbors_)
 {
 }
 
-TriSurf::~TriSurf()
+TriSurfMesh::~TriSurfMesh()
 {
 }
 
 
 BBox
-TriSurf::get_bounding_box() const
+TriSurfMesh::get_bounding_box() const
 {
   BBox result;
 
@@ -49,45 +49,45 @@ TriSurf::get_bounding_box() const
 }
 
 
-TriSurf::node_iterator
-TriSurf::node_begin() const
+TriSurfMesh::node_iterator
+TriSurfMesh::node_begin() const
 {
   return 0;
 }
 
-TriSurf::node_iterator
-TriSurf::node_end() const
+TriSurfMesh::node_iterator
+TriSurfMesh::node_end() const
 {
   return points_.size();
 }
 
-TriSurf::edge_iterator
-TriSurf::edge_begin() const
+TriSurfMesh::edge_iterator
+TriSurfMesh::edge_begin() const
 {
   return 0;
 }
 
-TriSurf::edge_iterator
-TriSurf::edge_end() const
+TriSurfMesh::edge_iterator
+TriSurfMesh::edge_end() const
 {
   return faces_.size();
 }
 
-TriSurf::face_iterator
-TriSurf::face_begin() const
+TriSurfMesh::face_iterator
+TriSurfMesh::face_begin() const
 {
   return 0;
 }
 
-TriSurf::face_iterator
-TriSurf::face_end() const
+TriSurfMesh::face_iterator
+TriSurfMesh::face_end() const
 {
   return faces_.size() / 3;
 }
 
 
 void
-TriSurf::get_nodes_from_edge(node_array &array, edge_index idx) const
+TriSurfMesh::get_nodes_from_edge(node_array &array, edge_index idx) const
 {
   static int table[6][2] =
   {
@@ -105,7 +105,7 @@ TriSurf::get_nodes_from_edge(node_array &array, edge_index idx) const
 
 
 void
-TriSurf::get_nodes_from_face(node_array &array, face_index idx) const
+TriSurfMesh::get_nodes_from_face(node_array &array, face_index idx) const
 {
   array.push_back(faces_[idx * 3 + 0]);
   array.push_back(faces_[idx * 3 + 1]);
@@ -114,7 +114,7 @@ TriSurf::get_nodes_from_face(node_array &array, face_index idx) const
 
 
 void
-TriSurf::get_edges_from_face(edge_array &array, face_index idx) const
+TriSurfMesh::get_edges_from_face(edge_array &array, face_index idx) const
 {
   array.push_back(idx * 3 + 0);
   array.push_back(idx * 3 + 1);
@@ -123,7 +123,7 @@ TriSurf::get_edges_from_face(edge_array &array, face_index idx) const
 
 
 void
-TriSurf::get_neighbor_from_edge(face_index &neighbor, edge_index idx) const
+TriSurfMesh::get_neighbor_from_edge(face_index &neighbor, edge_index idx) const
 {
   neighbor = neighbors_[idx];
 }
@@ -140,7 +140,7 @@ distance2(const Point &p0, const Point &p1)
 
 
 void
-TriSurf::locate_node(node_index &node, const Point &p)
+TriSurfMesh::locate_node(node_index &node, const Point &p)
 {
   // TODO: Use search structure instead of exaustive search.
   int min_indx;
@@ -172,20 +172,20 @@ TriSurf::locate_node(node_index &node, const Point &p)
 #if 0
 
 void
-TriSurf::locate_edge(edge_index &edge, const Point & /* p */)
+TriSurfMesh::locate_edge(edge_index &edge, const Point & /* p */)
 {
   edge = edge_end();
 }
 
 void
-TriSurf::locate_face(face_index &face, const Point & /* p */)
+TriSurfMesh::locate_face(face_index &face, const Point & /* p */)
 {
   face = face_end();
 }
 
 
 void
-TriSurf::locate_cell(cell_index &cell, const Point &p)
+TriSurfMesh::locate_cell(cell_index &cell, const Point &p)
 {
   for (int i=0; i < faces_.size(); i+=4)
   {
@@ -201,14 +201,14 @@ TriSurf::locate_cell(cell_index &cell, const Point &p)
 
 
 void
-TriSurf::unlocate(Point &result, const Point &p)
+TriSurfMesh::unlocate(Point &result, const Point &p)
 {
   result = p;
 }
 
 
 void
-TriSurf::get_point(Point &result, node_index index) const
+TriSurfMesh::get_point(Point &result, node_index index) const
 {
   result = points_[index];
 }
@@ -216,7 +216,7 @@ TriSurf::get_point(Point &result, node_index index) const
 
 #if 0
 bool
-TriSurf::inside4_p(int i, const Point &p)
+TriSurfMesh::inside4_p(int i, const Point &p)
 {
   // TODO: This has not been tested.
   // TODO: Looks like too much code to check sign of 4 plane/point tests.
@@ -277,8 +277,8 @@ TriSurf::inside4_p(int i, const Point &p)
 #endif
 
 
-TriSurf::node_index
-TriSurf::add_find_point(const Point &p, double err)
+TriSurfMesh::node_index
+TriSurfMesh::add_find_point(const Point &p, double err)
 {
   node_index i;
   locate_node(i, p);
@@ -295,7 +295,7 @@ TriSurf::add_find_point(const Point &p, double err)
 
 
 void
-TriSurf::add_triangle(node_index a, node_index b, node_index c,
+TriSurfMesh::add_triangle(node_index a, node_index b, node_index c,
 		      bool cw_p)
 {
   if (cw_p)
@@ -314,7 +314,7 @@ TriSurf::add_triangle(node_index a, node_index b, node_index c,
 
 
 void
-TriSurf::add_triangle(const Point &p0, const Point &p1, const Point &p2,
+TriSurfMesh::add_triangle(const Point &p0, const Point &p1, const Point &p2,
 		      bool cw_p)
 {
   add_triangle(add_find_point(p0),
@@ -323,12 +323,12 @@ TriSurf::add_triangle(const Point &p0, const Point &p1, const Point &p2,
 }
 
 
-#define TRISURF_VERSION 1
+#define TRISURFMESH_VERSION 1
 
 void
-TriSurf::io(Piostream &stream)
+TriSurfMesh::io(Piostream &stream)
 {
-  stream.begin_class(type_id.type.c_str(), TRISURF_VERSION);
+  stream.begin_class(type_id.type.c_str(), TRISURFMESH_VERSION);
 
   Pio(stream, points_);
   Pio(stream, faces_);

@@ -1,5 +1,5 @@
 /*
- *  TriSurf.h: Templated Meshs defined on a 3D Regular Grid
+ *  TriSurfMesh.h: Templated Meshs defined on a 3D Regular Grid
  *
  *  Written by:
  *   Michael Callahan
@@ -11,12 +11,13 @@
  *
  */
 
-#ifndef SCI_project_TriSurf_h
-#define SCI_project_TriSurf_h 1
+#ifndef SCI_project_TriSurfMesh_h
+#define SCI_project_TriSurfMesh_h 1
 
 #include <Core/Containers/Handle.h>
-#include <Core/Datatypes/Datatype.h>
-#include <Core/Geometry/BBox.h>
+//#include <Core/Datatypes/Datatype.h>
+//#include <Core/Geometry/BBox.h>
+#include <Core/Datatypes/MeshBase.h>
 #include <Core/Containers/Array1.h>
 
 #include <vector>
@@ -25,7 +26,7 @@ namespace SCIRun {
 
 using std::vector;
 
-class SCICORESHARE TriSurf : public Datatype
+class SCICORESHARE TriSurfMesh : public MeshBase
 {
 private:
 
@@ -59,9 +60,9 @@ public:
   typedef vector<edge_index> edge_array;
   //typedef vector<face_index> face_array;
 
-  TriSurf();
-  TriSurf(const TriSurf &copy);
-  virtual ~TriSurf();
+  TriSurfMesh();
+  TriSurfMesh(const TriSurfMesh &copy);
+  virtual ~TriSurfMesh();
 
   virtual BBox get_bounding_box() const;
 
@@ -107,7 +108,6 @@ public:
   //		 face_index &face, double &u, double &v);
 
 
-  int point_count() { return points_.size(); }
   const Point &point(node_index i) { return points_[i]; }
 
 private:
@@ -122,9 +122,9 @@ private:
 };
 
 
-typedef Handle<TriSurf> TriSurfHandle;
+typedef Handle<TriSurfMesh> TriSurfMeshHandle;
 
 } // namespace SCIRun
 
 
-#endif // SCI_project_TriSurf_h
+#endif // SCI_project_TriSurfMesh_h

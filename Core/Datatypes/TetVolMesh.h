@@ -1,5 +1,5 @@
 /*
- *  MeshTet.h: Templated Meshs defined on a 3D Regular Grid
+ *  TetVolMesh.h: Templated Meshs defined on a 3D Regular Grid
  *
  *  Written by:
  *   Michael Callahan
@@ -11,8 +11,8 @@
  *
  */
 
-#ifndef SCI_project_MeshTet_h
-#define SCI_project_MeshTet_h 1
+#ifndef SCI_project_TetVolMesh_h
+#define SCI_project_TetVolMesh_h 1
 
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Datatypes/FieldIterator.h>
@@ -24,7 +24,7 @@
 namespace SCIRun {
 
 
-class SCICORESHARE MeshTet : public Datatype
+class SCICORESHARE TetVolMesh : public Datatype
 {
 public:
   typedef int index_type;
@@ -45,10 +45,10 @@ public:
   typedef vector<edge_index> edge_array;
   typedef vector<face_index> face_array;
 
-  MeshTet();
-  MeshTet(const MeshTet &copy);
-  //MeshTet(const MeshRG &lattice);
-  virtual ~MeshTet();
+  TetVolMesh();
+  TetVolMesh(const TetVolMesh &copy);
+  //TetVolMesh(const MeshRG &lattice);
+  virtual ~TetVolMesh();
 
   virtual BBox get_bounding_box() const;
 
@@ -94,15 +94,15 @@ private:
 
 
   Array1<Point>        points_;
-  Array1<index_type>   tets_;
+  Array1<index_type>   cells_;
   Array1<index_type>   neighbors_;
 
 };
 
-// Handle type for MeshTet mesh.
-typedef LockingHandle<MeshTet> MeshTetHandle;
+// Handle type for TetVolMesh mesh.
+typedef LockingHandle<TetVolMesh> TetVolMeshHandle;
 
 } // namespace SCIRun
 
 
-#endif // SCI_project_MeshTet_h
+#endif // SCI_project_TetVolMesh_h

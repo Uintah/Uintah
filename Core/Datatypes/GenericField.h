@@ -14,7 +14,9 @@
 
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/TypeName.h>
-#include <Core/Datatypes/MeshTet.h>
+#include <Core/Datatypes/TetVolMesh.h>
+#include <Core/Datatypes/TriSurfMesh.h>
+#include <Core/Datatypes/Lat3VolMesh.h>
 #include <Core/Containers/LockingHandle.h>
 #include <vector>
 
@@ -27,7 +29,7 @@ public:
   //! Typedefs to support the Field concept.
   typedef typename FData::value_type value_type;
   typedef Mesh                       mesh_type;
-  typedef LockingHandle<Mesh>        mesh_handle_type;
+  typedef LockingHandle<mesh_type>   mesh_handle_type;
   typedef FData                      fdata_type;
 
   GenericField() {};
@@ -35,18 +37,19 @@ public:
   virtual ~GenericField() {};
 
   //! Required virtual functions from field base.
-  virtual MeshBaseHandle get_mesh() const {};
+  virtual MeshBaseHandle get_mesh() const
+  { return MeshBaseHandle(mesh_.get_rep()); }
 
   //! Required interfaces from field base.
-  virtual InterpolateToScalar* query_interpolate_to_scalar() const {};
+  //virtual InterpolateToScalar* query_interpolate_to_scalar() const {};
 
   //! Required interface to support Field Concept.
-  value_type operator[] (typename Mesh::node_index){};
-  value_type operator[] (typename Mesh::edge_index){};
-  value_type operator[] (typename Mesh::face_index){};
-  value_type operator[] (typename Mesh::cell_index){};
+  //value_type &operator[] (typename Mesh::node_index i) {return fdata_[i]};
+  //value_type &operator[] (typename Mesh::edge_index i) {return fdata_[i]};
+  //value_type &operator[] (typename Mesh::face_index i) {return fdata_[i]};
+  //value_type &operator[] (typename Mesh::cell_index i) {return fdata_[i]};
   
-  mesh_handle_type get_typed_mesh(){}; 
+  mesh_handle_type get_typed_mesh() { return mesh_; };
 
   //! Persistent I/O.
   void    io(Piostream &stream);

@@ -82,9 +82,9 @@ FieldBoundary::execute()
 
   // Get exact mesh type, and find boundary for it.
   string type_string = mesh->type_name(0);
-  if (type_string == "MeshTet") {
-    MeshTet *mesht = dynamic_cast<MeshTet*>(mesh.get_rep());
-    find_boundary<MeshTet>(mesht, tris/*, ts*/); //FIX_ME
+  if (type_string == "TetVolMesh") {
+    TetVolMesh *mesht = dynamic_cast<TetVolMesh*>(mesh.get_rep());
+    find_boundary<TetVolMesh>(mesht, tris/*, ts*/); //FIX_ME
 //    } else if (type_string == "MeshRG") {
 //      MeshRG *meshrg = dynamic_cast<MeshRG*>(mesh.get_rep());
 //      find_boundary<MeshRG>(meshrg, tris/*, ts*/); //FIX_ME
