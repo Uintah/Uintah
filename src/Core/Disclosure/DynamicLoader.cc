@@ -24,6 +24,7 @@
 #include <Core/Util/sci_system.h>
 #include <fstream>
 #include <iostream>
+#include <algorithm>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -59,21 +60,8 @@ CompileInfo::CompileInfo(const string &fn, const string &bcn,
 void
 CompileInfo::add_include(const string &inc)
 {
-  bool unique = true;
-  list<string>::iterator itr = includes_.begin();
-  while (itr != includes_.end())
-  {
-    if (*itr == inc)
-    {
-      unique = false;
-    }
-    ++itr;
-  }
-  
-  if (unique)
-  {
-    includes_.push_front(inc);
-  }
+  //std::remove(includes_.begin(), includes_.end(), inc);
+  includes_.push_front(inc);
 }
 
 
@@ -302,15 +290,26 @@ DynamicLoader::create_cc(const CompileInfo &info)
   }
   fstr << "// This is an autamatically generated file, do not edit!" << endl;
 
-  // generate includes
+  // generate standard includes
   list<string>::const_iterator iter = info.includes_.begin();
   while (iter != info.includes_.end()) { 
     const string &s = *iter;
-    if (s.substr(0, 5) == STD_STR) {
+    if (s.substr(0, 5) == STD_STR)
+    {
       string std_include = s.substr(5, s.length() -1);
       fstr << "#include <" << std_include << ">" << endl;
-    } else if (s != "builtin")
+    }
+    ++iter;
+  }
+
+  // generate other includes
+  iter = info.includes_.begin();
+  while (iter != info.includes_.end()) { 
+    const string &s = *iter;
+    if (!((s.substr(0, 5) == STD_STR) || s == "builtin"))
+    {
       fstr << "#include \"" << s << "\"" << endl;
+    }
     ++iter;
   }
 
