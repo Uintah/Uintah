@@ -182,18 +182,18 @@ SmoothCylGeomPiece::createEndCapPoints()
     Vector currCenter = d_bottom.asVector() - axis*currZ;
 
     // Put a point at the center
-    d_points.push_back(Point(currCenter));
-    double area = 0.25*M_PI*radInc*radInc;
-    d_volume.push_back(axisInc*area);
-    count++;
+    //d_points.push_back(Point(currCenter));
+    //double area = 0.25*M_PI*radInc*radInc;
+    //d_volume.push_back(axisInc*area);
+    //count++;
     
-    for (int ii = 1; ii < d_numRadial; ++ii) {
+    for (int ii = 0; ii < d_numRadial; ++ii) {
       double prevRadius = ii*radInc;
       double currRadius = prevRadius + 0.5*radInc;
       double nextRadius = (ii+1)*radInc;
       int numCircum = (int) (2.0*M_PI*currRadius/radInc);
       double phiInc = 2.0*M_PI/(double) numCircum;
-      area = 0.5*phiInc*(nextRadius*nextRadius-prevRadius*prevRadius);
+      double area = 0.5*phiInc*(nextRadius*nextRadius-prevRadius*prevRadius);
       for (int jj = 0; jj < numCircum; ++jj) {
 	double phi = jj*phiInc; 
 	double cosphi = cos(phi);
@@ -225,12 +225,12 @@ SmoothCylGeomPiece::createEndCapPoints()
     Vector currCenter = d_top.asVector() + axis*currZ;
 
     // Put a point at the center
-    d_points.push_back(Point(currCenter));
-    double area = 0.25*M_PI*radInc*radInc;
-    d_volume.push_back(axisInc*area);
-    count++;
+    //d_points.push_back(Point(currCenter));
+    //double area = 0.25*M_PI*radInc*radInc;
+    //d_volume.push_back(axisInc*area);
+    //count++;
     
-    for (int ii = 1; ii < d_numRadial; ++ii) {
+    for (int ii = 0; ii < d_numRadial; ++ii) {
       double prevRadius = ii*radInc;
       double currRadius = prevRadius + 0.5*radInc;
       double nextRadius = (ii+1)*radInc;
@@ -305,18 +305,18 @@ SmoothCylGeomPiece::createSolidCylPoints()
     Vector currCenter = d_bottom.asVector() + axis*currZ;
 
     // Put a point at the center
-    d_points.push_back(Point(currCenter));
-    double area = 0.25*M_PI*radInc*radInc;
-    d_volume.push_back(axisInc*area);
-    count++;
+    //d_points.push_back(Point(currCenter));
+    //double area = 0.25*M_PI*radInc*radInc;
+    //d_volume.push_back(axisInc*area);
+    //count++;
     
-    for (int ii = 1; ii < d_numRadial; ++ii) {
+    for (int ii = 0; ii < d_numRadial; ++ii) {
       double prevRadius = ii*radInc;
       double currRadius = prevRadius + 0.5*radInc;
       double nextRadius = (ii+1)*radInc;
       int numCircum = (int) (2.0*M_PI*currRadius/radInc);
       double phiInc = 2.0*M_PI/(double) numCircum;
-      area = 0.5*phiInc*(nextRadius*nextRadius-prevRadius*prevRadius);
+      double area = 0.5*phiInc*(nextRadius*nextRadius-prevRadius*prevRadius);
       for (int jj = 0; jj < numCircum; ++jj) {
 	double phi = jj*phiInc; 
 	double cosphi = cos(phi);
@@ -382,21 +382,21 @@ SmoothCylGeomPiece::createHollowCylPoints()
   double currZ = 0.5*axisInc;
   for (int kk = 0; kk < d_numAxial-1; ++kk) {
     Vector currCenter = d_bottom.asVector() + axis*currZ;
-    for (int ii = 1; ii < numThick+1; ++ii) {
-      double prevRadius = innerRad + (ii-1)*radInc;
-      double currRadius = innerRad + ii*radInc;
-      double radLoc = 0.5*(prevRadius+currRadius);
+    for (int ii = 0; ii < numThick; ++ii) {
+      double prevRadius = innerRad + ii*radInc;
+      double currRadius = prevRadius + radInc*0.5;
+      double nextRadius = innerRad + (ii+1)*radInc;
       int numCircum = (int) (2.0*M_PI*currRadius/radInc);
       double phiInc = 2.0*M_PI/(double) numCircum;
-      double area = 0.5*phiInc*(currRadius*currRadius-prevRadius*prevRadius);
+      double area = 0.5*phiInc*(nextRadius*nextRadius-prevRadius*prevRadius);
       for (int jj = 0; jj < numCircum; ++jj) {
 	double phi = jj*phiInc; 
 	double cosphi = cos(phi);
 	double sinphi = sin(phi);
 
 	// Create points on xy plane
-	double x = radLoc*cosphi;
-	double y = radLoc*sinphi;
+	double x = currRadius*cosphi;
+	double y = currRadius*sinphi;
 	double z = 0;
      
 	// Rotate points to correct orientation and
