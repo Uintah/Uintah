@@ -62,7 +62,8 @@ itcl_class BioPSE_Forward_SetupFEMatrix {
         make_labeled_radio $w.f.r "Boundary Conditions:" "" \
                 left $this-BCFlag \
                 {{"Apply Dirichlet" DirSub} \
-                {"No Dirichlet (ping to zero)" PinZero}}
+                {"Ground Node Zero)" GroundZero}}
+                {"No Dirichlet" none}}
 	
 	global $this-UseCondTCL
 	checkbutton $w.f.b -text "Use Conductivities" -variable $this-UseCondTCL -onvalue 1 -offvalue 0
