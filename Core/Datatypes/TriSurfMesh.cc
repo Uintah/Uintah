@@ -269,7 +269,7 @@ TriSurfMesh::compute_node_neighbors()
 
 //! Returns all nodes that share an edge with this node 
 void
-TriSurfMesh::get_neighbors(Node::array_type &array, Node::index_type idx)
+TriSurfMesh::get_neighbors(Node::array_type &array, Node::index_type idx) const
 {
   ASSERTMSG(synchronized_ & NODE_NEIGHBORS_E, 
 	    "Must call synchronize NODE_NEIGHBORS_E on TriSurfMesh first"); 
