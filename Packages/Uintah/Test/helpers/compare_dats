@@ -12,8 +12,6 @@ if [ ! -d "$COMPARE_UDADIR" ]; then
   exit 1
 fi
 
-cd $TEST_UDADIR
-
 # choose the first dat file to compare number of lines later
 ls -1 $TEST_UDADIR/*.dat
 retval=$?
@@ -35,12 +33,23 @@ if [ $retval != "0" ]; then
     fi
 fi
 
-testdat=`ls -1 *.dat | head -n 1`
 abs_error_allowable=1e-10
 rel_error_allowable=1e-8
-echo "compare_dat_files.pl $abs_error_allowable $rel_error_allowable $TEST_UDADIR/ $COMPARE_UDADIR/ *.dat"
-compare_dat_files.pl $abs_error_allowable $rel_error_allowable $TEST_UDADIR/ $COMPARE_UDADIR/ *.dat
+
+WD=`pwd`
+cd $TEST_UDADIR
+dats=`ls -1 *.dat`
+testdat=`ls -1 *.dat | head -n 1`
+cd $WD
+
+echo "compare_dat_files.pl $abs_error_allowable $rel_error_allowable $TEST_UDADIR/ $COMPARE_UDADIR/ $dats"
+
+compare_dat_files.pl $abs_error_allowable $rel_error_allowable $TEST_UDADIR/ $COMPARE_UDADIR/ $dats
+
 retval=$?
+
+newcount="0"
+oldcount="0"
 
 if [ $retval = "0" ]; then
     newcount=`grep -c '\0' $TEST_UDADIR/$testdat`
@@ -48,7 +57,7 @@ if [ $retval = "0" ]; then
 
     if [ $newcount != $oldcount ]; then
         cat <<EOF
-There is only a discrepancy in the line count of the dat files.
+There is a discrepancy in the line count of the dat files.
 There are $newcount lines in the new $testdat and
           $oldcount lines in the old $testdat.
 This could simply be a result of a change to the timestep size.

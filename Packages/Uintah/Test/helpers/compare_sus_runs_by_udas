@@ -57,9 +57,9 @@ echo
 echo "Comparing checkpoints"
 echo "======================================"
 echo
-echo "$SUS_DIR/compare_uda -skip_unknown_types $TEST_UDADIR $COMPARE_UDADIR"
+echo "$SUS_DIR/compare_uda -skip_unknown_types $TEST_UDADIR/checkpoints $COMPARE_UDADIR/checkpoints"
 
-$SUS_DIR/compare_uda -skip_unknown_types $TEST_UDADIR $COMPARE_UDADIR
+$SUS_DIR/compare_uda -skip_unknown_types $TEST_UDADIR/checkpoints $COMPARE_UDADIR/checkpoints
 chp_retval=$?
 
 if [ $chp_retval != "0" ]; then
