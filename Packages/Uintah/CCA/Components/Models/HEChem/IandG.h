@@ -83,6 +83,9 @@ WARNING
     IandG& operator=(const IandG&);
 
     const VarLabel* reactedFractionLabel;   // diagnostic labels
+    const VarLabel* IandGterm1Label;   // diagnostic labels
+    const VarLabel* IandGterm2Label;   // diagnostic labels
+    const VarLabel* IandGterm3Label;   // diagnostic labels
 
     ProblemSpecP params;
     const Material* matl0;
