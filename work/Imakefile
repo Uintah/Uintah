@@ -10,7 +10,7 @@ TMPL_LIB =
 #endif
 
 SUBDIRS = Classlib Comm Constraints \
-	Dataflow Datatypes Devices Geom Geometry \
+	Dataflow Datatypes Geom Geometry \
 	Malloc Math Modules Multitask TCL Widgets tcl $(TMPL_DIR) \
 	convert
 
@@ -38,7 +38,6 @@ SR_LIBS = \
 	Datatypes/libDatatypes.o \
 	TCL/libTCL.a \
 	Geom/libGeom.a \
-	Devices/libDevices.a \
 	Comm/libComm.a \
 	Geometry/libGeometry.a \
 	Math/libMath.a \

@@ -8,3 +8,4 @@ lappend auto_path $sci_root/Modules/Visualization
 lappend auto_path $sci_root/Modules/Writers
 lappend auto_path $sci_root/Widgets
 lappend auto_path $sci_root/TCL
+lappend auto_path $sci_root/Devices

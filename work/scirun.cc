@@ -15,7 +15,6 @@
 #include <Dataflow/ModuleList.h>
 #include <Dataflow/Network.h>
 #include <Dataflow/NetworkEditor.h>
-#include <Devices/Dialbox.h>
 #include <Multitask/Task.h>
 #include <TCL/TCLTask.h>
 
@@ -50,10 +49,6 @@ int main(int argc, char** argv)
     // Activate the network editor and scheduler.  Arguments and return
     // values are meaningless
     gui_task->activate(0);
-
-    // Fork the dial box manager
-    Dialbox* dialtask=new Dialbox;
-    dialtask->activate(0);
 
     // Now activate the TCL event loop
     tcl_task->activate(0);
