@@ -27,6 +27,8 @@ namespace Uintah {
     struct CMData {
       double G;
       double K;
+      double KIc;  // Mode I fracture toughness (for FRACTURE)
+      double KIIc; // Mode II fracture toughness (for FRACTURE)
     };
 
   private:
@@ -103,10 +105,16 @@ namespace Uintah {
     virtual void addParticleState(std::vector<const VarLabel*>& from,
 				  std::vector<const VarLabel*>& to);
 
-    // Convert J-integral into stress intensity factors for hypoelastic materials
+    // Convert J-integral into stress intensity factors
+    // for hypoelastic materials (for FRACTURE) 
     virtual void ConvertJToK(const MPMMaterial* matl, const Vector& J,
                              const Vector& C,const Vector& V,
                              Vector& SIF);
+    // Determine crack propagation direction (for FRACTURE)
+    virtual double GetPropagationDirection(const double& KI, const double& KII);
+
+    // Detect if crack propagates (for FRACTURE)
+    virtual short CrackSegmentPropagates(const double& KI, const double& KII);
   };
 
 } // End namespace Uintah
