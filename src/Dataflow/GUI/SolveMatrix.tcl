@@ -31,7 +31,7 @@ itcl_class SCIRun_Math_SolveMatrix {
 	global $this-np
 	global $this-emit_partial $this-emit_iter
 	
-        set $this-target_error 1.0
+        set $this-target_error 0.001
 	set $this-method "Conjugate Gradient & Precond. (SCI)"
         set $this-precond jacobi
 	set $this-orig_error 0
