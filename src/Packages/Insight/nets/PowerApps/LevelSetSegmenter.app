@@ -697,7 +697,7 @@ set mods(Viewer-VolRen) $m52
 set mods(EditColorMap2D) $m55
 
 # Prev/Next slice
-set mods(ImageToField-Prev) $m25
+set mods(ImageToNrrd-Prev) $m25
 set mods(UnuAxdelete-Prev) $m72
 set mods(Extract-Prev) $m22 
 
