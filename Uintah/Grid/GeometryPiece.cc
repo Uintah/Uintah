@@ -1,10 +1,10 @@
 
 #include <math.h>
 //#include "GeometryObject.h"
-#include "BoxGeometryPiece.h"
-#include "SphereGeometryPiece.h"
-#include "CylinderGeometryPiece.h"
-#include "TriGeometryPiece.h"   
+#include <Uintah/Grid/BoxGeometryPiece.h>
+#include <Uintah/Grid/SphereGeometryPiece.h>
+#include <Uintah/Grid/CylinderGeometryPiece.h>
+#include <Uintah/Grid/TriGeometryPiece.h>   
 #include <Uintah/Grid/ParticleSet.h>
 #include <Uintah/Grid/ParticleVariable.h>
 #include <Uintah/Interface/DataWarehouse.h>
@@ -390,6 +390,10 @@ void GeometryObject::fillWithParticles(vector<Material *> &materials,
 
   
 // $Log$
+// Revision 1.2  2000/06/27 23:18:17  rawat
+// implemented Staggered cell variables. Modified Patch.cc to get ghostcell
+// and staggered cell indexes.
+//
 // Revision 1.1  2000/06/09 18:38:21  jas
 // Moved geometry piece stuff to Grid/ from MPM/GeometryPiece/.
 //
