@@ -58,6 +58,33 @@ WARNING
 			   DataWarehouseP& fromDW,
 			   DataWarehouseP& toDW) = 0;
       };
+
+
+      template<class T>
+      class NPAction : public ActionBase {
+
+         T* ptr;
+         void (T::*pmf)(const ProcessorContext*,
+                        DataWarehouseP&,
+                        DataWarehouseP&);
+      public:
+         NPAction( T* ptr,
+                 void (T::*pmf)(const ProcessorContext*,
+                                DataWarehouseP&,
+                                DataWarehouseP&) )
+            : ptr(ptr), pmf(pmf) {}
+         virtual ~NPAction() {}
+
+         //////////
+         // Insert Documentation Here:
+         virtual void doit(const ProcessorContext* pc,
+                           const Patch*,
+                           DataWarehouseP& fromDW,
+                           DataWarehouseP& toDW) {
+            (ptr->*pmf)(pc, fromDW, toDW);
+         }
+      };
+
       
       template<class T>
       class Action : public ActionBase {
@@ -203,6 +230,27 @@ WARNING
 	 d_usesMPI = false;
 	 d_subpatchCapable = false;
       }
+
+     template<class T>
+      Task(const string&         taskName,
+           DataWarehouseP&       fromDW,
+           DataWarehouseP&       toDW,
+           T*                    ptr,
+           void (T::*pmf)(const ProcessorContext*,
+                          DataWarehouseP&,
+                          DataWarehouseP&) )
+         : d_taskName( taskName ),
+           d_patch( 0 ),
+           d_action( scinew NPAction<T>(ptr, pmf) ),
+           d_fromDW( fromDW ),
+           d_toDW( toDW )
+      {
+         d_completed = false;
+         d_usesThreads = false;
+         d_usesMPI = false;
+         d_subpatchCapable = false;
+      }
+
       
       template<class T>
       Task(const string&         taskName,
@@ -395,6 +443,10 @@ WARNING
 
 //
 // $Log$
+// Revision 1.16  2000/06/01 23:16:18  guilkey
+// Added code to the ReductionVariable stuff to "emit" it's data.  Added
+// NPAction tasks.  NP=NonPatch, this is for tasks that don't need the patch.
+//
 // Revision 1.15  2000/05/30 20:19:35  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch
