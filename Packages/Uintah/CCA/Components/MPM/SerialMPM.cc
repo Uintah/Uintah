@@ -1275,6 +1275,10 @@ void SerialMPM::computeArtificialViscosity(const ProcessorGroup*,
     cout_doing <<"Doing computeArtificialViscosity on patch " << patch->getID()
 	       <<"\t\t MPM"<< endl;
 
+    // The following scheme for removing ringing behind a shock comes from:
+    // VonNeumann, J.; Richtmyer, R. D. (1950): A method for the numerical
+    // calculation of hydrodynamic shocks. J. Appl. Phys., vol. 21, pp. 232.
+
     Ghost::GhostType  gac   = Ghost::AroundCells;
 
     int numMatls = d_sharedState->getNumMPMMatls();
