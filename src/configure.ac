@@ -1960,7 +1960,7 @@ AC_SUBST(INC_TCL_H)
 # -- tk --
 if test -f "$_sci_lib/tkConfig.sh"; then 
   . $_sci_lib/tkConfig.sh; 
-  _sci_tk_inc="$_sci_inc $TK_SRC_DIR/generic"
+  _sci_tk_inc="$_sci_inc $TK_SRC_DIR/generic $TK_SRC_DIR/unix"
 fi
 
 # Note: TK_DEFS (used below to help resolve tk issues) comes from tkConfig.sh
@@ -2501,7 +2501,7 @@ if test "$HAVE_BLAS" != "yes"; then
   # if HAVE_BLAS is yes at this point, then atlas has been found and we
   # don't want to check for blas.
 
-  if test "$with_blas"; then
+  if test "$with_blas" && test "$with_blas" != "yes"; then
     _sci_lib="$with_blas/lib"
     _sci_inc="$with_blas/include"
     _sci_specific=yes
@@ -3522,25 +3522,21 @@ AC_MSG_CHECKING(for $_sci_optional freetype)
 
 found_freetype_config="no"
 
-for dir in "" $_sci_lib; do
+if test -e $_sci_lib/../bin/freetype-config; then
+    found_freetype_config="yes"
+    echo
+    AC_MSG_RESULT(Using $_sci_lib/../bin/freetype-config to set freetype variables.)
 
-   if test -e $dir/../bin/freetype-config; then
-       found_freetype_config="yes"
-       echo
-       AC_MSG_RESULT(Using $dir/../bin/freetype-config to set freetype variables.)
+    includes=`$_sci_lib/../bin/freetype-config --cflags`
+    FREETYPE_LIB_FLAG=`$_sci_lib/../bin/freetype-config --libs`
 
-       includes=`$dir/../bin/freetype-config --cflags`
-       FREETYPE_LIB_FLAG=`$dir/../bin/freetype-config --libs`
+    SCI_TRY_LINK(FREETYPE,freetype library and headers,ft2build.h,
+                 $_sci_inc,$FREETYPE_LIB_FLAG,$_sci_lib,$includes,,$_sci_optional)
 
-       SCI_TRY_LINK(FREETYPE,freetype library and headers,ft2build.h,
-                    $_sci_inc,$FREETYPE_LIB_FLAG,$dir,$includes,,$_sci_optional)
+    INC_FREETYPE_H="$INC_FREETYPE_H $includes"
 
-       INC_FREETYPE_H="$INC_FREETYPE_H $includes"
-
-       DEF_FREETYPE="#define HAVE_FREETYPE 1"
-       break
-    fi
-done
+    DEF_FREETYPE="#define HAVE_FREETYPE 1"
+fi
 
 if test "$found_freetype_config" = "no"; then
    AC_MSG_RESULT(no.)
@@ -3733,14 +3729,11 @@ if test "$sci_required_hdf5" = "yes"; then
 
   _sci_optional=required
   if test "$with_hdf5"; then
-    _sci_lib="$with_hdf5/lib"			# user defined directory
-    _sci_inc="$with_hdf5/include"
-    _sci_optional=specific
-  else
-#   _sci_lib="/usr/local/lib"			# default directory
-#   _sci_inc="/usr/local/include"
-    _sci_lib="$sci_thirdparty_lib"
-    _sci_inc="$sci_thirdparty_include"
+    if test "$with_hdf5" != "yes"; then
+      _sci_lib="$with_hdf5/lib"			# user defined directory
+      _sci_inc="$with_hdf5/include"
+      _sci_optional=specific
+    fi
   fi
 
   SCI_TRY_LINK(HDF5,hdf5 library and headers,hdf5.h,$_sci_inc,hdf5,$_sci_lib,,,$_sci_optional)
