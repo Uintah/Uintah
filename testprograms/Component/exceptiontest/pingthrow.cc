@@ -41,8 +41,18 @@
 
 using std::cerr;
 using std::cout;
+using std::string;
 
+using PingThrow_ns::PingThrow_impl;
+using PingThrow_ns::OtherThrow_impl;
+using PingThrow_ns::PingThrow;
+using PingThrow_ns::OtherThrow;
 using namespace SCIRun;
+
+void t1(PingThrow::pointer& pp, OtherThrow::pointer& ot, int rank);
+void t2(PingThrow::pointer& pp, OtherThrow::pointer& ot, int rank);
+void t3(PingThrow::pointer& pp, OtherThrow::pointer& ot, int rank);
+void t4(PingThrow::pointer& pp, OtherThrow::pointer& ot, int rank);
 
 void usage(char* progname)
 {
@@ -54,13 +64,75 @@ void usage(char* progname)
     exit(1);
 }
 
+//All will except
+void t1(PingThrow::pointer& pp, OtherThrow::pointer& ot, int rank) 
+{
+  cout << "Test 1...  ";
+  try {
+    pp->pingthrow(1);
+  } catch(PingThrow_ns::PPException* p) {
+    cout << "SUCCESS\n";
+    t2(pp,ot,rank);
+    return;
+  }
+  cout << "FAILED\n";
+  exit(1);
+}
+
+//Regular impreciseness
+void t2(PingThrow::pointer& pp, OtherThrow::pointer& ot, int rank) 
+{
+  cout << "Test 1...  ";
+  try {
+    pp->pingthrow(rank+1); //rank zero excepts
+    while(1) pp->donone();
+  } catch(PingThrow_ns::PPException* p) {
+    cout << "SUCCESS\n";
+    t3(pp,ot,rank);
+    return;
+  }
+  cout << "FAILED\n";
+  exit(1);
+}
+
+//getException basic
+void t3(PingThrow::pointer& pp, OtherThrow::pointer& ot, int rank) 
+{
+  cout << "Test 1...  ";
+  try {
+    pp->pingthrow(rank+1); //rank zero excepts
+    pp->getException();
+  } catch(PingThrow_ns::PPException* p) {
+    cout << "SUCCESS\n";
+    t4(pp,ot,rank);
+    return;
+  }
+  cout << "FAILED\n";
+  exit(1);
+}
+
+//getException with multiple exceptions/multiple methods
+void t4(PingThrow::pointer& pp, OtherThrow::pointer& ot, int rank) 
+{
+  cout << "Test 2...  ";
+  try {
+    pp->pingthrow(rank); //rank one excepts
+    pp->pingthrow2(rank+1); //rank zero excepts
+    pp->getException();
+  } catch(PingThrow_ns::PP2Exception* p) {
+    cout << "SUCCESS\n";
+    //t3(pp,ot);
+    return;
+  } catch(...) {
+    cout << "FAILED\n";
+    exit(1);
+  }
+  cout << "FAILED\n";
+  exit(1);
+}
+
 int main(int argc, char* argv[])
 {
-    using std::string;
-
-    using PingThrow_ns::PingThrow_impl;
-    using PingThrow_ns::PingThrow;
-
     try {
       PIDL::initialize();
       MPI_Init(&argc,&argv);
@@ -132,12 +204,22 @@ int main(int argc, char* argv[])
 	    cerr << "pp_isnull\n";
 	    abort();
 	  }
+
+	  OtherThrow::pointer ot;
+	  pp->getOX(ot);
+
 	  double stime=Time::currentSeconds();
+	  cout << "Starting test...\n";
+	  t1(pp,ot,myrank);
+	  cout << "ALL TEST SUCCESSFUL\n";
+	  /*
 	  for(int z=0; z<10; z++) { 
             ::std::cout << "Calling from node " << myrank << " for the " << z+1 << " time\n";
        	    int j=pp->pingthrow(13);
-            //if(z==0) pp->getException();
+            pp->getException();
 	  }
+	  */
+
           double dt=Time::currentSeconds()-stime;
 	  cerr << "3 reps in " << dt << " seconds\n";
 	  double us=dt/reps*1000*1000;

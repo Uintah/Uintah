@@ -37,10 +37,21 @@ namespace PingThrow_ns {
 
     class PingThrow_impl : public PingThrow {
     public:
-	PingThrow_impl();
-	virtual ~PingThrow_impl();
-	virtual int pingthrow(int);
+      PingThrow_impl();
+      virtual ~PingThrow_impl();
+      virtual int pingthrow(int);
+      virtual int pingthrow2(int);
+      virtual void getOX(OtherThrow::pointer& otptr);
+      virtual void donone();
     };
+
+    class OtherThrow_impl : public OtherThrow {
+    public:
+      OtherThrow_impl();
+      virtual ~OtherThrow_impl();
+      virtual int otherthrow();
+    };
+
 } // End namespace pingthrow
 
 #endif
