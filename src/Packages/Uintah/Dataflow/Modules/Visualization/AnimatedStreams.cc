@@ -100,7 +100,7 @@ void AnimatedStreams::execute(void)
     max = std::max( max, Smax.z() - Smin.z());
     control_widget->SetPosition(Interpolate(Smin,Smax,0.5));
     control_widget->SetScale(max/80.0);
-    GeomObj *w=control_widget->GetWidget();
+    GeomHandle w=control_widget->GetWidget();
     control_id = ogeom->addObj( w, control_name, &control_lock);
   }
 
