@@ -47,7 +47,8 @@ class SimpleMaterial;
       SimulationState
       
     DESCRIPTION
-      Long description...
+      Global data structure to store data accessible
+      by all components
       
     WARNING
       

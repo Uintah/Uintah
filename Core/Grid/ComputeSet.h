@@ -16,6 +16,38 @@ namespace Uintah {
   using std::vector;
   using std::ostringstream;
 
+/**************************************
+
+CLASS
+   ComputeSet
+   
+   Provides similar functionality to std::set.  An exception is that
+   a ComputeSet stores data in groups of ComputeSubsets.   
+
+   A ComputeSubset is much more similar to a std::set and provides 
+   functionality necessary for ComputeSet.
+
+GENERAL INFORMATION
+
+   ComputeSet.h
+
+   Steven G. Parker
+   Department of Computer Science
+   University of Utah
+
+   Center for the Simulation of Accidental Fires and Explosions (C-SAFE)
+  
+   Copyright (C) 2000 SCI Group
+
+KEYWORDS
+   Level
+
+DESCRIPTION
+   Long description...
+  
+WARNING
+  
+****************************************/
   template<class T>
   class ComputeSubset : public RefCounted {
   public:
@@ -124,8 +156,13 @@ namespace Uintah {
     ComputeSet();
     ~ComputeSet();
 
+    // adds all elements of vector in one subset
     void addAll(const vector<T>&);
+
+    // adds each element of vector as a separate individual subset
     void addEach(const vector<T>&);
+
+    // adds one element as a new subset
     void add(const T&);
 
     void sortSubsets();
