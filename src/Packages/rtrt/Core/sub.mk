@@ -50,7 +50,7 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/FastTurbulence.cc \
 	$(SRCDIR)/Tri.cc \
 	$(SRCDIR)/Color.cc \
-	$(SRCDIR)/BouncingSphere.cc  \
+	$(SRCDIR)/BouncingSphere.cc \
 	$(SRCDIR)/BV1.cc \
 	$(SRCDIR)/PerProcessorContext.cc \
 	$(SRCDIR)/BV2.cc \
@@ -72,11 +72,11 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/VolumeBrick16.cc \
 	$(SRCDIR)/Volume16.cc \
 	$(SRCDIR)/MIPHVB16.cc \
-	$(SRCDIR)/MIPGroup.cc \
 	$(SRCDIR)/TimeObj.cc \
 	$(SRCDIR)/CutPlane.cc \
 	$(SRCDIR)/PlaneDpy.cc \
-	$(SRCDIR)/Context.cc \
+	$(SRCDIR)/MIPGroup.cc \
+	$(SRCDIR)/Context.cc  \
 	$(SRCDIR)/UVMapping.cc \
 	$(SRCDIR)/UVPlane.cc \
 	$(SRCDIR)/ImageMaterial.cc \
@@ -112,6 +112,7 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/pcube.c \
 	$(SRCDIR)/fpcube.c \
 	$(SRCDIR)/templates.cc \
+       	$(SRCDIR)/ThinFilmMaterial.cc \
 	$(SRCDIR)/BumpMaterial.cc \
 	$(SRCDIR)/UVSphere.cc \
 	$(SRCDIR)/BumpObject.cc \
@@ -122,6 +123,15 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/CutVolumeDpy.cc \
 	$(SRCDIR)/CutPlaneDpy.cc \
 	$(SRCDIR)/ColorMap.cc \
+	$(SRCDIR)/AirBubble.cc \
+	$(SRCDIR)/SeaLambertian.cc \
+	$(SRCDIR)/TimeVaryingCheapCaustics.cc \
+	$(SRCDIR)/ColorMap.cc \
+	$(SRCDIR)/plyfile.cc \
+	$(SRCDIR)/VideoMap.cc \
+	$(SRCDIR)/FastDielectric.cc \
+	$(SRCDIR)/SpinningInstance.cc  \
+	$(SRCDIR)/DynamicInstance.cc \
 	$(SRCDIR)/SpinningInstance.cc \
 	$(SRCDIR)/plyfile.c \
 	$(SRCDIR)/DynamicInstance.cc \
