@@ -17,16 +17,16 @@
  *  Currently it only supports CCVariables.
  * 
  * Usage of converting Uintah data archive to a tecplot data file
- * puda_mov -tecplot <i_xd> <uda directory> :
- *           print all CCVariables into different tecplot data files 
- * puda_mov -tecplot <i_xd> <CCVariable's Name> <uda directory>:
- *           print one CCVariable into a tecplot data file
- * puda_mov -tecplot <i_xd> <tskip> <uda directory>:
- *           print all CCVariables into different tecplot data files
- *           by every tskip time steps
- * puda_mov -tecplot <i_xd> <CCVariable's Name> <tskip> <uda directory>:
- *           print one CCVariable into a tecplot data file
- *           by every tskip time steps
+ * puda -tecplot <i_xd> <uda directory> :
+ *       print all CCVariables into different tecplot data files 
+ * puda -tecplot <i_xd> <CCVariable's Name> <uda directory>:
+ *       print one CCVariable into a tecplot data file
+ * puda -tecplot <i_xd> <tskip> <uda directory>:
+ *       print all CCVariables into different tecplot data files
+ *       by every tskip time steps
+ * puda -tecplot <i_xd> <CCVariable's Name> <tskip> <uda directory>:
+ *       print one CCVariable into a tecplot data file
+ *       by every tskip time steps
  * i_xd may be i_1d, i_2d, i_3d for 1D, 2D and 3D problem
  *
  */
@@ -1051,7 +1051,7 @@ int main(int argc, char** argv)
 	      filename = filename + filetype;
 	      ofstream outfile(filename.c_str());
 	      outfile.setf(ios::scientific,ios::floatfield);
-	      outfile.precision(10);
+	      outfile.precision(20);
 
 	      //    print out the Title of the output file according to the subtype of the CCVariables 
 		       
@@ -1154,8 +1154,10 @@ int main(int argc, char** argv)
 
 		  for(int matlsIndex = 0; matlsIndex < numMatl; matlsIndex++){ //matls loop: 8
 		    //         write each Zone for diferent material at different time step for all patches for one of the levels
-		    if((ccVariable != "delP_Dilatate" && ccVariable != "press_equil_CC") || 
-		       ((ccVariable == "delP_Dilatate" || ccVariable == "press_equil_CC") && matlsIndex == 0)) { // pressure ccVariable if: 8'9 
+	          if((ccVariable != "delP_Dilatate" && ccVariable != "press_equil_CC" && ccVariable != "mach") ||
+		    ((ccVariable == "delP_Dilatate" || ccVariable == "press_equil_CC") && matlsIndex == 0) ||
+		     (ccVariable == "mach" && ( matlsIndex > 0))) {
+
 		      if(i_xd == "i_3d"){ 
 			outfile << "ZONE T =  " << "\"T:" << time << "," <<"M:" << matlsIndex << "," << "L:" << l << "," << "\"," 
 				<< "N = " << Irange*Jrange*Krange << "," << "E = " << (Irange-1)*(Jrange-1)*(Krange-1) << "," 
