@@ -3,6 +3,25 @@
 # Utility functions
 #
 
+#
+# To link two variables, so that when one changes the other changes, too
+# (update_vars is just the helper function, link_vars is the one to use
+#
+
+proc update_vars {v2 v1 vtmp op} {
+    global $v1
+    global $v2
+    if {[set $v1] != [set $v2]} {
+	set $v2 [set $v1]
+    }
+}
+
+proc link_vars {v1 v2} {
+    global $v1
+    global $v2
+    trace variable $v1 w "update_vars $v2"
+    trace variable $v2 w "update_vars $v1"
+}
 
 
 #
