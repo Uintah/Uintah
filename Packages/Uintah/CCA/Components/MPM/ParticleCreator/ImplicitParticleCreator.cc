@@ -15,8 +15,8 @@ using std::vector;
 using std::find;
 
 ImplicitParticleCreator::ImplicitParticleCreator(MPMMaterial* matl,
-						 MPMLabel* lb,int n8or27) 
-  :  ParticleCreator(matl,lb,n8or27)
+                                                MPMLabel* lb,int n8or27) 
+  : ParticleCreator(matl,lb,n8or27)
 {
   registerPermanentParticleState(matl,lb);
 
@@ -47,9 +47,23 @@ ImplicitParticleCreator::createParticles(MPMMaterial* matl,
 
   ParticleVariable<Vector> pacceleration;
   ParticleVariable<double> pvolumeold;
-  new_dw->allocateAndPut(pvolumeold, lb->pVolumeOldLabel, subset);
+  new_dw->allocateAndPut(pvolumeold,    lb->pVolumeOldLabel,    subset);
   new_dw->allocateAndPut(pacceleration, lb->pAccelerationLabel, subset);
   
+//  Vector dxpp = patch->dCell()/(*obj)->getNumParticlesPerCell();
+
+#if 0
+  for(ParticleSubset::iterator iter =  subset->begin();
+                               iter != subset->end(); iter++){
+    particleIndex idx = *iter;
+
+    pacceleration[idx] = Vector(0.,0.,0.);
+//    pvolumeold[idx]    = dxpp.x()*dxpp.y()*dxpp.z();
+    pvolumeold[idx]    = 1.0;
+  }
+#endif
+
+#if 1  // Is there a better way to do this?
   particleIndex start = 0;
 
   vector<GeometryObject*>::const_iterator obj;
@@ -87,7 +101,7 @@ ImplicitParticleCreator::createParticles(MPMMaterial* matl,
     } // for
     start += count;
   }
-
+#endif
 
   return subset;
 }
@@ -116,21 +130,4 @@ ImplicitParticleCreator::registerPermanentParticleState(MPMMaterial* matl,
 
   particle_state.push_back(lb->pAccelerationLabel);
   particle_state_preReloc.push_back(lb->pAccelerationLabel_preReloc);
-    
-  // This is a hack to remove the pTemperatureLabel from particle_state.
-  // Temperature is initialized in the ParticleCreator class, but for
-  // the implicit algorithm, we don't use it, hence, we can just remove
-  // it from the permanentParticleState, and relocParticles will ignore it.
-  
-  vector<const VarLabel* >::iterator result;
-  
-  result = find(particle_state.begin(), particle_state.end(),
-		lb->pTemperatureLabel);
-  
-  particle_state.erase(result);
-
-  result = find(particle_state_preReloc.begin(),particle_state_preReloc.end(),
-		lb->pTemperatureLabel_preReloc);
-  
-  particle_state_preReloc.erase(result);
 }
