@@ -45,12 +45,12 @@
         <save label = "continuityResidual"/>
         <save label = "filterdrhodt"/>
 	<save label="cellType"/>
-	<save label = "radiationFluxEIN"/>
-	<save label = "radiationFluxWIN"/>
-	<save label = "radiationFluxNIN"/>
-	<save label = "radiationFluxSIN"/>
-	<save label = "radiationFluxTIN"/>
-	<save label = "radiationFluxBIN"/>
+        <save label = "radiationFluxEIN"/>
+        <save label = "radiationFluxWIN"/>
+        <save label = "radiationFluxNIN"/>
+        <save label = "radiationFluxSIN"/>
+        <save label = "radiationFluxTIN"/>
+        <save label = "radiationFluxBIN"/>
 	<checkpoint interval="0.2" cycle="2"/>
    </DataArchiver>
 
@@ -80,7 +80,7 @@
 	    <grow_dt>0.05</grow_dt>
 	    <variable_dt>true</variable_dt>
    	    <nonlinear_solver>explicit</nonlinear_solver>
-    	    <turbulence_model>smagorinsky</turbulence_model>
+    	    <turbulence_model>dynamicprocedure</turbulence_model>
             <reacting_flow>true</reacting_flow>
             <solve_enthalpy>true</solve_enthalpy>	
 	    <solve_reactingscalar>false</solve_reactingscalar>
@@ -93,6 +93,7 @@
 
 	    <Properties>
 		<denUnderrelax>1.0</denUnderrelax>
+		<first_order_drhodt>true</first_order_drhodt>
 	        <ref_point>[-1,-1,-1]</ref_point>
 	        <radiation>true</radiation>
 	        <opl>3.0</opl>
@@ -245,6 +246,7 @@
 	    </PhysicalConstants>
 
 	    <ExplicitSolver>
+		<timeIntegratorType>RK2SSP</timeIntegratorType>
 		<max_iter>0</max_iter>	
 		<res_tol>2.0</res_tol>
 		<probe_data>false</probe_data>
@@ -266,6 +268,7 @@
 		    <finite_difference>second</finite_difference>
 		    <linear_solver>petsc</linear_solver>
 		    <LinearSolver>
+		        <res_tol>1.0e-9</res_tol>
 			<ksptype>cg</ksptype>
 			<pctype>jacobi</pctype>
 			<fill>1</fill>		!---for ilu preconditioner
