@@ -200,7 +200,7 @@ X_PRE_LIBS := @X_PRE_LIBS@
 X_EXTRA_LIBS := @X_EXTRA_LIBS@
 
 ifneq ($(X_LIBS),)
-  X_LIBRARY := -L$(X_LIBS) $(X_PRE_LIBS)
+  X_LIBRARY := $(LDRUN_PREFIX)$(X_LIBS) -L$(X_LIBS) $(X_PRE_LIBS)
 else
   X_LIBRARY := 
 endif
