@@ -67,6 +67,16 @@ Point AffineCombination(const Point& p1, double w1,
 		 p1._z*w1+p2._z*w2+p3._z*w3);
 }
 
+Point AffineCombination(const Point& p1, double w1,
+			const Point& p2, double w2,
+			const Point& p3, double w3,
+			const Point& p4, double w4)
+{
+    return Point(p1._x*w1+p2._x*w2+p3._x*w3+p4._x*w4,
+		 p1._y*w1+p2._y*w2+p3._y*w3+p4._y*w4,
+		 p1._z*w1+p2._z*w2+p3._z*w3+p4._z*w4);
+}
+
 ostream& operator<<( ostream& os, Point& p )
 {
    os << p.string();

@@ -59,6 +59,10 @@ public:
     friend Point Interpolate(const Point&, const Point&, double);
     friend Point AffineCombination(const Point&, double,
 				   const Point&, double,
+				   const Point&, double,
+				   const Point&, double);
+    friend Point AffineCombination(const Point&, double,
+				   const Point&, double,
 				   const Point&, double);
     friend Point AffineCombination(const Point&, double,
 				   const Point&, double);
