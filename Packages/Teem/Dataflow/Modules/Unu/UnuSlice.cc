@@ -80,12 +80,27 @@ UnuSlice::execute()
     error("Empty input Nrrd.");
     return;
   }
+  reset_vars();
+
+  if (axis_.get() == 0) {
+    error("Cannot slice away the tuple axis, select another axis for slicing");
+  }
 
   Nrrd *nin = nrrd_handle->nrrd;
+  Nrrd *nout = nrrdNew();
+  
+  if (nrrdSlice(nout, nin, axis_.get(), position_.get())) {
+    char *err = biffGetDone(NRRD);
+    error(string("Error Slicing nrrd: ") + err);
+    free(err);
+  }
 
-  error("This module is a stub.  Implement me.");
+  NrrdData *nrrd = scinew NrrdData;
+  nrrd->nrrd = nout;
+  nout->axis[0].label = strdup(nin->axis[0].label);
+  nrrd->copy_sci_data(*nrrd_handle.get_rep());
 
-  //onrrd_->send(NrrdDataHandle(nrrd_joined));
+  onrrd_->send(NrrdDataHandle(nrrd));
 }
 
 } // End namespace SCITeem
