@@ -307,7 +307,7 @@ std::string TempFileManager::get_scirun_tmp_dir(std::string subdir)
 {
     struct stat buf;
 
-    char *TMPDIR = getenv("SCIRUN_SERV_TMP_DIR");
+    const char *TMPDIR = sci_getenv("SCIRUN_SERV_TMP_DIR");
     if (TMPDIR != 0)
     {
         std::string dirname = std::string(TMPDIR);

@@ -883,7 +883,8 @@ bool Matlab::open_matlab_engine()
                
 		std::string status = "Matlab engine running\n\nmatlabengine version: " + matlab_engine_->getversion() + "\nmatlabengine address: " +
 			matlab_engine_->getremoteaddress() + "\nmatlabengine session: " + matlab_engine_->getsession() + "\nmatlabengine filetransfer version :" +
-            file_transfer_->getversion() + "\nshared home directory: " + sharehomedir + "\n";
+            file_transfer_->getversion() + "\nshared home directory: " + sharehomedir + "\nlocal temp directory: " + file_transfer_->local_file("") +
+            "\nremote temp directory: " + file_transfer_->remote_file("") + "\n";
 		update_status(status);
 	}
 
