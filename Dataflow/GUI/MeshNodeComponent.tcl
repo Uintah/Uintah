@@ -9,12 +9,12 @@
  #  Log Information:
  ##
 
-catch {rename MeshNodeCore/CCA/Component ""}
+catch {rename MeshNodeComponent ""}
 
 itcl_class SCIRun_Mesh_MeshNodeComponent {
     inherit Module
     constructor {config} {
-        set name MeshNodeCore/CCA/Component
+        set name MeshNodeCoreComponent
         set_defaults
     }
     method set_defaults {} {
@@ -33,7 +33,7 @@ itcl_class SCIRun_Mesh_MeshNodeComponent {
         frame $w.f
         set n "$this-c needexecute "
 	global $this-compTCL
-	make_labeled_radio $w.f.c "Core/CCA/Component: " "" \
+	make_labeled_radio $w.f.c "Component: " "" \
 		top $this-compTCL \
 		{{"X" x} \
 		{"Y" y} \
