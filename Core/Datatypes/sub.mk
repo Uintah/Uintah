@@ -10,6 +10,7 @@ SRCS += $(SRCDIR)/Brick.cc		    \
         $(SRCDIR)/Datatype.cc		    \
         $(SRCDIR)/DenseMatrix.cc	    \
         $(SRCDIR)/Field.cc		    \
+        $(SRCDIR)/FieldSet.cc		    \
         $(SRCDIR)/GenFunction.cc	    \
         $(SRCDIR)/Geom          	    \
         $(SRCDIR)/HexMesh.cc		    \
