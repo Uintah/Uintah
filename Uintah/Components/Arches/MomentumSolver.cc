@@ -339,8 +339,8 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
     old_dw->get(d_velocityVars->old_uVelocity, d_lab->d_uVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::None, numGhostCells);
     cerr << "in moment solve just before allocate" << index << endl;
-    matrix_dw->allocate(d_velocityVars->variableCalledDU, d_lab->d_DUMBLMLabel,
-			matlIndex, patch);
+    //    new_dw->allocate(d_velocityVars->variableCalledDU, d_lab->d_DUMBLMLabel,
+    //			matlIndex, patch);
 
     for (int ii = 0; ii < nofStencils; ii++) {
       matrix_dw->allocate(d_velocityVars->uVelocityCoeff[ii], 
@@ -365,8 +365,8 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
     old_dw->get(d_velocityVars->old_vVelocity, d_lab->d_vVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::None, numGhostCells);
     cerr << "in moment solve just before allocate" << index << endl;
-    matrix_dw->allocate(d_velocityVars->variableCalledDV, d_lab->d_DVMBLMLabel,
-			matlIndex, patch);
+    //    new_dw->allocate(d_velocityVars->variableCalledDV, d_lab->d_DVMBLMLabel,
+    //			matlIndex, patch);
     for (int ii = 0; ii < nofStencils; ii++) {
       matrix_dw->allocate(d_velocityVars->vVelocityCoeff[ii], 
 			  d_lab->d_vVelCoefMBLMLabel, ii, patch);
@@ -389,8 +389,8 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::None, numGhostCells);
     old_dw->get(d_velocityVars->old_wVelocity, d_lab->d_wVelocitySPBCLabel, 
 		matlIndex, patch, Ghost::None, numGhostCells);
-    matrix_dw->allocate(d_velocityVars->variableCalledDW, d_lab->d_DWMBLMLabel,
-			matlIndex, patch);
+    //    new_dw->allocate(d_velocityVars->variableCalledDW, d_lab->d_DWMBLMLabel,
+    //			matlIndex, patch);
     for (int ii = 0; ii < nofStencils; ii++) {
       matrix_dw->allocate(d_velocityVars->wVelocityCoeff[ii], 
 			  d_lab->d_wVelCoefMBLMLabel, ii, patch);
@@ -590,6 +590,9 @@ MomentumSolver::velocityLinearSolve(const ProcessorGroup* pc,
   
 //
 // $Log$
+// Revision 1.23  2000/08/10 21:29:09  rawat
+// fixed a bug in cellinformation
+//
 // Revision 1.22  2000/08/01 23:28:43  skumar
 // Added residual calculation procedure and modified templates in linear
 // solver.  Added template for order-of-magnitude term calculation.

@@ -188,7 +188,6 @@ PressureSolver::sched_buildLinearMatrix(const LevelP& level,
 	tsk->computes(matrix_dw, d_lab->d_wVelCoefPBLMLabel, ii, patch);
 	tsk->computes(matrix_dw, d_lab->d_presCoefPBLMLabel, ii, patch);
       }
-
       tsk->computes(matrix_dw, d_lab->d_uVelLinSrcPBLMLabel, matlIndex, patch);
       tsk->computes(matrix_dw, d_lab->d_vVelLinSrcPBLMLabel, matlIndex, patch);
       tsk->computes(matrix_dw, d_lab->d_wVelLinSrcPBLMLabel, matlIndex, patch);
@@ -295,22 +294,24 @@ PressureSolver::buildLinearMatrix(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::None, numGhostCells);
   
   for(int index = 1; index <= Arches::NDIM; ++index) {
+#if  0
     switch (index) {
     case Arches::XDIR:
-      matrix_dw->allocate(d_pressureVars->variableCalledDU, d_lab->d_DUPBLMLabel,
-			  matlIndex, patch);
+      new_dw->allocate(d_pressureVars->variableCalledDU, d_lab->d_DUPBLMLabel,
+		       matlIndex, patch);
       break;
     case Arches::YDIR:
-      matrix_dw->allocate(d_pressureVars->variableCalledDV, d_lab->d_DUPBLMLabel,
+      new_dw->allocate(d_pressureVars->variableCalledDV, d_lab->d_DVPBLMLabel,
 			  matlIndex, patch);
       break;
     case Arches::ZDIR:
-      matrix_dw->allocate(d_pressureVars->variableCalledDW, d_lab->d_DWPBLMLabel,
+      new_dw->allocate(d_pressureVars->variableCalledDW, d_lab->d_DWPBLMLabel,
 			  matlIndex, patch);
       break;
     default:
       throw InvalidValue("invalid index for velocity in PressureSolver"); 
     }
+#endif
 
     for (int ii = 0; ii < nofStencils; ii++) {
       switch(index) {
@@ -522,6 +523,9 @@ PressureSolver::normPressure(const Patch* ,
 
 //
 // $Log$
+// Revision 1.43  2000/08/10 21:29:09  rawat
+// fixed a bug in cellinformation
+//
 // Revision 1.42  2000/08/01 23:28:43  skumar
 // Added residual calculation procedure and modified templates in linear
 // solver.  Added template for order-of-magnitude term calculation.

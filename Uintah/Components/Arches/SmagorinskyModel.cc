@@ -226,7 +226,7 @@ SmagorinskyModel::computeTurbSubmodel(const ProcessorGroup* pc,
   // Testing if correct values have been put
   cerr << " AFTER COMPUTE TURBULENCE SUBMODEL " << endl;
   for (int ii = domLoVis.x(); ii <= domHiVis.x(); ii++) {
-    cerr << "Density for ii = " << ii << endl;
+    cerr << "Viscosity for ii = " << ii << endl;
     for (int jj = domLoVis.y(); jj <= domHiVis.y(); jj++) {
       for (int kk = domLoVis.z(); kk <= domHiVis.z(); kk++) {
 	cerr.width(10);
@@ -626,6 +626,9 @@ void SmagorinskyModel::calcVelocitySource(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.29  2000/08/10 21:29:09  rawat
+// fixed a bug in cellinformation
+//
 // Revision 1.28  2000/08/04 03:02:01  bbanerje
 // Add some inits.
 //
