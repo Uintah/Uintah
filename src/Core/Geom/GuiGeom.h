@@ -30,6 +30,7 @@ public:
     GuiColor(const clString& name, const clString& id, TCL* tcl);
     ~GuiColor();
 
+    virtual void reset();
     Color get();
     void set(const Color&);
     virtual void emit(std::ostream& out);
@@ -49,6 +50,7 @@ class SCICORESHARE GuiMaterial : public GuiVar {
     GuiMaterial(const clString& name, const clString& id, TCL* tcl);
     ~GuiMaterial();
    
+    virtual void reset();
     Material get();
     void set(const Material&);
     virtual void emit(std::ostream& out);

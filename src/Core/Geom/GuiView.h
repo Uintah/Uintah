@@ -37,12 +37,13 @@ public:
     ~GuiView();
     GuiView(const GuiView&);
 
+    virtual void reset();
     View get();
     void set(const View&);
     virtual void emit(std::ostream& out);
 };
 
-class SCICORESHARE TCLExtendedView : public GuiVar {
+class SCICORESHARE GuiExtendedView : public GuiVar {
     GuiPoint eyep;
     GuiPoint lookat;
     GuiVector up;
@@ -54,10 +55,11 @@ class SCICORESHARE TCLExtendedView : public GuiVar {
 
 public:
     GuiColor bg;
-    TCLExtendedView(const clString& name, const clString& id, TCL* tcl);
-    ~TCLExtendedView();
-    TCLExtendedView(const TCLExtendedView&);
+    GuiExtendedView(const clString& name, const clString& id, TCL* tcl);
+    ~GuiExtendedView();
+    GuiExtendedView(const GuiExtendedView&);
 
+    virtual void reset();
     ExtendedView get();
     void set(const ExtendedView&);
     virtual void emit(std::ostream& out);
