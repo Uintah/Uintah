@@ -12,12 +12,9 @@ namespace Uintah {
 
   class AdvectionFactory
   {
-  public:
-    // this function has a switch for all known advection_types
-    // and calls the proper class' readParameters()
-    // addMaterial() calls this
+  public: 
     static Advector* create(ProblemSpecP& ps,
-                            std::string& advect_type);
+                            bool& d_useCompatibleFluxes);
   };
 
 } // End namespace Uintah
