@@ -111,6 +111,7 @@ void VectorFieldExtractor::get_vars(vector< string >& names,
     type = types[index];
   }
 
+  if( names.size() == 0 ) type = 0;
   // inherited from FieldExtractor
   update_GUI(sVar.get(), sNames);
 }
@@ -139,6 +140,11 @@ void VectorFieldExtractor::execute()
 
   // get time, set timestep, set generation, update grid and update gui
   double time = field_update(); // yeah it does all that
+  
+  if(type == 0){
+    warning( "No variables found.");
+    return;
+  }
   
   // set the index for the correct timestep.
   double dt = -1;
