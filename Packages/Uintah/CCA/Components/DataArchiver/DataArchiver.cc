@@ -88,6 +88,7 @@ void DataArchiver::problemSetup(const ProblemSpecP& params,
    ProblemSpecP p = params->findBlock("DataArchiver");
 
    d_outputDoubleAsFloat = p->findBlock("outputDoubleAsFloat") != 0;
+   d_outputInitTimestep = p->findBlock("outputInitTimestep") != 0;
    p->require("filebase", d_filebase);
 
    // get output timestep or time interval info
@@ -236,8 +237,8 @@ void DataArchiver::initializeOutput(const ProblemSpecP& params) {
 
    // set up the next output and checkpoint time
    d_nextOutputTime=0.0;
-   d_nextOutputTimestep=1;
-   d_nextCheckpointTime=d_checkpointInterval; // no need to checkpoint t=0
+   d_nextOutputTimestep = d_outputInitTimestep?0:1;
+   d_nextCheckpointTime=d_checkpointInterval; 
    d_nextCheckpointTimestep=d_checkpointTimestepInterval+1;
    
    if (d_checkpointWalltimeInterval > 0)
@@ -448,15 +449,15 @@ void DataArchiver::restartSetup(Dir& restartFromDir, int startTimestep,
    //d_currentTimestep = timestep;
    
    if (d_outputInterval > 0)
-      d_nextOutputTime = d_outputInterval * ceil(time / d_outputInterval);
+      d_nextOutputTime = d_outputInitTimestep?time:d_outputInterval * ceil(time / d_outputInterval);
    else if (d_outputTimestepInterval > 0)
-      d_nextOutputTimestep = timestep + d_outputTimestepInterval;
+      d_nextOutputTimestep = d_outputInitTimestep?timestep:timestep + d_outputTimestepInterval;
    
    if (d_checkpointInterval > 0)
-      d_nextCheckpointTime = d_checkpointInterval *
+      d_nextCheckpointTime = d_outputInitTimestep?time:d_checkpointInterval *
 	 ceil(time / d_checkpointInterval);
    else if (d_checkpointTimestepInterval > 0)
-      d_nextCheckpointTimestep = timestep + d_checkpointTimestepInterval;
+      d_nextCheckpointTimestep = d_outputInitTimestep?timestep:timestep + d_checkpointTimestepInterval;
    if (d_checkpointWalltimeInterval > 0)
      d_nextCheckpointWalltime = d_checkpointWalltimeInterval + 
        (int)Time::currentSeconds();
@@ -747,13 +748,16 @@ void DataArchiver::finalizeTimestep(double time, double delt,
   //d_currentTimestep++;
   beginOutputTimestep(time, delt, grid);
 
-  if ((delt != 0 && (!wereSavesAndCheckpointsInitialized)) || addMaterial) {
-      /* skip the initialization timestep for this
+  // some changes here - we need to redo this if we add a material, or if we schedule output
+  // on the initialization timestep (because there will be new computes on subsequent timestep)
+  // - BJW
+  if (((delt != 0 || d_outputInitTimestep) && !wereSavesAndCheckpointsInitialized) || addMaterial) {
+      /* skip the initialization timestep (normally, anyway) for this
          because it needs all computes to be set
          to find the save labels */
     
-    if (d_outputInterval != 0.0 || d_outputTimestepInterval != 0 || addMaterial) {
-      initSaveLabels(sched);
+    if (d_outputInterval != 0.0 || d_outputTimestepInterval != 0) {
+      initSaveLabels(sched, delt == 0);
      
       if (!wereSavesAndCheckpointsInitialized)
         indexAddGlobals(); /* add saved global (reduction)
@@ -762,18 +766,22 @@ void DataArchiver::finalizeTimestep(double time, double delt,
     
     // This assumes that the TaskGraph doesn't change after the second
     // timestep and will need to change if the TaskGraph becomes dynamic. 
-    wereSavesAndCheckpointsInitialized = true;
+    //   We also need to do this again if this is the init timestep
+    if (delt != 0) {
+      wereSavesAndCheckpointsInitialized = true;
     
-    if (d_checkpointInterval != 0.0 || d_checkpointTimestepInterval != 0 || 
-	d_checkpointWalltimeInterval != 0)
-      initCheckpoints(sched);
+      // can't do checkpoints on init timestep....
+      if (d_checkpointInterval != 0.0 || d_checkpointTimestepInterval != 0 || 
+          d_checkpointWalltimeInterval != 0)
+        initCheckpoints(sched);
+    }
   }
 
   // we don't want to schedule more tasks unless we're recompiling
   if (!recompile)
     return;
   if ( (d_outputInterval != 0.0 || d_outputTimestepInterval != 0) && 
-       delt != 0 ) {
+       (delt != 0 || d_outputInitTimestep)) {
     // Schedule task to dump out reduction variables at every timestep
     Task* t = scinew Task("DataArchiver::outputReduction",
 			  this, &DataArchiver::outputReduction);
@@ -789,7 +797,7 @@ void DataArchiver::finalizeTimestep(double time, double delt,
     sched->addTask(t, 0, 0);
     
     dbg << "Created reduction variable output task" << endl;
-    if (delt != 0)
+    if (delt != 0 || d_outputInitTimestep)
       scheduleOutputTimestep(d_dir, d_saveLabels, grid, sched, false);
   }
     
@@ -808,7 +816,7 @@ void DataArchiver::finalizeTimestep(double time, double delt,
     sched->addTask(t, 0, 0);
     
     dbg << "Created checkpoint reduction variable output task" << endl;
-
+    
     scheduleOutputTimestep(d_checkpointsDir, d_checkpointLabels,
 			   grid, sched, true);
   }
@@ -828,7 +836,7 @@ void DataArchiver::beginOutputTimestep( double time, double delt,
   // do *not* update d_nextOutputTime or others here.  We need the original
   // values to compare if there is a timestep restart.  See 
   // reEvaluateOutputTimestep
-  if (d_outputInterval != 0.0 && delt != 0) {
+  if (d_outputInterval != 0.0 && (delt != 0 || d_outputInitTimestep)) {
     if(time+delt >= d_nextOutputTime) {
       // output timestep
       d_wasOutputTimestep = true;
@@ -839,7 +847,7 @@ void DataArchiver::beginOutputTimestep( double time, double delt,
       d_wasOutputTimestep = false;
     }
   }
-  else if (d_outputTimestepInterval != 0 && delt != 0) {
+  else if (d_outputTimestepInterval != 0 && (delt != 0 || d_outputInitTimestep)) {
     if(timestep >= d_nextOutputTimestep) {
       // output timestep
       d_wasOutputTimestep = true;
@@ -1478,7 +1486,6 @@ void DataArchiver::output(const ProcessorGroup*,
   // return if not an outpoint/checkpoint timestep
   if ((!d_wasOutputTimestep && !isThisCheckpoint) || 
       (!d_wasCheckpointTimestep && isThisCheckpoint)) {
-
     return;
   }
   bool isReduction = var->typeDescription()->isReductionVariable();
@@ -1941,9 +1948,12 @@ DataArchiver::makeVersionedDir()
    
 }
 
-void  DataArchiver::initSaveLabels(SchedulerP& sched)
+void  DataArchiver::initSaveLabels(SchedulerP& sched, bool initTimestep)
 {
   dbg << "initSaveLabels called\n";
+
+  // if this is the initTimestep, then don't complain about saving all the vars,
+  // just save the ones you can.  They'll most likely be around on the next timestep.
 
   SaveItem saveItem;
   d_saveReductionLabels.clear();
@@ -1960,9 +1970,9 @@ void  DataArchiver::initSaveLabels(SchedulerP& sched)
     //   make sure that the scheduler shows that that it has been scheduled
     //   to be computed.  Then save it to saveItems.
     VarLabel* var = VarLabel::find((*it).labelName);
-    if (var == NULL)
+    if (var == NULL) 
       throw ProblemSetupException((*it).labelName +
-				  " variable not found to save.");
+                                  " variable not found to save.");
 
     if ((*it).compressionMode != "")
       var->setCompressionMode((*it).compressionMode);
@@ -1970,10 +1980,16 @@ void  DataArchiver::initSaveLabels(SchedulerP& sched)
     Scheduler::VarLabelMaterialMap::iterator found =
       pLabelMatlMap->find(var->getName());
 
-    if (found == pLabelMatlMap->end())
-      throw ProblemSetupException((*it).labelName +
-				  " variable not computed for saving.");
-      
+    if (found == pLabelMatlMap->end()) {
+      if (initTimestep) {
+        // ignore this on the init timestep, cuz lots of vars aren't computed on the init timestep
+        dbg << "Ignoring var " << it->labelName << " on initialization timestep\n";
+        continue;
+      }
+      else
+        throw ProblemSetupException((*it).labelName +
+                                    " variable not computed for saving.");
+    }
     saveItem.label_ = var;
     ConsecutiveRangeSet matlsToSave =
       (ConsecutiveRangeSet((*found).second)).intersected((*it).matls);
@@ -1989,8 +2005,9 @@ void  DataArchiver::initSaveLabels(SchedulerP& sched)
     if (saveItem.label_->typeDescription()->isReductionVariable()) {
       d_saveReductionLabels.push_back(saveItem);
     }
-    else
+    else {
       d_saveLabels.push_back(saveItem);
+    }
   }
   //d_saveLabelNames.clear();
   delete pLabelMatlMap;
@@ -2000,6 +2017,7 @@ void  DataArchiver::initSaveLabels(SchedulerP& sched)
 
 void DataArchiver::initCheckpoints(SchedulerP& sched)
 {
+   dbg << "initCheckpoints called\n";
    typedef vector<const Task::Dependency*> dep_vector;
    const dep_vector& initreqs = sched->getInitialRequires();
    SaveItem saveItem;
