@@ -7,6 +7,8 @@ ALLTARGETS := $(ALLTARGETS) $(SRCDIR)/tclIndex
 $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/application.tcl \
 	$(SRCDIR)/test.tcl \
+	$(SRCDIR)/ScalarFieldAverage.tcl \
+	$(SRCDIR)/SubFieldHistogram.tcl \
 	$(SRCDIR)/ScalarFieldExtractor.tcl $(SRCDIR)/TimestepSelector.tcl \
 	$(SRCDIR)/VectorFieldExtractor.tcl \
 	$(SRCDIR)/TensorFieldExtractor.tcl \
@@ -21,6 +23,8 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/GLTextureBuilder.tcl \
 	$(SRCDIR)/CuttingPlane.tcl\
 	$(SRCDIR)/Hedgehog.tcl\
+	$(SRCDIR)/ScalarOperator.tcl\
+	$(SRCDIR)/ScalarFieldOperator.tcl\
 	$(SRCDIR)/TensorOperator.tcl\
 	$(SRCDIR)/TensorFieldOperator.tcl\
 	$(SRCDIR)/TensorParticlesOperator.tcl\
