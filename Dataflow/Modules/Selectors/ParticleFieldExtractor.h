@@ -130,7 +130,7 @@ private:
 
   ArchiveHandle archiveH;
   void add_type(string &type_list, const TypeDescription *subtype);
-  void setVars(ArchiveHandle ar);
+  bool setVars(ArchiveHandle ar);
   void showVarsForMatls();
   std::string getVarsForMaterials(std::list<VarInfo>& vars,
 				  const ConsecutiveRangeSet& matls,
