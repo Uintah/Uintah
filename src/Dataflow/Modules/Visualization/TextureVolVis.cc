@@ -84,15 +84,15 @@ void TextureVolVis::widget_moved(bool)
 void TextureVolVis::execute(void)
 {
   intexture = (GLTexture3DIPort *)get_iport("GL Texture");
-  incolormap = (ColorMapIPort *)get_iport("Color Map");
+  icmap = (ColorMapIPort *)get_iport("ColorMap");
   ogeom = (GeometryOPort *)get_oport("Geometry");
-
+  ocmap = (ColorMapOPort *)get_oport("ColorMap");
   if (!intexture) {
     error("Unable to initialize iport 'GL Texture'.");
     return;
   }
-  if (!incolormap) {
-    error("Unable to initialize iport 'Color Map'.");
+  if (!icmap) {
+    error("Unable to initialize iport 'ColorMap'.");
     return;
   }
   if (!ogeom) {
@@ -109,7 +109,7 @@ void TextureVolVis::execute(void)
   }
   
   ColorMapHandle cmap;
-  if( !incolormap->get(cmap)){
+  if( !icmap->get(cmap)){
     return;
   }
 
@@ -183,6 +183,19 @@ void TextureVolVis::execute(void)
   //AuditAllocator(default_allocator);
   ogeom->flushViews();				  
   //AuditAllocator(default_allocator);
+
+  if (!ocmap) {
+    error("Unable to initialize oport 'Color Map'.");
+    return;
+  } else {
+    ColorMapHandle outcmap;
+    outcmap = new ColorMap(*cmap.get_rep()); 
+    double min, max;
+    tex->getminmax(min, max);
+    outcmap->Scale(min, max);
+    ocmap->send(outcmap);
+  }    
+
 }
 
 } // End namespace SCIRun

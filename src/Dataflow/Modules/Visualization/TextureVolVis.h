@@ -55,9 +55,10 @@ private:
   
   GLTexture3DHandle tex;
 
-  ColorMapIPort* incolormap;
+  ColorMapIPort* icmap;
   GLTexture3DIPort* intexture;
   GeometryOPort* ogeom;
+  ColorMapOPort* ocmap;
    
   CrowdMonitor control_lock; 
   PointWidget *control_widget;

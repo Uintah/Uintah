@@ -37,7 +37,7 @@
 	<datatype>SCIRun::GLTexture3D</datatype>
       </port>
       <port>
-        <name>Color Map</name>
+        <name>ColorMap</name>
 	<datatype>SCIRun::ColorMap</datatype>
       </port>
     </inputs>
@@ -45,6 +45,10 @@
       <port>
         <name>Geometry</name>
         <datatype>SCIRun::Geometry</datatype>
+      </port>
+      <port>
+        <name>ColorMap</name>
+	<datatype>SCIRun::ColorMap</datatype>
       </port>
     </outputs>
   </io>
