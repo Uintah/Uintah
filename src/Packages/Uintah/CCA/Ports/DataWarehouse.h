@@ -27,7 +27,6 @@ namespace Uintah {
    class OutputContext;
    class ProcessorGroup;
    class VarLabel;
-   class ScatterGatherBase;
 
 /**************************************
 	
@@ -80,11 +79,6 @@ WARNING
       virtual void override(const ReductionVariableBase&, const VarLabel*,
 			    int matlIndex = -1) = 0;
 
-      // Scatther/gather.  This will need a VarLabel if anyone but the
-      // scheduler ever wants to use it.
-      virtual void scatter(ScatterGatherBase*, const Patch*, const Patch*) = 0;
-      virtual ScatterGatherBase* gather(const Patch*, const Patch*) = 0;
-      
       // Particle Variables
       virtual ParticleSubset* createParticleSubset(particleIndex numParticles,
 				        int matlIndex, const Patch*) = 0;

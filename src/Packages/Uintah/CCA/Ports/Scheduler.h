@@ -9,6 +9,7 @@
 #include <map>
 #include <list>
 #include <string>
+#include <set>
 
 namespace Uintah {
   using namespace std;
@@ -59,14 +60,14 @@ WARNING
     
     //////////
     // Insert Documentation Here:
-    virtual void compile(const ProcessorGroup * pc ) = 0;
+    virtual void compile(const ProcessorGroup * pc, bool init_timestep ) = 0;
     virtual void execute(const ProcessorGroup * pc ) = 0;
        
     //////////
     // Insert Documentation Here:
     virtual void addTask(Task* t, const PatchSet*, const MaterialSet*) = 0;
     
-    virtual const vector<const Task::Dependency*>& getInitialRequires() = 0;
+    virtual const set<const VarLabel*>& getInitialRequires() = 0;
     
     virtual LoadBalancer* getLoadBalancer() = 0;
     virtual void releaseLoadBalancer() = 0;
