@@ -129,7 +129,7 @@ ALLTARGETS := $(ALLTARGETS) $(SCENES)
 
 LIBS := $(GL_LIBRARY) $(FASTM_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY) $(PERFEX_LIBRARY) $(X_LIBRARY)
 
-RTRT_ULIBS = -lPackages_rtrt_Core -lPackages_Uintah_Core_DataArchive -lPackages_Uintah_Core_Grid -lCore_Persistent -lCore_Geometry -lCore_Containers -lCore_Exceptions -lDataflow_Comm -lDataflow_XMLUtil $(SCI_THIRDPARTY_LIBRARY) $(XML_LIBRARY) $(MPI_LIBRARY) -lCore_Malloc -lCore_Thread
+RTRT_ULIBS = -lPackages_rtrt_Core -lPackages_Uintah_Core_DataArchive -lPackages_Uintah_Core_Grid -lCore_Persistent -lCore_Geometry -lCore_Containers -lCore_Exceptions -lDataflow_Comm -lDataflow_XMLUtil $(SCI_THIRDPARTY_LIBRARY) $(XML_LIBRARY) $(MPI_LIBRARY) -lCore_Malloc -lCore_Thread $(LAPACKMP_LIBRARY)
 
 
 $(SRCDIR)/VolumeVisMod.mo: $(SRCDIR)/VolumeVisMod.o
@@ -165,7 +165,7 @@ $(SRCDIR)/uintahisosurface.mo: $(SRCDIR)/uintahisosurface.o
 $(SCENES): lib/libPackages_rtrt_Core.$(SO_OR_A_FILE) lib/libPackages_rtrt_Core_PathTracer.$(SO_OR_A_FILE) lib/libCore_Persistent.$(SO_OR_A_FILE) lib/libCore_Geometry.$(SO_OR_A_FILE) lib/libCore_Malloc.$(SO_OR_A_FILE) lib/libCore_Thread.$(SO_OR_A_FILE) lib/libCore_Exceptions.$(SO_OR_A_FILE) lib/libCore_Math.$(SO_OR_A_FILE)
 %.mo: %.o
 	rm -f $@
-	$(CXX) -o $@ $(LDFLAGS) $(SOFLAGS) $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lPackages_rtrt_Core_PathTracer -lCore_Exceptions -lCore_Geometry -lCore_Persistent -lCore_Malloc -lCore_Thread -lCore_Exceptions -lCore_Math $(SCI_THIRDPARTY_LIBRARY) $(XML_LIBRARY) $(M_LIBRARY) $(OOGL_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY)
+	$(CXX) -o $@ $(LDFLAGS) $(SOFLAGS) $(patsubst %.mo,%.o,$(filter %.mo,$@)) -lPackages_rtrt_Core -lPackages_rtrt_Core_PathTracer -lCore_Exceptions -lCore_Geometry -lCore_Persistent -lCore_Malloc -lCore_Thread -lCore_Exceptions -lCore_Math $(SCI_THIRDPARTY_LIBRARY) $(XML_LIBRARY) $(M_LIBRARY) $(OOGL_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY) $(LAPACKMP_LIBRARY)
 
 CLEANPROGS := $(CLEANPROGS) $(SCENES) 
 
