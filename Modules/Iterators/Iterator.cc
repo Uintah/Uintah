@@ -88,7 +88,7 @@ void TYPEIterator::execute()
       feedback_oport->send_intermediate(data);
     } else {
       // Get the condition...
-      coun++;
+      count++;
       sciBooleanHandle cond;
       if(!condition_iport->get(cond))
 	return;

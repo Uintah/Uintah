@@ -7,8 +7,8 @@ SRCS = $(GENSRCS)
 LIBNAME = Iterators
 
 SO_LIBS =
-SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lTCL \
-	-lClasslib -lMultitask -lMalloc
+SO_LDFLAGS = -L$(TOP)/lib -lDatatypes -lDataflow -lGeom -lTCL \
+	-lClasslib -lMultitask -lMalloc -lm -lC -lc
 
 depend:: $(GENSRCS)
 
