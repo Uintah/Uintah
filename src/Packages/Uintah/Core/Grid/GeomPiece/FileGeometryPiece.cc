@@ -102,8 +102,7 @@ void FileGeometryPiece::readPoints(int pid)
   string file_name = d_file_name+fnum;
   ifstream source(file_name.c_str());
   if (!source ){
-    throw ProblemSetupException("ERROR: opening MPM geometry file: \n
-                                The file must be in the same directory as sus");
+    throw ProblemSetupException("ERROR: opening MPM geometry file:  The file must be in the same directory as sus");
   }
 
   double x,y,z,vol;
