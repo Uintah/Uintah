@@ -9,6 +9,7 @@
 namespace Uintah {
 
 using namespace SCIRun;
+class ParticlesNeighbor;
 
 class Lattice : public Array3<Cell> {
 public:
@@ -20,6 +21,8 @@ public:
   
   const Patch*                    getPatch() const;
   const ParticleVariable<Point>&  getpX() const;
+
+  void  getParticlesNeighbor(const Point& p, ParticlesNeighbor& particles);
 
   bool  checkPossible(const Vector& N,
                    particleIndex thisIdx,

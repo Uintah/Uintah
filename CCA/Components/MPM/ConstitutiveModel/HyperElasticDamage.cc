@@ -263,24 +263,6 @@ void HyperElasticDamage::computeStressTensor(const Patch* patch,
 #endif
 }
 
-//for fracture
-void HyperElasticDamage::computeCrackSurfaceContactForce(const Patch* patch,
-                                           const MPMMaterial* matl,
-                                           DataWarehouseP& old_dw,
-                                           DataWarehouseP& new_dw)
-{
-}
-
-//for fracture
-void HyperElasticDamage::addComputesAndRequiresForCrackSurfaceContact(
-	                                     Task* task,
-					     const MPMMaterial* matl,
-					     const Patch* patch,
-					     DataWarehouseP& old_dw,
-					     DataWarehouseP& new_dw) const
-{
-}
-
 double HyperElasticDamage::computeStrainEnergy(const Patch* patch,
 					       const MPMMaterial* matl,
 					       DataWarehouseP& new_dw)

@@ -117,15 +117,7 @@ public:
 
   //////////
   // Insert Documentation Here:
-  void stressRelease(const ProcessorGroup*,
-			     const Patch* patch,
-			     DataWarehouseP& old_dw,
-			     DataWarehouseP& new_dw);
-
-
-  //////////
-  // Insert Documentation Here:
-  void computeVisibility(const ProcessorGroup*,
+  void computeConnectivity(const ProcessorGroup*,
 			     const Patch* patch,
 			     DataWarehouseP& old_dw,
 			     DataWarehouseP& new_dw);
@@ -254,12 +246,7 @@ public:
 				     DataWarehouseP&,
 				     DataWarehouseP&);
 
-  void scheduleStressRelease(const Patch* patch,
-				     SchedulerP&,
-				     DataWarehouseP&,
-				     DataWarehouseP&);
-
-  void scheduleComputeVisibility(const Patch* patch,
+  void scheduleComputeConnectivity(const Patch* patch,
 				     SchedulerP&,
 				     DataWarehouseP&,
 				     DataWarehouseP&);

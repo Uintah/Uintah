@@ -65,6 +65,14 @@ const ParticleVariable<Point>& Lattice::getpX() const
   return *d_pX;
 }
 
+void Lattice::getParticlesNeighbor(const Point& p, ParticlesNeighbor& particles)
+{
+  particles.clear();
+  IntVector cellIdx;
+  d_patch->findCell(p,cellIdx);
+  particles.buildIn(cellIdx,*this);
+}
+
 bool Lattice::checkPossible(const Vector& N,
                    particleIndex thisIdx,
                    const ParticleVariable<Point>& pX,
@@ -161,6 +169,8 @@ void fit(ParticleSubset* pset_patchOnly,
 	 const ParticleVariable<Point>& pX_patchAndGhost,
 	 vector<int>& particleIndexExchange)
 {
+  Vector d = pset_patchOnly->getPatch()->dCell()/10;
+  
   for(ParticleSubset::iterator iter_patchOnly = pset_patchOnly->begin();
        iter_patchOnly != pset_patchOnly->end(); iter_patchOnly++)
   {
@@ -169,9 +179,9 @@ void fit(ParticleSubset* pset_patchOnly,
          iter_patchAndGhost != pset_patchAndGhost->end(); iter_patchAndGhost++)
     {
       const Point& p = pX_patchAndGhost[*iter_patchAndGhost];
-      if( v.x() == p.x() && 
-          v.y() == p.y() && 
-          v.z() == p.z() )
+      if( fabs(v.x()-p.x()) < d.x() && 
+          fabs(v.y()-p.y()) < d.y() && 
+          fabs(v.z()-p.z()) < d.z() )
       {
         particleIndexExchange[*iter_patchOnly] = *iter_patchAndGhost;
 	break;

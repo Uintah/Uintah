@@ -83,19 +83,6 @@ WARNING
 					     DataWarehouseP& old_dw,
 					     DataWarehouseP& new_dw) const;
 
-         //for fracture
-         virtual void computeCrackSurfaceContactForce(const Patch* patch,
-                                           const MPMMaterial* mpm_matl,
-                                           DataWarehouseP& old_dw,
-                                           DataWarehouseP& new_dw);
-
-	 virtual void addComputesAndRequiresForCrackSurfaceContact(
-	                                     Task* task,
-					     const MPMMaterial* matl,
-					     const Patch* patch,
-					     DataWarehouseP& old_dw,
-					     DataWarehouseP& new_dw) const;
-
 	 virtual void addParticleState(std::vector<const VarLabel*>& from,
 				       std::vector<const VarLabel*>& to);
       };
