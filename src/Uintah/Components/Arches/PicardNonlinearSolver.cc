@@ -18,7 +18,9 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/Level.h>
 #include <Uintah/Grid/Task.h>
 #include <Uintah/Grid/CCVariable.h>
-#include <Uintah/Grid/FCVariable.h>
+#include <Uintah/Grid/SFCXVariable.h>
+#include <Uintah/Grid/SFCYVariable.h>
+#include <Uintah/Grid/SFCZVariable.h>
 #include <Uintah/Exceptions/InvalidValue.h>
 #include <SCICore/Util/NotFinished.h>
 #include <math.h>
@@ -49,11 +51,11 @@ PicardNonlinearSolver::PicardNonlinearSolver(Properties* props,
   d_pressureINLabel = scinew VarLabel("pressureIN",
 				   CCVariable<double>::getTypeDescription() );
   d_uVelocitySPLabel = scinew VarLabel("uVelocitySP",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCXVariable<double>::getTypeDescription() );
   d_vVelocitySPLabel = scinew VarLabel("vVelocitySP",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCYVariable<double>::getTypeDescription() );
   d_wVelocitySPLabel = scinew VarLabel("wVelocitySP",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCZVariable<double>::getTypeDescription() );
   d_scalarSPLabel = scinew VarLabel("scalarSP",
 				  CCVariable<double>::getTypeDescription() );
   d_densityCPLabel = scinew VarLabel("densityCP",
@@ -274,13 +276,13 @@ PicardNonlinearSolver::initialize(const ProcessorGroup* ,
   old_dw->get(pressure, d_pressureINLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
 
-  FCVariable<double> uVelocity;
+  SFCXVariable<double> uVelocity;
   old_dw->get(uVelocity, d_uVelocitySPLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  FCVariable<double> vVelocity;
+  SFCYVariable<double> vVelocity;
   old_dw->get(vVelocity, d_vVelocitySPLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
-  FCVariable<double> wVelocity;
+  SFCZVariable<double> wVelocity;
   old_dw->get(wVelocity, d_wVelocitySPLabel, matlIndex, patch, Ghost::None,
 	      nofGhostCells);
 
@@ -305,14 +307,13 @@ PicardNonlinearSolver::initialize(const ProcessorGroup* ,
   new_dw->allocate(pressure_new, d_pressureINLabel, matlIndex, patch);
   pressure_new = pressure; // copy old into new
 
-  // (tmp) velocity should be FCVariable
-  FCVariable<double> uVelocity_new;
+  SFCXVariable<double> uVelocity_new;
   new_dw->allocate(uVelocity_new, d_uVelocitySPLabel, matlIndex, patch);
   uVelocity_new = uVelocity; // copy old into new
-  FCVariable<double> vVelocity_new;
+  SFCYVariable<double> vVelocity_new;
   new_dw->allocate(vVelocity_new, d_vVelocitySPLabel, matlIndex, patch);
   vVelocity_new = vVelocity; // copy old into new
-  FCVariable<double> wVelocity_new;
+  SFCZVariable<double> wVelocity_new;
   new_dw->allocate(wVelocity_new, d_wVelocitySPLabel, matlIndex, patch);
   wVelocity_new = wVelocity; // copy old into new
 
@@ -378,6 +379,9 @@ PicardNonlinearSolver::computeResidual(const LevelP& level,
 
 //
 // $Log$
+// Revision 1.31  2000/06/29 22:56:43  bbanerje
+// Changed FCVars to SFC[X,Y,Z]Vars, and added the neceesary getIndex calls.
+//
 // Revision 1.30  2000/06/22 23:06:35  bbanerje
 // Changed velocity related variables to FCVariable type.
 // ** NOTE ** We may need 3 types of FCVariables (one for each direction)

@@ -16,7 +16,9 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/Level.h>
 #include <Uintah/Grid/Task.h>
 #include <Uintah/Grid/CCVariable.h>
-#include <Uintah/Grid/FCVariable.h>
+#include <Uintah/Grid/SFCXVariable.h>
+#include <Uintah/Grid/SFCYVariable.h>
+#include <Uintah/Grid/SFCZVariable.h>
 #include <SCICore/Util/NotFinished.h>
 #include <Uintah/Components/Arches/Arches.h>
 
@@ -47,11 +49,11 @@ PressureSolver::PressureSolver(int nDim,
   d_pressureINLabel = scinew VarLabel("pressureIN",
 			     CCVariable<double>::getTypeDescription() );
   d_uVelocitySIVBCLabel = scinew VarLabel("uVelocitySIVBC",
-				 FCVariable<double>::getTypeDescription() );
+				 SFCXVariable<double>::getTypeDescription() );
   d_vVelocitySIVBCLabel = scinew VarLabel("vVelocitySIVBC",
-				 FCVariable<double>::getTypeDescription() );
+				 SFCYVariable<double>::getTypeDescription() );
   d_wVelocitySIVBCLabel = scinew VarLabel("wVelocitySIVBC",
-				 FCVariable<double>::getTypeDescription() );
+				 SFCZVariable<double>::getTypeDescription() );
   d_densitySIVBCLabel = scinew VarLabel("densitySIVBC",
 			       CCVariable<double>::getTypeDescription() );
   d_viscosityCTSLabel = scinew VarLabel("viscosityCTS",
@@ -59,29 +61,29 @@ PressureSolver::PressureSolver(int nDim,
 
   // Computed
   d_uVelConvCoefPBLMLabel = scinew VarLabel("uVelConvectCoefPBLM",
-				   FCVariable<double>::getTypeDescription() );
+				   SFCXVariable<double>::getTypeDescription() );
   d_vVelConvCoefPBLMLabel = scinew VarLabel("vVelConvectCoefPBLM",
-				   FCVariable<double>::getTypeDescription() );
+				   SFCYVariable<double>::getTypeDescription() );
   d_wVelConvCoefPBLMLabel = scinew VarLabel("wVelConvectCoefPBLM",
-				   FCVariable<double>::getTypeDescription() );
+				   SFCZVariable<double>::getTypeDescription() );
   d_uVelCoefPBLMLabel = scinew VarLabel("uVelCoefPBLM",
-			       FCVariable<double>::getTypeDescription() );
+			       SFCXVariable<double>::getTypeDescription() );
   d_vVelCoefPBLMLabel = scinew VarLabel("vVelCoefPBLM",
-			       FCVariable<double>::getTypeDescription() );
+			       SFCYVariable<double>::getTypeDescription() );
   d_wVelCoefPBLMLabel = scinew VarLabel("wVelCoefPBLM",
-			       FCVariable<double>::getTypeDescription() );
+			       SFCZVariable<double>::getTypeDescription() );
   d_uVelLinSrcPBLMLabel = scinew VarLabel("uVelLinSrcPBLM",
-				 FCVariable<double>::getTypeDescription() );
+				 SFCXVariable<double>::getTypeDescription() );
   d_vVelLinSrcPBLMLabel = scinew VarLabel("vVelLinSrcPBLM",
-				 FCVariable<double>::getTypeDescription() );
+				 SFCYVariable<double>::getTypeDescription() );
   d_wVelLinSrcPBLMLabel = scinew VarLabel("wVelLinSrcPBLM",
-				 FCVariable<double>::getTypeDescription() );
+				 SFCZVariable<double>::getTypeDescription() );
   d_uVelNonLinSrcPBLMLabel = scinew VarLabel("uVelNonLinSrcPBLM",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCXVariable<double>::getTypeDescription() );
   d_vVelNonLinSrcPBLMLabel = scinew VarLabel("vVelNonLinSrcPBLM",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCYVariable<double>::getTypeDescription() );
   d_wVelNonLinSrcPBLMLabel = scinew VarLabel("wVelNonLinSrcPBLM",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCZVariable<double>::getTypeDescription() );
   d_presCoefPBLMLabel = scinew VarLabel("presCoefPBLM",
 			       CCVariable<double>::getTypeDescription() );
   d_presLinSrcPBLMLabel = scinew VarLabel("presLinSrcPBLM",
@@ -333,6 +335,9 @@ PressureSolver::normPressure(const Patch* ,
 
 //
 // $Log$
+// Revision 1.26  2000/06/29 22:56:43  bbanerje
+// Changed FCVars to SFC[X,Y,Z]Vars, and added the neceesary getIndex calls.
+//
 // Revision 1.25  2000/06/22 23:06:35  bbanerje
 // Changed velocity related variables to FCVariable type.
 // ** NOTE ** We may need 3 types of FCVariables (one for each direction)

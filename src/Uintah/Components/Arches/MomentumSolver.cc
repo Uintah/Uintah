@@ -16,7 +16,9 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/Level.h>
 #include <Uintah/Grid/Task.h>
 #include <Uintah/Grid/CCVariable.h>
-#include <Uintah/Grid/FCVariable.h>
+#include <Uintah/Grid/SFCXVariable.h>
+#include <Uintah/Grid/SFCYVariable.h>
+#include <Uintah/Grid/SFCZVariable.h>
 #include <SCICore/Util/NotFinished.h>
 #include <Uintah/Components/Arches/Arches.h>
 
@@ -45,39 +47,39 @@ MomentumSolver::MomentumSolver(TurbulenceModel* turb_model,
   d_pressurePSLabel = scinew VarLabel("pressurePS",
 				    CCVariable<double>::getTypeDescription() );
   d_uVelocityCPBCLabel = scinew VarLabel("uVelocityCPBC",
-				     FCVariable<double>::getTypeDescription() );
+				     SFCXVariable<double>::getTypeDescription() );
   d_vVelocityCPBCLabel = scinew VarLabel("vVelocityCPBC",
-				     FCVariable<double>::getTypeDescription() );
+				     SFCYVariable<double>::getTypeDescription() );
   d_wVelocityCPBCLabel = scinew VarLabel("wVelocityCPBC",
-				     FCVariable<double>::getTypeDescription() );
+				     SFCZVariable<double>::getTypeDescription() );
   d_densitySIVBCLabel = scinew VarLabel("densitySIVBC",
 				   CCVariable<double>::getTypeDescription() );
   d_viscosityCTSLabel = scinew VarLabel("viscosityCTS",
 				     CCVariable<double>::getTypeDescription() );
   d_uVelConvCoefMBLMLabel = scinew VarLabel("uVelConvCoefMBLM",
-				   FCVariable<double>::getTypeDescription() );
+				   SFCXVariable<double>::getTypeDescription() );
   d_vVelConvCoefMBLMLabel = scinew VarLabel("vVelConvCoefMBLM",
-				   FCVariable<double>::getTypeDescription() );
+				   SFCYVariable<double>::getTypeDescription() );
   d_wVelConvCoefMBLMLabel = scinew VarLabel("wVelConvCoefMBLM",
-				   FCVariable<double>::getTypeDescription() );
+				   SFCZVariable<double>::getTypeDescription() );
   d_uVelCoefMBLMLabel = scinew VarLabel("uVelCoefMBLM",
-				   FCVariable<double>::getTypeDescription() );
+				   SFCXVariable<double>::getTypeDescription() );
   d_vVelCoefMBLMLabel = scinew VarLabel("vVelCoefMBLM",
-				   FCVariable<double>::getTypeDescription() );
+				   SFCYVariable<double>::getTypeDescription() );
   d_wVelCoefMBLMLabel = scinew VarLabel("wVelCoefMBLM",
-				   FCVariable<double>::getTypeDescription() );
+				   SFCZVariable<double>::getTypeDescription() );
   d_uVelLinSrcMBLMLabel = scinew VarLabel("uVelLinSrcMBLM",
-				   FCVariable<double>::getTypeDescription() );
+				   SFCXVariable<double>::getTypeDescription() );
   d_vVelLinSrcMBLMLabel = scinew VarLabel("vVelLinSrcMBLM",
-				   FCVariable<double>::getTypeDescription() );
+				   SFCYVariable<double>::getTypeDescription() );
   d_wVelLinSrcMBLMLabel = scinew VarLabel("wVelLinSrcMBLM",
-				   FCVariable<double>::getTypeDescription() );
+				   SFCZVariable<double>::getTypeDescription() );
   d_uVelNonLinSrcMBLMLabel = scinew VarLabel("uVelNonLinSrcMBLM",
-				   FCVariable<double>::getTypeDescription() );
+				   SFCXVariable<double>::getTypeDescription() );
   d_vVelNonLinSrcMBLMLabel = scinew VarLabel("vVelNonLinSrcMBLM",
-				   FCVariable<double>::getTypeDescription() );
+				   SFCYVariable<double>::getTypeDescription() );
   d_wVelNonLinSrcMBLMLabel = scinew VarLabel("wVelNonLinSrcMBLM",
-				   FCVariable<double>::getTypeDescription() );
+				   SFCZVariable<double>::getTypeDescription() );
 }
 
 //****************************************************************************
@@ -268,6 +270,9 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.13  2000/06/29 22:56:42  bbanerje
+// Changed FCVars to SFC[X,Y,Z]Vars, and added the neceesary getIndex calls.
+//
 // Revision 1.12  2000/06/22 23:06:34  bbanerje
 // Changed velocity related variables to FCVariable type.
 // ** NOTE ** We may need 3 types of FCVariables (one for each direction)

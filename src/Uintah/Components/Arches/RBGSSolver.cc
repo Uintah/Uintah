@@ -17,7 +17,9 @@ static char *id="@(#) $Id$";
 #include <Uintah/Grid/Level.h>
 #include <Uintah/Grid/Task.h>
 #include <Uintah/Grid/CCVariable.h>
-#include <Uintah/Grid/FCVariable.h>
+#include <Uintah/Grid/SFCXVariable.h>
+#include <Uintah/Grid/SFCYVariable.h>
+#include <Uintah/Grid/SFCZVariable.h>
 #include <SCICore/Util/NotFinished.h>
 #include <Uintah/Components/Arches/Arches.h>
 
@@ -49,49 +51,49 @@ RBGSSolver::RBGSSolver()
 
   // Momentum Solve requires (inputs)
   d_uVelocityCPBCLabel = scinew VarLabel("uVelocityCPBC",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCXVariable<double>::getTypeDescription() );
   d_vVelocityCPBCLabel = scinew VarLabel("vVelocityCPBC",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCYVariable<double>::getTypeDescription() );
   d_wVelocityCPBCLabel = scinew VarLabel("wVelocityCPBC",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCZVariable<double>::getTypeDescription() );
   d_uVelCoefMBLMLabel = scinew VarLabel("uVelCoefMBLM",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCXVariable<double>::getTypeDescription() );
   d_vVelCoefMBLMLabel = scinew VarLabel("vVelCoefMBLM",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCYVariable<double>::getTypeDescription() );
   d_wVelCoefMBLMLabel = scinew VarLabel("wVelCoefMBLM",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCZVariable<double>::getTypeDescription() );
   d_uVelNonLinSrcMBLMLabel = scinew VarLabel("uVelNonLinSrcMBLM",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCXVariable<double>::getTypeDescription() );
   d_vVelNonLinSrcMBLMLabel = scinew VarLabel("vVelNonLinSrcMBLM",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCYVariable<double>::getTypeDescription() );
   d_wVelNonLinSrcMBLMLabel = scinew VarLabel("wVelNonLinSrcMBLM",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCZVariable<double>::getTypeDescription() );
 
   // Momentum Solve Computes
   d_uVelResidualMSLabel = scinew VarLabel("uVelResidualMS",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCXVariable<double>::getTypeDescription() );
   d_vVelResidualMSLabel = scinew VarLabel("vVelResidualMS",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCYVariable<double>::getTypeDescription() );
   d_wVelResidualMSLabel = scinew VarLabel("wVelResidualMS",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCZVariable<double>::getTypeDescription() );
   d_uVelCoefMSLabel = scinew VarLabel("uVelCoefMS",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCXVariable<double>::getTypeDescription() );
   d_vVelCoefMSLabel = scinew VarLabel("vVelCoefMS",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCYVariable<double>::getTypeDescription() );
   d_wVelCoefMSLabel = scinew VarLabel("wVelCoefMS",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCZVariable<double>::getTypeDescription() );
   d_uVelNonLinSrcMSLabel = scinew VarLabel("uVelNonLinSrcMS",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCXVariable<double>::getTypeDescription() );
   d_vVelNonLinSrcMSLabel = scinew VarLabel("vVelNonLinSrcMS",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCYVariable<double>::getTypeDescription() );
   d_wVelNonLinSrcMSLabel = scinew VarLabel("wVelNonLinSrcMS",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCZVariable<double>::getTypeDescription() );
   d_uVelocityMSLabel = scinew VarLabel("uVelocityMS",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCXVariable<double>::getTypeDescription() );
   d_vVelocityMSLabel = scinew VarLabel("vVelocityMS",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCYVariable<double>::getTypeDescription() );
   d_wVelocityMSLabel = scinew VarLabel("wVelocityMS",
-				    FCVariable<double>::getTypeDescription() );
+				    SFCZVariable<double>::getTypeDescription() );
 
   // Momentum Solve Requires/Computes
   d_scalarSPLabel = scinew VarLabel("scalarSP",
@@ -180,7 +182,6 @@ RBGSSolver::sched_pressureSolve(const LevelP& level,
       int matlIndex = 0;
 
       // coefficient for the variable for which solve is invoked
-      // not sure if the var is of type CCVariable or FCVariable
       tsk->requires(old_dw, d_pressureINLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
       tsk->requires(new_dw, d_presCoefPBLMLabel, matlIndex, patch, Ghost::None,
@@ -204,7 +205,6 @@ RBGSSolver::sched_pressureSolve(const LevelP& level,
       int matlIndex = 0;
 
       // coefficient for the variable for which solve is invoked
-      // not sure if the var is of type CCVariable or FCVariable
       tsk->requires(old_dw, d_pressureINLabel, matlIndex, patch, Ghost::None,
 		    numGhostCells);
       tsk->requires(new_dw, d_presCoefPSLabel, matlIndex, patch, Ghost::None,
@@ -288,7 +288,6 @@ RBGSSolver::sched_velSolve(const LevelP& level,
       switch(index) {
       case 0:
 	// coefficient for the variable for which solve is invoked
-	// not sure if the var is of type CCVariable or FCVariable
 	tsk->requires(old_dw, d_uVelocityCPBCLabel, matlIndex, patch, 
 		      Ghost::None, numGhostCells);
 	tsk->requires(new_dw, d_uVelCoefMBLMLabel, matlIndex, patch, 
@@ -304,7 +303,6 @@ RBGSSolver::sched_velSolve(const LevelP& level,
 
       case 1:
 	// coefficient for the variable for which solve is invoked
-	// not sure if the var is of type CCVariable or FCVariable
 	tsk->requires(old_dw, d_vVelocityCPBCLabel, matlIndex, patch, 
 		      Ghost::None, numGhostCells);
 	tsk->requires(new_dw, d_vVelCoefMBLMLabel, matlIndex, patch, 
@@ -320,7 +318,6 @@ RBGSSolver::sched_velSolve(const LevelP& level,
 
       case 2:
 	// coefficient for the variable for which solve is invoked
-	// not sure if the var is of type CCVariable or FCVariable
 	tsk->requires(old_dw, d_wVelocityCPBCLabel, matlIndex, patch, 
 		      Ghost::None, numGhostCells);
 	tsk->requires(new_dw, d_wVelCoefMBLMLabel, matlIndex, patch, 
@@ -353,7 +350,6 @@ RBGSSolver::sched_velSolve(const LevelP& level,
       switch(index) {
       case 0:
 	// coefficient for the variable for which solve is invoked
-	// not sure if the var is of type CCVariable or FCVariable
 	tsk->requires(old_dw, d_uVelocityCPBCLabel, matlIndex, patch, 
 		      Ghost::None, numGhostCells);
 	tsk->requires(new_dw, d_uVelCoefMSLabel, matlIndex, patch, 
@@ -365,7 +361,6 @@ RBGSSolver::sched_velSolve(const LevelP& level,
 	break;
       case 1:
 	// coefficient for the variable for which solve is invoked
-	// not sure if the var is of type CCVariable or FCVariable
 	tsk->requires(old_dw, d_vVelocityCPBCLabel, matlIndex, patch, 
 		      Ghost::None, numGhostCells);
 	tsk->requires(new_dw, d_vVelCoefMSLabel, matlIndex, patch, 
@@ -377,7 +372,6 @@ RBGSSolver::sched_velSolve(const LevelP& level,
 	break;
       case 2:
 	// coefficient for the variable for which solve is invoked
-	// not sure if the var is of type CCVariable or FCVariable
 	tsk->requires(old_dw, d_wVelocityCPBCLabel, matlIndex, patch, 
 		      Ghost::None, numGhostCells);
 	tsk->requires(new_dw, d_wVelCoefMSLabel, matlIndex, patch, 
@@ -440,7 +434,6 @@ RBGSSolver::sched_scalarSolve(const LevelP& level,
       int matlIndex = 0;
 
       // coefficient for the variable for which solve is invoked
-      // not sure if the var is of type CCVariable or FCVariable
       tsk->requires(old_dw, d_scalarSPLabel, index, patch, Ghost::None,
 		    numGhostCells);
       tsk->requires(new_dw, d_scalCoefSBLMLabel, index, patch, Ghost::None,
@@ -465,7 +458,6 @@ RBGSSolver::sched_scalarSolve(const LevelP& level,
       int matlIndex = 0;
 
       // coefficient for the variable for which solve is invoked
-      // not sure if the var is of type CCVariable or FCVariable
       tsk->requires(old_dw, d_scalarSPLabel, index, patch, Ghost::None,
 		    numGhostCells);
       tsk->requires(new_dw, d_scalCoefSSLabel, index, patch, Ghost::None,
@@ -504,7 +496,6 @@ RBGSSolver::press_underrelax(const ProcessorGroup*,
   // source terms from the new DW
   old_dw->get(pressure, d_pressureINLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-
   for (int ii = 0; ii < nofStencils; ii++) {
      new_dw->get(pressCoeff[ii], d_presCoefPBLMLabel, matlIndex, patch, 
 		 Ghost::None, numGhostCells);
@@ -512,14 +503,26 @@ RBGSSolver::press_underrelax(const ProcessorGroup*,
   new_dw->get(pressNonLinSrc, d_presNonLinSrcPBLMLabel, matlIndex, patch, 
 	      Ghost::None, numGhostCells);
  
-  // Get the patch bounds
-  IntVector lowIndex = patch->getCellLowIndex();
-  IntVector highIndex = patch->getCellHighIndex();
+  // Get the patch bounds and the variable bounds
+  IntVector domLo = pressure.getFortLowIndex();
+  IntVector domHi = pressure.getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
 
   //fortran call
 #ifdef WONT_COMPILE_YET
-  FORT_UNDERELAX(pressCoeff, pressNonlinearSrc, pressure,
-		 lowIndex, highIndex, d_underrelax);
+  FORT_UNDERELAX(domLo.get_pointer(), domHi.get_pointer(),
+		 idxLo.get_pointer(), idxHi.get_pointer(),
+		 pressure.getPointer(),
+		 pressCoeff[StencilMatrix::AP].getPointer(), 
+		 pressCoeff[StencilMatrix::AE].getPointer(), 
+		 pressCoeff[StencilMatrix::AW].getPointer(), 
+		 pressCoeff[StencilMatrix::AN].getPointer(), 
+		 pressCoeff[StencilMatrix::AS].getPointer(), 
+		 pressCoeff[StencilMatrix::AT].getPointer(), 
+		 pressCoeff[StencilMatrix::AB].getPointer(), 
+		 pressNonLinSrc.getPointer(), 
+		 d_underrelax);
 #endif
 
   // Write the pressure Coefficients and nonlinear source terms into new DW
@@ -551,22 +554,32 @@ RBGSSolver::press_lisolve(const ProcessorGroup*,
   // source terms from the new DW
   old_dw->get(pressure, d_pressureINLabel, matlIndex, patch, Ghost::None,
 	      numGhostCells);
-
   for (int ii = 0; ii < nofStencils; ii++) {
     new_dw->get(pressCoeff[ii], d_presCoefPSLabel, matlIndex, patch, 
 		Ghost::None, numGhostCells);
   }
-
   new_dw->get(pressNonLinSrc, d_presNonLinSrcPSLabel, matlIndex, patch, 
 	      Ghost::None, numGhostCells);
  
-  IntVector lowIndex = patch->getCellLowIndex();
-  IntVector highIndex = patch->getCellHighIndex();
+  // Get the patch bounds and the variable bounds
+  IntVector domLo = pressure.getFortLowIndex();
+  IntVector domHi = pressure.getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
 
 #ifdef WONT_COMPILE_YET
   //fortran call for red-black GS solver
-  FORT_RBGSLISOLV(pressCoeff, pressNonlinearSrc, pressure,
-	      lowIndex, highIndex);
+  FORT_RBGSLISOLV(domLo.get_pointer(), domHi.get_pointer(),
+		  idxLo.get_pointer(), idxHi.get_pointer(),
+		  pressure.getPointer(),
+		  pressCoeff[StencilMatrix::AP].getPointer(), 
+		  pressCoeff[StencilMatrix::AE].getPointer(), 
+		  pressCoeff[StencilMatrix::AW].getPointer(), 
+		  pressCoeff[StencilMatrix::AN].getPointer(), 
+		  pressCoeff[StencilMatrix::AS].getPointer(), 
+		  pressCoeff[StencilMatrix::AT].getPointer(), 
+		  pressCoeff[StencilMatrix::AB].getPointer(), 
+		  pressNonLinSrc.getPointer());
 #endif
 
   new_dw->put(pressure, d_pressurePSLabel, matlIndex, patch);
@@ -597,80 +610,147 @@ RBGSSolver::vel_underrelax(const ProcessorGroup* ,
   int matlIndex = 0;
   int nofStencils = 7;
 
-  // Patch based variables
-  FCVariable<double> velocity;
-  StencilMatrix<FCVariable<double> > velCoeff;
-  FCVariable<double> velNonLinSrc;
-
-  // Get the velocity from the old DW and velocity coefficients and non-linear
-  // source terms from the new DW
   switch(index) {
   case 0:
-    old_dw->get(velocity, d_uVelocityCPBCLabel, matlIndex, patch, 
-		Ghost::None, numGhostCells);
+    {
+      // Patch based variables
+      SFCXVariable<double> velocity;
+      StencilMatrix<SFCXVariable<double> > velCoeff;
+      SFCXVariable<double> velNonLinSrc;
 
-    for (int ii = 0; ii < nofStencils; ii++) {
-      new_dw->get(velCoeff[ii], d_uVelCoefMBLMLabel, matlIndex, patch, 
+      // Get the velocity from the old DW and velocity coefficients and non-linear
+      // source terms from the new DW
+      old_dw->get(velocity, d_uVelocityCPBCLabel, matlIndex, patch, 
 		  Ghost::None, numGhostCells);
-    }
-    new_dw->get(velNonLinSrc, d_uVelNonLinSrcMBLMLabel, matlIndex, patch, 
-		Ghost::None, numGhostCells);
-    break;
-  case 1:
-    old_dw->get(velocity, d_vVelocityCPBCLabel, matlIndex, patch, 
-		Ghost::None, numGhostCells);
-
-    for (int ii = 0; ii < nofStencils; ii++) {
-      new_dw->get(velCoeff[ii], d_vVelCoefMBLMLabel, matlIndex, patch, 
+      for (int ii = 0; ii < nofStencils; ii++) {
+	new_dw->get(velCoeff[ii], d_uVelCoefMBLMLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      }
+      new_dw->get(velNonLinSrc, d_uVelNonLinSrcMBLMLabel, matlIndex, patch, 
 		  Ghost::None, numGhostCells);
-    }
-    new_dw->get(velNonLinSrc, d_vVelNonLinSrcMBLMLabel, matlIndex, patch, 
-		Ghost::None, numGhostCells);
-    break;
-  case 2:
-    old_dw->get(velocity, d_wVelocityCPBCLabel, matlIndex, patch, 
-		Ghost::None, numGhostCells);
-
-    for (int ii = 0; ii < nofStencils; ii++) {
-      new_dw->get(velCoeff[ii], d_wVelCoefMBLMLabel, matlIndex, patch, 
-		  Ghost::None, numGhostCells);
-    }
-    new_dw->get(velNonLinSrc, d_wVelNonLinSrcMBLMLabel, matlIndex, patch, 
-		Ghost::None, numGhostCells);
-    break;
-  default:
-    throw InvalidValue("Valid velocity index = 0 or 1 or 2");
-  }
  
-  // Get the patch bounds
-  IntVector lowIndex = patch->getCellLowIndex();
-  IntVector highIndex = patch->getCellHighIndex();
+      // Get the patch bounds and the variable bounds
+      IntVector domLo = velocity.getFortLowIndex();
+      IntVector domHi = velocity.getFortHighIndex();
+      IntVector idxLo = patch->getSFCXFORTLowIndex();
+      IntVector idxHi = patch->getSFCXFORTHighIndex();
 
-  //fortran call
+      //fortran call
 #ifdef WONT_COMPILE_YET
-  FORT_UNDERELAX(velCoeff, velNonlinearSrc, velocity,
-		 lowIndex, highIndex, d_underrelax);
+      FORT_UNDERELAX(domLo.get_pointer(), domHi.get_pointer(),
+		     idxLo.get_pointer(), idxHi.get_pointer(),
+		     velocity.getPointer(),
+		     velCoeff[StencilMatrix::AP].getPointer(), 
+		     velCoeff[StencilMatrix::AE].getPointer(), 
+		     velCoeff[StencilMatrix::AW].getPointer(), 
+		     velCoeff[StencilMatrix::AN].getPointer(), 
+		     velCoeff[StencilMatrix::AS].getPointer(), 
+		     velCoeff[StencilMatrix::AT].getPointer(), 
+		     velCoeff[StencilMatrix::AB].getPointer(), 
+		     velNonLinSrc.getPointer(), 
+		     d_underrelax);
 #endif
 
-  // Write the velocity Coefficients and nonlinear source terms into new DW
-  switch(index) {
-  case 0:
-    for (int ii = 0; ii < nofStencils; ii++) {
-      new_dw->put(velCoeff[ii], d_uVelCoefMSLabel, matlIndex, patch);
+      // Write the velocity Coefficients and nonlinear source terms into new DW
+      for (int ii = 0; ii < nofStencils; ii++) {
+	new_dw->put(velCoeff[ii], d_uVelCoefMSLabel, matlIndex, patch);
+      }
+      new_dw->put(velNonLinSrc, d_uVelNonLinSrcMSLabel, matlIndex, patch);
     }
-    new_dw->put(velNonLinSrc, d_uVelNonLinSrcMSLabel, matlIndex, patch);
     break;
   case 1:
-    for (int ii = 0; ii < nofStencils; ii++) {
-      new_dw->put(velCoeff[ii], d_vVelCoefMSLabel, matlIndex, patch);
+    {
+      // Patch based variables
+      SFCYVariable<double> velocity;
+      StencilMatrix<SFCYVariable<double> > velCoeff;
+      SFCYVariable<double> velNonLinSrc;
+
+      // Get the velocity from the old DW and velocity coefficients and non-linear
+      // source terms from the new DW
+      old_dw->get(velocity, d_vVelocityCPBCLabel, matlIndex, patch, 
+		  Ghost::None, numGhostCells);
+      for (int ii = 0; ii < nofStencils; ii++) {
+	new_dw->get(velCoeff[ii], d_vVelCoefMBLMLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      }
+      new_dw->get(velNonLinSrc, d_vVelNonLinSrcMBLMLabel, matlIndex, patch, 
+		  Ghost::None, numGhostCells);
+
+      // Get the patch bounds and the variable bounds
+      IntVector domLo = velocity.getFortLowIndex();
+      IntVector domHi = velocity.getFortHighIndex();
+      IntVector idxLo = patch->getSFCYFORTLowIndex();
+      IntVector idxHi = patch->getSFCYFORTHighIndex();
+
+      //fortran call
+#ifdef WONT_COMPILE_YET
+      FORT_UNDERELAX(domLo.get_pointer(), domHi.get_pointer(),
+		     idxLo.get_pointer(), idxHi.get_pointer(),
+		     velocity.getPointer(),
+		     velCoeff[StencilMatrix::AP].getPointer(), 
+		     velCoeff[StencilMatrix::AE].getPointer(), 
+		     velCoeff[StencilMatrix::AW].getPointer(), 
+		     velCoeff[StencilMatrix::AN].getPointer(), 
+		     velCoeff[StencilMatrix::AS].getPointer(), 
+		     velCoeff[StencilMatrix::AT].getPointer(), 
+		     velCoeff[StencilMatrix::AB].getPointer(), 
+		     velNonLinSrc.getPointer(), 
+		     d_underrelax);
+#endif
+
+      // Write the velocity Coefficients and nonlinear source terms into new DW
+      for (int ii = 0; ii < nofStencils; ii++) {
+	new_dw->put(velCoeff[ii], d_vVelCoefMSLabel, matlIndex, patch);
+      }
+      new_dw->put(velNonLinSrc, d_vVelNonLinSrcMSLabel, matlIndex, patch);
     }
-    new_dw->put(velNonLinSrc, d_vVelNonLinSrcMSLabel, matlIndex, patch);
     break;
   case 2:
-    for (int ii = 0; ii < nofStencils; ii++) {
-      new_dw->put(velCoeff[ii], d_wVelCoefMSLabel, matlIndex, patch);
+    {
+      // Patch based variables
+      SFCZVariable<double> velocity;
+      StencilMatrix<SFCZVariable<double> > velCoeff;
+      SFCZVariable<double> velNonLinSrc;
+      
+      // Get the velocity from the old DW and velocity coefficients and non-linear
+      // source terms from the new DW
+      old_dw->get(velocity, d_wVelocityCPBCLabel, matlIndex, patch, 
+		  Ghost::None, numGhostCells);
+      for (int ii = 0; ii < nofStencils; ii++) {
+	new_dw->get(velCoeff[ii], d_wVelCoefMBLMLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      }
+      new_dw->get(velNonLinSrc, d_wVelNonLinSrcMBLMLabel, matlIndex, patch, 
+		  Ghost::None, numGhostCells);
+
+      // Get the patch bounds and the variable bounds
+      IntVector domLo = velocity.getFortLowIndex();
+      IntVector domHi = velocity.getFortHighIndex();
+      IntVector idxLo = patch->getSFCZFORTLowIndex();
+      IntVector idxHi = patch->getSFCZFORTHighIndex();
+
+      //fortran call
+#ifdef WONT_COMPILE_YET
+      FORT_UNDERELAX(domLo.get_pointer(), domHi.get_pointer(),
+		     idxLo.get_pointer(), idxHi.get_pointer(),
+		     velocity.getPointer(),
+		     velCoeff[StencilMatrix::AP].getPointer(), 
+		     velCoeff[StencilMatrix::AE].getPointer(), 
+		     velCoeff[StencilMatrix::AW].getPointer(), 
+		     velCoeff[StencilMatrix::AN].getPointer(), 
+		     velCoeff[StencilMatrix::AS].getPointer(), 
+		     velCoeff[StencilMatrix::AT].getPointer(), 
+		     velCoeff[StencilMatrix::AB].getPointer(), 
+		     velNonLinSrc.getPointer(), 
+		     d_underrelax);
+#endif
+
+      // Write the velocity Coefficients and nonlinear source terms into new DW
+      for (int ii = 0; ii < nofStencils; ii++) {
+	new_dw->put(velCoeff[ii], d_wVelCoefMSLabel, matlIndex, patch);
+      }
+      new_dw->put(velNonLinSrc, d_wVelNonLinSrcMSLabel, matlIndex, patch);
     }
-    new_dw->put(velNonLinSrc, d_wVelNonLinSrcMSLabel, matlIndex, patch);
     break;
   default:
     throw InvalidValue("Valid velocity index = 0 or 1 or 2");
@@ -691,72 +771,132 @@ RBGSSolver::vel_lisolve(const ProcessorGroup* ,
   int matlIndex = 0;
   int nofStencils = 7;
 
-  // Variables
-  FCVariable<double> velocity;
-  StencilMatrix<FCVariable<double> > velCoeff;
-  FCVariable<double> velNonLinSrc;
-
-  // Get the velocity from the old DW and velocity coefficients and non-linear
-  // source terms from the new DW
   switch(index) {
   case 0:
-    old_dw->get(velocity, d_uVelocityCPBCLabel, matlIndex, patch, 
-		Ghost::None, numGhostCells);
+    {
+      // Variables
+      SFCXVariable<double> velocity;
+      StencilMatrix<SFCXVariable<double> > velCoeff;
+      SFCXVariable<double> velNonLinSrc;
 
-    for (int ii = 0; ii < nofStencils; ii++) {
-      new_dw->get(velCoeff[ii], d_uVelCoefMSLabel, matlIndex, patch, 
+      // Get the velocity from the old DW and velocity coefficients and non-linear
+      // source terms from the new DW
+      old_dw->get(velocity, d_uVelocityCPBCLabel, matlIndex, patch, 
 		  Ghost::None, numGhostCells);
-    }
-
-    new_dw->get(velNonLinSrc, d_uVelNonLinSrcMSLabel, matlIndex, patch, 
-		Ghost::None, numGhostCells);
-    break;
-  case 1:
-    old_dw->get(velocity, d_vVelocityCPBCLabel, matlIndex, patch, 
-		Ghost::None, numGhostCells);
-
-    for (int ii = 0; ii < nofStencils; ii++) {
-      new_dw->get(velCoeff[ii], d_vVelCoefMSLabel, matlIndex, patch, 
+      for (int ii = 0; ii < nofStencils; ii++) {
+	new_dw->get(velCoeff[ii], d_uVelCoefMSLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      }
+      new_dw->get(velNonLinSrc, d_uVelNonLinSrcMSLabel, matlIndex, patch, 
 		  Ghost::None, numGhostCells);
-    }
 
-    new_dw->get(velNonLinSrc, d_vVelNonLinSrcMSLabel, matlIndex, patch, 
-		Ghost::None, numGhostCells);
-    break;
-  case 2:
-    old_dw->get(velocity, d_wVelocityCPBCLabel, matlIndex, patch, 
-		Ghost::None, numGhostCells);
-
-    for (int ii = 0; ii < nofStencils; ii++) {
-      new_dw->get(velCoeff[ii], d_wVelCoefMSLabel, matlIndex, patch, 
-		  Ghost::None, numGhostCells);
-    }
-
-    new_dw->get(velNonLinSrc, d_wVelNonLinSrcMSLabel, matlIndex, patch, 
-		Ghost::None, numGhostCells);
-    break;
-  default:
-    throw InvalidValue("Valid velocity index = 0 or 1 or 2");
-  }
- 
-  IntVector lowIndex = patch->getCellLowIndex();
-  IntVector highIndex = patch->getCellHighIndex();
-
+      // Get the patch bounds and the variable bounds
+      IntVector domLo = velocity.getFortLowIndex();
+      IntVector domHi = velocity.getFortHighIndex();
+      IntVector idxLo = patch->getSFCXFORTLowIndex();
+      IntVector idxHi = patch->getSFCXFORTHighIndex();
+      
 #ifdef WONT_COMPILE_YET
-  //fortran call for red-black GS solver
-  FORT_RBGSLISOLV(velCoeff, velNonlinearSrc, velocity,
-	      lowIndex, highIndex);
+      //fortran call for red-black GS solver
+      FORT_RBGSLISOLV(domLo.get_pointer(), domHi.get_pointer(),
+		      idxLo.get_pointer(), idxHi.get_pointer(),
+		      velocity.getPointer(),
+		      velCoeff[StencilMatrix::AP].getPointer(), 
+		      velCoeff[StencilMatrix::AE].getPointer(), 
+		      velCoeff[StencilMatrix::AW].getPointer(), 
+		      velCoeff[StencilMatrix::AN].getPointer(), 
+		      velCoeff[StencilMatrix::AS].getPointer(), 
+		      velCoeff[StencilMatrix::AT].getPointer(), 
+		      velCoeff[StencilMatrix::AB].getPointer(), 
+		      velNonLinSrc.getPointer());
 #endif
 
-  switch(index) {
-  case 0:
-    new_dw->put(velocity, d_uVelocityMSLabel, matlIndex, patch);
+      new_dw->put(velocity, d_uVelocityMSLabel, matlIndex, patch);
+    }
     break;
   case 1:
-    new_dw->put(velocity, d_vVelocityMSLabel, matlIndex, patch);
+    {
+      // Variables
+      SFCYVariable<double> velocity;
+      StencilMatrix<SFCYVariable<double> > velCoeff;
+      SFCYVariable<double> velNonLinSrc;
+
+      // Get the velocity from the old DW and velocity coefficients and non-linear
+      // source terms from the new DW
+      old_dw->get(velocity, d_vVelocityCPBCLabel, matlIndex, patch, 
+		  Ghost::None, numGhostCells);
+      for (int ii = 0; ii < nofStencils; ii++) {
+	new_dw->get(velCoeff[ii], d_vVelCoefMSLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      }
+      new_dw->get(velNonLinSrc, d_vVelNonLinSrcMSLabel, matlIndex, patch, 
+		  Ghost::None, numGhostCells);
+
+      // Get the patch bounds and the variable bounds
+      IntVector domLo = velocity.getFortLowIndex();
+      IntVector domHi = velocity.getFortHighIndex();
+      IntVector idxLo = patch->getSFCYFORTLowIndex();
+      IntVector idxHi = patch->getSFCYFORTHighIndex();
+      
+#ifdef WONT_COMPILE_YET
+      //fortran call for red-black GS solver
+      FORT_RBGSLISOLV(domLo.get_pointer(), domHi.get_pointer(),
+		      idxLo.get_pointer(), idxHi.get_pointer(),
+		      velocity.getPointer(),
+		      velCoeff[StencilMatrix::AP].getPointer(), 
+		      velCoeff[StencilMatrix::AE].getPointer(), 
+		      velCoeff[StencilMatrix::AW].getPointer(), 
+		      velCoeff[StencilMatrix::AN].getPointer(), 
+		      velCoeff[StencilMatrix::AS].getPointer(), 
+		      velCoeff[StencilMatrix::AT].getPointer(), 
+		      velCoeff[StencilMatrix::AB].getPointer(), 
+		      velNonLinSrc.getPointer());
+#endif
+
+      new_dw->put(velocity, d_vVelocityMSLabel, matlIndex, patch);
+    }
     break;
   case 2:
-    new_dw->put(velocity, d_wVelocityMSLabel, matlIndex, patch);
+    {
+      // Variables
+      SFCZVariable<double> velocity;
+      StencilMatrix<SFCZVariable<double> > velCoeff;
+      SFCZVariable<double> velNonLinSrc;
+      
+      // Get the velocity from the old DW and velocity coefficients and non-linear
+      // source terms from the new DW
+      old_dw->get(velocity, d_wVelocityCPBCLabel, matlIndex, patch, 
+		  Ghost::None, numGhostCells);
+      for (int ii = 0; ii < nofStencils; ii++) {
+	new_dw->get(velCoeff[ii], d_wVelCoefMSLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      }
+      new_dw->get(velNonLinSrc, d_wVelNonLinSrcMSLabel, matlIndex, patch, 
+		  Ghost::None, numGhostCells);
+      
+      // Get the patch bounds and the variable bounds
+      IntVector domLo = velocity.getFortLowIndex();
+      IntVector domHi = velocity.getFortHighIndex();
+      IntVector idxLo = patch->getSFCZFORTLowIndex();
+      IntVector idxHi = patch->getSFCZFORTHighIndex();
+      
+#ifdef WONT_COMPILE_YET
+      //fortran call for red-black GS solver
+      FORT_RBGSLISOLV(domLo.get_pointer(), domHi.get_pointer(),
+		      idxLo.get_pointer(), idxHi.get_pointer(),
+		      velocity.getPointer(),
+		      velCoeff[StencilMatrix::AP].getPointer(), 
+		      velCoeff[StencilMatrix::AE].getPointer(), 
+		      velCoeff[StencilMatrix::AW].getPointer(), 
+		      velCoeff[StencilMatrix::AN].getPointer(), 
+		      velCoeff[StencilMatrix::AS].getPointer(), 
+		      velCoeff[StencilMatrix::AT].getPointer(), 
+		      velCoeff[StencilMatrix::AB].getPointer(), 
+		      velNonLinSrc.getPointer());
+#endif
+      
+      new_dw->put(velocity, d_wVelocityMSLabel, matlIndex, patch);
+    }
     break;
   default:
     throw InvalidValue("Valid velocity index = 0 or 1 or 2");
@@ -809,14 +949,26 @@ RBGSSolver::scalar_underrelax(const ProcessorGroup* ,
   new_dw->get(scalarNonLinSrc, d_scalNonLinSrcSBLMLabel, index, patch, 
 	      Ghost::None, numGhostCells);
  
-  // Get the patch bounds
-  IntVector lowIndex = patch->getCellLowIndex();
-  IntVector highIndex = patch->getCellHighIndex();
+  // Get the patch bounds and the variable bounds
+  IntVector domLo = scalar.getFortLowIndex();
+  IntVector domHi = scalar.getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
 
   //fortran call
 #ifdef WONT_COMPILE_YET
-  FORT_UNDERELAX(scalarCoeff, scalarNonlinearSrc, scalar,
-		 lowIndex, highIndex, d_underrelax);
+  FORT_UNDERELAX(domLo.get_pointer(), domHi.get_pointer(),
+		 idxLo.get_pointer(), idxHi.get_pointer(),
+		 scalar.getPointer(),
+		 scalarCoeff[StencilMatrix::AP].getPointer(), 
+		 scalarCoeff[StencilMatrix::AE].getPointer(), 
+		 scalarCoeff[StencilMatrix::AW].getPointer(), 
+		 scalarCoeff[StencilMatrix::AN].getPointer(), 
+		 scalarCoeff[StencilMatrix::AS].getPointer(), 
+		 scalarCoeff[StencilMatrix::AT].getPointer(), 
+		 scalarCoeff[StencilMatrix::AB].getPointer(), 
+		 scalarNonLinSrc.getPointer(), 
+		 d_underrelax);
 #endif
 
   // Write the scalar Coefficients and nonlinear source terms into new DW
@@ -862,13 +1014,26 @@ RBGSSolver::scalar_lisolve(const ProcessorGroup* ,
   new_dw->get(scalarNonLinSrc, d_scalNonLinSrcSSLabel, index, patch, 
 	      Ghost::None, numGhostCells);
  
-  IntVector lowIndex = patch->getCellLowIndex();
-  IntVector highIndex = patch->getCellHighIndex();
+  // Get the patch bounds and the variable bounds
+  IntVector domLo = scalar.getFortLowIndex();
+  IntVector domHi = scalar.getFortHighIndex();
+  IntVector idxLo = patch->getCellFORTLowIndex();
+  IntVector idxHi = patch->getCellFORTHighIndex();
 
 #ifdef WONT_COMPILE_YET
   //fortran call for red-black GS solver
-  FORT_RBGSLISOLV(scalarCoeff, scalarNonlinearSrc, scalar,
-	      lowIndex, highIndex);
+  FORT_RBGSLISOLV(domLo.get_pointer(), domHi.get_pointer(),
+		  idxLo.get_pointer(), idxHi.get_pointer(),
+		  scalar.getPointer(),
+		  scalarCoeff[StencilMatrix::AP].getPointer(), 
+		  scalarCoeff[StencilMatrix::AE].getPointer(), 
+		  scalarCoeff[StencilMatrix::AW].getPointer(), 
+		  scalarCoeff[StencilMatrix::AN].getPointer(), 
+		  scalarCoeff[StencilMatrix::AS].getPointer(), 
+		  scalarCoeff[StencilMatrix::AT].getPointer(), 
+		  scalarCoeff[StencilMatrix::AB].getPointer(), 
+		  scalarNonLinSrc.getPointer());
+		  d_underrelax);
 #endif
 
   new_dw->put(scalar, d_scalarSSLabel, index, patch);
@@ -889,6 +1054,9 @@ RBGSSolver::scalar_residCalculation(const ProcessorGroup* ,
 
 //
 // $Log$
+// Revision 1.11  2000/06/29 22:56:43  bbanerje
+// Changed FCVars to SFC[X,Y,Z]Vars, and added the neceesary getIndex calls.
+//
 // Revision 1.10  2000/06/22 23:06:37  bbanerje
 // Changed velocity related variables to FCVariable type.
 // ** NOTE ** We may need 3 types of FCVariables (one for each direction)
