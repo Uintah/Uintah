@@ -822,9 +822,8 @@ TetVolMesh::compute_grid()
   // cubed root of number of cells to get a subdivision ballpark
   const double one_third = 1.L/3.L;
   Cell::size_type csize;  size(csize);
-  int s = (int)ceil(pow((double)csize , one_third));
-  s = s/3 + 2;
-  const double cell_epsilon = bb.diagonal().length() * 0.1 / s;
+  const int s = ((int)ceil(pow((double)csize , one_third))) / 2 + 2;
+  const Vector cell_epsilon = bb.diagonal() * (0.01 / s);
 
   LatVolMeshHandle mesh(scinew LatVolMesh(s, s, s, bb.min(), bb.max()));
   grid_ = scinew LatVolField<vector<Cell::index_type> >(mesh, Field::CELL);
@@ -844,12 +843,8 @@ TetVolMesh::compute_grid()
     box.extend(points_[nodes[1]]);
     box.extend(points_[nodes[2]]);
     box.extend(points_[nodes[3]]);
-    const Point padmin(box.min().x() - cell_epsilon,
-		       box.min().y() - cell_epsilon,
-		       box.min().z() - cell_epsilon);
-    const Point padmax(box.max().x() + cell_epsilon,
-		       box.max().y() + cell_epsilon,
-		       box.max().z() + cell_epsilon);
+    const Point padmin(box.min() - cell_epsilon);
+    const Point padmax(box.max() + cell_epsilon);
     box.extend(padmin);
     box.extend(padmax);
 
