@@ -3,6 +3,12 @@
 #define UINTAH_HOMEBREW_ICE_H
 
 #include <Uintah/Interface/CFDInterface.h>
+#include <Uintah/Grid/VarLabel.h>
+#include <Uintah/Grid/CCVariable.h>
+#include <SCICore/Geometry/Vector.h>
+
+using SCICore::Geometry::Vector;
+
 namespace Uintah {
 class ProcessorContext;
 class Patch;
@@ -19,26 +25,110 @@ public:
    virtual void scheduleInitialize(const LevelP& level,
 				   SchedulerP&,
 				   DataWarehouseP&);
+
+   void actuallyInitialize(const ProcessorContext*,
+			   const Patch* patch,
+			   DataWarehouseP& /* old_dw */,
+			   DataWarehouseP& new_dw);
    
    virtual void scheduleComputeStableTimestep(const LevelP&,
 					      SchedulerP&,
 					      DataWarehouseP&);
    void actuallyComputeStableTimestep(const ProcessorContext*,
 				      const Patch* patch,
-				      const DataWarehouseP&,
+				      DataWarehouseP&,
 				      DataWarehouseP&);
-   virtual void scheduleTimeAdvance(double t, double dt, const LevelP&, SchedulerP&,
-				    DataWarehouseP&, DataWarehouseP&);
+
+   virtual void scheduleTimeAdvance(double t, double dt, 
+				    const LevelP&, 
+				    SchedulerP&,
+				    DataWarehouseP&, 
+				    DataWarehouseP&);
+
+
    void actuallyTimeStep(const ProcessorContext*,
 			 const Patch* patch,
-			 const DataWarehouseP&,
+			 DataWarehouseP&,
 			 DataWarehouseP&);
+
+   void convertNR_4dToUCF(const Patch*, CCVariable<Vector>& vel_ucf, 
+			  double ****uvel_CC,
+			  double ****vvel_CC,
+			  double **** wvel_CC,
+			  int xLoLimit,
+			  int xHiLimit,
+			  int yLoLimit,
+			  int yHiLimit,
+			  int zLoLimit,
+			  int zHiLimit,
+			  int nMaterials);
+
+ void convertUCFToNR_4d(const Patch*, CCVariable<Vector>& vel_ucf, 
+			  double ****uvel_CC,
+			  double ****vvel_CC,
+			  double **** wvel_CC,
+			  int xLoLimit,
+			  int xHiLimit,
+			  int yLoLimit,
+			  int yHiLimit,
+			  int zLoLimit,
+			  int zHiLimit,
+			  int nMaterials);
+
+
+			  
    
 private:
     // These two will go away SOON - a really bad habit, won't work in parallel, blah blah blah
-    double cheat_t, cheat_delt;
-    double
-            *R,                         /* gas constant R[material]          */ 
+ 
+
+    const VarLabel* delTLabel;
+    const VarLabel* vel_CCLabel;
+
+
+   int  i,j,k,m,   
+        xLoLimit,                       /* x array lower limits             */
+        yLoLimit,                       /* y array lower limits             */
+        zLoLimit,
+        xHiLimit,
+        yHiLimit,
+        zHiLimit,
+        printSwitch,
+        should_I_write_output,          /* flag for dumping output          */
+        fileNum,                        /* tecplot file number              */
+        stat,                           /* status of putenv and getenv      */
+        **BC_inputs,                    /* BC_types[wall][m] that contains  */
+                                        /* the users boundary condition     */
+                                        /* selection for each wall          */
+        ***BC_types,                    /* each variable can have a Neuman, */
+                                        /* or Dirichlet type BC             */
+                                        /* BC_types[wall][variable][m]=type */
+        ***BC_float_or_fixed,           /* BC_float_or_fixed[wall][variable][m]*/
+                                        /* Variable on boundary is either   */
+                                        /* fixed or it floats during the    */
+                                        /* compuation                       */
+        nMaterials;                     /* Number of materials              */
+
+                                        
+/* ______________________________   
+*  Geometry                        
+* ______________________________   */     
+     double  delX,                      /* Cell width                       */
+             delY,                      /* Cell Width in the y dir          */
+             delZ,                      /* Cell width in the z dir          */
+             delt,
+             cheat_t,
+             cheat_delt,                /* time step                        */
+             CFL,                       /* Courant-Friedrichs and Lewy      */
+             t_final,                   /* final problem time               */
+            *t_output_vars,             /* array holding output timing info */
+                                        /* t_output_vars[1] = t_initial     */
+                                        /* t_output_vars[2] = t final       */
+                                        /* t_output_vars[3] = delta t       */
+            *delt_limits,               /* delt_limits[1]   = delt_minimum  */
+                                        /* delt_limits[2]   = delt_maximum  */
+                                        /* delt_limits[3]   = delt_initial  */
+             t,                         /* current time                     */
              ***x_CC,                   /* x-coordinate of cell center      */
              ***y_CC,                   /* y-coordinate of cell center      */
              ***z_CC,                   /* z-coordinate of cell center      */
@@ -75,7 +165,9 @@ private:
             ****ymom_CC,                /* y-dir momentum cell-centered     */
             ****zmom_CC,                /* z-dir momentum cell-centered     */
             ****int_eng_CC,             /* Internal energy cell-centered    */
-            ****total_eng_CC,           /* Total energy cell-centered       */  
+            ****total_eng_CC,           /* Total energy cell-centered       */
+            ****div_velFC_CC,           /* Divergence of the face centered  */
+                                        /* velocity that lives at CC        */    
             ****scalar1_CC,             /* Cell-centered scalars            */   
             ****scalar2_CC,             /* (x, y, z, material)              */
             ****scalar3_CC,
@@ -85,12 +177,13 @@ private:
             ******vvel_FC,              /* *v-face-centered velocity        */
             ******wvel_FC,              /* w face-centered velocity         */
             ******press_FC,             /* face-centered pressure           */
-            ******tau_x_FC,             /* *x-stress component at each face */
-            ******tau_y_FC,             /* *y-stress component at each face */
-            ******tau_z_FC,             /* *z-stress component at each face */            
+            ******tau_X_FC,             /* *x-stress component at each face */
+            ******tau_Y_FC,             /* *y-stress component at each face */
+            ******tau_Z_FC,             /* *z-stress component at each face */
             /*----------------------------------*/                                              
            *grav,                       /* gravity (dir)                    */
                                         /* x-dir = 1, y-dir = 2, z-dir = 3  */
+            *gamma,
             ****speedSound;             /* speed of sound (x,y,z, material) */    
              
 /* ______________________________   
@@ -119,40 +212,25 @@ private:
 *   MISC Variables
 *___________________________________*/            
             ***BC_Values,                /* BC values BC_values[wall][variable][m]*/  
-            *t_output_vars,             /* array holding output timing info */
-                                        /* t_output_vars[1] = t_initial     */
-                                        /* t_output_vars[2] = t final       */
-                                        /* t_output_vars[3] = delta t       */
-            *delt_limits               /* delt_limits[1]   = delt_minimum  */
-                                        /* delt_limits[2]   = delt_maximum  */
-	;
-
-    int
-        **BC_inputs,                    /* BC_types[wall][m] that contains  */
-                                        /* the users boundary condition     */
-                                        /* selection for each wall          */
-        ***BC_types,                    /* each variable can have a Neuman, */
-                                        /* or Dirichlet type BC             */
-                                        /* BC_types[wall][variable][m]=type */
-        ***BC_float_or_fixed           /* BC_float_or_fixed[wall][variable][m]*/
-                                        /* Variable on boundary is either   */
-                                        /* fixed or it floats during the    */
-                                        /* compuation                       */
-    ;
-
-
+            *R;                         /* gas constant R[material]          */ 
+                             
+    double  residual,                   /* testing*/            
+            x1, x2,
+            temp1,
+            temp2,
+            u0,
+            u1,
+            u2,
+            uL,
+            uR;
+            
     char    output_file_basename[30],   /* Tecplot filename description     */
             output_file_desc[50];       /* Title used in tecplot stuff      */
-    int xLoLimit,                       /* x array lower limits             */
-        yLoLimit,                       /* y array lower limits             */
-        zLoLimit,
-        xHiLimit,
-        yHiLimit,
-        zHiLimit;
-     double  delX,                      /* Cell width                       */
-             delY,                      /* Cell Width in the y dir          */
-             delZ;                      /* Cell width in the z dir          */
-    int nMaterials;                     /* Number of materials              */
+
+
+
+
+
     ICE(const ICE&);
     ICE& operator=(const ICE&);
 };
