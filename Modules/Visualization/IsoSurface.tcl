@@ -58,7 +58,7 @@ itcl_class IsoSurface {
 		-from [set $this-min] -to [set $this-max] -label "IsoValue:" \
 		-resolution 0.000001 -showvalue true \
 		-orient horizontal \
-		-command $n -state disabled
+		-command $n
 	pack $w.f.isoval -side top -fill x
 
 	#makePoint $w.f.seed "Seed Point" $this-seed_point $n
