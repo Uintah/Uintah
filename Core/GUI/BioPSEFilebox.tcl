@@ -443,6 +443,13 @@ proc biopseIconList_Select {w rTag {callBrowse 1}} {
     set text   [lindex $itemList($rTag) 2]
     set serial [lindex $itemList($rTag) 3]
 
+puts "w:    $w"
+puts "rtag: $rTag"
+puts "text: $text"
+puts "Ttag: $tTag"
+puts "Itag: $iTag"
+puts "seri: $serial"
+
     if {![info exists data(rect)]} {
         set data(rect) [$data(canvas) create rect 0 0 0 0 \
 	    -fill #a0a0ff -outline #a0a0ff]
@@ -716,17 +723,23 @@ proc biopseFDialog {argstring} {
 
     # Set the timestamp for the current directory
     global biopse_TimeStamps biopse_ID
-    set biopse_TimeStamps($w) [file mtime $data(selectPath)]
+
+    if {![file isdirectory $data(selectPath)]} {
+        # It is possible if the initial file was specified as a file
+        # that does not exist, that the selectPath does not exist, so use bogus time.
+        set biopse_TimeStamps($w) -1
+    } else {
+        set biopse_TimeStamps($w) [file mtime $data(selectPath)]
+    }
 
     # set the refreshing ID to be -1.  For some reason when a
     # UI is opened or closed the map/unmap methods get called
     # about 20 times so this let it check if it is the first time
-    set biopse_ID($w) {-1}
+    set biopse_ID($w) -1
 
     # bind mapping and unmapping to start and stop update directory command
     bind $w <Map> "biopseFDialog_Mapped $w"
     bind $w <Unmap> "biopseFDialog_Unmapped $w"
-
 
     # 6. Withdraw the window, then update all the geometry information
     # so we know how big it wants to be, then center the window in the
@@ -752,6 +765,7 @@ proc biopseFDialog {argstring} {
     grab $w
     focus $data(ent)
     $data(ent) delete 0 end
+
     $data(ent) insert 0 $data(selectFile)
     $data(ent) select from 0
     $data(ent) select to   end
@@ -832,36 +846,30 @@ proc biopseFDialog_Config {w type argList} {
     
     # 4.a: setting initial file to the filevar contents, if it is specified
     if { [info exists $data(-filevar)]} {
-	if {[file exists  [set $data(-filevar)]] } {
-	    set tmp [set $data(-filevar)]
+
+        set tmp [set $data(-filevar)]
+	if { $tmp != "" } {
+            # If the filevar is set to anything, use it... (even if the file
+            # does not exist.)
 	    set data(-initialdir) [file dirname $tmp]
 	    set data(-initialfile) [file tail $tmp]
-	} else {
-	    # place to warn that specified file not found
 	}
     }
     
     # 4.b: set the default directory and selection according to the -initial
     #    settings
-    if {[string compare $data(-initialdir) ""]} {
-	if {[file isdirectory $data(-initialdir)]} {
-	    set data(selectPath) [glob $data(-initialdir)]
-	} else {
-	    # place to set initdirectory to predefined data directory
-	    set initdir [pwd]
-	    if {![string compare $initdir ""]} {
-		set data(selectPath) $initdir
-	    } else {
-		set data(selectPath) [pwd]
-	    }
-	}
+    if { $data(-initialdir) != "" } {
 
-	# Convert the initialdir to an absolute path name.
-	
-	set old [pwd]
-	cd $data(selectPath)
-	set data(selectPath) [pwd]
-	cd $old
+	if {[file isdirectory $data(-initialdir)]} {
+            set data(selectPath) [glob $data(-initialdir)]
+            # Convert the initialdir to an absolute path name. 
+            set old [pwd]
+            cd $data(selectPath)
+            set data(selectPath) [pwd]
+            cd $old
+        } else {
+            set data(selectPath) $data(-initialdir)
+        }
     }
 
     set data(selectFile) $data(-initialfile)
@@ -1182,12 +1190,15 @@ proc biopseFDialog_Unmapped {w} {
 proc biopseFDialog_UpdateDirectory {w} {
     upvar #0 $w data
     global biopse_TimeStamps biopse_ID
-    set curr_time [file mtime $data(selectPath)]
-    set old_time $biopse_TimeStamps($w)
+
+    if {[file isdirectory $data(selectPath)]} {
+        set curr_time [file mtime $data(selectPath)]
+        set old_time $biopse_TimeStamps($w)
     
-    if {$curr_time != $old_time} {
-	set biopse_TimeStamps($w) $curr_time
-	biopseFDialog_Update $w
+        if {$curr_time != $old_time} {
+            set biopse_TimeStamps($w) $curr_time
+            biopseFDialog_Update $w
+        }
     }
     set biopse_ID($w) [after 5000 "biopseFDialog_UpdateDirectory $w"]
 }
@@ -1204,6 +1215,13 @@ proc biopseFDialog_Update {w} {
     }
 
     upvar #0 $w data
+
+    if {![file isdirectory $data(selectPath)]} {
+        # It is possible if the initial file was specified as a file
+        # that does not exist, that the selectPath does not exist.  If so, just return.
+        return
+    }
+
     global tk_library biopsePriv
     catch {unset data(updateId)}
 
@@ -1586,9 +1604,13 @@ proc biopseFDialog_InvokeBtn {w key} {
 # Gets called when user presses the "parent directory" button
 proc biopseFDialog_UpDirCmd {w} {
     upvar #0 $w data
+    global biopse_ID
 
-    if {[string compare $data(selectPath) "/"]} {
+    if { $data(selectPath) != "/" } {
 	set data(selectPath) [file dirname $data(selectPath)]
+        # Cancel the scheduled update and update right now.
+	after cancel $biopse_ID($w)
+        biopseFDialog_UpdateDirectory $w
     }
 }
 
