@@ -17,7 +17,6 @@
 #include <Packages/Uintah/CCA/Components/Arches/PicardNonlinearSolver.h>
 #include <Packages/Uintah/CCA/Components/Arches/TurbulenceModel.h>
 #include <Packages/Uintah/CCA/Components/HETransformation/Burn.h>
-#include <Packages/Uintah/CCA/Components/MPM/BoundaryCond.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
@@ -25,7 +24,7 @@
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/Core/Grid/CCVariable.h>
 #include <Packages/Uintah/Core/Grid/CellIterator.h>
-#include <Packages/Uintah/Core/Grid/fillFace.h>
+#include <Packages/Uintah/CCA/Components/MPM/MPMBoundCond.h>
 #include <Packages/Uintah/Core/Grid/NCVariable.h>
 #include <Packages/Uintah/Core/Grid/NodeIterator.h>
 #include <Packages/Uintah/Core/Grid/ParticleSet.h>
@@ -36,12 +35,9 @@
 #include <Packages/Uintah/Core/Grid/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/SFCZVariable.h>
-#include <Packages/Uintah/Core/Grid/SymmetryBoundCond.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/TemperatureBoundCond.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
-#include <Packages/Uintah/Core/Grid/VelocityBoundCond.h>
 
 using namespace Uintah;
 using namespace SCIRun;
@@ -629,64 +625,16 @@ void MPMArches::interpolateParticlesToGrid(const ProcessorGroup*,
       }
 
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
-
 	gvelocity[*iter] /= gmass[*iter];
 	gTemperature[*iter] /= gmass[*iter];
-
       }
 
       // Apply grid boundary conditions to the velocity before storing the data
+      MPMBoundCond bc;
+      bc.setBoundaryCondition(patch,matlindex,"Velocity",gvelocity);
+      bc.setBoundaryCondition(patch,matlindex,"Symmetric",gvelocity);
+      bc.setBoundaryCondition(patch,matlindex,"Temperature",gTemperature);
 
-      IntVector offset =  IntVector(0,0,0);
-
-      //      IntVector offset = 
-      //	patch->getInteriorCellLowIndex() - patch->getCellLowIndex();
-      // cout << "offset = " << offset << endl;
-
-      for(Patch::FaceType face = Patch::startFace;
-	  face <= Patch::endFace; face=Patch::nextFace(face)){
-
-        const BoundCondBase *vel_bcs, *temp_bcs, *sym_bcs;
-        if (patch->getBCType(face) == Patch::None) {
-
-	  vel_bcs  = patch->getBCValues(matlindex,"Velocity",face);
-	  temp_bcs = patch->getBCValues(matlindex,"Temperature",face);
-	  sym_bcs  = patch->getBCValues(matlindex,"Symmetric",face);
-
-        } else
-
-          continue;
-
-	  if (vel_bcs != 0) {
-
-	    const VelocityBoundCond* bc = 
-	      dynamic_cast<const VelocityBoundCond*>(vel_bcs);
-	    if (bc->getKind() == "Dirichlet") {
-
-	      //cout << "Velocity bc value = " << bc->getValue() << endl;
-	      fillFace(gvelocity, patch, face, bc->getValue(),offset);
-
-	    }
-	  }
-
-	  if (sym_bcs != 0) {
-
-	     fillFaceNormal(gvelocity, patch, face, offset);
-
-	  }
-
-	  if (temp_bcs != 0) {
-
-	    const TemperatureBoundCond* bc =
-	      dynamic_cast<const TemperatureBoundCond*>(temp_bcs);
-	    if (bc->getKind() == "Dirichlet") {
-
-	      fillFace(gTemperature, patch, face, bc->getValue(),offset);
-
-	    }
-
-	  }
-      }
     }  // End loop over materials
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
