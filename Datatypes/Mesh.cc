@@ -17,6 +17,8 @@
 #include <Classlib/String.h>
 #include <Classlib/Timer.h>
 #include <Classlib/TrivialAllocator.h>
+#include <Datatypes/ColumnMatrix.h>
+#include <Datatypes/DenseMatrix.h>
 #include <iostream.h>
 
 static TrivialAllocator Element_alloc(sizeof(Element));
@@ -55,7 +57,8 @@ Mesh::~Mesh()
     for(int i=0;i<nodes.size();i++)
 	delete nodes[i];
     for(i=0;i<elems.size();i++)
-	delete elems[i];
+	if(elems[i])
+	    delete elems[i];
 }
 
 Mesh* Mesh::clone()
@@ -107,6 +110,7 @@ Element::Element(Mesh* mesh, int n1, int n2, int n3, int n4)
 : mesh(mesh)
 {
     n[0]=n1; n[1]=n2; n[2]=n3; n[3]=n4;
+    faces[0]=faces[1]=faces[2]=faces[3]=-2;
 }
 
 Element::Element(const Element& copy)
@@ -193,6 +197,38 @@ int Element::face(int i)
     return faces[i];
 }
 
+void Element::get_sphere2(Point& cen, double& rad2)
+{
+    Point p0(mesh->nodes[n[0]]->p);
+    Point p1(mesh->nodes[n[1]]->p);
+    Point p2(mesh->nodes[n[2]]->p);
+    Point p3(mesh->nodes[n[3]]->p);
+    Vector v1(p1-p0);
+    Vector v2(p2-p0);
+    Vector v3(p3-p0);
+    double c0=(p0-Point(0,0,0)).length2();
+    double c1=(p1-p0).length2();
+    double c2=(p2-p0).length2();
+    double c3=(p3-p0).length2();
+    DenseMatrix mat(3,3);
+    mat[0][0]=v1.x();
+    mat[0][1]=v1.y();
+    mat[0][2]=v1.z();
+    mat[1][0]=v2.x();
+    mat[1][1]=v2.y();
+    mat[1][2]=v2.z();
+    mat[2][0]=v3.x();
+    mat[2][1]=v3.y();
+    mat[2][2]=v3.z();
+    ColumnMatrix rhs(3);
+    rhs[0]=c1-c0;
+    rhs[1]=c2-c0;
+    rhs[2]=c3-c0;
+    mat.solve(rhs);
+    cen=Point(rhs[0], rhs[1], rhs[2]);
+    rad2=(p0-cen).length2();
+}
+
 void Mesh::compute_neighbors()
 {
     // Clear old neighbors...
@@ -204,14 +240,16 @@ void Mesh::compute_neighbors()
     t1.start();
     for(i=0;i<elems.size();i++){
 	Element* elem=elems[i];
-	Node* n1=nodes[elem->n[0]];
-	Node* n2=nodes[elem->n[1]];
-	Node* n3=nodes[elem->n[2]];
-	Node* n4=nodes[elem->n[3]];
-	n1->elems.add(i);
-	n2->elems.add(i);
-	n3->elems.add(i);
-	n4->elems.add(i);
+	if(elem){
+	    Node* n1=nodes[elem->n[0]];
+	    Node* n2=nodes[elem->n[1]];
+	    Node* n3=nodes[elem->n[2]];
+	    Node* n4=nodes[elem->n[3]];
+	    n1->elems.add(i);
+	    n2->elems.add(i);
+	    n3->elems.add(i);
+	    n4->elems.add(i);
+	}
     }
     t1.stop();
     cerr << "Element info time: " << t1.time() << endl;
@@ -220,10 +258,12 @@ void Mesh::compute_neighbors()
     cerr << "Computing face neighbors...\n";
     // Compute face neighbors
     for(i=0;i<elems.size();i++){
-	elems[i]->faces[0]=-2;
-	elems[i]->faces[1]=-2;
-	elems[i]->faces[2]=-2;
-	elems[i]->faces[3]=-2;
+	if(elems[i]){
+	    elems[i]->faces[0]=-2;
+	    elems[i]->faces[1]=-2;
+	    elems[i]->faces[2]=-2;
+	    elems[i]->faces[3]=-2;
+	}
     }
 #if 0
     for(i=0;i<elems.size();i++){
@@ -391,7 +431,7 @@ void Mesh::get_grad(Element* elem, const Point&,
 int Mesh::locate(const Point& p, int& ix)
 {
     for(int i=0;i<elems.size();i++){
-	if(inside(p, elems[i])){
+	if(elems[i] && inside(p, elems[i])){
 	    ix=i;
 	    return 1;
 	}
@@ -438,12 +478,27 @@ int Element::orient()
 
 double Element::volume()
 {
+    Point p1(mesh->nodes[n[0]]->p);
+    Point p2(mesh->nodes[n[1]]->p);
+    Point p3(mesh->nodes[n[2]]->p);
+    Point p4(mesh->nodes[n[3]]->p);
+    double x1=p1.x();
+    double y1=p1.y();
+    double z1=p1.z();
+    double x2=p2.x();
+    double y2=p2.y();
+    double z2=p2.z();
+    double x3=p3.x();
+    double y3=p3.y();
+    double z3=p3.z();
+    double x4=p4.x();
+    double y4=p4.y();
+    double z4=p4.z();
     double a1=+x2*(y3*z4-y4*z3)+x3*(y4*z2-y2*z4)+x4*(y2*z3-y3*z2);
     double a2=-x3*(y4*z1-y1*z4)-x4*(y1*z3-y3*z1)-x1*(y3*z4-y4*z3);
     double a3=+x4*(y1*z2-y2*z1)+x1*(y2*z4-y4*z2)+x2*(y4*z1-y1*z4);
     double a4=-x1*(y2*z3-y3*z2)-x2*(y3*z1-y1*z3)-x3*(y1*z2-y2*z1);
-    double iV6=1./(a1+a2+a3+a4);
-    return ???;
+    return (a1+a2+a3+a4)/6.;
 }
 
 void Mesh::get_bounds(Point& min, Point& max)
@@ -455,3 +510,20 @@ void Mesh::get_bounds(Point& min, Point& max)
 	max=Max(max, nodes[i]->p);
     }
 }    
+
+Face::Face(int n0, int n1, int n2)
+{
+    n[0]=n0;
+    n[1]=n1;
+    n[2]=n2;
+}
+
+int Face::hash(int hash_size) const
+{
+    return (((n[0]*7+5)^(n[1]*5+3)^(n[2]*3+1))^(3*hash_size+1))%hash_size;
+}
+
+int Face::operator==(const Face& f) const
+{
+    return n[0]==f.n[0] && n[1]==f.n[1] && n[2]==f.n[2];
+}

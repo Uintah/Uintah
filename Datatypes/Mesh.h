@@ -38,6 +38,8 @@ struct Element {
 
     double volume();
     int orient();
+    void get_sphere(Point& cen, double& rad);
+    void get_sphere2(Point& cen, double& rad2);
 };
 
 void Pio(Piostream&, Element*&);
@@ -52,6 +54,13 @@ struct Node {
 };
 
 void Pio(Piostream&, Node*&);
+
+struct Face {
+    int n[3];
+    Face(int, int, int);
+    int hash(int hash_size) const;
+    int operator==(const Face&) const;
+};
 
 class Mesh;
 typedef LockingHandle<Mesh> MeshHandle;
