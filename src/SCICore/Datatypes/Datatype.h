@@ -20,7 +20,7 @@
 #include <SCICore/Multitask/ITC.h>
 
 namespace SCICore {
-namespace CoreDatatypes {
+namespace Datatypes {
 
 using SCICore::PersistentSpace::Persistent;
 using SCICore::Multitask::Mutex;
@@ -35,11 +35,16 @@ public:
     virtual ~Datatype();
 };
 
-} // End namespace CoreDatatypes
+} // End namespace Datatypes
 } // End namespace SCICore
 
 //
 // $Log$
+// Revision 1.3  1999/08/25 03:48:32  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.2  1999/08/17 06:38:45  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
@@ -54,7 +59,7 @@ public:
 // added SCICore .h files to /include directories
 //
 // Revision 1.1  1999/04/25 04:07:06  dav
-// Moved files into CoreDatatypes
+// Moved files into Datatypes
 //
 // Revision 1.1.1.1  1999/04/24 23:12:52  dav
 // Import sources

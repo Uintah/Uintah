@@ -35,8 +35,8 @@ namespace PSECommon {
 namespace Modules {
 
 using PSECore::Dataflow::Module;
-using PSECore::CommonDatatypes::GeometryIPort;
-using PSECore::CommonDatatypes::GeometryComm;
+using PSECore::Datatypes::GeometryIPort;
+using PSECore::Datatypes::GeometryComm;
 
 using SCICore::GeomSpace::HeadLight;
 using SCICore::Containers::to_string;
@@ -485,6 +485,11 @@ void Salmon::emit_vars(ostream& out)
 
 //
 // $Log$
+// Revision 1.6  1999/08/25 03:47:58  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.5  1999/08/19 23:17:53  sparker
 // Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
 // from files that did not need them.

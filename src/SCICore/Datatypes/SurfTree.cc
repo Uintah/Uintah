@@ -17,8 +17,8 @@
 #include <SCICore/Util/Assert.h>
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/Containers/TrivialAllocator.h>
-#include <SCICore/CoreDatatypes/SurfTree.h>
-#include <SCICore/CoreDatatypes/TopoSurfTree.h>
+#include <SCICore/Datatypes/SurfTree.h>
+#include <SCICore/Datatypes/TopoSurfTree.h>
 #include <SCICore/Geometry/BBox.h>
 #include <SCICore/Geometry/Grid.h>
 #include <SCICore/Math/Expon.h>
@@ -26,7 +26,7 @@
 #include <SCICore/Malloc/Allocator.h>
 
 namespace SCICore {
-namespace CoreDatatypes {
+namespace Datatypes {
 
 using Geometry::Cross;
 
@@ -586,11 +586,16 @@ void Pio(Piostream& stream, NodeInfo& node)
     stream.end_cheap_delim();
 }
     
-} // End namespace CoreDatatypes
+} // End namespace Datatypes
 } // End namespace SCICore
 
 //
 // $Log$
+// Revision 1.4  1999/08/25 03:48:41  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.3  1999/08/18 20:20:19  sparker
 // Eliminated copy constructor and clone in all modules
 // Added a private copy ctor and a private clone method to Module so
@@ -611,6 +616,6 @@ void Pio(Piostream& stream, NodeInfo& node)
 // added beginnings of support for g++ compilation
 //
 // Revision 1.1  1999/04/27 21:14:29  dav
-// working on CoreDatatypes
+// working on Datatypes
 //
 //

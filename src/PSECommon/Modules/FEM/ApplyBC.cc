@@ -14,7 +14,7 @@
 
 #include <SCICore/Util/NotFinished.h>
 #include <PSECore/Dataflow/Module.h>
-#include <PSECore/CommonDatatypes/SurfacePort.h>
+#include <PSECore/Datatypes/SurfacePort.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Malloc/Allocator.h>
 
@@ -22,7 +22,7 @@ namespace PSECommon {
 namespace Modules {
 
 using namespace PSECore::Dataflow;
-using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 
@@ -67,6 +67,11 @@ void ApplyBC::execute()
 
 //
 // $Log$
+// Revision 1.4  1999/08/25 03:47:44  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.3  1999/08/18 20:19:36  sparker
 // Eliminated copy constructor and clone in all modules
 // Added a private copy ctor and a private clone method to Module so

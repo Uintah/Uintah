@@ -11,22 +11,22 @@
  *  Copyright (C) 1996 SCI Group
  */
 
-#ifndef SCI_CommonDatatypes_ScaledBoxWidgetData_h
-#define SCI_CommonDatatypes_ScaledBoxWidgetData_h 1
+#ifndef SCI_Datatypes_ScaledBoxWidgetData_h
+#define SCI_Datatypes_ScaledBoxWidgetData_h 1
 
 #include <SCICore/share/share.h>
-#include <SCICore/CoreDatatypes/Datatype.h>
+#include <SCICore/Datatypes/Datatype.h>
 #include <SCICore/Containers/LockingHandle.h>
 #include <SCICore/Geometry/Point.h>
 
 namespace PSECore {
-namespace CommonDatatypes {
+namespace Datatypes {
 
 using SCICore::Containers::LockingHandle;
 using SCICore::Geometry::Point;
 using SCICore::PersistentSpace::Piostream;
 using SCICore::PersistentSpace::PersistentTypeID;
-using namespace SCICore::CoreDatatypes;
+using namespace SCICore::Datatypes;
 
 class ScaledBoxWidgetData;
 typedef LockingHandle<ScaledBoxWidgetData> ScaledBoxWidgetDataHandle;
@@ -53,11 +53,16 @@ public:
     static PersistentTypeID type_id;
 };
 
-} // End namespace CommonDatatypes
+} // End namespace Datatypes
 } // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.3  1999/08/25 03:48:22  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.2  1999/08/17 06:38:11  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -16,16 +16,16 @@
 #include <SCICore/Persistent/Pstreams.h>
 #include <PSECore/Dataflow/Module.h>
 #include <SCICore/Geom/GeomObj.h>
-#include <PSECore/CommonDatatypes/GeometryPort.h>
+#include <PSECore/Datatypes/GeometryPort.h>
 #include <SCICore/Malloc/Allocator.h>
-#include <PSECore/CommonDatatypes/GeometryComm.h>
+#include <PSECore/Datatypes/GeometryComm.h>
 #include <SCICore/TclInterface/TCLvar.h>
 
 namespace PSECommon {
 namespace Modules {
 
 using namespace PSECore::Dataflow;
-using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 using namespace SCICore::PersistentSpace;
@@ -85,6 +85,11 @@ void GeometryReader::execute() {
 
 //
 // $Log$
+// Revision 1.4  1999/08/25 03:47:54  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.3  1999/08/18 20:19:48  sparker
 // Eliminated copy constructor and clone in all modules
 // Added a private copy ctor and a private clone method to Module so

@@ -17,12 +17,12 @@
 #include <SCICore/Containers/Array1.h>
 #include <SCICore/Containers/Array3.h>
 #include <PSECore/Dataflow/Module.h>
-#include <PSECore/CommonDatatypes/GeometryPort.h>
-#include <PSECore/CommonDatatypes/ScalarFieldPort.h>
-#include <PSECore/CommonDatatypes/SurfacePort.h>
-#include <SCICore/CoreDatatypes/ScalarField.h>
-#include <SCICore/CoreDatatypes/ScalarFieldRG.h>
-#include <SCICore/CoreDatatypes/ScalarFieldUG.h>
+#include <PSECore/Datatypes/GeometryPort.h>
+#include <PSECore/Datatypes/ScalarFieldPort.h>
+#include <PSECore/Datatypes/SurfacePort.h>
+#include <SCICore/Datatypes/ScalarField.h>
+#include <SCICore/Datatypes/ScalarFieldRG.h>
+#include <SCICore/Datatypes/ScalarFieldUG.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Geometry/Plane.h>
 #include <SCICore/TclInterface/TCLvar.h>
@@ -34,7 +34,7 @@ namespace PSECommon {
 namespace Modules {
 
 using namespace PSECore::Dataflow;
-using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Datatypes;
 using namespace PSECore::Widgets;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
@@ -407,6 +407,11 @@ void BoxClipSField::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.4  1999/08/25 03:48:05  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.3  1999/08/18 20:20:03  sparker
 // Eliminated copy constructor and clone in all modules
 // Added a private copy ctor and a private clone method to Module so
@@ -424,7 +429,7 @@ void BoxClipSField::tcl_command(TCLArgs& args, void* userdata)
 // Initial commit
 //
 // Revision 1.2  1999/04/27 22:57:56  dav
-// updates in Modules for CoreDatatypes
+// updates in Modules for Datatypes
 //
 // Revision 1.1.1.1  1999/04/24 23:12:33  dav
 // Import sources

@@ -20,14 +20,14 @@
 #include <SCICore/Containers/HashTable.h>
 #include <SCICore/Containers/Queue.h>
 #include <SCICore/Containers/Stack.h>
-#include <SCICore/CoreDatatypes/Mesh.h>
-#include <SCICore/CoreDatatypes/ScalarField.h>
-#include <SCICore/CoreDatatypes/ScalarFieldRG.h>
-#include <SCICore/CoreDatatypes/ScalarFieldUG.h>
-#include <SCICore/CoreDatatypes/ScalarFieldRGchar.h>
-#include <SCICore/CoreDatatypes/ScalarFieldRGint.h>
-//Dd: #include <SCICore/CoreDatatypes/SurfOctree.h>
-#include <SCICore/CoreDatatypes/TriSurface.h>
+#include <SCICore/Datatypes/Mesh.h>
+#include <SCICore/Datatypes/ScalarField.h>
+#include <SCICore/Datatypes/ScalarFieldRG.h>
+#include <SCICore/Datatypes/ScalarFieldUG.h>
+#include <SCICore/Datatypes/ScalarFieldRGchar.h>
+#include <SCICore/Datatypes/ScalarFieldRGint.h>
+//Dd: #include <SCICore/Datatypes/SurfOctree.h>
+#include <SCICore/Datatypes/TriSurface.h>
 #include <SCICore/Geom/GeomGroup.h>
 #include <SCICore/Geom/Material.h>
 #include <SCICore/Geom/Pt.h>
@@ -42,10 +42,10 @@
 
 #include <PSECore/Widgets/ArrowWidget.h>
 #include <PSECore/Dataflow/Module.h>
-#include <PSECore/CommonDatatypes/ColorMapPort.h>
-#include <PSECore/CommonDatatypes/GeometryPort.h>
-#include <PSECore/CommonDatatypes/ScalarFieldPort.h>
-#include <PSECore/CommonDatatypes/SurfacePort.h>
+#include <PSECore/Datatypes/ColorMapPort.h>
+#include <PSECore/Datatypes/GeometryPort.h>
+#include <PSECore/Datatypes/ScalarFieldPort.h>
+#include <PSECore/Datatypes/SurfacePort.h>
 
 // just so I can see the proccess id...
 
@@ -56,7 +56,7 @@ namespace PSECommon {
 namespace Modules {
 
 using namespace PSECore::Dataflow;
-using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 
@@ -272,6 +272,11 @@ cerr << "Dd: SurfOctree Portion of this code deleted... it is"
 
 //
 // $Log$
+// Revision 1.5  1999/08/25 03:47:46  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.4  1999/08/19 23:17:43  sparker
 // Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
 // from files that did not need them.
@@ -296,7 +301,7 @@ cerr << "Dd: SurfOctree Portion of this code deleted... it is"
 // deleted some files that are dependent on DaveW files
 //
 // Revision 1.2  1999/04/27 22:57:49  dav
-// updates in Modules for CoreDatatypes
+// updates in Modules for Datatypes
 //
 // Revision 1.1.1.1  1999/04/24 23:12:32  dav
 // Import sources

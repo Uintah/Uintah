@@ -9,15 +9,15 @@
  */
 
 #include <SCICore/Containers/LockingHandle.h>
-#include <SCICore/CoreDatatypes/ScalarField.h>
+#include <SCICore/Datatypes/ScalarField.h>
 
-#include <PSECore/CommonDatatypes/SimplePort.h>
+#include <PSECore/Datatypes/SimplePort.h>
 
 using namespace SCICore::Containers;
-using namespace SCICore::CoreDatatypes;
+using namespace SCICore::Datatypes;
 using namespace SCICore::GeomSpace;
 
-using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Datatypes;
 
 #if 0
 
@@ -74,7 +74,7 @@ template void Pio<>(Piostream&, LockingHandle<ScalarField>&);
 
 // Pio__SCICore::PersistentSpace::Piostream(
 //					    SCICore::Containers::LockingHandle,
-//					    SCICore::CoreDatatypes::ScalarField
+//					    SCICore::Datatypes::ScalarField
 //					   )
 
 #if 0

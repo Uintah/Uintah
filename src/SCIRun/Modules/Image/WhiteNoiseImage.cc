@@ -26,7 +26,7 @@ using namespace SCICore::TclInterface;
 using namespace SCICore::Multitask;
 
 using namespace PSECore::Dataflow;
-using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Datatypes;
 
 using namespace SCIRun::Datatypes;
 
@@ -94,6 +94,11 @@ void WhiteNoiseImage::execute()
 
 //
 // $Log$
+// Revision 1.3  1999/08/25 03:49:00  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.2  1999/08/17 06:40:04  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -11,11 +11,11 @@
 #include <Containers/Array1.h>
 #include <Util/NotFinished.h>
 #include <Dataflow/Module.h>
-#include <CommonDatatypes/GeometryPort.h>
-#include <CommonDatatypes/ScalarFieldPort.h>
-#include <CoreDatatypes/ScalarFieldRG.h>
-#include <CoreDatatypes/ScalarFieldRGfloat.h>
-#include <CommonDatatypes/ColorMapPort.h>
+#include <Datatypes/GeometryPort.h>
+#include <Datatypes/ScalarFieldPort.h>
+#include <Datatypes/ScalarFieldRG.h>
+#include <Datatypes/ScalarFieldRGfloat.h>
+#include <Datatypes/ColorMapPort.h>
 #include <Geom/GeomGrid.h>
 #include <Geom/GeomGroup.h>
 #include <Geom/GeomLine.h>
@@ -32,7 +32,7 @@ namespace SCIRun {
 namespace Modules {
 
 using namespace PSECore::Dataflow;
-using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Datatypes;
 
 using namespace SCICore::TclInterface;
 using namespace SCICore::Multitask;
@@ -205,6 +205,11 @@ void FFT::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.3  1999/08/25 03:48:56  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.2  1999/08/17 06:39:59  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

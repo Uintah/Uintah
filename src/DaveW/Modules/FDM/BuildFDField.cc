@@ -24,7 +24,7 @@ namespace DaveW {
 namespace Modules {
 
 using namespace PSECore::Dataflow;
-using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 
@@ -99,6 +99,11 @@ void BuildFDField::execute()
 
 //
 // $Log$
+// Revision 1.2  1999/08/25 03:47:40  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.1  1999/08/24 06:23:04  dmw
 // Added in everything for the DaveW branch
 //
@@ -109,7 +114,7 @@ void BuildFDField::execute()
 // moved FDM to DaveW
 //
 // Revision 1.2  1999/04/27 22:57:47  dav
-// updates in Modules for CoreDatatypes
+// updates in Modules for Datatypes
 //
 // Revision 1.1.1.1  1999/04/24 23:12:30  dav
 // Import sources

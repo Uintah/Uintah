@@ -14,17 +14,17 @@
 
 #include <SCICore/Containers/Array2.h>
 #include <PSECore/Dataflow/Module.h>
-#include <PSECore/CommonDatatypes/GeometryPort.h>
-#include <PSECore/CommonDatatypes/ScalarFieldPort.h>
-#include <SCICore/CoreDatatypes/ScalarField.h>
-#include <SCICore/CoreDatatypes/ScalarFieldRGBase.h>
-#include <SCICore/CoreDatatypes/ScalarFieldRG.h>
-#include <SCICore/CoreDatatypes/ScalarFieldRGdouble.h>
-#include <SCICore/CoreDatatypes/ScalarFieldRGfloat.h>
-#include <SCICore/CoreDatatypes/ScalarFieldRGint.h>
-#include <SCICore/CoreDatatypes/ScalarFieldRGshort.h>
-#include <SCICore/CoreDatatypes/ScalarFieldRGchar.h>
-#include <SCICore/CoreDatatypes/ScalarFieldRGuchar.h>
+#include <PSECore/Datatypes/GeometryPort.h>
+#include <PSECore/Datatypes/ScalarFieldPort.h>
+#include <SCICore/Datatypes/ScalarField.h>
+#include <SCICore/Datatypes/ScalarFieldRGBase.h>
+#include <SCICore/Datatypes/ScalarFieldRG.h>
+#include <SCICore/Datatypes/ScalarFieldRGdouble.h>
+#include <SCICore/Datatypes/ScalarFieldRGfloat.h>
+#include <SCICore/Datatypes/ScalarFieldRGint.h>
+#include <SCICore/Datatypes/ScalarFieldRGshort.h>
+#include <SCICore/Datatypes/ScalarFieldRGchar.h>
+#include <SCICore/Datatypes/ScalarFieldRGuchar.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/TclInterface/TCLvar.h>
 #include <PSECore/Widgets/ScaledBoxWidget.h>
@@ -38,7 +38,7 @@ namespace PSECommon {
 namespace Modules {
 
 using namespace PSECore::Dataflow;
-using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Datatypes;
 using namespace PSECore::Widgets;
 using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
@@ -662,6 +662,11 @@ void FieldFilter::buildOversampleMitchellTable(Array2<double> *table,
 
 //
 // $Log$
+// Revision 1.5  1999/08/25 03:47:46  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.4  1999/08/19 23:17:43  sparker
 // Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
 // from files that did not need them.

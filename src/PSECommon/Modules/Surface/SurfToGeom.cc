@@ -26,17 +26,17 @@
 
 #include <SCICore/Util/NotFinished.h>
 #include <PSECommon/Dataflow/Module.h>
-#include <SCICore/CoreDatatypes/BasicSurfaces.h>
-#include <SCICore/CoreDatatypes/ColorMap.h>
-#include <PSECommon/CommonDatatypes/ColorMapPort.h>
-#include <PSECommon/CommonDatatypes/GeometryPort.h>
-#include <PSECommon/CommonDatatypes/ScalarFieldPort.h>
-#include <PSECommon/CommonDatatypes/SurfTree.h>
-#include <SCICore/CoreDatatypes/Surface.h>
-#include <PSECommon/CommonDatatypes/SurfacePort.h>
-#include <SCICore/CoreDatatypes/ScalarField.h>
-#include <SCICore/CoreDatatypes/TriSurface.h>
-#include <PSECommon/CommonDatatypes/ScalarTriSurface.h>
+#include <SCICore/Datatypes/BasicSurfaces.h>
+#include <SCICore/Datatypes/ColorMap.h>
+#include <PSECommon/Datatypes/ColorMapPort.h>
+#include <PSECommon/Datatypes/GeometryPort.h>
+#include <PSECommon/Datatypes/ScalarFieldPort.h>
+#include <PSECommon/Datatypes/SurfTree.h>
+#include <SCICore/Datatypes/Surface.h>
+#include <PSECommon/Datatypes/SurfacePort.h>
+#include <SCICore/Datatypes/ScalarField.h>
+#include <SCICore/Datatypes/TriSurface.h>
+#include <PSECommon/Datatypes/ScalarTriSurface.h>
 #include <SCICore/Geom/GeomArrows.h>
 #include <SCICore/Goem/GeomCylinder.h>
 #include <SCICore/Geom/Color.h>
@@ -53,7 +53,7 @@
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECommon::CommonDatatypes;
+using namespace PSECommon::Datatypes;
 using namespace PSECommon::Dataflow;
 using namespace SCICore::TclInterface;
 using namespace SCICore::Containers;
@@ -666,6 +666,11 @@ void SurfToGeom::execute()
 
 //
 // $Log$
+// Revision 1.4  1999/08/25 03:48:01  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.3  1999/08/18 20:19:59  sparker
 // Eliminated copy constructor and clone in all modules
 // Added a private copy ctor and a private clone method to Module so

@@ -38,7 +38,7 @@ namespace PSECore {
   namespace Dataflow {
     class Module;
   }
-  namespace CommonDatatypes {
+  namespace Datatypes {
     class GeometryOPort;
   }
   namespace Constraints {
@@ -73,7 +73,7 @@ using SCICore::GeomSpace::TCLMaterial;
 using SCICore::Geometry::Vector;
 using SCICore::Geometry::Point;
 
-using PSECore::CommonDatatypes::GeometryOPort;
+using PSECore::Datatypes::GeometryOPort;
 using PSECore::Dataflow::Module;
 using PSECore::Constraints::ConstraintSolver;
 using PSECore::Constraints::BaseVariable;
@@ -230,6 +230,11 @@ ostream& operator<<( ostream& os, BaseWidget& w );
 
 //
 // $Log$
+// Revision 1.3  1999/08/25 03:48:28  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.2  1999/08/17 06:38:27  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

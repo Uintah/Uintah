@@ -14,11 +14,11 @@
 
 #include <SCICore/Util/NotFinished.h>
 #include <PSECommon/Dataflow/Module.h>
-#include <SCICore/CoreDatatypes/BasicSurfaces.h>
-#include <PSECommon/CommonDatatypes/ManhattanDist.h>
-#include <SCICore/CoreDatatypes/Surface.h>
-#include <PSECommon/CommonDatatypes/SurfacePort.h>
-#include <PSECommon/CommonDatatypes/TriSurface.h>
+#include <SCICore/Datatypes/BasicSurfaces.h>
+#include <PSECommon/Datatypes/ManhattanDist.h>
+#include <SCICore/Datatypes/Surface.h>
+#include <PSECommon/Datatypes/SurfacePort.h>
+#include <PSECommon/Datatypes/TriSurface.h>
 #include <SCICore/Geometry/BBox.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCLvar.h>
@@ -29,12 +29,12 @@ namespace PSECommon {
 namespace Modules {
 
 using PSECommon::Dataflow::Module;
-using PSECommon::CommonDatatypes::SurfaceIPort;
-using PSECommon::CommonDatatypes::SurfaceOPort;
-using PSECommon::CommonDatatypes::SurfaceHandle;
-using PSECommon::CommonDatatypes::TriSurface;
-using PSECommon::CommonDatatypes::TSElement;
-using PSECommon::CommonDatatypes::ManhattanDist;
+using PSECommon::Datatypes::SurfaceIPort;
+using PSECommon::Datatypes::SurfaceOPort;
+using PSECommon::Datatypes::SurfaceHandle;
+using PSECommon::Datatypes::TriSurface;
+using PSECommon::Datatypes::TSElement;
+using PSECommon::Datatypes::ManhattanDist;
 using SCICore::Containers::clString;
 using SCICore::Containers::Array1;
 using SCICore::Containers::Array2;
@@ -270,6 +270,11 @@ void AugmentSurf::voxelCoalesce(TriSurface* ts, int gs) {
 
 //
 // $Log$
+// Revision 1.4  1999/08/25 03:47:59  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.3  1999/08/18 20:19:54  sparker
 // Eliminated copy constructor and clone in all modules
 // Added a private copy ctor and a private clone method to Module so
@@ -287,7 +292,7 @@ void AugmentSurf::voxelCoalesce(TriSurface* ts, int gs) {
 // Initial commit
 //
 // Revision 1.2  1999/04/27 22:57:55  dav
-// updates in Modules for CoreDatatypes
+// updates in Modules for Datatypes
 //
 // Revision 1.1.1.1  1999/04/24 23:12:31  dav
 // Import sources

@@ -12,13 +12,13 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/CoreDatatypes/ColorMap.h>
+#include <SCICore/Datatypes/ColorMap.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <iostream.h>
 
 namespace SCICore {
-namespace CoreDatatypes {
+namespace Datatypes {
 
 using SCICore::GeomSpace::Material;
 using SCICore::GeomSpace::HSVColor;
@@ -267,11 +267,16 @@ double ColorMap::getMax()
     return max;
 }
 
-} // End namespace CoreDatatypes
+} // End namespace Datatypes
 } // End namespace SCICore
 
 //
 // $Log$
+// Revision 1.4  1999/08/25 03:48:31  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.3  1999/08/23 06:30:34  sparker
 // Linux port
 // Added X11 configuration options
@@ -288,7 +293,7 @@ double ColorMap::getMax()
 // added beginnings of support for g++ compilation
 //
 // Revision 1.1  1999/04/25 04:07:04  dav
-// Moved files into CoreDatatypes
+// Moved files into Datatypes
 //
 // Revision 1.1.1.1  1999/04/24 23:12:51  dav
 // Import sources

@@ -12,7 +12,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <SCICore/CoreDatatypes/ScalarFieldUG.h>
+#include <SCICore/Datatypes/ScalarFieldUG.h>
 #include <SCICore/Util/NotFinished.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Math/MusilRNG.h>
@@ -24,7 +24,7 @@
 #endif
 
 namespace SCICore {
-namespace CoreDatatypes {
+namespace Datatypes {
 
 using namespace SCICore::Math;
 
@@ -391,11 +391,16 @@ void ScalarFieldUG::over_grad_augment(double vol_wt, double grad_wt,
   cerr << vol_total << " Volume " << grad_total << " Gradient\n";
 }
 
-} // End namespace CoreDatatypes
+} // End namespace Datatypes
 } // End namespace SCICore
 
 //
 // $Log$
+// Revision 1.4  1999/08/25 03:48:40  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.3  1999/08/23 06:30:35  sparker
 // Linux port
 // Added X11 configuration options
@@ -415,13 +420,13 @@ void ScalarFieldUG::over_grad_augment(double vol_wt, double grad_wt,
 // added back .h files
 //
 // Revision 1.3  1999/04/27 21:14:28  dav
-// working on CoreDatatypes
+// working on Datatypes
 //
 // Revision 1.2  1999/04/25 04:14:43  dav
 // oopps...?
 //
 // Revision 1.1  1999/04/25 04:07:16  dav
-// Moved files into CoreDatatypes
+// Moved files into Datatypes
 //
 // Revision 1.1.1.1  1999/04/24 23:12:48  dav
 // Import sources

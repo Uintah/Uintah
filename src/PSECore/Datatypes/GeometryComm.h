@@ -11,13 +11,13 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#ifndef SCI_CommonDatatypes_GeometryComm_h
-#define SCI_CommonDatatypes_GeometryComm_h 1
+#ifndef SCI_Datatypes_GeometryComm_h
+#define SCI_Datatypes_GeometryComm_h 1
 
 #include <SCICore/share/share.h>
 
 #include <PSECore/Comm/MessageBase.h>
-#include <PSECore/CommonDatatypes/GeometryPort.h>
+#include <PSECore/Datatypes/GeometryPort.h>
 #include <SCICore/Multitask/ITC.h>
 
 namespace SCICore {
@@ -30,7 +30,7 @@ namespace SCICore {
 }
 
 namespace PSECore {
-namespace CommonDatatypes {
+namespace Datatypes {
 
 using PSECore::Comm::MessageBase;
 using PSECore::Comm::MessageTypes;
@@ -75,11 +75,16 @@ public:
     AsyncReply<int>* nreply;
 };
 
-} // End namespace CommonDatatypes
+} // End namespace Datatypes
 } // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.3  1999/08/25 03:48:20  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.2  1999/08/17 06:38:08  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
@@ -95,4 +100,4 @@ public:
 //
 //
 
-#endif /* SCI_CommonDatatypes_GeometryComm_h */
+#endif /* SCI_Datatypes_GeometryComm_h */

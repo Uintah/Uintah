@@ -12,7 +12,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <PSECore/CommonDatatypes/SoundPort.h>
+#include <PSECore/Datatypes/SoundPort.h>
 
 #include <SCICore/Util/Assert.h>
 #include <SCICore/Containers/String.h>
@@ -23,7 +23,7 @@
 #include <iostream.h>
 
 namespace PSECore {
-namespace CommonDatatypes {
+namespace Datatypes {
 
 static clString sound_type("Sound");
 static clString sound_color("aquamarine4");
@@ -242,11 +242,16 @@ void SoundOPort::resend(Connection*)
     cerr << "SoundOPort can't resend and shouldn't be asked to!\n";
 }
 
-} // End namespace CommonDatatypes
+} // End namespace Datatypes
 } // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.4  1999/08/25 03:48:23  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.3  1999/08/19 23:18:03  sparker
 // Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
 // from files that did not need them.

@@ -23,7 +23,7 @@ namespace Dataflow {
   class Module;
 }
 
-namespace CommonDatatypes {
+namespace Datatypes {
 
 using PSECore::Dataflow::Module;
 using PSECore::Dataflow::IPort;
@@ -85,7 +85,7 @@ public:
     virtual void resend(Connection* conn);
 };
 
-} // End namespace CommonDatatypes
+} // End namespace Datatypes
 } // End namespace PSECore
 
 ////////////////////////////////////////////////////////////
@@ -118,7 +118,7 @@ public:
 extern char** global_argv;
 
 namespace PSECore {
-namespace CommonDatatypes {
+namespace Datatypes {
 
 using namespace SCICore::PersistentSpace;
 
@@ -449,11 +449,16 @@ SimplePortComm<T>::SimplePortComm(const T& data)
 {
 }
 
-} // End namespace CommonDatatypes
+} // End namespace Datatypes
 } // End namespace PSECore
 
 //
 // $Log$
+// Revision 1.3  1999/08/25 03:48:23  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.2  1999/08/17 06:38:12  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

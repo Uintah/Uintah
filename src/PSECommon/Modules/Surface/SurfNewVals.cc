@@ -16,10 +16,10 @@
 #include <SCICore/Containers/String.h>
 #include <SCICore/Persistent/Pstreams.h>
 #include <PSECore/Dataflow/Module.h>
-#include <PSECore/CommonDatatypes/ColumnMatrixPort.h>
-#include <SCICore/CoreDatatypes/ColumnMatrix.h>
-#include <PSECore/CommonDatatypes/SurfacePort.h>
-#include <SCICore/CoreDatatypes/TriSurface.h>
+#include <PSECore/Datatypes/ColumnMatrixPort.h>
+#include <SCICore/Datatypes/ColumnMatrix.h>
+#include <PSECore/Datatypes/SurfacePort.h>
+#include <SCICore/Datatypes/TriSurface.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/Expon.h>
@@ -32,7 +32,7 @@
 namespace PSECommon {
 namespace Modules {
 
-using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
 using namespace SCICore::Containers;
 
@@ -126,6 +126,11 @@ void SurfNewVals::execute() {
 
 //
 // $Log$
+// Revision 1.5  1999/08/25 03:48:01  sparker
+// Changed SCICore/CoreDatatypes to SCICore/Datatypes
+// Changed PSECore/CommonDatatypes to PSECore/Datatypes
+// Other Misc. directory tree updates
+//
 // Revision 1.4  1999/08/19 23:17:54  sparker
 // Removed a bunch of #include <SCICore/Util/NotFinished.h> statements
 // from files that did not need them.

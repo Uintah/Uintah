@@ -3,16 +3,16 @@
 
 #include <SCICore/TclInterface/TCLvar.h> 
 #include <SCICore/Geom/Color.h>
-#include <SCICore/CoreDatatypes/ColorMap.h>
+#include <SCICore/Datatypes/ColorMap.h>
 
 #include <PSECore/Dataflow/Module.h> 
-#include <PSECore/CommonDatatypes/ColorMapPort.h>
+#include <PSECore/Datatypes/ColorMapPort.h>
 
 namespace PSECommon {
 namespace Modules {
 
 using namespace PSECore::Dataflow;
-using namespace PSECore::CommonDatatypes;
+using namespace PSECore::Datatypes;
 using namespace SCICore::TclInterface;
 
 /**************************************
