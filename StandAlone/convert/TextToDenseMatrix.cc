@@ -141,6 +141,7 @@ main(int argc, char **argv) {
   cerr << "done building matrix.\n";
 
   MatrixHandle mH(dm);
+  mH->set_raw(false);
 
   if (binOutput) {
     BinaryPiostream out_stream(matrixName, Piostream::Write);
