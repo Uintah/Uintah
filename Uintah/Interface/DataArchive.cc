@@ -338,16 +338,15 @@ GridP DataArchive::queryGrid( double time )
 	 int numPatches = -1234;
 	 long totalCells = 0;
 	 for(DOM_Node r = n.getFirstChild(); r != 0; r=r.getNextSibling()){
-	    if(r.getNodeName().equals("numPatches")){
-	       if(!get(r, numPatches))
-		  throw InternalError("Error parsing numPatches");
-	    } else if(r.getNodeName().equals("numRegions")){
+	    if(r.getNodeName().equals("numPatches") ||
+	       r.getNodeName().equals("numRegions")){
 	       if(!get(r, numPatches))
 		  throw InternalError("Error parsing numRegions");
 	    } else if(r.getNodeName().equals("totalCells")){
 	       if(!get(r, totalCells))
 		  throw InternalError("Error parsing totalCells");
-	    } else if(r.getNodeName().equals("Patch")){
+	    } else if(r.getNodeName().equals("Patch") ||
+		      r.getNodeName().equals("Region")){
 	       int id;
 	       if(!get(r, "id", id))
 		  throw InternalError("Error parsing patch id");
@@ -596,7 +595,7 @@ DOM_Node DataArchive::findVariable(const string& searchname,
 	       if(varname != searchname)
 		  continue;
 	       int patchid;
-	       if(!get(r, "patch", patchid))
+	       if(!get(r, "patch", patchid) && !get(r, "region", patchid))
 		  throw InternalError("Cannot get patch id");
 	       if(patchid != searchpatch->getID())
 		  continue;
@@ -636,6 +635,9 @@ int DataArchive::queryNumMaterials( const string& name, const Patch* patch, doub
 
 //
 // $Log$
+// Revision 1.5  2000/05/31 18:01:34  sparker
+// More region backwards compatibility
+//
 // Revision 1.4  2000/05/31 03:11:12  sparker
 // Made reader backwards compatible with pre-patch uda files
 //
