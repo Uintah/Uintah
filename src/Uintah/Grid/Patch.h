@@ -184,8 +184,7 @@ WARNING
      IntVector getGhostSFCZHighIndex(const int numGC) const;
      
      inline Box getBox() const {
-       return Box(d_level->getNodePosition(d_lowIndex),
-		  d_level->getNodePosition(d_highIndex));
+	return d_level->getBox(d_lowIndex, d_highIndex);
      }
      
      inline IntVector getNFaces() const {
@@ -303,6 +302,9 @@ std::ostream& operator<<(std::ostream& out, const Uintah::Patch & r);
 
 //
 // $Log$
+// Revision 1.19.4.1  2000/09/29 06:12:29  sparker
+// Added support for sending data along patch edges
+//
 // Revision 1.19  2000/09/26 21:34:05  dav
 // inlined a few things
 //

@@ -571,6 +571,8 @@ void Patch::computeVariableExtents(VariableBasis basis, Ghost::GhostType gtype,
 	}
 	break;
     }
+    low=l;
+    high=h;
     d_level->selectPatches(l, h, neighbors);
 }
 
@@ -604,7 +606,10 @@ void Patch::computeVariableExtents(TypeDescription::Type basis,
 	translation=CellBased;
 	break;
     default:
-	throw InternalError("Unknown variable type in Patch::getVariableExtents (from TypeDescription::Type)");
+       if(gtype == Ghost::None)
+	  translation=CellBased;  // Shouldn't matter what it is
+       else
+	  throw InternalError("Unknown variable type in Patch::getVariableExtents (from TypeDescription::Type)");
     }
     computeVariableExtents(translation, gtype, numGhostCells,
 			   neighbors, low, high);
@@ -680,6 +685,9 @@ IntVector Patch::getGhostSFCZHighIndex(const int numGC) const
 
 //
 // $Log$
+// Revision 1.22.4.1  2000/09/29 06:12:29  sparker
+// Added support for sending data along patch edges
+//
 // Revision 1.22  2000/09/25 20:58:14  sparker
 // Removed a few "if 0" statements.
 //

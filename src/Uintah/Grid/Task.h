@@ -5,6 +5,7 @@
 #include <Uintah/Grid/Ghost.h>
 #include <Uintah/Grid/Handle.h>
 #include <Uintah/Grid/VarLabel.h>
+#include <SCICore/Geometry/IntVector.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <string>
 #include <vector>
@@ -254,7 +255,6 @@ WARNING
 	   d_action(0),
 	   d_fromDW(0),
 	   d_toDW(0)
-	
       {
 	 d_completed = false;
 	 d_usesThreads = false;
@@ -483,12 +483,15 @@ WARNING
 	 const Patch*     d_patch;
 	 Task*		  d_task;
 	 int		  d_serialNumber;
+	 IntVector	  d_lowIndex, d_highIndex;
 	 
 	 Dependency(      const DataWarehouseP& dw,
 			  const VarLabel* d_var,
 			  int matlIndex,
 			  const Patch*,
-			  Task* task);
+			  Task* task,
+			  const IntVector& lowIndex,
+			  const IntVector& highIndex);
       }; // end struct Dependency
       
       //////////
@@ -563,6 +566,9 @@ ostream & operator << ( ostream & out, const Uintah::Task::Dependency & dep );
 
 //
 // $Log$
+// Revision 1.25.2.1  2000/09/29 06:12:29  sparker
+// Added support for sending data along patch edges
+//
 // Revision 1.25  2000/09/28 23:22:01  jas
 // Added (int) to remove g++ warnings for STL size().  Reordered initialization
 // to coincide with *.h declarations.
