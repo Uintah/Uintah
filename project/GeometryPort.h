@@ -56,6 +56,7 @@ public:
     GeomID addObj(GeomObj*);
     void delObj(GeomID);
     void delAll();
+    void flushViews();
 };
 
 class GeometryComm : public MessageBase {

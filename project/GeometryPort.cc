@@ -77,22 +77,36 @@ void GeometryOPort::finish()
 
 GeomID GeometryOPort::addObj(GeomObj* obj)
 {
+    turn_on();
     GeomID id=serial++;
     outbox->send(new GeometryComm(portid, id, obj));
     dirty=1;
+    turn_off();
     return id;
 }
 
 void GeometryOPort::delObj(GeomID id)
 {
+    turn_on();
     outbox->send(new GeometryComm(portid, id));
     dirty=1;
+    turn_off();
 }
 
 void GeometryOPort::delAll()
 {
+    turn_on();
     outbox->send(new GeometryComm(portid));
     dirty=1;
+    turn_off();
+}
+
+void GeometryOPort::flushViews()
+{
+    turn_on();
+    outbox->send(new GeometryComm);
+    dirty=0;
+    turn_off();
 }
 
 GeometryComm::GeometryComm(Mailbox<int>* reply)
