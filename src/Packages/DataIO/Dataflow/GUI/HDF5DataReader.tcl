@@ -164,6 +164,9 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    -filetypes $types \
 	    -initialdir $initdir \
 	    -defaultextension $defext
+
+       moveToCursor $w
+       wm deiconify $w
     }
 
     method ui {} {
