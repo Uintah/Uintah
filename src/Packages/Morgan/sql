@@ -1,8 +1,20 @@
-#!/bin/sh -w
+#!/bin/sh -- 
+#!perl
 
-eval 'exec perl $0 ${1+"$@"}' 
-    if 0;
-use lib '/nfs/sci/u2/morgan/lib/perl5/site_perl/5.005/';
+eval 'exec perl -wS -x $0 ${1+"$@"}'
+    if $running_under_some_shell;
+
+BEGIN {
+print $ENV{PERL_LIB_PATH}, "\n";
+if(exists $ENV{PERL_LIB_PATH}) {
+    foreach my $lib(split(/:/, $ENV{PERL_LIB_PATH})) {
+        eval "use lib '$lib'";
+    }
+}
+}
+
+print STDERR "Starting SQL...\n";
+
 use IO::Handle;
 use DBI;
 use strict;
@@ -10,8 +22,6 @@ use strict;
 autoflush STDOUT;
 
 sub send_cmd;
-
-print STDERR "Starting SQL...\n";
 
 print STDERR join(" ", DBI->available_drivers), "\n";
 
