@@ -139,10 +139,10 @@ FieldHandle ImageToField::create_image_field(ITKDatatypeHandle &img) {
   
   // the origin specified by the itk image should remain the same
   // so we must make the min and max points accordingly
-  double spread_x = (space_x * size_x)/2;
-  double spread_y = (space_y * size_y)/2;
+  double spread_x = (space_x * size_x);
+  double spread_y = (space_y * size_y);
   
-  Point min(origin_x - spread_x, origin_y - spread_y, 0.0);
+  Point min(origin_x, origin_y, 0.0);
   Point max(origin_x + spread_x, origin_y + spread_y, 0.0);
   
   ImageMesh* m = new ImageMesh(size_x, size_y, min, max);
@@ -214,11 +214,11 @@ FieldHandle ImageToField::create_latvol_field(ITKDatatypeHandle &img) {
   // the origin specified by the itk image should remain the same
   // so we must make the min and max points accordingly
   
-  double spread_x = (space_x * size_x)/2;
-  double spread_y = (space_y * size_y)/2;
-  double spread_z = (space_z * size_z)/2;
+  double spread_x = (space_x * size_x);
+  double spread_y = (space_y * size_y);
+  double spread_z = (space_z * size_z);
   
-  Point min(origin_x - spread_x, origin_y - spread_y, origin_z - spread_z);
+  Point min(origin_x, origin_y, origin_z);
   Point max(origin_x + spread_x, origin_y + spread_y, origin_z + spread_z);
   
   LatVolMesh* m = new LatVolMesh(size_x, size_y, size_z, min, max);
@@ -253,7 +253,7 @@ FieldHandle ImageToField::create_latvol_field(ITKDatatypeHandle &img) {
 	  pixelIndex[0] = col;
 	  pixelIndex[1] = row;
 	  pixelIndex[2] = z;
-	  
+
 	  tmp = n->GetPixel(pixelIndex);
 	  fld->set_value(tmp, *iter);
 	  ++iter;
@@ -291,10 +291,10 @@ FieldHandle ImageToField::create_image_vector_field1(ITKDatatypeHandle &img){
   
   // the origin specified by the itk image should remain the same
   // so we must make the min and max points accordingly
-  double spread_x = (space_x * size_x)/2;
-  double spread_y = (space_y * size_y)/2;
+  double spread_x = (space_x * size_x);
+  double spread_y = (space_y * size_y);
   
-  Point min(origin_x - spread_x, origin_y - spread_y, 0.0);
+  Point min(origin_x, origin_y, 0.0);
   Point max(origin_x + spread_x, origin_y + spread_y, 0.0);
   
   ImageMesh* m = new ImageMesh(size_x, size_y, min, max);
@@ -368,11 +368,11 @@ FieldHandle ImageToField::create_latvol_vector_field1(ITKDatatypeHandle &img){
   // the origin specified by the itk image should remain the same
   // so we must make the min and max points accordingly
   
-  double spread_x = (space_x * size_x)/2;
-  double spread_y = (space_y * size_y)/2;
-  double spread_z = (space_z * size_z)/2;
+  double spread_x = (space_x * size_x);
+  double spread_y = (space_y * size_y);
+  double spread_z = (space_z * size_z);
   
-  Point min(origin_x - spread_x, origin_y - spread_y, origin_z - spread_z);
+  Point min(origin_x, origin_y, origin_z);
   Point max(origin_x + spread_x, origin_y + spread_y, origin_z + spread_z);
   
   LatVolMesh* m = new LatVolMesh(size_x, size_y, size_z, min, max);
@@ -450,10 +450,10 @@ FieldHandle ImageToField::create_image_vector_field2(ITKDatatypeHandle &img){
   
   // the origin specified by the itk image should remain the same
   // so we must make the min and max points accordingly
-  double spread_x = (space_x * size_x)/2;
-  double spread_y = (space_y * size_y)/2;
+  double spread_x = (space_x * size_x);
+  double spread_y = (space_y * size_y);
   
-  Point min(origin_x - spread_x, origin_y - spread_y, 0.0);
+  Point min(origin_x, origin_y, 0.0);
   Point max(origin_x + spread_x, origin_y + spread_y, 0.0);
   
   ImageMesh* m = new ImageMesh(size_x, size_y, min, max);
@@ -524,11 +524,11 @@ FieldHandle ImageToField::create_latvol_vector_field2(ITKDatatypeHandle &img){
   // the origin specified by the itk image should remain the same
   // so we must make the min and max points accordingly
   
-  double spread_x = (space_x * size_x)/2;
-  double spread_y = (space_y * size_y)/2;
-  double spread_z = (space_z * size_z)/2;
+  double spread_x = (space_x * size_x);
+  double spread_y = (space_y * size_y);
+  double spread_z = (space_z * size_z);
   
-  Point min(origin_x - spread_x, origin_y - spread_y, origin_z - spread_z);
+  Point min(origin_x, origin_y, origin_z);
   Point max(origin_x + spread_x, origin_y + spread_y, origin_z + spread_z);
   
   LatVolMesh* m = new LatVolMesh(size_x, size_y, size_z, min, max);
