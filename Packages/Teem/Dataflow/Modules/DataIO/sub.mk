@@ -24,7 +24,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-INCLUDES += $(TEEM_INCLUDE) $(HDF5_INCLUDE)
+INCLUDES += $(TEEM_INCLUDE)
 
 
 SRCDIR   := Packages/Teem/Dataflow/Modules/DataIO
@@ -46,7 +46,7 @@ PSELIBS := Packages/Teem/Core/Datatypes Packages/Teem/Dataflow/Ports \
         Core/Geom Core/Datatypes Core/Geometry Core/GeomInterface \
         Core/TkExtensions 
 
-LIBS := $(TEEM_LIBRARY) $(HDF5_LIBRARY)
+LIBS := $(TEEM_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
