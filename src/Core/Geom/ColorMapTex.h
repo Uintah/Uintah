@@ -49,7 +49,7 @@ namespace SCIRun {
 
 class SCICORESHARE ColorMapTex : public GeomObj {
   Point a_, b_, c_, d_;
-  unsigned char texture_[256*4];
+  float texture_[256*4];
   int numcolors_;
   
 public:
@@ -58,10 +58,10 @@ public:
   ColorMapTex(const ColorMapTex &);
   virtual ~ColorMapTex();
 
-  void set_texture(unsigned char *tex, int w = 256)
+  void set_texture(float *tex, int w = 256)
   {
     numcolors_ = Max(Min(w, 256), 0);
-    memcpy(texture_, tex, numcolors_ * 4);
+    memcpy(texture_, tex, sizeof(float) * numcolors_ * 4);
   }
   
   virtual GeomObj* clone();

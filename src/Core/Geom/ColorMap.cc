@@ -153,15 +153,6 @@ ColorMap::set_blend(bool blend)
 }
   
 
-static unsigned char COLOR_FTOB(double c)
-{
-  int tmp = (int)(c * 255.0 + 0.5);
-  if (tmp > 255) tmp = 255;
-  else if (tmp < 0) tmp = 0;
-  return (unsigned char)tmp;
-}
-
-
 void
 ColorMap::Build1d(const int size)
 {
@@ -185,7 +176,7 @@ ColorMap::Build1d(const int size)
   Color ambient(0,0,0),specular(0.7,0.7,0.7);
 
   if (rawRGBA_) { delete rawRGBA_; rawRGBA_ = 0; }
-  if (!rawRGBA_) rawRGBA_ = scinew unsigned char[4*size];
+  if (!rawRGBA_) rawRGBA_ = scinew float[4*size];
   
   colors_.clear();
   colors_.resize(size);
@@ -207,10 +198,10 @@ ColorMap::Build1d(const int size)
 	A0 * (AT1 - t) / (AT1 - CT0);
     }
 
-    rawRGBA_[i*4+0] = COLOR_FTOB(color->diffuse.r());
-    rawRGBA_[i*4+1] = COLOR_FTOB(color->diffuse.g());
-    rawRGBA_[i*4+2] = COLOR_FTOB(color->diffuse.b());
-    rawRGBA_[i*4+3] = COLOR_FTOB(color->transparency);
+    rawRGBA_[i*4+0] = color->diffuse.r();
+    rawRGBA_[i*4+1] = color->diffuse.g();
+    rawRGBA_[i*4+2] = color->diffuse.b();
+    rawRGBA_[i*4+3] = color->transparency;
 
     t += dt;
     if (cIdx < cSize && t >= CT1) {

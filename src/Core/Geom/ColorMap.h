@@ -67,7 +67,7 @@ public:
   vector<float>			rawRampAlphaT_;
   vector<Color>			rawRampColor_;
   vector<float>			rawRampColorT_;
-  unsigned char*		rawRGBA_;
+  float*         		rawRGBA_;
   string			units;
 
 private:
