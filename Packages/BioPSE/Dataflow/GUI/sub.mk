@@ -32,7 +32,8 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ModifyConductivities.tcl\
 	$(SRCDIR)/SetupFEMatrix.tcl\
 	$(SRCDIR)/ShowDipoles.tcl\
-
+	$(SRCDIR)/ShowLeads.tcl\
+	$(SRCDIR)/RawToDenseMatrix.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/BioPSE/Dataflow/GUI
