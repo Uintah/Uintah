@@ -372,6 +372,7 @@ itcl_class Roe {
 	global "$this-global-movieFrame"
 	
 	global $this-do_stereo
+	global $this-sbase
 	global $this-do_bawgl
 	global $this-tracker_state
 	
@@ -388,6 +389,7 @@ itcl_class Roe {
 	set "$this-global-movieFrame" 0
 	    
 	set $this-do_stereo 0
+	set $this-sbase 0.01
 	set $this-do_bawgl 0
 	set $this-tracker_state 0
 	
@@ -482,8 +484,13 @@ itcl_class Roe {
 	
 	checkbutton $m.stereo -text "Stereo" -variable $this-do_stereo \
 		-command "$this-c redraw"
-	pack $m.stereo -side top
-
+	
+	scale $m.sbase -variable $this-sbase -length 100 -from 0.1 -to 10 \
+		-resolution 0.1 -orient horizontal -label "Base Scale:"
+	checkbutton $m.sr -text "Rot. Shift" -variable $this-sr -anchor w
+	pack $m.stereo $m.sbase $m.sr -side top
+	$m.sbase set 1
+	
 	# the stuff below doesn't have corresponding c-functions
 	
 	checkbutton $m.tracker -text "Tracker" -variable $this-tracker_state \
