@@ -20,8 +20,6 @@ if test $3 = "-ttts"; then
     ttts=$4
 fi
 
-if test $3
-
 #  Find the location of the TextToTriSurfField
 
 cd $uda_dir
