@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../../doc/Utilities/XML/component.dtd">
+
+<component name="TensorsToIndices" category="Forward">
+  <overview>
+    <authors>
+      <author>David Weinstein</author>
+    </authors>
+    <summary>Change a Field of ints, into a Field of Tensors.</summary>
+    <description>
+      <p>
+        IndiciesToTensors is used to convert a Field of Tensors, where the
+        ints are indices into a conductivity_table property (table is
+        a vector of pairs, where each pair contains a string (the name
+        of the material region) and a Tensor), into a Field of
+        Tensors.
+      </p>
+      <p>
+        This module is templatized -- it should work for any Mesh
+        type, and any data_at location.  Presently it only work for
+        the conductivity_table -- eventually it would be nice to
+        instantiate any data type that is mapped through a lookup
+        table.
+      </p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>IndexField</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>TensorField</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+  </io>
+  <testing>
+  </testing>
+</component>
