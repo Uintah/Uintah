@@ -438,6 +438,7 @@ case $1 in
     sci_check_globus=yes
     sci_check_qt=yes
     sci_check_uuid=yes
+    sci_check_mpi=yes
   ;;
   Remote)
     sci_check_jpeg=yes
