@@ -27,7 +27,7 @@ extern "C" {
 #include <Core/Containers/Array2.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Algorithms/DataIO/GuiFile.h>
-#include <Core/2d/Polyline.h>
+#include <Core/2d/LockedPolyline.h>
 #include <Core/2d/Diagram.h>
 #include <Core/2d/Graph.h>
 
@@ -98,7 +98,7 @@ private:
   //  Bayer bayer;
   Diagram *diagram;
   ResultsHandle results;
-  Array1<Polyline *> poly;
+  Array1<LockedPolyline *> poly;
 
   UNUR_GEN *gen;
 
@@ -227,7 +227,7 @@ Metropolis::reset()
 
     srand48(0);
     for (int i=nparms; i<m; i++) {
-      Polyline *p = scinew Polyline( i );
+      LockedPolyline *p = scinew LockedPolyline( i );
       p->set_lock( monitor_ );
       p->set_color( Color( drand48(), drand48(), drand48() ) );
       poly.add( p );
@@ -292,12 +292,12 @@ void Metropolis::metropolis()
   
   int len = (gui_monitor.get() - gui_burning.get()) / gui_thin.get();
 
-  results->k.reserve( len );
-  results->theta.resize( nparms );
+  results->k_.reserve( len );
+  results->data_.resize( nparms );
 
   for (int i=0; i<nparms; i++) {
-    results->theta[i].reserve( len );
-    results->theta[i].remove_all();
+    results->data_[i].reserve( len );
+    results->data_[i].remove_all();
     poly[i]->clear();
   }
 
@@ -328,10 +328,10 @@ void Metropolis::metropolis()
     if ( k > gui_burning.get()  
 	 && fmod(k-gui_burning.get(), gui_thin.get() ) == 0 ) 
     {
-      results->k.add(k) ;
+      results->k_.add(k) ;
 
       for (int i=0; i<nparms; i++) {
-	results->theta[i].add(theta[i]);
+	results->data_[i].add(theta[i]);
 	poly[i]->add(theta[i]);
       }
 
@@ -343,8 +343,11 @@ void Metropolis::metropolis()
   
   if ( !r_port ) 
     cerr << " no output port\n";
-  else
+  else {
+    for (int i=0; i<poly.size(); i++)
+      results->color_.add(poly[i]->get_color());
     r_port->send( results );
+  }
 }
 
 
