@@ -156,16 +156,11 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
 
-    Matrix3 bElBarTrial,deformationGradientInc;
-    Matrix3 shearTrial,Shear,normal;
-    Matrix3 fbar,velGrad;
-    double J,p,fTrial,IEl,muBar,delgamma,sTnorm,Jinc;
-    double onethird = (1.0/3.0);
-    double sqtwthds = sqrt(2.0/3.0);
-    Matrix3 Identity;
-    double c_dil = 0.0,se = 0.;
+    Matrix3 bElBarTrial,deformationGradientInc,Identity;
+    Matrix3 shearTrial,Shear,normal,fbar,velGrad;
+    double J,p,fTrial,IEl,muBar,delgamma,sTnorm,Jinc,U,W;
+    double onethird = (1.0/3.0),sqtwthds = sqrt(2.0/3.0), c_dil = 0.0,se = 0.;
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
-    double U,W;
 
     Identity.Identity();
 
@@ -180,7 +175,7 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<Matrix3> pstress;
     constParticleVariable<StateData> statedata_old;
     ParticleVariable<StateData> statedata;
-    constParticleVariable<double> pmass, pvolume;
+    constParticleVariable<double> pmass;
     ParticleVariable<double> pvolume_deformed;
     constParticleVariable<Vector> pvelocity;
     constNCVariable<Vector> gvelocity;
@@ -190,7 +185,6 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
     old_dw->get(bElBar,              bElBarLabel,                  pset);
     old_dw->get(statedata_old,       p_statedata_label,            pset);
     old_dw->get(pmass,               lb->pMassLabel,               pset);
-    old_dw->get(pvolume,             lb->pVolumeLabel,             pset);
     old_dw->get(pvelocity,           lb->pVelocityLabel,           pset);
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
     new_dw->allocate(pstress,        lb->pStressLabel,             pset);
@@ -218,6 +212,8 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
     double bulk  = d_initialData.Bulk;
     double flow  = d_initialData.FlowStress;
     double K     = d_initialData.K;
+
+    double rho_orig = matl->getInitialDensity();
 
     for(ParticleSubset::iterator iter = pset->begin();
 	iter != pset->end(); iter++){
@@ -276,16 +272,14 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
       // time step and the velocity gradient and the material constants
       double alpha = statedata[idx].Alpha;
 
-      // Compute the deformation gradient increment using the time_step
-      // velocity gradient
-      // F_n^np1 = dudx * dt + Identity
-      deformationGradientInc = velGrad * delT + Identity;
+      // Update the deformation gradient tensor to its time n+1 value.
+      deformationGradient_new[idx]=deformationGradient[idx] +
+                                   velGrad * delT;
+
+      deformationGradientInc = deformationGradient_new[idx]*
+			       deformationGradient[idx].Inverse();
 
       Jinc = deformationGradientInc.Determinant();
-
-      // Update the deformation gradient tensor to its time n+1 value.
-      deformationGradient_new[idx] = deformationGradientInc *
-                                     deformationGradient[idx];
 
       // get the volume preserving part of the deformation gradient increment
       fbar = deformationGradientInc * pow(Jinc,-onethird);
@@ -293,13 +287,14 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
       // predict the elastic part of the volume preserving part of the left
       // Cauchy-Green deformation tensor
       bElBarTrial = fbar*bElBar[idx]*fbar.Transpose();
+
+      // get the volumetric part of the deformation
+      J = deformationGradient_new[idx].Determinant();
+
       IEl = onethird*bElBarTrial.Trace();
 
       // shearTrial is equal to the shear modulus times dev(bElBar)
       shearTrial = (bElBarTrial - Identity*IEl)*shear;
-
-      // get the volumetric part of the deformation
-      J = deformationGradient_new[idx].Determinant();
 
       // get the hydrostatic part of the stress
       p = 0.5*bulk*(J - 1.0/J);
@@ -314,6 +309,8 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
 
       if(fTrial > 0.0){
 	// plastic
+
+        cout << "yielding plastically" << endl;
 
 	delgamma = (fTrial/(2.0*muBar)) / (1.0 + (K/(3.0*muBar)));
 
@@ -340,8 +337,8 @@ void CompNeoHookPlas::computeStressTensor(const PatchSubset* patches,
       U = .5*bulk*(.5*(pow(J,2.0) - 1.0) - log(J));
       W = .5*shear*(bElBar_new[idx].Trace() - 3.0);
 
-      pvolume_deformed[idx]=Jinc*pvolume[idx];
-      
+      pvolume_deformed[idx]=(pmass[idx]/rho_orig)*J;
+
       double e = (U + W)*pvolume_deformed[idx]/J;
       
       if(matl->getFractureModel()) pStrainEnergy[idx] = e;
