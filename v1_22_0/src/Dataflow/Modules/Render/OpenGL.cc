@@ -83,9 +83,6 @@ namespace SCIRun {
 #define IMAGE_DONE 7
 
 
-static map<string, ObjTag*>::iterator viter;
-
-
 int CAPTURE_Z_DATA_HACK = 0;
 
 static OpenGL* current_drawer=0;
@@ -1857,13 +1854,9 @@ ViewWindow::setState(DrawInfoOpenGL* drawinfo, const string& tclID)
 void
 ViewWindow::setDI(DrawInfoOpenGL* drawinfo,string name)
 {
-  ObjTag* vis;
-
-  viter = visible.find(name);
-  if (viter != visible.end())
-  { // if found
-    vis = (*viter).second;
-    setState(drawinfo,to_string(vis->tagid));
+  map<string,int>::iterator tag_iter = obj_tag.find(name);      
+  if (tag_iter != obj_tag.end()) { // if found
+    setState(drawinfo,to_string((*tag_iter).second));
   }
 }
 
