@@ -154,6 +154,7 @@ EOF
       fi
       AC_MSG_RESULT(yes)
       eval $_SCI_FOUND_
+      rm -f conftest* a.out
     else
       eval $_SCI_VAR_NAME_=''
       eval $_SCI_VAR_HAVE_=''
@@ -1273,9 +1274,9 @@ for i in /usr/lib /usr/X11R6/lib; do
   if test ! -d "$i"; then 
     continue
   fi
+  
   SCI_CHECK_LIB($i,GL,main,HAVE_LIBGL=yes,,)
   SCI_CHECK_LIB($i,GLU,main,HAVE_LIBGLU=yes,,-lGL)
-  
   if test "$HAVE_LIBGL" &&
      test "$HAVE_LIBGLU"; then
     FOUND_ALL_GL=yes
@@ -1283,11 +1284,14 @@ for i in /usr/lib /usr/X11R6/lib; do
   fi
 done
 
+if test "$FOUND_ALL_GL" = "no";  then
+  AC_MSG_ERROR(one or more OpenGL libraries are missing. exiting.)
+fi
+
 SCI_CHECK_HEADERS(/usr/include,GL/gl.h GL/glu.h GL/glx.h,,HAVE_GL_H=no)
 
-if test "$HAVE_GL_H" = "no" ||
-   test "$FOUND_ALL_GL" = "no";  then
-  AC_MSG_ERROR(one or more OpenGL components is missing. exiting.)
+if test "$HAVE_GL_H" = "no";  then
+  AC_MSG_ERROR(one or more OpenGL headers is missing. exiting.)
 fi
 
 AC_SUBST(LIBGL)
