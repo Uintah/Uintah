@@ -88,7 +88,7 @@ class Diagram {
 	$tb add button zoom-in \
 	    -helpstr "Zoom mode" \
 	    -image [image create photo \
-		-file "../pixmaps/viewmag.ppm"] \
+		-file "../src/pixmaps/viewmag.ppm"] \
 	    -command "$this set-mode zoom"
 	
 	$tb add button sub \
@@ -225,7 +225,7 @@ class Diagram {
     }
 
     method set-zoom { mode } {
-	set icon "../pixmaps/viewmag"
+	set icon "../src/pixmaps/viewmag"
 	if { $mode == "on" } {
 	    set prevcursor \
 		[$ogl set-cursor "@$icon+.xbm $icon+mask.xbm black lightblue"]
