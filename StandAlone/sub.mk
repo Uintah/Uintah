@@ -204,10 +204,13 @@ else
   PSELIBS := \
 	Packages/Uintah/Core/Grid \
 	Packages/Uintah/Core/Parallel \
+	Packages/Uintah/Core/Exceptions \
+	Packages/Uintah/Core/Math \
 	Packages/Uintah/Core/ProblemSpec \
 	Packages/Uintah/CCA/Ports \
 	Packages/Uintah/CCA/Components/ProblemSpecification \
-	Core/Exceptions
+	Core/Exceptions \
+        Core/Geometry
 endif
 
 LIBS    := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
