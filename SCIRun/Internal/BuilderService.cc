@@ -51,8 +51,8 @@
 #include <SCIRun/CCA/ConnectionID.h>
 #include <iostream>
 #include <string>
-using namespace std;
-using namespace SCIRun;
+
+namespace SCIRun {
 
 BuilderService::BuilderService(SCIRunFramework* framework,
 			       const std::string& name)
@@ -328,9 +328,9 @@ BuilderService::getFrameworkURL(){
 
 std::string 
 BuilderService::generateBridge(const sci::cca::ComponentID::pointer& c1,
-			       const string& port1,
+			       const std::string& port1,
 			       const sci::cca::ComponentID::pointer& c2,
-			       const string& port2)
+			       const std::string& port2)
 {
   ComponentID* cid1 = dynamic_cast<ComponentID*>(c1.getPointer());
   ComponentID* cid2 = dynamic_cast<ComponentID*>(c2.getPointer());
@@ -356,7 +356,7 @@ BuilderService::generateBridge(const sci::cca::ComponentID::pointer& c1,
 int BuilderService::addLoader(const std::string &loaderName, const std::string &user, const std::string &domain, const std::string &loaderPath )
 {
   cerr<<"BuiderService::addLoader() not implemented\n";
-  string cmd="xterm -e ssh ";
+  std::string cmd="xterm -e ssh ";
   //  cmd+=user+"@"+domain+" "+loaderPath+" "+loaderName+" "+getFrameworkURL() +"&";
 
   cmd="xterm -e "+loaderPath+" "+loaderName+" "+getFrameworkURL() +"&";
@@ -372,22 +372,21 @@ int BuilderService::removeLoader(const std::string &loaderName)
 }
 
 
-int addComponentClasses(const std::string &loaderName)
+int BuilderService::addComponentClasses(const std::string &loaderName)
 {
   cerr<<"BuiderService::addComponentClasses not implemented\n";
   return 0;
 }
 
-int removeComponentClasses(const std::string &loaderName)
+int BuilderService::removeComponentClasses(const std::string &loaderName)
 {
   cerr<<"BuiderService::removeComponentClasses not implemented\n";
   return 0;
 }
 
 
-
 /*
-void BuilderService::registerFramework(const string &frameworkURL)
+void BuilderService::registerFramework(const std::string &frameworkURL)
 {
   Object::pointer obj=PIDL::objectFrom(frameworkURL);
   sci::cca::AbstractFramework::pointer remoteFramework=
@@ -450,5 +449,5 @@ sci::cca::AbstractFramework::pointer BuilderService::getFramework()
   return sci::cca::AbstractFramework::pointer(framework);
 }*/
 
-
+} // end namespace SCIRun
 

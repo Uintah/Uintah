@@ -52,11 +52,23 @@ class SCIRunFramework;
 /**
  * \class BuilderService
  *
- * The BuilderService class is a standard CCA object responsible for
- * instantiating and connecting components.  In order to do this, it relies on
- * much of the functionality implemented in the SCIRunFramework class and in
- * the various ComponentModel classes contained in the SCIRunFramework.
+ * \brief The BuilderService class is a CCA interface used to instantiate and
+ * connect components in a framework.
  *
+ * A BuilderService port's interface is standard for any CCA-compliant
+ * AbstractFramework.  This implementation of the BuilderService port is
+ * specific for SCIRun2 and relies on much of the functionality in the
+ * SCIRunFramework class and the various SCIRun component model classes.
+ *
+ *
+ * \todo getComponentProperties is not finished?
+ * \todo setComponentProperties is not finished?
+ * \todo getDeserialization is not finished?
+ * \todo addComponentClasses not implemented
+ * \todo removeComponentClasses not implemented
+ *
+ * \sa SCIRunFramework
+ * \sa InternalComponentModel
  */
 class BuilderService : public sci::cca::ports::BuilderService,
                        public InternalComponentInstance
@@ -64,20 +76,28 @@ class BuilderService : public sci::cca::ports::BuilderService,
   public:
   virtual ~BuilderService();
 
-  /** */
+  /** Factory method for creating an instance of a BuilderService class.
+      Returns a reference counted pointer to a newly-allocated BuilderService
+      port.  The \em framework parameter is a pointer to the relevent framework
+      and the \em name parameter will become the unique name for the new port.*/
   static InternalComponentInstance* create(SCIRunFramework* framework,
                                            const std::string& name);
   
-  /** */
+  /** Creates an instance of the component of type \em className.  The
+      parameter \em instanceName is the unique name of the newly created
+      instance. This method is implemented through a createComponentInstance
+      call to the SCIRunFramework. */
   virtual sci::cca::ComponentID::pointer
   createInstance( const std::string& instanceName, const std::string& className,
                   const sci::cca::TypeMap::pointer& properties);
 
 
-  /** */
+  /** Returns a list (array) of CCA ComponentIDs that exist in the
+      BuilderService's framework. */
   virtual SSIDL::array1<sci::cca::ComponentID::pointer> getComponentIDs();
 
-  /** */
+  /** Returns a CCA TypeMap (i.e. a map) that represents any properties
+      associated with component \em cid */
   virtual sci::cca::TypeMap::pointer
   getComponentProperties(const sci::cca::ComponentID::pointer& cid);
 
