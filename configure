@@ -17003,12 +17003,12 @@ fi
 
 if test "$_sci_optional" = "specific"; then
   # If 'specific' then only one lib is allowed:
-  ### Determine if there is only one item in /sw/lib (I don't know of a better way to do this.)
+  ### Determine if there is only one item in  (I don't know of a better way to do this.)
   __sci_pass=false
   __sci_first_time=true
 
   # Must have the "" for the SGI sh.
-  for value in "" /sw/lib; do
+  for value in "" ; do
     if test "$value" = "/usr/lib"; then
        echo ""
        { { echo "$as_me:$LINENO: error: Please do not specify /usr/lib as the location for libs g2c." >&5
@@ -17026,8 +17026,8 @@ echo "$as_me: error: Please do not specify /usr/lib as the location for libs g2c
     fi
   done
   if test $__sci_pass != "true"; then
-       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for fortran libraries only one library path may be specified (you had: /sw/lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: For specific SCI-TRY-LINK test for fortran libraries only one library path may be specified (you had: /sw/lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for fortran libraries only one library path may be specified (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: For specific SCI-TRY-LINK test for fortran libraries only one library path may be specified (you had: ).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
   fi
   # and only one include path:
@@ -17062,17 +17062,6 @@ for i in g2c; do
 done
 
 _sci_lib_path=
-
-for i in /sw/lib; do
-  # make sure it exists
-  if test -d $i; then
-    if test -z "$_sci_lib_path"; then
-      _sci_lib_path="$LDRUN_PREFIX$i -L$i"
-    else
-      _sci_lib_path="$_sci_lib_path $LDRUN_PREFIX$i -L$i"
-    fi
-  fi
-done
 
 CFLAGS="$_sci_includes $CFLAGS"
 CXXFLAGS="$_sci_includes $CXXFLAGS"
@@ -17119,9 +17108,9 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
 
-eval LIB_DIR_F='"/sw/lib"'
+eval LIB_DIR_F='""'
 
-if test "/sw/lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
+if test "" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval F_LIB_DIR_FLAG=''
 else
   eval F_LIB_DIR_FLAG='"$_sci_lib_path"'
@@ -17209,10 +17198,10 @@ echo "$as_me: error: Specificly requested fortran libraries include file '/$i' w
   done
   # Make sure the exact libraries were found
   for i in ""g2c; do
-#echo looking for /sw/lib/$i
-    if test ! -e /sw/lib/lib$i.so && test ! -e /sw/lib/lib$i.a; then
-     { { echo "$as_me:$LINENO: error: Specificly requested fortran libraries library file '/sw/lib/$i' was not found" >&5
-echo "$as_me: error: Specificly requested fortran libraries library file '/sw/lib/$i' was not found" >&2;}
+#echo looking for /$i
+    if test ! -e /lib$i.so && test ! -e /lib$i.a; then
+     { { echo "$as_me:$LINENO: error: Specificly requested fortran libraries library file '/$i' was not found" >&5
+echo "$as_me: error: Specificly requested fortran libraries library file '/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done

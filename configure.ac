@@ -2028,7 +2028,7 @@ case $host in
     ;;
   *-darwin*)
     # OSX Library Check
-    SCI_TRY_LINK(F,fortran libraries,,,g2c,/sw/lib,,,$_sci_optional)
+    SCI_TRY_LINK(F,fortran libraries,,,g2c,,,,$_sci_optional)
     ;;
   *)
     SCI_TRY_LINK(F,fortran libraries,,,F77,,,,$_sci_optional)
