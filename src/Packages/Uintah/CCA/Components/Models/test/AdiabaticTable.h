@@ -118,6 +118,8 @@ WARNING
       VarLabel* scalar_CCLabel;
       VarLabel* scalar_src_CCLabel;
       VarLabel* diffusionCoeffLabel;
+      VarLabel* varianceLabel;
+      VarLabel* scaledVarianceLabel;
       
       vector<Region*> regions;
       double diff_coeff;
@@ -153,6 +155,10 @@ WARNING
     int d_ref_cv_index;
     int d_ref_gamma_index;
     int d_ref_temp_index;
+
+    bool useVariance;
+    double varianceScale;
+    double varianceMax;
   };
 }
 

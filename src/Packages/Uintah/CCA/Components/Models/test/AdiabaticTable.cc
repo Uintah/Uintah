@@ -1,5 +1,8 @@
 // TODO
 // Use cp directly instead of cv/gamma
+// multimaterial checks in smagorisky
+// multimaterial checks in dynamic model
+// Avoid recomputation of variance
 
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
@@ -44,6 +47,7 @@ AdiabaticTable::AdiabaticTable(const ProcessorGroup* myworld,
                      ProblemSpecP& params)
   : ModelInterface(myworld), params(params)
 {
+  d_scalar = 0;
   d_matl_set = 0;
   lb  = scinew ICELabel();
   cumulativeEnergyReleased_CCLabel = VarLabel::create("cumulativeEnergyReleased", CCVariable<double>::getTypeDescription());
@@ -58,11 +62,15 @@ AdiabaticTable::~AdiabaticTable()
     delete d_matl_set;
   }
   
-  VarLabel::destroy(d_scalar->scalar_CCLabel);
-  if(d_scalar->scalar_src_CCLabel)
-    VarLabel::destroy(d_scalar->scalar_src_CCLabel);
-  VarLabel::destroy(d_scalar->diffusionCoeffLabel);
-  VarLabel::destroy(cumulativeEnergyReleased_CCLabel);
+  if(d_scalar){
+    VarLabel::destroy(d_scalar->scalar_CCLabel);
+    if(d_scalar->scalar_src_CCLabel)
+      VarLabel::destroy(d_scalar->scalar_src_CCLabel);
+    VarLabel::destroy(d_scalar->diffusionCoeffLabel);
+    VarLabel::destroy(cumulativeEnergyReleased_CCLabel);
+    VarLabel::destroy(d_scalar->varianceLabel);
+    VarLabel::destroy(d_scalar->scaledVarianceLabel);
+  }
   VarLabel::destroy(cumulativeEnergyReleased_src_CCLabel);
   delete lb;
   delete table;
@@ -112,11 +120,18 @@ if (!oldStyleAdvect.active()){
   d_matl_set->addAll(m);
   d_matl_set->addReference();
 
+  // Get parameters
+  params->getWithDefault("varianceScale", varianceScale, 0.0);
+  params->getWithDefault("varianceMax", varianceMax, 1.0);
+  useVariance = (varianceScale != 0.0);
+
   //__________________________________
   //setup the table
   string tablename = "adiabatic";
   table = TableFactory::readTable(params, tablename);
   table->addIndependentVariable("F");
+  if(useVariance)
+    table->addIndependentVariable("Fvar");
   
   for (ProblemSpecP child = params->findBlock("tableValue"); child != 0;
        child = child->findNextBlock("tableValue")) {
@@ -139,24 +154,41 @@ if (!oldStyleAdvect.active()){
   d_ref_temp_index  = table->addDependentVariable("reference_Temp");
   table->setup();
 
-#if 0
+#if 1
   ofstream out("graph.dat");
   int ng = 100;
-  vector<double> mm(1);
-  for(int i=0;i<=ng;i++){
-    double mix = i/(double)ng;
-    mm[0]=mix;
-    out << mix << " "
-        << table->interpolate(tmp_index, mm) << " "
-        << table->interpolate(d_temp_index, mm) << " "
-        << table->interpolate(d_density_index, mm) << " "
-        << table->interpolate(d_gamma_index, mm) << " "
-        << table->interpolate(d_cv_index, mm) << " "
-        << table->interpolate(d_viscosity_index, mm) << " "
-        << table->interpolate(d_thermalcond_index, mm) << " "
-        << table->interpolate(d_ref_cv_index, mm) << " "
-        << table->interpolate(d_ref_gamma_index, mm) << " "
-        << table->interpolate(d_ref_temp_index, mm) << "\n";
+  vector<double> mm;
+  int nv;
+  if(useVariance){
+    mm.resize(2);
+    nv = 10;
+  } else {
+    mm.resize(1);
+    nv = 0;
+  }
+  for(int j=0;j<=nv;j++){
+    if(useVariance)
+      mm[1] = j/(double)nv;
+    for(int i=0;i<=ng;i++){
+      double mix = i/(double)ng;
+      mm[0]=mix;
+      double pressure = table->interpolate(d_temp_index, mm) 
+        * table->interpolate(d_cv_index, mm)
+        * (table->interpolate(d_gamma_index, mm)-1)
+        * table->interpolate(d_density_index, mm);
+      out << mix << " "
+          << table->interpolate(d_temp_index, mm) << " "
+          << pressure << " "
+          << table->interpolate(d_density_index, mm) << " "
+          << table->interpolate(d_gamma_index, mm) << " "
+          << table->interpolate(d_cv_index, mm) << " "
+          << table->interpolate(d_viscosity_index, mm) << " "
+          << table->interpolate(d_thermalcond_index, mm) << " "
+          << table->interpolate(d_ref_cv_index, mm) << " "
+          << table->interpolate(d_ref_gamma_index, mm) << " "
+          << table->interpolate(d_ref_temp_index, mm) << "\n";
+    }
+    out << '\n';
   }
 #endif
 
@@ -171,6 +203,8 @@ if (!oldStyleAdvect.active()){
   
   const TypeDescription* td_CCdouble = CCVariable<double>::getTypeDescription();
   d_scalar->scalar_CCLabel =     VarLabel::create("scalar-f",       td_CCdouble);
+  d_scalar->varianceLabel = VarLabel::create("scalar-f-variance", td_CCdouble);
+  d_scalar->scaledVarianceLabel = VarLabel::create("scalar-f-scaledvariance", td_CCdouble);
   d_scalar->diffusionCoeffLabel = VarLabel::create("scalar-diffCoeff",td_CCdouble);
   d_modelComputesThermoTransportProps = true;
   
@@ -319,6 +353,13 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
     // initialize other properties
     vector<constCCVariable<double> > ind_vars;
     ind_vars.push_back(f);
+    if(useVariance){
+      // Variance is zero for initialization
+      CCVariable<double> variance;
+      new_dw->allocateTemporary(variance, patch);
+      variance.initialize(0);
+      ind_vars.push_back(variance);
+    }
 
     // Save the volume fraction so that we can back out rho later
     CCVariable<double> volfrac;
@@ -329,7 +370,9 @@ void AdiabaticTable::initialize(const ProcessorGroup*,
     }
     
     CellIterator iter = patch->getExtraCellIterator();
+    cerr << "Interpolating density, vars=" << ind_vars.size() << '\n';
     table->interpolate(d_density_index,   rho_micro,   iter, ind_vars);
+    cerr << "done Interpolating density\n";
     table->interpolate(d_gamma_index,     gamma,    iter, ind_vars);
     table->interpolate(d_cv_index,        cv,       iter, ind_vars);
     table->interpolate(d_viscosity_index, viscosity,iter, ind_vars);
@@ -400,6 +443,10 @@ void AdiabaticTable::scheduleModifyThermoTransportProperties(SchedulerP& sched,
   t->modifies(lb->gammaLabel);
   t->modifies(lb->thermalCondLabel);
   t->modifies(lb->viscosityLabel);
+  if(useVariance){
+    t->requires(Task::NewDW, d_scalar->varianceLabel, Ghost::None, 0);
+    t->computes(d_scalar->scaledVarianceLabel);
+  }
   //t->computes(d_scalar->diffusionCoefLabel);
   sched->addTask(t, level->eachPatch(), d_matl_set);
 }
@@ -434,13 +481,36 @@ void AdiabaticTable::modifyThermoTransportProperties(const ProcessorGroup*,
     
     vector<constCCVariable<double> > ind_vars;
     ind_vars.push_back(f_old);
+    CCVariable<double> scaledvariance;
+    if(useVariance){
+      constCCVariable<double> variance;
+      new_dw->get(variance, d_scalar->varianceLabel, indx, patch,
+                  Ghost::None, 0);
+      
+      // This is put into the DW instead of allocated as a temporary
+      // so that we can save it.
+      new_dw->allocateAndPut(scaledvariance, d_scalar->scaledVarianceLabel,
+                             indx, patch);
+      for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
+        const IntVector& c = *iter;
+        double denom = f_old[c] * (1-f_old[c]);
+        if(denom < 1.e-20)
+          denom = 1.e-20;
+        double sv = variance[c] / denom;
+        if(sv < 0)
+          sv = 0;
+        else if(sv > varianceMax)
+          sv = varianceMax;
+        scaledvariance[c] = sv;
+      }
+      ind_vars.push_back(scaledvariance);
+    }
     
     CellIterator iter = patch->getExtraCellIterator();
     table->interpolate(d_gamma_index,     gamma,    iter, ind_vars);
     table->interpolate(d_cv_index,        cv,       iter, ind_vars);
     table->interpolate(d_viscosity_index, viscosity,iter, ind_vars);
     table->interpolate(d_thermalcond_index, thermalCond, iter, ind_vars);
-
     //diffusionCoeff.initialize(d_scalar->diff_coeff);
   }
 } 
@@ -469,6 +539,27 @@ void AdiabaticTable::computeSpecificHeat(CCVariable<double>& cv_new,
   // interpolate cv
   vector<constCCVariable<double> > ind_vars;
   ind_vars.push_back(f);
+  CCVariable<double> scaledvariance;
+  if(useVariance){
+    constCCVariable<double> variance;
+    new_dw->get(variance, d_scalar->varianceLabel, indx, patch, Ghost::None, 0);
+
+    new_dw->allocateTemporary(scaledvariance, patch);
+    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++){
+      const IntVector& c = *iter;
+      double denom = f[c] * (1-f[c]);
+      if(denom < 1.e-20)
+        denom = 1.e-20;
+      double sv = variance[c] / denom;
+      if(sv < 0)
+        sv = 0;
+      else if(sv > varianceMax)
+        sv = varianceMax;
+      scaledvariance[c] = sv;
+    }
+        
+    ind_vars.push_back(scaledvariance);
+  }
   table->interpolate(d_cv_index, cv_new, patch->getExtraCellIterator(),
                      ind_vars);
 } 
@@ -499,6 +590,8 @@ void AdiabaticTable::scheduleComputeModelSources(SchedulerP& sched,
   t->modifies(cumulativeEnergyReleased_src_CCLabel);
   if(d_scalar->scalar_src_CCLabel)
     t->modifies(d_scalar->scalar_src_CCLabel);
+  if(useVariance)
+    t->requires(Task::NewDW, d_scalar->varianceLabel, Ghost::None, 0);
 
   // Interpolated table values
   for(int i=0;i<(int)tablevalues.size();i++){
@@ -553,8 +646,31 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
       //  grab values from the tables
       vector<constCCVariable<double> > ind_vars;
       ind_vars.push_back(f_old);
+      CCVariable<double> scaledvariance;
+      if(useVariance){
+        constCCVariable<double> variance;
+        new_dw->get(variance, d_scalar->varianceLabel, matl, patch, gn, 0);
+
+        new_dw->allocateTemporary(scaledvariance, patch);
+        for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
+          const IntVector& c = *iter;
+          double denom = f_old[c] * (1-f_old[c]);
+          if(denom < 1.e-20)
+            denom = 1.e-20;
+          double sv = variance[c] / denom;
+          if(sv < 0)
+            sv = 0;
+          else if(sv > varianceMax)
+            sv = varianceMax;
+          scaledvariance[c] = sv;
+        }
+        
+        ind_vars.push_back(scaledvariance);
+      }
+
       CellIterator iter = patch->getCellIterator();
       table->interpolate(d_temp_index,  flameTemp,  iter, ind_vars);
+
       CCVariable<double> ref_temp;
       new_dw->allocateTemporary(ref_temp, patch); 
       table->interpolate(d_ref_temp_index, ref_temp, iter, ind_vars);
@@ -580,7 +696,8 @@ void AdiabaticTable::computeModelSources(const ProcessorGroup*,
       double cpsum = 0;
       double masssum=0;
 #endif
-      
+      int numclip = 0;
+      double maxrelease = 0;
       for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++){
         IntVector c = *iter;
 
