@@ -79,8 +79,8 @@ LatVolMesh::get_center(Point &result, cell_index idx) const
   get_nodes(nodes,idx);
 
   // convert the min and max nodes of the cell into object space points
-  get_point(min,nodes[0]);
-  get_point(max,nodes[7]);
+  get_point(min,nodes[0]); // node 0 = min
+  get_point(max,nodes[6]); // node 6 = max
 
   // return the point half way between min and max
   result.x(min.x()+(max.x()-min.x())*.5);

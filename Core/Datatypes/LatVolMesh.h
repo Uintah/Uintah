@@ -207,7 +207,7 @@ public:
   //! get the child elements of the given index
   void get_nodes(node_array &, edge_index) const {}
   void get_nodes(node_array &, face_index) const {}
-  void get_nodes(node_array &array, cell_index idx) const;
+  void get_nodes(node_array &, cell_index) const;
   void get_edges(edge_array &, face_index) const {}
   void get_edges(edge_array &, cell_index) const {}
   void get_faces(face_array &, cell_index) const {}
@@ -225,19 +225,19 @@ public:
   void get_neighbor(cell_index &, face_index) const {}
 
   //! get the center point (in object space) of an element
-  void get_center(Point &result, node_index idx) const;
+  void get_center(Point &, node_index) const;
   void get_center(Point &, edge_index) const {}
   void get_center(Point &, face_index) const {}
-  void get_center(Point &result, cell_index idx) const;
+  void get_center(Point &, cell_index) const;
 
-  bool locate(node_index &node, const Point &p) const;
+  bool locate(node_index &, const Point &) const;
   bool locate(edge_index &, const Point &) const { return false; }
   bool locate(face_index &, const Point &) const { return false; }
-  bool locate(cell_index &cell, const Point &p) const;
+  bool locate(cell_index &, const Point &) const;
 
   void unlocate(Point &result, const Point &p) const { result =  p; };
 
-  void get_point(Point &result, node_index index) const;
+  void get_point(Point &, node_index) const;
 
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
