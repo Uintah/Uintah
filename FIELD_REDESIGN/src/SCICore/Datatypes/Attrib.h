@@ -64,7 +64,7 @@ public:
   std::string get_name(){return name;};
 
   /////////
-  //
+  // Get information about the attribute
   virtual string get_info() =0;
   
 protected:

@@ -39,20 +39,6 @@ GenSField<T,G,A>::GenSField(const GenSField&)
 }
 
 template <class T, class G, class A >
-bool GenSField<T,G,A>::resize(int a, int b, int c)
-{
-  LatticeGeom* lgeom = geom->get_latticegeom();
-  if (lgeom && attrib.get_rep()) {
-    lgeom->resize(a, b, c);
-    attrib->resize(a, b, c);
-    return true;
-  }
-  else{
-    return false;
-  }
-}
-
-template <class T, class G, class A >
 const T& GenSField<T,G,A>::grid(int x, int y, int z) const
 {
   A* typedattrib = attrib.get_rep();
@@ -130,48 +116,6 @@ bool GenSField<T,G,A>::get_bbox(BBox& bbox)
       return 0;
     }
 }
-
-
-template <class T, class G, class A >
-bool GenSField<T,G,A>::set_bbox(const BBox& bbox)
-{
-  if (geom.get_rep())
-    {
-      if(geom->set_bbox(bbox))
-	{
-	  return 1;
-	}
-      else
-	{
-	  return 0;
-	}
-    }
-  else
-    {
-      return 0;
-    }
-}
-
-template <class T, class G, class A >
-bool GenSField<T,G,A>::set_bbox(const Point& p1, const Point& p2)
-{
-  if (geom.get_rep())
-    {
-      if(geom->set_bbox(p1, p2))
-	{
-	  return 1;
-	}
-      else
-	{
-	  return 0;
-	}
-    }
-  else
-    {
-      return 0;
-    }
-}
-
 
 template <class T> struct MinMaxFunctor : public AttribFunctor<T>
 {

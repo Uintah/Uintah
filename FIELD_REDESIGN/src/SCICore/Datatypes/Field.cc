@@ -12,7 +12,7 @@
 
 namespace SCICore{
 namespace Datatypes{
-
+  
 PersistentTypeID Field::type_id("Field", "Datatype", 0);
 
 Field::Field(){

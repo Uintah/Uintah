@@ -1,4 +1,4 @@
-//  MeshGeom.cc - A group of Tets in 3 space
+//  PointCloudGeom.cc - A group of Nodes in 3 space
 //
 //  Written by:
 //   Eric Kuehne
@@ -8,29 +8,33 @@
 //
 //  Copyright (C) 2000 SCI Institute
 
-#include <SCICore/Datatypes/MeshGeom.h>
+#include <SCICore/Datatypes/PointCloudGeom.h>
 
 namespace SCICore{
 namespace Datatypes{
 
-PersistentTypeID MeshGeom::type_id("MeshGeom", "Datatype", 0);
+PersistentTypeID PointCloudGeom::type_id("PointCloudGeom", "Datatype", 0);
 
-DebugStream MeshGeom::dbg("MeshGeom", true);
+DebugStream PointCloudGeom::dbg("PointCloudGeom", true);
 
-MeshGeom::MeshGeom():
+PointCloudGeom::PointCloudGeom(const vector<NodeSimp>& inodes):
   has_bbox(0)
 {
+  nodes = inodes;
 }
 
-string MeshGeom::get_info(){
+PointCloudGeom::~PointCloudGeom(){
+}
+
+string PointCloudGeom::get_info(){
   ostringstream retval;
   retval << "name = " << name << endl;
   return retval.str();
 }
 
-bool MeshGeom::compute_bbox(){
+bool PointCloudGeom::compute_bbox(){
   //compute diagnal and bbox
-  dbg << "calling meshgeom::compute_bbox()" << endl;
+  dbg << "calling PointCloudgeom::compute_bbox()" << endl;
   
   if(nodes.empty()){
     return false;
@@ -49,12 +53,12 @@ bool MeshGeom::compute_bbox(){
   return true;
 }
   
-void MeshGeom::set_nodes(const vector<NodeSimp>& inodes){
+void PointCloudGeom::set_nodes(const vector<NodeSimp>& inodes){
   nodes.clear();
   nodes = inodes;
 }
 
-void MeshGeom::io(Piostream&){
+void PointCloudGeom::io(Piostream&){
 }
 
 

@@ -44,9 +44,7 @@ public:
   // Used by SFieldHandle to obtain a SField*
   inline SField* get_base() {return this;};
 
-  //////////
-  // Return the min and max values
-  virtual bool get_minmax(double&, double&) = 0;
+  virtual bool get_minmax(double &imin, double &imax) = 0;
 
   //////////
   // Persistent representation...

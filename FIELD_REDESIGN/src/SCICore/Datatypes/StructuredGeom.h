@@ -38,7 +38,8 @@ class SCICORESHARE StructuredGeom:public Geom{
 public:
   
   virtual ~StructuredGeom(){ };
-  
+  virtual void set_bbox(const BBox&) = 0;
+  virtual void set_bbox(const Point&, const Point&) = 0;
 
 protected:
   
