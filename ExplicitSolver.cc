@@ -811,14 +811,24 @@ ExplicitSolver::sched_probeData(SchedulerP& sched, const PatchSet* patches,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
     tsk->requires(Task::NewDW, d_MAlab->integTemp_CCLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
+
     tsk->requires(Task::NewDW, d_MAlab->totHT_CCLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
+
     tsk->requires(Task::NewDW, d_MAlab->totHT_FCXLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
     tsk->requires(Task::NewDW, d_MAlab->totHT_FCYLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
     tsk->requires(Task::NewDW, d_MAlab->totHT_FCZLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
+
+    tsk->requires(Task::NewDW, d_MAlab->totHtFluxXLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_MAlab->totHtFluxYLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::NewDW, d_MAlab->totHtFluxZLabel,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+
   }
 
   sched->addTask(tsk, patches, matls);
@@ -889,19 +899,32 @@ ExplicitSolver::probeData(const ProcessorGroup* ,
     constSFCXVariable<double> totalHT_FCX;
     constSFCYVariable<double> totalHT_FCY;
     constSFCZVariable<double> totalHT_FCZ;
+    constSFCXVariable<double> totHtFluxX;
+    constSFCYVariable<double> totHtFluxY;
+    constSFCZVariable<double> totHtFluxZ;
     if (d_MAlab) {
       new_dw->get(gasfraction, d_lab->d_mmgasVolFracLabel, matlIndex, patch, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
       new_dw->get(tempSolid, d_MAlab->integTemp_CCLabel, matlIndex, patch, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
+
       new_dw->get(totalHT, d_MAlab->totHT_CCLabel, matlIndex, patch, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
+
       new_dw->get(totalHT_FCX, d_MAlab->totHT_FCXLabel, matlIndex, patch, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
       new_dw->get(totalHT_FCY, d_MAlab->totHT_FCYLabel, matlIndex, patch, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
       new_dw->get(totalHT_FCZ, d_MAlab->totHT_FCZLabel, matlIndex, patch, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
+
+      new_dw->get(totHtFluxX, d_MAlab->totHtFluxXLabel, matlIndex, patch, 
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->get(totHtFluxY, d_MAlab->totHtFluxYLabel, matlIndex, patch, 
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+      new_dw->get(totHtFluxZ, d_MAlab->totHtFluxZLabel, matlIndex, patch, 
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+
     }
 
     constCCVariable<double> temperature;
@@ -935,10 +958,13 @@ ExplicitSolver::probeData(const ProcessorGroup* ,
 	  cerr.precision(16);
 	  cerr << "gas vol fraction: " << gasfraction[*iter] << endl;
 	  cerr << " Solid Temperature at Location " << *iter << " At time " << time << ","<< tempSolid[*iter] << endl;
-	  cerr << " Total Heat Flux at Location " << *iter << " At time " << time << ","<< totalHT[*iter] << endl;
-	  cerr << " Total X-Dir Heat Flux at Location " << *iter << " At time " << time << ","<< totalHT_FCX[*iter] << endl;
-	  cerr << " Total Y-Dir Heat Flux at Location " << *iter << " At time " << time << ","<< totalHT_FCY[*iter] << endl;
-	  cerr << " Total Z-Dir Heat Flux at Location " << *iter << " At time " << time << ","<< totalHT_FCZ[*iter] << endl;
+	  cerr << " Total Heat Rate at Location " << *iter << " At time " << time << ","<< totalHT[*iter] << endl;
+	  cerr << " Total X-Dir Heat Rate at Location " << *iter << " At time " << time << ","<< totalHT_FCX[*iter] << endl;
+	  cerr << " Total Y-Dir Heat Rate at Location " << *iter << " At time " << time << ","<< totalHT_FCY[*iter] << endl;
+	  cerr << " Total Z-Dir Heat Rate at Location " << *iter << " At time " << time << ","<< totalHT_FCZ[*iter] << endl;
+	  cerr << " Total X-Dir Heat Flux at Location " << *iter << " At time " << time << ","<< totHtFluxX[*iter] << endl;
+	  cerr << " Total Y-Dir Heat Flux at Location " << *iter << " At time " << time << ","<< totHtFluxY[*iter] << endl;
+	  cerr << " Total Z-Dir Heat Flux at Location " << *iter << " At time " << time << ","<< totHtFluxZ[*iter] << endl;
 	}
 
       }
