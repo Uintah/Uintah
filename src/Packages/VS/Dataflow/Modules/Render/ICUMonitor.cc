@@ -137,6 +137,7 @@ private:
       clamp_(0),
       lines_(0),
       draw_aux_data_(0),
+		use_plot_color_(0),
       auxindex_(-1),
       min_(0.0),
       max_(1.0),
@@ -159,6 +160,7 @@ private:
     int       clamp_;
     int       lines_;
     int       draw_aux_data_;
+    int       use_plot_color_;
     int       auxindex_;
     float     min_;
     float     max_;
@@ -203,6 +205,7 @@ private:
   vector<GuiInt*>                      gui_clamp_;
   vector<GuiInt*>                      gui_lines_;
   vector<GuiInt*>                      gui_draw_aux_data_;
+  vector<GuiInt*>                      gui_use_plot_color_;
   vector<GuiInt*>                      gui_auxidx_;
   vector<GuiDouble*>                   gui_red_;
   vector<GuiDouble*>                   gui_green_;
@@ -601,6 +604,7 @@ ICUMonitor::synch_plot_vars(int s)
   clear_vector(gui_clamp_, s);
   clear_vector(gui_lines_, s);
   clear_vector(gui_draw_aux_data_, s);
+  clear_vector(gui_use_plot_color_, s);
   clear_vector(gui_auxidx_, s);
   clear_vector(gui_red_, s);
   clear_vector(gui_green_, s);
@@ -739,6 +743,10 @@ ICUMonitor::init_plots()
       gui_draw_aux_data_[i] = scinew GuiInt(ctx->subVar("draw_aux_data-" + num));
     }
     g.draw_aux_data_ = gui_draw_aux_data_[i]->get();
+    if (! gui_use_plot_color_[i]) {
+      gui_use_plot_color_[i] = scinew GuiInt(ctx->subVar("use_plot_color-" + num));
+    }
+    g.use_plot_color_ = gui_use_plot_color_[i]->get();
 
     if (! gui_red_[i]) {
       gui_red_[i] = scinew GuiDouble(ctx->subVar("plot_color-" + num + "-r"));
@@ -887,8 +895,10 @@ ICUMonitor::draw_plots()
       g.label_->draw((cur_x + (w*cw)) - xoff, cur_y, sx, sy);
     }
 
-    //glColor4f(g.r_, g.g_, g.b_, 1.0);
-    glColor4f(1.0, 1.0, 1.0, 1.0);
+	 if (g.use_plot_color_ == 1) 
+      glColor4f(g.r_, g.g_, g.b_, 1.0);
+	 else
+      glColor4f(1.0, 1.0, 1.0, 1.0);
 
     if (g.draw_aux_data_ == 1) { 
       if (g.aux_data_label_)

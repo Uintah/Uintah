@@ -446,6 +446,9 @@ itcl_class VS_Render_ICUMonitor {
 	    checkbutton  $w.add.f.draw_aux_data -text "Draw Derived Data" \
 		-padx 6 -justify left -relief flat -variable \
 		$this-draw_aux_data-$v -onvalue 1 -offvalue 0 -anchor w
+	    checkbutton  $w.add.f.use_plot_color -text "Use Plot Color" \
+		-padx 6 -justify left -relief flat -variable \
+		$this-use_plot_color-$v -onvalue 1 -offvalue 0 -anchor w
 
 	    frame $w.add.f.col -borderwidth 2
 	    addColorSelection $w.add.f.col "Plot Color" $this-plot_color-$v  \
@@ -460,6 +463,7 @@ itcl_class VS_Render_ICUMonitor {
 		$w.add.f.idxl \
 		$w.add.f.idx $w.add.f.trace $w.add.f.adl $w.add.f.ad \
 		$w.add.f.auxidxl $w.add.f.auxidx $w.add.f.draw_aux_data \
+		$w.add.f.use_plot_color \
 		$w.add.f.col -side top -fill x -padx 2 -pady 2
 
 	    pack $w.add.f -side top -fill x -padx 2 -pady 2
