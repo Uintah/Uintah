@@ -119,7 +119,7 @@ ScalarSolver::solve(const LevelP& level,
 
   //computes stencil coefficients and source terms
   // requires : scalarSP, [u,v,w]VelocityMS, densitySIVBC, viscosityCTS
-  // computes : scalarCoefSBLM, scalarLinSrcSBLM, scalarNonLinSrcSBLM
+  // computes : scalCoefSBLM, scalLinSrcSBLM, scalNonLinSrcSBLM
   //sched_buildLinearMatrix(level, sched, new_dw, matrix_dw, delta_t, index);
   sched_buildLinearMatrix(level, sched, old_dw, new_dw, delta_t, index);
     
@@ -227,6 +227,9 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.13  2000/06/28 08:14:53  bbanerje
+// Changed the init routines a bit.
+//
 // Revision 1.12  2000/06/22 23:06:37  bbanerje
 // Changed velocity related variables to FCVariable type.
 // ** NOTE ** We may need 3 types of FCVariables (one for each direction)

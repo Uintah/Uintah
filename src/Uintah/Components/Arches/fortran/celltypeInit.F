@@ -52,36 +52,43 @@ c*********************************************************************
 c     Locals :
 c*********************************************************************
       integer i, j, k
-      integer iBegGhost, iEndGhost, iBegActual, iEndActual
-      integer jBegGhost, jEndGhost, jBegActual, jEndActual
-      integer kBegGhost, kEndGhost, kBegActual, kEndActual
+      integer iBeg, iEnd
+      integer jBeg, jEnd
+      integer kBeg, kEnd
 
-c*********************************************************************
-c     Get the indices of interest
-c*********************************************************************
-      iBegGhost = domainLow(1)
-      jBegGhost = domainLow(2)
-      kBegGhost = domainLow(3)
-      iBegActual = indexLow(1)
-      jBegActual = indexLow(2)
-      kBegActual = indexLow(3)
-      iEndGhost = domainHigh(1)
-      jEndGhost = domainHigh(2)
-      kEndGhost = domainHigh(3)
-      iEndActual = indexHigh(1)
-      jEndActual = indexHigh(2)
-      kEndActual = indexHigh(3)
+C-----------------------------------------------------------------------
+C     Set up the locals
+C-----------------------------------------------------------------------
+      iBeg = indexLow(1)
+      jBeg = indexLow(2)
+      kBeg = indexLow(3)
+      iEnd = indexHigh(1)
+      jEnd = indexHigh(2)
+      kEnd = indexHigh(3)
 
 C-----------------------------------------------------------------------
 C     INITIALIZE ALL CARDINAL VARIABLES  
 C-----------------------------------------------------------------------
-      DO 300 K = kBegGhost,kEndGhost
-         DO 200 J = jBegGhost,jEndGhost
-            DO 100 I = iBegGhost,iEndGhost
+      print *, 'In Fortran : celltype val = ',cellval
+      DO 300 K = kBeg,kEnd
+         DO 200 J = jBeg,jEnd
+            DO 100 I = iBeg,iEnd
                PCELL(I,J,K) = CELLVAL
  100        CONTINUE
  200     CONTINUE
  300  CONTINUE
+
+C-----------------------------------------------------------------------
+C     TESTING
+C-----------------------------------------------------------------------
+      print *, 'In Fortran : '
+      DO 900 K = kBeg,kEnd
+         DO 800 J = jBeg,jEnd
+            DO 700 I = iBeg,iEnd
+               write(*,'(3i4," : PCELL = ",i5)') i, j, k, PCELL(i,j,k)
+ 700        CONTINUE
+ 800     CONTINUE
+ 900  CONTINUE
 
       RETURN
       END
@@ -89,6 +96,9 @@ C-----------------------------------------------------------------------
 c*********************************************************************
 c
 c $Log$
+c Revision 1.2  2000/06/28 08:14:55  bbanerje
+c Changed the init routines a bit.
+c
 c Revision 1.1  2000/06/14 23:07:59  bbanerje
 c Added celltypeInit.F and sub.mk
 c
