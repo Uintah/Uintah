@@ -43,13 +43,11 @@
 #ifndef SCI_project_Plane_h
 #define SCI_project_Plane_h 1
 
-#include <Core/share/share.h>
-
 #include <Core/Geometry/Vector.h>
 
 namespace SCIRun {
   class Point;
-class SCICORESHARE Plane {
+class Plane {
    Vector n;
    double d;
 public:

@@ -51,7 +51,7 @@ namespace SCIRun {
 class Piostream;
 
 
-class SCICORESHARE Ray {
+class Ray {
     Point o_;
     Vector d_;
 public:
@@ -88,7 +88,7 @@ public:
   void normalize(); //! normalizes the direction vector d
   void direction(const Vector& newdir); //! changes d
 
-  friend SCICORESHARE void Pio( Piostream&, Ray&);
+  friend void Pio( Piostream&, Ray&);
 };
 
 

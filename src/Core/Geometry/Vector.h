@@ -43,7 +43,6 @@
 #ifndef Geometry_Vector_h
 #define Geometry_Vector_h 1
 
-#include <Core/share/share.h>
 
 #include <Core/Util/Assert.h>
 #include <Core/Math/Expon.h>
@@ -61,7 +60,7 @@ class Piostream;
 class Point;
 class TypeDescription;
 
-class SCICORESHARE Vector {
+class Vector {
   double _x,_y,_z;
 public:
   inline explicit Vector(const Point&);
@@ -72,9 +71,9 @@ public:
   inline explicit Vector(double init) : _x(init), _y(init), _z(init) {}
   inline double length() const;
   inline double length2() const;
-  friend SCICORESHARE inline double Dot(const Vector&, const Vector&);
-  friend SCICORESHARE inline double Dot(const Point&, const Vector&);
-  friend SCICORESHARE inline double Dot(const Vector&, const Point&);
+  friend inline double Dot(const Vector&, const Vector&);
+  friend inline double Dot(const Point&, const Vector&);
+  friend inline double Dot(const Vector&, const Point&);
   inline Vector& operator=(const Vector&);
 
 #ifdef COMMENT_OUT
@@ -127,8 +126,8 @@ public:
   inline double normalize();
   inline double safe_normalize();
   Vector normal() const;
-  friend SCICORESHARE inline Vector Cross(const Vector&, const Vector&);
-  friend SCICORESHARE inline Vector Abs(const Vector&);
+  friend inline Vector Cross(const Vector&, const Vector&);
+  friend inline Vector Abs(const Vector&);
   inline void x(double);
   inline double x() const;
   inline void y(double);
@@ -153,12 +152,12 @@ public:
   friend class Point;
   friend class Transform;
     
-  friend SCICORESHARE inline Vector Interpolate(const Vector&, const Vector&, double);
+  friend inline Vector Interpolate(const Vector&, const Vector&, double);
     
   void find_orthogonal(Vector&, Vector&) const;
   bool check_find_orthogonal(Vector&, Vector&) const;
 
-  friend SCICORESHARE void Pio( Piostream&, Vector& );
+  friend void Pio( Piostream&, Vector& );
 
   inline const Point &point() const;
   inline Point &asPoint() const;
@@ -198,8 +197,8 @@ public:
       
 };
 
-SCICORESHARE std::ostream& operator<<(std::ostream& os, const Vector& p);
-SCICORESHARE std::istream& operator>>(std::istream& os, Vector& p);
+std::ostream& operator<<(std::ostream& os, const Vector& p);
+std::istream& operator>>(std::istream& os, Vector& p);
 
 } // End namespace SCIRun
 
@@ -453,14 +452,14 @@ inline Point &Vector::asPoint() const {
 }
 
 
-inline SCICORESHARE Vector Min(const Vector &v1, const Vector &v2)
+inline Vector Min(const Vector &v1, const Vector &v2)
 {
   return Vector(Min(v1.x(), v2.x()),
 		Min(v1.y(), v2.y()),
 		Min(v1.z(), v2.z()));
 }
 
-inline SCICORESHARE Vector Max(const Vector &v1, const Vector &v2)
+inline Vector Max(const Vector &v1, const Vector &v2)
 {
   return Vector(Max(v1.x(), v2.x()),
 		Max(v1.y(), v2.y()),

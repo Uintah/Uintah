@@ -43,7 +43,6 @@
 #ifndef Geometry_Polygon_h
 #define Geometry_Polygon_h 1
 
-#include <Core/share/share.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Geometry/Point.h>
 #include <sgi_stl_warnings_off.h>
@@ -87,7 +86,7 @@ using std::vector;
 ****************************************/
 
 
-class SCICORESHARE Polygon {
+class Polygon {
   vector<Point> vertices;
   vector<Point> texcoords;
 public:
@@ -149,7 +148,7 @@ private:
   Polygon(){};
 };
 
-SCICORESHARE std::ostream& operator<<(std::ostream& os, const Polygon& p);
+std::ostream& operator<<(std::ostream& os, const Polygon& p);
 
 } // End namespace SCIRun
 

@@ -43,10 +43,6 @@
 #ifndef SCI_project_Grid_h
 #define SCI_project_Grid_h 1
 
-#include <Core/share/share.h>
-
-#include <Core/share/share.h>
-
 #include <Core/Containers/Array1.h>
 #include <Core/Containers/Array3.h>
 #include <Core/Containers/LockingHandle.h>
@@ -58,7 +54,7 @@
 namespace SCIRun {
 
 
-class SCICORESHARE Grid {
+class Grid {
     double spacing;
     Point min;
     Array3<Array1<int> *> *e;
