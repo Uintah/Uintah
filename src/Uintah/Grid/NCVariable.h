@@ -132,7 +132,7 @@ WARNING
      // Use to apply symmetry boundary conditions.  On the
      // indicated face, replace the component of the vector
      // normal to the face with 0.0
-     void fillFaceNormal(Region::FaceType)
+     void fillFaceNormal(Region::FaceType face)
        {
 	 IntVector low = getLowIndex();
 	 IntVector hi = getHighIndex();
@@ -141,7 +141,8 @@ WARNING
 	   for (int j = low.y(); j<hi.y(); j++) {
 	     for (int k = low.z(); k<hi.z(); k++) {
 		(*this)[IntVector(hi.x()-1,j,k)] =
-				Vector(0.0,(*this).y(),(*this).z());
+		Vector(0.0,(*this)[IntVector(hi.x()-1,j,k)].y(),
+				(*this)[IntVector(hi.x()-1,j,k)].z());
 	     }
 	   }
 	   break;
@@ -149,7 +150,8 @@ WARNING
 	   for (int j = low.y(); j<hi.y(); j++) {
 	     for (int k = low.z(); k<hi.z(); k++) {
 	       (*this)[IntVector(low.x(),j,k)] = 
-				Vector(0.0,(*this).y(),(*this).z());
+		Vector(0.0,(*this)[IntVector(low.x(),j,k)].y(),
+				(*this)[IntVector(low.x(),j,k)].z());
 	     }
 	   }
 	   break;
@@ -157,7 +159,8 @@ WARNING
 	   for (int i = low.x(); i<hi.x(); i++) {
 	     for (int k = low.z(); k<hi.z(); k++) {
 	       (*this)[IntVector(i,hi.y()-1,k)] =
-				Vector((*this).x(),0.0,(*this).z());
+		Vector((*this)[IntVector(i,hi.y()-1,k)].x(),0.0,
+				(*this)[IntVector(i,hi.y()-1,k)].z());
 	     }
 	   }
 	   break;
@@ -165,7 +168,8 @@ WARNING
 	   for (int i = low.x(); i<hi.x(); i++) {
 	     for (int k = low.z(); k<hi.z(); k++) {
 	       (*this)[IntVector(i,low.y(),k)] =
-				Vector((*this).x(),0.0,(*this).z());
+		Vector((*this)[IntVector(i,low.y(),k)].x(),0.0,
+				(*this)[IntVector(i,low.y(),k)].z());
 	     }
 	   }
 	   break;
@@ -173,7 +177,8 @@ WARNING
 	   for (int i = low.x(); i<hi.x(); i++) {
 	     for (int j = low.y(); j<hi.y(); j++) {
 	       (*this)[IntVector(i,j,hi.z()-1)] =
-				Vector((*this).x(),(*this).y(),0.0);
+		Vector((*this)[IntVector(i,j,hi.z()-1)].x(),
+				(*this)[IntVector(i,j,hi.z()-1)].y(),0.0);
 	     }
 	   }
 	   break;
@@ -181,7 +186,8 @@ WARNING
 	   for (int i = low.x(); i<hi.x(); i++) {
 	     for (int j = low.y(); j<hi.y(); j++) {
 		(*this)[IntVector(i,j,low.z())] =
-				Vector((*this).x(),(*this).y(),0.0);
+		Vector((*this)[IntVector(i,j,low.z())].x(),
+				(*this)[IntVector(i,j,low.z())].y(),0.0);
 	     }
 	   }
 	   break;
@@ -296,6 +302,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.20  2000/05/19 00:37:29  guilkey
+// Tested and fixed fillFaceNormal.
+//
 // Revision 1.19  2000/05/18 23:01:28  guilkey
 // Filled in fillFaceNormal.  Haven't tested it yet, but will soon.
 //
