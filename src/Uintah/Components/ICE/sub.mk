@@ -9,13 +9,16 @@ SRCDIR   := Uintah/Components/ICE
 
 SRCS     += $(SRCDIR)/ICE.cc
 
-PSELIBS := Uintah/Interface Uintah/Grid
+PSELIBS := Uintah/Interface Uintah/Grid SCICore/Exceptions
 LIBS := $(XML_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.4  2000/05/30 19:36:40  dav
+# added SCICore/Exceptions to PSELIBS
+#
 # Revision 1.3  2000/04/12 22:58:43  sparker
 # Added xerces to link line
 #
