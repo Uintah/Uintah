@@ -32,6 +32,7 @@
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/LatVolField.h>
 #include <Core/Datatypes/MaskedLatVolField.h>
+#include <Core/Datatypes/MRLatVolField.h>
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 /*
@@ -113,6 +114,9 @@ const TypeDescription* get_type_description(MaskedLatVolField<char> *);
 const TypeDescription* get_type_description(MaskedLatVolField<unsigned int> *);
 const TypeDescription* get_type_description(MaskedLatVolField<unsigned short> *);
 const TypeDescription* get_type_description(MaskedLatVolField<unsigned char> *);
+
+template class MRLatVolField<double>;
+const TypeDescription* get_type_description(MRLatVolField<double> *);
 
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
