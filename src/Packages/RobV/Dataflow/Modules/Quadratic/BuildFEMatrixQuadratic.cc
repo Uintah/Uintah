@@ -187,6 +187,8 @@ void BuildFEMatrixQuadratic::execute()
   //       }
      
 
+  outmatrix = (MatrixOPort *)get_oport("FEM Matrix");
+  rhsoport = (MatrixOPort *)get_oport("RHS");
   gbl_matrixH=MatrixHandle(gbl_matrix);
   outmatrix->send(gbl_matrixH);
   //outmatrix->send(gbl_matrix);
