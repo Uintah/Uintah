@@ -4,6 +4,7 @@
 #include "Lattice.h"
 #include "Cell.h"
 #include "LeastSquare.h"
+#include <SCICore/Exceptions/InternalError.h>
 
 #include <Uintah/Components/MPM/Util/Matrix3.h>
 
@@ -12,18 +13,30 @@
 namespace Uintah {
 namespace MPM {
 
+using SCICore::Exceptions::InternalError;
+
 ParticlesNeighbor::ParticlesNeighbor(const ParticleVariable<Point>& pX,
 	                  const ParticleVariable<int>& pIsBroken,
 			  const ParticleVariable<Vector>& pCrackSurfaceNormal,
 			  const ParticleVariable<double>& pMicrocrackSize,
 			  const ParticleVariable<double>& pMicrocrackPosition)
 : std::vector<particleIndex>(),
-  d_pX(pX),
-  d_pIsBroken(pIsBroken),
-  d_pCrackSurfaceNormal(pCrackSurfaceNormal),
-  d_pMicrocrackSize(pMicrocrackSize),
-  d_pMicrocrackPosition(pMicrocrackPosition)
+  d_pX(&pX),
+  d_pIsBroken(&pIsBroken),
+  d_pCrackSurfaceNormal(&pCrackSurfaceNormal),
+  d_pMicrocrackSize(&pMicrocrackSize),
+  d_pMicrocrackPosition(&pMicrocrackPosition)
 {
+}
+
+ParticlesNeighbor::ParticlesNeighbor()
+: std::vector<particleIndex>()
+{
+}
+
+const ParticleVariable<int>& ParticlesNeighbor::getpIsBroken() const
+{
+  return *d_pIsBroken;
 }
 
 void ParticlesNeighbor::buildIn(const IntVector& cellIndex,const Lattice& lattice)
@@ -55,7 +68,7 @@ void  ParticlesNeighbor::interpolateVector(LeastSquare& ls,
   for(int i=0;i<3;++i) {
     ls.clean();
     for(const_iterator pIter = begin(); pIter != end(); pIter++) {
-      ls.input( d_pX[*pIter]-d_pX[pIdx], pVector[*pIter](i) );
+      ls.input( (*d_pX)[*pIter]-(*d_pX)[pIdx], pVector[*pIter](i) );
     }
     ls.output( data(i),v );
     for(int j=0;j<3;++j) {
@@ -72,7 +85,7 @@ void  ParticlesNeighbor::interpolatedouble(LeastSquare& ls,
 {
   ls.clean();
   for(const_iterator pIter = begin(); pIter != end(); pIter++) {
-    ls.input( d_pX[*pIter]-d_pX[pIdx], pdouble[*pIter] );
+    ls.input( (*d_pX)[*pIter]-(*d_pX)[pIdx], pdouble[*pIter] );
   }
   ls.output( data,gradient );
 }
@@ -89,7 +102,7 @@ void  ParticlesNeighbor::interpolateInternalForce(LeastSquare& ls,
     for(int j=0;j<3;++j) {
       ls.clean();
       for(const_iterator pIter = begin(); pIter != end(); pIter++) {
-        ls.input( d_pX[*pIter]-d_pX[pIdx], pStress[*pIter](i,j) );
+        ls.input( (*d_pX)[*pIter]-(*d_pX)[pIdx], pStress[*pIter](i,j) );
       }
     }
     ls.output( data,v );
@@ -101,10 +114,10 @@ bool ParticlesNeighbor::visible(const Point& A,const Point& B) const
 {
   for(int i=0; i<size(); i++) {
       int index = (*this)[i];
-      if( d_pIsBroken[index] ) {
-        Vector N = d_pCrackSurfaceNormal[index];
-        double size2 = d_pMicrocrackSize[index] * d_pMicrocrackSize[index];
-        Point O = d_pX[index] + N * d_pMicrocrackPosition[index];
+      if( (*d_pIsBroken)[index] ) {
+        Vector N = (*d_pCrackSurfaceNormal)[index];
+        double size2 = (*d_pMicrocrackSize)[index] * (*d_pMicrocrackSize)[index];
+        Point O = (*d_pX)[index] + N * (*d_pMicrocrackPosition)[index];
 
 	double A_N = Dot(A,N);
 	
@@ -127,6 +140,9 @@ bool ParticlesNeighbor::visible(const Point& A,const Point& B) const
 } //namespace Uintah
 
 // $Log$
+// Revision 1.11  2000/09/12 16:52:11  tan
+// Reorganized crack surface contact force algorithm.
+//
 // Revision 1.10  2000/09/11 00:15:00  tan
 // Added calculations on random distributed microcracks in broken particles.
 //

@@ -3,6 +3,7 @@
 #include "ParticlesNeighbor.h"
 #include "Visibility.h"
 
+#include <Uintah/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 
 #include <Uintah/Components/MPM/MPMLabel.h>
@@ -59,7 +60,7 @@ initializeFractureModelData(const Patch* patch,
    new_dw->put(pCrackingSpeed, lb->pCrackingSpeedLabel);
 }
 
-void Fracture::computerNodesVisibilityAndCrackSurfaceContactForce(
+void Fracture::computerNodesVisibility(
                   const Patch* patch,
                   MPMMaterial* mpm_matl, 
 		  DataWarehouseP& old_dw, 
@@ -75,11 +76,6 @@ void Fracture::computerNodesVisibilityAndCrackSurfaceContactForce(
   ParticleVariable<double> pMicrocrackPosition;
   ParticleVariable<int>    pIsBroken;
 
-  //for crack surface contact computation
-  ParticleVariable<Vector> pVelocity;
-  ParticleVariable<double> pVolume;
-  ParticleVariable<double> pMass;
-
   ParticleSubset* outsidePset = old_dw->getParticleSubset(matlindex, patch,
 	Ghost::AroundNodes, 1, lb->pXLabel);
 
@@ -89,10 +85,6 @@ void Fracture::computerNodesVisibilityAndCrackSurfaceContactForce(
   old_dw->get(pMicrocrackPosition, lb->pMicrocrackPositionLabel, outsidePset);
   old_dw->get(pIsBroken, lb->pIsBrokenLabel, outsidePset);
 
-  old_dw->get(pVelocity, lb->pVelocityLabel, outsidePset);
-  old_dw->get(pVolume, lb->pVolumeLabel, outsidePset);
-  old_dw->get(pMass, lb->pMassLabel, outsidePset);
-  
   delt_vartype delT;
   old_dw->get(delT, lb->delTLabel);
 
@@ -100,9 +92,6 @@ void Fracture::computerNodesVisibilityAndCrackSurfaceContactForce(
 
   ParticleVariable<int>    pVisibility;
   new_dw->allocate(pVisibility, lb->pVisibilityLabel, insidePset);
-  ParticleVariable<Vector> pCrackSurfaceContactForce;
-  new_dw->allocate(pCrackSurfaceContactForce, lb->pCrackSurfaceContactForceLabel,
-     insidePset);
 
   Lattice lattice(pX);
   ParticlesNeighbor particles( pX,
@@ -113,12 +102,6 @@ void Fracture::computerNodesVisibilityAndCrackSurfaceContactForce(
   IntVector cellIdx;
   IntVector nodeIdx[8];
 
-  for(ParticleSubset::iterator iter = insidePset->begin();
-          iter != insidePset->end(); iter++)
-  {
-    pCrackSurfaceContactForce[*iter] = Vector(0.,0.,0.);
-  }
-  
   for(ParticleSubset::iterator iter = insidePset->begin();
           iter != insidePset->end(); iter++)
   {
@@ -136,36 +119,9 @@ void Fracture::computerNodesVisibilityAndCrackSurfaceContactForce(
       else vis.setUnvisible(i);
     }
     pVisibility[pIdx] = vis.flag();
-    
-    Point& X1 = pX[pIdx];
-    double size1 = pow(pVolume[pIdx],0.3333);
-    double mass1 = pMass[pIdx];
-    Vector& V1 = pVelocity[pIdx];
-
-    //crack surface contact force
-    for(int pNeighbor=0; pNeighbor<particles.size();++pNeighbor)
-    {
-      if( particles[pNeighbor] > pIdx ) {
-        particleIndex pContact = particles[pNeighbor];
-	if(pIsBroken[pContact] || pIsBroken[pIdx]) {
-	
- 	  Point& X2 = pX[pContact];
-	  double size2 = pow(pVolume[pContact],0.3333);
-	  
-	  if( (X1-X2).length() < (size1+size2)/2 * 0.9 ) {
-            double mass2 = pMass[pContact];
-	    Vector& V2 = pVelocity[pContact];
-	    Vector F = (V2-V1)*mass1*mass2/(mass1+mass2)/delT;
-	    pCrackSurfaceContactForce[pIdx] += F;
-	    pCrackSurfaceContactForce[pContact] -= F;
-	  }	  
-	}
-      }
-    }
   }
   
   new_dw->put(pVisibility, lb->pVisibilityLabel);
-  new_dw->put(pCrackSurfaceContactForce, lb->pCrackSurfaceContactForceLabel);
 }
 
 void
@@ -301,6 +257,9 @@ Fracture::~Fracture()
 } //namespace Uintah
 
 // $Log$
+// Revision 1.46  2000/09/12 16:52:11  tan
+// Reorganized crack surface contact force algorithm.
+//
 // Revision 1.45  2000/09/11 20:23:26  tan
 // Fixed a mistake in crack surface contact force algorithm.
 //

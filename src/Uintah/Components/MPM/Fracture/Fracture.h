@@ -34,7 +34,7 @@ public:
                             const MPMMaterial* matl,
                             DataWarehouseP& new_dw);
 
-  void   computerNodesVisibilityAndCrackSurfaceContactForce(
+  void   computerNodesVisibility(
                   const Patch* patch,
                   MPMMaterial* mpm_matl, 
 		  DataWarehouseP& old_dw, 
@@ -60,6 +60,9 @@ private:
 #endif //__FRACTURE_H__
 
 // $Log$
+// Revision 1.28  2000/09/12 16:52:11  tan
+// Reorganized crack surface contact force algorithm.
+//
 // Revision 1.27  2000/09/11 18:55:51  tan
 // Crack surface contact force is now considered in the simulation.
 //

@@ -96,11 +96,19 @@ protected:
 
   //////////
   // Insert Documentation Here:
-  void computerNodesVisibilityAndCrackSurfaceContactForce(
+  void computerNodesVisibility(
                                const ProcessorGroup*,
 			       const Patch* patch,
 			       DataWarehouseP& old_dw,
 			       DataWarehouseP& new_dw);
+
+  //////////
+  // Insert Documentation Here:
+  void computeCrackSurfaceContactForce(
+                   const ProcessorGroup*,
+		   const Patch* patch,
+		   DataWarehouseP& old_dw,
+		   DataWarehouseP& new_dw);
 
   //////////
   // Insert Documentation Here:
@@ -219,6 +227,9 @@ protected:
    
 //
 // $Log$
+// Revision 1.59  2000/09/12 16:52:04  tan
+// Reorganized crack surface contact force algorithm.
+//
 // Revision 1.58  2000/09/11 18:55:17  tan
 // Crack surface contact force is now considered in the simulation.
 //

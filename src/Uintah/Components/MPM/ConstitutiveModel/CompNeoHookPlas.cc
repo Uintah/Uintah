@@ -425,6 +425,24 @@ void CompNeoHookPlas::addComputesAndRequires(Task* task,
    }
 }
 
+//for fracture
+void CompNeoHookPlas::computeCrackSurfaceContactForce(const Patch* patch,
+                                           const MPMMaterial* matl,
+                                           DataWarehouseP& old_dw,
+                                           DataWarehouseP& new_dw)
+{
+}
+
+//for fracture
+void CompNeoHookPlas::addComputesAndRequiresForCrackSurfaceContact(
+	                                     Task* task,
+					     const MPMMaterial* matl,
+					     const Patch* patch,
+					     DataWarehouseP& old_dw,
+					     DataWarehouseP& new_dw) const
+{
+}
+
 #ifdef __sgi
 #define IRIX
 #pragma set woff 1209
@@ -454,6 +472,9 @@ const TypeDescription* fun_getTypeDescription(CompNeoHookPlas::CMData*)
 }
 
 // $Log$
+// Revision 1.48  2000/09/12 16:52:10  tan
+// Reorganized crack surface contact force algorithm.
+//
 // Revision 1.47  2000/09/11 20:23:25  tan
 // Fixed a mistake in crack surface contact force algorithm.
 //

@@ -526,6 +526,23 @@ void ViscoScram::addComputesAndRequires(Task* task,
    task->computes(new_dw, lb->pVolumeDeformedLabel, matl->getDWIndex(), patch);
 }
 
+//for fracture
+void ViscoScram::computeCrackSurfaceContactForce(const Patch* patch,
+                                           const MPMMaterial* matl,
+                                           DataWarehouseP& old_dw,
+                                           DataWarehouseP& new_dw)
+{
+}
+
+void ViscoScram::addComputesAndRequiresForCrackSurfaceContact(
+	                                     Task* task,
+					     const MPMMaterial* matl,
+					     const Patch* patch,
+					     DataWarehouseP& old_dw,
+					     DataWarehouseP& new_dw) const
+{
+}
+
 #ifdef __sgi
 #define IRIX
 #pragma set woff 1209
@@ -555,6 +572,9 @@ const TypeDescription* fun_getTypeDescription(ViscoScram::StateData*)
 }
 
 // $Log$
+// Revision 1.7  2000/09/12 16:52:10  tan
+// Reorganized crack surface contact force algorithm.
+//
 // Revision 1.6  2000/08/23 22:17:32  guilkey
 // Finished implementing viscoscram.  Much debugging
 // to be done.
