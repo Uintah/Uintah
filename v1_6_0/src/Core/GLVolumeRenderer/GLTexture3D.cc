@@ -242,7 +242,7 @@ GLTexture3D::build_texture()
 			   thread_sema, tg);
   } else if (type == "unsigned_int") {
     bontree_ = build_bon_tree(minP_, maxP_, 0, 0, 0, X_, Y_, Z_, 0, 
-	       dynamic_cast<LatVolField<unsigned_int>*>(texfld_.get_rep()), 0, 
+	       dynamic_cast<LatVolField<unsigned int>*>(texfld_.get_rep()), 0, 
 			   thread_sema, tg);
   } else if (type == "short") {
     bontree_ = build_bon_tree(minP_, maxP_, 0, 0, 0, X_, Y_, Z_, 0, 
