@@ -136,12 +136,8 @@ usage( const std::string & message,
 }
 
 int
-main(int argc, char** argv)
+main( int argc, char** argv )
 {
-//   int pid;
-//   cout << "MPI Process PID:  " << getpid() << endl;
-//   cin >> pid;
-
 #ifdef USE_TAU_PROFILING
 
   // WARNING:
@@ -181,6 +177,9 @@ main(int argc, char** argv)
     string loadbalancer;
     IntVector layout(1,1,1);
 
+    // Checks to see if user is running an MPI version of sus.
+    Uintah::Parallel::determineIfRunningUnderMPI( argc, argv );
+
 #ifdef HAVE_MPICH
     /*
      * Initialize MPI
@@ -189,6 +188,9 @@ main(int argc, char** argv)
     // If we are using MPICH, then we must call MPI_Init() before
     // parsing args... this is supposed to be fixed at some point in
     // MPICH-2.  (InitializeManager() calls MPI_Init().)
+    //
+    // (When using MPICH, initializeManager() uses the arg list to
+    // determine whether sus is running with MPI before calling MPI_Init())
     //
     // NOTE: The main problem with calling initializeManager() before
     // parsing the args is that we don't know which "scheduler" to
