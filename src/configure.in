@@ -52,6 +52,11 @@ AC_ARG_ENABLE(optimize,
 	  [optimize="$enableval"],
 	  [optimize=${optimize='no'}])
 
+AC_ARG_ENABLE(64bit,
+	[  --enable-64bit		Compile in 64 bit mode],
+	[is_64bit="$enableval"],
+	[is_64bit=$i{is_64bit='no'}])
+
 extra_cflags="";
 if test "$debug" = "no"; then
   AC_MSG_RESULT(   No debug flags.)
@@ -290,11 +295,6 @@ AC_SUBST(LDFLAGS)
 AC_SUBST(ASFLAGS)
 AC_SUBST(LDRUN_PREFIX)
 AC_SUBST(BINARYFLAGS)
-
-AC_ARG_ENABLE(64bit,
-	[  --enable-64bit		Compile in 64 bit mode],
-	[is_64bit="$enableval"],
-	[is_64bit=$i{is_64bit='no'}])
 
 u=`echo $package | sed 's/.*Uintah.*/Uintah/'`
 if test "$u" = "Uintah" ; then
