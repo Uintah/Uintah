@@ -122,7 +122,7 @@
 	      <a href="#section_4_5">Electrodes</a>
 	    </li>
 	    <li value="6">
-	      <a href="#section_4_6">Color-Map</a>
+	      <a href="#section_4_6">Colormap</a>
 	    </li>
 	  </ol>
 	</li>
@@ -181,29 +181,28 @@
       <h2>Section 1&ndash;Introduction</h2>
       <p>
 	BioFEM is a SCIRun PowerApp that computes the electric field
-	in a volume produced by a set of dipoles.  In other words,
-	BioFEM computes a solution to the bioelectric field forward
-	problem.  BioFEM also computes voltage values at electrode
-	positions, which can be compared with values recorded via ECG
-	or EKG.
+	in a volume produced by a set of dipoles. BioFEM computes a
+	solution to the bioelectric field forward problem.  BioFEM
+	also computes voltage values at electrode positions, which can
+	be compared with values recorded via ECG or EKG.
       </p>
 
       <p>
 	BioFEM requires these inputs:
       </p>
       <ul>
-	<li><p>A discretized volume with associated volume element conductivities</p></li>
-	<li><p>An electric field modeling a dipole source</p></li>
-	<li><p>The positions of a set of measurement electrodes</p></li>
+	<li><p>A discretized volume with associated volume element conductivities.</p></li>
+	<li><p>An electric field modeling a dipole source.</p></li>
+	<li><p>The positions of a set of measurement electrodes.</p></li>
       </ul>
 
       <p>
-	Instructions for preparing these data are given in <a
-	href="#appendix_a">Appendix A</a>.  However, in this tutorial,
-	BioFEM is used to process and visualize the Utah Torso data
-	set&mdash;no data set preparations are needed to run this tutorial.
-	The Utah Torso data set is part of the SCIRun sample data set
-	collection and can be <a
+	<a href="#appendix_a">Appendix A</a> gives instructions for
+	preparing these data.  However, this tutorial uses BioFEM to
+	process and visualize the Utah Torso data set. No data set
+	preparations are needed to run this tutorial.  The Utah Torso
+	data set is part of the SCIRun sample data set collection, and
+	can be <a
 	href="http::software.sci.utah.edu/datasets/SCIRunData.1.20.0.tar.gz">downloaded</a>
 	from SCI's web site.
       </p>
@@ -211,21 +210,21 @@
       <a name="section_2" id="section_2"/>
       <h2>Section 2&ndash;Getting Started</h2>
       <p>
-	This section shows how to start BioFEM. Subsequent
-	sections show how to load, process, and visualize data.
+	This section demonstrates how to start BioFEM. Subsequent
+	sections demonstrate how to load, process, and visualize data.
       </p>
       
       <a name="section_2_1" id="section_2_1"/>
       <h3>2.1 Preparations</h3>
 
       <p>
-	Before starting BioFEM the environment variables SCIRUN_DATA,
-	SCIRUN_DATASET, SCIRUN_ON_THE_FLY_LIBS_DIR and must be set.
+	Before starting BioFEM, the environment variables SCIRUN_DATA,
+	SCIRUN_DATASET, and SCIRUN_ON_THE_FLY_LIBS_DIR must be set.
       </p>
       <p>
 	SCIRUN_DATA points to the sample data sets directory.
 	This tutorial assumes the SCIRun sample data directory is
-	<tt>/usr/sci/data/SCIRunData/1.20.0</tt> so SCIRUN_DATA is
+	<tt>/usr/sci/data/SCIRunData/1.20.0</tt>. So, SCIRUN_DATA is
 	set to (for a csh-like shell):
       </p>
       <pre>
@@ -238,7 +237,11 @@ setenv SCIRUN_DATA /usr/sci/data/SCIRun/SCIRunData/1.20.0
 
       <p>
 	The Utah Torso data set exists in high resolution and low
-	resolution versions.  To use the high resolution data set,
+	resolution versions.  
+      </p>	
+	
+      <p>
+        To use the high resolution data set,
 	SCIRUN_DATASET must be set to "utahtorso":
       </p>
 
@@ -248,7 +251,7 @@ setenv SCIRUN_DATASET utahtorso
 
       <p>
 	To use the low resolution dataset, SCIRUN_DATASET must be set
-	to "utahtorso-lowres".
+	to "utahtorso-lowres":
       </p>
 
       <pre>
@@ -270,13 +273,17 @@ setenv SCIRUN_ON_THE_FLY_LIBS_DIR ~/on-the-fly-libs
 
       <p>
 	When running BioFEM on Apple's OSX operating system, the limit on
-	the number of open files must be increased.  Users of csh-like shells
-	must type:
+	the number of open files must be increased.
       </p>
+      
+      <p>
+	for csh-like shells type:
+      </p>
+
       <pre>
 limit descriptors unlimited
       </pre>
-      <p>and users of sh-like shells must type:</p>
+      <p>for sh-like shells type:</p>
       <pre>
 ulimit -n unlimited
       </pre>
@@ -285,7 +292,7 @@ ulimit -n unlimited
       <a name="section_2_2" id="section_2_2"/>
       <h3>2.2 Launching BioFEM</h3>
       <p>
-	Change your working directory (using the <span
+	Change the working directory (using the <span
 	class="cmd">cd</span> command) to the directory containing the
 	BioFEM executable.  This directory will be
 	<tt>/usr/local/SCIRun/bin/</tt> if SCIRun has been installed
@@ -297,7 +304,7 @@ cd /usr/local/SCIRun/bin
       </pre>
 
       <p>
-	BioFEM will take a few moments to start up, then will display
+	BioFEM takes a few moments to start up, then displays
 	the window shown in <a href="#figure_1">Figure 1.</a>
       </p>
       <br /> <br />
@@ -317,18 +324,19 @@ cd /usr/local/SCIRun/bin
       <h3>2.3 User Interface Organization</h3>
 
       <p>
-	BioFEM's window contains two panes.  The Rendering Pane, on the
-	left of the window, is where all data interaction and
-	visualization is performed.  The Visualization Pane, on the
-	right of the window, guides the user through the application
-	and controls visualization parameters for the Rendering
+	The BioFEM window contains two panes.  The Rendering Pane is
+	on the left side of the window. All data interaction and
+	visualization is performed in the Rendering Pane. The
+	Visualization Pane is on the right side of the window. The
+	Visualization Pane guides the user through the application, and
+	controls visualization parameters for the Rendering
 	window. The panes may be "detached" from one another by
 	clicking on the pane detachment/attachment
 	controls&mdash;these are the vertical dashed lines separating
 	the panes. When separated, the panes appear as shown in <a
 	href="#figure_2">Figure 2.</a> Detaching the Rendering window
 	allows it to be viewed at maximum resolution.  Panes are
-	re-attached by again clicking on the pane
+	re-attached by clicking on the pane
 	detachment/attachment controls.
       </p>
       <br />
@@ -350,24 +358,24 @@ cd /usr/local/SCIRun/bin
 
       <dl>
 	<dt>Load Session...</dt>
-	<dd>Loads a previously saved session</dd>
+	<dd>Loads a previously saved session.</dd>
 	<dt>Save Session...</dt>
-	<dd>Saves a session, which may be resumed later</dd>
+	<dd>Saves a session, which can be resumed later.</dd>
 	<dt>Save Session As...</dt>
-	<dd>Saves a session under a new name</dd>
+	<dd>Saves a session under a new name.</dd>
 	<dt>Save Image...</dt>
-	<dd>Saves the content of the Rendering pane as an image</dd>
+	<dd>Saves the content of the Rendering pane as an image.</dd>
 	<dt>Quit</dt>
-	<dd>Quits BioFEM</dd>
+	<dd>Quits BioFEM.</dd>
       </dl>
 
       <p>
 	The user is not required to complete all processing steps
 	before exiting BioFEM.  A BioFEM session can be stopped and
-	resumed later using File menu items Save Session... (or Save
-	Session As...)  and Load Session... respectively.  After
-	loading a saved session with Load Session..., processing and
-	visualization are resumed by clicking Execute.
+	resumed using File menu items Save Session... (or Save
+	Session As...)  and Load Session.., respectively.  After
+	loading a saved session with Load Session..., resume processing and
+	visualization by clicking Execute.
       </p>
       <br/><br/>
 
@@ -386,11 +394,11 @@ cd /usr/local/SCIRun/bin
 
       <dl>
 	<dt>Show Tooltips</dt>
-	<dd>A checkbox that toggles tooltips on and off</dd>
+	<dd>A checkbox that toggles tooltips on and off.</dd>
 	<dt>Help Contents</dt>
 	<dd></dd>
 	<dt>About BioFEM</dt>
-	<dd>Provides information about BioFEM</dd>
+	<dd>Provides information about BioFEM.</dd>
       </dl>
       <br/><br/>
       
@@ -408,7 +416,7 @@ cd /usr/local/SCIRun/bin
 	parameters for the current processing step have been set.  The
 	Progress Indicator shows how much of the current processing
 	step has been completed.  Text above the Progress Indicator
-	describes the current state of processing and suggests the
+	describes the current state of processing, and suggests the
 	next processing step.
       </p>
 
@@ -418,7 +426,7 @@ cd /usr/local/SCIRun/bin
 
       
       <p>
-	After starting BioFEM, the Visualization pane will show the
+	After starting BioFEM, the Visualization pane shows the
 	contents of the Data Selection tab.  Verify that the Utah
 	Torso Lowres radio button is selected.
       </p>
@@ -436,9 +444,9 @@ cd /usr/local/SCIRun/bin
       </p>
 
       <ol>
-	<li>Click on the tab labeled "Viewer Options"</li>
+	<li>Click on the tab labeled "Viewer Options".</li>
 
-	<li>Click on the Views pop-up menu, then select menu item
+	<li>Click on the Views pop-up menu, select menu item
 	"Look down -Y axis", then select sub-menu item "Up vector +Z".
 	</li>
       </ol>
@@ -540,7 +548,7 @@ cd /usr/local/SCIRun/bin
 	<a href="#figure_6">Figure 6</a> shows the Visualization
 	Pane's Viewer Options tab.  The Viewer Options tab provides
 	controls for changing the properties of the Rendering Window.
-	"Hovering" the mouse pointer over a control (say the Views
+	"Hovering" the mouse pointer over a control (e.g., Views
 	pop-up menu button) displays a tooltip describing a control.
       </p>
 
@@ -561,8 +569,8 @@ cd /usr/local/SCIRun/bin
 	Pane's Vis Options tab.  Controls in the Vis Options tab allow
 	selection of visualization type, visualization parameters, and
 	color map.  Visualizations can be viewed individually or
-	together.  <a href="#figure_5">Figure 5</a> shows, for
-	example, concurrent visualization of streamlines, zero-voltage
+	together. For example, <a href="#figure_5">Figure 5</a> shows
+	concurrent visualization of streamlines, zero-voltage
 	iso-surface, and electrodes.
       </p>
 
@@ -588,13 +596,13 @@ cd /usr/local/SCIRun/bin
 	href="#figure_8">Figure 8</a> shows an iso-potential surface
 	of value 0.  The visualization in <a
 	href="#figure_8">Figure 8</a> is produced by selecting the
-	checkbox labeled "Show IsoSuface" and selecting a voltage
+	checkbox labeled "Show IsoSuface", and selecting a voltage
 	value of 0 using the Isoval control.
       </p>
       <p>
 	The checkbox labeled "Interpolate Smooth Normals" 
 	turns surface smoothing on and off. Smoothing improves
-	iso-surface appearance but hides iso-surface mesh details.
+	iso-surface appearance, but hides iso-surface mesh details.
       </p>
       <br/>
       <br/>
@@ -615,8 +623,8 @@ cd /usr/local/SCIRun/bin
 	Streamlines are  traces of paths particles take along
 	voltage gradients. The rake widget is used to establish (or
 	seed) initial particle positions within the electric field.
-	Particles follow paths which start at one end of the dipole,
-	pass through the rake and end at the other side of the dipole.
+	Particles follow paths that start at one end of the dipole,
+	pass through the rake, and end at the other side of the dipole.
 	<a href="#figure_9">Figure 9</a> shows streamlines
 	visualization.
       </p>
@@ -629,7 +637,7 @@ cd /usr/local/SCIRun/bin
       <p>
 	The rake widget's position and orientation determine
 	streamline paths.  The mouse is used to translate, rotate, and
-	resize the rake widget.  In each case the Shift key and the
+	resize the rake widget.  In each case, the Shift key and the
 	left mouse button are pressed while dragging a component of
 	the rake.  Drag the rake's blue bar to translate the rake.
 	Drag one of the rake's blue spheres to rotate the rake.  Drag
@@ -671,7 +679,7 @@ cd /usr/local/SCIRun/bin
       <h3>4.5 Electrodes Visualization</h3>
 
       <p>
-	Electrodes (typically on the torso surface) are visualized by
+	Visualize electrodes (typically on the torso surface) by
 	checking the "Show Electrodes" checkbox in the Vis Options
 	tab.  Electrodes are displayed as spheres.  Voltage values are
 	computed at each electrode position.  Voltage values are color
@@ -691,7 +699,7 @@ cd /usr/local/SCIRun/bin
       <br />
 
       <a name="section_4_6" id="section_4_6"/>
-      <h3>4.6 ColorMap Selection</h3>
+      <h3>4.6 Colormap Selection</h3>
 
       <p>
 	Voltage values are color coded using a colormap.  Six
@@ -699,7 +707,7 @@ cd /usr/local/SCIRun/bin
 	colormap is selected from the Visualization pane's Vis Option
 	tab.  <a href="#figure_11">Figure 11</a> shows the
 	utahtorso-lowres model colored with the Red-to-Blue colormap
-	selected rather than the default Inverse Rainbow coloring.
+	selected, rather than the default Inverse Rainbow coloring.
       </p>
       <br />
       <br />
