@@ -99,7 +99,7 @@ GatherPoints::execute()
     }
     ++pi;
   }
-  PointCloud<int> *pcH = scinew PointCloud<int>(pcmH, Field::NONE);
+  PointCloud<double> *pcH = scinew PointCloud<double>(pcmH, Field::NODE);
   ofld->send(FieldHandle(pcH));
 }
 
