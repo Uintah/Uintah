@@ -7,9 +7,9 @@ import re
 def mkdir_and_copy(src, dsttop, trim) :   
     dst = dsttop + src[trim:]
     cmmd = 'mkdir -p ' + dst
-    print cmmd
+    os.system(cmmd)
     cmmd = 'cp ' + src + os.sep + '*.* ' + dst
-    print cmmd
+    os.system(cmmd)
     
 def copy_doc1(arg, dirname, names) :
     if dirname[-3:] == 'CVS' : return #don't work in CVS dirs!!
