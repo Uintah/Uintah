@@ -23,9 +23,10 @@ namespace Uintah {
     const VarLabel* delPress_CCLabel;
     const VarLabel* rho_micro_CCLabel;
     const VarLabel* sp_vol_CCLabel;
-    const VarLabel* sp_vol_newLabel;
+    const VarLabel* sp_vol_equilLabel;
     const VarLabel* mass_CCLabel;
     const VarLabel* rho_CCLabel;
+    const VarLabel* rho_CC_top_cycleLabel;
     const VarLabel* temp_CCLabel;
     const VarLabel* vel_CCLabel;
     const VarLabel* speedSound_CCLabel;
