@@ -144,6 +144,13 @@ template class GenericField<TriSurfMesh, vector<int> >;
 template class GenericField<TriSurfMesh, vector<short> >;
 template class GenericField<TriSurfMesh, vector<unsigned char> >;
 
+const TypeDescription* get_type_description(TriSurf<Tensor>*);
+const TypeDescription* get_type_description(TriSurf<Vector>*);
+const TypeDescription* get_type_description(TriSurf<double>*);
+const TypeDescription* get_type_description(TriSurf<int>*);
+const TypeDescription* get_type_description(TriSurf<short>*);
+const TypeDescription* get_type_description(TriSurf<unsigned char>*);
+
 template class ImageField<Tensor>;
 template class ImageField<Vector>;
 template class ImageField<double>;
