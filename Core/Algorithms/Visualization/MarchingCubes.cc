@@ -47,15 +47,15 @@ MarchingCubesAlg::get_compile_info(const TypeDescription *td) {
   string sname = td->get_name("", "");
   
   //Test for LatVolField inheritance...
-  if (sname.find("LatVolField") != string::npos) {
+  if (sname.find("LatVolField") != string::npos ||
+      sname.find("StructHexVolField") != string::npos) {
     // we are dealing with a lattice vol or inherited version
     subname.append("HexMC<" + td->get_name() + "> ");
     subinc.append(HexMCBase::get_h_file_path());
   } else if (sname.find("TetVolField") != string::npos) {
     subname.append("TetMC<" + td->get_name() + "> ");
     subinc.append(TetMCBase::get_h_file_path());
-  } else if (sname.find("HexVolField") != string::npos ||
-	     sname.find("StructHexVolField") != string::npos) {
+  } else if (sname.find("HexVolField") != string::npos) {
     subname.append("UHexMC<" + td->get_name() + "> ");
     subinc.append(UHexMCBase::get_h_file_path());
   } else {
