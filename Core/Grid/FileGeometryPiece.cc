@@ -46,15 +46,16 @@ void FileGeometryPiece::readPoints(const string& f_name, bool var)
 {
   ifstream source(f_name.c_str());
 
-  while(!source.eof()) {
-    double x,y,z,var;
-    if (var == false) 
-      source >> x >> y >> z;
-    else {
-      source >> x >> y >> z >> var;
-      d_volume.push_back(var);
+  double x,y,z,vol;
+  if (var == false) {
+    while (source >> x >> y >> z) {
+      d_points.push_back(Point(x,y,z));
     }
-    d_points.push_back(Point(x,y,z));
+  } else {
+    while(source >> x >> y >> z >> vol) {
+      d_points.push_back(Point(x,y,z));
+      d_volume.push_back(vol);
+    }
   }
   source.close();
 
