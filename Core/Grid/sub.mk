@@ -40,7 +40,16 @@ SRCS     += \
 	$(SRCDIR)/BoundCondFactory.cc \
 	$(SRCDIR)/BoundCondData.cc \
 	$(SRCDIR)/UnknownVariable.cc \
-	$(SRCDIR)/SimpleMaterial.cc
+	$(SRCDIR)/SimpleMaterial.cc \
+	$(SRCDIR)/NCVariable_special.cc \
+	$(SRCDIR)/CCVariable_special.cc \
+	$(SRCDIR)/SFCXVariable_special.cc \
+	$(SRCDIR)/SFCYVariable_special.cc \
+	$(SRCDIR)/SFCZVariable_special.cc \
+	$(SRCDIR)/cd_templates.cc
+
+
+
 
 PSELIBS := \
 	Packages/Uintah/Core/Math        \
