@@ -9,8 +9,6 @@ namespace rtrt {
 
     SCIRun::Mutex * waitDisplay;
 
-    Camera * camera;
-
     int   xres,yres;
 
     bool  exposed;
