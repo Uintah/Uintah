@@ -28,10 +28,10 @@ class ScrolledOpenGLWindow : public OpenGLWindow {
 private:
   
 public:
-  ScrolledOpenGLWindow();
+  ScrolledOpenGLWindow(GuiInterface* gui);
   virtual ~ScrolledOpenGLWindow() {}
 
-  virtual void tcl_command(TCLArgs&, void*);
+  virtual void tcl_command(GuiArgs&, void*);
   
 };
 

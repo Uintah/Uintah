@@ -22,9 +22,9 @@ using std::ostringstream;
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/ConditionVariable.h>
+#include <Core/Thread/Runnable.h>
 #include <Core/GuiInterface/TclObj.h>
-#include <Core/GuiInterface/TCLTask.h>
-#include <Core/GuiInterface/TCL.h>
+#include <Core/GuiInterface/GuiInterface.h>
 
 namespace SCIRun {
 
@@ -51,8 +51,8 @@ GraphHelper::run()
 
 
 
-Graph::Graph( const string &id )
-  : DrawGui( id, "Graph" ), has_work_("GraphLock")
+Graph::Graph(GuiInterface* gui, const string &id )
+  : DrawGui(gui, id, "Graph" ), has_work_("GraphLock")
 {
   obj_ = 0;
 
@@ -112,7 +112,7 @@ Graph::update()
 }
 
 void
-Graph::tcl_command(TCLArgs& args, void* userdata)
+Graph::tcl_command(GuiArgs& args, void* userdata)
 {
   if ( args[1] == "redraw" ) 
     update();
@@ -130,6 +130,14 @@ Graph::io(Piostream& stream)
   stream.end_class();
 }
 
-} // End namespace SCIRun
+void Graph::lock()
+{
+  gui->lock();
+}
 
+void Graph::unlock()
+{
+  gui->unlock();
+}
+} // End namespace SCIRun
 

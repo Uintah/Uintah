@@ -40,18 +40,19 @@ using std::ostringstream;
 #include <Core/Malloc/Allocator.h>
 #include <Core/2d/Axes.h>
 #include <Core/2d/Diagram.h>
+#include <Core/GuiInterface/GuiInterface.h>
 
-namespace SCIRun {
+using namespace SCIRun;
 
 Persistent* make_XAxis()
 {
-  return scinew XAxis;
+  return scinew XAxis(GuiInterface::getSingleton());
 }
 
 PersistentTypeID XAxis::type_id("XAxis", "XAxisObj", make_XAxis);
 
-XAxis::XAxis( Diagram *p, const string &name)
-  : TclObj( "XAxis" ), XAxisObj(name), parent_(p), activepoly_(0),
+XAxis::XAxis(GuiInterface* gui, Diagram *p, const string &name)
+  : TclObj(gui, "XAxis" ), XAxisObj(name), parent_(p), activepoly_(0),
     initialized_(false)
 {
 }
@@ -103,13 +104,13 @@ XAxis::io(Piostream& stream)
 
 Persistent* make_YAxis()
 {
-  return scinew YAxis;
+  return scinew YAxis(GuiInterface::getSingleton());;
 }
 
 PersistentTypeID YAxis::type_id("YAxis", "YAxisObj", make_YAxis);
 
-YAxis::YAxis( Diagram *p, const string &name)
-  : TclObj( "YAxis" ), YAxisObj(name), parent_(p), activepoly_(0),
+YAxis::YAxis(GuiInterface* gui, Diagram *p, const string &name)
+  : TclObj(gui, "YAxis" ), YAxisObj(name), parent_(p), activepoly_(0),
     initialized_(false)
 {
 }
@@ -158,8 +159,3 @@ YAxis::io(Piostream& stream)
   Widget::io(stream);
   stream.end_class();
 }
-
-
-} // namespace SCIRun
-
-  

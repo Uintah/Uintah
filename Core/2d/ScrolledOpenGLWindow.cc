@@ -17,20 +17,18 @@
 
 #include <Core/2d/ScrolledOpenGLWindow.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/TCLTask.h>
-#include <Core/GuiInterface/TCL.h>
 
 namespace SCIRun {
 
 
-ScrolledOpenGLWindow::ScrolledOpenGLWindow()
-  : OpenGLWindow()
+ScrolledOpenGLWindow::ScrolledOpenGLWindow(GuiInterface* gui)
+  : OpenGLWindow(gui)
 {
 }
  
 
 void
-ScrolledOpenGLWindow::tcl_command(TCLArgs& args, void* userdata)
+ScrolledOpenGLWindow::tcl_command(GuiArgs& args, void* userdata)
 {
   OpenGLWindow::tcl_command( args, userdata );
 }

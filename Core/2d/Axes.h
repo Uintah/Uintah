@@ -48,8 +48,8 @@ protected:
 
 public:
   
-  XAxis() : TclObj( "xaxis"), XAxisObj("XAxis") {}
-  XAxis( Diagram *, const string &name="XAxis" );
+  XAxis(GuiInterface* gui) : TclObj(gui, "xaxis"), XAxisObj("XAxis") {}
+  XAxis(GuiInterface* gui, Diagram *, const string &name="XAxis" );
   virtual ~XAxis();
 
   void update();
@@ -77,8 +77,8 @@ protected:
 
 public:
   
-  YAxis() : TclObj( "yaxis"), YAxisObj("YAxis") {}
-  YAxis( Diagram *, const string &name="YAxis" );
+  YAxis(GuiInterface* gui) : TclObj(gui, "yaxis"), YAxisObj("YAxis") {}
+  YAxis(GuiInterface* gui, Diagram *, const string &name="YAxis" );
   virtual ~YAxis();
 
   void update();

@@ -21,7 +21,6 @@
 #include <Core/2d/Drawable.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/TCL.h>
 #include <Core/GuiInterface/TclObj.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Geom/Color.h>
@@ -43,15 +42,15 @@ private:
   Color bg_, fg_;
   
 public:
-  OpenGLWindow();
+  OpenGLWindow(GuiInterface* gui);
   virtual ~OpenGLWindow() {}
 
-  void lock() { lock_->lock(); }
-  void unlock() { lock_->unlock(); }
+  void lock();
+  void unlock();
 
   bool init( const string &);
   bool initialized() { return initialized_; }
-  virtual void tcl_command(TCLArgs&, void*);
+  virtual void tcl_command(GuiArgs&, void*);
   
   virtual void clear();
   virtual void pre();
@@ -68,7 +67,7 @@ public:
   int yres() { return yres_; }
 
 protected:
-  virtual void report_init() {}
+  virtual void report_init();
   void make_raster_font();
 
   bool initialized_;

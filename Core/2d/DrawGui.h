@@ -42,7 +42,7 @@ protected:
   string menu_, tb_, ui_;
 
 public:
-  DrawGui( const string &name, const string &script );
+  DrawGui( GuiInterface* gui, const string &name, const string &script );
   virtual ~DrawGui();
 
   virtual void set_windows( const string &menu, const string &tb,

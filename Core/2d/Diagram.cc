@@ -31,10 +31,8 @@
 
 #include <stdio.h>
 #include <iostream>
-using std::cerr;
-using std::ostream;
 #include <sstream>
-using std::ostringstream;
+using namespace std;
 
 #include <Core/Containers/StringUtil.h>
 #include <Core/Malloc/Allocator.h>
@@ -44,18 +42,18 @@ using std::ostringstream;
 #include <Core/2d/Zoom.h>
 #include <Core/2d/BBox2d.h>
 #include <Core/2d/ScrolledOpenGLWindow.h>
-
-namespace SCIRun {
+#include <Core/GuiInterface/GuiInterface.h>
+using namespace SCIRun;
 
 Persistent* make_Diagram()
 {
-  return scinew Diagram;
+  return scinew Diagram(GuiInterface::getSingleton());
 }
 
 PersistentTypeID Diagram::type_id("diagram", "DrawObj", make_Diagram);
 
-Diagram::Diagram( const string &name)
-  : DrawGui(name, "Diagram")
+Diagram::Diagram(GuiInterface* gui, const string &name)
+  : DrawGui(gui, name, "Diagram")
 {
   select_mode_ = 2;
   scale_mode_ = 1;
@@ -125,7 +123,7 @@ Diagram::get_bounds( BBox2d &bb )
 
 
 void
-Diagram::tcl_command(TCLArgs& args, void* userdata)
+Diagram::tcl_command(GuiArgs& args, void* userdata)
 {
   if ( args[1] == "select" ) {
     int plot = atoi( args[2].c_str() );
@@ -138,7 +136,7 @@ Diagram::tcl_command(TCLArgs& args, void* userdata)
     update();
   } 
   else if ( args[1] == "redraw" ) {
-    reset_vars();
+    ctx->reset();
     select_mode_ = gui_select->get();
     scale_mode_ = gui_scale->get();
     update();
@@ -206,7 +204,7 @@ Diagram::tcl_command(TCLArgs& args, void* userdata)
 void
 Diagram::add_hairline() 
 {
-  Hairline *hair = scinew Hairline( this, "Hairline");
+  Hairline *hair = scinew Hairline(gui, this, "Hairline");
   int w = add_widget( hair );
 
   string window_name;
@@ -221,9 +219,9 @@ Diagram::add_hairline()
 void
 Diagram::add_axes() 
 {
-  YAxis *yaxis = scinew YAxis( this, "YAxis");
+  YAxis *yaxis = scinew YAxis(gui, this, "YAxis");
   /*int w = */add_widget( yaxis );
-  XAxis *xaxis = scinew XAxis( this, "XAxis");
+  XAxis *xaxis = scinew XAxis(gui, this, "XAxis");
   /*int w = */add_widget( xaxis );
 
   string window_name;
@@ -276,10 +274,11 @@ Diagram::set_id( const string & nid )
 
   TclObj::set_id( tmp.str() );
 
-  gui_select = scinew GuiInt("select", id(), this );
-  gui_scale = scinew GuiInt("scale", id(), this );
+  ctx=gui->createContext(nid);
+  gui_select = scinew GuiInt(ctx->subVar("select"));
+  gui_scale = scinew GuiInt(ctx->subVar("scale"));
 
-  ogl_ = scinew ScrolledOpenGLWindow;
+  ogl_ = scinew ScrolledOpenGLWindow(gui);
   ogl_->set_id ( id() + "-gl" );
 }
 
@@ -431,8 +430,3 @@ Diagram::io(Piostream& stream)
   DrawObj::io(stream);
   stream.end_class();
 }
-
-
-} // namespace SCIRun
-
-  

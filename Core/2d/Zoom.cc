@@ -40,18 +40,19 @@ using std::ostringstream;
 #include <Core/Malloc/Allocator.h>
 #include <Core/2d/Zoom.h>
 #include <Core/2d/Diagram.h>
+#include <Core/GuiInterface/GuiInterface.h>
 
-namespace SCIRun {
+using namespace SCIRun;
 
 Persistent* make_Zoom()
 {
-  return scinew Zoom;
+  return scinew Zoom(GuiInterface::getSingleton());
 }
 
 PersistentTypeID Zoom::type_id("Zoom", "BoxObj", make_Zoom);
 
- Zoom::Zoom( Diagram *p, const string &name)
-  : TclObj( "Zoom" ), BoxObj(name)
+ Zoom::Zoom(GuiInterface* gui, Diagram *p, const string &name)
+  : TclObj(gui, "Zoom" ), BoxObj(name)
 {
 }
 
@@ -71,8 +72,3 @@ Zoom::io(Piostream& stream)
   BoxObj::io(stream);
   stream.end_class();
 }
-
-
-} // namespace SCIRun
-
-  
