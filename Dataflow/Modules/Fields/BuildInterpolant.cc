@@ -113,14 +113,14 @@ void Pio(Piostream &s, LatVolMesh::cell_index &i)
   s.end_cheap_delim();
 }
 #else
-void Pio(Piostream &s, TetVolMesh::node_index &i) {}
-void Pio(Piostream &s, TetVolMesh::edge_index &i) {}
-void Pio(Piostream &s, TetVolMesh::face_index &i) {}
-void Pio(Piostream &s, TetVolMesh::cell_index &i) {}
-void Pio(Piostream &s, LatVolMesh::node_index &i) {}
-void Pio(Piostream &s, LatVolMesh::edge_index &i) {}
-void Pio(Piostream &s, LatVolMesh::face_index &i) {}
-void Pio(Piostream &s, LatVolMesh::cell_index &i) {}
+void Pio(Piostream &, TetVolMesh::node_index &) {}
+void Pio(Piostream &, TetVolMesh::edge_index &) {}
+void Pio(Piostream &, TetVolMesh::face_index &) {}
+void Pio(Piostream &, TetVolMesh::cell_index &) {}
+void Pio(Piostream &, LatVolMesh::node_index &) {}
+void Pio(Piostream &, LatVolMesh::edge_index &) {}
+void Pio(Piostream &, LatVolMesh::face_index &) {}
+void Pio(Piostream &, LatVolMesh::cell_index &) {}
 #endif
 
 // TetVol
