@@ -420,7 +420,7 @@ void matlabconverter::mlArrayTOsciMatrix(matlabarray &ma,MatrixHandle &handle, P
             // getnumericarray is a templated function that casts the data to the supplied pointer
             // type. It needs the dimensions of the memory block (in elements) to make sure
             // everything is still OK. 
-            ma.getnumericarray(dmptr->getData(),(dmptr->nrows())*(dmptr->ncols()));  
+            ma.getnumericarray(dmptr->get_data_pointer(), dmptr->get_data_size());
                         
             handle = static_cast<Matrix *>(dmptr); // cast it to a general matrix pointer
           }
@@ -437,7 +437,7 @@ void matlabconverter::mlArrayTOsciMatrix(matlabarray &ma,MatrixHandle &handle, P
             // getnumericarray is a templated function that casts the data to the supplied pointer
             // type. It needs the dimensions of the memory block (in elements) to make sure
             // everything is still OK. 
-            ma.getnumericarray(dm.getData(),(dm.nrows())*(dm.ncols()));  
+            ma.getnumericarray(dm.get_data_pointer(), dm.get_data_size());
                         
             // There is no transpose function to operate on the same memory block
             // Hence, it is a little memory inefficient.
@@ -568,7 +568,7 @@ void matlabconverter::sciMatrixTOmlMatrix(MatrixHandle &scimat,matlabarray &mlma
       dims[1] = tmatrix->nrows();
       dims[0] = tmatrix->ncols();
       mlmat.createdensearray(dims,dataformat);
-      mlmat.setnumericarray(tmatrix->getData(),mlmat.getnumelements());
+      mlmat.setnumericarray(tmatrix->get_data_pointer(),mlmat.getnumelements());
     }
   if (scimat->is_column())
     {
