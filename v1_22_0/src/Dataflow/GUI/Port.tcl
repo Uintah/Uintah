@@ -102,7 +102,7 @@ proc portCoords { port } {
     set isoport [string equal o [pType port]]
     if { [isaSubnetEditor [pMod port]] } {
 	set border [expr $isoport?0:[winfo height $canvas]]
-	set at [list [$canvas canvasx 0] [$canvas canvasy $border]]
+	set at [list [expr [$canvas canvasx 0]+4] [$canvas canvasy $border]]
 	set h 0
     } elseif { [lsearch $Subnet(Subnet$Subnet([pMod port])_Modules) [pMod port]]!= -1} {
 	set at [$canvas coords [pMod port]]
@@ -224,7 +224,7 @@ proc drawPort { port { color red } { connected 0 } } {
 	set modframe $Subnet(Subnet${subnet}_canvas).module[pMod port]
     }
     set isoport [string equal [pType port] o]
-    set x [expr [pNum port]*$port_spacing+($isSubnetEditor?9:6)]
+    set x [expr [pNum port]*$port_spacing+($isSubnetEditor?13:6)]
     set e [expr $connected?"out":""][expr $isoport?"bottom":"top"]
     set portbevel $modframe.port[pType port][pNum port]
     set portlight $modframe.portlight[pType port][pNum port]
