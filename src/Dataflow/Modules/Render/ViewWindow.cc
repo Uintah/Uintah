@@ -241,12 +241,12 @@ void ViewWindow::get_bounds(BBox& bbox)
   for ( ; iter.first != iter.second; iter.first++) {
 	
     GeomIndexedGroup::IterIntGeomObj serIter =
-      ((GeomViewerPort*)((*iter.first).second))->getIter();
+      ((GeomViewerPort*)((*iter.first).second.get_rep()))->getIter();
 
 				// items in the scen are all
 				// GeomViewerItem's...
     for ( ; serIter.first != serIter.second; serIter.first++) {
-      GeomViewerItem *si=(GeomViewerItem*)((*serIter.first).second);
+      GeomViewerItem *si=(GeomViewerItem*)((*serIter.first).second.get_rep());
 	    
 				// Look up the name to see if it
 				// should be drawn...
@@ -1456,7 +1456,7 @@ void ViewWindow::bawgl_pick(int action, int iv[3], GLfloat fv[3])
 	    
       current_renderer->get_pick(manager, this, iv[0], iv[1],
 				 pick_obj, pick_pick, pick_n); 
-      if (pick_obj){
+      if (pick_obj.get_rep()){
 	update_mode_string(pick_obj);
 	pick_pick->set_picked_obj(pick_obj);
 	pick_pick->pick(this,bs);
@@ -1472,7 +1472,7 @@ void ViewWindow::bawgl_pick(int action, int iv[3], GLfloat fv[3])
     break;
   case BAWGL_PICK_MOVE:
     {
-      if (!pick_obj || !pick_pick) break;
+      if (!pick_obj.get_rep() || !pick_pick.get_rep()) break;
       Vector dir(fv[0],fv[1],fv[2]);
       //float dv= sqrt(fv[0]*fv[0]+fv[1]*fv[1]+fv[2]*fv[2]);
       //pick_pick->moved(0, dv, dir, bs);
@@ -1507,7 +1507,7 @@ void ViewWindow::bawgl_pick(int action, int iv[3], GLfloat fv[3])
     break;
   case BAWGL_PICK_END:
     {
-      if(pick_pick){
+      if(pick_pick.get_rep()){
 	pick_pick->release( bs );
       }
       pick_pick=0;
@@ -1543,7 +1543,7 @@ void ViewWindow::mouse_pick(int action, int x, int y, int state, int btn, int)
       current_renderer->get_pick(manager, this, x, y,
 				 pick_obj, pick_pick, pick_n);
 
-      if (pick_obj){
+      if (pick_obj.get_rep()){
 	update_mode_string(pick_obj);
 	pick_pick->set_picked_obj(pick_obj);
 	pick_pick->pick(this,bs);
@@ -1556,7 +1556,7 @@ void ViewWindow::mouse_pick(int action, int x, int y, int state, int btn, int)
     break;
   case MouseMove:
     {
-      if (!pick_obj || !pick_pick) break;
+      if (!pick_obj.get_rep() || !pick_pick.get_rep()) break;
       // project the center of the item grabbed onto the screen -- take the z
       // component and unprojec the last and current x, y locations to get a 
       // vector in object space.
@@ -1610,7 +1610,7 @@ void ViewWindow::mouse_pick(int action, int x, int y, int state, int btn, int)
     }
     break;
   case MouseEnd:
-    if(pick_pick){
+    if(pick_pick.get_rep()){
       pick_pick->release( bs );
       need_redraw=1;
     }
@@ -1661,11 +1661,11 @@ void ViewWindow::tcl_command(GuiArgs& args, void*)
     for ( ; iter.first != iter.second; iter.first++) {
       
       GeomIndexedGroup::IterIntGeomObj serIter =
-	((GeomViewerPort*)((*iter.first).second))->getIter();
+	((GeomViewerPort*)((*iter.first).second.get_rep()))->getIter();
       
       for ( ; serIter.first != serIter.second; serIter.first++) {
 	GeomViewerItem *si =
-	  (GeomViewerItem*)((*serIter.first).second);
+	  (GeomViewerItem*)((*serIter.first).second.get_rep());
 	itemAdded(si);
       }
     }
@@ -2131,10 +2131,10 @@ void ViewWindow::redraw(double tbeg, double tend, int nframes, double framerate)
   current_renderer->redraw(manager, this, tbeg, tend, nframes, framerate);
 }
 
-void ViewWindow::update_mode_string(GeomObj* pick_obj)
+void ViewWindow::update_mode_string(GeomHandle pick_obj)
 {
   string ms="pick: ";
-  GeomViewerItem* si=dynamic_cast<GeomViewerItem*>(pick_obj);
+  GeomViewerItem* si=dynamic_cast<GeomViewerItem*>(pick_obj.get_rep());
   if(!si){
     ms+="not a GeomViewerItem?";
   } else {
@@ -2193,12 +2193,12 @@ void ViewWindow::do_for_visible(OpenGL* r, ViewWindowVisPMF pmf)
   for ( ; iter.first != iter.second; iter.first++) {
       
     GeomIndexedGroup::IterIntGeomObj serIter = 
-      ((GeomViewerPort*)((*iter.first).second))->getIter();
+      ((GeomViewerPort*)((*iter.first).second.get_rep()))->getIter();
     
     for ( ; serIter.first != serIter.second; serIter.first++) {
 	    
       GeomViewerItem *si =
-	(GeomViewerItem*)((*serIter.first).second);
+	(GeomViewerItem*)((*serIter.first).second.get_rep());
       
       // Look up the name to see if it should be drawn...
       ObjTag* vis;

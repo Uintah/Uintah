@@ -38,17 +38,17 @@ WidgetPickable::~WidgetPickable()
 }
 
 void
-WidgetPickable::geom_pick(GeomPick*, ViewWindow*, int, const BState&)
+WidgetPickable::geom_pick(GeomPickHandle, ViewWindow*, int, const BState&)
 {
 }
  
 void
-WidgetPickable::geom_release(GeomPick*, int, const BState&)
+WidgetPickable::geom_release(GeomPickHandle, int, const BState&)
 {
 }
 
 void
-WidgetPickable::geom_moved(GeomPick*, int, double, const Vector&,
+WidgetPickable::geom_moved(GeomPickHandle, int, double, const Vector&,
 			   int, const BState&, const Vector &)
 {
 }
@@ -60,18 +60,18 @@ ModulePickable::~ModulePickable()
 }
 
 void
-ModulePickable::geom_pick(GeomPick*, void*, GeomObj*)
+ModulePickable::geom_pick(GeomPickHandle, void*, GeomHandle)
 {
 }
 
 void
-ModulePickable::geom_release(GeomPick*, void*, GeomObj*)
+ModulePickable::geom_release(GeomPickHandle, void*, GeomHandle)
 {
 }
 
 void
-ModulePickable::geom_moved(GeomPick*, int, double, const Vector&,
-			  void*, GeomObj*)
+ModulePickable::geom_moved(GeomPickHandle, int, double, const Vector&,
+			  void*, GeomHandle)
 {
 }
 

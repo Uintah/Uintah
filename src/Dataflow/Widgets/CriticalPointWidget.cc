@@ -81,9 +81,9 @@ CriticalPointWidget::CriticalPointWidget( Module* module, CrowdMonitor* lock, do
   geometries[GeomHead] = scinew GeomCappedCone;
   materials[HeadMaterial] = scinew GeomMaterial(geometries[GeomHead], DefaultEdgeMaterial);
   arr->add(materials[HeadMaterial]);
-  picks[Pick] = scinew GeomPick(arr, module, this, Pick);
-  picks[Pick]->set_highlight(DefaultHighlightMaterial);
-  CreateModeSwitch(0, picks[Pick]);
+  picks_[Pick] = scinew GeomPick(arr, module, this, Pick);
+  picks(Pick)->set_highlight(DefaultHighlightMaterial);
+  CreateModeSwitch(0, picks_[Pick]);
    
   GeomGroup* cyls = scinew GeomGroup;
   geometries[GeomCylinder1] = scinew GeomCappedCylinder;
@@ -347,13 +347,13 @@ CriticalPointWidget::redraw()
    
   for (Index geom = 0; geom < NumPcks; geom++)
   {
-    picks[geom]->set_principal(direct, v1, v2);
+    picks(geom)->set_principal(direct, v1, v2);
   }
 }
 
 
 void
-CriticalPointWidget::geom_pick(GeomPick *p, ViewWindow *vw,
+CriticalPointWidget::geom_pick(GeomPickHandle p, ViewWindow *vw,
 			       int data, const BState &bs)
 {
   BaseWidget::geom_pick(p, vw, data, bs);
@@ -376,8 +376,10 @@ CriticalPointWidget::geom_pick(GeomPick *p, ViewWindow *vw,
  *      BaseWidget execute method (which calls the redraw method).
  */
 void
-CriticalPointWidget::geom_moved( GeomPick*, int /* axis */, double /* dist */,
-				 const Vector& /*delta*/, int pick, const BState&,
+CriticalPointWidget::geom_moved( GeomPickHandle, int /* axis */, 
+				 double /* dist */,
+				 const Vector& /*delta*/, int pick, 
+				 const BState&,
 				 const Vector &pick_offset)
 {
   switch(pick)

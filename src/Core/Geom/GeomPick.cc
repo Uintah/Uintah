@@ -184,7 +184,7 @@ GeomPick::set_widget_data(int wd)
 
 
 void
-GeomPick::set_picked_obj(GeomObj* object)
+GeomPick::set_picked_obj(GeomHandle object)
 {
   picked_obj_ = object;
 }

@@ -44,8 +44,8 @@ public:
   virtual ~GaugeWidget();
 
   virtual void redraw();
-  virtual void geom_pick(GeomPick*, ViewWindow*, int, const BState& bs);
-  virtual void geom_moved(GeomPick*, int, double, const Vector&, int,
+  virtual void geom_pick(GeomPickHandle, ViewWindow*, int, const BState& bs);
+  virtual void geom_moved(GeomPickHandle, int, double, const Vector&, int,
 			  const BState&, const Vector &pick_offset);
 
   virtual void MoveDelta( const Vector& delta );

@@ -147,37 +147,37 @@ ViewWidget::ViewWidget( Module* module, CrowdMonitor* lock,
 
   GeomGroup* eyes = scinew GeomGroup;
   geometries[GeomEye] = scinew GeomSphere;
-  picks[PickEye] = scinew GeomPick(geometries[GeomEye], module, this, PickEye);
-  picks[PickEye]->set_highlight(DefaultHighlightMaterial);
-  eyes->add(picks[PickEye]);
+  picks_[PickEye] = scinew GeomPick(geometries[GeomEye], module, this, PickEye);
+  picks(PickEye)->set_highlight(DefaultHighlightMaterial);
+  eyes->add(picks_[PickEye]);
 
   geometries[GeomUp] = scinew GeomSphere;
-  picks[PickUp] = scinew GeomPick(geometries[GeomUp], module, this, PickUp);
-  picks[PickUp]->set_highlight(DefaultHighlightMaterial);
-  eyes->add(picks[PickUp]);
+  picks_[PickUp] = scinew GeomPick(geometries[GeomUp], module, this, PickUp);
+  picks(PickUp)->set_highlight(DefaultHighlightMaterial);
+  eyes->add(picks_[PickUp]);
 
   geometries[GeomFore] = scinew GeomSphere;
-  picks[PickFore] = scinew GeomPick(geometries[GeomFore], module, this, PickFore);
-  picks[PickFore]->set_highlight(DefaultHighlightMaterial);
-  eyes->add(picks[PickFore]);
+  picks_[PickFore] = scinew GeomPick(geometries[GeomFore], module, this, PickFore);
+  picks(PickFore)->set_highlight(DefaultHighlightMaterial);
+  eyes->add(picks_[PickFore]);
 
   geometries[GeomLookAt] = scinew GeomSphere;
-  picks[PickLookAt] = scinew GeomPick(geometries[GeomLookAt], module, this, PickLookAt);
-  picks[PickLookAt]->set_highlight(DefaultHighlightMaterial);
-  eyes->add(picks[PickLookAt]);
+  picks_[PickLookAt] = scinew GeomPick(geometries[GeomLookAt], module, this, PickLookAt);
+  picks(PickLookAt)->set_highlight(DefaultHighlightMaterial);
+  eyes->add(picks_[PickLookAt]);
   materials[EyesMatl] = scinew GeomMaterial(eyes, DefaultPointMaterial);
 
   Index geom;
   GeomGroup* resizes = scinew GeomGroup;
   geometries[GeomResizeUp] = scinew GeomCappedCylinder;
-  picks[PickResizeUp] = scinew GeomPick(geometries[GeomResizeUp], module, this, PickResizeUp);
-  picks[PickResizeUp]->set_highlight(DefaultHighlightMaterial);
-  resizes->add(picks[PickResizeUp]);
+  picks_[PickResizeUp] = scinew GeomPick(geometries[GeomResizeUp], module, this, PickResizeUp);
+  picks(PickResizeUp)->set_highlight(DefaultHighlightMaterial);
+  resizes->add(picks_[PickResizeUp]);
   geometries[GeomResizeEye] = scinew GeomCappedCylinder;
-  picks[PickResizeEye] = scinew GeomPick(geometries[GeomResizeEye], module,
+  picks_[PickResizeEye] = scinew GeomPick(geometries[GeomResizeEye], module,
 					 this, PickResizeEye);
-  picks[PickResizeEye]->set_highlight(DefaultHighlightMaterial);
-  resizes->add(picks[PickResizeEye]);
+  picks(PickResizeEye)->set_highlight(DefaultHighlightMaterial);
+  resizes->add(picks_[PickResizeEye]);
   materials[ResizeMatl] = scinew GeomMaterial(resizes, DefaultResizeMaterial);
 
   GeomGroup* shafts = scinew GeomGroup;
@@ -185,9 +185,9 @@ ViewWidget::ViewWidget( Module* module, CrowdMonitor* lock,
   shafts->add(geometries[GeomUpVector]);
   geometries[GeomShaft] = scinew GeomCylinder;
   shafts->add(geometries[GeomShaft]);
-  picks[PickShaft] = scinew GeomPick(shafts, module, this, PickShaft);
-  picks[PickShaft]->set_highlight(DefaultHighlightMaterial);
-  materials[ShaftMatl] = scinew GeomMaterial(picks[PickShaft], DefaultEdgeMaterial);
+  picks_[PickShaft] = scinew GeomPick(shafts, module, this, PickShaft);
+  picks(PickShaft)->set_highlight(DefaultHighlightMaterial);
+  materials[ShaftMatl] = scinew GeomMaterial(picks_[PickShaft], DefaultEdgeMaterial);
 
   GeomGroup* w = scinew GeomGroup;
   w->add(materials[EyesMatl]);
@@ -221,9 +221,9 @@ ViewWidget::ViewWidget( Module* module, CrowdMonitor* lock,
     geometries[geom] = scinew GeomCylinder;
     cyls->add(geometries[geom]);
   }
-  picks[PickCyls] = scinew GeomPick(cyls, module, this, PickCyls);
-  picks[PickCyls]->set_highlight(DefaultHighlightMaterial);
-  materials[FrustrumMatl] = scinew GeomMaterial(picks[PickCyls], DefaultEdgeMaterial);
+  picks_[PickCyls] = scinew GeomPick(cyls, module, this, PickCyls);
+  picks(PickCyls)->set_highlight(DefaultHighlightMaterial);
+  materials[FrustrumMatl] = scinew GeomMaterial(picks_[PickCyls], DefaultEdgeMaterial);
   CreateModeSwitch(1, materials[FrustrumMatl]);
 
   SetMode(Mode0, Switch0|Switch1);
@@ -317,15 +317,15 @@ ViewWidget::redraw()
     {
       if (geom == PickResizeUp)
       {
-	picks[geom]->set_principal(spvec2);
+	picks(geom)->set_principal(spvec2);
       }
       if ((geom == PickResizeEye) || (geom == PickFore))
       {
-	picks[geom]->set_principal(spvec1);
+	picks(geom)->set_principal(spvec1);
       }
       else
       {
-	picks[geom]->set_principal(spvec1, spvec2, v);
+	picks(geom)->set_principal(spvec1, spvec2, v);
       }
     }
   }
@@ -345,7 +345,7 @@ ViewWidget::redraw()
  *      BaseWidget execute method (which calls the redraw method).
  */
 void
-ViewWidget::geom_moved( GeomPick*, int /* axis */, double /* dist */,
+ViewWidget::geom_moved( GeomPickHandle, int /* axis */, double /* dist */,
 			const Vector& delta, int pick, const BState&,
 			const Vector &/*pick_offset*/)
 {
