@@ -50,7 +50,7 @@
 #include <iostream>
 #include <sstream>
 
-#ifdef UNI_PETSC
+#ifdef PETSC_UNI
 
 extern "C" {
 #include <petsc.h>
@@ -144,7 +144,7 @@ class SolveMatrix : public Module {
   MatrixOPort* solport;
   MatrixHandle solution;
   
-#ifdef UNI_PETSC
+#ifdef PETSC_UNI
   friend int PETSc_monitor(KSP,int n,PetscReal rnorm,void *);
   Array1<double> PETSc_errlist;
   Array1<double> PETSc_targetlist;
@@ -229,7 +229,7 @@ SolveMatrix::tcl_command(GuiArgs& args, void*userdata)
 {
   if (args[1] == "petscenabled") 
   {
-#ifdef UNI_PETSC
+#ifdef PETSC_UNI
     args.result("1");
 #else
     args.result("0");
@@ -322,7 +322,7 @@ void SolveMatrix::execute()
   } else if(meth == "Jacoby & Precond. (SCI)"){
     jacobi_sci(mat, *solp, *rhsp);
     solport->send(solution);
-#ifdef UNI_PETSC
+#ifdef PETSC_UNI
   } else if(meth == "KSPRICHARDSON (PETSc)") {
     petsc_solve(precond.get().c_str(),(char*)KSPRICHARDSON,mat,rhsp,solp); 
     solport->send(solution);
@@ -365,7 +365,7 @@ void SolveMatrix::execute()
   }
 }
 
-#ifdef UNI_PETSC
+#ifdef PETSC_UNI
 
 int PETSc_monitor(KSP,int niter,PetscReal err,void *context)
 {  
