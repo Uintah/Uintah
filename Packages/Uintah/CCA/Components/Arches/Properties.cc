@@ -701,6 +701,7 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	  }
 	  // density underrelaxation is bogus here and has been removed
 	  new_density[currCell] = local_den;
+
 	}
       }
     }

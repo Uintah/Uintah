@@ -1497,12 +1497,12 @@ BoundaryCondition::mmWallTemperatureBC(const ProcessorGroup*,
     for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
       for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
 	IntVector currCell = IntVector(colX, colY, colZ);	  
-	if (cellType[currCell]==d_mmWallID && d_energyEx) {
-	  temperature[currCell] = solidTemp[currCell];
-	  //	  temperature[currCell] = 298.0;
+	if (cellType[currCell]==d_mmWallID) {
+	  if (d_energyEx)
+	    temperature[currCell] = solidTemp[currCell];
+	  else
+	    temperature[currCell] = 298.0;
 	}
-	else
-	  temperature[currCell] = 298.0;
       }
     }
   }
