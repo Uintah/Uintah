@@ -408,7 +408,10 @@ void fldToTree(SegFld &field, SurfTree &surf) {
 
     Array1<tripleInt> splits;
     Array1<int> splT;
-    bldSplits(field.getTypeFld(), splits, splT, field.thin);
+
+
+// DAVE - figure out why this makes holes in the vein datasets (sl2.sr)
+//    bldSplits(field.getTypeFld(), splits, splT, field.thin);
 
     Array1<int> splI;
     // first add in all of the nodes that need to be split
@@ -550,6 +553,9 @@ void SegFldToSurfTree::execute()
 
 //
 // $Log$
+// Revision 1.8  2000/10/29 04:02:46  dmw
+// cleaning up DaveW tree
+//
 // Revision 1.7  2000/03/17 18:44:21  dahart
 // Replaced all instances of HashTable<class X, class Y> with the STL
 // map<class X, class Y>.  Removed all includes of HashTable.h
