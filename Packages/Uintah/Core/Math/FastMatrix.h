@@ -56,6 +56,8 @@ namespace Uintah {
 
     void destructiveInvert(FastMatrix& inverse);
     void destructiveSolve(const vector<double>& b, vector<double>& X);
+    void destructiveSolve(double* X1, double* X2);
+
     void transpose(const FastMatrix& transpose);
     void multiply(const vector<double>& b, vector<double>& X) const;
     void multiply(const FastMatrix& a, const FastMatrix& b);
@@ -76,6 +78,7 @@ namespace Uintah {
 
     void big_destructiveInvert(FastMatrix& inverse);
     void big_destructiveSolve(const vector<double>& b, vector<double>& X);
+    void big_destructiveSolve(double* X1, double* X2);
 
     FastMatrix(const FastMatrix&);
     FastMatrix& operator=(const FastMatrix&);
