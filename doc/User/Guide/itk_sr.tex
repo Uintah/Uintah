@@ -584,6 +584,9 @@ sci-filter description file:
       <instantiations>
       \velide
       </instantiations>
+      <outputs>
+      \velide
+      </outputs>
       <includes>
       \velide
       </includes>
@@ -645,6 +648,9 @@ Element \xmlstarttag{filter-sci} provides module specific information.
     <instantiations>
     \velide
     </instantiations>
+    <outputs>
+    \velide
+    </outputs>
     <includes>
     \velide
     </includes>
@@ -678,6 +684,8 @@ For example:
   <package>Insight</package>
   <category>Filters</category>
 \end{alltt}
+
+\subsubsection{Element \xmlstarttag{instantiations}}
 
 Element \xmlstarttag{instantiations} can declare filter instantiations
 that replace those declared in an ITK filter description file (see
@@ -727,6 +735,64 @@ For example:
   </instance>
 \end{alltt}
 
+
+\subsubsection{Element \xmlstarttag{outputs}}
+
+Element \xmlstarttag{outputs} is optional.  \xmlstarttag{Outputs}
+lists outputs that are allowed to send \dfn{intermediate} data.
+
+Intermediate data are useful when using, for example, any of the
+LevelSet segmentation filters---the user can visualize the
+segmentation process in real-time.
+
+Usually data are sent only when a calculation is complete.  When
+allowed, an output port will send data every $n_th$ iteration of a
+calculation.
+
+The \xmlstarttag{outputs} element contains one or more
+\xmlstarttag{output} elements (but no more than are in the
+\xmlstarttag{outputs} element of the ITK filter description).  Each
+\xmlstarttag{output} element names an output and determines if the
+output is allowed to send intermediate data:
+
+\begin{alltt}
+  <outputs>
+    <output name="\replaceable{output\_name}"
+            send_intermediate="\replaceable{yes_or_no}"/>
+  </outputs>
+\end{alltt}
+
+For example:
+
+\begin{alltt}
+  <outputs>
+    <output name="OutputImage" send_intermediate="yes"/>
+  </outputs>
+\end{alltt}
+
+Each \xmlstarttag{output} element corresponds to an ITK filter
+description \xmlstarttag{output} element.  The value of the respective
+\xmlattrname{name} attributes must match.  The value of an
+\xmlstarttag{output} element's \xmlattrname{send_intermediate}
+attribute is set to \xmlattrvalue{yes} if the output is allowed to
+send intermediate data and \xmlattrvalue{no} otherwise.
+
+Note that users determine, via a module's GUI, if an output that is
+\emph{allowed} to send intermediate data, \emph{does} send
+intermediate data.  For each output that is allowed to send
+intermediate data, a module's default GUI will contain: a checkbox
+that determines if the output will generate intermediate data; and a
+text entry widget specifying the number of iterations between
+sends of intermediate data.
+
+For an example see:
+
+\begin{alltt}
+  src/Packages/Insight/Dataflow/Modules/Filters/XML/\
+sci_ThresholdSegmentationLevelSetImageFilter.xml
+\end{alltt}
+
+\subsubsection{Element \xmlstarttag{includes}}
 
 Element \xmlstarttag{includes} provides a list of include files needed
 by a module's implementation.  Each \xmlstarttag{file} element
