@@ -26,17 +26,23 @@ itcl_class CardioWave_CreateModel_SetupFVMatrix {
     }
 
     method set_defaults {} {	
-        global $this-sigx
-	global $this-sigy
-	global $this-sigz
+        global $this-sigx1
+	global $this-sigy1
+	global $this-sigz1
+        global $this-sigx2
+	global $this-sigy2
+	global $this-sigz2
 	global $this-sprfile
 	global $this-volumefile
-        set $this-sigx 0
-	set $this-sigy 0
-	set $this-sigz 0
+	global $this-BW
+        set $this-sigx1 1
+	set $this-sigy1 1
+	set $this-sigz1 1
+        set $this-sigx2 20
+	set $this-sigy2 20
+	set $this-sigz2 20
 	set $this-sprfile "SPR"
 	set $this-volumefile "VOLUME"
-	
     }
 
     method make_entry {w text v c} {
@@ -60,17 +66,29 @@ itcl_class CardioWave_CreateModel_SetupFVMatrix {
         frame $w.f
         pack $w.f -padx 2 -pady 2 -side top -expand yes
 
-  	frame $w.sigma
-        global $this-sigx
-	global $this-sigy
-	global $this-sigz
-	make_entry $w.sigma.x "Sigma X (mS/cm):" $this-sigx \
+  	frame $w.sigma1
+        global $this-sigx1
+	global $this-sigy1
+	global $this-sigz1
+	make_entry $w.sigma1.x "Cell1-Sigma X (mS/cm):" $this-sigx1 \
 		"$this-c needexecute"
-	make_entry $w.sigma.y "Sigma Y (mS/cm):" $this-sigy \
+	make_entry $w.sigma1.y "Cell1-Sigma Y (mS/cm):" $this-sigy1 \
 		"$this-c needexecute"
-	make_entry $w.sigma.z "Sigma Z (mS/cm):" $this-sigz \
+	make_entry $w.sigma1.z "Cell1-Sigma Z (mS/cm):" $this-sigz1 \
 		"$this-c needexecute"
-	pack $w.sigma.x $w.sigma.y $w.sigma.z -side left -fill x -expand 1
+	pack $w.sigma1.x $w.sigma1.y $w.sigma1.z -side left -fill x -expand 1
+
+  	frame $w.sigma2
+        global $this-sigx2
+	global $this-sigy2
+	global $this-sigz2
+	make_entry $w.sigma2.x "Cell2-Sigma X (mS/cm):" $this-sigx2 \
+		"$this-c needexecute"
+	make_entry $w.sigma2.y "Cell2-Sigma Y (mS/cm):" $this-sigy2 \
+		"$this-c needexecute"
+	make_entry $w.sigma2.z "Cell2-Sigma Z (mS/cm):" $this-sigz2 \
+		"$this-c needexecute"
+	pack $w.sigma2.x $w.sigma2.y $w.sigma2.z -side left -fill x -expand 1
 
 
         global $this-sprfile
@@ -81,7 +99,10 @@ itcl_class CardioWave_CreateModel_SetupFVMatrix {
 	make_entry $w.f.v "Volume file: " $this-volumefile \
 		"$this-c needexecute"		
 	
+	global $this-BW
+	checkbutton $w.f.bw -text "BandWidth Minimization" -variable $this-BW 
 
-	pack $w.f $w.sigma $w.f.s $w.f.v -side top -fill x -expand 1
+
+	pack $w.f $w.sigma1 $w.sigma2 $w.f.s $w.f.v $w.f.bw -side top -fill x -expand 1
    }
 }
