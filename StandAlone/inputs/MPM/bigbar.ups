@@ -81,6 +81,27 @@
     </MaterialProperties>
 	
     <Grid>
+     <BoundaryConditions>
+     <Face side = "x-">
+      <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+     </Face>
+     <Face side = "x+">
+      <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+     </Face>
+     <Face side = "y-">
+      <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+     </Face>
+     <Face side = "y+">
+      <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+     </Face>
+     <Face side = "z-">
+      <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+     </Face>
+     <Face side = "z+">
+      <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
+     </Face>
+     </BoundaryConditions>
+
 	<Level>
 	    <Box label="1">
 		<lower>[ -2.5, -1.0, -0.5   ]</lower>
