@@ -46,6 +46,15 @@ Patch::~Patch()
 {
 }
 
+IntVector Patch::findCell(const Point& pos) const
+{
+   Vector cellpos = (pos-d_box.lower())*d_res/(d_box.upper()-d_box.lower());
+   int ix = Floor(cellpos.x());
+   int iy = Floor(cellpos.y());
+   int iz = Floor(cellpos.z());
+   return IntVector(ix,iy,iz);
+}
+
 #if 0
 void Patch::findCell(const Vector& pos, int& ix, int& iy, int& iz) const
 {
@@ -357,6 +366,9 @@ Patch::determineGhostPatches( int numGhostCells )
 
 //
 // $Log$
+// Revision 1.2  2000/06/01 22:14:06  tan
+// Added findCell(const Point& pos).
+//
 // Revision 1.1  2000/05/30 20:19:31  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch
