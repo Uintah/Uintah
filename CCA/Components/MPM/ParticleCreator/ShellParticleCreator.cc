@@ -121,6 +121,8 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
 	ptemperature[pidx]=(*obj)->getInitialTemperature();
 	psp_vol[pidx]=1.0/matl->getInitialDensity();
         pdisp[pidx] = Vector(0.,0.,0.);
+        pfiberdir[pidx] = Vector(0.0,0.0,0.0);
+        perosion[pidx] = 1.0;
 
         // Calculate particle mass
 	double partMass = matl->getInitialDensity()*pvolume[pidx];
@@ -149,7 +151,33 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
 	  myCellNAPID++;
 	  pparticleID[pidx] = cellID | (long64)myCellNAPID;
 	} else {
-	  cerr << "cellID is not right" << endl;
+          double x = position[pidx].x();
+          double y = position[pidx].y();
+          double z = position[pidx].z();
+          if (fabs(x) < 1.0e-15) x = 0.0;
+          if (fabs(y) < 1.0e-15) y = 0.0;
+          if (fabs(z) < 1.0e-15) z = 0.0;
+          if (x == patch->getBox().upper().x()) x -= 1.0e-10;
+          if (y == patch->getBox().upper().y()) y -= 1.0e-10;
+          if (z == patch->getBox().upper().z()) z -= 1.0e-10;
+          position[pidx] = Point(x,y,z);
+	  if (!patch->findCell(position[pidx],cell_idx)) {
+	    cerr << "Pidx = " << pidx << " Pos = " << position[pidx]
+                 << " patch BBox = " << patch->getBox()
+                 << " cell_idx = " << cell_idx
+                 << " low = " << patch->getCellLowIndex()
+                 << " high = " << patch->getCellHighIndex()
+                 << " : Particle not in any cell." << endl;
+	    pparticleID[pidx] = 0;
+          } else {
+	    long64 cellID = ((long64)cell_idx.x() << 16) |
+	      ((long64)cell_idx.y() << 32) |
+	      ((long64)cell_idx.z() << 48);
+	    short int& myCellNAPID = cellNAPID[cell_idx];
+	    ASSERT(myCellNAPID < 0x7fff);
+	    myCellNAPID++;
+	    pparticleID[pidx] = cellID | (long64)myCellNAPID;
+          }
 	}
 
         // The shell specific variables
@@ -186,6 +214,8 @@ ShellParticleCreator::createParticles(MPMMaterial* matl,
 		pvelocity[pidx]=(*obj)->getInitialVelocity();
 		ptemperature[pidx]=(*obj)->getInitialTemperature();
 	        psp_vol[pidx]=1.0/matl->getInitialDensity(); 
+                perosion[pidx] = 1.0;
+                pfiberdir[pidx] = Vector(0.0,0.0,0.0);
 
 		// Calculate particle mass
 		double partMass =matl->getInitialDensity()*pvolume[pidx];
