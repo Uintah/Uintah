@@ -190,7 +190,7 @@ main(int argc, char** argv)
     // parsing args... this is supposed to be fixed at some point in
     // MPICH-2.  (InitializeManager() calls MPI_Init().)
     //
-    // The main problem with calling initializeManager() before
+    // NOTE: The main problem with calling initializeManager() before
     // parsing the args is that we don't know which "scheduler" to
     // use... the MPI or Mixed.  However, MPICH does not support
     // Thread safety, so we will just dis-allow that.
@@ -324,6 +324,11 @@ main(int argc, char** argv)
        }
     }
 
+#ifndef HAVE_MPICH
+    // If regular MPI, then initialize after parsing the args...
+    Uintah::Parallel::initializeManager( argc, argv, scheduler );
+#endif
+
     bool thrownException = false;
     
     /*
@@ -364,26 +369,25 @@ main(int argc, char** argv)
 	} else if(do_poisson2){
 	  sim = scinew Poisson2(world);
 	} else {
-	  usage("You need to specify a simulation, -arches, -ice, -mpm, -impm -mpmice, -mpmarches, or -poisson1, or -poisson2", "", argv[0]);
+	  usage("You need to specify a simulation: -arches, -ice, -mpm, "
+		"-impm -mpmice, -mpmarches, -poisson1, or -poisson2",
+		"", argv[0]);
 	}
-
-#ifndef HAVE_MPICH
-	// If regular MPI, then initialize after parsing the args...
-	// ...and after all "usages" may have been called.
-	Uintah::Parallel::initializeManager( argc, argv, scheduler );
-#endif
 
 	ctl->attachPort("sim", sim);
 
 	if(world->myrank() == 0){
-	   cerr << "Using scheduler: " << scheduler << " and load balancer: " << loadbalancer << '\n';
+	   cerr << "Using scheduler: " << scheduler 
+		<< " and load balancer: " << loadbalancer << '\n';
 	}
 
 	// Load balancer
 	LoadBalancer* bal;
 	if(loadbalancer == "SingleProcessorLoadBalancer"){
 	   bal = scinew SingleProcessorLoadBalancer(world);
-	} else if(loadbalancer == "RoundRobinLoadBalancer" || loadbalancer == "RoundRobin" || loadbalancer == "roundrobin"){
+	} else if(loadbalancer == "RoundRobinLoadBalancer" || 
+		  loadbalancer == "RoundRobin" || 
+		  loadbalancer == "roundrobin"){
 	   bal = scinew RoundRobinLoadBalancer(world);
 	} else if(loadbalancer == "SimpleLoadBalancer") {
 	   bal = scinew SimpleLoadBalancer(world);
