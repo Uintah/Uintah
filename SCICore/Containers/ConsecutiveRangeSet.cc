@@ -21,7 +21,7 @@ ConsecutiveRangeSet::ConsecutiveRangeSet(list<int>& set)
 
   list<Range> rangeSet;
   for (it++; it != set.end(); it++) {
-    if (*it == range.d_low + range.d_extent + 1)
+    if ((unsigned long)*it == range.d_low + range.d_extent + 1)
       range.d_extent++;
     else {
       // end of range
@@ -59,7 +59,7 @@ ConsecutiveRangeSet::ConsecutiveRangeSet(std::string setstr)
   char c;
 
   bool isInterval = false;
-  int lastNumber;
+  int lastNumber = 0;
   bool hasLastNumber = false;
   
   while (!ws(in).eof()) {
@@ -110,7 +110,7 @@ ConsecutiveRangeSet::ConsecutiveRangeSet(std::string setstr)
   int last_high = (*it).high();
   for (it++; it != rangeSet.end(); it++)
   {
-    if ((unsigned long)last_high + 1 >= (*it).d_low) {
+    if ((unsigned long)last_high + 1 >= (unsigned long)(*it).d_low) {
       // combine ranges
       int high = (last_high > (*it).high()) ? last_high : (*it).high();
       it--;
@@ -224,7 +224,7 @@ ConsecutiveRangeSet ConsecutiveRangeSet::unioned(const ConsecutiveRangeSet&
     Range& lastRange = newRangeSet.back();
 
     // check for overlap
-    if ((unsigned long)lastRange.high() + 1 >= range.d_low) {
+    if ((unsigned long)lastRange.high() + 1 >= (unsigned long)range.d_low) {
       // combine ranges
       if (range.high() > lastRange.high())
 	lastRange.d_extent =  (unsigned long)range.high() - lastRange.d_low;
