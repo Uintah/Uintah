@@ -73,7 +73,7 @@ ViewWindow::ViewWindow(Viewer* s, const clString& id)
   : manager(s),
     id(id),
     view("view", id, this),
-    homeview(Point(.55, .5, 0), Point(.0, .0, .0), Vector(0,1,0), 25),
+    homeview(Point(2.1, 1.6, 11.5), Point(.0, .0, .0), Vector(0,1,0), 20),
     bgcolor("bgcolor", id, this), 
     shading("shading", id, this),
     do_stereo("do_stereo", id, this), 
@@ -88,7 +88,9 @@ ViewWindow::ViewWindow(Viewer* s, const clString& id)
 {
   inertia_mode=0;
   bgcolor.set(Color(0,0,0));
+
   view.set(homeview);
+
   TCL::add_command(id+"-c", this, 0);
   current_renderer=0;
   maxtag=0;
@@ -99,8 +101,8 @@ ViewWindow::ViewWindow(Viewer* s, const clString& id)
   bawgl = new SCIBaWGL();
   // --  BAWGL -- 
   viewwindow_objs.add( createGenAxes() );     
-  viewwindow_objs_draw.add(0);              
-  viewwindow_objs_draw[0] = 1;
+  viewwindow_objs_draw.add(1);              
+//  viewwindow_objs_draw[0] = 1;
   // XXX - UniCam addition:
   // initialize focus sphere for UniCam
   // the focus sphere is a sphere object -- let's color it blue.
@@ -771,8 +773,8 @@ void ViewWindow::ShowFocusSphere()
     }
 
   viewwindow_objs.add(focus_sphere);
-  viewwindow_objs_draw.add(0);              
-  viewwindow_objs_draw[viewwindow_objs_draw.size()-1] = 1;
+  viewwindow_objs_draw.add(1);              
+//  viewwindow_objs_draw[viewwindow_objs_draw.size()-1] = 1;
 }
 
 void ViewWindow::HideFocusSphere()
@@ -1722,11 +1724,12 @@ void ViewWindow::tcl_command(TCLArgs& args, void*)
     if( !bawgl_error ) bawgl->stop();
     // --  BAWGL -- 
   } else if(args[1] == "centerGenAxes") { 
-    if(caxes.get() == 1) {  // checked
-      viewwindow_objs_draw[0] = 1;
-    } else {    // unchecked
-      viewwindow_objs_draw[0] = 0;
-    }
+    // DMW: We'll check this in do_for_visible() instead
+//    if(caxes.get() == 1) {  // checked
+//      viewwindow_objs_draw[0] = 1;
+//    } else {    // unchecked
+//      viewwindow_objs_draw[0] = 0;
+//    }
   } else if(args[1] == "iconGenAxes") {    
     if(iaxes.get() == 1) {  // checked
     } 
@@ -1919,6 +1922,7 @@ void ViewWindow::do_for_visible(Renderer* r, ViewWindowVisPMF pmf)
 {
 				// Do internal objects first...
   int i;
+  viewwindow_objs_draw[0]=caxes.get();
   for (i = 0; i < viewwindow_objs.size(); i++){
     if(viewwindow_objs_draw[i] == 1) {
       (r->*pmf)(manager, this, viewwindow_objs[i]);

@@ -66,6 +66,38 @@ itcl_class ViewWindow {
 	return $n
     }
 
+    method set_defaults {} {
+
+	# set defaults values for parameters that weren't set in a script
+
+	global $this-saveFile
+	global $this-saveType
+	if {![info exists $this-File]} {set $this-saveFile "out.raw"}
+	if {![info exists $this-saveType]} {set $this-saveType "raw"}
+
+	# Animation parameters
+	global $this-current_time
+	if {![info exists $this-current_time]} {set $this-current_time 0}
+	global $this-tbeg
+	if {![info exists $this-tbeg]} {set $this-tbeg 0}
+	global $this-tend
+	if {![info exists $this-tend]} {set $this-tend 1}
+	global $this-framerate
+	if {![info exists $this-framerate]} {set $this-framerate 15}
+	global $this-totframes
+	if {![info exists $this-totframes]} {set $this-totframes 30}
+	global $this-caxes
+        if {![info exists $this-caxes]} {set $this-caxes 1}
+
+	# Need to initialize the background color
+	global $this-bgcolor-r
+	if {![info exists $this-bgcolor-r]} {set $this-bgcolor-r 0}
+	global $this-bgcolor-g
+	if {![info exists $this-bgcolor-g]} {set $this-bgcolor-g 0}
+	global $this-bgcolor-b
+	if {![info exists $this-bgcolor-b]} {set $this-bgcolor-b 0}
+    }
+
     destructor {
     }
 
@@ -77,11 +109,7 @@ itcl_class ViewWindow {
 	wm title $w "ViewWindow"
 	wm iconname $w "ViewWindow"
 	wm minsize $w 100 100
-	
-	global $this-saveFile
-	global $this-saveType
-	set $this-saveFile "out.raw"
-	set $this-saveType "raw"
+	set_defaults
 
 	frame $w.menu -relief raised -borderwidth 3
 	pack $w.menu -fill x
@@ -95,30 +123,10 @@ itcl_class ViewWindow {
 	menubutton $w.menu.renderer -text "Renderer" -underline 0 \
 		-menu $w.menu.renderer.menu
 	menu $w.menu.renderer.menu
-	# Animation parameters
-	global $this-current_time
-	set $this-current_time 0
-	global $this-tbeg
-	set $this-tbeg 0
-	global $this-tend
-	set $this-tend 1
-	global $this-framerate
-	set $this-framerate 15
-	global $this-totframes
-	set $this-totframes 30
-        set $this-caxes 1
 
 	# Get the list of supported renderers for the pulldown
 	set r [$viewer-c listrenderers]
 	
-	# Need to initialize the background color
-	global $this-bgcolor-r
-	set $this-bgcolor-r 0
-	global $this-bgcolor-g
-	set $this-bgcolor-g 0
-	global $this-bgcolor-b
-	set $this-bgcolor-b 0
-
 	# OpenGL is the preferred renderer, X11 the next best.
 	# Otherwise just pick the first one for the default
 	global $this-renderer
@@ -420,7 +428,8 @@ itcl_class ViewWindow {
 	bind $w <Lock-ButtonRelease-1> "$this-c mpick end %x %y %s %b"
 	bind $w <Lock-ButtonRelease-2> "$this-c mpick end %x %y %s %b"
 	bind $w <Lock-ButtonRelease-3> "$this-c mpick end %x %y %s %b"
-	bind $w <Map> "$this-c autoview"
+# DMW: didn't want this since it overrides what's saved in the .sr file
+#	bind $w <Map> "$this-c autoview"
     }
 
     method destroyViewWindow { vw } {
@@ -610,7 +619,8 @@ itcl_class ViewWindow {
 	    puts "Non-existing frame to initialize!"
 	}
 
-        checkbutton $m.caxes -text "Center Axes" -variable $this-caxes -onvalue 1 -offvalue 0 -command "$this-c centerGenAxes; $this-c redraw"
+        checkbutton $m.caxes -text "Center Axes" -variable $this-caxes -onvalue 1 -offvalue 0 -command "$this-c redraw"
+        # checkbutton $m.caxes -text "Center Axes" -variable $this-caxes -onvalue 1 -offvalue 0 -command "$this-c centerGenAxes; $this-c redraw"
 	# checkbutton $m.iaxes -text "Icon Axes" -variable $this-iaxes -onvalue 1 -offvalue 0 -command "$this-c iconGenAxes; $this-c redraw"
 	# pack $m.caxes $m.iaxes -side top
 	pack $m.caxes -side top

@@ -258,7 +258,12 @@ void OpenGL::redraw_loop()
       Point z_a(vmat[0][2],vmat[1][2],vmat[2][2]);
 	    
       tmpview.up(y_a.vector());
+
+      // DMW: this was Alexei's new inertia-mode code:
+      // if (roe->inertia_mode == 1)
       tmpview.eyep((z_a*(viewwindow->eye_dist)) + tmpview.lookat().vector());
+      // else if (roe->inertia_mode == 2)
+      //   tmpview.lookat(tmpview.eyep()-(z_a*(roe->eye_dist)).vector());
 
       viewwindow->view.set(tmpview);	    
     } else {
