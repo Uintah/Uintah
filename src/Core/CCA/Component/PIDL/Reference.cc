@@ -40,7 +40,7 @@ Reference::Reference()
 }
 
 Reference::Reference(const Reference& copy)
-  :d_vtable_base(copy.d_vtable_base), par_size(copy.par_size), par_rank(copy.par_rank)
+  :d_vtable_base(copy.d_vtable_base), par_size(copy.par_size), par_rank(copy.par_rank) 
 {
   chan = (copy.chan)->SPFactory(false);
 }

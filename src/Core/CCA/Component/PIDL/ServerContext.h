@@ -36,6 +36,7 @@
 #include <Core/CCA/Component/Comm/EpChannel.h>
 #include <Core/CCA/Component/PIDL/Reference.h>
 #include <Core/CCA/Component/PIDL/HandlerStorage.h>
+#include <Core/CCA/Component/PIDL/HandlerGateKeeper.h>
 
 namespace SCIRun {
 /**************************************
@@ -100,6 +101,10 @@ DESCRIPTION
     // Storage for buffer data between two different handler invocations
     HandlerStorage* storage;
 
+    /////////
+    // Storage for buffer data between two different handler invocations
+    HandlerGateKeeper* gatekeeper;
+    
   };
 } // End namespace SCIRun
 

@@ -106,6 +106,10 @@ public:\n\
 ";
 #endif
 
+/*
+Local method which takes possibly illegal variable name
+and converts it to a legal, but (hopefully) still unique name
+*/
 std::string produceLegalVar(std::string illegalVar)
 {
    std::string legal = "_";
@@ -115,6 +119,37 @@ std::string produceLegalVar(std::string illegalVar)
    }
    return legal;
 }
+
+/*
+Retreives a UUID
+*/
+std::string getUUID()
+{
+  char* uuid_str;
+  uuid_t uuid;
+
+#ifdef UUID_CREATE
+  uint_t status;
+  uuid_create(&uuid, &status);
+  if(status != uuid_s_ok){
+    cerr << "Error creating uuid!\n";
+    exit(1);
+  }
+  
+  uuid_to_string(&uuid, &uuid_str, &status);
+  if(status != uuid_s_ok){
+    cerr << "Error creating uuid string!\n";
+    exit(1);
+  }
+#endif
+#ifdef UUID_GENERATE
+  uuid_str = (char*)malloc(64*sizeof(char));
+  uuid_generate( uuid );
+  uuid_unparse(uuid, uuid_str);
+#endif  
+
+  return std::string(uuid_str);
+}	
 
 struct Leader {
 };
@@ -412,28 +447,8 @@ void CI::emit(EmitState& e)
 void CI::emit_typeinfo(EmitState& e)
 {
   std::string fn=cppfullname(0);
+  std::string uuid_str = getUUID();
 
-  char* uuid_str;
-  uuid_t uuid;
-#ifdef UUID_CREATE
-  uint_t status;
-  uuid_create(&uuid, &status);
-  if(status != uuid_s_ok){
-    cerr << "Error creating uuid!\n";
-    exit(1);
-  }
-
-  uuid_to_string(&uuid, &uuid_str, &status);
-  if(status != uuid_s_ok){
-    cerr << "Error creating uuid string!\n";
-    exit(1);
-  }
-#endif
-#ifdef UUID_GENERATE
-  uuid_str = (char*)malloc(64*sizeof(char));
-  uuid_generate( uuid );
-  uuid_unparse(uuid, uuid_str);
-#endif
   e.out << "const ::SCIRun::TypeInfo* " << fn << "::_static_getTypeInfo()\n";
   e.out << "{\n";
   e.out << "  static ::SCIRun::TypeInfo* ti=0;\n";
@@ -462,8 +477,6 @@ void CI::emit_typeinfo(EmitState& e)
   e.out << "{\n";
   e.out << "  return _static_getTypeInfo();\n";
   e.out << "}\n\n";
-
-  free(uuid_str);
 }
 
 void CI::emit_handlers(EmitState& e)
@@ -800,6 +813,13 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
     e.out << leader2 << "//Unmarshal distribution flag\n";
     e.out << leader2 << "int _flag;\n";
     e.out << leader2 << "message->unmarshalInt(&_flag);\n";
+    e.out << leader2 << "//Unmarshal sessionID and number of calls\n";
+    e.out << leader2 << "int _sessionID;\n";
+    e.out << leader2 << "message->unmarshalInt(&_sessionID);\n";
+    e.out << leader2 << "int _numCalls;\n";
+    e.out << leader2 << "message->unmarshalInt(&_numCalls);\n";
+    e.out << leader2 << "//Check if it's the right session for this request to be satisfied\n";
+    e.out << leader2 << "_sc->gatekeeper->getTickets(_sessionID,_numCalls);\n";
   }
 
   /***********************************/
@@ -1016,6 +1036,10 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
     }
     e.out << "  } /*end else*/\n";
     e.out.pop_leader(f_leader);
+  }
+
+  if(isCollective) {
+    e.out << leader2 << "_sc->gatekeeper->releaseOneTicket();\n";
   }
 
   e.out.pop_leader(oldleader);
@@ -1389,13 +1413,20 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     e.out << leader2 << "if(_refL[0].par_rank >= (int)_refL.size()) {\n";
     e.out << leader2 << "  /*NOCALLRET*/\n";
     string nocallret_ldr=e.out.push_leader();
-    e.out << leader2 << "iter = _refL.begin() + ( _refL[0].par_rank % _refL.size() );\n";
+    e.out << leader2 << "int rank_offset = ( _refL[0].par_rank % _refL.size() );\n";
+    e.out << leader2 << "iter = _refL.begin() + rank_offset;\n";
     e.out << leader2 << "::SCIRun::Message* message = (*iter).chan->getMessage();\n";
     e.out << leader2 << "message->createMessage();\n";
     e.out << leader2 << "//Marshal flag which informs handler that\n";
     e.out << leader2 << "// this message is NOCALLRET:\n";
     e.out << leader2 << "int _flag = 4;\n";
     e.out << leader2 << "message->marshalInt(&_flag);\n";
+    e.out << leader2 << "//Marshal the sessionID and number of actual calls from this proxy\n";
+    e.out << leader2 << "int _sessionID = 13;\n";
+    e.out << leader2 << "message->marshalInt(&_sessionID);\n";
+    e.out << leader2 << "int _numCalls = (_refL[0].par_size / (int)_refL.size())+" << numRedisMessages << ";\n";
+    e.out << leader2 << "((_refL[0].par_size % (int)_refL.size()) > rank_offset) ?_numCalls++ :0;\n";
+    e.out << leader2 << "message->marshalInt(&_numCalls);\n";
     e.out << leader2 << "// Send the message\n";
     e.out << leader2 << "int _handler=(*iter).getVtableBase()+" << handlerOff << ";\n";
     e.out << leader2 << "message->sendMessage(_handler);\n";
@@ -1449,22 +1480,25 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     e.out << leader2 << "int rate = _refL[0].par_size;\n";
     e.out << leader2 << "iter = _refL.begin() + (_refL[0].par_rank + rate);\n";
     
-    e.out << leader2 << "for(unsigned int i=(_refL[0].par_rank + rate); i < _refL.size(); i+=rate, iter+=rate) {\n";
+    e.out << leader2 << "for(int i=(_refL[0].par_rank + rate); i < (int)_refL.size(); i+=rate, iter+=rate) {\n";
     e.out << leader2 << "  /*CALLNORET*/\n";
     string loop_leader1=e.out.push_leader();
     e.out << leader2 << "::SCIRun::Message* message = (*iter).chan->getMessage();\n";
     e.out << leader2 << "message->createMessage();\n";
-
-    int argNum=0;
-    if (doRedistribution) {
-      e.out << leader2 << "//Marshal flag which informs handler that\n";
-      e.out << leader2 << "// this message is CALLNORET\n";
-      e.out << leader2 << "int _flag = 3;\n";
-      e.out << leader2 << "message->marshalInt(&_flag);\n";
-    }
+    e.out << leader2 << "//Marshal flag which informs handler that\n";
+    e.out << leader2 << "// this message is CALLNORET\n";
+    e.out << leader2 << "int _flag = 3;\n";
+    e.out << leader2 << "message->marshalInt(&_flag);\n";
+    e.out << leader2 << "//Marshal the sessionID and number of actual calls from this proxy\n";
+    e.out << leader2 << "int _sessionID = 13;\n";
+    e.out << leader2 << "message->marshalInt(&_sessionID);\n";
+    e.out << leader2 << "int _numCalls = (_refL[0].par_size / (int)_refL.size())+" << numRedisMessages << ";\n";
+    e.out << leader2 << "((_refL[0].par_size % (int)_refL.size()) > i) ?_numCalls++ :0;\n";
+    e.out << leader2 << "message->marshalInt(&_numCalls);\n";
+    
     if(list.size() != 0)
       e.out << leader2 << "// Marshal the arguments\n";
-    argNum=0;
+    int argNum=0;
     for(vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++){
       argNum++;
       Argument* arg=*iter;
@@ -1505,6 +1539,12 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     e.out << leader2 << "// this message is CALLONLY:\n";
     e.out << leader2 << "int _flag = 2;\n";
     e.out << leader2 << "message->marshalInt(&_flag);\n";
+    e.out << leader2 << "//Marshal the sessionID and number of actual calls from this proxy\n";
+    e.out << leader2 << "int _sessionID = 13;\n";
+    e.out << leader2 << "message->marshalInt(&_sessionID);\n";
+    e.out << leader2 << "int _numCalls = (_refL[0].par_size / (int)_refL.size())+" << numRedisMessages << ";\n";
+    e.out << leader2 << "((_refL[0].par_size % (int)_refL.size()) > _refL[0].par_rank) ?_numCalls++ :0;\n";
+    e.out << leader2 << "message->marshalInt(&_numCalls);\n";
   }
 
   if(list.size() != 0)
@@ -2179,15 +2219,17 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	        << i << "] * _this_rep->getLocalStride(" << i+1 << ")) )\n";
 	  e.out.push_leader();
 	}
+ 	e.out << leader2 << "{\n";
+        string ttleader = e.out.leader;
 	e.out.push_leader(); 
-        e.out << "{\n";
         std::ostringstream var2unmarshal2;
 	var2unmarshal2 << "(*_arr_ptr)";
 	for(int i=arr_t->dim-1; i >= 0; i--) {
 	  var2unmarshal2 << "[(i" << i << "-adj" << i << ")/str" << i << "]";
 	}   
 	arr_t->subtype->emit_unmarshal(e, var2unmarshal2.str(), "1", handler, ctx, false, false);
-        e.out << "}\n";
+        e.out.pop_leader(ttleader);
+	e.out << leader2 << "}\n";
 	e.out.pop_leader(templeader); 
 	e.out << leader2 << "  //Mark this representation as recieved\n";
 	e.out << leader2 << "  _sc->d_sched->markReceived(\"" << distarr->getName() << "\",rank);\n";
@@ -2201,13 +2243,19 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	e.out << leader2 << "SCIRun::descriptorList _rl_out = d_sched->getRedistributionReps(\"" << distarr->getName() << "\");\n";
 	e.out << leader2 << "SCIRun::MxNArrayRep* _this_rep = d_sched->callerGetCallerRep(\"" 
 	      << distarr->getName() << "\");\n";
-	e.out << leader2 << "for(unsigned int i = 0; i < _rl_out.size(); i++) {\n";
+	e.out << leader2 << "for(int i = 0; i < (int)_rl_out.size(); i++) {\n";
 	e.out << leader2 << "  SCIRun::Message* message = _rl_out[i]->getReference()->chan->getMessage();\n";
 	string dimname=arg+"_mdim";
 	e.out << leader2 << "  message->createMessage();\n";
 	e.out << leader2 << "  //Marshal the distribution flag\n";
 	e.out << leader2 << "  int _flag = 1;\n";
 	e.out << leader2 << "  message->marshalInt(&_flag);\n";
+	e.out << leader2 << "  //Marshal the sessionID and number of actual calls from this proxy\n";
+	e.out << leader2 << "  int _sessionID = 13;\n";
+	e.out << leader2 << "  message->marshalInt(&_sessionID);\n";
+	e.out << leader2 << "  int _numCalls = (_refL[0].par_size / (int)_refL.size())+" << thisMethod->numRedisMessages << ";\n";
+	e.out << leader2 << "  ((_refL[0].par_size % (int)_refL.size()) > i) ?_numCalls++ :0;\n";
+	e.out << leader2 << "  message->marshalInt(&_numCalls);\n";
 	e.out << leader2 << "  //Marshal the distribution name:\n";
 	e.out << leader2 << "  int namesize = " << distarr->getName().size()+4 << ";\n";
 	e.out << leader2 << "  message->marshalInt(&namesize);\n";
@@ -2239,8 +2287,9 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	        << i << "] * _this_rep->getLocalStride(" << i+1 << ")) )\n";
 	  e.out.push_leader();
 	}
+  	e.out << leader2 << "{\n";
+        string ttleader = e.out.leader;
 	e.out.push_leader(); 
-        e.out << "{\n";
 	std::ostringstream var2unmarshal2;
 	var2unmarshal2 << "(" << arg;
 	for(int i=arr_t->dim-1; i >= 0; i--) {
@@ -2248,7 +2297,8 @@ void NamedType::emit_unmarshal(EmitState& e, const string& arg,
 	}   
 	var2unmarshal2 << ")";
 	arr_t->subtype->emit_unmarshal(e, var2unmarshal2.str(), "1", handler, ctx, false, false);
-        e.out << "}\n";
+        e.out.pop_leader(ttleader);
+	e.out << leader2 << "}\n";
 	e.out.pop_leader(templeader); 
 	e.out << leader2 << "  delete _meta_arr_rep;\n"; 
 	e.out << leader2 << "}\n";   
@@ -2451,13 +2501,19 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
 	e.out << leader2 << "SCIRun::descriptorList rl = d_sched->getRedistributionReps(\"" << distarr->getName() << "\");\n";
 	e.out << leader2 << "SCIRun::MxNArrayRep* this_rep = d_sched->callerGetCallerRep(\"" 
 	      << distarr->getName() << "\");\n";
-	e.out << leader2 << "for(unsigned int i = 0; i < rl.size(); i++) {\n";
+	e.out << leader2 << "for(int i = 0; i < (int)rl.size(); i++) {\n";
 	e.out << leader2 << "  SCIRun::Message* message = rl[i]->getReference()->chan->getMessage();\n";
 	string dimname=arg+"_mdim";
 	e.out << leader2 << "  message->createMessage();\n";
 	e.out << leader2 << "  //Marshal the distribution flag\n";
 	e.out << leader2 << "  int _flag = 1;\n";
 	e.out << leader2 << "  message->marshalInt(&_flag);\n";
+	e.out << leader2 << "  //Marshal the sessionID and number of actual calls from this proxy\n";
+	e.out << leader2 << "  int _sessionID = 13;\n";
+	e.out << leader2 << "  message->marshalInt(&_sessionID);\n";
+	e.out << leader2 << "  int _numCalls = (_refL[0].par_size / (int)_refL.size())+" << thisMethod->numRedisMessages << ";\n";
+	e.out << leader2 << "  ((_refL[0].par_size % (int)_refL.size()) > i) ?_numCalls++ :0;\n";
+	e.out << leader2 << "  message->marshalInt(&_numCalls);\n";
 	e.out << leader2 << "  //Marshal the distribution name:\n";
 	e.out << leader2 << "  int namesize = " << distarr->getName().size()+3 << ";\n";
 	e.out << leader2 << "  message->marshalInt(&namesize);\n";
@@ -2486,15 +2542,17 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
 		<< i << "] * this_rep->getLocalStride(" << i+1 << ")) )\n"; 
 	  e.out.push_leader();
 	}
+       	e.out << leader2 << "{\n"; 
+        string ttleader = e.out.leader;
 	e.out.push_leader(); 
-        e.out << "{\n";
 	std::ostringstream var2marshal;
 	var2marshal << arg;
 	for(int i=arr_t->dim-1; i >= 0; i--) {
 	  var2marshal << "[(i" << i << "-adj" << i << ")/str" << i << "]"; 
 	}   
 	arr_t->subtype->emit_marshal(e, var2marshal.str(), "1", handler, top, ctx, false);
-        e.out << "}\n";
+        e.out.pop_leader(ttleader);
+	e.out << leader2 << "}\n";
 	e.out.pop_leader(templeader);   
 	e.out << leader2 << "  delete _meta_arr_rep;\n"; 
 	e.out << leader2 << "  int _handler=rl[i]->getReference()->getVtableBase()+" << handler << ";\n";
@@ -2534,8 +2592,9 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
 	        << i << "] * _this_rep->getLocalStride(" << i+1 << ")) )\n";
 	  e.out.push_leader();
 	}
+        e.out << leader2 << "{\n";
+        string ttleader = e.out.leader;
 	e.out.push_leader(); 
-        e.out << "{\n";
 	std::ostringstream var2marshal;
 	var2marshal << "((*_arr_ptr)";
 	for(int i=arr_t->dim-1; i >= 0; i--) {
@@ -2543,7 +2602,8 @@ void NamedType::emit_marshal(EmitState& e, const string& arg,
 	}   
 	var2marshal << ")";
 	arr_t->subtype->emit_marshal(e, var2marshal.str(), "1", handler, top, ctx, false);
-        e.out << "}\n";
+        e.out.pop_leader(ttleader);
+	e.out << leader2 << "}\n";
 	e.out.pop_leader(templeader);   
 	e.out << leader2 << "  //Send Message\n";
 	e.out << leader2 << "  message->sendMessage(0);\n";
