@@ -135,7 +135,7 @@
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-	<filebase>advect2.uda</filebase>
+	<filebase>advect2mat.uda</filebase>
 	<outputInterval>.00</outputInterval>
 	<save label="vel_CC"/>
 	<save label="press_CC"/>
@@ -172,6 +172,7 @@
     <!--____________________________________________________________________-->   
     <PhysicalConstants>
 	<gravity>[0,0,0]</gravity>
+	<reference_pressure>101325.0</reference_pressure>
     </PhysicalConstants>
 
 
