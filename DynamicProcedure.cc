@@ -91,11 +91,11 @@ DynamicProcedure::computeTurbSubmodel(const ProcessorGroup* pg,
 				      DataWarehouse*,
 				      DataWarehouse* new_dw)
 {
+#ifdef PetscFilter
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
-#ifdef PetscFilter
     PerPatch<CellInformationP> cellInfoP;
     if (new_dw->exists(d_lab->d_cellInfoLabel, matlIndex, patch)) 
       new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
@@ -105,8 +105,8 @@ DynamicProcedure::computeTurbSubmodel(const ProcessorGroup* pg,
     }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     d_filter->setFilterMatrix(pg, patch, cellinfo);
-#endif
   }
+#endif
 }
 
 
