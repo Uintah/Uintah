@@ -73,7 +73,7 @@ SC_LIBS = \
 	Classlib/libClasslib.a \
 	Math/libMath.a
 
-SCALP_LDFLAGS = SCI_LM
+SC_LDFLAGS = SCI_LM
 SCIProgramTarget2($(SC_TARGET), $(SC_OBJS), $(SC_LIBS), $(SC_LDFLAGS))
 
 SRCS = $(SR_SRCS) $(SEG_SRCS) $(SC_SRCS)
