@@ -90,6 +90,32 @@ Matrix::cg_solve(const ColumnMatrix& rhs, ColumnMatrix& lhs) const
   return cg_solve(rhs, lhs, err, niter, flops, memrefs);
 }
 
+int 
+Matrix::cg_solve(const DenseMatrix& rhs, DenseMatrix& lhs) const
+{
+  double err;
+  int niter, flops, memrefs;
+  return cg_solve(rhs, lhs, err, niter, flops, memrefs);
+}
+
+int 
+Matrix::cg_solve(const DenseMatrix& rhs, DenseMatrix& lhs,
+		 double &err, int &niter,
+		 int &flops, int &memrefs,
+		 double max_error, int toomany) const
+{
+  if (rhs.ncols() != lhs.ncols()) return 0;
+  for (int i=0; i<rhs.ncols(); i++) {
+    ColumnMatrix rh(rhs.nrows()), lh(lhs.nrows());
+    int j;
+    for (j=0; j<rh.nrows(); j++)
+      rh[j]=rhs[i][j];
+    if (!cg_solve(rh, lh, err, niter, flops, memrefs)) return 0;
+    for (j=0; j<rh.nrows(); j++)
+      lhs[i][j]=lh[j];
+  }
+}
+
 int
 Matrix::cg_solve(const ColumnMatrix& rhs, ColumnMatrix& lhs,
 		 double &err, int &niter, 
@@ -173,6 +199,32 @@ Matrix::bicg_solve(const ColumnMatrix& rhs, ColumnMatrix& lhs) const
   double err;
   int niter, flops, memrefs;
   return bicg_solve(rhs, lhs, err, niter, flops, memrefs);
+}
+
+int 
+Matrix::bicg_solve(const DenseMatrix& rhs, DenseMatrix& lhs) const
+{
+  double err;
+  int niter, flops, memrefs;
+  return bicg_solve(rhs, lhs, err, niter, flops, memrefs);
+}
+
+int 
+Matrix::bicg_solve(const DenseMatrix& rhs, DenseMatrix& lhs,
+		   double &err, int &niter,
+		   int &flops, int &memrefs,
+		   double max_error, int toomany) const
+{
+  if (rhs.ncols() != lhs.ncols()) return 0;
+  for (int i=0; i<rhs.ncols(); i++) {
+    ColumnMatrix rh(rhs.nrows()), lh(lhs.nrows());
+    int j;
+    for (j=0; j<rh.nrows(); j++)
+      rh[j]=rhs[i][j];
+    if (!bicg_solve(rh, lh, err, niter, flops, memrefs)) return 0;
+    for (j=0; j<rh.nrows(); j++)
+      lhs[i][j]=lh[j];
+  }
 }
 
 int
