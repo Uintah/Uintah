@@ -296,8 +296,16 @@ tarball in the distribution.  Answer <userinput>y</userinput> to reinstall.
 the &osx; platform:
 <orderedlist>
 <listitem>
+<para>Create a directory for third-party binaries and libraries,
+for example:
+<literallayout class="monospaced">
+mkdir /usr/local/&sr;/Thirdparty_osx
+</literallayout></para>
+</listitem>
+
+<listitem>
 <para>
-<command>cd</command> to the third-party software directory:
+<command>cd</command> to the third-party sources directory:
 <literallayout class="monospaced">
 cd Thirdparty_install_osx.<replaceable>x.x.x</replaceable>
 </literallayout>
@@ -362,17 +370,12 @@ configure command for SGI/Linux platforms is:
   --with-thirdparty=/usr/local/&sr;/Thirdparty/1.8.0/Irix/CC-32bit \
   --enable-package="BioPSE MatlabInterface"
 </literallayout>
-  An example
-configure command for &osx; is:
-<literallayout class="monospaced">
-../src/configure \
-  --with-thirdparty=/usr/local/&sr;/Thirdparty_osx \
-  --enable-package="BioPSE MatlabInterface"
-</literallayout>For &sr; to use the <acronym>PETSc</acronym> libraries the option
-<option>--with-unipetsc</option> must be used.  Options
-<option>--with-lapack</option> and <option>--with-blas</option> must
-be used if the <acronym>BLAS</acronym> and <acronym>LAPACK</acronym>
-libraries are not in <filename>/usr/lib</filename> (<citetitle><xref
+
+Use option <option>--with-unipetsc</option> to add support for
+<acronym>PETSc</acronym>.  Options <option>--with-lapack</option> and
+<option>--with-blas</option> must be used if the
+<acronym>BLAS</acronym> and <acronym>LAPACK</acronym> libraries are
+not in <filename>/usr/lib</filename> (<citetitle><xref
 endterm="title.petsc_sr_config"
 linkend="sec.petsc_sr_config"/></citetitle> describes these options).
 For example:
@@ -400,7 +403,7 @@ also include the following environment variable assignments:
 example:
 <literallayout class="monospaced">
 ../src/configure \
-  --with-thirdparty=/usr/local/&sr;/Thirdparty/1.8.0/OSX/CC-32bit \
+  --with-thirdparty=/usr/local/&sr;/Thirdparty_osx \
   --enable-package="BioPSE MatlabInterface" \
   --enable-32bit \
   --disable-sci-malloc \
@@ -409,7 +412,7 @@ example:
 </para>
 
 <para>
-Not all of <command>configure</command>'s options have
+Not all of <command>configure</command>'s options have been
 mentioned. Command <command>configure --help</command> lists them all.
 </para>
 
