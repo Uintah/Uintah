@@ -10,6 +10,7 @@ itcl_class SolveMatrix {
 	global $this-current_error $this-flops $this-floprate $this-iteration
 	global $this-memrefs $this-memrate $this-maxiter
 	global $this-use_previous_so
+	global $this-np
 
         set $this-target_error 1.e-4
 	set $this-method conjugate_gradient_sci
@@ -24,6 +25,7 @@ itcl_class SolveMatrix {
 	set $this-maxiter 200
 	set $this-use_previous_soln 1
 	set $this-emit_partial 1
+	set $this-np 4
     }
  
 
@@ -31,7 +33,7 @@ itcl_class SolveMatrix {
         global $this-method
         set w .ui$this
         set meth [set $this-method]
-     if {($meth == "conjugate_gradient_sci") || ($meth == "jacoby_sci")} {
+     if {($meth == "conjugate_gradient_sci") || ($meth == "jacoby_sci") || ($meth == "bi_conjugate_gradient_sci")} {
            pack forget $w.stat                  
            pack $w.converg $w.graph -side top -padx 2 -pady 2 -fill x
 	 foreach t [winfo children $w.precond] {
@@ -66,7 +68,14 @@ itcl_class SolveMatrix {
 	button $w.execute -text "Execute" -command $n
 	pack $w.execute -side top -fill x -pady 2 -padx 2
         
- 
+	frame $w.np
+	pack $w.np -side top
+
+	label $w.np.label -text "Number of threads"
+	entry $w.np.entry -width 2 -relief flat -textvariable $this-np 
+	    
+	pack $w.np.label $w.np.entry -side left -anchor w
+
 	make_labeled_radio $w.method "Solution Method" "$this switchmethod
 " \
 		top $this-method\
@@ -79,6 +88,7 @@ itcl_class SolveMatrix {
                  {"Generalized Minimum Residual Iteration" gen_min_res_iter}\
         	 {"Richardson Iterations" richardson_iter}              
                  {"Conjugate Gradient & Precond. (SCIRun)" conjugate_gradient_sci}\
+                 {"BiConjugate Gradient & Precond. (SCIRun)" bi_conjugate_gradient_sci}\
 	         {"Jacoby & Precond. (SCIRun)" jacoby_sci}}
 
 
