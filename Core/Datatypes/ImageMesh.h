@@ -34,6 +34,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Datatypes/Mesh.h>
+#include <Core/Datatypes/FieldIterator.h>
 #include <Core/share/share.h>
 #include <string>
 #include <iostream>
@@ -48,96 +49,6 @@ public:
 
   static inline const string get_h_file_path() { return string(__FILE__); }
 
-  struct UnfinishedIndex
-  {
-  public:
-    UnfinishedIndex() : i_(0) {}
-    UnfinishedIndex(unsigned i) : i_(i) {}
-
-    operator unsigned() const { return i_; }
-
-    unsigned i_;
-  };
-
-  struct EdgeIndex : public UnfinishedIndex
-  {
-    EdgeIndex() : UnfinishedIndex() {}
-    EdgeIndex(unsigned i) : UnfinishedIndex(i) {}
-    friend void Pio(Piostream&, EdgeIndex&);
-    friend const TypeDescription* get_type_description(EdgeIndex *);
-    friend const string find_type_name(EdgeIndex *);
-  };
-
-  struct CellIndex : public UnfinishedIndex
-  {
-    CellIndex() : UnfinishedIndex() {}
-    CellIndex(unsigned i) : UnfinishedIndex(i) {}
-    friend void Pio(Piostream&, CellIndex&);
-    friend const TypeDescription* get_type_description(CellIndex *);
-    friend const string find_type_name(CellIndex *);
-  };
-
-  struct UnfinishedIter : public UnfinishedIndex
-  {
-    UnfinishedIter(const ImageMesh *m, unsigned i)
-      : UnfinishedIndex(i), mesh_(m) {}
-
-    const UnfinishedIndex &operator *() { return *this; }
-
-    bool operator ==(const UnfinishedIter &a) const
-    {
-      return i_ == a.i_ && mesh_ == a.mesh_;
-    }
-
-    bool operator !=(const UnfinishedIter &a) const
-    {
-      return !(*this == a);
-    }
-
-    const ImageMesh *mesh_;
-  };
-
-  struct EdgeIter : public UnfinishedIter
-  {
-    EdgeIter() : UnfinishedIter(0, 0) {}
-    EdgeIter(const ImageMesh *m, unsigned i)
-      : UnfinishedIter(m, i) {}
-
-    const EdgeIndex &operator *() const { return (const EdgeIndex&)(*this); }
-
-    EdgeIter &operator++() { return *this; }
-
-  private:
-
-    EdgeIter operator++(int)
-    {
-      EdgeIter result(*this);
-      operator++();
-      return result;
-    }
-  };
-
-  struct CellIter : public UnfinishedIter
-  {
-    CellIter() : UnfinishedIter(0, 0) {}
-    CellIter(const ImageMesh *m, unsigned i)
-      : UnfinishedIter(m, i) {}
-
-    const CellIndex &operator *() const { return (const CellIndex&)(*this); }
-
-    CellIter &operator++() { return *this; }
-
-  private:
-
-    CellIter operator++(int)
-    {
-      CellIter result(*this);
-      operator++();
-      return result;
-    }
-  };
-
-
   struct ImageIndex
   {
   public:
@@ -149,22 +60,22 @@ public:
     unsigned i_, j_;
   };
 
-  struct FaceIndex : public ImageIndex
+  struct IFaceIndex : public ImageIndex
   {
-    FaceIndex() : ImageIndex() {}
-    FaceIndex(unsigned i, unsigned j) : ImageIndex(i, j) {}
-    friend void Pio(Piostream&, FaceIndex&);
-    friend const TypeDescription* get_type_description(FaceIndex *);
-    friend const string find_type_name(FaceIndex *);
+    IFaceIndex() : ImageIndex() {}
+    IFaceIndex(unsigned i, unsigned j) : ImageIndex(i, j) {}
+    friend void Pio(Piostream&, IFaceIndex&);
+    friend const TypeDescription* get_type_description(IFaceIndex *);
+    friend const string find_type_name(IFaceIndex *);
   };
 
-  struct NodeIndex : public ImageIndex
+  struct INodeIndex : public ImageIndex
   {
-    NodeIndex() : ImageIndex() {}
-    NodeIndex(unsigned i, unsigned j) : ImageIndex(i, j) {}
-    friend void Pio(Piostream&, NodeIndex&);
-    friend const TypeDescription* get_type_description(NodeIndex *);
-    friend const string find_type_name(NodeIndex *);
+    INodeIndex() : ImageIndex() {}
+    INodeIndex(unsigned i, unsigned j) : ImageIndex(i, j) {}
+    friend void Pio(Piostream&, INodeIndex&);
+    friend const TypeDescription* get_type_description(INodeIndex *);
+    friend const string find_type_name(INodeIndex *);
   };
 
   struct ImageIter : public ImageIndex
@@ -189,15 +100,15 @@ public:
   };
 
 
-  struct NodeIter : public ImageIter
+  struct INodeIter : public ImageIter
   {
-    NodeIter() : ImageIter() {}
-    NodeIter(const ImageMesh *m, unsigned i, unsigned j)
+    INodeIter() : ImageIter() {}
+    INodeIter(const ImageMesh *m, unsigned i, unsigned j)
       : ImageIter(m, i, j) {}
 
-    const NodeIndex &operator *() const { return (const NodeIndex&)(*this); }
+    const INodeIndex &operator *() const { return (const INodeIndex&)(*this); }
 
-    NodeIter &operator++()
+    INodeIter &operator++()
     {
       i_++;
       if (i_ >= mesh_->min_x_ + mesh_->nx_) {
@@ -209,24 +120,24 @@ public:
 
   private:
 
-    NodeIter operator++(int)
+    INodeIter operator++(int)
     {
-      NodeIter result(*this);
+      INodeIter result(*this);
       operator++();
       return result;
     }
   };
 
 
-  struct FaceIter : public ImageIter
+  struct IFaceIter : public ImageIter
   {
-    FaceIter() : ImageIter() {}
-    FaceIter(const ImageMesh *m, unsigned i, unsigned j)
+    IFaceIter() : ImageIter() {}
+    IFaceIter(const ImageMesh *m, unsigned i, unsigned j)
       : ImageIter(m, i, j) {}
 
-    const FaceIndex &operator *() const { return (const FaceIndex&)(*this); }
+    const IFaceIndex &operator *() const { return (const IFaceIndex&)(*this); }
 
-    FaceIter &operator++()
+    IFaceIter &operator++()
     {
       i_++;
       if (i_ >= mesh_->min_x_+mesh_->nx_-1) {
@@ -238,9 +149,9 @@ public:
 
   private:
 
-    FaceIter operator++(int)
+    IFaceIter operator++(int)
     {
-      FaceIter result(*this);
+      IFaceIter result(*this);
       operator++();
       return result;
     }
@@ -250,39 +161,37 @@ public:
 
   //! Index and Iterator types required for Mesh Concept.
   struct Node {
-    typedef NodeIndex          index_type;
-    typedef NodeIter           iterator;
-    typedef NodeIndex          size_type;
-    typedef vector<index_type> array_type;
+    typedef INodeIndex                       index_type;
+    typedef INodeIter                        iterator;
+    typedef INodeIndex                       size_type;
+    typedef vector<index_type>               array_type;
   };			
 			
   struct Edge {		
-    typedef EdgeIndex          index_type;
-    typedef EdgeIter           iterator;
-    typedef EdgeIndex          size_type;
-    typedef vector<index_type> array_type;
+    typedef EdgeIndex<unsigned int>          index_type;
+    typedef EdgeIterator<unsigned int>       iterator;
+    typedef EdgeIndex<unsigned int>          size_type;
+    typedef vector<index_type>               array_type;
   };			
 			
   struct Face {		
-    typedef FaceIndex          index_type;
-    typedef FaceIter           iterator;
-    typedef FaceIndex          size_type;
-    typedef vector<index_type> array_type;
+    typedef IFaceIndex                       index_type;
+    typedef IFaceIter                        iterator;
+    typedef IFaceIndex                       size_type;
+    typedef vector<index_type>               array_type;
   };			
 			
   struct Cell {		
-    typedef CellIndex          index_type;
-    typedef CellIter           iterator;
-    typedef CellIndex          size_type;
-    typedef vector<index_type> array_type;
+    typedef CellIndex<unsigned int>          index_type;
+    typedef CellIterator<unsigned int>       iterator;
+    typedef CellIndex<unsigned int>          size_type;
+    typedef vector<index_type>               array_type;
   };
 
   typedef Face Elem;
 
-  friend class NodeIter;
-  friend class CellIter;
-  friend class EdgeIter;
-  friend class FaceIter;
+  friend class INodeIter;
+  friend class IFaceIter;
 
   ImageMesh()
     : min_x_(0), min_y_(0),
@@ -326,7 +235,7 @@ public:
   void size(Cell::size_type &) const;
 
   //! get the child elements of the given index
-  void get_nodes(Node::array_type &, Edge::index_type) const {}
+  void get_nodes(Node::array_type &, Edge::index_type) const;
   void get_nodes(Node::array_type &, Face::index_type) const;
   void get_nodes(Node::array_type &, Cell::index_type) const {}
   void get_edges(Edge::array_type &, Face::index_type) const {}
@@ -353,7 +262,7 @@ public:
 
   //! get the center point (in object space) of an element
   void get_center(Point &, Node::index_type) const;
-  void get_center(Point &, Edge::index_type) const {}
+  void get_center(Point &, Edge::index_type) const;
   void get_center(Point &, Face::index_type) const;
   void get_center(Point &, Cell::index_type) const {}
 
