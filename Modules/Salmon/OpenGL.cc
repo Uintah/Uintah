@@ -1245,8 +1245,7 @@ void OpenGL::listvisuals(TCLArgs& args)
     GETCONFIG(GLX_ACCUM_ALPHA_SIZE);
     tag+=to_string(value);
 #ifdef __sgi
-    GETCONFIG(GLX_SAMPLE_BUFFERS_SGIS);
-    tag+=clString(", samples=")+to_string(value)+":";
+    tag+=clString(", samples=");
     GETCONFIG(GLX_SAMPLES_SGIS);
     if(value)
       score+=50;
