@@ -74,6 +74,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/Rescale.tcl \
 	$(SRCDIR)/RescaleColorMap.tcl \
 	$(SRCDIR)/RingWidget.tcl \
+	$(SRCDIR)/ScalarFieldStats.tcl \
 	$(SRCDIR)/ScaledBoxWidget.tcl \
 	$(SRCDIR)/ScaledFrameWidget.tcl \
 	$(SRCDIR)/SeedField.tcl \
