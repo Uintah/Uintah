@@ -17,45 +17,54 @@ PersistentTypeID SurfaceGeom::type_id("SurfaceGeom", "Datatype", 0);
 
 DebugStream SurfaceGeom::dbg("SurfaceGeom", true);
 
-SurfaceGeom::SurfaceGeom():
-  has_bbox(0)
+SurfaceGeom::SurfaceGeom()
 {
 }
 
 
-string SurfaceGeom::get_info(){
+string
+SurfaceGeom::get_info()
+{
   ostringstream retval;
   retval << "name = " << name << endl;
   return retval.str();
 }
 
-bool SurfaceGeom::compute_bbox(){
+bool
+SurfaceGeom::compute_bbox()
+{
   //compute diagnal and bbox
   dbg << "calling Surfacegeom::compute_bbox()" << endl;
   
-  if(nodes.empty()){
-    return false;
-  }
-  has_bbox = true;
+  if (nodes.empty())
+    {
+      return false;
+    }
+
   Point min, max;
   min = max = nodes[0].p;
-  for(int i = 1; i < nodes.size(); i ++){
-    min = Min(min, nodes[i].p);
-    max = Max(max, nodes[i].p);
-  }
+  for (int i = 1; i < nodes.size(); i ++)
+    {
+      min = Min(min, nodes[i].p);
+      max = Max(max, nodes[i].p);
+    }
+
   bbox.reset();
   bbox.extend(min);
   bbox.extend(max);
-  diagonal = bbox.max()-bbox.min();
+
   return true;
 }
   
-void SurfaceGeom::set_nodes(const vector<NodeSimp>& inodes){
+void
+SurfaceGeom::set_nodes(const vector<NodeSimp>& inodes)
+{
   nodes.clear();
   nodes = inodes;
 }
 
-void SurfaceGeom::io(Piostream&){
+void SurfaceGeom::io(Piostream&)
+{
 }
 
 

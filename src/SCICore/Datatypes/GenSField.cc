@@ -38,6 +38,22 @@ GenSField<T,G,A>::GenSField(const GenSField&)
 {
 }
 
+
+template <class T, class G, class A >
+bool
+GenSField<T, G, A>::resize(int x, int y, int z)
+{
+  A *typedattrib = attrib.get_rep();
+  if (typedattrib) { typedattrib->resize(x, y, z); }
+  
+  G *typedgeom = geom.get_rep();
+  if (typedgeom) { typedgeom->resize(x, y, z); }
+
+  return true;
+}
+
+
+
 template <class T, class G, class A >
 const T& GenSField<T,G,A>::grid(int x, int y, int z) const
 {
@@ -183,10 +199,14 @@ bool GenSField<T,G,A>::longest_dimension(double &odouble)
 //}
 
 template <class T, class G, class A >
-int GenSField<T,G,A>::slinterpolate(const Point& p, double& outval, double eps)
+int GenSField<T,G,A>::slinterpolate(const Point& p, double& outval, double)
 {
-  return geom->slinterpolate<A>(attrib.get_rep(), data_loc, p, outval, eps);
+  T out;
+  geom->interp(attrib.get_rep(), p, out);
+  outval = out;
+  return 1;
 }
+
 
 template <class T, class G, class A >
 Vector GenSField<T,G,A>::gradient(const Point& /* ipoint */)

@@ -52,10 +52,6 @@ public:
   virtual string get_info();
   
   //////////
-  // Compute the bounding box and diagnal, set has_bbox to true
-  virtual bool compute_bbox();
-
-  //////////
   // Interpolate
   template <class A>
   int slinterpolate(A* att, elem_t, const Point& p, double& outval,
@@ -71,13 +67,14 @@ public:
   // Persistent representation...
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
+
+protected:
+  virtual bool compute_bbox();
+
+  bool has_neighbors;
  
   vector<NodeSimp> nodes;
   vector<EdgeSimp> edges;
-
-protected:
-  bool has_bbox;
-  bool has_neighbors;
 
 private:
   static DebugStream dbg;

@@ -51,10 +51,6 @@ public:
   virtual string get_info();
   
   //////////
-  // Compute the bounding box and diagnal, set has_bbox to true
-  virtual bool compute_bbox();
-
-  //////////
   // set nodes and tets vectors
   // deletes these pointers if they are allready set
   void set_nodes(const vector<NodeSimp>&);
@@ -64,10 +60,13 @@ public:
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
  
-  vector<NodeSimp> nodes;
-
 protected:
-  bool has_bbox;
+
+  //////////
+  // Compute the bounding box and diagnal, set has_bbox to true
+  virtual bool compute_bbox();
+  
+  vector<NodeSimp> nodes;
 
 private:
   static DebugStream dbg;

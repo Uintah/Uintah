@@ -17,8 +17,7 @@ PersistentTypeID MeshGeom::type_id("MeshGeom", "Datatype", 0);
 
 DebugStream MeshGeom::dbg("MeshGeom", true);
 
-MeshGeom::MeshGeom():
-  has_bbox(0)
+MeshGeom::MeshGeom()
 {
 }
 
@@ -28,26 +27,29 @@ string MeshGeom::get_info(){
   return retval.str();
 }
 
-bool MeshGeom::compute_bbox(){
-  //compute diagnal and bbox
+bool
+MeshGeom::compute_bbox()
+{
+  // Compute diagnal and bbox
   dbg << "calling meshgeom::compute_bbox()" << endl;
   
-  if(nodes.empty()){
-    return false;
-  }
-  has_bbox = true;
+  if(nodes.empty()) { return false; }
+
   Point min, max;
   min = max = nodes[0].p;
-  for(int i = 1; i < nodes.size(); i ++){
-    min = Min(min, nodes[i].p);
-    max = Max(max, nodes[i].p);
-  }
+  for (int i = 1; i < nodes.size(); i ++)
+    {
+      min = Min(min, nodes[i].p);
+      max = Max(max, nodes[i].p);
+    }
+
   bbox.reset();
   bbox.extend(min);
   bbox.extend(max);
-  diagonal = bbox.max()-bbox.min();
+
   return true;
 }
+
   
 void MeshGeom::set_nodes(const vector<NodeSimp>& inodes){
   nodes.clear();

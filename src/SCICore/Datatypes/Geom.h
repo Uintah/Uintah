@@ -53,10 +53,6 @@ public:
   virtual bool get_bbox(BBox&);
 
   //////////
-  // Compute the bounding box, set has_bbox to true
-  virtual bool compute_bbox() = 0;
-
-  //////////
   // Compute the longest dimension
   bool longest_dimension(double&);
 
@@ -73,10 +69,13 @@ public:
   
   // ...
 protected:
+
+  //////////
+  // Compute the bounding box, set has_bbox to true
+  virtual bool compute_bbox() = 0;
+
   BBox bbox;
   string name;
-  Vector diagonal;
-  bool has_bbox;
 };
 
 } // end namespace Datatypes
