@@ -278,12 +278,12 @@ C-----------------------------------------------------------------------
                IF (COEFE.LT.0.0 .OR. COEFW.LT.0.0) TEW = 0.0
                IF (COEFN.LT.0.0 .OR. COEFS.LT.0.0) TNS = 0.0
                IF (COEFT.LT.0.0 .OR. COEFB.LT.0.0) TTB = 0.0
-               AEC = -0.5*CE*TEW + AMAX1(0.0,-CPE)*(1.0-TEW)
-               AWC = 0.5*CW*TEW + AMAX1(0.0,CPW)*(1.0-TEW)
-               ANC = -0.5*CN*TNS + AMAX1(0.0,-CPN)*(1.0-TNS)
-               ASC = 0.5*CS*TNS + AMAX1(0.0,CPS)*(1.0-TNS)
-               ATC = -0.5*CT*TTB + AMAX1(0.0,-CPT)*(1.0-TTB)
-               ABC = 0.5*CB*TTB + AMAX1(0.0,CPB)*(1.0-TTB)
+               AEC = -0.5*CE*TEW + MAX(0.0,-CPE)*(1.0-TEW)
+               AWC = 0.5*CW*TEW + MAX(0.0,CPW)*(1.0-TEW)
+               ANC = -0.5*CN*TNS + MAX(0.0,-CPN)*(1.0-TNS)
+               ASC = 0.5*CS*TNS + MAX(0.0,CPS)*(1.0-TNS)
+               ATC = -0.5*CT*TTB + MAX(0.0,-CPT)*(1.0-TTB)
+               ABC = 0.5*CB*TTB + MAX(0.0,CPB)*(1.0-TTB)
 c *******
 c ** WARNING ** Rawat, should this be DZPB or DZPBW ?
 c *******
@@ -347,6 +347,9 @@ c                 SU(I,J,K) = 0.0
 c*********************************************************************
 c
 c $Log$
+c Revision 1.2  2000/07/08 23:42:17  bbanerje
+c Changed AMAX1(A,B) to MAX(A,B)
+c
 c Revision 1.1  2000/07/08 23:08:56  bbanerje
 c Added vvelcoef and wvelcoef ..
 c Rawat check the ** WARNING ** tags in these files for possible problems.
