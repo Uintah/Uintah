@@ -1674,8 +1674,13 @@ void Method::emit_proxy(EmitState& e, const string& fn,
     e.out << leader2 << "int _callID = xr->getlineID();\n";
     e.out << leader2 << "message->marshalInt(&_callID);\n";
   }
+
   if(list.size() != 0)
     e.out << leader2 << "// Marshal the arguments\n";
+  if(!isCollective) {
+    //Special subsetting for independent calls  
+    e.out << leader2 << "rm->createSubset(1,0);\n";
+  } 
   argNum=0;
   for(vector<Argument*>::const_iterator iter=list.begin();iter != list.end();iter++){
     argNum++;
@@ -1686,7 +1691,11 @@ void Method::emit_proxy(EmitState& e, const string& fn,
       arg->emit_marshal(e, argname.str(), "1", handlerOff , true, ArgIn, false);
     }
   }
-
+  if(!isCollective) {
+    //RESETTING Special subsetting for independent calls
+    e.out << leader2 << "rm->createSubset(0,0);\n";
+  }
+	  
   e.out << leader2 << "// Send the message\n";
   if (isCollective) {
     e.out << leader2 << "int _handler=(_ref[0])->getVtableBase()+" << handlerOff << ";\n";
