@@ -92,7 +92,9 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/imageutils.c \
 	$(SRCDIR)/input_ppm.c \
 	$(SRCDIR)/write_ppm.c \
-	$(SRCDIR)/rgbe.c
+	$(SRCDIR)/rgbe.c \
+	$(SRCDIR)/SunSky.cc
+	
 
 PSELIBS :=  \
 	Core/Thread Core/Exceptions Core/Geometry Packages/rtrt/visinfo 
