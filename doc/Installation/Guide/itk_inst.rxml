@@ -29,8 +29,9 @@ DEALINGS IN THE SOFTWARE.
 <!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
 <!--% doc = Doc.create(Doc::DocBook) %-->
 
-<section id="sec.itk_inst">
-  <title id="title.itk_inst">Insight Toolkit (<acronym>ITK</acronym>) Installation</title>
+<section os="linux;osx" id="sec.itk_inst">
+  <title id="title.itk_inst">Insight Toolkit (<acronym>ITK</acronym>)
+  Installation</title>
 
   <section>
     <title>Introduction</title>
@@ -52,8 +53,7 @@ DEALINGS IN THE SOFTWARE.
     doc.treeUrl(%Q{doc/User/Guide/usersguide/srug8.html}) %)">&sr; Users
     Guide</ulink> for more information.</para>
 
-    <!--%= doc.ifP(Doc::Linux) {%Q{-->
-    <note>
+    <note os="linux">
       <para>The &sr;/Insight <acronym>RPM</acronym> distribution of &sr;
       <emphasis>includes</emphasis> support for <acronym>ITK</acronym>.  The
       <acronym>RPM</acronym> distribution installs Insight libraries in
@@ -63,14 +63,15 @@ DEALINGS IN THE SOFTWARE.
       of &sr;.</para>
     </note>
 
-    <para>&sr;'s <acronym>ITK</acronym> support depends on the presence of
-    Java JDK 1.2.2 or later.  Environment
-    variable <envar>JAVA_HOME</envar> must contain the path to the java
+    <para os="linux">&sr;'s <acronym>ITK</acronym> support depends on
+    the presence of Java JDK 1.2.2 or later.  Environment variable
+    <envar>JAVA_HOME</envar> must contain the path to the java
     <quote>JDK</quote> directory. The JDK directory is typically
-    <filename>/usr/java</filename>, <filename>/usr/java2</filename>, or
+    <filename>/usr/java</filename>, <filename>/usr/java2</filename>,
+    or
     <filename>/usr/java/jdk<replaceable>x.x.x</replaceable></filename>.</para>
 
-    <para>
+    <para os="linux">
       For an sh-type shell:
       <literallayout class="monospaced">
 JAVA_HOME=/usr/java
@@ -82,7 +83,7 @@ setenv JAVA_HOME /usr/java
       </literallayout>
     </para>
 
-    <para>Environment variable <envar>PATH</envar> must contain the
+    <para os="linux">Environment variable <envar>PATH</envar> must contain the
     path to the <command>java</command> command.  <envar>PATH</envar>
     is set as follows:</para>
     <para>
@@ -95,7 +96,6 @@ PATH=$JAVA_HOME/bin:$PATH
 setenv PATH $JAVA_HOME/bin:$PATH
       </literallayout>
     </para>
-    <!--}} %-->
 
   </section>
 
@@ -131,7 +131,9 @@ setenv PATH $JAVA_HOME/bin:$PATH
       <varlistentry>
 	<term><varname>BUILD_SHARED_LIBS</varname></term>
 	<listitem>
-	  <para>Set the value of <varname>BUILD_SHARED_LIBS</varname> to <userinput><!--%= doc.ifP(Doc::Linux) {"ON"}; doc.ifP(Doc::OSX) {"OFF"} %--></userinput></para>
+	  <para>Set the value of <varname>BUILD_SHARED_LIBS</varname>
+	  to <userinput os="linux">ON</userinput><userinput
+	  os="osx">OFF</userinput></para>
 	</listitem>
       </varlistentry>
       <varlistentry>
@@ -169,7 +171,9 @@ setenv PATH $JAVA_HOME/bin:$PATH
 	<term><varname>PNG_LIBRARY</varname></term>
 	<listitem>
 	  <para>Set <varname>PNG_LIBRARY</varname> to the absolute
-	  pathname of the PNG library, for example, <filename><!--%= doc.ifP(Doc::Linux) {"/usr/local/lib/libpng.so"}; doc.ifP(Doc::OSX) {"/sw/lib/libpng.a"} %--></filename></para>
+	  pathname of the PNG library, for example, <filename
+	  os="linux">/usr/local/lib/libpng.so</filename><filename
+	  os="osx">/sw/lib/libpng.a</filename></para>
 	</listitem>
       </varlistentry>
       <varlistentry>
@@ -177,7 +181,9 @@ setenv PATH $JAVA_HOME/bin:$PATH
 	<listitem>
 	  <para>Set <varname>PNG_PNG_INCLUDE_DIR</varname> to the
 	  absolute pathname of the directory containing PNG include
-	  files, for example, <filename><!--%= doc.ifP(Doc::Linux) {"/usr/local/include"}; doc.ifP(Doc::OSX) {"/sw/include"} %--></filename></para>
+	  files, for example, <filename
+	  os="linux">/usr/local/include</filename><filename
+	  os="osx">/sw/include</filename></para>
 	</listitem>
       </varlistentry>
     </variablelist>
@@ -210,12 +216,8 @@ setenv PATH $JAVA_HOME/bin:$PATH
     <para>Here is an example &sr; <command>configure</command> command:
     <literallayout class="monospaced">
 ../src/configure \
-<!--%= doc.ifP(Doc::Linux) {%Q{-->
---with-thirdparty=/usr/local/Thirdparty/1.8.0/Linux/gcc-3.2-32bit \
-<!--}} %-->
-<!--%= doc.ifP(Doc::OSX) {%Q{-->
---with-thirdparty=/usr/local/Thirdparty_osx \
-<!--}} %-->
+<phrase os="linux">--with-thirdparty=/usr/local/Thirdparty/1.8.0/Linux/gcc-3.2-32bit \</phrase>
+<phrase os="osx">--with-thirdparty=/usr/local/Thirdparty_osx \</phrase>
 --enable-package="BioPSE Teem Insight" \
 --with-insight=/usr/local/lib/InsightToolkit
 &#x22EE;

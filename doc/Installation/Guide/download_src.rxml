@@ -100,8 +100,7 @@ DEALINGS IN THE SOFTWARE.
 	</simplelist>
       </para>
 
-      <!--%= doc.ifNotP(Doc::Irix) {%Q{-->
-      <para>
+      <para os="linux;osx">
 	To build Insight, download the following:
 	<simplelist>
 	  <member>
@@ -124,14 +123,13 @@ DEALINGS IN THE SOFTWARE.
 	  </member>
 	</simplelist>
       </para>
-      <!--}} %-->
     </listitem>
     
     <listitem id="src_unpack">
       <para>
 	Unpack &sr; sources:
 	<literallayout class="monospaced">
-	  gunzip -c &sr;.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
+gunzip -c &sr;.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
 	</literallayout>
 	This creates a directory called <filename>&sr;</filename>.
 	Below, the term <filename>&sr;</filename> refers to this directory.
@@ -144,7 +142,7 @@ DEALINGS IN THE SOFTWARE.
 	<filename>&sr;/src/Packages</filename>. For example, to unpack the
 	BioPSE package type:
 	<literallayout class="monospaced">
-	  gunzip -c BioPSE.PKG.<replaceable>x.x.x</replaceable>.tar.gz | (cd &sr;/src/Packages &amp;&amp; tar xf -)
+gunzip -c BioPSE.PKG.<replaceable>x.x.x</replaceable>.tar.gz | (cd &sr;/src/Packages &amp;&amp; tar xf -)
 	</literallayout>
 	Repeat for other packages.
       </para>
@@ -154,7 +152,7 @@ DEALINGS IN THE SOFTWARE.
       <para>
 	Unpack the sample datasets:
 	<literallayout class="monospaced">
-	  gunzip -c SCIRunData.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
+gunzip -c SCIRunData.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
 	</literallayout>
 	This creates the directory <filename>&sr;Data</filename>.
 	<filename>&sr;Data</filename> should be moved to a location
@@ -169,11 +167,9 @@ DEALINGS IN THE SOFTWARE.
       </para>
       <para>
 	<literallayout class="monospaced">
-	  gunzip -c Thirdparty_install<!--%= osx
-	  %-->.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
+gunzip -c Thirdparty_install<!--%= osx %-->.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
 	</literallayout>
-	This creates the directory <filename>Thirdparty_install<!--%=
-	osx %-->.<replaceable>x.x.x</replaceable></filename>.
+	This creates the directory <filename>Thirdparty_install<!--%= osx %-->.<replaceable>x.x.x</replaceable></filename>.
       </para>
     </listitem>
 
@@ -181,7 +177,7 @@ DEALINGS IN THE SOFTWARE.
       <para>
 	Unpack the documentation:
 	<literallayout class="monospaced">
-	  gunzip -c SCIRunDocs.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
+gunzip -c SCIRunDocs.<replaceable>x.x.x</replaceable>.tar.gz | tar xf -
 	</literallayout>
 	This creates the directory
 	<filename>&sr;Docs</filename>.<replaceable>x.x.x</replaceable>. This
@@ -196,7 +192,9 @@ DEALINGS IN THE SOFTWARE.
   </orderedlist>
 
   <note>
-    <title>Note</title> <para><xref linkend="ap.lsrcvs"/> discusses a
+    <title>Note</title>
+
+    <para><xref linkend="ap.lsrcvs"/> discusses a
     method for putting the downloaded &sr; sources under control of the
     CVS version control system.  This is useful if the &sr; distribution
     will be used for development.  This is <emphasis>not</emphasis> a

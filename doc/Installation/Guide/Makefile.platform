@@ -30,22 +30,30 @@
 # Build platform specific IG.
 
 platform := ${notdir ${shell pwd}}
-parms_chunk := chunk.section.depth=2 use.id.as.filename=1
+treetop := ../../../..
+edition := ${treetop}/src/main/sci_version.h
+
+params_common = treetop=${treetop} profile.os=${platform} use.extensions=1
+
 stylesheet_chunk := ${STYLESHEET_XSL_HTML}/srdocbook-chunk.xsl
+params_chunk = ${params_common} chunk.section.depth=2 use.id.as.filename=1
+
 stylesheet_nochunk := ${STYLESHEET_XSL_HTML}/srdocbook.xsl
+params_nochunk = ${params_common}
+
+stylesheet_fo := ${STYLESHEET_XSL_PRINT}/profile-docbook.xsl
+params_fo := ${params_common} section.autolabel=1
+
 stylesheet_print := ${STYLESHEET_DSSSL_PRINT}/docbook.dsl
 params_print := -V %footnote-ulinks% -V %section-autolabel% \
   -V %generate-article-toc% -V bop-footnotes
+
 rxmlsrcs := ${wildcard ../*.rxml}
-# Relative to platform directories.
-treetop := ../../../..
-# File containing sr version info
-edition := ${treetop}/src/main/sci_version.h
 
 .PHONY: all html print clean veryclean
 .DELETE_ON_ERROR:
 
-all: html print
+all: html fo-print
 
 vpath %.rxml ../
 
@@ -62,18 +70,26 @@ html: srig.html
 hxmlsrcs := ${subst .rxml,.hxml,${notdir ${rxmlsrcs}}}
 srig.html: ${hxmlsrcs} ${edition}
 	java com.icl.saxon.StyleSheet -w2 \
-          main.hxml ${stylesheet_nochunk} treetop=${treetop} >$@
+          main.hxml ${stylesheet_nochunk} ${params_nochunk}  >$@
 	java com.icl.saxon.StyleSheet -w2 \
-          main.hxml ${stylesheet_chunk} ${parms_chunk} treetop=${treetop}
+          main.hxml ${stylesheet_chunk} ${params_chunk}
 
-# Build print version
-print: srig.pdf
+# Build print (from fo) version
+fo-print: srig.pdf
 pxmlsrcs := ${subst .rxml,.pxml,${notdir ${rxmlsrcs}}}
 srig.pdf : ${pxmlsrcs} ${edition}
-	openjade -t tex -V tex-backend -c ${CATALOG} -o srig.tex \
-          -d ${stylesheet_print} ${params_print} ${XML_DCL} main.pxml
-	for i in 1 2 3; do jadetex srig.tex ; done
-	dvipdfm -p letter srig.dvi
+	java com.icl.saxon.StyleSheet -w2 -o srig.fo \
+          main.pxml ${stylesheet_fo} ${params_fo} >$@
+	fop -fo srig.fo -pdf srig.pdf
+
+# Build print version
+# print: srig.pdf
+# pxmlsrcs := ${subst .rxml,.pxml,${notdir ${rxmlsrcs}}}
+# srig.pdf : ${pxmlsrcs} ${edition}
+# 	openjade -t tex -V tex-backend -c ${CATALOG} -o srig.tex \
+#           -d ${stylesheet_print} ${params_print} ${XML_DCL} main.pxml
+# 	for i in 1 2 3; do jadetex srig.tex ; done
+# 	dvipdfm -p letter srig.dvi
 
 clean:
 	-rm -f *.[ph]xml srig.aux srig.log srig.out srig.dvi srig.tex *~

@@ -34,22 +34,20 @@ DEALINGS IN THE SOFTWARE.
 
   <para>This guide provides instructions for installing &sr;, its
   sample data sets, and &sr; documentation on the &pf; platform.  &sr;
-  can be installed from an <!--%= doc.ifP(Doc::Linux) {%Q{-->RPM<!--}}
-  %--><!--%= doc.ifP(Doc::OSX) {%Q{-->disk image (DMG)<!--}} %--> or
-  from its source code.</para>
+  is installed from <phrase os="linux">an RPM or</phrase> <phrase
+  os="osx">a disk image (DMG) or</phrase> source code.</para>
 
   <para>&pf; platform guidelines are listed in <xref
   linkend="tbl.pltfm_req"/>.</para>
   
-  <!--%= doc.ifP(Doc::Linux) { %Q{-->
-  <para>Linux has been tested on the specified systems and RPMs are
+  <para os="linux">Linux has been tested on the specified systems and RPMs are
   provided for these systems.  &sr; may work on other Linux systems
   as well.</para>
-  <!--}} %-->
 
   <para>
-    Disk space requirements <!--%= doc.ifNotP(Doc::Irix) {%Q{-->for a source code installation<!--}} %--> are listed in
-    <xref linkend="tbl.disk_space"/>.
+    Disk space requirements <phrase os="linux;osx">for a source code
+    installation</phrase> are listed in <xref
+    linkend="tbl.disk_space"/>.
   </para>
 
   <table id="tbl.pltfm_req">
@@ -62,8 +60,7 @@ DEALINGS IN THE SOFTWARE.
 	</row>
       </thead>
       <tbody>
-	<row valign="top">
-	  <!--%= doc.ifP(Doc::Linux) { %Q{-->
+	<row valign="top" os="linux">
 	  <entry>
 	    <itemizedlist>
 	      <listitem>
@@ -84,8 +81,8 @@ DEALINGS IN THE SOFTWARE.
 	      </listitem>
 	    </itemizedlist>
 	  </entry>
-	  <!--}} %-->	  
-	  <!--%= doc.ifP(Doc::Irix) { %Q{-->
+	</row>
+	<row valign="top" os="irix">
 	  <entry>
 	    <itemizedlist>
 	      <listitem>
@@ -106,8 +103,8 @@ DEALINGS IN THE SOFTWARE.
 	      </listitem>
 	    </itemizedlist>
 	  </entry>
-	  <!--}} %-->	    
-	  <!--%= doc.ifP(Doc::OSX) { %Q{-->
+	</row>
+	<row valign="top" os="osx">
 	  <entry>
 	    <itemizedlist>
 	      <listitem>
@@ -140,7 +137,6 @@ DEALINGS IN THE SOFTWARE.
 	      </listitem>
 	    </itemizedlist>
 	  </entry>
-	  <!--}} %-->
 	</row>
       </tbody>
     </tgroup>
@@ -166,8 +162,7 @@ DEALINGS IN THE SOFTWARE.
     </tgroup>
   </table>
 
-  <!--%= doc.ifP(Doc::OSX) {%Q{-->
-  <para>Apple's X11 server software, Xcode developer tools, and X11
+  <para os="osx">Apple's X11 server software, Xcode developer tools, and X11
   SDK are distributed with &osx; but are not part of the &osx; default
   installation.  They are installed by double-clicking, in turn, the
   files <filename>X11User.pkg</filename>,
@@ -177,10 +172,8 @@ DEALINGS IN THE SOFTWARE.
   <filename>Developer.mpkg</filename> and
   <filename>X11SDK.pkg</filename> are part of the Xcode
   distribution.</para>
-  <!--}} %-->
 
-  <!--%= doc.ifP(Doc::Linux) {%Q{-->
-  <para>
+  <para os="linux">
     Additional platform notes:
     <itemizedlist>
       <listitem>
@@ -241,27 +234,17 @@ DEALINGS IN THE SOFTWARE.
       </listitem>
     </itemizedlist>
   </para>
-  <!--}} %-->
 
-  <!--%= doc.ifP(Doc::Linux) {%Q{-->
-  <para>Proceed to <xref linkend="sec.rpminst" /> to install &sr;
-  via an <acronym>RPM</acronym>.</para>
+  <para os="linux">Proceed to <xref linkend="sec.rpminst" /> to install &sr;
+  from an <acronym>RPM</acronym>.</para>
 
-  <para>Proceed to <xref linkend="sec.source_inst" /> to install &sr;
-  from source code.</para>
-  <!--}} %-->
-
-  <!--%= doc.ifP(Doc::Irix) {%Q{-->
-  <para>Proceed to <xref linkend="sec.source_inst"/> to install
-  &sr;.</para>
-  <!--}} %-->
-
-  <!--%= doc.ifP(Doc::OSX) {%Q{-->
-  <para>Proceed to <xref linkend="sec.dmg_inst"/> to install &sr; from
+  <para os="osx">Proceed to <xref linkend="sec.dmg_inst"/> to install &sr; from
   a disk image.</para>
 
-  <para>Proceed to <xref linkend="sec.source_inst"/> to install &sr; from
-  source code.</para>
-  <!--}} %-->
+  <para os="irix">Proceed to <xref linkend="sec.source_inst"/> to install
+  &sr;.</para>
+
+  <para os="linux;osx">Proceed to <xref linkend="sec.source_inst"/> to
+  install &sr; from source code.</para>
 
 </section>

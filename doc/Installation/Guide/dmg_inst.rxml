@@ -26,7 +26,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 -->
 
-<section id="sec.dmg_inst">
+<section os="osx" id="sec.dmg_inst">
   <title id="title.dmg_inst">Installation from File Images</title>
 
   <section>
@@ -99,7 +99,7 @@ DEALINGS IN THE SOFTWARE.
     <para>
       Type:
       <literallayout class="monospaced">
-	sudo gunzip -c SCIRunData.<replaceable>x.x.x</replaceable>.tar.gz | (cd /usr/local &amp;&amp; tar xf -)
+sudo gunzip -c SCIRunData.<replaceable>x.x.x</replaceable>.tar.gz | (cd /usr/local &amp;&amp; tar xf -)
       </literallayout>
      You will be asked for your login password.  The above command
      creates <filename>/usr/local/&sr;Data</filename>, the sample
@@ -117,7 +117,7 @@ DEALINGS IN THE SOFTWARE.
     <para>
       Type:
       <literallayout class="monospaced">
-	sudo gunzip -c SCIRunDocs.<replaceable>x.x.x</replaceable>.tar.gz | (cd /usr/local &amp;&amp; tar xf -)
+sudo gunzip -c SCIRunDocs.<replaceable>x.x.x</replaceable>.tar.gz | (cd /usr/local &amp;&amp; tar xf -)
       </literallayout>
       You will be asked for your login password.  The above command
       will create

@@ -35,7 +35,8 @@ DEALINGS IN THE SOFTWARE.
     <title>Introduction</title>
 
     <para>
-      Follow these steps to install &sr; <!--%= doc.ifNotP(Doc::Irix) {%Q{-->from source code<!--}} %-->:
+      Follow these steps to install &sr; <phrase os="linux;osx">from
+      source code</phrase>:
       <orderedlist>
 	<listitem>
 	  <para><link linkend="src_download">Download</link> and <link

@@ -28,7 +28,7 @@
 
 # Build platform specific installation guides.
 
-platforms := Linux Irix OSX
+platforms := linux irix osx
 
 .PHONY: docs clean veryclean
 
