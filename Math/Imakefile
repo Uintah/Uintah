@@ -3,8 +3,8 @@
 
 #ifdef SCI_DIR_Math
 
-OBJS = Mat.o  MusilRNG.o  TrigTable.o
-SRCS = Mat.cc MusilRNG.cc TrigTable.cc
+OBJS = Mat.o  MusilRNG.o  TrigTable.o CatmullRomSpline.o
+SRCS = Mat.cc MusilRNG.cc TrigTable.cc CatmullRomSpline.cc
 
 LIBNAME = Math
 
