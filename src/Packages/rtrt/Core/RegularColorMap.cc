@@ -127,6 +127,20 @@ void RegularColorMap::fillColor(int type, Array1<Color> &colors) {
     colors.add(Color(1,1,1));
     colors.add(Color(0,0,0));
     break;
+  case RegCMap_InvRIsoLum:
+    colors.add(Color(0.528, 0.528, 1.0));
+    colors.add(Color(0.304, 0.5824, 1.0));
+    colors.add(Color(0.0, 0.6656, 0.832));
+    colors.add(Color(0.0, 0.712, 0.5696));
+    colors.add(Color(0.0, 0.744, 0.2976));
+    colors.add(Color(0.0, 0.76, 0.0));
+    colors.add(Color(0.304, 0.76, 0.0));
+    colors.add(Color(0.5504, 0.688, 0.0));
+    colors.add(Color(0.68, 0.624, 0.0));
+    colors.add(Color(0.752, 0.6016, 0.0));
+    colors.add(Color(1.0, 0.5008, 0.168));
+    colors.add(Color(1.0, 0.424, 0.424));
+    break;
   default:
     cerr << "RegularColorMap::fillColor(type):Invalid type "<<type
 	 <<" using gray scale\n";
@@ -218,6 +232,10 @@ int RegularColorMap::parseType(const char* typeSin) {
            typeS == "grayscale" ||
            typeS == "g"         )
     type = RegCMap_GrayScale;
+  else if (typeS == "InvRIsoLum" ||
+      typeS == "invrisolum" ||
+      typeS == "iril"         )
+    type = RegCMap_InvRIsoLum;
   
   return type;
 }

@@ -64,7 +64,8 @@ namespace rtrt {
       RegCMap_InvBlackBody,
       RegCMap_BlackBody,
       RegCMap_InvGrayScale,
-      RegCMap_GrayScale
+      RegCMap_GrayScale,
+      RegCMap_InvRIsoLum
     };
 
     // These are used to change the colors in the colormap.
