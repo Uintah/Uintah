@@ -1,7 +1,7 @@
 
 #include <Packages/Uintah/Core/Grid/Level.h>
-#include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/ProblemSpec/Handle.h>
+#include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
@@ -390,7 +390,11 @@ void Level::finalizeLevel(bool periodicX, bool periodicY, bool periodicZ)
   all_patches->addAll(tmp_patches);
 
   BBox bbox;
-  getSpatialRange(bbox);
+  
+  if (d_index > 0)
+    grid->getLevel(0)->getSpatialRange(bbox);
+  else
+    getSpatialRange(bbox);
   Box domain(bbox.min(), bbox.max());
   Vector vextent = positionToIndex(bbox.max()) - positionToIndex(bbox.min());
   IntVector extent((int)rint(vextent.x()), (int)rint(vextent.y()),
@@ -505,6 +509,7 @@ void Level::setBCTypes()
       patch->getFace(face, IntVector(0,0,0), IntVector(1,1,1), l, h);
       Patch::selectType neighbors;
       selectPatches(l, h, neighbors);
+
       if(neighbors.size() == 0){
 	if(d_index != 0){
 	  // See if there are any patches on the coarse level at that face
@@ -514,6 +519,21 @@ void Level::setBCTypes()
 	  IntVector coarseLow = mapCellToCoarser(fineLow);
 	  IntVector coarseHigh = mapCellToCoarser(fineHigh);
 	  const LevelP& coarseLevel = getCoarserLevel();
+          
+          // add 1 to the corresponding index on the plus edges 
+          // because the upper corners are sort of one cell off (don't know why)
+          if (d_extraCells.x() != 0 && face == Patch::xplus) {
+            coarseLow[0] ++;
+            coarseHigh[0]++;
+          }
+          else if (d_extraCells.y() != 0 && face == Patch::yplus) {
+            coarseLow[1] ++;
+            coarseHigh[1] ++;
+          }
+          else if (d_extraCells.z() != 0 && face == Patch::zplus) {
+            coarseLow[2] ++;
+            coarseHigh[2]++;
+          }
 	  coarseLevel->selectPatches(coarseLow, coarseHigh, neighbors);
 	  if(neighbors.size() == 0){
 	    patch->setBCType(face, Patch::None);
@@ -527,7 +547,6 @@ void Level::setBCTypes()
 	patch->setBCType(face, Patch::Neighbor);
       }
     }
-
     patch->finalizePatch();
   }
   
