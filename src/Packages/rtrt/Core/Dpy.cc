@@ -111,8 +111,6 @@ using namespace std;
 
 extern bool pin;
 
-//Mutex rtrt::cameralock("Frameless Camera Synch lock");
-
 Mutex io_lock_("io lock");
 
 //////////////////////////////////////////////////////////////////
@@ -195,7 +193,7 @@ Dpy::Dpy( Scene* scene, RTRT* rtrt_engine, char* criteria1, char* criteria2,
   bench(bench), bench_warmup(10), bench_num_frames(110),
   exit_after_bench(true), ncounters(ncounters),
   c0(c0), c1(c1),
-  frameless(frameless),synch_frameless(0), display_frames(display_frames)
+  frameless(frameless), synch_frameless(0), display_frames(display_frames)
 {
   if(rserver)
     this->rserver = new RServer();
@@ -257,6 +255,10 @@ Dpy::Dpy( Scene* scene, RTRT* rtrt_engine, char* criteria1, char* criteria2,
   objectStealth_ = new Stealth( translate_scale, rotate_scale, gravity );
 
   priv->stereo=stereo;
+
+  // Initialize for frameless
+  priv->last_changed = true;
+  priv->accum_count = 0;
 }
 
 Dpy::~Dpy()
@@ -607,8 +609,256 @@ bool Dpy::should_close() {
 
 void
 Dpy::renderFrameless() {
-  cout << "can't do frameless right now.\n";
-  return;
+  int   & showing_scene = priv->showing_scene;
+  // only 1 buffer for frameless...
+  showing_scene = 0;
+
+  // Time how long it takes to do the display, only if we are not
+  // synched with the workers.
+  double starttime = 0;
+
+  // We'll go ahead and set the desired framerate we want to see
+  // updates.  The display thread will wait for the remaining time.
+  priv->FrameRate = 1.0/15.0;
+  // I'm not sure what this is used for, because an assignment to
+  // synch_frameless is the only place it's used.
+  // priv->doing_frameless = 0;
+  double& FrameRate = priv->FrameRate;
+
+  // Just to make sure this whole pass works from the same value of
+  //synch_frameless we'll copy it over and do it.
+  int do_synch = synch_frameless;
+  //int do_some_type_of_synch=0;
+  if (do_synch) { // synchronize stuff...
+#if 0
+    io.lock();
+    cerr << "Display on first\n";
+    io.unlock();
+#endif
+    barrier->wait(nworkers+1); // wait here for all of the procs...
+#if 0
+    io.lock();
+    cerr << "Display out of first\n";
+    io.unlock();
+#endif
+    //do_some_type_of_synch=1; // do the right thing for barriers...
+  } else {
+    // Start timing how long it takes to display the frame.
+    starttime = SCIRun::Time::currentSeconds();
+  }
+
+  // Should this actually be false??
+  bool changed = true;
+  {
+    // Hmmm... should this be locked here?
+    rtrt_engine->cameralock.lock();
+    Camera * cam1 = scene->get_camera(rendering_scene);
+    
+    if( *cam1 != *guiCam_ ) {
+      *cam1 = *guiCam_;
+      changed = true;
+    }
+    rtrt_engine->cameralock.unlock();
+    
+    changed |= checkGuiFlags();
+    
+    if(!changed && !scene->no_aa){
+      double x1, x2, w;
+      do {
+        x1 = 2.0 * rng() - 1.0;
+        x2 = 2.0 * rng() - 1.0;
+        w = x1 * x1 + x2 * x2;
+      } while ( w >= 1.0 );
+      
+      w = sqrt( (-2.0 * log( w ) ) / w );
+      scene->xoffset = x1 * w * 0.5;
+      scene->yoffset = x2 * w * 0.5;
+    } else {
+      scene->xoffset=0;
+      scene->yoffset=0;
+    }
+  }
+
+  // no stats for frameless stuff for now...
+
+#if 0
+  drawstats[showing_scene]->add(SCIRun::Time::currentSeconds(), Color(0,1,0));
+
+  // This is the last stat for the rendering scene (cyan)
+  drawstats[showing_scene]->add(SCIRun::Time::currentSeconds(), Color(0,1,1));
+  counters->end_frame();
+      
+  Stats* st=drawstats[rendering_scene];
+  st->reset();
+#endif
+  double tnow=SCIRun::Time::currentSeconds();
+  //st->add(tnow, Color(1,0,0));
+  double dt=tnow-last_frame;
+  double framerate=1./dt;
+  last_frame=tnow;
+
+  if(ncounters){
+    fprintf(stderr, "%2d: %12lld", c0, counters->count0());	
+    for(int i=0;i<nworkers;i++){
+      fprintf(stderr, "%12lld", workers_[i]->get_counters()->count0());
+    }
+    fprintf(stderr, "\n");
+    if(ncounters>1){
+      fprintf(stderr, "%2d: %12lld", c1, counters->count1());	
+      for(int i=0;i<nworkers;i++){
+	fprintf(stderr, "%12lld", workers_[i]->get_counters()->count1());
+      }
+      fprintf(stderr, "\n\n");
+    }
+  }
+
+  Image * displayedImage = scene->get_image(showing_scene);
+
+  bool swap=true;
+
+#if 1
+  if(display_frames && !bench){
+    if(rserver){
+      rserver->sendImage(displayedImage, nstreams);
+    } else {
+      
+      // Set up the projection matrix for pixel writes
+      glViewport(0, 0, priv->xres, priv->yres);
+      glMatrixMode(GL_PROJECTION);
+      glLoadIdentity();
+      gluOrtho2D(0, priv->xres, 0, priv->yres);
+      glMatrixMode(GL_MODELVIEW);
+      glLoadIdentity();
+      glTranslatef(0.375, 0.375, 0.0);
+      
+#if 0
+      // zoom stuff to fit to the window...
+      if ((xScale != 1.0) || (yScale != 1.0)) {
+        glPixelZoom(1.0/xScale,1.0/yScale);
+      }
+#endif
+
+      if(scene->no_aa || priv->last_changed){
+        priv->accum_count=0;
+        scene->get_image(showing_scene)->draw( renderWindowSize_,
+                                               fullScreenMode_ );
+      } else {
+        if(priv->accum_count==0){
+          // Load last image...
+          glReadBuffer(GL_FRONT);
+          glAccum(GL_LOAD, 1.0);
+          glReadBuffer(GL_BACK);
+          priv->accum_count=1;
+        }
+        priv->accum_count++;
+        glAccum(GL_MULT, 1.-1./priv->accum_count);
+        scene->get_image(showing_scene)->draw( renderWindowSize_,
+                                               fullScreenMode_ );
+        glAccum(GL_ACCUM, 1.0/priv->accum_count);
+        if(priv->accum_count>=4){
+          /* The picture jumps around quite a bit when we show one
+           * that doesn't have very many samples, so we don't show the
+           * accumulated picture until we have at least 4 samples
+           */
+          glAccum(GL_RETURN, 1.0);
+        } else {
+          swap = false;
+        }
+      }
+      if (priv->show_frame_rate) {
+        // Display textual information on the screen:
+        char buf[200];
+        if (priv->FrameRate > 1)
+          sprintf( buf, "%3.1lf fps", (priv->FrameRate) );
+        else
+          sprintf( buf, "%2.2lf fps - %3.1lf spf", (priv->FrameRate) ,
+                   1.0f/(priv->FrameRate));
+	// Figure out how wide the string is
+	int width = calc_width(fontInfo, buf);
+	// Now we want to draw a gray box beneth the font using blending. :)
+	glEnable(GL_BLEND);
+	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+	glColor4f(0.5,0.5,0.5,0.5);
+	glRecti(8,3-fontInfo->descent-2,12+width,fontInfo->ascent+3);
+	glDisable(GL_BLEND);
+	printString(fontbase, 10, 3, buf, Color(1,1,1));
+      }
+
+      //st->add(SCIRun::Time::currentSeconds(), Color(0,0,1));
+
+      // Draw stats removed
+  
+      //st->add(SCIRun::Time::currentSeconds(), Color(1,0,1));
+      glFinish();
+      if (swap && ((window_mode & BufferModeMask) == DoubleBuffered))
+        glXSwapBuffers(dpy, win);
+      XFlush(dpy);
+      //st->add(SCIRun::Time::currentSeconds(), Color(1,1,0));
+      
+    }
+  } // if (display_frames && !bench)
+#else
+  glClearColor(.3,.3,.3, 1);
+  glClear(GL_COLOR_BUFFER_BIT);
+#endif
+  priv->last_changed = changed;
+
+
+  // Moved the locking before the frame draw
+//   cameralock.lock(); // lock this - for synchronization stuff...
+//   priv->camera=scene->get_camera(showing_scene);
+      
+//   get_input(); // this does all of the x stuff...
+      
+//   cameralock.unlock();
+
+  if (do_synch) {
+#if 0
+    io.lock();
+    cerr << "Display on second\n";
+    io.unlock();
+#endif
+    barrier->wait(nworkers+1);
+#if 0
+    io.lock();
+    cerr << "Display out of second\n";
+    io.unlock();
+#endif
+  }
+
+#if 0
+  if (do_some_type_of_synch) {
+    // just block in the begining???
+    barrier->wait(nworkers+1); // block - this lets them get camera params...
+    synch_frameless = priv->doing_frameless; // new ones always catch on 1st barrier...
+  }
+#endif
+
+  // always have stereo - camera sychronization used to determine if
+  // stereo pixels are rendered...
+
+  if( displayedImage->get_xres() != priv->xres ||
+      displayedImage->get_yres() != priv->yres ||
+      displayedImage->get_stereo() != priv->stereo) {
+    delete displayedImage;
+    displayedImage = new Image(priv->xres, priv->yres, priv->stereo);
+    scene->set_image(showing_scene, displayedImage);
+    if(rserver){
+      rserver->resize(priv->xres, priv->yres);
+    } else {
+      //      if (display_frames) XResizeWindow(dpy, win, priv->xres, priv->yres);
+      XResizeWindow(dpy, win, priv->xres, priv->yres);
+      resize(priv->xres, priv->yres);
+    }
+  }
+
+  //st->add(SCIRun::Time::currentSeconds(), Color(1,0,0));
+  //rendering_scene=1-rendering_scene;
+  //showing_scene=1-showing_scene;
+
+  double endtime = SCIRun::Time::currentSeconds();
+  if (!do_synch)
+    SCIRun::Time::waitFor(FrameRate - (endtime-starttime));
 } // end renderFrameless()
 
 void
@@ -663,13 +913,17 @@ Dpy::renderFrame() {
   
   drawstats[showing_scene]->add(SCIRun::Time::currentSeconds(),Color(1,0,0));
 
+  // Should this actually be false??
   bool changed = true;
 
   Camera * cam1 = scene->get_camera(rendering_scene);
 
-  if( *cam1 != *guiCam_ ){ *cam1 = *guiCam_; }
+  if( *cam1 != *guiCam_ ) {
+    *cam1 = *guiCam_;
+    changed = true;
+  }
 
-  changed = checkGuiFlags();
+  changed |= checkGuiFlags();
 
   scene->refill_work(rendering_scene, nworkers);
 
@@ -699,13 +953,6 @@ Dpy::renderFrame() {
     if(rserver){
       rserver->sendImage(displayedImage, nstreams);
     } else {
-      // Display textual information on the screen:
-      char buf[200];
-      if (priv->FrameRate > 1)
-	sprintf( buf, "%3.1lf fps", (priv->FrameRate) );
-      else
-	sprintf( buf, "%2.2lf fps - %3.1lf spf", (priv->FrameRate) ,
-		 1.0f/(priv->FrameRate));
 
       glViewport(0, 0, priv->xres, priv->yres);
       glMatrixMode(GL_PROJECTION);
@@ -723,6 +970,13 @@ Dpy::renderFrame() {
         displayedImage->draw_depth( scene->max_depth );
       }
       if (priv->show_frame_rate) {
+        // Display textual information on the screen:
+        char buf[200];
+        if (priv->FrameRate > 1)
+          sprintf( buf, "%3.1lf fps", (priv->FrameRate) );
+        else
+          sprintf( buf, "%2.2lf fps - %3.1lf spf", (priv->FrameRate) ,
+                   1.0f/(priv->FrameRate));
 	// Figure out how wide the string is
 	int width = calc_width(fontInfo, buf);
 	// Now we want to draw a gray box beneth the font using blending. :)
@@ -902,7 +1156,8 @@ void Dpy::wait_on_close() {
 }
 
 void Dpy::change_nworkers(int num) {
-  if (numThreadsRequested_new+num >= 1)
+  int newnum = numThreadsRequested_new+num;
+  if (newnum >= 1 && newnum <= SCIRun::Thread::numProcessors())
     numThreadsRequested_new += num;
 }
 
