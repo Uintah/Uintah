@@ -51,9 +51,6 @@ public:
   public:
     ImageIndex() : i_(0), j_(0), mesh_(0) {}
 
-    ImageIndex(unsigned i, unsigned j) 
-      : i_(i), j_(j), mesh_(0) {}
-
     ImageIndex(const ImageMesh *m, unsigned i, unsigned j) 
       : i_(i), j_(j), mesh_(m) {}
 
@@ -72,8 +69,8 @@ public:
   struct IFaceIndex : public ImageIndex
   {
     IFaceIndex() : ImageIndex() {}
-    IFaceIndex(unsigned i, unsigned j) 
-      : ImageIndex(i, j) {}
+    IFaceIndex(const ImageMesh *m, unsigned i, unsigned j) 
+      : ImageIndex(m, i, j) {}
     friend void Pio(Piostream&, IFaceIndex&);
     friend const TypeDescription* get_type_description(IFaceIndex *);
     friend const string find_type_name(IFaceIndex *);
@@ -82,8 +79,8 @@ public:
   struct INodeIndex : public ImageIndex
   {
     INodeIndex() : ImageIndex() {}
-    INodeIndex(unsigned i, unsigned j) 
-      : ImageIndex(i, j) {}
+    INodeIndex(const ImageMesh *m, unsigned i, unsigned j) 
+      : ImageIndex(m, i, j) {}
     friend void Pio(Piostream&, INodeIndex&);
     friend const TypeDescription* get_type_description(INodeIndex *);
     friend const string find_type_name(INodeIndex *);
@@ -91,7 +88,7 @@ public:
 
   struct ImageIter : public ImageIndex
   {
-    ImageIter() : ImageIndex(0, 0) {}
+    ImageIter() : ImageIndex() {}
     ImageIter(const ImageMesh *m, unsigned i, unsigned j)
       : ImageIndex(m, i, j) {}
 

@@ -128,6 +128,11 @@ ImageMesh::get_nodes(Node::array_type &array, Face::index_type idx) const
   array[1].i_ = idx.i_+1; array[1].j_ = idx.j_;
   array[2].i_ = idx.i_+1; array[2].j_ = idx.j_+1;
   array[3].i_ = idx.i_;   array[3].j_ = idx.j_+1;
+
+  array[0].mesh_ = this;
+  array[1].mesh_ = this;
+  array[2].mesh_ = this;
+  array[3].mesh_ = this;
 }
 
 
@@ -141,15 +146,15 @@ ImageMesh::get_nodes(Node::array_type &array, Edge::index_type idx) const
   {
     const int i = j_idx / (nj_ - 1);
     const int j = j_idx % (nj_ - 1);
-    array[0] = Node::index_type(i, j);
-    array[1] = Node::index_type(i, j+1);
+    array[0] = Node::index_type(this, i, j);
+    array[1] = Node::index_type(this, i, j+1);
   }
   else
   {
     const int i = idx % (ni_ - 1);
     const int j = idx / (ni_ - 1);
-    array[0] = Node::index_type(i, j);
-    array[1] = Node::index_type(i+1, j);
+    array[0] = Node::index_type(this, i, j);
+    array[1] = Node::index_type(this, i+1, j);
   }
 }
 
@@ -186,7 +191,7 @@ ImageMesh::get_faces(Face::array_type &arr, const BBox &bbox)
 
   for (unsigned i = min.i_; i <= max.i_; i++) {
     for (unsigned j = min.j_; j <= max.j_; j++) {
-      arr.push_back(Face::index_type(i,j));
+      arr.push_back(Face::index_type(this, i,j));
     }
   }
 }
@@ -271,6 +276,11 @@ ImageMesh::get_weights(const Point &p,
 {
   const Point r = transform_.unproject(p);
   Node::index_type node0, node1, node2, node3;
+
+  node0.mesh_ = this;
+  node1.mesh_ = this;
+  node2.mesh_ = this;
+  node3.mesh_ = this;
 
   node0.i_ = (unsigned int)floor(r.x());
   node0.j_ = (unsigned int)floor(r.y());
@@ -448,7 +458,7 @@ ImageMesh::end(ImageMesh::Node::iterator &itr) const
 void
 ImageMesh::size(ImageMesh::Node::size_type &s) const
 {
-  s = Node::size_type(ni_, nj_);
+  s = Node::size_type(this, ni_, nj_);
 }
 
 
@@ -485,7 +495,7 @@ ImageMesh::end(ImageMesh::Face::iterator &itr) const
 void
 ImageMesh::size(ImageMesh::Face::size_type &s) const
 {
-  s = Face::size_type(ni_-1, nj_-1);
+  s = Face::size_type(this, ni_-1, nj_-1);
 }
 
 
