@@ -63,6 +63,13 @@ namespace Uintah {
 		  int timestep,
 		  const VarLabel*,
 		  int matlindex);
+
+      // Method to output reduction variables to a single file
+      void outputReduction(const ProcessorContext*,
+//		  const Patch* patch,
+		  DataWarehouseP& old_dw,
+		  DataWarehouseP& new_dw);
+
    private:
       std::string d_filebase;
       int d_outputInterval;
@@ -77,6 +84,9 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.4  2000/06/01 23:09:39  guilkey
+// Added beginnings of code to store integrated quantities.
+//
 // Revision 1.3  2000/05/30 20:18:55  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch
