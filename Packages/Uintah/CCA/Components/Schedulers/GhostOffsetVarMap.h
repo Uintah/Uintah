@@ -33,7 +33,11 @@ public:
   
   void includeOffsets(const VarLabel* var, Ghost::GhostType gtype,
 		      int numGhostCells);
+
+  // get the minumum extents that cover both the specified ghost cells
+  // as well as the expected ghost cells (the included offsets).
   void getExtents(const VarLabel* var, const Patch* patch,
+		  Ghost::GhostType gtype, int numGhostCells,
 		  IntVector& lowIndex, IntVector& highIndex) const;
 private:
   // Note:  The offsets should be >= 0 in each dimension.  You should subtract,
@@ -43,6 +47,12 @@ private:
   public:
     Offsets()
       : lowOffset_(0,0,0), highOffset_(0,0,0) {}
+
+    Offsets& operator=(const Offsets& other)
+    {
+      lowOffset_ = other.lowOffset_; highOffset_ = other.highOffset_;
+      return *this;
+    }
 
     void encompassOffsets(IntVector lowOffset, IntVector highOffset);
 

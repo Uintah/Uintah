@@ -66,10 +66,12 @@ public:
    
    virtual bool exists(const VarLabel*, int matIndex, const Patch*) const; 
   
-   // Generic put, passing Variable as a pointer rather than by reference
-   // to avoid ambiguity with other put overloaded methods.
+   // Generic put and allocate, passing Variable as a pointer rather than
+   // by reference to avoid ambiguity with other put overloaded methods.
    virtual void put(Variable*, const VarLabel*, int matlIndex,
 		    const Patch*);   
+   virtual void allocateAndPutGridVar(Variable*, const VarLabel*, 
+				      int matlIndex, const Patch*);   
    
    // Reduction Variables
    virtual void allocate(ReductionVariableBase&, const VarLabel*,
@@ -92,8 +94,9 @@ public:
    virtual ParticleSubset* getParticleSubset(int matlIndex,
 			 const Patch*, Ghost::GhostType, int numGhostCells,
 			 const VarLabel* posvar);
-   virtual void allocate(ParticleVariableBase&, const VarLabel*,
-			 ParticleSubset*);
+   virtual void allocateTemporary(ParticleVariableBase&, ParticleSubset*);
+   virtual void allocateAndPut(ParticleVariableBase&, const VarLabel*,
+			       ParticleSubset*);
    virtual void get(constParticleVariableBase&, const VarLabel*,
 		    ParticleSubset*);
    virtual void get(constParticleVariableBase&, const VarLabel*,
@@ -108,10 +111,13 @@ public:
    getParticleVariable(const VarLabel*, int matlIndex, const Patch* patch);  
 
    // NCVariables Variables
-   virtual void allocate(NCVariableBase&, const VarLabel*,
-			 int matlIndex, const Patch*,
-			 Ghost::GhostType = Ghost::None,
-			 int numGhostCells = 0);
+   virtual void allocateTemporary(NCVariableBase&, const Patch*,
+				  Ghost::GhostType = Ghost::None,
+				  int numGhostCells = 0);
+   virtual void allocateAndPut(NCVariableBase&, const VarLabel*,
+			       int matlIndex, const Patch*,
+			       Ghost::GhostType = Ghost::None,
+			       int numGhostCells = 0);
    virtual void get(constNCVariableBase&, const VarLabel*, int matlIndex,
 		    const Patch*, Ghost::GhostType, int numGhostCells);
    virtual void getModifiable(NCVariableBase&, const VarLabel*, int matlIndex,
@@ -119,11 +125,14 @@ public:
    virtual void put(NCVariableBase&, const VarLabel*,
 		    int matlIndex, const Patch*, bool replace = false);
 
-   // CCVariables Variables -- fron Tan... need to be fixed...
-   virtual void allocate(CCVariableBase&, const VarLabel*,
-			 int matlIndex, const Patch*, 
-			 Ghost::GhostType = Ghost::None,
-			 int numGhostCells = 0);
+   // CCVariables Variables
+   virtual void allocateTemporary(CCVariableBase&, const Patch*, 
+				  Ghost::GhostType = Ghost::None,
+				  int numGhostCells = 0);
+   virtual void allocateAndPut(CCVariableBase&, const VarLabel*,
+			       int matlIndex, const Patch*, 
+			       Ghost::GhostType = Ghost::None,
+			       int numGhostCells = 0);
    virtual void get(constCCVariableBase&, const VarLabel*, int matlIndex,
 		    const Patch*, Ghost::GhostType, int numGhostCells);
    virtual void getModifiable(CCVariableBase&, const VarLabel*, int matlIndex,
@@ -132,10 +141,13 @@ public:
 		    int matlIndex, const Patch*, bool replace = false);
 
    // SFC[X-Z]Variables Variables
-   virtual void allocate(SFCXVariableBase&, const VarLabel*,
-			 int matlIndex, const Patch*,
-			 Ghost::GhostType = Ghost::None,
-			 int numGhostCells = 0);			 
+   virtual void allocateTemporary(SFCXVariableBase&, const Patch*,
+				  Ghost::GhostType = Ghost::None,
+				  int numGhostCells = 0);
+   virtual void allocateAndPut(SFCXVariableBase&, const VarLabel*,
+			       int matlIndex, const Patch*,
+			       Ghost::GhostType = Ghost::None,
+			       int numGhostCells = 0);			 
    virtual void get(constSFCXVariableBase&, const VarLabel*, int matlIndex,
 		    const Patch*, Ghost::GhostType, int numGhostCells);
    virtual void getModifiable(SFCXVariableBase&, const VarLabel*,
@@ -143,10 +155,13 @@ public:
    virtual void put(SFCXVariableBase&, const VarLabel*,
 		    int matlIndex, const Patch*, bool replace = false);
 
-   virtual void allocate(SFCYVariableBase&, const VarLabel*,
-			 int matlIndex, const Patch*,
-			 Ghost::GhostType = Ghost::None,
-			 int numGhostCells = 0);			 
+   virtual void allocateTemporary(SFCYVariableBase&, const Patch*,
+				  Ghost::GhostType = Ghost::None,
+				  int numGhostCells = 0); 
+   virtual void allocateAndPut(SFCYVariableBase&, const VarLabel*,
+			       int matlIndex, const Patch*,
+			       Ghost::GhostType = Ghost::None,
+			       int numGhostCells = 0);			 
    virtual void get(constSFCYVariableBase&, const VarLabel*, int matlIndex,
 		    const Patch*, Ghost::GhostType, int numGhostCells);
    virtual void getModifiable(SFCYVariableBase&, const VarLabel*,
@@ -154,10 +169,13 @@ public:
    virtual void put(SFCYVariableBase&, const VarLabel*,
 		    int matlIndex, const Patch*, bool replace = false);
 
-   virtual void allocate(SFCZVariableBase&, const VarLabel*,
-			 int matlIndex, const Patch*,
-			 Ghost::GhostType = Ghost::None,
-			 int numGhostCells = 0);			 
+   virtual void allocateTemporary(SFCZVariableBase&, const Patch*,
+				  Ghost::GhostType = Ghost::None,
+				  int numGhostCells = 0);	 
+   virtual void allocateAndPut(SFCZVariableBase&, const VarLabel*,
+			       int matlIndex, const Patch*,
+			       Ghost::GhostType = Ghost::None,
+			       int numGhostCells = 0);			 
    virtual void get(constSFCZVariableBase&, const VarLabel*, int matlIndex,
 		    const Patch*, Ghost::GhostType, int numGhostCells);
    virtual void getModifiable(SFCZVariableBase&, const VarLabel*,
@@ -218,11 +236,26 @@ private:
    void getGridVar(VariableBase& var, DWDatabase& db,
 		   const VarLabel* label, int matlIndex, const Patch* patch,
 		   Ghost::GhostType gtype, int numGhostCells);
+
+   template <Patch::VariableBasis basis, class VariableBase>
+   void allocateTemporaryGridVar(VariableBase& var, const Patch* patch,
+				 Ghost::GhostType gtype, int numGhostCells);
+
    template <Patch::VariableBasis basis, class VariableBase, class DWDatabase>
-   void
-   allocateGridVar(VariableBase& var, DWDatabase& db,
+   void allocateAndPutGridVar(VariableBase& var, DWDatabase& db,
+			      const VarLabel* label, int matlIndex, 
+			      const Patch* patch,
+			      Ghost::GhostType gtype, int numGhostCells);
+
+   template <class VariableBase, class DWDatabase>
+   void putGridVar(VariableBase& var, DWDatabase& db,
 		   const VarLabel* label, int matlIndex, const Patch* patch,
-		   Ghost::GhostType gtype, int numGhostCells);
+		   bool replace = false);
+   template <class VariableBase, class DWDatabase>
+   void recvMPIGridVar(DWDatabase& db, BufferInfo& buffer, 
+		       const DetailedDep* dep, const VarLabel* label, 
+		       int matlIndex, const Patch* patch);
+
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1424
 #endif  
@@ -235,7 +268,6 @@ private:
 			     int numGhostCells = 0);
   inline void checkPutAccess(const VarLabel* label, int matlIndex,
 			     const Patch* patch, bool replace);
-  inline void checkAllocation(const Variable& var, const VarLabel* label);
   inline void checkModifyAccess(const VarLabel* label, int matlIndex,
 				const Patch* patch);
   

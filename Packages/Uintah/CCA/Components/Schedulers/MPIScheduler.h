@@ -70,8 +70,8 @@ WARNING
       
     //////////
     // Insert Documentation Here:
-    virtual void compile( const ProcessorGroup * pg, bool scrub_new, bool scrub_old = true );
     virtual void execute( const ProcessorGroup * pg);
+
     virtual SchedulerP createSubScheduler();
       
     //////////
@@ -98,6 +98,8 @@ WARNING
 			     const VarLabel        * reloc_label );
 
   protected:
+    virtual void actuallyCompile( const ProcessorGroup * pg );
+    
     // Runs the task. (In Mixed, gives the task to a thread.)
     virtual void initiateTask( const ProcessorGroup  * pg,
 			       DetailedTask          * task,

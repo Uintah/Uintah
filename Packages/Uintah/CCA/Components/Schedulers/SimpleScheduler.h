@@ -51,8 +51,8 @@ WARNING
       
     //////////
     // Insert Documentation Here:
-    virtual void compile( const ProcessorGroup * pc, bool scrub_new, bool scrub_old = true );
-    virtual void execute( const ProcessorGroup * pc );
+    virtual void execute( const ProcessorGroup * pg );
+    
     virtual SchedulerP createSubScheduler();
       
     //////////
@@ -64,6 +64,9 @@ WARNING
 					    const vector<vector<const VarLabel*> >& new_labels,
 					    const VarLabel* particleIDLabel,
 					    const MaterialSet* matls);
+
+  protected:
+    virtual void actuallyCompile( const ProcessorGroup * pg );
     
   private:
     SPRelocate reloc;

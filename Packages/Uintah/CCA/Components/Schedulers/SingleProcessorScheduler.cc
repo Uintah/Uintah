@@ -48,7 +48,7 @@ SingleProcessorScheduler::verifyChecksum()
 }
 
 void
-SingleProcessorScheduler::compile(const ProcessorGroup* pg, bool scrub_new, bool scrub_old)
+SingleProcessorScheduler::actuallyCompile(const ProcessorGroup* pg)
 {
   if(dts_)
     delete dts_;
@@ -74,8 +74,6 @@ SingleProcessorScheduler::compile(const ProcessorGroup* pg, bool scrub_new, bool
   }
   
   releasePort("load balancer");
-  dts_->computeLocalTasks(pg->myrank());
-  dts_->createScrublists(scrub_new, scrub_old);
 }
 
 void
