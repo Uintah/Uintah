@@ -4,7 +4,8 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Packages/Uintah/CCA/Components/Examples
 
-SRCS     += $(SRCDIR)/Poisson1.cc \
+SRCS     += \
+	$(SRCDIR)/Poisson1.cc \
 	$(SRCDIR)/Poisson2.cc \
 	$(SRCDIR)/Burger.cc \
 	$(SRCDIR)/Poisson3.cc \
