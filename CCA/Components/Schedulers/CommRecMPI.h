@@ -130,14 +130,14 @@ donesome( MPI_Comm & comm, int donecount )
 
   // removed finished requests
   int j = 0;
-  for (int i=0; i < ids.size(); i++) {
+  for (int i=0; i < (int)ids.size(); i++) {
     if (ids[i] != MPI_REQUEST_NULL) {
       ids[j] = ids[i];
       handlers[j] = handlers[i];
       ++j;
     }
   }
-  ASSERT(ids.size() - donecount == j);
+  ASSERT((int)ids.size() - donecount == j);
   ids.resize(j);
   handlers.resize(j);
 
@@ -155,7 +155,7 @@ waitall(MPI_Comm comm, int me)
   MPI_Waitall((int)ids.size(), &ids[0], &statii[0]);
   //  dbg << me << " Done calling waitall with " 
   //      << ids.size() << " waiters\n";
-  for(int i=0;i<ids.size();i++){
+  for(int i=0;i<(int)ids.size();i++){
     if(handlers[i]) {
       handlers[i]->finishedCommunication(comm);
       delete handlers[i];

@@ -7,8 +7,8 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/ConditionVariable.h>
+#include <list>
 #include <vector>
-//#include <limits>
 
 namespace Uintah {
   class ProcessorGroup;
