@@ -196,9 +196,10 @@ void readCellIndicies(const string& filename, vector<IntVector>& cells)
     cells.push_back(indx);
     fp.get(c);
   }
-  for (int i = 0; i<(int) cells.size(); i++) {
-    cout << cells[i] << endl;
-  }
+  // We should do some bullet proofing here
+  //for (int i = 0; i<(int) cells.size(); i++) {
+  //  cout << cells[i] << endl;
+  //}
 }
 
 //______________________________________________________________________
