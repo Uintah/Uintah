@@ -59,6 +59,7 @@ SRCS     += \
 	$(SRCDIR)/TetVolFieldCellToNode.cc\
 	$(SRCDIR)/TetVol2QuadraticTetVol.cc\
 	$(SRCDIR)/Unstructure.cc\
+	$(SRCDIR)/VectorMagnitude.cc\
 #[INSERT NEW CODE FILE HERE]
 #	$(SRCDIR)/CastField.cc\
 #	$(SRCDIR)/ChangeCellType.cc\
