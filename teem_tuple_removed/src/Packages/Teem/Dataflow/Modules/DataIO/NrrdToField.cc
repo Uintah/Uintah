@@ -62,7 +62,6 @@ public:
   GuiString   quad_or_tet_;
   GuiString   struct_unstruct_;
   GuiInt      ni_, nj_, nk_;
-  int         has_data_, has_points_, has_connect_, has_origfield_;
   int         data_generation_, points_generation_;
   int         connect_generation_, origfield_generation_;
 
@@ -126,8 +125,6 @@ NrrdToField::NrrdToField(GuiContext* ctx)
     ni_(ctx->subVar("ni")),
     nj_(ctx->subVar("nj")),
     nk_(ctx->subVar("nk")),
-    has_data_(0), has_points_(0),
-    has_connect_(0), has_origfield_(0),
     data_generation_(-1), points_generation_(-1),
     connect_generation_(-1), origfield_generation_(-1)
 {
@@ -211,7 +208,8 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH, NrrdDataHandle points
   
 
   // Determine if we have data, points, connections, etc.
-  has_data_ = has_points_ = has_connect_ = has_origfield_ = false;
+  bool has_data_ = false, has_points_ = false, has_connect_ = false, 
+    has_origfield_ = false;
 
   if (dataH != 0)
     has_data_ = true;
