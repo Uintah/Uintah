@@ -522,7 +522,7 @@ RenderField<Fld>::render_all(const Fld *fld, bool nodes,
   if (faces) render_faces(fld, def_col);
   
   if (data) {
-    vec_node_ = scinew GeomArrows(vs);
+    vec_node_ = scinew GeomArrows(0.15, 0.6);
     data_switch_ = scinew GeomSwitch(vec_node_);
     render_data(fld, ndt, def_col, vs, normalize);
   }
