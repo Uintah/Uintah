@@ -33,10 +33,13 @@ class MaskLatticeAlgo : public DynamicAlgoBase
 public:
   virtual FieldHandle execute(FieldHandle src) = 0;
 
+  virtual string identify() = 0;
+
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
 					    const TypeDescription *lsrc,
-					    string clipfunction);
+					    string clipfunction,
+					    int hashoffset);
 };
 
 

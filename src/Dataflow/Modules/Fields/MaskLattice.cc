@@ -94,16 +94,25 @@ MaskLattice::execute()
     return;
   }
   
-  const TypeDescription *ftd = ifieldhandle->get_type_description();
-  const TypeDescription *ltd = ifieldhandle->data_at_type_description();
-  CompileInfoHandle ci =
-    MaskLatticeAlgo::get_compile_info(ftd, ltd, maskfunction_.get());
   Handle<MaskLatticeAlgo> algo;
-  if (!module_maybe_dynamic_compile(ci, algo))
+  int hoff = 0;
+  while (1)
   {
-    //DynamicLoader::scirun_loader().remove_cc(*(ci.get_rep()), cout);
-    error("Your function would not compile.");
-    return;
+    const TypeDescription *ftd = ifieldhandle->get_type_description();
+    const TypeDescription *ltd = ifieldhandle->data_at_type_description();
+    CompileInfoHandle ci =
+      MaskLatticeAlgo::get_compile_info(ftd, ltd, maskfunction_.get(), hoff);
+    if (!module_maybe_dynamic_compile(ci, algo))
+    {
+      DynamicLoader::scirun_loader().remove_cc(*(ci.get_rep()), cout);
+      error("Your function would not compile.");
+      return;
+    }
+    if (algo->identify() == maskfunction_.get())
+    {
+      break;
+    }
+    hoff++;
   }
   FieldHandle ofield(algo->execute(ifieldhandle));
 
@@ -120,10 +129,11 @@ MaskLattice::execute()
 CompileInfoHandle
 MaskLatticeAlgo::get_compile_info(const TypeDescription *field_td,
 				  const TypeDescription *loc_td,
-				  string clipfunction)
+				  string clipfunction,
+				  int hashoffset)
 {
   hash<const char *> H;
-  unsigned int hashval = H(clipfunction.c_str());
+  unsigned int hashval = H(clipfunction.c_str()) + hashoffset;
 
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
@@ -152,6 +162,9 @@ MaskLatticeAlgo::get_compile_info(const TypeDescription *field_td,
     "  {\n" +
     "    return " + clipfunction + ";\n" +
     "  }\n" +
+    "\n" +
+    "  virtual string identify()\n" +
+    "  { return string(\"" + clipfunction + "\"); }\n" +
     "};\n//";
 
   // Add in the include path to compile this obj

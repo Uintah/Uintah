@@ -42,9 +42,12 @@ public:
 			      FieldHandle fieldh,
 			      int clipmode) = 0;
 
+  virtual string identify() = 0;
+
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
-					    string clipfunction);
+					    string clipfunction,
+					    int hashoffset);
 };
 
 

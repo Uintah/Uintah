@@ -88,14 +88,23 @@ TransformData::execute()
 
   const TypeDescription *ftd = ifieldhandle->get_type_description();
   const TypeDescription *ltd = ifieldhandle->data_at_type_description();
-  CompileInfoHandle ci =
-    TransformDataAlgo::get_compile_info(ftd, ltd, function_.get());
+  int hoffset = 0;
   Handle<TransformDataAlgo> algo;
-  if (!module_maybe_dynamic_compile(ci, algo))
+  while (1)
   {
-    //DynamicLoader::scirun_loader().remove_cc(*(ci.get_rep()), cout);
-    error("Your function would not compile.");
-    return;
+    CompileInfoHandle ci =
+      TransformDataAlgo::get_compile_info(ftd, ltd, function_.get(), hoffset);
+    if (!module_maybe_dynamic_compile(ci, algo))
+    {
+      DynamicLoader::scirun_loader().remove_cc(*(ci.get_rep()), cout);
+      error("Your function would not compile.");
+      return;
+    }
+    if (algo->identify() == function_.get())
+    {
+      break;
+    }
+    hoffset++;
   }
 
   FieldHandle ofieldhandle = algo->execute(ifieldhandle);
@@ -112,10 +121,11 @@ TransformData::execute()
 CompileInfoHandle
 TransformDataAlgo::get_compile_info(const TypeDescription *field_td,
 				    const TypeDescription *loc_td,
-				    string function)
+				    string function,
+				    int hashoffset)
 {
   hash<const char *> H;
-  unsigned int hashval = H(function.c_str());
+  unsigned int hashval = H(function.c_str()) + hashoffset;
 
   // use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
@@ -142,6 +152,9 @@ TransformDataAlgo::get_compile_info(const TypeDescription *field_td,
     "  {\n" +
     function +
     "  }\n" +
+    "\n" +
+    "  virtual string identify()\n" +
+    "  { return string(\"" + function + "\"); }\n" +
     "};\n//";
 
   // Add in the include path to compile this obj
