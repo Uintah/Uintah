@@ -107,6 +107,9 @@ SerialMPM::SerialMPM( int MpiRank, int MpiProcesses ) :
    gMomExedVelocityStarLabel = new VarLabel( "g.momexedvelocity_star",
 			      NCVariable<Vector>::getTypeDescription() );
 
+   gSelfContactLabel = new VarLabel( "g.selfContact",
+			      NCVariable<bool>::getTypeDescription() );
+
    cSelfContactLabel = new VarLabel( "c.selfContact",
 			      CCVariable<bool>::getTypeDescription() );
 
@@ -175,7 +178,10 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 				          DataWarehouseP& old_dw, 
 				          DataWarehouseP& new_dw)
 {
+   int fieldIndependentVariable = 0;
+
    int numMatls = d_sharedState->getNumMatls();
+
    for(Level::const_regionIterator iter=level->regionsBegin();
        iter != level->regionsEnd(); iter++){
 
@@ -185,10 +191,10 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 /*
 	  * labelSelfContactNodesAndCells
 	  *   in(C.SURFACENORMAL,P.SURFACENORMAL)
-	  *   operation(label the cell which has self-contact)
+	  *   operation(label the nodes and cells that has self-contact)
 	  *   out(C.SELFCONTACTLABEL)
 	  */
-	 Task* t = new Task("Fracture::labelSelfContactCells",
+	 Task* t = new Task("Fracture::labelSelfContactNodesAndCells",
 			    region, old_dw, new_dw,
 			    d_fractureModel,
 			    &Fracture::labelSelfContactNodesAndCells);
@@ -196,13 +202,22 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	 for(int m = 0; m < numMatls; m++){
 	    Material* matl = d_sharedState->getMaterial(m);
 	    int idx = matl->getDWIndex();
-	    t->requires( old_dw, cSurfaceNormalLabel, idx, region,
-			 Ghost::None);
 	    t->requires( old_dw, pSurfaceNormalLabel, idx, region,
 			 Ghost::None);
-
-	    t->computes( new_dw, cSelfContactLabel, idx, region );
 	 }
+
+         t->requires( old_dw,
+                      cSurfaceNormalLabel,
+                      d_sharedState->getMaterial(fieldIndependentVariable)
+                                   ->getDWIndex(),
+                      region,
+	              Ghost::None);
+
+         t->computes( new_dw,
+                      cSelfContactLabel,
+                      d_sharedState->getMaterial(fieldIndependentVariable)
+                                   ->getDWIndex(),
+                      region );
 
 	 sched->addTask(t);
       }
@@ -431,16 +446,14 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	  *   accelerations in nodes of contact-cells)
 	  *   out(G.VELOCITY,G.ACCELERATION)
 	  */
-	 Task* t = new Task("Fracture::updateSurfaceNormalOfBoundaryParticle",
+	 Task* t = new Task("Fracture::updateNodeInformationInContactCells",
 			    region, old_dw, new_dw,
 			    d_fractureModel,
-			    &Fracture::updateSurfaceNormalOfBoundaryParticle);
+			    &Fracture::updateNodeInformationInContactCells);
 
 	 for(int m = 0; m < numMatls; m++){
 	    Material* matl = d_sharedState->getMaterial(m);
 	    int idx = matl->getDWIndex();
-	    t->requires( old_dw, cSelfContactLabel, idx, region,
-			 Ghost::None);
 	    t->requires( old_dw, gVelocityLabel, idx, region,
 			 Ghost::None);
 	    t->requires( old_dw, gAccelerationLabel, idx, region,
@@ -449,6 +462,13 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	    t->computes( new_dw, gVelocityLabel, idx, region );
 	    t->computes( new_dw, gAccelerationLabel, idx, region );
 	 }
+
+         t->requires( old_dw,
+                      gSelfContactLabel,
+                      d_sharedState->getMaterial(fieldIndependentVariable)
+                                   ->getDWIndex(),
+                      region,
+	              Ghost::None);
 
 	 sched->addTask(t);
       }
@@ -493,10 +513,10 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	  *   operation(update the surface normal of each boundary particles)
 	  * out(P.SURFACENORMAL)
 	  */
-	 Task* t = new Task("Fracture::updateSurfaceNormalOfBoundaryParticle",
+	 Task* t = new Task("Fracture::updateParticleInformationInContactCells",
 			    region, old_dw, new_dw,
 			    d_fractureModel,
-			    &Fracture::updateSurfaceNormalOfBoundaryParticle);
+			    &Fracture::updateParticleInformationInContactCells);
 
 	 for(int m = 0; m < numMatls; m++){
 	    Material* matl = d_sharedState->getMaterial(m);
@@ -517,6 +537,13 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
 	    t->computes( new_dw, pDeformationMeasureLabel, idx, region );
 	    t->computes( new_dw, pStressLabel, idx, region );
 	 }
+
+         t->requires( old_dw,
+                      cSelfContactLabel,
+                      d_sharedState->getMaterial(fieldIndependentVariable)
+                                   ->getDWIndex(),
+                      region,
+	              Ghost::None);
 
 	 sched->addTask(t);
       }
@@ -1125,6 +1152,10 @@ void SerialMPM::crackGrow(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.61  2000/05/23 02:25:45  tan
+// Put all velocity-field independent variables on material
+// index of 0.
+//
 // Revision 1.60  2000/05/18 18:50:25  jas
 // Now using the gravity from the input file.
 //
