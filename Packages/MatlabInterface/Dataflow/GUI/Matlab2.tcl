@@ -136,8 +136,8 @@ itcl_class MatlabInterface_DataIO_Matlab2 {
 
 		# internet default settings
 		
-		set $this-inet-address "localhost"
-		set $this-inet-port "5517"
+		set $this-inet-address ""
+		set $this-inet-port ""
 		set $this-inet-passwd ""	
 		set $this-inet-session "1"	
 
@@ -148,11 +148,23 @@ itcl_class MatlabInterface_DataIO_Matlab2 {
 		set $this-matlab-add-output "$this AddOutput "
 		set $this-matlab-update-status "$this UpdateStatus"
 		set $this-matlab-status "matlab engine not running"
+        
+        global $this-cmdTCL
+        global $this-hpTCL
+        
+        set $this-cmdTCL ""
+        set $this-hpTCL ""
+
 	}
 
 
     method ui {} {
-       
+     
+        if {[string equal [set $this-cmdTCL] ""]} {
+         set $this-matlab-code [set $this-cmdTCL]
+         set $this-cmdTCL ""
+        }   
+        
 		set w .ui[modname]
 		if {[winfo exists $w]} {
 			raise $w
