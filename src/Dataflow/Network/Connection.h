@@ -49,14 +49,6 @@ public:
   IPort* const iport;
   std::string id;
 
-private:
-  bool blocked_;
-
-public:    
-  bool is_blocked() const { return blocked_; }
-  void block()      { blocked_ = true; }
-  void unblock()    { blocked_ = false; }
-
   void makeID();
 };
 
