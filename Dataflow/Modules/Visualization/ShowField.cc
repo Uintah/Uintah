@@ -14,6 +14,7 @@
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/TetVol.h>
 #include <Core/Datatypes/LatticeVol.h>
+#include <Core/Datatypes/ContourField.h>
 #include <Core/Datatypes/FieldAlgo.h>
 
 #include <Dataflow/Ports/ColorMapPort.h>
@@ -220,17 +221,41 @@ ShowField::execute()
     } else {
       error = true; msg ="TetVol of unknown type.";
     }
-  } /*else if (name == "LatticeVol") {
+  } else if (name == "LatticeVol") {
     if (geom_handle->get_type_name(1) == "double") {
       LatticeVol<double> *lv = 0;
+      LatticeVol<double> *tv1 = 0;
       lv = dynamic_cast<LatticeVol<double>*>(geom_handle.get_rep());
-      if (lv) { render(lv); }
+      if (data_gen_) {
+	tv1 = dynamic_cast<LatticeVol<double>*>(data_handle.get_rep());
+      }
+      if (lv)
+	render(lv, tv1, color_handle);
       else { error = true; msg = "Not a valid LatticeVol."; }
     } else {
       error = true; msg ="LatticeVol of unknown type.";
     }
-    }*/ else if (error) {
+    } else if (error) {
     cerr << "ShowField Error: " << msg << endl;
+    return;
+  } else if (name == "ContourField") {
+#if 0
+    if (geom_handle->get_type_name(1) == "double") {
+      ContourField<double> *cf = 0;
+      ContourField<double> *tv1 = 0;
+      cf = dynamic_cast<ContourField<double>*>(geom_handle.get_rep());
+      if (data_gen_) {
+	tv1 = dynamic_cast<ContourField<double>*>(data_handle.get_rep());
+      }
+      if (cf)
+	render(cf, tv1, color_handle);
+      else { error = true; msg = "Not a valid ContourField."; }
+    } else {
+      error = true; msg ="ContourField of unknown type.";
+    }
+    } else if (error) {
+    cerr << "ShowField Error: " << msg << endl;
+#endif
     return;
   }
   
