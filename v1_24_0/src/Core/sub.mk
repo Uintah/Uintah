@@ -43,7 +43,6 @@ SUBDIRS := \
 	$(SRCDIR)/Geom \
 	$(SRCDIR)/GeomInterface \
 	$(SRCDIR)/Geometry \
-	$(SRCDIR)/GLVolumeRenderer \
 	$(SRCDIR)/GuiInterface \
 	$(SRCDIR)/ICom \
 	$(SRCDIR)/ImportExport \

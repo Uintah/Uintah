@@ -43,7 +43,6 @@ SRCDIR   := Dataflow/Modules/Visualization
 SRCS     += \
 	$(SRCDIR)/AddLight.cc\
 	$(SRCDIR)/ChooseColorMap.cc\
-	$(SRCDIR)/GLTextureBuilder.cc\
 	$(SRCDIR)/GenAxes.cc\
 	$(SRCDIR)/GenClock.cc\
 	$(SRCDIR)/GenStandardColorMaps.cc\
@@ -55,8 +54,6 @@ SRCS     += \
 	$(SRCDIR)/ShowField.cc\
 	$(SRCDIR)/ShowMatrix.cc\
 	$(SRCDIR)/StreamLines.cc\
-	$(SRCDIR)/TexCuttingPlanes.cc\
-	$(SRCDIR)/TextureVolVis.cc\
 	$(SRCDIR)/EditTransferFunc2.cc\
 	$(SRCDIR)/NrrdTextureBuilder.cc\
 	$(SRCDIR)/TextureBuilder.cc\
@@ -69,7 +66,7 @@ PSELIBS := Dataflow/Network Dataflow/Widgets Dataflow/Ports \
 	Core/Exceptions Core/Thread Core/GuiInterface Core/Geom \
 	Core/Persistent Core/Geometry Core/2d Core/Util \
 	Core/TkExtensions Core/Algorithms/Visualization \
-	Core/GLVolumeRenderer Core/GeomInterface Core/Volume
+	Core/GeomInterface Core/Volume
 
 LIBS := $(TEEM_LIBRARY) $(FTGL_LIBRARY) $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 
