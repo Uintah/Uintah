@@ -509,7 +509,123 @@ DEALINGS IN THE SOFTWARE.
 	    </para>
 	    <para>
 	      In the tooth histogram <xref linkend="fig.histo"/> there are four distinct
+	      materials, denoted by areas of high concentration near the bottom of the
+	      histogram.
 	    </para>
+	    <para>
+	      If we do an "add rectangle" and drag the newly formed rectangle over to the
+	      first material, we see that the material corresponds to the root of the
+	      tooth.
+	    </para>
+	    <figure id="fig.root_tf"><title>Adding color to the transfer function</title>
+              <mediaobject>
+		<textobject>
+		  <phrase>Adding color tp the transfer function</phrase>
+		</textobject>
+		<imageobject>
+		  <imagedata fileref="Figures/root_tf.eps" align="center" format="EPS"/>
+		</imageobject>
+		<imageobject>
+		  <imagedata fileref="Figures/root_tf.jpg" align="center" format="JPG"/>
+		</imageobject>
+	      </mediaobject>
+	    </figure>
+	    <figure id="fig.root_ren"><title>The root of the tooth displayed in the viewer</title>
+              <mediaobject>
+		<textobject>
+		  <phrase>The root of the tooth displayed in the viewer</phrase>
+		</textobject>
+		<imageobject>
+		  <imagedata fileref="Figures/root_ren.eps" align="center" format="EPS"/>
+		</imageobject>
+		<imageobject>
+		  <imagedata fileref="Figures/root_ren.jpg" align="center" format="JPG"/>
+		</imageobject>
+	      </mediaobject>
+	    </figure>
+	    <para>
+	      Similarly, we discover the air surrounding the tooth <xref linkend="fig.air_ren"/>,
+	      the tooth dentin <xref linkend="fig.dentin_ren"/> and tooth 
+	      enamel <xref linkend="fig.enamel_ren"/>.
+	    </para>
+	    <figure id="fig.air_tf"><title>Adding color to the transfer function</title>
+              <mediaobject>
+		<textobject>
+		  <phrase>Adding color tp the transfer function</phrase>
+		</textobject>
+		<imageobject>
+		  <imagedata fileref="Figures/air_tf.eps" align="center" format="EPS"/>
+		</imageobject>
+		<imageobject>
+		  <imagedata fileref="Figures/air_tf.jpg" align="center" format="JPG"/>
+		</imageobject>
+	      </mediaobject>
+	    </figure>
+	    <figure id="fig.air_ren"><title>The air around the tooth displayed in the viewer</title>
+              <mediaobject>
+		<textobject>
+		  <phrase>The air around the tooth displayed in the viewer</phrase>
+		</textobject>
+		<imageobject>
+		  <imagedata fileref="Figures/air_ren.eps" align="center" format="EPS"/>
+		</imageobject>
+		<imageobject>
+		  <imagedata fileref="Figures/air_ren.jpg" align="center" format="JPG"/>
+		</imageobject>
+	      </mediaobject>
+	    </figure>
+	    <figure id="fig.dentin_tf"><title>Adding color to the transfer function</title>
+              <mediaobject>
+		<textobject>
+		  <phrase>Adding color to the transfer function</phrase>
+		</textobject>
+		<imageobject>
+		  <imagedata fileref="Figures/dentin_tf.eps" align="center" format="EPS"/>
+		</imageobject>
+		<imageobject>
+		  <imagedata fileref="Figures/dentin_tf.jpg" align="center" format="JPG"/>
+		</imageobject>
+	      </mediaobject>
+	    </figure>
+	    <figure id="fig.dentin_ren"><title>The dentin of the tooth displayed in the viewer</title>
+              <mediaobject>
+		<textobject>
+		  <phrase>The dentin of the tooth displayed in the viewer</phrase>
+		</textobject>
+		<imageobject>
+		  <imagedata fileref="Figures/dentin_ren.eps" align="center" format="EPS"/>
+		</imageobject>
+		<imageobject>
+		  <imagedata fileref="Figures/dentin_ren.jpg" align="center" format="JPG"/>
+		</imageobject>
+	      </mediaobject>
+	    </figure>
+	    <figure id="fig.enamel_tf"><title>Adding color to the transfer function</title>
+              <mediaobject>
+		<textobject>
+		  <phrase>Adding color tp the transfer function</phrase>
+		</textobject>
+		<imageobject>
+		  <imagedata fileref="Figures/enamel_tf.eps" align="center" format="EPS"/>
+		</imageobject>
+		<imageobject>
+		  <imagedata fileref="Figures/enamel_tf.jpg" align="center" format="JPG"/>
+		</imageobject>
+	      </mediaobject>
+	    </figure>
+	    <figure id="fig.enamel_ren"><title>The enamel of the tooth displayed in the viewer</title>
+              <mediaobject>
+		<textobject>
+		  <phrase>The enamel of the tooth displayed in the viewer</phrase>
+		</textobject>
+		<imageobject>
+		  <imagedata fileref="Figures/enamel_ren.eps" align="center" format="EPS"/>
+		</imageobject>
+		<imageobject>
+		  <imagedata fileref="Figures/enamel_ren.jpg" align="center" format="JPG"/>
+		</imageobject>
+	      </mediaobject>
+	    </figure>
 	  </section><!-- end:The Edit Transfer Function Window -->
 	</section><!-- end: Editing the Transfer Fuction -->
       </section><!-- end:Volume Rendering -->
