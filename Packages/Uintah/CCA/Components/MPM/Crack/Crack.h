@@ -35,9 +35,11 @@ using std::string;
 class Crack
 {
  public:
- 
+
+    double d_outputInterval;  
+
     // Constructor
-     Crack(const ProblemSpecP& ps, SimulationStateP& d_sS,
+    Crack(const ProblemSpecP& ps, SimulationStateP& d_sS,
                            MPMLabel* lb,int n8or27);
 
     // Destructor
@@ -80,10 +82,19 @@ class Crack
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw);
 
-    void addComputesAndRequiresCalculateJIntegral(Task* task,
+    void addComputesAndRequiresGetNodalSolutions(Task* task,
                                 const PatchSet* patches,
                                 const MaterialSet* matls) const;
-    void CalculateJIntegral(const ProcessorGroup*,
+    void GetNodalSolutions(const ProcessorGroup*,
+                                const PatchSubset* patches,
+                                const MaterialSubset* matls,
+                                DataWarehouse* old_dw,
+                                DataWarehouse* new_dw);
+
+    void addComputesAndRequiresCalculateFractureParameters(Task* task,
+                                const PatchSet* patches,
+                                const MaterialSet* matls) const;
+    void CalculateFractureParameters(const ProcessorGroup*,
                                 const PatchSubset* patches,
                                 const MaterialSubset* matls,
                                 DataWarehouse* old_dw,
@@ -98,10 +109,10 @@ class Crack
                                 DataWarehouse* old_dw,
                                 DataWarehouse* new_dw);
 
-    void addComputesAndRequiresInitializeMovingCracks(Task* task,
+    void addComputesAndRequiresCrackPointSubset(Task* task,
                                 const PatchSet* patches,
                                 const MaterialSet* matls) const;
-    void InitializeMovingCracks(const ProcessorGroup*,
+    void CrackPointSubset(const ProcessorGroup*,
                                 const PatchSubset* patches,
                                 const MaterialSubset* matls,
                                 DataWarehouse* old_dw,
@@ -139,38 +150,78 @@ class Crack
      int NGP;
      int NGN;
 
-     // member data of cracks
+     int NJ;                               // rJ = NJ*min_dCell
+     double rJ;                            // NJ = rJ/min_dCell
+     int mS,iS;                            // matID & crkFrtSegID for saving J-integral
+
+     string d_calFractParameters;   // Flag if calculating fracture parameters
+     string d_doCrackPropagation;   // Flag if doing crack propagation
+     short calFractParameters;      // Flag if calculating fracture parameters at this step
+     short doCrackPropagation;      // Flag if doing crack propagation at this step
+
+     // Data members of cracks
      string crackType[MNM];                //crack contact type
      double c_mu[MNM];                     //Frcition coefficients
      double separateVol[MNM];              //critical separate volume
      double contactVol[MNM];               //critical contact volume
 
      //crack geometry
-     //quadrilateral segments of cracks
+       //quadrilateral segments of cracks
      vector<vector<Point> > rectangles[MNM];
-     //resolution of quadrilateral cracks in 1-2 & 2-3 directions 
+       //resolution of quadrilateral cracks in 1-2 & 2-3 directions 
      vector<int>  rectN12[MNM],rectN23[MNM];       
-     //sides at crack front
+       //sides at crack front
      vector<vector<short> > rectCrackSidesAtFront[MNM];
      
-     //trianglular segements of cracks 
+       //trianglular segements of cracks 
      vector<vector<Point> > triangles[MNM];
-     //resolution of triangular cracks in all sides 
+       //resolution of triangular cracks in all sides 
      vector<int>  triNCells[MNM];
-     //sides at crack front
+       //sides at crack front
      vector<vector<short> > triCrackSidesAtFront[MNM];
-     Point cmin[MNM],cmax[MNM];            //crack extent
+
+       //arc segements of cracks
+     vector<vector<Point> > arcs[MNM];
+       //resolution of arc cracks on circumference
+     vector<int>  arcNCells[MNM];
+       // crack front segment ID
+     vector<int> arcCrkFrtSegID[MNM];
+
+       //elliptical segments of cracks
+     vector<vector<Point> > ellipses[MNM];
+       //resolution of arc cracks on circumference
+     vector<int>  ellipseNCells[MNM];
+       // crack front segment ID
+     vector<int> ellipseCrkFrtSegID[MNM];
+
+       //partial elliptical segments of cracks
+     vector<vector<Point> > pellipses[MNM];
+       //resolution of partial elliptic cracks on circumference 
+     vector<int>  pellipseNCells[MNM];
+       // crack front segment ID
+     vector<int> pellipseCrkFrtSegID[MNM];
+       // extent of partial elliptic cracks
+     vector<string> pellipseExtent[MNM];
+
+       //crack extent
+     Point cmin[MNM],cmax[MNM];  
 
      // crack data after mesh  
-     vector<Point> cx[MNM];                //crack node position
-     int cnumElems[MNM];                   //number of carck elements
-     int cnumNodes[MNM];                   //number of crack points
-     vector<IntVector> cElemNodes[MNM];    //nodes of crack elements
-     vector<Vector> cElemNorm[MNM];        //crack element normals
-     vector<Point> cFrontSegPoints[MNM];   //crack front segments
-     vector<short> moved[MNM];             //if crack points moved
+     int               cnumElems[MNM];      //number of carck elements
+     int               cnumNodes[MNM];      //number of crack points
+     int               cnumFrontSegs[MNM];  //number of segments at crack front
+     vector<Point>     cx[MNM];             //crack node position
+     vector<IntVector> cElemNodes[MNM];     //nodes of crack elements
+     vector<Vector>    cElemNorm[MNM];      //crack element normals
+     vector<Point>     cFrontSegPts[MNM];   //crack front segments
+     vector<Vector>    cFrontSegNorm[MNM];  //crack front segment normals
+     vector<Vector>    cFrontSegJ[MNM];     //J integral of crack front segments
+     vector<Vector>    cFrontSegK[MNM];     //SIF of crack front segments
+     vector<int>       cpset[128][MNM];     //crack point sunset, 128=64nodes*2procs/node
 
      // private methods  
+     // Detect if a node is within the whole grid 
+     short NodeWithinGrid(const IntVector&,const IntVector&,const IntVector&);
      // Calculate normal of a triangle
      Vector TriangleNormal(const Point&,const Point&,const Point&);
      // Detect if particle and node in same side of a plane
@@ -181,7 +232,24 @@ class Crack
      // a private function
      IntVector CellOffset(const Point&, const Point&, Vector);
      // detect if a line is in another line
-     short TwoLinesDuplicate(const Point&,const Point&,const Point&,const Point&);
+     short TwoLinesDuplicate(const Point&,const Point&,const Point&,
+                                                       const Point&);
+     // direction consines of two points
+     Vector TwoPtsDirCos(const Point&,const Point&);
+     // find plane equation by three points
+     void FindPlaneEquation(const Point&,const Point&,const Point&,
+                            double&,double&,double&,double&);
+     // detect if a point is within a triangle
+     short PointInTriangle(const Point&,const Point&, 
+                          const Point&,const Point&); 
+     // find parameters of J-patch circle
+     void FindJPathCircle(const Point&,const Vector&,
+              const Vector&,const Vector&,double []);
+     // find intersection between J-patch and crack plane
+     void FindIntersectionOfJPathAndCrackPlane(const int&,
+                   const double& r,const double [],Point&); 
+    // Detect if doing fracture analysis 
+     void FindTimeStepForFractureAnalysis(double);
 
  protected:
      
