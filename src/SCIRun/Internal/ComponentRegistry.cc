@@ -47,17 +47,27 @@
 #include <SCIRun/CCA/ComponentID.h>
 #include <SCIRun/ComponentInstance.h>
 #include <iostream>
-using namespace std;
-using namespace SCIRun;
 
-class ComponentClassDescriptionAdapter : public sci::cca::ComponentClassDescription {
+namespace SCIRun {
+
+/** \class ComponentClassDescriptionAdapter
+ *
+ * 
+ * \todo Should this class be in the SCIRun namespace?
+ */
+class ComponentClassDescriptionAdapter
+  : public sci::cca::ComponentClassDescription
+{
 public:
   ComponentClassDescriptionAdapter(const ComponentDescription*);
   ~ComponentClassDescriptionAdapter();
 
-  virtual string getComponentClassName();
-  virtual string getComponentModelName();
-  virtual string getLoaderName();
+  /** */
+  virtual std::string getComponentClassName();
+  /** */
+  virtual std::string getComponentModelName();
+  /** */
+  virtual std::string getLoaderName();
 private:
   const ComponentDescription* cd;
 };
@@ -71,35 +81,34 @@ ComponentClassDescriptionAdapter::~ComponentClassDescriptionAdapter()
 {
 }
 
-string ComponentClassDescriptionAdapter::getComponentClassName()
+std::string ComponentClassDescriptionAdapter::getComponentClassName()
 {
   return cd->getType();
 }
 
-string ComponentClassDescriptionAdapter::getComponentModelName()
+std::string ComponentClassDescriptionAdapter::getComponentModelName()
 {
   return cd->getModel()->getName();
 }
 
-string ComponentClassDescriptionAdapter::getLoaderName()
+std::string ComponentClassDescriptionAdapter::getLoaderName()
 {
   return cd->getLoaderName();
 }
 
-
 ComponentRegistry::ComponentRegistry(SCIRunFramework* framework,
-				     const std::string& name)
+                                     const std::string& name)
   : InternalComponentInstance(framework, name, "internal:ComponentRegistry")
 {
 }
 
 ComponentRegistry::~ComponentRegistry()
 {
-  cerr << "Registry destroyed...\n";
+  std::cerr << "Registry destroyed..." << std::endl;
 }
 
 InternalComponentInstance* ComponentRegistry::create(SCIRunFramework* framework,
-						  const std::string& name)
+                                                     const std::string& name)
 {
   ComponentRegistry* n = new ComponentRegistry(framework, name);
   n->addReference();
@@ -111,14 +120,20 @@ sci::cca::Port::pointer ComponentRegistry::getService(const std::string&)
   return sci::cca::Port::pointer(this);
 }
 
-SSIDL::array1<sci::cca::ComponentClassDescription::pointer> ComponentRegistry::getAvailableComponentClasses()
+SSIDL::array1<sci::cca::ComponentClassDescription::pointer>
+ComponentRegistry::getAvailableComponentClasses()
 {
-  vector<ComponentDescription*> list;
+  std::vector<ComponentDescription*> list;
   framework->listAllComponentTypes(list, false);
   SSIDL::array1<sci::cca::ComponentClassDescription::pointer> ccalist;
-  for(vector<ComponentDescription*>::iterator iter = list.begin();
-      iter != list.end(); iter++){
-    ccalist.push_back(sci::cca::ComponentClassDescription::pointer(new ComponentClassDescriptionAdapter(*iter)));
-  }
+
+  for(std::vector<ComponentDescription*>::iterator iter = list.begin();
+      iter != list.end(); iter++)
+    {
+    ccalist.push_back(sci::cca::ComponentClassDescription::pointer(
+                          new ComponentClassDescriptionAdapter(*iter)));
+    }
   return ccalist;
 }
+
+} // end namespace SCIRun
