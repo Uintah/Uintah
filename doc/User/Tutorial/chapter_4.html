@@ -54,7 +54,7 @@
 	that performs all visualizations concurrently. For details, see the
 	    <a HREF="../Guide/usersguide/srug4.html#sec:navnetwork">User's
 	    Guide 4.15, 
-	    Navigating a Network</a>.  We will also add a fourth visualization
+	    Navigating a Network</a>.  We will add a fourth visualization
 	    tool--isosurface extraction.</p>
  
 	<p> First, add the following to your canvas:</p>
@@ -81,26 +81,25 @@
 	
       
 	<p>If a color map is not connected to the Isosurface input port, the module uses the Default Color. By default, the module extracts a surface using the Marching Cubes
-	algorithm, and choose the number of threads (processors) 
+	algorithm, and you can choose the number of threads (processors) 
 	the algorithm will use. Or, you may use the NOISE algorithm.</p>
 
         <p><b><A name="section-2">Putting the nets together</b></A>
 
-        <p>Now we will add the visualization techniques from Chapter 3, a procedure that involves sharing the FieldReader and Viewer modules across the 3A, 3B, and 3C networks.  You may choose from the following two options for rebuilding the nets you saved in Chapter 3.
+        <p>Now we will add the visualization techniques from Chapter 3, a procedure that involves sharing the FieldReader and Viewer modules across the 3A, 3B, and 3C networks.  You may choose from the following two options for rebuilding the nets you saved in Chapter 3.  The first option is to manually reconstruct the nets by,
 	<ul>
-	<p><li>First, repeat all of the steps for creating <b><A href="chapter_3.html#section-1">3A</b></A> in Chapter 3.</p>
+	<p><li>Repeat all of the steps for creating <b><A href="chapter_3.html#section-1">3A</b></A> in Chapter 3.</p>
 	<p><li>Do the same for <b><A href="chapter_3.html#section-2">3B</b></A> and <b><A href="chapter_3.html#section-3">3C</b></A>, but use the FieldReader and
 	  Viewer from 
        3A.</ul></p>
                   
         <p>You can use the complete, color-coded network in <b>Figure 4.2</b> that shows the  
 	previous chapter's networks. Yellow corresponds to 3A, green to 3B,
-	and red to 3C. As soon as the 
-	Isosurface module executes, this surface will appear in the ViewWindow.</p>
+	and red to 3C.</p>
 
 <p>Or, as the second option, you may use the File/Insert command to insert all of the nets you saved in Chapter 3, along with their settings.  You will need to destroy all but one Viewer module by right-clicking on the module and selecting the Destroy option.  To destroy a connection between two modules, right-click on the pipe connecting those modules. In addition to the Viewer, these nets will also share the FieldReader module (in the left uppermost corner of <b>Figure 4.2</b>), which loads the utahtorso-lowres-voltage.tvd.fld file.</p>
 
-<p>You can move module groupings by holding the middle-mouse button and drawing a box that contains the modules you wish to relocate. The selected modules will turn a darker gray.  You can then left-click the mouse in order to move the entire group to a new location in the ViewWindow.</p>
+<p>You can move module groupings by holding the middle-mouse button and drawing a box that contains the modules you wish to relocate. The selected modules will turn a darker gray.  You can then left-click the mouse in order to move the entire group to a new location in the NetEdit frame.</p>
 
 	
 	<p>The complete network appears in
