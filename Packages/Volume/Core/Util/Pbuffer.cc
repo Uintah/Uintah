@@ -513,7 +513,7 @@ Pbuffer::swapBuffers ()
   if (mDoubleBuffer)
     glXSwapBuffers(mImpl->mDisplay, mImpl->mPbuffer);
   else
-    glFlush();
+    glFinish();
 }
 
 void

@@ -35,9 +35,12 @@
 #include <Core/Util/NotFinished.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/Color.h>
+
 #include <Packages/Volume/Core/Util/Utils.h>
 #include <Packages/Volume/Core/Util/Pbuffer.h>
 #include <Packages/Volume/Core/Util/ShaderProgramARB.h>
+#include <Packages/Volume/Core/Geom/VolShader.h>
+#include <Packages/Volume/Core/Datatypes/CM2Shader.h>
 
 #include <iostream>
 using std::cerr;
@@ -46,12 +49,26 @@ using Volume::Brick;
 
 namespace Volume {
 
-static const string Cmap2ShaderString =
+static const string Cmap2ShaderStringNV =
 "!!ARBfp1.0 \n"
 "TEMP c, z; \n"
 "ATTRIB t = fragment.texcoord[0]; \n"
 "PARAM s = program.local[0]; # {bp, sliceRatio, 0.0, 0.0} \n"
 "TEX c, t, texture[0], RECT; \n"
+"POW z.w, c.w, s.x; # alpha1 = pow(alpha, bp); \n"
+"SUB z.w, 1.0, z.w; # alpha2 = 1.0-pow(1.0-alpha1, sliceRatio); \n"
+"POW c.w, z.w, s.y; \n"
+"SUB c.w, 1.0, c.w; \n"
+"MUL c.xyz, c.xyzz, c.w; # c *= alpha2; \n"
+"MOV result.color, c; \n"
+"END";
+
+static const string Cmap2ShaderStringATI =
+"!!ARBfp1.0 \n"
+"TEMP c, z; \n"
+"ATTRIB t = fragment.texcoord[0]; \n"
+"PARAM s = program.local[0]; # {bp, sliceRatio, 0.0, 0.0} \n"
+"TEX c, t, texture[0], 2D; \n"
 "POW z.w, c.w, s.x; # alpha1 = pow(alpha, bp); \n"
 "SUB z.w, 1.0, z.w; # alpha2 = 1.0-pow(1.0-alpha1, sliceRatio); \n"
 "POW c.w, z.w, s.y; \n"
@@ -84,9 +101,11 @@ TextureRenderer::TextureRenderer(TextureHandle tex,
   raster_buffer_(0),
   shader_factory_(0),
   cmap2_buffer_(0),
-  cmap2_shader_(new FragmentProgramARB(Cmap2ShaderString)),
-  comp_buffer_(0),
-  comp_bits_(8)
+  cmap2_shader_nv_(new FragmentProgramARB(Cmap2ShaderStringNV)),
+  cmap2_shader_ati_(new FragmentProgramARB(Cmap2ShaderStringATI)),
+  vol_shader_factory_(new VolShaderFactory()),
+  blend_buffer_(0),
+  blend_numbits_(8)
 {}
 
 TextureRenderer::TextureRenderer(const TextureRenderer& copy) :
@@ -112,14 +131,19 @@ TextureRenderer::TextureRenderer(const TextureRenderer& copy) :
   raster_buffer_(copy.raster_buffer_),
   shader_factory_(copy.shader_factory_),
   cmap2_buffer_(copy.cmap2_buffer_),
-  cmap2_shader_(copy.cmap2_shader_),
-  comp_buffer_(copy.comp_buffer_),
-  comp_bits_(copy.comp_bits_)
+  cmap2_shader_nv_(copy.cmap2_shader_nv_),
+  cmap2_shader_ati_(copy.cmap2_shader_ati_),
+  vol_shader_factory_(copy.vol_shader_factory_),
+  blend_buffer_(copy.blend_buffer_),
+  blend_numbits_(copy.blend_numbits_)
 {}
 
 TextureRenderer::~TextureRenderer()
-{}
-
+{
+  delete cmap2_shader_nv_;
+  delete cmap2_shader_ati_;
+  delete vol_shader_factory_;
+}
 
 void
 TextureRenderer::set_texture(TextureHandle tex)
@@ -183,10 +207,10 @@ TextureRenderer::set_sw_raster(bool b)
 
 
 void
-TextureRenderer::set_comp_bits(int b)
+TextureRenderer::set_blend_numbits(int b)
 {
   mutex_.lock();
-  comp_bits_ = b;
+  blend_numbits_ = b;
   mutex_.unlock();
 }
 
@@ -554,12 +578,12 @@ TextureRenderer::build_colormap2()
       raster_buffer_ = new Pbuffer(256, 64, GL_FLOAT, 32, true, GL_FALSE);
       cmap2_buffer_ = new Pbuffer(256, 64, GL_INT, 8, true, GL_FALSE);
       shader_factory_ = new CM2ShaderFactory();
-      if(raster_buffer_->create() || cmap2_buffer_->create() || cmap2_shader_->create()
-         || shader_factory_->create()) {
+      if(raster_buffer_->create() || cmap2_buffer_->create()
+         || cmap2_shader_nv_->create() || cmap2_shader_ati_->create()) {
         raster_buffer_->destroy();
         cmap2_buffer_->destroy();
-        cmap2_shader_->destroy();
-        shader_factory_->destroy();
+        cmap2_shader_nv_->destroy();
+        cmap2_shader_ati_->destroy();
         delete raster_buffer_;
         delete cmap2_buffer_;
         delete shader_factory_;
@@ -602,7 +626,7 @@ TextureRenderer::build_colormap2()
         vector<CM2Widget*> widgets = cmap2_->widgets();
         for (unsigned int i=0; i<widgets.size(); i++) {
           raster_buffer_->bind(GL_FRONT);
-          widgets[i]->rasterize(*shader_factory_, cmap2_->faux(), true);
+          widgets[i]->rasterize(*shader_factory_, cmap2_->faux(), raster_buffer_);
           raster_buffer_->release(GL_FRONT);
           raster_buffer_->swapBuffers();
         }
@@ -624,11 +648,13 @@ TextureRenderer::build_colormap2()
       glDisable(GL_DEPTH_TEST);
       glDisable(GL_LIGHTING);
       glDisable(GL_CULL_FACE);
-      cmap2_shader_->bind();
+      FragmentProgramARB* shader =
+        raster_buffer_->need_shader() ? cmap2_shader_nv_ : cmap2_shader_ati_;
+      shader->bind();
       double bp = mode_ == MODE_MIP ? 1.0 : 
         tan(1.570796327 * (0.5 - slice_alpha_*0.49999));
-      cmap2_shader_->setLocalParam(0, bp, imode_ ? 1.0/irate_ : 1.0/sampling_rate_,
-                                   0.0, 0.0);
+      shader->setLocalParam(0, bp, imode_ ? 1.0/irate_ : 1.0/sampling_rate_,
+                            0.0, 0.0);
       glActiveTexture(GL_TEXTURE0);
       glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
       raster_buffer_->bind(GL_FRONT);
@@ -636,16 +662,16 @@ TextureRenderer::build_colormap2()
       {
         glTexCoord2f( 0.0,  0.0);
         glVertex2f( 0.0,  0.0);
-        glTexCoord2f( 1.0,  0.0);
+        glTexCoord2f(1.0,  0.0);
         glVertex2f( 1.0,  0.0);
-        glTexCoord2f( 1.0,  1.0);
+        glTexCoord2f(1.0,  1.0);
         glVertex2f( 1.0,  1.0);
         glTexCoord2f( 0.0,  1.0);
         glVertex2f( 0.0,  1.0);
       }
       glEnd();
       raster_buffer_->release(GL_FRONT);
-      cmap2_shader_->release();
+      shader->release();
       cmap2_buffer_->swapBuffers();
       cmap2_buffer_->deactivate();
     } else {

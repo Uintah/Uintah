@@ -58,6 +58,7 @@ using SCIRun::Mutex;
 
 class Pbuffer;
 class FragmentProgramARB;
+class VolShaderFactory;
 
 class TextureRenderer : public GeomObj
 {
@@ -72,7 +73,7 @@ public:
   void set_colormap_size(int size);
   void set_slice_alpha(double alpha);
   void set_sw_raster(bool b);
-  void set_comp_bits(int b);
+  void set_blend_numbits(int b);
   inline void set_interp(bool i) { interp_ = i; }
   
   enum RenderMode { MODE_NONE, MODE_OVER, MODE_MIP, MODE_SLICE };
@@ -122,9 +123,11 @@ protected:
   Pbuffer* raster_buffer_;
   CM2ShaderFactory* shader_factory_;
   Pbuffer* cmap2_buffer_;
-  FragmentProgramARB* cmap2_shader_;
-  Pbuffer* comp_buffer_;
-  int comp_bits_;
+  FragmentProgramARB* cmap2_shader_nv_;
+  FragmentProgramARB* cmap2_shader_ati_;
+  VolShaderFactory* vol_shader_factory_;
+  Pbuffer* blend_buffer_;
+  int blend_numbits_;
   
   void compute_view(Ray& ray);
   void load_brick(Brick& b);
@@ -137,6 +140,8 @@ protected:
   void release_colormap2();
 #endif
 };
+
+
 
 } // end namespace Volume
 

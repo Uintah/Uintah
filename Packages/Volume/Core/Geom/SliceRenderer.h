@@ -50,8 +50,6 @@ namespace Volume {
 
 using SCIRun::GeomObj;
 using SCIRun::DrawInfoOpenGL;
-class FragmentProgramARB;
-class VertexProgramARB;
 
 class SliceRenderer : public TextureRenderer
 {
@@ -114,14 +112,6 @@ protected:
   bool draw_phi1_;
   double phi1_;
   bool draw_cyl_;
-  FragmentProgramARB* vol_shader1_;
-  FragmentProgramARB* vol_shader4_;
-  FragmentProgramARB* fog_vol_shader1_;
-  FragmentProgramARB* fog_vol_shader4_;
-  FragmentProgramARB* vol_shader1_2_;
-  FragmentProgramARB* vol_shader4_2_;
-  FragmentProgramARB* fog_vol_shader1_2_;
-  FragmentProgramARB* fog_vol_shader4_2_;
 };
 
 } // end namespace SCIRun

@@ -31,7 +31,9 @@
 
 #include <sci_gl.h>
 #include <Packages/Volume/Core/Util/ShaderProgramARB.h>
+#include <Packages/Volume/Core/Datatypes/CM2Shader.h>
 #include <Packages/Volume/Core/Datatypes/CM2Widget.h>
+#include <Packages/Volume/Core/Util/Pbuffer.h>
 #include <Packages/Volume/Core/Util/Utils.h>
 #include <Core/Math/MinMax.h>
 
@@ -43,160 +45,6 @@ using namespace std;
 using namespace SCIRun;
 
 namespace Volume {
-
-#define CM2_TRIANGLE_BASE \
-"!!ARBfp1.0 \n" \
-"PARAM color = program.local[0]; \n" \
-"PARAM geom0 = program.local[1]; # {base, top_x, top_y, 0.0} \n" \
-"PARAM geom1 = program.local[2]; # {width, bottom, 0.0, 0.0} \n" \
-"PARAM sz = program.local[3]; # {1/sx, 1/sy, 0.0, 0.0} \n" \
-"TEMP c, p, t;" \
-"MUL p.xy, fragment.position.xyyy, sz.xyyy; \n" \
-"MUL p.z, geom1.y, geom0.z; \n" \
-"SUB p.z, p.y, p.z; \n" \
-"KIL p.z; \n" \
-"RCP t.z, geom0.z; \n" \
-"MUL t.x, p.y, t.z; \n" \
-"LRP c.x, t.x, geom0.y, geom0.x; \n" \
-"MUL c.y, t.x, geom1.x; \n" \
-"MUL c.y, c.y, 0.5; \n" \
-"RCP c.y, c.y; \n" \
-"SUB c.z, p.x, c.x; \n" \
-"MUL c.z, c.y, c.z; \n" \
-"ABS c.z, c.z; \n" \
-"SUB t.w, 1.0, c.z; \n"
-
-#define CM2_RECTANGLE_1D_BASE \
-"!!ARBfp1.0 \n" \
-"PARAM color = program.local[0]; \n" \
-"PARAM geom0 = program.local[1]; # {left_x, left_y, width, height} \n" \
-"PARAM geom1 = program.local[2]; # {offset, 1/offset, 1/(1-offset), 0.0} \n" \
-"PARAM sz = program.local[3]; # {1/sx, 1/sy, 0.0, 0.0} \n" \
-"TEMP c, p, t; \n" \
-"MUL p.xy, fragment.position.xyyy, sz.xyyy; \n" \
-"SUB p.xy, p.xyyy, geom0.xyyy; \n" \
-"RCP p.z, geom0.z; \n" \
-"RCP p.w, geom0.w; \n" \
-"MUL p.xy, p.xyyy, p.zwww; \n" \
-"SUB t.x, p.x, geom1.x; \n" \
-"MUL t.y, t.x, geom1.y; \n" \
-"MUL t.z, t.x, geom1.z; \n" \
-"CMP t.w, t.y, t.y, t.z; \n" \
-"ABS t.w, t.w; \n" \
-"SUB t.w, 1.0, t.w; \n" \
-
-#define CM2_RECTANGLE_ELLIPSOID_BASE \
-"!!ARBfp1.0 \n" \
-"PARAM color = program.local[0]; \n" \
-"TEMP c, p, t;"
-
-#define CM2_FRAGMENT_BLEND \
-"TEX t, fragment.position.xyyy, texture[0], RECT; \n" \
-"SUB p.w, 1.0, c.w; \n" \
-"MAD result.color, t, p.w, c; \n" \
-"END"
-
-#define CM2_RASTER_BLEND \
-"MOV result.color, c; \n" \
-"END"
-
-#define CM2_REGULAR \
-"MUL c.w, color.w, t.w; \n" \
-"MOV c.xyz, color.xyzz; \n"
-
-#define CM2_FAUX \
-"MUL c, color, t.w; \n"
-
-const string CM2ShaderString[CM2_LAST] =
-  {
-    // CM2_TRIANGLE
-    CM2_TRIANGLE_BASE
-    CM2_REGULAR
-    CM2_RASTER_BLEND,
-    // CM2_TRIANGLE_FAUX
-    CM2_TRIANGLE_BASE
-    CM2_FAUX
-    CM2_RASTER_BLEND,
-    // CM2_TRIANGLE_BLEND
-    CM2_TRIANGLE_BASE
-    CM2_REGULAR
-    CM2_FRAGMENT_BLEND,
-    // CM2_TRIANGLE_FAUX_BLEND
-    CM2_TRIANGLE_BASE
-    CM2_FAUX
-    CM2_FRAGMENT_BLEND,
-    // CM2_RECTANGLE_1D
-    CM2_RECTANGLE_1D_BASE
-    CM2_REGULAR
-    CM2_RASTER_BLEND,
-    // CM2_RECTANGLE_1D_FAUX
-    CM2_RECTANGLE_1D_BASE
-    CM2_FAUX
-    CM2_RASTER_BLEND,
-    // CM2_RECTANGLE_1D_BLEND
-    CM2_RECTANGLE_1D_BASE
-    CM2_REGULAR
-    CM2_FRAGMENT_BLEND,
-    // CM2_RECTANGLE_1D_FAUX_BLEND
-    CM2_RECTANGLE_1D_BASE
-    CM2_FAUX
-    CM2_FRAGMENT_BLEND,
-    // CM2_RECTANGLE_ELLIPSOID
-    CM2_RECTANGLE_ELLIPSOID_BASE
-    CM2_REGULAR
-    CM2_RASTER_BLEND,
-    // CM2_RECTANGLE_ELLIPSOID_FAUX
-    CM2_RECTANGLE_ELLIPSOID_BASE
-    CM2_FAUX
-    CM2_RASTER_BLEND,
-    // CM2_RECTANGLE_ELLIPSOID_BLEND
-    CM2_RECTANGLE_ELLIPSOID_BASE
-    CM2_REGULAR
-    CM2_FRAGMENT_BLEND,
-    // CM2_RECTANGLE_ELLIPSOID_FAUX_BLEND
-    CM2_RECTANGLE_ELLIPSOID_BASE
-    CM2_FAUX
-    CM2_FRAGMENT_BLEND
-  };
-
-CM2ShaderFactory::CM2ShaderFactory()
-{
-  shader_ = new FragmentProgramARB*[CM2_LAST];
-  for(int i=0; i<CM2_LAST; i++) {
-    shader_[i] = new FragmentProgramARB(CM2ShaderString[i]);
-  }
-}
-
-CM2ShaderFactory::~CM2ShaderFactory()
-{
-  for(int i=0; i<CM2_LAST; i++) {
-    delete shader_[i];
-  }
-  delete [] shader_;
-}
-
-bool
-CM2ShaderFactory::create()
-{
-  for(int i=0; i<CM2_LAST; i++) {
-    if(shader_[i]->create()) return true;
-  }
-  return false;
-}
-
-void
-CM2ShaderFactory::destroy()
-{
-  for(int i=0; i<CM2_LAST; i++) {
-    shader_[i]->destroy();
-  }
-}
-
-FragmentProgramARB*
-CM2ShaderFactory::shader(int type)
-{
-  return (type < CM2_LAST && type >= 0) ? shader_[type] : 0;
-}
 
 CM2Widget::CM2Widget()
   : line_color_(0.75, 0.75, 0.75),
@@ -272,28 +120,42 @@ TriangleCM2Widget::clone()
 }
 
 void
-TriangleCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux, bool blend)
+TriangleCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux, Pbuffer* pbuffer)
 {
-  int type = CM2_TRIANGLE + (int)blend*2 + (int)faux;
-  FragmentProgramARB* shader = factory.shader(type);
-
-  shader->bind();
-  shader->setLocalParam(0, color_.r(), color_.g(), color_.b(), alpha_);
-  shader->setLocalParam(1, base_, base_+top_x_, top_y_, 0.0);
-  shader->setLocalParam(2, width_, bottom_, 0.0, 0.0);
-
-  GLint vp[4];
-  glGetIntegerv(GL_VIEWPORT, vp);
-  shader->setLocalParam(3, 1.0/vp[2], 1.0/vp[3], 0.0, 0.0);
-    
-  glBegin(GL_TRIANGLES);
-  {
-    glVertex2f(base_, 0.0);
-    glVertex2f(base_+top_x_+width_/2, top_y_);
-    glVertex2f(base_+top_x_-width_/2, top_y_);
+  CM2BlendType blend = CM2_BLEND_RASTER;
+  if(pbuffer) {
+    if(pbuffer->need_shader())
+      blend = CM2_BLEND_FRAGMENT_NV;
+    else
+      blend = CM2_BLEND_FRAGMENT_ATI;
   }
-  glEnd();
-  shader->release();
+  FragmentProgramARB* shader = factory.shader(CM2_SHADER_TRIANGLE, faux, blend);
+
+  if(shader) {
+    if(!shader->valid()) {
+      shader->create();
+    }
+  
+    shader->bind();
+    shader->setLocalParam(0, color_.r(), color_.g(), color_.b(), alpha_);
+    shader->setLocalParam(1, base_, base_+top_x_, top_y_, 0.0);
+    shader->setLocalParam(2, width_, bottom_, 0.0, 0.0);
+
+    GLint vp[4];
+    glGetIntegerv(GL_VIEWPORT, vp);
+    shader->setLocalParam(3, 1.0/vp[2], 1.0/vp[3], 0.0, 0.0);
+    if(pbuffer)
+      shader->setLocalParam(4, 1.0/pbuffer->width(), 1.0/pbuffer->height(), 0.0, 0.0);
+    
+    glBegin(GL_TRIANGLES);
+    {
+      glVertex2f(base_, 0.0);
+      glVertex2f(base_+top_x_+width_/2, top_y_);
+      glVertex2f(base_+top_x_-width_/2, top_y_);
+    }
+    glEnd();
+    shader->release();
+  }
 }
 
 void
@@ -579,7 +441,7 @@ RectangleCM2Widget::RectangleCM2Widget()
   alpha_ = 1.0;
 }
 
-RectangleCM2Widget::RectangleCM2Widget(int type, float left_x, float left_y,
+RectangleCM2Widget::RectangleCM2Widget(CM2RectangleType type, float left_x, float left_y,
                                        float width, float height, float offset)
   : type_(type), left_x_(left_x), left_y_(left_y), width_(width), height_(height),
     offset_(offset)
@@ -609,34 +471,50 @@ RectangleCM2Widget::clone()
 }
 
 void
-RectangleCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux, bool blend)
+RectangleCM2Widget::rasterize(CM2ShaderFactory& factory, bool faux, Pbuffer* pbuffer)
 {
-  int type = type_ + (int)blend*2 + (int)faux;
-  FragmentProgramARB* shader = factory.shader(type);
-
-  shader->bind();
-  shader->setLocalParam(0, color_.r(), color_.g(), color_.b(), alpha_);
-  shader->setLocalParam(1, left_x_, left_y_, width_, height_);
-  if(offset_ < std::numeric_limits<float>::epsilon())
-    shader->setLocalParam(2, offset_, 0.0, 1.0, 0.0);
-  else if((1.0-offset_) < std::numeric_limits<float>::epsilon())
-    shader->setLocalParam(2, offset_, 1.0, 0.0, 0.0);
-  else
-    shader->setLocalParam(2, offset_, 1/offset_, 1/(1-offset_), 0.0);
-
-  GLint vp[4];
-  glGetIntegerv(GL_VIEWPORT, vp);
-  shader->setLocalParam(3, 1.0/vp[2], 1.0/vp[3], 0.0, 0.0);
-  
-  glBegin(GL_QUADS);
-  {
-    glVertex2f(left_x_, left_y_);
-    glVertex2f(left_x_+width_, left_y_);
-    glVertex2f(left_x_+width_, left_y_+height_);
-    glVertex2f(left_x_, left_y_+height_);
+  CM2BlendType blend = CM2_BLEND_RASTER;
+  if(pbuffer) {
+    if(pbuffer->need_shader())
+      blend = CM2_BLEND_FRAGMENT_NV;
+    else
+      blend = CM2_BLEND_FRAGMENT_ATI;
   }
-  glEnd();
-  shader->release();
+  CM2ShaderType type = CM2_SHADER_RECTANGLE_1D;
+  if(type_ == CM2_RECTANGLE_ELLIPSOID)
+    type = CM2_SHADER_RECTANGLE_ELLIPSOID;
+  FragmentProgramARB* shader = factory.shader(type, faux, blend);
+
+  if(shader) {
+    if(!shader->valid()) {
+      shader->create();
+    }
+    shader->bind();
+    shader->setLocalParam(0, color_.r(), color_.g(), color_.b(), alpha_);
+    shader->setLocalParam(1, left_x_, left_y_, width_, height_);
+    if(offset_ < std::numeric_limits<float>::epsilon())
+      shader->setLocalParam(2, offset_, 0.0, 1.0, 0.0);
+    else if((1.0-offset_) < std::numeric_limits<float>::epsilon())
+      shader->setLocalParam(2, offset_, 1.0, 0.0, 0.0);
+    else
+      shader->setLocalParam(2, offset_, 1/offset_, 1/(1-offset_), 0.0);
+
+    GLint vp[4];
+    glGetIntegerv(GL_VIEWPORT, vp);
+    shader->setLocalParam(3, 1.0/vp[2], 1.0/vp[3], 0.0, 0.0);
+    if(pbuffer)
+      shader->setLocalParam(4, 1.0/pbuffer->width(), 1.0/pbuffer->height(), 0.0, 0.0);
+  
+    glBegin(GL_QUADS);
+    {
+      glVertex2f(left_x_, left_y_);
+      glVertex2f(left_x_+width_, left_y_);
+      glVertex2f(left_x_+width_, left_y_+height_);
+      glVertex2f(left_x_, left_y_+height_);
+    }
+    glEnd();
+    shader->release();
+  }
 }
 
 void
@@ -944,7 +822,7 @@ RectangleCM2Widget::tcl_unpickle(const string &p)
   istringstream s(p);
   char c;
   s >> c;
-  s >> type_;
+  s >> (int)type_;
   s >> left_x_;
   s >> left_y_;
   s >> width_;
