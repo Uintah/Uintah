@@ -17,6 +17,14 @@ PROGRAM := $(SRCDIR)/JAStoMesh
 SRCS := $(SRCDIR)/JAStoMesh.cc
 include $(SRCTOP)/scripts/program.mk
 
+PROGRAM := $(SRCDIR)/JAStoTetVolPot
+SRCS := $(SRCDIR)/JAStoTetVolPot.cc
+include $(SRCTOP)/scripts/program.mk
+
+PROGRAM := $(SRCDIR)/JAStoQuadTetVolPot
+SRCS := $(SRCDIR)/JAStoQuadTetVolPot.cc
+include $(SRCTOP)/scripts/program.mk
+
 PROGRAM := $(SRCDIR)/ExtractCC
 SRCS := $(SRCDIR)/ExtractCC.cc
 include $(SRCTOP)/scripts/program.mk
