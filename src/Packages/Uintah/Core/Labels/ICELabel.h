@@ -106,6 +106,14 @@ namespace Uintah {
     const VarLabel*  eng_exch_errorLabel;
     const VarLabel*  mom_exch_errorLabel;
     const VarLabel*  max_RHSLabel;
+    
+    const VarLabel*  maxMach_xminusLabel;
+    const VarLabel*  maxMach_xplusLabel;
+    const VarLabel*  maxMach_yminusLabel;
+    const VarLabel*  maxMach_yplusLabel; 
+    const VarLabel*  maxMach_zminusLabel;
+    const VarLabel*  maxMach_zplusLabel;
+
       
     };
 } // end namespace Uintah

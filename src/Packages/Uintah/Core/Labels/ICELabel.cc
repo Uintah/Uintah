@@ -168,7 +168,22 @@ ICELabel::ICELabel()
   eng_exch_errorLabel = 
     VarLabel::create( "eng_exch_error",sum_vartype::getTypeDescription() );
   max_RHSLabel = 
-    VarLabel::create( "max_RHS",       max_vartype::getTypeDescription() ); 
+    VarLabel::create( "max_RHS",       max_vartype::getTypeDescription() );
+
+
+  maxMach_xminusLabel = 
+    VarLabel::create( "maxMach_xminus",   max_vartype::getTypeDescription() );
+  maxMach_xplusLabel = 
+    VarLabel::create( "maxMach_xplus",   max_vartype::getTypeDescription() );
+  maxMach_yminusLabel = 
+    VarLabel::create( "maxMach_yminus",   max_vartype::getTypeDescription() );
+  maxMach_yplusLabel = 
+    VarLabel::create( "maxMach_yplus",   max_vartype::getTypeDescription() );
+  maxMach_zminusLabel = 
+    VarLabel::create( "maxMach_zminus",   max_vartype::getTypeDescription() );  
+  maxMach_zplusLabel = 
+    VarLabel::create( "maxMach_zplus",   max_vartype::getTypeDescription() ); 
+
   CenterOfMassVelocityLabel = 
     VarLabel::create( "CenterOfMassVelocity",
                                       sumvec_vartype::getTypeDescription() );
@@ -274,7 +289,16 @@ ICELabel::~ICELabel()
     VarLabel::destroy(TotalIntEngLabel); 
     VarLabel::destroy(eng_exch_errorLabel);   
     VarLabel::destroy(mom_exch_errorLabel);  
-    VarLabel::destroy(max_RHSLabel);   
+    VarLabel::destroy(max_RHSLabel);
+    
+    //   --- max Mach Number
+    VarLabel::destroy(maxMach_xminusLabel);
+    VarLabel::destroy(maxMach_xplusLabel);
+    VarLabel::destroy(maxMach_yminusLabel);
+    VarLabel::destroy(maxMach_yplusLabel);
+    VarLabel::destroy(maxMach_zminusLabel);
+    VarLabel::destroy(maxMach_zplusLabel);
+
     VarLabel::destroy(doMechLabel);
 
     // Model variables
