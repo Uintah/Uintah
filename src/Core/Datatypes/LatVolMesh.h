@@ -291,8 +291,6 @@ public:
 
   typedef Cell Elem;
 
-  typedef vector<double>      weight_array;
-
   friend class NodeIter;
   friend class CellIter;
   friend class EdgeIter;

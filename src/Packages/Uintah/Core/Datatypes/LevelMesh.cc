@@ -217,7 +217,7 @@ LevelMesh::locate(Node::index_type &node, const Point &p) const
   if( grid_->getLevel(level_)->containsPoint(p) ) {
     // locate the cell enclosing the point (including weights)
     if (!locate(cell,p)) return false;
-    weight_array w;
+    vector<double> w;
     calc_weights(this, cell, p, w);
     
     // get the node_indeces in this cell

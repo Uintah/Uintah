@@ -80,8 +80,6 @@ public:
 
   typedef Cell Elem;
 
-  typedef vector<double>     weight_array;
-
   HexVolMesh();
   HexVolMesh(const HexVolMesh &copy);
   //HexVolMesh(const MeshRG &lattice);

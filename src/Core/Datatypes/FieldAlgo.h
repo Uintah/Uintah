@@ -46,13 +46,13 @@ using std::pair;
 template <class Mesh, class Index>
 void
 calc_weights(const Mesh *mesh, Index i, const Point &p, 
-	     typename Mesh::weight_array &weights) {
+	     vector<double> &weights) {
   
   typename Mesh::Node::array_type nodes;
   mesh->get_nodes(nodes, i);
 
   weights.resize(nodes.size()); //clear and size correctly.
-  typename Mesh::weight_array::iterator witer = weights.begin();
+  vector<double>::iterator witer = weights.begin();
 
   Point np;
 

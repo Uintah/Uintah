@@ -80,8 +80,6 @@ public:
 
   typedef Cell Elem;
 
-  typedef vector<double>     weight_array;
-
   TetVolMesh();
   TetVolMesh(const TetVolMesh &copy);
   //TetVolMesh(const MeshRG &lattice);
