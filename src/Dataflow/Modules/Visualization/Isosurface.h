@@ -99,10 +99,12 @@ class Isosurface : public Module {
   MarchingCubesAlg *mc_alg;
   NoiseAlg *noise_alg;
   SageAlg *sage_alg;
-  Loader loader;
-  Loader minmax_loader;
 
   MaterialHandle matl;
+
+protected:
+  Loader loader;
+  Loader minmax_loader;
 
 
 public:
