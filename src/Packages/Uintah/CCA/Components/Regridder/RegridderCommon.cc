@@ -244,7 +244,8 @@ void RegridderCommon::Dilate( CCVariable<int>& flaggedCells, CCVariable<int>& di
 {
   if (depth < 0) throw InternalError("Regridder given a bad dilation depth!");
 
-  int filter[2*depth+1][2*depth+1][2*depth+1];
+  // we'll find a better way to do this
+  int*** filter = (int***) new int[(2*depth+1)*(2*depth+1)*(2*depth+1)];
 
   switch (filterType) {
 
@@ -274,7 +275,7 @@ void RegridderCommon::Dilate( CCVariable<int>& flaggedCells, CCVariable<int>& di
       break;
     }
 
-    default: throw InternalError("Regridder given a bad dilation filter type!");
+    default: delete filter; throw InternalError("Regridder given a bad dilation filter type!");
   }
 
   cout << "----------------------------------------------------------------" << endl;
@@ -350,4 +351,5 @@ void RegridderCommon::Dilate( CCVariable<int>& flaggedCells, CCVariable<int>& di
     }
     cout << endl;
   }
+  delete filter;
 }
