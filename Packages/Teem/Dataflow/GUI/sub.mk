@@ -37,13 +37,18 @@ SRCS := \
 	$(SRCDIR)/NrrdSelectTime.tcl\
 	$(SRCDIR)/NrrdToField.tcl\
 	$(SRCDIR)/NrrdWriter.tcl\
+	$(SRCDIR)/TendAnscale.tcl\
 	$(SRCDIR)/TendAnvol.tcl\
 	$(SRCDIR)/TendBmat.tcl\
 	$(SRCDIR)/TendEpireg.tcl\
 	$(SRCDIR)/TendEstim.tcl\
 	$(SRCDIR)/TendEval.tcl\
+	$(SRCDIR)/TendEvalClamp.tcl\
+	$(SRCDIR)/TendEvalPow.tcl\
 	$(SRCDIR)/TendEvec.tcl\
+	$(SRCDIR)/TendEvecRGB.tcl\
 	$(SRCDIR)/TendExpand.tcl\
+	$(SRCDIR)/TendNorm.tcl\
 	$(SRCDIR)/TendPoint.tcl\
 	$(SRCDIR)/TendSatin.tcl\
 	$(SRCDIR)/TendShrink.tcl\
