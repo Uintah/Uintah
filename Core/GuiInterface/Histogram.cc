@@ -149,24 +149,31 @@ Histogram::FillBuckets()
    double range(double(numbuckets-1)/(maxval-minval));
    
    initfreqs();
-   unsigned int i;
-   for (i=0; i<data.size(); i++) {
-      freqs[int(0.5+(data[i]-minval)*range)]++;
+   unsigned int j;
+   for (j=0; j<data.size(); j++)
+   {
+      freqs[int(0.5+(data[j]-minval)*range)]++;
    }
    
    minfreq = maxfreq = freqs[0];
-   // C++ can calcminmax faster than tcl...
-   for (i=1; i<numbuckets; i++) {
-      if (freqs[i] < minfreq) {
+   // C++ can calcminmax faster than tcl.
+   int i;
+   for (i=1; i<numbuckets; i++)
+   {
+      if (freqs[i] < minfreq)
+      {
 	 minfreq = freqs[i];
-      } else if (freqs[i] > maxfreq) {
+      }
+      else if (freqs[i] > maxfreq)
+      {
 	 maxfreq = freqs[i];
       }
    }
 
    vector<string> freqlist(numbuckets);
 
-   for (i=0; i<numbuckets; i++) {
+   for (i=0; i<numbuckets; i++)
+   {
       freqlist[i] = to_string(freqs[i]);
    }
 
@@ -181,7 +188,8 @@ Histogram::FillBuckets()
 void
 Histogram::initfreqs()
 {
-   for (int i=0; i<numbuckets; i++) {
+   for (int i=0; i<numbuckets; i++)
+   {
       freqs[i] = 0;
    }
 }
