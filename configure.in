@@ -2597,14 +2597,6 @@ AC_SUBST(BLT_LIB_FLAG)
 AC_SUBST(BLT_LIB_DIR_FLAG)
 AC_SUBST(INC_BLT_H)
 
-if test "$pkg_CollabVis" = "yes"; then
-    DEF_COLLAB_VIS="#define HAVE_COLLAB_VIS 1"
-    HAVE_COLLAB_VIS="yes"
-fi
-
-AC_SUBST(DEF_COLLAB_VIS)
-AC_SUBST(HAVE_COLLAB_VIS)
-
 if test "$pkg_fusion" = "yes"; then
   SCI_CHECK_LIB($dirs,plplot,main,$TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,optional)
   if test "$HAVE_LIB_PLPLOT"; then
@@ -2719,6 +2711,36 @@ INC_XERCESC_H=$INC_XERCESC_DOM_DOMNAMEDNODEMAP_HPP
 AC_SUBST(XERCES_C_LIB_FLAG)
 AC_SUBST(XERCES_C_LIB_DIR_FLAG)
 AC_SUBST(INC_XERCESC_H)
+
+##  --  search for collab-vis stuff  --------------------------------------
+if test "$pkg_CollabVis" = "yes"; then
+    dirs="../src/Dataflow/Modules/Render/SV_Server/lib $SCI_LAB_TP_LIBS"
+
+# Check the libs that should have been built for the server - this is a hack since we do
+# not want to deal with the original configure that was developed for it.
+# What should have been done is for the configure to be incorporated into the main scirun
+# configure.in file then create sub.mk for the dirs.
+# This is all in  src/Dataflow/Modules/Render/SV_Server/lib
+# Unfortunately, all of the compiled files are in src dir - this is normally not allowed.
+# but since this is a hack we do not care.
+
+#    SCI_CHECK_LIB($dirs,Compression,main,-L../src/Dataflow/Modules/Render/SV_Server/lib -lMalloc -lProperties -lXML -lExceptions -lMessage -lRendering -lLogging -lNetwork -lThread $XERCES_C_LIB_DIR_FLAG $XERCES_C_LIB_FLAG $X11_LIB_DIR_FLAG $X11_LIB_FLAG,,optional)
+    SCI_CHECK_LIB($dirs,Compression,main,-L../src/Dataflow/Modules/Render/SV_Server/lib -lMalloc,,optional)
+    if test "$HAVE_LIB_COMPRESSION"; then
+      echo "Have collabortive visualization server libraries - Make sure they are up to date before compiling SCIRun."
+      DEF_COLLAB_VIS="#define HAVE_COLLAB_VIS 1"
+      HAVE_COLLAB_VIS="yes"
+    else
+      echo "Can not find collabortive visualization server libraries - Make sure they are compiled."
+      exit 1
+    fi
+else
+  HAVE_COLLAB_VIS="no"
+fi
+
+AC_SUBST(DEF_COLLAB_VIS)
+AC_SUBST(HAVE_COLLAB_VIS)
+
 
 ##  --  search for mpi  --------------------------------------------------
 
