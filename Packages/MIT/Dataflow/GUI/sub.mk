@@ -17,6 +17,8 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/BayerAnalysis.tcl\
 	$(SRCDIR)/MeasurementsReader.tcl\
 	$(SRCDIR)/DistributionReader.tcl\
+	$(SRCDIR)/MetropolisWriter.tcl\
+	$(SRCDIR)/MetropolisReader.tcl\
 #[INSERT NEW TCL FILE HERE]
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/MIT/Dataflow/GUI
 
