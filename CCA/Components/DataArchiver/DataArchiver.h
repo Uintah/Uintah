@@ -96,7 +96,8 @@ using std::pair;
       //! Call once per timestep, and if recompiling,
       //! after all the other tasks are scheduled.
       virtual void finalizeTimestep(double t, double delt, const GridP&,
-				    SchedulerP&, bool recompile=false);
+				    SchedulerP&, bool recompile=false,
+                                    bool addMaterial=false);
 
       //! Find the next times to output and dumps open files to disk.
       //! Call after timestep has completed.
