@@ -315,14 +315,14 @@ private:
    *  hash to the same value. nodes are sorted on edge construction. */
   static const int sz_int = sizeof(int) * 8; // in bits
   struct FaceHash {
-    static const size_t bucket_size = 4;
-    static const size_t min_buckets = 8;
+    static const size_t bucket_size;
+    static const size_t min_buckets;
 
-    static const int sz_quarter_int = (int)(sz_int * .25); // in bits
-    static const int top4_mask = ((~((int)0)) << sz_quarter_int << sz_quarter_int << sz_quarter_int);
-    static const int up4_mask = top4_mask ^ (~((int)0) << sz_quarter_int << sz_quarter_int);
-    static const int mid4_mask =  top4_mask ^ (~((int)0) << sz_quarter_int);
-    static const int low4_mask = ~(top4_mask | mid4_mask);
+    static const int sz_quarter_int;
+    static const int top4_mask;
+    static const int up4_mask;
+    static const int mid4_mask;
+    static const int low4_mask;
 
     size_t operator()(const PFace &f) const {
       return ((f.snodes_[0] << sz_quarter_int << sz_quarter_int <<sz_quarter_int) |
@@ -407,6 +407,15 @@ private:
   grid_handle                 grid_;
   Mutex                       grid_lock_; // Bad traffic!
 };
+
+const size_t HexVolMesh::FaceHash::bucket_size = 4;
+const size_t HexVolMesh::FaceHash::min_buckets = 8;
+
+const int HexVolMesh::FaceHash::sz_quarter_int = (int)(HexVolMesh::sz_int * .25); // in bits
+const int HexVolMesh::FaceHash::top4_mask = ((~((int)0)) << sz_quarter_int << sz_quarter_int << sz_quarter_int);
+const int HexVolMesh::FaceHash::up4_mask = top4_mask ^ (~((int)0) << sz_quarter_int << sz_quarter_int);
+const int HexVolMesh::FaceHash::mid4_mask =  top4_mask ^ (~((int)0) << sz_quarter_int);
+const int HexVolMesh::FaceHash::low4_mask = ~(top4_mask | mid4_mask);
 
 // Handle type for HexVolMesh mesh.
 typedef LockingHandle<HexVolMesh> HexVolMeshHandle;

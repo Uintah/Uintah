@@ -44,7 +44,7 @@ public:
   Data *end() { return &((*this)(dim1()-1,dim2()-1,dim3()-1))+1; }
     
   FData3d() : Array3<Data>() {}
-  FData3d(const FData3d& data) { copy(data); }
+  FData3d(const FData3d& data) {Array3<Data>::copy(data); }
   virtual ~FData3d();
   
   const value_type &operator[](typename LatVolMesh::Cell::index_type idx) const

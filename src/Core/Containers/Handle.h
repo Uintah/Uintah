@@ -104,9 +104,9 @@ public:
     return rep;
   }
 
+  template <typename type>
   friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream& stream, 
-					     Handle<T>& data);
-
+					     Handle<type>& data);
 };
 
 } // End namespace SCIRun
