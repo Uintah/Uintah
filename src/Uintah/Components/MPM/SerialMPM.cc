@@ -974,10 +974,8 @@ void SerialMPM::interpolateParticlesForSaving(const ProcessorGroup*,
 
 		 // Add each particles contribution
 		 for(int k = 0; k < 8; k++) {
-		    if(patch->containsNode(ni[k])){
 		       gdata[ni[k]]  += pdata[idx] * weighting[idx] *S[k];
 		       gweight[ni[k]]+= weighting[idx] *S[k];
-		    }
 		 }
 	      }
 	      for(NodeIterator iter = patch->getNodeIterator();
@@ -1008,10 +1006,8 @@ void SerialMPM::interpolateParticlesForSaving(const ProcessorGroup*,
 
 		 // Add each particles contribution
 		 for(int k = 0; k < 8; k++) {
-		    if(patch->containsNode(ni[k])){
 		       gdata[ni[k]]   += pdata[idx] * weighting[idx]*S[k];
 		       gweight[ni[k]] += weighting[idx] * S[k];
-		    }
 		 }
 	      }
 	      for(NodeIterator iter = patch->getNodeIterator();
@@ -1043,10 +1039,8 @@ void SerialMPM::interpolateParticlesForSaving(const ProcessorGroup*,
 
 		 // Add each particles contribution
 		 for(int k = 0; k < 8; k++) {
-		    if(patch->containsNode(ni[k])){
 		       gdata[ni[k]]   += pdata[idx] * weighting[idx]*S[k];
 		       gweight[ni[k]] += weighting[idx] * S[k];
-		    }
 		 }
 	      }
 	      for(NodeIterator iter = patch->getNodeIterator();
@@ -1166,14 +1160,6 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       old_dw->get(pvelocity,      lb->pVelocityLabel, pset);
       old_dw->get(pexternalforce, lb->pExternalForceLabel, pset);
       old_dw->get(pTemperature,   lb->pTemperatureLabel, pset);
-      
-      ParticleVariable<int> pVisibility;
-      ParticleVariable<Vector> pCrackSurfaceContactForce;
-      if(mpm_matl->getFractureModel()) {
-        new_dw->get(pVisibility, lb->pVisibilityLabel, pset);
-	old_dw->get(pCrackSurfaceContactForce,
-			lb->pCrackSurfaceContactForceLabel, pset);
-      }
 
       // Create arrays for the grid data
       NCVariable<double> gmass;
@@ -1188,18 +1174,26 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       new_dw->allocate(gTemperature, lb->gTemperatureLabel,
 						matlindex, patch);
 
-      // Interpolate particle data to Grid data.
-      // This currently consists of the particle velocity and mass
-      // Need to compute the lumped global mass matrix and velocity
-      // Vector from the individual mass matrix and velocity vector
-      // GridMass * GridVelocity =  S^T*M_D*ParticleVelocity
-
       gmass.initialize(0);
       gvelocity.initialize(Vector(0,0,0));
       gexternalforce.initialize(Vector(0,0,0));
       gTemperature.initialize(0);
 
-      double totalmass = 0;
+      // Interpolate particle data to Grid data.
+      // This currently consists of the particle velocity and mass
+      // Need to compute the lumped global mass matrix and velocity
+      // Vector from the individual mass matrix and velocity vector
+      // GridMass * GridVelocity =  S^T*M_D*ParticleVelocity
+      
+   double totalmass = 0;
+   if(mpm_matl->getFractureModel()) {  // Do interpolation with fracture
+
+      ParticleVariable<int> pVisibility;
+      ParticleVariable<Vector> pCrackSurfaceContactForce;
+      new_dw->get(pVisibility, lb->pVisibilityLabel, pset);
+      old_dw->get(pCrackSurfaceContactForce,
+			lb->pCrackSurfaceContactForceLabel, pset);
+
       for(ParticleSubset::iterator iter = pset->begin();
 	  iter != pset->end(); iter++){
 	 particleIndex idx = *iter;
@@ -1212,23 +1206,18 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	      throw InternalError("Particle not in patch");
 
          Visibility vis;
-         if(mpm_matl->getFractureModel()) {
-  	   vis = pVisibility[idx];
-      	   vis.modifyWeights(S);
-   	 }
+  	 vis = pVisibility[idx];
+      	 vis.modifyWeights(S);
 	 
 	 // Add each particles contribution to the local mass & velocity 
 	 // Must use the node indices
 	 for(int k = 0; k < 8; k++) {
-	    if(patch->containsNode(ni[k]) && vis.visible(k) ) {
+	    if(vis.visible(k) ) {
 	       gmass[ni[k]] += pmass[idx] * S[k];
 	       gvelocity[ni[k]] += pvelocity[idx] * pmass[idx] * S[k];
 	       
 	       gexternalforce[ni[k]] += pexternalforce[idx] * S[k];
-	       if(mpm_matl->getFractureModel()) {
-  	         gexternalforce[ni[k]] += pCrackSurfaceContactForce[idx]
-							 * S[k];
-	       }
+  	       gexternalforce[ni[k]] += pCrackSurfaceContactForce[idx] * S[k];
 	       
 	       totalmass += pmass[idx] * S[k];
 	       
@@ -1236,6 +1225,32 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 	    }
 	 }
       }
+    }
+    else {  // Do interpolation without fracture
+      for(ParticleSubset::iterator iter = pset->begin();
+	  iter != pset->end(); iter++){
+	 particleIndex idx = *iter;
+
+	 // Get the node indices that surround the cell
+	 IntVector ni[8];
+	 double S[8];
+
+  	 if(!patch->findCellAndWeights(px[idx], ni, S))
+	      throw InternalError("Particle not in patch");
+
+	 // Add each particles contribution to the local mass & velocity 
+	 // Must use the node indices
+	 for(int k = 0; k < 8; k++) {
+	       gmass[ni[k]] += pmass[idx] * S[k];
+	       gvelocity[ni[k]] += pvelocity[idx] * pmass[idx] * S[k];
+	       gexternalforce[ni[k]] += pexternalforce[idx] * S[k];
+               gTemperature[ni[k]] += pTemperature[idx]*pmass[idx] * S[k];
+
+	       totalmass += pmass[idx] * S[k];
+	 }
+      }
+    }
+
       for(NodeIterator iter = patch->getNodeIterator();
 				!iter.done(); iter++) {
 	 if(gmass[*iter] >= 1.e-10){
@@ -1400,7 +1415,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       int matlindex = mpm_matl->getDWIndex();
       // Create arrays for the particle position, volume
       // and the constitutive model
-      ParticleVariable<Point>  px;
+      ParticleVariable<Point>   px;
       ParticleVariable<double>  pvol;
       ParticleVariable<double>  pmass;
       ParticleVariable<Matrix3> pstress;
@@ -1424,10 +1439,9 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
   
       internalforce.initialize(Vector(0,0,0));
 
+    if(mpm_matl->getFractureModel()) {
       ParticleVariable<int> pVisibility;
-      if(mpm_matl->getFractureModel()) {
-        new_dw->get(pVisibility, lb->pVisibilityLabel, pset);
-      }
+      new_dw->get(pVisibility, lb->pVisibilityLabel, pset);
 
       for(ParticleSubset::iterator iter = pset->begin();
          iter != pset->end(); iter++){
@@ -1444,13 +1458,11 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
            continue;
 
          Visibility vis;
-         if(mpm_matl->getFractureModel()) {
-           vis = pVisibility[idx];
-           vis.modifyShapeDerivatives(d_S);
-         }
+         vis = pVisibility[idx];
+         vis.modifyShapeDerivatives(d_S);
 
          for (int k = 0; k < 8; k++){
-	   if(patch->containsNode(ni[k]) && vis.visible(k)){
+	   if(vis.visible(k)){
 	     Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
 						d_S[k].z()*oodx[2]);
 	     internalforce[ni[k]] -= (div * pstress[idx] * pvol[idx]);
@@ -1458,22 +1470,47 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
 	   }
          }
       }
+    }
+    else {
+
+      for(ParticleSubset::iterator iter = pset->begin();
+         iter != pset->end(); iter++){
+         particleIndex idx = *iter;
+  
+         // Get the node indices that surround the cell
+         IntVector ni[8];
+         Vector d_S[8];
+         double S[8];
+
+         if(!patch->findCellAndShapeDerivatives(px[idx], ni, d_S))
+  	   continue;
+         if(!patch->findCellAndWeights(px[idx], ni, S))
+           continue;
+
+         for (int k = 0; k < 8; k++){
+	     Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
+						d_S[k].z()*oodx[2]);
+	     internalforce[ni[k]] -= (div * pstress[idx] * pvol[idx]);
+             gstress[ni[k]] += pstress[idx] * pmass[idx] * S[k];
+         }
+      }
+    }
+
       for(NodeIterator iter = patch->getNodeIterator();
 				!iter.done(); iter++) {
          if(gmass[*iter] >= 1.e-10){
             gstress[*iter] /= gmass[*iter];
          }
       }
-      new_dw->put(internalforce, lb->gInternalForceLabel, matlindex, patch);
-      new_dw->put(gstress, lb->gStressForSavingLabel,     matlindex, patch);
+      new_dw->put(internalforce, lb->gInternalForceLabel,   matlindex, patch);
+      new_dw->put(gstress,       lb->gStressForSavingLabel, matlindex, patch);
   }
 }
 
-void SerialMPM::computeInternalHeatRate(
-                                     const ProcessorGroup*,
-				     const Patch* patch,
-				     DataWarehouseP& old_dw,
-				     DataWarehouseP& new_dw)
+void SerialMPM::computeInternalHeatRate(const ProcessorGroup*,
+				        const Patch* patch,
+				        DataWarehouseP& old_dw,
+				        DataWarehouseP& new_dw)
 {
   Vector dx = patch->dCell();
   double oodx[3];
@@ -1527,13 +1564,11 @@ void SerialMPM::computeInternalHeatRate(
          }
 
          for (int k = 0; k < 8; k++){
-	   if(patch->containsNode(ni[k]) && vis.visible(k)){
              Vector div(d_S[k].x()*oodx[0],d_S[k].y()*oodx[1],
 						d_S[k].z()*oodx[2]);
 	     internalHeatRate[ni[k]] -= Dot( div,
 				 pTemperatureGradient[idx] ) * 
 	                                pvol[idx] * thermalConductivity;
- 	   }
          }
       }
       new_dw->put(internalHeatRate, lb->gInternalHeatRateLabel,
@@ -1879,6 +1914,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 //      double Cp=mpm_matl->getSpecificHeat();
 
+    if(mpm_matl->getFractureModel()) {
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
 	 particleIndex idx = *iter;
@@ -1895,11 +1931,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
         Visibility vis;
 	int numVisibleNodes = 0;
-        if(mpm_matl->getFractureModel()) {
-  	   vis = pVisibility[idx];
-	   vis.modifyWeights(S);
-	   vis.modifyShapeDerivatives(d_S);
-        }
+  	vis = pVisibility[idx];
+	vis.modifyWeights(S);
+	vis.modifyShapeDerivatives(d_S);
 
         vel = Vector(0.0,0.0,0.0);
         acc = Vector(0.0,0.0,0.0);
@@ -1945,6 +1979,52 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	CMX = CMX + (pxnew[idx]*pmass[idx]).asVector();
 	CMV += pvelocitynew[idx]*pmass[idx];
       }
+    }
+    else {  // Interpolate to particles if no fracture is involved
+      for(ParticleSubset::iterator iter = pset->begin();
+          iter != pset->end(); iter++){
+	 particleIndex idx = *iter;
+
+        // Get the node indices that surround the cell
+	IntVector ni[8];
+        double S[8];
+        Vector d_S[8];
+
+        if(!patch->findCellAndWeights(px[idx], ni, S))
+	    continue;
+        if(!patch->findCellAndShapeDerivatives(px[idx], ni, d_S))
+            continue;
+
+        vel = Vector(0.0,0.0,0.0);
+        acc = Vector(0.0,0.0,0.0);
+
+        pTemperatureGradient[idx] = Vector(0.0,0.0,0.0);
+        tempRate = 0;
+
+        // Accumulate the contribution from each surrounding vertex
+        for (int k = 0; k < 8; k++) {
+	      vel += gvelocity_star[ni[k]]  * S[k];
+   	      acc += gacceleration[ni[k]]   * S[k];
+	   
+              tempRate += gTemperatureRate[ni[k]] * S[k];
+              for (int j = 0; j<3; j++) {
+                pTemperatureGradient[idx](j) += 
+                   gTemperatureStar[ni[k]] * d_S[k](j) * oodx[j];
+              }
+        }
+
+        // Update the particle's position and velocity
+        pxnew[idx]      = px[idx] + vel * delT;
+        pvelocitynew[idx] = pvelocity[idx] + acc * delT;
+        pTemperatureRate[idx] = tempRate;
+        pTemperatureNew[idx] = pTemperature[idx] + tempRate * delT;
+//        thermal_energy += pTemperature[idx] * Cp;
+	
+        ke += .5*pmass[idx]*pvelocitynew[idx].length2();
+	CMX = CMX + (pxnew[idx]*pmass[idx]).asVector();
+	CMV += pvelocitynew[idx]*pmass[idx];
+      }
+    }
 
       // Store the new result
       new_dw->put(pxnew,        lb->pXLabel_preReloc);
@@ -1970,6 +2050,13 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
 
 // $Log$
+// Revision 1.165  2000/11/28 23:01:23  guilkey
+// Rearranged computeInternalForce, interpolateParticlesToGrid and
+// interpolateToParticlesAndUpdate so that the "if doing fracture"
+// question is not asked inside of inner loops.  Also got rid of
+// the "if(patch->containsNode())" operations, as this is now redundant.
+// All of these were done to speed the code up.
+//
 // Revision 1.164  2000/11/28 00:17:28  tan
 // Fixed a bug caused by unique-variable_lable_name-problem.
 //
