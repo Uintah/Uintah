@@ -1,5 +1,15 @@
 This is a brief description of the input files in inputs/MPM:
 
+Constitutive model test suite.  Two particle problems designed 
+to generate uniaxial stress/strain response of the various 
+constitutive models.  The individual files are:
+
+	const_test_cmr.ups  Compressible Mooney Rivlen
+	const_test_hypo.ups Hypoelasticity
+	const_test_nh.ups   Neo Hookean
+	const_test_nhp.ups  Neo Hookean Plasticity
+	const_test_vs.ups   ViscoScram
+
 disks.ups  This is the standard disks problem which we've been running
 since the first MPM code.  Excercises CompMooneyRivlin Constitutive
 Model.
