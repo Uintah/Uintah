@@ -9,13 +9,17 @@ SRCDIR   := Uintah/Components/SimulationController
 
 SRCS     += $(SRCDIR)/SimulationController.cc
 
-PSELIBS := Uintah/Parallel
-LIBS :=
+PSELIBS := Uintah/Parallel Uintah/Exceptions Uintah/Interface \
+	Uintah/Grid SCICore/Geometry
+LIBS := $(XML_LIBRARY)
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3  2000/04/12 23:00:10  sparker
+# Start of reading grids
+#
 # Revision 1.2  2000/03/20 19:38:28  sparker
 # Added VPATH support
 #
