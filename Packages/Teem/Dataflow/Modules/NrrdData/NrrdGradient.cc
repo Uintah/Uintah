@@ -88,7 +88,7 @@ NrrdGradient::execute()
   Nrrd *nin = nrrd_handle->nrrd;
   Nrrd *nout = nrrdNew();
   
-  if (nrrdFlip(nout, nin, "x")) {
+  if (nrrdFlip(nout, nin, 0)) {
    char *err = biffGetDone(NRRD);
     error(string("Error Flipping nrrd: ") + err);
     free(err);
