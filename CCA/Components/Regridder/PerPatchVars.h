@@ -37,6 +37,8 @@ struct SubPatchFlag : public RefCounted {
     initialize(low, high);
   }
   inline SubPatchFlag() {subpatches_ = 0; delSubpatches_ = false;}
+  SubPatchFlag( const SubPatchFlag& ) { throw InternalError( "SubPatchFlag( const SubPatchFlag& ) not implemented!" ); }
+  SubPatchFlag& operator=( const SubPatchFlag& ) { throw InternalError( "SubPatchFlag& operator=( const SubPatchFlag& ) not implemented!" );}
   inline ~SubPatchFlag() { if (delSubpatches_) delete subpatches_; }
   
   // initialize with our own memory

@@ -34,8 +34,6 @@ WARNING
    class RefCounted {
    public:
       RefCounted();
-      RefCounted(const RefCounted&);
-      RefCounted& operator=(const RefCounted&);
       virtual ~RefCounted();
       
       //////////
@@ -50,6 +48,8 @@ WARNING
 	 return d_refCount;
       }
    private:
+      RefCounted(const RefCounted&);
+      RefCounted& operator=(const RefCounted&);
       //////////
       // Insert Documentation Here:
       mutable int d_refCount;
