@@ -88,6 +88,24 @@ struct Allocator {
     inline void lock();
     inline void unlock();
 
+#ifdef SCI_PTHREAD
+    inline void rlock();
+    // These (dont_lock et.al.) are added in an attempt to deal with some
+    // bugs with current versions of glibc in linux.  If and when they get
+    // resolved, this code should be removed.  The bug relates to mishandling
+    // of mutex's accross fork calls.
+    // This variable is initialized in initlock.
+    //   James Bigler - 02/04/2003
+    bool use_rlock;
+    // Current thread that has the lock
+    // I'm not sure what to initialize this to, but 0 seems a close enough bet
+    pthread_t owner;
+    bool owner_initialized;
+    // Number of locks held by owner
+    int lock_count;
+
+#endif
+  
     void* alloc_big(size_t size, const char* tag);
     
     void* memalign(size_t alignment, size_t size, const char* tag);
