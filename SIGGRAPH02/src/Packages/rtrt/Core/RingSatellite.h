@@ -57,10 +57,26 @@ class RingSatellite : public Ring
   virtual void compute_bounds(BBox& bbox, double offset)
   {
     if (parent_) {
-      parent_->compute_bounds(bbox,offset);
-      bbox.extend(parent_->get_center(), 
-                  parent_->get_orb_radius()+parent_->get_radius()+
-                  radius+thickness+offset);
+      Point center = parent_->get_center();
+      bbox.extend(center);
+      Point extent = 
+        Point(center.x()+parent_->get_orb_radius()+radius+offset,
+              center.y()+parent_->get_orb_radius()+radius+offset,
+              center.z());
+      bbox.extend( extent );
+      extent = 
+        Point(center.x()-(parent_->get_orb_radius()+radius+offset),
+              center.y()-(parent_->get_orb_radius()+radius+offset),
+              center.z());
+      bbox.extend( extent );
+
+      extent = Point(center.x(),center.y(),
+                     center.z()+parent_->get_radius()+offset);
+      bbox.extend( extent );
+
+      extent = Point(center.x(),center.y(),
+                     center.z()-(parent_->get_radius()+offset));
+      bbox.extend( extent );
     } else {
       bbox.extend(cen, radius+thickness+offset);
     }
