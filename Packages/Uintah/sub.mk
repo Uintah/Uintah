@@ -5,7 +5,7 @@ include $(OBJTOP_ABS)/scripts/largeso_prologue.mk
 SRCDIR := Packages/Uintah
 SUBDIRS := \
 	$(SRCDIR)/Core \
-	$(SRCDIR)/Dataflow \
+	$(SRCDIR)/Dataflow
 
 include $(OBJTOP_ABS)/scripts/recurse.mk
 
