@@ -43,6 +43,7 @@ public:
     GeomContainer(const GeomContainer&);
     virtual ~GeomContainer();
     virtual void get_bounds(BBox&);
+    virtual void reset_bbox();
 
     // For OpenGL
 #ifdef SCI_OPENGL

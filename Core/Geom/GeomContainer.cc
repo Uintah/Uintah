@@ -61,7 +61,14 @@ void GeomContainer::get_triangles( Array1<float> &v)
 
 void GeomContainer::get_bounds(BBox& bbox)
 {
+  if (child)
     child->get_bounds(bbox);
+}
+
+void GeomContainer::reset_bbox()
+{
+  if (child)
+    child->reset_bbox();
 }
 
 #define GEOMCONTAINER_VERSION 1

@@ -37,36 +37,27 @@ namespace SCIRun {
 
 Persistent* make_GeomDL()
 {
-    return scinew GeomDL(0);
+  return scinew GeomDL(0);
 }
 
 PersistentTypeID GeomDL::type_id("GeomDL", "GeomObj",
-					make_GeomDL);
+				 make_GeomDL);
 
 
 GeomDL::GeomDL(GeomObj* obj)
-  :child(obj), have_dl(false)
+  : GeomContainer(obj), display_list_(0)
 {
 }
 
-
-void GeomDL::get_triangles( Array1<float> &v)
+GeomDL::GeomDL(const GeomDL &copy)
+  : GeomContainer(copy), display_list_(0)
 {
-    if ( child )
-      child->get_triangles(v);
 }
+
 
 GeomObj* GeomDL::clone()
 {
-    cerr << "GeomDL::clone not implemented!\n";
-    return 0;
-}
-
-
-void GeomDL::get_bounds(BBox& box)
-{
-  if ( child )
-    child->get_bounds(box);
+  return scinew GeomDL(*this);
 }
 
 #define GEOMDL_VERSION 1
@@ -74,13 +65,13 @@ void GeomDL::get_bounds(BBox& box)
 void GeomDL::io(Piostream& stream)
 {
 
-    /*int version=*/ stream.begin_class("GeomDL", GEOMDL_VERSION);
-    Pio(stream, child);
-    stream.end_class();
+  /*int version=*/ stream.begin_class("GeomDL", GEOMDL_VERSION);
+  Pio(stream, child);
+  stream.end_class();
 }
 
 bool GeomDL::saveobj(ostream& out, const string& format,
-			    GeomSave* saveinfo)
+		     GeomSave* saveinfo)
 {
   if ( child )
     return child->saveobj(out, format, saveinfo);
