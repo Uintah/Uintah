@@ -84,19 +84,24 @@ SmagorinskyModel::sched_computeTurbSubmodel(const LevelP& level,
 			      patch, old_dw, new_dw, this,
 			      &SmagorinskyModel::computeTurbSubmodel);
 
-      int numGhostCells = 0;
+      int numGhostCells = 1;
+      int zeroGhostCells = 0;
       int matlIndex = 0;
 
       // Requires
       tsk->requires(old_dw, d_lab->d_densityCPLabel, matlIndex, patch, Ghost::None,
+		    zeroGhostCells);
+      tsk->requires(old_dw, d_lab->d_viscosityINLabel, matlIndex, patch, 
+		    Ghost::None,
+		    zeroGhostCells);
+      tsk->requires(old_dw, d_lab->d_uVelocitySPLabel, matlIndex, patch, 
+		    Ghost::AroundCells,
 		    numGhostCells);
-      tsk->requires(old_dw, d_lab->d_viscosityINLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_lab->d_vVelocitySPLabel, matlIndex, patch,
+		    Ghost::AroundCells,
 		    numGhostCells);
-      tsk->requires(old_dw, d_lab->d_uVelocitySPLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(old_dw, d_lab->d_vVelocitySPLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(old_dw, d_lab->d_wVelocitySPLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(old_dw, d_lab->d_wVelocitySPLabel, matlIndex, patch, 
+		    Ghost::AroundCells,
 		    numGhostCells);
 
       // Computes
@@ -124,19 +129,24 @@ SmagorinskyModel::sched_reComputeTurbSubmodel(const LevelP& level,
 			      patch, old_dw, new_dw, this,
 			      &SmagorinskyModel::reComputeTurbSubmodel);
 
-      int numGhostCells = 0;
+      int numGhostCells = 1;
+      int zeroGhostCells = 0;
       int matlIndex = 0;
 
       // Requires
       tsk->requires(new_dw, d_lab->d_densityCPLabel, matlIndex, patch, Ghost::None,
+		    zeroGhostCells);
+      tsk->requires(new_dw, d_lab->d_viscosityINLabel, matlIndex, patch, 
+		    Ghost::None,
+		    zeroGhostCells);
+      tsk->requires(new_dw, d_lab->d_uVelocitySPBCLabel, matlIndex, patch,
+		    Ghost::AroundCells,
 		    numGhostCells);
-      tsk->requires(new_dw, d_lab->d_viscosityINLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(new_dw, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
+		    Ghost::AroundCells,
 		    numGhostCells);
-      tsk->requires(new_dw, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(new_dw, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, Ghost::None,
-		    numGhostCells);
-      tsk->requires(new_dw, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, Ghost::None,
+      tsk->requires(new_dw, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
+		    Ghost::AroundCells,
 		    numGhostCells);
 
       // Computes
@@ -640,6 +650,9 @@ void SmagorinskyModel::calcVelocitySource(const ProcessorGroup* pc,
 
 //
 // $Log$
+// Revision 1.31  2000/09/25 14:40:20  rawat
+// modified requires for multi-patch
+//
 // Revision 1.30  2000/09/20 16:56:16  rawat
 // added some petsc parallel stuff and fixed some bugs
 //
