@@ -21,6 +21,9 @@
 #include <SCICore/Containers/String.h>
 #include <SCICore/Math/MiscMath.h>
 #include <SCICore/Math/Trig.h>
+#include <iostream>
+using std::cerr;
+using std::ostream;
 
 namespace SCICore {
 namespace GeomSpace {
@@ -234,6 +237,9 @@ bool GeomCappedCylinder::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
+// Revision 1.7  1999/10/07 02:07:41  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.6  1999/09/04 06:01:48  sparker
 // Updates to .h files, to minimize #includes
 // removed .icc files (yeah!)

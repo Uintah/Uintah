@@ -47,6 +47,8 @@
 #include <SCICore/Geom/GeomTriangles.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCLvar.h>
+#include <iostream>
+using std::cerr;
 
 namespace PSECommon {
 namespace Modules {
@@ -658,6 +660,9 @@ void SurfToGeom::execute()
 
 //
 // $Log$
+// Revision 1.7  1999/10/07 02:07:01  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.6  1999/09/16 00:38:12  dmw
 // fixed TCL files for SurfToGeom and SolveMatrix and added SurfToGeom to the Makefile
 //

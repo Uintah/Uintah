@@ -16,7 +16,9 @@
 #include <SCICore/Containers/Array2.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Malloc/Allocator.h>
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
+using std::ostream;
 #ifdef _WIN32
 #include <float.h>
 #define MAXDOUBLE DBL_MAX
@@ -154,6 +156,9 @@ bool GeomTimeGroup::saveobj(ostream& out, const clString& format,
 
 //
 // $Log$
+// Revision 1.8  1999/10/07 02:07:46  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.7  1999/09/04 06:01:49  sparker
 // Updates to .h files, to minimize #includes
 // removed .icc files (yeah!)

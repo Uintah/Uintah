@@ -29,7 +29,7 @@ LOG
 #include <SCICore/Datatypes/ScalarField.h>
 #include <SCICore/Datatypes/VectorField.h>
 
-#include <fstream.h>
+#include <fstream.h> // Cannot be <fstream> due to seekg and tellg
 
 namespace Uintah {
 namespace Datatypes {  
@@ -106,7 +106,7 @@ class MPRead {
   FileType fileType;
   GridState gridState;
   State state;
-  ifstream is;
+    ifstream is;
   float version;
   
   clString filename;

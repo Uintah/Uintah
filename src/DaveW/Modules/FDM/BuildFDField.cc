@@ -18,6 +18,8 @@
 #include <SCICore/Datatypes/ScalarFieldRG.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/Malloc/Allocator.h>
+#include <iostream>
+using std::cerr;
 
 namespace DaveW {
 namespace Modules {
@@ -98,6 +100,9 @@ void BuildFDField::execute()
 
 //
 // $Log$
+// Revision 1.4  1999/10/07 02:06:33  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.3  1999/09/08 02:26:26  sparker
 // Various #include cleanups
 //

@@ -29,8 +29,11 @@
 #include <SCICore/Containers/String.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/MiscMath.h>
-#include <iostream.h>
-#include <fstream.h>
+#include <iostream>
+using std::cout;
+using std::endl;
+using std::ostream;
+#include <fstream>
 
 /*******************************************************************************
 ********************************************************************************
@@ -87,7 +90,7 @@ HexNode::HexNode ()
 * purposes only.
 *******************************************************************************/
 
-ostream & operator << (ostream & o, const HexNode & n)
+std::ostream & operator << (std::ostream & o, const HexNode & n)
 {
   o << "HexNode " << (void *) &n << ": x=" << n.x() << " y=" << n.y() 
     << " z=" << n.z() << " index=" << n.my_index
@@ -292,7 +295,7 @@ double HexFace::dist (const Point & P)
 * purposes only.
 *******************************************************************************/
 
-ostream & operator << (ostream & o, const HexFace & f)
+std::ostream & operator << (std::ostream & o, const HexFace & f)
 {
   o << "HexFace " << (void *) &f << ": index=" << f.my_index
     << ": contains=" << f.my_contains_index << ": neighbor=" << f.my_neighbor_index
@@ -596,7 +599,7 @@ void Hexahedron::find_stu (const Vector & p, double & s, double & t, double & u)
 * purposes only.
 *******************************************************************************/
 
-ostream & operator << (ostream & o, const Hexahedron & h)
+std::ostream & operator << (std::ostream & o, const Hexahedron & h)
 {
   o << "Hexahedron " << (void *) &h << ":" << " index=" << h.my_index
     << " num_faces=" << h.num_faces
@@ -1561,6 +1564,9 @@ void Pio (Piostream & p, Hexahedron * & h)
 
 //
 // $Log$
+// Revision 1.5  1999/10/07 02:07:31  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.4  1999/09/08 02:26:47  sparker
 // Various #include cleanups
 //

@@ -2,7 +2,7 @@
 #include "ThreadListener.h"
 #include "Thread.h"
 #include "ThreadEvent.h"
-#include <iostream.h>
+#include <iostream>
 
 /*
  * An object may implement this interface and register with

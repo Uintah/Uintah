@@ -5,7 +5,8 @@
 #include <SCICore/Thread/ThreadGroup.h>
 #include <SCICore/Thread/Mutex.h>
 #include <SCICore/Thread/Time.h>
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>

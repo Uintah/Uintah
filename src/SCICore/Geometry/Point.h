@@ -17,12 +17,7 @@
 #include <SCICore/share/share.h>
 #include <SCICore/Math/MinMax.h>
 
-#ifdef KCC
-#include <iosfwd.h>  // Forward declarations for KCC C++ I/O routines
-#else
-class ostream;
-class istream;
-#endif
+#include <iosfwd>
 
 namespace SCICore {
     namespace Containers {
@@ -104,8 +99,8 @@ public:
 
 };
 
-SCICORESHARE ostream& operator<<(ostream& os, const Point& p);
-SCICORESHARE istream& operator>>(istream& os, Point& p);
+SCICORESHARE std::ostream& operator<<(std::ostream& os, const Point& p);
+SCICORESHARE std::istream& operator>>(std::istream& os, Point& p);
 
 } // End namespace Geometry
 } // End namespace SCICore
@@ -265,6 +260,9 @@ inline double Dot(const Point& p1, const Point& p2)
 
 //
 // $Log$
+// Revision 1.4  1999/10/07 02:07:56  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.3  1999/09/04 06:01:52  sparker
 // Updates to .h files, to minimize #includes
 // removed .icc files (yeah!)

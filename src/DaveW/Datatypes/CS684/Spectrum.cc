@@ -14,7 +14,8 @@
 
 #include <DaveW/Datatypes/CS684/Spectrum.h>
 #include <DaveW/Datatypes/CS684/xyz.h>
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
 
 namespace DaveW {
 namespace Datatypes {
@@ -200,6 +201,9 @@ void Pio(Piostream& stream, LiteSpectrum& s)
 
 //
 // $Log$
+// Revision 1.2  1999/10/07 02:06:19  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.1  1999/08/23 02:52:58  dmw
 // Dave's Datatypes
 //

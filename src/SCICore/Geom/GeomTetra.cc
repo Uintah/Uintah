@@ -18,6 +18,8 @@
 #include <SCICore/Geom/GeomLine.h>
 #include <SCICore/Geometry/BBox.h>
 #include <SCICore/Malloc/Allocator.h>
+#include <iostream>
+using std::ostream;
 
 namespace SCICore {
 namespace GeomSpace {
@@ -83,6 +85,9 @@ bool GeomTetra::saveobj(ostream&, const clString&, GeomSave*)
 
 //
 // $Log$
+// Revision 1.6  1999/10/07 02:07:45  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.5  1999/08/29 00:46:56  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++

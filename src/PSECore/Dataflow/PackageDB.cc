@@ -9,7 +9,8 @@
 #include <SCICore/Containers/AVLTree.h>
 #include <SCICore/Containers/String.h>
 #include <PSECore/Dataflow/PackageDB.h>
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
 
 namespace PSECore {
 namespace Dataflow {
@@ -301,6 +302,9 @@ PackageDB::moduleNames(const clString& packageName,
 
 //
 // $Log$
+// Revision 1.14  1999/10/07 02:07:20  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.13  1999/10/06 20:37:37  mcq
 // Added memoirs.
 //

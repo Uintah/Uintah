@@ -25,8 +25,8 @@
 #include <SCICore/Geometry/Vector.h>
 #include <SCICore/Math/MinMax.h>
 #include <SCICore/Persistent/Pstreams.h>
-#include <fstream.h>
-#include <iostream.h>
+#include <fstream>
+#include <iostream>
 #include <math.h>
 #include <stdio.h>
 

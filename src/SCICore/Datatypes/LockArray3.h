@@ -16,6 +16,7 @@
 
 #include <SCICore/Util/Assert.h>
 #include <SCICore/Datatypes/Datatype.h>
+#include <iostream>
 
 namespace SCICore {
 namespace Datatypes {
@@ -190,7 +191,7 @@ LockArray3<T>::get_onedim_byte( unsigned char *v )
 template<class T>
 void LockArray3<T>::io(Piostream&)
 {
-  cerr << "Error - not implemented!\n";
+    std::cerr << "Error - not implemented!\n";
 }
 
 // Put this in a specialization file... Dd
@@ -237,6 +238,9 @@ void Pio(Piostream& stream, SCICore::Datatypes::LockArray3<T>*& data) {
 
 //
 // $Log$
+// Revision 1.6  1999/10/07 02:07:32  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.5  1999/08/30 20:19:27  sparker
 // Updates to compile with -LANG:std on SGI
 // Other linux/irix porting oscillations

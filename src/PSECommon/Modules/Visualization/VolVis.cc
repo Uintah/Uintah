@@ -43,7 +43,9 @@
 
 #include <SCICore/Containers/Array2.h>
 #include <SCICore/Containers/String.h>
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
 #include <stdlib.h>
 #include <string.h>
 #include <SCICore/Util/Timer.h>
@@ -1710,6 +1712,9 @@ VolVis::CalculateRayIncrements ()
 
 //
 // $Log$
+// Revision 1.7  1999/10/07 02:07:09  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.6  1999/08/29 00:46:49  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++

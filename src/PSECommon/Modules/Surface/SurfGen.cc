@@ -12,7 +12,8 @@
 #include <PSECore/Datatypes/SurfacePort.h>
 #include <SCICore/Datatypes/TriSurface.h>
 #include <SCICore/TclInterface/TCLvar.h>
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
 #include <SCICore/Malloc/Allocator.h>
 #include <PSECore/Datatypes/GeometryPort.h>
 
@@ -116,6 +117,9 @@ void SurfGen::execute()
 
 //
 // $Log$
+// Revision 1.7  1999/10/07 02:07:00  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.6  1999/08/25 03:48:01  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

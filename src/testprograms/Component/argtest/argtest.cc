@@ -422,6 +422,7 @@ static void usage(char* progname)
     cerr << "valid options are:\n";
     cerr << "  -server  - server process\n";
     cerr << "  -client URL  - client process\n";
+    cerr << "  -reps N - do test N times\n";
     cerr << "\n";
     exit(1);
 }
@@ -440,6 +441,7 @@ int main(int argc, char* argv[])
 	bool client=false;
 	bool server=false;
 	string client_url;
+	int reps=1;
 
 	for(int i=1;i<argc;i++){
 	    string arg(argv[i]);
@@ -454,6 +456,10 @@ int main(int argc, char* argv[])
 		    usage(argv[0]);
 		client_url=argv[i];
 		client=true;
+	    } else if(arg == "-reps"){
+		if(++i>=argc)
+		    usage(argv[0]);
+		reps=atoi(argv[i]);
 	    } else {
 		usage(argv[0]);
 	    }
@@ -468,126 +474,131 @@ int main(int argc, char* argv[])
 	    cerr << "Waiting for argtest connections...\n";
 	    cerr << pp->getURL().getString() << '\n';
 	} else {
+	    double stime=Time::currentSeconds();
 	    Object obj=PIDL::objectFrom(client_url);
 	    Server rm=pidl_cast<Server>(obj);
-
-	    if(rm->return_int() != 5)
-		fail("return_int");
-	    rm->in_int(6);
-	    int test_int;
-	    rm->out_int(test_int);
-	    if(test_int != 7)
-		fail("out_int");
-	    test_int=8;
-	    rm->inout_int(test_int);
-	    if(test_int != 9)
-		fail("inout_int");
-	    if(!rm->getSuccess())
-		fail("int failure on remote side");
-
-	    if(rm->return_string() != "return string")
-		fail("return_string");
-	    rm->in_string("in string");
-	    string test_string;
-	    rm->out_string(test_string);
-	    if(test_string != "out string")
-		fail("out_string");
-	    test_string="inout string in";
-	    rm->inout_string(test_string);
-	    if(test_string != "inout string out")
-		fail("inout_string");
-	    if(!rm->getSuccess())
-		fail("string failure on remote side");
-
-	    if(rm->return_ref()->test() != 10)
-		fail("return_ref");
-	    rm->in_ref(new ref_impl(11));
-	    ref test_ref;
-	    rm->out_ref(test_ref);
-	    if(test_ref->test() != 12)
-		fail("out_ref");
-	    test_ref=new ref_impl(13);
-	    rm->inout_ref(test_ref);
-	    if(test_ref->test() != 14)
-		fail("inout_ref");
-	    if(!rm->getSuccess())
-		fail("ref failure on remote side");
-
-	    array1<int> test_array=rm->return_array();
-	    if(!test(test_array, 10))
-		fail("return_array");
-	    init(test_array, 11);
-	    rm->in_array(test_array);
-	    rm->out_array(test_array);
-	    if(!test(test_array, 12))
-		fail("out_array");
-	    init(test_array, 13);
-	    rm->inout_array(test_array);
-	    if(!test(test_array, 14))
-		fail("inout_array");
-	    if(!rm->getSuccess())
-		fail("array failure on remote side");
-
-	    array1<bool> test_arraybool=rm->return_arraybool();
-	    if(!test(test_arraybool, 10))
-		fail("return_arraybool");
-	    init(test_arraybool, 11);
-	    rm->in_arraybool(test_arraybool);
-	    rm->out_arraybool(test_arraybool);
-	    if(!test(test_arraybool, 12))
-		fail("out_arraybool");
-	    init(test_arraybool, 13);
-	    rm->inout_arraybool(test_arraybool);
-	    if(!test(test_arraybool, 14))
-		fail("inout_arraybool");
-	    if(!rm->getSuccess())
-		fail("arraybool failure on remote side");
-
-	    array1<string> test_arraystring=rm->return_arraystring();
-	    if(!test(test_arraystring, 10))
-		fail("return_arraystring");
-	    init(test_arraystring, 11);
-	    rm->in_arraystring(test_arraystring);
-	    rm->out_arraystring(test_arraystring);
-	    if(!test(test_arraystring, 12))
-		fail("out_arraystring");
-	    init(test_arraystring, 13);
-	    rm->inout_arraystring(test_arraystring);
-	    if(!test(test_arraystring, 14))
-		fail("inout_arraystring");
-	    if(!rm->getSuccess())
-		fail("arraystring failure on remote side");
-
-	    array1<array1<int> > test_arrayarray=rm->return_arrayarray();
-	    if(!test(test_arrayarray, 10))
-		fail("return_arrayarray");
-	    init(test_arrayarray, 11);
-	    rm->in_arrayarray(test_arrayarray);
-	    rm->out_arrayarray(test_arrayarray);
-	    if(!test(test_arrayarray, 12))
-		fail("out_arrayarray");
-	    init(test_arrayarray, 13);
-	    rm->inout_arrayarray(test_arrayarray);
-	    if(!test(test_arrayarray, 14))
-		fail("inout_arrayarray");
-	    if(!rm->getSuccess())
-		fail("arrayarray failure on remote side");
-
-	    array1<ref> test_arrayref=rm->return_arrayref();
-	    if(!test(test_arrayref, 10))
-		fail("return_arrayref");
-	    init(test_arrayref, 11);
-	    rm->in_arrayref(test_arrayref);
-	    rm->out_arrayref(test_arrayref);
-	    if(!test(test_arrayref, 12))
-		fail("out_arrayref");
-	    init(test_arrayref, 13);
-	    rm->inout_arrayref(test_arrayref);
-	    if(!test(test_arrayref, 14))
-		fail("inout_arrayref");
-	    if(!rm->getSuccess())
-		fail("arrayref failure on remote side");
-
+	    for(int i=0;i<reps;i++){
+		if(rm->return_int() != 5)
+		    fail("return_int");
+		rm->in_int(6);
+		int test_int;
+		rm->out_int(test_int);
+		if(test_int != 7)
+		    fail("out_int");
+		test_int=8;
+		rm->inout_int(test_int);
+		if(test_int != 9)
+		    fail("inout_int");
+		if(!rm->getSuccess())
+		    fail("int failure on remote side");
+		
+		if(rm->return_string() != "return string")
+		    fail("return_string");
+		rm->in_string("in string");
+		string test_string;
+		rm->out_string(test_string);
+		if(test_string != "out string")
+		    fail("out_string");
+		test_string="inout string in";
+		rm->inout_string(test_string);
+		if(test_string != "inout string out")
+		    fail("inout_string");
+		if(!rm->getSuccess())
+		    fail("string failure on remote side");
+		
+		if(rm->return_ref()->test() != 10)
+		    fail("return_ref");
+		rm->in_ref(new ref_impl(11));
+		ref test_ref;
+		rm->out_ref(test_ref);
+		if(test_ref->test() != 12)
+		    fail("out_ref");
+		test_ref=new ref_impl(13);
+		rm->inout_ref(test_ref);
+		if(test_ref->test() != 14)
+		    fail("inout_ref");
+		if(!rm->getSuccess())
+		    fail("ref failure on remote side");
+		
+		array1<int> test_array=rm->return_array();
+		if(!test(test_array, 10))
+		    fail("return_array");
+		init(test_array, 11);
+		rm->in_array(test_array);
+		rm->out_array(test_array);
+		if(!test(test_array, 12))
+		    fail("out_array");
+		init(test_array, 13);
+		rm->inout_array(test_array);
+		if(!test(test_array, 14))
+		    fail("inout_array");
+		if(!rm->getSuccess())
+		    fail("array failure on remote side");
+		
+		array1<bool> test_arraybool=rm->return_arraybool();
+		if(!test(test_arraybool, 10))
+		    fail("return_arraybool");
+		init(test_arraybool, 11);
+		rm->in_arraybool(test_arraybool);
+		rm->out_arraybool(test_arraybool);
+		if(!test(test_arraybool, 12))
+		    fail("out_arraybool");
+		init(test_arraybool, 13);
+		rm->inout_arraybool(test_arraybool);
+		if(!test(test_arraybool, 14))
+		    fail("inout_arraybool");
+		if(!rm->getSuccess())
+		    fail("arraybool failure on remote side");
+		
+		array1<string> test_arraystring=rm->return_arraystring();
+		if(!test(test_arraystring, 10))
+		    fail("return_arraystring");
+		init(test_arraystring, 11);
+		rm->in_arraystring(test_arraystring);
+		rm->out_arraystring(test_arraystring);
+		if(!test(test_arraystring, 12))
+		    fail("out_arraystring");
+		init(test_arraystring, 13);
+		rm->inout_arraystring(test_arraystring);
+		if(!test(test_arraystring, 14))
+		    fail("inout_arraystring");
+		if(!rm->getSuccess())
+		    fail("arraystring failure on remote side");
+		
+		array1<array1<int> > test_arrayarray=rm->return_arrayarray();
+		if(!test(test_arrayarray, 10))
+		    fail("return_arrayarray");
+		init(test_arrayarray, 11);
+		rm->in_arrayarray(test_arrayarray);
+		rm->out_arrayarray(test_arrayarray);
+		if(!test(test_arrayarray, 12))
+		    fail("out_arrayarray");
+		init(test_arrayarray, 13);
+		rm->inout_arrayarray(test_arrayarray);
+		if(!test(test_arrayarray, 14))
+		    fail("inout_arrayarray");
+		if(!rm->getSuccess())
+		    fail("arrayarray failure on remote side");
+		
+		array1<ref> test_arrayref=rm->return_arrayref();
+		if(!test(test_arrayref, 10))
+		    fail("return_arrayref");
+		init(test_arrayref, 11);
+		rm->in_arrayref(test_arrayref);
+		rm->out_arrayref(test_arrayref);
+		if(!test(test_arrayref, 12))
+		    fail("out_arrayref");
+		init(test_arrayref, 13);
+		rm->inout_arrayref(test_arrayref);
+		if(!test(test_arrayref, 14))
+		    fail("inout_arrayref");
+		if(!rm->getSuccess())
+		    fail("arrayref failure on remote side");
+	    }
+	    double dt=Time::currentSeconds()-stime;
+	    cerr << "argtest: " << reps << " reps in " << dt << " seconds\n";
+	    double us=dt/reps*1000*1000;
+	    cerr << "argtest: " << us << " us/rep\n";
 	}
 	PIDL::serveObjects();
 	cerr << "Argtest successful\n";
@@ -604,6 +615,9 @@ int main(int argc, char* argv[])
 
 //
 // $Log$
+// Revision 1.3  1999/10/07 02:08:36  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.2  1999/09/29 07:34:29  sparker
 // Test more parameter passing modes - arrays of strings, arrays of
 //    bools, arrays of references and arrays of arrays

@@ -13,6 +13,8 @@
 #include <PSECore/Datatypes/ColumnMatrixPort.h>
 #include <PSECore/Datatypes/MatrixPort.h>
 #include <SCICore/Malloc/Allocator.h>
+#include <iostream>
+using std::cerr;
 
 namespace DaveW {
 namespace Modules {
@@ -88,6 +90,9 @@ void VecSplit::execute()
 
 //
 // $Log$
+// Revision 1.3  1999/10/07 02:06:35  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.2  1999/09/05 23:16:19  dmw
 // build scalar field of error values from Basis Matrix
 //

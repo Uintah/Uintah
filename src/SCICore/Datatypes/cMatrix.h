@@ -15,18 +15,11 @@
 
 #include <SCICore/Datatypes/Datatype.h>
 #include <SCICore/Containers/LockingHandle.h>
-
-
-namespace SCICore {
-  namespace Math {
-    class Complex;
-  }
-}
+#include <complex>
 
 namespace SCICore {
 namespace Datatypes {
 
-using SCICore::Math::Complex;
 using SCICore::Containers::LockingHandle;
 using SCICore::PersistentSpace::Piostream;
 using SCICore::PersistentSpace::PersistentTypeID;
@@ -38,6 +31,7 @@ class cVector;
 class SCICORESHARE cMatrix:public Datatype{
   
 public:
+    typedef std::complex<double> Complex;
  virtual cVector operator*( cVector &V)=0;
 
  virtual void mult(cVector& V,cVector& tmp)=0;
@@ -55,6 +49,9 @@ public:
 
 //
 // $Log$
+// Revision 1.4  1999/10/07 02:07:35  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.3  1999/08/25 03:48:48  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

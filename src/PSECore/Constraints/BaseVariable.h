@@ -70,7 +70,7 @@ public:
    inline Real real() const;
    inline operator Real() const;
 
-   void print( ostream& os );
+   void print( std::ostream& os );
 
    inline const clString& GetName() const { return name; }
    inline int GetNumConstraints() const { return numconstraints; }
@@ -94,9 +94,9 @@ private:
 
    Index Register( BaseConstraint* constraint, const Index index );
    void RegisterPriority( const Index index, const VPriority p );
-   void printc( ostream& os, const Index c );
+   void printc( std::ostream& os, const Index c );
 };
-inline PSECORESHARE ostream& operator<<( ostream& os, BaseVariable& v );
+inline PSECORESHARE std::ostream& operator<<( std::ostream& os, BaseVariable& v );
 
 
 /* Miscellaneous */
@@ -137,8 +137,8 @@ BaseVariable::operator Real() const
 }
 
 
-inline PSECORESHARE ostream&
-operator<<( ostream& os, BaseVariable& v )
+inline PSECORESHARE std::ostream&
+operator<<( std::ostream& os, BaseVariable& v )
 {
    v.print(os);
    return os;
@@ -149,6 +149,9 @@ operator<<( ostream& os, BaseVariable& v )
 
 //
 // $Log$
+// Revision 1.5  1999/10/07 02:07:15  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.4  1999/09/08 02:26:37  sparker
 // Various #include cleanups
 //

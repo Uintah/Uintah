@@ -23,7 +23,9 @@
 #include <SCICore/Math/Trig.h>
 #include <SCICore/Math/TrigTable.h>
 #include <SCICore/TclInterface/TCL.h>
-
+#include <iostream>
+using std::cerr;
+using std::endl;
 #include <stdio.h>
 
 namespace SCICore {
@@ -758,6 +760,9 @@ void PointsSurface::set_surfnodes(const Array1<NodeHandle>& nodes) {
 
 //
 // $Log$
+// Revision 1.6  1999/10/07 02:07:30  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.5  1999/08/25 03:48:30  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

@@ -19,7 +19,8 @@
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Tester/RigorousTest.h>
 
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
 #include <stdio.h>
 
 #define DEBUG 0
@@ -381,6 +382,9 @@ void SiReCrunch::execute()
 
 //
 // $Log$
+// Revision 1.4  1999/10/07 02:06:40  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.3  1999/09/08 02:26:30  sparker
 // Various #include cleanups
 //

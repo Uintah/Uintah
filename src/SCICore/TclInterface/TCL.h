@@ -53,7 +53,7 @@ class SCICORESHARE TCL {
     void register_var(TCLvar*);
     void unregister_var(TCLvar*);
 public:
-    virtual void emit_vars(ostream& out);
+    virtual void emit_vars(std::ostream& out);
     static void initialize();
     static void execute(const clString&);
     static void execute(char*);
@@ -89,6 +89,9 @@ public:
 
 //
 // $Log$
+// Revision 1.3  1999/10/07 02:08:03  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.2  1999/08/17 06:39:44  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

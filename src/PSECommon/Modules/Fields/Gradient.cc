@@ -27,6 +27,8 @@
 #include <SCICore/Datatypes/VectorFieldUG.h>
 #include <SCICore/Geometry/Point.h>
 #include <SCICore/TclInterface/TCLvar.h>
+#include <iostream>
+using std::cerr;
 
 namespace PSECommon {
 namespace Modules {
@@ -177,6 +179,9 @@ void Gradient::execute()
 
 //
 // $Log$
+// Revision 1.6  1999/10/07 02:06:48  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.5  1999/08/25 03:47:47  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

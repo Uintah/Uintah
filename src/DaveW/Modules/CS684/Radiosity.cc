@@ -37,7 +37,8 @@
 #include <SCICore/Math/MinMax.h>
 #include <SCICore/TclInterface/TCLvar.h>
 
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>

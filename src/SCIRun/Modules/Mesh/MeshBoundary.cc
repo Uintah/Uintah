@@ -16,6 +16,8 @@
 #include <SCICore/Datatypes/TriSurface.h>
 #include <SCICore/Geom/GeomTriangles.h>
 #include <SCICore/Malloc/Allocator.h>
+#include <iostream>
+using std::cerr;
 
 namespace SCIRun {
 namespace Modules {
@@ -126,6 +128,9 @@ void MeshBoundary::execute()
 
 //
 // $Log$
+// Revision 1.2  1999/10/07 02:08:19  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.1  1999/09/05 01:15:27  dmw
 // added all of the old SCIRun mesh modules
 //

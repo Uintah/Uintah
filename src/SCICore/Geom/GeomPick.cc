@@ -14,6 +14,8 @@
 
 #include <SCICore/Geom/GeomPick.h>
 #include <SCICore/Malloc/Allocator.h>
+#include <iostream>
+using std::ostream;
 
 namespace SCICore {
 namespace GeomSpace {
@@ -210,6 +212,9 @@ bool GeomPick::saveobj(ostream& out, const clString& format, GeomSave* saveinfo)
 
 //
 // $Log$
+// Revision 1.3  1999/10/07 02:07:43  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.2  1999/08/17 06:39:10  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

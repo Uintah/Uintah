@@ -13,7 +13,9 @@
 #include "MpegEncoder.h"
 #include <stdio.h>
 #include <string.h>
-#include <fstream.h>
+#include <fstream>
+using std::ofstream;
+using std::ios;
 
 namespace PSECommon {
 namespace Modules {
@@ -117,9 +119,9 @@ void MpegEncoder::EncodeFrame(unsigned char* red, unsigned char* green,
   ofstream outfileU("/tmp/enc.U", ios::out);
   ofstream outfileV("/tmp/enc.V", ios::out);
 
-  outfileY.write(imageY, sx*sy);
-  outfileU.write(imageU, sx*sy/4);
-  outfileV.write(imageV, sx*sy/4);
+  outfileY.write((char*)imageY, sx*sy);
+  outfileU.write((char*)imageU, sx*sy/4);
+  outfileV.write((char*)imageV, sx*sy/4);
 
   outfileY.close();
   outfileU.close();

@@ -12,7 +12,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <iostream.h>
+#include <iostream>
 #ifndef _WIN32
 #include <unistd.h>
 #endif
@@ -101,6 +101,9 @@ Demand_Message::~Demand_Message()
 
 //
 // $Log$
+// Revision 1.5  1999/10/07 02:07:19  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.4  1999/09/23 01:01:07  moulding
 // added #include <iostream.h> at top
 //

@@ -1,7 +1,7 @@
 #include <PSECore/Dataflow/PackageDB.h>
 #include <SCICore/Containers/String.h>
 #include <PSECore/Dataflow/Module.h>
-#include <iostream.h>
+#include <iostream>
 
 #define MP(makesuf) \
 namespace DaveW { namespace Modules { using namespace PSECore::Dataflow;\
@@ -163,6 +163,6 @@ void initPackage(const clString& tcl) {
   RM("Writers",	      "SigmaSetWriter",		 make_SigmaSetWriter,	    tcl+"/SigmaSetWriter.tcl");
   RM("Writers",	      "TensorFieldWriter",	 make_TensorFieldWriter,    tcl+"/TensorFieldWriter.tcl");
 
-  cerr << "Initfn done -- TCL path was " << tcl << "\n";
+  std::cerr << "Initfn done -- TCL path was " << tcl << "\n";
 }
 }

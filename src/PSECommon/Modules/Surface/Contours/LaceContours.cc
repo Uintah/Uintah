@@ -25,7 +25,7 @@
 #include <SCICore/Math/MinMax.h>
 #include <SCICore/Math/Expon.h>
 
-#include <iostream.h>
+#include <iostream>
 
 class LaceContours : public Module {
     ContourSetIPort* incontour;

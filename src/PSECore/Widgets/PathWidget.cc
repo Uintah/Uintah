@@ -20,7 +20,9 @@
 #include <SCICore/Geom/GeomSphere.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <PSECore/Dataflow/Module.h>
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
 
 namespace PSECore {
 namespace Widgets {
@@ -466,6 +468,9 @@ PathWidget::GetMaterialName( const Index mindex ) const
 
 //
 // $Log$
+// Revision 1.4  1999/10/07 02:07:25  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.3  1999/09/08 02:26:43  sparker
 // Various #include cleanups
 //

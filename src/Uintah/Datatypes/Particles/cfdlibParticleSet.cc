@@ -12,7 +12,9 @@
  *  Copyright (C) 1998 SCI Group
  */
 
-#include <iostream.h>
+#include <iostream>
+using std::cout;
+using std::endl;
 
 #include <SCICore/Containers/String.h>
 #include <SCICore/Malloc/Allocator.h>
@@ -200,6 +202,9 @@ void cfdlibParticleSet::print() {
 
 //
 // $Log$
+// Revision 1.4  1999/10/07 02:08:24  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.3  1999/09/21 16:08:31  kuzimmer
 // modifications for binary file format
 //

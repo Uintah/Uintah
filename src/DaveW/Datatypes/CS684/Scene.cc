@@ -3,8 +3,9 @@
 #include <DaveW/Datatypes/CS684/Scene.h>
 #include <SCICore/Containers/String.h>
 
-#include <fstream.h>
-#include <iostream.h>
+#include <fstream>
+#include <iostream>
+using std::cerr;
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -355,6 +356,9 @@ static void _dummy_(Piostream& p1, Array1<RTObject*>& p2)
 } // End namespace DaveW
 //
 // $Log$
+// Revision 1.3  1999/10/07 02:06:19  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.2  1999/08/29 00:46:35  sparker
 // Integrated new thread library
 // using statement tweaks to compile with both MipsPRO and g++

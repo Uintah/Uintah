@@ -15,6 +15,8 @@
 #include <PSECore/Datatypes/SurfacePort.h>
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/Math/Trig.h>
+#include <iostream>
+using std::cerr;
 
 namespace DaveW {
 namespace Modules {
@@ -141,6 +143,9 @@ void DipoleSourceRHS::execute()
 
 //
 // $Log$
+// Revision 1.4  1999/10/07 02:06:34  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.3  1999/09/16 00:36:55  dmw
 // added new Module that Chris Butson will work on (DipoleInSphere) and fixed SRCDIR references in DaveW makefiles
 //

@@ -27,10 +27,7 @@
 #include <rpc/types.h>
 #include <rpc/xdr.h>
 
-// KCC stuff
-#include <fstream.h>
-//class ifstream;
-//class ofstream;
+#include <iosfwd>
 
 namespace SCICore {
 namespace PersistentSpace {
@@ -40,17 +37,14 @@ using SCICore::Containers::clString;
 class SCICORESHARE BinaryPiostream : public Piostream {
     FILE* fp;
     void* addr;
-    int len;
     XDR* xdr;
     bool mmapped;
     virtual void emit_pointer(int&, int&);
     int have_peekname;
     clString peekname;
-    virtual double get_percent_done();
 public:
     BinaryPiostream(const clString& filename, Direction dir);
     BinaryPiostream(int fd, Direction dir);
-    BinaryPiostream(ifstream*, int);
 
     virtual ~BinaryPiostream();
     virtual clString peek_class();
@@ -74,18 +68,14 @@ public:
 };
 
 class SCICORESHARE TextPiostream : public Piostream {
-    ifstream* istr;
-    ofstream* ostr;
-    int len;
+    std::ifstream* istr;
+    std::ofstream* ostr;
     int have_peekname;
     clString peekname;
     void expect(char);
     virtual void emit_pointer(int&, int&);
-    virtual double get_percent_done();
 public:
     TextPiostream(const clString& filename, Direction dir);
-    TextPiostream(int fd, Direction dir);
-    TextPiostream(ifstream*, int);
     virtual ~TextPiostream();
     virtual clString peek_class();
     virtual int begin_class(const clString& name, int);
@@ -110,15 +100,12 @@ public:
 
 class SCICORESHARE GzipPiostream : public Piostream {
     gzFile gzfile;
-    int len;
     int have_peekname;
     clString peekname;
     void expect(char);
     virtual void emit_pointer(int&, int&);
-    virtual double get_percent_done();
 public:
     GzipPiostream(const clString& filename, Direction dir);
-    GzipPiostream(char *name, int version);
     virtual ~GzipPiostream();
     virtual clString peek_class();
     virtual int begin_class(const clString& name, int);
@@ -144,14 +131,12 @@ public:
 
 class SCICORESHARE GunzipPiostream : public Piostream {
     int unzipfile;	// file descriptor
-    int len;
     int have_peekname;
     clString peekname;
     void expect(char);
     virtual void emit_pointer(int&, int&);
-    virtual double get_percent_done();
 public:
-    GunzipPiostream(ifstream* istream, int version);
+    GunzipPiostream(const clString& filename, Direction dir);
     virtual ~GunzipPiostream();
     virtual clString peek_class();
     virtual int begin_class(const clString& name, int);
@@ -180,6 +165,9 @@ public:
 
 //
 // $Log$
+// Revision 1.3  1999/10/07 02:08:02  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.2  1999/08/17 06:39:41  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

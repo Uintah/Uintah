@@ -15,6 +15,8 @@
 #include <SCICore/Malloc/Allocator.h>
 #include <SCICore/TclInterface/TCLTask.h>
 #include <SCICore/TclInterface/TCLvar.h>
+#include <iostream>
+using std::cerr;
 #include <math.h>
 
 namespace SCIRun {
@@ -119,6 +121,9 @@ void ImageGen::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.6  1999/10/07 02:08:15  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.5  1999/09/08 02:27:00  sparker
 // Various #include cleanups
 //

@@ -15,7 +15,9 @@
 #include <SCICore/Datatypes/ColorMap.h>
 #include <SCICore/Containers/String.h>
 #include <SCICore/Malloc/Allocator.h>
-#include <iostream.h>
+#include <iostream>
+using std::cerr;
+using std::endl;
 
 namespace SCICore {
 namespace Datatypes {
@@ -272,6 +274,9 @@ double ColorMap::getMax()
 
 //
 // $Log$
+// Revision 1.5  1999/10/07 02:07:30  sparker
+// use standard iostreams and complex type
+//
 // Revision 1.4  1999/08/25 03:48:31  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes
