@@ -6,9 +6,9 @@
 #include <Uintah/Interface/ProblemSpecP.h>
 
 namespace Uintah {
+  class GeometryPiece;
    namespace MPM {
-      class GeometryPiece;
-      using namespace SCICore::Geometry;
+     using namespace SCICore::Geometry;
 /**************************************
 	
 CLASS
@@ -99,6 +99,10 @@ WARNING
 
 
 // $Log$
+// Revision 1.20  2000/11/22 17:05:12  jas
+// Moved GeometryPiece out of the Uintah::MPM namespace (up to Uintah per
+// Jim's recent changes).
+//
 // Revision 1.19  2000/09/22 07:11:51  tan
 // MPM code works with fracture in three point bending.
 //
