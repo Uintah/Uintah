@@ -55,7 +55,7 @@ void NullContact::initializeContact(const Patch* /*patch*/,
 
 void NullContact::exMomInterpolated(const ProcessorContext*,
 				    const Patch* patch,
-				    DataWarehouseP& old_dw,
+				    DataWarehouseP& /*old_dw*/,
 				    DataWarehouseP& new_dw)
 {
 
@@ -88,7 +88,7 @@ void NullContact::exMomInterpolated(const ProcessorContext*,
 
 void NullContact::exMomIntegrated(const ProcessorContext*,
 				  const Patch* patch,
-                                  DataWarehouseP& old_dw,
+                                  DataWarehouseP& /*old_dw*/,
                                   DataWarehouseP& new_dw)
 {
 
@@ -126,7 +126,7 @@ void NullContact::exMomIntegrated(const ProcessorContext*,
 void NullContact::addComputesAndRequiresInterpolated( Task* t,
                                              const MPMMaterial* matl,
                                              const Patch* patch,
-                                             DataWarehouseP& old_dw,
+                                             DataWarehouseP& /*old_dw*/,
                                              DataWarehouseP& new_dw) const
 {
   const MPMLabel* lb = MPMLabel::getLabels();
@@ -141,7 +141,7 @@ void NullContact::addComputesAndRequiresInterpolated( Task* t,
 void NullContact::addComputesAndRequiresIntegrated( Task* t,
                                              const MPMMaterial* matl,
                                              const Patch* patch,
-                                             DataWarehouseP& old_dw,
+                                             DataWarehouseP& /*old_dw*/,
                                              DataWarehouseP& new_dw) const
 {
 
@@ -158,6 +158,12 @@ void NullContact::addComputesAndRequiresIntegrated( Task* t,
 
 
 // $Log$
+// Revision 1.13  2000/06/03 05:25:46  sparker
+// Added a new for pSurfLabel (was uninitialized)
+// Uncommented pleaseSaveIntegrated
+// Minor cleanups of reduction variable use
+// Removed a few warnings
+//
 // Revision 1.12  2000/05/30 20:19:09  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch

@@ -262,10 +262,10 @@ void ElasticConstitutiveModel::computeStressIncrement()
 }
 #endif
 
-void ElasticConstitutiveModel::computeStressTensor(const Patch* patch,
-						   const MPMMaterial* matl,
-						   DataWarehouseP& new_dw,
-						   DataWarehouseP& old_dw)
+void ElasticConstitutiveModel::computeStressTensor(const Patch* /*patch*/,
+						   const MPMMaterial* /*matl*/,
+						   DataWarehouseP& /*new_dw*/,
+						   DataWarehouseP& /*old_dw*/)
 {
   cerr << "computeStressTensor not finished\n";
 }
@@ -498,6 +498,12 @@ int ElasticConstitutiveModel::getSize() const
 
 
 // $Log$
+// Revision 1.14  2000/06/03 05:25:45  sparker
+// Added a new for pSurfLabel (was uninitialized)
+// Uncommented pleaseSaveIntegrated
+// Minor cleanups of reduction variable use
+// Removed a few warnings
+//
 // Revision 1.13  2000/05/30 20:19:03  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch

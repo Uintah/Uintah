@@ -615,8 +615,8 @@ void SerialMPM::scheduleTimeAdvance(double /*t*/, double /*dt*/,
    new_dw->pleaseSave(lb->pExternalForceLabel, numMatls);
    new_dw->pleaseSave(lb->gVelocityLabel, numMatls);
    new_dw->pleaseSave(lb->pXLabel, numMatls);
-//   new_dw->pleaseSaveIntegrated(lb->StrainEnergyLabel);
-//   new_dw->pleaseSaveIntegrated(lb->KineticEnergyLabel);
+   new_dw->pleaseSaveIntegrated(lb->StrainEnergyLabel);
+   new_dw->pleaseSaveIntegrated(lb->KineticEnergyLabel);
 }
 
 void SerialMPM::actuallyInitialize(const ProcessorContext*,
@@ -1096,7 +1096,7 @@ void SerialMPM::integrateAcceleration(const ProcessorContext*,
       NCVariable<Vector>        velocity;
       delt_vartype delT;
       sum_vartype strainEnergy;
-      new_dw->get((ReductionVariableBase&)strainEnergy, lb->StrainEnergyLabel);
+      new_dw->get(strainEnergy, lb->StrainEnergyLabel);
 
       cout << strainEnergy << endl;
 
@@ -1105,7 +1105,7 @@ void SerialMPM::integrateAcceleration(const ProcessorContext*,
       new_dw->get(velocity, lb->gMomExedVelocityLabel, vfindex, patch,
 		  Ghost::None, 0);
 
-      old_dw->get((ReductionVariableBase&)delT, lb->delTLabel);
+      old_dw->get(delT, lb->delTLabel);
 
       // Create variables for the results
       NCVariable<Vector> velocity_star;
@@ -1367,6 +1367,12 @@ void SerialMPM::crackGrow(const ProcessorContext*,
 }
 
 // $Log$
+// Revision 1.79  2000/06/03 05:25:44  sparker
+// Added a new for pSurfLabel (was uninitialized)
+// Uncommented pleaseSaveIntegrated
+// Minor cleanups of reduction variable use
+// Removed a few warnings
+//
 // Revision 1.78  2000/06/01 23:12:04  guilkey
 // Code to store integrated quantities in the DW and save them in
 // an archive of sorts.  Also added the "computes" in the right tasks.
