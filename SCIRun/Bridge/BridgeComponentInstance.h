@@ -48,6 +48,9 @@
 #include <SCIRun/CCA/CCAPortInstance.h>
 #include <SCIRun/Babel/BabelPortInstance.h>
 #include <SCIRun/Dataflow/SCIRunPortInstance.h>
+#include <SCIRun/Vtk/VtkPortInstance.h>
+
+#include <SCIRun/Vtk/Component.h>
 
 #include <SCIRun/Bridge/BridgeModule.h>
 
@@ -74,6 +77,9 @@ namespace SCIRun {
     Port* getDataflowOPort(const std::string& name);
     sci::cca::Port::pointer getCCAPort(const std::string& name);
     gov::cca::Port getBabelPort(const std::string& name);
+    vtk::Port* getVtkPort(const std::string& name);
+    void addVtkPort(vtk::Port* vtkport, VtkPortInstance::PortType portT);
+
     void releasePort(const std::string& name,const modelT model);
     void registerUsesPort(const std::string& name, const std::string& type,
 			  const modelT model);
@@ -113,7 +119,7 @@ namespace SCIRun {
 
     //Dataflow:
     BridgeModule* bmdl; 
-    
+   
     BridgeComponentInstance(const BridgeComponentInstance&);
     BridgeComponentInstance& operator=(const BridgeComponentInstance&);
   };

@@ -49,13 +49,19 @@
 #include <SCIRun/Babel/gov_cca.hh>
 //Dataflow:
 #include <Dataflow/Network/Port.h>
+//Vtk:
+#include <SCIRun/Vtk/InPort.h>
+#include <SCIRun/Vtk/OutPort.h>
+#include <SCIRun/Vtk/VtkPortInstance.h>
+
 
 namespace SCIRun {
 
   typedef enum {
     CCA = 1,
     Babel,
-    Dataflow
+    Dataflow,
+    Vtk
   } modelT;
   
   class BridgeServices {
@@ -67,7 +73,10 @@ namespace SCIRun {
     virtual Port* getDataflowOPort(const std::string& name) = 0;
     virtual sci::cca::Port::pointer getCCAPort(const std::string& name) = 0;
     virtual gov::cca::Port getBabelPort(const std::string& name) = 0;
-    
+    virtual vtk::Port* getVtkPort(const std::string& name) = 0; 
+    virtual void addVtkPort(vtk::Port* vtkport, VtkPortInstance::PortType portT) = 0;
+  
+ 
     virtual void releasePort(const std::string& name, const modelT model) = 0;
     virtual void registerUsesPort(const std::string& name, const std::string& type,
 			  const modelT model) = 0;
