@@ -61,14 +61,32 @@ DependencyBatch::~DependencyBatch()
 }
 
 void
-DetailedTasks::assignMessageTags()
+DetailedTasks::assignMessageTags(vector<Task*>& tasks)
 {
-  int serial=1;
-  for(int i=0;i<(int)batches.size();i++)
-    batches[i]->messageTag = serial++;
-  maxSerial=serial;
-  if(dbg.active())
-    dbg << "MAXSERIAL=" << maxSerial << '\n';
+  int ntasks = (int)tasks.size()+(int)stasks.size();
+  int taskbits = 0;
+  while(1<<taskbits < ntasks)
+    taskbits++;
+  if(taskbits*2 >= sizeof(int)*8)
+    throw InternalError("assignMessageTags needs more bits to handle this number of tasks!");
+  for(int i=0;i<(int)tasks.size();i++)
+    tasks[i]->setTaskNumber(i);
+  int n=(int)tasks.size();
+  for(int i=0;i<(int)stasks.size();i++,n++)
+    stasks[i]->setTaskNumber(n);
+  for(int i=0;i<(int)batches.size();i++){
+    DependencyBatch* batch = batches[i];
+    int fromTask = batch->fromTask->getTask()->getTaskNumber();
+    ASSERT(fromTask != -1);
+    list<DetailedTask*>::iterator iter = batch->toTasks.begin();
+    ASSERT(iter != batch->toTasks.end());
+    int toTask = (*iter)->getTask()->getTaskNumber();
+    ASSERT(toTask != -1);
+    for(;iter != batch->toTasks.end();iter++)
+      ASSERTEQ(toTask, (*iter)->getTask()->getTaskNumber());
+    int tag = (fromTask<<taskbits)|toTask;
+    batches[i]->messageTag = tag;
+  }
 } // end assignMessageTags()
 
 void
@@ -547,7 +565,7 @@ void
 DetailedTasks::initTimestep()
 {
   internalDependencySatisfiedTasks_ = initiallyReadyTasks_;
-  readyQueueSemaphore_.up(internalDependencySatisfiedTasks_.size());
+  readyQueueSemaphore_.up((int)internalDependencySatisfiedTasks_.size());
   incrementDependencyGeneration();
   initializeBatches();
 }

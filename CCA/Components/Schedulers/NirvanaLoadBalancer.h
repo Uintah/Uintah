@@ -4,6 +4,7 @@
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Core/Geometry/IntVector.h>
+#include <set>
 
 namespace Uintah {
   using namespace SCIRun;
@@ -43,6 +44,10 @@ namespace Uintah {
      virtual void assignResources(DetailedTasks& tg, const ProcessorGroup*);
      virtual int getPatchwiseProcessorAssignment(const Patch* patch,
 						  const ProcessorGroup* resources);
+     virtual void createNeighborhood(const Level* level, const ProcessorGroup*);
+     virtual bool inNeighborhood(const PatchSubset*, const MaterialSubset*);
+     virtual bool inNeighborhood(const Patch*);
+
      virtual const PatchSet* createPerProcessorPatchSet(const LevelP& level,
 							const ProcessorGroup* resources);
    private:
@@ -56,6 +61,7 @@ namespace Uintah {
      int patches_per_processor;
      IntVector d;
 
+     std::set<const Patch*> neighbors;
    };
 } // End namespace Uintah
 

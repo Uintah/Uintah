@@ -58,7 +58,7 @@ SchedulerCommon::~SchedulerCommon()
 }
 
 void
-SchedulerCommon::makeTaskGraphDoc(const DetailedTasks* dt, bool emit_edges)
+SchedulerCommon::makeTaskGraphDoc(const DetailedTasks*/* dt*/, bool emit_edges)
 {
   if (!emit_taskgraph)
     return;

@@ -54,23 +54,23 @@ NullScheduler::compile(const ProcessorGroup* pg, bool init_timestep)
   if( dts_ )
     delete dts_;
 
+  UintahParallelPort* lbp = getPort("load balancer");
+  LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
   if( useInternalDeps() )
-    dts_ = graph.createDetailedTasks( pg, true );
+    dts_ = graph.createDetailedTasks( pg, lb, true );
   else
-    dts_ = graph.createDetailedTasks( pg, false );
+    dts_ = graph.createDetailedTasks( pg, lb, false );
 
   if(dts_->numTasks() == 0){
     cerr << "WARNING: Scheduler executed, but no tasks\n";
   }
   
-  UintahParallelPort* lbp = getPort("load balancer");
-  LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
   lb->assignResources(*dts_, d_myworld);
 
   graph.createDetailedDependencies(dts_, lb, pg);
   releasePort("load balancer");
 
-  dts_->assignMessageTags();
+  dts_->assignMessageTags(graph.getTasks());
   int me=pg->myrank();
   dts_->computeLocalTasks(me);
   dts_->createScrublists(init_timestep);

@@ -38,3 +38,24 @@ SingleProcessorLoadBalancer::createPerProcessorPatchSet(const LevelP& level,
 {
   return level->allPatches();
 }
+
+
+void
+SingleProcessorLoadBalancer::createNeighborhood(const Level* level,
+					       const ProcessorGroup* group)
+{
+  // Nothing to do
+}
+
+bool
+SingleProcessorLoadBalancer::inNeighborhood(const PatchSubset* ps,
+					    const MaterialSubset*)
+{
+  return true;
+}
+
+bool
+SingleProcessorLoadBalancer::inNeighborhood(const Patch* patch)
+{
+  return true;
+}

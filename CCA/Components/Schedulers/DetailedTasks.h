@@ -203,11 +203,7 @@ namespace Uintah {
       return tasks[i];
     }
 
-    void assignMessageTags();
-    int getMaxMessageTag() const {
-      return maxSerial;
-    }
-
+    void assignMessageTags(vector<Task*>& tasks);
     void possiblyCreateDependency(DetailedTask* from, Task::Dependency* comp,
 				  const Patch* fromPatch,
 				  DetailedTask* to, Task::Dependency* req,
@@ -263,8 +259,6 @@ namespace Uintah {
     vector<DependencyBatch*> batches;
     DetailedDep* initreq;
     
-    int maxSerial;
-
     // True for mixed scheduler which needs to keep track of internal
     // depedencies.
     bool mustConsiderInternalDependencies_;

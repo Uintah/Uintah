@@ -8,6 +8,7 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 
 #include <Core/Containers/FastHashTable.h>
 #include <Core/Exceptions/InternalError.h>
@@ -561,21 +562,44 @@ TaskGraph::createDetailedTask(DetailedTasks* tasks, Task* task,
 
 DetailedTasks*
 TaskGraph::createDetailedTasks( const ProcessorGroup* pg,
+				LoadBalancer* lb,
 			        bool useInternalDeps )
 {
-  DetailedTasks* dt = scinew DetailedTasks( pg, this, useInternalDeps );
   vector<Task*> sorted_tasks;
   topologicalSort(sorted_tasks);
 
+  // WARNING - this just grabs ONE level.  For AMR, we may need to be
+  // more careful.
+  const Level* level = 0;
+  for(int i=0;!level && i<(int)sorted_tasks.size();i++){
+    Task* task = sorted_tasks[i];
+    const PatchSet* ps = task->patch_set;
+    if(ps && task->matl_set){
+      for(int p=0;!level && p<ps->size();p++){
+	const PatchSubset* pss = ps->getSubset(p);
+	for(int s=0;!level && s<pss->size();s++){
+	  const Patch* patch = pss->get(s);
+	  level = patch->getLevel();
+	}
+      }
+    }
+  }
+  lb->createNeighborhood(level, pg);
+
+  DetailedTasks* dt = scinew DetailedTasks( pg, this, useInternalDeps );
   for(int i=0;i<(int)sorted_tasks.size();i++){
     Task* task = sorted_tasks[i];
     const PatchSet* ps = task->patch_set;
     const MaterialSet* ms = task->matl_set;
     if(ps && ms){
       for(int p=0;p<ps->size();p++){
+	const PatchSubset* pss = ps->getSubset(p);
+	for(int s=0;s<pss->size();s++)
+	  ASSERT(pss->get(s)->getLevel() == level);
 	for(int m=0;m<ms->size();m++){
-	  createDetailedTask(dt, task, ps->getSubset(p),
-			     ms->getSubset(m));
+	  const MaterialSubset* mss = ms->getSubset(m);
+	  if(lb->inNeighborhood(pss, mss))
+	    createDetailedTask(dt, task, pss, mss);
 	}
       }
     } else if(!ps && !ms){
@@ -842,13 +866,14 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
       lastReductionTask = task;
     }
   }
-  
+
+  int me = pg->myrank();
   // Go through the modifies and find and replace the matching comp
   for(int i=0;i<dt->numTasks();i++){
     DetailedTask* task = dt->getTask(i);
-
     if(task->task->getType() == Task::Reduction) {
       // only internal dependencies need to be generated for reductions
+#if 0
       for (Task::Dependency* req = task->task->getRequires();
 	   req != 0; req = req->next) {
 	DetailedTask* creator;
@@ -876,6 +901,7 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
 	else
 	  throw InternalError("TaskGraph::createDetailedDependencies, reduction task dependency not supported without patches and materials");
       }
+#endif
       continue;
     }
 
@@ -950,6 +976,8 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
 	}
 	for(int i=0;i<neighbors.size();i++){
 	  const Patch* neighbor=neighbors[i];
+	  if(!lb->inNeighborhood(neighbor))
+	    continue;
 	  for(int m=0;m<matls->size();m++){
 	    int matl = matls->get(m);
 	    DetailedTask* creator;
@@ -966,8 +994,12 @@ TaskGraph::createDetailedDependencies(DetailedTasks* dt, LoadBalancer* lb,
 	      else
 		didFind = ct.findcomp(req, neighbor, matl, creator, comp);
 	      if(!didFind) {
-		cerr << "Failure finding " << *req << " for " << task->getTask()->getName() << endl; 
-		throw InternalError("Failed to find comp for dep!");
+		cerr << "Failure finding " << *req << " for " << *task<< endl;
+		cerr << "creator=" << *creator << '\n';
+		cerr << "neighbor=" << *neighbor << '\n';
+		cerr << "me=" << pg->myrank() << '\n';
+		//throw InternalError("Failed to find comp for dep!");
+		continue;
 	      }
 	    }
 	    IntVector l = Max(neighbor->getNodeLowIndex(), low);

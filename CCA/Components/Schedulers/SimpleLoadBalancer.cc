@@ -5,6 +5,7 @@
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
 
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/NotFinished.h>
@@ -130,3 +131,48 @@ SimpleLoadBalancer::createPerProcessorPatchSet(const LevelP& level,
   return patches;
 }
 
+void
+SimpleLoadBalancer::createNeighborhood(const Level* level,
+				       const ProcessorGroup* group)
+{
+  int me = group->myrank();
+  // WARNING - this should be determined from the taskgraph? - Steve
+  int maxGhost = 2;
+  neighbors.clear();
+  for(Level::const_patchIterator iter = level->patchesBegin();
+      iter != level->patchesEnd(); iter++){
+    const Patch* patch = *iter;
+    if(getPatchwiseProcessorAssignment(patch, group) == me){
+      Level::selectType n;
+      IntVector lowIndex, highIndex;
+      patch->computeVariableExtents(Patch::CellBased, Ghost::AroundCells,
+				    maxGhost, n, lowIndex, highIndex);
+      for(int i=0;i<(int)n.size();i++){
+	const Patch* neighbor = n[i];
+	if(neighbors.find(neighbor) == neighbors.end())
+	  neighbors.insert(neighbor);
+      }
+    }
+  }
+}
+
+bool
+SimpleLoadBalancer::inNeighborhood(const PatchSubset* ps,
+				   const MaterialSubset*)
+{
+  for(int i=0;i<ps->size();i++){
+    const Patch* patch = ps->get(i);
+    if(neighbors.find(patch) != neighbors.end())
+      return true;
+  }
+  return false;
+}
+
+bool
+SimpleLoadBalancer::inNeighborhood(const Patch* patch)
+{
+  if(neighbors.find(patch) != neighbors.end())
+    return true;
+  else
+    return false;
+}
