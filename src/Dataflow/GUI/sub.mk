@@ -94,6 +94,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/SolveMatrix.tcl \
 	$(SRCDIR)/StreamLines.tcl \
 	$(SRCDIR)/Submatrix.tcl \
+	$(SRCDIR)/SynchronizeGeometry.tcl \
 	$(SRCDIR)/TexCuttingPlanes.tcl \
 	$(SRCDIR)/TextureVolVis.tcl \
 	$(SRCDIR)/TransformScalarData.tcl \
