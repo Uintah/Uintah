@@ -731,7 +731,8 @@ void DataArchiver::createIndexXML(Dir& dir)
 
 void DataArchiver::finalizeTimestep(double time, double delt,
 				    const GridP& grid, SchedulerP& sched,
-                                    bool recompile /*=false*/)
+                                    bool recompile /*=false*/,
+                                    bool addMaterial /*=false*/)
 {
   //this function should get called exactly once per timestep
 
@@ -743,12 +744,12 @@ void DataArchiver::finalizeTimestep(double time, double delt,
   //d_currentTimestep++;
   beginOutputTimestep(time, delt, grid);
 
-  if (delt != 0 && (!wereSavesAndCheckpointsInitialized)) {
+  if ((delt != 0 && (!wereSavesAndCheckpointsInitialized)) || addMaterial) {
       /* skip the initialization timestep for this
          because it needs all computes to be set
          to find the save labels */
     
-    if (d_outputInterval != 0.0 || d_outputTimestepInterval != 0) {
+    if (d_outputInterval != 0.0 || d_outputTimestepInterval != 0 || addMaterial) {
       initSaveLabels(sched);
      
       if (!wereSavesAndCheckpointsInitialized)
@@ -1986,7 +1987,7 @@ void  DataArchiver::initSaveLabels(SchedulerP& sched)
     else
       d_saveLabels.push_back(saveItem);
   }
-  d_saveLabelNames.clear();
+  //d_saveLabelNames.clear();
   delete pLabelMatlMap;
   dbg << "end of initSaveLabels\n";
 }
