@@ -8,7 +8,7 @@ SRCS     += $(SRCDIR)/PatchCombiner.cc
 
 PSELIBS := \
 	Packages/Uintah/CCA/Components/Schedulers        \
-	Packages/Uintah/CCA/Ports        \
+	Packages/Uintah/Core/DataArchive \
 	Packages/Uintah/Core/Parallel    \
 	Packages/Uintah/Core/Grid        \
 	Packages/Uintah/Core/Disclosure  \
@@ -18,10 +18,9 @@ PSELIBS := \
 	Core/Exceptions  \
 	Core/Containers  \
 	Core/Thread      \
-	Core/Util        \
-	Dataflow/XMLUtil 
+	Core/Util
 
-LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
+LIBS := $(MPI_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
