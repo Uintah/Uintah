@@ -109,7 +109,7 @@ execute(FieldHandle fsrcH, MeshHandle mdstH, Field::data_location loc_dst)
       }
       ++citr;
     }
-    vector<pair<typename LSRC::index_type, double> > svec(1);
+    vector<pair<typename LSRC::index_type, double> > svec;
     svec.push_back(pair<typename LSRC::index_type, double>(edge, 1.0));
     foutdst->set_value(svec, *itr);
 
