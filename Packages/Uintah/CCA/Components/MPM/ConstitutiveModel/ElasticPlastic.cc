@@ -12,6 +12,7 @@
 #include <Packages/Uintah/Core/Grid/ParticleSet.h>
 #include <Packages/Uintah/Core/Grid/ParticleVariable.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/VarLabel.h>
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Core/Math/MinMax.h>
@@ -579,7 +580,7 @@ void ElasticPlastic::computeStableTimestep(const Patch* patch,
 
   WaveSpeed = dx/WaveSpeed;
   double delT_new = WaveSpeed.minComponent();
-  new_dw->put(delt_vartype(delT_new), lb->delTLabel);
+  new_dw->setDelT(delT_new, lb->delTLabel, patch->getLevel());
 }
 
 void 
@@ -663,7 +664,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
     // Get the time increment (delT)
     delt_vartype delT;
-    old_dw->get(delT, lb->delTLabel);
+    old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
     constParticleVariable<Short27> pgCode;
     constNCVariable<Vector> GVelocity;
@@ -1229,7 +1230,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
     }
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
-    new_dw->put(delt_vartype(delT_new), lb->delTLabel);
+    new_dw->setDelT(delT_new, lb->delTLabel, patch->getLevel());
     new_dw->put(sum_vartype(totalStrainEnergy), lb->StrainEnergyLabel);
   }
   cout_EP << getpid() << "... End." << endl;
@@ -1334,7 +1335,7 @@ void ElasticPlastic::carryForward(const PatchSubset* patches,
       pPlasticTempInc_new[idx] = 0.0;
     }
 
-    new_dw->put(delt_vartype(1.e10), lb->delTLabel);
+    new_dw->setDelT(1.e10, lb->delTLabel, patch->getLevel());
     new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
   }
 }

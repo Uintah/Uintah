@@ -91,7 +91,7 @@ void RigidMPM::computeStressTensor(const ProcessorGroup*,
     cm->carryForward(patches, mpm_matl, old_dw, new_dw);
   }
 
-  new_dw->put(delt_vartype(999.0), lb->delTLabel);
+  new_dw->setDelT(999.0, lb->delTLabel, getLevel(patches));
 
 }
 
@@ -143,7 +143,7 @@ void RigidMPM::solveEquationsMotion(const ProcessorGroup*,
 	       <<"\t\t\t RigidMPM"<< endl;
 
     delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label() );
+    old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
 
     for(int m = 0; m < d_sharedState->getNumMPMMatls(); m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
