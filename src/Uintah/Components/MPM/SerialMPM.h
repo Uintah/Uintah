@@ -71,7 +71,7 @@ public:
    //////////
    // Insert Documentation Here:
    virtual void problemSetup(const ProblemSpecP& params, GridP& grid,
-			     SimulationStateP&);
+			     const SimulationStateP&);
 
    virtual void scheduleInitialize(const LevelP& level,
 				   SchedulerP&,
@@ -167,6 +167,10 @@ private:
 
 //
 // $Log$
+// Revision 1.15  2000/04/25 22:57:29  guilkey
+// Fixed Contact stuff to include VarLabels, SimulationState, etc, and
+// made more of it compile.
+//
 // Revision 1.14  2000/04/24 21:04:24  sparker
 // Working on MPM problem setup and object creation
 //

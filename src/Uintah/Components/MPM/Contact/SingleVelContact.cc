@@ -11,18 +11,52 @@ static char *id="@(#) $Id$";
 // contact as can be gotten using "automatic" contact.
 
 #include "SingleVelContact.h"
-
 #include <SCICore/Geometry/Vector.h>
+
+#include <Uintah/Grid/Array3Index.h>
+#include <Uintah/Grid/Grid.h>
+#include <Uintah/Grid/Level.h>
+#include <Uintah/Grid/NCVariable.h>
+#include <Uintah/Grid/ParticleSet.h>
+#include <Uintah/Grid/ParticleVariable.h>
+#include <Uintah/Interface/ProblemSpec.h>
+#include <Uintah/Grid/Region.h>
+#include <Uintah/Grid/NodeIterator.h> // Must be included after Region.h
+#include <Uintah/Grid/ReductionVariable.h>
+#include <Uintah/Grid/SimulationState.h>
+#include <Uintah/Grid/SimulationStateP.h>
+#include <Uintah/Grid/SoleVariable.h>
+#include <Uintah/Grid/Task.h>
+#include <Uintah/Interface/DataWarehouse.h>
+#include <Uintah/Interface/Scheduler.h>
+#include <Uintah/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <vector>
 
 namespace Uintah {
 namespace Components {
 
 using SCICore::Geometry::Vector;
+using Uintah::Grid::Level;
+using Uintah::Grid::ReductionVariable;
+using Uintah::Grid::NodeIterator;
+using Uintah::Grid::NCVariable;
+using Uintah::Grid::VarLabel;
+using std::vector;
 
-SingleVelContact::SingleVelContact()
+
+SingleVelContact::SingleVelContact(const SimulationStateP& d_sS)
 {
   // Constructor
+   gMassLabel         = new VarLabel( "g.mass",
+                        NCVariable<double>::getTypeDescription() );
+   gVelocityLabel     = new VarLabel( "g.velocity",
+                        NCVariable<Vector>::getTypeDescription() );
+   gVelocityStarLabel = new VarLabel( "g.velocity_star",
+                        NCVariable<Vector>::getTypeDescription() );
+   gAccelerationLabel = new VarLabel( "g.acceleration",
+                        NCVariable<Vector>::getTypeDescription() );
 
+  d_sharedState = d_sS;
 }
 
 SingleVelContact::~SingleVelContact()
@@ -31,50 +65,54 @@ SingleVelContact::~SingleVelContact()
 
 }
 
-void
-SingleVelContact::exMomInterpolated(const ProcessorContext*,
+void SingleVelContact::exMomInterpolated(const ProcessorContext*,
 				    const Region* region,
 				    const DataWarehouseP& old_dw,
 				    DataWarehouseP& new_dw)
 {
-#if 0
   Vector zero(0.0,0.0,0.0);
-  Vector CenterOfMassVelocity(0.0,0.0,0.0);
-  Vector CenterOfMassMom(0.0,0.0,0.0);
+  Vector centerOfMassVelocity(0.0,0.0,0.0);
+  Vector centerOfMassMom(0.0,0.0,0.0);
   double centerOfMassMass;
-  int n;
+
+  int numMatls = d_sharedState->getNumMatls();
+  int NVFs = d_sharedState->getNumVelFields();
 
   // Retrieve necessary data from DataWarehouse
-  for( n=firstMPMVelField; n<(firstMPMVelField+numMPMVelFields); n++){
-    NCVariable<double> gmass[n];
-    new_dw->get(gmass[n], "g.mass", n, region, 0);
-    NCVariable<Vector> gvelocity[n];
-    new_dw->get(gvelocity[n], "g.velocity", n, region, 0);
+  vector<NCVariable<double> > gmass(NVFs);
+  vector<NCVariable<Vector> > gvelocity(NVFs);
+  for(int m = 0; m < numMatls; m++){
+    Material* matl = d_sharedState->getMaterial( m );
+    MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
+    if(mpm_matl){
+      int vfindex = matl->getVFIndex();
+      new_dw->get(gmass[vfindex], gMassLabel,vfindex , region, 0);
+      new_dw->get(gvelocity[vfindex], gVelocityLabel, vfindex, region, 0);
+    }
   }
 
   for(NodeIterator iter = region->begin();
              iter != region->end(); iter++){
-    CenterOfMassMom=zero;
-    CenterOfMassMass=0.0; 
-    for( n=firstMPMVelField; n<(firstMPMVelField+numMPMVelFields); n++){
-       centerOfMassMom+=gvelocity[n][*iter] * gmass[n][*iter];
-       centerOfMassMass+=mass[n][i]; 
+    centerOfMassMom=zero;
+    centerOfMassMass=0.0; 
+    for(int n = 0; n < NVFs; n++){
+      centerOfMassMom+=gvelocity[n][*iter] * gmass[n][*iter];
+      centerOfMassMass+=gmass[n][*iter]; 
     }
 
     // Set each field's velocity equal to the center of mass velocity
     if(!compare(centerOfMassMass,0.0)){
       centerOfMassVelocity=centerOfMassMom/centerOfMassMass;
-      for( n=firstMPMVelField; n<(firstMPMVelField+numMPMVelFields); n++){
+      for(int n = 0; n < NVFs; n++){
 	gvelocity[n][*iter] = centerOfMassVelocity;
       }
     }
   }
 
   // Store new velocities in DataWarehouse
-  for( int n=firstMPMVelField; n<=numMPMVelFields; n++){
-    new_dw->put(gvelocity[n], "g.velocity", n, region, 0);
+  for(int n=0; n< NVFs; n++){
+    new_dw->put(gvelocity[n], gVelocityLabel, n, region);
   }
-#endif
 }
 
 void
@@ -136,6 +174,10 @@ SingleVelContact::exMomIntegrated(const ProcessorContext*,
 } // end namespace Uintah
 
 // $Log$
+// Revision 1.4  2000/04/25 22:57:30  guilkey
+// Fixed Contact stuff to include VarLabels, SimulationState, etc, and
+// made more of it compile.
+//
 // Revision 1.3  2000/04/20 23:21:02  dav
 // updated to match Contact.h
 //
