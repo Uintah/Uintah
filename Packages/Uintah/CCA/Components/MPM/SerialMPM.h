@@ -78,6 +78,7 @@ public:
 
   void setMPMLabel(MPMLabel* Mlb)
   {
+        delete lb;
 	lb = Mlb;
   };
 
