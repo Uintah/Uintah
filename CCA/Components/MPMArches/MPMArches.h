@@ -47,7 +47,7 @@ WARNING
 #include <Core/Geometry/Vector.h>
 
 #undef RIGID_MPM
-#define RIGID_MPM
+// #define RIGID_MPM
 
 namespace Uintah {
 
