@@ -62,7 +62,7 @@ The following code should be inserted right before the </body> tag:
 <script type="text/javascript">doc.postContent();</script>
 */
 
-/* Base document object */
+// Base document object
 function Document() { }
 
 Document.prototype.beginContent = function() {
@@ -101,7 +101,7 @@ Document.prototype.insertLinkElement = function(cssfile) {
   document.write("<link href=\"", gSiteTop, "doc/Utilities/HTML/", cssfile, "\" type=\"text/css\" rel=\"stylesheet\"/>");
 }
 
-/* Index document object */
+// Index document object
 function IndexDocument() {
   Document.prototype.insertLinkElement("indexcommon.css");
 }
@@ -109,7 +109,7 @@ function IndexDocument() {
 IndexDocument.prototype = new Document();
 IndexDocument.prototype.constructor = IndexDocument;
 
-/* DocBook document object */
+// DocBook document object
 function DocBookDocument() {
   Document.prototype.insertLinkElement("srdocbook.css");
 }
@@ -127,7 +127,7 @@ DocBookDocument.prototype.postContent = function() {
   Document.prototype.postContent();
 }
 
-/* Release notes document object */
+// Release notes document object
 function ReleaseNotesDocument() {
   Document.prototype.insertLinkElement("releasenotes.css");
 }
@@ -145,7 +145,7 @@ ReleaseNotesDocument.prototype.postContent = function() {
   Document.prototype.postContent();
 }
 
-/* Module spec document object */
+// Module spec document object
 function ModuleSpecDocument() {
   Document.prototype.insertLinkElement("component.css");
 }
@@ -163,13 +163,30 @@ ModuleSpecDocument.prototype.postContent = function() {
   Document.prototype.postContent();
 }
 
-/* Module index document object */
+// Module index document object
 function ModuleIndexDocument() {
   Document.prototype.insertLinkElement("moduleindex.css");
 }
 
 ModuleIndexDocument.prototype = new Document()
 ModuleIndexDocument.prototype.constructor = ModuleIndexDocument;
+
+// Latex2html generated pages
+function Latex2HTMLDocument() {
+}
+
+Latex2HTMLDocument.prototype = new Document()
+Latex2HTMLDocument.prototype.constructor = Latex2HTMLDocument;
+
+Latex2HTMLDocument.prototype.preContent = function() {
+  Document.prototype.preContent();
+  document.write("<div class=\"content-layer1\">\n");
+}
+
+Latex2HTMLDocument.prototype.postContent = function() {
+  document.write("</div>\n");
+  Document.prototype.postContent();
+}
 
 /*
 Code for generating table of contents.
@@ -230,11 +247,11 @@ Toc.prototype.idString = function() {
 /* Add, as 'node's previous sibling, an anchor node to be used as a
    toc target */
 Toc.prototype.addTarget = function(node) {
-//   var target = document.createElement("A");
-//   var idString = this.newIdString();
-//   target.setAttribute("id", idString);
-//   node.parentNode.insertBefore(target, node);
-  node.setAttribute("id", this.newIdString);
+  var target = document.createElement("A");
+  var idString = this.newIdString();
+  target.setAttribute("id", idString);
+  node.parentNode.insertBefore(target, node);
+//  node.setAttribute("id", this.newIdString);
 }
 
 /* Add a toc entry which references its target */
