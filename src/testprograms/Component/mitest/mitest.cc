@@ -30,7 +30,7 @@
 
 #include <iostream>
 #include <Core/CCA/Component/PIDL/PIDL.h>
-#include "mitest_sidl.h"
+#include <testprograms/Component/mitest/mitest_sidl.h>
 #include <Core/Thread/Time.h>
 
 using std::cerr;

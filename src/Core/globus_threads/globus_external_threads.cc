@@ -13,24 +13,13 @@
   The Original Source Code was developed by the University of Utah.
   Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
   University of Utah. All Rights Reserved.
-*/
 
-/******************************************************************************
-globus_thread_scithreads.c
-
-Description:
+  Description:
 
   Bindings for the Globus threads package , to be used when Globus has been
   configured to use the sci thread library.
+*/
 
-CVS Information:
-
-  $Source$
-  $Date$
-  $Revision$
-  $State$
-  $Author$
-******************************************************************************/
 #include "globus_common.h"
 #include "globus_thread_common.h"
 #include "globus_hashtable.h"
@@ -40,6 +29,7 @@ CVS Information:
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Thread.h>
 #include <iostream>
+#include <string.h>
 
 #define GLOBUS_L_LIBC_MAX_ERR_SIZE 512
 

@@ -17,16 +17,25 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR := testprograms/Component
+SRCDIR := testprograms/Component/spectest
 
-SUBDIRS := \
-	$(SRCDIR)/argtest	\
-	$(SRCDIR)/spectest	\
+ifeq ($(LARGESOS),yes)
+PSELIBS := Core
+else
+PSELIBS := Core/CCA/Component/CIA Core/CCA/Component/PIDL Core/Thread \
+	Core/Exceptions Core/globus_threads
+endif
+LIBS := $(GLOBUS_LIBS) -lglobus_nexus -lglobus_dc -lglobus_common -lglobus_io
+
+PROGRAM := $(SRCDIR)/spectest
+
+SRCS := $(SRCDIR)/spectest.cc \
+	$(SRCDIR)/spectest_impl.cc \
+	$(SRCDIR)/spectest_sidl.cc \
 
 
-# $(SRCDIR)/memstress $(SRCDIR)/mitest \
-#	$(SRCDIR)/objects $(SRCDIR)/pingpong 
-#$(SRCDIR)/dav
 
-include $(SCIRUN_SCRIPTS)/recurse.mk
+GENHDRS := $(SRCDIR)/spectest_sidl.h
+
+include $(SCIRUN_SCRIPTS)/program.mk
 

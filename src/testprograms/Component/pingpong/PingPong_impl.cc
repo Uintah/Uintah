@@ -28,15 +28,17 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include "PingPong_impl.h"
+#include <testprograms/Component/pingpong/PingPong_impl.h>
 #include <Core/Util/NotFinished.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <iostream>
 
-using namespace PingPong;
+using namespace PingPong_ns;
+using namespace std;
 
 PingPong_impl::PingPong_impl()
 {

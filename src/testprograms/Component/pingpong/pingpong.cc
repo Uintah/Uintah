@@ -33,8 +33,8 @@
 
 #include <Core/CCA/Component/PIDL/MalformedURL.h>
 
-#include "PingPong_impl.h"
-#include "PingPong_sidl.h"
+#include <testprograms/Component/pingpong/PingPong_impl.h>
+#include <testprograms/Component/pingpong/PingPong_sidl.h>
 #include <Core/Thread/Time.h>
 
 using std::cerr;
@@ -56,8 +56,8 @@ int main(int argc, char* argv[])
 {
     using std::string;
 
-    using PingPong::PingPong_impl;
-    using PingPong::PingPong;
+    using PingPong_ns::PingPong_impl;
+    using PingPong_ns::PingPong;
 
     try {
       cout << "initialize:\n";
@@ -121,9 +121,6 @@ int main(int argc, char* argv[])
 	    double us=dt/reps*1000*1000;
 	    cerr << us << " us/rep\n";
 	}
-	cerr << "Serve Objects!\n";
-	PIDL::PIDL::serveObjects();
-	cerr << "Done Serve Objects!\n";
     } catch(const PIDL::MalformedURL& e) {
 	cerr << "pingpong.cc: Caught MalformedURL exception:\n";
 	cerr << e.message() << '\n';
@@ -135,6 +132,10 @@ int main(int argc, char* argv[])
 	cerr << "Caught unexpected exception!\n";
 	abort();
     }
+	cerr << "Serve Objects!\n";
+	//int k; cin >> k;
+	PIDL::PIDL::serveObjects();
+	cerr << "Done Serve Objects!\n";
     return 0;
 }
 
