@@ -231,6 +231,13 @@ ArchesLabel::ArchesLabel()
 				SFCYVariable<double>::getTypeDescription() );
   d_DWMBLMLabel = scinew VarLabel("DWMBLM",
 				SFCZVariable<double>::getTypeDescription() );
+
+  // Labels that access the velocity stored as a cell centered vector
+  // after interpolation (for use in visualization)
+  d_oldCCVelocityLabel = scinew VarLabel("oldCCVelocity",
+				CCVariable<Vector>::getTypeDescription() );
+  d_newCCVelocityLabel = scinew VarLabel("newCCVelocity",
+				CCVariable<Vector>::getTypeDescription() );
 }
 
 //****************************************************************************
@@ -242,6 +249,10 @@ ArchesLabel::~ArchesLabel()
 
 //
 // $Log$
+// Revision 1.7  2000/08/18 05:06:57  bbanerje
+// Added interpolation from FC Var to CC Var for velocity viz in
+// Picard.
+//
 // Revision 1.6  2000/08/10 00:56:33  rawat
 // added pressure bc for scalar and changed discretization option for velocity
 //

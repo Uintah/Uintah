@@ -62,8 +62,6 @@ PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
   // dw->put(nonlinear_its, "max_nonlinear_its");
 
   db->require("res_tol", d_resTol);
-  int nDim = 3;
-  //db->require("num_dim", nDim);
   bool calPress;
   db->require("cal_pressure", calPress);
   if (calPress) {
@@ -105,19 +103,10 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   //                     viscosityIN
   sched_setInitialGuess(level, sched, old_dw, new_dw);
 
-  // Save the initial guess
-  new_dw->pleaseSave(d_lab->d_pressureINLabel, 1);
-  new_dw->pleaseSave(d_lab->d_uVelocityINLabel, 1);
-  new_dw->pleaseSave(d_lab->d_vVelocityINLabel, 1);
-  new_dw->pleaseSave(d_lab->d_wVelocityINLabel, 1);
-  int nofScalars = d_props->getNumMixVars();
-  new_dw->pleaseSave(d_lab->d_scalarINLabel, nofScalars);
-  new_dw->pleaseSave(d_lab->d_densityINLabel, 1);
-  new_dw->pleaseSave(d_lab->d_viscosityINLabel, 1);
-
   // Start the iterations
   int nlIterations = 0;
   double nlResidual = 2.0*d_resTol;;
+  int nofScalars = d_props->getNumMixVars();
   do{
     //correct inlet velocities to account for change in properties
     // require : densityIN, [u,v,w]VelocityIN (new_dw)
@@ -133,9 +122,6 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     //           presResidualPS, presCoefPBLM, presNonLinSrcPBLM,(matrix_dw)
     //           pressurePS (new_dw)
     d_pressSolver->solve(level, sched, old_dw, new_dw, time, delta_t);
-
-    // Save the calculated pressure
-    new_dw->pleaseSave(d_lab->d_pressurePSLabel, 1);
 
     // if external boundary then recompute velocities using new pressure
     // and puts them in nonlinear_dw
@@ -157,11 +143,6 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
       d_momSolver->solve(level, sched, old_dw, new_dw, time, delta_t, index);
     }
     
-    // Save the calculated velocities
-    new_dw->pleaseSave(d_lab->d_uVelocitySPBCLabel, 1);
-    new_dw->pleaseSave(d_lab->d_vVelocitySPBCLabel, 1);
-    new_dw->pleaseSave(d_lab->d_wVelocitySPBCLabel, 1);
-
     // equation for scalars
     // require : scalarIN, [u,v,w]VelocitySPBC, densityIN, viscosityIN (new_dw)
     //           scalarSP, densityCP (old_dw)
@@ -173,25 +154,16 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
       d_scalarSolver->solve(level, sched, old_dw, new_dw, time, delta_t, index);
     }
 
-    // Save the scalars
-    new_dw->pleaseSave(d_lab->d_scalarSPLabel, nofScalars);
-
     // update properties
     // require : densityIN
     // compute : densityCP
     d_props->sched_reComputeProps(level, sched, old_dw, new_dw);
-
-    // Save the density
-    new_dw->pleaseSave(d_lab->d_densityCPLabel, 1);
 
     // LES Turbulence model to compute turbulent viscosity
     // that accounts for sub-grid scale turbulence
     // require : densityCP, viscosityIN, [u,v,w]VelocitySPBC
     // compute : viscosityCTS
     d_turbModel->sched_reComputeTurbSubmodel(level, sched, old_dw, new_dw);
-
-    // Save the viscosity
-    new_dw->pleaseSave(d_lab->d_viscosityCTSLabel, 1);
 
 
     ++nlIterations;
@@ -200,6 +172,34 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
     nlResidual = computeResidual(level, sched, old_dw, new_dw);
 
   }while((nlIterations < d_nonlinear_its)&&(nlResidual > d_resTol));
+
+  // Schedule an interpolation of the face centered velocity data 
+  // to a cell centered vector for used by the viz tools
+  sched_interpolateFromFCToCC(level, sched, old_dw, new_dw);
+
+  // Save the old data (previous time step)
+  new_dw->pleaseSave(d_lab->d_pressureINLabel, 1);
+  new_dw->pleaseSave(d_lab->d_uVelocityINLabel, 1);
+  new_dw->pleaseSave(d_lab->d_vVelocityINLabel, 1);
+  new_dw->pleaseSave(d_lab->d_wVelocityINLabel, 1);
+  new_dw->pleaseSave(d_lab->d_scalarINLabel, nofScalars);
+  new_dw->pleaseSave(d_lab->d_densityINLabel, 1);
+  new_dw->pleaseSave(d_lab->d_viscosityINLabel, 1);
+
+  // Save the old velocity as a CC<Vector> Variable
+  new_dw->pleaseSave(d_lab->d_oldCCVelocityLabel, 1);
+
+  // Save the new data (this time step)
+  new_dw->pleaseSave(d_lab->d_pressurePSLabel, 1);
+  new_dw->pleaseSave(d_lab->d_uVelocitySPBCLabel, 1);
+  new_dw->pleaseSave(d_lab->d_vVelocitySPBCLabel, 1);
+  new_dw->pleaseSave(d_lab->d_wVelocitySPBCLabel, 1);
+  new_dw->pleaseSave(d_lab->d_scalarSPLabel, nofScalars);
+  new_dw->pleaseSave(d_lab->d_densityCPLabel, 1);
+  new_dw->pleaseSave(d_lab->d_viscosityCTSLabel, 1);
+
+  // Save the new velocity as a CC<Vector> Variable
+  new_dw->pleaseSave(d_lab->d_newCCVelocityLabel, 1);
 
   return(0);
 }
@@ -254,6 +254,46 @@ PicardNonlinearSolver::sched_setInitialGuess(const LevelP& level,
       }
       tsk->computes(new_dw, d_lab->d_densityINLabel, matlIndex, patch);
       tsk->computes(new_dw, d_lab->d_viscosityINLabel, matlIndex, patch);
+
+      sched->addTask(tsk);
+    }
+  }
+}
+
+//****************************************************************************
+// Schedule Interpolate from SFCX, SFCY, SFCZ to CC<Vector>
+//****************************************************************************
+void 
+PicardNonlinearSolver::sched_interpolateFromFCToCC(const LevelP& level,
+						   SchedulerP& sched,
+						   DataWarehouseP& old_dw,
+						   DataWarehouseP& new_dw)
+{
+  for(Level::const_patchIterator iter=level->patchesBegin();
+      iter != level->patchesEnd(); iter++){
+    const Patch* patch=*iter;
+    {
+      Task* tsk = scinew Task("PicardNonlinearSolver::interpolateFCToCC",patch,
+			   old_dw, new_dw, this,
+			   &PicardNonlinearSolver::interpolateFromFCToCC);
+      int numGhostCells = 0;
+      int matlIndex = 0;
+
+      tsk->requires(new_dw, d_lab->d_uVelocityINLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->d_vVelocityINLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->d_wVelocityINLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+      tsk->requires(new_dw, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
+		    Ghost::None, numGhostCells);
+
+      tsk->computes(new_dw, d_lab->d_oldCCVelocityLabel, matlIndex, patch);
+      tsk->computes(new_dw, d_lab->d_newCCVelocityLabel, matlIndex, patch);
 
       sched->addTask(tsk);
     }
@@ -356,13 +396,97 @@ PicardNonlinearSolver::setInitialGuess(const ProcessorGroup* ,
 }
 
 //****************************************************************************
+// Actual interpolation from FC to CC Variable of type Vector 
+// ** WARNING ** For multiple patches we need ghost information for
+//               interpolation
+//****************************************************************************
+void 
+PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
+					     const Patch* patch,
+					     DataWarehouseP& /*old_dw*/,
+					     DataWarehouseP& new_dw)
+{
+  int matlIndex = 0;
+  int nofGhostCells = 0;
+
+  // Get the old velocity
+  SFCXVariable<double> oldUVel;
+  SFCYVariable<double> oldVVel;
+  SFCZVariable<double> oldWVel;
+  new_dw->get(oldUVel, d_lab->d_uVelocityINLabel, matlIndex, patch, 
+	      Ghost::None, nofGhostCells);
+  new_dw->get(oldVVel, d_lab->d_vVelocityINLabel, matlIndex, patch, 
+	      Ghost::None, nofGhostCells);
+  new_dw->get(oldWVel, d_lab->d_wVelocityINLabel, matlIndex, patch, 
+	      Ghost::None, nofGhostCells);
+
+  // Get the new velocity
+  SFCXVariable<double> newUVel;
+  SFCYVariable<double> newVVel;
+  SFCZVariable<double> newWVel;
+  new_dw->get(newUVel, d_lab->d_uVelocitySPBCLabel, matlIndex, patch, 
+	      Ghost::None, nofGhostCells);
+  new_dw->get(newVVel, d_lab->d_vVelocitySPBCLabel, matlIndex, patch, 
+	      Ghost::None, nofGhostCells);
+  new_dw->get(newWVel, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
+	      Ghost::None, nofGhostCells);
+
+  // Get the low and high index for the Cell Centered Variables
+  IntVector idxLo = patch->getCellLowIndex();
+  IntVector idxHi = patch->getCellHighIndex();
+
+  // Allocate the interpolated velocities
+  CCVariable<Vector> oldCCVel;
+  CCVariable<Vector> newCCVel;
+  new_dw->allocate(oldCCVel, d_lab->d_oldCCVelocityLabel, matlIndex, patch);
+  new_dw->allocate(newCCVel, d_lab->d_newCCVelocityLabel, matlIndex, patch);
+
+  // Interpolate the FC velocity to the CC
+  for (int kk = idxLo.z(); kk < idxHi.z(); ++kk) {
+    for (int jj = idxLo.y(); jj < idxHi.y(); ++jj) {
+      for (int ii = idxLo.x(); ii < idxHi.x(); ++ii) {
+
+	// old U velocity (linear interpolation)
+	double old_u = 0.5*(oldUVel[IntVector(ii,jj,kk)] + 
+			    oldUVel[IntVector(ii+1,jj,kk)]);
+	// new U velocity (linear interpolation)
+	double new_u = 0.5*(newUVel[IntVector(ii,jj,kk)] +
+			    newUVel[IntVector(ii+1,jj,kk)]);
+
+	// old V velocity (linear interpolation)
+	double old_v = 0.5*(oldVVel[IntVector(ii,jj,kk)] +
+			    oldVVel[IntVector(ii,jj+1,kk)]);
+	// new V velocity (linear interpolation)
+	double new_v = 0.5*(newVVel[IntVector(ii,jj,kk)] +
+			    newVVel[IntVector(ii,jj+1,kk)]);
+
+	// old W velocity (linear interpolation)
+	double old_w = 0.5*(oldWVel[IntVector(ii,jj,kk)] +
+			    oldWVel[IntVector(ii,jj,kk+1)]);
+	// new W velocity (linear interpolation)
+	double new_w = 0.5*(newWVel[IntVector(ii,jj,kk)] +
+			    newWVel[IntVector(ii,jj,kk+1)]);
+
+	// Add the data to the CC Velocity Variables
+	oldCCVel[IntVector(ii,jj,kk)] = Vector(old_u,old_v,old_w);
+	newCCVel[IntVector(ii,jj,kk)] = Vector(new_u,new_v,new_w);
+      }
+    }
+  }
+
+  // Put the calculated stuff into the new_dw
+  new_dw->put(oldCCVel, d_lab->d_oldCCVelocityLabel, matlIndex, patch);
+  new_dw->put(newCCVel, d_lab->d_newCCVelocityLabel, matlIndex, patch);
+}
+
+//****************************************************************************
 // compute the residual
 //****************************************************************************
 double 
-PicardNonlinearSolver::computeResidual(const LevelP& level,
-				       SchedulerP& sched,
-				       DataWarehouseP& old_dw,
-				       DataWarehouseP& new_dw)
+PicardNonlinearSolver::computeResidual(const LevelP& /*level*/,
+				       SchedulerP& /*sched*/,
+				       DataWarehouseP& /*old_dw*/,
+				       DataWarehouseP& /*new_dw*/)
 {
   double nlresidual = 0.0;
 #if 0
@@ -391,6 +515,10 @@ PicardNonlinearSolver::computeResidual(const LevelP& level,
 
 //
 // $Log$
+// Revision 1.43  2000/08/18 05:06:57  bbanerje
+// Added interpolation from FC Var to CC Var for velocity viz in
+// Picard.
+//
 // Revision 1.42  2000/08/16 19:36:40  bbanerje
 // Changed second argument in pleaseSave from matlIndex to numMaterials.
 //
