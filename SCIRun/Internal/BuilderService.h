@@ -73,9 +73,16 @@ namespace SCIRun {
 
     static InternalComponentInstance* create(SCIRunFramework* fwk,
 					     const std::string& name);
+    std::string getFrameworkURL(); 
+   
+  ::CIA::array1< gov::cca::Port::pointer > 
+   listPorts(const std::string &com_name);
     gov::cca::Port::pointer getService(const std::string&);
+   gov::cca::Port::pointer getUIPort(const std::string& com_name);
+
   private:
     BuilderService(SCIRunFramework* fwk, const std::string& name);
+    	
   };
 }
 
