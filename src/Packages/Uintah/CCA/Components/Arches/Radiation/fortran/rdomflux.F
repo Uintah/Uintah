@@ -1,5 +1,5 @@
 #include <Packages/Uintah/CCA/Components/Arches/Radiation/fortran/rdomflux_fort.h>
-      integer i,j,k,l
+      integer i,j,k
 
       do 30 k=idxlo(3),idxhi(3)
       do 20 j=idxlo(2),idxhi(2)
