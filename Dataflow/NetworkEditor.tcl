@@ -184,7 +184,14 @@ proc moveModule {name} {
 
 proc addModule {name} {
     set modid [netedit addmodule $name]
-    makeModule $modid $name .cframe.f.canvas
+    makeModule $modid $name .cframe.f.canvas 10 10
+    update idletasks
+    return $modid
+}
+
+proc addModuleAtPosition {name xpos ypos} {
+    set modid [netedit addmodule $name]
+    makeModule $modid $name .cframe.f.canvas $xpos $ypos
     update idletasks
     return $modid
 }
