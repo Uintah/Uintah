@@ -59,7 +59,7 @@ static string widget_name("Isosurface");
 Isosurface::Isosurface(const string& id) : 
   Module("Isosurface", id, Filter, "Visualization", "SCIRun"), 
   gui_iso_value("isoval", id, this),
-  extract_from_new_field("extract-from-new-field", id, this ),
+  extract_from_new_field("extract_from_new_field", id, this ),
   use_algorithm("algorithm", id, this),
   build_trisurf_("build_trisurf", id, this),
   np_("np", id, this),
@@ -84,6 +84,7 @@ Isosurface::~Isosurface()
 
 void Isosurface::execute()
 {
+  cerr << "Isosurface:: execute..\n";
   update_state(NeedData);
   infield = (FieldIPort *)get_iport("Field");
   inColorMap = (ColorMapIPort *)get_iport("Color Map");
