@@ -350,8 +350,23 @@ static void Thread_shutdown(Thread* thread)
 	active[i-1]=active[i];
     }
     numActive--;
+
+    // This can't be done in checkExit, because of a potential race
+    // condition.
+    int done=true;
+    for(int i=0;i<numActive;i++){
+	Thread_private* p=active[i];
+	if(!p->thread->isDaemon()){
+	    done=false;
+	    break;
+	}
+    }
+    
     unlock_scheduler();
-    Thread::checkExit();
+
+    if(done)
+	Thread::exitAll(0);
+
     if(priv->threadid == 0){
 	priv->state=Thread::PROGRAM_EXIT;
 	if (WaitForSingleObject(main_sema,INFINITE)!=WAIT_OBJECT_0) {
