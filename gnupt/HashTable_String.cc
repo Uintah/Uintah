@@ -21,3 +21,4 @@ typedef HashTableIter<clString, Arg_base*> _dummy6_;
 typedef HashTable<clString, Module*> _dummy7_;
 typedef HashTable<clString, Connection*> _dummy8_;
 typedef HashTable<clString, Renderer*> _dummy9_;
+typedef HashTable<clString, int> _dummy10_;

@@ -3,13 +3,13 @@
 #pragma implementation "ITC.h"
 
 #include <Multitask/ITC.cc>
-#include <GeometryPort.h>
-#include <ContourSetPort.h>
-#include <Matrix.h>
-#include <MeshPort.h>
-#include <ScalarFieldPort.h>
-#include <SurfacePort.h>
-#include <VectorFieldPort.h>
+#include <Datatypes/GeometryPort.h>
+#include <Datatypes/ContourSetPort.h>
+#include <Datatypes/Matrix.h>
+#include <Datatypes/MeshPort.h>
+#include <Datatypes/ScalarFieldPort.h>
+#include <Datatypes/SurfacePort.h>
+#include <Datatypes/VectorFieldPort.h>
 
 class MessageBase;
 class SoundComm;
