@@ -3392,6 +3392,8 @@ void GeomSuperquadric::draw(DrawInfoOpenGL* di, Material* matl, double)
   glNormalPointer(GL_FLOAT, 0, &(normals_.front()));
   glEnableClientState(GL_NORMAL_ARRAY);
 
+  glDisableClientState(GL_COLOR_ARRAY);
+
   glDrawElements(GL_TRIANGLE_FAN, nu_ + 2, GL_UNSIGNED_SHORT,
     		 &(tindices_[0]));
 
