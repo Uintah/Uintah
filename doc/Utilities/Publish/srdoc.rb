@@ -339,7 +339,7 @@ class Doc
   # Execute the given block if we be doin' html output.
   def doIfHTML()
     if htmlOutput?()
-      yield()
+      filter(yield())
     else
       ""
     end
@@ -353,7 +353,7 @@ class Doc
   # Execute the given block if we be doin' print output.
   def doIfPrint()
     if printOutput?()
-      yield()
+      filter(yield())
     else
       ""
     end
