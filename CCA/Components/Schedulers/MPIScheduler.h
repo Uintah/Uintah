@@ -81,6 +81,7 @@ WARNING
 					    const vector<vector<const VarLabel*> >& old_labels,
 					    const VarLabel* new_posLabel,
 					    const vector<vector<const VarLabel*> >& new_labels,
+					    const VarLabel* particleIDLabel,
 					    const MaterialSet* matls);
     
     static void recvMPIData( const ProcessorGroup  * pg,

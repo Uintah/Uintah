@@ -26,7 +26,7 @@ NullScheduler::NullScheduler(const ProcessorGroup* myworld,
    : SchedulerCommon(myworld, oport)
 {
    d_generation = 0;
-   delt = scinew VarLabel("delT",
+   delt = VarLabel::create("delT",
     ReductionVariable<double, Reductions::Min<double> >::getTypeDescription());
    firstTime=true;
 }
@@ -45,7 +45,7 @@ void
 NullScheduler::advanceDataWarehouse(const GridP& grid)
 {
   if( !dws_[Task::NewDW] )
-    dws_[ Task::NewDW ] = scinew OnDemandDataWarehouse(d_myworld, 0, grid);
+    dws_[ Task::NewDW ] = scinew OnDemandDataWarehouse(d_myworld, this, 0, grid);
 }
 
 void
@@ -99,6 +99,7 @@ NullScheduler::scheduleParticleRelocation(const LevelP&,
 					  const vector<vector<const VarLabel*> >&,
 					  const VarLabel*,
 					  const vector<vector<const VarLabel*> >&,
+					  const VarLabel* particleIDLabel,
 					  const MaterialSet*)
 {
 }
