@@ -88,6 +88,12 @@ void Crack::GetNodalSolutions(const ProcessorGroup*,
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
+    double time = d_sharedState->getElapsedTime();
+
+    // Detect if calculating J & K (If yes, set calFractParameters=YES)
+    // or if propagating crack (If yes, set doCrackPropagation=YES) 
+    // at this time step
+    DetectIfDoingFractureAnalysisAtThisTimeStep(time);
 
     int numMPMMatls = d_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMPMMatls; m++){
@@ -218,83 +224,6 @@ void Crack::GetNodalSolutions(const ProcessorGroup*,
   }
 }
 
-
-void Crack::addComputesAndRequiresCrackFrontSegSubset(Task* /*t*/,
-                                const PatchSet* /*patches*/,
-                                const MaterialSet* /*matls*/) const
-{
-  // Currently do nothing
-}
-
-void Crack::CrackFrontSegSubset(const ProcessorGroup*,
-                      const PatchSubset* patches,
-                      const MaterialSubset* /*matls*/,
-                      DataWarehouse* /*old_dw*/,
-                      DataWarehouse* /*new_dw*/)
-{ 
-  for(int p=0; p<patches->size(); p++){
-    const Patch* patch = patches->get(p);
-
-    int pid,patch_size;
-    MPI_Comm_size(mpi_crack_comm,&patch_size);
-    MPI_Comm_rank(mpi_crack_comm,&pid);
-
-    int numMPMMatls=d_sharedState->getNumMPMMatls();
-    for(int m=0; m<numMPMMatls; m++) {
-      /* Task 1: Collect crack-front segs in each patch and
-                 broadcast to all ranks
-      */
-      // cfsset -- store crack-front segs
-      cfsset[m][pid].clear();
-      int ncfSegs=(int)cfSegNodes[m].size()/2;
-      for(int j=0; j<ncfSegs; j++) {
-        int n1=cfSegNodes[m][2*j];
-        int n2=cfSegNodes[m][2*j+1];
-        Point cent=cx[m][n1]+(cx[m][n2]-cx[m][n1])/2.;
-        if(patch->containsPoint(cent)) {
-          cfsset[m][pid].push_back(j);
-        }
-      } // End of loop over j
-
-      MPI_Barrier(mpi_crack_comm);
-
-      // Broadcast cfsset of each patch to all ranks
-      for(int i=0; i<patch_size; i++) {
-        int num; // number of crack-front segs in patch i
-        if(i==pid) num=cfsset[m][i].size();
-        MPI_Bcast(&num,1,MPI_INT,i,mpi_crack_comm);
-        cfsset[m][i].resize(num);
-        MPI_Bcast(&cfsset[m][i][0],num,MPI_INT,i,mpi_crack_comm);
-      }
-
-      MPI_Barrier(mpi_crack_comm);
-
-      /* Task 2: Collect crack-front nodes in each patch and
-                 broadcast to all ranks
-      */
-      // cfnset -- store Crack-front node indice
-      cfnset[m][pid].clear();
-      for(int j=0; j<(int)cfSegNodes[m].size(); j++) {
-        int node=cfSegNodes[m][j];
-        if(patch->containsPoint(cx[m][node]))
-          cfnset[m][pid].push_back(j);
-      }
-
-      MPI_Barrier(mpi_crack_comm);
-
-      // Broadcast cfnset of each patch to all ranks
-      for(int i=0; i<patch_size; i++) {
-        int num; // number of crack-front nodes in patch i
-        if(i==pid) num=cfnset[m][i].size();
-        MPI_Bcast(&num,1,MPI_INT,i,mpi_crack_comm);
-        cfnset[m][i].resize(num);
-        MPI_Bcast(&cfnset[m][i][0],num,MPI_INT,i,mpi_crack_comm);
-      }
-
-    } // End of loop over matls
-  } // End of loop over patches
-}
-
 void Crack::addComputesAndRequiresCalculateFractureParameters(Task* t,
                                 const PatchSet* /*patches*/,
                                 const MaterialSet* /*matls*/) const
@@ -397,8 +326,6 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
       cfSegJ[m].resize(cfNodeSize);
       cfSegK[m].resize(cfNodeSize);
       if(calFractParameters || doCrackPropagation) {
-        // Get crack-front node preious index
-        FindCrackFrontNodePreIdx(m);
         for(int i=0; i<patch_size; i++) {// Loop over all patches
           int num=cfnset[m][i].size(); // number of crack-front nodes in patch i
 
@@ -411,14 +338,14 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                 int idx=cfnset[m][i][l];     // index of this node
                 int node=cfSegNodes[m][idx]; // node
                 
-                int pre_idx=cfSegPreIdx[m][idx];
+                int preIdx=cfSegPreIdx[m][idx];
                 for(int ij=l-1; ij>=0; ij--) {
-                  if(pre_idx==cfnset[m][i][ij]) {
-                    pre_idx=ij;
+                  if(preIdx==cfnset[m][i][ij]) {
+                    preIdx=ij;
                     break;
                   } 
                 } 
-                if(pre_idx<0) { // Not operated
+                if(preIdx<0) { // Not operated
                   /* Step 1: Define crack front segment coordinates
                    v1,v2,v3: direction consies of new axes X',Y' and Z'
                    Origin located at the point at which J&K is calculated
@@ -750,8 +677,8 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
                   cfK[l]=SIF;
                 } // End if not operated
                 else { // if operated
-                  cfJ[l]=cfJ[pre_idx];
-                  cfK[l]=cfK[pre_idx];
+                  cfJ[l]=cfJ[preIdx];
+                  cfK[l]=cfK[preIdx];
                 }
               } // End of loop over nodes(l) for calculating J & K
             } // End if(pid==i)
@@ -792,29 +719,29 @@ void Crack::OutputCrackFrontResults(const int& m)
   ofstream outCrkFrt("CrackFrontResults.dat", ios::app);
 
   if(time>=timeforoutputcrack) {
-    for(int i=0;i<(int)cfSegNodes[m].size();i++) {
-      int node=cfSegNodes[m][i];
-      int segs[2];
-      FindSegsFromNode(m,node,segs);
-      Point  cp=cx[m][node];
-      Vector cfPara=cfSegK[m][i];
-      outCrkFrt << setw(15) << time
-                << setw(5)  << i/2
-                << setw(10)  << node
-                << setw(15) << cp.x()
-                << setw(15) << cp.y()
-                << setw(15) << cp.z()
-                << setw(15) << cfPara.x()
-                << setw(15) << cfPara.y()
-                << setw(15) << cfPara.z();
-      if(cfPara.x()!=0.) {
-        outCrkFrt << setw(15) << cfPara.y()/cfPara.x() << endl;
-      }
-      else {
-        outCrkFrt << setw(15) << "inf" << endl;
-      }
-      if(segs[1]<0) { // End of the sub-crack
-        outCrkFrt << endl;
+    int num=(int)cfSegNodes[m].size();
+    int numSubCracks=0;
+    for(int i=0;i<num;i++) {
+      if(i==0 || i==num-1 || cfSegPreIdx[m][i]<0) {
+        if(i==cfSegMinIdx[m][i]) numSubCracks++;
+        int node=cfSegNodes[m][i];
+        Point cp=cx[m][node];
+        Vector cfPara=cfSegK[m][i];
+        outCrkFrt << setw(15) << time
+                  << setw(5)  << (i-1+2*numSubCracks)/2
+                  << setw(10)  << node
+                  << setw(15) << cp.x()
+                  << setw(15) << cp.y()
+                  << setw(15) << cp.z()
+                  << setw(15) << cfPara.x()
+                  << setw(15) << cfPara.y()
+                  << setw(15) << cfPara.z();
+        if(cfPara.x()!=0.) 
+          outCrkFrt << setw(15) << cfPara.y()/cfPara.x() << endl;
+        else 
+          outCrkFrt << setw(15) << "inf" << endl;
+
+        if(i==cfSegMaxIdx[m][i]) outCrkFrt << endl;
       }
     }
     timeforoutputcrack+=d_outputCFInterval;
