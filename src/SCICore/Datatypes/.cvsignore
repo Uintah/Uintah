@@ -1,2 +1,15 @@
 Makefile
-ScalarFieldRG{,double,float,int,short,uchar,char}.{cc,h}
+ScalarFieldRG.cc
+ScalarFieldRGdouble.cc
+ScalarFieldRGfloat.cc
+ScalarFieldRGint.cc
+ScalarFieldRGshort.cc
+ScalarFieldRGuchar.cc
+ScalarFieldRGchar.cc
+ScalarFieldRG.h
+ScalarFieldRGdouble.h
+ScalarFieldRGfloat.h
+ScalarFieldRGint.h
+ScalarFieldRGshort.h
+ScalarFieldRGuchar.h
+ScalarFieldRGchar.h
