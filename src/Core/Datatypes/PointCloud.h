@@ -141,6 +141,9 @@ template <> ScalarFieldInterface *
 PointCloud<double>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface *
+PointCloud<float>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface *
 PointCloud<int>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*

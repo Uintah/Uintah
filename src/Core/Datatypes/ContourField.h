@@ -141,6 +141,9 @@ template <> ScalarFieldInterface *
 ContourField<double>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface *
+ContourField<float>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface *
 ContourField<int>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*

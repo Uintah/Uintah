@@ -164,6 +164,9 @@ template <> ScalarFieldInterface *
 ImageField<double>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface *
+ImageField<float>::query_scalar_interface() const;
+
+template <> ScalarFieldInterface *
 ImageField<int>::query_scalar_interface() const;
 
 template <> ScalarFieldInterface*
