@@ -653,6 +653,7 @@ void AMRSimpleCFD::scheduleErrorEstimate(const LevelP& coarseLevel,
   task->requires(Task::NewDW, lb_->temperature, gac, 1);
   task->requires(Task::NewDW, lb_->pressure,    gac, 1);
   task->requires(Task::NewDW, lb_->density,     gac, 1);
+  task->requires(Task::NewDW, lb_->ccvelocity,  gac, 1);
   
   task->modifies(sharedState_->get_refineFlag_label(), sharedState_->refineFlagMaterials());
   task->modifies(sharedState_->get_refinePatchFlag_label(), sharedState_->refineFlagMaterials());
@@ -676,6 +677,7 @@ void AMRSimpleCFD::scheduleInitialErrorEstimate(const LevelP& coarseLevel,
   task->requires(Task::NewDW, lb_->temperature, gac, 1);
   task->requires(Task::NewDW, lb_->pressure,    gac, 1);
   task->requires(Task::NewDW, lb_->density,     gac, 1);
+  task->requires(Task::NewDW, lb_->ccvelocity,  gac, 1);
   
   task->modifies(sharedState_->get_refineFlag_label(), sharedState_->refineFlagMaterials());
   task->modifies(sharedState_->get_refinePatchFlag_label(), sharedState_->refineFlagMaterials());
