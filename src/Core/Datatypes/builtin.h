@@ -81,6 +81,9 @@ inline const string find_type_name(Int*)   {return find_type_name((int *)0);}
 inline const string find_type_name(Float*) {return find_type_name((float *)0);}
 inline const string find_type_name(Double*){return find_type_name((double *)0);}
 
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma set woff 1424
+#endif
 
 template<class T> bool is_scalar() { return false; }
 template<> inline bool is_scalar<char>() { return true; }
@@ -88,6 +91,10 @@ template<> inline bool is_scalar<short>() { return true; }
 template<> inline bool is_scalar<int>() { return true; }
 template<> inline bool is_scalar<float>() { return true; }
 template<> inline bool is_scalar<double>() { return true; }
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 1424
+#endif
 
 } // end namespace SCIRun
 
