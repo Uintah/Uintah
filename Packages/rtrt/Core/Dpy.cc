@@ -473,7 +473,9 @@ void Dpy::get_input()
     case KeyPress:
       switch(XKeycodeToKeysym(priv->dpy, e.xkey.keycode, 0)){
       case XK_Escape:
-	Thread::exitAll(1);
+      case XK_q:
+	scene->rtrt_engine->exit_clean(1);
+	//	Thread::exitAll(1);
 	break;
       case XK_2:
 	stereo=true;
@@ -1059,6 +1061,10 @@ void Dpy::run()
       frame++;
       drawstats[showing_scene]->add(Time::currentSeconds(), Color(1,0,0));
       barrier->wait(nworkers+1);
+      // exit if you are supposed to
+      if (scene->rtrt_engine->stop_execution())
+	Thread::exit();
+
       scene->refill_work(rendering_scene, nworkers);
       //bool changed=false;
       bool changed=true;
@@ -1124,7 +1130,7 @@ void Dpy::run()
       st->add(tnow, Color(1,0,0));
       double dt=tnow-last_frame;
       double framerate=1./dt;
-#if 0
+#if 1
       if(framerate<4){
 	cerr << "dt=" << dt << '\n';
       }
@@ -1191,8 +1197,12 @@ void Dpy::run()
       Image* im=scene->get_image(showing_scene);
       midchanged=changed;
       last_changed=midchanged;
+      // color blue
       st->add(Time::currentSeconds(), Color(0,0,1));
+      //      st->add(Time::currentSeconds(), Color(0.4,0.2,1));
       priv->camera=scene->get_camera(showing_scene);
+      // color 
+      st->add(Time::currentSeconds(), Color(1,0.5,0));
       if(!bench && draw_framerate){
 	char buf[100];
 	sprintf(buf, "%3.1ffps", framerate);
@@ -1203,6 +1213,8 @@ void Dpy::run()
 	}
 	printString(fontbase, 10, 3, buf, Color(1,1,1));
       }
+      // color light blue
+      st->add(Time::currentSeconds(), Color(0.5,0.5,1));
       if(draw_pstats){
 	Stats* mystats=drawstats[showing_scene];
 	if(im->get_stereo()){
@@ -1216,6 +1228,8 @@ void Dpy::run()
 		   showing_scene, fontbase, lasttime, cum_ttime,
 		   cum_dt);
       }
+      // color grey
+      st->add(Time::currentSeconds(), Color(0.5,0.5,0.5));
       if(draw_rstats){
 	if(im->get_stereo()){
 	  glDrawBuffer(GL_BACK_LEFT);
@@ -1231,11 +1245,12 @@ void Dpy::run()
       st->add(Time::currentSeconds(), Color(1,0,1));
       glFinish();
 #ifdef GL_INCLUDE
+      st->add(Time::currentSeconds(), Color(1,0.5,1));
       if(!dontswap)
 	glXSwapBuffers(priv->dpy, win);
       XFlush(priv->dpy);
 #endif
-      st->add(Time::currentSeconds(), Color(1,1,0));
+      st->add(Time::currentSeconds(), Color(1,0.5,0.3));
 
       if(scene->logframes){
 	  scene->frameno++;
@@ -1293,6 +1308,10 @@ void Dpy::run()
     double& FrameRate = priv->FrameRate;
 
     for (;;) {
+      // exit if you are supposed to
+      if (scene->rtrt_engine->stop_execution())
+	Thread::exit();
+
       frame++;
       //int do_synch=0;
       if (synch_frameless) { // synchronize stuff...
