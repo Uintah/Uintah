@@ -46,6 +46,7 @@ namespace Uintah {
       }
       
       void copy(const Array3Window<T>*);
+      void copy(const Array3Window<T>*, const IntVector& low, const IntVector& high);
       void initialize(const T&);
       void initialize(const T&, const IntVector& s, const IntVector& e);
       inline IntVector getLowIndex() const {
@@ -107,6 +108,14 @@ namespace Uintah {
       }
    
    template<class T>
+      void Array3Window<T>::copy(const Array3Window<T>* from,
+				 const IntVector& low, const IntVector& high)
+      {
+	 data->copy(low-offset, high-offset, from->data,
+		    low-from->offset, high-from->offset);
+      }
+   
+   template<class T>
       void Array3Window<T>::initialize(const T& val,
 				       const IntVector& s,
 				       const IntVector& e)
@@ -154,6 +163,11 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.9  2000/10/11 17:39:38  sparker
+// Added copy with range
+// Fixed bug in Array3Data::copy
+// Fixed compiler warnings
+//
 // Revision 1.8  2000/09/20 15:48:30  sparker
 // Added .copy() method to copy one Array3 from another
 //

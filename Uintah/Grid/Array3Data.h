@@ -108,11 +108,11 @@ namespace Uintah {
       }
    
    template<class T>
-      void Array3Data<T>::copy(const IntVector& from_lowIndex,
-			       const IntVector& from_highIndex,
+      void Array3Data<T>::copy(const IntVector& to_lowIndex,
+			       const IntVector& to_highIndex,
 			       const Array3Data<T>* from,
-			       const IntVector& to_lowIndex,
-			       const IntVector& to_highIndex)
+			       const IntVector& from_lowIndex,
+			       const IntVector& from_highIndex)
       {
 	 CHECKARRAYBOUNDS(to_lowIndex.x(), 0, d_size.x());
 	 CHECKARRAYBOUNDS(to_lowIndex.y(), 0, d_size.y());
@@ -189,6 +189,11 @@ namespace Uintah {
 
 //
 // $Log$
+// Revision 1.15  2000/10/11 17:39:38  sparker
+// Added copy with range
+// Fixed bug in Array3Data::copy
+// Fixed compiler warnings
+//
 // Revision 1.14  2000/09/25 20:37:42  sparker
 // Quiet g++ compiler warnings
 // Work around g++ compiler bug instantiating vector<NCVariable<Vector> >
