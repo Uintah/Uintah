@@ -68,9 +68,6 @@ MPMArchesLabel::MPMArchesLabel()
 					SFCYVariable<double>::getTypeDescription() );
   tempSolid_FCZLabel = VarLabel::create("tempSolid_FCZ",
 					SFCZVariable<double>::getTypeDescription() );
-  integTemp_CCLabel =  VarLabel::create("integTempSolid_CC",
-					CCVariable<double>::getTypeDescription() );
-
   // Drag Force labels for solid: CC
 
   DragForceX_CCLabel = VarLabel::create("DragForceX_CC",
@@ -141,6 +138,28 @@ MPMArchesLabel::MPMArchesLabel()
 					 NCVariable<Vector>::getTypeDescription() );
   AccArchesNCLabel = VarLabel::create("AccArchesNC",
 				      NCVariable<Vector>::getTypeDescription() );
+
+  // Integrated Solid Property Labels (over 
+  // all materials) for Use by Arches
+
+  integTemp_CCLabel =  VarLabel::create("integTempSolid_CC",
+					CCVariable<double>::getTypeDescription() );
+  integHTS_CCLabel =  VarLabel::create("integHTSolid_CC",
+					CCVariable<double>::getTypeDescription() );
+  integHTS_FCXLabel =  VarLabel::create("integHTSolid_FCX",
+					SFCXVariable<double>::getTypeDescription() );
+  integHTS_FCYLabel =  VarLabel::create("integHTSolid_FCY",
+					SFCYVariable<double>::getTypeDescription() );
+  integHTS_FCZLabel =  VarLabel::create("integHTSolid_FCZ",
+					SFCZVariable<double>::getTypeDescription() );
+  totHT_CCLabel = VarLabel::create("totalHTSolid",
+				   CCVariable<double>::getTypeDescription() );
+  totHT_FCXLabel = VarLabel::create("totalHTSolid_FCX",
+				   SFCXVariable<double>::getTypeDescription() );
+  totHT_FCYLabel = VarLabel::create("totalHTSolid_FCY",
+				   SFCYVariable<double>::getTypeDescription() );
+  totHT_FCZLabel = VarLabel::create("totalHTSolid_FCZ",
+				   SFCZVariable<double>::getTypeDescription() );
 
   // Labels for gas calculations
 
@@ -340,7 +359,6 @@ MPMArchesLabel::~MPMArchesLabel()
   VarLabel::destroy(tempSolid_FCXLabel);
   VarLabel::destroy(tempSolid_FCYLabel);
   VarLabel::destroy(tempSolid_FCZLabel);
-  VarLabel::destroy(integTemp_CCLabel);
 
   VarLabel::destroy(DragForceX_CCLabel);
   VarLabel::destroy(DragForceY_CCLabel);
@@ -373,6 +391,16 @@ MPMArchesLabel::~MPMArchesLabel()
   VarLabel::destroy(SumAllForcesNCLabel);
   VarLabel::destroy(AccArchesCCLabel);
   VarLabel::destroy(AccArchesNCLabel);
+
+  VarLabel::destroy(integTemp_CCLabel);
+  VarLabel::destroy(integHTS_CCLabel);
+  VarLabel::destroy(integHTS_FCXLabel);
+  VarLabel::destroy(integHTS_FCYLabel);
+  VarLabel::destroy(integHTS_FCZLabel);
+  VarLabel::destroy(totHT_CCLabel);  
+  VarLabel::destroy(totHT_FCXLabel);  
+  VarLabel::destroy(totHT_FCYLabel);  
+  VarLabel::destroy(totHT_FCZLabel);  
 
   VarLabel::destroy(void_frac_CCLabel);
 

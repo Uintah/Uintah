@@ -103,6 +103,13 @@ public:
 					   const MaterialSet* mpm_matls,
 					   const MaterialSet* all_matls);
 
+  // Calculate Total Heat Flux to Solid (combination of x-, y-,
+  // z- and cc-fluxes) for any wall cell
+
+  void scheduleComputeTotalHT(SchedulerP& sched,
+			      const PatchSet* patches,
+			      const MaterialSet* arches_matls);
+
   // Calculate momentum exchange terms for gas-solid interface
   void scheduleMomExchange(SchedulerP& sched,
 			   const PatchSet* patches,
@@ -167,6 +174,12 @@ public:
 				   const MaterialSubset*,
 				   DataWarehouse* /*old_dw*/,
 				   DataWarehouse* new_dw);
+
+  void computeTotalHT(const ProcessorGroup*,
+		      const PatchSubset* patches,
+		      const MaterialSubset*,
+		      DataWarehouse* /*old_dw*/,
+		      DataWarehouse* new_dw);
 
   void doMomExchange(const ProcessorGroup*,
 		     const PatchSubset* patches,

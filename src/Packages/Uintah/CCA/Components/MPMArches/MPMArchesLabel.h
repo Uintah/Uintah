@@ -42,8 +42,6 @@ using std::vector;
       const VarLabel* tempSolid_FCYLabel;
       const VarLabel* tempSolid_FCZLabel;
 
-      const VarLabel* integTemp_CCLabel;
-
       // reqd by MPM
 
       const VarLabel* DragForceX_CCLabel;
@@ -77,6 +75,19 @@ using std::vector;
       const VarLabel* AccArchesCCLabel; 
       const VarLabel* SumAllForcesNCLabel; 
       const VarLabel* AccArchesNCLabel; 
+
+      // Integrated Solid Property Labels (over 
+      // all materials) for Use by Arches
+
+      const VarLabel* integTemp_CCLabel;
+      const VarLabel* integHTS_CCLabel;
+      const VarLabel* integHTS_FCXLabel;
+      const VarLabel* integHTS_FCYLabel;
+      const VarLabel* integHTS_FCZLabel;
+      const VarLabel* totHT_CCLabel;
+      const VarLabel* totHT_FCXLabel;
+      const VarLabel* totHT_FCYLabel;
+      const VarLabel* totHT_FCZLabel;
 
       // reqd by Arches
 
