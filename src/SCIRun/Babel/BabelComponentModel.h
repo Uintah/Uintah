@@ -115,7 +115,6 @@ private:
   typedef std::map<std::string, BabelComponentDescription*> componentDB_type;
   componentDB_type components;
   
-  std::string getSidlXMLPath();
   void readComponentDescription(const std::string& file);
 
   BabelComponentModel(const BabelComponentModel&);

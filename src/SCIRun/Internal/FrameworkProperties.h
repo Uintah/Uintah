@@ -93,9 +93,18 @@ private:
         or a null pointer (see man getlogin(3)) */
     void getLogin();
 
-    /** Get a ';' seperated list of directories where XML based
-        descriptions of components can be found. */
-    void getEnv();
+    /**
+     * Get SIDL file paths from (in order of processing):
+     * the user's environment, CONFIG_FILE, component model defaults.
+     *
+     * Framework properties:
+     * "sidl_xml_path": a ';' seperated list of directories where XML based
+     *                  descriptions of components can be found.
+     */
+    void getSidlPaths();
+
+    void parseEnvVariable(std::string& input, const char token,
+                          SSIDL::array1<std::string>& stringArray);
 
     /** Persistent framework properties from file. */
     bool readPropertiesFromFile();

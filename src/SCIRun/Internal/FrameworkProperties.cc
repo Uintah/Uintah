@@ -42,6 +42,9 @@
 #include <SCIRun/Internal/FrameworkProperties.h>
 #include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/PortInstance.h>
+#include <SCIRun/CCA/CCAComponentModel.h>
+#include <SCIRun/Babel/BabelComponentModel.h>
+#include <SCIRun/Vtk/VtkComponentModel.h>
 #include <Core/OS/Dir.h>
 #include <Core/Util/Environment.h>
 
@@ -62,7 +65,7 @@ FrameworkProperties::FrameworkProperties(SCIRunFramework* framework,
     frameworkProperties = sci::cca::TypeMap::pointer(new TypeMap);
     frameworkProperties->putString("url", framework->getURL().getString());
     getLogin();
-    getEnv();
+    getSidlPaths();
 }
 
 FrameworkProperties::~FrameworkProperties()
@@ -95,17 +98,41 @@ sci::cca::Port::pointer FrameworkProperties::getService(const std::string& name)
     return sci::cca::Port::pointer(this);
 }
 
-void FrameworkProperties::getEnv()
+void FrameworkProperties::getSidlPaths()
 {
+    SSIDL::array1<std::string> sArray;
     // ';' seperated list of directories where one can find SIDL xml files
     // getenv may return NULL if SIDL_XML_PATH was not set
     const char *component_path = getenv("SIDL_XML_PATH");
     if (component_path) {
-        frameworkProperties->putString("sidl_xml_path", std::string(component_path));
+        std::string s(component_path);
+        parseEnvVariable(s, ';', sArray);
+        frameworkProperties->putStringArray("sidl_xml_path", sArray);
     } else if (readPropertiesFromFile()) {
         return;
     } else {
-        frameworkProperties->putString("sidl_xml_path", std::string());
+        std::string srcDir(sci_getenv("SCIRUN_SRCDIR"));
+        sArray.push_back(srcDir + CCAComponentModel::DEFAULT_PATH);
+        sArray.push_back(srcDir + BabelComponentModel::DEFAULT_PATH);
+        sArray.push_back(srcDir + VtkComponentModel::DEFAULT_PATH);
+        frameworkProperties->putStringArray("sidl_xml_path", sArray);
+    }
+    // SIDL_DLL_PATH env. variable is read and parsed in VtkComponentModel
+}
+
+void FrameworkProperties::parseEnvVariable(std::string& input,
+                                           const char token,
+                                           SSIDL::array1<std::string>& stringArray)
+{
+    std::string::size_type i = 0;
+    while ( i != std::string::npos ) {
+        i = input.find(token);
+        if (i < input.size()) {
+            stringArray.push_back(input.substr(0, i));
+            input = input.substr(i + 1, input.size());
+        } else {
+            stringArray.push_back(input);
+        }
     }
 }
 
@@ -126,6 +153,7 @@ bool FrameworkProperties::readPropertiesFromFile()
     sci_putenv("HOME", HOME);
 
     name += CONFIG_DIR + "/" + CONFIG_FILE;
+    SSIDL::array1<std::string> sArray;
     if (parse_scirunrc(name)) {
         const char *dll_path = sci_getenv("SIDL_DLL_PATH");
         if (dll_path != 0) {
@@ -134,11 +162,13 @@ bool FrameworkProperties::readPropertiesFromFile()
 
         const char *xml_path = sci_getenv("SIDL_XML_PATH");
         if (xml_path != 0) {
-            frameworkProperties->putString("sidl_xml_path", xml_path);
+            std::string s(xml_path);
+            parseEnvVariable(s, ';', sArray);
+            frameworkProperties->putStringArray("sidl_xml_path", sArray);
         }
-    } else {
-        return false;
+        return true;
     }
+    return false;
 }
 
 bool FrameworkProperties::writePropertiesToFile()
