@@ -386,7 +386,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& level, SchedulerP& sched, int , int )
                                                                  all_matls); 
   }
 
-  if(d_ice->d_canAddMaterial){
+  if(d_ice->d_canAddICEMaterial){
     //  This checks to see if the model on THIS patch says that it's
     //  time to add a new material
     d_ice->scheduleCheckNeedAddMaterial(    sched, level,   all_matls);
