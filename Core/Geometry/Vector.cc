@@ -81,6 +81,11 @@ Vector::operator== ( const Vector& v ) const
     return v._x == _x && v._y == _y && v._z == _z;
 }
 
+int Vector::operator!=(const Vector& v) const
+{
+    return v._x != _x || v._y != _y || v._z != _z;
+}
+
 void
 Pio(Piostream& stream, Vector& p)
 {
