@@ -48,10 +48,20 @@ ServerContext::activateEndpoint()
     globus_nexus_endpoint_set_user_pointer(&d_endpoint, (void*)this);
     if(int gerr=globus_nexus_endpointattr_destroy(&attr))
 	throw GlobusError("endpointattr_destroy", gerr);
+
+    d_endpoint_active=true;
 }
 
 //
 // $Log$
+// Revision 1.2  1999/09/26 06:12:56  sparker
+// Added (distributed) reference counting to PIDL objects.
+// Began campaign against memory leaks.  There seem to be no more
+//   per-message memory leaks.
+// Added a test program to flush out memory leaks
+// Fixed other Component testprograms so that they work with ref counting
+// Added a getPointer method to PIDL handles
+//
 // Revision 1.1  1999/09/24 06:26:25  sparker
 // Further implementation of new Component model and IDL parser, including:
 //  - fixed bugs in multiple inheritance

@@ -22,16 +22,20 @@
 #include <Component/PIDL/URL.h>
 #include <Component/PIDL/Wharehouse.h>
 #include <SCICore/Exceptions/InternalError.h>
-#include <SCICore/Util/NotFinished.h>
+#include <SCICore/Thread/MutexPool.h>
 #include <sstream>
 
 using Component::PIDL::Object_interface;
 using Component::PIDL::URL;
 using SCICore::Exceptions::InternalError;
+using SCICore::Thread::Mutex;
+using SCICore::Thread::MutexPool;
 
 Object_interface::Object_interface()
     : d_serverContext(0)
 {
+    ref_cnt=0;
+    mutex_index=getMutexPool()->nextIndex();
 }
 
 void Object_interface::initializeServer(const TypeInfo* typeinfo, void* ptr)
@@ -55,15 +59,15 @@ void Object_interface::initializeServer(const TypeInfo* typeinfo, void* ptr)
 
 Object_interface::~Object_interface()
 {
+    if(ref_cnt != 0)
+	throw InternalError("Object delete while reference count != 0");
     if(d_serverContext){
 	Wharehouse* wharehouse=PIDL::getWharehouse();
 	if(wharehouse->unregisterObject(d_serverContext->d_objid) != this)
 	    throw InternalError("Corruption in object wharehouse");
-	//d_serverContext->d_endpoint->shutdown();
-	NOT_FINISHED("Object_interface::~Object_interface");
+	if(int gerr=globus_nexus_endpoint_destroy(&d_serverContext->d_endpoint))
+	    throw GlobusError("endpoint_destroy", 0);
 	delete d_serverContext;
-    } else {
-	NOT_FINISHED("Object::~Object");
     }
 }
 
@@ -95,6 +99,34 @@ void Object_interface::_getReference(Reference& ref, bool copy) const
     ref.d_vtable_base=TypeInfo::vtable_methods_start;
 }
 
+void Object_interface::_addReference()
+{
+    Mutex* m=getMutexPool()->getMutex(mutex_index);
+    m->lock();
+    ref_cnt++;
+    m->unlock();
+}
+
+void Object_interface::_deleteReference()
+{
+    Mutex* m=getMutexPool()->getMutex(mutex_index);
+    m->lock();
+    ref_cnt--;
+    bool del;
+    if(ref_cnt == 0)
+	del=true;
+    else
+	del=false;
+    m->unlock();
+
+    // We must delete outside of the lock to prevent deadlock
+    // conditions with the mutex pool, but we must check the condition
+    // inside the lock to prevent race conditions with other threads
+    // simultaneously releasing a reference.
+    if(del)
+	delete this;
+}
+
 void Object_interface::activateObject() const
 {
     Wharehouse* wharehouse=PIDL::getWharehouse();
@@ -102,8 +134,28 @@ void Object_interface::activateObject() const
     d_serverContext->activateEndpoint();
 }
 
+MutexPool* Object_interface::getMutexPool()
+{
+    static MutexPool* pool=0;
+    if(!pool){
+	// TODO - make this threadsafe.  This can leak if two threads
+	// happen to request the first pool at the same time.  I doubt
+	// it will ever happen - sparker.
+	pool=new MutexPool("Component::PIDL::Object_interface mutex pool", 63);
+    }
+    return pool;
+}
+
 //
 // $Log$
+// Revision 1.6  1999/09/26 06:12:55  sparker
+// Added (distributed) reference counting to PIDL objects.
+// Began campaign against memory leaks.  There seem to be no more
+//   per-message memory leaks.
+// Added a test program to flush out memory leaks
+// Fixed other Component testprograms so that they work with ref counting
+// Added a getPointer method to PIDL handles
+//
 // Revision 1.5  1999/09/24 06:26:25  sparker
 // Further implementation of new Component model and IDL parser, including:
 //  - fixed bugs in multiple inheritance

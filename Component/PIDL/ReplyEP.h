@@ -58,7 +58,7 @@ DESCRIPTION
 	    // is used only in sidl-generated stub code.  It does NOT
 	    // call globus_nexus_startpoint_copy.  That should be done
 	    // in the generated code if necessary.
-	    void get_startpoint(globus_nexus_startpoint_t*);
+	    void get_startpoint_copy(globus_nexus_startpoint_t*);
 
 
 	    //////////
@@ -104,6 +104,14 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.5  1999/09/26 06:12:56  sparker
+// Added (distributed) reference counting to PIDL objects.
+// Began campaign against memory leaks.  There seem to be no more
+//   per-message memory leaks.
+// Added a test program to flush out memory leaks
+// Fixed other Component testprograms so that they work with ref counting
+// Added a getPointer method to PIDL handles
+//
 // Revision 1.4  1999/09/24 20:03:37  sparker
 // Added cocoon documentation
 //

@@ -61,6 +61,8 @@ Object_interface* Wharehouse::unregisterObject(int id)
     if(iter == objects.end())
 	throw InternalError("Object not in wharehouse");
     objects.erase(id);
+    if(objects.size() == 0)
+	condition.conditionSignal();
     mutex.unlock();
     return iter->second;
 }
@@ -112,12 +114,22 @@ int Wharehouse::approval(char* urlstring, globus_nexus_startpoint_t* sp)
 	std::cerr << "Globus error code: " << gerr << '\n';
 	return 1004;
     }
+    /* Increment the reference count for this object. */
+    obj->_addReference();
     std::cerr << "Approved connection to " << urlstring << '\n';
     return GLOBUS_SUCCESS;
 }
 
 //
 // $Log$
+// Revision 1.3  1999/09/26 06:12:57  sparker
+// Added (distributed) reference counting to PIDL objects.
+// Began campaign against memory leaks.  There seem to be no more
+//   per-message memory leaks.
+// Added a test program to flush out memory leaks
+// Fixed other Component testprograms so that they work with ref counting
+// Added a getPointer method to PIDL handles
+//
 // Revision 1.2  1999/08/31 08:59:03  sparker
 // Configuration and other updates for globus
 // First import of beginnings of new component library

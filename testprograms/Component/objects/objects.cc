@@ -133,19 +133,18 @@ int main(int argc, char* argv[])
 
 	if(server) {
 	    cerr << "Creating objects object\n";
-	    RingMaster_impl pp;
+	    RingMaster_impl* pp=new RingMaster_impl;
 	    cerr << "Waiting for objects connections...\n";
-	    cerr << pp.getURL().getString() << '\n';
-	    PIDL::serveObjects();
+	    cerr << pp->getURL().getString() << '\n';
 	} else {
 	    Object obj=PIDL::objectFrom(client_url);
 	    RingMaster rm=pidl_cast<RingMaster>(obj);
 
-	    Client_impl me;
-	    int myid=rm->registerClient(&me);
+	    Client_impl* me=new Client_impl;
+	    int myid=rm->registerClient(me);
 	    cerr << "nclients now " << myid << '\n';
-	    PIDL::serveObjects();
 	}
+	PIDL::serveObjects();
     } catch(const SCICore::Exceptions::Exception& e) {
 	cerr << "Caught exception:\n";
 	cerr << e.message() << '\n';
@@ -159,6 +158,14 @@ int main(int argc, char* argv[])
 
 //
 // $Log$
+// Revision 1.2  1999/09/26 06:13:00  sparker
+// Added (distributed) reference counting to PIDL objects.
+// Began campaign against memory leaks.  There seem to be no more
+//   per-message memory leaks.
+// Added a test program to flush out memory leaks
+// Fixed other Component testprograms so that they work with ref counting
+// Added a getPointer method to PIDL handles
+//
 // Revision 1.1  1999/09/24 06:26:28  sparker
 // Further implementation of new Component model and IDL parser, including:
 //  - fixed bugs in multiple inheritance

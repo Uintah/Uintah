@@ -15,6 +15,12 @@
 #ifndef Component_PIDL_Object_h
 #define Component_PIDL_Object_h
 
+namespace SCICore {
+    namespace Thread {
+	class MutexPool;
+    }
+}
+
 namespace Component {
     namespace PIDL {
 	class Reference;
@@ -52,6 +58,17 @@ DESCRIPTION
 	    // Internal method to get a reference (startpoint and
 	    // vtable base) to this object.
 	    virtual void _getReference(Reference&, bool copy) const;
+
+	    //////////
+	    // Internal method to increment the reference count for
+	    // this object.
+	    void _addReference();
+
+	    //////////
+	    // Internal method to decrement the reference count for
+	    // this object.
+	    void _deleteReference();
+
 	protected:
 	    //////////
 	    // Constructor.  Initializes d_serverContext to null,
@@ -76,11 +93,24 @@ DESCRIPTION
 	    ServerContext* d_serverContext;
 
 	    //////////
+	    // The reference count for this object.
+	    int ref_cnt;
+
+	    //////////
+	    // The index of the mutex in the mutex pool.
+	    int mutex_index;
+
+	    //////////
 	    // Activate the server.  This registers the object with the
 	    // object wharehouse, and creates the globus endpoint.
 	    // This is not done until something requests a reference
 	    // to the object though getURL() or _getReference().
 	    void activateObject() const;
+
+	    //////////
+	    // Return the singleton Mutex pool shared by all instances
+	    // of Object_interface.
+	    static SCICore::Thread::MutexPool* getMutexPool();
 
 	    //////////
 	    // Private copy constructor to make copying impossible.
@@ -104,7 +134,56 @@ DESCRIPTION
    with a a smart pointer class.
 
 ****************************************/
-	typedef Object_interface* Object;
+	class Object {
+	    Object_interface* ptr;
+	public:
+	    static const ::Component::PIDL::TypeInfo* _getTypeInfo();
+	    typedef Object_interface interfacetype;
+	    inline Object()
+	    {
+		ptr=0;
+	    }
+	    inline Object(Object_interface* ptr)
+		: ptr(ptr)
+	    {
+		if(ptr)
+		    ptr->_addReference();
+	    }
+	    inline ~Object()
+	    {
+		if(ptr)
+		    ptr->_deleteReference();
+	    }
+	    inline Object(const Object& copy)
+		: ptr(copy.ptr)
+	    {
+		if(ptr)
+		    ptr->_addReference();
+	    }
+	    inline Object& operator=(const Object& copy)
+	    {
+		if(&copy != this){
+		    if(ptr)
+			ptr->_deleteReference();
+		    if(copy.ptr)
+			copy.ptr->_addReference();
+		}
+		ptr=copy.ptr;
+		return *this;
+	    }
+	    inline Object_interface* getPointer() const
+	    {
+		return ptr;
+	    }
+	    inline Object_interface* operator->() const
+	    {
+		return ptr;
+	    }
+	    inline operator bool() const
+	    {
+		return ptr != 0;
+	    }
+	};
     }
 }
 
@@ -112,6 +191,14 @@ DESCRIPTION
 
 //
 // $Log$
+// Revision 1.4  1999/09/26 06:12:55  sparker
+// Added (distributed) reference counting to PIDL objects.
+// Began campaign against memory leaks.  There seem to be no more
+//   per-message memory leaks.
+// Added a test program to flush out memory leaks
+// Fixed other Component testprograms so that they work with ref counting
+// Added a getPointer method to PIDL handles
+//
 // Revision 1.3  1999/09/24 06:26:25  sparker
 // Further implementation of new Component model and IDL parser, including:
 //  - fixed bugs in multiple inheritance

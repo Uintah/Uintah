@@ -73,6 +73,7 @@ private:
     void emit_recursive_vtable_comment(EmitState&, bool);
     bool iam_class();
     int isaHandler;
+    int deleteReferenceHandler;
     int vtable_base;
 };
 
@@ -435,6 +436,14 @@ private:
 
 //
 // $Log$
+// Revision 1.6  1999/09/26 06:13:00  sparker
+// Added (distributed) reference counting to PIDL objects.
+// Began campaign against memory leaks.  There seem to be no more
+//   per-message memory leaks.
+// Added a test program to flush out memory leaks
+// Fixed other Component testprograms so that they work with ref counting
+// Added a getPointer method to PIDL handles
+//
 // Revision 1.5  1999/09/24 06:26:30  sparker
 // Further implementation of new Component model and IDL parser, including:
 //  - fixed bugs in multiple inheritance

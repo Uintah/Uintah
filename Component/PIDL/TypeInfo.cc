@@ -57,13 +57,13 @@ Object_interface* TypeInfo::pidl_cast(Object_interface* obj) const
     // Get a startpoint ready for the reply
     ReplyEP* reply=ReplyEP::acquire();
     globus_nexus_startpoint_t sp;
-    reply->get_startpoint(&sp);
+    reply->get_startpoint_copy(&sp);
 
     // Size the message
     int classname_size=d_priv->fullclassname.length();
     int uuid_size=d_priv->uuid.length();
     int size=globus_nexus_sizeof_startpoint(&sp, 1)+
-	globus_nexus_sizeof_int(2)+
+	globus_nexus_sizeof_int(3)+
 	globus_nexus_sizeof_char(classname_size+uuid_size);
 
     // Pack the message
@@ -76,6 +76,8 @@ Object_interface* TypeInfo::pidl_cast(Object_interface* obj) const
     globus_nexus_put_int(&buffer, &uuid_size, 1);
     globus_nexus_put_char(&buffer, const_cast<char*>(d_priv->uuid.c_str()),
 			  uuid_size);
+    int addRef=1; // Tell the isa handler to increment the ref count on the object
+    globus_nexus_put_int(&buffer, &addRef, 1);
     globus_nexus_put_startpoint_transfer(&buffer, &sp, 1);
 
     // Send the message
@@ -95,14 +97,19 @@ Object_interface* TypeInfo::pidl_cast(Object_interface* obj) const
     int vtbase;
     globus_nexus_get_int(&recvbuff, &vtbase, 1);
     ReplyEP::release(reply);
+    if(int gerr=globus_nexus_buffer_destroy(&recvbuff))
+	throw GlobusError("buffer_destroy", gerr);
 
     if(!flag){
 	// isa failed
 	return 0;
     } else {
 	// isa succeeded, return the correct proxy
-	Reference new_ref(ref);
+	Reference new_ref;
+	if(int gerr=globus_nexus_startpoint_copy(&new_ref.d_sp, &ref.d_sp))
+	    throw GlobusError("startpoint_copy", gerr);
 	new_ref.d_vtable_base=vtbase;
+
 	return (*d_priv->create_proxy)(new_ref);
     }
 }
@@ -124,6 +131,14 @@ int TypeInfo::isa(const std::string& classname, const std::string& uuid) const
 
 //
 // $Log$
+// Revision 1.2  1999/09/26 06:12:57  sparker
+// Added (distributed) reference counting to PIDL objects.
+// Began campaign against memory leaks.  There seem to be no more
+//   per-message memory leaks.
+// Added a test program to flush out memory leaks
+// Fixed other Component testprograms so that they work with ref counting
+// Added a getPointer method to PIDL handles
+//
 // Revision 1.1  1999/09/17 05:08:10  sparker
 // Implemented component model to work with sidl code generator
 //
