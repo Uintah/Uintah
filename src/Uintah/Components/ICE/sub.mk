@@ -11,7 +11,8 @@ SRCS	+= $(SRCDIR)/ICE.cc \
 	$(SRCDIR)/ICELabel.cc \
 	$(SRCDIR)/ICEMaterial.cc \
 	$(SRCDIR)/EquationOfState.cc \
-	$(SRCDIR)/EquationOfStateFactory.cc 
+	$(SRCDIR)/EquationOfStateFactory.cc \
+	$(SRCDIR)/IdealGas.cc 
 
 PSELIBS := Uintah/Interface Uintah/Grid Uintah/Parallel \
 	Uintah/Exceptions SCICore/Exceptions SCICore/Thread \
@@ -22,6 +23,9 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.16  2000/10/04 23:42:50  jas
+# Add IdealGas.cc
+#
 # Revision 1.15  2000/10/04 20:16:37  jas
 # Add EOS,Label and Material to makefile.
 #
