@@ -319,6 +319,51 @@ ProblemSpecP ProblemSpec::get(const std::string& name,
 
 }
 
+
+ProblemSpecP ProblemSpec::get(const std::string& name, 
+			      vector<int>& value)
+{
+
+  std::string string_value;
+  ProblemSpecP ps = this;
+  DOM_Node found_node = findNode(name, *d_node);
+  if (found_node.isNull()) {
+    ps = 0;
+    return ps;
+  }
+  else {
+    for (DOM_Node child = found_node.getFirstChild(); child != 0;
+	 child = child.getNextSibling()) {
+      if (child.getNodeType() == DOM_Node::TEXT_NODE) {
+	DOMString val = child.getNodeValue();
+	char *s = val.transcode();
+	string_value = std::string(s);
+	delete[] s;
+
+	istringstream in(string_value);
+	char c,next;
+	string result;
+	while (!in.eof()) {
+	  in >> c;
+	  if (c == '[' || c == ',' || c == ' ' || c == ']')
+	    continue;
+	  next = in.peek();
+	  result += c;
+	  if (next == ',' ||  next == ' ' || next == ']') {
+	    // turn the result into a number
+	    int val = atof(result.c_str());
+	    value.push_back(val);
+	    result.erase();
+	  }
+	}
+      }
+    }
+  }
+          
+  return ps;
+
+} 
+
 ProblemSpecP ProblemSpec::get(const std::string& name, 
 			      IntVector &value)
 {
@@ -420,6 +465,17 @@ void ProblemSpec::require(const std::string& name,
       throw ParameterNotFound(name);
 
 }
+
+void ProblemSpec::require(const std::string& name, 
+			  vector<int>& value)
+{
+
+  // Check if the prob_spec is NULL
+
+ if (! this->get(name,value))
+      throw ParameterNotFound(name);
+
+} 
 
 void ProblemSpec::require(const std::string& name, 
 			  IntVector  &value)
