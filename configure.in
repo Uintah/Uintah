@@ -601,6 +601,10 @@ SCI_ARG_WITH(imagemagick,
   [  --with-imagemagick=DIR                    <path-to-imagemagick>],
   [with_imagemagick="$withval"],
   [with_imagemagick=${with_imagemagick='no'}])
+SCI_ARG_WITH(mdsplus,
+  [  --with-mdsplus=<path-to-mdsplus>	<path-to-mdsplus>/lib/MdsLib_client.so],
+  [mdsplus="$withval"],
+  [mdsplus=""])
 
 
 SCI_ARG_ENABLE(threads,
@@ -1655,6 +1659,36 @@ fi
 AC_SUBST(MPEG_DEF_FLAG)
 AC_SUBST(HAVE_LIBMPEGE)
 AC_SUBST(LIBMPEGE)
+
+##  --  search for mdsplus  -------------------------------------------------
+
+for i in $mdsplus $thirdparty $SCI_LAB_TP_DEFAULT; do
+  if test ! -d "$i"; then 
+    continue
+  fi
+
+  SCI_CHECK_HEADER($i/include,mdslib.h,INCMDSPLUS_H="$i/include",continue)
+  SCI_CHECK_LIB($i/lib,MdsLib_client,main,LIBMDSPLUS="$i/lib",continue)
+
+  if test "$LIBMDSPLUS" && test "$INCMDSPLUS_H"; then
+
+    MDSPLUS_DEF_FLAG="-DMDSPLUS"
+
+    break
+  fi
+done
+
+if test "$mdsplus" && test ! "$MDSPLUS_DEF_FLAG"; then
+  echo
+  AC_MSG_ERROR(One or more of the MDS PLUS components is missing.)
+  echo
+fi
+
+
+AC_SUBST(MDSPLUS_DEF_FLAG)
+AC_SUBST(INCMDSPLUS_H)
+AC_SUBST(LIBMDSPLUS)
+
 
 ##  --  search for perfex  -----------------------------------------------
 for i in $perfex $thirdparty $SCI_LAB_TP_DEFAULT; do

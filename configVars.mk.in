@@ -140,6 +140,8 @@ else
 endif  
 MPEG_DEF_FLAG	  := @MPEG_DEF_FLAG@
 
+
+
 ifneq (@INCUNIPETSC_H@,)
 UNI_PETSC_INCLUDE := -I@INCUNIPETSC_H@ -I@INCMPIUNI_H@ -I@UNIPETSC_DIR@/bmake/@UNIPETSC_ARCH@
 endif
@@ -201,6 +203,22 @@ ifneq (@INCMPI_H@,)
 MPI_INCLUDE := -I@INCMPI_H@
 endif
 MPI_TLINK := -L$(MPI_LIB_DIR)
+
+ifneq (@INCMDSPLUS_H@,)
+  MDSPLUS_INCLUDE := -I@INCMDSPLUS_H@
+else
+  MDSPLUS_INCLUDE :=
+endif
+
+ifneq (@LIBMDSPLUS@,)
+  MDSPLUS_LIBRARY      := $(LDRUN_PREFIX)@LIBMDSPLUS@ \
+					-L@LIBMDSPLUS@ -lMdsLib_client
+else
+  MDSPLUS_LIBRARY      := 
+endif 
+
+
+MDSPLUS_DEF_FLAG  := @MDSPLUS_DEF_FLAG@
 
 X_LIBS := @LIBX@
 X_PRE_LIBS := @X_PRE_LIBS@
