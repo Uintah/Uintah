@@ -63,7 +63,6 @@
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
 #include <map>
-
 namespace SCIRun {
 
 class PSECORESHARE GenAxes : public Module {
@@ -468,10 +467,12 @@ GenAxes::generateAxisLines(int prim, int sec, int ter)
     show = get_GuiInt(base+"maxticks");
     obj = scinew GeomSwitch(scinew GeomCull(obj, show<2?0:&secondary),show>0);
     grid->add(scinew GeomSwitch(scinew GeomCull(obj, show<2?0:&normal),show>0));
+#ifdef HAVE_FTGL
     obj = scinew GeomTransform(values,trans);
     show = get_GuiInt(base+"maxvalue");
     obj = scinew GeomSwitch(scinew GeomCull(obj,show<2?0:&secondary),show>0);
     grid->add(scinew GeomSwitch(scinew GeomCull(obj,show<2?0:&normal),show>0));
+#endif
 
 
     
@@ -532,11 +533,12 @@ GenAxes::generateAxisLines(int prim, int sec, int ter)
     show = get_GuiInt(base+"minticks");
     obj = scinew GeomSwitch(scinew GeomCull(obj, show<2?0:&nsecondary),show>0);
     grid->add(scinew GeomSwitch(scinew GeomCull(obj, show<2?0:&normal),show>0));
-
+#ifdef HAVE_FTGL
     obj = scinew GeomTransform(values, trans);
     show = get_GuiInt(base+"minvalue");
     obj = scinew GeomSwitch(scinew GeomCull(obj,show<2?0:&nsecondary),show>0);
     grid->add(scinew GeomSwitch(scinew GeomCull(obj,show<2?0:&normal),show>0));
+#endif
 
 
 #if 0
