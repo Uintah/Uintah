@@ -35,6 +35,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ConfigureElectrode.tcl\
 	$(SRCDIR)/DipoleSearch.tcl\
 	$(SRCDIR)/InsertVoltageSource.tcl\
+	$(SRCDIR)/IntegrateCurrent.tcl\
 	$(SRCDIR)/ModifyConductivities.tcl\
 	$(SRCDIR)/SetupFEMatrix.tcl\
 	$(SRCDIR)/ShowDipoles.tcl\

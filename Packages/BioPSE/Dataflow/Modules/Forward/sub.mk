@@ -38,6 +38,7 @@ SRCS     += $(SRCDIR)/ApplyFEMCurrentSource.cc\
 	    $(SRCDIR)/IndicesToTensors.cc\
 	    $(SRCDIR)/InsertElectrodes.cc\
 	    $(SRCDIR)/InsertVoltageSource.cc\
+	    $(SRCDIR)/IntegrateCurrent.cc\
 	    $(SRCDIR)/ModifyConductivities.cc\
 	    $(SRCDIR)/SetupBEMatrix.cc\
 	    $(SRCDIR)/SetupFEMatrix.cc\
