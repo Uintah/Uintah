@@ -117,6 +117,9 @@ namespace Uintah {
         else
                 d_speciesConcn[d_H2Oindex];
       }
+      inline double getC2H2() const {
+                return d_c2h2;
+      }
       inline bool getSootBool() const {
 	return d_lsoot;
       }
@@ -176,6 +179,7 @@ namespace Uintah {
       double d_sootFV;
       double d_co2;
       double d_h2o;
+      double d_c2h2;
       double d_fvtfive;
       double d_tfour;
       double d_tfive;
