@@ -182,7 +182,7 @@ NrrdSubvolume::execute()
   cerr << "Subvolume: ("<<min[0]<<","<<min[1]<<","<<min[2]<<") -> (";
   cerr << max[0]<<","<<max[1]<<","<<max[2]<<")"<<endl;
 
-  nrrdSubvolume(nin, nout, min, max, 1);
+  nrrdSubvolume(nout, nin, min, max, 1);
   NrrdData *nrrd = scinew NrrdData;
   nrrd->nrrd = nout;
   last_nrrdH_ = nrrd;
