@@ -49,6 +49,14 @@
         <name>Field(double)</name>
         <datatype>SCIRun::Field</datatype>
       </port>
+      <port>
+        <name>PointCloud(Vector)</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>PrimaryPointCloud(Vector)</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
     </outputs>
   </io>
   <testing>

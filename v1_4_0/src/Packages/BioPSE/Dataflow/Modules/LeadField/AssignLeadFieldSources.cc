@@ -31,6 +31,9 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Ports/MatrixPort.h>
 #include <Dataflow/Ports/FieldPort.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/ColumnMatrix.h>
+#include <Core/Datatypes/PointCloudField.h>
 #include <Core/Datatypes/TetVolField.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <iostream>
@@ -45,10 +48,12 @@ using namespace SCIRun;
 
 class AssignLeadFieldSources : public Module
 {
-  FieldIPort *ifp;
+  FieldIPort *ifp; 
   MatrixIPort *imp;
   FieldOPort *ofp;
   FieldOPort *ofp2;
+  FieldOPort *ofp3;
+  FieldOPort *ofp4;
 public:
   AssignLeadFieldSources(const string& id);
   virtual ~AssignLeadFieldSources();
@@ -79,6 +84,8 @@ AssignLeadFieldSources::execute()
 
   ofp = (FieldOPort*)get_oport("VectorField");
   ofp2 = (FieldOPort*)get_oport("Field(double)");
+  ofp3 = (FieldOPort*)get_oport("PointCloud(Vector)");
+  ofp4 = (FieldOPort*)get_oport("PrimaryPointCloud(Vector)");
 
   if (!ifp) {
     postMessage("Unable to initialize "+name+"'s iport\n");
@@ -96,7 +103,27 @@ AssignLeadFieldSources::execute()
     postMessage("Unable to initialize "+name+"'s oport\n");
     return;
   }
+  if (!ofp3) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
+  if (!ofp4) {
+    postMessage("Unable to initialize "+name+"'s oport\n");
+    return;
+  }
   
+  // Get input matrix.
+  MatrixHandle imatrix;
+  if (!(imp->get(imatrix)) || !(imatrix.get_rep())) {
+    remark("No input matrix.");
+    return;
+  }
+  ColumnMatrix *cm = dynamic_cast<ColumnMatrix *>(imatrix.get_rep());
+  if (!cm) {
+    remark("Matrix was supposed to be a ColumnMatrix.");
+    return;
+  }
+
   // Get input field.
   FieldHandle ifield;
   if (!(ifp->get(ifield)) || !(ifield.get_rep())) {
@@ -113,17 +140,6 @@ AssignLeadFieldSources::execute()
 
   TetVolMesh::Cell::size_type csize;  tvm->size(csize);
 
-  // Get input matrix.
-  MatrixHandle imatrix;
-  if (!(imp->get(imatrix)) || !(imatrix.get_rep())) {
-    remark("No input matrix.");
-    return;
-  }
-  ColumnMatrix *cm = dynamic_cast<ColumnMatrix *>(imatrix.get_rep());
-  if (!cm) {
-    remark("Matrix was supposed to be a ColumnMatrix.");
-    return;
-  }
   if (cm->nrows() != csize * 3) {
     remark("ColumnMatrix should be 3x as big as the number of mesh cells.");
     return;
@@ -143,6 +159,7 @@ AssignLeadFieldSources::execute()
 
   Array1<double> lengths(csize);
   double maxL=0;
+
   int i;
   for (i=0; i<cm->nrows()/3; i++) {
     Vector v((*cm)[i*3], (*cm)[i*3+1], (*cm)[i*3+2]);
@@ -161,22 +178,41 @@ AssignLeadFieldSources::execute()
     }
   }
 
+  vector<Vector> vecs;
+  vector<Vector> vecs2;
+  PointCloudMesh *pcm = scinew PointCloudMesh;
+  PointCloudMesh *pcm2 = scinew PointCloudMesh;
   cerr << "\n\n\nFocusing ``spikes'':\n";
   double halfMax = maxL/2.;
   for (i=0; i<lengths.size(); i++) {
+    Point p;
+    tvm->get_center(p, TetVolMesh::Cell::index_type(i));
+    if (lengths[i]>0.000001) {
+      pcm->add_point(p);
+      vecs.push_back(ofield->fdata()[i]);
+    }
     if (lengths[i]>halfMax) {
-      Point p;
-      tvm->get_center(p, TetVolMesh::Cell::index_type(i));
+      pcm2->add_point(p);
+      vecs2.push_back(ofield->fdata()[i]);
       cerr<<"   Magnitude="<<lengths[i]<<" cellIdx="<<i<<" centroid="<<p<<"\n";
     }
   }
   cerr << "End of focusing spikes.\n";
+  PointCloudMeshHandle pcmH(pcm);
+  PointCloudField<Vector> *pc = scinew PointCloudField<Vector>(pcmH, Field::NODE);
+  pc->fdata()=vecs;
+
+  PointCloudMeshHandle pcm2H(pcm2);
+  PointCloudField<Vector> *pc2 = scinew PointCloudField<Vector>(pcm2H, Field::NODE);
+  pc2->fdata()=vecs2;
 
   for (i=0; i<nsize; i++) 
-    ofield2->fdata()[i]=node_sums[i]/node_refs[i]*10000;
+    ofield2->fdata()[i]=node_sums[i]/node_refs[i];
 
   ofp->send(FieldHandle(ofield));
   ofp2->send(FieldHandle(ofield2));
+  ofp3->send(FieldHandle(pc));
+  ofp4->send(FieldHandle(pc2));
 }
 } // End namespace BioPSE
 
