@@ -34,8 +34,10 @@ itcl_class Fusion_Fields_NrrdFieldConverter {
     method set_defaults {} {
 
 	global $this-datasets
-
 	set $this-datasets ""
+
+	global $this-nomesh
+	set $this-nomesh 0
     }
 
     method ui {} {
@@ -59,6 +61,18 @@ itcl_class Fusion_Fields_NrrdFieldConverter {
 	# since it is not valid.
 
 	toplevel $w
+
+	global $this-nomesh
+
+	frame $w.mesh
+	label $w.mesh.label -text "No Mesh - regular topology and geometry" \
+	    -width 40 -anchor w -just left
+	checkbutton $w.mesh.button -variable $this-nomesh
+	
+	pack $w.mesh.button $w.mesh.label -side left
+
+	pack $w.mesh -side top
+
 
 	frame $w.grid
 	label $w.grid.l -text "Inputs: (Execute to show list)" -width 30 -just left
