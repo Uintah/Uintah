@@ -144,12 +144,10 @@ void Worker::run()
 
 	useAddSubBarrier_ = false;
 	addSubThreads_->wait( oldNumWorkers_+1 );
+
 	// stop if you have been told to stop.  
-
-	//cout << "stop is " << stop_ << "\n";
-
 	if( stop_ ) {// I don't think this one ever is called
-	  cout << "Thread: " << num << " stopping\n";
+          //	  cerr << "Thread: " << num << " stopping\n";
 	  return;
 	}
       }
