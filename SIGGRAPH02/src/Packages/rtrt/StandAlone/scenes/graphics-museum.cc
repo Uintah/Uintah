@@ -87,7 +87,7 @@ using namespace SCIRun;
 // all the following should be 1 for demos  (0 to speedup for debugging)
 #define IMGSONWALL 0 
 #define INSERTDAVID 0
-#define INSERTCEILING 1
+#define INSERTCEILING 0
 #define INSERTVIDEO 0
 #define INSERTMODERNMODELS 0
 #define INSERTHISTORYMODELS 0
@@ -1528,6 +1528,7 @@ void build_history_hall (Group* main_group, Group* no_shadow_group, Scene *scene
   /* **************** alpha1 helicopter **************** */
   Material* turquoise = new LambertianMaterial(Color(.21,.55,.65));
   
+
   l = (new Light(CopterPt+Vector(-1,-1,4),Color(1.,1.,1.),0,0.7));
   l->name_ = "Copter";
   scene->add_per_matl_light (l);
@@ -1536,6 +1537,44 @@ void build_history_hall (Group* main_group, Group* no_shadow_group, Scene *scene
   historyg->add (new Parallelogram(turquoise,
 				   CopterPt+Vector(-diff,-diff,0.001),
 				   Vector(gbox_size,0,0),Vector(0,-gbox_size,0)));
+
+//    Material* copter_matl = new MetalMaterial(Color(0.7,0.73,0.8));
+  Material* copter_matl = new Phong(Color(210/255.,180/255.,140/255.),
+				    Color(.2,.2,.2),40);
+
+  Group* copterg;
+  // read in the copter geometry
+  copterg = readtris("/usr/sci/data/Geometry/models/museum/copter.tris",copter_matl);
+
+  BBox copter_bbox;
+
+  copterg->compute_bounds(copter_bbox,0);
+
+  Point copter_min = copter_bbox.min();
+  Point copter_max = copter_bbox.max();
+  Vector copter_diag = copter_bbox.diagonal();
+
+  Point CopterPedPt = CopterPt + Vector(ped_size/2., -ped_size/2., 0);
+
+  Transform copterT;
+
+  copterT.pre_translate(-Vector((copter_max.x()+copter_min.x())/2.,
+				(copter_min.y()+copter_max.y())/2.,
+				(copter_max.z()+copter_min.z())/2.)); // center copter over 0
+  copterT.pre_rotate(M_PI_2,Vector(1,0,0));  // make z up
+  copterT.pre_rotate(M_PI_2/2.,Vector(0,0,1));  // orient heli
+  copterT.pre_translate(Vector(0,0,copter_min.y()));
+  double copter_scale = .45*2./(sqrt(copter_diag.x()*copter_diag.x()+copter_diag.z()*copter_diag.z()));
+  copterT.pre_scale(Vector(copter_scale,
+			  copter_scale,
+			  copter_scale));
+  copterT.pre_translate(CopterPedPt.asVector());
+
+  copterg->transform(copterT);
+
+
+  main_group->add(new HierarchicalGrid(copterg,16,16,64,16,1024,4));
+
 #endif
 
   main_group->add(historyg);
@@ -1807,8 +1846,8 @@ void build_david_room (Group* main_group, Scene *scene, Light *light1, Light *li
   main_group->add(new HierarchicalGrid(ropeg1,6,16,64,8,1024,4));
   main_group->add(new HierarchicalGrid(ropeg2,6,16,64,8,1024,4));
   main_group->add(new HierarchicalGrid(ropeg3,6,16,64,8,1024,4));
-//    main_group->add(new HierarchicalGrid(ropeg4,6,16,64,8,1024,4));
-  main_group->add(new HierarchicalGrid(ropeg4,8,16,64,8,1024,4));
+  main_group->add(new HierarchicalGrid(ropeg4,6,16,64,8,1024,4));
+//    main_group->add(new HierarchicalGrid(ropeg4,8,16,64,8,1024,4));
   main_group->add(new HierarchicalGrid(ropeg5,6,16,64,8,1024,4));
   main_group->add(new HierarchicalGrid(ropeg6,6,16,64,8,1024,4));
 
@@ -2001,7 +2040,7 @@ void build_modern_room (Group *main_group, Scene *scene) {
   // read in the dragon geometry
   TriMesh* dragon_tm = new TriMesh();
   Group* dragong = new Group();
-  read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/dragon_vrip_res4.ply",shiny_green,dragon_tm,dragong);
+  read_ply("/usr/sci/data/Geometry/Stanford_Sculptures/dragon_vrip_res2.ply",shiny_green,dragon_tm,dragong);
   
   BBox dragon_bbox;
 
@@ -2380,7 +2419,7 @@ void build_modern_room (Group *main_group, Scene *scene) {
 
   partT.pre_translate(-Vector((part_max.x()+part_min.x())/2.,part_min.y(),(part_max.z()+part_min.z())/2.)); // center part over 0
   partT.pre_rotate(M_PI_2,Vector(1,0,0));  // make z up
-  double part_scale = .375*2./(sqrt(part_diag.x()*part_diag.x()+part_diag.z()*part_diag.z()));
+  double part_scale = .25*2./(sqrt(part_diag.x()*part_diag.x()+part_diag.z()*part_diag.z()));
   partT.pre_scale(Vector(part_scale,
 			 part_scale,
 			 part_scale));
@@ -2458,11 +2497,6 @@ void build_modern_room (Group *main_group, Scene *scene) {
   Point stadium_min = stadium_bbox.min();
   Point stadium_max = stadium_bbox.max();
   Vector stadium_diag = stadium_bbox.diagonal();
-
-//    printf("bbox: min %lf %lf %lf max %lf %lf %lf\n",
-//  	 stadium_min.x(), stadium_min.y(), stadium_min.z(),
-//  	 stadium_max.x(), stadium_max.y(), stadium_max.z());
-//    exit(-1);
 
   Transform stadiumT;
 
