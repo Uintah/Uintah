@@ -36,6 +36,8 @@
 #include <Core/Math/MinMax.h>
 
 #include <iostream>
+#include <sstream>
+
 using namespace std;
 
 using namespace SCIRun;
@@ -540,6 +542,30 @@ TriangleCM2Widget::release (int obj, int x, int y, int w, int h)
 }
 
 
+string
+TriangleCM2Widget::tcl_pickle()
+{
+  ostringstream s;
+  s << base_ << " ";
+  s << top_x_ << " ";
+  s << top_y_ << " ";
+  s << width_ << " ";
+  s << bottom_;
+  return s.str();
+}
+
+void
+TriangleCM2Widget::tcl_unpickle(const string &p)
+{
+  istringstream s(p);
+  s >> base_;
+  s >> top_x_;
+  s >> top_y_;
+  s >> width_;
+  s >> bottom_;
+}
+
+
 RectangleCM2Widget::RectangleCM2Widget()
   : type_(CM2_RECTANGLE_1D), left_x_(0.25), left_y_(0.5), width_(0.25), height_(0.25),
     offset_(0.25)
@@ -892,6 +918,32 @@ void
 RectangleCM2Widget::release (int obj, int x, int y, int w, int h)
 {
   //move(obj, x, y, w, h);
+}
+
+
+string
+RectangleCM2Widget::tcl_pickle()
+{
+  ostringstream s;
+  s << type_ << " ";
+  s << left_x_ << " ";
+  s << left_y_ << " ";
+  s << width_ << " ";
+  s << height_ << " ";
+  s << offset_;
+  return s.str();
+}
+
+void
+RectangleCM2Widget::tcl_unpickle(const string &p)
+{
+  istringstream s(p);
+  s >> type_;
+  s >> left_x_;
+  s >> left_y_;
+  s >> width_;
+  s >> height_;
+  s >> offset_;
 }
 
 

@@ -115,7 +115,8 @@ class EditTransferFunc2 : public Module {
   vector<GuiDouble *>		gui_color_g_;
   vector<GuiDouble *>		gui_color_b_;
   vector<GuiDouble *>		gui_color_a_;
-  
+  vector<GuiString *>           gui_wstate_;
+
 public:
   EditTransferFunc2(GuiContext* ctx);
   virtual ~EditTransferFunc2();
@@ -153,6 +154,7 @@ EditTransferFunc2::EditTransferFunc2(GuiContext* ctx)
 {
   widgets_.push_back(scinew TriangleCM2Widget());
   widgets_.push_back(scinew RectangleCM2Widget());
+  resize_gui();
 }
 
 
@@ -294,11 +296,12 @@ EditTransferFunc2::resize_gui()
   for (i = gui_name_.size(); i < (unsigned int)gui_num_entries_.get(); i++)
   {
     const string num = to_string(i);
-    gui_name_.push_back(new GuiString(ctx->subVar("names-" + num)));
+    gui_name_.push_back(new GuiString(ctx->subVar("name-" + num)));
     gui_color_r_.push_back(new GuiDouble(ctx->subVar(num +"-color-r")));
     gui_color_g_.push_back(new GuiDouble(ctx->subVar(num +"-color-g")));
     gui_color_b_.push_back(new GuiDouble(ctx->subVar(num +"-color-b")));
     gui_color_a_.push_back(new GuiDouble(ctx->subVar(num +"-color-a")));
+    gui_wstate_.push_back(new GuiString(ctx->subVar("state- " + num)));
   }
 }
 
@@ -328,6 +331,10 @@ EditTransferFunc2::update_from_gui()
   resize_gui();
   for (unsigned int i = 0; i < widgets_.size(); i++)
   {
+    gui_color_r_[i]->reset();
+    gui_color_g_[i]->reset();
+    gui_color_b_[i]->reset();
+    gui_color_a_[i]->reset();
     widgets_[i]->set_color(Color(gui_color_r_[i]->get(),
 				 gui_color_g_[i]->get(),
 				 gui_color_b_[i]->get()));
