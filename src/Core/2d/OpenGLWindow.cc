@@ -48,7 +48,10 @@ using namespace SCIRun;
 using namespace std;
   
 extern "C" Tcl_Interp* the_interp;
+
+#ifndef _WIN32
 extern "C" GLXContext OpenGLGetContext(Tcl_Interp*, char*);
+#endif
 
 OpenGLWindow::OpenGLWindow(GuiInterface* gui)
   : TclObj(gui, "OpenGLWindow")
@@ -88,6 +91,7 @@ OpenGLWindow::init( const string &window_name)
     gui->unlock();
     return false;
   }
+#ifndef _WIN32
   dpy=Tk_Display(tkwin);
   win=Tk_WindowId(tkwin);
   cx=OpenGLGetContext(the_interp, const_cast<char *>(window_name.c_str()));
@@ -96,6 +100,7 @@ OpenGLWindow::init( const string &window_name)
     gui->unlock();
     return false;
   }
+#endif
   //    }
   
   // Get the window size
@@ -117,9 +122,10 @@ OpenGLWindow::pre()
 {
   gui->lock();
 
+#ifndef _WIN32
   if (!glXMakeCurrent(dpy, win, cx))
     cerr << "*glXMakeCurrent failed.\n";
-  
+#endif
 
   glViewport(0, 0, xres_, yres_);
   
@@ -131,10 +137,12 @@ OpenGLWindow::pre()
 void
 OpenGLWindow::post( bool swap)
 {
+#ifndef _WIN32
   if ( swap )
     glXSwapBuffers( dpy, win);
 
   glXMakeCurrent(dpy, None, NULL);
+#endif
 
   gui->unlock();
 }
@@ -165,17 +173,21 @@ OpenGLWindow::set_binds( const string& obj )
 void 
 OpenGLWindow::make_raster_font()
 {
+#ifndef _WIN32
   if (!cx)
     return;
+#endif
 
   XFontStruct *fontInfo;
   Font id;
   unsigned int first, last;
   Display *xdisplay;
   
+#ifndef _WIN32
   xdisplay = dpy;
   fontInfo = XLoadQueryFont(xdisplay, 
-			    "-*-helvetica-medium-r-normal--12-*-*-*-p-67-iso8859-1");
+  		    "-*-helvetica-medium-r-normal--12-*-*-*-p-67-iso8859-1");
+#endif
   if (fontInfo == NULL) {
     printf ("no font found\n");
     exit (0);
@@ -190,7 +202,9 @@ OpenGLWindow::make_raster_font()
     printf ("out of display lists\n");
     exit (0);
   }
+#ifndef _WIN32
   glXUseXFont(id, first, last-first+1, base+first);
+#endif
   /*    *height = fontInfo->ascent + fontInfo->descent;
    *width = fontInfo->max_bounds.width;  */
 }

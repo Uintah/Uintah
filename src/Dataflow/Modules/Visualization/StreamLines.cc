@@ -49,11 +49,9 @@
 #include <vector>
 #include <math.h>
 
-#include <Dataflow/share/share.h>
-
 namespace SCIRun {
 
-class PSECORESHARE StreamLines : public Module {
+class StreamLines : public Module {
 public:
   StreamLines(GuiContext* ctx);
 

@@ -38,8 +38,6 @@
 #include <Dataflow/Ports/ColorMapPort.h>
 #include <Dataflow/Ports/GeometryPort.h>
 
-#include <Dataflow/share/share.h>
-
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Widgets/PointWidget.h>
@@ -61,7 +59,7 @@
 
 namespace SCIRun {
 
-class PSECORESHARE VolumeVisualizer : public Module {
+class VolumeVisualizer : public Module {
 public:
   VolumeVisualizer(GuiContext*);
   virtual ~VolumeVisualizer();

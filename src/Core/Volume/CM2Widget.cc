@@ -54,6 +54,20 @@
 using namespace std;
 using namespace SCIRun;
 
+#ifdef _WIN32
+  // windows doesn't have drand48
+  // we can make a better solution if it becomes necessary
+  // (i.e., more files use it than this one)
+#include <Core/Thread/Time.h>
+
+double drand48()
+{
+  srand((int) Time::currentTicks());
+  return ((double) rand())/ RAND_MAX;
+}
+
+#endif
+
 PersistentTypeID CM2Widget::type_id("CM2Widget", "Datatype", 0);
 
 #if 0

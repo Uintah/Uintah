@@ -48,6 +48,13 @@ using std::string;
 
 namespace SCIRun {
 
+#ifdef _WIN32
+#define GL_FUNC_ADD 2
+#define GL_MAX 2
+#define GL_TEXTURE_3D 2
+#define glBlendEquation(x)
+#endif
+
 //static SCIRun::DebugStream dbg("VolumeRenderer", false);
 
 VolumeRenderer::VolumeRenderer(TextureHandle tex,

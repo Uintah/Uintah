@@ -663,7 +663,7 @@ bool GeomTexVolRender::saveobj(ostream&, const string&, GeomSave*)
 
 void GeomTexVolRender::Clear()
 {
-  bzero(vol3d,sizeof(char)*nx*ny*nz);
+  memset(vol3d,0,sizeof(char)*nx*ny*nz);
   cerr << "Cleared...\n";
   map2d = vol3d;
 }

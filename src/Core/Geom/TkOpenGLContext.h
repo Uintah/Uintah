@@ -39,7 +39,6 @@
 #define SCIRun_Core_2d_TkOpenGLContext_h
 
 #include <sci_glx.h>
-#include <Core/share/share.h>
 #include <stdio.h>
 #include <tk.h>
 
@@ -102,7 +101,9 @@ public:
   Window		x11_win_;
   Tk_Window		tkwin_;
   Tk_Window		mainwin_;
+#ifndef _WIN32
   GLXContext		context_;
+#endif
   XVisualInfo*		vi_;
   Colormap		colormap_;
   Tk_Cursor		cursor_;

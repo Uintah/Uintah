@@ -57,6 +57,9 @@ PSELIBS := \
 	Core/Util
 #	Dataflow/Network Dataflow/XMLUtil
 
+ifeq ($(IS_WIN), yes)
+  PSELIBS += Core/Math
+endif
 
 LIBS := $(GL_LIBRARY) $(M_LIBRARY) $(TEEM_LIBRARY)
 #LIBS := $(LINK) $(XML_LIBRARY) $(GL_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)

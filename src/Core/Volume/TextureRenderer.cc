@@ -46,6 +46,12 @@ using std::string;
 
 namespace SCIRun {
 
+#ifdef _WIN32
+#define GL_TEXTURE_3D 2
+#define GL_CLAMP_TO_EDGE 2
+#define GL_TEXTURE_WRAP_R 2
+#endif
+
 static const string Cmap2ShaderStringNV =
 "!!ARBfp1.0 \n"
 "TEMP c, z; \n"
@@ -396,7 +402,7 @@ TextureRenderer::load_brick(TextureBrickHandle brick, bool use_cmap2)
       }
       else
 #endif
-#ifndef __sgi
+#if !defined(__sgi) && !defined(_WIN32)
 #if defined(GL_EXT_shared_texture_palette) && !defined(__APPLE__)
       {
 	if (reuse)

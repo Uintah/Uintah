@@ -1076,8 +1076,10 @@ EditColorMap2D::build_colormap_texture()
     if (rebuild_texture) {
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+#ifndef _WIN32
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+#endif
     }
         
     if (use_back_buffer_) 
@@ -1148,8 +1150,10 @@ EditColorMap2D::build_histogram_texture()
   glBindTexture(GL_TEXTURE_2D, histogram_texture_id_);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+#ifndef _WIN32
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+#endif
   int axis_size[3];
 
   if (!histo_) {
@@ -1283,8 +1287,10 @@ EditColorMap2D::redraw()
     glFlush();
     glReadBuffer(GL_BACK);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 8);
+#ifndef _WIN32
     glReadPixels(0, 0,width_, height_,
 		 GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, FrameBuffer);
+#endif
     char tmp[256];
     sprintf(tmp, filename_.get().c_str());
     remark("Writing to file: "+filename_.get());

@@ -49,8 +49,6 @@
 #include <sgi_stl_warnings_on.h>
 
 #include <Core/Util/Assert.h>
-#include <Core/share/share.h>
-
 namespace SCIRun {
 
 using std::string;
@@ -60,7 +58,7 @@ using std::pair;
 class Persistent;
 
 //----------------------------------------------------------------------
-struct SCICORESHARE PersistentTypeID {
+struct PersistentTypeID {
   string type;
   string parent;
   Persistent* (*maker)();
@@ -70,7 +68,7 @@ struct SCICORESHARE PersistentTypeID {
 };
 
 //----------------------------------------------------------------------
-class SCICORESHARE Piostream {
+class Piostream {
   
 public:
 
@@ -136,29 +134,29 @@ public:
 };
 
 //----------------------------------------------------------------------
-class SCICORESHARE Persistent {
+class Persistent {
 public:
   virtual ~Persistent();
   virtual void io(Piostream&)=0;
 };
 
 //----------------------------------------------------------------------
-SCICORESHARE inline void Pio(Piostream& stream, bool& data) { stream.io(data); }
-SCICORESHARE inline void Pio(Piostream& stream, char& data) { stream.io(data); }
-SCICORESHARE inline void Pio(Piostream& stream, signed char& data) { stream.io(data); }
-SCICORESHARE inline void Pio(Piostream& stream, unsigned char& data) { stream.io(data); }
-SCICORESHARE inline void Pio(Piostream& stream, short& data) { stream.io(data); }
-SCICORESHARE inline void Pio(Piostream& stream, unsigned short& data) { stream.io(data); }
-SCICORESHARE inline void Pio(Piostream& stream, int& data) { stream.io(data); }
-SCICORESHARE inline void Pio(Piostream& stream, unsigned int& data) { stream.io(data); }
-SCICORESHARE inline void Pio(Piostream& stream, long& data) { stream.io(data); }
-SCICORESHARE inline void Pio(Piostream& stream, unsigned long& data) { stream.io(data); }
-SCICORESHARE inline void Pio(Piostream& stream, long long& data) { stream.io(data); }
-SCICORESHARE inline void Pio(Piostream& stream, unsigned long long& data) { stream.io(data); }
-SCICORESHARE inline void Pio(Piostream& stream, double& data) { stream.io(data); }
-SCICORESHARE inline void Pio(Piostream& stream, float& data) { stream.io(data); }
-SCICORESHARE inline void Pio(Piostream& stream, string& data) { stream.io(data); }
-SCICORESHARE inline void Pio(Piostream& stream, Persistent& data) { data.io(stream); }
+inline void Pio(Piostream& stream, bool& data) { stream.io(data); }
+inline void Pio(Piostream& stream, char& data) { stream.io(data); }
+inline void Pio(Piostream& stream, signed char& data) { stream.io(data); }
+inline void Pio(Piostream& stream, unsigned char& data) { stream.io(data); }
+inline void Pio(Piostream& stream, short& data) { stream.io(data); }
+inline void Pio(Piostream& stream, unsigned short& data) { stream.io(data); }
+inline void Pio(Piostream& stream, int& data) { stream.io(data); }
+inline void Pio(Piostream& stream, unsigned int& data) { stream.io(data); }
+inline void Pio(Piostream& stream, long& data) { stream.io(data); }
+inline void Pio(Piostream& stream, unsigned long& data) { stream.io(data); }
+inline void Pio(Piostream& stream, long long& data) { stream.io(data); }
+inline void Pio(Piostream& stream, unsigned long long& data) { stream.io(data); }
+inline void Pio(Piostream& stream, double& data) { stream.io(data); }
+inline void Pio(Piostream& stream, float& data) { stream.io(data); }
+inline void Pio(Piostream& stream, string& data) { stream.io(data); }
+inline void Pio(Piostream& stream, Persistent& data) { data.io(stream); }
 
 
 

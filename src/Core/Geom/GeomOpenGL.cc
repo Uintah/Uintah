@@ -127,10 +127,10 @@ using std::endl;
 #include <GL/gls.h>
 #endif
 
-
+#ifndef _WIN32
 #include <X11/X.h>
 #include <X11/Xlib.h>
-
+#endif
 
 #include <stdio.h>
 
@@ -243,7 +243,7 @@ DrawInfoOpenGL::DrawInfoOpenGL() :
     }
 
 #ifdef _WIN32
-  gluQuadricCallback(qobj, (GLenum)GLU_ERROR, (void (__stdcall*)())quad_error);
+  gluQuadricCallback(qobj, /* FIX (GLenum)GLU_ERROR*/ 0, (void (__stdcall*)())quad_error);
 #else
   gluQuadricCallback(qobj, (GLenum)GLU_ERROR, (gluQuadricCallbackType)quad_error);
 #endif
@@ -1035,7 +1035,9 @@ GeomColorMap::draw(DrawInfoOpenGL* di, Material *m, double time)
     glTexImage1D(GL_TEXTURE_1D, 0, 4, 256, 0, GL_RGBA, GL_FLOAT,
 		 cmap_->rawRGBA_);
 
+#ifndef _WIN32
     glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+#endif
     if (cmap_->resolution_ == 256)
     {
       glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -6387,8 +6389,10 @@ void GeomTexRectangle::draw(DrawInfoOpenGL* di, Material* matl, double)
       glEnable(GL_ALPHA_TEST);
 #endif
       glEnable(GL_BLEND);
+#ifndef _WIN32
       glBlendEquation(GL_FUNC_ADD);
       glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+#endif
     }
 
     float mvmat[16];
