@@ -21,14 +21,15 @@
 #include <stdlib.h>
 
 Module::Module(const clString& name, SchedClass sched_class)
-: name(name), sched_class(sched_class), state(NeedData), mailbox(5),
-  xpos(10), ypos(10), width(100), height(100), helper(0)
+: name(name), sched_class(sched_class), state(NeedData), mailbox(100),
+  xpos(10), ypos(10), width(100), height(100), helper(0),
+  sched_state(SchedDormant)
 {
 }
 
 Module::Module(const Module& copy, int)
 : name(copy.name), state(NeedData), mailbox(5),
-  xpos(10), ypos(10), width(100), height(100)
+  xpos(10), ypos(10), width(100), height(100), sched_state(SchedDormant)
 {
     NOT_FINISHED("Module copy CTOR");
 }

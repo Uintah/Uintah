@@ -15,6 +15,7 @@
 #define SCI_project_Geom_h 1
 
 #include <Classlib/Array1.h>
+#include <Classlib/Stack.h>
 #include <Geometry/Point.h>
 #include <Geometry/BBox.h>
 #include <Color.h>
@@ -35,7 +36,18 @@ public:
 
 struct DrawInfo {
     MaterialProp* current_matl;
+    Stack<MaterialProp*> stack;
+    enum DrawType {
+	WireFrame,
+	Flat,
+	Gouraud,
+	Phong,
+    };
+    DrawType drawtype;
     DrawInfo();
+
+    void push_matl(MaterialProp*);
+    void pop_matl();
 };
 
 class GeomObj {
@@ -73,6 +85,7 @@ public:
     Point p1;
     Point p2;
     Point p3;
+    Vector n;
 
     Triangle(const Point&, const Point&, const Point&);
     virtual ~Triangle();

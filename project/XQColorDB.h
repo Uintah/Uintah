@@ -38,8 +38,8 @@ XQColor_named_colors.insert("lavender blush", RGBColor(1,0.941176,0.960784));
 XQColor_named_colors.insert("LavenderBlush", RGBColor(1,0.941176,0.960784));
 XQColor_named_colors.insert("misty rose", RGBColor(1,0.894118,0.882353));
 XQColor_named_colors.insert("MistyRose", RGBColor(1,0.894118,0.882353));
-XQColor_named_colors.insert("white", RGBColor(1,1,1));
 #endif
+XQColor_named_colors.insert("white", RGBColor(1,1,1));
 XQColor_named_colors.insert("black", RGBColor(0,0,0));
 #if 0
 XQColor_named_colors.insert("dark slate", RGBColor(0.184314,0.309804,0.309804));
@@ -160,7 +160,9 @@ XQColor_named_colors.insert("light goldenrod", RGBColor(0.980392,0.980392,0.8235
 XQColor_named_colors.insert("LightGoldenrodYellow", RGBColor(0.980392,0.980392,0.823529));
 XQColor_named_colors.insert("light yellow", RGBColor(1,1,0.878431));
 XQColor_named_colors.insert("LightYellow", RGBColor(1,1,0.878431));
+#endif
 XQColor_named_colors.insert("yellow", RGBColor(1,1,0));
+#if 0
 XQColor_named_colors.insert("gold", RGBColor(1,0.843137,0));
 XQColor_named_colors.insert("light goldenrod", RGBColor(0.933333,0.866667,0.509804));
 XQColor_named_colors.insert("LightGoldenrod", RGBColor(0.933333,0.866667,0.509804));
@@ -191,7 +193,9 @@ XQColor_named_colors.insert("salmon", RGBColor(0.980392,0.501961,0.447059));
 #if 0
 XQColor_named_colors.insert("light salmon", RGBColor(1,0.627451,0.478431));
 XQColor_named_colors.insert("LightSalmon", RGBColor(1,0.627451,0.478431));
+#endif
 XQColor_named_colors.insert("orange", RGBColor(1,0.647059,0));
+#if 0
 XQColor_named_colors.insert("dark orange", RGBColor(1,0.54902,0));
 XQColor_named_colors.insert("DarkOrange", RGBColor(1,0.54902,0));
 XQColor_named_colors.insert("coral", RGBColor(1,0.498039,0.313725));
@@ -231,7 +235,9 @@ XQColor_named_colors.insert("dark violet", RGBColor(0.580392,0,0.827451));
 XQColor_named_colors.insert("DarkViolet", RGBColor(0.580392,0,0.827451));
 XQColor_named_colors.insert("blue violet", RGBColor(0.541176,0.168627,0.886275));
 XQColor_named_colors.insert("BlueViolet", RGBColor(0.541176,0.168627,0.886275));
+#endif
 XQColor_named_colors.insert("purple", RGBColor(0.627451,0.12549,0.941176));
+#if 0
 XQColor_named_colors.insert("medium purple", RGBColor(0.576471,0.439216,0.858824));
 XQColor_named_colors.insert("MediumPurple", RGBColor(0.576471,0.439216,0.858824));
 XQColor_named_colors.insert("thistle", RGBColor(0.847059,0.74902,0.847059));

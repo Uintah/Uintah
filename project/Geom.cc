@@ -53,15 +53,12 @@ int ObjGroup::size()
 
 void ObjGroup::draw(DrawInfo* di)
 {
-    if(matl){
-	for (int i=0; i<objs.size(); i++){
-	    matl->set(di);
-	    objs[i]->draw(di);
-	}
-    } else {
-	for (int i=0; i<objs.size(); i++)
-	    objs[i]->draw(di);
-    }
+    if(matl)
+	di->push_matl(matl);
+    for (int i=0; i<objs.size(); i++)
+	objs[i]->draw(di);
+    if(matl)
+	di->pop_matl();
 }
 
 BBox ObjGroup::bbox()
@@ -70,7 +67,7 @@ BBox ObjGroup::bbox()
 }
 
 Triangle::Triangle(const Point& p1, const Point& p2, const Point& p3)
-: p1(p1), p2(p2), p3(p3)
+: p1(p1), p2(p2), p3(p3), n(Cross(p3-p1, p2-p1))
 {
     bb.extend(p1);
     bb.extend(p2);
@@ -82,16 +79,35 @@ Triangle::~Triangle()
 }
 
 void Triangle::draw(DrawInfo* di) {
-    if(matl)matl->set(di);
-    glBegin(GL_TRIANGLES);
-    Vector e1(p3-p1);
-    Vector e2(p2-p1);
-    Vector n(Cross(e1, e2));
-    glNormal3d(n.x(), n.y(), n.z());
-    glVertex3d(p1.x(), p1.y(), p1.z());
-    glVertex3d(p2.x(), p2.y(), p2.z());
-    glVertex3d(p3.x(), p3.y(), p3.z());
-    glEnd();
+    if(matl)
+	di->push_matl(matl);
+    switch(di->drawtype){
+    case DrawInfo::WireFrame:
+	glBegin(GL_LINE_LOOP);
+	glVertex3d(p1.x(), p1.y(), p1.z());
+	glVertex3d(p2.x(), p2.y(), p2.z());
+	glVertex3d(p3.x(), p3.y(), p3.z());
+	glEnd();
+	break;
+    case DrawInfo::Flat:
+	glBegin(GL_TRIANGLES);
+	glVertex3d(p1.x(), p1.y(), p1.z());
+	glVertex3d(p2.x(), p2.y(), p2.z());
+	glVertex3d(p3.x(), p3.y(), p3.z());
+	glEnd();
+	break;
+    case DrawInfo::Gouraud:
+    case DrawInfo::Phong:
+	glBegin(GL_TRIANGLES);
+	glNormal3d(n.x(), n.y(), n.z());
+	glVertex3d(p1.x(), p1.y(), p1.z());
+	glVertex3d(p2.x(), p2.y(), p2.z());
+	glVertex3d(p3.x(), p3.y(), p3.z());
+	glEnd();
+	break;
+    }
+    if(matl)
+	di->pop_matl();
 }
 
 BBox Triangle::bbox() {
@@ -112,7 +128,8 @@ Tetra::~Tetra()
 }
 
 void Tetra::draw(DrawInfo* di) {
-    if(matl)matl->set(di);
+    if(matl)
+	di->push_matl(matl);
     glBegin(GL_LINE_STRIP);
     glVertex3d(p1.x(), p1.y(), p1.z());
     glVertex3d(p2.x(), p2.y(), p2.z());
@@ -123,6 +140,8 @@ void Tetra::draw(DrawInfo* di) {
     glVertex3d(p3.x(), p3.y(), p3.z());
     glVertex3d(p4.x(), p4.y(), p4.z());
     glEnd();
+    if(matl)
+	di->pop_matl();
 }
 
 BBox Tetra::bbox() {
@@ -141,27 +160,108 @@ GeomSphere::~GeomSphere()
 
 void GeomSphere::draw(DrawInfo* di)
 {
-    if(matl)matl->set(di);
+    if(matl)
+	di->push_matl(matl);
     SinCosTable u(nu, 0, 2.*Pi);
-    SinCosTable v(nv, -Pi/2., Pi/2., rad);
-    for(int i=0;i<nu-1;i++){
-	glBegin(GL_TRIANGLE_STRIP);
-	double x0=u.sin(i);
-	double y0=u.cos(i);
-	double x1=u.sin(i+1);
-	double y1=u.cos(i+1);
-	for(int j=0;j<nv-1;j++){
+    SinCosTable v(nv, 0, Pi, rad);
+    double cx=cen.x();
+    double cy=cen.y();
+    double cz=cen.z();
+    int i, j;
+    cerr << "drawtype=" << di->drawtype << endl;
+    switch(di->drawtype){
+    case DrawInfo::WireFrame:
+	for(i=0;i<nu-1;i++){
+	    glBegin(GL_LINE_STRIP);
+		double x0=u.sin(i);
+	    double y0=u.cos(i);
+	    for(int j=0;j<nv;j++){
+		double r0=v.sin(j);
+		double z0=v.cos(j);
+		glVertex3d(x0*r0+cx, y0*r0+cy, z0+cz);
+	    }
+	    glEnd();
+	}
+	for(j=1;j<nv-1;j++){
+	    glBegin(GL_LINE_LOOP);
 	    double r0=v.sin(j);
 	    double z0=v.cos(j);
-	    double r1=v.sin(j+1);
-	    double z1=v.cos(j+1);
-	    glVertex3d(x0*r0, y0*r0, z0);
-	    glVertex3d(x1*r0, y1*r0, z0);
-	    glVertex3d(x0*r1, y0*r1, z1);
-	    glVertex3d(x1*r1, y1*r1, z1);
+	    for(int i=0;i<nu-1;i++){
+		double x0=u.sin(i);
+		double y0=u.cos(i);
+		glVertex3d(x0*r0+cx, y0*r0+cy, z0+cz);
+	    }
+	    glEnd();
 	}
-	glEnd();
+	break;
+    case DrawInfo::Flat:
+	for(i=0;i<nu-1;i++){
+	    glBegin(GL_TRIANGLE_STRIP);
+	    double x0=u.sin(i);
+	    double y0=u.cos(i);
+	    double x1=u.sin(i+1);
+	    double y1=u.cos(i+1);
+	    for(int j=0;j<nv-1;j++){
+		double r0=v.sin(j);
+		double z0=v.cos(j);
+		double r1=v.sin(j+1);
+		double z1=v.cos(j+1);
+		glVertex3d(x0*r0+cx, y0*r0+cy, z0+cz);
+		glVertex3d(x1*r0+cx, y1*r0+cy, z0+cz);
+		glVertex3d(x0*r1+cx, y0*r1+cy, z1+cz);
+		glVertex3d(x1*r1+cx, y1*r1+cy, z1+cz);
+	    }
+	    glEnd();
+	}
+	break;
+    case DrawInfo::Gouraud:
+	for(i=0;i<nu-1;i++){
+	    glBegin(GL_TRIANGLE_STRIP);
+	    double x0=u.sin(i);
+	    double y0=u.cos(i);
+	    double x1=u.sin(i+1);
+	    double y1=u.cos(i+1);
+	    for(int j=0;j<nv-1;j++){
+		double r0=v.sin(j);
+		double z0=v.cos(j);
+		double r1=v.sin(j+1);
+		double z1=v.cos(j+1);
+		glNormal3d(-x0*r0, -y0*r0, -z0);
+		glVertex3d(x0*r0+cx, y0*r0+cy, z0+cz);
+		glVertex3d(x1*r0+cx, y1*r0+cy, z0+cz);
+		glVertex3d(x0*r1+cx, y0*r1+cy, z1+cz);
+		glVertex3d(x1*r1+cx, y1*r1+cy, z1+cz);
+	    }
+	    glEnd();
+	}
+	break;
+    case DrawInfo::Phong:
+	for(i=0;i<nu-1;i++){
+	    glBegin(GL_TRIANGLE_STRIP);
+	    double x0=u.sin(i);
+	    double y0=u.cos(i);
+	    double x1=u.sin(i+1);
+	    double y1=u.cos(i+1);
+	    for(int j=0;j<nv-1;j++){
+		double r0=v.sin(j);
+		double z0=v.cos(j);
+		double r1=v.sin(j+1);
+		double z1=v.cos(j+1);
+		glNormal3d(-x0*r0, -y0*r0, -z0);
+		glVertex3d(x0*r0+cx, y0*r0+cy, z0+cz);
+		glNormal3d(-x1*r0, -y1*r0, -z0);
+		glVertex3d(x1*r0+cx, y1*r0+cy, z0+cz);
+		glNormal3d(-x0*r1, -y0*r1, -z1);
+		glVertex3d(x0*r1+cx, y0*r1+cy, z1+cz);
+		glNormal3d(-x1*r1, -y1*r1, -z1);
+		glVertex3d(x1*r1+cx, y1*r1+cy, z1+cz);
+	    }
+	    glEnd();
+	}
+	break;
     }
+    if(matl)
+	di->pop_matl();
 }
 
 BBox GeomSphere::bbox() {
@@ -178,10 +278,13 @@ GeomPt::~GeomPt() {
 }
 
 void GeomPt::draw(DrawInfo* di) {
-    if(matl)matl->set(di);
+    if(matl)
+	di->push_matl(matl);
     glBegin(GL_POINTS);
     glVertex3d(p1.x(), p1.y(), p1.z());
     glEnd();
+    if(matl)
+	di->pop_matl();
 }
 
 BBox GeomPt::bbox() {
@@ -199,20 +302,44 @@ void MaterialProp::set(DrawInfo* di)
 {
     if(this==di->current_matl)
 	return;
-    di->current_matl=this;
     float color[4];
-    ambient.get_color(color);
-    glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, color);
-    diffuse.get_color(color);
-    glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, color);
-    specular.get_color(color);
-    glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, color);
-    emission.get_color(color);
-    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, shininess);
-    glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, color);
+    di->current_matl=this;
+    switch(di->drawtype){
+    case DrawInfo::WireFrame:
+    case DrawInfo::Flat:
+	diffuse.get_color(color);
+	glColor4fv(color);
+	break;
+    case DrawInfo::Gouraud:
+    case DrawInfo::Phong:
+	ambient.get_color(color);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, color);
+	diffuse.get_color(color);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, color);
+	specular.get_color(color);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, color);
+	emission.get_color(color);
+	glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, shininess);
+	glMaterialfv(GL_FRONT_AND_BACK, GL_EMISSION, color);
+	break;
+    }
 }
 
 DrawInfo::DrawInfo()
 : current_matl(0)
 {
+}
+
+void DrawInfo::push_matl(MaterialProp* matl)
+{
+    stack.push(matl);
+    matl->set(this);
+}
+
+void DrawInfo::pop_matl()
+{
+    stack.pop();
+    if(stack.size()>0){
+	stack.top()->set(this);
+    }
 }

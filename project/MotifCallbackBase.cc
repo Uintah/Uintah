@@ -120,6 +120,10 @@ void MotifCallbackBase::dispatch(void* data)
     CallbackData* cbdata=0;
     if(cloner)
 	cbdata=(*cloner)(data);
+    int size=mailbox->size();
+    int nitems=mailbox->nitems();
+    if(nitems >= (size>>1))
+	cerr << "WARNING: Mailbox getting full: " << nitems << "/" << size << endl;
     mailbox->send(new Callback_Message(this, cbdata));
 }
 

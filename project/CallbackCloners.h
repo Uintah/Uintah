@@ -42,6 +42,7 @@ public:
     static CallbackData* selection_clone(void*);
     static CallbackData* event_clone(void*);
     static CallbackData* list_clone(void*);
+    static CallbackData* gl_clone(void*);
 };
 
 #endif

@@ -246,7 +246,7 @@ static void draw_shadow(Display* dpy, Window win, GC gc,
 void UserModule::redraw_widget(CallbackData*, void*)
 {
     if(need_reconfig){
-	need_reconfig=1;
+	need_reconfig=0;
 	reconfigure_iports();
 	reconfigure_oports();
     }
@@ -679,3 +679,4 @@ int UserModule::compute_width()
     int x=np*port_spacing+2*(MODULE_EDGE_WIDTH+MODULE_SIDE_BORDER);
     return Max(x, w);
 }
+

@@ -24,10 +24,16 @@
 #include <Mt/FileSelectionBox.h>
 #include <Mt/List.h>
 #include <Mt/Scale.h>
+#include <GL/GLwMDrawA.h>
 
 CallbackData* CallbackCloners::event_clone(void* event)
 {
     return new CallbackData((XEvent*)event);
+}
+
+CallbackData* CallbackCloners::gl_clone(void* event)
+{
+    return new CallbackData(((GLwDrawingAreaCallbackStruct*)event)->event);
 }
 
 CallbackData* CallbackCloners::scale_clone(void* vdata)
