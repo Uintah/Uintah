@@ -59,9 +59,11 @@ void HypoElasticImplicit::initializeCMData(const Patch* patch,
   }
 }
 
-void HypoElasticImplicit::allocateCMData(DataWarehouse* new_dw,
-					  ParticleSubset* subset,
-					  map<const VarLabel*, ParticleVariableBase*>* newState)
+void HypoElasticImplicit::allocateCMDataAdd(DataWarehouse* new_dw,
+					    ParticleSubset* subset,
+					    map<const VarLabel*, ParticleVariableBase*>* newState,
+					    ParticleSubset* delset,
+					    DataWarehouse* old_dw)
 {
    // Put stuff in here to initialize each particle's
    // constitutive model parameters and deformationMeasure

@@ -74,6 +74,12 @@ void ConstitutiveModel::addComputesAndRequires(Task*,
 }
 
 
+void ConstitutiveModel::allocateCMDataAddRequires(Task*, const MPMMaterial*,
+						  const PatchSet*,
+						  MPMLabel*) const
+{
+}
+
 void ConstitutiveModel::addRequiresDamageParameter(Task*, 
 						   const MPMMaterial*,
 						   const PatchSet*) const
