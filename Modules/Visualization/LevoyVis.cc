@@ -1344,11 +1344,11 @@ LevoyS::Eleven ( const Point& eye, Vector& step,
   
   /* DAVES */
 
-  // calculate the length from the eye to the DepthBuffer based point
-  // in space
-
 /*   int templength = step.length() * ( clipConst * DepthBuffer(x,y) +
      nearTohome ); */
+
+  // calculate the length from the eye to the DepthBuffer based point
+  // in space
 
   int templength = step.length() * ( clipConst *
 		   geom->depthbuffer->get_depth(px,py) + nearTohome );
@@ -1356,10 +1356,7 @@ LevoyS::Eleven ( const Point& eye, Vector& step,
   // compare the 2 lengths, pick the shorter one
 
   if ( templength < mylength )
-    {
       mylength = templength;
-      cerr << "U";
-    }
     
   /* END DAVES */
 
@@ -1531,6 +1528,18 @@ LevoyS::Twelve ( const Point& eye, Vector& step,
     cerr << "T";
     
     */
+  
+  // calculate the length from the eye to the DepthBuffer based point
+  // in space
+
+  int templength = step.length() * ( clipConst *
+		   geom->depthbuffer->get_depth(px,py) + nearTohome );
+
+  // compare the 2 lengths, pick the shorter one
+
+  if ( templength < mylength )
+      mylength = templength;
+    
 
   // find step vector
   
@@ -1593,10 +1602,16 @@ LevoyS::Twelve ( const Point& eye, Vector& step,
   // therefore don't add the background color to the accumulated one.
   
   if ( contribution > EpsilonContribution )
-    accumulatedColor = backgroundColor * contribution + accumulatedColor;
+    accumulatedColor = geom->colorbuffer->get_pixel(px,py) * contribution +
+      accumulatedColor;
 
   // DAVES  
 //    accumulatedColor = BackgroundBuffer(px,py) * contribution + accumulatedColor;
+
+  /* DAVES */
+
+
+  /* END DAVES */
 
   return accumulatedColor;
 }
@@ -1692,6 +1707,17 @@ LevoyS::Thirteen ( const Point& eye, Vector& step,
     
     */
 
+  // calculate the length from the eye to the DepthBuffer based point
+  // in space
+
+  int templength = step.length() * ( clipConst *
+		   geom->depthbuffer->get_depth(px,py) + nearTohome );
+
+  // compare the 2 lengths, pick the shorter one
+
+  if ( templength < mylength )
+      mylength = templength;
+    
   // find step vector
   
   step.normalize();
@@ -1746,11 +1772,16 @@ LevoyS::Thirteen ( const Point& eye, Vector& step,
   // if contribution is minute, the background is not visible
   // therefore don't add the background color to the accumulated one.
   
-  if ( contribution > EpsilonContribution )
-    accumulatedColor = backgroundColor * contribution + accumulatedColor;
-
 // DAVES    
 //    accumulatedColor = BackgroundBuffer(px,py) * contribution + accumulatedColor;
+
+  /* DAVES */
+
+  if ( contribution > EpsilonContribution )
+    accumulatedColor = geom->colorbuffer->get_pixel(px,py) * contribution +
+      accumulatedColor;
+
+  /* END DAVES */
 
   return accumulatedColor;
 }
