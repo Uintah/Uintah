@@ -23,6 +23,9 @@ SRCDIR := Core/CCA/spec
 
 $(SRCDIR)/cca.sidl:$(SRCDIR)/SCIRun2Ports.sidl $(SRCDIR)/SCIRun2Classes.sidl
 
+$(SRCDIR)/cca_sidl.cc: $(SRCDIR)/SCIRun2Ports.sidl $(SRCDIR)/SCIRun2Classes.sidl
+$(SRCDIR)/cca_sidl.h: $(SRCDIR)/SCIRun2Ports.sidl $(SRCDIR)/SCIRun2Classes.sidl
+
 SRCS := $(SRCS) $(SRCDIR)/cca.sidl $(SRCDIR)/cca_sidl.cc
 GENHDRS := $(GENHDRS) $(SRCDIR)/cca_sidl.h
 
