@@ -403,11 +403,12 @@ Volvis2DDpy::button_pressed(MouseButton button, const int x, const int y)
 	  [(int)(x/x_pixel_width/500.0f*(float)textureWidth)][3] );*/
   switch( button )
     {
-    case MouseButton1:	
+      /*    case MouseButton1:	
       pickShape( button, x, y );
       if( pickedIndex >= 0 )
 	{
-	  widgets[pickedIndex]->changeColor( 0.0, 0.6, 0.85 );
+	  printf( "%d\n", widgets.size() );
+	  //widgets[pickedIndex]->changeColor( 0.0, 0.6, 0.85 );
 	  if( pickedIndex > 0 )
 	    widgets[pickedIndex-1]->changeColor( 0.85, 0.6, 0.6 );
 	} // if
@@ -420,7 +421,7 @@ Volvis2DDpy::button_pressed(MouseButton button, const int x, const int y)
 	  widgets[pickedIndex]->drawFlag = 6;
 	  redraw = true;
 	} // else if
-      break;
+	break;*/
       // case MouseButton1
     case MouseButton2:
       addWidget( x, y );
