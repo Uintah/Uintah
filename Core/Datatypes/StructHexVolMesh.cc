@@ -271,7 +271,7 @@ StructHexVolMesh::locate(Node::index_type &node, const Point &p)
 
 void
 StructHexVolMesh::get_weights(const Point &p,
-			Cell::array_type &l, vector<double> &w)
+			      Cell::array_type &l, vector<double> &w)
 {
   Cell::index_type idx;
   if (locate(idx, p))
@@ -308,7 +308,7 @@ tet_vol6(const Point &p1, const Point &p2, const Point &p3, const Point &p4)
 // Tet inside test, cut and pasted from TetVolMesh.cc
 static bool
 tet_inside_p(const Point &p, const Point &p0, const Point &p1,
-	  const Point &p2, const Point &p3)
+	     const Point &p2, const Point &p3)
 {
   const double x0 = p0.x();
   const double y0 = p0.y();
