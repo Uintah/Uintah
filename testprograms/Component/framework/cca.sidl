@@ -86,7 +86,7 @@ package sci_cca {
   };
 
   interface RegistryServices extends Port {
-    void getActiveComponentList( out array<string> components );
+    void getActiveComponentList( out array<ComponentID> componentIds );
     void shutdown();  // Tells the framework to quit.  Here for now
                       // as I don't have a better place to put it yet.
   };
