@@ -75,7 +75,7 @@ WARNING
     //////////
     // Call this after all other tasks have been added to the scheduler
     virtual void finalizeTimestep(double t, double delt, const GridP&,
-				  SchedulerP&) = 0;
+				  SchedulerP&, bool = false) = 0;
 
     //////////
     // Call this after the timestep has been executed.
