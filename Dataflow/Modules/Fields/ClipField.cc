@@ -58,6 +58,8 @@ private:
   ClipperHandle clipper_;
   stack<ClipperHandle> undo_stack_;
 
+  bool bbox_similar_to(const BBox &a, const BBox &b);
+
 public:
   ClipField(const string& id);
   virtual ~ClipField();
@@ -88,6 +90,43 @@ ClipField::ClipField(const string& id)
 
 ClipField::~ClipField()
 {
+}
+
+
+static bool
+check_ratio(double x, double y, double lower, double upper)
+{
+  if (fabs(x) < 1e-6)
+  {
+    if (!(fabs(y) < 1e-6))
+    {
+      return false;
+    }
+  }
+  else
+  {
+    const double ratio = y / x;
+    if (ratio < lower || ratio > upper)
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
+
+bool
+ClipField::bbox_similar_to(const BBox &a, const BBox &b)
+{
+  return 
+    a.valid() &&
+    b.valid() &&
+    check_ratio(a.min().x(), b.min().x(), 0.5, 2.0) &&
+    check_ratio(a.min().y(), b.min().y(), 0.5, 2.0) &&
+    check_ratio(a.min().z(), b.min().z(), 0.5, 2.0) &&
+    check_ratio(a.min().x(), b.min().x(), 0.5, 2.0) &&
+    check_ratio(a.min().y(), b.min().y(), 0.5, 2.0) &&
+    check_ratio(a.min().z(), b.min().z(), 0.5, 2.0);
 }
 
 
@@ -143,46 +182,61 @@ ClipField::execute()
     clipper_ = algo->execute(cfieldhandle->mesh());
     do_clip_p = true;
   }
-  else
+
+  // Update the widget.
+  BBox obox = ifieldhandle->mesh()->get_bounding_box();
+  if (!bbox_similar_to(last_bounds_, obox))
   {
-    // Update the widget.
-    BBox obox = ifieldhandle->mesh()->get_bounding_box();
-    if (!(last_bounds_.valid() && obox.valid() &&
-	  obox.min() == last_bounds_.min() &&
-	  obox.max() == last_bounds_.max()))
+    const BBox bbox = ifieldhandle->mesh()->get_bounding_box();
+      
+    Point bmin = bbox.min();
+    Point bmax = bbox.max();
+
+    // Fix degenerate boxes.
+    const double size_estimate = Max((bmax-bmin).length() * 0.01, 1.0e-5);
+    if (fabs(bmax.x() - bmin.x()) < 1.0e-6)
     {
-      const BBox bbox = ifieldhandle->mesh()->get_bounding_box();
-      const Point &bmin = bbox.min();
-      const Point &bmax = bbox.max();
-
-      const Point center = bmin + Vector(bmax - bmin) * 0.25;
-      const Point right = center + Vector((bmax.x()-bmin.x())/4.0, 0, 0);
-      const Point down = center + Vector(0, (bmax.y()-bmin.y())/4.0, 0);
-      const Point in = center + Vector(0, 0, (bmax.z()-bmin.z())/4.0);
-
-      const double l2norm = (bmax - bmin).length();
-
-      box_->SetScale(l2norm * 0.015);
-      box_->SetPosition(center, right, down, in);
-
-      GeomGroup *widget_group = scinew GeomGroup;
-      widget_group->add(box_->GetWidget());
-
-      GeometryOPort *ogport=0;
-      ogport = (GeometryOPort*)get_oport("Selection Widget");
-      if (!ogport) {
-	error("Unable to initialize " + name + "'s oport.");
-	return;
-      }
-      ogport->addObj(widget_group, "ClipField Selection Widget",
-		     &widget_lock_);
-      ogport->flushViews();
-
-      last_bounds_ = obox;
-      clipper_ = 0; // Force clipper to sync with new widget.
+      bmin.x(bmin.x() - size_estimate);
+      bmax.x(bmax.x() + size_estimate);
     }
-  }
+    if (fabs(bmax.y() - bmin.y()) < 1.0e-6)
+    {
+      bmin.y(bmin.y() - size_estimate);
+      bmax.y(bmax.y() + size_estimate);
+    }
+    if (fabs(bmax.z() - bmin.z()) < 1.0e-6)
+    {
+      bmin.z(bmin.z() - size_estimate);
+      bmax.z(bmax.z() + size_estimate);
+    }
 
+    const Point center = bmin + Vector(bmax - bmin) * 0.25;
+    const Point right = center + Vector((bmax.x()-bmin.x())/4.0, 0, 0);
+    const Point down = center + Vector(0, (bmax.y()-bmin.y())/4.0, 0);
+    const Point in = center + Vector(0, 0, (bmax.z()-bmin.z())/4.0);
+
+    const double l2norm = (bmax - bmin).length();
+
+    box_->SetScale(l2norm * 0.015);
+    box_->SetPosition(center, right, down, in);
+
+    GeomGroup *widget_group = scinew GeomGroup;
+    widget_group->add(box_->GetWidget());
+
+    GeometryOPort *ogport=0;
+    ogport = (GeometryOPort*)get_oport("Selection Widget");
+    if (!ogport) {
+      error("Unable to initialize " + name + "'s oport.");
+      return;
+    }
+    ogport->addObj(widget_group, "ClipField Selection Widget",
+		   &widget_lock_);
+    ogport->flushViews();
+
+    last_bounds_ = obox;
+    // Force clipper to sync with new widget.
+    if (!clipper_->mesh_p()) { clipper_ = 0; }
+  }
 
   if (!clipper_.get_rep())
   {
