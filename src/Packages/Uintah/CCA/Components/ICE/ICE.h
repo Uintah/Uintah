@@ -591,6 +591,7 @@ namespace Uintah {
       bool switchDebug_PressFC;
       bool switchDebugLagrangianValues;
       bool switchDebugLagrangianSpecificVol;
+      bool switchDebugLagrangianTransportedVars;
       bool switchDebugMomentumExchange_CC;
       bool switchDebugSource_Sink;
       bool switchDebug_advance_advect;
