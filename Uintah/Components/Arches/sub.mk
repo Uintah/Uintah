@@ -7,7 +7,11 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Uintah/Components/Arches
 
-SRCS     += $(SRCDIR)/Arches.cc
+SRCS     += $(SRCDIR)/Arches.cc 
+
+#$(SRCDIR)/Discretization.cc \
+#	$(SRCDIR)/NonlinearSolver.cc $(SRCDIR)/PicardNonlinearSolver.cc \
+#	$(SRCDIR)/PressureSolver.cc
 
 PSELIBS := Uintah/Parallel Uintah/Interface
 LIBS :=
@@ -16,6 +20,10 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.3  2000/03/21 18:52:50  sparker
+# Fixed compilation errors in Arches.cc
+# use new problem spec class
+#
 # Revision 1.2  2000/03/20 19:38:20  sparker
 # Added VPATH support
 #

@@ -36,9 +36,11 @@ WARNING
 #include "NonlinearSolver.h"
 
 
+namespace Uintah {
+    namespace Components {
 
 #ifndef LACKS_NAMESPACE
-using namespace UINTAH;
+using namespace Uintah::Components;
 #endif
 
 class PressureSolver;
@@ -70,9 +72,11 @@ public:
   // The code returns 0 if there are no errors and
   // 1 if there is a nonlinear failure.
   //    [in] data User data needed for solve 
-  virtual int nonlinearSolve(Arches* integrator);
+  virtual int nonlinearSolve(const LevelP&, SchedulerP& sched,
+			     const DataWarehouseP& old_dw,
+			     DataWarehouseP& new_dw);
   
-  virtual void problemSetup(DatabaseP& input_db);
+  virtual void problemSetup(ProblemSpecP& input_db);
 private:
   // Total number of nonlinear iterates
   int d_nonlinear_its;
@@ -95,6 +99,9 @@ private:
   TurbulenceModel* d_turbModel;
   
 };
+
+    }
+}
 
 #endif
 

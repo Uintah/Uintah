@@ -34,8 +34,11 @@ WARNING
 
 #include "Arches.h"
 
+namespace Uintah {
+    namespace Components {
+
 #ifndef LACKS_NAMESPACE
-using namespace UINTAH;
+using namespace Uintah::Components;
 #endif
 
 
@@ -58,13 +61,17 @@ public:
   ////////////////////////////////////////////////////////////////////////
   // Solve the nonlinear system, return some error code.
   //    [in] data User data needed for solve 
-  virtual int nonlinearSolve(Arches* integrator) = 0;
+  virtual int nonlinearSolve(const LevelP&, SchedulerP& sched,
+			     const DataWarehouseP& old_dw,
+			     DataWarehouseP& new_dw) = 0;
   
-  virtual void problemSetup(DatabaseP& db) = 0;
+  virtual void problemSetup(ProblemSpecP& db) = 0;
 
 private:
 
 };
+    }
+}
 
 #endif
 
