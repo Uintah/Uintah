@@ -2286,6 +2286,7 @@ class BioTensorApp {
         disableModule $mods(TendEpireg) 1
 	disableModule $mods(UnuJoin) 1
         disableModule $mods(ChooseNrrd-ToReg) 1
+        disableModule $mods(RescaleColorMap2) 1
 
 	# DT Smoothing is intially turned off
 	disableModule $mods(UnuResample-XY) 1
@@ -5034,6 +5035,7 @@ class BioTensorApp {
 		disableModule $mods(ChooseNrrd-ToReg) 0
 		disableModule $mods(UnuJoin) 0
 		disableModule $mods(ChooseNrrd-ToReg) 0
+		disableModule $mods(RescaleColorMap2) 0
 	    }
 	    
 	    # activate reg variance checkbutton
