@@ -43,6 +43,8 @@ using namespace std;
 const string OTF_SRC_DIR(ON_THE_FLY_SRC);
 const string OTF_OBJ_DIR(ON_THE_FLY_OBJ);
 
+DynamicLoader* DynamicLoader::scirun_loader_ = 0;
+Mutex DynamicLoader::scirun_loader_lock_("DynamicLoader: static instance");
 
 CompileInfo::CompileInfo(const string &fn, const string &bcn, 
 			 const string &tcn, const string &tcdec) :
@@ -55,19 +57,109 @@ CompileInfo::CompileInfo(const string &fn, const string &bcn,
 }
 
 
-DynamicLoader::DynamicLoader() 
+DynamicLoader::DynamicLoader() :
+  map_crowd_("DynamicLoader: One compilation at a time."),
+  compilation_cond_("DynamicLoader: waits for compilation to finish."),
+  map_lock_("DynamicLoader: controls mutable access to the map."),
+  condit_mutex_("DynamicLoader: supports condition variable.")
 {
+  map_lock_.lock();
   algo_map_.clear();
+  map_lock_.unlock();
 }
 
 DynamicLoader::~DynamicLoader() 
 {
+  map_lock_.lock();
   algo_map_.clear();
+  map_lock_.unlock();
 }
 
+DynamicLoader& 
+DynamicLoader::scirun_loader() {
+  if (scirun_loader_ == 0) {
+    scirun_loader_lock_.lock();
+    if (scirun_loader_ == 0) {
+      scirun_loader_ = new DynamicLoader;
+    }
+    scirun_loader_lock_.unlock();
+  }
+  return *scirun_loader_;
+};
+
+//! DynamicLoader::entry_exists
+//! 
+//! Convenience function to query the map, but thread safe.
+bool 
+DynamicLoader::entry_exists(const string &entry)
+{
+  map_lock_.lock();
+  bool rval = algo_map_.find(entry) != algo_map_.end();
+  map_lock_.unlock();
+  return rval;
+}
+
+//! DynamicLoader::entry_is_null
+//! 
+//! Convenience function to query the value in the map, but thread safe.
+bool 
+DynamicLoader::entry_is_null(const string &entry)
+{
+  map_lock_.lock();
+  bool rval =  (algo_map_.find(entry) != algo_map_.end() && 
+		algo_map_[entry] == 0);
+  map_lock_.unlock();
+  return rval;
+}
+
+//! DynamicLoader::wait_for_current_compile
+//! 
+//! Block if the lib associated with entry is compiling now.
+//! The only way false is returned, is for the compile to fail.
+bool
+DynamicLoader::wait_for_current_compile(const string &entry)
+{
+  while (entry_is_null(entry)) {
+    // another thread is compiling this lib, so wait.
+    condit_mutex_.lock();
+    compilation_cond_.wait(condit_mutex_);
+    condit_mutex_.unlock();
+  }
+  // if the map entry no longer exists, compilation failed.
+  if (! entry_exists(entry)) return false;
+  // The maker fun has been stored by another thread.
+  ASSERT(! entry_is_null(entry));
+  return true;
+}
+
+//! DynamicLoader::compile_and_store
+//! 
+//! Compile and store the maker function mapped to the lib name.
+//! The sychronization code allows multiple threads to compile different
+//! libs at the same time, but forces only one thread can compile any one
+//! lib.
 bool
 DynamicLoader::compile_and_store(const CompileInfo &info)
-{
+{  
+  bool do_compile = false;
+  
+  if (! entry_exists(info.filename_)) {
+    // first attempt at creation of this lib
+    map_crowd_.writeLock();
+    if (! entry_exists(info.filename_)) {
+      // create an empty entry, to catch threads chasing this one.
+      map_lock_.lock();
+      algo_map_[info.filename_] = 0; 
+      map_lock_.unlock();
+      do_compile = true; // this thread is compiling.
+    } 
+    map_crowd_.writeUnlock();
+  }
+
+  if (! do_compile) {
+    if (! wait_for_current_compile(info.filename_)) return false;
+  }
+
   // Try to load a .so that is already compiled
   string full_so = OTF_OBJ_DIR + string("/") + 
     info.filename_ + string("so");
@@ -78,15 +170,22 @@ DynamicLoader::compile_and_store(const CompileInfo &info)
     compile_so(info.filename_); // make sure
     so = GetLibraryHandle(full_so.c_str());
   } else {
-    // the so does not exist.    
+    // the lib does not exist.  
     create_cc(info);
     compile_so(info.filename_);
     so = GetLibraryHandle(full_so.c_str());
 
     if (so == 0) { // does not compile
+      cerr << "does not compile" << endl;
       cerr << "DYNAMIC COMPILATION ERROR: " << full_so 
 	   << " does not compile!!" << endl;
       cerr << SOError() << endl;
+      // Remove the null ref for this lib from the map.
+      map_lock_.lock();
+      algo_map_.erase(info.filename_);
+      map_lock_.unlock();
+      // wake up all sleepers.
+      compilation_cond_.conditionBroadcast();
       return false;
     }
   }
@@ -98,10 +197,18 @@ DynamicLoader::compile_and_store(const CompileInfo &info)
     cerr << "DYNAMIC LIB ERROR: " << full_so 
 	 << " no maker function!!" << endl;
     cerr << SOError() << endl;
+    // Remove the null ref for this lib from the map.
+    map_lock_.lock();
+    algo_map_.erase(info.filename_);
+    map_lock_.unlock();
+    // wake up all sleepers.
+    compilation_cond_.conditionBroadcast();
     return false;
   }
   // store this so that we can get at it again.
-  store(info.filename_, maker); 
+  store(info.filename_, maker);
+  // wake up all sleepers. 
+  compilation_cond_.conditionBroadcast();
   return true;
 }
 
@@ -114,7 +221,7 @@ DynamicLoader::compile_so(const string& file)
 {
   string command = "cd " + OTF_OBJ_DIR + "; gmake " + file + "so";
 
-  cout << "Executing: " << command << endl;
+  cerr << "Executing: " << command << endl;
   bool compiled =  sci_system(command.c_str()) == 0; 
   if(!compiled) {
     cerr << "DynamicLoader::compile_so() error: "
@@ -178,19 +285,29 @@ DynamicLoader::create_cc(const CompileInfo &info)
 void 
 DynamicLoader::store(const string &name, maker_fun m)
 {
+  map_lock_.lock();
   algo_map_[name] = m;
+  map_lock_.unlock();
 }
 
 bool 
 DynamicLoader::fetch(const CompileInfo &ci, DynamicAlgoHandle &algo)
 {
+  bool rval = false;
+  // block in case we get here while it is compiling.
+  if (! wait_for_current_compile(ci.filename_)) return false;
+
+  map_crowd_.readLock();
+  map_lock_.lock();
   map_type::iterator loc = algo_map_.find(ci.filename_);
   if (loc != algo_map_.end()) {
     maker_fun m = loc->second;
     algo = DynamicAlgoHandle(m());
-    return true;
+    rval = true;
   }
-  return false;
+  map_lock_.unlock();
+  map_crowd_.readUnlock();
+  return rval;
 }
 
 bool 

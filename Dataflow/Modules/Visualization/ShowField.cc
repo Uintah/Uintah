@@ -107,7 +107,6 @@ class ShowField : public Module
   //! Refinement resolution for cylinders and spheres
   GuiInt                   resolution_;
   int                      res_;
-  DynamicLoader            loader_;
   DynamicAlgoHandle        renderer_;
 
 public:
@@ -183,7 +182,7 @@ ShowField::execute()
 
     // Get the Algorithm.
     CompileInfo *ci = RenderFieldBase::get_compile_info(td);
-    if (! loader_.get(*ci, renderer_)) {
+    if (! DynamicLoader::scirun_loader().get(*ci, renderer_)) {
       fld_gen_ = -1;
       error("Could not compile algorithm for ShowField -");
       error(td->get_name().c_str());
