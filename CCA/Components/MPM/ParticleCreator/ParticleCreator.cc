@@ -76,12 +76,14 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     vector<double>* volumes = 0;
     if (sgp) volumes = sgp->getVolume();
 
-    int i = 0;
-    vector<Point>::const_iterator itr;
-    geompoints::key_type key(patch,*obj);
     vector<double>::const_iterator voliter;
     geomvols::key_type volkey(patch,*obj);
-    if (volumes) voliter = d_object_vols[volkey].begin();
+    if (volumes) {
+      if (!volumes->empty()) voliter = d_object_vols[volkey].begin();
+    }
+
+    vector<Point>::const_iterator itr;
+    geompoints::key_type key(patch,*obj);
     for (itr=d_object_points[key].begin();itr!=d_object_points[key].end(); 
 	 ++itr) {
       
@@ -89,15 +91,17 @@ ParticleCreator::createParticles(MPMMaterial* matl,
       if (!patch->findCell(*itr,cell_idx)) continue;
       
       particleIndex pidx = start+count;      
-      //cout << "Point["<<pidx<<"]="<<*itr<<" Cell = "<<cell_idx<<endl;
+      //cerr << "Point["<<pidx<<"]="<<*itr<<" Cell = "<<cell_idx<<endl;
  
       initializeParticle(patch,obj,matl,*itr,cell_idx,pidx,
 			 cellNAPID);
       
       if (volumes) {
-	pvolume[pidx] = *voliter;
-        pmass[pidx] = matl->getInitialDensity()*pvolume[pidx];
-        ++voliter;
+        if (!volumes->empty()) {
+    	  pvolume[pidx] = *voliter;
+          pmass[pidx] = matl->getInitialDensity()*pvolume[pidx];
+          ++voliter;
+        }
       }
       
       // If the particle is on the surface and if there is
@@ -111,7 +115,6 @@ ParticleCreator::createParticles(MPMMaterial* matl,
 	}
       }
       count++;
-      i++;
     }
     start += count;
   }
@@ -128,7 +131,7 @@ ParticleCreator::getLoadCurveID(const Point& pp, const Vector& dxpp)
   for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
     string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
         
-    //cout << " BC Type = " << bcs_type << endl;
+    //cerr << " BC Type = " << bcs_type << endl;
     if (bcs_type == "Pressure") {
       PressureBC* pbc = 
         dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
@@ -163,7 +166,7 @@ ParticleCreator::applyForceBC(const Vector& dxpp,
   for (int i = 0; i<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); i++){
     string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[i]->getType();
         
-    //cout << " BC Type = " << bcs_type << endl;
+    //cerr << " BC Type = " << bcs_type << endl;
     if (bcs_type == "Force") {
       ForceBC* bc = dynamic_cast<ForceBC*>
 	(MPMPhysicalBCFactory::mpmPhysicalBCs[i]);
@@ -173,10 +176,10 @@ ParticleCreator::applyForceBC(const Vector& dxpp,
       const Box bcBox(bc->getLowerRange()-dxpp, 
                       bc->getUpperRange()+dxpp);
 #endif           
-      //cout << "BC Box = " << bcBox << " Point = " << pp << endl;
+      //cerr << "BC Box = " << bcBox << " Point = " << pp << endl;
       if(bcBox.contains(pp)) {
         pExtForce = bc->getForceDensity() * pMass;
-        //cout << "External Force on Particle = " << pExtForce 
+        //cerr << "External Force on Particle = " << pExtForce 
         //     << " Force Density = " << bc->getForceDensity() 
         //     << " Particle Mass = " << pMass << endl;
       }
@@ -432,7 +435,7 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
       p = points->at(ii);
       if (patch->findCell(p,cell_idx)) {
         d_object_points[key].push_back(p);
-        if (vols) {
+        if (!vols->empty()) {
           double vol = vols->at(ii); 
           d_object_vols[volkey].push_back(vol);
         }
