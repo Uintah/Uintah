@@ -49,9 +49,9 @@ class BuildHexFEMatrix {
   ReferenceElement *rE_;
   SparseRowMatrix *dA_;
 
-  void buildLocalMatrix(double localMatrix[8][8], HexVolMesh::Cell::index_type c_ind, int ci, HexVolMesh::Node::array_type& cell_nodes);
-  void addLocal2GlobalMatrix(double localMatrix[8][8], HexVolMesh::Cell::index_type c_ind, HexVolMesh::Node::array_type& cell_nodes);
-  double getLocalMatrixEntry(HexVolMesh::Cell::index_type c_ind, int ci, int i, int j, HexVolMesh::Node::array_type& cell_nodes);
+  void buildLocalMatrix(double localMatrix[8][8], int ci, HexVolMesh::Node::array_type& cell_nodes);
+  void addLocal2GlobalMatrix(double localMatrix[8][8], HexVolMesh::Node::array_type& cell_nodes);
+  double getLocalMatrixEntry(int ci, int i, int j, HexVolMesh::Node::array_type& cell_nodes);
   int getAllNeighbors(HexVolMesh::Node::index_type nii, int *index);
   void sortNodes(int *index, int length);
 

@@ -90,15 +90,14 @@ MatrixHandle BuildHexFEMatrix::buildMatrix() {
   hMesh_->begin(ii);
   hMesh_->end(ie);
   double localMatrix[8][8];
-  j = 0;
   HexVolMesh::Node::array_type cell_nodes(8);
 
   // loop over cells
   for(; ii != ie; ++ii) {
 	hMesh_->get_nodes(cell_nodes, *ii);
-	buildLocalMatrix(localMatrix, *ii, j, cell_nodes);
-	addLocal2GlobalMatrix(localMatrix, *ii, cell_nodes);
-	j++;
+	j = hField_->value(*ii); // get index of the cell (data location must be at cell !!!)
+	buildLocalMatrix(localMatrix, j, cell_nodes);
+	addLocal2GlobalMatrix(localMatrix, cell_nodes);
   }
 
   MatrixHandle hM(dA_);
@@ -106,18 +105,18 @@ MatrixHandle BuildHexFEMatrix::buildMatrix() {
   
 }
 
-void BuildHexFEMatrix::buildLocalMatrix(double localMatrix[8][8], HexVolMesh::Cell::index_type c_ind, int ci, HexVolMesh::Node::array_type& cell_nodes) {
+void BuildHexFEMatrix::buildLocalMatrix(double localMatrix[8][8], int ci, HexVolMesh::Node::array_type& cell_nodes) {
 
   // compute matrix entries
   for(int i=0; i<8; i++) { // loop over nodes (basis functions)
 	for(int j=0; j<8; j++) { // loop over nodes (basis functions)
-	  localMatrix[i][j] = getLocalMatrixEntry(c_ind,ci,i,j, cell_nodes);  
+	  localMatrix[i][j] = getLocalMatrixEntry(ci,i,j, cell_nodes);  
 	}
   }
   
 }
 
-double BuildHexFEMatrix::getLocalMatrixEntry(HexVolMesh::Cell::index_type c_ind, int ci, int i, int j, HexVolMesh::Node::array_type& cell_nodes) {
+double BuildHexFEMatrix::getLocalMatrixEntry(int ci, int i, int j, HexVolMesh::Node::array_type& cell_nodes) {
   double value = 0.0;
   int w;
   double xa, xb, ya, yb, za, zb;
@@ -156,14 +155,13 @@ double BuildHexFEMatrix::getLocalMatrixEntry(HexVolMesh::Cell::index_type c_ind,
 
 }
 
-void BuildHexFEMatrix::addLocal2GlobalMatrix(double localMatrix[8][8], HexVolMesh::Cell::index_type c_ind, HexVolMesh::Node::array_type& cell_nodes) {
+void BuildHexFEMatrix::addLocal2GlobalMatrix(double localMatrix[8][8], HexVolMesh::Node::array_type& cell_nodes) {
   // get global matrix indices
   for(int i=0; i<8; i++) {
-	int row = (int)cell_nodes[i]; //hField_->value(cell_nodes[i]);
+	int row = (int)cell_nodes[i]; 
 	for(int j=0; j<8; j++) {
-	  int col = (int)cell_nodes[j]; //hField_->value(cell_nodes[j]);
+	  int col = (int)cell_nodes[j]; 
 	  dA_->get(row, col) += localMatrix[i][j];
-	  //dA2_->get(row, col) += localMatrix[i][j];
 	}
   }
 }
