@@ -59,8 +59,8 @@ Chapter 6 demonstrated how to combine simulation and visualization
 components to form a complete dataflow network.  While the
 visualization components were dynamic (<i>i.e.</i>, changing the
 isovalue or streamline seed positions changed the visualization), the
-models were static.  The final chapter in this tutorial illustrates
-adding a feedback module that will allow the user to change the
+models were static. Chapter 7 illustrates
+adding a feedback module that  allows the user to change the
 position of the dipole model, and interactively visualize the results.
 	
 <H2><A name="section-1">ShowDipoles</A></H2>
@@ -78,34 +78,32 @@ src="images/figures/chap7-network.gif"><br>
 <b>Figure 7.1: ShowDipoles Added to the Chapter 6 Network</b></p>
 </center>
 <p>
-The ShowDipoles module has two outputs: a Field and a geometry
+The ShowDipoles module has two outputs; a Field and a geometry
 object. The geometry object attaches to the Viewer module, graphically
-depicting the dipoles as arrow widgets. Dipoles in the same way as the
-streamlines widget in <A href="chapter_3.html#section-4">Chapter 3,
-Controlling Widgets</A>. At each release of the mouse mouse, an
+depicting the dipoles as arrow widgets. At each release of the mouse, an
 updated version of the dipole positions passes through the Field
-output port and into the ApplyFEMCurrentSource module.
+output port, and into the ApplyFEMCurrentSource module.
 <p>
 The ShowDipoles UI (<b>Figure 7.2</b>) has several configuration
 options for controlling how the dipoles are graphically displayed. In
 the ShowDipoles UI:
 <p>
 <ol>
-   <li value="1.">Select the Normalize Largest radio button.
-   <li>Set the Widget Size to 10.
-   <li>Select Show Last As Vector.
-   <li>Unselect Show Lines.
+   <li value="1.">Select the Normalize Largest radio button.</p>
+   <li>Set the Widget Size to 10.</p>
+   <li>Select Show Last As Vector.</p>
+   <li>Unselect Show Lines.</p>
 </ol>	
 <p>
 These options result in a set of dipoles with uniformly scaled
-lengths. The longest vector now has a length 10.
+lengths. The longest vector is now a length 10.
 <P>
 <center>
 <img width="361" height="218" src="images/figures/7_1.gif"><br>
 <b>Figure 7.2: ShowDipoles UI</b></p>
 </center>
 <p>
-As the result of connecting the ShowDipoles module, there is a
+Connecting the ShowDipoles modul results in a 
 complete forward finite element network.  <b>Figure 7.3</b> contains
 the resulting visualization that appears in the ViewWindow.  This is
 the same net provided in the SCIRun software installation
@@ -117,8 +115,8 @@ as:Packages/BioPSE/nets/forward-fem.net
 </center>
 <p>
 The white arrows in <b>Figure7.3</b> indicate that the widget can be
-moved around to interactively rotate and shift the rake widget (these
-arrows will not appear in the ViewWindow when the user builds this
+moved around to interactively rotate and shift the rake widget (the
+arrows do not appear in the ViewWindow when the user builds this
 network).
 <P>
 <H2><A name="summary">Summary</A></H2>

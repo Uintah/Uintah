@@ -109,19 +109,19 @@ net created in <a href="chapter_1.html#chapter1">Chapter 1</a>.
 <OL>
   <LI> First, open the SCIRun environment and load
        show-torso-mesh.net located in <b>../SCIRun/src/nets</b> (as
-       saved in Chapter 1).
+       saved in Chapter 1).</p>
 
   <LI> Now, add both modules: GenStandardColorMap and RescaleColorMap,
-       located under the SCIRun/Visualization menu (see <b>Figure 2.1</b>).
+       located under the SCIRun/Visualization menu (see <b>Figure 2.1</b>).</p>
 
   <LI> Connect the output from GenStandardColorMaps to the input of
-       RescaleColorMap.
+       RescaleColorMap.</p>
 
   <LI> Connect the output from the FieldReader to the other input port
-       of RescaleColorMap.
+       of RescaleColorMap.</p>
 
-  <LI>Finally, connect the output from RescaleColorMap to the input of
-       ShowField.
+  <LI> Finally, connect the output from RescaleColorMap to the input of
+       ShowField.</p>
 </OL> 
 
 The network should be similar to <b>Figure 2.1</b>.
@@ -151,16 +151,16 @@ To complete this net, read in a Field.
         utahtorso-lowres-electrodes.pcd.fld (a point cloud of
         electrode positions, with voltages measured from a single
         instant in time). There may be a brief wait while several
-        modules dynamically compile code.
+        modules dynamically compile code.</p>
 
    <LI> Select the Autoview option in the ViewWindow and rotate the
-        image downward.
+        image downward.</p>
 
    <LI> In the ShowField UI, change the Node Scale to 6.The Node
-        Display Type should already be set to Spheres.
+        Display Type should already be set to Spheres.</p>
 
    <LI> An image similar to <b>Figure 2.2</b> should appear in the
-        ViewWindow.
+        ViewWindow.</p>
 </OL>
 
 <center> <img width="550" height="474" src="images/figures/2_3.gif"><br>
@@ -182,28 +182,28 @@ To complete this net, read in a Field.
     Please note the following:
         <UL>
 	  <LI> A selection of standard color maps appears on the
- 	       bottom half of the window.
+ 	       bottom half of the window.</p>
 
 	  <LI> The selected color map appears at the top of the
 	       window, and has a clickable interface for changing the
 	       opacity of each color swatch in the map. The red line
 	       in the middle of the color map represents the opacity
-	       (alpha) of the color map.
+	       (alpha) of the color map.</p>
 
 	  <LI> To add additional control points, left click on the
 	       color map.  To remove additonal control points, right
-	       click on a control point.
+	       click on a control point.<p>
 
 	  <LI> The <I>Shift</I> slider skews the color map to the
-	       left or right.
+	       left or right.</p>
 
 	  <LI> The <I>Resolution</I> slider sets the number of
-	       distinct colors to be stored in the color table.
+	       distinct colors to be stored in the color table.</p>
 
-	  <LI> To generate <it>banded</it> colors, choose a low resolution.
+	  <LI> To generate <it>banded</it> colors, choose a low resolution.</p>
 
 	  <LI> For smoother color transitions, choose a higher
- 	       resolution (256 colors).
+ 	       resolution (256 colors).</p>
 
 	</UL>  
 
@@ -231,11 +231,11 @@ To complete this net, read in a Field.
 
 	<UL>
             <LI> The minimum/maximum range of the color map can be set
-                 manually or automatically.
+                 manually or automatically.</p>
 
             <LI> If the range is auto-scaled, it will correspond to
                  the minimum and maximum data values from all input
-                 Fields connected to the module.
+                 Fields connected to the module.</p>
         </UL>
                   
         Change the color map range in the RescaleColorMap UI to a

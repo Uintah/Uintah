@@ -59,28 +59,25 @@
 <H2><A name="section-0">Chapter Overview</A></H2>
 
 Chapters 1-4 discussed various dataflow programming networks.  The
-networks were built to visualize <em>existing</em> datasets. This
-chapter demonstrates the construction of a network that
+networks were built to visualize <em>existing</em> datasets. 
+Chapter 5 demonstrates the construction of a network that
 <em>computes</em> simulated voltages for a realistic volume conductor
 problem.
 <P>
-Thus far, we have used modules from the SCIRun package (packages are
-logically grouped sets of modules). <A HREF="#figure-5.1"><b>Figure
-5.1</b></A> shows a SCIRun menu bar from a build that features several
-additional packages. To learn more about packages, see <a
-HREF="../../Guide/usersguide/srug6.html#sec:packages">User's Guide
-6.0, Packages.</a> (Note: In addition to the Packages listed
-(<I>SCIRun, BioPSE</I> and <I>Teem</I>), the Menu Bar also has the
-<I>Sub-Networks</I> and <I>Help</I> menus.  Sub-Networks are a new
-addition to SCIRun (V1.20) and allow for grouping of modules together
-(eg: by functionality). See <A
-HREF="../../Guide/usersguide/srug5.html#sec:crsubnet">User's Guide,
-Chapter 5</A> for more information on Sub-Networks.  They are useful
-for hiding complexity of dataflow networks by consolidating groups of
-modules that work together into a single representation on the Network
-Editory canvas.  The <I>Help</I> menu allows the user to turn on/off
-the use of Tooltips, show the <I>About</I> splash screen, and review
-the SCIRun License.)
+Thus far, modules from the SCIRun package have been used (packages are
+logically grouped sets of modules). <b>Figure 5.1</b> shows a SCIRun menu
+bar from a build that features several additional packages. To learn
+more about packages, see User's Guide 6.0, Packages. Note that in
+addition to the Packages listed (<I>SCIRun, BioPSE</I>, and
+<I>Teem</I>), the Menu Bar has <I>Sub-Networks</I> and <I>Help</I>
+menus.  Sub-Networks are a new addition to SCIRun
+(V1.20). Sub-networks allow modules to be grouped together (e.g., by
+functionality). They are useful for hiding complexity of dataflow
+networks by consolidating groups of modules that work together into a
+single representation on the Network Editory canvas. See User's Guide,
+Chapter 5 for more information on Sub-Networks. The <I>Help</I> menu
+allows the user to turn on/off the use of Tooltips, show the
+<I>About</I> splash screen, and review the SCIRun License.
 <P>
 <center>
 <A NAME="figure-5.1">
@@ -89,8 +86,8 @@ the SCIRun License.)
 </center>
 <P>
 Modules within the SCIRun package serve as general purpose tools that
-are not targeted towards any specific application. This chapter uses
-modules from the BioPSE package which contains a set of tools
+do not target specific applications. This chapter uses
+modules from the BioPSE package, which contains a set of tools
 specifically written for modeling, simulation, and visualization of
 bioelectric field problems.
 
@@ -127,15 +124,15 @@ src="images/del.gif" align="absbottom"><img height="16" width="13"
 src="images/phi.gif" align="absbottom">) is zero where there is not a
 current source.
 <p>
-Discretizing this onto the tetrahedral domain, the divergence of the
+Discretizing Poisson's equation onto the tetrahedral domain, the divergence of the
 electric field with the stiffness matrix <font
 size="4"><b>A</b></font> is approximated. <img height="16" width="13"
 src="images/phi.gif"> is a vector composed of voltages at the
 nodes. And <font size="4"><b>b</b></font> is a source vector
-indicating the flux through the nodes -- it is only non-zero for nodes
+indicating the flux through the nodes. <font size="4"><b>b</b></font> it is only non-zero for nodes
 that are corners of elements containing a current source. Given a
 stiffness matrix, <font size="4"><b>A</b></font>, and a source vector,
-<font size="4"><b>b</b></font>, the linear system can be solved:
+<font size="4"><b>b</b></font>, the linear system:
 <P>
 <center>
 <img height="15" width="14" src="images/A.gif"><img height="16"
@@ -144,7 +141,7 @@ stiffness matrix, <font size="4"><b>A</b></font>, and a source vector,
      src="images/b.gif">
 </center>
 <p>
-to determine the potentials,<img height="16" width="13"
+ can be solved to determine the potentials,<img height="16" width="13"
 src="images/phi.gif">, through the field. Taking the gradient, <img
 height="16" width="15" src="images/del.gif"><img height="16"
 width="13" src="images/phi.gif">, obtains the electric field through
@@ -170,17 +167,16 @@ steps:
 	src="images/b.gif">, to determine the potentials at the nodes.</p>
 </ol>
 <p>
-Each of the above steps corresponds to a SCIRun module.
+Each of the above steps corresponds to a SCIRun module:
 <p>
 <ul>
-  <li>For steps 1 and 2, use 2 SCIRun/DataIO/FieldReader modules.
-  <li>For step 3, use a BioPSE/Forward/SetupFEMatrix module.
-  <li>For step 4, use a BioPSE/Forward/ApplyFEMCurrentSource module.
-  <li>And for step 5, use a SCIRun/Math/SolveMatrix module.
+  <li>For steps 1 and 2, use two SCIRun/DataIO/FieldReader modules.</p>
+  <li>For step 3, use a BioPSE/Forward/SetupFEMatrix module.</p>
+  <li>For step 4, use a BioPSE/Forward/ApplyFEMCurrentSource module.</p>
+  <li>For step 5, use a SCIRun/Math/SolveMatrix module.</p>
 </ul>
 <p>
-All modules should be connected as shown in <A
-HREF="#figure-5.2"><b>Figure 5.2</b></A>.
+All modules should be connected as shown in <b>Figure 5.2</b>.
 <p>
 <b>WARNING: Do not execute the net until all UI settings have been
    specified for each module, as described in the sections below, or
@@ -195,8 +191,8 @@ HREF="#figure-5.2"><b>Figure 5.2</b></A>.
 <H2><A name="section-3">FEM User Interface Settings</A></H2>
 
 The SetupFEMatrix module constructs a finite element stiffness matrix
-from a tetrahedral volume mesh. The user can choose to incorporate the
-local conductivity tensors into the stiffness matrix, or to use a
+from a tetrahedral volume mesh. The user can incorporate the
+local conductivity tensors into the stiffness matrix, or use a
 uniform conductivity as shown in <b>Figure 5.3</b>.  For this
 application, incorporate the local conductivity changes.
 
@@ -221,8 +217,8 @@ several methods as indicated in the UI.
 <p>
 <ol>
    <li> Beneath the Methods tab, choose Conjugate Gradient & Precond
-        (SCI) method, and set the Target Error to 0.0001.
-   <li>Set the Maximum Iterations to 200.
+        (SCI) method, and set the Target Error to 0.0001.</p>
+   <li>Set the Maximum Iterations to 200.</p>
 </ol>
 	
 <center>
@@ -234,9 +230,9 @@ Finally, for this simulation:
 <p>
 <ol>
    <li value="1.">For the FieldReader on the left, load the
-	      mesh Field utahtorso-lowres-mesh.tvt.fld.
+	      mesh Field utahtorso-lowres-mesh.tvt.fld.</p>
    <li>For the FieldReader on the right, load the
-	      dipole Field utahtorso-lowres-dipole.pcv.fld.
+	      dipole Field utahtorso-lowres-dipole.pcv.fld.</p>
 </ol>
 <p>
 The mesh field contains the tetrahedral finite element mesh, which
@@ -248,20 +244,20 @@ torso volume that functions as the bioelectric source.
 
 <H2><A name="section-4">Running The Simulation</A></H2>
 
-Execute the network, and as the simulation progresses, watch as the
-residual plot in the SolveMatrix UI converges. A finite element
-problem has just been solved.  Please save this net as it will be used
+Execute the network, and as the simulation progresses, watch the
+residual plot in the SolveMatrix UI converge. A finite element
+problem has just been solved. Save this net, it will be used
 in Chapter 6.
 
 <H2><A name="summary">Summary</A></H2>
 
-Chapter five has demonstrated the use of modules from the bioelectric
+Chapter 5 demonstrated the use of modules from the bioelectric
 problem solving environment (BioPSE) package. This chapter also
 illustrated the construction of a simulation network that computes
 simulated voltages for a realistic volume conductor problem.
 <p>
-Chapter 6 will reuse the finite element simulation network from this
-chapter, as well as the visualization network from Chapter 4.
+Chapter 6 will reuse the finite element simulation network from
+chapter 5, and the visualization network from Chapter 4.
 
 <P>
 <A href="#chapter-5">Return to Top</A>
