@@ -96,7 +96,7 @@ using std::endl;
 
 #include <GL/gl.h>
 #include <GL/glu.h>
-#if !defined(__linux) && !defined(_WIN32) && !defined(__digital__)
+#if !defined(__linux) && !defined(_WIN32) && !defined(__digital__) && !defined(_AIX)
 #include <GL/gls.h>
 #endif
 
@@ -979,7 +979,7 @@ void TexGeomGrid::draw(DrawInfoOpenGL* di, Material* matl, double)
 			  GL_NEAREST);
 	  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-#if !defined(__linux)&&!defined(_WIN32) && !defined(__digital__)
+#if !defined(__linux)&&!defined(_WIN32) && !defined(__digital__) && !defined(_AIX)
 	  glConvolutionFilter2DEXT(GL_CONVOLUTION_2D_EXT,
 				   GL_INTENSITY_EXT,
 				   conv_dim,conv_dim,
