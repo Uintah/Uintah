@@ -436,16 +436,23 @@ NrrdFieldConverter::execute(){
 	dHandle->get_tuple_indecies(dataset);
 	  
 	if( dataset[0].find( ":Scalar" ) != string::npos ) {
-	  mesh_rank = dHandle->nrrd->dim - 2;
-	  mesh_coor_rank = dHandle->nrrd->axis[ dHandle->nrrd->dim-1].size;
+	  if( dHandle->nrrd->dim == 2 ) {
+	    mesh_rank = 1;
+	    mesh_coor_rank = 1;
+	  } else {
+	    mesh_rank = dHandle->nrrd->dim - 2;
+	    mesh_coor_rank = dHandle->nrrd->axis[ dHandle->nrrd->dim-1].size;
+	  }
 	} else if( dataset[0].find( ":Vector" ) != string::npos ) {
 	  mesh_rank = dHandle->nrrd->dim - 1;
 	  mesh_coor_rank = 3;
 	}
 	  
-	if( mesh_coor_rank < 2 || 3 < mesh_coor_rank ) {
+	if( mesh_coor_rank < 1 || 3 < mesh_coor_rank ) {
 	  error( dataset[0] +
-		 " Mesh dataset does not contain 2D or 3D points." );
+		 " Mesh dataset does not contain 1D, 2D or 3D points." );
+	  cerr << mesh_coor_rank << endl;
+
 	  error_ = true;
 	  return;
 	}
@@ -622,16 +629,22 @@ NrrdFieldConverter::execute(){
 	fieldname = dataset[0];
 
 	if( dataset[0].find( ":Scalar" ) != string::npos ) {
-	  mesh_rank = dHandle->nrrd->dim - 2;
-	  mesh_coor_rank = dHandle->nrrd->axis[ dHandle->nrrd->dim-1].size;
+	  if( dHandle->nrrd->dim == 2 ) {
+	    mesh_rank = 1;
+	    mesh_coor_rank = 1;
+	  } else {
+	    mesh_rank = dHandle->nrrd->dim - 2;
+	    mesh_coor_rank = dHandle->nrrd->axis[ dHandle->nrrd->dim-1].size;
+	  }
 	} else if( dataset[0].find( ":Vector" ) != string::npos ) {
 	  mesh_rank = dHandle->nrrd->dim - 1;
 	  mesh_coor_rank = 3;
 	}
 	  
-	if( mesh_coor_rank < 2 || 3 < mesh_coor_rank ) {
+	if( mesh_coor_rank < 1 || 3 < mesh_coor_rank ) {
 	  error( dataset[0] +
-		 " Mesh dataset does not contain 2D or 3D points." );
+		 " Mesh dataset does not contain 1D, 2D or 3D points." );
+	  cerr << mesh_coor_rank << endl;
 	  error_ = true;
 	  return;
 	}
@@ -756,11 +769,14 @@ NrrdFieldConverter::execute(){
 	    dataset[0].find( ":Scalar" ) != string::npos )
 	  mesh_coor_rank = pHandle->nrrd->axis[2].size;
 	else if( pHandle->nrrd->dim == 2 &&
+		 dataset[0].find( ":Scalar" ) != string::npos )
+	  mesh_coor_rank = 1;
+	else if( pHandle->nrrd->dim == 2 &&
 		 dataset[0].find( ":Vector" ) != string::npos )
 	  mesh_coor_rank = 3;
 	      
-	if( mesh_coor_rank < 2 || 3 < mesh_coor_rank ) {
-	  error( dataset[0] + " - Mesh does not contain 2D or 3D points." );
+	if( mesh_coor_rank < 1 || 3 < mesh_coor_rank ) {
+	  error( dataset[0] + " - Mesh does not contain 1D, 2D or 3D points." );
 	  error_ = true;
 	  return;
 	}
