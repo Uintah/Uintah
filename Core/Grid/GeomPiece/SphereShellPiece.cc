@@ -11,6 +11,7 @@ using namespace SCIRun;
 
 SphereShellPiece::SphereShellPiece(ProblemSpecP& ps)
 {
+  setName("sphere_shell");
   ps->require("origin",d_origin);
   ps->require("radius",d_radius);
   ps->require("thickness",d_h);

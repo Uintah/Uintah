@@ -11,7 +11,7 @@ using namespace SCIRun;
 
 SphereGeometryPiece::SphereGeometryPiece(ProblemSpecP& ps)
 {
-
+  setName("sphere");
   Point orig;
   double rad;
 

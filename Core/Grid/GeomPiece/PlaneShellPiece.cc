@@ -15,6 +15,7 @@ using namespace std;
 // Constructor : Initialize stuff
 PlaneShellPiece::PlaneShellPiece(ProblemSpecP& ps)
 {
+  setName("plane");
   ps->require("center", d_center);
   ps->require("normal", d_normal);
   ps->require("radius", d_radius);
