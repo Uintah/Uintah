@@ -117,6 +117,7 @@ Heightfield<A,B>::Heightfield(Material* matl, char* filebase,
 //  	cerr << "done (" << (double)(blockdata.get_datasize())/dt/1024/1024 << " MB/sec)\n";
 	indata.resize(0,0);
     } else {
+#if __sgi
 	struct dioattr s;
 #if 0
 	if(fcntl(bin, F_DIOINFO, &s) == 0 && s.d_mem>0)
@@ -158,8 +159,12 @@ Heightfield<A,B>::Heightfield(Material* matl, char* filebase,
 //  	double dt=Thread::currentSeconds()-start;
 //  	cerr << "done (" << (double)(blockdata.get_datasize())/dt/1024/1024 << " MB/sec)\n";
 	close(bin);
+#else
+	cerr << "Error - can only use direct IO on sgis.\n";
+	exit(1);
+#endif
     }
-		   
+
     xsize=new int[depth];
     ysize=new int[depth];
     int tx=nx-1;
@@ -283,13 +288,13 @@ void Heightfield<A,B>::calc_mcell(int depth, int startx, int starty,
     if(depth==0){
 	for(int ix=startx;ix<endx;ix++){
 	    for(int iy=starty;iy<endy;iy++){
-	       A::data_type rhos[4];
+	       typename A::data_type rhos[4];
 	       rhos[0]=blockdata(ix, iy);
 	       rhos[1]=blockdata(ix+1, iy);
 	       rhos[2]=blockdata(ix, iy+1);
 	       rhos[3]=blockdata(ix+1, iy+1);
-	       A::data_type min=rhos[0];
-	       A::data_type max=rhos[0];
+	       typename A::data_type min=rhos[0];
+	       typename A::data_type max=rhos[0];
 	       for(int i=1;i<4;i++){
 		  if(rhos[i]<min)
 		     min=rhos[i];
@@ -311,7 +316,7 @@ void Heightfield<A,B>::calc_mcell(int depth, int startx, int starty,
 	B& mcells=macrocells[depth];
 	for(int x=startx;x<endx;x++){
 	    for(int y=starty;y<endy;y++){
-	       B::data_type tmp;
+	       typename B::data_type tmp;
 	       calc_mcell(depth-1, x*nx, y*ny, tmp);
 	       if(tmp.min < mcell.min)
 		  mcell.min=tmp.min;
@@ -338,7 +343,7 @@ void Heightfield<A,B>::parallel_calc_mcell(int)
 	for(int block=s;block<e;block++){
 	    int y=block%ny;
 	    int x=block/ny;
-	    B::data_type tmp;
+	    typename B::data_type tmp;
 	    calc_mcell(depth-2, x*nnx, y*nny, tmp);
 	    mcells(x,y)=tmp;
 #ifdef DEBUG
@@ -388,7 +393,7 @@ void Heightfield<A,B>::isect_up(int depth, double t,
 	       cerr << "Doing cell: " << gx << ", " << gy
 		    << " (" << startx << "+" << ix << ", " << starty << "+" << iy << ")\n";
 #endif
-		A::data_type rhos[4];
+	        typename A::data_type rhos[4];
 		rhos[0]=blockdata(gx, gy);
 		rhos[1]=blockdata(gx, gy+1);
 		rhos[2]=blockdata(gx+1, gy);
@@ -396,8 +401,8 @@ void Heightfield<A,B>::isect_up(int depth, double t,
 #ifdef DEBUG
 		cerr << "data: " << rhos[0] << ", " << rhos[1] << ", " << rhos[2] << ", " << rhos[3] << '\n';
 #endif
-		A::data_type min=rhos[0];
-		A::data_type max=rhos[0];
+		typename A::data_type min=rhos[0];
+		typename A::data_type max=rhos[0];
 		for(int i=1;i<4;i++){
 		    if(rhos[i]<min)
 			min=rhos[i];
@@ -463,11 +468,11 @@ void Heightfield<A,B>::isect_up(int depth, double t,
 	    }
 	}
     } else {
-	B& mcells=macrocells[depth];
+        B & mcells=macrocells[depth];
 	for(;;){
 	    int gx=startx+ix;
 	    int gy=starty+iy;
-	    B::data_type& mcell=mcells(gx,gy);
+	    typename B::data_type& mcell=mcells(gx,gy);
 #ifdef DEBUG
 	    cerr << "doing macrocell: " << gx << ", " << gy << ": " << mcell.min << ", " << mcell.max << '\n';
 #endif
@@ -582,7 +587,7 @@ void Heightfield<A,B>::isect_down(int depth, double t,
 	       cerr << "Doing cell: " << gx << ", " << gy
 		    << " (" << startx << "+" << ix << ", " << starty << "+" << iy << ")\n";
 #endif
-		A::data_type rhos[4];
+		typename A::data_type rhos[4];
 		rhos[0]=blockdata(gx, gy);
 		rhos[1]=blockdata(gx, gy+1);
 		rhos[2]=blockdata(gx+1, gy);
@@ -590,8 +595,8 @@ void Heightfield<A,B>::isect_down(int depth, double t,
 #ifdef DEBUG
 		cerr << "data: " << rhos[0] << ", " << rhos[1] << ", " << rhos[2] << ", " << rhos[3] << '\n';
 #endif
-		A::data_type min=rhos[0];
-		A::data_type max=rhos[0];
+		typename A::data_type min=rhos[0];
+		typename A::data_type max=rhos[0];
 		for(int i=1;i<4;i++){
 		    if(rhos[i]<min)
 			min=rhos[i];
@@ -661,7 +666,7 @@ void Heightfield<A,B>::isect_down(int depth, double t,
 	for(;;){
 	    int gx=startx+ix;
 	    int gy=starty+iy;
-	    B::data_type& mcell=mcells(gx,gy);
+	    typename B::data_type& mcell=mcells(gx,gy);
 #ifdef DEBUG
 	    cerr << "doing macrocell: " << gx << ", " << gy << ": " << mcell.min << ", " << mcell.max << '\n';
 #endif
@@ -885,7 +890,7 @@ void Heightfield<A,B>::brickit(int proc)
 	    cerr << "processor " << proc << ": " << x << " of " << nx-1 << "\n";
 	    io.unlock();
 	    for(int y=0;y<ny;y++){
-	       A::data_type value=indata(x,y);
+	       typename A::data_type value=indata(x,y);
 	       blockdata(x,y)=value;
 	    }
 	}
