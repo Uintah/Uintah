@@ -2014,9 +2014,6 @@ GeomCLines::draw(DrawInfoOpenGL* di, Material* matl, double)
 
   di->polycount+=points_.size()/6;
 
-  //glEnable(GL_BLEND);
-  //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
   glLineWidth(line_width_);
 
   glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
@@ -2029,7 +2026,29 @@ GeomCLines::draw(DrawInfoOpenGL* di, Material* matl, double)
 
   glLineWidth(di->line_width_);
 
-  //glDisable(GL_BLEND);
+  post_draw(di);
+}
+
+
+void
+GeomCLineStrips::draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+  if(!pre_draw(di, matl, 0)) return;
+
+  glLineWidth(line_width_);
+  glEnableClientState(GL_VERTEX_ARRAY);
+  glEnableClientState(GL_COLOR_ARRAY);
+
+  const int n_strips = points_.size();
+  for (int i = 0; i < n_strips; i++) {
+    const int n_points = points_[i].size()/3;
+    di->polycount += n_points-1;
+    glVertexPointer(3, GL_FLOAT, 0, &(points_[i].front()));
+    glColorPointer(4, GL_UNSIGNED_BYTE, 0, &(colors_[i].front()));
+    glDrawArrays(GL_LINE_STRIP, 0, n_points);
+  }
+
+  glLineWidth(di->line_width_);
 
   post_draw(di);
 }
@@ -4698,90 +4717,73 @@ void GeomTorusArc::draw(DrawInfoOpenGL* di, Material* matl, double)
 
 void GeomTriStrip::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
-    if(!pre_draw(di, matl, 1)) return;
-    if(verts.size() <= 2)
-	return;
-    di->polycount+=verts.size()-2;
-    if (di->currently_lit) {
-	glDisable(GL_NORMALIZE);
-	switch(di->get_drawtype()){
-	case DrawInfoOpenGL::WireFrame:
-	    {
-		verts[0]->emit_all(di);
-		verts[1]->emit_all(di);
-		for(int i=2;i<verts.size();i++){
-		    glBegin(GL_LINE_LOOP);
-		    verts[i-2]->emit_all(di);
-		    verts[i-1]->emit_all(di);
-		    verts[i]->emit_all(di);
-		    glEnd();
-		}
-	    }
-	    break;
-	case DrawInfoOpenGL::Flat:
-	    {
-		glBegin(GL_TRIANGLE_STRIP);
-		for(int i=0;i<verts.size();i++){
-		    verts[i]->emit_all(di);
-		}
-		glEnd();
-	    }
-	    break;
-	case DrawInfoOpenGL::Gouraud:
-	    {
-		glBegin(GL_TRIANGLE_STRIP);
-		for(int i=0;i<verts.size();i++){
-		    verts[i]->emit_all(di);
-		}
-		glEnd();
-	    }
-	    break;
+  if(!pre_draw(di, matl, 1)) return;
+  if(verts.size() <= 2)
+    return;
+  di->polycount+=verts.size()-2;
+  if (di->currently_lit) {
+    glDisable(GL_NORMALIZE);
+    switch(di->get_drawtype()){
+    case DrawInfoOpenGL::WireFrame:
+      {
+	verts[0]->emit_all(di);
+	verts[1]->emit_all(di);
+	for(int i=2;i<verts.size();i++){
+	  glBegin(GL_LINE_LOOP);
+	  verts[i-2]->emit_all(di);
+	  verts[i-1]->emit_all(di);
+	  verts[i]->emit_all(di);
+	  glEnd();
 	}
-	glEnable(GL_NORMALIZE);
-    }
-    else {
-	switch(di->get_drawtype()){
-	case DrawInfoOpenGL::WireFrame:
-	    {
-		verts[0]->emit_matl(di);
-		verts[0]->emit_point(di);
-		verts[1]->emit_matl(di);
-		verts[1]->emit_point(di);
-		for(int i=2;i<verts.size();i++){
-		    glBegin(GL_LINE_LOOP);
-		    verts[i-2]->emit_matl(di);
-		    verts[i-2]->emit_point(di);
-		    verts[i-1]->emit_matl(di);
-		    verts[i-1]->emit_point(di);
-		    verts[i]->emit_matl(di);
-		    verts[i]->emit_point(di);
-		    glEnd();
-		}
-	    }
-	    break;
-	case DrawInfoOpenGL::Flat:
-	    {
-		glBegin(GL_TRIANGLE_STRIP);
-		for(int i=0;i<verts.size();i++){
-		    verts[i]->emit_matl(di);
-		    verts[i]->emit_point(di);
-		}
-		glEnd();
-	    }
-	    break;
-	case DrawInfoOpenGL::Gouraud:
-	    {
-		glBegin(GL_TRIANGLE_STRIP);
-		for(int i=0;i<verts.size();i++){
-		    verts[i]->emit_matl(di);
-		    verts[i]->emit_point(di);
-		}
-		glEnd();
-	    }
-	    break;
+      }
+      break;
+    case DrawInfoOpenGL::Flat:
+    case DrawInfoOpenGL::Gouraud:
+      {
+	glBegin(GL_TRIANGLE_STRIP);
+	for(int i=0;i<verts.size();i++){
+	  verts[i]->emit_all(di);
 	}
+	glEnd();
+      }
+      break;
     }
-    post_draw(di);
+    glEnable(GL_NORMALIZE);
+  }
+  else {
+    switch(di->get_drawtype()){
+    case DrawInfoOpenGL::WireFrame:
+      {
+	verts[0]->emit_matl(di);
+	verts[0]->emit_point(di);
+	verts[1]->emit_matl(di);
+	verts[1]->emit_point(di);
+	for(int i=2;i<verts.size();i++){
+	  glBegin(GL_LINE_LOOP);
+	  verts[i-2]->emit_matl(di);
+	  verts[i-2]->emit_point(di);
+	  verts[i-1]->emit_matl(di);
+	  verts[i-1]->emit_point(di);
+	  verts[i]->emit_matl(di);
+	  verts[i]->emit_point(di);
+	  glEnd();
+	}
+      }
+      break;
+    case DrawInfoOpenGL::Flat:
+    case DrawInfoOpenGL::Gouraud:
+      {
+	glBegin(GL_TRIANGLE_STRIP);
+	for(int i=0;i<verts.size();i++){
+	  verts[i]->emit_matl(di);
+	  verts[i]->emit_point(di);
+	}
+	glEnd();
+      }
+      break;
+    }
+  }
+  post_draw(di);
 }
 
 void GeomTriStripList::draw(DrawInfoOpenGL* di, Material* matl, double)

@@ -185,6 +185,36 @@ public:
   static PersistentTypeID type_id;
 };
 
+
+class SCICORESHARE GeomCLineStrips : public GeomObj {
+protected:
+  double line_width_;
+  vector<vector<float> > points_;
+  vector<vector<unsigned char> > colors_;
+
+public:
+  GeomCLineStrips();
+  GeomCLineStrips(const GeomCLineStrips&);
+  virtual ~GeomCLineStrips();
+
+  void add(const vector<Point> &p, const vector<MaterialHandle> &c);
+  void add(const Point &p, const MaterialHandle c);
+  void newline();
+  void setLineWidth(float val) { line_width_ = val; }
+
+  virtual GeomObj* clone();
+  virtual void get_bounds(BBox&);
+
+#ifdef SCI_OPENGL
+  virtual void draw(DrawInfoOpenGL*, Material*, double time);
+#endif
+  
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
+  virtual bool saveobj(std::ostream&, const string& format, GeomSave*);
+};
+
+
 } // End namespace SCIRun
 
 

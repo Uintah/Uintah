@@ -599,5 +599,116 @@ void TexGeomLines::SortVecs()
   // that should be everything...
 }
 
+
+
+
+
+
+
+Persistent* make_GeomCLineStrips()
+{
+  return new GeomCLineStrips();
+}
+
+PersistentTypeID GeomCLineStrips::type_id("GeomCLineStrips", "GeomObj", make_GeomCLineStrips);
+
+GeomCLineStrips::GeomCLineStrips()
+  : line_width_(1.0)
+{
+}
+
+GeomCLineStrips::GeomCLineStrips(const GeomCLineStrips& copy)
+  : line_width_(copy.line_width_),
+    points_(copy.points_),
+    colors_(copy.colors_)
+{
+}
+
+GeomCLineStrips::~GeomCLineStrips()
+{
+}
+
+GeomObj* GeomCLineStrips::clone()
+{
+  return new GeomCLineStrips(*this);
+}
+
+void GeomCLineStrips::get_bounds(BBox& bb)
+{
+  const int n_strips = points_.size();
+  for(unsigned int s = 0; s < n_strips; s++) {
+    const int n_coords = points_[s].size();
+    for (unsigned int i = 0; i < n_coords; i+=3) {
+      bb.extend(Point(points_[s][i+0], points_[s][i+1], points_[s][i+2]));
+    }
+  }
+}
+
+#define GEOMCLINESTRIPS_VERSION 1
+
+void GeomCLineStrips::io(Piostream& stream)
+{
+
+  stream.begin_class("GeomCLineStrips", GEOMCLINESTRIPS_VERSION);
+  GeomObj::io(stream);
+  Pio(stream, line_width_);
+  Pio(stream, points_);
+  Pio(stream, colors_);
+  stream.end_class();
+}
+
+bool GeomCLineStrips::saveobj(ostream&, const string&, GeomSave*)
+{
+#if 0
+  NOT_FINISHED("GeomCLineStrips::saveobj");
+  return false;
+#else
+  return true;
+#endif
+}
+
+
+void
+GeomCLineStrips::add(const vector<Point> &p, 
+		     const vector<MaterialHandle> &c)
+{
+  points_.push_back(vector<float>());
+  colors_.push_back(vector<unsigned char>());
+
+  const int n_points = p.size();
+  const int n_colors = c.size();
+  ASSERT(n_colors == n_points);
+
+  for (unsigned int i = 0; i < n_points; i++) 
+    add(p[i], c[i]);
+}
+
+void
+GeomCLineStrips::add(const Point &p, 
+		     const MaterialHandle c)
+{
+  if (points_.empty()) points_.push_back(vector<float>());
+  if (colors_.empty()) colors_.push_back(vector<unsigned char>());
+  
+  points_.back().push_back(p.x());
+  points_.back().push_back(p.y());
+  points_.back().push_back(p.z());
+
+  colors_.back().push_back(COLOR_FTOB(c->diffuse.r()));
+  colors_.back().push_back(COLOR_FTOB(c->diffuse.g()));
+  colors_.back().push_back(COLOR_FTOB(c->diffuse.b()));
+  colors_.back().push_back(COLOR_FTOB(c->transparency));
+}
+
+void
+GeomCLineStrips::newline()
+{
+  points_.push_back(vector<float>());
+  colors_.push_back(vector<unsigned char>());
+}
+
+
+
+
 } // End namespace SCIRun
 
