@@ -8,7 +8,7 @@
    </Meta>
 
    <Time>
-	<maxTime>20.0</maxTime>
+	<maxTime>1.0</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.00001</delt_min>
 	<delt_max>0.01</delt_max>
@@ -40,7 +40,7 @@
 	    <Box label = "1">
 	        <lower>[0,0,0]</lower>
 	        <upper>[3,3,3]</upper>
-	        <resolution>[20,20,20]</resolution>
+	        <resolution>[10,10,10]</resolution>
                 <extraCells>[1,1,1]</extraCells>
 		<patches>[1,1,1]</patches>
 	    </Box>
@@ -199,6 +199,7 @@
 		    <linear_solver>petsc</linear_solver>
 		    <LinearSolver>
 			<ksptype>cg</ksptype>
+			<pctype>jacobi</pctype>
 			<overlap>1</overlap>
 			<max_iter>75</max_iter>
 			<res_tol>0.0003</res_tol>
