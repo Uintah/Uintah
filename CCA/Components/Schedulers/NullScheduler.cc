@@ -1,16 +1,18 @@
 
 
 #include <Packages/Uintah/CCA/Components/Schedulers/NullScheduler.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
-#include <Packages/Uintah/Core/Grid/TypeDescription.h>
 #include <Packages/Uintah/Core/Grid/ReductionVariable.h>
+#include <Packages/Uintah/Core/Grid/TypeDescription.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
+#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+#include <Core/Malloc/Allocator.h>
 #include <Core/Thread/Time.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Util/FancyAssert.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Util/NotFinished.h>
 
 using namespace Uintah;
@@ -41,7 +43,30 @@ NullScheduler::advanceDataWarehouse(const GridP& grid)
 }
 
 void
-NullScheduler::execute(const ProcessorGroup * pg)
+NullScheduler::compile(const ProcessorGroup* pg)
+{
+  if(dt)
+    delete dt;
+  dt = graph.createDetailedTasks(pg);
+
+  if(dt->numTasks() == 0){
+    cerr << "WARNING: Scheduler executed, but no tasks\n";
+  }
+  
+  UintahParallelPort* lbp = getPort("load balancer");
+  LoadBalancer* lb = dynamic_cast<LoadBalancer*>(lbp);
+  lb->assignResources(*dt, d_myworld);
+
+  graph.createDetailedDependencies(dt, lb, pg);
+  releasePort("load balancer");
+
+  dt->assignMessageTags();
+  int me=pg->myrank();
+  dt->computeLocalTasks(me);
+}
+
+void
+NullScheduler::execute(const ProcessorGroup *)
 {
   ASSERT(dt != 0);
   if(firstTime){
