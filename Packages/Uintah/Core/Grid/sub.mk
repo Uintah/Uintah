@@ -50,7 +50,7 @@ PSELIBS := \
 	Core/Geometry \
 	Dataflow/XMLUtil
 
-LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) -lm
+LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) -lm -lz
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
 
