@@ -885,12 +885,27 @@ Gui::handleKeyPressCB( unsigned char key, int /*mouse_x*/, int /*mouse_y*/ )
     break;
   case 'w':
     cerr << "Saving ppm image file\n";
-    activeGui->dpy_->scene->get_image(showing_scene)->save_ppm("images/image");
+    if (activeGui->dpy_->scene->display_depth)
+      activeGui->dpy_->scene->get_image(showing_scene)->save_depth("images/depth");
+    else
+      activeGui->dpy_->scene->get_image(showing_scene)->save_ppm("images/image", activeGui->scene()->display_sils, activeGui->scene()->max_depth);
     break;
   case 'd':
-    activeGui->dpy_->scene->display_depth = !activeGui->dpy_->scene->display_depth;
-    if (activeGui->dpy_->scene->display_depth)
-      activeGui->dpy_->scene->store_depth = 1;
+    {
+      bool dd = activeGui->scene()->display_depth;
+      bool ds = activeGui->scene()->display_sils;
+      activeGui->scene()->display_depth = !dd && !ds;
+      activeGui->scene()->display_sils = dd && !ds;
+      activeGui->scene()->store_depth = !ds;
+    }
+    break;
+  case 'D':
+    {
+      bool ds = activeGui->scene()->display_sils;
+      activeGui->scene()->display_depth = false;
+      activeGui->scene()->display_sils = !ds;
+      activeGui->scene()->store_depth = !ds;
+    }
     break;
   default:
     printf("unknown regular key %d\n", key);
@@ -1997,6 +2012,12 @@ Gui::soundThreadNowActive()
   activeGui->enableSounds_ = true;
 }
 
+Scene*
+Gui::scene()
+{
+  return dpy_->scene;
+}
+
 void Gui::SGAutoCycleCB( int id ) {
   SGCallbackInfo* sgcbi = (SGCallbackInfo*)callback_info_list[id];
   sgcbi->sg->toggleAutoswitch();
@@ -2396,6 +2417,14 @@ Gui::createMenus( int winId, bool soundOn /* = false */,
   activeGui->glyphThresholdSpinner_->set_speed( 0.1 );
   activeGui->glyphThresholdSpinner_->set_float_limits( 0, 1 );
   
+  activeGui->sceneDepthSpinner_ = activeGui->mainWindow->
+    add_spinner_to_panel( otherControls, "Max Depth",
+			  GLUI_SPINNER_FLOAT, 
+			  &(activeGui->dpy_->scene->max_depth),
+			  0, updateSceneDepthCB);
+  activeGui->sceneDepthSpinner_->set_speed( 0.1 );
+  //  activeGui->sceneDepthSpinner_->set_float_limits( 0, 500 );
+  
   // 
   activeGui->depthValue_ = activeGui->priv->maxdepth;
   GLUI_Spinner * depthSpinner = activeGui->mainWindow->
@@ -2584,6 +2613,13 @@ void
 Gui::updateRayOffsetCB( int /*id*/ )
 {
   activeGui->camera_->set_ray_offset( activeGui->ray_offset );
+}
+
+void
+Gui::updateSceneDepthCB( int /*id*/ )
+{
+  if (activeGui->scene()->max_depth < 0)
+    activeGui->scene()->max_depth = 0;
 }
 
 void
