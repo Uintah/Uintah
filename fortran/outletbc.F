@@ -74,8 +74,8 @@ c      if (zminus) kst = kst + 1
          DO 190 K=KST,KEND
 	    DO 180 J=JST,JEND
                IF (PCELL(I,J,K) .EQ. PFIELD) THEN
-                  avden = 0.5*(den(i,j,k)+den(i-1,j,k))
-                  avdenlow = 0.5*(den(i-1,j,k)+den(i-2,j,k))
+                  avden = 0.5D0*(den(i,j,k)+den(i-1,j,k))
+                  avdenlow = 0.5D0*(den(i-1,j,k)+den(i-2,j,k))
 c                  avden = 1.0
 c                  avdenlow = 1.0
                   UU(I,J,K) = (-delta_t*uvwout*(avden*old_uu(i,j,k)-
@@ -87,10 +87,10 @@ c                  avdenlow = 1.0
                   ff(i,j,k) = -delta_t*uvwout*(old_ff(i,j,k)-
      $                         old_ff(i-1,j,k))/(dxpw(i)) + 
      $                         old_ff(i,j,k)
-                  if (ff(i,j,k) .lt. 0.0) then 
-                     ff(i,j,k) = 0.0
-                  else if (ff(i,j,k) .gt. 1.0) then
-                     ff(i,j,k) = 1.0
+                  if (ff(i,j,k) .lt. 0.0D0) then 
+                     ff(i,j,k) = 0.0D0
+                  else if (ff(i,j,k) .gt. 1.0D0) then
+                     ff(i,j,k) = 1.0D0
                   endif
                endif
  180        CONTINUE

@@ -97,19 +97,19 @@ C$DIR SCALAR
 
                IF (PCELL(I,J,K).EQ.WALL) THEN
                   if (.not.(yminus.and.j.eq.jst)) then
-                     VV(I,J,K) = 0.0
+                     VV(I,J,K) = 0.0D0
 C--------------------------------------------------------------------
 C             SOUTHEAST FACE OF INTRUSION\WALL
 C--------------------------------------------------------------------
                      SP(I+1,J,K) =SP(I+1,J,K)-TMULT*SNSV(J)*STB(K)
-                     AW(I+1,J,K) = 0.0
-                     cwsav(i+1,j,k) = 0.0
+                     AW(I+1,J,K) = 0.0D0
+                     cwsav(i+1,j,k) = 0.0D0
                   endif
                else if ((pcell(i,j-1,k).eq.wall).and.
      $                 (pcell(i,j,k).ne.wall)) then
                   SP(I+1,J,K) =SP(I+1,J,K)-TMULT*SNSV(J)*STB(K)
-                  AW(I+1,J,K) = 0.0
-                  cwsav(i+1,j,k) = 0.0
+                  AW(I+1,J,K) = 0.0D0
+                  cwsav(i+1,j,k) = 0.0D0
                endif
  110        CONTINUE
  120     CONTINUE
@@ -123,15 +123,15 @@ C--------------------------------------------------------------------
          DO 210 K = kst,kend
             DO 200 J = jst,jend
                IF ((PCELL(iEndGhost,J,K).EQ.PBCFLD
-     &              .AND. UU(iEndGhost+1,J,K).GT.0.0).or.
+     &              .AND. UU(iEndGhost+1,J,K).GT.0.0D0).or.
      $          (PCELL(iEndGhost, J, K).EQ.outletfld)) THEN
                   VV(iEndGhost,J,K) = VV(iend,J,K)
-                  AE(iend,J,K) = 2.0*TINY
+                  AE(iend,J,K) = 2.0D0*TINY
                END IF
                IF (PCELL(iBegGhost,J,K).EQ.PBCFLD
-     &              .AND.UU(iBegGhost,J,K).LT.0.0) THEN
+     &              .AND.UU(iBegGhost,J,K).LT.0.0D0) THEN
                   VV(iBegGhost,J,K) = VV(ist,J,K)
-                  AW(ist,J,K) = 2.0*TINY
+                  AW(ist,J,K) = 2.0D0*TINY
                END IF
  200        CONTINUE
  210     CONTINUE
@@ -159,14 +159,14 @@ C--------------------------------------------------------------------
       DO 410 J = jst,jend
          DO 400 I = ist,iend
             IF (PCELL(I,J,kEndGhost).EQ.PBCFLD) then
-c     &           .AND.WW(I,J,kEndGhost+1).GT.0.0) THEN
+c     &           .AND.WW(I,J,kEndGhost+1).GT.0.0D0) THEN
                VV(I,J,kEndGhost) = VV(I,J,kend)
-               AT(I,J,kend) = 2.0*TINY
+               AT(I,J,kend) = 2.0D0*TINY
             END IF
             IF (PCELL(I,J,kBegGhost).EQ.PBCFLD) then
-c     &           .AND.WW(I,J,kBegGhost).LT.0.0) THEN
+c     &           .AND.WW(I,J,kBegGhost).LT.0.0D0) THEN
                VV(I,J,kBegGhost) = VV(I,J,kst)
-               AB(I,J,kst) = 2.0*TINY
+               AB(I,J,kst) = 2.0D0*TINY
             END IF
  400     CONTINUE
  410  CONTINUE

@@ -91,13 +91,13 @@ C$DIR SCALAR
 C$DIR SCALAR
                I = ist -1
                if (pcell(I,J,K).eq.wall) then
-                  uu(i,j,k) = 0.0
+                  uu(i,j,k) = 0.0D0
 C--------------------------------------------------------------------
 C             East FACE OF INTRUSION\WALL
 C--------------------------------------------------------------------
                   IF (PCELL(I+1, J, K).NE.WALL) THEN
-                     AW(I+2,J,K) = 0.0
-                     cwsav(i+2,j,k) = 0.0
+                     AW(I+2,J,K) = 0.0D0
+                     cwsav(i+2,j,k) = 0.0D0
                   end if
                end if
  110        CONTINUE
@@ -115,7 +115,7 @@ C--------------------------------------------------------------------
            IF ((PCELL(iEndGhost, J, K).EQ.PBCFLD).or.
      $          (PCELL(iEndGhost, J, K).EQ.outletfld)) THEN
               UU(iEndGhost+1,J,K) = UU(iEndGhost,J,K)
-c              AE(iend,J,K) = 2.0*TINY
+c              AE(iend,J,K) = 2.0D0*TINY
           END IF
           IF (PCELL(iBegGhost,J,K).EQ.PBCFLD) THEN
              UU(iBegGhost,J,K) = UU(ist,J,K)
@@ -129,15 +129,15 @@ C--------------------------------------------------------------------
         DO 400 I = ist, iend
           IF ((PCELL(I,jEndGhost, K).EQ.PBCFLD)) then
 c .AND.
-c     $        (VV(I,jEndGhost+1,K).GT.0.0)) THEN
+c     $        (VV(I,jEndGhost+1,K).GT.0.0D0)) THEN
              UU(I,jEndGhost,K) = UU(I,jend,K)
-             AN(I,jend,K) = 2.0*TINY
+             AN(I,jend,K) = 2.0D0*TINY
           END IF
           IF (PCELL(I,jBegGhost,K).EQ.PBCFLD) then
 c.AND.
-c     $         VV(I,jBegGhost,K).LT.0.0) THEN
+c     $         VV(I,jBegGhost,K).LT.0.0D0) THEN
             UU(I,jBegGhost, K) = UU(I,jst,K)
-            AS(I,jst,K) = 2.0*TINY
+            AS(I,jst,K) = 2.0D0*TINY
             END IF
   400   CONTINUE
   410 CONTINUE
@@ -150,15 +150,15 @@ C--------------------------------------------------------------------
         DO 500 I = ist, iend
           IF ((PCELL(I,J,kEndGhost).EQ.PBCFLD)) then
 c.AND.
-c     $        (WW(I,J,kEndGhost+1).GT.0.0)) THEN
+c     $        (WW(I,J,kEndGhost+1).GT.0.0D0)) THEN
              UU(I,J,kEndGhost) = UU(I,J,kend)
-             AT(I,J,kend) = 2.0*TINY
+             AT(I,J,kend) = 2.0D0*TINY
           END IF
           IF (PCELL(I,J,kBegGhost).EQ.PBCFLD) then
 c.AND.
-c     $         WW(I,J,kBegGhost).LT.0.0) THEN
+c     $         WW(I,J,kBegGhost).LT.0.0D0) THEN
             UU(I,J,kBegGhost) = UU(I,J,kst)
-            AB(I,J,kst) = 2.0*TINY
+            AB(I,J,kst) = 2.0D0*TINY
             END IF
   500   CONTINUE
   510 CONTINUE

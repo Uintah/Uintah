@@ -51,13 +51,13 @@ C--------------------------------------------------------------------
       do 520 k = valid_lo(3), valid_hi(3)
          do 510 j = valid_lo(2), valid_hi(2)
             do 500 i = valid_lo(1), valid_hi(1)
-               AE(I,J,K) = AE(i,j,k)-cesav(i,j,k)*0.5
-               AW(I,J,K) = AW(I,J,K)+CWSAV(I,J,K)*0.5
-               AN(I,J,K) = AN(I,J,K)-CNSAV(I,J,K)*0.5
-               AS(I,J,K) = AS(I,J,K)+CSSAV(I,J,K)*0.5
-               AT(I,J,K) = AT(I,J,K)-CTSAV(I,J,K)*0.5
-               AB(I,J,K) = AB(I,J,K)+CBSAV(I,J,K)*0.5
-               AP(I,J,K) = AP(I,J,K)+0.5*(CESAV(I,J,K)-CWSAV(I,J,K)+
+               AE(I,J,K) = AE(i,j,k)-cesav(i,j,k)*0.5D0
+               AW(I,J,K) = AW(I,J,K)+CWSAV(I,J,K)*0.5D0
+               AN(I,J,K) = AN(I,J,K)-CNSAV(I,J,K)*0.5D0
+               AS(I,J,K) = AS(I,J,K)+CSSAV(I,J,K)*0.5D0
+               AT(I,J,K) = AT(I,J,K)-CTSAV(I,J,K)*0.5D0
+               AB(I,J,K) = AB(I,J,K)+CBSAV(I,J,K)*0.5D0
+               AP(I,J,K) = AP(I,J,K)+0.5D0*(CESAV(I,J,K)-CWSAV(I,J,K)+
      $                  CNSAV(I,J,K)-CSSAV(I,J,K)+
      $                  CTSAV(I,J,K)-CBSAV(I,J,K))
 

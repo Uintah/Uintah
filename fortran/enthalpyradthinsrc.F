@@ -22,7 +22,8 @@ c-----------------------------------------------------------------------
          do 110 j = JST, JEND
             do 100 i = IST, IEND
                vol = sew(i)*sns(j)*stb(k)
-               radsource = 4*SIGMA*Absorp(i,j,k)*(tg(i,j,k)**4-tref**4)
+               radsource = 4.0D0*SIGMA*Absorp(i,j,k)*
+     *(tg(i,j,k)**4-tref**4)
                su(i,j,k) = su(i,j,k) - radsource*vol
  100        continue
  110     continue

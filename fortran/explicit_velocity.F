@@ -44,7 +44,7 @@ c*********************************************************************
          do 190 j = idxLo(2), idxHi(2)
             do 180 i = idxLo(1), idxHi(1)
                vol = sew(i)*sns(j)*stb(k)
-               apo = 0.5*(old_den(i,j,k)+old_den(i-ioff,j-joff,k-koff))
+            apo = 0.5D0*(old_den(i,j,k)+old_den(i-ioff,j-joff,k-koff))
      $                    *vol/dtime
                rhs = ae(i,j,k)*old_phi(i+1,j,k)+ 
      $              aw(i,j,k)*old_phi(i-1,j,k) +

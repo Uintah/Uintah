@@ -53,47 +53,47 @@ C     width in the input file as PRLS.  Note the discussion in
 C     Mason (1994) Q.J.R. Meteorol. Soc., 120, pp. 1-26
 C     The filter length will become the cell size if it is very small
 C--------------------------------------------------------------------
-               DMESH = ((SNS(J)*SEW(I)*STB(K))**(1/3))
+               DMESH = ((SNS(J)*SEW(I)*STB(K))**(1.0D0/3.0D0))
                PMIXL = CF*MAX(FILTERL,FAC_MESH*DMESH)
-               CMLTM = 1.0
+               CMLTM = 1.0D0
 C--------------------------------------------------------------------
 C     CALCULATE GENERATION OF TURBULENCE
 C--------------------------------------------------------------------
                uep = uu(i+1,j,k)
                uwp = uu(i,j,k)
-               UNP = 0.25*(UU(I,J,K)+
+               UNP = 0.25D0*(UU(I,J,K)+
      &              UU(I+1,J,K)+UU(I,J+1,K)+UU(I+1,J+1,K))
-               USP = 0.25*(UU(I,J,K)+
+               USP = 0.25D0*(UU(I,J,K)+
      &              UU(I+1,J,K)+UU(I,J-1,K)+UU(I+1,J-1,K))
                DUDY = (UNP-USP)/SNS(J)
                UTP = (UU(I,J,K)+
-     &              UU(I+1,J,K)+UU(I,J,K+1)+UU(I+1,J,K+1))/4.0
+     &              UU(I+1,J,K)+UU(I,J,K+1)+UU(I+1,J,K+1))/4.0D0
                UBP = (UU(I,J,K)+
-     &              UU(I+1,J,K)+UU(I,J,K-1)+UU(I+1,J,K-1))/4.0 
+     &              UU(I+1,J,K)+UU(I,J,K-1)+UU(I+1,J,K-1))/4.0D0 
                DUDZ = (UTP-UBP)/STB(K) 
                vnp = vv(i,j+1,k)
                vsp = vv(i,j,k)
                VEP = (VV(I,J,K)+
-     &              VV(I,J+1,K)+VV(I+1,J,K)+VV(I+1,J+1,K))/4.0
+     &              VV(I,J+1,K)+VV(I+1,J,K)+VV(I+1,J+1,K))/4.0D0
                VWP = (VV(I,J,K)+
-     &              VV(I,J+1,K)+VV(I-1,J,K)+VV(I-1,J+1,K))/4.0
+     &              VV(I,J+1,K)+VV(I-1,J,K)+VV(I-1,J+1,K))/4.0D0
                DVDX = (VEP-VWP)/SEW(I)
                VTP = (VV(I,J,K)+
-     &              VV(I,J+1,K)+VV(I,J,K+1)+VV(I,J+1,K+1))/4.0
+     &              VV(I,J+1,K)+VV(I,J,K+1)+VV(I,J+1,K+1))/4.0D0
                VBP = (VV(I,J,K)+
-     &              VV(I,J+1,K)+VV(I,J,K-1)+VV(I,J+1,K-1))/4.0 
+     &              VV(I,J+1,K)+VV(I,J,K-1)+VV(I,J+1,K-1))/4.0D0
                DVDZ = (VTP-VBP)/STB(K)
                wtp = ww(i,j,k+1)
                wbp = ww(i,j,k)
                WEP = (WW(I,J,K)+
-     &              WW(I,J,K+1)+WW(I+1,J,K)+WW(I+1,J,K+1))/4.0
+     &              WW(I,J,K+1)+WW(I+1,J,K)+WW(I+1,J,K+1))/4.0D0
                WWP = (WW(I,J,K)+
-     &              WW(I,J,K+1)+WW(I-1,J,K)+WW(I-1,J,K+1))/4.0
+     &              WW(I,J,K+1)+WW(I-1,J,K)+WW(I-1,J,K+1))/4.0D0
                DWDX = (WEP-WWP)/SEW(I)
                WNP = (WW(I,J,K)+
-     &              WW(I,J,K+1)+WW(I,J+1,K)+WW(I,J+1,K+1))/4.0
+     &              WW(I,J,K+1)+WW(I,J+1,K)+WW(I,J+1,K+1))/4.0D0
                WSP = (WW(I,J,K)+
-     &              WW(I,J,K+1)+WW(I,J-1,K)+WW(I,J-1,K+1))/4.0
+     &              WW(I,J,K+1)+WW(I,J-1,K)+WW(I,J-1,K+1))/4.0D0
                DWDY = (WNP-WSP)/SNS(J)
 Cmjb... estimate gradient of velocity in transverse direction
 Cmjb     * for a uni-axial flow, this would be "du/dy"
@@ -124,14 +124,14 @@ c              calculate the grid strain rate tensor
                s11 = (uep-uwp)/sew(i)
                s22 = (vnp-vsp)/sns(j)
                s33 = (wtp-wbp)/stb(k)
-               s12 = 0.5*((unp-usp)/sns(j) + (vep-vwp)/sew(i))
-               s13 = 0.5*((utp-ubp)/stb(k) + (wep-wwp)/sew(i))
-               s23 = 0.5*((vtp-vbp)/stb(k) + (wnp-wsp)/sns(j))
+               s12 = 0.5D0*((unp-usp)/sns(j) + (vep-vwp)/sew(i))
+               s13 = 0.5D0*((utp-ubp)/stb(k) + (wep-wwp)/sew(i))
+               s23 = 0.5D0*((vtp-vbp)/stb(k) + (wnp-wsp)/sns(j))
 
 c              calculate absolute value of the grid strain rate
    
-               IsI = sqrt(2.0*(s11**2 + s22**2 + s33**2 +
-     &              2.0*(s12**2 + s13**2 + s23**2)))
+               IsI = sqrt(2.0D0*(s11**2 + s22**2 + s33**2 +
+     &              2.0D0*(s12**2 + s13**2 + s23**2)))
 
 Cmjb.... logic within next if/then block can be invoked
 Cmjb     when using mixing length model to start up a k-e model
