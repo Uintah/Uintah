@@ -2235,11 +2235,25 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
           Vector min_mom_L = vel_CC[*iter] * min_mass;
           Vector mom_L_tmp = vel_CC[*iter] * mass + 
                                vel_CC[*iter] * burnedMass[*iter];
-
-          double mom_L_x = std::max( mom_L_tmp.x(), min_mom_L.x() );
-          double mom_L_y = std::max( mom_L_tmp.y(), min_mom_L.y() );
-          double mom_L_z = std::max( mom_L_tmp.z(), min_mom_L.z() );
-
+                               
+           // find the max between mom_L_tmp and min_mom_L
+           // but keep the sign of the mom_L_tmp     
+           // You need the d_SMALL_NUMs to avoid nans when mom_L_temp = 0.0           
+          double plus_minus_one_x = (mom_L_tmp.x()+d_SMALL_NUM)/
+                                    (fabs(mom_L_tmp.x()+d_SMALL_NUM));
+          double plus_minus_one_y = (mom_L_tmp.y()+d_SMALL_NUM)/
+                                    (fabs(mom_L_tmp.y()+d_SMALL_NUM));
+          double plus_minus_one_z = (mom_L_tmp.z()+d_SMALL_NUM)/
+                                    (fabs(mom_L_tmp.z()+d_SMALL_NUM));
+          
+          double mom_L_x = std::max( fabs(mom_L_tmp.x()), min_mom_L.x() );
+          double mom_L_y = std::max( fabs(mom_L_tmp.y()), min_mom_L.y() );
+          double mom_L_z = std::max( fabs(mom_L_tmp.z()), min_mom_L.z() );
+          
+          mom_L_x = plus_minus_one_x * mom_L_x;
+          mom_L_y = plus_minus_one_y * mom_L_y;
+          mom_L_z = plus_minus_one_z * mom_L_z;
+ 
           mom_L[*iter] = Vector(mom_L_x,mom_L_y,mom_L_z) + mom_source[*iter];
 
           // must have a minimum int_eng   
