@@ -19,6 +19,8 @@ using std::vector;
       const VarLabel* temp_CCLabel;
       const VarLabel* press_NCLabel;
       const VarLabel* burnedMassCCLabel;
+      const VarLabel* onSurfaceLabel;
+      const VarLabel* surfaceTempLabel;
       const VarLabel* scratchLabel;         // to vis intermediate quantities
       const VarLabel* scratch1Label;
       const VarLabel* scratch2Label;
