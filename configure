@@ -4174,8 +4174,6 @@ else
   DEF_MALLOC="#define DISABLE_SCI_MALLOC"
 fi
 
-is_linux=`echo $host | sed 's/.*linux.*/linux/'`
-
 
 
 
@@ -8170,11 +8168,14 @@ else
   _sci_inc="/usr/X11R6/include"
 fi
 
-if test "$is_linux" = "linux"; then
-  GLU_OTHERS="-lpthread"
-else
+case $host in
+  *linux*)
+  GLU_OTHERS="pthread"
+  ;;
+  *)
   GLU_OTHERS=""
-fi
+  ;;
+esac
 
 
 ## arguments mean:
@@ -8221,7 +8222,7 @@ for i in $_sci_inc; do
 done
 
 
-for i in GLU GL; do
+for i in GLU GL $GLU_OTHERS; do
   if test -z "$_sci_libs"; then
     _sci_libs=-l$i
   else
@@ -8245,7 +8246,7 @@ done
 CFLAGS="$_sci_includes $CFLAGS"
 CXXFLAGS="$_sci_includes $CXXFLAGS"
 LDFLAGS="$_sci_lib_path $LDFLAGS"
-LIBS="$_sci_libs $GLU_OTHERS $LIBS"
+LIBS="$_sci_libs  $LIBS"
 
 cat >conftest.$ac_ext <<_ACEOF
 #line $LINENO "configure"
@@ -8532,165 +8533,9 @@ _sci_includes=''
 
 if test "$HAVE_DL" = "yes"; then
    HAVE_LIB_DL="yes"
-elif test "$IS_OSX" = "no"; then
-
-## arguments mean:
-## arg 1 : variable base name i.e. MATH
-## arg 2 : checking message
-## arg 3 : includes that arg 6 needs to compile
-## arg 4 : include paths -I
-## arg 5 : list of libs to link against -l
-## arg 6 : lib paths -L
-## arg 7 : extra link flags
-## arg 8 : body of code to compile. can be empty
-## arg 9 : optional or not-optional required argument
-##
-## after execution of macro, the following will be defined:
-##      Variable            Value
-##      --------            -----
-##      LIB_DIR_DL        => lib path
-##      DL_LIB_DIR_FLAG   => all the -L's
-##      DL_LIB_FLAG       => all the -l's
-##      HAVE_DL           => yes or no
-##      INC_DL_H          => all the -I's
-##      HAVE_DL_H         => yes or no
-
-
-
-echo "$as_me:$LINENO: checking for dlopen in libdl" >&5
-echo $ECHO_N "checking for dlopen in libdl... $ECHO_C" >&6
-_sci_savelibs=$LIBS
-_sci_saveldflags=$LDFLAGS
-_sci_savecflags=$CFLAGS
-_sci_savecxxflags=$CXXFLAGS
-
-_sci_includes=
-
-
-for i in dl; do
-  if test -z "$_sci_libs"; then
-    _sci_libs=-l$i
-  else
-    _sci_libs="$_sci_libs -l$i"
-  fi
-done
-
-_sci_lib_path=
-
-CFLAGS="$_sci_includes $CFLAGS"
-CXXFLAGS="$_sci_includes $CXXFLAGS"
-LDFLAGS="$_sci_lib_path $LDFLAGS"
-LIBS="$_sci_libs  $LIBS"
-
-cat >conftest.$ac_ext <<_ACEOF
-#line $LINENO "configure"
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-
-  #include <dlfcn.h>
-
-int
-main ()
-{
-
-    dlopen("bogus", 0);
-
-  ;
-  return 0;
-}
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-         { ac_try='test -s conftest$ac_exeext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-
-eval LIB_DIR_DL='""'
-eval DL_LIB_DIR_FLAG='"$_sci_lib_path"'
-eval DL_LIB_FLAG='"$_sci_libs"'
-eval HAVE_DL="yes"
-eval INC_DL_H='"$_sci_includes"'
-eval HAVE_DL_H="yes"
-echo "$as_me:$LINENO: result: yes" >&5
-echo "${ECHO_T}yes" >&6
-
 else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-
-eval LIB_DIR_DL=''
-eval DL_LIB_DIR_FLAG=''
-eval DL_LIB_FLAG=''
-eval HAVE_DL="no"
-eval INC_DL_H=''
-eval HAVE_DL_H="no"
-echo "$as_me:$LINENO: result: not found" >&5
-echo "${ECHO_T}not found" >&6
-if test "not-optional" =  "not-optional"; then
-
-## SCI_MSG_ERROR
-if test -z "$debugging"; then
-  { echo "$as_me:$LINENO: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
-    Digging through the config.log file is your best option
-    for determining what went wrong.  Search for the specific lib/file
-    that configured failed to find.  There should be a compile line
-    and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
-    error most likely will show up.
-  " >&5
-echo "$as_me: WARNING:
-    Adding '--enable-verbosity' to configure line
-    _may_ give more information about what is breaking.
-    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
-    Digging through the config.log file is your best option
-    for determining what went wrong.  Search for the specific lib/file
-    that configured failed to find.  There should be a compile line
-    and source code near that check.  If you cut the source code into
-    a test.cc and then use the compile line to compile it, the true
-    error most likely will show up.
-  " >&2;}
-fi
-
-{ { echo "$as_me:$LINENO: error: Test for required DL failed.
-    To see the failed compile information, look in config.log,
-    search for DL. Please install the relevant libraries
-     or specify the correct paths and try to configure again." >&5
-echo "$as_me: error: Test for required DL failed.
-    To see the failed compile information, look in config.log,
-    search for DL. Please install the relevant libraries
-     or specify the correct paths and try to configure again." >&2;}
-   { (exit 1); exit 1; }; }
-
-fi
-
-fi
-rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
-
-#restore variables
-CFLAGS=$_sci_savecflags
-CXXFLAGS=$_sci_savecxxflags
-LDFLAGS=$_sci_saveldflags
-LIBS=$_sci_savelibs
-_sci_lib_path=''
-_sci_libs=''
-_sci_includes=''
-
-
-else
+  case $host in
+  *-darwin*)
 
 ## arguments mean:
 ## arg 1 : variable base name i.e. MATH
@@ -8770,13 +8615,13 @@ cat confdefs.h >>conftest.$ac_ext
 cat >>conftest.$ac_ext <<_ACEOF
 /* end confdefs.h.  */
 
-  #include <dlfcn.h>
+    #include <dlfcn.h>
 
 int
 main ()
 {
 
-    dlopen("bogus", 0);
+      dlopen("bogus", 0);
 
   ;
   return 0;
@@ -8870,6 +8715,167 @@ _sci_libs=''
 _sci_includes=''
 
 
+    ;;
+  *)
+
+## arguments mean:
+## arg 1 : variable base name i.e. MATH
+## arg 2 : checking message
+## arg 3 : includes that arg 6 needs to compile
+## arg 4 : include paths -I
+## arg 5 : list of libs to link against -l
+## arg 6 : lib paths -L
+## arg 7 : extra link flags
+## arg 8 : body of code to compile. can be empty
+## arg 9 : optional or not-optional required argument
+##
+## after execution of macro, the following will be defined:
+##      Variable            Value
+##      --------            -----
+##      LIB_DIR_DL        => lib path
+##      DL_LIB_DIR_FLAG   => all the -L's
+##      DL_LIB_FLAG       => all the -l's
+##      HAVE_DL           => yes or no
+##      INC_DL_H          => all the -I's
+##      HAVE_DL_H         => yes or no
+
+
+
+echo "$as_me:$LINENO: checking for dlopen in libdl" >&5
+echo $ECHO_N "checking for dlopen in libdl... $ECHO_C" >&6
+_sci_savelibs=$LIBS
+_sci_saveldflags=$LDFLAGS
+_sci_savecflags=$CFLAGS
+_sci_savecxxflags=$CXXFLAGS
+
+_sci_includes=
+
+
+for i in dl; do
+  if test -z "$_sci_libs"; then
+    _sci_libs=-l$i
+  else
+    _sci_libs="$_sci_libs -l$i"
+  fi
+done
+
+_sci_lib_path=
+
+CFLAGS="$_sci_includes $CFLAGS"
+CXXFLAGS="$_sci_includes $CXXFLAGS"
+LDFLAGS="$_sci_lib_path $LDFLAGS"
+LIBS="$_sci_libs  $LIBS"
+
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+    #include <dlfcn.h>
+
+int
+main ()
+{
+
+      dlopen("bogus", 0);
+
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+         { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+
+eval LIB_DIR_DL='""'
+eval DL_LIB_DIR_FLAG='"$_sci_lib_path"'
+eval DL_LIB_FLAG='"$_sci_libs"'
+eval HAVE_DL="yes"
+eval INC_DL_H='"$_sci_includes"'
+eval HAVE_DL_H="yes"
+echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+
+eval LIB_DIR_DL=''
+eval DL_LIB_DIR_FLAG=''
+eval DL_LIB_FLAG=''
+eval HAVE_DL="no"
+eval INC_DL_H=''
+eval HAVE_DL_H="no"
+echo "$as_me:$LINENO: result: not found" >&5
+echo "${ECHO_T}not found" >&6
+if test "not-optional" =  "not-optional"; then
+
+## SCI_MSG_ERROR
+if test -z "$debugging"; then
+  { echo "$as_me:$LINENO: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it, the true
+    error most likely will show up.
+  " >&5
+echo "$as_me: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING, TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it, the true
+    error most likely will show up.
+  " >&2;}
+fi
+
+{ { echo "$as_me:$LINENO: error: Test for required DL failed.
+    To see the failed compile information, look in config.log,
+    search for DL. Please install the relevant libraries
+     or specify the correct paths and try to configure again." >&5
+echo "$as_me: error: Test for required DL failed.
+    To see the failed compile information, look in config.log,
+    search for DL. Please install the relevant libraries
+     or specify the correct paths and try to configure again." >&2;}
+   { (exit 1); exit 1; }; }
+
+fi
+
+fi
+rm -f conftest.$ac_objext conftest$ac_exeext conftest.$ac_ext
+
+#restore variables
+CFLAGS=$_sci_savecflags
+CXXFLAGS=$_sci_savecxxflags
+LDFLAGS=$_sci_saveldflags
+LIBS=$_sci_savelibs
+_sci_lib_path=''
+_sci_libs=''
+_sci_includes=''
+
+
+    ;;
+  esac
 fi
 
 
@@ -18810,8 +18816,8 @@ if test "$sci_check_hdf5" = "yes"; then
     _sci_lib="$with_hdf5/lib"
     _sci_inc="$with_hdf5/include"
   else
-    _sci_lib="/usr/local/hdf5/1.4.5/lib"
-    _sci_inc="/usr/local/hdf5/1.4.5/include"
+    _sci_lib="/usr/local/lib"
+    _sci_inc="/usr/local/include"
   fi
 
 
@@ -20975,8 +20981,7 @@ fi # end sci_check_uuid
 ##  --  See if we have everything needed for SCIRun2 ----------------------
 
 if test "$enable_scirun2" = "yes"; then
-  ## For now, don't check for uuid if on macintosh.
-  if test "$have_uuid" != "yes" && test "$IS_OSX" != "yes"; then
+  if test "$have_uuid" != "yes"; then
     case $host in
       *linux*)
 
@@ -21010,6 +21015,11 @@ fi
 echo "$as_me: error: uuid_generate function and libuuid not found" >&2;}
    { (exit 1); exit 1; }; }
 
+        ;;
+      ## For now, don't check for uuid if on macintosh.
+      *-darwin*)
+        { echo "$as_me:$LINENO: WARNING: Skipping uuid check on MAC" >&5
+echo "$as_me: WARNING: Skipping uuid check on MAC" >&2;}
         ;;
       *)
 
