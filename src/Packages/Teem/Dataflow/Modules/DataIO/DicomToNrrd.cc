@@ -50,7 +50,10 @@
 #include <Core/Algorithms/DataIO/DicomImage.h>
 #endif
 
-namespace SCITeem {
+// Standard includes
+#include <dirent.h>
+
+namespace SCITeem { 
 
 using namespace SCIRun;
 
@@ -275,6 +278,19 @@ void DicomToNrrd::tcl_command(GuiArgs& args, void* userdata)
 
     DicomSeriesReader reader;
     string dir = args[2];
+
+    // Check to make sure the directory exists
+    DIR *dirp;
+    dirp = opendir( dir.c_str() );
+    if (!dirp)
+    {
+      string no_dir = string( "No such directory: " + dir );
+      messages_.set( no_dir );
+      string all_suids = "";
+      series_uid_.set( all_suids );
+      return;
+    }
+    closedir(dirp);
 
     reader.set_dir( dir );
 
@@ -520,7 +536,7 @@ int DicomToNrrd::build_nrrds( vector<Nrrd*> & array )
     int dim = image.get_dimension();
     if( dim == 3 ) 
     {
-      if( nrrdWrap(nrrd, image.get_pixel_buffer(), nrrdTypeUShort, 
+      if( nrrdWrap(nrrd, image.get_pixel_buffer(), nrrdTypeInt, 
                image.get_dimension(), image.get_size(0), 
                image.get_size(1), image.get_size(2)) ) 
       {
@@ -543,7 +559,7 @@ int DicomToNrrd::build_nrrds( vector<Nrrd*> & array )
       nrrd->axis[1].spacing = image.get_spacing(0);
       nrrd->axis[2].spacing = image.get_spacing(1);
       nrrd->axis[3].spacing = image.get_spacing(2);
-
+ 
       nrrdAxisMinMaxSet(nrrd, 0, nrrdCenterNode);
       nrrdAxisMinMaxSet(nrrd, 1, nrrdCenterNode);
       nrrdAxisMinMaxSet(nrrd, 2, nrrdCenterNode);
@@ -551,7 +567,7 @@ int DicomToNrrd::build_nrrds( vector<Nrrd*> & array )
     }
     else if( dim == 2 ) 
     {
-      if( nrrdWrap(nrrd, image.get_pixel_buffer(), nrrdTypeUShort, 
+      if( nrrdWrap(nrrd, image.get_pixel_buffer(), nrrdTypeInt, 
                image.get_dimension(), image.get_size(0), 
                image.get_size(1)) ) 
       {
