@@ -10,109 +10,94 @@
  * and alerted simultaneously.
  */
 
-void ThreadGroup::addme(ThreadGroup* t) {
-    lock.lock();
-    ThreadGroup** newgroups=new ThreadGroup*[ngroups+1];
-    for(int i=0;i<ngroups;i++)
-        newgroups[i]=groups[i];
-    newgroups[ngroups++]=t;
-    if(groups)
-        delete[] groups;
-    groups=newgroups;
-    lock.unlock();
+void ThreadGroup::addme(ThreadGroup* t)
+{
+    d_lock.lock();
+    d_groups.push_back(t);
+    d_lock.unlock();
 }
 
-void ThreadGroup::addme(Thread* t) {
-    lock.lock();
-    Thread** newthreads=new Thread*[nthreads+1];
-    for(int i=0;i<nthreads;i++)
-        newthreads[i]=threads[i];
-    newthreads[nthreads++]=t;
-    if(threads)
-        delete[] threads;
-    threads=newthreads;
-    lock.unlock();
+void ThreadGroup::addme(Thread* t)
+{
+    d_lock.lock();
+    d_threads.push_back(t);
+    d_lock.unlock();
 }
 
-ThreadGroup* ThreadGroup::default_group;
-ThreadGroup::ThreadGroup(char* name, ThreadGroup* parentGroup)
-	: lock("ThreadGroup lock"), name(strdup(name)), parent(parentGroup) {
+ThreadGroup* ThreadGroup::s_defaultGroup;
+
+ThreadGroup::ThreadGroup(const std::string& name, ThreadGroup* parentGroup)
+    : d_lock("ThreadGroup lock"), d_name(name), d_parent(parentGroup)
+{
     if(parentGroup==0){
-        parent=default_group;
-        if(parent) // It could still be null if we are making the first one
-    	parent->addme(this);
+        d_parent=s_defaultGroup;
+        if(d_parent) // It could still be null if we are making the first one
+	    d_parent->addme(this);
     }
-    ngroups=nthreads=0;
-    groups=0;
-    threads=0;
 }
 
-ThreadGroup::~ThreadGroup() {
-    free(name);
+ThreadGroup::~ThreadGroup()
+{
 }
 
-int ThreadGroup::nactive(bool countDaemon) {
-    lock.lock();
-    int total;
+int ThreadGroup::numActive(bool countDaemon)
+{
+    d_lock.lock();
+    int total=0;
     if(countDaemon){
-        total=nthreads;
+        total=d_threads.size();
     } else {
-        for(int i=0;i<nthreads;i++)
-    	if(threads[i]->isDaemon())
-    	   total++;
+	for(vector<Thread*>::iterator iter=d_threads.begin();iter != d_threads.end();iter++)
+	    if((*iter)->isDaemon())
+		total++;
     }
-    for(int i=0;i<ngroups;i++)
-        total+=groups[i]->nactive(countDaemon);
-    lock.unlock();
+    for(vector<ThreadGroup*>::iterator iter=d_groups.begin();iter != d_groups.end();iter++)
+        total+=(*iter)->numActive(countDaemon);
+    d_lock.unlock();
     return total;
 }
 
 void ThreadGroup::stop() {
-    lock.lock();
-    for(int i=0;i<ngroups;i++)
-        groups[i]->stop();
-    for(int j=0;j<nthreads;j++)
-        threads[j]->stop();
-    lock.unlock();
+    d_lock.lock();
+    for(vector<ThreadGroup*>::iterator iter=d_groups.begin();iter != d_groups.end();iter++)
+        (*iter)->stop();
+    for(vector<Thread*>::iterator iter=d_threads.begin();iter != d_threads.end();iter++)
+        (*iter)->stop();
+    d_lock.unlock();
 }
 
-void ThreadGroup::resume() {
-    lock.lock();
-    for(int i=0;i<ngroups;i++)
-        groups[i]->resume();
-    for(int j=0;j<nthreads;j++)
-        threads[j]->resume();
-    lock.unlock();
+void ThreadGroup::resume()
+{
+    d_lock.lock();
+    for(vector<ThreadGroup*>::iterator iter=d_groups.begin();iter != d_groups.end();iter++)
+        (*iter)->resume();
+    for(vector<Thread*>::iterator iter=d_threads.begin();iter != d_threads.end();iter++)
+        (*iter)->resume();
+    d_lock.unlock();
 }
 
-void ThreadGroup::join() {
-    lock.lock();
-    for(int i=0;i<ngroups;i++)
-        groups[i]->join();
-    for(int j=0;j<nthreads;j++)
-        threads[j]->join();
-    lock.unlock();
+void ThreadGroup::join()
+{
+    d_lock.lock();
+    for(vector<ThreadGroup*>::iterator iter=d_groups.begin();iter != d_groups.end();iter++)
+        (*iter)->join();
+    for(vector<Thread*>::iterator iter=d_threads.begin();iter != d_threads.end();iter++)
+        (*iter)->join();
+    d_lock.unlock();
 }
 
-void ThreadGroup::detach() {
-    lock.lock();
-    for(int i=0;i<ngroups;i++)
-        groups[i]->detach();
-    for(int j=0;j<nthreads;j++)
-        threads[j]->detach();
-    lock.unlock();
+void ThreadGroup::detach()
+{
+    d_lock.lock();
+    for(vector<ThreadGroup*>::iterator iter=d_groups.begin();iter != d_groups.end();iter++)
+        (*iter)->detach();
+    for(vector<Thread*>::iterator iter=d_threads.begin();iter != d_threads.end();iter++)
+        (*iter)->detach();
+    d_lock.unlock();
 }
 
-void ThreadGroup::alert(int code) {
-    lock.lock();
-    for(int i=0;i<ngroups;i++)
-        groups[i]->alert(code);
-    for(int j=0;j<nthreads;j++)
-        threads[j]->alert(code);
-    lock.unlock();
-}
-
-ThreadGroup* ThreadGroup::parentGroup() {
-    return parent;
+ThreadGroup* ThreadGroup::parentGroup()
+{
+    return d_parent;
 }
 

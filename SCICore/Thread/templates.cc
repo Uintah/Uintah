@@ -1,7 +1,7 @@
 
-#include <SCICore/Thread/Mailbox.h>
-#include <SCICore/Thread/Parallel.h>
-#include <SCICore/Thread/TestThreads.h>
+#include <Thread/Mailbox.h>
+#include <Thread/Parallel.h>
+#include <Thread/TestThreads.h>
 
 template class AsyncReply<int>;
 

@@ -44,7 +44,7 @@ extern "C" {
 #define TOPBIT ((unsigned int)0x80000000)
 
 extern "C" int __ateachexit(void(*)());
-#define THREAD_STACKSIZE 256*1024*2
+#define THREAD_STACKSIZE 256*1024*4
 
 #define MAXBSTACK 10
 #define MAXTHREADS 4000
@@ -133,21 +133,24 @@ struct ThreadLocalMemory {
 };
 ThreadLocalMemory* thread_local;
 
-static void lock_scheduler() {
+static void lock_scheduler()
+{
     if(uspsema(schedlock) == -1){
 	perror("uspsema");
 	Thread::niceAbort();
     }
 }
 
-static void unlock_scheduler() {
+static void unlock_scheduler()
+{
     if(usvsema(schedlock) == -1){
 	perror("usvsema");
 	Thread::niceAbort();
     }
 }
 
-static int push_bstack(Thread_private* p, int state, const char* name) {
+static int push_bstack(Thread_private* p, int state, const char* name)
+{
     int oldstate=p->state;
     p->state=state;
     p->blockstack[p->bstacksize]=name;
@@ -159,17 +162,20 @@ static int push_bstack(Thread_private* p, int state, const char* name) {
     return oldstate;
 }
 
-static void pop_bstack(Thread_private* p, int oldstate) {
+static void pop_bstack(Thread_private* p, int oldstate)
+{
     p->bstacksize--;
     p->state=oldstate;
 }
 
-int Thread::couldBlock(const char* why) {
+int Thread::couldBlock(const char* why)
+{
     Thread_private* p=Thread::currentThread()->priv;
     return push_bstack(p, STATE_BLOCK_ANY, why);
 }
 
-void Thread::couldBlock(int restore) {
+void Thread::couldBlock(int restore)
+{
     Thread_private* p=Thread::currentThread()->priv;
     pop_bstack(p, restore);
 }
@@ -177,7 +183,8 @@ void Thread::couldBlock(int restore) {
 /*
  * Return the statename for p
  */
-static const char* getstate(Thread_private* p){
+static const char* getstate(Thread_private* p)
+{
     switch(p->state) {
     case STATE_STARTUP:
 	return "startup";
@@ -210,7 +217,8 @@ static const char* getstate(Thread_private* p){
     }
 }
 
-static void print_threads(FILE* fp, int print_idle) {
+static void print_threads(FILE* fp, int print_idle)
+{
     for(int i=0;i<nactive;i++){
 	Thread_private* p=active[i];
 	const char* tname=p->thread?p->thread->threadName():"???";
@@ -238,7 +246,8 @@ static void print_threads(FILE* fp, int print_idle) {
     }
 }
 
-static Thread_private* find_thread_from_tid(int tid){
+static Thread_private* find_thread_from_tid(int tid)
+{
     for(int i=0;i<nactive;i++){
 	Thread_private* p=active[i];
 	if(p->pid == tid)
@@ -250,7 +259,8 @@ static Thread_private* find_thread_from_tid(int tid){
 /*
  * Shutdown the threads...
  */
-void Thread_exit() {
+void Thread_exit()
+{
     if(exiting)
 	return;
     Thread* self=Thread::currentThread();
@@ -377,7 +387,8 @@ static char* signal_name(int sig, int code, caddr_t addr)
     return buf;
 }
 
-static void wait_shutdown() {
+static void wait_shutdown()
+{
     long n;
     if((n=prctl(PR_GETNSHARE)) > 1){
 	fprintf(stderr, "Waiting for %d threads to shut down: ", (int)(n-1));
@@ -483,7 +494,8 @@ static void handle_abort_signals(int sig, int code, sigcontext_t* context)
 /*
  * Handle SIGUSR2 - the signal that gets sent when another thread dies.
  */
-static void handle_thread_death(int, int, sigcontext_t*) {
+static void handle_thread_death(int, int, sigcontext_t*)
+{
     if(exiting){
 	if(getpid() == main_pid)
 	    return;
@@ -499,7 +511,8 @@ static void handle_thread_death(int, int, sigcontext_t*) {
 }
 
 #if 0
-void Thread_send_event(Thread* t, Thread::ThreadEvent event) {
+void Thread_send_event(Thread* t, Thread::ThreadEvent event)
+{
     Thread::event(t, event);
 }
 #endif
@@ -507,7 +520,8 @@ void Thread_send_event(Thread* t, Thread::ThreadEvent event) {
 /*
  * Setup signals for the current thread
  */
-static void install_signal_handlers(){
+static void install_signal_handlers()
+{
     struct sigaction action;
     sigemptyset(&action.sa_mask);
     action.sa_flags=0;
@@ -606,8 +620,8 @@ static void mld_alloc(int size, int nmld,
 /*
  * Intialize threads for irix
  */
-void Thread::initialize() {
-
+void Thread::initialize()
+{
     int poffmask = getpagesize() - 1;
     unsigned int cycleval;
     __psunsigned_t phys_addr = syssgi(SGI_QUERY_CYCLECNTR, &cycleval);
@@ -707,6 +721,7 @@ void Thread::initialize() {
 	exit(1);
     }
     reservoir=fetchop_init(USE_DEFAULT_PM, 10);
+    fprintf(stderr, "Made reservoir\n");
     if(!reservoir){
 	fprintf(stderr, "fetchop not available, disabled\n");
 	use_fetchop=false;
@@ -797,7 +812,9 @@ void Thread::roundRobinPlacement( void *mem, size_t len )
 	perror("pm_attach");
     }
 }
-void ThreadGroup::gangSchedule() {
+
+void ThreadGroup::gangSchedule()
+{
     /* There are two problems with real gang scheduling.
      *
      * 1) It needs to be run as root.
@@ -816,11 +833,13 @@ void ThreadGroup::gangSchedule() {
     }
 }
 
-void Thread_run(Thread* t) {
+void Thread_run(Thread* t)
+{
     t->run_body();
 }
 
-static void run_threads(void* priv_v, size_t) {
+static void run_threads(void* priv_v, size_t)
+{
     Thread_private* priv=(Thread_private*)priv_v;
     if(!getenv("THREAD_NO_CATCH_SIGNALS"))
 	install_signal_handlers();
@@ -840,7 +859,8 @@ static void run_threads(void* priv_v, size_t) {
     }
 }
 
-void Thread_shutdown(Thread* thread) {
+void Thread_shutdown(Thread* thread)
+{
     Thread_private* priv=thread->priv;
     int pid=getpid();
 
@@ -892,7 +912,8 @@ void Thread_shutdown(Thread* thread) {
     }
 }
 
-void Thread::check_exit() {
+void Thread::check_exit()
+{
     lock_scheduler();
     int done=true;
     for(int i=0;i<nactive;i++){
@@ -908,7 +929,8 @@ void Thread::check_exit() {
 	Thread::exitAll(0);
 }
 
-void Thread::exitAll(int code) {
+void Thread::exitAll(int code)
+{
     exiting=true;
     exit_code=code;
 
@@ -936,7 +958,8 @@ void Thread::exitAll(int code) {
 /*
  * Startup the given thread...
  */
-void Thread::os_start(bool stopped) {
+void Thread::os_start(bool stopped)
+{
     /* See if there is a thread waiting around ... */
     if(!initialized){
 	Thread::initialize();
@@ -991,7 +1014,8 @@ void Thread::os_start(bool stopped) {
     //Thread::event(this, THREAD_START);
 }
 
-void Thread::setPriority(int pri) {
+void Thread::setPriority(int pri)
+{
     /*
      * Priorities are disabled currently, because they only
      * work from root.
@@ -999,28 +1023,32 @@ void Thread::setPriority(int pri) {
     priority=pri;
 }
 
-void Thread::stop() {
+void Thread::stop()
+{
     if(blockproc(priv->pid) != 0){
 	perror("blockproc");
 	error("Cannot block thread");
     }
 }
 
-void Thread::resume() {
+void Thread::resume()
+{
     if(unblockproc(priv->pid) != 0){
 	perror("unblockproc");
 	error("Cannot unblock thread");
     }
 }
 
-void Thread::detach() {
+void Thread::detach()
+{
     if(usvsema(priv->delete_ready) == -1){
 	perror("usvsema");
 	Thread::niceAbort();
     }
 }    
 
-void Thread::join() {
+void Thread::join()
+{
     Thread* us=Thread::currentThread();
     int os=push_bstack(us->priv, STATE_JOINING, threadname);
     if(uspsema(priv->done) == -1){
@@ -1060,9 +1088,9 @@ SysClock Thread::currentTicks()
 {
     if(timer_32bit){
 	for(;;){
-	    unsigned high=iotimer_high;
-	    unsigned ohigh=high;
-	    unsigned low=*iotimer_addr32;
+	    unsigned int high=iotimer_high;
+	    unsigned int ohigh=high;
+	    unsigned int low=*iotimer_addr32;
 	    if((low&TOPBIT) != (high&TOPBIT)){
 		// Possible rollover...
 		if(!(low&TOPBIT))
@@ -1088,23 +1116,28 @@ SysClock Thread::currentTicks()
     }
 }
 
-double Thread::currentSeconds() {
+double Thread::currentSeconds()
+{
     return Thread::currentTicks()*ticks_to_seconds;
 }
 
-double Thread::secondsPerTick() {
+double Thread::secondsPerTick()
+{
     return ticks_to_seconds;
 }
 
-double Thread::ticksPerSecond() {
+double Thread::ticksPerSecond()
+{
     return seconds_to_ticks;
 }
 
-void Thread::waitUntil(double seconds) {
+void Thread::waitUntil(double seconds)
+{
     waitFor(seconds-currentSeconds());
 }
 
-void Thread::waitFor(double seconds) {
+void Thread::waitFor(double seconds)
+{
     if(seconds<=0)
 	return;
     static long tps=0;
@@ -1116,11 +1149,13 @@ void Thread::waitFor(double seconds) {
     }
 }
 
-void Thread::waitUntil(SysClock time) {
+void Thread::waitUntil(SysClock time)
+{
     waitFor(time-currentTicks());
 }
 
-void Thread::waitFor(SysClock time) {
+void Thread::waitFor(SysClock time)
+{
     if(time<=0)
 	return;
     static double tps=0;
@@ -1135,7 +1170,8 @@ void Thread::waitFor(SysClock time) {
 /*
  * Migrate the thread to a CPU.
  */
-void Thread::migrate(int proc) {
+void Thread::migrate(int proc)
+{
 #if 0
     if(proc==-1){
 	if(sysmp(MP_RUNANYWHERE_PID, priv->pid) == -1){
@@ -1154,7 +1190,9 @@ void Thread::migrate(int proc) {
  * Mutex implementation
  */
 
-Mutex::Mutex(const char* name) : name(name) {
+Mutex::Mutex(const char* name)
+    : name(name)
+{
     if(!initialized){
 	Thread::initialize();
     }
@@ -1165,11 +1203,13 @@ Mutex::Mutex(const char* name) : name(name) {
     }
 }
 
-Mutex::~Mutex() {
+Mutex::~Mutex()
+{
     usfreelock((ulock_t)priv, arena);
 }
 
-void Mutex::lock() {
+void Mutex::lock()
+{
     Thread* t=Thread::currentThread();
     int os;
     Thread_private* p=0;
@@ -1185,7 +1225,8 @@ void Mutex::lock() {
 	pop_bstack(p, os);
 }
 
-bool Mutex::try_lock() {
+bool Mutex::try_lock()
+{
     int st=uscsetlock((ulock_t)priv, 100);
     if(st==-1){
 	perror("uscsetlock");
@@ -1194,7 +1235,8 @@ bool Mutex::try_lock() {
     return st!=0;
 }
 
-void Mutex::unlock() {
+void Mutex::unlock()
+{
     if(usunsetlock((ulock_t)priv) == -1){
 	perror("usunsetlock");
 	Thread::niceAbort();
@@ -1205,7 +1247,8 @@ void Mutex::unlock() {
  * PoolMutex implementation
  */
 
-PoolMutex::PoolMutex() {
+PoolMutex::PoolMutex()
+{
     if(ussetlock((ulock_t)poolmutex_lock) == -1){
 	perror("ussetlock");
 	Thread::niceAbort();
@@ -1230,7 +1273,8 @@ PoolMutex::PoolMutex() {
     }
 }
 
-PoolMutex::~PoolMutex() {
+PoolMutex::~PoolMutex()
+{
     if(ussetlock((ulock_t)poolmutex_lock) == -1){
 	perror("ussetlock");
 	Thread::niceAbort();
@@ -1244,7 +1288,8 @@ PoolMutex::~PoolMutex() {
     }
 }
 
-void PoolMutex::lock() {
+void PoolMutex::lock()
+{
     Thread* t=Thread::currentThread();
     Thread_private* p=t->priv;
     int os=push_bstack(p, STATE_BLOCK_POOLMUTEX, poolmutex_names[mutex_idx]);
@@ -1255,7 +1300,8 @@ void PoolMutex::lock() {
     pop_bstack(p, os);
 }
 
-bool PoolMutex::try_lock() {
+bool PoolMutex::try_lock()
+{
     // Note - the Irix 6.2 manpage is wrong about what this returns...
     int st=uscsetlock((ulock_t)poolmutex[mutex_idx], 100);
     if(st==-1){
@@ -1265,7 +1311,8 @@ bool PoolMutex::try_lock() {
     return st==0;
 }
 
-void PoolMutex::unlock() {
+void PoolMutex::unlock()
+{
     if(usunsetlock((ulock_t)poolmutex[mutex_idx]) == -1){
 	perror("usunsetlock");
 	Thread::niceAbort();
@@ -1280,7 +1327,7 @@ struct Semaphore_private {
 };
 
 Semaphore::Semaphore(const char* name, int count)
-: name(name)
+    : name(name)
 {
     if(!initialized){
 	Thread::initialize();
@@ -1351,13 +1398,14 @@ struct Barrier_private {
 };
 
 Barrier_private::Barrier_private()
-: cond0("Barrier condition 0"), cond1("Barrier condition 1"),
-  mutex("Barrier lock"), nwait(0), cc(0)
+    : cond0("Barrier condition 0"), cond1("Barrier condition 1"),
+      mutex("Barrier lock"), nwait(0), cc(0)
 {
     if(nprocessors > 1){
 	if(use_fetchop){
 	    flag=0;
 	    pvar=fetchop_alloc(reservoir);
+	    fprintf(stderr, "***Alloc: %p\n", pvar);
 	    if(!pvar){
 		perror("fetchop_alloc");
 		Thread::niceAbort();
@@ -1371,7 +1419,7 @@ Barrier_private::Barrier_private()
 }   
 
 Barrier::Barrier(const char* name, int nthreads)
- : name(name), nthreads(nthreads), threadGroup(0)
+    : name(name), nthreads(nthreads), threadGroup(0)
 {
     if(!initialized){
 	Thread::initialize();
@@ -1380,7 +1428,7 @@ Barrier::Barrier(const char* name, int nthreads)
 }
 
 Barrier::Barrier(const char* name, ThreadGroup* threadGroup)
- : name(name), nthreads(0), threadGroup(threadGroup)
+    : name(name), nthreads(0), threadGroup(threadGroup)
 {
     if(!initialized){
 	Thread::initialize();
@@ -1390,10 +1438,12 @@ Barrier::Barrier(const char* name, ThreadGroup* threadGroup)
 
 Barrier::~Barrier()
 {
-    if(use_fetchop)
+    if(use_fetchop){
 	fetchop_free(reservoir, priv->pvar);
-    else
+	fprintf(stderr, "*** Freeing: %p\n", priv->pvar);
+    } else {
 	free_barrier(priv->barrier);
+    }
     delete priv;
 }
 
@@ -1449,7 +1499,8 @@ static int pass_flags;
 static int prof_status;
 static unsigned short _junk;
 
-static void handle_profile(int, int, sigcontext_t*) {
+static void handle_profile(int, int, sigcontext_t*)
+{
     if(pass_profp){
 	// Start it.
 	prof_status=sprofil(pass_profp, pass_profcnt, pass_tvp, pass_flags);
@@ -1461,7 +1512,8 @@ static void handle_profile(int, int, sigcontext_t*) {
 }
 
 static void pass_sprofil(FILE* out, int pid, struct prof* profp, int profcnt,
-			 struct timeval* tvp, unsigned int flags) {
+			 struct timeval* tvp, unsigned int flags)
+{
     proflock.lock();
     pass_profp=profp;
     pass_profcnt=profcnt;
@@ -1503,7 +1555,8 @@ struct ProfRegion {
     char* strtab;
 };
 
-Elf_Scn* get_section_byname(Elf* elf, Elf32_Half ndx, char* wantname) {
+Elf_Scn* get_section_byname(Elf* elf, Elf32_Half ndx, char* wantname)
+{
     Elf_Scn* scn = 0;
     while ((scn = elf_nextscn(elf, scn)) != 0){
 	Elf32_Shdr* shdr;
@@ -1516,7 +1569,8 @@ Elf_Scn* get_section_byname(Elf* elf, Elf32_Half ndx, char* wantname) {
     return scn;
 }
 
-static void find_symbols(void* dlhandle, ProfRegion* region, ProfProc* procs, int& nprocs) {
+static void find_symbols(void* dlhandle, ProfRegion* region, ProfProc* procs, int& nprocs)
+{
     Elf_Cmd cmd=ELF_C_READ_MMAP;
     if (elf_version(EV_CURRENT) == EV_NONE) {
 	/* library out of date */
@@ -1616,7 +1670,8 @@ static void find_symbols(void* dlhandle, ProfRegion* region, ProfProc* procs, in
 
 int lookup_proc(ProfRegion* regions, int nregions,
 		ProfProc* procs, int nprocs,
-		unsigned int* stataddr) {
+		unsigned int* stataddr)
+{
     char* addr=0;
     for(int k=0;k<nregions;k++){
 	ProfRegion* region=&regions[k];
@@ -1644,7 +1699,8 @@ void gather_stats(unsigned long ninstr,
 		  ProfRegion* regions, int nregions,
 		  ProfProc* procs, int nprocs,
 		  ProfProc** sortedprocs, int& activeprocs,
-		  unsigned long& nsamples) {
+		  unsigned long& nsamples)
+{
     for(unsigned long i=0;i<ninstr;i++){
 	if(stats[i] != 0){
 	    int pi=procidx[i];
@@ -1663,13 +1719,15 @@ void gather_stats(unsigned long ninstr,
     }
 }
 
-int compare_procs(const void* p1, const void* p2) {
+int compare_procs(const void* p1, const void* p2)
+{
     ProfProc** proc1=(ProfProc**)p1;
     ProfProc** proc2=(ProfProc**)p2;
     return (int)((*proc2)->total_hit-(*proc1)->total_hit);
 }
 
-void Thread::profile(FILE* in, FILE* out) {
+void Thread::profile(FILE* in, FILE* out)
+{
     int tid=-1;
     Thread_private* priv;
     lock_scheduler();
@@ -1886,10 +1944,156 @@ void Thread::profile(FILE* in, FILE* out) {
     pass_sprofil(out, tid, 0, 0, 0, 0);
 }
 
-void Thread::alert(int) {
+void Thread::alert(int)
+{
     fprintf(stderr, "Thread::alert not finished\n");
 }
 
+<<<<<<< Thread_irix.cc
+
+
+#include "WorkQueue.h"
+#include "Thread.h"
+#include <iostream.h>
+#ifdef __sgi
+extern "C" {
+#include <sys/pmo.h>
+#include <fetchop.h>
+}
+#else
+#include "AtomicCounter.h"
+#endif
+#include <stdio.h>
+
+/*
+ * Doles out work assignment to various worker threads.  Simple
+ * attempts are made at evenly distributing the workload.
+ * Initially, assignments are relatively large, and will get smaller
+ * towards the end in an effort to equalize the total effort.
+ */
+struct WorkQueue_private {
+    WorkQueue_private();
+    fetchop_var_t* pvar;
+    AtomicCounter counter;
+};
+
+WorkQueue_private::WorkQueue_private()
+    : counter("WorkQueue counter", 0)
+{
+    if(use_fetchop){
+	pvar=fetchop_alloc(reservoir);
+	if(!pvar){
+	    perror("fetchop_alloc");
+	    Thread::niceAbort();
+	}
+	fprintf(stderr, "**Alloc: %p\n", pvar);
+	storeop_store(pvar, 0);
+    } else {
+	// Atomic counter is already initialized
+    }
+}
+
+void WorkQueue::init()
+{
+    if(use_fetchop)
+	storeop_store(priv->pvar, 0);
+    else
+	priv->counter.set(0);
+
+    fill();
+}
+
+WorkQueue::WorkQueue(const std::string& name, int totalAssignments,
+		     int nthreads, bool dynamic, int granularity)
+    : d_name(name), d_numThreads(nthreads),
+      d_totalAssignments(totalAssignments), d_granularity(granularity),
+      d_numAllocated(0), d_assignments(0), d_dynamic(dynamic)
+{
+    if(!initialized){
+	Thread::initialize();
+    }
+    d_priv=new WorkQueue_private();
+    init();
+}
+
+WorkQueue::WorkQueue()
+    : d_name(0), d_numAllocated(0), d_assignments(0)
+{
+    d_totalAssignments=0;
+    d_priv=0;
+}
+
+WorkQueue::~WorkQueue()
+{
+    if(priv){
+	if(use_fetchop){
+	    fprintf(stderr, "**Freeing: %p\n", priv->pvar);
+	    //fetchop_free(reservoir, priv->pvar);
+	}
+	delete priv;
+    }
+}
+
+bool WorkQueue::nextAssignment(int& start, int& end)
+{
+    int i;
+    if(use_fetchop){
+	i=(int)fetchop_increment(priv->pvar);
+    } else {
+	i=priv->counter++;
+    }
+    if(i >= nassignments)
+	return false;
+    start=assignments[i];
+    end=assignments[i+1];
+    return true;
+}
+
+void WorkQueue::refill(int new_ta, int new_numThreads,
+		       bool new_dynamic, int new_granularity)
+{
+    if(new_ta == totalAssignments && new_nthreads == nthreads
+       && new_dynamic == dynamic && new_granularity == granularity){
+	if(use_fetchop)
+	    storeop_store(priv->pvar, 0);
+	else
+	    priv->counter.set(0);
+    } else {
+	totalAssignments=new_ta;
+	nthreads=new_nthreads;
+	dynamic=new_dynamic;
+	granularity=new_granularity;
+	init();
+    }
+}
+
+#if 0
+void WorkQueue::addWork(int nassignments)
+{
+    if(!dynamic){
+        cerr << "ERROR: Work added to a non-dynamic WorkQueue: " << name << '\n';
+        return;
+    }
+    lock.lock();
+    int oldn=totalAssignments;
+    totalAssignments+=nassignments;
+    current_assignmentsize=(current_assignmentsize*totalAssignments)/(oldn+1);
+    decrement=(decrement*totalAssignments)/(oldn+1);
+    if(nwaiting)
+        workdone.cond_broadcast();  // Wake up sleeping workers...
+    lock.unlock();
+}
+
+void WorkQueue::waitForEmpty()
+{
+    lock.lock();
+    while(current_assignment != totalAssignments){
+	workdone.wait(lock);
+    }
+    lock.unlock();
+}
+#endif
+=======
 
 extern "C" {
 #include <sys/pmo.h>
@@ -1918,6 +2122,7 @@ WorkQueue_private::WorkQueue_private()
 	    perror("fetchop_alloc");
 	    Thread::niceAbort();
 	}
+	fprintf(stderr, "**Alloc: %p\n", pvar);
 	storeop_store(pvar, 0);
     } else {
 	// Atomic counter is already initialized
@@ -2030,8 +2235,10 @@ WorkQueue& WorkQueue::operator=(const WorkQueue& copy)
 WorkQueue::~WorkQueue()
 {
     if(priv){
-	if(use_fetchop)
-	    fetchop_free(reservoir, priv->pvar);
+	if(use_fetchop){
+	    fprintf(stderr, "**Freeing: %p\n", priv->pvar);
+	    //fetchop_free(reservoir, priv->pvar);
+	}
 	delete priv;
     }
 }
@@ -2039,10 +2246,11 @@ WorkQueue::~WorkQueue()
 bool WorkQueue::nextAssignment(int& start, int& end)
 {
     int i;
-    if(use_fetchop)
+    if(use_fetchop){
 	i=(int)fetchop_increment(priv->pvar);
-    else
+    } else {
 	i=priv->counter++;
+    }
     if(i >= nassignments)
 	return false;
     start=assignments[i];
@@ -2067,3 +2275,4 @@ void WorkQueue::refill(int new_ta, int new_nthreads,
 	init();
     }
 }
+>>>>>>> 1.13

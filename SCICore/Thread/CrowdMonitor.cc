@@ -8,69 +8,76 @@
  * the synchronization by allowing multiple threads access to a
  * resource (usually a data area), on the condition that the thread
  * will only read the data.  When a thread needs to write the data,
- * it can access the monitor in write mode (using <i>write_lock</i>).
+ * it can access the monitor in write mode (using <i>writeLock</i>).
  * At any given time, one writer thread can be active, or multiple
  * reader threads can be active.  <b>CrowdMonitor</b> guards against
  * multiple writers accessing a data, and against a thread writing
  * to the data while other threads are reading it.
 
- * <p> Calling <i>read_lock</i> within a <i>write_lock/write_unlock</i>
- * section may result in a deadlock.  Likewise, calling <i>write_lock</i>
- * within a <i>read_lock/read_unlock</i> section may result in a deadlock.
- * Calling <i>read_unlock</i> or <i>write_unlock</i> when the lock is
+ * <p> Calling <i>read_lock</i> within a <i>write_lock/writeUnlock</i>
+ * section may result in a deadlock.  Likewise, calling <i>writeLock</i>
+ * within a <i>readLock/readUnlock</i> section may result in a deadlock.
+ * Calling <i>readUnlock</i> or <i>writeUnlock</i> when the lock is
  * not held is not legal and may result in undefined behavior.
  */
 
-CrowdMonitor::CrowdMonitor(const char* name)
-     : name(name), write_waiters("CrowdMonitor write condition"),
-   read_waiters("CrowdMonitor read condition"),
-   lock("CrowdMonitor lock") {
-    nreaders_waiting=0;
-    nwriters_waiting=0;
-    nreaders=0;
-    nwriters=0;
+CrowdMonitor::CrowdMonitor(const std::string& name)
+    : d_name(name), d_writeWaiters("CrowdMonitor write condition"),
+      d_readWaiters("CrowdMonitor read condition"),
+      d_lock("CrowdMonitor lock")
+{
+    d_numReadersWaiting=0;
+    d_numWritersWaiting=0;
+    d_numReaders=0;
+    d_numWriters=0;
 }
 
-CrowdMonitor::~CrowdMonitor() {}
+CrowdMonitor::~CrowdMonitor()
+{
+}
 
-void CrowdMonitor::read_lock() {
-    lock.lock();
-    while(nwriters > 0){
-        nreaders_waiting++;
-        read_waiters.wait(lock);
-        nreaders_waiting--;
+void CrowdMonitor::readLock()
+{
+    d_lock.lock();
+    while(d_numWriters > 0){
+        d_numReadersWaiting++;
+        d_readWaiters.wait(d_lock);
+        d_numReadersWaiting--;
     }
-    nreaders++;
-    lock.unlock();
+    d_numReaders++;
+    d_lock.unlock();
 }
 
-void CrowdMonitor::read_unlock() {
-    lock.lock();
-    nreaders--;
-    if(nreaders == 0 && nwriters_waiting > 0)
-        write_waiters.cond_signal();
-    lock.unlock();
+void CrowdMonitor::readUnlock()
+{
+    d_lock.lock();
+    d_numReaders--;
+    if(d_numReaders == 0 && d_numWritersWaiting > 0)
+        d_writeWaiters.conditionSignal();
+    d_lock.unlock();
 }
 
-void CrowdMonitor::write_lock() {
-    lock.lock();
-    while(nwriters || nreaders){
+void CrowdMonitor::writeLock()
+{
+    d_lock.lock();
+    while(d_numWriters || d_numReaders){
         // Have to wait...
-        nwriters_waiting++;
-        write_waiters.wait(lock);
-        nwriters_waiting--;
+        d_numWritersWaiting++;
+        d_writeWaiters.wait(d_lock);
+        d_numWritersWaiting--;
     }
-    nwriters++;
-    lock.unlock();
+    d_numWriters++;
+    d_lock.unlock();
 }
 
-void CrowdMonitor::write_unlock() {
-    lock.lock();
-    nwriters--;
-    if(nwriters_waiting)
-        write_waiters.cond_signal(); // Wake one of them up...
-    else if(nreaders_waiting)
-        read_waiters.cond_broadcast(); // Wake all of them up...
-    lock.unlock();
+void CrowdMonitor::writeUnlock()
+{
+    d_lock.lock();
+    d_numWriters--;
+    if(d_numWritersWaiting)
+        d_writeWaiters.conditionSignal(); // Wake one of them up...
+    else if(d_numReadersWaiting)
+        d_readWaiters.conditionBroadcast(); // Wake all of them up...
+    d_lock.unlock();
 }
 

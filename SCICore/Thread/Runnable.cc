@@ -18,13 +18,15 @@
  * of this same thread.
  */
 
-Runnable::Runnable() {
-    mythread=0;
+Runnable::Runnable()
+{
+    d_myThread=0;
 }
 
-Runnable::~Runnable() {
-    if(mythread){
-        mythread->error("Runnable is being destroyed while thread is still running\n");
+Runnable::~Runnable()
+{
+    if(d_myThread){
+        d_myThread->error("Runnable is being destroyed while thread is still running\n");
     }
 }
 

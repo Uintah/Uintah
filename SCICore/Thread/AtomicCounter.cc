@@ -8,49 +8,60 @@
  * of these objects.  See also <b>WorkQueue</b>.
  */
 
-AtomicCounter::AtomicCounter(const char* name) : name(name), lock("AtomicCounter lock") {
+AtomicCounter::AtomicCounter(const std::string& name)
+    : d_name(name), d_lock("AtomicCounter lock")
+{
 }
 
-AtomicCounter::AtomicCounter(const char* name, int value) : name(name), lock("AtomicCounter lock"), value(value) {
+AtomicCounter::AtomicCounter(const std::string& name, int value)
+    : d_name(name), d_lock("AtomicCounter lock"), d_value(value)
+{
 }
 
-AtomicCounter::~AtomicCounter() {
+AtomicCounter::~AtomicCounter()
+{
 }
 
-AtomicCounter::operator int() const {
-    return value;
+AtomicCounter::operator int() const
+{
+    return d_value;
 }
 
-AtomicCounter& AtomicCounter::operator++() {
-    lock.lock();
-    ++value;
-    lock.unlock();
+AtomicCounter& AtomicCounter::operator++()
+{
+    d_lock.lock();
+    ++d_value;
+    d_lock.unlock();
     return *this;
 }
 
-int AtomicCounter::operator++(int) {
-    lock.lock();
-    int ret=value++;
-    lock.unlock();
+int AtomicCounter::operator++(int)
+{
+    d_lock.lock();
+    int ret=d_value++;
+    d_lock.unlock();
     return ret;
 }
 
-AtomicCounter& AtomicCounter::operator--() {
-    lock.lock();
-    --value;	
-    lock.unlock();
+AtomicCounter& AtomicCounter::operator--()
+{
+    d_lock.lock();
+    --d_value;	
+    d_lock.unlock();
     return *this;
 }
 
-int AtomicCounter::operator--(int) {
-    lock.lock();
-    int ret=value--;
-    lock.unlock();
+int AtomicCounter::operator--(int)
+{
+    d_lock.lock();
+    int ret=d_value--;
+    d_lock.unlock();
     return ret;
 }
 
-void AtomicCounter::set(int v) {
-    lock.lock();
-    value=v;
-    lock.unlock();
+void AtomicCounter::set(int v)
+{
+    d_lock.lock();
+    d_value=v;
+    d_lock.unlock();
 }
