@@ -108,6 +108,7 @@ PPPLHDF5FieldReader::~PPPLHDF5FieldReader() {
 
 void PPPLHDF5FieldReader::execute() {
 
+#ifdef HDF5
   bool updateAll  = false;
   bool updateFile = false;
 
@@ -472,6 +473,11 @@ void PPPLHDF5FieldReader::execute() {
     // Send the data downstream
     ofield_port->send( pHandle_ );
   }
+#else
+
+  error( "No HDF5 availible." );
+
+#endif
 }
 
 void PPPLHDF5FieldReader::tcl_command(GuiArgs& args, void* userdata)
@@ -482,6 +488,7 @@ void PPPLHDF5FieldReader::tcl_command(GuiArgs& args, void* userdata)
   }
 
   if (args[1] == "update_file") {
+#ifdef HAVE_HDF5
     int ndatasets, ndims;
 
     string new_filename(filename_.get());
@@ -572,6 +579,11 @@ void PPPLHDF5FieldReader::tcl_command(GuiArgs& args, void* userdata)
 	gui->execute(str.str().c_str());
       }
     }
+#else
+
+  error( "No HDF5 availible." );
+
+#endif
   } else {
     Module::tcl_command(args, userdata);
   }
