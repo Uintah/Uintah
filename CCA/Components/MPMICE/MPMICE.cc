@@ -1289,10 +1289,9 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       } 
       
       if(mpm_matl){                //  M P M
-#if 1
-//	rho_micro[m][*iter] =  mpm_matl->getConstitutiveModel()->
-//	  computeRhoMicroCM(press_new[*iter],mpm_matl);
-	rho_micro[m][*iter] = mass_CC[m][*iter]/mat_vol[m][*iter];
+#if 0
+	rho_micro[m][*iter] =  mpm_matl->getConstitutiveModel()->
+	  computeRhoMicroCM(press_new[*iter],mpm_matl);
 
 	mpm_matl->getConstitutiveModel()->
 	  computePressEOSCM(rho_micro[m][*iter],press_eos[m],dp_drho[m],
@@ -1301,7 +1300,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 	mat_volume[m] = mat_vol[m][*iter];
 
 //    This is the IDEAL GAS stuff
-#if 0
+#if 1
 	double gamma   = mpm_matl->getGamma(); 
 	rho_micro[m][*iter] = mpm_matl->
 	  getConstitutiveModel()->computeRhoMicro(press_new[*iter],gamma,
@@ -1383,13 +1382,13 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
        if(mpm_matl){
         //__________________________________
         //  Hardwire for an ideal gas
-#if 1
+#if 0
           mpm_matl->getConstitutiveModel()->
                computePressEOSCM(rho_micro[m][*iter],press_eos[m],dp_drho[m],
 								tmp,mpm_matl);
 #endif
 //    This is the IDEAL GAS stuff
-#if 0
+#if 1
           double gamma = mpm_matl->getGamma();
           mpm_matl->getConstitutiveModel()->
             computePressEOS(rho_micro[m][*iter],gamma, cv[m],Temp[m][*iter],
@@ -1429,13 +1428,13 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
                                              cv[m],Temp[m][*iter]);
        }
        if(mpm_matl){
-#if 1
+#if 0
          rho_micro[m][*iter] =  
            mpm_matl->getConstitutiveModel()->computeRhoMicroCM(press_new[*iter],
 								mpm_matl);
 #endif
 //    This is the IDEAL GAS stuff
-#if 0
+#if 1
          double gamma = mpm_matl->getGamma();
          rho_micro[m][*iter] = 
          mpm_matl->getConstitutiveModel()->computeRhoMicro(press_new[*iter],
@@ -1467,13 +1466,13 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
                     (press_eos[m]/(rho_micro[m][*iter]*rho_micro[m][*iter]));
        }
        if(mpm_matl){
-#if 1
+#if 0
           mpm_matl->getConstitutiveModel()->
                computePressEOSCM(rho_micro[m][*iter],press_eos[m],dp_drho[m],
 								tmp,mpm_matl);
 #endif
 //    This is the IDEAL GAS stuff
-#if 0
+#if 1
          double gamma = mpm_matl->getGamma();
          mpm_matl->getConstitutiveModel()->
              computePressEOS(rho_micro[m][*iter],gamma,
