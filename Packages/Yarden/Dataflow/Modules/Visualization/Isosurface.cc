@@ -61,13 +61,13 @@
 
 
 // SAGE
-#include <Core/Algorithms/Visualization/Sage.h>
+#include <Packages/Yarden/Core/Algorithms/Visualization/Sage.h>
 
 // SpanSpace and Noise
-#include <Dataflow/Ports/SpanSpace.h>
-#include <Core/Algorithms/Visualization/MCRGScan.h>
-#include <Core/Algorithms/Visualization/MCUG.h>
-#include <Core/Algorithms/Visualization/Noise.h>
+#include <Packages/Yarden/Core/Datatypes/SpanSpace.h>
+#include <Packages/Yarden/Core/Algorithms/Visualization/MCRGScan.h>
+#include <Packages/Yarden/Core/Algorithms/Visualization/MCUG.h>
+#include <Packages/Yarden/Core/Algorithms/Visualization/Noise.h>
 
 #include <tcl.h>
 #include <tk.h>
@@ -78,9 +78,9 @@
 #include <values.h>
 
 
-namespace SCIRun {
+namespace Yarden {
     
-    
+using namespace SCIRun;
     
     SysTime::SysClock extract_timer, vis_timer;
 
@@ -957,4 +957,4 @@ namespace SCIRun {
 
     
 
-} // End namespace SCIRun
+} // End namespace Yarden

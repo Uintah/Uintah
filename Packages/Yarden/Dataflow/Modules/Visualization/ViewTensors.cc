@@ -35,7 +35,7 @@
 #include <Dataflow/Ports/ScalarFieldPort.h>
 #include <Dataflow/Ports/ColorMapPort.h>
 
-#include <Packages/Yarden/Core/Datatypes/TensorFieldPort.h>
+#include <Packages/Yarden/Dataflow/Ports/TensorFieldPort.h>
 
 #include <tcl.h>
 #include <tk.h>
@@ -54,7 +54,7 @@ extern Tcl_Interp* the_interp;
 
 namespace Yarden {
 using namespace SCIRun;
-    using namespace DaveW::Datatypes;
+using namespace DaveW::Datatypes;
     
     
     // ViewTensors

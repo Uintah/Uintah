@@ -15,11 +15,12 @@
 #include <Core/Datatypes/ScalarField.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Geometry/BBox.h>
-#include <Dataflow/Ports/SpanSpace.h>
+#include <Packages/Yarden/Core/Datatypes/SpanSpace.h>
 
 
-namespace SCIRun {
+namespace Yarden {
     
+using namespace SCIRun;
 
     SpanSpaceBuildUG::SpanSpaceBuildUG ( ScalarFieldUG *field)
       {
@@ -60,4 +61,4 @@ void SpanForest::io(Piostream& stream) {
 */
 
     
-} // End namespace SCIRun
+} // End namespace Yarden

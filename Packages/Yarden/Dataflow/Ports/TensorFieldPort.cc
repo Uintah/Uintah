@@ -10,7 +10,7 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#include <Packages/Yarden/Core/Datatypes/TensorFieldPort.h>
+#include <Packages/Yarden/Dataflow/Ports/TensorFieldPort.h>
 #include <Packages/Yarden/share/share.h>
 #include <Core/Malloc/Allocator.h>
 

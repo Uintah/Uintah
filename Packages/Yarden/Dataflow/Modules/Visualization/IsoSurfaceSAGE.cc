@@ -56,7 +56,7 @@
 #include <Dataflow/Ports/SurfacePort.h>
 #include <Dataflow/Ports/PathPort.h>
 
-#include <Core/Algorithms/Visualization/Sage.h>
+#include <Packages/Yarden/Core/Algorithms/Visualization/Sage.h>
 
 #include <tcl.h>
 #include <tk.h>
@@ -67,8 +67,9 @@
 
 
 
-namespace SCIRun {
-    
+namespace Yarden {
+
+using namespace SCIRun;    
     
     
     SysTime::SysClock extract_timer, vis_timer;
@@ -473,4 +474,4 @@ IsoSurfaceSAGE::set_view( const View &view )
 }
 
 
-} // End namespace SCIRun
+} // End namespace Yarden

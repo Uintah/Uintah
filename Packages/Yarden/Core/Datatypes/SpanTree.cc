@@ -10,10 +10,11 @@
  *  Copyright (C) 1995 SCI Group
  */
 
-#include <Dataflow/Ports/SpanTree.h>
+#include <Packages/Yarden/Core/Datatypes/SpanTree.h>
 
-namespace SCIRun {
+namespace Yarden {
 
+using namespace SCIRun;
 
 PersistentTypeID SpanForest::type_id("SpanTree", "Datatype", 0);
 
@@ -35,4 +36,4 @@ void SpanForest::io(Piostream& stream) {
 */
 
 
-} // End namespace SCIRun
+} // End namespace Yarden

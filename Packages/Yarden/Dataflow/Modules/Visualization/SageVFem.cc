@@ -60,9 +60,9 @@
 #include <iostream>
 #include <sstream>
 #include <values.h>
-#include <Modules/Visualization/Screen.h>
-#include <Datatypes/Clock.h>
-#include "mcube_scan.h"
+#include <Packages/Yarden/Core/Datatypes/Screen.h>
+#include <Packages/Yarden/Core/Datatypes/Clock.h>
+#include <Packages/Yarden/Core/Algorithms/Visualization/mcube_scan.h>
 
 
 //#define DOUBLE

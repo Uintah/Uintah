@@ -22,17 +22,17 @@
 #include <Core/Datatypes/ScalarFieldRGfloat.h>
 #include <Core/Datatypes/ScalarFieldUG.h>
 #include <Dataflow/Ports/ScalarFieldPort.h>
-#include <Dataflow/Ports/SpanPort.h>
-#include <Dataflow/Ports/SpanTree.h>
 #include <Core/Thread/Parallel.h>
 #include <Core/Thread/Thread.h>
 #include <Core/TclInterface/TCLvar.h>
-
 #include <Core/Geom/Material.h>
 
-namespace SCIRun {
+#include <Packages/Yarden/Dataflow/Ports/SpanPort.h>
+#include <Packages/Yarden/Core/Datatypes/SpanTree.h>
 
+namespace Yarden {
 
+using namespace SCIRun;
 
 
 class Noise : public Module {
@@ -110,6 +110,6 @@ private:
   void _count_collect( int, int & );
 };
 
-} // End namespace SCIRun
+} // End namespace Yarden
 
 #endif

@@ -6,12 +6,13 @@
 #include <stdlib.h>
 #include <Core/Geom/GeomTriangles.h>
 #include <Core/Containers/Array3.h>
-#include <Dataflow/Modules/Visualization/table.h>
-#include <Dataflow/Ports/SpanTree.h>
+#include <Packages/Yarden/Core/Algorithms/Visualization/table.h>
+#include <Packages/Yarden/Core/Datatypes/SpanTree.h>
 using std::cerr;
 
-namespace SCIRun {
+namespace Yarden {
 
+using namespace SCIRun;
   using std::cerr;
 
   //using namespace Dataflow::Dataflow;
@@ -828,5 +829,5 @@ mcube( GeomTrianglesP *triangles, double iso, int cell )
 
 
 
-} // End namespace SCIRun
+} // End namespace Yarden
 

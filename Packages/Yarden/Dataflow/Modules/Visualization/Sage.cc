@@ -64,10 +64,10 @@
 #include <sstream>
 #include <values.h>
 
-#include <Packages/Yarden/Dataflow/Modules/Visualization/Screen.h>
-#include <Packages/Yarden/Core/Datatypes/General/Clock.h>
-#include <Packages/Yarden/Dataflow/Modules/Visualization/mcube_scan.h>
-#include <Packages/Yarden/Dataflow/Modules/Visualization/BonTree.h>
+#include <Packages/Yarden/Core/Algorithms/mcube_scan.h>
+#include <Packages/Yarden/Core/Datatypes/Screen.h>
+#include <Packages/Yarden/Core/Datatypes/Clock.h>
+#include <Packages/Yarden/Core/Datatypes/BonTree.h>
 
 #ifdef __GNUG__
 int trunc(double v ) { return v > 0 ? int(floor(v)) : int(floor(v+1)); }

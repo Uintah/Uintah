@@ -6,5 +6,6 @@ SRCDIR   := Packages/Yarden/Dataflow/Ports
 
 SRCS     += \
 	$(SRCDIR)/SpanPort.cc\
+	$(SRCDIR)/TensorFieldPort.cc\
 #[INSERT NEW CODE FILE HERE]
 

@@ -13,8 +13,9 @@
 #ifndef SCI_project_Span_h
 #define SCI_project_Span_h 1
 
-namespace SCIRun {
+namespace Yarden {
 
+using namesapce SCIRun;
 
 class Span : public Module {
 public:
@@ -46,6 +47,6 @@ public:
 };
 
 
-} // End namespace SCIRun
+} // End namespace Yarden
 
 #endif
