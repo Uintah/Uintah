@@ -67,6 +67,7 @@ public:
    void print(ostream&) const;
    void cleanForeign();
    void scrub(const VarLabel* label);
+   void logMemoryUse(ostream& out, const std::string& tag, int dwid);
 private:
    typedef vector<VarType*> dataDBtype;
 
@@ -404,6 +405,44 @@ void DWDatabase<VarType>::print(std::ostream& out) const
    for (globalDBtype::const_iterator globaliter = globals.begin();
 	globaliter != globals.end(); globaliter++)
      out << (*globaliter).first->getName() << '\n';
+}
+
+template<class VarType>
+void
+DWDatabase<VarType>::logMemoryUse(ostream& out, const std::string& tag,
+				  int dwid)
+{
+  for(nameDBtype::iterator iter = names.begin();
+      iter != names.end(); iter++){
+    NameRecord* nr = iter->second;
+    for(patchDBtype::iterator iter = nr->patches.begin();
+	iter != nr->patches.end(); iter++){
+      PatchRecord* pr = iter->second;
+      for(dataDBtype::iterator iter = pr->vars.begin();
+	  iter != pr->vars.end(); iter++){
+	VarType* var = *iter;
+	const VarLabel* label = nr->label;
+	string elems;
+	unsigned long totsize;
+	void* ptr;
+	var->getSizeInfo(elems, totsize, ptr);
+	const TypeDescription* td = label->typeDescription();
+	out << dwid << "\t" << tag << "\t" << (td?td->getName():"-") << "\t" << label->getName() << "\t" << elems << "\t" << totsize << "\t" << ptr << '\n';
+      }
+    }
+  }
+  
+  for(globalDBtype::iterator iter = globals.begin();
+      iter != globals.end(); iter++){
+    const VarLabel* label = iter->first;
+    VarType* var = iter->second;
+    string elems;
+    unsigned long totsize;
+    void* ptr;
+    var->getSizeInfo(elems, totsize, ptr);
+    const TypeDescription* td = label->typeDescription();
+    out << dwid << "\t" << tag << "\t" << (td?td->getName():"-") << "\t" << label->getName() << "\t" << elems << "\t" << totsize << "\t" << ptr << '\n';
+  }
 }
 
 } // End namespace Uintah
