@@ -446,7 +446,7 @@ FieldExtractor::execute()
           CCVariable<double> gridVar;
           if(get_all_levels){
             //      cerr<<"getting all levels\n";
-            cerr.flush();
+//             cerr.flush();
             GridP newGrid = build_minimal_patch_grid( grid );
             MRLatVolField<double>* mrfield =0;
             //      cerr<<"building multi-level field\n";
@@ -1110,7 +1110,7 @@ FieldExtractor::execute()
       //      AllocatorSetDefaultTag(old_tag1);
       return;
     }
-
+    new2OldPatchMap_.clear();
     fout->send(fHandle_);
   }
   //  AllocatorSetDefaultTag(old_tag1);
@@ -1135,8 +1135,8 @@ FieldExtractor::build_minimal_patch_grid( GridP oldGrid )
     LevelP newLevel =
       newGrid->addLevel(level->getAnchor(), level->dCell());
 
-    //     cerr<<"Level "<<i<<":\n";
-    //int count = 0;
+//     cerr<<"Level "<<i<<":\n";
+    int count = 0;
     SuperPatchContainer::const_iterator superIter;
     for (superIter = superPatches->begin();
          superIter != superPatches->end(); superIter++) {
@@ -1145,7 +1145,7 @@ FieldExtractor::build_minimal_patch_grid( GridP oldGrid )
       IntVector inLow = high; // taking min values starting at high
       IntVector inHigh = low; // taking max values starting at low
 
-      //       cerr<<"\tcombined patch "<<count++<<" is "<<low<<", "<<high<<"\n";
+//       cerr<<"\tcombined patch "<<count++<<" is "<<low<<", "<<high<<"\n";
 
       for (unsigned int p = 0; p < (*superIter)->getBoxes().size(); p++) {
         const Patch* patch = (*superIter)->getBoxes()[p];
@@ -1155,10 +1155,12 @@ FieldExtractor::build_minimal_patch_grid( GridP oldGrid )
       
       Patch* newPatch =
         newLevel->addPatch(low, high, inLow, inHigh);
+      list<const Patch*> oldPatches; 
       for (unsigned int p = 0; p < (*superIter)->getBoxes().size(); p++) {
         const Patch* patch = (*superIter)->getBoxes()[p];
-        new2OldPatchMap_[newPatch].push_back(patch);
+        oldPatches.push_back(patch);
       }
+      new2OldPatchMap_[newPatch] = oldPatches;
     }
     newLevel->finalizeLevel();
   }

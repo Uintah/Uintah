@@ -176,25 +176,25 @@ FieldExtractor::build_multi_level_field( DataArchive& archive, GridP grid,
     
     // At this point we should have a mimimal patch set in our grid
     // And we want to make a LatVolField for each patch
-    for(Level::const_patchIterator r = level->patchesBegin();
-	r != level->patchesEnd(); ++r){
+    for(Level::const_patchIterator patch_it = level->patchesBegin();
+	patch_it != level->patchesEnd(); ++patch_it){
       
       IntVector hi, low, range;
-      low = (*r)->getLowIndex();
-      hi = (*r)->getHighIndex();	
+      low = (*patch_it)->getLowIndex();
+      hi = (*patch_it)->getHighIndex();	
 
       // ***** This seems like a hack *****
       range = hi - low + IntVector(1,1,1); 
       // **********************************
 
       BBox pbox;
-      pbox.extend((*r)->getBox().lower());
-      pbox.extend((*r)->getBox().upper());
+      pbox.extend((*patch_it)->getBox().lower());
+      pbox.extend((*patch_it)->getBox().upper());
       
-      cerr<<"before mesh update: range is "<<range.x()<<"x"<<
-	range.y()<<"x"<< range.z()<<",  low index is "<<low<<
-	"high index is "<<hi<<" , size is  "<<
-	pbox.min()<<", "<<pbox.max()<<"\n";
+//       cerr<<"before mesh update: range is "<<range.x()<<"x"<<
+// 	range.y()<<"x"<< range.z()<<",  low index is "<<low<<
+// 	"high index is "<<hi<<" , size is  "<<
+// 	pbox.min()<<", "<<pbox.max()<<"\n";
       
       LatVolMeshHandle mh = 0;
       update_mesh_handle(level, hi, range, pbox, type, mh);
@@ -207,12 +207,12 @@ FieldExtractor::build_multi_level_field( DataArchive& archive, GridP grid,
       } else {
 	set_scalar_properties( fd, var, time, low, type);
       }
-      cerr<<"Field "<<count<<", level "<<i<<" ";
-      build_patch_field(archive, (*r), low, var, mat, time, v, fd);
+//       cerr<<"Field "<<count<<", level "<<i<<" ";
+      build_patch_field(archive, (*patch_it), low, var, mat, time, v, fd);
       patchfields.push_back( fd );
       count++;
     }
-    cerr<<"Added "<<count<<" fields to level "<<i<<"\n";
+//     cerr<<"Added "<<count<<" fields to level "<<i<<"\n";
     MultiResLevel<T> *mrlevel = 
       new MultiResLevel<T>( patchfields, i );
     levelfields.push_back(mrlevel);
@@ -225,7 +225,7 @@ template <class T, class Var>
 void
 FieldExtractor::build_patch_field(DataArchive& archive,
                                   const Patch* patch,
-				  IntVector& lo,
+				  IntVector& new_low,
 				  const string& varname,
 				  int mat,
 				  double time,
@@ -240,67 +240,79 @@ FieldExtractor::build_patch_field(DataArchive& archive,
                                              max_workers);
   Mutex lock("PatchtoData lock");
   int count = 0;
-  list<const Patch*> oldPatches = new2OldPatchMap_[patch];
-  for(list<const Patch*>::iterator r = oldPatches.begin();
-      r != oldPatches.end(); ++r){
-    IntVector low, hi;
-    Var v;
-    int vartype;
-    archive.query( v, varname, mat, *r, time);
-    if( sfd->basis_order() == 0){
-      low = (*r)->getCellLowIndex();
-      hi = (*r)->getCellHighIndex();
-    } else if(sfd->get_property("vartype", vartype)){
-      low = (*r)->getNodeLowIndex();
-      switch (vartype) {
-      case TypeDescription::SFCXVariable:
-	hi = (*r)->getSFCXHighIndex();
-	break;
-      case TypeDescription::SFCYVariable:
-	hi = (*r)->getSFCYHighIndex();
-	break;
-      case TypeDescription::SFCZVariable:
-	hi = (*r)->getSFCZHighIndex();
-	break;
-      default:
-	hi = (*r)->getNodeHighIndex();	
+  map<const Patch*, list<const Patch*> >::iterator oldPatch_it =
+    new2OldPatchMap_.find(patch);
+  if( oldPatch_it != new2OldPatchMap_.end() ){
+    list<const Patch*> oldPatches = (*oldPatch_it).second;
+    for(list<const Patch*>::iterator patch_it = oldPatches.begin();
+	patch_it != oldPatches.end(); ++patch_it){
+      IntVector old_low, old_hi;
+      Var v;
+      int vartype;
+      archive.query( v, varname, mat, *patch_it, time);
+      if( sfd->basis_order() == 0){
+	old_low = (*patch_it)->getCellLowIndex();
+	old_hi = (*patch_it)->getCellHighIndex();
+      } else if(sfd->get_property("vartype", vartype)){
+	old_low = (*patch_it)->getNodeLowIndex();
+	switch (vartype) {
+	case TypeDescription::SFCXVariable:
+	  old_hi = (*patch_it)->getSFCXHighIndex();
+	  break;
+	case TypeDescription::SFCYVariable:
+	  old_hi = (*patch_it)->getSFCYHighIndex();
+	  break;
+	case TypeDescription::SFCZVariable:
+	  old_hi = (*patch_it)->getSFCZHighIndex();
+	  break;
+	default:
+	  old_hi = (*patch_it)->getNodeHighIndex();	
+	} 
       } 
-    } 
 
-    IntVector range = hi - low;
+      IntVector range = old_hi - old_low;
 
-    int z_min = low.z();
-    int z_max = low.z() + hi.z() - low.z();
-    int z_step, z, N = 0;
-    if ((z_max - z_min) >= max_workers){
-      // in case we have large patches we'll divide up the work 
-      // for each patch, if the patches are small we'll divide the
-      // work up by patch.
-      int cs = 25000000;  
-      int S = range.x() * range.y() * range.z() * sizeof(T);
-      N = Min(Max(S/cs, 1), (max_workers-1));
-    }
-    N = Max(N,2);
-    z_step = (z_max - z_min)/(N - 1);
-    for(z = z_min ; z < z_max; z += z_step) {
+      int z_min = old_low.z();
+      int z_max = old_low.z() + old_hi.z() - old_low.z();
+      int z_step, z, N = 0;
+      if ((z_max - z_min) >= max_workers){
+	// in case we have large patches we'll divide up the work 
+	// for each patch, if the patches are small we'll divide the
+	// work up by patch.
+	int cs = 25000000;  
+	int S = range.x() * range.y() * range.z() * sizeof(T);
+	N = Min(Max(S/cs, 1), (max_workers-1));
+      }
+      N = Max(N,2);
+      z_step = (z_max - z_min)/(N - 1);
+      for(z = z_min ; z < z_max; z += z_step) {
       
-      IntVector min_i(low.x(), low.y(), z);
-      IntVector max_i(hi.x(), hi.y(), Min(z+z_step, z_max));
-      thread_sema->down();
-      PatchToFieldThread<Var, T>* fldthrd = 
-	scinew PatchToFieldThread<Var, T>(sfd, v, lo, min_i, max_i,// low, hi,
-					  thread_sema, lock);
-      fldthrd->run();
+	IntVector min_i(old_low.x(), old_low.y(), z);
+	IntVector max_i(old_hi.x(), old_hi.y(), Min(z+z_step, z_max));
+	thread_sema->down();
+#if 1
+	PatchToFieldThread<Var, T>* fldthrd = 
+	  scinew PatchToFieldThread<Var, T>(sfd, v, new_low, min_i, max_i,
+					    // old_low, old_hi,
+					    thread_sema, lock);
+	fldthrd->run();
+	delete fldthrd;
+#else
     
-//       Thread *thrd = scinew Thread( 
-//         (scinew PatchToFieldThread<Var, T>(sfd, v, lo, min_i, max_i,// low, hi,
-// 				      thread_sema, lock)),
-// 	"patch_to_field_worker");
-//       thrd->detach();
+	Thread *thrd = scinew Thread( 
+				     (scinew PatchToFieldThread<Var, T>(sfd, v, new_low, min_i, max_i,
+									// old_low, old_hi,
+									thread_sema, lock)),
+				     "patch_to_field_worker");
+	thrd->detach();
+#endif
+      }
+      count++;
     }
-    count++;
+  } else {
+    error("No mapping from old patches to new patches.");
   }
-  cerr<<"used "<<count<<" patches to fill field\n";
+//   cerr<<"used "<<count<<" patches to fill field\n";
   thread_sema->down(max_workers);
   if( thread_sema ) delete thread_sema;
 }
@@ -328,50 +340,50 @@ void FieldExtractor::build_field(DataArchive& archive,
 //   double size = level->numPatches();
 //   int count = 0;
   
-  for( Level::const_patchIterator r = level->patchesBegin();
-      r != level->patchesEnd(); ++r){
+  for( Level::const_patchIterator patch_it = level->patchesBegin();
+      patch_it != level->patchesEnd(); ++patch_it){
     IntVector low, hi;
     Var v;
     int vartype;
-    archive.query( v, varname, mat, *r, time);
+    archive.query( v, varname, mat, *patch_it, time);
     if( sfd->basis_order() == 0){
-      low = (*r)->getCellLowIndex();
-      hi = (*r)->getCellHighIndex();
-//       low = (*r)->getNodeLowIndex();
-//       hi = (*r)->getNodeHighIndex() - IntVector(1,1,1);
+      low = (*patch_it)->getCellLowIndex();
+      hi = (*patch_it)->getCellHighIndex();
+//       low = (*patch_it)->getNodeLowIndex();
+//       hi = (*patch_it)->getNodeHighIndex() - IntVector(1,1,1);
 
 //       cerr<<"v.getLowIndex() = "<<v.getLowIndex()<<"\n";
 //       cerr<<"v.getHighIndex() = "<<v.getHighIndex()<<"\n";
-//       cerr<<"getCellLowIndex() = "<< (*r)->getCellLowIndex()
+//       cerr<<"getCellLowIndex() = "<< (*patch_it)->getCellLowIndex()
 // 	  <<"\n";
-//       cerr<<"getCellHighIndex() = "<< (*r)->getCellHighIndex()
+//       cerr<<"getCellHighIndex() = "<< (*patch_it)->getCellHighIndex()
 // 	  <<"\n";
-//       cerr<<"getInteriorCellLowIndex() = "<< (*r)->getInteriorCellLowIndex()
+//       cerr<<"getInteriorCellLowIndex() = "<< (*patch_it)->getInteriorCellLowIndex()
 // 	  <<"\n";
-//       cerr<<"getInteriorCellHighIndex() = "<< (*r)->getInteriorCellHighIndex()
+//       cerr<<"getInteriorCellHighIndex() = "<< (*patch_it)->getInteriorCellHighIndex()
 // 	  <<"\n";
-//       cerr<<"getNodeLowIndex() = "<< (*r)->getNodeLowIndex()
+//       cerr<<"getNodeLowIndex() = "<< (*patch_it)->getNodeLowIndex()
 // 	  <<"\n";
-//       cerr<<"getNodeHighIndex() = "<< (*r)->getNodeHighIndex()
+//       cerr<<"getNodeHighIndex() = "<< (*patch_it)->getNodeHighIndex()
 // 	  <<"\n";
-//       cerr<<"getInteriorNodeLowIndex() = "<< (*r)->getInteriorNodeLowIndex()
+//       cerr<<"getInteriorNodeLowIndex() = "<< (*patch_it)->getInteriorNodeLowIndex()
 // 	  <<"\n";
-//       cerr<<"getInteriorNodeHighIndex() = "<< (*r)->getInteriorNodeHighIndex()
+//       cerr<<"getInteriorNodeHighIndex() = "<< (*patch_it)->getInteriorNodeHighIndex()
 // 	  <<"\n\n";
     } else if(sfd->get_property("vartype", vartype)){
-      low = (*r)->getNodeLowIndex();
+      low = (*patch_it)->getNodeLowIndex();
       switch (vartype) {
       case TypeDescription::SFCXVariable:
-	hi = (*r)->getSFCXHighIndex();
+	hi = (*patch_it)->getSFCXHighIndex();
 	break;
       case TypeDescription::SFCYVariable:
-	hi = (*r)->getSFCYHighIndex();
+	hi = (*patch_it)->getSFCYHighIndex();
 	break;
       case TypeDescription::SFCZVariable:
-	hi = (*r)->getSFCZHighIndex();
+	hi = (*patch_it)->getSFCZHighIndex();
 	break;
       default:
-	hi = (*r)->getNodeHighIndex();	
+	hi = (*patch_it)->getNodeHighIndex();	
       } 
     } 
 
