@@ -83,6 +83,8 @@ NrrdFieldConverter::~NrrdFieldConverter(){
 void
 NrrdFieldConverter::execute(){
 
+  reset_vars();
+
   MeshHandle mHandle;
   vector< NrrdDataHandle > nHandles;
 
@@ -109,6 +111,7 @@ NrrdFieldConverter::execute(){
 
     // Save the field handles.
     if (inrrd_port->get(nHandle) && nHandle.get_rep()) {
+
       unsigned int tuples = nHandle->get_tuple_axis_size();
 
       // Store only single nrrds
@@ -390,11 +393,13 @@ NrrdFieldConverter::execute(){
 	data_.push_back( ic );
     }
 
+    datasetsStr_.reset();
+
     if( datasetsStr != datasetsStr_.get() ) {
       // Update the dataset names and dims in the GUI.
       ostringstream str;
-      str << id << " set_names " << structured << " {" << datasetsStr << "}";
-      
+      str << id << " set_names {" << datasetsStr << "}";
+
       gui->execute(str.str().c_str());
     }
   }
