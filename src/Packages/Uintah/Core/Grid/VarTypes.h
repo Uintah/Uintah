@@ -2,7 +2,6 @@
 #define UINTAH_HOMEBREW_VarTypes_H
 
 
-#include <Packages/Uintah/Core/Grid/VarTypes.h>
 #include <Packages/Uintah/Core/Grid/Reductions.h>
 #include <Packages/Uintah/Core/Grid/ReductionVariable.h>
 #include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
