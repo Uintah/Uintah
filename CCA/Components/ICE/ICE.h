@@ -754,7 +754,7 @@ namespace Uintah {
       bool d_usingNG_hack;
       
       Advector* d_advector;
-      std::string d_advect_type;
+      bool d_useCompatibleFluxes;
       Turbulence* d_turbulence;
       std::string d_delT_scheme;
       
