@@ -88,7 +88,26 @@ GLVolRenState::computeView(Ray& ray)
   viewPt = Point(-mvmat[12], -mvmat[13], -mvmat[14]);
 
   viewPt = field_trans.unproject( viewPt );
-  view = field_trans.unproject( view );
+
+  /* set the translation to zero */
+  mvmat[12]=mvmat[13] = mvmat[14]=0;
+   
+
+  /* The Transform stores it's matrix as
+     0  1  2  3
+     4  5  6  7
+     8  9 10 11
+     12 13 14 15
+
+     Because of this order, simply setting the tranform with the glmatrix 
+     causes our tranform matrix to be the transpose of the glmatrix
+     ( assuming no scaling ) */
+  mat.set( mvmat );
+    
+  /* Since mat is the transpose, we then multiply the view space viewPt
+     by the mat to get the world or model space viewPt, which we need
+     for calculations */
+  //  view = field_trans.unproject( view );
 
   ray =  Ray(viewPt, view);
 }
