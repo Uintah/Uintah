@@ -29,6 +29,7 @@
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/SchedulerCommon.h>
 #include <Packages/Uintah/CCA/Components/PatchCombiner/PatchCombiner.h>
+#include <Packages/Uintah/CCA/Components/PatchCombiner/UdaReducer.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Grid/VarTypes.h>
@@ -94,6 +95,7 @@ void AMRSimulationController::run()
      restartSetup(currentGrid, t);
    }
    if (d_combinePatches) {
+     // combine patches and reduce uda need the same things here
      Dir combineFromDir(d_fromDir);
      d_output->combinePatchSetup(combineFromDir);
 
@@ -101,7 +103,11 @@ void AMRSimulationController::run()
      // and should not use a delt factor.
      d_timeinfo->delt_factor = 1;
      d_timeinfo->delt_min = 0;
-     d_timeinfo->maxTime = static_cast<PatchCombiner*>(d_sim)->getMaxTime();
+     if (d_reduceUda)
+       d_timeinfo->maxTime = static_cast<UdaReducer*>(d_sim)->getMaxTime();
+     else
+       d_timeinfo->maxTime = static_cast<PatchCombiner*>(d_sim)->getMaxTime();
+
      cout << " MaxTime: " << d_timeinfo->maxTime << endl;
      d_timeinfo->delt_max = d_timeinfo->maxTime;
    }
@@ -139,7 +145,6 @@ void AMRSimulationController::run()
      max_iterations = d_timeinfo->maxTimestep - d_sharedState->getCurrentTopLevelTimeStep();
 
    while( t < d_timeinfo->maxTime && iterations < max_iterations) {
-
      if (d_doAMR && d_regridder->needsToReGrid() && !first) {
        doRegridding(currentGrid);
      }
@@ -297,7 +302,8 @@ void AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
   if(d_myworld->myrank() == 0){
     cout << "Compiling initialization taskgraph...\n";
   }
-  
+ 
+  double start = Time::currentSeconds();
   // for dynamic lb's, set up initial patch config
   d_lb->possiblyDynamicallyReallocate(grid, false); 
   
@@ -324,9 +330,8 @@ void AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
 
   d_scheduler->compile();
   
-  double dt=Time::currentSeconds() - getStartTime();
   if(d_myworld->myrank() == 0)
-    cout << "done taskgraph compile (" << dt << " seconds)\n";
+    cout << "done taskgraph compile (" << Time::currentSeconds() - start << " seconds)\n";
   // No scrubbing for initial step
   d_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
   d_scheduler->execute();
@@ -339,13 +344,15 @@ void AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
 
 bool AMRSimulationController::doInitialTimestepRegridding(GridP& currentGrid)
 {
+  double start = Time::currentSeconds();
   GridP oldGrid = currentGrid;       
   currentGrid = d_regridder->regrid(oldGrid.get_rep(), d_scheduler, d_ups);
   if (d_myworld->myrank() == 0) {
-    //    cout << "  DOING ANOTHER INITIALIZATION REGRID!!!!\n";
-    //    cout << "---------- OLD GRID ----------" << endl << *(oldGrid.get_rep());
-    //    cout << "---------- NEW GRID ----------" << endl << *(currentGrid.get_rep());
+        cout << "  DOING ANOTHER INITIALIZATION REGRID!!!!\n";
+        cout << "---------- OLD GRID ----------" << endl << *(oldGrid.get_rep());
+        cout << "---------- NEW GRID ----------" << endl << *(currentGrid.get_rep());
   }
+  double regridTime = Time::currentSeconds() - start;
   if (currentGrid == oldGrid)
     return false;
   
@@ -369,26 +376,28 @@ bool AMRSimulationController::doInitialTimestepRegridding(GridP& currentGrid)
   }
   d_scheduler->compile();
   
-  double dt=Time::currentSeconds() - getStartTime();
   // No scrubbing for initial step
   d_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNone);
   d_scheduler->execute();
+
+  double time=Time::currentSeconds() - start;
+  if(d_myworld->myrank() == 0)
+    cout << "done adding level (" << time << " seconds, regridding took " << regridTime << ")\n";
 
   return true;
 }
 
 void AMRSimulationController::doRegridding(GridP& currentGrid)
 {
-  if (d_myworld->myrank() == 0)
-    cout << "  REGRIDDING!!!!!\n";
-  
+  double start = Time::currentSeconds();
   GridP oldGrid = currentGrid;
   currentGrid = d_regridder->regrid(oldGrid.get_rep(), d_scheduler, d_ups);
+  double regridTime = Time::currentSeconds() - start;
   if (currentGrid != oldGrid) {
     if (d_myworld->myrank() == 0) {
-      //cout << "---------- OLD GRID ----------" << endl << *(oldGrid.get_rep());
-      cout << "---------- NEW GRID ----------" << endl; // << *(currentGrid.get_rep());
-      cout << "---------- ABOUT TO COPY GRIDS ----------" << endl;
+      cout << "  REGRIDDING!!!!!\n";
+      cout << "---------- OLD GRID ----------" << endl << *(oldGrid.get_rep());
+      cout << "---------- NEW GRID ----------" << *(currentGrid.get_rep());
     }
          
     // Compute number of dataWarehouses
@@ -460,13 +469,9 @@ void AMRSimulationController::doRegridding(GridP& currentGrid)
       newDataWarehouse->d_reductionDB.put(currentReductionVar.label_, currentReductionVar.matlIndex_, newLevel, v->clone(), false);
     }
 
-    cout << "---------- DONE COPYING GRIDS ----------" << endl;
-    cout << "The grids are different!" << endl;         
-  }
-  else {
-    if (d_myworld->myrank() == 0) {
-      cout << "The grids are the same!" << endl;
-    }
+    double time = Time::currentSeconds() - start;
+    if(d_myworld->myrank() == 0)
+      cout << "done regridding (" << time << " seconds, regridding took " << regridTime << ")\n";
   }
 }
 

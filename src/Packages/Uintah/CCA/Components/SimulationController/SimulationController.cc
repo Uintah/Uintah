@@ -70,10 +70,11 @@ namespace Uintah {
     delete d_timeinfo;
   }
 
-  void SimulationController::doCombinePatches(std::string fromDir)
+  void SimulationController::doCombinePatches(std::string fromDir, bool reduceUda)
   {
     ASSERT(!d_doAMR);
     d_combinePatches = true;
+    d_reduceUda = reduceUda;
     d_fromDir = fromDir;
   }
 
