@@ -19,7 +19,7 @@ LevelMesh::LevelMesh( GridP  g, int level) : grid_(g), level_(level)
   
   IntVector low, high;
   
-  l->getIndexRange( low, high );
+  l->findIndexRange( low, high );
 
   idxLow_ = low;
 
