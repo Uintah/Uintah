@@ -49,7 +49,7 @@ public:
 
   //! Required interfaces
   virtual InterpBase* query_interpolate() const = 0;
-//  virtual InterpolateToScalar* query_interpolate_to_scalar() const = 0;
+  virtual void finish_mesh() {};
 
   //! Persistent I/O.
   virtual void io(Piostream &stream);
