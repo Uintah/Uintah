@@ -319,6 +319,11 @@ void Module::update_progress(int n, int max, Timer &t)
   update_progress(double(n)/double(max), t);
 }
 
+void Module::light_module0()
+{
+  gui->execute(id+" light_module0 ");
+}
+
 void Module::light_module()
 {
   gui->execute(id+" light_module ");

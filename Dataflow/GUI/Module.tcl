@@ -794,26 +794,34 @@ itcl_class Module {
 	update_progress
     }
 
+    method light_module0 { } {
+	foreach t $canvases {
+	    set modframe $t.module[modname]
+
+	    # add "Dynamically Compiling" text
+	    $modframe.ff.title configure -text "COMPILING" -justify left
+	}
+    }
+
     method light_module { } {
 	# light up module
 	set ir 240
 	set ig 230 
 	set ib 140 
+	set colstring [format #%1x%1x%1x $ir $ig $ib]
 	foreach t $canvases {
 	    set modframe $t.module[modname]
-	    $modframe configure -background [format #%1x%1x%1x $ir $ig $ib]
-	    $modframe.ff configure -background [format #%1x%1x%1x $ir $ig $ib]
+	    $modframe configure -background $colstring
+	    $modframe.ff configure -background $colstring
 	    if {[winfo exists $modframe.ff.ui] == 1} {
-		$modframe.ff.ui configure -background [format #%1x%1x%1x $ir $ig $ib]
+		$modframe.ff.ui configure -background $colstring
 	    }
-	    $modframe.ff.title configure -background [format #%1x%1x%1x $ir $ig $ib]
-	    $modframe.ff.time configure -background [format #%1x%1x%1x $ir $ig $ib]
+	    $modframe.ff.title configure -background $colstring
+	    $modframe.ff.time configure -background $colstring
 
-	    
 	    # add "Dynamically Compiling" text
 	    $modframe.ff.title configure -text "COMPILING" -justify left
 	}
-
     }
 
     method reset_module_color { } {
