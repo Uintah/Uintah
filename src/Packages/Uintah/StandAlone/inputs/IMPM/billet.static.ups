@@ -10,7 +10,7 @@
    </Meta>
 
    <Time>
-	<maxTime>0.25</maxTime>
+	<maxTime>0.10</maxTime>
 	<initTime>0.0</initTime>
 	<delt_min>0.025</delt_min>
 	<delt_max>0.025</delt_max>
@@ -50,7 +50,6 @@
                     <bulk_modulus> 60000000.0</bulk_modulus>
                     <shear_modulus> 6000000.0</shear_modulus>
                 </constitutive_model>
-                <is_rigid>true</is_rigid>
 		<toughness>10.e6</toughness>
 		<thermal_conductivity>1.0</thermal_conductivity>
 		<specific_heat>5</specific_heat>
@@ -72,6 +71,7 @@
                     <bulk_modulus> 60000000.0</bulk_modulus>
                     <shear_modulus> 6000000.0</shear_modulus>
                 </constitutive_model>
+                <is_rigid>true</is_rigid>
 		<toughness>10.e6</toughness>
 		<thermal_conductivity>1.0</thermal_conductivity>
 		<specific_heat>5</specific_heat>
