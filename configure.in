@@ -743,7 +743,7 @@ if (test $xerces -a
 elif (test -d "/res/sci/data6/sparker/xerces-c/include/util" &&
       test -d "/res/sci/data6/sparker/xerces-c/include/sax" &&
       test -d "/res/sci/data6/sparker/xerces-c/include/dom" &&
-      test -d "/res/sci/data6/sparkerxerces-c/include/parsers") ; then
+      test -d "/res/sci/data6/sparker/xerces-c/include/parsers") ; then
   XML_INCLUDE_DIR="/res/sci/data6/sparker/xerces-c/include"
 elif (test -d "/usr/include/util" &&
       test -d "/usr/include/sax" &&
