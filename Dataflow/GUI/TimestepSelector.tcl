@@ -84,7 +84,7 @@ itcl_class Uintah_Selectors_TimestepSelector {
 	    -resolution 1 -bd 2 -variable $this-time \
 	    -tickinterval 50
 	entry $f.tframe.tval -state disabled \
-	    -width 10 -textvariable $this-timeval
+	     -textvariable $this-timeval -justify left
 	pack $f -side top -fill x -padx 2 -pady 2
 	pack $f.lframe -side top -expand yes -fill x
 	pack $f.tframe -side top -expand yes -fill x
@@ -92,7 +92,8 @@ itcl_class Uintah_Selectors_TimestepSelector {
 	pack $f.lframe.val -side right -anchor e
 	pack $f.tframe.time -side left -expand yes \
 	    -fill x -padx 2 -pady 2 -anchor w
-	pack $f.tframe.tval -side right  -padx 2 -pady 2 -anchor e
+	pack $f.tframe.tval -side right  -padx 2 -pady 2 -anchor e \
+	    -expand yes -fill x
 
 	frame $w.aframe -relief groove -borderwidth 2
 	pack $w.aframe -side top -fill x -padx 2 -pady 2
