@@ -144,7 +144,7 @@ void resize(int i){ vector<ShareAssignArray3<Data> >::resize(i); }
 	      index.z() >= low.z() && index.x() < high.x() &&
 	      index.y() < high.y() && index.z() < high.z())
 	  {
-	    it_ = Array3<Data>::iterator( &(*vit_), index);
+	    it_ = Array3<Data>::const_iterator( &(*vit_), index);
 	    return;
 	  }
 	}
@@ -159,7 +159,7 @@ void resize(int i){ vector<ShareAssignArray3<Data> >::resize(i); }
     { return it_ == it.it_ && vit_ == it.vit_ && vitend_ == it.vitend_;}
     inline bool operator!=(const iterator& it)
     { return !(operator==(it)); }
-    inline Data& operator*() const {return *it_;}
+    inline const Data& operator*() const {return *it_;}
     inline iterator& operator++(){
       if( ++it_ ==  (*vit_).end() ){
 	if(++vit_ != vitend_){
@@ -174,7 +174,7 @@ void resize(int i){ vector<ShareAssignArray3<Data> >::resize(i); }
       return result;
     }
   private:
-    typename Array3<Data>::iterator it_;
+    typename Array3<Data>::const_iterator it_;
     typename vector<ShareAssignArray3<Data> >::const_iterator vit_;
     typename vector<ShareAssignArray3<Data> >::const_iterator vitend_;
   };
