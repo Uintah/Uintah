@@ -2029,11 +2029,11 @@ void MPMICE::interpolateMassBurnFractionToNC(const ProcessorGroup*,
                                                   Ghost::AroundCells,1);
         new_dw->allocate(massBurnFraction,
                                   Mlb->massBurnFractionLabel,dwindex,patch);
+        massBurnFraction.initialize(0.);
 
         IntVector cIdx[8];
         for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
            patch->findCellsFromNode(*iter,cIdx);
-          massBurnFraction[*iter]         = 0.0;
           for (int in=0;in<8;in++){
             massBurnFraction[*iter] +=
                      (fabs(burnedMassCC[cIdx[in]])/massCC[cIdx[in]])*.125;
