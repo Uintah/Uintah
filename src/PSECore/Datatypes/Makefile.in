@@ -7,7 +7,8 @@ SRCS     = BooleanPort.cc ColorMapPort.cc ColumnMatrixPort.cc \
            MatrixPort.cc MeshPort.cc ScalarFieldPort.cc \
            ScaledBoxWidgetData.cc ScaledBoxWidgetDataPort.cc SoundPort.cc \
            SurfacePort.cc VectorFieldPort.cc VoidStarPort.cc cMatrixPort.cc \
-           cVectorPort.cc
+           cVectorPort.cc \
+	   SpanTree.cc SpanPort.cc
 
 INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
 
