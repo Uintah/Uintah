@@ -1,0 +1,144 @@
+#
+# The contents of this file are subject to the University of Utah Public
+# License (the "License"); you may not use this file except in compliance
+# with the License.
+# 
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations under
+# the License.
+# 
+# The Original Source Code is SCIRun, released March 12, 2001.
+# 
+# The Original Source Code was developed by the University of Utah.
+# Portions created by UNIVERSITY are Copyright (C) 2001, 1994 
+# University of Utah. All Rights Reserved.
+#
+
+# SCI Network 1.0
+
+if {[llength [array get env SCIRUN_DATA]] == 0} {
+   puts ""
+   puts "*** Error: this net depends on the SCIRUN_DATA enviroment variable."
+   puts "*** Please exit, set it in your shell, and rerun."
+   puts "*** (e.g. setenv SCIRUN_DATA /local/data/SCIRunData/)"
+   puts ""
+   ::netedit scheduleok
+   return
+}
+set DATADIR $env(SCIRUN_DATA)
+puts "*** Using SCIRUN_DATA $DATADIR"
+
+::netedit dontschedule
+
+global notes
+set notes ""
+
+set m0 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 204 297]
+set m1 [addModuleAtPosition "SCIRun" "DataIO" "FieldReader" 144 107]
+set m2 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 308 202]
+set m3 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 308 32]
+set m4 [addModuleAtPosition "SCIRun" "Render" "Viewer" 368 400]
+set m5 [addModuleAtPosition "SCIRun" "Fields" "SamplePlane" 560 191]
+set m6 [addModuleAtPosition "SCIRun" "Fields" "DirectInterpolate" 493 321]
+
+addConnection $m3 0 $m2 0
+addConnection $m2 0 $m0 1
+addConnection $m0 1 $m4 0
+addConnection $m1 0 $m5 0
+addConnection $m5 0 $m6 1
+addConnection $m1 0 $m6 0
+addConnection $m6 0 $m2 1
+addConnection $m6 0 $m0 0
+
+set $m0-notes {}
+set $m0-show_status {1}
+set $m0-isoval {0.4260}
+set $m0-isoval-min {0.0864115}
+set $m0-isoval-max {1.41458}
+set $m0-isoval-typed {1.2}
+set $m0-isoval-quantity {30}
+set $m0-extract-from-new-field {1}
+set $m0-algorithm {0}
+set $m0-build_trisurf {0}
+set $m0-np {1}
+set $m0-active-isoval-selection-tab {2}
+set $m0-active_tab {MC}
+set $m0-update_type {on release}
+set $m0-color-r {0.4}
+set $m0-color-g {0.2}
+set $m0-color-b {0.9}
+set $m1-notes {}
+set $m1-show_status {1}
+set $m1-filename $DATADIR/radial/radial-distance.lvd.fld
+set $m2-notes {}
+set $m2-show_status {1}
+set $m2-isFixed {0}
+set $m2-min {        0.0864115}
+set $m2-max {          1.41458}
+set $m3-notes {}
+set $m3-show_status {1}
+set $m3-tcl_status {Calling GenStandardColorMaps!}
+set $m3-positionList {}
+set $m3-nodeList {}
+set $m3-width {1}
+set $m3-height {1}
+set $m3-mapType {3}
+set $m3-minRes {12}
+set $m3-resolution {255}
+set $m3-realres {255}
+set $m3-gamma {0}
+set $m4-notes {}
+set $m4-show_status {1}
+$m4 ui
+set $m4-ViewWindow_0-pos {}
+set $m4-ViewWindow_0-caxes {1}
+set $m4-ViewWindow_0-iaxes {}
+set $m4-ViewWindow_0-view-eyep-x {          7.79424}
+set $m4-ViewWindow_0-view-eyep-y {          1.95486}
+set $m4-ViewWindow_0-view-eyep-z {          8.63993}
+set $m4-ViewWindow_0-view-lookat-x {}
+set $m4-ViewWindow_0-view-lookat-y {}
+set $m4-ViewWindow_0-view-lookat-z {}
+set $m4-ViewWindow_0-view-up-x {        -0.118947}
+set $m4-ViewWindow_0-view-up-y {         0.986123}
+set $m4-ViewWindow_0-view-up-z {        -0.115815}
+set $m4-ViewWindow_0-view-fov {          18.0624}
+set $m4-ViewWindow_0-view-eyep_offset-x {}
+set $m4-ViewWindow_0-view-eyep_offset-y {}
+set $m4-ViewWindow_0-view-eyep_offset-z {}
+set $m4-ViewWindow_0-bgcolor-r {0}
+set $m4-ViewWindow_0-bgcolor-g {0}
+set $m4-ViewWindow_0-bgcolor-b {0}
+set $m4-ViewWindow_0-shading {}
+set $m4-ViewWindow_0-do_stereo {0}
+set $m4-ViewWindow_0-ambient-scale {1.0}
+set $m4-ViewWindow_0-diffuse-scale {1.0}
+set $m4-ViewWindow_0-specular-scale {0.4}
+set $m4-ViewWindow_0-emission-scale {1.0}
+set $m4-ViewWindow_0-shininess-scale {1.0}
+set $m4-ViewWindow_0-sbase {0.40}
+set $m4-ViewWindow_0-sr {1}
+set $m4-ViewWindow_0-do_bawgl {0}
+set $m4-ViewWindow_0-drawimg {}
+set $m4-ViewWindow_0-saveprefix {}
+set $m4-ViewWindow_0-resx {}
+set $m4-ViewWindow_0-resy {}
+set $m4-ViewWindow_0-aspect {}
+set $m4-ViewWindow_0-aspect_ratio {}
+set $m4-ViewWindow_0-unused {1}
+set $m5-notes {}
+set $m5-show_status {1}
+set $m5-sizex {20}
+set $m5-sizey {20}
+set $m5-axis {0}
+set $m5-padpercent {0}
+set $m5-data-at {Nodes}
+set $m6-notes {}
+set $m6-show_status {1}
+set $m6-use_interp {1}
+set $m6-use_closest {1}
+set $m6-closeness_distance {1.0e15}
+$m0 initialize_ui
+
+::netedit scheduleok
