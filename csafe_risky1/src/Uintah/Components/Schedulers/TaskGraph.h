@@ -152,6 +152,9 @@ WARNING
 
       typedef map<TaskProduct, const Task::Dependency*> actype;
       actype d_allcomps;
+
+      typedef multimap<TaskProduct, const Task::Dependency*> artype;
+      artype d_allreqs;
       int d_maxSerial;
    };
    
@@ -159,6 +162,9 @@ WARNING
 
 //
 // $Log$
+// Revision 1.5.4.2  2000/10/17 01:01:09  sparker
+// Added optimization of getRequiresForComputes
+//
 // Revision 1.5.4.1  2000/10/10 05:28:04  sparker
 // Added support for NullScheduler (used for profiling taskgraph overhead)
 //

@@ -51,6 +51,7 @@ TaskGraph::initialize()
 
    d_tasks.clear();
    d_allcomps.clear();
+   d_allreqs.clear();
 }
 
 map<DependData, int> depToSN;
@@ -310,6 +311,15 @@ TaskGraph::addTask(Task* task)
       }
       d_allcomps[p] = dep;
    }
+
+   const Task::reqType& reqs = task->getRequires();
+   for(Task::reqType::const_iterator dep = reqs.begin();
+       dep != reqs.end(); dep++){
+      if(!dep->d_dw->isFinalized()){
+	 TaskProduct p(dep->d_patch, dep->d_matlIndex, dep->d_var);
+	 d_allreqs.insert(artype::value_type(p, dep));
+      }
+   }
 }
 
 const Task::Dependency* TaskGraph::getComputesForRequires(const Task::Dependency* req)
@@ -324,6 +334,7 @@ const Task::Dependency* TaskGraph::getComputesForRequires(const Task::Dependency
 void TaskGraph::getRequiresForComputes(const Task::Dependency* comp,
 				       vector<const Task::Dependency*>& reqs)
 {
+#if 0
    // This REALLY needs to be improved - Steve
    vector<Task*>::iterator iter;
    for( iter=d_tasks.begin(); iter != d_tasks.end(); iter++ ) {
@@ -345,6 +356,13 @@ void TaskGraph::getRequiresForComputes(const Task::Dependency* comp,
       }
    }
    //cerr << "Found " << reqs.size() << " consumers of variable: " << comp->d_var->getName() << " on patch " << comp->d_patch->getID() << " " << comp->d_patch << '\n';
+#else
+   TaskProduct key(comp->d_patch, comp->d_matlIndex, comp->d_var);
+   pair<artype::iterator, artype::iterator> iters;
+   iters = d_allreqs.equal_range(key);
+   for(artype::iterator iter = iters.first; iter != iters.second; iter++)
+      reqs.push_back(iter->second);
+#endif
 }
 
 bool
@@ -406,6 +424,9 @@ DependData::operator()( const DependData & d1, const DependData & d2 ) const {
 
 //
 // $Log$
+// Revision 1.9.4.2  2000/10/17 01:01:09  sparker
+// Added optimization of getRequiresForComputes
+//
 // Revision 1.9.4.1  2000/10/10 05:28:03  sparker
 // Added support for NullScheduler (used for profiling taskgraph overhead)
 //
