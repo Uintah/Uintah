@@ -2,7 +2,7 @@ SRCTOP   = @top_srcdir@
 SRCDIR   = @srcdir@
 OBJTOP   = ../../..
 
-SRCS     = ImagePort.o
+SRCS     = ImagePort.cc
 
 INCLUDES = -I$(SRCTOP) -I$(OBJTOP)
 

@@ -8,14 +8,14 @@
  *    July 1997
  */
 
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <Datatypes/ScalarFieldPort.h>
-#include <Datatypes/ScalarField.h>
-#include <Datatypes/ScalarFieldRG.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLTask.h>
-#include <TclInterface/TCLvar.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/Datatypes/ScalarFieldPort.h>
+#include <SCICore/Datatypes/ScalarField.h>
+#include <SCICore/Datatypes/ScalarFieldRG.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLTask.h>
+#include <SCICore/TclInterface/TCLvar.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -46,17 +46,13 @@ class TiffWriter : public Module {
   
 public:
     TiffWriter(const clString& id);
-    TiffWriter(const TiffWriter&, int deep=0);
     virtual ~TiffWriter();
-    virtual Module* clone(int deep);
     virtual void execute();
 };
 
-extern "C" {
-  Module* make_TiffWriter(const clString& id)
-    {
-      return scinew TiffWriter(id);
-    }
+Module* make_TiffWriter(const clString& id)
+{
+    return scinew TiffWriter(id);
 }
 
 TiffWriter::TiffWriter(const clString& id)
@@ -69,20 +65,8 @@ TiffWriter::TiffWriter(const clString& id)
     newgrid = new ScalarFieldRG;
 }
 
-TiffWriter::TiffWriter(const TiffWriter& copy, int deep)
-: Module(copy, deep), filename("filename", id, this),
-  resolution("resolution",id,this)
-{
-    NOT_FINISHED("TiffWriter::TiffWriter");
-}
-
 TiffWriter::~TiffWriter()
 {
-}
-
-Module* TiffWriter::clone(int deep)
-{
-    return scinew TiffWriter(*this, deep);
 }
 
 void TiffWriter::execute()
@@ -218,6 +202,9 @@ void TiffWriter::execute()
 
 //
 // $Log$
+// Revision 1.4  1999/08/31 08:55:38  sparker
+// Bring SCIRun modules up to speed
+//
 // Revision 1.3  1999/08/25 03:49:02  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

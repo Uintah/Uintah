@@ -8,24 +8,27 @@
  *    July 1998
  */
 
-#include <Containers/Array1.h>
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <Datatypes/GeometryPort.h>
-#include <Datatypes/ScalarFieldPort.h>
-#include <Datatypes/ScalarFieldRG.h>
-#include <Datatypes/ScalarFieldRGfloat.h>
-#include <Datatypes/ColorMapPort.h>
-#include <Geom/GeomGrid.h>
-#include <Geom/GeomGroup.h>
-#include <Geom/GeomLine.h>
-#include <Geom/Material.h>
-#include <Geometry/Point.h>
-#include <Math/MinMax.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLvar.h>
-#include <Multitask/Task.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/Datatypes/GeometryPort.h>
+#include <PSECore/Datatypes/ScalarFieldPort.h>
+#include <SCICore/Datatypes/ScalarFieldRG.h>
+#include <SCICore/Datatypes/ScalarFieldRGfloat.h>
+#include <PSECore/Datatypes/ColorMapPort.h>
+#include <SCICore/Geom/GeomGrid.h>
+#include <SCICore/Geom/GeomGroup.h>
+#include <SCICore/Geom/GeomLine.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Math/MinMax.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/Thread/Parallel.h>
+#include <SCICore/Thread/Thread.h>
 #include <math.h>
+
+using namespace SCICore::Thread;
 
 namespace SCIRun {
 namespace Modules {
@@ -34,7 +37,6 @@ using namespace PSECore::Dataflow;
 using namespace PSECore::Datatypes;
 
 using namespace SCICore::TclInterface;
-using namespace SCICore::Multitask;
 
 class ImageSel : public Module {
    ScalarFieldIPort *inscalarfield;
@@ -52,9 +54,7 @@ class ImageSel : public Module {
   
 public:
    ImageSel(const clString& id);
-   ImageSel(const ImageSel&, int deep);
    virtual ~ImageSel();
-   virtual Module* clone(int deep);
    virtual void execute();
 
 //   void tcl_command( TCLArgs&, void *);
@@ -63,12 +63,10 @@ public:
 
 };
 
-extern "C" {
   Module* make_ImageSel(const clString& id)
     {
       return scinew ImageSel(id);
     }
-}
 
 static clString module_name("ImageSel");
 
@@ -90,19 +88,8 @@ ImageSel::ImageSel(const clString& id)
     oldsel=-1;
 }
 
-ImageSel::ImageSel(const ImageSel& copy, int deep)
-: Module(copy, deep), seltcl("sel",id,this)
-{
-   NOT_FINISHED("ImageSel::ImageSel");
-}
-
 ImageSel::~ImageSel()
 {
-}
-
-Module* ImageSel::clone(int deep)
-{
-   return scinew ImageSel(*this, deep);
 }
 
 void ImageSel::do_ImageSel(int proc)    
@@ -113,13 +100,6 @@ void ImageSel::do_ImageSel(int proc)
   for(int x=start; x<end; x++) 
     for(int y=0; y<rg->grid.dim1(); y++)
       newgrid->grid(y,x,0)=rg->grid(y,x,sel);
-}
-
-static void start_ImageSel(void* obj,int proc)
-{
-  ImageSel* img = (ImageSel*) obj;
-
-  img->do_ImageSel(proc);
 }
 
 void ImageSel::execute()
@@ -158,10 +138,11 @@ void ImageSel::execute()
     
     newgrid->resize(ny,nx,1);
 
-    np = Task::nprocessors();    
+    np = Thread::numProcessors();    
 
     //if (sel!=oldsel) {
-      Task::multiprocess(np, start_ImageSel, this);
+      Thread::parallel(Parallel<ImageSel>(this, &ImageSel::do_ImageSel),
+		       np, true);
       //  oldsel=sel;
       // }
 
@@ -180,6 +161,9 @@ void ImageSel::tcl_command(TCLArgs& args, void* userdata)
 
 //
 // $Log$
+// Revision 1.4  1999/08/31 08:55:33  sparker
+// Bring SCIRun modules up to speed
+//
 // Revision 1.3  1999/08/25 03:48:56  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

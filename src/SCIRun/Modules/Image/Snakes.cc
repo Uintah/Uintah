@@ -8,22 +8,25 @@
  *    June 1998
  */
 
-#include <Containers/Array1.h>
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <Datatypes/GeometryPort.h>
-#include <Datatypes/ScalarFieldPort.h>
-#include <Datatypes/ScalarFieldRG.h>
-#include <Geom/GeomGrid.h>
-#include <Geom/GeomGroup.h>
-#include <Geom/GeomLine.h>
-#include <Geom/Material.h>
-#include <Geometry/Point.h>
-#include <Math/MinMax.h>
-#include <Malloc/Allocator.h>
-#include <TclInterface/TCLvar.h>
-#include <Multitask/Task.h>
+#include <SCICore/Containers/Array1.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <PSECore/Datatypes/GeometryPort.h>
+#include <PSECore/Datatypes/ScalarFieldPort.h>
+#include <SCICore/Datatypes/ScalarFieldRG.h>
+#include <SCICore/Geom/GeomGrid.h>
+#include <SCICore/Geom/GeomGroup.h>
+#include <SCICore/Geom/GeomLine.h>
+#include <SCICore/Geom/Material.h>
+#include <SCICore/Geometry/Point.h>
+#include <SCICore/Math/MinMax.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/TclInterface/TCLvar.h>
+#include <SCICore/Thread/Parallel.h>
+#include <SCICore/Thread/Thread.h>
 #include <math.h>
+
+using namespace SCICore::Thread;
 
 namespace SCIRun {
 namespace Modules {
@@ -32,7 +35,6 @@ using namespace PSECore::Dataflow;
 using namespace PSECore::Datatypes;
 
 using namespace SCICore::TclInterface;
-using namespace SCICore::Multitask;
 
 class ipoint {
 public:
@@ -59,9 +61,7 @@ class Snakes : public Module {
   
 public:
    Snakes(const clString& id);
-   Snakes(const Snakes&, int deep);
    virtual ~Snakes();
-   virtual Module* clone(int deep);
    virtual void execute();
 
    void do_parallel(int proc);
@@ -73,12 +73,10 @@ public:
   
 };
 
-extern "C" {
   Module* make_Snakes(const clString& id)
     {
       return scinew Snakes(id);
     }
-}
 
 static clString module_name("Snakes");
 static clString widget_name("Snakes Widget");
@@ -110,23 +108,8 @@ Snakes::Snakes(const clString& id)
     snaxels=0;
 }
 
-Snakes::Snakes(const Snakes& copy, int deep)
-: Module(copy, deep),
-  aval("a", id, this), bval("b", id, this), maxxval("maxx", id, this),
-  maxyval("maxy", id, this), resxval("resx", id, this),
-  resyval("resy", id, this), fixedval("fixed", id, this),
-  iterval("iter",id,this)
-{
-   NOT_FINISHED("Snakes::Snakes");
-}
-
 Snakes::~Snakes()
 {
-}
-
-Module* Snakes::clone(int deep)
-{
-   return scinew Snakes(*this, deep);
 }
 
 void Snakes::do_parallel(int proc)
@@ -149,13 +132,6 @@ void Snakes::do_parallel(int proc)
       //      if (sn->grid(x,y,z))
       //	snaxels++;
     }
-}
-
-static void do_parallel_stuff(void* obj,int proc)
-{
-  Snakes* img = (Snakes*) obj;
-
-  img->do_parallel(proc);
 }
 
 /*
@@ -480,8 +456,9 @@ void Snakes::execute()
     
     newgrid->resize(nx,ny,nz);
 
-    np = Task::nprocessors();
-    Task::multiprocess(np, do_parallel_stuff, this);
+    np = Thread::numProcessors();
+    Thread::parallel(Parallel<Snakes>(this, &Snakes::do_parallel),
+		     np, true);
 
     
     snaxels = 0;
@@ -534,6 +511,9 @@ void Snakes::execute()
 
 //
 // $Log$
+// Revision 1.4  1999/08/31 08:55:35  sparker
+// Bring SCIRun modules up to speed
+//
 // Revision 1.3  1999/08/25 03:48:58  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes

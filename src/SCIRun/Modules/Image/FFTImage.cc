@@ -12,12 +12,12 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Datatypes/Image/ImagePort.h>
+#include <SCIRun/Datatypes/Image/ImagePort.h>
 
-#include <Util/NotFinished.h>
-#include <Dataflow/Module.h>
-#include <Malloc/Allocator.h>
-#include <Math/fft.h>
+#include <SCICore/Util/NotFinished.h>
+#include <PSECore/Dataflow/Module.h>
+#include <SCICore/Malloc/Allocator.h>
+#include <SCICore/Math/fft.h>
 
 namespace SCIRun {
 namespace Modules {
@@ -32,17 +32,13 @@ class FFTImage : public Module {
     ImageOPort* oport;
 public:
     FFTImage(const clString& id);
-    FFTImage(const FFTImage&, int deep);
     virtual ~FFTImage();
-    virtual Module* clone(int deep);
     virtual void execute();
 };
 
-extern "C" {
 Module* make_FFTImage(const clString& id)
 {
     return scinew FFTImage(id);
-}
 }
 
 FFTImage::FFTImage(const clString& id)
@@ -55,19 +51,8 @@ FFTImage::FFTImage(const clString& id)
     add_oport(oport);
 }
 
-FFTImage::FFTImage(const FFTImage& copy, int deep)
-: Module(copy, deep)
-{
-    NOT_FINISHED("FFTImage::FFTImage");
-}
-
 FFTImage::~FFTImage()
 {
-}
-
-Module* FFTImage::clone(int deep)
-{
-    return scinew FFTImage(*this, deep);
 }
 
 void FFTImage::execute()
@@ -87,6 +72,9 @@ void FFTImage::execute()
 
 //
 // $Log$
+// Revision 1.4  1999/08/31 08:55:31  sparker
+// Bring SCIRun modules up to speed
+//
 // Revision 1.3  1999/08/25 03:48:55  sparker
 // Changed SCICore/CoreDatatypes to SCICore/Datatypes
 // Changed PSECore/CommonDatatypes to PSECore/Datatypes
