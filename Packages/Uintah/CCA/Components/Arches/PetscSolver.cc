@@ -575,7 +575,7 @@ PetscSolver::pressLinearSolve()
   ierr = PCNullSpaceAttach(peqnpc, nullsp);
   ierr = PCNullSpaceDestroy(nullsp);
 #endif
-  ierr = KSPSetInitialGuessNonzero(ksp);
+  ierr = KSPSetInitialGuessNonzero(ksp, PETSC_TRUE);
   if(ierr)
     throw PetscError(ierr, "KSPSetInitialGuessNonzero");
   
