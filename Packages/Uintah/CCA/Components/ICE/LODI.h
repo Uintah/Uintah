@@ -23,7 +23,9 @@ namespace Uintah {
     Lodi_vars() : di(6) {}
     constCCVariable<double> rho_old;     
     constCCVariable<double> temp_old; 
-    constCCVariable<double> speedSound;    
+    constCCVariable<double> speedSound;
+    constCCVariable<double> cv;
+    constCCVariable<double> gamma;   
     constCCVariable<Vector> vel_old;
     CCVariable<double> rho_CC;      // rho *after* BC has been applied
     CCVariable<Vector> vel_CC;      // vel *after* BC has been applied  
@@ -31,8 +33,6 @@ namespace Uintah {
     CCVariable<double> E;          // total energy
     CCVariable<Vector> nu;               
     StaticArray<CCVariable<Vector> > di; 
-    double cv;
-    double gamma; 
     double delT;
     bool setLodiBcs;                 
   };
@@ -40,9 +40,11 @@ namespace Uintah {
   // This struct contains the additional variables
   // required to apply the Lodi pressure bcs.
   struct Lodi_vars_pressBC{
-    Lodi_vars_pressBC(int numMatls): Temp_CC(numMatls), f_theta(numMatls) {}
+    Lodi_vars_pressBC(int numMatls): Temp_CC(numMatls), f_theta(numMatls), cv(numMatls),gamma(numMatls) {}
     StaticArray<constCCVariable<double> > Temp_CC;
     StaticArray<constCCVariable<double> > f_theta;
+    StaticArray<constCCVariable<double> > cv;
+    StaticArray<constCCVariable<double> > gamma;
     bool usingLODI;
     bool setLodiBcs;                  
   };
