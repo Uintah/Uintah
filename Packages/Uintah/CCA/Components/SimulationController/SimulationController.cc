@@ -47,6 +47,9 @@ using std::cout;
 using namespace SCIRun;
 using namespace Uintah;
 
+// for calculating memory usage when sci-malloc is disabled.
+char* SimulationController::start_addr = NULL;
+
 SimulationController::SimulationController(const ProcessorGroup* myworld) :
   UintahParallelComponent(myworld)
 {
@@ -230,28 +233,49 @@ void SimulationController::run()
 	 delt = timeinfo.delt_max;
       }
       old_dw->override(delt_vartype(delt), sharedState->get_delt_label());
+      
+#ifndef DISABLE_SCI_MALLOC
+      size_t nalloc,  sizealloc, nfree,  sizefree, nfillbin,
+	nmmap, sizemmap, nmunmap, sizemunmap, highwater_alloc,  
+	highwater_mmap, nlonglocks, nnaps, bytes_overhead, bytes_free,
+	bytes_fragmented, bytes_inuse, bytes_inhunks;
+      
+      GetGlobalStats(DefaultAllocator(),
+		     nalloc, sizealloc, nfree, sizefree,
+		     nfillbin, nmmap, sizemmap, nmunmap,
+		     sizemunmap, highwater_alloc,
+		     highwater_mmap, nlonglocks, nnaps,
+		     bytes_overhead, bytes_free,
+		     bytes_fragmented, bytes_inuse,
+		     bytes_inhunks);
+      unsigned long memuse = sizealloc - sizefree;
+#else
+      unsigned long memuse = (char*)sbrk(0)-start_addr;
+#endif
+
+      unsigned long avg_memuse = memuse;
+      unsigned long max_memuse = memuse;
+      if (d_myworld->size() > 0) {
+	MPI_Reduce(&memuse, &avg_memuse, 1, MPI_UNSIGNED_LONG, MPI_SUM, 0,
+		   d_myworld->getComm());
+	avg_memuse /= d_myworld->size(); // only to be used by processor 0
+	MPI_Reduce(&memuse, &max_memuse, 1, MPI_UNSIGNED_LONG, MPI_MAX, 0,
+		   d_myworld->getComm());
+      }
+      
+      
       if(d_myworld->myrank() == 0){
 
-	size_t nalloc,  sizealloc, nfree,  sizefree, nfillbin,
-	  nmmap, sizemmap, nmunmap, sizemunmap, highwater_alloc,  
-	  highwater_mmap, nlonglocks, nnaps, bytes_overhead, bytes_free,
-	  bytes_fragmented, bytes_inuse, bytes_inhunks;
-
-	GetGlobalStats(DefaultAllocator(),
-					nalloc, sizealloc, nfree, sizefree,
-					nfillbin, nmmap, sizemmap, nmunmap,
-					sizemunmap, highwater_alloc,
-					highwater_mmap, nlonglocks, nnaps,
-					bytes_overhead, bytes_free,
-					bytes_fragmented, bytes_inuse,
-					bytes_inhunks);
 
 	if( analyze ) analyze->showStepInformation();
 	else {
           cout << "Time=" << t << ", delT=" << delt 
 	       << ", elap T = " << wallTime 
-	       << ", DW: " << old_dw->getID() << ", Mem Use = " 
-	       << sizealloc - sizefree << "\n";
+	       << ", DW: " << old_dw->getID() << ", Mem Use = ";
+	  if (avg_memuse == max_memuse)
+	    cout << avg_memuse << endl;
+	  else
+	    cout << avg_memuse << " (avg), " << max_memuse << " (max)\n";
 
 #ifdef OUTPUT_AVG_ELAPSED_WALLTIME
 	  if (n > 1) // ignore first set of elapsed times
@@ -394,7 +418,10 @@ void SimulationController::problemSetup(const ProblemSpecP& params,
 	IntVector patches;
 	IntVector inLowIndex,inHighIndex;
 	if(box_ps->get("patches", patches)){
-	   level->setPatchDistributionHint(patches);
+	  level->setPatchDistributionHint(patches);
+	  if (d_myworld->size() > 1 &&
+	      (patches.x() * patches.y() * patches.z() != d_myworld->size()))
+	    throw ProblemSetupException("Number of patches must equal the number of processes in an mpi run");
 	  for(int i=0;i<patches.x();i++){
 	    for(int j=0;j<patches.y();j++){
 	      for(int k=0;k<patches.z();k++){
