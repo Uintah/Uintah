@@ -1002,7 +1002,8 @@ OpenGL::redraw_frame()
 
 	// now make the ViewWindow setup its clipping planes...
 	viewwindow->setClip(drawinfo);
-	
+        viewwindow->setMouse(drawinfo);
+        
 	// UNICAM addition
 	glGetDoublev (GL_MODELVIEW_MATRIX, get_depth_model);
 	glGetDoublev (GL_PROJECTION_MATRIX, get_depth_proj);
@@ -1954,7 +1955,11 @@ ViewWindow::setClip(DrawInfoOpenGL* drawinfo)
   }
 }
 
-
+void
+ViewWindow::setMouse(DrawInfoOpenGL* drawinfo)
+{
+  drawinfo->mouse_action = mouse_action_;
+}
 
 void
 GeomViewerItem::draw(DrawInfoOpenGL* di, Material *m, double time)
