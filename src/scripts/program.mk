@@ -41,7 +41,7 @@ $(PROGRAM)_LIBS := $(LIBS)
 #
 $(PROGRAM): $(OBJS) $(patsubst %,$(LIBDIR)lib%.so,$(PSELIBS))
 	rm -f $@
-	$(CXX) $(LDFLAGS) -o $@ $(filter %.o,$^) $(patsubst ../lib/lib%.so,-l%,$(filter %.so,$^)) $($@_LIBS)
+	$(CXX) $(LDFLAGS) -o $@ $(filter %.o,$^) $(patsubst $(LIBDIR)lib%.so,-l%,$(filter %.so,$^)) $($@_LIBS)
 
 #
 #  These will get removed on make clean
@@ -56,6 +56,9 @@ SRCS := INVALID_SRCS.cc
 
 #
 # $Log$
+# Revision 1.7  2000/03/18 08:09:13  sparker
+# Fixed substitution for libraries
+#
 # Revision 1.6  2000/03/17 10:40:17  sparker
 # Fixed rule to remove file - use $@ instead of $(PROGRAM)
 #
