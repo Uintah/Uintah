@@ -11,7 +11,9 @@
 #
 
 
-catch {rename BaseWidget ""}
+if {[info commands BaseWidget] != ""} {
+	return
+}
 
 source $sci_root/TCL/MaterialEditor.tcl
 
