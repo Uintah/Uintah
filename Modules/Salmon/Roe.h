@@ -31,6 +31,11 @@ class Salmon;
 class SceneItem;
 class Vector;
 
+struct ObjTag {
+    TCLvarint* visible;
+    int tagid;
+};
+
 class TCLView : public TCLvar {
     TCLPoint eyep;
     TCLPoint lookat;
@@ -71,6 +76,8 @@ class Roe : public TCL {
     char* modebuf;
     char* modecommand;
 
+    int maxtag;
+
     void animate_to_view(const View& v, double time);
 public:
     clString id;
@@ -102,7 +109,7 @@ public:
     void get_bounds(BBox&);
 
     // Which of the objects do we draw?
-    HashTable<clString, TCLvarint*> visible;
+    HashTable<clString, ObjTag*> visible;
 
     // Which of the lights are on?
     HashTable<clString, int> light_on;
