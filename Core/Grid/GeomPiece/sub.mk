@@ -21,6 +21,7 @@ SRCS     += \
 	$(SRCDIR)/CylinderShellPiece.cc \
 	$(SRCDIR)/PlaneShellPiece.cc \
 	$(SRCDIR)/SphereShellPiece.cc \
+	$(SRCDIR)/GUVSphereShellPiece.cc \
 	$(SRCDIR)/SmoothGeomPiece.cc \
 	$(SRCDIR)/SmoothCylGeomPiece.cc \
 	$(SRCDIR)/CorrugEdgeGeomPiece.cc

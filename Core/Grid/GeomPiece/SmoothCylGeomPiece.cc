@@ -111,9 +111,9 @@ SmoothCylGeomPiece::getBoundingBox() const
   Vector bot = d_bottom.asVector() - capAxis;
   Vector top = d_top.asVector() + capAxis;
   Point lo(bot.x() - d_radius, bot.y() - d_radius,
-	   bot.z() - d_radius);
+           bot.z() - d_radius);
   Point hi(top.x() + d_radius, top.y() + d_radius,
-	   top.z() + d_radius);
+           top.z() + d_radius);
 
   return Box(lo,hi);
 }
@@ -199,25 +199,25 @@ SmoothCylGeomPiece::createEndCapPoints()
       double phiInc = 2.0*M_PI/(double) numCircum;
       double area = 0.5*phiInc*(nextRadius*nextRadius-prevRadius*prevRadius);
       for (int jj = 0; jj < numCircum; ++jj) {
-	double phi = jj*phiInc; 
-	double cosphi = cos(phi);
-	double sinphi = sin(phi);
+        double phi = jj*phiInc; 
+        double cosphi = cos(phi);
+        double sinphi = sin(phi);
 
-	// Create points on xy plane
-	double x = currRadius*cosphi;
-	double y = currRadius*sinphi;
-	double z = 0;
+        // Create points on xy plane
+        double x = currRadius*cosphi;
+        double y = currRadius*sinphi;
+        double z = 0;
      
-	// Rotate points to correct orientation and
-	// Translate to correct position
-	Vector pp(x, y, z);
-	pp = R*pp + currCenter;
-	Point p(pp);
+        // Rotate points to correct orientation and
+        // Translate to correct position
+        Vector pp(x, y, z);
+        pp = R*pp + currCenter;
+        Point p(pp);
 
         d_points.push_back(p);
         d_volume.push_back(axisInc*area);
         //cout << "Point["<<count<<"]="<<p<<endl;
-	count++;
+        count++;
       }
     }
     currZ -= axisInc;
@@ -242,25 +242,25 @@ SmoothCylGeomPiece::createEndCapPoints()
       double phiInc = 2.0*M_PI/(double) numCircum;
       double area = 0.5*phiInc*(nextRadius*nextRadius-prevRadius*prevRadius);
       for (int jj = 0; jj < numCircum; ++jj) {
-	double phi = jj*phiInc; 
-	double cosphi = cos(phi);
-	double sinphi = sin(phi);
+        double phi = jj*phiInc; 
+        double cosphi = cos(phi);
+        double sinphi = sin(phi);
 
-	// Create points on xy plane
-	double x = currRadius*cosphi;
-	double y = currRadius*sinphi;
-	double z = 0;
+        // Create points on xy plane
+        double x = currRadius*cosphi;
+        double y = currRadius*sinphi;
+        double z = 0;
      
-	// Rotate points to correct orientation and
-	// Translate to correct position
-	Vector pp(x, y, z);
-	pp = R*pp + currCenter;
-	Point p(pp);
+        // Rotate points to correct orientation and
+        // Translate to correct position
+        Vector pp(x, y, z);
+        pp = R*pp + currCenter;
+        Point p(pp);
 
         d_points.push_back(p);
         d_volume.push_back(axisInc*area);
         //cout << "Point["<<count<<"]="<<p<<endl;
-	count++;
+        count++;
       }
     }
     currZ += axisInc;
@@ -322,24 +322,24 @@ SmoothCylGeomPiece::createSolidCylPoints()
       double phiInc = 2.0*M_PI/(double) numCircum;
       double area = 0.5*phiInc*(nextRadius*nextRadius-prevRadius*prevRadius);
       for (int jj = 0; jj < numCircum; ++jj) {
-	double phi = jj*phiInc; 
-	double cosphi = cos(phi);
-	double sinphi = sin(phi);
+        double phi = jj*phiInc; 
+        double cosphi = cos(phi);
+        double sinphi = sin(phi);
 
-	// Create points on xy plane
-	double x = currRadius*cosphi;
-	double y = currRadius*sinphi;
-	double z = 0;
-	Vector pp(x, y, z);
+        // Create points on xy plane
+        double x = currRadius*cosphi;
+        double y = currRadius*sinphi;
+        double z = 0;
+        Vector pp(x, y, z);
      
-	// Rotate points to correct orientation and
-	// Translate to correct position
-	pp = R*pp + currCenter;
-	Point p(pp);
+        // Rotate points to correct orientation and
+        // Translate to correct position
+        pp = R*pp + currCenter;
+        Point p(pp);
         d_points.push_back(p);
         d_volume.push_back(axisInc*area);
         //cout << "Point["<<count<<"]="<<p<<endl;
-	count++;
+        count++;
       }
     }
     currZ += axisInc;
@@ -394,25 +394,25 @@ SmoothCylGeomPiece::createHollowCylPoints()
       double phiInc = 2.0*M_PI/(double) numCircum;
       double area = 0.5*phiInc*(nextRadius*nextRadius-prevRadius*prevRadius);
       for (int jj = 0; jj < numCircum; ++jj) {
-	double phi = jj*phiInc; 
-	double cosphi = cos(phi);
-	double sinphi = sin(phi);
+        double phi = jj*phiInc; 
+        double cosphi = cos(phi);
+        double sinphi = sin(phi);
 
-	// Create points on xy plane
-	double x = currRadius*cosphi;
-	double y = currRadius*sinphi;
-	double z = 0;
+        // Create points on xy plane
+        double x = currRadius*cosphi;
+        double y = currRadius*sinphi;
+        double z = 0;
      
-	// Rotate points to correct orientation and
-	// Translate to correct position
-	Vector pp(x, y, z);
-	pp = R*pp + currCenter;
-	Point p(pp);
+        // Rotate points to correct orientation and
+        // Translate to correct position
+        Vector pp(x, y, z);
+        pp = R*pp + currCenter;
+        Point p(pp);
 
         d_points.push_back(p);
         d_volume.push_back(axisInc*area);
         //cout << "Point["<<count<<"]="<<p<<endl;
-	count++;
+        count++;
       }
     }
     currZ += axisInc;

@@ -2,6 +2,7 @@
 #include <Packages/Uintah/Core/Grid/GeomPiece/PlaneShellPiece.h>
 #include <Packages/Uintah/Core/Grid/GeomPiece/SphereShellPiece.h>
 #include <Packages/Uintah/Core/Grid/GeomPiece/CylinderShellPiece.h>
+#include <Packages/Uintah/Core/Grid/GeomPiece/GUVSphereShellPiece.h>
 
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
@@ -30,6 +31,9 @@ ShellGeometryFactory::create(const ProblemSpecP& ps,
 
     else if (go_type == "cylinder")
       objs.push_back(new CylinderShellPiece(child));
+
+    else if (go_type == "GUV_sphere")
+      objs.push_back(new GUVSphereShellPiece(child));
 
     else 
       if (ps->doWriteMessages())
