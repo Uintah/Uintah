@@ -119,7 +119,7 @@ double IdealGas::computeRhoMicro(double& press, double& gamma,
 
 //__________________________________
 //
-void IdealGas::computeTemp_CC(const Patch* patch,
+void IdealGas::computeTempCC(const Patch* patch,
                                 const CCVariable<double>& press, 
                                 const double& gamma,
 				    const double& cv,

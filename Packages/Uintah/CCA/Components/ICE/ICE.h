@@ -80,7 +80,7 @@ using namespace SCIRun;
 	lb = Ilb;
       };
       
-    public:
+    private:
       
       void actuallyInitialize(const ProcessorGroup*, const Patch* patch,
 			      DataWarehouseP&  old_dw, DataWarehouseP& new_dw);
@@ -191,6 +191,8 @@ using namespace SCIRun;
       friend const TypeDescription* fun_getTypeDescription(fflux*);
       friend const TypeDescription* fun_getTypeDescription(eflux*);
       friend const TypeDescription* fun_getTypeDescription(cflux*);
+
+      friend class MPMICE;
       
       
       void influxOutfluxVolume(const SFCXVariable<double>& uvel_CC,
@@ -291,6 +293,8 @@ using namespace SCIRun;
  /*______________________________________________________________________
  *      Needed by Advection Routines
  *______________________________________________________________________*/   
+
+    enum face {TOP = 0,BOTTOM,RIGHT,LEFT,FRONT,BACK };
 #define TOP        0          /* index used to designate the top cell face    */
 #define BOTTOM     1          /* index used to designate the bottom cell face */
 #define RIGHT      2          /* index used to designate the right cell face  */
@@ -300,6 +304,18 @@ using namespace SCIRun;
 #define SURROUND_MAT 0        /* Mat index of surrounding material, assumed */  
             //__________________________________
             //   E D G E   F L U X E S
+    enum edge {TOP_R = 0, TOP_FR, TOP_L, TOP_BK, BOT_R, BOT_FR, BOT_L,BOT_BK,
+	       RIGHT_BK, RIGHT_FR, LEFT_FR, LEFT_BK};
+    // Key:
+    // Top = top
+    // BOT = bottom
+    // R = right
+    // L = left
+    // FR = front
+    // BK = back
+    // RIGHT = right
+    // LEFT = left
+
 #define TOP_R               0               /* edge on top right of cell    */
 #define TOP_FR              1               /* edge on top front of cell    */
 #define TOP_L               2               /* edge on top left of cell     */
@@ -317,6 +333,15 @@ using namespace SCIRun;
      
             //__________________________________
             //   C O R N E R   F L U X E S
+    enum corner {TOP_R_BK = 0,TOP_R_FR,TOP_L_BK,TOP_L_FR,BOT_R_BK,BOT_R_FR,
+		 BOT_L_BK,BOT_L_FR};
+    // Key:
+    // TOP = top
+    // R = ight
+    // L = left
+    // BK = back corner
+    // FR = front corner
+    
 #define TOP_R_BK            0               /* top, RIGHT, back corner      */
 #define TOP_R_FR            1               /* top, RIGHT, front corner     */
 #define TOP_L_BK            2               /* top, LEFT, back corner       */
