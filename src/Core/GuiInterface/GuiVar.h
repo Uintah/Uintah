@@ -75,6 +75,10 @@ public:
     value_ = value;
     ctx->set(value_);
   }
+  // Returns true if variable exists in TCL scope and is of type T
+  inline bool valid() {
+    return ctx->get(value_);
+  }
 };
 
 typedef GuiSingle<string> GuiString;
@@ -110,6 +114,10 @@ public:
       y_.set(var.y());
       z_.set(var.z());
     }
+  }
+  // Returns true if triplet exists in TCL scope and are valid doubles
+  inline bool valid() {
+    return (x_.valid() && y_.valid() && z_.valid());
   }
 };
 
