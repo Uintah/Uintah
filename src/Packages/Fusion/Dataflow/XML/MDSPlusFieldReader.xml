@@ -6,6 +6,7 @@
 <component name="MDSPlusFieldReader" category="DataIO">
   <overview>
     <authors>
+      <author>ARSanderson</author>
     </authors>
   </overview>
   <implementation>
@@ -24,6 +25,10 @@
       </port>
       <port>
 	<name>Output V Field</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+	<name>Output J Field</name>
 	<datatype>SCIRun::Field</datatype>
       </port>
     </outputs>

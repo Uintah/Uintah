@@ -59,6 +59,9 @@ private:
   FieldHandle  bHandle_;
   FieldHandle  vHandle_;
   FieldHandle  pHandle_;
+  FieldHandle  tHandle_;
+
+  FieldHandle  eHandle_;
 };
 
 
@@ -83,8 +86,8 @@ void FusionFieldReader::execute(){
   enum DATA_FIELDS { GRID_XYZ=0,   GRID_R_PHI_Z=1,   GRID_R_Z_PHI=2,
 		     BFIELD_XYZ=3, BFIELD_R_PHI_Z=4, BFIELD_R_Z_PHI=5,
 		     VFIELD_XYZ=6, VFIELD_R_PHI_Z=7, VFIELD_R_Z_PHI=8,
-		     PRESSURE = 9,
-		     MAX_FIELDS = 10};
+		     PRESSURE = 9, TEMPERATURE= 10,
+		     MAX_FIELDS = 11};
 
   int *readOrder = new int[ (int) MAX_FIELDS ];
 
@@ -112,7 +115,7 @@ void FusionFieldReader::execute(){
   if( new_filename         != old_filename_ || 
       new_filemodification != old_filemodification_)
   {
-    cout << "Reading the file " <<  new_filename << endl;
+    remark( "Reading the file " +  new_filename );
 
     old_filemodification_ = new_filemodification;
     old_filename_         = new_filename;
@@ -169,7 +172,7 @@ void FusionFieldReader::execute(){
 
     ifs >> nVals;
 
-    cout << "FusionFieldReader - Number of values including grid " << nVals << endl;
+    remark( "Number of values including grid " + nVals );
 
     int index = 0;
 
@@ -177,7 +180,7 @@ void FusionFieldReader::execute(){
     {
       ifs >> token;
 
-      cout << "FusionFieldReader - Token and index " << token << " " << index << endl;
+      //      remark( "Token and index " + token + " " + index );
 
       if( strcmp( token, "GRID_X_Y_Z" ) == 0 ) {
 	readOrder[GRID_XYZ] = index;
@@ -234,6 +237,12 @@ void FusionFieldReader::execute(){
 	index += 1;
       }
 
+      // Temperature
+      else if( strcmp( token, "TEMPERATURE" ) == 0 ) {
+	readOrder[TEMPERATURE] = index;
+	index += 1;
+      }
+
       else
       { 
 	error( string("Bad token: expected XXX but read ") + token );
@@ -269,7 +278,7 @@ void FusionFieldReader::execute(){
 
     ifs >> idim >> jdim >> kdim; 
 
-    cout << "FusionFieldReader - " << idim << "  " << jdim << "  " << kdim << endl;
+    //    remark( idim + "  " + jdim + "  " + kdim );
 
     // Create the grid, and scalar and vector data matrices.
     StructHexVolMesh *hvm = NULL;
@@ -292,6 +301,8 @@ void FusionFieldReader::execute(){
     StructHexVolField<Vector> *bfield = NULL;
     StructHexVolField<Vector> *vfield = NULL;
     StructHexVolField<double> *pfield = NULL;
+    StructHexVolField<double> *tfield = NULL;
+    StructHexVolField< vector<double> > *efield = NULL;
 
     if( readOrder[BFIELD_XYZ    ] > -1 ||
 	readOrder[BFIELD_R_PHI_Z] > -1 ||
@@ -304,6 +315,9 @@ void FusionFieldReader::execute(){
 	readOrder[VFIELD_R_Z_PHI] > -1 ) {
       vfield = scinew StructHexVolField<Vector>(hvm, Field::NODE);
       vHandle_ = vfield;
+
+      efield = scinew StructHexVolField< vector<double> >(hvm, Field::NODE);
+      eHandle_ = efield;
     }
 
     if( readOrder[PRESSURE] > -1 ) {
@@ -311,10 +325,15 @@ void FusionFieldReader::execute(){
       pHandle_ = pfield;
     }
 
+    if( readOrder[TEMPERATURE] > -1 ) {
+      tfield = scinew StructHexVolField<double>(hvm, Field::NODE);
+      tHandle_ = tfield;
+    }
+
     // Read the data.
     double* data = new double[nVals];
 
-    double xVal, yVal, zVal, pVal, rad, phi;
+    double xVal, yVal, zVal, pVal, tVal, rad, phi;
 
     bool phi_read;
 
@@ -333,7 +352,7 @@ void FusionFieldReader::execute(){
 	    if( ifs.eof() ) {
 	      error( string("Could not read grid ") + new_filename );
 
-	      cerr << "FusionFieldReader " << i << "  " << j << "  " << k << "  " << index << endl;
+	      //	      error( "FusionFieldReader " + i + "  " + j + "  " + k + "  " + index );
 
 	      return;
 	    }
@@ -444,6 +463,13 @@ void FusionFieldReader::execute(){
 
 	    vfield->set_value(Vector(xVal, yVal, zVal), node);
 
+	    vector< double > errors;
+	    errors.push_back( xVal );
+	    errors.push_back( yVal );
+	    errors.push_back( zVal );
+
+	    efield->set_value(errors, node);
+
 	  }
 	  else if( readOrder[VFIELD_R_PHI_Z] > -1 ) {
 
@@ -459,6 +485,13 @@ void FusionFieldReader::execute(){
 	      zVal =  data[index+2];
 
 	      vfield->set_value(Vector(xVal, yVal, zVal), node);
+
+	      vector< double > errors;
+	      errors.push_back( xVal );
+	      errors.push_back( yVal );
+	      errors.push_back( zVal );
+	      
+	      efield->set_value(errors, node);
 	    }
 	  }
 
@@ -476,6 +509,13 @@ void FusionFieldReader::execute(){
 	      zVal =  data[index+1];
 
 	      vfield->set_value(Vector(xVal, yVal, zVal), node);
+
+	      vector< double > errors;
+	      errors.push_back( xVal );
+	      errors.push_back( yVal );
+	      errors.push_back( zVal );
+
+	      efield->set_value(errors, node);
 	    }
 	  }
 
@@ -487,6 +527,16 @@ void FusionFieldReader::execute(){
 	    pVal = data[index];
 
 	    pfield->set_value(pVal, node);
+	  }
+	 
+	  // Temperature
+	  if( readOrder[TEMPERATURE] > -1 ) {
+
+	    index = readOrder[TEMPERATURE];
+
+	    tVal = data[index];
+
+	    tfield->set_value(tVal, node);
 	  }
 	}
       }
@@ -516,6 +566,8 @@ void FusionFieldReader::execute(){
 	    vfield->set_value(vfield->value( node0 ), node);
 	  if( pfield )
 	    pfield->set_value(pfield->value( node0 ), node);
+	  if( efield )
+	    efield->set_value(efield->value( node0 ), node);
 	}
       }
     }
@@ -547,6 +599,8 @@ void FusionFieldReader::execute(){
 	    vfield->set_value(vfield->value( node0 ), node);
 	  if( pfield )
 	    pfield->set_value(pfield->value( node0 ), node);
+	  if( efield )
+	    efield->set_value(efield->value( node0 ), node);
 	}
       }
     }
@@ -563,7 +617,7 @@ void FusionFieldReader::execute(){
   }
   else
   {
-    cout << "FusionFieldReader - Already read the file " <<  new_filename << endl;
+    remark( "Already read the file " +  new_filename );
   }
 
 
@@ -580,6 +634,21 @@ void FusionFieldReader::execute(){
 
     // Send the data downstream
     ofield_port->send( pHandle_ );
+  }
+
+  // Get a handle to the output field port.
+  if( tHandle_.get_rep() )
+  {
+    FieldOPort *ofield_port = 
+      (FieldOPort *) get_oport("Output Temperature Field");
+
+    if (!ofield_port) {
+      error("Unable to initialize "+name+"'s oport\n");
+      return;
+    }
+
+    // Send the data downstream
+    ofield_port->send( tHandle_ );
   }
 
   // Get a handle to the output field port.
@@ -610,6 +679,21 @@ void FusionFieldReader::execute(){
 
     // Send the data downstream
     ofield_port->send( vHandle_ );
+  }
+
+  // Get a handle to the output field port.
+  if( eHandle_.get_rep() )
+  {
+    FieldOPort *ofield_port = 
+      (FieldOPort *) get_oport("Output Error Field");
+
+    if (!ofield_port) {
+      error("Unable to initialize "+name+"'s oport\n");
+      return;
+    }
+
+    // Send the data downstream
+    ofield_port->send( eHandle_ );
   }
 }
 
