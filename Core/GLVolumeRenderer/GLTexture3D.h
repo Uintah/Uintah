@@ -285,7 +285,7 @@ GLTexture3D::replace_bon_tree_data(Point min, Point max,
       newz = zmax_;
     }
     
-#ifdef 0 //__sgi
+#if 0 //__sgi
     thread_sema->down();
     //Thread *t = 
       scinew Thread(new GLTexture3D::run_make_brick_data<T>(this, 
@@ -450,7 +450,7 @@ GLTexture3D::replace_bon_tree_data(Point min, Point max,
                           thread_sema, group);
     }
 
-#ifdef 0 // __sgi
+#if 0 // __sgi
     group->join();
     //group->stop();
       
