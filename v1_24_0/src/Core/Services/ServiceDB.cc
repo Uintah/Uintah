@@ -486,7 +486,7 @@ bool ServiceDB::parse_service_rcfile(ServiceInfo *new_service,std::string filena
               }
               else
               {	// split of the latest line read
-                  newline = linebuffer.substr(linestart,lineend);
+                  newline = linebuffer.substr(linestart,(lineend-linestart));
                   linebuffer = linebuffer.substr(lineend+1);
                   need_new_read = false;
               }
