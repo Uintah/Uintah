@@ -207,7 +207,7 @@ void MPMMaterial::createParticles(particleIndex numParticles,
              lower.y() <= position[pIdx].y() && position[pIdx].y() <= upper.y() &&
              lower.z() <= position[pIdx].z() && position[pIdx].z() <= upper.z() )
          {
-             pexternalforce[pIdx] = bc->getForceDensity() * pvolume[pIdx];
+             pexternalforce[pIdx] = bc->getForceDensity() * pmass[pIdx];
              cout << pexternalforce[pIdx] << endl;
          }
        }
@@ -374,6 +374,9 @@ double MPMMaterial::getHeatTransferCoefficient() const
 
 
 // $Log$
+// Revision 1.49  2000/09/07 00:38:00  tan
+// Fixed a bug in ForceBC.
+//
 // Revision 1.48  2000/09/05 19:36:36  tan
 // Fracture starts to run in Uintah/MPM!
 //
