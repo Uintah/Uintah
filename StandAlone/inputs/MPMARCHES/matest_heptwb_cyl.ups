@@ -196,6 +196,7 @@
 	    <Properties>
 
 		<denUnderrelax>1.0</denUnderrelax>
+		<first_order_drhodt>true</first_order_drhodt>
 	        <ref_point>[3,3,3]</ref_point>
 	        <radiation>true</radiation>
 	        <opl>3.0</opl>
