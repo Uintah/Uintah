@@ -56,7 +56,7 @@ using std::endl;
 
 // This needs to be synced with the contents of
 // SCIRun/doc/edition.xml
-#define VERSION "1.22.0"
+#define SCIRUN_VERSION "1.22.0"
 
 using namespace SCIRun;
 
@@ -97,7 +97,7 @@ parse_args( int argc, char *argv[] )
     if( ( arg == "--version" ) || ( arg == "-version" )
 	|| ( arg == "-v" ) || ( arg == "--v" ) )
     {
-      cout << "Version: " << VERSION << "\n";
+      cout << "Version: " << SCIRUN_VERSION << "\n";
       exit( 0 );
     }
     else if ( ( arg == "--help" ) || ( arg == "-help" ) ||
@@ -171,7 +171,7 @@ show_license_and_copy_scirunrc(GuiInterface *gui) {
     Thread::exitAll(1);
   }
   // check to make sure home directory is there
-  char* HOME = sci_getenv("HOME");
+  const char* HOME = sci_getenv("HOME");
   if (!HOME) return;
   // If the user accepted the license then create a .scirunrc for them
   if (tclresult == "accept") {
@@ -184,13 +184,19 @@ show_license_and_copy_scirunrc(GuiInterface *gui) {
       parse_scirunrc(homerc);
     }
   }
-  delete [] HOME;
 }
 
 
 
 int
-main( int argc, char *argv[] ) {
+main( int argc, char *argv[], char **environment) {
+  // Setup the SCIRun key/value environment
+  create_sci_environment(environment);
+  sci_putenv("SCIRUN_SRCDIR", SCIRUN_SRCDIR);
+  sci_putenv("SCIRUN_OBJDIR", SCIRUN_OBJDIR);
+  sci_putenv("SCIRUN_VERSION", SCIRUN_VERSION);
+
+  // Parse the command line arguments to find a network to execute
   const int startnetno = parse_args( argc, argv );
 
 #if defined(__APPLE__)  
@@ -203,8 +209,7 @@ main( int argc, char *argv[] ) {
   // We need to start the thread in the NotActivated state, so we can
   // change the stack size.  The 0 is a pointer to a ThreadGroup which
   // will default to the global thread group.
-  Thread* t=new Thread(tcl_task, "TCL main event loop",
-		       0, Thread::NotActivated);
+  Thread* t=new Thread(tcl_task, "TCL main event loop",0, Thread::NotActivated);
   t->setStackSize(1024*1024);
   // False here is stating that the tread was stopped or not.  Since
   // we have never started it the parameter should be false.
@@ -212,17 +217,11 @@ main( int argc, char *argv[] ) {
   t->detach();
   tcl_task->mainloop_waitstart();
 
-  // Create user interface link
+  // Create user interface link and setup TCL auto_path to find core components
   GuiInterface* gui = new TCLInterface();
-  // Set a few useful variables in the TCL side
-  gui->execute("global SCIRUN_VERSION; set SCIRUN_VERSION "VERSION);
-  gui->execute("global SCIRUN_SRCDIR; set SCIRUN_SRCDIR "SCIRUN_SRCDIR);
-  gui->execute("global SCIRUN_OBJDIR; set SCIRUN_OBJDIR "SCIRUN_OBJDIR);
+  gui->execute("lappend auto_path "SCIRUN_SRCDIR"/Core/GUI "
+	       SCIRUN_SRCDIR"/Dataflow/GUI "ITCL_WIDGETS);
   gui->execute("global scirun2; set scirun2 0");
-  // Set up the TCL environment to find core components
-  gui->execute("lappend auto_path "SCIRUN_SRCDIR"/Core/GUI");
-  gui->execute("lappend auto_path "SCIRUN_SRCDIR"/Dataflow/GUI");
-  gui->execute("lappend auto_path "ITCL_WIDGETS);
 
   // Create initial network
   packageDB = new PackageDB(gui);
@@ -272,15 +271,11 @@ main( int argc, char *argv[] ) {
   // Activate "File" menu sub-menus once packages are all loaded.
   gui->execute("activate_file_submenus");
 
-  // At this point it is safe to init the environment variables on the
-  // TCL side.  (Note, this must be done before a net is loaded.)
-  gui->execute("initEnviroVars");
-
-  char * doing_regressions = sci_getenv("SCI_REGRESSION_TESTING");
+  const bool doing_regressions = sci_getenv_p("SCI_REGRESSION_TESTING");
 
   if (startnetno)
   {
-    gui->execute(string("loadnet {")+argv[startnetno]+string("}"));
+    gui->execute("loadnet {"+string(argv[startnetno])+"}");
     if (execute_flag || doing_regressions )
     {
       gui->execute("netedit scheduleall");
@@ -292,10 +287,6 @@ main( int argc, char *argv[] ) {
     RegressionKiller *kill = scinew RegressionKiller();
     Thread *tkill = scinew Thread(kill, "Kill a hung SCIRun");
     tkill->detach();
-    // doing_regressions is a single char so no delete[].
-    // FIX_ME  this should not be leaked but deleting with delete[] or delete
-    // causes a crash.
-    //delete doing_regressions;
   }
 
   // Now activate the TCL event loop
