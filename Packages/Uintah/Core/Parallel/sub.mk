@@ -17,7 +17,7 @@ PSELIBS := \
 	Packages/Uintah/Core/ProblemSpec \
 	Packages/Uintah/Core/Grid
 
-LIBS := $(MPI_LIBRARY) $(VAMPIR_LIBRARY) 
+LIBS := $(XML_LIBRARY) $(MPI_LIBRARY) $(VAMPIR_LIBRARY) 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

@@ -31,7 +31,7 @@ PSELIBS := \
 	Packages/Uintah/CCA/Components/HETransformation
 
 
-LIBS := $(VT_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
+LIBS := $(XML_LIBRARY) $(VT_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

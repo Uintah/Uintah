@@ -46,7 +46,7 @@ PSELIBS := \
 	Packages/Uintah/Core/DataArchive     \
 	Packages/Uintah/Dataflow/Modules/Selectors
 
-LIBS := $(M_LIBRARY)
+LIBS := $(XML_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
