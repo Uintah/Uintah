@@ -22,6 +22,7 @@
 #include <Packages/Uintah/CCA/Ports/SimulationInterface.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Regridder.h>
+#include <Packages/Uintah/CCA/Components/Regridder/PerPatchVars.h>
 #include <Packages/Uintah/CCA/Ports/Output.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/CCA/Ports/ProblemSpecInterface.h>
@@ -602,7 +603,7 @@ AMRSimulationController::initializeErrorEstimate(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     CCVariable<int> refineFlag;
-    PerPatch<int> refinePatchFlag(0);
+    PerPatch<PatchFlagP> refinePatchFlag(new PatchFlag);
     new_dw->allocateAndPut(refineFlag, sharedState->get_refineFlag_label(),
                            0, patch);
     new_dw->put(refinePatchFlag, sharedState->get_refinePatchFlag_label(),
