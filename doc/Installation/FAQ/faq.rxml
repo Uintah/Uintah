@@ -39,6 +39,41 @@
 
   <qandaset defaultlabel="number">
 
+
+    <qandaentry>
+      <revhistory>
+	<revision>
+	  <revnumber>001</revnumber>
+	  <date>03/17/05</date>
+	</revision>
+      </revhistory>
+      <question>
+	<para>
+	  I'm building ITK on Mac OSX and the compilation fails with
+	  errors like the following:
+	  <literallayout class="monospaced">
+ld: Undefined symbols:
+std::basic_ostream&lt;char, std::char_traits&lt;char> >&amp; operator&lt;&lt; 
+&lt;double>(std::basic_ostream&lt;char, std::char_traits&lt;char> >&amp;, 
+vnl_matrix&lt;double> const&amp;)
+	  </literallayout>
+	  I'm using gcc 3.3. What's wrong?
+	</para>
+      </question>
+      <answer>
+	<para>
+	  The initial version of gcc 3.3 distributed with Xcode 1.5 is
+	  buggy. Be sure the command <command>gcc -v</command> yields
+	  build number 1671.  If the build number is 1666 then gcc
+	  must be updated with Apple's
+	  <filename>November2004GCCUpdater</filename> package,
+	  available from <ulink
+	  url="http://developer.apple.com/">Apple's Developer
+	  Connection page</ulink>.
+	</para>
+      </answer>
+    </qandaentry>
+
     <qandaentry>
       <revhistory>
 	<revision>
