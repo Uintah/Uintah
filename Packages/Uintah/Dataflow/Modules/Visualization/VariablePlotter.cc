@@ -14,8 +14,8 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <Dataflow/Network/Module.h>
-#include <Core/Geometry/IntVector.h>
+#include <Packages/Uintah/Dataflow/Modules/Visualization/VariablePlotter.h>
+
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
@@ -23,7 +23,6 @@
 #include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
 #include <Packages/Uintah/Core/Datatypes/Archive.h>
 #include <Packages/Uintah/Core/Datatypes/VariableCache.h>
-#include <Packages/Uintah/Core/Grid/GridP.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
@@ -36,6 +35,7 @@
 #include <iostream>
 //#include <string>
 
+
 using namespace SCIRun;
 using namespace std;
 
@@ -46,57 +46,25 @@ namespace Uintah {
 #define NC_VAR 0
 #define CC_VAR 1
 
-class ID {
-public:
-  ID(): id(IntVector(0,0,0)), level(0) {}
-  IntVector id;
-  int level;
-};
-  
-class VariablePlotter : public Module {
-public:
-  VariablePlotter(const string& id);
-  virtual ~VariablePlotter();
-  virtual void execute();
-  void tcl_command(TCLArgs& args, void* userdata);
-
-private:
-  bool getGrid();
-  void add_type(string &type_list,const TypeDescription *subtype);
-  void setVars(GridP grid);
-  void extract_data(string display_mode, string varname,
-		    vector<string> mat_list, vector<string> type_list,
-		    string index);
-  void pick(); // synchronize user set index values with currentNode
-  
-  string currentNode_str();
-  
-  ArchiveIPort* in; // incoming data archive
-
-  GuiInt var_orientation; // whether node center or cell centered
-  GuiInt nl;      // number of levels in the scene
-  GuiInt index_x; // x index for the variable
-  GuiInt index_y; // y index for the variable
-  GuiInt index_z; // z index for the variable
-  GuiInt index_l; // index of the level for the variable
-  GuiString curr_var;
-  
-  ID currentNode;
-  vector< string > names;
-  vector< double > times;
-  vector< const TypeDescription *> types;
-  double time;
-  int old_generation;
-  int old_timestep;
-  GridP grid;
-  DataArchive* archive;
-  VariableCache material_data_list;
-};
-
 static string widget_name("VariablePlotter Widget");
  
 extern "C" Module* make_VariablePlotter(const string& id) {
   return scinew VariablePlotter(id);
+}
+
+  
+VariablePlotter::VariablePlotter(const string& name, const string& id)
+: Module(name, id, Filter, "Visualization", "Uintah"),
+  var_orientation("var_orientation",id,this),
+  nl("nl",id,this),
+  index_x("index_x",id,this),
+  index_y("index_y",id,this),
+  index_z("index_z",id,this),
+  index_l("index_l",id,this),
+  curr_var("curr_var",id,this),
+  old_generation(-1), old_timestep(0), grid(NULL)
+{
+
 }
 
 VariablePlotter::VariablePlotter(const string& id)
@@ -112,6 +80,7 @@ VariablePlotter::VariablePlotter(const string& id)
 {
 
 }
+
 
 VariablePlotter::~VariablePlotter()
 {
@@ -215,18 +184,17 @@ void VariablePlotter::setVars(GridP grid) {
   TCL::execute(id + " setType_list " + type_list.c_str());  
 }
 
-void VariablePlotter::execute()
-{
+void VariablePlotter::initialize_ports() {
   // Create the input port
   in= (ArchiveIPort *) get_iport("Data Archive");
+}
 
-  cerr << "\t\tEntering execute.\n";
-
+int VariablePlotter::initialize_grid() {
   // Get the handle on the grid and the number of levels
   bool new_grid = getGrid();
   if(!grid)
-    return;
-  int numLevels = grid->numLevels();
+    return 2;
+  numLevels = grid->numLevels();
 
   // setup the tickle stuff
   if (new_grid) {
@@ -236,7 +204,14 @@ void VariablePlotter::execute()
     archive->queryVariables(names, types);
   }
   setVars(grid);
-  
+
+  if (new_grid)
+    return 1;
+  else
+    return 0;
+}
+
+void VariablePlotter::update_tcl_window() {
   string visible;
   TCL::eval(id + " isVisible", visible);
   if ( visible == "1") {
@@ -246,8 +221,19 @@ void VariablePlotter::execute()
     TCL::execute("update idletasks");
     reset_vars();
   }
+}
+
+void VariablePlotter::execute()
+{
+  cerr << "VariablePlotter::execute:start\n";
+  initialize_ports();
   
-  cerr << "\t\tFinished execute\n";
+  if (initialize_grid() == 2)
+    return;
+  
+  update_tcl_window();
+  
+  cerr << "VariablePlotter::execute:end\n";
 }
 
 void VariablePlotter::tcl_command(TCLArgs& args, void* userdata)
