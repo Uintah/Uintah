@@ -342,6 +342,16 @@ Point Transform::unproject(const Point& p)
 	       imat[3][0]*p.x()+imat[3][1]*p.y()+imat[3][2]*p.z()+imat[3][3]);
 }
 
+
+Vector Transform::unproject(const Vector& p)
+{
+  if(!inverse_valid) compute_imat();
+  return Vector(imat[0][0]*p.x()+imat[0][1]*p.y()+imat[0][2]*p.z(),
+		imat[1][0]*p.x()+imat[1][1]*p.y()+imat[1][2]*p.z(),
+		imat[2][0]*p.x()+imat[2][1]*p.y()+imat[2][2]*p.z());
+}
+
+
 void Transform::get(double* gmat)
 {
   double* p=gmat;
