@@ -51,6 +51,7 @@ SRCS := \
 	$(SRCDIR)/ComboListbox.tcl \
 	$(SRCDIR)/ComponentWizard.tcl \
 	$(SRCDIR)/Coregister.tcl \
+	$(SRCDIR)/CreateMesh.tcl \
 	$(SRCDIR)/CriticalPointWidget.tcl \
 	$(SRCDIR)/CrosshairWidget.tcl \
 	$(SRCDIR)/DirectInterpolate.tcl \
