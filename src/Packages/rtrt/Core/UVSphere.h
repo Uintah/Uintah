@@ -12,7 +12,6 @@ Email:		ramsey@cs.utah.edu
 
 #include <Packages/rtrt/Core/Object.h>
 #include <Packages/rtrt/Core/UVMapping.h>
-//#include <Packages/rtrt/Core/vec.h>
 #include <Packages/rtrt/Core/UV.h>
 #include <Packages/rtrt/Core/BBox.h>
 #include <Packages/rtrt/Core/HitInfo.h>
@@ -64,34 +63,17 @@ class UVSphere : public Object, public UVMapping {
   friend void SCIRun::Pio(SCIRun::Piostream&, UVSphere*&);
 
   virtual void preprocess(double maxradius, int& pp_offset, int& scratchsize);
-  virtual void uv(UV& uv, const Point&, const HitInfo& hit);
+  virtual void compute_bounds(BBox&, double offset);
+  virtual Vector normal(const Point&, const HitInfo& hit);
+
   virtual void intersect(Ray& ray, HitInfo& hit, DepthStats* st,
 			 PerProcessorContext*);
-#if 1
   virtual void light_intersect(Ray& ray, HitInfo& hit, Color& atten,
 			       DepthStats* st, PerProcessorContext* ppc);
-#endif
-  virtual Vector normal(const Point&, const HitInfo& hit);
-  virtual void compute_bounds(BBox&, double offset);
+
+  virtual void uv(UV& uv, const Point&, const HitInfo& hit);
   virtual void get_frame(const Point &hitpos, const HitInfo&hit,
-                         const Vector &norm,  Vector &pu, Vector &pv)
-  {
-    UV uv_m;
-    float u,v;
-    double phi,theta;
-    uv(uv_m,hitpos,hit);
-    u = uv_m.u();
-    v = uv_m.v();
-    phi = 6.28318530718 * u;
-    theta = -(M_PI*v) + M_PI;
-    pu = Vector(-6.28318530718* radius * sin(phi) * sin(theta),
-                6.28318530718 * radius * sin(phi) * cos(theta), 	0);
-    pv = Vector(M_PI * radius * cos(phi) * cos(theta),
-                M_PI * radius * cos(phi) * sin(theta),
-                -1 * M_PI * radius * sin(phi));
-    VXV3(pu,norm,pv);
-    VXV3(pv,norm,pu);
-  }
+                         const Vector &norm,  Vector &pu, Vector &pv);
 
   Vector get_up() { return up; }
   void set_up(const Vector &v) { up = v; }
