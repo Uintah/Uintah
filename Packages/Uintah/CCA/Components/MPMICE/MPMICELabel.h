@@ -26,6 +26,7 @@ namespace Uintah {
       const VarLabel* scratchVecLabel;
       const VarLabel* NC_CCweightLabel;
       const VarLabel* gMassLabel;
+      const VarLabel* gVelocityLabel;
       const VarLabel* TempGradLabel;      // Needed by burn model --- temporary 
       const VarLabel* aveSurfTempLabel;    
     };
