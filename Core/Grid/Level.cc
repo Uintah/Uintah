@@ -685,6 +685,15 @@ IntVector Level::mapNodeToFiner(const IntVector& idx) const
   return idx*grid->getLevel(d_index+1)->refinementRatio;
 }
 
+double Level::adjustDelt(double delt) const
+{
+  for(int i=1;i<=getIndex();i++) {     // REFINE
+    delt *= getGrid()->getLevel(i)->timeRefinementRatio();
+  }
+  return delt;
+}
+
+
 namespace Uintah {
   const Level* getLevel(const PatchSubset* subset)
   {
