@@ -62,53 +62,12 @@ using namespace std;
 // started.  Its checked by sci_putenv to ensure we don't overwrite env variables
 map<string,string> scirun_env;
 
-// get_existing_env() will fill up the SCIRun::existing_env string set
-// with all the currently set environment variable keys, but not their values
-void create_sci_environment(char **environ, char *execname)
-{
-  
-  char **environment = environ;
-  scirun_env.clear();
-  while (*environment) {
-    const string str(*environment);
-    const size_t pos = str.find("=");
-    scirun_env[str.substr(0,pos)] = str.substr(pos+1, str.length());
-    environment++;
-  }
-  if (!sci_getenv("SCIRUN_SRCDIR"))
-      sci_putenv("SCIRUN_SRCDIR", SCIRUN_SRCDIR);
-  if (!sci_getenv("SCIRUN_OBJDIR")) 
-  {
-    ASSERT(execname);
-    string objdir(execname);
-    if (execname[0] != '/') {
-      char cwd[MAXPATHLEN];
-      getcwd(cwd,MAXPATHLEN);
-      objdir = cwd+string("/")+objdir;
-    }
-    int pos = objdir.length()-1;
-    while (pos >= 0 && objdir[pos] != '/') --pos;
-    ASSERT(pos >= 0);
-    objdir.erase(objdir.begin()+pos+1, objdir.end());
-    sci_putenv("SCIRUN_OBJDIR", objdir);
-  }
-  if (!sci_getenv("SCIRUN_LOAD_PACKAGE"))
-    sci_putenv("SCIRUN_LOAD_PACKAGE", LOAD_PACKAGE);
-  if (!sci_getenv("SCIRUN_ITCL_WIDGETS"))
-    sci_putenv("SCIRUN_ITCL_WIDGETS", ITCL_WIDGETS);
-}
 
-
-
-
-// WARNING: According to other software (tcl) you should lock before
-// messing with the environment.
-
-// MacroSubstitute takes var_val returns a string with the environment
+// MacroSubstitute takes var_value returns a string with the environment
 // variables expanded out.  Performs one level of substitution
 //   Note: Must delete the returned string when you are done with it.
 char*
-MacroSubstitute( char * var_val )
+MacroSubstitute( const char * var_value )
 {
   int    cur = 0;
   int    start = 0;
@@ -116,8 +75,10 @@ MacroSubstitute( char * var_val )
   string newstring("");
   char * macro = 0;
   
-  if (var_val==0)
+  if (var_value==0)
     return 0;
+
+  char * var_val = strdup(var_value);
 
   int length = (int)strlen(var_val);
 
@@ -153,8 +114,56 @@ MacroSubstitute( char * var_val )
   char* retval = new char[newlength+1];
   sprintf(retval,"%s",newstring.c_str());
   
+  free(var_val);
   return retval;
 }
+
+
+// get_existing_env() will fill up the SCIRun::existing_env string set
+// with all the currently set environment variable keys, but not their values
+void create_sci_environment(char **environ, char *execname)
+{
+  
+  char **environment = environ;
+  scirun_env.clear();
+  while (*environment) {
+    const string str(*environment);
+    const size_t pos = str.find("=");
+    scirun_env[str.substr(0,pos)] = str.substr(pos+1, str.length());
+    environment++;
+  }
+  if (!sci_getenv("SCIRUN_SRCDIR"))
+      sci_putenv("SCIRUN_SRCDIR", SCIRUN_SRCDIR);
+  if (!sci_getenv("SCIRUN_OBJDIR")) 
+  {
+    ASSERT(execname);
+    string objdir(execname);
+    if (execname[0] != '/') {
+      char cwd[MAXPATHLEN];
+      getcwd(cwd,MAXPATHLEN);
+      objdir = cwd+string("/")+objdir;
+    }
+    int pos = objdir.length()-1;
+    while (pos >= 0 && objdir[pos] != '/') --pos;
+    ASSERT(pos >= 0);
+    objdir.erase(objdir.begin()+pos+1, objdir.end());
+    sci_putenv("SCIRUN_OBJDIR", objdir);
+  }
+  if (!sci_getenv("SCIRUN_THIRDPARTY_DIR"))
+      sci_putenv("SCIRUN_THIRDPARTY_DIR", SCIRUN_THIRDPARTY_DIR);
+  if (!sci_getenv("SCIRUN_LOAD_PACKAGE"))
+    sci_putenv("SCIRUN_LOAD_PACKAGE", LOAD_PACKAGE);
+  if (!sci_getenv("SCIRUN_ITCL_WIDGETS"))
+    sci_putenv("SCIRUN_ITCL_WIDGETS", ITCL_WIDGETS);
+  sci_putenv("SCIRUN_ITCL_WIDGETS", MacroSubstitute(sci_getenv("SCIRUN_ITCL_WIDGETS")));
+
+}
+
+
+
+
+// WARNING: According to other software (tcl) you should lock before
+// messing with the environment.
 
 const char *
 sci_getenv( const string & key )
