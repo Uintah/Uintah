@@ -1083,9 +1083,7 @@ void Dpy::run()
       // exit if you are supposed to
       if (scene->rtrt_engine->stop_execution()) {
 	XCloseDisplay(priv->dpy);
-	cerr << "Display thread exiting\n"; flush(cerr);
 	return;
-	//	Thread::exit();
       }
 
       scene->refill_work(rendering_scene, nworkers);
@@ -1348,8 +1346,11 @@ void Dpy::run()
 
     for (;;) {
       // exit if you are supposed to
-      if (scene->rtrt_engine->stop_execution())
-	Thread::exit();
+      if (scene->rtrt_engine->stop_execution()) {
+	XCloseDisplay(priv->dpy);
+	return;
+      }
+	
 
       frame++;
       //int do_synch=0;

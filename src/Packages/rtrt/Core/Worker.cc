@@ -143,9 +143,7 @@ void Worker::run()
 
       // exit if you are supposed to
       if (scene->get_rtrt_engine()->stop_execution()) {
-	cerr << "Worker thread exiting\n"; flush(cerr);
 	return;
-	//Thread::exit();
       }	
 
       counters->end_frame();
