@@ -13,6 +13,12 @@ itcl_class TclStream {
 	set varName ""
 	set isNewOutput 0
     }
+    
+    destructor {
+	unregisterOutput
+	unset varName
+	destroy $this
+    }
 
     # output text window
     public txtWidget               
@@ -41,7 +47,9 @@ itcl_class TclStream {
     }
 
     method unregisterOutput {} {
-	unset txtWidget
+	if [info exists txtWidget] {
+	    unset txtWidget
+	}
     }
     
     method flush {v ind op} {
