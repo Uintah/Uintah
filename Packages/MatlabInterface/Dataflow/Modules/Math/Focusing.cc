@@ -45,10 +45,11 @@ extern "C" MatlabInterfaceSHARE Module* make_Focusing(const string& id) {
 }
 
 Focusing::Focusing(const string& id)
-  : Module("Focusing", id, Filter), noiseGUI("noiseGUI",id,this),
+  : Module("Focusing", id, Filter, "Math", "MatlabInterface"), noiseGUI("noiseGUI",id,this),
     fcsdgGUI("fcsdgGUI", id, this)
   //  : Module("Focusing", id, Source, "Math", "MatlabInterface")
 {
+  /*
     iport1=scinew MatrixIPort(this, "Lead Field", MatrixIPort::Atomic);
     add_iport(iport1);
 
@@ -60,6 +61,7 @@ Focusing::Focusing(const string& id)
 
     oport2=scinew MatrixOPort(this, "Residual", MatrixIPort::Atomic);
     add_oport(oport2);
+  */
 }
 
 Focusing::~Focusing(){}
@@ -76,6 +78,10 @@ void Focusing::execute()
   int    Nd,Nm;
 
   MatrixHandle mh1,mh2,mh3,mh4;
+  iport1 = (MatrixIPort *)get_iport("Lead Field");
+  iport2 = (MatrixIPort *)get_iport("RHS (data)");
+  oport1 = (MatrixOPort *)get_oport("Sources");
+  oport2 = (MatrixOPort *)get_oport("Residual");
   DenseMatrix  *inp1;   // Sensitivity matrix
   ColumnMatrix *inp2;   // data (right-hand side)
   ColumnMatrix *otp1;   // model

@@ -66,17 +66,13 @@ extern "C" Module* make_NrrdResample(const string& id)
 }
 
 NrrdResample::NrrdResample(const string& id)
-  : Module("NrrdResample", id, Filter), filtertype_("filtertype", id, this),
+  : Module("NrrdResample", id, Filter, "Filters", "Teem"), filtertype_("filtertype", id, this),
     resampAxis0_("resampAxis0", id, this), 
     resampAxis1_("resampAxis1", id, this), 
     resampAxis2_("resampAxis2", id, this), 
     last_filtertype_(""), last_resampAxis0_(""), last_resampAxis1_(""),
     last_resampAxis2_(""), last_generation_(-1), last_nrrdH_(0)
 {
-  inrrd_ = new NrrdIPort(this, "", NrrdIPort::Atomic);
-  add_iport(inrrd_);
-  onrrd_ = new NrrdOPort(this, "", NrrdIPort::Atomic);
-  add_oport(onrrd_);
 }
 
 NrrdResample::~NrrdResample() {
@@ -127,7 +123,8 @@ NrrdResample::execute()
 {
   NrrdDataHandle nrrdH;
   update_state(NeedData);
-
+  inrrd_ = (NrrdIPort *)get_iport("Nrrd");
+  onrrd_ = (NrrdOPort *)get_oport("Nrrd");
   if (!inrrd_->get(nrrdH))
     return;
   if (!nrrdH.get_rep()) {

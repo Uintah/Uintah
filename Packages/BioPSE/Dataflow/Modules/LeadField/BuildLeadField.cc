@@ -85,29 +85,20 @@ extern "C" Module* make_BuildLeadField(const string& id) {
 
 //---------------------------------------------------------------
 BuildLeadField::BuildLeadField(const string& id)
-  : Module("BuildLeadField", id, Filter), leadfield_(0),
+  : Module("BuildLeadField", id, Filter, "LeadField", "BioPSE"), leadfield_(0),
     last_mesh_generation_(-1), last_interp_generation_(-1)
 {
-  mesh_iport_ = new FieldIPort(this, "Domain Mesh",
-			      FieldIPort::Atomic);
-  add_iport(mesh_iport_);
-  interp_iport_ = new FieldIPort(this, "Electrode Interpolant",
-				FieldIPort::Atomic);
-  add_iport(interp_iport_);
-  sol_iport_ = new MatrixIPort(this,"Solution Vectors",
-			      MatrixIPort::Atomic);
-  add_iport(sol_iport_);
-  rhs_oport_ = new MatrixOPort(this,"RHS Vector",
-			      MatrixIPort::Atomic);
-  add_oport(rhs_oport_);
-  leadfield_oport_ = new MatrixOPort(this, "Leadfield (nelecs x nelemsx3)",
-				 MatrixIPort::Atomic);
-  add_oport(leadfield_oport_);
 }
 
 BuildLeadField::~BuildLeadField(){}
 
 void BuildLeadField::execute() {
+  mesh_iport_ = (FieldIPort *)get_iport("Domain Mesh");
+  interp_iport_ = (FieldIPort *)get_iport("Electrode Interpolant");
+  sol_iport_ = (MatrixIPort *)get_iport("Solution Vectors");
+  rhs_oport_ = (MatrixOPort *)get_oport("RHS Vector");
+  leadfield_oport_ = (MatrixOPort *)get_oport("Leadfield (nelecs x nelemsx3)");
+
   FieldHandle mesh_in;
   if (!mesh_iport_->get(mesh_in)) {
     cerr << "BuildLeadField -- couldn't get mesh.  Returning.\n";

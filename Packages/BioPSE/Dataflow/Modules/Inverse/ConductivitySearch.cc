@@ -113,40 +113,10 @@ double ConductivitySearch::CONVERGENCE_ = 0.001;
 double ConductivitySearch::OUT_OF_BOUNDS_MISFIT_ = 1000000;
 
 ConductivitySearch::ConductivitySearch(const string& id)
-  : Module("ConductivitySearch", id, Filter), 
+  : Module("ConductivitySearch", id, Filter, "Inverse", "BioPSE"), 
   mylock_("pause lock for ConductivitySearch"), 
   seed_gui_("seed_gui", id, this)
 {
-  // FEM mesh without conductivities
-  mesh_iport_ = new FieldIPort(this,"FiniteElementMesh",
-			       FieldIPort::Atomic);
-  add_iport(mesh_iport_);
-
-  // optimal orientation for the test conductivity
-  cond_params_iport_ = new MatrixIPort(this,"ConductivityParameters",
-				       MatrixIPort::Atomic);
-  add_iport(cond_params_iport_);
-  
-  // the computed misfit for the latest test conductivity
-  misfit_iport_ = new MatrixIPort(this, "TestMisfit",
-				  MatrixIPort::Atomic);
-  add_iport(misfit_iport_);
-  
-  // FEM mesh with new conductivities
-  mesh_oport_ = new FieldOPort(this, "FiniteElementMesh",
-			       FieldIPort::Atomic);
-  add_oport(mesh_oport_);
-
-  // vector of old and new conductivities
-  cond_vector_oport_ = new MatrixOPort(this, "OldAndNewConductivities",
-				       MatrixIPort::Atomic);
-  add_oport(cond_vector_oport_);
-  
-  // FEM matrix reflecting test conductivities
-  fem_mat_oport_ = new MatrixOPort(this, "FiniteElementMatrix",
-				   MatrixIPort::Atomic);
-  add_oport(fem_mat_oport_);
-  
   mylock_.unlock();
   state_ = "SEEDING";
   stop_search_ = 0;
@@ -491,6 +461,14 @@ void ConductivitySearch::read_mesh_and_cond_param_ports(int &valid_data,
 
 void ConductivitySearch::execute() {
   int valid_data, new_data;
+  mesh_iport_ = (FieldIPort *)get_iport("FiniteElementMesh");
+  cond_params_iport_ = (MatrixIPort *)get_iport("ConductivityParameters");
+  misfit_iport_ = (MatrixIPort *)get_iport("TextMisfit");
+
+  mesh_oport_ = (FieldOPort *)get_oport("FiniteElementMesh");
+  cond_vector_oport_ = (MatrixOPort *)get_oport("OldAndNewConductivities");
+  fem_mat_oport_ = (MatrixOPort *)get_oport("FiniteElementMatrix");
+  
   read_mesh_and_cond_param_ports(valid_data, new_data);
   if (!valid_data) return;
   if (!new_data) {

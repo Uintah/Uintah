@@ -70,7 +70,7 @@
              port has valid data.
           </p>
 	</description>
-	<datatype>Field</datatype>
+	<datatype>SCIRun::Field</datatype>
 	<componentname>FieldReader</componentname>
       </port>
       <port>
@@ -82,7 +82,7 @@
              rendered with.
           </p>
 	</description>
-	<datatype>ColorMap</datatype>
+	<datatype>SCIRun::ColorMap</datatype>
 	<componentname>GenStandardColorMap</componentname>
       </port>
     </inputs>
@@ -96,7 +96,7 @@
              rendered by the downstream port.
           </p>
 	</description>
-	<datatype>GeomObj</datatype>
+	<datatype>SCIRun::Geometry</datatype>
 	<componentname>Viewer</componentname>
       </port>
     </outputs>

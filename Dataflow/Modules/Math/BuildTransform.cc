@@ -114,6 +114,7 @@ BuildTransform::BuildTransform(const string& id)
     ignoring_widget_changes_(1),
     have_been_initialized_(0)
 {
+  /*
   // Create the input port
   imatrix_=scinew MatrixIPort(this, "Matrix", MatrixIPort::Atomic);
   add_iport(imatrix_);
@@ -123,6 +124,7 @@ BuildTransform::BuildTransform(const string& id)
   add_oport(omatrix_);
   ogeom_=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
   add_oport(ogeom_);
+  */
   box_widget_=scinew ScaledBoxWidget(this, &widget_lock_, 0.2);
   widget_switch_=box_widget_->GetWidget();
 }
@@ -133,6 +135,9 @@ BuildTransform::~BuildTransform()
 
 void BuildTransform::execute()
 {
+  imatrix_ = (MatrixIPort *)get_iport("Matrix");
+  omatrix_ = (MatrixOPort *)get_oport("Matrix");
+  ogeom_ = (GeometryOPort *)get_oport("Geometry");
   string which_transform=which_transform_gui_.get();
 
   // create the widget

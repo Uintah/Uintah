@@ -71,20 +71,6 @@ TextureVolVis::TextureVolVis(const string& id)
     interp_mode("interp_mode", id, this),
     volren(0)
 {
-  // Create the input ports
-  intexture = scinew GLTexture3DIPort( this, "GL Texture",
-				     GLTexture3DIPort::Atomic);
-  add_iport(intexture);
-  incolormap=scinew  
-    ColorMapIPort(this, "Color Map", ColorMapIPort::Atomic);
-    
-  add_iport(incolormap);
-					
-  // Create the output port
-  ogeom = scinew GeometryOPort(this, "Geometry", 
-			       GeometryIPort::Atomic);
-  add_oport(ogeom);
-
 }
 
 TextureVolVis::~TextureVolVis()
@@ -102,6 +88,10 @@ void TextureVolVis::widget_moved(int)
 
 void TextureVolVis::execute(void)
 {
+  intexture = (GLTexture3DIPort *)get_iport("GL Texture");
+  incolormap = (ColorMapIPort *)get_iport("Color Map");
+  ogeom = (GeometryOPort *)get_oport("Geometry");
+  
   if (!intexture->get(tex)) {
     return;
   }

@@ -30,6 +30,18 @@
     </description>
   </overview>
   <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Nrrd</name>
+	<datatype>Teem::Nrrd</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Field</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
   </io>
   <testing>
   </testing>

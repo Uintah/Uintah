@@ -63,15 +63,11 @@ extern "C" Module* make_NrrdPermute(const string& id)
 }
 
 NrrdPermute::NrrdPermute(const string& id)
-  : Module("NrrdPermute", id, Filter),
+  : Module("NrrdPermute", id, Filter, "Filters", "Teem"),
     axis0_("axis0", id, this), axis1_("axis1", id, this),
     axis2_("axis2", id, this), last_axis0_(0), last_axis1_(0), 
     last_axis2_(0), last_generation_(-1), last_nrrdH_(0)
 {
-  inrrd_ = new NrrdIPort(this, "", NrrdIPort::Atomic);
-  add_iport(inrrd_);
-  onrrd_ = new NrrdOPort(this, "", NrrdIPort::Atomic);
-  add_oport(onrrd_);
 }
 
 NrrdPermute::~NrrdPermute() {
@@ -99,7 +95,8 @@ NrrdPermute::execute()
 {
   NrrdDataHandle nrrdH;
   update_state(NeedData);
-
+  inrrd_ = (NrrdIPort *)get_iport("Nrrd");
+  onrrd_ = (NrrdOPort *)get_oport("Nrrd");
   if (!inrrd_->get(nrrdH))
     return;
   if (!nrrdH.get_rep()) {

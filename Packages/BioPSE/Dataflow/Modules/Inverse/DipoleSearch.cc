@@ -110,55 +110,10 @@ double DipoleSearch::CONVERGENCE_ = 0.001;
 double DipoleSearch::OUT_OF_BOUNDS_MISFIT_ = 1000000;
 
 DipoleSearch::DipoleSearch(const string& id)
-  : Module("DipoleSearch", id, Filter), 
+  : Module("DipoleSearch", id, Filter, "Inverse", "BioPSE"), 
   mylock_("pause lock for DipoleSearch"), 
   use_cache_gui_("use_cache_gui_",id,this)
 {
-  // point cloud of vectors -- the seed positions/orientations for our search
-  seeds_iport_ = new FieldIPort(this, "DipoleSeeds",
-				      FieldIPort::Atomic);
-  add_iport(seeds_iport_);
-  
-  // domain of search -- used for constraining and for caching misfits
-  mesh_iport_ = new FieldIPort(this,"TetMesh",
-			      FieldIPort::Atomic);
-  add_iport(mesh_iport_);
-
-  // the computed misfit for the latest test dipole
-  misfit_iport_ = new MatrixIPort(this, "TestMisfit",
-				 MatrixIPort::Atomic);
-  add_iport(misfit_iport_);
-  
-  // optimal orientation for the test dipole
-  dir_iport_ = new MatrixIPort(this,"TestDirection",
-			      MatrixIPort::Atomic);
-  add_iport(dir_iport_);
-  
-  // column matrix of the position and x-orientation of the test dipole
-  x_oport_ = new MatrixOPort(this, "TestDipoleX",
-				MatrixIPort::Atomic);
-  add_oport(x_oport_);
-  
-  // column matrix of the position and y-orientation of the test dipole
-  y_oport_ = new MatrixOPort(this, "TestDipoleY",
-				MatrixIPort::Atomic);
-  add_oport(y_oport_);
-  
-  // column matrix of the position and z-orientation of the test dipole
-  z_oport_ = new MatrixOPort(this, "TestDipoleZ",
-				MatrixIPort::Atomic);
-  add_oport(z_oport_);
-  
-  // point cloud of vectors -- the latest simplex (for vis)
-  simplex_oport_ = new FieldOPort(this, "DipoleSimplex",
-				FieldIPort::Atomic);
-  add_oport(simplex_oport_);
-
-  // point cloud of one vector, just the test dipole (for vis)
-  dipole_oport_ = new FieldOPort(this, "TestDipole",
-				FieldIPort::Atomic);
-  add_oport(dipole_oport_);
-
   mylock_.unlock();
   state_ = "SEEDING";
   stop_search_ = 0;
@@ -471,6 +426,17 @@ void DipoleSearch::read_field_ports(int &valid_data, int &new_data) {
 
 void DipoleSearch::execute() {
   int valid_data, new_data;
+  seeds_iport_ = (FieldIPort *)get_iport("DipoleSeeds");
+  mesh_iport_ = (FieldIPort *)get_iport("TetMesh");
+  misfit_iport_ = (MatrixIPort *)get_iport("TestMisfit");
+  dir_iport_ = (MatrixIPort *)get_iport("TestDirection");
+
+  x_oport_ = (MatrixOPort *)get_oport("TestDipoleX");
+  y_oport_ = (MatrixOPort *)get_oport("TestDipoleY");
+  z_oport_ = (MatrixOPort *)get_oport("TestDipoleZ");
+  simplex_oport_ = (FieldOPort *)get_oport("DipoleSimplex");
+  dipole_oport_ = (FieldOPort *)get_oport("TestDipole");
+
   read_field_ports(valid_data, new_data);
   if (!valid_data) return;
   if (!new_data) {

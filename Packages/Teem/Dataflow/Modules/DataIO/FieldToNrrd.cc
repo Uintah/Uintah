@@ -58,15 +58,8 @@ extern "C" Module* make_FieldToNrrd(const string& id) {
 }
 
 
-FieldToNrrd::FieldToNrrd(const string& id):Module("FieldToNrrd", id, Filter)
+FieldToNrrd::FieldToNrrd(const string& id):Module("FieldToNrrd", id, Filter, "DataIO", "Teem")
 {
-  // Create the input port
-  ifield = scinew FieldIPort(this, "Field", FieldIPort::Atomic);
-  add_iport(ifield);
-  
-  // Create the output ports
-  onrrd = scinew NrrdOPort(this, "Nrrd", NrrdIPort::Atomic);
-  add_oport(onrrd);
 }
 
 FieldToNrrd::~FieldToNrrd()
@@ -75,6 +68,8 @@ FieldToNrrd::~FieldToNrrd()
   
 void FieldToNrrd::execute()
 {
+  ifield = (FieldIPort *)get_iport("Field");
+  onrrd = (NrrdOPort *)get_oport("Nrrd");
   FieldHandle fieldH;
   if (!ifield->get(fieldH))
     return;

@@ -78,22 +78,6 @@ Isosurface::Isosurface(const string& id)
     build_trisurf_("build_trisurf", id, this),
     np_("np", id, this)  
 {
-    // Create the input ports
-  infield=scinew FieldIPort(this, "Field", FieldIPort::Atomic);
-  add_iport(infield);
-//   incolorfield=scinew FieldIPort(this, "Color Field", FieldIPort::Atomic);
-//   add_iport(incolorfield);
-  inColorMap=scinew ColorMapIPort(this, "Color Map", ColorMapIPort::Atomic);
-  add_iport(inColorMap);
-  
-
-  // Create the output port
-  osurf=scinew FieldOPort(this, "Surface", FieldIPort::Atomic);
-  add_oport(osurf);
-  
-  ogeom=scinew GeometryOPort(this, "Geometry", GeometryIPort::Atomic);
-  add_oport(ogeom);
-
   matl = scinew Material(Color(0,.3,0), Color(0,.6,0), Color(.7,.7,.7), 50);
 
   geom_id=0;
@@ -113,7 +97,10 @@ Isosurface::~Isosurface()
 void Isosurface::execute()
 {
   update_state(NeedData);
-
+  infield = (FieldIPort *)get_iport("Field");
+  inColorMap = (ColorMapIPort *)get_iport("Color Map");
+  osurf = (FieldOPort *)get_oport("Surface");
+  ogeom = (GeometryOPort *)get_oport("Geometry");
   FieldHandle field;
   infield->get(field);
   if(!field.get_rep()){

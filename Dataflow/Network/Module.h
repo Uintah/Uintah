@@ -122,7 +122,7 @@ public:
     ModuleHelper* helper;
     FutureValue<int> helper_done;
     int have_own_dispatch;
-
+    
     double progress;
     CPUTimer timer;
     //WallClockTimer timer;
@@ -222,7 +222,6 @@ public:
     OPort* oport(int);
     void multisend(OPort*, OPort* =0);
     void set_context(NetworkEditor*, Network*);
-
     int need_execute;
     SchedClass sched_class;
     // virtual int should_execute();

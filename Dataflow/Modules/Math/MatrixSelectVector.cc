@@ -23,6 +23,7 @@ class MatrixSelectVector : public Module {
   MatrixIPort* imat_;
   MatrixIPort* ivec_;
   MatrixOPort* ovec_;
+  
   GuiInt row_;
   GuiInt row_max_;
   GuiInt col_;
@@ -43,7 +44,7 @@ extern "C" Module* make_MatrixSelectVector(const string& id)
 }
 
 MatrixSelectVector::MatrixSelectVector(const string& id)
-: Module("MatrixSelectVector", id, Filter),
+: Module("MatrixSelectVector", id, Filter,"Math", "SCIRun"),
   row_("row", id, this),
   row_max_("row_max", id, this),
   col_("col", id, this),
@@ -51,16 +52,6 @@ MatrixSelectVector::MatrixSelectVector(const string& id)
   row_or_col_("row_or_col", id, this),
   animate_("animate", id, this)
 {
-  // Create the input port
-  imat_=new MatrixIPort(this, "Matrix", MatrixIPort::Atomic);
-  add_iport(imat_);
-  
-  ivec_=new MatrixIPort(this, "Weight Vector", MatrixIPort::Atomic);
-  add_iport(ivec_);
-  
-  // Create the output port
-  ovec_=new MatrixOPort(this,"Vector", MatrixIPort::Atomic);
-  add_oport(ovec_);
   stop_=0;
 }
 
@@ -69,6 +60,10 @@ MatrixSelectVector::~MatrixSelectVector()
 }
 
 void MatrixSelectVector::execute() {
+  imat_ = (MatrixIPort *)get_iport("Matrix");
+  ivec_ = (MatrixIPort *)get_iport("Weight Vector");
+  ovec_ = (MatrixOPort *)get_oport("Vector");
+  
   stop_=0;
   update_state(NeedData);
   MatrixHandle mh;

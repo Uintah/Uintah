@@ -113,22 +113,8 @@ extern "C" Module* make_SetupBEMatrix(const string& id) {
 // Constructor/Destructor
 
 SetupBEMatrix::SetupBEMatrix(const string& id): 
-  Module("SetupBEMatrix", id, Source)
+  Module("SetupBEMatrix", id, Source, "Forward", "BioPSE")
 {
-  // Create the input ports
-  iportSurfInn_ = scinew FieldIPort(this, "Inner Surface", FieldIPort::Atomic);
-  add_iport(iportSurfInn_);
-
-  iportSurfOut_ = scinew FieldIPort(this, "Outer Surface", FieldIPort::Atomic);
-  add_iport(iportSurfOut_);
-  
-  // Create the output ports
-  oportMatrix_ = scinew MatrixOPort(this, "Zbh Matrix", MatrixIPort::Atomic);
-  add_oport(oportMatrix_);
-
-  oportSurfOut_ = scinew FieldOPort(this, "Outer Surf with Pots", FieldIPort::Atomic);
-  add_oport(oportSurfOut_);
-
   genIn_= -1;
   genOut_= -1;
 }
@@ -140,7 +126,11 @@ SetupBEMatrix::~SetupBEMatrix(){
 //////////
 // Module execution
 void SetupBEMatrix::execute(){
-  
+  iportSurfInn_ = (FieldIPort *)get_iport("Inner Surface");
+  iportSurfOut_ = (FieldIPort *)get_iport("Outer Surface");
+  oportMatrix_ = (MatrixOPort *)get_oport("Zbh Matrix");
+  oportSurfOut_ = (FieldOPort *)get_oport("Outer Surf with Pots");
+   
   //! getting input fields
   FieldHandle hFieldInn;
   FieldHandle hFieldOut;

@@ -32,6 +32,22 @@
     </description>
   </overview>
   <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Field to Seed</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Seeds</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Seeding Widget</name>
+	<datatype>SCIRun::Geometry</datatype>
+      </port>
+    </outputs>
   </io>
   <testing>
   </testing>

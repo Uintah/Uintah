@@ -72,15 +72,6 @@ ShowDipoles::ShowDipoles(const string& id) :
   showLinesGui_("showLinesGui_", id, this),
   widget_lock_("ShowDipoles widget lock")
 {
-  // Create the input port
-  ifield_=scinew FieldIPort(this, "dipoleFld", FieldIPort::Atomic);
-  add_iport(ifield_);
-
-  // Create the output ports
-  ofield_=scinew FieldOPort(this, "dipoleFld", FieldIPort::Atomic);
-  add_oport(ofield_);
-  ogeom_=scinew GeometryOPort(this,"Geometry",GeometryIPort::Atomic);
-  add_oport(ogeom_);
   gen_=-1;
   nDips_=0;
   lastSize_=-1;
@@ -92,6 +83,10 @@ ShowDipoles::~ShowDipoles(){
 }
 
 void ShowDipoles::execute(){
+  ifield_ = (FieldIPort *)get_iport("dipoleFld");
+  ofield_ = (FieldOPort *)get_oport("dipoleFld");
+  ogeom_ = (GeometryOPort *)get_oport("Geometry");
+  
   FieldHandle fieldH;
   PointCloud<Vector> *field_pcv;
   if (!ifield_->get(fieldH) || 

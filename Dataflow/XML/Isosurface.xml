@@ -32,6 +32,26 @@
     </description>
   </overview>
   <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Field</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Color Map</name>
+	<datatype>SCIRun::ColorMap</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Surface</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Geometry</name>
+	<datatype>SCIRun::Geometry</datatype>
+      </port>
+    </outputs>
   </io>
   <testing>
   </testing>

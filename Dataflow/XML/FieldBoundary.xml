@@ -49,7 +49,7 @@
              have faces.
           </p>
 	</description>
-	<datatype>Field</datatype>
+	<datatype>SCIRun::Field</datatype>
 	<componentname>FieldReader</componentname>
       </port>
     </inputs>
@@ -60,7 +60,7 @@
 	<description>
 	  <p>outputs a TriSurface of doubles.</p>
 	</description>
-	<datatype>Field</datatype>
+	<datatype>SCIRun::Field</datatype>
 	<componentname>ShowField</componentname>
       </port>
     </outputs>

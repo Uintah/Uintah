@@ -66,13 +66,6 @@ SparseSolve::SparseSolve(const string& id)
   maxiter("maxiter", id, this),
   method("method", id, this)
 {
-  matrixport = scinew MatrixIPort(this, "Matrix", MatrixIPort::Atomic);
-  add_iport(matrixport);
-  rhsport = scinew MatrixIPort(this, "RHS", MatrixIPort::Atomic);
-  add_iport(rhsport);
-
-  solport = scinew MatrixOPort(this, "Solution", MatrixIPort::Atomic);
-  add_oport(solport);
 }
 
 SparseSolve::~SparseSolve(){
@@ -81,6 +74,9 @@ SparseSolve::~SparseSolve(){
 void SparseSolve::execute(){
 #ifdef __sgi
   MatrixHandle matrix;
+  matrixport = (MatrixIPort *)get_iport("Matrix");
+  rhsport = (MatrixIPort *)get_iport("RHS");
+  solport = (MatrixOPort *)get_oport("Solution");
   if(!matrixport->get(matrix))
     return;
   

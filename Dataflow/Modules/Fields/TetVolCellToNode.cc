@@ -24,7 +24,7 @@ namespace SCIRun {
 using namespace std;
 
 class PSECORESHARE TetVolCellToNode : public Module {
-public:
+private:
   
   Field          *infield_;
   FieldHandle    inhandle_;

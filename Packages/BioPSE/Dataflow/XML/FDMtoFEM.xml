@@ -21,14 +21,11 @@
 
 <component name="FDMtoFEM" category="Forward">
   <overview>
-    
     <authors>
       <author>David Weinstein</author>
     </authors>
-
     <summary>Change a finite difference model into a finite element
     model</summary>
-
     <description>
       <p>Version Date: April 2001</p>
       <p>Version: 1.1</p>
@@ -40,4 +37,18 @@
       PropertManager.</p>
     </description>
   </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>FDM (LVT, cell sigmas)</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>FEM (TVT, cell sigmas)</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+  </io>
 </component>

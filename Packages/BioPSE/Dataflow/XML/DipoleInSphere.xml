@@ -50,10 +50,10 @@
 	  <p>The port takes a handle to the field data object that
 	  contans TriSurfMesh as geometry</p>
 	</description>
-	<datatype>TriSurf</datatype>
+	<datatype>SCIRun::Field</datatype>
       </port>
       <port>
-	<name>Dipoles</name>
+	<name>Dipole Sources</name>
 	<description>
 	  <p>The port takes handle to the matrix of size n-by-6,
 	  contating parameters of n dipoles (the first three column are dipole
@@ -61,7 +61,7 @@
 	  are assumed to lie inside the sphere. Otherwise warning
 	  message is produced in the module log window</p>
 	</description>
-	<datatype>DenseMatrix</datatype>
+	<datatype>SCIRun::Field</datatype>
       </port>
     </inputs>
 
@@ -74,7 +74,7 @@
 	  module. The field object is initial one populated with
 	  potential values at sphere nodes</p>
 	</description>
-	<datatype>TriSurf</datatype>
+	<datatype>SCIRun::Field</datatype>
       </port>
     </outputs>
 

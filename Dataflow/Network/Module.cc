@@ -310,7 +310,7 @@ void Module::update_progress(int n, int max, Timer &t)
 void Module::add_iport(IPort* port)
 {
   if(lastportdynamic && dynamic_port_maker) {
-    TCL::execute(id+" module_grow "+ to_string(iports.size()));
+    TCL::execute(id+" module_grow "+to_string(iports.size()));
   }
     port->set_which_port(iports.size());
     iports.add(port);

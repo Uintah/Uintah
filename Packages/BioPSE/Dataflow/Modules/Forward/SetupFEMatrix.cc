@@ -90,22 +90,12 @@ extern "C" Module* make_SetupFEMatrix(const string& id) {
 }
 
 SetupFEMatrix::SetupFEMatrix(const string& id): 
-  Module("SetupFEMatrix", id, Filter), 
+  Module("SetupFEMatrix", id, Filter, "Forward", "BioPSE"), 
   uiUseCond_("UseCondTCL", id, this),
   lastUseCond_(1),
   uiBCFlag_("BCFlag", id, this),
   refNode_(0)
 {
-  // Create the input ports
-  iportField_ = scinew FieldIPort(this, "Mesh", FieldIPort::Atomic);
-  add_iport(iportField_);
-  
-  // Create the output ports
-  oportMtrx_=scinew MatrixOPort(this, "FEM Matrix", MatrixIPort::Atomic);
-  add_oport(oportMtrx_);
-  
-  oportRhs_=scinew MatrixOPort(this, "RHS", MatrixIPort::Atomic);
-  add_oport(oportRhs_);
   gen_=-1;
   uiUseCond_.set(1);
 }
@@ -114,7 +104,11 @@ SetupFEMatrix::~SetupFEMatrix(){
 }
 
 void SetupFEMatrix::execute(){
- 
+  
+  iportField_ = (FieldIPort *)get_iport("Mesh");
+  oportMtrx_ = (MatrixOPort *)get_oport("FEM Matrix");
+  oportRhs_ = (MatrixOPort *)get_oport("RHS");
+
   FieldHandle hField;
   if(!iportField_->get(hField)){
     msgStream_ << "Error: Cann't get field" << endl;

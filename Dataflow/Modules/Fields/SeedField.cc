@@ -168,17 +168,6 @@ SeedField::SeedField(const string& id)
     vf_generation_(0),
     widget_lock_("StreamLines widget lock")
 {
-  // Create the input port
-  ifport_ = scinew FieldIPort(this, "Field to Seed", FieldIPort::Atomic);
-  add_iport(ifport_);
-  
-  // Create the output ports
-  ofport_ = scinew FieldOPort(this,"Seeds", FieldIPort::Atomic);
-  add_oport(ofport_);
-
-  ogport_ = scinew GeometryOPort(this,"Seeding Widget", GeometryIPort::Atomic);
-  add_oport(ogport_);
-
   vf_ = 0;
   widgetid_=0;;
   rake_ = 0;
@@ -440,6 +429,10 @@ SeedField::generate_widget_seeds(Field *field)
 void
 SeedField::execute()
 {
+  ifport_ = (FieldIPort *)get_iport("Field to Seed");
+  ofport_ = (FieldOPort *)get_oport("Seeds");
+  ogport_ = (GeometryOPort *)get_oport("Seeding Widget");
+  
   // The field input is required.
   if (!ifport_->get(vfhandle_) || !(vf_ = vfhandle_.get_rep()))
   {

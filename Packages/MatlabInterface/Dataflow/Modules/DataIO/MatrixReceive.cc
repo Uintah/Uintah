@@ -66,21 +66,15 @@ extern "C" MatlabInterfaceSHARE Module* make_MatrixReceive(const string& id) {
 MatrixReceive::MatrixReceive(const string& id)
   : Module("MatrixReceive", id, Source, "DataIO", "MatlabInterface") , hpTCL("hpTCL",id,this)
 {
-    imat1=scinew MatrixIPort(this, "Matrix", MatrixIPort::Atomic);
-    add_iport(imat1);
-
-    omat1=scinew MatrixOPort(this, "Matrix", MatrixIPort::Atomic);
-    add_oport(omat1);
-
-    omat2=scinew MatrixOPort(this, "Matrix", MatrixIPort::Atomic);
-    add_oport(omat2);
-
 }
 
 MatrixReceive::~MatrixReceive(){ }
 
 void MatrixReceive::execute()
 {
+  imat1 = (MatrixIPort *)get_iport("Matrix");
+  omat1 = (MatrixOPort *)get_oport("Matrix");
+  omat2 = (MatrixOPort *)get_oport("Matrix");
 /* OBTAIN HOST:PORT INFORMATION */
 
  const char *hport=hpTCL.get().c_str();

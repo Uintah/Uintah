@@ -45,20 +45,9 @@ extern "C" MatlabInterfaceSHARE Module* make_Tikhonov(const string& id) {
 }
 
 Tikhonov::Tikhonov(const string& id)
-  : Module("Tikhonov", id, Filter), hpTCL("hpTCL",id,this)
+  : Module("Tikhonov", id, Filter, "Math", "MatlabInterface"), hpTCL("hpTCL",id,this)
 //  : Module("Tikhonov", id, Source, "Math", "MatlabInterface")
 {
-    iport1=scinew MatrixIPort(this, "Matrix", MatrixIPort::Atomic);
-    add_iport(iport1);
-
-    iport2=scinew MatrixIPort(this, "Matrix", MatrixIPort::Atomic);
-    add_iport(iport2);
-
-    oport1=scinew MatrixOPort(this, "Matrix", MatrixIPort::Atomic);
-    add_oport(oport1);
-
-    oport2=scinew MatrixOPort(this, "Matrix", MatrixIPort::Atomic);
-    add_oport(oport2);
 }
 
 Tikhonov::~Tikhonov(){
@@ -74,6 +63,12 @@ void Tikhonov::execute()
   int    Nd,Nm;
 
   MatrixHandle mh1,mh2,mh3,mh4;
+
+  iport1 = (MatrixIPort *)get_iport("Matrix");
+  iport2 = (MatrixIPort *)get_iport("Matrix");
+  oport1 = (MatrixOPort *)get_oport("Matrix");
+  oport2 = (MatrixOPort *)get_oport("Matrix");
+  
   DenseMatrix  *inp1;   // Sensitivity matrix
   ColumnMatrix *inp2;   // data (right-hand side)
   ColumnMatrix *otp1;   // model

@@ -58,7 +58,7 @@
 	<description>
 	  <p>Takes handle to the field containing condictivity mesh</p>
 	</description>
-	<datatype>TetVol(int)</datatype>
+	<datatype>SCIRun::Field</datatype>
 	<componentname>FieldReader</componentname>
       </port>
       <port>
@@ -67,7 +67,7 @@
 	  <p>Takes handle to the field containing dipole positions and
 	  their moment values</p>
 	</description>
-	<datatype>TetVol(Vector)</datatype>
+	<datatype>SCIRun::Field</datatype>
 	<componentname>FieldReader</componentname>
       </port>
       <port>
@@ -76,7 +76,7 @@
 	  <p>Takes handle to the matrix containing RHS for FE
 	  discretization obtained from SetupFEMatrix</p>
 	</description>
-	<datatype>ColumnMatrix</datatype>
+	<datatype>SCIRun::Matrix</datatype>
 	<componentname>SetupFEMatrix</componentname>
 	<componentname>MatrixReader</componentname>
       </port>
@@ -89,9 +89,13 @@
 	<description>
 	  <p>Sends handle to Matrix containing dipole terms to downstream modules</p>
 	</description>
-	<datatype>ColumnMatrix</datatype>
+	<datatype>SCIRun::Matrix</datatype>
 	<componentname>SolveMatrix</componentname>
 	<componentname>MatrixWriter</componentname>
+      </port>
+      <port>
+        <name>Output Weights</name>
+	<datatype>SCIRun::Matrix</datatype>
       </port>
     </outputs>
   </io>

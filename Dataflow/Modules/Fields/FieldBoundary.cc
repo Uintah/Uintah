@@ -83,12 +83,6 @@ FieldBoundary::FieldBoundary(const string& id) :
   infield_gen_(-1),
   tri_fh_(scinew FieldHandle(scinew TriSurf<double>))
 {
-  // Create the input port
-  infield_ = scinew FieldIPort(this, "Field", FieldIPort::Atomic);
-  add_iport(infield_);
-
-  osurf_ = scinew FieldOPort(this, "TriSurf", FieldIPort::Atomic);
-  add_oport(osurf_);
 }
 void 
 FieldBoundary::add_face(const Point &p0, const Point &p1, const Point &p2, 
@@ -213,6 +207,8 @@ FieldBoundary::boundary(const Msh *mesh)
 void 
 FieldBoundary::execute()
 {
+  infield_ = (FieldIPort *)get_iport("Field");
+  osurf_ = (FieldOPort *)get_oport("TriSurf");
   FieldHandle input;
   if (!infield_->get(input)) return;
   if (!input.get_rep()) {

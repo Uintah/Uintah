@@ -24,13 +24,13 @@
     </inputs>
     <outputs>
       <port>
-        <name>Matrix</name>
+        <name>Field</name>
         <description>
           <p>
             The matrix obtained from the SQL database.
           </p>
         </description>
-        <datatype>Matrix</datatype>
+        <datatype>SCIRun::Matrix</datatype>
         <componentname>WriteMatrix</componentname>
       </port>
     </outputs>

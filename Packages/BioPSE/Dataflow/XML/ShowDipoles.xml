@@ -34,6 +34,22 @@
   <implementation>
   </implementation>
   <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>dipoleFld</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>dipoleFld</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Geometry</name>
+	<datatype>SCIRun::Geometry</datatype>
+      </port>
+    </outputs>
   </io>
   <gui>
   </gui>

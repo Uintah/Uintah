@@ -58,13 +58,9 @@ extern "C" Module* make_NrrdConvert(const string& id)
 }
 
 NrrdConvert::NrrdConvert(const string& id)
-  : Module("NrrdConvert", id, Filter), type_("type", id, this),
+  : Module("NrrdConvert", id, Filter, "Filters", "Teem"), type_("type", id, this),
     last_type_(0), last_generation_(-1), last_nrrdH_(0)
 {
-  inrrd_ = new NrrdIPort(this, "", NrrdIPort::Atomic);
-  add_iport(inrrd_);
-  onrrd_ = new NrrdOPort(this, "", NrrdIPort::Atomic);
-  add_oport(onrrd_);
 }
 
 NrrdConvert::~NrrdConvert() {
@@ -75,7 +71,8 @@ NrrdConvert::execute()
 {
   NrrdDataHandle nrrdH;
   update_state(NeedData);
-
+  inrrd_ = (NrrdIPort *)get_iport("Nrrd");
+  onrrd_ = (NrrdOPort *)get_oport("Nrrd");
   if (!inrrd_->get(nrrdH))
     return;
   if (!nrrdH.get_rep()) {

@@ -64,9 +64,6 @@ Viewer::Viewer(const string& id)
 				// Add a headlight
     lighting.lights.add(scinew HeadLight("Headlight", Color(1,1,1)));
     
-				// Create the input port
-    //add_iport(scinew GeometryIPort(this, "Geometry", GeometryIPort::Atomic));
-    //add_iport(scinew GeometryIPort(this, "0", GeometryIPort::Atomic));
     default_matl=scinew Material(Color(.1,.1,.1), Color(.6,0,0),
 			      Color(.7,.7,.7), 50);
     busy_bit=1;
@@ -103,10 +100,6 @@ Viewer::Viewer(const string& id, const string& moduleName):
 
 				// Add a headlight
     lighting.lights.add(scinew HeadLight("Headlight", Color(1,1,1)));
-    
-				// Create the input port
-    //add_iport(scinew GeometryIPort(this, "Geometry", GeometryIPort::Atomic));
-    //add_iport(scinew GeometryIPort(this, "0", GeometryIPort::Atomic));
     default_matl=scinew Material(Color(.1,.1,.1), Color(.6,0,0),
 			      Color(.7,.7,.7), 50);
     busy_bit=1;

@@ -186,7 +186,7 @@ string Network::connect(Module* m1, int p1, Module* m2, int p2)
 
 int Network::disconnect(const string& connId)
 {
-    Message msg;
+  Message msg;
 
     int i;
     for (i = 0; i < connections.size(); i++)

@@ -17,8 +17,20 @@
   </implementation>
   <io>
     <inputs>
+      <port>
+        <name>Matrix</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>RHS</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
     </inputs>
     <outputs>
+      <port>
+        <name>Solution</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
     </outputs>
   </io>
   <gui>

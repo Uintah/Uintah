@@ -113,9 +113,9 @@ struct CGData {
 
 class SolveMatrix : public Module {
   MatrixIPort* matrixport;
-    MatrixIPort* rhsport;
-    MatrixOPort* solport;
-    MatrixHandle solution;
+  MatrixIPort* rhsport;
+  MatrixOPort* solport;
+  MatrixHandle solution;
   
 #ifdef SCI_SPARSELIB
     void conjugate_gradient(Matrix*, ColumnMatrix&, ColumnMatrix&,int flag);
@@ -185,13 +185,6 @@ SolveMatrix::SolveMatrix(const string& id)
     status("status",id,this),
     tcl_np("np", id, this)
 {
-    matrixport=scinew MatrixIPort(this, "Matrix", MatrixIPort::Atomic);
-    add_iport(matrixport);
-    rhsport=scinew MatrixIPort(this, "RHS", MatrixIPort::Atomic);
-    add_iport(rhsport);
-
-    solport=scinew MatrixOPort(this, "Solution", MatrixIPort::Atomic);
-    add_oport(solport);
 }
 
 SolveMatrix::~SolveMatrix()
@@ -200,6 +193,9 @@ SolveMatrix::~SolveMatrix()
 
 void SolveMatrix::execute()
 {
+  matrixport = (MatrixIPort *)get_iport("Matrix");
+  rhsport = (MatrixIPort *)get_iport("RHS");
+  solport = (MatrixOPort *)get_oport("Solution");
 #ifdef SCI_SPARSELIB
  int flag = 1;
 #endif

@@ -56,9 +56,6 @@ NrrdWriter::NrrdWriter(const string& id)
   filename_("filename", id, this),
   filetype_("filetype", id, this)
 {
-    // Create the output port
-    inport_=scinew NrrdIPort(this, "Input Data", NrrdIPort::Atomic);
-    add_iport(inport_);
 }
 
 NrrdWriter::~NrrdWriter()
@@ -69,6 +66,7 @@ void NrrdWriter::execute()
 {
   // Read data from the input port
   NrrdDataHandle handle;
+  inport_ = (NrrdIPort *)get_iport("Input Data");
   if(!inport_->get(handle))
     return;
 

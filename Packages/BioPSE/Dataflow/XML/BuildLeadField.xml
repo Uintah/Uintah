@@ -30,6 +30,30 @@
     </description>
   </overview>
   <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Domain Mesh</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Electrode Interpolant</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Solution Vectors</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>RHS Vector</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>Leadfield (nelecs x nelemsx3)</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
   </io>
   <testing>
   </testing>
