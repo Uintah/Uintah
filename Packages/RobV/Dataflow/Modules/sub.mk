@@ -9,6 +9,7 @@ SRCDIR := Packages/RobV/Dataflow/Modules
 
 SUBDIRS := \
 	$(SRCDIR)/Quadratic\
+	$(SRCDIR)/Magnetic\
 #[INSERT NEW CATEGORY DIR HERE]
 
 include $(SRCTOP_ABS)/scripts/recurse.mk
