@@ -1539,6 +1539,8 @@ else
 fi
 AC_SUBST(DEF_HASHMAP)
 
+AC_CHECK_HEADERS(ext/algorithm)
+
 ##  --  search for tcl stuff  ---------------------------------------------
 echo 
 AC_CHECKING(for required Tcl components...)
