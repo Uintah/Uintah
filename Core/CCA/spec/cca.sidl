@@ -1013,12 +1013,6 @@ package cca {
 	   int addLoader(in string loaderName, in string login, in string domain, in string path);
 	   int removeLoader(in string name);
 
-	  /**
-	   * Gets the URL of this BuilderService's framework. 
-	   * @return URL as string.
-	   */
-	   string getFrameworkURL();
-
 	   //void registerFramework(in string frameworkURL); 	
 	   //void registerServices(in sci.cca.Services svc);
 
