@@ -41,9 +41,6 @@ itcl_class Teem_UnuNtoZ_UnuRmap {
         global $this-rescale
         set $this-rescale 0
 	
-	global $this-length
-	set $this-length 0
-
 	global $this-min
 	set $this-min 0
 
@@ -65,10 +62,6 @@ itcl_class Teem_UnuNtoZ_UnuRmap {
 	frame $w.f.options
 	pack $w.f.options -side top -expand yes
 	
-        iwidgets::entryfield $w.f.options.length -labeltext "Length:" \
-	    -textvariable $this-length
-        pack $w.f.options.length -side top -expand yes -fill x	
-
         checkbutton $w.f.options.rescale \
 	    -text "Rescale to the Map Domain" \
 	    -variable $this-rescale
