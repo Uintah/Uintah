@@ -215,21 +215,50 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
   for(int m = 0; m < numMatls; m++){
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
-      new_dw->get(gmass[m], lb->gMassLabel, dwi, patch, Ghost::None, 0);
+      new_dw->get(gmass[m], lb->gMassLabel, dwi, patch, Ghost::AroundNodes, 1);
       new_dw->allocate(gsurfnorm[m],lb->gSurfNormLabel, dwi, patch);
 
       gsurfnorm[m].initialize(Vector(0.0,0.0,0.0));
 
-      IntVector lowi(gsurfnorm[dwi].getLowIndex());
-      IntVector highi(gsurfnorm[dwi].getHighIndex());
+      IntVector low(gsurfnorm[m].getLowIndex());
+      IntVector high(gsurfnorm[m].getHighIndex());
 
-//      cout << "Low" << lowi << endl;
-//      cout << "High" << highi << endl;
+      int ILOW,IHIGH,JLOW,JHIGH,KLOW,KHIGH;
+      // First, figure out some ranges for for loops
+      for(Patch::FaceType face = Patch::startFace;
+      		  face <= Patch::endFace; face=Patch::nextFace(face)){
+	Patch::BCType bc_type = patch->getBCType(face);
+
+	if(face==Patch::xminus){
+	  if(bc_type == Patch::Neighbor) { ILOW = low.x(); }
+	  else if(bc_type == Patch::None){ ILOW = low.x()+1; }
+	}
+	if(face==Patch::xplus){
+	  if(bc_type == Patch::Neighbor) { IHIGH = high.x(); }
+	  else if(bc_type == Patch::None){ IHIGH = high.x()-1; }
+	}
+	if(face==Patch::yminus){
+	  if(bc_type == Patch::Neighbor) { JLOW = low.y(); }
+	  else if(bc_type == Patch::None){ JLOW = low.y()+1; }
+	}
+	if(face==Patch::yplus){
+	  if(bc_type == Patch::Neighbor) { JHIGH = high.y(); }
+	  else if(bc_type == Patch::None){ JHIGH = high.y()-1; }
+	}
+	if(face==Patch::zminus){
+	  if(bc_type == Patch::Neighbor) { KLOW = low.z(); }
+	  else if(bc_type == Patch::None){ KLOW = low.z()+1; }
+	}
+	if(face==Patch::zplus){
+	  if(bc_type == Patch::Neighbor) { KHIGH = high.z(); }
+	  else if(bc_type == Patch::None){ KHIGH = high.z()-1; }
+	}
+      }
 
       // Compute the normals for all of the interior nodes
-      for(int i = lowi.x()+1; i < highi.x()-1; i++){
-        for(int j = lowi.y()+1; j < highi.y()-1; j++){
-          for(int k = lowi.z()+1; k < highi.z()-1; k++){
+      for(int i = ILOW; i < IHIGH; i++){
+        for(int j = JLOW; j < JHIGH; j++){
+          for(int k = KLOW; k < KHIGH; k++){
 	     surnor = Vector(
 	        -(gmass[m][IV(i+1,j,k)] - gmass[m][IV(i-1,j,k)])/dx.x(),
          	-(gmass[m][IV(i,j+1,k)] - gmass[m][IV(i,j-1,k)])/dx.y(), 
@@ -242,80 +271,71 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
         }
       }
 
-     // Compute normals on the surface nodes assuming a single patch
-     // with reflective boundaries.  This needs to be generalized for
-     // running in parallel.
 
-      // Compute the normals for the x-surface nodes
-      for(int j = lowi.y()+1; j < highi.y()-1; j++){
-        for(int k = lowi.z()+1; k < highi.z()-1; k++){
-           int i=lowi.x();
-	   surnor = Vector(
-	      0.0,
-	      -(gmass[m][IV(i,j+1,k)] - gmass[m][IV(i,j-1,k)])/dx.y(), 
-	      -(gmass[m][IV(i,j,k+1)] - gmass[m][IV(i,j,k-1)])/dx.z()); 
-	   double length = surnor.length();
-	   if(length>0.0){
-	  	gsurfnorm[m][IntVector(i,j,k)] = surnor/length;;
-	   }
-           i=highi.x()-1;
-	   surnor = Vector(
-	      0.0,
-	      -(gmass[m][IV(i,j+1,k)] - gmass[m][IV(i,j-1,k)])/dx.y(), 
-	      -(gmass[m][IV(i,j,k+1)] - gmass[m][IV(i,j,k-1)])/dx.z()); 
-	   length = surnor.length();
-	   if(length>0.0){
-	  	gsurfnorm[m][IntVector(i,j,k)] = surnor/length;;
-	   }
-        }
-      }
+     // Fix the normals on the surface nodes
+      for(Patch::FaceType face = Patch::startFace;
+      		  face <= Patch::endFace; face=Patch::nextFace(face)){
+	Patch::BCType bc_type = patch->getBCType(face);
+	// First the nodes which border another patch
+	if (bc_type == Patch::Neighbor){
+		// Do nothing, we already got those
+	}
+	// Next the nodes which make up the problem domain
+	else if (bc_type == Patch::None) {
+	  if(face==Patch::xplus || face==Patch::xminus){
+            int I;
+            if(face==Patch::xminus){ I=low.x(); }
+            if(face==Patch::xplus) { I=high.x()-1; }
+            for (int j = JLOW; j<JHIGH; j++) {
+              for (int k = KLOW; k<KHIGH; k++) {
+           	surnor = Vector( 0.0,
+                       -(gmass[m][IV(I,j+1,k)] - gmass[m][IV(I,j-1,k)])/dx.y(),
+                       -(gmass[m][IV(I,j,k+1)] - gmass[m][IV(I,j,k-1)])/dx.z());
+                double length = surnor.length();
+                if(length>0.0){
+                   gsurfnorm[m][IntVector(I,j,k)] = surnor/length;;
+                }
+              }
+            }
+          }
 
-      // Compute the normals for the y-surface nodes
-      for(int i = lowi.x()+1; i < highi.x()-1; i++){
-        for(int k = lowi.z()+1; k < highi.z()-1; k++){
-           int j=lowi.y();
-	   surnor = Vector(
-	      -(gmass[m][IV(i+1,j,k)] - gmass[m][IV(i-1,j,k)])/dx.x(),
-	      0.0,
-	      -(gmass[m][IV(i,j,k+1)] - gmass[m][IV(i,j,k-1)])/dx.z()); 
-	   double length = surnor.length();
-	   if(length>0.0){
-	  	gsurfnorm[m][IntVector(i,j,k)] = surnor/length;;
-	   }
-           j=highi.y()-1;
-	   surnor = Vector(
-	      -(gmass[m][IV(i+1,j,k)] - gmass[m][IV(i-1,j,k)])/dx.x(),
-	      0.0,
-	      -(gmass[m][IV(i,j,k+1)] - gmass[m][IV(i,j,k-1)])/dx.z()); 
-	   length = surnor.length();
-	   if(length>0.0){
-	  	gsurfnorm[m][IntVector(i,j,k)] = surnor/length;;
-	   }
-        }
-      }
+          if(face==Patch::yplus || face==Patch::yminus){
+            int J;
+            if(face==Patch::yminus){ J=low.y(); }
+            if(face==Patch::yplus) { J=high.y()-1; }
+            for (int i = ILOW; i<IHIGH; i++) {
+              for (int k = KLOW; k<KHIGH; k++) {
+		surnor = Vector(
+	               -(gmass[m][IV(i+1,J,k)] - gmass[m][IV(i-1,J,k)])/dx.x(),
+			 0.0,
+		       -(gmass[m][IV(i,J,k+1)] - gmass[m][IV(i,J,k-1)])/dx.z());
+		double length = surnor.length();
+		if(length>0.0){
+		  gsurfnorm[m][IntVector(i,J,k)] = surnor/length;;
+		}
+              }
+            }
+          }
 
-      // Compute the normals for the z-surface nodes
-      for(int i = lowi.x()+1; i < highi.x()-1; i++){
-        for(int j = lowi.y()+1; j < highi.y()-1; j++){
-           int k=lowi.z();
-	   surnor = Vector(
-	      -(gmass[m][IV(i+1,j,k)] - gmass[m][IV(i-1,j,k)])/dx.x(),
-	      -(gmass[m][IV(i,j+1,k)] - gmass[m][IV(i,j-1,k)])/dx.y(), 
-	      0.0);
-	   double length = surnor.length();
-	   if(length>0.0){
-	  	gsurfnorm[m][IntVector(i,j,k)] = surnor/length;;
-	   }
-           k=highi.z()-1;
-	   surnor = Vector(
-	      -(gmass[m][IV(i+1,j,k)] - gmass[m][IV(i-1,j,k)])/dx.x(),
-	      -(gmass[m][IV(i,j+1,k)] - gmass[m][IV(i,j-1,k)])/dx.y(), 
-	      0.0);
-	   length = surnor.length();
-	   if(length>0.0){
-	  	gsurfnorm[m][IntVector(i,j,k)] = surnor/length;;
-	   }
-        }
+          if(face==Patch::zplus || face==Patch::zminus){
+            int K;
+            if(face==Patch::zminus){ K=low.z(); }
+            if(face==Patch::zplus) { K=high.z()-1; }
+            for (int i = ILOW; i<IHIGH; i++) {
+              for (int j = JLOW; j<JHIGH; j++) {
+		surnor = Vector(
+	               -(gmass[m][IV(i+1,j,K)] - gmass[m][IV(i-1,j,K)])/dx.x(),
+	               -(gmass[m][IV(i,j+1,K)] - gmass[m][IV(i,j-1,K)])/dx.y(), 
+	               0.0);
+		double length = surnor.length();
+		if(length>0.0){
+		  gsurfnorm[m][IntVector(i,j,K)] = surnor/length;;
+		}
+              }
+            }
+          }
+
+	}
       }
 
       new_dw->put(gsurfnorm[m],lb->gSurfNormLabel, dwi, patch);
@@ -326,7 +346,9 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
     MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int matlindex = mpm_matl->getDWIndex();
       // Create arrays for the particle stress and grid stress
-      ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch);
+      ParticleSubset* pset = old_dw->getParticleSubset(matlindex, patch,
+                                               Ghost::AroundNodes, 1,
+                                               lb->pXLabel);
       ParticleVariable<Matrix3> pstress;
       NCVariable<Matrix3>       gstress;
       new_dw->get(pstress, lb->pStressAfterStrainRateLabel, pset);
@@ -361,7 +383,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
     NCVariable<Matrix3>      gstress;
     NCVariable<double>       gnormtraction;
     NCVariable<Vector>       surfnorm;
-    new_dw->get(gstress,lb->gStressLabel, matlindex, patch, Ghost::None, 0);
+    new_dw->get(gstress, lb->gStressLabel,   matlindex, patch, Ghost::None, 0);
     new_dw->get(surfnorm,lb->gSurfNormLabel, matlindex, patch, Ghost::None, 0);
     new_dw->allocate(gnormtraction,lb->gNormTractionLabel, matlindex, patch);
 
@@ -506,7 +528,8 @@ void FrictionContact::addComputesAndRequiresIntegrated( Task* t,
   int idx = matl->getDWIndex();
   t->requires( new_dw, lb->pStressAfterStrainRateLabel, idx, patch,
                         			   Ghost::AroundNodes, 1);
-  t->requires(new_dw,  lb->gMassLabel,         idx, patch, Ghost::None);
+  t->requires(new_dw,  lb->gMassLabel,         idx, patch,
+						   Ghost::AroundNodes, 1);
   t->requires(new_dw,  lb->gVelocityStarLabel, idx, patch, Ghost::None);
   t->requires(new_dw,  lb->gAccelerationLabel, idx, patch, Ghost::None);
 
@@ -518,6 +541,9 @@ void FrictionContact::addComputesAndRequiresIntegrated( Task* t,
 }
 
 // $Log$
+// Revision 1.39  2000/12/21 18:50:45  guilkey
+// FrictionContact now works in parallel.
+//
 // Revision 1.38  2000/11/30 22:59:21  guilkey
 // Got rid of the if(! in front of all of the patch->findCellAnd...
 // since this is no longer needed.
