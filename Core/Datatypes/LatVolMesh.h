@@ -53,12 +53,12 @@ public:
     
     const LatIndex &operator *() { return *this; }
     
-    bool operator ==(const LatIter &a)
+    bool operator ==(const LatIter &a) const
     {
       return i_ == a.i_ && j_ == a.j_ && k_ == a.k_ && mesh_ == a.mesh_;
     }
     
-    bool operator !=(const LatIter &a)
+    bool operator !=(const LatIter &a) const
     {
       return !(*this == a);
     }
@@ -72,6 +72,8 @@ public:
     NodeIter(const LatVolMesh *m, unsigned i, unsigned j, unsigned k) 
       : LatIter(m, i, j, k) {}
     
+    const NodeIndex &operator *() const { return (const NodeIndex&)(*this); }
+
     NodeIter &operator++()
     {
       i_++;
@@ -102,6 +104,8 @@ public:
     CellIter(const LatVolMesh *m, unsigned i, unsigned j, unsigned k) 
       : LatIter(m, i, j, k) {}
     
+    const CellIndex &operator *() const { return (const CellIndex&)(*this); }
+
     CellIter &operator++()
     {
       i_++;
@@ -235,6 +239,8 @@ private:
   // returns a LatVolMesh
   static Persistent *maker() { return new LatVolMesh(); }
 };
+
+typedef LockingHandle<LatVolMesh> LatVolMeshHandle;
 
 
 
