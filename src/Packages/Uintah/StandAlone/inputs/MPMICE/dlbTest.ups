@@ -11,7 +11,7 @@
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            0.002 </maxTime>
+       <maxTime>            0.0003 </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
@@ -151,9 +151,9 @@
    </DataArchiver>
 
    <LoadBalancer>
-        <timestepInterval>500</timestepInterval>
+        <timestepInterval>100</timestepInterval>
         <dynamicAlgorithm>particle3</dynamicAlgorithm>
-        <cellFactor>3.2</cellFactor>
+        <cellFactor>4.5</cellFactor>
    </LoadBalancer>
 
 <!--    <Debug>
