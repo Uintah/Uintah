@@ -15,6 +15,7 @@
 #include <PSECore/Dataflow/Module.h>
 #include <PSECore/Datatypes/MatrixPort.h>
 #include <PSECore/Datatypes/ColumnMatrixPort.h>
+#include <SCICore/Datatypes/DenseMatrix.h>
 #include <iostream>
 
 namespace DaveW {
@@ -67,14 +68,29 @@ void LeastSquaresSolve::execute()
       cerr << "Error - matrix and RHS must have the same number of rows!\n";
       return;
     }
+    double *b=bH->get_rhs();
 
-    ColumnMatrix *x=new ColumnMatrix(AH->ncols());
-    ColumnMatrixHandle xH(x);
+    int nrows=AH->nrows();
+    int ncols=AH->ncols();
 
-    // compute:   x = A^(-1) b
+    DenseMatrix *AA = new DenseMatrix(ncols, ncols);
+    ColumnMatrix *bb = new ColumnMatrix(ncols);
+    double *bbp=bb->get_rhs();
 
-    x_port->send(xH);
+    AA->zero();
+    bb->zero();
 
+    int i, j, k;
+    for (i=0; i<ncols; i++) {
+	for (j=0; j<ncols; j++)
+	    for (k=0; k<nrows; k++)
+		(*AA)[i][j]+=AH->get(k,i)*AH->get(k,j);
+	for (k=0; k<nrows; k++)
+	    bbp[i]+=AH->get(k,i)*(b[k]);
+    }
+
+    AA->solve(*bb);
+    x_port->send(bb);
 } 
 
 } // End namespace Modules
@@ -82,6 +98,9 @@ void LeastSquaresSolve::execute()
 
 //
 // $Log$
+// Revision 1.2  1999/12/09 09:56:26  dmw
+// got this module working
+//
 // Revision 1.1  1999/12/09 00:10:04  dmw
 // woops - wrong filename
 //
