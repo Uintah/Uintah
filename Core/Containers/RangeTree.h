@@ -335,6 +335,14 @@ private:
     void setExtremePoints(int** diagonalDirections,
 			  int numDiagDirections, int dimensions);
 
+    inline TPoint* getExtremePointBoundLeft(int i, int directionIndex,
+					    int numDiagDirections)
+    { return getExtremePoint<RANGE_LEFT>(i,directionIndex,numDiagDirections); }
+
+    inline TPoint* getExtremePointBoundRight(int i, int directionIndex,
+					     int numDiagDirections)
+    { return getExtremePoint<RANGE_RIGHT>(i,directionIndex,numDiagDirections);}
+    
     template <int BOUND_FROM_SIDE>
     inline TPoint* getExtremePoint(int i, int directionIndex,
 				  int numDiagDirections)
@@ -387,12 +395,22 @@ private:
   };
   
 public:
-  // The only reason this is not a member of RAngeTreeNode is due to a
-  // g++ compiler bug relating to templates functions.
+  // The only reason this is not a member of RangeTreeNode is due to a
+  // g++ compiler bug relating to template functions.
   template <int SIDE>
   static inline RangeTreeNode* getChild(RangeTreeNode* node)
   { return (SIDE == RANGE_LEFT) ? node->leftChild_ : node->rightChild_; }
 
+  // This is necessare because of the same g++ compiler bug
+  template <int BOUND_FROM_SIDE>
+  inline TPoint* getExtremePoint(BaseLevelSet* bls, int i, int directionIndex,
+				 int numDiagDirections)
+  {
+    return (BOUND_FROM_SIDE == RANGE_LEFT) ?
+      bls->getExtremePointBoundLeft(i, directionIndex, numDiagDirections) :
+      bls->getExtremePointBoundRight(i, directionIndex, numDiagDirections);
+  }
+  
   /* Likewise, these aren't in BaseLevelSet because of the same g++ compiler
      bug */
   
@@ -1575,8 +1593,12 @@ queryNearestL1FromSplit(RangeTreeNode* vsplit, const TPoint& p,
   edgeNodes.push_back(vsplit);
   BasicBoundTester<NEAR_SIDE> nearBoundTester(p[d]);
   if (D1) {
-    splitSubIndex = vsplit->lowerLevel_.bls->
-      findFirstFromSide<BASE_BOUND_SIDE>(p[0]);
+   
+    splitSubIndex = (BASE_BOUND_SIDE == RANGE_LEFT) ?
+	vsplit->lowerLevel_.bls->findFirstGreaterEq(p[0]) :
+      vsplit->lowerLevel_.bls->findLastLesserEq(p[0]);
+    /*vsplit->lowerLevel_.bls->
+      findFirstFromSide<BASE_BOUND_SIDE>(p[0]);*/
 
     if ((splitSubIndex < 0) ||
 	(splitSubIndex >= vsplit->lowerLevel_.bls->getSize()))
@@ -1638,8 +1660,11 @@ queryNearestL1FromSplit(RangeTreeNode* vsplit, const TPoint& p,
 	return; // leaf should have been checked already
 
       // reset the splitSubIndex
-      splitSubIndex = vsplit->lowerLevel_.bls->
-	findFirstFromSide<BASE_BOUND_SIDE>(p[0]);
+      splitSubIndex = (BASE_BOUND_SIDE == RANGE_LEFT) ?
+	vsplit->lowerLevel_.bls->findFirstGreaterEq(p[0]) :
+      vsplit->lowerLevel_.bls->findLastLesserEq(p[0]);
+      /*vsplit->lowerLevel_.bls->
+	findFirstFromSide<BASE_BOUND_SIDE>(p[0]);*/
       if ((splitSubIndex < 0) ||
 	  (splitSubIndex >= vsplit->lowerLevel_.bls->getSize()))
 	return; // no points in this sub tree are on the searching side of p[0]
@@ -1658,8 +1683,8 @@ queryNearestL1FromSplit(RangeTreeNode* vsplit, const TPoint& p,
 	(prev->lowerLevel_.bls, *cascadedIndexIter, sub);
       // constant time lookup
       TPoint* candidate =
-	sub->getExtremePoint<BASE_BOUND_SIDE>(cascadedIndex, directionIndex,
-					      numDiagDirections_);
+	getExtremePoint<BASE_BOUND_SIDE>(sub, cascadedIndex, directionIndex,
+					 numDiagDirections_);
       setNearest(nearest, candidate, directionIndex, pL1Length,
 		 nearestKnownL1Distance);
       cascadedIndexIter++;
@@ -1701,8 +1726,8 @@ queryNearestL1FromSplit(RangeTreeNode* vsplit, const TPoint& p,
       index = getCascadedSubIndex<NEAR_SIDE, BASE_BOUND_SIDE>
 	(node->lowerLevel_.bls, index, sub);
       TPoint* candidate =
-	sub->getExtremePoint<BASE_BOUND_SIDE>(index, directionIndex,
-					      numDiagDirections_);
+	getExtremePoint<BASE_BOUND_SIDE>(sub, index, directionIndex,
+					 numDiagDirections_);
       setNearest(nearest, candidate, directionIndex, pL1Length,
 		 nearestKnownL1Distance);
     }
