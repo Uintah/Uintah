@@ -26,7 +26,9 @@
 #include <Datatypes/ScalarFieldRG.h>
 #include <Datatypes/ScalarFieldPort.h>
 #include <Datatypes/SurfacePort.h>
+#include <Datatypes/TriSurface.h>
 #include <Geom/Pt.h>
+#include <Geom/Material.h>
 #include <Geometry/Point.h>
 #include <Geometry/Vector.h>
 #include <Math/Expon.h>
@@ -40,6 +42,7 @@
 class Coregister : public Module {
     SurfaceIPort* iport_scalp;
     SurfaceIPort* iport_pts;
+    SurfaceOPort* oport_pts;
     GeomPts* geomPts;
     GeometryOPort* ogeom;
     GeometryOPort* owidget;
@@ -47,6 +50,7 @@ class Coregister : public Module {
     ScaledBoxWidget *widget;
     int build_full_mgd;
     int print_mgd;
+    int send_pts;
     int geom_id;
     int initialized;
     int widgetMoved;
@@ -64,6 +68,7 @@ class Coregister : public Module {
     TCLdouble rot_i_x, rot_i_y, rot_i_z;
     TCLdouble trans_x, trans_y, trans_z;
     TCLdouble reg_error;
+    TCLdouble scale;
     TCLint abortButton;
     TCLint newtonB;
     TCLstring curr_iter;
@@ -71,6 +76,8 @@ class Coregister : public Module {
     TCLstring iters;
     TCLstring tolerance;
     TCLstring percent;
+    MaterialHandle matl;
+    int recenter;
 public:
     Coregister(const clString& id);
     Coregister(const Coregister&, int deep);
@@ -86,6 +93,7 @@ public:
 		       const Vector& vi, int perc=100);
     void makeMGD(int full);
     void printMGD();
+    void sendPts();
     double findMin(double, double, double, double*);
 };
 
@@ -104,10 +112,12 @@ Coregister::Coregister(const clString& id)
   rot_d_x("rot_d_x",id,this),rot_d_y("rot_d_y",id,this),rot_d_z("rot_d_z",id,this),
   rot_i_x("rot_i_x",id,this),rot_i_y("rot_i_y",id,this),rot_i_z("rot_i_z",id,this),
   trans_x("trans_x",id,this),trans_y("trans_y",id,this),trans_z("trans_z",id,this),
+  scale("scale", id, this),
   error_metric("error_metric",id,this), iters("iters",id,this),
   tolerance("tolerance",id,this), abortButton("abortButton",id,this),
   curr_iter("curr_iter",id,this), percent("percent",id,this),
-  newtonB("newtonB",id,this), build_full_mgd(0), print_mgd(0)
+  newtonB("newtonB",id,this), build_full_mgd(0), print_mgd(0), recenter(1),
+  send_pts(0)
 {
     // Create the input ports
     iport_scalp=new SurfaceIPort(this, "Scalp", SurfaceIPort::Atomic);
@@ -119,6 +129,8 @@ Coregister::Coregister(const clString& id)
     add_oport(owidget);
     ogeom=new GeometryOPort(this, "GeomOut", GeometryIPort::Atomic);
     add_oport(ogeom);
+    oport_pts=new SurfaceOPort(this, "OPoints", SurfaceIPort::Atomic);
+    add_oport(oport_pts);
     widget=scinew ScaledBoxWidget(this, &widget_lock, 0.2);
     widget->SetCurrentMode(2);
     geom_id=0;
@@ -127,6 +139,7 @@ Coregister::Coregister(const clString& id)
     initialized=0;
     widgetMoved=0;
     autoRegister=0;
+    matl = scinew Material(Color(.2,.2,.2), Color(0,0,.6), Color(0,0,.5), 20);
 }
 
 Coregister::Coregister(const Coregister& copy, int deep)
@@ -135,10 +148,12 @@ Coregister::Coregister(const Coregister& copy, int deep)
   rot_d_x("rot_d_x",id,this),rot_d_y("rot_d_y",id,this),rot_d_z("rot_d_z",id,this),
   rot_i_x("rot_i_x",id,this),rot_i_y("rot_i_y",id,this),rot_i_z("rot_i_z",id,this),
   trans_x("trans_x",id,this),trans_y("trans_y",id,this),trans_z("trans_z",id,this),
+  scale("scale", id, this),
   error_metric("error_metric",id,this), iters("iters",id,this),
   tolerance("tolerance",id,this), abortButton("abortButton",id,this),
   curr_iter("curr_iter",id,this), percent("percent",id,this),
-  newtonB("newtonB",id,this), build_full_mgd(0), print_mgd(0)
+  newtonB("newtonB",id,this), build_full_mgd(0), print_mgd(0), recenter(1),
+  send_pts(0)
 {
     NOT_FINISHED("Coregister::Coregister");
 }
@@ -182,10 +197,11 @@ void Coregister::transform_pts(const Point& w_c, const Point& p,
 			       const Vector& vi, int perc) {
     double a0, a1, a2;
     int incr=(int)(100./perc);
+    double sc=scale.get();
     for (int i=0; i<orig_pts.size(); i+=incr) {
-	a0=orig_pts[i].x()-w_c.x(); 
-	a1=orig_pts[i].y()-w_c.y(); 
-	a2=orig_pts[i].z()-w_c.z();
+	a0=(orig_pts[i].x()-w_c.x())*sc; 
+	a1=(orig_pts[i].y()-w_c.y())*sc; 
+	a2=(orig_pts[i].z()-w_c.z())*sc;
 	trans_pts[i]=Point (p.x()+a0*vr.x()+a1*vd.x()+a2*vi.x(),
 			    p.y()+a0*vr.y()+a1*vd.y()+a2*vi.y(),
 			    p.z()+a0*vr.z()+a1*vd.z()+a2*vi.z());
@@ -249,6 +265,12 @@ void Coregister::execute()
 	return;
     }
 
+    if (send_pts) {
+	send_pts=0;
+	sendPts();
+	return;
+    }
+
     if (!autoRegister && !widgetMoved && iPtsHdl.get_rep()==old_pts.get_rep())
 	return;
 
@@ -285,9 +307,9 @@ void Coregister::execute()
 	geomPts = scinew GeomPts(nodes.size());
 	orig_pts.resize(nodes.size());
 	trans_pts.resize(nodes.size());
-	geomPts->pts.resize(nodes.size());
 	for (int i=0; i<nodes.size(); i++) {
-	    orig_pts[i]=geomPts->pts[i]=nodes[i]->p;
+	    orig_pts[i]=nodes[i]->p;
+	    geomPts->add(nodes[i]->p);
 	}
     } else {   // have to copy them b/c we're gonna erase them below...
 	geomPts = scinew GeomPts(*geomPts);
@@ -305,33 +327,31 @@ void Coregister::execute()
     Vector v_d(widget->GetDownAxis());
     Vector v_i(widget->GetInAxis());
     widget_lock.read_unlock();
-
+    if (v_r.length2()>2) {
+	v_r=v_r/1;
+	v_d=v_d/1;
+	v_i=v_i/1;
+    }
     // if the pts are new, reset widget
-    if (iPtsHdl.get_rep() != old_pts.get_rep()) {
-	BBox b;
-	geomPts->get_bounds(b);
-        w_v = b.diagonal();
-	w_c = p = b.center();
-        Vector v_c = Vector(p.x(), p.y(), p.z()); 
-        v_r = Vector(1,0,0);
-        v_d = Vector(0,1,0);
-        v_i = Vector(0,0,1);
-	cerr << "Moving the widget to starting location!\n";
-        widget->SetPosition(w_c, w_c+v_r, w_c+v_d, w_c+v_i);
-	widget->SetScale(w_v.length()/20.);
-
-#if 0
-        cerr << "New data...\n";
-        cerr << "Are we aligned? "<<widget->IsAxisAligned()<<"\n";
-        widget->print(cerr);
-#endif
-
+    if (iPtsHdl.get_rep() != old_pts.get_rep() || recenter) {
+	if (recenter) {
+	    BBox b;
+	    geomPts->get_bounds(b);
+	    w_v = b.diagonal();
+	    w_c = p = b.center();
+	    w_c = b.center();
+	    Vector v_c = Vector(p.x(), p.y(), p.z()); 
+	    v_r = Vector(1,0,0);
+	    v_d = Vector(0,1,0);
+	    v_i = Vector(0,0,1);
+//	cerr << "Moving the widget to starting location!\n";
+	    widget->SetPosition(w_c, w_c+(v_r*1), w_c+(v_d*1), w_c+(v_i*1));
+	    widget->SetScale
+(w_v.length()/20.);
+	    recenter=0;
+	}
 	old_pts = iPtsHdl;
     }
-
-    Point p_r(v_r.x(),v_r.y(),v_r.z());
-    Point p_d(v_d.x(),v_d.y(),v_d.z());
-    Point p_i(v_i.x(),v_i.y(),v_i.z());
 
 #if 0
 // let's print the info, just to make sure...
@@ -347,12 +367,37 @@ void Coregister::execute()
 
     transform_pts(w_c, p, v_r, v_d, v_i);
     reg_error.set(computeError());
+    geomPts->pts.resize(0);
     for (int pp=0; pp<trans_pts.size(); pp++) {
-	geomPts->pts[pp]=trans_pts[pp];
+	geomPts->add(trans_pts[pp]);
     }
-    geom_id = ogeom->addObj(geomPts, module_name);
+    GeomObj* topobj=scinew GeomMaterial(geomPts, matl);
+    geom_id = ogeom->addObj(topobj, module_name);
     ogeom->flushViews();
 }	
+
+void Coregister::sendPts(void) {
+    TriSurface *os=old_pts->getTriSurface();
+    if (!os) {
+	error("Can't send non-trisurface!");
+	return;
+    }
+    cerr << "os.points.size:"<<os->points.size()<<"  os.elements.size:"<<os->elements.size()<<"\n";
+    TriSurface *ts=new TriSurface();
+    ts->points.resize(os->points.size());
+    ts->elements.resize(os->elements.size());
+    for (int i=0; i<os->elements.size(); i++)
+	ts->elements[i]=new TSElement(*(os->elements[i]));
+    if (ts->points.size() != trans_pts.size()) {
+	cerr << "Points.size: "<<ts->points.size()<<"  TransPts.size:"<<trans_pts.size()<<"\n";
+	error("Wrong number of points!");
+	return;
+    }
+    for (i=0; i<ts->points.size(); i++) {
+	ts->points[i]=trans_pts[i];
+    }
+    oport_pts->send(SurfaceHandle(ts));
+}
 
 double Coregister::computeError(int perc) {
     if (!mgd) {
@@ -430,10 +475,12 @@ void Coregister::auto_register() {
     Vector v_r(widget->GetRightAxis());
     Vector v_d(widget->GetDownAxis());
     Vector v_i(widget->GetInAxis());
+    if (v_r.length2()>2) {
+	v_r=v_r/1;
+	v_d=v_d/1;
+	v_i=v_i/1;
+    }
     widget_lock.read_unlock();
-    Point p_r(v_r.x(),v_r.y(),v_r.z());
-    Point p_d(v_d.x(),v_d.y(),v_d.z());
-    Point p_i(v_i.x(),v_i.y(),v_i.z());
 
     transform_pts(w_c, p, v_r, v_d, v_i, perc);
     double currError=computeError(perc);
@@ -479,13 +526,13 @@ void Coregister::auto_register() {
             a_i[idx+7]=rotateVector(v_i, rm);
         }
         int bestIdx=0;
-        cerr << "Errors (iter "<<currIter<<", opt 0): "<<currError<<"\n";
+//        cerr << "Errors (iter "<<currIter<<", opt 0): "<<currError<<"\n";
         double allErrors[13];
         allErrors[0]=currError;
         for (idx=1; idx<13; idx++) {
             transform_pts(w_c, a_c[idx], a_r[idx], a_d[idx], a_i[idx], perc);
             allErrors[idx]=computeError(perc);
-            cerr << "Errors (iter "<<currIter<<", opt "<<idx<<"): "<<allErrors[idx]<<"\n";
+//            cerr << "Errors (iter "<<currIter<<", opt "<<idx<<"): "<<allErrors[idx]<<"\n";
             if (allErrors[idx]<allErrors[bestIdx]) {
                 bestIdx=idx;
             }
@@ -509,8 +556,8 @@ void Coregister::auto_register() {
                     v.normalize();
                     v*=sc*t_scale;
                 }
-                cerr << "xScale="<<xScale<<"; yScale="<<yScale<<"; zScale="<<zScale<<"\n";
-                cerr << "v: "<<v<<"\n";
+//                cerr << "xScale="<<xScale<<"; yScale="<<yScale<<"; zScale="<<zScale<<"\n";
+//                cerr << "v: "<<v<<"\n";
                 new_c+=v;
             } else {
                 int bestRotIdx = 7;
@@ -523,7 +570,7 @@ void Coregister::auto_register() {
                 double aa;
                 double rScale = findMin(allErrors[bestRotIdx+1], allErrors[0], 
                                         allErrors[bestRotIdx], &aa);
-                cerr << "rScale="<<rScale<<" ("<<bestRotIdx<<")\n";
+//                cerr << "rScale="<<rScale<<" ("<<bestRotIdx<<")\n";
                 buildRotateMatrix(rm, r_scale*rScale, axis[bestRotIdx-7]);
                 new_r = rotateVector(v_r, rm);
                 new_d = rotateVector(v_d, rm);
@@ -531,7 +578,7 @@ void Coregister::auto_register() {
             }
             transform_pts(w_c, new_c, new_r, new_d, new_i, perc);
             double ee=computeError(perc);
-            cerr << "New error: "<<ee<<"\n";
+//            cerr << "New error: "<<ee<<"\n";
             if (ee<currError) {
                 currError=ee;
                 p=new_c;
@@ -571,16 +618,18 @@ void Coregister::auto_register() {
                 rot_d_x.set(v_d.x()); rot_d_y.set(v_d.y()); rot_d_z.set(v_d.z());
                 rot_i_x.set(v_i.x()); rot_i_y.set(v_i.y()); rot_i_z.set(v_i.z());
                 trans_x.set(p.x()); trans_y.set(p.y()); trans_z.set(p.z()); 
-                widget->SetPosition(p, p+v_r, p+v_d, p+v_i);
+                widget->SetPosition(p, p+(v_r*1), p+(v_d*1), p+(v_i*1));
    	        geomPts = scinew GeomPts(*geomPts);
                 if (geom_id) {	     // erase old points
              	    ogeom->delObj(geom_id);
          	    geom_id = 0;
                 }
+ 		geomPts->pts.resize(0);
                 for (int pp=0; pp<trans_pts.size(); pp++) {
-	            geomPts->pts[pp]=trans_pts[pp];
+	            geomPts->add(trans_pts[pp]);
                 }
-                geom_id = ogeom->addObj(geomPts, module_name);
+		GeomObj* topobj=scinew GeomMaterial(geomPts, matl);
+		geom_id = ogeom->addObj(topobj, module_name);
                 ogeom->flushViews();
             }
         }
@@ -631,9 +680,20 @@ void Coregister::tcl_command(TCLArgs& args, void* userdata)
 	    print_mgd=1;
 	    want_to_execute();
 	}
-    else if(args[1] == "go")
+    else if(args[1] == "scale")
         {
 	    widgetMoved = 1;
+            want_to_execute();
+        }
+    else if(args[1] == "recenter")
+        {
+	    widgetMoved = 1;
+	    recenter = 1;
+            want_to_execute();
+        }
+    else if(args[1] == "send_pts")
+        {
+	    send_pts=1;
             want_to_execute();
         }
     else

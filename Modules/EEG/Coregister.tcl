@@ -12,6 +12,9 @@
  #  Log Information:
  #
  #  $Log$
+ #  Revision 1.11  1997/03/11 22:05:53  dweinste
+ #  fixed stuff
+ #
  #  Revision 1.10  1996/10/22 20:00:05  dweinste
  #  nothing.
  #
@@ -59,6 +62,7 @@ itcl_class Coregister {
 	global $this-abortButton
 	global $this-newtonB
 	global $this-percent
+	global $this-scale
         set $this-rot_r_x 1
         set $this-rot_r_y 0
         set $this-rot_r_z 0
@@ -79,6 +83,7 @@ itcl_class Coregister {
 	set $this-abortButton 0
 	set $this-newtonB 1
 	set $this-percent 10
+	set $this-scale 1.0
     }
     method ui {} {
         set w .ui$this
@@ -152,6 +157,9 @@ itcl_class Coregister {
 	pack $w.f.v.t.z.l $w.f.v.t.z.x -side left
 	pack $w.f.v.t.l $w.f.v.t.x $w.f.v.t.y $w.f.v.t.z -side top
 	pack $w.f.v.r $w.f.v.t -side left
+	expscale $w.f.s -orient horizontal -variable $this-scale \
+		-label "Scale:" \
+		-command "$this-c scale"
 	frame $w.f.e
 	label $w.f.e.l -text "RMS Error (cm): "
 	label $w.f.e.e -textvariable $this-reg_error
@@ -187,8 +195,10 @@ itcl_class Coregister {
 	frame $w.f.mgd
 	button $w.f.mgd.bld -text "Build Full MGD" -command "$this-c build_full_mgd"
 	button $w.f.mgd.print -text "Print MGD" -command "$this-c print_mgd"
-	pack $w.f.mgd.bld $w.f.mgd.print -side left -expand 1
-	pack $w.f.v $w.f.e $w.f.b $w.f.p $w.f.m $w.f.t $w.f.i $w.f.mgd -side top
+	button $w.f.mgd.rec -text "Recenter" -command "$this-c recenter"
+	button $w.f.mgd.send -text "Send Pts" -command "$this-c send_pts"
+	pack $w.f.mgd.bld $w.f.mgd.print $w.f.mgd.rec $w.f.mgd.send -side left -expand 1
+	pack $w.f.v $w.f.s $w.f.e $w.f.b $w.f.p $w.f.m $w.f.t $w.f.i $w.f.mgd -side top
 	pack $w.f
     }
 }
