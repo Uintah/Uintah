@@ -71,6 +71,11 @@ using namespace std;
 #define NC_VAR 0
 #define CC_VAR 1
 #define FC_VAR 2
+
+struct ID {
+  IntVector id;
+  int level;
+};
   
 class GridVisualizer : public Module {
 public:
@@ -87,10 +92,15 @@ private:
   void setupColors();
   MaterialHandle getColor(clString color, int type);
   void setVars(GridP grid);
-  void graph(string varname, string material, string index);
+  void getnunv(int* nu, int* nv);
+  void graph(string varname, vector<string> mat_list, string index);
+  bool is_cached(string name, string& data);
+  string vector_to_string(vector< int > data);
+  string vector_to_string(vector< string > data);
   string vector_to_string(vector< double > data);
-  string vector_to_string(vector< Vector > data);
-  string vector_to_string(vector< Matrix3 > data);
+  string vector_to_string(vector< Vector > data, string type);
+  string vector_to_string(vector< Matrix3 > data, string type);
+  string currentNode_str();
   
   ArchiveIPort* in;
   GeometryOPort* ogeom;
@@ -115,6 +125,10 @@ private:
   TCLdouble radius;
   TCLint polygons;
   TCLint nl;
+  TCLint index_x;
+  TCLint index_y;
+  TCLint index_z;
+  TCLint index_l;
   TCLstring curr_var;
   
   CrowdMonitor widget_lock;
@@ -126,13 +140,16 @@ private:
   int need_2d;
   vector<int> old_id_list;
   vector<int> id_list;
-
-  IntVector currentNode;
+  GeomSphere* selected_sphere;
+  bool node_selected;
+  
+  ID currentNode;
   vector< string > names;
   vector< double > times;
   vector< const TypeDescription *> types;
   double time;
   DataArchive* archive;
+  map< string, string > material_data_list;
 };
 
 static clString widget_name("GridVisualizer Widget");
@@ -162,8 +179,12 @@ GridVisualizer::GridVisualizer(const clString& id)
   polygons("polygons",id,this),
   nl("nl",id,this),
   curr_var("curr_var",id,this),
+  index_l("index_l",id,this),
+  index_x("index_x",id,this),
+  index_y("index_y",id,this),
+  index_z("index_z",id,this),
   widget_lock("GridVusualizer widget lock"),
-  init(1), need_2d(1)
+  init(1), need_2d(1), node_selected(false)
 {
 
   // Create the input port
@@ -197,6 +218,7 @@ GridP GridVisualizer::getGrid()
   vector< int > indices;
   times.clear();
   archive->queryTimesteps( indices, times );
+  TCL::execute(id + " set_time " + vector_to_string(indices).c_str());
   int timestep = (*(handle.get_rep())).timestep();
   time = times[timestep];
   GridP grid = archive->queryGrid(time);
@@ -324,6 +346,19 @@ void GridVisualizer::setVars(GridP grid) {
   TCL::execute(id + " setMat_list " + matls.c_str());  
 }
 
+void GridVisualizer::getnunv(int* nu, int* nv) {
+#define MIN_POLYS 8
+#define MAX_POLYS 400
+#define MIN_NU 4
+#define MAX_NU 20
+#define MIN_NV 2
+#define MAX_NV 20
+  // calculate the spheres nu,nv based on the number of polygons
+  float t = (polygons.get() - MIN_POLYS)/float(MAX_POLYS - MIN_POLYS);
+  *nu = int(MIN_NU + t*(MAX_NU - MIN_NU)); 
+  *nv = int(MIN_NV + t*(MAX_NV - MIN_NV));
+}
+
 void GridVisualizer::execute()
 {
 
@@ -412,19 +447,10 @@ void GridVisualizer::execute()
   double rad = radius.get();
   bool node_on = node_select_on.get() != 0;
   Box widget_box;
-#define MIN_POLYS 8
-#define MAX_POLYS 400
-#define MIN_NU 4
-#define MAX_NU 20
-#define MIN_NV 2
-#define MAX_NV 20
   
   if (node_on) {
-    // calculate the spheres nu,nv based on the number of polygons
-    float t = (polygons.get() - MIN_POLYS)/float(MAX_POLYS - MIN_POLYS);
-    nu = int(MIN_NU + t*(MAX_NU - MIN_NU)); 
-    nv = int(MIN_NV + t*(MAX_NV - MIN_NV));
-
+    getnunv(&nu,&nv);
+    
     if (widget_on) {
       // get the position of the frame widget and determine
       // the boundaries
@@ -492,7 +518,7 @@ void GridVisualizer::execute()
 	if(node_on) {
 	  for(NodeIterator iter = patch->getNodeIterator(widget_box); !iter.done(); iter++){
 	    spheres->add(scinew GeomSphere(patch->nodePosition(*iter),
-					   rad,nu,nv,*iter));
+					   rad,nu,nv,l,*iter));
 	  }
 	}
 	break;
@@ -510,7 +536,7 @@ void GridVisualizer::execute()
 	if(node_on) {
 	  for(CellIterator iter = patch->getCellIterator(widget_box); !iter.done(); iter++){
 	    spheres->add(scinew GeomSphere(patch->cellPosition(*iter),
-					   rad,nu,nv,*iter));
+					   rad,nu,nv,l,*iter));
 	  }
 	}
 	break;
@@ -538,6 +564,21 @@ void GridVisualizer::execute()
   if (node_on) {
     GeomPick* pick = scinew GeomPick(pick_nodes,this);
     id_list.push_back(ogeom->addObj(pick,"Selectable Nodes"));
+  }
+  if (node_selected) {
+    Point p;
+    switch (var_orientation.get()) {
+    case NC_VAR:
+      //p = patch->nodePosition(currentNode);
+      break;
+    case CC_VAR:
+      //p = patch->cellPosition(currentNode);
+      break;
+    case FC_VAR:
+      // not implemented
+      break;
+    }
+    //seleted_sphere->move(p);
   }
   cerr << "\t\tFinished execute\n";
 }
@@ -570,48 +611,125 @@ void GridVisualizer::tcl_command(TCLArgs& args, void* userdata)
   }
   else if(args[1] == "graph") {
     string varname(args[2]());
-    string matl(args[3]());
-    string index(args[4]());
-    cerr << "Graphing " << varname << " with material " << matl << endl;
-    graph(varname,matl,index);
+    string index(args[3]());
+    int num_mat;
+    args[4].get_int(num_mat);
+    cerr << "Extracting " << num_mat << " materals:";
+    vector< string > mat_list;
+    for (int i = 5; i < 5+num_mat; i++) {
+      string mat(args[i]());
+      mat_list.push_back(mat);
+    }
+    cerr << endl;
+    cerr << "Graphing " << varname << " with materials: " << vector_to_string(mat_list) << endl;
+    graph(varname,mat_list,index);
   }
   else {
     Module::tcl_command(args, userdata);
   }
 }
 
+bool GridVisualizer::is_cached(string name, string& data) {
+  map< string, string >::iterator iter;
+  iter = material_data_list.find(name);
+  if (iter == material_data_list.end()) {
+    return false;
+  }
+  else {
+    data = iter->second;
+    return true;
+  }
+}
+
+string GridVisualizer::vector_to_string(vector< int > data) {
+  ostringstream ostr;
+  for(int i = 0; i < data.size(); i++) {
+      ostr << data[i]  << " ";
+    }
+  return ostr.str();
+}
+
+string GridVisualizer::vector_to_string(vector< string > data) {
+  string result;
+  for(int i = 0; i < data.size(); i++) {
+      result+= (data[i] + " ");
+    }
+  return result;
+}
+
 string GridVisualizer::vector_to_string(vector< double > data) {
   ostringstream ostr;
   for(int i = 0; i < data.size(); i++) {
-      ostr << i << " " << data[i]  << " ";
+      ostr << data[i]  << " ";
     }
   return ostr.str();
 }
 
-string GridVisualizer::vector_to_string(vector< Vector > data) {
+string GridVisualizer::vector_to_string(vector< Vector > data, string type) {
   ostringstream ostr;
-  for(int i = 0; i < data.size(); i++) {
-      ostr << i << " " << data[i].length2() << " ";
+  if (type == "length") {
+    for(int i = 0; i < data.size(); i++) {
+      ostr << data[i].length() << " ";
     }
+  } else if (type == "length2") {
+    for(int i = 0; i < data.size(); i++) {
+      ostr << data[i].length2() << " ";
+    }
+  } else if (type == "x") {
+    for(int i = 0; i < data.size(); i++) {
+      ostr << data[i].x() << " ";
+    }
+  } else if (type == "y") {
+    for(int i = 0; i < data.size(); i++) {
+      ostr << data[i].y() << " ";
+    }
+  } else if (type == "z") {
+    for(int i = 0; i < data.size(); i++) {
+      ostr << data[i].z() << " ";
+    }
+  }
+
   return ostr.str();
 }
 
-string GridVisualizer::vector_to_string(vector< Matrix3 > data) {
+string GridVisualizer::vector_to_string(vector< Matrix3 > data, string type) {
   ostringstream ostr;
-  for(int i = 0; i < data.size(); i++) {
-      ostr << i << " " << data[i].Norm() << " ";
+  if (type == "determinant") {
+    for(int i = 0; i < data.size(); i++) {
+      ostr << data[i].Determinant() << " ";
     }
+  } else if (type == "trace") {
+    for(int i = 0; i < data.size(); i++) {
+      ostr << data[i].Trace() << " ";
+    }
+  } else if (type == "norm") {
+    for(int i = 0; i < data.size(); i++) {
+      ostr << data[i].Norm() << " ";
+    } 
+ }
+
   return ostr.str();
 }
 
-void GridVisualizer::graph(string varname, string material, string index) {
+string GridVisualizer::currentNode_str() {
+  ostringstream ostr;
+  ostr << currentNode.level << "_";
+  ostr << currentNode.id.x()  << "_";
+  ostr << currentNode.id.y()  << "_";
+  ostr << currentNode.id.z();
+  return ostr.str();
+}
+
+void GridVisualizer::graph(string varname, vector <string> mat_list, string index) {
 
   /*
     template<class T>
     void query(std::vector<T>& values, const std::string& name, int matlIndex,
                IntVector loc, double startTime, double endTime);
   */
-  // archive->query(value, varname, material, currentNode, times[0], times[times.size()-1]);
+
+  // clear the current contents of the ticles's material data list
+  TCL::execute(id + " reset_var_val");
 
   // determine type
   const TypeDescription *td;
@@ -619,42 +737,76 @@ void GridVisualizer::graph(string varname, string material, string index) {
     if (names[i] == varname)
       td = types[i];
   
-  vector< double > valuesd;
-  vector< Vector > valuesv;
-  vector< Matrix3 > valuesm;
-  vector< Point > valuesp;
-  int matl = atoi(material.c_str());
   const TypeDescription* subtype = td->getSubType();
   switch ( subtype->getType() ) {
   case TypeDescription::double_type:
-    cerr << "Graphing a double\n";
-    archive->query(valuesd, varname, matl, currentNode, times[0], times[times.size()-1]);
-    cerr << "Received data.  Size of data = " << valuesd.size() << endl;
-    TCL::execute(id + " graph_data " + index.c_str() + material.c_str() + " " +
-		 varname.c_str()+" "+vector_to_string(valuesd).c_str());
+    cerr << "Graphing a variable of type double\n";
+    // loop over all the materials in the mat_list
+    for(int i = 0; i < mat_list.size(); i++) {
+      string data;
+      if (!is_cached(varname+mat_list[i]+currentNode_str(),data)) {
+	// query the value and then cache it
+	vector< double > values;
+	int matl = atoi(mat_list[i].c_str());
+	archive->query(values, varname, matl, currentNode.id, times[0], times[times.size()-1]);
+	cerr << "Received data.  Size of data = " << values.size() << endl;
+	data = vector_to_string(values);
+	material_data_list[varname+mat_list[i]+currentNode_str()] = data;
+      }
+      else {
+	// use cached value that was put into data by is_cached
+      }
+      TCL::execute(id+" set_var_val "+data.c_str());
+    }
     break;
   case TypeDescription::Vector:
-    cerr << "Graphing a Vector\n";
-    archive->query(valuesv, varname, matl, currentNode, times[0], times[times.size()-1]);
-    cerr << "Received data.  Size of data = " << valuesv.size() << endl;
-    TCL::execute(id + " graph_data " + index.c_str() + material.c_str() + " " +
-		 varname.c_str()+" "+vector_to_string(valuesv).c_str());
+    cerr << "Graphing a variable of type Vector\n";
+    // loop over all the materials in the mat_list
+    for(int i = 0; i < mat_list.size(); i++) {
+      string data;
+      if (!is_cached(varname+mat_list[i]+currentNode_str(),data)) {
+	// query the value and then cache it
+	vector< Vector > values;
+	int matl = atoi(mat_list[i].c_str());
+	archive->query(values, varname, matl, currentNode.id, times[0], times[times.size()-1]);
+	cerr << "Received data.  Size of data = " << values.size() << endl;
+	data = vector_to_string(values,"length");
+	material_data_list[varname+mat_list[i]+currentNode_str()] = data;
+      }
+      else {
+	// use cached value that was put into data by is_cached
+      }
+      TCL::execute(id+" set_var_val "+data.c_str());
+    }
     break;
   case TypeDescription::Matrix3:
-    cerr << "Graphing a Matrix3\n";
-    archive->query(valuesm, varname, matl, currentNode, times[0], times[times.size()-1]);
-    cerr << "Received data.  Size of data = " << valuesm.size() << endl;
-    TCL::execute(id + " graph_data " + index.c_str() + material.c_str() + " " +
-		 varname.c_str()+" "+vector_to_string(valuesm).c_str());
+    cerr << "Graphing a variable of type Matrix3\n";
+    // loop over all the materials in the mat_list
+    for(int i = 0; i < mat_list.size(); i++) {
+      string data;
+      if (!is_cached(varname+mat_list[i]+currentNode_str(),data)) {
+	// query the value and then cache it
+	vector< Matrix3 > values;
+	int matl = atoi(mat_list[i].c_str());
+	archive->query(values, varname, matl, currentNode.id, times[0], times[times.size()-1]);
+	cerr << "Received data.  Size of data = " << values.size() << endl;
+	data = vector_to_string(values,"Norm");
+	material_data_list[varname+mat_list[i]+currentNode_str()] = data;
+      }
+      else {
+	// use cached value that was put into data by is_cached
+      }
+      TCL::execute(id+" set_var_val "+data.c_str());
+    }
     break;
   case TypeDescription::Point:
     cerr << "Error trying to graph a Point.  No valid representation for Points for 2d graph.\n";
-    //archive->query(valuesp, varname, matl, currentNode, times[0], times[times.size()-1]);
-    //cerr << "Received data.  Size of data = " << valuesp.size() << endl;
     break;
   default:
     cerr<<"Unknown var type\n";
-  }// else { Tensor,Other}
+    }// else { Tensor,Other}
+  TCL::execute(id+" graph_data "+index.c_str()+" "+varname.c_str()+" "+
+	       vector_to_string(mat_list).c_str());
   
 }
 
@@ -668,9 +820,40 @@ void GridVisualizer::geom_pick(GeomPick* pick, void* userdata, GeomObj* picked) 
   cerr << "User data = " << userdata << endl;
 #endif
   IntVector id;
-  if ( picked->getId( id ) ) {
-    cerr<<"Id = "<< id <<endl;
-    currentNode = id;
+  int level;
+  if ( picked->getId( id ) && picked->getId(level)) {
+    cerr<<"Id = "<< id << " Level = " << level << endl;
+    currentNode.id = id;
+    index_l.set(level);
+    index_x.set(currentNode.id.x());
+    index_y.set(currentNode.id.y());
+    index_z.set(currentNode.id.z());
+    // add the selected sphere to the geometry
+    Point p;
+    int nu,nv;
+    double rad = radius.get() * 1.5;
+    getnunv(&nu,&nv);
+    switch (var_orientation.get()) {
+    case NC_VAR:
+      //p = patch->nodePosition(currentNode);
+      break;
+    case CC_VAR:
+      //p = patch->cellPosition(currentNode);
+      break;
+    case FC_VAR:
+      // not implemented
+      break;
+    }
+    if (!node_selected) {
+      selected_sphere = scinew GeomSphere(p,rad,nu,nv,
+					  currentNode.level,currentNode.id);
+      GeomPick* pick = scinew GeomPick(scinew GeomMaterial(selected_sphere, getColor("green",GRID_COLOR)),this);
+      ogeom->addObj(pick,"Selected Node");
+      node_selected = true;
+    }
+    else {
+      //seleted_sphere->move(p);
+    }
   }
   else
     cerr<<"Not getting the correct data\n";
@@ -681,6 +864,12 @@ void GridVisualizer::geom_pick(GeomPick* pick, void* userdata, GeomObj* picked) 
 
 //
 // $Log$
+// Revision 1.5  2000/09/22 22:17:41  bigler
+// Added support to graph multiple materials in one graph.
+// Currently only one graph per variable, but that could change.
+// The code is kind of rough looking, but I will fix it up once I
+// complete all of my enhancements.
+//
 // Revision 1.4  2000/08/22 19:14:47  bigler
 // Added graphing of NCvar and CCvar variables accross time for selected node.
 // Can now also visualize cell centers.
