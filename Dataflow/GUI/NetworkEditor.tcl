@@ -505,11 +505,12 @@ proc itemDrag {c x y} {
 
 proc popupSaveMenu {} {
     set types {
-	{{Uintah Scripts Files} {.uin} }
+	{{SCIRun Net} {.net} }
+	{{Uintah Script} {.uin} }
 	{{Dataflow Script} {.sr} }
 	{{Other} { * } }
     } 
-    set netedit_savefile [ tk_getSaveFile -defaultextension {.uin} \
+    set netedit_savefile [ tk_getSaveFile -defaultextension {.net} \
 			       -filetypes $types ]
 
     if { $netedit_savefile != "" } {
@@ -521,7 +522,8 @@ proc popupSaveMenu {} {
 proc popupLoadMenu {} {
     global netedit
     set types {
-	{{Uintah Scripts Files} {.uin} }
+	{{SCIRun Net} {.net} }
+	{{Uintah Script} {.uin} }
 	{{Dataflow Script} {.sr} }
 	{{Other} { * } }
     } 
