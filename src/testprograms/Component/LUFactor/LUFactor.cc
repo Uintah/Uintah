@@ -28,16 +28,18 @@
  *  Copyright (C) 2002 U of U
  */
 
-#include <iostream>
 #include <stdlib.h>
-#include <algo.h>
+
+#include <iostream>
+#include <algorithm>
+
 #include <Core/CCA/Component/PIDL/PIDL.h>
 #include <Core/CCA/Component/PIDL/MxNArrayRep.h>
 #include <Core/CCA/Component/PIDL/MalformedURL.h>
+#include <Core/Thread/Time.h>
 
 #include <testprograms/Component/LUFactor/LUFactor_impl.h>
 #include <testprograms/Component/LUFactor/LUFactor_sidl.h>
-#include <Core/Thread/Time.h>
 
 
 #define SIZE 5               
