@@ -56,9 +56,7 @@ public:
     int last_y_max;
     int last_z_max;
     ClipField(const clString& id);
-    ClipField(const ClipField&, int deep);
     virtual ~ClipField();
-    virtual Module* clone(int deep);
     virtual void execute();
     ScalarFieldHandle fldHandle;
     ScalarFieldRGBase* osf;
@@ -82,21 +80,8 @@ ClipField::ClipField(const clString& id)
     first_time=1;
 }
 
-ClipField::ClipField(const ClipField& copy, int deep)
-: Module(copy, deep),
-  x_min("x_min", id, this),y_min("y_min", id, this),z_min("z_min", id, this), 
-  x_max("x_max", id, this),y_max("y_max", id, this),z_max("z_max", id, this),
-  sameInput("sameInput", id, this)
-{
-}
-
 ClipField::~ClipField()
 {
-}
-
-Module* ClipField::clone(int deep)
-{
-    return new ClipField(*this, deep);
 }
 
 void ClipField::execute()
@@ -200,6 +185,15 @@ void ClipField::execute()
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:19:38  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:26  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

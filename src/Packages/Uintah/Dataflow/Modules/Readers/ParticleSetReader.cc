@@ -38,9 +38,7 @@ class ParticleSetReader : public Module {
     clString old_filename;
 public:
     ParticleSetReader(const clString& id);
-    ParticleSetReader(const ParticleSetReader&, int deep=0);
     virtual ~ParticleSetReader();
-    virtual Module* clone(int deep);
     virtual void execute();
 };
 
@@ -56,19 +54,8 @@ ParticleSetReader::ParticleSetReader(const clString& id)
     add_oport(outport);
 }
 
-ParticleSetReader::ParticleSetReader(const ParticleSetReader& copy, int deep)
-: Module(copy, deep), filename("filename", id, this)
-{
-    NOT_FINISHED("ParticleSetReader::ParticleSetReader");
-}
-
 ParticleSetReader::~ParticleSetReader()
 {
-}
-
-Module* ParticleSetReader::clone(int deep)
-{
-    return scinew ParticleSetReader(*this, deep);
 }
 
 #ifdef BROKEN
@@ -119,6 +106,15 @@ void ParticleSetReader::execute()
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:20:24  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:40:13  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

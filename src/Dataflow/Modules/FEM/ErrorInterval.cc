@@ -36,9 +36,7 @@ class ErrorInterval : public Module {
     TCLdouble high;
 public:
     ErrorInterval(const clString& id);
-    ErrorInterval(const ErrorInterval&, int deep);
     virtual ~ErrorInterval();
-    virtual Module* clone(int deep);
     virtual void execute();
 };
 
@@ -58,19 +56,8 @@ ErrorInterval::ErrorInterval(const clString& id)
     add_oport(ocmap);
 }
 
-ErrorInterval::ErrorInterval(const ErrorInterval& copy, int deep)
-: Module(copy, deep), low("low", id, this),
-  high("high", id, this)
-{
-}
-
 ErrorInterval::~ErrorInterval()
 {
-}
-
-Module* ErrorInterval::clone(int deep)
-{
-    return new ErrorInterval(*this, deep);
 }
 
 void ErrorInterval::execute()
@@ -91,6 +78,15 @@ void ErrorInterval::execute()
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:19:37  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:25  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -55,22 +55,8 @@ RescaleColorMap::RescaleColorMap(const clString& id)
     fieldports.add(ifield);
 }
 
-RescaleColorMap::RescaleColorMap(const RescaleColorMap& copy, int deep)
-: Module(copy, deep),
-  isFixed("isFixed", id, this),
-  min("min", id, this ),
-  max("max", id, this)
-{
-}
-
 RescaleColorMap::~RescaleColorMap()
 {
-}
-
-Module* 
-RescaleColorMap::clone(int deep)
-{
-    return scinew RescaleColorMap(*this, deep);
 }
 
 void
@@ -129,6 +115,15 @@ RescaleColorMap::connection(ConnectionMode mode, int which_port, int)
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:20:10  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:53  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

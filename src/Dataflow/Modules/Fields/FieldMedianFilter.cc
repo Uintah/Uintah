@@ -33,7 +33,7 @@ using namespace SCICore::TclInterface;
 using namespace SCICore::GeomSpace;
 
 class QNode {
-    inline int isequal(const QNode& t) const {return 0;}
+    inline int isequal(const QNode&) const {return 0;}
 };
 
 class FieldMedianFilter : public Module {
@@ -47,10 +47,8 @@ class FieldMedianFilter : public Module {
     int genIFld;
 public:
     FieldMedianFilter(const clString& id);
-    FieldMedianFilter(const FieldMedianFilter&, int deep);
     void filter(int ksize);
     virtual ~FieldMedianFilter();
-    virtual Module* clone(int deep);
     virtual void execute();
 };
 
@@ -71,18 +69,8 @@ FieldMedianFilter::FieldMedianFilter(const clString& id)
     genIFld=lastKernel=-1;
 }
 
-FieldMedianFilter::FieldMedianFilter(const FieldMedianFilter& copy, int deep)
-: Module(copy, deep), kernel("kernel", id, this)
-{
-}
-
 FieldMedianFilter::~FieldMedianFilter()
 {
-}
-
-Module* FieldMedianFilter::clone(int deep)
-{
-    return new FieldMedianFilter(*this, deep);
 }
 
 inline int ucharCompare(const void* first, const void* second) {uchar f=*((const uchar *)first); uchar s=*((const uchar *)second); if (f<s) return -1; else if (f==s) return 0; else return 1;}
@@ -151,6 +139,15 @@ void FieldMedianFilter::execute() {
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:19:39  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:27  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -40,9 +40,7 @@ class MergeTensor : public Module {
     VectorFieldOPort* outJ;
 public:
     MergeTensor(const clString& id);
-    MergeTensor(const MergeTensor&, int deep);
     virtual ~MergeTensor();
-    virtual Module* clone(int deep);
     virtual void execute();
 };
 
@@ -72,18 +70,8 @@ MergeTensor::MergeTensor(const clString& id)
     add_oport(outJ);
 }
 
-MergeTensor::MergeTensor(const MergeTensor& copy, int deep)
-: Module(copy, deep)
-{
-}
-
 MergeTensor::~MergeTensor()
 {
-}
-
-Module* MergeTensor::clone(int deep)
-{
-    return new MergeTensor(*this, deep);
 }
 
 void MergeTensor::execute()
@@ -164,6 +152,15 @@ void MergeTensor::execute()
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:19:41  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:29  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

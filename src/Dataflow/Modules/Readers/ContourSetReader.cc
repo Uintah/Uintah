@@ -35,9 +35,7 @@ class ContourSetReader : public Module {
     clString old_filename;
 public:
     ContourSetReader(const clString& id);
-    ContourSetReader(const ContourSetReader&, int deep=0);
     virtual ~ContourSetReader();
-    virtual Module* clone(int deep);
     virtual void execute();
 };
 
@@ -53,19 +51,8 @@ ContourSetReader::ContourSetReader(const clString& id)
     add_oport(outport);
 }
 
-ContourSetReader::ContourSetReader(const ContourSetReader& copy, int deep)
-: Module(copy, deep), filename("filename", id, this)
-{
-    NOT_FINISHED("ContourSetReader::ContourSetReader");
-}
-
 ContourSetReader::~ContourSetReader()
 {
-}
-
-Module* ContourSetReader::clone(int deep)
-{
-    return scinew ContourSetReader(*this, deep);
 }
 
 #ifdef BROKEN
@@ -116,6 +103,15 @@ void ContourSetReader::execute()
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:19:47  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:33  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -127,9 +127,7 @@ class IsoMask : public Module {
     Point v[9];
 public:
     IsoMask(const clString& id);
-    IsoMask(const IsoMask&, int deep);
     virtual ~IsoMask();
-    virtual Module* clone(int deep);
     virtual void execute();
 };
 
@@ -202,22 +200,8 @@ IsoMask::IsoMask(const clString& id)
     init=1;
 }
 
-IsoMask::IsoMask(const IsoMask& copy, int deep)
-: Module(copy, deep), seed_point("seed_point", id, this),
-  have_seedpoint("have_seedpoint", id, this), isoval("isoval", id, this),
-  do_3dwidget("do_3dwidget", id, this), emit_surface("emit_surface", id, this),
-  show_progress("show_progress", id, this)
-{
-    NOT_FINISHED("IsoMask::IsoMask");
-}
-
 IsoMask::~IsoMask()
 {
-}
-
-Module* IsoMask::clone(int deep)
-{
-    return scinew IsoMask(*this, deep);
 }
 
 void IsoMask::execute()
@@ -1847,6 +1831,15 @@ void IsoMask::widget_moved(int last)
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:20:08  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:37:50  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

@@ -405,7 +405,8 @@ void SurfTree::distance(const Point &p, int &have_hit, double &distBest,
     }
 }
 
-int SurfTree::inside(const Point &p, int &component) {
+int SurfTree::inside(const Point &p, int &/*component*/)
+{
     if (!valid_bboxes)
 	compute_bboxes();
 
@@ -467,7 +468,8 @@ void SurfTree::get_surfnodes(Array1<NodeHandle> &n)
     }
 }
 
-void SurfTree::set_surfnodes(const Array1<NodeHandle> &n) {
+void SurfTree::set_surfnodes(const Array1<NodeHandle> &/*n*/)
+{
     NOT_FINISHED("SurfTree::set_surfnodes");
 }
 
@@ -515,7 +517,8 @@ TopoSurfTree* SurfTree::toTopoSurfTree() {
     return tst;
 }
 
-void SurfTree::set_surfnodes(const Array1<NodeHandle>&n, clString name) {
+void SurfTree::set_surfnodes(const Array1<NodeHandle>&/*n*/, clString /*name*/)
+{
     NOT_FINISHED("SurfTree::set_surfnodes");
 }
 
@@ -588,6 +591,15 @@ void Pio(Piostream& stream, NodeInfo& node)
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:20:19  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:38:55  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.

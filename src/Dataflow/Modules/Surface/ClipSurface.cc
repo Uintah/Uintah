@@ -56,9 +56,7 @@ class ClipSurface : public Module {
     int generation;
 public:
     ClipSurface(const clString& id);
-    ClipSurface(const ClipSurface&, int deep);
     virtual ~ClipSurface();
-    virtual Module* clone(int deep);
     virtual void execute();
 };
 
@@ -91,11 +89,6 @@ ClipSurface::ClipSurface(const ClipSurface& copy, int deep)
 
 ClipSurface::~ClipSurface()
 {
-}
-
-Module* ClipSurface::clone(int deep)
-{
-    return new ClipSurface(*this, deep);
 }
 
 void ClipSurface::execute()
@@ -170,6 +163,15 @@ void ClipSurface::execute()
 
 //
 // $Log$
+// Revision 1.2  1999/08/18 20:19:55  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.1  1999/07/27 16:57:56  mcq
 // Initial commit
 //

@@ -77,9 +77,7 @@ class PartToGeom : public Module {
     void *cbClass;
  public:
     PartToGeom(const clString& id);
-    PartToGeom(const PartToGeom&, int deep);
     virtual ~PartToGeom();
-    virtual Module* clone(int deep);
     virtual void geom_pick(GeomPick*, void*, int);
 
     virtual void execute();
@@ -117,25 +115,8 @@ PartToGeom::PartToGeom(const clString& id)
     
 }
 
-PartToGeom::PartToGeom(const PartToGeom&copy, int deep)
-  : Module(copy, deep), current_time("current_time", id, this),
-    radius("radius", id, this), drawspheres("drawspheres", id, this),
-    drawVectors("drawVectors",id,this), length_scale("length_scale", id, this),
-    head_length("head_length", id, this), width_scale("width_scale",id,this),
-    shaft_rad("shaft_rad", id,this),drawcylinders("drawcylinders", id, this),
-    polygons("polygons", id, this), MIN_POLYS(8), MAX_POLYS(400),
-    MIN_NU(4), MAX_NU(20), MIN_NV(2), MAX_NV(20)
-{
-  NOT_FINISHED("PartToGeom::PartToGeom");
-}
-
 PartToGeom::~PartToGeom()
 {
-}
-
-Module* PartToGeom::clone(int deep)
-{
-  return scinew PartToGeom(*this, deep);
 }
 
 void PartToGeom::execute()
@@ -333,6 +314,15 @@ Module* make_PartToGeom( const clString& id ) {
 
 //
 // $Log$
+// Revision 1.3  1999/08/18 20:20:22  sparker
+// Eliminated copy constructor and clone in all modules
+// Added a private copy ctor and a private clone method to Module so
+//  that future modules will not compile until they remvoe the copy ctor
+//  and clone method
+// Added an ASSERTFAIL macro to eliminate the "controlling expression is
+//  constant" warnings.
+// Eliminated other miscellaneous warnings
+//
 // Revision 1.2  1999/08/17 06:40:11  sparker
 // Merged in modifications from PSECore to make this the new "blessed"
 // version of SCIRun/Uintah.
