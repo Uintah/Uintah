@@ -71,6 +71,11 @@ WARNING
       // Insert Documentation Here:
       void initialize(const T& value);
       
+      //////////
+      // Insert Documentation Here:
+      T& operator[](const IntVector& idx) const;
+      
+
       CCVariable<T>& operator=(const CCVariable<T>&);
    private:
    };
@@ -141,10 +146,18 @@ WARNING
 	 std::cerr << "CCVariable::copyRegion!\n";
       }
 
+   template<class T>
+      T& CCVariable<T>::operator[](const IntVector& idx) const {
+	 std::cerr << "CCVariable::operator[]!\n";
+      }
+
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.9  2000/05/15 19:09:43  tan
+// CCVariable<T>::operator[] is needed.
+//
 // Revision 1.8  2000/05/12 18:12:37  sparker
 // Added CCVariableBase.cc to sub.mk
 // Fixed copyPointer and other CCVariable methods - still not implemented
