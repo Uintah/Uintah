@@ -85,7 +85,7 @@ namespace BioPSE
 						 DenseMatrix& S, DenseMatrix& V, DenseMatrix& X, ColumnMatrix& y);
 		DenseMatrix *make_dense(MatrixHandle A);
     		ColumnMatrix *make_column(MatrixHandle A);
-		void TSVD::Conv(Array1<double> &sp, ColumnMatrix& coef, Array1<double> &basis, int nLambda);  
+		void Conv(Array1<double> &sp, ColumnMatrix& coef, Array1<double> &basis, int nLambda);  
   		void FindCorner(Array1<double>  &rho, Array1<double>  &eta, ColumnMatrix *kapa, int *lambda_index, int nLambda);
 		
   };
@@ -581,6 +581,7 @@ namespace BioPSE
 
 		error("S matrix dimensions incorrect.");
 		return;	
+#if 0
 		Method=GSVD_method;
 		
 		/*if(!iportX->get(hMatrixX)) 
@@ -595,7 +596,7 @@ namespace BioPSE
 				break;
 		if(i>=0)
 			rank=matrixS->nrows()-i;
-
+#endif
 	}
 	else
 	{
