@@ -37,12 +37,12 @@ using CIA::Object;
 
 void Interface::addReference()
 {
-  Object::addReference();
+  PIDL::Object::addReference();
 }
 
 void Interface::deleteReference()
 {
-  Object::deleteReference();
+  PIDL::Object::deleteReference();
 }
 
 Class::pointer Interface::getClass()
