@@ -223,9 +223,9 @@ void ParticleVis::execute()
   if( auto_radius.get() ){
     BBox spatial_box;
     IntVector low, hi, range;
-    part->get_level()->findIndexRange( low, hi );
+    pset->getLevel()->findIndexRange( low, hi );
     range = hi -low;
-    part->get_level()->getSpatialRange(spatial_box);
+    pset->getLevel()->getSpatialRange(spatial_box);
     Vector srange = spatial_box.max() - spatial_box.min();
     double max_srange = ((srange.x() > srange.y() && srange.x() > srange.z()) ?
 		     srange.x():((srange.y() > srange.z()) ?
