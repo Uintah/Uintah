@@ -2360,6 +2360,8 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	rho_frac_min = .1;
       }
       const Level* lvl = patch->getLevel();
+      IntVector pbcs = lvl->getPeriodicBoundaries();
+      int pbcsl = pbcs.x() + pbcs.y() + pbcs.z();
 
       // Loop over particles
       for(ParticleSubset::iterator iter = pset->begin();
@@ -2424,7 +2426,20 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 	CMV += pvelocitynew[idx]*pmass[idx];
       }
 
-      if(combustion_problem){  // Delete particles based on various criteria
+      // Delete particles that have left the domain if not using periodic BCs
+      if(pbcsl == 0){
+        for(ParticleSubset::iterator iter  = pset->begin();
+                                     iter != pset->end(); iter++){
+          particleIndex idx = *iter;
+          bool pointInLevel = lvl->containsPointInRealCells(pxnew[idx]);
+          if(!pointInLevel){
+            delset->addParticle(idx);
+          }
+        }
+      }
+
+      if(combustion_problem){
+       // Delete particles based on mass or velocity
        if(m==RMI){
         for(ParticleSubset::iterator iter  = pset->begin();
                                      iter != pset->end(); iter++){
@@ -2432,16 +2447,6 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           bool pointInLevel = lvl->containsPointInRealCells(pxnew[idx]);
           if(pmassNew[idx] <= d_min_part_mass || !pointInLevel ||
              pvelocitynew[idx].length() > d_max_vel){
-            delset->addParticle(idx);
-          }
-        }
-       }
-       else{
-        for(ParticleSubset::iterator iter  = pset->begin();
-                                     iter != pset->end(); iter++){
-          particleIndex idx = *iter;
-          bool pointInLevel = lvl->containsPointInRealCells(pxnew[idx]);
-          if(!pointInLevel){
             delset->addParticle(idx);
           }
         }
