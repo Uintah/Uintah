@@ -394,7 +394,7 @@ DataTransmitter::runRecvingThread(){
       short listPort;
       newAddr.port=ntohs(their_addr.sin_port);
       recvall(new_fd, &(newAddr.port), sizeof(short));
-      cerr<<"Done register port "<<newAddr.port<<endl;
+      //cerr<<"Done register port "<<newAddr.port<<endl;
       sockmap_mutex->lock();
       sockmap[newAddr]=new_fd;
       sockmap_mutex->unlock();
