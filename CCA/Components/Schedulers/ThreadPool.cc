@@ -14,6 +14,7 @@
 #include <Core/Util/DebugStream.h>
 
 #include <iostream>
+#include <sstream>
 #include <stdio.h>
 
 using std::cerr;
