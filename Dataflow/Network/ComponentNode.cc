@@ -1051,7 +1051,7 @@ void WriteComponentNodeToFile(component_node* n, const char* filename)
   o << "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" << endl;
   o << "<!DOCTYPE component SYSTEM \""
        "../../../../../doc/component.dtd\">" << endl;
-  o << "<?xml-stylesheet href=\"../../../../../doc/component.xsl\""
+  o << "<?xml-stylesheet href=\"../../../../../doc/package-component.xsl\""
        " type=\"text/xsl\"?>" << endl;
   o << "<?cocoon-process type=\"xslt\"?>" << endl << endl;
 
