@@ -1917,6 +1917,30 @@ void ICE::computeDelPressAndUpdatePressCC(const ProcessorGroup*,
     cell faces for every cell in the computational domain and a single 
     layer of ghost cells. 
   ---------------------------------------------------------------------  */
+
+template <class T> void ICE::computePressFace(int& numMatls,CellIterator iter, 
+					      IntVector adj_offset,
+			   StaticArray<constCCVariable<double> >& rho_CC,
+					     constCCVariable<double>& press_CC,
+					      T& press_FC)
+{
+
+  for(;!iter.done(); iter++){
+    IntVector c = *iter;
+    IntVector adj = c + adj_offset; 
+    double sum_rho     = 0.0;
+    double sum_rho_adj = 0.0;
+    for(int m = 0; m < numMatls; m++) {
+      sum_rho      += rho_CC[m][c];
+      sum_rho_adj  += rho_CC[m][adj];
+    }
+    
+    press_FC[c] = (press_CC[c] * sum_rho_adj + press_CC[adj] * sum_rho)/
+      (sum_rho + sum_rho_adj);
+  }
+
+}
+
 void ICE::computePressFC(const ProcessorGroup*,   
                       const PatchSubset* patches,
                       const MaterialSubset* /*matls*/,
@@ -1930,8 +1954,6 @@ void ICE::computePressFC(const ProcessorGroup*,
          << "\t\t\t\t ICE" << endl;
 
     int numMatls = d_sharedState->getNumMatls();
-    double sum_rho, sum_rho_adj;
-    double A;                                 
 
     StaticArray<constCCVariable<double> > rho_CC(numMatls);
     constCCVariable<double> press_CC;
@@ -1941,14 +1963,11 @@ void ICE::computePressFC(const ProcessorGroup*,
     SFCXVariable<double> pressX_FC;
     SFCYVariable<double> pressY_FC;
     SFCZVariable<double> pressZ_FC;
-    StaticArray<CCVariable<double> > scratch(3); 
+
     new_dw->allocate(pressX_FC,lb->pressX_FCLabel, 0, patch);
     new_dw->allocate(pressY_FC,lb->pressY_FCLabel, 0, patch);
     new_dw->allocate(pressZ_FC,lb->pressZ_FCLabel, 0, patch);
-    
-    for(int dir=0; dir < 3; dir ++) {
-      new_dw->allocate(scratch[dir], lb->scratchLabel, 0, patch);
-    }
+
     vector<IntVector> adj_offset(3);
     adj_offset[0] = IntVector(-1, 0, 0);    // X faces
     adj_offset[1] = IntVector(0, -1, 0);    // Y faces
@@ -1960,37 +1979,19 @@ void ICE::computePressFC(const ProcessorGroup*,
       new_dw->get(rho_CC[m],lb->rho_CCLabel,indx,patch,Ghost::AroundCells,1);
     }
     //__________________________________
-    //  For each face compute something
-    for (int dir= 0; dir < 3; dir++) {
-      for(CellIterator iter=patch->getSFCIterator(dir);!iter.done(); iter++){
-        IntVector cur = *iter;
-        IntVector adj = cur + adj_offset[dir]; 
-        sum_rho     = 0.0;
-        sum_rho_adj = 0.0;
-        for(int m = 0; m < numMatls; m++) {
-          sum_rho      += rho_CC[m][cur];
-          sum_rho_adj  += rho_CC[m][adj];
-        }
+    //  For each face compute the pressure
 
-        A =  (press_CC[cur]/sum_rho) + (press_CC[adj]/sum_rho_adj);
-        scratch[dir][cur] = A/((1/sum_rho)+(1.0/sum_rho_adj));
-      }
-    }
-    //__________________________________
+    computePressFace<SFCXVariable<double> >(numMatls,patch->getSFCXIterator(),
+					    adj_offset[0],rho_CC,press_CC,
+					    pressX_FC);
 
-    //  Extract the different components
-    for(CellIterator iter=patch->getSFCXIterator();!iter.done(); iter++){
-      IntVector cur = *iter;
-      pressX_FC[cur] = scratch[0][cur];   
-    }
-    for(CellIterator iter=patch->getSFCYIterator();!iter.done(); iter++){
-      IntVector cur = *iter;
-      pressY_FC[cur] = scratch[1][cur];   
-    }
-    for(CellIterator iter=patch->getSFCZIterator();!iter.done(); iter++){
-      IntVector cur = *iter;
-      pressZ_FC[cur] = scratch[2][cur];   
-    }
+    computePressFace<SFCYVariable<double> >(numMatls,patch->getSFCYIterator(),
+					    adj_offset[1],rho_CC,press_CC,
+					    pressY_FC);
+
+    computePressFace<SFCZVariable<double> >(numMatls,patch->getSFCZIterator(),
+					    adj_offset[2],rho_CC,press_CC,
+					    pressZ_FC);
 
     new_dw->put(pressX_FC,lb->pressX_FCLabel, 0, patch);
     new_dw->put(pressY_FC,lb->pressY_FCLabel, 0, patch);
@@ -2083,6 +2084,7 @@ void ICE::massExchange(const ProcessorGroup*,
       //__________________________________
       // Find the ICE matl which is the products of reaction
       // dump all the mass into that matl.
+      // Make this faster
       for(int prods = 0; prods < numICEMatls; prods++) {
         ICEMaterial* ice_matl = d_sharedState->getICEMaterial(prods);
 	if (ice_matl->getRxProduct() == Material::product) {
