@@ -1,15 +1,23 @@
+#define CONVERGENCE 1e-6
+#define MAX_ITER 50 
+
+#include <Packages/Uintah/CCA/Components/ICE/NG_NozzleBCs.h>
+#include <Packages/Uintah/Core/Grid/SimulationState.h>
+#include <Packages/Uintah/Core/Grid/CellIterator.h>
+
+#include <Core/Util/DebugStream.h>
+
 #include <string.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#define CONVERGENCE 1e-6
-#define MAX_ITER 50 
-#include <Packages/Uintah/CCA/Components/ICE/NG_NozzleBCs.h>
-#include <Packages/Uintah/Core/Grid/SimulationState.h>
-#include <Packages/Uintah/Core/Grid/CellIterator.h>
-#include <Core/Util/DebugStream.h>
-#include <iostream>
 #include <dirent.h>
+
+#include <iostream>
+
+using namespace Uintah;
+using namespace SCIRun;
+
 static DebugStream cout_doing("NG_DOING_COUT", false);
 static DebugStream cout_dbg("NG_DBG_COUT",     false);
 /*______________________________________________________________________
@@ -76,9 +84,6 @@ __________________________________
 The right state, at point i is simply the state vector at one cell in.
 ______________________________________________________________________*/
 
-using namespace Uintah;
-namespace Uintah {
-
 #define NR_END 1
 #define FREE_ARG char*
 
@@ -101,18 +106,19 @@ double *dvector_nr(long nl, long nh)
 	return v-nl+NR_END;
 }
 
-void free_dvector_nr(double *v, long nl, long nh)
+void free_dvector_nr(double *v, long nl, long /*nh*/)
 /* free a double vector allocated with dvector_nr() */
 {
 	free((FREE_ARG) (v+nl-NR_END));
 }
 //______________________________________________________________________
 //  compute Stagnation properties from curve fits
-void computeStagnationProperties(double &stag_press,
-                                 double &stag_temp,
-                                 double &stag_rho,
-                                 double &time,
-                                 SimulationStateP& sharedState)
+void
+Uintah::computeStagnationProperties(double &stag_press,
+                                    double &stag_temp,
+                                    double &stag_rho,
+                                    double &time,
+                                    SimulationStateP& sharedState)
 {
     //__________________________________
     // constants
@@ -152,13 +158,14 @@ void computeStagnationProperties(double &stag_press,
  Compute the static (temperature, density, velocity)  using isentropic
  relations (gamma = 1.4) and an area ratio = 1.88476 
 ______________________________________________________________________*/
-void  BC_values_using_IsentropicRelations(const double stag_press,
-                                          const double stag_rho,
-                                          const double stag_temp,
-                                          double &static_press,
-                                          double &static_temp,
-                                          double &static_rho,
-                                          double &static_vel)
+void
+Uintah::BC_values_using_IsentropicRelations(const double stag_press,
+                                            const double stag_rho,
+                                            const double stag_temp,
+                                            double &static_press,
+                                            double &static_temp,
+                                            double &static_rho,
+                                            double &static_vel)
 {
   //__________________________________
   //  Isenentrop relations for A/A* = 1.88476
@@ -178,28 +185,28 @@ void  BC_values_using_IsentropicRelations(const double stag_press,
  Function:  p2_p1_ratio--MISC: computes p2/p1           
  This is function is used by the secant method.
 ______________________________________________________________________*/
-  double p2_p1_ratio(
-          double  gamma,
-          double  p4_p1,
-          double  p2_p1_guess,
-          double  a4,
-          double  a1,
-          double  u4,
-          double  u1  )
+double
+Uintah::p2_p1_ratio( double  gamma,
+                     double  p4_p1,
+                     double  p2_p1_guess,
+                     double  a4,
+                     double  a1,
+                     double  u4,
+                     double  u1 )
 {         
-    double  gamma_ratio1, gamma_ratio2,
-            sqroot, exponent, fraction, boxed_quantity;
+  double gamma_ratio1, gamma_ratio2,
+         sqroot, exponent, fraction, boxed_quantity;
          
-    gamma_ratio1    = (gamma + 1.0)/( 2.0 * gamma);
-    sqroot          = sqrt( gamma_ratio1 * (p2_p1_guess - 1.0) + 1.0 );
-    fraction        = (p2_p1_guess - 1.0)/sqroot;
+  gamma_ratio1    = (gamma + 1.0)/( 2.0 * gamma);
+  sqroot          = sqrt( gamma_ratio1 * (p2_p1_guess - 1.0) + 1.0 );
+  fraction        = (p2_p1_guess - 1.0)/sqroot;
+  
+  boxed_quantity  = u4 - u1 - (a1/gamma) * fraction;
 
-    boxed_quantity  = u4 - u1 - (a1/gamma) * fraction;
+  gamma_ratio2    = (gamma - 1.0)/(2.0 * a4);
+  exponent        = -2.0*gamma/(gamma - 1.0);
 
-    gamma_ratio2    = (gamma - 1.0)/(2.0 * a4);
-    exponent        = -2.0*gamma/(gamma - 1.0);
-
-   return p4_p1 - p2_p1_guess * pow( (1.0 + gamma_ratio2 * boxed_quantity), exponent);
+  return p4_p1 - p2_p1_guess * pow( (1.0 + gamma_ratio2 * boxed_quantity), exponent);
 }
 
 
@@ -213,7 +220,8 @@ Implementation Notes:
 Reference:
     Computational GasDynamics by C.B. Laney, 1998, pg 73
 ______________________________________________________________________*/
- void Solve_Riemann_problem(
+void
+Uintah::Solve_Riemann_problem(
         int     qLoLimit,                /* array lower limit                */
         int     qHiLimit,                /* upper limit                      */
         double  diaphragm_location,      /*diaphram location                 */
@@ -263,8 +271,8 @@ ______________________________________________________________________*/
             p2_p1_guess0,
             p2_p1_guess00;
             
-    double  delta,                       /* used by the secant method        */
-            fudge;        
+    double  delta;                       /* used by the secant method        */
+          //fudge;        
     static double p2_p1_guess;
 /*__________________________________
 *   Compute some stuff
@@ -279,7 +287,7 @@ ______________________________________________________________________*/
       p2_p1_guess00   = 0.05* p4_p1;
     }
     iter            = 0;    
-    fudge           = 0.99;
+    //fudge           = 0.99;
 /*______________________________________________________________________
 *   Use the secant method to solve for pressure ratio across the shock
 *                   p2_p1
@@ -423,22 +431,23 @@ ______________________________________________________________________*/
 #endif    
 }
 //______________________________________________________________________
-void solveRiemannProblemInterface( const double t_final,
-                                   const double Length, int ncells,
-                                   const double u4, const double p4, const double rho4,                                   
-                                   const double u1, const double p1, const double rho1,
-                                   const double diaphragm_location,
-                                   const int probeCell,
-                                   NG_BC_vars* ng,
-                                   double &press,    // at probe location
-                                   double &Temp,
-                                   double &rho,
-                                   double &vel)
+void
+Uintah::solveRiemannProblemInterface( const double t_final,
+                                      const double Length, int ncells,
+                                      const double u4, const double p4, const double rho4,
+                                      const double u1, const double p1, const double rho1,
+                                      const double diaphragm_location,
+                                      const int probeCell,
+                                      NG_BC_vars* ng,
+                                      double &press,    // at probe location
+                                      double &Temp,
+                                      double &rho,
+                                      double &vel)
 {
-     int    qLoLimit, qHiLimit, Q_MAX_LIM,i;                                         
-    double  a1,     a4,
-            *u_Rieman, *a_Rieman,*p_Rieman,*rho_Rieman,*T_Rieman,
-            R, gamma, delQ;
+  int    qLoLimit, qHiLimit, Q_MAX_LIM,i;                                         
+  double a1,     a4,
+         *u_Rieman, *a_Rieman,*p_Rieman,*rho_Rieman,*T_Rieman,
+         R, gamma, delQ;
   //__________________________________
   //Parse arguments                
 //  cout_dbg << " p4 " << p4 << " u4 " << u4 << " rho4 " << rho4
@@ -532,16 +541,17 @@ void solveRiemannProblemInterface( const double t_final,
 }
 
 //______________________________________________________________________
-void setNGCVelocity_BC(const Patch* patch,
-                       const Patch::FaceType face,
-                       CCVariable<Vector>& q_CC,
-                       const string& var_desc,
-                       const vector<IntVector> bound,
-                       const string& bc_kind,
+void
+Uintah::setNGCVelocity_BC(const Patch* patch,
+                          const Patch::FaceType face,
+                          CCVariable<Vector>& q_CC,
+                          const string& var_desc,
+                          const vector<IntVector> bound,
+                          const string& bc_kind,
 			  const int mat_id,
 			  const int child,
-                       SimulationStateP& sharedState,
-                       NG_BC_vars* ng)
+                          SimulationStateP& sharedState,
+                          NG_BC_vars* ng)
 {
   if (var_desc == "Velocity" && bc_kind == "Custom") {
     cout_doing << "Doing setNGCVelocity_BC " << patch->getID() << endl;
@@ -562,10 +572,11 @@ void setNGCVelocity_BC(const Patch* patch,
 
 //______________________________________________________________________
 // add the requires needed by each of the various tasks
-void addRequires_NGNozzle(Task* t, 
-                          const string& where,
-                          ICELabel* lb,
-                          const MaterialSubset* ice_matls)
+void
+Uintah::addRequires_NGNozzle(Task* t, 
+                             const string& where,
+                             ICELabel* lb,
+                             const MaterialSubset* ice_matls)
 {
   cout_doing<< "Doing addRequires_NGNozzle: \t\t" <<t->getName()
             << " " << where << endl;
@@ -608,13 +619,14 @@ void addRequires_NGNozzle(Task* t,
 
 //______________________________________________________________________
 // get the necessary data an push it into the NG_vars struct
-void getVars_for_NGNozzle( DataWarehouse* old_dw,
-                            DataWarehouse* new_dw,
-                            ICELabel* lb,
-                            const Patch* patch,
-                            int indx,
-                            const string& where,
-                            NG_BC_vars* ng)
+void
+Uintah::getVars_for_NGNozzle( DataWarehouse* old_dw,
+                              DataWarehouse* new_dw,
+                              ICELabel* lb,
+                              const Patch* patch,
+                              int indx,
+                              const string& where,
+                              NG_BC_vars* ng)
 {
 
   cout_doing <<  "Doing getVars_for_NGNozzle Patch:" << patch->getID() 
@@ -693,7 +705,8 @@ void getVars_for_NGNozzle( DataWarehouse* old_dw,
  Function~  using_NG_hack
  Purpose~   returns if we are using the Northrup Grumman BC hack on any face,
  ---------------------------------------------------------------------  */
-bool using_NG_hack(const ProblemSpecP& prob_spec)
+bool
+Uintah::using_NG_hack(const ProblemSpecP& prob_spec)
 {
   //__________________________________
   // search the BoundaryConditions problem spec
@@ -722,6 +735,7 @@ bool using_NG_hack(const ProblemSpecP& prob_spec)
   return usingNG;
 }
 
-}
+
+
 
 
