@@ -57,7 +57,7 @@ ImageMaterial::~ImageMaterial()
 {
 }
 
-Color interp_color(Array2<Color>& image,
+Color ImageMaterial::interp_color(Array2<Color>& image,
 				  double u, double v)
 {
     u *= (image.dim1()-1);

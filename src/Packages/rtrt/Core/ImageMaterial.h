@@ -15,7 +15,7 @@ public:
 	Clamp,
 	None
     };
-private:
+protected:
     bool valid_;
 
     double Kd;
@@ -47,6 +47,7 @@ public:
                        double atten, const Color& accumcolor,
                        Context* cx);
     bool valid() { return valid_; }
+    Color interp_color(Array2<Color>& image, double u, double v);
     void set_refl(double r)
       {
 	refl = r;
