@@ -7,9 +7,11 @@ include $(SRCTOP)/scripts/smallso_prologue.mk
 
 SRCDIR   := Uintah/Components/Schedulers
 
-SRCS     += $(SRCDIR)/SingleProcessorScheduler.cc \
-	$(SRCDIR)/MPIScheduler.cc \
-	$(SRCDIR)/OnDemandDataWarehouse.cc
+SRCS     += $(SRCDIR)/MPIScheduler.cc \
+	$(SRCDIR)/OnDemandDataWarehouse.cc \
+	$(SRCDIR)/SingleProcessorScheduler.cc \
+	$(SRCDIR)/SingleProcessorLoadBalancer.cc \
+	$(SRCDIR)/TaskGraph.cc
 
 PSELIBS := Uintah/Grid Uintah/Interface SCICore/Thread Uintah/Parallel \
 	Uintah/Exceptions SCICore/Exceptions SCICore/Util PSECore/XMLUtil
@@ -19,6 +21,11 @@ include $(SRCTOP)/scripts/smallso_epilogue.mk
 
 #
 # $Log$
+# Revision 1.8  2000/06/17 07:04:56  sparker
+# Implemented initial load balancer modules
+# Use ProcessorGroup
+# Implemented TaskGraph - to contain the common scheduling stuff
+#
 # Revision 1.7  2000/06/15 23:14:08  sparker
 # Cleaned up scheduler code
 # Renamed BrainDamagedScheduler to SingleProcessorScheduler

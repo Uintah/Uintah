@@ -19,7 +19,7 @@ namespace Uintah {
 class DataItem;
 class TypeDescription;
 class Patch;
-class ProcessorContext;
+class ProcessorGroup;
 class ScatterRecord;
 
 /**************************************
@@ -53,7 +53,7 @@ class ScatterRecord;
 
 class OnDemandDataWarehouse : public DataWarehouse {
 public:
-   OnDemandDataWarehouse( int MpiRank, int MpiProcesses, int generation );
+   OnDemandDataWarehouse( const ProcessorGroup* myworld, int generation );
    virtual ~OnDemandDataWarehouse();
    
    virtual void setGrid(const GridP&);
@@ -136,14 +136,10 @@ public:
    virtual int findMpiNode( const VarLabel * label,
 			    const Patch   * patch );
 
-   bool isFinalized() const {
-      return d_finalized;
-   }
-   bool exists(const VarLabel*, const Patch*) const;
-
-   void finalize() {
-      d_finalized=true;
-   }
+   virtual bool isFinalized() const;
+   virtual bool exists(const VarLabel*, const Patch*) const;
+   
+   virtual void finalize();
 
    //////////
    // Adds a variable to the save set
@@ -166,11 +162,11 @@ public:
 
 private:
 
-   void scatterParticles(const ProcessorContext*,
+   void scatterParticles(const ProcessorGroup*,
 			 const Patch* patch,
 			 DataWarehouseP& old_dw,
 			 DataWarehouseP& new_dw);
-   void gatherParticles(const ProcessorContext*,
+   void gatherParticles(const ProcessorGroup*,
 			const Patch* patch,
 			DataWarehouseP& old_dw,
 			DataWarehouseP& new_dw);
@@ -234,6 +230,11 @@ private:
 
 //
 // $Log$
+// Revision 1.30  2000/06/17 07:04:54  sparker
+// Implemented initial load balancer modules
+// Use ProcessorGroup
+// Implemented TaskGraph - to contain the common scheduling stuff
+//
 // Revision 1.29  2000/06/16 19:48:55  sparker
 // Eliminated carryForward
 //
