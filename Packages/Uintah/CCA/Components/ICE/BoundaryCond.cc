@@ -1405,55 +1405,65 @@ void ImplicitMatrixBC( CCVariable<Stencil7>& A,
 { 
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
-    switch (face) {
-    case Patch::xplus:
-      for(CellIterator iter = patch->getFaceCellIterator(face); 
-                                               !iter.done(); iter++) { 
-        IntVector c(*iter - IntVector(1,0,0));
-        A[c].e = 0.0;
-      }
-      break;
-    case Patch::xminus:
-      for(CellIterator iter = patch->getFaceCellIterator(face); 
-                                               !iter.done(); iter++) { 
-        IntVector c(*iter + IntVector(1,0,0));
-        A[c].w = 0.0;
-      }
-      break;
-    case Patch::yplus:
-      for(CellIterator iter = patch->getFaceCellIterator(face); 
-                                               !iter.done(); iter++) { 
-        IntVector c(*iter - IntVector(0,1,0));
-        A[c].n = 0.0;
-      }
-      break;
-    case Patch::yminus:
-      for(CellIterator iter = patch->getFaceCellIterator(face); 
-                                               !iter.done(); iter++) { 
-        IntVector c(*iter + IntVector(0,1,0)); 
-        A[c].s = 0.0;
-      }
-      break;
-    case Patch::zplus:
-      for(CellIterator iter = patch->getFaceCellIterator(face); 
-                                               !iter.done(); iter++) { 
-        IntVector c(*iter - IntVector(0,0,1));
-        A[c].t = 0.0;
-      }
-      break;
-    case Patch::zminus:
-      for(CellIterator iter = patch->getFaceCellIterator(face); 
-                                               !iter.done(); iter++) { 
-        IntVector c(*iter + IntVector(0,0,1));
-        A[c].b = 0.0;
-      }
-      break;
-    case Patch::numFaces:
-      break;
-    case Patch::invalidFace:
-      break; 
+      
+    // only apply the BC when on the edge of the computational domain.
+    // skip the faces between neighboring patches  
+    bool onEdgeOfDomain = false;  
+    if (patch->getBCType(face) == Patch::None) {
+      onEdgeOfDomain = true;
     }
-  }
+    
+    if (onEdgeOfDomain){
+      switch (face) {
+      case Patch::xplus:
+        for(CellIterator iter = patch->getFaceCellIterator(face); 
+                                                 !iter.done(); iter++) { 
+          IntVector c(*iter - IntVector(1,0,0));
+          A[c].e = 0.0;
+        }
+        break;
+      case Patch::xminus:
+        for(CellIterator iter = patch->getFaceCellIterator(face); 
+                                                 !iter.done(); iter++) { 
+          IntVector c(*iter + IntVector(1,0,0));
+          A[c].w = 0.0;
+        }
+        break;
+      case Patch::yplus:
+        for(CellIterator iter = patch->getFaceCellIterator(face); 
+                                                 !iter.done(); iter++) { 
+          IntVector c(*iter - IntVector(0,1,0));
+          A[c].n = 0.0;
+        }
+        break;
+      case Patch::yminus:
+        for(CellIterator iter = patch->getFaceCellIterator(face); 
+                                                 !iter.done(); iter++) { 
+          IntVector c(*iter + IntVector(0,1,0)); 
+          A[c].s = 0.0;
+        }
+        break;
+      case Patch::zplus:
+        for(CellIterator iter = patch->getFaceCellIterator(face); 
+                                                 !iter.done(); iter++) { 
+          IntVector c(*iter - IntVector(0,0,1));
+          A[c].t = 0.0;
+        }
+        break;
+      case Patch::zminus:
+        for(CellIterator iter = patch->getFaceCellIterator(face); 
+                                                 !iter.done(); iter++) { 
+          IntVector c(*iter + IntVector(0,0,1));
+          A[c].b = 0.0;
+        }
+        break;
+      case Patch::numFaces:
+        break;
+      case Patch::invalidFace:
+        break; 
+      } 
+    }  // face on edge of domain?
+  }  // face loop
 }
 
 }  // using namespace Uintah
