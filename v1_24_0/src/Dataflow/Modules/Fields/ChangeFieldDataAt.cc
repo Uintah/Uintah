@@ -60,7 +60,7 @@ public:
 
 ChangeFieldDataAt::ChangeFieldDataAt(GuiContext* ctx)
   : Module("ChangeFieldDataAt", ctx, Filter, "FieldsData", "SCIRun"),
-    outputdataat_(ctx->subVar("outputdataat")),
+    outputdataat_(ctx->subVar("output-basis")),
     inputdataat_(ctx->subVar("inputdataat", false)),
     fldname_(ctx->subVar("fldname", false)),
     generation_(-1)
@@ -143,8 +143,8 @@ ChangeFieldDataAt::execute()
   }
 
   int basis_order = fh->basis_order();
-  const string &d = outputdataat_.get();
-  if (d == "Nodes")
+  const string &bstr = outputdataat_.get();
+  if (bstr == "Linear")
   {
     if (fh->mesh()->dimensionality() == 0)
     {
@@ -155,19 +155,11 @@ ChangeFieldDataAt::execute()
       basis_order = 1;
     }
   }
-  else if (d == "Edges" && fh->mesh()->dimensionality() == 1)
+  else if (bstr == "Constant")
   {
     basis_order = 0;
   }
-  else if (d == "Faces" && fh->mesh()->dimensionality() == 2)
-  {
-    basis_order = 0;
-  }
-  else if (d == "Cells" && fh->mesh()->dimensionality() == 3)
-  {
-    basis_order = 0;
-  }
-  else if (d == "None")
+  else if (bstr == "None")
   {
     basis_order = -1;
   }
