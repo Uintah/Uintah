@@ -29,6 +29,7 @@ public:
 
   void setGraph(const TaskGraph* graph);
   void setOrientation(Orientation orientation);
+  void setFontSize(int font_size);
 
   int getOutput() const { return m_fromDV; }
 
@@ -36,7 +37,9 @@ public:
   { return m_selectedEdge; }
 
   const std::list<std::string>& getSelectedNodes() const
-  { return m_selectedNodes; } 
+  { return m_selectedNodes; }
+
+  static bool doExclusion;
 private:
   DaVinci(pid_t pid, int to, int from);
 

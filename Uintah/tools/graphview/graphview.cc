@@ -24,6 +24,12 @@ static const char HELP_MSG[] = {
 "Prune <percent>\n"
 "    Hide nodes and edges with maximum path costs less than <percent>\n"
 "    of the critical path cost.\n"
+"Xclude\n"
+"    Turn exclusion on or off.  When it is on, it not only hides, but\n"
+"    exclude nodes with maximum path costs less than the set pruning\n"
+"    percent.  This is useful for very large graphs.\n"
+"FontSize <size>\n"
+"    Sets the font size in the daVinci graph.\n"
 "Quit\n"
 "    Exit the program.\n\n"
 "Each command can be given using its unique shortcut (indicated by the\n"
@@ -40,30 +46,77 @@ static string udaDir;
 
 static void handle_event(const Event& event);
 static void handle_console_input();
+static bool load_timestep(int timestep, float prune_percent);
+
+void usage(char* prog_name)
+{
+  cerr << "usage: " << prog_name
+       << " <uda directory> [-t <timestep>] [-p <prune percent>] [-x]" << endl;
+  cerr << endl << "Options\n";
+  cerr << "-t <timestep>\n"
+      << "\tLoads the taskgraph from the given timestep directory in the uda\n"
+      << "\tdirectory.\n";
+  cerr << "-p <prune percent>\n"
+      << "\tHide nodes and edges with maximum path costs less than <percent>\n"
+       << "\tof the critical path cost.\n";
+  cerr << "-x\n"
+    << "\tNot just hide, but exclude nodes with maximum path costs less than\n"
+    << "\tthe set pruning percent.  This is useful for very large graphs.\n";
+}
 
 int
 main(int argc, char* argv[])
 {
   if (argc < 2) {
-    cerr << "usage: " << argv[0] << " <uda directory>" << endl;
+    usage(argv[0]);
     return 1;
   }
 
   udaDir = argv[1];
 
-  cout << "Loading timestep 0...\n";
+  int timestep = 0;
+  float prune_percent = 0;
+  bool do_exclusion = false;
   
-  string infile = udaDir + "/t0000";
-  
-  gGraph = TaskGraph::inflate(infile);
-  if (!gGraph) {
-    cerr << "Failed reading task graph, quitting" << endl;
-    return 1;
+  for (int i = 2; i < argc; i++) {
+    if (argv[i][0] == '-') {
+      if (argv[i][1] == 't') {
+	if (++i >= argc) {
+	  usage(argv[0]);
+	  return 1;
+	}
+	timestep = atoi(argv[i]);
+      }
+      else if (argv[i][1] == 'p') {
+	if (++i >= argc) {
+	  usage(argv[0]);
+	  return 1;
+	}
+	prune_percent = atof(argv[i]);
+      }
+      else if (argv[i][1] == 'x')
+	do_exclusion = true;
+      else {
+	cerr << "Invalid option " << argv[i] << endl;
+	usage(argv[0]);
+	return 1;
+      }
+    }
+    else {
+      usage(argv[0]);
+      return 1;
+    }
   }
   
   gDavinci = DaVinci::run();
   gDavinci->setOrientation(DaVinci::BOTTOM_UP);
-  gDavinci->setGraph(gGraph);
+  DaVinci::doExclusion = do_exclusion;
+
+  gGraph = NULL;
+  if (!load_timestep(timestep, prune_percent)) {
+    cerr << "Failed reading task graph, quitting" << endl;
+    return 1;
+  }
 
   cout << HELP_MSG << endl;
   
@@ -170,6 +223,29 @@ handle_event(const Event& event)
   }
 }
 
+static bool load_timestep(int timestep, float prune_percent)
+{
+  ostringstream timedir;
+  timedir << "/t" << setw(4) << setfill('0') << timestep;
+  cout << "Loading timestep " << timestep << "...\n";
+  TaskGraph* oldGraph = gGraph;
+  gGraph = TaskGraph::inflate(udaDir + timedir.str());
+  if (gGraph != NULL) {
+    gGraph->setThresholdPercent(prune_percent);
+    cout << "Sending graph to daVinci...\n";
+    gDavinci->setGraph(gGraph);
+    cout << "Graph sent.\n";
+    delete oldGraph;
+    return true;
+  }
+  else {
+    gGraph = oldGraph;
+    cout << "Use the 'List' command to get a list of timestep directories\n"
+	 << "and find out which timestep numbers are valid.\n";
+    return false;
+  }
+}
+
 static void handle_console_input()
 {
   string cmd;
@@ -192,32 +268,38 @@ static void handle_console_input()
     }
   } break;
 
+  case 'x':
+    // turn exclusion on or off
+    DaVinci::doExclusion = !DaVinci::doExclusion;
+    cout << "Exclusion " << (DaVinci::doExclusion ? "on\n" : "off\n");
+    gDavinci->setGraph(gGraph);
+
+    break;
+
   case 'q':
     gQuit = true;
     break;
 
   case 't': {
     int timestep;
-    ostringstream timedir;
     if (cin.peek() == 't' || cin.peek() == 'T')
       cin.get();
     cin >> timestep;
-    timedir << "/t" << setw(4) << setfill('0') << timestep;
-    cout << "Loading timestep " << timestep << "...\n";
-    TaskGraph* oldGraph = gGraph;
-    gGraph = TaskGraph::inflate(udaDir + timedir.str());
-    if (gGraph != NULL) {
-      gGraph->setThresholdPercent(oldGraph->getThresholdPercent());
-      gDavinci->setGraph(gGraph);
-      delete oldGraph;
-    }
-    else {
-      gGraph = oldGraph;
+
+    if (!load_timestep(timestep, gGraph->getThresholdPercent()))
       cout << "Use the 'List' command to get a list of timestep directories\n"
 	   << "and find out which timestep numbers are valid.\n";
-    }
   } break;
 
+  case 'f': {
+    // set the fontsize in daVinci
+    int font_size;
+    cin >> font_size;
+    cout << "Setting font size to " << font_size << "...\n";
+    gDavinci->setFontSize(font_size);
+    
+  } break;
+  
   case 'l':
     system((string("find ") +  udaDir + " -name 'taskgraph_00000.xml' | sed -e \"s/\\/taskgraph_00000\\.xml//g\" | sed -e \"s/.*\\///g\"").c_str());
     break;
