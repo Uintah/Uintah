@@ -76,6 +76,12 @@ WorkQueue::fill()
 	assignments_.resize(0);
 	return;
     }
+
+    // Since we are using push_back every time we call fill (and make
+    // assignments into the array, we need to remove the existing entries,
+    // otherwise we get more assignments then we should.
+    assignments_.clear();
+    // make sure we only allocate memory once for the vector
     assignments_.reserve(total_assignments_+1);
     int current_assignment=0;
     int current_assignmentsize=(2*total_assignments_)/(num_threads_*(granularity_+1));
