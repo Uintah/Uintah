@@ -51,10 +51,15 @@ TextureGridSpheres::io(SCIRun::Piostream&)
 }
 
 void TextureGridSpheres::shade(Color& result, const Ray& ray,
-			      const HitInfo& hit, int /*depth*/,
+			      const HitInfo& hit, int depth,
 			      double /*atten*/, const Color& /*accumcolor*/,
-			      Context* /*cx*/)
+			      Context* cx)
 {
+  if (dpy->shade_method == 1) {
+    // do diffuse shading
+    lambertianshade(result, surface_color(hit), ray, hit, depth, cx);
+    return;
+  }
   // cell is the index of the sphere which was intersected.  To get to
   // the actuall data you need to simply just add cell to spheres.  To
   // get the number of the sphere which was intersected you need to
