@@ -58,6 +58,7 @@ public:
 		const Patch* patch) const;
    void copyAll(const DWDatabase& from, const VarLabel*, const Patch* patch);
    void print(ostream&);
+   void cleanForeign();
 private:
    typedef vector<VarType*> dataDBtype;
 
@@ -97,6 +98,28 @@ DWDatabase<VarType>::~DWDatabase()
    for(nameDBtype::iterator iter = names.begin();
        iter != names.end(); iter++){
       delete iter->second;
+   }
+}
+
+template<class VarType>
+void
+DWDatabase<VarType>::cleanForeign()
+{
+   for(nameDBtype::iterator iter = names.begin();
+       iter != names.end(); iter++){
+      NameRecord* nr = iter->second;
+      for(patchDBtype::iterator iter = nr->patches.begin();
+	  iter != nr->patches.end(); iter++){
+	 PatchRecord* pr = iter->second;
+	 for(dataDBtype::iterator iter = pr->vars.begin();
+	     iter != pr->vars.end(); iter++){
+	    VarType* var = *iter;
+	    if(var && var->isForeign()){
+	       delete var;
+	       *iter=0;
+	    }
+	 }
+      }
    }
 }
 
@@ -301,6 +324,9 @@ void DWDatabase<VarType>::print(std::ostream& out)
 
 //
 // $Log$
+// Revision 1.17  2000/10/13 20:46:39  sparker
+// Clean out foreign variables at finalize time
+//
 // Revision 1.16  2000/09/28 23:16:45  jas
 // Added (int) for anything returning the size of a STL component.  Added
 // <algorithm> and using std::find.  Other minor modifications to get
