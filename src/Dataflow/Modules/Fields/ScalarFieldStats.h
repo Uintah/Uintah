@@ -83,8 +83,8 @@ void
 ScalarFieldStatsAlgoT<FIELD, LOC>::execute(FieldHandle field_h,
 					   ScalarFieldStats *sfs)
 {
-  static int old_min = 0;
-  static int old_max = 0;
+  //static int old_min = 0;
+  //static int old_max = 0;
   static bool old_fixed = false;
 
   FIELD *ifield = dynamic_cast<FIELD *>(field_h.get_rep());
