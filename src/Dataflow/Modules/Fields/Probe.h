@@ -69,7 +69,8 @@ ProbeLocateAlgoT<MESH>::execute(MeshHandle mesh_h,
   MESH *mesh = dynamic_cast<MESH *>(mesh_h.get_rep());
 
   {
-    typename MESH::Node::index_type index = 0;
+    typename MESH::Node::index_type index;
+//    typename MESH::Node::index_type index = 0;
     bool found_p = true;
     if (!mesh->locate(index, p))
     {
@@ -162,7 +163,8 @@ ProbeLocateAlgoT<MESH>::execute(MeshHandle mesh_h,
   }
 
   {
-    typename MESH::Cell::index_type index = 0;
+    typename MESH::Cell::index_type index;
+//    typename MESH::Cell::index_type index = 0;
     bool found_p = true;
     if (!mesh->locate(index, p))
     {
