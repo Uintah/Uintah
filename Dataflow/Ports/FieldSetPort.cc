@@ -23,7 +23,7 @@ PSECORESHARE OPort* make_FieldSetOPort(Module* module, const clString& name) {
 }
 
 template<> clString SimpleIPort<FieldSetHandle>::port_type("FieldSet");
-template<> clString SimpleIPort<FieldSetHandle>::port_color("dark yellow");
+template<> clString SimpleIPort<FieldSetHandle>::port_color("orange");
 
 } // End namespace SCIRun
 
