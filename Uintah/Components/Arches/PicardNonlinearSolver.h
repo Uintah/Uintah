@@ -49,6 +49,7 @@ class ScalarSolver;
 class TurbulenceModel;
 class Properties;
 class BoundaryCondition;
+class PhysicalConstants;
 const double MACHINEPRECISSION = 14.0; //used to compute residual
 class PicardNonlinearSolver:
 public NonlinearSolver
@@ -59,7 +60,8 @@ public:
   ////////////////////////////////////////////////////////////////////////
   //
   PicardNonlinearSolver(Properties& props, BoundaryCondition& bc,
-			TurbulenceModel& turbModel);
+			TurbulenceModel& turbModel, 
+			PhysicalConstants& physConst);
 
 
 
@@ -74,7 +76,8 @@ public:
   // The code returns 0 if there are no errors and
   // 1 if there is a nonlinear failure.
   //    [in] data User data needed for solve 
-  virtual int nonlinearSolve(const LevelP&, SchedulerP& sched,
+  virtual int nonlinearSolve(double time, double deltat, const LevelP&,
+			     SchedulerP& sched,
 			     const DataWarehouseP& old_dw,
 			     DataWarehouseP& new_dw);
   
@@ -82,7 +85,7 @@ public:
   void computeResidual(const LevelP&, SchedulerP& sched,
 		       const DataWarehouseP& old_dw,
 		       DataWarehouseP& new_dw);
-  void scheduler_initialize(const LevelP&, SchedulerP& sched,
+  void sched_initialize(const LevelP&, SchedulerP& sched,
 			    const DataWarehouseP& old_dw,
 			    DataWarehouseP& new_dw);
   
@@ -94,8 +97,8 @@ private:
 		  DataWarehouseP& new_dw);
   // Total number of nonlinear iterates
   int d_nonlinear_its;
-  // nonlinear residual
-  double d_residual;
+  // nonlinear residual tolerance
+  double d_resTol;
     
   // Pressure Eqn Solver
   PressureSolver* d_pressSolver;
@@ -105,7 +108,8 @@ private:
 
   // Scalar solver
   ScalarSolver* d_scalarSolver;
-
+  // physcial constatns
+  PhysicalConstants* d_physicalConsts;
   // properties...solves density, temperature and specie concentrations
   Properties* d_props;
   

@@ -4,6 +4,7 @@ static char *id="@(#) $Id$";
 #include <Uintah/Components/Arches/Arches.h>
 #include <Uintah/Components/Arches/PicardNonlinearSolver.h>
 #if 0
+#include <Uintah/Components/Arches/PhysicalConstants.h>
 #include <Uintah/Components/Arches/SmagorinskyModel.h>
 #include <Uintah/Components/Arches/BoundaryCondition.h>
 #include <Uintah/Components/Arches/Properties.h>
@@ -55,14 +56,14 @@ void Arches::problemSetup(const ProblemSpecP& params, GridP&,
   db->require("nonlinear_solver", nlSolver);
   if(nlSolver == "picard")
     d_nlSolver = new PicardNonlinearSolver(d_props, d_boundaryCondition,
-					   d_turbModel);
+					   d_turbModel, d_physicalConsts);
   else
     throw InvalidValue("Nonlinear solver not supported: "+nlSolver, db);
 
   //d_nlSolver->problemSetup(db, dw); /* 2 params ? */
   d_nlSolver->problemSetup(db);
 #else
-  NOT_FINISHED("Arches::probemSetup");
+  NOT_FINISHED("Arches::problemSetup");
 #endif
 }
 #if 0
@@ -91,22 +92,80 @@ void Arches::timeStep(double time, double dt,
 	      const LevelP& level, SchedulerP& sched,
 	      const DataWarehouseP& old_dw, DataWarehouseP& new_dw)
 {
-  int error_code = d_nlSolver->nonlinearSolve(level, sched, old_dw, new_dw);
-   /*
-    * if the solver works then put thecomputed values in
-    * the database.
-    */
-   // not sure if this is the correct way to do it
-   // we need temp pressure, velocity and scalar vars
-   //   new_dw->put(CCVariable<double>(pressure), "pressure");
-
+  int error_code = d_nlSolver->nonlinearSolve(time, dt, level, 
+					      sched, old_dw, new_dw);
+  if (!error_code) {
+    old_dw = new_dw;
+  }
+  else {
+    cerr << "Nonlinear Solver didn't converge" << endl;
+  }
 }
+
+void Arches::sched_paramInit(const LevelP& level,
+			     SchedulerP& sched, DataWarehouseP& dw)
+{
+    for(Level::const_regionIterator iter=level->regionsBegin();
+      iter != level->regionsEnd(); iter++){
+    const Region* region=*iter;
+    {
+      Task* tsk = new Task("Arches::Initialization",
+			   region, dw, this,
+			   Arches::paramInit);
+      tsk->computes(dw, "velocity", region, 0,
+		    FCVariable<Vector>::getTypeDescription());
+      tsk->computes(dw, "pressure", region, 0,
+		    CCVariable<double>::getTypeDescription());
+      tsk->computes(dw, "scalars", region, 0,
+		    CCVariable<Vector>::getTypeDescription());
+      tsk->computes(dw, "density", region, 0,
+		    CCVariable<double>::getTypeDescription());
+      tsk->computes(dw, "viscosity", region, 0,
+		    CCVariable<double>::getTypeDescription());
+      sched->addTask(tsk);
+    }
+
+  }
+}
+
+void Arches::paramInit(const ProcessorContext*,
+		       const Region* region,
+		       const DataWarehouseP& old_dw)
+{
+  FCVariable<Vector> velocity;
+  // ....but will only compute for computational domain
+  old_dw->allocate(velocity,"velocity",region, 1);
+  CCVariable<double> pressure;
+  old_dw->allocate(pressure, "pressure", region, 1);
+  CCVariable<Vector> scalar;
+  old_dw->allocate(scalar, "scalar", region, 1);
+  CCVariable<double> density;
+  old_dw->allocate(density, "density", region, 1);
+  CCVariable<double> viscosity;
+  old_dw->allocate(viscosity, "viscosity", region, 1);
+  Array3Index lowIndex = region->getLowIndex();
+  Array3Index highIndex = region->getHighIndex();
+
+  FORT_INIT(velocity, pressure, scalar, density, viscosity,
+	    lowIndex, highIndex);
+  old_dw->put(velocity, "velocity", region, 0);
+  old_dw->put(pressure, "pressure", region, 0);
+  old_dw->put(scalar, "scalar", region, 0);
+  old_dw->put(density, "density", region, 0);
+  old_dw->put(viscosity, "viscosity", region, 0);
+}
+  
+
+
 
 } // end namespace Components
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.15  2000/04/11 19:55:51  rawat
+// modified nonlinear solver for initialization
+//
 // Revision 1.14  2000/04/11 07:10:35  sparker
 // Completing initialization and problem setup
 // Finishing Exception modifications

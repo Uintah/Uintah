@@ -48,6 +48,7 @@ using namespace Uintah::Components;
 using namespace Uintah::Interface;
 #endif
 class TurbulenceModel;
+class PhysicalConstants;
 class Discretization;
 class Source;
 class BoundaryCondition;
@@ -70,7 +71,8 @@ class PressureSolver
   //
   // Default constructor.
    PressureSolver();
-   PressureSolver(TurbulenceModel* turb_model, BoundaryCondition* bndry_cond);
+   PressureSolver(TurbulenceModel* turb_model, BoundaryCondition* bndry_cond,
+		  PhysicalConstants* physConst);
 
   // GROUP: Destructors:
   ////////////////////////////////////////////////////////////////////////
@@ -85,54 +87,45 @@ class PressureSolver
    void problemSetup(const ProblemSpecP& params);
 
    // linearize eqn
-   void buildLinearMatrix(const LevelP& level,
+   void buildLinearMatrix(double time, double delta_t,
+			  const LevelP& level,
 			  SchedulerP& sched,
 			  const DataWarehouseP& old_dw,
 			  DataWarehouseP& new_dw);
  
    ////////////////////////////////////////////////////////////////////////
    // solve linearized pressure equation
-   void solve(const LevelP& level,
+   void solve(double time, double delta_t, 
+	      const LevelP& level,
 	      SchedulerP& sched,
 	      const DataWarehouseP& old_dw,
 	      DataWarehouseP& new_dw);
    
-    void sched_modifyCoeff(const LevelP& level,
-			   SchedulerP& sched,
-			   const DataWarehouseP& old_dw,
-			   DataWarehouseP& new_dw);
-  
- private:
-
-   // functions
-   void calculateResidual(const LevelP& level,
+   void sched_modifyCoeff(const LevelP& level,
 			  SchedulerP& sched,
 			  const DataWarehouseP& old_dw,
 			  DataWarehouseP& new_dw);
+   void sched_normPressure(const LevelP& level,
+			   SchedulerP& sched,
+			   const DataWarehouseP& old_dw,
+			   DataWarehouseP& new_dw);  
+ private:
 
-    void calculateOrderMagnitude(const LevelP& level,
-				 SchedulerP& sched,
-				 const DataWarehouseP& old_dw,
-				 DataWarehouseP& new_dw);
       // Modify coefficients
    void modifyCoeff(const Region* region,
 		    SchedulerP& sched,
 		    const DataWarehouseP& old_dw,
 		    DataWarehouseP& new_dw);
 
-   void underrelaxEqn(const LevelP& level,
-		      SchedulerP& sched,
-		      const DataWarehouseP& old_dw,
-		      DataWarehouseP& new_dw);
-
+   void normPressure(const Region* region,
+		     SchedulerP& sched,
+		     const DataWarehouseP& old_dw,
+		     DataWarehouseP& new_dw);
    // computes coefficients
    Discretization* d_discretize;
 
    // computes sources
    Source* d_source;
-
-   // computes boundary conditions
-   BoundaryCondition* d_boundaryCondition;
 
    // linear solver
    LinearSolver* d_linearSolver;
@@ -141,7 +134,8 @@ class PressureSolver
    TurbulenceModel* d_turbModel;
    // boundary condition
    BoundaryCondition* d_boundaryCondition;
-
+   // physical constants
+   PhysicalConstants* d_physicalConsts;
 // GROUP: Data members.
 
    ////////////////////////////////////////////////////////////////////////
@@ -151,7 +145,7 @@ class PressureSolver
    // underrealaxation parameter, read from an input database
    double d_underrelax;
    //reference points for the solvers
-   int d_ipref, d_jpref, d_kpref;
+   Array3 d_pressRef;
 
 };
 
