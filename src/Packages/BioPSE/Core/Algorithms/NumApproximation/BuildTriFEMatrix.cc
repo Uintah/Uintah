@@ -242,10 +242,8 @@ void BuildTriFEMatrix::build_local_matrix(double lcl_a[3][3],
   if (index_based_) el_cond = tens_[hFieldInt_->value(f_ind)].second.mat_;
   else el_cond = hFieldTensor_->value(f_ind).mat_;
 
-  if(fabs(area) < 1.e-10){
-    for(int i = 0; i<3; i++)
-      for(int j = 0; j<3; j++)
-	lcl_a[i][j]=0;
+  if (fabs(area) < 1.e-10) {
+    memset(lcl_a, 0, sizeof(double) * 9);
     return;
   }
   
