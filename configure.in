@@ -2588,7 +2588,10 @@ case $host in
          if test -n "$HAVE_LIB_LAM"; then
             SCI_CHECK_LIB($dirs,mpi,main,-llam -lutil,,optional)
 	    if test -n "$HAVE_LIB_MPI"; then
-	       MPI_LIB_FLAG="$MPI_LIB_FLAG $LAM_LIB_FLAG $UTIL_LIB_FLAG"
+               SCI_CHECK_LIB($dirs,pmpi,main,-llam -lutil $MPI_LIB_FLAG,,optional)
+	       MPI_LIB_FLAG="$PMPI_LIB_FLAG $MPI_LIB_FLAG $LAM_LIB_FLAG $UTIL_LIB_FLAG"
+               echo "MPI_LIB_FLAG is $MPI_LIB_FLAG"
+               echo "MPI_LIB_DIR_FLAG is $MPI_LIB_DIR_FLAG"
             fi
          fi
       fi
@@ -2698,15 +2701,15 @@ if test "$pkg_uintah" = "yes" && test "$with_tau"; then
 EOF
 
   cat > conftest-tau-makefile <<EOF
-include $(with_tau)
+include $with_tau
 all:
-  $(TAU_CXX) -o conftest-tau-a.out $(TAU_DEFS) $(TAU_INC_LUDE) conftest-tau.cc $(TAU_SHLIBS) $(TAU_MPI_LIBS)
+  \$(TAU_CXX) -o conftest-tau-a.out \$(TAU_DEFS) \$(TAU_INCLUDE) conftest-tau.cc \$(TAU_SHLIBS) \$(TAU_MPI_LIBS)
 EOF
 
-  ac_try="make TAU_MAKEFILE=${tau} -f conftest-tau-makefile > conftestout1) 2> conftesterr1"
+  ac_try="make TAU_MAKEFILE=$with_tau -f conftest-tau-makefile > conftestout1 2> conftesterr1"
   (eval $ac_try) 2>&5
   ac_status=$?
-  if $ac_status; then
+  if test "$ac_status" = "1"; then
     rm -f conftest-tau.cc conftest-tau-makefile conftest-tau-a.out conftestout1 conftesterr1
     SCI_MSG_ERROR(TAU libraries not working. Bye!)
   fi
@@ -3326,40 +3329,40 @@ if test "$HAVE_LIB_MPI" && test "$HAVE_LIB_BLAS" &&
     dirs="$with_petsc/lib/$PETSC_SUB/$PETSC_ARCH $dirs"
   fi
 
-  SCI_CHECK_LIB($dirs,petsc,main,$LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_FLAG,,optional)
+  SCI_CHECK_LIB($dirs,petsc,main,$LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_DIR_FLAG $BLAS_LIB_FLAG $F_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG,,optional)
 
   SCI_CHECK_HEADERS($LIB_DIR_PETSC/../../../include /usr/include/petsc, \
     petsc.h, $INC_MPI_H -I$LIB_DIR_PETSC/../../../bmake/$PETSC_ARCH,,optional)
 
   SCI_CHECK_LIB($LIB_DIR_PETSC,petscvec,main,$PETSC_LIB_FLAG \
 		$LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_FLAG \
-		$F_LIB_FLAG,,optional)
+		$F_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG,,optional)
   SCI_CHECK_LIB($LIB_DIR_PETSC,petscmat,main,
 		$PETSCVEC_LIB_FLAG $PETSC_LIB_FLAG \
 		$LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_FLAG \
-		$F_LIB_FLAG,,optional)
+		$F_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG,,optional)
   SCI_CHECK_LIB($LIB_DIR_PETSC,petscdm,main,
 		$PETSCMAT_LIB_FLAG $PETSCVEC_LIB_FLAG $PETSC_LIB_FLAG \
 		$LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_FLAG \
-		$F_LIB_FLAG,,optional)
+		$F_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG,,optional)
   SCI_CHECK_LIB($LIB_DIR_PETSC,petsccontrib,main,
 		$PETSCDM_LIB_FLAG $PETSCMAT_LIB_FLAG $PETSCVEC_LIB_FLAG \
 		$PETSC_LIB_FLAG $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG \
-		$BLAS_LIB_FLAG $F_LIB_FLAG,,optional)
+		$BLAS_LIB_FLAG $F_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG,,optional)
   SCI_CHECK_LIB($LIB_DIR_PETSC,petscsles,main,
 		$PETSCDM_LIB_FLAG $PETSCMAT_LIB_FLAG $PETSCVEC_LIB_FLAG \
 		$PETSC_LIB_FLAG $LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG \
-		$BLAS_LIB_FLAG $F_LIB_FLAG,,optional)
+		$BLAS_LIB_FLAG $F_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG,,optional)
   SCI_CHECK_LIB($LIB_DIR_PETSC,petscsnes,main,                      
 		$PETSCSLES_LIB_FLAG $PETSCDM_LIB_FLAG $PETSCMAT_LIB_FLAG \
 		$PETSCVEC_LIB_FLAG $PETSC_LIB_FLAG \
 		$LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_FLAG \
-		$F_LIB_FLAG,,optional)
+		$F_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG,,optional)
   SCI_CHECK_LIB($LIB_DIR_PETSC,petscts,main,                         \
 		$PETSCSNES_LIB_FLAG $PETSCSLES_LIB_FLAG $PETSCDM_LIB_FLAG \
 		$PETSCMAT_LIB_FLAG $PETSCVEC_LIB_FLAG $PETSC_LIB_FLAG \
 		$LAPACK_LIB_DIR_FLAG $LAPACK_LIB_FLAG $BLAS_LIB_FLAG \
-		$F_LIB_FLAG,,optional)
+		$F_LIB_FLAG $MPI_LIB_DIR_FLAG $MPI_LIB_FLAG,,optional)
 
   if test "$HAVE_LIB_PETSC"        && test "$HAVE_PETSC_H" &&
      test "$HAVE_LIB_PETSCCONTRIB" && test "$HAVE_LIB_PETSCDM" && 
