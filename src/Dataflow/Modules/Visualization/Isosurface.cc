@@ -259,15 +259,18 @@ Isosurface::new_field( FieldHandle &field )
   // reset the GUI
 
   // 1: field info
-  ostringstream info;
-  info << id << " set_info {" << type << "} " << field->generation;
-  tcl_execute(info.str().c_str());
+  command( "set_info {" + type + "} " + to_string(field->generation) );
+//   ostringstream info;
+//   info << id << " ;
+//   tcl_execute(info.str().c_str());
 
   // 2: min/max
   if(minmax.first != prev_min || minmax.second != prev_max){
-    ostringstream str;
-    str << id << " set_minmax " << minmax.first << " " << minmax.second;
-    tcl_execute(str.str().c_str());
+    command( "set_minmax " + to_string(minmax.first) 
+	     + " " + to_string(minmax.second) );
+//     ostringstream str;
+//     str << id << " set_minmax " << minmax.first << " " << minmax.second;
+//     tcl_execute(str.str().c_str());
     prev_min = minmax.first;
     prev_max = minmax.second;
   }
