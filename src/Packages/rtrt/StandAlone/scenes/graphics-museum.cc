@@ -293,7 +293,7 @@ void add_poster_on_wall (char *image_name, const Point &top_left,
   add_image_on_wall(image_name, top_left, right, down, wall_group);
 
   /* add glass frame */
-  Material* glass= new DielectricMaterial(1.5, 1.0, 0.1, 400.0, 
+  Material* glass= new DielectricMaterial(1.5, 1.0, 0.05, 400.0, 
 					  Color(.80, .93 , .87), 
 					  Color(1,1,1), false);
   Vector in = Cross (right,down);
@@ -362,12 +362,12 @@ void build_history_hall (Group* main_group, Scene *scene) {
 
   // history hall pedestals
   Group *historyg = new Group();
-  const float img_size = 1.3;     
-  float img_div = 0.15;
-  const float img_ht = 3.5;
+  const float img_size = 1.0;     
+  float img_div = 0.3;
+  const float img_ht = 2.7;
   const float ped_size = 0.75;
   float ped_div = (img_size - ped_size)/2.;
-  const float ped_ht = 1.4;
+  const float ped_ht = 1.0;
 
   /* **************** image on North wall in history hall **************** */
 
@@ -410,7 +410,7 @@ void build_history_hall (Group* main_group, Scene *scene) {
   //  cerr << "North Wall: " << NorthPoint << endl;
   
   /* **************** image on East wall in history hall **************** */
-  img_div = 0.10;
+  img_div = 0.25;
   Vector EastRight (0,-img_size,0);
   Vector EastDown (0,0,-img_size);
   PedPoint = Point (-4.625, 0, ped_ht);
@@ -509,7 +509,7 @@ void build_history_hall (Group* main_group, Scene *scene) {
 
   /* **************** image on West wall in history hall **************** */
   
-  img_div = 0.06;
+  img_div = 0.21;
   Vector WestRight (0,img_size,0);
   Vector WestDown (0,0,-img_size);
   Point WestPoint (-7.85+IMG_EPS, -4-img_div-img_size, img_ht);
@@ -618,7 +618,7 @@ void build_history_hall (Group* main_group, Scene *scene) {
 		      historyg);
 
   /* **************** image on South wall in history hall **************** */
-  img_div = .07;
+  img_div = .22;
   Vector SouthRight (-img_size, 0, 0);
   Vector SouthDown (0,0,-img_size);
   Point SouthPoint (-4-img_div, -28+IMG_EPS, img_ht);
@@ -850,8 +850,10 @@ void build_david_room (Group* main_group, Scene *scene) {
 
   /* **************** David **************** */
 
+  /*  0 for David, 1 for Bender */
+
 #if 0
-  Transform bender_trans;
+ Transform bender_trans;
   Point bender_center (-12.5,-20,0);
 
   // first, get it centered at the origin (in x and y), and scale it
@@ -1235,58 +1237,75 @@ void build_david_room (Group* main_group, Scene *scene) {
 void build_modern_room (Group *main_group, Scene *scene) {
   Material* flat_white = new LambertianMaterial(Color(.8,.8,.8));
   Material* shinyred = new MetalMaterial( Color(0.8, 0.0, 0.08) );
+  Material* light_marble1 
+    = new CrowMarble(4.5, Vector(.3, .3, 0), Color(.9,.9,.9), 
+		     Color(.8, .8,.8), Color(.7, .7, .7)); 
   FILE *fp;
+  const float ped_ht = 1.0;
 
   //  pedestals
   Group* moderng = new Group();
 
   // along east wall
-  moderng->add(new Box(flat_white,Point(-8.75-0.375,-8-0.375,0),
-		       Point(-8.75+0.375,-8+0.375,1.4)));
-  moderng->add(new Box(flat_white,Point(-8.75-0.375,-12-0.375,0),
-		       Point(-8.75+0.375,-12+0.375,1.4)));
+  /*  Cal tower */
+  moderng->add(new Box(flat_white,Point(-10-0.375,-7-0.375,0),
+		       Point(-10+0.375,-7+0.375,ped_ht)));
+  /*  lumigraph */
+  moderng->add(new Box(flat_white,Point(-10-0.375,-10-0.375,0),
+		       Point(-10+0.375,-10+0.375,ped_ht)));
+  /*  Gooch NPR models */
+  moderng->add(new Box(flat_white,Point(-10-0.375,-13-0.375,0),
+		       Point(-10+0.375,-13+0.375,ped_ht)));
 
   // along south wall
-  moderng->add(new Box(flat_white,Point(-14-0.375,-15-0.375,0),
-		       Point(-14+0.375,-15+0.375,1.4)));
-  moderng->add(new Box(flat_white,Point(-16-0.375,-15-0.375,0),
-		       Point(-16+0.375,-15+0.375,1.4)));
+  /* dragon */
+  moderng->add(new Box(flat_white,Point(-14-0.375,-14-0.375,0),
+		       Point(-14+0.375,-14+0.375,ped_ht)));
+  /* SCI torso */
+  moderng->add(new Box(flat_white,Point(-16-0.375,-14-0.375,0),
+		       Point(-16+0.375,-14+0.375,ped_ht)));
 
   // along west wall 
-  moderng->add(new Box(flat_white,Point(-18.5-0.375,-11-0.375,0),
-		       Point(-18.5+0.375,-11+0.375,1.4)));
-  moderng->add(new Box(flat_white,Point(-18.5-0.375,-7.5-0.375,0),
-		       Point(-18.5+0.375,-7.5+0.375,1.4)));
+  /* buddha */
+  moderng->add(new Box(flat_white,Point(-18-0.375,-12-0.375,0),
+		       Point(-18+0.375,-12+0.375,ped_ht)));
+  /*  UNC well */
+  moderng->add(new Box(flat_white,Point(-18-0.375,-10-0.375,0),
+		       Point(-18+0.375,-10+0.375,ped_ht)));
 
   // along north wall
-  moderng->add(new Box(flat_white,Point(-16.5-0.375,-6-0.375,0),
-		       Point(-16.5+0.375,-6+0.375,1.4)));
-  Point bun_ped_top (-14,-6,1.4);
-  moderng->add(new Box(flat_white,Point(-14-0.375,-6-0.375,0),
-		       Point(-14+0.375,-6+0.375,1.4)));
+  /* Stanford bunny */
+  moderng->add(new Box(flat_white,Point(-15-0.375,-6-0.375,0),
+		       Point(-15+0.375,-6+0.375,ped_ht)));
+  Point bun_ped_top (-14,-6,ped_ht);
+  /*  Venus  */
+  moderng->add(new Box(flat_white,Point(-13-0.375,-6-0.375,0),
+		       Point(-13+0.375,-6+0.375,ped_ht)));
+
   // center of room
-  moderng->add(new Box(flat_white,Point(-16-0.6,-12-0.6,0),
-		       Point(-16+0.6,-12+0.6,0.9)));
-  moderng->add(new Box(flat_white,Point(-12-0.6,-10-0.6,0),
-		       Point(-12+0.6,-10+0.6,0.9)));
+  /* rtrt room */
+  moderng->add(new Box(flat_white,Point(-14-0.6,-10-0.6,0),
+		       Point(-14+0.6,-10+0.6,0.6)));
 
   // St Matthew's Pedestal in northwest corner of room
   /*
-  UVCylinderArc* StMattPed = (new UVCylinderArc(light_marble1, Point (-20,-16,0),
-						Point (-20,-16, 1), 1));
-  //  StMattPed->set_arc (3.*M_PI_2/4.,M_PI_2);
-  moderng->add(StMattPed);	
-
+  UVCylinderArc* StMattPed = (new UVCylinderArc(light_marble1, 
+						Point (-20,-4,0),
+						Point (-20,-4, ped_ht), 1));
+						
+  StMattPed->set_arc (3.*M_PI_2/4.,M_PI_2);
+  StMattPed->set_arc (0.,3*M_PI_2/4.);
+  moderng->add(StMattPed);
   */
 
   /* **************** image on North wall in modern room **************** */
-  const float img_size = 1.3;     
-  float img_div = 0.35;
-  const float img_ht = 3.5;
+  const float img_size = 1.1;     
+  float img_div = 0.25;
+  const float img_ht = 2.7;
 
   Vector NorthRight (img_size,0,0);
   Vector NorthDown (0,0,-img_size);
-  Point NorthPoint (-8.1-img_div-img_size, -4.1-IMG_EPS, img_ht);
+  Point NorthPoint (-11.1-img_div-img_size, -4.1-IMG_EPS, img_ht);
 
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/modern/Figure12C-fill.ppm",
 		      NorthPoint, NorthRight, NorthDown,
@@ -1312,17 +1331,18 @@ void build_modern_room (Group *main_group, Scene *scene) {
 		      NorthPoint, NorthRight, NorthDown,
 		      moderng);
 
-  NorthPoint += Vector(-2*img_div-img_size, 0,0);  
-  add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/modern/bunnyC-fill.ppm",
-		      NorthPoint, NorthRight, NorthDown,
-		      moderng);
-
-  //  cerr << "North Wall: " << NorthPoint << endl;
+  cerr << "North Wall: " << NorthPoint << endl;
 
   Vector WestRight (0,img_size,0);
   Vector WestDown (0,0,-img_size);
   Point WestPoint (-20+IMG_EPS, -4-img_div-img_size, img_ht);
 
+
+  add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/modern/bunnyC-fill.ppm",
+		      WestPoint, WestRight, WestDown,
+		      moderng);
+
+  WestPoint -= Vector (0, 2*img_div+img_size, 0);
   add_poster_on_wall ("/usr/sci/data/Geometry/textures/museum/modern/chickenposter2C-fill.ppm",
 		      WestPoint, WestRight, WestDown,
 		      moderng);
@@ -1352,8 +1372,9 @@ void build_modern_room (Group *main_group, Scene *scene) {
 		      WestPoint, WestRight, WestDown, 		      
 		      moderng);
 
-  //  cerr << "West Wall:  " << WestPoint << endl;
+  cerr << "West Wall:  " << WestPoint << endl;
 
+  img_div = 0.35;
   Vector SouthRight (-img_size, 0, 0);
   Vector SouthDown (0,0,-img_size);
   Point SouthPoint (-20+img_div+img_size, -15.85+IMG_EPS, img_ht);
@@ -1378,7 +1399,7 @@ void build_modern_room (Group *main_group, Scene *scene) {
 		      SouthPoint, SouthRight, SouthDown, 
 		      moderng);
 
-  //  cerr << "South Wall: " << SouthPoint-Vector(img_size, 0,0) << endl;
+  cerr << "South Wall: " << SouthPoint-Vector(img_size, 0,0) << endl;
 
   Vector EastRight (0,-img_size,0);
   Vector EastDown (0,0,-img_size);
@@ -1408,7 +1429,7 @@ void build_modern_room (Group *main_group, Scene *scene) {
 		      EastPoint, EastRight, EastDown, 
 		      moderng);
 
-  //  cerr << "East Wall:  " << EastPoint-Vector(0,img_size,0) << endl;
+  cerr << "East Wall:  " << EastPoint-Vector(0,img_size,0) << endl;
 
 #if 0
   Transform bunnyT;
@@ -1567,8 +1588,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   east_wall->add(new Rect(wall_white, Point(-4+.16, -4.5, 4), 
 		       Vector(0, 0.5, 0), Vector(0, 0, 4)));
 
-  ceiling_floor->add(new Rect(wall_white, Point(-12, -16, 8),
-			      Vector(8.16, 0, 0), Vector(0, 12.16, 0)));
+  //  ceiling_floor->add(new Rect(wall_white, Point(-12, -16, 8),
+  //			      Vector(8.16, 0, 0), Vector(0, 12.16, 0)));
 
   partitions->add(new Box(wall_white, Point(-8-.15,-24,0),
 			  Point(-8+.15,-4,5)));
@@ -1636,3 +1657,8 @@ Scene* make_scene(int argc, char* argv[], int /*nworkers*/)
   return scene;
 }
 
+/*
+North Wall: [-18.85, -4.11, 2.7]
+West Wall:  [-19.99, -14.95, 2.7]
+
+ */
