@@ -6,18 +6,15 @@
 //#define SUPERBOX_DEBUGGING
 //#define SUPERBOX_PERFORMANCE_TESTING
 
-#ifdef SUPERBOX_PERFORMANCE_TESTING
-int biggerBoxCount;
-int minBiggerBoxCount;
-#endif
-
 #include <iostream>
+#include <sstream>
 
 #include <set>
 #include <vector>
 #include <sci_hash_map.h>
 #include <algorithm>
 #include <Core/Malloc/Allocator.h>
+#include <Core/Exceptions/InternalError.h>
 
 namespace SCIRun {
 
@@ -152,6 +149,11 @@ public:
   
   void takeOwnershipOfSuperBoxes()
   { ownsSuperBoxes_ = true; }
+
+#ifdef SUPERBOX_PERFORMANCE_TESTING
+  static int biggerBoxCount;
+  static int minBiggerBoxCount;
+#endif  
 private:
   template <class BoxIterator, class RangeQuerier>
   static SuperBoxSet*
@@ -165,6 +167,13 @@ private:
   SuperBoxContainer superBoxes_;
   Value value_;
 };
+
+#ifdef SUPERBOX_PERFORMANCE_TESTING
+template <class BoxP, class Point, class Volume, class Value, class Evaluator>
+int SuperBoxSet<BoxP, Point, Volume, Value, Evaluator>::biggerBoxCount = 0;
+template <class BoxP, class Point, class Volume, class Value, class Evaluator>
+int SuperBoxSet<BoxP, Point, Volume, Value, Evaluator>::minBiggerBoxCount = 0;
+#endif
 
 template <class BoxP, class Point, class Volume, class Value, class Evaluator>
 class SuperBox {
@@ -770,7 +779,9 @@ findOptimalSuperBoxSet(RangeQuerier& rangeQuerier, BoxHashMap& boxMap,
     compositePick->reactivate(activeBoxes, maxPossibleValue);
   }
   undoPicks(keepers, activeBoxes, maxPossibleValue);
-  result->addSuperBoxes(keepers.begin(), keepers.end());
+  if (result != 0) {
+    result->addSuperBoxes(keepers.begin(), keepers.end());
+  }
 
 #ifdef SUPERBOX_DEBUGGING
   ASSERT(storeMaxPossibleValue == maxPossibleValue);
@@ -807,7 +818,12 @@ findNearOptimalSuperBoxSet(RangeQuerier& rangeQuerier, BoxHashMap& boxMap,
   } while (activeBoxes.size() > 0);
 
 #ifdef SUPERBOX_DEBUGGING
-  ASSERT(storeMaxPossibleValue >= maxPossibleValue);
+  if (storeMaxPossibleValue < maxPossibleValue) {
+    ostringstream msg_str;
+    msg_str << "maxPossibleValue should increase: " << storeMaxPossibleValue
+	    << " to " << maxPossibleValue;
+    throw InternalError(msg_str.str());
+  }
 #endif    
 
   undoPicks(result->getSuperBoxes(), activeBoxes, maxPossibleValue);
@@ -1106,7 +1122,7 @@ buildActivatedMaximalSuperBoxes(RangeQuerier& rangeQuerier, BoxHashMap& boxMap,
 				const Region* withinRegion /* = 0 */)
 {
 #ifdef SUPERBOX_PERFORMANCE_TESTING
-  minBiggerBoxCount++;
+  SuperBoxSet::minBiggerBoxCount++;
 #endif
   
   set<CompositeBox*, LexCompare> allExploredBoxes;
@@ -1138,7 +1154,7 @@ buildActivatedMaximalSuperBoxes(BasicBoxPIterator begin,
   for (BasicBoxPIterator iter = begin; iter != end; iter++) {
     if ((*iter)->isAvailable()) {
 #ifdef SUPERBOX_PERFORMANCE_TESTING
-      minBiggerBoxCount++;
+      SuperBoxSet::minBiggerBoxCount++;
 #endif
       (*iter)->buildActivatedMaximalSuperBoxes(rangeQuerier, boxMap,
 					       maximalSuperBoxes,
@@ -1165,7 +1181,7 @@ buildActivatedMaximalSuperBoxes(RangeQuerier& rangeQuerier, BoxHashMap& boxMap,
 {
   typedef typename RangeQuerier::ResultContainer RangeContainer;
 #ifdef SUPERBOX_PERFORMANCE_TESTING
-  biggerBoxCount++;
+  SuperBoxSet::biggerBoxCount++;
 #endif
 
   bool hasBiggerBox = false;
@@ -1487,17 +1503,16 @@ makeOptimalSuperBoxSet(BoxIterator begin, BoxIterator end,
   // result is deleted.
   result->takeOwnershipOfSuperBoxes();
 
-  // delete the temporary SuperBoxes that were created
-  for (b_iter = basicBoxes.begin(); b_iter != basicBoxes.end(); b_iter++)
-    delete *b_iter;
-
-  
   for (sb_iter = maximalSuperBoxes.begin(); sb_iter != maximalSuperBoxes.end();
        sb_iter++) {
     // Only delete CompositeBox maximalSuperBoxes since the basicBoxes
-    // were already deleted.
+    // will be deleted.
     delete dynamic_cast<CompositeBox*>(*sb_iter);
   }
+  
+  // delete the temporary SuperBoxes that were created
+  for (b_iter = basicBoxes.begin(); b_iter != basicBoxes.end(); b_iter++)
+    delete *b_iter;
 
   delete superBoxSet;
   return result;
