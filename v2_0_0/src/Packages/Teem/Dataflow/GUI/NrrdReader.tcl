@@ -89,15 +89,16 @@ itcl_class Teem_DataIO_NrrdReader {
 	
 	######################################################
 	
-	makeOpenFilebox \
-	    -parent $w \
-	    -filevar $this-filename \
-	    -command "set $this-axis \"\";$this-c read_nrrd;destroy " \
-	    -cancel "destroy " \
-	    -title $title \
-	    -filetypes $types \
-	    -initialdir $initdir \
-	    -defaultextension $defext
+	return \
+	    [makeOpenFilebox \
+		 -parent . \
+		 -filevar $this-filename \
+		 -command "set $this-axis \"\";$this-c read_nrrd;destroy " \
+		 -cancel "destroy " \
+		 -title $title \
+		 -filetypes $types \
+		 -initialdir $initdir \
+		 -defaultextension $defext]
     }
 
     method update_type {om} {
@@ -159,7 +160,7 @@ itcl_class Teem_DataIO_NrrdReader {
 	button $f.sel -text "Browse" \
 	    -command "$this make_file_open_box"
 
-	pack $f.fname $f.sel -side top -fill x -expand yes
+	pack $f.fname $f.sel -side top -fill x -expand yes -padx 4 -pady 4
 	pack $w.f -fill x -expand yes -side top
 
 	# axis info and selection
@@ -194,14 +195,12 @@ itcl_class Teem_DataIO_NrrdReader {
 	$f1.type insert end Scalar Vector Tensor
 	$f1.type select [set $this-type]
 
-	pack $f1.lab $f1.type -fill x -expand yes -side top
+	pack $f1.lab $f1.type -fill x -expand yes -side top -padx 4 -pady 2
 
+	pack $w.add $w.f1 -fill x -expand yes -side top
 
-	# execute button
-	button $w.send -text "Execute" \
-	    -command "$this-c needexecute"
-
-	pack $w.add $w.f1 $w.send -fill x -expand yes -side top
+	makeSciButtonPanel $w $w $this
+	moveToCursor $w
 
 	if {[set $this-filename] != ""} {
 	    $this-c read_nrrd
