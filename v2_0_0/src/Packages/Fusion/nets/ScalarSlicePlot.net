@@ -1,21 +1,14 @@
-# SCI Network 1.0
+# SCI Network 1.20
 
 ::netedit dontschedule
 
-global userName
-set userName ""
+set bbox {32 17 473 1017}
 
-global runDate
-set runDate ""
+# Set the name of our network
+# NOTE: $Subnet(Loading) is the Sub-Network slot # we are loading into
+set Subnet(Subnet$Subnet(Loading)_Name) {Main}
 
-global runTime
-set runTime ""
-
-global notes
-set notes ""
-
-set bbox {}
-
+# Create the Modules
 set m0 [addModuleAtPosition "SCIRun" "FieldsGeometry" "MapDataToMeshCoord" 284 694]
 set m1 [addModuleAtPosition "DataIO" "Readers" "HDF5DataReader" 32 17]
 set m2 [addModuleAtPosition "SCIRun" "FieldsCreate" "FieldSlicer" 32 312]
@@ -33,29 +26,37 @@ set m13 [addModuleAtPosition "Fusion" "Fields" "NIMRODConverter" 32 109]
 set m14 [addModuleAtPosition "Fusion" "Fields" "NIMRODConverter" 228 111]
 set m15 [addModuleAtPosition "Fusion" "Fields" "NrrdFieldConverter" 32 225]
 
-addConnection $m4 0 $m5 0
-addConnection $m5 0 $m3 1
-addConnection $m8 1 $m10 0
-addConnection $m10 0 $m9 1
-addConnection $m8 0 $m9 0
-addConnection $m9 0 $m0 0
-addConnection $m2 0 $m8 0
-addConnection $m0 0 $m11 0
-addConnection $m11 0 $m3 0
-addConnection $m8 1 $m11 1
-addConnection $m2 0 $m7 0
-addConnection $m7 0 $m12 0
-addConnection $m5 0 $m12 1
-addConnection $m12 0 $m6 0
-addConnection $m3 0 $m6 1
-addConnection $m1 0 $m13 0
-addConnection $m1 1 $m13 1
-addConnection $m1 2 $m14 0
-addConnection $m13 0 $m15 0
-addConnection $m14 0 $m15 1
-addConnection $m15 0 $m2 0
-addConnection $m2 0 $m5 1
+# Set the Module Notes Dispaly Options
 
+# Create the Connections between Modules
+set c0 [addConnection $m1 0 $m13 0]
+set c1 [addConnection $m1 2 $m14 0]
+set c2 [addConnection $m7 0 $m12 0]
+set c3 [addConnection $m13 0 $m15 0]
+set c4 [addConnection $m15 0 $m2 0]
+set c5 [addConnection $m2 0 $m7 0]
+set c6 [addConnection $m2 0 $m8 0]
+set c7 [addConnection $m8 0 $m9 0]
+set c8 [addConnection $m8 1 $m10 0]
+set c9 [addConnection $m9 0 $m0 0]
+set c10 [addConnection $m11 0 $m3 0]
+set c11 [addConnection $m0 0 $m11 0]
+set c12 [addConnection $m4 0 $m5 0]
+set c13 [addConnection $m12 0 $m6 0]
+set c14 [addConnection $m1 1 $m13 1]
+set c15 [addConnection $m14 0 $m15 1]
+set c16 [addConnection $m2 0 $m5 1]
+set c17 [addConnection $m8 1 $m11 1]
+set c18 [addConnection $m10 0 $m9 1]
+set c19 [addConnection $m5 0 $m3 1]
+set c20 [addConnection $m5 0 $m12 1]
+set c21 [addConnection $m3 0 $m6 1]
+
+# Mark which Connections are Disabled
+
+# Set the Connection Notes and Dislpay Options
+
+# Set the GUI variables for each Module
 set $m0-notes {}
 set $m0-coord {3}
 set $m1-notes {}
@@ -72,7 +73,7 @@ set $m1-inc-amount {1}
 set $m1-filename {/z/home/sci/allen/SCIRUN/SCIRunData/fusion/NIMROD_10089_000_001.h5}
 set $m1-datasets {{/ NIMROD OUTPUTS CODE GRID PHI} {/ NIMROD OUTPUTS CODE GRID R} {/ NIMROD OUTPUTS CODE GRID Z} {/ NIMROD OUTPUTS CODE SLICES T00000 REALSPACE PRESSURE Values}}
 set $m1-dumpname {/tmp/NIMROD_10089_000_001.h5.dump}
-set $m1-ports {}
+set $m1-ports {   0   1   1   2}
 set $m1-ndims {0}
 set $m1-mergeData {1}
 set $m1-assumeSVT {1}
@@ -126,6 +127,7 @@ set $m3-bidirectional {0}
 set $m3-vector-usedefcolor {0}
 set $m3-tensors-on {0}
 set $m3-has_tensor_data {0}
+set $m3-tensor-usedefcolor {0}
 set $m3-scalars-on {0}
 set $m3-scalars-transparency {0}
 set $m3-has_scalar_data {0}
@@ -206,6 +208,7 @@ set $m12-bidirectional {0}
 set $m12-vector-usedefcolor {0}
 set $m12-tensors-on {0}
 set $m12-has_tensor_data {0}
+set $m12-tensor-usedefcolor {0}
 set $m12-scalars-on {0}
 set $m12-scalars-transparency {0}
 set $m12-has_scalar_data {0}
@@ -252,8 +255,7 @@ set $m14-notes {}
 set $m14-datasets {-NIMROD-OUTPUTS-CODE-SLICES-T00000-REALSPACE-PRESSURE-Values:Scalar}
 set $m14-nmodes {0}
 set $m15-notes {}
+set $m15-nomesh {0}
 set $m15-datasets {{-NIMROD-OUTPUTS-CODE-GRID-XYZ:Vector} {-NIMROD-OUTPUTS-CODE-SLICES-T00000-REALSPACE-PRESSURE-Values:Scalar} }
-$m2 initialize_ui
-$m7 initialize_ui
 
 ::netedit scheduleok
