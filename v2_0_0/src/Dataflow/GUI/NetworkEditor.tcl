@@ -223,7 +223,6 @@ proc makeNetworkEditor {} {
     bind all <Control-y> "redo"
 
     setupMainSubnet
-        
 }
 
 proc canvasScroll { canvas { dx 0.0 } { dy 0.0 } } {
@@ -983,11 +982,20 @@ proc showSplash { {steps none} } {
     update idletasks
 }
 
+global LicenseResult
+set licenseResult decline
+
+
 proc licenseDialog { {firsttime 0} } {
-    global SCIRUN_SRCDIR
+    global SCIRUN_SRCDIR licenseResult userData
     set filename [file join $SCIRUN_SRCDIR LICENSE]
     set stream [open $filename r]
     toplevel .license
+    wm protocol .license WM_DELETE_WINDOW {
+	tk_messageBox -type ok -parent .license -icon error \
+	    -message "Please choose Accept, Decline, or Later to continue"
+    }
+
     wm geometry .license 504x482+135+170
     wm title .license {UNIVERSITY OF UTAH RESEARCH FOUNDATION PUBLIC LICENSE}
     frame .license.text -borderwidth 1 -class Scroll -highlightthickness 1 \
@@ -1012,22 +1020,80 @@ proc licenseDialog { {firsttime 0} } {
     bind .license.text.text <1> {focus %W}
     frame .license.b
     pack .license.b -side bottom
+    set result decline
+    set userData(first) ""
+    set userData(last) ""
+    set userData(email) ""
+    set userData(aff) ""
+    set licenseResult decline
     if { $firsttime } {
+	frame .license.b.entry
+	
+	set w .license.b.entry.first
+	frame $w
+	label $w.lab -justify right -text "First Name:"
+	entry $w.entry -width 35 -textvariable userData(first)
+	pack $w.entry $w.lab -side right -expand 0
 
-	button .license.b.accept -text Accept -command {destroy .license}
-	button .license.b.decline -text Decline -command {destroy .license}
-	pack .license.b.accept .license.b.decline -padx 5 -pady 5 -side right
+	set w .license.b.entry.last
+	frame $w
+	label $w.lab -justify right -text "Last Name:"
+	entry $w.entry -width 35 -textvariable userData(last)
+	pack $w.entry $w.lab -side right -expand 0
+
+	set w .license.b.entry.email
+	frame $w
+	label $w.lab -justify right -text "E-Mail Address:"
+	entry $w.entry -width 35 -textvariable userData(email)
+	pack $w.entry $w.lab -side right -expand 0
+
+	set w .license.b.entry.affil
+	frame $w
+	label $w.lab -justify right -text "Affiliation:"
+	entry $w.entry -width 35 -textvariable userData(aff)
+	pack $w.entry $w.lab -side right -expand 0
+
+	set w .license.b.entry
+	pack $w.first $w.last $w.email $w.affil -side top -expand 1 -fill x
+
+	set w .license.b.buttons
+	frame $w
+	button $w.accept -text Accept -command "licenseAccept"
+	button $w.decline -text Decline \
+	    -command "set licenseResult cancel
+                      catch {destroy .license}"
+	button $w.later -text Later \
+	    -command "set licenseResult later
+                      catch {destroy .license}"
+	pack $w.accept $w.decline $w.later -padx 5 -pady 5 -side right
+	pack .license.b.buttons  .license.b.entry -side bottom
     } else {
 	button .license.b.ok -text OK -command {destroy .license}
 	pack .license.b.ok -padx 5 -pady 5 -side bottom
     }
     raise .license
     grab .license
+    tkwait window .license
+    return $licenseResult
 }
 
-proc showEULA {} {
-    licenseDialog 1
-    return "later"
+proc licenseAccept { } {
+    global licenseResult userData
+    if { [string length $userData(first)] &&
+	 [string length $userData(last)] &&
+	 [string length $userData(email)] } {
+	puts "here"
+	catch "exec \"mail -n -s USERDATA mdavis@sci.utah.edu\""
+	puts "there"
+	set licenseResult accept
+	puts "everywhere"
+	catch {destroy .license}
+
+    } else {
+	tk_messageBox -type ok -parent .license -icon error \
+	    -message "You must enter a First Name, Last Name, and E-Mail address to Accept."
+    }
+    puts "but there"
 }
 
 # Removes the element at pos from a list without a set - similar to lappend
