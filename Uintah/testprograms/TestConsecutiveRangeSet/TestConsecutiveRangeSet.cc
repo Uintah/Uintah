@@ -74,23 +74,40 @@ void doStringInitTests(Suite* suite)
 {
   const int normalSet[] = {1, 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 18, 20, 21, 22};
   doStringInitTest(suite, "Normal", "1-8, 10-12, 18, 20-22", normalSet,
-		   15, 4, "1-8, 10-12, 18, 20-22");
+		   15, 4, "1 - 8, 10 - 12, 18, 20 - 22");
   doStringInitTest(suite, "Unsorted", "20-22, 10-12, 18, 1-8", normalSet,
-		   15, 4, "1-8, 10-12, 18, 20-22" );
+		   15, 4, "1 - 8, 10 - 12, 18, 20 - 22" );
   
   const int combineSet[] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 19, 20, 21, 22};
   doStringInitTest(suite, "Combine", "1-5, 6-10, 19, 20-22", combineSet,
-		   14, 2, "1-10, 19-22");
+		   14, 2, "1 - 10, 19 - 22");
   doStringInitTest(suite, "Unsorted Combine", "19, 6-10, 1-5, 20-22",
-		   combineSet, 14, 2, "1-10, 19-22");
+		   combineSet, 14, 2, "1 - 10, 19 - 22");
   doStringInitTest(suite, "Overlapping", "1-6, 3-10, 19-22, 20", combineSet,
-		   14, 2, "1-10, 19-22");
+		   14, 2, "1 - 10, 19 - 22");
   doStringInitTest(suite, "Unsorted Overlapping", "3-10, 1-6, 19, 22, 19-22",
-		   combineSet, 14, 2, "1-10, 19-22");
+		   combineSet, 14, 2, "1 - 10, 19 - 22");
+
+  const int negSet[] = {-2, -1};
+  doStringInitTest(suite, "Negative", "-1 - -2",
+		   negSet, 2, 1, "-2 - -1");
+  int one = 1;
+  int neg_one = -1;
+  doStringInitTest(suite, "Single Negative", "-1",
+		   &neg_one, 1, 1, "-1");
+  doStringInitTest(suite, "Single Positive", "1",
+		   &one, 1, 1, "1");
 
   Test* exceptionTest = suite->addTest("Parse Exception");
   try {
-    ConsecutiveRangeSet set("1-3-9");
+    ConsecutiveRangeSet set("1-,3-9");
+    exceptionTest->setResults(false);
+  }
+  catch (ConsecutiveRangeSetException) {
+    exceptionTest->setResults(true);
+  }
+  try {
+    ConsecutiveRangeSet set("#$%");
     exceptionTest->setResults(false);
   }
   catch (ConsecutiveRangeSetException) {
@@ -108,17 +125,19 @@ void doStringInitTest(Suite* suite, string testname, string setstr,
   Test* test = suite->addTest(testname + ": " + setstr);
   test->setResults(set.getNumRanges() == numgroups);
   test->setResults(equalSets(set, expectedset, expectedset_size, sameSize));
-  if (!sameSize)
+  if (!sameSize) {
     suite->addTest(testname + " size test", false);
+  }
   suite->addTest(testname + " output test",
 		 strcmp(set.toString().c_str(), expectedout.c_str()) == 0);
 }
 
 void doIntersectTests(Suite* suite)
 {
-  ConsecutiveRangeSet empty;
-  ConsecutiveRangeSet all(INT_MIN, INT_MAX);
+  const ConsecutiveRangeSet& empty = ConsecutiveRangeSet::empty;
+  const ConsecutiveRangeSet& all = ConsecutiveRangeSet::all;
   ConsecutiveRangeSet testset("1-4, 10-12");
+  ConsecutiveRangeSet singlet("-1");
   ConsecutiveRangeSet nonoverlap("5-9");
   ConsecutiveRangeSet overlap("4-10");
   ConsecutiveRangeSet overlap_result("4, 10");
@@ -129,6 +148,8 @@ void doIntersectTests(Suite* suite)
 		 empty.intersected(testset) == empty);
   suite->addTest("with all", testset.intersected(all) == testset &&
 		 all.intersected(testset) == testset);  
+  suite->addTest("singlet with all", singlet.intersected(all) == singlet &&
+		 all.intersected(singlet) == singlet);  
   suite->addTest("all and all", all.intersected(all) == all);  
   suite->addTest("all and ampty", all.intersected(empty) == empty &&
 		 empty.intersected(all) == empty);  
@@ -142,8 +163,8 @@ void doIntersectTests(Suite* suite)
 
 void doUnionTests(Suite* suite)
 {
-  ConsecutiveRangeSet empty;
-  ConsecutiveRangeSet all(INT_MIN, INT_MAX);
+  const ConsecutiveRangeSet& empty = ConsecutiveRangeSet::empty;
+  const ConsecutiveRangeSet& all = ConsecutiveRangeSet::all;
   ConsecutiveRangeSet testset("1-4, 10-12");
   ConsecutiveRangeSet nonoverlap("5-9");
   ConsecutiveRangeSet joined("1-12");
