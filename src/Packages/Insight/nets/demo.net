@@ -1,5 +1,7 @@
 # SCI Network 1.0
 
+set DATADIR $env(INSIGHT_DATA)
+
 ::netedit dontschedule
 
 set m0 [addModuleAtPosition "Insight" "DataIO" "ImageReaderFloat3D" 281 12]
@@ -38,7 +40,7 @@ addConnection $m14 1 $m6 2
 addConnection $m13 1 $m6 3
 
 set $m0-notes {}
-set $m0-filename {/home/darbyb/sci/data/tumorbase/case1/metaimage/case1seed.mhd}
+set $m0-filename $DATADIR/metaimage/case1seed.mhd
 set $m1-notes {}
 set $m1-copy {0}
 set $m2-notes {}
@@ -162,7 +164,7 @@ set $m10-smoothing_iterations {0}
 set $m10-smoothing_time_step {0.1}
 set $m10-smoothing_conductance {0.5}
 set $m11-notes {}
-set $m11-filename {/home/darbyb/sci/data/tumorbase/case1/metaimage/case1cropisosm.mhd}
+set $m11-filename $DATADIR/case1cropisosm.mhd
 set $m12-notes {}
 set $m12-copy {0}
 set $m13-notes {}
