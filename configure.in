@@ -1523,10 +1523,14 @@ fi
 AC_MSG_CHECKING(whether optimize was enabled)
 if test "$optimize" = "no"; then
   if test "$debug" = "no"; then
+    # neither debug nor optimize specified, DEFAULT TO: optimized
     extra_cflags="-O2 ${extra_cflags}"
-    AC_MSG_RESULT(no (-O2) )
+    AC_MSG_RESULT(no (default to -O2) )
   else
+    # Debug mode specified.
     extra_cflags="${no_optimize_flag} ${extra_cflags}"
+    # extra_fflags WILL ONLY BE USED WITH g77
+    extra_fflags="-ffortran-bounds-check"
     AC_MSG_RESULT(no (${no_optimize_flag}) )
   fi
 elif test "$optimize" = "yes"; then
@@ -1710,7 +1714,17 @@ case $host in
     WOFF=" -w"
     CPPFLAGS="$CPPFLAGS $WOFF"
     CFLAGS="$CFLAGS $extra_cflags"
-    FFLAGS="$FFLAGS $extra_cflags"
+
+    case $F77 in
+      *g77*)
+         # extra_fflags has array checking if in debug mode.
+         FFLAGS="$FFLAGS $extra_cflags $extra_fflags"
+         ;;
+      *)
+         FFLAGS="$FFLAGS $extra_cflags"
+         ;;
+    esac
+
     CXXFLAGS="$CXXFLAGS $extra_cflags"
     SOFLAGS="-shared ${SOFLAGS}"
     NEED_SONAME=yes
