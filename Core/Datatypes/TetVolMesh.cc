@@ -91,7 +91,7 @@ TetVolMesh::compute_edges()
     hash_edge(arr[0], arr[1], *ci, table);
     hash_edge(arr[0], arr[2], *ci, table);
     hash_edge(arr[0], arr[3], *ci, table);
-    hash_edge(arr[1], arr[1], *ci, table);
+    hash_edge(arr[1], arr[2], *ci, table);
     hash_edge(arr[1], arr[2], *ci, table);
     hash_edge(arr[1], arr[3], *ci, table);
   }
@@ -127,7 +127,7 @@ TetVolMesh::edge_begin() const
 TetVolMesh::edge_iterator
 TetVolMesh::edge_end() const
 {
-  return (cells_.size() >> 2) * 6;
+  return edges_.size();
 }
 
 TetVolMesh::face_iterator
@@ -139,7 +139,7 @@ TetVolMesh::face_begin() const
 TetVolMesh::face_iterator
 TetVolMesh::face_end() const
 {
-  return cells_.size();
+  return cells_.size(); //FIX_ME
 }
 
 TetVolMesh::cell_iterator
@@ -158,42 +158,16 @@ TetVolMesh::cell_end() const
 void
 TetVolMesh::get_nodes(node_array &array, edge_index idx) const
 {
-  static int table[6][2] =
-  {
-    {0, 1},
-    {0, 2},
-    {0, 3},
-    {1, 2},
-    {1, 3},
-    {2, 3}
-  };
-
-  const int tet = idx / 6;
-  const int off = idx % 6;
-  const int node = tet * 4;
-
-  array.push_back(cells_[node + table[off][0]]);
-  array.push_back(cells_[node + table[off][1]]);
+  Edge e = edges_[idx];
+  array.push_back(e.nodes_[0]); 
+  array.push_back(e.nodes_[1]);
 }
 
 
 void
 TetVolMesh::get_nodes(node_array &array, face_index idx) const
 {
-  static int table[4][3] =
-  {
-    {1, 2, 3},
-    {3, 2, 0},
-    {0, 1, 3},
-    {2, 1, 0}
-  };
-  
-  int tet = idx & 0xfffffffc;
-  int off = idx & 3;
-  array.push_back(cells_[tet + table[off][0]]);
-  array.push_back(cells_[tet + table[off][1]]);
-  array.push_back(cells_[tet + table[off][2]]);
-  array.push_back(cells_[tet + table[off][3]]);
+  ASSERT(0);
 }
 
 

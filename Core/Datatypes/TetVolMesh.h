@@ -150,7 +150,10 @@ private:
    *  edge. */
   struct EdgeHash {
     size_t operator()(const Edge &e) const {
-      return 5 ; //FIX_ME 5 is not an optimal hash function.
+      int n1 = e.nodes_[0];
+      int n2 = e.nodes_[1];
+      int r = n1&n2;
+      return r; //FIX_ME not an optimal hash function.
     }
   };
 
