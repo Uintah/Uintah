@@ -1,29 +1,29 @@
 /*
-   For more information, please see: http://software.sci.utah.edu
+  For more information, please see: http://software.sci.utah.edu
 
-   The MIT License
+  The MIT License
 
-   Copyright (c) 2004 Scientific Computing and Imaging Institute,
-   University of Utah.
+  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+  University of Utah.
 
-   License for the specific language governing rights and limitations under
-   Permission is hereby granted, free of charge, to any person obtaining a
-   copy of this software and associated documentation files (the "Software"),
-   to deal in the Software without restriction, including without limitation
-   the rights to use, copy, modify, merge, publish, distribute, sublicense,
-   and/or sell copies of the Software, and to permit persons to whom the
-   Software is furnished to do so, subject to the following conditions:
+  License for the specific language governing rights and limitations under
+  Permission is hereby granted, free of charge, to any person obtaining a
+  copy of this software and associated documentation files (the "Software"),
+  to deal in the Software without restriction, including without limitation
+  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+  and/or sell copies of the Software, and to permit persons to whom the
+  Software is furnished to do so, subject to the following conditions:
 
-   The above copyright notice and this permission notice shall be included
-   in all copies or substantial portions of the Software.
+  The above copyright notice and this permission notice shall be included
+  in all copies or substantial portions of the Software.
 
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-   DEALINGS IN THE SOFTWARE.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+  DEALINGS IN THE SOFTWARE.
 */
 
 
@@ -46,6 +46,7 @@
 #include <Core/Malloc/Allocator.h>
 
 #include <stdlib.h>
+#include <stdio.h>
 
 #include <iostream>
 #include <fstream>
@@ -144,8 +145,8 @@ DestroyOverviewNode(overview_node* n)
 {
   if (n->authors) {
     for(char_iter i=n->authors->begin();
-	i!=n->authors->end();
-	i++) 
+        i!=n->authors->end();
+        i++) 
       delete[] (*i).second; 
     delete n->authors;
   }
@@ -172,10 +173,10 @@ DestroyInportNode(inport_node* n)
   if (n->datatype && n->datatype!=NOT_SET) delete[] n->datatype;
   if (n->upstream) {
     for (char_iter i=n->upstream->begin();
-	 i!=n->upstream->end();
-	 i++) {
+         i!=n->upstream->end();
+         i++) {
       if ((*i).second != NOT_SET) {
-	delete[] (*i).second;
+        delete[] (*i).second;
       }
     }
     delete n->upstream;
@@ -196,7 +197,7 @@ DestroyOutportNode(outport_node* n)
          i!=n->downstream->end();
          i++) {
       if ((*i).second != NOT_SET) {
-	delete[] (*i).second;
+        delete[] (*i).second;
       }
     }
     delete n->downstream;
@@ -221,43 +222,43 @@ DestroyIoNode(io_node* n)
 
   if (n->infiles) {
     for(i4=n->infiles->begin();
-	i4!=n->infiles->end();
-	i4++) 
+        i4!=n->infiles->end();
+        i4++) 
       DestroyFileNode((*i4).second);
     delete n->infiles;
   }
   if (n->outfiles) {
     for(i4=n->outfiles->begin();
-	i4!=n->outfiles->end();
-	i4++) 
+        i4!=n->outfiles->end();
+        i4++) 
       DestroyFileNode((*i4).second);
     delete n->outfiles;
   }
   if (n->indevices) {
     for(i5=n->indevices->begin();
-	i5!=n->indevices->end();
-	i5++) 
+        i5!=n->indevices->end();
+        i5++) 
       DestroyDeviceNode((*i5).second);
     delete n->indevices;
   }
   if (n->outdevices) {
     for(i5=n->outdevices->begin();
-	i5!=n->outdevices->end();
-	i5++) 
+        i5!=n->outdevices->end();
+        i5++) 
       DestroyDeviceNode((*i5).second);
     delete n->outdevices;
   }
   if (n->inports) {
     for(i2=n->inports->begin();
-	i2!=n->inports->end();
-	i2++) 
+        i2!=n->inports->end();
+        i2++) 
       DestroyInportNode((*i2).second);
     delete n->inports;
   }
   if (n->outports) {
     for(i3=n->outports->begin();
-	i3!=n->outports->end();
-	i3++) 
+        i3!=n->outports->end();
+        i3++) 
       DestroyOutportNode((*i3).second);
     delete n->outports;
   }
@@ -281,8 +282,8 @@ DestroyGuiNode(gui_node* n)
   if (n->image && n->image!=NOT_SET) delete[] n->image;
   if (n->parameters) {
     for(param_iter i=n->parameters->begin();
-	i!=n->parameters->end();
-	i++)
+        i!=n->parameters->end();
+        i++)
       DestroyParameterNode((*i).second);
     delete n->parameters;
   }
@@ -296,8 +297,8 @@ DestroyPlanNode(plan_node* n)
 
   if (n->steps) {
     for (char_iter i=n->steps->begin();
-	 i!=n->steps->end();
-	 i++)
+         i!=n->steps->end();
+         i++)
       delete[] (*i).second;
     delete n->steps;
   }
@@ -362,16 +363,16 @@ SCIRun::PrintComponentNode(component_node* n)
     cout << "  Authors:" << endl;
     if (n->overview->authors)
       for (i=n->overview->authors->begin();
-	   i!=n->overview->authors->end();
-	   i++)
-	cout << "    " << (*i).second << endl;
+           i!=n->overview->authors->end();
+           i++)
+        cout << "    " << (*i).second << endl;
     cout << endl;
     cout << "  Summary:" << endl;
     cout << "    " << n->overview->summary << endl;
     cout << endl;
     cout << "  Description:" << endl;
     if (n->overview->description)
-	cout << "    " << n->overview->description << endl;
+      cout << "    " << n->overview->description << endl;
     cout << endl;
     cout << "  Example .sr file: " << n->overview->examplesr << endl;
     cout << endl;
@@ -384,84 +385,84 @@ SCIRun::PrintComponentNode(component_node* n)
     if (n->io->inports->size()) {
       cout << "    Ports:" << endl;
       for (i5=n->io->inports->begin();
-	   i5!=n->io->inports->end();
-	   i5++) {
-	cout << "      name       : " << (*i5).second->name << endl;
-	cout << "      Description: " << endl;
-	if ((*i5).second->description)
-	  cout << "    " << (*i5).second->description << endl;
-	cout << "      Datatype   : " << (*i5).second->datatype << endl;
-	cout << "      Upstream   : " << endl;
-	if ((*i5).second->upstream)
-	  for (i=(*i5).second->upstream->begin();
-	       i!=(*i5).second->upstream->end();
-	       i++)
-	    cout << "        " << (*i).second << endl;
-	cout << endl;
+           i5!=n->io->inports->end();
+           i5++) {
+        cout << "      name       : " << (*i5).second->name << endl;
+        cout << "      Description: " << endl;
+        if ((*i5).second->description)
+          cout << "    " << (*i5).second->description << endl;
+        cout << "      Datatype   : " << (*i5).second->datatype << endl;
+        cout << "      Upstream   : " << endl;
+        if ((*i5).second->upstream)
+          for (i=(*i5).second->upstream->begin();
+               i!=(*i5).second->upstream->end();
+               i++)
+            cout << "        " << (*i).second << endl;
+        cout << endl;
       }
     }
     if (n->io->infiles->size()) {
       cout << "    Files:" << endl;
       for(i2=n->io->infiles->begin();
-	  i2!=n->io->infiles->end();
-	  i2++) {
-	cout << "      Description: " << endl;
-	if ((*i2).second->description)
-	  cout << "    " << (*i2).second->description << endl;
-	cout << "      Datatype   : " << (*i2).second->datatype << endl;
-	cout << endl;
+          i2!=n->io->infiles->end();
+          i2++) {
+        cout << "      Description: " << endl;
+        if ((*i2).second->description)
+          cout << "    " << (*i2).second->description << endl;
+        cout << "      Datatype   : " << (*i2).second->datatype << endl;
+        cout << endl;
       }
     }
     if (n->io->indevices->size()) {
       cout << "    Devices:" << endl;
       for(i7=n->io->indevices->begin();
-	  i7!=n->io->indevices->end();
-	  i7++) {
-	cout << "      Device Name: " << (*i7).second->devicename << endl;
-	cout << "      Description:" << endl;
-	  cout << "    " << (*i7).second->description << endl;
-	cout << endl;
+          i7!=n->io->indevices->end();
+          i7++) {
+        cout << "      Device Name: " << (*i7).second->devicename << endl;
+        cout << "      Description:" << endl;
+        cout << "    " << (*i7).second->description << endl;
+        cout << endl;
       }
     }
     cout << "  Outputs:" << endl;
     if (n->io->outports->size()) {
       cout << "    Ports:" << endl;
       for (i6=n->io->outports->begin();
-	   i6!=n->io->outports->end();
-	   i6++) {
-	cout << "      Name       : " << (*i6).second->name << endl;
-	cout << "      Description: " << endl;
-	cout << "        " << (*i6).second->description << endl;
-	cout << "      Datatype   : " << (*i6).second->datatype << endl;
-	cout << "      Downstream : " << endl;
-	if ((*i6).second->downstream)
-	  for (i=(*i6).second->downstream->begin();
-	       i!=(*i6).second->downstream->end();
-	       i++)
-	    cout << "        " << (*i).second << endl;
-	cout << endl;
+           i6!=n->io->outports->end();
+           i6++) {
+        cout << "      Name       : " << (*i6).second->name << endl;
+        cout << "      Description: " << endl;
+        cout << "        " << (*i6).second->description << endl;
+        cout << "      Datatype   : " << (*i6).second->datatype << endl;
+        cout << "      Downstream : " << endl;
+        if ((*i6).second->downstream)
+          for (i=(*i6).second->downstream->begin();
+               i!=(*i6).second->downstream->end();
+               i++)
+            cout << "        " << (*i).second << endl;
+        cout << endl;
       }
     }
     if (n->io->outfiles->size()) {
       cout << "    Files:" << endl;
       for(i2=n->io->outfiles->begin();
-	  i2!=n->io->outfiles->end();
-	  i2++) {
-	cout << "      Description: " << endl;
-	  cout << "        " << (*i2).second->description << endl;
-	cout << "      Datatype   : " << (*i2).second->datatype << endl;
-	cout << endl;
+          i2!=n->io->outfiles->end();
+          i2++) {
+        cout << "      Description: " << endl;
+        cout << "        " << (*i2).second->description << endl;
+        cout << "      Datatype   : " << (*i2).second->datatype << endl;
+        cout << endl;
       }
     }
     if (n->io->outdevices->size()) {
       cout << "    Devices:" << endl;
       for(i7=n->io->outdevices->begin();
-	  i7!=n->io->outdevices->end();
-	  i7++) {
-	cout << "      Device Name: " << (*i7).second->devicename << endl;
-	cout << "      Description:" << endl;
-	cout << "        " << (*i7).second->description << endl;
-	cout << endl;
+          i7!=n->io->outdevices->end();
+          i7++) {
+        cout << "      Device Name: " << (*i7).second->devicename << endl;
+        cout << "      Description:" << endl;
+        cout << "        " << (*i7).second->description << endl;
+        cout << endl;
       }
     }
   }    
@@ -469,19 +470,19 @@ SCIRun::PrintComponentNode(component_node* n)
   if (n->gui) {
     cout << "  GUI:" << endl;
     cout << "    Description: " << endl;
-      cout << "        " << n->gui->description << endl;
+    cout << "        " << n->gui->description << endl;
     cout << "    Image      : " << n->gui->image << endl;
     cout << "    Parameters : " << endl;
     if (n->gui->parameters)
       for(i4=n->gui->parameters->begin();
-	  i4!=n->gui->parameters->end();
-	  i4++) {
-	cout << "      Label      : " << (*i4).second->label << endl;
-	cout << "      Widget     : " << (*i4).second->widget << endl;
-	cout << "      Datatype   : " << (*i4).second->datatype << endl;
-	cout << "      Description: " << endl;
-	  cout << "        " << (*i4).second->description << endl;
-	cout << endl;
+          i4!=n->gui->parameters->end();
+          i4++) {
+        cout << "      Label      : " << (*i4).second->label << endl;
+        cout << "      Widget     : " << (*i4).second->widget << endl;
+        cout << "      Datatype   : " << (*i4).second->datatype << endl;
+        cout << "      Description: " << endl;
+        cout << "        " << (*i4).second->description << endl;
+        cout << endl;
       }
     cout << endl;
   }
@@ -491,17 +492,17 @@ SCIRun::PrintComponentNode(component_node* n)
     int stepcount = 1;
     cout << "  Testing plan(s):" << endl;
     for (i3=n->testingplans->begin();
-	 i3!=n->testingplans->end();
-	 i3++,plancount++) {
+         i3!=n->testingplans->end();
+         i3++,plancount++) {
       cout << "    Plan " << plancount << ":" << endl; 
       cout << "      Description: " << endl 
-	   << (*i3).second->description << endl;
+           << (*i3).second->description << endl;
       cout << "      Steps:" << endl;
       for (i=(*i3).second->steps->begin();
-	   i!=(*i3).second->steps->end();
-	   i++)
-	cout << "        Step " << stepcount++ << ":" << endl
-	     << "          " << (*i).second << endl;
+           i!=(*i3).second->steps->end();
+           i++)
+        cout << "        Step " << stepcount++ << ":" << endl
+             << "          " << (*i).second << endl;
       cout << endl;
     }
   }
@@ -512,35 +513,35 @@ ProcessFileNode(const DOMNode& d, file_node* n)
 {
   for (DOMNode *child = d.getFirstChild(); child != 0; 
        child = child->getNextSibling()) 
-  {
-    const XMLCh* childname = child->getNodeName();
-    if (string_is(childname, "description") && n->description == NOT_SET) 
     {
-      n->description = rWSgSC(child);
-    } else if (string_is(childname, "datatype") && n->datatype == NOT_SET) 
-    {
-      n->datatype = rWSgSC(child);  
+      const XMLCh* childname = child->getNodeName();
+      if (string_is(childname, "description") && n->description == NOT_SET) 
+        {
+          n->description = rWSgSC(child);
+        } else if (string_is(childname, "datatype") && n->datatype == NOT_SET) 
+          {
+            n->datatype = rWSgSC(child);  
+          }
     }
-  }
 }
 
 void
 ProcessInportNode(const DOMNode& d, inport_node* n)
 {
   for (DOMNode *child = d.getFirstChild(); child!=0; child=child->getNextSibling()) 
-  {
-    const XMLCh* childname = child->getNodeName();
-    if (string_is(childname, "description") && n->description==NOT_SET)
-      n->description = rWSgSC(child);
-    else if (string_is(childname, "name") && n->name==NOT_SET) {
-      n->name = rWSgSC(child);
-    }
-    else if (string_is(childname, "datatype") && n->datatype==NOT_SET)
-      n->datatype = rWSgSC(child);
-    else if (string_is(childname, "componentname") && n->upstream)
-      n->upstream->insert(std::pair<int,char*>(n->upstream->size(),
-					       rWSgSC(child)));
-  }				       
+    {
+      const XMLCh* childname = child->getNodeName();
+      if (string_is(childname, "description") && n->description==NOT_SET)
+        n->description = rWSgSC(child);
+      else if (string_is(childname, "name") && n->name==NOT_SET) {
+        n->name = rWSgSC(child);
+      }
+      else if (string_is(childname, "datatype") && n->datatype==NOT_SET)
+        n->datatype = rWSgSC(child);
+      else if (string_is(childname, "componentname") && n->upstream)
+        n->upstream->insert(std::pair<int,char*>(n->upstream->size(),
+                                                 rWSgSC(child)));
+    }                                    
 }
 
 void
@@ -559,7 +560,7 @@ ProcessOutportNode(const DOMNode& d, outport_node* n)
       n->datatype = rWSgSC(child);
     else if (string_is(childname, "componentname") && n->downstream)
       n->downstream->insert(std::pair<int,char*>(n->downstream->size(),
-					       rWSgSC(child)));
+                                                 rWSgSC(child)));
   }
 }
 
@@ -586,80 +587,80 @@ ProcessIoNode(const DOMNode& d, io_node* n)
     const XMLCh* childname = child->getNodeName();
     if (string_is(childname, "inputs")){
       if (n->lastportdynamic) {
-	
-	const DOMNode *attr = 
-	  child->getAttributes()->getNamedItem(
-					   to_xml_ch_ptr("lastportdynamic"));
-	if (attr != 0) {
-	  const XMLCh* attrstr = attr->getNodeValue();
-	  if (string_is(attrstr,"yes") ||
-	      string_is(attrstr, "y") ||
-	      string_is(attrstr, "YES") ||
-	      string_is(attrstr, "Y"))
-	    n->lastportdynamic = 1;
-	  else
-	    n->lastportdynamic = 0;
-	} else
-	  n->lastportdynamic = 0;
+        
+        const DOMNode *attr = 
+          child->getAttributes()->getNamedItem(
+                                               to_xml_ch_ptr("lastportdynamic"));
+        if (attr != 0) {
+          const XMLCh* attrstr = attr->getNodeValue();
+          if (string_is(attrstr,"yes") ||
+              string_is(attrstr, "y") ||
+              string_is(attrstr, "YES") ||
+              string_is(attrstr, "Y"))
+            n->lastportdynamic = 1;
+          else
+            n->lastportdynamic = 0;
+        } else
+          n->lastportdynamic = 0;
       }
       for (DOMNode *inchild = child->getFirstChild();
-	   inchild!=0;
-	   inchild=inchild->getNextSibling()) {
-	const XMLCh* inchildname = inchild->getNodeName();
-	if (string_is(inchildname, "file") && n->infiles) { 
-	  file_node* newfile = new file_node;
-	  newfile->description = NOT_SET;
-	  newfile->datatype = NOT_SET;
-	  ProcessFileNode(*inchild, newfile);
-	  n->infiles->insert(std::pair<int, file_node*>(n->infiles->size(),
-							newfile));
-	} else if (string_is(inchildname, "port") && n->inports) {
-	  inport_node* newport = new inport_node;
-	  newport->name = NOT_SET;
-	  newport->description = NOT_SET;
-	  newport->datatype = NOT_SET;
-	  newport->upstream = new map<int, char*>;
-	  ProcessInportNode(*inchild, newport);
-	  n->inports->insert(std::pair<int, inport_node*>(n->inports->size(),
-							newport));
-	} else if (string_is(inchildname, "device") && n->indevices) {
-	  device_node* newdevice = new device_node;
-	  newdevice->description = NOT_SET;
-	  newdevice->devicename = NOT_SET;
-	  ProcessDeviceNode(*inchild, newdevice);
-	  n->indevices->insert(
-		std::pair<int, device_node*>(n->indevices->size(),newdevice));
-	}
+           inchild!=0;
+           inchild=inchild->getNextSibling()) {
+        const XMLCh* inchildname = inchild->getNodeName();
+        if (string_is(inchildname, "file") && n->infiles) { 
+          file_node* newfile = new file_node;
+          newfile->description = NOT_SET;
+          newfile->datatype = NOT_SET;
+          ProcessFileNode(*inchild, newfile);
+          n->infiles->insert(std::pair<int, file_node*>(n->infiles->size(),
+                                                        newfile));
+        } else if (string_is(inchildname, "port") && n->inports) {
+          inport_node* newport = new inport_node;
+          newport->name = NOT_SET;
+          newport->description = NOT_SET;
+          newport->datatype = NOT_SET;
+          newport->upstream = new map<int, char*>;
+          ProcessInportNode(*inchild, newport);
+          n->inports->insert(std::pair<int, inport_node*>(n->inports->size(),
+                                                          newport));
+        } else if (string_is(inchildname, "device") && n->indevices) {
+          device_node* newdevice = new device_node;
+          newdevice->description = NOT_SET;
+          newdevice->devicename = NOT_SET;
+          ProcessDeviceNode(*inchild, newdevice);
+          n->indevices->insert(
+                               std::pair<int, device_node*>(n->indevices->size(),newdevice));
+        }
       }
     } else if (string_is(childname, "outputs")) {
       for (DOMNode *outchild = child->getFirstChild();
-	   outchild!=0;
-	   outchild=outchild->getNextSibling()) {
-	const XMLCh* outchildname = outchild->getNodeName();
-	if (string_is(outchildname, "file") && n->outfiles) {
-	  file_node* newfile = new file_node;
-	  newfile->description = NOT_SET;
-	  newfile->datatype = NOT_SET;
-	  ProcessFileNode(*outchild, newfile);
-	  n->outfiles->insert(std::pair<int, file_node*>(n->outfiles->size(),
-							newfile));
-	} else if (string_is(outchildname, "port") && n->outports) {
-	  outport_node* newport = new outport_node;
-	  newport->name = NOT_SET;
-	  newport->description = NOT_SET;
-	  newport->datatype = NOT_SET;
-	  newport->downstream = new map<int, char*>;
-	  ProcessOutportNode(*outchild, newport);
-	  n->outports->insert(
-		std::pair<int,outport_node*>(n->outports->size(), newport));
-	} else if (string_is(outchildname, "device") && n->outdevices) {
-	  device_node* newdevice = new device_node;
-	  newdevice->description = NOT_SET;
-	  newdevice->devicename = NOT_SET;
-	  ProcessDeviceNode(*outchild, newdevice);
-	  n->outdevices->insert(
-	       std::pair<int, device_node*>(n->outdevices->size(), newdevice));
-	}
+           outchild!=0;
+           outchild=outchild->getNextSibling()) {
+        const XMLCh* outchildname = outchild->getNodeName();
+        if (string_is(outchildname, "file") && n->outfiles) {
+          file_node* newfile = new file_node;
+          newfile->description = NOT_SET;
+          newfile->datatype = NOT_SET;
+          ProcessFileNode(*outchild, newfile);
+          n->outfiles->insert(std::pair<int, file_node*>(n->outfiles->size(),
+                                                         newfile));
+        } else if (string_is(outchildname, "port") && n->outports) {
+          outport_node* newport = new outport_node;
+          newport->name = NOT_SET;
+          newport->description = NOT_SET;
+          newport->datatype = NOT_SET;
+          newport->downstream = new map<int, char*>;
+          ProcessOutportNode(*outchild, newport);
+          n->outports->insert(
+                              std::pair<int,outport_node*>(n->outports->size(), newport));
+        } else if (string_is(outchildname, "device") && n->outdevices) {
+          device_node* newdevice = new device_node;
+          newdevice->description = NOT_SET;
+          newdevice->devicename = NOT_SET;
+          ProcessDeviceNode(*outchild, newdevice);
+          n->outdevices->insert(
+                                std::pair<int, device_node*>(n->outdevices->size(), newdevice));
+        }
       }
     }
   }
@@ -702,7 +703,7 @@ ProcessGuiNode(const DOMNode& d, gui_node* n)
       newparam->description = NOT_SET;
       ProcessParameterNode(*child, newparam);
       n->parameters->insert(
-           std::pair<int, parameter_node*>(n->parameters->size(), newparam));
+                            std::pair<int, parameter_node*>(n->parameters->size(), newparam));
     }
   }
 }
@@ -718,7 +719,7 @@ ProcessPlanNode(const DOMNode& d, plan_node* n)
       n->description = rWSgSC(child);
     else if (string_is(childname, "step") && n->steps) 
       n->steps->insert(std::pair<int,char*>(n->steps->size(),
-					    rWSgSC(child)));
+                                            rWSgSC(child)));
   }
 }
 
@@ -742,7 +743,7 @@ ProcessOverviewNode(const DOMNode& d, overview_node* n)
           sprintf( nv, "%s", author_p );
 
           n->authors->insert(std::pair<int,char*>(n->authors->size(), nv));
-	}
+        }
       }
     }
     else if (string_is(childname, "description") && n->description==NOT_SET) {
@@ -800,7 +801,7 @@ SCIRun::ProcessComponentNode(const DOMNode& d, component_node* n)
   if (n->optional==NOT_SET) {
     DOMNode *name = d.getAttributes()->getNamedItem(to_xml_ch_ptr("optional"));
     if (name == 0)
-      cout << "ERROR: Component has no optional." << endl;
+      cout << "ERROR: Component is not marked (one way or the other) as an 'optional' component." << endl;
     else {
       char * opt_p = scinew char[strlen(to_char_ptr(name->getNodeValue()))+1];
       sprintf( opt_p, "%s", to_char_ptr(name->getNodeValue()) );
@@ -828,17 +829,17 @@ SCIRun::ProcessComponentNode(const DOMNode& d, component_node* n)
     
     if (string_is(childname, "testing") && n->testingplans) {
       for (DOMNode *planchild = child->getFirstChild();
-	   planchild!=0;
-	   planchild = planchild->getNextSibling()) {
-	const XMLCh* planchildname = planchild->getNodeName();
-	if (string_is(planchildname, "plan")) {
-	  plan_node* newplan = new plan_node;
-	  newplan->description = NOT_SET;
-	  newplan->steps = new map<int, char*>;
-	  ProcessPlanNode(*planchild, newplan);
-	  n->testingplans->insert(
-             std::pair<int, plan_node*>(n->testingplans->size(), newplan));
-	}
+           planchild!=0;
+           planchild = planchild->getNextSibling()) {
+        const XMLCh* planchildname = planchild->getNodeName();
+        if (string_is(planchildname, "plan")) {
+          plan_node* newplan = new plan_node;
+          newplan->description = NOT_SET;
+          newplan->steps = new map<int, char*>;
+          ProcessPlanNode(*planchild, newplan);
+          n->testingplans->insert(
+                                  std::pair<int, plan_node*>(n->testingplans->size(), newplan));
+        }
       }
     }
   }
@@ -852,8 +853,8 @@ WriteOverviewNodeToStream(overview_node* n, std::ofstream& o)
   if (n->authors) {
     o << "    <authors>" << endl;
     for (char_iter i=n->authors->begin();
-	 i!=n->authors->end();
-	 i++)
+         i!=n->authors->end();
+         i++)
       o << "      <author>" << (*i).second << "</author>" << endl;
     o << "    </authors>" << endl;
   }
@@ -930,10 +931,10 @@ WriteInportNodeToStream(inport_node* n, std::ofstream& o)
 
   if (n->upstream)
     for (i=n->upstream->begin();
-	 i!=n->upstream->end();
-	 i++)
+         i!=n->upstream->end();
+         i++)
       o <<  "        <componentname>" << (*i).second
-	<< "</componentname>" << endl;
+        << "</componentname>" << endl;
   
   o << "      </port>" << endl;
 }
@@ -960,10 +961,10 @@ WriteOutportNodeToStream(outport_node* n, std::ofstream& o)
 
   if (n->downstream)
     for (i=n->downstream->begin();
-	 i!=n->downstream->end();
-	 i++)
+         i!=n->downstream->end();
+         i++)
       o <<  "        <componentname>" << (*i).second 
-	<< "</componentname>" << endl;
+        << "</componentname>" << endl;
 
   o << "      </port>" << endl;
 }
@@ -991,21 +992,21 @@ WriteIoNodeToStream(io_node* n, std::ofstream& o)
 
     if (n->infiles)
       for (i2=n->infiles->begin();
-	   i2!=n->infiles->end();
-	   i2++)
-	WriteFileNodeToStream((*i2).second,o);
+           i2!=n->infiles->end();
+           i2++)
+        WriteFileNodeToStream((*i2).second,o);
     
     if (n->indevices)
       for (i7=n->indevices->begin();
-	   i7!=n->indevices->end();
-	   i7++)
-	WriteDeviceNodeToStream((*i7).second,o);
+           i7!=n->indevices->end();
+           i7++)
+        WriteDeviceNodeToStream((*i7).second,o);
 
     if (n->inports)
       for (i5=n->inports->begin();
-	   i5!=n->inports->end();
-	   i5++)
-	WriteInportNodeToStream((*i5).second,o);
+           i5!=n->inports->end();
+           i5++)
+        WriteInportNodeToStream((*i5).second,o);
 
     o << "    </inputs>" << endl;
   }
@@ -1015,21 +1016,21 @@ WriteIoNodeToStream(io_node* n, std::ofstream& o)
 
     if (n->outfiles)
       for (i2=n->outfiles->begin();
-	   i2!=n->outfiles->end();
-	   i2++)
-	WriteFileNodeToStream((*i2).second,o);
+           i2!=n->outfiles->end();
+           i2++)
+        WriteFileNodeToStream((*i2).second,o);
     
     if (n->outdevices)
       for (i7=n->outdevices->begin();
-	   i7!=n->outdevices->end();
-	   i7++)
-	WriteDeviceNodeToStream((*i7).second,o);
+           i7!=n->outdevices->end();
+           i7++)
+        WriteDeviceNodeToStream((*i7).second,o);
 
     if (n->outports)
       for (i6=n->outports->begin();
-	   i6!=n->outports->end();
-	   i6++) 
-	WriteOutportNodeToStream((*i6).second,o);
+           i6!=n->outports->end();
+           i6++) 
+        WriteOutportNodeToStream((*i6).second,o);
 
     o << "    </outputs>" << endl;
   }
@@ -1073,8 +1074,8 @@ WriteGuiNodeToStream(gui_node* n, std::ofstream& o)
   
   if (n->parameters) {
     for (i2=n->parameters->begin();
-	 i2!=n->parameters->end();
-	 i2++)
+         i2!=n->parameters->end();
+         i2++)
       WriteParameterNodeToStream((*i2).second,o);
   }
   
@@ -1098,11 +1099,11 @@ WritePlanNodeToStream(plan_node* n, std::ofstream& o)
 
   if (n->steps) 
     for (i=n->steps->begin();
-	 i!=n->steps->end();
-	 i++)
+         i!=n->steps->end();
+         i++)
       o << "      <step>" << endl
-	<< "        " << (*i).second << endl
-	<< "      </step>" << endl;
+        << "        " << (*i).second << endl
+        << "      </step>" << endl;
 
   o << "    </plan>" << endl;
 }
@@ -1116,18 +1117,18 @@ WriteImplementationNodeToStream(implementation_node* n, std::ofstream& o)
     o << "  <implementation>" << endl;
     
     for (i=n->ccfiles->begin();
-	 i!=n->ccfiles->end();
-	 i++)
+         i!=n->ccfiles->end();
+         i++)
       o << "    <ccfile>" << (*i).second << "</ccfile>" << endl;
 
     for (i=n->cfiles->begin();
-	 i!=n->cfiles->end();
-	 i++)
+         i!=n->cfiles->end();
+         i++)
       o << "    <cfile>" << (*i).second << "</cfile>" << endl;
 
     for (i=n->ffiles->begin();
-	 i!=n->ffiles->end();
-	 i++)
+         i!=n->ffiles->end();
+         i++)
       o << "    <ffile>" << (*i).second << "</ffile>" << endl;
 
     o << "  </implementation>" << endl;
@@ -1165,13 +1166,13 @@ SCIRun::WriteComponentNodeToFile(component_node* n, const char* filename)
   if (n->testingplans) {
     o << "  <testing>" << endl;
     for(plan_iter i=n->testingplans->begin();
-	i!=n->testingplans->end();
-	i++)
+        i!=n->testingplans->end();
+        i++)
       WritePlanNodeToStream((*i).second,o);
     o << "  </testing>" << endl;
   }
 
-    o << "</component>" << endl;
+  o << "</component>" << endl;
   
   o << endl;
 }
@@ -1185,7 +1186,7 @@ SCIRun::ReadComponentNodeFromFile(component_node* n, const char* filename,
     XMLPlatformUtils::Initialize();
   } catch (const XMLException& toCatch) {
     std::cerr << "Error during initialization! :\n"
-	 << StrX(toCatch.getMessage()) << endl;
+              << StrX(toCatch.getMessage()) << endl;
     return -1;
   }
 
