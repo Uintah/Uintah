@@ -541,6 +541,30 @@ for i in $package; do
    SCI_SET_PACKAGE_CHECKS($i)
 done
 
+if test "$pkg_BioPSE" = "yes" || test "$pkg_Insight" = "yes" ||
+   test "$pgk_MatlabInterface" = "yes" || test "$pkg_DataIO" = "yes" ||
+   test "$pkg_Fusion" = "yes"; then
+   if test "$pkg_Teem" != "yes"; then
+      AC_MSG_WARN(User did not enable the Teem package but it is required by)
+      AC_MSG_WARN(an enabled package(s)... adding it to the list of requested packages.)
+      PACKAGE_DIRS=$PACKAGE_DIRS" Packages/Teem"
+      # set the package dependent checks
+      SCI_SET_PACKAGE_CHECKS(Teem)
+      package="$package Teem"
+   fi
+fi
+
+if test "$pkg_Fusion" = "yes"; then
+  if test "$pkg_DataIO" != "yes"; then
+      AC_MSG_WARN(User did not enable the DataIO package but it is required by)
+      AC_MSG_WARN(the Fusion package... adding it to the list of requested packages.)
+      PACKAGE_DIRS=$PACKAGE_DIRS" Packages/DataIO"
+      # set the package dependent checks
+      SCI_SET_PACKAGE_CHECKS(DataIO)
+      package="$package DataIO"
+  fi
+fi
+
 if test "$sci_required_unipetsc" = "yes"; then
    sci_required_blas=yes
    sci_required_lapack=yes
@@ -562,31 +586,6 @@ fi
 AC_SUBST(DEF_COLLAB_VIS)
 AC_SUBST(HAVE_COLLAB_VIS)
 
-
-# Take care of package dependencies
-if test "$pkg_DataIO" = "yes"; then
-  # DataIO depends upon Teem Package.  
-  if test -z $pkg_Teem; then
-    AC_MSG_ERROR([The DataIO Package depends on the Teem Package. Please 
-                  make sure you have the Teem Package and configure 
-                  with it enabled.])
-  fi
-fi
-
-if test "$pkg_Fusion" = "yes"; then
-  # Fusion depends upon Teem Package.  
-  if test -z $pkg_Teem; then
-    AC_MSG_ERROR([The Fusion Package depends on the Teem Package. Please 
-                  make sure you have the Teem Package and configure 
-                  with it enabled.])
-  fi
-  if test -z $pkg_DataIO; then
-    AC_MSG_ERROR([The Fusion Package depends on the DataIO Package. Please 
-                  make sure you have the Teem Package and configure 
-                  with it enabled.])
-  fi
-fi
-
 LOAD_PACKAGE="SCIRun"
 for i in $package; do
  LOAD_PACKAGE=$LOAD_PACKAGE,"$i"
@@ -599,7 +598,7 @@ BASENAME_IS=`type dirname | sed 's%^.* %%'`
 LDRUN_PREFIX="-Wl,-rpath -Wl,"
 
 ## We use both of these in a number of spots, so I think this is fair:
-## (Eventually we could write our own if necessary...
+## (Eventually we could write our own if necessary...)
 if test -z "$DIRNAME_IS" -o -z "$BASENAME_IS"; then
   AC_MSG_ERROR(dirname or basename not found.  Configure script won't work!)
 fi
@@ -1948,7 +1947,7 @@ for dif in "" "$_sci_lib"; do
        done
 
        SCI_TRY_LINK(MAGICK,ImageMagick library and headers,magick/magick.h,
-                    $includes,Magick,$MAGICK_LIB_FLAG,$MAGICK_LIB_DIR_FLAG,,optional)
+                    $includes,Magick,$MAGICK_LIB_FLAG,$MAGICK_LIB_DIR_FLAG,,required)
 
        DEF_MAGICK="#define HAVE_MAGICK 1"
     fi
@@ -1978,8 +1977,8 @@ AC_SUBST(DEF_MAGICK)
 
 # Default values:
 _sci_optional=optional
-_sci_lib="$sci_thirdparty_dir"
-_sci_inc="$sci_thirdparty_includes"
+_sci_lib=
+_sci_inc=
 
 if test "$with_png" = "yes"; then
   # If --with-png is specified without a parameter, then it makes it required
@@ -2282,7 +2281,7 @@ if test "$HAVE_F" = "yes" && test "$HAVE_BLAS" = "yes"; then
   if test "$with_lapack"; then
     _sci_lib="$with_lapack"
   else
-    _sci_lib="$LIB_DIR_BLAS $sci_thirdparty_libs"
+    _sci_lib="$LIB_DIR_BLAS"
   fi
 fi
 
@@ -3077,14 +3076,28 @@ if test "$sci_required_teem" = "yes"; then
   fi
   
   if test "$sci_required_rtrt" = "yes"; then
-     SCI_TRY_LINK(TEEM,teem library and headers,teem/nrrd.h,$_sci_inc,teem,$_sci_lib,-lm,,optional)
+     SCI_TRY_LINK(TEEM,teem library and headers,teem/nrrd.h,$_sci_inc,teem,$_sci_lib m,,,optional)
   else
-     SCI_TRY_LINK(TEEM,teem library and headers,teem/nrrd.h,$_sci_inc,teem,$_sci_lib,-lm,,required)
+
+     # Determine if teem is using png.  Assume teem is either in the 3rd Party
+     # or where the user has specified (as we are going to use nm to look at its
+     # symbols and are not trying to link against it (at this point.))
+
+     result=`nm $_sci_lib/libteem.a | grep png`
+     if test -n "$result" && test "$HAVE_PNG" != "yes"; then
+        AC_MSG_WARN(Teem was built with PNG support.  However the SCIRun configure)
+        AC_MSG_WARN(did not find PNG.  You need to determine where it is... as)
+        AC_MSG_WARN(Teem seems to have found it already.  You will most likely then need)
+        AC_MSG_WARN(to use --with-png=/dir/above/dir/having/libpng on your configure line.)
+        AC_MSG_ERROR(Please fix this problem and then configure again.)
+     fi
+
+     SCI_TRY_LINK(TEEM,teem library and headers,teem/nrrd.h,$_sci_inc,teem,$_sci_lib,$PNG_LIB_DIR_FLAG $PNG_LIB_FLAG -lm,,required)
   fi
 
   if test "$HAVE_TEEM" = "yes"; then
      DEF_TEEM="#define HAVE_TEEM 1"
-  fi  
+  fi
 
   if test "$with_teem" && test ! "$DEF_TEEM"; then
     echo
