@@ -33,7 +33,7 @@
 if grep -q Packages/BioPSE __OBJ_DIR__/configVars.mk
 then
    # Just loading the needed packages.
-   export LOAD_PACKAGE=SCIRun,BioPSE
+   export SCIRUN_LOAD_PACKAGE=SCIRun,BioPSE
 
    __OBJ_DIR__/scirun __SRC_DIR__/Packages/BioPSE/nets/PowerApps/BioFEM.app $1
 else
