@@ -46,11 +46,11 @@ public:
   virtual void execute();
 
 private:
-
   GuiInt size_x_;
   GuiInt size_y_;
   GuiInt size_z_;
   GuiDouble padpercent_;
+  GuiString data_at_;
 
   enum DataTypeEnum { SCALAR, VECTOR, TENSOR };
 };
@@ -66,7 +66,8 @@ SampleLattice::SampleLattice(const string& id)
     size_x_("sizex", id, this),
     size_y_("sizey", id, this),
     size_z_("sizez", id, this),
-    padpercent_("padpercent", id, this)
+    padpercent_("padpercent", id, this),
+    data_at_("data-at", id, this)
 {
 }
 
@@ -122,17 +123,25 @@ SampleLattice::execute()
 
   // Create Image Field.
   FieldHandle ofh;
+  Field::data_location data_at;
+  if (data_at_.get() == "Nodes") data_at = Field::NODE;
+  else if (data_at_.get() == "Cells") data_at = Field::CELL;
+  else {
+    cerr << "Error unsupported data_at location: "<<data_at_.get()<<"\n";
+    return;
+  }
+
   if (datatype == VECTOR)
   {
-    ofh = scinew LatVolField<Vector>(mesh, Field::NODE);
+    ofh = scinew LatVolField<Vector>(mesh, data_at);
   }				    
   else if (datatype == TENSOR)	    
   {				    
-    ofh = scinew LatVolField<Tensor>(mesh, Field::NODE);
+    ofh = scinew LatVolField<Tensor>(mesh, data_at);
   }				    
   else				    
   {				    
-    ofh = scinew LatVolField<double>(mesh, Field::NODE);
+    ofh = scinew LatVolField<double>(mesh, data_at);
   }
 
   FieldOPort *ofp = (FieldOPort *)get_oport("Output Sample Field");

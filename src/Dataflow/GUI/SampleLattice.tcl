@@ -27,10 +27,12 @@ itcl_class SCIRun_Fields_SampleLattice {
 	global $this-sizey
 	global $this-sizez
 	global $this-padpercent
+	global $this-data-at
 	set $this-sizex 16
 	set $this-sizey 16
 	set $this-sizez 16
 	set $this-padpercent 0
+	set $this-data-at Nodes
     }
 
     method ui {} {
@@ -46,9 +48,10 @@ itcl_class SCIRun_Fields_SampleLattice {
 	frame $w.row3
 	frame $w.row31
 	frame $w.row4
+	frame $w.which -relief groove -borderwidth 2
 
-	pack $w.row1 $w.row2 $w.row3 $w.row31 $w.row4 -side top -e y -f both \
-		-padx 5 -pady 5
+	pack $w.which $w.row1 $w.row2 $w.row3 $w.row31 $w.row4 -side top \
+		-e y -f both -padx 5 -pady 5
 	
 	label $w.row1.xsize_label -text "X Size   "
 	entry $w.row1.xsize -textvariable $this-sizex
@@ -67,6 +70,14 @@ itcl_class SCIRun_Fields_SampleLattice {
 
 	button $w.row4.execute -text "Execute" -command "$this-c needexecute"
 	pack $w.row4.execute -side top -e n -f both
+
+	label $w.which.l -text "Data at Location"
+	radiobutton $w.which.node -text "Nodes" \
+		-variable $this-data-at -value Nodes
+	radiobutton $w.which.element -text "Cells" \
+		-variable $this-data-at -value Cells
+	pack $w.which.l -side top
+	pack $w.which.node $w.which.element -anchor nw
     }
 }
 
