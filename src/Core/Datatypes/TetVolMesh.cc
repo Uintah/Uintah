@@ -98,10 +98,15 @@ TetVolMesh::~TetVolMesh()
 {
 }
 
-
-void TetVolMesh::get_random_point(Point &p, const Cell::index_type &ei) const
+/* To generate a random point inside of a tetrahedron, we generate random
+   barrycentric coordinates (independent random variables between 0 and
+   1 that sum to 1) for the point. */
+void TetVolMesh::get_random_point(Point &p, const Cell::index_type &ei,
+				  int seed) const
 {
-  static MusilRNG rng(1249);
+  static MusilRNG rng;
+
+  // get positions of the vertices
   Node::array_type ra;
   get_nodes(ra,ei);
   Point p0,p1,p2,p3;
@@ -109,18 +114,29 @@ void TetVolMesh::get_random_point(Point &p, const Cell::index_type &ei) const
   get_point(p1,ra[1]);
   get_point(p2,ra[2]);
   get_point(p3,ra[3]);
-  Vector v0(p1-p0);
-  Vector v1(p2-p0);
-  Vector v2(p3-p0);
-  double t = rng()*v0.length();
-  double u = rng()*v1.length();
-  double v = rng()*v2.length();
-  if ( (t+u+v)>1 ) {
-    t = 1.-t;
-    u = 1.-u;
-    v = 1.-v;
+
+  // generate barrycentric coordinates
+  double t,u,v,w;
+  if (seed) {
+    MusilRNG rng1(seed);
+    t = rng1();
+    u = rng1();
+    v = rng1();
+    w = rng1();
+  } else {
+    t = rng();
+    u = rng();
+    v = rng();
+    w = rng();
   }
-  p = p0+(v0*t)+(v1*u)+(v2*v);
+  double sum = t+u+v+w;
+  t/=sum;
+  u/=sum;
+  v/=sum;
+  w/=sum;
+
+  // compute the position of the random point
+  p = (p0.vector()*t+p1.vector()*u+p2.vector()*v+p3.vector()*w).point();
 }
 
 BBox
@@ -182,9 +198,10 @@ TetVolMesh::hash_face(Node::index_type n1, Node::index_type n2,
 void
 TetVolMesh::compute_faces()
 {
-  if (faces_.size() > 0) return;
-
   face_table_lock_.lock();
+  if (faces_.size() > 0) {face_table_lock_.unlock(); return;}
+  cerr << "TetVolMesh::computing faces...\n";
+
   Cell::iterator ci = cell_begin();
   Node::array_type arr(4);
   while (ci != cell_end()) {
@@ -227,9 +244,10 @@ TetVolMesh::hash_edge(Node::index_type n1, Node::index_type n2,
 void
 TetVolMesh::compute_edges()
 {
-  if (edges_.size() > 0) return;
-
   edge_table_lock_.lock();
+  if (edges_.size() > 0) {edge_table_lock_.unlock(); return;}
+  cerr << "TetVolMesh::computing edges...\n";
+
   Cell::iterator ci = cell_begin();
   Node::array_type arr(4);
   while (ci != cell_end()) {
@@ -483,8 +501,9 @@ TetVolMesh::get_neighbors(Node::array_type &array, Node::index_type idx) const
 void
 TetVolMesh::compute_node_neighbors()
 {
-  if (node_neighbors_.size() > 0) return;
   node_nbor_lock_.lock();
+  if (node_neighbors_.size() > 0) {node_nbor_lock_.unlock(); return;}
+  cerr << "TetVolMesh::computing node neighbors...\n";
   node_neighbors_.clear();
   node_neighbors_.resize(points_.size());
   for_each(edge_begin(), edge_end(), FillNodeNeighbors(node_neighbors_,
@@ -656,14 +675,45 @@ TetVolMesh::get_weights(const Point &p,
   }
 }
 
+void
+TetVolMesh::get_weights(const Point &p,
+			Node::array_type &l, vector<double> &w)
+{
+  Cell::index_type idx;
+  if (locate(idx, p))
+  {
+    Node::array_type ra(4);
+    get_nodes(ra,idx);
+    Point p0,p1,p2,p3;
+    get_point(p0,ra[0]);
+    get_point(p1,ra[1]);
+    get_point(p2,ra[2]);
+    get_point(p3,ra[3]);
+    double vol0, vol1, vol2, vol3, vol_sum;
+    vol0 = (Cross(Cross(p1-p,p2-p),p3-p)).length();
+    vol1 = (Cross(Cross(p0-p,p2-p),p3-p)).length();
+    vol2 = (Cross(Cross(p0-p,p1-p),p3-p)).length();
+    vol3 = (Cross(Cross(p0-p,p1-p),p2-p)).length();
+    vol_sum = vol0+vol1+vol2+vol3;
+    l.push_back(ra[0]);
+    l.push_back(ra[1]);
+    l.push_back(ra[2]);
+    l.push_back(ra[3]);
+    w.push_back(vol0/vol_sum);
+    w.push_back(vol1/vol_sum);
+    w.push_back(vol2/vol_sum);
+    w.push_back(vol3/vol_sum);
+  }
+}
+
 
 void
 TetVolMesh::compute_grid()
 {
-  if (grid_.get_rep() != 0) return; // only create once.
-
-  cerr << "compute_grid starting" << endl;
   grid_lock_.lock();
+  if (grid_.get_rep() != 0) {grid_lock_.unlock(); return;} // only create once.
+
+  cerr << "TetVolMesh::compute_grid starting" << endl;
   BBox bb = get_bounding_box();
   // cubed root of number of cells to get a subdivision ballpark
   const double one_third = 1.L/3.L;
@@ -708,8 +758,8 @@ TetVolMesh::compute_grid()
     }
     ++ci;
   }
+  cerr << "TetVolMesh::compute_grid done." << endl << endl;
   grid_lock_.unlock();
-  cerr << "compute_grid done." << endl << endl;
 }
 
 bool

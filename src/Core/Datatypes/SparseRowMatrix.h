@@ -37,15 +37,12 @@
 
 namespace SCIRun {
 
+class ColumnMatrix;
+class SparseRowMatrix;
 
-class AddMatrices;
 class SCICORESHARE SparseRowMatrix : public Matrix {
   int nnrows;
   int nncols;
-  double dummy;
-  double minVal;
-  double maxVal;
-protected:
 public:
   //! Public data
   int* rows;
@@ -59,29 +56,27 @@ public:
   SparseRowMatrix(int, int, int*, int*, int, double*);
   SparseRowMatrix(int, int, int*, int*, int);
   SparseRowMatrix(const SparseRowMatrix&);
-
   //! Destructor
   virtual ~SparseRowMatrix();
+
+  DenseMatrix *toDense();
+  ColumnMatrix *toColumn();
 
   //! Assignement operator
   SparseRowMatrix& operator=(const SparseRowMatrix&);
 
 
-  virtual double& get(int, int);
+  virtual double& get(int, int) const;
   virtual void put(int, int, const double&);
   virtual void add(int, int, const double&);
 
-  void transpose( SparseRowMatrix &);  
+  virtual SparseRowMatrix *transpose();
   int getIdx(int, int);
-  double density();
   int get_nnz() { return nnz; }
   
   //! 
   virtual int nrows() const;
   virtual int ncols() const;
-  virtual double minValue();
-  virtual double maxValue();
-
   
   virtual void getRowNonzeros(int r, Array1<int>& idx, Array1<double>& val);
   virtual void solve(ColumnMatrix&);
@@ -104,9 +99,6 @@ public:
   //! Persistent representation...
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
-
-  //! Friends
-  friend class AddMatrices;
 };
 
 } // End namespace SCIRun

@@ -21,8 +21,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Core/Datatypes
 
-SRCS += $(SRCDIR)/Brick.cc		    	\
-        $(SRCDIR)/ColorMap.cc		    	\
+SRCS += $(SRCDIR)/ColorMap.cc		    	\
         $(SRCDIR)/ColumnMatrix.cc	    	\
 	$(SRCDIR)/ContourMesh.cc            	\
         $(SRCDIR)/cd_templates.cc	    	\
@@ -35,6 +34,7 @@ SRCS += $(SRCDIR)/Brick.cc		    	\
         $(SRCDIR)/Image.cc		    	\
         $(SRCDIR)/ImageMesh.cc		    	\
         $(SRCDIR)/InterpolantTypes.cc		\
+	$(SRCDIR)/LatVolMesh.cc 		\
         $(SRCDIR)/Matrix.cc		    	\
         $(SRCDIR)/MeshBase.cc		    	\
         $(SRCDIR)/Path.cc		    	\
@@ -42,32 +42,29 @@ SRCS += $(SRCDIR)/Brick.cc		    	\
         $(SRCDIR)/PropertyManager.cc	    	\
 	$(SRCDIR)/ScanlineMesh.cc           	\
         $(SRCDIR)/SparseRowMatrix.cc	    	\
-        $(SRCDIR)/SymSparseRowMatrix.cc	    	\
         $(SRCDIR)/TetVolMesh.cc 	    	\
-        $(SRCDIR)/TriDiagonalMatrix.cc	    	\
         $(SRCDIR)/TriSurfMesh.cc	    	\
 	$(SRCDIR)/TypeName.cc		    	\
-        $(SRCDIR)/VoidStar.cc			\
-	$(SRCDIR)/GLTexture3D.cc 		\
-	$(SRCDIR)/GLTextureIterator.cc 		\
-	$(SRCDIR)/GLTexRenState.cc 		\
-	$(SRCDIR)/GLOverOp.cc 			\
-	$(SRCDIR)/GLMIP.cc 			\
-	$(SRCDIR)/GLVolRenState.cc 		\
-	$(SRCDIR)/GLAttenuate.cc 		\
-	$(SRCDIR)/GLPlanes.cc 			\
+	$(SRCDIR)/Brick.cc		    	\
 	$(SRCDIR)/FullRes.cc 			\
 	$(SRCDIR)/FullResIterator.cc 		\
+	$(SRCDIR)/GLAttenuate.cc 		\
+	$(SRCDIR)/GLMIP.cc 			\
+	$(SRCDIR)/GLOverOp.cc 			\
+	$(SRCDIR)/GLPlanes.cc 			\
+        $(SRCDIR)/GLTexture3D.cc 		\
+	$(SRCDIR)/GLTextureIterator.cc 		\
+	$(SRCDIR)/GLTexRenState.cc 		\
+	$(SRCDIR)/GLVolRenState.cc 		\
+	$(SRCDIR)/GLVolumeRenderer.cc 		\
 	$(SRCDIR)/LOS.cc 			\
 	$(SRCDIR)/LOSIterator.cc 		\
+	$(SRCDIR)/Polygon.cc 			\
 	$(SRCDIR)/ROI.cc 			\
 	$(SRCDIR)/ROIIterator.cc 		\
-	$(SRCDIR)/TexPlanes.cc 			\
-	$(SRCDIR)/GLVolumeRenderer.cc 		\
-	$(SRCDIR)/Polygon.cc 			\
 	$(SRCDIR)/SliceTable.cc 		\
+	$(SRCDIR)/TexPlanes.cc 			\
 	$(SRCDIR)/VolumeUtils.cc 		\
-	$(SRCDIR)/LatVolMesh.cc 		\
 
 
 

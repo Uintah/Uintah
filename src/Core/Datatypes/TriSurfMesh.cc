@@ -62,26 +62,41 @@ TriSurfMesh::~TriSurfMesh()
 {
 }
 
-
-void
-TriSurfMesh::get_random_point(Point &p, const Face::index_type &ei) const
+/* To generate a random point inside of a triangle, we generate random
+   barrycentric coordinates (independent random variables between 0 and
+   1 that sum to 1) for the point. */
+void TriSurfMesh::get_random_point(Point &p, const Face::index_type &ei,
+				   int seed) const
 {
-  static MusilRNG rng(1249);
+  static MusilRNG rng;
+
+  // get the positions of the vertices
   Node::array_type ra;
   get_nodes(ra,ei);
   Point p0,p1,p2;
   get_point(p0,ra[0]);
   get_point(p1,ra[1]);
   get_point(p2,ra[2]);
-  Vector v0(p1-p0);
-  Vector v1(p2-p0);
-  double t = rng()*v0.length();
-  double u = rng()*v1.length();
-  if ( (t+u)>1 ) {
-    t = 1.-t;
-    u = 1.-u;
+
+  // generate the barrycentric coordinates
+  double t,u,v;
+  if (seed) {
+    MusilRNG rng1(seed);
+    t = rng1(); 
+    u = rng1(); 
+    v = rng1();
+  } else {
+    t = rng(); 
+    u = rng(); 
+    v = rng();
   }
-  p = p0+(v0*t)+(v1*u);
+  double sum = t+u+v;
+  t/=sum;
+  u/=sum;
+  v/=sum;
+
+  // compute the position of the random point
+  p = (p0.vector()*t+p1.vector()*u+p2.vector()*v).point();
 }
 
 
@@ -294,6 +309,33 @@ TriSurfMesh::get_weights(const Point &p,
   {
     l.push_back(idx);
     w.push_back(1.0);
+  }
+}
+
+void
+TriSurfMesh::get_weights(const Point &p,
+			 Node::array_type &l, vector<double> &w)
+{
+  Face::index_type idx;
+  if (locate(idx, p))
+  {
+    Node::array_type ra(3);
+    get_nodes(ra,idx);
+    Point p0,p1,p2;
+    get_point(p0,ra[0]);
+    get_point(p1,ra[1]);
+    get_point(p2,ra[2]);
+    double area0, area1, area2, area_sum;
+    area0 = (Cross(p1-p,p2-p)).length();
+    area1 = (Cross(p0-p,p2-p)).length();
+    area2 = (Cross(p0-p,p1-p)).length();
+    area_sum = area0+area1+area2;
+    l.push_back(ra[0]);
+    l.push_back(ra[1]);
+    l.push_back(ra[2]);
+    w.push_back(area0/area_sum);
+    w.push_back(area1/area_sum);
+    w.push_back(area2/area_sum);
   }
 }
 

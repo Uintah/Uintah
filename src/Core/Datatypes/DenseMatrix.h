@@ -41,12 +41,15 @@ namespace SCIRun {
 
 using std::vector;
 
+class ColumnMatrix;
+class SparseRowMatrix;
+
 class SCICORESHARE DenseMatrix : public Matrix {
   //!private data
   int nc;
   int nr;
-  double   minVal;
-  double   maxVal;
+//  double   minVal;
+//  double   maxVal;
   double** data;
   double*  dataptr;
 public:
@@ -55,6 +58,9 @@ public:
   DenseMatrix(int, int);
   DenseMatrix(const DenseMatrix&);
 
+  SparseRowMatrix *toSparse();
+  ColumnMatrix *toColumn();
+
   //! Destructor
   virtual ~DenseMatrix();
   
@@ -62,17 +68,16 @@ public:
   DenseMatrix& operator=(const DenseMatrix&);
   
   //! slow setters/getter for polymorphic operations
-  virtual double& get(int, int);
-  virtual void    put(int, int, const double&);
-
+  virtual double& get(int, int) const;
+  virtual void   put(int, int, const double&);
+  
+  virtual DenseMatrix* transpose();
   
   virtual int     nrows() const;
   virtual int     ncols() const;
-  virtual double  minValue();
-  virtual double  maxValue();
  
   virtual void    zero();
-  
+
   virtual double  sumOfCol(int);
   virtual double  sumOfRow(int);
   virtual void    getRowNonzeros(int r, Array1<int>& idx, Array1<double>& val);

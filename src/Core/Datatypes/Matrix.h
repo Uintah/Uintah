@@ -39,8 +39,6 @@ using namespace std;
 
 namespace SCIRun {
 
-
-class SymSparseRowMatrix;
 class SparseRowMatrix;
 class DenseMatrix;
 class ColumnMatrix;
@@ -51,57 +49,23 @@ typedef LockingHandle<Matrix> MatrixHandle;
 class SCICORESHARE Matrix : public Datatype
 {
 protected:
-  enum Sym {
-    NON_SYMMETRIC,
-    SYMMETRIC
-  };
-  enum Representation {
-    SPARSE,
-    SYMSPARSE,
-    DENSE,
-    TRIDIAGONAL,
-    COLUMN,
-    OTHER
-  };
-
   bool     separate_raw_;
   string   raw_filename_;
-  Sym      sym_;
-  bool     extremaCurrent_;
-
-  Matrix(Sym symmetric, Representation dense);
-
-private:
-
-  Representation rep_;
 
 public:
-
-  virtual ~Matrix();
-  virtual Matrix* clone();
-
+  virtual Matrix* clone()=0;
+  virtual Matrix* transpose()=0;
   virtual double* get_val() { return 0; }
   virtual int* get_row() { return 0; }
   virtual int* get_col() { return 0; }
 
-  
-  const string getType() const;
-  SymSparseRowMatrix* getSymSparseRow();
-  SparseRowMatrix* getSparseRow();
-  DenseMatrix* getDense();
-  ColumnMatrix* getColumn();
-  bool is_symmetric();
-  void is_symmetric(bool sym);
-
-  virtual double& get(int, int)=0;
+  virtual double& get(int, int) const=0;
   inline MatrixRow operator[](int r);
 
   virtual void zero()=0;
   virtual int nrows() const=0;
   virtual int ncols() const=0;
   virtual void getRowNonzeros(int r, Array1<int>& idx, Array1<double>& v)=0;
-  virtual double minValue()=0;
-  virtual double maxValue()=0;
   virtual void mult(const ColumnMatrix& x, ColumnMatrix& b,
 		    int& flops, int& memrefs,
 		    int beg=-1, int end=-1, int spVec=0) const=0;

@@ -48,6 +48,7 @@ public:
   virtual ~PropertyBase() {}
   virtual void io(Piostream &) {}
   static  PersistentTypeID type_id;
+  virtual PropertyBase* copy() const {return 0;}
 private:
   static Persistent *maker();
 };
@@ -58,6 +59,7 @@ public:
   Property() {}   // only Pio should use this constructor
   Property( T &o ) { obj_= &o; } 
   
+  virtual PropertyBase * copy() const {return scinew Property(*static_cast<T *>(obj_));}
   static const string type_name( int n = -1 );
   virtual void io(Piostream &stream);
   static  PersistentTypeID type_id;
@@ -72,6 +74,7 @@ private:
 public:
   Property( T *obj, bool temp=false ) : Property<T>( *obj ), tmp(temp) {}
   ~Property() { if (tmp) delete static_cast<T *>(obj_); }
+  virtual PropertyBase * copy() const {if (tmp) return scinew Property<T *>(static_cast<T *>(obj_)); else return scinew Property<T *>(scinew T(*static_cast<T *>(obj_)), true);}
 };
 
 

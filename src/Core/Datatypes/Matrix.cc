@@ -35,110 +35,16 @@ namespace SCIRun {
 
 PersistentTypeID Matrix::type_id("Matrix", "Datatype", 0);
 
-bool
-Matrix::is_symmetric()
-{
-  return sym_==SYMMETRIC;
-}
-
-
-void
-Matrix::is_symmetric(bool sym)
-{
-  sym_ = sym?SYMMETRIC:NON_SYMMETRIC;
-}
-
-
-Matrix::Matrix(Sym sym, Representation rep)
-  : separate_raw_(0),
-    raw_filename_(""),
-    sym_(sym),
-    extremaCurrent_(false),
-    rep_(rep)
-{
-}
-
-
-Matrix::~Matrix()
-{
-}
-
-
-const string Matrix::getType() const
-{
-  switch(rep_)
-  {
-  case SPARSE:
-    return "sparse";
-  case SYMSPARSE:
-    return "symsparse";
-  case DENSE:
-    return "dense";
-  case TRIDIAGONAL:
-    return "tridiagonal";
-  case COLUMN:
-    return "column";
-  case OTHER:
-  default:
-    return "unknown";
-  }
-}
-
-
-SparseRowMatrix *
-Matrix::getSparseRow()
-{
-  if (rep_ == SPARSE)
-    return (SparseRowMatrix*)this;
-  else
-    return 0;
-}
-
-
-SymSparseRowMatrix *
-Matrix::getSymSparseRow()
-{
-  if (rep_ == SYMSPARSE)
-    return (SymSparseRowMatrix*)this;
-  else
-    return 0;
-}
-
-
-DenseMatrix *
-Matrix::getDense()
-{
-  if (rep_ == DENSE)
-    return (DenseMatrix*)this;
-  else
-    return 0;
-}
-
-
-ColumnMatrix *
-Matrix::getColumn()
-{
-  if (rep_ == COLUMN)
-    return (ColumnMatrix*)this;
-  else
-    return 0;
-}
-
-
-Matrix *
-Matrix::clone()
-{
-  return 0;
-}
-
-#define MATRIX_VERSION 1
+#define MATRIX_VERSION 2
 
 void
 Matrix::io(Piostream& stream)
 {
-  stream.begin_class("Matrix", MATRIX_VERSION);
-  int *tmpsym = (int *)&sym_;
-  stream.io(*tmpsym);
+  int version = stream.begin_class("Matrix", MATRIX_VERSION);
+  if (version < 2) {
+    int tmpsym;
+    stream.io(tmpsym);
+  }
   stream.end_class();
 }
 

@@ -130,9 +130,9 @@ public:
   bool locate(Face::index_type &loc, const Point &p);
   bool locate(Cell::index_type &loc, const Point &p);
 
-  void get_weights(const Point &p, Node::array_type &l, vector<double> &w) {}
-  void get_weights(const Point &p, Edge::array_type &l, vector<double> &w) {}
-  void get_weights(const Point &p, Face::array_type &l, vector<double> &w) {}
+  void get_weights(const Point &p, Node::array_type &l, vector<double> &w);
+  void get_weights(const Point &, Edge::array_type &, vector<double> &) {ASSERTFAIL("TetVolMesh::get_weights for edges isn't supported");}
+  void get_weights(const Point &, Face::array_type &, vector<double> &) {ASSERTFAIL("TetVolMesh::get_weights for faces isn't supported");}
   void get_weights(const Point &p, Cell::array_type &l, vector<double> &w);
 
   void get_point(Point &result, Node::index_type index) const
@@ -144,21 +144,21 @@ public:
   { points_[index] = point; }
 
   double get_volume(const Cell::index_type &ci) {
-    Node::array_type ra;
+    Node::array_type ra(4);
     get_nodes(ra,ci);
     Point p0,p1,p2,p3;
     get_point(p0,ra[0]);
     get_point(p1,ra[1]);
     get_point(p2,ra[2]);
     get_point(p3,ra[3]);
-    return (Cross(Cross(p1-p0,p2-p0),p3-p0)).length()*
-      0.1666666666666666;
+    return (Cross(Cross(p1-p0,p2-p0),p3-p0)).length()*0.1666666666666666;
   }
   double get_area(const Face::index_type &) { return 0; }
   double get_element_size(const Elem::index_type &ci)
   { return get_volume(ci); }
 
-  void get_random_point(Point &p, const Cell::index_type &ei) const;
+  void get_random_point(Point &p, const Cell::index_type &ei, 
+			int seed=0) const;
 
   //! the double return val is the volume of the tet.
   double get_gradient_basis(Cell::index_type ci, Vector& g0, Vector& g1,

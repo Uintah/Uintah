@@ -28,9 +28,10 @@
  */
 
 #include <stdio.h>
-#include <Core/Datatypes/DenseMatrix.h>
-#include <Core/Util/Assert.h>
 #include <Core/Datatypes/ColumnMatrix.h>
+#include <Core/Datatypes/DenseMatrix.h>
+#include <Core/Datatypes/SparseRowMatrix.h>
+#include <Core/Util/Assert.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
 #include <iostream>
@@ -54,8 +55,7 @@ DenseMatrix* DenseMatrix::clone(){
 }
 
 //! constructors
-DenseMatrix::DenseMatrix()
-  : Matrix(Matrix::NON_SYMMETRIC, Matrix::DENSE), 
+DenseMatrix::DenseMatrix() :
   nc(0), 
   nr(0), 
   data(0),
@@ -64,7 +64,6 @@ DenseMatrix::DenseMatrix()
 }
 
 DenseMatrix::DenseMatrix(int r, int c)
-  : Matrix(Matrix::NON_SYMMETRIC, Matrix::DENSE)
 {
   ASSERT(r>0);
   ASSERT(c>0);
@@ -80,10 +79,9 @@ DenseMatrix::DenseMatrix(int r, int c)
 }
 
 DenseMatrix::DenseMatrix(const DenseMatrix& m)
-  : Matrix(Matrix::NON_SYMMETRIC, Matrix::DENSE)
 {
-  nc=m.nc;
-  nr=m.nr;
+  nc=m.ncols();
+  nr=m.nrows();
   data=scinew double*[nr];
   double* tmp=scinew double[nr*nc];
   dataptr=tmp;
@@ -94,6 +92,38 @@ DenseMatrix::DenseMatrix(const DenseMatrix& m)
       *tmp++=*p++;
     }
   }
+}
+
+ColumnMatrix *DenseMatrix::toColumn() {
+  ColumnMatrix *cm = scinew ColumnMatrix(nr);
+  for(int i=0;i<nc;i++)
+    (*cm)[i]=data[i][0];
+  return cm;
+}
+
+SparseRowMatrix *DenseMatrix::toSparse() {
+  int nnz = 0;
+  int r, c;
+  int *rows = scinew int[nr+1];
+  for (r=0; r<nr; r++)
+    for (c=0; c<nc; c++)
+      if (data[r][c] != 0) nnz++;
+
+  int *columns = scinew int[nnz];
+  double *a = scinew double[nnz];
+
+  int count=0;
+  for (r=0; r<nr; r++) {
+    rows[r]=count;
+    for (c=0; c<nc; c++)
+      if (data[r][c] != 0) {
+	columns[count]=c;
+	a[count]=data[r][c];
+	count++;
+      }
+  }
+  rows[nr]=count;
+  return scinew SparseRowMatrix(nr, nc, rows, columns, nnz, a);
 }
 
 //! destructor
@@ -123,7 +153,7 @@ DenseMatrix& DenseMatrix::operator=(const DenseMatrix& m)
   return *this;
 }
 
-double& DenseMatrix::get(int r, int c)
+double& DenseMatrix::get(int r, int c) const
 {
   ASSERTRANGE(r, 0, nr);
   ASSERTRANGE(c, 0, nc);
@@ -134,40 +164,16 @@ void DenseMatrix::put(int r, int c, const double& d)
 {
   ASSERTRANGE(r, 0, nr);
   ASSERTRANGE(c, 0, nc);
-  extremaCurrent_ = false;
   data[r][c]=d;
 }
 
-double DenseMatrix::minValue() {
-  if (extremaCurrent_)
-    return minVal;
-  minVal=maxVal=data[0][0];
-  for (int r=0; r<nr; r++) {
-    for (int c=0; c<nr; c++) {
-      if (data[r][c] < minVal)
-	minVal = data[r][c];
-      if (data[r][c] > maxVal)
-	maxVal = data[r][c];
-    }
-  }
-  extremaCurrent_ = true;
-  return minVal;
-}
-
-double DenseMatrix::maxValue() {
-  if (extremaCurrent_)
-    return maxVal;
-  minVal=maxVal=data[0][0];
-  for (int r=0; r<nr; r++) {
-    for (int c=0; c<nr; c++) {
-      if (data[r][c] < minVal)
-	minVal = data[r][c];
-      if (data[r][c] > maxVal)
-	maxVal = data[r][c];
-    }
-  }
-  extremaCurrent_=true;
-  return maxVal;
+DenseMatrix *DenseMatrix::transpose() {
+  DenseMatrix *m=scinew DenseMatrix(nc,nr);
+  double *mptr = &((*m)[0][0]);
+  for (int c=0; c<nc; c++)
+    for (int r=0; r<nr; r++)
+      *mptr++ = data[r][c];
+  return m;
 }
 
 int DenseMatrix::nrows() const
@@ -202,7 +208,6 @@ void DenseMatrix::zero()
       row[c]=0.0;
     }
   }
-  extremaCurrent_=false;
 }
 
 int DenseMatrix::solve(ColumnMatrix& sol)
