@@ -1,4 +1,4 @@
-#!/bin/csh
+#!/bin/tcsh
 
 set src = $argv
  ../../../Test/helpers/useFakeArches.pl $src
