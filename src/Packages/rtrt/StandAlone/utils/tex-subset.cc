@@ -186,6 +186,7 @@ int main(int argc, char *argv[]) {
   // Compute the measure on the textures
   float* tex_data = (float*)(nin->data);
   int num_pixels = width*height;
+  float max_value = -FLT_MAX;
   for (int channel = 0; channel < num_channels; channel++) {
     float min = FLT_MAX;
     float max = -FLT_MAX;
@@ -207,6 +208,9 @@ int main(int argc, char *argv[]) {
       sort[channel].value = max - min;
     else
       sort[channel].value = sum/num_pixels;
+    
+    if (sort[channel].value > max_value)
+      max_value = sort[channel].value;
   }
   
   // Use quick sort to order the textures
@@ -235,9 +239,8 @@ int main(int argc, char *argv[]) {
     // Seed the RNG
     srand48(seed);
 
-    double inv_nc = 1.0/num_channels;
     for (int tex = num_subset; tex < num_channels; tex++) {
-      double p = drand48()*(num_channels - tex)*inv_nc;
+      double p = drand48()*sort[tex].value/max_value;
       if (p > perturb_thresh) {
 	int r_idx = (int)(random()%num_subset);
 	sort[r_idx].idx = sort[tex].idx;
