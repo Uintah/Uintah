@@ -236,7 +236,7 @@ ChangeFieldBounds::execute()
     return;
   }
 
-  gui->execute(id + " set_state Executing 0");
+  update_state(Executing);
 
   // build the transform widget and set the the initial
   // field transform.

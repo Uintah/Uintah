@@ -40,7 +40,9 @@ using std::pair;
 
 class PSECORESHARE ChangeFieldDataAt : public Module {
 public:
-  GuiString outputdataat_;     // the out data at
+  GuiString outputdataat_;    // the out data at
+  GuiString inputdataat_;     // the in data at
+  GuiString fldname_;         // the field name
   int              generation_;
   ChangeFieldDataAt(GuiContext* ctx);
   virtual ~ChangeFieldDataAt();
@@ -53,6 +55,8 @@ public:
 ChangeFieldDataAt::ChangeFieldDataAt(GuiContext* ctx)
   : Module("ChangeFieldDataAt", ctx, Filter, "Fields", "SCIRun"),
     outputdataat_(ctx->subVar("outputdataat")),
+    inputdataat_(ctx->subVar("inputdataat")),
+    fldname_(ctx->subVar("fldname")),
     generation_(-1)
 {
 }
@@ -67,23 +71,32 @@ ChangeFieldDataAt::update_input_attributes(FieldHandle f)
   switch(f->data_at())
   {
   case Field::NODE:
-    gui->execute(string("set ")+id+"-inputdataat Nodes"); break;
+    inputdataat_.set("Nodes");
+    break;
   case Field::EDGE: 
-    gui->execute(string("set ")+id+"-inputdataat Edges"); break;
+    inputdataat_.set("Edges");
+    break;
   case Field::FACE: 
-    gui->execute(string("set ")+id+"-inputdataat Faces"); break;
+    inputdataat_.set("Faces");
+    break;
   case Field::CELL: 
-    gui->execute(string("set ")+id+"-inputdataat Cells"); break;
+    inputdataat_.set("Cells");
+    break;
   case Field::NONE: 
-    gui->execute(string("set ")+id+"-inputdataat None"); break;
+    inputdataat_.set("None");
+    break;
   default: ;
   }
 
   string fldname;
   if (f->get_property("name",fldname))
-    gui->execute(string("set ")+id+"-fldname "+fldname);
+  {
+    fldname_.set(fldname);
+  }
   else
-    gui->execute(string("set ")+id+"-fldname \"--- Name Not Assigned ---\"");
+  {
+    fldname_.set("--- No Name ---");
+  }
 
   // copy valid settings to the un-checked output field attributes
   gui->execute(id+" copy_attributes; update idletasks");
@@ -103,7 +116,8 @@ ChangeFieldDataAt::execute()
   FieldHandle fh;
   if (!iport->get(fh) || !fh.get_rep())
   {
-    gui->execute(string("set ")+id+"-inputdataat \"---\"");
+    fldname_.set("---");
+    inputdataat_.set("---");
     return;
   }
 
@@ -158,7 +172,7 @@ ChangeFieldDataAt::execute()
   Handle<ChangeFieldDataAtAlgoCreate> algo;
   if (!module_dynamic_compile(ci, algo)) return;
 
-  gui->execute(id + " set_state Executing 0");
+  update_state(Executing);
   bool same_value_type_p = false;
   FieldHandle ef(algo->execute(fh, dataat, same_value_type_p));
 
