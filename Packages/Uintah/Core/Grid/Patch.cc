@@ -262,16 +262,16 @@ void Patch::findCellAndWeightsAndShapeDerivatives(const Point& pos,
 
 void Patch::findCellAndWeights27(const Point& pos,
                                  IntVector ni[27],
-                                 double S[27]) const
+                                 double S[27], const Vector& size) const
 {
    Point cellpos = d_level->positionToIndex(pos);
    int ix = Floor(cellpos.x());
    int iy = Floor(cellpos.y());
    int iz = Floor(cellpos.z());
    int nnx,nny,nnz;
-   double lx = .25;
-   double ly = .25;
-   double lz = .25;
+   double lx = size.x()/2.;
+   double ly = size.y()/2.;
+   double lz = size.z()/2.;
 
    if(cellpos.x()-(ix) <= .5){ nnx = -1; } else{ nnx = 2; }
    if(cellpos.y()-(iy) <= .5){ nny = -1; } else{ nny = 2; }
@@ -397,16 +397,17 @@ void Patch::findCellAndWeights27(const Point& pos,
 
 void Patch::findCellAndShapeDerivatives27(const Point& pos,
                                           IntVector ni[27],
-                                          Vector d_S[27]) const
+                                          Vector d_S[27],
+                                          const Vector& size) const
 {
    Point cellpos = d_level->positionToIndex(pos);
    int ix = Floor(cellpos.x());
    int iy = Floor(cellpos.y());
    int iz = Floor(cellpos.z());
    int nnx,nny,nnz;
-   double lx = .25;
-   double ly = .25;
-   double lz = .25;
+   double lx = size.x()/2.;
+   double ly = size.y()/2.;
+   double lz = size.z()/2.;
 
    if(cellpos.x()-(ix) <= .5){ nnx = -1; } else{ nnx = 2; }
    if(cellpos.y()-(iy) <= .5){ nny = -1; } else{ nny = 2; }
@@ -562,16 +563,17 @@ void Patch::findCellAndShapeDerivatives27(const Point& pos,
 void Patch::findCellAndWeightsAndShapeDerivatives27(const Point& pos,
                                                     IntVector ni[27],
                                                     double S[27],
-                                                    Vector d_S[27]) const
+                                                    Vector d_S[27],
+                                                    const Vector& size) const
 {
    Point cellpos = d_level->positionToIndex(pos);
    int ix = Floor(cellpos.x());
    int iy = Floor(cellpos.y());
    int iz = Floor(cellpos.z());
    int nnx,nny,nnz;
-   double lx = .25;
-   double ly = .25;
-   double lz = .25;
+   double lx = size.x()/2.;
+   double ly = size.y()/2.;
+   double lz = size.z()/2.;
 
    if(cellpos.x()-(ix) <= .5){ nnx = -1; } else{ nnx = 2; }
    if(cellpos.y()-(iy) <= .5){ nny = -1; } else{ nny = 2; }

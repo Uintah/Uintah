@@ -82,6 +82,7 @@ WARNING
                              ParticleVariable<Vector>& pt1,
                              ParticleVariable<Vector>& pt2,
                              ParticleVariable<Vector>& pn,
+                             ParticleVariable<Vector>& psize,
                              particleIndex start);
 
 
