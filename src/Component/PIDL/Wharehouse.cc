@@ -17,12 +17,13 @@
 #include <Component/PIDL/Object.h>
 #include <Component/PIDL/ServerContext.h>
 #include <Component/PIDL/URL.h>
-#include <Component/Exceptions/InternalError.h>
+#include <SCICore/Exceptions/InternalError.h>
 #include <iostream>
 #include <sstream>
 
-using Component::Exceptions::InternalError;
-using Wharehouse;
+using Component::PIDL::Object_interface;
+using Component::PIDL::Wharehouse;
+using SCICore::Exceptions::InternalError;
 using std::map;
 
 Wharehouse::Wharehouse()
@@ -117,6 +118,12 @@ int Wharehouse::approval(char* urlstring, globus_nexus_startpoint_t* sp)
 
 //
 // $Log$
+// Revision 1.2  1999/08/31 08:59:03  sparker
+// Configuration and other updates for globus
+// First import of beginnings of new component library
+// Added yield to Thread_irix.cc
+// Added getRunnable to Thread.{h,cc}
+//
 // Revision 1.1  1999/08/30 17:39:49  sparker
 // Updates to configure script:
 //  rebuild configure if configure.in changes (Bug #35)

@@ -14,6 +14,8 @@
 
 #include <Component/PIDL/Object_proxy.h>
 
+using Component::PIDL::Object_proxy;
+
 Object_proxy::Object_proxy(const Reference& ref)
     : ProxyBase(ref)
 {
@@ -22,8 +24,15 @@ Object_proxy::Object_proxy(const Reference& ref)
 Object_proxy::~Object_proxy()
 {
 }
+
 //
 // $Log$
+// Revision 1.2  1999/08/31 08:59:01  sparker
+// Configuration and other updates for globus
+// First import of beginnings of new component library
+// Added yield to Thread_irix.cc
+// Added getRunnable to Thread.{h,cc}
+//
 // Revision 1.1  1999/08/30 17:39:46  sparker
 // Updates to configure script:
 //  rebuild configure if configure.in changes (Bug #35)

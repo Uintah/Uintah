@@ -15,8 +15,8 @@
 #ifndef Component_PIDL_Wharehouse_h
 #define Component_PIDL_Wharehouse_h
 
-#include <Component/Thread/ConditionVariable.h>
-#include <Component/Thread/Mutex.h>
+#include <SCICore/Thread/ConditionVariable.h>
+#include <SCICore/Thread/Mutex.h>
 #include <map>
 #include <string>
 #include <globus_nexus.h>
@@ -42,8 +42,8 @@ namespace Component {
 	    void run();
 
 	private:
-	    Mutex mutex;
-	    ConditionVariable condition;
+	    SCICore::Thread::Mutex mutex;
+	    SCICore::Thread::ConditionVariable condition;
 	    std::map<int, Object_interface*> objects;
 	    int nextID;
 	};
@@ -53,6 +53,12 @@ namespace Component {
 #endif
 //
 // $Log$
+// Revision 1.2  1999/08/31 08:59:03  sparker
+// Configuration and other updates for globus
+// First import of beginnings of new component library
+// Added yield to Thread_irix.cc
+// Added getRunnable to Thread.{h,cc}
+//
 // Revision 1.1  1999/08/30 17:39:49  sparker
 // Updates to configure script:
 //  rebuild configure if configure.in changes (Bug #35)
