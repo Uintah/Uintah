@@ -85,9 +85,9 @@ color="maroon">
     <p> Set two environment variables in the shell
      before starting SCIRun. This process assumes the SCIRunData directory has been   
      downloaded, a separate download from the SCIRun build. (for more information about  
-     environment variables consult the <a
-     HREF="../Guide/usersguide/srug3.html#sec:scirundata"><i>User's Guide</i> 3.4,
-     "SCIRUN_DATA"</a>).    
+     environment variables consult <a
+     HREF="../Guide/usersguide/srug3_4.html">Section
+    3.4</a> of the <a href="../Guide/usersguide/index.html"><i>User's Guide</i></a>). 
 
       <p><ol><li value="1.">The SCIRUN_DATA variable points to the location 
       of the SCIRunData directory on the system.</p>  
@@ -140,10 +140,15 @@ color="maroon">
     <div align="left">
     <p><br>
    <p> A module is a single-purpose unit that functions within a dataflow environment. Modules  always have at least one input port for receiving data, located at the top of the module, or one output port for sending data, located at the bottom of the module. </p> 
-<p>For a more complete description of modules, consult the <a
-    HREF="../Guide/usersguide/srug2.html#sec:modulesandnetworks"><i>User's Guide</i>, Section 2.3 "Modules and Networks."</a></p>
-<p> Each dataflow datatype in SCIRun has a unique color such as yellow, purple, or pink. Ports of the same color can be connected with a datatype. These colors are described in detail in the <a
-    HREF="../Guide/usersguide/srug4.html#sec:anatomyofamodule"><i>User's Guide</i>, Section 4.2, "Anatomy of a Module"</a>.</p> 
+<p>For a more complete description of modules, consult <a
+     HREF="../Guide/usersguide/srug2_3.html">Section
+    2.3</a> of the <a href="../Guide/usersguide/index.html"><i>User's Guide</i></a>)</p>
+<p> Each dataflow datatype in SCIRun has a unique color such as
+   yellow, purple, or pink. Ports of the same color can be connected
+   with a datatype. These colors are described in detail in the 
+<a
+     HREF="../Guide/usersguide/srug4_2.html">Section
+    4.2</a> of the <a href="../Guide/usersguide/index.html"><i>User's Guide</i></a>.</p> 
 <p>By joining the modules together, data passes through the pipe from one module to the next; two or more connected modules form a SCIRun network, or <i>net</i>.</p>
 
 <p>All modules have an indicator that tells the user if messages exist in a module's log. Different colors represent different types of messages. Blue represents a Remark (as the SampleField module indicates the number of seed points), yellow for Warning.  If the module's indicator is clicked, the log will open with a message.</p>
@@ -153,10 +158,8 @@ color="maroon">
 	<p><ul><li>From the
     SCIRun menu, select DataIO/FieldReader, as shown in
     <b>Figure 1.4</b>.</p></ul>
-<p> To find out more about using nets, see the <a
-    HREF="../Guide/usersguide/srug4.html#sec:workingwithnets"><i>User's Guide</i>
-    4.0, "Working 
-    with Networks."</a></p> 
+<p> To find out more about using nets, see <a
+    HREF="../Guide/usersguide/srug4.html">Chapter 4</a> of the <a href="../Guide/usersguide/index.html"><i>User's Guide</i></a></p> 
     
     </div>
     <center>
@@ -361,8 +364,8 @@ color="maroon">
       <li><p>Close the ShowField GUI by pressing the Dismiss button.</p></ol>
       
       <p>The ShowField module is ready to render the nodes as blue
-	  spheres. The module Interactively Updates, by default, to execute after every change.  Or,   select the Execute Button Only box to contain all changes until the Execute button is pressed. Consult the <a HREF="../Guide/usersguide/srug4.html#sec:executenet">
-    <i>User's Guide</i> 4.5,
+	  spheres. The module Interactively Updates, by default, to execute after every change.  Or,   select the Execute Button Only box to contain all changes until the Execute button is pressed. Consult the <a HREF="../Guide/usersguide/srug4_17.html">
+    <i>User's Guide</i> 4.17,
     "Executing a Network"</a>, for more details.</p> 
 
 
@@ -370,8 +373,8 @@ color="maroon">
     
     <p>The Viewer is the last module that will be added to the
     network. More information about the Viewer can be found in the <a
-    HREF="../Guide/usersguide/srug5.html#sec:viewer"><i>User's Guide</i> 5.0,
-    "Visualization with the Viewer."</a>
+    HREF="../Guide/usersguide/srug5.html"><i>User's Guide</i> 5.0,
+    "Visualization"</a>.
     <ol>
       <p><li>Locate the Viewer under the SCIRun/Render
 	  menu.</p>  
@@ -394,7 +397,7 @@ color="maroon">
        <p><b><A name="section-6">Navigating the ViewWindow</b><br></A>
     
     <p>Since the Viewer is one of the most important SCIRun modules, we suggest reading <a
-    HREF="../Guide/usersguide/srug5.html#sec:view-anatomy">User's Guide 5.1,
+    HREF="../Guide/usersguide/srug5_1.html">User's Guide 5.1,
     "Anatomy of the ViewWindow"</a> for a full description of the
     Viewer.</p><br>
 <ul><li><p>Please note that we tested this tutorial on a 1.8 Ghz Linux/Nvidia GForce 3 at approximately 7 fps (frames per second).  On much slower systems that have a frame rate less than .3 fps, the GUI may appear to freeze.</ul></li></p><br> 
@@ -402,7 +405,7 @@ color="maroon">
     <p><b><A name="section-7">Mouse controls</b><br></A>
     
     <p>In the Viewer, the mouse can be used to rotate, scale, and translate the image. . The <a
-    HREF="../Guide/usersguide/srug5.html#sec:view-mouse"><i>User's Guide</i> 5.2,
+    HREF="../Guide/usersguide/srug5_2.html"><i>User's Guide</i> 5.2,
     "Mouse Control in the Viewer"</a> 
 	provides more complete information.</p>
 <p><b>Translating the image</b></p>
@@ -464,7 +467,7 @@ color="maroon">
     <p>To access more display options:</p>
     <ul>
       <p><li> The Extended Control Window contains additional Viewer settings.To access the Extended Control Window, press the "+" button in the lower right corner of the ViewWindow.  <b>(Figure 1.14)</b>. For a more complete description, see the <a
-	  HREF="../Guide/usersguide/srug5.html#sec:view-control"><i>User's Guide</i>
+	  HREF="../Guide/usersguide/srug5_3.html"><i>User's Guide</i>
 	  5.3, "Extended Control Window.:</a></p> 
     </ul> 
 <center>
