@@ -20,21 +20,30 @@ using Component::PIDL::GlobusError;
 GlobusError::GlobusError(const std::string& msg, int code)
     : d_msg(msg), d_code(code)
 {
+    std::ostringstream o;
+    o << d_msg << "(return code=" << d_code << ")";
+    d_msg = o.str();
 }
 
 GlobusError::~GlobusError()
 {
 }
 
-std::string GlobusError::message() const
+const char* GlobusError::message() const
 {
-    std::ostringstream o;
-    o << d_msg << "(return code=" << d_code << ")";
-    return o.str();
+    return d_msg.c_str();
+}
+
+const char* GlobusError::type() const
+{
+    return "Component::PIDL::GlobusError";
 }
 
 //
 // $Log$
+// Revision 1.4  2000/03/23 10:27:35  sparker
+// Added "name" method to match new Exception base class
+//
 // Revision 1.3  1999/09/17 05:08:07  sparker
 // Implemented component model to work with sidl code generator
 //
