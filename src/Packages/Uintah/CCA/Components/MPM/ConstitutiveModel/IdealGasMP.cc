@@ -63,76 +63,50 @@ void IdealGasMP::initializeCMData(const Patch* patch,
                                         const MPMMaterial* matl,
                                         DataWarehouse* new_dw)
 {
-  // Put stuff in here to initialize each particle's
-  // constitutive model parameters and deformationMeasure
-  Matrix3 Identity, zero(0.);
-  Identity.Identity();
+  // Initialize the variables shared by all constitutive models
+  // This method is defined in the ConstitutiveModel base class.
+  initSharedDataForExplicit(patch, matl, new_dw);
 
-  ParticleSubset* pset = new_dw->getParticleSubset(matl->getDWIndex(), patch);
-  ParticleVariable<Matrix3> deformationGradient, pstress;
-
-  new_dw->allocateAndPut(deformationGradient,lb->pDeformationMeasureLabel,pset);
-  new_dw->allocateAndPut(pstress,            lb->pStressLabel,            pset);
-
-  for(ParticleSubset::iterator iter = pset->begin();iter != pset->end();iter++){
-      deformationGradient[*iter] = Identity;
-      pstress[*iter] = zero;
-  }
   computeStableTimestep(patch, matl, new_dw);
 }
 
 void IdealGasMP::allocateCMDataAddRequires(Task* task,
-						   const MPMMaterial* matl ,
-						   const PatchSet* ,
-						   MPMLabel* lb) const
+                                           const MPMMaterial* matl ,
+                                           const PatchSet* patches,
+                                           MPMLabel* lb) const
 {
-  const MaterialSubset* matlset = matl->thisMaterial(); 
-  task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc, 
-                 matlset, Ghost::None);
-  task->requires(Task::NewDW,lb->pStressLabel_preReloc, 
-                 matlset, Ghost::None);
+  const MaterialSubset* matlset = matl->thisMaterial();
+
+  // Allocate the variables shared by all constitutive models
+  // for the particle convert operation
+  // This method is defined in the ConstitutiveModel base class.
+  addSharedRForConvertExplicit(task, matlset, patches);
 }
 
 void IdealGasMP::allocateCMDataAdd(DataWarehouse* new_dw,
-				   ParticleSubset* addset,
-				   map<const VarLabel*, ParticleVariableBase*>* newState,
-				   ParticleSubset* delset,
-				   DataWarehouse* )
+                                   ParticleSubset* addset,
+    map<const VarLabel*, ParticleVariableBase*>* newState,
+                                   ParticleSubset* delset,
+                                   DataWarehouse* )
 {
-  // Put stuff in here to initialize each particle's
-  // constitutive model parameters and deformationMeasure
-  ParticleSubset::iterator n,o;
-
-  ParticleVariable<Matrix3> deformationGradient, pstress;
-
-  constParticleVariable<Matrix3> o_DeformGrad, o_Stress;
-
-  new_dw->allocateTemporary(deformationGradient,addset);
-  new_dw->allocateTemporary(pstress,addset);
-
-  new_dw->get(o_DeformGrad,lb->pDeformationMeasureLabel_preReloc,
-              delset);
-  new_dw->get(o_Stress,lb->pStressLabel_preReloc,delset);
-
-  n = addset->begin();
-  for (o=delset->begin(); o != delset->end(); o++, n++) {
-    deformationGradient[*n] = o_DeformGrad[*o];
-    pstress[*n] = o_Stress[*o];
-  }
-
-  (*newState)[lb->pDeformationMeasureLabel]=deformationGradient.clone();
-  (*newState)[lb->pStressLabel]=pstress.clone();
+  // Copy the data common to all constitutive models from the particle to be 
+  // deleted to the particle to be added. 
+  // This method is defined in the ConstitutiveModel base class.
+  copyDelToAddSetForConvertExplicit(new_dw, delset, addset, newState);
+  
+  // Copy the data local to this constitutive model from the particles to 
+  // be deleted to the particles to be added
 }
 
 
 void IdealGasMP::addParticleState(std::vector<const VarLabel*>& from,
-				   std::vector<const VarLabel*>& to)
+                                   std::vector<const VarLabel*>& to)
 {
-   from.push_back(lb->pDeformationMeasureLabel);
-   from.push_back(lb->pStressLabel);
+  // Add the particle state data common to all constitutive models.
+  // This method is defined in the ConstitutiveModel base class.
+  addSharedParticleState(from, to);
 
-   to.push_back(lb->pDeformationMeasureLabel_preReloc);
-   to.push_back(lb->pStressLabel_preReloc);
+  // Add the local particle state data for this constitutive model.
 }
 
 void IdealGasMP::computeStableTimestep(const Patch* patch,
@@ -173,8 +147,8 @@ void IdealGasMP::computeStableTimestep(const Patch* patch,
      // Compute wave speed at each particle, store the maximum
      c_dil = sqrt(tmp);
      WaveSpeed=Vector(Max(c_dil+fabs(pvelocity[idx].x()),WaveSpeed.x()),
-		      Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
-		      Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
+                      Max(c_dil+fabs(pvelocity[idx].y()),WaveSpeed.y()),
+                      Max(c_dil+fabs(pvelocity[idx].z()),WaveSpeed.z()));
   }
   WaveSpeed = dx/WaveSpeed;
   double delT_new = WaveSpeed.minComponent();
@@ -183,9 +157,9 @@ void IdealGasMP::computeStableTimestep(const Patch* patch,
 }
 
 void IdealGasMP::computeStressTensor(const PatchSubset* patches,
-				      const MPMMaterial* matl,
-				      DataWarehouse* old_dw,
-				      DataWarehouse* new_dw)
+                                      const MPMMaterial* matl,
+                                      DataWarehouse* old_dw,
+                                      DataWarehouse* new_dw)
 {
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);
@@ -237,14 +211,22 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
       new_dw->get(Gvelocity,lb->GVelocityLabel, dwi, patch, gac, NGN);
     }
     
+    // Allocate variable to store internal heating rate
+    ParticleVariable<double> pIntHeatRate;
+    new_dw->allocateAndPut(pIntHeatRate, lb->pInternalHeatRateLabel_preReloc, 
+                           pset);
+
     double gamma = d_initialData.gamma;
     double cv    = d_initialData.cv;
 
     double rho_orig = matl->getInitialDensity();
 
     for(ParticleSubset::iterator iter = pset->begin();
-	iter != pset->end(); iter++){
+        iter != pset->end(); iter++){
        particleIndex idx = *iter;
+
+      // Assign zero internal heating by default - modify if necessary.
+      pIntHeatRate[idx] = 0.0;
 
        // Get the node indices that surround the cell
        IntVector ni[MAX_BASIS];
@@ -260,16 +242,16 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
         Vector gvel;
         velGrad.set(0.0);
         for(int k = 0; k < flag->d_8or27; k++) {
-	  if (flag->d_fracture) {
-	    if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]];
-	    if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
-	  } else
-	    gvel = gvelocity[ni[k]];
-	  for (int j = 0; j<3; j++){
-	    for (int i = 0; i<3; i++) {
-	      velGrad(i,j) += gvel[i] * d_S[k][j] * oodx[j];
-	    }
-	  }
+          if (flag->d_fracture) {
+            if(pgCode[idx][k]==1) gvel = gvelocity[ni[k]];
+            if(pgCode[idx][k]==2) gvel = Gvelocity[ni[k]];
+          } else
+            gvel = gvelocity[ni[k]];
+          for (int j = 0; j<3; j++){
+            for (int i = 0; i<3; i++) {
+              velGrad(i,j) += gvel[i] * d_S[k][j] * oodx[j];
+            }
+          }
         }
 
       // Compute the deformation gradient increment using the time_step
@@ -279,7 +261,7 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
 
       // Update the deformation gradient tensor to its time n+1 value.
       deformationGradient_new[idx] = deformationGradientInc *
-				     deformationGradient[idx];
+                                     deformationGradient[idx];
 
       // get the volumetric part of the deformation
       J    = deformationGradient_new[idx].Determinant();
@@ -298,8 +280,8 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
       Vector pvelocity_idx = pvelocity[idx];
       c_dil = sqrt(tmp);
       WaveSpeed=Vector(Max(c_dil+fabs(pvelocity_idx.x()),WaveSpeed.x()),
-  		       Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
-		       Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
+                       Max(c_dil+fabs(pvelocity_idx.y()),WaveSpeed.y()),
+                       Max(c_dil+fabs(pvelocity_idx.z()),WaveSpeed.z()));
     }
 
     WaveSpeed = dx/WaveSpeed;
@@ -310,40 +292,24 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
   }
 }
 
-	 
+         
 void IdealGasMP::addComputesAndRequires(Task* task,
-					 const MPMMaterial* matl,
-					 const PatchSet*) const
+                                         const MPMMaterial* matl,
+                                         const PatchSet* patches) const
 {
-   Ghost::GhostType  gac   = Ghost::AroundCells;
-   const MaterialSubset* matlset = matl->thisMaterial();
-   task->requires(Task::OldDW, lb->pXLabel,             matlset, Ghost::None);
-   task->requires(Task::OldDW, lb->pMassLabel,          matlset, Ghost::None);
-   task->requires(Task::OldDW, lb->pTemperatureLabel,   matlset, Ghost::None);
-   task->requires(Task::OldDW, lb->pVelocityLabel,      matlset, Ghost::None);
-   task->requires(Task::OldDW, lb->pDeformationMeasureLabel,
-						        matlset, Ghost::None);
-   if(flag->d_8or27==27){
-     task->requires(Task::OldDW, lb->pSizeLabel,        matlset, Ghost::None);
-   }
-   task->requires(Task::NewDW,lb->gVelocityLabel,matlset,gac,NGN);
-   task->requires(Task::OldDW, lb->delTLabel);
+  // Add the computes and requires that are common to all explicit 
+  // constitutive models.  The method is defined in the ConstitutiveModel
+  // base class.
+  const MaterialSubset* matlset = matl->thisMaterial();
+  addSharedCRForExplicit(task, matlset, patches);
 
-   if (flag->d_fracture) {
-     task->requires(Task::NewDW, lb->pgCodeLabel,       matlset, Ghost::None);
-     task->requires(Task::NewDW, lb->GVelocityLabel,    matlset, gac, NGN);
-   }
-
-   task->computes(lb->pStressLabel_preReloc,             matlset);
-   task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
-   task->computes(lb->pVolumeDeformedLabel,              matlset);
 }
 
 void 
 IdealGasMP::addComputesAndRequires(Task* ,
-				   const MPMMaterial* ,
-				   const PatchSet* ,
-				   const bool ) const
+                                   const MPMMaterial* ,
+                                   const PatchSet* ,
+                                   const bool ) const
 {
 }
 
@@ -398,7 +364,7 @@ const TypeDescription* fun_getTypeDescription(IdealGasMP::StateData*)
    static TypeDescription* td = 0;
    if(!td){
       td = scinew TypeDescription(TypeDescription::Other,
-			       "IdealGasMP::StateData", true, &makeMPI_CMData);
+                               "IdealGasMP::StateData", true, &makeMPI_CMData);
    }
    return td;
 }

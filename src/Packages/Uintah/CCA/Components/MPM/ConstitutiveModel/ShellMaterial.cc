@@ -179,6 +179,11 @@ void
 ShellMaterial::addParticleState(std::vector<const VarLabel*>& from,
 				std::vector<const VarLabel*>& to)
 {
+  // Add the particle state data common to all constitutive models.
+  // This method is defined in the ConstitutiveModel base class.
+  addSharedParticleState(from, to);
+
+  // Add the local particle state data for this constitutive model.
   from.push_back(lb->pThickTopLabel);
   from.push_back(lb->pInitialThickTopLabel);
   from.push_back(lb->pThickBotLabel);
@@ -208,12 +213,6 @@ ShellMaterial::addParticleState(std::vector<const VarLabel*>& from,
   to.push_back(pStressTopLabel_preReloc);
   to.push_back(pStressCenLabel_preReloc);
   to.push_back(pStressBotLabel_preReloc);
-
-  from.push_back(lb->pDeformationMeasureLabel);
-  from.push_back(lb->pStressLabel);
-
-  to.push_back(lb->pDeformationMeasureLabel_preReloc);
-  to.push_back(lb->pStressLabel_preReloc);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -252,6 +251,10 @@ ShellMaterial::initializeCMData(const Patch* patch,
 				const MPMMaterial* matl,
 				DataWarehouse* new_dw)
 {
+  // Initialize the variables shared by all constitutive models
+  // This method is defined in the ConstitutiveModel base class.
+  initSharedDataForExplicit(patch, matl, new_dw);
+
   // Put stuff in here to initialize each particle's
   // constitutive model parameters and deformationMeasure
   Matrix3 One, Zero(0.0); One.Identity();
@@ -268,9 +271,6 @@ ShellMaterial::initializeCMData(const Patch* patch,
   new_dw->allocateAndPut(pStressTop,  pStressTopLabel,     pset);
   new_dw->allocateAndPut(pStressCen,  pStressCenLabel,     pset);
   new_dw->allocateAndPut(pStressBot,  pStressBotLabel,     pset);
-  ParticleVariable<Matrix3> pDefGrad, pStress;
-  new_dw->allocateAndPut(pDefGrad, lb->pDeformationMeasureLabel, pset);
-  new_dw->allocateAndPut(pStress,  lb->pStressLabel,             pset);
 
   ParticleSubset::iterator iter = pset->begin();
   for(; iter != pset->end(); iter++) {
@@ -282,9 +282,6 @@ ShellMaterial::initializeCMData(const Patch* patch,
     pStressTop[pidx]  = Zero;
     pStressCen[pidx]  = Zero;
     pStressBot[pidx]  = Zero;
-
-    pDefGrad[*iter] = One;
-    pStress[*iter] = Zero;
   }
 
   computeStableTimestep(patch, matl, new_dw);
@@ -292,50 +289,49 @@ ShellMaterial::initializeCMData(const Patch* patch,
 
 void ShellMaterial::allocateCMDataAddRequires(Task* task,
 					      const MPMMaterial* matl,
-					      const PatchSet* ,
+					      const PatchSet* patches,
 					      MPMLabel* lb) const
 {
   const MaterialSubset* matlset = matl->thisMaterial();
 
-  task->requires(Task::NewDW,pNormalRotRateLabel_preReloc, 
-                 matlset, Ghost::None);
-  task->requires(Task::NewDW,pDefGradTopLabel_preReloc,    
-                 matlset, Ghost::None);
-  task->requires(Task::NewDW,pDefGradCenLabel_preReloc,    
-                 matlset, Ghost::None);
-  task->requires(Task::NewDW,pDefGradBotLabel_preReloc,    
-                 matlset, Ghost::None);
-  task->requires(Task::NewDW,pStressTopLabel_preReloc,     
-                 matlset, Ghost::None);
-  task->requires(Task::NewDW,pStressCenLabel_preReloc,     
-                 matlset, Ghost::None);
-  task->requires(Task::NewDW,pStressBotLabel_preReloc,     
-                 matlset, Ghost::None);
-  task->requires(Task::NewDW,lb->pStressLabel_preReloc,     
-                 matlset, Ghost::None);
-  task->requires(Task::NewDW,lb->pDeformationMeasureLabel_preReloc,
-                 matlset, Ghost::None);
+  // Allocate the variables shared by all constitutive models
+  // for the particle convert operation
+  // This method is defined in the ConstitutiveModel base class.
+  addSharedRForConvertExplicit(task, matlset, patches);
+
+  // Add requires local to this model
+  Ghost::GhostType  gnone = Ghost::None;
+  task->requires(Task::NewDW, pNormalRotRateLabel_preReloc, matlset, gnone);
+  task->requires(Task::NewDW, pDefGradTopLabel_preReloc,    matlset, gnone);
+  task->requires(Task::NewDW, pDefGradCenLabel_preReloc,    matlset, gnone);
+  task->requires(Task::NewDW, pDefGradBotLabel_preReloc,    matlset, gnone);
+  task->requires(Task::NewDW, pStressTopLabel_preReloc,     matlset, gnone);
+  task->requires(Task::NewDW, pStressCenLabel_preReloc,     matlset, gnone);
+  task->requires(Task::NewDW, pStressBotLabel_preReloc,     matlset, gnone);
 }
 
 
 void 
 ShellMaterial::allocateCMDataAdd(DataWarehouse* new_dw,
 				 ParticleSubset* addset,
-				 map<const VarLabel*, ParticleVariableBase*>* newState,
+  map<const VarLabel*, ParticleVariableBase*>* newState,
 				 ParticleSubset* delset,
 				 DataWarehouse* )
 {
-  // Put stuff in here to initialize each particle's
-  // constitutive model parameters and deformationMeasure
-
+  // Copy the data common to all constitutive models from the particle to be 
+  // deleted to the particle to be added. 
+  // This method is defined in the ConstitutiveModel base class.
+  copyDelToAddSetForConvertExplicit(new_dw, delset, addset, newState);
+  
+  // Copy the data local to this constitutive model from the particles to 
+  // be deleted to the particles to be added
   ParticleVariable<Vector>  pRotRate; 
   ParticleVariable<Matrix3> pDefGradTop, pDefGradCen, pDefGradBot, 
                             pStressTop, pStressCen, pStressBot;
-  ParticleVariable<Matrix3> pDefGrad, pStress;
 
   constParticleVariable<Vector> o_RotRate;
   constParticleVariable<Matrix3> o_DefGradTop, o_DefGradCen, o_DefGradBot,
-    o_StressTop, o_StressCen, o_StressBot, o_DefGrad, o_Stress;
+    o_StressTop, o_StressCen, o_StressBot;
 
   new_dw->allocateTemporary(pRotRate, addset);
   new_dw->allocateTemporary(pDefGradTop, addset);
@@ -344,8 +340,6 @@ ShellMaterial::allocateCMDataAdd(DataWarehouse* new_dw,
   new_dw->allocateTemporary(pStressTop, addset);
   new_dw->allocateTemporary(pStressCen, addset);
   new_dw->allocateTemporary(pStressBot, addset);
-  new_dw->allocateTemporary(pDefGrad, addset);
-  new_dw->allocateTemporary(pStress,  addset);
 
   new_dw->get(o_RotRate,pNormalRotRateLabel_preReloc,delset);
   new_dw->get(o_DefGradTop,pDefGradTopLabel_preReloc,delset);
@@ -354,8 +348,6 @@ ShellMaterial::allocateCMDataAdd(DataWarehouse* new_dw,
   new_dw->get(o_StressTop,pStressTopLabel_preReloc,delset);
   new_dw->get(o_StressCen,pStressCenLabel_preReloc,delset);
   new_dw->get(o_StressBot,pStressBotLabel_preReloc,delset);
-  new_dw->get(o_Stress,lb->pStressLabel_preReloc,delset);
-  new_dw->get(o_DefGrad,lb->pDeformationMeasureLabel,delset);
 
   ParticleSubset::iterator o,n = addset->begin();
   for(o=delset->begin(); o != delset->end(); o++,n++) {
@@ -366,8 +358,6 @@ ShellMaterial::allocateCMDataAdd(DataWarehouse* new_dw,
     pStressTop[*n]  = o_StressTop[*o];
     pStressCen[*n]  = o_StressCen[*o];
     pStressBot[*n]  = o_StressBot[*o];
-    pDefGrad[*n] = o_DefGrad[*o];
-    pStress[*n] = o_Stress[*o];
   }
 
   (*newState)[pNormalRotRateLabel]=pRotRate.clone();
@@ -377,8 +367,6 @@ ShellMaterial::allocateCMDataAdd(DataWarehouse* new_dw,
   (*newState)[pStressTopLabel]=pStressTop.clone();
   (*newState)[pStressCenLabel]=pStressCen.clone();
   (*newState)[pStressBotLabel]=pStressBot.clone();
-  (*newState)[lb->pDeformationMeasureLabel]=pDefGrad.clone();
-  (*newState)[lb->pStressLabel]=pStress.clone();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -520,15 +508,18 @@ ShellMaterial::interpolateParticleRotToGrid(const PatchSubset* patches,
 void 
 ShellMaterial::addComputesAndRequires(Task* task,
 				      const MPMMaterial* matl,
-				      const PatchSet*) const
+				      const PatchSet* patches) const
 {
+  // Add the computes and requires that are common to all explicit 
+  // constitutive models.  The method is defined in the ConstitutiveModel
+  // base class.
+  const MaterialSubset* matlset = matl->thisMaterial();
+  addSharedCRForExplicit(task, matlset, patches);
+
+  // Other constitutive model and input dependent computes and requires
   Ghost::GhostType  gnone = Ghost::None;
   Ghost::GhostType  gac   = Ghost::AroundCells;
-  const MaterialSubset* matlset = matl->thisMaterial();
-  task->requires(Task::OldDW, lb->pXLabel,                  matlset, gnone);
-  task->requires(Task::OldDW, lb->pMassLabel,               matlset, gnone);
-  if (flag->d_8or27 == 27)
-    task->requires(Task::OldDW, lb->pSizeLabel,             matlset, gnone);
+
   task->requires(Task::OldDW, lb->pThickTopLabel,           matlset, gnone);
   task->requires(Task::OldDW, lb->pInitialThickTopLabel,    matlset, gnone);
   task->requires(Task::OldDW, lb->pThickBotLabel,           matlset, gnone);
@@ -542,15 +533,7 @@ ShellMaterial::addComputesAndRequires(Task* task,
   task->requires(Task::OldDW, pStressTopLabel,              matlset, gnone);
   task->requires(Task::OldDW, pStressCenLabel,              matlset, gnone);
   task->requires(Task::OldDW, pStressBotLabel,              matlset, gnone);
-  task->requires(Task::OldDW, lb->pStressLabel,             matlset, gnone);
-  task->requires(Task::OldDW, lb->pDeformationMeasureLabel, matlset, gnone);
-  task->requires(Task::NewDW, lb->gVelocityLabel,           matlset, gac, NGN);
   task->requires(Task::NewDW, lb->gNormalRotRateLabel,      matlset, gac, NGN);
-  task->requires(Task::OldDW, lb->delTLabel);
-
-  task->computes(lb->pStressLabel_preReloc,             matlset);
-  task->computes(lb->pDeformationMeasureLabel_preReloc, matlset);
-  task->computes(lb->pVolumeDeformedLabel,              matlset);
 
   task->computes(lb->pThickTopLabel_preReloc,           matlset);
   task->computes(lb->pInitialThickTopLabel_preReloc,    matlset);
@@ -660,6 +643,11 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
     new_dw->allocateAndPut(pNDotAvSig, pNormalDotAvStressLabel, pset);
     new_dw->allocateAndPut(pRotMass,   pRotMassLabel,           pset);
 
+    // Allocate variable to store internal heating rate
+    ParticleVariable<double> pIntHeatRate;
+    new_dw->allocateAndPut(pIntHeatRate, lb->pInternalHeatRateLabel_preReloc, 
+                           pset);
+
     // Initialize contants
     Vector WaveSpeed(1.e-12,1.e-12,1.e-12);
     Vector dx = patch->dCell();
@@ -672,6 +660,9 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
     ParticleSubset::iterator iter = pset->begin();
     for(; iter != pset->end(); iter++){
       particleIndex idx = *iter;
+
+      // Assign zero internal heating by default - modify if necessary.
+      pIntHeatRate[idx] = 0.0;
 
       // Find the surrounding nodes, interpolation functions and derivatives
       IntVector ni[MAX_BASIS];

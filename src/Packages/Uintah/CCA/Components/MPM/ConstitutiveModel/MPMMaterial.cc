@@ -89,6 +89,13 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMLabel* lb,
   ps->require("density",d_density);
   ps->require("thermal_conductivity",d_thermalConductivity);
   ps->require("specific_heat",d_specificHeat);
+  
+  // Assume the the centered specific heat is C_v
+  d_Cv = d_specificHeat;
+
+  // Set C_p = C_v if not C_p data are entered
+  d_Cp = d_Cv;
+  ps->get("C_p",d_Cp);
 
   d_troom = 294.0; d_tmelt = 295.0;
   ps->get("room_temp", d_troom);
@@ -150,6 +157,8 @@ MPMMaterial::copyWithoutGeom(const MPMMaterial* mat, MPMFlags* flags)
   d_density = mat->d_density;
   d_thermalConductivity = mat->d_thermalConductivity;
   d_specificHeat = mat->d_specificHeat;
+  d_Cv = mat->d_Cv;
+  d_Cp = mat->d_Cp;
   d_troom = mat->d_troom;
   d_tmelt = mat->d_tmelt;
   d_is_rigid = mat->d_is_rigid;
@@ -201,6 +210,18 @@ ParticleCreator* MPMMaterial::getParticleCreator()
 double MPMMaterial::getInitialDensity() const
 {
   return d_density;
+}
+
+double 
+MPMMaterial::getInitialCp() const
+{
+  return d_Cp;
+}
+
+double 
+MPMMaterial::getInitialCv() const
+{
+  return d_Cv;
 }
 
 double MPMMaterial::getRoomTemperature() const
