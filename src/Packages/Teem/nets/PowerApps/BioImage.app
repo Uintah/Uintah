@@ -657,13 +657,13 @@ class BioImageApp {
     method build_app {d} {
 	set data_dir $d
 	global mods
-	
 	wm withdraw .standalone
+	incrProgress 5
 	# Embed the Viewers
 
 	# add a viewer and tabs to each
 	frame $win.viewers
-
+	incrProgress 5
 	### Processing Part
 	#########################
 	### Create Detached Processing Part
@@ -675,10 +675,10 @@ class BioImageApp {
 	
 	wm sizefrom $win.detachedP user
 	wm positionfrom $win.detachedP user
-	
+	incrProgress 5	
 	wm withdraw $win.detachedP
 
-
+	incrProgress 5
 	### Create Attached Processing Part
 	frame $win.attachedP 
 	frame $win.attachedP.f -relief flat 
@@ -690,7 +690,9 @@ class BioImageApp {
 	set detachedPFr $win.detachedP
 	set attachedPFr $win.attachedP
 
+	incrProgress 5
 	init_Pframe $detachedPFr.f 0
+	incrProgress 5
 	init_Pframe $attachedPFr.f 1
 
 	#change_current 0
@@ -698,7 +700,6 @@ class BioImageApp {
 	### create detached width and heigh
 	append geomP $process_width x $process_height
 	wm geometry $detachedPFr $geomP
-
 
 	### Vis Part
 	#####################
@@ -714,6 +715,7 @@ class BioImageApp {
 	
 	wm withdraw $win.detachedV
 
+	incrProgress 10
 	### Create Attached Vis Part
 	frame $win.attachedV
 	frame $win.attachedV.f -relief flat
@@ -721,6 +723,7 @@ class BioImageApp {
 
 	set IsVAttached 1
 
+	incrProgress 10
 	### set frame data members
 	set detachedVFr $win.detachedV
 	set attachedVFr $win.attachedV
@@ -728,14 +731,14 @@ class BioImageApp {
 	init_Vframe $detachedVFr.f 1
 	init_Vframe $attachedVFr.f 2
 
-
+	incrProgress 5
 	### pack 3 frames
 	pack $attachedPFr -side left -anchor n -fill y
-
+ 	incrProgress 5
 	pack $win.viewers -side left -anchor n -fill both -expand 1
 
 	pack $attachedVFr -side left -anchor n -fill y
-
+	incrProgress 5
 	set total_width [expr $process_width + $viewer_width + $vis_width]
 
 	set total_height $viewer_height
@@ -745,16 +748,17 @@ class BioImageApp {
 
 	append geom $total_width x $total_height + $pos_x + $pos_y
 	wm geometry .standalone $geom
+	incrProgress 5
 	update	
 
         set initialized 1
-
 	global PowerAppSession
 	if {[info exists PowerAppSession] && [set PowerAppSession] != ""} { 
 	    set saveFile $PowerAppSession
 	    wm title .standalone "BioImage - [getFileName $saveFile]"
 	    $this load_session_data
 	} 
+	incrProgress 10
 	wm deiconify .standalone
     }
 
