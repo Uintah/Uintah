@@ -344,9 +344,6 @@ build a default set of ITK filter-based modules.  Users can generate
 additional modules by writing XML descriptions. The process of
 generating modules based on ITK filters is described in
 \chref{Wrapping ITK Filters in \sr Modules}{ch:itk_mods}.
-See the \htmladdnormallinkfoot{Installation Guide}
-{\latexhtml{http://software.sci.utah.edu/doc/Installation/Guide/Linux/sec.itk_inst.html}{../../Installation/Guide/Linux/sec.itk_inst.html}}
-for information on compiling ITK and SCIRun.
 
 \subsection{PETSc}
 \index{PETSc}
@@ -420,27 +417,29 @@ interface.
 The following Power Apps are available:
 
 \begin{description}
-  \descitem{BioTensor} \index{BioTensor} An application for computing and visualizing
-  diffusion tensor data.  See the \htmladdnormallinkfoot{BioTensor
-    tutorial}{\latexhtml{http://software.sci.utah.edu/doc/User/Tutorials/BioTensor/BioTensor.html}{../../Tutorials/BioTensor/BioTensor.html}}
+  \descitem{BioTensor} \index{BioTensor} An application for computing
+  and visualizing diffusion tensor data.  See the
+  \htmladdnormallinkfoot{BioTensor
+  tutorial}{\latexhtml{http://software.sci.utah.edu/doc/User/Tutorials/BioTensor/BioTensor.html}{../../Tutorials/BioTensor/BioTensor.html}}
   for more information.
   
-  \descitem{BioFEM} \index{BioFEM} A finite element simulation application. It is
-  used, for example, to compute electric and potential fields from a
-  discretized volume conductor and a current source.
+  \descitem{BioFEM} \index{BioFEM} A finite element simulation
+  application. It is used, for example, to compute electric and
+  potential fields from a discretized volume conductor and a current
+  source.
 
-  \descitem{BioImage} \index{BioImage} An application for exploring 3D volume data.
-  See the \htmladdnormallinkfoot{BioImage tutorial}
+  \descitem{BioImage} \index{BioImage} An application for exploring 3D
+  volume data.  See the \htmladdnormallinkfoot{BioImage tutorial}
   {\latexhtml{http://software.sci.utah.edu/doc/User/Tutorials/BioImage/index.html}{../../Tutorials/BioImage/index.html}}
   for more information.
 
 \end{description}
 
-Commands \command{BioTensor}, \command{BioFem} and \command{BioImage} invoke these
-applications.  If \sr{} is installed from source code, commands
-\command{BioTensor}, \command{BioFem} and \command{BioImage} are located in \sr{}'s build
-directory (alongside the \command{scirun} command).  If \sr{} is
-installed from RPMs these commands are located in
+Commands \command{BioTensor}, \command{BioFem} and \command{BioImage}
+invoke these applications.  If \sr{} is installed from source code,
+commands \command{BioTensor}, \command{BioFem} and \command{BioImage}
+are located in \sr{}'s build directory (alongside the \command{scirun}
+command).  If \sr{} is installed from RPMs these commands are located in
 \directory{/usr/local/SCIRun/bin}.
 
 \section{\sr{} Objects}
@@ -480,7 +479,7 @@ C++ data types are \datatype{double}, \datatype{float},
 
 \sr{} meshes are classified as \dfn{unstructured}, \dfn{structured},
 or \dfn{regular}.  A mesh consists of nodes and implicit or explicit
-node connectivity data.
+node connectivity information.
 
 Node locations and connectivities for unstructured 
 meshes\index{meshes!unstructured meshes} are specified
@@ -500,7 +499,23 @@ meshes\index{meshes!regular meshes}.  The regular mesh types
 are \datatype{ScanlineMesh},
 \datatype{ImageMesh}, \datatype{LatVolMesh}.
 
-Below are figures of some mesh types:
+A regular mesh is more constrained than structured and unstructured
+meshes.  Likewise, a structured mesh is more constrained that a
+unstructured mesh.  A more constrained mesh can be trivially converted
+to a less constrained mesh by explicitly enumerating implicit
+properties.  For instance, a LatVol mesh is converted to a StructHexVol
+by enumerating a LatVol mesh's node coordinates (connectivities are
+still implied).  Also, a LatVol mesh is converted to a HexVol mesh by
+enumerating a LatVol's node locations and connectivities.  Module
+\module{ToStructured} performs this type of conversion.
+
+It is not meaningful to convert a less constrained mesh to a more
+constrained mesh.  It is possible, however, to sample an unstructured
+field at regular intervals to create a regular field.  For example, a
+HexVolField is interpolated onto a LatVol mesh using modules
+\module{SampleLattice} and \module{DirectInterpolate}.
+
+Below are figures of mesh types:
 
 %begin{latexonly}
 \newcommand{\meshdoc}[4]{%
@@ -525,8 +540,16 @@ Below are figures of some mesh types:
 \meshdoc{60}{ContourField}{Contour Field Mesh}{A Curve mesh \index{meshes!Curve mesh} is a 
   segmented curve.}
 
-\meshdoc{100}{ImageField}{Image Mesh}{An Image mesh \index{meshes!Image mesh} is a regular 2D
-  grid. Note that an Image mesh is not used for image processing.}
+\meshdoc{100}{ImageField}{Image Mesh}{An Image mesh \index{meshes!Image
+  mesh} is a regular 2D grid. Note that an Image mesh is not used for
+  image processing.}
+
+\meshdoc{253}{StructQuadSurf2}{Structured Quad Surface mesh}{Surface made of
+connected quadrilaterals on a structured grid \index{meshes!Structured Quad Surface mesh}}
+
+\meshdoc{253}{StructHexVol2}{Structured Hex Volume mesh}{Subdivision of
+space into structured hexagonal elements\index{meshes!Structured Hex
+Volume mesh}}
 
 \meshdoc{65}{trisurf}{Tri Surface Mesh}{A Tri Surface mesh \index {meshes!Tri Surface mesh} is a
   surface made of connected triangles.}
@@ -544,6 +567,8 @@ Below are figures of some mesh types:
   \index{meshes!Prism Volume mesh} is a subdivision of space into
   prism elements.  Prism elements have five faces, two trangular faces
   connected by three quadrilateral faces.}
+
+
 
 \subsection{Matrices}
 \index{matrices}
