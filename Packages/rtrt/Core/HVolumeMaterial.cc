@@ -21,8 +21,12 @@ void HVolumeMaterial::shade(Color& result, const Ray& ray,
 			    Context* cx) {
   // get the current value from vdpy
   float isoval = vdpy->isoval;
-  // lookup into f1_to_f2
-  float f2 = f1_to_f2->lookup_bound(isoval);
+  // lookup into f1_to_f2 if it exists
+  float f2;
+  if (f1_to_f2)
+    f2 = f1_to_f2->lookup_bound(isoval);
+  else
+    f2 = isoval;
   // use this value to get the material
   Material *matl = f2_to_material->lookup(f2);
   matl->shade(result, ray, hit, depth, atten, accumcolor, cx);
