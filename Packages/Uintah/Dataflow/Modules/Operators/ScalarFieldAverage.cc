@@ -54,7 +54,7 @@ void ScalarFieldAverage::execute(void)
     cerr<<"No time in database"<<endl; }
 
   if(aveField == 0) {
-    aveField = new LatVolField<double>(hTF->data_at());
+    aveField = new LatVolField<double>(hTF->basis_order());
     aveFieldH = aveField;
     varname = vname;
     time = t;

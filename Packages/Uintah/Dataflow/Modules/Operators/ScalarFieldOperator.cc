@@ -44,21 +44,21 @@ void ScalarFieldOperator::execute(void)
       dynamic_cast<LatVolField<double>*>(hTF.get_rep())) {
     LatVolField<double>  *scalarField2 = 0;  
 
-    scalarField2 = scinew LatVolField<double>(hTF->data_at());
+    scalarField2 = scinew LatVolField<double>(hTF->basis_order());
     performOperation( scalarField1, scalarField2 );
     fh = scalarField2;
   } else if( LatVolField<float> *scalarField1 =
 	     dynamic_cast<LatVolField<float>*>(hTF.get_rep())) {
     LatVolField<float>  *scalarField2 = 0;  
 
-    scalarField2 = scinew LatVolField<float>(hTF->data_at());
+    scalarField2 = scinew LatVolField<float>(hTF->basis_order());
     performOperation( scalarField1, scalarField2 );
     fh = scalarField2;
   } else if( LatVolField<long64> *scalarField1 =
 	     dynamic_cast<LatVolField<long64>*>(hTF.get_rep())) {
     LatVolField<long64>  *scalarField2 = 0;  
 
-    scalarField2 = scinew LatVolField<long64>(hTF->data_at());
+    scalarField2 = scinew LatVolField<long64>(hTF->basis_order());
     performOperation( scalarField1, scalarField2 );
     fh = scalarField2;
   }
