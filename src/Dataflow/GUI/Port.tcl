@@ -408,6 +408,11 @@ proc findModulesToInsertOnPort { port } {
     if { [pType port] == "o" } {
 	set datatype [lindex $ModuleOPorts($path) [pNum port]]
     } else {
+	set lastport [expr [llength $ModuleIPorts($path)]-1]
+	# Assume this port was dynamically created
+	if { $lastport < [pNum port] } {
+	    set port [lreplace $port 1 1 $lastport]
+	}
 	set datatype [lindex $ModuleIPorts($path) [pNum port]]
     }
 
@@ -494,7 +499,8 @@ proc portMenu {x y port cx cy} {
     set mouseY $cy
     set canvas $Subnet(Subnet$Subnet([pMod port])_canvas)
     set menu_id "$canvas.menu[join $port _]"
-    insertModuleOnPortMenu $port $menu_id
-    tk_popup $menu_id $x $y
+    if { [insertModuleOnPortMenu $port $menu_id] } {
+	tk_popup $menu_id $x $y
+    }
 }
 
