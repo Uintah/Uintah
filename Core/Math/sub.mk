@@ -7,7 +7,8 @@ SRCDIR   := Packages/Uintah/Core/Math
 SRCS     += \
 	$(SRCDIR)/Primes.cc     \
 	$(SRCDIR)/Matrix3.cc    \
-	$(SRCDIR)/CubeRoot.cc
+	$(SRCDIR)/CubeRoot.cc	\
+	$(SRCDIR)/Sparse.cc
 
 PSELIBS := \
 	Core/Exceptions                 \

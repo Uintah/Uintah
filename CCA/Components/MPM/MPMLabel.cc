@@ -234,6 +234,36 @@ MPMLabel::MPMLabel()
 
   doMechLabel = VarLabel::create( "doMech", delt_vartype::getTypeDescription() );
 
+  // Implicit MPM labels
+
+  gVelocityNewLabel = VarLabel::create("g.velocityNew",
+				    NCVariable<Vector>::getTypeDescription()); 
+
+  gVelocityOldLabel = VarLabel::create("g.velocityOld",
+				    NCVariable<Vector>::getTypeDescription()); 
+
+  dispNewLabel = VarLabel::create("dispNew",
+				  NCVariable<Vector>::getTypeDescription()); 
+
+  dispIncLabel = VarLabel::create("dispInc",
+				  NCVariable<Vector>::getTypeDescription()); 
+
+  gAccelerationOldLabel = VarLabel::create("g.accelerationOld",
+				   NCVariable<Vector>::getTypeDescription()); 
+  converged = VarLabel::create("converged",
+			       bool_and_vartype::getTypeDescription());
+
+  dispIncQNorm0 = VarLabel::create("dispIncQNorm0",
+				   sum_vartype::getTypeDescription());
+
+  dispIncNormMax = VarLabel::create("dispIncNormMax",
+				    sum_vartype::getTypeDescription());
+
+  pAccelerationLabel = VarLabel::create("p.acceleration",
+				   ParticleVariable<Vector>::getTypeDescription()); 
+
+  pAccelerationLabel_preReloc = VarLabel::create("p.acceleration+",
+				   ParticleVariable<Vector>::getTypeDescription()); 
 } 
 
 MPMLabel::~MPMLabel()
@@ -316,6 +346,17 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(CenterOfMassPositionLabel);
   VarLabel::destroy(CenterOfMassVelocityLabel);
   VarLabel::destroy(pCellNAPIDLabel);
+
+  VarLabel::destroy(gVelocityNewLabel);
+  VarLabel::destroy(gVelocityOldLabel);
+  VarLabel::destroy(dispNewLabel);
+  VarLabel::destroy(gAccelerationOldLabel);
+  VarLabel::destroy(pAccelerationLabel);
+  VarLabel::destroy(converged);
+  VarLabel::destroy(dispIncQNorm0);
+  VarLabel::destroy(dispIncNormMax);
+  VarLabel::destroy(pAccelerationLabel_preReloc);
+
 }
 
 void MPMLabel::registerPermanentParticleState(int i,

@@ -17,6 +17,7 @@
 #include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 #include <Packages/Uintah/CCA/Components/SimulationController/SimulationController.h>
 #include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
+#include <Packages/Uintah/CCA/Components/MPM/ImpMPM.h>
 #include <Packages/Uintah/CCA/Components/Arches/Arches.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICE.h>
 #include <Packages/Uintah/CCA/Components/MPMICE/MPMICE.h>
@@ -163,6 +164,7 @@ main(int argc, char** argv)
      * Default values
      */
     bool   do_mpm=false;
+    bool   do_impmpm=false;
     bool   do_arches=false;
     bool   do_ice=false;
     bool   do_poisson1=false;
@@ -203,7 +205,9 @@ main(int argc, char** argv)
 	if( (s == "-help") || (s == "-h") ) {
 	  usage( "", "", argv[0]);
 	} else if(s == "-mpm"){
-	    do_mpm=true;
+	  do_mpm=true;
+	} else if(s == "-impm"){
+	  do_impmpm=true;
 	} else if(s == "-arches"){
 	    do_arches=true;
 	} else if(s == "-ice"){
@@ -305,7 +309,7 @@ main(int argc, char** argv)
 	usage( "ICE and Arches do not work together", "", argv[0]);
     }
 
-    if(!(do_ice || do_arches || do_mpm || do_poisson1 || do_poisson2)){
+    if(!(do_ice || do_arches || do_mpm || do_impmpm || do_poisson1 || do_poisson2)){
 	usage( "You need to specify -arches, -ice, or -mpm", "", argv[0]);
     }
 
@@ -352,6 +356,8 @@ main(int argc, char** argv)
 	  sim = scinew MPMArches(world);
 	} else if(do_mpm){
 	  sim = scinew SerialMPM(world);
+	} else if(do_impmpm){
+	  sim = scinew ImpMPM(world);
 	} else if(do_arches){
 	  sim = scinew Arches(world);
 	} else if(do_ice) {
@@ -363,7 +369,7 @@ main(int argc, char** argv)
 	} else if(do_poisson2){
 	  sim = scinew Poisson2(world);
 	} else {
-	  usage("You need to specify a simulation, -arches, -ice, -mpm, -mpmice, -mpmarches, or -poisson1, or -poisson2", "", argv[0]);
+	  usage("You need to specify a simulation, -arches, -ice, -mpm, -impm -mpmice, -mpmarches, or -poisson1, or -poisson2", "", argv[0]);
 	}
 	ctl->attachPort("sim", sim);
 

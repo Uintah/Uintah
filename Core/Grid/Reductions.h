@@ -48,6 +48,13 @@ namespace Uintah {
 	 }
       };
 
+      template<class T> class And {
+      public:
+	T operator()(T a, T b) {
+	  return a && b;
+	 }
+      };
+
    private:
       Reductions(const Reductions&);
       Reductions& operator=(const Reductions&);

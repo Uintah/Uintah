@@ -31,6 +31,18 @@ ReductionVariable<double, Reductions::Sum<double> >
 
 template<>
 void
+ReductionVariable<bool, Reductions::And<bool> >
+   ::getMPIBuffer(void*& buf, int& count,
+		  MPI_Datatype& datatype, MPI_Op& op)
+{
+   buf = &value;
+   datatype = MPI_CHAR;
+   count = 1;
+   op = MPI_LAND;
+}
+
+template<>
+void
 ReductionVariable<long64, Reductions::Sum<long64> >
    ::getMPIBuffer(void*& buf, int& count,
 		  MPI_Datatype& datatype, MPI_Op& op)
