@@ -8,6 +8,10 @@
 #include <Uintah/Exceptions/TypeMismatchException.h>
 #include <SCICore/Malloc/Allocator.h>
 
+#include <iostream>
+#include <fstream>
+using namespace std;
+
 namespace Uintah {
    class TypeDescription;
 
@@ -55,6 +59,7 @@ WARNING
       virtual ReductionVariable<T, Op>* clone() const;
       virtual void copyPointer(const ReductionVariableBase&);
       virtual void reduce(const ReductionVariableBase&);
+      virtual void emit(ofstream&);
    private:
       ReductionVariable<T, Op>& operator=(const ReductionVariable<T, Op>& copy);
       T value;
@@ -114,11 +119,23 @@ WARNING
 	 value = copy.value;
 	 return *this;
       }
+
+   template<class T, class Op>
+      void
+      ReductionVariable<T, Op>::emit(ofstream& intout)
+      {
+        intout << &(*this) << " ";
+	intout << "This doesn't work yet" << " ";
+      }
    
 } // end namespace Uintah
 
 //
 // $Log$
+// Revision 1.8  2000/06/01 23:16:18  guilkey
+// Added code to the ReductionVariable stuff to "emit" it's data.  Added
+// NPAction tasks.  NP=NonPatch, this is for tasks that don't need the patch.
+//
 // Revision 1.7  2000/05/30 20:19:32  sparker
 // Changed new to scinew to help track down memory leaks
 // Changed region to patch
