@@ -47,17 +47,6 @@ using std::vector;
 using std::pair;
 
 
-#if 0
-template <> const string find_type_name(TetVolMesh::node_index *);
-template <> const string find_type_name(TetVolMesh::edge_index *);
-template <> const string find_type_name(TetVolMesh::face_index *);
-template <> const string find_type_name(TetVolMesh::cell_index *);
-template <> const string find_type_name(LatVolMesh::node_index *);
-template <> const string find_type_name(LatVolMesh::edge_index *);
-template <> const string find_type_name(LatVolMesh::face_index *);
-template <> const string find_type_name(LatVolMesh::cell_index *);
-#endif
-
 template <> const string find_type_name(vector<pair<TetVolMesh::node_index, double> > *);
 template <> const string find_type_name(vector<pair<TetVolMesh::edge_index, double> > *);
 template <> const string find_type_name(vector<pair<TetVolMesh::face_index, double> > *);
@@ -207,17 +196,8 @@ public:
 
   virtual void execute();
 
-  template <class FDST, class FSRC, class FITP>
-  void dispatch_src_node(FDST *fdst, FSRC *fsrc, FITP *fitp);
-
-  template <class FDST, class FSRC, class FITP>
-  void dispatch_src_edge(FDST *fdst, FSRC *fsrc, FITP *fitp);
-
-  template <class FDST, class FSRC, class FITP>
-  void dispatch_src_face(FDST *fdst, FSRC *fsrc, FITP *fitp);
-
-  template <class FDST, class FSRC, class FITP>
-  void dispatch_src_cell(FDST *fdst, FSRC *fsrc, FITP *fitp);
+  template <class FSRC, class FITP, class FRES>
+  void callback(FSRC *fsrc, FITP *fitp, FRES *);
 };
 
 
@@ -239,30 +219,35 @@ ApplyInterpolant::~ApplyInterpolant()
 
 
 
-template <class FDST, class FSRC, class FITP>
+template <class FSRC, class FITP, class FOUT>
 void
-ApplyInterpolant::dispatch_src_node(FDST *fdst, FSRC *fsrc, FITP *fitp)
+ApplyInterpolant::callback(FSRC *fsrc, FITP *fitp, FOUT *)
 {
-  FDST *fout = fdst->clone();
+  FOUT *fout = new FOUT(fitp->get_typed_mesh(), fitp->data_at());
   FieldHandle fhout(fout);
 
-  switch(fdst->data_at())
+  switch(fout->data_at())
   {
   case Field::NODE:
     {
-      typename FDST::mesh_type::node_iterator iter =
+      typename FOUT::mesh_type::node_iterator iter =
 	fout->get_typed_mesh()->node_begin();
       while (iter != fout->get_typed_mesh()->node_end())
       {
-	vector<pair<typename FSRC::mesh_type::node_index, double> > v;
+	typename FITP::value_type v;
 	fitp->value(v, *iter);
-	typename FDST::value_type val = (typename FDST::value_type)(fsrc->value(v[0].first) * v[0].second);
-	vector<pair<typename FSRC::mesh_type::node_index, double> >::size_type j;
-	for (j = 1; j < v.size(); j++)
+	if (!v.empty())
 	{
-	  val += (typename FDST::value_type)(fsrc->value(v[j].first) * v[j].second);
+	  typename FSRC::value_type val =
+	    (typename FSRC::value_type)(fsrc->value(v[0].first) * v[0].second);
+	  unsigned int j;
+	  for (j = 1; j < v.size(); j++)
+	  {
+	    val += (typename FSRC::value_type)
+	      (fsrc->value(v[j].first) * v[j].second);
+	  }
+	  fout->set_value(val, *iter);
 	}
-	fout->set_value(val, *iter);
 	++iter;
       }
     }
@@ -270,19 +255,24 @@ ApplyInterpolant::dispatch_src_node(FDST *fdst, FSRC *fsrc, FITP *fitp)
 
   case Field::EDGE:
     {
-      typename FDST::mesh_type::edge_iterator iter =
+      typename FOUT::mesh_type::edge_iterator iter =
 	fout->get_typed_mesh()->edge_begin();
       while (iter != fout->get_typed_mesh()->edge_end())
       {
-	vector<pair<typename FSRC::mesh_type::node_index, double> > v;
+	typename FITP::value_type v;
 	fitp->value(v, *iter);
-	typename FDST::value_type val = (typename FDST::value_type)(fsrc->value(v[0].first) * v[0].second);
-	vector<pair<typename FSRC::mesh_type::node_index, double> >::size_type j;
-	for (j = 1; j < v.size(); j++)
+	if (!v.empty())
 	{
-	  val += (typename FDST::value_type)(fsrc->value(v[j].first) * v[j].second);
+	  typename FSRC::value_type val =
+	    (typename FSRC::value_type)(fsrc->value(v[0].first) * v[0].second);
+	  unsigned int j;
+	  for (j = 1; j < v.size(); j++)
+	  {
+	    val += (typename FSRC::value_type)
+	      (fsrc->value(v[j].first) * v[j].second);
+	  }
+	  fout->set_value(val, *iter);
 	}
-	fout->set_value(val, *iter);
 	++iter;
       }
     }
@@ -290,19 +280,24 @@ ApplyInterpolant::dispatch_src_node(FDST *fdst, FSRC *fsrc, FITP *fitp)
 
   case Field::FACE:
     {
-      typename FDST::mesh_type::face_iterator iter =
+      typename FOUT::mesh_type::face_iterator iter =
 	fout->get_typed_mesh()->face_begin();
       while (iter != fout->get_typed_mesh()->face_end())
       {
-	vector<pair<typename FSRC::mesh_type::node_index, double> > v;
+	typename FITP::value_type v;
 	fitp->value(v, *iter);
-	typename FDST::value_type val = (typename FDST::value_type)(fsrc->value(v[0].first) * v[0].second);
-	vector<pair<typename FSRC::mesh_type::node_index, double> >::size_type j;
-	for (j = 1; j < v.size(); j++)
+	if (!v.empty())
 	{
-	  val += (typename FDST::value_type)(fsrc->value(v[j].first) * v[j].second);
+	  typename FSRC::value_type val =
+	    (typename FSRC::value_type)(fsrc->value(v[0].first) * v[0].second);
+	  unsigned int j;
+	  for (j = 1; j < v.size(); j++)
+	  {
+	    val += (typename FSRC::value_type)
+	      (fsrc->value(v[j].first) * v[j].second);
+	  }
+	  fout->set_value(val, *iter);
 	}
-	fout->set_value(val, *iter);
 	++iter;
       }
     }
@@ -310,24 +305,31 @@ ApplyInterpolant::dispatch_src_node(FDST *fdst, FSRC *fsrc, FITP *fitp)
 
   case Field::CELL:
     {
-      typename FDST::mesh_type::cell_iterator iter =
+      typename FOUT::mesh_type::cell_iterator iter =
 	fout->get_typed_mesh()->cell_begin();
       while (iter != fout->get_typed_mesh()->cell_end())
       {
-	vector<pair<typename FSRC::mesh_type::node_index, double> > v;
+	typename FITP::value_type v;
 	fitp->value(v, *iter);
-	typename FDST::value_type val = (typename FDST::value_type)(fsrc->value(v[0].first) * v[0].second);
-	vector<pair<typename FSRC::mesh_type::node_index, double> >::size_type j;
-	for (j = 1; j < v.size(); j++)
+	if (!v.empty())
 	{
-	  val += (typename FDST::value_type)(fsrc->value(v[j].first) * v[j].second);
+	  typename FSRC::value_type val =
+	    (typename FSRC::value_type)(fsrc->value(v[0].first) * v[0].second);
+	  unsigned int j;
+	  for (j = 1; j < v.size(); j++)
+	  {
+	    val += (typename FSRC::value_type)
+	      (fsrc->value(v[j].first) * v[j].second);
+	  }
+	  fout->set_value(val, *iter);
 	}
-	fout->set_value(val, *iter);
 	++iter;
       }
     }
+    break;
 
   default:
+    cout << "No data in interpolant field.";
     return;
   }
 
@@ -336,326 +338,76 @@ ApplyInterpolant::dispatch_src_node(FDST *fdst, FSRC *fsrc, FITP *fitp)
 }
 
 
-template <class FDST, class FSRC, class FITP>
-void
-ApplyInterpolant::dispatch_src_edge(FDST *fdst, FSRC *fsrc, FITP *fitp)
-{
-  FDST *fout = fdst->clone();
-  FieldHandle fhout(fout);
 
-  switch(fdst->data_at())
-  {
-  case Field::NODE:
-    {
-      typename FDST::mesh_type::node_iterator iter =
-	fout->get_typed_mesh()->node_begin();
-      while (iter != fout->get_typed_mesh()->node_end())
-      {
-	vector<pair<typename FSRC::mesh_type::edge_index, double> > v;
-	fitp->value(v, *iter);
-	typename FDST::value_type val = (typename FDST::value_type)(fsrc->value(v[0].first) * v[0].second);
-	vector<pair<typename FSRC::mesh_type::edge_index, double> >::size_type j;
-	for (j = 1; j < v.size(); j++)
-	{
-	  val += (typename FDST::value_type)(fsrc->value(v[j].first) * v[j].second);
-	}
-	fout->set_value(val, *iter);
-	++iter;
-      }
-    }
-    break;
-
-  case Field::EDGE:
-    {
-      typename FDST::mesh_type::edge_iterator iter =
-	fout->get_typed_mesh()->edge_begin();
-      while (iter != fout->get_typed_mesh()->edge_end())
-      {
-	vector<pair<typename FSRC::mesh_type::edge_index, double> > v;
-	fitp->value(v, *iter);
-	typename FDST::value_type val = (typename FDST::value_type)(fsrc->value(v[0].first) * v[0].second);
-	vector<pair<typename FSRC::mesh_type::edge_index, double> >::size_type j;
-	for (j = 1; j < v.size(); j++)
-	{
-	  val += (typename FDST::value_type)(fsrc->value(v[j].first) * v[j].second);
-	}
-	fout->set_value(val, *iter);
-	++iter;
-      }
-    }
-    break;
-
-  case Field::FACE:
-    {
-      typename FDST::mesh_type::face_iterator iter =
-	fout->get_typed_mesh()->face_begin();
-      while (iter != fout->get_typed_mesh()->face_end())
-      {
-	vector<pair<typename FSRC::mesh_type::edge_index, double> > v;
-	fitp->value(v, *iter);
-	typename FDST::value_type val = (typename FDST::value_type)(fsrc->value(v[0].first) * v[0].second);
-	vector<pair<typename FSRC::mesh_type::edge_index, double> >::size_type j;
-	for (j = 1; j < v.size(); j++)
-	{
-	  val += (typename FDST::value_type)(fsrc->value(v[j].first) * v[j].second);
-	}
-	fout->set_value(val, *iter);
-	++iter;
-      }
-    }
-    break;
-
-  case Field::CELL:
-    {
-      typename FDST::mesh_type::cell_iterator iter =
-	fout->get_typed_mesh()->cell_begin();
-      while (iter != fout->get_typed_mesh()->cell_end())
-      {
-	vector<pair<typename FSRC::mesh_type::edge_index, double> > v;
-	fitp->value(v, *iter);
-	typename FDST::value_type val = (typename FDST::value_type)(fsrc->value(v[0].first) * v[0].second);
-	vector<pair<typename FSRC::mesh_type::edge_index, double> >::size_type j;
-	for (j = 1; j < v.size(); j++)
-	{
-	  val += (typename FDST::value_type)(fsrc->value(v[j].first) * v[j].second);
-	}
-	fout->set_value(val, *iter);
-	++iter;
-      }
-    }
-    break;
-
-  default:
-    return;
-  }
-
-  FieldOPort *ofp = (FieldOPort *)get_oport("Output");
-  ofp->send(fhout);
-}
-
-template <class FDST, class FSRC, class FITP>
-void
-ApplyInterpolant::dispatch_src_face(FDST *fdst, FSRC *fsrc, FITP *fitp)
-{
-  FDST *fout = fdst->clone();
-  FieldHandle fhout(fout);
-
-  switch(fdst->data_at())
-  {
-  case Field::NODE:
-    {
-      typename FDST::mesh_type::node_iterator iter =
-	fout->get_typed_mesh()->node_begin();
-      while (iter != fout->get_typed_mesh()->node_end())
-      {
-	vector<pair<typename FSRC::mesh_type::face_index, double> > v;
-	fitp->value(v, *iter);
-	typename FDST::value_type val = (typename FDST::value_type)(fsrc->value(v[0].first) * v[0].second);
-	vector<pair<typename FSRC::mesh_type::face_index, double> >::size_type j;
-	for (j = 1; j < v.size(); j++)
-	{
-	  val += (typename FDST::value_type)(fsrc->value(v[j].first) * v[j].second);
-	}
-	fout->set_value(val, *iter);
-	++iter;
-      }
-    }
-    break;
-
-  case Field::EDGE:
-    {
-      typename FDST::mesh_type::edge_iterator iter =
-	fout->get_typed_mesh()->edge_begin();
-      while (iter != fout->get_typed_mesh()->edge_end())
-      {
-	vector<pair<typename FSRC::mesh_type::face_index, double> > v;
-	fitp->value(v, *iter);
-	typename FDST::value_type val = (typename FDST::value_type)(fsrc->value(v[0].first) * v[0].second);
-	vector<pair<typename FSRC::mesh_type::face_index, double> >::size_type j;
-	for (j = 1; j < v.size(); j++)
-	{
-	  val += (typename FDST::value_type)(fsrc->value(v[j].first) * v[j].second);
-	}
-	fout->set_value(val, *iter);
-	++iter;
-      }
-    }
-    break;
-
-  case Field::FACE:
-    {
-      typename FDST::mesh_type::face_iterator iter =
-	fout->get_typed_mesh()->face_begin();
-      while (iter != fout->get_typed_mesh()->face_end())
-      {
-	vector<pair<typename FSRC::mesh_type::face_index, double> > v;
-	fitp->value(v, *iter);
-	typename FDST::value_type val = (typename FDST::value_type)(fsrc->value(v[0].first) * v[0].second);
-	vector<pair<typename FSRC::mesh_type::face_index, double> >::size_type j;
-	for (j = 1; j < v.size(); j++)
-	{
-	  val += (typename FDST::value_type)(fsrc->value(v[j].first) * v[j].second);
-	}
-	fout->set_value(val, *iter);
-	++iter;
-      }
-    }
-    break;
-
-  case Field::CELL:
-    {
-      typename FDST::mesh_type::cell_iterator iter =
-	fout->get_typed_mesh()->cell_begin();
-      while (iter != fout->get_typed_mesh()->cell_end())
-      {
-	vector<pair<typename FSRC::mesh_type::face_index, double> > v;
-	fitp->value(v, *iter);
-	typename FDST::value_type val = (typename FDST::value_type)(fsrc->value(v[0].first) * v[0].second);
-	vector<pair<typename FSRC::mesh_type::face_index, double> >::size_type j;
-	for (j = 1; j < v.size(); j++)
-	{
-	  val += (typename FDST::value_type)(fsrc->value(v[j].first) * v[j].second);
-	}
-	fout->set_value(val, *iter);
-	++iter;
-      }
-    }
-    break;
-
-  default:
-    return;
-  }
-
-  FieldOPort *ofp = (FieldOPort *)get_oport("Output");
-  ofp->send(fhout);
-}
-
-template <class FDST, class FSRC, class FITP>
-void
-ApplyInterpolant::dispatch_src_cell(FDST *fdst, FSRC *fsrc, FITP *fitp)
-{
-  FDST *fout = fdst->clone();
-  FieldHandle fhout(fout);
-
-  switch (fdst->data_at())
-  {
-  case Field::NODE:
-    {
-      typename FDST::mesh_type::node_iterator iter =
-	fout->get_typed_mesh()->node_begin();
-      while (iter != fout->get_typed_mesh()->node_end())
-      {
-	vector<pair<typename FSRC::mesh_type::cell_index, double> > v;
-	fitp->value(v, *iter);
-	typename FDST::value_type val = (typename FDST::value_type)(fsrc->value(v[0].first) * v[0].second);
-	vector<pair<typename FSRC::mesh_type::cell_index, double> >::size_type j;
-	for (j = 1; j < v.size(); j++)
-	{
-	  val += (typename FDST::value_type)(fsrc->value(v[j].first) * v[j].second);
-	}
-	fout->set_value(val, *iter);
-	++iter;
-      }
-    }
-    break;
-
-  case Field::EDGE:
-    {
-      typename FDST::mesh_type::edge_iterator iter =
-	fout->get_typed_mesh()->edge_begin();
-      while (iter != fout->get_typed_mesh()->edge_end())
-      {
-	vector<pair<typename FSRC::mesh_type::cell_index, double> > v;
-	fitp->value(v, *iter);
-	typename FDST::value_type val = (typename FDST::value_type)(fsrc->value(v[0].first) * v[0].second);
-	vector<pair<typename FSRC::mesh_type::cell_index, double> >::size_type j;
-	for (j = 1; j < v.size(); j++)
-	{
-	  val += (typename FDST::value_type)(fsrc->value(v[j].first) * v[j].second);
-	}
-	fout->set_value(val, *iter);
-	++iter;
-      }
-    }
-    break;
-
-  case Field::FACE:
-    {
-      typename FDST::mesh_type::face_iterator iter =
-	fout->get_typed_mesh()->face_begin();
-      while (iter != fout->get_typed_mesh()->face_end())
-      {
-	vector<pair<typename FSRC::mesh_type::cell_index, double> > v;
-	fitp->value(v, *iter);
-	typename FDST::value_type val = (typename FDST::value_type)(fsrc->value(v[0].first) * v[0].second);
-	vector<pair<typename FSRC::mesh_type::cell_index, double> >::size_type j;
-	for (j = 1; j < v.size(); j++)
-	{
-	  val += (typename FDST::value_type)(fsrc->value(v[j].first) * v[j].second);
-	}
-	fout->set_value(val, *iter);
-	++iter;
-      }
-    }
-    break;
-
-  case Field::CELL:
-    {
-      typename FDST::mesh_type::cell_iterator iter =
-	fout->get_typed_mesh()->cell_begin();
-      while (iter != fout->get_typed_mesh()->cell_end())
-      {
-	vector<pair<typename FSRC::mesh_type::cell_index, double> > v;
-	fitp->value(v, *iter);
-	typename FDST::value_type val = (typename FDST::value_type)(fsrc->value(v[0].first) * v[0].second);
-	vector<pair<typename FSRC::mesh_type::cell_index, double> >::size_type j;
-	for (j = 1; j < v.size(); j++)
-	{
-	  val += (typename FDST::value_type)(fsrc->value(v[j].first) * v[j].second);
-	}
-	fout->set_value(val, *iter);
-	++iter;
-      }
-    }
-    break;
-
-  default:
-    return;
-  }
-
-  FieldOPort *ofp = (FieldOPort *)get_oport("Output");
-  ofp->send(fhout);
-}
-
-
-#define HAIRY_MACRO(FDST, DDST, FSRC, DSRC) \
+#define HAIRY_MACRO(FSRC, FITP, DSRC)\
 switch(src_field->data_at())\
 {\
 case Field::NODE:\
-  dispatch_src_node((FDST<DDST> *) dst_field,\
-		    (FSRC<DSRC> *) src_field,\
-		    (FDST<vector<pair<FSRC<DSRC>::mesh_type::node_index, double> > > *)itp_field);\
+  {\
+	FSRC<DSRC> *src = dynamic_cast<FSRC<DSRC> *>(src_field);\
+	FITP<vector<pair<FSRC<DSRC>::mesh_type::node_index, double> > > *itp =\
+	  dynamic_cast<FITP<vector<pair<FSRC<DSRC>::mesh_type::node_index, double> > > *>(itp_field);\
+	if (src && itp)\
+	{\
+	  callback(src, itp, (FITP<DSRC> *)0);\
+	}\
+	else\
+	{\
+	  cout << "Incorrect field types dispatched\n";\
+	}\
+  }\
   break;\
 \
 case Field::EDGE:\
-  dispatch_src_edge((FDST<DDST> *) dst_field,\
-		    (FSRC<DSRC> *) src_field,\
-		    (FDST<vector<pair<FSRC<DSRC>::mesh_type::edge_index, double> > > *)itp_field);\
+  {\
+	FSRC<DSRC> *src = dynamic_cast<FSRC<DSRC> *>(src_field);\
+	FITP<vector<pair<FSRC<DSRC>::mesh_type::edge_index, double> > > *itp =\
+	  dynamic_cast<FITP<vector<pair<FSRC<DSRC>::mesh_type::edge_index, double> > > *>(itp_field);\
+	if (src && itp)\
+	{\
+	  callback(src, itp, (FITP<DSRC> *)0);\
+	}\
+	else\
+	{\
+	  cout << "Incorrect field types dispatched\n";\
+	}\
+  }\
   break;\
 \
 case Field::FACE:\
-  dispatch_src_face((FDST<DDST> *) dst_field,\
-		    (FSRC<DSRC> *) src_field,\
-		    (FDST<vector<pair<FSRC<DSRC>::mesh_type::face_index, double> > > *)itp_field);\
+  {\
+	FSRC<DSRC> *src = dynamic_cast<FSRC<DSRC> *>(src_field);\
+	FITP<vector<pair<FSRC<DSRC>::mesh_type::face_index, double> > > *itp =\
+	  dynamic_cast<FITP<vector<pair<FSRC<DSRC>::mesh_type::face_index, double> > > *>(itp_field);\
+	if (src && itp)\
+	{\
+	  callback(src, itp, (FITP<DSRC> *)0);\
+	}\
+	else\
+	{\
+	  cout << "Incorrect field types dispatched\n";\
+	}\
+  }\
   break;\
 \
 case Field::CELL:\
-  dispatch_src_cell((FDST<DDST> *) dst_field,\
-		    (FSRC<DSRC> *) src_field,\
-		    (FDST<vector<pair<FSRC<DSRC>::mesh_type::cell_index, double> > > *)itp_field);\
+  {\
+	FSRC<DSRC> *src = dynamic_cast<FSRC<DSRC> *>(src_field);\
+	FITP<vector<pair<FSRC<DSRC>::mesh_type::cell_index, double> > > *itp =\
+	  dynamic_cast<FITP<vector<pair<FSRC<DSRC>::mesh_type::cell_index, double> > > *>(itp_field);\
+	if (src && itp)\
+	{\
+	  callback(src, itp, (FITP<DSRC> *)0);\
+	}\
+	else\
+	{\
+	  cout << "Incorrect field types dispatched\n";\
+	}\
+  }\
   break;\
 \
 default:\
+  cout << "No data location to dispatch on.\n";\
   return;\
 }
 
@@ -663,14 +415,6 @@ default:\
 void
 ApplyInterpolant::execute()
 {
-  FieldIPort *dst_port = (FieldIPort *)get_iport("Destination");
-  FieldHandle dfieldhandle;
-  Field *dst_field;
-  if (!(dst_port->get(dfieldhandle) && (dst_field = dfieldhandle.get_rep())))
-  {
-    return;
-  }
-
   FieldIPort *src_port = (FieldIPort *)get_iport("Source");
   FieldHandle sfieldhandle;
   Field *src_field;
@@ -687,320 +431,290 @@ ApplyInterpolant::execute()
     return;
   }
 
-  const string dst_geom_name = dst_field->get_type_name(0);
-  const string dst_data_name = dst_field->get_type_name(1);
   const string src_geom_name = src_field->get_type_name(0);
   const string src_data_name = src_field->get_type_name(1);
+  const string itp_geom_name = itp_field->get_type_name(0);
 
-  if (dst_geom_name == "TetVol" && dst_data_name == "Vector" &&
-      src_geom_name == "TetVol" && src_data_name == "Vector")
-  {
-    HAIRY_MACRO(TetVol, Vector, TetVol, Vector)
-  }
-  else if (dst_geom_name == "TetVol" && dst_data_name == "Vector" &&
-	   src_geom_name == "LatticeVol" && src_data_name == "Vector")
-  {
-    HAIRY_MACRO(TetVol, Vector, LatticeVol, Vector)
-  }
-  else if (dst_geom_name == "LatticeVol" && dst_data_name == "Vector" &&
-	   src_geom_name == "TetVol" && src_data_name == "Vector")
-  {
-    HAIRY_MACRO(LatticeVol, Vector, TetVol, Vector)
-  }
-  else if (dst_geom_name == "LatticeVol" && dst_data_name == "Vector" &&
-	   src_geom_name == "LatticeVol" && src_data_name == "Vector")
-  {
-    HAIRY_MACRO(LatticeVol, Vector, LatticeVol, Vector)
-  }
-  else if (dst_geom_name == "TriSurf" && dst_data_name == "Vector" &&
-	   src_geom_name == "TetVol" && src_data_name == "Vector")
-  {
-    HAIRY_MACRO(TriSurf, Vector, TetVol, Vector)
-  }
-  else if (dst_geom_name == "TriSurf" && dst_data_name == "Vector" &&
-	   src_geom_name == "LatticeVol" && src_data_name == "Vector")
-  {
-    HAIRY_MACRO(TriSurf, Vector, LatticeVol, Vector)
-  }
+  cout << "src geom " << src_geom_name << '\n';
+  cout << "src data " << src_data_name << '\n';
+  cout << "itp geom " << itp_geom_name << '\n';
+  cout << "itp type " << itp_field->get_type_name() << '\n';
 
-
-  else if (dst_geom_name == "TetVol" && dst_data_name == "double" &&
-	   src_geom_name == "TetVol" && src_data_name == "double")
+  if (src_geom_name == "TetVol")
   {
-    HAIRY_MACRO(TetVol, double, TetVol, double)
+    if (itp_geom_name == "TetVol")
+    {
+      if (src_data_name == "Vector")
+      {
+	HAIRY_MACRO(TetVol, TetVol, Vector);
+      }
+      else if (src_data_name == "double")
+      {
+	HAIRY_MACRO(TetVol, TetVol, double);
+      }
+      else if (src_data_name == "float")
+      {
+	HAIRY_MACRO(TetVol, TetVol, float);
+      }
+      else if (src_data_name == "int")
+      {
+	HAIRY_MACRO(TetVol, TetVol, int);
+      }
+      else if (src_data_name == "unsigned int")
+      {
+	HAIRY_MACRO(TetVol, TetVol, unsigned int);
+      }
+      else if (src_data_name == "short")
+      {
+	HAIRY_MACRO(TetVol, TetVol, short);
+      }
+      else if (src_data_name == "unsigned short")
+      {
+	HAIRY_MACRO(TetVol, TetVol, unsigned short);
+      }
+      else if (src_data_name == "char")
+      {
+	HAIRY_MACRO(TetVol, TetVol, char);
+      }
+      else if (src_data_name == "unsigned char")
+      {
+	HAIRY_MACRO(TetVol, TetVol, unsigned char);
+      }
+      else
+      {
+	cout << "Non-interpable source field type\n";
+      }
+    }
+    else if (itp_geom_name == "LatticeVol")
+    {
+      if (src_data_name == "Vector")
+      {
+	HAIRY_MACRO(TetVol, LatticeVol, Vector);
+      }
+      else if (src_data_name == "double")
+      {
+	HAIRY_MACRO(TetVol, LatticeVol, double);
+      }
+      else if (src_data_name == "float")
+      {
+	HAIRY_MACRO(TetVol, LatticeVol, float);
+      }
+      else if (src_data_name == "int")
+      {
+	HAIRY_MACRO(TetVol, LatticeVol, int);
+      }
+      else if (src_data_name == "unsigned int")
+      {
+	HAIRY_MACRO(TetVol, LatticeVol, unsigned int);
+      }
+      else if (src_data_name == "short")
+      {
+	HAIRY_MACRO(TetVol, LatticeVol, short);
+      }
+      else if (src_data_name == "unsigned short")
+      {
+	HAIRY_MACRO(TetVol, LatticeVol, unsigned short);
+      }
+      else if (src_data_name == "char")
+      {
+	HAIRY_MACRO(TetVol, LatticeVol, char);
+      }
+      else if (src_data_name == "unsigned char")
+      {
+	HAIRY_MACRO(TetVol, LatticeVol, unsigned char);
+      }
+      else
+      {
+	cout << "Non-interpable source field type\n";
+      }
+    }
+    else if (itp_geom_name == "TriSurf")
+    {
+      if (src_data_name == "Vector")
+      {
+	HAIRY_MACRO(TetVol, TriSurf, Vector);
+      }
+      else if (src_data_name == "double")
+      {
+	HAIRY_MACRO(TetVol, TriSurf, double);
+      }
+      else if (src_data_name == "float")
+      {
+	HAIRY_MACRO(TetVol, TriSurf, float);
+      }
+      else if (src_data_name == "int")
+      {
+	HAIRY_MACRO(TetVol, TriSurf, int);
+      }
+      else if (src_data_name == "unsigned int")
+      {
+	HAIRY_MACRO(TetVol, TriSurf, unsigned int);
+      }
+      else if (src_data_name == "short")
+      {
+	HAIRY_MACRO(TetVol, TriSurf, short);
+      }
+      else if (src_data_name == "unsigned short")
+      {
+	HAIRY_MACRO(TetVol, TriSurf, unsigned short);
+      }
+      else if (src_data_name == "char")
+      {
+	HAIRY_MACRO(TetVol, TriSurf, char);
+      }
+      else if (src_data_name == "unsigned char")
+      {
+	HAIRY_MACRO(TetVol, TriSurf, unsigned char);
+      }
+      else
+      {
+	cout << "Non-interpable source field type\n";
+      }
+    }
+    else
+    {
+      cout << "bad interp field type";
+    }
   }
-  else if (dst_geom_name == "TetVol" && dst_data_name == "double" &&
-	   src_geom_name == "LatticeVol" && src_data_name == "double")
+  else if (src_geom_name == "LatticeVol")
   {
-    HAIRY_MACRO(TetVol, double, LatticeVol, double)
+    if (itp_geom_name == "TetVol")
+    {
+      if (src_data_name == "Vector")
+      {
+	HAIRY_MACRO(LatticeVol, TetVol, Vector);
+      }
+      else if (src_data_name == "double")
+      {
+	HAIRY_MACRO(LatticeVol, TetVol, double);
+      }
+      else if (src_data_name == "float")
+      {
+	HAIRY_MACRO(LatticeVol, TetVol, float);
+      }
+      else if (src_data_name == "int")
+      {
+	HAIRY_MACRO(LatticeVol, TetVol, int);
+      }
+      else if (src_data_name == "unsigned int")
+      {
+	HAIRY_MACRO(LatticeVol, TetVol, unsigned int);
+      }
+      else if (src_data_name == "short")
+      {
+	HAIRY_MACRO(LatticeVol, TetVol, short);
+      }
+      else if (src_data_name == "unsigned short")
+      {
+	HAIRY_MACRO(LatticeVol, TetVol, unsigned short);
+      }
+      else if (src_data_name == "char")
+      {
+	HAIRY_MACRO(LatticeVol, TetVol, char);
+      }
+      else if (src_data_name == "unsigned char")
+      {
+	HAIRY_MACRO(LatticeVol, TetVol, unsigned char);
+      }
+      else
+      {
+	cout << "Non-interpable source field type\n";
+      }
+    }
+    else if (itp_geom_name == "LatticeVol")
+    {
+      if (src_data_name == "Vector")
+      {
+	HAIRY_MACRO(LatticeVol, LatticeVol, Vector);
+      }
+      else if (src_data_name == "double")
+      {
+	HAIRY_MACRO(LatticeVol, LatticeVol, double);
+      }
+      else if (src_data_name == "float")
+      {
+	HAIRY_MACRO(LatticeVol, LatticeVol, float);
+      }
+      else if (src_data_name == "int")
+      {
+	HAIRY_MACRO(LatticeVol, LatticeVol, int);
+      }
+      else if (src_data_name == "unsigned int")
+      {
+	HAIRY_MACRO(LatticeVol, LatticeVol, unsigned int);
+      }
+      else if (src_data_name == "short")
+      {
+	HAIRY_MACRO(LatticeVol, LatticeVol, short);
+      }
+      else if (src_data_name == "unsigned short")
+      {
+	HAIRY_MACRO(LatticeVol, LatticeVol, unsigned short);
+      }
+      else if (src_data_name == "char")
+      {
+	HAIRY_MACRO(LatticeVol, LatticeVol, char);
+      }
+      else if (src_data_name == "unsigned char")
+      {
+	HAIRY_MACRO(LatticeVol, LatticeVol, unsigned char);
+      }
+      else
+      {
+	cout << "Non-interpable source field type\n";
+      }
+    }
+    else if (itp_geom_name == "TriSurf")
+    {
+      if (src_data_name == "Vector")
+      {
+	HAIRY_MACRO(LatticeVol, TriSurf, Vector);
+      }
+      else if (src_data_name == "double")
+      {
+	HAIRY_MACRO(LatticeVol, TriSurf, double);
+      }
+      else if (src_data_name == "float")
+      {
+	HAIRY_MACRO(LatticeVol, TriSurf, float);
+      }
+      else if (src_data_name == "int")
+      {
+	HAIRY_MACRO(LatticeVol, TriSurf, int);
+      }
+      else if (src_data_name == "unsigned int")
+      {
+	HAIRY_MACRO(LatticeVol, TriSurf, unsigned int);
+      }
+      else if (src_data_name == "short")
+      {
+	HAIRY_MACRO(LatticeVol, TriSurf, short);
+      }
+      else if (src_data_name == "unsigned short")
+      {
+	HAIRY_MACRO(LatticeVol, TriSurf, unsigned short);
+      }
+      else if (src_data_name == "char")
+      {
+	HAIRY_MACRO(LatticeVol, TriSurf, char);
+      }
+      else if (src_data_name == "unsigned char")
+      {
+	HAIRY_MACRO(LatticeVol, TriSurf, unsigned char);
+      }
+      else
+      {
+	cout << "Non-interpable source field type\n";
+      }
+    }
+    else
+    {
+      cout << "bad interp field type";
+    }
   }
-  else if (dst_geom_name == "LatticeVol" && dst_data_name == "double" &&
-	   src_geom_name == "TetVol" && src_data_name == "double")
+  else
   {
-    HAIRY_MACRO(LatticeVol, double, TetVol, double)
-  }
-  else if (dst_geom_name == "LatticeVol" && dst_data_name == "double" &&
-	   src_geom_name == "LatticeVol" && src_data_name == "double")
-  {
-    HAIRY_MACRO(LatticeVol, double, LatticeVol, double)
-  }
-  else if (dst_geom_name == "TriSurf" && dst_data_name == "double" &&
-	   src_geom_name == "TetVol" && src_data_name == "double")
-  {
-    HAIRY_MACRO(TriSurf, double, TetVol, double)
-  }
-  else if (dst_geom_name == "TriSurf" && dst_data_name == "double" &&
-	   src_geom_name == "LatticeVol" && src_data_name == "double")
-  {
-    HAIRY_MACRO(TriSurf, double, LatticeVol, double)
-  }
-
-  else if (dst_geom_name == "TetVol" && dst_data_name == "float" &&
-	   src_geom_name == "TetVol" && src_data_name == "float")
-  {
-    HAIRY_MACRO(TetVol, float, TetVol, float)
-  }
-  else if (dst_geom_name == "TetVol" && dst_data_name == "float" &&
-	   src_geom_name == "LatticeVol" && src_data_name == "float")
-  {
-    HAIRY_MACRO(TetVol, float, LatticeVol, float)
-  }
-  else if (dst_geom_name == "LatticeVol" && dst_data_name == "float" &&
-	   src_geom_name == "TetVol" && src_data_name == "float")
-  {
-    HAIRY_MACRO(LatticeVol, float, TetVol, float)
-  }
-  else if (dst_geom_name == "LatticeVol" && dst_data_name == "float" &&
-	   src_geom_name == "LatticeVol" && src_data_name == "float")
-  {
-    HAIRY_MACRO(LatticeVol, float, LatticeVol, float)
-  }
-  else if (dst_geom_name == "TriSurf" && dst_data_name == "float" &&
-	   src_geom_name == "TetVol" && src_data_name == "float")
-  {
-    HAIRY_MACRO(TriSurf, float, TetVol, float)
-  }
-  else if (dst_geom_name == "TriSurf" && dst_data_name == "float" &&
-	   src_geom_name == "LatticeVol" && src_data_name == "float")
-  {
-    HAIRY_MACRO(TriSurf, float, LatticeVol, float)
-  }
-
-  else if (dst_geom_name == "TetVol" && dst_data_name == "float" &&
-	   src_geom_name == "TetVol" && src_data_name == "float")
-  {
-    HAIRY_MACRO(TetVol, float, TetVol, float)
-  }
-  else if (dst_geom_name == "TetVol" && dst_data_name == "float" &&
-	   src_geom_name == "LatticeVol" && src_data_name == "float")
-  {
-    HAIRY_MACRO(TetVol, float, LatticeVol, float)
-  }
-  else if (dst_geom_name == "LatticeVol" && dst_data_name == "float" &&
-	   src_geom_name == "TetVol" && src_data_name == "float")
-  {
-    HAIRY_MACRO(LatticeVol, float, TetVol, float)
-  }
-  else if (dst_geom_name == "LatticeVol" && dst_data_name == "float" &&
-	   src_geom_name == "LatticeVol" && src_data_name == "float")
-  {
-    HAIRY_MACRO(LatticeVol, float, LatticeVol, float)
-  }
-  else if (dst_geom_name == "TriSurf" && dst_data_name == "float" &&
-	   src_geom_name == "TetVol" && src_data_name == "float")
-  {
-    HAIRY_MACRO(TriSurf, float, TetVol, float)
-  }
-  else if (dst_geom_name == "TriSurf" && dst_data_name == "float" &&
-	   src_geom_name == "LatticeVol" && src_data_name == "float")
-  {
-    HAIRY_MACRO(TriSurf, float, LatticeVol, float)
-  }
-
-  else if (dst_geom_name == "TetVol" && dst_data_name == "int" &&
-	   src_geom_name == "TetVol" && src_data_name == "int")
-  {
-    HAIRY_MACRO(TetVol, int, TetVol, int)
-  }
-  else if (dst_geom_name == "TetVol" && dst_data_name == "int" &&
-	   src_geom_name == "LatticeVol" && src_data_name == "int")
-  {
-    HAIRY_MACRO(TetVol, int, LatticeVol, int)
-  }
-  else if (dst_geom_name == "LatticeVol" && dst_data_name == "int" &&
-	   src_geom_name == "TetVol" && src_data_name == "int")
-  {
-    HAIRY_MACRO(LatticeVol, int, TetVol, int)
-  }
-  else if (dst_geom_name == "LatticeVol" && dst_data_name == "int" &&
-	   src_geom_name == "LatticeVol" && src_data_name == "int")
-  {
-    HAIRY_MACRO(LatticeVol, int, LatticeVol, int)
-  }
-  else if (dst_geom_name == "TriSurf" && dst_data_name == "int" &&
-	   src_geom_name == "TetVol" && src_data_name == "int")
-  {
-    HAIRY_MACRO(TriSurf, int, TetVol, int)
-  }
-  else if (dst_geom_name == "TriSurf" && dst_data_name == "int" &&
-	   src_geom_name == "LatticeVol" && src_data_name == "int")
-  {
-    HAIRY_MACRO(TriSurf, int, LatticeVol, int)
-  }
-
-  else if (dst_geom_name == "TetVol" && dst_data_name == "unsigned int" &&
-	   src_geom_name == "TetVol" && src_data_name == "unsigned int")
-  {
-    HAIRY_MACRO(TetVol, unsigned int, TetVol, unsigned int)
-  }
-  else if (dst_geom_name == "TetVol" && dst_data_name == "unsigned int" &&
-	   src_geom_name == "LatticeVol" && src_data_name == "unsigned int")
-  {
-    HAIRY_MACRO(TetVol, unsigned int, LatticeVol, unsigned int)
-  }
-  else if (dst_geom_name == "LatticeVol" && dst_data_name == "unsigned int" &&
-	   src_geom_name == "TetVol" && src_data_name == "unsigned int")
-  {
-    HAIRY_MACRO(LatticeVol, unsigned int, TetVol, unsigned int)
-  }
-  else if (dst_geom_name == "LatticeVol" && dst_data_name == "unsigned int" &&
-	   src_geom_name == "LatticeVol" && src_data_name == "unsigned int")
-  {
-    HAIRY_MACRO(LatticeVol, unsigned int, LatticeVol, unsigned int)
-  }
-  else if (dst_geom_name == "TriSurf" && dst_data_name == "unsigned int" &&
-	   src_geom_name == "TetVol" && src_data_name == "unsigned int")
-  {
-    HAIRY_MACRO(TriSurf, unsigned int, TetVol, unsigned int)
-  }
-  else if (dst_geom_name == "TriSurf" && dst_data_name == "unsigned int" &&
-	   src_geom_name == "LatticeVol" && src_data_name == "unsigned int")
-  {
-    HAIRY_MACRO(TriSurf, unsigned int, LatticeVol, unsigned int)
-  }
-
-  else if (dst_geom_name == "TetVol" && dst_data_name == "short" &&
-	   src_geom_name == "TetVol" && src_data_name == "short")
-  {
-    HAIRY_MACRO(TetVol, short, TetVol, short)
-  }
-  else if (dst_geom_name == "TetVol" && dst_data_name == "short" &&
-	   src_geom_name == "LatticeVol" && src_data_name == "short")
-  {
-    HAIRY_MACRO(TetVol, short, LatticeVol, short)
-  }
-  else if (dst_geom_name == "LatticeVol" && dst_data_name == "short" &&
-	   src_geom_name == "TetVol" && src_data_name == "short")
-  {
-    HAIRY_MACRO(LatticeVol, short, TetVol, short)
-  }
-  else if (dst_geom_name == "LatticeVol" && dst_data_name == "short" &&
-	   src_geom_name == "LatticeVol" && src_data_name == "short")
-  {
-    HAIRY_MACRO(LatticeVol, short, LatticeVol, short)
-  }
-  else if (dst_geom_name == "TriSurf" && dst_data_name == "short" &&
-	   src_geom_name == "TetVol" && src_data_name == "short")
-  {
-    HAIRY_MACRO(TriSurf, short, TetVol, short)
-  }
-  else if (dst_geom_name == "TriSurf" && dst_data_name == "short" &&
-	   src_geom_name == "LatticeVol" && src_data_name == "short")
-  {
-    HAIRY_MACRO(TriSurf, short, LatticeVol, short)
-  }
-
-  else if (dst_geom_name == "TetVol" && dst_data_name == "unsigned short" &&
-	   src_geom_name == "TetVol" && src_data_name == "unsigned short")
-  {
-    HAIRY_MACRO(TetVol, unsigned short, TetVol, unsigned short)
-  }
-  else if (dst_geom_name == "TetVol" && dst_data_name == "unsigned short" &&
-	   src_geom_name == "LatticeVol" && src_data_name == "unsigned short")
-  {
-    HAIRY_MACRO(TetVol, unsigned short, LatticeVol, unsigned short)
-  }
-  else if (dst_geom_name == "LatticeVol" && dst_data_name == "unsigned short" &&
-	   src_geom_name == "TetVol" && src_data_name == "unsigned short")
-  {
-    HAIRY_MACRO(LatticeVol, unsigned short, TetVol, unsigned short)
-  }
-  else if (dst_geom_name == "LatticeVol" && dst_data_name == "unsigned short" &&
-	   src_geom_name == "LatticeVol" && src_data_name == "unsigned short")
-  {
-    HAIRY_MACRO(LatticeVol, unsigned short, LatticeVol, unsigned short)
-  }
-  else if (dst_geom_name == "TriSurf" && dst_data_name == "unsigned short" &&
-	   src_geom_name == "TetVol" && src_data_name == "unsigned short")
-  {
-    HAIRY_MACRO(TriSurf, unsigned short, TetVol, unsigned short)
-  }
-  else if (dst_geom_name == "TriSurf" && dst_data_name == "unsigned short" &&
-	   src_geom_name == "LatticeVol" && src_data_name == "unsigned short")
-  {
-    HAIRY_MACRO(TriSurf, unsigned short, LatticeVol, unsigned short)
-  }
-
-  else if (dst_geom_name == "TetVol" && dst_data_name == "char" &&
-	   src_geom_name == "TetVol" && src_data_name == "char")
-  {
-    HAIRY_MACRO(TetVol, char, TetVol, char)
-  }
-  else if (dst_geom_name == "TetVol" && dst_data_name == "char" &&
-	   src_geom_name == "LatticeVol" && src_data_name == "char")
-  {
-    HAIRY_MACRO(TetVol, char, LatticeVol, char)
-  }
-  else if (dst_geom_name == "LatticeVol" && dst_data_name == "char" &&
-	   src_geom_name == "TetVol" && src_data_name == "char")
-  {
-    HAIRY_MACRO(LatticeVol, char, TetVol, char)
-  }
-  else if (dst_geom_name == "LatticeVol" && dst_data_name == "char" &&
-	   src_geom_name == "LatticeVol" && src_data_name == "char")
-  {
-    HAIRY_MACRO(LatticeVol, char, LatticeVol, char)
-  }
-  else if (dst_geom_name == "TriSurf" && dst_data_name == "char" &&
-	   src_geom_name == "TetVol" && src_data_name == "char")
-  {
-    HAIRY_MACRO(TriSurf, char, TetVol, char)
-  }
-  else if (dst_geom_name == "TriSurf" && dst_data_name == "char" &&
-	   src_geom_name == "LatticeVol" && src_data_name == "char")
-  {
-    HAIRY_MACRO(TriSurf, char, LatticeVol, char)
-  }
-
-  else if (dst_geom_name == "TetVol" && dst_data_name == "unsigned char" &&
-	   src_geom_name == "TetVol" && src_data_name == "unsigned char")
-  {
-    HAIRY_MACRO(TetVol, unsigned char, TetVol, unsigned char)
-  }
-  else if (dst_geom_name == "TetVol" && dst_data_name == "unsigned char" &&
-	   src_geom_name == "LatticeVol" && src_data_name == "unsigned char")
-  {
-    HAIRY_MACRO(TetVol, unsigned char, LatticeVol, unsigned char)
-  }
-  else if (dst_geom_name == "LatticeVol" && dst_data_name == "unsigned char" &&
-	   src_geom_name == "TetVol" && src_data_name == "unsigned char")
-  {
-    HAIRY_MACRO(LatticeVol, unsigned char, TetVol, unsigned char)
-  }
-  else if (dst_geom_name == "LatticeVol" && dst_data_name == "unsigned char" &&
-	   src_geom_name == "LatticeVol" && src_data_name == "unsigned char")
-  {
-    HAIRY_MACRO(LatticeVol, unsigned char, LatticeVol, unsigned char)
-  }
-  else if (dst_geom_name == "TriSurf" && dst_data_name == "unsigned char" &&
-	   src_geom_name == "TetVol" && src_data_name == "unsigned char")
-  {
-    HAIRY_MACRO(TriSurf, unsigned char, TetVol, unsigned char)
-  }
-  else if (dst_geom_name == "TriSurf" && dst_data_name == "unsigned char" &&
-	   src_geom_name == "LatticeVol" && src_data_name == "unsigned char")
-  {
-    HAIRY_MACRO(TriSurf, unsigned char, LatticeVol, unsigned char)
+    cout << "bad source field type";
   }
 }
 

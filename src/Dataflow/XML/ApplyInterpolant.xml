@@ -36,10 +36,6 @@
 	<datatype>SCIRun::Field</datatype>
       </port>
       <port>
-	<name>Destination</name>
-	<datatype>SCIRun::Field</datatype>
-      </port>
-      <port>
 	<name>Interpolant</name>
 	<datatype>SCIRun::Field</datatype>
       </port>
