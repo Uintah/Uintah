@@ -9,6 +9,7 @@ SRCS += $(SRCDIR)/Worker.cc \
 	$(SRCDIR)/gl_test.cc \
 	$(SRCDIR)/Trigger.cc \
 	$(SRCDIR)/VolumeVis.cc \
+	$(SRCDIR)/GridTris.cc \
 	$(SRCDIR)/VolumeVisDpy.cc \
 	$(SRCDIR)/DpyBase.cc \
 	$(SRCDIR)/Dpy.cc \
